@@ -293,6 +293,63 @@ class BowTieWipeTransition(TransitionClass, PolylistR2OverlapBlitterClass):
 				(x1, y0))
 			return (poly,), self.ltrb
 
+class DoubleSweepWipeTransition(TransitionClass, PolylistR2OverlapBlitterClass):
+	# Reveal the image by two rotating bars, mid-top and mid-bottom
+
+	def computeparameters(self, value):
+		x0, y0, x1, y1 = self.ltrb
+		xmid = (x0+x1)/2
+		ymid = (y0+y1)/2
+		width = (x1-x0)
+		height = (y1-y0)
+		if value <= 0.5:
+			ydist = int(2*value*height)
+			poly1 = (
+				(xmid, y0),
+				(x1, y0),
+				(x1, y0+ydist))
+			poly2 = (
+				(xmid, y1),
+				(x0, y1),
+				(x0, y1-ydist))
+		else:
+			xdist = int((value-0.5)*width)
+			poly1 = (
+				(xmid, y0),
+				(x1, y0),
+				(x1, y1),
+				(x1-xdist, y1))
+			poly2 = (
+				(xmid, y1),
+				(x0, y1),
+				(x0, y0),
+				(x0+xdist, y0))
+		return (poly1, poly2), self.ltrb
+	
+class SaloonDoorWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	# Reveal the image by two rotating bars, topleft and topright
+
+	def computeparameters(self, value):
+		x0, y0, x1, y1 = self.ltrb
+		xmid = (x0+x1)/2
+		ymid = (y0+y1)/2
+		width = (x1-x0)
+		height = (y1-y0)
+		if value <= 0.5:
+			ydist = int(2*value*height)
+			poly = (
+				(x0, y0),
+				(x1, y0),
+				(xmid, ydist))
+		else:
+			xdist = int((value-0.5)*width)
+			poly = (
+				(x0, y0),
+				(x1, y0),
+				(xmid+xdist, y1),
+				(xmid-xdist, y1))
+		return poly, self.ltrb
+	
 ##class TriangleWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 ##	# Reveal the new image by a triangle growing from the center outward
 ##	
@@ -527,7 +584,7 @@ class MiscShapeWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
 		yc1 = int((ymid+value*(y1-ymid))+0.5)
 		return ((xc0, yc0, xc1, yc1), (x0, y0, x1, y1))
 	
-class _RadialTransitionClass(TransitionClass, PolyR2OverlapBlitterClass):
+class _RadialTransitionClass(TransitionClass, PolylistR2OverlapBlitterClass):
 	# Generic subclass for radial transitions. Our angle system has 0 is up, 90 degrees is left.
 	
 	def __init__(self, engine, dict):
@@ -628,7 +685,48 @@ class ClockWipeTransition(_RadialTransitionClass):
 	def computeparameters(self, value):
 		angle = math.pi/2 - (value*2*math.pi)
 		poly = self._angle2poly(angle, clockwise=1)
-		return poly, self.ltrb
+		return (poly,), self.ltrb
+		
+class PinWheelWipeTransition(_RadialTransitionClass):
+	# Two clockwise radials from the center, one from top one from bottom
+	
+	def computeparameters(self, value):
+		angle = math.pi/2 - (value*math.pi)
+		poly1 = self._angle2poly(angle, clockwise=1)
+		poly2 = []
+		for x, y in poly1:
+			x = 2*self.xmid-x
+			y = 2*self.ymid-y
+			poly2.append((x, y))
+		return (poly1,tuple(poly2)), self.ltrb
+		
+class FanWipeTransition(_RadialTransitionClass):
+	# Two radials from the top, one CW one CCW
+	
+	def computeparameters(self, value):
+		angle1 = math.pi/2 - (value*math.pi)
+		poly1 = self._angle2poly(angle1, clockwise=1)
+		angle2 = math.pi/2 + (value*math.pi)
+		poly2 = self._angle2poly(angle2, clockwise=0)
+		return (poly1,poly2), self.ltrb
+		
+class DoubleFanWipeTransition(_RadialTransitionClass):
+	# Two radials from the top, one CW one CCW
+	
+	def computeparameters(self, value):
+		angle1 = math.pi/2 - (value*math.pi/2)
+		poly1 = self._angle2poly(angle1, clockwise=1)
+		angle2 = math.pi/2 + (value*math.pi/2)
+		poly2 = self._angle2poly(angle2, clockwise=0)
+		poly3 = []
+		for x, y in poly1:
+			y = 2*self.ymid-y
+			poly3.append((x, y))
+		poly4 = []
+		for x, y in poly2:
+			y = 2*self.ymid-y
+			poly4.append((x, y))
+		return (poly1, poly2, tuple(poly3), tuple(poly4)), self.ltrb
 		
 class _MatrixTransitionClass(TransitionClass, RlistR2OverlapBlitterClass):
 	# Generic subclass for all the matrix transitions
@@ -682,7 +780,7 @@ class SnakeWipeTransition(_MatrixTransitionClass):
 	# Reveal the new image by sweeping left-to-right, then on the next line right-to-left, etc
 		
 	def computeparameters(self, value):
-		index = int(value*self.hsteps*self.vsteps+0.5)
+		index = int(value*self.hsteps*self.vsteps)
 		hindex = index % self.hsteps
 		vindex = index / self.hsteps
 		x0, y0, x1, y1 = self.ltrb
@@ -883,12 +981,12 @@ TRANSITIONDICT = {
 	"roundRectWipe" : RoundRectWipeTransition,
 	"starWipe" : StarWipeTransition,
 	"clockWipe" : ClockWipeTransition,
-#	"pinWheelWipe" : PinWheelWipeTransition,
+	"pinWheelWipe" : PinWheelWipeTransition,
 	"singleSweepWipe" : SingleSweepWipeTransition,
-#	"fanWipe" : FanWipeTransition,
-#	"doubleFanWipe" : DoubleFanWipeTransition,
-#	"doubleSweepWipe" : DoubleSweepWipeTransition,
-#	"saloonDoorWipe" : SaloonDoorWipeTransition,
+	"fanWipe" : FanWipeTransition,
+	"doubleFanWipe" : DoubleFanWipeTransition,
+	"doubleSweepWipe" : DoubleSweepWipeTransition,
+	"saloonDoorWipe" : SaloonDoorWipeTransition,
 #	"windshieldWipe" : WindShieldWipeTransition,
 	"snakeWipe" : SnakeWipeTransition,
 	"spiralWipe" : SpiralWipeTransition,
