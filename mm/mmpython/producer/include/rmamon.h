@@ -27,6 +27,7 @@ typedef _INTERFACE	IRMAPropWatchResponse		IRMAPropWatchResponse;
 typedef _INTERFACE	IRMAActiveRegistry		IRMAActiveRegistry;
 typedef _INTERFACE	IRMAActivePropUser		IRMAActivePropUser;
 typedef _INTERFACE	IRMAActivePropUserResponse	IRMAActivePropUserResponse;
+typedef _INTERFACE	IRMAPNRegistryAltStringHandling	IRMAPNRegistryAltStringHandling;
 
 /*
  * Types of the values stored in the registry.
@@ -1050,5 +1051,55 @@ DECLARE_INTERFACE_(IRMACopyRegistry, IUnknown)
 			    const char* pFrom,
 			    const char* pTo) PURE;
 };
+
+
+/*
+ * 
+ *  Interface:
+ *
+ *	IRMAPNRegistryAltStringHandling
+ *
+ *  Purpose:
+ *
+ *	Tells the registry about alternate handling of PT_STRING types.
+ *
+ *
+ *  IID_IRMAPNRegistryAltStringHandling
+ *
+ *	{00000607-0901-11d1-8B06-00A024406D59}
+ *
+ */
+DEFINE_GUID(IID_IRMAPNRegistryAltStringHandling, 0x00000607, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 
+			0xa0, 0x24, 0x40, 0x6d, 0x59);
+
+#undef  INTERFACE
+#define INTERFACE   IRMAPNRegistryAltStringHandling
+
+DECLARE_INTERFACE_(IRMAPNRegistryAltStringHandling, IUnknown)
+{
+    /*
+     *	IUnknown methods
+     */
+    STDMETHOD(QueryInterface)	(THIS_
+				REFIID riid,
+				void** ppvObj) PURE;
+
+    STDMETHOD_(ULONG32,AddRef)	(THIS) PURE;
+
+    STDMETHOD_(ULONG32,Release)	(THIS) PURE;
+
+    /************************************************************************
+    * IRMAPNRegistryAltStringHandling::SetStringAccessAsBufferById
+    *
+    *   For those times when you added a property as a buffer, but wish it
+    *   were a string (and of course, people now rely on the fact that it's
+    *   a buffer)...  Create the property as a string and then pass this
+    *   method it's ID.  The property will now be accessible/setable as a,
+    *   but it will still be a string!
+    */
+    STDMETHOD (SetStringAccessAsBufferById)  (THIS_
+					      UINT32 ulId) PURE;
+};
+
 
 #endif /* _RMAMON_H_ */

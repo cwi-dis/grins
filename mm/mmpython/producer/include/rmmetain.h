@@ -58,6 +58,10 @@ typedef _INTERFACE IRMAValues	IRMAValues;
 // this value will not be present in files which are not archived broadcasts
 #define RM_PROPERTY_CLOCK_START_TIME "Clock Start Time" // UINT32 
 
+// Clip was encoded for download (may have gigantic preroll), UINT32 -- TRUE/FALSE
+#define RM_PROPERTY_DOWNLOAD_ONLY "Download Only"
+
+
 /****************************************************************************
  * 
  *  Interface:

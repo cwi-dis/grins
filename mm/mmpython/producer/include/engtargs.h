@@ -354,6 +354,10 @@ DECLARE_INTERFACE_(IRMATargetAudienceInfo, IUnknown)
      *	    IRMATargetAudienceInfo::GetVideoCodec/SetVideoCodec
      *	Purpose:
      *	    Get/Set video codec.
+     *	Notes:
+     *	    Unlike audio, only one video codec/flavor may be set for all 
+     *		non backward-compatible SureStream targets (calling this once for a single 
+     *		target audience will actually set the video codec for all target audiences).
      *	Parameters:
      *	    ccVideoCodec - [in/out] video codec
      */
