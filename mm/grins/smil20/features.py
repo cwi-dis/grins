@@ -12,5 +12,5 @@ cmif = 0
 lightweight = 0
 editor = 0
 # XXX do we require sys.platform?
-license_features_needed = ('player', sys.platform)
+license_features_needed = ('smil2player', sys.platform)
 expiry_date = (2001, 1, 15)
