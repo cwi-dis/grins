@@ -14,6 +14,9 @@
       	<region id="imageRegion" left="5" top="5" width="400" height="180" z-index="1" GRiNS:type="image" GRiNS:editBackground="(160 160 192)" GRiNS:showEditBackground="1" />
 	</viewport>
     </layout>
+    <transition id="fade" type="fade"/>
+    <transition id="slideover" type="slideWipe"/>
+    <transition id="push" type="pushWipe"/>
   </head>
   <body>
     <par id="Simple_Slideshow">
