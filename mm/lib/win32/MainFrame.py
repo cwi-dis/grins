@@ -1289,19 +1289,7 @@ class ChildFrame(window.MDIChildWnd):
 		msg=win32mu.Win32Msg(params)
 		hwndChildDeact = msg._wParam; # child being deactivated 
 		hwndChildAct = msg._lParam; # child being activated
-
-		try: childAct = win32ui.CreateWindowFromHandle(hwndChildAct)
-		except: childAct = None
-		
-		doactivate = (hwndChildAct == self.GetSafeHwnd())
-		if not doactivate:
-			# other view component such as dilaog bar
-			doactivate = (childAct and childAct.GetParent() == self)
-		if not doactivate:
-			# spliter
-			doactivate = (childAct and childAct.GetParent().GetParent() == self)
-
-		if doactivate:
+		if hwndChildAct == self.GetSafeHwnd():
 			self._view.activate()
 		else:
 			self._view.deactivate()
