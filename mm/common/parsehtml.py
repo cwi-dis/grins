@@ -68,7 +68,7 @@ class Parser(SGMLParser):
 				self.unknown_endtag(self.__stack[-1])
 		id = None
 		name = None
-		for i in range(len(attrs)):
+		for i in range(len(attrs)-1, -1, -1):
 			a, v = attrs[i]
 			if (a == 'id' or (tag == 'a' and a == 'name')) and \
 			   v in self.__idlist:
@@ -100,8 +100,7 @@ class Parser(SGMLParser):
 			self.__data.append('>')
 			self.__stack.append('a')
 		elif name:
-			self.__data.append('<a name="%s">'%name)
-			self.__stack.append('a')
+			self.__data.append('<a name="%s">&nbsp;</a>'%name)
 
 	def unknown_endtag(self, tag):
 		while self.__stack and self.__stack[-1] != tag:
