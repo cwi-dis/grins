@@ -54,6 +54,10 @@ PRODUCT_TO_FEATURE = {
 	"upgradefromsmil1editor": ["upgradefromsmil1editor"],
 	"upgradefromsmil2real": ["upgradefromsmil2real"],
 	"upgradefromany": ["upgradefromsmil2real", "upgradefromsmil1editor"]
+
+	"U1R": ["upgradefromsmil1editor", "smil2real"],
+	"U1E": ["upgradefromsmil1editor", "smil2pro"],
+	"URE": ["upgradefromsmil2real", "smil2pro"],
 	}
 
 PLATFORM_TO_PLATFORM = {
