@@ -378,7 +378,7 @@ class ResDialog(dialog.Dialog):
 		if not resdll:
 			import __main__
 			resdll=__main__.resdll
-		dialog.Dialog.__init__(self,id,resdll,parent)
+		dialog.Dialog.__init__(self,id,resdll)
 		self._subwndlist = [] # controls add thrmselves to this list
 
 	# Get from the OS and set the window handles to the controls
