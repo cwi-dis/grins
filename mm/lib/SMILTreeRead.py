@@ -1333,6 +1333,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						node.showtime = val
 				else:
 					self.syntax_error('bad %s attribute' % attr)
+			elif attr == 'timezoom':
+				try:
+					node.min_pxl_per_sec = string.atof(val)
+				except string.atof_error:
+					self.syntax_error('invalid timezoom attribute value')
 			elif attr == 'allowedmimetypes':
 				attrdict[attr] = map(string.strip, val.split(','))
 			elif attr == 'skip-content':

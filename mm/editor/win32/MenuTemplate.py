@@ -252,6 +252,9 @@ MENUBAR=(
 		(FLAG_PRO, TOGGLE, 'Show &Playable', None, PLAYABLE),
 		(FLAG_ALL, TOGGLE, 'Sho&w Time in Structure', None, CORRECTLOCALTIMESCALE),
 		(FLAG_ALL, TOGGLE, 'Show &Bandwidth Usage', None, TOGGLE_BWSTRIP),
+		(FLAG_ALL, ENTRY, 'Zoom in timeline', None, TIMELINEZOOMIN),
+		(FLAG_ALL, ENTRY, 'Zoom out timeline', None, TIMELINEZOOMOUT),
+		(FLAG_ALL, ENTRY, 'Reset timeline zoom', None, TIMELINEZOOMRESET),
 ##		(FLAG_ALL, CASCADE, 'Sho&w Time in Structure', (
 ##			(FLAG_ALL, TOGGLE, '&Whole Document, Adaptive', None, TIMESCALE),
 ##			(FLAG_ALL, TOGGLE, '&Selection Only, Adaptive', None, LOCALTIMESCALE),
@@ -289,9 +292,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Quick Start Guide', None, GRINS_QSG),
-		(FLAG_ALL, ENTRY, '&Tutorial', None, GRINS_TUTORIAL),#		(FLAG_ALL, ENTRY, 'Paste &before', None, PASTE_BEFORE),
-#		(FLAG_ALL, ENTRY, 'Paste &in
-
+		(FLAG_ALL, ENTRY, '&Tutorial', None, GRINS_TUTORIAL),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'C&heck for GRiNS update...', None, CHECKVERSION),
 		(FLAG_ALL, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
@@ -504,6 +505,9 @@ POPUP_HVIEW_STRUCTURE = (
 		(FLAG_ALL, ENTRY, 'E&xpand all', None, EXPANDALL),
 		(FLAG_ALL, ENTRY, 'C&ollapse all', None, COLLAPSEALL),
 		(FLAG_ALL, TOGGLE, 'S&how Time in Structure', None, CORRECTLOCALTIMESCALE),
+		(FLAG_ALL, ENTRY, 'Zoom in timeline', None, TIMELINEZOOMIN),
+		(FLAG_ALL, ENTRY, 'Zoom out timeline', None, TIMELINEZOOMOUT),
+		(FLAG_ALL, ENTRY, 'Reset timeline zoom', None, TIMELINEZOOMRESET),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Use as event &source', None, CREATE_EVENT_SOURCE),
 		(FLAG_ALL, ENTRY, 'Create &begin event', None, CREATE_BEGIN_EVENT),

@@ -791,6 +791,13 @@ def getshowtime(writer, node):
 	if node.showtime:
 		return node.showtime
 
+def gettimezoom(writer, node):
+	try:
+		scale = node.min_pxl_per_sec
+	except:
+		return
+	return fmtfloat(scale)
+
 def getinlinetrmode(writer, node):
 	mode = node.GetRawAttrDef('mode', 'in')
 	if mode == 'in':
@@ -922,6 +929,7 @@ smil_attrs=[
 	("dropIcon", lambda writer, node: geturl(writer, node, 'dropicon'), "dropicon"),
 	("collapsed", getcollapsed, None),
 	("showtime", getshowtime, None),
+	("timezoom", gettimezoom, None),
 	("allowedmimetypes", getallowedmimetypes, None),
 ]
 prio_attrs = [
@@ -936,6 +944,7 @@ prio_attrs = [
 	('pauseDisplay', lambda writer, node: getcmifattr(writer, node, 'pauseDisplay', 'inherit'), "pauseDisplay"),
 	("collapsed", getcollapsed, None),
 	("showtime", getshowtime, None),
+	("timezoom", gettimezoom, None),
 	]
 
 # attributes that we know about and so don't write into the SMIL file using

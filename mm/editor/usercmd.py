@@ -337,6 +337,12 @@ class CONVERTRP(_CommandBase):
 	help = 'Convert seq node to RealPix file'
 class FIND_EVENT_SOURCE(_CommandBase):
 	help = 'Find the source of this event'
+class TIMELINEZOOMIN(_CommandBase):
+	help = 'Zoom timeline in'
+class TIMELINEZOOMOUT(_CommandBase):
+	help = 'Zoom timeline out'
+class TIMELINEZOOMRESET(_CommandBase):
+	help = 'Reset timeline zoom factor'
 
 # Pseudo-commands for drag/drop
 class DRAG_NODE(_CommandBase): pass

@@ -79,6 +79,8 @@ HOREXTRASIZE = f_title.strsizePXL('XX')[0]
 ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
 ERRSIZE = windowinterface.ICONSIZE_PXL	# width of error/bandwidth indicator
 
+MIN_PXL_PER_SEC_DEFAULT = 0
+
 GAPSIZE = 4 #2						# size of gap between nodes
 HEDGSIZE = 4 #3						# size of edges
 VEDGSIZE = 4 #3						# size of edges
