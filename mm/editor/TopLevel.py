@@ -265,6 +265,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.links = LinkEditLight.LinkEditLight(self)
 
 		# Views that are destroyed by restore (currently all)
+		# Notice that these must follow a certain order.
 		self.views = [self.player, self.hierarchyview,
 			      self.channelview, self.links, self.layoutview,
 			      self.ugroupview, self.transitionview, self.layoutview2,
