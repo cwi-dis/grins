@@ -28,13 +28,13 @@ import compatibility
 
 # mjvdg: Enable or disable the slideshow view (make the heirachy flat!)
 try:
-	if features.slideshow_view:
-		slideshow_view = 1;
+	if features.grins_snap:
+		grins_snap = 1;
 	else:
-		slideshow_view = 0;
+		grins_snap = 0;
 except AttributeError:
-	# slideshow_view was not defined in features.py
-	slideshow_view = 0;
+	# grins_snap was not defined in features.py
+	grins_snap = 0;
 
 import settings
 hierarchy_minimum_sizes = settings.get('hierarchy_minimum_sizes')
@@ -136,7 +136,7 @@ class sizes_notime:
 	ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
 	ERRSIZE = windowinterface.ICONSIZE_PXL	# width of error/bandwidth indicator
 
-	if slideshow_view:		
+	if grins_snap:		
 		GAPSIZE = 16;
 		HEDGSIZE = 16;
 		VEDGSIZE = 12 #3						# size of edges		
@@ -546,7 +546,7 @@ class HierarchyView(HierarchyViewDialog):
 				return
 			self.setfocusobj(obj) # give the focus to the object which was dropped on.
 			
-		if slideshow_view:	# mjvdg 28-sept-2000
+		if grins_snap:	# mjvdg 28-sept-2000
 			# update: 2-October - Nodes should never be empty, so this bit is pointless.
 			# The dropped object will be put into the left-most free node.
 			# Now, obj is the object which had a file dropped on it.
@@ -930,7 +930,7 @@ class HierarchyView(HierarchyViewDialog):
 				# This code is actually unreachable - I suspect this function is
 				# only ever called when the node being added has no URL. -mjvdg
 # 				print "DEBUG: coming very close to untested code."
-# 				if slideshow_view and node.attrdict.has_key("file"): # mjvdg 28-sept-2000
+# 				if grins_snap and node.attrdict.has_key("file"): # mjvdg 28-sept-2000
 # 					# If this is the final node, insert a blank node after
 # 					# (copying this node to preserve all attr's)
 # 					print "DEBUG: Maybe add a node after the current?"
@@ -1164,7 +1164,7 @@ class HierarchyView(HierarchyViewDialog):
 				size = size + child.boxsize[2]
 		# size is minimum size required for children in mm
 # use this to make drop area also proportional to available size
-##		if ntype == 'seq' and slideshow_view:
+##		if ntype == 'seq' and grins_snap:
 ##			size = size + self.sizes.DROPAREA
 		if horizontal:
 			gapsize = self.horgap
@@ -1173,7 +1173,7 @@ class HierarchyView(HierarchyViewDialog):
 			gapsize = self.vergap
 			totsize = bottom - top
 # use this to have a fixed size drop area
-		if ntype == 'seq' and slideshow_view:
+		if ntype == 'seq' and grins_snap:
 			totsize = totsize - self.droparea;
 		# totsize is total available size for all children with inter-child gap
 		factor = (totsize - (len(children) - 1) * gapsize) / size
@@ -1194,7 +1194,7 @@ class HierarchyView(HierarchyViewDialog):
 			else:
 				top = b + gapsize
 				if r > maxr: maxr = r
-		if ntype == 'seq' and slideshow_view:
+		if ntype == 'seq' and grins_snap:
 			if horizontal:
 ##				left = left + self.sizes.DROPAREA * factor
 				left = left + self.droparea + gapsize
@@ -1245,9 +1245,19 @@ class HierarchyView(HierarchyViewDialog):
 			self.timescalebox = None
 			databox = (0, 0, 1, 1)
 		self.makeboxes(list, self.root, databox)
-		for item in list:
+		for item in list:	
 			obj = Object(self, item)
-			self.objects.append(obj)
+			self.objects.append(obj)						
+
+			# Attach nipples to media nodes only
+			if grins_snap and obj.node.GetType() in MMNode.leaftypes:
+				left_nipple = Nipple(self, item);
+				left_nipple.append_to_left();
+				self.objects.append(left_nipple);
+				right_nipple = Nipple(self, item);
+				right_nipple.append_to_right();
+				self.objects.append(right_nipple);
+
 			if item[0] is self.focusnode:
 				self.focusobj = obj
 			if item[0] is self.prevfocusnode:
@@ -1578,7 +1588,7 @@ class HierarchyView(HierarchyViewDialog):
 					width = w
 				height = height + h + self.sizes.GAPSIZE
 			width = width + b
-		if ntype == 'seq' and slideshow_view:
+		if ntype == 'seq' and grins_snap:
 			if horizontal:
 				width = width + self.sizes.DROPAREA
 			else:
@@ -1643,10 +1653,9 @@ class Object:
 	# This is a representation of an MMNode on the screen
 	# e.g. all the boxes in the structure view. TODO: elaborate.
 	
-	# Initialize an instance
 	def __init__(self, mother, item):
 		# mother is a HierachyView
-		# item is a tuple of (MMNode, int, box) where box is (float, float, float, float)
+		# item is a tuple of (MMNode, int, box) where box is (float, float, float, float)		
 		self.mother = mother	# : HierarchyView
 		node, self.boxtype, self.box = item
 		node.box = self.box	# Assigning the coords to the MMNode
@@ -1822,7 +1831,17 @@ class Object:
 				else:
 					d.fgcolor(TEXTCOLOR)
 					d.drawbox(box)
-
+			# Draw the transition handles. WORKING HERE mjvdg
+			# Actually, I was just mucking around. Delete this.
+			#gap = sizes_notime.GAPSIZE/pix_winwidth
+			#wsize = gap/2;
+			#hsize = (b-t)/3;
+			#th_top = t +  ( (b-t)/2 - hsize/2 ) # top of box.
+			#th1_left = l - gap/2		    			
+			#th2_left = r;
+			#d.drawbox((th1_left, th_top, wsize, hsize));
+			#d.drawbox((th2_left, th_top, wsize, hsize));
+			
 		# draw a little triangle to indicate expanded/collapsed state
 		title_left = l+hmargin
 		if (node.GetType() in MMNode.interiortypes and not \
@@ -1845,13 +1864,12 @@ class Object:
 			else:
 				node.abox = (0, 0, -1, -1)
 
-		if ntype == 'seq' and slideshow_view and not self.boxtype==LEAFBOX: # Draw a decoration at the end of the node.
-			pix_winwidth, pix_winheight = self.mother.canvassize;
-			border = float(sizes_notime.HEDGSIZE)/pix_winwidth;
-			base = float(sizes_notime.VEDGSIZE)/pix_winheight
+		if ntype == 'seq' and grins_snap and not self.boxtype==LEAFBOX: # Draw a decoration at the end of the node.
+			border = float(sizes_notime.HEDGSIZE)/rw;
+			base = float(sizes_notime.VEDGSIZE)/rh
 			
 			dec_right = r-border;
-			minsize = float(sizes_notime.DROPAREASIZE)/pix_winwidth;
+			minsize = float(sizes_notime.DROPAREASIZE)/rw;
 			dec_left = dec_right - self.mother.droparea;
 			dec_bottom = b-base;
 			dec_top = t+titleheight;
@@ -2117,6 +2135,66 @@ class Object:
 	def pasteundercall(self):
 		self.mother.paste(0)
 
+
+class Nipple(Object):
+	# The Nipples of an object are a graphical representation of the transitions
+	# between the MMNodes that the object refers to.
+
+	def __init__(self, mother, item):
+		self.mother = mother;
+		self.node, self.boxtype, self.box = item; # self.node is shared with another Object.
+		self.breast = self.mother.whichobj(self.node); # The object that I'm attached to.
+		self.iconbox = None;	# This is the relevant icon for this nipple.
+		self.top = None;
+		self.left = None;
+		self.width = None;
+		self.height = None;
+
+	def select(self):
+		Object.select(self.breast);
+
+	def deselect(self):
+		Object.deselect(self.breast);
+
+	def draw(self):
+		d = self.mother.new_displist;
+		d.drawbox((self.left, self.top, self.width, self.height));
+
+	def append_to_left(self):
+		# Calulates size and position for appending to left of an Object.
+		l, t, r, b = self.box;
+
+		canvas_width, canvas_height = self.mother.canvassize;
+		wgapsize = (sizes_notime.GAPSIZE)/canvas_width;
+		
+		self.left = l - wgapsize/2;
+		self.top = t + (b-t)/3;
+		self.width = wgapsize/2;
+		self.height = (b-t)/3;
+
+	def append_to_right(self):
+		# Calulates size and position for appending to right of an Object.
+		l, t, r, b = self.box;
+
+		canvas_width, canvas_height = self.mother.canvassize;
+		wgapsize = (sizes_notime.GAPSIZE)/canvas_width;
+
+		self.left = r;
+		self.top = t + (b-t)/3;
+		self.width = wgapsize/2;
+		self.height = (b-t)/3;
+		
+	def ishit(self, x, y):
+		if self.top < y <= self.top+self.height and self.left < x < self.left+self.width:
+			print "Hit!!";
+			return 1;
+		else:
+			return 0;
+
+	def cleanup(self):
+		return;			# no cleanup needs to be done on a Nipple.
+					# This is handled by the assoc-ed Object.
+				       		
 # specialized node for RealPix slides (transitions)
 class SlideMMNode(MMNode.MMNode):
 	def GetChannel(self):
