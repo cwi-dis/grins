@@ -27,7 +27,7 @@ class SocketChannel(Channel):
 			windowinterface.showmessage('Cannot open socket '+`port`+': '+\
 				  `arg`)
 			self.socket = None
-			return self
+			return
 		windowinterface.select_setcallback(self.socket,
 						   self.socket_ready, ())
 		self.anchorlist = None
@@ -42,7 +42,7 @@ class SocketChannel(Channel):
 		if attrdict.has_key('mcgroup'):
 			mcgroup = attrdict['mcgroup']
 			addgroup(self.socket, mcgroup, ttl)
-		return self
+		return
 
 	def destroy(self):
 		if self.socket:
