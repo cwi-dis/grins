@@ -36,7 +36,7 @@ resources = [
 ## '*XmDrawnButton.background: #999999',
 ## '*XmList.background: #999999',
 '*XmMenuShell*XmToggleButton.selectColor: #000000',
-'*XmMenuShell*background: #e0e0e0',
+'*XmMenuShell*background: #999999',
 '*help_label.foreground: #000000',
 '*help_label.background: #eedd82',
 '*XmMenuShell*help_label.background: #eedd82',
@@ -45,7 +45,7 @@ resources = [
 '*XmScale.XmScrollBar.foreground: #999999',
 '*XmText.background: #b98e8e',
 '*XmTextField.background: #b98e8e',
-'*background: #e0e0e0',
+'*background: #999999',
 	]
 
 def _roundi(x):
