@@ -514,6 +514,7 @@ class WndCtrl(LightWeightControl,window.Wnd):
 # Implementation of the splash screen
 class SplashDlg(ResDialog):
 	def __init__(self,arg,version):
+		import settings
 		ResDialog.__init__(self,grinsRC.IDD_SPLASH)
 		self._splash = WndCtrl(self,grinsRC.IDC_SPLASH)
 		self._versionc = Static(self,grinsRC.IDC_VERSION_MSG)
@@ -521,8 +522,10 @@ class SplashDlg(ResDialog):
 		self._version=version
 		if string.find(version, 'player') >= 0:
 			self._splashbmp = grinsRC.IDB_SPLASHPLAY
+		elif settings.get('lightweight'):
+			self._splashbmp = grinsRC.IDB_SPLASHLITE
 		else:
-			self._splashbmp = grinsRC.IDB_SPLASH
+			self._splashbmp = grinsRC.IDB_SPLASHPRO
 
 		self.CreateWindow()
 		self.CenterWindow()
@@ -566,14 +569,17 @@ class SplashDlg(ResDialog):
 # Implementation of the about dialog
 class AboutDlg(ResDialog):
 	def __init__(self,arg,version,parent=None):
+		import settings
 		ResDialog.__init__(self,grinsRC.IDD_ABOUT,parent)
 		self._splash = WndCtrl(self,grinsRC.IDC_SPLASH)
 		self._versionc = Static(self,grinsRC.IDC_VERSION_MSG)
 		self._version=version
 		if string.find(version, 'player') >= 0:
 			self._splashbmp = grinsRC.IDB_SPLASHPLAY
+		elif settings.get('lightweight'):
+			self._splashbmp = grinsRC.IDB_SPLASHLITE
 		else:
-			self._splashbmp = grinsRC.IDB_SPLASH
+			self._splashbmp = grinsRC.IDB_SPLASHPRO
 	def OnInitDialog(self):	
 		self.attach_handles_to_subwindows()	
 		self._splash.create_wnd_from_handle()
