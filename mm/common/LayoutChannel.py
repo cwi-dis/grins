@@ -96,6 +96,8 @@ class LayoutChannel(ChannelWindow):
 		else:
 			# no basewindow, create a top-level window
 			adornments = self._player.get_adornments(self)
+			if self._player._exporter:
+				adornments['exporting'] = 1
 			units = self._attrdict.get('units',
 						   windowinterface.UNIT_MM)
 			width, height = self._attrdict.get('winsize', (50, 50))
