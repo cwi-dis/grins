@@ -25,7 +25,7 @@ __version__ = "$Id$"
 import windowinterface
 
 class AttrEditorDialog:
-	def __init__(self, title, attriblist):
+	def __init__(self, title, attriblist, toplevel=None):
 		"""Create the AttrEditor dialog.
 
 		Create the dialog window (non-modal, so does not grab

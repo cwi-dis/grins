@@ -654,6 +654,7 @@ class PreferenceWrapper(Wrapper):
 
 	def __init__(self, callback):
 		self.__callback = callback
+		self.toplevel = None
 
 	def close(self):
 		global prefseditor
@@ -861,7 +862,7 @@ class AttrEditor(AttrEditorDialog):
 			b = C(self, name, labeltext or name)
 			list.append(b)
 		self.attrlist = list
-		AttrEditorDialog.__init__(self, wrapper.maketitle(), list)
+		AttrEditorDialog.__init__(self, wrapper.maketitle(), list, wrapper.toplevel)
 
 	def resetall(self):
 		for b in self.attrlist:
