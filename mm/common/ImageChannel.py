@@ -132,9 +132,7 @@ class ImageChannel(ChannelWindow):
 		del self._anchor_context
 		del self._anchor
 
-	# Hack to convert pixel offsets into relative offsets and to make
-	# the coordinates relative to the upper-left corner instead of
-	# lower-left.  This only works for RGB images.
+	# Convert pixel offsets into relative offsets.
 	# If the offsets are in the range [0..1], we don't need to do
 	# the conversion since the offsets are already fractions of
 	# the image.
@@ -151,8 +149,8 @@ class ImageChannel(ChannelWindow):
 			return args
 		xsize, ysize = self.window._image_size(file)
 		x0, y0, x1, y1 = args[0], args[1], args[2], args[3]
-		y0 = ysize - y0
-		y1 = ysize - y1
+## 		y0 = ysize - y0
+## 		y1 = ysize - y1
 		if x0 > x1:
 			x0, x1 = x1, x0
 		if y0 > y1:
