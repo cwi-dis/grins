@@ -18,20 +18,20 @@
 
     <par id="HERENGRACHT">
       <text type="text/plain" id="Credits" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam"/>
-        <img id="stroll" region="image4" src="stroll.gif"/>
+        <img id="stroll" region="image4" src="stroll.jpg"/>
 
 <switch>
         <seq id="HERENGRACHT_stroll-high" system-bitrate="28800">
-        <img id="map" region="image1" src="1map.gif" dur="5s"/>
-          <img id="herengracht_168-image" region="image2" src="1h168.gif" dur="5s"/>
-          <img id="herengracht_218-image" region="image3" src="1h218.gif" dur="5s"/>
-          <img id="herengracht_284-image" region="image2" src="1h284.gif" dur="5s"/>
+        <img id="map" region="image1" src="1map.jpg" dur="5s"/>
+          <img id="herengracht_168-image" region="image2" src="1h168.jpg" dur="5s"/>
+          <img id="herengracht_218-image" region="image3" src="1h218.jpg" dur="5s"/>
+          <img id="herengracht_284-image" region="image2" src="1h284.jpg" dur="5s"/>
       </seq>
       <seq id="HERENGRACHT_stroll-low">
-        <img id="map-l" region="image1" src="map.gif" dur="5s"/>
-          <img id="herengracht_168-image-l" region="image2" src="h168.gif" dur="5s"/>
-          <img id="herengracht_218-image-l" region="image5" src="h218.gif" dur="5s"/>
-          <img id="herengracht_284-image-l" region="image2" src="h284.gif" dur="5s"/>
+        <img id="map-l" region="image1" src="map.jpg" dur="5s"/>
+          <img id="herengracht_168-image-l" region="image2" src="h168bw.jpg" dur="5s"/>
+          <img id="herengracht_218-image-l" region="image5" src="h218bw.jpg" dur="5s"/>
+          <img id="herengracht_284-image-l" region="image2" src="h284bw.jpg" dur="5s"/>
       </seq>
 </switch>
     </par>

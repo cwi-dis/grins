@@ -17,17 +17,17 @@
 
 <switch>
         <seq id="HERENGRACHT_stroll-high" system-bitrate="28800">
-          <img id="map" region="image1" src="1map.gif" dur="3s"/>
-          <img id="herengracht_168" region="image2" src="1h168.gif" dur="3s"/>
-          <img id="herengracht_218" region="image3" src="1h218.gif" dur="3s"/>
-          <img id="herengracht_284" region="image2" src="1h284.gif" dur="3s"/>
+          <img id="map" region="image1" src="1map.jpg" dur="3s"/>
+          <img id="herengracht_168" region="image2" src="1h168.jpg" dur="3s"/>
+          <img id="herengracht_218" region="image3" src="1h218.jpg" dur="3s"/>
+          <img id="herengracht_284" region="image2" src="1h284.jpg" dur="3s"/>
           <text type="text/plain" id="Credits" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam" dur="indefinite"/>
         </seq>
         <seq id="HERENGRACHT_stroll-low">
-          <img id="map-l" region="image1" src="map.gif" dur="3s"/>
-          <img id="herengracht_168-l" region="image2" src="h168.gif" dur="3s"/>
-          <img id="herengracht_218-l" region="image4" src="h218.gif" dur="3s"/>
-          <img id="herengracht_284-l" region="image2" src="h284.gif" dur="3s"/>
+          <img id="map-l" region="image1" src="map.jpg" dur="3s"/>
+          <img id="herengracht_168-l" region="image2" src="h168bw.jpg" dur="3s"/>
+          <img id="herengracht_218-l" region="image4" src="h218bw.jpg" dur="3s"/>
+          <img id="herengracht_284-l" region="image2" src="h284bw.jpg" dur="3s"/>
           <text type="text/plain" id="Credits-l" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam" dur="indefinite"/>
         </seq>
 </switch>

@@ -19,15 +19,15 @@
   <body>
     <par id="HERENGRACHT">
       <text id="Credits" type="text/plain" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam"/>
-      <img region="image4" id="stroll" src="stroll.gif"/>
+      <img region="image4" id="stroll" src="stroll.jpg"/>
       <seq id="HERENGRACHT_map">
        <switch>
-        <img system-bitrate="28800" id="map-high" region="image1" src="1map1.gif" dur="10s">
+        <img system-bitrate="28800" id="map-high" region="image1" src="1map1.jpg" dur="10s">
           <anchor id="map-168" coords="16%,46%,21%,52%" href="#herengracht_168"/>
           <anchor id="map-218" coords="15%,53%,21%,58%" href="#herengracht_218"/>
           <anchor id="map-284" coords="14%,60%,19%,66%" href="#herengracht_284"/>
         </img>
-        <img id="map-low" region="image1" src="map1.gif" dur="10s">
+        <img id="map-low" region="image1" src="map1.jpg" dur="10s">
           <anchor id="map-168-l" coords="16%,46%,21%,52%" href="#herengracht_168"/>
           <anchor id="map-218-l" coords="15%,53%,21%,58%" href="#herengracht_218"/>
           <anchor id="map-284-l" coords="14%,60%,19%,66%" href="#herengracht_284"/>
@@ -36,14 +36,14 @@
         <seq id="HERENGRACHT_stroll">
      <switch id="herengracht_168">
           <par system-bitrate="28800" id="herengracht_168-high">
-            <img region="image2" id="herengracht_168-image" src="1h168.gif"/>
+            <img region="image2" id="herengracht_168-image" src="1h168.jpg"/>
             <text id="herengracht_168-adress" type="text/plain" region="adress" src="data:,HERENGRACHT%20168" dur="5.521s"/>
             <text id="herengracht_168-year" type="text/plain" region="year" src="data:,ANNO%201638" dur="5.521s"/>
             <audio region="sound" id="herengracht_168-sound" src="168.au"/>
             <text begin="id(herengracht_168-sound)(2.800s)" id="herengracht_168-style" type="text/plain" region="style" src="data:,AN%20EXAMPLE%20OF%20DUTCH%20CLASSICISM" dur="2.816s"/>
           </par>
           <par id="herengracht_168-low">
-            <img region="image2" id="herengracht_168-image-l" src="h168.gif"/>
+            <img region="image2" id="herengracht_168-image-l" src="h168bw.jpg"/>
             <text id="herengracht_168-adress-l" type="text/plain" region="adress" src="data:,HERENGRACHT%20168" dur="5.521s"/>
             <text id="herengracht_168-year-l" type="text/plain" region="year" src="data:,ANNO%201638" dur="5.521s"/>
             <audio region="sound" id="herengracht_168-sound-l" src="168.au"/>
@@ -52,14 +52,14 @@
      </switch>
      <switch id="herengracht_218">
           <par system-bitrate="28800" id="herengracht_218-high">
-            <img region="image3" id="herengracht_218-image" src="1h218.gif"/>
+            <img region="image3" id="herengracht_218-image" src="1h218.jpg"/>
             <text id="herengracht_218-adress" type="text/plain" region="adress" src="data:,HERENGRACHT%20218" dur="8.613s"/>
             <text id="herengracht_218-year" type="text/plain" region="year" src="data:,ANNO%201616" dur="8.613s"/>
             <audio region="sound" id="herengracht_218-sound" src="218.au"/>
             <text begin="id(herengracht_218-sound)(3.500s)" id="herengracht_218-style" type="text/plain" region="style1" src="data:,THE%20BAROQUE%20AND%20THE%20SOBER%20AMSTERDAM%20RENAISSANCE" dur="5.113s"/>
           </par>
           <par id="herengracht_218-low">
-            <img region="image5" id="herengracht_218-image-l" src="h218.gif"/>
+            <img region="image5" id="herengracht_218-image-l" src="h218bw.jpg"/>
             <text id="herengracht_218-adress-l" type="text/plain" region="adress" src="data:,HERENGRACHT%20218" dur="8.613s"/>
             <text id="herengracht_218-year-l" type="text/plain" region="year" src="data:,ANNO%201616" dur="8.613s"/>
             <audio region="sound" id="herengracht_218-sound-l" src="218.au"/>
@@ -68,7 +68,7 @@
       </switch>
       <switch id="herengracht_284">
           <par system-bitrate="28800" id="herengracht_284-high">
-            <img region="image2" id="herengracht_284-image" src="1h284.gif"/>
+            <img region="image2" id="herengracht_284-image" src="1h284.jpg"/>
             <text id="herengracht_284-adress" type="text/plain" region="adress" src="data:,HERENGRACHT%20284" dur="5.604s"/>
             <text id="herengracht_284-year" type="text/plain" region="year" src="data:,ANNO%201728" dur="5.604s"/>
             <audio region="sound" id="herengracht_284-sound" src="284.au"/>
@@ -76,7 +76,7 @@
         </par>
   
           <par id="herengracht_284-low">
-            <img region="image2" id="herengracht_284-image-l" src="h284.gif"/>
+            <img region="image2" id="herengracht_284-image-l" src="h284bw.jpg"/>
             <text id="herengracht_284-adress-l" type="text/plain" region="adress" src="data:,HERENGRACHT%20284" dur="5.604s"/>
             <text id="herengracht_284-year-l" type="text/plain" region="year" src="data:,ANNO%201728" dur="5.604s"/>
             <audio region="sound" id="herengracht_284-sound-l" src="284.au"/>
@@ -84,12 +84,12 @@
       </par>
      </switch>
        <switch>
-        <img system-bitrate="28800" id="map-high-1" region="image1" src="1map1.gif" dur="10s">
+        <img system-bitrate="28800" id="map-high-1" region="image1" src="1map1.jpg" dur="10s">
           <anchor id="map-168-1" coords="16%,46%,21%,52%" href="#herengracht_168"/>
           <anchor id="map-218-1" coords="15%,53%,21%,58%" href="#herengracht_218"/>
           <anchor id="map-284-1" coords="14%,60%,19%,66%" href="#herengracht_284"/>
         </img>
-        <img id="map-low-1" region="image1" src="map1.gif" dur="10s">
+        <img id="map-low-1" region="image1" src="map1.jpg" dur="10s">
           <anchor id="map-168-l-1" coords="16%,46%,21%,52%" href="#herengracht_168"/>
           <anchor id="map-218-l-1" coords="15%,53%,21%,58%" href="#herengracht_218"/>
           <anchor id="map-284-l-1" coords="14%,60%,19%,66%" href="#herengracht_284"/>

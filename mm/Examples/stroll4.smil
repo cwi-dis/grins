@@ -17,26 +17,26 @@
   <body>
     <par id="HERENGRACHT">
       <text type="text/plain" id="Credits" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam"/>
-        <img id="stroll" region="image4" src="stroll.gif"/>
+        <img id="stroll" region="image4" src="stroll.jpg"/>
 
 
 
         <seq id="HERENGRACHT_stroll">
 
-        <img id="map" region="image1" src="map.gif" dur="5s"/>
+        <img id="map" region="image1" src="map.jpg" dur="5s"/>
 
          <par id="herengracht_168">      
-          <img id="herengracht_168-image" region="image2" src="h168.gif"/>
+          <img id="herengracht_168-image" region="image2" src="h168bw.jpg"/>
           <audio id="herengracht_168-sound" region="sound" src="168.au"/>
          </par>
 
          <par id="herengracht_218">
-          <img id="herengracht_218-image" region="image3" src="h218.gif"/>
+          <img id="herengracht_218-image" region="image3" src="h218bw.jpg"/>
           <audio id="herengracht_218-sound" region="sound" src="218.au"/>
          </par>
 
          <par id="herengracht_284">
-          <img id="herengracht_284-image" region="image2" src="h284.gif"/>
+          <img id="herengracht_284-image" region="image2" src="h284bw.jpg"/>
           <audio id="herengracht_284-sound" region="sound" src="284.au"/>
          </par>
 
