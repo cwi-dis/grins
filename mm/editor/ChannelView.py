@@ -525,6 +525,13 @@ class ChannelView(ViewDialog):
 				hits.append(obj)
 		if hits:
 			obj = hits[-1]	# Last object (the one drawn on top)
+			if self.lockednode:
+			    if obj.is_node_object:
+				obj.finishlink()
+				return
+			    else:
+				windowinterface.beep()
+				self.lockednode.unlock()
 			obj.select()
 			self.drawarcs()
 		self.render()
@@ -710,6 +717,7 @@ class GO:
 		self.name = name
 		self.selected = 0
 		self.ok = 0
+		self.is_node_object = 0
 
 		# Submenus listing related mini-documents
 
@@ -1070,21 +1078,20 @@ class NodeBox(GO):
 		name = MMAttrdefs.getattr(node, 'name')
 		self.locked = 0
 		GO.__init__(self, mother, name)
+		self.is_node_object = 1
 		c = self.commandlist
 		c.append(None)
 		c.append('p', 'Play node...', (self.playcall, ()))
 		c.append('G', 'Play from here...', (self.playfromcall, ()))
+		c.append('f', 'Push focus', (self.focuscall, ()))
+		c.append(None)
+		c.append('s', 'Finish sync arc...', (self.newsyncarccall, ()))
+		c.append('L', 'Finish hyperlink...', (self.hyperlinkcall, ()))
 		c.append(None)
 		c.append('i', 'Node info...', (self.infocall, ()))
 		c.append('a', 'Node attr...', (self.attrcall, ()))
 		c.append('e', 'Edit contents...', (self.editcall, ()))
 		c.append('t', 'Edit anchors...', (self.anchorcall, ()))
-		c.append('L', 'Finish hyperlink...', (self.hyperlinkcall, ()))
-		c.append(None)
-		c.append('f', 'Push focus', (self.focuscall, ()))
-		c.append('l', 'Lock node', (self.lockcall, ()))
-		c.append('u', 'Unlock node', (self.unlockcall, ()))
-		c.append('s', 'New sync arc...', (self.newsyncarccall, ()))
 		self.menutitle = 'Node ' + self.name + ' ops'
 
 
@@ -1114,13 +1121,32 @@ class NodeBox(GO):
 				self.mother.lockednode.unlock()
 			self.locked = 1
 			self.mother.lockednode = self
+			self.mother.window.setcursor('link')
 			self.drawfocus()
 
 	def unlock(self):
 		if self.locked:
+		        self.mother.window.setcursor('')
 			self.locked = 0
 			self.mother.lockednode = None
 			self.drawfocus()
+
+	def finishlink(self):
+		if not self.mother.lockednode:
+			windowinterface.beep()
+			return
+		editmgr = self.mother.editmgr
+		if not editmgr.transaction():
+			return # Not possible at this time
+		root = self.mother.root
+		snode, sside, delay, dnode, dsize = \
+			self.mother.lockednode.node, 1, 0.0, self.node, 0
+		editmgr.addsyncarc(snode, sside, delay, dnode, dsize)
+		self.mother.cleanup()
+		editmgr.commit()
+		# NB: when we get here, this object is nearly dead already!
+		import ArcInfo
+		ArcInfo.showarcinfo(root, snode, sside, delay, dnode, dsize)
 
 	def select(self):
 		self.unlock()
@@ -1238,35 +1264,10 @@ class NodeBox(GO):
 		import AnchorEdit
 		AnchorEdit.showanchoreditor(self.mother.toplevel, self.node)
 
-	def lockcall(self):
+	def newsyncarccall(self):
 		self.mother.init_display()
 		self.lock()
 		self.mother.render()
-
-	def unlockcall(self):
-		if self.mother.lockednode:
-			self.mother.init_display()
-			self.mother.lockednode.unlock()
-			self.mother.render()
-		else:
-			windowinterface.beep()
-
-	def newsyncarccall(self):
-		if not self.mother.lockednode:
-			windowinterface.beep()
-			return
-		editmgr = self.mother.editmgr
-		if not editmgr.transaction():
-			return # Not possible at this time
-		root = self.mother.root
-		snode, sside, delay, dnode, dsize = \
-			self.mother.lockednode.node, 1, 0.0, self.node, 0
-		editmgr.addsyncarc(snode, sside, delay, dnode, dsize)
-		self.mother.cleanup()
-		editmgr.commit()
-		# NB: when we get here, this object is nearly dead already!
-		import ArcInfo
-		ArcInfo.showarcinfo(root, snode, sside, delay, dnode, dsize)
 
 	def focuscall(self):
 		self.mother.toplevel.hierarchyview.globalsetfocus(self.node)

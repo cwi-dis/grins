@@ -23,6 +23,7 @@ _dpi_x = 0
 _dpi_y = 0
 _watchcursor = 0
 _channelcursor = 0
+_linkcursor = 0
 
 _image_cache = {}			# cache of prepared images
 _cache_full = 0				# 1 if we shouldn't cache more images
@@ -66,6 +67,7 @@ class _Toplevel:
 		global _dpi_y
 		global _watchcursor
 		global _channelcursor
+		global _linkcursor
 		if debug: print '_TopLevel.__init__() --> '+`self`
 		self._win_lock = _DummyLock()
 		self._toplevel = self
@@ -99,6 +101,7 @@ class _Toplevel:
 		self._cursor = ''
 		_watchcursor = dpy.CreateFontCursor(Xcursorfont.watch)
 		_channelcursor = dpy.CreateFontCursor(Xcursorfont.draped_box)
+		_linkcursor = dpy.CreateFontCursor(Xcursorfont.hand1)
 		self._main.RealizeWidget()
 
 	def _colormask(self, mask):
@@ -585,6 +588,8 @@ class _Window:
 					self._form.DefineCursor(_watchcursor)
 				elif cursor == 'channel':
 					self._form.DefineCursor(_channelcursor)
+				elif cursor == 'link':
+				        self._form.DefineCursor(_linkcursor)
 				elif cursor == '':
 					self._form.UndefineCursor()
 				else:
