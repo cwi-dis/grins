@@ -9,6 +9,8 @@
 #include "extra_types.h"
 #endif
 
+namespace windowinterface {
+
 class messagebox
 	{
 	public:
@@ -26,5 +28,7 @@ inline messagebox showmessage(const TCHAR *text, const char *mtype = "message",
 	{
 	return messagebox(text, mtype, ok, cancel);
 	}
+
+} // namespace windowinterface
 
 #endif // 	 INC_WINDOWINTERFACE
