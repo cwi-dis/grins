@@ -1737,7 +1737,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.error('multiple body tags', self.lineno)
 		self.__seen_body = 1
 		self.__in_body = 1
-		self.start_seq(attributes)
+		self.AddAttrs(self.__root, attributes)
 
 	def end_body(self):
 		self.end_seq()
