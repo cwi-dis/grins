@@ -119,3 +119,21 @@ class SoundChannel(Channel.ChannelAsync):
 		windowinterface.showmessage('%s\n'
 						    '%s node %s on Channel.ChannelAsync %s' % (inmsg, chtype, name, self._name), mtype = 'warning')
 
+	def play(self, node):
+		self.play_0(node)
+		if not self._is_shown or not node.ShouldPlay() \
+		   or self.syncplay:
+			self.play_1()
+			return
+		if self._is_shown:
+			self.do_play(node)
+		if node.__type == 'real':
+			self.need_armdone = 1
+		else:
+			self.armdone()
+
+	def playdone(self, dummy):
+		if self.need_armdone:
+			self.armdone()
+			self.need_armdone = 0
+		Channel.ChannelAsync.playdone(self, dummy)
