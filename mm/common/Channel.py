@@ -1005,7 +1005,9 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 	def stopplay(self, node):
 		if self.window:
 			self.window.setredrawfunc(None)
-		ChannelWindow.stopplay(self, node)
+##		ChannelWindow.stopplay(self, node)
+		Channel.stopplay(self, node)   # These 2 lines repl prev.
+		self.played_display = None
 		_ChannelThread.stopplay(self, node)
 
 	def setpaused(self, paused):
@@ -1025,10 +1027,10 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 			# assume that we are going to get a
 			# resize event
 			pass
-		else:
-			self.armed_display.render()
-		if self.played_display:
-			self.played.display.close()
+#		else:
+#			self.armed_display.render()
+#		if self.played_display:
+#			self.played.display.close()
 		self.played_display = self.armed_display
 		self.armed_display = None
 		thread_play_called = 0
