@@ -187,8 +187,15 @@ class URLopener:
 		fp = self.open(url)
 		headers = fp.info()
 		if not filename:
-		    import tempfile
-		    filename = tempfile.mktemp()
+		    import tempfile, urlparse
+		    path, params, query = urlparse.urlparse(fp.url)[2:5]
+		    suffix = ''
+		    if not params and not query:
+			    i = string.rfind(path, '/')
+			    if i < 0: i = 0
+			    i = string.find(path, '.', i+1)
+			    if i > 0: suffix = path[i:]
+		    filename = tempfile.mktemp(suffix)
 		    self.__tempfiles.append(filename)
 		result = filename, headers
 		if self.tempcache is not None:
