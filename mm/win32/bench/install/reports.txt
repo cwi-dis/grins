@@ -66,11 +66,26 @@ without addons to run GRiNS properly (play sounds and video).
 
 -------------------------------------------------------------------
 2. Win98 GRiNS installation
+step 1: Typical clean installation of Windows 98
+step 2: Install GRiNS
+step 3: Test GRiNS: 
+
+Notes: 
+	i)  The typical installation of Windows 98 installed IE4 
+	ii) The typical installation installed ActiveMovie control (Media Player) 
+	iii) This is the only test that has used an existing but clean installation of Win 98
+		The other tests started from zero to check GRiNS. 
+
+Result: COMPLETE SUCCESS. 
+	GRiNS seems to work correctly with a clean win 98.
+	The test included all the views/forms/dialogs and smil docs containing 
+	all basic media (text,html,image,video)
 
 
 
 -------------------------------------------------------------------
 3. Win95 GRiNS installation
+(Until we test this platform we can assume the same as NT4)
 
 
 
