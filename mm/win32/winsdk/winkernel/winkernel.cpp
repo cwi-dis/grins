@@ -42,6 +42,19 @@ static PyObject* Sleep(PyObject *self, PyObject *args)
 	return Py_None;
 }
 
+static PyObject* SetThreadPriority(PyObject *self, PyObject *args)
+{
+	int nPriority;
+	if (!PyArg_ParseTuple(args, "i", &nPriority))
+		return NULL;
+	if(!SetThreadPriority(GetCurrentThread(), nPriority)){
+		seterror("SetThreadPriority", GetLastError());
+		return NULL;
+		}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 static PyObject* GetTickCount(PyObject *self, PyObject *args)
 {
 	if(!PyArg_ParseTuple(args, ""))
@@ -124,6 +137,7 @@ static PyObject* Winkernel_LoadMenu(PyObject *self, PyObject *args)
 static struct PyMethodDef winkernel_methods[] = {
 	{"GetVersionEx", (PyCFunction)GetVersionEx, METH_VARARGS, ""},
 	{"Sleep", (PyCFunction)Sleep, METH_VARARGS, ""},
+	{"SetThreadPriority", (PyCFunction)SetThreadPriority, METH_VARARGS, ""},
 	{"GetTickCount", (PyCFunction)GetTickCount, METH_VARARGS, ""},
 	{"LoadLibrary", (PyCFunction)LoadLibrary, METH_VARARGS, ""},
 	{"FindResource", (PyCFunction)FindResource, METH_VARARGS, ""},
