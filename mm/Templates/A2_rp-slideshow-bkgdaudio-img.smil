@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<smil xmlns:GRiNS="http://www.oratrix.com/">
+  <head>
+    <meta name="title" content="Simple RealPix Slideshow with background audio"/>
+    <meta name="generator" content="GRiNS editor 1.0.1alpha win32 patchlevel 16"/>
+    <meta name="template_name" content="RealPix Slideshow"/>
+    <meta name="template_description" content="Realpix slideshow with two soundtracks and a background image"/>
+    <meta name="template_snapshot" content="rp_2x_audio.bmp"/>
+    <layout>
+      <root-layout id="Player-Window" width="415" height="245"/>
+      <region id="audioRegion_1" GRiNS:type="sound"/>
+      <region id="audioRegion_2" GRiNS:type="sound"/>
+      <region id="bkgd_imageRegion" width="415" height="245" GRiNS:type="image"/>
+      <region id="realpixRegion" left="5" top="5" width="400" height="180" z-index="1" GRiNS:type="RealPix"/>
+    </layout>
+  </head>
+  <body>
+    <par>
+      <img id="RealPix-Slideshow" region="realpixRegion" src="media/realpix-template.rp" dur="10s"/>
+	  <seq>
+        <audio id="Background-Audio" region="audioRegion_1" src="background-sound.aiff"/>
+	  </seq>
+	  <seq>
+        <audio id="Additional-Audio" region="audioRegion_2" src="background-sound.aiff"/>
+	  </seq>
+	  <seq>
+        <img id="Background-Image" region="bkgd_imageRegion" src="media/bkgd-image.jpg"/>
+	  </seq>
+    </par>
+  </body>
+</smil>
