@@ -161,7 +161,6 @@ class SchedulerContext:
 		for ev in prearmnowlist:
 			parent.add_runqueue(self, PRIO_PREARM_NOW, ev)
 		prearmlaterlist.sort()
-		pll = []
 		for time, ev in prearmlaterlist:
 			parent.add_lopriqueue(self, time, ev)
 	#
@@ -177,6 +176,18 @@ class SchedulerContext:
 	# XXXX
 	#
 	def prepare_minidoc(self, seeknode, end_action):
+		if end_action is None:
+			try:
+				sractions = seeknode.save_sractions[:]
+				srevents = {}
+				for key, val in seeknode.save_srevents.items():
+					srevents[key] = val
+			except AttributeError:
+				pass
+			else:
+				self.sractions = sractions
+				self.srevents = srevents
+				return
 		srlist = GenAllSR(self.playroot, seeknode)
 		#
 		# If this is not the root document and if the 'pause minidoc'
@@ -204,6 +215,11 @@ class SchedulerContext:
 				srevents[ev] = actionpos
 		self.sractions = sractions
 		self.srevents = srevents
+		if end_action is None:
+			seeknode.save_sractions = sractions[:]
+			seeknode.save_srevents = {}
+			for key, val in srevents.items():
+				seeknode.save_srevents[key] = val
 
 	#
 	# Start minidoc starts playing what we've prepared
@@ -215,7 +231,7 @@ class SchedulerContext:
 		self.startcontextchannels()
 		if s_node and s_aid:
 			self.seekanchor(s_node, s_aid, s_args)
-		self.parent.event((self, (SR.SCHED, self.playroot)))
+		self.parent.event(self, (SR.SCHED, self.playroot))
 		self.parent.updatetimer()
 		return 1
 	#
@@ -303,7 +319,7 @@ class Scheduler(scheduler):
 	# Playing algorithm.
 	#
 	def play(self, node, seek_node, anchor_id, anchor_arg, end_action):
-		if node.GetType == 'bag':
+		if node.GetType() == 'bag':
 			raise 'Cannot play bag node'
 		self.toplevel.setwaiting()
 		# XXXX This statement should move to an intermedeate level.
@@ -417,6 +433,7 @@ class Scheduler(scheduler):
 		for q in self.runqueues:
 			if q:
 				work = 1
+				break
 		if not self.playing:
 			delay = 0
 			if debugtimer: print 'updatetimer: not playing' #DBG
@@ -474,13 +491,13 @@ class Scheduler(scheduler):
 	#
 	# Incoming events from channels, or the start event.
 	#
-	def event(self, *ev):
-		# Hack: we can be called with either sctx, (action,node) or
-		# ((sctx, (action,node),) arg, due to the way apply works.
-		# sigh...
-		if len(ev) == 1:
-			ev = ev[0]
-		sctx, ev = ev
+	def event(self, sctx, ev):
+##		# Hack: we can be called with either sctx, (action,node) or
+##		# ((sctx, (action,node),) arg, due to the way apply works.
+##		# sigh...
+##		if len(ev) == 1:
+##			ev = ev[0]
+##		sctx, ev = ev
 
 		if sctx.active:
 			if ev[0] == SR.PLAY_DONE:
@@ -647,9 +664,10 @@ class Scheduler(scheduler):
 	# GenAllPrearms fills the prearmlists dictionary with all arms needed.
 	#
 	def GenAllPrearms(self, node, prearmlists):
-		if node.GetType() == 'bag':
+		nodetype = node.GetType()
+		if nodetype == 'bag':
 			return
-		if node.GetType() in leaftypes:
+		if nodetype in leaftypes:
 			chan = self.ui.getchannelbynode(node)
 			prearmlists[chan].append((SR.PLAY_ARM, node))
 			return
