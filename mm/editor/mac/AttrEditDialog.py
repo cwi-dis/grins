@@ -622,6 +622,24 @@ class TimingTabPage(MultiStringTabPage):
 	_items_on_page = _attr_to_item.values()
 	helpstring = 'Item duration, start-delay (both in seconds) and number of times to repeat.'
 
+class BandwidthTabPage(MultiStringTabPage):
+	TAB_LABEL='Bandwidth'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_BANDWIDTH
+	ITEM_GROUP=1
+	ITEM_PREROLL=3
+	ITEM_BITRATE=5
+	ITEM_MAXFPS=7
+	N_ITEMS=7
+	_attr_to_item = {
+		'preroll': ITEM_PREROLL,
+		'bitrate': ITEM_BITRATE,
+		'maxfps': ITEM_MAXFPS,
+	}
+	attrs_on_page = ['preroll', 'bitrate', 'maxfps']
+	_items_on_page = _attr_to_item.values()
+	helpstring = 'These fields control bandwidth (and CPU) usage of this RealPix slideshow.'
+
 class UploadTabPage(MultiStringTabPage):
 	TAB_LABEL='Upload'
 	
@@ -1647,6 +1665,7 @@ MULTI_ATTR_CLASSES = [
 	Conversion2TabPage,
 	Conversion3TabPage,
 	ImageConversionTabPage,
+	BandwidthTabPage,
 	SourceAreaTabPage,
 	DestinationAreaTabPage,
 	Destination1AreaTabPage,
