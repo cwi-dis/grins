@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from Channel import *
 #
 # This rather boring channel is used for laying-out other channels
