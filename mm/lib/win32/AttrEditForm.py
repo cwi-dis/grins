@@ -721,6 +721,68 @@ class OptionsRadioCtrl(AttrCtrl):
 	def OnRadio(self,id,code):
 		self.sethelp()
 
+class OptionsCheckCtrl(AttrCtrl):
+	def __init__(self,wnd,attr,resid):
+		AttrCtrl.__init__(self,wnd,attr,resid)
+		self._attrname=components.Control(wnd,resid[0])
+		n = len(self._attr.getoptions())
+		self._check=[]
+		for ix in range(n):
+			self._check.append(components.CheckButton(wnd,resid[ix+1]))
+
+	def OnInitCtrl(self):
+		self._initctrl=self
+		self._attrname.attach_to_parent()
+		self._attrname.settext(self._attr.getlabel())
+		list = self._attr.getoptions()
+		n = len(list)
+		for ix in range(n):
+			self._check[ix].attach_to_parent()
+			self._check[ix].hookcommand(self._wnd,self.OnCheck)
+		self._wnd.HookCommand(self.OnReset,self._resid[n+1])
+		val = self._attr.getcurrent()
+		self.setoptions(list,val)
+	
+	def setoptions(self,list,val):
+		vals = string.split(val, ',')
+		if self._initctrl:
+			for i in range(len(list)):
+				self._check[i].settext(list[i])
+				self._check[i].setcheck(0)
+			for val in vals:
+				try:
+					ix=list.index(val)
+				except ValueError:
+					pass
+				else:
+					self._check[ix].setcheck(1)
+		
+	def setvalue(self, val):
+		if not self._initctrl:
+			return
+		list = self._attr.getoptions()
+		if val not in list:
+			val = list[0]
+		ix=list.index(val)
+		self._check[ix].setcheck(not self._check[ix].getcheck())
+
+	def getvalue(self):
+		if self._initctrl:
+			list = self._attr.getoptions()
+			values = []
+			for ix in range(len(list)):
+				if self._check[ix].getcheck():
+					values.append(list[ix])
+			return string.join(values, ',')
+		return self._attr.getcurrent()
+
+	def OnReset(self,id,code):
+		if self._attr:
+			self._attr.reset_callback()
+
+	def OnCheck(self,id,code):
+		self.sethelp()
+
 ##################################
 class FileCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -1091,11 +1153,11 @@ class SingleAttrPage(AttrPage):
 			(grinsRC.IDD_EDITATTR_R4,
 			 OptionsRadioCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6)),
-		'project_targets':	# Six radio buttons
-			(grinsRC.IDD_EDITATTR_R6,
-			 OptionsRadioCtrl,
-			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,
-			  grinsRC.IDC_6,grinsRC.IDC_7,grinsRC.IDC_8)),
+		'project_targets':	# Six check buttons
+			(grinsRC.IDD_EDITATTR_C6,
+			 OptionsCheckCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_CHECK1,grinsRC.IDC_CHECK2,grinsRC.IDC_CHECK3,grinsRC.IDC_CHECK4,grinsRC.IDC_CHECK5,
+			  grinsRC.IDC_CHECK6,grinsRC.IDC_8)),
 		}
 	CTRLMAP_BYTYPE = {
 		'option':		# An option selected from a list (as a popup menu)

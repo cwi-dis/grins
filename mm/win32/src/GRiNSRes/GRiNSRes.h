@@ -66,6 +66,7 @@
 #define IDD_PROGRESS                    262
 #define IDD_INIT_DIALOG                 263
 #define IDD_EDITATTR_R6                 265
+#define IDD_EDITATTR_C6                 265
 #define IDI_ICON_OPEN                   266
 #define IDI_ICON_CLOSED                 267
 #define IDI_ICON_BANDWIDTHBAD           268
@@ -245,6 +246,8 @@
 #define IDC_INIT_NOTHING                1190
 #define IDC_INIT_NEVER_AGAIN            1191
 #define IDC_8                           1192
+#define IDC_CHECK5                      1193
+#define IDC_CHECK6                      1194
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -302,7 +305,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        271
 #define _APS_NEXT_COMMAND_VALUE         32838
-#define _APS_NEXT_CONTROL_VALUE         1193
+#define _APS_NEXT_CONTROL_VALUE         1196
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
