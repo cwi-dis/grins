@@ -34,6 +34,8 @@ import grinsRC
 import win32mu
 import usercmd, usercmdui, wndusercmd
 
+import ddraw
+
 # constants to select web browser control
 [IE_CONTROL, WEBSTER_CONTROL]=0, 1
 
@@ -582,14 +584,31 @@ class _CmifPlayerView(_CmifView):
 		self.update()
 
 	def	__initDD(self):
-		import ddraw
 		self._ddraw = ddraw.CreateDirectDraw()
 		self._ddraw.SetCooperativeLevel(self.GetSafeHwnd(), ddraw.DDSCL_NORMAL)
-		self._frontBuffer = self._ddraw.CreateSurface()
+
+		# create front buffer (shared with GDI)
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_PRIMARYSURFACE)
+		self._frontBuffer = self._ddraw.CreateSurface(ddsd)
+
+		# size of back buffer
+		# for now we create it at the size of the screen
+		# to avoid resize manipulations
 		from __main__ import toplevel
 		w = toplevel._scr_width_pxl
 		h = toplevel._scr_height_pxl
-		self._backBuffer = self._ddraw.CreateSurface(w,h)
+
+		# create back buffer 
+		# we draw everything on this surface and 
+		# then blit it to the front surface
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
+		ddsd.SetSize(w,h)
+		self._backBuffer = self._ddraw.CreateSurface(ddsd)
+
 		self._clipper = self._ddraw.CreateClipper(self.GetSafeHwnd())
 		self._frontBuffer.SetClipper(self._clipper)
 		self._pxlfmt = self._frontBuffer.GetPixelFormat()
@@ -602,7 +621,11 @@ class _CmifPlayerView(_CmifView):
 		
 	def CreateSurface(self, w, h):
 		if not self._ddraw: return None
-		dds = self._ddraw.CreateSurface(w, h)
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
+		ddsd.SetSize(w,h)
+		dds = self._ddraw.CreateSurface(ddsd)
 		if self._convbgcolor == None:
 			r, g, b = self._bgcolor
 			self._convbgcolor = dds.GetColorMatch((r, g, b))

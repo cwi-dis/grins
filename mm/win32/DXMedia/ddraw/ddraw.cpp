@@ -168,8 +168,8 @@ newDDSURFACEDESCObject()
 	self = PyObject_NEW(DDSURFACEDESCObject, &DDSURFACEDESCType);
 	if (self == NULL)
 		return NULL;
-	memset(&self->sd, 0, sizeof(self->sd));
-	self->sd.dwSize = sizeof(self->sd);
+	memset(&self->sd, 0, sizeof(DDSURFACEDESC));
+	self->sd.dwSize = sizeof(DDSURFACEDESC);
 	/* XXXX Add your own initializers here */
 	return self;
 }
@@ -262,34 +262,19 @@ DirectDraw_RestoreDisplayMode(DirectDrawObject *self, PyObject *args)
 	return Py_None;
 }
 
+
 static char DirectDraw_CreateSurface__doc__[] =
 ""
 ;
 static PyObject *
 DirectDraw_CreateSurface(DirectDrawObject *self, PyObject *args)
 {
-	int cx=0,cy=0;
-	if (!PyArg_ParseTuple(args, "|ii",&cx,&cy))
-		return NULL;	
-	HRESULT hr;
-	// avoid transfering this struct for now
-	DDSURFACEDESC ddsd; 
-	memset(&ddsd, 0, sizeof(ddsd));
-	ddsd.dwSize = sizeof(ddsd);
-	if(cx>0 && cy>0)
-		{
-		ddsd.dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS;
-		ddsd.dwWidth = cx;
-		ddsd.dwHeight = cy;
-		ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
-		}
-	else
-		{
-		ddsd.dwFlags = DDSD_CAPS;
-		ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
-		}	
+	DDSURFACEDESCObject *ddsdObj;
+	if (!PyArg_ParseTuple(args, "O!",&DDSURFACEDESCType,&ddsdObj))
+		return NULL;
+	
 	DirectDrawSurfaceObject *obj = newDirectDrawSurfaceObject();	
-	hr = self->pI->CreateSurface(&ddsd, &obj->pI, NULL);
+	HRESULT hr = self->pI->CreateSurface(&ddsdObj->sd, &obj->pI, NULL);
 	if (FAILED(hr)){
 		Py_DECREF(obj);
 		seterror("DirectDraw_CreateSurface", hr);
@@ -297,6 +282,7 @@ DirectDraw_CreateSurface(DirectDrawObject *self, PyObject *args)
 	}
 	return (PyObject*) obj;
 }
+
 
 static char DirectDraw_CreateClipper__doc__[] =
 ""
