@@ -1760,7 +1760,7 @@ class MMNode:
 					pass
 				arc.qid = None
 			arc.timestamp = None
-		self.sched_children = []
+##		self.sched_children = []
 		self.looping_body_self = None
 		self.realpix_body = None
 		self.caption_body = None
@@ -3324,7 +3324,6 @@ class MMNode:
 				return
 			body = self
 		for node, arc in body.arcs:
-			#print 'deleting', `arc`
 			node.sched_children.remove(arc)
 		body.arcs = []
 		for arc in body.durarcs:
