@@ -182,11 +182,11 @@ class _DisplayList:
 				convbgcolor = dds.GetColorMatch((r,g,b))
 				dds.BltFill((x, y, x+w, y+h), convbgcolor)
 			elif cmd == 'image':
-				mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]
+				mask, image, flags, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]
 				xdc, ydc, wdc, hdc = w.rectAnd((x+dest_x, y+dest_y, width, height), (xc, yc, wc, hc))
 				xsc, ysc, wsc, hsc = xdc-(x+dest_x), ydc-(y+dest_y), wdc, hdc
 				try:	
- 					dds.Blt((xdc,ydc,xdc+wdc,ydc+hdc), image, (xsc, ysc, xsc+wsc, ysc+hsc), ddraw.DDBLT_WAIT)
+ 					dds.Blt((xdc,ydc,xdc+wdc,ydc+hdc), image, (xsc, ysc, xsc+wsc, ysc+hsc), flags)
  				except:
  					pass
  
@@ -224,14 +224,14 @@ class _DisplayList:
 		elif cmd == 'fg':
 			self._curfg = entry[1]
 		elif cmd == 'image':
-			mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]
-			if not self._overlap(region, (dest_x, dest_y, width, height)):
+			mask, image, flags, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]
+			if region and not self._overlap(region, (dest_x, dest_y, width, height)):
 				return
 			if self._directdraw:
 				imghdc = image.GetDC()
 				if imghdc:
 					imgdc = win32ui.CreateDCFromHandle(imghdc)
-					dc.BitBlt((dest_x, dest_y),(width, height),imgdc,(0, 0), win32con.SRCCOPY)
+					dc.BitBlt((dest_x, dest_y),(width, height),imgdc,(0, 0), ddraw.DDBLT_WAIT)
 					imgdc.Detach()
 					image.ReleaseDC(imghdc)				
 			else:
@@ -456,10 +456,11 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
 		       self._window._prepare_image(file, crop, scale, center, coordinates, clip, units)
-
+		
+		flags = ddraw.DDBLT_WAIT
 		if self._directdraw:
-			image = self.createDDSImage(image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep)
-		self._list.append(('image', mask, image, src_x, src_y,
+			image, flags = self.createDDSImage(image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep)
+		self._list.append(('image', mask, image, flags, src_x, src_y,
 				   dest_x, dest_y, width, height,rcKeep))
 		self._optimize((2,))
 		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
@@ -498,6 +499,10 @@ class _DisplayList:
 		if not self._directdraw: return image
 		tw = self._window._topwindow
 		dds = tw.CreateSurface(width, height)
+		trans_rgb = win32ig.gettransp(image)
+		if trans_rgb:
+			convbgcolor = dds.GetColorMatch(trans_rgb)
+			dds.BltFill((0, 0, width, height), convbgcolor)
 		try:
 			imghdc = dds.GetDC()
 		except:
@@ -505,7 +510,11 @@ class _DisplayList:
 		win32ig.render(imghdc, self._bgcolor,
 				mask, image, src_x, src_y, 0, 0, width, height, rcKeep, aspect="none" )
 		dds.ReleaseDC(imghdc)
-		return dds
+		flags = ddraw.DDBLT_WAIT
+		if trans_rgb:
+			flags = ddraw.DDBLT_WAIT | ddraw.DDBLT_KEYSRC
+			dds.SetColorKey(ddraw.DDCKEY_SRCBLT, (convbgcolor, convbgcolor))
+		return dds, flags
 						
 	def isSimple(self):
 		count = 0
@@ -1126,3 +1135,4 @@ class _Button:
 	# End of animation experimental methods
 	##########################################
 
+ 
