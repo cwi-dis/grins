@@ -153,7 +153,7 @@ def hasstyleattreditor(context, name):
 # it should probably be merged with the class attr editor, using
 # a common base class implementing most functions.)
 
-class Wrapper(): # Base class -- common operations
+class Wrapper: # Base class -- common operations
 	def getcontext(self):
 		return self.context
 	def register(self, object):
@@ -174,7 +174,7 @@ class Wrapper(): # Base class -- common operations
 	def parsevalue(self, (name, string)):
 		return MMAttrdefs.parsevalue(name, string, self.context)
 
-class NodeWrapper() = Wrapper():
+class NodeWrapper(Wrapper):
 	#
 	def init(self, node):
 		self.node = node
@@ -220,12 +220,12 @@ class NodeWrapper() = Wrapper():
 			namelist = namelist + cclass.node_attrs
 			for name in cclass.chan_attrs:
 				if name in namelist: continue
-				if MMAttrdefs.getdef(name)[5] = 'channel':
+				if MMAttrdefs.getdef(name)[5] == 'channel':
 					namelist.append(name)
 			for name in cclass.node_attrs:
 				if name in namelist: continue
 				namelist.append(name)
-		except:
+		except: # XXX be more specific!
 			pass # Ignore errors in the above
 		# Merge in nonstandard attributes (except synctolist!)
 		extras = []
@@ -237,7 +237,7 @@ class NodeWrapper() = Wrapper():
 	#
 
 
-class ChannelWrapper() = Wrapper():
+class ChannelWrapper(Wrapper):
 	#
 	def init(self, (context, name)):
 		self.context = context
@@ -248,20 +248,20 @@ class ChannelWrapper() = Wrapper():
 	#
 	def stillvalid(self):
 		return self.context.channeldict.has_key(self.name) and \
-			self.context.channeldict[self.name] = self.attrdict
+			self.context.channeldict[self.name] == self.attrdict
 	#
 	def maketitle(self):
 		return 'Attributes for channel: ' + self.name
 	#
 	def getattr(self, name):
-		if name = '.cname': return self.name
+		if name == '.cname': return self.name
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		else:
 			return MMAttrdefs.getdef(name)[1]
 	#
 	def getvalue(self, name): # Return the raw attribute or None
-		if name = '.cname': return self.name
+		if name == '.cname': return self.name
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		else:
@@ -271,7 +271,7 @@ class ChannelWrapper() = Wrapper():
 		return MMAttrdefs.getdef(name)[1]
 	#
 	def setattr(self, (name, value)):
-		if name = '.cname':
+		if name == '.cname':
 			self.editmgr.setchannelname(self.name, value)
 			self.change_channel_name(self.editmgr.root, \
 						self.name, value)
@@ -281,7 +281,7 @@ class ChannelWrapper() = Wrapper():
 			self.editmgr.setchannelattr(self.name, name, value)
 	#
 	def delattr(self, name):
-		if name = '.cname':
+		if name == '.cname':
 			self.editmgr.setchannelname(self.name, 'none')
 		else:
 			self.editmgr.setchannelattr(self.name, name, None)
@@ -298,9 +298,9 @@ class ChannelWrapper() = Wrapper():
 			namelist = namelist + cclass.chan_attrs
 			for name in cclass.node_attrs:
 				if name in namelist: continue
-				if MMAttrdefs.getdef(name)[5] = 'channel':
+				if MMAttrdefs.getdef(name)[5] == 'channel':
 					namelist.append(name)
-		except:
+		except: # XXX be more specific!
 			pass # Ignore errors in the above
 		# Merge in nonstandard attributes
 		extras = []
@@ -313,7 +313,7 @@ class ChannelWrapper() = Wrapper():
 	# Override three methods from Wrapper to fake channel name attribute
 	#
 	def getdef(self, name):
-		if name = '.cname':
+		if name == '.cname':
 			# Channelname -- special case
 			return (('name', None), 'none', \
 				'Channel name', 'default', \
@@ -321,26 +321,26 @@ class ChannelWrapper() = Wrapper():
 		return MMAttrdefs.getdef(name)
 	#
 	def valuerepr(self, (name, value)):
-		if name = '.cname': name = 'name'
+		if name == '.cname': name = 'name'
 		return MMAttrdefs.valuerepr(name, value)
 	#
 	def parsevalue(self, (name, string)):
-		if name = '.cname': name = 'name'
+		if name == '.cname': name = 'name'
 		return MMAttrdefs.parsevalue(name, string, self.context)
 	#
 	def change_channel_name(self, (node, oldname, newname)):
 		try:
 			cname = node.GetRawAttr('channel')
-		except:
+		except NoSuchAttrError:
 			cname = None
-		if cname = oldname:
+		if cname == oldname:
 			self.editmgr.setnodeattr(node, 'channel', newname)
 		if node.GetType() in interiortypes:
 			for c in node.GetChildren():
 				self.change_channel_name(c, oldname, newname)
 
 
-class StyleWrapper() = Wrapper():
+class StyleWrapper(Wrapper):
 	#
 	def init(self, (context, name)):
 		self.context = context
@@ -351,7 +351,7 @@ class StyleWrapper() = Wrapper():
 	#
 	def stillvalid(self):
 		return self.context.styledict.has_key(self.name) and \
-			self.context.styledict[self.name] = self.attrdict
+			self.context.styledict[self.name] == self.attrdict
 	#
 	def maketitle(self):
 		return 'Attributes for style: ' + self.name
@@ -390,7 +390,7 @@ class StyleWrapper() = Wrapper():
 			for name in cclass.node_attrs + cclass.chan_attrs:
 				if MMAttrdefs.getdef(name)[5] <> 'raw':
 					namelist.append(name)
-		except:
+		except: # XXX be more specific!
 			pass # Ignore errors in the above
 		# Merge in nonstandard attributes
 		extras = []
@@ -404,7 +404,7 @@ class StyleWrapper() = Wrapper():
 
 # Attribute editor class.
 
-class AttrEditor() = Dialog():
+class AttrEditor(Dialog):
 	#
 	def init(self, wrapper):
 		#
@@ -562,7 +562,7 @@ class AttrEditor() = Dialog():
 # and input fields without quotes for strings.
 # XXX The class has the wrong type of interface to do that!
 
-class ButtonRow():
+class ButtonRow:
 	#
 	def init(b, (attreditor, name)):
 		b.attreditor = attreditor
@@ -574,7 +574,7 @@ class ButtonRow():
 	def makelabeltext(b, (x, y, w, h)):
 		attrdef = b.wrapper.getdef(b.name)
 		labeltext = attrdef[2]
-		if labeltext = '': labeltext = b.name
+		if labeltext == '': labeltext = b.name
 		b.label = b.form.add_text(NORMAL_TEXT, x, y, w-1, h, labeltext)
 	#
 	def makehelpbutton(b, (x, y, w, h)):
@@ -594,7 +594,7 @@ class ButtonRow():
 		value = b.wrapper.getvalue(b.name)
 		default = b.wrapper.getdefault(b.name)
 		b.defaultvalue = default
-		if value = None:
+		if value == None:
 			b.currentvalue = default
 			b.isdefault = 1
 		else:
@@ -627,14 +627,14 @@ class ButtonRow():
 	#
 	def valuecallback(b, dummy):
 		newtext = b.value.get_input()[:INPUT_MAX-1]
-		if newtext = b.currenttext[:INPUT_MAX-1]:
+		if newtext == b.currenttext[:INPUT_MAX-1]:
 			return # No change
 		try:
 			value = b.parsevalue(newtext)
 		except (EOFError, MMExc.SyntaxError, MMExc.TypeError), msg:
 			if type(msg) <> type(''):
 				found, expected = msg
-				if expected = ')':
+				if expected == ')':
 					expected = ') or EOF'
 				msg = 'found ' + `found` + \
 					', expected ' + expected
@@ -726,7 +726,7 @@ def test():
 	print 'go ...'
 	while 1:
 		obj = fl.do_forms()
-		if obj = quitbutton:
+		if obj == quitbutton:
 			hideattreditor(root)
 			break
 		print 'This object should have a callback!', `obj.label`
