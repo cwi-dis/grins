@@ -1215,6 +1215,7 @@ static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"GetColorMatch", (PyCFunction)DirectDrawSurface_GetColorMatch, METH_VARARGS, DirectDrawSurface_GetColorMatch__doc__},
 	{"GetPixelFormat", (PyCFunction)DirectDrawSurface_GetPixelFormat, METH_VARARGS, DirectDrawSurface_GetPixelFormat__doc__},
 	{"BltBlend", (PyCFunction)DirectDrawSurface_BltBlend, METH_VARARGS, DirectDrawSurface_BltBlend__doc__},
+	{"BltFill", (PyCFunction)DirectDrawSurface_BltFill, METH_VARARGS, DirectDrawSurface_BltFill__doc__},
 	{"IsLost", (PyCFunction)DirectDrawSurface_IsLost, METH_VARARGS, DirectDrawSurface_IsLost__doc__},
 	{"Restore", (PyCFunction)DirectDrawSurface_Restore, METH_VARARGS, DirectDrawSurface_Restore__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
