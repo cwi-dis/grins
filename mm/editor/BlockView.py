@@ -2,6 +2,7 @@ import fl
 from FL import *
 import MMAttrdefs
 import glwindow
+from Dialog import BasicDialog
 
 # the block view class.
 # *** Hacked by --Guido ***
@@ -36,28 +37,31 @@ XMARG = 10 # margin width
 YMARG = 5 # two time the  margin width
 B=5	# the size of the roundbutton
 
-class BlockView () :
+class BlockView () = BasicDialog () :
 	#
 	# init() method compatible with the other views.
 	#
 	def init(self, root):
+		self.root = root
 		width, height = \
 			MMAttrdefs.getattr(root, 'blockview_winsize')
-		self.width, self.height = width, height
-		self = self.new(width, height, root)
-		return self
+		self = BasicDialog.init(self, (width, height, 'Hierarchy'))
+		return self.new(width, height, root)
+	#
+	# Extend basic show/hide methods.
 	#
 	def show(self):
+		width, height = \
+			MMAttrdefs.getattr(self.root, 'blockview_winsize')
 		h, v = MMAttrdefs.getattr(self.root, 'blockview_winpos')
-		glwindow.setgeometry(h, v, self.width, self.height)
-		self.form.show_form(PLACE_SIZE, TRUE, 'Hierarchy')
+		self.last_geometry = h, v, width, height
+		BasicDialog.show(self)
 	#
 	def hide(self):
-		self.form.hide_form()
-	#
-	def destroy(self):
-		self.hide()
-		# XXX Ougt to garbage-collect everything now...
+		BasicDialog.hide(self)
+		h, v, width, height = self.last_geometry
+		self.root.SetAttr('blockview_winpos', (h, v))
+		self.root.SetAttr('blockview_winsize', (width, height))
 	#
 	# new makes an object of type 'blockview'
 	#
@@ -72,7 +76,6 @@ class BlockView () :
 	#
 	def new (self, (w, h, root)) :
 		self._init(w, h)
-		self.form = fl.make_form (NO_BOX, w, h)
 		area = self.form.add_box (UP_BOX, 0, 0, w, h, '')
 
 		commands=self.form.add_default(ALWAYS_DEFAULT,0,0,w,h,'')
@@ -81,7 +84,6 @@ class BlockView () :
 		focus = self.form.add_button(HIDDEN_BUTTON, 0, 0, w, h, '')
 		focus.set_call_back(self._change_focus_callback, 0)
 		
-		self.root = root
 		self.rootview = root
 		self._initcommanddict()
 		self.mkBlockview((0, 0, w,h), root)

@@ -9,6 +9,7 @@ from sched import scheduler
 import glwindow
 from MMExc import *
 import MMAttrdefs
+from Dialog import BasicDialog
 import Timing
 
 
@@ -35,14 +36,8 @@ from ChannelMap import channelmap
 #
 # It implements a queue using "virtual time" using an invisible timer
 # object in its form.
-#
-# An exception may be made for modal dialogs ("goodies" of the FORMS library)
-# but these should be used *very* sparingly.  In principle every user
-# interface component should be reactive at all times.  For example,
-# asking for a file name should not be done with a modal dialog -- a
-# modeless file selector (which may remain open between uses) is better.
 
-class Player() = scheduler():
+class Player() = BasicDialog(), scheduler():
 	#
 	# Initialization.
 	#
@@ -52,8 +47,8 @@ class Player() = scheduler():
 		self.root = root
 		self.root.GetContext().geteditmgr().register(self)
 		self.setcurrenttime_callback = None
-		self.showing = self.playing = self.locked = 0
-		return self
+		self.playing = self.locked = 0
+		return BasicDialog.init(self, (0, 0, 'Player'))
 	#
 	# EditMgr interface (as dependent client).
 	#
@@ -73,29 +68,37 @@ class Player() = scheduler():
 		# Nothing has changed after all.
 		self.locked = 0
 	#
-	# Toplevel interface.
+	# Extend BasicDialog show/hide/destroy methods.
 	#
 	def show(self):
 		if self.showing: return
 		self.abcontrol = ()
 		self.makechannels()
-		self.makecpanel()
 		self.reset()
+		h, v = MMAttrdefs.getattr(self.root, 'player_winpos')
+		width, height = MMAttrdefs.getattr(self.root, 'player_winsize')
+		self.last_geometry = h, v, width, height
+		BasicDialog.show(self)
 		self.showchannels()
-		self.showcpanel()
-		self.showing = 1
 		self.showstate()
 	#
 	def hide(self):
 		if not self.showing: return
 		self.stop()
 		self.reset()
+		self.save_geometry()
+		BasicDialog.hide(self)
 		self.destroychannels()
-		self.destroycpanel()
-		self.showing = 0
 	#
-	def destroy(self):
-		self.hide()
+	def save_geometry(self):
+		if self.showing:
+			gl.winset(self.form.window)
+			self.last_geometry = glwindow.getgeometry()
+		if self.last_geometry:
+			h, v, width, height = self.last_geometry
+			# XXX need transaction here!
+			self.root.SetAttr('player_winpos', (h, v))
+			self.root.SetAttr('player_winsize', (width, height))
 	#
 	def set_setcurrenttime_callback(self, setcurrenttime):
 		self.setcurrenttime_callback = setcurrenttime
@@ -168,9 +171,9 @@ class Player() = scheduler():
 	#
 	# User interface.
 	#
-	def makecpanel(self):
+	def make_form(self):
 		#
-		cpanel = fl.make_form(FLAT_BOX, CPWIDTH, CPHEIGHT)
+		self.form = form = fl.make_form(FLAT_BOX, CPWIDTH, CPHEIGHT)
 		#
 		# The play, pause and stop buttons are inactive buttons
 		# (used for display) covered by invisible buttons
@@ -180,65 +183,43 @@ class Player() = scheduler():
 		#
 		x, y, w, h = 0, 50, 98, 48
 		self.playbutton = \
-			cpanel.add_button(INOUT_BUTTON, x,y,w,h, 'Play')
+			form.add_button(INOUT_BUTTON, x,y,w,h, 'Play')
 		self.playbutton.set_call_back(self.play_callback, None)
 		#
 		x, y, w, h = 100, 50, 48, 48
 		self.pausebutton = \
-			cpanel.add_button(INOUT_BUTTON,x,y,w,h, 'Pause')
+			form.add_button(INOUT_BUTTON,x,y,w,h, 'Pause')
 		self.pausebutton.set_call_back(self.pause_callback, None)
 		#
 		x, y, w, h = 150, 50, 48, 48
 		self.stopbutton = \
-			cpanel.add_button(INOUT_BUTTON,x,y,w,h, 'Stop')
+			form.add_button(INOUT_BUTTON,x,y,w,h, 'Stop')
 		self.stopbutton.set_call_back(self.stop_callback, None)
 		#
 		x, y, w, h = 200, 50, 48, 48
 		self.fastbutton = \
-			cpanel.add_button(INOUT_BUTTON,x,y,w,h, 'Faster')
+			form.add_button(INOUT_BUTTON,x,y,w,h, 'Faster')
 		self.fastbutton.set_call_back(self.fast_callback, None)
 		#
 		x, y, w, h = 200, 0, 98, 48
 		self.abbutton = \
-			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, 'A-B')
+			form.add_button(NORMAL_BUTTON,x,y,w,h, 'A-B')
 		self.abbutton.set_call_back(self.ab_callback, None)
 		#
 		x, y, w, h = 0, 0, 198, 48
 		self.statebutton = \
-			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, 'T = 0')
+			form.add_button(NORMAL_BUTTON,x,y,w,h, 'T = 0')
 		self.statebutton.boxtype = FLAT_BOX
 		self.statebutton.set_call_back(self.state_callback, None)
 		#
 		x, y, w, h = 250, 50, 48, 48
 		self.speedbutton = \
-			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, '0')
+			form.add_button(NORMAL_BUTTON,x,y,w,h, '0')
 		self.speedbutton.boxtype = FLAT_BOX
 		self.speedbutton.set_call_back(self.speed_callback, None)
 		#
-		self.timerobject = cpanel.add_timer(HIDDEN_TIMER,0,0,0,0, '')
+		self.timerobject = form.add_timer(HIDDEN_TIMER,0,0,0,0, '')
 		self.timerobject.set_call_back(self.timer_callback, None)
-		#
-		self.cpanel = cpanel
-	#
-	def showcpanel(self):
-		#
-		# Use the winpos attribute of the root to place the panel
-		#
-		h, v = MMAttrdefs.getattr(self.root, 'player_winpos')
-		width, height = 300, 100
-		glwindow.setgeometry(h, v, width, height)
-		#
-		self.cpanel.show_form(PLACE_SIZE, TRUE, 'Presentation Control')
-	#
-	def hidecpanel(self):
-		gl.winset(self.cpanel.window)
-		h, v, width, height = glwindow.getgeometry()
-		# XXX need transaction here!
-		self.root.SetAttr('player_winpos', (h, v))
-		self.cpanel.hide_form()
-	#
-	def destroycpanel(self):
-		self.hidecpanel()
 	#
 	# FORMS callbacks.
 	#
