@@ -161,6 +161,10 @@ SOURCE=.\M_AnchorDefs.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_AnchorList.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_appcon.c
 # End Source File
 # Begin Source File
@@ -297,6 +301,10 @@ SOURCE=.\M_commctrl.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_compatibility.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_components.c
 # End Source File
 # Begin Source File
@@ -333,6 +341,10 @@ SOURCE=.\M_exec_cmif.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_features.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_FileCache.c
 # End Source File
 # Begin Source File
@@ -346,14 +358,6 @@ SOURCE=.\M_fnmatch.c
 # Begin Source File
 
 SOURCE=.\M_Font.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_FormServer.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_fsm.c
 # End Source File
 # Begin Source File
 
@@ -461,10 +465,6 @@ SOURCE=.\M_imgxbm.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_InputValidator.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_keyword.c
 # End Source File
 # Begin Source File
@@ -538,6 +538,10 @@ SOURCE=.\M_MMCache.c
 # Begin Source File
 
 SOURCE=.\M_MMExc.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_MMmimetypes.c
 # End Source File
 # Begin Source File
 
@@ -997,19 +1001,19 @@ SOURCE=.\M_ViewDialog.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ViewServer.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_wc.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_whrandom.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\M_win32con.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_win32dialog.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_win32dxm.c
 # End Source File
 # Begin Source File
 

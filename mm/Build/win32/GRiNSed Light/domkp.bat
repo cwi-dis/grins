@@ -179,6 +179,9 @@ rem producer stuff
 echo -x producer >> FreezeOpts
 echo -x dshow >> FreezeOpts
 
+rem python16 stuff
+echo -x _socket >> FreezeOpts
+
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
 
