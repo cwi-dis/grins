@@ -1182,6 +1182,22 @@ class HierarchyView(HierarchyViewDialog):
 
 		if url is not None:
 			node.SetAttr('file', url)
+			# figure out a reasonable default name for the new node
+			# the name is the basename of the URL
+			# figure out file name part
+			path = urlparse.urlparse(url)[2]
+			if path:
+				import posixpath
+				# get last bit (after last slash)
+				base = posixpath.split(path)[1]
+				if base:
+					# remove extensions
+					base = posixpath.splitext(base)[0]
+					if base:
+						# convert %-escapes
+						base = MMurl.unquote(base)
+						# and assign
+						node.SetAttr('name', base)
 		if dftchannel:
 			node.SetAttr('channel', dftchannel)
 		if layout == 'undefined' and \
@@ -1195,7 +1211,7 @@ class HierarchyView(HierarchyViewDialog):
 ##				self.editmgr.addsyncarc(node, 'beginlist', arc)
 			self.editmgr.commit()
 			if not lightweight:
-				AttrEdit.showattreditor(self.toplevel, node)
+				AttrEdit.showattreditor(self.toplevel, node, 'channel')
 
 	def insertparent(self, type):
 		node = self.focusnode
