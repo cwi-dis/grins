@@ -11,6 +11,6 @@
     </layout>
   </head>
   <body>
-    <video region="NEW1Real-Video" src="test.rv" dur="indefinite"/>
+    <video region="NEW1Real-Video" src="test.rv"/>
   </body>
 </smil>
