@@ -414,7 +414,7 @@ class SchedulerContext:
 				if debugevents: print 'trigger: ignore arc',`arc`
 				parent.updatetimer()
 				return
-			if parent.queue and parent.queue[0][:2] < arc.qid[:2]:
+			if arc.qid and parent.queue and parent.queue[0][:2] < arc.qid[:2]:
 				# a higher priority element has cropped up in
 				# the queue: reinsert this one so that the
 				# other one can be handled first
@@ -453,6 +453,7 @@ class SchedulerContext:
 				while node.delayed_arcs:
 					arc = node.delayed_arcs[0]
 					del node.delayed_arcs[0]
+					arc.qid = 0
 					self.trigger(arc)
 				if node.scheduled_children > 0:
 					parent.updatetimer()

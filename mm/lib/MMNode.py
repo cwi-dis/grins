@@ -756,7 +756,7 @@ class MMChannel:
 class MMSyncArc:
 	def __init__(self, dstnode, action, srcnode=None, srcanchor=None,
 		     channel=None, event=None, marker=None, wallclock=None,
-		     delay=None):
+		     accesskey=None, delay=None):
 		self.__isresolvedcalled = 0
 		if __debug__:
 			assert event is None or marker is None
@@ -766,11 +766,19 @@ class MMSyncArc:
 				assert channel is None
 				assert event is None
 				assert marker is None
+				assert accesskey is None
 				assert delay == 0
 			elif channel is not None:
 				assert srcnode is None
 				assert srcanchor is None
 				assert event is not None
+				assert marker is None
+				assert accesskey is None
+				assert delay is not None
+			elif accesskey is not None:
+				assert srcnode is None
+				assert srcanchor is None
+				assert event is None
 				assert marker is None
 				assert delay is not None
 			elif srcnode is not None:
@@ -782,7 +790,7 @@ class MMSyncArc:
 					assert srcanchor is None
 			else:
 				# wallclock is None and channel is None
-				# and srcnode is None:
+				# and srcnode is None and accesskey is None:
 				# indefinite
 				assert srcanchor is None
 				assert event is None
@@ -799,6 +807,7 @@ class MMSyncArc:
 		self.channel = channel	# MMChannel instance or None
 		self.event = event
 		self.marker = marker
+		self.accesskey = accesskey
 		self.wallclock = wallclock
 		self.delay = delay
 		self.qid = None
@@ -829,6 +838,8 @@ class MMSyncArc:
 			src = 'indefinite'
 		elif self.channel is not None:
 			src = self.channel.name
+		elif self.accesskey is not None:
+			src = 'accessKey(%s)' % self.accesskey
 		elif self.srcnode == 'syncbase':
 			src = 'syncbase'
 		elif self.srcnode == 'prev':
@@ -863,7 +874,7 @@ class MMSyncArc:
 	def refnode(self):
 		node = self.dstnode
 		pnode = node.GetSchedParent()
-		if self.wallclock is not None or self.channel is not None:
+		if self.wallclock is not None or self.channel is not None or self.accesskey is not None:
 			return node.GetRoot()
 
 		assert self.srcnode is not None
@@ -892,6 +903,8 @@ class MMSyncArc:
 			return 1
 		if self.delay is None:
 			return 0	# indefinite
+		if self.accesskey is not None:
+			return 0	# event hasn't happened
 		if self.wallclock is not None:
 			if timefunc is not None:
 				return 1
@@ -1266,6 +1279,12 @@ class MMNode:
 			# if arc's event has already occurred, trigger it
 			if arc.wallclock is not None:
 				if arc.resolvedtime(self.sctx.parent.timefunc) <= self.sctx.parent.timefunc():
+					if arc.dstnode is not None:
+						pdstnode = arc.dstnode.GetSchedParent()
+						if pdstnode is not None and pdstnode.playing != MMStates.PLAYING:
+							pdstnode.sched_children.append(arc)
+							return
+					arc.qid = 0
 					self.sctx.trigger(arc)
 				return
 			if arc.event is not None:
@@ -1285,6 +1304,12 @@ class MMNode:
 				time = self.sctx.parent.timefunc()
 				t = self.happenings[key]
 				if arc.delay <= time - t:
+					if arc.dstnode is not None:
+						pdstnode = arc.dstnode.GetSchedParent()
+						if pdstnode is not None and pdstnode.playing != MMStates.PLAYING:
+							pdstnode.sched_children.append(arc)
+							return
+					arc.qid = 0
 					self.sctx.trigger(arc)
 
 	def event(self, time, event, anchorname = None):

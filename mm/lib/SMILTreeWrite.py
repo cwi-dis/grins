@@ -555,7 +555,7 @@ def getsyncarc(writer, node, isend):
 		if arc.srcnode is None and arc.event is None and arc.marker is None and arc.delay is None and arc.wallclock is None:
 			nomultiple = 1
 			list.append('indefinite')
-		elif arc.srcnode is None and arc.event is None and arc.marker is None and arc.wallclock is None:
+		elif arc.srcnode is None and arc.event is None and arc.marker is None and arc.wallclock is None and arc.accesskey is None:
 			list.append(fmtfloat(arc.delay, 's'))
 		elif arc.wallclock is not None:
 			yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = arc.wallclock
@@ -569,6 +569,11 @@ def getsyncarc(writer, node, isend):
 			else:
 				tz = ''
 			list.append('wallclock(%s%s%s)' % (date, time, tz))
+		elif arc.accesskey is not None:
+			key = 'accessKey(%s)' % arc.accesskey
+			if arc.delay:
+				key = key + fmtfloat(arc.delay, withsign = 1)
+			list.append(key)
 		elif arc.marker is None:
 			if arc.channel is not None:
 				name = writer.ch2name[arc.channel]
