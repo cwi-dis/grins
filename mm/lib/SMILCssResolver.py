@@ -220,6 +220,7 @@ class Node:
 		return None
 
 	def getAttr(self, name):
+		self._toInitState()
 		if name == 'regPoint':
 			return self.getRegPoint()
 		elif name == 'regAlign':
