@@ -108,7 +108,7 @@ class Trace:
 		self.depth = d
 		sys.setprofile(self.trace_dispatch)
 
-	def __args(self, frame, repr = pprint.saferepr range = range):
+	def __args(self, frame, repr = pprint.saferepr, range = range):
 		code = frame.f_code
 		dict = frame.f_locals
 		isinit = dict.has_key
