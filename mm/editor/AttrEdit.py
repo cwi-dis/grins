@@ -402,7 +402,7 @@ class NodeWrapper(Wrapper):
 			'name', ('file',),	# From nodeinfo window
 			'.type',
 			('terminator',),
-			'begin', 'duration', 'loop', 'repeatdur', # Time stuff
+			'begin', 'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
 			'restart',
 			('clipbegin',), ('clipend',),	# More time stuff
 			('fill',), ('fillDefault',),
@@ -425,6 +425,8 @@ class NodeWrapper(Wrapper):
 			namelist.append('fill')
 		if self.context.attributes.get('project_boston', 0):
 			namelist.append('fillDefault')
+			namelist.append('min')
+			namelist.append('max')
 		if ntype == 'bag':
 			namelist.append('bag_index')
 		if ntype == 'par':
