@@ -53,6 +53,9 @@ class LightWeightControl:
 	def sendmessage_gt(self,msg,wparam,lparam=0):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessageGT(self._hwnd,msg,wparam,lparam)	
+	def sendmessage_getrect(self,msg,wparam,lparam=0):
+		if not self._hwnd: raise error, 'os control has not been created'
+		return Sdk.SendMessageGetRect(self._hwnd,msg,wparam,lparam)	
 	def enable(self,f):
 		if not self._hwnd: raise error, 'os control %d has not been created'
 		if f==None:f=0
@@ -124,6 +127,7 @@ class LightWeightControl:
 		self._hfont = Sdk.CreateFontIndirect(lf)
 		if self._hfont:
 			self.sendmessage(win32con.WM_SETFONT, self._hfont, 1)
+
 
 # shortcut
 Control = LightWeightControl
@@ -250,6 +254,8 @@ class ListBox(Control):
 		self.sendmessage(win32con.LB_RESETCONTENT)
 	def sethorizontalextent(self,npixels):
 		self.sendmessage(win32con.LB_SETHORIZONTALEXTENT,npixels)
+	def getitemrect(self, index):
+		return self.sendmessage_getrect(win32con.LB_GETITEMRECT ,index)
 
 	# Multi-select list support
 	def getselcount(self):
