@@ -36,7 +36,7 @@ class MovieChannel(ChannelWindow):
 		if debug: print 'MovieChannel: arm', node
 
 		fn = self.getfileurl(node)
-		fn = MMurl.url2pathname(fn)
+		fn = MMurl.urlretrieve(fn)[0]
 		
 		try:
 			movieResRef = Qt.OpenMovieFile(fn, 1)
