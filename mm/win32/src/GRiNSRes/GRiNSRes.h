@@ -64,6 +64,7 @@
 #define IDD_PASSWD_DIALOG               259
 #define IDD_TEMPLATE_DIALOG             260
 #define IDD_PROGRESS                    262
+#define IDD_INIT_DIALOG                 263
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
 #define IDD_EDITATTR_S5                 328
@@ -232,6 +233,10 @@
 #define IDC_TARGET_EMBEDDED             1184
 #define IDC_BUTTON1                     1186
 #define IDC_PROGRESS1                   1187
+#define IDC_INIT_NEW                    1188
+#define IDC_INIT_OPEN                   1189
+#define IDC_INIT_NOTHING                1190
+#define IDC_INIT_NEVER_AGAIN            1191
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -287,9 +292,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        263
+#define _APS_NEXT_RESOURCE_VALUE        264
 #define _APS_NEXT_COMMAND_VALUE         32838
-#define _APS_NEXT_CONTROL_VALUE         1188
+#define _APS_NEXT_CONTROL_VALUE         1192
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

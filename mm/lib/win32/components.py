@@ -688,6 +688,48 @@ class NewChannelDlg(ResDialog):
 			apply(apply,self._cbd_cancel)
 
 # Implementation of the select template dialog
+class OpenAppDialog(ResDialog):
+	def __init__(self,cb_new, cb_open, cb_never_again,parent=None):
+		ResDialog.__init__(self,grinsRC.IDD_INIT_DIALOG,parent)
+		self._cb_open = cb_open
+		self._cb_new = cb_new
+		self._cb_never_again = cb_never_again
+		self._r_open = RadioButton(self, grinsRC.IDC_INIT_OPEN)
+		self._r_new = RadioButton(self, grinsRC.IDC_INIT_NEW)
+		self._r_nothing = RadioButton(self, grinsRC.IDC_INIT_NOTHING)
+		self._b_never_again = CheckButton(self, grinsRC.IDC_INIT_NEVER_AGAIN)
+
+		self.show()
+
+	def OnInitDialog(self):
+		self.attach_handles_to_subwindows()
+		self.init_subwindows()
+		self._r_new.setcheck(1)
+		self._r_open.setcheck(0)
+		self._r_nothing.setcheck(0)
+		self._b_never_again.setcheck(0)
+		return ResDialog.OnInitDialog(self)
+
+	def show(self):
+		self.DoModal()
+
+	def close(self):
+		self.EndDialog(win32con.IDCANCEL)
+
+	def OnOK(self):
+		self.close()
+		if self._b_never_again.getcheck():
+			if self._cb_never_again:
+				self._cb_never_again()
+		if self._r_open.getcheck():
+			self._cb_open()
+		elif self._r_new.getcheck():
+			self._cb_new()
+
+	def OnCancel(self):
+		self.close()
+
+# Implementation of the select template dialog
 class TemplateDialog(ResDialog):
 	def __init__(self,names, descriptions, cb,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_TEMPLATE_DIALOG,parent)
