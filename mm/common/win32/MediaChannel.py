@@ -420,7 +420,13 @@ class DirectSound:
 	def createBufferFromFile(self, filename):
 		dsbdesc = dsound.CreateDSBufferDesc()
 		dsbdesc.SetFlags(dsound.DSBCAPS_CTRLDEFAULT)
-		return self._dsound.CreateSoundBufferFromFile(dsbdesc, filename)
+		sb = None
+		try:
+			sb = self._dsound.CreateSoundBufferFromFile(dsbdesc, filename)
+		except dsound.error, arg:
+			print arg
+			sb = None
+		return sb
 
 		
 directSound = DirectSound()
@@ -429,13 +435,22 @@ class DSPlayer:
 	def __init__(self, channel):
 		self.__channel = channel
 		self._sound = None
-
+		
 	def prepare_player(self, node):
-		url = self.__channel.getfileurl(node)
-		if not url:
-			raise error, 'No URL on node'
-		filename = MMurl.urlretrieve(url)[0]
-		self._sound = directSound.createBufferFromFile(filename)
+		f = self.__channel.getfileurl(node)
+		if not f:
+			self.__channel.errormsg(node, 'No URL set on node')
+			raise error, 'No URL set on node'
+			return 0
+		try:
+			f = MMurl.urlretrieve(f)[0]
+		except IOError, arg:
+			if type(arg) is type(self):
+				arg = arg.strerror
+			raise error, 'Cannot resolve URL "%s": %s' % (f, arg)
+			return 0
+		self._sound = directSound.createBufferFromFile(f)
+		return 1
 
 	def playit(self, node, start_time=0):
 		#print 'playit', node, start_time
