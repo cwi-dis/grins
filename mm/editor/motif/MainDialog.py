@@ -120,18 +120,18 @@ class MainDialog:
 
 	def __filecvt(self, filename):
 		import os, MMurl
-		if os.path.isabs(filename):
-			cwd = os.getcwd()
-			if os.path.isdir(filename):
-				dir, file = filename, os.curdir
-			else:
-				dir, file = os.path.split(filename)
-			# XXXX maybe should check that dir gets shorter!
-			while len(dir) > len(cwd):
-				dir, f = os.path.split(dir)
-				file = os.path.join(f, file)
-			if dir == cwd:
-				filename = file
+##		if os.path.isabs(filename):
+##			cwd = os.getcwd()
+##			if os.path.isdir(filename):
+##				dir, file = filename, os.curdir
+##			else:
+##				dir, file = os.path.split(filename)
+##			# XXXX maybe should check that dir gets shorter!
+##			while len(dir) > len(cwd):
+##				dir, f = os.path.split(dir)
+##				file = os.path.join(f, file)
+##			if dir == cwd:
+##				filename = file
 		self.__lasturl = MMurl.pathname2url(filename)
 		self.__text.settext(self.__lasturl)
 
