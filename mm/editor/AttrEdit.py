@@ -1,7 +1,5 @@
 # Attribute editor using the FORMS library (fl, FL)
 
-# MODIFIED VERSION WHICH CAN EDIT CHANNEL ATTRIBUTE LISTS AS WELL!
-
 # XXX This assumes we can create and destroy as many forms as we want.
 # That's not actually true: forms never die, they just become inaccessible.
 # But there is still hope that we can fix the forms library rather than
@@ -17,7 +15,7 @@ import MMWrite
 from MMExc import *
 
 
-# There are two basic calls into this module:
+# There are two basic calls into this module (but see below for more):
 # showattreditor(node) creates an attribute editor form for a node
 # and hideattreditor(node) hides it again.  Since the editor may also
 # hide itself, spurious hide calls are ignored; also, only one attribute
@@ -43,12 +41,16 @@ def hideattreditor(node):
 		attreditor = node.attreditor
 	except NameError:
 		return # No attribute editor active
-	# XXX What if there are changes?
 	attreditor.close()
+	# XXX What if there are changes?
+	# XXX Should ask the user to save them or throw them away.
+	# XXX There should be a return value to from hideattreditor()
+	# XXX to show if the user wants to cancel whatever caused it...
 
 
 # An additional call to check whether the attribute editor is currently
-# active for a node.
+# active for a node (so the caller can put up a warning "you are already
+# editing this node's attributes" instead of just silence).
 
 def hasattreditor(node):
 	try:
@@ -58,18 +60,51 @@ def hasattreditor(node):
 		return 0
 
 
-def makechannelattreditor(context, name):
-	return AttrEditor().init(ChannelWrapper().init(context, name))
+# A similar interface for channels (note different arguments!).
+# Note that the administration is in context.channelattreditors,
+# which is created here if necessary.
+#
+def showchannelattreditor(context, name):
+	try:
+		dummy = context.channelattreditors
+	except NameError:
+		context.channelattreditors = {}
+	if context.channelattreditors.has_key(name):
+		return
+	dummy = AttrEditor().init(ChannelWrapper().init(context, name))
 
-
-def killchannelattreditor(attreditor):
+def hidechannelattreditor(context, name):
+	try:
+		attreditor = context.channelattreditors[name]
+	except:
+		return
 	attreditor.close()
 
+def haschannelattreditor(context, name):
+	try:
+		attreditor = context.channelattreditors[name]
+		return 1
+	except:
+		return 0
+
+
+# The "Wrapper" classes encapsulate the differences between attribute
+# editors for nodes and channels.  If you want editors for other
+# attribute collections (styles!) you may want to new wrappers.
+# All wrappers should support the methods shown here; the init()
+# method can have different arguments since it is only called from
+# the show*() function.  (When introducing a style attr editor
+# it should probably be merged with the class attr editor, using
+# a common base class implementing most functions.)
 
 class NodeWrapper():
+	#
 	def init(self, node):
 		self.node = node
 		return self
+	#
+	def maketitle(self):
+		return 'Node attributes'
 	#
 	def link(self, attreditor):
 		self.node.attreditor = attreditor
@@ -109,18 +144,18 @@ class NodeWrapper():
 		except NoSuchAttrError:
 			pass
 	#
-	# List the attribute names that make sense for this node,
+	# Return a list of attribute names that make sense for this node,
 	# in an order that makes sense to the user.
 	# XXX Should depend on the channel type;
-	# XXX currently all known names are returned in alphabetical order.
+	# XXX currently most known names are returned in alphabetical order.
 	#
-	def listattrnames(self):
-		namelist = MMAttrdefs.getnames()
-		if 'styledict' in namelist:
-			namelist.remove('styledict')
-		if 'channellist' in namelist:
-			namelist.remove('channellist')
-		# Merge in any nonstandard attributes that the node might have
+	def attrnames(self):
+		exceptions = ('styledict', 'channellist', 'type')
+		namelist = []
+		for name in MMAttrdefs.getnames():
+			if name not in exceptions:
+				namelist.append(name)
+		# Merge in any nonstandard attributes
 		for name in self.node.GetAttrDict().keys():
 			if name not in namelist:
 				namelist.append(name)
@@ -137,11 +172,14 @@ class ChannelWrapper():
 		self.attrdict = self.context.channeldict[name]
 		return self
 	#
+	def maketitle(self):
+		return 'Channel attributes for ' + self.name
+	#
 	def link(self, attreditor):
-		pass
+		self.context.channelattreditors[self.name] = attreditor
 	#
 	def unlink(self):
-		pass
+		del self.context.channelattreditors[self.name]
 	#
 	def getcontext(self):
 		return self.context
@@ -168,17 +206,17 @@ class ChannelWrapper():
 		if self.attrdict.has_key(name):
 			del self.attrdict[name]
 	#
-	# List the attribute names that make sense for this channel,
+	# Return a list of attribute names that make sense for this channel,
 	# in an order that makes sense to the user.
 	# XXX Should depend on the channel type;
-	# XXX currently all known names are returned in alphabetical order.
+	# XXX currently most known names are returned in alphabetical order.
 	#
-	def listattrnames(self):
-		namelist = MMAttrdefs.getnames()
-		if 'styledict' in namelist:
-			namelist.remove('styledict')
-		if 'channellist' in namelist:
-			namelist.remove('channellist')
+	def attrnames(self):
+		exceptions = ('styledict', 'channellist', 'channel')
+		namelist = []
+		for name in MMAttrdefs.getnames():
+			if name not in exceptions:
+				namelist.append(name)
 		# Merge in any nonstandard attributes
 		for name in self.attrdict.keys():
 			if name not in namelist:
@@ -195,7 +233,7 @@ class AttrEditor():
 	def init(self, wrapper):
 		#
 		self.wrapper = wrapper
-		self.namelist = wrapper.listattrnames()
+		self.namelist = wrapper.attrnames()
 		#
 		itemwidth = 450
 		itemheight = 25
@@ -230,7 +268,7 @@ class AttrEditor():
 		#
 		self.getvalues()
 		#
-		form.show_form(PLACE_SIZE, TRUE, 'Attribute Editor')
+		form.show_form(PLACE_SIZE, TRUE, self.wrapper.maketitle())
 		# XXX Should have a more meaningful title
 		#
 		self.wrapper.link(self)
