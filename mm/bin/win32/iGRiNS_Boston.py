@@ -35,17 +35,17 @@ else:
 
 CMIFPATH = [
 	os.path.join(CMIFDIR, 'bin\\win32'),
-	os.path.join(CMIFDIR, '%s\\win32' % specificPath),
-	os.path.join(CMIFDIR, '%s\\smilboston' % specificPath),
 	os.path.join(CMIFDIR, '%s\\smilboston\\win32' % specificPath),
-	os.path.join(CMIFDIR, 'mmextensions\\real\\win32'),
+	os.path.join(CMIFDIR, '%s\\smilboston' % specificPath),
+	os.path.join(CMIFDIR, '%s\\win32' % specificPath),
+##	os.path.join(CMIFDIR, 'mmextensions\\real\\win32'),
 	os.path.join(CMIFDIR, 'common\\win32'),
 	os.path.join(CMIFDIR, 'lib\\win32'),
 	os.path.join(CMIFDIR, '%s' % specificPath),
 	os.path.join(CMIFDIR, 'common'),
 	os.path.join(CMIFDIR, 'lib'),
 	os.path.join(CMIFDIR, 'pylib'),
-#	os.path.join(CMIFDIR, 'pylib\\audio'),
+##	os.path.join(CMIFDIR, 'pylib\\audio'),
 	os.path.join(CMIFDIR, 'win32\\src\\Build'),
 	os.path.join(os.path.split(CMIFDIR)[0], 'python\\Lib')
 ]

@@ -1,17 +1,15 @@
 rem BEGIN_CUSTOMIZATION
 
 set GRINS_HOME=..\..\..
+set PYTHONHOME=%GRINS_HOME%\..\python
 
 set FREEZE_WHAT=grins
 set EXCLUDE_WHAT=editor
-
-set INCLUDE_MMEXTENSIONS=no
+set PRODUCT=smil20
 
 set main_script=%GRINS_HOME%\fGRiNS.py
 
-set PYTHON_EXE=..\..\..\..\python\PCbuild\python.exe
-
-set PYTHONHOME=..\..\..\..\python
+set PYTHON_EXE=%PYTHONHOME%\PCbuild\python.exe
 
 rem call c:\"Program Files"\"Microsoft Visual Studio"\VC98\Bin\vcvars32.bat
 
@@ -43,9 +41,9 @@ rem set CL=%CL%;/D FREEZE_WIN32UI
 rem Set up the PYTHONPATH for the freeze - this points to all the cmif directories
 rem we need to perform the freeze.
 set PYTHONPATH=%GRINS_HOME%
+set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\%PRODUCT%\win32
+set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\%PRODUCT%
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\win32
-set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\smil20
-set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\smil20\win32
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\common\win32
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib\win32
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%
@@ -62,7 +60,7 @@ set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\Build
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin\Build
 
-rem Path for old standard python librairie
+rem Path for old standard python libraries
 set PYTHONPATH=%PYTHONPATH%;%PYTHONHOME%\Lib\lib-old
 
 : Do the freeze
@@ -150,15 +148,11 @@ echo -x CORBA.services
 echo -x readline >> FreezeOpts
 echo -x pwd >> FreezeOpts
 
-rem Windows specific stuff we just dont want!!
-echo -x win32ui  >> FreezeOpts
-echo -x win32dbg >> FreezeOpts
-
-rem exclude RMASDK
-echo -x rma >> FreezeOpts
-
-rem exlude img related pyds
-REM echo -x img >> FreezeOpts
+rem Windows PYDs
+echo -x _socket >> FreezeOpts
+echo -x ddraw >> FreezeOpts
+echo -x dshow >> FreezeOpts
+echo -x gear32sd >> FreezeOpts
 echo -x imgcolormap >> FreezeOpts
 echo -x imgformat >> FreezeOpts
 echo -x imggif >> FreezeOpts
@@ -169,17 +163,12 @@ echo -x imgpgm >> FreezeOpts
 echo -x imgpng >> FreezeOpts
 echo -x imgppm >> FreezeOpts
 echo -x imgtiff >> FreezeOpts
-echo -x gear32sd >> FreezeOpts
-
-rem producer stuff
 echo -x producer >> FreezeOpts
-
-rem dxmedia
-echo -x dshow >> FreezeOpts
-echo -x ddraw >> FreezeOpts
-
-rem python16 stuff
-echo -x _socket >> FreezeOpts
+echo -x rma >> FreezeOpts
+echo -x win32api >> FreezeOpts
+echo -x win32trace >> FreezeOpts
+echo -x win32ui >> FreezeOpts
+echo -x wmfapi >> FreezeOpts
 
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
@@ -193,4 +182,3 @@ echo -x %EXCLUDE_WHAT% >> FreezeOpts
 : Make the target
 rem echo Executing NMAKE
 rem nmake
-

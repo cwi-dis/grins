@@ -1,6 +1,7 @@
 rem BEGIN_CUSTOMIZATION
 
 set GRINS_HOME=..\..\..
+set PYTHONHOME=%GRINS_HOME%\..\python
 
 set FREEZE_WHAT=editor
 set EXCLUDE_WHAT=grins
@@ -8,9 +9,7 @@ set PRODUCT=smilboston
 
 set main_script=%GRINS_HOME%\fGRiNSed.py
 
-set PYTHON_EXE=..\..\..\..\python\PCbuild\python.exe
-
-set PYTHONHOME=..\..\..\..\python
+set PYTHON_EXE=%PYTHONHOME%\PCbuild\python.exe
 
 rem call c:\"Program Files"\"Microsoft Visual Studio"\VC98\Bin\vcvars32.bat
 
@@ -61,7 +60,7 @@ set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\Build
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin\Build
 
-rem Path for old standard python librairie
+rem Path for old standard python libraries
 set PYTHONPATH=%PYTHONPATH%;%PYTHONHOME%\Lib\lib-old
 
 : Do the freeze
@@ -183,4 +182,3 @@ echo -x %EXCLUDE_WHAT% >> FreezeOpts
 : Make the target
 rem echo Executing NMAKE
 rem nmake
-
