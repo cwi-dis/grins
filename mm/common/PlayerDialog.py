@@ -51,7 +51,7 @@ class PlayerDialog:
 		"""Close the dialog and free resources."""
 		if self.__window is not None:
 			self.__window.close()
-		del self.__window
+		self.__window = None
 		del self.__displist
 		del self.__subwins
 		del self.__channels
