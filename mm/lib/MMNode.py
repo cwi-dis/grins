@@ -1700,49 +1700,6 @@ class MMNode:
 		self.computedMimeType = None
 		self.channelType = None
 		
-	def destroy(self):
-		self.__unlinkCssId()
-		self._mediaCssId = None
-		self._subRegCssId = None
-		self.type = None	# see MMTypes.py
-		self.context = None	# From MMContext
-		self.uid = None		# Unique identifier for each node (starts at 1)
-		self.attrdict = None	# Attributes of this MMNode
-		self.attrcache = None
-		self.d_attrdict = None	# Dynamic (changing) attrs of this MMNode
-		self.values = None
-		self.willplay = None	# Used for colours in the editor
-		self.shouldplay = None
-		self.canplay = None
-		self.parent = None	# The parent of this MMNode
-		self.children = None	# The sub-nodes of this MMNode
-		self.wtd_children = None
-		self.looping_body_self = None
-		self.realpix_body = None
-		self.caption_body = None
-		self.curloopcount = None
-		self.infoicon = None	# An alert icon
-		self.errormessage = None # An error message to accompany the alert icon
-		self.force_switch_choice = None
-		self.srdict = None
-		self.events = None	# events others are interested in
-		self.sched_children = None # arcs that depend on us
-		self.scheduled_children = None
-		self.arcs = None
-		self.durarcs = None
-		self.time_list = None
-		self.fullduration = None
-		self.pausestack = None	# used only by excl nodes
-		# stuff to do with the min attribute
-		self.has_min = None
-		self.delayed_arcs = None
-		self.__calcendtimecalled = None
-		self.views = None	# Map {string -> Interactive} - that is, a list of views
-					# looking at this object.
-		self.collapsed = None	# Whether this node is collapsed in the structure view.
-		self.timing_info_dict = None
-		self.happenings = None
-		
 	#
 	# Return string representation of self
 	#
@@ -2595,6 +2552,7 @@ class MMNode:
 	def SetPresentationAttr(self, name, value):
 		self.d_attrdict[name] = value
 
+
 	#
 	# Channel management
 	#
@@ -2875,38 +2833,54 @@ class MMNode:
 		MMAttrdefs.flushcache(self)
 ##		self._updsummaries([name])
 
-	def Destroy(self):
+	def Destroy(self, fakeroot = 0):
 		if self.parent is not None:
 			raise CheckError, 'Destroy() non-root node'
 
 		if hasattr(self, 'slideshow'):
 			self.slideshow.destroy()
 			del self.slideshow
-		# delete hyperlinks referring to anchors here
-		alist = MMAttrdefs.getattr(self, 'anchorlist')
-		hlinks = self.context.hyperlinks
-		for a in alist:
-			aid = (self.uid, a.aid)
-			for link in hlinks.findalllinks(aid, None):
-				hlinks.dellink(link)
+		if not fakeroot:
+			# delete hyperlinks referring to anchors here
+			alist = MMAttrdefs.getattr(self, 'anchorlist')
+			hlinks = self.context.hyperlinks
+			for a in alist:
+				aid = (self.uid, a.aid)
+				for link in hlinks.findalllinks(aid, None):
+					hlinks.dellink(link)
 
-		self.context.forgetnode(self.uid)
-		for child in self.children:
-			child.parent = None
-			child.Destroy()
+			self.context.forgetnode(self.uid)
+			for child in self.children:
+				child.parent = None
+				child.Destroy()
+		self.__unlinkCssId()
+		self._mediaCssId = None
+		self._subRegCssId = None
 		self.type = None
 		self.context = None
 		self.uid = None
 		self.attrdict = None
+		self.attrcache = None
+		self.d_attrdict = None
 		self.parent = None
 		self.children = None
 		self.values = None
 		self.wtd_children = None
-##		self.summaries = None
+		self.views = None
 		self.looping_body_self = None
 		self.realpix_body = None
 		self.caption_body = None
 		self.srdict = None
+		self.events = None
+		self.sched_children = None
+		self.scheduled_children = None
+		self.arcs = None
+		self.durarcs = None
+		self.time_list = None
+		self.pausestack = None
+		self.delayed_arcs = None
+		self.happenings = None
+		self.timing_info_dict = None
 
 	def Extract(self):
 		if self.parent is None: raise CheckError, 'Extract() root node'
@@ -2915,7 +2889,8 @@ class MMNode:
 		parent.children.remove(self)
 		name = MMAttrdefs.getattr(self, 'name')
 		if name and parent.GetTerminator() == name:
-			parent.DelAttr('terminator')
+			# only called from edit manager, so definitely inside transaction
+			self.context.editmgr.setnodeattr(self, 'terminator', None)
 ##		parent._fixsummaries(self.summaries)
 
 	def AddToTree(self, parent, i):
@@ -4183,7 +4158,7 @@ class FakeRootNode(MMNode):
 		MMNode.resetall(self, sched)
 		del self.__root.fakeparent
 		del self.__root
-		self.destroy()
+		self.Destroy(fakeroot = 1)
 
 # Make a "deep copy" of an arbitrary value
 #
