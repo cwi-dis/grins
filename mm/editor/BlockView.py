@@ -8,6 +8,17 @@ from ViewDialog import ViewDialog
 
 # the block view class.
 # *** Hacked by --Guido ***
+# XXX I have made quick hacks to interface to the edit manager:
+# XXX changes to the tree call transaction() and commit().
+# XXX However, this is really a bogus way of doing it:
+# XXX - we aren't registered with the edit manager to get told
+# XXX   about change to the tree made by other views
+# XXX - we don't use the edit manager to carry out the changes,
+# XXX   so UNDO won't work
+# XXX - we update our display directly, instead of doing that in
+# XXX   response to the commit
+
+
 #
 # There are two methods :
 #	1. new (w, h, root) which returns the form and a box which
@@ -292,9 +303,13 @@ def deleteNode (bv) :
 	if parent = None :
 		fl.show_message ('sorry, cannot delete root','','')
 		return
+
+	if not node.context.editmgr.transaction(): return
+	# XXX Should use editmgr to make the actual changes as well!
+	# XXX Shouldn't fix the display here!
+
 	pObj = parent.bv_obj
 	x, y, w, h = pObj.x, pObj.y, pObj.w, pObj.h
-
 	node.Extract ()
 	bv.form.freeze_form ()
 	bv.rmBlockview (parent)	# yes, from the parent !
@@ -311,6 +326,8 @@ def deleteNode (bv) :
 	if len (parent.GetChildren()) = 0 : deleteNode(bv)
 	#
 	bv.form.unfreeze_form ()
+
+	node.context.editmgr.commit()
 
 def mkNode(node) :
 	context = node.GetContext()
@@ -330,6 +347,10 @@ def rotatefunc (bv) :
 	node = bv.focus
 	parent = node.GetParent()
 	if parent = None : return
+
+	if not node.context.editmgr.transaction(): return
+	# XXX Should use editmgr to make the actual changes as well!
+	# XXX Shouldn't fix the display here!
 	
 	nObj = parent.bv_obj
 	x, y, w, h = nObj.x, nObj.y, nObj.w, nObj.h
@@ -352,6 +373,8 @@ def rotatefunc (bv) :
 	bv.setfocus(node)
 	bv.form.unfreeze_form ()
 
+	node.context.editmgr.commit()
+
 #
 # add a sequential node to the focus.
 # The stratagy is :
@@ -363,6 +386,10 @@ def rotatefunc (bv) :
 
 def addSequential (bv) :
 	node = bv.focus
+
+	if not node.context.editmgr.transaction(): return
+	# XXX Should use editmgr to make the actual changes as well!
+	# XXX Shouldn't fix the display here!
 
 	nObj = node.bv_obj
 	x, y, w, h = nObj.x, nObj.y, nObj.w, nObj.h
@@ -411,6 +438,8 @@ def addSequential (bv) :
 		bv.setfocus(child)
 		bv.form.unfreeze_form ()
 
+	node.context.editmgr.commit()
+
 #
 # add a parallel node to the focus.
 # The stratagy is :
@@ -422,6 +451,10 @@ def addSequential (bv) :
 
 def addParallel (bv) :
 	node = bv.focus
+
+	if not node.context.editmgr.transaction(): return
+	# XXX Should use editmgr to make the actual changes as well!
+	# XXX Shouldn't fix the display here!
 
 	nObj = node.bv_obj
 	x, y, w, h = nObj.x, nObj.y, nObj.w, nObj.h
@@ -469,6 +502,8 @@ def addParallel (bv) :
 		bv.presentlabels (parent)
 		bv.setfocus(child)
 		bv.form.unfreeze_form ()
+
+	node.context.editmgr.commit()
 
 def unzoomfunc (bv) :
 	if bv.rootview = bv.root : return
