@@ -23,9 +23,6 @@
 # blank lines and comments may be inserted freely.
 
 
-##(bbox (tuple (int) (int) (int) (int)) (0 0 0 0) 'Bounding box' default
-##	'Bounding box for embedded PostScript image' channel)
-
 (anchorid (int) 1 'Next anchor UID' hidden
 	'Next anchor UID to use' raw)
 
@@ -50,9 +47,6 @@
 (border (int) 1 'Channel border' default
 	'Determines whether channel window has a border (1=yes)' raw)
 
-##(center (bool) 0 'Center' default
-##	'If on, text is centered within the margins' channel)
-
 (channel (name) undefined 'Channel' channelname
 	'Name of channel used to render this node/subtree' inherited)
 
@@ -75,9 +69,6 @@
 (duration (float) 0.0 'Duration' default
 	'Duration of a node/subtree (in seconds)' channel)
 
-##(extraspaceafter (float) 0.0 'Extra space after' default
-##	'Extra space following last word (in characters)')
-
 (fgcolor (tuple (int) (int) (int)) (0 0 0) 'Foreground color' color
 	'Color used for background of window' channel)
 
@@ -86,15 +77,6 @@
 
 (font (string) 'default' 'Font' font
 	'Font used to display text' channel)
-
-##(format (enum ASCII PostScript) ASCII 'Format' default
-##	'Format used by external text file (ASCII or PostScript)' channel)
-
-##(help_winpos  (tuple (float) (float)) (-1 -1) 'Help window position' hidden
-##	 'Position of help window' raw)
-
-##(help_winsize  (tuple (float) (float)) (115.234375 172.8515625) 'Help window size' hidden
-##	 'Size of help window' raw)
 
 (hicolor (tuple (int) (int) (int)) (255 0 0) 'Hilight color' color
 	'Color used for anchors in window' channel)
@@ -111,15 +93,6 @@
 	'Hyperlink list' hidden
 	'Hyperlinks within this document (root node only)' raw)
 
-##(indent (float) 0 'Indent' default
-##	'Extra indentation of left margin (in characters)')
-
-##(justify (bool) 0 'Justify' default
-##	'If on, justify right margins' channel)
-
-##(keep (bool) 0 'Keep' default
-##	'If on, text in window is kept until explicitly replaced' channel)
-
 (links_winpos  (tuple (float) (float)) (-1 -1) 'Link edit window position' hidden
 	 'Position of link edit window' raw)
 
@@ -129,20 +102,11 @@
 (name (name) '' 'Node name' default
 	'Name given to a node' raw)
 
-##(needGS (bool) 0 'Need Ghostscript' default
-##	'Must be on for channel to support embedded Postscript' channel)
-
-##(nospaceafter (bool) 0 'No space after' default
-##	'If on, suppress space following last word')
-
-(scale (float) 1.0 'Scale factor' default
+(scale (float) 0.0 'Scale factor' default
 	'Image magnification (0.0 means fit in window)' channel)
 
 (scalefilter (name) '' 'Scaling filter' default
 	'Name of filter used after image scaling' channel)
-
-##(scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars' default
-##	'Select the presence of horizontal/vertical scroll bars' channel)
 
 (player_winpos (tuple (float) (float)) (-1 -1) 'Player winpos' hidden
 	 'Window position for player control panel' raw)
@@ -168,18 +132,6 @@
 (styledict (namedict (attrdict)) () 'Style Dictionary' hidden
 	'Styles used in this document (root node only)')
 
-# This is an obsoleve attribute type!
-##(synclist (list (enclosed (tuple 
-##				(enum begin end)
-##				(enclosed (list (name)))
-##				(float)
-##				(enclosed (list (name)))
-##				(float)
-##				(float)
-##	)))
-##	() 'Sync list' default
-##	'List of sync arcs used in this subtree' raw)
-
 # This is the real sync arc data structure, on the destination!!!
 (synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
 	() 'SyncTo list' hidden
@@ -194,17 +146,8 @@
 (type (name) null 'Channel type' channeltype
 	'Channel type (channel dictionary only)' raw)
 
-##(volume (float) 1.0 'Volume' default
-##	'Volume of audio output (1.0 means standard)' channel)
-
-##(vspace (tuple (float) (float)) (-1 -1) 'Vertical space' default
-##	'Vertical space before/after text (in lines)')
-
 (visible (bool) 1 'Channel visibility' hidden
 	'Determines visibility of channel' raw)
-
-##(wait_for_close (bool) 0 'Wait for close' default
-##	'Wait for "close window" action to proceed' channel)
 
 (winpos (tuple (float) (float)) (-1 -1) 'Window position' hidden
 	'Initial window position (x, y) (x axis pointing down!)' raw)
