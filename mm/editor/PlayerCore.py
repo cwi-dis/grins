@@ -100,6 +100,7 @@ class PlayerCore(Selecter, PlayerCommon):
 		self.playroot = self.userplayroot = self.root
 		if hasattr(self, '_animateContext'):
 			self._animateContext.reset()
+			del self._animateContext
 
 	#
 	# play_done - Upcall by scheduler to indicate that all is done.
@@ -152,9 +153,16 @@ class PlayerCore(Selecter, PlayerCommon):
 	def checkRenderer(self):
 		# if the document has been edited, we have to check (and rebuild) the renderer channels
 		if self.mustCheckRenderer:
+			# reset animator
+			if hasattr(self, '_animateContext'):
+				self._animateContext.reset()
+				
 			self.checkRendererAndIChannels()
-			self.mustCheckRenderer = 0
 			self.setlayout(self.curlayout, self.curchannel)
+			# force internal channels to show (if not)
+			self.showichannels()
+			
+			self.mustCheckRenderer = 0
 		
 	#
 	def anchorinit(self, node):
