@@ -779,7 +779,7 @@ class LayoutView2(LayoutViewDialog2):
 		if not enabled or self.currentFocus is None or len(self.currentFocus) != 1:
 			self.setKeyTimeIndex(None, None)
 		elif (self.previousFocus is None or len(self.previousFocus) != 1 or (not self.currentFocus[0] is self.previousFocus[0])):
-			self.setKeyTimeIndex(0, selectedNode)
+			self.setKeyTimeIndex(0, self.currentFocus[0])
 				
 		if self.timeValueChanged:
 			self.previousWidget.updateRegionTree()
@@ -910,6 +910,24 @@ class LayoutView2(LayoutViewDialog2):
 	def getCurrentTimeValue(self):
 		return self.currentTimeValue
 
+	def insertKeyTime(self, nodeRef, tp):
+		animationData = nodeRef.getAnimationData()
+		timeList = animationData.getTimes()
+		data = animationData.getData()
+		index = 0
+		for time in timeList:
+			if time > tp:
+				break
+			index = index+1
+
+		if index > 0 and index < len(timeList):
+			# can only insert a key between the first and the end
+			data.insert(index, data[index-1])
+			timeList.insert(index, tp)
+			self.setKeyTimeIndex(index, nodeRef)
+			self.keyTimeSliderWidget.insertKey(tp)
+			self.timeValueChanged = 1 # force layout to refresh
+		
 	def getKeyForThisTime(self, timeList, time):
 		index = 0
 		for timeRef in timeList:
@@ -919,20 +937,14 @@ class LayoutView2(LayoutViewDialog2):
 		return None
 	
 	def getPxGeomWithContextAnimation(self, nodeRef):
-#		keyTimeIndex = None
 		animationData = nodeRef.getAnimationData()
-#		if animationData != None:
-#			data = animationData.getData()
-#			timeList = animationData.getTimes()
-#			if data != None:
-#				keyTimeIndex = self.getKeyTimeIndex()
 
 		time = self.currentTimeValue
 		
 		if not time is None and not animationData is None:
+			# XXX should move in another place
 			animationData.createAnimators()
 			wingeom = animationData.getRectAt(time)
-#			wingeom, color = data[keyTimeIndex]
 		else:
 			wingeom = nodeRef.getPxGeom()
 			
@@ -1083,13 +1095,6 @@ class LayoutView2(LayoutViewDialog2):
 		widgetList['ZFieldWidget'] = ZFieldWidget(self)
 		self.keyTimeSliderWidget = widgetList['KeyTimeSliderWidget'] = KeyTimeSliderWidget(self)
 
-	def updateKeyTimeGeoms(self, nodeRef, geom):
-		animationData = nodeRef.getAnimationData()
-		data = animationData.getData()
-		keyTimeIndex = self.getKeyTimeIndex()
-		if len(data) > keyTimeIndex:
-			data[keyTimeIndex] = geom, (0,0,0)
-
 	def applyGeom(self, nodeRef, geom):
 		# make a list of attr top apply according the geometry
 		list = []
@@ -1099,28 +1104,11 @@ class LayoutView2(LayoutViewDialog2):
 			transactionType = 'REGION_GEOM'
 		elif nodeType == TYPE_MEDIA:
 			transactionType = 'MEDIA_GEOM'
-
-			keyTimeIndex = self.getKeyTimeIndex()
-			if keyTimeIndex is not None and keyTimeIndex >= 0:
-				self.updateKeyTimeGeoms(nodeRef, geom)
-				self.applyAnimationData(nodeRef)
-				return
-		
 		self.__makeAttrListToApplyFromGeom(nodeRef, geom, list)
 		self.applyAttrList(list)		
 
 	def applyGeomList(self, applyList):
-		list = []
-		
-		keyTimeIndex = self.getKeyTimeIndex()
-		if keyTimeIndex is not None and keyTimeIndex >= 0 and len(applyList) > 0:
-			nodeRef, geom = applyList[0]
-			nodeType = self.getNodeType(nodeRef)
-			if nodeType == TYPE_MEDIA:
-				self.updateKeyTimeGeoms(nodeRef, geom)
-				self.applyAnimationData(nodeRef)
-				return
-		
+		list = []		
 		for nodeRef, geom in applyList:
 			self.__makeAttrListToApplyFromGeom(nodeRef, geom, list)
 		self.applyAttrList(list)
@@ -1191,11 +1179,6 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.setchannelattr(name, 'height', 400)
 			self.editmgr.commit('REGION_TREE')
 		
-	def applyAnimationData(self, nodeRef):		
-		# if the node is animated, compute the animation data according to the MMNode tree
-		nodeRef.applyAnimationData(self.editmgr)
-		self.updateFocus()
-
 	def __makeRegionListToDel(self, nodeRef, list):
 		# remove the children before removing the node
 		children = self.getChildren(nodeRef)
@@ -1204,16 +1187,51 @@ class LayoutView2(LayoutViewDialog2):
 		nodeType = self.getNodeType(nodeRef)
 		if nodeType in (TYPE_REGION, TYPE_VIEWPORT):
 			list.append(nodeRef.name)
-					
+
 	def applyAttrList(self, nodeRefAndValueList):
-		if self.editmgr.transaction():
-			for nodeRef, attrName, attrValue in nodeRefAndValueList:
-				nodeType = self.getNodeType(nodeRef)
+		if not self.editmgr.transaction():
+			return
+
+		# not good enough
+		animationEnabled = self.keyTimeSliderWidget.isEnabled
+		animatedType, animatedNode = self.keyTimeSliderWidget._selected
+		
+		if animationEnabled:
+			animationData = animatedNode.getAnimationData()
+			data = animationData.getData()
+			timeList = animationData.getTimes()
+			keyTimeIndex = self.getKeyTimeIndex()
+			currentTimeValue = self.getCurrentTimeValue()
+			if not currentTimeValue is None:
+				if not self.getKeyForThisTime(timeList,currentTimeValue):
+					self.insertKeyTime(animatedNode, currentTimeValue)
+					keyTimeIndex = self.getKeyForThisTime(animationData.getTimes(),currentTimeValue)
+					
+		for nodeRef, attrName, attrValue in nodeRefAndValueList:
+			nodeType = self.getNodeType(nodeRef)
+		
+			if animationEnabled and nodeRef is animatedNode and attrName in ('left', 'top', 'width', 'height') and \
+				not keyTimeIndex is None and keyTimeIndex >= 0:
+					# animation value
+					(left, top, width, height), bgcolor = data[keyTimeIndex]
+					if attrName == 'left':
+						left = attrValue
+					elif attrName == 'top':
+						top = attrValue
+					elif attrName == 'width':
+						width = attrValue
+					elif attrName == 'height':
+						height = attrValue
+					data[keyTimeIndex] = (left, top, width, height), bgcolor
+			else:		
 				if nodeType in (TYPE_VIEWPORT, TYPE_REGION):					
 					self.editmgr.setchannelattr(nodeRef.name, attrName, attrValue)
 				elif nodeType == TYPE_MEDIA:
 					self.editmgr.setnodeattr(nodeRef, attrName, attrValue)
-			self.editmgr.commit()
+			if animationEnabled:
+				nodeRef.applyAnimationData(self.editmgr)
+				
+		self.editmgr.commit()
 
 	# apply some command which are automaticly applied when a control lost the focus
 	# it avoids some recursives transactions and some crashes
@@ -1555,6 +1573,8 @@ class LayoutView2(LayoutViewDialog2):
 
 	def onEnableAnimation(self):
 		if len(self.currentSelectedNodeList) > 0:
+			if not self.editmgr.transaction():
+				return
 			selectedNode = self.currentSelectedNodeList[0]
 			animationData = selectedNode.getAnimationData()
 			if animationData.isEmpty():
@@ -1568,8 +1588,9 @@ class LayoutView2(LayoutViewDialog2):
 				# disable animation: just remove all datas
 				animationData.setTimesData([], [])
 				self.setKeyTimeIndex(None, selectedNode)
-			self.applyAnimationData(selectedNode)
+			selectedNode.applyAnimationData(self.editmgr)
 			self.updateFocus(1)
+			self.editmgr.commit()
 
 	def onEditProperties(self):
 		if len(self.currentSelectedNodeList) > 0:
@@ -2299,6 +2320,7 @@ class KeyTimeSliderWidget(LightWidget):
 	def __updateUnselected(self):
 		self.isEnabled = 0
 		self.sliderCtrl.setKeyTimes([0.0, 1.0])		
+		self.sliderCtrl.setCursorPos(0)
 		self.sliderCtrl.enable(0)
 	
 	def __updateViewport(self, nodeRef):
@@ -2332,6 +2354,10 @@ class KeyTimeSliderWidget(LightWidget):
 		self.isEnabled = 1
 		self.sliderCtrl.enable(1)
 
+	def insertKey(self, time):
+		if self.isEnabled:
+			self.sliderCtrl.insertKeyTime(time)
+		
 	#
 	# interface implementation of 'dialog controls callback' 
 	#
@@ -2339,26 +2365,13 @@ class KeyTimeSliderWidget(LightWidget):
 	def onInsertKey(self, tp):
 		if self.isEnabled:
 			nodeType, nodeRef = self._selected
-			animationData = nodeRef.getAnimationData()
-			timeList = animationData.getTimes()
-			data = animationData.getData()
-			index = 0
-			for time in timeList:
-				if time > tp:
-					break
-				index = index+1
-
-			if index > 0 and index < len(timeList):
-				# can only insert a key between the first and the end
-				data.insert(index, data[index-1])
-				timeList.insert(index, tp)
-				self.sliderCtrl.insertKeyTime(tp)
-				list = self.sliderCtrl.getKeyTimes()
-				self.sliderCtrl.setCursorPos(list[index])
-				self._context.setKeyTimeIndex(index, nodeRef)
-				self.sliderCtrl.selectKeyTime(index)
-				self._context.applyAnimationData(nodeRef)
-
+			editmgr = self._context.editmgr
+			if not editmgr.transaction():
+				return
+			self._context.insertKeyTime(nodeRef, tp)
+			nodeRef.applyAnimationData(editmgr)
+			editmgr.commit()
+			
 	def onRemoveKey(self, index):
 		if self.isEnabled:
 			nodeType, nodeRef = self._selected
@@ -2368,6 +2381,9 @@ class KeyTimeSliderWidget(LightWidget):
 				# can only remove a key between the first and the end
 				data = animationData.getData()
 				if index < len(timeList):
+					editmgr = self._context.editmgr
+					if not editmgr.transaction():
+						return
 					del data[index]
 					del timeList[index]
 					self.sliderCtrl.removeKeyTimeAtIndex(index)
@@ -2375,8 +2391,9 @@ class KeyTimeSliderWidget(LightWidget):
 					list = self.sliderCtrl.getKeyTimes()
 					self.sliderCtrl.setCursorPos(list[index-1])
 					self.sliderCtrl.selectKeyTime(index-1)
-					self._context.applyAnimationData(nodeRef)
-
+					nodeRef.applyAnimationData(editmgr)
+					editmgr.commit()
+					
 	def onSelected(self, index):
 		if self.isEnabled and not self.__selecting:
 			nodeType, nodeRef = self._selected
@@ -2393,12 +2410,15 @@ class KeyTimeSliderWidget(LightWidget):
 
 	def onKeyTimeChanged(self, index, time):
 		if self.isEnabled:
+			editmgr = self._context.editmgr
+			if not editmgr.transaction(editmgr):
+				return
 			nodeType, nodeRef = self._selected
 			animationData = nodeRef.getAnimationData()
 			timeList = animationData.getTimes()
 			timeList[index] = time
-			self._context.applyAnimationData(nodeRef)
-			self._context.updateFocus(1)
+			nodeRef.applyAnimationData(editmgr)
+			editmgr.commit()
 				
 #
 # tree widget management
