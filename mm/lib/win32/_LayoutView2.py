@@ -40,6 +40,7 @@ from appcon import *
 
 from GenFormView import GenFormView
 import DropTarget
+import IconMixin
 
 class _LayoutView2(GenFormView):
 	def __init__(self,doc,bgcolor=None):
@@ -492,10 +493,8 @@ class _LayoutView2(GenFormView):
 # on MFC CTreeCtrl class. So it's not a lightweight component as Button, List,
 # that we manage in componenent module
 
-class TreeManager:
+class TreeManager(IconMixin.ViewMixin):
 	def __init__(self):
-		self.__imageList = win32ui.CreateImageList(16, 16, 0, 10, 5)
-		self.bitmapNameToId = {}
 		self._listener = None
 		self._popup = None
 		
@@ -504,8 +503,6 @@ class TreeManager:
 		self.treeCtrl.removeMultiSelListener(self)
 		self.treeCtrl.removeDragdropListener(self)
 		self.treeCtrl = None
-		self.__imageList = None
-		self.bitmapNameToId = None
 		self._listener = None
 		self._popup = None
 	
@@ -527,47 +524,15 @@ class TreeManager:
 		self.treeCtrl.setDragdropListener(self)
 
 		# init the image list used in the tree
-		self.__initImageList()
-
-	def _loadbmp(self, idRes):
-		import win32dialog
-		return win32dialog.loadBitmapFromResId(idRes)
-
-	def __addImage(self, bitmap):
-		return self.__imageList.Add(bitmap.GetHandle(), 0)
-		
-	def __initImageList(self):
-		# initialize
-		import grinsRC
-
-		# viewport
-		bitmap = self._loadbmp(grinsRC.IDB_VIEWPORT)
-		id = self.__addImage(bitmap)
-		self.bitmapNameToId['viewport'] = id
-		# region
-		bitmap = self._loadbmp(grinsRC.IDB_REGION)
-		id = self.__addImage(bitmap)
-		self.bitmapNameToId['region'] = id
-		# media nodes
-		for name, idRes in [('image',grinsRC.IDB_IMAGE), ('sound',grinsRC.IDB_SOUND),
-							('video',grinsRC.IDB_VIDEO), ('text',grinsRC.IDB_TEXT),
-							('html',grinsRC.IDB_HTML),('brush',grinsRC.IDB_IMAGE),
-							('svg',grinsRC.IDB_SVG), ('null',grinsRC.IDB_IMAGE)]:
-			bitmap = self._loadbmp(idRes)
-			id = self.__addImage(bitmap)
-			self.bitmapNameToId[name] = id
-
-		self.treeCtrl.SetImageList(self.__imageList, commctrl.LVSIL_NORMAL)
+		self.initicons()
+		self.seticonlist(self.treeCtrl)
 
 	def removeNode(self, item):
 		self.treeCtrl.DeleteItem(item)
 		
 	def insertNode(self, parent, text, imageName, selectedImageName):
-		iImage = self.bitmapNameToId.get(imageName)
-		iSelectedImage = self.bitmapNameToId.get(selectedImageName)
-		if iImage is None or iSelectedImage is None:
-			iImage = self.bitmapNameToId.get('image')
-			iSelectedImage = self.bitmapNameToId.get('image')
+		iImage = self.geticonid(imageName)
+		iSelectedImage = self.geticonid(selectedImageName)
 			
 		mask = int(commctrl.TVIF_TEXT|commctrl.TVIF_IMAGE|commctrl.TVIF_SELECTEDIMAGE)
 		item = self.treeCtrl.InsertItem(mask,
@@ -582,8 +547,8 @@ class TreeManager:
 		return item
 
 	def updateNode(self, item, text, imageName, selectedImageName):
-		iImage = self.bitmapNameToId.get(imageName)
-		iSelectedImage = self.bitmapNameToId.get(selectedImageName)
+		iImage = self.geticonid(imageName)
+		iSelectedImage = self.geticonid(selectedImageName)
 		self.treeCtrl.SetItemText(item, text)
 		self.treeCtrl.SetItemImage(item, iImage, iSelectedImage)
 
