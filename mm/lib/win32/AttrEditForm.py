@@ -1173,17 +1173,25 @@ class HtmlTemplateCtrl(StringOptionsCtrl):
 class AttrSheet(dialog.PropertySheet):
 	def __init__(self,form):
 		self._form=form
+		self._showAll = None
+		self._followSelection = None
 		import __main__
 		dll=__main__.resdll
 		dialog.PropertySheet.__init__(self,grinsRC.IDR_GRINSED,dll)
 		self.HookMessage(self.onInitDialog,win32con.WM_INITDIALOG)
 		self._apply=components.Button(self,afxres.ID_APPLY_NOW)
+		self.HookMessage(self.onSize,win32con.WM_SIZE)
 
 	def onInitDialog(self,params):
 		self.HookCommand(self.onApply,afxres.ID_APPLY_NOW)
 		self.HookCommand(self.onOK,win32con.IDOK)
 		self.HookCommand(self.onCancel,win32con.IDCANCEL)
 		self._apply.attach_to_parent()
+
+		ctrl = components.CheckButton(self,101)
+		ctrl.create(components.CHECKBOX(), (0,0,200,20), 'Show all properties')
+		self._showAll = ctrl
+		self.HookCommand(self.onShowAll,101)
 
 	def onApply(self,id,code): 
 		self._form.call('Apply')
@@ -1198,6 +1206,20 @@ class AttrSheet(dialog.PropertySheet):
 	def enableApply(self,flag):
 		if self._apply:
 			self._apply.enable(flag)
+
+	def onSize(self, params):
+		if self._showAll:
+			l, t, r, b = self._showAll.getwindowrect()
+			w, h = r-l, b-t
+			msg = win32mu.Win32Msg(params)
+			flags = win32con.SWP_NOSIZE | win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE
+			self._showAll.setwindowpos(0, (4 ,msg.height()-h-4, w+4, msg.height()-4), flags)
+
+	def onShowAll(self, id, code):
+		if self._showAll.getcheck():
+			print 'show all' 
+		else:
+			print 'show most important'
 		
 class AttrPage(dialog.PropertyPage):
 	enabletooltips = 1
