@@ -7,8 +7,8 @@ gives the ability to edit these user groups.
 
 __version__ = "$Id$"
 
-import Dlg
-import Qd
+from Carbon import Dlg
+from Carbon import Qd
 import windowinterface
 import WMEVENTS
 
