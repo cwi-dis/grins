@@ -143,7 +143,7 @@ class AttrEditForm(docview.ListView):
 	# Class constructor. Calls base constructor and nullify members
 	def __init__(self,doc):
 		docview.ListView.__init__(self,doc)
-		self._title='Attribute Editor'
+		self._title='Properties'
 		self._attriblist=None
 		self._cbdict=None
 
@@ -155,7 +155,7 @@ class AttrEditForm(docview.ListView):
 			(style & ~commctrl.LVS_TYPEMASK) | commctrl.LVS_SINGLESEL | commctrl.LVS_REPORT | commctrl.LVS_SHOWSELALWAYS)
 		self.SetExStyle(commctrl.LVS_EX_FULLROWSELECT)
 		
-		header_list=[("Attribute",100),("Current Value",120),("Default",100),("Explanation",400),]
+		header_list=[("Property",100),("Current Value",120),("Default",100),("Explanation",400),]
 		self.InsertListHeader(header_list)
 		self.FillAttrList()
 
