@@ -60,14 +60,14 @@ class HierarchyViewDialog(ViewDialog):
 				('Edit content...', CONTENT),
 				None,
 				('Create simple anchor', CREATEANCHOR),
-				('Finish hyperlink to focus', FINISH_LINK)
+				('Finish hyperlink to selection', FINISH_LINK)
 				]),
 			('Navigate', [
 				('Expand/Collapse', EXPAND),
 				('Expand recursively', EXPANDALL),
 				('Collapse recusively', COLLAPSEALL),
 				None,
-				('Send focus to other views', PUSHFOCUS),
+				('Synchronize selection', PUSHFOCUS),
 				(('Show thumbnails', 'Hide thumbnails'),
 				 THUMBNAIL, 't'),
 				]),
