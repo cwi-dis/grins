@@ -2011,10 +2011,16 @@ class LayoutView2(LayoutViewDialog2):
 				
 	def onFieldCtrl(self, ctrlName, value):
 		if ctrlName in ('RegionX','RegionY','RegionW','RegionH'):
-			value = int(value)
-			self.__updateGeom(ctrlName, value)
+			try:
+				value = int(value)
+				self.__updateGeom(ctrlName, value)
+			except:
+				value = None
 		elif ctrlName == 'RegionZ':
-			value = int(value)
+			try:
+				value = int(value)
+			except:
+				value = 0
 			self.__updateZOrder(value)
 
 	def onButtonClickCtrl(self, ctrlName):
