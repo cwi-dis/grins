@@ -26,6 +26,7 @@ def usage(msg):
 class Main:
 	def __init__(self, opts, files):
 		import TopLevel, windowinterface
+		from MMExc import MSyntaxError
 		self._mm_callbacks = {}
 		try:
 			import mm, posix
@@ -37,17 +38,28 @@ class Main:
 			self._mmfd = pipe_r
 			windowinterface.select_setcallback(pipe_r,
 						self._mmcallback, ())
+		tops = []
 		for fn in files:
 			try:
 				top = TopLevel.TopLevel(self, fn)
-			except:
-				print 'parsing file %s failed' % fn
+			except MSyntaxError, msg:
+				print 'parsing file %s failed: %s' % (fn, msg)
 				continue
 			top.setwaiting()
 			top.show()
 			top.player.show()
-			if ('-j', '') in opts:
-				top.player.playfromanchor(top.root, arg)
+			tops.append(top)
+		if not tops:
+			# no toplevels made, so exit
+			# error message has already been printed
+			sys.exit(2)
+		j_arg = None
+		for o, a in opts:
+			if o == '-j':
+				j_arg = a
+		for top in tops:
+			if j_arg:
+				top.player.playfromanchor(top.root, j_arg)
 			else:
 				top.player.playsubtree(top.root)
 
