@@ -16,7 +16,7 @@ class PlayerCore(Selecter):
 	#
 	# Initialization.
 	#
-	def init(self, toplevel):
+	def __init__(self, toplevel):
 		self.toplevel = toplevel
 		self.root = self.toplevel.root
 		self.playroot = self.root # top of current mini-document
@@ -24,8 +24,7 @@ class PlayerCore(Selecter):
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
 		self.editmgr.register(self)
-		self = Selecter.init(self)
-		return self
+		Selecter.__init__(self)
 	#
 	# EditMgr interface (as dependent client).
 	#

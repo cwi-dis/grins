@@ -31,10 +31,10 @@ class Player(ViewDialog, PlayerCore):
 	#
 	# Initialization.
 	#
-	def init(self, toplevel):
-		self = ViewDialog.init(self, 'player_')
+	def __init__(self, toplevel):
+		ViewDialog.__init__(self, 'player_')
 		self.playing = self.pausing = self.locked = 0
-		self = PlayerCore.init(self, toplevel)
+		PlayerCore.__init__(self, toplevel)
 		self.channelnames = []
 		self.measure_armtimes = 0
 		self.channels = {}
@@ -53,7 +53,6 @@ class Player(ViewDialog, PlayerCore):
 		self.waiting = 0
 		self.last_geometry = None
 		self.window = None
-		return self
 
 	def destroy(self):
 		self.close()

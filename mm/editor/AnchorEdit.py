@@ -31,7 +31,7 @@ def showanchoreditor(toplevel, node):
 	try:
 		anchoreditor = node.anchoreditor
 	except AttributeError:
-		anchoreditor = AnchorEditor().init(toplevel, node)
+		anchoreditor = AnchorEditor(toplevel, node)
 		node.anchoreditor = anchoreditor
 	anchoreditor.open()
 
@@ -57,7 +57,7 @@ def hideanchoreditor(node):
 
 class AnchorEditor:
 
-	def init(self, toplevel, node):
+	def __init__(self, toplevel, node):
 		self.node = node
 		self.toplevel = toplevel
 		self.context = node.GetContext()
@@ -98,7 +98,6 @@ class AnchorEditor:
 						  right = self.buttons,
 						  bottom = self.type_choice)
 		w.fix()
-		return self
 
 	def __repr__(self):
 		return '<AnchorEditor instance, node=' + `self.node` + '>'

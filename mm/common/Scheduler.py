@@ -5,7 +5,6 @@ from sched import scheduler
 from MMExc import *
 import MMAttrdefs
 import Timing
-import rtpool
 from MMNode import alltypes, leaftypes, interiortypes
 from ArmStates import *
 from HDTL import HD, TL
@@ -22,7 +21,7 @@ N_PRIO = 5
 [END_STOP, END_PAUSE, END_KEEP] = range(3)
 
 class SchedulerContext:
-	def init(self, parent, node, seeknode, end_action):
+	def __init__(self, parent, node, seeknode, end_action):
 		self.active = 1
 		self.parent = parent
 		self.sractions = []
@@ -31,7 +30,6 @@ class SchedulerContext:
 		#self.parent.ui.duration_ind.label = '??:??'
 
 		self.prepare_minidoc(seeknode, end_action)
-		return self
 
 	
 	#
@@ -311,7 +309,7 @@ class Scheduler(scheduler):
 		# XXXX This statement should move to an intermedeate level.
 		if self.ui.sync_cv:
 			self.toplevel.channelview.globalsetfocus(node)
-		sctx = SchedulerContext().init(self, node, seek_node, end_action)
+		sctx = SchedulerContext(self, node, seek_node, end_action)
 		self.sctx_list.append(sctx)
 		self.playing = self.playing + 1
 		if not sctx.start(seek_node, anchor_id, anchor_arg):
