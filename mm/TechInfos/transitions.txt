@@ -1,0 +1,19 @@
+Transitions.
+
+The general structure of how you edit transitions that we have now is probably
+okay for a first release, with a few minor changes.
+
+The inTransition and outTransition properties are actually lists of transitions.
+The properties dialog should reflect this (a list of transitions, with
+add/edit/delete buttons). A complication is that the order is important, so the
+list should allow drag/drop or another way to rearrange the items (move up/move down
+buttons?).
+
+The transition view should give some visual indication of what the transition is.
+For this version I think we have to stick with doing the transition on the
+blue-A/yellow-B images, doing it on actual images in the document is going to be
+difficult (selecting which ones to use, mainly, and regions etc come in play too).
+
+We should also not forget that only a small subset of all transitions have been 
+implemented currently, and things like border/horzRepeat/vertRepeat have not
+been implemented at all. We should probably fix this.

@@ -1,0 +1,37 @@
+The source view.
+-----------------
+
+The implementation for the source view doesn't look like it's going to 
+be too difficult.
+
+An external editor on Windows or Mac simply won't work.
+
+The main issue is how to syncronise the changes. 
+
+- cancel changes
+
+When you have finished editing, you have a choise:
+	* Cancel the changes you made.
+	* Keep the changes you made.
+If the reload doesn't work, then obviously you can:
+	* Go back to the editor.
+	* Discard the changes and keep the old document.
+
+- edit manager locking.;
+
+When the player is in action, commits to the edit manager aren't allowed.
+We could do something similar in the source view.
+
+If the user tries to change something in the document, the source view will
+recieve a commit from the edit manager, and could ask the user:
+	* Discard the changes in the source view
+	* Keep the changes in the source view.
+
+This does, of course, mean that the user needs to close the source
+view if he / she wants to make changes to the document.
+
+- keep the current focus.
+
+When the source view starts up, it might be a good idea to select the
+nodes which have the current focus.
+
