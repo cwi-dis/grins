@@ -8,6 +8,8 @@ descendants but we may consider closing children.
 Use yellow warning triangles to show that a node has zero duration and
 as a result will not show during playback.  The triangle must be
 removed as soon as the situation changes.
+[Jack] And we should show these warning icons much more often in general!
+it is a nice an unobtrusive way of telling the user of potential problems.
 
 The SV can show lots of information, but it should be optional what
 information is show.  This can be achieved using a (dockable? --
@@ -36,18 +38,10 @@ giving the current new delay.  This can be done when time is shown in
 the parent node (in which case the pixel to time mapping should follow
 the time to pixel mapping of the parent) but also when no time is
 being shown.
-
-Maybe we want a Preview Media Element command to show a media element
-in the Player View.  This would be different from playing the element,
-since that would take timing into account.
-
-When creating a parent element, optionally move attributes to the new
-parent.  We should probably then have a dialog where the user can
-indicate which attributes to move.
-
-Allow begin/end on switch elements and on writing the SMIL file,
-create a par parent and move all attributes from the switch to the
-par.  Compare to create parent element.
+[Jack] I think this could possibly be implemented not with changing the
+cursor when on the edge of a node but when dragging from the boxes below.
+But that depends on this dragging not being used for other purposes,
+such as creating an event arc.
 
 We could create 4 icons to be used to display the type of value of the
 begin and end attributes.  The icons could indicate
@@ -56,4 +50,34 @@ begin and end attributes.  The icons could indicate
 	begin="event-based begin time"
 	begin="both scheduled and event-based begin times"
 
+Maybe we want a Preview Media Element command to show a media element
+in the Player View.  This would be different from playing the element,
+since that would take timing into account.
+[Jack] Maybe we also want this for non-leaf nodes. The effect would be that
+we do the same as "play node", but with the duration set to indefinite.
+
+When creating a parent element, optionally move attributes to the new
+parent.  We should probably then have a dialog where the user can
+indicate which attributes to move.
+[Jack] We should also offer to move hyperlink destinations.
+[Jack] We also want a way to collapse a single-child-parent with its
+child, basically the reverse operation of this one.
+
+Allow begin/end on switch elements and on writing the SMIL file,
+create a par parent and move all attributes from the switch to the
+par.  Compare to create parent element.
+
 We could have icons to indicate the type of interior nodes.
+
+[Jack] Multiple select is difficult, the semantics and set of allowed
+operations needs more thought.
+
+[Jack] We need visual feedback during drag. Currently only the mouse changes,
+but if we would see, say, a thin blue line/box to show where a media item
+(or node, or whatever) will end up if we release the mouse at this point we
+can get away with the rather narrow borders between nodes we have at the moment.
+The only alternative is to make those borders larger (at least 3 pixels, maybe 5?).
+
+[Jack] Some people (Dick and Alain, I think) have trouble with the paradigm
+of "create simple anchor"/"Finish hyperlink". We should find out why this is.
+
