@@ -725,10 +725,16 @@ class _Window:
 		else:
 			format = imgformat.rgb
 			depth = 4
-		reader = img.reader(format, file)
+		try:
+		    reader = img.reader(format, file)
+		except img.error, arg:
+		    raise error, arg
 		xsize = reader.width
 		ysize = reader.height
-		image = reader.read()
+		try:
+		    image = reader.read()
+		except: # XXXX This is lousy
+		    raise error, 'Unspecified error reading image'
 		_image_size_cache[file] = (xsize, ysize)
 		top = int(top * ysize + 0.5)
 		bottom = int(bottom * ysize + 0.5)
