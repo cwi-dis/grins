@@ -81,5 +81,16 @@ def get(node, ignoreloop=0, wanterror=0, ignoredur=0):
 			return 0
 		if ignoredur and dur is not None:
 			cache['duration'] = dur
+		try:
+			clipbegin = node.GetClip('clipbegin', 'sec')
+		except ValueError:
+			clipbegin = 0
+		try:
+			clipend = node.GetClip('clipend', 'sec')
+		except ValueError:
+			clipend = 0
+		if clipend:
+			dur = min(dur, clipend)
+		dur = max(dur - clipbegin, 0)
 		return loop * dur
 	return duration
