@@ -1106,7 +1106,7 @@ class FloatTupleCtrl(TupleCtrl):
 					s = st[i]
 				self._attrval[i].settext(s)
 
-class ListCtrl(AttrCtrl):
+class EventCtrl(AttrCtrl):
 	# This is a list control, but it's specific to events. If you
 	# want a generic list control, you'll need to rename this.
 	# _attr, _attrval, _initctrl, _listeners, _resid, _validator, _wnd
@@ -1119,47 +1119,90 @@ class ListCtrl(AttrCtrl):
 		#'resid': Tuple of ints (4)/resource ids - list, 'add', 'delete', 'edit' (3 buttons)
 		#'self': <AttrEditForm.ListCtrl instance at 1cbd9d0>} -> me :-).
 		AttrCtrl.__init__(self, wnd, attr, resid)
-		self._attrname=components.Control(wnd,resid[0])
+		#self._attrname=components.Control(wnd,grinsRC.IDC_EVENTLASSOO)
 		#self._nedit=len(resid)-1 - how can an int have a length?
 		self._attrval=[]
-		#for i in range(self._nedit):
-		#	self._attrval.append(components.Edit(wnd,resid[i+1]))
-		self._list = components.ListBox(wnd, resid[1])
-		self._addbutton = components.Button(wnd, resid[2])
-		self._deletebutton = components.Button(wnd, resid[3])
-		self._editbutton = components.Button(wnd, resid[4])
+
+		# State variables:
+		self._eventstruct = None	# This is the currently edited struct.
+		self.selected_radiobutton = 'delay'
+		self.dont_update = 0
+		
+		self._list = components.ListBox(wnd, grinsRC.IDC_EVENTLIST)
+		self._addbutton = components.Button(wnd, grinsRC.IDC_NEWBUTTON)
+		self._deletebutton = components.Button(wnd, grinsRC.IDC_DELETEBUTTON)
+
+		self._eventwidget = components.ComboBox(self._wnd, grinsRC.IDC_EVENTTYPE)
+		self._textwidget = components.Edit(self._wnd, grinsRC.IDC_THINGVALUE)
+		self._thingnamewidget = components.Edit(self._wnd, grinsRC.IDC_THINGNAME) # static text box.
+		self._resultwidget = components.Edit(self._wnd, grinsRC.IDC_EVENTLASSOO)
+		self._offsetwidget = components.Edit(self._wnd, grinsRC.IDC_EDITOFFSET)
+
+		g = grinsRC
+		self._radiobuttons = {
+			g.IDC_RDELAY: 'delay',
+			g.IDC_RNODE: 'node',
+			g.IDC_RLAYOUT: 'region',
+			g.IDC_RINDEFINITE: 'indefinite',
+			g.IDC_RACCESSKEY: 'accesskey',
+			g.IDC_RWALLCLOCK: 'wallclock',
+			g.IDC_RMARKER: 'marker',
+			}
+		self._radiobuttonwidgets = {}
+		
 		self._node = None	# MMNode. Needed for creating new nodes.
 
 	def OnInitCtrl(self):
-		# TODO: self._attrval needs to be a list of syncarcs.
-		self._attrval=['hello', 'world']
 		self._initctrl=self
 
-		self._attrname.attach_to_parent()
-		self._list.attach_to_parent() # TODO: what does this do? 
+		#self._attrname.attach_to_parent()
+		self._list.attach_to_parent()
 		self._addbutton.attach_to_parent()
 		self._deletebutton.attach_to_parent()
-		self._editbutton.attach_to_parent()
-		self._wnd.HookCommand(self.OnAdd, self._resid[2])
-		self._wnd.HookCommand(self.OnDelete, self._resid[3])
-		self._wnd.HookCommand(self.OnEdit, self._resid[4])
-		#self._wnd.HookCommand(self.OnListEdit, self._resid[0])
+		self._eventwidget.attach_to_parent()
+		self._textwidget.attach_to_parent()
+		self._thingnamewidget.attach_to_parent()
+		self._resultwidget.attach_to_parent()
+		self._offsetwidget.attach_to_parent()
+		self.__init_radiobuttons()
+
+		# Top half of window.
+		self._list.hookcommand(self._wnd, self._listcallback)
+		self._wnd.HookCommand(self.OnAdd, grinsRC.IDC_NEWBUTTON)
+		self._wnd.HookCommand(self.OnDelete, grinsRC.IDC_DELETEBUTTON)
+
+		# Bottom half of window
+		#self._causewidget.hookcommand(self, self._causewidgetcallback)
+		self._eventwidget.hookcommand(self._wnd, self._eventwidgetcallback)
+		self._textwidget.hookcommand(self._wnd, self._textwidgetcallback)
+		self._offsetwidget.hookcommand(self._wnd, self._offsetwidgetcallback)
 
 		bob = self._attr.getcurrent()
 		self.setvalue(bob)
+		self.update()
 
-		#self._attrname.attach_to_parent()
-		#if self.want_label:
-		#	label = self._attr.getlabel()
-		#	if self.want_colon_after_label:
-		#		label = label + ':'
-		#	self._attrname.settext(label)
-		#for i in range(self._nedit):		
-		#	self._attrval[i].attach_to_parent()
-		#strxy=self._attr.getcurrent()
-		#self.setvalue(strxy)
-		#for i in range(self._nedit):
-		#	self._attrval[i].hookcommand(self._wnd,self.OnEdit)
+	def __init_radiobuttons(self):
+		for k,v in self._radiobuttons.items():
+			new = components.RadioButton(self._wnd, k)
+			self._radiobuttonwidgets[v] = new
+			new.attach_to_parent()
+			new.hookcommand(self._wnd, self._radiobuttoncallback)
+
+	def update(self):
+		# Updates all the widgets.
+		if self.dont_update:
+			return		# If I don't do this, the widgets refresh themselves ad inifinitium.
+		self.dont_update = 1
+		self.resetlist()
+		self.initevent()
+		self.dont_update = 0
+
+	def initevent(self):
+		self.set_radiobuttons()
+		self.set_eventwidget()
+		self.set_textwidget()
+		self.set_offsetwidget()
+		self.set_resultwidget()
 
 	def sethelp(self):
 		print "TODO: sethelp."
@@ -1167,14 +1210,13 @@ class ListCtrl(AttrCtrl):
 	def OnAdd(self, id, code):
 		# Callback from the "add" button, which I renamed to "new"
 		# self._node should be an MMNode
-		assert self._node is not None
+		if self._node is None:
+			print "ERROR: I cannot create this! I have no node."
+			return
 		n = EventEditor.EventStruct(None, node = self._node, action = self._attr.getname())
-		edit = EventEditor.EventEditor(parent=self._wnd._form)
-		edit.set_eventstruct(n)
-		if edit.show():
-			self._value.append(n)
-		self.resetlist()
-		#s = EventEditor.newevent()
+		self._value.append(n)
+		self._eventstruct = n
+		self.update()
 
 	def OnDelete(self, id, code):
 		# callback for the "delete" button
@@ -1182,85 +1224,150 @@ class ListCtrl(AttrCtrl):
 		if a >= 0 and a < len(self._value):
 			#self._list.deletestring(a)
 			del self._value[a]
+			self._eventstruct = None
 			self.resetlist()
 			# delete only from the list; this will later be converted to a lack of syncarc.
 		else:
 			print "DEBUG: weirdly selected list member: ", a
 
-	def OnEdit(self, id, code):
-		# callback for the "edit" button.
-		selected = self._list.getselected()
-		if selected >= 0 and selected < len(self._value):
-			edit = EventEditor.EventEditor(parent=self._wnd._form)
-			edit.set_eventstruct(self._value[selected])
-			edit.show()
-			self._value[selected] = edit.get_eventstruct()
-			self.setvalue(self._value)
-		else:
-			print "DEBUG: Weirdly selected event."
-
-	#def OnListEdit(self, id, code):
-	#	print "OnListEdit: ", self._list.getselected(), self._list.getcursel()
-
 	def enable(self, enable):
 		pass
-		#for c in self._attrval:
-		#	c.enable(enable)
 
 	def resetlist(self):
+		sel = self._list.getcursel()
 		self._list.resetcontent()
 		for i in range(0, len(self._value)):
 			self._list.insertstring(i, self._value[i].as_string())
-
-		# I don't have strings; I have event objects.
-		#for i in val:
-		#	st = EventEditor.syncarc2string(i)
-		#	self._list.addstring(st)
-		#self._list.addlistitems(val)
-		#if self._initctrl:
-		#	t=self.atoi_tuple(val)
-		#	st=self.dtuple2stuple(t,self._nedit)
-		#	default = string.split(self._attr.getdefault())
-		#	for i in range(self._nedit):
-		#		self._attrval[i].settext(st[i] or default[i])
+		if sel >= 0 and sel < len(self._value):
+			self._list.setcursel(sel)
 
 	def setvalue(self, val):
-		# val should be a tuple of (node, EventStructs)
-		#print "DEBUG: val is: ", val
-		#import traceback ; traceback.print_stack()
 		if isinstance(val, type(())):
 			self._node, self._value = val	# store for later use.
 		elif isinstance(val, type([])):
 			self._value = val
 		else:
 			print "ERROR: ListCtrl.setvalue received an invalid value."
-		self.resetlist()
 
 	def getvalue(self):
-		return (self._node, self._value)
-		#if not self._initctrl:
-		#	return self._attr.getcurrent()
-		#default = string.split(self._attr.getdefault())
-		#st=[]
-		#for i in range(self._nedit):
-		#	st.append(self._attrval[i].gettext() or default[i])
-		#return string.join(st)
-
-	#def OnEdit(self,id,code):
-	#	print "DEBUG: ListCtrl.OnEdit called."
-	#	if code==win32con.EN_SETFOCUS:
-	#		self.sethelp()
-	#	elif code==win32con.EN_CHANGE:
-	#		self.notifylisteners('change')
-	#		self.enableApply()
+		return self._value
+		#return (self._node, self._value)
 
 	def settooltips(self,tooltipctrl):
-		help = self.gethelp()
-		for i in [0,1,2,3]:
-			tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[i]), help, None, 0)
+		pass
+		#help = self.gethelp()
+		#for i in [0,1,2,3]:
+		#	tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[i]), help, None, 0)
 		#for i in range(self._nedit):
 		#	tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[i+1]),self.gethelp(),None,0)
 
+	def set_radiobuttons(self):
+		if not self._eventstruct:
+			return
+		cause = self._eventstruct.get_cause()
+		self._radiobuttonwidgets[self.selected_radiobutton].setcheck(0)
+		self._radiobuttonwidgets[cause].setcheck(1)
+	def set_eventwidget(self):
+		# Sets the value of the event widget.
+		self._eventwidget.resetcontent()
+		if not self._eventstruct:
+			return
+		l = self._eventstruct.get_possible_events()
+		if l:
+			#self._eventwidget.setreadonly(0) # combo boxes don't have readonly attributes.
+			map(self._eventwidget.addstring, l)
+		#else:
+			#self._eventwidget.setreadonly(1)
+		i = self._eventstruct.get_event_index()
+		if i:
+			self._eventwidget.setcursel(i)
+		else:
+			print "DEBUG: event widget has no index."
+			
+	def set_textwidget(self):
+		if not self._eventstruct:
+			self._textwidget.settext("")
+			self._textwidget.setreadonly(1)
+			return
+		name, string, isnumber, isreadonly = self._eventstruct.get_thing_string()
+		if isreadonly or string is None:
+			self._textwidget.setreadonly(1)
+		else:
+			self._textwidget.setreadonly(0)
+		if string:
+			self._textwidget.settext(string)
+		else:
+			self._textwidget.settext("")
+		self._thingnamewidget.settext(name)
+	def set_resultwidget(self):
+		if not self._eventstruct:
+			self._resultwidget.settext("")
+		else:
+			self._resultwidget.settext(self._eventstruct.as_string())
+	def set_offsetwidget(self):
+		if not self._eventstruct:
+			self._offsetwidget.settext("")
+			self._offsetwidget.setreadonly(1)
+			return
+		r = self._eventstruct.get_offset()
+		if r:
+			self._offsetwidget.setreadonly(0)
+			self._offsetwidget.settext(r)
+		else:
+			self._offsetwidget.settext("")
+			self._offsetwidget.setreadonly(1)
+
+	def _listcallback(self, id, code):
+		if code != win32con.CBN_SELCHANGE:
+			return
+		i = self._list.getselected()
+		if i >= 0 and i < len(self._value):
+			self._eventstruct = self._value[i]
+			self.dont_update = 1
+			self.initevent()
+			self.dont_update = 0
+		else:
+			print "error: wierdly selected list member: ", i
+
+##	def _causewidgetcallback(self, id, code):
+##		if not self._eventstruct:
+##			return		
+##		if code == win32con.CBN_SELCHANGE:
+##			s = self._causewidget.getvalue()
+##			self._eventstruct.set_cause(s)
+##			self.set_eventwidget()
+	def _eventwidgetcallback(self, id, code):
+		if not self._eventstruct:
+			return
+		if code == win32con.CBN_SELCHANGE:
+			s = self._eventwidget.getvalue()
+			self._eventstruct.set_event(s)
+			self.update()
+	def _textwidgetcallback(self, id, code):
+		if not self._eventstruct:
+			return
+		if code != win32con.EN_CHANGE:
+			return
+		t = self._textwidget.gettext()
+		error = self._eventstruct.set_thing_string(t)
+		if error:
+			print "ERROR:", error
+		self.update()
+	def _offsetwidgetcallback(self, id, code):
+		if code != win32con.EN_CHANGE:
+			return
+		if not self._eventstruct:
+			return
+		if not self._eventstruct.set_offset(self._offsetwidget.gettext()):
+			# In theory this will never happen - the widget is numeric only.
+			print "ERROR:", error
+		self.update()
+	def _radiobuttoncallback(self, id, code):
+		if code == win32con.BN_CLICKED and self._eventstruct:
+			newcause = self._radiobuttons[id]
+			self._eventstruct.set_cause(newcause)
+			self.update()
+			self.selected_radiobutton = newcause
 
 ##################################
 # StringOptionsCtrl can be used as a StringCtrl but the user 
@@ -3631,23 +3738,41 @@ class WipeGroup(AttrGroup):
 		cd[a] = OptionsRadioNocolonCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24,grinsRC.IDC_25))
 		return cd
 
-class TimeListGroup(AttrGroup):
-	data=attrgrsdict['timelist']
+class BeginListGroup(AttrGroup):
+	data=attrgrsdict['beginlist']
 
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
 
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_2LIST
+		return grinsRC.IDD_EDITATTR_EVENTLIST
 
 	def createctrls(self,wnd):
 		cd = {}
+		#a = self.getattr('beginlist')
+		#cd[a] = ListCtrl(wnd,a,(grinsRC.IDC_STATIC1, grinsRC.IDC_LIST4, grinsRC.IDC_BUTTON7, grinsRC.IDC_BUTTON8, grinsRC.IDC_BUTTON9))
 		a = self.getattr('beginlist')
-		cd[a] = ListCtrl(wnd,a,(grinsRC.IDC_STATIC1, grinsRC.IDC_LIST4, grinsRC.IDC_BUTTON7, grinsRC.IDC_BUTTON8, grinsRC.IDC_BUTTON9))
-		a = self.getattr('endlist')
-		cd[a] = ListCtrl(wnd,a,(grinsRC.IDC_STATIC2, grinsRC.IDC_LIST3, grinsRC.IDC_BUTTON4, grinsRC.IDC_BUTTON5, grinsRC.IDC_BUTTON6))
+		cd[a] = EventCtrl(wnd,a,())
 		return cd
 
+class EndListGroup(AttrGroup):
+	data=attrgrsdict['endlist']
+
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_EVENTLIST
+
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('endlist')
+		cd[a] = EventCtrl(wnd,a,())
+		#a = self.getattr('endlist')
+		#cd[a] = ListCtrl(wnd,a,(grinsRC.IDC_STATIC2, grinsRC.IDC_LIST3, grinsRC.IDC_BUTTON4, grinsRC.IDC_BUTTON5, grinsRC.IDC_BUTTON6))
+		return cd
+
+ 
 class Convert1Group(AttrGroup):
 	data = attrgrsdict['convert1']
 
@@ -3872,7 +3997,8 @@ groupsui={
 	'.cname':CNameGroup,
 	'intname':INameGroup,
 
-	'timelist':TimeListGroup,
+	'beginlist':BeginListGroup,
+	'endlist':EndListGroup,
 	'timing1':DurationGroup,
 	'timing2':Duration2Group,
 	'timing3':Duration3Group,

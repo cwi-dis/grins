@@ -1583,6 +1583,9 @@ class AttrEditor(AttrEditorDialog):
 			self.close()
 
 	def apply_callback(self):
+		# For those of us who can't tell verbs from nouns, apply here means "The Apply button"
+		# and this is a callback for when the "Apply button" is pressed - although it gets called
+		# from the "Ok" button also.
 		self.__new = 0
 		# first collect all changes
 		dict = {}
@@ -1602,7 +1605,8 @@ class AttrEditor(AttrEditorDialog):
 						pass
 				try:
 					value = b.parsevalue(str)
-				except:
+				except ValueError, eparam:
+					print "DEBUG: ValueError exception: ", eparam
 					typedef = self.wrapper.getdef(name)[0]
 					exp = typedef[0]
 					if exp == 'int':
@@ -1998,7 +2002,8 @@ class TimelistAttrEditorField(AttrEditorField):
 		n = self.wrapper.node
 		for i in listofsyncarcs:
 			return_me.append(EventEditor.EventStruct(i, n))
-		return (n, return_me)	# The editor (see AttrEditForm.py) needs the node, this is the
+		return return_me
+#		return (n, return_me)	# The editor (see AttrEditForm.py) needs the node, this is the
 					# only way I know to get it there. Possible TODO.
 
 	def parsevalue(self, editorstruct):
@@ -2006,7 +2011,10 @@ class TimelistAttrEditorField(AttrEditorField):
 		# The node is there for consistancy.
 		# Converts editorstruct back into a list of syncarcs.
 		return_me = []
-		node, value = editorstruct # ignore the node.
+		if isinstance(editorstruct, type(())):
+			node, value = editorstruct # ignore the node.
+		else:
+			value = editorstruct
 		for i in value:
 			if i: return_me.append(i.get_value()) # i could be None.
 		return return_me
