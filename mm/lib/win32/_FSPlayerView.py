@@ -29,7 +29,7 @@ from WMEVENTS import *
 import usercmd
 
 # generic wnd class
-from pywin.mfc import window
+from pywinlib.mfc import window
 
 # cursors
 import grinsRC

@@ -468,9 +468,8 @@ class ComboBox(Control):
 
 ##################
 # A special class that it is both an MFC window and A LightWeightControl
-# from pywin.mfc import window
 
-from pywin.mfc import window
+from pywinlib.mfc import window
 
 class WndCtrl(LightWeightControl,window.Wnd):
 	def create_wnd_from_handle(self):

@@ -27,7 +27,7 @@ import components, win32dialog
 import usercmd
 import win32mu
 
-from pywin.mfc import window,object,docview
+from pywinlib.mfc import window,object,docview
 import afxres,commctrl
 
 # This indermediate class based on the framework FormView class implements the 

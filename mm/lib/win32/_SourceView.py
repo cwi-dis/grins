@@ -13,7 +13,7 @@ import win32mu
 
 import usercmd
 
-from pywin.mfc import window,object,docview
+from pywinlib.mfc import window,object,docview
 import afxres,commctrl
 
 class _SourceView(docview.EditView):
