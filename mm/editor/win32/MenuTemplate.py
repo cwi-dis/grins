@@ -47,6 +47,7 @@ MENUBAR=(
 		(LIGHT, ENTRY, 'Save &as...', None, SAVE_AS),
 		(LIGHT, CASCADE, '&Export', (
 			(LIGHT, ENTRY, '&RealSystem G2...', None, EXPORT_SMIL),
+			(LIGHT, ENTRY, '&Upload RealSystem G2...', None, UPLOAD_SMIL),
 			)),
 		(LIGHT, ENTRY, 'Revert &to saved', None, RESTORE),
 		(LIGHT, SEP,),
