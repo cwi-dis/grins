@@ -189,6 +189,10 @@ SOURCE=.\M_ArmStates.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_ASXNode.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_ASXParser.c
 # End Source File
 # Begin Source File
@@ -922,6 +926,10 @@ SOURCE=.\M_SoundDuration.c
 # Begin Source File
 
 SOURCE=.\M_splash.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_splashbmp.c
 # End Source File
 # Begin Source File
 
