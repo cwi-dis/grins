@@ -39,7 +39,7 @@ from GenFormView import GenFormView
 
 class _LayoutView(GenFormView):
 	def __init__(self,doc):
-		GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT2)	
+		GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT)	
 		self._lnames=l=('LayoutList','ChannelList','OtherList')
 		self[l[0]]=components.ListBox(self,grinsRC.IDC_LAYOUTS)
 		self[l[1]]=components.ListBox(self,grinsRC.IDC_LAYOUT_CHANNELS)
