@@ -175,12 +175,11 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 
 	def resize(self, arg, window, event, value):
 		# hack for MovieChannel
-		windowinterface.setcursor('watch')
+		self._player.toplevel.setwaiting()
 		if hasattr(window, '_gc'):
 			window._gc.SetRegion(window._clip)
 			window._gc.foreground = window._convert_color(window._bgcolor)
 		apply(self.threads.resized, window._rect)
-		windowinterface.setcursor('')
 		return
 
 	def playstop(self):
