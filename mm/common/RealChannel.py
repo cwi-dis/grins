@@ -105,6 +105,7 @@ class RealChannel:
 		if duration > 0:
 			self.__qid = self._scheduler.enter(duration, 0,
 							   self.__stop, ())
+		self.__playdone_called = 0
 		# WARNING: RealMedia player doesn't unquote, so we must do it
 		url = MMurl.unquote(url)
 		self.__rmaplayer.OpenURL(url)
@@ -118,7 +119,10 @@ class RealChannel:
 		if self.__rmaplayer:
 			self.__loop = 1
 			self.__rmaplayer.Stop()
-			# XXX does this indeed cause OnStop to be called?
+			# This may cause OnStop to be called, and it may not....
+			if not self.__playdone_called:
+				self.playdone(0)
+				self.__playdone_called = 1
 		else:
 			self.playdone(0)
 
@@ -127,7 +131,9 @@ class RealChannel:
 			self.__loop = self.__loop - 1
 			if self.__loop == 0:
 				if self.__qid is None:
-					self.playdone(0)
+					if not self.__playdone_called:
+						self.playdone(0)
+						self.__playdone_called = 1
 				return
 ##		print 'looping'
 		windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
