@@ -316,7 +316,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						boston = 'signed clock value'
 					continue
 				tokens = filter(None, map(string.strip, tokenize(val)))
-				for i in range(len(tokens)):
+				ok = 1
+				i = 0
+				while i < len(tokens):
 					# this can't match the first
 					# time round because of part
 					# above
@@ -324,13 +326,21 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						try:
 							offset = self.__parsecounter(string.join(tokens[i:], ''), withsign = 1)
 						except error:
-							self.syntax_error('bad offset value')
-							continue
+							self.syntax_error('bad offset value or unescaped - in identifier')
+							if tokens[i] == '-':
+								# try to fix it
+								tokens[i-1:i+2] = [string.join(tokens[i-1:i+2], '')]
+								continue
+							ok = 0
+							break
 						del tokens[i:]
 						val = string.join(tokens, '')
 						break
+					i = i + 1
 				else:
 					offset = None
+				if not ok:
+					continue
 
 				if tokens[0] == 'prev':
 					if len(tokens) != 3 or tokens[1] != '.' or tokens[2] not in ('begin', 'end'):
@@ -387,7 +397,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 				if '.' not in tokens:
 					# event value
-					# XXX this includes thins like
+					# XXX this includes things like
 					# repeat(3)
 					list.append(MMNode.MMSyncArc(node, attr, srcnode = node, event = string.join(string.split(string.join(tokens, ''), '\\'), ''), delay = offset or 0))
 					continue
