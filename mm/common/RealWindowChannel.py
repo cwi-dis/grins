@@ -9,6 +9,8 @@ __version__ = "$Id$"
 """
 import Channel, RealChannel
 
+realwindowchanneldebug=0
+
 class RealWindowChannel(Channel.ChannelWindowAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.need_armdone = 0
@@ -16,6 +18,8 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def do_arm(self, node, same = 0):
+		if realwindowchanneldebug:
+			print 'do_arm', self, node
 		if self.__rc is None or not self.__rc.prepare_player(node):
 			import MMAttrdefs
 			name = MMAttrdefs.getattr(node, 'name')
@@ -48,6 +52,8 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 		Channel.ChannelWindowAsync.do_hide(self)
 		
 	def do_play(self, node):
+		if realwindowchanneldebug:
+			print 'do_play', self, node
 		if self.__rc is None or \
 		   not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
 			self.playdone(0)
@@ -59,6 +65,8 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 			self.__rc.pauseit(paused)
 
 	def stopplay(self, node):
+		if realwindowchanneldebug:
+			print 'stopplay', self, node
 		if self.__rc is not None:
 			self.__rc.stopit()
 		Channel.ChannelWindowAsync.stopplay(self, node)
@@ -80,6 +88,8 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 		return None
 
 	def play(self, node):
+		if realwindowchanneldebug:
+			print 'play', self, node
 		self.need_armdone = 0
 		self.play_0(node)
 		if self._is_shown and node.ShouldPlay() \
@@ -101,6 +111,10 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 			self.play_1()
 
 	def playdone(self, dummy):
+		if realwindowchanneldebug:
+			print 'playdone', self
+		if self._armstate != Channel.ARMED:
+			self.need_armdone = 0
 		if self.need_armdone:
 			self.need_armdone = 0
 			self.armdone()
