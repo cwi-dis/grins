@@ -316,4 +316,5 @@ def cleanup():
 			pass
 	temps[:] = []
 
+import FileCache
 aiffcache = FileCache.FileCache().init(makeaiff, rmcache)
