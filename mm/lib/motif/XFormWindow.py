@@ -913,6 +913,81 @@ class TextEdit(_Widget):
 		_Widget._destroy(self, widget, value, call_data)
 		del self._linecache
 
+class Html(_Widget):
+	# This class implements an extremely simplistic HTML browser.
+	# When following a link, the html widget is re-created.  This
+	# is a kludge to get around the problem that the View widget
+	# doesn't seem to get any events anymore when a new page is
+	# loaded.  This resulted in the impossibility to scroll the
+	# window and follow links.
+	def __init__(self, parent, url, name = 'windowHtml', **options):
+		self.__name = name
+		self.url = None
+		attrs = {'width': 600, 'height': 400,
+			 'borderWidth': 0, 'marginWidth': 0,
+			 'borderHeight': 0, 'marginHeight': 0}
+		self._attachments(attrs, options)
+		form = parent._form.CreateManagedWidget(name+'Form',
+							Xm.DrawingArea, attrs)
+		self.__htmlw = None
+		_Widget.__init__(self, parent, form)
+		form.AddCallback('resizeCallback', self.__resize, None)
+		if url:
+			self.goto_url(url)
+
+	def __resize(self, form, client_data, call_data):
+		if self.__htmlw is not None:
+			self.__htmlw.SetValues(
+				form.GetValues(['width', 'height']))
+
+	def __cblink(self, htmlw, client_data, call_data):
+		href = call_data.href
+		if href:
+			self.url = href
+
+	def __cbanchor(self, htmlw, client_data, call_data):
+		self.goto_url(call_data.href)
+
+	def __resolveImage(self, htmlw, src, noload = 0):
+		from MMurl import basejoin
+		from XHtml import resolveImage
+		src = basejoin(self.url, src)
+		return resolveImage(htmlw, src, noload)
+
+	def __destroy(self, htmlw, client_data, call_data):
+		htmlw.FreeImageInfo()
+
+	def goto_url(self, url):
+		import MMurl, HTML
+		if self.url:
+			url = MMurl.basejoin(self.url, url)
+		self.url, tag = MMurl.splittag(url)
+		try:
+			fn, hdrs = MMurl.urlretrieve(self.url)
+		except IOError:
+			import sys
+			text = '<H1>Cannot Open</H1><P>'+ \
+				  'Cannot open '+self.url+':<P>'+ \
+				  `(sys.exc_type, sys.exc_value)`+ \
+				  '<P>\n'
+		else:
+			if hdrs.has_key('Content-Location'):
+				self.url = hdrs['Content-Location']
+			text = open(fn, 'rb').read()
+		if self.__htmlw is not None:
+			self.__htmlw.DestroyWidget()
+		attrs = {'x': 0, 'y': 0,
+			 'resolveImageFunction': self.__resolveImage,
+			 'resolveDelayedImage': self.__resolveImage}
+		attrs.update(self._form.GetValues(['width', 'height']))
+		html = self._form.CreateManagedWidget(self.__name, HTML.html,
+						      attrs)
+		html.AddCallback('anchorCallback', self.__cbanchor, None)
+		html.AddCallback('linkCallback', self.__cblink, None)
+		html.AddCallback('destroyCallback', self.__destroy, None)
+		self.__htmlw = html
+		html.SetText(text, '', '', 0, tag)
+
 class Separator(_Widget):
 	def __init__(self, parent, useGadget = _def_useGadget,
 		     name = 'windowSeparator', vertical = 0,
@@ -1134,6 +1209,8 @@ class _WindowHelpers:
 			     (self, prompt, inittext, chcb, accb), options)
 	def TextEdit(self, inittext, cb, **options):
 		return apply(TextEdit, (self, inittext, cb), options)
+	def Html(self, url, **options):
+		return apply(Html, (self, url), options)
 	def Separator(self, **options):
 		return apply(Separator, (self,), options)
 	def ButtonRow(self, buttonlist, **options):
@@ -1294,7 +1371,7 @@ class Window(_WindowHelpers, _MenuSupport, _CommandSupport):
 		else:
 			wattrs['iconName'] = title
 			self._shell = toplevel._main.CreatePopupShell(Name,
-				Xt.ApplicationShell, wattrs)
+				Xt.AppllicationShell, wattrs)
 			self._form = self._shell.CreateManagedWidget(
 				'windowForm', Xm.Form, attrs)
 			if options.has_key('deleteCallback'):

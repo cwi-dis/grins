@@ -11,6 +11,7 @@ import MMAttrdefs
 from MMExc import *
 import sys
 import windowinterface
+import XHtml
 import MMurl
 from TextChannel import getfont, mapfont
 import parsehtml
@@ -154,7 +155,6 @@ class HtmlChannel(Channel.ChannelWindow):
 			wh = {'width': w, 'height': h, 'x': x, 'y': y}
 		self.htmlw.SetValues(wh)
 
-
 	def do_arm(self, node, same=0):
 	        if not same:
 	        	try:
@@ -284,6 +284,7 @@ class HtmlChannel(Channel.ChannelWindow):
 			widget.SetAppSensitive()
 		except TypeError:
 			pass
+		windowinterface.toplevel.setready()
 
 	def cbform(self, widget, userdata, calldata):
 		if widget is not self.htmlw:
@@ -296,8 +297,9 @@ class HtmlChannel(Channel.ChannelWindow):
 		if not href or href[:5] <> 'cmif:':
 			self.www_jump(href, calldata.method,
 				      calldata.enctype, list)
-			return
-		self.cbcmifanchor(href, list)
+		else:
+			self.cbcmifanchor(href, list)
+		windowinterface.toplevel.setready()
 
 	def cbcmifanchor(self, href, list):
 		aname = href[5:]
@@ -349,46 +351,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		MMAttrdefs.flushcache(node)
 
 	def resolveImage(self, widget, src, noload = 0):
-		import X
 		src = MMurl.basejoin(self.url, src)
-		try:
-			return image_cache[src]
-		except KeyError:
-			pass
-		if noload:
-			return None
-		try:
-			filename, info = MMurl.urlretrieve(src)
-		except IOError:
-			return None
-		import img, imgformat
-		visual = widget.visual
-		if visual.c_class == X.TrueColor and visual.depth == 8:
-			format = windowinterface.toplevel._imgformat
-		else:
-			format = imgformat.xcolormap
-		try:
-			reader = img.reader(format, filename)
-		except:
-			return
-		is_transparent = 0
-		if hasattr(reader, 'transparent') and \
-		   hasattr(reader, 'colormap'):
-			is_transparent = 1
-			reader.colormap[reader.transparent] = windowinterface.toplevel._colormap.QueryColor(widget.background)[1:4]
-		if format is imgformat.xcolormap:
-			colors = map(None, reader.colormap)
-		else:
-			colors = range(256)
-			colors = map(None, colors, colors, colors)
-		dict = {'width': reader.width, 'height': reader.height,
-			'image_data': reader.read(), 'colors': colors}
-		if not is_transparent:
-			# only cache non-transparent images since the
-			# background can be different next time we use
-			# the image
-			image_cache[src] = dict
-		return dict
+		return XHtml.resolveImage(widget, src, noload)
 
 	#
 	# The stuff below has little to do with CMIF per se, it implements
@@ -452,11 +416,10 @@ class HtmlChannel(Channel.ChannelWindow):
 			if hdrs.type != 'text/html':
 				import Hlinks
 				self._player.toplevel.jumptoexternal(self.url, None, Hlinks.TYPE_JUMP)
+				return
 			else:
 				newtext = open(fn, 'rb').read()
-				self.htmlw.SetText(newtext, None, self.footer, 0, tag)
-
-image_cache = {}
+		self.htmlw.SetText(newtext, None, self.footer, 0, tag)
 
 def addquery(href, list):
 	if not list: return href
