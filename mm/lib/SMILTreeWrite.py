@@ -814,7 +814,7 @@ def getpath(writer, node):
 	return attr
 
 def getcollapsed(writer, node):
-	if node.GetType() in interiortypes and node.collapsed:
+	if node.GetType() in (interiortypes + mediatypes) and node.collapsed:
 		return 'true'
 
 def getshowtime(writer, node):
@@ -2526,9 +2526,9 @@ class SMILWriter(SMIL):
 			sendTo = anchor.GetAttrDef('sendTo', None)
 			if sendTo is not None:
 				attrlist.append(('%s:sendTo' % NSRP9prefix, sendTo))
-			self.writetag('area', attrlist)
+			self.writetag('area', attrlist, anchor)
 		else:
-			self.writetag('anchor', attrlist)
+			self.writetag('anchor', attrlist, anchor)
 
 	def newfile(self, srcurl):
 		import posixpath, urlparse

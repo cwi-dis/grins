@@ -200,20 +200,27 @@ class HierarchyViewDialog(ViewDialog):
 		from StructureWidgets import MMWidgetDecoration
 		if isinstance(dstwidget, MMWidgetDecoration):
 			dstwidget = dstwidget.mmwidget
+		rv = windowinterface.DROPEFFECT_NONE
 		if dstwidget:
 			dstnode = dstwidget.get_node()
-		if dstwidget and dstwidget.get_node().GetType() in MMNode.interiortypes:
-			if cmd=='move':
-				if srcnode.IsAncestorOf(dstnode):
-					rv = windowinterface.DROPEFFECT_NONE
+			if srcnode.GetType() in ('anchor', 'animpar'):
+				# anchor and animpar can only be dropped on media nodes
+				if dstnode.GetType() in MMNode.mediatypes:
+					if cmd=='move':
+						if not srcnode.IsAncestorOf(dstnode):
+							self.droppable_widget = dstwidget
+							rv = windowinterface.DROPEFFECT_MOVE
+					else:
+						self.droppable_widget = dstwidget
+						rv = windowinterface.DROPEFFECT_COPY
+			elif dstnode.GetType() in MMNode.interiortypes:
+				if cmd=='move':
+					if not srcnode.IsAncestorOf(dstnode):
+						self.droppable_widget = dstwidget
+						rv = windowinterface.DROPEFFECT_MOVE
 				else:
 					self.droppable_widget = dstwidget
-					rv = windowinterface.DROPEFFECT_MOVE
-			else:
-				self.droppable_widget = dstwidget
-				rv = windowinterface.DROPEFFECT_COPY
-		else:
-			rv = windowinterface.DROPEFFECT_NONE
+					rv = windowinterface.DROPEFFECT_COPY
 		self.draw()
 		return rv
 

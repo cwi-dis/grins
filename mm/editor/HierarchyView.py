@@ -18,6 +18,7 @@ test drag+drop with multiple nodes.
 import windowinterface, WMEVENTS
 import MMAttrdefs
 import MMNode
+import MMTypes
 import EditableObjects
 from HierarchyViewDialog import HierarchyViewDialog
 import BandwidthCompute
@@ -362,11 +363,11 @@ class HierarchyView(HierarchyViewDialog):
 			commands = commands + self.finishlinkcommands
 		if len(self.event_sources) > 0:
 			commands = commands + self.finisheventcommands
-		if fntype in MMNode.interiortypes:
+		if fntype in MMTypes.interiortypes:
 			commands = commands + self.interiorcommands # Add interior structure modifying commands.
 		if self.root.showtime:
 			commands = commands + self.timelinezoomcommands
-		if fntype not in MMNode.interiortypes and \
+		if fntype not in MMTypes.interiortypes and \
 		   fnode.GetChannelType() != 'sound' and \
 		   not (self.toplevel.links and self.toplevel.links.islinksrc(fnode)):
 			commands = commands + self.createanchorcommands
@@ -388,7 +389,7 @@ class HierarchyView(HierarchyViewDialog):
 			if findex < len(pchildren) - 1:
 				commands = commands + self.navigatecommands[2:3]
 
-		if fntype in MMNode.playabletypes and fnode.GetChannelType() != 'animate':
+		if fntype in MMTypes.playabletypes and fnode.GetChannelType() != 'animate':
 			commands = commands + self.animatecommands[2:3]
 		if fntype == 'ext':
 			if fnode.GetComputedMimeType() == 'image/vnd.rn-realpix':
@@ -404,18 +405,22 @@ class HierarchyView(HierarchyViewDialog):
 
 		# Enable "paste" commands depending on what is in the clipboard.
 		nodeList = self.editmgr.getclip()
-		enablePaste = 0
 		for node in nodeList:
 			if node.getClassName() == 'MMNode':
-				enablePaste = 1
+				if node.GetType() in ('anchor', 'animpar'):
+					# anchors and animpars can only occur under media nodes
+					if fntype in MMTypes.mediatypes:
+						commands = commands + self.pasteinteriorcommands
+					elif fntype in ('anchor', 'animpar'):
+						commands = commands + self.pastenotatrootcommands
+				else:
+					if fntype in MMTypes.interiortypes:
+						# can only paste inside interior nodes
+						commands = commands + self.pasteinteriorcommands
+					if fnode is not self.root:
+						# can't paste before/after root node
+						commands = commands + self.pastenotatrootcommands
 				break
-		if enablePaste:
-			if fntype in MMNode.interiortypes:
-				# can only paste inside interior nodes
-				commands = commands + self.pasteinteriorcommands
-			if fnode is not self.root:
-				# can't paste before/after root node
-				commands = commands + self.pastenotatrootcommands
 		# commands is not mutable here.
 		return commands
 
@@ -1192,7 +1197,7 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.showmessage('Drop target is an immediate node. Change to external?', mtype = 'question', callback = (self.cvdrop, (obj.node, window, event, params)), parent = self.window)
 			return
 		else:
-			interior = (obj.node.GetType() in MMNode.interiortypes)
+			interior = (obj.node.GetType() in MMTypes.interiortypes)
 		# make URL relative to document
 		url = ctx.relativeurl(url)
 
@@ -1258,7 +1263,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		if not obj:
 			windowinterface.setdragcursor('dragnot')
-		elif obj.node.GetType() in MMNode.interiortypes:
+		elif obj.node.GetType() in MMTypes.interiortypes:
 			windowinterface.setdragcursor('dragadd')
 		else:
 			windowinterface.setdragcursor('dragset')
@@ -1646,10 +1651,24 @@ class HierarchyView(HierarchyViewDialog):
 					mtype = 'error', parent = self.window)
 				node.Destroy()
 				return 0
+			if node.GetType() in ('anchor', 'animpar') and focus.GetType() not in MMTypes.mediatypes:
+				windowinterface.showmessage(
+					"Can only insert %s in media objects." % node.GetType(),
+					mtype = 'error', parent = self.window)
+				node.Destroy()
+				return 0
+		elif where == 0 and node.GetType() in ('anchor', 'animpar'):
+			# special case for anchor
+			if focus.GetType() not in MMTypes.mediatypes:
+				windowinterface.showmessage(
+					"Can only insert %s in media objects."  % node.GetType(),
+					mtype = 'error', parent = self.window)
+				node.Destroy()
+				return 0
 		elif where == 0 and node.GetChannelType()!='animate':
 			# Special condition for animate
-			ntype = self.get_selected_widget().get_node().GetType()
-			if ntype not in MMNode.interiortypes and \
+			ntype = focus.GetType()
+			if ntype not in MMTypes.interiortypes and \
 				   (ntype != 'ext' or node.GetChannelType() != 'animate'):
 				# Should not happen.
 				windowinterface.showmessage('Selection is a leaf node!',
@@ -1860,7 +1879,7 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return
 		ntype = node.GetType()
-		if ntype not in MMNode.interiortypes:
+		if ntype not in MMTypes.interiortypes:
 			windowinterface.beep()
 			return
 		expandnode(node)
