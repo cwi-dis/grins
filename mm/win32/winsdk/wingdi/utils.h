@@ -1,5 +1,5 @@
-#ifndef INC_UTIL
-#define INC_UTIL
+#ifndef INC_UTILS
+#define INC_UTILS
 
 #ifndef Py_PYTHON_H
 #include "Python.h"
@@ -186,12 +186,6 @@ inline WCHAR* toTEXT(WCHAR *p)
 	}
 #define textchr wcschr
 
-inline char* toMB(WCHAR *p)
-	{
-	static char buf[512];
-	WideCharToMultiByte(CP_ACP, 0, p, -1, buf, 512, NULL, NULL);		
-	return buf;
-	}
 
 #else
 
@@ -208,6 +202,14 @@ inline char* toTEXT(WCHAR *p)
 #define textchr strchr
 
 #endif
+
+inline char* toMB(char *p) {return p;}
+inline char* toMB(WCHAR *p)
+	{
+	static char buf[512];
+	WideCharToMultiByte(CP_ACP, 0, p, -1, buf, 512, NULL, NULL);		
+	return buf;
+	}
 
 #endif
 
