@@ -381,7 +381,8 @@ class NodeWrapper(Wrapper):
 			'system_bitrate', 'system_captions',
 			'system_language', 'system_overdub_or_caption',
 			'system_required', 'system_screen_size',
-			'system_screen_depth',
+			'system_screen_depth', 'system_audiodesc',
+			'system_overdub_or_subtitle',
 			]
 		ntype = self.node.GetType()
 		ctype = self.node.GetChannelType()
@@ -391,7 +392,7 @@ class NodeWrapper(Wrapper):
 			namelist.append('bag_index')
 		if ntype == 'par':
 			namelist.append('terminator')
-		if ntype in ('par', 'seq'):
+		if ntype in ('par', 'seq', 'excl'):
 			namelist.append('duration')
 		if ntype == 'alt':
 			namelist.remove('begin')
@@ -451,7 +452,7 @@ class NodeWrapper(Wrapper):
 				'Links within the presentation or to another SMIL document',
 				'raw', 'light')
 		if name == '.type':
-			return (('string', None), '',
+			return (('enum', alltypes), '',
 				'Node type', 'nodetype',
 				'Node type', 'raw', 'light')
 		if name == '.values':
@@ -767,11 +768,9 @@ class PreferenceWrapper(Wrapper):
 		}
 	__boolprefs = {
 		'system_captions': 'Whether captions are to be shown',
+		'system_audiodesc': 'Whether to "show" audio descriptions',
 		'cmif': 'Enable CMIF-specific extensions',
 		'html_control': 'Choose between IE4 and WebsterPro HTML controls',
-		}
-	__specprefs = {
-		'system_overdub_or_caption': 'Audible or visible "captions"',
 		}
 
 	def __init__(self, callback):
@@ -823,10 +822,14 @@ class PreferenceWrapper(Wrapper):
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'default',
 				self.__boolprefs[name], 'raw', 'light')
-		elif self.__specprefs.has_key(name):
+		elif name == 'system_overdub_or_caption':
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'captionoverdub',
-				self.__specprefs[name], 'raw', 'light')
+				'Audible or visible "captions"', 'raw', 'light')
+		elif name == 'system_overdub_or_subtitle':
+			return (('bool', None), self.getdefault(name),
+				defs[2] or name, 'subtitleoverdub',
+				'Overdub or subtitles', 'raw', 'light')
 
 	def stillvalid(self):
 		return 1
@@ -981,6 +984,10 @@ class AttrEditor(AttrEditorDialog):
 				C = CaptionOverdubAttrEditorField
 			elif displayername == 'captionoverdub3':
 				C = CaptionOverdubAttrEditorFieldWithDefault
+			elif displayername == 'subtitleoverdub':
+				C = SubtitleOverdubAttrEditorField
+			elif displayername == 'subtitleoverdub3':
+				C = SubtitleOverdubAttrEditorFieldWithDefault
 			elif displayername == 'language':
 				C = LanguageAttrEditorField
 			elif displayername == 'language3':
@@ -1591,6 +1598,33 @@ class CaptionOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
 
 class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
 	__values = ['caption', 'overdub']
+	default = 'Not set'
+	nodefault = 0
+
+	def parsevalue(self, str):
+		if str == self.default:
+			return None
+		return str
+
+	def valuerepr(self, value):
+		if value is None:
+			if self.nodefault:
+				return self.getdefault()
+			return self.default
+		return value
+
+	def getoptions(self):
+		return [self.default] + self.__values
+
+class SubtitleOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
+	__values = ['subtitle', 'overdub']
+	nodefault = 1
+
+	def getoptions(self):
+		return self.__values
+
+class SubtitleOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
+	__values = ['subtitle', 'overdub']
 	default = 'Not set'
 	nodefault = 0
 

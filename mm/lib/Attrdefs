@@ -347,6 +347,8 @@
 	'Stacking order for channels, higher numbers are on top' normal light)
 
 # SMIL system test attributes
+(system_audiodesc (bool) 0 'System audio descriptions' bool3
+	'Play node only if end-user wants audio descriptions' raw smil2)
 (system_bitrate (int) 0 'System bitrate' bitrate3
 	'Play node only if bitrate >= value here' raw light)
 (system_captions (bool) 0 'System captions' bool3
@@ -355,6 +357,8 @@
 	'Play node only if end-user prefers this language' raw light)
 (system_overdub_or_caption (string) '' 'System overdub or caption' captionoverdub3
 	'Play node only depending on end user overdub/caption preference' raw light)
+(system_overdub_or_subtitle (string) '' 'System overdub or subtitle' subtitleoverdub3
+	'Play node only depending on end user overdub/subtitle preference' raw light)
 (system_required (string) '' 'System required' default
 	'Play node only if player supports these features' raw light)
 (system_screen_size (tuple (int) (int)) (0 0) 'System screen size' default

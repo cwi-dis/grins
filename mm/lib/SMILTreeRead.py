@@ -23,10 +23,15 @@ LAYOUT_UNKNOWN = -1			# must be < 0
 
 layout_name = ' SMIL '			# name of layout channel
 
-coordre = re.compile(r'^(?P<x0>\d+%?),(?P<y0>\d+%?),'
-		     r'(?P<x1>\d+%?),(?P<y1>\d+%?)$')
-idref = re.compile(r'id\((?P<id>' + xmllib._Name + r')\)')
-clock_val = (r'(?:(?P<use_clock>'	# full/partial clock value
+_opS = xmllib._opS
+
+coordre = re.compile(_opS + r'(?P<x0>\d+%?)' + _opS + r',' +
+		     _opS + r'(?P<y0>\d+%?)' + _opS + r',' +
+		     _opS + r'(?P<x1>\d+%?)' + _opS + r',' +
+		     _opS + r'(?P<y1>\d+%?)' + _opS + r'$')
+idref = re.compile(r'id\(' + _opS + r'(?P<id>' + xmllib._Name + r')' + _opS + r'\)')
+clock_val = (_opS +
+	     r'(?:(?P<use_clock>'	# full/partial clock value
 	     r'(?:(?P<hours>\d+):)?'		# hours: (optional)
 	     r'(?P<minutes>[0-5][0-9]):'	# minutes:
 	     r'(?P<seconds>[0-5][0-9])'      	# seconds
@@ -35,22 +40,25 @@ clock_val = (r'(?:(?P<use_clock>'	# full/partial clock value
 	     r'(?P<timecount>\d+)'		# timecount
 	     r'(?P<units>\.\d+)?'		# .fraction (optional)
 	     r'(?P<metric>h|min|s|ms)?)'	# metric (optional)
-	     r')')
-syncbase = re.compile(r'id\((?P<name>' + xmllib._Name + r')\)' # id(name)
-		      r'\((?P<event>[^)]+)\)'		# (event)
-##		      r'(?:\+(?P<delay>.*))?'		# +delay (optional)
-		      r'$')
+	     r')' + _opS)
+syncbase = re.compile('id' + _opS + r'\(' + _opS + '(?P<name>' + xmllib._Name + ')' + _opS + r'\)' + # id(name)
+		      _opS +
+		      r'\(' + _opS + r'(?P<event>[^)]*[^) \t\r\n])' + _opS + r'\)' + # (event)
+		      '$')
 offsetvalue = re.compile('(?P<sign>[-+])?' + clock_val + '$')
 syncbase2 = re.compile(	# ((id-ref/prev ".")? event-ref/begin/end)? (offset)?
-	r'(?P<event>' + xmllib._Name + r')'			# ID-ref
+	_opS +
+	r'(?P<event>' + xmllib._Name + r')' +			# ID-ref
+	_opS +
 	r'(?P<offset>(?:[-+])' + clock_val + r')?$'		# offset
 	)
 mediamarker = re.compile(		# id-ref ".marker(" name ")"
+	_opS +
 	r'(?P<id>' + xmllib._Name + r')\.'			# ID-ref "."
-	r'marker\((?P<markername>' + xmllib._Name + r')\)$'	# "marker(...)"
+	r'marker\(' + _opS + r'(?P<markername>' + xmllib._Name + r')' + _opS + r'\)' + _opS + r'$'	# "marker(...)"
 	)
 wallclock = re.compile(			# "wallclock(" wallclock-value ")"
-	r'wallclock\([^()]+\)$'
+	r'wallclock\((?P<wallclock>[^()]+)\)$'
 	)
 ##clock = re.compile(r'(?P<name>local|remote):'
 ##		   r'(?P<hours>\d+):'
@@ -58,12 +66,15 @@ wallclock = re.compile(			# "wallclock(" wallclock-value ")"
 ##		   r'(?P<seconds>\d{2})'
 ##		   r'(?P<fraction>\.\d+)?'
 ##		   r'(?:Z(?P<sign>[-+])(?P<ohours>\d{2}):(?P<omin>\d{2}))?$')
-screen_size = re.compile(r'(?P<x>\d+)X(?P<y>\d+)$')
-clip = re.compile('^(?:'
-		   '(?:(?P<npt>npt)=(?P<nptclip>[^-]*))|'
-		   '(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smpteclip>[^-]*))'
-		   ')$')
-smpte_time = re.compile(r'(?:(?:\d{2}:)?\d{2}:)?\d{2}(?P<f>\.\d{2})?$')
+screen_size = re.compile(_opS + r'(?P<x>\d+)' + _opS + r'[xX]' +
+			 _opS + r'(?P<y>\d+)' + _opS + r'$')
+clip = re.compile(_opS + r'(?:'
+		  # npt=...
+		   '(?:(?P<npt>npt)' + _opS + r'=' + _opS + r'(?P<nptclip>[^-]*))|'
+		  # smpte/smpte-25/smpte-30-drop=...
+		   '(?:(?P<smpte>smpte(?:-30-drop|-25)?)' + _opS + r'=' + _opS + r'(?P<smpteclip>[^-]*))'
+		   ')' + _opS + r'$')
+smpte_time = re.compile(r'(?:(?:\d{2}:)?\d{2}:)?\d{2}(?P<f>\.\d{2})?' + _opS + r'$')
 namedecode = re.compile(r'(?P<name>.*)-\d+$')
 _token = '[^][\001-\040()<>@,;:\\"/?=\177-\377]+' # \000 also not valid
 dataurl = re.compile('data:(?P<type>'+_token+'/'+_token+')?'
@@ -76,12 +87,13 @@ from colors import colors
 color = re.compile('(?:'
 		   '#(?P<hex>[0-9a-fA-F]{3}|'		# #f00
 			    '[0-9a-fA-F]{6})|'		# #ff0000
-		   'rgb\((?: *(?P<ri>[0-9]+) *,'	# rgb(255, 0, 0)
-			   ' *(?P<gi>[0-9]+) *,'
-			   ' *(?P<bi>[0-9]+) *|'
-			   ' *(?P<rp>[0-9]+) *% *,'	# rgb(100%, 0%, 0%)
-			   ' *(?P<gp>[0-9]+) *% *,'
-			   ' *(?P<bp>[0-9]+) *% *)\))$')
+		   'rgb' + _opS + r'\(' +		# rgb(R,G,B)
+			   _opS + '(?:(?P<ri>[0-9]+)' + _opS + ',' + # rgb(255,0,0)
+			   _opS + '(?P<gi>[0-9]+)' + _opS + ',' +
+			   _opS + '(?P<bi>[0-9]+)|' +
+			   _opS + '(?P<rp>[0-9]+)' + _opS + '%' + _opS + ',' + # rgb(100%,0%,0%)
+			   _opS + '(?P<gp>[0-9]+)' + _opS + '%' + _opS + ',' +
+			   _opS + '(?P<bp>[0-9]+)' + _opS + '%)' + _opS + r'\))$')
 
 smil_node_attrs = [
 	'region', 'clip-begin', 'clip-end', 'endsync', 'choice-index',
@@ -108,6 +120,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'par': (self.start_par, self.end_par),
 			'seq': (self.start_seq, self.end_seq),
 			'switch': (self.start_switch, self.end_switch),
+			'excl': (self.start_excl, self.end_excl),
 			GRiNSns+' '+'choice': (self.start_choice, self.end_choice),
 			GRiNSns+' '+'bag': (self.start_choice, self.end_choice),
 			'ref': (self.start_ref, self.end_ref),
@@ -283,7 +296,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if res is not None:
 					if not boston:
 						boston = 'wallclock time'
-					wallclock = res.group('wallclock')
+					wc = res.group('wallclock')
 					continue
 				self.syntax_error('unrecognized %s value' % attr)
 		if boston:
@@ -300,6 +313,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		node.__anchorlist = []
 		attrdict = node.attrdict
 		for attr, val in attributes.items():
+			val = string.strip(val)
 			if attr == 'id':
 				self.__nodemap[val] = node
 				self.__idmap[val] = node.GetUID()
@@ -334,6 +348,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							self.warning('bad repeat value', self.lineno)
 						elif repeat != 1:
 							attrdict['loop'] = repeat
+			elif attr == 'restart':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val in ('always', 'whenNotActive', 'never'):
+					attrdict['restart'] = val
+				else:
+					self.syntax_error('bad restart attribute')
 			elif attr == 'system-bitrate':
 				try:
 					bitrate = string.atoi(val)
@@ -344,7 +366,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						attrdict['system_bitrate'] = bitrate
 			elif attr == 'systemBitrate':
 				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
 				try:
 					bitrate = string.atoi(val)
@@ -361,7 +383,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
 			elif attr == 'systemScreenSize':
 				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
 				res = screen_size.match(val)
 				if res is None:
@@ -378,7 +400,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						attrdict['system_screen_depth'] = depth
 			elif attr == 'systemScreenDepth':
 				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
 				try:
 					depth = string.atoi(val)
@@ -397,7 +419,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad system-captions attribute')
 			elif attr == 'systemCaptions':
 				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
 				if val == 'on':
 					attrdict['system_captions'] = 1
@@ -405,12 +427,31 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['system_captions'] = 0
 				else:
 					self.syntax_error('bad system-captions attribute')
+##			elif attr == 'system-audiodesc':
+##				if val == 'on':
+##					if not attrdict.has_key('system_audiodesc'):
+##						attrdict['system_audiodesc'] = 1
+##				elif val == 'off':
+##					if not attrdict.has_key('system_audiodesc'):
+##						attrdict['system_audiodesc'] = 0
+##				else:
+##					self.syntax_error('bad system-audiodesc attribute')
+			elif attr == 'systemAudioDesc':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val == 'on':
+					attrdict['system_audiodesc'] = 1
+				elif val == 'off':
+					attrdict['system_audiodesc'] = 0
+				else:
+					self.syntax_error('bad system-audiodesc attribute')
 			elif attr == 'system-language':
 				if not attrdict.has_key('system_language'):
 					attrdict['system_language'] = val
 			elif attr == 'systemLanguage':
 				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
 				attrdict['system_language'] = val
 			elif attr == 'system-overdub-or-caption':
@@ -421,23 +462,37 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad system-overdub-or-caption attribute')
 			elif attr == 'systemOverdubOrCaption':
 				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
 				if val in ('caption', 'overdub'):
 					attrdict['system_overdub_or_caption'] = val
 				else:
 					self.syntax_error('bad system-overdub-or-caption attribute')
+			elif attr == 'system-overdub-or-subtitle':
+				if val in ('subtitle', 'overdub'):
+					if not attrdict.has_key('system_overdub_or_subtitle'):
+						attrdict['system_overdub_or_subtitle'] = val
+				else:
+					self.syntax_error('bad system-overdub-or-subtitle attribute')
+			elif attr == 'systemOverdubOrSubtitle':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val in ('subtitle', 'overdub'):
+					attrdict['system_overdub_or_subtitle'] = val
+				else:
+					self.syntax_error('bad system-overdub-or-subtitle attribute')
 			elif attr == 'system-required':
 				if not attrdict.has_key('system_required'):
 					attrdict['system_required'] = val
 			elif attr == 'systemRequired':
 				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
 				attrdict['system_required'] = val
 			elif attr == 'uGroup':
 				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
 				if self.__u_groups.has_key(val):
 					attrdict['u_group'] = val
@@ -451,9 +506,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif attr == 'title':
 				attrdict['title'] = val
 			elif attr == 'fill':
-				if val in ('hold', 'transition'):
+				if node.type in interiortypes or \
+				   val in ('hold', 'transition'):
 					if self.__context.attributes.get('project_boston') == 0:
-						self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 					self.__context.attributes['project_boston'] = 1
 				if val in ('freeze', 'remove', 'hold', 'transition'):
 					attrdict['fill'] = val
@@ -1329,14 +1385,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# smil contains everything
 	def start_smil(self, attributes):
+		for attr in attributes.keys():
+			if attr != 'id' and \
+			   self.attributes['body'].get(attr) != attributes[attr]:
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('body attribute %s not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				break
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if self.__seen_smil:
 			self.error('more than 1 smil tag', self.lineno)
 		self.__seen_smil = 1
 		self.__in_smil = 1
-		# fill in defaults for seq
-		attributes['repeat'] = '1'
 		self.NewContainer('seq', attributes)
 
 	def end_smil(self):
@@ -1355,6 +1416,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					     'declwidth':0,
 					     'declheight':0,
 					     'attrs':attrs}
+			if not self.__childregions.has_key(None):
+				self.__childregions[None] = []
 		self.FixRoot()
 		self.FixSizes()
 		self.MakeChannels()
@@ -1391,8 +1454,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.error('multiple body tags', self.lineno)
 		self.__seen_body = 1
 		self.__in_body = 1
+		self.start_seq(attributes)
 
 	def end_body(self):
+		self.end_seq()
 		self.__in_body = 0
 
 	def start_meta(self, attributes):
@@ -1557,7 +1622,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attrdict['fit'] = val
 			elif attr == 'backgroundColor':
 				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
 				val = self.__convert_color(val)
 				if val is not None:
@@ -1768,22 +1833,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		
 	# container nodes
 
-	def start_par(self, attributes):
+	def start_parexcl(self, ntype, attributes):
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		# XXXX we ignore sync for now
-		self.NewContainer('par', attributes)
+		self.NewContainer(ntype, attributes)
 		if not self.__container:
 			return
 		self.__container.__endsync = attributes.get('endsync')
+		self.__container.__lineno = self.lineno
 ## 		if self.__container.__endsync is not None and \
 ## 		   self.__container.attrdict.has_key('duration'):
 ## 			self.warning('ignoring dur attribute', self.lineno)
 ## 			del self.__container.attrdict['duration']
 
-	def end_par(self):
+	def end_parexcl(self, ntype):
 		node = self.__container
-		self.EndContainer('par')
+		self.EndContainer(ntype)
 		endsync = node.__endsync
 		del node.__endsync
 		if endsync is None:
@@ -1806,7 +1872,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					node.attrdict['terminator'] = child.GetRawAttr('name')
 					return
 			# id not found among the children
-			self.warning('unknown idref in endsync attribute', self.lineno)
+			self.warning('unknown idref in endsync attribute', node.__lineno)
+		del node.__lineno
+
+	def start_par(self, attributes):
+		self.start_parexcl('par', attributes)
+
+	def end_par(self):
+		self.end_parexcl('par')
 
 	def start_seq(self, attributes):
 		self.__fix_attributes(attributes)
@@ -1815,6 +1888,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_seq(self):
 		self.EndContainer('seq')
+
+	def start_excl(self, attributes):
+		self.start_parexcl('excl', attributes)
+
+	def end_excl(self):
+		self.end_parexcl('excl')
 
 	def start_choice(self, attributes):
 		self.__fix_attributes(attributes)
@@ -2069,7 +2148,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# other callbacks
 
-	__whitespace = re.compile(xmllib._opS + '$')
+	__whitespace = re.compile(_opS + '$')
 	def handle_data(self, data):
 		if self.__node is None or self.__is_ext:
 			if self.__in_layout != LAYOUT_UNKNOWN:
@@ -2080,7 +2159,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__nodedata.append(data)
 
 	__doctype = re.compile('SYSTEM' + xmllib._S + '(?P<dtd>[^ \t\r\n]+)' +
-			       xmllib._opS + '$')
+			       _opS + '$')
 	def handle_doctype(self, tag, pubid, syslit, data):
 		if tag != 'smil':
 			self.error('not a SMIL document', self.lineno)
