@@ -11,6 +11,8 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include "winuser_main.h"
 
 #include "utils.h"
+
+
 #include <shellapi.h>
 
 PyObject* Winuser_MessageLoop(PyObject *self, PyObject *args)
@@ -37,6 +39,7 @@ PyObject* Winuser_PostQuitMessage(PyObject *self, PyObject *args)
 	return none();
 }
 
+
 PyObject* Winuser_MessageBox(PyObject *self, PyObject *args)
 {
 	char *text;
@@ -45,21 +48,12 @@ PyObject* Winuser_MessageBox(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s|si", &text, &caption, &type))
 		return NULL;
 	int res;
-#ifdef UNICODE
-	TCHAR *ttext = newTEXT(text);
-	TCHAR *tcaption = newTEXT(caption);
 	Py_BEGIN_ALLOW_THREADS
-	res = MessageBox(NULL, ttext, tcaption, type);
+	res = MessageBox(NULL, TextPtr(text), TextPtr(caption), type);
 	Py_END_ALLOW_THREADS
-	delete[] tcaption;
-	delete[] ttext;
-#else
-	Py_BEGIN_ALLOW_THREADS
-	res = MessageBox(NULL, text, caption, type);
-	Py_END_ALLOW_THREADS
-#endif
 	return Py_BuildValue("i", res);
 }
+
 
 PyObject* Winuser_GetSystemMetrics(PyObject *self, PyObject *args)
 {
@@ -136,7 +130,7 @@ PyObject* Winuser_ShellExecute(PyObject *self, PyObject *args)
 	if (dir==NULL) dir="";
 	HINSTANCE rc;
 	Py_BEGIN_ALLOW_THREADS
-	rc = ShellExecute(hwnd, toTEXT(op), toTEXT(file), toTEXT(params), toTEXT(dir), show);
+	rc = ShellExecute(hwnd, TextPtr(op), TextPtr(file), TextPtr(params), TextPtr(dir), show);
 	Py_END_ALLOW_THREADS
 	TCHAR szMsg[512] = TEXT("OK");
 	if ((rc) <= (HINSTANCE)32) 

@@ -88,7 +88,7 @@ static PyObject* PyMenu_InsertMenu(PyMenu *self, PyObject *args)
 	char *pNewItem = NULL;
 	if (!PyArg_ParseTuple(args, "ii|iz", &uPosition, &uFlags, &uIDNewItem, &pNewItem))
 		return NULL;
-	BOOL res = InsertMenu(self->m_hMenu, uPosition, uFlags, uIDNewItem, toTEXT(pNewItem));
+	BOOL res = InsertMenu(self->m_hMenu, uPosition, uFlags, uIDNewItem, TextPtr(pNewItem));
 	if(!res){
 		seterror("InsertMenu", GetLastError());
 		return NULL;
@@ -103,7 +103,7 @@ static PyObject* PyMenu_AppendMenu(PyMenu *self, PyObject *args)
 	char *pNewItem = NULL;
 	if (!PyArg_ParseTuple(args, "i|iz", &uFlags, &uIDNewItem, &pNewItem))
 		return NULL;
-	BOOL res = AppendMenu(self->m_hMenu, uFlags, uIDNewItem, toTEXT(pNewItem));
+	BOOL res = AppendMenu(self->m_hMenu, uFlags, uIDNewItem, TextPtr(pNewItem));
 	if(!res){
 		seterror("AppendMenu", GetLastError());
 		return NULL;
