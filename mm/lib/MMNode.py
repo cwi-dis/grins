@@ -254,9 +254,14 @@ class MMNodeContext:
 			raise CheckError, 'copychannel: invalid position'
 		if not orig in self.channelnames:
 			raise CheckError, 'copychannel: non-existing original'
-		c = MMChannel(self, name)
-		orig_i = self.channelnames.index(orig)
-		orig_ch = self.channels[orig_i]
+		if settings.activeFullSmilCss:
+			orig_i = self.channelnames.index(orig)
+			orig_ch = self.channels[orig_i]
+			c = MMChannel(self, name, orig_ch.get('type'))
+		else:
+			c = MMChannel(self, name)
+			orig_i = self.channelnames.index(orig)
+			orig_ch = self.channels[orig_i]
 		for attr in orig_ch.keys():
 			c[attr] = eval(repr(orig_ch[attr]))
 		self.channeldict[name] = c
@@ -631,7 +636,10 @@ class MMChannel:
 		if settings.activeFullSmilCss:
 			if type == 'layout':
 				self.cssId = context.cssResolver.newRegion()
-
+				# allow to maintains the compatibility with old version
+				# this flag shouldn't be accessible in the future
+				self.attrdict['base_winoff'] = (0, 0, 100, 100)
+				
 	def __repr__(self):
 		return '<MMChannel instance, name=' + `self.name` + '>'
 
@@ -640,6 +648,9 @@ class MMChannel:
 
 	def _destroy(self):
 		self.context = None
+		if settings.activeFullSmilCss:
+			if self.attrdict.get('type') == 'layout':
+				self.context.cssResolver.unlink(self.cssId)
 
 	def stillvalid(self):
 		return self.context is not None
@@ -728,11 +739,9 @@ class MMChannel:
 		else:
 			if settings.activeFullSmilCss:
 				if key == 'base_winoff':
-					if self.attrdict.get('type') == 'layout':
-						print 'Warning: base_winoff deprecated attribute. Instead, use getPxGeom'
-						return self.context.cssResolver.getPxGeom(self.cssId)
-					else:
-						print "Error: base_winoff not supported if not layout type. Instead, call getPxGeomSubReg on MMNode"
+					# keep the compatibility with old version
+					print 'Warning: base_winoff deprecated attribute. Instead, use getPxGeom'
+					return self.getPxGeom()
 			# special case for background color
 			if key == 'bgcolor' and \
 			   self.attrdict.has_key('base_window') and \
@@ -754,7 +763,13 @@ class MMChannel:
 						del self['base_window']
 					pchan = self.context.channeldict.get(value)
 					self.context.cssResolver.link(self.cssId, pchan.cssId)
-				
+		elif key == 'base_winoff':
+			if settings.activeFullSmilCss:
+				# keep the compatibility with old version
+				print 'Warning: base_winoff deprecated attribute.Instead, modify directly the raw attributes positioning, or use setPxGeom (if absolutly required for last case)'
+				self.setPxGeom(value)
+				return
+			
 		self.attrdict[key] = value
 
 	def __delitem__(self, key):
@@ -776,6 +791,10 @@ class MMChannel:
 	def get(self, key, default = None, animated=0):
 		if animated and self.d_attrdict.has_key(key):
 			return self.d_attrdict[key]
+		if key == 'base_winoff':
+			if settings.activeFullSmilCss:
+				print 'Warning: base_winoff deprecated attribute. Instead, use getPxGeom'
+				return self.getPxGeom()
 		if self.attrdict.has_key(key):
 			return self.attrdict[key]
 		if key == 'bgcolor' and \
@@ -790,16 +809,35 @@ class MMChannel:
 			pchan = self.context.channeldict.get(pname)
 			if pchan:
 				return pchan.get(key, default)
-		elif key == 'base_winoff':
-			if settings.activeFullSmilCss:
-				if self.attrdict['type'] == 'layout':
-					return self.context.cssResolver.getPxGeom(self.cssId)
-				else:
-					print "Error: base_winoff not supported if not layout type. Instead, call getPxGeom on MMNode"
 		return default
 
 	def getPxGeom(self):
-		return self.context.cssResolver.getPxGeom(self.cssId)
+		if self.attrdict.get('type') == 'layout':
+			return self.context.cssResolver.getPxGeom(self.cssId)
+		else:
+			print 'getPxGeom unsupported on no layout channel'
+			return (0, 0, 100, 100)
+
+	# use this method only if it's an absolute requirement
+	# for now, it's use for keep the compatibility with old implementation
+	# Instead of use this method, modify directly the raw attributes (left, top, width and height)
+	def setPxGeom(self, geom):
+		if self.attrdict.get('type') == 'layout':
+			left, top, width, height = geom
+			self.context.cssResolver.changeRawValue(self.cssId, 'left', left)
+			self.context.cssResolver.changeRawValue(self.cssId, 'top', top)
+			self.context.cssResolver.changeRawValue(self.cssId, 'width', width)
+			self.context.cssResolver.changeRawValue(self.cssId, 'height', height)
+			self.attrdict['left'] = left
+			self.attrdict['top'] = top
+			self.attrdict['width'] = width
+			self.attrdict['height'] = height
+			if self.attrdict.has_key('right'):
+				del self.attrdict['right']
+			elif self.attrdict.has_key('bottom'):
+				del self.attrdict['bottom']
+		else:
+			print 'setPxGeom unsupported on no layout channel'
 	
 # The Sync Arc class
 #
