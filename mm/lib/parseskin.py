@@ -47,6 +47,11 @@ error = 'parseskin.error'
 #	"SMIL 2.0 Basic Language Profile"
 #	"SMIL MMS Profile"
 #
+# In addition to the above commands, you can also have lines to set
+# system attributes.  These lines are single Python assignments and
+# start with "system_".  E.g.
+#	system_bitrate = 33600
+#
 # Example skin definition file:
 #	image Classic.gif
 #	display 0 0 240 268
