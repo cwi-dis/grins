@@ -12,7 +12,7 @@ Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include "aud2rm.h"
 
 // options
-#define LOG_ACTIVITY
+// #define LOG_ACTIVITY
 
 
 namespace RProducer {
