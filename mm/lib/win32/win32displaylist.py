@@ -63,6 +63,7 @@ _icon_ids = {
 	'prioclosed': grinsRC.IDI_ICON_PRIOCLOSED,
 	'exclopen': grinsRC.IDI_ICON_EXCLOPEN,
 	'exclclosed': grinsRC.IDI_ICON_EXCLCLOSED,
+	'properties': grinsRC.IDI_PROPERTIES,
 }
 
 def _get_icon(which):
