@@ -29,6 +29,7 @@ import Widgets
 import StructureWidgets
 import Help
 import AttrEdit
+import Hlinks				# for merging nodes only.
 import Sizes
 
 import settings
@@ -1538,8 +1539,9 @@ class HierarchyView(HierarchyViewDialog):
 		#	if self.window.hitarrow((x,y), src, dest):
 		#		self.select_arrow(i)
 		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
-		clicked_widget.mouse0press((x,y))
-		self.select_widget(clicked_widget, scroll=0)
+		if clicked_widget:
+			clicked_widget.mouse0press((x,y))
+			self.select_widget(clicked_widget, scroll=0)
 		self.draw()
 
 	def addclick(self, x, y):
@@ -1850,36 +1852,52 @@ class HierarchyView(HierarchyViewDialog):
 			
 
 		# Find all the hyperlinks going to the child node.
-		childanchors = MMAttrdefs.getattr(child, 'anchorlist')
-		childlinks = []
-		for a in childanchors:
-			childlinks.append(self.root.context.hyperlinks.finddstlinks(a))
-		print "DEBUG: childlinks are:", childlinks
-
-		# Re-align them to the parent node
+##		childanchors = MMAttrdefs.getattr(child, 'anchorlist')
+##		print "DEBUG: childanchors are: ", childanchors
+##		childlinks = []
 		parent_uid = parent.GetUID()
 		child_uid = child.GetUID() # only used for the assert.
-		for l in childlinks:
+		print "DEBUG: child uid:", child_uid, "parent uid: ", parent_uid
+##		for a in childanchors:
+##			anchor_tuple = (child_uid, a.aid)
+##			childlinks = childlinks + self.root.context.hyperlinks.findalllinks(anchor_tuple, None)
+#		print "DEBUG: all childlinks: ", childlinks
+		print "DEBUG: all links: ", self.root.context.hyperlinks.links
+
+		links = []
+		# Copy the list..
+		for l in self.root.context.hyperlinks.links:
+			links.append(l)
+		
+		# Re-align them to the parent node
+		for l in links:
+			print "DEBUG: l is now:", l
 			# l is a tuple that points to my anchors.
-			if isinstance(l, type(())) and len(l) == 5:
-				((suid, said), (duid, daid), d, t, s, p) = l
-				assert duid == child_uid
+			((suid, said), (duid, daid), d, t, s, p) = l
+			changed = 0
+			if suid == child_uid:
+				suid = parent_uid
+				changed = 1
+			if duid == child_uid:
+				duid = parent_uid
+				changed = 1
+			if changed:
+				# We need to use a copy of the list; otherwise this won't work here:
 				em.dellink(l)
-				em.addlink(((suid, said), (parent_uid, daid), d, t, s, p))
-			else:
-				print "DEBUG: l is:", l
+				em.addlink(((suid, said), (duid, daid), d, t, s, p))
 
 
 		# Lastly, delete the child node.
 		em.delnode(child)
 
 		assert len(parent.children) == 0
-		print "DEBUG: node type is: ", type
+		print "DEBUG: node type is: ", child_type
 		em.setnodetype(parent, child_type) # This cannot be done until the child has been deleted.
 		print "DEBUG: committing now (after merge)."
 
 		self.need_resize = 1
 		em.commit()		# This does a redraw.
+		print "Done.. links are now:", self.root.context.hyperlinks.links
 
 
 

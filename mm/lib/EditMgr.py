@@ -412,7 +412,7 @@ class EditMgr(Clipboard.Clipboard):
 	# Hyperlink operations
 	#
 	def addlink(self, link):
-		print "DEBUG: addlink; link is: ", link
+		#print "DEBUG: addlink; link is: ", link
 		# Link is a tuple of (srcanchor, dstanchor, direction, jump_type, src_stop, dest_play)
 		# where:
 		# srcanchor is this link's source

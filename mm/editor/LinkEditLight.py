@@ -180,6 +180,8 @@ class LinkEditLight:
 		return nodename + '.' + aid
 
 	def findanchor(self, anchor):
+		# Returns an MMAnchor which is the anchor.
+		# anchor is a tuple representing an anchor.
 		if anchor is not None:
 			if type(anchor) is not type(()):
 				from MMNode import MMAnchor

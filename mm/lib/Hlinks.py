@@ -97,6 +97,7 @@ class Hlinks:
 	# Find the hyperlinks with the specified anchor as destination.
 	# Returns a list of all such links
 	def finddstlinks(self, anchor):
+		# anchor is an anchor tuple of (src, dest, ...)
 		rv = []
 		for l in self.links:
 			if l[ANCHOR2]==anchor and \
