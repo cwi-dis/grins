@@ -1204,10 +1204,17 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		self.createLayoutContext(self._form._winsize)
 		self._units=self._form.getunits()
 		self._layoutctrl=None
-		
+		self._isintscale=1
+			
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
 		self._layoutctrl=self.createLayoutCtrl()
+		t=components.Static(self,grinsRC.IDC_SCALE1)
+		t.attach_to_parent()
+		if self._isintscale:
+			t.settext('scale 1 : %.0f' % self._xscale)
+		else:
+			t.settext('scale 1 : %.1f' % self._xscale)
 		self.create_box(self.getcurrentbox())
 
 	def OnSetActive(self):
@@ -1255,25 +1262,41 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		else:
 			sw,sh=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
 		
-		DW=200
+		DW=240
 		DH=3*DW/4
-		
-		# try to find best scale
-		wscale=float(sw)/DW
-		hscale=float(sh)/DH
-		if wscale<hscale:
-			scale=wscale
-		else:
-			scale=hscale
-		scale=float(int(scale*100.0+0.5))/100.0
 
+		# try first an int scale
+		n=1
+		while not self.isvalidscale(sw,sh,n):
+			n=n+1
+		scale=float(n)
 		self._xmax=int(sw/scale+0.5)
 		self._ymax=int(sh/scale+0.5)
+		self._isintscale=1
+		if n!=1 and (self._xmax<3*DW/4 or self._ymax<3*DH/4):
+			# try to find a better scale
+			wscale=float(sw)/DW
+			hscale=float(sh)/DH
+			if wscale<hscale:
+				scale=wscale
+			else:
+				scale=hscale
+			self._xmax=int(sw/scale+0.5)
+			self._ymax=int(sh/scale+0.5)
+			self._isintscale=0
 		
 		# finally the exact scale:
 		self._xscale=float(sw)/self._xmax
 		self._yscale=float(sh)/self._ymax
-		
+	
+	def isvalidscale(self,sw,sh,n):
+		DW=240.0
+		DH=3.0*DW/4.0
+		sw=float(sw)/n
+		sh=float(sw)/n
+		if sw<=DW and sh<=DH:
+			return 1
+		return 0		
 
 	def getboundingbox(self):
 		return (0,0,self._xmax,self._ymax)
@@ -1509,12 +1532,19 @@ class InfoGroup(AttrGroup):
 	def getpageresid(self):
 		return getattr(grinsRC, 'IDD_EDITATTR_S%d' % len(self._al))
 
+	# although 'Info' title is hardcoded in the IDD_EDITATTR_S%d pages, 
+	# set it for generality
+	def oninitdialog(self,wnd):
+		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
+		ctrl.attach_to_parent()
+		ctrl.settext(self._data['title'])
+
 
 class UploadGroup(AttrGroup):
 	data=attrgrsdict['upload_info']
 
 	def __init__(self):
-		AttrGroup.__init__(self,InfoGroup.data)
+		AttrGroup.__init__(self,UploadGroup.data)
 
 	def createctrls(self,wnd):
 		cd={}
@@ -1530,6 +1560,11 @@ class UploadGroup(AttrGroup):
 
 	def getpageresid(self):
 		return getattr(grinsRC, 'IDD_EDITATTR_S%d' % len(self._al))
+
+	def oninitdialog(self,wnd):
+		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
+		ctrl.attach_to_parent()
+		ctrl.settext(self._data['title'])
 
 
 # base_winoff
@@ -1666,7 +1701,7 @@ class DurationGroup(AttrGroup):
 		return getattr(grinsRC, 'IDD_EDITATTR_S%d' % len(self._al))
 	
 	def oninitdialog(self,wnd):
-		ctrl=components.Control(wnd,grinsRC.ID_GROUP1)
+		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
 		ctrl.attach_to_parent()
 		ctrl.settext(self._data['title'])
 		
