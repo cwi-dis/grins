@@ -1,0 +1,293 @@
+<HTML><HEAD><TITLE>Home Page Software Inc. - Webster Pro Release Notes</TITLE></HEAD>
+<BODY bgcolor="#ffffff" TEXT="#000000" LINK="#0000FF">
+
+<A NAME="ReleaseNotes"></A>
+
+<TABLE WIDTH=100% CELLSPACING=0 CELLPADDING=0  border=0>
+
+<TR height=21 bgcolor=black>
+<TD height=21 NOWRAP VALIGN=MIDDLE>
+<a href="http://www.homepagesw.com"><IMG SRC="../images/BtnHome_U.gif" hspace=2 border=0 width=51 height=21 alt="Home Page Software Inc."></a>
+<a href="../webster_dl.htm"><IMG SRC="../images/BtnDemo_U.gif" hspace=2 border=0 width=51 height=21 alt="Demo Download"></a>
+<a href="../webster_subscription.htm"><IMG SRC="../images/BtnOrder_U.gif" hspace=2 border=0 width=81 height=21 alt="Order a Webster Pro"></a>
+<a href="../webster_sup.htm"><IMG SRC="../images/BtnSupport_U.gif" hspace=2 border=0 width=65 height=21 alt="Support Area"></a>
+<a href="../webster_faq.htm"><IMG SRC="../images/BtnFAQ_U.gif" hspace=2 border=0 width=65 height=21 alt="Frequently Asked Questions"></a>
+<a href="../about_us.htm"><IMG SRC="../images/BtnAboutUs_U.gif" hspace=2 border=0 width=77 height=21 alt="About Us"></a>
+</TD>
+<TD align=right>
+<a href="../subscribe"><IMG SRC="../images/BtnSubscriber_U.gif" hspace=2 border=0 width=83 height=21 alt="Subscriber Area"></A>
+</TD>
+</TR>
+
+<TR>
+<TD height=20>
+</TD>
+</TR>
+</TABLE>
+
+<TABLE WIDTH=100% CELLSPACING=0 CELLPADDING=0  border=0>
+<TR>
+
+<td>
+<CENTER><IMG SRC="../images/blue1.gif" width=480 height=64 border=0 alt="Home Page Software"></CENTER>
+<H1 align=center><font color=red>Webster Pro Release Notes</font></H1>
+<P>
+<br>
+
+<!-- Headline -->
+<table width=100%>
+<tr bgcolor=gray>
+<td valign=middle>
+<B><font face="arial" color=yellow>&nbsp;&nbsp;Webster Pro V2.7 Release Notes</font></B>
+</td>
+</tr>
+</table>
+<!-- Headline Ends -->
+<img src="../images/spacer.gif" hspace=0 vspace=0 height=4 width=8 border=0>
+<!-- Items -->
+
+
+<FONT FACE="ARIAL">
+
+
+<TABLE>
+<TR>
+   <TD valign=top>
+   <img src="../images/grayball.gif" width=12 height=12 border=0>
+   </TD>
+   <TD>
+   Previous release notes are available for <A HREF="webster_v26a.htm">Webster Pro v2.6</A>.
+   </TD>
+</TR>
+</TABLE>
+
+<BR>
+
+<TABLE>
+<TR>
+   <TD valign=top>
+   <img src="../images/grayball.gif" width=12 height=12 border=0>
+   </TD>
+   <TD>
+   The 32-bit Webster Pro Control was built with Visual C++ 4.2 and can be
+   used with any matched set of MFC DLLs dated 2-August-96 or later.  It has been
+   tested with the MFC DLLs included in the installation kit (which are from
+   VC++ 4.2b) as well as with the sets from VC++ 5.0 and VC++ 6.0. For more information
+   see the Help file section entitled "Redistributing the Webster Pro 
+   Control" or the <A HREF="../webster_redist.htm">redistribution notes</A> page.
+   </TD>
+</TR>
+</TABLE>
+
+<BR>
+
+<TABLE>
+<TR>
+   <TD valign=top>
+   <img src="../images/grayball.gif" width=12 height=12 border=0>
+   </TD>
+   <TD>
+   <B><U>Note</U></B>: If you are switching from a demo or beta build to the release 
+   version of the control in a forms-based 
+   application (VB, MS-VC++, Borland C++ Builder etc.), you should delete 
+   the demo Webster Pro from the form and then insert the release version 
+   in it's place so that the license information is updated. Keep the 
+   control ID the same (e.g. WebsterPro1) and you will not have to change 
+   any code.
+   </TD>
+</TR>
+</TABLE>
+
+<P>
+
+<TABLE>
+<TR>
+   <TD valign=top>
+   <img src="../images/grayball.gif" width=12 height=12 border=0>
+   </TD>
+   <TD>
+   <B><U>New Properties</U></B><P>
+   <UL>
+   <LI>The new <FONT COLOR=BROWN><B>ActiveColor</B></FONT> property 
+    determines the highlight color for active (pressed) hyperlinks,
+    unless overridden by the specification of an ALINK attribute in 
+    a BODY tag.  To disable this
+     feature, set the <B>ActiveColor</B> property to the same 
+     value as the <B>AnchorColor</B> property.
+   <P>
+   <LI>The new <FONT COLOR=BROWN><B>HoverColor</B></FONT> property
+     specifies the color with which to highlight a hyperlink 
+     when the mouse pointer hovers over it.  To disable this
+     feature, set the <B>HoverColor</B> property to the same 
+     value as the <B>AnchorColor</B> property.
+   <P>
+   <P>
+   <LI>The new <FONT COLOR=BROWN><B>AnchorUnderline</B></FONT> property
+   determines how hyperlink text is rendered.  This property can be set on
+   the Misc property page. Possible value are:
+   <P>
+   <TABLE>
+   <TR>
+   <TH NOWRAP valign=top>
+   <TT>0</TT>
+   </TD>
+   <TH NOWRAP valign=top>
+   <TT>AnchorUnderlineNever</TT>
+   </TD>
+   <TD>
+   Never underline hyperlinks.
+   </TD>
+   </TR>
+   <TR>
+   <TH NOWRAP valign=top>
+   <TT>1</TT>
+   </TD>
+   <TH NOWRAP valign=top>
+   <TT>AnchorUnderlineAlways</TT>
+   </TD>
+   <TD>
+   Always underline hyperlinks (the default).
+   </TD>
+   </TR>
+   <TR>
+   <TH NOWRAP valign=top>
+   <TT>2</TT>
+   </TD>
+   <TH NOWRAP valign=top>
+   <TT>AnchorUnderlineOnHover</TT>
+   </TD>
+   <TD>
+   Underline hyperlinks on mouse hover.
+   </TD>
+   </TR>
+   </TABLE>
+   <P>
+   <LI>The new <FONT COLOR=BROWN><B>StatusDisplay</B></FONT> property
+   enables or disables the automatic display of a status page
+   when a page load fails.  It is exposed on the Misc property
+   page.
+   <P>
+   Set to <TT>StatusDisplayPage</TT> (=1, the default) to display 
+   the auto-status page for failed loads as in previous versions.  
+   This status "placeholder" page stays in cache until aged out 
+   or dismissed.
+   <P>
+   Set to <TT>StatusDisplayBarOnly</TT> (= 0) to disable
+   the atomatic generation of a status page upon load failure.  
+   In this case, the
+   only UI is the status on the status bar, so you may want to 
+   provide your own failure indication for the user (e.g., a dialog 
+   box).  Note also that a status "placeholder" page is not kept in 
+   cache for failed loads in this case.
+   <P>
+   <LI>The new <FONT COLOR=BROWN><B>SocketTimeout</B></FONT> property
+   sets the socket timeout in seconds.  It is exposed on the Misc 
+   property
+   page.
+   <P>
+
+
+
+   </UL>
+   </TD>
+</TR>
+</TABLE>
+
+<BR>
+
+<TABLE>
+<TR>
+   <TD valign=top>
+   <img src="../images/grayball.gif" width=12 height=12 border=0>
+   </TD>
+   <TD>
+   <B><U>Bug Fixes</U></B><P>
+   <UL>
+
+
+   <LI>Avoid vertically breaking text lines when printing.
+   <P>
+   <LI>Eliminated a thread race that caused double loads of images
+   when loaded via deferred pure-image (dummy page) loads.  This
+   happened when the content-type of a page HTTP header
+   specified an image but this was not initially discernable 
+   (by extension) in the original URL.
+   <P>
+   <LI>VB-specific fix: Tab and arrow key presses in HTML
+   Forms fields should no longer result in focus shifting to another
+   control on the VB form.  When the Tab key is pressed in an HTML
+   Form control the focus shifts to the next HTML Form control.
+   <P>
+   <LI>Improved initial jump-to-internal-anchor in subFrames.
+   <P>
+   </UL>
+   </TD>
+</TR>
+</TR>
+</TABLE>
+
+<BR>
+
+<TABLE>
+<TR>
+   <TD valign=top>
+   <img src="../images/grayball.gif" width=12 height=12 border=0>
+   </TD>
+   <TD>
+   <B><U>Other changes</U></B><P>
+   <UL>
+   <LI>The new Pages property page has been split off from the
+   Misc property page to accomodate new properties.
+   <P>
+   <LI>The ALINK attribute of the BODY tag is now supported 
+    and determines the color of active (pressed) hyperlink
+    highlighting.
+   <P>
+   <LI>The WRAP attribute of the TEXTAREA tag is now supported.
+     TEXTAREA fields now word-wrap by default, unless
+     WRAP=OFF is specified.
+   <P>
+   <LI>In Table cells, text-element tags that don't have matching
+   end tags are now automatically closed at the end of the cell.
+   This means that fonts, colors and other text attributes 
+   specified inside a Table cell do not affect text outside the
+   cell in which they are specified even if not explicitly 
+   closed by the HTML.  This matches the current behavior of
+   other browsers.
+   <P>
+   <LI>When an HTML Form is newly made visible, focus is now set to 
+     the first Form control only if the OCX currently owns the focus.
+   <P>
+   <LI>The page title is exposed via the PageTitle property and the
+       GetTitle method as soon as it first becomes available.
+   <P>
+   <LI>Improved scroolbar automatic sizing behavior after layout
+       to reduce flicker.
+   <P>
+   <LI>For compatibility with other browsers: don't form-decode URLs.
+   <P>
+   </UL>
+   </TD>
+</TR>
+</TABLE>
+
+</FONT>
+
+<BR>
+
+<HR>
+<tt><font size=-1>The Webster CodeBase, Webster Pro Control, 
+WebTrek Browser Control and Webster HTML OCX are Trademarks
+of Home Page Software Inc.</font></tt>
+<HR>
+<table width=100%><tr><td>
+<tt><font size=-1>Copyright &copy; Home Page Software Inc.</font></tt>
+</td><td align=right>
+<tt><font size=-1><a href="mailto:webmaster@homepagesw.com">webmaster@homepagesw.com</font></tt>
+</td></tr></table>
+
+</td>
+</TABLE>
+
+</TD></TR></TABLE>
+</BODY></HTML>
