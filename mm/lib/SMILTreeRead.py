@@ -157,6 +157,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'animateColor': (self.start_animatecolor, self.end_animatecolor),
 			'transition': (self.start_transition, self.end_transition),
 			'regPoint': (self.start_regpoint, self.end_regpoint),
+			'prefetch': (self.start_prefetch, self.end_prefetch),
 			}
 		xmllib.XMLParser.__init__(self)
 		self.__seen_smil = 0
@@ -796,6 +797,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		if tagname == 'brush':
 			chtype = 'brush'
+			mediatype = subtype = None
+			mimetype = None
+		elif tagname == 'prefetch':
+			chtype = 'prefetch'
 			mediatype = subtype = None
 			mimetype = None
 		else:
@@ -3121,6 +3126,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_animate(self):
 		self.EndAnimateNode()
+
+	def start_prefetch(self, attributes):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('animate not compatible with SMIL 1.0')
+		self.__context.attributes['project_boston'] = 1
+		self.NewNode('prefetch', attributes)
+
+	def end_prefetch(self):
+		self.EndNode()
 
 	def start_set(self, attributes):
 		if self.__context.attributes.get('project_boston') == 0:

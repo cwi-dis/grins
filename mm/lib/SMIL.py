@@ -476,12 +476,24 @@ class SMIL:
 				'multiElement':'false',
 				'childrenClip':'false',
 				},
+		'prefetch': {'id':None,
+			'begin':None,
+			'clip-begin':None,
+			'clip-end':None,
+			'dur':None,
+			'end':None,
+			'src':None,
+			'mediaSize':None,
+			'mediaTime':None,
+			'bandwidth':None,
+			},
+
 		}
 	attributes['seq'] = attributes['body']
 	attributes[__bag] = attributes[__choice]
 
 	__media_object = ['audio', 'video', 'text', 'img', 'animation',
-			  'textstream', 'ref', 'brush', __null, __cmif,
+			  'textstream', 'ref', 'brush', 'prefetch',  __null, __cmif,
 			  __shell, __socket]
 	__at = None
 	for __el in __media_object:
@@ -503,7 +515,7 @@ class SMIL:
 			   'accumulate':'none',
 			   'additive':'replace',
 			   'attributeName':'',
-			   'attributeType':'',
+			   'attributeType':None,
 			   'autoReverse':'false',
 			   'begin':None,
 			   'by':None,
@@ -544,6 +556,7 @@ class SMIL:
 	del __animate_attrs['additive'], __animate_attrs['accumulate'],
 	attributes['set'] = __animate_attrs.copy()
 	del __animate_attrs
+
 
 	__schedule = ['par', 'seq', 'excl', __choice, __bag] + __media_object
 	__container_content = __schedule + ['switch', 'a'] + __animate_elements
