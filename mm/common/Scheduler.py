@@ -377,6 +377,9 @@ class SchedulerContext:
 		self.flushqueue()
 
 		if arc is not None:
+			if arc.qid is None:
+				if debugevents: print 'trigger: ignore arc',`arc`
+				return
 			timestamp = arc.resolvedtime(self.parent.timefunc)
 			node = arc.dstnode
 			arc.qid = None
