@@ -8,7 +8,6 @@ import sys
 import MMAttrdefs
 from AnchorDefs import *
 
-
 class CmifChannel(Channel):
 
 	def __init__(self, name, attrdict, scheduler, ui):
@@ -16,21 +15,13 @@ class CmifChannel(Channel):
 		self.stopped = 0
 	
 	def do_arm(self, node, same = 0):
-		if node.GetType() == 'imm':
-			cmds = node.GetValues()
+		try:
+			cmds = self.getstring(node)
+		except error, arg:
+			print arg
+			cmds = []
 		else:
-			filename = self.getfileurl(node)
-			from urllib import urlopen
-			try:
-				fp = urlopen(filename)
-			except IOError, msg:
-				if type(msg) is type(()):
-					msg = msg[1]
-				self.errormsg(node, filename + ':\n' + msg)
-				cmds = []
-			else:
-				cmds = fp.readlines()
-				fp.close()
+			cmds = string.split(cmds, '\n')
 		self.cmds = cmds
 		return 1
 
