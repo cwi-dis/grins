@@ -1400,7 +1400,7 @@ class HierarchyView(HierarchyViewDialog):
 			height = height - self.sizes.GAPSIZE
 		# XXXX This code does not work for a vertical timeline
 		if self.timescale:
-			# Again, for timescale mode we happily ignore all these comptations
+			# Again, for timescale mode we happily ignore all these computations
 			width = minwidth
 		else:
 			width = max(width + 2 * self.sizes.HEDGSIZE, minwidth)
