@@ -424,7 +424,7 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 class _ImageWidget(_Widget, _ImageMixin):
 	def __init__(self, dlg, item, image=None):
 		_Widget.__init__(self, dlg, item)
-		tp, h, rect = wid.GetDialogItem(item)
+		tp, h, rect = dlg.GetDialogItem(item)
 		# wid is the window (dialog) where our image is going to be in
 		# rect is it's item rectangle (as in dialog item)
 		self.rect = rect
