@@ -22,7 +22,7 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 struct PyMP3Decoder
 	{
 	PyObject_HEAD
-
+	void *state;
 	static PyTypeObject type;
 	static PyMethodDef methods[];
 
@@ -30,13 +30,22 @@ struct PyMP3Decoder
 		{
 		PyMP3Decoder *instance = PyObject_NEW(PyMP3Decoder, &type);
 		if (instance == NULL) return NULL;
-		mp3_lib_init(equalizer, eqfactors);
+		instance->state = NULL;
+		mp3_lib_create_instance(&instance->state);
+		if (instance->state == NULL) {
+			PyMem_DEL(instance);
+			return NULL;
+			}
+		mp3_lib_init(instance->state, equalizer, eqfactors);
 		return instance;
 		}
 
 	static void dealloc(PyMP3Decoder *p) 
 		{ 
-		mp3_lib_finalize();
+		if(p->state != NULL) {
+			mp3_lib_finalize(p->state);
+			mp3_lib_release_instance(p->state);
+			}
 		PyMem_DEL(p);
 		}
 
@@ -68,7 +77,7 @@ static PyObject* MP3Decoder_GetWaveFormat(PyMP3Decoder *self, PyObject *args)
 	unsigned char *inbuf = (unsigned char*)PyString_AS_STRING(obj);
 	int insize = PyString_GET_SIZE(obj);
 	int nChannels, BitRate;
-	mp3_lib_decode_header(inbuf, insize, &nSamplesPerSec, &nChannels, &BitRate);
+	mp3_lib_decode_header(self->state, inbuf, insize, &nSamplesPerSec, &nChannels, &BitRate);
 	int wBitsPerSample = 16; 
 	int nBlockAlign = nChannels*wBitsPerSample/8; 
 	long nAvgBytesPerSec = nBlockAlign*nSamplesPerSec;
@@ -85,7 +94,7 @@ static PyObject* MP3Decoder_DecodeHeader(PyMP3Decoder *self, PyObject *args)
 	unsigned char *inbuf = (unsigned char*)PyString_AS_STRING(obj);
 	int insize = PyString_GET_SIZE(obj);
 	int nChannels, BitRate;
-	mp3_lib_decode_header(inbuf, insize, &nSamplesPerSec, &nChannels, &BitRate);
+	mp3_lib_decode_header(self->state, inbuf, insize, &nSamplesPerSec, &nChannels, &BitRate);
 	return Py_BuildValue("(iii)", nSamplesPerSec, nChannels, BitRate); 
 	}
 
@@ -111,7 +120,7 @@ static PyObject* MP3Decoder_DecodeBuffer(PyMP3Decoder *self, PyObject *args)
 		return NULL;
 	char *outbuf = PyString_AsString(outbufobj);
 	int done = 0, inputpos = 0;
-	int status = mp3_lib_decode_buffer(inbuf, insize, outbuf, outbufsize, &done, &inputpos);
+	int status = mp3_lib_decode_buffer(self->state, inbuf, insize, outbuf, outbufsize, &done, &inputpos);
 	PyObject *rv = Py_BuildValue("(Oiii)", outbufobj, done, inputpos, status);
 	Py_DECREF(outbufobj);
 	return rv;
@@ -123,8 +132,8 @@ static PyObject* MP3Decoder_Reset(PyMP3Decoder *self, PyObject *args)
 	char *eqfactors = 0;
 	if (!PyArg_ParseTuple(args, "|is", &equalizer, &eqfactors))
 		return NULL;
-	mp3_lib_finalize();
-	mp3_lib_init(equalizer, eqfactors);
+	mp3_lib_finalize(self->state);
+	mp3_lib_init(self->state, equalizer, eqfactors);
 	return none();
 	}
 
