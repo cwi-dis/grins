@@ -65,9 +65,6 @@ def HasQtSupport():
 		return 1
 	return 0
 
-# Implementation note on direct draw use by Qt
-# Qt.SetDDPrimarySurface is global so we have to use a global surface
-# for more than one video
 
 class QtPlayer:
 	def __init__(self):
@@ -87,7 +84,7 @@ class QtPlayer:
 		s = s + '>'
 		return s
 
-	def open(self, url, exporter=None):
+	def open(self, url, exporter = None, asaudio = 0):
 		try:
 			movieResRef = Qt.OpenMovieFileWin(url, 1)
 		except Exception, arg:
@@ -100,8 +97,9 @@ class QtPlayer:
 			Qt.CloseMovieFile(movieResRef)
 			return 0
 		Qt.CloseMovieFile(movieResRef)
-		l, t, r, b = self.movie.GetMovieBox()
-		self._rect = l, t, r-l, b-t
+		if not asaudio:
+			l, t, r, b = self.movie.GetMovieBox()
+			self._rect = l, t, r-l, b-t
 		return 1
 
 	def getMovieRect(self):
@@ -117,7 +115,9 @@ class QtPlayer:
 		if self.movie:
 			self.movie.SetMovieActive(flag)
 
-	def createVideoDDS(self, ddobj, size=None):
+	def createVideoDDS(self, ddobj, size = None):
+		if self._rect is None:
+			return
 		if size is not None:
 			w, h = size
 		else:
@@ -145,6 +145,8 @@ class QtPlayer:
 		
 	def update(self):
 		if self.movie:
+			if self._dds is not None:
+				Qt.SetDDPrimarySurface(self._dds)
 			self.movie.MoviesTask(0)
 			self.movie.UpdateMovie()
 			return not self.movie.IsMovieDone()
