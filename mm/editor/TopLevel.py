@@ -296,7 +296,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return
 		if username and not passwd:
 			windowinterface.InputDialog('Enter password for %s at %s'%(username, hostname),
-					'', self.upload_callback_2)
+					'', self.upload_callback_2, passwd=1)
 		else:
 			self.upload_callback_2(passwd)
 	
