@@ -58,6 +58,8 @@ char **argv;
     RGBmode();
     gconfig();
     drawit();
+    printf("%d\n", getpid());
+    fflush(stdout);
     while(1) {
 	if(qread(&val) == REDRAW) 
 	    drawit();
