@@ -46,6 +46,7 @@ class MMNodeContext:
 		self._ichanneldict = {}
 		self.comment = ''
 		self.metadata = ''
+		self.root = None
 
 	def __repr__(self):		
 		return '<MMNodeContext instance, channelnames=' \
@@ -117,6 +118,25 @@ class MMNodeContext:
 		self.addinternalchannels( [(chname, node.attrdict), ] )
 		return node
 
+	#
+	# Timing computation
+	#
+	def needtimes(self, which):
+		# XXXX For now
+		if not self.root:
+			uid = self.uidmap.keys()[0]
+			self.root = self.uidmap[uid].GetRoot()
+		import Timing
+		if self.root:
+			Timing.needtimes(self.root)
+		
+	def changedtimes(self):
+		import Timing
+		if not self.root:
+			uid = self.uidmap.keys()[0]
+			self.root = sekf.uidmap[uid].GetRoot()
+		if self.root:
+			Timing.changedtimes(self.root)
 	#
 	# Channel administration
 	#
@@ -1619,6 +1639,18 @@ class MMNode:
 			for child in self.children: print child.GetType(),
 			print
 
+	# Timing interface
+	def GetTimes(self, which='virtual'):
+		# XXX For now
+		self.context.needtimes(which)
+		downloadtime = 0
+		begindelay = 0.0
+		if self.attrdict.has_key('beginlist'):
+			arcs = self.attrdict['beginlist']
+			for arc in arcs:
+				if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
+					begindelay = arc.delay
+		return self.t0, self.t1, self.t2, downloadtime, begindelay
 	#
 	# Presentation values management
 	#
