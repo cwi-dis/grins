@@ -1,5 +1,17 @@
 # Movie channel
-# For now, plays only B/W movies recorded by Jack's "cam2" program
+
+# For now, this play only movies recorded by Jack's "camcorder" program.
+# The format is the following:
+#	first line: "CMIF video 1.0"
+#	second line: "width, height, packfactor"
+#	each image:
+#		one line: "time, datasize"
+#		datasize bytes of binary data
+# For compatibility with some old movies the header line, pack factor and
+# data size are optional.  Default pack factor is 2; default data size is
+# (width/2) * (height/2) if pack factor is nonzero, or width*height*4
+# if it is zero (indicating a color movie).
+# An EOF indicates the end of the file; 
 
 import posix
 from stat import *
@@ -47,6 +59,8 @@ class MovieWindow() = ChannelWindow():
 			self.fp = None
 			return
 		line = self.fp.readline()
+		if line[:4] = 'CMIF':
+			line = self.fp.readline()
 		if not line:
 			print 'Empty movie file', filename
 			self.fp = None
@@ -57,24 +71,45 @@ class MovieWindow() = ChannelWindow():
 			self.pf = 2
 		else:
 			self.w, self.h, self.pf = x
+		self.scale = scale
+		self.lasttime = 0
 	#
 	def nextframe(self):
 		if not self.fp:
 			return
-		line = self.fp.readline() # XXX Time code; ignore for now
-		if not line:
+		line = self.fp.readline()
+		if line = '' or line = '\n':
 			self.fp = None
 			return
-		data = self.fp.read(self.w*self.h/4)
+		if self.pf:
+			w, h = self.w/self.pf, self.h/self.pf
+		else:
+			w, h = self.w, self.h
+		x = eval(line[:-1])
+		if type(x) = type(0):
+			t = 0
+			if self.pf: size = w*h
+			else: size = w*h*4
+		else:
+			t, size = x
+		data = self.fp.read(size)
 		if self.wid <> 0:
 			gl.winset(self.wid)
-			if self.fp:
-				data = gl.unpackrect(self.w, self.h,\
-						self.pf, data)
-			w, h = gl.getsize()
-			x = (w-self.w)/2
-			y = (h-self.h)/2
-			gl.lrectwrite(x, y, x+self.w-1, y+self.h-1, data)
+			if self.pf:
+				data = gl.unpackrect(w, h, 1, data)
+				zoom = self.pf * self.scale
+			else:
+				zoom = self.scale
+			zoom = int(zoom+0.999) # Round up
+			gl.rectzoom(zoom, zoom)
+			# Center it in the window
+			xsize, ysize = gl.getsize()
+			x = (xsize-w*zoom)/2
+			y = (ysize-h*zoom)/2
+			gl.lrectwrite(x, y, x+w-1, y+h-1, data)
+		dt = t - self.lasttime
+		self.lasttime = t
+		return max(dt, 0) * 0.001
 	#
 	def done(self):
 		return self.fp = None
@@ -118,13 +153,13 @@ class MovieChannel() = Channel():
 	#
 	def poll(self, cb_arg):
 		self.qid = None
-		self.window.nextframe()
+		dt = self.window.nextframe()
 		if self.window.done(): # Last frame
 			callback, arg = cb_arg
 			callback(arg)
 			return
 		else:
-			self.qid = self.player.enter(0.1, 1, self.poll, cb_arg)
+			self.qid = self.player.enter(dt, 1, self.poll, cb_arg)
 	#
 	def reset(self):
 		self.window.clear()
@@ -137,6 +172,8 @@ class MovieChannel() = Channel():
 			print 'cannot get duration of movie', filename
 			return MMAttrdefs.getattr(node, 'duration')
 		line = fp.readline()
+		if line[:4] = 'CMIF':
+			line = fp.readline()
 		if not line:
 			print 'Empty movie file', filename
 			self.fp = None
