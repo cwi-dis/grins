@@ -2153,6 +2153,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if key[:len(QTns)+1] == QTns + ' ':
 				del attributes[key]
 				attributes[key[len(QTns)+1:]] = val
+			if key[:len(SMIL2)] == SMIL2:
+				del attributes[key]
+				attributes[string.split(key,' ',1)[1]] = val
 		if features.compatibility == features.QT:
 			self.parseQTAttributeOnSmilElement(attributes)
 

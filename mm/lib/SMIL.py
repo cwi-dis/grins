@@ -547,6 +547,8 @@ class SMIL:
 					for __ns in SMIL2ns:
 						__atd[__ns+' '+__at] = __vl
 ##					del __atd[__at]
+					if __at in ('path','keySplines','keyTimes'):
+						__atd[SMIL2 + 'SplineAnimation'+' '+__at] = __vl
 	del __el, __atd, __at, __vl, __key, __val, __ns
 
 	# all entities with their allowed content
