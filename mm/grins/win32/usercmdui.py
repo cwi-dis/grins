@@ -36,6 +36,7 @@ m=100
 idc=((idbegin+100)/m+1)*m
 casc2ui={
 CHANNELS:idc,
+USERGROUPS:idc+m,
 }
 def get_cascade(id):
 	global idc,m,casc2ui
@@ -97,7 +98,7 @@ PLAY_UI=CommandUI(PLAY,IDUC_PLAY)
 PAUSE_UI=CommandUI(PAUSE,IDUC_PAUSE)
 STOP_UI=CommandUI(STOP,IDUC_STOP)
 MAGIC_PLAY_UI=CommandUI(MAGIC_PLAY)
-CHANNELS_UI=CommandUI(CHANNELS)
+USERGROUPS_UI=CommandUI(USERGROUPS,casc2ui[USERGROUPS])
 CHANNELS_UI=CommandUI(CHANNELS,casc2ui[CHANNELS])
 #CALCTIMING_UI=CommandUI(CALCTIMING)
 CRASH_UI=CommandUI(CRASH)
