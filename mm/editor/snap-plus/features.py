@@ -6,7 +6,7 @@ from compatibility import *
 from FeatureSet import *
 import sys
 
-feature_set = [EXPORT_CMIF, EXPORT_SMIL2, EXPORT_QT, EXPORT_WMP,
+feature_set = [EXPORT_CMIF, EXPORT_SMIL2, EXPORT_REAL, EXPORT_QT, EXPORT_WMP,
                PLAYER_VIEW, STRUCTURE_VIEW,
                ];
 

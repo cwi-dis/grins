@@ -370,19 +370,12 @@ class HTMLWriter:
 		return int(x), int(y), int(w), int(h)
 
 	def top_channel_size(self, ch):
-		if not ch.has_key('winsize'):
-			return None, None
-		units = ch.get('units', 0)
-		w, h = ch['winsize']
-		if units == 0:
-			# convert mm to pixels
-			# (assuming 100 dpi)
-			w = round(w / 25.4 * 100.0)
-			h = round(h / 25.4 * 100.0)
-		if units == 1:
-			raise Error, "Cannot use relative coordinates for toplevel window"
-		# else: units are already in pixels
-		return int(w), int(h)
+		w = ch.GetAttrDef('width', None)
+		h = ch.GetAttrDef('height', None)
+		if type(w) is type(h) is type(0):
+			return w, h
+		# if not pixels, return nothing
+		return None, None
 
 namechars = string.letters + string.digits + '_-.'
 

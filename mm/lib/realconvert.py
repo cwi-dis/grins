@@ -31,7 +31,7 @@ else:
 				'DT_EncSDK=%s\000' % os.path.join(dir, 'Tools') +
 				'DT_Common=%s\000' % os.path.join(dir, 'Common'))
 		else:
-			raise ImportError('no G2 codecs')
+			raise ImportError('no RealMedia codecs')
 
 engine = None
 audiopin = None
