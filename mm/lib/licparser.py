@@ -53,12 +53,29 @@ class License:
 			lic = settings.get('license')
 		self.__available_features, self.__licensee, self.__moredays = \
 					   _parselicense(lic)
+		if not user:
+			user = settings.get('license_user')
+			if user[-18:] == ' (evaluation copy)':
+				user = user[:-18]
+		if not organization:
+			organization = settings.get('license_organization')
+		# If this is a personalized license force the user/organization
+		if self.__licensee:
+			if ',' in self.__licensee:
+				lfields = string.split(self.__licensee, ',')
+				user = lfields[0]
+				organization = string.join(lfields[1:], ',')
+			else:
+				# One field: force only organization
+				organization = self.__licensee
 		for f in features:
 			if not self.have(f):
 				if f == sys.platform:
 					raise Error, "License not valid for this OS/platform"
 				else:
 					raise Error, "License not valid for this program"
+		if not user and not organization:
+			raise Error, "You must specify user or organization name"
 
 		self.msg = ""
 		if type(self.__moredays) == type(0):
@@ -80,9 +97,14 @@ class License:
 				if user and organization:
 					self.__licensee = user + ', ' + organization
 				elif user:
-					self.__licensee = user
+					self.__licensee = user + ', '
 				else:
 					self.__licensee = organization
+		else:
+			if self.__moredays:
+				user = user + ' (evaluation copy)'
+			settings.set('license_user', user)
+			settings.set('license_organization', organization)
 
 	def have(self, *features):
 		"""Check whether we have the given features"""
