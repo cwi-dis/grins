@@ -291,10 +291,6 @@ class Channel:
 			if not self._player.toplevel.waitevent():
 				return
 
-	def add_anchor(self, button, func, arg):
-		if button:
-			self._anchors[button] = (func, arg)
-
 	def anchor_triggered(self, node, anchorlist, arg):
 		return self._playcontext.anchorfired(node, anchorlist, arg)
 
@@ -352,8 +348,7 @@ class Channel:
 				self._has_pause = 1
 			else:
 				f = self._playcontext.anchorfired
-			self.add_anchor(button, f,
-					(node, [(name, type)], None))
+			self._anchors[button] = f, (node, [(name, type)], None)
 		self._qid = None
 
 	def play_1(self):
