@@ -125,9 +125,9 @@ class EditMgr:
 			raise MMExc.AssertError, 'cannot set synctolist attr'
 		oldvalue = node.GetRawAttrDef(name, None)
 		self.addstep('setnodeattr', node, name, oldvalue, value)
-		if value <> None:
+		if value is not None:
 			node.SetAttr(name, value)
-		elif oldvalue <> None:
+		elif oldvalue is not None:
 			node.DelAttr(name)
 	#
 	def setnodevalues(self, node, values):
@@ -138,7 +138,7 @@ class EditMgr:
 	#
 	def addsyncarc(self, xnode, xside, delay, ynode, yside):
 		list = ynode.GetRawAttrDef('synctolist', None)
-		if list == None:
+		if list is None:
 			list = []
 			ynode.SetAttr('synctolist', list)
 		xuid = xnode.GetUID()
@@ -270,10 +270,10 @@ class EditMgr:
 ##			oldvalue = attrdict[attrname]
 ##		else:
 ##			oldvalue = None
-##		if value == None == oldvalue:
+##		if value is None is oldvalue:
 ##			return
 ##		self.addstep('setstyleattr', name, attrname, oldvalue, value)
-##		if value == None:
+##		if value is None:
 ##			del attrdict[attrname]
 ##		else:
 ##			attrdict[attrname] = value
