@@ -240,6 +240,12 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		del self._topwindow
 		del self.arrowcache
 
+	# get the doc of this instance
+	def GetCmifDoc(self):
+		if not self._parent:
+			self._parent=(self.GetParent()).GetMDIFrame()
+		return self._parent._cmifdoc
+
 	# Returns true if the window is closed
 	def is_closed(self):
 		return not (self._obj_ and self.IsWindow())
@@ -473,6 +479,10 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 			return 1
 		if self._transparent==-1 and self._active_displist:
 			dc.FillSolidRect(rc,win32mu.RGB(self._active_displist._bgcolor))
+			return 1
+
+		# if we are transparent without an active displist we are actualy out of the game
+		if self._transparent in (1,-1) and not self._active_displist:
 			return 1
 		
 		# the window is transparent 
