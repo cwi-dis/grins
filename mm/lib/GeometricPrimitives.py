@@ -15,9 +15,9 @@ class GeoWidget(Widget):
 	# contains editable elements.
 	# Currently, it requires the existing display list implementation to run.
 
-	def __init__(self, root):
+	def __init__(self, mother):
 		# Root is the root window.
-		Widget.__init__(self, root)
+		Widget.__init__(self, mother)
 		self.canvassize = 800, 200
 		self.widgets = []
 
@@ -43,8 +43,9 @@ class GeoWidget(Widget):
 		# Handle display lists and so forth.
 		# I may reuse the display list for small changes.
 		x,y = self.canvassize
-		self.root.window.setcanvassize((windowinterface.UNIT_PXL, x,y))
-		self.displist = self.root.window.newdisplaylist((227,223,145), windowinterface.UNIT_PXL)
+		self.mother.window.setcanvassize((windowinterface.UNIT_PXL, x,y))
+		# Fixing the color of the background will break things. Sorry, but I'm lazy (-anonymous developer :-).
+		self.displist = self.mother.window.newdisplaylist(settings.get('temporal_backgroundcolor'), windowinterface.UNIT_PXL)
 		for i in self.widgets:
 			i.displist = self.displist
 			i.redraw()
@@ -61,6 +62,9 @@ class GeoWidget(Widget):
 			y = b
 		self.canvassize = x,y
 
+	def getgeometry(self):
+		return self.mother.window.getgeometry()
+
 class GeoClientWidget(Widget):
 	# Common routines for all widgets.
 	def moveto(self, coords):
@@ -72,8 +76,10 @@ class Image(GeoClientWidget):
 		print "TODO"
 
 class Line(GeoClientWidget):
+	color=(0,0,0)
 	def redraw(self):
-		self.displist.drawline(self.get_box())
+		x,y,w,h = self.get_box()
+		self.displist.drawline(self.color, [(x,y), (x+w, y+h)])
 
 class HLine3D(GeoClientWidget):
 	pass;
