@@ -405,11 +405,19 @@ SOURCE=.\RES\zoomout.ico
 # End Group
 # Begin Source File
 
+SOURCE=.\RES\animate.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\Audio.ico
 # End Source File
 # Begin Source File
 
 SOURCE=.\RES\Blank.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\brush.ico
 # End Source File
 # Begin Source File
 

@@ -245,6 +245,8 @@
 #define IDI_REGION                      441
 #define IDD_EDITATTR_CH2                441
 #define IDR_SOURCE_EDIT                 442
+#define IDI_BRUSH                       443
+#define IDI_ANIMATE                     444
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -764,7 +766,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        443
+#define _APS_NEXT_RESOURCE_VALUE        445
 #define _APS_NEXT_COMMAND_VALUE         32893
 #define _APS_NEXT_CONTROL_VALUE         1445
 #define _APS_NEXT_SYMED_VALUE           104
