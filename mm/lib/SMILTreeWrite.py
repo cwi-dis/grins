@@ -938,7 +938,7 @@ smil_attrs=[
 	("system-bitrate", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_bitrate")) or None),
 	("system-captions", lambda writer, node:(not writer.smilboston and getboolean(writer, node, 'system_captions')) or None),
 	("system-language", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_language")) or None),
-	("system-overdub-or-caption", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_overdub_or_caption")) or None),
+	("system-overdub-or-caption", lambda writer, node:(not writer.smilboston and {'overdub':'overdub','subtitle':'caption'}.get(getrawcmifattr(writer, node, "system_overdub_or_caption"))) or None),
 	("system-required", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_required")) or None),
 	("system-screen-size", lambda writer, node:(not writer.smilboston and getscreensize(writer, node)) or None),
 	("system-screen-depth", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_screen_depth")) or None),

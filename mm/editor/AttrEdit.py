@@ -2096,14 +2096,14 @@ class QTChapterModeEditorField(PopupAttrEditorFieldNoDefault):
 		return self.valuerepr(val)
 
 class CaptionOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
-	__values = ['caption', 'overdub']
+	__values = ['subtitle', 'overdub']
 	nodefault = 1
 
 	def getoptions(self):
 		return self.__values
 
 class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
-	__values = ['caption', 'overdub']
+	__values = ['subtitle', 'overdub']
 	default = 'Not set'
 	nodefault = 0
 
@@ -2121,33 +2121,6 @@ class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
 
 	def getoptions(self):
 		return [self.default] + self.__values
-
-##class SubtitleOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
-##	__values = ['subtitle', 'overdub']
-##	nodefault = 1
-
-##	def getoptions(self):
-##		return self.__values
-
-##class SubtitleOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
-##	__values = ['subtitle', 'overdub']
-##	default = 'Not set'
-##	nodefault = 0
-
-##	def parsevalue(self, str):
-##		if str == self.default:
-##			return None
-##		return str
-
-##	def valuerepr(self, value):
-##		if value is None:
-##			if self.nodefault:
-##				return self.getdefault()
-##			return self.default
-##		return value
-
-##	def getoptions(self):
-##		return [self.default] + self.__values
 
 class LanguageAttrEditorField(PopupAttrEditorField):
 	from languages import a2l, l2a
