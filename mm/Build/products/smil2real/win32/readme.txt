@@ -8,7 +8,7 @@ of SMIL 2.0 documents for the RealNetworks' RealONE player.
 System Requirements
 -------------------
 
-GRiNS Editor for Real, Version 2.0 requires at least Windows 98 or
+GRiNS Editor for RealONE, Version 2.0 requires at least Windows 98 or
 Windows 2000. GRiNS will work on Windows 95 and Windows NT, but these
 operating systems do not support multiple audio channels so you may
 experience problems.
