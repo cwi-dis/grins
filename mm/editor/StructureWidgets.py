@@ -373,10 +373,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		# XXXX This is wrong.
 		self.node.infoicon = icon
 		self.node.errormessage = msg
-		if self.infoicon:
-			self.infoicon.set_icon(icon)
+		if self.info_icon:
+			self.info_icon.set_icon(icon)
 		else:
-			self.infoicon = self.iconbox.add_icon(icon, callback = self.show_mesg)
+			self.info_icon = self.iconbox.add_icon(icon, callback = self.show_mesg)
 
 	def get_cause_event_icon(self):
 		# Returns the start position of an event arrow.
