@@ -9,7 +9,7 @@
 
 //Python Header Files
 #define Py_USE_NEW_NAMES
-#include "allobjects.h"
+#include "Python.h"
 #include "modsupport.h"
 #include "abstract.h"
 
@@ -25,3 +25,4 @@
 #define PyIMPORT  __declspec(dllimport)
 #define PyEXPORT  __declspec(dllexport)
 
+#endif
