@@ -180,7 +180,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# return commnds class id
 	def get_cmdclass_id(self,cmdcl):
-		if cmdcl in usercmdui.class2ui.keys():
+		if usercmdui.class2ui.has_key(cmdcl):
 			return usercmdui.class2ui[cmdcl].id
 		else: 
 			print 'CmdClass not found',cmdcl
@@ -188,9 +188,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Returns a submenu from its string id (e.g 'File','Edit',etc)
 	def get_submenu(self,strid):
-		if not strid in self._mainmenu._submenus_dict.keys():
-			return None
-		return self._mainmenu._submenus_dict[strid]
+		return self._mainmenu._submenus_dict.get(strid)
 
 	# Called after the window has been created for further initialization
 	# Called after CWnd::OnCreate
@@ -443,7 +441,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
 		      commandlist = None, resizable = 1):
-		if 'view' in adornments.keys():strid=adornments['view']
+		if adornments.has_key('view'):strid=adornments['view']
 		else:  raise "undefined view request"
 		return self.newview(x, y, w, h, title, units, adornments,canvassize, commandlist,strid)
 
@@ -573,7 +571,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	# More complex than it should be due to lack in sync between
 	# two independent mechanisms: 'set_commandlist call' and 'OS activate'
 	def set_commandlist(self,commandlist,context='view'):
-		if context not in self._activecmds.keys():
+		if not self._activecmds.has_key(context):
 			self._activecmds[context]={}
 
 		# dissable all commands in context set previously
@@ -607,15 +605,14 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
 
 	def dissable_cmdlist(self,context):
-		l=[]
-		if context in self._activecmds.keys():
+		if self._activecmds.has_key(context):
 			l=self._activecmds[context].keys()
 			for id in l:self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
 
 	def enable_viewcmdlist(self,context):
 		# dissable all commands set by views previously
 		self.dissable_viewscmdlist(context)
-		if context==None or context not in self._activecmds.keys():
+		if context is None or not self._activecmds.has_key(context):
 			return
 		contextcmds=self._activecmds[context]
 		for id in contextcmds.keys():
@@ -626,9 +623,9 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	# but only those not included in a higher context (e.g PLAY,?)
 	def viewscmdids(self,vcontext):
 		l=[];frameids=[];documentids=[]
-		if 'frame' in self._activecmds.keys():
+		if self._activecmds.has_key('frame'):
 			frameids=self._activecmds['frame'].keys()
-		if 'document' in self._activecmds.keys():
+		if self._activecmds.has_key('document'):
 			documentids=self._activecmds['document'].keys()
 		for context in self._activecmds.keys():
 			if context=='frame' or context=='document':continue
@@ -683,7 +680,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 		callback = cmd.callback
 		menuspec = []
-		if command not in self._dyncmds.keys():
+		if not self._dyncmds.has_key(command):
 			self._dyncmds[command]={}
 		else:
 			self._dyncmds[command].clear()
@@ -716,7 +713,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	# items are checked/unchecked by the core system
 	def check_cascade_menu_entry(self,id):
 		submenu=self.get_cascade_menu(id)
-		if id not in submenu._toggles.keys():return
+		if not submenu._toggles.has_key(id):return
 		state=submenu.GetMenuState(id,win32con.MF_BYCOMMAND)
 		if state & win32con.MF_CHECKED:
 			submenu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_UNCHECKED)
@@ -758,7 +755,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			return
 
 		# look first self._active_child cmds
-		if self._active_child and self._active_child._view._strid in self._activecmds.keys():
+		if self._active_child and self._activecmds.has_key(self._active_child._view._strid):
 			contextcmds=self._activecmds[self._active_child._view._strid]
 			if contextcmds.has_key(id):
 				cmd=contextcmds[id]
@@ -781,7 +778,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Check the menu item with id
 	def check_menu_item(self,id):
-		if id not in self._mainmenu._toggles.keys(): return
+		if not self._mainmenu._toggles.has_key(id): return
 		state=self._mainmenu.GetMenuState(id,win32con.MF_BYCOMMAND)
 		if state & win32con.MF_CHECKED:
 			self._mainmenu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_UNCHECKED)

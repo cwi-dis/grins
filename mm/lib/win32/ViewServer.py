@@ -189,7 +189,7 @@ class ViewServer:
 	# Create a new view object 
 	def newviewobj(self,strid):
 		viewno=self.getviewno(strid)
-		if 'hosted' in appview[viewno].keys() and appview[viewno]['hosted']:
+		if appview[viewno].has_key('hosted') and appview[viewno]['hosted']:
 			viewclass=appview[viewno]['class']
 			viewobj=viewclass()
 			self.add_common_interface(viewobj,viewno)
@@ -227,9 +227,7 @@ class ViewServer:
 
 	# Create the child frame that will host this view
 	def frameview(self,view,viewno):
-		freezeSize=0
-		if 'freezesize' in appview[viewno].keys():
-			freezeSize=appview[viewno]['freezesize']
+		freezeSize = appview[viewno].get('freezesize', 0)
 		f=ChildFrame(view,freezeSize)
 		rc=self._context.getPrefRect()
 		f.Create(appview[viewno]['title'],None,self._context,0)

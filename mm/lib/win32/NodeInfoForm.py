@@ -156,7 +156,7 @@ class NodeInfoForm(GenFormView):
 		cbd=self._cbdict=adornments['callbacks']
 		self._idcbdict={}
 		for k in self.keys():
-			if k in cbd.keys():
+			if cbd.has_key(k):
 				self._idcbdict[self[k]._id]=cbd[k]
 
 		# gen node info 
@@ -282,10 +282,9 @@ class NodeInfoForm(GenFormView):
 		if not immtext:immtext=''
 		if type(immtext)==type([]):
 			str=string.join(immtext, '\r\n')
-			self['ImmEdit'].settext(str)
 		else:
 			str=self.convert2ws(immtext)
-			self['ImmEdit'].settext(str)
+		self['ImmEdit'].settext(str)
 
 	def gettext(self):
 		"""Return the current text as one string."""
