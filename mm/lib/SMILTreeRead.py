@@ -488,8 +488,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			
 
 		# now determine channel type
-		if compatibility.G2 == features.compatibility and \
-			subtype is not None and \
+		if subtype is not None and \
 			string.find(string.lower(subtype), 'real') >= 0:
 				# if it's a RealMedia type, use tag to determine chtype
 				if tagname == 'audio':
@@ -629,9 +628,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__width > 0 and self.__height > 0:
 			# we don't have to calculate minimum sizes
 			pass
-		elif mtype in ('image', 'movie', 'video', 'mpeg') or \
-		 (compatibility.G2 == features.compatibility and \
-		 mtype in ('RealPix', 'RealText', 'RealVideo')):
+		elif mtype in ('image', 'movie', 'video', 'mpeg', 'RealPix', 'RealText', 'RealVideo'):
 			x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
 			# if we don't know the region size and
 			# position in pixels, we need to look at the
@@ -835,9 +832,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		attrdict = attrdict.copy() # we're going to change this...
 		if attrdict.has_key('type'): del attrdict['type']
 		if mtype in ('text', 'image', 'movie', 'video', 'mpeg',
-			     'html', 'label', 'graph', 'layout') or \
-		(compatibility.G2 == features.compatibility and \
-		mtype in ('RealPix','RealText', 'RealVideo')):
+			     'html', 'label', 'graph', 'layout', 'RealPix','RealText', 'RealVideo'):
 			# deal with channel with window
 			ch['drawbox'] = 0
 			if attrdict.has_key('id'): del attrdict['id']
@@ -1051,9 +1046,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ctx.channels.append(ch)
 			ch['type'] = mtype
 			if mtype in ('image', 'movie', 'video', 'mpeg',
-				     'text', 'label', 'html', 'graph') or \
-			 (compatibility.G2 == features.compatibility and \
-			    mtype in ('RealPix', 'RealText', 'RealVideo')):
+				     'text', 'label', 'html', 'graph', 'RealPix', 'RealText', 'RealVideo'):
 				if not self.__regions.has_key(region):
 					self.warning('no region %s in layout' %
 						     region, self.lineno)
@@ -1416,13 +1409,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val is not None:
 					attrdict['background-color'] = val
 			elif attr == 'type':
-				if val == 'RealAudio':
-					val = 'sound'
-				elif val == 'RealVideo':
-					val = 'video'
-				if not (compatibility.G2 == features.compatibility):
-					if val == 'RealPix':
-						val = 'unknown'
+				# map channel type to something we can deal with
+				# this should loop at most twice (RealPix->RealVideo->video)
+				while not self.__validchannels.has_key(val):
+					if val == 'RealVideo':
+						val = 'video'
+					elif val == 'RealPix':
+						val = 'RealVideo'
+					elif val == 'RealAudio':
+						val = 'sound'
+					elif val == 'RealText':
+						val = 'video'
+					elif val == 'html':
+						val = 'text'
 				attrdict[attr] = val
 			else:
 				# catch all
