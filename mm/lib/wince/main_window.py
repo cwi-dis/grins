@@ -370,7 +370,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 	
 	def getStatusRect(self):
 		l, t, r, b = self.GetClientRect()
-		y = self._splash_pos[1] + self._splash.GetSize()[1] + 16
+		y = self._splash_pos[1] + self._splash.GetSize()[1]
 		return l, y, r, y+24
 		
 	def setStatusMsg(self, msg):
