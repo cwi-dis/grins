@@ -255,7 +255,7 @@ class ListBox(Control):
 		return self.gettext(ix)
 
 
-# CompoBox control class
+# ComboBox control class
 class ComboBox(Control):
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
@@ -746,6 +746,8 @@ class SimpleSelectDlg(ResDialog):
 		self._title=title
 		self._prompt=prompt
 		self._defaultindex=defaultindex
+		self._result=None
+
 	def OnInitDialog(self):
 		dialog.Dialog.OnInitDialog(self)
 
@@ -764,6 +766,7 @@ class SimpleSelectDlg(ResDialog):
 			self._list_ctrl.setcursel(self._defaultindex)
 
 	def OnOK(self):
+		self._result=win32con.IDOK
 		ix=self._list_ctrl.getcursel()
 		res=self._obj_.OnOK()
 		if ix>=0:
@@ -773,6 +776,7 @@ class SimpleSelectDlg(ResDialog):
 		return res
 
 	def OnCancel(self):
+		self._result=win32con.IDCANCEL
 		# nothing
 		return self._obj_.OnCancel()
 	
@@ -804,12 +808,17 @@ class _MultChoice:
 		for i in range(len(self.msg_list)):
 			if msg == self.msg_list[i]:
 				self.answer = i
-				break;
+				break
 
 def multchoice(prompt, list, defindex, parent = None):
-	 mc=_MultChoice(prompt, list, defindex, parent = parent)
-	 return mc.answer
-
+	mc=_MultChoice(prompt, list, defindex, parent = parent)
+	if mc.dialog._result==win32con.IDOK:
+		return mc.answer
+	else:
+		if 'Cancel' in list:
+			return list.index('Cancel')
+		else:
+			return -1
 
 #####################################
 # std win32 modules
