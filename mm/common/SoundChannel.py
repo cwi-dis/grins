@@ -14,9 +14,6 @@ class SoundChannel(ChannelAsync):
 	__maxbytes = 0			# queue size in bytes
 	__playing = 0			# # of active channels
 
-	def __repr__(self):
-		return '<NonThreadedSoundChannel instance, name=' + `self._name` + '>'
-
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 		if debug: print 'SoundChannel: init', name
@@ -123,6 +120,7 @@ class Player:
 				self.__is_playing = 0
 
 	def __playsome(self, first = 0):
+		self.__tid = None
 		if not self.__is_playing:
 			self.__port.wait()
 			for cb in self.__callbacks:
