@@ -2,8 +2,8 @@
 package grins;
 
 /**
-*  SMILController specifies the interface for controlling the playback
-*  of SMIL documents. SMILControllers are produced by SMILDocuments
+*  The interface for controlling playback of SMIL documents.
+*  SMILControllers are produced by SMILDocuments
 *  using the method getController(); see interface SMILDocument
 */   
 public interface SMILController {
@@ -30,6 +30,8 @@ public interface SMILController {
     /**
     *  Seek to time t in seconds within the SMIL document controlled
     *  by this SMILController.
+    *
+    * @param  t  time in seconds to seek to.
     */       
     void setTime(double t);
     
@@ -43,6 +45,9 @@ public interface SMILController {
     *  Set playback speed for the SMIL document controlled
     *  by this SMILController.
     *  (null implementation for now)
+    *
+    * @param  v   new speed.
+    *
     */       
     void setSpeed(double v);
     
@@ -56,6 +61,8 @@ public interface SMILController {
     /**
     *  Add a playback event listener for the SMIL document controlled
     *  by this SMILController.
+    *
+    * @param  listener the object that will receive playback notifications.
     */       
     void addListener(SMILListener listener);
     

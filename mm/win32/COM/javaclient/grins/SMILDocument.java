@@ -5,8 +5,8 @@ import java.awt.Canvas;
 import java.awt.Dimension;
 
 /**
-*  SMILDocument specifies the interface for managing
-*  SMIL documents. SMILDocument are produced by GRiNSToolkit
+*  The interface for managing SMIL documents.
+*  SMILDocument are produced by GRiNSToolkit
 *  using the factory method createDocument(String filenameOrURLString)
 *  After using a SMILDocument you should <em>always</em> call close() 
 *  to dispose used resources. 
