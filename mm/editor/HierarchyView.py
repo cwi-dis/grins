@@ -52,6 +52,32 @@ class HierarchyView(HierarchyViewDialog):
 		self.root = self.toplevel.root
 		self.scene_graph = None
 
+		self.editmgr = self.root.context.editmgr
+
+		self.thumbnails = settings.get('structure_thumbnails')
+		self.showplayability = 1
+		self.timescale = None
+		self.usetimestripview = 0
+		if features.H_TIMESTRIP in features.feature_set:
+			if self._timestripconform():
+				self.usetimestripview = 1
+			else:
+				windowinterface.showmessage("Warning: document structure cannot be displayed as timestrip.  Using structured view.", parent=self.window)
+		self.pushbackbars = features.H_VBANDWIDTH in features.feature_set 	# display download times as pushback bars on MediaWidgets.
+		self.dropbox = features.H_DROPBOX in features.feature_set	# display a drop area at the end of every node.
+		self.transboxes = features.H_TRANSITIONS in features.feature_set # display transitions
+		self.translist = []	# dynamic transition menu
+		self.show_links = 1	# Show HTML links??? I think.. -mjvdg.
+		self.sizes = sizes_notime
+		from cmif import findfile
+		self.datadir = findfile('GRiNS-Icons')
+		
+		self.__add_commands()
+		HierarchyViewDialog.__init__(self)		
+
+	def __init_state(self):
+		# Sets the state of this view - i.e. selected nodes etc.
+		# This gets called before the scene is initialised.
 		# Drawing optimisations
 		self.drawing = 0	# A lock to prevent recursion in the draw() method of self.
 		self.redrawing = 0	# A lock to prevent recursion in redraw()
@@ -78,31 +104,9 @@ class HierarchyView(HierarchyViewDialog):
 
 		# Remove sometime.
 		self.focusnode = self.prevfocusnode = self.root	# : MMNode - remove when no longer used.
-
-		self.editmgr = self.root.context.editmgr
-
 		self.destroynode = None	# node to be destroyed later
-		self.thumbnails = settings.get('structure_thumbnails')
-		self.showplayability = 1
-		self.timescale = None
-		self.usetimestripview = 0
-		if features.H_TIMESTRIP in features.feature_set:
-			if self._timestripconform():
-				self.usetimestripview = 1
-			else:
-				windowinterface.showmessage("Warning: document structure cannot be displayed as timestrip.  Using structured view.", parent=self.window)
-		self.pushbackbars = features.H_VBANDWIDTH in features.feature_set 	# display download times as pushback bars on MediaWidgets.
-		self.dropbox = features.H_DROPBOX in features.feature_set	# display a drop area at the end of every node.
-		self.transboxes = features.H_TRANSITIONS in features.feature_set # display transitions
-		self.translist = []	# dynamic transition menu
-		self.show_links = 1	# Show HTML links??? I think.. -mjvdg.
-		self.sizes = sizes_notime
+
 		self.arrow_list = []	# A list of arrows to be drawn after everything else.
-		from cmif import findfile
-		self.datadir = findfile('GRiNS-Icons')
-		
-		self.__add_commands()
-		HierarchyViewDialog.__init__(self)		
 
 	def __add_commands(self):
 		# Add the user-interface commands that are used for this window.
@@ -398,14 +402,12 @@ class HierarchyView(HierarchyViewDialog):
 		# Iterate through the MMNode structure (starting from self.root)
 		# and create a scene graph from it.
 		# As such, any old references into the old scene graph need to be reinitialised.
-		self.selected_widget = None
+		self.__init_state()
 		self.scene_graph = StructureWidgets.create_MMNode_widget(self.root, self)
-		self.need_redraw = 1
-		self.need_resize = 1
-		if self.window and self.focusnode:
-			self.select_node(self.focusnode)
-			widget = self.focusnode.views['struct_view']
-			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
+		#if self.window and self.focusnode:
+		#	self.select_node(self.focusnode)
+		#	widget = self.focusnode.views['struct_view']
+		#	self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 
 
 	# Callbacks for the Widget classes.
@@ -432,7 +434,6 @@ class HierarchyView(HierarchyViewDialog):
 		# Recalculates the node structure from the MMNode structure.
 		if self.scene_graph is not None:
 			self.scene_graph.destroy()
-		self.base_display_list = None
 		self.create_scene_graph()
 
 	######################################################################
