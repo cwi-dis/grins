@@ -637,7 +637,18 @@ class _CommonWindow:
 			if py >= rh:
 				py, ph = rh - 1, py - rh + 1
 		if len(coordinates) == 2:
-			return px+rx, py+ry
+		
+			px = px + rx
+			py = py + ry
+			if not -32767 <= px <= 32767 or \
+			   not -32767 <= py <= 32767 or \
+			   not -32767 <= pw <= 32767:
+				print 'Warning: _convert_coordinates: clipping', (px, py)
+				if px < -32767: px = -32767
+				if px > 32767: px = 32767
+				if py < -32767: py = -32767
+				if py > 32767: py = 32767
+			return px, py
 		if units == UNIT_PXL or (units is None and type(w) is type(0)):
 			pw = int(w + pw - dx)
 		else:
@@ -655,7 +666,22 @@ class _CommonWindow:
 				ph = 1
 			if py + ph > rh:
 				ph = rh - py
-		return px+rx, py+ry, pw, ph
+		px = px + rx
+		py = py + ry
+		if not -32767 <= px <= 32767 or \
+		   not -32767 <= py <= 32767 or \
+		   not -32767 <= pw <= 32767 or \
+		   not -32767 <= ph <= 32767:
+			print 'Warning: _convert_coordinates: clipping', (px, py, pw, ph)
+			if px < -32767: px = -32767
+			if px > 32767: px = 32767
+			if py < -32767: py = -32767
+			if py > 32767: py = 32767
+			if pw < -32767: pw = -32767
+			if pw > 32767: pw = 32767
+			if ph < -32767: ph = -32767
+			if ph > 32767: ph = 32767
+		return px, py, pw, ph
 		
 	def _scrolloffset(self):
 		"""Return the x,y to be added to coordinates to convert them to QD
@@ -1697,7 +1723,7 @@ class _OffscreenMixin:
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 			Qd.RGBForeColor((0,0,0))
 			port = self._onscreen_wid.GetWindowPort()
-			Qd.QDFlushPortBuffer(port, None)
+			port.QDFlushPortBuffer(None)
 			Qd.CopyBits(port.GetPortBitMapForCopyBits(), bitmap, area, area, QuickDraw.srcCopy, None)
 ## XXX Not sure whether this is correct: the whole offscreen bitmap has been cleared during
 ## creation (above), but should I re-clear here if I reuse it?
