@@ -64,13 +64,14 @@ def _readparser(p, filename):
 	#
 	# Read a single node (this is a whole tree!) from the file.
 	# If an error occurs, format a nice error message, and
-	# re-raise the exception.
+	# re-raise the exception as an MSyntaxError.
 	#
 	try:
 		root = p.getnode()
 	except EOFError:
+		tb = sys.exc_traceback
 		p.reporterror(filename, 'Unexpected EOF', sys.stderr)
-		raise EOFError
+		raise MSyntaxError, 'Unexpected EOF', tb
 	except MSyntaxError, msg:
 		if hasattr(sys, 'exc_info'):
 			tb = sys.exc_info()[2]
@@ -90,7 +91,7 @@ def _readparser(p, filename):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
 		p.reporterror(filename, 'Type error: ' + msg, sys.stderr)
-		raise MTypeError, msg, tb
+		raise MSyntaxError, msg, tb
 	#
 	# Make sure that there is no garbage in the file after the node.
 	#
