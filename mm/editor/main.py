@@ -2,6 +2,7 @@
 
 import sys
 import getopt
+import os
 
 def main():
 	playnow = 0
@@ -27,8 +28,13 @@ def main():
 	# patch the module search path
 	# so we are less dependent on where we are called
 	#
-	sys.path.append('/ufs/guido/mm/demo/mm4')
-	sys.path.append('/ufs/guido/mm/demo/lib')
+	if os.environ.has_key('CMIF'):
+		CMIF = os.environ['CMIF']
+	else:
+		CMIF = '/ufs/guido/mm/demo'
+	sys.path.append(os.join(CMIF, 'mm4'))
+	sys.path.append(os.join(CMIF, 'lib'))
+	#
 	import MMExc
 	import TopLevel
 	import SoundChannel
