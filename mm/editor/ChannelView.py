@@ -869,8 +869,6 @@ class GO(GOCommand):
 					(windowinterface.DOUBLE_WIDTH,))),
 			CANVAS_RESET(callback = (self.canvascall,
 					(windowinterface.RESET_CANVAS,))),
-			CANVAS_FIT(callback = (self.canvascall,
-					(windowinterface.FIT_WINDOW,))),
 			NEW_CHANNEL(callback = (self.newchannelcall, ())),
 			ANCESTORS(callback = mother.setviewrootcb),
 			SIBLINGS(callback = mother.setviewrootcb),
