@@ -21,10 +21,10 @@ class Selecter:
 	#
 	# State transitions.
 	#
-	def play(self):
+	def play(self, starttime = 0):
 		if self.playing:
 			raise 'Already playing'
-		self.reset()
+		self.reset(starttime)
 		self.sctx = self.scheduler.play(self.userplayroot, None, None, None, timestamp = 0)
 		if not self.sctx:
 			return
@@ -41,8 +41,8 @@ class Selecter:
 		self.playing = 0
 		self.showstate()
 	#
-	def reset(self):
-		self.scheduler.resettimer()
+	def reset(self, starttime = 0):
+		self.scheduler.resettimer(starttime)
 	#
 	# Callback for anchor activations, called by channels.
 	# Return 1 if the anchor fired, 0 if nothing happened.
