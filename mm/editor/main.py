@@ -219,7 +219,7 @@ def findfile(name):
 	import os
 	if os.path.isabs(name):
 		return name
-	if cmifpath == None:
+	if cmifpath is None:
 		if os.environ.has_key('CMIFPATH'):
 			import string
 			var = os.environ['CMIFPATH']
