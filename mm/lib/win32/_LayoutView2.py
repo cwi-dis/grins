@@ -105,6 +105,9 @@ class _LayoutView2(GenFormView):
 	# for now avoid to have one handler by dialog ctrl
 	def getDialogComponent(self):
 		return self
+
+	def getKeyTimeSlider(self):
+		return self._slider
 	
 	# returning true will make frame resizeable
 	def isResizeable(self):
