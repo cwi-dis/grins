@@ -662,7 +662,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			else:
 				cwd = os.getcwd()
 		title = 'Save GRiNS project:'
-		filetypes = ['application/x-grins-project', 'application/smil']
+		filetypes = ['application/x-grins-project']
 		if prune:
 			filetypes = ['application/smil']
 			title = 'Save SMIL file:'
