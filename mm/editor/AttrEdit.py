@@ -813,7 +813,7 @@ class FloatButtonRow(ButtonRow):
 			raise MMExc.SyntaxError, 'bad float syntax'
 		if type(x) <> type(0) and type(x) <> type(0.0):
 			raise MMExc.TypeError, 'not a float value'
-		return x
+		return float(x)
 
 
 class NameButtonRow(ButtonRow):
