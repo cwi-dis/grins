@@ -600,7 +600,7 @@ class _CmifPlayerView(_CmifView):
 		dds = self._ddraw.CreateSurface(w, h)
 		if self._convbgcolor == None:
 			r, g, b = self._bgcolor
-			self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+			self._convbgcolor = dds.GetColorMatch((r, g, b))
 		dds.BltFill((0, 0, w, h), self._convbgcolor)
 		return dds
 
@@ -628,27 +628,12 @@ class _CmifPlayerView(_CmifView):
 		x, y, w, h = self.getwindowpos()
 		if self._convbgcolor == None:
 			r, g, b = self._bgcolor
-			self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+			self._convbgcolor = dds.GetColorMatch((r,g,b))
 		dds.BltFill((x, y, x+w, y+h), self._convbgcolor)
 
 	def paint(self):		
 		# first paint self
-		if self._active_displist:
-			dc = self.GetDDDC()
-			if not dc: return
-			x, y, w, h = self.getwindowpos()
-			rgn = win32ui.CreateRgn()
-			rgn.CreateRectRgn((x,y,x+w,y+h))
-			dc.SelectClipRgn(rgn)
-			rgn.DeleteObject()
-			x0, y0 = dc.SetWindowOrg((-x,-y))
-			self._active_displist._render(dc,None)
-			if self._redrawfunc:
-				self._redrawfunc()
-			dc.SetWindowOrg((x0,y0))
-			self.ReleaseDDDC(dc)
-		else:
-			self.clear()
+		self._paintOnDDS(self._backBuffer, self._canvas)
 
 		# then paint children bottom up
 		L = self._subwindows[:]
@@ -661,6 +646,83 @@ class _CmifPlayerView(_CmifView):
 		rcBack = self.GetClientRect()
 		rcFront = self.ClientToScreen(rcBack)
 		self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
+	
+	# copy from win32window
+	def _paintOnDDS(self, dds, dst, rgn=None):
+		if self._transition and self._outtrans:
+			return
+
+		x, y, w, h = dst
+		if w==0 or h==0:
+			return
+		
+		if rgn:
+			xc, yc, wc, hc = self.xywh(rgn.GetRgnBox()[1])
+		else:
+			xc, yc, wc, hc = dst
+
+		if wc==0 or hc==0:
+			return
+		
+		if self._active_displist:
+			entry = self._active_displist._list[0]
+			if entry[0] == 'clear' and entry[1]:
+				r, g, b = entry[1]
+				convbgcolor = dds.GetColorMatch((r,g,b))
+				dds.BltFill((xc, yc, xc+wc, yc+hc), convbgcolor)
+
+			if self._video:
+				# get video info
+				vdds, vrcDst, vrcSrc = self._video
+				xd, yd, wd, hd = vrcDst
+				ld, td, rd, bd = x+xd, y+yd, x+xd+wd, y+yd+hd
+				ls, ts, rs, bs = self.ltrb(vrcSrc)
+
+				# clip destination
+				ldc, tdc, rdc, bdc = self.ltrb(self.rectAnd((xc, yc, wc, hc), 
+					(ld, td, rd-ld, bd-td)))
+			
+				# find part of source mapped to the clipped destination
+				# apply linear afine transformation from destination -> source
+				# x^p = ((x_2^p - x_1^p)*x + (x_1^p*x_2-x_2^p*x_1))/(x_2-x_1)
+				# rem: primes represent source coordinates
+				a = (rs-ls)/float(rd-ld);b=(ls*rd-rs*ld)/float(rd-ld)
+				lsc = int(a*ldc + b + 0.5)
+				rsc = int(a*rdc + b + 0.5)
+				a = (bs-ts)/float(bd-td);b=(ts*bd-bs*td)/float(bd-td)
+				tsc = int(a*tdc + b + 0.5)
+				bsc = int(a*bdc + b + 0.5)
+			
+				# we are ready, blit it
+				dds.Blt((ldc, tdc, rdc, bdc), vdds, (lsc,tsc,rsc,bsc), ddraw.DDBLT_WAIT)
+
+			# draw now the display list but after clear
+			hdc = dds.GetDC()
+			dc = win32ui.CreateDCFromHandle(hdc)
+			if rgn:
+				dc.SelectClipRgn(rgn)
+			x0, y0 = dc.SetWindowOrg((-x,-y))
+
+			self._active_displist._render(dc, None, clear=0)
+
+			if self._showing:
+				win32mu.FrameRect(dc,self._rect,self._showing)
+						
+			dc.SetWindowOrg((x0,y0))
+			dc.Detach()
+			dds.ReleaseDC(hdc)
+			
+			# if we have an os-subwindow invalidate its area
+			# but do not update it since we want this to happen
+			# after the surfaces flipping
+			if self._oswnd:
+				self._oswnd.InvalidateRect(self._oswnd.GetClientRect())
+
+		elif not self._transparent:
+			if self._convbgcolor == None:
+				r, g, b = self._bgcolor
+				self._convbgcolor = dds.GetColorMatch((r,g,b))
+			dds.BltFill((xc, yc, xc+wc, yc+hc), self._convbgcolor)
 			
 #################################################
 # Specialization of _CmifView for smooth drawing	

@@ -1082,7 +1082,7 @@ class SubWindow(Window):
 			entry = self._active_displist._list[0]
 			if entry[0] == 'clear' and entry[1]:
 				r, g, b = entry[1]
-				convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+				convbgcolor = dds.GetColorMatch((r,g,b))
 				dds.BltFill((xc, yc, xc+wc, yc+hc), convbgcolor)
 
 			if self._video:
@@ -1135,7 +1135,7 @@ class SubWindow(Window):
 		elif self._transparent == 0:
 			if self._convbgcolor == None:
 				r, g, b = self._bgcolor
-				self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+				self._convbgcolor = dds.GetColorMatch((r,g,b))
 			dds.BltFill((xc, yc, xc+wc, yc+hc), self._convbgcolor)
 		
 	
@@ -1177,7 +1177,7 @@ class SubWindow(Window):
 				r, g, b = self._bgcolor
 			else:
 				r, g, b = 0, 0, 0
-			self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+			self._convbgcolor = dds.GetColorMatch((r,g,b))
 		dds.BltFill((0, 0, w, h), self._convbgcolor)
 
 	# normal painting
