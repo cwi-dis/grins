@@ -119,7 +119,7 @@ class MACDialog:
 	def close(self):
 		"""Close the dialog and free resources."""
 		self._window.close()
-		del self._dialog
+		self._dialog = None
 
 	def show(self):
 		"""Show the dialog."""
