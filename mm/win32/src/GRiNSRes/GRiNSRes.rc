@@ -795,13 +795,6 @@ IDR_GRINSED             ICON    DISCARDABLE     "res\\GRiNSed.ico"
 
 IDR_GRINSED ACCELERATORS PRELOAD MOVEABLE PURE 
 BEGIN
-    "1",            IDUC_PLAYER,            VIRTKEY, ALT, NOINVERT
-    "2",            IDUC_LAYOUT,            VIRTKEY, ALT, NOINVERT
-    "3",            IDUC_HVIEW,             VIRTKEY, ALT, NOINVERT
-    "4",            IDUC_CVIEW,             VIRTKEY, ALT, NOINVERT
-    "5",            IDUC_HLINKS,            VIRTKEY, ALT, NOINVERT
-    "6",            IDUC_UGROUPS,           VIRTKEY, ALT, NOINVERT
-    "7",            IDUC_SOURCE,            VIRTKEY, ALT, NOINVERT
     "C",            IDUC_COPY,              VIRTKEY, CONTROL, NOINVERT
     "H",            IDUC_STOP,              VIRTKEY, CONTROL, NOINVERT
     "N",            IDUC_NEW_DOCUMENT,      VIRTKEY, CONTROL, NOINVERT
@@ -811,6 +804,10 @@ BEGIN
     "U",            IDUC_PAUSE,             VIRTKEY, CONTROL, NOINVERT
     "V",            IDUC_PASTE,             VIRTKEY, CONTROL, NOINVERT
     VK_DELETE,      IDUC_DELETE,            VIRTKEY, CONTROL, NOINVERT
+    VK_F5,          IDUC_PLAYER,            VIRTKEY, NOINVERT
+    VK_F6,          IDUC_HVIEW,             VIRTKEY, NOINVERT
+    VK_F7,          IDUC_CVIEW,             VIRTKEY, NOINVERT
+    VK_F8,          IDUC_LAYOUT,            VIRTKEY, NOINVERT
     VK_SPACE,       IDUC_MAGIC_PLAY,        VIRTKEY, CONTROL, NOINVERT
     "X",            IDUC_CUT,               VIRTKEY, CONTROL, NOINVERT
     "Z",            IDUC_UNDO,              VIRTKEY, CONTROL, NOINVERT
