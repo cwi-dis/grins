@@ -238,9 +238,22 @@ class TopLevel(TopLevelDialog):
 ##		t1 = time.time()
 ##		print 'done in', round(t1-t0, 3), 'sec.'
 		self.context = self.root.GetContext()
+		if sys.platform == 'wince':
+			errors = self.context.getParseErrors()
+			if errors is not None:
+				if errors.getType() == 'fatal':
+					msg = 'Fatal error'
+				else:
+					msg = 'Error'
+				logfile = r'\My Documents\GRiNS Error Log.txt'
+				f = open(logfile, 'w')
+				f.write(errors.getFormatedErrorsMessage())
+				f.close()
+				windowinterface.showmessage('%s logged in %s' % (msg, logfile))
 
 	def printfunc(self, msg):
-		windowinterface.showmessage('%s\n\n(while reading %s)' % (msg, self.filename))
+		if sys.platform != 'wince':
+			windowinterface.showmessage('%s\n\n(while reading %s)' % (msg, self.filename))
 
 	def reload_callback(self):
 		self.setwaiting()
