@@ -317,15 +317,16 @@ class MediaChannel:
 			t_sec=self.__playBuilder.GetPosition()
 			if t_sec>=self.__playEnd:self.OnMediaEnd()
 			self.paint()
-	def register_for_timeslices(self):
-		if self.__fiber_id: return
-		import windowinterface
-		self.__fiber_id=windowinterface.register( (self.onIdle,()) )
-	def unregister_for_timeslices(self):
-		if not self.__fiber_id: return
-		import windowinterface
-		windowinterface.unregister(self.__fiber_id)
-		self.__fiber_id=0
+	
+	def __register_for_timeslices(self):
+		if not self.__fiber_id:
+			windowinterface.setidleproc(self.onIdle)
+			self.__fiber_id = 1
+
+	def __unregister_for_timeslices(self):
+		if self.__fiber_id:
+			windowinterface.cancelidleproc(self.onIdle)
+			self.__fiber_id = 0
 
 
 ###################################
@@ -447,25 +448,21 @@ class VideoStream:
 	
 	def __register_for_timeslices(self):
 		if not self.__fiber_id:
-			self.__fiber_id=windowinterface.register( (self.onIdle,()) )
+			windowinterface.setidleproc(self.onIdle)
+			self.__fiber_id = 1
 
 	def __unregister_for_timeslices(self):
 		if self.__fiber_id:
-			windowinterface.unregister(self.__fiber_id)
-			self.__fiber_id=0
+			windowinterface.cancelidleproc(self.onIdle)
+			self.__fiber_id = 0
 
 	# Define the anchor area for visible medias
 	def prepare_anchors(self, node, window, coordinates):
 		if not window: return
 	
 		# it should be nice to verify this calcul !!!
-		
-#	 	left,top,width,height=self.__armBuilder.GetWindowPosition()
-#	 	print left,top,width,height
-#		left,top,right,bottom = window.GetClientRect()
+		# GetClientRect by def returns always: 0, 0, w, h		
 		left,top,w_width,w_height = window.GetClientRect()
-#	 	print left,top,right,bottom
-#		x,y,w,h=left,top,right-left,bottom-top
 
 		left,top,width,height = window._convert_coordinates(coordinates)
 		x,y,w,h = left,top,width,height
