@@ -231,7 +231,7 @@ MENUBAR=(
 		(LIGHT, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 
 
-NODOC_MENUBAR=(MENUBAR[0],MENUBAR[6])
+NODOC_MENUBAR=(MENUBAR[0],MENUBAR[7])
 
 #
 # Popup menus for various states
