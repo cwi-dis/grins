@@ -31,8 +31,8 @@ NULL=nul
 ################################################################################
 # Begin Project
 # PROP Target_Last_Scanned "textex - Win32 Release"
-RSC=rc.exe
 CPP=cl.exe
+RSC=rc.exe
 MTL=mktyplib.exe
 
 !IF  "$(CFG)" == "textex - Win32 Release"
@@ -227,6 +227,38 @@ DEP_CPP_TEXTM=\
 	".\Ezfont.h"\
 	".\textex.h"\
 	".\winclass.h"\
+	"D:\Python1.4\Src\Include\abstract.h"\
+	"D:\Python1.4\Src\Include\accessobject.h"\
+	"D:\Python1.4\Src\Include\allobjects.h"\
+	"D:\Python1.4\Src\Include\bltinmodule.h"\
+	"D:\Python1.4\Src\Include\ceval.h"\
+	"D:\Python1.4\Src\Include\classobject.h"\
+	"D:\Python1.4\Src\Include\cobject.h"\
+	"D:\Python1.4\Src\Include\complexobject.h"\
+	"D:\Python1.4\Src\Include\config.h"\
+	"D:\Python1.4\Src\Include\fileobject.h"\
+	"D:\Python1.4\Src\Include\floatobject.h"\
+	"D:\Python1.4\Src\Include\funcobject.h"\
+	"D:\Python1.4\Src\Include\intobject.h"\
+	"D:\Python1.4\Src\Include\intrcheck.h"\
+	"D:\Python1.4\Src\Include\listobject.h"\
+	"D:\Python1.4\Src\Include\longobject.h"\
+	"D:\Python1.4\Src\Include\mappingobject.h"\
+	"D:\Python1.4\Src\Include\methodobject.h"\
+	"D:\Python1.4\Src\Include\moduleobject.h"\
+	"D:\Python1.4\Src\Include\mymalloc.h"\
+	"D:\Python1.4\Src\Include\myproto.h"\
+	"D:\Python1.4\Src\Include\object.h"\
+	"D:\Python1.4\Src\Include\objimpl.h"\
+	"D:\Python1.4\Src\Include\pydebug.h"\
+	"D:\Python1.4\Src\Include\pyerrors.h"\
+	"D:\Python1.4\Src\Include\rangeobject.h"\
+	"D:\Python1.4\Src\Include\rename2.h"\
+	"D:\Python1.4\Src\Include\sliceobject.h"\
+	"D:\Python1.4\Src\Include\stringobject.h"\
+	"D:\Python1.4\Src\Include\sysmodule.h"\
+	"D:\Python1.4\Src\Include\thread.h"\
+	"D:\Python1.4\Src\Include\tupleobject.h"\
 	"D:\Python1.4\Src\pythonwi\pythondlg.h"\
 	"D:\Python1.4\Src\pythonwi\pythondoc.h"\
 	"D:\Python1.4\Src\pythonwi\pythoneditview.h"\
@@ -234,10 +266,10 @@ DEP_CPP_TEXTM=\
 	"D:\Python1.4\Src\pythonwi\pythonppage.h"\
 	"D:\Python1.4\Src\pythonwi\pythonpsheet.h"\
 	"D:\Python1.4\Src\pythonwi\pythonview.h"\
-	"D:\Python1.4\Src\pythonwi\win32app.h"\
+	"D:\Python1.4\Src\pythonwi\Win32app.h"\
 	"D:\Python1.4\Src\pythonwi\win32assoc.h"\
 	"D:\Python1.4\Src\pythonwi\win32cmd.h"\
-	"D:\Python1.4\Src\pythonwi\win32ui.h"\
+	"D:\Python1.4\Src\pythonwi\Win32ui.h"\
 	{$(INCLUDE)}"\graminit.h"\
 	{$(INCLUDE)}"\import.h"\
 	{$(INCLUDE)}"\modsupport.h"\
@@ -260,38 +292,38 @@ DEP_CPP_TEXTM=\
 	".\Ezfont.h"\
 	".\textex.h"\
 	".\winclass.h"\
-	"D:\python1.4\Src\Include\abstract.h"\
-	"D:\python1.4\Src\Include\accessobject.h"\
-	"D:\python1.4\Src\Include\allobjects.h"\
-	"D:\python1.4\Src\Include\bltinmodule.h"\
-	"D:\python1.4\Src\Include\ceval.h"\
-	"D:\python1.4\Src\Include\classobject.h"\
-	"D:\python1.4\Src\Include\cobject.h"\
-	"D:\python1.4\Src\Include\complexobject.h"\
-	"D:\python1.4\Src\Include\config.h"\
-	"D:\python1.4\Src\Include\fileobject.h"\
-	"D:\python1.4\Src\Include\floatobject.h"\
-	"D:\python1.4\Src\Include\funcobject.h"\
-	"D:\python1.4\Src\Include\intobject.h"\
-	"D:\python1.4\Src\Include\intrcheck.h"\
-	"D:\python1.4\Src\Include\listobject.h"\
-	"D:\python1.4\Src\Include\longobject.h"\
-	"D:\python1.4\Src\Include\mappingobject.h"\
-	"D:\python1.4\Src\Include\methodobject.h"\
-	"D:\python1.4\Src\Include\moduleobject.h"\
-	"D:\python1.4\Src\Include\mymalloc.h"\
-	"D:\python1.4\Src\Include\myproto.h"\
-	"D:\python1.4\Src\Include\object.h"\
-	"D:\python1.4\Src\Include\objimpl.h"\
-	"D:\python1.4\Src\Include\pydebug.h"\
-	"D:\python1.4\Src\Include\pyerrors.h"\
-	"D:\python1.4\Src\Include\rangeobject.h"\
-	"D:\python1.4\Src\Include\rename2.h"\
-	"D:\python1.4\Src\Include\sliceobject.h"\
-	"D:\python1.4\Src\Include\stringobject.h"\
-	"D:\python1.4\Src\Include\sysmodule.h"\
-	"D:\python1.4\Src\Include\thread.h"\
-	"D:\python1.4\Src\Include\tupleobject.h"\
+	"D:\Python1.4\Src\Include\abstract.h"\
+	"D:\Python1.4\Src\Include\accessobject.h"\
+	"D:\Python1.4\Src\Include\allobjects.h"\
+	"D:\Python1.4\Src\Include\bltinmodule.h"\
+	"D:\Python1.4\Src\Include\ceval.h"\
+	"D:\Python1.4\Src\Include\classobject.h"\
+	"D:\Python1.4\Src\Include\cobject.h"\
+	"D:\Python1.4\Src\Include\complexobject.h"\
+	"D:\Python1.4\Src\Include\config.h"\
+	"D:\Python1.4\Src\Include\fileobject.h"\
+	"D:\Python1.4\Src\Include\floatobject.h"\
+	"D:\Python1.4\Src\Include\funcobject.h"\
+	"D:\Python1.4\Src\Include\intobject.h"\
+	"D:\Python1.4\Src\Include\intrcheck.h"\
+	"D:\Python1.4\Src\Include\listobject.h"\
+	"D:\Python1.4\Src\Include\longobject.h"\
+	"D:\Python1.4\Src\Include\mappingobject.h"\
+	"D:\Python1.4\Src\Include\methodobject.h"\
+	"D:\Python1.4\Src\Include\moduleobject.h"\
+	"D:\Python1.4\Src\Include\mymalloc.h"\
+	"D:\Python1.4\Src\Include\myproto.h"\
+	"D:\Python1.4\Src\Include\object.h"\
+	"D:\Python1.4\Src\Include\objimpl.h"\
+	"D:\Python1.4\Src\Include\pydebug.h"\
+	"D:\Python1.4\Src\Include\pyerrors.h"\
+	"D:\Python1.4\Src\Include\rangeobject.h"\
+	"D:\Python1.4\Src\Include\rename2.h"\
+	"D:\Python1.4\Src\Include\sliceobject.h"\
+	"D:\Python1.4\Src\Include\stringobject.h"\
+	"D:\Python1.4\Src\Include\sysmodule.h"\
+	"D:\Python1.4\Src\Include\thread.h"\
+	"D:\Python1.4\Src\Include\tupleobject.h"\
 	"D:\Python1.4\Src\pythonwi\pythondlg.h"\
 	"D:\Python1.4\Src\pythonwi\pythondoc.h"\
 	"D:\Python1.4\Src\pythonwi\pythoneditview.h"\
@@ -299,10 +331,10 @@ DEP_CPP_TEXTM=\
 	"D:\Python1.4\Src\pythonwi\pythonppage.h"\
 	"D:\Python1.4\Src\pythonwi\pythonpsheet.h"\
 	"D:\Python1.4\Src\pythonwi\pythonview.h"\
-	"D:\Python1.4\Src\pythonwi\win32app.h"\
+	"D:\Python1.4\Src\pythonwi\Win32app.h"\
 	"D:\Python1.4\Src\pythonwi\win32assoc.h"\
 	"D:\Python1.4\Src\pythonwi\win32cmd.h"\
-	"D:\Python1.4\Src\pythonwi\win32ui.h"\
+	"D:\Python1.4\Src\pythonwi\Win32ui.h"\
 	{$(INCLUDE)}"\graminit.h"\
 	{$(INCLUDE)}"\import.h"\
 	{$(INCLUDE)}"\modsupport.h"\
