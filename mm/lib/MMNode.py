@@ -475,6 +475,7 @@ class MMNode:
 ##		self.isinfiniteloopnode = 0
 		self.looping_body_self = None
 		self.curloopcount = 0
+		self.infoicon = ''
 
 	#
 	# Return string representation of self
@@ -1750,6 +1751,18 @@ class MMNode:
 	#
 	def set_armedmode(self, mode):
 		self.armedmode = mode
+		
+	#
+	# method for maintaining node's info-icon state when the HierarchyView is
+	# not active
+	#
+	def set_infoicon(self, icon):
+		self.infoicon = icon
+		
+	def clear_infoicon(self):
+		self.infoicon = ''
+		for ch in self.children:
+			ch.clear_infoicon()
 
 	#
 	# Playability depending on system/environment parameters
