@@ -21,7 +21,7 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=..\..\bin\win32\grins_real_win_2.0-135.exe
+  EXE Filename=..\..\bin\win32\grins_real_win_2.0-136.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -39,7 +39,7 @@ item: Global
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=E:\PROGRA~1\WISEIN~1
+  Variable Default2=C:\PROGRA~1\WISEIN~2
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -1471,18 +1471,28 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
+  Source=..\..\RealOneTemplates\T-icons\video_1_P1A.bmp
+  Destination=%MAINDIR%\Templates\T-icons\video_1_P1A.bmp
+  Flags=0000000010000010
+end
+item: Install File
   Source=..\..\RealOneTemplates\T-icons\video_1_1A.bmp
   Destination=%MAINDIR%\Templates\T-icons\video_1_1A.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\T-icons\slideshow_2Ax.bmp
-  Destination=%MAINDIR%\Templates\T-icons\slideshow_2Ax.bmp
+  Source=..\..\RealOneTemplates\T-icons\slideshow_P2AC.bmp
+  Destination=%MAINDIR%\Templates\T-icons\slideshow_P2AC.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\T-icons\slideshow_2ACx.bmp
-  Destination=%MAINDIR%\Templates\T-icons\slideshow_2ACx.bmp
+  Source=..\..\RealOneTemplates\T-icons\slideshow_P2A.bmp
+  Destination=%MAINDIR%\Templates\T-icons\slideshow_P2A.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\RealOneTemplates\T-icons\slideshow_P1A.bmp
+  Destination=%MAINDIR%\Templates\T-icons\slideshow_P1A.bmp
   Flags=0000000010000010
 end
 item: Install File
@@ -1506,88 +1516,48 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropVT.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropVT.gif
+  Source=..\..\RealOneTemplates\T-icons\empty_P1A.bmp
+  Destination=%MAINDIR%\Templates\T-icons\empty_P1A.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropVITS.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropVITS.gif
+  Source=..\..\RealOneTemplates\T-icons\dropVITS.tif
+  Destination=%MAINDIR%\Templates\T-icons\dropVITS.tif
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropVideo.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropVideo.gif
+  Source=..\..\RealOneTemplates\T-icons\dropVideo.tif
+  Destination=%MAINDIR%\Templates\T-icons\dropVideo.tif
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropText.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropText.gif
+  Source=..\..\RealOneTemplates\T-icons\dropText.tif
+  Destination=%MAINDIR%\Templates\T-icons\dropText.tif
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropSVG.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropSVG.gif
+  Source=..\..\RealOneTemplates\T-icons\dropSound.tif
+  Destination=%MAINDIR%\Templates\T-icons\dropSound.tif
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropSound.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropSound.gif
+  Source=..\..\RealOneTemplates\T-icons\dropITS.tif
+  Destination=%MAINDIR%\Templates\T-icons\dropITS.tif
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\T-icons\DropRight.gif
-  Destination=%MAINDIR%\Templates\T-icons\DropRight.gif
+  Source=..\..\RealOneTemplates\T-icons\dropImage.tif
+  Destination=%MAINDIR%\Templates\T-icons\dropImage.tif
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropRealVideo.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropRealVideo.gif
+  Source=..\..\RealOneTemplates\T-icons\adapt_1_P1A.psd
+  Destination=%MAINDIR%\Templates\T-icons\adapt_1_P1A.psd
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropRealText.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropRealText.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropRealPix.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropRealPix.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropNull.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropNull.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropITS.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropITS.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropIT.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropIT.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropIS.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropIS.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropImage.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropImage.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropHTML.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropHTML.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\RealOneTemplates\T-icons\dropAudio.gif
-  Destination=%MAINDIR%\Templates\T-icons\dropAudio.gif
+  Source=..\..\RealOneTemplates\T-icons\adapt_1_P1A.bmp
+  Destination=%MAINDIR%\Templates\T-icons\adapt_1_P1A.bmp
   Flags=0000000010000010
 end
 item: Install File
@@ -1596,13 +1566,8 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\media\Back3S.gif
-  Destination=%MAINDIR%\Templates\media\Back3S.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\RealOneTemplates\media\Back3P.gif
-  Destination=%MAINDIR%\Templates\media\Back3P.gif
+  Source=..\..\RealOneTemplates\media\Back3R.gif
+  Destination=%MAINDIR%\Templates\media\Back3R.gif
   Flags=0000000010000010
 end
 item: Install File
@@ -1611,43 +1576,43 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\media\Back2P.gif
-  Destination=%MAINDIR%\Templates\media\Back2P.gif
+  Source=..\..\RealOneTemplates\S2_99_empty.grins
+  Destination=%MAINDIR%\Templates\S2_99_empty.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\S2_12G_video1A.grins
-  Destination=%MAINDIR%\Templates\S2_12G_video1A.grins
+  Source=..\..\RealOneTemplates\S2_21_adapt1A.grins
+  Destination=%MAINDIR%\Templates\S2_21_adapt1A.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\S2_11G_video1A.grins
-  Destination=%MAINDIR%\Templates\S2_11G_video1A.grins
+  Source=..\..\RealOneTemplates\S2_12_video1A.grins
+  Destination=%MAINDIR%\Templates\S2_12_video1A.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\S2_21G_adapt1A.grins
-  Destination=%MAINDIR%\Templates\S2_21G_adapt1A.grins
+  Source=..\..\RealOneTemplates\S2_11_video1A.grins
+  Destination=%MAINDIR%\Templates\S2_11_video1A.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\S2_99G_empty.grins
-  Destination=%MAINDIR%\Templates\S2_99G_empty.grins
+  Source=..\..\RealOneTemplates\S2_03_slideshow2AC.grins
+  Destination=%MAINDIR%\Templates\S2_03_slideshow2AC.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\S2_03G_slideshow2AC.grins
-  Destination=%MAINDIR%\Templates\S2_03G_slideshow2AC.grins
+  Source=..\..\RealOneTemplates\S2_02M_slideshow2A.grins
+  Destination=%MAINDIR%\Templates\S2_02M_slideshow2A.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\S2_02G_slideshow2A.grins
-  Destination=%MAINDIR%\Templates\S2_02G_slideshow2A.grins
+  Source=..\..\RealOneTemplates\S2_02A_slideshow.grins
+  Destination=%MAINDIR%\Templates\S2_02A_slideshow.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\RealOneTemplates\S2_01G_slideshow1A.grins
-  Destination=%MAINDIR%\Templates\S2_01G_slideshow1A.grins
+  Source=..\..\RealOneTemplates\S2_01_slideshow1A.grins
+  Destination=%MAINDIR%\Templates\S2_01_slideshow1A.grins
   Flags=0000000010000010
 end
 item: Install File
@@ -2207,6 +2172,11 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=..\products\smil2real\HowTo-Basic.pdf
+  Destination=%MAINDIR%\HowTo-Basic.pdf
+  Flags=0000000010000010
+end
+item: Install File
   Source=..\products\smil2real\REFM.html
   Destination=%MAINDIR%\REFM.html
   Flags=0000000010000010
@@ -2327,7 +2297,33 @@ item: Create Shortcut
 end
 item: End Block
 end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\HowTo-Basic.pdf
+  Destination=%GROUP%\HowTo-Basic.lnk
+  Icon Number=0
+  Flags=01000000
+end
+item: End Block
+end
 item: Else Statement
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=HowTo-Basic
+  Command Line=%MAINDIR%\HowTo-Basic.pdf
+  Flags=01000000
+end
+item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS
