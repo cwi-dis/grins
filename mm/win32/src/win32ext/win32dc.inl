@@ -1,16 +1,7 @@
 // CMIF_ADD
 //
-// kk@epsilon.com.gr
-//
-//
-// Note that this source file contains embedded documentation.
-// This documentation consists of marked up text inside the
-// C comments, and is prefixed with an '@' symbol.  The source
-// files are processed by a tool called "autoduck" which
-// generates Windows .hlp files.
-// @doc
 
-// Purpose: Enhancements to the PyCDC class needed by the Chameleon applications
+// Purpose: Enhancements to the PyCDC class
 
 // @pymethod object|PyCDC|SelectObjectFromHandle|Selects an object into the device context.<nl>
 // Return Values: The handle of the previous GDI object
@@ -30,15 +21,7 @@ ui_dc_select_object_from_handle(PyObject *self, PyObject *args)
   return Py_BuildValue("i",hr);
 }
 
-static PyObject *
-ui_dc_detach(PyObject *self, PyObject *args)
-	{
-	CDC *pDC = ui_dc_object::GetDC(self);
-	if (!pDC)
-		return NULL;
-	HDC hdc = pDC->Detach();
-	return Py_BuildValue("i",hdc);
-	}
+
 
 // @pymethod |PyCDC|FrameRectFromHandle|Draws a border around the rectangle specified by rect
 // Return Values: None
@@ -61,6 +44,58 @@ ui_dc_framerect_from_handle(PyObject *self, PyObject *args)
 	// @pyseemfc CDC|FrameRectFromHandle
 	RETURN_NONE;
 }
+
+static PyObject *
+ui_dc_detach(PyObject *self, PyObject *args)
+{
+	CDC *pDC = ui_dc_object::GetDC(self);
+	if (!pDC)
+		return NULL;
+	GUI_BGN_SAVE;
+	HDC hdc = pDC->Detach();
+	GUI_END_SAVE;
+	return Py_BuildValue("i",hdc);
+}
+
+static PyObject *
+ui_dc_paint_rgn(PyObject *self, PyObject *args)
+{
+	CDC *pDC = ui_dc_object::GetDC(self);
+	if (!pDC)return NULL;
+
+	PyObject *objRgn = Py_None;
+	if (!PyArg_ParseTuple(args,"O:PaintRgn",&objRgn))
+		return NULL;
+
+	CRgn *pRgn = PyCRgn::GetRgn(objRgn);
+	if (!pRgn) return NULL;
+
+
+	GUI_BGN_SAVE;
+	BOOL r=pDC->PaintRgn(pRgn);
+    GUI_END_SAVE;
+
+	return Py_BuildValue("i",r);
+}
+
+static PyObject *
+ui_dc_exclude_clip_rect(PyObject *self, PyObject *args)
+	{
+	CDC *pDC = ui_dc_object::GetDC(self);
+	if (!pDC) return NULL;
+	RECT rect;
+	if (!PyArg_ParseTuple (args, "(iiii):ExcludeClipRect", 
+	          &rect.left, &rect.top, &rect.right, &rect.bottom
+			  // @pyparm (left, top, right, bottom|rect||Specifies the bounding rectangle, in logical units.
+	          ))
+		return NULL;
+	GUI_BGN_SAVE;
+	int r = pDC->ExcludeClipRect(&rect);
+	GUI_END_SAVE;
+	// @pyseemfc CDC|ExcludeClipRect
+	return Py_BuildValue("i",r);
+	}
+
 
 /*
 // @mfcproto virtual int IntersectClipRect( LPCRECT lpRect );
@@ -332,9 +367,11 @@ ui_dc_stretch_blt (PyObject *self, PyObject *args)
 // @pymeth Rectangle|Draws a rectangle using the current pen. The interior of the rectangle is filled using the current brush. 
 // @pymeth DrawText|Formats text in the given rectangle
 #define DEF_NEW_PY_METHODS \
-	{"Detach", ui_dc_detach, 1},\
 	{"FrameRectFromHandle", ui_dc_framerect_from_handle, 1},\
-	{"SelectObjectFromHandle",	ui_dc_select_object_from_handle,1},
+	{"SelectObjectFromHandle",	ui_dc_select_object_from_handle,1},\
+	{"PaintRgn",ui_dc_paint_rgn,1},\
+	{"ExcludeClipRect", ui_dc_exclude_clip_rect,1},\
+	{"Detach",	ui_dc_detach,1},
 
 /*	{"SetPolyFillMode",     ui_dc_set_poly_fill_mode, 1},\
 	{"Polyline",ui_dc_polyline,1},\
