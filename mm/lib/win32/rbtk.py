@@ -154,14 +154,7 @@ class _rbtk:
 ## 			if self._rb_modeless and self._rb_dirty(rb):
 ## 				apply(self._rb_callback, rb)
 ## 			else:	
-## 				apply(self._rb_callback,())
-			if not self._coolmode:
-				apply(self._rb_callback, ())
-			else:
- 				if self._rb_modeless and self._rb_dirty(rb):
- 					apply(self._rb_callback, rb)
- 				else:	
- 					apply(self._rb_callback,())
+ 				apply(self._rb_callback,())
 			
 
 	def cancel_create_box(self):
