@@ -2053,7 +2053,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def timelinezoom(self, inout):
 		self.toplevel.setwaiting()
-		node = self.get_selected_node()
+		node = self.root	# should be node with timeline
 		try:
 			scale = node.min_pxl_per_sec
 		except:
