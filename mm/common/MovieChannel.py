@@ -13,8 +13,11 @@ class MovieChannel(ChannelWindowThread):
 		try:
 			import VFile
 			vfile = VFile.RandomVinFile().init(filename)
-		except EOFError:
-			print 'Empty movie file', `filename`
+		except EOFError, msg:
+			print 'Empty movie file', `filename`, `msg`
+			return 1
+		except IOError, msg:
+			print 'IO Error: ' + `msg`
 			return 1
 		try:
 			vfile.readcache()

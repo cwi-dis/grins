@@ -97,10 +97,10 @@ class ImageChannel(ChannelWindow):
 	# the conversion since the offsets are already fractions of
 	# the image.
 	def convert_args(self, file, args):
-		need_conversion = 0
+		need_conversion = 1
 		for a in args:
-			if a > 1:
-				need_conversion = 1
+			if a != int(a):	# any floating point number
+				need_conversion = 0
 				break
 		if not need_conversion:
 			return args
