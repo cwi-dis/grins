@@ -766,5 +766,5 @@ def GetYesNoCancel(prompt, parent = None):
 def GetOKCancel(prompt, parent = None):
 	import EasyDialogs
 	rv = EasyDialogs.AskYesNoCancel(prompt, 1, yes='OK', no='')
-	if rv > 0: return 1
-	return 0
+	if rv > 0: return 0
+	return 1
