@@ -168,7 +168,8 @@ class RealChannel:
 		node = self._playargs[0]
 		t0 = self.__channel._scheduler.timefunc()
 		if t0 > node.start_time:
-			print 'RealChannel: skipping',node.start_time,t0,t0-node.start_time
+			if not __debug__:
+				print 'RealChannel: skipping',node.start_time,t0,t0-node.start_time
 			try:
 				self.__rmaplayer.Seek(int((t0-node.start_time)*1000))
 			except rma.error, arg:
@@ -270,4 +271,3 @@ class RealChannel:
 				self.__channel._scheduler.cancel(self.__qid)
 			self.__qid = 0
 			self.__rmaplayer.Pause()
- 
