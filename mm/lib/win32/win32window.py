@@ -962,9 +962,31 @@ class Region(Window):
 			wnd.HookMessage(self.onUserUrl,win32con.WM_USER)
 
 		self._oswnd = wnd
+		if not html:
+			self.hookOsWndMessages()
 		return wnd
 
+	def hookOsWndMessages(self):
+		if not self._oswnd: return
+		self.HookMessage(self.onOsWndLButtonDown,win32con.WM_LBUTTONDOWN)
+		self.HookMessage(self.onOsWndLButtonUp,win32con.WM_LBUTTONUP)
+		self.HookMessage(self.onOsWndMouseMove,win32con.WM_MOUSEMOVE)
 	
+	def onOsWndLButtonDown(self, params):
+		xr, yr = win32mu.Win32Msg(params).pos()
+		x, y, w, h = self.getwindowpos()
+		self._topwindow.onMouseEvent((x+xr, y+yr), Mouse0Press)
+
+	def onOsWndLButtonUp(self, params):
+		xr, yr = win32mu.Win32Msg(params).pos()
+		x, y, w, h = self.getwindowpos()
+		self._topwindow.onMouseEvent((x+xr, y+yr), Mouse0Release)
+
+	def onOsWndMouseMove(self, params):
+		xr, yr = win32mu.Win32Msg(params).pos()
+		x, y, w, h = self.getwindowpos()
+		self._topwindow.onMouseMove(0, (x+xr, y+yr))
+
 	def DestroyOSWindow(self):
 		if self._oswnd:
 			self._oswnd.DestroyWindow()
