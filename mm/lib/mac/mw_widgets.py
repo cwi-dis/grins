@@ -52,7 +52,7 @@ class _ListWidget:
 ##		self._redraw() # DBG
 	
 	def close(self):
-		print 'DBG: close', self
+##		print 'DBG: close', self
 		del self.list  # XXXX Or should we DisposeList it?
 		del self.wid
 		del self._data
@@ -160,7 +160,7 @@ class _ImageWidget(_Widget):
 		Win.InvalRect(self.rect)
 		
 	def close(self):
-		print 'DBG: close', self
+##		print 'DBG: close', self
 		del self.image
 		del self.wid
 		self.image_data = None
@@ -232,7 +232,7 @@ class _SelectWidget:
 			raise 'Menu-callbacks not supported anymore'
 		
 	def close(self):
-		print 'DBG: close', self
+##		print 'DBG: close', self
 		self.menu.delete()
 		del self.menu
 		del self.wid
@@ -245,7 +245,8 @@ class _SelectWidget:
 		pass # Handled by dialog mgr
 		
 	def delete(self):
-		print 'DBG: delete (obsolete)', self
+##		print 'DBG: delete (obsolete)', self
+		pass
 		
 	def setitems(self, items=[], default=None):
 		items = items[:]
@@ -253,9 +254,7 @@ class _SelectWidget:
 			items.append('')
 ##		self.choice = None
 		self.data = items
-		if self.menu:
-			self.menu.delete()
-			del self.menu
+		oldmenu = self.menu
 		self.menu = mw_menucmd.SelectPopupMenu(items)
 		mhandle, mid = self.menu.getpopupinfo()
 		self.control.SetControlDataHandle(Controls.kControlMenuPart,
@@ -266,6 +265,8 @@ class _SelectWidget:
 		self.control.SetControlMaximum(len(items)+1)
 		if default != None:
 			self.select(default)
+		if oldmenu:
+			oldmenu.delete()
 		
 	def select(self, item):
 		if item in self.data:
