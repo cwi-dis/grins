@@ -1116,15 +1116,43 @@ class LayoutView2(LayoutViewDialog2):
 	
 	def getPxGeomWithContextAnimation(self, nodeRef):
 		animationData = nodeRef.getAnimationData()
-
 		time = self.currentTimeValue
-		
 		if not time is None and not animationData is None:
 			# XXX should move in another place
 			wingeom = animationData.getRectAt(time)
 		else:
 			wingeom = nodeRef.getPxGeom()
 			
+		return wingeom
+
+	def getPxGeomMediaWithContextAnimation(self, nodeRef):
+		animationData = nodeRef.getAnimationData()
+		time = self.currentTimeValue
+		if not time is None and not animationData is None:
+			x, y, w, h = animationData.getRectAt(time)
+			# XXX modify temporarly the css attribute values to be able to get the right values
+			saveLeftValue = nodeRef.getCssRawAttr('left')
+			saveTopValue = nodeRef.getCssRawAttr('top')
+			saveWidthValue = nodeRef.getCssRawAttr('width')
+			saveHeightValue = nodeRef.getCssRawAttr('height')
+			saveRightValue = nodeRef.getCssRawAttr('right')
+			saveBottomValue = nodeRef.getCssRawAttr('bottom')
+			nodeRef.setCssAttr('left',x)
+			nodeRef.setCssAttr('top', y)
+			nodeRef.setCssAttr('width', w)
+			nodeRef.setCssAttr('height', h)
+			nodeRef.setCssAttr('right', None)
+			nodeRef.setCssAttr('bottom',None)
+			wingeom = nodeRef.getPxGeomMedia()[1]
+			# restore the raw values
+			nodeRef.setCssAttr('left',saveLeftValue)
+			nodeRef.setCssAttr('top', saveTopValue)
+			nodeRef.setCssAttr('width', saveWidthValue)
+			nodeRef.setCssAttr('height', saveHeightValue)
+			nodeRef.setCssAttr('right', saveRightValue)
+			nodeRef.setCssAttr('bottom',saveBottomValue)			
+		else:
+			wingeom = nodeRef.getPxGeomMedia()[1]
 		return wingeom
 		
 	# Test whether x is ancestor of node
@@ -3751,9 +3779,9 @@ class MediaRegion(Region):
 			self.datadir = findfile('GRiNS-Icons')
 			f = os.path.join(self.datadir, '%s.tiff' % chtype)
 			canBeScaled = 0
-			
+
 		if f is not None:
-			mediadisplayrect  = self._nodeRef.getPxGeomMedia()[1]
+			mediadisplayrect  = self._ctx._context.getPxGeomMediaWithContextAnimation(self._nodeRef)
 			self._graphicCtrl.drawbox(mediadisplayrect)
 			
 			# the algorithm to show the preview of the media depend of its type
