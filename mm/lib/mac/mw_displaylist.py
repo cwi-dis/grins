@@ -236,11 +236,14 @@ class _DisplayList:
 			cl, ct, cr, cb = entry[1]
 			l, t, w, h = entry[2]
 			r, b = l + w, t + h
+##			print '3Dbox', (l, t, r, b) # DBG
 			# l, r, t, b are the corners
 			l3 = l+3
 			t3 = t + 3
 			r3 = r - 3
 			b3 = b - 3
+			# Save old foreground color
+			fgcolor = wid.GetWindowPort().rgbFgColor
 			# draw left side
 			Qd.RGBForeColor(cl)
 			polyhandle = self._polyhandle([(l, t), (l3, t3), (l3, b3), (l, b)])
@@ -270,7 +273,6 @@ class _DisplayList:
 ##			rr = r - 2
 ##			bb = b - 3
 
-##			fgcolor = wid.GetWindowPort().rgbFgColor
 
 ##			Qd.RGBForeColor(cl)
 ##			polyhandle = self._polyhandle([(l1, t1), (ll, tt), (ll, bb), (l1, b1)])
