@@ -1302,6 +1302,7 @@ class StructureObjWidget(MMNodeWidget):
 				self.bwstrip.moveto((my_l, my_b - bw_h, my_r, my_b), self.node, timemapper)
 				my_b = my_b - bw_h
 				greyout_t = my_b
+			min_height = min_height - bw_h
 		if self.greyout is not None:
 			self.greyout.moveto((my_l, greyout_t, my_r, greyout_b), timemapper)
 
