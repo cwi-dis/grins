@@ -1,8 +1,31 @@
 cache = {}
 
-def GetImageSize(file):
+def GetSize(file, maintype, subtype):
 	if cache.has_key(file):
 		return cache[file]
+	if maintype == 'image':
+		if subtype == 'vnd.rn-realpix':
+			import realsupport
+			rp = realsupport.RPParser()
+			rp.feed(open(file).read())
+			rp.close()
+			width, height = rp.width, rp.height
+		else:
+			width, height = GetImageSize(file)
+	elif maintype == 'video':
+		width, height = GetVideoSize(file)
+	elif maintype == 'text' and subtype == 'vnd.rn-realtext':
+		import realsupport
+		rp = realsupport.RTParser()
+		rp.feed(open(file).read())
+		rp.close()
+		width, height = rp.width, rp.height
+	else:
+		width = height = 0
+	cache[file] = width, height
+	return width, height
+
+def GetImageSize(file):
 	try:
 		import img
 	except ImportError:
@@ -11,12 +34,9 @@ def GetImageSize(file):
 	else:
 		rdr = img.reader(None, file)
 		width, height = rdr.width, rdr.height
-	cache[file] = width, height
 	return width, height
 
 def GetVideoSize(file):
-	if cache.has_key(file):
-		return cache[file]
 	try:
 		import mv
 	except ImportError:
@@ -27,5 +47,4 @@ def GetVideoSize(file):
 		track = movie.FindTrackByMedium(mv.DM_IMAGE)
 		width = track.GetImageWidth()
 		height = track.GetImageHeight()
-	cache[file] = width, height
 	return width, height
