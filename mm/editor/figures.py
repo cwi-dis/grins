@@ -217,7 +217,7 @@ class thermo():
 		y = self.y
 		w = self.w
 		h = self.h
-		print 'polygon', x, y, w, h, val
+#		print 'polygon', x, y, w, h, val
 		pushmatrix()
 		translate(x, y, 0)
 		bgnpolygon()
