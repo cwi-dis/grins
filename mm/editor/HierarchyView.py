@@ -439,7 +439,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.select_node(self.focusnode)
 
 	def refresh_scene_graph(self):
-		if self.scene_graph:
+		if self.scene_graph is not None:
 			self.scene_graph.destroy();
 		self.create_scene_graph();
 		self.draw();
@@ -1166,7 +1166,8 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Clear the list of objects
 	def cleanup(self):
-		self.scene_graph.destroy()
+		if self.scene_graph is not None:
+			self.scene_graph.destroy()
 		self.focusobj = None
 		self.selected_widget = None
 		return
