@@ -92,7 +92,7 @@ class AudioPlayer:
 		else:
 			atype = 'au'
 		try:
-			rdr = audio.reader(u, [audio.format.linear_16_mono, audio.format.linear_16_stereo], [8000, 11025, 16000, 22050, 32000, 44100], filetype = atype)
+			rdr = audio.reader(u, [audio.format.linear_16_mono], [8000, 11025, 16000, 22050, 32000, 44100], filetype = atype)
 			fmt = rdr.getformat()
 			bytesperframe = fmt.getblocksize() / fmt.getfpb()
 			nchan = fmt.getnchannels()
