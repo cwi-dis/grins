@@ -26,7 +26,7 @@ default_settings = {
 	'license': '',
 	'license_user' : '',
 	'license_organization' : '',
-	'compatibility': SMIL10,		# Try to be compatible with...
+	'compatibility': G2,		# Try to be compatible with...
 	'cmif': 0,			# Show cmif-only attributes
 	'debug': 0,			# Show debug commands
 	'checkext': 1,			# Guess Mime type based on extension
