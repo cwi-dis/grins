@@ -461,7 +461,7 @@ class MMNode:
 		return self.parent
 
 	def _get_childNodes(self):
-		return self.children
+		return grinsDOM.dom.core.NodeList(self.children)
 
 	def _get_firstChild(self):
 		if len(self.children) > 0:
@@ -487,8 +487,9 @@ class MMNode:
 	def _get_attributes(self):
 		namedNodeMap = grinsDOM.dom.core.NamedNodeMap()
 		for a in self.attrdict.items() :
-			newAttribute = grinsDOM.dom.core.Attr(a[0],a[1]) 
-			namedNodeMap.setNamedItem(newAttribute)
+			if a[1]: # skip empty attributes
+				newAttribute = grinsDOM.dom.core.Attr(a[0],str(a[1]))
+				namedNodeMap.setNamedItem(newAttribute)
 		return namedNodeMap     
 
 	# not in XML-DOM terms!
