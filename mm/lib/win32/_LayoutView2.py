@@ -484,15 +484,15 @@ class TreeManager:
 			self._listener.onExpandTreeNodeCtrl(item, isExpanded)
 						 
 ###########################
-class LayoutManager(window.Wnd, win32window.DrawContext):
+class LayoutManager(window.Wnd, win32window.MSDrawContext):
 	def __init__(self):
 		window.Wnd.__init__(self, win32ui.CreateWnd())
-		win32window.DrawContext.__init__(self)
+		win32window.MSDrawContext.__init__(self)
 		
 	# allow to create a LayoutManager instance before the onInitialUpdate of dialog box
 	def onInitialUpdate(self, parent, rc, bgcolor):
 		# register dialog as listener
-		win32window.DrawContext.addListener(self, self) 
+		win32window.MSDrawContext.addListener(self, self) 
 
 		self._parent = parent
 		self._bgcolor = bgcolor
@@ -538,7 +538,7 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 
 
 	#
-	# win32window.DrawContext listener interface
+	# win32window.MSDrawContext listener interface
 	# 
 	def onShapeChange(self, shape):
 		if shape is None:
@@ -569,8 +569,10 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 
 	def onProperties(self, shape):
 		if not shape: return
-
 		shape.onProperties()
+
+	def onMultiSelChanged(self, selections):
+		print 'onMultiSelChanged', selections
 
 	# 
 	# interface implementation: function called from an external module
@@ -589,7 +591,7 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		self._parent.showScale(self._device2logical)
 		self.__initState()
 		self._viewport = Viewport(name, self, attrdict, self._device2logical)
-		win32window.DrawContext.reset(self)
+		win32window.MSDrawContext.reset(self)
 
 		return self._viewport
 			
@@ -608,7 +610,7 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		if self._selected != None:
 			if not self._selected.inside(point):
 				self._wantDown = 0
-				win32window.DrawContext.onLButtonDown(self, flags, point)
+				win32window.MSDrawContext.onLButtonDown(self, flags, point)
 
 	def onLButtonUp(self, params):
 		msg=win32mu.Win32Msg(params)
@@ -616,9 +618,9 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		point = self.DPtoLP(point)
 		if self._wantDown:
 			if not self._isGeomChanging:
-				win32window.DrawContext.onLButtonDown(self, self._sflags, self._spoint)
+				win32window.MSDrawContext.onLButtonDown(self, self._sflags, self._spoint)
 				self._wantDown = 0
-		win32window.DrawContext.onLButtonUp(self, flags, point)
+		win32window.MSDrawContext.onLButtonUp(self, flags, point)
 
 		# update user events
 		if self._selected:
@@ -634,18 +636,18 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		if self._wantDown:
 			if not self._isGeomChanging:
 				self._isGeomChanging = 1
-				win32window.DrawContext.onLButtonDown(self, self._sflags, self._spoint)
+				win32window.MSDrawContext.onLButtonDown(self, self._sflags, self._spoint)
 				self._wantDown = 0
-		win32window.DrawContext.onMouseMove(self, flags, point)
+		win32window.MSDrawContext.onMouseMove(self, flags, point)
 
 	def onLButtonDblClk(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
 		point = self.DPtoLP(point)
-		win32window.DrawContext.onLButtonDblClk(self, flags, point)
+		win32window.MSDrawContext.onLButtonDblClk(self, flags, point)
 
 	def onNCLButton(self, params):
-		win32window.DrawContext.onNCButton(self)
+		win32window.MSDrawContext.onNCButton(self)
 
 	def OnPaint(self):
 		dc, paintStruct = self.BeginPaint()
@@ -844,8 +846,24 @@ class Viewport(win32window.Window, UserEventMng):
 		# adjust some variables
 		self._topwindow = self
 
+		# disp list of this window
+		# use shortcut instead of render 
+		self._active_displist = self.newdisplaylist()
+
+		# XXX: test
+		#filename = r'D:\ufs\mmdocuments\smil2time\FLC-Cream.jpg'
+		#self.setImage(filename, fit='fill')
+
 		self._showname = 1
 		self._scale  = scale
+
+	# overide the default newdisplaylist method defined in win32window
+	def newdisplaylist(self, bgcolor = None):
+		if bgcolor is None:
+			if not self._transparent:
+				bgcolor = self._bgcolor
+		return win32window._ResizeableDisplayList(self, bgcolor)
+
 	# 
 	# interface implementation: function called from an external module
 	#
@@ -894,9 +912,9 @@ class Viewport(win32window.Window, UserEventMng):
 		self._showname = bv
 		self._ctx.update()
 		
-	def setImage(self, handle, image, fit):
-		print 'setImage on viewport: not implemented yet'
-
+	def setImage(self, filename, fit):
+		if self._active_displist != None:
+			self._active_displist.newimage(filename, fit)
 	#
 	#  end interface implementation
 	#
@@ -944,8 +962,11 @@ class Viewport(win32window.Window, UserEventMng):
 
 		rgn = self.getClipRgn()
 		dc.SelectClipRgn(rgn)
-		if self._bgcolor:
-			dc.FillSolidRect(ltrb,win32mu.RGB(self._bgcolor))
+
+		x0, y0 = dc.SetWindowOrg((-l,-t))
+		if self._active_displist:
+			self._active_displist._render(dc, rc)
+		dc.SetWindowOrg((x0,y0))
 
 		L = self._subwindows[:]
 		L.reverse()
