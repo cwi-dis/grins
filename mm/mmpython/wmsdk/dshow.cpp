@@ -109,6 +109,27 @@ newPinObject()
 }
 
 
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IEnumPins* pPins;
+} EnumPinsObject;
+
+staticforward PyTypeObject EnumPinsType;
+
+static EnumPinsObject *
+newEnumPinsObject()
+{
+	EnumPinsObject *self;
+
+	self = PyObject_NEW(EnumPinsObject, &EnumPinsType);
+	if (self == NULL)
+		return NULL;
+	self->pPins = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
 
 typedef struct {
 	PyObject_HEAD
@@ -283,12 +304,87 @@ GraphBuilder_WaitForCompletion(GraphBuilderObject *self, PyObject *args)
 }
 
 
+static char GraphBuilder_RenderFile__doc__[] =
+""
+;
+
+static PyObject *
+GraphBuilder_RenderFile(GraphBuilderObject *self, PyObject *args)
+{
+	HRESULT res;
+	char *psz;
+	if (!PyArg_ParseTuple(args, "s", &psz))
+		return NULL;
+
+	WCHAR wsz[MAX_PATH];
+	MultiByteToWideChar(CP_ACP,0,psz,-1,wsz,MAX_PATH);
+	res = self->pGraphBuilder->RenderFile(wsz,NULL);
+	if (FAILED(res)) {
+		seterror("GraphBuilder_RenderFile", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+
+static char GraphBuilder_FindFilterByName__doc__[] =
+""
+;
+
+static PyObject *
+GraphBuilder_FindFilterByName(GraphBuilderObject *self, PyObject *args)
+{
+	HRESULT res;
+	char *psz;
+	BaseFilterObject *obj;
+	if (!PyArg_ParseTuple(args, "s", &psz))
+		return NULL;
+	obj = newBaseFilterObject();
+	WCHAR wsz[MAX_PATH];
+	MultiByteToWideChar(CP_ACP,0,psz,-1,wsz,MAX_PATH);
+	res = self->pGraphBuilder->FindFilterByName(wsz,&obj->pFilter);
+	if (FAILED(res)) {
+		seterror("GraphBuilder_AddSourceFilter", res);
+		obj->pFilter=NULL;
+		Py_DECREF(obj);
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
+
+
+static char GraphBuilder_RemoveFilter__doc__[] =
+""
+;
+
+static PyObject *
+GraphBuilder_RemoveFilter(GraphBuilderObject *self, PyObject *args)
+{
+	HRESULT res;
+	BaseFilterObject *obj;
+	if (!PyArg_ParseTuple(args, "O", &obj))
+		return NULL;
+	res = self->pGraphBuilder->RemoveFilter(obj->pFilter);
+	if (FAILED(res)) {
+		seterror("GraphBuilder_RemoveFilter", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 static struct PyMethodDef GraphBuilder_methods[] = {
 	{"AddSourceFilter", (PyCFunction)GraphBuilder_AddSourceFilter, METH_VARARGS, GraphBuilder_AddSourceFilter__doc__},
 	{"AddFilter", (PyCFunction)GraphBuilder_AddFilter, METH_VARARGS, GraphBuilder_AddFilter__doc__},
 	{"Render", (PyCFunction)GraphBuilder_Render, METH_VARARGS, GraphBuilder_Render__doc__},
 	{"QueryIMediaControl", (PyCFunction)GraphBuilder_QueryIMediaControl, METH_VARARGS, GraphBuilder_QueryIMediaControl__doc__},
 	{"WaitForCompletion", (PyCFunction)GraphBuilder_WaitForCompletion, METH_VARARGS, GraphBuilder_WaitForCompletion__doc__},
+	{"RenderFile", (PyCFunction)GraphBuilder_RenderFile, METH_VARARGS, GraphBuilder_RenderFile__doc__},
+	{"FindFilterByName", (PyCFunction)GraphBuilder_FindFilterByName, METH_VARARGS, GraphBuilder_FindFilterByName__doc__},
+	{"RemoveFilter", (PyCFunction)GraphBuilder_RemoveFilter, METH_VARARGS, GraphBuilder_RemoveFilter__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -388,9 +484,30 @@ BaseFilter_QueryIFileSinkFilter(BaseFilterObject *self, PyObject *args)
 	return (PyObject *) obj;
 }
 
+static char BaseFilter_EnumPins__doc__[] =
+""
+;
+
+static PyObject *
+BaseFilter_EnumPins(BaseFilterObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	EnumPinsObject *obj = newEnumPinsObject();
+	HRESULT res = self->pFilter->EnumPins(&obj->pPins);
+	if (FAILED(res)) {
+		seterror("BaseFilter_EnumPins", res);
+		Py_DECREF(obj);
+		obj->pPins=NULL;
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
 static struct PyMethodDef BaseFilter_methods[] = {
 	{"FindPin", (PyCFunction)BaseFilter_FindPin, METH_VARARGS, BaseFilter_FindPin__doc__},
 	{"QueryIFileSinkFilter", (PyCFunction)BaseFilter_QueryIFileSinkFilter, METH_VARARGS, BaseFilter_QueryIFileSinkFilter__doc__},
+	{"EnumPins", (PyCFunction)BaseFilter_EnumPins, METH_VARARGS, BaseFilter_EnumPins__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -441,7 +558,29 @@ static PyTypeObject BaseFilterType = {
 // End of code for BaseFilter object 
 ////////////////////////////////////////////
 
+static char Pin_ConnectedTo__doc__[] =
+""
+;
+
+static PyObject *
+Pin_ConnectedTo(PinObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	PinObject *obj = newPinObject();
+	HRESULT res=self->pPin->ConnectedTo(&obj->pPin);
+	if (FAILED(res)) {
+		seterror("Pin_ConnectedTo", res);
+		Py_DECREF(obj);
+		obj->pPin=NULL;
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
+
 static struct PyMethodDef Pin_methods[] = {
+	{"ConnectedTo", (PyCFunction)Pin_ConnectedTo, METH_VARARGS, Pin_ConnectedTo__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -454,7 +593,7 @@ Pin_dealloc(PinObject *self)
 }
 
 static PyObject *
-Pin_getattr(BaseFilterObject *self, char *name)
+Pin_getattr(PinObject *self, char *name)
 {
 	/* XXXX Add your own getattr code here */
 	return Py_FindMethod(Pin_methods, (PyObject *)self, name);
@@ -686,6 +825,91 @@ static PyTypeObject MediaControlType = {
 // End of MediaControl
 ////////////////////////////////////////////
 
+////////////////////////////////////////////
+// EnumPins object 
+
+
+static char EnumPins_Next__doc__[] =
+""
+;
+
+static PyObject *
+EnumPins_Next(EnumPinsObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	PinObject *obj = newPinObject();
+	ULONG fetched=0;
+	HRESULT res = self->pPins->Next(1,&obj->pPin,&fetched);
+	if (FAILED(res)) {
+		seterror("EnumPins_Next", res);
+		Py_DECREF(obj);
+		obj->pPin=NULL;
+		return NULL;
+	}
+	if(fetched==1)
+		return (PyObject *) obj;
+	Py_DECREF(obj);
+	obj->pPin=NULL;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static struct PyMethodDef EnumPins_methods[] = {
+	{"Next", (PyCFunction)EnumPins_Next, METH_VARARGS, EnumPins_Next__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+EnumPins_dealloc(EnumPinsObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pPins);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+EnumPins_getattr(EnumPinsObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(EnumPins_methods, (PyObject *)self, name);
+}
+
+static char EnumPinsType__doc__[] =
+""
+;
+
+static PyTypeObject EnumPinsType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"EnumPins",			/*tp_name*/
+	sizeof(EnumPinsObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)EnumPins_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)EnumPins_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	EnumPinsType__doc__ /* Documentation string */
+};
+
+// End of code for EnumPins object 
+////////////////////////////////////////////
+
+
+///////////////////////////////////////////
+// MODULE
 //
 static char CreateGraphBuilder__doc__[] =
 ""
