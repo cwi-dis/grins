@@ -58,6 +58,7 @@ syncbase = re.compile(r'id\(' + _opS + '(?P<name>' + xmllib._Name + ')' + _opS +
 		      '$')
 offsetvalue = re.compile('(?P<sign>[-+])?' + clock_val + '$')
 # SMIL 2.0 syncbase without the offset
+tokenizer = re.compile(r'((?<!\\)[-+. ()])')
 mediamarker = re.compile(		# id-ref ".marker(" name ")"
 	_opS +
 	r'(?P<id>' + xmllib._Name + r')\.'			# ID-ref "."
@@ -307,55 +308,38 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				try:
 					offset = self.__parsecounter(val, withsign = 1)
 				except error:
-					if val[0] in '-+':
-						self.syntax_error('%s value starting with sign must be offset value' % attr)
+					if val[0] in '-+' + string.digits:
+						self.syntax_error('%s value starting with sign or digit must be offset value' % attr)
 						continue
 				else:
 					list.append(MMNode.MMSyncArc(node, attr, srcnode='syncbase', delay=offset))
 					if val[0] in '+-' and not boston:
 						boston = 'signed clock value'
 					continue
-				res = offsetvalue.search(val)
-				if res is not None:
-					offset = self.__parsecounter(res.group(0), withsign = 1)
-					val = string.strip(val[:res.start(0)])
+				tokens = filter(None, map(string.strip, tokenizer.split(val)))
+				for i in range(len(tokens)):
+					# this can't match the first
+					# time round because of part
+					# above
+					if tokens[i] in ('-','+'):
+						try:
+							offset = self.__parsecounter(string.join(tokens[i:], ''), withsign = 1)
+						except error:
+							self.syntax_error('bad offset value')
+							continue
+						del tokens[i:]
+						val = string.join(tokens, '')
+						break
 				else:
 					offset = None
-				res = mediamarker.match(val)
-				if res is not None:
-					if offset is not None:
-						self.syntax_error('no offset allowed with media marker')
-##						continue
-					if not boston:
-						boston = 'marker'
-					name = res.group('id')
-					xnode = self.__nodemap.get(name)
-					if xnode is None:
-						self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
+
+				if tokens[0] == 'prev':
+					if len(tokens) != 3 or tokens[1] != '.' or tokens[2] not in ('begin', 'end'):
+						self.syntax_error('bad sync-to-prev value')
 						continue
-					marker = res.group('markername')
-					list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode, marker=marker, delay=offset or 0))
+					list.append(MMNode.MMSyncArc(node, attr, srcnode = 'prev', event = tokens[2], delay = offset or 0))
 					continue
-				res = accesskey.match(val)
-				if res is not None:
-					if not boston:
-						boston = 'accesskey'
-					char = res.group('character')
-					nsdict = self.getnamespace()
-					if res.group('accesskey') == 'accessKey':
-						for ns in nsdict.values():
-							if ns in limited['viewport']:
-								break
-						else:
-							self.syntax_error('accessKey deprecated in favor of accesskey')
-					else:
-						for ns in nsdict.values():
-							if ns in limited['topLayout']:
-								break
-						else:
-							self.syntax_error('accesskey not available in old namespace')
-					list.append(MMNode.MMSyncArc(node, attr, accesskey=char, delay=offset or 0))
-					continue
+
 				res = wallclock.match(val)
 				if res is not None:
 					if offset is not None:
@@ -378,68 +362,104 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						tzsg = '+'
 					list.append(MMNode.MMSyncArc(node, attr, wallclock = (yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn), delay=offset or 0))
 					continue
+				if tokens[0] == 'wallclock':
+					self.syntax_error('bad wallclock value')
+					continue
+				res = accesskey.match(val)
+				if res is not None:
+					if not boston:
+						boston = 'accesskey'
+					char = res.group('character')
+					nsdict = self.getnamespace()
+					if res.group('accesskey') == 'accessKey':
+						for ns in nsdict.values():
+							if ns in limited['viewport']:
+								break
+						else:
+							self.syntax_error('accessKey deprecated in favor of accesskey')
+					else:
+						for ns in nsdict.values():
+							if ns in limited['topLayout']:
+								break
+						else:
+							self.syntax_error('accesskey not available in old namespace')
+					list.append(MMNode.MMSyncArc(node, attr, accesskey=char, delay=offset or 0))
+					continue
+
+				if '.' not in tokens:
+					# event value
+					# XXX this includes thins like
+					# repeat(3)
+					list.append(MMNode.MMSyncArc(node, attr, srcnode = node, event = string.join(string.split(string.join(tokens, ''), '\\'), ''), delay = offset or 0))
+					continue
+
+				if tokens[0] == '.' or tokens[1] != '.' or '.' in tokens[2:]:
+					self.syntax_error('bad event specification')
+					continue
+
+				if tokens[-1] in ('begin', 'end') and tokens[-2] == '.':
+					if len(tokens) != 3:
+						self.syntax_error('bad syncbase value')
+						continue
+					name = string.join(string.split(tokens[0], '\\'), '')
+					event = tokens[2] # tokens[-1]
+				else:
+					try:
+						i = tokens.index('marker')
+					except ValueError:
+						# definitely not a marker value
+						pass
+					else:
+						if 0 < i < len(tokens)-1 and tokens[i-1] == '.' and tokens[i+1] == '(':
+							res = mediamarker.match(val)
+							if res is not None:
+								if offset is not None:
+									self.syntax_error('no offset allowed with media marker')
+									continue
+
+								if not boston:
+									boston = 'marker'
+								name = res.group('id')
+								xnode = self.__nodemap.get(name)
+								if xnode is None:
+									self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
+									continue
+								marker = res.group('markername')
+								list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode, marker=marker, delay=offset or 0))
+								continue
+							self.syntax_error('bad marker value')
+							continue
+					name = string.join(string.split(tokens[0], '\\'), '')
+					event = string.join(string.split(string.join(tokens[2:], ''), '\\'), '')
+
 				if not boston:
 					boston = 'SMIL-2.0 time value'
-				if val[:5] == 'prev.':
-					event = val[5:]
-					name = 'prev'
-				elif len(val) > 6 and \
-				     val[-6:] == '.begin' and \
-				     val[-7] != '\\':
-					name = val[:-6]
-					event = 'begin'
-				elif len(val) > 4 and \
-				     val[-4:] == '.end' and \
-				     val[-5] != '\\':
-					name = val[:-4]
-					event = 'end'
-				else:
-					tokens = string.split(val, '.')
-					for i in range(len(tokens)-2,-1,-1):
-						if tokens[i][-1:] == '\\':
-							tokens[i] = tokens[i][:-1] + '.' + tokens[i+1]
-							del tokens[i+1]
-					if len(tokens) == 1:
-						name = None
-						event = tokens[0]
-					elif len(tokens) == 2:
-						name = tokens[0]
-						event = tokens[1]
-					else:
-						nlist = []
-						for i in range(len(tokens)-1):
-							name = string.join(tokens[:i], '.')
-							event = string.join(tokens[i:], '.')
-							if self.__ids.has_key(name):
-								nlist.append((name, event))
-						if len(nlist) == 1:
-							name, event = nlist[0]
-						else:
-							self.syntax_error('ambiguous syncbase definition')
-							continue
 				xanchor = xchan = None
-				if name == 'prev':
-					xnode = 'prev'
-				elif name is None:
-					xnode = node
-				else:
-					if name[0] == '\\':
-						name = name[1:]
-						if not name:
-							self.syntax_error('invalid name')
+				xnode = self.__nodemap.get(name)
+				if xnode is None:
+					xanchor = self.__anchormap.get(name)
+					if xanchor is None:
+						xchan = self.__context.channeldict.get(name)
+						if xchan is None:
+							self.warning('ignoring sync arc from unknown element %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
 							continue
-					xnode = self.__nodemap.get(name)
-					if xnode is None:
-						xanchor = self.__anchormap.get(name)
-						if xanchor is None:
-							xchan = self.__context.channeldict.get(name)
-							if xchan is None:
-								self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
-								continue
+						if event[:8] == 'viewport' or event[:9] == 'topLayout':
+							nsdict = self.getnamespace()
 							if event[:8] == 'viewport':
 								event = 'topLayout' + event[8:]
-						else:
-							xnode, xanchor = xanchor
+								for ns in nsdict.values():
+									if ns in limited['viewport']:
+										break
+								else:
+									self.syntax_error('viewport deprecated in favor of topLayout')
+							else:
+								for ns in nsdict.values():
+									if ns in limited['topLayout']:
+										break
+								else:
+									self.syntax_error('topLayout not available in old namespace')
+					else:
+						xnode, xanchor = xanchor
 				list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,srcanchor=xanchor,channel=xchan,event=event,delay=offset or 0))
 				continue
 		if boston:
