@@ -12,11 +12,8 @@ import string
 class SVGRenderer:
 	animateEl = ['animate', 'set', 'animateMotion', 'animateColor', 'animateTransform']
 	filter = ['#comment', 'style', 'defs'] + animateEl
-	def __init__(self, svgdoc, svggraphics):
+	def __init__(self, svgdoc, svggraphics, renderbox, bgcolor):
 		self.svgdoc = svgdoc
-		root =  svgdoc.getRoot()
-		self._size = root.getSize()
-		self._viewbox = root.getViewBox()
 
 		# svg graphics object
 		self.graphics = svggraphics
@@ -26,13 +23,21 @@ class SVGRenderer:
 		self._grstack = []
 	
 		#
+		self._renderbox = renderbox
+		self._bgcolor = bgcolor
+
+		#
 		self._verbose = 0
 
-	def getFilter(self):
-		return SVGRenderer.filter
+	def getFilter(self): return SVGRenderer.filter
+	def getWidth(self): return self._renderbox[2]
+	def getHeight(self): return self._renderbox[3]
+	def getSize(self): return self._renderbox[2:]
+	def getRenderBox(self): return self._renderbox
 					
 	def render(self):
-		self.graphics.onBeginRendering(self._size, self._viewbox)
+		root =  self.svgdoc.getRoot()
+		self.graphics.onBeginRendering(self._renderbox, root.getViewBox(), self._bgcolor)
 		iter = svgdom.DOMIterator(self.svgdoc, self, filter=SVGRenderer.filter)
 		while iter.advance(): pass
 		self.graphics.onEndRendering()
@@ -128,6 +133,8 @@ class SVGRenderer:
 	def svg(self, node):
 		self.saveGraphics()
 		x, y, w, h = node.get('x'), node.get('y'), node.get('width'), node.get('height')
+		if w is None: w = self.getWidth()
+		if h is None: h = self.getHeight()
 		self.graphics.tkClipBox((x, y, w, h))
 		self.graphics.applyTfList([('translate', [x, y]),])
 
@@ -255,7 +262,7 @@ def Render(source, msecwait=3000):
 	ddrawobj, dds = createDDSurface()
 	ddshdc = dds.GetDC()
 	svggraphics.tkStartup(ddshdc)
-	renderer = SVGRenderer(svgdoc, svggraphics)
+	renderer = SVGRenderer(svgdoc, svggraphics, (0,0,800,600))
 	renderer.render()
 	svggraphics.tkShutdown()
 	dds.ReleaseDC(ddshdc)

@@ -401,7 +401,10 @@ class SVGLength(SVGAttr):
 	def setValue(self, val, units='px'):
 		self._value = val
 		self._units = units
-			
+
+	def setDefault(self, default):
+		self._default = default	
+
 class SVGWidth(SVGLength):
 	pass
 
