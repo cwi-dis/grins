@@ -15,12 +15,14 @@ def WriteFile(root, filename):
 
 def WriteOpenFile(root, fp):
 	root.attrdict['styledict'] = root.context.styledict
+	root.attrdict['hyperlinks'] = root.context.hyperlinks.getall()
 	clist = []
 	for cname in root.context.channelnames:
 		clist.append(cname, root.context.channeldict[cname])
 	root.attrdict['channellist'] = clist
 	writenode(root, fp)
 	del root.attrdict['styledict']
+	del root.attrdict['hyperlinks']
 	del root.attrdict['channellist']
 	fp.write('\n')
 
