@@ -152,8 +152,8 @@ class HtmlChannel(Channel.ChannelWindow):
 	def stopplay(self, node, curtime):
 #		if self.window:
 #			self.window.SetImmHtml(' ')
-		if self.window and hasattr(self.window,'DestroyHtmlCtrl'):
-			self.window.DestroyHtmlCtrl()
+		if self.window:
+			self.window.DestroyOSWindow()
 			self.window.setredrawfunc(None)
 		Channel.ChannelWindow.stopplay(self, node, curtime)
 		
