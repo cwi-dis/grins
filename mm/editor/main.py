@@ -52,7 +52,11 @@ class Main:
 			files = ['NEW-DOCUMENT.cmif']
 			new_file = 1
 		for fn in files:
-			top = TopLevel.TopLevel(self, fn, new_file)
+			try:
+				top = TopLevel.TopLevel(self, fn, new_file)
+			except:
+				print 'parsing file %s failed' % fn
+				continue
 			top.setwaiting()
 			top.show()
 			for opt, arg in opts:
