@@ -1403,7 +1403,9 @@ class HierarchyView(HierarchyViewDialog):
 							return dftchannel
 					else:
 						# container node, recursive search
-						self.__searchRegion2(child)
+						dftchannel = self.__searchRegion2(child)
+						if dftchannel != None:
+							return dftchannel
 		# no valid region found
 		return None
 	
