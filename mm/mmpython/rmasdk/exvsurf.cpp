@@ -2,14 +2,8 @@
  * 
  *  $Id$
  *  
- *  Copyright (C) 1995,1996,1997 Progressive Networks.
- *  All rights reserved.
- *
- *  This program contains proprietary 
- *  information of Progressive Networks, Inc, and is licensed
- *  subject to restrictions on use and distribution.
- *
  */
+
 
 
 #include <stdio.h>
@@ -19,12 +13,10 @@
 #include "pntypes.h"
 #include "pnwintyp.h"
 
-///#include "cpnxtype.h"
 
 #include "rmapckts.h"
 #include "rmawin.h"
 #include "rmasite2.h"
-//#include "rmavctrl.h"
 #include "rmavsurf.h"
 #include "rmacomm.h"
 
@@ -50,11 +42,7 @@ ExampleVideoSurface::ExampleVideoSurface(IUnknown* pContext, ExampleWindowlessSi
     , m_pBitmapInfo(NULL)
 	, m_pPyVideoRenderer(NULL)
 { 
-    if (m_pContext)
-    {
-	m_pContext->AddRef();
-    }
-
+    if (m_pContext)m_pContext->AddRef();
     memset(&m_lastBitmapInfo, 0, sizeof(RMABitmapInfoHeader));
 }
 
@@ -78,18 +66,17 @@ STDMETHODIMP
 ExampleVideoSurface::QueryInterface(REFIID riid, void** ppvObj)
 {
     if (IsEqualIID(riid, IID_IUnknown))
-    {
+		{
         AddRef();
         *ppvObj = this;
         return PNR_OK;
-    }
+		}
     else if (IsEqualIID(riid, IID_IRMAVideoSurface))
-    {
+		{
         AddRef();
         *ppvObj = (IRMAVideoSurface*)this;
         return PNR_OK;
-    }
-    
+		}
     *ppvObj = NULL;
     return PNR_NOINTERFACE;
 }
@@ -118,10 +105,9 @@ STDMETHODIMP_(ULONG32)
 ExampleVideoSurface::Release()
 {
     if (InterlockedDecrement(&m_lRefCount) > 0)
-    {
+		{
         return m_lRefCount;
-    }
-
+		}
     delete this;
     return 0;
 }
@@ -148,56 +134,52 @@ ExampleVideoSurface::Blt(UCHAR*		    pImageData,
 STDMETHODIMP
 ExampleVideoSurface::BeginOptimizedBlt(RMABitmapInfoHeader* pBitmapInfo)
 {
-    PN_RESULT res = PNR_FAIL;
-                                                                                
-    if (!pBitmapInfo)                                                           
-    {                                                                           
-        return res;
-    }
+    if (!pBitmapInfo) return PNR_FAIL;                                                        
 
-	
-    switch (pBitmapInfo->biCompression)
-    {
-      case RMA_RGB3_ID:
-      case RMA_RGB555_ID:
-      case RMA_RGB565_ID:
-      case RMA_RGB24_ID:
-      case RMA_8BIT_ID:
-      case RMA_BITFIELDS: 
-      case RMA_RGB:
-      case RMA_YUV420_ID:
-      {
-        m_pBitmapInfo = pBitmapInfo;
+	// behind the scenes format negotiation
+	// return PNR_FAIL for not supported formats
+	switch(pBitmapInfo->biCompression){
+		// what we can accept:
+		case RMA_RGB:break;
+		case RMA_YUV420_ID:break;
+		case RMA_BITFIELDS:break;
+		case RMA_RGB24_ID:break;
+		case RMA_RGB555_ID:break;
+		case RMA_RGB565_ID:break;
+		case RMA_8BIT_ID:break;
+		case RMA_RGB3_ID:break;
+		default: return PNR_FAIL;
+		}
 
 	// see if we have new format 
-	if (m_lastBitmapInfo.biWidth != pBitmapInfo->biWidth ||
+	if(m_lastBitmapInfo.biWidth != pBitmapInfo->biWidth ||
 	    m_lastBitmapInfo.biHeight != pBitmapInfo->biHeight ||
 	    m_lastBitmapInfo.biBitCount != pBitmapInfo->biBitCount ||
 	    m_lastBitmapInfo.biCompression != pBitmapInfo->biCompression)
-	{
+		{
+		m_pBitmapInfo = pBitmapInfo;
+		
 	    // format has changed since last blit...
-	    //
-	    //
+		if(m_pPyVideoRenderer && pBitmapInfo->biCompression==BI_BITFIELDS)
+			{
+			CallerHelper helper("OnFormatBitFields",m_pPyVideoRenderer);
+			if(helper.HaveHandler()) 
+				helper.call(pBitmapInfo->rcolor,pBitmapInfo->gcolor,pBitmapInfo->bcolor);
+			}
 		if(m_pPyVideoRenderer)
 			{
 			CallerHelper helper("OnFormatChange",m_pPyVideoRenderer);
 			if(helper.HaveHandler())helper.call(pBitmapInfo->biWidth,pBitmapInfo->biHeight,
 				pBitmapInfo->biBitCount, pBitmapInfo->biCompression);
 			}
-
 	    // save settings for comparison next time 
 	    m_lastBitmapInfo.biWidth = pBitmapInfo->biWidth;
 	    m_lastBitmapInfo.biHeight = pBitmapInfo->biHeight;
 	    m_lastBitmapInfo.biHeight = pBitmapInfo->biHeight;
 	    m_lastBitmapInfo.biBitCount = pBitmapInfo->biBitCount;
 	    m_lastBitmapInfo.biCompression = pBitmapInfo->biCompression;
-	}
-
-        res =  PNR_OK;
-      }
-    }
-
-    return res;
+		}
+    return PNR_OK;
 }
 
 
@@ -206,35 +188,25 @@ ExampleVideoSurface::OptimizedBlt(UCHAR* pImageBits,
 				      REF(PNxRect) rDestRect, 
 				      REF(PNxRect) rSrcRect)
 {
-    if (!m_pBitmapInfo)
-		{
-		return PNR_UNEXPECTED;
-		}
-
-
-    //
-    // this is where we would actually blit the image if we were /
-    // interested in doing that sort of thing
-    //
-    //
+    if (!m_pBitmapInfo) return PNR_UNEXPECTED;
 	if(m_pPyVideoRenderer)
 		{
 		CallerHelper helper("Blt",m_pPyVideoRenderer);
 		if(helper.HaveHandler())helper.call((int)pImageBits);
 		}
-
-
-    //printf("ExampleVideoSurface::OptimizedBlt - yeah baby!\n");
-
     return PNR_OK;
- }
+}	
 
 
 STDMETHODIMP
 ExampleVideoSurface::EndOptimizedBlt(void)
 {
+	if(m_pPyVideoRenderer)
+		{
+		CallerHelper helper("EndBlt",m_pPyVideoRenderer);
+		if(helper.HaveHandler())helper.call();
+		}
     m_pBitmapInfo = NULL;
-
     return PNR_OK;
 }
 
@@ -243,9 +215,9 @@ STDMETHODIMP
 ExampleVideoSurface::GetOptimizedFormat(REF(RMA_COMPRESSION_TYPE) ulType)
 {
     if (m_pBitmapInfo)
-    {
+		{
         ulType =  m_pBitmapInfo->biCompression;
-    }
+		}
 
     return PNR_NOTIMPL;
 }
