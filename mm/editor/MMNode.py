@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import MMNodeBase
 import MMAttrdefs
 from MMTypes import *
