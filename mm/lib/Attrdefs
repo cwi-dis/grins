@@ -237,7 +237,7 @@
 	'Quality of image conversion to JPEG' raw (g2))
 
 (project_smil_url (string) '' 'Mediaserver URL' default
-	'URL of SMIL document on the media server' raw (g2 qt))
+	'URL of SMIL document on the media server' raw (all))
 
 (project_targets (int) 3 'Target audience' targets
 	'One or more bandwidths for which this item should be converted' raw (g2))
