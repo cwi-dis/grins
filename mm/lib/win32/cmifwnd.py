@@ -11,7 +11,7 @@ from DisplayList import DisplayList
 Sdk = win32ui.GetWin32Sdk()
 
 # utilities
-import win32mu,AppMenu
+import win32mu,win32menu
 
 # constants
 from appcon import *
@@ -20,9 +20,13 @@ from WMEVENTS import *
 # globals 
 toplevel=None # set by AppTopLevel
 
+import  rbtk
+import DrawTk
 
-class _CmifWnd:
+class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 	def __init__(self):
+		rbtk._rbtk.__init__(self)
+		DrawTk.DrawLayer.__init__(self)
 		self._subwindows = []
 		self._displists = []
 		self._active_displist = None
@@ -157,9 +161,9 @@ class _CmifWnd:
 
 	def create_menu(self, list, title = None):
 		self.destroy_menu()
-		menu = AppMenu.CreateMenu()
-		float = AppMenu.CreateMenu()
-		AppMenu.PopupAppendMenu(menu,float,"menu")
+		menu = win32ui.CreateMenu()
+		float = win32ui.CreateMenu()
+		win32menu.PopupAppendMenu(menu,float,"menu")
 		
 		if title:
 			list = [title, None] + list
@@ -169,7 +173,7 @@ class _CmifWnd:
 		
 		#self._accelerators = {}
 		if hasattr(self,'_cbld'):
-			AppMenu._create_menu(float, list, 1, self._cbld,
+			win32menu._create_menu(float, list, 1, self._cbld,
 					self._accelerators)
 
 		self.HookAllKeyStrokes(self._char_callback)
@@ -256,10 +260,12 @@ class _CmifWnd:
 		self.onEvent(ev,(x, y, buttons))
 
 	def onLButtonDown(self, params):
+		self.notifyListener('onLButtonDown',params)
 		msg=win32mu.Win32Msg(params)
 		self.onMouseEvent(msg.pos(),Mouse0Press)
 
 	def onLButtonUp(self, params):
+		self.notifyListener('onLButtonUp',params)
 		msg=win32mu.Win32Msg(params)
 		self.onMouseEvent(msg.pos(),Mouse0Release)
 
@@ -267,7 +273,7 @@ class _CmifWnd:
 		msg=win32mu.Win32Msg(params)
 		xpos,ypos=msg.pos()
 		if self._menu:
-			id = AppMenu.FloatMenu(self,self._menu, xpos, ypos)
+			id = win32menu.FloatMenu(self,self._menu, xpos, ypos)
 			if self._cbld.has_key(id) :
 				callback = self._cbld[id]
 				apply(callback[0], callback[1])
@@ -279,7 +285,8 @@ class _CmifWnd:
 		self.onMouseEvent(pt,Mouse0Press)
 
 	def onMouseMove(self, params):
-		if self._cursor!='': return
+		self.notifyListener('onMouseMove',params)
+		#if self._cursor!='': return
 		if not self._active_displist: return
 		buttons = []
 		msg=win32mu.Win32Msg(params)
@@ -288,6 +295,13 @@ class _CmifWnd:
 			if button._inside(x,y):
 				self.setcursor('hand')
 				break
+
+	def notifyListener(self,key,params):
+		if rbtk._in_create_box==None: return
+		if key=='onLButtonDown':DrawTk.DrawLayer.onLButtonDown(self,params)
+		elif key=='onLButtonUp':DrawTk.DrawLayer.onLButtonUp(self,params)
+		elif key=='onMouseMove':DrawTk.DrawLayer.onMouseMove(self,params)
+		elif key=='OnDraw':DrawTk.DrawLayer.OnDraw(self,params)
 
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
@@ -326,7 +340,7 @@ class _CmifWnd:
 
 
 #====================================== Destroy
-	def onClose(self, params):
+	def OnClose_X(self):
 		self.onEvent(WindowExit)
 
 #====================================== Paint
@@ -397,7 +411,6 @@ class _CmifWnd:
 	# defined for the benefit of the top level windows
 	# that are not scrollable	
 	def _do_resize(self,new_width,new_height):
-		
 		if self._topwindow != self:
 			print '_do_resize called from the non-toplevel wnd',self
 		self._destroy_displists_tree()
@@ -406,6 +419,8 @@ class _CmifWnd:
 		old_width,old_height=rc.width(),rc.height()
 		self._rect=self._canvas=0,0,new_width,new_height
 
+		if old_width<=0:old_width=1 # raise error
+		if old_height<=0:old_height=1
 		xf = float(new_width)/old_width;
 		yf = float(new_height)/old_height;
 		hdwp = Sdk.BeginDeferWindowPos(8);
@@ -454,7 +469,6 @@ class _CmifWnd:
 			hdwp=w._resize_wnds_tree(hdwp,xf,yf)
 		return hdwp
 	
-		
 	def _resize_controls(self):
 		pass
 
