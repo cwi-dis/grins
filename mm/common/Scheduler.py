@@ -15,8 +15,8 @@ import SR
 import fl	# For fl.showmessage only
 
 # Priorities for the various events:
-N_PRIO = 3
-[PRIO_PREARM_NOW, PRIO_RUN, PRIO_LO] = range(N_PRIO)
+N_PRIO = 5
+[PRIO_PREARM_NOW, PRIO_INTERN, PRIO_STOP, PRIO_START, PRIO_LO] = range(N_PRIO)
 
 # Actions on end-of-play:
 [END_STOP, END_PAUSE, END_KEEP] = range(3)
@@ -133,7 +133,8 @@ class SchedulerContext():
 				prearmnowlist.append(ev)
 			else:
 				prearmlaterlist.append(ev[1].t0, ev)
-		self.parent.add_runqueue(self, PRIO_PREARM_NOW, prearmnowlist)
+		for ev in prearmnowlist:
+			self.parent.add_runqueue(self, PRIO_PREARM_NOW, ev)
 		prearmlaterlist.sort()
 		pll = []
 		for time, ev in prearmlaterlist:
@@ -190,8 +191,14 @@ class SchedulerContext():
 	#
 	def event(self, ev):
 		srlist = self.getsrlist(ev)
-		if srlist:
-			self.parent.add_runqueue(self, PRIO_RUN, srlist)
+		for sr in srlist:
+			if sr[0] == SR.PLAY:
+				prio = PRIO_START
+			elif sr[0] == SR.PLAY_STOP:
+				prio = PRIO_STOP
+			else:
+				prio = PRIO_INTERN
+			self.parent.add_runqueue(self, prio, sr)
 
 	def arm_ready(self, cname):
 		if cname == 'Scottish': print 'Scottish ready' #DBG
@@ -297,7 +304,9 @@ class Scheduler(scheduler):
 		print '# contexts:', len(self.sctx_list)
 		for i in range(len(self.runqueues)):
 			print '---- runqueue',i
-			print SR.evlist2string(self.runqueues[i])
+			for j in self.runqueues[i]:
+				print SR.ev2string(j[1]),
+			print
 		for i in range(len(self.sctx_list)):
 			print '---- context',i
 			self.sctx_list[i].dump()
@@ -429,11 +438,15 @@ class Scheduler(scheduler):
 	# Updatetimer restarts the forms timer object. If we have work to do
 	# we set the timeout very short, otherwise we simply stop the clock.
 	def updatetimer(self):
+		# Helper variable:
+		work = 0
+		for q in self.runqueues:
+			if q:
+				work = 1
 		if not self.ui.playing:
 			delay = 0
 			#print 'updatetimer: not playing' #DBG
-		elif self.rate and ( self.runqueues[PRIO_PREARM_NOW] or \
-			  self.runqueues[PRIO_RUN]):
+		elif self.rate and work:
 			#
 			# We have SR actions to execute. Make the callback
 			# happen as soon as possible.
@@ -441,6 +454,10 @@ class Scheduler(scheduler):
 			delay = 0.001
 			#print 'updatetimer: runnable events' #DBG
 		elif self.runqueues[PRIO_LO]:
+			#
+			# We are not running (rate==0), but we can do some
+			# prearms
+			#
 			delay = 0.001
 		elif self.queue:
 			#
@@ -506,9 +523,8 @@ class Scheduler(scheduler):
 	#
 	# Concatenate the given list of SR's to the runqueue.
 	#
-	def add_runqueue(self, sctx, prio, srlist):
-		for sr in srlist:
-			self.runqueues[prio].append(sctx, sr, 0)
+	def add_runqueue(self, sctx, prio, sr):
+		self.runqueues[prio].append(sctx, sr, 0)
 	def add_lopriqueue(self, sctx, time, sr):
 		runq = self.runqueues[PRIO_LO]
 		for i in range(len(runq)):
