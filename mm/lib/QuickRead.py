@@ -62,8 +62,7 @@ class QuickRead:
 		for i in range(nviewports):
 			name = marshal.load(self.__fp)
 			attrdict = marshal.load(self.__fp)
-			ctx.newviewport(name, -1, 'layout')
-			v = ctx.channeldict[name]
+			v = ctx.newviewport(name, -1, 'layout')
 			v.attrdict = attrdict
 			v.addOwner(OWNER_DOCUMENT)
 			self.readregions(v)
@@ -79,8 +78,7 @@ class QuickRead:
 		for i in range(nregions):
 			name = marshal.load(self.__fp)
 			attrdict = marshal.load(self.__fp)
-			ctx.newchannel(name, -1, 'layout')
-			r = ctx.channeldict[name]
+			r = ctx.newchannel(name, -1, 'layout')
 			r.attrdict = attrdict
 			parent._addchild(r)
 			attrList = []
