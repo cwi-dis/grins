@@ -45,6 +45,11 @@ class SoundChannel(ChannelAsync):
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
+		except EOFError:
+			self.errormsg(node, '%s: Unexpected EOF' % fn)
+			self.arm_fp = None
+			self.armed_duration = 0
+			return 1
 		except audio.Error:
 			self.errormsg(node, '%s: Unknown audio file type' % fn)
 			self.arm_fp = None
