@@ -195,11 +195,15 @@ class MMNode():
 		try:
 			return self.attrdict[name]
 		except RuntimeError:
-			try:
-				styles = self.attrdict['style']
-			except RuntimeError:
-				raise NoSuchAttrError, 'in GetAttr'
-			return self.context.lookinstyles(name, styles)
+			return self.GetDefAttr(self, name)
+	#
+	def GetDefAttr(self, name):
+		_stat('GetDefAttr')
+		try:
+			styles = self.attrdict['style']
+		except RuntimeError:
+			raise NoSuchAttrError, 'in GetDefAttr'
+		return self.context.lookinstyles(name, styles)
 	#
 	def GetAttrDef(self, (name, default)):
 		_stat('GetAttrDef')
