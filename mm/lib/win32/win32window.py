@@ -2058,6 +2058,17 @@ class ViewportContext:
 		self._wnd = wnd
 		self._bgcolor = bgcolor
 
+		# make viewport size acceptable by wmf
+		# but yet if the aspect ratio  of the viewport is not the same
+		# as the screen the resulting wmv has not the correct aspect ratio
+		w = (w/16 + 1)*16
+		h = (h/16 + 1)*16
+
+		# set a slow timer so that we get some progress feedback
+		# when nothing is changing in the viewport
+		self._timerid = wnd.SetTimer(2,500)
+		wnd.HookMessage(self.onTimer, win32con.WM_TIMER)
+
 		self._ddraw = ddraw.CreateDirectDraw()
 		self._ddraw.SetCooperativeLevel(self._wnd.GetSafeHwnd(), ddraw.DDSCL_NORMAL)
 		ddsd = ddraw.CreateDDSURFACEDESC()
@@ -2070,7 +2081,10 @@ class ViewportContext:
 		self._ddbgcolor = self._backBuffer.GetColorMatch(bgcolor or (255,255,255))
 		self._backBuffer.BltFill((0, 0, w, h), self._ddbgcolor)
 
-	def update(self, rc):
+	def onTimer(self, params):
+		self._viewport.update()
+
+	def update(self, rc=None):
 		if self._backBuffer.IsLost():
 			if not self._backBuffer.Restore():
 				return
@@ -2115,6 +2129,7 @@ class ViewportContext:
 		return self._viewport._rect
 
 	def closeViewport(self, viewport):
+		self._wnd.KillTimer(self._timerid)
 		del viewport
 
 	def getDrawBuffer(self):
