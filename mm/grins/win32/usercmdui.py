@@ -110,4 +110,16 @@ CRASH_UI=CommandUI(CRASH)
 SCHEDDUMP_UI=CommandUI(SCHEDDUMP)
 
 
+#
+# Add the rest without a ui name
+# 
+#
+import usercmd
+for s in dir(usercmd):
+	a=getattr(usercmd,s)
+	if type(a) == type(usercmd._CommandBase):
+		if a.__name__ != '_CommandBase' and a.__name__ != '_DynamicCascade':
+			if not class2ui.has_key(a):
+				CommandUI(a)
+				# print 'no ui name assigned to usercmd',a.__name__
 
