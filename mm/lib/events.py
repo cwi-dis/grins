@@ -4,7 +4,7 @@ from EVENTS import *
 error = 'events.error'
 
 class _Events:
-	def init(self):
+	def __init__(self):
 		self._timers = []
 		self._callbacks = {}
 		self._windows = {}
@@ -13,7 +13,6 @@ class _Events:
 		self._timenow = float(time.millitimer()) / 1000
 		self._timerid = 0
 		self._modal = 0
-		return self
 
 	def _checktime(self):
 		timenow = float(time.millitimer()) / 1000
@@ -180,7 +179,7 @@ class _Events:
 			dummy = self.readevent()
 
 # There is one instnce of the _Events class.  It is created here.
-_event_instance = _Events().init()
+_event_instance = _Events()
 
 # In case you want an class instance you can use this.
 def Events():

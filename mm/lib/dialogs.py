@@ -51,7 +51,7 @@ import windowinterface, events, EVENTS, string
 from debug import debug
 
 class Dialog:
-	def init(self, text):
+	def __init__(self, text):
 		if len(text) <= 1:
 			raise TypeError, 'arg count mismatch'
 		# self.events is used to remember events that we are
@@ -126,7 +126,7 @@ class Dialog:
 		self.FGCOLOR = FGCOLOR
 		self.FONT = FONT
 		self.draw_window()
-		return self
+		return
 
 	def draw_window(self):
 		d = self.window.newdisplaylist()
@@ -240,7 +240,7 @@ class Dialog:
 		self.window.close()
 
 def showdialog(*text):
-	d = Dialog().init(text)
+	d = Dialog(text)
 	r = d.eventloop()
 	d.close()
 	return r
