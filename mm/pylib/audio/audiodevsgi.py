@@ -32,6 +32,7 @@ class AudioDevSGI:
 
 	def __init__(self, fmt = None, qsize = None):
 		self.__format = None
+		self.__framerate = 0
 		self.__params = [AL.OUTPUT_RATE, 0]
 		self.__oldparams = []
 		self.__port = None
@@ -63,6 +64,9 @@ class AudioDevSGI:
 		nchannels = self.__nchannelsdict[nchannels]
 		c.setchannels(nchannels)
 
+	def getformat(self):
+		return self.__format
+
 	def setframerate(self, rate):
 		try:
 			cooked = self.__frameratedict[rate]
@@ -70,6 +74,10 @@ class AudioDevSGI:
 			raise Error, 'bad output rate'
 		else:
 			self.__params[1] = cooked
+			self.__framerate = rate
+
+	def getframerate(self):
+		return self.__framerate
 
 	def writeframes(self, data):
 		if not self.__format or not self.__params[1]:

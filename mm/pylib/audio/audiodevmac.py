@@ -37,8 +37,14 @@ class AudioDevMAC:
 		self.__nchannels = fmt.getnchannels()
 		self.__sampwidth = (fmt.getbps() + 7) / 8
 
+	def getformat(self):
+		return self.__format
+
 	def setframerate(self, rate):
 		self.__outrate = rate
+
+	def getframerate(self):
+		return self.__outrate
 
 	def writeframes(self, data):
 		if not self.__format or not self.__outrate:
