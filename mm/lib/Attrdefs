@@ -46,6 +46,9 @@
 (bag_index (name) undefined 'Choice index' CMIFchildnodename
 	'Name of child auto-started when choice node plays' normal)
 
+(base (string) '' 'Base URL' default
+	'Base URL of document' raw)
+
 (base_window (name) 'undefined' 'Channel base window' CMIFbasechannelname
 	'Name of window in which channelwin is created' raw)
 
@@ -107,7 +110,7 @@
 (fgcolor (tuple (int) (int) (int)) (0 0 0) 'Foreground color' color
 	'Color used for text/images in window' channel)
 
-(file (string) '/dev/null' 'File' file
+(file (string) '' 'File' file
 	'URL for the data of this node' channel)
 
 (font (string) 'Times-Roman' 'Font' CMIFfont
