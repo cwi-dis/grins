@@ -28,6 +28,7 @@ class SchedulerContext:
 		self.sractions = []
 		self.srevents = {}
 		self.unexpected_armdone = {}
+		self.prearmlists = {}
 		self.playroot = node
 		#self.parent.ui.duration_ind.label = '??:??'
 
