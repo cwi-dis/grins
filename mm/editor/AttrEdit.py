@@ -1839,7 +1839,17 @@ class ColorAttrEditorField(TupleAttrEditorField):
 			return colors.rcolors[value]
 		return TupleAttrEditorField.valuerepr(self, value)
 
-class CssColorAttrEditorField(AttrEditorField):
+class CssAttrEditorField(AttrEditorField):
+	def getParent(self):
+		node = self.wrapper.getselection()
+		
+		if node.getClassName() == 'MMNode':
+			parentNode = node.GetChannel()
+		else:
+			parentNode = node.GetParent()
+		return parentNode
+	
+class CssColorAttrEditorField(CssAttrEditorField):
 # a parsed value is a tuple of:
 # colortype, colorspec
 # colortype = either transparent inherit or color
@@ -1884,13 +1894,7 @@ class CssColorAttrEditorField(AttrEditorField):
 		return svalue[1]+' '+svalue[2]+' '+svalue[3]		
 
 	def getInheritedValue(self):
-		node = self.wrapper.getselection()
-		
-		# get the layout parent. because the current 'inherit' value is not applied yet
-		if node.getClassName() == 'MMNode':
-			parentNode = node.GetChannel()
-		else:
-			parentNode = node.GetParent()
+		parentNode = self.getParent()
 		if parentNode is None:
 			return None
 		
@@ -1902,7 +1906,7 @@ class CssColorAttrEditorField(AttrEditorField):
 
 		return bgcolor
 
-class CssPosAttrEditorField(AttrEditorField):
+class CssPosAttrEditorField(CssAttrEditorField):
 # a parsed value is either:
 # - a real number (0 to 1) representing a percent value
 # - a int number representing a pixel value
@@ -1924,6 +1928,10 @@ class CssPosAttrEditorField(AttrEditorField):
 				val = int(str)
 			else:
 				val = float(str[:-1])/100
+			attrName = self.getname()
+			if attrName in ('width', 'height') and val <0:
+				raise MParsingError, attrName+' value cannot be negative'
+			
 		return val		
 
 	def valuerepr(self, value):
@@ -1936,6 +1944,42 @@ class CssPosAttrEditorField(AttrEditorField):
 		else:
 			print 'unknown value ',value
 
+	def getParentSize(self):
+		parentNode = self.getParent()
+		if parentNode is None:
+			# shoudn't happen
+			w,h = 100, 100
+		elif parentNode.getClassName() == 'Viewport':
+			w,h = parentNode.getPxGeom()
+		else:
+			x,y,w,h = parentNode.getPxGeom()
+		
+		attrName = self.getname()
+		if attrName in ('left', 'right', 'width'):
+			return w
+		else:
+			return h
+
+	def getCurrentPxValue(self):
+		node = self.wrapper.getselection()
+		x,y,w,h = node.getPxGeom()
+		pSize = self.getParentSize()
+		attrName = self.getname()
+		if attrName == 'left':
+			return x
+		elif attrName == 'top':
+			return y
+		elif attrName == 'width':
+			return w
+		elif attrName == 'height':
+			return h
+		elif attrName == 'right':
+			return pSize-w-x
+		elif attrName == 'bottom':
+			return pSize-h-y
+		else:
+			return 0
+		
 class PopupAttrEditorField(AttrEditorField):
 	# A choice menu choosing from a list -- base class only
 	type = 'option'
