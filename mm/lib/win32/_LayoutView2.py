@@ -893,13 +893,10 @@ class LayoutManager(LayoutManagerBase):
 		# convert it to natural coordinates
 		point = self.LPtoNP(point)
 
-# kk: again this breaks selection logic
-# temporary out
-		# if the point belongs already to a selected shape we keep the shape
-		# it's important to have this behavior if you want to edit a node behind another one
-#		for shape in self._selectedList:
-#			if shape.inside(point):
-#				return shape
+		# check first for handles hit first
+		for shape in self._selectedList:
+			if shape.getDragHandleAt(point)>=0:
+				return shape
 		
 		if self._viewport:
 			shape = self._viewport.getMouseTarget(point)
@@ -1047,7 +1044,7 @@ class LayoutManager(LayoutManagerBase):
 			dc.RestoreDC(hsave)
 
 			nHandles = wnd.getDragHandleCount()		
-			for ix in range(1,nHandles+1):
+			for ix in range(nHandles):
 				x, y, w, h = wnd.getDragHandleRect(ix)
 				dc.FillSolidRect((x, y, x+w, y+h), win32api.RGB(255,127,80))
 				dc.FrameRectFromHandle((x, y, x+w, y+h), self._blackBrush)

@@ -491,7 +491,7 @@ class Shape:
 		return 'arrow'
 
 	def getDragHandleAt(self, point):
-		return 0
+		return -1
 
 	def moveDragHandleTo(self, ixHandle, point):
 		pass
@@ -552,7 +552,7 @@ class SelectTool(DrawTool):
 		shape = ctx._selected
 		if shape and canResize:
 			ctx._ixDragHandle = shape.getDragHandleAt(point)
-			if ctx._ixDragHandle and shape.isResizeable():
+			if ctx._ixDragHandle>0 and shape.isResizeable():
 				ctx._selmode = SM_SIZE
 				ctx.setcursor(shape.getDragHandleCursor(ctx._ixDragHandle))
 		
@@ -600,7 +600,7 @@ class SelectTool(DrawTool):
 		if not ctx.hasCapture():
 			if shape and ctx.inSelectMode():
 				ctx._ixDragHandle = shape.getDragHandleAt(point)
-				if ctx._ixDragHandle and shape.isResizeable():
+				if ctx._ixDragHandle>0 and shape.isResizeable():
 					ctx.setcursor(shape.getDragHandleCursor(ctx._ixDragHandle))
 					return
 			if ctx.inSelectMode():
@@ -782,7 +782,7 @@ class Polyline:
 			l, t, r, b = x, y, x+w, y+h
 			if xp>=l and xp<r and yp>=t and yp<b:
 				return ix
-		return 0
+		return -1
 
 	# move drag handle in device coordinates to point in device coordinates
 	def moveDragHandleTo(self, ixHandle, point):

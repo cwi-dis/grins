@@ -1082,7 +1082,10 @@ class Window:
 		w, h = w-1, h-1
 		xc = x + w/2
 		yc = y + h/2
-		if ix == 1:
+		if ix == 0:
+			x = x+w/2
+			y = y+h/2
+		elif ix == 1:
 			x = x
 			y = y
 		elif ix == 2:
@@ -1114,10 +1117,11 @@ class Window:
 		return x-3, y-3, 7, 7
 
 	def getDragHandleCount(self):
-		return 8
+		return 9
 
 	def getDragHandleCursor(self, ix):
-		if   ix==1 or ix==5:id = 'sizenwse'
+		if ix==0: id = 'arrow'
+		elif ix==1 or ix==5:id = 'sizenwse'
 		elif ix==2 or ix==6:id = 'sizens'
 		elif ix==3 or ix==7:id = 'sizenesw'
 		elif ix==4 or ix==8:id = 'sizewe'
@@ -1127,19 +1131,21 @@ class Window:
 	# return drag handle at device coordinates
 	def getDragHandleAt(self, point):
 		xp, yp = point
-		for ix in range(1,9):
+		for ix in range(9):
 			x, y, w, h = self.getDragHandleRect(ix)
 			l, t, r, b = x, y, x+w, y+h
 			if xp>=l and xp<r and yp>=t and yp<b:
 				return ix
-		return 0
+		return -1
 
 	# move drag handle in device coordinates to point in device coordinates
 	def moveDragHandleTo(self, ixHandle, point):
 		xp, yp = self.DPtoLP(point)
 		x, y, w, h = self.getwindowpos()
 		l, t, r, b = x, y, x+w, y+h
-		if	ixHandle== 1:
+		if ixHandle == 0:
+			return
+		elif ixHandle == 1:
 			l = xp
 			t = yp
 		elif ixHandle== 2:
