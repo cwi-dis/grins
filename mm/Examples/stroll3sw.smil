@@ -28,7 +28,7 @@
           <img id="herengracht_218-image" region="image3" src="1h218.gif" dur="5s"/>
           <img id="herengracht_284-image" region="image2" src="1h284.gif" dur="5s"/>
       </seq>
-        <seq id="HERENGRACHT_stroll-low" system-bitrate="14400">
+      <seq id="HERENGRACHT_stroll-low">
         <img id="map-l" region="image1" src="map.gif" dur="5s"/>
           <img id="herengracht_168-image-l" region="image2" src="h168.gif" dur="5s"/>
           <img id="herengracht_218-image-l" region="image5" src="h218.gif" dur="5s"/>

@@ -24,7 +24,7 @@
           <img id="herengracht_284" region="image2" src="1h284.gif" dur="3s"/>
           <text type="text/plain" id="Credits" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam" dur="indefinite"/>
         </seq>
-        <seq id="HERENGRACHT_stroll-low" system-bitrate="14400">
+        <seq id="HERENGRACHT_stroll-low">
           <img id="map-l" region="image1" src="map.gif" dur="3s"/>
           <img id="herengracht_168-l" region="image2" src="h168.gif" dur="3s"/>
           <img id="herengracht_218-l" region="image4" src="h218.gif" dur="3s"/>
