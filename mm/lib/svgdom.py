@@ -293,14 +293,7 @@ class SvgG(SvgElement):
 
 class SvgSvg(SvgElement):
 	def parseAttributes(self):
-		width = self.get('width')
-		height = self.get('height')
-		if width is None: 
-			width = self.getXMLAttr('width')
-			width.setValue(640) # should be 100%
-		if height is None:
-			height = self.getXMLAttr('height')
-			height.setValue(480) # should be 100%
+		pass
 							
 	def getSize(self):
 		return self.get('width'), self.get('height')
