@@ -653,6 +653,7 @@ class MMChannel:
 		self.name = name
 		self.attrdict = {'type':type}
 		self.d_attrdict = {}
+		self.views = {}
 		if settings.activeFullSmilCss:
 			self._cssId = None
 			if type == 'layout':

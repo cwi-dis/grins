@@ -172,8 +172,8 @@ class TemporalView(TemporalViewDialog):
 		# Sets the popup menu to channel mode.
 		commands = self.commands
 		popupmenu = [self.menu_no_nodes]	# there needs to be a default.
-		print "DEBUG: selected nodes: ", self.selected_nodes, len(self.selected_nodes)
 		if len(self.selected_nodes) != 1:
+			print "Warning: Selection is: ", self.selected_nodes
 			print "Warning: Multiple selection pop-ups not thought about yet."
 		else:
 			n = self.selected_nodes[0].node
@@ -196,6 +196,7 @@ class TemporalView(TemporalViewDialog):
 		commands = self.commands
 		popupmenu = self.menu_no_channel
 		if len(self.selected_regions) != 1:
+			print "Warning: Selected region is: ", self.selected_regions
 			print "Warning: Multiple channel selection not thought about yet."
 		else:
 			popupmenu = self.menu_channel
@@ -217,7 +218,6 @@ class TemporalView(TemporalViewDialog):
 			i.unselect()
 		self.selected_regions = []
 		self.focusobj = None
-		self.update_popupmenu_channel()
 
 	def select_node(self, node):
 		# Called back from the scene
@@ -232,7 +232,6 @@ class TemporalView(TemporalViewDialog):
 			i.unselect()
 		self.selected_nodes = []
 		self.focusobj = None
-		self.update_popupmenu_node()
 
 ######################################################################
 		# Edit manager interface
@@ -250,21 +249,27 @@ class TemporalView(TemporalViewDialog):
 		self.destroy()
 
 	def globalfocuschanged(self, focustype, focusobject):
+		print "DEBUG: TemporalView recieved global focus change: ", focustype, focusobject
 		if self.just_selected:
-			self.just_selected = 0
+			print "DEBUG: Just selected that channel."
+			self.just_selected = None
 			return
 		if self.recurse_lock:
+			print "DEBUG: Got a recurse lock."
 			return
 		self.recurse_lock = 1
 		if self.scene:
 			if focustype == 'MMNode':
 				try:
 					self.scene.select_node(focusobject.views['tempview'])
+					self.just_selected = None
 				except KeyError:
 					pass # Don't worry about it. This means it is probably a structure node.
 					# What we /could/ do is select all of the syncbars associated to it..
-			#elif focustype == 'MMChannel':
-			#	self.scene.select_channel(focusobject)
+			elif focustype == 'MMChannel':
+				self.scene.select_mmchannel(focusobject)
+				self.just_selected = None
+		print "DEBUG: redrawing.."
 		self.draw()
 		self.recurse_lock = 0
 
@@ -290,7 +295,7 @@ class TemporalView(TemporalViewDialog):
 #		print "DEBUG: Drawing..", time.time() - before
 
 #		before = time.time()
-		if isinstance(self.just_selected, MMWidget):
+		if isinstance(self.just_selected, MMWidget) or isinstance(self.just_selected, MultiMMWidget):
 			self.editmgr.setglobalfocus('MMNode', self.just_selected.node)
 		elif isinstance(self.just_selected, ChannelWidget):
 			self.editmgr.setglobalfocus('MMChannel', self.just_selected.get_channel())
