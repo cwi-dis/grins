@@ -72,7 +72,8 @@ class HierarchyViewDialog(ViewDialog):
 				('Double height of canvas', CANVAS_HEIGHT),
 				('Double width of canvas', CANVAS_WIDTH),
 				('Reset canvas size', CANVAS_RESET),
-				('Show thumbnails', THUMBNAIL, 't'),
+				(('Show thumbnails', 'Hide thumbnails'),
+				 THUMBNAIL, 't'),
 				]),
 			('Help', [
 				('Help...', HELP),
