@@ -613,7 +613,6 @@ class OpenLocationDlg(ResDialog):
 ##############################
 
 # Implementation of the Layout name dialog
-
 class LayoutNameDlg(ResDialog):
 	def __init__(self,promp,default_text,cb_ok,cancelCallback=None,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_LAYOUT_NAME,parent)
@@ -671,6 +670,49 @@ class NewChannelDlg(ResDialog):
 	def OnCancel(self):
 		if self._cbd_cancel:
 			apply(apply,self._cbd_cancel)
+
+# Implementation of the channel undefined dialog
+class ChannelUndefDlg(ResDialog):
+	def __init__(self,title,default,grab=1,parent=None):
+		ResDialog.__init__(self,grinsRC.IDD_CHANNEL_UNDEF,parent)
+		self._title=title
+		self._default_name=default
+		self._parent=parent
+		self._chantext= Edit(self,grinsRC.IDC_CHANNEL_NAME)
+		self._bcancel = Button(self,win32con.IDCANCEL)
+		self._bundef= Button(self,grinsRC.IDC_LEAVE_UNDEF)
+		self._bopen = Button(self,win32con.IDOK)
+		self._cb_ok=None
+		self._cb_undef_ok=None
+		self._cb_cancel=None
+
+	def OnInitDialog(self):
+		self.SetWindowText(self._title)
+		self.attach_handles_to_subwindows()
+		self.init_subwindows()
+		self._chantext.settext(self._default_name)
+		self._bundef.hookcommand(self,self.OnUndef)
+		return ResDialog.OnInitDialog(self)
+
+	def show(self):
+		self.DoModal()
+
+	def close(self):
+		self.EndDialog(win32con.IDCANCEL)
+
+	def OnOK(self):
+		if self._cb_ok:
+			text=self._chantext.gettext()
+			apply(self._cb_ok,(text,))
+		self.close()
+
+	def OnCancel(self):
+		self.close()
+
+	def OnUndef(self,id,code):
+		if self._cb_undef_ok:
+			apply(self._cb_undef_ok,())
+		self.close()
 
 # Implementation of a modeless message box
 class ModelessMessageBox(ResDialog):
