@@ -664,6 +664,15 @@ class OptionsCtrl(AttrCtrl):
 	def OnCombo(self,id,code):
 		self.sethelp()
 
+class ChannelCtrl(OptionsCtrl):
+	def OnInitCtrl(self):
+		OptionsCtrl.OnInitCtrl(self)
+		self._wnd.HookCommand(self.OnChannel,self._resid[3])
+
+	def OnChannel(self,id,code):
+		if self._attr:
+			self._attr.channelprops()
+
 class OptionsRadioCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
@@ -2028,14 +2037,23 @@ class NameGroup(AttrGroup):
 	def __init__(self):
 		AttrGroup.__init__(self,NameGroup.data)
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_S1O1
+		return grinsRC.IDD_EDITATTR_S1O1C
 	def getctrlids(self,ix):
-		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
+		val = getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
+		      getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
+		      getattr(grinsRC, 'IDC_%d' % (ix*10+3))
+		if self._al[ix-1].getname() == 'channel':
+			val = val + (getattr(grinsRC, 'IDC_%d' % (ix*10+4)),)
+		return val
 	def getpageclass(self):
 		return AttrPage
-	
+
+	def getctrlclass(self,a):
+		if a.getname() == 'channel':
+			return ChannelCtrl
+		return AttrGroup.getctrlclass(self,a)
+
+
 class CNameGroup(AttrGroup):
 	data=attrgrsdict['.cname']
 	def __init__(self):
