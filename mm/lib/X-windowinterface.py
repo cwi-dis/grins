@@ -17,11 +17,14 @@ _screenheight = 1024
 _dpi_x = 111
 _dpi_y = 111
 
-import imgfile
 try:
-	dummy = imgfile.ttob(1)
-	del dummy
-except AttributeError:
+	import imgfile
+	try:
+		dummy = imgfile.ttob(1)
+		del dummy
+	except AttributeError:
+		pass
+except ImportError:
 	pass
 
 _image_cache = {}			# cache of prepared images

@@ -1279,8 +1279,8 @@ class _Window:
 			retval = _image_cache[cachekey]
 			filename = retval[-1]
 			try:
-				import imgfile
-				image = imgfile.read(filename)
+				import rgbimg
+				image = rgbimg.longimagedata(filename)
 				return retval[:-1] + (image,)
 			except:		# any error...
 				del _image_cache[cachekey]
@@ -1317,9 +1317,10 @@ class _Window:
 			import tempfile
 			filename = tempfile.mktemp()
 			try:
-				import imgfile
-				imgfile.write(filename, retval[10], \
-					  retval[6], retval[7], retval[8])
+				import rgbimg
+				rgbimg.longstoimage(retval[10],
+					  retval[6], retval[7], 1,
+					  filename)
 			except:		# any error...
 				print 'Warning: caching image failed'
 				import posix
@@ -1337,8 +1338,8 @@ class _Window:
 		header = f.read(16)
 		if header[:2] == '\001\332':
 			f.close()
-			import imgfile
-			xsize, ysize, zsize = imgfile.getsizes(file)
+			import rgbimg
+			xsize, ysize = rgbimg.sizeofimage(file)
 			return xsize, ysize
 		elif header[:4] == '\377\330\377\340':
 			import cl, CL
@@ -1357,8 +1358,8 @@ class _Window:
 			raise error, 'cannot determine size of image'
 
 	def _prepare_RGB_image_from_file(self, file, top, bottom, left, right):
-		import imgfile
-		xsize, ysize, zsize = imgfile.getsizes(file)
+		import rgbimg
+		xsize, ysize = rgbimg.sizeofimage(file)
 		top = int(top * ysize + 0.5)
 		bottom = int(bottom * ysize + 0.5)
 		left = int(left * xsize + 0.5)
@@ -1366,18 +1367,20 @@ class _Window:
 		width, height = self._width, self._height
 		scale = min(float(width)/(xsize - left - right), \
 			    float(height)/(ysize - top - bottom))
-		if scale == int(scale):
-			image = imgfile.read(file)
-			width, height = xsize, ysize
-		else:
+		image = rgbimg.longimagedata(file)
+		if scale != int(scale):
+			import imageop
 			width = int(xsize * scale)
 			height = int(ysize * scale)
-			image = imgfile.readscaled(file, width, height, 'box')
+			image = imageop.scale(image, 4, xsize, ysize,
+					      width, height)
 			top = int(top * scale)
 			bottom = int(bottom * scale)
 			left = int(left * scale)
 			right = int(right * scale)
 			scale = 1.0
+		else:
+			width, height = xsize, ysize
 		x, y = (self._width-(width-left-right))/2, \
 			  (self._height-(height-top-bottom))/2
 		if xsize * ysize < width * height:
@@ -1385,7 +1388,7 @@ class _Window:
 		else:
 			do_cache = 1
 		return x, y, width - left - right, height - top - bottom, \
-			  left, bottom, width, height, zsize, scale, \
+			  left, bottom, width, height, 4, scale, \
 			  image, do_cache
 
 	def _prepare_JPEG_image_from_filep(self, filep, top, bottom, left, right):
