@@ -32,26 +32,30 @@ from MainDialog import MainDialog
 
 class Main(MainDialog):
 	def __init__(self, opts, files):
-		import MMurl
-		import license
 		import windowinterface
-		self._tracing = 0
-		self.tops = []
-		self._mm_callbacks = {}
-		self._untitled_counter = 1
-		self._license = license.License()
-		if self._license.have('save'):
-			pass # Everything is hunky-dory
-		elif self._license.have('editdemo'):
+		import license
+		self.tmpopts = opts
+		self.tmpfiles = files
+		self.tmplicensedialog = license.WaitLicense(self.do_init,
+					   ('save', 'editdemo'))
+
+	def do_init(self, license):
+		opts, files = self.tmpopts, self.tmpfiles
+		del self.tmpopts
+		del self.tmpfiles
+##		del self.tmplicensedialog
+		import MMurl
+		import windowinterface
+		self._license = license
+		if not self._license.have('save'):
 			windowinterface.showmessage(
 				'This is a demo version.\n'+
 				'You will not be able to save your changes.',
 				title='CMIFed license')
-		else:
-			windowinterface.showmessage(
-				'Sorry, you have no license for this program.',
-				title='CMIFed license')
-			sys.exit(1)
+		self._tracing = 0
+		self.tops = []
+		self._mm_callbacks = {}
+		self._untitled_counter = 1
 		try:
 			import mm, posix, fcntl, FCNTL
 		except ImportError:
