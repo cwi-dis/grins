@@ -305,18 +305,21 @@ class _DisplayList:
 				return
 			brush = entry[1]
 			rect = entry[2]
+			x, y = rect[:2]
+			dx, dy = dc.GetViewportOrg()
+			x, y = x + dx, y + dy
 			oldmode = dc.SetBkMode(win32con.TRANSPARENT)
 			oldpen = dc.SelectStockObject(win32con.NULL_PEN)
+			brush.UnrealizeObject()
+			oldorg = dc.SetBrushOrg((x % 8, y % 8))
 			oldbrush = dc.SelectObject(brush)
 			dc.Rectangle(rect)
 			if 1: # begin trick for more dense grid pattern 
-				x, y = dc.GetBrushOrg()
 				brush.UnrealizeObject()
 				dc.SetBrushOrg(((x + 4) % 8, y % 8))
-				dc.SelectObject(brush)
 				dc.Rectangle(rect)
-				dc.SetBrushOrg((x, y))
 				# end_trick
+			dc.SetBrushOrg(oldorg)
 			dc.SelectObject(oldbrush)
 			dc.SelectObject(oldpen)
 			dc.SetBkMode(oldmode)
