@@ -175,7 +175,7 @@ BOOL CHtmlWnd::CreateHtmlCtrl()
 		if (!m_wndWebsterBrowser.Create(NULL, "untitled",
 				WS_CHILD, rectClient, this, AFX_IDW_PANE_FIRST))
 			{
-			DestroyWindow();
+			//DestroyWindow();
 			return FALSE;
 			}
 		m_bCtrlCreated=true;
@@ -201,7 +201,7 @@ BOOL CHtmlWnd::CreateHtmlCtrl()
 		if (!m_wndWebBrowser.Create(NULL, "untitled",
 				WS_CHILD, rectClient, this, AFX_IDW_PANE_FIRST))
 			{
-			DestroyWindow();
+			//DestroyWindow();
 			return FALSE;
 			}
 		m_wndWebBrowser.Navigate("about:",NULL,NULL,NULL,NULL);
@@ -246,8 +246,6 @@ void CHtmlWnd::FitHtmlCtrl()
 	}
 
 // valid local file URL is
-// ///F|/SMIL/webnews/the.news/html/leader_title.html
-// or 
 // file:///F|/SMIL/webnews/the.news/html/leader_title.html
 void CHtmlWnd::Navigate(LPCTSTR lpszURL)
 	{
@@ -257,16 +255,7 @@ void CHtmlWnd::Navigate(LPCTSTR lpszURL)
 		m_wndWebsterBrowser.Navigate(lpszURL,NULL, NULL, "", "", "");
 	else
 		{
-		// if URL refers a local file convert it to IE convention
-		// i.e put the prefix 'file:'
-		CString str("file:");
-		if(lpszURL[0]=='/' && lpszURL[1]=='/' && lpszURL[2]=='/')
-			{
-			str+=lpszURL;
-			m_wndWebBrowser.Navigate(str,NULL,NULL,NULL,NULL);
-			}
-		else
-			m_wndWebBrowser.Navigate(lpszURL,NULL,NULL,NULL,NULL);
+		m_wndWebBrowser.Navigate(lpszURL,NULL,NULL,NULL,NULL);
 		}
 	}
 
