@@ -61,6 +61,9 @@ Error = 'Error'
 
 def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0):
 	# XXXX If oldfilename set we should use that as a template
+	import cmif
+	templatedir = cmif.findfile('Templates')
+	templatedir = MMurl.pathname2url(templatedir)
 	#
 	# This is a bit of a hack. G2 appears to want its URLs without
 	# %-style quoting.
@@ -81,7 +84,7 @@ def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0):
 		macostools.touched(fss)
 	ramurl = MMurl.pathname2url(ramfile)
 	try:
-		writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense)
+		writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense, templatedir)
 		writer.write()
 	except Error, msg:
 		windowinterface.showmessage(msg, mtype = 'error')
@@ -94,6 +97,8 @@ def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0):
 import FtpWriter
 def WriteFTP(root, filename, smilurl, ftpparams, oldfilename='', evallicense = 0):
 	host, user, passwd, dir = ftpparams
+	import settings
+	templatedir = settings.get('templatedir_url')
 	#
 	# First create and upload the RAM file
 	#
@@ -113,7 +118,7 @@ def WriteFTP(root, filename, smilurl, ftpparams, oldfilename='', evallicense = 0
 	try:
 		ftp = FtpWriter.FtpWriter(host, filename, user=user, passwd=passwd, dir=dir, ascii=1)
 		try:
-			writer = HTMLWriter(root, ftp, filename, ramurl, oldfilename, evallicense)
+			writer = HTMLWriter(root, ftp, filename, ramurl, oldfilename, evallicense, templatedir)
 			writer.write()
 			ftp.close()
 		except Error, msg:
@@ -133,9 +138,10 @@ def ramfilename(htmlfilename):
 	return ramfilename
 	
 class HTMLWriter:
-	def __init__(self, node, fp, filename, ramurl, oldfilename='', evallicense = 0):
+	def __init__(self, node, fp, filename, ramurl, oldfilename='', evallicense = 0, templatedir_url=''):
 		self.evallicense = evallicense
 		self.ramurl = ramurl
+		self.templatedir_url = templatedir_url
 
 		self.root = node
 		self.fp = fp
@@ -191,6 +197,7 @@ class HTMLWriter:
 			outdict['generator'] = outdict['generator'] + '\n' + EVALcomment
 		outdict['ramurl'] = self.ramurl
 		outdict['unquotedramurl'] = MMurl.unquote(self.ramurl)
+		outdict['templatedir'] = self.templatedir_url
 		
 		playername = 'clip_1'
 		
@@ -244,7 +251,7 @@ class HTMLWriter:
 		try:
 			output = template_data % outdict
 		except:
-			raise Error, "Error in HTML template %s"%templatename
+			raise Error, "Error in HTML template %s"%templatefile
 		#
 		# Step four - Write it
 		#
