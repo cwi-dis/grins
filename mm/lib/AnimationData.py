@@ -10,6 +10,8 @@ import tokenizer
 
 import colors
 
+GENERATE_KEYTIMES = 0
+
 # AnimationData pattern:
 # <ref ...>  <--- AnimationData third argument (animparent)
 #   <animateMotion values="x1, y1; x2, y2; x3, y3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
@@ -187,14 +189,22 @@ class AnimationData:
 			return
 
 		times = MMAttrdefs.getattr(animations[0], 'keyTimes')
-		if not times:
-			times = [0.0, 1.0]
-		self._times = times
-			
-		animateMotionValues = [] 
-		animateWidthValues = []
-		animateHeightValues = [] 
-		animateColorValues = []
+		if times:
+			hasKeyTime = 1
+			self._times = times
+		else:
+			hasKeyTime = 0
+			self._times = [1.0]
+			# the duration for all elements is relative to the animated node
+			targetNode = self._target.getTargetNode()
+			targetDuration = targetNode.attrdict.get('duration')
+			if targetDuration is None:
+				targetDuration = 0
+				
+		animateMotionValues = [(0,0)] 
+		animateWidthValues = [1]
+		animateHeightValues = [1] 
+		animateColorValues = [(0,0,0)]
 		for anim in animations:
 			tag = anim.attrdict.get('atag')
 			str = MMAttrdefs.getattr(anim, 'values')
@@ -205,16 +215,68 @@ class AnimationData:
 					str = str1 + ';' + str2
 			if str:
 				if tag == 'animateMotion':
-					animateMotionValues = self._strToPosList(str)
+					_animateMotionValues = self._strToPosList(str)
 				elif tag == 'animate':
 					attributeName = MMAttrdefs.getattr(anim, 'attributeName')
 					if attributeName == 'width':
-						animateWidthValues = self._strToIntList(str)
+						_animateWidthValues = self._strToIntList(str)
 					elif attributeName == 'height':
-						animateHeightValues = self._strToIntList(str)
+						_animateHeightValues = self._strToIntList(str)
 				elif tag == 'animateColor':
-					animateColorValues = self._strToColorList(str)
-		
+					_animateColorValues = self._strToColorList(str)
+					
+			# XXX time: very experimental part to be able to demonstrate something with RP9
+			# try begin sync arcs
+			if not hasKeyTime:
+				syncArcList = MMAttrdefs.getattr(anim, 'beginlist')
+				if len(syncArcList) == 1:
+					syncArc = syncArcList[0]
+					if syncArc.delay is not None:
+						begin = syncArc.delay
+					else:
+						begin = 0
+				else:
+					begin = 0
+
+				isNew, ind = self.__newTime(begin, targetDuration)
+				if isNew:
+					if ind < len(animateMotionValues):
+						animateMotionValues.insert(ind, animateMotionValues[ind])
+					else:
+						animateMotionValues.append((0,0))
+					if ind < len(animateWidthValues):
+						animateWidthValues.insert(ind, animateWidthValues[ind])
+					else:
+						animateWidthValues.append(0)
+					if ind < len(animateHeightValues):
+						animateHeightValues.insert(ind, animateHeightValues[ind])
+					else:
+						animateHeightValues.append(0)
+					if ind < len(animateColorValues):
+						animateColorValues.insert(ind, animateColorValues[ind])
+					else:
+						animateColorValues.append((0,0,0))
+						
+				if tag == 'animateMotion':
+					animateMotionValues[ind] = _animateMotionValues[0]
+					animateMotionValues[-1] = _animateMotionValues[1]
+				elif tag == 'animate':
+					attributeName = MMAttrdefs.getattr(anim, 'attributeName')
+					if attributeName == 'width':
+						animateWidthValues[ind] = _animateWidthValues[0]
+						animateWidthValues[-1] = _animateWidthValues[1]
+					elif attributeName == 'height':
+						animateHeightValues[ind] = _animateHeightValues[0]
+						animateHeightValues[-1] = _animateHeightValues[1]
+				elif tag == 'animateColor':
+					animateColorValues[ind] = _animateColorValues[0]
+					animateColorValues[-1] = _animateColorValues[1]
+			else:
+				animateMotionValues = _animateMotionValues
+				animateWidthValues = _animateWidthValues 
+				animateHeightValues = _animateHeightValues
+				animateColorValues = _animateColorValues
+						
 		n = len(self._times)
 
 		dompos = self._domrect[:2]
@@ -240,6 +302,22 @@ class AnimationData:
 			rect = x, y, w, h
 			color = animateColorValues[i]
 			self._data.append((rect, color))
+
+	def __newTime(self, time, maxTime):
+		time = time/maxTime
+		ind = 0
+		for rTime in self._times:
+			if time == rTime:
+				# time already set
+				return 0,ind
+			elif time < rTime:
+				# new time
+				self._times.insert(ind, time)
+				return 1,ind
+			ind = ind+1
+		else:
+			print 'AnimationData.readData : invalid keyTime found : ',time
+		return 0, 0
 		
 	# create animate nodes from self data
 	def applyData(self, editmgr, replace=0, defaultDuration=None):
@@ -256,21 +334,21 @@ class AnimationData:
 		animateHeightValues, animateColorValues = self._dataToValuesAttr()
 		keyTimes = self._timesToKeyTimesAttr()
 		
-		existing = {}
+		existing = {'pos':[], 'width':[], 'height':[], 'color':[]}
 		animations = self._target.getAnimations()
 		if animations:
 			for anim in animations:
 				tag = anim.attrdict.get('atag')
 				if tag == 'animateMotion':
-					existing['pos'] = anim
+					existing['pos'].append(anim)
 				elif tag == 'animate':
 					attributeName = MMAttrdefs.getattr(anim, 'attributeName')
 					if attributeName == 'width':
-						existing['width'] = anim
+						existing['width'].append(anim)
 					elif attributeName == 'height':
-						existing['height'] = anim
+						existing['height'].append(anim)
 				elif tag == 'animateColor':
-					existing['color'] = anim
+					existing['color'].append(anim)
 		
 		parent = self._target.getAnimationsParent()
 		targname = None
@@ -280,47 +358,59 @@ class AnimationData:
 
 		# update/insert animation nodes starting at this index
 		nodeIndex = 0 
-		
-		anim = existing.get('pos')
-		if anim is not None:
-			self._updateNode(anim, keyTimes, animateMotionValues)
-		elif self._writeAnimateMotion:
-			anim = context.newanimatenode('animateMotion')
-			anim.targetnode = self._target.getTargetNode()
-			self._updateNode(anim, keyTimes, animateMotionValues, None, targname, dur = defaultDuration)
-			em.addnode(parent, nodeIndex, anim)
-			nodeIndex = nodeIndex + 1
 
-		anim = existing.get('width')
-		if anim is not None:
-			self._updateNode(anim, keyTimes, animateWidthValues)
-		elif self._writeAnimateWidth:
-			anim = context.newanimatenode('animate')
-			anim.targetnode = self._target.getTargetNode()
-			self._updateNode(anim, keyTimes, animateWidthValues, 'width', targname, dur = defaultDuration)
-			em.addnode(parent, nodeIndex, anim)
-			nodeIndex = nodeIndex + 1
+		if GENERATE_KEYTIMES:
+			anim = existing.get('pos')
+			if len(anim) > 0:
+				self._updateNode(anim[0], keyTimes, animateMotionValues)
+			elif self._writeAnimateMotion:
+				anim = context.newanimatenode('animateMotion')
+				anim.targetnode = self._target.getTargetNode()
+				self._updateNode(anim, keyTimes, animateMotionValues, None, targname, dur = defaultDuration)
+				em.addnode(parent, nodeIndex, anim)
+				nodeIndex = nodeIndex + 1
 
-		anim = existing.get('height')
-		if anim is not None:
-			self._updateNode(anim, keyTimes, animateHeightValues)
-		elif self._writeAnimateHeight:
-			anim = context.newanimatenode('animate')
-			anim.targetnode = self._target.getTargetNode()
-			self._updateNode(anim, keyTimes, animateHeightValues, 'height', targname, dur = defaultDuration)
-			em.addnode(parent, nodeIndex, anim)
-			nodeIndex = nodeIndex + 1
+			anim = existing.get('width')
+			if len(anim) > 0:
+				self._updateNode(anim[0], keyTimes, animateWidthValues)
+			elif self._writeAnimateWidth:
+				anim = context.newanimatenode('animate')
+				anim.targetnode = self._target.getTargetNode()
+				self._updateNode(anim, keyTimes, animateWidthValues, 'width', targname, dur = defaultDuration)
+				em.addnode(parent, nodeIndex, anim)
+				nodeIndex = nodeIndex + 1
 
-		anim = existing.get('color')
-		if anim is not None:
-			self._updateNode(anim, keyTimes, animateColorValues)
-		elif self._writeAnimateColor:
-			anim = context.newanimatenode('animateColor')
-			anim.targetnode = self._target.getTargetNode()
-			self._updateNode(anim, keyTimes, animateColorValues, 'backgroundColor', targname, dur = defaultDuration)
-			em.addnode(parent, nodeIndex, anim)
-			nodeIndex = nodeIndex + 1
-		
+			anim = existing.get('height')
+			if len(anim) > 0:
+				self._updateNode(anim[0], keyTimes, animateHeightValues)
+			elif self._writeAnimateHeight:
+				anim = context.newanimatenode('animate')
+				anim.targetnode = self._target.getTargetNode()
+				self._updateNode(anim, keyTimes, animateHeightValues, 'height', targname, dur = defaultDuration)
+				em.addnode(parent, nodeIndex, anim)
+				nodeIndex = nodeIndex + 1
+
+			anim = existing.get('color')
+			if len(anim) > 0:
+				self._updateNode(anim[0], keyTimes, animateColorValues)
+			elif self._writeAnimateColor:
+				anim = context.newanimatenode('animateColor')
+				anim.targetnode = self._target.getTargetNode()
+				self._updateNode(anim, keyTimes, animateColorValues, 'backgroundColor', targname, dur = defaultDuration)
+				em.addnode(parent, nodeIndex, anim)
+				nodeIndex = nodeIndex + 1
+		else:
+			self._editmgr = em
+			animList = existing.get('pos')
+			nodeIndex = self._updateNodesWithoutKeyTimes(animList, None, targname, nodeIndex)
+			animList = existing.get('width')
+			nodeIndex = self._updateNodesWithoutKeyTimes(animList, 'width', targname, nodeIndex)
+			animList = existing.get('height')
+			nodeIndex = self._updateNodesWithoutKeyTimes(animList, 'height', targname, nodeIndex)
+			if self._writeAnimateColor:
+				animList = existing.get('color')
+				nodeIndex = self._updateNodesWithoutKeyTimes(animList, 'backgroundColor', targname, nodeIndex)
+			
 #		em.commit()
 		return 1
 
@@ -402,6 +492,110 @@ class AnimationData:
 			node.attrdict['duration'] = dur
 		from MMNode import MMSyncArc
 		node.attrdict['endlist'] = [MMSyncArc(node, 'end', srcnode=self._target.getAnimationsParent(), event='end', delay=0)]
+
+	# XXX very temporare to a allow demonstration
+	# XXX update times because the target node duration may have changed
+	# XXX note: don't pass by editmgr is intentional because we don't know if this method is already called
+	# outside or inside a transaction
+	def updateTimes(self):		
+		targetNode = self._target.getTargetNode()
+		targetDuration = targetNode.attrdict.get('duration')
+		if targetDuration is None:
+			targetDuration = 0
+		
+		animations = self._target.getAnimations()
+		for anim in animations:
+			if hasattr(anim, '_animBegin'):
+				if anim._animBegin > 0:
+					syncArc = None
+					beginlist = anim.attrdict.get('beginlist')
+					if beginlist != None and list(beginlist) > 0:
+						beginlist[0].delay = anim._animBegin*targetDuration
+			if hasattr(anim, '_animDuration'):
+				anim.attrdict['duration'] = anim._animDuration*targetDuration
+		
+	def _updateNodesWithoutKeyTimes(self, nodeList, attr = None, targname = None, nodeIndex = 0):
+		ind = 0
+		context = self._target.getContext()		
+		parent = self._target.getAnimationsParent()
+		em = self._editmgr
+
+		animateMotionValues, animateWidthValues, animateHeightValues, animateColorValues = self._dataToValues()
+		
+		for time in self._times:
+			if ind == len(self._times)-1:
+				break
+			if ind >= len(nodeList):
+				if attr == 'backgroundColor':
+					node = context.newanimatenode('animateColor')
+				elif attr is None:
+					node = context.newanimatenode('animateMotion')
+				else:
+					node = context.newanimatenode('animate')
+				node.targetnode = self._target.getTargetNode()
+				em.addnode(parent, nodeIndex, node)
+				nodeIndex = nodeIndex + 1
+			else:
+				node = nodeList[ind]
+				
+			if attr is not None:
+				em.setnodeattr(node, 'attributeName', attr)
+			if targname is not None:
+				em.setnodeattr(node, 'targetElement', targname)
+
+			if attr is None:
+				value1 = animateMotionValues[ind]
+				value2 = animateMotionValues[ind+1]
+				strValue1 = self._posListToStr([value1])
+				strValue2 = self._posListToStr([value2])
+			elif attr == 'width':
+				value1 = animateWidthValues[ind]
+				value2 = animateWidthValues[ind+1]
+				strValue1 = self._intListToStr([value1])
+				strValue2 = self._intListToStr([value2])
+			elif attr == 'height':
+				value1 = animateHeightValues[ind]
+				value2 = animateHeightValues[ind+1]
+				strValue1 = self._intListToStr([value1])
+				strValue2 = self._intListToStr([value2])
+			elif attr == 'backgroundColor':
+				value1 = animateColorValues[ind]
+				value2 = animateColorValues[ind+1]
+				strValue1 = self._colorListToStr([value1])
+				strValue2 = self._colorListToStr([value2])
+				
+			em.setnodeattr(node, 'fill', 'freeze')
+			em.setnodeattr(node, 'from', strValue1)
+			em.setnodeattr(node, 'to', strValue2)
+#			node.attrdict['duration'] = dur
+			from MMNode import MMSyncArc
+			targetNode = self._target.getTargetNode()
+			targetDuration = targetNode.attrdict.get('duration')
+			if targetDuration is not None and targetDuration > 0:
+				begin = time*targetDuration
+				duration =(self._times[ind+1]-time)*targetDuration
+				# XXX save the time key value to be able to update the time easily outside a transaction
+				node._animBegin = time
+				node._animDuration = self._times[ind+1]-time
+			else:
+				duration = 0
+				begin = 0
+				# XXX save the time key value to be able to update the time easily outside a transaction
+				node._animBegin = 0
+				node._animDuration = 0
+			em.setnodeattr(node, 'duration', duration)
+			if begin > 0:
+				em.setnodeattr(node, 'beginlist', [MMSyncArc(node, 'begin', srcnode='syncbase', delay=begin)])
+#			em.setnodeattr(node, 'endlist', [MMSyncArc(node, 'end', srcnode=self._target.getAnimationsParent(), event='end', delay=0)])
+			
+			ind = ind+1
+
+		while ind < len(nodeList):
+			node = nodeList[ind]
+			em.delnode(node)
+			ind = ind+1
+			
+		return nodeIndex
 	
 	def _clampKeyTime(self, keyTime):
 		if keyTime<0.0:
