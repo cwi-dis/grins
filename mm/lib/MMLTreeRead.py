@@ -1,10 +1,13 @@
 __version__ = "$Id$"
 
 import xmllib
-import MMNode
+import MMNode, MMAttrdefs
 from windowinterface import UNIT_PXL
 from HDTL import HD, TL
 import string
+from AnchorDefs import *
+from Hlinks import DIR_1TO2, TYPE_JUMP, TYPE_CALL, TYPE_FORK
+import regex
 
 error = 'MMLTreeRead.error'
 
@@ -12,12 +15,16 @@ LAYOUT_NONE = 0				# must be 0
 LAYOUT_MML = 1
 LAYOUT_UNKNOWN = -1
 
+coordre = regex.compile('^\([0-9.]+%?\),\([0-9.]+%?\) +'
+			'\([0-9.]+%?\),\([0-9.]+%?\)$')
+
 class MMLParser(xmllib.XMLParser):
 	def __init__(self, context, verbose = 0):
 		xmllib.XMLParser.__init__(self, verbose)
 		self.__seen_mml = 0
 		self.__in_mml = 0
 		self.__in_layout = LAYOUT_NONE
+		self.__in_a = None
 		self.__context = context
 		self.__root = None
 		self.__container = None
@@ -25,6 +32,9 @@ class MMLParser(xmllib.XMLParser):
 		self.__width = self.__height = 0
 		self.__layout = None
 		self.__nodemap = {}
+		self.__links = []
+		self.__hlink_src = self.__hlink_dst = None
+		self.__in_hlink = 0
 
 	def GetRoot(self):
 		if not self.__root:
@@ -91,12 +101,11 @@ class MMLParser(xmllib.XMLParser):
 
 	def AddAttrs(self, node, attributes):
 		node.__syncarcs = []
-		for attr, val in attributes:
-			val = self.translate_references(val)
+		for attr, val in attributes.items():
 			if attr == 'id':
 				node.attrdict['name'] = val
 				if self.__nodemap.has_key(val):
-					print 'warning: node name %s not unique'%val
+					self.warning('node name %s not unique'%val)
 				self.__nodemap[val] = node
 			elif attr == 'href':
 				node.attrdict['file'] = val
@@ -116,6 +125,16 @@ class MMLParser(xmllib.XMLParser):
 		self.AddAttrs(node, attributes)
 		self.__container._addchild(node)
 		node.__mediatype = mediatype
+		if self.__in_a:
+			# deal with hyperlink
+			href, ltype, id = self.__in_a
+			try:
+				anchorlist = node.attrdict['anchorlist']
+			except KeyError:
+				node.attrdict['anchorlist'] = anchorlist = []
+			id = _uniqname(map(lambda a: a[A_ID], anchorlist), id)
+			anchorlist.append((id, ATYPE_WHOLE, []))
+			self.__links.append((node.GetUID(), id, href, ltype))
 
 	def NewContainer(self, type, attributes):
 		if not self.__in_mml:
@@ -161,7 +180,7 @@ class MMLParser(xmllib.XMLParser):
 		elif mediatype == 'image':
 			mtype = 'image'
 		elif mediatype == 'video':
-			mtype = 'mpeg'
+			mtype = 'video'
 		elif mediatype == 'text':
 			mtype = 'html'
 		elif mediatype == 'cmif_cmif':
@@ -180,6 +199,7 @@ class MMLParser(xmllib.XMLParser):
 					name = key
 					break
 		else:
+			# there is no channel of the right name and type
 			if not ctx.channeldict.has_key(channel):
 				name = channel
 			ch = MMNode.MMChannel(ctx, name)
@@ -187,11 +207,13 @@ class MMLParser(xmllib.XMLParser):
 			ctx.channelnames.append(name)
 			ctx.channels.append(ch)
 			ch['type'] = mtype
+			if mediatype == 'image':
+				ch['scale'] = 1
 			if mediatype in ('image', 'video', 'text'):
 				# deal with channel with window
 				if not self.__channels.has_key(channel):
 					self.__in_layout = LAYOUT_MML
-					self.start_channel([('name', channel)])
+					self.start_channel({'name': channel})
 					self.__in_layout = LAYOUT_NONE
 				attrdict = self.__channels[channel]
 				if self.__layout is None:
@@ -218,21 +240,59 @@ class MMLParser(xmllib.XMLParser):
 				h = attrdict['h']
 				if type(x) is type(0):
 					x = float(x) / self.__width
+				if type(w) is type(0):
+					if w == 0:
+						# rest of window
+						w = 1.0 - x
+					else:
+						w = float(w) / self.__width
 				if type(y) is type(0):
 					y = float(y) / self.__height
-				if type(w) is type(0):
-					w = float(w) / self.__width
-					if w == 0:
-						w = 1.0 - x
 				if type(h) is type(0):
-					h = float(h) / self.__height
 					if h == 0:
+						# rest of window
 						h = 1.0 - y
+					else:
+						h = float(h) / self.__height
 				ch['base_winoff'] = x, y, w, h
+				# anchors should not be visible
+				ch['hicolor'] = ch['bucolor'] = \
+						MMAttrdefs.getdef('bgcolor')[1]
 		node.attrdict['channel'] = name
 
-	def syntax_error(self, lineno, msg):
-		print 'warning: syntax error on line %d: %s' % (lineno, msg)
+	def FixLinks(self):
+		hlinks = self.__context.hyperlinks
+		for node, aid, href, ltype in self.__links:
+			# node is either a node UID (int in string
+			# form) or a node id (anything else)
+			try:
+				string.atoi(node)
+			except string.atoi_error:
+				if not self.__nodemap.has_key(node):
+					print 'warning: unknown node id',node
+					continue
+				node = self.__nodemap[node].GetUID()
+			if type(aid) is type(()):
+				aid, atype, args = aid
+				n = self.__context.uidmap[node]
+				try:
+					anchorlist = n.attrdict['anchorlist']
+				except KeyError:
+					n.attrdict['anchorlist'] = anchorlist = []
+				aid = _uniqname(map(lambda a: a[A_ID], anchorlist), aid)
+				anchorlist.append((aid, atype, args))
+			src = node, aid
+			if href[:1] == '#':
+				try:
+					dst = self.__nodemap[href[1:]]
+				except KeyError:
+					print 'warning: unknown node id',href[1:]
+					continue
+				hlinks.addlink((src, _wholenodeanchor(dst),
+						DIR_1TO2, ltype))
+			else:
+				href, tag = urllib.splittag(href)
+				hlinks.addlink((src, (href, tag), DIR_1TO2, ltype))
 
 	# methods for start and end tags
 
@@ -248,6 +308,7 @@ class MMLParser(xmllib.XMLParser):
 		if not self.__root:
 			raise error, 'empty document'
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
+		self.FixLinks()
 
 	# layout section
 
@@ -255,11 +316,9 @@ class MMLParser(xmllib.XMLParser):
 		if not self.__in_mml:
 			raise error, 'layout not in mml'
 		self.__in_layout = LAYOUT_UNKNOWN
-		for attr, val in attributes:
-			val = self.translate_references(val)
-			if attr == 'type' and val == 'text/mml-basic-layout':
-				self.__in_layout = LAYOUT_MML
-				break
+		if attributes.has_key('type') and \
+		   attributes['type'] == 'text/mml-basic-layout':
+			self.__in_layout = LAYOUT_MML
 
 	def end_layout(self):
 		self.__in_layout = LAYOUT_NONE
@@ -275,48 +334,45 @@ class MMLParser(xmllib.XMLParser):
 			    'z': 0,
 			    'w': 0,
 			    'h': 0}
-		for attr, val in attributes:
-			val = self.translate_references(val)
+		for attr, val in attributes.items():
 			if attr in ('x', 'y', 'w', 'h'):
 				try:
 					if val[-1] == '%':
 						val = string.atof(val[:-1]) / 100.0
+						if val < 0 or val > 1:
+							raise error, 'channel with impossible size'
 					else:
 						val = string.atoi(val)
-				except string.error:
+						if val < 0:
+							raise error, 'channel with impossible size'
+				except (string.atoi_error, string.atof_error):
 					self.syntax_error(self.lineno, 'invalid channel attribute value')
 					val = 0
 			elif attr == 'z':
 				try:
 					val = string.atoi(val)
-				except string.error:
+				except string.atoi_error:
 					self.syntax_error(self.lineno, 'invalid channel attribute value')
 					val = 0
+				if val < 0:
+					raise error, 'channel with negative z'
 			attrdict[attr] = val
 		if attrdict.has_key('name'):
 			self.__channels[attrdict['name']] = attrdict
 		else:
 			raise error, 'channel without name attribute'
+
+		# calculate minimum required size of top-level window
 		x = attrdict['x']
 		y = attrdict['y']
 		w = attrdict['w']
 		h = attrdict['h']
-		if type(x) is type(0):
-			if type(w) is type(0.0):
-				w = int(x*w)
-			if self.__width < x+w:
-				self.__width = x+w
-		elif type(w) is type(0):
-			if self.__width < w:
-				self.__width = w
-		if type(y) is type(0):
-			if type(h) is type(0.0):
-				h = int(y*h)
-			if self.__height < y+h:
-				self.__height = y+h
-		elif type(h) is type(0):
-			if self.__height < h:
-				self.__height = h
+		width = _minsize(x, w)
+		if width > self.__width:
+			self.__width = width
+		height = _minsize(y, h)
+		if height > self.__height:
+			self.__height = height
 
 	def end_channel(self):
 		pass
@@ -381,6 +437,163 @@ class MMLParser(xmllib.XMLParser):
 	def end_cmif_shell(self):
 		pass
 
+	# linking
+
+	def start_a(self, attributes):
+		try:
+			href = attributes['href']
+		except KeyError:
+			self.warning('anchor without HREF')
+			return
+		try:
+			show = attributes['show']
+		except KeyError:
+			show = 'replace'
+		show = string.lower(show)
+		if show == 'replace':
+			ltype = TYPE_JUMP
+		elif show == 'pause':
+			ltype = TYPE_CALL
+		elif show == 'new':
+			ltype = TYPE_FORK
+		else:
+			self.warning('unknown show attribute value')
+			ltype = TYPE_JUMP
+		try:
+			id = attributes['id']
+		except KeyError:
+			id = None
+		self.__in_a = href, ltype, id
+
+	def end_a(self):
+		self.__in_a = None
+
+	def start_hlink(self, attributes):
+		if self.__in_hlink:
+			self.syntax_error(self.lineno, 'recursive hlink')
+			return
+		try:
+			show = string.lower(attributes['show'])
+		except KeyError:
+			show = 'replace'
+		if show == 'replace':
+			ltype = TYPE_JUMP
+		elif show == 'pause':
+			ltype = TYPE_CALL
+		elif show == 'new':
+			ltype = TYPE_FORK
+		else:
+			self.warning('unknown show attribute value')
+			ltype = TYPE_JUMP
+		self.__in_hlink = 1
+		self.__hlink_type = ltype
+
+	def end_hlink(self):
+		sattr = self.__hlink_src
+		dattr = self.__hlink_dst
+		self.__in_hlink = 0
+		self.__hlink_src = self.__hlink_dst = None
+		if not sattr:
+			self.warning('source anchor missing')
+			return
+		if not dattr:
+			self.warning('destination anchor missing')
+			return
+		snode = sattr['href'][1:] # remove leading '#'
+		stype = ATYPE_WHOLE
+		sargs = []
+		if sattr.has_key('shape') and sattr.has_key('coords'):
+			stype = ATYPE_NORMAL
+			if string.lower(sattr['shape']) != 'rect':
+				self.warning('unknown shape attribute')
+				return
+			coords = sattr['coords']
+			if coordre.match(coords) < 0:
+				self.warning('syntax error in coords attribute')
+				return
+			x, y, w, h = coordre.group(1, 2, 3, 4)
+			try:
+				if x[-1] == '%':
+					x = string.atof(x[:-1]) / 100.0
+				else:
+					x = string.atoi(x)
+				if y[-1] == '%':
+					y = string.atof(y[:-1]) / 100.0
+				else:
+					y = string.atoi(y)
+				if w[-1] == '%':
+					w = string.atof(w[:-1]) / 100.0
+				else:
+					w = string.atoi(w)
+				if h[-1] == '%':
+					h = string.atof(h[:-1]) / 100.0
+				else:
+					h = string.atoi(h)
+			except (string.atoi_error, string.atof_error):
+				self.warning('syntax error in coords attribute')
+				return
+			sargs = [x, y, w, h]
+		if sattr.has_key('id'):
+			sid = sattr['id']
+		else:
+			sid = None
+		self.__links.append((snode, (sid, stype, sargs), dattr['href'],
+				     self.__hlink_type))
+
+	def start_anchor(self, attributes):
+		if not self.__in_hlink:
+			raise error, 'anchor not in hlink'
+		try:
+			role = string.lower(attributes['role'])
+		except KeyError:
+			self.warning('required attribute role missing')
+			return
+		try:
+			href = attributes['href']
+		except KeyError:
+			self.warning('required attribute href missing')
+			return
+		if role == 'src':
+			if self.__hlink_src:
+				self.warning('multiple source anchors')
+				return
+			if href[:1] != '#':
+				self.warning('source anchor does not point to document')
+				return
+			self.__hlink_src = attributes
+		elif role == 'dst':
+			if self.__hlink_dst:
+				self.warning('multiple destination anchors')
+				return
+			self.__hlink_dst = attributes
+		else:
+			self.warning('unkown role attribute value')
+
+	def end_anchor(self):
+		pass
+
+	# catch all
+
+	def unknown_starttag(self, tag, attrs):
+		self.warning('ignoring unknown start tag %s' % tag)
+
+	def unknown_endtag(self, tag):
+		pass
+
+	def unknown_charref(self, ref):
+		self.warning('ignoring unknown char ref %s' % ref)
+
+	def unknown_entityref(self, ref):
+		self.warning('ignoring unknown entity ref %s' % ref)
+
+	# non-fatal syntax errors
+
+	def syntax_error(self, lineno, msg):
+		print 'warning: syntax error on line %d: %s' % (lineno, msg)
+
+	def warning(self, message):
+		print 'warning: %s on line %d' % (message, self.lineno)
+
 def ReadFile(filename):
 	return ReadFileContext(filename, MMNode.MMNodeContext(MMNode.MMNode))
 
@@ -391,6 +604,69 @@ def ReadFileContext(filename, context):
 	p.feed(open(filename).read())
 	p.close()
 	return p.GetRoot()
+
+def _minsize(start, extent):
+	# Determine minimum size for top-level window given that it
+	# has to contain a subwindow with the given start and extent
+	# values.  Start and extent can be integers or floats.  The
+	# type determines whether they are interpreted as pixel values
+	# or as fractions of the top-level window.
+	if type(start) is type(0):
+		# start is pixel value
+		if type(extent) is type(0.0):
+			# extent is fraction
+			if extent == 0 or (extent == 1 and start > 0):
+				raise error, 'channel with impossible size'
+			if extent == 1:
+				return 0
+			return int(start / (1 - extent) + 0.5)
+		else:
+			# extent is pixel value
+			if extent == 0:
+				# extent == 0 means rest of window
+				extent = 1 # make sure there is a rest
+			return start + extent
+	else:
+		# start is fraction
+		if start == 1:
+			raise error, 'channel with impossible size'
+		if type(extent) is type(0):
+			# extent is pixel value
+			return int(extent / (1 - start) + 0.5)
+		else:
+			# extent is fraction
+			return 0
+
+def _uniqname(namelist, defname):
+	if defname is not None and defname not in namelist:
+		return defname
+	if defname is None:
+		maxid = 0
+		for id in namelist:
+			try:
+				id = eval('0+'+id)
+			except:
+				pass
+			if type(id) is type(0) and id > maxid:
+				maxid = id
+		return `maxid+1`
+	id = 0
+	while ('%s_%d' % (defname, id)) in namelist:
+		id = id + 1
+	return '%s_%d' % (defname, id)
+
+def _wholenodeanchor(node):
+	try:
+		anchorlist = node.attrdict['anchorlist']
+	except KeyError:
+		node.attrdict['anchorlist'] = anchorlist = []
+	for a in anchorlist:
+		if a[A_TYPE] == ATYPE_DEST:
+			break
+	else:
+		a = '0', ATYPE_DEST, []
+		anchorlist.append(a)
+	return node.GetUID(), a[A_ID]
 
 import regex
 counter_val = regex.symcomp('\(\(\(<hours>[0-9][0-9]\):\)?'
