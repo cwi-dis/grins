@@ -24,10 +24,10 @@ Package=<4>
     Project_Dep_Name swinuser
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name libjpeg
+    Project_Dep_Name spython16
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name spython16
+    Project_Dep_Name slibjpeg
     End Project Dependency
 }}}
 
@@ -56,14 +56,11 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name swinuser
     End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libjpeg
-    End Project Dependency
 }}}
 
 ###############################################################################
 
-Project: "libjpeg"="..\..\..\..\lib-src\jpeg\wince\libjpeg.vcp" - Package Owner=<4>
+Project: "slibjpeg"="..\..\..\..\lib-src\jpeg\wince\slibjpeg.vcp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -75,7 +72,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "spython16"=..\..\..\..\PYTHON_CE\PCBUILD\CE\spython16.vcp - Package Owner=<4>
+Project: "spython16"="..\..\..\..\PYTHON_CE\PCBUILD\CE\spython16.vcp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -87,7 +84,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "swingdi"=..\..\WINSDK\WINGDI\swingdi.vcp - Package Owner=<4>
+Project: "swingdi"="..\..\WINSDK\WINGDI\swingdi.vcp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -99,7 +96,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "swinkernel"=..\..\WINSDK\WINKERNEL\swinkernel.vcp - Package Owner=<4>
+Project: "swinkernel"="..\..\WINSDK\WINKERNEL\swinkernel.vcp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -111,7 +108,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "swinmm"=..\..\WINSDK\WINMM\swinmm.vcp - Package Owner=<4>
+Project: "swinmm"="..\..\WINSDK\WINMM\swinmm.vcp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -123,7 +120,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "swinuser"=..\..\WINSDK\WINUSER\swinuser.vcp - Package Owner=<4>
+Project: "swinuser"="..\..\WINSDK\WINUSER\swinuser.vcp" - Package Owner=<4>
 
 Package=<5>
 {{{
