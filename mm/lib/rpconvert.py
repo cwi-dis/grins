@@ -140,7 +140,6 @@ def rpconvert(node):
 #		em.setchannelattr(chname, 'transparent', region.get('transparent', 0))
 #		em.setchannelattr(chname, 'bgcolor', region.get('bgcolor', (255,255,255)))
 #		em.setchannelattr(chname, 'center', 0)
-#		em.setchannelattr(chname, 'drawbox', 0)
 #		em.setchannelattr(chname, 'z', -1)
 
 		# calculate subregion positioning

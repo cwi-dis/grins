@@ -756,7 +756,6 @@ class MMChannel:
 		if self.attrdict.get('type') == 'layout':
 			self.attrdict['transparent'] = 1
 			self.attrdict['center'] = 0
-			self.attrdict['drawbox'] = 0
 			self.attrdict['z'] = 0
 			self.attrdict['editBackground'] = 100,100,100
 			
@@ -837,14 +836,12 @@ class MMChannel:
 			self.attrdict['units'] = UNIT_PXL
 			self.attrdict['transparent'] = 1
 			self.attrdict['center'] = 0
-			self.attrdict['drawbox'] = 0
 			self.attrdict['scale'] = 1
 		if features.compatibility == features.G2:
 			# specialized settings for G2-compatibility
 			self.attrdict['units'] = UNIT_PXL
 			self.attrdict['transparent'] = -1
 			self.attrdict['center'] = 0
-			self.attrdict['drawbox'] = 0
 			if type in ('image', 'video'):
 				self.attrdict['scale'] = 1
 			if type in ('text', 'RealText'):
