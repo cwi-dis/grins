@@ -10,6 +10,7 @@ from Hlinks import Hlinks
 import MMurl
 import settings
 from HDTL import HD, TL
+import string
 
 class MMNodeContext:
 	def __init__(self, nodeclass):
@@ -41,15 +42,25 @@ class MMNodeContext:
 		return self.title
 
 	def setbaseurl(self, baseurl):
+		if baseurl:
+			# delete everything after last slash
+			i = string.rfind(baseurl, '/')
+			if i >= 0:
+				baseurl = baseurl[:i+1]
 		self.baseurl = baseurl
 
 	def findurl(self, url):
 		"Locate a file given by url-style filename."
-##		urltype, urlpath = MMurl.splittype(url)
-##		if urltype or url[:1] == '/':
-##			return url
 		if self.baseurl:
 			url = MMurl.basejoin(self.baseurl, url)
+		return url
+
+	def relativeurl(self, url):
+		"Convert a URL to something that is relative to baseurl."
+		url = MMurl.canonURL(url)
+		baseurl = MMurl.canonURL(self.baseurl or '')
+		if url[:len(baseurl)] == baseurl:
+			url = url[len(baseurl):]
 		return url
 
 	def newnode(self, type):
@@ -87,7 +98,7 @@ class MMNodeContext:
 		# return a list of channels compatible with the given URL
 		if url:
 			# ignore chtype if url is set
-			import mimetypes, string
+			import mimetypes
 			mtype = mimetypes.guess_type(url)[0]
 			if not mtype:
 				return []
@@ -131,9 +142,8 @@ class MMNodeContext:
 		return chlist
 
 	def addchannels(self, list):
-		import MMNode
 		for name, dict in list:
-			c = MMNode.MMChannel(self, name)
+			c = MMChannel(self, name)
 ##			for key, val in dict.items():
 ##				c[key] = val
 			c.attrdict = dict # we know the internals...
