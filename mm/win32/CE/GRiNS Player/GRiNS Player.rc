@@ -82,9 +82,9 @@ IDM_MENU MENU DISCARDABLE
 BEGIN
     POPUP "File"
     BEGIN
-        MENUITEM "Exit",                        IDM_EXIT
         MENUITEM "Open",                        IDM_OPEN
         MENUITEM "Close",                       IDM_CLOSE
+        MENUITEM "Exit",                        IDM_EXIT
     END
     POPUP "Play"
     BEGIN
