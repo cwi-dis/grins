@@ -103,7 +103,8 @@ class Widget:
 		self.root = root
 
 		# Mutable attributes
-		self.pos_rel = (0.0, 0.0, 1.0, 1.0) # relative position (0.0 <= n <= 1.0)
+#		self.pos_rel = (0.0, 0.0, 1.0, 1.0) # relative position (0.0 <= n <= 1.0)
+		self.pos_abs = (0,0,20,20) # absolute position. Don't use the relative position.
 		self.pos_z = 0		# Z value - order on screen. 
 		self.minsize = (0.0, 0.0) # Minimum size that this is likely to be.
 		self.maxsize = (1.0, 1.0) # Maximum size that this is likely to be.
@@ -130,16 +131,16 @@ class Widget:
 		# For the base Widget, nothing will be drawn.
 		self.recalc()
 
-		if self.pos_rel == (0,0,0,0):
+		if self.pos_abs == (0,0,0,0):
 			print "Warning! Widget drawn with null coords."
 			return 0
 
-		l, t, r, b = self.pos_rel
+		l, t, r, b = self.pos_abs
 		width = r-l
 		height = b-t
 
 		# Check that this widget is on the screen.
-		if l<0.0 or t<0.0 or r>1.0 or b>1.0:
+		if l<0 or t<0:
 			print "Warning! Widget drawn off window."
 			return 0
 
@@ -170,13 +171,7 @@ class Widget:
 		assert 0
 
 	def get_pos_abs(self):
-		x, y = self.root.get_window_size_abs()
-		lr, tr, rr, br = self.pos_rel
-		l = float(lr) * x
-		t = float(tr) * y
-		r = float(rr) * x
-		b = float(br) * y
-		return (l,t,r,b)
+		return self.pos_abs
 
 	def click(self):
 		self.select()
@@ -195,7 +190,7 @@ class Widget:
 
 	def moveto(self, newpos):
 		# Also handles resizing - new size is in newpos as well.
-		l,t,r,b = newpos
+		#l,t,r,b = newpos
 #		print "DEBUG: moveto Received sizes: ", l, t, r, b
 #		print "DEBUG: moveto self.get_minsize is: ", self.get_minsize()
 #		print "DEBUG: moveto self.get_maxsize is: ", self.get_maxsize()
@@ -206,14 +201,14 @@ class Widget:
 #		assert (r-l) > lw and (b-t) > lh
 #		assert (r-l) < mw and (b-t) < mh
 
-		if r < l:
-			print "Widget: Error: box is right-to-left", self
-		if t > b:
-			print "Widget: Error: box is upside down.", self
+##		if r < l:
+##			print "Widget: Error: box is right-to-left", self
+##		if t > b:
+##			print "Widget: Error: box is upside down.", self
 
 #		assert r <= 1.0 and r >= 0.0 and l <= 1.0 and l >= 0.0
-#		assert t >= 0.0 and t <= 1.0 and b >= 0.0 and b <= 1.0
-		self.pos_rel = newpos
+		#assert t >= 0.0 and t <= 1.0 and b >= 0.0 and b <= 1.0
+		self.pos_abs = newpos
 
 	def set_append(self, otherobject, position):
 		# Used to make the position of this object relative to another.
@@ -242,18 +237,20 @@ class Widget:
 	# TODO: def deepcopy?? And other methods here.
 
 	def get_box(self):
-		l,t,r,b = self.pos_rel
+		l,t,r,b = self.pos_abs
 		return l,t,r-l,b-t
-
+	
 	def get_relx(self, xvalue):
-		return float(xvalue)/ self.root.get_window_size_abs()[0]
+		return xvalue
+		#return float(xvalue)/ self.root.get_window_size_abs()[0]
 
 	def get_rely(self, yvalue):
-		return float(yvalue) / self.root.get_window_size_abs()[1]
+		#return float(yvalue) / self.root.get_window_size_abs()[1]
+		return yvalue
 
 	def is_hit(self, (x, y)):
-		l,t,r,b = self.pos_rel
-		if l < x <= r and t < y < b:
+		l,t,r,b = self.pos_abs
+		if l < x <= r and t < y <= b:
 			return 1
 		else:
 			return 0

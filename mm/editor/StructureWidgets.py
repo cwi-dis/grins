@@ -82,7 +82,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			del self.node.set_infoicon
 			self.node = None
 #	   else:
-#		   print "DEBUG: I don't have a node to clean up!: ", self
+#		print "DEBUG: I don't have a node to clean up!: ", self
 
 	#   
 	# These a fillers to make this behave like the old 'Object' class.
@@ -104,7 +104,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def set_infoicon(self, icon, msg=None):
 		# Sets the information icon to this icon.
 		# icon is a string, msg is a string.
-		print "DEBUG: set_infoicon called!"
+		# print "DEBUG: set_infoicon called!"
 		self.node.infoicon = icon
 		self.node.errormessage = msg
 		self.root.dirty = 1 # The root needs redrawing
@@ -323,7 +323,7 @@ class StructureObjWidget(MMNodeWidget):
 		# Oh, how I love recursive methods :-). Nice. -mjvdg.
 		if self.collapsebutton and self.collapsebutton.is_hit(pos):
 			return self.collapsebutton
-
+		
 		if self.is_hit(pos):
 			if self.iscollapsed():
 				return self
@@ -337,7 +337,7 @@ class StructureObjWidget(MMNodeWidget):
 
 	def recalc(self):
 		if self.collapsebutton:
-			l,t,r,b = self.pos_rel
+			l,t,r,b = self.pos_abs
 			l = l + self.get_relx(1)
 			t = t + self.get_rely(2)
 			self.collapsebutton.moveto((l,t))
@@ -353,8 +353,8 @@ class StructureObjWidget(MMNodeWidget):
 		# Draw the title.
 		displist.fgcolor(CTEXTCOLOR);
 		displist.usefont(f_title)
-		l,t,r,b = self.pos_rel;
-		b = t + self.get_rely(sizes_notime.TITLESIZE) + self.get_rely(sizes_notime.VEDGSIZE);
+		l,t,r,b = self.pos_abs;
+		b = t + sizes_notime.TITLESIZE + sizes_notime.VEDGSIZE;
 		l = l + self.get_relx(16);	# move it past the icon.
 		displist.centerstring(l,t,r,b, self.name)
 		if self.collapsebutton:
@@ -385,6 +385,7 @@ class SeqWidget(StructureObjWidget):
 		return StructureObjWidget.get_obj_at(self, pos)
 
 	def draw(self, display_list):
+		# print "DEBUG: seq drawing ", self.get_box()
 		if self.selected: 
 			display_list.drawfbox(self.highlight(SEQCOLOR), self.get_box())
 			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box());
@@ -394,14 +395,16 @@ class SeqWidget(StructureObjWidget):
 
 		if self.channelbox and not self.iscollapsed():
 			self.channelbox.draw(display_list)
+			
 		if self.root.pushbackbars and not self.iscollapsed():
-			for i in self.children:
-				if isinstance(i, MediaWidget):
-					i.pushbackbar.draw(display_list)
+			if not self.iscollapsed():
+				for i in self.children:
+					if isinstance(i, MediaWidget):
+						i.pushbackbar.draw(display_list)
 
 		# Draw those funny vertical lines.
 		if self.iscollapsed():
-			l,t,r,b = self.pos_rel
+			l,t,r,b = self.pos_abs
 			i = l + self.get_relx(sizes_notime.HEDGSIZE)
 			t = t + self.get_rely(sizes_notime.VEDGSIZE + sizes_notime.TITLESIZE)
 			b = b - self.get_rely(sizes_notime.VEDGSIZE)
@@ -410,7 +413,6 @@ class SeqWidget(StructureObjWidget):
 				while (i < r): #{
 					display_list.drawline(TEXTCOLOR, [(i, t),(i, b)]);
 					i = i + step;
-				#}
 
 
 		StructureObjWidget.draw(self, display_list)
@@ -434,9 +436,8 @@ class SeqWidget(StructureObjWidget):
 
 	def get_minsize(self):
 		# Return the minimum size that I can be.
-		# This will prevent the duplication of code a bit.
-		x,y = self.get_minsize_abs()
-		return self.get_relx(x), self.get_rely(y)
+		return self.get_minsize_abs()
+
 ##		if self.iscollapsed():
 ##			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
 ##			return self.get_relx(boxsize), self.get_rely(boxsize)
@@ -468,12 +469,12 @@ class SeqWidget(StructureObjWidget):
 ##			min_width = min_width + w;
 ##			if h > min_height:
 ##				min_height = h
-#	   handle = self.get_relx(sizes_notime.HANDLESIZE);
-#	   droparea = self.get_relx(sizes_notime.DROPAREASIZE);
-		#assert min_width < 1.0
-		#assert min_height < 1.0
+###	   handle = self.get_relx(sizes_notime.HANDLESIZE);
+###	   droparea = self.get_relx(sizes_notime.DROPAREASIZE);
+##		#assert min_width < 1.0
+##		#assert min_height < 1.0
 
-		#			current +   gaps between nodes  +  gaps at either end	
+##		#			current +   gaps between nodes  +  gaps at either end	
 ##		min_width = min_width + xgap*( len(self.children)-1) + 2*self.get_relx(sizes_notime.HEDGSIZE)
 
 ##		if self.dropbox:
@@ -486,25 +487,26 @@ class SeqWidget(StructureObjWidget):
 
 	def get_minsize_abs(self):
 		# Everything here calculated in pixels.
-
+		
 		if self.iscollapsed():
 			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
+			# print "Seq: collapsed; returning ", boxsize, boxsize
 			return boxsize, boxsize
-
+		
 		xgap = sizes_notime.GAPSIZE
-
+		
 		if not self.children and not self.channelbox:
 			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
 			min_width, min_height = boxsize, boxsize
 			if self.dropbox:
-				min_width = min_width + self.dropbox.get_minsize_abs()[0] + xgap
+				min_width = min_width  + xgap + self.dropbox.get_minsize_abs()[0]
 			return min_width, min_height
-
+		
 		mw=0; mh=0
 		if self.channelbox:
 			mw, mh = self.channelbox.get_minsize_abs()
 			mw = mw + sizes_notime.GAPSIZE
-
+			
 		for i in self.children:
 			if self.root.pushbackbars and isinstance(i, MediaWidget):
 				pushover = i.downloadtime_lag
@@ -513,12 +515,12 @@ class SeqWidget(StructureObjWidget):
 			w,h = i.get_minsize_abs()
 			if h > mh: mh=h
 			mw = mw + w + pushover;
-
+			
 		mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE
-
+		
 		if self.dropbox:
 			mw = mw + self.dropbox.get_minsize_abs()[0] + sizes_notime.GAPSIZE;
-
+			
 		mh = mh + 2*sizes_notime.VEDGSIZE
 		# Add the title box.
 		mh = mh + sizes_notime.TITLESIZE
@@ -535,7 +537,8 @@ class SeqWidget(StructureObjWidget):
 			StructureObjWidget.recalc(self)
 			return
 		
-		l, t, r, b = self.pos_rel
+		l, t, r, b = self.pos_abs
+		# print "SeqWidget.recalc: l,t,r,b = ", l,t,r,b
 		min_width, min_height = self.get_minsize()
 		
 		free_width = ((r-l) - min_width)
@@ -545,55 +548,42 @@ class SeqWidget(StructureObjWidget):
 		t = t + self.get_rely(sizes_notime.TITLESIZE)
 		min_height = min_height - self.get_rely(sizes_notime.TITLESIZE)
 		
-		
-		if free_width < 0.0:
-#		   print "Warning! free_width is less than 0.0!:", free_width
-			free_width = 0.0
+		if free_width < 0:
+
+			print "Warning! free_width is less than 0.0!:", free_width
+			free_width = 0
 			
+		# Umm.. Jack.. the free width for each child isn't proportional to their size doing this..
 		freewidth_per_child = free_width / max(1, len(self.children))
 		
-		l = float(l) + self.get_relx(sizes_notime.HEDGSIZE) #+ self.get_relx(sizes_notime.HANDLESIZE);
-		t = float(t) + self.get_rely(sizes_notime.VEDGSIZE)
-		
-		b = float(b) - self.get_rely(sizes_notime.VEDGSIZE)
+		l = l + sizes_notime.HEDGSIZE
+		t = t + sizes_notime.VEDGSIZE
+		b = b - sizes_notime.VEDGSIZE
 		
 		if self.channelbox:
 			w, h = self.channelbox.get_minsize()
 			self.channelbox.moveto((l, t, l+w, b))
 			l = l + w + self.get_relx(sizes_notime.GAPSIZE)
-			
+		
 		for medianode in self.children: # for each MMNode:
 			if self.root.pushbackbars and isinstance(medianode, MediaWidget):
-				print "DEBUG: pushing bar forward. ", medianode
+				# print "DEBUG: pushing bar forward. ", medianode
 				l = l + medianode.downloadtime_lag;
 			w,h = medianode.get_minsize()
-			if h > (b-t)+0.000001:			 # If the node needs to be bigger than the available space...
-				print "Error: Node is too tall! h=",h,"(b-t)=",b-t;
 			thisnode_free_width = freewidth_per_child
 			# Give the node the free width.
 			r = l + w + thisnode_free_width
-			##if r > 1.0:
-##			   print "ERROR!!! Node extends too far right.. clipping.."
-##				r = 1.0
-##			if b > 1.0:
-##			   print "ERROR!! Node extends too far down.. clipping.."
-##				b = 1.0
-##			if l > 1.0:
-##			   print "ERROR!! Node starts too far across.. clipping.."
-##				l = 1.0
-##				r = 1.0
-
 			medianode.moveto((l,t,r,b))
 			medianode.recalc()
 			l = r + self.get_relx(sizes_notime.GAPSIZE)
-			
+
 		if self.dropbox:
 			w,h = self.dropbox.get_minsize()
 			# The dropbox takes up the rest of the free width.
-			r = self.pos_rel[2]-self.get_relx(sizes_notime.HEDGSIZE)
+			r = self.pos_abs[2]-self.get_relx(sizes_notime.HEDGSIZE)
 			
 			self.dropbox.moveto((l,t,r,b))
-
+		
 		StructureObjWidget.recalc(self)
 
 
@@ -604,25 +594,24 @@ class TimeStripSeqWidget(SeqWidget):
 	# Wow. I like this sort of code. If only the rest of the classes were this easy. -mjvdg
 	HAS_COLLAPSE_BUTTON = 0
 	HAS_CHANNEL_BOX = 1
-
 	def __repr__(self):
 		return "TimeStripSeqWidget"
 
 
 class ImageBoxWidget(Widgets.Widget):
 	# Common baseclass for dropbox and channelbox
-
 	def __repr__(self):
 		return "ImageBoxWidget"
 	
 	def get_minsize(self):
-		return self.get_relx(sizes_notime.MINSIZE), self.get_rely(sizes_notime.MINSIZE)
+		return self.get_minsize_abs()
 
 	def get_minsize_abs(self):
 		return sizes_notime.MINSIZE, sizes_notime.MINSIZE
 
 	def draw(self, displist):
 		x,y,w,h = self.get_box()	 
+		# print "DEBUG: ImageBoxWidget drawing at: ", x,y,w,h
 		
 		# Draw the image.
 		image_filename = self._get_image_filename()
@@ -632,7 +621,9 @@ class ImageBoxWidget(Widgets.Widget):
 					image_filename,
 					center = 1,
 					# The coordinates should all be floating point numbers.
-					coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6)),
+					# Wrong - now they are pixels -mjvdg.
+					#coordinates = (float(x+w)/12, float(y+h)/6, 5*(float(w)/6), 4*(float(h)/6)),
+					coordinates = (x, y, 16, 16),
 					scale = -2
 					)
 			except windowinterface.error:
@@ -667,7 +658,7 @@ class ChannelBoxWidget(ImageBoxWidget):
 	def draw(self, displist):
 		ImageBoxWidget.draw(self, displist)
 		x, y, w, h = self.get_box()
-		texth = self.get_rely(sizes_notime.TITLESIZE)
+		texth = sizes_notime.TITLESIZE
 		texty = y + h - texth
 		availbw  = settings.get('system_bitrate')
 		bwfraction = MMAttrdefs.getattr(self.node, 'project_bandwidth_fraction')
@@ -688,8 +679,10 @@ class ChannelBoxWidget(ImageBoxWidget):
 		displist.usefont(f_title)
 		displist.centerstring(x, texty, x+w, texty+texth, label)
 	
+	#def get_minsize(self):
+	#	return self.get_relx(sizes_notime.MINSIZE), self.get_rely(sizes_notime.MINSIZE + sizes_notime.TITLESIZE)
 	def get_minsize(self):
-		return self.get_relx(sizes_notime.MINSIZE), self.get_rely(sizes_notime.MINSIZE + sizes_notime.TITLESIZE)
+		return self.get_minsize_abs()
 
 	def get_minsize_abs(self):
 		return sizes_notime.MINSIZE, sizes_notime.MINSIZE + sizes_notime.TITLESIZE
@@ -727,19 +720,20 @@ class UnseenVerticalWidget(StructureObjWidget):
 		return "UnseenVerticalWidget, name = "+self.name
 
 	def get_minsize(self):
-		# Return the minimum size that I can be.
-		min_width = 0; min_height = 0
+		return self.get_minsize_abs()
 
+	def get_minsize_abs(self):
+		mw=0
+		mh=0
+		
 		if len(self.children) == 0 or self.iscollapsed():
-			return 0, 0
-
+			return sizes_notime.MINSIZE, sizes_notime.MINSIZE+sizes_notime.TITLESIZE
+		
 		for i in self.children:
-			w, h = i.get_minsize()
-			if w > min_width:		  # The width is the greatest of the width of all children.
-				min_width = w
-			min_height = min_height + h
-
-		return min_width, min_height
+			w,h = i.get_minsize_abs()
+			if w > mw: mw=w
+			mh=mh+h
+		return mw, mh
 
 	def get_nearest_node_index(self, pos):
 		# Return the index of the node at the specific drop position.
@@ -755,39 +749,27 @@ class UnseenVerticalWidget(StructureObjWidget):
 				return i
 		return -1
 
-	def get_minsize_abs(self):
-		mw=0
-		mh=0
-
-		if len(self.children) == 0 or self.iscollapsed():
-			return 0, 0
-
-		for i in self.children:
-			w,h = i.get_minsize_abs()
-			if w > mw: mw=w
-			mh=mh+h
-		return mw, mh
-
 	def recalc(self):
 		# Untested.
 		# Recalculate the position of all the contained boxes.
 		# Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
 		# Apportion free space equally, based on the size of self.
 		# TODO: This does not test for maxheight()
-
+		
+		# print "DEBUG: UnseenVerticleWidget: position is: ", self.pos_abs
 		if self.iscollapsed():
 			StructureObjWidget.recalc(self)
 			return
-
-		l, t, r, b = self.pos_rel
+		
+		l, t, r, b = self.pos_abs
 		# Add the titlesize;
 		min_width, min_height = self.get_minsize()
-
+		
 		overhead_height = 0
 		free_height = (b-t) - min_height
-		if free_height < 0.001 or free_height > 1.0:
+		if free_height < 0:
 			free_height = 0.0
-
+		
 		for medianode in self.children: # for each MMNode:
 			w,h = medianode.get_minsize()
 			if h > (b-t):			  # If the node needs to be bigger than the available space...
@@ -800,29 +782,19 @@ class UnseenVerticalWidget(StructureObjWidget):
 			# Give the node the free width.
 			b = t + h + thisnode_free_height 
 			# r = l + w # Wrap the node to it's minimum size.
-
-			if r > 1.0:
-#			   print "ERROR!!! Node extends too far right.. clipping.."
-				r = 1.0
-			if b > 1.0:
-#			   print "ERROR!! Node extends too far down.. clipping.."
-				b = 1.0
-			if l > 1.0:
-#			   print "ERROR!! Node starts too far across.. clipping.."
-				l = 1.0
-				r = 1.0
-				
 			medianode.moveto((l,t,r,b))
 			medianode.recalc()
 			t = b #  + self.get_rely(sizes_notime.GAPSIZE)
 		StructureObjWidget.recalc(self)
 
 	def draw(self, display_list):
-		if self.root.pushbackbars and not self.iscollapsed():
-			for i in self.children:
-				if isinstance(i, MediaWidget):
-					i.pushbackbar.draw(display_list)
-				i.draw(display_list)
+		# We want to draw this even if pushback bars are disabled.
+		#if self.root.pushbackbars and not self.iscollapsed():
+		# print "UnseenVerticalWidget: Size is ", self.get_box()
+		for i in self.children:
+			if isinstance(i, MediaWidget):
+				i.pushbackbar.draw(display_list)
+			i.draw(display_list)
 
 
 class VerticalWidget(StructureObjWidget):
@@ -831,17 +803,14 @@ class VerticalWidget(StructureObjWidget):
 	def __repr__(self):
 		return "VerticalWidget, name is: " + self.name
 
-	def get_minsize(self):
-		# Return the minimum size that I can be.
-		x,y = self.get_minsize_abs()
-		return self.get_relx(x), self.get_rely(y)
-
+##	def get_minsize(self):
+##		# Return the minimum size that I can be.
 ##		min_width = 0; min_height = 0
-
+		
 ##		if len(self.children) == 0 or self.iscollapsed():
 ##			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
 ##			return self.get_relx(boxsize), self.get_rely(boxsize)
-
+		
 ##		for i in self.children:
 ##			w, h = i.get_minsize()
 ##			if self.root.pushbackbars and isinstance(i, MediaWidget):
@@ -855,42 +824,31 @@ class VerticalWidget(StructureObjWidget):
 ##			if w > min_width:		  # The width is the greatest of the width of all children.
 ##				min_width = w
 ##			min_height = min_height + h
-
+		
 ##		# Add the text label to the top.
 ##		titleheight = self.get_rely(sizes_notime.TITLESIZE)
 ##		min_height = min_height + titleheight;
-
+		
 ##		ygap = self.get_rely(sizes_notime.GAPSIZE)
-
+		
 ##		#assert min_width < 1.0
 ##		#assert min_height < 1.0
-
+		
 ##		min_width = min_width + 2*self.get_relx(sizes_notime.HEDGSIZE)
 ##		min_height = min_height + ygap*(len(self.children)-1) + 2.0*self.get_rely(sizes_notime.VEDGSIZE)
-
+		
 ###	   print "VerticalWidget: min_width is: ", min_width
 ###	   #assert min_width < 1.0 and min_width > 0.0
 ##		#assert min_height < 1.0 and min_height > 0.0
-
+		
 ##		return min_width, min_height
 
-	def get_nearest_node_index(self, pos):
-		# Return the index of the node at the specific drop position.
-		if self.iscollapsed():
-			return -1
-		
-		assert self.is_hit(pos);
-		x,y = pos;
-		# Working from left to right:
-		for i in range(len(self.children)):
-			l,t,w,h = self.children[i].get_box();
-			if y <= t+(h/2.0):
-				return i;
-		return -1;
+	def get_minsize(self):
+		return self.get_minsize_abs()
 
 	def get_minsize_abs(self):
 		mw=0; mh=0
-
+		
 		if len(self.children) == 0 or self.iscollapsed():
 			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE;
 			return boxsize, boxsize
@@ -910,87 +868,83 @@ class VerticalWidget(StructureObjWidget):
 		mw = mw + 2*sizes_notime.HEDGSIZE
 		return mw, mh
 
+	def get_nearest_node_index(self, pos):
+		# Return the index of the node at the specific drop position.
+		if self.iscollapsed():
+			return -1
+		
+		assert self.is_hit(pos);
+		x,y = pos;
+		# Working from left to right:
+		for i in range(len(self.children)):
+			l,t,w,h = self.children[i].get_box();
+			if y <= t+(h/2.0):
+				return i;
+		return -1;
+
 	def recalc(self):
 		# Untested.
 		# Recalculate the position of all the contained boxes.
 		# Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
 		# Apportion free space equally, based on the size of self.
 		# TODO: This does not test for maxheight()
-
+		
 		if self.iscollapsed():
 			StructureObjWidget.recalc(self)
 			return;
-
-		l, t, r, b = self.pos_rel
+		
+		l, t, r, b = self.pos_abs
 		# Add the titlesize;
-		t = t + self.get_rely(sizes_notime.TITLESIZE)
+		t = t + sizes_notime.TITLESIZE
 		min_width, min_height = self.get_minsize()
-		min_height = min_height - self.get_rely(sizes_notime.TITLESIZE);
-
-		overhead_height = 2.0*self.get_rely(sizes_notime.VEDGSIZE) + float(len(self.children)-1)*self.get_rely(sizes_notime.GAPSIZE)
+		min_height = min_height - sizes_notime.TITLESIZE
+		
+		overhead_height = 2*self.get_rely(sizes_notime.VEDGSIZE) + len(self.children)-1*sizes_notime.GAPSIZE
 		free_height = (b-t) - min_height
-##	  print "***"
-##	  print "DEBUG: Vertical: calculating free height";
-##	  print "min_width: ", min_width, "min_height: ", min_height
-##	  print "actual height: ", (b-t);
-##	  print "---";
-		if free_height < 0.001 or free_height > 1.0:
+		
+		if free_height < 0: #or free_height > 1.0:
 #		   print "Warning! free_height is wrong: ", free_height, self;
-			free_height = 0.0
-
+			free_height = 0
+		
 		l_par = float(l) + self.get_relx(sizes_notime.HEDGSIZE)
 		r = float(r) - self.get_relx(sizes_notime.HEDGSIZE)
 		t = float(t) + self.get_rely(sizes_notime.VEDGSIZE)
 		
-
+		
 		for medianode in self.children: # for each MMNode:
 			w,h = medianode.get_minsize()
 			if self.root.pushbackbars and isinstance(medianode, MediaWidget):
 				pushover = medianode.downloadtime_lag
 			else:
-				pushover = 0.0
+				pushover = 0
 			l = l_par + pushover
 			if h > (b-t):			  # If the node needs to be bigger than the available space...
 				pass				   # TODO!!!!!
-#			   print "Error: Node is too big!"
-#			   #assert 0			  # This shouldn't happen because the minimum size of this node
-										# has already been determined to be bigger than this in minsize()
 			# Take a portion of the free available width, fairly.
-			if free_height == 0.0:
-				thisnode_free_height = 0.0
+			if free_height == 0:
+				thisnode_free_height = 0
 			else:
-				thisnode_free_height = (float(h)/(min_height-overhead_height)) * free_height
+				thisnode_free_height = h/(min_height-overhead_height) * free_height
 			# Give the node the free width.
 			b = t + h + thisnode_free_height 
 			# r = l + w # Wrap the node to it's minimum size.
-
-			if r > 1.0:
-#			   print "ERROR!!! Node extends too far right.. clipping.."
-				r = 1.0
-			if b > 1.0:
-#			   print "ERROR!! Node extends too far down.. clipping.."
-				b = 1.0
-			if l > 1.0:
-#			   print "ERROR!! Node starts too far across.. clipping.."
-				l = 1.0
-				r = 1.0
-				
+			
 			medianode.moveto((l,t,r,b))
 			medianode.recalc()
 			t = b + self.get_rely(sizes_notime.GAPSIZE)
 		StructureObjWidget.recalc(self);
 
 	def draw(self, display_list):
+		# print "Draw: Verticle widget ", self.get_box()
 		if self.root.pushbackbars and not self.iscollapsed():
 			for i in self.children:
 				if isinstance(i, MediaWidget):
-#				   print "Par: drawing bar";
 					i.pushbackbar.draw(display_list);
 		StructureObjWidget.draw(self, display_list);
-
+		
 		# Draw those stupid horizontal lines.
 		if self.iscollapsed():
-			l,t,r,b = self.pos_rel
+			l,t,r,b = self.pos_abs
 			i = t + self.get_rely(sizes_notime.VEDGSIZE + sizes_notime.TITLESIZE)
 			l = l + self.get_relx(sizes_notime.HEDGSIZE)
 			r = r - self.get_relx(sizes_notime.HEDGSIZE)
@@ -999,6 +953,7 @@ class VerticalWidget(StructureObjWidget):
 				while i < b:
 					display_list.drawline(TEXTCOLOR, [(l, i),(r, i)])
 					i = i + step
+
 
 class ParWidget(VerticalWidget):
 	# Parallel node
@@ -1050,6 +1005,8 @@ class SwitchWidget(VerticalWidget):
 
 ##############################################################################
 # The Media objects (images, videos etc) in the Structure view.
+##############################################################################
+
 
 class MediaWidget(MMNodeWidget):
 	# A view of an object which is a playable media type.
@@ -1092,7 +1049,7 @@ class MediaWidget(MMNodeWidget):
 		# divide the available bandwidth, for other structure nodes each child has the whole bandwidth
 		# available.
 		prearmtime = self.node.compute_download_time()
-		print "MediaWidget prearmtime is: ", prearmtime
+		# print "MediaWidget prearmtime is: ", prearmtime
 
 		# Now subtract the duration of the previous node: this fraction of
 		# the downloadtime is no problem.
@@ -1103,7 +1060,7 @@ class MediaWidget(MMNodeWidget):
 			prevnode_duration = 0
 		lagtime = prearmtime - prevnode_duration
 
-		print "            lagtime is: ", lagtime
+		# print "            lagtime is: ", lagtime
 		
 		if lagtime < 0:
 			lagtime = 0
@@ -1120,15 +1077,16 @@ class MediaWidget(MMNodeWidget):
 		else:
 			self.downloadtime_lag_errorfraction = (lagtime-begindelay)/lagtime
 
-		print "            begindelay is: ", begindelay
+		# print "            begindelay is: ", begindelay
 		
 		# Now convert this from time to distance. 
 		node_duration = (self.node.t1-self.node.t0)
 		if node_duration <= 0: node_duration = 1
-		print "            node_duration is: ", node_duration
-		l,t,r,b = self.pos_rel
+
+		# print "            node_duration is: ", node_duration
+		l,t,r,b = self.pos_abs
 		node_width = self.get_minsize()[0]
-		print "            node width is: ", node_width
+		# print "            node width is: ", node_width
 		# Lagwidth is a percentage of this node's width.
 		#lagwidth = lagtime * node_width / node_duration
 		if node_duration == 0:
@@ -1137,20 +1095,21 @@ class MediaWidget(MMNodeWidget):
 #			lagwidth = 1.0 * node_width
 		else:
 			lagwidth = (lagtime/node_duration) * node_width
+
 		self.downloadtime = 0
 		if lagwidth > 0:
 			self.downloadtime_lag = lagwidth
 		else:
-			print "Error: lagwidth is < 0"
+			# print "Error: lagwidth is < 0"
 			self.downloadtime_lag = 0
-		print "            set downloadtime_lag to: ", self.downloadtime_lag
+		# print "            set downloadtime_lag to: ", self.downloadtime_lag
 
 	def show_mesg(self):
 		if self.node.errormessage:
 			windowinterface.showmessage("This node's message:\n\t"+self.node.errormessage, parent=self.root.window)
 
 	def recalc(self):
-		l,t,r,b = self.pos_rel
+		l,t,r,b = self.pos_abs
 		self.compute_download_time()
 
 		self.infoicon.moveto((l+self.get_relx(1), t+self.get_rely(2)))
@@ -1173,27 +1132,24 @@ class MediaWidget(MMNodeWidget):
 
 		MMNodeWidget.recalc(self) # This is probably not necessary.
 
-
 	def get_minsize(self):
-		xsize = self.get_relx(sizes_notime.MINSIZE)
-		ysize = self.get_rely(sizes_notime.MINSIZE)
-#	   ysize = ysize + self.get_rely(sizes_notime.TITLESIZE)
-		return xsize, ysize
-
-	def get_minsize_abs(self):
 		# return the minimum size of this node, in pixels.
 		# Calld to work out the size of the canvas.
 		xsize = sizes_notime.MINSIZE
 		ysize = sizes_notime.MINSIZE# + sizes_notime.TITLESIZE
 		return (xsize, ysize)
-	
+
+	def get_minsize_abs(self):
+		return self.get_minsize()
+		
 	def get_maxsize(self):
 		return self.get_relx(sizes_notime.MAXSIZE), self.get_rely(sizes_notime.MAXSIZE)
 
 	def draw(self, displist):
+		# print "DEBUG: MediaWidget.draw:", self.get_box()
 		x,y,w,h = self.get_box()	 
-		y = y + self.get_rely(sizes_notime.TITLESIZE)
-		h = h - self.get_rely(sizes_notime.TITLESIZE)
+		y = y + sizes_notime.TITLESIZE
+		h = h - sizes_notime.TITLESIZE
 		
 		willplay = self.root.showplayability or self.node.WillPlay()
 		ntype = self.node.GetType()
@@ -1228,12 +1184,12 @@ class MediaWidget(MMNodeWidget):
 				displist.drawbox(box)
 
 		# Draw the name
-		iconsizex = self.get_relx(16)
-		iconsizey = self.get_rely(16)
+		iconsizex = 16
+		iconsizey = 16
 		displist.fgcolor(CTEXTCOLOR)
 		displist.usefont(f_title)
-		l,t,r,b = self.pos_rel
-		b = t+self.get_rely(sizes_notime.TITLESIZE) + self.get_rely(sizes_notime.VEDGSIZE)
+		l,t,r,b = self.pos_abs
+		b = t+sizes_notime.TITLESIZE + sizes_notime.VEDGSIZE
 		if self.node.infoicon:
 			l = l + iconsizex	  # Maybe have an icon there soon.
 		displist.centerstring(l,t,r,b,self.name)
@@ -1306,7 +1262,7 @@ class TransitionWidget(MMNodeWidget):
 
 	def unselect(self):
 		self.parent.unselect()
-	
+
 	def draw(self, displist):
 		if self.in_or_out is 'in':
 			displist.drawicon(self.get_box(), 'transin')
@@ -1390,26 +1346,32 @@ class PushBackBarWidget(Widgets.Widget):
 		import AttrEdit
 		AttrEdit.showattreditor(self.root.toplevel, self.node, '.begin1')
 
+# there was a cvs conflict here, explaining the two classes. They should really be deleted.
+#class CollapseButtonWidget(Widgets.Widget):
+#	# This is the "expand/collapse" button at the right hand corner of the nodes.
+#	def __init__(self, parent, root):
+#		Widgets.Widget.__init__(self, root);
+#		self.parent=parent;
 
-class CollapseButtonWidget(Widgets.Widget):
-	# This is the "expand/collapse" button at the right hand corner of the nodes.
-	def __init__(self, parent, root):
-		Widgets.Widget.__init__(self, root);
-		self.parent=parent;
+##class CollapseButtonWidget(Widgets.Widget):
+##	# This is the "expand/collapse" button at the right hand corner of the nodes.
+##	def __init__(self, parent, root):
+##		Widgets.Widget.__init__(self, root);
+##		self.parent=parent;
 
-	def recalc(self):
-		l,t,w,h = self.parent.get_box();
-		l=l+self.get_relx(1)			# Trial-and-error numbers.
-		t = t+self.get_rely(2)
-		r = l + self.get_relx(16);	# This is pretty bad code..
-		b = t+self.get_rely(16);
-		self.moveto((l,t,r,b));
+##	def recalc(self):
+##		l,t,w,h = self.parent.get_box();
+##		l=l+self.get_relx(1)			# Trial-and-error numbers.
+##		t = t+self.get_rely(2)
+##		r = l + self.get_relx(16);	# This is pretty bad code..
+##		b = t+self.get_rely(16);
+##		self.moveto((l,t,r,b));
 			
-	def draw(self, displist):
-		if self.parent and self.parent.iscollapsed():
-			displist.drawicon(self.get_box(), 'open')
-		else:
-			displist.drawicon(self.get_box(), 'closed')
+##	def draw(self, displist):
+##		if self.parent and self.parent.iscollapsed():
+##			displist.drawicon(self.get_box(), 'open')
+##		else:
+##			displist.drawicon(self.get_box(), 'closed')
 		
 
 class Icon(MMNodeWidget):
@@ -1431,8 +1393,8 @@ class Icon(MMNodeWidget):
 
 	def moveto(self, pos):
 		x,y = pos
-		iconsizex = self.get_relx(sizes_notime.ERRSIZE)
-		iconsizey = self.get_rely(sizes_notime.ERRSIZE)
+		iconsizex = sizes_notime.ERRSIZE
+		iconsizey = sizes_notime.ERRSIZE
 		MMNodeWidget.moveto(self, (x, y, x+iconsizex, y+iconsizey))
 
 ##  def recalc(self):
