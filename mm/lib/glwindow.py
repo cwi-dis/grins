@@ -221,6 +221,16 @@ def report(s):
 	print 'glwindow.dispatch:', s
 
 
+def mm2pixels(h, v):
+	h = int(float(h)/gl.getgdesc(GL.GD_XMMAX)*gl.getgdesc(GL.GD_XPMAX)+0.5)
+	v = int(float(v)/gl.getgdesc(GL.GD_YMMAX)*gl.getgdesc(GL.GD_YPMAX)+0.5)
+	return h, v
+
+def pixels2mm(h, v):
+	h = float(h) / gl.getgdesc(GL.GD_XPMAX) * gl.getgdesc(GL.GD_XMMAX)
+	v = float(v) / gl.getgdesc(GL.GD_YPMAX) * gl.getgdesc(GL.GD_YMMAX)
+	return h, v
+	
 # Useful subroutine to call prefposition/prefsize.
 # The input arguments (h, v) are in X screen coordinates (origin top left);
 # prefposition uses GL screen coordinates (origin bottom left).
@@ -232,16 +242,19 @@ def report(s):
 def setgeometry(arg):
 	if arg == None:
 		return # Everything default
+	[arg]
 	h, v, width, height = arg
 	if h < 0 and v < 0 and width == 0 and height == 0:
 		return # Everything default
 	if width == 0 and height == 0:
-		height = 300
-		width = 400
+		height = 86.4
+		width = 115.2
 	else:
 		# Default aspect ratio (height/width) is 3/4
 		if width == 0: width = int(height / 0.75)
 		elif height == 0: height = int(width * 0.75)
+	width, height = mm2pixels(width, height)
+	h, v = mm2pixels(h, v)
 	if h < 0 and v < 0:
 		gl.prefsize(width, height)
 	else:
@@ -262,8 +275,10 @@ def setgeometry(arg):
 def getgeometry():
 	x, y = gl.getorigin()
 	width, height = gl.getsize()
-	scrwidth = gl.getgdesc(GL.GD_XPMAX)
-	scrheight = gl.getgdesc(GL.GD_YPMAX)
+	scrwidth = gl.getgdesc(GL.GD_XMMAX)
+	scrheight = gl.getgdesc(GL.GD_YMMAX)
+	x, y = pixels2mm(x, y)
+	width, height = pixels2mm(width, height)
 	return x, scrheight - y - height, width, height
 
 
@@ -272,6 +287,8 @@ def getgeometry():
 def relocate(arg):
 	if arg == None: return
 	h, v, width, height = arg
+	h, v = mm2pixels(h, v)
+	width, height = mm2pixels(width, height)
 	scrwidth = gl.getgdesc(GL.GD_XPMAX)
 	scrheight = gl.getgdesc(GL.GD_YPMAX)
 	x1, x2 = h, h + width

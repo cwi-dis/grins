@@ -58,7 +58,7 @@ class StyleSheet(ViewDialog, BasicDialog):
 	#
 	def make_form(self):
 		# XXX should fdesign...
-		self.width, self.height = 300, 320
+		self.width, self.height = glwindow.pixels2mm(300, 320)
 		BasicDialog.make_form(self) # Make form & Cancel...OK buttons
 		form = self.form
 		#

@@ -13,6 +13,8 @@ import MMAttrdefs
 from MMNode import alltypes, leaftypes, interiortypes
 from Dialog import Dialog
 
+import glwindow
+
 cwdcache = None
 formtemplates = None
 
@@ -49,8 +51,7 @@ class NodeInfo(Dialog):
 	    formtemplates = flp.parse_forms('NodeInfoForm')
 	#
 	main = formtemplates['main']
-	width = main[0].Width
-	height = main[0].Height
+	width, height = glwindow.pixels2mm(main[0].Width, main[0].Height)
 	title = self.maketitle()
 	hint = ''
 	self = Dialog.init(self, width, height, title, hint)

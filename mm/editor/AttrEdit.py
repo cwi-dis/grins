@@ -16,6 +16,8 @@ from ChannelMap import channelmap
 
 from Dialog import Dialog
 
+import glwindow
+
 
 # There are two basic calls into this module (but see below for more):
 # showattreditor(node) creates an attribute editor form for a node
@@ -432,11 +434,11 @@ class AttrEditor(Dialog):
 		#
 		self.changed = -1 # Neither 0 not 1
 		#
-		itemwidth = 450
-		itemheight = 25
+		itemwidth, itemheight = glwindow.pixels2mm(450, 25)
 		#
 		formwidth = itemwidth
-		formheight = len(self.namelist) * itemheight + 30
+		formheight = len(self.namelist) * itemheight + \
+			  glwindow.pixels2mm(0, 30)[1]
 		#
 		title = self.wrapper.maketitle()
 		hint = '[Click on labels for help]'
@@ -454,7 +456,8 @@ class AttrEditor(Dialog):
 		formwidth = itemwidth
 		formheight = len(self.namelist) * itemheight + 30
 		#
-		self.width, self.height = formwidth, formheight
+		self.width, self.height = glwindow.pixels2mm(formwidth, \
+			  formheight)
 		Dialog.make_form(self)
 		#
 		itemw3 = 50

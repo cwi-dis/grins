@@ -9,6 +9,7 @@ import MMExc
 import MMAttrdefs
 
 from Dialog import Dialog
+import glwindow
 
 
 form_template = None # Initialized on first use
@@ -43,8 +44,8 @@ class ArcInfo(Dialog):
 		if not form_template:
 			form_template = flp.parse_form('ArcInfoForm', 'main')
 		#
-		width = form_template[0].Width
-		height = form_template[0].Height
+		width, height = glwindow.pixels2mm(form_template[0].Width, \
+			  form_template[0].Height)
 		title = self.maketitle()
 		hint = ''
 		self = Dialog.init(self, width, height, title, hint)
