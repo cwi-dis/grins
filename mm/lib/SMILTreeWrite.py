@@ -440,6 +440,8 @@ def getfitatt(writer, node, attr):
 			fit = None	# 'hidden' is default
 		elif val == -3:
 			fit = 'fill'
+		elif val == -4:
+			fit = 'scroll'
 	return fit
 
 def getbgcoloratt(writer, node, attr):
