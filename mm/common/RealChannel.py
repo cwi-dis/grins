@@ -65,6 +65,7 @@ class RealChannel:
 	__engine = None
 	__has_rma_support = rma is not None
 	__warned = 0
+	__error = 0
 
 	def __init__(self, channel):
 		if not self.__has_rma_support:
@@ -95,7 +96,6 @@ class RealChannel:
 
 	def prepare_player(self, node = None):
 		if not self.__has_rma_support:
-			print 'no RMA support'
 			return 0
 		if not self.__rmaplayer:
 			try:
@@ -114,7 +114,7 @@ class RealChannel:
 			url = self.__channel.getfileurl(node)
 		if not url:
 			self.__channel.errormsg(node, 'No URL set on this node')
-			return 1
+			return 0
 		url = MMurl.canonURL(url)
 		self.__url = url
 ##		self.__window = window
@@ -133,7 +133,15 @@ class RealChannel:
 		if realenginedebug:
 			print 'RealChannel.playit', self, `url`
 		self.__rmaplayer.OpenURL(url)
-		self.__rmaplayer.Begin()
+		if self.__rmaplayer.Begin():
+			# if we call errormsg here, ErrorOccurred gets called
+			# and if we don't call errormsg here, ErrorOccurred
+			# does not get called.
+			# Does anybody understand what goes on?
+			self.__error = 1 # skip errormsg in ErrorOccurred
+			self.__channel.errormsg(node, 'Failed to render '+url)
+			del self.__error
+			return 0
 		self.__engine.startusing()
 		self.__using_engine = 1
 		return 1
@@ -171,7 +179,8 @@ class RealChannel:
 	def ErrorOccurred(self,str):
 		if realenginedebug:
 			print 'RealChannel.ErrorOccurred', self
-		self.__channel.errormsg(None, str)
+		if not self.__error:
+			self.__channel.errormsg(None, str)
 
 	def pauseit(self, paused):
 		if self.__rmaplayer:
