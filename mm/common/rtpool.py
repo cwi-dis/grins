@@ -2,6 +2,8 @@
 # Module rtpool.
 # Keeps a pool of actions and durations and returns the best fitting one.
 #
+import bisect
+
 error = 'rtpool.error'
 
 class rtpool:
@@ -16,6 +18,10 @@ class rtpool:
 		self.pool = []
 
 	def enter(self, ev):
+		bisect.insort(self.pool, ev)
+
+	# The original version of the code: sorts by duration only
+	def XXX_enter(self, ev):
 		duration = ev[1]
 		for i in range(len(self.pool)):
 			if self.pool[i][1] > duration:
