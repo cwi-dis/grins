@@ -2,7 +2,7 @@ __version__ = "$Id$"
 
 import windowinterface
 from usercmd import *
-import Qd
+from Carbon import Qd
 
 def ITEMrange(fr, to): return range(fr, to+1)
 

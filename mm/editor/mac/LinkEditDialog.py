@@ -34,8 +34,8 @@ All other callbacks are called without arguments.
 
 """
 
-import Dlg
-import Qd
+from Carbon import Dlg
+from Carbon import Qd
 
 import windowinterface
 import WMEVENTS
