@@ -32,7 +32,7 @@ M_KEEP = 9
 from LinkEditLight import LinkEditLight
 from LinkEditDialog import LinkBrowserDialog, LinkEditorDialog
 
-class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
+class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 	def __init__(self, toplevel):
 		LinkEditLight.__init__(self, toplevel)
 		ViewDialog.__init__(self, 'links_')

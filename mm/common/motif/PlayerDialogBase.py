@@ -222,4 +222,4 @@ class PlayerDialogBase:
 		"""
 
 		if self._window is not None:
-			return self._window.getgeometry()
+			return self._window.getgeometry(windowinterface.UNIT_PXL)
