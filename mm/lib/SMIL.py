@@ -307,6 +307,15 @@ class SMIL:
 			   'skip-content':'true',
 			   'title':None,
 			   GRiNSns+' ' 'fragment-id':None},
+		'area': {'begin':None,
+			   'coords':None,
+			   'end':None,
+			   'href':None,
+			   'id':None,
+			   'show':'replace',
+			   'skip-content':'true',
+			   'title':None,
+			   GRiNSns+' ' 'fragment-id':None},
 		'userAttributes': {'id':None,},
 		'uGroup': {GRiNSns+' ' 'id':None,
 			    GRiNSns+' ' 'u-state':'RENDERED',
@@ -341,7 +350,7 @@ class SMIL:
 
 	__schedule = ['par', 'seq', 'excl', __choice, __bag] + __media_object
 	__container_content = __schedule + ['switch', 'a']
-	__assoc_link = ['anchor']
+	__assoc_link = ['anchor', 'area']
 
 	# all entities with their allowed content
 	# no allowed content is default, so we don't specify empty ones here
