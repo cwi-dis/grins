@@ -143,7 +143,7 @@ class ListCtrl(window.Wnd, DropTarget.DropTargetProxy, IconMixin.CtrlMixin):
 	#
 	#  popup menu
 	#
- 	def setpopup(self, menutemplate):
+	def setpopup(self, menutemplate):
 		import win32menu, usercmdui
 		popup = win32menu.Menu('popup')
 		popup.create_popup_from_menubar_spec_list(menutemplate, usercmdui.usercmd2id)
