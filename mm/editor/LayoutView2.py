@@ -288,24 +288,24 @@ class MediaRegion(Region):
 		# ajust the internal geom for edition. If no constraint neither on right nor botton,
 		# with fit==hidden: chg the internal region size.
 		# it avoid a unexepected effet during the edition when you resize. don't change the semantic
-		right =	self._nodeRef.GetRawAttrDef('right', None) 
-		bottom = self._nodeRef.GetRawAttrDef('bottom', None) 
-		width =	self._nodeRef.GetRawAttrDef('width', None) 
-		height = self._nodeRef.GetRawAttrDef('height', None)
-		regPoint = self._nodeRef.GetAttrDef('regPoint', None)
-		regAlign = self._nodeRef.GetAttrDef('regAlign', None)
-		self.media_width, self.media_height = self._nodeRef.GetDefaultMediaSize(wingeom[2], wingeom[3])
-		# protect against getdefaultmediasize method which may return 0 !
-		if self.media_width <= 0 or self.media_height <= 0:
-			self.media_width, self.media_height = wingeom[2], wingeom[3]
-		if regPoint == 'topLeft' and regAlign == 'topLeft':
-			if fit == 'hidden':
-				if right == None and width == None:
-					x,y,w,h = wingeom
-					wingeom = x,y,self.media_width,h
-				if bottom == None and height == None:
-					x,y,w,h = wingeom
-					wingeom = x,y,w,self.media_height
+#		right =	self._nodeRef.GetRawAttrDef('right', None) 
+#		bottom = self._nodeRef.GetRawAttrDef('bottom', None) 
+#		width =	self._nodeRef.GetRawAttrDef('width', None) 
+#		height = self._nodeRef.GetRawAttrDef('height', None)
+#		regPoint = self._nodeRef.GetAttrDef('regPoint', None)
+#		regAlign = self._nodeRef.GetAttrDef('regAlign', None)
+#		self.media_width, self.media_height = self._nodeRef.GetDefaultMediaSize(wingeom[2], wingeom[3])
+#		# protect against getdefaultmediasize method which may return 0 !
+#		if self.media_width <= 0 or self.media_height <= 0:
+#			self.media_width, self.media_height = wingeom[2], wingeom[3]
+#		if regPoint == 'topLeft' and regAlign == 'topLeft':
+#			if fit == 'hidden':
+#				if right == None and width == None:
+#					x,y,w,h = wingeom
+#					wingeom = x,y,self.media_width,h
+#				if bottom == None and height == None:
+#					x,y,w,h = wingeom
+#					wingeom = x,y,w,self.media_height
 
 		self._curattrdict['wingeom'] = wingeom
 		self._curattrdict['z'] = 0
@@ -1548,14 +1548,24 @@ class LayoutView2(LayoutViewDialog2):
 		
 		# test if possible 
 		if self.editmgr.transaction('REGION_GEOM'):
-			self.editmgr.setchannelattr(regionRef.name, 'base_winoff', geom)
-			self.editmgr.setchannelattr(regionRef.name, 'units', UNIT_PXL)			
+			x,y,w,h = geom
+			self.editmgr.setchannelattr(regionRef.name, 'left', x)
+			self.editmgr.setchannelattr(regionRef.name, 'top', y)
+			self.editmgr.setchannelattr(regionRef.name, 'width', w)
+			self.editmgr.setchannelattr(regionRef.name, 'height', h)
+			self.editmgr.setchannelattr(regionRef.name, 'right', None)
+			self.editmgr.setchannelattr(regionRef.name, 'bottom', None)
 			self.editmgr.commit('REGION_GEOM')
 
-	def applyGeomOnMedia(self, mediaRef, value):
+	def applyGeomOnMedia(self, mediaRef, geom):
 		if self.editmgr.transaction('MEDIA_GEOM'):			
-			x,y,w,h = value
-			self.editmgr.setnodeattr(mediaRef, 'base_winoff', (x,y,w,h))
+			x,y,w,h = geom
+			self.editmgr.setnodeattr(mediaRef, 'left', x)
+			self.editmgr.setnodeattr(mediaRef, 'top', y)
+			self.editmgr.setnodeattr(mediaRef, 'width', w)
+			self.editmgr.setnodeattr(mediaRef, 'height', h)
+			self.editmgr.setnodeattr(mediaRef, 'right', None)
+			self.editmgr.setnodeattr(mediaRef, 'bottom', None)
 							
 			# todo: some ajustements for take into account all fit values
 			self.editmgr.commit('MEDIA_GEOM')
@@ -1920,9 +1930,8 @@ class LayoutView2(LayoutViewDialog2):
 
 	def __updateGeomOnMedia(self, ctrlName, value):
 		if self.currentNodeRefSelected != None:
-			mediaNode = self.getMediaNode(self.currentNodeRefSelected)
-			geom = mediaNode._curattrdict['wingeom']
-			x,y,w,h = geom
+			nodeRef = self.currentNodeRefSelected
+			x,y,w,h = nodeRef.getPxGeom()
 			if ctrlName == 'RegionX':
 				x = value
 			elif ctrlName == 'RegionY':
@@ -1930,7 +1939,7 @@ class LayoutView2(LayoutViewDialog2):
 			elif ctrlName == 'RegionW':
 				w = value
 			elif ctrlName == 'RegionH':
-				h = value			
+				h = value
 			self.applyGeomOnMedia(self.currentNodeRefSelected, (x,y,w,h))
 		
 	def __updateGeom(self, ctrlName, value):
