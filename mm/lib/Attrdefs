@@ -90,8 +90,8 @@
 ##(nospaceafter (bool) 0 'No space after' default
 ##	'If on, suppress space following last word')
 
-(scale (int) 1 'Scale factor' default
-	'Image scale factor (magnification); int >= 1' channel)
+(scale (float) 1.0 'Scale factor' default
+	'Image scale factor (magnification)' channel)
 
 ##(scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars' default
 ##	'Select the presence of horizontal/vertical scroll bars' channel)
