@@ -49,6 +49,12 @@ def dumpcache(root, filename):
 	marshal.dump(header, f)
 	dump(root, f)
 	f.close()
+	if os.name == 'mac':
+		import macfs
+		import macostools
+		fss = macfs.FSSpec(filename)
+		fss.SetCreatorType('CMIF', 'CMC ')
+		macostools.touched(fss)
 	print 'Successfully wrote CMIF cache', cache
 
 # Compute the name of the cached version of filename
