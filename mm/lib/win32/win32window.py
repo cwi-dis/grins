@@ -3,11 +3,11 @@ from appcon import *
 from WMEVENTS import *
 
 import win32mu
-import win32ig
 
+from win32ig import win32ig
 from win32displaylist import _DisplayList
 
-# global toplevel 
+# for global toplevel 
 import __main__
 
 # base class for subwindows
@@ -304,6 +304,15 @@ class Window:
 			return float(int(factor*x+0.5)/factor), float(int(factor*y+0.5)/factor),\
 				float(int(factor*w+0.5)/factor), float(int(factor*h+0.5)/factor)
 
+	# returns the relative coordinates of a wnd with respect to its parent
+	def getsizes(self):
+		return self._sizes
+
+	# Returns the relative coordinates of a wnd with respect to its parent with 2 decimal digits
+	def getsizes100(self):
+		ps=self.getsizes()
+		return float(int(100.0*ps[0]+0.5)/100.0),float(int(100.0*ps[1]+0.5)/100.0),float(int(100.0*ps[2]+0.5)/100.0),float(int(100.0*ps[3]+0.5)/100.0)
+
 	# Returns the size of the image
 	def _image_size(self, file):
 		toplevel=__main__.toplevel
@@ -525,6 +534,11 @@ class Window:
 	def setcontentcanvas(self, w, h, units = UNIT_SCREEN):
 		pass
 
+	def getwindowpos(self):
+		X, Y, W, H = self._parent.getwindowpos()
+		x, y, w, h = self._rectb
+		return X+x, Y+y, w, h
+
 	#
 	# Private methods
 	#
@@ -545,8 +559,6 @@ class Window:
 		self._rectb = x, y, w, h  # rect with respect to parent in pixels
 		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
 		self._units = units
-		X, Y = self._parent._recta[:2]
-		self._recta = X+x, Y+y, w, h # rect with respect to topwindow (abs) in pixels
 
 	# insert this window in parent._subwindows list at the correct z-order
 	def __set_z_order(self, z):
@@ -623,20 +635,35 @@ class SubWindow(Window):
 				trsubwindows.append(w)
 		
 		# then paint self
-		x, y, w, h = self._recta
+		x, y, w, h = self.getwindowpos()
 		x0, y0 = dc.SetWindowOrg((-x,-y))
 		if self._active_displist:
-			print self._active_displist._list		
 			self._active_displist._render(dc,None)
+		if self._redrawfunc:
+			self._redrawfunc()
 		dc.SetWindowOrg((x0,y0))
-
-		# show self (debug)
-		rc = (x, y, x+w, y+h)
-		win32mu.FrameRect(dc,rc,(255,0,0))
 
 		# then paint transparent children
 		trsubwindows.reverse()
 		for w in trsubwindows:
 			w.paintOn(dc)
+
+		if self._showing:
+			self.__showwindowOn(dc, self._showing)
+		
+		# debug:
+		#self.__showwindowOn(dc, (255,0,0))
+
+
+	def showwindow(self, color = (255,0,0)):
+		dc=self._topwindow.GetDC()
+		self.__showwindowOn(dc, color)
+		self._topwindow.ReleaseDC(dc)
+
+	def __showwindowOn(self, dc, color):
+		self._showing = color
+		x, y, w, h = self.getwindowpos()
+		rc = (x, y, x+w, y+h)
+		win32mu.FrameRect(dc,rc,self._showing)
 
 
