@@ -1036,7 +1036,7 @@ cmif_chan_attrs_ignore = {
 	# end new
 	'showBackground':0,	
 	'soundLevel':0,
-	'regAlign':0, 'regPoint':0, 'close':0, 'open':0
+	'regAlign':0, 'regPoint':0, 'close':0, 'open':0, 'subtype':0,
 	}
 
 qt_node_attrs = {
@@ -1628,6 +1628,7 @@ class SMILWriter(SMIL):
 				else:
 					attrlist.append(('width', '%d' % int(w + .5)))
 					attrlist.append(('height', '%d' % int(h + .5)))
+
 			if self.smilboston:
 				for key, val in ch.items():
 					if not cmif_chan_attrs_ignore.has_key(key):
@@ -1785,6 +1786,11 @@ class SMILWriter(SMIL):
 				if regAlign != None and regAlign != 'topLeft':
 					attrlist.append(('regAlign',regAlign))
 				
+		# for layout channel the subtype attribute is translated to grins:type attribute
+		subtype = ch.get('subtype')
+		if subtype != None:
+			attrlist.append(('%s:type' % NSGRiNSprefix, subtype))
+
 		for key, val in ch.items():
 			if not cmif_chan_attrs_ignore.has_key(key):
 				attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
