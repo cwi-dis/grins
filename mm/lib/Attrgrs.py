@@ -24,6 +24,13 @@ attrgrs=(
 		'comment'
 		]},
 
+	{'name':'upload_info',
+	'title':'FTP upload',
+	'attrs':[
+		'ftp_host',
+		'ftp_user',
+		'ftp_dir'
+		]},
 
 	{'name':'subregion',
 	'title':'Destination region',
