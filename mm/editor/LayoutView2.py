@@ -270,8 +270,6 @@ class MediaRegion(Region):
 		channel = self._nodeRef.GetChannel()
 		wingeom = self._nodeRef.getPxGeom()
 
-		self.ctype = self._nodeRef.GetChannelType()
-
 		# determinate the real fit attribute		
 		scale = MMAttrdefs.getattr(self._nodeRef,'scale')
 		if scale == 1:
@@ -294,6 +292,9 @@ class MediaRegion(Region):
 		regPoint = self._nodeRef.GetAttrDef('regPoint', None)
 		regAlign = self._nodeRef.GetAttrDef('regAlign', None)
 		self.media_width, self.media_height = self._nodeRef.GetDefaultMediaSize(wingeom[2], wingeom[3])
+		# protect against getdefaultmediasize method which may return 0 !
+		if self.media_width <= 0 or self.media_height <= 0:
+			self.media_width, self.media_height = wingeom[2], wingeom[3]
 		if regPoint == 'topLeft' and regAlign == 'topLeft':
 			if fit == 'hidden':
 				if right == None and width == None:
@@ -304,7 +305,6 @@ class MediaRegion(Region):
 					wingeom = x,y,w,self.media_height
 
 		self._curattrdict['wingeom'] = wingeom
-		
 		self._curattrdict['z'] = 0
 
 	def updateShowName(self,value):
@@ -330,24 +330,29 @@ class MediaRegion(Region):
 		
 		# copy from old hierarchical view to determinate the image to showed
 		node = self._nodeRef
-		ntype = node.GetType()
+		chtype = node.GetChannelType()
 		
-		from cmif import findfile
-		self.datadir = findfile('GRiNS-Icons')
 
-		import os
-		f = os.path.join(self.datadir, '%s.tiff' % self.ctype)
-		url = node.GetAttrDef('file', None)		
-		if self.ctype == 'image':
+		f = None
+		fit = 'fill'
+		from cmif import findfile
+		if chtype == 'image':
 			fit = self.fit
-			url = node.context.findurl(url)
-			try:
-				import MMurl
-				f = MMurl.urlretrieve(url)[0]
-			except IOError, arg:
-				print "Cannot load image: %s"%arg
+			url = node.GetAttrDef('file', None)		
+			if url != None:
+				url = node.context.findurl(url)
+				try:
+					import MMurl
+					f = MMurl.urlretrieve(url)[0]
+				except IOError, arg:
+					print "Cannot load image: %s"%arg
+			else:
+				print "Can't find image: %s"%url
 		else:
-			fit = 'fill'
+			import os
+			self.datadir = findfile('GRiNS-Icons')
+			f = os.path.join(self.datadir, '%s.tiff' % chtype)
+			
 		if f is not None:
 			self._graphicCtrl.setImage(f, fit)
 		
