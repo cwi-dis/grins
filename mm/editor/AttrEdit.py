@@ -634,6 +634,9 @@ class ChannelnameButtonRow(PopupButtonRow):
 	def choices(self):
 		return ['undefined'] + self.wrapper.context.channelnames
 
+	def parsevalue(self, value):
+		return value
+
 class ChildnodenameButtonRow(PopupButtonRow):
 	# Choose from the node's children
 	def __repr__(self):

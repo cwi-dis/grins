@@ -174,6 +174,23 @@ class NodeInfo:
 	def rollback(self):
 		pass
 
+	def destroy(self):
+		self.hide()
+		del self.window
+		del self.name_field
+		del self.type_select
+		del self.channel_select
+		del self.style_group
+		del self.styles_browser
+		del self.styles_select
+		del self.styles_buttons
+		del self.imm_group
+		del self.ext_group
+		del self.int_group
+		del self.file_input
+		del self.children_browser
+		del self.text_browser
+
 	def kill(self):
 		self.close()
 		self.destroy()
