@@ -10,11 +10,11 @@ from Hlinks import Hlinks
 import MMurl
 import settings
 
-import grinsDOM.dom.core
+import domcore
 
-class MMNodeContext(grinsDOM.dom.core.Element):
+class MMNodeContext(domcore.Element):
 	def __init__(self, nodeclass):
-		grinsDOM.dom.core.Element.__init__(self, "context")
+		domcore.Element.__init__(self, "context")
 		self.nodeclass = nodeclass
 		self.uidmap = {}
 		self.channelnames = []
@@ -32,14 +32,14 @@ class MMNodeContext(grinsDOM.dom.core.Element):
 	# Act like an XML DOM Core Node
 	# def _get_nodeName(self): return "context"
 	def _get_attributes(self):
-		return grinsDOM.dom.core.NamedNodeMap()
+		return domcore.NamedNodeMap()
 	def _get_childNodes(self):
 		# DOM 'children' of a context inlcude channels and
 		# hyperlinks
 		l = []
 		l.append(self.hyperlinks)
 		l = l + self.channels
-		return grinsDOM.dom.core.NodeList(l)
+		return domcore.NodeList(l)
 
 
 
@@ -333,9 +333,9 @@ class MMNodeContext(grinsDOM.dom.core.Element):
 	def geteditmgr(self):
 		return self.editmgr
 
-class MMChannel(grinsDOM.dom.core.Element):
+class MMChannel(domcore.Element):
 	def __init__(self, context, name):
-		grinsDOM.dom.core.Element.__init__(self, 'channel')
+		domcore.Element.__init__(self, 'channel')
 		self.context = context
 		self.name = name
 		self.attrdict = {}
@@ -344,16 +344,16 @@ class MMChannel(grinsDOM.dom.core.Element):
 	def _get_nodeName(self):
 		return "channel"
 	def _get_attributes(self):
-		nnm = grinsDOM.dom.core.NamedNodeMap()
+		nnm = domcore.NamedNodeMap()
 		for a in self.attrdict.items() :
 			if a[1]: # skip empty attributes
-				attr = grinsDOM.dom.core.Attr(a[0],str(a[1]))
+				attr = domcore.Attr(a[0],str(a[1]))
 				nnm.setNamedItem(attr)
-		attr = grinsDOM.dom.core.Attr('name', self.name)
+		attr = domcore.Attr('name', self.name)
 		nnm.setNamedItem(attr)
 		return nnm
 	def _get_childNodes(self):
-		nodeList =  grinsDOM.dom.core.NodeList([])
+		nodeList =  domcore.NodeList([])
 		return nodeList
 	
 	def __repr__(self):
@@ -460,9 +460,9 @@ class MMNode_body:
 	def stoplooping(self):
 		pass
 
-class MMNode(grinsDOM.dom.core.Element):
+class MMNode(domcore.Element):
 	def __init__(self, type, context, uid):
-		grinsDOM.dom.core.Element.__init__(self)
+		domcore.Element.__init__(self)
 		# ASSERT type in alltypes
 		self.type = type
 		self.context = context
@@ -480,22 +480,12 @@ class MMNode(grinsDOM.dom.core.Element):
 		self.curloopcount = 0
 
 	# XML DOM Core
-	# Element implementation - jrvosse:
-	def getAttribute(self, name):
-		if self.attrdict.has_key(name):
-			return str(self.attrdict[name])
-		else:
-			return None
-
 	# Node implementation - jst:
 	def _get_nodeName(self) :
 		return self.type 
 					
 	def _get_nodeValue(self) :
-		raise grinsDOM.dom.core.DOMException('reading nodeValue is illegal')
-
-	# def _get_nodeType(self) :
-	#	return grinsDOM.dom.core.ELEMENT_NODE
+		raise domcore.DOMException('reading nodeValue is illegal')
 
 	def _get_parentNode(self) :
 		return self.parent
@@ -506,13 +496,14 @@ class MMNode(grinsDOM.dom.core.Element):
 			cl = []
 			cl.append(self.context)
 			for c in self.children: cl.append(c)
-			return grinsDOM.dom.core.NodeList(cl)
+			return domcore.NodeList(cl)
 		else:
-			return grinsDOM.dom.core.NodeList(self.children)
+			return domcore.NodeList(self.children)
 
 	def _get_firstChild(self):
 		if not self.parent:
-			return self.context # context is first kid of root element
+			# context is first kid of root element
+			return self.context
 		elif len(self.children) > 0:
 			return self.children[0] 
 		else:
@@ -525,6 +516,7 @@ class MMNode(grinsDOM.dom.core.Element):
 			return None
 
 	def _get_previousSibling(self):
+		# fixme root has context as first child ...
 		if not self.parent: return None # the root has no siblings
 		siblings = self.parent.children
 		my_index = siblings.index(self)
@@ -539,18 +531,28 @@ class MMNode(grinsDOM.dom.core.Element):
 		else: return siblings[my_index+1]
 
 	def _get_attributes(self):
-		namedNodeMap = grinsDOM.dom.core.NamedNodeMap()
-		namedNodeMap.setNamedItem(grinsDOM.dom.core.Attr('uid', str(self.uid)))
+		namedNodeMap = domcore.NamedNodeMap()
+		namedNodeMap.setNamedItem(domcore.Attr('uid', str(self.uid)))
 		for name, value in self.attrdict.items():
 			# skip empty and complex attributes
 			if value:
 				# and not name=='anchorlist' and not name=='synctolist': 
-				newAttribute = grinsDOM.dom.core.Attr(name,str(value))
+				newAttribute = domcore.Attr(name,str(value))
 				namedNodeMap.setNamedItem(newAttribute)
 		return namedNodeMap     
-	
+
+
+
+	def removeChild(self, oldChild):
+		em = self.context.editmgr			
+		if not em.transaction():
+                	return None
+		em.delnode(oldChild)
+		em.commit()
+		return oldChild
+
 	# toxml2 is more efficient, but not using XML-DOM interface.
-	# To get all dom stuff, use toxml() defined in grinsDOM.dom.core.Element
+	# To get all dom stuff, use toxml() defined in domcore.Element
 	def toxml2(self, level=0, tab="  ", nl="\n") :
 		s = level*tab + "<" + self.type
 		for name,value in self.attrdict.items():
