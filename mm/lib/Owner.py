@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # this module allows to manage the owner any root node
 # different possible values:
 # OWNER_NONE: none is owner

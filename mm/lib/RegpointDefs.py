@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 alignDef = {	'topLeft': (0.0, 0.0), 
 		'topMid': (0.0, 0.5),
 		'topRight': (0.0, 1.0),
