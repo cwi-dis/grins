@@ -205,6 +205,10 @@ SOURCE=.\RES\icon_ope.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\idle.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\Res\image.bmp
 # End Source File
 # Begin Source File
