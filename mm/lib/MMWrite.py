@@ -47,7 +47,7 @@ def writenode(x, fp):
 	elif type = 'ext':
 		pass
 	else:
-		raise RuntimeError, 'bad node type in writenode'
+		raise CheckError, 'bad node type in writenode'
 	fp.write(')')
 
 
