@@ -465,6 +465,30 @@ class _CmifPlayerView(_CmifView):
 		else:
 			self.paintOn(dc)
 
+	def onMouseEvent(self, point, ev):
+		if not USE_NEWSUBWINDOWSIMPL:
+			_CmifView.onMouseEvent(self, point, ev)
+			return
+		
+		return # under construction!
+
+		for w in self._subwindows:
+			if w.IsClientPoint(point):
+				w.onMouseEvent(point, ev)
+				return
+
+		# not in a subwindow, handle it ourselves
+		disp = self._active_displist
+		point = self._DPtoLP(point)
+		x,y = self._pxl2rel(point,self._canvas)
+		buttons = []
+		if disp is not None:
+			for button in disp._buttons:
+				if button._inside(x,y):
+					buttons.append(button)
+		return self.onEvent(ev,(x, y, buttons))
+
+
 	def OnEraseBkgnd(self,dc):
 		if not USE_NEWSUBWINDOWSIMPL or not self._active_displist:
 			return _CmifView.OnEraseBkgnd(self,dc)
@@ -473,18 +497,9 @@ class _CmifPlayerView(_CmifView):
 	def getwindowpos(self):
 		return self._rect
 
+	# draw everything bottom up for now
+	# we don't use clipping yet
 	def paintOn(self, dc):
-		# first paint opaque subwindows
-		trsubwindows = []
-		for w in self._subwindows:
-			if w._transparent == 0 or \
-			   (w._transparent == -1 and
-			    w._active_displist):
-				w.paintOn(dc)
-			else:
-				trsubwindows.append(w)
-		
-		# then paint self
 		x, y, w, h = self.getwindowpos()
 		x0, y0 = dc.SetWindowOrg((-x,-y))
 		if self._active_displist:
@@ -493,11 +508,11 @@ class _CmifPlayerView(_CmifView):
 			self._redrawfunc()
 		dc.SetWindowOrg((x0,y0))
 
-		# then paint transparent children
-		trsubwindows.reverse()
-		for w in trsubwindows:
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
 			w.paintOn(dc)
-
+		
 #################################################
 # Specialization of _CmifView for smooth drawing	
 class _CmifStructView(_CmifView):
