@@ -38,8 +38,8 @@ def isanimatedgif(file):
 			y = ord(file.read(1))
 			if y == 0xF9:	# Graphic Control Extension
 				bsize,flag,delay,transparent,term = struct.unpack('<bbhbb', file.read(6))
-				if delay != 0:
-					return 1
+##				if delay != 0:
+##					return 1
 			elif y == 0xFE:	# Comment Extension
 				while 1:
 					size = ord(file.read(1))
