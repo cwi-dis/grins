@@ -169,7 +169,9 @@ class HierarchyView(HierarchyViewDialog):
 		if not lightweight:
 			self.commands.append(PUSHFOCUS(callback = (self.focuscall, ())))
 			self.commands.append(TIMESCALE(callback = (self.timescalecall, ())))
-		self.interiorcommands = self._getmediacommands(toplevel.root.context, under=1)
+		self.interiorcommands = self._getmediacommands(toplevel.root.context, under=1) + [
+			EXPAND(callback = (self.expandcall, ())),
+			]
 		self.pasteinteriorcommands = [
 			PASTE_UNDER(callback = (self.pasteundercall, ())),
 			]
@@ -185,7 +187,6 @@ class HierarchyView(HierarchyViewDialog):
 			NEW_ALT(callback = (self.createaltcall, ())),
 			DELETE(callback = (self.deletecall, ())),
 			CUT(callback = (self.cutcall, ())),
-			EXPAND(callback = (self.expandcall, ())),
 			]
 		self.noslidecommands = [
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
