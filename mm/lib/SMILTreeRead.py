@@ -2638,7 +2638,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ctx = self.__context
 
 		if len(self.__toplayouts) > 1 and features.editor and features.MULTIPLE_TOPLAYOUT not in features.feature_set:
-			self.unsupportedfeature_error("multi top layouts")
+			self.unsupportedfeature_error("multiple top layouts")
 		
 		for top in self.__toplayouts:
 			self.CreateLayout(self.__tops[top]['attrs'], top is None)
