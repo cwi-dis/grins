@@ -1817,12 +1817,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if node.attrdict.has_key('bgcolor'):
 				del node.attrdict['bgcolor']
 
-	def __newTopRegion(self, id = None):
+	def __newTopRegion(self):
 		if self.__rootLayout is None:
 			if features.editor and features.MULTIPLE_TOPLAYOUT not in features.feature_set and len(self.__context.getviewports()) > 0:
 				self.unsupportedfeature_error("multiple top layouts")
-			if id is None:
-				id = self.__mkid('viewport')
+			id = self.__mkid('viewport')
 			self.__rootLayout = self.__context.newviewport(id, -1, 'layout')
 			self.__rootLayout.addOwner(OWNER_DOCUMENT)
 
@@ -3354,7 +3353,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif self.__viewport is not None:
 			self.__viewport._addchild(ch)
 		else:
-			self.__newTopRegion(id)
+			self.__newTopRegion()
 			self.__rootLayout._addchild(ch)
 		self.__region = ch
 
