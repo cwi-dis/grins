@@ -59,6 +59,11 @@ attrfind = re.compile(
     '(?P<value>\'[^\']*\'|"[^"]*"|[-a-zA-Z0-9.:+*%?!()_#=~]+))')
 attrtrans = string.maketrans(' \r\n\t', '    ')
 
+# definitions for XML namespaces
+_NCName = '[a-zA-Z_][-a-zA-Z0-9._]*'    # XML Name, minus the ":"
+ncname = re.compile(_NCName + '$')
+qname = re.compile('(?:(?P<prefix>' + _NCName + '):)?' # optional prefix
+                   '(?P<local>' + _NCName + ')')
 
 # XML parser base class -- find tags and call handler functions.
 # Usage: p = XMLParser(); p.feed(data); ...; p.close().
@@ -73,8 +78,7 @@ attrtrans = string.maketrans(' \r\n\t', '    ')
 class XMLParser:
 
     # Interface -- initialize and reset this instance
-    def __init__(self, verbose=0):
-        self.verbose = verbose
+    def __init__(self):
         self.reset()
 
     # Interface -- reset this instance.  Loses all unprocessed data
@@ -87,6 +91,7 @@ class XMLParser:
         self.__at_start = 1
         self.__seen_doctype = None
         self.__seen_starttag = 0
+        self.__namespaces = {'xml':0}   # xml is implicitly declared
 
     # For derived classes only -- enter literal mode (CDATA) till EOF
     def setnomoretags(self):
@@ -399,7 +404,7 @@ class XMLParser:
         self.handle_cdata(rawdata[i+9:res.start(0)])
         return res.end(0)
 
-    __xml_attributes = {'version': '1.0', 'standalone': 'no', 'encoding': None}
+    __xml_namespace_attributes = {'ns':None, 'src':None, 'prefix':None}
     # Internal -- handle a processing instruction tag
     def parse_proc(self, i):
         rawdata = self.rawdata
@@ -414,15 +419,34 @@ class XMLParser:
             raise RuntimeError, 'unexpected call to parse_proc'
         k = res.end(0)
         name = res.group(0)
-        if string.find(string.lower(name), 'xml') >= 0:
-            self.syntax_error('illegal processing instruction target name')
-        self.handle_proc(name, rawdata[k:j])
+        if name == 'xml:namespace':
+            # namespace declaration
+            # this must come after the <?xml?> declaration (if any)
+            # and before the <!DOCTYPE> (if any).
+            if self.__seen_doctype or self.__seen_starttag:
+                self.syntax_error('xml:namespace declaration too late in document')
+            attrdict, k = self.parse_attributes(
+                name, k, j, self.__xml_namespace_attributes)
+            if not attrdict.has_key('ns') or not attrdict.has_key('prefix'):
+                self.syntax_error('xml:namespace without required attributes')
+            prefix = attrdict.get('prefix')
+            if self.__namespaces.has_key(prefix):
+                self.syntax_error('xml:namespace prefix not unique')
+            self.__namespaces[prefix] = 0
+            if ncname.match(prefix) is None:
+                self.syntax_error('xml:namespace illegal prefix value')
+            self.handle_xml_namespace(attrdict.get('prefix'),
+                                      attrdict.get('ns'),
+                                      attrdict.get('src'))
+        else:
+            if string.find(string.lower(name), 'xml') >= 0:
+                self.syntax_error('illegal processing instruction target name')
+            self.handle_proc(name, rawdata[k:j])
         return end.end(0)
 
     # Internal -- parse attributes between i and j
-    def parse_attributes(self, tag, k, j, attributes = None):
+    def parse_attributes(self, tag, i, j, attributes = None, prefix = None):
         rawdata = self.rawdata
-        # Now parse the data between k and j into a tag and attrs
         attrdict = {}
         try:
             # convert attributes list to dictionary
@@ -432,10 +456,20 @@ class XMLParser:
             attributes = d
         except TypeError:
             pass
-        while k < j:
-            res = attrfind.match(rawdata, k)
+        while i < j:
+            res = attrfind.match(rawdata, i)
             if not res: break
             attrname, attrvalue = res.group('name', 'value')
+            i = res.end(0)
+            res = qname.match(attrname) # always matches something
+            if res is None or res.end(0) != len(attrname):
+                self.syntax_error('illegal qualified name for attribute')
+                aprefix = None
+            else:
+                aprefix = res.group('prefix')
+            if prefix is not None and aprefix is None:
+                # if tag has prefix and attr. doesn't, add prefix to attr.
+                attrname = prefix + ':' + attrname
             if attrvalue is None:
                 self.syntax_error('no attribute value specified')
                 attrvalue = attrname
@@ -451,13 +485,12 @@ class XMLParser:
                 self.syntax_error('attribute specified twice')
             attrvalue = string.translate(attrvalue, attrtrans)
             attrdict[attrname] = self.translate_references(attrvalue)
-            k = res.end(0)
         if attributes is not None:
             # fill in with default attributes
             for key, val in attributes.items():
                 if val is not None and not attrdict.has_key(key):
                     attrdict[key] = val
-        return attrdict, k
+        return attrdict, i
 
     # Internal -- handle starttag, return length or -1 if not terminated
     def parse_starttag(self, i):
@@ -477,11 +510,18 @@ class XMLParser:
                 self.syntax_error('starttag does not match DOCTYPE')
         if self.__seen_starttag and not self.stack:
             self.syntax_error('multiple elements on top level')
+        res = qname.match(tag)
+        if res is not None and res.end(0) == len(tag):
+            prefix = res.group('prefix')
+            if prefix is not None and not self.__namespaces.has_key(prefix):
+                self.syntax_error('start tag using undeclared namespace prefix')
+        else:
+            prefix = None
         if hasattr(self, tag + '_attributes'):
             attributes = getattr(self, tag + '_attributes')
         else:
             attributes = None
-        attrdict, k = self.parse_attributes(tag, k, j, attributes)
+        attrdict, k = self.parse_attributes(tag, k, j, attributes, prefix)
         res = starttagend.match(rawdata, k)
         if not res:
             self.syntax_error('garbage in start tag')
@@ -571,6 +611,10 @@ class XMLParser:
     def handle_doctype(self, tag, pubid, syslit, data):
         pass
 
+    # Overridable -- handle xml:namespace declaration
+    def handle_xml_namespace(self, prefix, ns, src):
+        pass
+
     # Overridable -- handle start tag
     def handle_starttag(self, tag, method, attrs):
         method(attrs)
@@ -640,9 +684,9 @@ class XMLParser:
 
 class TestXMLParser(XMLParser):
 
-    def __init__(self, verbose=0):
+    def __init__(self):
         self.testdata = ""
-        XMLParser.__init__(self, verbose)
+        XMLParser.__init__(self)
 
     def handle_xml(self, encoding, standalone):
         self.flush()
@@ -651,6 +695,10 @@ class TestXMLParser(XMLParser):
     def handle_doctype(self, tag, pubid, syslit, data):
         self.flush()
         print 'DOCTYPE:',tag, `data`
+
+    def handle_xml_namespace(self, prefix, ns, src):
+        self.flush()
+        print 'xml:namespace: ns=',ns,'prefix=',prefix,'src=',src
 
     def handle_entity(self, name, strval, pubid, syslit, ndata):
         self.flush()

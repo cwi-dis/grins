@@ -18,6 +18,8 @@ error = 'SMILTreeRead.error'
 SMILpubid = "-//W3C//DTD SMIL 1.0//EN"
 SMILdtd = "http://www.w3.org/AudioVideo/Group/SMIL10.dtd"
 
+CMIFns = "http://www.cwi.nl/Chameleon/"
+
 LAYOUT_NONE = 0				# must be 0
 LAYOUT_SMIL = 1
 LAYOUT_UNKNOWN = -1
@@ -89,8 +91,9 @@ color = re.compile('(?:'
 			   ' *(?P<bp>[0-9]+) *% *)\))$')
 
 class SMILParser(xmllib.XMLParser):
-	def __init__(self, context, verbose = 0):
-		xmllib.XMLParser.__init__(self, verbose)
+	def __init__(self, context):
+		xmllib.XMLParser.__init__(self)
+		self.cmif_prefix = None
 		self.__seen_smil = 0
 		self.__in_smil = 0
 		self.__in_head = 0
@@ -970,14 +973,13 @@ class SMILParser(xmllib.XMLParser):
 				self.syntax_error('bad endsync attribute')
 				return
 			id = res.group('id')
-			for c in node.GetChildren():
-				nm = c.attrdict.get('name')
-				if nm is not None and nm == id:
-					node.attrdict['terminator'] = id
+			if self.__nodemap.has_key(id):
+				child = self.__nodemap[id]
+				if child in node.GetChildren():
+					node.attrdict['terminator'] = child.GetRawAttr('name')
 					return
-			else:
-				# id not found among the children
-				self.warning('unknown idref in endsync attribute')
+			# id not found among the children
+			self.warning('unknown idref in endsync attribute')
 
 	seq_attributes = {'id':None, 'title':None, 'dur':None, 'begin':None,
 			  'end':None, 'repeat':'1',
@@ -992,10 +994,41 @@ class SMILParser(xmllib.XMLParser):
 
 	end_seq = EndContainer
 
-	def start_bag(self, attributes):
-		self.NewContainer('bag', attributes)
+	cmif_bag_attributes = {'id':None, 'title':None, 'bag-index':None,
+			  'author':'', 'copyright':'', 'abstract':'',
+			  'system-bitrate':None, 'system-language':None,
+			  'system-captions':None,
+			  'system-overdub-or-caption':None,
+			  'system-required':None, 'system-screen-size':None,
+			  'system-screen-depth':None}
+	def start_cmif_bag(self, attributes):
+		a = {}
+		for key, val in attributes.items():
+			if key[:len(self.cmif_prefix)+1] == \
+			   self.cmif_prefix + ':':
+				a[key[len(self.cmif_prefix)+1:]] = val
+		self.NewContainer('bag', a)
+		self.__container.__bag_index = a.get('bag-index')
 
-	end_bag = EndContainer
+	def end_cmif_bag(self):
+		node = self.__container
+		self.EndContainer()
+		bag_index = node.__bag_index
+		del node.__bag_index
+		if bag_index is None:
+			return
+		res = idref.match(bag_index)
+		if res is None:
+			self.syntax_error('bad bag-index attribute')
+			return
+		id = res.group('id')
+		if self.__nodemap.has_key(id):
+			child = self.__nodemap[id]
+			if child in node.GetChildren():
+				node.attrdict['bag_index'] = child.GetRawAttr('name')
+				return
+		# id not found among the children
+		self.warning('unknown idref in bag-index attribute')
 
 	switch_attributes = {'id':None,
 			     'system-bitrate':None, 'system-language':None,
@@ -1031,14 +1064,14 @@ class SMILParser(xmllib.XMLParser):
 			    'system-overdub-or-caption':None,
 			    'system-required':None, 'system-screen-size':None,
 			    'system-screen-depth':None}
-	ref_attributes = basic_attributes.copy()
+	ref_attributes = basic_attributes
 	def start_ref(self, attributes):
 		self.NewNode(None, attributes)
 
 	def end_ref(self):
 		self.EndNode()
 
-	text_attributes = basic_attributes
+	text_attributes = basic_attributes.copy()
 	text_attributes['encoding'] = 'UTF'
 	def start_text(self, attributes):
 		self.NewNode('text', attributes)
@@ -1046,7 +1079,7 @@ class SMILParser(xmllib.XMLParser):
 	def end_text(self):
 		self.EndNode()
 
-	audio_attributes = ref_attributes
+	audio_attributes = basic_attributes
 	def start_audio(self, attributes):
 		self.NewNode('audio', attributes)
 
@@ -1060,21 +1093,21 @@ class SMILParser(xmllib.XMLParser):
 	def end_img(self):
 		self.EndNode()
 
-	video_attributes = ref_attributes
+	video_attributes = basic_attributes
 	def start_video(self, attributes):
 		self.NewNode('video', attributes)
 
 	def end_video(self):
 		self.EndNode()
 
-	animation_attributes = ref_attributes
+	animation_attributes = basic_attributes
 	def start_animation(self, attributes):
 		self.NewNode('animation', attributes)
 
 	def end_animation(self):
 		self.EndNode()
 
-	textstream_attributes = ref_attributes
+	textstream_attributes = basic_attributes.copy()
 	textstream_attributes['encoding'] = 'UTF'
 	def start_textstream(self, attributes):
 		self.NewNode('textstream', attributes)
@@ -1082,26 +1115,41 @@ class SMILParser(xmllib.XMLParser):
 	def end_textstream(self):
 		self.EndNode()
 
-	cmif_cmif_attributes = basic_attributes
+	cmif_cmif_attributes = basic_attributes.copy()
 	cmif_cmif_attributes['encoding'] = 'UTF'
 	def start_cmif_cmif(self, attributes):
-		self.NewNode('cmif_cmif', attributes)
+		a = {}
+		for key, val in attributes.items():
+			if key[:len(self.cmif_prefix)+1] == \
+			   self.cmif_prefix + ':':
+				a[key[len(self.cmif_prefix)+1:]] = val
+		self.NewNode('cmif_cmif', a)
 
 	def end_cmif_cmif(self):
 		self.EndNode()
 
-	cmif_socket_attributes = basic_attributes
+	cmif_socket_attributes = basic_attributes.copy()
 	cmif_socket_attributes['encoding'] = 'UTF'
 	def start_cmif_socket(self, attributes):
-		self.NewNode('cmif_socket', attributes)
+		a = {}
+		for key, val in attributes.items():
+			if key[:len(self.cmif_prefix)+1] == \
+			   self.cmif_prefix + ':':
+				a[key[len(self.cmif_prefix)+1:]] = val
+		self.NewNode('cmif_socket', a)
 
 	def end_cmif_socket(self):
 		self.EndNode()
 
-	cmif_shell_attributes = basic_attributes
+	cmif_shell_attributes = basic_attributes.copy()
 	cmif_shell_attributes['encoding'] = 'UTF'
 	def start_cmif_shell(self, attributes):
-		self.NewNode('cmif_shell', attributes)
+		a = {}
+		for key, val in attributes.items():
+			if key[:len(self.cmif_prefix)+1] == \
+			   self.cmif_prefix + ':':
+				a[key[len(self.cmif_prefix)+1:]] = val
+		self.NewNode('cmif_shell', a)
 
 	def end_cmif_shell(self):
 		self.EndNode()
@@ -1240,6 +1288,43 @@ class SMILParser(xmllib.XMLParser):
 			self.error('not a SMIL document')
 		if pubid != SMILpubid or syslit != SMILdtd or data:
 			self.syntax_error('invalid DOCTYPE')
+
+	def handle_xml_namespace(self, prefix, ns, src):
+		if ns == CMIFns and not self.cmif_prefix:
+			self.cmif_prefix = prefix
+			self.__dict__['start_' + prefix + ':cmif'] = \
+					       self.start_cmif_cmif
+			self.__dict__['end_' + prefix + ':cmif'] = \
+					     self.end_cmif_cmif
+			d = {}
+			for key, val in self.cmif_cmif_attributes.items():
+				d[prefix + ':' + key] = val
+			self.__dict__[prefix + ':cmif_attributes'] = d
+			self.__dict__['start_' + prefix + ':socket'] = \
+					       self.start_cmif_socket
+			self.__dict__['end_' + prefix + ':socket'] = \
+					     self.end_cmif_socket
+			d = {}
+			for key, val in self.cmif_cmif_attributes.items():
+				d[prefix + ':' + key] = val
+			self.__dict__[prefix + ':socket_attributes'] = d
+			self.__dict__['start_' + prefix + ':shell'] = \
+					       self.start_cmif_shell
+			self.__dict__['end_' + prefix + ':shell'] = \
+					     self.end_cmif_shell
+			d = {}
+			for key, val in self.cmif_cmif_attributes.items():
+				d[prefix + ':' + key] = val
+			self.__dict__[prefix + ':shell_attributes'] = d
+			self.__dict__['start_' + prefix + ':bag'] = \
+					       self.start_cmif_bag
+			self.__dict__['end_' + prefix + ':bag'] = \
+					     self.end_cmif_bag
+			d = {}
+			for key, val in self.cmif_bag_attributes.items():
+				d[prefix + ':' + key] = val
+			self.__dict__[prefix + ':bag_attributes'] = d
+		# ignore other namespaces
 
 	def handle_proc(self, name, data):
 		self.warning('ignoring processing instruction %s' % name)

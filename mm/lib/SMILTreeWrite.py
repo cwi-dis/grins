@@ -15,11 +15,10 @@ import MMurl
 import regsub
 
 # This string is written at the start of a SMIL file.
-SMILdecl = '''\
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
-                      "http://www.w3.org/AudioVideo/Group/SMIL10.dtd">
-'''
+SMILdecl = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
+CMIFns = '<?xml:namespace ns="http://www.cwi.nl/Chameleon/" prefix="cmif"?>\n'
+SMILdtd = '<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"\n\
+                      "http://www.w3.org/AudioVideo/Group/SMIL10.dtd">\n'
 
 # A fileish object with indenting
 class IndentedFile:
@@ -195,7 +194,19 @@ def getscreensize(writer, node):
 	value = node.GetRawAttrDef('system_screen_size', None)
 	if value is not None:
 		return '%dX%d' % value
-	
+
+def getbagindex(writer, node):
+	if node.GetType() != 'bag':
+		return
+	bag_index = node.GetRawAttrDef('bag_index', None)
+	if bag_index is None:
+		return
+	for child in node.children:
+		if child.GetRawAttrDef('name', '') == bag_index:
+			return 'id(%s)' % writer.uid2name[child.GetUID()]
+	print '** Bag-index attribute refers to unknown child in', \
+	      node.GetRawAttrDef('name', '<unnamed>'),\
+	      node.GetUID()
 
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
@@ -217,6 +228,7 @@ smil_attrs=[
 	("system-required", lambda writer, node:getcmifattr(writer, node, "system_required")),
 	("system-screen-size", getscreensize),
 	("system-screen-depth", lambda writer, node:getcmifattr(writer, node, "system_screen_depth")),
+	("cmif:bag-index", getbagindex),
 ]
 
 # Mapping from CMIF channel types to smil media types
@@ -237,10 +249,11 @@ def mediatype(chtype, error=0):
 		return smil_mediatype[chtype]
 	if error and chtype != 'layout':
 		print '** Unimplemented channel type', chtype
-	return 'cmif_'+chtype
+	return 'cmif:'+chtype
 
 class SMILWriter:
 	def __init__(self, node, fp, filename):
+		self.uses_cmif_extension = 0
 		self.__title = None
 		self.root = node
 		self.fp = fp
@@ -264,29 +277,34 @@ class SMILWriter:
 
 		if len(self.bases_used) > 1:
 			print '** Document uses multiple toplevel channels'
+			self.uses_cmif_extension = 1
 		
 		self.tmpdirname = filename + '.data'
 
 	def write(self):
-		self.fp.write(SMILdecl)
-		self.fp.write('<smil>\n')
-		self.fp.push()
-		self.fp.write('<head>\n')
-		self.fp.push()
-		self.fp.write('<meta name="sync" content="soft"/>\n')
+		fp = self.fp
+		fp.write(SMILdecl)
+		if self.uses_cmif_extension:
+			fp.write(CMIFns)
+		fp.write(SMILdtd)
+		fp.write('<smil>\n')
+		fp.push()
+		fp.write('<head>\n')
+		fp.push()
+		fp.write('<meta name="sync" content="soft"/>\n')
 		self.writelayout()
 		if self.__title:
-			self.fp.write('<meta name="title" content=%s/>\n' %
-				      nameencode(self.__title))
-		self.fp.pop()
-		self.fp.write('</head>\n')
-		self.fp.write('<body>\n')
-		self.fp.push()
+			fp.write('<meta name="title" content=%s/>\n' %
+				 nameencode(self.__title))
+		fp.pop()
+		fp.write('</head>\n')
+		fp.write('<body>\n')
+		fp.push()
 		self.writenode(self.root, root = 1)
-		self.fp.pop()
-		self.fp.write('</body>\n')
-		self.fp.pop()
-		self.fp.write('</smil>\n')
+		fp.pop()
+		fp.write('</body>\n')
+		fp.pop()
+		fp.write('</smil>\n')
 
 	def calcnames1(self, node):
 		"""Calculate unique names for nodes; first pass"""
@@ -297,9 +315,12 @@ class SMILWriter:
 			if not self.ids_used.has_key(name):
 				self.ids_used[name] = 1
 				self.uid2name[uid] = name
-		if node.GetType() in interiortypes:
+		ntype = node.GetType()
+		if ntype in interiortypes:
 			for child in node.children:
 				self.calcnames1(child)
+		if ntype == 'bag':
+			self.uses_cmif_extension = 1
 
 	def calcnames2(self, node):
 		"""Calculate unique names for nodes; second pass"""
@@ -336,6 +357,11 @@ class SMILWriter:
 			if ch.has_key('base_window'):
 				base = ch['base_window']
 				self.bases_used[base] = 1
+			# also check if we need to use the CMIF extension
+			if not self.uses_cmif_extension and \
+			   not smil_mediatype.has_key(ch['type']) and \
+			   ch['type'] != 'layout':
+				self.uses_cmif_extension = 1
 
 	def calcchnames2(self, node):
 		"""Calculate unique names for channels; second pass"""
@@ -451,7 +477,12 @@ class SMILWriter:
 
 		interior = (type in interiortypes)
 		if interior:
-			mtype = type
+			if type == 'bag':
+				mtype = 'cmif:bag'
+			elif type == 'alt':
+				mtype = 'switch'
+			else:
+				mtype = type
 		else:
 			chtype = x.GetChannelType()
 			if not chtype:
@@ -476,7 +507,7 @@ class SMILWriter:
 		imm_href = None
 		if type == 'imm':
 			data = string.join(x.GetValues(), '\n')
-			if mtype != 'text':
+			if mtype != 'text' and mtype[:5] != 'cmif:':
 				import base64
 				data = base64.encodestring(data)
 			elif '<' in data or '&' in data:
