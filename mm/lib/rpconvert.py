@@ -140,15 +140,35 @@ def rpconvert(node):
 		em.setchannelattr(chname, 'center', 0)
 		em.setchannelattr(chname, 'drawbox', 0)
 		em.setchannelattr(chname, 'z', -1)
+
+		# calculate subregion positioning
+		# first work in source (RealPix) coordinates
 		if tagdict.get('displayfull', 0):
-			x, y, w, h = 0, 0, rw, rh
+			x, y, w, h = 0, 0, rp.width, rp.height
 		else:
 			x, y = tagdict.get('subregionxy', (0, 0))
 			w, h = tagdict.get('subregionwh', (0, 0))
+			# they really default to the size of the window
 			if w == 0:
-				w = rw - x
+				w = rp.width
 			if h == 0:
-				h = rh - y
+				h = rp.height
+		# if size too big, reduce to RealPix size
+		if w > rp.width:
+			w = rp.width
+		if h > rp.height:
+			h = rp.height
+		# if the destination area doesn't fit, it is shifted up and left to make it fit
+		if x + w > rp.width:
+			x = rp.width - w
+		if y + h > rp.height:
+			y = rp.height - h
+		# convert to destination (SMIL 2.0) coordinates
+		x = int((float(x) / rp.width) * rw + 0.5)
+		w = int((float(w) / rp.width) * rw + 0.5)
+		y = int((float(y) / rp.height) * rh + 0.5)
+		h = int((float(h) / rp.height) * rh + 0.5)
+
 		em.setnodeattr(newnode, 'left', x)
 		em.setnodeattr(newnode, 'top', y)
 		em.setnodeattr(newnode, 'width', w)
