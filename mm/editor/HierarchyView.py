@@ -1223,6 +1223,7 @@ class HierarchyView(HierarchyViewDialog):
 		pass
 
 	def commit(self, type):
+		oldscrollpos = self.window.getscrollposition(units=windowinterface.UNIT_PXL)
 		self.refresh_scene_graph()
 
 		focusobject = self.editmgr.getglobalfocus()
@@ -1236,6 +1237,7 @@ class HierarchyView(HierarchyViewDialog):
 		#elif type == 'ATTRS_CHANGED': # for example, a new event was added.
 		#	self.need_redraw = 1
 		self.draw()
+		self.window.scrollvisible(oldscrollpos, units=windowinterface.UNIT_PXL)
 
 	def kill(self):
 		self.destroy()
@@ -1799,6 +1801,7 @@ class HierarchyView(HierarchyViewDialog):
 			widget = widget.get_mmwidget()
 
 		widget.select()
+		print 'DBG selectwidget', widget, 'scroll', scroll, widget.get_box()
 		if scroll:
 			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 
@@ -1841,7 +1844,7 @@ class HierarchyView(HierarchyViewDialog):
 				self.focus_lock = 1
 				self.editmgr.addglobalfocus([widget.get_node()])
 				self.focus_lock = 0
-
+		print 'DBG: alsoselect', widget, 'scroll', scroll, widget.get_box()
 		if scroll:
 			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 
