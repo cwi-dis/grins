@@ -58,6 +58,9 @@ getmainwnd=toplevel.getmainwnd
 getactivedocframe=toplevel.getActiveDocFrame
 # /SDI-MDI Model Support
 
+#
+register_embedded = toplevel.register_embedded
+unregister_embedded = toplevel.unregister_embedded
 
 # constants
 from appcon import *
