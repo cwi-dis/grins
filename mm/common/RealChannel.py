@@ -198,6 +198,10 @@ class RealChannel:
 	def __createplayer(self):
 		if not self.__has_rma_support:
 			return 0
+		# This is a hack. We re-create the player for every item played. This seems to be the
+		# only way we can make sure that no new windows are created.
+		if os.name == 'mac':
+			self.__rmaplayer = None
 		if not self.__rmaplayer:
 			try:
 				self.__rmaplayer = apply(self.__engine.CreatePlayer, self.__winpos)
@@ -218,14 +222,6 @@ class RealChannel:
 			self.__channel.errormsg(node, 'No URL set on this node')
 			return 0
 		url = MMurl.canonURL(url)
-##		try:
-##			u = MMurl.urlopen(url)
-##		except:
-##			self.errormsg(node, 'Cannot open '+url)
-##			return 0
-##		else:
-##			u.close()
-##			del u
 		self.__url = url
 		self.__rmaplayer.SetStatusListener(self)
 		if duration > 0:
@@ -248,15 +244,9 @@ class RealChannel:
 		if not self._playargs:
 			return
 		node, window, winpossize, url = self._playargs
-		temp = self.__rmaplayer
 		self.__rmaplayer = None
 		self.__createplayer()
 		self.__rmaplayer.SetStatusListener(self)
-		if window is not None:
-			self.__rmaplayer.SetOsWindow(window)
-		if winpossize is not None:
-			pos, size = winpossize
-			self.__rmaplayer.SetPositionAndSize(pos, size)
 		self.__rmaplayer.OpenURL(url)
 		self.__rmaplayer.Begin()
 
@@ -286,11 +276,7 @@ class RealChannel:
 						self.__channel.playdone(0)
 						self.__playdone_called = 1
 				return
-##		print 'looping'
-#		windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
 		windowinterface.settimer(0.1,(self.replay,()))
-#		self.__rmaplayer.Stop()
-#		self.__rmaplayer.Begin()
 
 	def ErrorOccurred(self,str):
 		if realenginedebug:
