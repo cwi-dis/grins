@@ -217,9 +217,9 @@ class Widget:
 			print "Error! Node has no root - should I be selected?"
 		self.root.dirty = 1
 		# DEBUG:
-		print "Selected: ", self
-		print "          coords: ", self.pos_abs
-		print self.name
+		#print "Selected: ", self
+		#print "          coords: ", self.pos_abs
+		#print self.name
 
 	def unselect(self):
 		self.selected = 0
