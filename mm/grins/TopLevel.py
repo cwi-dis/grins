@@ -11,6 +11,7 @@ import settings
 # RTIPA start
 import features
 # RTIPA end
+import systemtestnames
 
 from TopLevelDialog import TopLevelDialog
 
@@ -64,6 +65,9 @@ class TopLevel(TopLevelDialog):
 		url = urlunparse((utype, host, path, params, query, None))
 		self.filename = url
 		self.source = None
+
+		settings.register(self)
+
 		if askskin:
 			self.read_it_with_skin()
 		else:
@@ -95,6 +99,14 @@ class TopLevel(TopLevelDialog):
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
+
+	def commit(self, type):
+		if self.player is not None:
+			self.player.stop()
+		self.update_toolbarpulldowns()
+
+	def transaction(self, type):
+		return 1
 
 	def show(self):
 		TopLevelDialog.show(self)
@@ -183,6 +195,38 @@ class TopLevel(TopLevelDialog):
 
 	def progressCallback(self, pValue):
 		self.progress.set(self.progressMessage, None, None, pValue*100, 100)
+
+	def getsettingsdict(self):
+		# Returns the initializer dictionary used
+		# to create the toolbar pulldown menus for
+		# preview playback preferences
+
+		alltests = self.root.GetAllSystemTests()
+		dict = {}
+		for testname in alltests:
+			exttestname = systemtestnames.int2extattr(testname)
+			val = settings.get(testname)
+			values = systemtestnames.getallexternal(testname)
+			init = systemtestnames.int2extvalue(testname, val)
+			dict[exttestname] = (values, (self.systemtestcb, testname), init)
+		# Add the "synchronous playback" button
+		offon = ['off', 'on']
+		cur = offon[settings.get('default_sync_behavior_locked')]
+		dict['Synchronous playback'] = (offon, self.syncmodecb, cur)
+		return dict
+
+	def update_toolbarpulldowns(self):
+		self.setsettingsdict(self.getsettingsdict())
+
+	def syncmodecb(self, arg):
+		settings.set('default_sync_behavior_locked', arg == 'on')
+
+	def systemtestcb(self, attrname, extvalue):
+		attrvalue = systemtestnames.ext2intvalue(attrname, extvalue)
+		if settings.get(attrname) != attrvalue:
+			settings.set(attrname, attrvalue)
+			self.root.ResetPlayability()
+		return 1		# indicate success
 
 	def read_it_with_skin(self):
 		if settings.get('askskin'):

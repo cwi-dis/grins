@@ -19,7 +19,11 @@ class TopLevelDialog:
 			self.window=None
 		if not self.window:
 			self.window = windowinterface.newdocument(self, 
-				adornments = None,commandlist = self.commandlist)
+				adornments = {'pulldown': self.getsettingsdict()}, commandlist = self.commandlist)
+
+	def setsettingsdict(self, dict):
+		if self.window:
+			self.window.settoolbarpulldowns(dict)
 
 	def hide(self):
 		if hasattr(self,'window') and self.window:
