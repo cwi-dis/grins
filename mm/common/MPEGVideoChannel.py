@@ -59,10 +59,10 @@ class VideoChannel(ChannelWindowThread):
 			
 #		hicolor = self.gethicolor(node)
 #		for a in node.GetRawAttrDef('anchorlist', []):
-#			atype = a[A_TYPE]
+#			atype = a.atype
 #			if atype not in SourceAnchors or atype == ATYPE_AUTO:
 #				continue
-#			args = a[A_ARGS]
+#			args = a.aargs
 #			if len(args) == 0:
 #				args = [0,0,1,1]
 #			elif len(args) == 4:
@@ -76,11 +76,11 @@ class VideoChannel(ChannelWindowThread):
 ##			y = y * self._arm_imbox[3] + self._arm_imbox[1]
 ##			w = w * self._arm_imbox[2]
 ##			h = h * self._arm_imbox[3]
-#			b = self.armed_display.newbutton((x,y,w,h), times = a[A_TIMES])
+#			b = self.armed_display.newbutton((x,y,w,h), times = a.atimes)
 #			b.hiwidth(3)
 #			if drawbox:
 #				b.hicolor(hicolor)
-#			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
+#			self.setanchor(a.aid, a.atype, b, a.atimes)
 
 		return self.syncarm
 
@@ -141,7 +141,7 @@ class VideoChannel(ChannelWindowThread):
 	def defanchor(self, node, anchor, cb):
 		import windowinterface
 		windowinterface.showmessage('The whole window will be hot.')
-		cb((anchor[0], anchor[1], [0,0,1,1], anchor[3]))
+		cb(anchor)
 
 	def stoparm(self):
 		self.need_armdone = 0
