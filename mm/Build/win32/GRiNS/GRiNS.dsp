@@ -274,6 +274,10 @@ SOURCE=.\M_DrawTk.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_DropTarget.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_Duration.c
 # End Source File
 # Begin Source File
@@ -859,6 +863,10 @@ SOURCE=.\M_traceback.c
 # Begin Source File
 
 SOURCE=.\M_types.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_urlcache.c
 # End Source File
 # Begin Source File
 
