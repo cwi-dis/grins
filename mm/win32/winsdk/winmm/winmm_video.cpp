@@ -160,6 +160,22 @@ static PyObject* PyVideoPlayer_FinishedPlayback(PyVideoPlayer *self, PyObject *a
 	return Py_BuildValue("i", ret); 
 	}
 
+static PyObject* PyVideoPlayer_LockSurface(PyVideoPlayer *self, PyObject *args)
+	{
+	if (!PyArg_ParseTuple(args,""))
+		return NULL;
+	self->m_player->lock_surface();
+	return none(); 
+	}
+
+static PyObject* PyVideoPlayer_UnlockSurface(PyVideoPlayer *self, PyObject *args)
+	{
+	if (!PyArg_ParseTuple(args,""))
+		return NULL;
+	self->m_player->unlock_surface();
+	return none(); 
+	}
+
 PyMethodDef PyVideoPlayer::methods[] = {
 	{"GetVideoSize", (PyCFunction)PyVideoPlayer_GetVideoSize, METH_VARARGS, ""},
 	{"GetVideoDuration", (PyCFunction)PyVideoPlayer_GetVideoDuration, METH_VARARGS, ""},
@@ -167,6 +183,8 @@ PyMethodDef PyVideoPlayer::methods[] = {
 	{"SuspendPlayback", (PyCFunction)PyVideoPlayer_SuspendPlayback, METH_VARARGS, ""},
 	{"ResumePlayback", (PyCFunction)PyVideoPlayer_ResumePlayback, METH_VARARGS, ""},
 	{"FinishedPlayback", (PyCFunction)PyVideoPlayer_FinishedPlayback, METH_VARARGS, ""},
+	{"LockSurface", (PyCFunction)PyVideoPlayer_LockSurface, METH_VARARGS, ""},
+	{"UnlockSurface", (PyCFunction)PyVideoPlayer_UnlockSurface, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
 
