@@ -56,3 +56,6 @@ class TopLevelDialog:
 		b2 = "Don't save"
 		b3 = 'Cancel'
 		return windowinterface.multchoice(prompt, [b1, b2, b3], -1)
+
+	def setcommands(self, commandlist):
+		self.window.set_commandlist(commandlist)
