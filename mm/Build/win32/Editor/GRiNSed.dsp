@@ -161,18 +161,6 @@ SOURCE=.\M_AnchorDefs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AnchorEdit.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_AnchorEditDialog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_AnchorEditForm.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_appcon.c
 # End Source File
 # Begin Source File

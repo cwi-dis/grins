@@ -1,7 +1,7 @@
 Document Type: WSE
 item: Global
-  Version=7.04
-  Title=Oratrix GRiNS 1.0.1alpha Installation
+  Version=7.041
+  Title=Oratrix GRiNS 1.5 beta Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
   Japanese Font Name=MS Gothic
@@ -19,25 +19,25 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins-win-full-101alpha.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins-win-full-15beta.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
   Upload Directory=/ufs/sjoerd/tmp
   Per-User Version ID=1
   Dialogs Version=7
-  Version File=1.0.1alpha
-  Version Description=Oratrix GRiNS for SMIL
+  Version File=1.5 beta
+  Version Description=Oratrix GRiNS for G2
   Version Copyright=Copyright 1999 Oratrix Development BV
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=3635029417
+  File Checksum=2460289814
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=D:\Program Files\Wise InstallMaker
+  Variable Default2=E:\EXTERN~1\WISEIN~1
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -91,12 +91,12 @@ item: End Block
 end
 item: Set Variable
   Variable=APPTITLE
-  Value=Oratrix GRiNS 1.0.1alpha
+  Value=Oratrix GRiNS 1.5 beta
   Flags=10000000
 end
 item: Set Variable
   Variable=GROUP
-  Value=Oratrix GRiNS 1.0.1alpha
+  Value=Oratrix GRiNS for G2, 1.5 beta
   Flags=10000000
 end
 item: Set Variable
@@ -105,7 +105,7 @@ item: Set Variable
 end
 item: Set Variable
   Variable=MAINDIR
-  Value=Oratrix\GRiNS 1.0.1alpha
+  Value=Oratrix\GRiNS 1.5 beta
   Flags=10000000
 end
 item: Check Configuration
@@ -1406,7 +1406,7 @@ end
 item: End Block
 end
 item: Install File
-  Source=d:\Program Files\Wise InstallMaker\Unwise.exe
+  Source=E:\External Program Files\Wise InstallMaker\Unwise.exe
   Destination=%MAINDIR%\Unwise.exe
   Flags=0000000010000010
 end
@@ -1416,73 +1416,13 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A3_videoshow-bkgdaudio-img.smil
-  Destination=%MAINDIR%\Templates\A3_videoshow-bkgdaudio-img.smil
+  Source=d:\ufs\mm\cmif\Templates\media\slide-3.jpg
+  Destination=%MAINDIR%\Templates\media\slide-3.jpg
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A1_simple_slideshow.smil
-  Destination=%MAINDIR%\Templates\A1_simple_slideshow.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\slideshow_2x_audio.bmp
-  Destination=%MAINDIR%\Templates\slideshow_2x_audio.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\rp_2x_audio.bmp
-  Destination=%MAINDIR%\Templates\rp_2x_audio.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\GetGRiNS.gif
-  Destination=%MAINDIR%\Templates\GetGRiNS.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\freeplayer_g2.gif
-  Destination=%MAINDIR%\Templates\freeplayer_g2.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\adaptive.bmp
-  Destination=%MAINDIR%\Templates\adaptive.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\video_2x_audio.bmp
-  Destination=%MAINDIR%\Templates\video_2x_audio.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A4_adaptive_content.smil
-  Destination=%MAINDIR%\Templates\A4_adaptive_content.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A5_empty.smil
-  Destination=%MAINDIR%\Templates\A5_empty.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A2_rp-slideshow-bgaud-img.smil
-  Destination=%MAINDIR%\Templates\A2_rp-slideshow-bgaud-img.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\embedded_htmllayout_player.html
-  Destination=%MAINDIR%\Templates\embedded_htmllayout_player.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\embedded_player.html
-  Destination=%MAINDIR%\Templates\embedded_player.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\external_player.html
-  Destination=%MAINDIR%\Templates\external_player.html
+  Source=d:\ufs\mm\cmif\Templates\media\slide-2.jpg
+  Destination=%MAINDIR%\Templates\media\slide-2.jpg
   Flags=0000000010000010
 end
 item: Install File
@@ -1496,6 +1436,26 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\rp-slide-3.jpg
+  Destination=%MAINDIR%\Templates\media\rp-slide-3.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\rp-slide-2.jpg
+  Destination=%MAINDIR%\Templates\media\rp-slide-2.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\rp-slide-1.jpg
+  Destination=%MAINDIR%\Templates\media\rp-slide-1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\realtext-template.rt
+  Destination=%MAINDIR%\Templates\media\realtext-template.rt
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\Templates\media\realpix-template.rp
   Destination=%MAINDIR%\Templates\media\realpix-template.rp
   Flags=0000000010000010
@@ -1506,38 +1466,93 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\bkgd-image.jpg
-  Destination=%MAINDIR%\Templates\media\bkgd-image.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\slide-2.jpg
-  Destination=%MAINDIR%\Templates\media\slide-2.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\rp-slide-3.jpg
-  Destination=%MAINDIR%\Templates\media\rp-slide-3.jpg
-  Flags=0000000010000010
-end
-item: Install File
   Source=d:\ufs\mm\cmif\Templates\media\hd_bkgd-image.jpg
   Destination=%MAINDIR%\Templates\media\hd_bkgd-image.jpg
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\slide-3.jpg
-  Destination=%MAINDIR%\Templates\media\slide-3.jpg
+  Source=d:\ufs\mm\cmif\Templates\media\bkgd-image.jpg
+  Destination=%MAINDIR%\Templates\media\bkgd-image.jpg
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\rp-slide-1.jpg
-  Destination=%MAINDIR%\Templates\media\rp-slide-1.jpg
+  Source=d:\ufs\mm\cmif\Templates\A4_adaptive_content.grins
+  Destination=%MAINDIR%\Templates\A4_adaptive_content.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\rp-slide-2.jpg
-  Destination=%MAINDIR%\Templates\media\rp-slide-2.jpg
+  Source=d:\ufs\mm\cmif\Templates\A3_videoshow-bkaudio-img.grins
+  Destination=%MAINDIR%\Templates\A3_videoshow-bkaudio-img.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\video_2x_audio.bmp
+  Destination=%MAINDIR%\Templates\video_2x_audio.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\A2_rp-slideshow-bgaud-img.grins
+  Destination=%MAINDIR%\Templates\A2_rp-slideshow-bgaud-img.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\A1_simple_slideshow.grins
+  Destination=%MAINDIR%\Templates\A1_simple_slideshow.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\freeplayer_g2.gif
+  Destination=%MAINDIR%\Templates\freeplayer_g2.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\GetGRiNS.gif
+  Destination=%MAINDIR%\Templates\GetGRiNS.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\A5_empty.grins
+  Destination=%MAINDIR%\Templates\A5_empty.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\rp_2x_audio.bmp
+  Destination=%MAINDIR%\Templates\rp_2x_audio.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\external_player.html
+  Destination=%MAINDIR%\Templates\external_player.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\adaptive.bmp
+  Destination=%MAINDIR%\Templates\adaptive.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\slideshow_2x_audio.bmp
+  Destination=%MAINDIR%\Templates\slideshow_2x_audio.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\QSG1-Slideshow.grins
+  Destination=%MAINDIR%\Templates\QSG1-Slideshow.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\qsg1.bmp
+  Destination=%MAINDIR%\Templates\qsg1.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\embedded_player.html
+  Destination=%MAINDIR%\Templates\embedded_player.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\embedded_htmllayout_player.html
+  Destination=%MAINDIR%\Templates\embedded_htmllayout_player.html
   Flags=0000000010000010
 end
 item: Install File
@@ -1549,11 +1564,6 @@ item: Install File
   Source=d:\ufs\mm\cmif\win32\DXMedia\bin\aud2rm.ax
   Destination=%MAINDIR%\Producer-SDK\aud2rm.ax
   Flags=0001001010000011
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNSed Light.exe
-  Destination=%MAINDIR%\GRiNSed Light.exe
-  Flags=0000000010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\rmto3260.dll
@@ -1956,6 +1966,43 @@ end
 item: End Block
 end
 item: Else Statement
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for SMIL
+  Command Line=%MAINDIR%\GRiNSed.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNSed Lite for G2
+  Command Line="%MAINDIR%\GRiNSed Light.exe"
+  Flags=01000000
+end
+item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS
@@ -2404,110 +2451,100 @@ end
 item: End Block
 end
 item: Edit Registry
-  Total Keys=10
-  item: Key
-    Key=.cmif
-    New Value=CMIFfile
-  end
-  item: Key
-    Key=.cmif
-    New Value=application/x-grins-cmif
-    Value Name=Content Type
-  end
+  Total Keys=6
   item: Key
     Key=.smi
     New Value=SMILfile
+    Root=32
   end
   item: Key
     Key=.smi
     New Value=application/smil
     Value Name=Content Type
+    Root=32
   end
   item: Key
     Key=.smil
     New Value=SMILfile
+    Root=32
   end
   item: Key
     Key=.smil
     New Value=application/smil
     Value Name=Content Type
-  end
-  item: Key
-    Key=CMIFfile
-    New Value=GRiNS CMIF File
-  end
-  item: Key
-    Key=CMIFfile\DefaultIcon
-    New Value=%MAINDIR%\GRiNSed.exe,1
+    Root=32
   end
   item: Key
     Key=SMILfile
     New Value=GRiNS SMIL File
+    Root=32
   end
   item: Key
     Key=SMILfile\DefaultIcon
     New Value=%MAINDIR%\GRiNSed.exe,2
+    Root=32
   end
 end
 item: Edit Registry
   Total Keys=1
-  Key=.cmc
-  New Value=CMIFCacheFile
+  Key=MIME\Database\Content Type\application/smil
+  New Value=.smil
+  Value Name=Extension
+  Root=32
 end
 item: Edit Registry
-  Total Keys=1
-  Key=CMIFCacheFile
-  New Value=GRiNS CMIF Cache File
-end
-item: Edit Registry
-  Total Keys=2
-  item: Key
-    Key=MIME\Database\Content Type\application/x-grins-cmif
-    New Value=.cmif
-    Value Name=Extension
-  end
-  item: Key
-    Key=MIME\Database\Content Type\application/smil
-    New Value=.smil
-    Value Name=Extension
-  end
-end
-item: Edit Registry
-  Total Keys=2
-  item: Key
-    Key=CMIFfile\shell\edit
-    New Value=Edit with GRiNS
-  end
-  item: Key
-    Key=CMIFfile\shell\edit\command
-    New Value=%MAINDIR%\GRiNSed.exe "%%1"
-  end
-end
-item: Edit Registry
-  Total Keys=6
-  item: Key
-    Key=CMIFfile\shell\open
-    New Value=Open with GRiNS
-  end
-  item: Key
-    Key=CMIFfile\shell\open\command
-    New Value=%MAINDIR%\GRiNS.exe "%%1"
-  end
+  Total Keys=4
   item: Key
     Key=SMILfile\shell\edit
     New Value=Edit with GRiNS
+    Root=32
   end
   item: Key
     Key=SMILfile\shell\edit\command
     New Value=%MAINDIR%\GRiNSed.exe "%%1"
+    Root=32
   end
   item: Key
     Key=SMILfile\shell\open
     New Value=Open with GRiNS
+    Root=32
   end
   item: Key
     Key=SMILfile\shell\open\command
     New Value=%MAINDIR%\GRiNS.exe "%%1"
+  end
+end
+item: Edit Registry
+  Total Keys=7
+  item: Key
+    Key=.grins
+    New Value=GRiNSProject
+  end
+  item: Key
+    Key=.grins
+    New Value=application/x-grins-project
+    Value Name=Content Type
+  end
+  item: Key
+    Key=GRiNSProject
+    New Value=GRiNS Project File
+  end
+  item: Key
+    Key=GRiNSProject\DefaultIcon
+    New Value=%MAINDIR%\GRiNSed.exe,2
+  end
+  item: Key
+    Key=GRiNSProject\shell\open
+    New Value=Edit with GRiNS Editor for G2
+  end
+  item: Key
+    Key=GRiNSProject\shell\open\command
+    New Value=%MAINDIR%\GRiNSed.exe "%%1"
+  end
+  item: Key
+    Key=MIME\Database\Content Type\application/x-grins-project
+    New Value=.grins
+    Value Name=Extension
   end
 end
 item: Self-Register OCXs/DLLs
@@ -2517,49 +2554,7 @@ item: Add Text to INSTALL.LOG
   Text=Delete in-use files: On
 end
 item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: .cmc
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: .cmif
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: CMIFCacheFile
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: CMIFfile
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: MIME\Database\Content Type\application/x-grins-cmif
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: SMILfile
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
   Text=File Tree: %MAINDIR%\
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: MIME\Database\Content Type\application/smil
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
 end
 item: Wizard Block
   Direction Variable=DIRECTION
