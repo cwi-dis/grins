@@ -572,9 +572,10 @@ class AboutDlg(ResDialog):
 
 # Implementation of the open loaction dialog
 class OpenLocationDlg(ResDialog):
-	def __init__(self,callbacks=None,parent=None):
+	def __init__(self,callbacks=None,parent=None, default=''):
 		ResDialog.__init__(self,grinsRC.IDD_DIALOG_OPENLOCATION,parent)
 		self._callbacks=callbacks
+		self._default = default
 
 		self._text= Edit(self,grinsRC.IDC_EDIT_LOCATION)
 		self._bcancel = Button(self,win32con.IDCANCEL)
@@ -586,6 +587,7 @@ class OpenLocationDlg(ResDialog):
 		self._bopen.enable(0)
 		self._text.hookcommand(self,self.OnEditChange)
 		self._bbrowse.hookcommand(self,self.OnBrowse)
+		self._text.settext(self._default)
 		return ResDialog.OnInitDialog(self)
 
 	def OnOK(self):
