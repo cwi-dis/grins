@@ -8,45 +8,65 @@
 # with the provision that tuples, lists and dictionaries must
 # be surrounded by an extra pair of parentheses.
 #
+# The helptext should be one line explaining what the attribute is for.
+#
 # A definition need not be wholly contained in a single input line;
 # blank lines and comments may be inserted freely.
 
 
-(bbox (tuple (int) (int) (int) (int)) (0 0 0 0) 'Bounding box' default '')
+(bbox (tuple (int) (int) (int) (int)) (0 0 0 0) 'Bounding box' default
+	'Bounding box for embedded PostScript image')
 
-(center (bool) 0 'Center text' default '')
+(center (bool) 0 'Center' default
+	'If on, text is centered within the margins')
 
-(channel (name) undefined 'Channel name' default '')
+(channel (name) undefined 'Channel' default
+	'Name of channel used to render this node/subtree')
 
-(channeldict (namedict (attrdict)) () 'Channel Dictionary' default '')
+(channeldict (namedict (attrdict)) () 'Channel Dictionary' default
+	'Channels used in this document (root node only)')
 
-(duration (float) 0 'Duration (secs.)' default '')
+(duration (float) 0 'Duration' default
+	'Duration of a node/subtree (in seconds)')
 
-(extraspaceafter (float) 0 'Extra space after word (chars)' default '')
+(extraspaceafter (float) 0 'Extra space after' default
+	'Extra space following last word (in characters)')
 
-(file (string) '' 'File name' default '')
+(file (string) '' 'File' default
+	'File name for external node')
 
-(font (string) 'default' 'Font' default '')
+(font (string) 'default' 'Font' default
+	'Font used to display text')
 
-(format (enum ASCII PostScript) ASCII 'Text file format' default '')
+(format (enum ASCII PostScript) ASCII 'Format' default
+	'Format used by external text file (ASCII or PostScript)')
 
-(indent (float) 0 'Left margin indentation (chars)' default '')
+(indent (float) 0 'Indent' default
+	'Extra indentation of left margin (in characters)')
 
-(justify (bool) 0 'Justify right margins' default '')
+(justify (bool) 0 'Justify' default
+	'If on, justify right margins')
 
-(keep (bool) 1 'Keep text when done' default '')
+(keep (bool) 0 'Keep' default
+	'If on, text in window is kept until explicitly replaced')
 
-(name (string) '' 'Node name' default '')
+(name (name) none 'Name' default
+	'Name given to a node')
 
-(needGS (bool) 0 'Need Ghostscript' default '')
+(needGS (bool) 0 'Need Ghostscript' default
+	'Must be on for channel to support embedded Postscript')
 
-(nospaceafter (bool) 0 'Suppress space after word' default '')
+(nospaceafter (bool) 0 'No space after' default
+	'If on, suppress space following last word')
 
-(scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars (hor, ver)' default '')
+(scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars' default
+	'Select the presence of horizontal/vertical scroll bars')
 
-(style (list (name)) () 'Style(s) used' default '')
+(style (list (name)) () 'Style list' default
+	'List of style names that apply to this node/subtree')
 
-(styledict (namedict (attrdict)) () 'Style Dictionary' default '')
+(styledict (namedict (attrdict)) () 'Style Dictionary' default
+	'Styles used in this document (root node only)')
 
 (synclist (list (enclosed (tuple 
 				(enum begin end)
@@ -56,21 +76,27 @@
 				(float)
 				(float)
 	)))
-	() 'Sync arcs (old style)' default '')
+	() 'Sync list' default
+	'List of sync arcs used in this subtree')
 
 (synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
-	() 'Sync arcs ending here' default '')
+	() 'SyncTo list' default
+	'List of sync arcs ending at this node')
 
-(type (name) undefined 'Channel type' default '')
+(type (name) undefined 'Channel type' default
+	'Channel type (channel dictionary only)')
 
-(volume (float) 1.0 'Audio volume' default '')
+(volume (float) 1.0 'Volume' default
+	'Volume of audio output (1.0 means standard)')
 
-(vspace (tuple (float) (float)) (-1 -1)
-	'Vertical space before/after (lines)' default '')
+(vspace (tuple (float) (float)) (-1 -1) 'Vertical space' default
+	'Vertical space before/after text (in lines)')
 
-(wait_for_close (bool) 0
-	'Ask user to close window before proceeding' default '')
+(wait_for_close (bool) 0 'Wait for close' default
+	'Wait for "close window" action to proceed')
 
-(winpos (tuple (int) (int)) (0 0) 'Window position (x, y)' default '')
+(winpos (tuple (int) (int)) (0 0) 'Window position' default
+	'Initial window position (x, y) (x axis pointing down!)')
 
-(winsize (tuple (int) (int)) (0 0) 'Window size (width, height)' default '')
+(winsize (tuple (int) (int)) (0 0) 'Window size' default
+	'Initial window size (width, height)')
