@@ -9,7 +9,7 @@ import string
 import MMAttrdefs
 import sys
 import windowinterface
-import urllib
+import MMurl
 import htmlwidget
 from TextChannel import getfont, mapfont
 import WMEVENTS
@@ -251,14 +251,14 @@ class HtmlChannel(Channel.ChannelWindow):
 				self.htmlw.insert_html(self.played_str, self.played_url)
 				self.url = self.played_url
 				return
-			href = urllib.basejoin(self.url, href)
+			href = MMurl.basejoin(self.url, href)
 		else:
 			href = self.url
 		if list:
 			href = addquery(href, list)
-		self.url, tag = urllib.splittag(href)
+		self.url, tag = MMurl.splittag(href)
 		try:
-			u = urllib.urlopen(self.url)
+			u = MMurl.urlopen(self.url)
 			if u.headers.maintype == 'image':
 				newtext = '<IMG SRC="%s">\n' % self.url
 			else:
@@ -294,14 +294,10 @@ def encodequery(query):
 	return (name, value)
 
 def encodestring(s):
-	return urllib.quote(s or '')	# Catches None as well!
+	return MMurl.quote(s or '')	# Catches None as well!
 
 #
 # Get the data-behind-the-URL
 #
 def urlget(newurl):
-	return urllib.urlopen(newurl).read()
-
-	
-# cleanup temporary files when we finish
-windowinterface.addclosecallback(urllib.urlcleanup, ())
+	return MMurl.urlopen(newurl).read()

@@ -9,7 +9,7 @@ __version__ = "$Id$"
 from Channel import ChannelWindow
 import windowinterface
 import time
-import urllib
+import MMurl
 import os
 import Qt
 import QuickTime
@@ -36,7 +36,7 @@ class MovieChannel(ChannelWindow):
 		if debug: print 'MovieChannel: arm', node
 
 		fn = self.getfileurl(node)
-		fn = urllib.url2pathname(fn)
+		fn = MMurl.url2pathname(fn)
 		
 		try:
 			movieResRef = Qt.OpenMovieFile(fn, 1)
