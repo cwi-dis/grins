@@ -365,10 +365,6 @@ SOURCE=.\M_DefCompatibilityCheck.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_DrawTk.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_DropTarget.c
 # End Source File
 # Begin Source File
@@ -386,6 +382,14 @@ SOURCE=.\M_EditMgr.c
 # Begin Source File
 
 SOURCE=.\M_embedding.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_EventEditor.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_EventEditorDialog.c
 # End Source File
 # Begin Source File
 
@@ -426,6 +430,10 @@ SOURCE=.\M_FtpWriter.c
 # Begin Source File
 
 SOURCE=.\M_GenFormView.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_GenView.c
 # End Source File
 # Begin Source File
 
@@ -1290,6 +1298,10 @@ SOURCE=.\M_windowinterface.c
 # Begin Source File
 
 SOURCE=.\M_winerror.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_winlayout.c
 # End Source File
 # Begin Source File
 

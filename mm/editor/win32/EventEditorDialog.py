@@ -23,7 +23,15 @@ class EventEditorDialog(win32dialog.ResDialog):
 		self.attach_handles_to_subwindows()
 		self._causewidget.resetcontent()
 		map(self._causewidget.addstring, EventEditor.CAUSES)
-		self._causewidget.setcursel(EventEditor.CAUSES.index(self._eventstruct.get_cause()))
+		x = self._eventstruct.get_cause()
+		if x:
+			try:
+				self._causewidget.setcursel(EventEditor.CAUSES.index(x))
+			except ValueError:
+				print "Error: unknown event cause:", x
+				#windowinterface.showmessage("Unknown event cause.", mtype="error")
+		else:
+			print "Warning: Event cause is None."
 		self.set_eventwidget()
 		self.set_offsetwidget()
 		self._causewidget.hookcommand(self, self._causewidgetcallback)
@@ -70,17 +78,26 @@ class EventEditorDialog(win32dialog.ResDialog):
 			self._offsetwidget.setmodify(0)
 
 	def _causewidgetcallback(self, id, code):
-		s = self._causewidget.getvalue()
-		self._eventstruct.set_cause(s)
-		self.set_eventwidget()
+		if code == win32con.CBN_SELCHANGE:
+			s = self._causewidget.getvalue()
+			self._eventstruct.set_cause(s)
+			self.set_eventwidget()
 	def _eventwidgetcallback(self, id, code):
-		s = self._eventwidget.getvalue()
-		self._eventstruct.set_event(s)
-		self.set_textwidget()
+		if code == win32con.CBN_SELCHANGE:
+			s = self._eventwidget.getvalue()
+			self._eventstruct.set_event(s)
+			self.set_textwidget()
 	def _textwidgetcallback(self, id, code):
+		print "DEBUG: _textwidgetcallback: code is: ", code
+		if code != win32con.EN_CHANGE:
+			return
 		t = self._textwidget.gettext()
-		self._eventstruct.set_thing_string(t)
+		error = self._eventstruct.set_thing_string(t)
+		if error:
+			windowinterface.showmessage(error, mtype="error")
 	def _offsetwidgetcallback(self, id, code):
+		#if code != win32con.EN_CHANGE:
+		#	return
 		if not self._eventstruct.set_offset(self._offsetwidget.gettext()):
 			# In theory this will never happen - the widget is numeric only.
 			windowinterface.showmessage("Offset must be a number.", self)
