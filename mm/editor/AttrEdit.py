@@ -256,16 +256,16 @@ class SlideWrapper(NodeWrapper):
 		import realsupport
 		tag = self.node.GetAttrDict()['tag']
 		if tag == 'fill':
-			namelist = ['color', 'subregion', 'start']
+			namelist = ['color', 'displayfull', 'subregionxy', 'subregionwh', 'subregionanchor', 'start']
 		elif tag in ('fadein', 'crossfade', 'wipe'):
-			namelist = ['file', 'imgcrop', 'aspect', 'subregion', 'start', 'duration', 'maxfps', 'href']
+			namelist = ['file', 'imgcrop', 'aspect', 'displayfull', 'subregionxy', 'subregionwh', 'subregionanchor', 'start', 'duration', 'maxfps', 'href']
 			if tag == 'wipe':
 				namelist.append('direction')
 				namelist.append('wipetype')
 		elif tag == 'fadeout':
-			namelist = ['color', 'subregion', 'start', 'duration', 'maxfps']
+			namelist = ['color', 'subregionxy', 'displayfull', 'subregionwh', 'subregionanchor', 'start', 'duration', 'maxfps']
 		elif tag == 'viewchange':
-			namelist = ['imgcrop', 'subregion', 'start', 'duration', 'maxfps']
+			namelist = ['imgcrop', 'displayfull', 'subregionxy', 'subregionwh', 'subregionanchor', 'start', 'duration', 'maxfps']
 		else:
 			namelist = []
 		namelist.insert(0, 'tag')
@@ -546,6 +546,8 @@ class AttrEditor(AttrEditorDialog):
 				C = WipeDirectionAttrEditorField
 			elif displayername == 'wipetype':
 				C = WipeTypeAttrEditorField
+			elif displayername == 'subregionanchor':
+				C = AnchorTypeAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -943,6 +945,14 @@ class WipeDirectionAttrEditorField(PopupAttrEditorField):
 
 class WipeTypeAttrEditorField(PopupAttrEditorField):
 	__values = ['normal', 'push']
+
+	def getoptions(self):
+		return ['Default'] + self.__values
+
+class AnchorTypeAttrEditorField(PopupAttrEditorField):
+	__values = ['top-left', 'top-center', 'top-right',
+		    'center-left', 'center', 'center-right',
+		    'bottom-left', 'bottom-center', 'bottom-right']
 
 	def getoptions(self):
 		return ['Default'] + self.__values
