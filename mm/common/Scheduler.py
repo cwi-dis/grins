@@ -863,7 +863,6 @@ class SchedulerContext:
 				if not parent.playing:
 					break
 				if xxx and action[1][0] == SR.LOOPRESTART:
-					print 'keep',`self.queue`
 					return
 				del self.queue[0]
 				ts = None
