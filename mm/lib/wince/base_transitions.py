@@ -6,11 +6,10 @@ import Transitions
 import windowinterface
 import time
 
-# for ddraw.error
-import ddraw
-
 # for Sleep
 import winkernel
+
+import wingdi
 
 class TransitionEngine:
 	def __init__(self, window, outtrans, runit, dict, cb):
@@ -35,7 +34,6 @@ class TransitionEngine:
 		self.__endprogress = dict.get('endProgress', 1)
 		if self.__endprogress <= self.__startprogress:
 			self.__transperiod = 0
-			#raise AssertionError
 		elif self.__duration <= 0:
 			self.__transperiod = 0
 			self.__startprogress = self.__endprogress
@@ -89,8 +87,7 @@ class TransitionEngine:
 		if wnd.is_closed():
 			return
 		
-		# assert that we paint the active surface the correct way 
-		# for each of the following cases:
+		# cases:
 		# 1. multiElement==true, childrenClip==true
 		# 2. multiElement==true, childrenClip==false
 		# 3. multiElement==false
@@ -98,24 +95,24 @@ class TransitionEngine:
 			if self.__childrenClip:
 				# since children clipping will be done in wnd's paint method
 				# do a normal painting on active surface
-				wnd.paintOnDDS(self._tosurf, wnd)
+				wnd.paintOnSurf(self._tosurf, wnd)
 			else:
 				# do a normal painting on active surface
-				wnd.paintOnDDS(self._tosurf, wnd)
+				wnd.paintOnSurf(self._tosurf, wnd)
 		else:
 			if self.outtrans:
-				wnd._paintOnDDS(wnd._fromsurf, wnd._rect)
-				wnd.updateBackDDS(self._tosurf, exclwnd=wnd) 
+				wnd._paintOnSurf(wnd._fromsurf)
+				wnd.updateBackSurf(self._tosurf, exclwnd = wnd) 
 			else:
-				wnd.updateBackDDS(wnd._fromsurf, exclwnd=wnd)
-				wnd._paintOnDDS(self._tosurf, wnd._rect)
+				wnd.updateBackSurf(wnd._fromsurf, exclwnd = wnd)
+				wnd._paintOnSurf(self._tosurf)
 	
 		fromsurf = 	wnd._fromsurf
 		tosurf = self._tosurf	
 		tmpsurf  = self._tmp
 		dstsurf  = wnd._drawsurf
 		dstrgn = None
-
+		
 		self.__transitiontype.updatebitmap(parameters, tosurf, fromsurf, tmpsurf, dstsurf, dstrgn)
 		wnd.update(wnd.getwindowpos())
 
@@ -144,19 +141,13 @@ class TransitionEngine:
 		# transition window
 		# or parent window in multiElement transitions
 		wnd = self.windows[0]
-		while 1:
-			try:
-				wnd._fromsurf = wnd.getBackDDS(exclwnd = wnd, dopaint = 1)
-				# use getBackDDS instead of createDDS
-				# just in case of an early repaint 
-				wnd._drawsurf = wnd.getBackDDS(exclwnd = wnd, dopaint = 0)
-				self._tosurf = wnd.getBackDDS(exclwnd = wnd, dopaint = 0)
-				self._tmp = wnd.getBackDDS(exclwnd = wnd, dopaint = 0)
-			except ddraw.error, arg:
-				print arg
-				winkernel.Sleep(50)
-			else:
-				break
+		try:
+			wnd._fromsurf = wnd.cloneBackSurf(exclwnd = wnd, dopaint = 1)
+			wnd._drawsurf = wnd.cloneBackSurf(exclwnd = wnd, dopaint = 0)
+			self._tosurf = wnd.cloneBackSurf(exclwnd = wnd, dopaint = 0)
+			self._tmp = wnd.cloneBackSurf(exclwnd = wnd, dopaint = 0)
+		except wingdi.error, arg:
+			print arg
 
 		# resize to this window
 		x, y, w, h = wnd._rect
@@ -176,7 +167,7 @@ class TransitionEngine:
 		else:
 			try:
 				self.settransitionvalue(self.__startprogress + self.__transperiod * t_sec)
-			except ddraw.error, arg:
+			except wingdi.error, arg:
 				print arg			
 				
 	
@@ -190,114 +181,3 @@ class TransitionEngine:
 			self.__fiber_id = None
 
 
-class InlineTransitionEngine:
-	def __init__(self, window, outtrans, runit, dict, cb):
-		self.window = window
-		self.outtrans = outtrans
-		self.dict = dict
-		self.cb = cb
-
-		trtype = dict.get('trtype')
-		subtype = dict.get('subtype')
-		klass = Transitions.TransitionFactory(trtype, subtype)
-		self.__transitiontype = klass(self, self.dict)
-
-		self.__running = 0		
-		self._lastvalue = None
-
-	def __del__(self):
-		if self.__transitiontype:
-			self.endtransition()
-	
-	def begintransition(self):
-		self.__createSurfaces()
-		self.__running = 1	
-		self._lastvalue = None
-
-	def endtransition(self):
-		if not self.__transitiontype: return
-		self.__transitiontype = None
-		self.__running = 0		
-		wnd = self.window
-		if wnd.is_closed():
-			return
-		wnd._transition = None
-		wnd._drawsurf = None
-		wnd.update(wnd.getwindowpos())
-
-	def settransitionvalue(self, value):
-		if value<0.0 or value>1.0:
-			raise AssertionError, 'settransitionvalue out of range %d', value
-		
-		# transition window
-		wnd = self.window
-		if wnd.is_closed():
-			return
-		
-		if self._lastvalue == value:
-			wnd.update(wnd.getwindowpos())
-			return
-		self._lastvalue = value
-			
-		# hack until i find the bug
-		if value == 1.0: 
-			if self.outtrans: 
-				wnd.updateBackDDS(wnd._drawsurf, exclwnd=wnd)
-			else:
-				wnd._paintOnDDS(wnd._drawsurf, wnd._rect)
-			wnd.update(wnd.getwindowpos())
-			return
-		elif value==0.0:
-			if self.outtrans: 
-				wnd._paintOnDDS(wnd._drawsurf, wnd._rect)
-			else:
-				wnd.updateBackDDS(wnd._drawsurf, exclwnd=wnd)
-			wnd.update(wnd.getwindowpos())
-			return
-
-		# normal processing
-		parameters = self.__transitiontype.computeparameters(value)
-		if self.outtrans:
-			wnd._paintOnDDS(wnd._fromsurf, wnd._rect)
-			wnd.updateBackDDS(self._tosurf, exclwnd=wnd) 
-		else:
-			wnd.updateBackDDS(wnd._fromsurf, exclwnd=wnd) 
-			wnd._paintOnDDS(self._tosurf, wnd._rect)
-
-		fromsurf = 	wnd._fromsurf
-		tosurf = self._tosurf	
-		tmpsurf  = self._tmp
-		dstsurf  = wnd._drawsurf
-		dstrgn = None
-
-		self.__transitiontype.updatebitmap(parameters, tosurf, fromsurf, tmpsurf, dstsurf, dstrgn)
-		wnd.update(wnd.getwindowpos())
-
-
-	def _ismaster(self, wnd):
-		return self.window==wnd
-
-	def _isrunning(self):
-		return self.__running
-
-	def __createSurfaces(self):
-		# transition window
-		# or parent window in multiElement transitions
-		wnd = self.window
-		while 1:
-			try:
-				# use getBackDDS instead of createDDS
-				# just in case of an early repaint 
-				wnd._fromsurf = wnd.getBackDDS(dopaint = 1)
-				wnd._drawsurf = wnd.getBackDDS(dopaint = 0)
-				self._tosurf = wnd.getBackDDS(dopaint = 0)
-				self._tmp = wnd.getBackDDS(dopaint = 0)
-			except ddraw.error, arg:
-				print arg
-				winkernel.Sleep(50)
-			else:
-				break
-
-		# resize to this window
-		x, y, w, h = wnd._rect
-		self.__transitiontype.move_resize((0, 0, w, h))

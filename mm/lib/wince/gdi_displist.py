@@ -67,25 +67,25 @@ class DisplayList:
 	def is_closed(self):
 		return self._window is None
 
-	def _render(self, dc, ltrb = None, start = 0):
+	def _render(self, dc, ltrb, dst_xywh, start = 0):
 		self._rendered = 1
 
 		for i in range(start, len(self._list)):
-			self._do_render(self._list[i], dc, ltrb)
+			self._do_render(self._list[i], dc, ltrb, dst_xywh)
 
 		for b in self._buttons:
 			if b._highlighted:b._do_highlight()
 
-	def _do_render(self, entry, dc, ltrb):
+	def _do_render(self, entry, dc, ltrb, dst_xywh):
 		cmd = entry[0]
 		wnd = self._window
 		mediadisplayrect = wnd._mediadisplayrect
 
-		rc = x, y, w, h = wnd.getDR()
+		x, y, w, h = dst_xywh
 		rcc = xc, yc, wc, hc = wnd.xywh(ltrb)
 
 		if cmd == 'clear':
-			brush = wingdi.CreateSolidBrush(bgcolor)
+			brush = wingdi.CreateSolidBrush(entry[1])
 			old_brush = dc.SelectObject(brush)
 			dc.Rectangle(wnd.ltrb(rcc))
 			dc.SelectObject(old_brush)
