@@ -99,7 +99,7 @@ class ChannelView(ChannelViewDialog):
 		self.editmgr = self.context.editmgr
 		self.focus = None
 		self.future_focus = None
-		self.showall = 0
+		self.showall = 1
 		self.placing_channel = 0
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		ChannelViewDialog.__init__(self)
@@ -721,7 +721,21 @@ class ChannelView(ChannelViewDialog):
 		else:
 		    name = self.placing_orig
 
+		root_layout = None
 		if placement_type == PLACING_NEW:
+		    # find a root window
+		    # if there is one, root_layout will be its name,
+		    # if there are multiple, root_layout will be '',
+		    # if there are none, root_layout will be None.
+		    for key, val in context.channeldict.items():
+			if val.get('base_window') is None:
+			    # we're looking at a top-level channel
+			    if root_layout is None:
+				# first one
+				root_layout = key
+			    else:
+				# multiple root windows
+				root_layout = ''
 		    editmgr.addchannel(name, index, self.placing_type)
 		elif placement_type == PLACING_COPY:
 		    editmgr.copychannel(name, index, self.placing_orig)
@@ -730,6 +744,8 @@ class ChannelView(ChannelViewDialog):
 		    editmgr.movechannel(name, index)
 		    index = context.channels.index(c)
 		channel = context.channels[index]
+		if placement_type == PLACING_NEW and root_layout:
+			channel['base_window'] = root_layout
 		self.future_focus = 'c', channel
 		self.showall = 1	# Force showing the new channel
 		for c in self.context.channels:
