@@ -283,3 +283,14 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 
 	def setReady(self):
 		self._ready = 1
+
+	def CreateProgressBar(self):
+		wndclass = 'msctls_progress32'
+		height = 16
+		l, t, r, b = self.getStatusRect()
+		l, t, r, b = l+16, b+8, r-16, b
+		wnd = self.__dict__['_obj_']
+		progress = winuser.CreateWindowEx(0, wndclass, '', 
+			wincon.WS_VISIBLE | wincon.WS_BORDER , (l, t), (r-l, height), wnd, 0)
+		progress.ShowWindow(wincon.SW_SHOW)
+		return progress
