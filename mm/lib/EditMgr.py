@@ -292,7 +292,7 @@ class EditMgr(Clipboard.Clipboard):
 		self.focus_busy = 1
 		changed = 0
 		for item in list:
-			if item in self.cocus:
+			if item in self.focus:
 				self.focus.remove(item)
 				changed = 1
 		if not self.busy:
