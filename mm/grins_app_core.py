@@ -12,8 +12,6 @@ def fix_argv():
 		if os.path.exists(sys.argv[i]):
 			sys.argv[i] = longpath.short2longpath(sys.argv[i])
 
-
-
 try:
 	os.environ['GRINS_REMOTE_TRACE']
 	bRemoteTracing = 1
@@ -69,6 +67,7 @@ class GrinsApp(app.CApp):
 
 		
 	def InitInstance(self):
+		#win32ui.MessageBox('InitInstance')
 		afx=win32ui.GetAfx()
 		afx.OleInit()
 		afx.EnableControlContainer()
@@ -82,8 +81,9 @@ class GrinsApp(app.CApp):
 		# Boot up CMIF!
 		self.BootGrins()
 
+
 	def ExitInstance(self):
-		rc = app.CApp.ExitInstance(self)
+		#win32ui.MessageBox('Exit Instance')
 		if self.frame and hasattr(self.frame,'DestroyWindow'):
 			self.frame.DestroyWindow()
 		self.frame = None
@@ -92,7 +92,7 @@ class GrinsApp(app.CApp):
 		import __main__
 		if hasattr(__main__,'resdll'):
 			del __main__.resdll
-		return 0
+		return app.CApp.ExitInstance(self)
 
 	def BootGrins(self):
 		raise RuntimeError, "You must subclass this object"
@@ -105,11 +105,10 @@ def BootApplication(appClass):
 	# If we are not hosted by Pythonwin.exe, we need to simulate an MFC startup.
 	if win32ui.GetApp().IsInproc():
 		print "Not hosted by pythonwin - simulating MFC startup..."
+		#win32ui.MessageBox('Not hosted by pythonwin - simulating MFC startup...')
 		rc = gapp.InitInstance()
 		print "InitInstance returned", rc
 		if not rc: # None or 0 mean "this is OK"
 			gapp.Run()
-			print "Calling ExitInstance"
-			gapp.ExitInstance()
 
 
