@@ -918,7 +918,7 @@ class SchedulerContext:
 				if chan:
 					if debugevents: print 'stopplay',`node`,parent.timefunc()
 					chan.stopplay(xnode, curtime)
-					self.sched_arcs(xnode, curtime, 'endEvent')
+					self.sched_arcs(xnode, curtime, 'endEvent', timestamp = curtime)
 			if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 				for c in [node.looping_body_self,
 					  node.realpix_body,
@@ -1037,7 +1037,7 @@ class SchedulerContext:
 				if chan:
 					if debugevents: print 'freeze',`node`,parent.timefunc()
 					chan.freeze(xnode, curtime)
-					self.sched_arcs(xnode, 'endEvent', curtime)
+					self.sched_arcs(xnode, curtime, 'endEvent', timestamp = curtime)
 			for c in node.GetSchedChildren():
 				self.do_terminate(c, curtime, timestamp, fill = 'freeze')
 				if not parent.playing:
@@ -1454,8 +1454,8 @@ class Scheduler(scheduler):
 					arg.looping_body_self.startplay(timestamp)
 				sctx.sched_arcs(arg.looping_body_self, curtime, 'begin', timestamp=timestamp)
 				arg.looping_body_self.loopcount = arg.looping_body_self.loopcount + 1
-				sctx.sched_arcs(arg, curtime, 'repeat(%d)' % arg.looping_body_self.loopcount)
-				sctx.sched_arcs(arg, curtime, 'repeatEvent')
+				sctx.sched_arcs(arg, curtime, 'repeat(%d)' % arg.looping_body_self.loopcount, timestamp = curtime)
+				sctx.sched_arcs(arg, curtime, 'repeatEvent', timestamp = curtime)
 		elif action == SR.SCHED_STOPPING:
 			if arg.scheduled_children or arg.has_min:
 				if debugevents: print 'not stopping',`arg`,arg.scheduled_children,self.timefunc()
@@ -1526,7 +1526,7 @@ class Scheduler(scheduler):
 ##		ndur = node.calcfullduration(self)
 ##		if ndur is not None and ndur >= 0:
 ##			sctx.sched_arcs(node, curtime, 'end', timestamp = timestamp+ndur)
-		sctx.sched_arcs(node, curtime, 'beginEvent')
+		sctx.sched_arcs(node, curtime, 'beginEvent', timestamp = curtime)
 		chan.play(xnode, curtime)
 
 	#
