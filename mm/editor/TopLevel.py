@@ -414,10 +414,10 @@ class TopLevel(ViewDialog, BasicDialog):
 		import time
 		self.changed = 0
 		print 'parsing', self.filename, '...'
-		t0 = time.millitimer()
+		t0 = time.time()
 		self.root = MMTree.ReadFile(self.filename)
-		t1 = time.millitimer()
-		print 'done in', (t1-t0) * 0.001, 'sec.'
+		t1 = time.time()
+		print 'done in', round(t1-t0, 3), 'sec.'
 		Timing.changedtimes(self.root)
 		self.context = self.root.GetContext()
 		self.editmgr = EditMgr().init(self.root)
