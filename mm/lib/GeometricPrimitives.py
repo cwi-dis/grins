@@ -105,7 +105,7 @@ class GeoClientWidget(Widget):
 class Image(GeoClientWidget):
 	filename = None
 	def redraw(self):
-		print "DEBUG: Image: filename is: ", self.filename
+##		print "DEBUG: Image: filename is: ", self.filename
 		if self.filename:
 			self.displist.display_image_from_file(
 				self.filename,
