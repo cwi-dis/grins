@@ -1037,6 +1037,7 @@ class HierarchyView(HierarchyViewDialog):
 		children = node.GetChildren()
 		size = 0
 		horizontal = (t in ('par', 'alt', 'excl')) == DISPLAY_VERTICAL
+		# animate++
 		if t in MMNode.leaftypes and node.GetChildren():
 			horizontal = 0
 		for child in children:
@@ -1468,12 +1469,15 @@ class HierarchyView(HierarchyViewDialog):
 		node.boxsize = width, height, begin
 		return node.boxsize
 
-def do_expand(node, expand, nlevels=None):
+def do_expand(node, expand, nlevels=None, expleaftypes=0):
 	if nlevels == 0:
 		return 0
 	if nlevels != None:
 		nlevels = nlevels - 1
 	ntype = node.GetType()
+	# animate++
+	if expleaftypes and ntype in MMNode.leaftypes and node.GetChildren():
+		pass
 	if ntype not in MMNode.interiortypes and not node.GetChildren() and\
 	   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
 		return 0
@@ -1486,7 +1490,7 @@ def do_expand(node, expand, nlevels=None):
 		collapsenode(node)
 		changed = 1
 	for child in node.GetChildren():
-		if do_expand(child, expand, nlevels):
+		if do_expand(child, expand, nlevels, expleaftypes):
 			changed = 1
 	return changed			# any changes in this subtree
 
@@ -1701,6 +1705,22 @@ class Object:
 					d.drawicon(iconbox, 'closed')
 			else:
 				node.abox = (0, 0, -1, -1)
+
+		# animate++
+		if node.GetType() in MMNode.leaftypes and node.GetChildren():
+			left_pos = title_left
+			title_left = title_left + awidth
+			# Check whether it fits
+			if l+awidth+2*hmargin <= r and t+aheight+2*vmargin <= b:
+				node.abox = left_pos, t+vmargin, title_left, t+vmargin+aheight
+				iconbox = left_pos, t+vmargin, awidth, aheight
+				if hasattr(node, 'expanded'):
+					d.drawicon(iconbox, 'open')
+				else:
+					d.drawicon(iconbox, 'closed')
+			else:
+				node.abox = (0, 0, -1, -1)
+
 		# And leave room for the bandwidth and/or error icon
 		left_pos = title_left
 		title_left = title_left + awidth
@@ -1812,7 +1832,7 @@ class Object:
 
 	def expandallcall(self, expand):
 		self.mother.toplevel.setwaiting()
-		if do_expand(self.node, expand):
+		if do_expand(self.node, expand, None, 1):
 			# there were changes
 			# make sure root isn't collapsed
 			self.mother.recalc()
