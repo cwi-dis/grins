@@ -41,6 +41,20 @@ def unregister(object):
 
 class glwindow:
 	#
+	# Basic administrative functions.
+	#
+	def init(self, wid):
+		# Initialize the instance.  Derived classes may extend
+		# or override this to their liking (e.g. use a
+		# different way to store the window id).
+		self.wid = wid
+		return self
+	#
+	def setwin(self):
+		# Make the window current.  Derived classes may extend
+		# or override this to set more state, e.g. fonts.
+		gl.winset(self.wid)
+	#
 	# Event dispatchers, named after the events.
 	# The window is current by the time this function is called.
 	#
@@ -113,25 +127,25 @@ def dispatch(dev, val):
 		key = `val`
 		if windowmap.has_key(key):
 			window = windowmap[key]
-			gl.winset(val)
+			window.setwin()
 			window.redraw()
 		else:
 			report('REDRAW event for unregistered window')
 	elif dev == KEYBD:
 		if focuswindow:
-			gl.winset(focuswid)
+			focuswindow.setwin()
 			focuswindow.keybd(val)
 		else:
 			report('KEYBD event with no focus window')
 	elif dev in (MOUSE3, MOUSE2, MOUSE1): # In left-to-right order
 		if focuswindow:
-			gl.winset(focuswid)
+			focuswindow.setwin()
 			focuswindow.mouse(dev, val)
 		else:
 			report('MOUSE event with no focus window')
 	elif dev == INPUTCHANGE:
 		if focuswindow:
-			gl.winset(focuswid)
+			focuswindow.setwin()
 			focuswindow.leavewindow()
 			focuswindow = None
 			focuswid = None
@@ -140,15 +154,15 @@ def dispatch(dev, val):
 			if windowmap.has_key(key):
 				focuswindow = windowmap[key]
 				focuswid = val
-				gl.winset(val)
+				focuswindow.setwin()
 				focuswindow.enterwindow()
 			else:
 				report('INPUTCHANGE for unregistered window')
 	elif dev == WINSHUT:
 		key = `val`
 		if windowmap.has_key(key):
-			gl.winset(val)
 			window = windowmap[key]
+			window.setwin()
 			window.winshut()
 		else:
 			report('WINSHUT for unregistered window')
@@ -156,8 +170,8 @@ def dispatch(dev, val):
 		report('WINQUIT')
 		key = `val`
 		if windowmap.has_key(key):
-			gl.winset(val)
 			window = windowmap[key]
+			window.setwin()
 			window.winquit()
 		else:
 			report('WINQUIT for unregistered window')
