@@ -843,6 +843,7 @@ class ColorCtrl(AttrCtrl):
 			if func is not None:
 				colorlist = dlg.GetSavedCustomColors()
 				func(colorlist)
+			self._wnd._form._color_list = colorlist
 			newcol = dlg.GetColor()
 			r, g, b = win32ui.GetWin32Sdk().GetRGBValues(newcol)
 			return r, g, b
