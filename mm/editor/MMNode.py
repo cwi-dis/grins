@@ -586,7 +586,7 @@ class MMNode(MMNodeBase.MMNode):
 		elif type == 'bag':
 			self.gensr = self.gensr_bag
 		elif type == 'alt':
-			self.gensr = self.gensr_bag
+			self.gensr = self.gensr_alt
 		elif type == 'seq':
 			self.gensr = self.gensr_seq
 		elif type == 'par':
@@ -705,6 +705,37 @@ class MMNode(MMNodeBase.MMNode):
 				 [(SCHED_DONE,arg), (PLAY_STOP, arg)] + out1))
 			result.append(([(SCHED_STOP, arg)], []))
 		return result, []
+
+	# XXXX temporary hack to do at least something on ALT nodes
+	def gensr_alt(self):
+		in0, in1 = self.sync_from
+		out0, out1 = self.sync_to
+		srlist = []
+		duration = MMAttrdefs.getattr(self, 'duration')
+		if duration > 0:
+			# if duration set, we must trigger a timeout
+			# and we must catch the timeout to terminate
+			# the node
+			out0 = out0 + [(SYNC, (duration, self))]
+			srlist.append(([(SYNC_DONE, self)],
+					[(TERMINATE, self)]))
+		prereqs = [(SCHED, self)] + in0
+		actions = out0[:]
+		tlist = []
+		if self.wtd_children:
+			actions.append((SCHED, self.wtd_children[0]))
+			srlist.append((prereqs, actions))
+			prereqs = [(SCHED_DONE, self.wtd_children[0])]
+			actions = [(SCHED_STOP, self.wtd_children[0])]
+			tlist.append((TERMINATE, self.wtd_children[0]))
+		last_actions = actions
+		actions = [(SCHED_DONE, self)]
+		srlist.append((prereqs, actions))
+		srlist.append(([(SCHED_STOP, self)] + in1,
+			       last_actions + out1))
+		tlist.append((SCHED_DONE, self))
+		srlist.append(([(TERMINATE, self)], tlist))
+		return srlist, self.wtd_children[:1]
 
 	def gensr_bag(self):
 		in0, in1 = self.sync_from

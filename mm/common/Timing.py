@@ -9,7 +9,7 @@ from MMExc import *
 from MMTypes import *
 from HDTL import HD, TL
 
-real_interiortypes = ('par', 'seq')
+real_interiortypes = ('par', 'seq', 'alt')
 
 
 # The routine 'changedtimes' signifies that the timing might have changed
@@ -194,7 +194,7 @@ def prep1(node):
 			adddep(xnode, xside, 0, c, HD)
 			xnode, xside = c, TL
 		adddep(xnode, xside, 0, node, TL)
-	elif type == 'par':
+	elif type in ('par', 'alt'):
 		for c in node.GetChildren():
 			prep1(c)
 			adddep(node, HD, 0, c, HD)
@@ -234,7 +234,7 @@ def propdown(node, stoptime):
 	tp = node.GetType()
 	if not node.t0t1_inherited:
 		stoptime = node.t1
-	if tp == 'par':
+	if tp in ('par', 'alt'):
 		for c in node.GetChildren():
 			propdown(c, stoptime)
 	elif tp == 'seq': # XXX not right!
