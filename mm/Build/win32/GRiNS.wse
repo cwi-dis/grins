@@ -10,7 +10,7 @@ item: Global
   Start Gradient=0 0 128
   End Gradient=255 128 64
   Windows Flags=00000100000000110010110000001000
-  Log Pathname=%MAINDIR%\INSTALL.LOG
+  Log Pathname=%WIN%\INSTALL.LOG
   Message Font=MS Sans Serif
   Font Size=8
   Pages Modified=00110000111101100000011100000111
@@ -22,7 +22,7 @@ item: Global
   EXE Filename=D:\ufs\mm\cmif\bin\win32\grins-win-play-10.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
-  Upload Name=jack
+  Upload Name=sjoerd
   Upload Directory=/var/www/OratrixWeb/downloaddir
   Per-User Version ID=1
   Dialogs Version=7
@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=145959833
+  File Checksum=2934037546
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -50,7 +50,7 @@ item: Get Temporary Filename
   Variable=READMEFILE
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\common\license.txt
+  Source=D:\ufs\mm\cmif\Build\common\lllicense.txt
   Destination=%TEMP%\%READMEFILE%
   Flags=0000000000100010
 end
@@ -1127,6 +1127,11 @@ item: Display Graphic
 end
 item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\common\license.txt
+  Destination=%MAINDIR%\license.txt
+  Flags=0000000010000010
 end
 item: Install File
   Source=c:\Winnt\system32\Msvcirt.dll
