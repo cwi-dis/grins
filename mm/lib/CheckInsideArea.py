@@ -37,6 +37,8 @@ def insideElipse(xSrc, ySrc, xCenter, yCenter, xRadius, yRadius):
 	d2 = ySrc-yCenter
 	m2 = d2*d2
 	distance = math.sqrt(m1+m2)
+	if d1 == 0:
+		return 1
 	angle = math.atan(float(d2)/d1)
 	if d1 == 0:
 		if d1 > 0:
