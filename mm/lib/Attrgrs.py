@@ -115,6 +115,7 @@ attrgrs=(
 		'system_language',
 		'system_overdub_or_caption',
 		'system_audiodesc',
+		'showhidden',
 		]},
 
 	{'name':'preferences',

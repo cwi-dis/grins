@@ -396,6 +396,7 @@
 #define IDC_42                          1161
 #define IDC_43                          1162
 #define IDC_51                          1163
+#define IDC_SHOWHIDDENL                 1163
 #define IDC_52                          1164
 #define IDC_53                          1165
 #define IDC_SCOMPONENTL                 1165
@@ -416,6 +417,7 @@
 #define IDC_SAUDIODESCV1                1175
 #define IDC_16                          1176
 #define IDC_SCUSTOMTESTSL               1176
+#define IDC_SHOWHIDDENV1                1176
 #define IDC_14                          1177
 #define IDC_SCUSTOMTESTSV               1177
 #define IDC_15                          1178
@@ -447,6 +449,7 @@
 #define IDC_GROUP3                      1206
 #define IDC_GROUP6                      1207
 #define IDC_GROUP7                      1208
+#define IDC_GROUP9                      1209
 #define IDC_NEW                         1211
 #define IDC_RENAME                      1212
 #define IDC_DELETE                      1213
@@ -550,6 +553,7 @@
 #define IDC_BUTTON_QTNEXT               1315
 #define IDC_SAUDIODESCV2                1315
 #define IDC_ADD_EXTERNAL                1316
+#define IDC_SHOWHIDDENV2                1316
 #define IDC_PROGRESS1                   1317
 #define IDC_BUTTON7                     1318
 #define IDC_PROMPT1                     1319

@@ -2517,32 +2517,39 @@ IDD_EDITATTR_S1R3S7 DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "System",IDC_GROUP1,6,5,287,98
-    LTEXT           "Bitrate:",IDC_11,12,19,96,8
-    COMBOBOX        IDC_12,109,17,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    GROUPBOX        "System properties",IDC_GROUP1,6,5,287,93
+    LTEXT           "Bitrate:",IDC_11,12,17,96,8
+    COMBOBOX        IDC_12,109,15,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "Captions:",IDC_31,12,35,96,8
+    LTEXT           "Captions:",IDC_31,12,33,96,8
     CONTROL         "on",IDC_32,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,116,35,24,10
+                    WS_TABSTOP,116,33,24,10
     CONTROL         "off",IDC_33,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,196,
-                    35,24,10
-    GROUPBOX        "",IDC_GROUP2,109,29,174,17
-    LTEXT           "Language:",IDC_21,12,51,96,8
-    COMBOBOX        IDC_22,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    33,24,10
+    GROUPBOX        "",IDC_GROUP2,109,27,174,17
+    LTEXT           "Language:",IDC_21,12,49,96,8
+    COMBOBOX        IDC_22,109,47,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "Overdub or Subtitle:",IDC_41,12,67,96,8
+    LTEXT           "Overdub or Subtitle:",IDC_41,12,65,96,8
     CONTROL         "subtitle",IDC_42,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY | WS_TABSTOP,116,67,38,10
+                    BS_NOTIFY | WS_TABSTOP,116,65,38,10
     CONTROL         "overdub",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    196,67,42,10
+                    196,65,42,10
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
-    GROUPBOX        "",IDC_GROUP3,109,61,174,17
-    LTEXT           "Audio description:",IDC_SAUDIODESCL,12,83,74,8
+    GROUPBOX        "",IDC_GROUP3,109,59,174,17
+    LTEXT           "Audio description:",IDC_SAUDIODESCL,12,81,74,8
     CONTROL         "on",IDC_SAUDIODESCV1,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY | WS_TABSTOP,116,83,24,10
+                    BS_NOTIFY | WS_TABSTOP,116,81,24,10
     CONTROL         "off",IDC_SAUDIODESCV2,"Button",BS_AUTORADIOBUTTON | 
-                    BS_NOTIFY,196,83,24,10
-    GROUPBOX        "",IDC_GROUP6,109,77,174,17
+                    BS_NOTIFY,196,81,24,10
+    GROUPBOX        "",IDC_GROUP6,109,75,174,17
+    GROUPBOX        "Custom tests",IDC_GROUP7,6,100,287,27
+    LTEXT           "Show hidden:",IDC_SHOWHIDDENL,12,113,74,8
+    CONTROL         "on",IDC_SHOWHIDDENV1,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY | WS_TABSTOP,115,113,24,10
+    CONTROL         "off",IDC_SHOWHIDDENV2,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY,195,113,24,10
+    GROUPBOX        "",IDC_GROUP9,109,107,174,17
 END
 
 
