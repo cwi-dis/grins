@@ -792,12 +792,14 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 	def setcanvassize(self, how):
 		x,y,w,h=self._canvas
 		if type(how) is type(()):
-			import sysmetrics
+			import sysmetrics, settings
+			no_canvas_resize = settings.get('no_canvas_resize')
 			units, width, height = how
 			w, h = sysmetrics.to_pixels(0,0,width,height,units)[2:4]
-			rw, rh = self._rect[2:4]
-			if w < rw: w = rw
-			if h < rh: h = rh
+			if not no_canvas_resize:
+				rw, rh = self._rect[2:4]
+				if w < rw: w = rw
+				if h < rh: h = rh
 		elif how == DOUBLE_WIDTH:
 			w = w * 2
 		elif how == DOUBLE_HEIGHT:
