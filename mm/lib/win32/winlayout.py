@@ -778,8 +778,10 @@ class LayoutWnd:
 	def OnDestroy(self, params):
 		if self._hsmallfont:
 			Sdk.DeleteObject(self._hsmallfont)
+			self._hsmallfont = 0
 		if self._tipwnd:
 			self._tipwnd.DestroyWindow()
+			self._tipwnd = None
 	#
 	#  DrawContext listener interface
 	#
