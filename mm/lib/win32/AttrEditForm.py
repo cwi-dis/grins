@@ -23,6 +23,7 @@ Like all resources these templates can be found in cmif\win32\src\GRiNSRes\GRiNS
 import string
 # std win32 modules
 import win32ui,win32con,win32api
+Sdk=win32ui.GetWin32Sdk()
 
 # win32 lib modules
 import win32mu,components,sysmetrics
@@ -603,6 +604,9 @@ class AttrCtrl:
 	def getcurrent(self):
 		return self._attr.getcurrent()
 
+	def drawOn(self,dc):
+		pass
+
 # temp stuff not safe
 def atoft(str):
 	# convert string into tuple of floats
@@ -751,6 +755,9 @@ class FileCtrl(AttrCtrl):
 	def OnEdit(self,id,code):
 		if code==win32con.EN_SETFOCUS:
 			self.sethelp()
+		elif code==win32con.EN_CHANGE:
+			if hasattr(self._wnd,'onAttrChange'):
+				self._wnd.onAttrChange()
 
 ##################################
 class ColorCtrl(AttrCtrl):
@@ -768,10 +775,38 @@ class ColorCtrl(AttrCtrl):
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
 		self._wnd.HookCommand(self.OnReset,self._resid[3])
+		self.calcIndicatorRC()
+
+	def calcIndicatorRC(self):
+		place='edit'
+		pos='bottom'
+		l,t,r,b=self._wnd.GetWindowRect()
+		if place=='button':
+			s=components.Control(self._wnd,self._resid[2])
+			s.attach_to_parent()
+			lc,tc,rc,bc=s.getwindowrect()
+		else:
+			lc,tc,rc,bc=self._attrval.getwindowrect()
+		if pos=='top':
+			self._indicatorRC=(lc-l,tc-t-12,lc-l+rc-lc,tc-t-4)
+		else:
+			self._indicatorRC=(lc-l,bc-t+4,lc-l+rc-lc,bc-t+16)
+
+	def drawOn(self,dc):
+		rc=self._indicatorRC
+		ct=self.getdispcolor()
+		dc.FillSolidRect(rc, win32mu.RGB(ct))
+		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
+		dc.FrameRectFromHandle(rc,br)
+		Sdk.DeleteObject(br)
+
+	def invalidateInd(self):
+		self._wnd.InvalidateRect(self._indicatorRC)
 
 	def setvalue(self, val):
 		if self._initctrl:
 			self._attrval.settext(val)
+			self.invalidateInd()
 
 	def getvalue(self):
 		if self._initctrl:
@@ -781,10 +816,12 @@ class ColorCtrl(AttrCtrl):
 	def OnReset(self,id,code):
 		if self._attr:self._attr.reset_callback()
 
-	def OnBrowse(self,id,code):
-		if not self._initctrl: return
-		oldcolorstring = self._attrval.gettext()
-		list = string.split(string.strip(oldcolorstring))
+	def getdispcolor(self):
+		colorstring = self._attrval.gettext()
+		from colors import colors
+		if colors.has_key(colorstring):
+			return colors[colorstring]
+		list = string.split(string.strip(colorstring))
 		r = g = b = 0
 		if len(list) == 3:
 			try:
@@ -793,10 +830,16 @@ class ColorCtrl(AttrCtrl):
 				b = string.atoi(list[2])
 			except ValueError:
 				pass
+		return (r,g,b)
+
+	def OnBrowse(self,id,code):
+		if not self._initctrl: return
+		r,g,b=self.getdispcolor()
 		rv = self.ColorSelect(r, g, b)
 		if rv != None:
 			colorstring = "%d %d %d"%rv
 			self._attrval.settext(colorstring)
+			self.invalidateInd()
 	
 	def ColorSelect(self, r, g, b):
 		dlg = win32ui.CreateColorDialog(win32api.RGB(r,g,b),win32con.CC_ANYCOLOR,self._wnd)
@@ -809,6 +852,8 @@ class ColorCtrl(AttrCtrl):
 	def OnEdit(self,id,code):
 		if code==win32con.EN_SETFOCUS:
 			self.sethelp()
+		elif code==win32con.EN_CHANGE:
+			self.invalidateInd()
 
 ##################################
 class StringCtrl(AttrCtrl):
@@ -952,7 +997,16 @@ class AttrPage(dialog.PropertyPage):
 		for ctrl in self._cd.values():ctrl.OnInitCtrl()
 		if self._group:
 			self._group.oninitdialog(self)
-				
+		
+	def OnPaint(self):
+		dc, paintStruct = self.BeginPaint()
+		self.drawOn(dc)
+		self.EndPaint(paintStruct)
+
+	def drawOn(self,dc):
+		for ctrl in self._cd.values():
+			ctrl.drawOn(dc)
+					
 	def OnRestore(self,id,code): self._form.call('Restore')
 	def OnApply(self,id,code): self._form.call('Apply')
 	def OnCancel(self,id,code): self._form.call('Cancel')
@@ -1032,11 +1086,11 @@ class SingleAttrPage(AttrPage):
 		a=self._attr
 		t = a.gettype()
 		if a.getname()=='layout':
-			return grinsRC.IDD_EDITATTR_O1_R2
+			return grinsRC.IDD_EDITATTR_R2
 		elif a.getname()=='visible' or a.getname()=='drawbox' or a.getname()=='popup':
-			return grinsRC.IDD_EDITATTR_O1_R3
+			return grinsRC.IDD_EDITATTR_R3
 		elif a.getname()=='transparent':
-			return grinsRC.IDD_EDITATTR_O1_R4			
+			return grinsRC.IDD_EDITATTR_R4			
 		elif SingleAttrPage.ctrlmap.has_key(t):
 			return SingleAttrPage.idmap[t]
 		else:
@@ -1353,7 +1407,274 @@ class PosSizeLayoutPage(LayoutPage):
 				self._xy.setvalue(axy)
 				self._wh.setvalue(awh)
 
+############################
+# Base class for media renderers
 
+class Renderer:
+	def __init__(self,wnd,rc,baseURL=''):
+		self._wnd=wnd
+		self._rc=rc
+		self._baseURL=baseURL
+		self._bgcolor=(0,0,0)
+
+	def urlqual(self,rurl):
+		if not rurl:return rurl
+		if len(rurl)>5 and rurl[:6]=='file:/': 
+			url=rurl
+		elif self._baseURL:
+			url = self._baseURL + '/' + rurl
+		else:
+			url=rurl
+		return url
+
+	def urlretrieve(self,url):
+		if not url:return None
+		import MMurl
+		try:
+			f = MMurl.urlretrieve(url)[0]
+		except IOError, arg:
+			f=None 
+		return f
+	
+	def isfile(self,f):
+		try:list = win32api.FindFiles(f)
+		except:return 0
+		if not list or len(list) > 1:return 0
+		return 1
+
+	def update(self):
+		self._wnd.InvalidateRect(self.inflaterc(self._rc))
+
+	# borrow cmifwnd's _prepare_image but make some adjustments
+	def adjustSize(self, size, crop = (0,0,0,0), scale = 0, center = 1):
+		xsize, ysize = size
+		x,y,r,b=self._rc
+		width, height=r-x,b-y
+
+		# check for valid crop proportions
+		top, bottom, left, right = crop
+		if top + bottom >= 1.0 or left + right >= 1.0 or \
+		   top < 0 or bottom < 0 or left < 0 or right < 0:
+			raise error, 'bad crop size'
+
+		top = int(top * ysize + 0.5)
+		bottom = int(bottom * ysize + 0.5)
+		left = int(left * xsize + 0.5)
+		right = int(right * xsize + 0.5)
+		rcKeep=left,top,xsize-right,ysize-bottom
+
+		# compute scale taking into account the hint (0,-1)
+		if scale == 0:
+			scale = min(float(width)/(xsize - left - right),
+				    float(height)/(ysize - top - bottom))
+		elif scale == -1:
+			scale = max(float(width)/(xsize - left - right),
+				    float(height)/(ysize - top - bottom))
+		elif scale == -2:
+			scale = min(float(width)/(xsize - left - right),
+				    float(height)/(ysize - top - bottom))
+			if scale > 1:
+				scale = 1
+
+		# scale crop sizes
+		top = int(top * scale + .5)
+		bottom = int(bottom * scale + .5)
+		left = int(left * scale + .5)
+		right = int(right * scale + .5)
+
+		mask=None
+		w=xsize
+		h=ysize
+		if scale != 1:
+			w = int(xsize * scale + .5)
+			h = int(ysize * scale + .5)
+
+		if center:
+			x, y = x + (width - (w - left - right)) / 2, \
+			       y + (height - (h - top - bottom)) / 2
+		return left, top, x, y, w - left - right, h - top - bottom, rcKeep
+
+	def inflaterc(self,rc,dl=1,dt=1,dr=1,db=1):
+		l,t,r,b=rc
+		l=l-dl
+		t=t-dt
+		r=r+dr
+		b=b+db
+		return (l,t,r,b)
+
+
+	# overrides
+	def load(self,f):
+		pass
+
+	def render(self,dc):
+		pass
+
+	def play(self):
+		pass
+
+	def pause(self):
+		pass
+
+	def stop(self):
+		pass
+
+	
+###############################
+from win32ig import win32ig
+
+class ImageRenderer(Renderer):
+	def __init__(self,wnd,rc,baseURL=''):
+		Renderer.__init__(self,wnd,rc,baseURL)
+		self._ig=-1
+			
+	def __del__(self):
+		if self._ig>=0:
+			win32ig.delete(self._ig)
+	
+	def load(self,rurl):
+		if self._ig>=0:
+			win32ig.delete(self._ig)
+			self._ig=-1
+		if not rurl:
+			self.update()
+			return
+
+		url=self.urlqual(rurl)
+		f=self.urlretrieve(url)
+		if not f or not self.isfile(f):
+			self.update()
+			return
+		try:
+			self._ig=win32ig.load(f)
+		except:
+			self._ig=-1
+		if self._ig<0:
+			print 'failed to load',f
+		else:
+			self._imgsize=win32ig.size(self._ig)
+		self.update()
+
+	def render(self,dc):
+		if self._ig<0: return
+		src_x, src_y, dest_x, dest_y, width, height,rcKeep = self.adjustSize(self._imgsize[:2])
+		win32ig.render(dc.GetSafeHdc(),self._bgcolor,
+			None, self._ig, src_x, src_y,dest_x, dest_y, width, height,rcKeep)
+		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
+		dc.FrameRectFromHandle((dest_x, dest_y, dest_x + width, dest_y+height),br)
+		Sdk.DeleteObject(br)
+
+#################################
+DirectShowSdk=win32ui.GetDS()
+
+class VideoRenderer(Renderer):
+	def __init__(self,wnd,rc,baseURL=''):
+		Renderer.__init__(self,wnd,rc,baseURL)
+		self._builder=None
+	
+	def __del__(self):
+		self.release()
+			
+	def release(self):
+		if self._builder:
+			self._builder.Stop()
+			self._builder.Release()
+			self._builder=None
+
+	def load(self,rurl):
+		self.release()
+		try:
+			self._builder = DirectShowSdk.CreateGraphBuilder()
+		except:
+			self._builder=None
+
+		if not self._builder:
+			self.update()
+			return
+		url=self.urlqual(rurl)
+		import MMurl,urllib
+		url = MMurl.canonURL(url)
+		url=urllib.unquote(url)
+		if not self._builder.RenderFile(url):
+			self.update()
+			return
+		left,top,width,height=self._builder.GetWindowPosition()
+		src_x, src_y, dest_x, dest_y, width, height,rcKeep=\
+			self.adjustSize((width,height))
+		self._builder.SetWindowPosition((dest_x, dest_y, width, height))
+		self._builder.SetWindow(self._wnd,win32con.WM_USER+101)
+		self.update()
+	
+
+	def play(self):
+		if not self._builder: return
+		d=self._builder.GetDuration()
+		t=self._builder.GetPosition()
+		if t>=d:
+			self._builder.SetPosition(0)
+		self._builder.Run()
+
+	def pause(self):
+		if not self._builder: return
+		self._builder.Pause()
+	def stop(self):
+		if not self._builder: return
+		self._builder.Stop()
+
+
+#################################
+
+class PreviewPage(AttrPage):
+	def __init__(self,form,mtype='image',aname='file'):
+		AttrPage.__init__(self,form)
+		self._prevrc=(20,20,DIALOG_WINDOW_WIDTH,DIALOG_WINDOW_HEIGHT)
+		self._aname=aname
+		if mtype=='video':
+			self._renderer=VideoRenderer(self,self._prevrc,self._form._baseURL)
+		else:
+			self._renderer=ImageRenderer(self,self._prevrc,self._form._baseURL)
+
+	def OnInitDialog(self):
+		AttrPage.OnInitDialog(self)
+		c=self.getctrl(self._aname)
+		rurl=string.strip(c.getvalue())
+		self._renderer.load(rurl)
+
+	def OnDestroy(self,params):
+		del self._renderer
+
+	def OnSetActive(self):
+		self._renderer.play()
+		return self._obj_.OnSetActive()
+
+	def OnKillActive(self):
+		self._renderer.pause()
+		return self._obj_.OnKillActive()
+
+	def drawOn(self,dc):
+		self._renderer.render(dc)
+
+	def setvalue(self, attr, val):
+		if not self._initdialog: return
+		if self._cd.has_key(attr): 
+			self._cd[attr].setvalue(val)
+		if attr.getname()==self._aname:
+			self._renderer.load(string.strip(val))
+
+	def onAttrChange(self):
+		if not self._initdialog: return
+		c=self.getctrl(self._aname)
+		rurl=string.strip(c.getvalue())
+		self._renderer.load(rurl)
+
+class ImagePreviewPage(PreviewPage):
+	def __init__(self,form):
+		PreviewPage.__init__(self,form,'image')
+
+class VideoPreviewPage(PreviewPage):
+	def __init__(self,form):
+		PreviewPage.__init__(self,form,'video')	
+	
 ############################
 
 from Attrgrs import attrgrs
@@ -1441,61 +1762,49 @@ class AttrGroup:
 	def oninitdialog(self,wnd):
 		pass
 	
+class StringGroup(AttrGroup):
+	def __init__(self,data):
+		AttrGroup.__init__(self,data)
 
-class InfoGroup(AttrGroup):
+	def createctrls(self,wnd):
+		cd={}
+		for ix in range(len(self._al)):
+			a=self._al[ix]
+			cd[a]=StringCtrl(wnd,a,self.getctrlids(ix+1))
+		return cd
+
+	def getctrlids(self,ix):
+		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
+
+	def getpageresid(self):
+		return getattr(grinsRC, 'IDD_EDITATTR_S%d' % len(self._al))
+
+	def oninitdialog(self,wnd):
+		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
+		ctrl.attach_to_parent()
+		ctrl.settext(self._data['title'])
+
+class InfoGroup(StringGroup):
 	data=attrgrsdict['infogroup']
-
 	def __init__(self):
-		AttrGroup.__init__(self,InfoGroup.data)
+		StringGroup.__init__(self,InfoGroup.data)
 
-	def createctrls(self,wnd):
-		cd={}
-		for ix in range(len(self._al)):
-			a=self._al[ix]
-			cd[a]=StringCtrl(wnd,a,self.getctrlids(ix+1))
-		return cd
-
-	def getctrlids(self,ix):
-		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
-
-	def getpageresid(self):
-		return getattr(grinsRC, 'IDD_EDITATTR_S%d' % len(self._al))
-
-	# although 'Info' title is hardcoded in the IDD_EDITATTR_S%d pages, 
-	# set it for generality
-	def oninitdialog(self,wnd):
-		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
-		ctrl.attach_to_parent()
-		ctrl.settext(self._data['title'])
-
-
-class UploadGroup(AttrGroup):
+class UploadGroup(StringGroup):
 	data=attrgrsdict['upload_info']
-
 	def __init__(self):
-		AttrGroup.__init__(self,UploadGroup.data)
+		StringGroup.__init__(self,UploadGroup.data)
 
-	def createctrls(self,wnd):
-		cd={}
-		for ix in range(len(self._al)):
-			a=self._al[ix]
-			cd[a]=StringCtrl(wnd,a,self.getctrlids(ix+1))
-		return cd
+class WebserverGroup(StringGroup):
+	data=attrgrsdict['webserver']
+	def __init__(self):
+		StringGroup.__init__(self,WebserverGroup.data)
 
-	def getctrlids(self,ix):
-		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
-
-	def getpageresid(self):
-		return getattr(grinsRC, 'IDD_EDITATTR_S%d' % len(self._al))
-
-	def oninitdialog(self,wnd):
-		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
-		ctrl.attach_to_parent()
-		ctrl.settext(self._data['title'])
+class MediaserverGroup(StringGroup):
+	data=attrgrsdict['mediaserver']
+	def __init__(self):
+		StringGroup.__init__(self,MediaserverGroup.data)
 
 
 # base_winoff
@@ -1575,7 +1884,7 @@ class SystemGroup(AttrGroup):
 		AttrGroup.__init__(self,SystemGroup.data)
 
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_S1O1S5_R3
+		return grinsRC.IDD_EDITATTR_S1R3S5
 
 	def getctrlids(self,ix):
 		ids = getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
@@ -1636,7 +1945,48 @@ class DurationGroup(AttrGroup):
 		ctrl.attach_to_parent()
 		ctrl.settext(self._data['title'])
 		
-	
+
+class FileGroup(AttrGroup):
+	data=attrgrsdict['file']
+	def __init__(self):
+		AttrGroup.__init__(self,FileGroup.data)
+	def createctrls(self,wnd):
+		cd={}
+		a=self.getattr('file')
+		cd[a]=FileCtrl(wnd,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4))
+		return cd
+
+	def canpreview(self):
+		a=self.getattr('file')
+		f=a.getcurrent()
+		import mimetypes
+		mtype = mimetypes.guess_type(f)[0]
+		if mtype is None: return 0
+		mtype, subtype = string.split(mtype, '/')
+		if mtype=='image':can=1
+		# we can preview videos but what about big videos? 
+		# we should let the user select using a preview button.
+		elif mtype=='video':can=1 
+		else: can=0
+		self._mtype=mtype
+		return can
+
+	def getpageresid(self):
+		if self.canpreview():
+			return getattr(grinsRC, 'IDD_EDITATTR_PF1')
+		else:
+			return getattr(grinsRC, 'IDD_EDITATTR_F1')
+
+	def getpageclass(self):
+		if not self.canpreview():
+			return AttrPage
+		if self._mtype=='image':
+			return ImagePreviewPage
+		elif self._mtype=='video':
+			return VideoPreviewPage
+		else:
+			raise error,'see AttrEditForm.FileGroup'
+
 ############################
 # platform dependent association
 # what we have implemented, anything else goes as singleton
@@ -1653,6 +2003,9 @@ groupsui={
 
 	'duration_and_loop':DurationGroup,
 	'upload_info':UploadGroup,
+	'webserver':WebserverGroup,
+	'mediaserver':MediaserverGroup,
+	'file':FileGroup,
 	}
 
 
@@ -1764,10 +2117,9 @@ class AttrEditFormNew(GenFormView):
 		
 		a=self._attriblist[0]
 		channels = a.wrapper.toplevel.root.context.channels
+		self._baseURL=a.wrapper.toplevel.dirname
 		for ch in channels:
 			self._channels[ch.name]=ch
-			# use the same convention as in Channel.py and LayoutView.py 
-			# correct either the help string or attrdict.get calls
 			units=self.getunits(ch)
 			t=ch.attrdict['type']
 			if t=='layout' and ch.attrdict.has_key('winsize'):
