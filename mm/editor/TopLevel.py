@@ -2,6 +2,7 @@ __version__ = "$Id$"
 
 import os, posixpath
 import sys
+import string
 import windowinterface
 import MMAttrdefs, MMurl
 from urlparse import urlparse, urlunparse
@@ -325,7 +326,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if not self.w_ftpinfo[0] or not self.m_ftpinfo[0]:
 			missing = '\n- webserver and mediaserver FTP info'
 		if not smilurl:
-			missing = missing + '\n- Mediaserver document URL'
+			missing = missing + '\n- Mediaserver SMILfile URL'
 		attrs = self.context.attributes
 		if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
 			missing = missing + '\n- HTML template'
@@ -334,6 +335,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if windowinterface.showquestion('Please set these parameters then try again:'+missing):
 				self.prop_callback()
 			return
+		else:
+			# Do a sanity check on the SMILfile URL
+			fn = MMurl.url2pathname(string.split(smilurl, '/')[-1])
+		if os.path.split(filename)[1] != os.path.split(fn)[1]:
+			# The SMIL upload filename and URL don't match. Warn.
+			if not windowinterface.showquestion('Warning: Mediaserver SMIL URL looks suspect:\n'+smilurl):
+				return
 		hostname, username, passwd, dirname = self.w_ftpinfo
 		if username and not passwd:
 			windowinterface.InputDialog('Enter password for %s at %s'%(username, hostname),
@@ -573,6 +581,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		evallicense= (license < 0)
 		self.pre_save()
 		#
+		# Progress dialog
+		#
+		progress = windowinterface.ProgressDialog("Uploading", self.cancel_upload)
+		progress.set("Generating document...")
+		#
 		# First save and upload the SMIL file (and the data items)
 		#
 		try:
@@ -583,13 +596,18 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			SMILTreeWrite.WriteFTP(self.root, filename, m_ftpparams,
 						cleanSMIL = 1,
 						copyFiles = 1,
-						evallicense=evallicense)
+						evallicense=evallicense,
+						progress=progress.set)
 		except IOError, msg:
 			windowinterface.showmessage('Media upload failed:\n'+msg[1])
+			return 0
+		except KeyboardInterrupt:
+			windowinterface.showmessage('Upload interrupted')
 			return 0
 		#
 		# Next create and upload the HTML and RAM files
 		#
+		progress.set("Uploading webpage")
 		#
 		# Invent HTML file name and SMIL file url, and generate webpage
 		#
@@ -606,9 +624,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		except IOError, msg:
 			windowinterface.showmessage('Webpage upload failed:\n'+msg[1])
 			return 0
+		except KeyboardInterrupt:
+			windowinterface.showmessage('Upload interrupted')
+			return 0
 		self.setcommands(self.commandlist) # Is this needed?? (Jack)
 		return 1
 		
+	def cancel_upload(self):
+		raise KeyboardInterrupt
 
 	def restore_callback(self):
 		if self.changed:
