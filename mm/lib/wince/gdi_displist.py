@@ -82,8 +82,11 @@ class DisplayList:
 		wnd = self._window
 		mediadisplayrect = wnd._mediadisplayrect
 
-		x, y, w, h = dst_xywh
+		# rendering clip rectangle in device cordinates
 		rcc = xc, yc, wc, hc = wnd.xywh(ltrb)
+
+		# clip to parent only rect
+		x, y, w, h = dst_xywh
 
 		if cmd == 'clear':
 			rgb = winstruct.RGB(entry[1])
@@ -110,7 +113,10 @@ class DisplayList:
 			ldc, tdc, rdc, bdc = wnd.ltrb(rca)
 				
 			# find src clip ltrb given the destination clip
-			lsc, tsc, rsc, bsc =  wnd._getsrcclip((ld, td, rd, bd), (ls, ts, rs, bs), (ldc, tdc, rdc, bdc))
+			src_no_clip = ls, ts, rs, bs
+			dst_no_clip = ld, td, rd, bd
+			dst_clipped = ldc, tdc, rdc, bdc
+			lsc, tsc, rsc, bsc =  wnd._getsrcclip(dst_no_clip, src_no_clip, dst_clipped)
 			
 			if wnd._canscroll: 	
 				dx, dy = wnd._scrollpos

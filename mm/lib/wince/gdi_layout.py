@@ -69,26 +69,29 @@ class Region(base_window.Window):
 		rc = self.getVisibleWindowPos()
 		return self._topwindow.LRtoDR(rc, round = 1)
 
+	# get intersection of self and parent
 	def getVisibleWindowPos(self, rel = None):
 		if not self._parent:
 			return self.getwindowpos()
 		# clip to parent
-		ltrb1a = winstruct.ltrb(self.getwindowpos())
-		ltrb1b = winstruct.ltrb(self._parent.getwindowpos())
-		ltrb2 = winstruct.rectAnd(ltrb1a, ltrb1b)
-		if ltrb2 is None: 
+		xywh = self.rectAnd(self.getwindowpos(), self._parent.getwindowpos())
+		if xywh is None: 
 			return 0, 0, 0, 0
-		return self.xywh(ltrb2)
+		return xywh
 
+	# get intersection of self with parents tree
+	def getclippedwindowpos(self):
+		if not self._parent:
+			return self.getwindowpos()
+		return self.rectAnd(self.getwindowpos(), self._parent.getclippedwindowpos())
+
+	# absolute paintable ltrb rectangle
 	def getClipDR(self, dc):
 		# dc box
 		ltrb1 = dc.GetClipBox()
 
 		# clip to parent
-		ltrb2a = winstruct.ltrb(self.getwindowpos())
-		ltrb2b = winstruct.ltrb(self._parent.getwindowpos())
-		ltrb2 = winstruct.rectAnd(ltrb2a, ltrb2b)
-		if ltrb2 is None: return None
+		ltrb2 = self.ltrb(self.getclippedwindowpos())
 		ltrb2 = self._topwindow.LRtoDR(ltrb2, round = 1)
 
 		# common box
@@ -142,10 +145,15 @@ class Region(base_window.Window):
 		
 	# dc origin is viewport origin
 	def _paintOnDC(self, dc):
+
+		# clip self to ancestors and dc, in device coordinates
 		ltrb = self.getClipDR(dc)
 		if ltrb is None:
 			return
+		
+		# clip self to parent, device coordinates
 		xywh_dst = self.getDR()
+
 		if self._active_displist:
 			entry = self._active_displist._list[0]
 			bgcolor = None
@@ -324,6 +332,9 @@ class Viewport(Region):
 		return color 
 
 	def getwindowpos(self, rel=None):
+		return self._rectb
+
+	def getVisibleWindowPos(self, rel = None):
 		return self._rectb
 
 	def pop(self, poptop = 1):
