@@ -4,9 +4,6 @@
 //Win32 Header Files
 #include <process.h>
 
-//MFC Header Files
-#include "StdAfx.h"
-
 //Python Header Files
 #include "Python.h"
 
