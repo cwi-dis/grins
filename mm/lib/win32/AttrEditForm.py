@@ -829,7 +829,7 @@ class ElementSelCtrl(AttrCtrl):
 
 	def settooltips(self,tooltipctrl):
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Choose File for URL',None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Choose target element',None,0)
 
 ##################################
 class ColorCtrl(AttrCtrl):
