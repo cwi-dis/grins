@@ -251,6 +251,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, '&Structure view\tF6', '3', HIERARCHYVIEW),
 		(FLAG_ALL, ENTRY, '&Timeline view\tF7', '4', CHANNELVIEW),
 		(FLAG_PRO|FLAG_SNAP, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW2),
+		(FLAG_PRO|FLAG_SNAP, ENTRY, '&Assets view\tF8', '2', ASSETSVIEW),
 ##		(FLAG_PRO, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW),
 #		(FLAG_ALL, ENTRY, 'Temporal view', '8', TEMPORALVIEW),
 ##		(FLAG_ALL, SEP,),

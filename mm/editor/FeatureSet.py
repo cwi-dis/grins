@@ -29,6 +29,7 @@ __version__ = "$Id$";
 	TIMELINE_VIEW,
 	LAYOUT_VIEW,
 	HYPERLINKS_VIEW,
+	ASSETS_VIEW,
 	LINKEDIT_LIGHT,						# I'm not sure about this.. see TopLevel.py
 	CHANNEL_VIEW,
 	TEMPORAL_VIEW,
@@ -46,4 +47,4 @@ __version__ = "$Id$";
 	H_DROPBOX,							# Show an empty drop box at the end of a sequence.
 	H_COLLAPSE,							# Enable internal node collapsing.
 	H_TIMESTRIP,						# Show snap!-like documents with correct toplevel par/seq
-] = range(27)							# don't forget to update this range!
+] = range(28)							# don't forget to update this range!

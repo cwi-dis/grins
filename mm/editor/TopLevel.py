@@ -140,11 +140,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				LINKVIEW(callback = (self.view_callback, (3,))),
 				LAYOUTVIEW(callback = (self.view_callback, (4,))),
 				LAYOUTVIEW2(callback = (self.view_callback, (7, ))),
+				ASSETSVIEW(callback = (self.view_callback, (9, ))),
 				HIDE_LAYOUTVIEW2(callback = (self.hide_view_callback, (7, ))),
 				HIDE_CHANNELVIEW(callback = (self.hide_view_callback, (2,))),
 				HIDE_LINKVIEW(callback = (self.hide_view_callback, (3,))),
 				HIDE_LAYOUTVIEW(callback = (self.hide_view_callback, (4,))),
 				HIDE_USERGROUPVIEW(callback = (self.hide_view_callback, (5,))),
+				HIDE_ASSETSVIEW(callback = (self.hide_view_callback, (9,))),
 				]
 			self.__ugroup = [
 				USERGROUPVIEW(callback = (self.view_callback, (5,))),
@@ -255,6 +257,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.links.show()
 		if 'source' in defaultviews and self.sourceview is not None:
 			self.sourceview.show()
+		if 'assets' in defaultviews and self.assetsview is not None:
+			self.assetsview.show()
 
 	def destroy(self):
 		self.set_timer(-1)
@@ -303,6 +307,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.transitionview = None
 #		self.temporalview = None
 		self.sourceview = None
+		self.assetsview = None
 
 		if features.STRUCTURE_VIEW in features.feature_set:
 			import HierarchyView
@@ -359,12 +364,16 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			import SourceView
 			self.sourceview = SourceView.SourceView(self)
 
+		if features.ASSETS_VIEW in features.feature_set:
+			import AssetsView
+			self.assetsview = AssetsView.AssetsView(self)
+
 		# Views that are destroyed by restore (currently all)
 		# Notice that these must follow a certain order.
 		self.views = [self.player, self.hierarchyview,
 			      self.channelview, self.links, self.layoutview,
 			      self.ugroupview, self.transitionview, self.layoutview2,
-			      self.sourceview
+			      self.sourceview, self.assetsview
 			      ]
 #			      self.temporalview]
 
