@@ -709,7 +709,11 @@ class ChannelBoxWidget(ImageBoxWidget):
 	def attrcall(self):
 		self.root.toplevel.setwaiting()
 		chname = MMAttrdefs.getattr(self.node, 'project_default_region')
+		if not chname:
+			self.parent.attrcall()
 		channel = self.root.toplevel.context.getchannel(chname)
+		if not channel:
+			self.parent.attrcall()
 		import AttrEdit
 		AttrEdit.showchannelattreditor(self.root.toplevel, channel)
 
