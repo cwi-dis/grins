@@ -341,17 +341,23 @@ class MMNode:
 	# (The uid is compared, so a deep copy will compare different.
 	# This is hard to avoid since deep copying may also change
 	# attributes that contain uid references.)
+	# XXX This used to be __cmp__, but that's too slow
 	#
-	def __cmp__(self, other):
-		##_stat('__cmp__')
-		i = cmp(self.type, other.type)
-		if i: return i
-		i = cmp(self.uid, other.uid)
-		if i: return i
-		i = cmp(self.attrdict, other.attrdict)
-		if i: return i
+	def cmp(self, other):
+		##_stat('cmp')
+		c = cmp(self.type, other.type)
+		if c: return c
+		c = cmp(self.uid, other.uid)
+		if c: return c
+		c = cmp(self.attrdict, other.attrdict)
+		if c: return c
 		if self.type in interiortypes:
-			return cmp(self.children, other.children)
+			n1 = len(self.children)
+			n2 = len(other.children)
+			for i in range(min(n1,  n2)):
+				c = self.children[i].cmp(other.children[i])
+				if c: return c
+			return cmp(n1, n2)
 		elif self.type == 'imm':
 			return cmp(self.values, other.values)
 		else:
