@@ -88,7 +88,7 @@ class TopLevel(ViewDialog):
 			   ('Trace', (self.trace_callback, ()), 't')]
 		if hasattr(self.root, 'source') and \
 		   hasattr(windowinterface, 'TextEdit'):
-			buttons.insert(1, ('View Source...', (self.source_callback, ())))
+			buttons.insert(5, ('View Source...', (self.source_callback, ())))
 		self.source = None
 		self.buttons = self.window.ButtonRow(
 			buttons,
