@@ -583,6 +583,8 @@
 #define IDC_ZOOMIN                      1326
 #define IDC_ZOOMOUT                     1327
 #define IDC_THINGNAME                   1328
+#define IDC_LAYOUT_REGION_FITL          1328
+#define IDC_LAYOUT_FITL                 1328
 #define IDC_THINGVALUE                  1329
 #define IDC_EVENTLIST                   1332
 #define IDC_NEWBUTTON                   1333
@@ -688,6 +690,11 @@
 #define IDC_INIT_RECENT_COMBO           1451
 #define IDC_SLIDER1                     1452
 #define IDC_LAYOUT_SLIDER               1453
+#define IDC_LAYOUT_FITV                 1454
+#define IDC_ANIMATE_GROUP               1455
+#define IDC_ANIMATE_P0L                 1456
+#define IDC_ANIMATE_P100L               1457
+#define IDC_ANIMATE_ENABLE              1458
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -795,7 +802,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        463
 #define _APS_NEXT_COMMAND_VALUE         32900
-#define _APS_NEXT_CONTROL_VALUE         1454
+#define _APS_NEXT_CONTROL_VALUE         1459
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
