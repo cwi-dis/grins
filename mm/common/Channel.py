@@ -216,9 +216,23 @@ class Channel:
 			# maybe we should do something, but what?
 			raise error, 'don\'t know if this can happen'
 
-	def show(self):
+	def show(self, force = 0):
 		if debug:
 			print 'Channel.show('+`self`+')'
+
+		# force equal 1 is used only in internal. By default the channel is shown 
+		# only when showBackground attribute equal to always
+		if not force: 
+			if self._get_parent_channel() != None:
+				if self._attrdict.has_key('showBackground'):
+					if self._attrdict['showBackground'] == 'whenActive':
+						return
+			else:
+				# case for the top window
+				if self._attrdict.has_key('open'):
+					if self._attrdict['open'] == 'whenActive':
+						return
+				
 		# Indicate that the channel must enter the SHOWN state.
 		self._want_shown = 1
 		if self._is_shown:
@@ -246,6 +260,7 @@ class Channel:
 			if self._is_shown == 0:
 				self._player.after_chan_show(self)
 			return
+			
 		self.after_show()
 
 	def _get_parent_channel(self, creating=0):
@@ -292,14 +307,28 @@ class Channel:
 		# can become visible
 		for chan in self._subchannels[:]:
 			if chan._want_shown:
-				chan.show()
+				chan.show(1)
 		self._player.after_chan_show(self)
 
-	def hide(self):
+	def hide(self, force=1):
 		# Indicate that the channel must enter the HIDDEN state.
 		if debug:
-			print 'Channel.hide('+`self`+')'
-		self._want_shown = 0
+	 		print 'Channel.hide('+`self`+')'
+	
+		# force equal 0 is used only in internal. By default the channel is hide 
+		# only when showBackground attribute equal whenActive
+		if not force: 
+			if self._get_parent_channel() != None:
+				if self._attrdict.has_key('showBackground'):
+					if self._attrdict['showBackground'] == 'always':
+						return
+			else:
+				# case for the top window
+				if self._attrdict.has_key('close'):
+					if self._attrdict['close'] == 'never':
+						return
+
+		self._want_shown = 0		
 		self._highlighted = None
 		self.cancel_modeless_resize()
 		self.sensitive()
@@ -706,10 +735,6 @@ class Channel:
 		if not self._armcontext:
 			# The player has aborted
 			return
-		# experimentale code	
-		if not self._is_shown:
-			self.setActive()			
-		# end experimentale code
 		
 		self._prepareAnchors(node)
 		
@@ -1160,8 +1185,6 @@ class ChannelWindow(Channel):
 		self.__out_trans_qid = None
 		self._active_multiregion_transition = None
 		self._wingeom = None		
-		self._activeMediaNumber = 0
-		self._setVisible(0)
 
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
@@ -1170,29 +1193,6 @@ class ChannelWindow(Channel):
 			STOP(callback = (ui.stop_callback, ())),
 			MAGIC_PLAY(callback = (ui.magic_play, ())),
 			]
-
-	# Return true if this channel have to show the background when you start the document.
-	# this value depend of showBackground attribute
-	def _hasBackgroundAtStart(self):
-		try:
-			self.__hasBgAtStart
-		except:
-			pchan = self
-			found = 0
-			while pchan != None:
-				if pchan._get_parent_channel() != None:					
-					if not pchan._get_parent_channel()._hasBackgroundAtStart():
-						found = 1
-						break;
-					elif pchan._attrdict['showBackground'] == 'whenActive':
-						found = 1
-						break;
-				pchan = pchan._get_parent_channel()
-			if found:
-				self.__hasBgAtStart = 0
-			else:
-				self.__hasBgAtStart = 1
-		return self.__hasBgAtStart
 
 	def destroy(self):
 		del self._player.ChannelWinDict[self._name]
@@ -1350,8 +1350,9 @@ class ChannelWindow(Channel):
 ##					     (self.highlight, ())))
 ##				menu.append(('', 'unhighlight',
 ##					     (self.unhighlight, ())))
+			# for now
 			# all the time transparent
-			transparent = -1 
+			transparent = -1
 			self._curvals['transparent'] = (transparent, 0)
 			z = self._attrdict.get('z', 0)
 			self._curvals['z'] = (z, 0)
@@ -1478,47 +1479,23 @@ class ChannelWindow(Channel):
 #				self._attrdict['units'] = units
 			self._curvals['base_winoff'] = pgeom, None
 			
-		# we have to render visible the channel at start according to the 
-		# showBackground attribute
-		if self._hasBackgroundAtStart():
-			self._setVisible(1)
+		units = self._attrdict.get('units',
+					   windowinterface.UNIT_SCREEN)
+		self.create_window(self._get_parent_channel(), self._wingeom, units)
+		
 		return 1
 
-	# Set this channel visible/unvisible according to the showBackground attribute
-
-	###################################### WARNING ###################################
-	# for now, we destroy the window when the channel pass inactive (only method which
-	# actually work). We also destroy all windows inside
-	# we can't use hide/show because they modify a lot of things (structure of channel,
-	# state in some case, ...). Otherwise you have a crash in a lot of cases.
-	# The best method whould be call hide/show without destroy and rebuild the window, 
-	# but it doesn't work actually
-	##################################################################################
-
-	def _setVisible(self, fl):
-		if self.window == None and fl:
-			# print 'set visible :',self
-			# create a window for this channel
-			units = self._attrdict.get('units',
-						   windowinterface.UNIT_SCREEN)
-			self.create_window(self._get_parent_channel(), self._wingeom, units)
-			
-		elif self.window != None and not fl:
-			# print 'set unvisible :',self
-			self.window.close()
-			self.window = None
-				
+	# Updates channels to visible if according to the showBackground/open and close attributes
 	def updateToActiveState(self):
-		self._activeMediaNumber = 1
+		self.show(1)
 		pchan = self._get_parent_channel()
-		pchan.updateToActiveState()
-		self._setVisible(1)
+		pchan.childToActiveState()
 						
+	# Updates channels to unvisible if according to the showBackground/open and close attributes
 	def updateToInactiveState(self):
-		self._activeMediaNumber = 0
-		self._setVisible(0)
+		self.hide(0)
 		pchan = self._get_parent_channel()
-		pchan.updateToInactiveState()
+		pchan.childToInactiveState()
 			
 ##	def _box_callback(self, *pgeom):
 ##		if not pgeom:
@@ -1838,9 +1815,6 @@ class ChannelWindow(Channel):
 		# print 'subreg geom : ',subreg_left, subreg_top, subreg_width, subreg_height
 		return subreg_left, subreg_top, subreg_width, subreg_height
 		
-	def hide(self):
-		Channel.hide(self)
-
 	def play(self, node):
 		if debug:
 			print 'ChannelWindow.play('+`self`+','+`node`+')'
