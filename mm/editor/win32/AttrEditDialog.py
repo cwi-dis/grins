@@ -32,7 +32,7 @@ implements the actual dialog.
 import windowinterface
 
 class AttrEditorDialog:
-	def __init__(self, title, attriblist):
+	def __init__(self, title, attriblist, toplevel=None):
 		"""Create the AttrEditor dialog.
 
 		Create the dialog window (non-modal, so does not grab
@@ -45,8 +45,11 @@ class AttrEditorDialog:
 			AttrEditorDialogField
 		"""
 		formid='attr_edit'
-
-		toplevel_window=self.wrapper.toplevel.window
+		
+		if toplevel:
+			toplevel_window=self.wrapper.toplevel.window
+		else:
+			toplevel_window = windowinterface.getmainwnd()
 		fs=toplevel_window.getformserver()
 		w=fs.newformobj(formid)
 		w._title=title
