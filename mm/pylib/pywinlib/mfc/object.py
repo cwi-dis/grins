@@ -7,8 +7,10 @@ class Object:
 		self.__dict__['_obj_'] = initObj
 #		self._obj_ = initObj
 		if initObj is not None: initObj.AttachObject(self)
+
 	def __del__(self):
-		self.close()
+		self.detach()
+
 	def __getattr__(self, attr):	# Make this object look like the underlying win32ui one.
 		# During cleanup __dict__ is not available, causing recursive death.
 		if attr != '__dict__':
@@ -29,7 +31,8 @@ class Object:
 	def OnAttachedObjectDeath(self):
 #		print "object", self.__class__.__name__, "dieing"
 		self._obj_ = None
-	def close(self):
+
+	def detach(self):
 		if self.__dict__.has_key('_obj_'):
 			if self._obj_ is not None:
 				self._obj_.AttachObject(None)
