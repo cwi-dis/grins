@@ -1165,6 +1165,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					node.collapsed = 1
 				else:
 					self.syntax_error('bad %s attribute' % attr)
+			elif attr == 'showtime':
+				if val in ('focus', 'cfocus'):
+					# ignore in player
+					if features.editor:
+						node.showtime = val
+				else:
+					self.syntax_error('bad %s attribute' % attr)
 			elif attr == 'skip-content':
 				if val in ('true', 'false'):
 					attrdict['skip_content'] = val == 'true'

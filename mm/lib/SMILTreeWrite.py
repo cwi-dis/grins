@@ -795,6 +795,10 @@ def getcollapsed(writer, node):
 	if node.GetType() in interiortypes and node.collapsed:
 		return 'true'
 
+def getshowtime(writer, node):
+	if node.showtime:
+		return node.showtime
+
 def getinlinetrmode(writer, node):
 	mode = node.GetRawAttrDef('mode', 'in')
 	if mode == 'in':
@@ -905,6 +909,7 @@ smil_attrs=[
 	("bandwidth", lambda writer, node: node.GetRawAttrDef("bandwidth", None)),
 
 	("collapsed", getcollapsed),
+	("showtime", getshowtime),
 ]
 prio_attrs = [
 	("id", getid),
@@ -917,6 +922,7 @@ prio_attrs = [
 	('higher', lambda writer, node: getcmifattr(writer, node, 'higher', 'pause')),
 	('pauseDisplay', lambda writer, node: getcmifattr(writer, node, 'pauseDisplay', 'inherit')),
 	("collapsed", getcollapsed),
+	("showtime", getshowtime),
 	]
 
 # attributes that we know about and so don't write into the SMIL file using
