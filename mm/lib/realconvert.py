@@ -79,6 +79,7 @@ def convertaudiofile(u, dstdir, file, node, progress = None):
 	elif u.headers.subtype == 'x-wav':
 		atype = 'wav'
 	elif u.headers.subtype == 'mpeg':
+		u.close()
 		return None
 	else:
 		atype = 'au'		# XXX not correct
@@ -121,6 +122,7 @@ def convertaudiofile(u, dstdir, file, node, progress = None):
 		audiopin.Encode(ms)
 
 	engine.DoneEncoding()
+	u.close()
 
 	return file
 
@@ -154,10 +156,16 @@ def convertimagefile(u, srcurl, dstdir, file, node):
 		from win32ig import win32ig
 		img = __main__.toplevel._image_cache.get(f)
 		if img is None:
-			img = win32ig.load(f)
+			try:
+				img = win32ig.load(f)
+			except:
+				# can't load image, so can't convert
+				return
 		width, height, depth = win32ig.size(img)
+		if depth != 24:
+			win32ig.color_promote(img, 3) # IG_PROMOTE_TO_24
 		data = win32ig.read(img)
-		srcfmt = imgformat.bmprgbbe_noalign
+		srcfmt = imgformat.bmprgble_noalign
 	else:
 		import img
 		rdr = img.reader(wt.format_choices[0], f)
@@ -179,6 +187,7 @@ def converttextfile(u, dstdir, file, node):
 	file = os.path.splitext(file)[0] + '.rt'
 	fullpath = os.path.join(dstdir, file)
 	data = u.read()
+	u.close()
 	f = open(fullpath, 'w')
 	f.write('<window')
 	if node is not None:
@@ -388,6 +397,8 @@ def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 if producer is None:
 	# dummies if we can't import producer
 	def convertaudiofile(u, dstdir, file, node, progress = None):
+		u.close()
 		return None
 	def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
+		u.close()
 		return None
