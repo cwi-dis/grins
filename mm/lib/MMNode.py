@@ -1852,7 +1852,7 @@ class MMNode(MMTreeElement):
 			self.start_time = None
 		if debug: print 'MMNode.reset', `self`
 		if self.parent and self.parent.type in ('switch', 'foreign', 'prio'):
-			self.parent.reset()
+			self.parent.reset(full_reset)
 
 
 	def resetall(self, sched):
@@ -3404,17 +3404,17 @@ class MMNode(MMTreeElement):
 		for node, arc in body.arcs:
 			node.sched_children.remove(arc)
 		body.arcs = []
-		for arc in body.durarcs:
-			refnode = arc.refnode()
-			refnode.sched_children.remove(arc)
-			if arc.qid is not None:
-				try:
-					sched.cancel(arc.qid)
-				except ValueError:
-					pass
-				arc.qid = None
-		body.durarcs = []
 		for child in self.wtd_children:
+			for arc in child.durarcs:
+				refnode = arc.refnode()
+				refnode.sched_children.remove(arc)
+				if arc.qid is not None:
+					try:
+						sched.cancel(arc.qid)
+					except ValueError:
+						pass
+					arc.qid = None
+			child.durarcs = []
 			beginlist = child.GetBeginList()
 			beginlist = self.FilterArcList(beginlist)
 			for arc in beginlist:
@@ -3515,7 +3515,14 @@ class MMNode(MMTreeElement):
 			chname = MMAttrdefs.getattr(child, 'name')
 			beginlist = child.GetBeginList()
 			beginlist = self.FilterArcList(beginlist)
-			if not beginlist:
+			if path and path[0] is child:
+				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = sctx.parent.timefunc() - self.start_time)
+				self_body.arcs.append((srcnode, arc))
+				srcnode.add_arc(arc, sctx)
+				schedule = 1
+				if path and path[0] is child:
+					arc.path = path[1:]
+			elif not beginlist:
 				if defbegin is None:
 					child.set_infoicon('error', 'node cannot start')
 				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin)

@@ -296,6 +296,7 @@ class SchedulerContext:
 			# this tests wheter the dependant arc can be
 			# scheduled at this time (i.e. it should be of
 			# the right type with a definite delay etc.).
+			if debugevents: print 'sched_arcs',`node`,'trying',`arc`,
 			if (arc.channel != channel or
 			    arc.getevent() != event or
 			    arc.marker != marker or
@@ -312,7 +313,9 @@ class SchedulerContext:
 			    arc.marker is None or
 			    '#' not in arc.marker or
 			    event != 'begin'):
+				if debugevents: print 'continue'
 				continue
+			if debugevents: print 'do it'
 			do_continue = 0	# on old Python we can't continue from inside try/except
 			try:
 				if arc.__in_sched_arcs:
@@ -491,6 +494,7 @@ class SchedulerContext:
 					self.flushqueue()
 				parent.updatetimer()
 				return
+		# the node should start, but we need to do some more checks
 		if not pnode:
 			self.scheduled_children = self.scheduled_children - 1
 		if not pnode or pnode.playing != MMStates.PLAYING:
@@ -529,6 +533,7 @@ class SchedulerContext:
 						found = 1
 						break
 			if not found:
+				# we didn't find a time interval
 				if debugevents: print 'not allowed to start',parent.timefunc()
 				srdict = pnode.gensr_child(node, runchild = 0, sctx = self)
 				self.srdict.update(srdict)
@@ -537,6 +542,7 @@ class SchedulerContext:
 				parent.event(self, ev, timestamp)
 				parent.updatetimer()
 				return
+		# now we know for sure the node should start
 		# if node is playing (or not stopped), must terminate it first
 		if node.playing not in (MMStates.IDLE, MMStates.PLAYED):
 			if debugevents: print 'terminating node',parent.timefunc()
@@ -547,6 +553,9 @@ class SchedulerContext:
 			self.flushqueue()
 			self.sched_arcs(node, 'begin', timestamp=timestamp)
 			pnode.scheduled_children = pnode.scheduled_children - 1
+##		node.cleanup_sched(parent)
+		for c in node.GetSchedChildren():
+			c.resetall(parent)
 		if pnode.type == 'excl':
 			action = 'nothing'
 			for sib in pnode.GetSchedChildren():
@@ -775,13 +784,6 @@ class SchedulerContext:
 						return
 				# start interior node not yet playing or
 				# start any leaf node
-				pnode = node.GetSchedParent()
-				if pnode is not None and pnode.GetType() == 'seq' and path:
-					if path is None:
-						path = [node]
-					else:
-						path.insert(0, node)
-					node = pnode
 				self.trigger(None, node, path, start)
 				self.sched_arcs(node, 'begin', timestamp = start)
 				return
@@ -870,8 +872,8 @@ class SchedulerContext:
 						return
 				node.stopplay(timestamp)
 				node.cleanup_sched(parent)
-				for c in node.GetSchedChildren():
-					c.resetall(parent)
+##				for c in node.GetSchedChildren():
+##					c.resetall(parent)
 		elif fill != 'remove' and node.playing in (MMStates.PLAYING, MMStates.PAUSED):
 			self.freeze_play(node, timestamp)
 			if not parent.playing:
