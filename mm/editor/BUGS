@@ -2,7 +2,26 @@ channel view: crashes if a leaf node has no valid channel
 
 channel view: if root is selected, focus isn't shown
 
+channel view: open it, then close; open in the block view a node that
+was closed; and then 'add' there.  This crashes the channel view...
+
+channel view: doesn't notice when a node has moved to another channel
+
+player: crash when putting two events on same channel simultaneously
+
+block view: resize behavior is weird
+
+channel view: resize behavior is weird
+
 ------------------------------ FEATURES ---------------------------
+
+quit dialog if there are unsaved changes
+
+player: "keep" attribute (default 1)
+
+player: color used for clearing various windows (text, image, movie)
+
+text channel: font spec should be a node attribute (as well as colors)
 
 block view: needs Copy command as well
 
@@ -12,14 +31,14 @@ channel view: need commands to add/delete channels
 
 block & channel view: want to show other view's focus
 
+need global clipboard module
+
+------------------------------ NITS -------------------------------
+
 player: should remember & save which channels are "off"
 
 player: when playing a subtree, should make sure that at least one
  	of the channels it uses is on?
-
------------------------------- NITS -------------------------------
-
-info window: should be smaller
 
 ------------------------------ FIXED ------------------------------
 
@@ -39,3 +58,7 @@ info window: need a button to edit or create 'ext' data
 info window: window doesn't disappear when restore destroys the tree
 
 toplevel: hierarchy button light stays on when view is closed by restore
+
+info window: should be smaller
+
+movie channel: crash when a "2.0" movie is presented
