@@ -834,5 +834,6 @@ initmoviechannel()
 	maxbits = getgdesc(GD_BITS_NORM_SNG_CMODE);
 	if (maxbits > 11)
 		maxbits = 11;
+	/*DEBUG*/maxbits=8;
 	init_colorconv();
 }
