@@ -717,12 +717,14 @@ class EffectiveAnimator:
 		mmregion = self.__region._attrdict
 
 		# implemented fit='meet' (0) and fit='hidden' (1)
-		scale = mmregion['scale']
 
 		if settings.activeFullSmilCss:
+			scale = mmregion.getCssAttr('scale', 1)
 			coordinates = mmregion.getPxGeom()
 		else:
+			scale = mmregion['scale']
 			coordinates = mmregion.GetPresentationAttr('base_winoff')
+
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
 			x, y, w, h = coordinates
 			units = ch.get('units')
@@ -817,14 +819,12 @@ class EffectiveAnimator:
 
 		# implemented fit='meet' (0) and fit='hidden' (1)
 		if settings.activeFullSmilCss:
-			scale = 1
-		else:
-			scale = mmchan['scale']
-
-		if settings.activeFullSmilCss:
+			scale = 1 # mmchan.getCssAttr('scale', 1)
 			coordinates = self.__node.getPxGeom()
 		else:
+			scale = mmchan['scale']
 			coordinates = mmchan.GetPresentationAttr('base_winoff')
+
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
 			x, y, w, h = coordinates
 			units = mmchan.get('units')
@@ -941,7 +941,7 @@ def getregionattr(node, attr):
 				v = r[2]
 			elif attr == 'height':
 				v = r[3]
-		return v, attr, 'int'
+			return v, attr, 'int'
 		
 	elif attr == 'bgcolor':
 		if d.has_key('bgcolor'):
@@ -1022,7 +1022,8 @@ class AnimateElementParser:
 
 		# locate target node
 		# for some elements not represented by nodes (region, area, transition)
-		# create a virtual node 
+		# create a virtual node
+		self.__isstdnode = 1
 		if not hasattr(anim,'targetnode') or not anim.targetnode:
 			te = MMAttrdefs.getattr(anim, 'targetElement')
 			if te:
@@ -1030,6 +1031,7 @@ class AnimateElementParser:
 				anim.targetnode = root.GetChildByName(te)
 				if not anim.targetnode:
 					self.__checkNotNodeElementsTargets(te)
+					if anim.targetnode: self.__isstdnode = 0
 			else:
 				anim.targetnode = anim.GetParent()	
 				
@@ -1262,7 +1264,11 @@ class AnimateElementParser:
 		if self.__elementTag=='animateMotion':
 			self.__grinsattrname = self.__attrname = 'position'
 			if settings.activeFullSmilCss:
-				rc = self.__target.getPxGeom()
+				if self.__isstdnode:
+					rc = self.__target.getPxGeom()
+				else:
+					ch = self.__target.GetChannel()
+					rc = ch.getPxGeom()
 				if rc:
 					x, y, w, h = rc
 					self.__domval = complex(x, y)
