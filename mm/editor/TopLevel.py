@@ -294,7 +294,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			v.save_geometry()
 		# Make a back-up of the original file...
 		try:
-			os.rename(filename, filename + '~')
+			os.rename(filename, make_backup_filename(filename))
 		except os.error:
 			pass
 		print 'saving to', filename, '...'
@@ -341,38 +341,46 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.setready()
 
 	def read_it(self):
-		import time
 		self.changed = 0
 		if self.new_file:
-			import MMTree
-			self.root = MMTree.ReadString(EMPTY, self.filename)
-		else:
-			import mimetypes
-			print 'parsing', self.filename, '...'
-			t0 = time.time()
-			mtype = mimetypes.guess_type(self.filename)[0]
-			if mtype == 'application/smil':
-				import SMILTree
-				self.root = SMILTree.ReadFile(self.filename)
-			elif mtype == 'application/x-cmif':
-				import MMTree
-				self.root = MMTree.ReadFile(self.filename)
+			print 'New file', self.new_file #DBG
+			if type(self.new_file) == type(''):
+				self.do_read_it(self.new_file)
 			else:
-				import SMILTree
-				self.root = SMILTree.ReadString('''\
-<smil>
-  <body>
-    <ref dur="indefinite" src="%s"/>
-  </body>
-</smil>
-''' % self.filename, self.filename)
-			t1 = time.time()
-			print 'done in', round(t1-t0, 3), 'sec.'
+				import MMTree
+				self.root = MMTree.ReadString(EMPTY, self.filename)
+		else:
+			self.do_read_it(self.filename)
 		Timing.changedtimes(self.root)
 		self.context = self.root.GetContext()
 		self.editmgr = EditMgr(self.root)
 		self.context.seteditmgr(self.editmgr)
 		self.editmgr.register(self)
+		
+	def do_read_it(self, filename):
+		import time
+		import mimetypes
+		print 'parsing', filename, '...'
+		t0 = time.time()
+		mtype = mimetypes.guess_type(filename)[0]
+		if mtype == 'application/smil':
+			import SMILTree
+			self.root = SMILTree.ReadFile(filename)
+		elif mtype == 'application/x-cmif':
+			import MMTree
+			self.root = MMTree.ReadFile(filename)
+		else:
+			import SMILTree
+			self.root = SMILTree.ReadString('''\
+<smil>
+  <body>
+    <ref dur="indefinite" src="%s"/>
+  </body>
+</smil>
+''' % filename, filename)
+		t1 = time.time()
+		print 'done in', round(t1-t0, 3), 'sec.'
+
 
 	def close_callback(self):
 		self.setwaiting()
@@ -522,3 +530,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if top is not self:
 				rv = rv + top._getlocalexternalanchors()
 		return rv
+
+if os.name == 'posix':
+	def make_backup_filename(filename):
+		return filename + '~'
+else:
+	def make_backup_filename(filename):
+		return filename + '.BAK'
+		

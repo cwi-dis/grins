@@ -45,6 +45,7 @@ class Main(MainDialog):
 		self._tracing = 0
 		self.tops = []
 		self._mm_callbacks = {}
+		self._untitled_counter = 1
 		try:
 			import mm, posix, fcntl, FCNTL
 		except ImportError:
@@ -63,8 +64,34 @@ class Main(MainDialog):
 
 	def new_callback(self):
 		import TopLevel
-		top = TopLevel.TopLevel(self, 'NEW-DOCUMENT.cmif', 1)
+		import windowinterface
+		
+		have_templates = 0
+		if os.environ.has_key('CMIF'):
+			cmifdir = os.environ['CMIF']
+			templatedir = os.path.join(cmifdir, 'Templates')
+			if os.path.exists(templatedir):
+				have_templates = 1
+		if have_templates:
+			windowinterface.FileDialog('Select a template', templatedir, '*', '',
+				self._new_ok_callback, None, 1)
+		else:
+			print "Warning: no Templates directory, creating empty document"
+			top = TopLevel.TopLevel(self, self.getnewdocumentname('dummy.cmif'), 1)
+			self.new_top(top)
+	
+	def _new_ok_callback(self, filename):
+		import TopLevel
+		import MMurl
+		template_url = MMurl.pathname2url(filename)
+		top = TopLevel.TopLevel(self, self.getnewdocumentname(filename), template_url)
 		self.new_top(top)
+		
+	def getnewdocumentname(self, templatename):
+		name = 'Untitled%d'%self._untitled_counter
+		self._untitled_counter = self._untitled_counter + 1
+		dummy, ext = os.path.splitext(templatename)
+		return name + ext
 
 	def open_callback(self, url):
 		from MMExc import MSyntaxError
