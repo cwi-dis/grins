@@ -28,6 +28,8 @@ interface IGRiNSPlayerAuto : IUnknown
 	HRESULT setTime([in] double t);
 	HRESULT getSpeed([out] double *ps);
 	HRESULT setSpeed([in] double s);
+	HRESULT mouseClicked([in] int x, [in] int y);
+	HRESULT mouseMoved([in] int x, [in] int y, [out] BOOL *phot);
 	};
 
 // {8443A49C-5957-4019-AEC5-D13CEBF3FCF3}
