@@ -1,5 +1,4 @@
 # Anchor editor modeless dialog
-print 'import AnchorEdit'
 
 
 import fl
@@ -16,11 +15,11 @@ from MMNode import alltypes, leaftypes, interiortypes
 form_template = None
 
 
-def showanchoreditor(node):
+def showanchoreditor(toplevel, node):
 	try:
 		anchoreditor = node.anchoreditor
 	except AttributeError:
-		anchoreditor = AnchorEditor().init(node)
+		anchoreditor = AnchorEditor().init(toplevel, node)
 		node.anchoreditor = anchoreditor
 	anchoreditor.open()
 
@@ -35,8 +34,9 @@ def hideanchoreditor(node):
 
 class AnchorEditor(Dialog):
 
-	def init(self, node):
+	def init(self, toplevel, node):
 		self.node = node
+		self.toplevel = toplevel
 		self.context = node.GetContext()
 		self.editmgr = self.context.geteditmgr()
 		self.root = node.GetRoot()
@@ -153,10 +153,33 @@ class AnchorEditor(Dialog):
 
 	def show_location(self):
 		# XXX Should change sometime
+		if self.focus == None:
+			print 'AnchorEdit: show_location without focus!'
+		a = self.anchorlist[self.focus]
+		loc = a[1]
 		self.begin_button.set_button(0)
 		self.end_button.set_button(0)
-		self.whole_button.set_button(1)
-		self.internal_button.set_button(0)
+		self.whole_button.set_button(loc == [])
+		self.internal_button.set_button(loc <> [])
+
+	def set_location(self, loc):
+		if self.focus == None:
+			print 'AnchorEdit: show_location without focus!'
+		a = self.anchorlist[self.focus]
+		self.changed = 1
+		if loc in (0, 1):
+			# Cannot do yet
+			loc = 2
+		if loc == 2:
+			a = (a[0], [])
+		else:
+			na = self.toplevel.player.defanchor(self.node, a)
+			if na == None:
+				loc = 2
+			else:
+				a = na
+		self.anchorlist[self.focus] = a
+		self.show_location()
 
 	def close(self):
 		if self.showing:
@@ -200,7 +223,7 @@ class AnchorEditor(Dialog):
 		else:
 			id = 1
 		name = '#' + self.uid + '.' + `id`
-		self.anchorlist.append((id, [0]))
+		self.anchorlist.append((id, []))
 		self.anchor_browser.add_browser_line(name)
 		self.focus = len(self.anchorlist)-1
 		self.show_focus()
@@ -224,11 +247,11 @@ class AnchorEditor(Dialog):
 		self.show_focus()
 
 	def setloc_callback(self, (obj, value)):
+		# value can be '0', '1', '2' or '3' (a string!)
 		# Ignore, for now
 		if self.focus == None:
 			print 'AnchorEdit: no focus in setloc!'
-		self.show_location()
-
+		self.set_location(eval(value))
 
 # Routine to close all attribute editors in a node and its context.
 
