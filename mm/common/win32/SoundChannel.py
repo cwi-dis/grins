@@ -1,4 +1,4 @@
-from Channel import ChannelWindow, FALSE
+from Channel import Channel, FALSE
 import urllib, MMurl
 import MMAttrdefs
 
@@ -7,6 +7,7 @@ import time, mmsystem
 
 import win32ui,win32con
 from win32modules import midiex
+from windowinterface import genericwnd
 
 error = 'Channel.error'
 
@@ -24,28 +25,29 @@ PIDLE = 1
 PLAYING = 2
 PLAYED = 3
 
-class SoundChannel(ChannelWindow):
+class SoundChannel(Channel):
 	_visible = FALSE
 
 	def __init__(self, name, attrdict, scheduler, ui):
-		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
+		Channel.__init__(self, name, attrdict, scheduler, ui)
 		self._armed_soundIndex = None
 		self._play_soundIndex = -1
 		self._played_soundIndex = None
 		self._armed_filename = ""
 		self._play_filename = ""
-		self._soundWindow = None
+		self._soundWindow = genericwnd()
 		self._tp = None
 
 	def __repr__(self):
 		return '<SoundChannel instance, name=' + `self._name` + '>'
 
+	def destroy(self):
+		if self._soundWindow.IsWindow():
+			self._soundWindow.DestroyWindow()
+		Channel.destroy(self)
+
 	def do_arm(self, node, same=0):
-		if self.window == None:
-			win32ui.MessageBox("Window not Created yet!!", "Debug", win32con.MB_OK|win32con.MB_ICONSTOP)
-			return 1
-		else:
-			self._soundWindow = self.window
+		self._soundWindow.create()
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
@@ -122,19 +124,19 @@ class SoundChannel(ChannelWindow):
 					midiex.seekstart(self._play_soundIndex)
 					midiex.play(self._play_soundIndex, self.play_duration)
 					return
-				ChannelWindow.playdone(self, dummy)
+				Channel.playdone(self, dummy)
 				return
 			midiex.stop(self._play_soundIndex)
 			midiex.seekstart(self._play_soundIndex)
 			midiex.play(self._play_soundIndex, self.play_duration)
 		else:
-			ChannelWindow.playdone(self, dummy)
+			Channel.playdone(self, dummy)
 
 
 
 	def callback(self, dummy1, dummy2, event, value):
 		if debug:
-			print 'ChannelWindow.callback'+`self,dummy1,dummy2,event,value`
+			print 'Channel.callback'+`self,dummy1,dummy2,event,value`
 		if value == MM_PLAYDONE:
 			if self._playstate == PLAYING:
 				self.playdone(0)
@@ -161,10 +163,10 @@ class SoundChannel(ChannelWindow):
 		self.play_loop = 1
 		self.need_armdone = 0
 		self.playdone(0)
-		ChannelWindow.stopplay(self, node)
+		Channel.stopplay(self, node)
 
 	def setpaused(self, paused):
-		ChannelWindow.setpaused(self, paused)
+		Channel.setpaused(self, paused)
 		if self._paused:
 			if self._play_soundIndex >= 0:
 				res = midiex.stop(self._play_soundIndex)
