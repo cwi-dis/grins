@@ -14,6 +14,8 @@ import MMParser
 import MMWrite
 from MMExc import *
 
+from Dialog import Dialog
+
 
 # There are two basic calls into this module (but see below for more):
 # showattreditor(node) creates an attribute editor form for a node
@@ -104,7 +106,8 @@ class NodeWrapper():
 		return self
 	#
 	def maketitle(self):
-		return 'Node attributes'
+		name = MMAttrdefs.getattr(self.node, 'name')
+		return 'Node attributes for ' + name
 	#
 	def link(self, attreditor):
 		self.node.attreditor = attreditor
@@ -228,7 +231,7 @@ class ChannelWrapper():
 
 # Attribute editor class.
 
-class AttrEditor():
+class AttrEditor() = Dialog():
 	#
 	def init(self, wrapper):
 		#
@@ -241,6 +244,10 @@ class AttrEditor():
 		formwidth = itemwidth
 		formheight = len(self.namelist) * itemheight + 30
 		#
+		title = self.wrapper.maketitle()
+		hint = '[Click on labels for help]'
+		self = Dialog.init(self, (formwidth, formheight, title, hint))
+		#
 		itemw3 = 50
 		itemw2 = itemwidth/2
 		itemw1 = itemwidth - itemw2 - itemw3
@@ -249,8 +256,7 @@ class AttrEditor():
 		itemx2 = itemx1 + itemw1
 		itemx3 = itemx2 + itemw2
 		#
-		form = fl.make_form(FLAT_BOX, formwidth, formheight)
-		self.form = form
+		form = self.form
 		#
 		self.blist = []
 		#
@@ -264,49 +270,11 @@ class AttrEditor():
 			b.makeresetbutton(itemx3, itemy, itemw3, itemheight)
 			self.blist.append(b)
 		#
-		self.makebuttons(formwidth)
-		#
 		self.getvalues()
-		#
-		form.show_form(PLACE_SIZE, TRUE, self.wrapper.maketitle())
-		# XXX Should have a more meaningful title
-		#
 		self.wrapper.link(self)
+		self.show()
 		#
 		return self
-	#
-	def makebuttons(self, width):
-		#
-		# Add buttons for cancel/restore/apply/OK commands to
-		# the bottom of the form, and a hint text between them.
-		#
-		form = self.form
-		#
-		x, y, w, h = 2, 2, 66, 26
-		#
-		x = 2
-		cancel = form.add_button(NORMAL_BUTTON, x, y, w, h, 'Cancel')
-		cancel.set_call_back(self.cancelcallback, None)
-		#
-		x = x + 70
-		restore = form.add_button(NORMAL_BUTTON, x, y, w, h, 'Restore')
-		restore.set_call_back(self.restorecallback, None)
-		#
-		x = x + 70
-		w1 = width - 4*70 - 4
-		hint = form.add_text(NORMAL_TEXT, \
-			x, y, w1, h, '[Click on labels for help]')
-		hint.align = ALIGN_CENTER
-		#
-		x = width - 70 - 68
-		apply = form.add_button(RETURN_BUTTON, x, y, w, h, 'Apply')
-		apply.set_call_back(self.applycallback, None)
-		#
-		x = x + 70
-		ok = form.add_button(NORMAL_BUTTON, x, y, w, h, 'OK')
-		ok.set_call_back(self.okcallback, None)
-		#
-		self.globalbuttons = (cancel, restore, hint, apply, ok)
 	#
 	def getvalues(self):
 		self.form.freeze_form()
@@ -321,21 +289,22 @@ class AttrEditor():
 		self.changed = 0
 	#
 	def close(self):
-		self.form.hide_form()
+		self.hide()
 		self.wrapper.unlink()
 		# XXX break circular links...
 		# Leave the rest to garbage collection
+		self.destroy()
 	#
-	def cancelcallback(self, dummy):
+	def cancel_callback(self, dummy):
 		self.close()
 	#
-	def restorecallback(self, dummy):
+	def restore_callback(self, dummy):
 		self.getvalues()
 	#
-	def applycallback(self, dummy):
+	def apply_callback(self, dummy):
 		self.setvalues()
 	#
-	def okcallback(self, dummy):
+	def ok_callback(self, dummy):
 		self.setvalues()
 		self.close()
 	#
