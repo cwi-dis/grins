@@ -190,7 +190,10 @@ class HierarchyViewDialog(ViewDialog):
 		import settings
 		title = 'Structure View (%s)' % self.toplevel.basename
 		self.load_geometry()
-		x, y, w, h = self.last_geometry
+		if self.last_geometry:
+			x, y, w, h = self.last_geometry
+		else:
+			x, y, w, h = -1, -1, -1, -1
 		self.adornments['flags'] = curflags()
 		self.window = windowinterface.newcmwindow(x, y, w, h, title,
 				pixmap = 1, adornments = self.adornments,

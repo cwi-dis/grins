@@ -39,7 +39,10 @@ class HierarchyViewDialog(ViewDialog):
 			return
 		title = 'Structure View (%s)' % self.toplevel.basename
 		self.load_geometry()
-		x, y, w, h = self.last_geometry
+		if self.last_geometry:
+			x, y, w, h = self.last_geometry
+		else:
+			x, y, w, h = -1, -1, -1, -1
 		toplevel_window=self.toplevel.window
 		self.window = toplevel_window.newview(x, y, w, h, title,
 				units=windowinterface.UNIT_PXL,
