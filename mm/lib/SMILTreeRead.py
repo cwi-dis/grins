@@ -1459,12 +1459,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.syntax_error('invalid clip-end attribute')
 		if self.__in_a:
 			# deal with hyperlink
-			href, ltype, stype, dtype, id = self.__in_a[:-1]
+			href, atype, ltype, stype, dtype, id = self.__in_a[:-1]
 			if id is not None and not self.__idmap.has_key(id):
 				self.__idmap[id] = node.GetUID()
 			anchorlist = node.__anchorlist
 			id = _uniqname(map(lambda a: a[2], anchorlist), id)
-			anchorlist.append((0, len(anchorlist), id, ATYPE_WHOLE, [], (0, 0)))
+			anchorlist.append((0, len(anchorlist), id, atype, [], (0, 0)))
 			self.__links.append((node.GetUID(), id, href, ltype, stype, dtype))
 
 	def NewContainer(self, type, attributes):
@@ -3537,7 +3537,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		ltype, stype, dtype = self.__link_attrs(attributes)
 
-		self.__in_a = href, ltype, stype, dtype, id, self.__in_a
+		# determinate atype according to actuate attribute
+		atype = self.__link_atype(attributes,ATYPE_WHOLE);
+
+		self.__in_a = href, atype, ltype, stype, dtype, id, self.__in_a
 
 	def end_a(self):
 		if self.__in_a is None:
@@ -3636,6 +3639,25 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		return ltype, stype, dtype
 
+	def __link_atype(self, attributes, defaultValue):
+		# default value
+		atype = defaultValue
+				
+		actuate = attributes.get('actuate')
+		if actuate != None:
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('actuate attribute not compatible with SMIL 1.0')
+			self.__context.attributes['project_boston'] = 1		
+			if actuate == 'onRequest':
+				# default value
+				pass
+			elif actuate == 'onLoad':
+				atype = ATYPE_AUTO
+			else:
+				self.syntax_error('unknown actuate attribute value')
+				
+		return atype
+		
 	def start_anchor(self, attributes):
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
@@ -3658,13 +3680,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		nname = self.__node.GetRawAttrDef('name', None)
 
 		# show, sourcePlaystate and destinationPlaystate parsing
-
 		ltype, stype, dtype = self.__link_attrs(attributes)
-
+		
+		# default atype value
 		atype = ATYPE_WHOLE
-		aargs = [A_SHAPETYPE_ALLREGION]
 
 		# coord and shape parsing
+		
+		aargs = [A_SHAPETYPE_ALLREGION]
 
 		# shape attribute
 		shape = attributes.get('shape')
@@ -3775,6 +3798,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif id is not None:
 			aid = id
 
+		# determinate new atype
+		# atype may be overide by the actuate attribute
+		atype = self.__link_atype(attributes, atype)
+				
 		if id is not None:
 			self.__anchormap[id] = (uid, aid)
 		anchorlist.append((z, len(anchorlist), aid, atype, aargs, (begin or 0, end or 0)))

@@ -452,6 +452,7 @@ class Channel:
 		if repeatdur is not None:
 			duration = repeatdur
 		self.armed_duration = duration
+			
 		return 0
 
 	def add_arc(self, node, arc):
@@ -521,6 +522,7 @@ class Channel:
 			self.playdone(0)
 
 	def play_0(self, node):
+	
 		# This does the initial part of playing a node.
 		# Superclasses should call this method when they are
 		# starting to play a node.
@@ -609,6 +611,11 @@ class Channel:
 ##					self.playdone, (0, self._played_node.start_time+self.armed_duration))
 		else:
 			self.playdone(0)
+			
+		# in cmif mode, an auto anchor is triggered at the end of active duration
+		# in smil mode, an auto anchor is triggered at the begin of active duration
+		if not CMIF_MODE:
+			self._try_auto_anchors()
 
 	def playdone(self, outside_induced, end_time = None):
 		# This method should be called by a superclass
@@ -635,9 +642,12 @@ class Channel:
 		if self._has_pause:
 			return
 		if not self.syncplay:
-			if not outside_induced:
-				if self._try_auto_anchors():
-					return
+			# in cmif mode, an auto anchor is triggered at the end of active duration
+			# in smil mode, an auto anchor is triggered at the begin of active duration
+			if CMIF_MODE:
+				if not outside_induced:
+					if self._try_auto_anchors():
+						return
 			self._playcontext.play_done(self._played_node, end_time)
 		self._playstate = PLAYED
 
@@ -651,11 +661,12 @@ class Channel:
 		if not list:
 			return 0
 		didfire = self.anchor_triggered(node, list, None)
-		if didfire and self._playstate == PLAYING and \
-		   self._played_node is node:
-			if not self.syncplay:
-				self._playcontext.play_done(node)
-			self._playstate = PLAYED
+		if CMIF_MODE:
+			if didfire and self._playstate == PLAYING and \
+			   self._played_node is node:
+				if not self.syncplay:
+					self._playcontext.play_done(node)
+				self._playstate = PLAYED
 		return didfire
 
 	def freeze(self, node):
