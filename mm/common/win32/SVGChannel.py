@@ -7,13 +7,18 @@ __version__ = "$Id$"
 import Channel
 import MMurl
 
+import svgdom
+
+import windowinterface
+
 class SVGChannel(Channel.ChannelWindow):
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 		self.svgdstrect = None
 		self.svgsrcrect = None
 		self.svgdds = None
-
+		self.svgplayer = None
+		 
 	def __repr__(self):
 		return '<SVGChannel instance, name=' + `self._name` + '>'
 	
@@ -34,7 +39,6 @@ class SVGChannel(Channel.ChannelWindow):
 			self.errormsg(node, 'No URL set on node')
 			return 1
 		
-		import svgdom
 		if svgdom.doccache.hasdoc(url):
 			svgdoc = svgdom.doccache.getDoc(url)
 		else:
@@ -56,21 +60,37 @@ class SVGChannel(Channel.ChannelWindow):
 			self.svgdstrect = left, top, width, height = self.window._convert_coordinates(coordinates)
 			self.svgsrcrect = 0, 0, width, height
 			self.svgdds = self.window.createDDS(width, height)
-			self.renderOn(self.svgdds, svgdoc)
+			self.renderOn(self.svgdds, svgdoc, update=0)
+			if svgdoc.hasTiming():
+				rendercb = (self.renderOn, (self.svgdds, svgdoc))
+				self.svgplayer = svgdom.SVGPlayer(svgdoc, windowinterface.toplevel, rendercb)	
 		return 1
 
 	def do_play(self, node):
 		if self.window and self.svgdds:
 			self.window.setredrawdds(self.svgdds, self.svgdstrect, self.svgsrcrect)
 			self.window.update(self.svgdstrect)
+			if self.svgplayer:
+				self.svgplayer.play()
 
 	def stopplay(self, node):
 		if self.window:
 			self.window.setredrawdds(None)
+			if self.svgplayer:
+				self.svgplayer.stop()
+				self.svgplayer = None
 			self.svgdds = None
 		Channel.ChannelWindow.stopplay(self, node)
-		
-	def renderOn(self, dds, svgdoc):
+	
+	def setpaused(self, paused):
+		Channel.ChannelWindow.setpaused(self, paused)
+		if self.svgplayer:
+			if paused:
+				self.svgplayer.pause()
+			else:
+				self.svgplayer.resume()
+						
+	def renderOn(self, dds, svgdoc, update = 1):
 		import svgrender, svgwin
 		svggraphics = svgwin.SVGWinGraphics()
 		ddshdc = dds.GetDC()
@@ -79,6 +99,8 @@ class SVGChannel(Channel.ChannelWindow):
 		renderer.render()
 		svggraphics.tkShutdown()
 		dds.ReleaseDC(ddshdc)
+		if update:
+			self.window.update(self.svgdstrect)
 
 ###################################
 # SVG channel alt using an OS window and Adobe's SVG viewer
