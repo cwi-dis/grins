@@ -15,13 +15,16 @@ DEFINE_GUID(IID_IWMConverter,
 0xbdbc884c, 0xfce, 0x414f, 0x99, 0x41, 0x3, 0x5f, 0x90, 0xe, 0x43, 0xb6);
 struct IWMConverter : public IUnknown
 	{
-	virtual HRESULT __stdcall SetInterface(IUnknown *p,LPCOLESTR hint)=0;
+	virtual HRESULT __stdcall SetWMWriter(IUnknown *pI)=0;
+	virtual HRESULT __stdcall SetAudioInputProps(DWORD dwInputNum,IUnknown *pI)=0;
+	virtual HRESULT __stdcall SetVideoInputProps(DWORD dwInputNum,IUnknown *pI)=0;
 	};
 
 // {F19DA5C1-CA68-498d-9F01-7568E4F20C5E}
 DEFINE_GUID(CLSID_Aud2wm,
 0xf19da5c1, 0xca68, 0x498d, 0x9f, 0x1, 0x75, 0x68, 0xe4, 0xf2, 0xc, 0x5e);
 
+class WMWriter;
 
 class Aud2wmRenderer : 
 	public CBaseRenderer,
@@ -46,12 +49,14 @@ public:
 
 	// Implements IWMConverter
     DECLARE_IUNKNOWN
-	STDMETHODIMP SetInterface(IUnknown *p,LPCOLESTR hint);
-
+	STDMETHODIMP SetWMWriter(IUnknown *p);
+	STDMETHODIMP SetAudioInputProps(DWORD dwInputNum,IUnknown *pI);
+	STDMETHODIMP SetVideoInputProps(DWORD dwInputNum,IUnknown *pI);
+	
 protected:
     CMediaType m_mtIn;                  // Source connection media type
 	int m_ixsample;
-
+	WMWriter *m_pWMWriter;
 }; 
 
 #endif

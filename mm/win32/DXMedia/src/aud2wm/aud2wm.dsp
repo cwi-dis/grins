@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Gz /MD /W3 /Gy /I "..\..\classes\base" /I "..\..\include" /D DBG=0 /D WINVER=0x400 /D _X86_=1 /D "_DLL" /D "_MT" /D "_WIN32" /D "WIN32" /D "STRICT" /D "INC_OLE2" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /Oxs /GF /D_WIN32_WINNT=-0x0400 /c
+# ADD CPP /nologo /Gz /MD /W3 /Gy /I "..\..\classes\base" /I "..\..\include" /I "..\..\..\wmsdk\wmfsdk\include" /D DBG=0 /D WINVER=0x400 /D _X86_=1 /D "_DLL" /D "_MT" /D "_WIN32" /D "WIN32" /D "STRICT" /D "INC_OLE2" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /FR /Oxs /GF /D_WIN32_WINNT=-0x0400 /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 ..\..\lib\strmbase.lib ..\..\lib\quartz.lib msvcrt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2wm.ax" /subsystem:windows,4.0 /opt:ref /release /debug:none
+# ADD LINK32 msvcrt.lib ..\..\..\wmsdk\wmfsdk\lib\wmstub.lib ..\..\..\wmsdk\wmfsdk\lib\wmvcore.lib ..\..\lib\strmbase.lib ..\..\lib\quartz.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2wm.ax" /subsystem:windows,4.0 /opt:ref /release /debug:none
 
 !ELSEIF  "$(CFG)" == "vaud2wm - Win32 Debug"
 
@@ -71,7 +71,7 @@ LINK32=link.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Gz /MDd /W3 /Z7 /Gy /I "..\..\classes\base" /I "..\..\include" /D "INC_OLE2" /D "STRICT" /D _WIN32_WINNT=0x0400 /D "WIN32" /D "_WIN32" /D "_MT" /D "_DLL" /D _X86_=1 /D WINVER=0x0400 /D DBG=1 /D "DEBUG" /D "_DEBUG" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /Oid /c
+# ADD CPP /nologo /Gz /MDd /W3 /Z7 /Gy /I "..\..\classes\base" /I "..\..\include" /I "..\..\..\wmsdk\wmfsdk\include" /D "INC_OLE2" /D "STRICT" /D _WIN32_WINNT=0x0400 /D "WIN32" /D "_WIN32" /D "_MT" /D "_DLL" /D _X86_=1 /D WINVER=0x0400 /D DBG=1 /D "DEBUG" /D "_DEBUG" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /Oid /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ..\..\lib\strmbasd.lib ..\..\lib\quartz.lib msvcrtd.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2wm_d.ax" /debug:mapped,full /subsystem:windows,4.0
+# ADD LINK32 msvcrtd.lib ..\..\..\wmsdk\wmfsdk\lib\wmstub.lib ..\..\..\wmsdk\wmfsdk\lib\wmvcore.lib ..\..\lib\strmbased.lib ..\..\lib\quartz.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2wm_d.ax" /debug:mapped,full /subsystem:windows,4.0
 
 !ENDIF 
 
@@ -93,6 +93,11 @@ LINK32=link.exe
 
 SOURCE=.\aud2wm.cpp
 DEP_CPP_AUD2W=\
+	"..\..\..\wmsdk\wmfsdk\include\asferr.h"\
+	"..\..\..\wmsdk\wmfsdk\include\nserror.h"\
+	"..\..\..\wmsdk\wmfsdk\include\wmsbuffer.h"\
+	"..\..\..\wmsdk\wmfsdk\include\wmsdk.h"\
+	"..\..\..\wmsdk\wmfsdk\include\wmsdkidl.h"\
 	"..\..\classes\base\amextra.h"\
 	"..\..\classes\base\amfilter.h"\
 	"..\..\classes\base\cache.h"\
@@ -124,6 +129,7 @@ DEP_CPP_AUD2W=\
 	"..\..\classes\base\wxlist.h"\
 	"..\..\classes\base\wxutil.h"\
 	".\aud2wm.h"\
+	".\wmwriter.h"\
 	
 # End Source File
 # Begin Source File
@@ -137,6 +143,22 @@ SOURCE=.\aud2wm.h
 # Begin Source File
 
 SOURCE=.\aud2wm.rc
+# End Source File
+# Begin Source File
+
+SOURCE=.\wmwriter.cpp
+DEP_CPP_WMWRI=\
+	"..\..\..\wmsdk\wmfsdk\include\asferr.h"\
+	"..\..\..\wmsdk\wmfsdk\include\nserror.h"\
+	"..\..\..\wmsdk\wmfsdk\include\wmsbuffer.h"\
+	"..\..\..\wmsdk\wmfsdk\include\wmsdk.h"\
+	"..\..\..\wmsdk\wmfsdk\include\wmsdkidl.h"\
+	".\wmwriter.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=.\wmwriter.h
 # End Source File
 # End Target
 # End Project
