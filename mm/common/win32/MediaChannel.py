@@ -105,14 +105,10 @@ class MediaChannel:
 			url = MMurl.canonURL(url)
 			url = urllib.unquote(url)
 
-		if not self.__armBuilder.RenderFile(url):
+		if not self.__armBuilder.RenderFile(url, self.__channel._exporter):
 			self.__armFileHasBeenRendered=0
 			raise error, 'Failed to render '+url
 		
-		exporter = self.__channel._exporter
-		if exporter:
-			self.__armBuilder.RedirectAudioFilter(exporter.getWriter())
-
 		self.__armFileHasBeenRendered=1
 		return 1
 
@@ -334,12 +330,9 @@ class VideoStream:
 		else:
 			url = MMurl.canonURL(url)
 			url = urllib.unquote(url)
-		if not self.__mmstream.open(url):
-			raise error, 'Failed to render %s'% url
 
-		exporter = self.__channel._exporter
-		if exporter:
-			self.__mmstream.redirectAudioFilter(exporter.getWriter())
+		if not self.__mmstream.open(url, self.__channel._exporter):
+			raise error, 'Failed to render %s'% url
 
 		return 1
 
