@@ -414,6 +414,9 @@ class Channel:
 		self.armed_duration = duration
 		return 0
 
+	def add_arc(self, node, arc):
+		pass
+
 	def arm_1(self):
 		# This does the final part of arming a node.  This
 		# method should be called by superclasses when they
@@ -524,7 +527,6 @@ class Channel:
 			self._has_pause = 1
 		else:
 			self._has_pause = 0
-		self._has_pause = 1
 		for (name, type, button, times) in self._played_anchors:
 			if name is None and type is None:
 				f = self.onclick
@@ -543,7 +545,7 @@ class Channel:
 	def event(self, event):
 		timestamp = self._scheduler.timefunc()
 		self._played_node.event(timestamp, event)
-		self._scheduler.sched_arcs(self._playcontext, self._played_node, event, timestamp=timestamp)
+		self._playcontext.sched_arcs(self._played_node, event, timestamp=timestamp)
 
 	def play_1(self):
 		# This does the final part of playing a node.  This
@@ -882,7 +884,8 @@ class Channel:
 		# is a button object which, when pressed, triggers the
 		# anchor.
 		self._armed_anchors.append((name, type, button, times))
-		self._anchor2button[name] = button
+		if name is not None:
+			self._anchor2button[name] = button
 
 	def getfileurl(self, node, animated=0):
 		name = node.GetAttrDef('name', None)
@@ -1540,6 +1543,19 @@ class ChannelWindow(Channel):
 				       armed_anchor[A_TIMES])
 				       
 		return 0
+
+	def add_arc(self, node, arc):
+		if node is self._played_node and arc.event == 'click':
+			d = self.played_display.clone()
+			d.fgcolor(self.getbgcolor(node))
+			b = d.newbutton((0,0,1,1), z = -1)
+			self._played_anchors.append((None, None, b, None))
+			self._anchors[b] = self.onclick, (node, [(None, None)], None)
+			if self._paused >= 0:
+				# don't render when paused and hidden
+				d.render()
+			self.played_display.close()
+			self.played_display = d
 
 	# get the area media geom according to registration points
 	# Actual duration: about 1ms
