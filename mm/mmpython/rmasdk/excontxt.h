@@ -49,7 +49,7 @@ class ExampleClientContext : public IUnknown
     STDMETHOD_(UINT32, Release) (THIS);
 
 
-    private:
+    //private:
     /****** Private Class Variables ****************************************/
     INT32			    m_lRefCount;
     ExampleClientAdviceSink*	    m_pClientSink;
