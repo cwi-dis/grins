@@ -98,9 +98,9 @@ class _WindowGroup:
 	def close(self, closegroup=1):
 		if closegroup:
 			mw_globals.toplevel._close_windowgroup(self)
-		del self._dict
-		del self._cmds_toggled
-		del self._dynamic_list_dict
+		self._dict = {}
+		self._cmds_toggled = {}
+		self._dynamic_list_dict = {}
 		
 	def pop(self):
 		# NOTE: This method should only be called for groups, not windows
