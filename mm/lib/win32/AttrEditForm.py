@@ -1103,13 +1103,19 @@ class ScreenLayoutContext:
 			sw,sh=winsize
 		else:
 			sw,sh=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
-		self._aspect=sw/float(sh)
+		
+		DW=220
+		DH=3*DW/4.0
 
-		self._ymax=190
-		self._xmax=int(self._ymax*self._aspect)
-
-		self._xscale=sw/float(self._xmax)
-		self._yscale=sh/float(self._ymax)
+		self._xscale=DW/float(sw)
+		self._yscale=DH/float(sh)
+		if self._xscale<self._yscale:
+			self._yscale=self._xscale
+		else:
+			self._xscale=self._yscale
+				
+		self._xmax=int(self._xscale*sw+0.5)+2
+		self._ymax=int(self._yscale*sh+0.5)+2
 
 	def getboundingbox(self):
 		return (0,0,self._xmax,self._ymax)
@@ -1122,18 +1128,17 @@ class ScreenLayoutContext:
 	def getyscale(self):
 		return self._yscale
 
-
 	def fromlayout(self,box):
 		if not box: return box
 		x=self._xscale
 		y=self._yscale
-		return int(box[0]*x+0.5),int(box[1]*y+0.5),int(box[2]*x+0.5),int(box[3]*y+0.5)
+		return int(box[0]/x+0.5),int(box[1]/y+0.5),int(box[2]/x+0.5),int(box[3]/y+0.5)
 
 	def tolayout(self,box):
 		if not box: return box
 		x=self._xscale
 		y=self._yscale
-		return (int(0.5+box[0]/x),int(0.5+box[1]/y),int(0.5+box[2]/x),int(0.5+box[3]/y))
+		return (int(0.5+box[0]*x),int(0.5+box[1]*y),int(0.5+box[2]*x),int(0.5+box[3]*y))
 
 ##################################
 # LayoutPage
@@ -1151,7 +1156,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		AttrPage.__init__(self,form)
 		cmifwnd._CmifWnd.__init__(self)
 		if not layoutcontext:
-			self._layoutcontext=ScreenLayoutContext()
+			self._layoutcontext=ScreenLayoutContext(self._form._winsize)
 		else:
 			self._layoutcontext=layoutcontext
 
