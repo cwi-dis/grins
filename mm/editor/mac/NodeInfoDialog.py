@@ -55,7 +55,7 @@ import WMEVENTS
 
 def ITEMrange(fr, to): return range(fr, to+1)
 # Dialog info
-ID_DIALOG_NODEINFO=520
+from mw_resources import ID_DIALOG_NODEINFO
 
 ITEM_NAME_LABEL=1
 ITEM_NAME=2
@@ -79,7 +79,8 @@ ITEM_IMM_LABEL=15
 ITEM_IMM=16
 ITEMLIST_IMM=ITEMrange(ITEM_IMM_LABEL, ITEM_IMM)
 
-ITEMLIST_ALL=ITEMrange(1, ITEM_IMM)
+ITEM_BALLOONHELP=17
+ITEMLIST_ALL=ITEMrange(1, ITEM_BALLOONHELP)
 
 class NodeInfoDialog(windowinterface.MACDialog):
 	def __init__(self, title, channelnames, initchannel, types, inittype,
