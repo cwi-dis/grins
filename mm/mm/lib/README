@@ -1,0 +1,58 @@
+The CMIF Library
+================
+
+This directory contains a library that can be used to build Multimedia
+application prototypes such as a viewer and an editor for CMIF
+documents.  (CMIF, or CWI Multimedia Interchange Format, is an ASCII
+representation for files containing structured multimedia documents.)
+
+The library concentrates on a flexible 'MMNode' data type, which can
+be converted to and from files in CMIF format.
+
+In the directory ../../doc, the file SPEC contains a specification of
+the application interface to the MMNode module and the
+parser/unparser; the file CMIF there describes the CMIF file format.
+
+Attribute definitions are read from a file (Attrdefs).  This means
+that adding a new kind of attribute does not require editing the
+parser, writer and other modules -- just the file Attrdefs (and of
+course the channel module that implements it...).
+
+
+Building blocks for a viewer are also placed in the library.  The
+current plans for the viewer are based upon the FORMS library by Mark
+Overmars.  This is a flexible user interface builder, providing a
+large collection of nice looking buttons, sliders, text input fields,
+etc., based upon the SGI Graphics Library (GL).  Robert van Liere and
+I have created a Python interface to FORMS which is used here.
+
+
+[Note: I am slowly replacing pieces of the code, making it more
+generally useful in the MM editor that Robert and I are designing,
+while trying to keep it working.]
+
+--Guido
+
+
+Files
+-----
+
+Multimedia tree library (shared by all applications, even those
+without a windowing user interface):
+
+MMNode.py		node and context access methods
+MMParser.py		parser for CMIF files
+MMRead.py		interface to the parser
+MMWrite.py		write nodes to CMIF files
+MMTree.py		top-level interface to parser and writer
+MMAttrdefs.py		attribute definitions read from a file
+MMExc.py		central place where all exceptions are defined
+
+Viewer portions (based on the FORMS library):
+
+AttrEdit.py		attribute editor window
+
+
+Data files:
+
+Attrdefs		attribute definitions
