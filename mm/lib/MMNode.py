@@ -369,10 +369,10 @@ class MMNodeContext:
 	#
 	def addusergroups(self, list):
 		for name, value in list:
-			title, rendered, allowed = value
+			title, rendered, allowed, uid = value
 			rendered = ['NOT RENDERED', 'RENDERED'][rendered]
 			allowed = ['not allowed', 'allowed'][allowed]
-			self.usergroups[name] = title, rendered, allowed
+			self.usergroups[name] = title, rendered, allowed, uid
 
 	def addusergroup(self, name, value):
 		if self.usergroups.has_key(name):
@@ -817,8 +817,8 @@ class MMNode_body:
 	def stoplooping(self):
 		pass
 	
-	def cleanup_sched(self):
-		self.parent.cleanup_sched(self)
+	def cleanup_sched(self, sched):
+		self.parent.cleanup_sched(sched, self)
 
 	def add_arc(self, arc):
 		self.parent.add_arc(arc, self)
@@ -2246,7 +2246,7 @@ class MMNode:
 		for child in self.children:
 			child.cleanup()
 
-	def cleanup_sched(self, body = None):
+	def cleanup_sched(self, sched, body = None):
 		if self.type != 'par' and self.type != 'excl':
 			return
 		if body is None:
@@ -2265,7 +2265,7 @@ class MMNode:
 					refnode = child.__find_refnode(arc)
 					refnode.sched_children.remove(arc)
 					if arc.qid is not None:
-						self.cancel(arc.qid)
+						sched.cancel(arc.qid)
 						arc.qid = None
 					arc.triggered = 0
 			for arc in MMAttrdefs.getattr(child, 'endlist'):
@@ -2273,7 +2273,7 @@ class MMNode:
 				refnode = child.__find_refnode(arc)
 				refnode.sched_children.remove(arc)
 				if arc.qid is not None:
-					self.cancel(arc.qid)
+					sched.cancel(arc.qid)
 					arc.qid = None
 				arc.triggered = 0
 
