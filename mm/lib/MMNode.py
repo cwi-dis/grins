@@ -325,7 +325,6 @@ class MMNode:
 	def Init(self, type, context, uid):
 		# ASSERT type in alltypes
 		self.type = type
-		self.setgensr()
 		self.context = context
 		self.uid = uid
 		self.attrdict = {}
@@ -334,6 +333,7 @@ class MMNode:
 		self.values = []
 		self.summaries = {}
 		self.armedmode = None
+		self.setgensr()
 		return self
 	#
 	# Return string representation of self
@@ -665,6 +665,7 @@ class MMNode:
 			return
 		if self.type in interiortypes and type in interiortypes:
 			self.type = type
+			self.setgensr()
 			return
 		if self.children <> []: # TEMP! or self.values <> []:
 			raise CheckError, 'SetType() on non-empty node'
