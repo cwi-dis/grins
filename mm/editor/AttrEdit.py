@@ -36,7 +36,10 @@ def getwrapperclass(selvaluelist):
 		return None
 	className = selvalue.getClassName()
 	if className == 'MMNode':
-		if selvalue.GetChannelType() == 'animate' :
+		ntype = selvalue.GetType()
+		if ntype == 'anchor':
+			wrapperclass = AnchorWrapper
+		elif selvalue.GetChannelType() == 'animate' :
 			wrapperclass = AnimationWrapper
 		elif selvalue.GetChannelType() == 'prefetch' :
 			wrapperclass = PrefetchWrapper
@@ -1632,7 +1635,7 @@ class AttrEditor(AttrEditorDialog):
 			return
 		# we know here that there is exactly one element in focuslist
 		focusobject = focuslist[0]
-		if not isinstance(self.wrapper, wrapperclass):
+		if self.wrapper.__class__ is not wrapperclass:
 			# the wrapper has to change
 			toplevel = self.wrapper.toplevel
 			newwrapper = wrapperclass(toplevel, focusobject)
