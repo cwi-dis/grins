@@ -162,7 +162,8 @@ class Window:
 			self._ptdown = None
 		self.updateForeignObject(Mouse0Release, point)
 
-	def _onmousemove(self, point):
+	def _onmousemove(self, params):
+		point = params[:2]
 		for wnd in self._subwindows:
 			if wnd.inside(point):
 				wnd._onmousemove(point)
@@ -2632,6 +2633,10 @@ def getcursorhandle(strid):
 		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DARROW)
 	elif strid == 'darrowhit':
 		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DARROWHIT)
+	elif strid == 'constraindarrow':
+		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_CDARROW)
+	elif strid == 'constraindarrowhit':
+		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_CDARROWHIT)
 	elif strid == 'channel':
 		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGMOVE)
 	elif strid == 'stop':
