@@ -868,6 +868,19 @@ class _Toplevel(_Event):
 		self._mouseregionschanged()
 		del self._wid_to_window[wid]
 		
+	def _is_last_in_group(self, wid):
+		"""See if this window is the last one in the group"""
+		window = self._wid_to_window[wid]
+		group = window.window_group
+		if not group:
+			return 0	# Can't be last if no group
+		for w in self._wid_to_window.values():
+			if w == window:
+				continue	# Skip the parameter window
+			if w.window_group == group and w.is_showing():
+				return 0	# Someone else
+		return 1
+		
 	def _find_wid(self, wid):
 		"""Map a MacOS window to our window object, or None"""
 		if self._wid_to_window.has_key(wid):

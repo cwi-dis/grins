@@ -1618,12 +1618,19 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		return '<Window %s>'%self._title
 	
 	def close(self):
+		self._close_document_test()
 		self._enable_drop(0)
 		_ScrollMixin.close(self)
 		_AdornmentsMixin.close(self)
 		_CommonWindow.close(self)
 		self.arrowcache = {}
 		# XXXX Not WindowGroup?
+		
+	def _close_document_test(self):
+		"""Test whether we should close the whole document (if we are the
+		last window open)"""
+		if self._parent and self._parent._is_last_in_group(self._wid):
+			print "LAST IN GROUP"
 		
 	def settitle(self, title):
 		"""Set window title"""
@@ -2088,6 +2095,7 @@ class DialogWindow(_Window):
 		self.grabdone()
 		self.settitle(None)
 		self._is_shown = 0
+		self._close_document_test()
 		
 	def is_showing(self):
 		return self._is_shown
