@@ -186,7 +186,7 @@ class _Toplevel:
 				frame.setdocument(cmifdoc,adornments,commandlist)
 				return frame
 		frame = MainFrame.MDIFrameWnd()
-		frame.create(self._apptitle)
+		frame.createOsWnd(self._apptitle)
 		frame.init_cmif(None, None, 0, 0,self._apptitle,
 			UNIT_MM,self._appadornments,self._appcommandlist)
 		frame.setdocument(cmifdoc,adornments,commandlist)
