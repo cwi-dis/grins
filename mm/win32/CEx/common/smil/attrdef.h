@@ -17,6 +17,9 @@ namespace smil {
 #include "xml/attribute_def.h"
 #endif
 
+#ifndef INC_EXTRA_TYPES
+#include "extra_types.h"
+#endif
 
 //
 struct time_attr_reader
@@ -39,27 +42,24 @@ begin_def("begin", 0.0, "Start delay of object");
 
 // addToAttrsMap(begin_def)
 
-//
-struct rgbtuble
-	{
-	};
+#include <img/surface.h>
 
 struct color_reader
 	{
-	static bool read(std::string repr, rgbtuble& v) 
+	static bool read(std::string repr, le::trible& v) 
 		{
 		}
 	};
 
 struct color_writer
 	{
-	static std::string write(const rgbtuble& v) 
+	static std::string write(const le::trible& v) 
 		{
 		}
 	};
 
-xml::attribute_def<rgbtuble, color_reader, color_writer> 
-borderColor_def("borderColor", rgbtuble(0,0,0), "Color for transition border (wipe only)");
+xml::attribute_def<le::trible, color_reader, color_writer> 
+borderColor_def("borderColor", le::trible(0,0,0), "Color for transition border (wipe only)");
 
 // addToAttrsMap(borderColor_def)
 
@@ -67,6 +67,17 @@ borderColor_def("borderColor", rgbtuble(0,0,0), "Color for transition border (wi
 template<const char** values>
 struct str_enum
 	{
+	str_enum(const std::string& value)
+		{
+		// if in values
+		m_value = value;
+		}
+	str_enum(const char* value)
+		{
+		// if in values
+		m_value = value;
+		}
+
 	std::string m_value;
 	};
 
@@ -92,5 +103,6 @@ xml::attribute_def<str_enum<calcMode_enum>, str_enum_reader<calcMode_enum>, str_
 calcMode_def("calcMode", "linear", "Interpolation mode for the animation");
 
 // addToAttrsMap(calcMode_def)
+
 
 } // namespace smil
