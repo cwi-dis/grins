@@ -79,10 +79,12 @@ movie_init(self)
 	PRIV->m_play.m_frame = NULL;
 	PRIV->m_play.m_bframe = NULL;
 	PRIV->m_play.m_f = NULL;
+	PRIV->m_play.m_wid = -1;
 	PRIV->m_arm.m_index = NULL;
 	PRIV->m_arm.m_frame = NULL;
 	PRIV->m_arm.m_bframe = NULL;
 	PRIV->m_arm.m_f = NULL;
+	PRIV->m_arm.m_wid = -1;
 	window_used++;
 	return 1;
 }
@@ -654,6 +656,8 @@ movie_resized(self)
 	long xorig, yorig;
 	double scale;
 
+	if (PRIV->m_play.m_wid < 0)
+		return 1;
 	denter(movie_resized);
 	getsize(&PRIV->m_width, &PRIV->m_height);
 	if (PRIV->m_play.m_frame) {
@@ -718,6 +722,32 @@ movie_playstop(self)
 }
 
 static int
+movie_finished(self)
+	mmobject *self;
+{
+	if (PRIV->m_play.m_wid >= 0) {
+		winset(PRIV->m_play.m_wid);
+		if (PRIV->m_play.m_bgindex >= 0) {
+			RGBcolor((PRIV->m_play.m_bgcolor >> 16) & 0xff,
+				 (PRIV->m_play.m_bgcolor >>  8) & 0xff,
+				 (PRIV->m_play.m_bgcolor      ) & 0xff);
+			clear();
+		} else {
+			color(PRIV->m_play.m_bgindex);
+			clear();
+		}
+	}
+	XDECREF(PRIV->m_play.m_index);
+	XDECREF(PRIV->m_play.m_f);
+	if (PRIV->m_play.m_frame)
+		free(PRIV->m_play.m_frame);
+	if (PRIV->m_play.m_bframe)
+		free(PRIV->m_play.m_bframe);
+	PRIV->m_play.m_wid = -1;
+	return 1;
+}
+
+static int
 movie_setrate(self, rate)
 	mmobject *self;
 	double rate;
@@ -748,6 +778,7 @@ static struct mmfuncs movie_channel_funcs = {
 	movie_armstop,
 	movie_play,
 	movie_playstop,
+	movie_finished,
 	movie_setrate,
 	movie_init,
 	movie_dealloc,

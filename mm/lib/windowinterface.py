@@ -140,7 +140,7 @@ class _Event:
 						_toplevel._win_lock.release()
 					if (w, h) != (win._width, win._height):
 						win._resize()
-						return win, ResizeWindow, None
+						return None
 ##			else:
 ##				print 'redraw event for unknown window '+`val`
 			return None
@@ -235,7 +235,8 @@ class _Event:
 			win = _window_list[winkey]
 			if win._must_redraw:
 				win._redraw()
-		return event
+		if event:
+			self._queue.append(event)
 		
 	def enterevent(self, win, event, arg):
 		if debug: print 'Event.enterevent'+`win,event,arg`
@@ -434,14 +435,15 @@ class _DisplayList:
 		return self
 
 	def close(self):
+		if self.is_closed():
+			return
 		for button in self._buttonlist[:]:
 			button.close()
 		window = self._window
-		if window:
-			window._displaylists.remove(self)
-			if window._active_display_list == self:
-				window._active_display_list = None
-				window._redraw()
+		window._displaylists.remove(self)
+		if window._active_display_list == self:
+			window._active_display_list = None
+			window._redraw()
 		self._window = None
 		self._rendered = 0
 		del self._displaylist
@@ -1023,6 +1025,7 @@ class _Window:
 			displist.close()
 		for win in self._subwindows:
 			win._resize()
+		enterevent(self, ResizeWindow, None)
 
 	def _redraw(self):
 		if debug: print 'Window._redraw()'

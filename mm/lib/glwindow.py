@@ -158,11 +158,13 @@ def dispatch(dev, val):
 			waslocked = 1
 ##		print 'release'
 		GLLock.gl_lock.release()
-	event = windowinterface._event._doevent(dev, val)
-##	print 'dispatch now:', event #DBG
-	if event:
+	# Use some undocumented internals of the windowinterface module.
+	windowinterface._event._doevent(dev, val)
+	while windowinterface._event._queue:
+		window, event, value = windowinterface._event._queue[0]
+		del windowinterface._event._queue[0]
+##		print 'dispatch now:', event #DBG
 ##		global highlight
-		window, event, value = event
 		if event == EVENTS.Mouse0Press:
 			buttons = value[2]
 			if len(buttons) == 1 and not buttons[0].is_closed():

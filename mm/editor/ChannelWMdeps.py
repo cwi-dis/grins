@@ -42,6 +42,11 @@ class ChannelWM:
 		pass
 
 class ChannelWindowWM:
+	def do_show_wmdep(self):
+		pass
+
+	def do_hide_wmdep(self):
+		pass
 
 	def save_geometry(self):
 		if self.is_showing():

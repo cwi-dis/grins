@@ -34,6 +34,7 @@ struct mmfuncs {
 	int (*armstop) PROTO((mmobject *));
 	int (*play) PROTO((mmobject *));
 	int (*playstop) PROTO((mmobject *));
+	int (*finished) PROTO((mmobject *));
 	int (*setrate) PROTO((mmobject *, double));
 	int (*init) PROTO((mmobject *));
 	void (*dealloc) PROTO((mmobject *));
