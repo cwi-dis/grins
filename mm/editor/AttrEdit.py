@@ -1,6 +1,7 @@
 # Attribute editor using the FORMS library (fl, FL), based upon Dialog.
 
 
+import gl
 import fl
 from FL import *
 
@@ -139,6 +140,13 @@ class Wrapper(): # Base class -- common operations
 		self.editmgr.commit()
 	def rollback(self):
 		self.editmgr.rollback()
+	#
+	def getdef(self, name):
+		return MMAttrdefs.getdef(name)
+	def valuerepr(self, (name, value)):
+		return MMAttrdefs.valuerepr(name, value)
+	def parsevalue(self, (name, string)):
+		return MMAttrdefs.parsevalue(name, string, self.context)
 
 class NodeWrapper() = Wrapper():
 	#
@@ -218,12 +226,14 @@ class ChannelWrapper() = Wrapper():
 		return 'Attributes for channel: ' + self.name
 	#
 	def getattr(self, name):
+		if name = '.cname': return self.name
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		else:
 			return MMAttrdefs.getdef(name)[1]
 	#
 	def getvalue(self, name): # Return the raw attribute or None
+		if name = '.cname': return self.name
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		else:
@@ -233,16 +243,23 @@ class ChannelWrapper() = Wrapper():
 		return MMAttrdefs.getdef(name)[1]
 	#
 	def setattr(self, (name, value)):
-		self.editmgr.setchannelattr(self.name, name, value)
+		if name = '.cname':
+			self.editmgr.setchannelname(self.name, value)
+			self.name = value
+		else:
+			self.editmgr.setchannelattr(self.name, name, value)
 	#
 	def delattr(self, name):
-		self.editmgr.setchannelattr(self.name, name, None)
+		if name = '.cname':
+			self.editmgr.setchannelname(self.name, 'none')
+		else:
+			self.editmgr.setchannelattr(self.name, name, None)
 	#
 	# Return a list of attribute names that make sense for this channel,
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = ['type']
+		namelist = ['.cname', 'type']
 		try:
 			ctype = self.attrdict['type']
 			cclass = channelmap[ctype]
@@ -261,6 +278,24 @@ class ChannelWrapper() = Wrapper():
 				extras.append(name)
 		extras.sort()
 		return namelist + extras
+	#
+	# Override three methods from Wrapper to fake channel name attribute
+	#
+	def getdef(self, name):
+		if name = '.cname':
+			# Channelname -- special case
+			return (('name', None), 'none', \
+				'Channel name', 'default', \
+				'Channel name (not a real attribute)', 'raw')
+		return MMAttrdefs.getdef(name)
+	#
+	def valuerepr(self, (name, value)):
+		if name = '.cname': name = 'name'
+		return MMAttrdefs.valuerepr(name, value)
+	#
+	def parsevalue(self, (name, string)):
+		if name = '.cname': name = 'name'
+		return MMAttrdefs.parsevalue(name, string, self.context)
 	#
 
 
@@ -391,6 +426,8 @@ class AttrEditor() = Dialog():
 				self.open() # Causes re-open
 			else:
 				self.fixvalues()
+				gl.winset(self.form.window)
+				gl.wintitle(self.wrapper.maketitle())
 	#
 	def rollback(self):
 		pass
@@ -502,7 +539,7 @@ class ButtonRow():
 		return b
 	#
 	def makelabeltext(b, (x, y, w, h)):
-		attrdef = MMAttrdefs.getdef(b.name)
+		attrdef = b.wrapper.getdef(b.name)
 		labeltext = attrdef[2]
 		if labeltext = '': labeltext = b.name
 		b.label = b.form.add_text(NORMAL_TEXT, x, y, w-1, h, labeltext)
@@ -550,7 +587,7 @@ class ButtonRow():
 			b.getvalue()
 	#
 	def helpcallback(b, dummy):
-		attrdef = MMAttrdefs.getdef(b.name)
+		attrdef = self.wrapper.getdef(b.name)
 		fl.show_message('attribute: ' + b.name, \
 			'default: ' + b.valuerepr(b.defaultvalue), \
 			attrdef[4])
@@ -604,11 +641,10 @@ class ButtonRow():
 			b.reset.show_object()
 	#
 	def valuerepr(b, value):
-		return MMAttrdefs.valuerepr(b.name, value)
+		return b.wrapper.valuerepr(b.name, value)
 	#
 	def parsevalue(b, string):
-		return MMAttrdefs.parsevalue \
-			(b.name, string, b.wrapper.getcontext())
+		return b.wrapper.parsevalue(b.name, string)
 	#
 
 
