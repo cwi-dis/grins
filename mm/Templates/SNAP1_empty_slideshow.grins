@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<smil xmlns="http://www.w3.org/2000/SMIL20/CR/Language" xmlns:GRiNS="http://www.oratrix.com/">
+  <head>
+    <meta xmlns="" name="title" content="Empty SMIL2 Slideshow"/>
+    <meta xmlns="" name="template_name" content="Empty SMIL2 Slideshow"/>
+    <meta xmlns="" name="template_description" content="A empty SMIL2 slideshow. Two audio tracks and a background image."/>
+    <meta xmlns="" name="template_snapshot" content="slideshow_2x_audio.bmp"/>
+    <meta xmlns="" name="project_html_page" content="external_player.html"/>
+    <layout>
+      <viewport id="Player-Window" width="415" height="245" GRiNS:editBackground="192 192 192" GRiNS:showEditBackground="1" >
+        <region id="audioRegion_1" GRiNS:type="sound"/>
+      	<region id="audioRegion_2" GRiNS:type="sound"/>
+        <region id="bkgd_imageRegion" width="415" height="245" GRiNS:type="image" GRiNS:editBackground="160 192 160" GRiNS:showEditBackground="1" />
+      	<region id="imageRegion" left="5" top="5" width="400" height="180" z-index="1" GRiNS:type="image" GRiNS:editBackground="160 160 192" GRiNS:showEditBackground="1" />
+	</viewport>
+    </layout>
+    <transition id="fade" type="fade"/>
+    <transition id="slideover" type="slideWipe"/>
+    <transition id="push" type="pushWipe"/>
+  </head>
+  <body>
+    <par id="Simple_Slideshow">
+      <seq id="Image_Sequence" GRiNS:project_default_region="imageRegion" GRiNS:project_default_type="image" GRiNS:project_bandwidth_fraction="0.4">
+      </seq>
+      <seq id="Caption_Audio" GRiNS:project_bandwidth_fraction="0.4" GRiNS:project_default_region="audioRegion_2" GRiNS:project_default_type="sound">
+      </seq>
+      <seq id="Background_Audio" GRiNS:project_bandwidth_fraction="0.1" GRiNS:project_default_region="audioRegion_1" GRiNS:project_default_type="sound" GRiNS:project_readonly="1">
+        <audio id="Bkgd-Clip_1" region="audioRegion_1" src="media/bkgd_audio_example.aiff"/>
+      </seq>
+      <seq id="Background_Image" GRiNS:project_bandwidth_fraction="0.1" GRiNS:project_default_region="bkgd_imageRegion" GRiNS:project_default_type="image" GRiNS:project_readonly="1">
+        <img id="Background_1" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg" fill="freeze"/>
+      </seq>
+    </par>
+  </body>
+</smil>
