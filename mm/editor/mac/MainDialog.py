@@ -34,8 +34,6 @@ class MainDialog:
 		title -- string to be displayed as window title
 		"""
 
-		import windowinterface
-
 		if __debug__:
 			self.commandlist.append(
 				usercmd.CONSOLE(callback=(self.console_callback, ())))
@@ -111,7 +109,16 @@ class MainDialog:
 			self.openURL_callback(url)
 		
 	def _ae_quit(self, *args, **kwargs):
-		self.close_callback()
+		#
+		# Obfuscated code ahead. We call do_close to check that the user wants to close
+		# but in stead of actually doing the exit here, which would result in the
+		# AE reply not being sent, we schedule the exit for a short while later.
+		#
+		exitcallback = (windowinterface.settimer, (0.1, (self._quitnow, ())))
+		self.close_callback(exitcallback)
+		
+	def _quitnow(self):
+		raise SystemExit, 0
 
 # The dialog shown when you open the application
 
