@@ -1407,6 +1407,7 @@ class SlideShow:
 		if node.GetType() != 'ext' or \
 		   node.GetChannelType() != 'RealPix':
 			raise RuntimeError("shouldn't happen")
+		update = 0
 		self.node = node
 		import realsupport
 		ctx = node.GetContext()
@@ -1417,6 +1418,7 @@ class SlideShow:
 			windowinterface.showmessage('No URL specified for slideshow node %s on channel %s' % (name, cname), mtype = 'warning')
 			rp = DummyRP()
 		else:
+			ourl = url
 			url = ctx.findurl(url)
 			utype, host, path, params, query, tag = urlparse.urlparse(url)
 			url = urlparse.urlunparse((utype, host, path, params, query, ''))
@@ -1429,8 +1431,22 @@ class SlideShow:
 				rp.feed(fp.read())
 				rp.close()
 			except:
-				windowinterface.showmessage('Cannot read slideshow file with URL %s in node %s on channel %s' % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
-				rp = DummyRP()
+				rp = None
+				if hasattr(ctx, 'template'):
+					url = MMurl.basejoin(ctx.template, ourl)
+					try:
+						fn, hdr = MMurl.urlretrieve(url)
+						fp = open(fn)
+						rp = realsupport.RPParser(fn, self.printfunc)
+						rp.feed(fp.read())
+						rp.close()
+						update = 1
+					except:
+						pass
+					url = self.url
+				if rp is None:
+					windowinterface.showmessage('Cannot read slideshow file with URL %s in node %s on channel %s' % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
+					rp = DummyRP()
 			if fp is not None:
 				fp.close()
 		self.url = url
@@ -1458,6 +1474,8 @@ class SlideShow:
 			attrdict['href'] = rp.url
 		self.editmgr = ctx.editmgr
 		ctx.editmgr.registerfirst(self) # *must* come first
+		if update:
+			self.update(changed = 1)
 
 	def destroy(self):
 		del self.node
@@ -1476,7 +1494,7 @@ class SlideShow:
 	def commit(self):
 		self.update()
 
-	def update(self):
+	def update(self, changed = 0):
 		node = self.node
 		oldrp = self.rp
 		if node.GetType() != 'ext' or \
@@ -1562,7 +1580,6 @@ class SlideShow:
 				self.rp = rp
 		rp = self.rp
 		attrdict = node.GetAttrDict()
-		changed = 0
 		if attrdict['bitrate'] != rp.bitrate:
 			if rp is oldrp:
 				rp.bitrate = attrdict['bitrate']
