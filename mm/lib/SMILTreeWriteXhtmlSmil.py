@@ -194,6 +194,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		self.seqtimingfixes = {}
 		
 		self.currLayout = []
+		self.node2layout = {}
 
 		self.__isopen = 0
 		self.__stack = []
@@ -653,20 +654,29 @@ class SMILXhtmlSmilWriter(SMIL):
 		sensitive = self.issensitive(node)
 		if self.hasTimeChildren(node) or transIn or transOut or mtype=='brush' or sensitive:
 			return 1
+
 		if self.hasMultiWindowLayout:
 			return 1
+
 		if self.linkssources.has_key(node):
 			return 1
+
 		if node in self.animate_nodes:
 			return 1
-		if self.animate_regions:
-			return 1
 
-		# no hierachy deeper than 2
 		nodeRegion = node.GetChannel().GetLayoutChannel()
 		path = self.getRegionPath(nodeRegion)
+		
+		# no hierachy deeper than 2
 		if path and len(path) > 2:
 			return 1
+
+		for region in path:
+			if region in self.animate_regions:
+				return 1
+			z = region.get('z', 0)
+			if z > 0:
+				return 1
 
 		# check coordinates of region, subregion and mediaregion
 		if mtype == 'audio':
@@ -716,6 +726,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		regionid = self.registerRegionAlias(currMediaRegion)
 		self.ids_written[regionid] = 1
 		divlist.append(('id', regionid))
+		self.node2layout[node] = {'outer':regionid}
 
 		# apply region style
 		ft = (prevMediaRegion == currMediaRegion or mtype == 'audio')
@@ -783,8 +794,9 @@ class SMILXhtmlSmilWriter(SMIL):
 				regstyle = self.rc2style(subRegGeom)
 			bgcolor = getbgcoloratt(self, node, 'bgcolor')
 			if bgcolor: regstyle = regstyle + 'background-color:%s;' % bgcolor
-			z = getcmifattr(self, node, 'z')
-			if z: regstyle = regstyle + 'z-index:%s;' % z
+			z = self.removeAttr(attrlist, 'z-index')
+			if z is not None: 
+				regstyle = regstyle + 'z-index:%s;' % z
 			divlist.append(('style', regstyle))
 			divlist.append(('class', 'time'))
 			self.writetag('div', divlist)
@@ -906,7 +918,10 @@ class SMILXhtmlSmilWriter(SMIL):
 		
 		if mtype != 'audio':
 			fit = MMAttrdefs.getattr(node, 'fit')
-			style = self.getRegionStyle(nodeRegion, fit=fit)
+			z = self.removeAttr(attrlist, 'z-index')
+			style = self.getRegionStyle(nodeRegion, fit = fit, inczindex = (z is None))
+			if z is not None:
+				style = style + 'z-index:%s;' % z
 			attrlist.append(('style', style))
 			
 		# apply soundLevel
@@ -1204,10 +1219,12 @@ class SMILXhtmlSmilWriter(SMIL):
 
 	def writeanimatenode(self, node, root):
 		attrlist = []
+		animvalattrs = ('from', 'to', 'by', 'values', 'path')
 		tag = node.GetAttrDict().get('atag')
 
 		target = None
 		targetElement = None
+		attributeName = None
 
 		if tag == 'animateMotion':
 			from Animators import AnimateElementParser
@@ -1244,16 +1261,6 @@ class SMILXhtmlSmilWriter(SMIL):
 						value = targetElement
 					else:
 						targetElement = value
-				if tag == 'animateMotion' and not isAdditive:
-					if name == 'from': value = fromxy
-					elif name == 'to': value = toxy
-					elif name == 'values': value = values
-					elif name == 'path': value = path
-				elif tag == 'animateColor':
-					if name == 'from': value = fromcr
-					elif name == 'to': value = tocr
-					elif name == 'by': value = bycr
-					elif name == 'values': value = valuescr
 				if value and value != attributes[name]:
 					if name in ('begin', 'end'):
 						value = event2xhtml(value)
@@ -1266,6 +1273,18 @@ class SMILXhtmlSmilWriter(SMIL):
 							value = value + ' '.join(l) + ';'
 					elif name == 'id':
 						hasid = 1
+					elif name == 'attributeName':
+						attributeName = value
+					elif name in animvalattrs and tag == 'animateMotion' and not isAdditive:
+						if name == 'from': value = fromxy
+						elif name == 'to': value = toxy
+						elif name == 'values': value = values
+						elif name == 'path': value = path
+					elif name in animvalattrs and tag == 'animateColor':
+						if name == 'from': value = fromcr
+						elif name == 'to': value = tocr
+						elif name == 'by': value = bycr
+						elif name == 'values': value = valuescr
 					attrlist.append((name, value))
 		if not hasid:
 			id = 'm' + node.GetUID()
@@ -1273,6 +1292,10 @@ class SMILXhtmlSmilWriter(SMIL):
 
 		# write it
 		if target is None or target.getClassName() not in ('Region', 'Viewport'):
+			if attributeName == 'z-index':
+				ld = self.node2layout.get(target)
+				if ld is not None and ld.has_key('outer'):
+					self.replaceAttrVal(attrlist, 'targetElement', ld.get('outer'))
 			self.writetag('t:'+tag, attrlist)
 		else:
 			# region animation
@@ -1351,7 +1374,7 @@ class SMILXhtmlSmilWriter(SMIL):
 				specs[l] = '0'
 		return specs
 
-	def getRegionStyle(self, region, forcetransparent = 0, fit='hidden'):
+	def getRegionStyle(self, region, forcetransparent = 0, fit='hidden',  inczindex = 1):
 		if region in self.top_levels:
 			return self.getViewportStyle(region, forcetransparent)
 		style = 'position:absolute;overflow:%s;' % self.getoverflow(fit)
@@ -1378,9 +1401,10 @@ class SMILXhtmlSmilWriter(SMIL):
 			else:
 				bgcolor = '#%02x%02x%02x' % bgcolor
 			style = style + 'background-color:%s;' % bgcolor
-		z = region.get('z', 0)
-		if z > 0:
-			style = style + 'z-index:%d;' % z
+		if inczindex:
+			z = region.get('z', 0)
+			if z > 0:
+				style = style + 'z-index:%d;' % z
 		return style
 
 	def rc2style(self, rc, fit = 'hidden'):
@@ -1550,8 +1574,9 @@ class SMILXhtmlSmilWriter(SMIL):
 				if target.getClassName() in ('Region', 'Viewport'):
 					self.animate_regions.append(target)			 
 					if motion: self.animate_motion_regions.append(target)
-				else:
-					self.animate_nodes.append(target)
+				else:	
+					if node.attrdict.get('attributeName') != 'z-index':
+						self.animate_nodes.append(target)
 					if motion: self.animate_motion_nodes.append(target)
 
 	def calcugrnames(self, node):
