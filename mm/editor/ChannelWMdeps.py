@@ -14,9 +14,11 @@ class Channel():
 	# Because of the rules for inheritance of class attributes,
 	# channels that don't add any personal attributes needn't
 	# define these variables.
+	# A few additional attribute names are hardcoded in AttrEdit:
+	# 'type' for channels, 'name', 'channel', 'duration' for nodes.
 	#
-	chan_attrs = ['type']
-	node_attrs = ['name', 'channel', 'duration']
+	chan_attrs = []
+	node_attrs = []
 	#
 	#
 	# Initialization method (returns self!).
@@ -43,6 +45,9 @@ class Channel():
 		pass
 	#
 	def destroy(self):
+		pass
+	#
+	def save_geometry(self):
 		pass
 	#
 	# Return the nominal duration of a node, in seconds.
