@@ -125,6 +125,13 @@ class SMIL:
 			    'system-screen-depth':None,
 			    'system-screen-size':None,
 			    'title':None}
+	__user_attributes_attributes = {'id':None,
+					}
+	__u_group_attributes = {'id':None,
+				'u_state':'RENDERED',
+				'title':None,
+				'override':'allowed',
+				}
 
 	attributes['ref'] = attributes['ref']
 	attributes['text'] = attributes['ref'].copy()
@@ -190,3 +197,15 @@ class SMIL:
 		self.entities['a'].append(prefix + ':bag')
 		self.entities['switch'].append(prefix + ':bag')
 		self.entities[prefix + ':bag'] = self.__container_content
+
+		self.attributes[prefix + ':user_attributes'] = d = {}
+		for key, val in self.__user_attributes_attributes.items():
+			d[prefix + ':' + key] = val
+		u_group = '%s:u_group' % prefix
+		self.attributes[u_group] = d = {}
+		for key, val in self.__u_group_attributes.items():
+			d['%s:%s' % (prefix, key)] = val
+		self.entities['head'].append('%s:user_attributes' % prefix)
+		self.entities['%s:user_attributes' % prefix] = [u_group]
+		for tag in ['par', 'seq', '%s:bag' % prefix, 'switch'] + self.__media_object:
+			self.attributes[tag][u_group] = None
