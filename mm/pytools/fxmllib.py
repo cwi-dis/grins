@@ -88,16 +88,16 @@ _CombiningChar = u'\u0300-\u0345\u0360-\u0361\u0483-\u0486\u0591-\u05A1\u05A3-\u
                  u'\u0F90-\u0F95\u0F97\u0F99-\u0FAD\u0FB1-\u0FB7\u0FB9' \
                  u'\u20D0-\u20DC\u20E1\u302A-\u302F\u3099\u309A'
 _Digit = u'\u0030-\u0039\u0660-\u0669\u06F0-\u06F9\u0966-\u096F\u09E6-\u09EF' \
-	 u'\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0BE7-\u0BEF' \
-	 u'\u0C66-\u0C6F\u0CE6-\u0CEF\u0D66-\u0D6F\u0E50-\u0E59' \
-	 u'\u0ED0-\u0ED9\u0F20-\u0F29'
+         u'\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0BE7-\u0BEF' \
+         u'\u0C66-\u0C6F\u0CE6-\u0CEF\u0D66-\u0D6F\u0E50-\u0E59' \
+         u'\u0ED0-\u0ED9\u0F20-\u0F29'
 _Extender = u'\u00B7\u02D0\u02D1\u0387\u0640\u0E46\u0EC6\u3005\u3031-\u3035' \
-	    u'\u309D-\u309E\u30FC-\u30FE'
+            u'\u309D-\u309E\u30FC-\u30FE'
 _Letter = _BaseChar + _Ideographic
 _NameChar = '-' + _Letter + _Digit + '._:' + _CombiningChar + _Extender
 
-_S = '[ \t\r\n]+'			# white space
-_opS = '[ \t\r\n]*'			# optional white space
+_S = '[ \t\r\n]+'                       # white space
+_opS = '[ \t\r\n]*'                     # optional white space
 _Name = '['+_Letter+'_:]['+_NameChar+']*' # XML Name
 _QStr = "(?:'[^']*'|\"[^\"]*\")"        # quoted XML string
 _Char = u'\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD' # legal characters
@@ -177,18 +177,18 @@ class XMLParser:
     """XML document parser."""
     def __init__(self, xmlns = 1):
         self.__xmlns = xmlns            # whether or not to parse namespaces
-	self.reset()
+        self.reset()
 
     def reset(self):
         """Reset parser to pristine state."""
-	self.docname = None
-	self.rawdata = []
+        self.docname = None
+        self.rawdata = []
         self.entitydefs = {             # & entities defined in DTD
-            'lt': '&#60;',		# <
-            'gt': '&#62;',		# >
-            'amp': '&#38;',		# &
-            'apos': '&#39;',		# '
-            'quot': '&#34;',		# "
+            'lt': '&#60;',              # <
+            'gt': '&#62;',              # >
+            'amp': '&#38;',             # &
+            'apos': '&#39;',            # '
+            'quot': '&#34;',            # "
             }
         self.pentitydefs = {}           # % entities defined in DTD
         self.elems = {}                 # elements and their content/attrs
@@ -198,13 +198,13 @@ class XMLParser:
 
     def feed(self, data):
         """Feed data to parser."""
-	self.rawdata.append(data)
+        self.rawdata.append(data)
 
     def close(self):
         """End of data, finish up parsing."""
-	data = string.join(self.rawdata, '')
-	self.rawdata = []
-	self.parse(data)
+        data = string.join(self.rawdata, '')
+        self.rawdata = []
+        self.parse(data)
 
     def __parse_textdecl(self, data, document = 0):
         # Figure out the encoding of a file by looking at the first
@@ -213,30 +213,30 @@ class XMLParser:
         # This will convert the data to unicode from whatever format
         # it was originally.
         i = 0
-	if data[:2] == '\376\377':
-	    enc = 'utf-16-be'
-	    i = 2
-	elif data[:2] == '\377\376':
-	    enc = 'utf-16-le'
-	    i = 2
+        if data[:2] == '\376\377':
+            enc = 'utf-16-be'
+            i = 2
+        elif data[:2] == '\377\376':
+            enc = 'utf-16-le'
+            i = 2
         elif data[:4] == '\x00\x3C\x00\x3F':
             enc = 'utf-16-be'
         elif data[:4] == '\x3C\x00\x3F\x00':
             enc = 'utf-16-le'
         else:
-            enc = None             # unknowns as yet
+            enc = None                  # unknowns as yet
         if enc:
             try:
                 data = unicode(data[i:], enc)
             except UnicodeError:
                 self.__error("data cannot be converted to Unicode", data, i, fatal = 1)
             i = 0
-	# optional XMLDecl
+        # optional XMLDecl
         if document:
             res = xmldecl.match(data, i)
         else:
             res = textdecl.match(data, i)
-	if res is not None:
+        if res is not None:
             if document:
                 version, encoding, standalone = res.group('version',
                                                           'encoding',
@@ -244,8 +244,8 @@ class XMLParser:
             else:
                 version, encoding = res.group('version', 'encoding')
                 standalone = None
-	    if version is not None and version[1:-1] != '1.0':
-		self.__error('only XML version 1.0 supported', data, res.start('version'), fatal = 1)
+            if version is not None and version[1:-1] != '1.0':
+                self.__error('only XML version 1.0 supported', data, res.start('version'), fatal = 1)
             if encoding:
                 encoding = encoding[1:-1]
                 if enc and enc != encoding.lower() and \
@@ -255,7 +255,7 @@ class XMLParser:
             if standalone:
                 standalone = standalone[1:-1]
 ##            self.handle_xml(encoding, standalone)
-	    i = res.end(0)
+            i = res.end(0)
         if enc is None:
             enc = 'utf-8'
         if type(data) is not type(u'a'):
@@ -282,79 +282,79 @@ class XMLParser:
         """Parse the data as an XML document."""
         data = self.__parse_textdecl(data, 1)
         data = self.__normalize_linefeed(data)
-	# (Comment | PI | S)*
-	i = self.__parse_misc(data, 0)
-	# doctypedecl?
-	res = doctype.match(data, i)
-	if res is not None:
-	    docname, publit, syslit, docdata = res.group('docname', 'publit',
-							'syslit', 'data')
-	    self.docname = docname
+        # (Comment | PI | S)*
+        i = self.__parse_misc(data, 0)
+        # doctypedecl?
+        res = doctype.match(data, i)
+        if res is not None:
+            docname, publit, syslit, docdata = res.group('docname', 'publit',
+                                                        'syslit', 'data')
+            self.docname = docname
             if publit: publit = publit[1:-1]
             if syslit: syslit = syslit[1:-1]
-	    self.handle_doctype(docname, publit, syslit, docdata)
-	    i = res.end(0)
-	# (Comment | PI | S)*
-	i = self.__parse_misc(data, i)
-	# the document itself
-	res = starttag.match(data, i)
-	if res is None:
-	    self.__error('no elements in document', data, i, fatal = 1)
-	i = res.end(0)
-	tagname, slash = res.group('tagname', 'slash')
-	if self.docname and tagname != self.docname:
-	    self.__error('starttag does not match DOCTYPE', data, res.start('tagname'), fatal = 0)
-	val = self.__parse_attrs(tagname, data, res.start('tagname'), res.span('attrs'), None)
+            self.handle_doctype(docname, publit, syslit, docdata)
+            i = res.end(0)
+        # (Comment | PI | S)*
+        i = self.__parse_misc(data, i)
+        # the document itself
+        res = starttag.match(data, i)
+        if res is None:
+            self.__error('no elements in document', data, i, fatal = 1)
+        i = res.end(0)
+        tagname, slash = res.group('tagname', 'slash')
+        if self.docname and tagname != self.docname:
+            self.__error('starttag does not match DOCTYPE', data, res.start('tagname'), fatal = 0)
+        val = self.__parse_attrs(tagname, data, res.start('tagname'), res.span('attrs'), None)
         if val is None:
             return
         nstag, attrs, namespaces = val
-	self.finish_starttag(nstag, attrs)
-	if not slash:
-	    i = self.__parse_content(data, i, tagname, namespaces)
-	    if i is None:
-		return
-	    if type(i) is type(res):
-		res = i
-	    else:
-		res = endtag.match(data, i)
-	    if res is None:
-		self.__error('end tag missing', data, i, fatal = 0)
+        self.finish_starttag(nstag, attrs)
+        if not slash:
+            i = self.__parse_content(data, i, tagname, namespaces)
+            if i is None:
+                return
+            if type(i) is type(res):
+                res = i
+            else:
+                res = endtag.match(data, i)
+            if res is None:
+                self.__error('end tag missing', data, i, fatal = 0)
             elif res.group('tagname') != tagname:
-		self.__error("end tag doesn't match start tag", data, res.start('tagname'), fatal = 0)
-	    i = res.end(0)
+                self.__error("end tag doesn't match start tag", data, res.start('tagname'), fatal = 0)
+            i = res.end(0)
         self.finish_endtag(nstag)
-	i = self.__parse_misc(data, i)
-	if i != len(data):
-	    self.__error('garbage at end of document', data, i, fatal = 0)
+        i = self.__parse_misc(data, i)
+        if i != len(data):
+            self.__error('garbage at end of document', data, i, fatal = 0)
 
     def __parse_misc(self, data, i):
         # match any number of whitespace, processing instructions and comments
-	matched = 1
-	while matched:
-	    matched = 0
-	    res = comment.match(data, i)
-	    if res is not None:
-		matched = 1
+        matched = 1
+        while matched:
+            matched = 0
+            res = comment.match(data, i)
+            if res is not None:
+                matched = 1
                 c0, c1 = res.span('comment')
                 ires = illegal1.search(data, c0, c1)
                 if ires is not None:
                     self.__error('illegal characters in comment', data, ires.start(0), fatal = 0)
-		self.handle_comment(data[c0:c1])
-		i = res.end(0)
-	    res = pidecl.match(data, i)
-	    if res is not None:
-		matched = 1
+                self.handle_comment(data[c0:c1])
+                i = res.end(0)
+            res = pidecl.match(data, i)
+            if res is not None:
+                matched = 1
                 c0, c1 = res.span('data')
                 ires = illegal1.search(data, c0, c1)
                 if ires is not None:
                     self.__error('illegal characters in Processing Instruction', data, ires.start(0), fatal = 0)
-		self.handle_proc(res.group('name'), res.group('data') or '')
-		i = res.end(0)
-	    res = space.match(data, i)
-	    if res is not None:
-		matched = 1
-		i = res.end(0)
-	return i
+                self.handle_proc(res.group('name'), res.group('data') or '')
+                i = res.end(0)
+            res = space.match(data, i)
+            if res is not None:
+                matched = 1
+                i = res.end(0)
+        return i
 
     def __update_state(self, dfa, states, tagname):
         # update the list of states in the dfa.  If tagname is None,
@@ -379,21 +379,21 @@ class XMLParser:
     def __parse_content(self, data, i, ptagname, namespaces, states = None):
         # parse the content of an element (i.e. the string between
         # start tag and end tag)
-	datalen = len(data)
+        datalen = len(data)
         if self.elems.has_key(ptagname):
             content, attributes, start, end = self.elems[ptagname][:4] # content model
             if states == None:
                 states = [start]
         else:
             content = None              # unknown content model
-	while i < datalen:
-	    matched = 0
-	    res = interesting.search(data, i)
-	    if res is None:
-		j = datalen
-	    else:
-		j = res.start(0)
-	    if j > i:
+        while i < datalen:
+            matched = 0
+            res = interesting.search(data, i)
+            if res is None:
+                j = datalen
+            else:
+                j = res.start(0)
+            if j > i:
                 res = illegal.search(data, i, j)
                 if res is not None:
                     self.__error("illegal data content in element `%s'" % ptagname, data, i, fatal = 0)
@@ -410,13 +410,13 @@ class XMLParser:
                         complain = 1
                     if complain:
                         self.__error("no character data allowed in element `%s'" % ptagname, data, i, fatal = 0)
-		matched = 1
+                matched = 1
                 if not skip:
                     self.handle_data(data[i:j])
-		i = j
-	    res = starttag.match(data, i)
-	    if res is not None:
-		tagname, slash = res.group('tagname', 'slash')
+                i = j
+            res = starttag.match(data, i)
+            if res is not None:
+                tagname, slash = res.group('tagname', 'slash')
                 if content == 'EMPTY' or content == '#PCDATA':
                     self.__error("empty element `%s' has content" % ptagname, data, res.start(0), fatal = 0)
                 elif content == 'ANY':
@@ -430,56 +430,56 @@ class XMLParser:
                     self.__update_state(content, states, tagname)
                     if not states:
                         self.__error("illegal content for element `%s'" % ptagname, data, i)
-		val = self.__parse_attrs(tagname, data, res.start('tagname'), res.span('attrs'), namespaces)
-		if val is None:
-		    return
-		i = res.end(0)
+                val = self.__parse_attrs(tagname, data, res.start('tagname'), res.span('attrs'), namespaces)
+                if val is None:
+                    return
+                i = res.end(0)
                 nstag, attrs, subnamespaces = val
-		self.finish_starttag(nstag, attrs)
-		if not slash:
-		    i = self.__parse_content(data, i, tagname, subnamespaces)
-		    if i is None:
-			return
-		    if type(i) is type(res):
-			res = i
-		    else:
-			res = endtag.match(data, i)
-		    if res is None:
-			self.__error('end tag missing', data, i, fatal = 0)
-		    elif res.group('tagname') != tagname:
-			self.__error("end tag doesn't match start tag", data, res.start('tagname'), fatal = 0)
-		    i = res.end(0)
+                self.finish_starttag(nstag, attrs)
+                if not slash:
+                    i = self.__parse_content(data, i, tagname, subnamespaces)
+                    if i is None:
+                        return
+                    if type(i) is type(res):
+                        res = i
+                    else:
+                        res = endtag.match(data, i)
+                    if res is None:
+                        self.__error('end tag missing', data, i, fatal = 0)
+                    elif res.group('tagname') != tagname:
+                        self.__error("end tag doesn't match start tag", data, res.start('tagname'), fatal = 0)
+                    i = res.end(0)
                 self.finish_endtag(nstag)
                 matched = 1
-	    res = endtag.match(data, i)
-	    if res is not None:
+            res = endtag.match(data, i)
+            if res is not None:
                 if type(content) is type([]) and content and type(content[0]) is type({}):
                     self.__update_state(content, states, None)
                     if end not in states:
                         self.__error("content of element `%s' doesn't match content model" % ptagname, data, i, fatal = 0)
-		return res
-	    res = comment.match(data, i)
-	    if res is not None:
+                return res
+            res = comment.match(data, i)
+            if res is not None:
                 c0, c1 = res.span('comment')
                 ires = illegal1.search(data, c0, c1)
                 if ires is not None:
                     self.__error('illegal characters in comment', data, ires.start(0), fatal = 0)
-		self.handle_comment(data[c0:c1])
-		i = res.end(0)
+                self.handle_comment(data[c0:c1])
+                i = res.end(0)
                 matched = 1
-	    res = ref.match(data, i)
-	    if res is not None:
-		name = res.group('name')
-		if name:
-		    if self.entitydefs.has_key(name):
-			sval = val = self.entitydefs[name]
+            res = ref.match(data, i)
+            if res is not None:
+                name = res.group('name')
+                if name:
+                    if self.entitydefs.has_key(name):
+                        sval = val = self.entitydefs[name]
                         if type(val) is type(()):
                             if val[2] is not None:
                                 apply(self.handle_ndata, val)
                                 val = None
                             else:
                                 val = self.__read_pentity(val[0], val[1])
-			if val is not None:
+                        if val is not None:
                             del self.entitydefs[name] # to break recursion
                             n = self.__parse_content(val, 0, ptagname, namespaces, states)
                             self.entitydefs[name] = sval # restore value
@@ -490,42 +490,42 @@ class XMLParser:
                                 if type(n) is type(res):
                                     n = res.start(0)
                                 self.__error('misformed entity value', data, n, fatal = 0)
-		    else:
+                    else:
                         if self.docname:
                             self.__error("unknown entity reference `&%s;' in element `%s'" % (name, ptagname), data, i, fatal = 0)
                         self.data = data
                         self.offset = res.start('name')
                         self.lineno = string.count(data, '\n', 0, self.offset)
                         self.unknown_entityref(name)
-		else:
-		    str = self.__parse_charref(res.group('char'), data, res.start(0))
-		    if str is None:
-			return
-		    self.handle_data(str)
-		i = res.end(0)
+                else:
+                    str = self.__parse_charref(res.group('char'), data, res.start(0))
+                    if str is None:
+                        return
+                    self.handle_data(str)
+                i = res.end(0)
                 matched = 1
-	    res = pidecl.match(data, i)
-	    if res is not None:
-		matched = 1
+            res = pidecl.match(data, i)
+            if res is not None:
+                matched = 1
                 c0, c1 = res.span('data')
                 ires = illegal1.search(data, c0, c1)
                 if ires is not None:
                     self.__error('illegal characters in Processing Instruction', data, ires.start(0), fatal = 0)
-		self.handle_proc(res.group('name'), res.group('data') or '')
-		i = res.end(0)
-	    res = cdata.match(data, i)
-	    if res is not None:
-		matched = 1
+                self.handle_proc(res.group('name'), res.group('data') or '')
+                i = res.end(0)
+            res = cdata.match(data, i)
+            if res is not None:
+                matched = 1
                 c0, c1 = res.span('cdata')
                 ires = illegal1.search(data, c0, c1)
                 if ires is not None:
                     self.__error('illegal characters in CDATA section', data, ires.start(0), fatal = 0)
-		self.handle_cdata(res.group('cdata'))
-		i = res.end(0)
-	    if not matched:
-		self.__error("no valid content in element `%s'" % ptagname, data, i)
-		return
-	return i
+                self.handle_cdata(res.group('cdata'))
+                i = res.end(0)
+            if not matched:
+                self.__error("no valid content in element `%s'" % ptagname, data, i)
+                return
+        return i
 
     def __check_attr(self, tagname, attrname, value, attributes, data, attrstart):
         # check that the attribute attrname on element tagname is of
@@ -584,8 +584,8 @@ class XMLParser:
     def __parse_attrs(self, tagname, data, tagstart, span, namespaces):
         # parse the string between the tag name and closing bracket
         # for attribute=value pairs
-	i, dataend = span
-	attrlist = []
+        i, dataend = span
+        attrlist = []
         namespace = None
         reqattrs = {}                   # attributes that are #REQUIRED
         if self.elems.has_key(tagname):
@@ -596,14 +596,14 @@ class XMLParser:
             attrseen = {}               # attributes that we've seen
         else:
             attributes = None
-	while i < dataend:
-	    res = attrfind.match(data, i, dataend)
-	    if res is None:
+        while i < dataend:
+            res = attrfind.match(data, i, dataend)
+            if res is None:
                 # couldn't match any attributes, but there is more
                 # string to parse: complain and ignore rest of string
-		self.__error('bad attributes', data, i, fatal = 0)
-		return
-	    name = res.group('attrname')
+                self.__error('bad attributes', data, i, fatal = 0)
+                return
+            name = res.group('attrname')
             if reqattrs.has_key(name):
                 del reqattrs[name]      # seen this #REQUIRED attribute
             if attributes is not None and attributes.has_key(name):
@@ -612,10 +612,10 @@ class XMLParser:
                 attype = None
             start, end = res.span('attrvalue')
             value = self.__parse_attrval(data, attype, span = (start+1, end-1))
-	    if value is None:
+            if value is None:
                 # bad attribute value: ignore, but continue parsing
                 i = res.end(0)
-		continue
+                continue
             attrstart = res.start('attrname')
             if attributes is not None:
                 if attributes.has_key(name):
@@ -698,7 +698,7 @@ class XMLParser:
             if attrdict.has_key(attr):
                 self.__error("duplicate attribute name `%s'" % attr, data, attrstart, fatal = 0)
             attrdict[attr] = value
-	return tagname, attrdict, namespaces
+        return tagname, attrdict, namespaces
 
     def __parse_attrval(self, data, attype, span = None):
         # parse an attribute value, replacing entity and character
@@ -711,15 +711,15 @@ class XMLParser:
         res = illegal1.search(data, i, dataend)
         if res is not None:
             self.__error("illegal characters in attribute value", data, res.start(0), fatal = 0)
-	newval = []
-	while i < dataend:
-	    res = interesting.search(data, i, dataend)
-	    if res is None:
+        newval = []
+        while i < dataend:
+            res = interesting.search(data, i, dataend)
+            if res is None:
                 str = data[i:dataend]
                 if attype is None or attype == 'CDATA':
                     str = self.__normalize_space(str)
-		newval.append(str)
-		break
+                newval.append(str)
+                break
             j = res.start(0)
             if data[j] == '<':
                 self.__error("no `<' allowed in attribute value", data, j, fatal = 0)
@@ -727,50 +727,50 @@ class XMLParser:
                 str = data[i:j]
                 if attype is None or attype == 'CDATA':
                     str = self.__normalize_space(str)
-		newval.append(str)
-	    res = ref.match(data, j, dataend)
-	    if res is None:
-		self.__error('illegal attribute value', data, j, fatal = 0)
+                newval.append(str)
+            res = ref.match(data, j, dataend)
+            if res is None:
+                self.__error('illegal attribute value', data, j, fatal = 0)
                 newval.append(data[j])  # the &
                 i = j + 1               # continue searching after the &
-		continue
-	    i = res.end(0)
-	    name = res.group('name')
-	    if name:
+                continue
+            i = res.end(0)
+            name = res.group('name')
+            if name:
                 # entity reference (e.g. "&lt;")
-		if self.entitydefs.has_key(name):
-		    val = self.entitydefs[name]
+                if self.entitydefs.has_key(name):
+                    val = self.entitydefs[name]
                     if type(val) is type(()):
                         self.__error("no external parsed entity allowed in attribute value", data, res.start(0), fatal = 1)
                     del self.entitydefs[name]
-		    nval = self.__parse_attrval(val, attype)
+                    nval = self.__parse_attrval(val, attype)
                     self.entitydefs[name] = val
-		    if nval is None:
-			return
-		    newval.append(nval)
-		else:
-		    self.__error("reference to unknown entity `%s'" % name, data, res.start(0), fatal = 0)
+                    if nval is None:
+                        return
+                    newval.append(nval)
+                else:
+                    self.__error("reference to unknown entity `%s'" % name, data, res.start(0), fatal = 0)
                     newval.append('&%s;' % name)
-	    else:
-		val = self.__parse_charref(res.group('char'), data, res.start(0))
-		if val is None:
-		    newval.append('&#%s;' % res.group('char'))
+            else:
+                val = self.__parse_charref(res.group('char'), data, res.start(0))
+                if val is None:
+                    newval.append('&#%s;' % res.group('char'))
                     continue
-		newval.append(val)
+                newval.append(val)
         str = string.join(newval, '')
         if attype is not None and attype != 'CDATA':
             str = string.join(string.split(str))
-	return str
+        return str
 
     def __parse_charref(self, name, data, i):
         # parse a character reference (e.g. "%#38;")
         # the "name" arg is just part between # and ;
-	if name[0] == 'x':
+        if name[0] == 'x':
             # e.g. &#x26;
-	    n = string.atoi(name[1:], 16)
-	else:
+            n = string.atoi(name[1:], 16)
+        else:
             # e.g. &#38;
-	    n = string.atoi(name)
+            n = string.atoi(name)
         try:
             c = unichr(n)
         except ValueError:
@@ -955,7 +955,7 @@ class XMLParser:
             if not internal:
                 if data[i:i+1] == '<':
                     hlevel = 1
-                    qlevel = []
+                    quote = None
                     j = i+1
                     while hlevel > 0:
                         res = bracket.search(data, j)
@@ -965,13 +965,13 @@ class XMLParser:
                         c = data[res.start(0)]
                         if c == '<':
                             hlevel = hlevel + 1
-                        elif qlevel and c == qlevel[-1]:
-                            del qlevel[-1]
+                        elif quote and c == quote:
+                            quote = None
                         elif c in ('"', "'"):
-                            qlevel.append(c)
+                            quote = c
                         elif c == '>':
                             hlevel = hlevel - 1
-                        elif hlevel == 1 and not qlevel:
+                        elif hlevel == 1 and not quote:
                             # only expand parsed entities at lowest level
                             res = peref.match(data, res.start(0))
                             if res is not None:
