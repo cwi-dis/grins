@@ -1833,10 +1833,7 @@ class LayoutPage(AttrPage):
 
 	def OnSetActive(self):
 		if self._layoutctrl:
-			if not self._layoutctrl._region:
-				self.create_box(self.getcurrentbox())
-			else:
-				self._layoutctrl._drawContext.reset()
+			self.create_box(self.getcurrentbox())
 		return self._obj_.OnSetActive()
 
 	def OnKillActive(self): 
@@ -1855,6 +1852,7 @@ class LayoutPage(AttrPage):
 		self.initLayoutCtrl(v)
 		return v
 	
+	# XXX: old
 	def initLayoutCtrl(self, v):
 		#v.SetLayoutMode(0)
 		self._scale = LayoutScale(v,self._xscale,self._yscale,self._boxoff)
@@ -1901,16 +1899,17 @@ class LayoutPage(AttrPage):
 		return  0, 0, self._xmax, self._ymax
 
 	def create_box(self,box):
-		self._layoutctrl._region = None
+		self._layoutctrl.removeObjects()
 		self._layoutctrl.update()
-		if box and (box[2]==0 or box[3]==0):box=None
-		#self.check_units()
+		if box and (box[2]==0 or box[3]==0):
+			box = None
 		if box is None:
 			self._layoutctrl.selectTool('shape')
 		else:
 			self._layoutctrl.setObject(box)
 			self._layoutctrl.selectTool('select')
 
+	# XXX: old
 	def check_units(self):
 		units=self._form.getunits()
 		if units!=self._units:
@@ -2167,7 +2166,7 @@ class AnchorlistPage(LayoutPage):
 		box = self._group.anchorlistctrl.getbox(0)
 		x, y = self._boxoff
 		box = box[0]+x, box[1]+y, box[2], box[3]
-		box = self._scale.layoutbox(box,self._units)
+		box = self._scale.layoutbox(box, self._units)
 		self.create_box(box)
 
 	# called back by create_box on every change

@@ -1181,14 +1181,18 @@ class LayoutOsWndCtrl(LayoutOsWnd, win32window.Window):
 	#	
 	def setObject(self, rc, strid=None):
 		self._drawContext.reset()
-		if self._subwindows:
-			region = self._subwindows[0]
-			region.updatecoordinates(rc)
-		else:
-			region = Region(self, rc, self._device2logical, (255, 255, 255), transparent=1)
+		self._subwindows = []
+		region = Region(self, rc, self._device2logical, (255, 255, 255), transparent=1)
+		self._drawContext.selectShape(region)
 		self.update()
 		self._updatehost = 1
 		return region
+
+	def removeObjects(self):
+		self._drawContext.reset()
+		self._subwindows = []
+		self.update()
+		self._updatehost = 1
 
 	#
 	#	win32window.Window overrides
