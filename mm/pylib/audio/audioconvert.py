@@ -8,6 +8,9 @@ class audio_filter:
 		self._srcfmt = rdr.getformat()
 		self._dstfmt = fmt
 
+	def __repr__(self):
+		return '<%s instance, src=%s, format=%s>' % (self.__class__.__name__, `self._rdr`, `self._srcfmt`)
+
 	def getformat(self):
 		return self._dstfmt
 
