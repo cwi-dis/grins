@@ -8,6 +8,14 @@ from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 from MMNode import alltypes, leaftypes, interiortypes
 
+# XXX Temp for forms 1.5 compat:
+try:
+    dummy = fl.get_rgbmode
+    forms_v20 = 1
+    del dummy
+except:
+    forms_v20 = 0
+
 # the block view class.
 # *** Hacked by --Guido ***
 # XXX I have made quick hacks to interface to the edit manager:
@@ -116,8 +124,13 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		self._init(w, h)
 		area = self.form.add_box (UP_BOX, 0, 0, w, h, '')
 
-		commands=self.form.add_default(ALWAYS_DEFAULT,0,0,w,h,'')
-		commands.set_call_back(self._command_callback, 0)
+		if forms_v20:
+		    commands=self.form.add_input(HIDDEN_INPUT,0,0,1,1,'')
+		    commands.set_call_back(self._command_callback, 0)
+		    commands.set_input_return(1)
+		else:
+		    commands=self.form.add_default(ALWAYS_DEFAULT,0,0,w,h,'')
+		    commands.set_call_back(self._command_callback, 0)
 
 		focus = self.form.add_button(HIDDEN_BUTTON, 0, 0, w, h, '')
 		focus.set_call_back(self._change_focus_callback, 0)
@@ -345,7 +358,11 @@ class BlockView () = ViewDialog(), BasicDialog () :
 	# the associated command.
 	#
 	def _command_callback(self, (obj, args)) :
-		key = obj.get_default()
+		if forms_v20:
+		    key = obj.get_input()
+		    obj.set_input('')
+		else:
+		    key = obj.get_default()
 		self._do_command(key)
 	def _do_command(self,key):
 		if self.commanddict.has_key (key) :
