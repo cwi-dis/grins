@@ -496,13 +496,14 @@ class _DisplayList:
 
 	# display image from file
 	def display_image_from_file(self, file, crop = (0,0,0,0), fit = 'meet',
-				    center = 1, coordinates = None, clip = None, units = None):
+				    center = 1, coordinates = None, clip = None, align = None,
+				    units = None):
 		if units is None:
 			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
-		       self._window._prepare_image(file, crop, fit, center, coordinates, clip, units)
+		       self._window._prepare_image(file, crop, fit, center, coordinates, clip, align, units)
 		
 		flags = ddraw.DDBLT_WAIT
 		if self._directdraw:

@@ -456,14 +456,14 @@ class _DisplayList:
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), fit = 'meet',
 				    center = 1, coordinates = None,
-				    clip = None, units = None):
+				    clip = None, align = None, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		if units is None:
 			units = self.__units
 		w = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       w._prepare_image(file, crop, fit, center, coordinates, units)
+		       w._prepare_image(file, crop, fit, center, coordinates, align, units)
 		if mask:
 			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
 		else:
