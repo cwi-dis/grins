@@ -14,6 +14,7 @@ import win32mu
 import usercmd
 
 from pywinlib.mfc import window,object,docview
+print window, object, docview
 import windowinterface
 import afxres,commctrl
 
@@ -82,6 +83,8 @@ class _SourceView(docview.RichEditView):
 	# cmif interface
 	# Set the text to be shown
 	def settext(self,text):
+		#self.__editctrl.m_nWordWrap = WrapNone; (normally, you would do this. It doesn't work here.)
+		self.__editctrl.SetWordWrap(0) # helps if you are psycic.
 		self._text=self.convert2ws(text)
 		# if already visible, update text in window
 		if self._mdiframe is not None:

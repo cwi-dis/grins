@@ -73,6 +73,9 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 				self.write_text_and_close() # Which will close all windows.
 			elif saveme == 1: # Which means "No"
 				self.hide()
+			else:		# "Cancel"
+				# Pass through to the end of this method.
+				pass	# I know, it's extraneous, but it's here for completion so it's not a hidden option.
 		else:
 			self.hide()
 
