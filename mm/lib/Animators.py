@@ -717,7 +717,7 @@ class EffectiveAnimator:
 		mmregion = self.__region._attrdict
 
 		# implemented fit='meet' (0) and fit='hidden' (1)
-		scale = mmregion.get('scale')
+		scale = mmregion.get('scale', 1)
 		coordinates = mmregion.GetPresentationAttr('base_winoff')
 
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
@@ -751,20 +751,22 @@ class EffectiveAnimator:
 			elif attr=='height': 
 				newcoordinates = x, y, w, value
 			self.__updatecoordinates(newcoordinates, units, scale)
-
-		elif attr=='z':
-			self.__updatezindex(value)
-
-		elif attr=='bgcolor':
-			self.__updatebgcolor(value)
-
-		elif attr=='soundLevel':
-			self.__updatesoundlevel(value)
+			mmregion.SetPresentationAttr('base_winoff', newcoordinates)
 
 		else:
-			print 'update',attr,'of region',regionname,'to',value,'(unsupported)'
+			if attr=='z':
+				self.__updatezindex(value)
 
-		mmregion.SetPresentationAttr(attr, value)
+			elif attr=='bgcolor':
+				self.__updatebgcolor(value)
+
+			elif attr=='soundLevel':
+				self.__updatesoundlevel(value)
+
+			else:
+				print 'update',attr,'of region',regionname,'to',value,'(unsupported)'
+			mmregion.SetPresentationAttr(attr, value)
+
 		if debug: 
 			print 'update',attr,'of region',regionname,'to',value
 
@@ -813,12 +815,8 @@ class EffectiveAnimator:
 		mmchan = chan._attrdict
 
 		# implemented fit='meet' (0) and fit='hidden' (1)
-		if settings.activeFullSmilCss:
-			scale = 1 # mmchan.getCssAttr('scale', 1)
-			coordinates = self.__node.getPxGeom()
-		else:
-			scale = mmchan.get('scale')
-			coordinates = mmchan.GetPresentationAttr('base_winoff')
+		scale = mmchan.get('scale', 1)
+		coordinates = mmchan.GetPresentationAttr('base_winoff', self.__node)
 
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
 			x, y, w, h = coordinates
@@ -852,7 +850,7 @@ class EffectiveAnimator:
 				newcoordinates = x, y, w, value
 			if chan.window:
 				chan.window.updatecoordinates(newcoordinates, units, scale)
-		mmchan.SetPresentationAttr(attr, value)
+			mmchan.SetPresentationAttr('base_winoff', newcoordinates)
 		if debug:
 			print 'update',self.__attr,'of channel',self.__chan._name,'to',value
 			
@@ -1041,8 +1039,10 @@ alltypes = ['string',] + additivetypes
 
 # implNote
 # main decision attrs:
+# elementTag (__elementTag)
+# node type (self.__target._type)
+
 # valuesType, attrType, additivity
-# elementTag
 # syntaxError:	invalidTarget, invalidValues, invalidKeyTimes, invalidKeySplines,
 #				invalidEnumAttr, invalidTimeManipAttr,
 # notSMILBostonAnimTarget
@@ -1060,16 +1060,23 @@ class AnimateElementParser:
 
 		self.__grinsattrname = ''	# grins internal target attribute name
 
-		# locate target node
+			
+		############################
+		# Locate target node
+
 		# for some elements not represented by nodes (region, area, transition)
 		# create a virtual node
-		self.__isstdnode = 1
+		# once target found (self.__target) 
+		# set its grins-type (self.__target._type in ('mmnode', 'region', 'area') )
+
 		if not hasattr(anim,'targetnode') or not anim.targetnode:
 			te = MMAttrdefs.getattr(anim, 'targetElement')
 			if te:
 				root = anim.GetRoot()
 				anim.targetnode = root.GetChildByName(te)
-				if not anim.targetnode:
+				if anim.targetnode:
+					anim.targetnode._type = 'mmnode'
+				else:
 					self.__checkNotNodeElementsTargets(te)
 			else:
 				anim.targetnode = anim.GetParent()
@@ -1087,9 +1094,20 @@ class AnimateElementParser:
 		else:
 			self.__target = anim.targetnode
 
-		# do we have a valid target node and attribute?
+		if debug:
+			print self.__elementTag, self.__target._type
+
+
+		########################################
+		# Locate target attribute, its DOM value and type
+	
+		# do we have a valid target attribute?
 		self.__hasValidTarget = self.__checkTarget()
 
+
+		########################################
+		# Cache some attributes
+	
 		# Read enumeration attributes
 		self.__additive = MMAttrdefs.getattr(anim, 'additive')
 		self.__calcMode = MMAttrdefs.getattr(anim, 'calcMode')
@@ -1300,11 +1318,19 @@ class AnimateElementParser:
 		if self.__speed!=1.0:
 			anim._setSpeed(self.__speed)
 
-	# check that we have a valid target
+
+	# check that we have a valid target attribute
+	# get its DOM value and type
 	def __checkTarget(self):
-		# for animate motion the implicit target attribute is region.position
+
+		# Manage animateMotion first
+		# animateMotion has an implicit attributeName
+
+		# for animate motion the implicit target attribute
+		# is region.position or node.position
 		if self.__elementTag=='animateMotion':
 			self.__grinsattrname = self.__attrname = 'position'
+			self.__attrtype = 'position'
 			if settings.activeFullSmilCss:
 				rc = None
 				if self.__target._type == 'mmnode':
@@ -1325,10 +1351,61 @@ class AnimateElementParser:
 					return 1
 			return 0
 				
+		# For all other animate elements we must have an explicit attributeName
+		# else its a syntax error
 		self.__attrname = MMAttrdefs.getattr(self.__anim, 'attributeName')
 		if not self.__attrname:
 			print 'failed to get attributeName'
 			print '\t',self
+			return 0
+
+		# we have an attributeName
+		# is it valid?
+
+		if self.__attrname in ('left', 'top', 'width', 'height','right','bottom'):
+			attr = self.__grinsattrname = self.__attrname
+			self.__attrtype = 'int'
+			if settings.activeFullSmilCss:
+				rc = None
+				if self.__target._type == 'mmnode':
+					rc = self.__target.getPxGeom()
+				elif self.__target._type == 'region':
+					ch = self.__target._region
+					rc = ch.getPxGeom()
+				if rc:
+					if attr == 'left':
+						v = rc[0]
+					elif attr=='top':
+						v = rc[1]
+					elif attr == 'right':
+						v = rc[0] + r[2]
+					elif attr == 'bottom':
+						v = rc[1] + r[3]
+					elif attr == 'width':
+						v = rc[2]
+					elif attr == 'height':
+						v = rc[3]
+					self.__domval = v
+					return 1
+				return 0
+			else:
+				d = self.__target.GetChannel().attrdict
+				if d.has_key('base_winoff'):
+					rc = d['base_winoff']
+					if attr == 'left':
+						v = rc[0]
+					elif attr=='top':
+						v = rc[1]
+					elif attr == 'right':
+						v = rc[0] + r[2]
+					elif attr == 'bottom':
+						v = rc[1] + r[3]
+					elif attr == 'width':
+						v = rc[2]
+					elif attr == 'height':
+						v = rc[3]
+					self.__domval = v
+					return 1
 			return 0
 
 		if smil_attrs.has_key(self.__attrname):
