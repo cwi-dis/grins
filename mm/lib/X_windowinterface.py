@@ -157,7 +157,8 @@ class _Window:
 		self._shell.SetValues({'width': w, 'height': h})
 		self._form = self._shell.CreateManagedWidget('drawingArea',
 			  Xm.DrawingArea,
-			  {'height': h, 'width': w,
+			  {'resizePolicy': Xmd.RESIZE_NONE,
+			   'height': h, 'width': w,
 			   'colormap': self._colormap,
 			   'marginHeight': 0, 'marginWidth': 0})
 		self._width = w
@@ -260,7 +261,8 @@ class _Window:
 		self._xfgcolor = self._convert_color(self._fgcolor)
 		self._form = pwin._form.CreateManagedWidget('drawingArea',
 			Xm.DrawingArea,
-			{'width': w, 'height': h, 'x': x, 'y': y,
+			{'resizePolicy': Xmd.RESIZE_NONE,
+			 'width': w, 'height': h, 'x': x, 'y': y,
 			 'colormap': self._colormap,
 			 'marginHeight': 0, 'marginWidth': 0})
 		self._do_open_win()
@@ -416,8 +418,6 @@ class _Window:
 
 	def _resize_callback(self, *rest):
 		if debug: print `self`+'._resize_callback()'
-		if hasattr(self, '_resizing'):
-			return # XXX Hack for HtmlWidget :-(
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
 		val = self._form.GetValues(['width', 'height'])
@@ -427,10 +427,8 @@ class _Window:
 		self._height = val['height']
 		for displist in self._displaylists[:]:
 			displist.close()
-		self._resizing = 1
 		for win in self._subwindows:
 			win._do_resize()
-		del self._resizing
 		enterevent(self, ResizeWindow, None)
 
 	def newwindow(self, *coordinates):
@@ -459,7 +457,8 @@ class _Window:
 			newwin._colormap = toplevel._colormap
 		newwin._form = self._form.CreateManagedWidget('drawingArea',
 			  Xm.DrawingArea,
-			  {'width': w, 'height': h, 'x': x, 'y': y,
+			  {'resizePolicy': Xmd.RESIZE_NONE,
+			   'width': w, 'height': h, 'x': x, 'y': y,
 			   'colormap':newwin._colormap,
 			   'marginHeight': 0, 'marginWidth': 0})
 		if toplevel._win_lock:
