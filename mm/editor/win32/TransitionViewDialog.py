@@ -7,12 +7,14 @@ gives the ability to edit these.
 
 __version__ = "$Id$"
 
+import ViewDialog
 import windowinterface
 from usercmd import *
 IMPL_AS_FORM=1
 
-class TransitionViewDialog:
+class TransitionViewDialog(ViewDialog.ViewDialog):
 	def __init__(self):
+		ViewDialog.ViewDialog.__init__(self, 'transitionview_')
 		self.__window = None
 		self.__callbacks={
 			'New':(self.new_callback, ()),
@@ -28,6 +30,7 @@ class TransitionViewDialog:
 		self.__window = None
 
 	def show(self):
+		self.load_geometry()
 		self.assertwndcreated()	
 		self.__window.show()
 
@@ -37,10 +40,15 @@ class TransitionViewDialog:
 		return self.__window.is_showing()
 
 	def hide(self):
+		self.save_geometry()
 		if self.__window is not None:
 			self.__window.close()
 			self.__window = None
 
+	def get_geometry(self):
+		if self.__window:
+			self.last_geometry = self.__window.getgeometry()
+			 
 #### support win32 model
 	def createviewobj(self):
 		if self.__window: return
@@ -55,7 +63,7 @@ class TransitionViewDialog:
 		if self.__window.GetSafeHwnd()==0:
 			f=self.toplevel.window
 			if IMPL_AS_FORM: # form
-				f.showview(self.__window,'trview_')
+				f.showview(self.__window,'trview_', self.last_geometry)
 				self.__window.show()
 			else: # dlgbar
 				f=self.toplevel.window

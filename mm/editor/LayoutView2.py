@@ -443,12 +443,6 @@ class LayoutView2(LayoutViewDialog2):
 	def fixtitle(self):
 		pass			# for now...
 	
-	def get_geometry(self):
-		pass
-	
-	def save_geometry(self):
-		pass
-
 	def destroy(self):
 		self.hide()
 		LayoutViewDialog2.destroy(self)

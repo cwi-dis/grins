@@ -42,8 +42,9 @@ implements the actual dialog.
 
 """
 import windowinterface
+import ViewDialog
 
-class LinkBrowserDialog:
+class LinkBrowserDialog(ViewDialog.ViewDialog):
 	def __init__(self, title, menu1, cbarg1, menu2, cbarg2):
 		"""Create the LinkEditor dialog.
 
@@ -62,6 +63,7 @@ class LinkBrowserDialog:
 		cbarg2 -- any object -- argument passed on to
 			callbacks related to the right list
 		"""
+		ViewDialog.ViewDialog.__init__(self, 'linkview_')
 		self._adornments={'form_id':'leview_',
 			'callbacks':{
 				'close':(self.close_callback, ()),
@@ -87,6 +89,7 @@ class LinkBrowserDialog:
 		return self.window.is_showing()
 
 	def show(self):
+		self.load_geometry()
 		self.assertcreated()
 		self.window.show()
 
@@ -98,10 +101,11 @@ class LinkBrowserDialog:
 			w=toplevel_window.newviewobj(self._adornments['form_id'])
 			apply(w.do_init,self._init_args)
 			self.window=w	
-			toplevel_window.showview(self.window,'leview_')
+			toplevel_window.showview(self.window,'leview_', self.last_geometry)
 			self.window.show()
 
 	def hide(self):
+		self.save_geometry()
 		if not self.window: return
 		if self.is_showing():
 			self.window.close()

@@ -1,14 +1,16 @@
 # experimental layout view
 
+import ViewDialog
 import windowinterface
 import win32ui, win32api, win32con, appcon
 
 from usercmd import *
 IMPL_AS_FORM=1
 
-class LayoutViewDialog2:
+class LayoutViewDialog2(ViewDialog.ViewDialog):
 	
 	def __init__(self):
+		ViewDialog.ViewDialog.__init__(self, 'layoutview_')
 		self.__window=None
 
 	def createviewobj(self):
@@ -46,6 +48,7 @@ class LayoutViewDialog2:
 		#del self.__regionSelCtrl
 
 	def show(self):
+		self.load_geometry()
 		self.assertwndcreated()	
 		self.__window.show()
 
@@ -55,12 +58,17 @@ class LayoutViewDialog2:
 		return self.__window.is_showing()
 
 	def hide(self):
+		self.save_geometry()
 		if self.__window is not None:
 			self.__window.close()
 			self.__window = None
 			f=self.toplevel.window
 			f.set_toggle(LAYOUTVIEW,0)
 
+	def get_geometry(self):
+		if self.__window:
+			self.last_geometry = self.__window.getgeometry()
+			 
 	def setcommands(self, commandlist, title):
 		self.__window.set_commandlist(commandlist)
 #		self.window.set_dynamiclist(ANCESTORS, self.baseobject.ancestors)
@@ -72,7 +80,7 @@ class LayoutViewDialog2:
 		if self.__window.GetSafeHwnd()==0:
 			f=self.toplevel.window
 			if IMPL_AS_FORM: # form
-				f.showview(self.__window,'lview2_')
+				f.showview(self.__window,'lview2_', self.last_geometry)
 				self.__window.show()
 			else:# dlgbar
 				self.__window.create(f)
