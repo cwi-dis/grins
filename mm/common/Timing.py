@@ -158,7 +158,10 @@ def cleanup(node):
 #
 from AnchorDefs import A_TYPE, ATYPE_PAUSE, ATYPE_ARGS
 #
+is_warned = 0
+
 def getduration(node):
+	global is_warned
 	import Duration
 	d = Duration.get(node)
 	if d > 0:
@@ -171,8 +174,13 @@ def getduration(node):
 	if alist: # Not None and not []
 		for a in alist:
 			if a[A_TYPE] in (ATYPE_PAUSE, ATYPE_ARGS):
-				return d + 10
-	return d
+				if not is_warned:
+					print 'Warning: document contains (obsolete) pausing anchors'
+					is_warned = 1
+				return 10
+	if d < 0:
+		return 10
+	return 0
 	
 
 

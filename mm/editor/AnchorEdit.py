@@ -28,7 +28,7 @@ form_template = None	# result of flp.parse_form is stored here
 
 TypeValues = [ ATYPE_WHOLE, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO, ATYPE_COMP,
 	  ATYPE_ARGS]
-TypeLabels = [ 'dest only', 'normal', 'pausing', 'auto-firing', 'composite',
+TypeLabels = [ 'dest only', 'normal', 'pausing (obsolete)', 'auto-firing', 'composite',
 	  'with arguments']
 
 # Top-level interface to show/hide a node's anchor editor
