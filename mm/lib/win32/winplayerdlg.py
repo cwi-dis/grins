@@ -210,9 +210,7 @@ class PlayerDlgBar(window.Wnd):
 		old_keys.sort()
 		new_keys.sort()
 		if old_keys != new_keys:
-			print 'PLAYDLG SHOULD UPDATE'
-			print 'old', old_keys
-			print 'new', new_keys
+			self._recreateDialog(optionsdict)
 		for name, info in optionsdict.items():
 			self.setOption(name, info)
 
@@ -224,6 +222,15 @@ class PlayerDlgBar(window.Wnd):
 			initoption = info[2]
 			ctrl.initoptions(optionlist, optionlist.index(initoption))
 			ctrl.setcb(info[1])
+
+	def _recreateDialog(self, optionsdict):
+		attrs = []
+		for name, (values, cb, init) in optionsdict.items():
+			if values == ['off', 'on']:
+				attrs.append(('boolean', name))
+			else:
+				attrs.append(('option', name))
+		self.setAttributes(attrs)
 
 	def hookCommands(self):
 		for ctrl in self._ctrls.values():
