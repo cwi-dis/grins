@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-import winkernel
+import winkernel, winuser
 
 from appcon import *
 
@@ -21,6 +21,10 @@ class Toplevel:
 
 		# application's main window
 		self._mainwnd = None
+
+		#
+		self._waiting = 0
+		self._wait_cursor = winuser.LoadStandardCursor(wincon.IDC_WAIT)
 
 	def close(self):
 		pass
@@ -61,7 +65,8 @@ class Toplevel:
 ##			self._mainwnd.setStatusMsg('')
 			self._mainwnd.setReady()
 			preload_list_msg = 1
-
+		
+		self.setready()
 		while self._timers:
 			t = float(winkernel.GetTickCount())/TICKS_PER_SECOND
 			sec, cb, tid = self._timers[0]
@@ -124,6 +129,16 @@ class Toplevel:
 		for onIdle in self._idles.values():
 			onIdle()
 
+	def setwaiting(self):
+		if not self._waiting:
+			if not self._mainwnd or not self._mainwnd._in_gapi_mode:
+				winuser.SetCursor(self._wait_cursor)
+				self._waiting = 1
+
+	def setready(self):
+		if self._waiting:
+			winuser.SetCursor(0)
+			self._waiting = 0
 	#
 	def register_embedded(self, event, func, arg):
 		pass
