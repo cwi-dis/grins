@@ -390,7 +390,8 @@ class HierarchyView(HierarchyViewDialog):
 			HierarchyViewDialog.show(self)
 			return
 		HierarchyViewDialog.show(self)
-		self.aftersetfocus()
+# also done in refresh_scene_graph
+##		self.aftersetfocus()
 		self.window.bgcolor(BGCOLOR)
 		# Other administratrivia
 		self.editmgr.register(self,1) # 1 means we want to participate in global focus management.
@@ -535,7 +536,7 @@ class HierarchyView(HierarchyViewDialog):
 		# for now, catch only MMNode focus
 		if focustype == 'MMNode':
 			if isinstance(focusobject, MMNode.MMNode) and focusobject is not self.focusnode:
-				self.select_node(focusobject)
+				self.select_node(focusobject, 1)
 				self.aftersetfocus()
 				self.need_resize = 1
 				self.dirty = 1
@@ -1079,6 +1080,7 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return
 		self.setfocusnode(siblings[i])
+		self.draw()
 
 	def toparent(self):
 		if not self.focusnode:
@@ -1089,6 +1091,7 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return
 		self.setfocusnode(parent)
+		self.draw()
 
 	def tochild(self, i):
 		node = self.focusnode
@@ -1106,36 +1109,43 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return
 		self.setfocusnode(children[i])
+		self.draw()
 
-	def select_widget(self, widget):
+	def select_widget(self, widget, external = 0):
 		# Set the focus to a specific widget on the user interface.
 		# Make the widget the current selection.
+		if self.selected_widget == widget:
+			# don't do anything if the focus is already set to the requested widget.
+			# this is important because of the setglobalfocus call below.
+			return
 		if isinstance(self.selected_widget, Widgets.Widget):
 			self.selected_widget.unselect()
 		self.selected_widget = widget
 		self.focusobj = widget	# Used for callbacks.
 		self.prevfocusnode = self.focusnode
-		if widget == None:
+		if widget is None:
 			self.focusnode = None
 		else: 
 			self.focusnode = widget.node
 			widget.select()
 			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 		self.aftersetfocus()
-		#self.editmgr.setglobalfocus("MMNode", widget.node) 
+		self.dirty = 1
+		if not external:
+			# avoid recursive setglobalfocus
+			self.editmgr.setglobalfocus("MMNode", self.focusnode)
 
-	def select_node(self, node):
+	def select_node(self, node, external = 0):
 		# Set the focus to a specfic MMNode (obviously the focus did not come from the UI)
-		self.setfocusnode(node)
+		self.setfocusnode(node, external)
 		
-	def setfocusnode(self, node):
+	def setfocusnode(self, node, external = 0):
 		# Try not to call this function
 		if not node:
-			self.select_widget(None)
+			self.select_widget(None, external)
 		else:
 			widget = node.views['struct_view']
-			self.select_widget(widget)
-		#self.editmgr.setglobalfocus("MMNode", node)
+			self.select_widget(widget, external)
 
 	# Handle a selection click at (x, y)
 	def select(self, x, y):
@@ -1147,11 +1157,10 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		else:
 			self.select_widget(widget)
-			self.aftersetfocus()
+##			self.aftersetfocus()
 			self.dirty = 1
 		assert isinstance(widget.node, MMNode.MMNode)
 #		print "DEBUG: Hierarchyview recieved select(x,y)"
-		self.editmgr.setglobalfocus("MMNode", widget.node)
 
 
 	# Find the smallest object containing (x, y)
