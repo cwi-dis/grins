@@ -70,7 +70,7 @@ class MainDialog:
 			adornments = self.adornments,
 			commandlist = self.commandlist)
 		import settings
-		if not hasarguments and not settings.get('no_initial_dialog'):
+		if not hasarguments and settings.get('initial_dialog'):
 			f = windowinterface.getmainwnd()
 			doclist = self.get_recent_files()
 			windowinterface.OpenAppDialog(self.new_callback, 

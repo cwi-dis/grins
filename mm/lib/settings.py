@@ -51,7 +51,7 @@ default_settings = {
 	'thumbnail_size':10.0,		# Size of thumbnail (mm)
 	'time_scale_factor': 1.0,	# Scale factor for sec to mm
 	'show_links':1,			# Show hyperlink icons
-	'no_initial_dialog': 0,		# Don't show initial dialog if true
+	'initial_dialog': 1,		# Show initial dialog if true
 	'RPthumbnails': 0,		# RealPix thumbnails in timeline view
 	'cascade': 0,			# Cascade regions when no <layout>
 	'no_image_cache': 0,		# Don't cache images (or info about them)
