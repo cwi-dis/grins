@@ -3,17 +3,35 @@ Tag a:
 		to be supplied
 	Attribute actuate:
 		to be supplied
+	Attribute begin:
+		to be supplied
 	Attribute class:
+		to be supplied
+	Attribute customTest:
 		to be supplied
 	Attribute destinationLevel:
 		to be supplied
 	Attribute destinationPlaystate:
+		to be supplied
+	Attribute dur:
+		to be supplied
+	Attribute end:
 		to be supplied
 	Attribute external:
 		to be supplied
 	Attribute href:
 		to be supplied
 	Attribute id:
+		to be supplied
+	Attribute max:
+		to be supplied
+	Attribute min:
+		to be supplied
+	Attribute repeat:
+		to be supplied
+	Attribute repeatCount:
+		to be supplied
+	Attribute repeatDur:
 		to be supplied
 	Attribute show:
 		to be supplied
@@ -79,6 +97,8 @@ Tag anchor:
 	Attribute class:
 		to be supplied
 	Attribute coords:
+		to be supplied
+	Attribute customTest:
 		to be supplied
 	Attribute destinationLevel:
 		to be supplied
@@ -417,8 +437,8 @@ Tag animateMotion:
 		to be supplied
 	Attribute origin:
 		to be supplied
-	Attribute path:
-		Implemented
+#	Attribute path:
+#		Implemented
 	Attribute repeat:
 		to be supplied
 	Attribute repeatCount:
@@ -626,6 +646,8 @@ Tag area:
 	Attribute class:
 		to be supplied
 	Attribute coords:
+		to be supplied
+	Attribute customTest:
 		to be supplied
 	Attribute destinationLevel:
 		to be supplied
@@ -857,8 +879,8 @@ Tag body:
 		to be supplied
 	Attribute copyright:
 		to be supplied
-	Attribute customTest:
-		to be supplied
+#	Attribute customTest:
+#		to be supplied
 	Attribute dur:
 		to be supplied
 	Attribute end:
@@ -893,44 +915,44 @@ Tag body:
 		to be supplied
 	Attribute syncToleranceDefault:
 		to be supplied
-	Attribute system-bitrate:
-		to be supplied
-	Attribute system-captions:
-		to be supplied
-	Attribute system-language:
-		to be supplied
-	Attribute system-overdub-or-caption:
-		to be supplied
-	Attribute system-required:
-		to be supplied
-	Attribute system-screen-depth:
-		to be supplied
-	Attribute system-screen-size:
-		to be supplied
-	Attribute systemAudioDesc:
-		to be supplied
-	Attribute systemBitrate:
-		to be supplied
-	Attribute systemCPU:
-		to be supplied
-	Attribute systemCaptions:
-		to be supplied
-	Attribute systemComponent:
-		to be supplied
-	Attribute systemLanguage:
-		to be supplied
-	Attribute systemOperatingSystem:
-		to be supplied
+#	Attribute system-bitrate:
+#		to be supplied
+#	Attribute system-captions:
+#		to be supplied
+#	Attribute system-language:
+#		to be supplied
+#	Attribute system-overdub-or-caption:
+#		to be supplied
+#	Attribute system-required:
+#		to be supplied
+#	Attribute system-screen-depth:
+#		to be supplied
+#	Attribute system-screen-size:
+#		to be supplied
+#	Attribute systemAudioDesc:
+#		to be supplied
+#	Attribute systemBitrate:
+#		to be supplied
+#	Attribute systemCPU:
+#		to be supplied
+#	Attribute systemCaptions:
+#		to be supplied
+#	Attribute systemComponent:
+#		to be supplied
+#	Attribute systemLanguage:
+#		to be supplied
+#	Attribute systemOperatingSystem:
+#		to be supplied
 #	Attribute systemOverdubOrCaption:
 #		to be supplied
-	Attribute systemOverdubOrSubtitle:
-		to be supplied
-	Attribute systemRequired:
-		to be supplied
-	Attribute systemScreenDepth:
-		to be supplied
-	Attribute systemScreenSize:
-		to be supplied
+#	Attribute systemOverdubOrSubtitle:
+#		to be supplied
+#	Attribute systemRequired:
+#		to be supplied
+#	Attribute systemScreenDepth:
+#		to be supplied
+#	Attribute systemScreenSize:
+#		to be supplied
 	Attribute title:
 		to be supplied
 	Attribute xml:lang:
@@ -972,11 +994,13 @@ Tag brush:
 		to be supplied
 	Attribute left:
 		to be supplied
-	Attribute longdesc:
-		to be supplied
+#	Attribute longdesc:
+#		to be supplied
 	Attribute max:
 		to be supplied
 	Attribute min:
+		to be supplied
+	Attribute readIndex:
 		to be supplied
 	Attribute regAlign:
 		to be supplied
@@ -1118,44 +1142,44 @@ Tag customTest:
 		to be supplied
 	Attribute skip-content:
 		to be supplied
-	Attribute system-bitrate:
-		to be supplied
-	Attribute system-captions:
-		to be supplied
-	Attribute system-language:
-		to be supplied
-	Attribute system-overdub-or-caption:
-		to be supplied
-	Attribute system-required:
-		to be supplied
-	Attribute system-screen-depth:
-		to be supplied
-	Attribute system-screen-size:
-		to be supplied
-	Attribute systemAudioDesc:
-		to be supplied
-	Attribute systemBitrate:
-		to be supplied
-	Attribute systemCPU:
-		to be supplied
-	Attribute systemCaptions:
-		to be supplied
-	Attribute systemComponent:
-		to be supplied
-	Attribute systemLanguage:
-		to be supplied
-	Attribute systemOperatingSystem:
-		to be supplied
+#	Attribute system-bitrate:
+#		to be supplied
+#	Attribute system-captions:
+#		to be supplied
+#	Attribute system-language:
+#		to be supplied
+#	Attribute system-overdub-or-caption:
+#		to be supplied
+#	Attribute system-required:
+#		to be supplied
+#	Attribute system-screen-depth:
+#		to be supplied
+#	Attribute system-screen-size:
+#		to be supplied
+#	Attribute systemAudioDesc:
+#		to be supplied
+#	Attribute systemBitrate:
+#		to be supplied
+#	Attribute systemCPU:
+#		to be supplied
+#	Attribute systemCaptions:
+#		to be supplied
+#	Attribute systemComponent:
+#		to be supplied
+#	Attribute systemLanguage:
+#		to be supplied
+#	Attribute systemOperatingSystem:
+#		to be supplied
 #	Attribute systemOverdubOrCaption:
 #		to be supplied
-	Attribute systemOverdubOrSubtitle:
-		to be supplied
-	Attribute systemRequired:
-		to be supplied
-	Attribute systemScreenDepth:
-		to be supplied
-	Attribute systemScreenSize:
-		to be supplied
+#	Attribute systemOverdubOrSubtitle:
+#		to be supplied
+#	Attribute systemRequired:
+#		to be supplied
+#	Attribute systemScreenDepth:
+#		to be supplied
+#	Attribute systemScreenSize:
+#		to be supplied
 	Attribute title:
 		to be supplied
 	Attribute uid:
@@ -1262,44 +1286,44 @@ Tag head:
 		to be supplied
 	Attribute id:
 		to be supplied
-	Attribute system-bitrate:
-		to be supplied
-	Attribute system-captions:
-		to be supplied
-	Attribute system-language:
-		to be supplied
-	Attribute system-overdub-or-caption:
-		to be supplied
-	Attribute system-required:
-		to be supplied
-	Attribute system-screen-depth:
-		to be supplied
-	Attribute system-screen-size:
-		to be supplied
-	Attribute systemAudioDesc:
-		to be supplied
-	Attribute systemBitrate:
-		to be supplied
-	Attribute systemCPU:
-		to be supplied
-	Attribute systemCaptions:
-		to be supplied
-	Attribute systemComponent:
-		to be supplied
-	Attribute systemLanguage:
-		to be supplied
-	Attribute systemOperatingSystem:
-		to be supplied
+#	Attribute system-bitrate:
+#		to be supplied
+#	Attribute system-captions:
+#		to be supplied
+#	Attribute system-language:
+#		to be supplied
+#	Attribute system-overdub-or-caption:
+#		to be supplied
+#	Attribute system-required:
+#		to be supplied
+#	Attribute system-screen-depth:
+#		to be supplied
+#	Attribute system-screen-size:
+#		to be supplied
+#	Attribute systemAudioDesc:
+#		to be supplied
+#	Attribute systemBitrate:
+#		to be supplied
+#	Attribute systemCPU:
+#		to be supplied
+#	Attribute systemCaptions:
+#		to be supplied
+#	Attribute systemComponent:
+#		to be supplied
+#	Attribute systemLanguage:
+#		to be supplied
+#	Attribute systemOperatingSystem:
+#		to be supplied
 #	Attribute systemOverdubOrCaption:
 #		to be supplied
-	Attribute systemOverdubOrSubtitle:
-		to be supplied
-	Attribute systemRequired:
-		to be supplied
-	Attribute systemScreenDepth:
-		to be supplied
-	Attribute systemScreenSize:
-		to be supplied
+#	Attribute systemOverdubOrSubtitle:
+#		to be supplied
+#	Attribute systemRequired:
+#		to be supplied
+#	Attribute systemScreenDepth:
+#		to be supplied
+#	Attribute systemScreenSize:
+#		to be supplied
 	Attribute title:
 		to be supplied
 	Attribute xml:lang:
@@ -1442,6 +1466,8 @@ Tag img:
 Tag layout:
 	Attribute class:
 		to be supplied
+	Attribute customTest:
+		to be supplied
 	Attribute id:
 		to be supplied
 	Attribute system-bitrate:
@@ -1499,44 +1525,44 @@ Tag meta:
 		to be supplied
 	Attribute skip-content:
 		to be supplied
-	Attribute system-bitrate:
-		to be supplied
-	Attribute system-captions:
-		to be supplied
-	Attribute system-language:
-		to be supplied
-	Attribute system-overdub-or-caption:
-		to be supplied
-	Attribute system-required:
-		to be supplied
-	Attribute system-screen-depth:
-		to be supplied
-	Attribute system-screen-size:
-		to be supplied
-	Attribute systemAudioDesc:
-		to be supplied
-	Attribute systemBitrate:
-		to be supplied
-	Attribute systemCPU:
-		to be supplied
-	Attribute systemCaptions:
-		to be supplied
-	Attribute systemComponent:
-		to be supplied
-	Attribute systemLanguage:
-		to be supplied
-	Attribute systemOperatingSystem:
-		to be supplied
+#	Attribute system-bitrate:
+#		to be supplied
+#	Attribute system-captions:
+#		to be supplied
+#	Attribute system-language:
+#		to be supplied
+#	Attribute system-overdub-or-caption:
+#		to be supplied
+#	Attribute system-required:
+#		to be supplied
+#	Attribute system-screen-depth:
+#		to be supplied
+#	Attribute system-screen-size:
+#		to be supplied
+#	Attribute systemAudioDesc:
+#		to be supplied
+#	Attribute systemBitrate:
+#		to be supplied
+#	Attribute systemCPU:
+#		to be supplied
+#	Attribute systemCaptions:
+#		to be supplied
+#	Attribute systemComponent:
+#		to be supplied
+#	Attribute systemLanguage:
+#		to be supplied
+#	Attribute systemOperatingSystem:
+#		to be supplied
 #	Attribute systemOverdubOrCaption:
 #		to be supplied
-	Attribute systemOverdubOrSubtitle:
-		to be supplied
-	Attribute systemRequired:
-		to be supplied
-	Attribute systemScreenDepth:
-		to be supplied
-	Attribute systemScreenSize:
-		to be supplied
+#	Attribute systemOverdubOrSubtitle:
+#		to be supplied
+#	Attribute systemRequired:
+#		to be supplied
+#	Attribute systemScreenDepth:
+#		to be supplied
+#	Attribute systemScreenSize:
+#		to be supplied
 	Attribute title:
 		to be supplied
 	Attribute xml:lang:
@@ -1548,44 +1574,44 @@ Tag metadata:
 		to be supplied
 	Attribute skip-content:
 		to be supplied
-	Attribute system-bitrate:
-		to be supplied
-	Attribute system-captions:
-		to be supplied
-	Attribute system-language:
-		to be supplied
-	Attribute system-overdub-or-caption:
-		to be supplied
-	Attribute system-required:
-		to be supplied
-	Attribute system-screen-depth:
-		to be supplied
-	Attribute system-screen-size:
-		to be supplied
-	Attribute systemAudioDesc:
-		to be supplied
-	Attribute systemBitrate:
-		to be supplied
-	Attribute systemCPU:
-		to be supplied
-	Attribute systemCaptions:
-		to be supplied
-	Attribute systemComponent:
-		to be supplied
-	Attribute systemLanguage:
-		to be supplied
-	Attribute systemOperatingSystem:
-		to be supplied
+#	Attribute system-bitrate:
+#		to be supplied
+#	Attribute system-captions:
+#		to be supplied
+#	Attribute system-language:
+#		to be supplied
+#	Attribute system-overdub-or-caption:
+#		to be supplied
+#	Attribute system-required:
+#		to be supplied
+#	Attribute system-screen-depth:
+#		to be supplied
+#	Attribute system-screen-size:
+#		to be supplied
+#	Attribute systemAudioDesc:
+#		to be supplied
+#	Attribute systemBitrate:
+#		to be supplied
+#	Attribute systemCPU:
+#		to be supplied
+#	Attribute systemCaptions:
+#		to be supplied
+#	Attribute systemComponent:
+#		to be supplied
+#	Attribute systemLanguage:
+#		to be supplied
+#	Attribute systemOperatingSystem:
+#		to be supplied
 #	Attribute systemOverdubOrCaption:
 #		to be supplied
-	Attribute systemOverdubOrSubtitle:
-		to be supplied
-	Attribute systemRequired:
-		to be supplied
-	Attribute systemScreenDepth:
-		to be supplied
-	Attribute systemScreenSize:
-		to be supplied
+#	Attribute systemOverdubOrSubtitle:
+#		to be supplied
+#	Attribute systemRequired:
+#		to be supplied
+#	Attribute systemScreenDepth:
+#		to be supplied
+#	Attribute systemScreenSize:
+#		to be supplied
 	Attribute title:
 		to be supplied
 	Attribute xml:lang:
@@ -1683,6 +1709,61 @@ Tag par:
 		to be supplied
 	Attribute xml:lang:
 		to be supplied
+Tag param:
+	Attribute class:
+		to be supplied
+	Attribute customTest:
+		to be supplied
+	Attribute id:
+		to be supplied
+	Attribute name:
+		to be supplied
+	Attribute system-bitrate:
+		to be supplied
+	Attribute system-captions:
+		to be supplied
+	Attribute system-language:
+		to be supplied
+	Attribute system-overdub-or-caption:
+		to be supplied
+	Attribute system-required:
+		to be supplied
+	Attribute system-screen-depth:
+		to be supplied
+	Attribute system-screen-size:
+		to be supplied
+	Attribute systemAudioDesc:
+		to be supplied
+	Attribute systemBitrate:
+		to be supplied
+	Attribute systemCPU:
+		to be supplied
+	Attribute systemCaptions:
+		to be supplied
+	Attribute systemComponent:
+		to be supplied
+	Attribute systemLanguage:
+		to be supplied
+	Attribute systemOperatingSystem:
+		to be supplied
+	Attribute systemOverdubOrSubtitle:
+		to be supplied
+	Attribute systemRequired:
+		to be supplied
+	Attribute systemScreenDepth:
+		to be supplied
+	Attribute systemScreenSize:
+		to be supplied
+	Attribute title:
+		to be supplied
+	Attribute type:
+		to be supplied
+	Attribute value:
+		to be supplied
+	Attribute valuetype:
+		to be supplied
+	Attribute xml:lang:
+		to be supplied
 Tag prefetch:
 	Attribute bandwidth:
 		Parsed. Not implemented.
@@ -1694,10 +1775,18 @@ Tag prefetch:
 		to be supplied
 	Attribute clip-end:
 		to be supplied
+	Attribute clipBegin:
+		to be supplied
+	Attribute clipEnd:
+		to be supplied
+	Attribute customTest:
+		to be supplied
 	Attribute dur:
 		Implemented, common.
 	Attribute end:
 		Implemented, common.
+	Attribute fillDefault:
+		to be supplied
 	Attribute id:
 		Implemented, common.
 	Attribute max:
@@ -1714,10 +1803,24 @@ Tag prefetch:
 		to be supplied
 	Attribute repeatDur:
 		to be supplied
+	Attribute restart:
+		to be supplied
+	Attribute restartDefault:
+		to be supplied
 	Attribute skip-content:
 		to be supplied
 	Attribute src:
 		Parsed. Not implemented.
+	Attribute syncBehavior:
+		to be supplied
+	Attribute syncBehaviorDefault:
+		to be supplied
+	Attribute syncMaster:
+		to be supplied
+	Attribute syncTolerance:
+		to be supplied
+	Attribute syncToleranceDefault:
+		to be supplied
 	Attribute system-bitrate:
 		to be supplied
 	Attribute system-captions:
@@ -1761,14 +1864,16 @@ Tag prefetch:
 	Attribute xml:lang:
 		to be supplied
 Tag priorityClass:
-#	Attribute abstract:
-#		to be supplied
-#	Attribute author:
-#		to be supplied
+	Attribute abstract:
+		to be supplied
+	Attribute author:
+		to be supplied
 	Attribute class:
 		to be supplied
-#	Attribute copyright:
-#		to be supplied
+	Attribute copyright:
+		to be supplied
+	Attribute customTest:
+		to be supplied
 	Attribute higher:
 		to be supplied
 	Attribute id:
@@ -2188,6 +2293,8 @@ Tag seq:
 		to be supplied
 	Attribute min:
 		to be supplied
+	Attribute region:
+		to be supplied
 	Attribute repeat:
 		to be supplied
 	Attribute repeatCount:
@@ -2344,44 +2451,44 @@ Tag smil:
 		to be supplied
 	Attribute id:
 		to be supplied
-	Attribute system-bitrate:
-		to be supplied
-	Attribute system-captions:
-		to be supplied
-	Attribute system-language:
-		to be supplied
-	Attribute system-overdub-or-caption:
-		to be supplied
-	Attribute system-required:
-		to be supplied
-	Attribute system-screen-depth:
-		to be supplied
-	Attribute system-screen-size:
-		to be supplied
-	Attribute systemAudioDesc:
-		to be supplied
-	Attribute systemBitrate:
-		to be supplied
-	Attribute systemCPU:
-		to be supplied
-	Attribute systemCaptions:
-		to be supplied
-	Attribute systemComponent:
-		to be supplied
-	Attribute systemLanguage:
-		to be supplied
-	Attribute systemOperatingSystem:
-		to be supplied
+#	Attribute system-bitrate:
+#		to be supplied
+#	Attribute system-captions:
+#		to be supplied
+#	Attribute system-language:
+#		to be supplied
+#	Attribute system-overdub-or-caption:
+#		to be supplied
+#	Attribute system-required:
+#		to be supplied
+#	Attribute system-screen-depth:
+#		to be supplied
+#	Attribute system-screen-size:
+#		to be supplied
+#	Attribute systemAudioDesc:
+#		to be supplied
+#	Attribute systemBitrate:
+#		to be supplied
+#	Attribute systemCPU:
+#		to be supplied
+#	Attribute systemCaptions:
+#		to be supplied
+#	Attribute systemComponent:
+#		to be supplied
+#	Attribute systemLanguage:
+#		to be supplied
+#	Attribute systemOperatingSystem:
+#		to be supplied
 #	Attribute systemOverdubOrCaption:
 #		to be supplied
-	Attribute systemOverdubOrSubtitle:
-		to be supplied
-	Attribute systemRequired:
-		to be supplied
-	Attribute systemScreenDepth:
-		to be supplied
-	Attribute systemScreenSize:
-		to be supplied
+#	Attribute systemOverdubOrSubtitle:
+#		to be supplied
+#	Attribute systemRequired:
+#		to be supplied
+#	Attribute systemScreenDepth:
+#		to be supplied
+#	Attribute systemScreenSize:
+#		to be supplied
 	Attribute title:
 		to be supplied
 	Attribute xml:lang:
@@ -2389,8 +2496,8 @@ Tag smil:
 Tag switch:
 	Attribute class:
 		to be supplied
-#	Attribute customTest:
-#		to be supplied
+	Attribute customTest:
+		to be supplied
 	Attribute id:
 		to be supplied
 	Attribute system-bitrate:
@@ -2722,6 +2829,8 @@ Tag transition:
 #		Not implemented, partially parsed (value "blend" not recognized)
 	Attribute coordinated:
 		to be supplied
+	Attribute customTest:
+		to be supplied
 	Attribute direction:
 		Parsed, not implemented
 	Attribute dur:
@@ -2798,91 +2907,6 @@ Tag transition:
 		Implemented, but will be changed slightly in the next draft
 	Attribute vertRepeat:
 		Parsed, not implemented
-	Attribute xml:lang:
-		to be supplied
-Tag transitionFilter:
-	Attribute begin:
-		to be supplied
-	Attribute borderWidth:
-		to be supplied
-	Attribute childrenClip:
-		to be supplied
-	Attribute class:
-		to be supplied
-	Attribute color:
-		to be supplied
-	Attribute coordinated:
-		to be supplied
-	Attribute customTest:
-		to be supplied
-	Attribute dur:
-		to be supplied
-	Attribute end:
-		to be supplied
-	Attribute horzRepeat:
-		to be supplied
-	Attribute id:
-		to be supplied
-	Attribute max:
-		to be supplied
-	Attribute min:
-		to be supplied
-	Attribute percentDone:
-		to be supplied
-	Attribute repeat:
-		to be supplied
-	Attribute repeatCount:
-		to be supplied
-	Attribute repeatDur:
-		to be supplied
-	Attribute skip-content:
-		to be supplied
-	Attribute subtype:
-		to be supplied
-	Attribute system-bitrate:
-		to be supplied
-	Attribute system-captions:
-		to be supplied
-	Attribute system-language:
-		to be supplied
-	Attribute system-overdub-or-caption:
-		to be supplied
-	Attribute system-required:
-		to be supplied
-	Attribute system-screen-depth:
-		to be supplied
-	Attribute system-screen-size:
-		to be supplied
-	Attribute systemAudioDesc:
-		to be supplied
-	Attribute systemBitrate:
-		to be supplied
-	Attribute systemCPU:
-		to be supplied
-	Attribute systemCaptions:
-		to be supplied
-	Attribute systemComponent:
-		to be supplied
-	Attribute systemLanguage:
-		to be supplied
-	Attribute systemOperatingSystem:
-		to be supplied
-#	Attribute systemOverdubOrCaption:
-#		to be supplied
-	Attribute systemOverdubOrSubtitle:
-		to be supplied
-	Attribute systemRequired:
-		to be supplied
-	Attribute systemScreenDepth:
-		to be supplied
-	Attribute systemScreenSize:
-		to be supplied
-	Attribute title:
-		to be supplied
-	Attribute type:
-		to be supplied
-	Attribute vertRepeat:
-		to be supplied
 	Attribute xml:lang:
 		to be supplied
 Tag video:
