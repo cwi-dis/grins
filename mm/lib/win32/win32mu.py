@@ -213,7 +213,7 @@ class CreateStruct:
 	def __init__(self,csd):
 		self.CreateParams=csd[0] 
 		self.hInstance=csd[1]
-   		self.hMenu=csd[2] 
+		self.hMenu=csd[2] 
    		self.hwndParent=csd[3] 
    		self.cy,self.cx,self.y,self.x=csd[4]
    		self.style=csd[5]
