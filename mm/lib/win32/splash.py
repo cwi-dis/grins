@@ -4,16 +4,16 @@ __version__ = "$Id$"
 This module contains the interface to create and
 destroy the splash screen displayed atapplication startup. 
 The actual implementation class
-of the splash is SplashDlg in lib/win32/components.py
+of the splash is SplashDlg in lib/win32/win32dialog.py
 It consists of just two simple functions.
 """
 
 # Create and display the splash screen
 def splash(arg=0,version=None):
 	global _splash
-	import components
+	import win32dialog
 	if not _splash:
-		_splash=components.SplashDlg(arg,version)
+		_splash=win32dialog.SplashDlg(arg,version)
 
 # Destroy the splash screen		
 def unsplash():
