@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from GL_windowbase import *
 import GL_windowbase
 
