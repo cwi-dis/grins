@@ -827,8 +827,25 @@ class FileButtonRow(StringButtonRow):
 
 
 class ColorButtonRow(ButtonRow):
-	# XXX should be 3 sliders plus a button that opens a color browser
-	pass
+	# A text field plus a button that pops up a color selector
+	#
+	def makevalueinput(b, (x, y, w, h)):
+		bw = 2*h
+		StringButtonRow.makevalueinput(b, (x, y, w-bw, h))
+		b.selectorbutton = b.form.add_button(NORMAL_BUTTON, \
+			x + w-bw, y, bw-1, h, 'Edit')
+		b.selectorbutton.set_call_back(b.selectorcallback, None)
+	#
+	def selectorcallback(b, dummy):
+		import ColorSelector
+		newcolors = ColorSelector.run(b.currentvalue)
+		if newcolors <> b.currentvalue:
+			b.currentvalue = newcolors
+			b.isdefault = 0
+			b.changed = 1
+			b.attreditor.setchanged(1)
+			b.update()
+	#
 
 
 class PopupButtonRow(ButtonRow):
