@@ -764,18 +764,18 @@ class HierarchyView(HierarchyViewDialog):
 					px = maxpix
 				x,y,w,h = timeline.get_box()
 				t, is_exact = obj.pixel2time(px, side, timemapper)
-##				if t < 0:
-##					if side == 'right':
-##						# no negative durations
-##						px1 = obj.time2pixel(0, side, timemapper, 'left')
-##						if px < px1:
-##							px = px1
-##					else:
-##						pnode = obj.node.GetParent()
-##						if pnode is None or pnode.GetType() == 'seq':
-##							px1 = obj.time2pixel(0, side, timemapper, 'left')
-##							if px < px1:
-##								px = px1
+				if t < 0:
+					if side == 'right':
+						# no negative durations
+						px1 = obj.time2pixel(0, side, timemapper, 'left')
+						if px < px1:
+							px = px1
+					else:
+						pnode = obj.node.GetParent()
+						if pnode is None or pnode.GetType() == 'seq':
+							px1 = obj.time2pixel(0, side, timemapper, 'left')
+							if px < px1:
+								px = px1
 				apply(self.window.drawxorline, self.__line)
 				if is_exact:
 					color = (255, 0, 0)
@@ -864,14 +864,14 @@ class HierarchyView(HierarchyViewDialog):
 			if maxpix != None and px > maxpix:
 				px = maxpix
 			t, is_exact = obj.pixel2time(px, side, timemapper)
-##			if t < 0:
-##				if side == 'right':
-##					# no negative durations
-##					t = 0
-##				else:
-##					pnode = obj.node.GetParent()
-##					if pnode is None or pnode.GetType() == 'seq':
-##						t = 0
+			if t < 0:
+				if side == 'right':
+					# no negative durations
+					t = 0
+				else:
+					pnode = obj.node.GetParent()
+					if pnode is None or pnode.GetType() == 'seq':
+						t = 0
 			self._setnewtime(obj, side, t, is_constrained)
 			return
 		if x >= 1 or y >= 1:
@@ -900,10 +900,17 @@ class HierarchyView(HierarchyViewDialog):
 		if side == 'right':
 			if nt0 > mintime:
 				mintime = nt0
+			# Disallow negative durations altogether
+			if mintime < 0:
+				mintime = 0
 		if side == 'left':
 			if max(nt1, nt2) < maxtime:
 				maxtime = max(nt1, nt2)
 		if pnode.GetType() == 'seq':
+			# Disallow negative begin for seq children
+			if side == 'left':
+				if mintime < 0:
+					mintime = 0
 			siblings = pnode.GetChildren()
 			idx = siblings.index(node)
 			if idx > 0:
