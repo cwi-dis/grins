@@ -18,6 +18,7 @@ import MenuTemplate
 import usercmd
 import struct
 import macfs
+import string
 
 #
 # Stuff we use from other mw_ modules
@@ -1833,6 +1834,10 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
  			# We're dragging through the window. Give the track
  			# handler a chance to update the mouse, if wanted
 			try:
+				#
+				# XXXX This is wrong: we should get the correct (DragFile or DragURL)
+				# handler here.
+				#
 				func, arg = self._eventhandlers[DragFile]
 			except KeyError:
 				return
@@ -1860,11 +1865,6 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 					
 		
 	def _receivehandler(self, dragref, wid):
-		try:
-			func, arg = self._eventhandlers[DropFile]
-		except KeyError:
-			print 'No DropFile handler!'
-			return
 		dummy, where = dragref.GetDragMouse()
 		Qd.SetPort(self._wid)
 		where = Qd.GlobalToLocal(where)
@@ -1872,20 +1872,58 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 ##		print 'MOUSE', x, y
 		n = dragref.CountDragItems()
 		for i in range(1, n+1):
+			#
+			# See which flavors are available for this drag
+			#
 			refnum = dragref.GetDragItemReferenceNumber(i)
-			try:
-				fflags = dragref.GetFlavorFlags(refnum, 'hfs ')
-			except Drag.Error:
-				print 'Wrong type...', i, dragref.GetFlavorType(refnum, 1)
+			nflavor = dragref.CountDragItemFlavors(refnum)
+			flavors = []
+			for ii in range(1, nflavor+1):
+				flavors.append(dragref.GetFlavorType(refnum, ii))
+			#
+			# And check whether we support any of them.
+			#
+			if 'hfs ' in flavors:
+				try:
+					fflags = dragref.GetFlavorFlags(refnum, 'hfs ')
+				except Drag.Error:
+					print 'Wrong type...', i, dragref.GetFlavorType(refnum, 1)
+					MacOS.SysBeep()
+					return
+				datasize = dragref.GetFlavorDataSize(refnum, 'hfs ')
+				data = dragref.GetFlavorData(refnum, 'hfs ', datasize, 0)
+				tp, cr, flags, fss = self._decode_hfs_dropdata(data)
+				fname = fss.as_pathname()
+				try:
+					func, arg = self._eventhandlers[DropFile]
+				except KeyError:
+					print 'No DropFile handler!'
+					MacOS.SysBeep()
+					return
+				mw_globals.toplevel.settimer(0.1, (func, (arg, self, DropFile, (x, y, fname))))
+			elif 'URLD' in flavors:
+				try:
+					fflags = dragref.GetFlavorFlags(refnum, 'URLD')
+				except Drag.Error:
+					print 'Wrong type...', i, dragref.GetFlavorType(refnum, 1)
+					MacOS.SysBeep()
+					return
+				datasize = dragref.GetFlavorDataSize(refnum, 'URLD')
+				data = dragref.GetFlavorData(refnum, 'URLD', datasize, 0)
+				# Data is "url\rdescription"
+				url = string.split(data, '\r')[0]
+				print 'url', url
+				try:
+					func, arg = self._eventhandlers[DropURL]
+				except KeyError:
+					print 'No DropURL handler!'
+					MacOS.SysBeep()
+					return
+				mw_globals.toplevel.settimer(0.1, (func, (arg, self, DropURL, (x, y, url))))
+			else:
+				print 'No supported flavors in drag item:', flavors
 				MacOS.SysBeep()
 				return
-##			print 'hfs', fflags
-			datasize = dragref.GetFlavorDataSize(refnum, 'hfs ')
-			data = dragref.GetFlavorData(refnum, 'hfs ', datasize, 0)
-			tp, cr, flags, fss = self._decode_hfs_dropdata(data)
-			fname = fss.as_pathname()
-##			print 'FILE', fname
-			func(arg, self, DropFile, (x, y, fname))
 
 	def _decode_hfs_dropdata(self, data):
 		tp = data[0:4]
