@@ -27,7 +27,7 @@ GRINSPATH = [
 	os.path.join(GRINSDIR, '%s\\win32' % specificPath),
 	os.path.join(GRINSDIR, '%s' % specificPath),
 
-	os.path.join(GRINSDIR, 'common\\win32'),
+#	os.path.join(GRINSDIR, 'common\\win32'),
 
 	os.path.join(GRINSDIR, 'common'),
 	os.path.join(GRINSDIR, 'lib'),
@@ -38,6 +38,4 @@ sys.path[0:0] = GRINSPATH
 
 
 import grinsNL_CE	
-
-file = r'\Program Files\GRiNS\samples\Commute\Commute.grins'
 
