@@ -140,6 +140,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__printdata = []
 		self.__u_groups = {}
 		self.__layouts = {}
+		self.__realpixnodes = []
 
 	def close(self):
 		xmllib.XMLParser.close(self)
@@ -450,6 +451,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		# create the node
 		if not self.__root:
+			# "can't happen"
 			node = self.MakeRoot(nodetype)
 		elif not self.__container:
 			self.syntax_error('node not in container')
@@ -958,6 +960,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		while par is not None:
 			par.__chanlist[name] = 0
 			par = par.GetParent()
+		if mtype == 'RealPix':
+			self.__realpixnodes.append(node)
 
 	def FixLayouts(self):
 		if not self.__layouts:
@@ -1041,6 +1045,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.NewContainer('seq', attributes)
 
 	def end_smil(self):
+		from realnode import SlideShow
 		self.__in_smil = 0
 		if not self.__root:
 			self.error('empty document', self.lineno)
@@ -1053,6 +1058,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.FixBaseWindow()
 		self.FixLinks()
 		self.Recurse(self.__root, self.FixAnchors)
+		for node in self.__realpixnodes:
+			node.slideshow = SlideShow(node)
+		del self.__realpixnodes
 
 	# head/body sections
 

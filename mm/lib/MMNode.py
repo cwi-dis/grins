@@ -29,6 +29,7 @@ class MMNodeContext:
 		self.getchannelbynode = None
 		self.title = None
 		self.attributes = {}	# unrecognized SMIL meta values
+		self.__registers = []
 
 	def __repr__(self):
 		return '<MMNodeContext instance, channelnames=' \
@@ -334,9 +335,18 @@ class MMNodeContext:
 	#
 	def seteditmgr(self, editmgr):
 		self.editmgr = editmgr
+		for x in self.__registers:
+			editmgr.registerfirst(x)
+		self.__registers = []
 
 	def geteditmgr(self):
 		return self.editmgr
+
+	def register(self, x):
+		if self.editmgr:
+			self.editmgr.registerfirst(x)
+		else:
+			self.__registers.append(x)
 
 class MMChannel:
 	def __init__(self, context, name):
@@ -820,6 +830,9 @@ class MMNode:
 		self.wtd_children = None
 ##		self.summaries = None
 		self.looping_body_self = None
+		if hasattr(self, 'slideshow'):
+			self.slideshow.destroy()
+			del self.slideshow
 
 	def Extract(self):
 		if self.parent is None: raise CheckError, 'Extract() root node'

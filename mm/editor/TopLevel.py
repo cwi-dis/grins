@@ -267,10 +267,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		license = self.main.wanttosave()
 		if not license:
 			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
-			return 0
+			return
 		evallicense= (license < 0)
 		if not self.save_to_file(filename, cleanSMIL = 1):
-			return 0 # Error, don't save HTML file
+			return		# Error, don't save HTML file
 		#
 		# Invent HTML file name and SMIL file url, and generate webpage
 		#
@@ -295,8 +295,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			windowinterface.showmessage('HTML write failed.\n'+
 						    'File: '+htmlfilename+'\n'+
 						    'Error: '+msg[1])
-			return 0
-		return 1
 
 	def export_callback(self):
 		cwd = self.dirname
@@ -549,9 +547,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			pass
 		print 'saving to', filename, '...'
 		try:
-			import HierarchyView
-			HierarchyView.writenodes(self.root,
-						 evallicense=evallicense)
+			import realnode
+			realnode.writenodes(self.root, evallicense=evallicense)
 			if filename[-4:] == '.cmi' or filename[-5:] == '.cmif':
 				if cleanSMIL:
 					windowinterface.showmessage('Saving to CMIF file instead of SMIL file', mtype = 'warning')
@@ -591,9 +588,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# First save and upload the SMIL file (and the data items)
 		#
 		try:
-			import HierarchyView
-			HierarchyView.writenodes(self.root,
-						 evallicense=evallicense)
+			import realnode
+			realnode.writenodes(self.root, evallicense=evallicense)
 			import SMILTreeWrite
 			SMILTreeWrite.WriteFTP(self.root, filename, m_ftpparams,
 						cleanSMIL = 1,

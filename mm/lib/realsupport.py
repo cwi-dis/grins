@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
 import xmllib, string, re
+import MMurl
 
 from colors import colors
 # see SMILTreeRead for a more elaborate version
@@ -257,7 +258,7 @@ class RPParser(xmllib.XMLParser):
 		'viewchange': __empty,
 		}
 
-	def __init__(self, file = None, printfunc = None):
+	def __init__(self, file = None, baseurl = '', printfunc = None):
 		self.elements = {
 			'head': (self.start_head, None),
 			'image': (self.start_image, None),
@@ -271,6 +272,7 @@ class RPParser(xmllib.XMLParser):
 		self.tags = []
 		self.__images = {}
 		self.__file = file or '<unknown file>'
+		self.__baseurl = baseurl
 		self.__printdata = []
 		self.__printfunc = printfunc
 		xmllib.XMLParser.__init__(self, accept_utf8 = 1)
@@ -396,13 +398,19 @@ class RPParser(xmllib.XMLParser):
 		if self.__images.has_key(handle):
 			self.syntax_error("image `handle' not unique")
 			return
-		self.__images[handle] = name
+		self.__images[handle] = MMurl.basejoin(self.__baseurl, name)
 
 	def start_fill(self, attributes):
 		destrect = self.__rect('dst', attributes)
 		color = self.__color(attributes)
 		start = self.__time('start', attributes)
-		self.tags.append({'tag': 'fill', 'color': color, 'subregionxy': destrect[:2], 'subregionwh': destrect[2:], 'subregionanchor': 'top-left', 'start': start, 'displayfull': destrect == (0,0,0,0)})
+		self.tags.append({'tag': 'fill',
+				  'color': color,
+				  'subregionxy': destrect[:2],
+				  'subregionwh': destrect[2:],
+				  'subregionanchor': 'top-left',
+				  'start': start,
+				  'displayfull': destrect == (0,0,0,0)})
 
 	def start_fadein(self, attributes):
 		self.__fadein_or_crossfade_or_wipe('fadein', attributes)
@@ -654,6 +662,13 @@ def writeRP(file, rp, node):
 	import MMAttrdefs
 
 	bgcolor = MMAttrdefs.getattr(node, 'bgcolor')
+	ctx = node.GetContext()
+	baseurl = MMurl.canonURL(ctx.findurl(MMAttrdefs.getattr(node, 'file')))
+	i = string.rfind(baseurl, '/')
+	if i >= 0:
+		baseurl = baseurl[:i+1]	# everything up to and including last /
+	else:
+		baseurl = ''		# no slashes
 
 	f = open(file, 'w')
 	f.write('<imfl>\n')
@@ -693,13 +708,17 @@ def writeRP(file, rp, node):
 	for attrs in rp.tags:
 		if attrs.get('tag', 'fill') in ('fadein', 'crossfade', 'wipe'):
 			file = attrs.get('file')
-			# This is a bit of a hack. G2 appears to want its URLs without
-			# %-style quoting.
-			file = MMurl.unquote(file)
-			if file and not images.has_key(file):
-				handle = handle + 1
-				images[file] = handle
-	for name, handle in images.items():
+			if not file or images.has_key(file):
+				continue
+			url = MMurl.canonURL(ctx.findurl(file))
+			if url[:len(baseurl)] == baseurl:
+				url = url[len(baseurl):]
+			# This is a bit of a hack. G2 appears to want its URLs
+			# without %-style quoting.
+			url = MMurl.unquote(url)
+			handle = handle + 1
+			images[file] = handle, url
+	for handle, name in images.values():
 		f.write('  <image handle="%d" name=%s/>\n' % (handle, nameencode(name)))
 	start = 0
 	duration = 0
@@ -733,7 +752,7 @@ def writeRP(file, rp, node):
 			if tag != 'viewchange':
 				file = attrs.get('file')
 				if file:
-					f.write(' target="%d"' % images[file])
+					f.write(' target="%d"' % images[file][0])
 ##				else:
 ##					# file attribute missing
 				aspect = attrs.get('aspect', defaspect)
@@ -892,7 +911,6 @@ def rmff(file, fp):
 	return info
 
 cache = {}
-import MMurl
 
 def getinfo(file, fp = None, printfunc = None):
 	if cache.has_key(file):
