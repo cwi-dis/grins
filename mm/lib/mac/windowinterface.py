@@ -100,3 +100,8 @@ def htmlwindow(url):
 	except:
 		showmessage('Cannot start webbrowser.\nInternet configuration error?')
 	return None
+
+from imgimagesize import GetImageSize
+def GetVideoSize(file):
+	# XXX to be implemented
+	return 0, 0

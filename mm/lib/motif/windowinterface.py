@@ -140,3 +140,14 @@ class ProgressDialog:
 			label = label + ": %d%%"%(cur2*100/max2)
 		print label
 		
+from imgimagesize import GetImageSize
+def GetVideoSize(file):
+	import mv
+	try:
+		movie = mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
+		track = movie.FindTrackByMedium(mv.DM_IMAGE)
+		width = track.GetImageWidth()
+		height = track.GetImageHeight()
+	except:
+		width = height = 0
+	return width, height
