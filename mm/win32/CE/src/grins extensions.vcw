@@ -3,6 +3,24 @@ Microsoft eMbedded Visual Tools Workspace File, Format Version 3.00
 
 ###############################################################################
 
+Project: "Frozen GRiNS Player"="..\GRINS PLAYER\Frozen GRiNS Player.vcp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libjpeg
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Python16
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "GRiNS Player"="..\GRINS PLAYER\GRiNS Player.vcp" - Package Owner=<4>
 
 Package=<5>

@@ -33,6 +33,12 @@ Application<TCHAR> g_application(TEXT("GRiNS Player"));
 // end_pfc
 /////////////////////////////////////
 
+#ifdef FROZEN_APPLICATION
+extern "C" {
+#include "frozen.c"
+}
+#endif
+
 int WINAPI WinMain(	HINSTANCE hInstance,
 					HINSTANCE hPrevInstance,
 					LPTSTR    lpCmdLine,
@@ -41,6 +47,11 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 	MSG msg;
 	HACCEL hAccelTable;
 	HWND hWnd;
+
+#ifdef FROZEN_APPLICATION
+	PyImport_FrozenModules = _PyImport_FrozenModules;
+#endif
+
 	// Perform application initialization:
 	if (!InitInstance (hInstance, nCmdShow, &hWnd)) 
 	{
