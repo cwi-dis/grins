@@ -89,6 +89,7 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, '&New node...', None, NEW_AFTER),
 		(FLAG_PRO, ENTRY, 'New &Region', None, NEW_REGION),
+		(FLAG_BOSTON, ENTRY, 'New &TopLayout', 'T', NEW_TOPLAYOUT),
 
 ## Windows dialogs apparently do not use usercmd commands.
 ##		(FLAG_PRO, ENTRY, 'New &layout', None, NEW_LAYOUT),

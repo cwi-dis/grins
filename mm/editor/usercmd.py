@@ -323,6 +323,8 @@ class CORRECTLOCALTIMESCALE(_CommandBase):
 #
 class NEW_REGION(_CommandBase):
 	help = 'Create a new region'
+class NEW_TOPLAYOUT(_CommandBase):
+	help = 'Create a new top layout'
 class TOGGLE_UNUSED(_CommandBase):
 	help = 'Toggle showing unused channels'
 class TOGGLE_ARCS(_CommandBase):
