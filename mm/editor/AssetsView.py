@@ -176,7 +176,9 @@ class AssetsView(AssetsViewDialog):
 			else:
 				windowinterface.beep()
 				return 0
+			print 'AssetsView.dodragdrop', tp, value
 			action = self.dodragdrop(tp, value)
+			print 'AssetsView.dodragdrop ->', action
 			if action == 'move':
 				# We should remove the item
 				print 'AssetView: Removing item', index

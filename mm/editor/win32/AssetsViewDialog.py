@@ -61,7 +61,7 @@ class AssetsViewDialog:
 		return self.__window.getSelected()
 
 	def dodragdrop(self, type, value):
-		rv = self.__window.doDragDrop(type, value)
+		rv = self.__window.doDragDrop(type, value, ignoreself=1)
 		if rv == windowinterface.DROPEFFECT_MOVE:
 			return 'move'
 		elif rv == windowinterface.DROPEFFECT_COPY:

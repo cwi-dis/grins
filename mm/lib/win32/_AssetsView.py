@@ -70,6 +70,8 @@ class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListen
 		self.columnsTemplate = []
 		self.items = []
 
+		self._ignoredragdrop = 0
+
 	def initicons(self):
 		self.iconlist_small = []
 		self.iconname_to_index = {}
@@ -185,9 +187,12 @@ class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListen
 			return 0
 		return cb(cursel)
 
-	def doDragDrop(self, flavor, value):
+	def doDragDrop(self, flavor, value, ignoreself=0):
+		if ignoreself:
+			self._ignoredragdrop = 1
 		flavorid, str = DropTarget.EncodeDragData(flavor, value)
 		rv = self.listCtrl.DoDragDrop(flavorid, str)
+		self._ignoredragdrop = 0
 		return rv
 
 	#
@@ -195,6 +200,8 @@ class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListen
 	#
 
 	def dragitem(self,dataobj,kbdstate,x,y):
+		if self._ignoredragdrop:
+			return 0
 		cb = self._cmddict.get('dragitem')
 		if not cb:
 			return 0
@@ -205,6 +212,8 @@ class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListen
 		return DropTarget.Name2DragEffect(rv)
 
 	def dropitem(self,dataobj,effect,x,y):
+		if self._ignoredragdrop:
+			return 0
 		cb = self._cmddict.get('dropitem')
 		if not cb:
 			return 0
