@@ -293,7 +293,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		return None
 
 	def fixanchorlist(self, node):
-		allanchorlist = self.htmlw.GetHRefs()
+		allanchorlist = self.htmlw.GetHRefs() + self.htmlw.GetActions()
 		anchorlist = []
 		for a in allanchorlist:
 			if a[:5] == 'cmif:':
