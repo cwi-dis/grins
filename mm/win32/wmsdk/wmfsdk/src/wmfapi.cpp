@@ -1331,6 +1331,24 @@ WMWriter_QueryIWMWriterAdvanced(WMWriterObject *self, PyObject *args)
 	return (PyObject*)obj;
 }
 
+static char WMWriter_QueryIUnknown__doc__[] =
+""
+;
+static PyObject *
+WMWriter_QueryIUnknown(WMWriterObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	HRESULT hr;
+	UnknownObject *obj = newUnknownObject();	
+	hr = self->pI->QueryInterface(IID_IUnknown,(void**)&obj->pI);
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMWriter_QueryIUnknown", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
 
 static struct PyMethodDef WMWriter_methods[] = {
 	{"SetProfile", (PyCFunction)WMWriter_SetProfile, METH_VARARGS, WMWriter_SetProfile__doc__},
@@ -1344,6 +1362,7 @@ static struct PyMethodDef WMWriter_methods[] = {
 	{"AllocateSample", (PyCFunction)WMWriter_AllocateSample, METH_VARARGS, WMWriter_AllocateSample__doc__},
 	{"WriteSample", (PyCFunction)WMWriter_WriteSample, METH_VARARGS, WMWriter_WriteSample__doc__},
 	{"QueryIWMWriterAdvanced", (PyCFunction)WMWriter_QueryIWMWriterAdvanced, METH_VARARGS, WMWriter_QueryIWMWriterAdvanced__doc__},
+	{"QueryIUnknown", (PyCFunction)WMWriter_QueryIUnknown, METH_VARARGS, WMWriter_QueryIUnknown__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
