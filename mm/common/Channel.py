@@ -1074,7 +1074,7 @@ class Channel:
 _button = None				# the currently highlighted button
 
 class ChannelWindow(Channel):
-	chan_attrs = Channel.chan_attrs + ['base_winoff', 'units', 'popup', 'z']
+	chan_attrs = Channel.chan_attrs + ['base_winoff', 'z']
 	node_attrs = Channel.node_attrs[:]
 	node_attrs.append('cssbgcolor')
 	chan_attrs.append('cssbgcolor')
