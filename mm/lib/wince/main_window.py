@@ -407,7 +407,8 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 			import parseskin, MMurl
 			try:
 				dict = parseskin.parsegskin(MMurl.urlopen(skin))
-				filename = MMurl.urlretrieve(MMurl.basejoin(skin, dict['image']))[0]
+				if dict.has_key('image'):
+					filename = MMurl.urlretrieve(MMurl.basejoin(skin, dict['image']))[0]
 			except parseskin.error, msg:
 				settings.set('skin', '')
 				from windowinterface import showmessage
@@ -417,8 +418,9 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 				from windowinterface import showmessage
 				showmessage('Error reading skin')
 			else:
-				self.HideMenu()
-				self._menu_height = 0
+				if dict.has_key('image'):
+					self.HideMenu()
+					self._menu_height = 0
 		dc = wingdi.GetDesktopDC()
 		try:
 			self._splash = wingdi.CreateDIBSurfaceFromFile(dc, filename)

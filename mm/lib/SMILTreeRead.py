@@ -211,7 +211,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'prefetch': (self.start_prefetch, self.end_prefetch),
 			GRiNSns + ' ' + 'assets': (self.start_assets, self.end_assets),
 			}
-		self.__readskin()
 		self.__encoding = 'utf-8'
 		xmllib.XMLParser.__init__(self, complain_foreign_namespace = 0)
 		self.__seen_smil = 0
@@ -261,6 +260,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__nlines = 0		# number of lines. Useful to determine the progress value
 		self.__animateParSet = {}
 		self.__have_accesskey = 0
+		self.__readskin()
 
 		if new_file and type(new_file) is type(''):
 			self.__base = new_file
@@ -2791,21 +2791,22 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		except parseskin.error, msg:
 			self.warning('error parsing skin description file')
 			return
-		image = MMurl.basejoin(skin, dict['image'])
-		width, height = Sizes.GetSize(image)
-		if width == 0 or height == 0:
-			self.warning('error getting skin image dimensions')
-			return
-		dict['width'] = width
-		dict['height'] = height
-		# XXXX Re-parses skin file
-		settings.read_components_from_skin()
-		apply(settings.setScreenSize, dict['display'][1][2:4])
+		if dict.has_key('image'):
+			image = MMurl.basejoin(skin, dict['image'])
+			width, height = Sizes.GetSize(image)
+			if width == 0 or height == 0:
+				self.warning('error getting skin image dimensions')
+				return
+			dict['width'] = width
+			dict['height'] = height
+		settings.read_components_from_skin(dict)
+		if dict.has_key('display'):
+			apply(settings.setScreenSize, dict['display'][1][2:4])
 		self.__skin = dict
 
 	def __fixskin(self):
 		dict = self.__skin
-		if not dict:
+		if not dict or not dict.has_key('image'):
 			return
 		skin = settings.get('skin')
 		ctx = self.__context

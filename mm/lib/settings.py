@@ -649,27 +649,28 @@ def read_RTIPA():
 # RTIPA end
 #
 
-def read_components_from_skin():
+def read_components_from_skin(skindict = None):
 	global components
 	import MMurl
 	import parseskin
 	del components[:]
-	url = get('skin')
-	if not url:
-		components = ['http://www.oratrix.com/GRiNS/smil2.0']
-		return
-	try:
-		u = MMurl.urlopen(url)
-	except:
-		import windowinterface
-		windowinterface.showmessage("Failed opening skin config file `%s'" % url)
-		return
-	try:
-		skindict = parseskin.parsegskin(u)
-	except parseskin.error, msg:
-		import windowinterface
-		windowinterface.showmessage("Error parsing skin/components file %s: %s"% (url, msg))
-		skindict = {}
+	if skindict is None:
+		url = get('skin')
+		if not url:
+			components = ['http://www.oratrix.com/GRiNS/smil2.0']
+			return
+		try:
+			u = MMurl.urlopen(url)
+		except:
+			import windowinterface
+			windowinterface.showmessage("Failed opening skin config file `%s'" % url)
+			return
+		try:
+			skindict = parseskin.parsegskin(u)
+		except parseskin.error, msg:
+			import windowinterface
+			windowinterface.showmessage("Error parsing skin/components file %s: %s"% (url, msg))
+			skindict = {}
 	if skindict.has_key('component'):
 		components = skindict['component']
 	else:

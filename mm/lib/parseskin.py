@@ -75,6 +75,7 @@ def parsegskin(file):
 	lineno = 0
 	profile = settings.SMIL_20_MODULES
 	modules = []
+	prefs = {}
 	while 1:
 		line = file.readline()
 		if not line:
@@ -88,6 +89,10 @@ def parsegskin(file):
 			line = line[:i]
 		line = line.strip()
 		if not line:
+			continue
+
+		if line[:7] == 'system_':
+			exec(line, prefs)
 			continue
 
 		# first part is GRiNS command
@@ -235,9 +240,10 @@ def parsegskin(file):
 				dict[cmd].append((shape, coords))
 			else:
 				dict[cmd] = [(shape, coords)]
-	if not dict.has_key('image'):
-		raise error, 'image missing from skin description file'
-	if not dict.has_key('display'):
+	if dict.has_key('image') and not dict.has_key('display'):
 		raise error, 'display region missing from skin description file'
 	settings.switch_profile(profile + modules)
+	for key, val in prefs.items():
+		if key[:1] != '_':
+			settings.set(key, val)
 	return dict
