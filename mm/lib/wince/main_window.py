@@ -155,14 +155,8 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 
 		# create and return viewport
 		
-		if 0:
-			# dummy test
-			import dummy_layout
-			self._viewport = dummy_layout.Viewport(self, (0, 0, width, height), bgcolor)
-		else:
-			# gdi test
-			import gdi_layout
-			self._viewport = gdi_layout.Viewport(self, (0, 0, width, height), bgcolor)
+		import gdi_layout
+		self._viewport = gdi_layout.Viewport(self, (0, 0, width, height), bgcolor)
 		
 		return self._viewport
 
