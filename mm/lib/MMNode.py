@@ -1046,6 +1046,8 @@ class MMNode:
 		if debug: print 'stopplay',`self`,timestamp
 		self.playing = MMStates.PLAYED
 		self.time_list[-1] = self.time_list[-1][0], timestamp
+##		for c in self.GetSchedChildren():
+##			c.resetall(self.sctx.parent)
 
 	def add_arc(self, arc, body = None):
 		if body is None:
@@ -2286,7 +2288,7 @@ class MMNode:
 			defbegin = 0.0
 
 		duration = self.GetAttrDef('duration', None)
-		if duration is not None:
+		if duration is not None and self_body is not self:
 			if duration < 0:
 				delay = None
 			else:
@@ -2319,7 +2321,9 @@ class MMNode:
 					   arc.marker is None and \
 					   arc.delay is not None:
 						schedule = 1
-			if termtype in ('FIRST', chname): ## or
+			if self.type == 'seq':
+				pass
+			elif termtype in ('FIRST', chname): ## or
 ##			   (len(wtd_children) == 1 and
 ##			    (schedule or termtype == 'ALL')):
 				arc = MMSyncArc(self_body, 'end', srcnode=child, event='end', delay=0)
@@ -2357,6 +2361,12 @@ class MMNode:
 				srcnode = child
 				event = 'end'
 
+		if self.type == 'seq' and wtd_children:
+			# connect last child's end to parent's end
+			# if no children, this would connects seq's begin to end
+			arc = MMSyncArc(self_body, 'end', srcnode=srcnode, event=event, delay=0)
+			self_body.arcs.append((srcnode, arc))
+			srcnode.add_arc(arc)
 		#
 		# Trickery to handle dur and end correctly:
 		#
