@@ -14,7 +14,7 @@ the application and its main control panel.
 
 The main purpose of an MDIFrameWnd instance is to provide 
 controls to the user (the menu and  the toolbars)
-and visualy confine the document's views and other windows
+and visually confine the document's views and other windows
 
 The Multiple Document Interface (MDI) is a specification for applications that handle
 multiple documents or views in MS Windows. This specification has also an operating system
@@ -470,7 +470,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 		l,t,r,b=self.GetClientRect()
 		self._canvas=self._rect=(l,t,r-l,b-t)
 	
-	# Called when a new document is oppened
+	# Called when a new document is opened
 	def newdocument(self,cmifdoc,adornments,commandlist):
 		if not self._cmifdoc:
 			self.setdocument(cmifdoc,adornments,commandlist)
