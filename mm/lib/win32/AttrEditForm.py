@@ -538,8 +538,8 @@ class AnchorlistCtrl(AttrCtrl):
 			atype, aargs, times = a[:3]
 			self._rename.enable(1)
 			self._delete.enable(1)
-			self._link.enable(1)
-			self._type.enable(len(a) == 4)
+			self._link.enable(len(a) == 4)
+			self._type.enable(1)
 			typelist = []
 			index = None
 			for i in range(len(AnchorDefs.TypeValues)):
