@@ -33,14 +33,27 @@ class ListCtrl(window.Wnd):
 	def OnDragEnter(self, dataobj, kbdstate, x, y): 
 		print 'OnDragEnter', self, dataobj, kbdstate, x, y
 		return DropTarget.DROPEFFECT_LINK
+
 	def OnDragLeave(self): 
 		print 'OnDragLeave', self
 		return DropTarget.DROPEFFECT_NONE
+
 	def OnDragOver(self, dataobj, kbdstate, x, y): 
 		print 'OnDragOver', self, dataobj, kbdstate, x, y
 		return DropTarget.DROPEFFECT_LINK
+
 	def OnDrop(self, dataobj, effect, x, y): 
 		print 'OnDrop', self, dataobj, effect, x, y
+
+		filename = dataobj.GetGlobalData(DropTarget.CF_FILE)
+		if filename: print 'filename', filename
+
+		nodeinfo = dataobj.GetGlobalData(DropTarget.CF_NODE)
+		if nodeinfo: print 'nodeinfo', nodeinfo
+
+		regioninfo = dataobj.GetGlobalData(DropTarget.CF_REGION)
+		if regioninfo: print 'regioninfo', regioninfo
+
 		return DropTarget.DROPEFFECT_NONE
 
 	def getStyle(self):
