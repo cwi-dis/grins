@@ -229,7 +229,7 @@ class _DisplayList:
 				dest_x, dest_y, width, height = entry[2]
 				width = width - dest_x
 				height = height - dest_y
-				if mediadisplayrc:
+				if mediadisplayrect:
 					dest_x, dest_y, width, height = mediadisplayrect
 				xdc, ydc, wdc, hdc = wnd.rectAnd((x+dest_x, y+dest_y, width, height), (xc, yc, wc, hc))
 				r, g, b = entry[1]
