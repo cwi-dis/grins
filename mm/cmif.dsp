@@ -614,6 +614,34 @@ SOURCE=.\editor\qtpro\features.py
 SOURCE=.\editor\smil10\features.py
 # End Source File
 # End Group
+# Begin Group "editor/snap"
+
+# PROP Default_Filter ""
+# Begin Group "editor/snap/win32"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\editor\snap\win32\splashbmp.py
+# End Source File
+# End Group
+# Begin Group "editor/snap/mac"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\editor\snap\mac\MenuTemplate.py
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=.\editor\snap\AppDefaults.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\snap\features.py
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\editor\AnchorEdit.py
