@@ -2589,24 +2589,33 @@ class PreviousWidget(Widget):
 		# prevent against infinite loop
 		if self.__selecting:
 			return
-		if debugPreview: print 'PreviewWidget.onSelect ',nodeList
 
-		# build the list of the reference nodes selected
-		list = []
-		# xxx to optimize
-		for  nodeRef, nodeTree in self._nodeRefToNodeTree.items():
-			for obj in objectList:
-				if nodeTree._graphicCtrl is obj:
-					list.append(nodeRef)
-
+		list = self.__getNodeRefSelectedList(objectList)
+		if debugPreview: print 'PreviewWidget.onSelectChanged ',list
 		self._context.onSelectChanged(list)
 
 	# selected update nodes handler method
 	# state = 1 means: add into selected list
 	# state = 0 means: remove from selected list
-	def onSelectUpdated(self, nodeList, state):
-		# XXX todo
-		pass
+	def onSelectUpdated(self, objectList, state):
+		# prevent against infinite loop
+		if self.__selecting:
+			return
+
+		list = self.__getNodeRefSelectedList(objectList)
+		if debugPreview: print 'PreviewWidget.onSelectUpdated ',list
+		self._context.onSelectUpdated(list, state)
+
+	def __getNodeRefSelectedList(self, objectList):
+		# build the list of the reference nodes selected
+		list = []
+		# xxx to optimize
+		for nodeRef, nodeTree in self._nodeRefToNodeTree.items():
+			for obj in objectList:
+				if nodeTree._graphicCtrl is obj:
+					list.append(nodeRef)
+
+		return list
 	
 	def getNode(self, nodeRef):
 		node = self._nodeRefToNodeTree.get(nodeRef)

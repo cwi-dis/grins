@@ -695,6 +695,8 @@ class LayoutManager(LayoutManagerBase):
 		self._blackBrush = Sdk.CreateBrush(win32con.BS_SOLID, 0, 0)
 		self._selPen = Sdk.CreatePen(win32con.PS_SOLID, 1, win32api.RGB(0,0,255))
 		self._selPenDot = Sdk.CreatePen(win32con.PS_DOT, 1, win32api.RGB(0,0,255))
+
+		self.selInc = 0
 			
 	# allow to create a LayoutManager instance before the onInitialUpdate of dialog box
 	def onInitialUpdate(self, parent, rc, bgcolor):
@@ -727,14 +729,24 @@ class LayoutManager(LayoutManagerBase):
 
 	#
 	# overrided methods to manage the mouse capture
+	# used also to determinate whether the selection is incremental or not
+	# XXX should be managed directly by the low level
 	#
 	def onLButtonDown(self, params):
+		msg=win32mu.Win32Msg(params)
+		point, flags = msg.pos(), msg._wParam
+		if (flags & win32con.MK_CONTROL):
+			self.lastSel = self._selectedList
+			self.selInc = 1
+			
 		self.SetCapture()
 		LayoutManagerBase.onLButtonDown(self, params)
 
 	def onLButtonUp(self, params):
 		LayoutManagerBase.onLButtonUp(self, params)
 		self.ReleaseCapture()
+
+		self.selInc = 0
 
 	#
 	#
@@ -743,7 +755,32 @@ class LayoutManager(LayoutManagerBase):
 	def onDSelChanged(self, selections):
 		self._selectedList = selections
 		if self._listener != None:
-			self._listener.onSelectChanged(selections)
+			if not self.selInc:
+				self._listener.onSelectChanged(selections)
+			else:
+				# XXX find out the element which has changed
+				# should be managed directly by the low level
+				for lastItemSel in self.lastSel:
+					itemFound = None
+					for curItemSel in selections:
+						if lastItemSel is curItemSel:
+							itemFound = curItemSel
+							break
+					if not itemFound:
+						# lastItemSel disapear
+						self._listener.onSelectUpdated([lastItemSel], 0)
+						break
+				for curItemSel in selections:
+					itemFound = None
+					for lastItemSel in self.lastSel:
+						if lastItemSel is curItemSel:
+							itemFound = curItemSel
+							break
+					if not itemFound:
+						# curItemSel is new
+						self._listener.onSelectUpdated([curItemSel], 1)
+						break
+
 
 	def onDSelMove(self, selections):
 		if self._listener != None:
