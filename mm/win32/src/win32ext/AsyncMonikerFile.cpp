@@ -1,9 +1,10 @@
-/*
-	python AsyncMonikerFile class
+/***********************************************************
+Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 
-  	kleanthis@oratrix.com
+                        All Rights Reserved
 
-*/
+******************************************************************/
+
 
 #include "stdafx.h"
 #include "AsyncMonikerFile.h"
@@ -60,15 +61,12 @@ void AsyncMonikerFile::OnDataAvailable(DWORD dwSize, DWORD bscfFlag)
 		FILE *f=fopen((LPCTSTR)m_saveAsFile,"wb");
 		fclose(f);
 		m_dwReadBefore = 0;
-		AfxMessageLog("FIRST DATA NOTIFICATION");
 		}
    if ((bscfFlag & BSCF_INTERMEDIATEDATANOTIFICATION) != 0)
 		{
-		AfxMessageLog("INTERMEDIATE DATA NOTIFICATION");
 		}
    if ((bscfFlag & BSCF_LASTDATANOTIFICATION) != 0)
 		{
-		AfxMessageLog("LAST DATA NOTIFICATION");
 		}
 
 	DWORD dwArriving = dwSize - m_dwReadBefore;
@@ -94,7 +92,6 @@ void AsyncMonikerFile::OnProgress(ULONG ulProgress, ULONG ulProgressMax,ULONG ul
 	{
 	CString str;
 	str.Format("%lu/%lu status=%lu %s",ulProgress,ulProgressMax,ulStatusCode,szStatusText);
-	AfxMessageLog(str);
 	CAsyncMonikerFile::OnProgress(ulProgress, ulProgressMax, ulStatusCode, szStatusText);
 	if(m_pyListener)
 		{
@@ -107,7 +104,6 @@ void AsyncMonikerFile::OnStopBinding(HRESULT hresult, LPCTSTR szError)
 	{
 	CAsyncMonikerFile::OnStopBinding(hresult, szError);
 	Close();
-	AfxMessageLog("Download complete");
 	if(m_pyListener)
 		{
 		CallbackHelper helper("OnDownloadComplete",m_pyListener);
@@ -120,7 +116,6 @@ void AsyncMonikerFile::OnStopBinding(HRESULT hresult, LPCTSTR szError)
 PyAsyncMonikerFile::PyAsyncMonikerFile()
 :	m_pAsyncMonikerFile(NULL)
 	{
-	AfxMessageLog("PyAsyncMonikerFile");
 	}
 
 PyAsyncMonikerFile::~PyAsyncMonikerFile()
@@ -129,7 +124,6 @@ PyAsyncMonikerFile::~PyAsyncMonikerFile()
 	// (it is valid to call it on a closed AsyncMonikerFile)
 	m_pAsyncMonikerFile->Close();
 	delete m_pAsyncMonikerFile;
-	AfxMessageLog("~PyAsyncMonikerFile");
 	}
 
 //static
