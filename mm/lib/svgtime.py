@@ -18,107 +18,6 @@ infinity = 'infinity'
 minusinfinity = '-infinity'
 epsilon = 0.0001
 
-class Time:
-	def __init__(self, t):
-		assert t is not None, 'time cannot be unspecified'
-		self.t = t
-	
-	def isdefinite(self):
-		return self.t is not unresolved and self.t is not indefinite
-
-	def isunresolved(self):
-		return self.t is unresolved
-
-	def isindefinite(self):
-		return self.t is indefinite
-
-	def mul(self, other):
-		if self.isunresolved() or other.isunresolved():
-			self.t = unresolved
-		elif v1==0 or v2==0:
-			self.t = 0
-		elif self.isindefinite() or other.isindefinite():
-			self.t = indefinite
-		else:
-			self.t = self.t*other.t
-
-	def div(self, a):
-		if self.isdefinite():
-			self.t = self.t/float(a)
-
-	def plus(self, other):
-		if self.isunresolved() or other.isunresolved():
-			self.t = unresolved
-		elif self.isindefinite() or other.isindefinite():
-			self.t = indefinite
-		else:
-			self.t = self.t + other.t
-
-	def minus(self, other):
-		if self.isunresolved() or other.isunresolved():
-			self.t = unresolved
-		elif self.isindefinite() or other.isindefinite():
-			self.t = indefinite
-		else:
-			self.t = self.t - other.t
-
-	def min(self, v1, v2):
-		if v1.t == 0 or v2.t == 0:
-			return Time(0)
-		elif v1.t is indefinite and v2.t>0:
-			return v2
-		elif v2.t is indefinite and v1.t>0:
-			return v1
-		elif v1.t is unresolved and v2.t>0:
-			return v2
-		elif v2.t is unresolved and v1.t>0:
-			return v1
-		elif v1.t is unresolved and v2.t is indefinite:
-			return Time(indefinite)
-		elif v2.t is unresolved and v1.t is indefinite:
-			return Time(ndefinite)
-		return Time(min(v1.t, v2.t))
-
-	def max(self, v1, v2):
-		if v1.isdefinite() and v2.isdefinite():
-			return Time(max(v1.t, v2.t))
-		elif (v1.isdefinite() and v2.isindefinite()) or (v1.isdefinite() and v1.isindefinite()):
-			return Time(indefinite)
-		elif v1.isunresolved() or v2.isunresolved():
-			return Time(unresolved)
-
-	def LT(self, other):
-		if self.isindefinite() and other.isindefinite():
-			return 0
-		elif self.isdefinite() and other.isindefinite():
-			return 1
-		elif other.isdefinite() and self.isindefinite():
-			return 0
-		elif self.isunresolved() or other.isunresolved():
-			return 0
-		return self.t < other.t
-
-	def LE(self, other):
-		if self.isindefinite() and other.isindefinite():
-			return 0
-		elif self.isdefinite() and other.isindefinite():
-			return 1
-		elif other.isdefinite() and self.isindefinite():
-			return 0
-		elif self.isunresolved() or other.isunresolved():
-			return 0
-		return self.t <= other.t
-
-	def GT(self, other):
-		return not self.LE(other)
-
-	def GE(self, other):
-		return not self.LT(other)
-
-	def EQ(self, other):
-		return self.t == other.t
-
-
 def isdefinite(v):
 	return v is not unresolved and v is not indefinite
 
@@ -471,7 +370,6 @@ class TimeNode:
 # specEndOfAnInterval: waitinterval, enter state and compute the next one and notify dependents 
 # specPostActive: waitinterval, perform any fill and wait for any next interval 
 
-
 # state transition external events:
 # startup, syncUpdate, parentRepeat, parentEnd, documentEnd
 
@@ -488,12 +386,6 @@ timestates = ['None', 'waitbegin', 'active', 'postactive']
 IDLE, WAITINTERVAL, WAITBEGIN, ACTIVE = None, 1, 2, 3
 
 class TimeElement(TimeNode, Timer):
-
-	# conceptual substates
-	None_substates = ['none', 'startup']
-	active_substates = ['playing', 'paused']
-	postactive_substates = ['endofinterval', 'nointervals']
-
 	def __init__(self, ttype, timeroot):
 		TimeNode.__init__(self, ttype, timeroot)
 		Timer.__init__(self)
@@ -531,11 +423,8 @@ class TimeElement(TimeNode, Timer):
 			self.eventSyncArcs.append(arc)
 	
 	#
-	#  element life-cycle: none, startup, (waitbegin, active, endinterval)*, postactive, none
-	#  excluding transition conceptual states and none: 
-	#		the states are: waitbegin, active, postactive
+	#  states and transitions
 	#
-
 	# while in none state make possibly a transition to waiting
 	def startupTransition(self, complete=1):
 		assert self._state is None, 'invalid transition'
@@ -672,7 +561,6 @@ class TimeElement(TimeNode, Timer):
 
 	#
 	#  DOM interface implementation
-	#  typical scenario: reset, seek? , begin, (pause, resume)*, seek*, end,	remove
 	#
 	def beginElement(self):
 		if self.isActive():
@@ -1060,6 +948,30 @@ class TimeContainer(TimeElement):
 	def onChildEvent(self, node, params):
 		pass
 
+	def matchesEndSyncRule(self, rule, id=None):
+		now = self.getTime()
+		if rule == 'first':
+			result = 0
+		else:
+			result = 1
+		for c in self.getTimeChildren():
+			if rule == 'first':
+				if c.getBeginCount()>0 and not c.isActive():
+					return 1
+
+			elif rule == 'id':
+				if id == c.get('id'):
+					return c.getBeginCount()>0 and not c.isActive()
+
+			elif rule == 'last':
+				if c.isActive() or c.getNextInterval(now) is not None:
+					return 0
+
+			elif rule == 'all':
+				if c.isActive() or not c.getBeginCount()>0 or c.getNextInterval(now) is not None:
+					return 0
+		return result
+
 ####################
 # par container
 
@@ -1096,30 +1008,6 @@ class Par(TimeContainer):
 		arc.addInstanceTime(0)
 		self.startupTransition()
 		return 1
-
-	def matchesEndSyncRule(self, rule, id=None):
-		now = self.getTime()
-		if rule == 'first':
-			result = 0
-		else:
-			result = 1
-		for c in self.getTimeChildren():
-			if rule == 'first':
-				if c.getBeginCount()>0 and not c.isActive():
-					return 1
-
-			elif rule == 'id':
-				if id == c.get('id'):
-					return c.getBeginCount()>0 and not c.isActive()
-
-			elif rule == 'last':
-				if c.isActive() or c.getNextInterval(now) is not None:
-					return 0
-
-			elif rule == 'all':
-				if c.isActive() or not c.getBeginCount()>0 or c.getNextInterval(now) is not None:
-					return 0
-		return result
 
 	def onChildEnd(self, node):
 		matches = self.matchesEndSyncRule('last')
