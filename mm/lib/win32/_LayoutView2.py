@@ -580,7 +580,7 @@ class _LayoutView2(GenFormView):
 
 	def resizeCtrls(self, w, h):
 		# controls margin + posibly scrollbar
-		cm = 110
+		cm = 120
 
 		lf, tf, rf, bf = self.GetWindowRect()
 
