@@ -20,6 +20,7 @@ class MovieWindow(ChannelWindow):
 	#
 	def init(self, name, attrdict, channel):
 		self = ChannelWindow.init(self, name, attrdict, channel)
+		self.vfile = None
 		self.clear()
 		return self
 	#
