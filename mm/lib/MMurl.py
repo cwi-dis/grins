@@ -117,17 +117,26 @@ class FancyURLopener(_OriginalFancyURLopener):
 
 	# override cleanup for prefetch implementation
 	def cleanup(self):
+		# first close open streams
 		for url, value in self.__prefetchcache:
 			fp, tfp = value
 			fp.close()
 			tfp.close()
-			if self.__prefetchtempfiles.has_key(url):
-				os.unlink(self.__prefetchtempfiles[url])
+		# unlink temp files
+		for url, fh in self.__prefetchtempfiles:
+			file, header = fh
+			try:
+				os.unlink(file)
+			except:
+				pass
+		# empty caches
 		self.__prefetchcache = {}
 		self.__prefetchtempfiles = {}
+		# call original cleanup
 		_OriginalFancyURLopener.cleanup()
 	
-	# see retrieve for sign
+	# open stream to url and read headers but not data yet
+	# see retrieve for signature
 	def begin_retrieve(self, url, filename=None, reporthook=None):
 		url = unwrap(url)
 		self.__clean_retrieve(url)
@@ -150,11 +159,12 @@ class FancyURLopener(_OriginalFancyURLopener):
 			path, garbage = splitattr(path or "")
 			suffix = os.path.splitext(path)[1]
 			filename = tempfile.mktemp(suffix)
-			self.__prefetchtempfiles[url] = filename
+			self.__prefetchtempfiles[url] = filename, headers
 		tfp = open(filename, 'wb')
 		self.__prefetchcache[url] = fp, tfp
 		return filename, headers
 	
+	# retrieve a block of length bs from already open stream to url
 	def do_retrieve(self, url, bs):
 		if not self.__prefetchcache.has_key(url):
 			return None
@@ -164,21 +174,22 @@ class FancyURLopener(_OriginalFancyURLopener):
 			tfp.write(block)
 		return block!=None
 
+	# prefetch completed
 	def end_retrieve(self, url):
 		if not self.__prefetchcache.has_key(url):
-			return None
+			return
 		fp, tfp = self.__prefetchcache[url]
 		del self.__prefetchcache[url]
 		fp.close()
 		tfp.close()
 
+	# retrieve rest of resource
 	def __fin_retrieve(self, url):
 		if not self.__prefetchcache.has_key(url):
 			return None
 		fp, tfp = self.__prefetchcache[url]
 		bs = 1024*8
 		block = fp.read(bs)
-		print 'read block'
 		while block:
 			tfp.write(block)
 			block = fp.read(bs)
@@ -186,7 +197,13 @@ class FancyURLopener(_OriginalFancyURLopener):
 		fp.close()
 		tfp.close()
 
+	# clean any refs and resources for url
 	def __clean_retrieve(self, url):
+		if self.__prefetchcache.has_key(url):
+			fp, tfp = self.__prefetchcache[url]
+			del self.__prefetchcache[url]
+			fp.close()
+			tfp.close()		
 		if self.__prefetchtempfiles.has_key(url):
 			file = self.__prefetchtempfiles[url]
 			try:
@@ -194,9 +211,9 @@ class FancyURLopener(_OriginalFancyURLopener):
 			except:
 				pass
 			del self.__prefetchtempfiles[url]
-		if self.tempcache and self.tempcache.has_key(url):
-			# unlink will be called on __tempfiles on close
-			del self.tempcache[url]
+
+	def _retrieved(self, url):
+		return self.__prefetchtempfiles.has_key(url) or self.tempcache.has_key(url)
 
 _urlopener = None
 def urlopen(url, data=None):
@@ -223,6 +240,11 @@ def geturlopener():
 	if not _urlopener:
 		_urlopener = FancyURLopener()
 	return _urlopener
+def urlretrieved(url):
+	global _urlopener
+	if not _urlopener:
+		_urlopener = FancyURLopener()
+	return _urlopener._retrieved(url)
 
 import urlparse
 basejoin = urlparse.urljoin # urljoin works better...
