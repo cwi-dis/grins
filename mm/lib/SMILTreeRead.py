@@ -233,6 +233,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def close(self):
 		xmllib.XMLParser.close(self)
+		
+		# Show the parse errors to the user:
 		if self.__printfunc is not None and self.__printdata:
 			data = string.join(self.__printdata, '\n')
 			# first 30 lines should be enough
