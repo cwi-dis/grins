@@ -129,6 +129,7 @@ SOURCE="$(InputPath)"
 # PROP Intermediate_Dir "X86EMRel"
 # PROP CPU_ID "{D6518FF4-710F-11D3-99F2-00105A0DF099}"
 # PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 EMPFILE=empfile.exe
 RSC=rc.exe
@@ -150,9 +151,9 @@ LINK32=link.exe
 InputPath=.\X86EMRel\GRiNS Player.exe
 SOURCE="$(InputPath)"
 
-"F:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\bin\wince\grinsRC.py" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"C:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\bin\wince\grinsRC.py" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	..\..\..\..\python\PCbuild\python.exe ..\..\..\..\python\Tools\scripts\h2py.py  resource.h 
-	copy resource.py "F:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\bin\wince\grinsRC.py" 
+	copy resource.py "C:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\bin\wince\grinsRC.py" 
 	
 # End Custom Build
 
@@ -193,9 +194,9 @@ LINK32=link.exe
 InputPath=.\X86EMDbg\GRiNS Player_d.exe
 SOURCE="$(InputPath)"
 
-"F:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\bin\wince\grinsRC.py" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"C:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\bin\wince\grinsRC.py" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	..\..\..\..\python\PCbuild\python.exe ..\..\..\..\python\Tools\scripts\h2py.py  resource.h 
-	copy resource.py "F:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\bin\wince\grinsRC.py" 
+	copy resource.py "C:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\bin\wince\grinsRC.py" 
 	
 # End Custom Build
 
@@ -253,8 +254,10 @@ DEP_CPP_GRINS=\
 	".\pfc\app_wndproc.h"\
 	".\pfc\ttl.h"\
 	".\StdAfx.h"\
-	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_GRINS=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
@@ -279,10 +282,8 @@ DEP_CPP_GRINS=\
 	".\pfc\app_wndproc.h"\
 	".\pfc\ttl.h"\
 	".\StdAfx.h"\
-	
-NODEP_CPP_GRINS=\
-	".\ipapi.h"\
-	".\ygshell.h"\
+	{$(INCLUDE)}"Aygshell.h"\
+	{$(INCLUDE)}"sipapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Debug"
@@ -827,8 +828,10 @@ DEP_CPP_APP_W=\
 	"..\..\winsdk\common\charconv.h"\
 	".\pfc\app_wnd.h"\
 	".\pfc\pyinterface.h"\
-	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_APP_W=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
@@ -927,10 +930,8 @@ DEP_CPP_APP_W=\
 	"..\..\winsdk\common\charconv.h"\
 	".\pfc\app_wnd.h"\
 	".\pfc\pyinterface.h"\
-	
-NODEP_CPP_APP_W=\
-	".\ipapi.h"\
-	".\ygshell.h"\
+	{$(INCLUDE)}"Aygshell.h"\
+	{$(INCLUDE)}"sipapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Debug"

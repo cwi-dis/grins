@@ -1,0 +1,3 @@
+LIBRARY        winkernel_d.pyd
+EXPORTS
+                initwinkernel   @1	PRIVATE
