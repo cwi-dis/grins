@@ -1127,9 +1127,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	# Called by the framework before destroying the window
 	def OnDestroy(self, msg):
-		if self._wndToolBar:
-			self._wndToolBar.DestroyWindow()
-			del self._wndToolBar
+		self.DestroyToolbars()
 		if self._mainmenu:
 			self.SetMenu(None) 
 			self._mainmenu.DestroyMenu()
@@ -1178,13 +1176,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	# Show or hide all childs but the player
 	def showChilds(self,flag):
-		if flag:
-			#self.SetMenu(self._mainmenu)
-			self._wndToolBar.ShowWindow(win32con.SW_SHOW)
-			self.ShowControlBar(self._wndToolBar,1,0)
-			self._wndToolBar.RedrawWindow()
-		else:
-			self._wndToolBar.ShowWindow(win32con.SW_HIDE)
+		# XXXX Jack thinks this may not be needed anymore,
+		# and part of the old rb_ stuff.
+		self.ShowToolbars(flag)
 
 		clist=[]
 		player=None
