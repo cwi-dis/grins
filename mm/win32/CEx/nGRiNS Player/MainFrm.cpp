@@ -144,6 +144,8 @@ void CMainWindow::OnUpdateCmdOpen(CCmdUI* pCmdUI)
 
 void CMainWindow::OnCmdClose() 
 	{
+	if(g_pGRiNSMain != NULL && m_is_open)
+		g_pGRiNSMain->close();
 	m_is_open = false;
 	m_play_state = STOPPED;
 	InvalidateRect(NULL);
@@ -205,6 +207,8 @@ void CMainWindow::OnPaint()
 void CMainWindow::OnClose() 
 	{
 	m_splash.DeleteObject();
+	if(g_pGRiNSMain != NULL && m_is_open)
+		g_pGRiNSMain->close();
 	CFrameWnd::OnClose();
 	}
 
