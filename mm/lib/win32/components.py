@@ -259,6 +259,9 @@ class ComboBox(Control):
 	def getpos(self):
 		'''Get the index of the currently selected option.'''
 		return self.getcursel()
+	def setpos(self,pos):
+		'''Set the index of the selected option.'''
+		self.setcursel(pos)
 
 	def getvalue(self):
 		'''Get the value of the currently selected option.'''
@@ -302,6 +305,7 @@ class TabCtrl(Control):
 		return self.sendmessage(commctrl.TCM_GETCURSEL)
 
 ##############################
+
 class ControlsDict:
 	def __init__(self):
 		self._subwnddict={}	
@@ -337,6 +341,91 @@ class ResDialog(dialog.Dialog):
 			pass
 		else:
 			apply(func,arg)
+
+from pywin.mfc import window
+class WndCtrl(LightWeightControl,window.Wnd):
+	def create_wnd_from_handle(self):
+		window.Wnd.__init__(self,win32ui.CreateWindowFromHandle(self._hwnd))
+
+class SplashDlg(ResDialog):
+	def __init__(self,arg,version):
+		ResDialog.__init__(self,grinsRC.IDD_SPLASH)
+		self._splash = WndCtrl(self,grinsRC.IDC_SPLASH)
+		self._versionc = Static(self,grinsRC.IDC_VERSION_MSG)
+		self._msgc = Static(self,grinsRC.IDC_MESSAGE)
+		self._version=version
+
+		self.CreateWindow()
+		self.CenterWindow()
+		self.ShowWindow(win32con.SW_SHOW)
+		self.UpdateWindow()
+
+	def OnInitDialog(self):	
+		self.attach_handles_to_subwindows()	
+		self._versionc.settext(self._version)
+		self._splash.create_wnd_from_handle()
+		self.HookMessage(self.OnDrawItem,win32con.WM_DRAWITEM)
+		self.loadbmp()
+		return ResDialog.OnInitDialog(self)
+
+	# draw splash
+	def OnDrawItem(self,params):
+		lParam=params[3]
+		hdc=Sdk.ParseDrawItemStruct(lParam)
+		dc=win32ui.CreateDCFromHandle(hdc)
+		dcmem=win32ui.CreateDC()
+		dcmem.CreateCompatibleDC(dc)
+		old=dcmem.SelectObject(self._bmp)
+		l,t,r,b=self._splash.GetClientRect()
+		dc.BitBlt((l,t),(r-l,b-t),dcmem,(0,0),win32con.SRCCOPY)
+		dcmem.SelectObject(old)
+		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
+		dc.FrameRectFromHandle((l,t,r,b),br)
+		Sdk.DeleteObject(br)
+
+	# load splash
+	def loadbmp(self):
+		import __main__
+		resdll=__main__.resdll
+		self._bmp=win32ui.CreateBitmap()
+		self._bmp.LoadBitmap(grinsRC.IDB_SPLASH,resdll)
+
+class AboutDlg(ResDialog):
+	def __init__(self,arg,version,parent=None):
+		ResDialog.__init__(self,grinsRC.IDD_ABOUT,parent)
+		self._splash = WndCtrl(self,grinsRC.IDC_SPLASH)
+		self._versionc = Static(self,grinsRC.IDC_VERSION_MSG)
+		self._version=version
+	def OnInitDialog(self):	
+		self.attach_handles_to_subwindows()	
+		self._splash.create_wnd_from_handle()
+		self.SetWindowText("About GRiNS")
+		self._versionc.settext(self._version)
+		self.HookMessage(self.OnDrawItem,win32con.WM_DRAWITEM)
+		self.loadbmp()
+		return ResDialog.OnInitDialog(self)
+
+	# draw splash
+	def OnDrawItem(self,params):
+		lParam=params[3]
+		hdc=Sdk.ParseDrawItemStruct(lParam)
+		dc=win32ui.CreateDCFromHandle(hdc)
+		dcmem=win32ui.CreateDC()
+		dcmem.CreateCompatibleDC(dc)
+		old=dcmem.SelectObject(self._bmp)
+		l,t,r,b=self._splash.GetClientRect()
+		dc.BitBlt((l,t),(r-l,b-t),dcmem,(0,0),win32con.SRCCOPY)
+		dcmem.SelectObject(old)
+		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
+		dc.FrameRectFromHandle((l,t,r,b),br)
+		Sdk.DeleteObject(br)
+
+	# load splash
+	def loadbmp(self):
+		import __main__
+		resdll=__main__.resdll
+		self._bmp=win32ui.CreateBitmap()
+		self._bmp.LoadBitmap(grinsRC.IDB_SPLASH,resdll)
 
 class OpenLocationDlg(ResDialog):
 	def __init__(self,callbacks=None,parent=None):
@@ -409,9 +498,10 @@ class LayoutNameDlg(ResDialog):
 		w._cbd_cancel=(self.__okchannel, (1,))
 
 class NewChannelDlg(ResDialog):
-	def __init__(self,title,grab=1,parent=None):
+	def __init__(self,title,default,grab=1,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_NEW_CHANNEL,parent)
 		self._title=title
+		self._default_name=default
 		self._parent=parent
 		self._chantext= Edit(self,grinsRC.IDC_CHANNEL_NAME)
 		self._chantype=ComboBox(self,grinsRC.IDC_CHANNEL_TYPE)
@@ -421,6 +511,7 @@ class NewChannelDlg(ResDialog):
 	def OnInitDialog(self):
 		self.attach_handles_to_subwindows()
 		self.init_subwindows()
+		self._chantext.settext(self._default_name)
 		return ResDialog.OnInitDialog(self)
 
 	def show(self):
@@ -465,13 +556,17 @@ class showmessage:
 			style = win32con.MB_OK|win32con.MB_ICONINFORMATION
 			
 		elif mtype == 'question':
-			style = win32con.MB_YESNO|win32con.MB_ICONQUESTION
+			style = win32con.MB_OKCANCEL|win32con.MB_ICONQUESTION
 		
 		if not parent:	
 			self._res = win32ui.MessageBox(text,title,style)
 		else:
 			self_res = parent.MessageBox(text,title,style)
-			
+		if callback and self._res==win32con.IDOK:
+			apply(apply,callback)
+		elif cancelCallback and self._res==win32con.IDCANCEL:
+			apply(apply,cancelCallback)
+
 	def getresult(self):
 		return self._res
 
@@ -543,7 +638,7 @@ class ModelessInputDialog(InputDialog):
 def GetYesNoCancel(promp,parent=None):
 	if parent:m=parent
 	else: m=win32ui
-	res=m.MessageBox(promp,'CMIFed',win32con.MB_YESNOCANCEL|win32con.MB_ICONQUESTION)
+	res=m.MessageBox(promp,'GRiNS Editor',win32con.MB_YESNOCANCEL|win32con.MB_ICONQUESTION)
 	if res==win32con.IDYES:return 0
 	elif res==win32con.IDNO:return 1
 	else: return 2
@@ -551,7 +646,7 @@ def GetYesNoCancel(promp,parent=None):
 
 class CreateBoxDlg(ResDialog):
 	def __init__(self,text,callback,cancelCallback,parent=None):
-		ResDialog.__init__(self,grinsRC.IDD_CREATE_BOX,parent)
+		ResDialog.__init__(self,grinsRC.IDD_CREATE_BOX1,parent)
 		self._text= Static(self,grinsRC.IDC_STATIC1)
 		self.CreateWindow()
 		self._text.attach_to_parent()
@@ -617,4 +712,70 @@ def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1,
 	if grab==1:dlg.DoModal()
 	else:dlg.CreateWindow()
 	return dlg
+
+#####################################
+# std win32 modules
+import win32ui,win32con,win32api
+
+# win32 lib modules
+import win32mu,components
+
+# std mfc windows stuf
+from pywin.mfc import window,object,docview,dialog
+import afxres,commctrl
+
+# GRiNS resource ids
+import grinsRC
+
+class DlgBar(window.Wnd,ControlsDict):
+	AFX_IDW_DIALOGBAR=0xE805
+	def __init__(self):
+		ControlsDict.__init__(self)
+		window.Wnd.__init__(self,win32ui.CreateDialogBar())
+	def create(self,frame,resid,align=afxres.CBRS_ALIGN_BOTTOM):
+		self._obj_.CreateWindow(frame,resid,
+			align,self.AFX_IDW_DIALOGBAR)
+	def show(self):
+		self.ShowWindow(win32con.SW_SHOW)
+	def hide(self):
+		self.ShowWindow(win32con.SW_HIDE)
+
+
+class CreateBoxBar(DlgBar):
+	def __init__(self,frame,text,callback=None,cancelCallback=None):
+		DlgBar.__init__(self)
+		DlgBar.create(self,frame,grinsRC.IDD_CREATE_BOX,afxres.CBRS_ALIGN_TOP)
+		
+		static= Static(self,grinsRC.IDC_STATIC1)
+		cancel=Button(self,grinsRC.IDUC_CANCEL)
+		ok=Button(self,grinsRC.IDUC_OK)
+		
+		static.attach_to_parent()
+		cancel.attach_to_parent()
+		ok.attach_to_parent()
+		
+		frame.HookCommand(self.onCancel,cancel._id)
+		frame.HookCommand(self.onOK,ok._id)
+
+		static.settext(text)
+		self._callback=callback
+		self._cancelCallback=cancelCallback
+		
+		self._frame=frame
+		frame.RecalcLayout()
+
+	def close(self):
+		self.DestroyWindow()
+		self._frame.RecalcLayout()
+		del self._obj_
+		
+	def onOK(self,id,code):
+		self.close()
+		if self._callback:
+			apply(apply,self._callback)
+
+	def onCancel(self,id,code):
+		self.close()
+		if self._cancelCallback:
+			apply(apply,self._cancelCallback)
 
