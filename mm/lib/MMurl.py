@@ -118,20 +118,19 @@ class FancyURLopener(_OriginalFancyURLopener):
 	# override cleanup for prefetch implementation
 	def cleanup(self):
 		# first close open streams
-		for url, value in self.__prefetchcache:
-			fp, tfp = value
+		for fp, tfp in self.__prefetchcache.values():
 			fp.close()
 			tfp.close()
+		self.__prefetchcache = {}
+
 		# unlink temp files
-		for url, fh in self.__prefetchtempfiles:
-			file, header = fh
+		for file, header in self.__prefetchtempfiles.values():
 			try:
 				os.unlink(file)
 			except:
 				pass
-		# empty caches
-		self.__prefetchcache = {}
 		self.__prefetchtempfiles = {}
+
 		# call original cleanup
 		_OriginalFancyURLopener.cleanup()
 	
@@ -179,21 +178,21 @@ class FancyURLopener(_OriginalFancyURLopener):
 		if not self.__prefetchcache.has_key(url):
 			return
 		fp, tfp = self.__prefetchcache[url]
-		del self.__prefetchcache[url]
 		fp.close()
 		tfp.close()
+		del self.__prefetchcache[url]
 
 	# retrieve rest of resource
 	def __fin_retrieve(self, url):
 		if not self.__prefetchcache.has_key(url):
 			return None
 		fp, tfp = self.__prefetchcache[url]
+		del self.__prefetchcache[url]
 		bs = 1024*8
 		block = fp.read(bs)
 		while block:
 			tfp.write(block)
 			block = fp.read(bs)
-		del self.__prefetchcache[url]
 		fp.close()
 		tfp.close()
 
@@ -201,11 +200,11 @@ class FancyURLopener(_OriginalFancyURLopener):
 	def __clean_retrieve(self, url):
 		if self.__prefetchcache.has_key(url):
 			fp, tfp = self.__prefetchcache[url]
-			del self.__prefetchcache[url]
 			fp.close()
 			tfp.close()		
+			del self.__prefetchcache[url]
 		if self.__prefetchtempfiles.has_key(url):
-			file = self.__prefetchtempfiles[url]
+			file, hdr = self.__prefetchtempfiles[url]
 			try:
 				os.unlink(file)
 			except:
@@ -213,7 +212,10 @@ class FancyURLopener(_OriginalFancyURLopener):
 			del self.__prefetchtempfiles[url]
 
 	def _retrieved(self, url):
-		return self.__prefetchtempfiles.has_key(url) or self.tempcache.has_key(url)
+		if self.tempcache.has_key(url):
+			return 1
+		return self.__prefetchtempfiles.has_key(url) and\
+			not self.__prefetchcache.has_key(url)
 
 _urlopener = None
 def urlopen(url, data=None):
