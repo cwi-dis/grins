@@ -9,6 +9,7 @@ import sys
 if len(sys.argv) > 1 and sys.argv[1] == '-v':
 	del sys.argv[1]
 	print '** Verbose **'
+	quietconsole=None
 else:
 	import quietconsole
 	quietconsole.install()
@@ -75,12 +76,23 @@ if len(sys.argv) < 2:
 			sys.exit(0)
 		sys.argv = ["macgrins", url]
 		
+no_exception=0
+try:
+	try:
+		if profile:
+			import profile
+			fss, ok = macfs.StandardPutFile("Profile output:")
+			if not ok: sys.exit(1)
+			profile.run("import main", fss.as_pathname())
+		else:
+			import main
+		no_exception=1
+	except SystemExit:
+		no_exception=1
+finally:
+	if not no_exception:
+		if quietconsole:
+			quietconsole.revert()
+		print 'Type return to exit-',
+		sys.stdin.readline()
 	
-
-if profile:
-	import profile
-	fss, ok = macfs.StandardPutFile("Profile output:")
-	if not ok: sys.exit(1)
-	profile.run("import main", fss.as_pathname())
-else:
-	import main
