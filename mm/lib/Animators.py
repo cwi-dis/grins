@@ -1153,10 +1153,7 @@ class AnimateElementParser:
 		# create a virtual node
 		# once target found (self.__target) 
 		# set its grins-type (self.__targettype in ('subregion', 'region', 'area') )
-			target = node.GetRoot().GetChildByName(name)
-			if not target:
-				target = node.GetContext().getchannel(name)			
-
+		
 		if anim.targetnode is None:
 			te = MMAttrdefs.getattr(anim, 'targetElement')
 			if te:
