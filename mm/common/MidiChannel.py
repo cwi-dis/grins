@@ -26,7 +26,7 @@ except ImportError:
     sgimidi = None
     midi = None
     midifile = None
-    
+
 class MidiChannel(Channel):
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.__init__(self, name, attrdict, scheduler, ui)
@@ -102,12 +102,12 @@ class MidiChannel(Channel):
 	    windowinterface.select_setcallback(self.port, self._playsome,
 					       (), 2)
 	    self.has_callback = 1
-	    
+
 	def unstall_callback(self):
 	    if not self.has_callback or not self.port: return
 	    windowinterface.select_setcallback(self.port, None, (), 2)
 	    self.has_callback = 0
-	    
+
 	def _playsome(self):
 	        i = 0
 		if debug:
@@ -124,7 +124,7 @@ class MidiChannel(Channel):
 		del self.play_data[:i]
 		if not self.play_data:
 		    self.unstall_callback()
-		    
+
 	def do_play(self, node):
 	        if not self.port:
 		    return
@@ -147,4 +147,4 @@ class MidiChannel(Channel):
 	    else:
 		self.install_callback()
 	    Channel.setpaused(self, paused)
-	    
+
