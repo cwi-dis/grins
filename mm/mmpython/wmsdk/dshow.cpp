@@ -33,7 +33,9 @@ DEFINE_GUID(IID_IWMConverter,
 0xbdbc884c, 0xfce, 0x414f, 0x99, 0x41, 0x3, 0x5f, 0x90, 0xe, 0x43, 0xb6);
 struct IWMConverter : public IUnknown
 	{
-	virtual HRESULT __stdcall SetInterface(IUnknown *p,LPCOLESTR hint)=0;
+	virtual HRESULT __stdcall SetWMWriter(IUnknown *pI)=0;
+	virtual HRESULT __stdcall SetAudioInputProps(DWORD dwInputNum,IUnknown *pI)=0;
+	virtual HRESULT __stdcall SetVideoInputProps(DWORD dwInputNum,IUnknown *pI)=0;
 	};
 
 static PyObject *ErrorObject;
@@ -1784,28 +1786,61 @@ static PyTypeObject RealConverterType = {
 ////////////////////////////////////////////
 // WMConverter object 
 
-static char WMConverter_SetInterface__doc__[] =
+static char WMConverter_SetWMWriter__doc__[] =
 ""
 ;
 
 static PyObject *
-WMConverter_SetInterface(WMConverterObject *self, PyObject *args)
+WMConverter_SetWMWriter(WMConverterObject *self, PyObject *args)
 {
 	UnknownObject *obj;
-	char *hint;
-	if (!PyArg_ParseTuple(args, "Os",&obj, &hint))
+	if (!PyArg_ParseTuple(args, "O",&obj))
 		return NULL;
-	WCHAR wsz[MAX_PATH];
-	MultiByteToWideChar(CP_ACP,0,hint,-1,wsz,MAX_PATH);
 	Py_BEGIN_ALLOW_THREADS
-	self->pWMConverter->SetInterface(obj->pUk,wsz);
+	self->pWMConverter->SetWMWriter(obj->pUk);
+	Py_END_ALLOW_THREADS
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char WMConverter_SetAudioInputProps__doc__[] =
+""
+;
+static PyObject *
+WMConverter_SetAudioInputProps(WMConverterObject *self, PyObject *args)
+{
+	DWORD dwInputNum;
+	UnknownObject *obj;
+	if (!PyArg_ParseTuple(args, "iO",&dwInputNum,&obj))
+		return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	self->pWMConverter->SetAudioInputProps(dwInputNum, obj->pUk);
+	Py_END_ALLOW_THREADS
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char WMConverter_SetVideoInputProps__doc__[] =
+""
+;
+static PyObject *
+WMConverter_SetVideoInputProps(WMConverterObject *self, PyObject *args)
+{
+	DWORD dwInputNum;
+	UnknownObject *obj;
+	if (!PyArg_ParseTuple(args, "iO",&dwInputNum,&obj))
+		return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	self->pWMConverter->SetVideoInputProps(dwInputNum, obj->pUk);
 	Py_END_ALLOW_THREADS
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
 static struct PyMethodDef WMConverter_methods[] = {
-	{"SetInterface", (PyCFunction)WMConverter_SetInterface, METH_VARARGS, WMConverter_SetInterface__doc__},
+	{"SetWMWriter", (PyCFunction)WMConverter_SetWMWriter, METH_VARARGS, WMConverter_SetWMWriter__doc__},
+	{"SetAudioInputProps", (PyCFunction)WMConverter_SetAudioInputProps, METH_VARARGS, WMConverter_SetAudioInputProps__doc__},
+	{"SetVideoInputProps", (PyCFunction)WMConverter_SetVideoInputProps, METH_VARARGS, WMConverter_SetVideoInputProps__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
