@@ -352,7 +352,7 @@ class EmbeddedWnd(win32window.DDWndLayer):
 	#
 	# Mouse input
 	#
-	def onMouseEvent(self, point, ev):
+	def onMouseEvent(self, point, ev, params=None):
 		return  self._viewport.onMouseEvent(point, ev)
 
 	def onMouseMoveEvent(self, point):

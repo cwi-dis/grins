@@ -734,7 +734,7 @@ class _CommonWindow:
 		# Overriden for toplevel window
 		return 0
 				
-	def _contentclick(self, down, where, event, rightclick, double):
+	def _contentclick(self, down, where, event, modifiers, double):
 		"""A click in our content-region. Note: this method is extended
 		for top-level windows (to do global-to-local coordinate
 		transforms)"""
@@ -742,7 +742,7 @@ class _CommonWindow:
 		# If we are rubberbanding handle that first.
 		#
 		if (self is _in_create_box) and down:
-				if self._rb_mousedown(where, rightclick):
+				if self._rb_mousedown(where, modifiers):
 					return
 				# We are in create_box mode, but the mouse was way off.
 				# If we are in modal create we beep, in modeless create we
@@ -758,7 +758,7 @@ class _CommonWindow:
 			if Qd.PtInRect(where, ch.qdrect()):
 				try:
 					ch._contentclick(down, where, event,
-							 rightclick, double)
+							 modifiers, double)
 				except Continue:
 					pass
 				else:
@@ -771,7 +771,7 @@ class _CommonWindow:
 		#
 		# Next, check for popup menu, if we have one
 		#
-		if down and rightclick:
+		if down and modifiers=='contextual':
 			if self._menu or self._popupmenu:
 				self._doclickcallback(Mouse0Press, where)
 				self._contentpopupmenu(where, event)
@@ -793,7 +793,7 @@ class _CommonWindow:
 		# Convert to our type of event and call the
 		# appropriate handler.
 		#
-		if rightclick:
+		if modifiers == 'contextual':
 			if down:
 				evttype = Mouse2Press
 			else:
@@ -804,9 +804,9 @@ class _CommonWindow:
 			else:
 				evttype = Mouse0Release
 				
-		self._doclickcallback(evttype, where)
+		self._doclickcallback(evttype, where, modifiers)
 		
-	def _doclickcallback(self, evttype, where):
+	def _doclickcallback(self, evttype, where, modifiers=None):
 		try:
 			func, arg = self._eventhandlers[evttype]
 		except KeyError:
@@ -821,7 +821,7 @@ class _CommonWindow:
 				if b._inside(x, y):
 					buttons.append(b)
 		try:
-			func(arg, self, evttype, (x, y, buttons))
+			func(arg, self, evttype, (x, y, buttons, modifiers))
 		except Continue:
 			pass
 		else:
@@ -1351,7 +1351,7 @@ class _CommonWindow:
 		if y > y1: y = y1
 		return x, y
 
-	def _rb_mousedown(self, where, rightclick): # XXXXSCROLL
+	def _rb_mousedown(self, where, modifiers): # XXXXSCROLL
 		# called on mouse press
 		# XXXX I'm not sure that both the render and the invalrect are needed...
 		self._rb_display.render()
@@ -2371,13 +2371,13 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		if not self.close_window_command():
 			print 'No way to close this window!', self
 		
-	def _contentclick(self, down, where, event, rightclick, double):
+	def _contentclick(self, down, where, event, modifiers, double):
 		"""A mouse click in our data-region"""
 		if not self._onscreen_wid or not self._parent:
 			return
 		Qd.SetPort(self._onscreen_wid)
 		where = Qd.GlobalToLocal(where)
-		_CommonWindow._contentclick(self, down, where, event, rightclick, double)
+		_CommonWindow._contentclick(self, down, where, event, modifiers, double)
 
 	def _keyboardinput(self, char, where, event):
 		"""A character typed in our data-region"""

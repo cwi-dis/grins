@@ -684,40 +684,17 @@ class HierarchyView(HierarchyViewDialog):
 	def mouse(self, dummy, window, event, params):
 		# Hack added by mjvdg: params[3] is the params as given by win32, including shift, ctrl status.
 		self.toplevel.setwaiting()
-		x, y = params[0:2]
-
-		# begin bad hack (send blame to mjvdg.)
-		# work out if the shift or ctrl keys are pressed.
-		if sys.platform == 'win32':
-			import win32con
-			allparams = params[3] # as given by win32. Look up the MFC docs.
-			keystatus = allparams[2] # is a bunch of boolean flags for each key.
-			ctrlstatus = keystatus & win32con.MK_CONTROL # i.e. 0x8 or 0x0
-			shiftstatus = keystatus & win32con.MK_SHIFT # i.e. 0x4 or 0x0
-			# This will annoy Jack: :-) 
-			which_mouse_button = keystatus & win32con.MK_RBUTTON # you also have MK_LBUTTON
-		else:
-			# Add more bad hacks here for each platform :-).
-			ctrlstatus = 0	# status of the ctrl key (or whatever equiv.)
-			shiftstatus = 0	# status of the shift key.
-			which_mouse_button = 0
-		# By the way.. allparams has all sorts of useful information in it, such as the x and y coords.
-		# It's usually called lword or something in the MFC docs.
-		# end bad hack.
+		x, y, dummy, modifier = params
 
 		if x >= 1 or y >= 1:
 			windowinterface.beep()
 			return
 		x = x * self.mcanvassize[0] # This is kind of dumb - it has already been converted from pixels
 		y = y * self.mcanvassize[1] #  to floats in the windowinterface.
-		self.mousehitx = x
-		self.mousehity = y
-		if which_mouse_button:
-			self.rightclick(x,y)
-		elif ctrlstatus:
-			self.ctrlclick(x, y)
-		elif shiftstatus:
-			self.shiftclick(x,y)
+##		self.mousehitx = x
+##		self.mousehity = y
+		if modifier == 'add':
+			self.addclick(x, y)
 		else:
 			self.click(x,y)
 
@@ -1364,17 +1341,11 @@ class HierarchyView(HierarchyViewDialog):
 		clicked_widget.mouse0press((x,y))
 		self.select_widget(clicked_widget, scroll=0)
 		# The calling method will re-draw the screen.
-	def ctrlclick(self, x, y):
+
+	def addclick(self, x, y):
 		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
 		clicked_widget.mouse0press((x,y))
 		self.also_select_widget(clicked_widget)
-	def shiftclick(self, x, y):
-		self.click(x,y)
-	def rightclick(self, x, y):
-		print "DEBUG: rightclick."
-		if len(self.multi_selected_widgets) == 0:
-			# You don't want to reselect only one widget.
-			self.click(x,y)
 
 	# Find the smallest object containing (x, y)
 	def whichhit(self, x, y):

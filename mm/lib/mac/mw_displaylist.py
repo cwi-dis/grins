@@ -53,8 +53,11 @@ def _get_icon(which):
 		for name, resid in _icon_ids.items():
 			_icons[name] = Icn.GetCIcon(resid)
 		_icons[''] = None
-	return _icons[which]
-	
+	try:
+		return _icons[which]
+	except KeyError:
+		print 'Unknown icon:', which
+		return None
 
 class _DisplayList:
 	def __init__(self, window, bgcolor, units):
@@ -673,8 +676,9 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		window = self._window
 		data = _get_icon(icon)
-		self._list.append(('icon', coordinates, data))
-		self._optimize(2)
+		if data:
+			self._list.append(('icon', coordinates, data))
+			self._optimize(2)
 		
 	def drawarrow(self, color, src, dst):
 		if self._rendered:

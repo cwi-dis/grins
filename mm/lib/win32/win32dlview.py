@@ -594,7 +594,16 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 			self.notifyListener('onLButtonDown',params)
 			return
 		msg=win32mu.Win32Msg(params) # translate the message to a useful Python list.
-		self.onMouseEvent(msg.pos(),Mouse0Press, params=params) # :-/ -mjvdg.
+		# Find modifier keys. Code gleaned from the way Michael did this in the
+		# HierarchyView, I'm pretty sure there must be a better way to do this.
+		keystatus = allparams[2] # is a bunch of boolean flags for each key.
+		ctrlstatus = keystatus & win32con.MK_CONTROL # i.e. 0x8 or 0x0
+		if ctrlstatus:
+			params = 'add'
+		else:
+			params = None
+		
+		self.onMouseEvent(msg.pos(),Mouse0Press, params=params)
 
 	# Response to left button up
 	def onLButtonUp(self, params):
