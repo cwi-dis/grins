@@ -1211,7 +1211,7 @@ class AttrSheet(dialog.PropertySheet):
 			ctrl = components.CheckButton(self,101)
 			ctrl.create(components.CHECKBOX(), (0,0,116,h), 'Show all properties')
 			ctrl.setcheck(self._form._showAll_initial)
-			ctrl.hookmessage(self.onShowAll, win32con.WM_LBUTTONDOWN)
+			self.HookCommand(self.onShowAll, 101)
 			self._showAll = ctrl
 
 		if self._form._has_followSelection:
@@ -1235,7 +1235,7 @@ class AttrSheet(dialog.PropertySheet):
 			if self._followSelection:
 				self._followSelection.setfont(logfont)
 	
-	def onShowAll(self, params):
+	def onShowAll(self, id, code):
 		self._form.call('Showall')
 #		if self._showAll.getcheck():
 #			self._showAll.setcheck(0)
