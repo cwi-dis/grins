@@ -160,7 +160,7 @@ class TopLevel(ViewDialog):
 	def open_okcallback(self, filename):
 		try:
 			top = TopLevel(self.main, filename, 0)
-		except (IOError, MMExc.TypeError, MMExc.SyntaxError), msg:
+		except (IOError, MMExc.MTypeError, MMExc.MSyntaxError), msg:
 			windowinterface.showmessage('Open operation failed.\n'+
 						    'File: '+filename+'\n'+
 						    'Error: '+`msg`)
@@ -410,7 +410,7 @@ class TopLevel(ViewDialog):
 		else:
 			try:
 				top = TopLevel(self.main, filename, 0)
-			except (IOError, MMExc.TypeError, MMExc.SyntaxError), msg:
+			except (IOError, MMExc.MTypeError, MMExc.MSyntaxError), msg:
 				windowinterface.showmessage(
 					'Open operation failed.\n'+
 					'File: '+filename+'\n'+
