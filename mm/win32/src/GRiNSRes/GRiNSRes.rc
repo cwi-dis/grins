@@ -1827,6 +1827,35 @@ BEGIN
     RTEXT           "100",IDC_MAX,283,2,13,8
 END
 
+IDD_LAYOUT_T1 DIALOG DISCARDABLE  0, 0, 425, 249
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "scale 1:1",IDC_LAYOUT_SCALE,132,4,38,8
+    LTEXT           "x",IDC_GROUP1,154,210,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_X,146,218,27,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "y",IDC_GROUP1,184,210,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_Y,174,218,27,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "w",IDC_GROUP1,210,210,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_W,202,218,27,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "h",IDC_GROUP1,238,210,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_H,230,218,27,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    PUSHBUTTON      "Preview Area",IDC_LAYOUT_PREVIEW,132,18,279,177,BS_FLAT | 
+                    NOT WS_VISIBLE | NOT WS_TABSTOP
+    CONTROL         "Show all medias",IDC_LAYOUT_SHOW_ALLMEDIAS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,4,67,10
+    GROUPBOX        "Position and size",IDC_GROUP1,132,200,140,38
+    GROUPBOX        "z-order",IDC_GROUP1,281,200,45,38
+    CONTROL         "Tree1",IDC_TREE1,"SysTreeView32",WS_BORDER | WS_TABSTOP,
+                    10,18,118,221
+    EDITTEXT        IDC_LAYOUT_REGION_Z,287,217,27,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2153,6 +2182,12 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 300
         BOTTOMMARGIN, 39
+    END
+
+    IDD_LAYOUT_T1, DIALOG
+    BEGIN
+        RIGHTMARGIN, 424
+        BOTTOMMARGIN, 246
     END
 END
 #endif    // APSTUDIO_INVOKED

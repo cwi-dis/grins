@@ -157,6 +157,7 @@
 #define IDD_LAYOUT3                     386
 #define IDD_EDITATTR_COLORSEL           387
 #define IDD_SEEK                        388
+#define IDD_LAYOUT_T1                   389
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
@@ -401,6 +402,9 @@
 #define IDC_SLIDER_POS                  1279
 #define IDC_MIN                         1280
 #define IDC_MAX                         1281
+#define IDC_TREE_REGION1                1282
+#define IDC_TREE1                       1283
+#define IDC_LAYOUT_SHOW_ALLMEDIAS       1284
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -485,7 +489,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        295
 #define _APS_NEXT_COMMAND_VALUE         32865
-#define _APS_NEXT_CONTROL_VALUE         1282
+#define _APS_NEXT_CONTROL_VALUE         1285
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
