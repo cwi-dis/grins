@@ -339,7 +339,7 @@ class MediaRegion(Region):
 		pass
 
 	def canShow(self):
-		return Node.canShow(self)
+		return Node.canShow(self) and self.getParent().canShow()
 	
 class Viewport(Node):
 	def __init__(self, name, dict, ctx):
@@ -545,6 +545,8 @@ class LayoutView2(LayoutViewDialog2):
 			name = object.attrdict.get("name")
 			for mediaRegion, parentRegion in self.currentMediaRegionList:
 				if mediaRegion.getName() == name:
+					if mediaRegion.getViewport() != self.currentViewport:
+						self.displayViewport(mediaRegion.getViewport().getName())	
 					self.select(mediaRegion)
 					break
 		else:
@@ -590,9 +592,10 @@ class LayoutView2(LayoutViewDialog2):
 		# re display all viewport
 		self.displayViewport(self.currentViewport.getName())
 
-		# set the focus
-		if self.currentFocus != None:
-			self.focusOnMMNode(self.currentFocus)
+		# change the focus to the viewport
+		self.myfocus = self.currentViewport
+		self.editmgr.setglobalfocus('MMChannel',self.currentViewport)
+		self.select(self.currentViewport)
 
 	def isSelectedRegion(self, regionName):
 		# by default all region selected
@@ -1106,8 +1109,9 @@ class LayoutView2(LayoutViewDialog2):
 		for mediaRegion, parentRegion in self.currentMediaRegionList:
 			mmnode = mediaRegion.mmnode
 			name = mmnode.attrdict.get('name')
-			if mediaRegion.canShow():
-				list.append(name)
+			if mediaRegion.getViewport() == self.currentViewport:
+				if mediaRegion.canShow():
+					list.append(name)
 			self.currentMediaNameList.append(name)
 			
 		self.currentMediaNameListSel = list
