@@ -787,10 +787,6 @@ class LayoutView2(LayoutViewDialog2):
 		self.setcommandlist(commandlist)
 		
 	def updateFocus(self, keepShowedNodes=0):
-		if debug: print 'LayoutView.updateFocus: focusobject=',self.currentFocus		
-		# check is the focus is still valid
-		# XXX this call should be exist. Normaly all view which are responsibled of delete a node
-		# should change the global focus as well if it points on the deleted node
 		if debug: print 'LayoutView.updateFocus: focus on List'
 		self.focusOnList(self.currentFocus, keepShowedNodes)
 
@@ -1816,15 +1812,30 @@ class LayoutView2(LayoutViewDialog2):
 		elif nodeType == TYPE_MEDIA:
 			self.geomFieldWidget.updateMediaGeom(geom)
 
-	# call from any widget belong to this view
-	def onSelect(self, nodeRefList, keepShowedNodes=1):
+	# called from any widget belong to this view
+	def onSelectChanged(self, nodeRefList, keepShowedNodes=1):
 		# XXX in the case, if the focus is change from the tree widget, the focus in the control field is not updated.
 		# So we have to force any apply.
 		self.flushChangement()
 		
 		self.setglobalfocus(nodeRefList)
 
-		self.updateFocus(keepShowedNodes)	
+		self.updateFocus(keepShowedNodes)
+
+	# called from any widget belong to this view
+	# selected update nodes handler method
+	# state = 1 means: add into selected list
+	# state = 0 means: remove from selected list
+	def onSelectUpdated(self, nodeRefList, state, keepShowedNodes=1):
+		# XXX in the case, if the focus is change from the tree widget, the focus in the control field is not updated.
+		# So we have to force any apply.
+		self.flushChangement()
+
+		if state:
+			self.editmgr.addglobalfocus(nodeRefList)
+		else:
+			self.editmgr.delglobalfocus(nodeRefList)
+					
 #
 # common class for all widgets
 #
@@ -2242,15 +2253,26 @@ class TreeWidget(Widget):
 		self.treeCtrl.updateNode(self.nodeRefToNodeTreeCtrlId[nodeRef], name, type, type)
 		
 	# selected node handler method
-	def onSelectTreeNodeCtrl(self, nodeTreeCtrlIdList):
+	def onSelectChanged(self, nodeTreeCtrlIdList):
 		nodeRefList = []
 		for nodeTreeCtrlId in nodeTreeCtrlIdList:
 			nodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
 			nodeRefList.append(nodeRef)
-		# update the selection, and raz the previous showed nodes (medias only)
-		self._context.onSelect(nodeRefList, 0)
+		# update the selection
+		self._context.onSelectChanged(nodeRefList, 0)
 
-	def onExpandTreeNodeCtrl(self, nodeTreeCtrlId, isExpanded):
+	# selected update node handler method
+	# state = 1 means: add into selected list
+	# state = 0 means: remove from selected list
+	def onSelectUpdated(self, nodeTreeCtrlIdList, state):
+		nodeRefList = []
+		for nodeTreeCtrlId in nodeTreeCtrlIdList:
+			nodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
+			nodeRefList.append(nodeRef)
+		# update the selection
+		self._context.onSelectUpdated(nodeRefList, state)
+
+	def onExpanded(self, nodeTreeCtrlId, isExpanded):
 		nodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
 		if nodeRef:
 			nodeType = self._context.getNodeType(nodeRef)
@@ -2563,10 +2585,29 @@ class PreviousWidget(Widget):
 				newNode.importAttrdict()
 				newNode.show()
 
-	def onSelect(self, nodeList):
+	def onSelectChanged(self, objectList):
+		# prevent against infinite loop
+		if self.__selecting:
+			return
 		if debugPreview: print 'PreviewWidget.onSelect ',nodeList
-		self._context.onSelect(nodeList)
 
+		# build the list of the reference nodes selected
+		list = []
+		# xxx to optimize
+		for  nodeRef, nodeTree in self._nodeRefToNodeTree.items():
+			for obj in objectList:
+				if nodeTree._graphicCtrl is obj:
+					list.append(nodeRef)
+
+		self._context.onSelectChanged(list)
+
+	# selected update nodes handler method
+	# state = 1 means: add into selected list
+	# state = 0 means: remove from selected list
+	def onSelectUpdated(self, nodeList, state):
+		# XXX todo
+		pass
+	
 	def getNode(self, nodeRef):
 		node = self._nodeRefToNodeTree.get(nodeRef)
 		return node
@@ -2581,20 +2622,6 @@ class PreviousWidget(Widget):
 			print 'can''t show viewport ',viewportRef
 			return
 		self.currentViewport.showAllNodes()
-
-	def onMultiSelChanged(self, objectList):
-		# prevent against infinite loop
-		if self.__selecting:
-			return
-		
-		# build the list of the reference nodes selected
-		list = []
-		# xxx to optimize
-		for  nodeRef, nodeTree in self._nodeRefToNodeTree.items():
-			for obj in objectList:
-				if nodeTree._graphicCtrl is obj:
-					list.append(nodeRef)
-		self.onSelect(list)
 
 	def onGeomChanging(self, objectList):
 		# update only if one object is moving

@@ -165,10 +165,14 @@ class TreeCtrl(window.Wnd):
 		if hitstate & commctrl.TVIS_SELECTED:
 			self.SetItemState(hititem, 0, commctrl.TVIS_SELECTED)
 			self.removeSelection(hititem)
+			# update the listener
+			self.OnMultiSelUpdated(hititem, 0)
 		else:
 			self.SelectItem(hititem)
 			self.SetItemState(hititem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
 			self.appendSelection(hititem)
+			# update the listener
+			self.OnMultiSelUpdated(hititem, 1)
 		
 		# restore selection of previously selected item once not the hit item
 		if nsel > 0:
@@ -181,8 +185,8 @@ class TreeCtrl(window.Wnd):
 #			self.appendSelection(hititem)
 		
 		# motify listeners
-		if nsel != len(self._selections):
-			self.OnMultiSelChanged()
+#		if nsel != len(self._selections):
+#			self.OnMultiSelChanged()
 
 		# absorb event		
 		return 0
@@ -499,6 +503,16 @@ class TreeCtrl(window.Wnd):
 			if debug:
 				self.scheduleDump()
 
+	# update the listener				
+	def OnMultiSelUpdated(self, item, state):
+		# don't update the listener when selecting
+		# avoid some recursive problems
+		if not self.__selecting:
+			for listener in self._multiSelListeners:
+				listener.OnMultiSelUpdated([item], state)
+			if debug:
+				self.scheduleDump()
+
 	# add an expand listener 
 	def addExpandListener(self, listener):
 		if hasattr(listener, 'OnExpandChanged') and\
@@ -512,7 +526,8 @@ class TreeCtrl(window.Wnd):
 		
 	# add a listener 
 	def addMultiSelListener(self, listener):
-		if hasattr(listener, 'OnMultiSelChanged') and\
+		if hasattr(listener, 'OnMultiSelChanged') and \
+			hasattr(listener, 'OnMultiSelUpdated') and \
 			listener not in self._multiSelListeners:
 			self._multiSelListeners.append(listener)
 

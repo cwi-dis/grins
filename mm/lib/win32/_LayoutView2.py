@@ -622,11 +622,15 @@ class TreeManager:
 	
 	def OnMultiSelChanged(self):
 		if self._listener != None:
-			self._listener.onSelectTreeNodeCtrl(self.treeCtrl.getSelectedItems())
+			self._listener.onSelectChanged(self.treeCtrl.getSelectedItems())
+
+	def OnMultiSelUpdated(self, itemList, state):
+		if self._listener != None:
+			self._listener.onSelectUpdated(itemList, state)
 
 	def OnExpandChanged(self, item, isExpanded):
 		if self._listener != None:
-			self._listener.onExpandTreeNodeCtrl(item, isExpanded)
+			self._listener.onExpanded(item, isExpanded)
 
 	#
 	#  drag and drop support methods
@@ -739,7 +743,7 @@ class LayoutManager(LayoutManagerBase):
 	def onDSelChanged(self, selections):
 		self._selectedList = selections
 		if self._listener != None:
-			self._listener.onMultiSelChanged(selections)
+			self._listener.onSelectChanged(selections)
 
 	def onDSelMove(self, selections):
 		if self._listener != None:
