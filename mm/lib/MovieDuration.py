@@ -18,6 +18,7 @@ def getduration(filename):
 		raise IOError, (0, 'bad movie file: ' + str(msg))
 	vfile.readcache()
 	t, ds, cs = vfile.getrandomframeheader(len(vfile.index)-1)
+	if t == 0: t = 1000
 	return t * 0.001
 
 duration_cache = FileCache.FileCache(getduration)
