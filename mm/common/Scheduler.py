@@ -401,6 +401,7 @@ class SchedulerContext:
 			   (arc.getevent() is not None or
 			    arc.marker is not None or
 			    marker is not None or
+			    arc.accesskey is not None or
 			    arc.delay is None or
 			    ((event != 'begin' or arc.dstnode not in node.GetSchedChildren()) and
 			     (event != 'end' or arc.dstnode in node.GetSchedChildren()))):
