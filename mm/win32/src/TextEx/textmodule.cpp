@@ -9,8 +9,14 @@ WNDPROC		orgProc;
 BOOL flag=FALSE;
 
 
+PYW_EXPORT CWnd *GetWndPtr(PyObject *);
 
-PyIMPORT CWnd *GetWndPtr(PyObject *);
+myWin *GetMyWndPtr(PyObject *ob)
+{
+	CWnd *pWnd = GetWndPtr(ob);
+	ASSERT(pWnd && pWnd->IsKindOf(RUNTIME_CLASS(myWin)));
+	return (myWin *)pWnd;
+}
 char textClass[100]="";
 //-------------------------------------------------
 /*
@@ -28,8 +34,12 @@ NOTES:
 	This function creates a font with the size we want, from the fonts 
 of our system, and returns a handler on this font. 
 */
+#define EZ_ATTR_BOLD          1
+#define EZ_ATTR_ITALIC        2
+#define EZ_ATTR_UNDERLINE     4
+#define EZ_ATTR_STRIKEOUT     8
 
-HFONT EzCreateFont (HDC hdc, char * szFaceName, int iDeciPtHeight,
+static HFONT EzCreateFont (HDC hdc, char * szFaceName, int iDeciPtHeight,
                     int iDeciPtWidth, int iAttributes, BOOL fLogRes)
 {
 	FLOAT      cxDpi, cyDpi ;
@@ -1227,7 +1237,7 @@ static PyObject* py_example_PutText(PyObject *self, PyObject *args)
 	}
 
 	
-	obWnd = (myWin*)GetWndPtr(testOb);
+	obWnd = GetMyWndPtr(testOb);
 	
 	algn = align;
 
@@ -1323,7 +1333,8 @@ static PyObject* py_example_PrepareText(PyObject *self, PyObject *args)
 		str=bit;
 		//str=clearstring(str);
 		str = expandtabs(str,align);
-		obWnd = (myWin*)GetWndPtr(testOb);
+		obWnd = GetMyWndPtr(testOb);
+		ASSERT_VALID(obWnd);
 		obWnd->GetDim(align,facename,size);
 		//if (align.IsEmpty()) obWnd->SetScroll(str);
 		//obWnd->align = align;
@@ -1355,7 +1366,7 @@ static PyObject* py_example_GetScrollPos(PyObject *self, PyObject *args)
 		return Py_None;
 	}
 
-	obWnd =(myWin*) GetWndPtr(testOb);
+	obWnd =GetMyWndPtr(testOb);
 	
 	if(obWnd->single_anchor) obWnd->difer = 0;
 	tmp=Py_BuildValue("i", obWnd->difer);
@@ -1380,7 +1391,7 @@ static PyObject* py_example_SetScrollPos(PyObject *self, PyObject *args)
 	}
 
 	str = s;
-	obWnd =(myWin*) GetWndPtr(testOb);
+	obWnd = GetMyWndPtr(testOb);
 	
 	obWnd->SetScroll(str);
 
@@ -1437,7 +1448,6 @@ static PyObject* py_example_SetFlag(PyObject *self, PyObject *args)
 }
 
 
-
 static PyObject* py_example_CreateWindow(PyObject *self, PyObject *args)
 {
 	char *wndName;
@@ -1467,7 +1477,7 @@ static PyObject* py_example_CreateWindow(PyObject *self, PyObject *args)
 		ws_flags = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_VSCROLL;  
 	
 	if(textClass[0]==0)
-		strcpy(textClass, AfxRegisterWndClass( CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, LoadCursor (AfxGetInstanceHandle(), IDC_ARROW), (HBRUSH) GetStockObject (WHITE_BRUSH), LoadIcon(NULL, MAKEINTRESOURCE(IDR_PYTHON))));
+		strcpy(textClass, AfxRegisterWndClass( CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, LoadCursor (AfxGetInstanceHandle(), IDC_ARROW), (HBRUSH) GetStockObject (WHITE_BRUSH), AfxGetApp()->LoadIcon(MAKEINTRESOURCE(IDR_PYTHON))));
 
 	if(newWnd->CreateEx(WS_EX_CLIENTEDGE,
 						textClass, wndName,
@@ -1518,7 +1528,7 @@ static PyObject* py_example_CreateChildWindow(PyObject *self, PyObject *args)
 	TRACE("hWnd: %p, Name: %s, X: %d, Y: %d, W: %d, H: %d\n", parentWnd->m_hWnd, wndName, x, y, nWidth, nHeight );
 		
 	if(textClass[0]==0)
-		strcpy(textClass, AfxRegisterWndClass( CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, LoadCursor (NULL, IDC_ARROW), (HBRUSH) GetStockObject (WHITE_BRUSH), LoadIcon(NULL, MAKEINTRESOURCE(IDR_PYTHON))));
+		strcpy(textClass, AfxRegisterWndClass( CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, LoadCursor (NULL, IDC_ARROW), (HBRUSH) GetStockObject (WHITE_BRUSH), AfxGetApp()->LoadIcon(MAKEINTRESOURCE(IDR_PYTHON))));
 	
 	
 	if(newWnd->CreateEx(WS_EX_CONTROLPARENT,
@@ -1557,7 +1567,7 @@ static PyObject* py_example_CloseText(PyObject *self, PyObject *args)
 	}
 
 	
-	obWnd = (myWin*) GetWndPtr(testOb);
+	obWnd = GetMyWndPtr(testOb);
 
 	obWnd->DestroyWindow();
 
@@ -1579,7 +1589,7 @@ static PyObject* py_example_ClearXY(PyObject *self, PyObject *args)
 		return Py_None;
 	}
 
-	obWnd =(myWin*) GetWndPtr(testOb);
+	obWnd = GetMyWndPtr(testOb);
 	
 	obWnd->difer = 0;
 		
@@ -1617,7 +1627,7 @@ static PyMethodDef TextExMethods[] =
 	{ NULL, NULL }
 };
 
-PyEXPORT 
+__declspec(dllexport) 
 void inittextex()
 {
 	PyObject *m, *d;
