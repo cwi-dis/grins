@@ -48,7 +48,7 @@ MENUBAR=(
 			(ALL, ENTRY, 'Show log/debug window', None, CONSOLE),
 			)),
 		(DBG, SEP,),
-		(ALL, ENTRY, 'Check for updates...', None, CHECKVERSION),
+		(ALL, ENTRY, 'Check for GRiNS update...', None, CHECKVERSION),
 		(ALL, SEP,),
 		(ALL, ENTRY, 'Quit', 'Q', EXIT),
 		)),
