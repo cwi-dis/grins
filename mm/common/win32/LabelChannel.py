@@ -6,7 +6,7 @@ from AnchorDefs import *
 import string
 import MMurl
 import MMAttrdefs
-import gifex
+from win32modules import gifex,cmifex
 import os
 
 [SINGLE, HTM, TEXT] = range(3)
