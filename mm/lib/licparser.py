@@ -4,10 +4,9 @@ import string
 import sys
 
 FEATURES={
-	"save": 1,
 	"editor": 1,	# Synonym
-	"editdemo": 2,
-	"player":4,
+	"light":2,
+
 }
 
 MAGIC=13
