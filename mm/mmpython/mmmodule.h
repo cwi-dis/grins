@@ -8,6 +8,7 @@
 #define EXIT		0x0004
 #define PAUSING		0x0008
 #define STOPPING	0x0010
+#define ARMED		0x0020
 
 typedef struct {
 	OB_HEAD
