@@ -600,7 +600,7 @@ class SMILParser(xmllib.XMLParser):
 	def end_switch(self):
 		self.__in_head_switch = 0
 		if not self.__in_head:
-			self.EndContainer(self)
+			self.EndContainer()
 
 	# media items
 
