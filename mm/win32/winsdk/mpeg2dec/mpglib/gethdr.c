@@ -61,7 +61,7 @@ static int True_Framenum_max  = -1;
 static int Temporal_Reference_GOP_Reset = 0;
 
 #define RESERVED    -1 
-static double frame_rate_Table[16] =
+double frame_rate_Table[16] =
 {
   0.0,
   ((23.0*1000.0)/1001.0),
