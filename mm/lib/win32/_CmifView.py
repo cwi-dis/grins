@@ -538,6 +538,7 @@ class _CmifPlayerView(_CmifView):
 		self._backBuffer = self._ddraw.CreateSurface(w,h)
 		self._clipper = self._ddraw.CreateClipper(self.GetSafeHwnd())
 		self._frontBuffer.SetClipper(self._clipper)
+		self._pxlfmt = self._frontBuffer.GetPixelFormat()
 
 	def __delDD(self):
 		del self._frontBuffer
