@@ -996,8 +996,10 @@ smil_attrs=[
 	# subregion positioning
 	("left", lambda writer, node:getsubregionatt(writer, node, 'left')),
 	("right", lambda writer, node:getsubregionatt(writer, node, 'right')),
+	("width", lambda writer, node:getsubregionatt(writer, node, 'width')),
 	("top", lambda writer, node:getsubregionatt(writer, node, 'top')),
 	("bottom", lambda writer, node:getsubregionatt(writer, node, 'bottom')),
+	("height", lambda writer, node:getsubregionatt(writer, node, 'height')),
 	("fit", lambda writer, node:getfitatt(writer, node, 'scale')),
 	# registration points
 	("regPoint", lambda writer, node:getrawcmifattr(writer, node, "regPoint", 'topLeft')),
