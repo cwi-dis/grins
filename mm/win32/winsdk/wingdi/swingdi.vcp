@@ -147,6 +147,37 @@ BSC32=bscmake.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=..\common\memman.cpp
+
+!IF  "$(CFG)" == "swingdi - Win32 (WCE ARM) Release"
+
+DEP_CPP_MEMMA=\
+	"..\common\memman.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swingdi - Win32 (WCE ARM) Debug"
+
+DEP_CPP_MEMMA=\
+	"..\common\memman.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swingdi - Win32 (WCE x86em) Release"
+
+DEP_CPP_MEMMA=\
+	"..\common\memman.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swingdi - Win32 (WCE x86em) Debug"
+
+DEP_CPP_MEMMA=\
+	"..\common\memman.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\wingdi.cpp
 
 !IF  "$(CFG)" == "swingdi - Win32 (WCE ARM) Release"
@@ -1155,11 +1186,11 @@ SOURCE=.\wingdi_surf.cpp
 !IF  "$(CFG)" == "swingdi - Win32 (WCE ARM) Release"
 
 DEP_CPP_WINGDI_S=\
-	"..\..\..\..\LIB-SRC\JPEG\jconfig.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jerror.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jmorecfg.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jpegint.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jpeglib.h"\
+	"..\..\..\..\lib-src\jpeg\jconfig.h"\
+	"..\..\..\..\lib-src\jpeg\jerror.h"\
+	"..\..\..\..\lib-src\jpeg\jmorecfg.h"\
+	"..\..\..\..\lib-src\jpeg\jpegint.h"\
+	"..\..\..\..\lib-src\jpeg\jpeglib.h"\
 	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
 	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
 	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
@@ -1201,6 +1232,7 @@ DEP_CPP_WINGDI_S=\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
 	"..\common\memfile.h"\
+	"..\common\memman.h"\
 	".\decode_bmp.h"\
 	".\decode_gif.h"\
 	".\decode_i.h"\
@@ -1214,11 +1246,11 @@ DEP_CPP_WINGDI_S=\
 !ELSEIF  "$(CFG)" == "swingdi - Win32 (WCE ARM) Debug"
 
 DEP_CPP_WINGDI_S=\
-	"..\..\..\..\LIB-SRC\JPEG\jconfig.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jerror.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jmorecfg.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jpegint.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jpeglib.h"\
+	"..\..\..\..\lib-src\jpeg\jconfig.h"\
+	"..\..\..\..\lib-src\jpeg\jerror.h"\
+	"..\..\..\..\lib-src\jpeg\jmorecfg.h"\
+	"..\..\..\..\lib-src\jpeg\jpegint.h"\
+	"..\..\..\..\lib-src\jpeg\jpeglib.h"\
 	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
 	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
 	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
@@ -1273,11 +1305,11 @@ DEP_CPP_WINGDI_S=\
 !ELSEIF  "$(CFG)" == "swingdi - Win32 (WCE x86em) Release"
 
 DEP_CPP_WINGDI_S=\
-	"..\..\..\..\LIB-SRC\JPEG\jconfig.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jerror.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jmorecfg.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jpegint.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jpeglib.h"\
+	"..\..\..\..\lib-src\jpeg\jconfig.h"\
+	"..\..\..\..\lib-src\jpeg\jerror.h"\
+	"..\..\..\..\lib-src\jpeg\jmorecfg.h"\
+	"..\..\..\..\lib-src\jpeg\jpegint.h"\
+	"..\..\..\..\lib-src\jpeg\jpeglib.h"\
 	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
 	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
 	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
@@ -1332,11 +1364,11 @@ DEP_CPP_WINGDI_S=\
 !ELSEIF  "$(CFG)" == "swingdi - Win32 (WCE x86em) Debug"
 
 DEP_CPP_WINGDI_S=\
-	"..\..\..\..\LIB-SRC\JPEG\jconfig.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jerror.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jmorecfg.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jpegint.h"\
-	"..\..\..\..\LIB-SRC\JPEG\jpeglib.h"\
+	"..\..\..\..\lib-src\jpeg\jconfig.h"\
+	"..\..\..\..\lib-src\jpeg\jerror.h"\
+	"..\..\..\..\lib-src\jpeg\jmorecfg.h"\
+	"..\..\..\..\lib-src\jpeg\jpegint.h"\
+	"..\..\..\..\lib-src\jpeg\jpeglib.h"\
 	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
 	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
 	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
