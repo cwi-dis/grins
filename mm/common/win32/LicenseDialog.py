@@ -64,7 +64,11 @@ class LicenseDialog(win32dialog.ResDialog):
 		hdc=sdk.ParseDrawItemStruct(lParam)
 		dc=win32ui.CreateDCFromHandle(hdc)
 		rct=self.__splash.GetClientRect()
-		win32mu.BitBltBmp(dc,self.__bmp,rct)
+		try:
+			win32mu.BitBltBmp(dc,self.__bmp,rct)
+		except:
+			print dc,self.__bmp,rct
+			return
 		br=sdk.CreateBrush(win32con.BS_SOLID,0,0)	
 		dc.FrameRectFromHandle(rct,br)
 		sdk.DeleteObject(br)
