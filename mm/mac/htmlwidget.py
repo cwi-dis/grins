@@ -409,9 +409,7 @@ class MyHTMLParser(htmllib.HTMLParser):
 		image = img.reader(imgformat.macrgb16, fname)
 		data = image.read()
 		handle = _gifkeeper.new(fname, image.width, image.height, data)
-		#self.handle_data(alt)
 		self.formatter.my_add_image(handle)
-		# self.handle_gif(handle)
 
 
 waste_inited = 0
