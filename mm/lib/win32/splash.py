@@ -1,12 +1,11 @@
 __version__ = "$Id$"
 
-""" @win32doc|splash
-This module contains the interface to create and
-destroy the splash screen displayed atapplication startup. 
-The actual implementation class
-of the splash is SplashDlg in lib/win32/win32dialog.py
-It consists of just two simple functions.
-"""
+# @win32doc|splash
+# This module contains the interface to create and
+# destroy the splash screen displayed atapplication startup. 
+# The actual implementation class
+# of the splash is SplashDlg in lib/win32/win32dialog.py
+# It consists of just two simple functions.
 
 
 # Create and display the splash screen
