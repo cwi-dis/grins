@@ -26,3 +26,5 @@ you give the attribute values and select OK? (There are problems with
 the windows).  -mariat
 
 
+The path used for external anchors is absolute. Need to be changed to
+relative. Currently I have to edit the cmif files manualy.   -mariat 27/1/97
