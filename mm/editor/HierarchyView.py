@@ -139,6 +139,7 @@ class HierarchyView(HierarchyViewDialog):
 				NEW_AFTER_PAR(callback = (self.createafterintcall, ('par',))),
 				NEW_AFTER_CHOICE(callback = (self.createafterintcall, ('bag',))),
 				NEW_AFTER_ALT(callback = (self.createafterintcall, ('alt',))),
+				EDIT_TVIEW(callback = (self.edit_in_tview, ())),
 				]
 		self.rpconvertcommands = [
 			RPCONVERT(callback = (self.rpconvertcall, ())),
@@ -1276,6 +1277,10 @@ class HierarchyView(HierarchyViewDialog):
 
 	def pasteundercall(self):
 		if self.focusobj: self.focusobj.pasteundercall()
+
+	def edit_in_tview(self):
+		if self.focusobj:
+			self.toplevel.open_node_in_tview(self.focusobj.node)
 
 def expandnode(node):
 	# Bad hack. I shouldn't refer to private attrs of a node.
