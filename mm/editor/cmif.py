@@ -6,7 +6,11 @@
 # (We can't define the function here and import it from main, because
 # main must *use* it to patch up the Python search path!)
 
-try:
-	from __main__ import findfile
-except ImportError:
-	from main import findfile
+import sys
+
+for mod in ('main', 'grins', 'cmifed', '__main__'):
+	if sys.modules.has_key(mod) and hasattr(sys.modules[mod], 'findfile'):
+		findfile = sys.modules[mod].findfile
+		break
+	else:
+		raise ImportError('no module named cmif')
