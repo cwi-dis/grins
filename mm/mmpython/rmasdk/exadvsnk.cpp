@@ -35,7 +35,6 @@ ExampleClientAdviceSink::ExampleClientAdviceSink(IUnknown* pUnknown)
     , m_pUnknown (NULL)
     , m_pRegistry (NULL)
 	, m_pyAdviceSink(NULL)
-	, m_bBeginOnPostSeek(FALSE)
 	{
     if (pUnknown)
 		{
