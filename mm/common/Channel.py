@@ -764,7 +764,7 @@ class Channel:
 	#
 	def updateattr(self, node, name, value):
 		# Updates the display value of the attribute
-		if self._playstate == PLAYING:
+		if self._playstate != PIDLE:
 			self.do_updateattr(node, name, value)
 
 	def do_updateattr(self, node, name, value):
