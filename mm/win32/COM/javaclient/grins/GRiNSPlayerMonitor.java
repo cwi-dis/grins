@@ -26,16 +26,16 @@ class GRiNSPlayerMonitor extends Thread {
                 }
             try {
                 Thread.sleep(interval);
-            }
+                }
             catch(InterruptedException e) {break;}
-        }
+            }
         if(hgrins!=0)
             {
             ndisconnect(hgrins);
             hgrins=0;
             }
         uninitializeThreadContext();
-    }
+        }
     
     private native void initializeThreadContext();
     private native void uninitializeThreadContext();
