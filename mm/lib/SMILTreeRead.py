@@ -146,6 +146,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'video': (self.start_video, self.end_video),
 			'animation': (self.start_animation, self.end_animation),
 			'textstream': (self.start_textstream, self.end_textstream),
+			'brush': (self.start_brush, self.end_brush),
 			GRiNSns+' '+'socket': (self.start_socket, self.end_socket),
 			GRiNSns+' '+'shell': (self.start_shell, self.end_shell),
 			GRiNSns+' '+'cmif': (self.start_cmif, self.end_cmif),
@@ -201,7 +202,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if new_file and type(new_file) == type(''):
 			self.__base = new_file
 		self.__validchannels = {'undefined':0}
-		for chtype in ChannelMap.getvalidchanneltypes():
+		for chtype in ChannelMap.getvalidchanneltypes(context):
+			self.__validchannels[chtype] = 1
+		for chtype in ChannelMap.SMILBostonChanneltypes:
 			self.__validchannels[chtype] = 1
 
 	def close(self):
@@ -581,6 +584,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['fill'] = val
 				else:
 					self.syntax_error("bad fill attribute")
+			elif attr == 'color' and node.__chantype == 'brush':
+				fg = self.__convert_color(val)
+				if type(fg) != type(()):
+					self.syntax_error("bad color attribute")
+				else:
+					attrdict['fgcolor'] = fg
 			elif compatibility.QT == features.compatibility and \
 				self.addQTAttr(attr, val, node):
 				pass
@@ -659,7 +668,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__node:
 			# the warning comes later from xmllib
 			self.EndNode()
-		url = attributes.get('src')
+		if tagname != 'brush':
+			url = attributes.get('src')
+		else:
+			url = None
 		data = None
 		mtype = None
 		nodetype = 'ext'
@@ -668,7 +680,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			url = None
 		if url == '#':
 			url = None
-		elif url[:1] == '#':
+		elif url and url[:1] == '#':
 			# just a #name URL, not valid here
 			self.syntax_error('no proper src attribute')
 			url = None
@@ -683,7 +695,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					data = string.split(MMurl.unquote(res.group('data')), '\n')
 					nodetype = 'imm'
 					del attributes['src']
-		else:
+		elif tagname != 'brush':
 			# remove if immediate data allowed
 			self.syntax_error('no src attribute')
 
@@ -694,104 +706,109 @@ class SMILParser(SMIL, xmllib.XMLParser):
 ##			if not attributes.has_key('type'):
 ##				self.syntax_error('no type attribute')
 
-		# find out type of file
-		subtype = None
-		mimetype = attributes.get('type')
-		if mimetype is not None:
-			mtype = mimetype
-# not allowed to look at extension...
-		if mtype is None and url is not None and settings.get('checkext'):
- 			import MMmimetypes
- 			# guess the type from the file extension
- 			mtype = MMmimetypes.guess_type(url)[0]
-		if url is not None and mtype is None and \
-		   (tagname is None or tagname == 'text'):
-			# last resort: get file and see what type it is
-			try:
-				u = MMurl.urlopen(url)
-			except:
-				self.warning('cannot open file %s' % url, self.lineno)
-				# we have no idea what type the file is
-			else:
-				mtype = u.headers.type
-				u.close()
+		if tagname == 'brush':
+			chtype = 'brush'
+			mediatype = subtype = None
+			mimetype = None
+		else:
+			# find out type of file
+			subtype = None
+			mimetype = attributes.get('type')
+			if mimetype is not None:
+				mtype = mimetype
+	# not allowed to look at extension...
+			if mtype is None and url is not None and settings.get('checkext'):
+				import MMmimetypes
+				# guess the type from the file extension
+				mtype = MMmimetypes.guess_type(url)[0]
+			if url is not None and mtype is None and \
+			   (tagname is None or tagname == 'text'):
+				# last resort: get file and see what type it is
+				try:
+					u = MMurl.urlopen(url)
+				except:
+					self.warning('cannot open file %s' % url, self.lineno)
+					# we have no idea what type the file is
+				else:
+					mtype = u.headers.type
+					u.close()
 
-		mediatype = tagname
-		if mtype is not None:
-			mtype = string.split(mtype, '/')
-##			if tagname is not None and mtype[0]!=tagname and \
-##			   (tagname[:5]!='cmif_' or mtype!=['text','plain']):
-##				self.warning("file type doesn't match element", self.lineno)
-			if tagname is None or tagname[:5] != 'cmif_':
-				mediatype = mtype[0]
-				subtype = mtype[1]
-			
+			mediatype = tagname
+			if mtype is not None:
+				mtype = string.split(mtype, '/')
+##				if tagname is not None and mtype[0]!=tagname and \
+##				   (tagname[:5]!='cmif_' or mtype!=['text','plain']):
+##					self.warning("file type doesn't match element", self.lineno)
+				if tagname is None or tagname[:5] != 'cmif_':
+					mediatype = mtype[0]
+					subtype = mtype[1]
 
-		# now determine channel type
-		if subtype is not None and \
-		   string.find(string.lower(subtype), 'real') >= 0:
-			# if it's a RealMedia type, use tag to determine chtype
-			if tagname == 'audio':
-				chtype = 'RealAudio'
-			elif tagname == 'image' or tagname == 'animation':
-				chtype = 'RealPix'
-			elif tagname == 'text' or tagname == 'textstream':
-				chtype = 'RealText'
-			else:
-				if mediatype == 'audio':
+
+			# now determine channel type
+			if subtype is not None and \
+			   string.find(string.lower(subtype), 'real') >= 0:
+				# if it's a RealMedia type, use tag to determine chtype
+				if tagname == 'audio':
 					chtype = 'RealAudio'
-				elif mediatype == 'image':
+				elif tagname == 'image' or tagname == 'animation':
 					chtype = 'RealPix'
-				elif mediatype == 'text':
+				elif tagname == 'text' or tagname == 'textstream':
 					chtype = 'RealText'
 				else:
-					chtype = 'RealVideo'
+					if mediatype == 'audio':
+						chtype = 'RealAudio'
+					elif mediatype == 'image':
+						chtype = 'RealPix'
+					elif mediatype == 'text':
+						chtype = 'RealText'
+					else:
+						chtype = 'RealVideo'
 
-		elif mediatype == 'audio':
-			chtype = 'sound'
-		elif mediatype == 'image':
-			chtype = 'image'
-		elif mediatype == 'video':
-			chtype = 'video'
-		elif mediatype == 'text':
-			if subtype == 'plain':
-				chtype = 'text'
-			else:
-				chtype = 'html'
-		elif mediatype == 'application' and \
-		     subtype == 'x-shockwave-flash':
-			chtype = 'RealVideo'
-		elif mediatype == 'cmif_cmif':
-			chtype = 'cmif'
-		elif mediatype == 'cmif_socket':
-			chtype = 'socket'
-		elif mediatype == 'cmif_shell':
-			chtype = 'shell'
-		elif mediatype is None:
-			chtype = 'undefined'
-		else:
-			chtype = 'undefined'
-			prtype = mediatype
-			if subtype:
-				prtype = prtype+'/'+subtype
-			self.warning('unrecognized media type %s' % prtype)
-
-		# map channel type to something we can deal with
-		# this should loop at most twice (RealPix->RealVideo->video)
-		while not self.__validchannels.has_key(chtype):
-			if chtype == 'RealVideo':
-				chtype = 'video'
-			elif chtype == 'RealPix':
-				chtype = 'RealVideo'
-			elif chtype == 'RealAudio':
+			elif mediatype == 'audio':
 				chtype = 'sound'
-			elif chtype == 'RealText':
+			elif mediatype == 'image':
+				chtype = 'image'
+			elif mediatype == 'video':
 				chtype = 'video'
-			elif chtype == 'html':
-				chtype = 'text'
+			elif mediatype == 'text':
+				if subtype == 'plain':
+					chtype = 'text'
+				else:
+					chtype = 'html'
+			elif mediatype == 'application' and \
+			     subtype == 'x-shockwave-flash':
+				chtype = 'RealVideo'
+			elif mediatype == 'cmif_cmif':
+				chtype = 'cmif'
+			elif mediatype == 'cmif_socket':
+				chtype = 'socket'
+			elif mediatype == 'cmif_shell':
+				chtype = 'shell'
+			elif mediatype is None:
+				chtype = 'undefined'
+			else:
+				chtype = 'undefined'
+				prtype = mediatype
+				if subtype:
+					prtype = prtype+'/'+subtype
+				self.warning('unrecognized media type %s' % prtype)
 
-## 		if attributes['encoding'] not in ('base64', 'UTF'):
-## 			self.syntax_error('bad encoding parameter')
+			# map channel type to something we can deal with
+			# this should loop at most twice (RealPix->RealVideo->video)
+			while not self.__validchannels.has_key(chtype):
+				if chtype == 'RealVideo':
+					chtype = 'video'
+				elif chtype == 'RealPix':
+					chtype = 'RealVideo'
+				elif chtype == 'RealAudio':
+					chtype = 'sound'
+				elif chtype == 'RealText':
+					chtype = 'video'
+				elif chtype == 'html':
+					chtype = 'text'
+
+##	 		if attributes['encoding'] not in ('base64', 'UTF'):
+## 				self.syntax_error('bad encoding parameter')
 
 		# create the node
 		if not self.__root:
@@ -806,8 +823,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if data is not None:
 			node.values = data
 		self.__node = node
-		self.AddAttrs(node, attributes)
 		node.__chantype = chtype
+		self.AddAttrs(node, attributes)
 		node.__mediatype = mediatype, subtype
 		self.__attributes = attributes
 		if mimetype is not None:
@@ -917,7 +934,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					height = 100
 				else:
 					node.__size = width, height
-		elif mtype in ('text', 'label', 'html', 'graph'):
+		elif mtype in ('text', 'label', 'html', 'graph', 'brush'):
 			# want to make them at least visible...
 			width = 200
 			height = 100
@@ -2274,6 +2291,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.NewNode('textstream', attributes)
 
 	def end_textstream(self):
+		self.EndNode()
+
+	def start_brush(self, attributes):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('brush element not compatible with SMIL 1.0')
+		self.__context.attributes['project_boston'] = 1
+		self.NewNode('brush', attributes)
+
+	def end_brush(self):
 		self.EndNode()
 
 	def start_cmif(self, attributes):

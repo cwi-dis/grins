@@ -2210,7 +2210,7 @@ class ChanneltypeAttrEditorField(PopupAttrEditorFieldNoDefault):
 		current = self.getcurrent()
 		if features.lightweight:
 			return [current]
-		all = ChannelMap.getvalidchanneltypes()
+		all = ChannelMap.getvalidchanneltypes(self.wrapper.context)
 		if not current in all:
 			# Can happen if we open, say, a full-smil document
 			# in the G2 editor

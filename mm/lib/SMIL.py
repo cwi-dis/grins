@@ -316,13 +316,59 @@ class SMIL:
 			GRiNSns+' ' 'project_quality':None,
 			GRiNSns+' ' 'project_targets':None,
 			GRiNSns+' ' 'project_videotype':None,
-			QTns+' ' 'immediate-instantiation':None,			
-			QTns+' ' 'bitrate':None,			
-			QTns+' ' 'system-mime-type-supported':None,			
-			QTns+' ' 'attach-timebase':None,			
-			QTns+' ' 'chapter':None,			
-			QTns+' ' 'composite-mode':None,			
+			QTns+' ' 'immediate-instantiation':None,
+			QTns+' ' 'bitrate':None,
+			QTns+' ' 'system-mime-type-supported':None,
+			QTns+' ' 'attach-timebase':None,
+			QTns+' ' 'chapter':None,
+			QTns+' ' 'composite-mode':None,
 			},
+		'brush': {'abstract':'',
+			  'alt':None,
+			  'author':'',
+			  'begin':None,
+			  'color':None,
+			  'copyright':'',
+			  'dur':None,
+			  'end':None,
+			  'fill':None,
+			  'id':None,
+			  'longdesc':None,
+			  'region':None,
+			  'repeat':None,
+			  'repeatCount':None,
+			  'repeatDur':None,
+			  'restart':None,
+			  'system-bitrate':None,
+			  'system-captions':None,
+			  'system-language':None,
+			  'system-overdub-or-caption':None,
+			  'system-required':None,
+			  'system-screen-depth':None,
+			  'system-screen-size':None,
+			  'systemAudioDesc':None,
+			  'systemBitrate':None,
+			  'systemCaptions':None,
+			  'systemLanguage':None,
+			  'systemOverdubOrCaption':None,
+			  'systemOverdubOrSubtitle':None,
+			  'systemRequired':None,
+			  'systemScreenDepth':None,
+			  'systemScreenSize':None,
+			  'title':None,
+			  'uGroup':None,
+			  __layout:None,
+			  GRiNSns+' ' 'bgcolor':None,
+			  GRiNSns+' ' 'comment':None,
+			  GRiNSns+' ' 'font':None,
+			  GRiNSns+' ' 'hicolor':None,
+			  QTns+' ' 'immediate-instantiation':None,
+			  QTns+' ' 'bitrate':None,
+			  QTns+' ' 'system-mime-type-supported':None,
+			  QTns+' ' 'attach-timebase':None,
+			  QTns+' ' 'chapter':None,
+			  QTns+' ' 'composite-mode':None,
+			  },
 		'a': {'href':None,
 		      'id':None,
 		      'show':'replace',
@@ -363,10 +409,12 @@ class SMIL:
 	attributes[__bag] = attributes[__choice]
 
 	__media_object = ['audio', 'video', 'text', 'img', 'animation',
-			  'textstream', 'ref', __null, __cmif, __shell,
-			  __socket]
+			  'textstream', 'ref', 'brush', __null, __cmif,
+			  __shell, __socket]
 	__at = None
 	for __el in __media_object:
+		if attributes.has_key(__el):
+			continue
 		if ' ' in __el:
 			attributes[__el] = __at = {}
 			for key, val in attributes['ref'].items():
@@ -377,7 +425,7 @@ class SMIL:
 		else:
 			attributes[__el] = attributes['ref']
 	del __el, __at
-	
+
 	__animate_elements = ['animate',  'animateMotion', 'animateColor', 'set',]
 	__animate_attrs ={'begin':None,
 		'dur':None,
@@ -393,18 +441,18 @@ class SMIL:
 		'targetElement': '',
 		'attribute':'',
 		'attributeName':'',
-		'attributeType':'', 
-		'additive':'replace', 
+		'attributeType':'',
+		'additive':'replace',
 		'accumulate':'none',
-		'id':None, 
-		'calcMode':'linear', 
-		'values':None, 
-		'keyTimes':None, 
-		'keySplines':None, 
-		'from':None, 
-		'to':None, 
+		'id':None,
+		'calcMode':'linear',
+		'values':None,
+		'keyTimes':None,
+		'keySplines':None,
+		'from':None,
+		'to':None,
 		'by':None,
-		'path':None, 
+		'path':None,
 		'origin':None,}
 	attributes['animateMotion'] = __animate_attrs.copy()
 	del attributes['animateMotion']['attributeName']
