@@ -623,7 +623,6 @@ newWMWriterAdvancedObject()
 //
 typedef struct {
 	PyObject_HEAD
-	/* XXXX Add your own stuff here */
 	IWMStreamConfig* pI;
 } WMStreamConfigObject;
 
@@ -633,15 +632,29 @@ static WMStreamConfigObject *
 newWMStreamConfigObject()
 {
 	WMStreamConfigObject *self;
-
 	self = PyObject_NEW(WMStreamConfigObject, &WMStreamConfigType);
-	if (self == NULL)
-		return NULL;
+	if (self == NULL) return NULL;
 	self->pI = NULL;		
-	/* XXXX Add your own initializers here */
 	return self;
 }
 
+//
+typedef struct {
+	PyObject_HEAD
+	IWMCodecInfo* pI;
+} WMCodecInfoObject;
+
+staticforward PyTypeObject WMCodecInfoType;
+
+static WMCodecInfoObject *
+newWMCodecInfoObject()
+{
+	WMCodecInfoObject *self;
+	self = PyObject_NEW(WMCodecInfoObject, &WMCodecInfoType);
+	if (self == NULL) return NULL;
+	self->pI = NULL;		
+	return self;
+}
 
 //
 typedef struct {
@@ -2077,6 +2090,42 @@ DDWMWriter_AllocateDDSample(DDWMWriterObject *self, PyObject *args)
 	return (PyObject*)bufobj;
 }
 
+static char DDWMWriter_SetDDSample__doc__[] =
+""
+;
+static PyObject *
+DDWMWriter_SetDDSample(DDWMWriterObject *self, PyObject *args)
+{
+	PyObject *obj;
+	NSSBufferObject *bufobj;
+	if (!PyArg_ParseTuple(args, "OO!", &obj,&NSSBufferType,&bufobj))
+		return NULL;
+
+	IDirectDrawSurface *surf = (IDirectDrawSurface *)((UnknownObject*)obj)->pI;
+	DDSURFACEDESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.dwSize=sizeof(desc);
+	HRESULT hr;
+	hr = surf->Lock(0,&desc,DDLOCK_WAIT | DDLOCK_READONLY, 0);
+	if (FAILED(hr)){
+		seterror("DDWMWriter_SetDDSample:Lock", hr);
+		return NULL;
+	}	
+
+	BYTE *pBuffer=(BYTE*)desc.lpSurface;
+	int nrows = int(desc.dwHeight);
+	int pitch = int(desc.lPitch);
+	BYTE *pbsBuffer;
+	bufobj->pI->GetBuffer(&pbsBuffer);
+	for(int row=nrows-1;row>=0;row--){
+		CopyMemory(pbsBuffer, pBuffer + row*pitch, pitch);
+		pbsBuffer += pitch;
+	}
+	surf->Unlock(0);
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
 static char DDWMWriter_WriteVideoSample__doc__[] =
 ""
 ;
@@ -2120,6 +2169,7 @@ static struct PyMethodDef DDWMWriter_methods[] = {
 	{"SetAudioFormat", (PyCFunction)DDWMWriter_SetAudioFormat, METH_VARARGS, DDWMWriter_SetAudioFormat__doc__},
 	{"SetDSAudioFormat", (PyCFunction)DDWMWriter_SetDSAudioFormat, METH_VARARGS, DDWMWriter_SetDSAudioFormat__doc__},
 	{"AllocateDDSample", (PyCFunction)DDWMWriter_AllocateDDSample, METH_VARARGS, DDWMWriter_AllocateDDSample__doc__},
+	{"SetDDSample", (PyCFunction)DDWMWriter_SetDDSample, METH_VARARGS, DDWMWriter_SetDDSample__doc__},
 	{"WriteVideoSample", (PyCFunction)DDWMWriter_WriteVideoSample, METH_VARARGS, DDWMWriter_WriteVideoSample__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
@@ -2229,7 +2279,7 @@ static char WMProfileManager_CreateEmptyProfile__doc__[] =
 static PyObject *
 WMProfileManager_CreateEmptyProfile(WMProfileManagerObject *self, PyObject *args)
 {
-	WMT_VERSION dwVersion = WMT_VER_4_0;
+	WMT_VERSION dwVersion = WMT_VER_7_0;
 	if (!PyArg_ParseTuple(args,"|i",&dwVersion))
 		return NULL;
 	
@@ -2247,10 +2297,61 @@ WMProfileManager_CreateEmptyProfile(WMProfileManagerObject *self, PyObject *args
 	return (PyObject*)obj;
 }
 
+
+static char WMProfileManager_QueryIWMCodecInfo__doc__[] =
+""
+;
+static PyObject *
+WMProfileManager_QueryIWMCodecInfo(WMProfileManagerObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,""))
+		return NULL;
+	
+	WMCodecInfoObject *obj = newWMCodecInfoObject();
+	if (obj == NULL) return NULL;
+	
+	HRESULT hr=self->pI->QueryInterface(IID_IWMCodecInfo, (void **)&obj->pI);
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMProfileManager_QueryIWMCodecInfo", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
+static char WMProfileManager_SetSystemProfileVersion__doc__[] =
+""
+;
+static PyObject *
+WMProfileManager_SetSystemProfileVersion(WMProfileManagerObject *self, PyObject *args)
+{
+	WMT_VERSION dwVersion = WMT_VER_7_0;
+	if (!PyArg_ParseTuple(args,"|i",&dwVersion))
+		return NULL;
+
+	IWMProfileManager2 *pI=NULL;
+	HRESULT hr=self->pI->QueryInterface(IID_IWMProfileManager2, (void **)&pI);
+	if (FAILED(hr)){
+		seterror("WMProfileManager_QueryIWMProfileManager2", hr);
+		return NULL;
+	}
+    hr = pI->SetSystemProfileVersion(dwVersion);
+	if (FAILED(hr)){
+		pI->Release();
+		seterror("WMProfileManager_SetSystemProfileVersion", hr);
+		return NULL;
+	}
+	pI->Release();
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
 static struct PyMethodDef WMProfileManager_methods[] = {
 	{"GetSystemProfileCount", (PyCFunction)WMProfileManager_GetSystemProfileCount, METH_VARARGS, WMProfileManager_GetSystemProfileCount__doc__},
 	{"LoadSystemProfile", (PyCFunction)WMProfileManager_LoadSystemProfile, METH_VARARGS, WMProfileManager_LoadSystemProfile__doc__},
 	{"CreateEmptyProfile", (PyCFunction)WMProfileManager_CreateEmptyProfile, METH_VARARGS, WMProfileManager_CreateEmptyProfile__doc__},
+	{"QueryIWMCodecInfo", (PyCFunction)WMProfileManager_QueryIWMCodecInfo, METH_VARARGS, WMProfileManager_QueryIWMCodecInfo__doc__},
+	{"SetSystemProfileVersion", (PyCFunction)WMProfileManager_SetSystemProfileVersion, METH_VARARGS, WMProfileManager_SetSystemProfileVersion__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -4834,6 +4935,124 @@ static PyTypeObject WMStreamConfigType = {
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
+// WMCodecInfo object (IWMCodecInfo)
+
+static char WMCodecInfo_GetCodecInfoCount__doc__[] =
+""
+;
+static PyObject *
+WMCodecInfo_GetCodecInfoCount(WMCodecInfoObject *self, PyObject *args)
+{
+	GUIDObject *obj;
+	if (!PyArg_ParseTuple(args,"O!", &GUIDType, &obj)) 
+		return NULL;
+	DWORD cCodecs;
+	HRESULT hr = self->pI->GetCodecInfoCount(obj->guid, &cCodecs);
+	if (FAILED(hr)) {
+		seterror("WMCodecInfo_GetCodecInfoCount", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i", cCodecs);
+}
+      
+static char WMCodecInfo_GetCodecFormatCount__doc__[] =
+""
+;
+static PyObject *
+WMCodecInfo_GetCodecFormatCount(WMCodecInfoObject *self, PyObject *args)
+{
+	GUIDObject *obj;
+	DWORD dwCodecIndex;
+	if (!PyArg_ParseTuple(args,"O!i", &GUIDType, &obj, &dwCodecIndex)) 
+		return NULL;
+	DWORD cFormats;
+	HRESULT hr = self->pI->GetCodecFormatCount(obj->guid, dwCodecIndex, &cFormats);
+	if (FAILED(hr)) {
+		seterror("WMCodecInfo_GetCodecFormatCount", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i", cFormats);
+}
+
+static char WMCodecInfo_GetCodecFormat__doc__[] =
+""
+;
+static PyObject *
+WMCodecInfo_GetCodecFormat(WMCodecInfoObject *self, PyObject *args)
+{
+	GUIDObject *guidobj;
+	DWORD dwCodecIndex;
+	DWORD dwFormatIndex;
+	if (!PyArg_ParseTuple(args,"O!ii", &GUIDType, &guidobj, &dwCodecIndex, &dwFormatIndex)) 
+		return NULL;
+	WMStreamConfigObject *obj = newWMStreamConfigObject();
+	if(obj==NULL) return NULL;
+	
+	HRESULT hr = self->pI->GetCodecFormat(guidobj->guid, dwCodecIndex, dwFormatIndex, &obj->pI);
+	if (FAILED(hr)) {
+		Py_DECREF(obj);
+		seterror("WMCodecInfo_GetCodecFormat", hr);
+		return NULL;
+	}
+	return (PyObject *)obj;
+}
+
+												  
+static struct PyMethodDef WMCodecInfo_methods[] = {
+	{"GetCodecInfoCount", (PyCFunction)WMCodecInfo_GetCodecInfoCount, METH_VARARGS, WMCodecInfo_GetCodecInfoCount__doc__},
+	{"GetCodecFormatCount", (PyCFunction)WMCodecInfo_GetCodecFormatCount, METH_VARARGS, WMCodecInfo_GetCodecFormatCount__doc__},
+	{"GetCodecFormat", (PyCFunction)WMCodecInfo_GetCodecFormat, METH_VARARGS, WMCodecInfo_GetCodecFormat__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMCodecInfo_dealloc(WMCodecInfoObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMCodecInfo_getattr(WMCodecInfoObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMCodecInfo_methods, (PyObject *)self, name);
+}
+
+static char WMCodecInfoType__doc__[] =
+""
+;
+
+static PyTypeObject WMCodecInfoType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMCodecInfo",			/*tp_name*/
+	sizeof(WMCodecInfoObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMCodecInfo_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMCodecInfo_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMCodecInfoType__doc__ /* Documentation string */
+};
+
+// End of code for WMCodecInfo object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
 // WMStreamList object 
    
 static struct PyMethodDef WMStreamList_methods[] = {
@@ -5696,7 +5915,8 @@ static PyObject *
 CreateDDVideoWMType(PyObject *self, PyObject *args)
 {
 	PyObject *ddsobj;
-	if (!PyArg_ParseTuple(args,"O",&ddsobj))
+	int avgTimePerFrame = 100; // in msecs
+	if (!PyArg_ParseTuple(args,"O|i",&ddsobj,&avgTimePerFrame))
 		return NULL;
 	IDirectDrawSurface *surf = (IDirectDrawSurface *)((UnknownObject*)ddsobj)->pI;
 
@@ -5749,8 +5969,9 @@ CreateDDVideoWMType(PyObject *self, PyObject *args)
 	WM_MEDIA_TYPE& mt = *obj->pMediaType;
 
 	DWORD dwSampleSize=width*height*(depth/8);
-	DWORD rate = 10*dwSampleSize*8;
-	LONGLONG atpf=LONGLONG(100)*10000;
+	LONGLONG atpf=LONGLONG(avgTimePerFrame)*10000;
+	double fps = 1000.0/double(avgTimePerFrame);
+	DWORD rate = DWORD(fps*dwSampleSize*8.0);
 
 	
 	WMVIDEOINFOHEADER* pVideoInfo = (WMVIDEOINFOHEADER*) new BYTE[cbFormat];
@@ -5763,7 +5984,7 @@ CreateDDVideoWMType(PyObject *self, PyObject *args)
 	pbmih->biHeight   = height;
 	pbmih->biPlanes   = 1;
 	pbmih->biBitCount = depth;
-	pbmih->biCompression=BI_RGB;
+	pbmih->biCompression = BI_RGB;
 	pbmih->biSizeImage = 0;
 	pbmih->biClrUsed = 0;
 	pbmih->biClrImportant = 0;
@@ -6191,6 +6412,7 @@ static struct enumentry _wmt_stream_selection[] ={
 
 static struct enumentry _wmt_version[] ={
     {"WMT_VER_4_0", WMT_VER_4_0},
+    {"WMT_VER_7_0", WMT_VER_7_0},
 	{NULL,0}
 	};
 
