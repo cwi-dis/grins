@@ -15,7 +15,7 @@ class MovieChannel(ChannelWindowThread):
 			return 1
 		import MMAttrdefs, GLLock, VFile
 		filename = self.getfileurl(node)
-		filename = urllib.url2pathname(filename)
+		filename = urllib.urlretrieve(filename)[0]
 		try:
 			vfile = VFile.RandomVinFile(filename)
 		except (EOFError, IOError, VFile.Error), msg:
