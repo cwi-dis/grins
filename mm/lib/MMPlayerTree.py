@@ -78,6 +78,12 @@ def WriteFile(root, filename):
 	del root.attrdict['hyperlinks']
 	del root.attrdict['channellist']
 	f.close()
+	if os.name == 'mac':
+		import macfs
+		import macostools
+		fss = macfs.FSSpec(cache)
+		fss.SetCreatorType('CMIF', 'CMP ')
+		macostools.touched(fss)
 
 def cachename(filename):
 	# return the name of the cache file for the given filename.
