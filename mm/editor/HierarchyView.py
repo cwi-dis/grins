@@ -14,6 +14,7 @@ __version__ = "$Id$"
 import windowinterface, WMEVENTS
 import MMAttrdefs
 import MMNode
+import EditableObjects
 from HierarchyViewDialog import HierarchyViewDialog
 import BandwidthCompute
 from usercmd import *
@@ -616,13 +617,23 @@ class HierarchyView(HierarchyViewDialog):
 	def globalfocuschanged(self, focustype, focusobject):
 		# for now, catch only MMNode focus
 		#print "DEBUG: HierarchyView received globalfocuschanged with ", focustype
-		if focustype == 'MMNode':
-			if isinstance(focusobject, MMNode.MMNode) and focusobject is not self.focusnode:
-				self.select_node(focusobject, 1)
-				self.aftersetfocus()
-				self.need_resize = 0
-				self.need_redraw = 0
-				self.draw()
+		# XXX Temporary: pick first item of multiselect. Michael will
+		# fix this later.
+		if not focusobject:
+			return # XXXX Or should we de-select?
+		if type(focusobject) == type([]):
+			focusobject = focusobject[0][1]
+			print "XXX Selecting first item of multiselect"
+		if not hasattr(focusobject, 'getClassName'):
+			print 'Error: focus objects need getClassName() method!', focusobject
+			return
+		if focusobject.getClassName() != 'MMNode':
+			return
+		self.select_node(focusobject, 1)
+		self.aftersetfocus()
+		self.need_resize = 0
+		self.need_redraw = 0
+		self.draw()
 
 	#################################################
 	# Event handlers                                #
