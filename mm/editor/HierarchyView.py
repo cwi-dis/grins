@@ -124,7 +124,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.destroynode = None	# node to be destroyed later
 		self.thumbnails = 1
 		from cmif import findfile
-		self.datadir = findfile('Data')
+		self.datadir = findfile('GRiNS-Icons')
 		HierarchyViewDialog.__init__(self)
 
 	def __repr__(self):
