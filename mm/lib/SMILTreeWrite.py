@@ -2378,8 +2378,8 @@ class SMILWriter(SMIL):
 		self.__generate_number = self.__generate_number + 1
 		return self.__generate_basename + `i` + '.rt'
 
-htmlnamechars = string.letters + string.digits + '_.'
-namechars = htmlnamechars + '-'
+htmlnamechars = string.letters + string.digits + '_'
+namechars = htmlnamechars + '-.'
 
 def identify(name, html = 0):
 	"""Turn a CMIF name into an identifier"""
@@ -2399,7 +2399,12 @@ def identify(name, html = 0):
 	# the first character must not be a digit
 	if rv and rv[0] in string.digits:
 		rv.insert(0, '_')
-	return string.join(rv, '')
+	name = string.join(rv, '')
+	if html:
+		# certain names should not be used in XHTML+SMIL
+		if ATTRIBUTES.has_key(name):
+			name = '_'+name
+	return name
 
 def intToEnumString(intValue, dict):
 	if dict.has_key(intValue):
