@@ -36,6 +36,9 @@ class PlayerCore(Selecter, PlayerCommon):
 	def fullreset(self):
 		self.reset()
 		self.playroot = self.userplayroot = self.root
+		if hasattr(self, '_animateContext'):
+			del self._animateContext
+
 	#
 	# play_done - Upcall by scheduler to indicate that all is done.
 	#
@@ -235,7 +238,6 @@ class PlayerCore(Selecter, PlayerCommon):
 		for name in ichnames:
 			self.__ichannels[name].destroy()
 			del self.__ichannels[name]
-
 	#
 	def __newichannel(self, name, attrdict):
 		if not attrdict.has_key('type'):
