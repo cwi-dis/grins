@@ -257,7 +257,8 @@ class EditMgr:
 		self.addnode(parent, i, node)
 
 	def clean_delnode(self, parent, i, node):
-		node.Destroy()
+		if node.GetParent() is None:
+			node.Destroy()
 
 	def addnode(self, parent, i, node):
 		self.addstep('addnode', node)
