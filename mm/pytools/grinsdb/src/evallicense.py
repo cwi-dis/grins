@@ -12,6 +12,8 @@ import grpasswd
 
 # Configurable
 
+DISABLED=1	# Set to 1 to disable this program and send notification
+
 # set to 1 if sending current license allowed (else send previously
 # sent license)
 SEND_NEW_LICENSE = 0
@@ -30,6 +32,7 @@ SEND_NEW_LICENSE = 0
 
 RESPONSE_OK=os.path.join(grinsdb.DATABASE, ".mail-license")
 RESPONSE_NOTOK=os.path.join(grinsdb.DATABASE, ".mail-no-license")
+RESPONSE_NOMORE=os.path.join(grinsdb.DATABASE, ".mail-redirect")
 LICENSE=os.path.join(grinsdb.DATABASE, ".evallicense")
 REGISTER_URL="http://www.oratrix.com/cgi-bin/warm?register.warm"
 
@@ -66,11 +69,14 @@ def main():
 	
 def evallicense(file, filename):
 	license = open(LICENSE).read()
-	dbase = grinsdb.Database()
 	msg = rfc822.Message(file)
 	fullname, email = msg.getaddr('from')
 	if msg.has_key('x-generated-message'):
 		return
+	if DISABLED:
+		mailnomore(email)
+		return
+	dbase = grinsdb.Database()
 	list = dbase.search('email', email)
 	try:
 		if not list:
@@ -116,6 +122,13 @@ def mailnotok(user):
 		"url": REGISTER_URL,
 		}
 	mail(RESPONSE_NOTOK, dict)
+	
+def mailnomore(user):
+	dict = {
+		"user": user,
+		"sender": RESPONSE_SENDER,
+		}
+	mail(RESPONSE_NOMORE, dict)
 	
 def mail(msg, dict):
 	ifp = open(msg)
