@@ -26,6 +26,7 @@ class PreferencesDialog(ResDialog,ControlsDict):
 		self['system_captions']=CheckButton(self,grinsRC.IDC_CHECK1)
 		self['system_overdub_or_caption']=CheckButton(self,grinsRC.IDC_CHECK2)
 		self['cmif']=CheckButton(self, grinsRC.IDC_CHECK3)
+		self['html_control']=CheckButton(self, grinsRC.IDC_CHECK4)
 
 		self['OK']=Button(self,win32con.IDOK)
 		self['Cancel']=Button(self,win32con.IDCANCEL)
