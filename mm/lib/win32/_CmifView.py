@@ -181,6 +181,8 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 
 	# Set the title of this window
 	def settitle(self,title):
+		import urllib
+		title=urllib.unquote(title)
 		self._title=title
 		self.GetParent().SetWindowText(title)
 
