@@ -448,7 +448,7 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		color = self._window._convert_color(color)
-		self._list.append('fg', color)
+		self._list.append(('fg', color))
 		self._fgcolor = color
 
 
@@ -465,8 +465,8 @@ class _DisplayList:
 		win = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
 		       win._prepare_image(file, crop, scale, center, coordinates)
-		self._list.append('image', mask, image, src_x, src_y,
-				  dest_x, dest_y, width, height)
+		self._list.append(('image', mask, image, src_x, src_y,
+				   dest_x, dest_y, width, height))
 		self._optimize(2)
 ##		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
 		x, y, w, h = win._rect
@@ -485,10 +485,10 @@ class _DisplayList:
 		yvalues = []
 		for point in points:
 			x, y = w._convert_coordinates(point)
-			p.append(x,y)
+			p.append((x,y))
 			xvalues.append(x)
 			yvalues.append(y)
-		self._list.append('line', color, p)
+		self._list.append(('line', color, p))
 ##		self._update_bbox(min(xvalues), min(yvalues),
 ##				  max(xvalues), max(yvalues))
 
@@ -498,13 +498,13 @@ class _DisplayList:
 		color2 = w._convert_color(color2)
 		x1, y = w._convert_coordinates((x1, y))
 		x2, dummy = w._convert_coordinates((x2, y))
-		self._list.append('3dhline', color1, color2, x1, x2, y)
+		self._list.append(('3dhline', color1, color2, x1, x2, y))
 
 	def drawbox(self, coordinates, clip = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._window._convert_coordinates(coordinates)
-		self._list.append('box', (x, y, w, h))
+		self._list.append(('box', (x, y, w, h)))
 		self._optimize()
 ##		self._update_bbox(x, y, x+w, y+h)
 
@@ -512,8 +512,8 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._window._convert_coordinates(coordinates)
-		self._list.append('fbox', self._window._convert_color(color),
-				(x, y, w, h))
+		self._list.append(('fbox', self._window._convert_color(color),
+				   (x, y, w, h)))
 		self._optimize(1)
 ##		self._update_bbox(x, y, x+w, y+h)
 
@@ -530,10 +530,10 @@ class _DisplayList:
 		yvalues = []
 		for point in points:
 			x, y = w._convert_coordinates(point)
-			p.append(x, y)
+			p.append((x, y))
 			xvalues.append(x)
 			yvalues.append(y)
-		self._list.append('fpolygon', color, p)
+		self._list.append(('fpolygon', color, p))
 		self._optimize(1)
 ##		self._update_bbox(min(xvalues), min(yvalues), max(xvalues), max(yvalues))
 
@@ -548,7 +548,7 @@ class _DisplayList:
 		ct = window._convert_color(ct)
 		cr = window._convert_color(cr)
 		cb = window._convert_color(cb)
-		self._list.append('3dbox', (cl, ct, cr, cb), coordinates)
+		self._list.append(('3dbox', (cl, ct, cr, cb), coordinates))
 		self._optimize(1)
 		x, y, w, h = coordinates
 ##		self._update_bbox(x, y, x+w, y+h)
@@ -557,7 +557,7 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		coordinates = self._window._convert_coordinates(coordinates)
-		self._list.append('diamond', coordinates)
+		self._list.append(('diamond', coordinates))
 		self._optimize()
 		x, y, w, h = coordinates
 ##		self._update_bbox(x, y, x+w, y+h)
@@ -573,7 +573,7 @@ class _DisplayList:
 			y, h = y + h, -h
 		coordinates = window._convert_coordinates((x, y, w, h))
 		color = window._convert_color(color)
-		self._list.append('fdiamond', color, coordinates)
+		self._list.append(('fdiamond', color, coordinates))
 		self._optimize(1)
 		x, y, w, h = coordinates
 ##		self._update_bbox(x, y, x+w, y+h)
@@ -588,7 +588,7 @@ class _DisplayList:
 		cr = window._convert_color(cr)
 		cb = window._convert_color(cb)
 		coordinates = window._convert_coordinates(coordinates)
-		self._list.append('3ddiamond', (cl, ct, cr, cb), coordinates)
+		self._list.append(('3ddiamond', (cl, ct, cr, cb), coordinates))
 		self._optimize(1)
 		x, y, w, h = coordinates
 ##		self._update_bbox(x, y, x+w, y+h)
@@ -607,7 +607,7 @@ class _DisplayList:
 		if yextra > 0:
 			y = y + yextra/2
 		data = _get_icon(icon)
-		self._list.append('icon', (x, y, size, size), data)
+		self._list.append(('icon', (x, y, size, size), data))
 		self._optimize(2)
 
 		
@@ -643,12 +643,12 @@ class _DisplayList:
 			cos = math.cos(rotation)
 			sin = math.sin(rotation)
 			points = [(ndx, ndy)]
-			points.append(_roundi(ndx + ARR_LENGTH*cos + ARR_HALFWIDTH*sin),
-				      _roundi(ndy + ARR_LENGTH*sin - ARR_HALFWIDTH*cos))
-			points.append(_roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
-				      _roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos))
+			points.append((_roundi(ndx + ARR_LENGTH*cos + ARR_HALFWIDTH*sin),
+				       _roundi(ndy + ARR_LENGTH*sin - ARR_HALFWIDTH*cos)))
+			points.append((_roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
+				       _roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos)))
 			window.arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
-		self._list.append('arrow', color, (nsx, nsy, ndx, ndy), points)
+		self._list.append(('arrow', color, (nsx, nsy, ndx, ndy), points))
 		self._optimize(1)
 ##		self._update_bbox(nsx, nsy, ndx, ndy)
 		
@@ -685,7 +685,7 @@ class _DisplayList:
 		if fontobj != self._font:
 			self._font = fontobj
 			self._font._initparams(self._window._wid)
-			self._list.append('font', fontobj)
+			self._list.append(('font', fontobj))
 			self.__font_size_cache = self.__baseline(), self.__fontheight(), self.__pointsize()
 		return self.__font_size_cache
 
@@ -742,7 +742,7 @@ class _DisplayList:
 		maxx = oldx
 		for str in strlist:
 			x0, y0 = w._convert_coordinates((x, y))
-			list.append('text', x0, y0, str)
+			list.append(('text', x0, y0, str))
 			twidth = Qd.TextWidth(str, 0, len(str))
 			self._curpos = x + float(twidth) / w._rect[_WIDTH], y
 ##			self._update_bbox(x0, y0, x0+twidth,
@@ -795,7 +795,7 @@ class _DisplayList:
 ##			minx, maxx = maxx, minx
 ##		if miny > maxy:
 ##			miny, maxy = maxy, miny
-##		self._clonebboxes.append(minx, miny, maxx, maxy)
+##		self._clonebboxes.append((minx, miny, maxx, maxy))
 		
 	def _optimize(self, ignore = []):
 		if type(ignore) is IntType:
