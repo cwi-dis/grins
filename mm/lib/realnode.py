@@ -188,9 +188,9 @@ class SlideShow:
 		if node.GetType() != 'ext' or \
 		   node.GetChannelType() != 'RealPix':
 			# not a RealPix node anymore
-			if hasattr(node, 'expanded'):
-				import HierarchyView
-				HierarchyView.collapsenode(node)
+##			if hasattr(node, 'expanded'):
+##				import HierarchyView
+##				HierarchyView.collapsenode(node)
 			del node.slideshow
 			self.destroy()
 			# XXX what to do with node.tmpfile?
@@ -371,11 +371,11 @@ class SlideShow:
 					if childattrs != attrs:
 						changed = 1
 					i = i + 1
-			else:
-				# re-create children
-				import HierarchyView
-				HierarchyView.collapsenode(node)
-				HierarchyView.expandnode(node)
+##			else:
+##				# re-create children
+##				import HierarchyView
+##				HierarchyView.collapsenode(node)
+##				HierarchyView.expandnode(node)
 		if changed:
 			if not hasattr(node, 'tmpfile'):
 				url = MMAttrdefs.getattr(node, 'file')
