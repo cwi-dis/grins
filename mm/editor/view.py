@@ -4,6 +4,7 @@ import fl
 from figures import *
 #import DEVICE
 from ArcEdit import *
+import MMAttrdefs
 
 # the view class.
 #
@@ -62,6 +63,7 @@ class view () :
 			self.chanboxes.append(diamond().new(xi,yi,wi,hi,li,self.channellist[i]))
 			xi = xi + self.unitwidth
 		self.mkView((0,0,w,h,h-HDR_SIZE),root)
+		self.mkArrows(root)
 		self.focus = root
 		self.setfocus(root)
 		self.locked_focus = None
@@ -171,6 +173,13 @@ class view () :
 				if type in ('seq','grp'):
 					h1 = h1 - child.duration * self.unitheight
 
+	def mkArrows(self, node):
+		synclist = MMAttrdefs.getattr(node, 'synctolist')
+		for i in synclist:
+			uid, frompos, delay, topos = i
+			self.add_arrow_at(self.root.MapUID(uid), node, frompos, delay, topos)
+		for i in node.GetChildren():
+			self.mkArrows(i)
 	#
 	# delete all the objects (made by channelview) form the node
 	#
@@ -315,8 +324,11 @@ class view () :
 		if self.focus = None:
 			fl.show_message ('There is no focus','','')
 			return
-		lo = self.locked_focus.channelobj
-		fo = self.focus.channelobj
+		self.add_arrow_at(self.locked_focus, self.focus, 1, 0.0, 0)
+
+	def add_arrow_at(self, (mysrc, mydst, f, d, t)):
+		lo = mysrc.channelobj
+		fo = mydst.channelobj
 		lx = lo.x + lo.w / 2
 		ly1 = lo.y
 		ly2 = ly1 + lo.h
@@ -326,18 +338,31 @@ class view () :
 		if fy2 < ly1:
 			ly, fy = fy2, ly1
 			lx, fx = fx, lx
-			dst = lo
+			src = mydst
+			dst = mysrc
 		else:
 			ly, fy = ly2, fy1
-			dst = fo
-		arr = arrow().new(fx, fy, lx, ly)
-		arr.frompos = 1
-		arr.delay = 0.0
-		arr.topos = 0
+			src = mysrc
+			dst = mydst
+		arcinfo = (src.GetUID(), f, d, t)
+		arclist = MMAttrdefs.getattr(dst, 'synctolist')
+		arclist1 = arclist[0:len(arclist)]
+		arclist1.append(arcinfo)
+		dst.SetAttr('synctolist', arclist1)
+		thisarc = (view, dst, arcinfo)
+		arr = arrow().new(fx, fy, lx, ly, thisarc)
 		arr.draw()
 		self.arrowlist.append(arr)
 	def arrowhit(self, arrow):
 		showarceditor(arrow)
+	def setarcvalues(self, (arrow, newinfo)):
+		view, dst, arcinfo = arrow.arc
+		arrow.arc = (view, dst, newinfo)
+		arclist = MMAttrdefs.getattr(dst, 'synctolist')
+		arclist.remove(arcinfo)
+		arclist.append(newinfo)
+		print 'setting new arclist', arclist, 'on node', dst.uid
+		dst.SetAttr('synctolist', arclist)
 	def diamhit(self, diam):
 		i = self.chanboxes.index(diam)
 		name = self.channellist[i]
