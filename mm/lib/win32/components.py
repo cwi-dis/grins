@@ -917,6 +917,16 @@ class KeyTimesSlider(window.Wnd):
 		self._selected = -1
 		self.updateKeyTimes()
 
+	def removeKeyTimeAtIndex(self, index):
+		del self._keyTimes[index]
+		if index == self._selected:
+			self._selected = -1
+		self.updateKeyTimes()
+
+	def removeSelectedKeyTime(self, index):
+		if self._selected>=0:
+			self.removeKeyTimeAtIndex(self._selected)	
+
 	def updateKeyTimes(self):
 		l, t, r, b = self.GetWindowRect()
 		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
