@@ -45,7 +45,7 @@ class GRiNSPlayerComModule
 	void adviceSetSize(int id, int w, int h){GRiNSPlayerAutoAdviceSetSize(id, w, h);}
 	void adviceSetCursor(int id, char *cursor){GRiNSPlayerAutoAdviceSetCursor(id, cursor);}
 	void adviceSetDur(int id, double dur){GRiNSPlayerAutoAdviceSetDur(id, dur);}
-	void adviceSetPos(int id, double pos){GRiNSPlayerAutoAdviceSetDur(id, pos);}
+	void adviceSetPos(int id, double pos){GRiNSPlayerAutoAdviceSetPos(id, pos);}
 	void adviceSetSpeed(int id, double speed){GRiNSPlayerAutoAdviceSetSpeed(id, speed);}
 	void adviceSetState(int id, int st){GRiNSPlayerAutoAdviceSetState(id, st);}
 	

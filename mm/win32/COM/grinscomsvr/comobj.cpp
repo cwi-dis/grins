@@ -256,7 +256,7 @@ HRESULT __stdcall GRiNSPlayerAuto::getTime(/* [out] */ double __RPC_FAR *pt)
 
 HRESULT __stdcall GRiNSPlayerAuto::setTime(/* [in] */ double t)
 	{
-	PostMessage(getListener(), WM_USER_SETPOS, WPARAM(this), LPARAM(1000.0*t));	
+	PostMessage(getListener(), WM_USER_SETPOS, WPARAM(this), LPARAM(floor(1000.0*t+0.5)));	
 	return S_OK;
 	}
 
@@ -268,7 +268,7 @@ HRESULT __stdcall GRiNSPlayerAuto::getSpeed(/* [out] */ double __RPC_FAR *ps)
 
 HRESULT __stdcall GRiNSPlayerAuto::setSpeed(/* [in] */ double s)
 	{
-	PostMessage(getListener(), WM_USER_SETSPEED, WPARAM(this), LPARAM(1000.0*s));	
+	PostMessage(getListener(), WM_USER_SETSPEED, WPARAM(this), LPARAM(floor(1000.0*s+0.5)));	
 	return S_OK;
 	}
 
