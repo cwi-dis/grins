@@ -1334,7 +1334,8 @@ class AnimateElementParser:
 					anim = ColorAnimator(attr, domval, (values,), dur, mode, times, splines, accumulate, additive)
 				elif self.__attrtype == 'position':
 					coords = self.__getNumPairInterpolationValues()
-					anim = DiscreteMotionAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)
+					if coords:
+						anim = DiscreteMotionAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)
 				elif self.__attrtype == 'inttuple':
 					coords = self.__getNumTupleInterpolationValues()
 					anim = IntTupleAnimator(attr, domval, (coords,), dur, mode, times, splines, accumulate, additive)
@@ -1384,12 +1385,14 @@ class AnimateElementParser:
 			elif self.__attrtype == 'position':
 				if mode == 'discrete':
 					coords = self.__getNumPairInterpolationValues()
-					anim = DiscreteMotionAnimator(attr, domval, coords[1], dur, mode, times, splines, accumulate, additive='sum')
+					if coords:
+						anim = DiscreteMotionAnimator(attr, domval, coords[1], dur, mode, times, splines, accumulate, additive='sum')
 				else:
 					path = svgpath.Path()
 					coords = self.__getNumPairInterpolationValues()
-					path.constructFromPoints(coords)
-					anim = MotionAnimator(attr, domval, path, dur, mode, times, splines, accumulate, additive='sum')
+					if coords:
+						path.constructFromPoints(coords)
+						anim = MotionAnimator(attr, domval, path, dur, mode, times, splines, accumulate, additive='sum')
 			if anim: 
 				self.__setTimeManipulators(anim)			
 			return anim
@@ -2019,20 +2022,29 @@ class AnimateElementParser:
 			for str in strcoord:
 				if str:
 					pt = self.__getNumPair(str)
-					if pt!=None:
+					if pt != None:
 						coords.append(pt)
 			return tuple(coords)
-
 		if self.__animtype == 'from-to':
-			return self.__getNumPair(self.getFrom()), self.__getNumPair(self.getTo())
+			v1 = self.__getNumPair(self.getFrom())
+			v2 = self.__getNumPair(self.getTo())
+			if v1 is None or v2 is None:
+				return ()
+			return v1, v2
 		elif self.__animtype == 'from-by':
 			v1 = self.__getNumPair(self.getFrom())
 			dv = self.__getNumPair(self.getBy())
+			if v1 is None or dv is None:
+				return ()
 			return v1, (v1[0]+dv[0], v1[1]+dv[1])
 		elif self.__animtype == 'to':
-			return 	self.__getNumPair(self.getTo())
+			v = self.__getNumPair(self.getTo())
+			if v is None: v = 0, 0
+			return 	v
 		elif self.__animtype == 'by':
-			return (0, 0), self.__getNumPair(self.getBy())
+			v = self.__getNumPair(self.getBy())
+			if v is None: v = 0, 0
+			return (0, 0), v
 		return ()	
 
 	# return list of interpolation numeric tuples
