@@ -20,6 +20,3 @@ Creating a standalone CMIF for the mac.
 16.	Repeat step 14 for PPC.
 
 Don't forget to include fonts and such on the cdrom!!
-
-This line is a test for MacCVS, please ignore.
-
