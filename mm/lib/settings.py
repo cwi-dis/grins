@@ -91,6 +91,7 @@ elif os.name == 'mac':
 	import macfs, MACFS
 	vrefnum, dirid = macfs.FindFolder(MACFS.kOnSystemDisk, 'pref', 1)
 	fss = macfs.FSSpec((vrefnum, dirid, 'GRiNS Preferences'))
+	default_settings['no_initial_dialog'] = 0
 	PREFSFILENAME=fss.as_pathname()
 else:
 	default_settings['html_control'] = 0	# which HTML control to use
