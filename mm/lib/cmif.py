@@ -10,8 +10,6 @@ __version__ = "$Id$"
 # *********  If you change this, also change ../lib/main.py   ***********
 # WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
 
-DEFAULTDIR = '/ufs/guido/mm/demo'	# Traditional default
-
 cmifpath = None
 
 def findfile(name):
@@ -28,8 +26,13 @@ def findfile(name):
 			cmifpath = [os.environ['CMIF']]
 		else:
 			import sys
-			cmifpath = [os.path.split(sys.executable)[0],
-				    DEFAULTDIR]
+			cmifpath = [os.path.split(sys.executable)[0]]
+			try:
+				link = os.readline(sys.executable)
+			except (os.error, AttributeError):
+				pass
+			else:
+				cmifpath.append(os.path.dirname(os.path.join(os.path.dirname(sys.executable), link)))
 	for dir in cmifpath:
 		fullname = os.path.join(dir, name)
 		if os.path.exists(fullname):
