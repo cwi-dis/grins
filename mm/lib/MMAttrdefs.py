@@ -106,7 +106,7 @@ def readattrdefs(fp, filename):
 				elif fl == 'smil10':
 					binary_flags = binary_flags | FLAG_SMIL_1_0
 				elif fl == 'smil2':
-					binary_flags = binary_flags | FLAG_SMIL_2
+					binary_flags = binary_flags | FLAG_BOSTON
 				elif fl == 'cmif':
 					binary_flags = binary_flags | FLAG_CMIF
 				elif fl == 'g2':
