@@ -110,7 +110,41 @@ class BarWipeTransition(TransitionClass, R1R2BlitterClass):
 		# Assume left-to-right
 		xpixels = int(value*(x1-x0)+0.5)
 		xcur = x0+xpixels
-		return ((x0, y0, xcur, y1), (xcur, y0, x1, y1), )
+		return ((x0, y0, xcur, y1), (xcur, y0, x1, y1))
+			
+class BoxWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
+
+	def computeparameters(self, value, oldparameters):
+		x0, y0, x1, y1 = self.ltrb
+		# Assume left-to-right
+		xpixels = int(value*(x1-x0)+0.5)
+		ypixels = int(value*(y1-y0)+0.5)
+		xcur = x0+xpixels
+		ycur = y0+ypixels
+		return ((x0, y0, xcur, ycur), (x0, y0, x1, y1))
+			
+class FourBoxWipeTransition(TransitionClass, RlistR2OverlapBlitterClass):
+
+	def computeparameters(self, value, oldparameters):
+		x0, y0, x1, y1 = self.ltrb
+		xmid = (x0+x1)/2
+		ymid = (y0+y1)/2
+		xpixels = int(value*(xmid-x0)+0.5)
+		ypixels = int(value*(ymid-y0)+0.5)
+		boxes = (
+			(x0, y0, x0+xpixels, y0+ypixels),
+			(x1-xpixels, y0, x1, y0+ypixels),
+			(x0, y1-ypixels, x0+xpixels, y1),
+			(x1-xpixels, y1-ypixels, x1, y1))
+		return (boxes, (x0, y0, x1, y1))
+			
+class BarnDoorWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
+
+	def computeparameters(self, value, oldparameters):
+		x0, y0, x1, y1 = self.ltrb
+		xmid = (x0+x1)/2
+		xpixels = int(value*(xmid-x0)+0.5)
+		return ((xmid-xpixels, y0, xmid+xpixels, y1), (x0, y0, x1, y1))
 			
 class MiscShapeWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
 
@@ -124,13 +158,16 @@ class MiscShapeWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
 		yc1 = int((ymid+value*(y1-ymid))+0.5)
 		return ((xc0, yc0, xc1, yc1), (x0, y0, x1, y1))
 	
-class SingleSweepWipeTransition(TransitionClass, RlistR2OverlapBlitterClass):
+class _MatrixTransitionClass(TransitionClass, RlistR2OverlapBlitterClass):
 
 	def __init__(self, engine, dict):
 		TransitionClass.__init__(self, engine, dict)
 		x0, y0, x1, y1 = self.ltrb
-		hr = dict.get('horzRepeat', 0)+1
-		vr = dict.get('vertRepeat', 0)+1
+##XXXX It seems this is _not_ the intention of horzRepeat and vertRepeat
+##		hr = dict.get('horzRepeat', 0)+1
+##		vr = dict.get('vertRepeat', 0)+1
+		hr = 8
+		vr = 8
 		self.hsteps = hr
 		self.vsteps = vr
 		self._recomputeboundaries()
@@ -149,6 +186,8 @@ class SingleSweepWipeTransition(TransitionClass, RlistR2OverlapBlitterClass):
 	def move_resize(self, ltrb):
 		TransitionClass.move_resize(self, ltrb)
 		self._recomputeboundaries()
+				
+class SingleSweepWipeTransition(_MatrixTransitionClass):
 		
 	def computeparameters(self, value, oldparameters):
 		index = int(value*self.hsteps*self.vsteps)
@@ -163,6 +202,28 @@ class SingleSweepWipeTransition(TransitionClass, RlistR2OverlapBlitterClass):
 		ylastbottom = self.vboundaries[vindex+1]
 		for i in range(hindex):
 			rect = (self.hboundaries[i], ylasttop, self.hboundaries[i+1], ylastbottom)
+			rectlist.append(rect)
+		return rectlist, self.ltrb
+		
+class SnakeWipeTransition(_MatrixTransitionClass):
+		
+	def computeparameters(self, value, oldparameters):
+		index = int(value*self.hsteps*self.vsteps)
+		hindex = index % self.hsteps
+		vindex = index / self.hsteps
+		x0, y0, x1, y1 = self.ltrb
+		rectlist = []
+		for i in range(vindex):
+			rect = (x0, self.vboundaries[i], x1, self.vboundaries[i+1])
+			rectlist.append(rect)
+		ylasttop = self.vboundaries[vindex]
+		ylastbottom = self.vboundaries[vindex+1]
+		for i in range(hindex):
+			if vindex % 2:
+				idx = self.hsteps-i-1
+			else:
+				idx = i
+			rect = (self.hboundaries[idx], ylasttop, self.hboundaries[idx+1], ylastbottom)
 			rectlist.append(rect)
 		return rectlist, self.ltrb
 				
@@ -191,8 +252,36 @@ class FadeTransition(TransitionClass, FadeBlitterClass):
 		
 TRANSITIONDICT = {
 	"barWipe" : BarWipeTransition,
+	"boxWipe" : BoxWipeTransition,
+	"fourBoxWipe" : FourBoxWipeTransition,
+	"barnDoorWipe" : BarnDoorWipeTransition,
+#	"dialogalWipe" : DiagonalWipeTransition,
+#	"bowTieWipe" : BowTieWipeTransition,
+#	"miscDiagonalWipe" : MiscDiagonalWipeTransition,
+#	"veeWipe" : VeeWipeTransition,
+#	"barnVeeWipe" : BarnVeeWipeTransition,
 	"miscShapeWipe" : MiscShapeWipeTransition,
+#	"triangleWipe" : TriangleWipeTransition,
+#	"arrowHeadWipe" : ArrowHeadWipeTransition,
+#	"pentagonWipe" : PentagonWipeTransition,
+#	"hexagonWipe" : HexagonWipeTransition,
+#	"ellipseWipe" : EllipseWipeTransition,
+#	"eyeWipe" : EyeWipeTransition,
+#	"roundRectWipe" : RoundRectWipeTransition,
+#	"starWipe" : StarWipeTransition,
+#	"clockWipe" : ClockWipeTransition,
+#	"pinWheelWipe" : PinWheelWipeTransition,
 	"singleSweepWipe" : SingleSweepWipeTransition,
+#	"fanWipe" : FanWipeTransition,
+#	"doubleFanWipe" : DoubleFanWipeTransition,
+#	"doubleSweepWipe" : DoubleSweepWipeTransition,
+#	"saloonDoorWipe" : SaloonDoorWipeTransition,
+#	"windshieldWipe" : WindShieldWipeTransition,
+	"snakeWipe" : SnakeWipeTransition,
+#	"spiralWipe" : SpiralWipeTransition,
+#	"parallelSnakesWipe" : ParallelSnakesWipeTransition,
+#	"boxSnakesWipe" : BoxSnakesWipeTransition,
+#	"waterfallWipe" : WaterfallWipeTransition,
 	"pushWipe" : PushWipeTransition,
 	"slideWipe" : SlideWipeTransition,
 	"fade" : FadeTransition,
