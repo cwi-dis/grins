@@ -168,7 +168,6 @@ class SvgElement(SvgNode):
 		if id is not None:
 			self.document.addElementId(id, self)
 
-
 		self.parseAttributes()
 
 	# override for extra attributes parsing
@@ -254,16 +253,14 @@ class SvgElement(SvgNode):
 
 class SvgRect(SvgElement):
 	def parseAttributes(self):
+		# force xvg semantics for rect rx ry
 		rx, ry = self.attrdict.get('rx'), self.attrdict.get('ry')
 		if rx is not None and ry is not None:
-			self.attrdict['rx'] = SVGLength(self, rx)
-			self.attrdict['ry'] = SVGLength(self, ry)
+			pass
 		elif rx is not None:
-			self.attrdict['rx'] = SVGLength(self, rx)
-			self.attrdict['ry'] = SVGLength(self, rx)
+			self.attrdict['ry'] = rx
 		elif ry is not None:
-			self.attrdict['rx'] = SVGLength(self, ry)
-			self.attrdict['ry'] = SVGLength(self, ry)
+			self.attrdict['rx'] = ry
 		
 class SvgCircle(SvgElement):
 	def parseAttributes(self):
@@ -334,7 +331,7 @@ class SvgStyle(SvgElement):
 
 class SvgDefs(SvgElement):
 	def parseAttributes(self):
-		self.document.appendDefs(el)
+		self.document.appendDefs(self)
 
 	def setready(self):
 		self.defs = {}
