@@ -275,7 +275,7 @@ class SchedulerContext:
 
 	def queuesrlist(self, srlist):
 		for sr in srlist:
-			if debugevents: print 'queue', SR.ev2string(sr)
+			if debugevents: print '  queue', SR.ev2string(sr)
 			if sr[0] == SR.PLAY:
 				prio = PRIO_START
 			elif sr[0] == SR.PLAY_STOP:
@@ -320,7 +320,7 @@ class SchedulerContext:
 			elif not settings.noprearm and ev[0] == SR.ARM_DONE:
 				self.unexpected_armdone[ev] = 1
 				return []
-			elif ev[0] == SR.SCHED_DONE:
+			elif ev[0] == SR.SCHED_STOPPING:
 				# XXXX Hack to forestall crash on interior
 				# nodes with duration that are terminated:
 				# their terminating syncarc is still there...
@@ -330,6 +330,7 @@ class SchedulerContext:
 		numsrlist = srdict.get(ev)
 		if not numsrlist:
 			raise error, 'Scheduler: actions already sched for ev: %s' % ev
+		del srdict[ev]
 		num, srlist = numsrlist
 		num = num - 1
 		if num < 0:
@@ -615,7 +616,7 @@ class Scheduler(scheduler):
 	def runone(self, (sctx, todo, dummy)):
 		if not sctx.active:
 			raise error, 'Scheduler: running from finished context'
-##		print 'exec: ', SR.ev2string(todo)
+		if debugevents: print 'exec: ', SR.ev2string(todo)
 		action, arg = todo
 		if action == SR.PLAY:
 			self.do_play(sctx, arg)
@@ -639,7 +640,7 @@ class Scheduler(scheduler):
 		elif action == SR.LOOPRESTART:
 			self.do_looprestart(sctx, arg)
 		else:
-			if action == SR.SCHED_STOP and \
+			if action == SR.SCHED_STOPPING and \
 			   (arg.GetType() in interiortypes or arg.realpix_body or arg.caption_body):
 				self.remove_terminate(sctx, arg)
 			sctx.event((action, arg))
@@ -652,6 +653,7 @@ class Scheduler(scheduler):
 				srdict = sctx.srdict[ev]
 				del sctx.srdict[ev]
 				numsrlist = srdict[ev]
+				del srdict[ev]
 				num = numsrlist[0]
 				num = num - 1
 				if num == 0:
@@ -701,10 +703,11 @@ class Scheduler(scheduler):
 					srdict = sctx.srdict[ev]
 					del sctx.srdict[ev]
 					numsrlist = srdict[ev]
+					del srdict[ev]
 					num = numsrlist[0]
 					num = num - 1
 					if num == 0:
-						if ev[0] == SR.SCHED_DONE:
+						if ev[0] == SR.SCHED_STOPPING:
 							sctx.queuesrlist(numsrlist[1])
 						numsrlist[:] = []
 					else:
