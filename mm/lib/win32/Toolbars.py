@@ -53,17 +53,19 @@ class ToolbarMixin:
 			self.LoadBarState("GRiNSToolBars")
 		except:
 			print "_restoreToolbarState: Could not load bar state, setting default"
-			for bar in self._bars.values():
-				self.ShowControlBar(bar,1,0)
-				bar.RedrawWindow()
+##			for bar in self._bars.values():
+##				self.ShowControlBar(bar,1,0)
+##				bar.RedrawWindow()
 
 	def OnClose(self):
 		self.SaveBarState("GRiNSToolBars")
 
 	def CreateToolbars(self):
 		self.EnableDocking(afxres.CBRS_ALIGN_ANY)
+		self._lastbar = None
 		for template in ToolbarTemplate.TOOLBARS:
 			self._setToolbarFromTemplate(template)
+		self._lastbar = None
 		self._recalcPulldownEnable()
 		self._restoreToolbarState()
 		self.RecalcLayout()
@@ -118,7 +120,8 @@ class ToolbarMixin:
 		cmdid = usercmdui.class2ui[command].id
 		bar = GRiNSToolbar(self, name, barid, resid, 0)
 		self._bars[cmdid] = bar
-		self.DockControlBar(bar)
+##		self.DockControlBar(bar)
+		self._DockControlBarNextPosition(bar)
 
 		# Initialize it
 		nbuttons = len(buttonlist)
@@ -139,6 +142,19 @@ class ToolbarMixin:
 			buttonindex = buttonindex+1
 ##		self.ShowControlBar(self._bars[barid],1,0)
 ##		self._bars[barid].RedrawWindow()
+
+	def _DockControlBarNextPosition(self, bar):
+		# Dock a control bar in the next position available at the top of
+		# the window. This trick obtained from the MSDN toolbar example code.
+		if not self._lastbar:
+			self.DockControlBar(bar, afxres.AFX_IDW_DOCKBAR_TOP)
+			self._lastbar = bar
+			return
+		self.RecalcLayout()
+		l, t, r, b = self._lastbar.GetWindowRect()
+		rect = (l+1, t, r+1, b)
+		self.DockControlBar(bar, afxres.AFX_IDW_DOCKBAR_TOP, rect)
+		self._lastbar = bar
 
 	def setToolbarPulldowns(self, pulldowndict):
 		self._pulldowndict = pulldowndict
