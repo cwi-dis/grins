@@ -114,6 +114,7 @@ class WaitLicense(LicenseDialog):
 		return 0
 
 	def cb_quit(self):
+		self.close()
 		import sys
 		if sys.platform=='win32':
 			import windowinterface
@@ -122,6 +123,7 @@ class WaitLicense(LicenseDialog):
 			sys.exit(0)
 			
 	def cb_try(self):
+		self.close()
 		self.do_callback()
 		
 	def cb_buy(self):
