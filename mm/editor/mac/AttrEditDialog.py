@@ -75,7 +75,6 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		# that fit on such a page
 		#
 		attribnames = map(lambda a: a.getname(), attriblist)
-##		print 'DBG NAMES:', attribnames
 		for cl in MULTI_ATTR_CLASSES:
 			if tabpage_multi_match(cl, attribnames):
 				# Instantiate the class and filter out the attributes taken care of
@@ -121,7 +120,6 @@ class AttrEditorDialog(windowinterface.MACDialog):
 ##		self._selectpage(initpagenum)
 
 	def close(self):
-##		print 'editclose', self
 		for p in self._pages:
 			p.close()
 		del self._pagebrowser
@@ -130,9 +128,6 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		del self._cur_page
 		windowinterface.MACDialog.close(self)
 		
-##	def __del__(self):
-##		print 'del', self
-
 	def getcurattr(self):
 		if not self._cur_page:
 			return None
@@ -246,13 +241,9 @@ class TabPage:
 		return self.item0 + self.N_ITEMS
 		
 	def close(self):
-##		print 'close', self
 		del self.fieldlist
 		del self.attreditor
 		
-##	def __del__(self):
-##		print 'del', self
-
 	def createwidget(self):
 		return self.fieldlist[0]._widgetcreated()
 		
@@ -750,9 +741,7 @@ class TargetAudienceTabPage(MultiTabPage):
 		field = self.fieldlist[0]
 		attr = field._getvalueforpage()
 		targets = string.split(attr, ',')
-##		print 'update dbg targets', targets
 		for t, item in self._value_to_item.items():
-##			print 'dbg', item, t, t in targets
 			self.attreditor._setbutton(self.item0+item, (t in targets))
 
 	def save(self):
@@ -764,7 +753,6 @@ class TargetAudienceTabPage(MultiTabPage):
 		for t, item in self._value_to_item.items():
 			if self.attreditor._getbutton(self.item0+item):
 				targets.append(t)
-##		print 'save dbg targets', targets
 		field._savevaluefrompage(string.join(targets, ','))
 
 class ImageConversionTabPage(MultiTabPage):
@@ -1520,7 +1508,6 @@ class AreaTabPage(MultiDictTabPage):
 		xywh = self._values_to_pixels(xywh)
 		if xywh == (0, 0, 0, 0):
 			xywh = self.getmaxarea()
-##		print 'area now', xywh
 		self._area.set(xywh)
 
 	def _getlabelfields(self):		
@@ -1532,7 +1519,6 @@ class AreaTabPage(MultiDictTabPage):
 
 	def _preview_to_labels(self):
 		xywh = self._area.get()
-##		print 'get returned', xywh
 		xywh = self._pixels_to_values(xywh)
 		self._setlabelfields(xywh)
 		if self.ITEM_WHOLE:
@@ -1933,6 +1919,13 @@ class Atab_wrap_checkbox(Atab_wrap_control):
 	def getcheck(self):
 		return self.attreditor._getbutton(self.item)
 		
+	def do_itemhit(self, item, event):
+		if item == self.item:
+			self.attreditor._togglebutton(self.item)
+			self.callback()
+			return 1
+		return 0
+		
 class Atab_wrap_xywh:
 	def __init__(self, attreditor, itemlist, callback):
 		self.itemlist = itemlist
@@ -1959,7 +1952,7 @@ class Atab_wrap_xywh:
 	def getval(self):
 		rv = []
 		for i in self.itemlist:
-			v = self.attreditor.getlabel(i)
+			v = self.attreditor._getlabel(i)
 			try:
 				v = self._conv(v)
 			except ValueError:
@@ -1974,7 +1967,7 @@ class Atab_wrap_xywh:
 		for i in range(len(values)):
 			item = self.itemlist[i]
 			v = values[i]
-			self.attreditor.setlabel(item, `v`)
+			self.attreditor._setlabel(item, `v`)
 			
 class Atab_wrap_se(Atab_wrap_xywh):
 	def _conv(self, v):
@@ -2017,12 +2010,12 @@ class AnchorTabPage(TabPage, AnchorList.AnchorList):
 		self.__allwrappers.append(self._new)
 		self._rename = Atab_wrap_control(self.attreditor, item0+self.ITEM_RENAME, self.__renamecb)
 		self.__allwrappers.append(self._rename)
-		self._delete = Atab_wrap_control(self.attreditor, item0+self.ITEM_NEW, self.deletecb)
+		self._delete = Atab_wrap_control(self.attreditor, item0+self.ITEM_DELETE, self.deletecb)
 		self.__allwrappers.append(self._delete)
 		self._type = Atab_wrap_checkbox(self.attreditor, item0+self.ITEM_PARTIAL, self.typecb)
 		self.__allwrappers.append(self._type)
 		self._xywh = Atab_wrap_xywh(self.attreditor, (item0+self.ITEM_X, item0+self.ITEM_Y, 
-				item0+self.ITEM_W, item0+self.ITEM_H), self.editcb)
+				item0+self.ITEM_W, item0+self.ITEM_H), self.__xywhcb)
 		self.__allwrappers.append(self._xywh)
 		self._se = Atab_wrap_xywh(self.attreditor, (item0+self.ITEM_START, item0+self.ITEM_END), 
 				self.editcb)
@@ -2040,6 +2033,11 @@ class AnchorTabPage(TabPage, AnchorList.AnchorList):
 	def __areacb(self):
 		box = self._area.get()
 		self.setbox(box)
+		self.fill()
+		
+	def __xywhcb(self):
+		self.editcb()
+		self.fill()
 		
 	def __listcb(self):
 		item = self._list.getcursel()
@@ -2066,6 +2064,7 @@ class AnchorTabPage(TabPage, AnchorList.AnchorList):
 		
 	def update(self):
 		self.setvalue(self.fieldlist[0]._getvalueforpage() or {})
+		self.fill()
 		
 	def save(self):
 		self.fieldlist[0]._savevaluefrompage(self.getvalue())
@@ -2215,15 +2214,12 @@ class AttrEditorDialogField:
 	def _widgetcreated(self):
 		label = self.getlabel()
 		self.__value = self.getcurrent()
-		print 'widgetcreated', self.getlabel(), self.__value
 		return '%s' % label
 
 	def _savevaluefrompage(self, value):
-		print 'savevaluefrompage', self.getlabel(), value
 		self.__value = value
 		
 	def _getvalueforpage(self):
-		print 'getvalueforpage', self.getlabel(), self.__value
 		return self.__value
 				
 
@@ -2248,7 +2244,6 @@ class AttrEditorDialogField:
 		Arguments (no defaults):
 		value -- string giving the new value
 		"""
-		print 'setvalue', self.getlabel(), value
 		self.__value = value
 		if self.attreditor._is_shown(self):
 			self.attreditor._updatepagevalues()
