@@ -3280,8 +3280,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				except error, msg:
 					self.syntax_error(msg)
 					continue
+			elif name == 'borderColor' and value == 'blend':
+				value = (-1,-1,-1)
 			elif name in ('borderColor', 'fadeColor'):
-				# XXXX Need support for blend
 				value = self.__convert_color(value)
 			elif name == 'skip-content':
 				continue
