@@ -335,7 +335,7 @@ class ImageChannel(Channel):
 	def play(self, node, callback, arg):
 		self.node = node
 		if not self.is_showing():
-			callback(arg)
+			apply(callback, arg)
 			return
 	        if node <> self.armed_node:
 		    print 'ImageChannel: node not armed'
