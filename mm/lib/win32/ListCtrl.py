@@ -92,6 +92,9 @@ class ListCtrl(window.Wnd):
 		if nmsg.state & commctrl.LVIS_SELECTED:
 			self.selected = nmsg.row
 			print 'selection: row', nmsg.row, `self.GetItemText(nmsg.row,0)`
+		else:
+			self.selected = -1
+			print 'selection: None'
 
 	#
 	#  command responses
