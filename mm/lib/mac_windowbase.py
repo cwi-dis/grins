@@ -101,9 +101,7 @@ class _Event:
 				sec = sec - (t - self._time)
 				self._time = t
 				if sec <= 0:
-##					print 'BEFORE DEL', len(self._timers), self._timers[0][0]
 					del self._timers[0]
-##					print 'AFTER DEL', len(self._timers), self._timers[0][0]
 					func, args = cb
 					apply(func, args)
 				else:
@@ -240,6 +238,7 @@ class _Toplevel(_Event):
 		self._bgcolor = 0xffff, 0xffff, 0xffff # white
 		self._fgcolor =      0,      0,      0 # black
 		self._hfactor = self._vfactor = 1.0
+		MacOS.EnableAppswitch(0)
 
 	def close(self):
 		for func, args in self._closecallbacks:
@@ -247,6 +246,7 @@ class _Toplevel(_Event):
 		for win in self._subwindows[:]:
 			win.close()
 		self.__init__()		# clears all lists
+		MacOS.EnableAppswitch(1)
 
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
@@ -269,17 +269,14 @@ class _Toplevel(_Event):
 		y = int(y*_y_pixel_per_mm)
 		w = int(w*_x_pixel_per_mm)
 		h = int(h*_y_pixel_per_mm)
-##		print 'TOPLEVEL WINDOW', x, y, w, h, title
 		rBounds = (x-_window_left_offset, y-_window_top_offset, 
 				x+w+_window_right_offset, y+h+_window_bottom_offset)
-##		print 'macos bounds', rBounds
 		wid = Win.NewCWindow(rBounds, title, 1, 0, -1, 1, 0 )
 		return wid, w, h
 		
 	def _close_wid(self, wid):
 		"""Close a MacOS window and remove references to it"""
 		del self._wid_to_window[wid]
-		wid.CloseWindow()
 		
 	def _find_wid(self, wid):
 		"""Map a MacOS window to our window object, or None"""
@@ -351,14 +348,12 @@ class _CommonWindow:
 
 	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
 		"""Create a new subwindow"""
-##		print 'SUB WINDOW', x, y, w, h
 		rv = _SubWindow(self, self._wid, (x, y, w, h), 0, pixmap, transparent)
 		self._clipchanged()
 		return rv
 
 	def necmwwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
 		"""Create a new subwindow"""
-##		print 'SUB CM WINDOW', x, y, w, h
 		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap, transparent)
 		self._clipchanged()
 		return rv
@@ -537,7 +532,7 @@ class _CommonWindow:
 			self._active_displist._render()
 		else:
 			Qd.EraseRect(self.qdrect())
-			print 'Erased', self.qdrect(),'to', self._wid.GetWindowPort().rgbBkColor
+##			print 'Erased', self.qdrect(),'to', self._wid.GetWindowPort().rgbBkColor
 			
 	def _testclip(self, color):
 		"""Test clipping region"""
@@ -743,7 +738,7 @@ class _DisplayList:
 ##		print 'RENDER', cmd, entry[1:]
 		if cmd == 'clear':
 			Qd.EraseRect(window.qdrect())
-			print 'Erased', window.qdrect(),'to', wid.GetWindowPort().rgbBkColor
+##			print 'Erased', window.qdrect(),'to', wid.GetWindowPort().rgbBkColor
 		elif cmd == 'text':
 			Qd.MoveTo(entry[1], entry[2])
 			Qd.DrawString(entry[3]) # XXXX Incorrect for long strings
@@ -755,7 +750,7 @@ class _DisplayList:
 				raise 'kaboo kaboo'
 			srcrect = srcx, srcy, srcx+w, srcy+h
 			dstrect = dstx, dsty, dstx+w, dsty+h
-			print 'IMAGE', image[0], srcrect, dstrect
+##			print 'IMAGE', image[0], srcrect, dstrect
 			Qd.CopyBits(image[0], wid.GetWindowPort().portBits, srcrect, dstrect,
 				QuickDraw.srcCopy+QuickDraw.ditherCopy, None)
 			
@@ -787,7 +782,7 @@ class _DisplayList:
 			pass
 		self._list.append('image', mask, image, src_x, src_y,
 				  dest_x, dest_y, width, height)
-		print 'ADDED IMAGE', src_x, src_y, dest_x, dest_y, width, height
+##		print 'ADDED IMAGE', src_x, src_y, dest_x, dest_y, width, height
 		x, y, w, h = w._rect
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
