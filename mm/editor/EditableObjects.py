@@ -210,12 +210,20 @@ class EditableMMNode(MMNode.MMNode):
 					 'non_empty_text',
 					 'non_empty_color',
 					 'thumbnail_scale'])
-		if withspecials and ntype in ('par', 'seq', 'excl'):
-			namelist.extend(['project_default_region_video',
-					 'project_default_region_image',
-					 'project_default_region_sound',
-					 'project_default_region_text',
-					 'project_forcechild'])
+		if withspecials:
+			if ntype in ('seq', 'excl'):
+				namelist.extend(['project_default_region_video',
+						 'project_default_region_image',
+						 'project_default_region_sound',
+						 'project_default_region_text',
+						 'project_forcechild'])
+			if ntype == 'par':
+				namelist.append('project_autoroute')
+			if ntype in ('par', 'seq', 'excl'):
+				namelist.extend(['project_default_duration',
+##						 'project_default_duration_text',
+##						 'project_default_duration_image',
+						 ])
 		if ntype in MMTypes.mediatypes:
 			if ntype != 'brush':
 				namelist.extend(['file',
