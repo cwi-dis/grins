@@ -613,6 +613,7 @@ class OptionsCtrl(AttrCtrl):
 		ix=list.index(val)
 		self._options.setoptions(list)
 		self._options.setcursel(ix)
+		self._wnd.HookCommand(self.OnCombo,self._resid[1])
 		self._wnd.HookCommand(self.OnReset,self._resid[2])
 	
 	def setoptions(self,list,val):
@@ -634,6 +635,8 @@ class OptionsCtrl(AttrCtrl):
 	def OnReset(self,id,code):
 		if self._attr:self._attr.reset_callback()
 
+	def OnCombo(self,id,code):
+		self.sethelp(self._wnd._attrinfo)
 
 ##################################
 class FileCtrl(AttrCtrl):
@@ -649,6 +652,7 @@ class FileCtrl(AttrCtrl):
 		self._attrname.settext(self._attr.getlabel())
 		a=self._attr
 		self._attrval.settext(self._attr.getcurrent())
+		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
 		self._wnd.HookCommand(self.OnReset,self._resid[3])
 
@@ -666,6 +670,10 @@ class FileCtrl(AttrCtrl):
 	def OnReset(self,id,code):
 		if self._attr:self._attr.reset_callback()
 
+	def OnEdit(self,id,code):
+		if code==win32con.EN_SETFOCUS:
+			self.sethelp(self._wnd._attrinfo)
+
 ##################################
 class ColorCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -679,6 +687,7 @@ class ColorCtrl(AttrCtrl):
 		self._attrval.attach_to_parent()
 		self._attrname.settext(self._attr.getlabel())
 		self._attrval.settext(self._attr.getcurrent())
+		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
 		self._wnd.HookCommand(self.OnReset,self._resid[3])
 
@@ -719,6 +728,10 @@ class ColorCtrl(AttrCtrl):
 			return r, g, b
 		return None
 
+	def OnEdit(self,id,code):
+		if code==win32con.EN_SETFOCUS:
+			self.sethelp(self._wnd._attrinfo)
+
 ##################################
 class StringCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -733,6 +746,7 @@ class StringCtrl(AttrCtrl):
 		self._attrname.settext(self._attr.getlabel())
 		self._attrval.settext(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnReset,self._resid[2])
+		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 
 	def setvalue(self, val):
 		if self._initctrl:
@@ -745,6 +759,10 @@ class StringCtrl(AttrCtrl):
 
 	def OnReset(self,id,code):
 		if self._attr:self._attr.reset_callback()
+
+	def OnEdit(self,id,code):
+		if code==win32con.EN_SETFOCUS:
+			self.sethelp(self._wnd._attrinfo)
 
 ##################################
 class AttrPage(dialog.PropertyPage):
