@@ -85,6 +85,15 @@ def _readparser(p, filename):
 	except NoSuchAttrError:
 		pass
 	#
+	# Move the hyperlink list from the root attribute list
+	# to the context.
+	#
+	try:
+		root.context.addhyperlinks(root.GetRawAttr('hyperlinks'))
+		root.DelAttr('hyperlinks')
+	except NoSuchAttrError:
+		pass
+	#
 	# Move the channel list from the root attribute list
 	# to the context.
 	#
