@@ -34,7 +34,6 @@ Main Menu: contains application level commands,
 	It contains also dynamic submenus depending on the document
 	and the active view.
 Dynamic Toolbar with states: Player,Editor no doc,Editor with doc
-Optionally a DialogBar with tabs to activate open childs (dissabled in the current version)
 """
 
 import win32ui, win32con, win32api
@@ -51,6 +50,7 @@ import afxexttb
 
 import win32mu
 import usercmd, usercmdui, wndusercmd
+import sysmetrics
 
 import win32dialog
 
@@ -73,7 +73,44 @@ import cmifwnd
 
 ##################################
 from FormServer import FormServer
-from ViewServer import ViewServer,appview
+
+# views types
+from _LayoutView import _LayoutView
+from _UsergroupView import _UsergroupView
+from _UsergroupView import _UsergroupView
+from _LinkView import _LinkView
+from _CmifView import _CmifView,_CmifStructView,_CmifPlayerView
+from _SourceView import _SourceView
+
+# editor document views
+_PlayerView= _CmifPlayerView
+_HierarchyView=_CmifStructView
+_ChannelView=_CmifStructView
+_LinkView=_LinkView
+_LayoutView=_LayoutView
+_SourceView=_SourceView
+
+# player document views
+if IsPlayer:
+	usercmd.HIDE_PLAYERVIEW=usercmd.CLOSE
+	usercmd.HIDE_HIERARCHYVIEW=None
+	usercmd.HIDE_CHANNELVIEW=None
+	usercmd.HIDE_LINKVIEW=None
+	usercmd.HIDE_LAYOUTVIEW=None
+	usercmd.HIDE_USERGROUPVIEW=None
+	usercmd.HIDE_SOURCE=usercmd.SOURCE
+
+appview={
+	0:{'cmd':usercmd.HIDE_PLAYERVIEW,'title':'Player','id':'pview_','class':_PlayerView,},
+	1:{'cmd':usercmd.HIDE_HIERARCHYVIEW,'title':'Structure view','id':'hview_','class':_HierarchyView,},
+	2:{'cmd':usercmd.HIDE_CHANNELVIEW,'title':'Timeline view','id':'cview_','class':_ChannelView,},
+	3:{'cmd':usercmd.HIDE_LINKVIEW,'title':'Hyperlinks','id':'leview_','class':_LinkView,'freezesize':1},
+	4:{'cmd':usercmd.HIDE_LAYOUTVIEW,'title':'Layout view','id':'lview_','class':_LayoutView,'freezesize':1},
+	5:{'cmd':usercmd.HIDE_USERGROUPVIEW,'title':'User groups','id':'ugview_','class':_UsergroupView,'freezesize':1},
+	6:{'cmd':usercmd.HIDE_SOURCE,'title':'Source','id':'sview_','class':_SourceView,'hosted':0},
+	7:{'cmd':-1,'title':'','id':'cmifview_','class':_CmifView,'hosted':0},
+}
+
 
 ##########
 class GRiNSToolbar(window.Wnd):
@@ -93,17 +130,17 @@ class GRiNSToolbar(window.Wnd):
 
 
 ####################################
-class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
+class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 	wndpos=None
 	wndsize=None
 	wndismax=0
 	def __init__(self):
 		window.MDIFrameWnd.__init__(self)
 		cmifwnd._CmifWnd.__init__(self)
-		ViewServer.__init__(self,self)
 		self._do_init(__main__.toplevel)
 		self._formServer=FormServer(self)
-	
+		self._player=None
+
 	# Create the OS window and set the toolbar	
 	def create(self,title):
 		strclass=self.registerwndclass()		
@@ -1067,4 +1104,213 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			# Title window associated with an iconized child window.
 			# Recurse over the window manager's list of windows.
 			return self.GetNextMDIChildWnd(currentChild)	
+
+
+
+	#########################################
+	# Views management
+
+	# Create and initialize a new view object 
+	# Keep instance of player
+	def newview(self,x, y, w, h, title, units = UNIT_MM, adornments=None,canvassize=None, commandlist=None, strid='cmifview_'):
+		if strid=='pview_' and self._player and (not self._player._canclose):
+			return self._player
+		viewno=self.getviewno(strid)
+		viewclass=appview[viewno]['class'] 
+		view=viewclass(self.getdoc())
+		self.add_common_interface(view,viewno)
+		if not x or x<0: x=0
+		if not y or y<0: y=0
+		if not w or not h:rc=None
+		else:
+			x,y,w,h=sysmetrics.to_pixels(x,y,w,h,units)
+			dw=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)+2*sysmetrics.cxframe
+			dh=sysmetrics.cycaption + 2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)+2*sysmetrics.cyframe
+			rc=(x,y,x+w+dw,y+h+dh)
+		f=ChildFrame(view)
+		f.Create(title,rc,self,0)
+		view.init(rc,title,units,adornments,canvassize,commandlist)
+		self.MDIActivate(f)
+		if IsPlayer:
+			self.RecalcLayout()
+			rcco=self.GetWindowRect()
+			client=self.GetMDIClient()
+			rcci= client.GetWindowRect() #self.GetClientRect()
+			l,t,r,b=f.GetWindowRect()
+			w=r-l;h=b-t
+			dhp=(rcco[3]-rcco[1])-(rcci[3]-rcci[1])
+			dwp=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)+2*sysmetrics.cxframe
+			self.setcoords((x,y,w+dw,h+dhp),units)
+		if strid=='pview_':self._player=view
+		return view
+
+
+	# Create a new view object 
+	def newviewobj(self,strid):
+		viewno=self.getviewno(strid)
+		if appview[viewno].has_key('hosted') and appview[viewno]['hosted']:
+			viewclass=appview[viewno]['class']
+			viewobj=viewclass()
+			self.add_common_interface(viewobj,viewno)
+			return viewobj
+		else:
+			return self._newviewobj(viewno)
+
+	# Show the view passed as argument
+	def showview(self,view,strid):
+		if not view or not view._obj_:
+			return
+		viewno=self.getviewno(strid)
+		self.frameview(view,viewno)
+
+	# Create the view with string id
+	def createview(self,strid):
+		viewno=self.getviewno(strid)
+		view=self._newviewobj(viewno)
+		self.frameview(view,viewno)
+		return view
+
+	# Create the view with view number
+	def _newviewobj(self,viewno):
+		viewclass=appview[viewno]['class'] 
+		viewobj=viewclass(self.getdoc())
+		self.add_common_interface(viewobj,viewno)
+		return viewobj
+
+	# Return the view number from its string id
+	def getviewno(self,strid):
+		for viewno in appview.keys():
+			if appview[viewno]['id']==strid:
+				return viewno
+		raise error,'undefined requested view'
+
+	# Create the child frame that will host this view
+	def frameview(self,view,viewno):
+		freezeSize = appview[viewno].get('freezesize', 0)
+		f=ChildFrame(view,freezeSize)
+		rc=self.getPrefRect()
+		f.Create(appview[viewno]['title'],None,self,0)
+		self.MDIActivate(f)
+	
+	# Returns the child frame that hosts this view
+	# returns None if not exists
+	def getviewframe(self,strid):
+		return self.GetParent()
+
+	# Adds to the view interface some common attributes
+	def add_common_interface(self,viewobj,viewno):
+		viewobj.getformserver=self.getformserver
+		viewobj.getframe=viewobj.GetParent
+		viewobj._strid=appview[viewno]['id']
+		viewobj._commandlist=[]
+		viewobj._title=appview[viewno]['title']
+		cmd =  appview[viewno]['cmd']
+		if usercmdui.class2ui.has_key(cmd):
+			viewobj._closecmdid=usercmdui.class2ui[cmd].id
+
+
+
+################################################
+# The ChildFrame purpose is to host the views in its client area
+# according to the MDIFrameWnd pattern
+class ChildFrame(window.MDIChildWnd):
+	def __init__(self,view,freezesize=0):
+		window.MDIChildWnd.__init__(self,win32ui.CreateMDIChild())
+		self._view=view
+		self._freezesize=freezesize
+		self._context=None
+		self._sizeFreeze=0
+
+	# Create the OS window and hook messages
+	def Create(self, title, rect = None, parent = None, maximize=0):
+		self._title=title
+		if rect:
+			l,t,r,b=rect
+			r=r+4;b=b+4
+			rect=(l,t,r,b)
+		style = win32con.WS_CHILD | win32con.WS_OVERLAPPEDWINDOW
+		self.CreateWindow(None, title, style, rect, parent)
+		if maximize and parent:parent.maximize(self)
+		self.HookMessage(self.onMdiActivate,win32con.WM_MDIACTIVATE)
+		self.ShowWindow(win32con.SW_SHOW)
+
+
+	# Change window style before creation
+	def PreCreateWindow(self, csd):
+		csd=self._obj_.PreCreateWindow(csd)
+		cs=win32mu.CreateStruct(csd)
+		if self._freezesize:
+			cs.style = win32con.WS_CHILD|win32con.WS_OVERLAPPED |win32con.WS_CAPTION|win32con.WS_BORDER|win32con.WS_SYSMENU|win32con.WS_MINIMIZEBOX
+		return cs.to_csd()
+
+	def GetNormalPosition(self):
+		(flags,showCmd,ptMinPosition,ptMaxPosition,rcNormalPosition)=\
+			self.GetWindowPlacement()
+		return rcNormalPosition
+	
+	def onMdiActivate(self,params):
+		msg=win32mu.Win32Msg(params)
+		hwndChildDeact = msg._wParam; # child being deactivated 
+		hwndChildAct = msg._lParam; # child being activated
+		if hwndChildAct == self.GetSafeHwnd():
+			self._view.activate()
+		elif hwndChildDeact == self.GetSafeHwnd():
+			self._view.deactivate()
+ 
+	# Creates and activates the view 	
+	# create view (will be created by default if)
+	def OnCreateClient(self, cp, context):
+		if context is not None and context.template is not None:
+			context.template.CreateView(self, context)
+		elif self._view:
+			v=self._view
+			v.createWindow(self)
+			self.SetActiveView(v)
+			self.RecalcLayout()
+			v.OnInitialUpdate()
+		self._hwnd=self.GetSafeHwnd()
+
+	# Set the view from the view class passed as argument
+	def setview(self,viewclass,id=None):
+		doc=docview.Document(docview.DocTemplate())
+		v = viewclass(doc)
+		v.CreateWindow(self)
+		self.SetActiveView(v)
+		self.RecalcLayout()
+		v.OnInitialUpdate()
+
+	# Response to user close command. Delegate to view
+	# the user is closing the wnd directly
+	def OnClose(self):
+		# we must let the view to decide:
+		if hasattr(self._view,'OnClose'):
+			self._view.OnClose()
+		else:
+			self._obj_.OnClose()
+
+	# Called by the framework after the window has been created
+	def InitialUpdateFrame(self, doc, makeVisible):
+		pass
+	
+	# Returns the parent MDIFrameWnd	
+	def getMDIFrame(self):
+		return self.GetMDIFrame()
+
+	# Returns the cmd class id	
+	def GetUserCmdId(self,cmdcl):
+		return self.GetMDIFrame().GetUserCmdId(cmdcl)
+
+	# Target for commands that are enabled
+	def OnUpdateCmdEnable(self,cmdui):
+		cmdui.Enable(1)
+
+	# Target for commands that are dissabled
+	def OnUpdateCmdDissable(self,cmdui):
+		cmdui.Enable(0)
+
+	# Called by the framework before destroying the window
+	# Used to keep instance counting for player
+	def OnDestroy(self, msg):
+		if self._view._strid=='pview_':
+			self.GetMDIFrame()._player=None
 
