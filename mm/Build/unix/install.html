@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>GRiNS Editor and Player for SMIL Version 1.0 Installation Instructions</title>
+  </head>
+
+  <body>
+    <h1>GR<i>i</i>NS Editor and Player for SMIL Version 1.0 Installation Instructions</h1>
+    
+    <p>First, download the appropriate distribution.  The following files are
+available:</p>
+    <dl>
+      <dt>grins-sgi-full-10.tardist</dt>
+      <dd>GR<i>i</i>NS Editor and Player for SGI, inst package</dd>
+      <dt>grins-sgi-full-10.tgz</dt>
+      <dd>GR<i>i</i>NS Editor and Player for SGI, gzipped tar</dd>
+      <dt>grins-sun-full-10.tgz</dt>
+      <dd>GR<i>i</i>NS Editor and Player for Sun, gzipped tar</dd>
+      <dt>grins-sgi-play-10.tardist</dt>
+      <dd>GR<i>i</i>NS Player for SGI, inst package</dd>
+      <dt>grins-sgi-play-10.tgz</dt>
+      <dd>GR<i>i</i>NS Player for SGI, gzipped tar</dd>
+      <dt>grins-sun-play-10.tgz</dt>
+      <dd>GR<i>i</i>NS Player for Sun, gzipped tar</dd>
+    </dl>
+
+    <p>
+      The SGI version was created and tested on an SGI O2 running IRIX
+      6.5.2, the Sun version was created and tested on a Sun running
+      Solaris 2.5 (SunOS 5.5).
+    </p>
+    <p>
+      For IRIX-6.5 (and later) on SGI systems, you have two options
+      when installing the GR<i>i</i>NS Editor and Player: using the
+      SGI inst tools or using the gzipped tar distribution.  For
+      Sun/Solaris the only option is usgin a gzipped tar distribution.
+    </p>
+
+    <h3>Using the SGI Inst Tools</h3>
+    <p>
+      Download the appropriate tardist file.  If your Web browser is
+      set up correctly, this will start the SGI Software Manager
+      automatically.  If not, you can extract the tardist file (it is
+      just a tar file) in a new directory and start the Software
+      Manager (swmgr) or inst manually.  Point either program to the
+      directory where the extracted files reside to start the
+      installation process.
+    </p>
+    <p>
+      From the Software Manager or inst, select the subsystems you
+      want to install (in the player-pnly version, the product is
+      called grins instead of grinsed and the editor subsystem is not
+      present):
+    </p>
+    <dl>
+      <dt>grinsed.sw.player</dt>
+      <dd>contains the GR<i>i</i>NS Player and is required</dd>
+      <dt>grinsed.sw.editor</dt>
+      <dd>contains the GR<i>i</i>NS Editor and is required</dd>
+      <dt>grinsed.sw.templates</dt>
+      <dd>contains editing templates for the GR<i>i</i>NS Editor and is required</dd>
+      <dt>grinsed.help</dt>
+      <dd>contains help information and is recommended</dd>
+      <dt>grinsed.relnotes</dt>
+      <dd>contains the release notes and is also recommended</dd>
+    </dl>
+    <p>
+      Important Note: You need superuser (root) privileges to use the
+      inst installation method.  The GR<i>i</i>NS Player and Editor (and the
+      supporting files) will be installed in /usr/local/grins.
+    </p>
+
+    <h3>Using the Gzipped Tar File</h3>
+    <p>
+      Download the appropriate file and extract.  The command to
+      extract the gzipped tar file is something like this:
+    </p>
+    <pre>gzip -cd grins*.tgz | tar xf -</pre>
+    <p>
+      The files will be extracted into a subdirectory called
+      grins-1.0.  The gzipped tar file contains the same files as the
+      corresponding tardist file.
+    </p>
+
+    <hr>
+    <address><a href="mailto:sjoerd.mullender@oratrix.com">Sjoerd Mullender</a></address>
+<!-- Created: Thu Aug 26 13:58:01 MET DST 1999 -->
+<!-- hhmts start -->
+Last modified: Thu Aug 26 17:41:23 MET DST 1999
+<!-- hhmts end -->
+  </body>
+</html>
