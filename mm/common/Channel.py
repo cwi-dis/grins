@@ -86,6 +86,7 @@ class Channel:
 		self.is_layout_channel = 0
 		self.seekargs = None
 		self._anchor2button = {}
+		self._hide_pending = 0
 		if debug:
 			print 'Channel() -> '+`self`
 		channels.append(self)
@@ -219,6 +220,9 @@ class Channel:
 	def show(self, force = 0):
 		if debug:
 			print 'Channel.show('+`self`+') force=',force
+			
+		# If we were still waiting for a hide we cancel that
+		self._hide_pending = 0
 
 		# force equal 1 is used only in internal. By default the channel is shown
 		# only when showBackground attribute equal to always
@@ -1907,12 +1911,15 @@ class ChannelWindow(Channel):
 			return
 		self.cleanup_transitions()
 		Channel.stopplay(self, node)
-		self.extended_fill(node)
+		in_extended_fill = self.extended_fill(node)
 		if self.played_display:
 			self.played_display.close()
 			self.played_display = None
 
-		self.updateToInactiveState()
+		if in_extended_fill:
+			self._hide_pending = 1
+		else:
+			self.updateToInactiveState()
 
 	def setpaused(self, paused):
 		if debug:
@@ -1928,10 +1935,24 @@ class ChannelWindow(Channel):
 
 	def extended_fill(self, node):
 		# Handle fill=transition and (in the future) fill=hold
+		if not self.window:
+			return
 		fill = MMAttrdefs.getattr(node, 'fill')
-		if self.window and fill == 'transition':
-			# XXX For now we only do transition, fill=hold is somewhat similar
+		if fill == 'transition':
 			self.window.freeze_content('transition')
+			return 1
+## Scheduler doesn't support this yet
+##		elif fill == 'hold':
+##			self.window.freeze_content('hold')
+##			return 1
+		return 0
+		
+## Scheduler doesn't support this yet	
+##	def end_extended_fill(self):
+##		# End a fill=hold
+##		self.window.freeze_content(None)
+##		if self._hide_pending:
+##			self.updateToInactiveState()
 
 	def playstop(self):
 		self.cleanup_transitions() # XXXX incorrect!
