@@ -780,6 +780,57 @@ class FileMediaCtrl(FileCtrl):
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[5]),'Stop',None,0)
 			
 	
+class ElementSelCtrl(AttrCtrl):
+	def __init__(self,wnd,attr,resid):
+		AttrCtrl.__init__(self,wnd,attr,resid)
+		self._attrname=components.Edit(wnd,resid[0])
+		self._attrval=components.Edit(wnd,resid[1])
+
+	def OnInitCtrl(self):
+		self._initctrl=self
+		self._attrname.attach_to_parent()
+		self._attrval.attach_to_parent()
+		if self.want_label:
+			label = self._attr.getlabel()
+			if self.want_colon_after_label:
+				label = label + ':'
+			self._attrname.settext(label)
+		self._attrval.settext(self._attr.getcurrent())
+		self._wnd.HookCommand(self.OnEdit,self._resid[1])
+		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
+
+	def enable(self, enable):
+		self._attrval.enable(enable)
+
+	def setvalue(self, val):
+		if self._initctrl:
+			self._attrval.settext(val)
+	def getvalue(self):
+		if self._initctrl:
+			return self._attrval.gettext()
+		return self._attr.getcurrent()
+
+	def OnBrowse(self,id,code):
+		parent = self._wnd._form
+		elements = None
+		selected = self._attrval.gettext()
+		dlg = win32dialog.SelectElementDlg(parent, elements, selected)
+		if dlg.DoModal() == win32con.IDOK:
+			if selected != dlg.gettext():
+				self._attrval.settext(dlg.gettext())
+
+	def OnEdit(self,id,code):
+		if code==win32con.EN_SETFOCUS:
+			self.sethelp()
+		elif code==win32con.EN_CHANGE:
+			if hasattr(self._wnd,'onAttrChange'):
+				self._wnd.onAttrChange()
+			self.enableApply()
+
+	def settooltips(self,tooltipctrl):
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Choose File for URL',None,0)
+
 ##################################
 class ColorCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -2013,6 +2064,10 @@ class SingleAttrPage(AttrPage):
 			(grinsRC.IDD_EDITATTR_D1,
 			 HtmlTemplateCtrl,
 			 (grinsRC.IDC_11,grinsRC.IDC_12)),
+		'targetElement':	# A string field with a browse element button
+			(grinsRC.IDD_EDITATTR_F1,
+			 ElementSelCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2, grinsRC.IDC_3)),
 		}
 	CTRLMAP_BYTYPE = {
 		'option':		# An option selected from a list (as a popup menu)
