@@ -26,6 +26,7 @@ structure_name_size = settings.get('structure_name_size')
 
 BGCOLOR = settings.get('structure_bgcolor')
 LEAFCOLOR = settings.get('structure_leafcolor')
+RPCOLOR = settings.get('structure_rpcolor')
 SLIDECOLOR = settings.get('structure_slidecolor')
 BAGCOLOR = settings.get('structure_bagcolor')
 ALTCOLOR = settings.get('structure_altcolor')
@@ -1001,7 +1002,10 @@ class Object:
 		node = self.node
 		nt = node.GetType()
 		if nt in MMNode.leaftypes:
-			color = LEAFCOLOR
+			if node.GetChannelType() == 'RealPix':
+				color = RPCOLOR
+			else:
+				color = LEAFCOLOR
 		elif nt == 'seq':
 			color = SEQCOLOR
 		elif nt == 'par':
