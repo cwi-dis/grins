@@ -92,7 +92,11 @@ class MainDialog:
 			return
 		import windowinterface
 		f=windowinterface.getmainwnd()
-		windowinterface.FileDialog('Open file', '.', '*.smil', '',
+		filetypes = ['application/x-grins-project', 'application/smil']
+		import settings
+		if not settings.get('lightweight'):
+			filetypes.append('application/x-grins-cmif')
+		windowinterface.FileDialog('Open file', '.', filetypes, '',
 					   self.__openfile_done, None, 1,
 					   parent = f)
 
@@ -109,7 +113,7 @@ class MainDialog:
 		url=self.__path2url(filename)
 		import mimetypes, windowinterface
 		mimetype = mimetypes.guess_type(url)[0]
-		if mimetype in ('application/smil', 'application/x-grins-cmif'):
+		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
 			self.openURL_callback(url)
 		else:
 			windowinterface.showmessage('Incorrect filetype for drop/paste')
@@ -126,7 +130,7 @@ class MainDialog:
 		url=self.__path2url(filename)
 		import mimetypes, windowinterface
 		mimetype = mimetypes.guess_type(url)[0]
-		if mimetype in ('application/smil', 'application/x-grins-cmif'):
+		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
 			return windowinterface.DROPEFFECT_COPY
 		else:
 			return windowinterface.DROPEFFECT_NONE
@@ -152,7 +156,11 @@ class MainDialog:
 		"""Callback used by "browse" button in open url"""
 		import windowinterface
 		f=windowinterface.getmainwnd()
-		windowinterface.FileDialog('Open file', '.', '*.smil', '',
+		filetypes = ['application/x-grins-project', 'application/smil']
+		import settings
+		if not settings.get('lightweight'):
+			filetypes.append('application/x-grins-cmif')
+		windowinterface.FileDialog('Open file', '.', filetypes, '',
 					   self.__filecvt, None, 1,
 					   parent = f)
 
