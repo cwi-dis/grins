@@ -148,8 +148,19 @@ def convertvideofile(infile, dstdir, file, node):
 	# are all managed by our dshow filter
 	mc = b.QueryIMediaControl()
 	mc.Run()
-	b.WaitForCompletion()
-	mc.Stop()
+	import sys
+	if sys.platform=='win32':
+		# remove messages in queue
+		# dispatch only paint message
+		import win32ui
+		while b.WaitForCompletion(0)==0:
+			win32ui.PumpWaitingMessages()
+		mc.Stop()
+		win32ui.PumpWaitingMessages()
+	else:
+		b.WaitForCompletion()
+		mc.Stop()
+	del b
 
 #inputfile='D:\\ufs\\mm\\cmif\\Build\\common\\testdoc\\testdatampg.mpg'
 inputfile='D:\\ufs\\mm\\cmif\\win32\\DXMedia\\bin\\ms.avi'
