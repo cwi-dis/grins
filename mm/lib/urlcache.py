@@ -23,12 +23,17 @@ import MMurl
 def mimetype(url):
 	cache = urlcache[url]
 	if not cache.has_key('mimetype'):
-		try:
-			u = MMurl.urlopen(url)
-		except IOError:
-			# don't cache non-existing file
-			return None
-		mtype = u.headers.type
+		mtype = None
+		if settings.get('checkext'):
+			import MMmimetypes
+			mtype = MMmimetypes.guess_type(url)[0]
+		if not mtype:
+			try:
+				u = MMurl.urlopen(url)
+			except IOError:
+				# don't cache non-existing file
+				return None
+			mtype = u.headers.type
 		if mtype.count('/') != 1:
 			# don't cache bad MIME type
 			return None

@@ -249,14 +249,8 @@ class SliderPeer:
 			if url:
 				media.append(url)
 				if not url2mtype.has_key(url):
-					import settings
-					mimetype = None
-					if settings.get('checkext'):
-						import MMmimetypes
-						mimetype = MMmimetypes.guess_type(url)[0]
-					if not mimetype:
-						import urlcache
-						mimetype = urlcache.mimetype(url)
+					import urlcache
+					mimetype = urlcache.mimetype(url)
 					try:
 						mtype, subtype = string.split(mimetype, '/')
 					except:

@@ -14,12 +14,8 @@ import settings
 import win32dxm
 
 def get(url):
-	mtype = None
-	if settings.get('checkext'):
-		mtype = MMmimetypes.guess_type(url)[0]
-	if not mtype:
-		import urlcache
-		mtype = urlcache.mimetype(url)
+	import urlcache
+	mtype = urlcache.mimetype(url)
 	if mtype and mtype.find('quicktime') >= 0:
 		import winqt
 		if winqt.HasQtSupport():

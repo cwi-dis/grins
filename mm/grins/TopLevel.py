@@ -181,13 +181,8 @@ class TopLevel(TopLevelDialog):
 		self.changed = 0
 ##		print 'parsing', self.filename, '...'
 ##		t0 = time.time()
-		mtype = None
-		if settings.get('checkext'):
-			import MMmimetypes
-			mtype = MMmimetypes.guess_type(self.filename)[0]
-		if not mtype:
-			import urlcache
-			mtype = urlcache.mimetype(self.filename)
+		import urlcache
+		mtype = urlcache.mimetype(self.filename)
 		if mtype == None and sys.platform == 'mac':
 			# On the mac we do something extra: for local files we attempt to
 			# get creator and type, and if they are us we assume we're looking
@@ -338,13 +333,8 @@ class TopLevel(TopLevelDialog):
 			try:
 				# if the destination document is not a smil/grins document,
 				# it's handle by an external application
-				mtype = None
-				if settings.get('checkext'):
-					import MMmimetypes
-					mtype = MMmimetypes.guess_type(url)[0]
-				if not mtype:
-					import urlcache
-					mtype = urlcache.mimetype(url)
+				import urlcache
+				mtype = urlcache.mimetype(url)
 				utype, url2 = MMurl.splittype(url)
 				if mtype in ('application/smil',
 					     'application/x-grins-project',

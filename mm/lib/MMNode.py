@@ -250,22 +250,13 @@ class MMNodeContext:
 		if specifiedMimeType != None:
 			computedMimeType = specifiedMimeType
 		else:
+			computedMimeType = None
 			if nodeType == 'imm':
 				computedMimeType = 'text/plain'
 			elif nodeType == 'ext':
-				computedMimeType = None	
-				# not allowed to look at extension...
-				if url is not None and settings.get('checkext'):
-					import MMmimetypes
-					# guess the type from the file extension
-					computedMimeType = MMmimetypes.guess_type(url)[0]
-				if url is not None and computedMimeType is None:
-					# last resort: get file and see what type it is
+				if url is not None:
 					import urlcache
 					computedMimeType = urlcache.mimetype(self.findurl(url))
-			else:
-				# no mime type
-				computedMimeType = None	
 
 			# special case			
 			if computedMimeType == 'application/vnd.rn-realmedia':
@@ -303,13 +294,8 @@ class MMNodeContext:
 		
 	def compatchtypes(self, url):
 		import ChannelMime, ChannelMap
-		mtype = None
-		if settings.get('checkext'):
-			import MMmimetypes
-			mtype = MMmimetypes.guess_type(url)[0]
-		if not mtype:
-			import urlcache
-			mtype = urlcache.mimetype(self.findurl(url))
+		import urlcache
+		mtype = urlcache.mimetype(self.findurl(url))
 		if not mtype:
 			return []
 		if mtype == 'application/vnd.rn-realmedia':

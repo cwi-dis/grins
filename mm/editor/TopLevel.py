@@ -95,12 +95,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				print 'query',query
 			# RTIPA end
 		url = urlunparse((utype, host, path, params, query, None))
-		mtype = None
-		if not mtype and settings.get('checkext'):
-			mtype = MMmimetypes.guess_type(url)[0]
-		if not mtype:
-			import urlcache
-			mtype = urlcache.mimetype(url)
+		import urlcache
+		mtype = urlcache.mimetype(url)
 		if mtype in ('application/x-grins-project', 'application/smil'):
 			self.basename = posixpath.splitext(base)[0]
 		else:
@@ -1375,12 +1371,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##		import time
 ##		print 'parsing', filename, '...'
 ##		t0 = time.time()
-		mtype = None
-		if settings.get('checkext'):
-			mtype = MMmimetypes.guess_type(filename)[0]
-		if not mtype:
-			import urlcache
-			mtype = urlcache.mimetype(filename)
+		import urlcache
+		mtype = urlcache.mimetype(filename)
 		if mtype is None and sys.platform == 'mac':
 			# On the mac we do something extra: for local files we attempt to
 			# get creator and type, and if they are us we assume we're looking
@@ -1703,12 +1695,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			try:
 				# if the destination document is not a smil/grins document,
 				# it's handle by an external application
-				mtype = None
-				if settings.get('checkext'):
-					mtype = MMmimetypes.guess_type(url)[0]
-				if not mtype:
-					import urlcache
-					mtype = urlcache.mimetype(url)
+				import urlcache
+				mtype = urlcache.mimetype(url)
 				utype, url2 = MMurl.splittype(url)
 				if mtype in ('application/smil',
 					     'application/x-grins-project',
