@@ -8,10 +8,15 @@ FG_BOX = 1
 FOCUS_BOX = 2
 LOCK_BOX = 3
 
+NORM_CHAN = 0
+FOCUS_CHAN = 1
+
 # play with these for arrows
 ARR_WIDTH = 5
 ARR_HEAD = 18
 ARR_SLANT = float(ARR_WIDTH) / float(ARR_HEAD)
+NORM_ARROW = 0
+FOCUS_ARROW = 1
 
 def clear_window():
 	color(WHITE)
@@ -72,6 +77,7 @@ class box():
 class diamond():
 
 	def new(self,(x,y,w,h,l,name)):
+		self.kind = NORM_CHAN
 		self.x = x
 		self.y = y
 		self.w = w
@@ -102,6 +108,49 @@ class diamond():
 		v2f(0, 0)
 		v2f(0, -l)
 		endline()
+		l = getlwidth()
+		linewidth(l * 2)
+		if self.kind = FOCUS_CHAN:
+			color(RED)
+		bgnclosedline()
+		v2f(0, 0)
+		v2f(w/2, h/2)
+		v2f(0, h)
+		v2f(-w/2, h/2)
+		endclosedline()
+		linewidth(l)
+		translate(0, h/2, 0)
+		putlabel(self.label)
+		popmatrix()
+
+	def redraw(self):
+		if self.hidden <> 0:
+			return
+		x = self.x
+		y = self.y
+		w = self.w
+		h = self.h
+		l = self.l
+		color(GREEN)
+		pushmatrix()
+		translate(x+w/2, y, 0)
+		bgnpolygon()
+		v2f(0, 0)
+		v2f(w/2, h/2)
+		v2f(0, h)
+		v2f(-w/2, h/2)
+		endpolygon()
+		l = getlwidth()
+		linewidth(l * 2)
+		if self.kind = FOCUS_CHAN:
+			color(RED)
+		bgnclosedline()
+		v2f(0, 0)
+		v2f(w/2, h/2)
+		v2f(0, h)
+		v2f(-w/2, h/2)
+		endclosedline()
+		linewidth(l)
 		translate(0, h/2, 0)
 		putlabel(self.label)
 		popmatrix()
@@ -141,6 +190,7 @@ class arrow():
 
 	def new(self, (fx, fy, tx, ty, arc, src, dst)):
 		self.repos(fx, fy, tx, ty)
+		self.kind = NORM_ARROW
 		self.arc = arc
 		self.hidden = 0
 		self.src = src
@@ -163,7 +213,10 @@ class arrow():
 		pushmatrix()
 		l = getlwidth()
 		linewidth(l*2)
-		color(RED)
+		if self.kind = NORM_ARROW:
+			color(RED)
+		else:
+			color(BLUE)
 		translate(self.fx, self.fy, 0)
 		rot(- self.angle * 180 / pi, 'z')
 		bgnline()
@@ -217,7 +270,6 @@ class thermo():
 		y = self.y
 		w = self.w
 		h = self.h
-#		print 'polygon', x, y, w, h, val
 		pushmatrix()
 		translate(x, y, 0)
 		bgnpolygon()
