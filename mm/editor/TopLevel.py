@@ -298,10 +298,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				self.publishcommandlist = self.publishcommandlist + [
 					EXPORT_SMIL1(callback = (self.export_SMIL1_callback, ())),
 					]
-##			if features.EXPORT_XMT in features.feature_set:
+##			if features.EXPORT_3GPP in features.feature_set:
 ##				self.publishcommandlist = self.publishcommandlist + [
-##					EXPORT_XMT(callback = (self.bandwidth_callback, ('xmt', self.export_XMT_callback,))),
-##					UPLOAD_XMT(callback = (self.bandwidth_callback, ('xmt', self.upload_XMT_callback,))),
+##					EXPORT_3GPP(callback = (self.bandwidth_callback, ('xmt', self.export_3GPP_callback,))),
+##					UPLOAD_3GPP(callback = (self.bandwidth_callback, ('xmt', self.upload_3GPP_callback,))),
 ##					]
 			if features.EXPORT_WINCE in features.feature_set:
 				self.publishcommandlist = self.publishcommandlist + [
@@ -705,7 +705,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			return 1
 
-	def saveas_callback(self, prune = 0, close = 0):
+	def askAndSave(self, prompt, filetypes, callback):
 		if self.new_file:
 			cwd = settings.get('savedir')
 		else:
@@ -716,19 +716,21 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					cwd = os.path.join(os.getcwd(), cwd)
 			else:
 				cwd = os.getcwd()
+		dftfilename = ''
+		if self.filename:
+			utype, host, path, params, query, fragment = urlparse(self.filename)
+			dftfilename = os.path.split(MMurl.url2pathname(path))[-1]
+		windowinterface.FileDialog(prompt, cwd, filetypes, dftfilename, callback, None)
+
+	def saveas_callback(self, prune = 0, close = 0):
 		title = 'Save GRiNS project:'
 		filetypes = ['application/x-grins-project', 'application/x-grins-binary-project']
 		if prune:
 			filetypes = ['application/smil']
 			title = 'Save SMIL file:'
 			self.prune = 1
-		dftfilename = ''
-		if self.filename:
-			utype, host, path, params, query, fragment = urlparse(self.filename)
-			dftfilename = os.path.split(MMurl.url2pathname(path))[-1]
 		self.closeonsave = close
-		windowinterface.FileDialog(title, cwd, filetypes,
-					   dftfilename, self.saveas_okcallback, None)
+		self.askAndSave(title, filetypes, self.saveas_okcallback)
 
 	def export_okcallback(self, filename):
 		exporttype = self.exporttype
@@ -804,8 +806,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def export_SMIL1_callback(self):
 		self.export('SMIL1')
 
-	def export_XMT_callback(self):
-		self.export('XMT')
+##	def export_3GPP_callback(self):
+##		self.export('3GPP')
 
 	def export_wince_callback(self):
 		self.export('WINCE')
@@ -813,16 +815,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def export_WMP_callback(self):
 		import wmpsupport
 		if wmpsupport.haswmpruntimecomponents():
-			cwd = self.dirname
-			if cwd:
-				cwd = MMurl.url2pathname(cwd)
-				if not os.path.isabs(cwd):
-					cwd = os.path.join(os.getcwd(), cwd)
-			else:
-				cwd = os.getcwd()
-			basename = self.basename + ".wmv"
-			windowinterface.FileDialog('Export to WMP file:', cwd, 'video/x-ms-wmv',
-						basename, self.export_WMP_okcallback, None)
+			self.askAndSave('Export to WMP file:', 'video/x-ms-wmv', self.export_WMP_okcallback)
 		else:
 			windowinterface.showmessage('No WMP export components on this system.')
 	
@@ -831,19 +824,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		wmpsupport.Exporter(pathname, self.player)
 
 	def export_HTML_TIME_callback(self):
-		cwd = self.dirname
-		if cwd:
-			cwd = MMurl.url2pathname(cwd)
-			if not os.path.isabs(cwd):
-				cwd = os.path.join(os.getcwd(), cwd)
-		else:
-			cwd = os.getcwd()
-		basename = self.basename + '.html'
-		windowinterface.FileDialog('Export to HTML+TIME file:', cwd, 'text/html',
-					basename, self.export_HTML_TIME_okcallback, None)
+		self.askAndSave('Export to HTML+TIME file:', 'text/html', self.export_HTML_TIME_okcallback)
 	
 	def export_HTML_TIME_okcallback(self, pathname):
-		if self.player: self.player.stop_callback()
+		if self.player:
+			self.player.stop_callback()
 		self.export_to_html_time(pathname)
 		if sys.platform=='win32':
 			# Hardcoded for now. Should be read from the registry
@@ -858,34 +843,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def export(self, exporttype):
 		self.exporttype = exporttype
-
-		# TODO: this also has to handle WMP -mjvdg.
-
-		# If new, we ask
-		if not self.new_file:
-			# If we have a project file name, use it
-			if urlcache.mimetype(self.filename) == 'application/x-grins-project':
-				utype, host, path, params, query, fragment = urlparse(self.filename)
-				# If the project file is remote, we ask for filename.
-				if (not utype or utype == 'file') and (not host or host == 'localhost'):
-					# don't ask for a filename
-					file = MMurl.url2pathname(path)
-					base = os.path.splitext(file)[0]
-					file = base + MMmimetypes.guess_extension('application/smil')
-					self.setwaiting()
-					self.export_okcallback(file)
-					return
-
-		# ask for a filename
-		cwd = self.dirname
-		if cwd:
-			cwd = MMurl.url2pathname(cwd)
-			if not os.path.isabs(cwd):
-				cwd = os.path.join(os.getcwd(), cwd)
-		else:
-			cwd = os.getcwd()
-		windowinterface.FileDialog('Publish SMIL file:', cwd, 'application/smil',
-					   '', self.export_okcallback, None)
+		self.askAndSave('Publish SMIL file:', 'application/smil', self.export_okcallback)
 	   
 	def upload_REAL_callback(self):
 		self.upload('REAL')
@@ -896,8 +854,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def upload_SMIL2_callback(self):
 		self.upload('SMIL2')
 
-	def upload_XMT_callback(self):
-		self.upload('XMT')
+##	def upload_3GPP_callback(self):
+##		self.upload('3GPP')
 
 	def upload_WMP_callback(self):
 		self.upload('WMP')
@@ -1383,7 +1341,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			SMILTreeWriteXhtmlSmil.WriteFileAsXhtmlSmil(self.root, filename,
 						cleanSMIL = 1,
 						grinsExt = 0,
-						copyFiles = 0,
+						copyFiles = 1,
 						evallicense=evallicense,
 						progress = progress,
 						convertURLs = 1)

@@ -47,19 +47,18 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Revert &to saved', None, RESTORE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, CASCADE, 'Publish', (
-			(FLAG_SMIL_1_0, ENTRY, '&Publish for SMIL 2.0...', None, EXPORT_SMIL),
-			(FLAG_SMIL_1_0, ENTRY, 'Publish for &SMIL 2.0 and upload...', None, UPLOAD_SMIL),
 			((features.EXPORT_QT,), ENTRY, 'Publish for &QuickTime...', None, EXPORT_QT),
 			((features.EXPORT_QT,), ENTRY, 'Pu&blish for QuickTime and upload...', None, UPLOAD_QT),
-			(FLAG_G2|FLAG_PRO, ENTRY, 'Publish for &RealOne...', None, EXPORT_G2),
-			(FLAG_G2|FLAG_PRO, ENTRY, 'Publish for RealOne and &upload...', None, UPLOAD_G2),
+			((features.EXPORT_REAL,), ENTRY, 'Publish for &RealOne...', None, EXPORT_G2),
+			((features.EXPORT_REAL,), ENTRY, 'Publish for RealOne and &upload...', None, UPLOAD_G2),
 			# TODO: These should not appear on all versions of GRiNS!
 			(0, ENTRY, 'Publish for &Windows Media...', None, EXPORT_WMP), # mjvdg 11-oct-2000
 			(0, ENTRY, 'Publish for Windows &Media and upload...', None, UPLOAD_WMP),
-			(FLAG_PRO, ENTRY, 'Publish for &IE-6 HTML+TIME...', None, EXPORT_HTML_TIME),
-		
+			((features.EXPORT_HTML_TIME,), ENTRY, 'Publish for &IE-6 HTML+TIME...', None, EXPORT_HTML_TIME),
+			((features.EXPORT_SMIL2,), ENTRY, '&Publish for GRiNS SMIL 2.0...', None, EXPORT_SMIL),
+			(0, ENTRY, 'Publish for &SMIL 2.0 and upload...', None, UPLOAD_SMIL),
 			((features.EXPORT_WINCE,), ENTRY, '&Publish for GRiNS/PocketPC...', None, EXPORT_WINCE),
-			(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'P&rune and publish for 3GPP (PSS4)...', None, EXPORT_XMT),
+			((features.EXPORT_3GPP,), ENTRY, 'P&rune and publish for 3GPP (PSS4)...', None, EXPORT_3GPP),
 			(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'P&rune and publish for generic SMIL 2.0...', None, EXPORT_PRUNE),
 			((features.EXPORT_SMIL1,), ENTRY, 'Publish for RealPlayer 8...', None, EXPORT_SMIL1),
 		)),
