@@ -1,0 +1,26 @@
+HKCR
+{
+	GRiNSRenderer.Behavior.1 = s 'Behavior Class'
+	{
+		CLSID = s '{02184C6D-37F8-44EB-B19D-2A59E5680876}'
+	}
+	GRiNSRenderer.Behavior = s 'Behavior Class'
+	{
+		CLSID = s '{02184C6D-37F8-44EB-B19D-2A59E5680876}'
+		CurVer = s 'GRiNSRenderer.Behavior.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {02184C6D-37F8-44EB-B19D-2A59E5680876} = s 'Behavior Class'
+		{
+			ProgID = s 'GRiNSRenderer.Behavior.1'
+			VersionIndependentProgID = s 'GRiNSRenderer.Behavior'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			'TypeLib' = s '{4D53AFAD-D909-487F-B868-BC0D9B30B24B}'
+		}
+	}
+}
