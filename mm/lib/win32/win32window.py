@@ -117,9 +117,12 @@ class Window:
 
 	# bring the subwindow infront of windows with the same z	
 	def pop(self, poptop=1):
-		if poptop:
-			self._topwindow.pop(1)
 		parent = self._parent
+		if parent == self._topwindow:
+			if poptop:
+				self._topwindow.pop(1)
+		else:
+			parent.pop(poptop)
 		# put self in front of all siblings with equal or lower z
 		if self is not parent._subwindows[0]:
 			parent._subwindows.remove(self)
