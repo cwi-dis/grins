@@ -47,7 +47,10 @@ class RealEngine:
 		
 	def CreatePlayer(self, window, winpossize):
 		if HAS_PRECONFIGURED_PLAYER:
-			return self.engine.CreatePlayer(window, winpossize)
+			if window is None:
+				return self.engine.CreatePlayer()
+			else:
+				return self.engine.CreatePlayer(window, winpossize)
 		else:
 			return RealPlayer(self.engine, window, winpossize)
 				
