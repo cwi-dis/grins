@@ -1207,7 +1207,7 @@ class MMChannel(MMTreeElement):
 		self.d_attrdict = {}
 		self.views = {}
 		self._cssId = None
-		self._animationData = []
+		self._animationData = None
 
 		if type == 'layout':
 			# by default it's a viewport
@@ -2321,7 +2321,7 @@ class MMNode(MMTreeElement):
 		self.reinit(recurse = 0)
 		self.reset()
 
-		self._animationData = AnimationData.AnimationData(self)
+		self._animationData = None
 
 	def reinit(self, recurse = 1):
 		self.looping_body_self = None
@@ -5034,9 +5034,14 @@ class MMNode(MMTreeElement):
 	#
 	# animation editor support
 	#
-
-	def computeAnimationData(self):
+	def computeAnimationData(self, root=None, animparent=None):
 		# XXX to do: update animation data according to animation nodes
+		if self._animationData is None:
+			if root is None:
+				root = self.GetRoot()
+			if animparent is None:
+				animparent = self
+			self._animationData = AnimationData.AnimationData(root, self, animparent)
 		self._animationData.readData()
 		return self._animationData
 
@@ -5044,7 +5049,8 @@ class MMNode(MMTreeElement):
 		return self._animationData
 	
 	def applyAnimationData(self, editmgr):
-		self._animationData.applyData(editmgr)
+		if self._animationData:
+			self._animationData.applyData(editmgr)
 		# XXX to do: destroy the current animation nodes (if exist) for this instance 
 		# XXX and create the new animation nodes according to animationData
 		
