@@ -19,6 +19,10 @@ class HierarchyViewDialog(ViewDialog):
 	adornments = {}
 
 	def __init__(self):
+		self.commands = self.commands + [
+			CONTENT_EDIT_REG(callback = (self._editcall, ())),
+			CONTENT_OPEN_REG(callback = (self._opencall, ())),
+			]
 		ViewDialog.__init__(self, 'hview_')
 
 	def show(self):
