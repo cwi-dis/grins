@@ -1245,6 +1245,7 @@ class Scheduler(scheduler):
 				arg.looping_body_self.startplay(timestamp)
 			sctx.sched_arcs(arg.looping_body_self,
 					'begin', timestamp=timestamp)
+			arg.looping_body_self.loopcount = 0
 		elif action == SR.LOOPEND:
 			self.do_loopend(sctx, arg, timestamp)
 		elif action == SR.LOOPRESTART:
@@ -1256,6 +1257,8 @@ class Scheduler(scheduler):
 					arg.looping_body_self.startplay(timestamp)
 				sctx.sched_arcs(arg.looping_body_self,
 						'begin', timestamp=timestamp)
+				arg.looping_body_self.loopcount = arg.looping_body_self.loopcount + 1
+				sctx.sched_arcs(arg, 'repeat(%d)' % arg.looping_body_self.loopcount)
 		elif action == SR.SCHED_STOPPING:
 			if arg.scheduled_children:
 				if debugevents: print 'not stopping',`arg`,arg.scheduled_children,self.timefunc()
