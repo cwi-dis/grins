@@ -14,8 +14,10 @@ from types import *
 import sys
 
 error = 'windowinterface.error'
+FALSE, TRUE = 0, 1
 ReadMask, WriteMask = 1, 2
 SINGLE, HTM, TEXT, MPEG = 0, 1, 2, 3
+UNIT_MM, UNIT_SCREEN, UNIT_PXL = 0, 1, 2
 
 Version = 'GL'
 
@@ -160,9 +162,9 @@ class _Toplevel:
 			win.setcursor(cursor)
 		self._cursor = cursor
 
-	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE):
+	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM):
 		if debug: print 'Toplevel.newwindow'+`x, y, w, h, title`
-		window = _Window(1, self, x, y, w, h, title)
+		window = _Window(1, self, x, y, w, h, title, units)
 		event._qdevice()
 		dummy = event.testevent()
 		return window
@@ -181,6 +183,14 @@ class _Toplevel:
 			self._win_lock = lock
 		else:
 			self._win_lock = _DummyLock()
+
+	def getscreensize(self):
+		"""Return screen size in pixels"""
+		return gl.getgdesc(GL.GD_XPMAX), gl.getgdesc(GL.GD_YPMAX)
+
+	def getscreendepth(self):
+		"""Return screen depth"""
+		return 24
 
 event = None
 class _Event:
@@ -892,7 +902,8 @@ class _DisplayList:
 	#
 	# Images
 	#
-	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0):
+	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
+				    center = 1):
 		if self.is_closed():
 			raise error, 'displaylist already closed'
 		window = self._window
@@ -900,7 +911,7 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		win_x, win_y, win_w, win_h, im_x, im_y, im_w, im_h, \
 		       depth, scale, image = \
-		       window._prepare_image_from_file(file, crop, scale)
+		       window._prepare_image_from_file(file, crop, scale, center)
 		d = self._displaylist
 		d.append(gl.rectzoom, (scale, scale))
 		if depth == 1:
@@ -1160,7 +1171,7 @@ class _DisplayList:
 
 
 class _Window:
-	def __init__(self, is_toplevel, parent, x, y, w, h, title):
+	def __init__(self, is_toplevel, parent, x, y, w, h, title, units):
 		self._parent_window = parent
 		if not is_toplevel:
 			return
@@ -1172,13 +1183,35 @@ class _Window:
 			wmcorr_x, wmcorr_y = 0, 0
 		x0, y0 = x, y
 		x1, y1 = x0 + w, y0 + h
-		x0 = int(float(x0)/_mscreenwidth*_screenwidth+0.5)
-		y0 = int(float(y0)/_mscreenheight*_screenheight+0.5)
-		x1 = int(float(x1)/_mscreenwidth*_screenwidth+0.5) - 1
-		y1 = int(float(y1)/_mscreenheight*_screenheight+0.5) - 1
-		gl.prefposition(x0 - wmcorr_x, x1 - wmcorr_x,
-			  _screenheight - y1 - 1 + wmcorr_y,
-			  _screenheight - y0 - 1 + wmcorr_y)
+		if units == UNIT_MM:
+			if x is not None:
+				x = int(float(x)/_mscreenwidth*_screenwidth+0.5)
+			if y is not None:
+				y = int(float(y)/_mscreenheight*_screenheight+0.5)
+			w = int(float(w)/_mscreenwidth*_screenwidth+0.5)
+			h = int(float(h)/_mscreenheight*_screenheight+0.5)
+		elif units == UNIT_SCREEN:
+			if x is not None:
+				x = int(float(x) * _screenwidth + 0.5)
+			if y is not None:
+				y = int(float(y) * _screenheight + 0.5)
+			w = int(float(w) * _screenwidth + 0.5)
+			h = int(float(h) * _screenheight + 0.5)
+		elif units == UNIT_PXL:
+			if x is not None:
+				x = int(x)
+			if y is not None:
+				y = int(y)
+			w = int(w)
+			h = int(h)
+		else:
+			raise error, 'bad units specified'
+		if x is None or y is None:
+			gl.prefsize(w, h)
+		else:
+			gl.prefposition(x - wmcorr_x, x - wmcorr_x + w - 1,
+					_screenheight - y - h + wmcorr_y,
+					_screenheight - y - 1 + wmcorr_y)
 		if title is None:
 			gl.noborder()
 			title = ''
@@ -1250,7 +1283,7 @@ class _Window:
 		else:
 			self._toplevel = self
 
-	def getgeometry(self):
+	def getgeometry(self, units = UNIT_MM):
 		if self.is_closed():
 			raise error, 'window already closed'
 		if self._parent_window is not toplevel:
@@ -1259,12 +1292,23 @@ class _Window:
 		gl.winset(self._window_id)
 		x, y = gl.getorigin()
 		toplevel._win_lock.release()
-		h = float(_mscreenheight) / _screenheight
-		w = float(_mscreenwidth) / _screenwidth
-		return float(x) * w, \
-		       (_screenheight - y - self._rect[_HEIGHT]) * h, \
-		       self._rect[_WIDTH] * w, \
-		       self._rect[_HEIGHT] * h
+		w, h = self._rect[2:]
+		if units == UNIT_MM:
+			fh = float(_mscreenheight) / _screenheight
+			fw = float(_mscreenwidth) / _screenwidth
+			return float(x) * w, \
+			       (_screenheight - y - h) * fh, \
+			       w * fw, \
+			       h * fh
+		elif units == UNIT_SCREEN:
+			return float(x) / _screenwidth, \
+			       float(y) / _screenheight, \
+			       float(w) / _screenwidth, \
+			       float(h) / _screenheight
+		elif units == UNIT_PXL:
+			return x, y, w, h
+		else:
+			raise error, 'bad units specified'
 
 	def newwindow(self, coordinates, type_channel = SINGLE, **options):
 		if debug: print `self`+'.newwindow'+`coordinates`
@@ -1501,7 +1545,7 @@ class _Window:
 				if cursor == 'watch':
 					gl.setcursor(_WATCH, 0, 0)
 				elif cursor == 'channel':
-				        gl.setcursor(_CHANNEL, 0, 0)
+					gl.setcursor(_CHANNEL, 0, 0)
 				elif cursor == 'link':
 					gl.setcursor(_LINK, 0, 0)
 				elif cursor == 'stop':
@@ -1514,7 +1558,10 @@ class _Window:
 				toplevel._win_lock.release()
 		self._cursor = cursor
 
-	def _prepare_image_from_file(self, file, crop, scale):
+	def _prepare_image_from_file(self, file, crop, scale, center):
+		# width, height: width and height of window
+		# xsize, ysize: width and height of unscaled (original) image
+		# w, h: width and height of scaled (final) image
 		global _cache_full
 		top, bottom, left, right = crop
 		cachekey = `file`+':'+`self._rect[_WIDTH]`+'x'+`self._rect[_HEIGHT]`
@@ -1551,22 +1598,24 @@ class _Window:
 		if scale == 0:
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
-		width, height = xsize, ysize
+		w, h = xsize, ysize
 		if scale != int(scale):
 			import imageop
-			width = int(xsize * scale)
-			height = int(ysize * scale)
-			image = imageop.scale(image, 4, xsize, ysize,
-					      width, height)
+			w = int(xsize * scale)
+			h = int(ysize * scale)
+			image = imageop.scale(image, 4, xsize, ysize, w, h)
 			top = int(top * scale)
 			bottom = int(bottom * scale)
 			left = int(left * scale)
 			right = int(right * scale)
 			scale = 1.0
-		x, y = (self._rect[_WIDTH]-(width-left-right))/2, \
-			  (self._rect[_HEIGHT]-(height-top-bottom))/2
-		retval = x, y, width - left - right, height - top - bottom, \
-			  left, bottom, width, height, 4, scale, \
+		if center:
+			x = (width-(w-left-right)) / 2
+			y = (height-(h-top-bottom)) / 2
+		else:
+			x = y = 0
+		retval = x, y, w - left - right, h - top - bottom, \
+			  left, bottom, w, h, 4, scale, \
 			  image
 		if not _cache_full:
 			import tempfile
@@ -2069,8 +2118,8 @@ class Dialog(_DummyButtons):
 	def settitle(self, title):
 		self.window.settitle(title)
 
-	def getgeometry(self):
-		return self.window.getgeometry()
+	def getgeometry(self, units = UNIT_MM):
+		return self.window.getgeometry(units)
 
 	def _convert_menu_list(self, list):
 		newlist = []
@@ -2132,3 +2181,6 @@ class _MultChoice(Dialog):
 def multchoice(prompt, list, defindex):
 	d = _MultChoice(prompt, list, defindex)
 	return d.run()
+
+def lopristarting():
+	pass
