@@ -332,8 +332,9 @@ class ChannelView(ChannelViewDialog):
 	def timerange(self):
 		# Return the range of times used in the window
 		v = self.viewroot
-		t0, t1 = v.t0 - self.prerolltime, v.t2
-		return t0, max(t1, t0 + 10)
+		t0, t1, t2, dummy, dummy = self.viewroot.GetTimes()
+		t0 = t0 - self.prerolltime
+		return t0, max(t2, t0 + 10)
 
 	def maptimes(self, t0, t1):
 		# Map begin and end times to top and bottom in window
@@ -524,14 +525,15 @@ class ChannelView(ChannelViewDialog):
 		for ch, list in channels.items():
 			x = []
 			for o in list:
+				t0, t1, t2, dummy, dummy = o.node.GetTimes()
 				for i in range(len(x)):
-					if o.node.t0 >= x[i]:
-						x[i] = o.node.t2
+					if t0 >= x[i]:
+						x[i] = t2
 						o.channelline = i
 						break
 				else:
 					o.channelline = len(x)
-					x.append(o.node.t2)
+					x.append(t2)
 			channels[ch] = len(x)
 		self.channellines = channels
 
@@ -1778,9 +1780,11 @@ class ChannelBox(GO, ChannelBoxCommand):
 
 
 def nodesort(o1, o2):
-	d = cmp(o1.node.t0, o2.node.t0)
+	o1_t0, dummy, o1_t2, dummy, dummy = o1.node.GetTimes()
+	o2_t0, dummy, o2_t2, dummy, dummy = o1.node.GetTimes()
+	d = cmp(o1_t0, o2_t0)
 	if d == 0:
-		d = cmp(o1.node.t2, o2.node.t2)
+		d = cmp(o1_t2, o2_t2)
 	return d
 
 class NodeBox(GO, NodeBoxCommand):
@@ -1933,30 +1937,32 @@ class NodeBox(GO, NodeBoxCommand):
 	def reshape(self):
 		# Compute ideal box coordinates
 		channel = self.node.GetChannel()
+		node_t0, node_t1, node_t2, dummy, dummy = self.node.GetTimes()
 		if channel:
 			channel = channel.GetLayoutChannel()
 		if self.pausenode:
 			parent = self.node.GetParent()
+			dummy, dummy, parent_t2, dummy, dummy = parent.GetTimes()
 			if parent is None:
-				t1 = self.node.t2
+				t1 = node_t2
 			elif parent.GetType() == 'seq':
 				siblings = parent.GetChildren()
 				index = siblings.index(self.node)
 				if len(siblings) > index+1:
-					t1 = siblings[index+1].t0
+					t1 = siblings[index+1].GetTimes()[0]
 				else:
-					t1 = parent.t2
+					t1 = parent_t2
 			else:
-				t1 = parent.t2
-			if t1 == self.node.t0:
-				t1 = self.node.t2
+				t1 = parent_t2
+			if t1 == node_t0:
+				t1 = node_t2
 		else:
-			t1 = self.node.t2
-		left, right = self.mother.maptimes(self.node.t0, t1)
+			t1 = node_t2
+		left, right = self.mother.maptimes(node_t0, t1)
 		top, bottom = self.mother.mapchannel(channel, self.channelline)
 		if hasattr(self.node,'timing_discont') and self.node.timing_discont:
 			self.mother.discontinuities.append(
-				self.node.t0+self.node.timing_discont)
+				node_t0+self.node.timing_discont)
 
 		hmargin = self.mother.nodemargin
 		left = left + hmargin
@@ -2066,10 +2072,11 @@ class NodeBox(GO, NodeBoxCommand):
 		     hasattr(self.node, 'slideshow'):
 			import MMurl
 			start = 0
+			node_t0 = self.node.GetTimes()[0]
 			for attrs in self.node.slideshow.rp.tags:
 				start = start + attrs.get('start', 0)
 				if attrs.get('tag', 'fill') in ('fadein', 'crossfade', 'wipe') and attrs.get('file'):
-					x = self.mother.maptimes(self.node.t0+start, 0)[0]
+					x = self.mother.maptimes(node_t0+start, 0)[0]
 					try:
 						f = MMurl.urlretrieve(self.node.context.findurl(attrs.get('file')))[0]
 					except IOError:
@@ -2091,14 +2098,13 @@ class NodeBox(GO, NodeBoxCommand):
 	def getbandwidthdata(self):
 		if not self.node.WillPlay():
 			return None
-		t0 = self.node.t0
-		t1 = self.node.t2
+		t0, t1, t2, dummy, dummy = self.node.GetTimes()
 		try:
 			prearm, bandwidth = Bandwidth.get(self.node)
 		except Bandwidth.Error, msg:
 			self.node.set_infoicon('error', msg)
 			prearm = bandwidth = 0
-		return t0, t1, self, prearm, bandwidth
+		return t0, t2, self, prearm, bandwidth
 
 	# Menu stuff beyond what GO offers
 
@@ -2166,7 +2172,8 @@ class INodeBox(GO):
 		GO.cleanup(self)
 
 	def reshape(self):
-		left, right = self.mother.maptimes(self.node.t0, self.node.t2)
+		t0, t1, t2, dummy, dummy = self.node.GetTimes()
+		left, right = self.mother.maptimes(t0, t2)
 		self.left = left
 		self.right = right
 		self.top = 0
