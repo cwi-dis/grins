@@ -238,6 +238,7 @@ basicwriters = { \
 	'namedict': writenamedict, \
 	'attrdict': writeattrdict, \
 	'enclosed': writeenclosed, \
+	'optenclosed':writeenclosed, \
 	'type': writetype, \
 	'any': writeany, \
 	}
