@@ -555,7 +555,6 @@ class LayoutView2(LayoutViewDialog2):
 
 	def onMainUpdate(self, nodeRef):
 		self.treeWidget.updateNode(nodeRef)
-		
 	#
 	#
 	#
@@ -2269,16 +2268,14 @@ class PreviousWidget(Widget):
 
 	def addRegion(self, parentRef, regionRef):
 		pNode = self.getNode(parentRef)
-		name = self._context.getShowedName(regionRef)
-		self._nodeRefToNodeTree[regionRef] = regionNode = Region(name, regionRef, self)
+		self._nodeRefToNodeTree[regionRef] = regionNode = Region(regionRef, self)
 		pNode.addNode(regionNode)
 
 		if self._context.showAllRegions:
 			self.__showRegion(regionRef)
 
 	def addViewport(self, viewportRef):
-		name = self._context.getShowedName(viewportRef)
-		viewportNode = Viewport(name, viewportRef, self)
+		viewportNode = Viewport(viewportRef, self)
 		self._nodeRefToNodeTree[viewportRef] = viewportNode
 
 	def removeRegion(self, regionRef):
@@ -2357,8 +2354,7 @@ class PreviousWidget(Widget):
 		# create the media region nodes according to nodeList
 		appendMediaRegionList = []
 		for nodeRef in nodeList:
-			name = nodeRef.attrdict.get("name")
-			newNode = MediaRegion(name, nodeRef, self)
+			newNode = MediaRegion(nodeRef, self)
 			parentRef = self._context.getParentNodeRef(nodeRef)
 			parentNode = self.getNode(parentRef)
 			if parentNode != None:
@@ -2370,7 +2366,7 @@ class PreviousWidget(Widget):
 	def onSelect(self, nodeList):
 		if debugPreview: print 'PreviewWidget.onSelect ',nodeList
 		self._context.onSelect(nodeList)
-								
+
 	def getNode(self, nodeRef):
 		node = self._nodeRefToNodeTree.get(nodeRef)
 		return node
@@ -2419,8 +2415,7 @@ class PreviousWidget(Widget):
 		self._context.applyGeomList(applyList)
 						
 class Node:
-	def __init__(self, name, nodeRef, ctx):
-		self._name = name
+	def __init__(self, nodeRef, ctx):
 		self._nodeRef = nodeRef
 		self._children = []
 		self._ctx = ctx
@@ -2481,8 +2476,8 @@ class Node:
 		return self._ctx._context.showName		
 
 	def getName(self):
-		return self._name
-
+		return self._ctx._context.getShowedName(self._nodeRef)
+	
 	def getParent(self):
 		return self._parent
 	
@@ -2553,8 +2548,8 @@ class Node:
 		self.hide()
 
 class Region(Node):
-	def __init__(self, name, nodeRef, ctx):
-		Node.__init__(self, name, nodeRef, ctx)
+	def __init__(self, nodeRef, ctx):
+		Node.__init__(self, nodeRef, ctx)
 		self._nodeType = TYPE_REGION
 		self._wantToShow = 0
 		
@@ -2586,7 +2581,7 @@ class Region(Node):
 			self.hideAllNodes()
 			
 		if self._wantToShow and self._parent._graphicCtrl != None:
-			self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
+			self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self.getName())
 			self._graphicCtrl.showName(self.getShowName())		
 			self._graphicCtrl.setListener(self)
 
@@ -2633,9 +2628,9 @@ class Region(Node):
 			self._ctx._context.selectBgColor(self.getNodeRef())
 				
 class MediaRegion(Region):
-	def __init__(self, name, node, ctx):
+	def __init__(self, node, ctx):
 		nodeRef = node
-		Region.__init__(self, name, nodeRef, ctx)
+		Region.__init__(self, nodeRef, ctx)
 		self._nodeType = TYPE_MEDIA
 		self._wantToShow = 1
 
@@ -2692,7 +2687,7 @@ class MediaRegion(Region):
 			# hide this node and its sub-nodes
 			self.hideAllNodes()
 
-		self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
+		self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self.getName())
 		self._graphicCtrl.showName(0)		
 		self._graphicCtrl.setListener(self)
 		
@@ -2730,11 +2725,11 @@ class MediaRegion(Region):
 			self._ctx._context.editProperties(self.getNodeRef())
 	
 class Viewport(Node):
-	def __init__(self, name, nodeRef, ctx):
+	def __init__(self, nodeRef, ctx):
 		self.currentX = 8
 		self.currentY = 8
 		
-		Node.__init__(self, name, nodeRef, ctx)
+		Node.__init__(self, nodeRef, ctx)
 		self._nodeType = TYPE_VIEWPORT
 		self._viewport = self
 
@@ -2759,7 +2754,7 @@ class Viewport(Node):
 
 	def show(self):
 		if debug: print 'Viewport.show : ',self.getName()
-		self._graphicCtrl = self._ctx.previousCtrl.newViewport(self._curattrdict, self._name)
+		self._graphicCtrl = self._ctx.previousCtrl.newViewport(self._curattrdict, self.getName())
 
 		# show a the trace image if specified		
 		traceImage = self._nodeRef.GetAttrDef('traceImage', '')
