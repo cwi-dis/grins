@@ -1,9 +1,6 @@
 TODO for Michael :-) 
 ---------------------------------------------
 
-What am I doing:
-----------------
-
 Priority top-to-bottom.
 ------------------------
 
@@ -12,6 +9,8 @@ Make the channels display in a tree
 Bars should not collide
 Nodes should not overlap
 The width should be calculated from the duration.
+
+* Move my files off the internet.
 
 * The temporal view.
 
