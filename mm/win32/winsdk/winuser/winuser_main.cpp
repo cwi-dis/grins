@@ -117,6 +117,16 @@ PyObject* Winuser_LoadCursor(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", hCursor);
 }
 
+PyObject* Winuser_SetCursor(PyObject *self, PyObject *args)
+{
+	HCURSOR hCursor;
+	if (!PyArg_ParseTuple(args, "i", &hCursor))
+		return NULL;
+	hCursor = SetCursor(hCursor);
+	return Py_BuildValue("i", hCursor);
+}
+
+
 PyObject* Winuser_ShellExecute(PyObject *self, PyObject *args)
 	{
 	HWND hwnd;
