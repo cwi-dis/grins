@@ -76,8 +76,6 @@ FullPopupMenu = mw_menucmd.FullPopupMenu
 
 MACDialog = mw_dialogs.MACDialog
 FileDialog = mw_dialogs.FileDialog
-SelectionDialog = mw_dialogs.SelectionDialog
-SingleSelectionDialog = mw_dialogs.SingleSelectionDialog
 InputDialog = mw_dialogs.InputDialog
 InputURLDialog = mw_dialogs.InputURLDialog
 NewChannelDialog = mw_dialogs.NewChannelDialog
@@ -86,6 +84,8 @@ ProgressDialog = mw_dialogs.ProgressDialog
 BandwidthComputeDialog = mw_dialogs.BandwidthComputeDialog
 Dialog = mw_dialogs.Dialog
 multchoice = mw_dialogs.multchoice
+GetYesNoCancel = mw_dialogs.GetYesNoCancel
+GetOKCancel = mw_dialogs.GetOKCancel
 showmessage = mw_dialogs.showmessage
 showquestion = mw_dialogs.showquestion
 
