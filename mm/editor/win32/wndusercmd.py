@@ -30,4 +30,6 @@ class PASTE_FILE(_CommandBase):
 
 class GRINS_WEB(_CommandBase):
 	help = 'GRiNS on the Web'
+class GRINS_QSG(_CommandBase):
+	help = 'GRiNS QuickStart Guide'
 
