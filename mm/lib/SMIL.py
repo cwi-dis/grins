@@ -1,4 +1,5 @@
 SMIL_BASIC = 'text/smil-basic-layout'
+SMIL_EXTENDED = 'text/smil-extended-layout'
 SMILpubid = "-//W3C//DTD SMIL 1.0//EN"
 SMILdtd = "http://www.w3.org/TR/REC-smil/SMIL10.dtd"
 SMILBostonPubid = "-//W3C//DTD SMIL 2.0//EN"
@@ -44,14 +45,16 @@ class SMIL:
 			       },
 		'region': {'background-color':'transparent',
 			   'backgroundColor':None,
+			   'bottom':None,
 			   'fit':'hidden',
-			   'height':'0',
+			   'height':None,
 			   'id':None,
-			   'left':'0',
+			   'left':None,
 			   'skip-content':'true',
+			   'right':None,
 			   'title':None,
-			   'top':'0',
-			   'width':'0',
+			   'top':None,
+			   'width':None,
 			   'z-index':'0',
 			   GRiNSns+' ' 'border':None,
 			   GRiNSns+' ' 'bucolor':None,

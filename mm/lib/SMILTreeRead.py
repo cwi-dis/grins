@@ -18,7 +18,8 @@ error = 'SMILTreeRead.error'
 
 LAYOUT_NONE = 0				# must be 0
 LAYOUT_SMIL = 1
-LAYOUT_UNKNOWN = -1
+LAYOUT_EXTENDED = 2
+LAYOUT_UNKNOWN = -1			# must be < 0
 
 layout_name = ' SMIL '			# name of layout channel
 
@@ -124,8 +125,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__root = None
 		self.__root_layout = None
 		self.__top_layout = None
-		self.__needs_root = 0
 		self.__tops = {}
+		self.__topchans = []
 		self.__container = None
 		self.__node = None	# the media object we're in
 		self.__regions = {}	# mapping from region id to chan. attrs
@@ -135,7 +136,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__childregions = {}
 		self.__topregion = {}
 		self.__ids = {}		# collect all id's here
-		self.__layout = None
 		self.__nodemap = {}
 		self.__idmap = {}
 		self.__anchormap = {}
@@ -539,7 +539,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		node.__region = region
 		ch = self.__regions.get(region)
 		if ch is None:
-			self.__in_layout = LAYOUT_SMIL
+			# create a region for this node
+			self.__in_layout = self.__seen_layout
 			ch = {}
 			for key, val in self.attributes['region'].items():
 				if val is not None:
@@ -550,23 +551,33 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__in_layout = LAYOUT_NONE
 			ch = self.__regions[region]
 		width = height = 0
-		x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
+		l = ch.get('left')
+		w = ch.get('width')
+		r = ch.get('right')
+		t = ch.get('top')
+		h = ch.get('height')
+		b = ch.get('bottom')
+		if l is not None and w is not None and r is not None:
+			del ch['right']
+			r = None
+		if t is not None and h is not None and b is not None:
+			del ch['bottom']
+			b = None
 		top = self.__topregion.get(node.__region)
 		if self.__tops[top]['width'] > 0 and \
 		   self.__tops[top]['height'] > 0:
 			# we don't have to calculate minimum sizes
+			pass
+		elif (type(l) is type(0)) + (type(w) is type(0)) + (type(r) is type(0)) >= 2 and \
+		     (type(t) is type(0)) + (type(h) is type(0)) + (type(b) is type(0)) >= 2:
+			# size and position is given in pixels
 			pass
 		elif mtype in ('image', 'movie', 'video', 'mpeg',
 			       'RealPix', 'RealText', 'RealVideo'):
 			# if we don't know the region size and
 			# position in pixels, we need to look at the
 			# media objects to figure out the size to use.
-			if w > 0 and h > 0 and \
-			   type(w) == type(h) == type(0) and \
-			   (x == y == 0 or type(x) == type(y) == type(0)):
-				# size and position is given in pixels
-				pass
-			elif node.attrdict.has_key('file'):
+			if node.attrdict.has_key('file'):
 				url = self.__context.findurl(node.attrdict['file'])
 				try:
 					import Sizes
@@ -578,15 +589,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					node.__size = width, height
 		elif mtype in ('text', 'label', 'html', 'graph'):
-			if w > 0 and h > 0 and \
-			   type(w) == type(h) == type(0) and \
-			   (x == y == 0 or type(x) == type(y) == type(0)):
-				# size and position is given in pixels
-				pass
-			else:
-				# want to make them at least visible...
-				width = 200
-				height = 100
+			# want to make them at least visible...
+			width = 200
+			height = 100
 		if ch['minwidth'] < width:
 			ch['minwidth'] = width
 		if ch['minheight'] < height:
@@ -682,8 +687,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def FixSizes(self):
 		for t in self.__tops.keys():
 			self.__calcsize1(t)
+			w = self.__tops[t]['width']
+			h = self.__tops[t]['height']
 			for r in self.__childregions[t]:
-				self.__calcsize2(t, r)
+				self.__calcsize2(t, r, w, h)
 
 	def __calcsize1(self, region):
 		minwidth = minheight = 0
@@ -706,92 +713,154 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attrdict['minwidth'] = minwidth
 			if attrdict.get('minheight', 0) < minheight:
 				attrdict['minheight'] = minheight
-			minwidth = _minsize(attrdict.get('left', 0),
-					    attrdict.get('width', 0),
+			minwidth = _minsize(attrdict.get('left'),
+					    attrdict.get('width'),
+					    attrdict.get('right'),
 					    attrdict.get('minwidth', 0))
-			minheight = _minsize(attrdict.get('top', 0),
-					     attrdict.get('height', 0),
+			minheight = _minsize(attrdict.get('top'),
+					     attrdict.get('height'),
+					     attrdict.get('bottom'),
 					     attrdict.get('minheight', 0))
 		return minwidth, minheight
 
-	def __calcsize2(self, top, region):
+	def __calcsize2(self, top, region, width, height):
 		from windowinterface import UNIT_PXL, UNIT_SCREEN
-		width = self.__tops[top]['width']
-		height = self.__tops[top]['height']
-		declwidth = self.__tops[top]['declwidth']
-		declheight = self.__tops[top]['declheight']
 		attrdict = self.__regions[region]
-		x = attrdict.get('left', 0)
-		y = attrdict.get('top', 0)
-		w = attrdict.get('width', 0)
-		h = attrdict.get('height', 0)
+		l = attrdict.get('left')
+		w = attrdict.get('width')
+		r = attrdict.get('right')
+		t = attrdict.get('top')
+		h = attrdict.get('height')
+		b = attrdict.get('bottom')
 		# if size of root-layout specified, convert to pixels
-		if declwidth:
-			if type(x) is type(0.0):
-				x = int(x * width + .5)
-				attrdict['left'] = x
+		if self.__tops[top]['declwidth']:
+			if type(l) is type(0.0):
+				l = int(l * width + .5)
+				attrdict['left'] = l
 			if type(w) is type(0.0):
 				w = int(w * width + .5)
 				attrdict['width'] = w
-		if declheight:
-			if type(y) is type(0.0):
-				y = int(y * height + .5)
-				attrdict['top'] = y
+			if type(r) is type(0.0):
+				r = int(r * width + .5)
+				attrdict['right'] = r
+		if self.__tops[top]['declheight']:
+			if type(t) is type(0.0):
+				t = int(t * height + .5)
+				attrdict['top'] = t
 			if type(h) is type(0.0):
 				h = int(h * height + .5)
 				attrdict['height'] = h
+			if type(b) is type(0.0):
+				b = int(b * height + .5)
+				attrdict['bottom'] = b
 		#
 		thetype = None # type of 1st elem != 0
-		for val in x, y, w, h:
-			if val == 0:
+		for val in l, w, r, t, h, b:
+			if val == 0 or val is None:
 				continue
 			if thetype is None:
 				thetype = type(val)
 				continue
 			elif type(val) is thetype:
 				continue
-			# we only get here if there
-			# are multiple values != 0 of
-			# different types
-			# not all the same units, convert
-			# everything to relative sizes
-			if type(x) is type(0):
-				x = float(x) / width
-			if type(w) is type(0) or w == 0:
-				if w == 0:
-					w = 1.0 - x
-				else:
-					w = float(w) / width
-			if type(y) is type(0):
-				y = float(y) / height
-			if type(h) is type(0) or h == 0:
-				if h == 0:
-					h = 1.0 - y
-				else:
-					h = float(h) / height
+			# we only get here if there are multiple
+			# values != 0 of different types
+			# not all the same units, convert everything
+			# to relative sizes
+			if type(l) is type(0):
+				l = float(l) / width
+			if type(w) is type(0):
+				w = float(w) / width
+			if type(r) is type(0):
+				r = float(r) / width
+			if type(t) is type(0):
+				t = float(t) / height
+			if type(h) is type(0):
+				h = float(h) / height
+			if type(b) is type(0):
+				b = float(b) / height
 			attrdict['units'] = UNIT_SCREEN
 			break
 		else:
-			# all the same type or 0
-			if thetype is type(0) or thetype is None:
-				units = UNIT_PXL
-			else:
+			# all the same type or 0/None
+			if thetype is type(0.0):
 				units = UNIT_SCREEN
+			else:
+				units = UNIT_PXL
 			attrdict['units'] = units
-			if w == 0 and type(width) is type(0):
-				if units == UNIT_PXL:
-					w = width - int(x)
+		# change things around so that l,w and t,h are defined
+		# if fewer than two of l,w,r and t,h,b are defined, fill
+		# in defaults: l==t==0, w and h rest of available space
+		if l is None:
+			if w is None:
+				if r is None:
+					l = 0
+					if units == UNIT_PXL:
+						w = width
+					else:
+						w = 1.0
 				else:
-					w = 1.0 - x
-			if h == 0 and type(height) is type(0):
-				if units == UNIT_PXL:
-					h = height - int(y)
+					l = 0
+					w = r
+					r = None
+			else:
+				if r is None:
+					l = 0
 				else:
-					h = 1.0 - y
-		attrdict['left'] = x
-		attrdict['top'] = y
+					l = r - w
+					r = None
+		else:
+			if w is None:
+				if r is None:
+					if units == UNIT_PXL:
+						w = width - l
+					else:
+						w = 1.0 - l
+				else:
+					w = r - l
+					r = None
+			else:
+				if r is not None:
+					r = None
+		if t is None:
+			if h is None:
+				if b is None:
+					t = 0
+					if units == UNIT_PXL:
+						h = height
+					else:
+						h = 1.0
+				else:
+					t = 0
+					h = b
+					b = None
+			else:
+				if b is None:
+					t = 0
+				else:
+					t = b - h
+					b = None
+		else:
+			if h is None:
+				if b is None:
+					if units == UNIT_PXL:
+						h = height - t
+					else:
+						h = 1.0 - t
+				else:
+					h = b - t
+					b = None
+			else:
+				if b is not None:
+					b = None
+		attrdict['left'] = l
 		attrdict['width'] = w
+		if attrdict.has_key('right'):
+			del attrdict['right']
+		attrdict['top'] = t
 		attrdict['height'] = h
+		if attrdict.has_key('bottom'):
+			del attrdict['bottom']
 
 		if type(w) is type(0.0):
 			w = int(w * width + .5)
@@ -799,7 +868,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			h = int(h * height + .5)
 		
 		for r in self.__childregions[region]:
-			self.__calcsize2(top, r)
+			self.__calcsize2(top, r, w, h)
 
 	def FixSyncArcs(self, node):
 		for attr, val in node.__syncarcs:
@@ -816,16 +885,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				bg = attrs['background-color']
 			bg = self.__convert_color(bg)
 			name = attrs.get('id')
-		if not name:		# can only happen if isroot==1
-			name = layout_name
+		top = name
+		if not name:
+			name = layout_name # only for anonymous root-layout
 		ctx = self.__context
 		layout = MMNode.MMChannel(ctx, name)
+		if not self.__region2channel.has_key(top):
+			self.__region2channel[top] = []
+		self.__region2channel[top].append(layout)
+		self.__topchans.append(layout)
 		ctx.channeldict[name] = layout
 		ctx.channelnames.insert(0, name)
 		ctx.channels.insert(0, layout)
 		if isroot:
 			self.__base_win = name
-			self.__layout = layout
 		layout['type'] = 'layout'
 		if bg is not None and \
 		   bg != 'transparent' and \
@@ -845,10 +918,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		layout['units'] = UNIT_PXL
 
 	def FixBaseWindow(self):
-		if self.__layout is None:
+		if not self.__topchans:
 			return
 		for ch in self.__context.channels:
-			if ch is self.__layout:
+			if ch in self.__topchans:
 				continue
 			if ch.has_key('base_window'):
 				basewin = ch['base_window']
@@ -1013,7 +1086,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if not self.__regions.has_key(region):
 					self.warning('no region %s in layout' %
 						     region, self.lineno)
-					self.__in_layout = LAYOUT_SMIL
+					self.__in_layout = self.__seen_layout
 					self.start_region({'id': region})
 					self.end_region()
 					self.__in_layout = LAYOUT_NONE
@@ -1134,14 +1207,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_smil = 0
 		if not self.__root:
 			self.error('empty document', self.lineno)
-		if not self.__needs_root and \
+		if not self.__tops.has_key(None) and \
 		   not self.__context.attributes.get('project_boston'):
-			self.__needs_root = 1
+			attrs = {}
+			for key, val in self.attributes['root-layout'].items():
+				if val is not None:
+					attrs[key] = val
 			self.__tops[None] = {'width':0,
 					     'height':0,
 					     'declwidth':0,
 					     'declheight':0,
-					     'attrs':{}}
+					     'attrs':attrs}
 		self.FixRoot()
 		self.FixSizes()
 		self.MakeChannels()
@@ -1166,6 +1242,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_head(self):
 		self.__in_head = 0
+		if not self.__seen_layout:
+			self.__seen_layout = LAYOUT_SMIL
 
 	def start_body(self, attributes):
 		self.__fix_attributes(attributes)
@@ -1236,16 +1314,38 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__seen_layout and not self.__in_head_switch:
 			self.syntax_error('multiple layouts without switch')
 		if attributes['type'] == SMIL_BASIC:
-			if self.__seen_layout == LAYOUT_SMIL:
-				# if we've seen SMIL_BASIC already,
-				# ignore this one
+			if self.__seen_layout > 0:
+				# if we've seen SMIL_BASIC/SMIL_EXTENDED
+				# already, ignore this one
 				self.__in_layout = LAYOUT_UNKNOWN
 			else:
 				self.__in_layout = LAYOUT_SMIL
 			self.__seen_layout = LAYOUT_SMIL
+		elif attributes['type'] == SMIL_EXTENDED:
+			if self.__in_head_switch and \
+			   self.__context.attributes.get('project_boston') == 0:
+				# ignre text/smil-extended-layout if we're
+				# specifically using SMIL 1.0 and we're
+				# inside a switch (if we're not in a switch
+				# we'll complain below)
+				self.__in_layout = LAYOUT_UNKNOWN
+				if not self.__seen_layout:
+					self.__seen_layout = LAYOUT_UNKNOWN
+				self.setliteral()
+				return
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('layout type %s not compatible with SMIL 1.0' % SMIL_EXTENDED)
+			self.__context.attributes['project_boston'] = 1
+			if self.__seen_layout > 0:
+				# if we've seen SMIL_BASIC/SMIL_EXTENDED
+				# already, ignore this one
+				self.__in_layout = LAYOUT_UNKNOWN
+			else:
+				self.__in_layout = LAYOUT_EXTENDED
+			self.__seen_layout = LAYOUT_EXTENDED
 		else:
 			self.__in_layout = LAYOUT_UNKNOWN
-			if self.__seen_layout != LAYOUT_SMIL:
+			if not self.__seen_layout:
 				self.__seen_layout = LAYOUT_UNKNOWN
 			self.setliteral()
 
@@ -1256,16 +1356,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if not self.__in_layout:
 			self.syntax_error('region not in layout')
 			return
-		if self.__in_layout != LAYOUT_SMIL:
-			# ignore outside of smil-basic-layout
+		if self.__in_layout != LAYOUT_SMIL and \
+		   self.__in_layout != LAYOUT_EXTENDED:
+			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
 		from windowinterface import UNIT_PXL
 		id = None
-		attrdict = {'left': 0,
-			    'top': 0,
-			    'z-index': 0,
-			    'width': 0,
-			    'height': 0,
+		attrdict = {'z-index': 0,
 			    'minwidth': 0,
 			    'minheight': 0,}
 
@@ -1281,7 +1378,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('non-unique id %s' % id)
 				self.__ids[id] = 0
 				self.__regions[id] = attrdict
-			elif attr in ('left', 'top', 'width', 'height'):
+			elif attr in ('left', 'width', 'right', 'top', 'height', 'bottom'):
+				# XXX are bottom and right allowed in SMIL-Boston basic layout?
+				if attr in ('bottom', 'right'):
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
 				try:
 					if val[-1] == '%':
 						val = string.atof(val[:-1]) / 100.0
@@ -1337,6 +1439,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				# catch all
 				attrdict[attr] = val
+		if attrdict.has_key('left') and attrdict.has_key('right') and attrdict.has_key('width'):
+			del attrdict['right']
+		if attrdict.has_key('top') and attrdict.has_key('bottom') and attrdict.has_key('height'):
+			del attrdict['bottom']
 
 		if id is None:
 			self.syntax_error('region without id attribute')
@@ -1353,20 +1459,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			attrdict['base_window'] = self.__top_layout
 			self.__childregions[self.__top_layout].append(id)
 		else:
-			if not self.__needs_root:
-				self.__needs_root = 1
+			if not self.__tops.has_key(None):
+				attrs = {}
+				for key, val in self.attributes['root-layout'].items():
+					if val is not None:
+						attrs[key] = val
 				self.__tops[None] = {'width':0,
 						     'height':0,
 						     'declwidth':0,
 						     'declheight':0,
-						     'attrs':{}}
+						     'attrs':attrs}
 				self.__childregions[None] = []
 			self.__childregions[None].append(id)
 
 		self.__region = id, self.__region
 		self.__regionlist.append(id)
 		self.__childregions[id] = []
-		self.__topregion[id] = self.__top_layout # None no if not in top-layout
+		self.__topregion[id] = self.__top_layout # None if not in top-layout
 
 	def end_region(self):
 		if self.__region is None:
@@ -1376,6 +1485,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__region = self.__region[1]
 
 	def start_root_layout(self, attributes):
+		if self.__in_layout != LAYOUT_SMIL and \
+		   self.__in_layout != LAYOUT_EXTENDED:
+			# ignore outside of smil-basic-layout/smil-extended-layout
+			return
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		self.__root_layout = attributes
@@ -1408,14 +1521,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				     'declwidth':width,
 				     'declheight':height,
 				     'attrs':attributes}
-		if not self.__needs_root:
-			self.__needs_root = 1
+		if not self.__childregions.has_key(None):
 			self.__childregions[None] = []
 
 	def end_root_layout(self):
 		pass
 
 	def start_top_layout(self, attributes):
+		if self.__in_layout != LAYOUT_SMIL and \
+		   self.__in_layout != LAYOUT_EXTENDED:
+			# ignore outside of smil-basic-layout/smil-extended-layout
+			return
+		if self.__in_layout != LAYOUT_EXTENDED:
+			self.syntax_error('top-layout not allowed in layout type %s' % LAYOUT_SMIL)
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('top-layout not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
@@ -2147,12 +2265,19 @@ def ReadStringContext(string, name, context, printfunc = None):
 	root.source = string
 	return root
 
-def _minsize(start, extent, minsize):
+def _minsize(start, extent, end, minsize):
 	# Determine minimum size for parent window given that it
-	# has to contain a subwindow with the given start and extent
+	# has to contain a subwindow with the given start/extent/end
 	# values.  Start and extent can be integers or floats.  The
 	# type determines whether they are interpreted as pixel values
 	# or as fractions of the top-level window.
+	# end is only used if extent is None.
+	if start == 0:
+		# make sure this is a pixel value
+		start = 0
+##	if extent is None and (type(start) is type(end) or start == 0):
+##		extent = end - start
+##		end = None
 	if type(start) is type(0):
 		# start is pixel value
 		if type(extent) is type(0.0):
@@ -2165,12 +2290,21 @@ def _minsize(start, extent, minsize):
 			if minsize > 0 and extent > 0:
 				size = max(size, int(minsize/extent + 0.5))
 			return size
-		else:
+		elif type(extent) is type(0):
 			# extent is pixel value
 			if extent == 0:
 				extent = minsize
 			return start + extent
-	else:
+		elif type(end) is type(0.0):
+			# no extent, end is fraction
+			return int((start + minsize) / end + 0.5)
+		elif type(end) is type(0):
+			# no extent, end is pixel value
+			return end
+		else:
+			# no extent and no end
+			return start + minsize
+	elif type(start) is type(0.0):
 		# start is fraction
 		if start == 1:
 			raise error, 'region with impossible size'
@@ -2179,11 +2313,42 @@ def _minsize(start, extent, minsize):
 			if extent == 0:
 				extent = minsize
 			return int(extent / (1 - start) + 0.5)
-		else:
+		elif type(extent) is type(0.0):
 			# extent is fraction
 			if minsize > 0 and extent > 0:
 				return int(minsize / extent + 0.5)
 			return 0
+		elif type(end) is type(0):
+			# no extent, end is pixel value
+			return end
+		elif type(end) is type(0.0):
+			# no extent, end is fraction
+			if minsize > 0 and end > start:
+				return int(minsize / (end - start) + 0.5)
+			return 0
+		else:
+			# no extent and no end
+			return int(minsize / (1 - start) + 0.5)
+	elif type(end) is type(0):
+		# no start, end is pixel value
+		return end
+	elif type(end) is type(0.0):
+		# no start, end is fraction
+		if end <= 0:
+			return 0
+		if type(extent) is type(0):
+			# extent is pixel value
+			if extent == 0:
+				extent = minsize
+			return int(extent / end + 0.5)
+		elif type(extent) is type(0.0):
+			# extent is fraction
+			return int(minsize / end + 0.5)
+	elif type(extent) is type(0):
+		return extent
+	elif type(extent) is type(0.0) and extent > 0:
+		return int(minsize / extent + 0.5)
+	return minsize
 
 def _uniqname(namelist, defname):
 	if defname is not None and defname not in namelist:
