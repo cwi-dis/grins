@@ -166,6 +166,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for key, val in self.elements.items():
 			if ' ' not in key:
 				self.elements[SMIL2+' '+key] = val
+				self.elements[SMIL2Language+' '+key] = val
 		xmllib.XMLParser.__init__(self)
 		self.__seen_smil = 0
 		self.__in_smil = 0
@@ -2389,7 +2390,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ns = self.getnamespace().get('')
 		if ns is None or ns == SMIL1:
 			self.__context.attributes['project_boston'] = 0
-		elif ns == SMIL2:
+		elif ns == SMIL2Language:
 			self.__context.attributes['project_boston'] = 1
 		for attr in attributes.keys():
 			if attr != 'id' and \
@@ -4175,15 +4176,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def finish_starttag(self, tagname, attrdict, method):
 		nstag = string.split(tagname, ' ')
 		if len(nstag) == 2 and \
-		   nstag[0] in (SMIL1, SMIL2, GRiNSns):
+		   nstag[0] in (SMIL1, SMIL2Language, SMIL2, GRiNSns):
 			ns, tagname = nstag
 			d = {}
 			for key, val in attrdict.items():
 				nstag = string.split(key, ' ')
 				if len(nstag) == 2 and \
-				   nstag[0] in (SMIL1, SMIL2, GRiNSns):
+				   nstag[0] in (SMIL1, SMIL2, SMIL2Language, GRiNSns):
 					key = nstag[1]
-				d[key] = val
+				if not d.has_key(key) or d[key] == self.attributes.get(tagname, {}).get(key):
+					d[key] = val
 			attrdict = d
 		else:
 			ns = ''
@@ -4191,7 +4193,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ptag = self.stack[-2][2]
 			nstag = string.split(ptag, ' ')
 			if len(nstag) == 2 and \
-			   nstag[0] in (SMIL1, SMIL2, GRiNSns):
+			   nstag[0] in (SMIL1, SMIL2, SMIL2Language, GRiNSns):
 				pns, ptag = nstag
 			else:
 				pns = ''
@@ -4210,6 +4212,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.error('outermost element must be "smil"', self.lineno)
 		elif ns and self.getnamespace().get('', '') != ns:
 			self.error('outermost element must be "smil" with default namespace declaration', self.lineno)
+		elif ns and ns != SMIL2Language:
+			self.warning('default namespace should be "%s"' % SMIL2Language, self.lineno)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 
 class SMILMetaCollector(xmllib.XMLParser):

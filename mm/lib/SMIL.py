@@ -8,6 +8,7 @@ SMIL1 = 'http://www.w3.org/TR/REC-smil'
 SMILBostonPubid = "-//W3C//DTD SMIL 2.0//EN"
 SMILBostonDtd = "http://www.w3.org/TR/REC-smil/2000/SMIL20.dtd"
 SMIL2 = 'http://www.w3.org/TR/REC-smil/2000/SMIL20'
+SMIL2Language = SMIL2 + '/Language'
 GRiNSns = "http://www.oratrix.com/"
 QTns = "http://www.apple.com/quicktime/resources/smilextensions"
 
@@ -405,7 +406,7 @@ class SMIL:
 ##				'autoReverse':'false',
 				'customTest':None,
 				'skip-content':None,
-				'targetElement': '',
+				'targetElement': None,
 				'to':None,
 				}
 	__animate_attrs_extra = {'accumulate':'none',
@@ -484,9 +485,11 @@ class SMIL:
 			# SMIL 1.0 element, make a SMIL 2.0 copy
 			__atd = __atd.copy()
 			attributes[SMIL2+' '+__el] = __atd
+			attributes[SMIL2Language+' '+__el] = __atd
 			for __at, __vl in __atd.items():
 				if ' ' not in __at:
 					__atd[SMIL2+' '+__at] = __vl
+					__atd[SMIL2Language+' '+__at] = __vl
 					del __atd[__at]
 	del __el, __atd, __at, __vl, __key, __val
 
