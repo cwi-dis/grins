@@ -17,9 +17,7 @@ static struct PyMethodDef wingdi_methods[] = {
 	
 	{"DeleteObject", (PyCFunction)Wingdi_DeleteObject, METH_VARARGS, ""},
 	{"GetStockObject", (PyCFunction)Wingdi_GetStockObject, METH_VARARGS, ""},
-	{"ExtCreatePen", (PyCFunction)Wingdi_ExtCreatePen, METH_VARARGS, ""},
 	{"CreateSolidBrush", (PyCFunction)Wingdi_CreateSolidBrush, METH_VARARGS, ""},
-	{"CreateBrushIndirect", (PyCFunction)Wingdi_CreateBrushIndirect, METH_VARARGS, ""},
 	{"CreateFontIndirect", (PyCFunction)Wingdi_CreateFontIndirect, METH_VARARGS, ""},
 
 	{"IntersectRect", (PyCFunction)Wingdi_IntersectRect, METH_VARARGS, ""},
@@ -28,8 +26,14 @@ static struct PyMethodDef wingdi_methods[] = {
 	{"GetRGBValues", (PyCFunction)Wingdi_GetRGBValues, METH_VARARGS, ""},
 
 	{"CreateRectRgn", (PyCFunction)Wingdi_CreateRectRgn, METH_VARARGS, ""},
-	{"CreatePolygonRgn", (PyCFunction)Wingdi_CreatePolygonRgn, METH_VARARGS, ""},
+
 	{"CombineRgn", (PyCFunction)Wingdi_CombineRgn, METH_VARARGS, ""},
+
+#ifndef _WIN32_WCE
+	{"CreatePolygonRgn", (PyCFunction)Wingdi_CreatePolygonRgn, METH_VARARGS, ""},
+	{"CreateBrushIndirect", (PyCFunction)Wingdi_CreateBrushIndirect, METH_VARARGS, ""},
+	{"ExtCreatePen", (PyCFunction)Wingdi_ExtCreatePen, METH_VARARGS, ""},
+#endif
 	
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };

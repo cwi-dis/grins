@@ -38,6 +38,7 @@ PyObject* Wingdi_GetStockObject(PyObject *self, PyObject *args)
 }
 
 
+#ifndef _WIN32_WCE
 PyObject* Wingdi_ExtCreatePen(PyObject *self, PyObject *args)
 {
 	DWORD dwPenStyle = PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_FLAT | PS_JOIN_MITER;
@@ -57,6 +58,7 @@ PyObject* Wingdi_ExtCreatePen(PyObject *self, PyObject *args)
 		}
 	return Py_BuildValue("i", hpen);
 }
+#endif
 
 PyObject* Wingdi_CreateSolidBrush(PyObject *self, PyObject *args)
 {
@@ -72,6 +74,7 @@ PyObject* Wingdi_CreateSolidBrush(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", hbrush);
 }
 
+#ifndef _WIN32_WCE
 PyObject* Wingdi_CreateBrushIndirect(PyObject *self, PyObject *args)
 {
 	LOGBRUSH lb = {BS_SOLID, 0, 0};
@@ -86,6 +89,7 @@ PyObject* Wingdi_CreateBrushIndirect(PyObject *self, PyObject *args)
 		}
 	return Py_BuildValue("i", hbrush);
 }
+#endif
 
 PyObject* Wingdi_CreateFontIndirect(PyObject *self, PyObject *args)
 {
@@ -106,7 +110,7 @@ PyObject* Wingdi_CreateFontIndirect(PyObject *self, PyObject *args)
 	s.lfCharSet = (BYTE)p.getIntAttr("charset", DEFAULT_CHARSET);
 	s.lfOutPrecision = (BYTE)p.getIntAttr("outprecision", OUT_DEFAULT_PRECIS); 
 	s.lfClipPrecision =(BYTE) p.getIntAttr("clipprecision", CLIP_DEFAULT_PRECIS);
-	s.lfQuality = (BYTE)p.getIntAttr("quality", PROOF_QUALITY);
+	s.lfQuality = (BYTE)p.getIntAttr("quality", DEFAULT_QUALITY);
 	s.lfPitchAndFamily = (BYTE)p.getIntAttr("pitch and family", DEFAULT_PITCH | FF_DONTCARE); // naming compatibility
 	p.getStrAttr("name", toMB(s.lfFaceName), LF_FACESIZE, "Arial");  //  naming compatibility
 	HFONT hfont = CreateFontIndirect(&s);
