@@ -165,7 +165,7 @@ class RealChannel:
 		node, window, winpossize, url = self._playargs
 		temp = self.__rmaplayer
 		self.__rmaplayer = None
-		self.__createplayer()
+		self.__createplayer(node)
 		self.__rmaplayer.SetStatusListener(self)
 		if window is not None:
 			self.__rmaplayer.SetOsWindow(window)
