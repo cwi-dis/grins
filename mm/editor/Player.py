@@ -126,7 +126,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		if self.is_showing():
 			PlayerDialog.show(self)
 			for ch in self.channels.values():
-				ch.popup()
+				ch.popup(poptop = 1)
 			if afterfunc is not None:
 				apply(apply, afterfunc)
 			return
