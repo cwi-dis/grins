@@ -1456,59 +1456,30 @@ class ChannelWindow(Channel):
 	def do_show(self, pchan):
 		if debug:
 			print 'ChannelWindow.do_show('+`self`+')'
-#		try:
-#			del self.winoff
-#		except AttributeError:
-#			pass
-		if pchan:
-			#
-			# Find the base layout channel window geom.
-			#
-			if self._wingeom == None:
-				######################### WARNING ###########################
-				############ for now we shouldn't pass here #################
-				#### this lines doesn't work for sub region pos #############
-				# these lines avoid just to avoid a crash
-
-				# when it'll be possible to resizing on all plateform a channel
-				# we'll be able to change this
-
-				# by default channel area is the same as LayoutChannel area
+			
+		if self._wingeom == None:
+			######################### WARNING ###########################
+			############ for now we shouldn't pass here #################
+			#### this lines doesn't work for sub region pos #############
+			# these lines avoid just to avoid a crash
+			
+			# when it'll be possible to resizing on all plateform a channel
+			# we'll be able to change this
+			
+			# by default channel area is the same as LayoutChannel area
+			if pchan != None:
 				left, top, width, height = pchan._attrdict['base_winoff']
 				self._wingeom = 0, 0, width, height
-				#############################################################
+			else:
+				self._wingeom = 0, 0, 100, 100				
+			#############################################################
+				
+		self._curvals['base_winoff'] = self._wingeom, None
 
-			pgeom = self._wingeom
-#			if pchan._attrdict.has_key('base_winoff'):
-#				self._wingeom = pgeom = pchan._attrdict['base_winoff']
-#			elif self._player.playing:
-#				windowinterface.showmessage(
-#					'No geometry for subchannel %s known' % self._name,
-#					mtype = 'error', grab = 1)
-#				pchan._subchannels.remove(self)
-#				pchan = None
-#			else:
-##				pchan.window.create_box(
-##					'Draw a subwindow for %s in %s' %
-##						(self._name, pchan._name),
-##					self._box_callback,
-##					units = units)
-##				return None
-				#
-				# Window without position/size. Set to whole parent, and remember
-				# in the attributes. (Note: technically wrong, changing the attrdict
-				# without using the edit mgr).
-				# Or should I skip the curvals stuff below, to do this correctly?
-				#
-#				self.winoff = pgeom = (0.0, 0.0, 1.0, 1.0)
-#				units = windowinterface.UNIT_SCREEN
-#				self._attrdict['base_winoff'] = pgeom
-#				self._attrdict['units'] = units
-			self._curvals['base_winoff'] = pgeom, None
-
-		units = self._attrdict.get('units',
-					   windowinterface.UNIT_SCREEN)
-		self.create_window(self._get_parent_channel(), self._wingeom, units)
+		# the window size is determinate from arm method. self._wingeom is all the time 
+		# expressed in pixel value. See getwingeom method.
+		units = windowinterface.UNIT_PXL
+		self.create_window(pchan, self._wingeom, units)
 
 		return 1
 
