@@ -88,7 +88,13 @@ class ImageChannel(ChannelWindow):
 		self.startcontext(self._anchor_context)
 		save_syncarm = self.syncarm
 		self.syncarm = 1
+		if hasattr(self, '_arm_imbox'):
+			del self._arm_imbox
 		self.arm(node)
+		if not hasattr(self, '_arm_imbox'):
+			self.syncarm = save_syncarm
+			windowinterface.showmessage("Can't display image, so can't edit anchors", parent = self.window)
+			return
 		save_syncplay = self.syncplay
 		self.syncplay = 1
 		self.play(node)
