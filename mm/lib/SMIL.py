@@ -520,7 +520,7 @@ class SMIL:
 					attributes[__el][GRiNSns+' '+__key] = __val
 		else:
 			attributes[__el].update(__Core)
-			if __el not in ('smil', 'head', 'meta', 'metadata',
+			if __el not in ('head', 'meta', 'metadata',
 					'body', 'customTest'):
 				attributes[__el].update(__Test)
 		attributes[__el].update(__I18n)
