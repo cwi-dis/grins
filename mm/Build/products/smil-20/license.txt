@@ -15,7 +15,7 @@ Definitions
 (b) "Authoring Product" means Software, such as Oratrix Development's 
     GRiNS Editor for SMIL which generate "End-User Products".
 (c) "Player Product" means Software, such as Oratrix Development's 
-    GRiNS Player for SMIL.
+    GRiNS Player for SMIL-2.0.
 (d) "License-key" means a number supplied by Oratrix Development to 
     unlock an Authoring Product.
 (e) "Evaluation Period" means the period of validity of a License-key 
@@ -59,7 +59,6 @@ Other than as set forth in Section 2:
     Development.
 
 5. Limited Warranties
-
 (a) Oratrix warrants that, for a period of ninety (90) days from the 
 date of delivery (as evidenced by a copy of your receipt): (i) when 
 used with a recommended hardware configuration, the Software will 
