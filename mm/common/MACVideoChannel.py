@@ -37,15 +37,16 @@ class VideoChannel(ChannelWindow):
 		if QT_AVAILABLE:
 			Qt.EnterMovies()
 		self.DBGcolor = (0xffff, 0, 0)
+		self.__rc = None
 		
-	def do_hide(self):
-		if self.play_movie:
-			self.play_movie.StopMovie()
-			self.play_movie = None
-			if self.window:
-				self.window.setredrawfunc(None)
-			self.fixidleproc()
-		ChannelWindow.do_hide(self)
+	def do_show(self, pchan):
+		if not ChannelWindow.do_show(self):
+			return 0
+		try:
+			from RealChannel import RealChannel
+			self.__rc = RealChannel(self)
+		except:
+			pass
 
 	def redraw(self):
 		if self.play_movie:
@@ -56,10 +57,20 @@ class VideoChannel(ChannelWindow):
 			self.errormsg(node, 'Node must be external')
 			return 1
 		if debug: print 'VideoChannel: arm', node
+		fn = self.getfileurl(node)
+		import mimetypes, string
+			mtype = mimetypes.guess_type(url)[0]
+		node.__type = ''
+		if string.find(mtype, 'real') >= 0:
+			node.__type = 'real'
+			if self.__rc is None:
+				self.errormsg(node, 'No playback support for RealVideo in this version')
+			else:
+				self.__rc.prepare_player(node)
+			return 1
 		if not QT_AVAILABLE:
 			self.errormsg(node, "QuickTime not available")
 			return 1
-		fn = self.getfileurl(node)
 		try:
 			fn = MMurl.urlretrieve(fn)[0]
 		except IOError, arg:
@@ -168,6 +179,11 @@ class VideoChannel(ChannelWindow):
 			self.playdone(0)
 			
 	def do_play(self, node):
+		self.__type = node.__type
+		if node.__type == 'real':
+			if self.__rc is None or not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
+				self.playdone(0)
+			return
 		if not self.arm_movie:
 			if self.play_movie:
 				self.play_movie.StopMovie()
@@ -210,6 +226,10 @@ class VideoChannel(ChannelWindow):
 	def play(self, node):
 		if debug:
 			print 'VideoChannel.play('+`self`+','+`node`+')'
+		if node.__type == 'real':
+			# no special case here for RealVideo
+			ChannelWindow.play(self, node)
+			return
 		self.play_0(node)
 		if not self._is_shown or not node.ShouldPlay() or self.syncplay:
 			self.play_1()
@@ -245,10 +265,17 @@ class VideoChannel(ChannelWindow):
 			self.play_movie.StopMovie()
 			self.play_movie = None
 			self.fixidleproc()
+		if self.__rc is not None:
+			self.__rc.stopit()
+			self.__rc.destroy()
+			self.__rc = None
 
 	def playstop(self):
 		if debug: print 'VideoChannel: playstop'
-		if self.play_movie:
+		if self.__type == 'real':
+			if self.__rc is not None:
+				self.__rc.stopit()
+		elif self.play_movie:
 			self.play_movie.StopMovie()
 			self.play_movie = None
 			self.fixidleproc()
@@ -270,9 +297,18 @@ class VideoChannel(ChannelWindow):
 		
 	def setpaused(self, paused):
 		self._paused = paused
+		if self.__rc is not None:
+			self.__rc.pauseit(paused)
 		if self.play_movie:
 			if self._paused:
 				self.play_movie.StopMovie()
 			else:
 				self.play_movie.StartMovie()
 		self.fixidleproc()
+
+	def _getoswindow(self):
+		return self.window._wid
+
+	def _getoswinpos(self):
+		x0, y0, x1, y1 = self.window.qdrect()
+		return ((x0, y0), (x1-x0, y1-y0))
