@@ -33,7 +33,7 @@ inline int GetIEVersion()
 	{
 	RegistryKey key(HKEY_LOCAL_MACHINE,"SOFTWARE\\MICROSOFT\\Internet Explorer");
 	CString strValue=key.QueryStrValue("Version");
-	if strValue.IsEmpty() return 1;
+	if (strValue.IsEmpty()) return 1;
 	return atoi(strValue);
 	}
 
