@@ -1475,12 +1475,14 @@ def do_expand(node, expand, nlevels=None, expleaftypes=0):
 	if nlevels != None:
 		nlevels = nlevels - 1
 	ntype = node.GetType()
+
 	# animate++
 	if expleaftypes and ntype in MMNode.leaftypes and node.GetChildren():
 		pass
-	if ntype not in MMNode.interiortypes and not node.GetChildren() and\
+	elif ntype not in MMNode.interiortypes and\
 	   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
 		return 0
+
 	changed = 0
 	if expand:
 		if not hasattr(node, 'expanded'):
