@@ -21,54 +21,7 @@ from usercmd import *
 STOPPED, PAUSING, PLAYING = range(3)
 
 class PlayerDialog:
-	adornments = {
-		'shortcuts': {
-			'p': PLAY,
-			'P': PAUSE,
-			's': STOP,
-			' ': MAGIC_PLAY,
-			},
-		'menubar': [
-			('File', [
-				('Open...', OPEN),
-				('View source...', SOURCE),
-				None,
-				('Close', CLOSE),
-				('Exit', EXIT),
-				]),
-			('Play', [
-				('Play', PLAY, 't'),
-				('Pause', PAUSE, 't'),
-				('Stop', STOP, 't'),
-				]),
-			('Channels', CHANNELS),
-			('Options', [
-				('Preferences...', PREFERENCES),
-				('Dump scheduler data', SCHEDDUMP),
-				]),
-			('Help', [
-				('Help', HELP),
-				]),
-			],
-		'close': [ CLOSE_WINDOW, CLOSE, EXIT, ],
-		}
-	adornments2 = {
-		'shortcuts': {
-			'p': PLAY,
-			'P': PAUSE,
-			's': STOP,
-			' ': MAGIC_PLAY,
-			},
-		'close': [ CLOSE_WINDOW, ],
-		}
-
-	if __debug__:
-		adornments['menubar'][0][1][1:1] = [
-			('Trace', TRACE, 't'),
-			('Debug', DEBUG),
-			('Crash CMIF', CRASH),
-			]
-
+	adornments = {}
 	def __init__(self, coords, title):
 		self.__window = None
 		self.__title = title
@@ -77,6 +30,8 @@ class PlayerDialog:
 		self.__menu_created = None
 		self.__topcommandlist = []
 		self.__commandlist = []
+		self.__ugroups = []
+		self.__ugroupdict = {}
 		self.__channels = []
 		self.__channeldict = {}
 		self.__strid='player'
@@ -104,8 +59,8 @@ class PlayerDialog:
 	def __create(self):
 		x, y, w, h = self.__coords
 		self.__window = self.toplevel.window
-		if self.__channels:
-			self.setchannels(self.__channels)
+		self.__window.set_commandlist(self.stoplist,self.__cmdtgt)
+
 
 	def show(self):
 		if self.__menu_created is None:
@@ -114,7 +69,6 @@ class PlayerDialog:
 
 	def hide(self):
 		if self.__window is not None:
-			#self.__window.close()
 			self.__window = None
 
 	def settitle(self, title):
@@ -122,28 +76,66 @@ class PlayerDialog:
 		if self.__window is not None:
 			self.__window.settitle(title)
 
-	def setchannels(self, channels):
-		self.__channels = channels
+	def setusergroups(self, ugroups = None):
+		if ugroups is None:
+			ugroups = self.__ugroups
+		else:
+			self.__ugroups = ugroups
+		menu = []
+		self.__ugroupdict = {}
+		for i in range(len(ugroups)):
+			name, title, onoff = ugroups[i]
+			self.__ugroupdict[name] = i
+			menu.append((title, (name,), 't', onoff))
+		w = self.__window
+		if w is not None:
+			w.set_dynamiclist(USERGROUPS, menu)
+
+	def setusergroup(self, ugroup, onoff):
+		i = self.__ugroupdict.get(ugroup)
+		if i is None:
+			raise RuntimeError, 'unknown user group'
+		if self.__ugroups[i][2] == onoff:
+			return
+		self.__ugroups[i] = self.__ugroups[i][:2] + (onoff,)
+		self.setusergroups()
+
+	def setchannels(self, channels=None):
+		"""Set the list of channels.
+
+		Arguments (no defaults):
+		channels -- a list of tuples (name, onoff) where name
+			is the channel name which is to be presented
+			to the user, and onoff indicates whether the
+			channel is on or off (1 if on, 0 if off)
+		"""
+		if channels is None:
+			channels = self.__channels
+		else:
+			self.__channels = channels
+
 		self.__channeldict = {}
 		menu = []
 		for i in range(len(channels)):
 			channel, onoff = channels[i]
 			self.__channeldict[channel] = i
-			if self.__menu_created is not None and \
-			   channel == self.__menu_created._name:
-				continue
 			menu.append((channel, (channel,), 't', onoff))
 		w = self.__window
-		if w is None and self.__menu_created is not None:
-			if hasattr(self.__menu_created, 'window'):
-				w = self.__menu_created.window
 		if w is not None:
 			w.set_dynamiclist(CHANNELS, menu)
 
 	def setchannel(self, channel, onoff):
+		"""Set the on/off status of a channel.
+
+		Arguments (no defaults):
+		channel -- the name of the channel whose status is to
+			be set
+		onoff -- the new status
+		"""
+
 		i = self.__channeldict.get(channel)
 		if i is None:
-			return
+			raise RuntimeError, 'unknown channel'
 		if self.__channels[i][1] == onoff:
 			return
 		self.__channels[i] = channel, onoff
