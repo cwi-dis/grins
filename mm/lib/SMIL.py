@@ -89,6 +89,8 @@ class SMIL:
 			     'skip-content':'true',
 			     'title':None,
 			     'width':'0',
+			     'close':'never',
+			     'open':'always',
 			     },
 		'region': {'background-color':'transparent',
 			   'backgroundColor':None,

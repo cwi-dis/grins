@@ -1589,6 +1589,17 @@ class SMILWriter(SMIL):
 			else:
 				attrlist.append(('background-color', bgcolor))
 				
+			if self.smilboston:
+				# write only not default value
+				if ch.has_key('open'):
+					val = ch['open']
+					if val != 'always':
+						attrlist.append(('open', val))
+				if ch.has_key('close'):
+					val = ch['close']
+					if val != 'never':
+						attrlist.append(('close', val))
+		
 			if ch.has_key('winsize'):
 				units = ch.get('units', 0)
 				w, h = ch['winsize']
