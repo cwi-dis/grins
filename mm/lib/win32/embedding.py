@@ -137,20 +137,42 @@ class ListenerWnd(GenWnd.GenWnd):
 	def GetPos(self, id):
 		return int(1000*self._slidermap[id].getPos())
 
+	def GetMediaFrameRate(self, id, rurl):
+		return self._slidermap[id].GetMediaFrameRate(rurl)
+
 	def GetState(self, id):
 		return self._slidermap[id].getState()
 
 ############################
+import FrameRate
+
 class SliderPeer:
 	def __init__(self, smildoc, peerid):
 		self.__smildoc = smildoc
 		self.__peerid = peerid
 		player = smildoc.player
 		ctx = player.userplayroot.GetContext()
-		# indefinite: -1, unknown: 0, else: >0
+		self.ctx = ctx
+
+		# indefinite: -1, unresolved: 0, else: >0
 		fulldur = player.userplayroot.calcfullduration(None)
 		if not fulldur: fulldur = 0
-		framerate = 25
+
+		# find doc media
+		self.media = []
+		self.url2mtype = {}
+		self.findMedia(player.userplayroot, self.media, self.url2mtype)
+		
+		framerate = 0
+		for rurl in self.media:
+			mt = self.url2mtype[rurl]
+			if mt[0] == 'video':
+				url = ctx.findurl(rurl)
+				framerate = FrameRate.GetFrameRate(url, mt[0], mt[1])
+				break
+		if framerate == 0: 
+			framerate = 20
+
 		# update peer for dur and first video/audio frameRate
 		try:
 			from __main__ import commodule
@@ -163,6 +185,13 @@ class SliderPeer:
 		self.canusetimefunction = player.isplaying
 		self.getstatefunction = player.getstate
 		self.__updatepeer = 1
+
+	def GetMediaFrameRate(self, rurl):
+		if self.url2mtype.has_key(rurl):
+			mt = self.url2mtype[rurl]
+			url = self.ctx.findurl(rurl)
+			return FrameRate.GetFrameRate(url, mt[0], mt[1])
+		return -1	
 
 	# set player pos
 	def setPos(self, pos):
@@ -185,6 +214,19 @@ class SliderPeer:
 		pass # setspeed 
 		self.__updatepeer = 1
 
+	def findMedia(self, node, media, url2mtype):
+		import MMTypes
+		nt = node.GetType()
+		if nt == 'ext':
+			url = node.GetRawAttr('file')
+			if url:
+				media.append(url)
+				if not url2mtype.has_key(url):
+					mimetype = node.GetComputedMimeType()
+					url2mtype[url] = string.split(mimetype, '/')
+		if nt in MMTypes.interiortypes:
+			for child in node.GetChildren():
+				self.findMedia(child, media, url2mtype)
 
 ############################
 import win32window
