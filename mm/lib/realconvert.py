@@ -193,6 +193,8 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 	for pin in engine.GetPins():
 		if pin.GetOutputMimeType() == producer.MIME_REALVIDEO:
 			videopin = pin
+		elif pin.GetOutputMimeType() == producer.MIME_REALAUDIO:
+			audiopin = pin
 	engine.SetDoOutputMimeType(producer.MIME_REALAUDIO, 0)
 	engine.SetDoOutputMimeType(producer.MIME_REALVIDEO, 1)
 	engine.SetDoOutputMimeType(producer.MIME_REALEVENT, 0)
@@ -241,24 +243,24 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 	lastpin=pin.ConnectedTo()
 	b.RemoveFilter(renderer)
 	try:
-		f = dshow.CreateFilter('Video Real Media Converter')
+		vf = dshow.CreateFilter('Video Real Media Converter')
 	except:
 		print 'Video real media converter filter is not installed'
 		return file
-	b.AddFilter(f,'VRMC')
+	b.AddFilter(vf,'VRMC')
 	b.Render(lastpin)
+
 	try:
-		rconv=f.QueryIRealConverter()
+		rconv=vf.QueryIRealConverter()
 	except:
 		print 'Filter does not support interface IRealConverter'
 		return file
 	try:
-		uk=engine.QueryInterfaceUnknown()
+		ukeng=engine.QueryInterfaceUnknown()
 	except:
 		print 'RMABuildEngine QueryInterfaceUnknown failed'
 		return file
-	rconv.SetInterface(uk,'IRMABuildEngine')
-
+	rconv.SetInterface(ukeng,'IRMABuildEngine')
 	try:
 		uk=videopin.QueryInterfaceUnknown()
 	except:
@@ -266,6 +268,7 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 		return file
 	rconv.SetInterface(uk,'IRMAInputPin')
 
+	# we are ready for video, check for audio
 	# find default audio renderer filter
 	try:
 		aurenderer=b.FindFilterByName('Default DirectSound Device')
@@ -276,10 +279,40 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 			aurenderer=b.FindFilterByName('Default WaveOut Device')
 		except:
 			aurenderer=None
-	# remove audio renderer filter for now
-	# should be replaced by our audio real converter filter
+	# replace audio renderer with aud2rm filter
 	if aurenderer:
+		enumpins=aurenderer.EnumPins()
+		pin=enumpins.Next()
+		lastpin=pin.ConnectedTo()
 		b.RemoveFilter(aurenderer)
+		try:
+			af = dshow.CreateFilter('Audio Real Media Converter')
+		except:
+			aurenderer=None
+		else:
+			b.AddFilter(af,'ARMC')
+			b.Render(lastpin)
+
+	# set engine and audio pin
+	if aurenderer:
+		try:
+			arconv=af.QueryIRealConverter()
+		except:
+			aurenderer=None
+		else:
+			arconv.SetInterface(ukeng,'IRMABuildEngine')
+	if aurenderer:
+		try:
+			uk=audiopin.QueryInterfaceUnknown()
+		except:
+			aurenderer=None
+		else:
+			arconv.SetInterface(uk,'IRMAInputPin')
+
+	# enable audio
+	if aurenderer:
+		engine.SetDoOutputMimeType(producer.MIME_REALAUDIO, 1)
+		ts.SetAudioContent(producer.ENC_AUDIO_CONTENT_VOICE)
 
 	# PinProperties,MediaSample,PrepareToEncode,Encode, DoneEncoding
 	# are all managed by our dshow filter
