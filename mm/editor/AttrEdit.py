@@ -83,18 +83,9 @@ def hasdocumentattreditor(toplevel):
 		return 0
 	return 1
 
-# These routine checks whether we are in CMIF or SMIL mode, and
+# This routine checks whether we are in CMIF or SMIL mode, and
 # whether the given attribute should be shown in the editor.
 def cmifmode():
-	import settings
-	if settings.get('cmif'):
-		return 1
-	return 0
-
-def mustshowdisplayer(displayer):
-	if displayer[:4] != 'CMIF':
-		return 1
-	displayer = displayer[4:]
 	import settings
 	return settings.get('cmif')
 
