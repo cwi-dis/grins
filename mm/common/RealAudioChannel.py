@@ -33,8 +33,8 @@ class RealAudioChannel(Channel.ChannelAsync):
 			self.playdone(0, curtime)
 
 	# toggles between pause and run
-	def setpaused(self, paused):
-		Channel.ChannelAsync.setpaused(self, paused)
+	def setpaused(self, paused, timestamp):
+		Channel.ChannelAsync.setpaused(self, paused, timestamp)
 		self.__rc.pauseit(paused)
 
 	def stopplay(self, node, curtime):
