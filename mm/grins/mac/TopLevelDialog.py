@@ -11,10 +11,14 @@ class TopLevelDialog:
 	# by TopLevel is happily ignored.
 	
 	def show(self):
-		pass
+		self.player.topcommandlist(self.commandlist)
 
 	def hide(self):
 		pass
 
 	def showsource(self, source):
-		pass
+		if self.source is not None and not self.source.is_closed():
+			self.source.show()
+			return
+		self.source = windowinterface.textwindow(self.root.source)
+

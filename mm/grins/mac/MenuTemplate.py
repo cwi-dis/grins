@@ -46,7 +46,10 @@ MENUBAR=(
 	(CASCADE, 'Views', (
 		(SPECIAL, 'Open documents', 'documents'),
 		(SPECIAL, 'Open windows', 'windows'),
-		(DYNAMICCASCADE, 'Channel visibility', CHANNELS))))
+		(SEP,),
+		(DYNAMICCASCADE, 'Channel visibility', CHANNELS),
+		(SEP,),
+		(ENTRY, 'View source', None, SOURCE))))
 		
 			
 #
