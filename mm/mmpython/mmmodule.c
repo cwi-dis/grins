@@ -41,10 +41,16 @@ static int mm_debug = 0;
 #else
 #define dprintf(args)
 #endif
+#define denter(func)		dprintf(( # func "(%lx)\n", (long) self))
 
 extern typeobject Mmtype;	/* Really static, forward */
 
-#define is_mmobject(v)		((v)->ob_type == &Mmtype)
+static object *MmError;		/* exception mm.error */
+
+#define CheckMmObject(v)	if ((v)->mm_chanobj == NULL) { \
+					err_setstr(MmError, "object already closed"); \
+					return NULL; \
+				}
 
 static void
 mm_armer(arg)
@@ -52,7 +58,7 @@ mm_armer(arg)
 {
 	mmobject *self = (mmobject *) arg;
 
-	dprintf(("mm_armer(%lx)\n", (long) arg));
+	denter(mm_armer);
 
 	for (;;) {
 		if (acquire_lock(self->mm_armlock, WAIT_LOCK) < 0)
@@ -69,10 +75,10 @@ mm_armer(arg)
 		if (self->mm_flags & EXIT)
 			break;
 		if (self->mm_flags & STOPPING) {
-			dprintf(("qenter(self->mm_ev, STOPPED);\n"));
+			dprintf(("mm_armer(%lx): qenter(self->mm_ev, STOPPED);\n", (long) self));
 			qenter(self->mm_ev, STOPPED);
 		} else {
-			dprintf(("qenter(self->mm_ev, ARMDONE);\n"));
+			dprintf(("mm_armer(%lx): qenter(self->mm_ev, ARMDONE);\n", (long) self));
 			qenter(self->mm_ev, ARMDONE);
 		}
 		self->mm_flags &= ~(ARMING|STOPPING);
@@ -91,7 +97,7 @@ mm_player(arg)
 {
 	mmobject *self = (mmobject *) arg;
 
-	dprintf(("mm_player(%lx)\n", (long) arg));
+	denter(mm_player);
 
 	for (;;) {
 		if (acquire_lock(self->mm_playlock, WAIT_LOCK) < 0)
@@ -108,10 +114,10 @@ mm_player(arg)
 		if (self->mm_flags & EXIT)
 			break;
 		if (self->mm_flags & STOPPING) {
-			dprintf(("qenter(self->mm_ev, STOPPED);\n"));
+			dprintf(("mm_player(%lx): qenter(self->mm_ev, STOPPED);\n", (long) self));
 			qenter(self->mm_ev, STOPPED);
 		} else {
-			dprintf(("qenter(self->mm_ev, PLAYDONE);\n"));
+			dprintf(("mm_player(%lx): qenter(self->mm_ev, PLAYDONE);\n", (long) self));
 			qenter(self->mm_ev, PLAYDONE);
 		}
 		self->mm_flags &= ~(PLAYING|STOPPING);
@@ -135,7 +141,8 @@ mm_done(self, args)
 	mmobject *self;
 	object *args;
 {
-	dprintf(("mm_done\n"));
+	CheckMmObject(self);
+	denter(mm_done);
 	if (!getnoarg(args))
 		return NULL;
 	if (!(*self->mm_chanobj->chan_funcs->done)(self))
@@ -154,7 +161,8 @@ mm_resized(self, args)
 	mmobject *self;
 	object *args;
 {
-	dprintf(("mm_resized\n"));
+	CheckMmObject(self);
+	denter(mm_resized);
 	if (!getnoarg(args))
 		return NULL;
 	if (!(*self->mm_chanobj->chan_funcs->resized)(self))
@@ -182,13 +190,14 @@ mm_arm(self, args)
 	int delay, duration;
 	object *file, *attrlist, *anchorlist;
 
-	dprintf(("mm_arm\n"));
+	CheckMmObject(self);
+	denter(mm_arm);
 	if (!getargs(args, "(OiiOO)", &file, &delay, &duration, &attrlist, &anchorlist))
 		return NULL;
 	(void) acquire_lock(self->mm_flaglock, WAIT_LOCK);
 	if (self->mm_flags & ARMING) {
 		release_lock(self->mm_flaglock);
-		err_setstr(RuntimeError, "already arming");
+		err_setstr(MmError, "already arming");
 		return NULL;
 	}
 	self->mm_flags |= ARMING;
@@ -212,13 +221,14 @@ mm_play(self, args)
 	mmobject *self;
 	object *args;
 {
-	dprintf(("mm_play\n"));
+	CheckMmObject(self);
+	denter(mm_play);
 	if (!getnoarg(args))
 		return NULL;
 	(void) acquire_lock(self->mm_flaglock, WAIT_LOCK);
 	if (self->mm_flags & PLAYING) {
 		release_lock(self->mm_flaglock);
-		err_setstr(RuntimeError, "already playing");
+		err_setstr(MmError, "already playing");
 		return NULL;
 	}
 	self->mm_flags |= PLAYING;
@@ -240,7 +250,8 @@ mm_stop(self, args)
 	mmobject *self;
 	object *args;
 {
-	dprintf(("mm_stop\n"));
+	CheckMmObject(self);
+	denter(mm_stop);
 	if (!getnoarg(args))
 		return NULL;
 	(void) acquire_lock(self->mm_flaglock, WAIT_LOCK);
@@ -250,7 +261,7 @@ mm_stop(self, args)
 		if (!(*self->mm_chanobj->chan_funcs->stop)(self))
 			return NULL;
 	} else {
-		printf("mmmodule: mm_stop: already stopped\n");
+		/* printf("mmmodule: mm_stop: already stopped\n"); */
 		release_lock(self->mm_flaglock);
 	}
 	INCREF(None);
@@ -269,7 +280,8 @@ mm_setrate(self, args)
 {
 	double rate;
 
-	dprintf(("mm_setrate\n"));
+	CheckMmObject(self);
+	denter(mm_setrate);
 	if (!getargs(args, "d", &rate))
 		return NULL;
 	if (!(*self->mm_chanobj->chan_funcs->setrate)(self, rate))
@@ -278,23 +290,10 @@ mm_setrate(self, args)
 	return None;
 }
 
-static struct methodlist channel_methods[] = {
-	{"done",		mm_done},
-	{"resized",		mm_resized},
-	{"arm",			mm_arm},
-	{"play",		mm_play},
-	{"stop",		mm_stop},
-	{"setrate",		mm_setrate},
-	{NULL,			NULL}		/* sentinel */
-};
-
-/* Mm methods */
-
 static void
-mm_dealloc(self)
+do_close(self)
 	mmobject *self;
 {
-	dprintf(("mm_dealloc\n"));
 	/* tell other threads to exit */
 	(void) acquire_lock(self->mm_flaglock, WAIT_LOCK);
 	self->mm_flags |= EXIT;
@@ -313,12 +312,52 @@ mm_dealloc(self)
 
 	/* now cleanup our own mess */
 	XDECREF(self->mm_attrlist);
+	self->mm_attrlist = NULL;
 	free_lock(self->mm_armlock);
+	self->mm_armlock = NULL;
 	free_lock(self->mm_playlock);
+	self->mm_playlock = NULL;
 	free_lock(self->mm_flaglock);
+	self->mm_flaglock = NULL;
 	free_sema(self->mm_exitsema);
+	self->mm_exitsema = NULL;
 	/*DEBUG*/free_sema(self->mm_waitarm);
+	/*DEBUG*/self->mm_waitarm = NULL;
 	DECREF(self->mm_chanobj);
+	self->mm_chanobj = NULL;
+}
+
+static object *
+mm_close(self)
+	mmobject *self;
+{
+	CheckMmObject(self);
+	denter(mm_close);
+	do_close(self);
+	INCREF(None);
+	return None;
+}
+
+static struct methodlist channel_methods[] = {
+	{"done",		mm_done},
+	{"resized",		mm_resized},
+	{"arm",			mm_arm},
+	{"play",		mm_play},
+	{"stop",		mm_stop},
+	{"setrate",		mm_setrate},
+	{"close",		mm_close},
+	{NULL,			NULL}		/* sentinel */
+};
+
+/* Mm methods */
+
+static void
+mm_dealloc(self)
+	mmobject *self;
+{
+	denter(mm_dealloc);
+	if (self->mm_chanobj)
+		do_close(self);
 	DEL(self);
 }
 
@@ -503,6 +542,8 @@ initmm()
 	mm_debug = getenv("MMDEBUG") != 0;
 #endif
 
+	dprintf(("initmm\n"));
+
 	m = initmodule("mm", mm_methods);
 	d = getmoduledict(m);
 
@@ -517,4 +558,8 @@ initmm()
 	v = newintobject((long) STOPPED);
 	if (v == NULL || dictinsert(d, "stopped", v) != 0)
 		fatal("can't define mm.stopped");
+
+	MmError = newstringobject("mm.error");
+	if (MmError == NULL || dictinsert(d, "error", MmError) != 0)
+		fatal("can't define mm.error");
 }

@@ -1,5 +1,6 @@
 This is a first cut at documenting the MM module.  This document isn't
 finished yet.
+[ Comments are placed in square brackets. ]
 
 Interface.
 ==========
@@ -35,10 +36,14 @@ obj = init(chanobj, wid, ev, attrlist)
 	STOPPED - A stop command has been processed. This is needed to
 		synchronize on the stop command (because there might still be
 		old events in the event queue).
+	[ The window-id may not be known at the time this function is
+	  called.  In the MovieChannel, the window-id is specified at
+	  arm time.  Maybe this interface should change. ]	  
 
 	Attrlist is a list of (attributename, value) pairs specifying
 	things like background color, etc.
-	
+	[ In the existing channels, this is not used. ]
+
 	The reason for letting the main program specify the event
 	number is that this allows the main program to use a different
 	event number for each instantiation of a raw channel.
@@ -51,6 +56,8 @@ done()
 	Note 1: disabling a channel is done through this mechanism as
 	  well. The python wrapper will have to take care of timing
 	  dependencies.
+	[ This methid isn't currently used in the exisiting channels.
+	  Maybe it isn't really needed. ]
 
 resized()
 	Called when the main loop notices that the window has changed
@@ -65,6 +72,9 @@ arm(file, delay, duration, attrlist, anchorlist)
 	(name, value) pairs like in the init call. Anchorlist is a
 	list of tuples where each tuple describes (in a channel
 	dependent way) how and where to show an anchor.
+	[ In the existing channels, attrlist is actually a dictionary.
+	  In it, all sorts of parameters are passed, such as
+	  window-id and audio parameters. ]
 
 armtime = play()
 	Start playing the armed node. The actual time needed for the
@@ -73,20 +83,22 @@ armtime = play()
 
 pause()
 	Pause playing, resume by calling play().
+	[ Not implemented.  Pausing is implemented by setting the
+	  playing rate to 0. ]
 
 stop()
 	Stop playing and arming. A STOPPED event is generated to help
-	resynchronising. 
+	resynchronising.
 
 setrate(rate)
-	Set the playing rate to the given value. Takes effect
+	Set the playing rate to the given value.  Takes effect
 	immedeately.
 
 Functions and Methods of the Channel Module.
 ============================================
 
 The channel module should implement one function, init(), which takes
-no argument and which returns an object which can be given to
+no arguments and which returns an object which can be given to
 mm.init().  There are no other python-callable functions.
 
 Interface between MM and Channel Module.
@@ -132,6 +144,7 @@ functions correspond to the list of functions mentioned above.
 The mmobject structure.
 
 The mmobject structure consists of the following fields.
+
 mm_wid		The window ID for channels that have a GL window.
 mm_ev		The event number which is used to enter certain events
 		into the GL event queue.  This value is not
@@ -157,9 +170,10 @@ mm_armlock	This lock is acquired by the main thread before the
 		started, it tries to acquire the lock, but since it is
 		already held, the arm thread will hang waiting for the
 		lock to be released.  When mm_arm() is called to arm
-		the channel, it releases the lock.  The arm thread can
-		then acquire it.  When the arm thread is done, it
-		tries again to acquire the lock without first
+		the channel, it releases the lock after the
+		channel-specific arm routine has finished.  The arm
+		thread can then acquire it.  When the arm thread is
+		done, it tries again to acquire the lock without first
 		releasing it.  Since the lock is already held, the arm
 		thread will hang until some other thread releases the
 		lock.
@@ -174,4 +188,49 @@ mm_exitsema	When the mm object is being deallocated, the main
 		to the mm object.
 mm_private	A pointer to channel-specific data.  The pointed-to
 		memory must be allocated by the channel-specific
-		initialization routine.
+		initialization routine and should be freed by the
+		channel-specific dealloc routine.
+
+The mmfuncs structure.
+
+The mmfuncs structure contains pointers to functions that do the
+channel-specific work.  The following functions are defined.
+
+armer(mmobject *)
+		Together with the function arm, this function does the
+		word needed to arm the channel.  First, arm is called,
+		and when it finishes, armer is called.  Armer runs in
+		the arm thread, while arm runs in the main thread.
+		Armer can do the part of arming that can take some
+		time, like reading from a file.  When arming is
+		finished, armer should return.
+player(mmobject *)
+		Together with the function play, this function does
+		the work needed to play a node on the channel.  First,
+		play is called, and when it finishes, player is
+		called.  Play should not take long, since many
+		channels may have to be started at the same time.
+		Player runs in the play thread, while play runs in the
+		main thread.
+		Player is supposed to do the real work, play should
+		only do some initialization.  When playing is
+		finished, player should return.
+done(mmobject *)
+		In the current implementation, this function is never
+		called.
+resized(mmobject *)
+		This function will be called when a resize event for
+		this channel's window is received.  It should interact
+		properly with the player function, but the specifics
+		of the interaction is up to the implementor of the
+		module.
+arm(mmobject *, object *, int, int, object *, object *)
+		This function is called to pass the arm parameters to
+		the channel module.  After it finishes, the armer
+		function will be called.
+play(mmobject *)
+		This function is called when the channel should start
+		playing.  After this function returns, the player
+		function will be called to do the real work.
+stop(mmobject *)
+		This function is called when playing has to stop.
