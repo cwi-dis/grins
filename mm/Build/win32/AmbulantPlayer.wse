@@ -1,6 +1,6 @@
 Document Type: WSE
 item: Global
-  Version=9.01
+  Version=9.02
   Title=Ambulant/G Player for SMIL 2.0 Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -67,7 +67,7 @@ item: Get Temporary Filename
   Variable=READMEFILE
 end
 item: Install File
-  Source=c:\documents and settings\sjoerd\my documents\src\cmif\build\products\smil-20\ambulant\lllicense.txt
+  Source=..\products\smil-20\ambulant\lllicense.txt
   Destination=%TEMP%\%READMEFILE%
   Flags=0000000000100010
 end
@@ -1367,182 +1367,182 @@ item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\gskin-specification.txt
+  Source=..\products\smil-20\ambulant\gskin-specification.txt
   Destination=%MAINDIR%\gskin-specification.txt
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\bin\win32\AmbulantRes.dll
+  Source=..\..\bin\win32\AmbulantRes.dll
   Destination=%MAINDIR%\AmbulantRes.dll
   Flags=0001000010000011
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\windowmenu.htm
+  Source=..\products\smil-20\ambulant\help\html\windowmenu.htm
   Destination=%MAINDIR%\help\html\windowmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\window.htm
+  Source=..\products\smil-20\ambulant\help\html\window.htm
   Destination=%MAINDIR%\help\html\window.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\viewmenu.htm
+  Source=..\products\smil-20\ambulant\help\html\viewmenu.htm
   Destination=%MAINDIR%\help\html\viewmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\view.htm
+  Source=..\products\smil-20\ambulant\help\html\view.htm
   Destination=%MAINDIR%\help\html\view.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\use.htm
+  Source=..\products\smil-20\ambulant\help\html\use.htm
   Destination=%MAINDIR%\help\html\use.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\title.htm
+  Source=..\products\smil-20\ambulant\help\html\title.htm
   Destination=%MAINDIR%\help\html\title.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\playmenu.htm
+  Source=..\products\smil-20\ambulant\help\html\playmenu.htm
   Destination=%MAINDIR%\help\html\playmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\playeruse.htm
+  Source=..\products\smil-20\ambulant\help\html\playeruse.htm
   Destination=%MAINDIR%\help\html\playeruse.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\playermenu.htm
+  Source=..\products\smil-20\ambulant\help\html\playermenu.htm
   Destination=%MAINDIR%\help\html\playermenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\play.htm
+  Source=..\products\smil-20\ambulant\help\html\play.htm
   Destination=%MAINDIR%\help\html\play.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\main.htm
+  Source=..\products\smil-20\ambulant\help\html\main.htm
   Destination=%MAINDIR%\help\html\main.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\intro.htm
+  Source=..\products\smil-20\ambulant\help\html\intro.htm
   Destination=%MAINDIR%\help\html\intro.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\helpmenu.htm
+  Source=..\products\smil-20\ambulant\help\html\helpmenu.htm
   Destination=%MAINDIR%\help\html\helpmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\helpintro.htm
+  Source=..\products\smil-20\ambulant\help\html\helpintro.htm
   Destination=%MAINDIR%\help\html\helpintro.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\help.htm
+  Source=..\products\smil-20\ambulant\help\html\help.htm
   Destination=%MAINDIR%\help\html\help.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\images\p20_2.gif
+  Source=..\products\smil-20\ambulant\help\images\p20_2.gif
   Destination=%MAINDIR%\help\images\p20_2.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\images\p20_3.gif
+  Source=..\products\smil-20\ambulant\help\images\p20_3.gif
   Destination=%MAINDIR%\help\images\p20_3.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\images\p20_4.gif
+  Source=..\products\smil-20\ambulant\help\images\p20_4.gif
   Destination=%MAINDIR%\help\images\p20_4.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\images\p20_5b.gif
+  Source=..\products\smil-20\ambulant\help\images\p20_5b.gif
   Destination=%MAINDIR%\help\images\p20_5b.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\images\p20_6.gif
+  Source=..\products\smil-20\ambulant\help\images\p20_6.gif
   Destination=%MAINDIR%\help\images\p20_6.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\images\p20_7.gif
+  Source=..\products\smil-20\ambulant\help\images\p20_7.gif
   Destination=%MAINDIR%\help\images\p20_7.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\images\p20_8.gif
+  Source=..\products\smil-20\ambulant\help\images\p20_8.gif
   Destination=%MAINDIR%\help\images\p20_8.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\images\p20_9.gif
+  Source=..\products\smil-20\ambulant\help\images\p20_9.gif
   Destination=%MAINDIR%\help\images\p20_9.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\filemenu.htm
+  Source=..\products\smil-20\ambulant\help\html\filemenu.htm
   Destination=%MAINDIR%\help\html\filemenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\file.htm
+  Source=..\products\smil-20\ambulant\help\html\file.htm
   Destination=%MAINDIR%\help\html\file.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\editmenu.htm
+  Source=..\products\smil-20\ambulant\help\html\editmenu.htm
   Destination=%MAINDIR%\help\html\editmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\edit.htm
+  Source=..\products\smil-20\ambulant\help\html\edit.htm
   Destination=%MAINDIR%\help\html\edit.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\html\cont.htm
+  Source=..\products\smil-20\ambulant\help\html\cont.htm
   Destination=%MAINDIR%\help\html\cont.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\images\p20_11.gif
+  Source=..\products\smil-20\ambulant\help\images\p20_11.gif
   Destination=%MAINDIR%\help\images\p20_11.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\images\Ambulant.gif
+  Source=..\products\smil-20\ambulant\help\images\Ambulant.gif
   Destination=%MAINDIR%\help\images\Ambulant.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\images\AmbulantSmLogo.gif
+  Source=..\products\smil-20\ambulant\help\images\AmbulantSmLogo.gif
   Destination=%MAINDIR%\help\images\AmbulantSmLogo.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\images\grins-logo-bg.gif
+  Source=..\products\smil-20\ambulant\help\images\grins-logo-bg.gif
   Destination=%MAINDIR%\help\images\grins-logo-bg.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\images\p20_1.gif
+  Source=..\products\smil-20\ambulant\help\images\p20_1.gif
   Destination=%MAINDIR%\help\images\p20_1.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\ambulant\help\images\p20_10.gif
+  Source=..\products\smil-20\ambulant\help\images\p20_10.gif
   Destination=%MAINDIR%\help\images\p20_10.gif
   Flags=0000000010000010
 end
