@@ -3,9 +3,7 @@ TODO for Michael :-)
 
 Priority top-to-bottom.
 ------------------------
-* Selection bugs.
-* Remove temporal view.
-* Optimise the structure view
+* Optimise the structure view (last optimisation: recalc() calls - cache them.)
 * Reload button on the player.
 * Create templates for Snap! (slideshow)
 * Add facilities to create asset boxes!
