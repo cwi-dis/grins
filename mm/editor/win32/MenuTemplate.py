@@ -53,6 +53,7 @@ MENUBAR=(
 			((features.EXPORT_QT,), ENTRY, 'Pu&blish for QuickTime and upload...', None, UPLOAD_QT),
 			(FLAG_G2|FLAG_PRO, ENTRY, 'Publish for &RealONE...', None, EXPORT_G2),
 			(FLAG_G2|FLAG_PRO, ENTRY, 'Publish for RealONE and &upload...', None, UPLOAD_G2),
+			((features.EXPORT_WINCE,), ENTRY, 'Publish for WindowsCE Handheld Device...', None, EXPORT_WINCE),
 			# TODO: These should not appear on all versions of GRiNS!
 			(0, ENTRY, 'Publish for &Windows Media...', None, EXPORT_WMP), # mjvdg 11-oct-2000
 			(0, ENTRY, 'Publish for Windows &Media and upload...', None, UPLOAD_WMP),

@@ -124,6 +124,8 @@ class EXPORT_HTML_TIME(_CommandBase):
 	help = 'Save document in a new file as an Internet Explorer HTML+TIME document.'
 class EXPORT_HTML(_CommandBase):
 	help = 'Create a template webpage linking to your presentation'
+class EXPORT_WINCE(_CommandBase):
+	help = 'Create SMIL file for Handheld Device'
 class RESTORE(_CommandBase):
 	help = 'Restore document from file (undo all unsaved changes)'
 class PROPERTIES(_CommandBase):

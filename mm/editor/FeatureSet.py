@@ -21,6 +21,7 @@ __version__ = "$Id$";
 	EXPORT_WMP,			# export to windows media player
 	EXPORT_XMT,			# export to XMT-0
 	EXPORT_HTML_TIME,		# export to Internet Explorer HTML+TIME
+	EXPORT_WINCE,			# export to Handheld Device
 
 	# If these do not appear in feature_set, they don't apper in GRiNS.
 	PREFERENCES,			# enable editing of GRiNS Preferences
@@ -65,4 +66,4 @@ __version__ = "$Id$";
 
 	INTERNAL_LINKS,			# allow creation of internal hyperlinks
 	UNSUPPORTED_ERROR,		# unsupported features cause fatal errors
-] = range(40)				# don't forget to update this range!
+] = range(41)				# don't forget to update this range!
