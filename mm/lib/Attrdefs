@@ -510,6 +510,28 @@
 (tduration (float) 0.0 'Transition duration' default
 	'Duration of the transition' normal (g2))
 
+# Real extensions
+(resizeBehavior (enum percentOnly zoom) zoom 'Resize behavior' default
+	'How resizing the window affects regions' normal (advanced g2 smil2))
+(opacity (float) 1.0 'Region opacity' percent
+	'Reduces background opacity' normal (advanced g2 smil2))
+(backgroundOpacity (float) 1.0 'Background opacity' percent
+	'Makes transparent backgrounds opaque' normal (advanced g2 smil2))
+(chromaKey (tuple (int) (int) (int)) (0 0 0) 'Chroma key' color
+	'Turns selected color transparent' normal (advanced g2 smil2))
+(chromaKeyOpacity (float) 0.0 'Chroma key opacity' percent
+	'Adds opacity to chroma key' normal (advanced g2 smil2))
+(chromaKeyTolerance (tuple (int) (int) (int)) (0 0 0) 'Chroma key tolerance' default
+	'Widens range of chromaKey' normal (advanced g2 smil2))
+(mediaOpacity (float) 1.0 'Media opacity' percent
+	'Makes all opaque areas transparent' normal (advanced g2 smil2))
+(sendTo (enum rpcontextwin rpbrowser osdefaultbrowser) rpbrowser 'Send to' default
+	'Specifies window that opens the HTML page' normal (advanced g2 smil2))
+(reliable (bool) 0 'Reliable transmission' default
+	'Ensures reliable transmission' normal (advanced g2 smil2))
+(strbitrate (int) 12288 'Stream bitrate' default
+	'Sets a static clip\'s streaming speed' normal (advanced g2 smil2))
+
 # QuickTime attributes
 
 (autoplay (bool) 0 'Auto play' default 

@@ -450,6 +450,16 @@ class NodeWrapper(Wrapper):
 				if ntype in mediatypes:
 					namelist.append('readIndex')
 					namelist.append('erase')
+					if features.EXPORT_REAL in features.feature_set:
+						if ctype != 'sound':
+							namelist.append('backgroundOpacity')
+							namelist.append('chromaKey')
+							namelist.append('chromaKeyOpacity')
+							namelist.append('chromaKeyTolerance')
+							namelist.append('mediaOpacity')
+						namelist.append('reliable')
+						if ctype in ('text','image'):
+							namelist.append('strbitrate')
 		else:
 			# Snap!
 			if ntype != 'switch':
@@ -754,6 +764,8 @@ class AnchorWrapper(NodeWrapper):
 					 'system_component','u_group',
 					 'fragment','accesskey','ashape',
 					 'actuate'])
+			if features.EXPORT_REAL in features.feature_set:
+				namelist.append('sendTo')
 			return namelist
 
 	def maketitle(self):
@@ -925,6 +937,7 @@ class ChannelWrapper(Wrapper):
 			if 'open' not in rv: rv.append('open')
 			if 'close' not in rv: rv.append('close')
 			if 'showEditBgMode' not in rv: rv.append('showEditBgMode')
+			if 'resizeBehavior' not in rv: rv.append('resizeBehavior')
 		else:
 			# region
 			if 'regionName' not in rv: rv.append('regionName')
@@ -937,6 +950,7 @@ class ChannelWrapper(Wrapper):
 			if 'right' not in rv: rv.append('right')
 			if 'z' not in rv: rv.append('z')
 			if 'soundLevel' not in rv: rv.append('soundLevel')
+			if 'opacity' not in rv: rv.append('opacity')
 ##		if not cmifmode():
 ##			if 'file' in rv: rv.remove('file')
 ##			if 'fit' in rv: rv.remove('fit')
@@ -1182,7 +1196,7 @@ class PreferenceWrapper(Wrapper):
 		'showhidden': 'Show hidden custom tests',
 		'saveopenviews': 'Save view placement in prefs file',
 		'initial_dialog': 'Show initial dialog on application start',
-		'vertical_icons': 'Show icons vertically in the Structure View',
+##		'vertical_icons': 'Show icons vertically in the Structure View',
 		}
 	if features.CREATE_TEMPLATES in features.feature_set:
 		__boolprefs['enable_template'] = \
@@ -3113,49 +3127,49 @@ class AnchorCoordsAttrEditorField(AttrEditorField):
 		return values
 
 DISPLAYERS = {
-	'file': FileAttrEditorField,
-	'font': FontAttrEditorField,
-	'timelist': TimelistAttrEditorField,
-	'color': ColorAttrEditorField,
-	'csscolor': CssColorAttrEditorField,
-	'csspos': CssPosAttrEditorField,
-	'regpoint': RegpointAttrEditorField,
-	'layoutname': LayoutnameAttrEditorField,
-	'channelname': ChannelnameAttrEditorField,
-	'regiondefault': RegionDefaultAttrEditorField,
-	'captionchannelname': CaptionChannelnameAttrEditorField,
-	'basechannelname': BaseChannelnameAttrEditorField,
-	'childnodename': ChildnodenameAttrEditorField,
-	'channeltype': ChanneltypeAttrEditorField,
-	'units': UnitsAttrEditorField,
-	'termnodename': TermnodenameAttrEditorField,
-	'transparency': TransparencyAttrEditorField,
-	'usergroup': UsergroupAttrEditorField,
-	'reqlist': ReqListAttrEditorField,
-	'transition': TransitionAttrEditorField,
-	'subregionanchor': AnchorTypeAttrEditorField,
-	'targets': RMTargetsAttrEditorField,
+	'acoords': AnchorCoordsAttrEditorField,
 	'audiotype': RMAudioAttrEditorField,
-	'videotype': RMVideoAttrEditorField,
-	'nodetype': NodeTypeAttrEditorField,
-	'text': TextAttrEditorField,
-	'qtchaptermode': QTChapterModeEditorField,
-	'bool3': BoolAttrEditorFieldWithDefault,
-	'captionoverdub': CaptionOverdubAttrEditorField,
-	'captionoverdub3': CaptionOverdubAttrEditorFieldWithDefault,
-	'language': LanguageAttrEditorField,
-	'language3': LanguageAttrEditorFieldWithDefault,
+	'basechannelname': BaseChannelnameAttrEditorField,
 	'bitrate': BitrateAttrEditorField,
 	'bitrate3': BitrateAttrEditorFieldWithDefault,
-	'quality': QualityAttrEditorField,
-	'percent': PercentAttrEditorField,
-	'opsys': OperatingSystemAttrEditorField,
+	'bool3': BoolAttrEditorFieldWithDefault,
+	'captionchannelname': CaptionChannelnameAttrEditorField,
+	'captionoverdub': CaptionOverdubAttrEditorField,
+	'captionoverdub3': CaptionOverdubAttrEditorFieldWithDefault,
+	'channelname': ChannelnameAttrEditorField,
+	'channeltype': ChanneltypeAttrEditorField,
+	'childnodename': ChildnodenameAttrEditorField,
+	'color': ColorAttrEditorField,
 	'cpu': CpuAttrEditorField,
-	'screensize': ScreenSizeAttrEditorField	,
-	'screendepth': ScreenDepthAttrEditorField,
-	'acoords': AnchorCoordsAttrEditorField,
-	'keyTimes': KeyTimesAttrEditorField,
+	'csscolor': CssColorAttrEditorField,
+	'csspos': CssPosAttrEditorField,
+	'file': FileAttrEditorField,
 	'fit': FitAttrEditorField,
+	'font': FontAttrEditorField,
+	'keyTimes': KeyTimesAttrEditorField,
+	'language': LanguageAttrEditorField,
+	'language3': LanguageAttrEditorFieldWithDefault,
+	'layoutname': LayoutnameAttrEditorField,
+	'nodetype': NodeTypeAttrEditorField,
+	'opsys': OperatingSystemAttrEditorField,
+	'percent': PercentAttrEditorField,
+	'qtchaptermode': QTChapterModeEditorField,
+	'quality': QualityAttrEditorField,
+	'regiondefault': RegionDefaultAttrEditorField,
+	'regpoint': RegpointAttrEditorField,
+	'reqlist': ReqListAttrEditorField,
+	'screendepth': ScreenDepthAttrEditorField,
+	'screensize': ScreenSizeAttrEditorField	,
+	'subregionanchor': AnchorTypeAttrEditorField,
+	'targets': RMTargetsAttrEditorField,
+	'termnodename': TermnodenameAttrEditorField,
+	'text': TextAttrEditorField,
+	'timelist': TimelistAttrEditorField,
+	'transition': TransitionAttrEditorField,
+	'transparency': TransparencyAttrEditorField,
+	'units': UnitsAttrEditorField,
+	'usergroup': UsergroupAttrEditorField,
+	'videotype': RMVideoAttrEditorField,
 }
 
 TYPEDISPLAYERS = {

@@ -385,8 +385,8 @@ def getsrc(writer, node):
 		val = MMurl.unquote(val)
 	return val
 
-def translatecolor(val):
-	if colors.rcolors.has_key(val):
+def translatecolor(val, use_name = 1):
+	if use_name and colors.rcolors.has_key(val):
 		return colors.rcolors[val]
 	else:
 		return '#%02x%02x%02x' % val
@@ -399,11 +399,11 @@ def getfgcolor(writer, node):
 		return
 	return translatecolor(fgcolor)
 
-def getcolor(writer, node, attr):
+def getcolor(writer, node, attr, use_name = 1):
 	color = node.GetRawAttrDef(attr, None)
 	if color is None:
 		return
-	return translatecolor(color)
+	return translatecolor(color, use_name)
 
 def getsubregionatt(writer, node, attr):
 	from windowinterface import UNIT_PXL, UNIT_SCREEN
@@ -528,9 +528,9 @@ def getproportion(writer, node, attr):
 	else:
 		return fmtfloat(prop)
 
-def getpercentage(writer, node, attr):
+def getpercentage(writer, node, attr, default = None):
 	prop = node.GetRawAttrDef(attr, None)
-	if prop is None:
+	if prop is None or prop == default:
 		return None
 	else:
 		return fmtfloat(prop * 100, suffix = '%')
@@ -686,9 +686,11 @@ def getrepeat(writer, node):
 	else:
 		return fmtfloat(value)
 
-def getboolean(writer, node, attr, truefalse = 0):
+def getboolean(writer, node, attr, truefalse = 0, default = None):
 	value = node.GetRawAttrDef(attr, None)
 	if value is not None:
+		if default is not None and value == default:
+			return None
 		if value:
 			if truefalse:
 				return 'true'
@@ -990,6 +992,21 @@ prio_attrs = [
 	("showtime", getshowtime, None),
 	("timezoom", gettimezoom, None),
 	]
+real_media_attrs = [
+	("backgroundOpacity", lambda writer, node: getpercentage(writer, node, 'backgroundOpacity', 1), "backgroundOpacity"),
+	("chromaKey", lambda writer, node: getcolor(writer, node, "chromaKey"), "chromaKey"),
+	("chromaKeyOpacity", lambda writer, node: getpercentage(writer, node, 'chromaKeyOpacity', 0), "chromaKeyOpacity"),
+	("chromaKeyTolerance", lambda writer, node: getcolor(writer, node, "chromaKeyTolerance", 0), "chromaKeyTolerance"),
+	("mediaOpacity", lambda writer, node: getpercentage(writer, node, 'mediaOpacity', 1), "mediaOpacity"),
+]
+qt_media_attrs = [
+	('immediate-instantiation', lambda writer, node: getboolean(writer, node, 'immediateinstantiationmedia', 1), 'immediateinstantiationmedia'),
+	('bitrate', lambda writer, node: getcmifattr(writer, node, 'bitratenecessary'), 'bitratenecessary'),
+	('system-mime-type-supported', lambda writer, node: getcmifattr(writer, node, 'systemmimetypesupported'), 'systemmimetypesupported'),
+	('attach-timebase', lambda writer, node: getboolean(writer, node, 'attachtimebase', 1, 1), 'attachtimebase'),
+	('chapter', lambda writer, node: getcmifattr(writer, node, 'qtchapter'), 'qtchapter'),
+	('composite-mode', lambda writer, node: getcmifattr(writer, node, 'qtcompositemode'), 'qtcompositemode'),
+	]
 
 # attributes that we know about and so don't write into the SMIL file using
 # our namespace extension
@@ -1035,7 +1052,8 @@ cmif_chan_attrs_ignore = {
 	'soundLevel':0,
 	'regAlign':0, 'regPoint':0, 'close':0, 'open':0, 'chsubtype':0,
 	'left':0, 'top':0, 'width':0, 'height':0, 'right':0, 'bottom':0,
-	'regionName':0
+	'regionName':0,
+	'resizeBehavior':0,
 	}
 
 qt_node_attrs = {
@@ -1715,6 +1733,9 @@ class SMILWriter(SMIL):
 				for key, val in ch.items():
 					if not cmif_chan_attrs_ignore.has_key(key):
 						attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
+				resizeBehavior = ch.get('resizeBehavior', 'zoom')
+				if resizeBehavior != 'zoom':
+					attrlist.append(('%s:resizeBehavior' % NSRP9prefix, resizeBehavior))
 				if useRootLayout:
 					self.writetag('root-layout', attrlist, ch)
 					self.writeregion(ch)
@@ -1876,6 +1897,9 @@ class SMILWriter(SMIL):
 		for key, val in ch.items():
 			if not cmif_chan_attrs_ignore.has_key(key):
 				attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
+		opacity = ch.get('opacity')
+		if opacity is not None and 0 <= opacity < 1: # default is 100%
+			attrlist.append(('%s:opacity' % NSRP9prefix, fmtfloat(opacity * 100, '%', prec = 0)))
 		self.writetag('region', attrlist, ch)
 		subchans = ch.GetChildren()
 
@@ -2178,21 +2202,23 @@ class SMILWriter(SMIL):
 
 	def writeQTAttributeOnMediaElement(self, node, attrlist):
 		dict = node.GetAttrDict()
-		for key, val in dict.items():
-			if key == 'immediateinstantiationmedia':
-				attrlist.append(('%s:immediate-instantiation' % NSQTprefix, intToEnumString(val,{0:'false',1:'true'})))
-			if key == 'bitratenecessary':
-				attrlist.append(('%s:bitrate' % NSQTprefix, '%d' % val))
-			if key == 'systemmimetypesupported':
-				attrlist.append(('%s:system-mime-type-supported' % NSQTprefix, val))
-			if key == 'attachtimebase':
-				defvalue = MMAttrdefs.getdefattr(None, 'attachtimebase')
-				if val != defvalue:
-					attrlist.append(('%s:attach-timebase' % NSQTprefix, intToEnumString(val,{0:'false',1:'true'})))
-			if key == 'qtchapter':
-				attrlist.append(('%s:chapter' % NSQTprefix, val))
-			if key == 'qtcompositemode':
-				attrlist.append(('%s:composite-mode' % NSQTprefix, val))
+		for smilattr, func, grinsattr in qt_media_attrs:
+			if not dict.has_key(grinsattr):
+				continue
+			val = func(self, node)
+			if val is None:
+				continue
+			attrlist.append(('%s:%s' % (NSQTprefix, smilattr), val))
+
+	def writeRPAttributeOnMediaElement(self, node, attrlist):
+		dict = node.GetAttrDict()
+		for smilattr, func, grinsattr in real_media_attrs:
+			if not dict.has_key(grinsattr):
+				continue
+			val = func(self, node)
+			if val is None:
+				continue
+			attrlist.append(('%s:%s' % (NSRP9prefix, smilattr), val))
 
 	def writemedianode(self, x, attrlist, mtype):
 		# XXXX Not correct for imm
@@ -2201,13 +2227,29 @@ class SMILWriter(SMIL):
 		if self.uses_qt_namespace:
 			self.writeQTAttributeOnMediaElement(x,attrlist)
 
+		if self.uses_rp_namespace:
+			self.writeRPAttributeOnMediaElement(x,attrlist)
+
 		self.writetag(mtype, attrlist, x)
 		fg = x.GetRawAttrDef('fgcolor', None)
 		if fg is not None and mtype == 'text':
 			if not pushed:
 				self.push()
 				pushed = 1
-			self.writetag('param', [('name','fgcolor'),('value',translatecolor(fg))], x)
+			self.writetag('param', [('name','fgcolor'),('value',translatecolor(fg))])
+		if self.uses_rp_namespace:
+			bitrate = x.GetRawAttrDef('strbitrate', None)
+			if bitrate is not None:
+				if not pushed:
+					self.push()
+					pushed = 1
+				self.writetag('param', [('name', 'bitrate'), ('value', `bitrate`)])
+			reliable = x.GetRawAttrDef('reliable', None)
+			if reliable is not None:
+				if not pushed:
+					self.push()
+					pushed = 1
+				self.writetag('param', [('name', 'reliable'), ('value', ['false', 'true'][reliable])])
 		for child in x.GetChildren():
 			if not pushed:
 				self.push()
@@ -2320,9 +2362,12 @@ class SMILWriter(SMIL):
 
 		accesskey = anchor.GetAttrDef('accesskey', None)
 		if accesskey is not None:
-			attrs.append(('accesskey', accesskey))
+			attrlist.append(('accesskey', accesskey))
 
 		if self.smilboston:
+			sendTo = anchor.GetAttrDef('sendTo', None)
+			if sendTo is not None:
+				attrlist.append(('%s:sendTo' % NSRP9prefix, sendTo))
 			self.writetag('area', attrlist)
 		else:
 			self.writetag('anchor', attrlist)

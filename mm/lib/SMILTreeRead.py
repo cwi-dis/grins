@@ -153,6 +153,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'mode': ['in', 'out'],
 		'origin': ['parent', 'element'],
 		'override': ['visible', 'hidden'],
+		'resizeBehavior': ['percentOnly', 'zoom'],
 		'shape': ['rect', 'poly', 'circle'],
 		'show': ['replace', 'pause', 'new'],
 		'sourcePlaystate': {'play':A_SRC_PLAY, 'pause':A_SRC_PAUSE, 'stop':A_SRC_STOP},
@@ -1378,6 +1379,29 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['non_empty_color'] = val
 			elif attr == 'dropIcon':
 				attrdict['dropicon'] = MMurl.basejoin(self.__base, val)
+			elif attr in ('backgroundOpacity', 'chromaKeyOpacity', 'mediaOpacity'):
+				try:
+					if val[-1] == '%':
+						val = string.atof(val[:-1]) / 100.0
+						if val < 0 or val > 1:
+							self.syntax_error('%s value out of range' % attr)
+							val = None
+					else:
+						self.syntax_error('only percentage values allowed on %s attribute' % attr)
+						val = None
+				except (string.atoi_error, string.atof_error):
+					self.syntax_error('invalid %s attribute value' % attr)
+					val = None
+				if val is not None:
+					attrdict[attr] = val
+			elif attr == ('chromaKey', 'chromaKeyTolerance'):
+				ck = self.__convert_color(val)
+				if ck is None:
+					pass # error already given
+				elif type(ck) is not type(()):
+					self.syntax_error("bad %s attribute" % attr)
+				else:
+					attrdict[attr] = ck
 			elif attr not in smil_node_attrs:
 				# catch all
 				# this should not be used for normal operation
@@ -2116,6 +2140,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				pass
 			elif attr == 'showEditBackground':
 				layout[attr] = val in ('on','true')
+			elif attr == 'resizeBehavior':
+				layout[attr] = val
 			else:
 				# parse all other attributes
 				try:
@@ -2402,6 +2428,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if key[:len(QTns)+1] == QTns + ' ':
 				del attributes[key]
 				key = key[len(QTns)+1:]
+				if attributes.has_key(key):
+					self.syntax_error("duplicate attribute `%s' in different namespaces" % key)
+					continue
+				attributes[key] = val
+			if key[:len(RP9ns)+1] == RP9ns + ' ':
+				del attributes[key]
+				key = key[len(RP9ns)+1:]
 				if attributes.has_key(key):
 					self.syntax_error("duplicate attribute `%s' in different namespaces" % key)
 					continue
@@ -2857,6 +2890,21 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad %s attribute' % attr)
 			elif attr == 'xml:lang':
 				attrdict['xmllang'] = val
+			elif attr == 'opacity':
+				try:
+					if val[-1] == '%':
+						val = string.atof(val[:-1]) / 100.0
+						if val < 0 or val > 1:
+							self.syntax_error('opacity value out of range')
+							val = None
+					else:
+						self.syntax_error('only percentage values allowed on %s attribute' % attr)
+						val = None
+				except (string.atoi_error, string.atof_error):
+					self.syntax_error('invalid %s attribute value' % attr)
+					val = None
+				if val is not None:
+					attrdict[attr] = val
 			else:
 				# catch all
 				attrdict[attr] = val
@@ -2936,6 +2984,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				     'attrs':attributes}
 		self.AddTestAttrs(self.__tops[None], attributes)
 		self.AddCoreAttrs(self.__tops[None], attributes)
+		if attributes.has_key('resizeBehavior'):
+			val = self.parseEnumValue('resizeBehavior', attributes['resizeBehavior'])
+			if val is not None:
+				self.__tops[None]['resizeBehavior'] = val
 		if not self.__childregions.has_key(None):
 			self.__childregions[None] = []
 
@@ -3001,6 +3053,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif attr in ('background-color', 'backgroundColor'):
 				# these two attribute are parsed in CreateLayout method
 				pass
+			elif attr == 'resizeBehavior':
+				val = self.parseEnumValue(attr, val)
+				if val is not None:
+					attrdict[attr] = val
 			else:
 				# catch all
 				attrdict[attr] = val
