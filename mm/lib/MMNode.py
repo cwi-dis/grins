@@ -4862,11 +4862,25 @@ class MMNode(MMTreeElement):
 			return self.shouldplay # i.e. 0
 		# If any of the system test attributes don't match
 		# we should not play
-		all = settings.getsettings()
-		for setting in all:
+		for setting in settings.getsettings():
 			if self.attrdict.has_key(setting):
-				ok = settings.match(setting,
-						    self.attrdict[setting])
+				#
+				# RTIPA start
+				#
+				if hasattr(features, 'RTIPA') and features.RTIPA and setting == 'system_bitrate':
+					url = self.GetFile()
+					scheme, url = MMurl.splittype(url)
+					if scheme and scheme != 'file':
+						host, url = MMurl.splithost(url)
+					else:
+						host = None
+					ok = settings.match_bitrate_RTIPA(self.attrdict['system_bitrate'], host)
+				else:
+					#
+					# RTIPA end
+					#
+					ok = settings.match(setting,
+							    self.attrdict[setting])
 				if not ok:
 					return 0
 		# And if any of our user groups doesn't match we shouldn't

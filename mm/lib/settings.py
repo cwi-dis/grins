@@ -142,6 +142,10 @@ default_settings = {
 	'show_all_attributes' : 1,
 	'enable_template': 0,
 	'registered': 'notyet',
+
+	# RTIPA start
+	'RTIPA_config': '',	# URL where RTIPA config file is to be found
+	# RTIPA end
 }
 
 # Set cpu/os type
@@ -194,8 +198,11 @@ def restore():
 	for k in user_settings.keys():
 		if k[:2] == '__':
 			del user_settings[k]
-
-restore()
+	# start RTIPA
+	import features
+	if hasattr(features, 'RTIPA') and features.RTIPA:
+		read_RTIPA()
+	# end RTIPA
 
 def factory_defaults():
 	global user_settings
@@ -355,3 +362,79 @@ def commit(auto=0):
 	_in_transaction = 0
 	for listener in _registry:
 		listener.commit('preference')
+
+#
+# RTIPA start
+#
+
+# mapping from host (IP address converted with socket.inet_aton) to bitrate
+RTIPA_bitrates = {}
+
+def match_bitrate_RTIPA(wanted_value, host):
+	if not host:
+		# no host defaults to normal processing
+		return match('system_bitrate', wanted_value)
+	import socket
+	try:
+		ip = socket.gethostbyname(host)
+	except socket.error:
+		# host unknown, so don't play
+		return 0
+	ip = socket.inet_aton(ip) # normalize
+	real_value = RTIPA_bitrates.get(ip)
+	if real_value is None:
+		# host unknown defaults to normal processing
+		return match('system_bitrate', wanted_value)
+	return real_value >= wanted_value
+
+# mapping from QoS class to bitrate
+RTIPA_QoS_map = {'AF': 1000000,
+		 'EF': 115200,
+		 }
+
+# regular expression to match interesting lines from RTIPA config file
+# a typical line looks like:
+# <router-name>/add_flow dev eth0 src_addr 191.192.192.192/32 class EF
+# we're interested in the IP address and the class
+import re
+RTIPA_re = re.compile('^[^/]*'		# router name
+		      '/add_flow'	# command we're looking for
+		      ' +dev +.* '	# device (e.g. eth0)
+		      'src_addr +'
+		      r'(?P<IP>[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)'	# IP address
+		      '/32'		# IP address ends with /32
+		      ' class '
+		      '(?P<class>EF|AF)' # class of service (AF or EF)
+		      )
+
+def read_RTIPA():
+	import socket, MMurl
+	RTIPA_bitrates.clear()
+	url = get('RTIPA_config')
+	if not url:
+		print 'no RTIPA URL specified'
+		return
+	try:
+		u = MMurl.urlopen(url)
+	except:
+		print 'can\'t find RTIPA file',url
+		return
+	while 1:
+		line = u.readline()
+		if not line:
+			u.close()
+			print 'RTIPA config now:',`RTIPA_bitrates`
+			return
+		res = RTIPA_re.match(line)
+		if res is None:
+			print 'no match for',line
+			continue
+		ip, qos = res.group('IP', 'class')
+		ip = socket.inet_aton(ip) # normalize
+		RTIPA_bitrates[ip] = RTIPA_QoS_map[qos]
+
+#
+# RTIPA end
+#
+
+restore()
