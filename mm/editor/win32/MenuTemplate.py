@@ -140,8 +140,11 @@ MENUBAR=(
 		(ENTRY, 'Show anchors...', 'T', ANCHORS),
 		(ENTRY, 'Edit content...', 'E', CONTENT),
 		(SEP,),
-		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
-		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC),
+		(ENTRY, 'Edit content with registered application', None, CONTENT_EDIT_REG),
+		(ENTRY, 'Open content with registered application', None, CONTENT_OPEN_REG),
+		(SEP,),
+		(ENTRY, 'Finish hyperlink to focus...', None, FINISH_LINK),
+		(ENTRY, 'Create syncarc from focus...', None, FINISH_ARC),
 		)),
 
 	('&Window', (
@@ -153,8 +156,11 @@ MENUBAR=(
 		)),
 
 	('&Help', (
-		(ENTRY, 'Help...', None, HELP),
+		(ENTRY, '&Contents', None, HELP_CONTENTS),
+		(ENTRY, 'Context &Help', None, HELP),
 		(SEP,),
-		(ENTRY, 'About...', None, ABOUT_GRINS))))
+		(ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
+		(SEP,),
+		(ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 		
 		
