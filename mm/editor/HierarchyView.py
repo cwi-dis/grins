@@ -817,9 +817,8 @@ class HierarchyView(HierarchyViewDialog):
 		if not hasattr(node, 'expanded') or \
 		   not node.GetChildren():
 			if hierarchy_minimum_sizes:
-				right = left + self.horsize
-##				if node.__class__ is SlideMMNode:
-##					right = right + self.horsize
+				if not self.timescale:
+					right = left + self.horsize
 				bottom = top + self.versize
 			list.append((node, LEAFBOX, (left, top, right, bottom)))
 			return left, top, right, bottom
