@@ -1245,7 +1245,7 @@ class _DisplayList:
 		for entry in self._list[self._clonestart:]:
 			cmd = entry[0]
 			if cmd == 'clear':
-				if not expose:
+				if not expose or window._gc.foreground != entry[1]:
 					gc.foreground = entry[1]
 					gc.FillRectangle(0, 0, width, height)
 				gc.background = entry[1]
