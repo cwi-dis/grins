@@ -133,7 +133,7 @@ class Channel(ChannelWM):
 		if armstate == ARMED:
 			self._armstate = AIDLE
 			self.syncarm = 1
-			dummy = self.arm(armed_node)
+			self.arm(armed_node)
 		if self._armstate != armstate:
 			# maybe we should do something, but what?
 			raise error, 'don\'t know if this can happen'
@@ -533,6 +533,7 @@ class ChannelWindow(ChannelWindowWM, Channel):
 		ChannelWinDict[self._name] = self
 		self.window = None
 		self.armed_display = self.played_display = None
+		self.nopop = 0
 		return self
 
 	def __repr__(self):
@@ -593,11 +594,13 @@ class ChannelWindow(ChannelWindowWM, Channel):
 			self.window.bgcolor(self._attrdict['bgcolor'])
 		if self._attrdict.has_key('fgcolor'):
 			self.window.fgcolor(self._attrdict['fgcolor'])
+		self.do_show_wmdep()
 		return 1
 
 	def do_hide(self):
 		if debug:
 			print 'ChannelWindow.do_hide('+`self`+')'
+		self.do_hide_wmdep()
 		if self.window:
 			self.window.close()
 			self.window = None
@@ -618,8 +621,14 @@ class ChannelWindow(ChannelWindowWM, Channel):
 			print 'ChannelWindow.play('+`self`+','+`node`+')'
 		self.play_0(node)
 		if self.is_showing():
-			self.window.pop()
-			self.armed_display.render()
+			if not self.nopop:
+				self.window.pop()
+			if self.armed_display.is_closed():
+				# assume that we are going to get a
+				# resize event
+				pass
+			else:
+				self.armed_display.render()
 			if self.played_display:
 				self.played_display.close()
 			self.played_display = self.armed_display
@@ -667,10 +676,10 @@ class _ChannelThread(_ChannelThreadWM):
 	def do_hide(self):
 		if debug:
 			print 'ChannelThread.do_hide('+`self`+')'
+		self.do_hide_wmdep()
 		if self.threads:
 			self.threads.close()
 			self.threads = None
-		self.do_hide_wmdep()
 
 	def play(self, node):
 		if debug:
@@ -699,6 +708,10 @@ class _ChannelThread(_ChannelThreadWM):
 	def setpaused(self, paused):
 		if self.is_showing():
 			self.threads.setrate(not paused)
+
+	def stopplay(self, node):
+		if self.threads:
+			self.threads.finished()
 
 	def callback(self, dummy1, dummy2, event, value):
 		if debug:
@@ -738,6 +751,10 @@ class ChannelThread(_ChannelThread, Channel):
 		_ChannelThread.armstop(self)
 		Channel.armstop(self)
 
+	def stopplay(self, node):
+		Channel.stopplay(self, node)
+		_ChannelThread.stopplay(self, node)
+
 	def setpaused(self, paused):
 		Channel.setpaused(self, paused)
 		_ChannelThread.setpaused(self, paused)
@@ -764,9 +781,17 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 			ChannelWindow.do_hide(self)
 		return 0
 
+	def do_show_wmdep(self):
+		ChannelWindow.do_show_wmdep(self)
+		_ChannelThread.do_show_wmdep(self)
+
 	def do_hide(self):
 		_ChannelThread.do_hide(self)
 		ChannelWindow.do_hide(self)
+
+	def do_hide_wmdep(self):
+		ChannelWindow.do_hide_wmdep(self)
+		_ChannelThread.do_hide_wmdep(self)
 
 	def playstop(self):
 		_ChannelThread.playstop(self)
@@ -775,6 +800,10 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 	def armstop(self):
 		_ChannelThread.armstop(self)
 		ChannelWindow.armstop(self)
+
+	def stopplay(self, node):
+		ChannelWindow.stopplay(self, node)
+		_ChannelThread.stopplay(self, node)
 
 	def setpaused(self, paused):
 		ChannelWindow.setpaused(self, paused)
@@ -787,8 +816,14 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		if not self.is_showing() or self.syncplay:
 			self.play_1()
 			return
-		self.window.pop()
-		self.armed_display.render()
+		if not self.nopop:
+			self.window.pop()
+		if self.armed_display.is_closed():
+			# assume that we are going to get a
+			# resize event
+			pass
+		else:
+			self.armed_display.render()
 		if self.played_display:
 			self.played.display.close()
 		self.played_display = self.armed_display

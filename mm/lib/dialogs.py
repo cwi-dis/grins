@@ -197,7 +197,7 @@ class Dialog:
 		elif event in (EVENTS.Mouse1Release, EVENTS.Mouse2Release):
 			# ignore these
 			pass
-		elif event == EVENTS.ResizeWindow:
+		elif (window, event) == (self.window, EVENTS.ResizeWindow):
 			self.draw_window()
 		else:
 			self.events.append(window, event, value)

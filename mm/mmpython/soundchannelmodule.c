@@ -373,6 +373,14 @@ sound_playstop(self)
 }
 
 static int
+sound_finished(self)
+	mmobject *self;
+{
+	denter(sound_finished);
+	return 1;
+}
+
+static int
 sound_setrate(self, rate)
 	mmobject *self;
 	double rate;
@@ -407,6 +415,7 @@ static struct mmfuncs sound_channel_funcs = {
 	sound_armstop,
 	sound_play,
 	sound_playstop,
+	sound_finished,
 	sound_setrate,
 	sound_init,
 	sound_dealloc,

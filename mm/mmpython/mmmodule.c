@@ -335,6 +335,31 @@ mm_armstop(self, args)
 }
 
 /*
+ * finished()
+ *	Called when the node is finished.
+ */
+static object *
+mm_finished(self, args)
+	mmobject *self;
+	object *args;
+{
+	denter(mm_finished);
+	down_sema(self->mm_flagsema);
+	if (self->mm_flags & PLAYING) {
+		up_sema(self->mm_flagsema);
+		err_setstr(MmError, "still playing");
+		return NULL;
+	}
+	up_sema(self->mm_flagsema);
+	if (!getnoarg(args))
+		return NULL;
+	if (!(*self->mm_chanobj->chan_funcs->finished)(self))
+		return NULL;
+	INCREF(None);
+	return None;
+}
+
+/*
  * setrate(rate)
  *	Set the playing rate to the given value. Takes effect
  *	immedeately.
@@ -409,13 +434,14 @@ mm_close(self)
 }
 
 static struct methodlist channel_methods[] = {
-	{"resized",		mm_resized},
 	{"arm",			mm_arm},
 	{"armstop",		mm_armstop},
+	{"close",		mm_close},
 	{"play",		mm_play},
 	{"playstop",		mm_playstop},
+	{"resized",		mm_resized},
 	{"setrate",		mm_setrate},
-	{"close",		mm_close},
+	{"finished",		mm_finished},
 	{NULL,			NULL}		/* sentinel */
 };
 
