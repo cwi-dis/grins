@@ -29,7 +29,7 @@ from version import version
 
 class Main(MainDialog):
 	def __init__(self, opts, files):
-		import MMurl, TopLevel, windowinterface, features
+		import windowinterface, features
 		if hasattr(features, 'expiry_date') and features.expiry_date:
 			import time
 			import version
@@ -43,6 +43,21 @@ class Main(MainDialog):
 					url = 'http://www.oratrix.com/indir/%s/update.html'%version.shortversion
 					windowinterface.htmlwindow(url)
 				sys.exit(0)
+		self.tmpopts = opts
+		self.tmpfiles = files
+		if hasattr(features, 'license_features_needed') and features.license_features_needed:
+			import license
+			self.tmplicensedialog = license.WaitLicense(self.do_init,
+					   features.license_features_needed)
+		else:
+			self.do_init()
+				
+	def do_init(self, license=None):
+		# We ignore the license, not needed in the player
+		import MMurl, TopLevel, windowinterface
+		opts, files = self.tmpopts, self.tmpfiles
+		del self.tmpopts
+		del self.tmpfiles
 		self._tracing = 0
 		self.nocontrol = 0	# For player compatability
 		self._closing = 0
