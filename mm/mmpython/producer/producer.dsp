@@ -95,11 +95,12 @@ LINK32=link.exe
 # ADD LINK32 advapi32.lib version.lib kernel32.lib user32.lib gdi32.lib winmm.lib vfw32.lib /nologo /dll /debug /machine:I386 /out:"Debug/producer_d.pyd" /pdbtype:sept
 # Begin Custom Build
 OutDir=.\Debug
+TargetPath=.\Debug\producer_d.pyd
 InputPath=.\Debug\producer_d.pyd
 SOURCE="$(InputPath)"
 
 "$(OutDir)\log.txt" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy $(OutDir)\producer_d.pyd d:\ufs\mm\cmif\bin
+	copy $(TargetPath) d:\ufs\mm\cmif\bin\win32
 
 # End Custom Build
 
@@ -169,6 +170,9 @@ SOURCE=.\rprod.cpp
 # SUBTRACT CPP /YX /Yc /Yu
 
 !ELSEIF  "$(CFG)" == "producer - Win32 Debug"
+
+# ADD CPP /I "./win32" /I "..\..\..\python\Include" /I "..\..\..\python\PC" /I "..\..\..\python\Extensions\win32\src"
+# SUBTRACT CPP /YX /Yc /Yu
 
 !ENDIF 
 

@@ -101,7 +101,7 @@ struct errors {
 	{ PNR_FILE_NOT_FOUND, "FILE_NOT_FOUND", },
 	{ PNR_WRITE_ERROR, "WRITE_ERROR", },
 	{ PNR_FILE_EXISTS, "FILE_EXISTS", },
-#define	PNR_FILE_NOT_OPEN		MAKE_PN_RESULT(1,SS_FIL,12)
+	{ PNR_FILE_NOT_OPEN, "FILE_NOT_OPEN", },
 	{ PNR_ADVISE_PREFER_LINEAR, "ADVISE_PREFER_LINEAR", },
 	{ PNR_PARSE_ERROR, "PARSE_ERROR", },
 	{ PNR_BAD_SERVER, "BAD_SERVER", },
@@ -225,7 +225,7 @@ struct errors {
 	{ PNR_INVALID_HTTP_PROXY_HOST, "INVALID_HTTP_PROXY_HOST", },
 	{ PNR_INVALID_METAFILE, "INVALID_METAFILE", },
 	{ PNR_BROWSER_LAUNCH, "BROWSER_LAUNCH", },
-#define	PNR_RESOURCE_NOT_CACHED		MAKE_PN_RESULT(1,SS_RSC,1)
+	{ PNR_RESOURCE_NOT_CACHED, "RESOURCE_NOT_CACHED", },
 	{ PNR_RESOURCE_NOT_FOUND, "RESOURCE_NOT_FOUND", },
 	{ PNR_RESOURCE_CLOSE_FILE_FIRST, "RESOURCE_CLOSE_FILE_FIRST", },
 	{ PNR_RESOURCE_NODATA, "RESOURCE_NODATA", },
@@ -265,6 +265,10 @@ seterror(const char *funcname, PN_RESULT res)
 
 /* ----------------------------------------------------- */
 
+#define UNKNOWN 0
+#define AUDIO 1
+#define VIDEO 2
+
 /* Declarations for objects of type RMBuildEngine */
 
 typedef struct {
@@ -279,7 +283,7 @@ static RMBEobject *
 newRMBEobject()
 {
 	RMBEobject *self;
-	
+
 	self = PyObject_NEW(RMBEobject, &RMBEtype);
 	if (self == NULL)
 		return NULL;
@@ -297,6 +301,13 @@ typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
 	IRMAInputPin *inputPin;
+	int pintype;
+	union {
+		IRMAAudioInputPin *u_audioInputPin;
+		IRMAVideoInputPin *u_videoInputPin;
+	} u;
+#define audioInputPin u.u_audioInputPin
+#define videoInputPin u.u_videoInputPin
 } RMIPobject;
 
 staticforward PyTypeObject RMIPtype;
@@ -305,12 +316,13 @@ static RMIPobject *
 newRMIPobject()
 {
 	RMIPobject *self;
-	
+
 	self = PyObject_NEW(RMIPobject, &RMIPtype);
 	if (self == NULL)
 		return NULL;
 	/* XXXX Add your own initializers here */
 	self->inputPin = NULL;
+	self->pintype = UNKNOWN;
 	return self;
 }
 
@@ -331,7 +343,7 @@ static RMVIPFobject *
 newRMVIPFobject()
 {
 	RMVIPFobject *self;
-	
+
 	self = PyObject_NEW(RMVIPFobject, &RMVIPFtype);
 	if (self == NULL)
 		return NULL;
@@ -349,6 +361,7 @@ typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
 	IRMATargetSettings *targetSettings;
+	IRMABasicTargetSettings *basicTargetSettings;
 } RMTSobject;
 
 staticforward PyTypeObject RMTStype;
@@ -357,12 +370,13 @@ static RMTSobject *
 newRMTSobject()
 {
 	RMTSobject *self;
-	
+
 	self = PyObject_NEW(RMTSobject, &RMTStype);
 	if (self == NULL)
 		return NULL;
 	/* XXXX Add your own initializers here */
 	self->targetSettings = NULL;
+	self->basicTargetSettings = NULL;
 	return self;
 }
 
@@ -383,7 +397,7 @@ static RMCPobject *
 newRMCPobject()
 {
 	RMCPobject *self;
-	
+
 	self = PyObject_NEW(RMCPobject, &RMCPtype);
 	if (self == NULL)
 		return NULL;
@@ -409,7 +423,7 @@ static RMBSPobject *
 newRMBSPobject()
 {
 	RMBSPobject *self;
-	
+
 	self = PyObject_NEW(RMBSPobject, &RMBSPtype);
 	if (self == NULL)
 		return NULL;
@@ -427,6 +441,13 @@ typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
 	IRMAPinProperties *pinProperties;
+	int pintype;
+	union {
+		IRMAAudioPinProperties *u_audioPinProperties;
+		IRMAVideoPinProperties *u_videoPinProperties;
+	} u;
+#define audioPinProperties u.u_audioPinProperties
+#define videoPinProperties u.u_videoPinProperties
 } RMPPobject;
 
 staticforward PyTypeObject RMPPtype;
@@ -435,12 +456,13 @@ static RMPPobject *
 newRMPPobject()
 {
 	RMPPobject *self;
-	
+
 	self = PyObject_NEW(RMPPobject, &RMPPtype);
 	if (self == NULL)
 		return NULL;
 	/* XXXX Add your own initializers here */
 	self->pinProperties = NULL;
+	self->pintype = UNKNOWN;
 	return self;
 }
 
@@ -453,6 +475,7 @@ typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
 	IRMAMediaSample *mediaSample;
+	PyObject *buffer;
 } RMMSobject;
 
 staticforward PyTypeObject RMMStype;
@@ -461,12 +484,13 @@ static RMMSobject *
 newRMMSobject()
 {
 	RMMSobject *self;
-	
+
 	self = PyObject_NEW(RMMSobject, &RMMStype);
 	if (self == NULL)
 		return NULL;
 	/* XXXX Add your own initializers here */
 	self->mediaSample = NULL;
+	self->buffer = NULL;
 	return self;
 }
 
@@ -487,7 +511,7 @@ static RMTAMobject *
 newRMTAMobject()
 {
 	RMTAMobject *self;
-	
+
 	self = PyObject_NEW(RMTAMobject, &RMTAMtype);
 	if (self == NULL)
 		return NULL;
@@ -513,7 +537,7 @@ static RMTAIobject *
 newRMTAIobject()
 {
 	RMTAIobject *self;
-	
+
 	self = PyObject_NEW(RMTAIobject, &RMTAItype);
 	if (self == NULL)
 		return NULL;
@@ -539,7 +563,7 @@ static RMCIMobject *
 newRMCIMobject()
 {
 	RMCIMobject *self;
-	
+
 	self = PyObject_NEW(RMCIMobject, &RMCIMtype);
 	if (self == NULL)
 		return NULL;
@@ -565,7 +589,7 @@ static RMCCobject *
 newRMCCobject()
 {
 	RMCCobject *self;
-	
+
 	self = PyObject_NEW(RMCCobject, &RMCCtype);
 	if (self == NULL)
 		return NULL;
@@ -584,6 +608,17 @@ typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
 	IRMACodecInfo *codecInfo;
+	int pintype;
+	union {
+		IRMAAudioCodecInfo *u_audioCodecInfo;
+		struct {
+			IRMAVideoCodecInfo *u_videoCodecInfo;
+			IRMACodecInfo2 *u_codecInfo2;
+		} s;
+	} u;
+#define audioCodecInfo u.u_audioCodecInfo
+#define videoCodecInfo u.s.u_videoCodecInfo
+#define codecInfo2 u.s.u_codecInfo2
 } RMCIobject;
 
 staticforward PyTypeObject RMCItype;
@@ -592,12 +627,13 @@ static RMCIobject *
 newRMCIobject()
 {
 	RMCIobject *self;
-	
+
 	self = PyObject_NEW(RMCIobject, &RMCItype);
 	if (self == NULL)
 		return NULL;
-	self->codecInfo = NULL;
 	/* XXXX Add your own initializers here */
+	self->codecInfo = NULL;
+	self->pintype = UNKNOWN;
 	return self;
 }
 
@@ -654,68 +690,75 @@ newRMCIobject()
 	}								\
 	return PyString_FromString(val)
 #define SETSVALUE(ptr,funcname) SETVALUE(ptr,funcname,(char *),char *,"s")
-#define ENUMERATE(ptr,funcname,newobj,query,ptype,field,ref)		\
-	IRMAEnumeratorIUnknown* enumerator = NULL;			\
-	IUnknown *tempUnk;						\
-	UINT32 i;							\
-	UINT32 n;							\
-	PyObject *obj = NULL;						\
-	ptype *v = NULL;						\
-	PN_RESULT res;							\
-	if (!PyArg_ParseTuple(args, ""))				\
-		return NULL;						\
-	res = (ptr)->funcname(ref enumerator);				\
-	if (!SUCCEEDED(res)) {						\
-		seterror(#funcname, res);				\
-		return NULL;						\
-	}								\
-	res = enumerator->GetCount(&n);					\
-	res = enumerator->First(&tempUnk);				\
-	if (!SUCCEEDED(res)) {						\
-		seterror("First", res);					\
-		goto error;						\
-	}								\
-	obj = PyList_New((int) n);					\
-	if (obj == NULL)						\
-		goto error;						\
-	for (i = 0; i < n; i++) {					\
-		v = newobj();						\
-		res = tempUnk->QueryInterface(query, (void **) &v->field); \
-		PN_RELEASE(tempUnk);					\
-		if (!SUCCEEDED(res)) {					\
-			seterror("QueryInterface", res);		\
-			goto error;					\
-		}							\
-		PyList_SetItem(obj, i, (PyObject *) v);			\
-		Py_DECREF((PyObject *) v); v = NULL;			\
-		res = enumerator->Next(&tempUnk);			\
-		if (!SUCCEEDED(res)) {					\
-			seterror("Next", res);				\
-			goto error;					\
-		}							\
-	}								\
-	PN_RELEASE(enumerator);						\
-	return obj;							\
-  error:								\
-	Py_XDECREF(obj);						\
-	Py_XDECREF((PyObject *) v);					\
-	PN_RELEASE(enumerator);						\
-	return NULL
 
 /* ---------------------------------------------------------------- */
 
-static char RMBE_GetPins__doc__[] = 
+static char RMBE_GetPins__doc__[] =
 ""
 ;
 
 static PyObject *
 RMBE_GetPins(RMBEobject *self, PyObject *args)
 {
-	ENUMERATE(self->buildEngine, GetPinEnumerator, newRMIPobject, IID_IRMAInputPin, RMIPobject, inputPin, &);
+	IRMAEnumeratorIUnknown* enumerator = NULL;
+	IUnknown *tempUnk;
+	UINT32 i;
+	UINT32 n;
+	PyObject *obj = NULL;
+	RMIPobject *v = NULL;
+	PN_RESULT res;
+	char type[33];
+
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	res = self->buildEngine->GetPinEnumerator(&enumerator);
+	if (!SUCCEEDED(res)) {
+		seterror("GetPinEnumerator", res);
+		return NULL;
+	}
+	res = enumerator->GetCount(&n);
+	res = enumerator->First(&tempUnk);
+	if (!SUCCEEDED(res)) {
+		seterror("First", res);
+		goto error;
+	}
+	obj = PyList_New((int) n);
+	if (obj == NULL)
+		goto error;
+	for (i = 0; i < n; i++) {
+		v = newRMIPobject();
+		res = tempUnk->QueryInterface(IID_IRMAInputPin, (void **) &v->inputPin);
+		PN_RELEASE(tempUnk);
+		if (!SUCCEEDED(res)) {
+			seterror("QueryInterface", res);
+			goto error;
+		}
+		res = v->inputPin->GetOutputMimeType(type, sizeof(type)-1);
+		if (strcmp(type, MIME_REALAUDIO) == 0) {
+			res = v->inputPin->QueryInterface(IID_IRMAAudioInputPin, (void **) &v->audioInputPin);
+			v->pintype = AUDIO;
+		} else if (strcmp(type, MIME_REALVIDEO) == 0) {
+			res = v->inputPin->QueryInterface(IID_IRMAVideoInputPin, (void **) &v->videoInputPin);
+			v->pintype = VIDEO;
+		}
+		PyList_SetItem(obj, i, (PyObject *) v); v = NULL;
+		res = enumerator->Next(&tempUnk);
+		if (!SUCCEEDED(res)) {
+			seterror("Next", res);
+			goto error;
+		}
+	}
+	PN_RELEASE(enumerator);
+	return obj;
+  error:
+	Py_XDECREF(obj);
+	Py_XDECREF((PyObject *) v);
+	PN_RELEASE(enumerator);
+	return NULL;
 }
 
 
-static char RMBE_GetClipProperties__doc__[] = 
+static char RMBE_GetClipProperties__doc__[] =
 ""
 ;
 
@@ -739,7 +782,7 @@ RMBE_GetClipProperties(RMBEobject *self, PyObject *args)
 }
 
 
-static char RMBE_SetClipProperties__doc__[] = 
+static char RMBE_SetClipProperties__doc__[] =
 ""
 ;
 
@@ -761,7 +804,7 @@ RMBE_SetClipProperties(RMBEobject *self, PyObject *args)
 }
 
 
-static char RMBE_GetTargetSettings__doc__[] = 
+static char RMBE_GetTargetSettings__doc__[] =
 ""
 ;
 
@@ -781,11 +824,12 @@ RMBE_GetTargetSettings(RMBEobject *self, PyObject *args)
 		Py_DECREF(v);
 		return NULL;
 	}
+	res = v->targetSettings->QueryInterface(IID_IRMABasicTargetSettings, (void **) &v->basicTargetSettings);
 	return (PyObject *) v;
 }
 
 
-static char RMBE_SetTargetSettings__doc__[] = 
+static char RMBE_SetTargetSettings__doc__[] =
 ""
 ;
 
@@ -807,7 +851,7 @@ RMBE_SetTargetSettings(RMBEobject *self, PyObject *args)
 }
 
 
-static char RMBE_GetRealTimeEncoding__doc__[] = 
+static char RMBE_GetRealTimeEncoding__doc__[] =
 ""
 ;
 
@@ -818,7 +862,7 @@ RMBE_GetRealTimeEncoding(RMBEobject *self, PyObject *args)
 }
 
 
-static char RMBE_SetRealTimeEncoding__doc__[] = 
+static char RMBE_SetRealTimeEncoding__doc__[] =
 ""
 ;
 
@@ -829,7 +873,7 @@ RMBE_SetRealTimeEncoding(RMBEobject *self, PyObject *args)
 }
 
 
-static char RMBE_GetDoMultiRateEncoding__doc__[] = 
+static char RMBE_GetDoMultiRateEncoding__doc__[] =
 ""
 ;
 
@@ -840,7 +884,7 @@ RMBE_GetDoMultiRateEncoding(RMBEobject *self, PyObject *args)
 }
 
 
-static char RMBE_SetDoMultiRateEncoding__doc__[] = 
+static char RMBE_SetDoMultiRateEncoding__doc__[] =
 ""
 ;
 
@@ -851,7 +895,52 @@ RMBE_SetDoMultiRateEncoding(RMBEobject *self, PyObject *args)
 }
 
 
-static char RMBE_ResetAllOutputMimeTypes__doc__[] = 
+static char RMBE_GetDoOutputMimeType__doc__[] =
+""
+;
+
+static PyObject *
+RMBE_GetDoOutputMimeType(RMBEobject *self, PyObject *args)
+{
+	PN_RESULT res;
+	char *mimetype;
+	BOOL encode;
+
+	if (!PyArg_ParseTuple(args, "s", &mimetype))
+		return NULL;
+	res = self->buildEngine->GetDoOutputMimeType(mimetype, &encode);
+	if (!SUCCEEDED(res)) {
+		seterror("GetDoOutputMimeType", res);
+		return NULL;
+	}
+	return PyInt_FromLong((long) encode);
+}
+
+
+static char RMBE_SetDoOutputMimeType__doc__[] =
+""
+;
+
+static PyObject *
+RMBE_SetDoOutputMimeType(RMBEobject *self, PyObject *args)
+{
+	PN_RESULT res;
+	char *mimetype;
+	int encode;
+
+	if (!PyArg_ParseTuple(args, "si", &mimetype, &encode))
+		return NULL;
+	res = self->buildEngine->SetDoOutputMimeType(mimetype, (BOOL) encode);
+	if (!SUCCEEDED(res)) {
+		seterror("SetDoOutputMimeType", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+static char RMBE_ResetAllOutputMimeTypes__doc__[] =
 ""
 ;
 
@@ -862,7 +951,29 @@ RMBE_ResetAllOutputMimeTypes(RMBEobject *self, PyObject *args)
 }
 
 
-static char RMBE_PrepareToEncode__doc__[] = 
+static char RMBE_GetTempDirectory__doc__[] =
+""
+;
+
+static PyObject *
+RMBE_GetTempDirectory(RMBEobject *self, PyObject *args)
+{
+	GETSVALUE(self->buildEngine, GetTempDirectory);
+}
+
+
+static char RMBE_SetTempDirectory__doc__[] =
+""
+;
+
+static PyObject *
+RMBE_SetTempDirectory(RMBEobject *self, PyObject *args)
+{
+	SETSVALUE(self->buildEngine, SetTempDirectory);
+}
+
+
+static char RMBE_PrepareToEncode__doc__[] =
 ""
 ;
 
@@ -906,7 +1017,7 @@ RMBE_PrepareToEncode(RMBEobject *self, PyObject *args)
 }
 
 
-static char RMBE_DoneEncoding__doc__[] = 
+static char RMBE_DoneEncoding__doc__[] =
 ""
 ;
 
@@ -935,7 +1046,7 @@ RMBE_DoneEncoding(RMBEobject *self, PyObject *args)
 }
 
 
-static char RMBE_CancelEncoding__doc__[] = 
+static char RMBE_CancelEncoding__doc__[] =
 ""
 ;
 
@@ -950,22 +1061,94 @@ RMBE_CancelEncoding(RMBEobject *self, PyObject *args)
 }
 
 
+static char RMBE_CreateMediaSample__doc__[] =
+""
+;
+
+static PyObject *
+RMBE_CreateMediaSample(RMBEobject *self, PyObject *args)
+{
+	PN_RESULT res;
+	IRMABuildClassFactory *clfac;
+	RMMSobject *val;
+
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	res = self->buildEngine->QueryInterface(IID_IRMABuildClassFactory, (void**) &clfac);
+	if (!SUCCEEDED(res)) {
+		seterror("QueryInterface", res);
+		return NULL;
+	}
+	val = newRMMSobject();
+	if (val == NULL)
+		return NULL;
+	res = clfac->CreateInstance(CLSID_IRMAMediaSample, NULL, IID_IRMAMediaSample, (void **) &val->mediaSample);
+	PN_RELEASE(clfac);
+	if (!SUCCEEDED(res)) {
+		seterror("CreateInstance", res);
+		val->mediaSample = NULL;
+		Py_DECREF(val);
+		return NULL;
+	}
+	return (PyObject *) val;
+}
+
+
+static char RMBE_CreateCodecInfoManager__doc__[] =
+""
+;
+
+static PyObject *
+RMBE_CreateCodecInfoManager(RMBEobject *self, PyObject *args)
+{
+	PN_RESULT res;
+	IRMABuildClassFactory *clfac;
+	RMCIMobject *val;
+
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	res = self->buildEngine->QueryInterface(IID_IRMABuildClassFactory, (void**) &clfac);
+	if (!SUCCEEDED(res)) {
+		seterror("QueryInterface", res);
+		return NULL;
+	}
+	val = newRMCIMobject();
+	if (val == NULL)
+		return NULL;
+	res = clfac->CreateInstance(CLSID_IRMACodecInfoManager, NULL, IID_IRMACodecInfoManager, (void **) &val->codecInfoManager);
+	PN_RELEASE(clfac);
+	if (!SUCCEEDED(res)) {
+		seterror("CreateInstance", res);
+		val->codecInfoManager = NULL;
+		Py_DECREF(val);
+		return NULL;
+	}
+	return (PyObject *) val;
+}
+
+
 static struct PyMethodDef RMBE_methods[] = {
-	{"GetPins",	(PyCFunction)RMBE_GetPins,	METH_VARARGS,	RMBE_GetPins__doc__},
- {"GetClipProperties",	(PyCFunction)RMBE_GetClipProperties,	METH_VARARGS,	RMBE_GetClipProperties__doc__},
- {"SetClipProperties",	(PyCFunction)RMBE_SetClipProperties,	METH_VARARGS,	RMBE_SetClipProperties__doc__},
- {"GetTargetSettings",	(PyCFunction)RMBE_GetTargetSettings,	METH_VARARGS,	RMBE_GetTargetSettings__doc__},
- {"SetTargetSettings",	(PyCFunction)RMBE_SetTargetSettings,	METH_VARARGS,	RMBE_SetTargetSettings__doc__},
- {"GetRealTimeEncoding",	(PyCFunction)RMBE_GetRealTimeEncoding,	METH_VARARGS,	RMBE_GetRealTimeEncoding__doc__},
- {"SetRealTimeEncoding",	(PyCFunction)RMBE_SetRealTimeEncoding,	METH_VARARGS,	RMBE_SetRealTimeEncoding__doc__},
- {"GetDoMultiRateEncoding",	(PyCFunction)RMBE_GetDoMultiRateEncoding,	METH_VARARGS,	RMBE_GetDoMultiRateEncoding__doc__},
- {"SetDoMultiRateEncoding",	(PyCFunction)RMBE_SetDoMultiRateEncoding,	METH_VARARGS,	RMBE_SetDoMultiRateEncoding__doc__},
- {"ResetAllOutputMimeTypes",	(PyCFunction)RMBE_ResetAllOutputMimeTypes,	METH_VARARGS,	RMBE_ResetAllOutputMimeTypes__doc__},
- {"PrepareToEncode",	(PyCFunction)RMBE_PrepareToEncode,	METH_VARARGS,	RMBE_PrepareToEncode__doc__},
- {"DoneEncoding",	(PyCFunction)RMBE_DoneEncoding,	METH_VARARGS,	RMBE_DoneEncoding__doc__},
- {"CancelEncoding",	(PyCFunction)RMBE_CancelEncoding,	METH_VARARGS,	RMBE_CancelEncoding__doc__},
- 
-	{NULL,		NULL}		/* sentinel */
+	{"GetPins", (PyCFunction)RMBE_GetPins, METH_VARARGS, RMBE_GetPins__doc__},
+	{"GetClipProperties", (PyCFunction)RMBE_GetClipProperties, METH_VARARGS, RMBE_GetClipProperties__doc__},
+	{"SetClipProperties", (PyCFunction)RMBE_SetClipProperties, METH_VARARGS, RMBE_SetClipProperties__doc__},
+	{"GetTargetSettings", (PyCFunction)RMBE_GetTargetSettings, METH_VARARGS, RMBE_GetTargetSettings__doc__},
+	{"SetTargetSettings", (PyCFunction)RMBE_SetTargetSettings, METH_VARARGS, RMBE_SetTargetSettings__doc__},
+	{"GetRealTimeEncoding", (PyCFunction)RMBE_GetRealTimeEncoding, METH_VARARGS, RMBE_GetRealTimeEncoding__doc__},
+	{"SetRealTimeEncoding", (PyCFunction)RMBE_SetRealTimeEncoding, METH_VARARGS, RMBE_SetRealTimeEncoding__doc__},
+	{"GetDoMultiRateEncoding", (PyCFunction)RMBE_GetDoMultiRateEncoding, METH_VARARGS, RMBE_GetDoMultiRateEncoding__doc__},
+	{"SetDoMultiRateEncoding", (PyCFunction)RMBE_SetDoMultiRateEncoding, METH_VARARGS, RMBE_SetDoMultiRateEncoding__doc__},
+	{"GetDoOutputMimeType", (PyCFunction)RMBE_GetDoOutputMimeType, METH_VARARGS, RMBE_GetDoOutputMimeType__doc__},
+	{"SetDoOutputMimeType", (PyCFunction)RMBE_SetDoOutputMimeType, METH_VARARGS, RMBE_SetDoOutputMimeType__doc__},
+	{"ResetAllOutputMimeTypes", (PyCFunction)RMBE_ResetAllOutputMimeTypes, METH_VARARGS, RMBE_ResetAllOutputMimeTypes__doc__},
+	{"GetTempDirectory", (PyCFunction)RMBE_GetTempDirectory, METH_VARARGS, RMBE_GetTempDirectory__doc__},
+	{"SetTempDirectory", (PyCFunction)RMBE_SetTempDirectory, METH_VARARGS, RMBE_SetTempDirectory__doc__},
+	{"PrepareToEncode", (PyCFunction)RMBE_PrepareToEncode, METH_VARARGS, RMBE_PrepareToEncode__doc__},
+	{"DoneEncoding", (PyCFunction)RMBE_DoneEncoding, METH_VARARGS, RMBE_DoneEncoding__doc__},
+	{"CancelEncoding", (PyCFunction)RMBE_CancelEncoding, METH_VARARGS, RMBE_CancelEncoding__doc__},
+	{"CreateMediaSample", (PyCFunction)RMBE_CreateMediaSample, METH_VARARGS, RMBE_CreateMediaSample__doc__},
+	{"CreateCodecInfoManager", (PyCFunction)RMBE_CreateCodecInfoManager, METH_VARARGS, RMBE_CreateCodecInfoManager__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
 };
 
 /* ---------- */
@@ -989,7 +1172,7 @@ RMBE_getattr(RMBEobject *self, char *name)
 	return Py_FindMethod(RMBE_methods, (PyObject *)self, name);
 }
 
-static char RMBEtype__doc__[] = 
+static char RMBEtype__doc__[] =
 ""
 ;
 
@@ -1022,7 +1205,7 @@ static PyTypeObject RMBEtype = {
 /* -------------------------------------------------------- */
 
 
-static char RMIP_GetOutputMimeType__doc__[] = 
+static char RMIP_GetOutputMimeType__doc__[] =
 ""
 ;
 
@@ -1033,7 +1216,7 @@ RMIP_GetOutputMimeType(RMIPobject *self, PyObject *args)
 }
 
 
-static char RMIP_GetPinProperties__doc__[] = 
+static char RMIP_GetPinProperties__doc__[] =
 ""
 ;
 
@@ -1042,6 +1225,7 @@ RMIP_GetPinProperties(RMIPobject *self, PyObject *args)
 {
 	RMPPobject *v;
 	PN_RESULT res;
+	char type[33];
 
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
@@ -1053,11 +1237,19 @@ RMIP_GetPinProperties(RMIPobject *self, PyObject *args)
 		Py_DECREF(v);
 		return NULL;
 	}
+	res = v->pinProperties->GetOutputMimeType(type, sizeof(type)-1);
+	if (strcmp(type, MIME_REALAUDIO) == 0) {
+		res = v->pinProperties->QueryInterface(IID_IRMAAudioPinProperties, (void **) &v->audioPinProperties);
+		v->pintype = AUDIO;
+	} else if (strcmp(type, MIME_REALVIDEO) == 0) {
+		res = v->pinProperties->QueryInterface(IID_IRMAVideoPinProperties, (void **) &v->videoPinProperties);
+		v->pintype = VIDEO;
+	}
 	return (PyObject *) v;
 }
 
 
-static char RMIP_SetPinProperties__doc__[] = 
+static char RMIP_SetPinProperties__doc__[] =
 ""
 ;
 
@@ -1079,7 +1271,7 @@ RMIP_SetPinProperties(RMIPobject *self, PyObject *args)
 }
 
 
-static char RMIP_Encode__doc__[] = 
+static char RMIP_Encode__doc__[] =
 ""
 ;
 
@@ -1101,7 +1293,7 @@ RMIP_Encode(RMIPobject *self, PyObject *args)
 }
 
 
-static char RMIP_GetPreferredAudioSourceProperties__doc__[] = 
+static char RMIP_GetPreferredAudioSourceProperties__doc__[] =
 ""
 ;
 
@@ -1113,7 +1305,7 @@ RMIP_GetPreferredAudioSourceProperties(RMIPobject *self, PyObject *args)
 
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	res = ((IRMAAudioInputPin *) self->inputPin)->GetPreferredAudioSourceProperties(&sps, &bps, &nc);
+	res = self->audioInputPin->GetPreferredAudioSourceProperties(&sps, &bps, &nc);
 	if (!SUCCEEDED(res)) {
 		seterror("GetPreferredAudioSourceProperties", res);
 		return NULL;
@@ -1122,18 +1314,18 @@ RMIP_GetPreferredAudioSourceProperties(RMIPobject *self, PyObject *args)
 }
 
 
-static char RMIP_GetSuggestedInputSize__doc__[] = 
+static char RMIP_GetSuggestedInputSize__doc__[] =
 ""
 ;
 
 static PyObject *
 RMIP_GetSuggestedInputSize(RMIPobject *self, PyObject *args)
 {
-	GETIVALUE((IRMAAudioInputPin *) self->inputPin, GetSuggestedInputSize, UINT32);
+	GETIVALUE(self->audioInputPin, GetSuggestedInputSize, UINT32);
 }
 
 
-static char RMIP_GetClippingSize__doc__[] = 
+static char RMIP_GetClippingSize__doc__[] =
 ""
 ;
 
@@ -1145,7 +1337,7 @@ RMIP_GetClippingSize(RMIPobject *self, PyObject *args)
 
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	res = ((IRMAVideoInputPin *) self->inputPin)->GetClippingSize(&left, &top, &width, &height);
+	res = self->videoInputPin->GetClippingSize(&left, &top, &width, &height);
 	if (!SUCCEEDED(res)) {
 		seterror("GetClippingSize", res);
 		return NULL;
@@ -1154,28 +1346,46 @@ RMIP_GetClippingSize(RMIPobject *self, PyObject *args)
 }
 
 
-static char RMIP_GetPreferredInputFrameRate__doc__[] = 
+static char RMIP_GetPreferredInputFrameRate__doc__[] =
 ""
 ;
 
 static PyObject *
 RMIP_GetPreferredInputFrameRate(RMIPobject *self, PyObject *args)
 {
-	GETFVALUE((IRMAVideoInputPin *)self->inputPin, GetPreferredInputFrameRate);
+	GETFVALUE(self->videoInputPin, GetPreferredInputFrameRate);
 }
 
 
 static struct PyMethodDef RMIP_methods[] = {
-	{"GetOutputMimeType",	(PyCFunction)RMIP_GetOutputMimeType,	METH_VARARGS,	RMIP_GetOutputMimeType__doc__},
- {"GetPinProperties",	(PyCFunction)RMIP_GetPinProperties,	METH_VARARGS,	RMIP_GetPinProperties__doc__},
- {"SetPinProperties",	(PyCFunction)RMIP_SetPinProperties,	METH_VARARGS,	RMIP_SetPinProperties__doc__},
- {"Encode",	(PyCFunction)RMIP_Encode,	METH_VARARGS,	RMIP_Encode__doc__},
- {"GetPreferredAudioSourceProperties",	(PyCFunction)RMIP_GetPreferredAudioSourceProperties,	METH_VARARGS,	RMIP_GetPreferredAudioSourceProperties__doc__},
- {"GetSuggestedInputSize",	(PyCFunction)RMIP_GetSuggestedInputSize,	METH_VARARGS,	RMIP_GetSuggestedInputSize__doc__},
- {"GetClippingSize",	(PyCFunction)RMIP_GetClippingSize,	METH_VARARGS,	RMIP_GetClippingSize__doc__},
- {"GetPreferredInputFrameRate",	(PyCFunction)RMIP_GetPreferredInputFrameRate,	METH_VARARGS,	RMIP_GetPreferredInputFrameRate__doc__},
- 
-	{NULL,		NULL}		/* sentinel */
+	{"GetOutputMimeType", (PyCFunction)RMIP_GetOutputMimeType, METH_VARARGS, RMIP_GetOutputMimeType__doc__},
+	{"GetPinProperties", (PyCFunction)RMIP_GetPinProperties, METH_VARARGS, RMIP_GetPinProperties__doc__},
+	{"SetPinProperties", (PyCFunction)RMIP_SetPinProperties, METH_VARARGS, RMIP_SetPinProperties__doc__},
+	{"Encode", (PyCFunction)RMIP_Encode, METH_VARARGS, RMIP_Encode__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
+};
+
+static struct PyMethodDef RMAIP_methods[] = {
+	{"GetOutputMimeType", (PyCFunction)RMIP_GetOutputMimeType, METH_VARARGS, RMIP_GetOutputMimeType__doc__},
+	{"GetPinProperties", (PyCFunction)RMIP_GetPinProperties, METH_VARARGS, RMIP_GetPinProperties__doc__},
+	{"SetPinProperties", (PyCFunction)RMIP_SetPinProperties, METH_VARARGS, RMIP_SetPinProperties__doc__},
+	{"Encode", (PyCFunction)RMIP_Encode, METH_VARARGS, RMIP_Encode__doc__},
+	{"GetPreferredAudioSourceProperties", (PyCFunction)RMIP_GetPreferredAudioSourceProperties, METH_VARARGS, RMIP_GetPreferredAudioSourceProperties__doc__},
+	{"GetSuggestedInputSize", (PyCFunction)RMIP_GetSuggestedInputSize, METH_VARARGS, RMIP_GetSuggestedInputSize__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
+};
+
+static struct PyMethodDef RMVIP_methods[] = {
+	{"GetOutputMimeType", (PyCFunction)RMIP_GetOutputMimeType, METH_VARARGS, RMIP_GetOutputMimeType__doc__},
+	{"GetPinProperties", (PyCFunction)RMIP_GetPinProperties, METH_VARARGS, RMIP_GetPinProperties__doc__},
+	{"SetPinProperties", (PyCFunction)RMIP_SetPinProperties, METH_VARARGS, RMIP_SetPinProperties__doc__},
+	{"Encode", (PyCFunction)RMIP_Encode, METH_VARARGS, RMIP_Encode__doc__},
+	{"GetClippingSize", (PyCFunction)RMIP_GetClippingSize, METH_VARARGS, RMIP_GetClippingSize__doc__},
+	{"GetPreferredInputFrameRate", (PyCFunction)RMIP_GetPreferredInputFrameRate, METH_VARARGS, RMIP_GetPreferredInputFrameRate__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
 };
 
 /* ---------- */
@@ -1196,10 +1406,17 @@ static PyObject *
 RMIP_getattr(RMIPobject *self, char *name)
 {
 	/* XXXX Add your own getattr code here */
-	return Py_FindMethod(RMIP_methods, (PyObject *)self, name);
+	switch (self->pintype) {
+	case AUDIO:
+		return Py_FindMethod(RMAIP_methods, (PyObject *)self, name);
+	case VIDEO:
+		return Py_FindMethod(RMVIP_methods, (PyObject *)self, name);
+	default:
+		return Py_FindMethod(RMIP_methods, (PyObject *)self, name);
+	}
 }
 
-static char RMIPtype__doc__[] = 
+static char RMIPtype__doc__[] =
 ""
 ;
 
@@ -1254,9 +1471,9 @@ RMVIPF_GetEncodeDecision(RMVIPFobject *self, PyObject *args)
 }
 
 static struct PyMethodDef RMVIPF_methods[] = {
-	{"GetEncodeDecision",	(PyCFunction)RMVIPF_GetEncodeDecision,	METH_VARARGS,	RMVIPF_GetEncodeDecision__doc__},
- 
-	{NULL,		NULL}		/* sentinel */
+	{"GetEncodeDecision", (PyCFunction)RMVIPF_GetEncodeDecision, METH_VARARGS, RMVIPF_GetEncodeDecision__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
 };
 
 /* ---------- */
@@ -1280,7 +1497,7 @@ RMVIPF_getattr(RMVIPFobject *self, char *name)
 	return Py_FindMethod(RMVIPF_methods, (PyObject *)self, name);
 }
 
-static char RMVIPFtype__doc__[] = 
+static char RMVIPFtype__doc__[] =
 ""
 ;
 
@@ -1313,7 +1530,7 @@ static PyTypeObject RMVIPFtype = {
 /* -------------------------------------------------------- */
 
 
-static char RMTS_GetType__doc__[] = 
+static char RMTS_GetType__doc__[] =
 ""
 ;
 
@@ -1324,40 +1541,40 @@ RMTS_GetType(RMTSobject *self, PyObject *args)
 }
 
 
-static char RMTS_AddTargetAudience__doc__[] = 
+static char RMTS_AddTargetAudience__doc__[] =
 ""
 ;
 
 static PyObject *
 RMTS_AddTargetAudience(RMTSobject *self, PyObject *args)
 {
-	SETIVALUE((IRMABasicTargetSettings *) self->targetSettings, AddTargetAudience, UINT32);
+	SETIVALUE(self->basicTargetSettings, AddTargetAudience, UINT32);
 }
 
 
-static char RMTS_RemoveTargetAudience__doc__[] = 
+static char RMTS_RemoveTargetAudience__doc__[] =
 ""
 ;
 
 static PyObject *
 RMTS_RemoveTargetAudience(RMTSobject *self, PyObject *args)
 {
-	SETIVALUE((IRMABasicTargetSettings *) self->targetSettings, RemoveTargetAudience, UINT32);
+	SETIVALUE(self->basicTargetSettings, RemoveTargetAudience, UINT32);
 }
 
 
-static char RMTS_RemoveAllTargetAudiences__doc__[] = 
+static char RMTS_RemoveAllTargetAudiences__doc__[] =
 ""
 ;
 
 static PyObject *
 RMTS_RemoveAllTargetAudiences(RMTSobject *self, PyObject *args)
 {
-	CALLFUNC((IRMABasicTargetSettings *) self->targetSettings, RemoveAllTargetAudiences);
+	CALLFUNC(self->basicTargetSettings, RemoveAllTargetAudiences);
 }
 
 
-static char RMTS_GetTargetAudienceCount__doc__[] = 
+static char RMTS_GetTargetAudienceCount__doc__[] =
 ""
 ;
 
@@ -1369,7 +1586,7 @@ RMTS_GetTargetAudienceCount(RMTSobject *self, PyObject *args)
 
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	res = ((IRMABasicTargetSettings *) self->targetSettings)->GetTargetAudienceCount(&count);
+	res = self->basicTargetSettings->GetTargetAudienceCount(&count);
 	if (!SUCCEEDED(res)) {
 		seterror("GetTargetAudienceCount", res);
 		return NULL;
@@ -1378,7 +1595,7 @@ RMTS_GetTargetAudienceCount(RMTSobject *self, PyObject *args)
 }
 
 
-static char RMTS_GetNthTargetAudience__doc__[] = 
+static char RMTS_GetNthTargetAudience__doc__[] =
 ""
 ;
 
@@ -1391,7 +1608,7 @@ RMTS_GetNthTargetAudience(RMTSobject *self, PyObject *args)
 
 	if (!PyArg_ParseTuple(args, "l", &index))
 		return NULL;
-	res = ((IRMABasicTargetSettings *) self->targetSettings)->GetNthTargetAudience((UINT32) index, &count);
+	res = self->basicTargetSettings->GetNthTargetAudience((UINT32) index, &count);
 	if (!SUCCEEDED(res)) {
 		seterror("GetNthTargetAudience", res);
 		return NULL;
@@ -1400,7 +1617,7 @@ RMTS_GetNthTargetAudience(RMTSobject *self, PyObject *args)
 }
 
 
-static char RMTS_GetAudioContent__doc__[] = 
+static char RMTS_GetAudioContent__doc__[] =
 ""
 ;
 
@@ -1412,7 +1629,7 @@ RMTS_GetAudioContent(RMTSobject *self, PyObject *args)
 
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	res = ((IRMABasicTargetSettings *) self->targetSettings)->GetAudioContent(&content);
+	res = self->basicTargetSettings->GetAudioContent(&content);
 	if (!SUCCEEDED(res)) {
 		seterror("GetAudioContent", res);
 		return NULL;
@@ -1421,18 +1638,18 @@ RMTS_GetAudioContent(RMTSobject *self, PyObject *args)
 }
 
 
-static char RMTS_SetAudioContent__doc__[] = 
+static char RMTS_SetAudioContent__doc__[] =
 ""
 ;
 
 static PyObject *
 RMTS_SetAudioContent(RMTSobject *self, PyObject *args)
 {
-	SETIVALUE((IRMABasicTargetSettings *) self->targetSettings, SetAudioContent, UINT32);
+	SETIVALUE(self->basicTargetSettings, SetAudioContent, UINT32);
 }
 
 
-static char RMTS_GetVideoQuality__doc__[] = 
+static char RMTS_GetVideoQuality__doc__[] =
 ""
 ;
 
@@ -1444,7 +1661,7 @@ RMTS_GetVideoQuality(RMTSobject *self, PyObject *args)
 
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	res = ((IRMABasicTargetSettings *) self->targetSettings)->GetVideoQuality(&quality);
+	res = self->basicTargetSettings->GetVideoQuality(&quality);
 	if (!SUCCEEDED(res)) {
 		seterror("GetVideoQuality", res);
 		return NULL;
@@ -1453,18 +1670,18 @@ RMTS_GetVideoQuality(RMTSobject *self, PyObject *args)
 }
 
 
-static char RMTS_SetVideoQuality__doc__[] = 
+static char RMTS_SetVideoQuality__doc__[] =
 ""
 ;
 
 static PyObject *
 RMTS_SetVideoQuality(RMTSobject *self, PyObject *args)
 {
-	SETIVALUE((IRMABasicTargetSettings *) self->targetSettings, SetVideoQuality, UINT32);
+	SETIVALUE(self->basicTargetSettings, SetVideoQuality, UINT32);
 }
 
 
-static char RMTS_GetPlayerCompatibility__doc__[] = 
+static char RMTS_GetPlayerCompatibility__doc__[] =
 ""
 ;
 
@@ -1476,7 +1693,7 @@ RMTS_GetPlayerCompatibility(RMTSobject *self, PyObject *args)
 
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	res = ((IRMABasicTargetSettings *) self->targetSettings)->GetPlayerCompatibility(&version);
+	res = self->basicTargetSettings->GetPlayerCompatibility(&version);
 	if (!SUCCEEDED(res)) {
 		seterror("GetPlayerCompatibility", res);
 		return NULL;
@@ -1485,80 +1702,80 @@ RMTS_GetPlayerCompatibility(RMTSobject *self, PyObject *args)
 }
 
 
-static char RMTS_SetPlayerCompatibility__doc__[] = 
+static char RMTS_SetPlayerCompatibility__doc__[] =
 ""
 ;
 
 static PyObject *
 RMTS_SetPlayerCompatibility(RMTSobject *self, PyObject *args)
 {
-	SETIVALUE((IRMABasicTargetSettings *) self->targetSettings, SetPlayerCompatibility, UINT32);
+	SETIVALUE(self->basicTargetSettings, SetPlayerCompatibility, UINT32);
 }
 
 
-static char RMTS_GetEmphasizeAudio__doc__[] = 
+static char RMTS_GetEmphasizeAudio__doc__[] =
 ""
 ;
 
 static PyObject *
 RMTS_GetEmphasizeAudio(RMTSobject *self, PyObject *args)
 {
-	GETIVALUE((IRMABasicTargetSettings *) self->targetSettings, GetEmphasizeAudio, BOOL);
+	GETIVALUE(self->basicTargetSettings, GetEmphasizeAudio, BOOL);
 }
 
 
-static char RMTS_SetEmphasizeAudio__doc__[] = 
+static char RMTS_SetEmphasizeAudio__doc__[] =
 ""
 ;
 
 static PyObject *
 RMTS_SetEmphasizeAudio(RMTSobject *self, PyObject *args)
 {
-	SETIVALUE((IRMABasicTargetSettings *) self->targetSettings, SetEmphasizeAudio, BOOL);
+	SETIVALUE(self->basicTargetSettings, SetEmphasizeAudio, BOOL);
 }
 
 
-static char RMTS_GetDoAudioOnlyMultimedia__doc__[] = 
+static char RMTS_GetDoAudioOnlyMultimedia__doc__[] =
 ""
 ;
 
 static PyObject *
 RMTS_GetDoAudioOnlyMultimedia(RMTSobject *self, PyObject *args)
 {
-	GETIVALUE((IRMABasicTargetSettings *) self->targetSettings, GetDoAudioOnlyMultimedia, BOOL);
+	GETIVALUE(self->basicTargetSettings, GetDoAudioOnlyMultimedia, BOOL);
 }
 
 
-static char RMTS_SetDoAudioOnlyMultimedia__doc__[] = 
+static char RMTS_SetDoAudioOnlyMultimedia__doc__[] =
 ""
 ;
 
 static PyObject *
 RMTS_SetDoAudioOnlyMultimedia(RMTSobject *self, PyObject *args)
 {
-	SETIVALUE((IRMABasicTargetSettings *) self->targetSettings, SetDoAudioOnlyMultimedia, BOOL);
+	SETIVALUE(self->basicTargetSettings, SetDoAudioOnlyMultimedia, BOOL);
 }
 
 
 static struct PyMethodDef RMTS_methods[] = {
-	{"GetType",	(PyCFunction)RMTS_GetType,	METH_VARARGS,	RMTS_GetType__doc__},
- {"AddTargetAudience",	(PyCFunction)RMTS_AddTargetAudience,	METH_VARARGS,	RMTS_AddTargetAudience__doc__},
- {"RemoveTargetAudience",	(PyCFunction)RMTS_RemoveTargetAudience,	METH_VARARGS,	RMTS_RemoveTargetAudience__doc__},
- {"RemoveAllTargetAudiences",	(PyCFunction)RMTS_RemoveAllTargetAudiences,	METH_VARARGS,	RMTS_RemoveAllTargetAudiences__doc__},
- {"GetTargetAudienceCount",	(PyCFunction)RMTS_GetTargetAudienceCount,	METH_VARARGS,	RMTS_GetTargetAudienceCount__doc__},
- {"GetNthTargetAudience",	(PyCFunction)RMTS_GetNthTargetAudience,	METH_VARARGS,	RMTS_GetNthTargetAudience__doc__},
- {"GetAudioContent",	(PyCFunction)RMTS_GetAudioContent,	METH_VARARGS,	RMTS_GetAudioContent__doc__},
- {"SetAudioContent",	(PyCFunction)RMTS_SetAudioContent,	METH_VARARGS,	RMTS_SetAudioContent__doc__},
- {"GetVideoQuality",	(PyCFunction)RMTS_GetVideoQuality,	METH_VARARGS,	RMTS_GetVideoQuality__doc__},
- {"SetVideoQuality",	(PyCFunction)RMTS_SetVideoQuality,	METH_VARARGS,	RMTS_SetVideoQuality__doc__},
- {"GetPlayerCompatibility",	(PyCFunction)RMTS_GetPlayerCompatibility,	METH_VARARGS,	RMTS_GetPlayerCompatibility__doc__},
- {"SetPlayerCompatibility",	(PyCFunction)RMTS_SetPlayerCompatibility,	METH_VARARGS,	RMTS_SetPlayerCompatibility__doc__},
- {"GetEmphasizeAudio",	(PyCFunction)RMTS_GetEmphasizeAudio,	METH_VARARGS,	RMTS_GetEmphasizeAudio__doc__},
- {"SetEmphasizeAudio",	(PyCFunction)RMTS_SetEmphasizeAudio,	METH_VARARGS,	RMTS_SetEmphasizeAudio__doc__},
- {"GetDoAudioOnlyMultimedia",	(PyCFunction)RMTS_GetDoAudioOnlyMultimedia,	METH_VARARGS,	RMTS_GetDoAudioOnlyMultimedia__doc__},
- {"SetDoAudioOnlyMultimedia",	(PyCFunction)RMTS_SetDoAudioOnlyMultimedia,	METH_VARARGS,	RMTS_SetDoAudioOnlyMultimedia__doc__},
- 
-	{NULL,		NULL}		/* sentinel */
+	{"GetType", (PyCFunction)RMTS_GetType, METH_VARARGS, RMTS_GetType__doc__},
+	{"AddTargetAudience", (PyCFunction)RMTS_AddTargetAudience, METH_VARARGS, RMTS_AddTargetAudience__doc__},
+	{"RemoveTargetAudience", (PyCFunction)RMTS_RemoveTargetAudience, METH_VARARGS, RMTS_RemoveTargetAudience__doc__},
+	{"RemoveAllTargetAudiences", (PyCFunction)RMTS_RemoveAllTargetAudiences, METH_VARARGS, RMTS_RemoveAllTargetAudiences__doc__},
+	{"GetTargetAudienceCount", (PyCFunction)RMTS_GetTargetAudienceCount, METH_VARARGS, RMTS_GetTargetAudienceCount__doc__},
+	{"GetNthTargetAudience", (PyCFunction)RMTS_GetNthTargetAudience, METH_VARARGS, RMTS_GetNthTargetAudience__doc__},
+	{"GetAudioContent", (PyCFunction)RMTS_GetAudioContent, METH_VARARGS, RMTS_GetAudioContent__doc__},
+	{"SetAudioContent", (PyCFunction)RMTS_SetAudioContent, METH_VARARGS, RMTS_SetAudioContent__doc__},
+	{"GetVideoQuality", (PyCFunction)RMTS_GetVideoQuality, METH_VARARGS, RMTS_GetVideoQuality__doc__},
+	{"SetVideoQuality", (PyCFunction)RMTS_SetVideoQuality, METH_VARARGS, RMTS_SetVideoQuality__doc__},
+	{"GetPlayerCompatibility", (PyCFunction)RMTS_GetPlayerCompatibility, METH_VARARGS, RMTS_GetPlayerCompatibility__doc__},
+	{"SetPlayerCompatibility", (PyCFunction)RMTS_SetPlayerCompatibility, METH_VARARGS, RMTS_SetPlayerCompatibility__doc__},
+	{"GetEmphasizeAudio", (PyCFunction)RMTS_GetEmphasizeAudio, METH_VARARGS, RMTS_GetEmphasizeAudio__doc__},
+	{"SetEmphasizeAudio", (PyCFunction)RMTS_SetEmphasizeAudio, METH_VARARGS, RMTS_SetEmphasizeAudio__doc__},
+	{"GetDoAudioOnlyMultimedia", (PyCFunction)RMTS_GetDoAudioOnlyMultimedia, METH_VARARGS, RMTS_GetDoAudioOnlyMultimedia__doc__},
+	{"SetDoAudioOnlyMultimedia", (PyCFunction)RMTS_SetDoAudioOnlyMultimedia, METH_VARARGS, RMTS_SetDoAudioOnlyMultimedia__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
 };
 
 /* ---------- */
@@ -1568,6 +1785,10 @@ static void
 RMTS_dealloc(RMTSobject *self)
 {
 	/* XXXX Add your own cleanup code here */
+	if (self->basicTargetSettings) {
+		PN_RELEASE(self->basicTargetSettings);
+		self->basicTargetSettings = NULL;
+	}
 	if (self->targetSettings) {
 		PN_RELEASE(self->targetSettings);
 		self->targetSettings = NULL;
@@ -1582,7 +1803,7 @@ RMTS_getattr(RMTSobject *self, char *name)
 	return Py_FindMethod(RMTS_methods, (PyObject *)self, name);
 }
 
-static char RMTStype__doc__[] = 
+static char RMTStype__doc__[] =
 ""
 ;
 
@@ -1615,7 +1836,7 @@ static PyTypeObject RMTStype = {
 /* -------------------------------------------------------- */
 
 
-static char RMCP_GetDoOutputFile__doc__[] = 
+static char RMCP_GetDoOutputFile__doc__[] =
 ""
 ;
 
@@ -1626,7 +1847,7 @@ RMCP_GetDoOutputFile(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_SetDoOutputFile__doc__[] = 
+static char RMCP_SetDoOutputFile__doc__[] =
 ""
 ;
 
@@ -1637,7 +1858,7 @@ RMCP_SetDoOutputFile(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_GetDoOutputServer__doc__[] = 
+static char RMCP_GetDoOutputServer__doc__[] =
 ""
 ;
 
@@ -1648,7 +1869,7 @@ RMCP_GetDoOutputServer(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_SetDoOutputServer__doc__[] = 
+static char RMCP_SetDoOutputServer__doc__[] =
 ""
 ;
 
@@ -1659,7 +1880,7 @@ RMCP_SetDoOutputServer(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_GetOutputFilename__doc__[] = 
+static char RMCP_GetOutputFilename__doc__[] =
 ""
 ;
 
@@ -1670,7 +1891,7 @@ RMCP_GetOutputFilename(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_SetOutputFilename__doc__[] = 
+static char RMCP_SetOutputFilename__doc__[] =
 ""
 ;
 
@@ -1692,7 +1913,7 @@ RMCP_SetOutputFilename(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_GetOutputServerInfo__doc__[] = 
+static char RMCP_GetOutputServerInfo__doc__[] =
 ""
 ;
 
@@ -1714,7 +1935,7 @@ RMCP_GetOutputServerInfo(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_SetOutputServerInfo__doc__[] = 
+static char RMCP_SetOutputServerInfo__doc__[] =
 ""
 ;
 
@@ -1737,7 +1958,7 @@ RMCP_SetOutputServerInfo(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_GetTitle__doc__[] = 
+static char RMCP_GetTitle__doc__[] =
 ""
 ;
 
@@ -1748,7 +1969,7 @@ RMCP_GetTitle(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_SetTitle__doc__[] = 
+static char RMCP_SetTitle__doc__[] =
 ""
 ;
 
@@ -1759,7 +1980,7 @@ RMCP_SetTitle(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_GetAuthor__doc__[] = 
+static char RMCP_GetAuthor__doc__[] =
 ""
 ;
 
@@ -1770,7 +1991,7 @@ RMCP_GetAuthor(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_SetAuthor__doc__[] = 
+static char RMCP_SetAuthor__doc__[] =
 ""
 ;
 
@@ -1781,7 +2002,7 @@ RMCP_SetAuthor(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_GetCopyright__doc__[] = 
+static char RMCP_GetCopyright__doc__[] =
 ""
 ;
 
@@ -1792,7 +2013,7 @@ RMCP_GetCopyright(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_SetCopyright__doc__[] = 
+static char RMCP_SetCopyright__doc__[] =
 ""
 ;
 
@@ -1803,7 +2024,7 @@ RMCP_SetCopyright(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_GetComment__doc__[] = 
+static char RMCP_GetComment__doc__[] =
 ""
 ;
 
@@ -1814,7 +2035,7 @@ RMCP_GetComment(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_SetComment__doc__[] = 
+static char RMCP_SetComment__doc__[] =
 ""
 ;
 
@@ -1825,7 +2046,7 @@ RMCP_SetComment(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_GetSelectiveRecord__doc__[] = 
+static char RMCP_GetSelectiveRecord__doc__[] =
 ""
 ;
 
@@ -1836,7 +2057,7 @@ RMCP_GetSelectiveRecord(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_SetSelectiveRecord__doc__[] = 
+static char RMCP_SetSelectiveRecord__doc__[] =
 ""
 ;
 
@@ -1847,7 +2068,7 @@ RMCP_SetSelectiveRecord(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_GetMobilePlay__doc__[] = 
+static char RMCP_GetMobilePlay__doc__[] =
 ""
 ;
 
@@ -1858,7 +2079,7 @@ RMCP_GetMobilePlay(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_SetMobilePlay__doc__[] = 
+static char RMCP_SetMobilePlay__doc__[] =
 ""
 ;
 
@@ -1869,7 +2090,7 @@ RMCP_SetMobilePlay(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_GetPerfectPlay__doc__[] = 
+static char RMCP_GetPerfectPlay__doc__[] =
 ""
 ;
 
@@ -1880,7 +2101,7 @@ RMCP_GetPerfectPlay(RMCPobject *self, PyObject *args)
 }
 
 
-static char RMCP_SetPerfectPlay__doc__[] = 
+static char RMCP_SetPerfectPlay__doc__[] =
 ""
 ;
 
@@ -1892,30 +2113,30 @@ RMCP_SetPerfectPlay(RMCPobject *self, PyObject *args)
 
 
 static struct PyMethodDef RMCP_methods[] = {
-	{"GetDoOutputFile",	(PyCFunction)RMCP_GetDoOutputFile,	METH_VARARGS,	RMCP_GetDoOutputFile__doc__},
- {"SetDoOutputFile",	(PyCFunction)RMCP_SetDoOutputFile,	METH_VARARGS,	RMCP_SetDoOutputFile__doc__},
- {"GetDoOutputServer",	(PyCFunction)RMCP_GetDoOutputServer,	METH_VARARGS,	RMCP_GetDoOutputServer__doc__},
- {"SetDoOutputServer",	(PyCFunction)RMCP_SetDoOutputServer,	METH_VARARGS,	RMCP_SetDoOutputServer__doc__},
- {"GetOutputFilename",	(PyCFunction)RMCP_GetOutputFilename,	METH_VARARGS,	RMCP_GetOutputFilename__doc__},
- {"SetOutputFilename",	(PyCFunction)RMCP_SetOutputFilename,	METH_VARARGS,	RMCP_SetOutputFilename__doc__},
- {"GetOutputServerInfo",	(PyCFunction)RMCP_GetOutputServerInfo,	METH_VARARGS,	RMCP_GetOutputServerInfo__doc__},
- {"SetOutputServerInfo",	(PyCFunction)RMCP_SetOutputServerInfo,	METH_VARARGS,	RMCP_SetOutputServerInfo__doc__},
- {"GetTitle",	(PyCFunction)RMCP_GetTitle,	METH_VARARGS,	RMCP_GetTitle__doc__},
- {"SetTitle",	(PyCFunction)RMCP_SetTitle,	METH_VARARGS,	RMCP_SetTitle__doc__},
- {"GetAuthor",	(PyCFunction)RMCP_GetAuthor,	METH_VARARGS,	RMCP_GetAuthor__doc__},
- {"SetAuthor",	(PyCFunction)RMCP_SetAuthor,	METH_VARARGS,	RMCP_SetAuthor__doc__},
- {"GetCopyright",	(PyCFunction)RMCP_GetCopyright,	METH_VARARGS,	RMCP_GetCopyright__doc__},
- {"SetCopyright",	(PyCFunction)RMCP_SetCopyright,	METH_VARARGS,	RMCP_SetCopyright__doc__},
- {"GetComment",	(PyCFunction)RMCP_GetComment,	METH_VARARGS,	RMCP_GetComment__doc__},
- {"SetComment",	(PyCFunction)RMCP_SetComment,	METH_VARARGS,	RMCP_SetComment__doc__},
- {"GetSelectiveRecord",	(PyCFunction)RMCP_GetSelectiveRecord,	METH_VARARGS,	RMCP_GetSelectiveRecord__doc__},
- {"SetSelectiveRecord",	(PyCFunction)RMCP_SetSelectiveRecord,	METH_VARARGS,	RMCP_SetSelectiveRecord__doc__},
- {"GetMobilePlay",	(PyCFunction)RMCP_GetMobilePlay,	METH_VARARGS,	RMCP_GetMobilePlay__doc__},
- {"SetMobilePlay",	(PyCFunction)RMCP_SetMobilePlay,	METH_VARARGS,	RMCP_SetMobilePlay__doc__},
- {"GetPerfectPlay",	(PyCFunction)RMCP_GetPerfectPlay,	METH_VARARGS,	RMCP_GetPerfectPlay__doc__},
- {"SetPerfectPlay",	(PyCFunction)RMCP_SetPerfectPlay,	METH_VARARGS,	RMCP_SetPerfectPlay__doc__},
- 
-	{NULL,		NULL}		/* sentinel */
+	{"GetDoOutputFile", (PyCFunction)RMCP_GetDoOutputFile, METH_VARARGS, RMCP_GetDoOutputFile__doc__},
+	{"SetDoOutputFile", (PyCFunction)RMCP_SetDoOutputFile, METH_VARARGS, RMCP_SetDoOutputFile__doc__},
+	{"GetDoOutputServer", (PyCFunction)RMCP_GetDoOutputServer, METH_VARARGS, RMCP_GetDoOutputServer__doc__},
+	{"SetDoOutputServer", (PyCFunction)RMCP_SetDoOutputServer, METH_VARARGS, RMCP_SetDoOutputServer__doc__},
+	{"GetOutputFilename", (PyCFunction)RMCP_GetOutputFilename, METH_VARARGS, RMCP_GetOutputFilename__doc__},
+	{"SetOutputFilename", (PyCFunction)RMCP_SetOutputFilename, METH_VARARGS, RMCP_SetOutputFilename__doc__},
+	{"GetOutputServerInfo", (PyCFunction)RMCP_GetOutputServerInfo, METH_VARARGS, RMCP_GetOutputServerInfo__doc__},
+	{"SetOutputServerInfo", (PyCFunction)RMCP_SetOutputServerInfo, METH_VARARGS, RMCP_SetOutputServerInfo__doc__},
+	{"GetTitle", (PyCFunction)RMCP_GetTitle, METH_VARARGS, RMCP_GetTitle__doc__},
+	{"SetTitle", (PyCFunction)RMCP_SetTitle, METH_VARARGS, RMCP_SetTitle__doc__},
+	{"GetAuthor", (PyCFunction)RMCP_GetAuthor, METH_VARARGS, RMCP_GetAuthor__doc__},
+	{"SetAuthor", (PyCFunction)RMCP_SetAuthor, METH_VARARGS, RMCP_SetAuthor__doc__},
+	{"GetCopyright", (PyCFunction)RMCP_GetCopyright, METH_VARARGS, RMCP_GetCopyright__doc__},
+	{"SetCopyright", (PyCFunction)RMCP_SetCopyright, METH_VARARGS, RMCP_SetCopyright__doc__},
+	{"GetComment", (PyCFunction)RMCP_GetComment, METH_VARARGS, RMCP_GetComment__doc__},
+	{"SetComment", (PyCFunction)RMCP_SetComment, METH_VARARGS, RMCP_SetComment__doc__},
+	{"GetSelectiveRecord", (PyCFunction)RMCP_GetSelectiveRecord, METH_VARARGS, RMCP_GetSelectiveRecord__doc__},
+	{"SetSelectiveRecord", (PyCFunction)RMCP_SetSelectiveRecord, METH_VARARGS, RMCP_SetSelectiveRecord__doc__},
+	{"GetMobilePlay", (PyCFunction)RMCP_GetMobilePlay, METH_VARARGS, RMCP_GetMobilePlay__doc__},
+	{"SetMobilePlay", (PyCFunction)RMCP_SetMobilePlay, METH_VARARGS, RMCP_SetMobilePlay__doc__},
+	{"GetPerfectPlay", (PyCFunction)RMCP_GetPerfectPlay, METH_VARARGS, RMCP_GetPerfectPlay__doc__},
+	{"SetPerfectPlay", (PyCFunction)RMCP_SetPerfectPlay, METH_VARARGS, RMCP_SetPerfectPlay__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
 };
 
 /* ---------- */
@@ -1939,7 +2160,7 @@ RMCP_getattr(RMCPobject *self, char *name)
 	return Py_FindMethod(RMCP_methods, (PyObject *)self, name);
 }
 
-static char RMCPtype__doc__[] = 
+static char RMCPtype__doc__[] =
 ""
 ;
 
@@ -1972,7 +2193,7 @@ static PyTypeObject RMCPtype = {
 /* -------------------------------------------------------- */
 
 
-static char RMBSP_GetOutputServerInfo__doc__[] = 
+static char RMBSP_GetOutputServerInfo__doc__[] =
 ""
 ;
 
@@ -1994,7 +2215,7 @@ RMBSP_GetOutputServerInfo(RMBSPobject *self, PyObject *args)
 }
 
 
-static char RMBSP_SetOutputServerInfo__doc__[] = 
+static char RMBSP_SetOutputServerInfo__doc__[] =
 ""
 ;
 
@@ -2017,7 +2238,7 @@ RMBSP_SetOutputServerInfo(RMBSPobject *self, PyObject *args)
 }
 
 
-static char RMBSP_GetTransportProtocol__doc__[] = 
+static char RMBSP_GetTransportProtocol__doc__[] =
 ""
 ;
 
@@ -2028,7 +2249,7 @@ RMBSP_GetTransportProtocol(RMBSPobject *self, PyObject *args)
 }
 
 
-static char RMBSP_SetTransportProtocol__doc__[] = 
+static char RMBSP_SetTransportProtocol__doc__[] =
 ""
 ;
 
@@ -2040,12 +2261,12 @@ RMBSP_SetTransportProtocol(RMBSPobject *self, PyObject *args)
 
 
 static struct PyMethodDef RMBSP_methods[] = {
-	{"GetOutputServerInfo",	(PyCFunction)RMBSP_GetOutputServerInfo,	METH_VARARGS,	RMBSP_GetOutputServerInfo__doc__},
- {"SetOutputServerInfo",	(PyCFunction)RMBSP_SetOutputServerInfo,	METH_VARARGS,	RMBSP_SetOutputServerInfo__doc__},
- {"GetTransportProtocol",	(PyCFunction)RMBSP_GetTransportProtocol,	METH_VARARGS,	RMBSP_GetTransportProtocol__doc__},
- {"SetTransportProtocol",	(PyCFunction)RMBSP_SetTransportProtocol,	METH_VARARGS,	RMBSP_SetTransportProtocol__doc__},
- 
-	{NULL,		NULL}		/* sentinel */
+	{"GetOutputServerInfo", (PyCFunction)RMBSP_GetOutputServerInfo, METH_VARARGS, RMBSP_GetOutputServerInfo__doc__},
+	{"SetOutputServerInfo", (PyCFunction)RMBSP_SetOutputServerInfo, METH_VARARGS, RMBSP_SetOutputServerInfo__doc__},
+	{"GetTransportProtocol", (PyCFunction)RMBSP_GetTransportProtocol, METH_VARARGS, RMBSP_GetTransportProtocol__doc__},
+	{"SetTransportProtocol", (PyCFunction)RMBSP_SetTransportProtocol, METH_VARARGS, RMBSP_SetTransportProtocol__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
 };
 
 /* ---------- */
@@ -2069,7 +2290,7 @@ RMBSP_getattr(RMBSPobject *self, char *name)
 	return Py_FindMethod(RMBSP_methods, (PyObject *)self, name);
 }
 
-static char RMBSPtype__doc__[] = 
+static char RMBSPtype__doc__[] =
 ""
 ;
 
@@ -2102,7 +2323,7 @@ static PyTypeObject RMBSPtype = {
 /* -------------------------------------------------------- */
 
 
-static char RMPP_GetOutputMimeType__doc__[] = 
+static char RMPP_GetOutputMimeType__doc__[] =
 ""
 ;
 
@@ -2113,73 +2334,73 @@ RMPP_GetOutputMimeType(RMPPobject *self, PyObject *args)
 }
 
 
-static char RMPP_GetSampleRate__doc__[] = 
+static char RMPP_GetSampleRate__doc__[] =
 ""
 ;
 
 static PyObject *
 RMPP_GetSampleRate(RMPPobject *self, PyObject *args)
 {
-	GETIVALUE((IRMAAudioPinProperties *)self->pinProperties, GetSampleRate, UINT32);
+	GETIVALUE(self->audioPinProperties, GetSampleRate, UINT32);
 }
 
 
-static char RMPP_SetSampleRate__doc__[] = 
+static char RMPP_SetSampleRate__doc__[] =
 ""
 ;
 
 static PyObject *
 RMPP_SetSampleRate(RMPPobject *self, PyObject *args)
 {
-	SETIVALUE((IRMAAudioPinProperties *)self->pinProperties, SetSampleRate, UINT32);
+	SETIVALUE(self->audioPinProperties, SetSampleRate, UINT32);
 }
 
 
-static char RMPP_GetSampleSize__doc__[] = 
+static char RMPP_GetSampleSize__doc__[] =
 ""
 ;
 
 static PyObject *
 RMPP_GetSampleSize(RMPPobject *self, PyObject *args)
 {
-	GETIVALUE((IRMAAudioPinProperties *)self->pinProperties, GetSampleSize, UINT32);
+	GETIVALUE(self->audioPinProperties, GetSampleSize, UINT32);
 }
 
 
-static char RMPP_SetSampleSize__doc__[] = 
+static char RMPP_SetSampleSize__doc__[] =
 ""
 ;
 
 static PyObject *
 RMPP_SetSampleSize(RMPPobject *self, PyObject *args)
 {
-	SETIVALUE((IRMAAudioPinProperties *)self->pinProperties, SetSampleSize, UINT32);
+	SETIVALUE(self->audioPinProperties, SetSampleSize, UINT32);
 }
 
 
-static char RMPP_GetNumChannels__doc__[] = 
+static char RMPP_GetNumChannels__doc__[] =
 ""
 ;
 
 static PyObject *
 RMPP_GetNumChannels(RMPPobject *self, PyObject *args)
 {
-	GETIVALUE((IRMAAudioPinProperties *)self->pinProperties, GetNumChannels, UINT32);
+	GETIVALUE(self->audioPinProperties, GetNumChannels, UINT32);
 }
 
 
-static char RMPP_SetNumChannels__doc__[] = 
+static char RMPP_SetNumChannels__doc__[] =
 ""
 ;
 
 static PyObject *
 RMPP_SetNumChannels(RMPPobject *self, PyObject *args)
 {
-	SETIVALUE((IRMAAudioPinProperties *)self->pinProperties, SetNumChannels, UINT32);
+	SETIVALUE(self->audioPinProperties, SetNumChannels, UINT32);
 }
 
 
-static char RMPP_GetVideoSize__doc__[] = 
+static char RMPP_GetVideoSize__doc__[] =
 ""
 ;
 
@@ -2191,7 +2412,7 @@ RMPP_GetVideoSize(RMPPobject *self, PyObject *args)
 
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	res = ((IRMAVideoPinProperties *)self->pinProperties)->GetVideoSize(&width, &height);
+	res = (self->videoPinProperties)->GetVideoSize(&width, &height);
 	if (!SUCCEEDED(res)) {
 		seterror("GetVideoSize", res);
 		return NULL;
@@ -2200,7 +2421,7 @@ RMPP_GetVideoSize(RMPPobject *self, PyObject *args)
 }
 
 
-static char RMPP_SetVideoSize__doc__[] = 
+static char RMPP_SetVideoSize__doc__[] =
 ""
 ;
 
@@ -2222,51 +2443,51 @@ RMPP_SetVideoSize(RMPPobject *self, PyObject *args)
 }
 
 
-static char RMPP_GetVideoFormat__doc__[] = 
+static char RMPP_GetVideoFormat__doc__[] =
 ""
 ;
 
 static PyObject *
 RMPP_GetVideoFormat(RMPPobject *self, PyObject *args)
 {
-	GETIVALUE((IRMAVideoPinProperties *)self->pinProperties, GetVideoFormat, UINT32);
+	GETIVALUE(self->videoPinProperties, GetVideoFormat, UINT32);
 }
 
 
-static char RMPP_SetVideoFormat__doc__[] = 
+static char RMPP_SetVideoFormat__doc__[] =
 ""
 ;
 
 static PyObject *
 RMPP_SetVideoFormat(RMPPobject *self, PyObject *args)
 {
-	SETIVALUE((IRMAVideoPinProperties *)self->pinProperties, SetVideoFormat, UINT32);
+	SETIVALUE(self->videoPinProperties, SetVideoFormat, UINT32);
 }
 
 
-static char RMPP_GetCroppingEnabled__doc__[] = 
+static char RMPP_GetCroppingEnabled__doc__[] =
 ""
 ;
 
 static PyObject *
 RMPP_GetCroppingEnabled(RMPPobject *self, PyObject *args)
 {
-	GETIVALUE((IRMAVideoPinProperties *)self->pinProperties, GetCroppingEnabled, BOOL);
+	GETIVALUE(self->videoPinProperties, GetCroppingEnabled, BOOL);
 }
 
 
-static char RMPP_SetCroppingEnabled__doc__[] = 
+static char RMPP_SetCroppingEnabled__doc__[] =
 ""
 ;
 
 static PyObject *
 RMPP_SetCroppingEnabled(RMPPobject *self, PyObject *args)
 {
-	SETIVALUE((IRMAVideoPinProperties *)self->pinProperties, SetCroppingEnabled, BOOL);
+	SETIVALUE(self->videoPinProperties, SetCroppingEnabled, BOOL);
 }
 
 
-static char RMPP_GetCroppingSize__doc__[] = 
+static char RMPP_GetCroppingSize__doc__[] =
 ""
 ;
 
@@ -2287,7 +2508,7 @@ RMPP_GetCroppingSize(RMPPobject *self, PyObject *args)
 }
 
 
-static char RMPP_SetCroppingSize__doc__[] = 
+static char RMPP_SetCroppingSize__doc__[] =
 ""
 ;
 
@@ -2299,7 +2520,7 @@ RMPP_SetCroppingSize(RMPPobject *self, PyObject *args)
 
 	if (!PyArg_ParseTuple(args, "llll", &left, &top, &width, &height))
 		return NULL;
-	res = ((IRMAVideoPinProperties *)self->pinProperties)->SetCroppingSize((UINT32) left, (UINT32) top, (UINT32) width, (UINT32) height);
+	res = (self->videoPinProperties)->SetCroppingSize((UINT32) left, (UINT32) top, (UINT32) width, (UINT32) height);
 	if (!SUCCEEDED(res)) {
 		seterror("SetCroppingSize", res);
 		return NULL;
@@ -2309,48 +2530,58 @@ RMPP_SetCroppingSize(RMPPobject *self, PyObject *args)
 }
 
 
-static char RMPP_GetFrameRate__doc__[] = 
+static char RMPP_GetFrameRate__doc__[] =
 ""
 ;
 
 static PyObject *
 RMPP_GetFrameRate(RMPPobject *self, PyObject *args)
 {
-	GETFVALUE((IRMAVideoPinProperties *)self->pinProperties, GetFrameRate);
+	GETFVALUE(self->videoPinProperties, GetFrameRate);
 }
 
 
-static char RMPP_SetFrameRate__doc__[] = 
+static char RMPP_SetFrameRate__doc__[] =
 ""
 ;
 
 static PyObject *
 RMPP_SetFrameRate(RMPPobject *self, PyObject *args)
 {
-	SETFVALUE((IRMAVideoPinProperties *)self->pinProperties, SetFrameRate);
+	SETFVALUE(self->videoPinProperties, SetFrameRate);
 }
 
 
 static struct PyMethodDef RMPP_methods[] = {
-	{"GetOutputMimeType",	(PyCFunction)RMPP_GetOutputMimeType,	METH_VARARGS,	RMPP_GetOutputMimeType__doc__},
- {"GetSampleRate",	(PyCFunction)RMPP_GetSampleRate,	METH_VARARGS,	RMPP_GetSampleRate__doc__},
- {"SetSampleRate",	(PyCFunction)RMPP_SetSampleRate,	METH_VARARGS,	RMPP_SetSampleRate__doc__},
- {"GetSampleSize",	(PyCFunction)RMPP_GetSampleSize,	METH_VARARGS,	RMPP_GetSampleSize__doc__},
- {"SetSampleSize",	(PyCFunction)RMPP_SetSampleSize,	METH_VARARGS,	RMPP_SetSampleSize__doc__},
- {"GetNumChannels",	(PyCFunction)RMPP_GetNumChannels,	METH_VARARGS,	RMPP_GetNumChannels__doc__},
- {"SetNumChannels",	(PyCFunction)RMPP_SetNumChannels,	METH_VARARGS,	RMPP_SetNumChannels__doc__},
- {"GetVideoSize",	(PyCFunction)RMPP_GetVideoSize,	METH_VARARGS,	RMPP_GetVideoSize__doc__},
- {"SetVideoSize",	(PyCFunction)RMPP_SetVideoSize,	METH_VARARGS,	RMPP_SetVideoSize__doc__},
- {"GetVideoFormat",	(PyCFunction)RMPP_GetVideoFormat,	METH_VARARGS,	RMPP_GetVideoFormat__doc__},
- {"SetVideoFormat",	(PyCFunction)RMPP_SetVideoFormat,	METH_VARARGS,	RMPP_SetVideoFormat__doc__},
- {"GetCroppingEnabled",	(PyCFunction)RMPP_GetCroppingEnabled,	METH_VARARGS,	RMPP_GetCroppingEnabled__doc__},
- {"SetCroppingEnabled",	(PyCFunction)RMPP_SetCroppingEnabled,	METH_VARARGS,	RMPP_SetCroppingEnabled__doc__},
- {"GetCroppingSize",	(PyCFunction)RMPP_GetCroppingSize,	METH_VARARGS,	RMPP_GetCroppingSize__doc__},
- {"SetCroppingSize",	(PyCFunction)RMPP_SetCroppingSize,	METH_VARARGS,	RMPP_SetCroppingSize__doc__},
- {"GetFrameRate",	(PyCFunction)RMPP_GetFrameRate,	METH_VARARGS,	RMPP_GetFrameRate__doc__},
- {"SetFrameRate",	(PyCFunction)RMPP_SetFrameRate,	METH_VARARGS,	RMPP_SetFrameRate__doc__},
- 
-	{NULL,		NULL}		/* sentinel */
+	{"GetOutputMimeType", (PyCFunction)RMPP_GetOutputMimeType, METH_VARARGS, RMPP_GetOutputMimeType__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
+};
+static struct PyMethodDef RMAPP_methods[] = {
+	{"GetOutputMimeType", (PyCFunction)RMPP_GetOutputMimeType, METH_VARARGS, RMPP_GetOutputMimeType__doc__},
+	{"GetSampleRate", (PyCFunction)RMPP_GetSampleRate, METH_VARARGS, RMPP_GetSampleRate__doc__},
+	{"SetSampleRate", (PyCFunction)RMPP_SetSampleRate, METH_VARARGS, RMPP_SetSampleRate__doc__},
+	{"GetSampleSize", (PyCFunction)RMPP_GetSampleSize, METH_VARARGS, RMPP_GetSampleSize__doc__},
+	{"SetSampleSize", (PyCFunction)RMPP_SetSampleSize, METH_VARARGS, RMPP_SetSampleSize__doc__},
+	{"GetNumChannels", (PyCFunction)RMPP_GetNumChannels, METH_VARARGS, RMPP_GetNumChannels__doc__},
+	{"SetNumChannels", (PyCFunction)RMPP_SetNumChannels, METH_VARARGS, RMPP_SetNumChannels__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
+};
+static struct PyMethodDef RMVPP_methods[] = {
+	{"GetOutputMimeType", (PyCFunction)RMPP_GetOutputMimeType, METH_VARARGS, RMPP_GetOutputMimeType__doc__},
+	{"GetVideoSize", (PyCFunction)RMPP_GetVideoSize, METH_VARARGS, RMPP_GetVideoSize__doc__},
+	{"SetVideoSize", (PyCFunction)RMPP_SetVideoSize, METH_VARARGS, RMPP_SetVideoSize__doc__},
+	{"GetVideoFormat", (PyCFunction)RMPP_GetVideoFormat, METH_VARARGS, RMPP_GetVideoFormat__doc__},
+	{"SetVideoFormat", (PyCFunction)RMPP_SetVideoFormat, METH_VARARGS, RMPP_SetVideoFormat__doc__},
+	{"GetCroppingEnabled", (PyCFunction)RMPP_GetCroppingEnabled, METH_VARARGS, RMPP_GetCroppingEnabled__doc__},
+	{"SetCroppingEnabled", (PyCFunction)RMPP_SetCroppingEnabled, METH_VARARGS, RMPP_SetCroppingEnabled__doc__},
+	{"GetCroppingSize", (PyCFunction)RMPP_GetCroppingSize, METH_VARARGS, RMPP_GetCroppingSize__doc__},
+	{"SetCroppingSize", (PyCFunction)RMPP_SetCroppingSize, METH_VARARGS, RMPP_SetCroppingSize__doc__},
+	{"GetFrameRate", (PyCFunction)RMPP_GetFrameRate, METH_VARARGS, RMPP_GetFrameRate__doc__},
+	{"SetFrameRate", (PyCFunction)RMPP_SetFrameRate, METH_VARARGS, RMPP_SetFrameRate__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
 };
 
 /* ---------- */
@@ -2360,6 +2591,20 @@ static void
 RMPP_dealloc(RMPPobject *self)
 {
 	/* XXXX Add your own cleanup code here */
+	switch (self->pintype) {
+	case AUDIO:
+		if (self->audioPinProperties) {
+			PN_RELEASE(self->audioPinProperties);
+			self->audioPinProperties = NULL;
+		}
+		break;
+	case VIDEO:
+		if (self->videoPinProperties) {
+			PN_RELEASE(self->videoPinProperties);
+			self->videoPinProperties = NULL;
+		}
+		break;
+	}
 	if (self->pinProperties) {
 		PN_RELEASE(self->pinProperties);
 		self->pinProperties = NULL;
@@ -2371,10 +2616,17 @@ static PyObject *
 RMPP_getattr(RMPPobject *self, char *name)
 {
 	/* XXXX Add your own getattr code here */
-	return Py_FindMethod(RMPP_methods, (PyObject *)self, name);
+	switch (self->pintype) {
+	case AUDIO:
+		return Py_FindMethod(RMAPP_methods, (PyObject *)self, name);
+	case VIDEO:
+		return Py_FindMethod(RMVPP_methods, (PyObject *)self, name);
+	default:
+		return Py_FindMethod(RMPP_methods, (PyObject *)self, name);
+	}
 }
 
-static char RMPPtype__doc__[] = 
+static char RMPPtype__doc__[] =
 ""
 ;
 
@@ -2407,7 +2659,7 @@ static PyTypeObject RMPPtype = {
 /* -------------------------------------------------------- */
 
 
-static char RMMS_SetBuffer__doc__[] = 
+static char RMMS_SetBuffer__doc__[] =
 ""
 ;
 
@@ -2415,24 +2667,27 @@ static PyObject *
 RMMS_SetBuffer(RMMSobject *self, PyObject *args)
 {
 	PN_RESULT res;
-	void *buffer;
-	int buffersize;
+	PyObject *buffer;
 	long timestamp;
 	int flags;
 
-	if (!PyArg_ParseTuple(args, "s#li", &buffer, &buffersize, &timestamp, &flags))
+	if (!PyArg_ParseTuple(args, "Sli", &buffer, &timestamp, &flags))
 		return NULL;
-	res = self->mediaSample->SetBuffer(buffer, (UINT32) buffersize, (UINT32) timestamp, (UINT16) flags);
+	Py_XDECREF(self->buffer);
+	self->buffer = NULL;
+	res = self->mediaSample->SetBuffer(PyString_AS_STRING(buffer), (UINT32) PyString_GET_SIZE(buffer), (UINT32) timestamp, (UINT16) flags);
 	if (!SUCCEEDED(res)) {
 		seterror("SetBuffer", res);
 		return NULL;
 	}
+	self->buffer = buffer;
+	Py_INCREF(buffer);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
 
-static char RMMS_GetBuffer__doc__[] = 
+static char RMMS_GetBuffer__doc__[] =
 ""
 ;
 
@@ -2462,7 +2717,7 @@ RMMS_GetBuffer(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_SetTime__doc__[] = 
+static char RMMS_SetTime__doc__[] =
 ""
 ;
 
@@ -2484,7 +2739,7 @@ RMMS_SetTime(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_SetAction__doc__[] = 
+static char RMMS_SetAction__doc__[] =
 ""
 ;
 
@@ -2507,7 +2762,7 @@ RMMS_SetAction(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_SetMapTime__doc__[] = 
+static char RMMS_SetMapTime__doc__[] =
 ""
 ;
 
@@ -2529,7 +2784,7 @@ RMMS_SetMapTime(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_SetMapSize__doc__[] = 
+static char RMMS_SetMapSize__doc__[] =
 ""
 ;
 
@@ -2551,7 +2806,7 @@ RMMS_SetMapSize(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_ResetMap__doc__[] = 
+static char RMMS_ResetMap__doc__[] =
 ""
 ;
 
@@ -2562,7 +2817,7 @@ RMMS_ResetMap(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_GetShapeHandle__doc__[] = 
+static char RMMS_GetShapeHandle__doc__[] =
 ""
 ;
 
@@ -2578,7 +2833,7 @@ RMMS_GetShapeHandle(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_ReleaseShapeHandle__doc__[] = 
+static char RMMS_ReleaseShapeHandle__doc__[] =
 ""
 ;
 
@@ -2589,7 +2844,7 @@ RMMS_ReleaseShapeHandle(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_ResetShapeHandle__doc__[] = 
+static char RMMS_ResetShapeHandle__doc__[] =
 ""
 ;
 
@@ -2600,7 +2855,7 @@ RMMS_ResetShapeHandle(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_SetShapeType__doc__[] = 
+static char RMMS_SetShapeType__doc__[] =
 ""
 ;
 
@@ -2623,7 +2878,7 @@ RMMS_SetShapeType(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_SetShapeCoordinates__doc__[] = 
+static char RMMS_SetShapeCoordinates__doc__[] =
 ""
 ;
 
@@ -2662,7 +2917,7 @@ RMMS_SetShapeCoordinates(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_AddShapeCoordinate__doc__[] = 
+static char RMMS_AddShapeCoordinate__doc__[] =
 ""
 ;
 
@@ -2685,7 +2940,7 @@ RMMS_AddShapeCoordinate(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_SetShapeActionPlayFile__doc__[] = 
+static char RMMS_SetShapeActionPlayFile__doc__[] =
 ""
 ;
 
@@ -2708,7 +2963,7 @@ RMMS_SetShapeActionPlayFile(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_SetShapeActionBrowse__doc__[] = 
+static char RMMS_SetShapeActionBrowse__doc__[] =
 ""
 ;
 
@@ -2731,7 +2986,7 @@ RMMS_SetShapeActionBrowse(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_SetShapeActionSeek__doc__[] = 
+static char RMMS_SetShapeActionSeek__doc__[] =
 ""
 ;
 
@@ -2753,7 +3008,7 @@ RMMS_SetShapeActionSeek(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_SetShapeAltText__doc__[] = 
+static char RMMS_SetShapeAltText__doc__[] =
 ""
 ;
 
@@ -2776,7 +3031,7 @@ RMMS_SetShapeAltText(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_SetShapeDuration__doc__[] = 
+static char RMMS_SetShapeDuration__doc__[] =
 ""
 ;
 
@@ -2798,7 +3053,7 @@ RMMS_SetShapeDuration(RMMSobject *self, PyObject *args)
 }
 
 
-static char RMMS_AddShape__doc__[] = 
+static char RMMS_AddShape__doc__[] =
 ""
 ;
 
@@ -2810,27 +3065,27 @@ RMMS_AddShape(RMMSobject *self, PyObject *args)
 
 
 static struct PyMethodDef RMMS_methods[] = {
-	{"SetBuffer",	(PyCFunction)RMMS_SetBuffer,	METH_VARARGS,	RMMS_SetBuffer__doc__},
- {"GetBuffer",	(PyCFunction)RMMS_GetBuffer,	METH_VARARGS,	RMMS_GetBuffer__doc__},
- {"SetTime",	(PyCFunction)RMMS_SetTime,	METH_VARARGS,	RMMS_SetTime__doc__},
- {"SetAction",	(PyCFunction)RMMS_SetAction,	METH_VARARGS,	RMMS_SetAction__doc__},
- {"SetMapTime",	(PyCFunction)RMMS_SetMapTime,	METH_VARARGS,	RMMS_SetMapTime__doc__},
- {"SetMapSize",	(PyCFunction)RMMS_SetMapSize,	METH_VARARGS,	RMMS_SetMapSize__doc__},
- {"ResetMap",	(PyCFunction)RMMS_ResetMap,	METH_VARARGS,	RMMS_ResetMap__doc__},
- {"GetShapeHandle",	(PyCFunction)RMMS_GetShapeHandle,	METH_VARARGS,	RMMS_GetShapeHandle__doc__},
- {"ReleaseShapeHandle",	(PyCFunction)RMMS_ReleaseShapeHandle,	METH_VARARGS,	RMMS_ReleaseShapeHandle__doc__},
- {"ResetShapeHandle",	(PyCFunction)RMMS_ResetShapeHandle,	METH_VARARGS,	RMMS_ResetShapeHandle__doc__},
- {"SetShapeType",	(PyCFunction)RMMS_SetShapeType,	METH_VARARGS,	RMMS_SetShapeType__doc__},
- {"SetShapeCoordinates",	(PyCFunction)RMMS_SetShapeCoordinates,	METH_VARARGS,	RMMS_SetShapeCoordinates__doc__},
- {"AddShapeCoordinate",	(PyCFunction)RMMS_AddShapeCoordinate,	METH_VARARGS,	RMMS_AddShapeCoordinate__doc__},
- {"SetShapeActionPlayFile",	(PyCFunction)RMMS_SetShapeActionPlayFile,	METH_VARARGS,	RMMS_SetShapeActionPlayFile__doc__},
- {"SetShapeActionBrowse",	(PyCFunction)RMMS_SetShapeActionBrowse,	METH_VARARGS,	RMMS_SetShapeActionBrowse__doc__},
- {"SetShapeActionSeek",	(PyCFunction)RMMS_SetShapeActionSeek,	METH_VARARGS,	RMMS_SetShapeActionSeek__doc__},
- {"SetShapeAltText",	(PyCFunction)RMMS_SetShapeAltText,	METH_VARARGS,	RMMS_SetShapeAltText__doc__},
- {"SetShapeDuration",	(PyCFunction)RMMS_SetShapeDuration,	METH_VARARGS,	RMMS_SetShapeDuration__doc__},
- {"AddShape",	(PyCFunction)RMMS_AddShape,	METH_VARARGS,	RMMS_AddShape__doc__},
- 
-	{NULL,		NULL}		/* sentinel */
+	{"SetBuffer", (PyCFunction)RMMS_SetBuffer, METH_VARARGS, RMMS_SetBuffer__doc__},
+	{"GetBuffer", (PyCFunction)RMMS_GetBuffer, METH_VARARGS, RMMS_GetBuffer__doc__},
+	{"SetTime", (PyCFunction)RMMS_SetTime, METH_VARARGS, RMMS_SetTime__doc__},
+	{"SetAction", (PyCFunction)RMMS_SetAction, METH_VARARGS, RMMS_SetAction__doc__},
+	{"SetMapTime", (PyCFunction)RMMS_SetMapTime, METH_VARARGS, RMMS_SetMapTime__doc__},
+	{"SetMapSize", (PyCFunction)RMMS_SetMapSize, METH_VARARGS, RMMS_SetMapSize__doc__},
+	{"ResetMap", (PyCFunction)RMMS_ResetMap, METH_VARARGS, RMMS_ResetMap__doc__},
+	{"GetShapeHandle", (PyCFunction)RMMS_GetShapeHandle, METH_VARARGS, RMMS_GetShapeHandle__doc__},
+	{"ReleaseShapeHandle", (PyCFunction)RMMS_ReleaseShapeHandle, METH_VARARGS, RMMS_ReleaseShapeHandle__doc__},
+	{"ResetShapeHandle", (PyCFunction)RMMS_ResetShapeHandle, METH_VARARGS, RMMS_ResetShapeHandle__doc__},
+	{"SetShapeType", (PyCFunction)RMMS_SetShapeType, METH_VARARGS, RMMS_SetShapeType__doc__},
+	{"SetShapeCoordinates", (PyCFunction)RMMS_SetShapeCoordinates, METH_VARARGS, RMMS_SetShapeCoordinates__doc__},
+	{"AddShapeCoordinate", (PyCFunction)RMMS_AddShapeCoordinate, METH_VARARGS, RMMS_AddShapeCoordinate__doc__},
+	{"SetShapeActionPlayFile", (PyCFunction)RMMS_SetShapeActionPlayFile, METH_VARARGS, RMMS_SetShapeActionPlayFile__doc__},
+	{"SetShapeActionBrowse", (PyCFunction)RMMS_SetShapeActionBrowse, METH_VARARGS, RMMS_SetShapeActionBrowse__doc__},
+	{"SetShapeActionSeek", (PyCFunction)RMMS_SetShapeActionSeek, METH_VARARGS, RMMS_SetShapeActionSeek__doc__},
+	{"SetShapeAltText", (PyCFunction)RMMS_SetShapeAltText, METH_VARARGS, RMMS_SetShapeAltText__doc__},
+	{"SetShapeDuration", (PyCFunction)RMMS_SetShapeDuration, METH_VARARGS, RMMS_SetShapeDuration__doc__},
+	{"AddShape", (PyCFunction)RMMS_AddShape, METH_VARARGS, RMMS_AddShape__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
 };
 
 /* ---------- */
@@ -2844,6 +3099,7 @@ RMMS_dealloc(RMMSobject *self)
 		PN_RELEASE(self->mediaSample);
 		self->mediaSample = NULL;
 	}
+	Py_XDECREF(self->buffer);
 	PyMem_DEL(self);
 }
 
@@ -2854,7 +3110,7 @@ RMMS_getattr(RMMSobject *self, char *name)
 	return Py_FindMethod(RMMS_methods, (PyObject *)self, name);
 }
 
-static char RMMStype__doc__[] = 
+static char RMMStype__doc__[] =
 ""
 ;
 
@@ -2887,7 +3143,7 @@ static PyTypeObject RMMStype = {
 /* -------------------------------------------------------- */
 
 
-static char RMTAM_GetTargetAudienceInfo__doc__[] = 
+static char RMTAM_GetTargetAudienceInfo__doc__[] =
 ""
 ;
 
@@ -2910,7 +3166,7 @@ RMTAM_GetTargetAudienceInfo(RMTAMobject *self, PyObject *args)
 }
 
 
-static char RMTAM_DisplayTargetAudienceSettings__doc__[] = 
+static char RMTAM_DisplayTargetAudienceSettings__doc__[] =
 ""
 ;
 
@@ -2936,7 +3192,7 @@ RMTAM_DisplayTargetAudienceSettings(RMTAMobject *self, PyObject *args)
 }
 
 
-static char RMTAM_RestoreDefaults__doc__[] = 
+static char RMTAM_RestoreDefaults__doc__[] =
 ""
 ;
 
@@ -2948,11 +3204,11 @@ RMTAM_RestoreDefaults(RMTAMobject *self, PyObject *args)
 
 
 static struct PyMethodDef RMTAM_methods[] = {
-	{"GetTargetAudienceInfo",	(PyCFunction)RMTAM_GetTargetAudienceInfo,	METH_VARARGS,	RMTAM_GetTargetAudienceInfo__doc__},
- {"DisplayTargetAudienceSettings",	(PyCFunction)RMTAM_DisplayTargetAudienceSettings,	METH_VARARGS,	RMTAM_DisplayTargetAudienceSettings__doc__},
- {"RestoreDefaults",	(PyCFunction)RMTAM_RestoreDefaults,	METH_VARARGS,	RMTAM_RestoreDefaults__doc__},
- 
-	{NULL,		NULL}		/* sentinel */
+	{"GetTargetAudienceInfo", (PyCFunction)RMTAM_GetTargetAudienceInfo, METH_VARARGS, RMTAM_GetTargetAudienceInfo__doc__},
+	{"DisplayTargetAudienceSettings", (PyCFunction)RMTAM_DisplayTargetAudienceSettings, METH_VARARGS, RMTAM_DisplayTargetAudienceSettings__doc__},
+	{"RestoreDefaults", (PyCFunction)RMTAM_RestoreDefaults, METH_VARARGS, RMTAM_RestoreDefaults__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
 };
 
 /* ---------- */
@@ -2976,7 +3232,7 @@ RMTAM_getattr(RMTAMobject *self, char *name)
 	return Py_FindMethod(RMTAM_methods, (PyObject *)self, name);
 }
 
-static char RMTAMtype__doc__[] = 
+static char RMTAMtype__doc__[] =
 ""
 ;
 
@@ -3009,7 +3265,7 @@ static PyTypeObject RMTAMtype = {
 /* -------------------------------------------------------- */
 
 
-static char RMTAI_GetTargetAudienceID__doc__[] = 
+static char RMTAI_GetTargetAudienceID__doc__[] =
 ""
 ;
 
@@ -3020,7 +3276,7 @@ RMTAI_GetTargetAudienceID(RMTAIobject *self, PyObject *args)
 }
 
 
-static char RMTAI_GetTargetAudienceName__doc__[] = 
+static char RMTAI_GetTargetAudienceName__doc__[] =
 ""
 ;
 
@@ -3031,7 +3287,7 @@ RMTAI_GetTargetAudienceName(RMTAIobject *self, PyObject *args)
 }
 
 
-static char RMTAI_GetTargetBitrate__doc__[] = 
+static char RMTAI_GetTargetBitrate__doc__[] =
 ""
 ;
 
@@ -3042,7 +3298,7 @@ RMTAI_GetTargetBitrate(RMTAIobject *self, PyObject *args)
 }
 
 
-static char RMTAI_SetTargetBitrate__doc__[] = 
+static char RMTAI_SetTargetBitrate__doc__[] =
 ""
 ;
 
@@ -3053,7 +3309,7 @@ RMTAI_SetTargetBitrate(RMTAIobject *self, PyObject *args)
 }
 
 
-static char RMTAI_GetAudioCodec__doc__[] = 
+static char RMTAI_GetAudioCodec__doc__[] =
 ""
 ;
 
@@ -3076,7 +3332,7 @@ RMTAI_GetAudioCodec(RMTAIobject *self, PyObject *args)
 }
 
 
-static char RMTAI_SetAudioCodec__doc__[] = 
+static char RMTAI_SetAudioCodec__doc__[] =
 ""
 ;
 
@@ -3099,7 +3355,7 @@ RMTAI_SetAudioCodec(RMTAIobject *self, PyObject *args)
 }
 
 
-static char RMTAI_GetVideoCodec__doc__[] = 
+static char RMTAI_GetVideoCodec__doc__[] =
 ""
 ;
 
@@ -3121,7 +3377,7 @@ RMTAI_GetVideoCodec(RMTAIobject *self, PyObject *args)
 }
 
 
-static char RMTAI_SetVideoCodec__doc__[] = 
+static char RMTAI_SetVideoCodec__doc__[] =
 ""
 ;
 
@@ -3143,7 +3399,7 @@ RMTAI_SetVideoCodec(RMTAIobject *self, PyObject *args)
 }
 
 
-static char RMTAI_GetMaxFrameRate__doc__[] = 
+static char RMTAI_GetMaxFrameRate__doc__[] =
 ""
 ;
 
@@ -3154,7 +3410,7 @@ RMTAI_GetMaxFrameRate(RMTAIobject *self, PyObject *args)
 }
 
 
-static char RMTAI_SetMaxFrameRate__doc__[] = 
+static char RMTAI_SetMaxFrameRate__doc__[] =
 ""
 ;
 
@@ -3166,18 +3422,18 @@ RMTAI_SetMaxFrameRate(RMTAIobject *self, PyObject *args)
 
 
 static struct PyMethodDef RMTAI_methods[] = {
-	{"GetTargetAudienceID",	(PyCFunction)RMTAI_GetTargetAudienceID,	METH_VARARGS,	RMTAI_GetTargetAudienceID__doc__},
- {"GetTargetAudienceName",	(PyCFunction)RMTAI_GetTargetAudienceName,	METH_VARARGS,	RMTAI_GetTargetAudienceName__doc__},
- {"GetTargetBitrate",	(PyCFunction)RMTAI_GetTargetBitrate,	METH_VARARGS,	RMTAI_GetTargetBitrate__doc__},
- {"SetTargetBitrate",	(PyCFunction)RMTAI_SetTargetBitrate,	METH_VARARGS,	RMTAI_SetTargetBitrate__doc__},
- {"GetAudioCodec",	(PyCFunction)RMTAI_GetAudioCodec,	METH_VARARGS,	RMTAI_GetAudioCodec__doc__},
- {"SetAudioCodec",	(PyCFunction)RMTAI_SetAudioCodec,	METH_VARARGS,	RMTAI_SetAudioCodec__doc__},
- {"GetVideoCodec",	(PyCFunction)RMTAI_GetVideoCodec,	METH_VARARGS,	RMTAI_GetVideoCodec__doc__},
- {"SetVideoCodec",	(PyCFunction)RMTAI_SetVideoCodec,	METH_VARARGS,	RMTAI_SetVideoCodec__doc__},
- {"GetMaxFrameRate",	(PyCFunction)RMTAI_GetMaxFrameRate,	METH_VARARGS,	RMTAI_GetMaxFrameRate__doc__},
- {"SetMaxFrameRate",	(PyCFunction)RMTAI_SetMaxFrameRate,	METH_VARARGS,	RMTAI_SetMaxFrameRate__doc__},
- 
-	{NULL,		NULL}		/* sentinel */
+	{"GetTargetAudienceID", (PyCFunction)RMTAI_GetTargetAudienceID, METH_VARARGS, RMTAI_GetTargetAudienceID__doc__},
+	{"GetTargetAudienceName", (PyCFunction)RMTAI_GetTargetAudienceName, METH_VARARGS, RMTAI_GetTargetAudienceName__doc__},
+	{"GetTargetBitrate", (PyCFunction)RMTAI_GetTargetBitrate, METH_VARARGS, RMTAI_GetTargetBitrate__doc__},
+	{"SetTargetBitrate", (PyCFunction)RMTAI_SetTargetBitrate, METH_VARARGS, RMTAI_SetTargetBitrate__doc__},
+	{"GetAudioCodec", (PyCFunction)RMTAI_GetAudioCodec, METH_VARARGS, RMTAI_GetAudioCodec__doc__},
+	{"SetAudioCodec", (PyCFunction)RMTAI_SetAudioCodec, METH_VARARGS, RMTAI_SetAudioCodec__doc__},
+	{"GetVideoCodec", (PyCFunction)RMTAI_GetVideoCodec, METH_VARARGS, RMTAI_GetVideoCodec__doc__},
+	{"SetVideoCodec", (PyCFunction)RMTAI_SetVideoCodec, METH_VARARGS, RMTAI_SetVideoCodec__doc__},
+	{"GetMaxFrameRate", (PyCFunction)RMTAI_GetMaxFrameRate, METH_VARARGS, RMTAI_GetMaxFrameRate__doc__},
+	{"SetMaxFrameRate", (PyCFunction)RMTAI_SetMaxFrameRate, METH_VARARGS, RMTAI_SetMaxFrameRate__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
 };
 
 /* ---------- */
@@ -3201,7 +3457,7 @@ RMTAI_getattr(RMTAIobject *self, char *name)
 	return Py_FindMethod(RMTAI_methods, (PyObject *)self, name);
 }
 
-static char RMTAItype__doc__[] = 
+static char RMTAItype__doc__[] =
 ""
 ;
 
@@ -3234,39 +3490,154 @@ static PyTypeObject RMTAItype = {
 /* -------------------------------------------------------- */
 
 
-static char RMCIM_GetAudioCodecs__doc__[] = 
+static char RMCIM_GetAudioCodecs__doc__[] =
 ""
 ;
 
 static PyObject *
 RMCIM_GetAudioCodecs(RMCIMobject *self, PyObject *args)
 {
-#if 0
-	ENUMERATE(self->codecInfoManager, GetAudioCodecEnum, newRMCIobject, IID_IRMAAudioCodecInfo, RMCIobject, codecInfo, EMPTYARG);
-#else
-	Py_INCREF(Py_None);
-	return Py_None;
-#endif
+	IUnknown *tempUnk;
+	IRMAEnumeratorIUnknown *enumerator;
+	UINT32 i, n;
+	PyObject *obj = NULL;
+	RMCIobject *v = NULL;
+	PN_RESULT res;
+
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	res = self->codecInfoManager->GetAudioCodecEnum(tempUnk);
+	if (!SUCCEEDED(res)) {
+		seterror("GetAudioCodecEnum", res);
+		return NULL;
+	}
+	res = tempUnk->QueryInterface(IID_IRMAEnumeratorIUnknown, (void **) &enumerator);
+	if (!SUCCEEDED(res)) {
+		seterror("QueryInterface", res);
+		return NULL;
+	}
+	PN_RELEASE(tempUnk);
+	res = enumerator->GetCount(&n);
+	if (!SUCCEEDED(res)) {
+		seterror("GetCount", res);
+		goto error;
+	}
+	res = enumerator->First(&tempUnk);
+	if (!SUCCEEDED(res)) {
+		seterror("First", res);
+		goto error;
+	}
+	obj = PyList_New((int) n);
+	if (obj == NULL)
+		goto error;
+	for (i = 0; i < n; i++) {
+		v = newRMCIobject();
+		res = tempUnk->QueryInterface(IID_IRMACodecInfo, (void **) &v->codecInfo);
+		PN_RELEASE(tempUnk);
+		if (!SUCCEEDED(res)) {
+			seterror("QueryInterface", res);
+			goto error;
+		}
+		v->pintype = AUDIO;
+		res = v->codecInfo->QueryInterface(IID_IRMAAudioCodecInfo, (void **) &v->audioCodecInfo);
+		if (!SUCCEEDED(res)) {
+			seterror("QueryInterface", res);
+			goto error;
+		}
+		PyList_SetItem(obj, i, (PyObject *) v); v = NULL;
+		res = enumerator->Next(&tempUnk);
+		if (!SUCCEEDED(res)) {
+			seterror("Next", res);
+			goto error;
+		}
+	}
+	PN_RELEASE(enumerator);
+	return obj;
+  error:
+	Py_XDECREF(obj);
+	Py_XDECREF((PyObject *) v);
+	PN_RELEASE(enumerator);
+	return NULL;
 }
 
 
-static char RMCIM_GetVideoCodecs__doc__[] = 
+static char RMCIM_GetVideoCodecs__doc__[] =
 ""
 ;
 
 static PyObject *
 RMCIM_GetVideoCodecs(RMCIMobject *self, PyObject *args)
 {
-#if 0
-	ENUMERATE(self->codecInfoManager, GetVideoCodecEnum, newRMCIobject, IID_IRMAVideoCodecInfo, RMCIobject, codecInfo, EMPTYARG);
-#else
-	Py_INCREF(Py_None);
-	return Py_None;
-#endif
+	IUnknown *tempUnk;
+	IRMAEnumeratorIUnknown *enumerator;
+	UINT32 i, n;
+	PyObject *obj = NULL;
+	RMCIobject *v = NULL;
+	PN_RESULT res;
+
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	res = self->codecInfoManager->GetVideoCodecEnum(tempUnk);
+	if (!SUCCEEDED(res)) {
+		seterror("GetVideoCodecEnum", res);
+		return NULL;
+	}
+	res = tempUnk->QueryInterface(IID_IRMAEnumeratorIUnknown, (void **) &enumerator);
+	if (!SUCCEEDED(res)) {
+		seterror("QueryInterface", res);
+		return NULL;
+	}
+	PN_RELEASE(tempUnk);
+	res = enumerator->GetCount(&n);
+	if (!SUCCEEDED(res)) {
+		seterror("GetCount", res);
+		goto error;
+	}
+	res = enumerator->First(&tempUnk);
+	if (!SUCCEEDED(res)) {
+		seterror("First", res);
+		goto error;
+	}
+	obj = PyList_New((int) n);
+	if (obj == NULL)
+		goto error;
+	for (i = 0; i < n; i++) {
+		v = newRMCIobject();
+		res = tempUnk->QueryInterface(IID_IRMACodecInfo, (void **) &v->codecInfo);
+		PN_RELEASE(tempUnk);
+		if (!SUCCEEDED(res)) {
+			seterror("QueryInterface", res);
+			goto error;
+		}
+		v->pintype = VIDEO;
+		res = v->codecInfo->QueryInterface(IID_IRMAVideoCodecInfo, (void **) &v->videoCodecInfo);
+		if (!SUCCEEDED(res)) {
+			seterror("QueryInterface", res);
+			goto error;
+		}
+		res = v->codecInfo->QueryInterface(IID_IRMACodecInfo2, (void **) &v->codecInfo2);
+		if (!SUCCEEDED(res)) {
+			seterror("QueryInterface", res);
+			goto error;
+		}
+		PyList_SetItem(obj, i, (PyObject *) v); v = NULL;
+		res = enumerator->Next(&tempUnk);
+		if (!SUCCEEDED(res)) {
+			seterror("Next", res);
+			goto error;
+		}
+	}
+	PN_RELEASE(enumerator);
+	return obj;
+  error:
+	Py_XDECREF(obj);
+	Py_XDECREF((PyObject *) v);
+	PN_RELEASE(enumerator);
+	return NULL;
 }
 
 
-static char RMCIM_GetCodecInfo__doc__[] = 
+static char RMCIM_GetCodecInfo__doc__[] =
 ""
 ;
 
@@ -3285,16 +3656,26 @@ RMCIM_GetCodecInfo(RMCIMobject *self, PyObject *args)
 		seterror("GetCodecInfo", res);
 		return NULL;
 	}
+	res = v->codecInfo->QueryInterface(IID_IRMAAudioCodecInfo, (void **) &v->audioCodecInfo);
+	if (SUCCEEDED(res))
+		v->pintype = AUDIO;
+	else {
+		res = v->codecInfo->QueryInterface(IID_IRMAVideoCodecInfo, (void **) &v->videoCodecInfo);
+		if (SUCCEEDED(res)) {
+			res = v->codecInfo->QueryInterface(IID_IRMACodecInfo2, (void **) &v->codecInfo2);
+			v->pintype = VIDEO;
+		}
+	}
 	return (PyObject *) v;
 }
 
 
 static struct PyMethodDef RMCIM_methods[] = {
-	{"GetAudioCodecs",	(PyCFunction)RMCIM_GetAudioCodecs,	METH_VARARGS,	RMCIM_GetAudioCodecs__doc__},
- {"GetVideoCodecs",	(PyCFunction)RMCIM_GetVideoCodecs,	METH_VARARGS,	RMCIM_GetVideoCodecs__doc__},
- {"GetCodecInfo",	(PyCFunction)RMCIM_GetCodecInfo,	METH_VARARGS,	RMCIM_GetCodecInfo__doc__},
- 
-	{NULL,		NULL}		/* sentinel */
+	{"GetAudioCodecs", (PyCFunction)RMCIM_GetAudioCodecs, METH_VARARGS, RMCIM_GetAudioCodecs__doc__},
+	{"GetVideoCodecs", (PyCFunction)RMCIM_GetVideoCodecs, METH_VARARGS, RMCIM_GetVideoCodecs__doc__},
+	{"GetCodecInfo", (PyCFunction)RMCIM_GetCodecInfo, METH_VARARGS, RMCIM_GetCodecInfo__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
 };
 
 /* ---------- */
@@ -3318,7 +3699,7 @@ RMCIM_getattr(RMCIMobject *self, char *name)
 	return Py_FindMethod(RMCIM_methods, (PyObject *)self, name);
 }
 
-static char RMCIMtype__doc__[] = 
+static char RMCIMtype__doc__[] =
 ""
 ;
 
@@ -3352,7 +3733,7 @@ static PyTypeObject RMCIMtype = {
 
 
 static struct PyMethodDef RMCC_methods[] = {
-	{NULL,		NULL}		/* sentinel */
+	{NULL, NULL}		/* sentinel */
 };
 
 /* ---------- */
@@ -3376,7 +3757,7 @@ RMCC_getattr(RMCCobject *self, char *name)
 	return Py_FindMethod(RMCC_methods, (PyObject *)self, name);
 }
 
-static char RMCCtype__doc__[] = 
+static char RMCCtype__doc__[] =
 ""
 ;
 
@@ -3409,7 +3790,7 @@ static PyTypeObject RMCCtype = {
 /* -------------------------------------------------------- */
 
 
-static char RMCI_GetCodecCookie__doc__[] = 
+static char RMCI_GetCodecCookie__doc__[] =
 ""
 ;
 
@@ -3431,7 +3812,7 @@ RMCI_GetCodecCookie(RMCIobject *self, PyObject *args)
 }
 
 
-static char RMCI_GetCodecName__doc__[] = 
+static char RMCI_GetCodecName__doc__[] =
 ""
 ;
 
@@ -3442,7 +3823,7 @@ RMCI_GetCodecName(RMCIobject *self, PyObject *args)
 }
 
 
-static char RMCI_GetOldestCompatiblePlayer__doc__[] = 
+static char RMCI_GetOldestCompatiblePlayer__doc__[] =
 ""
 ;
 
@@ -3453,7 +3834,7 @@ RMCI_GetOldestCompatiblePlayer(RMCIobject *self, PyObject *args)
 }
 
 
-static char RMCI_GetCodecForVersion__doc__[] = 
+static char RMCI_GetCodecForVersion__doc__[] =
 ""
 ;
 
@@ -3476,73 +3857,84 @@ RMCI_GetCodecForVersion(RMCIobject *self, PyObject *args)
 }
 
 
-static char RMCI_GetDescription__doc__[] = 
+static char RMCI_GetDescription__doc__[] =
 ""
 ;
 
 static PyObject *
 RMCI_GetDescription(RMCIobject *self, PyObject *args)
 {
-	GETSVALUE((IRMACodecInfo2 *) self->codecInfo, GetDescription);
+	GETSVALUE(self->codecInfo2, GetDescription);
 }
 
 
-static char RMCI_GetBitrate__doc__[] = 
+static char RMACI_GetDescription__doc__[] =
+""
+;
+
+static PyObject *
+RMACI_GetDescription(RMCIobject *self, PyObject *args)
+{
+	GETSVALUE(self->audioCodecInfo, GetDescription);
+}
+
+
+static char RMCI_GetBitrate__doc__[] =
 ""
 ;
 
 static PyObject *
 RMCI_GetBitrate(RMCIobject *self, PyObject *args)
 {
-	GETVALUE((IRMAAudioCodecInfo *) self->codecInfo, GetBitrate, UINT32, PyInt_FromLong, (long), EMPTYARG);
+	GETVALUE(self->audioCodecInfo, GetBitrate, UINT32, PyInt_FromLong, (long), EMPTYARG);
 }
 
 
-static char RMCI_GetSampleRate__doc__[] = 
+static char RMCI_GetSampleRate__doc__[] =
 ""
 ;
 
 static PyObject *
 RMCI_GetSampleRate(RMCIobject *self, PyObject *args)
 {
-	GETVALUE((IRMAAudioCodecInfo *) self->codecInfo, GetSampleRate, UINT32, PyInt_FromLong, (long), EMPTYARG);
+	GETVALUE(self->audioCodecInfo, GetSampleRate, UINT32, PyInt_FromLong, (long), EMPTYARG);
 }
 
 
-static char RMCI_GetSampleSize__doc__[] = 
+static char RMCI_GetSampleSize__doc__[] =
 ""
 ;
 
 static PyObject *
 RMCI_GetSampleSize(RMCIobject *self, PyObject *args)
 {
-	GETVALUE((IRMAAudioCodecInfo *) self->codecInfo, GetSampleSize, UINT32, PyInt_FromLong, (long), EMPTYARG);
+	GETVALUE(self->audioCodecInfo, GetSampleSize, UINT32, PyInt_FromLong, (long), EMPTYARG);
 }
 
 
-static char RMCI_GetNumChannels__doc__[] = 
+static char RMCI_GetNumChannels__doc__[] =
 ""
 ;
 
 static PyObject *
 RMCI_GetNumChannels(RMCIobject *self, PyObject *args)
 {
-	GETVALUE((IRMAAudioCodecInfo *) self->codecInfo, GetNumChannels, UINT32, PyInt_FromLong, (long), EMPTYARG);
+	GETVALUE(self->audioCodecInfo, GetNumChannels, UINT32, PyInt_FromLong, (long), EMPTYARG);
 }
 
 
-static char RMCI_GetFrequencyResponse__doc__[] = 
+static char RMCI_GetFrequencyResponse__doc__[] =
 ""
 ;
 
 static PyObject *
 RMCI_GetFrequencyResponse(RMCIobject *self, PyObject *args)
 {
-	GETVALUE((IRMAAudioCodecInfo *) self->codecInfo, GetFrequencyResponse, UINT32, PyInt_FromLong, (long), EMPTYARG);
+	GETVALUE(self->audioCodecInfo, GetFrequencyResponse, UINT32, PyInt_FromLong, (long), EMPTYARG);
 }
 
 
-static char RMCI_GetCodecModulus__doc__[] = 
+static char RMCI_GetCodecModulus__doc__[] =
 ""
 ;
 
@@ -3554,7 +3946,7 @@ RMCI_GetCodecModulus(RMCIobject *self, PyObject *args)
 
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	res = ((IRMAVideoCodecInfo *) self->codecInfo)->GetCodecModulus(width, height);
+	res = self->videoCodecInfo->GetCodecModulus(width, height);
 	if (!SUCCEEDED(res)) {
 		seterror("GetCodecModulus", res);
 		return NULL;
@@ -3564,19 +3956,38 @@ RMCI_GetCodecModulus(RMCIobject *self, PyObject *args)
 
 
 static struct PyMethodDef RMCI_methods[] = {
-	{"GetCodecCookie",	(PyCFunction)RMCI_GetCodecCookie,	METH_VARARGS,	RMCI_GetCodecCookie__doc__},
- {"GetCodecName",	(PyCFunction)RMCI_GetCodecName,	METH_VARARGS,	RMCI_GetCodecName__doc__},
- {"GetOldestCompatiblePlayer",	(PyCFunction)RMCI_GetOldestCompatiblePlayer,	METH_VARARGS,	RMCI_GetOldestCompatiblePlayer__doc__},
- {"GetCodecForVersion",	(PyCFunction)RMCI_GetCodecForVersion,	METH_VARARGS,	RMCI_GetCodecForVersion__doc__},
- {"GetDescription",	(PyCFunction)RMCI_GetDescription,	METH_VARARGS,	RMCI_GetDescription__doc__},
- {"GetBitrate",	(PyCFunction)RMCI_GetBitrate,	METH_VARARGS,	RMCI_GetBitrate__doc__},
- {"GetSampleRate",	(PyCFunction)RMCI_GetSampleRate,	METH_VARARGS,	RMCI_GetSampleRate__doc__},
- {"GetSampleSize",	(PyCFunction)RMCI_GetSampleSize,	METH_VARARGS,	RMCI_GetSampleSize__doc__},
- {"GetNumChannels",	(PyCFunction)RMCI_GetNumChannels,	METH_VARARGS,	RMCI_GetNumChannels__doc__},
- {"GetFrequencyResponse",	(PyCFunction)RMCI_GetFrequencyResponse,	METH_VARARGS,	RMCI_GetFrequencyResponse__doc__},
- {"GetCodecModulus",	(PyCFunction)RMCI_GetCodecModulus,	METH_VARARGS,	RMCI_GetCodecModulus__doc__},
- 
-	{NULL,		NULL}		/* sentinel */
+	{"GetCodecCookie", (PyCFunction)RMCI_GetCodecCookie, METH_VARARGS, RMCI_GetCodecCookie__doc__},
+	{"GetCodecName", (PyCFunction)RMCI_GetCodecName, METH_VARARGS, RMCI_GetCodecName__doc__},
+	{"GetOldestCompatiblePlayer", (PyCFunction)RMCI_GetOldestCompatiblePlayer, METH_VARARGS, RMCI_GetOldestCompatiblePlayer__doc__},
+	{"GetCodecForVersion", (PyCFunction)RMCI_GetCodecForVersion, METH_VARARGS, RMCI_GetCodecForVersion__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
+};
+
+static struct PyMethodDef RMACI_methods[] = {
+	{"GetCodecCookie", (PyCFunction)RMCI_GetCodecCookie, METH_VARARGS, RMCI_GetCodecCookie__doc__},
+	{"GetCodecName", (PyCFunction)RMCI_GetCodecName, METH_VARARGS, RMCI_GetCodecName__doc__},
+	{"GetOldestCompatiblePlayer", (PyCFunction)RMCI_GetOldestCompatiblePlayer, METH_VARARGS, RMCI_GetOldestCompatiblePlayer__doc__},
+	{"GetCodecForVersion", (PyCFunction)RMCI_GetCodecForVersion, METH_VARARGS, RMCI_GetCodecForVersion__doc__},
+	{"GetDescription", (PyCFunction)RMACI_GetDescription, METH_VARARGS, RMACI_GetDescription__doc__},
+	{"GetBitrate", (PyCFunction)RMCI_GetBitrate, METH_VARARGS, RMCI_GetBitrate__doc__},
+	{"GetSampleRate", (PyCFunction)RMCI_GetSampleRate, METH_VARARGS, RMCI_GetSampleRate__doc__},
+	{"GetSampleSize", (PyCFunction)RMCI_GetSampleSize, METH_VARARGS, RMCI_GetSampleSize__doc__},
+	{"GetNumChannels", (PyCFunction)RMCI_GetNumChannels, METH_VARARGS, RMCI_GetNumChannels__doc__},
+	{"GetFrequencyResponse", (PyCFunction)RMCI_GetFrequencyResponse, METH_VARARGS, RMCI_GetFrequencyResponse__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
+};
+
+static struct PyMethodDef RMVCI_methods[] = {
+	{"GetCodecCookie", (PyCFunction)RMCI_GetCodecCookie, METH_VARARGS, RMCI_GetCodecCookie__doc__},
+	{"GetCodecName", (PyCFunction)RMCI_GetCodecName, METH_VARARGS, RMCI_GetCodecName__doc__},
+	{"GetOldestCompatiblePlayer", (PyCFunction)RMCI_GetOldestCompatiblePlayer, METH_VARARGS, RMCI_GetOldestCompatiblePlayer__doc__},
+	{"GetCodecForVersion", (PyCFunction)RMCI_GetCodecForVersion, METH_VARARGS, RMCI_GetCodecForVersion__doc__},
+	{"GetDescription", (PyCFunction)RMCI_GetDescription, METH_VARARGS, RMCI_GetDescription__doc__},
+	{"GetCodecModulus", (PyCFunction)RMCI_GetCodecModulus, METH_VARARGS, RMCI_GetCodecModulus__doc__},
+
+	{NULL, 	NULL}		/* sentinel */
 };
 
 /* ---------- */
@@ -3597,10 +4008,17 @@ static PyObject *
 RMCI_getattr(RMCIobject *self, char *name)
 {
 	/* XXXX Add your own getattr code here */
-	return Py_FindMethod(RMCI_methods, (PyObject *)self, name);
+	switch (self->pintype) {
+	case AUDIO:
+		return Py_FindMethod(RMACI_methods, (PyObject *)self, name);
+	case VIDEO:
+		return Py_FindMethod(RMVCI_methods, (PyObject *)self, name);
+	default:
+		return Py_FindMethod(RMCI_methods, (PyObject *)self, name);
+	}
 }
 
-static char RMCItype__doc__[] = 
+static char RMCItype__doc__[] =
 ""
 ;
 
@@ -3661,9 +4079,9 @@ RP_CreateRMBuildEngine(PyObject *self, PyObject *args)
 /* List of methods defined in the module */
 
 static struct PyMethodDef RP_methods[] = {
-	{"CreateRMBuildEngine",	(PyCFunction)RP_CreateRMBuildEngine,	METH_VARARGS,	RP_CreateRMBuildEngine__doc__},
- 
-	{NULL,	 (PyCFunction)NULL, 0, NULL}		/* sentinel */
+	{"CreateRMBuildEngine", (PyCFunction)RP_CreateRMBuildEngine, METH_VARARGS, RP_CreateRMBuildEngine__doc__},
+
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
 
@@ -3691,8 +4109,8 @@ SetDllCategoryPaths()
 	// Set the DLL Access paths
 	// Win32 DEBUG builds and all Mac builds set everything to the app dir
 	// All other builds look in subdirs underneath the app dir
-	UINT32 ulNumChars = 0;   
-	char szDllPath[6*APP_MAX_PATH] = "";      
+	UINT32 ulNumChars = 0;
+	char szDllPath[6*APP_MAX_PATH] = "";
 
 	ulNumChars += sprintf(szDllPath+ulNumChars,"DT_Plugins=%s",szAppDir)+1;
 	ulNumChars += sprintf(szDllPath+ulNumChars,"DT_Codecs=%s",szAppDir)+1;
@@ -3702,15 +4120,15 @@ SetDllCategoryPaths()
 
 	// Set the path used to load RealProducer Core G2 SDK DLL's
 #ifdef RN_DLL_ACCESS
-	GetDLLAccessPath()->SetAccessPaths(szDllPath);  
+	GetDLLAccessPath()->SetAccessPaths(szDllPath);
 #else
-	SetDLLAccessPath(szDllPath); 
+	SetDLLAccessPath(szDllPath);
 #endif
 }
 
 /* Initialization function for the module (*must* be called initproducer) */
 
-static char producer_module_documentation[] = 
+static char producer_module_documentation[] =
 ""
 ;
 
@@ -3919,6 +4337,14 @@ initproducer()
 	if (x == NULL || PyDict_SetItemString(d, "ENC_NUM_TARGET_SETTINGS_TYPES", x) < 0)
 		goto error;
 	Py_DECREF(x);
+	x = PyLong_FromLong((long) MEDIA_SAMPLE_SYNCH_POINT);
+	if (x == NULL || PyDict_SetItemString(d, "MEDIA_SAMPLE_SYNCH_POINT", x) < 0)
+		goto error;
+	Py_DECREF(x);
+	x = PyLong_FromLong((long) MEDIA_SAMPLE_END_OF_STREAM);
+	if (x == NULL || PyDict_SetItemString(d, "MEDIA_SAMPLE_END_OF_STREAM", x) < 0)
+		goto error;
+	Py_DECREF(x);
 	x = PyLong_FromLong((long) IRMAEventMediaSample_URL);
 	if (x == NULL || PyDict_SetItemString(d, "IRMAEventMediaSample_URL", x) < 0)
 		goto error;
@@ -3967,7 +4393,7 @@ initproducer()
 	if (x == NULL || PyDict_SetItemString(d, "IRMAImageMapMediaSample_ACTION_PLAYER_SEEK", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	
+
 	/* Check for errors */
 	if (PyErr_Occurred()) {
 	  error:
