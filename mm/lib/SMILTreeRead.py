@@ -12,6 +12,7 @@ from Hlinks import DIR_1TO2, TYPE_JUMP, TYPE_CALL, TYPE_FORK
 import re
 import os
 from SMIL import *
+import settings
 
 error = 'SMILTreeRead.error'
 
@@ -365,10 +366,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if mimetype is not None:
 			mtype = mimetype
 # not allowed to look at extension...
-## 		if mtype is None and is_ext:
-## 			import mimetypes
-## 			# guess the type from the file extension
-## 			mtype = mimetypes.guess_type(url)[0]
+		if mtype is None and self.__is_ext and settings.get('checkext'):
+ 			import mimetypes
+ 			# guess the type from the file extension
+ 			mtype = mimetypes.guess_type(url)[0]
 		if url is not None and mtype is None and \
 		   (mediatype is None or
 		    (mediatype == 'text' and subtype is None)):
@@ -681,14 +682,25 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			region = '<unnamed>'
 		attrdict = self.__regions.get(region, {})
 		if mediatype == 'audio':
-			mtype = 'sound'
+			if subtype in ('vnd.rn-realaudio', 'x-pn-realaudio'):
+				mtype = 'raudio'
+			else:
+				mtype = 'sound'
 		elif mediatype == 'image':
-			mtype = 'image'
+			if subtype == 'vnd.rn-realpix':
+				mtype = 'rpix'
+			else:
+				mtype = 'image'
 		elif mediatype == 'video':
-			mtype = 'video'
+			if subtype == 'vnd.rn-realvideo':
+				mtype = 'rvideo'
+			else:
+				mtype = 'video'
 		elif mediatype == 'text':
 			if subtype == 'plain':
 				mtype = 'text'
+			elif subtype == 'vnd.rn-realtext':
+				mtype = 'rtext'
 			else:
 				mtype = 'html'
 		elif mediatype == 'cmif_cmif':
