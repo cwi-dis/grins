@@ -191,7 +191,15 @@ class Window:
 	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		return self.newwindow(coordinates, pixmap, transparent, z, type_channel, units)
 
-		
+	
+	def ltrb(self, xywh):
+		x,y,w,h = xywh
+		return x, y, x+w, y+h
+
+	def xywh(self, ltrb):
+		l,t,r,b = ltrb
+		return l, t, r-l, b-t
+
 	# return the coordinates of this window in units
 	def getgeometry(self, units = UNIT_SCREEN):
 		toplevel=__main__.toplevel
@@ -956,17 +964,21 @@ class SubWindow(Window):
 		rgn.CombineRgn(rgn,self._parent.getClipRgn(rel),win32con.RGN_AND)
 		return rgn
 
-	def clipRect(self, rc):
-		return rc
+	def clipRect(self, rc, rgn, rel=None):
+		newrgn = win32ui.CreateRgn()
+		newrgn.CreateRectRgn(self.ltrb(rc))
+		newrgn.CombineRgn(rgn,newrgn,win32con.RGN_AND)
+		ltrb = newrgn.GetRgnBox()[1]
+		newrgn.DeleteObject()
+		return self.xywh(ltrb)
 
 	def __paintOnDDS(self, dds, rel=None):
 		x, y, w, h = self.getwindowpos(rel)
+		rgn = self.getClipRgn(rel)
 		if self._active_displist:
 			hdc = dds.GetDC()
 			dc = win32ui.CreateDCFromHandle(hdc)
-			rgn = self.getClipRgn(rel)
 			dc.SelectClipRgn(rgn)
-			rgn.DeleteObject()
 			x0, y0 = dc.SetWindowOrg((-x,-y))
 			self._active_displist._render(dc,None)
 			if self._redrawfunc:
@@ -978,14 +990,18 @@ class SubWindow(Window):
 			dds.ReleaseDC(hdc)
 			if self._video:
 				vdds, vrcDst, vrcSrc = self._video
-				xv, yv, wv, hv = vrcDst
-				ltrb_dst = x+xv, y+yv, x+xv+wv, y+yv+hv
-				dds.Blt(ltrb_dst, vdds, vrcSrc, ddraw.DDBLT_WAIT)
+				vrcDst = self.clipRect(vrcDst, rgn, rel)
+				x, y, w, h = vrcSrc
+				vrcSrc = x, y, vrcDst[2],vrcDst[3]
+				if vrcDst[2]!=0 and vrcDst[3]!=0:
+					dds.Blt(self.ltrb(vrcDst), vdds, vrcSrc, ddraw.DDBLT_WAIT)
 		elif self._transparent == 0:
 			if self._convbgcolor == None:
 				r, g, b = self._bgcolor
 				self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
-			dds.BltFill((x, y, x+w, y+h), self._convbgcolor)
+			rc = self.clipRect((x, y, w, h), rgn, rel)
+			dds.BltFill(self.ltrb(rc), self._convbgcolor)
+		rgn.DeleteObject()
 				
 	def paintOnDDS(self, dds, rel=None):
 		x, y, w, h = self.getwindowpos(rel)
