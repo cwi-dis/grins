@@ -146,10 +146,14 @@ class PlayerCore(Selecter):
 
 	def updateFocus(self):
 		self.editmgr.setglobalfocus('MMNode', self.__focusNode)
+
+	def updatePlayerStateOnStop(self):
+		# send the player state event					
+		self.editmgr.setplayerstate('stopped', None)		
 		
-	# update the global focus in order to update all views according to this focus
-	# for now, the focus node list is: playing nodes and showing channels
-	def updatePlayerState(self):
+	# update the player state in order to update all views according to this state
+	# for now, the state is a list of: playing nodes and showing channels
+	def updatePlayerStateOnPause(self):
 		# node list is a tuple of (nodetype/node)
 		# here nodetype is either: 'MMChannel' or 'MMNode'
 		nodeList = []
@@ -174,8 +178,8 @@ class PlayerCore(Selecter):
 				nodeList.append(('MMNode',playingNode))
 				self.__focusNode = playingNode
 
-		# send the global focus event					
-		self.editmgr.setplayerstate('NodeList', nodeList)
+		# send the player state event					
+		self.editmgr.setplayerstate('paused', nodeList)
 
 	#
 	def pause(self, wantpause):
@@ -185,7 +189,7 @@ class PlayerCore(Selecter):
 		self.pausing = wantpause
 		if self.pausing:
 			self.scheduler.setpaused(1)
-			self.updatePlayerState()
+			self.updatePlayerStateOnPause()
 			self.updateFocus()
 		else:
 			self.scheduler.setpaused(0)

@@ -139,14 +139,14 @@ class EditMgr:
 	#
 	# player state interface
 	#
-	def setplayerstate(self, nodetype, nodeobject):
-		if (nodetype, nodeobject) == self.playerstate:
+	def setplayerstate(self, state, parameters):
+		if (state, parameters) == self.playerstate:
 			return
 		if self.playerstate_busy: raise MMExc.AssertError, 'recursive playerstate'
 		self.playerstate_busy = 1
-		self.playerstate = (nodetype, nodeobject)
+		self.playerstate = (state, parameters)
 		for client in self.playerstate_registry:
-			client.playerstatechanged(nodetype, nodeobject)
+			client.playerstatechanged(state, parameters)
 		self.playerstate_busy = 0
 
 	def getplayerstate(self):
