@@ -3515,16 +3515,15 @@ class PreviousWidget(Widget):
 		self.__mustBeUpdated = 1
 
 	def __showAnchor(self, nodeRef):
+		if self._nodeRefToNodeTree.has_key(nodeRef):
+			# already showed, force to hide
+			self.__hideAnchor(nodeRef)
+		
 		shape = nodeRef.GetAttrDef('ashape', None)
 		if shape not in (None, 'rect'):
 			# not supported shape
-			self.__hideAnchor(nodeRef)
 			return
 		
-		if self._nodeRefToNodeTree.has_key(nodeRef):
-			# already showed
-			return
-
 		parentRef = self._context.getParentNodeRef(nodeRef)
 		parentNode = self._nodeRefToNodeTree.get(parentRef)
 		if parentNode is None:
