@@ -1,0 +1,81 @@
+// GRiNSRenderer.idl : IDL source for GRiNSRenderer.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (GRiNSRenderer.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+	[
+		object,
+		uuid(D363D345-BF21-4C09-AC17-4165BF2089A7),
+		dual,
+		helpstring("IFactory Interface"),
+		pointer_default(unique)
+	]
+	interface IFactory : IDispatch
+	{
+	};
+
+
+	[
+		object,
+		uuid(C384EDD8-F415-41A6-BA4E-76845AB59EC8),
+		dual,
+		helpstring("IBehavior Interface"),
+		pointer_default(unique)
+	]
+	interface IBehavior : IDispatch
+	{
+	};
+
+	[
+		object,
+		uuid(7413676D-CE50-4EFE-9446-A274219AD66D),
+		dual,
+		helpstring("IEventSink Interface"),
+		pointer_default(unique)
+	]
+	interface IEventSink : IDispatch
+	{
+	};
+
+
+[
+	uuid(4D53AFAD-D909-487F-B868-BC0D9B30B24B),
+	version(1.0),
+	helpstring("GRiNSRenderer 1.0 Type Library")
+]
+library GRINSRENDERERLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	[
+		uuid(B12F3290-AF2D-4090-97BC-7CA5A4596497),
+		helpstring("Factory Class")
+	]
+	coclass Factory
+	{
+		[default] interface IFactory;
+	};
+
+	[
+		uuid(02184C6D-37F8-44EB-B19D-2A59E5680876),
+		helpstring("Behavior Class")
+	]
+	coclass Behavior
+	{
+		[default] interface IBehavior;
+	};
+
+	[
+		uuid(1E8289E1-9A39-4B4D-BC11-9A7D7B7583D9),
+		helpstring("EventSink Class")
+	]
+	coclass EventSink
+	{
+		[default] interface IEventSink;
+	};
+};
