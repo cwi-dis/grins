@@ -51,7 +51,7 @@ def fixhelpdir():
 def givehelp(topic, web=0):
 	global helpwindow
 	import windowinterface
-	if topic == 'buy' and hasattr(features, buyurl):
+	if topic == 'buy' and hasattr(features, 'buyurl'):
 		helpurl = features.buyurl
 	else:
 		fixhelpdir()
