@@ -57,7 +57,6 @@ class _LayoutView(GenFormView):
 
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
-		self.GetParent().freezeSize()
 		# enable all lists
 		for name in self._lnames:	
 			self.EnableCmd(name,1)
