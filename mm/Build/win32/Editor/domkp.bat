@@ -9,7 +9,6 @@ set INCLUDE_MMEXTENSIONS=no
 
 set main_script=%GRINS_HOME%\fGRiNSed.py
 
-rem set PYTHON_EXE=..\..\..\..\python\python.exe
 set PYTHON_EXE=..\..\..\bin\win32\python.exe
 
 set PYTHONHOME=..\..\..\..\python
@@ -24,6 +23,10 @@ rem The rest of the script assumes that the folder tree
 rem has the same structure as CWI's CVS root 
 rem It is the same for both player(GRiNS) and editor (GRiNSed)
 
+del *.c
+del log.txt
+del GRiNSed.exe
+del GRiNSed.lib
 
 set PYTHONEX=%PYTHONHOME%\Extensions
 set FREEZE=%PYTHONHOME%\Tools\freeze\freeze.py
@@ -139,6 +142,16 @@ echo -x win32dbg >> FreezeOpts
 rem exclude RMASDK
 echo -x rma >> FreezeOpts
 
+rem exlude img related pyds
+REM echo -x img >> FreezeOpts
+echo -x imgcolormap >> FreezeOpts
+echo -x imgjpeg >> FreezeOpts
+echo -x imgop >> FreezeOpts
+echo -x imgformat >> FreezeOpts
+
+rem producer stuff
+echo -x producer >> FreezeOpts
+
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
 
@@ -146,7 +159,7 @@ echo -x %EXCLUDE_WHAT% >> FreezeOpts
 
 %PYTHON_EXE% -O %COMPILE% >> log.txt
 
-%PYTHON_EXE% -O %FREEZE% -s windows -i FreezeOpts -e %GRINS_HOME%\win32\extensions.ini %main_script% >> log.txt
+%PYTHON_EXE% -O %FREEZE% -s windows -i FreezeOpts -e %GRINS_HOME%\win32\grins_extensions.ini %main_script% >> log.txt
 
 : Make the target
 rem echo Executing NMAKE
