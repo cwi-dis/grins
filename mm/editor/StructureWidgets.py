@@ -509,6 +509,7 @@ class SeqWidget(StructureObjWidget):
 			
 		for i in self.children:
 			if self.root.pushbackbars and isinstance(i, MediaWidget):
+				i.compute_download_time() # Calculate the push-over for this bar.
 				pushover = i.downloadtime_lag
 			else:
 				pushover = 0;
@@ -861,6 +862,7 @@ class VerticalWidget(StructureObjWidget):
 		for i in self.children:
 			w,h = i.get_minsize_abs()
 			if self.root.pushbackbars and isinstance(i, MediaWidget):
+				i.compute_download_time()
 				pushover = i.downloadtime_lag
 				w = w + pushover
 			else:
@@ -1091,7 +1093,7 @@ class MediaWidget(MMNodeWidget):
 		if node_duration <= 0: node_duration = 1
 
 		# print "            node_duration is: ", node_duration
-		l,t,r,b = self.pos_abs
+		#l,t,r,b = self.pos_abs
 		node_width = self.get_minsize()[0]
 		# print "            node width is: ", node_width
 		# Lagwidth is a percentage of this node's width.
@@ -1117,7 +1119,6 @@ class MediaWidget(MMNodeWidget):
 
 	def recalc(self):
 		l,t,r,b = self.pos_abs
-		self.compute_download_time()
 
 		self.infoicon.moveto((l+self.get_relx(1), t+self.get_rely(2)))
 

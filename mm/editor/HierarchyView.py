@@ -1308,6 +1308,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Used for dragging and dropping objects.
 		if x < 1.0 or y < 1.0:
 			print "DEBUG: Warning! Either this was a click at the top-right corner or we have unconverted relative coords."
+			import traceback; traceback.print_stack()
 		return self.scene_graph.get_obj_at((x,y))
 		
 ##		hitobj = None
