@@ -1597,6 +1597,15 @@ class EventCtrl(AttrCtrl):
 			self._radiobuttonwidgets[cause].setcheck(1)
 ##			if not self._eventstruct.has_node() and cause == 'node':
 ##				self._thingbuttoncallback(None, win32con.BN_CLICKED)
+			if self._node:
+				pnode = self._node.GetParent()
+				if pnode and pnode.GetType() == 'seq':
+					# Children of sequence nodes can only have
+					# delays
+					for k in self._radiobuttonwidgets.keys():
+						self._radiobuttonwidgets[k].enable(k == 'delay')
+					
+
 
 	def set_relative(self):
 		if not self._eventstruct:
