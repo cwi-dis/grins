@@ -43,10 +43,12 @@ __version__ = "$Id$";
 	UNIFIED_FOCUS,			# All views share their focus
 	CUSTOM_REGIONS,			# Allow to create/delete its own region
 
+	CREATE_TEMPLATES,		# Enable template creation features
+
 	# Different capabilities within the hierarchy view
 	H_TRANSITIONS,
 	H_MODIFY_STRUCTURE,		# This is the biggy - decides between templates or not.
 	H_DROPBOX,			# Show an empty drop box at the end of a sequence.
 	H_COLLAPSE,			# Enable internal node collapsing.
 	H_TIMESTRIP,			# Show snap!-like documents with correct toplevel par/seq
-] = range(30)				# don't forget to update this range!
+] = range(31)				# don't forget to update this range!

@@ -15,6 +15,7 @@ feature_set = [
 	       USER_GROUPS, TRANSITION_VIEW, ERRORS_VIEW,
 	       UNIFIED_FOCUS,
 	       H_MODIFY_STRUCTURE, CUSTOM_REGIONS,
+	CREATE_TEMPLATES,
 				];
 #
 if sys.platform == 'win32':
