@@ -41,6 +41,3 @@ cmif = 0
 lightweight = 0
 editor = 1
 license_features_needed = ('smil2pro', sys.platform)
-# RTIPA start
-RTIPA = 0
-# RTIPA end
