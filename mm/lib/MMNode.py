@@ -1271,8 +1271,11 @@ class MMChannel(MMTreeElement):
 				wantNewEditBg = parent is None
 
 				# Base_window is set. So, it's not a viewport
-				# reset css node with the right type
-				self.newCssId(0)
+				# XXX reset css node with the right type, only is base_window wasn't set yet
+				# XXX don't re-intialize css id if base_window was already set
+				# XXX NOTE: This part needs to be improved
+				if parent is None:
+					self.newCssId(0)
 					
 				pchan = self.context.channeldict.get(value)
 				if pchan is None:
