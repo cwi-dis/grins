@@ -1877,7 +1877,8 @@ class MMNode:
 ##			return []
 		synctolist = []
 		delay = self.GetAttrDef('begin', 0.0)
-		if delay > 0:
+		# ignore delays on root node
+		if delay > 0 and self.parent is not None:
 			if self.parent.type == 'seq':
 				xnode = None
 				xside = TL
@@ -1885,7 +1886,7 @@ class MMNode:
 					if n is self:
 						break
 					xnode = n
-				else:
+				if xnode is None:
 					# first child in seq
 					xnode = self.parent
 					xside = HD
