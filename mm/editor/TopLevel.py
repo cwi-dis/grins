@@ -128,10 +128,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	# detect the errors/fatal errors
 	# if it's a fatal error, then load an empty document to keep GRiNS in a stable state
 	def checkParseErrors(self, root):
-		parseErrors = root.GetContext().getParseErrors()
+		oldcontext = root.GetContext()
+		parseErrors = oldcontext.getParseErrors()
 		if parseErrors is not None and parseErrors.getType() == 'fatal':
 			# XXX for now, if there is any fatal error, we load an empty document. In this case, we
-			# even be able to edit the source view. 
+			# even be able to edit the source view.
+			baseurl = oldcontext.baseurl
 			import SMILTreeRead
 			root = SMILTreeRead.ReadString(EMPTY, self.filename)
 			# check that the 'EMPTY' document don't generate as well a fatal error
@@ -141,8 +143,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				# re-raise
 				raise MSyntaxError
 
-			# if we reload the empty document we have to re-set the previous error
-			root.GetContext().setParseErrors(parseErrors)
+			# if we reload the empty document we have to re-set the previous error and baseurl
+			newcontext = root.GetContext()
+			newcontext.setbaseurl(baseurl)
+			newcontext.setParseErrors(parseErrors)
 		return root
 		
 	def set_commandlist(self):
@@ -520,6 +524,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.progressMessage = "Reloading SMIL document from source view..."
 		self.progress.set(self.progressMessage)
 
+		baseurl = self.root.GetContext().baseurl
 		# read the source and update edit manager
 		try:
 			import SMILTreeRead		
@@ -529,6 +534,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.progress = None
 			# re-raise
 			raise sys.exc_type
+
+		root.GetContext().setbaseurl(baseurl)
 
 		# just update that the loading is finished
 		self.progressCallback(1.0)
@@ -1315,7 +1322,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				self.root = SMILTreeRead.ReadFile(filename, self.printfunc, self.new_file, check_compatibility, \
 												  progressCallback=(self.progressCallback, 0.5))
 			except (UserCancel, IOError):				
-				# the progress dialog will desapear
+				# the progress dialog will disappear
 				self.progress = None
 				# re-raise
 				raise sys.exc_type
@@ -1323,7 +1330,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# just update that the loading is finished
 			self.progressCallback(1.0)
 			
-			# the progress dialog will desapear
+			# the progress dialog will disappear
 			self.progress = None
 			
 ##				# For the lightweight version we set SMIL files as being "new"
