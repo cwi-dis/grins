@@ -47,6 +47,7 @@ MENUBAR=(
 		(SPECIAL, 'Open documents', 'documents'),
 		(SPECIAL, 'Open windows', 'windows'),
 		(SEP,),
+		(DYNAMICCASCADE, 'User groups', USERGROUPS),
 		(DYNAMICCASCADE, 'Channel visibility', CHANNELS),
 		(SEP,),
 		(ENTRY, 'View source', None, SOURCE),
