@@ -238,7 +238,7 @@ class _Toplevel:
 	
 	def enableCOMAutomation(self):
 		import __main__
-		if hasattr(__main__,'commodule'):
+		if hasattr(__main__,'commodule') and __main__.commodule is not None:
 			import embedding
 			listenerWnd = embedding.ListenerWnd(self)
 			self.addclosecallback(listenerWnd.DestroyWindow, ())
