@@ -6,7 +6,7 @@ _size_cache = {}
 
 Version = 'dummy'
 
-from EVENTS import *
+from WMEVENTS import *
 
 # The _Toplevel class represents the root of all windows.  It is never
 # accessed directly by any user code.
@@ -181,6 +181,14 @@ class _Window:
 
 	def necmwwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
 		return _Window(self, x, y, w, h, '', 1, pixmap, transparent)
+		
+	def showwindow(self):
+		"""Highlight the window"""
+		pass
+		
+	def dontshowwindow(self):
+		"""Don't highlight the window"""
+		pass
 
 	def fgcolor(self, color):
 		r, g, b = color
