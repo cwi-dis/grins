@@ -38,7 +38,7 @@ def multchoice(prompt, list, defindex):
 		promptheight = 0
 	
 	for item in list:
-		if type(item) == Tuple:
+		if type(item) is Tuple:
 			name, colorindex = item
 		else:
 			name = item
@@ -60,7 +60,7 @@ def multchoice(prompt, list, defindex):
 	for i in range(len(list)):
 		pos = pos - BUTHEIGHT
 		item = list[i]
-		if type(item) == Tuple:
+		if type(item) is Tuple:
 			name, colorindex = item
 		else:
 			name, colorindex = item, None
@@ -71,7 +71,7 @@ def multchoice(prompt, list, defindex):
 		obj = form.add_button(but, \
 			HMARGIN, pos, butwidth, BUTHEIGHT, name)
 		obj.boxtype = FL.FRAME_BOX
-		if colorindex <> None:
+		if colorindex is not None:
 			obj.col1 = colorindex
 		buttons.append(obj)
 	
