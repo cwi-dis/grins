@@ -44,9 +44,11 @@ import __main__
 import  rbtk
 import DrawTk
 from DisplayList import DisplayList
+from DropTarget import DropTarget
 
-class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
+class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 	def __init__(self):
+		DropTarget.__init__(self)
 		rbtk._rbtk.__init__(self)
 		DrawTk.DrawLayer.__init__(self)
 		self._subwindows = []
@@ -123,7 +125,6 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			for ix in range(numfiles):
 				filename=win32api.DragQueryFile(hDrop,ix)
 				self.onDropEvent(DropFile,(x, y, filename))
-##				print 'DropFile',x,y,filename
 		win32api.DragFinish(hDrop)
 	
 	def onDropEvent(self, event, (x, y, filename)):
@@ -529,19 +530,20 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		if event in(ResizeWindow, KeyboardInput, Mouse0Press,
 			     Mouse0Release, Mouse1Press, Mouse1Release,
 			     Mouse2Press, Mouse2Release, 
-				 DropFile, PasteFile, WindowExit):
+				 DropFile, PasteFile, DragFile,
+				 WindowExit):
 			self._callbacks[event] = func, arg
 			if event == DropFile:
-				self.dragAcceptFiles()
+				self.registerDropTarget()
 		else:
-			raise error, 'Internal error in Register Callback'
+			raise error, 'Unregister event',event
 
 	# Unregister user input callbacks
 	def unregister(self, event):
 		try:
 			del self._callbacks[event]
 			if event == DropFile:
-				self.dragRefuseFiles()
+				self.revokeDropTarget()
 		except KeyError:
 			pass
 
@@ -557,6 +559,20 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			except Continue:
 				return 0
 		return 1
+	
+	# Call registered callback with return value
+	def onEventEx(self,event,params=None):
+		ret=None
+		try:
+			func, arg = self._callbacks[event]			
+		except KeyError:
+			pass
+		else:
+			try:
+				ret=func(arg, self, event, params)
+			except Continue:
+				pass
+		return ret
 			
 	# Hook messages
 	def _enable_response(self,dict,wnd=None):
