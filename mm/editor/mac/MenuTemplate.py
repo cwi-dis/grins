@@ -48,13 +48,13 @@ MENUBAR=(
 		(CASCADE, 'Paste node', (
 			(ENTRY, 'Before', None, PASTE_BEFORE),
 			(ENTRY, 'After', None, PASTE_AFTER),
-			(ENTRY, 'As child', None, PASTE_UNDER))),
+			(ENTRY, 'Within', None, PASTE_UNDER))),
 		(ENTRY, 'Delete', None, DELETE),
 		(SEP,),
 		(CASCADE, 'New node', (
 			(ENTRY, 'Before', None, NEW_BEFORE),
 			(ENTRY, 'After', 'K', NEW_AFTER),
-			(ENTRY, 'Child', 'D', NEW_UNDER),
+			(ENTRY, 'Within', 'D', NEW_UNDER),
 			(ENTRY, 'Par parent', None, NEW_PAR),
 			(ENTRY, 'Seq parent', None, NEW_SEQ),
 			(ENTRY, 'Switch parent', None, NEW_ALT),
@@ -78,11 +78,12 @@ MENUBAR=(
 		(DYNAMICCASCADE, 'Channel visibility', CHANNELS))),
 
 	(CASCADE, 'Tools', (
-		(ENTRY, 'Show info', 'I', INFO),
-		(ENTRY, 'Show properties', 'A', ATTRIBUTES),
-		(ENTRY, 'Show anchors', 'T', ANCHORS),
+		(ENTRY, 'Info...', 'I', INFO),
+		(ENTRY, 'Properties...', 'A', ATTRIBUTES),
+		(ENTRY, 'Anchors...', 'T', ANCHORS),
 		(ENTRY, 'Edit content', 'E', CONTENT),
 		(SEP,),
+		(ENTRY, 'Create simple anchor', 'R', CREATEANCHOR),
 		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
 		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC))),
 		
@@ -114,18 +115,21 @@ MENUBAR=(
 		(DYNAMICCASCADE, 'Layout navigation', LAYOUTS))),
 		
 	(CASCADE, 'Views', (
-		(SPECIAL, 'Open windows', 'windows'),
-		(SPECIAL, 'Open documents', 'documents'),
-		(SEP,),
 		(TOGGLE, ('Show Player', 'Hide Player'), '1', PLAYERVIEW),
-		(TOGGLE, ('Show Layout view', 'Hide Layout view'), '2', LAYOUTVIEW),
-		(TOGGLE, ('Show Structure view', 'Hide Hierarchy view'), '3', HIERARCHYVIEW),
-		(TOGGLE, ('Show Timeline view', 'Hide Timeline view'), '4', CHANNELVIEW),
+		(SEP,),
+		(TOGGLE, ('Show Structure view', 'Hide Hierarchy view'), '2', HIERARCHYVIEW),
+		(TOGGLE, ('Show Timeline view', 'Hide Timeline view'), '3', CHANNELVIEW),
+		(TOGGLE, ('Show Layout view', 'Hide Layout view'), '4', LAYOUTVIEW),
+		(SEP,),
 		(TOGGLE, ('Show Hyperlinks', 'Hide Hyperlink view'), '5', LINKVIEW),
 		(TOGGLE, ('Show User groups', 'Hide User group view'), '6', USERGROUPVIEW),
 		(SEP,),
 		(ENTRY, 'View source', None, SOURCE),
-		(ENTRY, 'View help window', '?', HELP))),
+		(ENTRY, 'View help window', '?', HELP),
+		(SEP,),
+		(SPECIAL, 'Open windows', 'windows'),
+		(SPECIAL, 'Open documents', 'documents'),
+		)),
 )
 
 #
@@ -148,9 +152,12 @@ POPUP_HVIEW_LEAF = (
 		(ENTRY, 'Zoom in', None, ZOOMIN),
 		(ENTRY, 'Zoom out', None, ZOOMOUT),
 		(SEP,),
-		(ENTRY, 'Show info', 'I', INFO),
-		(ENTRY, 'Show properties', 'A', ATTRIBUTES),
-		(ENTRY, 'Show anchors', 'T', ANCHORS),
+		(ENTRY, 'Create anchor', None, CREATEANCHOR),
+		(ENTRY, 'Finish hyperlink', None, FINISH_LINK),
+		(SEP,),
+		(ENTRY, 'Info...', 'I', INFO),
+		(ENTRY, 'Properties...', 'A', ATTRIBUTES),
+		(ENTRY, 'Anchors...', 'T', ANCHORS),
 		(ENTRY, 'Edit content', 'E', CONTENT),
 )
 
@@ -174,6 +181,9 @@ POPUP_HVIEW_STRUCTURE = (
 		(ENTRY, 'Zoom out', None, ZOOMOUT),
 		(ENTRY, 'Zoom to focus', 'Z', ZOOMHERE),
 		(SEP,),
+		(ENTRY, 'Create anchor', None, CREATEANCHOR),
+		(ENTRY, 'Finish hyperlink', None, FINISH_LINK),
+		(SEP,),
 		(ENTRY, 'Show info', 'I', INFO),
 		(ENTRY, 'Show properties', 'A', ATTRIBUTES),
 		(ENTRY, 'Show anchors', 'T', ANCHORS),
@@ -193,6 +203,7 @@ POPUP_CVIEW_CHANNEL = (
 )
 
 POPUP_CVIEW_NODE = (
+		(ENTRY, 'Create simple anchor', None, CREATEANCHOR),
 		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
 		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC),
 		(SEP,),

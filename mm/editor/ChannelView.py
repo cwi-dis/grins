@@ -1250,6 +1250,7 @@ class NodeBox(GO, NodeBoxCommand):
 			PLAYFROM(callback = (self.playfromcall, ())),
 			PUSHFOCUS(callback = (self.focuscall, ())),
 			FINISH_ARC(callback = (self.newsyncarccall, ())),
+			CREATEANCHOR(callback = (self.createanchorcall, ())),
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
 			INFO(callback = (self.infocall, ())),
 			ATTRIBUTES(callback = (self.attrcall, ())),
@@ -1537,6 +1538,9 @@ class NodeBox(GO, NodeBoxCommand):
 		top = self.mother.toplevel
 		top.setwaiting()
 		top.hierarchyview.globalsetfocus(self.node)
+
+	def createanchorcall(self):
+		self.mother.toplevel.links.wholenodeanchor(self.node)
 
 	def hyperlinkcall(self):
 		self.mother.toplevel.links.finish_link(self.node)
