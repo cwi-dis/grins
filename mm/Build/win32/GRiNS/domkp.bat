@@ -1,6 +1,6 @@
 rem BEGIN_CUSTOMIZATION
 
-set GRINS_HOME=d:\ufs\mm\cmif
+set GRINS_HOME=..\..\..
 
 set FREEZE_WHAT=grins
 set EXCLUDE_WHAT=cmifed
@@ -9,10 +9,10 @@ set INCLUDE_MMEXTENSIONS=no
 
 set main_script=%GRINS_HOME%\fGRiNS.py
 
-rem set PYTHON_EXE=d:\ufs\mm\python\python.exe
-set PYTHON_EXE=d:\ufs\mm\cmif\bin\win32\python.exe
+rem set PYTHON_EXE=..\..\..\..\python\python.exe
+set PYTHON_EXE=..\..\..\bin\win32\python.exe
 
-set PYTHONHOME=d:\ufs\mm\python
+set PYTHONHOME=..\..\..\..\python
 
 call c:\Program Files\Microsoft Visual Studio\VC98\Bin\vcvars32.bat
 

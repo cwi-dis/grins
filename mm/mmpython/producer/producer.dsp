@@ -57,14 +57,14 @@ LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
 # ADD LINK32 version.lib winmm.lib vfw32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"Release/producer.pyd"
 # Begin Custom Build
-OutDir=.\Release
 TargetPath=.\Release\producer.pyd
 InputPath=.\Release\producer.pyd
 SOURCE="$(InputPath)"
 
-"$(OutDir)\log.txt" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy $(TargetPath) d:\ufs\mm\cmif\bin\win32
-
+"..\..\bin\win32\producer.pyd" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\bin\win32\producer.pyd 
+	copy $(TargetPath) ..\..\bin\win32 
+	
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "producer - Win32 Debug"
@@ -94,14 +94,14 @@ LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 version.lib winmm.lib vfw32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /out:"Debug/producer_d.pyd" /pdbtype:sept
 # Begin Custom Build
-OutDir=.\Debug
 TargetPath=.\Debug\producer_d.pyd
 InputPath=.\Debug\producer_d.pyd
 SOURCE="$(InputPath)"
 
-"$(OutDir)\log.txt" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy $(TargetPath) d:\ufs\mm\cmif\bin\win32
-
+"..\..\bin\win32\producer_d.pyd" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\bin\win32\producer_d.pyd 
+	copy $(TargetPath) ..\..\bin\win32 
+	
 # End Custom Build
 
 !ENDIF 
