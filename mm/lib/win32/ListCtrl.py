@@ -32,16 +32,16 @@ class ListCtrl(window.Wnd):
 
 	def OnDragEnter(self, dataobj, kbdstate, x, y): 
 		print 'OnDragEnter', self, dataobj, kbdstate, x, y
-		return DropTarget.DRAGEFFECT_LINK
+		return DropTarget.DROPEFFECT_LINK
 	def OnDragLeave(self): 
 		print 'OnDragLeave', self
-		return DropTarget.DRAGEFFECT_NONE
+		return DropTarget.DROPEFFECT_NONE
 	def OnDragOver(self, dataobj, kbdstate, x, y): 
 		print 'OnDragOver', self, dataobj, kbdstate, x, y
-		return DropTarget.DRAGEFFECT_LINK
+		return DropTarget.DROPEFFECT_LINK
 	def OnDrop(self, dataobj, effect, x, y): 
 		print 'OnDrop', self, dataobj, effect, x, y
-		return DropTarget.DRAGEFFECT_NONE
+		return DropTarget.DROPEFFECT_NONE
 
 	def getStyle(self):
 		style = win32con.WS_VISIBLE | win32con.WS_CHILD\
