@@ -17,7 +17,7 @@ class Animator:
 			times=None, splines=None, accumulate='none', additive='replace'): 
 		self._attr = attr
 		self._domval = domval
-		self._dur = dur
+		self._dur = float(dur)
 		self._mode = mode
 		self._values = values
 		self._times = times
@@ -46,19 +46,32 @@ class Animator:
 		# construct boundaries of time intervals
 		self._efftimes = []
 		if not times:
-			# create uniform intervals
-			# for now assume also uniform intervals for 'paced' mode
 			n = len(values)
-			# for discrete mode n is the number of intervals
-			if mode == 'discrete': n = n + 1
-			if n <= 2:
-				self._efftimes = [0, dur]
+			if mode == 'paced':
+				# create intervals proportional to values
+				# values may be not monotonic, so use segments:
+				tl = 0.0
+				for i in range(1,n):
+					tl = tl + self.distValues(values[i-1],values[i])
+				f = dur/tl
+				d = 0.0
+				self._efftimes.append(0)
+				for i in range(1,n-1):
+					d = d + self.distValues(values[i-1],values[i])
+					self._efftimes.append(f*d)
+				self._efftimes.append(dur)
 			else:
-				tau = dur/float(n-1)
-				t = 0.0
-				for i in range(n):
-					self._efftimes.append(t)
-					t = t + tau
+				# create uniform intervals
+				# for discrete mode n is the number of intervals
+				if mode == 'discrete': n = n + 1
+				if n <= 2:
+					self._efftimes = [0, dur]
+				else:
+					tau = dur/float(n-1)
+					t = 0.0
+					for i in range(n):
+						self._efftimes.append(t)
+						t = t + tau
 		else:
 			# scale times to dur
 			self._efftimes = []
@@ -72,18 +85,20 @@ class Animator:
 		self._repeatCounter = 0
 
 		# cashed acc value
-		self._accValue = 0
+		self._accValue = None
 
-		# current value
+		# current values
 		self._curvalue = None
+		self._time = None
 
 		# time manipulators
 		self._speed = 1.0
 		self._accelerate = 0.0
 		self._decelerate = 0.0
 		self._autoReverse = 0
+		self._direction = 1
 
-		# context of this animator
+		# composition context of this animator
 		self.__effectiveAnimator = None
 
 	def getDOMValue(self):
@@ -92,43 +107,83 @@ class Animator:
 	def getAttrName(self):
 		return self._attr
 
+	def getTimeManipulatedDur(self):
+		dur = self._dur
+		if self._autoReverse:
+			dur = 2*dur
+		dur = dur/self._speed
+		return dur
+
+	# return the current local time in [0, dur] 
+	# after time manipulations
+	def getLocalTime(self):
+		return self._time
+
 	# set local time to t and return value at t
 	def getValue(self, t):
 		# time manipulate transform
 		t = self._transformTime(t)
+		self._time = t
 
-		# boundary values
-		if t<0 or t>self._dur:
-			self._curvalue = self._domval
-			return self._domval
-		if self._dur == 0:
-			self._curvalue = self._values[0]
-			return self._values[0]
-
-		# end-point exclusive model 
-		if t == self._dur:
-			self._curvalue = self._values[0]
-			return self._values[0]
-
-		# calcMode
+		# assert that t is in [0,dur)
+		# i.e. assert end-point exclusive model 
+		if t<0 or t>self._dur or (t==self._dur and not self._autoReverse):
+			raise AssertionError
+			
+		# compute interpolated value according to calcMode
 		v = self._inrepol(t)
 
 		# accumulate
 		if self._accumulate=='sum' and self.__accValue:
 			v = self._accValue + v
-
+		
 		self._curvalue = v
 		return v
 
 	def getCurrValue(self):
 		return self._curvalue
 
+	# mainly for freeze and accumulate calculations 
+	def setToEnd(self):
+		# set local time to end
+		if self._autoReverse:t = 0
+		else: t = self._dur
+		self._time = t
+
+		# compute interpolated value according to calcMode
+		v = self._inrepol(t)
+
+		# set current value taking into account accumulate
+		self._repeatCounter = self._repeatCounter + 1
+		if self._accumulate=='sum':
+			if self._repeatCounter == 1:
+				self._accValue = v
+			else:
+				self._accValue = self.addValues(self._accValue, v)
+			self._curvalue = self._accValue
+		else:
+			self._curvalue = v
+
+	# reset
+	def restart(self):
+		self._repeatCounter = 0
+		self._accValue = None
+		self._curvalue = None
+		self._time = None
+
 	def isAdditive(self):
 		return self._additive=='sum'
 
-	# redefine this method to override addition
 	def addCurrValue(self, v):
-		return v + self._curvalue
+		return self.addValues(v, self._curvalue)
+
+	# redefine this method to override addition (for additive attributes)
+	def addValues(self, v1, v2):
+		return v1 + v2
+
+	# redefine this method to override metrics (for paced mode)
+	def distValues(self, v1, v2):
+		return math.fabs(v2-v1)
 
 	# t in [0, dur]
 	def _getinterval(self, t):
@@ -158,6 +213,8 @@ class Animator:
 		return vl[ix] + (vl[ix+1]-vl[ix])*pdt
 
 	def _paced(self, t):
+		# since intervals are proportional to values
+		# by construction, linear results to paced
 		return self._linear(t) 
 
 	def _spline(self, t):
@@ -206,82 +263,104 @@ class Animator:
 		else:
 			self._accumulate = acc
 
-	def repeat(self):
-		self._repeatCounter = self._repeatCounter + 1
-		if self._accumulate=='sum':
-			n = len(self._values)
-			last = self._values[n-1]
-			self._accValue = self._repeatCounter*last
-
 	def setRetunedValuesConverter(self, cvt):
 		self._convert = cvt
-
-	def freeze(self):
-		pass
 
 	def setEffectiveAnimator(self, ea):
 		self.__effectiveAnimator = ea
 
-	#
-	# begin time manipulation section
-	#
-	def getTimeManipulatedDur(self):
-		dur = self._dur
-		if self._autoReverse:
-			dur = 2*self._dur
-		if self._speed!=1.0:
-			dur = self._speed*dur
-		return dur
-		
-	def _setAutoReverse(self,t=0):
-		self._autoReverse = t
+	def _setAutoReverse(self,f):
+		if f: self._autoReverse = 1
+		else: self._autoReverse = 0
 
 	def _setAccelerateDecelerate(self, a, b):
-		self._accelerate = a
-		self._decelerate = b
+		if a <0.0 or b<0.0:
+			print 'invalid accelerate/decelerate values'		
+		a = math.fabs(a)
+		b = math.fabs(b)
+		s = a + b
+		if s==0:
+			self._accelerate = 0
+			self._decelerate = 0
+		elif s>1.0:
+			print 'invalid accelerate/decelerate values'
+			self._accelerate = a / s
+			self._decelerate = b / s
+		else:
+			self._accelerate = a
+			self._decelerate = b
 
+	# can be called two times
+	# one to set speed attribute and 
+	# two to set implicit speed from the container
 	def _setSpeed(self,s):
-		self._speed = s
+		if s == 0:
+			print 'invalid zero speed value'
+			s = 1.0
+		self._speed = self._speed * math.fabs(s)
+		self._direction = 1
+		if self._speed<0.0:
+			self._direction = -1
 
 	def _transformTime(self, t):
-		if self._autoReverse:
-			t = self._autoReverse(t)
-		if (self._accelerate+self._decelerate)>0.0:
-			t = self._accelerate_decelerate(t)
+		# first apply time scaling
 		if self._speed!=1.0:
-			t = self._speed(t)
+			t = self._applySpeed(t)
+
+		# then t mod dur
+		if self._autoReverse:
+			t = self._applyAutoReverse(t)
+
+		# then speed direction
+		if self._direction<0:
+			t = self._applyReflect(t)
+
+		# apply acc/dec for t is [0,dur]
+		if (self._accelerate+self._decelerate)>0.0:
+			t = self._applyAccelerateDecelerate(t)
+
 		return t
 
-	def _accelerate_decelerate(self, t):
+	# t in [0,dur]
+	# to presereve duration max speed m should be:
+	# d = accTriangle + constRectangle + decTriangle = a*d*m/2 + (d-b*d-a*d)*m + b*d*m/2
+	# therefore max speed m = 1 / (1 - a/2 - b/2)
+	def _applyAccelerateDecelerate(self, t):
+		if t<0 or t>self._dur:
+			raise AssertionError
 		a = self._accelerate
 		b = self._decelerate
 		d = self._dur
 		ad = a*d
-		bd = b*t
+		bd = b*d
 		t2 = t*t
-		r = 1.0/(1.0 - 0.5*a - 0.5*b)
+		dt2 = (d-t)*(d-t)
+		m = 1.0/(1.0 - 0.5*a - 0.5*b)
 		if t>=0 and t<=ad:
-			tp = 0.5*r*t2/ad
-		elif t>a*d and t<=(d-bd):
-			 tp = r*t
-		elif t>(d-bd) and t<=d:
-			tp = r * ((0.5*t2 - (d-bd))/bd)
-		else:
-			tp = t
+			tp = 0.5*m*t2/ad
+		elif t>=a*d and t<=(d-bd):
+			 tp = 0.5*m*ad + (t-ad)*m
+		elif t>=(d-bd) and t<=d:
+			tp = d - 0.5*m*dt2/bd
+		if tp<0 or tp>d:
+			raise AssertionError
 		return tp
 
-	def _autoReverse(self, t):
-		if t > 2*self._dur: 
-			return 0
-		elif t > self._dur:
-			return t - dur
+	# t in [0,2*dur]
+	def _applyAutoReverse(self, t):
+		if t<0 or t>2.0*self._dur:
+			raise AssertionError
+		if t > self._dur:
+			return self._dur - (t - self._dur)
 		else:
 			return t
 
-	def _speed(self, t):
-		if self._speed<0:
-			t = self._dur - t
-		return math.fabs(self._speed)*t
+	def _applySpeed(self, t):
+		return self._speed*t
+
+	# t in [0, dur]
+	def _applyReflect(self, t):
+		return self._dur - t
 
 	#
 	# temporary parametric form
@@ -365,12 +444,26 @@ class TupleAnimator(Animator):
 		for a in self._animators:
 			a.setRange(range)
 
-	def addCurrValue(self, v):
+	def addValues(self, v1, v2):
+		if len(v1)!=len(v2):
+			raise AssertionError
 		nv = []
-		for i in range(len(self._animators)):
+		for i in range(len(v1)):
 			a = self._animators[i]
-			nv.append(a.addCurrValue(v[i]))
+			nv.append(a.addValues(v1[i],v2[i]))
 		return tuple(nv)
+
+	def distValues(self, v1, v2):
+		if len(v1)!=len(v2):
+			raise AssertionError
+		ss = 0.0
+		for i in range(len(v1)):
+			a = self._animators[i]
+			dl = a.distValues(v1[i],v2[i])
+			ss = ss + dl*dl
+		return math.sqrt(ss)
+
+		return math.fabs(v2-v1)
 
 	def clamp(self, v):
 		nv = []
@@ -413,36 +506,28 @@ class ColorAnimator(TupleAnimator):
 # 'animateMotion' element animator
 class MotionAnimator(Animator):
 	def __init__(self, attr, domval, path, dur, mode='paced', 
-			times=None, splines=None, accumulate='none', additive='replace'):		
+			times=None, splines=None, accumulate='none', additive='replace'):
 		self._path = path
 
-		# values will be used if duration is undefined
-		l = path.getLength()
-		values = (path.getPointAt(0), path.getPointAt(l))
+		# get values from path to support modes other than paced
+		values = path.getPoints()
 		Animator.__init__(self, attr, domval, values, dur, mode, 
 			times, splines, accumulate, additive)
 		
-		# override acc value to be complex
-		self._accValue = complex(0,0)
-
 		# time to paced interval convertion factor
 		self._time2length = path.getLength()/dur
-
-	def _paced(self, t):
-		return self._path.getPointAt(t*self._time2length)
-
-	def _discrete(self, t):
-		return self._path.getPointAt(t*self._time2length)
 		
-	def _linear(self, t):
-		return self._path.getPointAt(t*self._time2length)
-
-	def _spline(self, t):
+	def _paced(self, t):
 		return self._path.getPointAt(t*self._time2length)
 
 	def convert(self, v):
 		x, y = v.real, v.imag
 		return _round(x), _round(y)
+	
+	def distValues(self, v1, v2):
+		dx = math.fabs(v2.real-v1.real)
+		dy = math.fabs(v2.imag-v1.imag)
+		return math.sqrt(dx*dx+dy*dy)
 
 ###########################
 # An EffectiveAnimator is responsible to combine properly
@@ -460,8 +545,7 @@ class MotionAnimator(Animator):
 # 'first in doc' is a common case and easy to implement
 # restart element raises priority but not repeat
 # *animators should be kept for all their effective dur: ED = AD + frozenDur
-# so, whats the best way to implement 'freeze'?
-# we must have a way to monitor animations for all ED not only AD
+# we must monitor animations for all ED not only AD
 # * we must either assert that onAnimateBegin are called in the proper order
 # or implement within EffectiveAnimator a proper ordering method
 # 
@@ -475,6 +559,10 @@ class EffectiveAnimator:
 
 		self.__chan = None
 		self.__currvalue = None
+
+		# we neeed a temporary instance of the
+		# last animator removed from self.__animators
+		self.__lastanimator = None
 
 	def getDOMValue(self):
 		return self.__domval
@@ -501,8 +589,11 @@ class EffectiveAnimator:
 
 	def onAnimateEnd(self, targChan, animator):
 		self.__animators.remove(animator)
-		if debug: print 'removing animator',animator		
+		if debug: print 'removing animator',animator
+		if not self.__animators:		
+			self.__lastanimator = animator
 		self.update(targChan)
+		self.__lastanimator = None
 
 	# compute and apply animations composite effect
 	# this method is a notification from some animator 
@@ -518,23 +609,31 @@ class EffectiveAnimator:
 			else:
 				cv = a.getCurrValue()
 		
+		# convert and clamp display value
 		displayValue = cv
+		a = None
 		if self.__animators:
 			a = self.__animators[0]
+		elif self.__lastanimator:
+			a = self.__lastanimator
+		if a:
 			displayValue = a.convert(displayValue)
 			displayValue = a.clamp(displayValue)
+
+		# update display value if we have a channel
 		if self.__chan and self.__chan.canupdateattr(self.__node, self.__attr):
 			self.__chan.updateattr(self.__node, self.__attr, displayValue)
 			if debug:
 				if cv == self.__domval:
-					print self.__attr,'is',displayValue, '(visible-domvalue)'
+					print self.__attr,'is',displayValue, '(update-domvalue)'
 				else:
-					print self.__attr,'is',displayValue, '(visible)'
+					print self.__attr,'is',displayValue, '(update)'
 		elif debug:
 			if cv == self.__domval:
 				print self.__attr,'is',displayValue, '(domvalue)'
 			else:
 				print self.__attr,'is',displayValue
+		
 		self.__currvalue = cv
 	
 	def getcurrentbasevalue(self, animator=None):
@@ -575,7 +674,6 @@ class AnimateContext:
 # * on syntax error: we can ignore animation effects but not timing
 # * attrdefs specs: additive, legal_range 
 # * an animation can effect indirectly more than one attributes (for example anim 'region')
-# * implement specialization: EffValueAnimator
 
 ###########################
 # Animation semantics parser helpers:
@@ -615,13 +713,11 @@ def getrenamed(node, attr):
 	return MMAttrdefs.getattr(nodr, attr), attr, MMAttrdefs.getattrtype(attr) 
 
 smil_attrs = {'left':(lambda node:getregionattr(node,'left')),
-	'right':(lambda node:getregionattr(node,'right')),
+	'top':(lambda node:getregionattr(node,'top')),
 	'width':(lambda node:getregionattr(node,'width')),
 	'height':(lambda node:getregionattr(node,'height')),
 	'right':(lambda node:getregionattr(node,'right')),
 	'bottom':(lambda node:getregionattr(node,'bottom')),
-	'position':(lambda node:getregionattr(node,'position')),
-	'size':(lambda node:getregionattr(node,'size')),
 	'backgroundColor': (lambda node:getregionattr(node,'bgcolor')),
 	'z-index':(lambda node:getregionattr(node,'z')),
 
@@ -631,18 +727,19 @@ smil_attrs = {'left':(lambda node:getregionattr(node,'left')),
 # Animation semantics parser
 class AnimateElementParser:
 	def __init__(self, anim):
-		self.__anim = anim
+		self.__anim = anim			# the animate element node
 		self.__elementTag = anim.attrdict['tag']
-		self.__attrname = ''
-		self.__grinsattrname = ''
-		self.__attrtype = ''
-		self.__domval = None
-		self.__enable = 0
-		self.__grinsext = 0
-		self.__hasValidTarget = 0
-		self.__target = None
+		self.__attrname = ''		# target attribute name
+		self.__attrtype = ''		# in ('string','int','float','color','position','inttuple','floattuple')
+		self.__domval = None		# document attribute value
+		self.__target = None		# target node
+		self.__hasValidTarget = 0	# valid target node and attribute
 
-		# locate target
+		self.__grinsattrname = ''	# grins internal target attribute name
+		self.__grinsext = 0			# is it a grins extension?
+
+		# locate target node
+		# create a virtual one for elements not represented internally by nodes
 		if not hasattr(anim,'targetnode') or not anim.targetnode:
 			te = MMAttrdefs.getattr(anim, 'targetElement')
 			if te:
@@ -664,14 +761,15 @@ class AnimateElementParser:
 		if not anim.targetnode:
 			# the target node does not exist within grins
 			# maybe it is a region or a similarly managed element
-			print 'Failed to locate target element',te
+			te = MMAttrdefs.getattr(anim, 'targetElement')
+			print 'Failed to locate target element', te
 			print '\t',self
 			return
 		else:
 			self.__target = anim.targetnode
 
 
-		# do we have a valid target?
+		# do we have a valid target node and attribute?
 		self.__hasValidTarget = self.__checkTarget()
 
 		# Read enumeration attributes
@@ -680,7 +778,6 @@ class AnimateElementParser:
 		self.__accumulate = MMAttrdefs.getattr(anim, 'accumulate')
 
 		# Read time manipulation attributes
-
 		# speed="1" is a no-op, and speed="-1" means play backwards
 		# we have to get the absolute speed. This is relative to parent 
 		self.__speed = MMAttrdefs.getattr(anim, 'speed')
@@ -722,9 +819,13 @@ class AnimateElementParser:
 
 		# 1. Read animation attributes
 		dur = self.getDuration()
-		mode = self.__calcMode 
-		times = self.__getInterpolationKeyTimes() 
-		splines = self.__getInterpolationKeySplines()
+		mode = self.__calcMode
+		if mode == 'paced':
+			# ignore times and splines for 'paced' animation
+			times = splines = ()
+		else:
+			times = self.__getInterpolationKeyTimes() 
+			splines = self.__getInterpolationKeySplines()
 		accumulate = self.__accumulate
 		additive = self.__additive
 
@@ -748,8 +849,10 @@ class AnimateElementParser:
 
 		if self.__elementTag=='animateColor':
 			values = self.__getColorValues()
-			return ColorAnimator(attr, domval, values, dur, mode, times, splines,
+			anim = ColorAnimator(attr, domval, values, dur, mode, times, splines,
 				accumulate, additive)
+			self.__setTimeManipulators(anim)
+			return anim
 
 		if self.__elementTag=='animateMotion':
 			strpath = MMAttrdefs.getattr(self.__anim, 'path')
@@ -760,8 +863,10 @@ class AnimateElementParser:
 				coords = self.__getNumPairInterpolationValues()
 				path.constructFromPoints(coords)
 			if path.getLength():
-				return MotionAnimator(attr, domval, path, dur, mode, times, splines,
+				anim = MotionAnimator(attr, domval, path, dur, mode, times, splines,
 					accumulate, additive)
+				self.__setTimeManipulators(anim)
+				return anim
 			else:
 				return None
 
