@@ -329,12 +329,12 @@ class StructureObjWidget(MMNodeWidget):
 		self.children = None
 
 	def select(self):
-		if self.mother.timescale == 'focus':
+		if self.mother.timescale in ('focus', 'cfocus'):
 			self.timeline = TimelineWidget(self.node, self.mother)
 		MMNodeWidget.select(self)
 		
 	def unselect(self):
-		if self.mother.timescale == 'focus' and self.timeline:
+		if self.mother.timescale in ('focus', 'cfocus') and self.timeline:
 			self.timeline.destroy()
 			self.timeline = None
 		MMNodeWidget.unselect(self)
