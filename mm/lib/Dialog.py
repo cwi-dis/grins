@@ -73,7 +73,6 @@ class BasicDialog() = (glwindow.glwindow)():
 	#
 	def hide(self):
 		if not self.showing: return
-		self.get_geometry()
 		self.save_geometry()
 		glwindow.unregister(self)
 		self.form.hide_form()
@@ -189,7 +188,6 @@ class GLDialog() = (glwindow.glwindow)():
 	#
 	def hide(self):
 		if self.wid = 0: return
-		self.get_geometry()
 		self.save_geometry()
 		glwindow.unregister(self)
 		gl.winclose(self.wid)
@@ -213,7 +211,7 @@ class GLDialog() = (glwindow.glwindow)():
 		pass
 	#
 	def save_geometry(self):
-		pass
+		self.get_geometry() # This is needed for hide()
 	#
 
 
