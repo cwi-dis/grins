@@ -58,21 +58,22 @@ class _rbtk:
 		# indicate drawing canvas
 		#canvas_color=(228,255,228)
 		#d.drawfbox(canvas_color,(0,0,1,1))
-		d.drawbox((0.001,0.001,0.999,0.999))
+		#d.drawbox((0.001,0.001,0.999,0.999))
 
 		# frame subwindows
 		sw = self._subwindows[:]
 		sw.reverse()
 		for win in sw:
 			b=win.getsizes()
-			d.drawbox(b)
+			if b != (0, 0, 1, 1):
+				d.drawbox(b)
 		self._topwindow.ShowWindows(win32con.SW_HIDE)
 
 		if box:
 			# add the rect obj
 			box_pxl=self.get_pixel_coords(box)
 			l,t,w,h=box_pxl
-			rectObj=DrawTk.DrawRect(Rect((l,t,l+w,t+h)))
+			rectObj=DrawTk.DrawRect(Rect((l,t,l+w,t+h)),units=units)
 			self.Add(rectObj)
 			
 			# select tool 'select' and select obj
@@ -84,7 +85,7 @@ class _rbtk:
 			drawTool.onLButtonDown(self,0,point)
 			drawTool.onLButtonUp(self,0,point)
 		else:
-			DrawTk.drawTk.SelectTool('rect')
+			DrawTk.drawTk.SelectTool('rect', units = units)
 			DrawTk.drawTk.LimitRects(1)
 
 		d.render()
@@ -120,7 +121,7 @@ class _rbtk:
 		self._rb_curdisp.close()
 
 		# 5. get user object
-		if len(self._objects):
+		if self._objects:
 			drawObj=self._objects[0]
 			rb=self.get_relative_coords100(drawObj._position.tuple_ps(), units = units)
 		else:
