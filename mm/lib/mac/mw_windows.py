@@ -2,6 +2,7 @@ import Win
 import Qd
 import Dlg
 import Ctl
+import Controls
 import mac_image
 import imgformat
 import img
@@ -1334,7 +1335,7 @@ class _SubWindow(_CommonWindow):
 			w._do_resize1()
 
 class DialogWindow(_Window):
-	def __init__(self, resid, title='Dialog'):
+	def __init__(self, resid, title='Dialog', default=None, cancel=None):
 		wid = Dlg.GetNewDialog(resid, -1)
 		x0, y0, x1, y1 = wid.GetWindowPort().portRect
 		w, h = x1-x0, y1-y0
@@ -1350,6 +1351,12 @@ class DialogWindow(_Window):
 		self._widgetdict = {}
 		self._is_shown = 0 # XXXX Is this always true??!?
 		self.title = title
+		if not default is None:
+			self._do_defaulthit = self._optional_defaulthit
+			self._default = default
+			self._wid.SetDialogDefaultItem(default)
+		if not cancel is None:
+			self._wid.SetDialogCancelItem(cancel)
 		
 	def show(self):
 		self.settitle(self.title)
@@ -1375,6 +1382,15 @@ class DialogWindow(_Window):
 	def do_itemhit(self, item, event):
 		print 'Dialog %s item %d event %s'%(self, item, event)
 		
+	#
+	# If the dialog has a default item the next method is copied to _do_defaulthit.
+	# The event handling will then call this when return is pressed.
+	#
+	def _optional_defaulthit(self):
+		tp, h, rect = self._wid.GetDialogItem(self._default)
+		h.as_Control().HiliteControl(Controls.inButton)
+		self.do_itemhit(self._default, None)
+		
 	def do_itemdraw(self, item):
 		try:
 			w = self._widgetdict[item]
@@ -1395,3 +1411,4 @@ class DialogWindow(_Window):
 		self.addwidget(item, widget)
 		return widget
 
+		
