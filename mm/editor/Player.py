@@ -212,10 +212,15 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 			form.add_button(INOUT_BUTTON,x,y,w,h, 'Faster')
 		self.fastbutton.set_call_back(self.fast_callback, None)
 		#
-		x, y, w, h = 200, 0, 98, 48
+		x, y, w, h = 200, 0, 48, 48
 		self.abbutton = \
-			form.add_button(NORMAL_BUTTON,x,y,w,h, 'A-B')
+			form.add_button(NORMAL_BUTTON,x,y,w,h, 'A-B\nplay')
 		self.abbutton.set_call_back(self.ab_callback, None)
+		#
+		x, y, w, h = 250, 0, 48, 48
+		self.menubutton = \
+			form.add_menu(PUSH_MENU,x,y,w,h, 'Menu')
+		self.menubutton.set_call_back(self.menu_callback, None)
 		#
 		x, y, w, h = 100, 0, 98, 48
 		self.statebutton = \
@@ -295,6 +300,16 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 			except:
 				import gl
 				gl.ringbell()
+	#
+	def menu_callback(self, (obj, arg)):
+		i = self.menubutton.get_menu() - 1
+		if 0 <= i < len(self.channelnames):
+			name = self.channelnames[i]
+			if self.channels[name].is_showing():
+				self.channels[name].hide()
+			else:
+				self.channels[name].show()
+			self.makemenu()
 	#
 	def state_callback(self, (obj, arg)):
 		# This is a button disguised as a button.
@@ -379,8 +394,11 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 			self.partbutton.label = ''
 		else:
 			name = MMAttrdefs.getattr(self.playroot, 'name')
-			if name = 'none': name = 'subtree'
-			self.partbutton.label = '(' + name + ')'
+			if name = 'none':
+				label = 'part play'
+			else:
+				label = 'part play:\n' + name
+			self.partbutton.label = label
 		self.showtime()
 	#
 	def showtime(self):
@@ -402,6 +420,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 			attrdict = self.context.channeldict[name]
 			self.newchannel(name, attrdict)
 			self.channelnames.append(name)
+		self.makemenu()
 	#
 	def checkchannels(self):
 		# XXX Ought to detect renamed channels...
@@ -424,18 +443,31 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 				i = self.context.channelnames.index(name)
 				self.channelnames.insert(i, name)
 				self.channels[name].show()
+		self.makemenu()
+	#
+	def makemenu(self):
+		self.menubutton.set_menu('')
+		for name in self.channelnames:
+			if self.channels[name].is_showing():
+				onoff = ''
+			else:
+				onoff = '(off)'
+			self.menubutton.addto_menu(name + ' ' + onoff + '|')
 	#
 	def showchannels(self):
 		for name in self.channelnames:
 			self.channels[name].show()
+		self.makemenu()
 	#
 	def hidechannels(self):
 		for name in self.channelnames:
 			self.channels[name].hide()
+		self.makemenu()
 	#
 	def destroychannels(self):
 		for name in self.channelnames[:]:
 			self.killchannel(name)
+		self.makemenu()
 	#
 	def killchannel(self, name):
 		self.channels[name].destroy()
