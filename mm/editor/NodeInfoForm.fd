@@ -156,7 +156,7 @@ alignment: 4
 style: 0
 size: 11.000000
 lcol: 0
-label: Archors...
+label: Anchors...
 name: anchors_button
 callback: anchors_callback
 argument: 0
