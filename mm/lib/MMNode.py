@@ -2148,6 +2148,7 @@ class MMSyncArc:
 			t = refnode.isresolved(sctx)
 			if event == 'begin':
 				if refnode.start_time is not None:
+##					print 'set timestamp 1',self,t + self.delay
 					self.timestamp = t + self.delay
 				return t + self.delay
 			if event == 'end':
@@ -2156,6 +2157,7 @@ class MMSyncArc:
 				d = refnode.calcfullduration(sctx)
 				if refnode.start_time is not None and \
 				   refnode.fullduration is not None:
+##					print 'set timestamp 2',self,t + d + self.delay
 					self.timestamp = t + d + self.delay
 				return t + d + self.delay
 			return refnode.happenings[('event', event)] + self.delay
@@ -2446,6 +2448,7 @@ class MMNode(MMTreeElement):
 				except ValueError:
 					pass
 				arc.qid = None
+##			print 'set timestamp 3',self,None
 			arc.timestamp = None
 ##		self.sched_children = []
 		self.looping_body_self = None
@@ -4197,6 +4200,8 @@ class MMNode(MMTreeElement):
 				# duration
 ##				srlist.append(([(SCHED_DONE, child)],
 ##					       scheddone_actions))
+			elif termtype == 'MEDIA':
+				pass
 			elif schedule or termtype == 'ALL':
 				scheddone_events.append((SCHED_DONE, child))
 			for arc in self.FilterArcList(child.GetEndList()):
