@@ -249,7 +249,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			movie.SetStartFrame(self.__begin)
 		t0 = self._scheduler.timefunc()
 		if t0 > self._played_node.start_time:
-			print 'skipping',t0-self._played_node.start_time
+			print 'skipping',self._played_node.start_time,t0,t0-self._played_node.start_time
 			movie.SetCurrentFrame(self.__begin + t0 - self._played_node.start_time)
 		begin = movie.GetStartTime(1000) / 1000.0
 		if self.__end:
@@ -267,6 +267,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if repeatdur > 0:
 			self.__qid = self._scheduler.enter(
 				repeatdur, 0, self.__stopplay, ())
+		self.event('beginEvent')
 		movie.Play()
 		self.__stopped = 0
 		r = Xlib.CreateRegion()

@@ -532,9 +532,12 @@ class Channel:
 		self._qid = None
 
 	def onclick(self, *unused):
+		self.event('click')
+
+	def event(self, event):
 		timestamp = self._scheduler.timefunc()
-		self._played_node.event(timestamp, 'click')
-		self._scheduler.sched_arcs(self._playcontext, self._played_node, 'click', timestamp=timestamp)
+		self._played_node.event(timestamp, event)
+		self._scheduler.sched_arcs(self._playcontext, self._played_node, event, timestamp=timestamp)
 
 	def play_1(self):
 		# This does the final part of playing a node.  This
@@ -579,6 +582,9 @@ class Channel:
 			self._played_node.end_time = self._scheduler.timefunc()
 		else:
 			self._played_node.end_time = end_time
+		if self._played_node.happenings.has_key(('event','beginEvent')):
+			# can only end when we've actually started
+			self.event('endEvent')
 		# If this node has a pausing anchor, don't call the
 		# callback just yet but wait till the anchor is hit.
 		if self._has_pause:
@@ -650,6 +656,7 @@ class Channel:
 
 	def do_play(self, node):
 		# Actually play the node.
+		self.event('beginEvent')
 		pass
 
 	#
