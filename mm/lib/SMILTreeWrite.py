@@ -655,7 +655,7 @@ def getsyscomp(writer, node, attr):
 def getscreensize(writer, node):
 	value = node.GetRawAttrDef('system_screen_size', None)
 	if value is not None:
-		return '%dX%d' % value
+		return '%dX%d' % (value[1], value[0])
 
 def getugroup(writer, node):
 	if not node.GetContext().usergroups:

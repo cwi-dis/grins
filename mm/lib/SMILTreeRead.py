@@ -77,8 +77,8 @@ wallclockval = re.compile(
 	r'(?P<time>(?P<hour>\d{2}):(?P<min>\d{2})(?::(?P<sec>\d{2}(?:\.\d+)?))?)?'	# time (optional)
 	r'(?:(?P<Z>Z)|(?P<tzsign>[-+])(?P<tzhour>\d{2}):(?P<tzmin>\d{2}))?$'	# timezone (optional)
 	)
-screen_size = re.compile(_opS + r'(?P<x>\d+)' + _opS + r'[xX]' +
-			 _opS + r'(?P<y>\d+)' + _opS + r'$')
+screen_size = re.compile(_opS + r'(?P<y>\d+)' + _opS + r'[xX]' +
+			 _opS + r'(?P<x>\d+)' + _opS + r'$')
 clip = re.compile(_opS + r'(?:'
 		  # npt=...
 		   '(?:(?P<npt>npt)' + _opS + r'=' + _opS + r'(?P<nptclip>[^-]*))|'
