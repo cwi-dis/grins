@@ -2310,7 +2310,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if self.__nodemap.has_key(targetid):
 				targetnode = self.__nodemap[targetid]
 				node.targetnode = targetnode
-			else:
+			elif node.attrdict['tag'] != 'animateMotion':
 				self.warning("unknown targetElement `%s'" % targetid, lineno)
 		del self.__animatenodes
 
