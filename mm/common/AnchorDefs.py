@@ -14,3 +14,16 @@ ATYPE_AUTO   = 1	# Auto-firing anchor (fires when the node is done)
 ATYPE_NORMAL = 2	# Normal (e.g. e box drawn in the window)
 ATYPE_PAUSE  = 3	# Pausing (same plus player pauses until choice made)
 # XXX ATYPE_PAUSE should be replaced by a separate 'pause' flag on the node
+#
+# This is a (temporary) routine to modify anchor lists so all anchor id's
+# are strings.
+def modanchorlist(list):
+	didwork = 0
+	for i in range(len(list)):
+		id, tp, args = list[i]
+		if type(id) <> type(''):
+			id = `id`
+			list[i] = (id, tp, args)
+			didwork = 1
+	if didwork:
+		print 'modanchorlist: modified anchors'

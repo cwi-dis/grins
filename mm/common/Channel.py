@@ -517,13 +517,21 @@ class Channel(ChannelWM):
 	def gethicolor(self, node):
 		return MMAttrdefs.getattr(node, 'hicolor')
 
-	# This method is called when the user defines a new anchor. It
-	# may be overridden by derived classes.
 	def defanchor(self, node, anchor):
-		print 'DEFANCHOR', node, anchor
+		# This method is called when the user defines a new anchor. It
+		# may be overridden by derived classes.
 		dialogs.showmessage('Channel '+self._name+' does not support\n'+ \
 			  'editing of anchors (yet)')
 		return anchor
+
+	def updatefixedanchors(self, node):
+		# This method is called by the anchor editor to ensure that
+		# the 'anchorlist' attribute is correct for nodes on channels
+		# that have anchors implicit in the document. Such channels
+		# override this method by one that does the updating and
+		# returns 1. A return of '1' causes the anchor editor to refuse
+		# to edit an anchor.
+		return 0
 
 # dictionary with channels that have windows
 ChannelWinDict = {}
