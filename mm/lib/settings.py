@@ -23,6 +23,7 @@ default_settings = {
 	'hierarchy_minimum_sizes': 0,	# Leaf nodes drawn using min. size
 	'root_expanded': 1,		# Root node always expanded
 	'recent_documents':[],		# Recently used documents
+	'thumbnail_size':10.0,		# Size of thumbnail (mm)
 # HierarchyView colors
 	'structure_bgcolor': (150, 150, 150), # Light gray
 	'structure_leafcolor': (208, 182, 160),	# Pale pinkish, match channel view
