@@ -103,11 +103,21 @@ class Main(MainDialog):
 		self.tops.append(top)
 		top.setready()
 
-	def do_exit(self, *args):
-		for top in self.tops[:]:
-			top.close()
-		if not self.tops:
-			raise SystemExit, 0
+	def do_exit(self):
+		ok = 1
+		toclose = []
+		for top in self.tops:
+			if top.close_ok():
+				toclose.append(top)
+			else:
+				ok = 0
+		if not ok:
+			# can't exit yet but close the ones that are
+			# ok to close
+			for top in toclose:
+				top.close()
+			return
+		raise SystemExit, 0
 
 	def run(self):
 		import windowinterface
