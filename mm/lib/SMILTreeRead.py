@@ -18,6 +18,7 @@ import ChannelMap
 import EditableObjects
 import parseutil
 import colors
+import urlcache
 
 if __debug__:
 	parsedebug = 0
@@ -1636,7 +1637,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					mtype = mimetype
 	# not allowed to look at extension...
 			if url is not None and mtype is None:
-				import urlcache
 				mtype = urlcache.mimetype(url)
 				if mtype is None:
 					# we have no idea what type the file is
@@ -1712,6 +1712,28 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					chtype = 'video'
 				elif chtype == 'html':
 					chtype = 'text'
+
+			if attributes.has_key('iwidth'):
+				try:
+					width = int(attributes['iwidth'])
+				except ValueError:
+					self.syntax_error('invalid iwidth attribute value')
+				else:
+					urlcache.urlcache[url]['width'] = width
+			if attributes.has_key('iheight'):
+				try:
+					height = int(attributes['iheight'])
+				except ValueError:
+					self.syntax_error('invalid iheight attribute value')
+				else:
+					urlcache.urlcache[url]['height'] = height
+			if attributes.has_key('idur'):
+				try:
+					height = float(attributes['idur'])
+				except ValueError:
+					self.syntax_error('invalid idur attribute value')
+				else:
+					urlcache.urlcache[url]['duration'] = height
 
 		# connect to the register point
 		if attributes.has_key('regPoint'):

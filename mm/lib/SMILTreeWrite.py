@@ -16,6 +16,7 @@ import os
 import MMurl
 import MMmimetypes
 import re
+import urlcache
 
 from SMIL import *
 
@@ -102,9 +103,9 @@ cancel = 'cancel'
 
 def WriteFile(root, filename, grinsExt = 1, qtExt = features.EXPORT_QT in features.feature_set,
 	      rpExt = features.EXPORT_REAL in features.feature_set, copyFiles = 0, convertfiles = 1, convertURLs = 0,
-	      evallicense = 0, progress = None, prune = 0, smil_one = 0):
+	      evallicense = 0, progress = None, prune = 0, smil_one = 0, addattrs = 0):
 	try:
-		writer = SMILWriter(root, None, filename, grinsExt = grinsExt, qtExt = qtExt, rpExt = rpExt, copyFiles = copyFiles, convertfiles = convertfiles, convertURLs = convertURLs, evallicense = evallicense, progress = progress, prune = prune, smil_one = smil_one)
+		writer = SMILWriter(root, None, filename, grinsExt = grinsExt, qtExt = qtExt, rpExt = rpExt, copyFiles = copyFiles, convertfiles = convertfiles, convertURLs = convertURLs, evallicense = evallicense, progress = progress, prune = prune, smil_one = smil_one, addattrs = addattrs)
 	except Error, msg:
 		from windowinterface import showmessage
 		showmessage(msg, mtype = 'error')
@@ -358,7 +359,6 @@ def copysrc(writer, node, url, copycache, files_generated, copydirurl):
 		if writer.rpExt and not writer.grinsExt:
 			nurl = MMurl.unquote(nurl)
 		return nurl
-	import urlcache
 	if urlcache.mimetype(url) == 'image/vnd.rn-realpix':
 		# special case code for RealPix file
 		import realsupport
@@ -498,7 +498,48 @@ def getmimetype(writer, node):
 	if writer.copydir and writer.convert and MMAttrdefs.getattr(node, 'project_convert'):
 		# MIME type may be changed by copying, so better not to return any
 		return
-	return node.GetRawAttrDef('mimetype', None)
+	mtype = node.GetRawAttrDef('mimetype', None)
+	if mtype is None and writer.addattrs:
+		url = node.GetAttrDef('file', None) or ''
+		if url:
+			mtype = urlcache.mimetype(node.GetContext().findurl(url))
+	return mtype
+
+def getintrinsicwidth(writer, node):
+	if not writer.addattrs:
+		return
+	if node.GetType() != 'ext':
+		return
+	url = node.GetFile()
+	if url:
+		import Sizes
+		width, height = Sizes.GetSize(url)
+		if width:
+			return `width`
+
+def getintrinsicheight(writer, node):
+	if not writer.addattrs:
+		return
+	if node.GetType() != 'ext':
+		return
+	url = node.GetFile()
+	if url:
+		import Sizes
+		width, height = Sizes.GetSize(url)
+		if height:
+			return `height`
+
+def getintrinsicduration(writer, node):
+	if not writer.addattrs:
+		return
+	if node.GetType() != 'ext':
+		return
+	url = node.GetAttrDef('file', None) or ''
+	if url:
+		import Duration
+		dur = Duration.getintrinsicduration(node, 0)
+		if dur > 0:
+			return fmtfloat(dur)
 
 def getdescr(writer, node, attr):
 	return node.GetRawAttrDef(attr, None) or None
@@ -986,7 +1027,7 @@ smil_attrs=[
 	("project_forcechild", getforcechild, "project_forcechild"),
 	("project_default_type", lambda writer, node:getcmifattr(writer, node, 'project_default_type'), "project_default_type"),
 	("project_bandwidth_fraction", lambda writer, node:getpercentage(writer, node, 'project_bandwidth_fraction'), "project_bandwidth_fraction"),
-	("type", getmimetype, "mimetype"),
+	("type", getmimetype, None),
 	("author", lambda writer, node:getcmifattr(writer, node, "author"), "author"),
 	("copyright", lambda writer, node:getcmifattr(writer, node, "copyright"), "copyright"),
 	("abstract", lambda writer, node:getcmifattr(writer, node, "abstract"), "abstract"),
@@ -1099,6 +1140,9 @@ smil_attrs=[
 	("project_readonly", lambda writer, node:getboolean(writer, node, "project_readonly", 1, 0), "project_readonly"),
 	("showAnimationPath", lambda writer, node:getboolean(writer, node, "showAnimationPath", 1, 1), "showAnimationPath"),
 	("RTIPA-server", lambda writer, node:getcmifattr(writer, node, "RTIPA_server"), "RTIPA_server"),
+	("iwidth", getintrinsicwidth, None),
+	("iheight", getintrinsicheight, None),
+	("idur", getintrinsicduration, None),
 ]
 prio_attrs = [
 	("id", getid, None),
@@ -1200,7 +1244,6 @@ def mediatype(x, error=0):
 		chtype = 'unknown'
 	if chtype == 'video':
 		url = x.GetAttrDef('file', None) or ''
-		import urlcache
 		mtype = urlcache.mimetype(x.GetContext().findurl(url))
 		if mtype == 'image/vnd.rn-realpix':
 			chtype = 'RealPix'
@@ -1359,7 +1402,7 @@ class SMILWriter(SMIL, BaseSMILWriter):
 		     qtExt = features.EXPORT_QT in features.feature_set,
 		     copyFiles = 0, evallicense = 0, tmpcopy = 0, progress = None,
 		     convertURLs = 0, convertfiles = 1, set_char_pos = 0, prune = 0,
-		     smil_one = 0, weburl = None):
+		     smil_one = 0, addattrs = 0, weburl = None):
 		self.messages = []
 
 		# remember params
@@ -1372,6 +1415,7 @@ class SMILWriter(SMIL, BaseSMILWriter):
 		self.progress = progress
 		self.convert = convertfiles # we only convert if we have to copy
 		self.root = node
+		self.addattrs = addattrs # add attributes to make processing faster
 
 		# some abbreviations
 		self.context = ctx = node.GetContext()
@@ -2685,7 +2729,6 @@ class SMILWriter(SMIL, BaseSMILWriter):
 		import posixpath, urlparse
 		utype, host, path, params, query, fragment = urlparse.urlparse(srcurl)
 		if utype == 'data':
-			import urlcache
 			mtype = urlcache.mimetype(srcurl)
 			if mtype is None:
 				mtype = 'text/plain'
