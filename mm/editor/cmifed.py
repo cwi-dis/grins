@@ -138,7 +138,7 @@ class Main(MainDialog):
 			if image:
 				image = os.path.join(self.templatedir, image)
 			names.append(name)
-			descriptions.append(description, image, pathname)
+			descriptions.append((description, image, pathname))
 		self.template_info = (names, descriptions)
 
 	def never_again(self):
