@@ -3,14 +3,12 @@ import ftplib
 from ftplib import all_errors, error_perm
 import string
 
-class FtpWriter:
+class FtpConnection:
 	def __init__(self,
 		     host,
-		     file,
 		     user='anonymous',
 		     passwd='',
 		     dir='',
-		     ascii=0,
 		     debuglevel=0):
 		self.ftp = None
 		self.ftpdata = None
@@ -21,6 +19,33 @@ class FtpWriter:
 		self.ftp.login(user, passwd)
 		if dir:
 			self.ftp.cwd(dir)
+			
+	def __del__(self):
+		self.close()
+
+	def close(self):
+		if self.ftp:
+			self.ftp.quit()
+			self.ftp = None
+			
+	def Writer(self, file, ascii=0):
+		return _FtpWriter(self, file, ascii)
+		
+	def chmkdir(self, dir):
+		try:
+			self.ftp.mkd(dir)
+		except ftplib.all_errors:
+			pass
+		self.ftp.cwd(dir)
+
+def FtpWriter(host, file, user='anonymous', passwd='', dir='', ascii=0, debuglevel=0):
+		return FtpConnection(host, user, passwd, dir, debuglevel).Writer(file, ascii)
+		
+class _FtpWriter:
+	def __init__(self, connection, file, ascii=0):
+		self.connection = connection
+		self.ftp = connection.ftp
+		self.ftpdata = None
 		self.ascii = ascii
 		if ascii:
 			self.ftp.voidcmd('TYPE A')
@@ -36,9 +61,7 @@ class FtpWriter:
 			self.ftpdata.close()
 			self.ftp.voidresp()
 			self.ftpdata = None
-		if self.ftp:
-			self.ftp.quit()
-			self.ftp = None
+		self.connection = None
 
 	def write(self, data):
 		if self.ascii:
