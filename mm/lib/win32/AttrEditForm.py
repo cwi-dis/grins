@@ -1820,16 +1820,16 @@ class LayoutPage(AttrPage):
 			t.settext('scale 1 : %.1f' % self._xscale)
 		self.create_box(self.getcurrentbox())
 
-	# hack messages! 
+	# update layout control that the mouse is outside its region
 	def onLButtonDown(self,params):
-		pass
-		#self._layoutctrl._notifyListener('onLButtonDown',params)
-		#self._layoutctrl._notifyListener('onLButtonUp',params)
+		if self._layoutctrl:
+			self._layoutctrl.onNCLButton(params)
 	def onLButtonUp(self,params):
-		pass
-		#self._layoutctrl._notifyListener('onLButtonUp',params)
+		if self._layoutctrl:
+			self._layoutctrl.onNCLButton(params)
 	def onMouseMove(self,params):
-		pass #self._layoutctrl.notifyListener('onLButtonUp',params)
+		if self._layoutctrl:
+			self._layoutctrl.onNCLButton(params)
 
 	def OnSetActive(self):
 		if self._layoutctrl:
