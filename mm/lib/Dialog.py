@@ -161,9 +161,9 @@ class Dialog(BasicDialog):
 		form = self.form
 		width = self.width
 		#
-		x, y, w, h = 2, 2, 66, 26
+		x, y, w, h = 0, 0, 66, 26
 		#
-		x = 2
+		x = 0
 		b = form.add_button(NORMAL_BUTTON, x, y, w, h, 'Cancel')
 		b.set_call_back(self.cancel_callback, None)
 		self.cancel_button = b
@@ -174,12 +174,12 @@ class Dialog(BasicDialog):
 		self.restore_button = b
 		#
 		x = x + 70
-		w1 = width - 4*70 - 4
+		w1 = width - 4*70
 		b = form.add_text(NORMAL_TEXT, x, y, w1, h, self.hint)
 		b.align = ALIGN_CENTER
 		self.hint_button = b
 		#
-		x = width - 70 - 68
+		x = width - 70 - 70
 		b = form.add_button(NORMAL_BUTTON, x, y, w, h, 'Apply')
 		b.set_call_back(self.apply_callback, None)
 		self.apply_button = b
