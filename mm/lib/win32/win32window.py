@@ -1661,10 +1661,10 @@ class Region(Window):
 			return img
 
 	def getgrinsdoc(self):
-		if self != self._toplevel:
-			return self._toplevel.getgrinsdoc()
+		if self != self._topwindow:
+			return self._topwindow.getgrinsdoc()
 		else:
-			print 'toplevel should override getgrinsdoc'
+			print 'topwindow should override getgrinsdoc'
 	
 	#
 	# Box creation section
@@ -2312,7 +2312,7 @@ class Viewport(Region):
 		self._ctx.updateMouseCursor()
 
 	def getgrinsdoc(self):
-		return self._ctx.getgrinsdoc(file)
+		return self._ctx.getgrinsdoc()
 
 	def onMouseEvent(self, point, event, params=None):
 		import WMEVENTS
