@@ -1,5 +1,8 @@
 # Player module -- mostly defines the Player class.
 
+# XXX Need to play 'bag' nodes differently
+# XXX I've broken the handling of measure_armtimes --Guido
+
 
 import time
 import gl
@@ -18,15 +21,7 @@ import rtpool
 from MMNode import alltypes, leaftypes, interiortypes
 from ArmStates import *
 from AnchorEdit import A_ID, A_TYPE, ATYPE_PAUSE
-
-
-# The player algorithm treats the head and tail (begin and end) sides
-# of a node as separate events in time; there are separate counters
-# and lists of dependencies, indexed by the symbolic constants
-# HD and TL: e.g., node.counter[HD], node.deps[HD].
-# This is also used in module Timing!
-
-HD, TL = 0, 1
+from HDTL import HD, TL
 
 
 # Nominal Control Panel dimensions
@@ -48,7 +43,8 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self = ViewDialog.init(self, 'player_')
 		self.toplevel = toplevel
 		self.root = self.toplevel.root
-		self.playroot = self.root
+		self.playroot = self.root # top of current mini-document
+		self.userplayroot = self.root # node specified by part play
 		self.queue = []
 		self.rtpool = rtpool.rtpool().init()
 		self.resettimer()
@@ -83,8 +79,11 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def commit(self):
 		if self.showing:
 			self.checkchannels()
+			# Check if any of the playroots has vanished
 			if self.playroot.GetRoot() <> self.root:
 				self.playroot = self.root
+			if self.userplayroot.GetRoot() <> self.root:
+				self.userplayroot = self.root
 		self.locked = 0
 		self.measure_armtimes = 1
 		self.showstate()
@@ -129,7 +128,8 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	#
 	def fullreset(self):
 		self.reset()
-		self.playroot = self.root
+		self.playroot = self.userplayroot = self.root
+		self.measure_armtimes = 0
 	#
 	def reset(self):
 		self.resettimer()
@@ -176,13 +176,14 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	#
 	def freeze(self):
 	        if not self.frozen:
-		    self.frozen_value = self.timefunc()
+			self.frozen_value = self.timefunc()
 		self.frozen = self.frozen + 1
+	#
 	def unfreeze(self):
 	        self.frozen = self.frozen - 1
 		if self.frozen <= 0:
-		    if self.frozen < 0:
-			print 'Player: self.frozen < 0!'
+			if self.frozen < 0:
+				print 'Player: self.frozen < 0!'
 	#
 	def setrate(self, rate):
 		if rate < 0.0:
@@ -241,15 +242,12 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	#
 	def play_callback(self, (obj, arg)):
 		self.play()
-
 	#
 	def pause_callback(self, (obj, arg)):
 		self.pause()
-
 	#
 	def stop_callback(self, (obj, arg)):
 		self.stop()
-
 	#
 	def speed_callback(self, (obj, arg)):
 		self.oldrate = obj.get_counter_value()
@@ -269,12 +267,11 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			self.makemenu()
 	#
 	def calctiming_callback(self, (obj, arg)):
-		# XXX should use the real root???
-		if obj.get_button():
-			del_timing(self.playroot)
-			Timing.calctimes(self.playroot)
-		self.measure_armtimes = obj.get_button()
-		obj.set_button(0)
+		if obj.get_button() or 1:
+			del_timing(self.root)
+			Timing.changedtimes(self.root)
+			self.measure_armtimes = 1
+			obj.set_button(1)
 	#
 	def ff_callback(self, (obj, arg)):
 		#print 'Player:', self.queue # DBG
@@ -288,17 +285,17 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		pass
 	#
 	def timer_callback(self, (obj, arg)):
-	        gap = None
+		gap = None
 		while self.queue:
 			when, prio, action, argument = self.queue[0]
 			now = self.timefunc()
 			delay = when - now
 			if delay < -0.1:
-			    self.late_ind.lcol = GL.RED
-			    self.latecount = self.latecount - delay
-			    self.late_ind.label = `int(self.latecount)`
+				self.late_ind.lcol = GL.RED
+				self.latecount = self.latecount - delay
+				self.late_ind.label = `int(self.latecount)`
 			else:
-			    self.late_ind.lcol = self.late_ind.col2
+				self.late_ind.lcol = self.late_ind.col2
 			if delay > 0.0:
 				break
 			del self.queue[0]
@@ -321,6 +318,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.ff = 0
 		self.seeking = 0
 		if not self.playing:
+			self.playroot = self.userplayroot
 			if not self.start_playing(1.0):
 				return
 		else:
@@ -334,7 +332,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			self.stop()
 		if node.GetRoot() <> self.root:
 			raise CheckError, 'playsubtree with bad arg'
-		self.playroot = node
+		self.userplayroot = self.playroot = node
 		self.play()
 	#
 	def defanchor(self, node, anchor):
@@ -390,11 +388,11 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			self.playbutton.set_button(self.rate >= 1.0)
 			self.pausebutton.set_button(0.0 == self.rate)
 			self.speedbutton.set_counter_value(self.oldrate)
-		if self.playroot is self.root:
+		if self.userplayroot is self.root:
 			self.partbutton.label = ''
 		else:
-			name = MMAttrdefs.getattr(self.playroot, 'name')
-			if name == 'none':
+			name = MMAttrdefs.getattr(self.userplayroot, 'name')
+			if name == '':
 				label = 'part play'
 			else:
 				label = 'part play: ' + name
@@ -431,16 +429,19 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		# or whose type has changed
 		for name in self.channelnames[:]:
 			if name not in self.context.channelnames:
+				print 'Detected deleted channel'
 				self.killchannel(name)
 			else:
 				oldtype = self.channeltypes[name]
 				newtype = \
 				    self.context.channeldict[name]['type']
 				if oldtype <> newtype:
+					print 'Detected retyped channel'
 					self.killchannel(name)
 		# (2) Add new channels that have appeared
 		for name in self.context.channelnames:
 			if name not in self.channelnames:
+				print 'Detected new channel'
 				attrdict = self.context.channeldict[name]
 				self.newchannel(name, attrdict)
 				i = self.context.channelnames.index(name)
@@ -506,11 +507,61 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		for cname in self.channelnames:
 			self.channels[cname].stop()
 	#
+	# Bag playing code.
+	# This is a modal dialog (for now)!
+	# (Also note the similarity with NodeEdit._showmenu...)
+	#
+	def playbag(self, node):
+		indexname = MMAttrdefs.getattr(node, 'bag_index')
+		children = node.GetChildren()
+		names = []
+		for child in children:
+			name = MMAttrdefs.getattr(child, 'name')
+			if name == '':
+				name = '???'
+			elif name == indexname:
+				return child
+			names.append(name)
+		names.reverse() # They are added from bottom to top
+		n = len(names) + 1
+		width = 200
+		butheight = 30
+		height = n*butheight + 10
+		form = fl.make_form(UP_BOX, width, height)
+		cancel = form.add_button(RETURN_BUTTON, \
+			5, 5, width-10, butheight, 'Cancel')
+		pos = butheight + 5
+		buttons = []
+		for name in names:
+			obj = form.add_button(NORMAL_BUTTON, \
+				5, pos, width-10, butheight, name)
+			buttons.append(obj)
+			pos = pos + butheight
+		buttons.reverse()
+		fl.deactivate_all_forms()
+		form.show_form(PLACE_MOUSE, TRUE, 'Choose subdocument')
+		choice = fl.do_forms() # Must be one of our buttons
+		form.hide_form()
+		fl.activate_all_forms()
+		if choice is cancel:
+			return None
+		if choice in buttons:
+			i = buttons.index(choice)
+			return children[i]
+		print 'Weird -- not one of our objects was selected:', choice
+		return None
+	#
 	# Playing algorithm.
 	#
 	def start_playing(self, rate):
 		if not self.maystart():
 			return 0
+		while self.playroot.GetType() == 'bag':
+			self.showstate()
+			node = self.playbag(self.playroot)
+			if not node:
+				return 0
+			self.playroot = node
 		arm_events = self.resume_1_playing(rate)
 		for pn in arm_events:
 			d = pn.GetRawAttr('arm_duration')
@@ -533,13 +584,12 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.playing = 1
 		self.reset()
 		self.setrate(rate)
-		if self.playroot.GetRoot() <> self.root:
-			self.playroot = self.root # In case it's been deleted
 		self.showstate() # Give the anxious user a clue...
-		Timing.optcalctimes(self.playroot)
+		Timing.needtimes(self.playroot)
 		arm_events = Timing.getinitial(self.playroot)
 		Timing.prepare(self.playroot)	# XXX Attempt by Jack
 		return arm_events
+	#
 	def resume_2_playing(self):
 		d = int(self.playroot.t1 - self.playroot.t0)
 		label = `d/60` + ':' + `d/10%6` + `d % 10`
@@ -557,14 +607,11 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		#print 'Player: unarm chview'
 		chv = self.toplevel.channelview
 		chv.unarm_all()
+	#
 	def stop_playing(self):
 		self.playing = 0
 		self.measure_armtimes = 0
 		self.suspend_playing()
-#XXX why was this here?
-###		if self.timing_changed:
-###			Timing.calctimes(self.playroot)
-###			Timing.optcalctimes(self.playroot)
 		#a = MMAttrdefs.stopstats()
 		#MMAttrdefs.showstats(a)
 	#
@@ -583,8 +630,10 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.seeking = 0
 		self.seek_node = None
 		self.seek_nodelist = []
+	#
 	def dummy(arg):
 		pass
+	#
 	def decrement(self, (delay, node, side)):
 		#print 'DEC', delay, node, side, ' of ', node.counter[side]
 	        self.freeze()
@@ -594,7 +643,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			self.unfreeze()
 			return
 		if side == TL and node.counter[side] == 0:
-			# To be fixed soon...
+			# XXX To be fixed soon...
 			print 'Player:Skip spurious decrement of tail on ', \
 				  MMAttrdefs.getattr(node, 'name')
 			self.unfreeze()
@@ -692,7 +741,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		for arg in node.deps[side]:
 			self.decrement(arg)
 		if node == self.playroot and side == TL:
-			# The whole tree is finished -- stop playing.
+			# The whole mini-document is finished -- stop playing.
 			if self.setcurrenttime_callback:
 				self.setcurrenttime_callback(node.t1)
 			self.stop()
@@ -702,6 +751,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	# the channel *before* the current one is finished playing. It is
 	# currently used by the sound channel only (but could conceivably
 	# be used by the Image channel as well).
+	#
 	def opt_prearm(self, node):
 		if node.node_to_arm:
 			pn = node.node_to_arm
@@ -730,9 +780,14 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	# Routine to do prearm feedback
 	#
 	def setarmedmode(self, node, mode):
+		# XXX There's something wrong here,
+		# XXX sometimes it isn't called right
+##		print 'Player.setarmedmode',
+##		print `MMAttrdefs.getattr(node, 'name')`, `mode`
 		self.toplevel.channelview.setarmedmode(node, mode)
 	#
-	# Callback for anchor activations
+	# Callback for anchor activations, called by channels.
+	# Return 1 if the anchor fired, 0 if nothing happened.
 	#
 	def anchorfired(self, node, anchorlist):
 		destlist = []
@@ -747,10 +802,10 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		if not destlist:
 			if pause_anchor:
 				return 0
-			fl.show_message('No hyperlink sourced at this anchor'\
+			fl.show_message('No hyperlink sourced at this anchor' \
 				  , '', '')
 			return 0
-		if len(destlist) <> 1:
+		if len(destlist) > 1:
 			fl.show_message('Sorry, multiple links not supported' \
 				  , '', '')
 			return 0
@@ -761,21 +816,34 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			self.seek_node = self.context.mapuid(dest[0])
 		except NoSuchUIDError:
 			fl.show_message('Dangling hyperlink selected', '', '')
-			return
+			return 0
 		self.suspend_playing()
-		self.seeking = 1
-		self.playroot = self.root
+		self.playroot = findminidocument(self.seek_node)
+		self.seeking = (self.playroot <> self.seek_node)
 		dummy = self.resume_1_playing(1.0)
 		self.resume_2_playing()
 		return 1
 
-#
-# del_timing removes all arm_duration attributes (so they will be recalculated)
-#
+
+# Find the root of a node's mini-document
+
+def findminidocument(node):
+	path = node.GetPath()
+	i = len(path)
+	while i > 0 and path[i-1].GetType() <> 'bag':
+		i = i-1
+	if 0 <= i < len(path):
+		return path[i]
+	else:
+		print 'Weird: findminidocroot of bag node'
+		return node
+
+
+#  Remove all arm_duration attributes (so they will be recalculated)
+
 def del_timing(node):
 	if node.GetAttrDict().has_key('arm_duration'):
 		node.DelAttr('arm_duration')
-	if node.GetType() in ('par', 'seq'):
-		children = node.GetChildren()
-		for child in children:
-			del_timing(child)
+	children = node.GetChildren()
+	for child in children:
+		del_timing(child)

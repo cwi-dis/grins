@@ -8,7 +8,7 @@ def main():
 	playnow = 0
 	stats = 0
 	#
-	opts, args = getopt.getopt(sys.argv[1:], 'psnh:')
+	opts, args = getopt.getopt(sys.argv[1:], 'psnh:THPSL')
 	#
 	if args:
 		if len(args) > 1:
@@ -53,6 +53,18 @@ def main():
 	top = TopLevel.TopLevel().init(filename)
 	#
 	top.show()
+	#
+	for opt, arg in opts:
+		if opt == '-T':
+			top.channelview.show()
+		elif opt == '-H':
+			top.blockview.show()
+		elif opt == '-P':
+			top.player.show()
+		elif opt == '-S':
+			top.styleview.show()
+		elif opt == '-L':
+			top.links.show()
 	#
 	try:
 		try:
