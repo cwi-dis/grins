@@ -87,6 +87,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.need_redraw = 1	# Whether the scene graph needs redrawing.
 		self.need_redraw_selection = 0 # Whether we only need to redraw the selection.
 		self.calculating = 0
+		self.creating = 0
 
 		self.focus_lock = 0	# prevents recursive focus requests.
 
@@ -487,7 +488,9 @@ class HierarchyView(HierarchyViewDialog):
 		# and create a scene graph from it.
 		# As such, any old references into the old scene graph need to be reinitialised.
 		self.__init_state()
+		self.creating = 1
 		self.scene_graph = StructureWidgets.create_MMNode_widget(self.root, self)
+		self.creating = 0
 		#if self.window and self.focusnode:
 		#	self.select_node(self.focusnode)
 		#	widget = self.focusnode.views['struct_view']
