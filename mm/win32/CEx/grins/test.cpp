@@ -112,58 +112,30 @@ void test_re()
 //////////////////////////////////////////
 // test3
 
-#include "tree_node.h"
 #include "xml_parsers.h"
-
-template <class Node>
-class XMLDocument: public Node {
-	public:
-	XMLDocument()
-	:	Node("#document")
-		, xmlversion("1.0")
-		, xmlencoding("ISO-8859-1")
-		, xmlstandalone("yes")
-		, doctypetag("xml")
-		, doctypepubid("")
-		, doctypesyslit("")
-		{	
-		}
-
-	bool buildFromSrc(const std::string& src, const XMLParser<Node>& parser)
-		{
-		return parser.parse(src.c_str(), src.length(), true));
-		}
-
-	bool buildFromFile(const TCHAR *pszFilename, const XMLParser<Node>& parser)
-		{
-		memfile mf;
-		if(!mf.open(pszFilename))
-			{
-			MessageBox(NULL, TEXT("memfile::open() failed"), TEXT("GRiNS Player"), MB_OK);
-			return false;
-			}
-		mf.fill();
-
-		if(!parser.parse((const char*)mf.data(), mf.size(), true))
-			return false;
-		return true;
-		}
-
-	std::string xmlversion;
-	std::string xmlencoding;
-	std::string xmlstandalone;
-	std::string doctypetag;
-	std::string doctypepubid;
-	std::string doctypesyslit;
-	};
+#include "smil/smil_parser.h"
 
 void test_xml_parser()
 	{
 	std::basic_string<TCHAR> filename(TEXT("\\My Documents\\Presentations\\slideshow-1.smil"));
-	XMLDocument<TreeNode> doc;
-	ExpatParser<TreeNode> parser(&doc);
-	if(!doc.buildFromFile(filename.c_str(), parser))
+	
+	
+	smil::parser smil_parser;
+
+	ExpatParser xml_parser(&smil_parser);
+
+	memfile mf;
+	if(!mf.open(filename.c_str()))
+		{
+		MessageBox(NULL, TEXT("memfile::open() failed"), TEXT("GRiNS Player"), MB_OK);
+		return;
+		}
+	mf.fill();
+
+	if(!xml_parser.parse((const char*)mf.data(), mf.size(), true))
+		{
 		MessageBox(NULL, TEXT("buildFromFile() failed"), TEXT("GRiNS Player"), MB_OK);
-	else
-		MessageBox(NULL, TEXT("build DOM"), TEXT("GRiNS Player"), MB_OK);
+		return;
+		}
+	MessageBox(NULL, TEXT("build DOM"), TEXT("GRiNS Player"), MB_OK);
 	}
