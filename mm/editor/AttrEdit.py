@@ -2,6 +2,7 @@
 
 
 import gl
+import GL
 import fl
 from FL import *
 
@@ -794,7 +795,9 @@ class PopupButtonRow(ButtonRow):
 		return []
 	#
 	def makevalueinput(b, (x, y, w, h)):
-		b.value = b.form.add_choice(NORMAL_CHOICE, x, y, w-1, h, '')
+		b.value = b.form.add_choice(NORMAL_CHOICE, x, y, w-3, h-2, '')
+		b.value.boxtype = SHADOW_BOX
+		b.value.col1 = GL.WHITE
 		for choice in b.choices():
 			b.value.addto_choice(choice)
 		b.value.set_call_back(b.valuecallback, None)
@@ -850,11 +853,13 @@ class FontButtonRow(ButtonRow):
 	# Choose from all possible font names
 	#
 	def makevalueinput(b, (x, y, w, h)):
-		b.value = b.form.add_button(INOUT_BUTTON, x, y, w-1, h, '')
+		b.value = b.form.add_button(INOUT_BUTTON, x, y, w-3, h-2, '')
+		b.value.boxtype = SHADOW_BOX
+		b.value.col1 = GL.WHITE
+		b.value.col2 = GL.WHITE
 		b.value.set_call_back(b.valuecallback, None)
 	#
 	def valuecallback(b, dummy):
-		print '-->', b.value.get_button()
 		value = dofontmenu()
 		b.value.set_button(0)
 		if value <> None and value <> b.currentvalue:
