@@ -908,7 +908,6 @@ class Path:
 				else:
 					segs.append(e)
 		points = [pt1,]
-		n = len(segs)
 		for e in segs:
 			if type(e)!=type((1,)):
 				points.append((e.real,e.imag)) 	
