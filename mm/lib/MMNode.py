@@ -1778,8 +1778,7 @@ class MMSyncArc:
 				return node.xpath(self.srcnode)
 			except xpath_error:
 				# invalid path
-# doesn't work: can be called during buildup of scene graph
-##				self.dstnode.set_infoicon('error', "relative syncarc doesn't point to an existing element")
+				self.dstnode.set_infoicon('error', "relative syncarc doesn't point to an existing element")
 				return None
 		elif self.srcnode is node:
 			refnode = node.looping_body_self or node
