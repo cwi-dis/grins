@@ -1559,11 +1559,11 @@ class AnimateElementParser:
 	def __getInterpolationKeyTimes(self):
 		keyTimes = self.getKeyTimes()
 		if not keyTimes: return ()
-		tl = string.split(values,';')
+		tl = string.split(keyTimes,';')
 
 		# len of values must be equal to len of keyTimes
 		lvl = self.__countInterpolationValues()
-		if mode=='discrete': lvl = lvl + 1
+		if self.__calcMode=='discrete': lvl = lvl + 1
 		if  lvl != len(tl):
 			print 'values vs times mismatch'		 
 			return ()
@@ -1603,16 +1603,17 @@ class AnimateElementParser:
 		if self.__calcMode != 'spline':
 			print 'splines while not in spline calc mode'
 			return []
-		sl = string.split(values,';')
+		sl = string.split(keySplines,';')
 		
 		# len of keySplines must be equal to num of intervals (=len(keyTimes)-1)
-		tt = self.getInterpolationKeyTimes()
+		tt = self.__getInterpolationKeyTimes()
 		if tt and len(sl) != len(tt)-1:
 			print 'intervals vs splines mismatch'
 			return []
 		if not tt and len(sl) != 1:
 			print 'intervals vs splines mismatch'
 			return []
+		rl = []
 		for e in sl:
 			vl = self.__split(e)
 			if len(vl)==4:
