@@ -15,7 +15,7 @@ def WriteFileAsHtmlTime(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles =
 	writer.writeAsHtmlTime()
 
 
-not_xhtml_time_elements = ('brush', 'prefetch', )
+not_xhtml_time_elements = ('prefetch', )
 
 not_xhtml_time_attrs = ('min', 'max',  'customTest', 'fillDefault', 
 	'restartDefault', 'syncBehaviorDefault','syncToleranceDefault', 'repeat',
@@ -401,7 +401,7 @@ class SMILHtmlTimeWriter(SMIL):
 		elif type in ('imm', 'ext'):
 			if mtype in not_xhtml_time_elements:
 				self.showunsupported(mtype)
-				return
+
 			children = x.GetChildren()
 			if not children:				
 				self.writemedianode(x, nodeid, attrlist, mtype, regionName, src, transIn, transOut)
@@ -540,6 +540,9 @@ class SMILHtmlTimeWriter(SMIL):
 		if mtype=='img':
 			attrlist.append( ('class','time') )
 			self.writetag(mtype, attrlist)
+		elif mtype=='brush':
+			attrlist.append( ('class','time') )
+			self.writetag('div', attrlist)
 		else:
 			self.writetag('t:'+mtype, attrlist)
 
