@@ -41,17 +41,9 @@ class Player(PlayerCore, PlayerDialog):
 		PlayerDialog.__init__(self, self.last_geometry,
 				      'Player (' + toplevel.basename + ')')
 		self.channelnames = []
-		self.measure_armtimes = 0
 		self.channels = {}
 		self.channeltypes = {}
-		self.seeking = 0
-		self.seek_node = None
-		self.seek_nodelist = []
 		self.sync_cv = 0
-		self.ignore_delays = 0
-		self.ignore_pauses = 0
-		self.play_all_bags = 0
-		self.pause_minidoc = 1
 		self.toplevel = toplevel
 		self.showing = 0
 		self.waiting = 0
