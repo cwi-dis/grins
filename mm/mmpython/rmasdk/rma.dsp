@@ -535,5 +535,13 @@ SOURCE=.\include\rmawin.h
 
 SOURCE=.\ReadMe.txt
 # End Source File
+# Begin Source File
+
+SOURCE=.\testdata\rmacom.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\testdata\rmatest.py
+# End Source File
 # End Target
 # End Project
