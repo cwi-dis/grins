@@ -9,6 +9,8 @@ import win32window
 
 from appcon import *
 
+import math
+
 # selection modes
 [SM_NONE, SM_MOVE, SM_SIZE, SM_NET] = range(4)
 
@@ -689,6 +691,13 @@ class Polyline:
 			points.append(self.LPtoDP((x0 + pt[0], y0+pt[1]), round=1))
 		return points
 
+	# insert point nearest to pt (pt in device coordinates)
+	def insertPoint(self, pt):
+		projpt, index = self.projection(pt)
+		if projpt is not None:
+			self._points.insert(index, projpt)
+		self.update()
+
 	#
 	# Scaling support
 	#
@@ -769,7 +778,12 @@ class Polyline:
 		self.update()
 
 	def moveBy(self, delta):
-		pass
+		dx, dy = self.DPtoLP(delta)
+		points = []
+		for pt in self._points:
+			points.append((dx + pt[0], dy+pt[1]))
+		self._points = points
+		self.update()
 		
 	def invalidateDragHandles(self):
 		self.update()
@@ -782,6 +796,83 @@ class Polyline:
 
 	def getAncestors(self):
 		return []
+
+	#
+	# metrics
+	#
+
+	# line through (x1,y1) and (x2,y2)
+	# Ax+By+C=0 where A=y2-y1, B=-(x2-x1), C=y1*(x2-x1)-x1*(y2-y1)
+	# distance of (x0, y0): 
+	# d = (Ax0+By0+C)/sqrt(A*A+B*B)
+	def distanceFromLineSegment(self, x0, y0, x1, y1, x2, y2):
+		# degenerate line: return dist
+		if x1 == x2 and y1 == y2:
+			dx = x1 - x0
+			dy = y1 - y0
+			return math.sqrt(dx*dx+dy*dy), None
+
+		# find parameter t of projection
+		x12 = x2-x1
+		y12 = y2-y1
+		if y1==y2:
+			t = (x0-x1)/ float(x2-x1)
+		elif x1==x2:
+			t = (y0-y1)/ float(y2-y1)
+		else:
+			t = ((x0-x1)*x12+(y0-y1)*y12)/float(x12*x12 + y12*y12)
+
+		if	t>=0 and t<=1.0:
+			# projection within seqment
+			A = y12
+			B = -x12
+			C = y1*x12-x1*y12
+			return math.fabs(A*x0+B*y0+C)/math.sqrt(A*A+B*B), t
+		elif t<0.0:
+			# projection before
+			dx = x1-x0
+			dy = y1-y0
+			return math.sqrt(dx*dx+dy*dy), None
+		else: #if(t>1.0)
+			# projection after
+			dx = x2-x0
+			dy = y2-y0
+			return math.sqrt(dx*dx+dy*dy), None
+		 
+	# point in device coordinates
+	def inside(self, point, dist=4):
+		x0, y0 = self.DPtoLP(point)
+		dx, dy = self._viewport.getOrg()
+		x0, y0 = x0 - dx, y0 - dy
+		n = len(self._points)
+		d = 100000.0
+		for i in range(1,n):
+			x1, y1 = self._points[i-1]
+			x2, y2 = self._points[i]
+			dp, t = self.distanceFromLineSegment(x0, y0, x1, y1, x2, y2)
+			d = min(d, dp)
+		return d<=dist
+
+	# point in device coordinates
+	def projection(self, point, dist=4):
+		x0, y0 = self.DPtoLP(point)
+		dx, dy = self._viewport.getOrg()
+		x0, y0 = x0 - dx, y0 - dy
+		n = len(self._points)
+		d = 100000.0
+		projpt = None
+		index = -1
+		for i in range(1,n):
+			x1, y1 = self._points[i-1]
+			x2, y2 = self._points[i]
+			dp, t = self.distanceFromLineSegment(x0, y0, x1, y1, x2, y2)
+			if t is not None and dp<d:
+				d = dp
+				projpt = x1 + t*(x2-x1), y1+t*(y2-y1)
+				index = i
+		if projpt is not None and d<=dist:
+			return 	projpt, index
+		return None, -1
 
 ################################
 
@@ -807,6 +898,7 @@ class LayoutWnd:
 				
 		self._tipwnd = None
 		self._lbuttondown = None
+		self._lbuttondblclk = None
 					
 	def setAutoScale(self, autoscale):
 		self._autoscale = autoscale
@@ -986,6 +1078,7 @@ class LayoutWnd:
 	def onLButtonDblClk(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
+		self._lbuttondblclk = point
 		point = self.DPtoLP(point)
 		self._drawContext.onLButtonDblClk(flags, point)
 
