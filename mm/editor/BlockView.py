@@ -214,7 +214,8 @@ class BlockView () = ViewDialog(), BasicDialog () :
 			node.bv_labeltext = o
 			# Create childrens' boxes
 			if kids:
-			    h = h - MMARG - BH
+			    h = h - TMARG - BMARG - MMARG - BH
+			    w = w - LMARG - RMARG
 			    if type = 'seq':
 				    h = h / len(kids)
 				    dx, dy = 0, h
@@ -227,14 +228,15 @@ class BlockView () = ViewDialog(), BasicDialog () :
 				node.bv_OC = 0
 				node.bv_openclose.col1 = GL.RED
 				node.bv_toosmall = 1
-				x, y = 0, 0
-				w, h = 1, 1
+				# x, y = 0, 0
+				# w, h = 1, 1
 			    elif not node.bv_OC:
 				o = node.bv_openclose
 				o.col1, o.col2 = o.col2, o.col1
 			    else:
 				x,y = x+LMARG,y+BMARG
-				w,h = w-LMARG-RMARG,h-TMARG-BMARG
+				# w,h = w-LMARG-RMARG,h-TMARG-BMARG
+				w,h = w-RMARG,h-TMARG
 			    if node.bv_OC:
 				if node.GetType() = 'seq':
 				    kids = kids[:]
