@@ -481,9 +481,12 @@ class AttrEditForm(docview.ListView):
 			self._dlgBar.resize(self._cx)
 			self._stdDlgBar.resize(self._cx)
 
-	# Called by the framework when this window is activated/deactivated
-	# called by mainwnd
-	def onActivate(self,f):
+	# Called when the view is activated 
+	def activate(self):
+		pass
+
+	# Called when the view is deactivated 
+	def deactivate(self):
 		pass
 
 	# cmif general interface
