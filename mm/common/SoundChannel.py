@@ -32,6 +32,17 @@ class SoundChannel(ChannelAsync):
 	def do_show(self, pchan):
 		# we can only be shown if we can play
 		return player is not None
+		
+	def getaltvalue(self, node):
+		# Determine playability. Expensive, but this method is only
+		# called when needed (i.e. the node is within a switch).
+		fn = self.getfileurl(node)
+		try:
+			fn = MMurl.urlretrieve(fn)[0]
+			fp = audio.reader(fn)
+		except (IOError, EOFError, audio.Error):
+			return 0
+		return 1
 
 	def do_arm(self, node, same=0):
 		if same and self.arm_fp:
