@@ -17,7 +17,7 @@ debug=0
 
 class SoundChannel(Channel.ChannelAsync,MediaChannel.MediaChannel):
 	node_attrs = Channel.ChannelAsync.node_attrs + ['duration',
-						'clipbegin', 'clipend']
+						'clipbegin', 'clipend', 'project_audiotype', 'project_targets']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		MediaChannel.MediaChannel.__init__(self)
