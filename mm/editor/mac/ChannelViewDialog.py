@@ -3,6 +3,7 @@ import windowinterface
 import WMEVENTS
 import MMAttrdefs
 from usercmd import *
+from MenuTemplate import POPUP_CVIEW_NONE, POPUP_CVIEW_CHANNEL, POPUP_CVIEW_NODE, POPUP_CVIEW_SYNCARC
 
 begend = ('begin', 'end')
 
@@ -35,6 +36,9 @@ class ChannelViewDialog(ViewDialog):
 		self.window.set_dynamiclist(DESCENDANTS, self.baseobject.descendants)
 		self.window.set_dynamiclist(SYNCARCS, (self.focus and self.focus.arcmenu) or [])
 		self.window.set_dynamiclist(LAYOUTS, self.layouts)
+		
+	def setpopup(self, popuptemplate):
+		self.window.setpopupmenu(popuptemplate)
 
 	def settoggle(self, command, onoff):
 		self.window.set_toggle(command, onoff)
@@ -45,7 +49,7 @@ class ChannelViewDialog(ViewDialog):
 		
 class GOCommand:
 	def __init__(self):
-		pass
+		self.popupmenu = POPUP_CVIEW_NONE
 
 	def helpcall(self):
 		import Help
@@ -53,13 +57,13 @@ class GOCommand:
 		
 class ChannelBoxCommand:
 	def __init__(self):
-		pass
+		self.popupmenu = POPUP_CVIEW_CHANNEL
 		
 class NodeBoxCommand:
 	def __init__(self, mother, node):
-		pass
+		self.popupmenu = POPUP_CVIEW_NODE
 		
 class ArcBoxCommand:
 	def __init__(self):
-		pass
+		self.popupmenu = POPUP_CVIEW_SYNCARC
 
