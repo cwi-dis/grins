@@ -25,6 +25,8 @@ debug = 0
 
 _CssAttrs = ['top', 'left', 'right', 'width', 'height', 'bottom', 'regPoint', 'regAlign', 'fit']
 
+xpath_error = 'xpath_error'
+
 class MMNodeContext:
 	"Adds context information about each MMNode" # -mjvdg. TODO: elaborate.
 	def __init__(self, nodeclass):
@@ -896,6 +898,9 @@ class MMRegPoint:
 	def items(self):
 		return self.attrdict.items()
 		
+# used by xpath method below
+_subscript = None
+
 class MMTreeElement:
 	def __init__(self, context, uid):
 		self.context = context	# From MMContext
@@ -973,6 +978,74 @@ class MMTreeElement:
 
 	def GetChild(self, i):
 		return self.children[i]
+
+	def xpath(self, xpath):
+		global _subscript
+		if not xpath:
+			return self
+		slash = xpath.find('/')
+		if slash >= 0:
+			xhead, xtail = xpath[:slash], xpath[slash+1:]
+		else:
+			xhead, xtail = xpath, ''
+		if xhead == '.':
+			return self.xpath(xtail)
+		if xhead == '..':
+			pnode = self.GetParent()
+			if pnode is None:
+				raise xpath_error, 'no parent'
+			return pnode.xpath(xtail)
+		if _subscript is None:
+			_subscript = re.compile(r'\[(?P<subscript>[0-9]+)\]$')
+		res = _subscript.search(xhead)
+		if res is None:
+			raise xpath_error, 'bad or no indexing expression'
+		else:
+			index = int(res.group('subscript'))
+			xhead = xhead[:res.start(0)]
+		step = 1
+		if xhead[:19] == 'following-sibling::':
+			pnode = self.GetParent()
+			if pnode is None:
+				raise xpath_error, 'no parent'
+			nodes = pnode.GetChildren()
+			self_index = nodes.index(self)
+			xhead = xhead[19:]
+		elif xhead[:19] == 'preceding-sibling::':
+			pnode = self.GetParent()
+			if pnode is None:
+				raise xpath_error, 'no parent'
+			nodes = pnode.GetChildren()
+			self_index = nodes.index(self)
+			index = -index
+			step = -1
+			xhead = xhead[19:]
+		else:
+			nodes = self.GetChildren()
+			self_index = -1
+		# ignore comment nodes
+		newnodes = []
+		for n in nodes:
+			if n.GetType() != 'comment':
+				newnodes.append(n)
+		nodes = newnodes
+		if xhead == '*':
+			if 0 <= self_index + index < len(nodes):
+				return nodes[self_index + index].xpath(xtail)
+			raise xpath_error, 'not enough children'
+		if xhead in ('par','seq','excl','priorityClass','switch','media'):
+			if xhead == 'priorityClass':
+				xhead = 'prio'
+			i = self_index + index - step
+			while index != 0:
+				i = i + step
+				if not (0 <= i < len(nodes)):
+					raise xpath_error, 'not enough children'
+				ntype = nodes[i].GetType()
+				if ntype == xhead or (xhead == 'media' and ntype in leaftypes):
+					index = index - step
+			return nodes[i].xpath(xtail)
+		raise xpath_error, "unrecognized XPath component `%s'" % xhead
 
 	def Destroy(self):
 		self.context.forgetnode(self.uid)
@@ -1489,7 +1562,7 @@ class MMAnchor:
 		return MMAnchor(self.aid, self.atype, self.aargs, self.atimes, self.aaccess)
 
 import re
-_repeat_regexp = re.compile("repeat\\(([0-9]*)\\)")
+_repeat_regexp = re.compile(r"repeat\(([0-9]*)\)")
 
 # The Sync Arc class
 # Sjoerd: if you have free time, could you describe (better than I can) what this is at some stage
@@ -1604,6 +1677,9 @@ class MMSyncArc:
 			src = 'syncbase'
 		elif self.srcnode == 'prev':
 			src = 'prev'
+		elif type(self.srcnode) is type(''):
+			# XPath
+			src = 'xpath(%s)' % self.srcnode
 		else:
 			src = `self.srcnode`
 			if self.srcanchor is not None:
@@ -1684,6 +1760,13 @@ class MMSyncArc:
 		elif self.srcnode == 'syncbase':
 			# pnode is not None
 			refnode = pnode.looping_body_self or pnode
+		elif type(self.srcnode) is type(''):
+			# XPath-like path
+			if self.srcnode[0] == '/':
+				# absolute
+				# XXX not really correct: we don't take the head element into account
+				return node.GetRoot().xpath(self.srcnode[1:])
+			return node.xpath(self.srcnode)
 		elif self.srcnode is node:
 			refnode = node.looping_body_self or node
 		else:

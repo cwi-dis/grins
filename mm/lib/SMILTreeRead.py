@@ -78,6 +78,9 @@ wallclockval = re.compile(
 	r'(?P<time>(?P<hour>\d{2}):(?P<min>\d{2})(?::(?P<sec>\d{2}(?:\.\d+)?))?)?'	# time (optional)
 	r'(?:(?P<Z>Z)|(?P<tzsign>[-+])(?P<tzhour>\d{2}):(?P<tzmin>\d{2}))?$'	# timezone (optional)
 	)
+xpathre = re.compile(			# e.g. "xpath(../../following-sibling::media[2]/*[1])"
+	r'xpath\((?P<xpath>[^()]+)\)'
+	)
 screen_size = re.compile(_opS + r'(?P<y>\d+)' + _opS + r'[xX]' +
 			 _opS + r'(?P<x>\d+)' + _opS + r'$')
 clip = re.compile(_opS + r'(?:'
@@ -400,7 +403,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if not ok:
 					continue
 
-				# XXXX No longer pertinant -mjvdg
+				# XXXX No longer pertinent -mjvdg
 				if tokens[0] == 'prev':
 					if len(tokens) != 3 or tokens[1] != '.' or tokens[2] not in ('begin', 'end'):
 						self.syntax_error('bad sync-to-prev value')
@@ -439,6 +442,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if not boston:
 						boston = 'event value'
 					continue
+
+				if tokens[0] == 'xpath' and tokens[1] == '(' and tokens[3] == ')':
+					tokens[0:4] = [''.join(tokens[0:4])]
 
 				if tokens[0] == '.' or tokens[1] != '.':
 					self.syntax_error('bad event specification')
@@ -488,7 +494,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if not boston:
 					boston = 'SMIL-2.0 time value'
 				xanchor = xchan = None
-				xnode = self.__nodemap.get(name)
+				res = xpathre.match(name)
+				if res is not None:
+					xnode = res.group('xpath') # GRiNS extension
+				else:
+					xnode = self.__nodemap.get(name)
 				if xnode is None:
 					xanchor = self.__anchormap.get(name)
 					if xanchor is None:
@@ -4452,30 +4462,29 @@ def parseattrval(name, string, context):
 		return string
 	return MMAttrdefs.parsevalue(name, string, context)
 
-try:
-	tokenizer = re.compile(r'((?<!\\)[-+. ()])')
-	def tokenize(str):
-		return tokenizer.split(str)
-except:
-	# do it the hard way
-	def tokenize(str):
-		tokens = []		# collect them here
-		t = []			# collect each token here
-		escape = 0
-		for c in str:
-			if c == '\\':
-				t.append(c)
-				escape = 1
-			elif escape:
-				t.append(c)
-				escape = 0
-			elif c in '-+. ()':
-				if t:
-					tokens.append(''.join(t))
-				tokens.append(c)
-				t = []
-			else:
-				t.append(c)
-		if t:
-			tokens.append(''.join(t))
-		return tokens
+def tokenize(str):
+	tokens = []		# collect them here
+	t = []			# collect each token here
+	escape = 0
+	parens = 0
+	for c in str:
+		if c == '\\':
+			t.append(c)
+			escape = 1
+		elif escape or (parens and c not in '()'):
+			t.append(c)
+			escape = 0
+		elif c in '-+. ()':
+			if c == '(':
+				parens = parens + 1
+			elif c == ')':
+				parens = parens - 1
+			if t:
+				tokens.append(''.join(t))
+			tokens.append(c)
+			t = []
+		else:
+			t.append(c)
+	if t:
+		tokens.append(''.join(t))
+	return tokens
