@@ -1216,10 +1216,14 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		self._layoutctrl.assert_not_in_create_box()
 		if box and (box[2]==0 or box[3]==0):box=None
 		units=self._form.getunits()
-		if self._units!=units:
-			box=None
+		if self._units!=units and box:
+			# to pxl
+			box=self._layoutctrl._convert_coordinates(box,units=self._units)
+			# from pxl to units
+			box=self._layoutctrl.inverse_coordinates(box,units=units)
 			self._units=units
-			self.getctrl('base_winoff').setvalue('')
+			apply(self.update, box)
+
 		# call create box against layout control but be modeless and cool!
 		modeless=1;cool=1;
 		self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
@@ -1262,11 +1266,14 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	# called back by create_box on every change
 	# the user can press reset to cancel changes
 	def update(self,*box):
-		if self._initdialog and box:
-			box=self.fromlayout(box)
+		if self._initdialog:
 			lc=self.getctrl('base_winoff')
-			a=lc.fttoa(box,4)
-			lc.setvalue(a)
+			if not box:
+				lc.setvalue('')
+			else:	
+				box=self.fromlayout(box)
+				a=lc.fttoa(box,4)
+				lc.setvalue(a)
 
 
 class PosSizeLayoutPage(LayoutPage):
