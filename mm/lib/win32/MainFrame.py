@@ -450,8 +450,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	def setdocument(self, cmifdoc, adornments, commandlist, peerdocid=0):
 		self._peerdocid = peerdocid
 		self._cmifdoc = cmifdoc
-		if self._pbar:
-			self._pbar.show()
 		import urllib
 		basename=urllib.unquote(cmifdoc.basename)
 		self.settitle(basename,'document')
