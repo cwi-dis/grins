@@ -75,7 +75,12 @@ class BandwidthAccumulator:
 	def reserve(self, t0, t1, bits, minbps, maxbps):
 		boxes = []
 		overflow = 0
+		count = 0
 		while 1:
+			count = count + 1
+			if count > 100:
+				print 'BandwidthReserve: computation did not converge:', t0, t1, bits
+				break
 			i, cur_t1 = self._find(t0, t1)
 			t0_0, oldusedbps, maxusedbps = self.used[i]
 			#
@@ -127,13 +132,13 @@ class BandwidthAccumulator:
 			boxes.append((t0, cur_t1, box_lobps, box_hibps, tp))
 			self.used[i] = (t0, newusedbps, maxusedbps)
 			
-			bits = bits - usedbps*(cur_t1-t0)
+			bits = bits - (usedbps*(cur_t1-t0)+0.99)
 			if bits < 0x7fffffff:
 				# Prefer ints
 				bits = round(bits)
-			assert (bits >= 0)
-			if t1-t0 < 1.0 or cur_t1 >= t1:
-				assert(bits == 0)
+			assert (bits >= -1)
+##			if t1-t0 < 1.0 or cur_t1 >= t1:
+##				assert(bits == 0)
 
 ##			if newbw > maxbw:
 ##				# Compute how much too much we've used
@@ -142,10 +147,55 @@ class BandwidthAccumulator:
 			if newusedbps > self.maxused:
 				self.maxused = newusedbps
 			t0 = cur_t1
-			if not bits:
+			if bits <= 0:
 				break
 		return overflow, boxes
-		
+
+	def overflowdelay(self, t0, bits, minbps, maxbps):
+		##import pdb ; pdb.set_trace() #DBG
+		count = 0
+		t1 = t0
+		while bits > 0:
+			count = count + 1
+			if count > 100:
+				print 'OverflowDelay: computation did not converge:', bits
+				return t1-t0
+			# See how many seconds we minimally need
+			minmax_t1 = t1 + (bits/maxbps)
+			# Grab the next slot
+			i, next_t1 = self._find(t1, minmax_t1)
+			t0_0, oldusedbps, maxusedbps = self.used[i]
+			availbps = maxusedbps - oldusedbps
+			# See how much bandwidth we're going to use here
+			if availbps < minbps:
+				usedbps = minbps
+			elif availbps < maxbps:
+				usedbps = availbps
+			else:
+				usedbps = maxbps
+			# See if this is sufficient
+			bits_thisslot = (next_t1-t1) * usedbps + 0.99
+			if bits_thisslot > bits:
+				t1 = t1 + (bits / usedbps)
+				break
+			# Otherwise we try again
+			bits = bits - bits_thisslot
+			if bits < 0x7fffffff:
+				# Prefer ints
+				bits = round(bits)
+			t1 = next_t1
+		delay = t1 - t0
+		# Round up to something reasonable
+		if delay > 0x7fffffff:
+			pass
+		elif delay > 10:
+			delay = int(delay + 1)
+		elif delay > 0.1:
+			delay = int(delay*10+1) / 10.0
+		else:
+			delay = delay * 1.01
+		return delay
+
 	def getstallinfo(self):
 		totaloverflowseconds = 0
 		stalls = []
@@ -270,7 +320,12 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 					msg = 'Uses %s more bandwidth than available.'%overflow
 				else:
 					from fmtfloat import fmtfloat
-					msg = 'Needs %s seconds longer to load.'%fmtfloat(overflow/maxbps, prec = 1)
+					bwdelay = accum.overflowdelay(t1, overflow, minbps, maxbps)
+					if bwdelay < 2:
+						ss = ""
+					else:
+						ss = "s"
+					msg = 'Needs %s second%s longer to load.'%(fmtfloat(bwdelay, prec = 1), ss)
 				node.set_infoicon('bandwidthbad', msg)
 				errornodes[node] = 1
 				delaycount = delaycount + 1
