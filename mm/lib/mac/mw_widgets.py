@@ -163,7 +163,7 @@ class _AreaWidget(_ControlWidget):
 		self.rect = self.control.GetControlRect()
 		self.control.SetControlDataCallback(0, Controls.kControlUserPaneDrawProcTag, self.redraw)
 		self.control.SetControlDataCallback(0, Controls.kControlUserPaneHitTestProcTag, self.hittest)
-		self.control.SetControlDataCallback(0, Controls.kControlUserPaneTrackingProcTag, self.tracking)
+##		self.control.SetControlDataCallback(0, Controls.kControlUserPaneTrackingProcTag, self.tracking)
 		self.image = None
 		self.outerrect = (0, 0, 1, 1)
 		self.otherrects = []
@@ -180,40 +180,48 @@ class _AreaWidget(_ControlWidget):
 ##			App.DrawThemeGenericWell(self.rect, 1)
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 			Qd.EraseRect(self.rect)
-			self._showrect(self.outerrect, (0, 0, 0))
+			Qd.RGBForeColor((0,0,0))
+			Qd.FrameRect(self.rect)
 			for r in self.otherrects:
-				self._showrect(r, (0x7fff, 0x7fff, 0x7fff))
-			self._showrect(self.ourrect, (0xffff, 0, 0))
+				Qd.RGBForeColor((0x7fff, 0x7fff, 0x7fff))
+				Qd.FrameRect(r)
+			Qd.RGBForeColor((0xffff, 0, 0))
+			Qd.FrameRect(self.ourrect)
+			for l in self.lurven:
+				Qd.PaintRect(l)
 		except:
 			import traceback, sys
 			exc_type, exc_value, exc_traceback = sys.exc_info()
 			traceback.print_exception(exc_type, exc_value, None)
 			traceback.print_tb(exc_traceback)
 
-	def hittest(self, *args):
-		print "hittest", args
-		return 0
+	def hittest(self, ctl, (x, y)):
+		try:
+			print "hittest", ctl, x, y
+			for i in range(len(self.lurven)):
+				lx0, ly0, lx1, ly1 = self.lurven[i]
+				if lx0 <= x <= lx1 and ly0 <= y <= ly1:
+					# track
+					print 'track lurf', i
+					return 1
+			return 0
+		except:
+			import traceback, sys
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			traceback.print_exception(exc_type, exc_value, None)
+			traceback.print_tb(exc_traceback)
 		
-	def tracking(self, *args):
-		print "tracking", args
-		return 0
-		
-	def _showrect(self, rect, color):
-		print rect, color, self.scale
-		x, y, w, h = rect
-		x = x / self.scale
-		y = y / self.scale
-		w = w / self.scale
-		h = h / self.scale
-		x = x + self.rect[0]
-		y = y + self.rect[1]
-		Qd.RGBForeColor(color)
-		Qd.FrameRect((x, y, x+w, y+h))
+##	def tracking(self, *args):
+##		print "tracking", args
+##		return 0
+##		
 		
 	def setinfo(self, outerrect, image=None, otherrects=[]):
 		self.outerrect = outerrect
 		self.image = image
-		self.otherrects = otherrects
+		self.otherrects = []
+		for r in otherrects:
+			self.oterrects.append(self.rect2screen(r))
 		self.recalc()
 		
 	def recalc(self):
@@ -238,14 +246,32 @@ class _AreaWidget(_ControlWidget):
 		Qd.SetPort(self.wid)
 		Win.InvalRect(fullrect)
 		
+	def recalclurven(self):
+		x0, y0, x1, y1 = self.ourrect
+		self.lurven = []
+		for x in (x0, (x0+x1)/2, x1):
+			for y in (y0, (y0+y1)/2, y1):
+				self.lurven.append((x-2, y-2, x+2, y+2))
+		
 	def set(self, rect):
-		self.ourrect = rect
+		self.ourrect = self.rect2screen(rect)
+		self.recalclurven()
 		fullrect = self.control.GetControlRect()
 		Qd.SetPort(self.wid)
 		Win.InvalRect(fullrect)
 		
 	def get(self):
-		return self.ourrect
+		return self.screen2rect(self.ourrect)
+		
+	def rect2screen(self, (x, y, w, h)):
+		x0, y0, x1, y1 = self.rect
+		return x0+x/self.scale, y0+y/self.scale, x0+(x+w)/self.scale, y0+(y+h)/self.scale
+		
+	def screen2rect(self, (rx0, ry0, rx1, ry1)):
+		x0, y0, x1, y1 = self.rect
+		w = rx1-rx0
+		h = ry1-ry0
+		return (rx0-x0)*self.scale, (ry0-y0)*self.scale, w*self.scale, h*self.scale
 					
 class _ImageWidget(_Widget):
 	def __init__(self, wid, item, image=None):
