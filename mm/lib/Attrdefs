@@ -245,25 +245,25 @@
 	'Convert data to RealMedia format' raw (advanced g2_pro))
 
 (project_ftp_host (string) '' 'Webserver' default
-	'FTP hostname to use for webpage upload' raw (g2 qt snap))
+	'FTP hostname to use for webpage upload' raw (smil2 g2 qt snap))
 
 (project_ftp_host_media (string) '' 'Mediaserver' default
-	'FTP hostname to use for media file upload (default: same as webserver)' raw (g2 qt smil10 smil2 cmif snap))
+	'FTP hostname to use for media file upload (default: same as webserver)' raw (smil2 g2 qt smil10 smil2 cmif snap))
 
 (project_ftp_user (string) '' 'Webserver User' default
-	'FTP username to use for webpage upload' raw (g2 qt snap))
+	'FTP username to use for webpage upload' raw (smil2 g2 qt snap))
 
 (project_ftp_user_media (string) '' 'Mediaserver User' default
-	'FTP username to use for media file upload' raw (g2 qt smil10 smil2 cmif snap))
+	'FTP username to use for media file upload' raw (smil2 g2 qt smil10 smil2 cmif snap))
 
 (project_ftp_dir (string) '' 'Webserver Directory' default
-	'Directory on FTP server where webpage will be stored' raw (g2 qt snap))
+	'Directory on FTP server where webpage will be stored' raw (smil2 g2 qt snap))
 
 (project_ftp_dir_media (string) '' 'Mediaserver Directory' default
-	'Directory on FTP server where media files will be stored' raw (g2 qt smil10 smil2 cmif snap))
+	'Directory on FTP server where media files will be stored' raw (smil2 g2 qt smil10 smil2 cmif snap))
 
 (project_html_page (string) '' 'HTML template' default
-	'Template used to generate web page for this presentation' raw (template g2 qt snap))
+	'Template used to generate web page for this presentation' raw (template smil2 g2 qt snap))
 
 (project_mobile (bool) 0 'Mobile play' default
 	'Allow download' raw (advanced g2_pro))
@@ -275,7 +275,7 @@
 	'Quality of image conversion to JPEG' raw (g2 snap))
 
 (project_smil_url (string) '' 'Mediaserver URL' default
-	'URL of SMIL document on the media server' raw (g2 qt snap))
+	'URL of SMIL document on the media server' raw (smil2 g2 qt snap))
 
 (project_targets (int) 3 'Target audience' targets
 	'One or more bandwidths for which this item should be converted' raw (g2 snap))
