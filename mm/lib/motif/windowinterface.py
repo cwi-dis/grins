@@ -2133,12 +2133,16 @@ class Window(_WindowHelpers, _MenuSupport):
 			  'colormap': toplevel._default_colormap,
 			  'visual': toplevel._default_visual,
 			  'depth': toplevel._default_visual.depth}
-		if options.has_key('width'):
-			wattrs['width'] = int(float(options['width']) * toplevel._hmm2pxl + 0.5)
-		if options.has_key('height'):
-			wattrs['height'] = int(float(options['height']) * toplevel._vmm2pxl + 0.5)
-		if options.has_key('x') and options.has_key('y'):
-			wattrs['geometry'] = '+%d+%d' % (int(float(options['x']) * toplevel._hmm2pxl + 0.5), int(float(options['y']) * toplevel._vmm2pxl + 0.5))
+		width = options.get('width')
+		if width is not None:
+			wattrs['width'] = int(float(width) * toplevel._hmm2pxl + 0.5)
+		height = options.get('height')
+		if height is not None:
+			wattrs['height'] = int(float(height) * toplevel._vmm2pxl + 0.5)
+		x = options.get('x')
+		y = options.get('y')
+		if x is not None and y is not None:
+			wattrs['geometry'] = '+%d+%d' % (int(float(x) * toplevel._hmm2pxl + 0.5), int(float(y) * toplevel._vmm2pxl + 0.5))
 		attrs = {'allowOverlap': FALSE,
 			 'resizePolicy': self.resizePolicy}
 		if not resizable:
