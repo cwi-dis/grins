@@ -78,7 +78,6 @@ class Channel(ChannelWM):
 		del self._armstate
 		del self._attrdict
 		del self._deviceno
-		del self._is_shown
 		del self._name
 		del self._playcontext
 		del self._played_anchors
@@ -151,8 +150,7 @@ class Channel(ChannelWM):
 				chan.show()
 
 	def hide(self):
-		# Indicate that the channel must enter the HIDDEN
-		# state.
+		# Indicate that the channel must enter the HIDDEN state.
 		if debug:
 			print 'Channel.hide('+`self`+')'
 		self._want_shown = 0
@@ -164,6 +162,9 @@ class Channel(ChannelWM):
 			chan.hide()
 			chan._want_shown = want_shown
 		self.do_hide()
+		for chan in channels:
+			if self in chan._subchannels:
+				chan._subchannels.remove(self)
 		if self._armstate == ARMING:
 			self.arm_1()
 		if self._playstate == PLAYING:
