@@ -5,17 +5,17 @@ import MMAttrdefs
 
 class Animator:
 	def __init__(self, attr, domval):
-		self.__attr = attr
-		self.__domval = domval
+		self._attr = attr
+		self._domval = domval
 
 	def getValue(self, t):
-		return self.__domval
+		return self._domval
 
 	def getDOMValue(self):
-		return self.__domval
+		return self._domval
 
 	def getAttrName(self):
-		return self.__attr
+		return self._attr
 
 class ConstAnimator(Animator):
 	def __init__(self, attr, domval, val):
@@ -26,23 +26,26 @@ class ConstAnimator(Animator):
 		return self.__val
 
 class LinearAnimator(Animator):
-	def __init__(self, domval, attr, fromval, toval, dur):
+	def __init__(self, attr, domval, fromval, toval, dur):
 		Animator.__init__(self, attr, domval)
-		self.__from = fromval
-		self.__to = toval
-		self.__dur = dur
+		self._from = fromval
+		self._to = toval
+		self._dur = dur
 
 	def getValue(self, t):
 		if dur>0:
-			return self.__from + (self.__to - self.__from)*t/dur
+			return self._from + (self._to - self._from)*t/self._dur
 		return self.getDOMValue()
 
 class URLPairAnimator(LinearAnimator):
+	def __init__(self, attr, domval, fromval, toval, dur):
+		LinearAnimator.__init__(self, attr, domval, fromval, toval, dur)
+
 	def getValue(self, t):
-		if t < dur/2:
-			return self.__from
+		if t < self._dur/2.0:
+			return self._from
 		else:
-			return self.__to
+			return self._to
 
 
 # take into account sum, acc
@@ -63,12 +66,29 @@ class AnimateElementParser:
 		self.__enable = 0
 
 		self.__hasValidTarget = self.__checkTarget()
-		self._dump()
+		self.__getEnumAttrs()
 
 	def getAnimator(self):
-		if self.__hasValidTarget:
-			return Animator(self.__attrname, self.__domval)
-		return None
+		if not self.__hasValidTarget:
+			return None
+
+		v1 = self.getFrom()
+		if not v1:
+			v1 = self.__domval
+
+		v2 = self.getTo()
+
+		dv = self.getBy()
+
+		dt = self.getDuration()
+
+		if dt and v2 and self.__attrname=='file' and self.__calcMode=='linear':
+			return URLPairAnimator(self.__attrname, self.__domval,
+				v1, v2, dt)
+		
+		# ....
+
+		return Animator(self.__attrname, self.__domval)
 
 	def getAttrName(self):
 		return self.__attrname
@@ -85,14 +105,27 @@ class AnimateElementParser:
 			return 0
 		return 1
 							
-	def ___getEnumAttrs(self):
+	def __getEnumAttrs(self):
 		self.__additive = MMAttrdefs.getattr(self.__anim, 'additive')
 		self.__calcMode = MMAttrdefs.getattr(self.__anim, 'calcMode')
 		self.__accumulate = MMAttrdefs.getattr(self.__anim, 'accumulate')
+
+	def getDuration(self):
+		return MMAttrdefs.getattr(self.__anim, 'duration')
+
+	def getFrom(self):
+		return MMAttrdefs.getattr(self.__anim, 'from')
+
+	def getTo(self):
+		return MMAttrdefs.getattr(self.__anim, 'to')
+
+	def getBy(self):
+		return MMAttrdefs.getattr(self.__anim, 'by')
+
+	def getLoop(self):
+		return MMAttrdefs.getattr(self.__anim, 'loop')
 
 	def _dump(self):
 		print 'animate attr:', self.__attrname
 		for name, value in self.__anim.attrdict.items():
 			print `name`, '=', `value`
-
-		
