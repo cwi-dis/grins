@@ -91,7 +91,7 @@ class PanelMixin:
 
 	def updatePanelCmdUI(self):
 		if self._pbar and self._pbar.IsWindowVisible():
-			self._pbar.UpdateCmdUI()
+			self._pbar.UpdateDialogControls(self, 1)
 
 # null player panel mixin
 class NullPanelMixin:
