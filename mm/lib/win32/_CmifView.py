@@ -182,7 +182,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 	# Set the title of this window
 	def settitle(self,title):
 		self._title=title
-		#self._parent.settitle(title,'view')
+		self.GetParent().SetWindowText(title)
 
 	# Called when the view is activated 
 	def activate(self):
