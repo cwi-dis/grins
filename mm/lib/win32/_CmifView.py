@@ -216,8 +216,8 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		return SubWindowClass(self, coordinates, transparent, type_channel, 0, pixmap, z, units, bgcolor)
 
 	# It is called by the core system when it wants to create a child window
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		return newwindow(coordinates, pixmap, transparent, z, type_channel, units)	
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
+		return newwindow(coordinates, pixmap, transparent, z, type_channel, units, bgcolor)	
 
 	# Sets the dynamic commands by delegating to its parent
 	def set_dynamiclist(self, cmd, list):
@@ -265,7 +265,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 			self._parent.set_toggle(command,onoff)
 
 	# Initialize the view using the arguments passed by the core system 
-	def init(self,rc,title='View',units= UNIT_MM,adornments=None,canvassize=None,commandlist=None):
+	def init(self,rc,title='View',units= UNIT_MM,adornments=None,canvassize=None,commandlist=None, bgcolor=None):
 		self.settitle(title)
 		self._title=title
 		self._commandlist=commandlist
@@ -284,7 +284,11 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		else:
 			self.SetScaleToFitSize((r-l,b-t))
 		if canvassize==None:
-			self.ResizeParentToFit()		
+			self.ResizeParentToFit()
+		
+		if bgcolor:
+			self._bgcolor = bgcolor
+					
 		return self
 	
 	# Sets the scroll mode. Enables or dissables scrolling
@@ -592,9 +596,14 @@ class _CmifPlayerView(_CmifView):
 		del self._ddraw
 		
 	def CreateSurface(self, w, h):
-		if not self._ddraw: return
-		return self._ddraw.CreateSurface(w, h)
-	
+		if not self._ddraw: return None
+		dds = self._ddraw.CreateSurface(w, h)
+		if self._convbgcolor == None:
+			r, g, b = self._bgcolor
+			self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+		dds.BltFill((0, 0, w, h), self._convbgcolor)
+		return dds
+
 	def GetDDDC(self):
 		if self._islocked:
 			return None
