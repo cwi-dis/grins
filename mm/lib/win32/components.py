@@ -841,7 +841,7 @@ class TemplateDialog(ResDialog):
 		self.InvalidateRect()
 
 class BandwidthComputeDialog(ResDialog):
-	def __init__(self, caption, parent=None):
+	def __init__(self, caption, parent=None, grab=0):
 		self._caption = caption
 		ResDialog.__init__(self, grinsRC.IDD_BANDWIDTH_DIALOG, parent)
 		self._parent = parent
@@ -855,9 +855,15 @@ class BandwidthComputeDialog(ResDialog):
 		self._cancel = Button(self, grinsRC.IDC_CANCEL)
 		self._help = Button(self, win32con.IDHELP)
 		self.mustwait = 0
-		self.CreateWindow()
-		self.ShowWindow(win32con.SW_SHOW)
-		self.UpdateWindow()
+		if not grab:
+			self.CreateWindow()
+			self.ShowWindow(win32con.SW_SHOW)
+			self.UpdateWindow()
+		self._grab=grab
+
+	def show(self):
+		if self._grab:
+			self.DoModal()
 
 	def OnInitDialog(self):
 		self.attach_handles_to_subwindows()
@@ -871,6 +877,7 @@ class BandwidthComputeDialog(ResDialog):
 		self._help.hookcommand(self,self.OnHelp)
 		self._cancel.hookcommand(self,self.onCancel)
 		self.init_subwindows()
+		self.CenterWindow()
 		return ResDialog.OnInitDialog(self)
 
 	def setinfo(self, prerolltime, errorseconds, delaycount, errorcount):
