@@ -38,7 +38,7 @@ class MovieWindow(ChannelWindow):
 	# Initialization function.
 	#
 	def init(self, (title, attrdict)):
-		self = ChannelWindow.init(self, (title, attrdict))
+		self = ChannelWindow.init(self, title, attrdict)
 		self.clear()
 		return self
 	#
@@ -149,7 +149,7 @@ class MovieChannel(Channel):
 	node_attrs = ['file', 'scale', 'bgcolor', 'arm_duration']
 	#
 	def init(self, (name, attrdict, player)):
-		self = Channel.init(self, (name, attrdict, player))
+		self = Channel.init(self, name, attrdict, player)
 		self.window = MovieWindow().init(name, attrdict)
 		self.armed_node = None
 		return self
