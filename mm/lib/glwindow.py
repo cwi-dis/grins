@@ -181,8 +181,8 @@ def dispatch(dev, val):
 					windowinterface.setcursor('')
 				if not but.is_closed():
 					but.unhighlight()
-			else:	# Added by Jack. Correct?
-				gl.ringbell()
+			else:
+				windowinterface.beep()
 ##		elif event == EVENTS.Mouse0Release:
 ##			if highlight and not highlight.is_closed():
 ##				highlight.unhighlight()
