@@ -379,7 +379,7 @@ class MMNode():
 					if s = x.summaries[key]:
 						tofix.remove(key)
 					else:
-						x.summaries = s
+						x.summaries[key] = s
 			x = x.parent
 	#
 	def _summarize(self, name):
