@@ -163,6 +163,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		self.top_levels = []
 		self.calcchnames1(node)
 		self.hasMultiWindowLayout = (len(self.top_levels) > 1)
+		self.regions_alias = {}
 
 		self.uid2name = {}
 		self.calcnames1(node)
@@ -347,6 +348,7 @@ class SMILXhtmlSmilWriter(SMIL):
 					style = self.getRegionStyle(reg)
 					name = self.ch2name[reg]
 					self.ids_written[name] = 1
+					self.regions_alias[name] = [name,]
 					self.writetag('div', [('id', name), ('style', style),])
 					self.push()
 					self.writeRegionBackground(reg)
@@ -538,7 +540,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		pushed, inpar, pardur, regionid = 0, 0, None, ''
 		
 		# write media node layout
-		pushed, inpar, pardur, regionid, subregionid  = \
+		pushed, inpar, pardur, regionid  = \
 			self.writeMediaNodeLayout(node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill)
 
 		# apply subregion's style
@@ -622,7 +624,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			pushed = pushed - 1
 
 	def writeMediaNodeLayout(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
-		pushed, inpar, pardur, regionid, subregionid = 0, 0, None, '', ''
+		pushed, inpar, pardur, regionid = 0, 0, None, ''
 		
 		currRegion = node.GetChannel().GetLayoutChannel()
 		path = self.getRegionPath(currRegion)
@@ -630,7 +632,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			print 'error: failed to get region path for', regionName
 			pushed, inpar, pardur, regionid, subregionid
 		if len(path) == 1:
-			pushed, inpar, pardur, regionid, subregionid
+			pushed, inpar, pardur, regionid
 
 		# outmost div attr list
 		divlist = []
@@ -647,12 +649,15 @@ class SMILXhtmlSmilWriter(SMIL):
 
 		# find/compose/set region id
 		name = self.ch2name[currMediaRegion]
-		if self.ids_written.get(name):
-			self.ids_written[name] = self.ids_written[name] + 1
-			regionid = name + '_%d' % self.ids_written[name]
-		else:
-			self.ids_written[name] = 1
+		alias = self.regions_alias.get(name)
+		if alias is None:
 			regionid = name
+			self.regions_alias[name] = [regionid,]
+		else:
+			counter = len(alias)+1
+			regionid = name + '_%d' % counter
+			self.regions_alias[name].append(regionid)
+		self.ids_written[regionid] = 1
 		divlist.append(('id', regionid))
 
 		# apply region style
@@ -679,12 +684,15 @@ class SMILXhtmlSmilWriter(SMIL):
 		i = 0
 		while i < len(attrlist):
 			attr, val = attrlist[i]
-			if attr in ('begin', 'dur', 'end'):
+			if attr in ('begin', 'dur', 'end'): 
 				timing_spec = timing_spec + 1
 				divlist.append((attr, val))
 				del attrlist[i]
 				if attr == 'dur':
 					pardur = val
+			elif attr in ('repeatCount', 'repeatDur'): 
+				divlist.append((attr, val))
+				del attrlist[i]
 			else:
 				i = i + 1
 
@@ -710,19 +718,15 @@ class SMILXhtmlSmilWriter(SMIL):
 
 		# write inner hierarchy
 		ix = path.index(currMediaRegion)
+		self.removeAttr(divlist, 'id')
+		self.removeAttr(divlist, 'repeatCount')
+		self.removeAttr(divlist, 'repeatDur')
 		for region in path[ix+1:]:
 			self.removeAttr(divlist, 'volume')
 			forceTransparent = region in self.currLayout or mtype == 'audio'
 			regstyle = self.getRegionStyle(region, None, forceTransparent)
 			self.replaceAttrVal(divlist, 'style', regstyle)
 			self.replaceAttrVal(divlist, 'begin', '0')
-			name = self.ch2name[region]
-			if self.ids_written.get(name):
-				self.ids_written[name] = self.ids_written[name] + 1
-				name = name + '%d' % self.ids_written[name]
-			else:
-				self.ids_written[name] = 1
-			self.replaceAttrVal(divlist, 'id', name)
 			volume = region.get('soundLevel', None)
 			if volume is not None:
 				volume = 100.0*string.atof(volume)
@@ -742,9 +746,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			subRegGeom, mediaGeom = geoms
 		if subRegGeom is not None and mediaGeom is not None:
 			# possible overrides: fit, z-index, and backgroundColor 
-			subregionid = nodeid + '_subreg'
-			self.removeAttr(divlist, 'volume')
-			self.replaceAttrVal(divlist, 'id', subregionid)
+			divlist.insert(0, ('id', nodeid))
 			x, y, w, h = subRegGeom
 			bgcolor = getbgcoloratt(self, node, 'bgcolor')
 			z = getcmifattr(self, node, 'z')
@@ -758,10 +760,11 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.writetag('div', divlist)
 			self.push()
 			pushed = pushed + 1
+			#self.replaceAttrVal(attrlist, 'id', nodeid + '_m')
 
 		# save current layout and return
 		self.currLayout = path
-		return pushed, inpar, pardur, regionid, subregionid
+		return pushed, inpar, pardur, regionid
 		
 	def applyMediaStyle(self, node, nodeid, attrlist, mtype):
 		subRegGeom, mediaGeom = None, None
@@ -772,18 +775,12 @@ class SMILXhtmlSmilWriter(SMIL):
 		if geoms and mtype != 'audio':
 			subRegGeom, mediaGeom = geoms
 		if mediaGeom:
-			if nodeid:
-				attrlist.insert(0,('id', nodeid))
 			style = self.rc2style_relative(mediaGeom, subRegGeom)
 			if mtype == 'brush':
 				color = self.removeAttr(attrlist, 'color')
 				if color is not None:
 					style = style + 'background-color:%s;' % color
 			attrlist.append( ('style', style) )
-
-	def rc2style(self, rc):
-		x, y, w, h = rc
-		return 'position:absolute;overflow:hidden;left:%d;top:%d;width:%d;height:%d;' % (x, y, w, h)
 
 	def rc2style_relative(self, rc, rcref):
 		x, y, w, h = rc
@@ -878,16 +875,17 @@ class SMILXhtmlSmilWriter(SMIL):
 
 	def replaceAttrVal(self, attrlist, attrname, attrval):
 		val = None
-		i = 0
-		while i < len(attrlist):
+		for i in range(len(attrlist)):
 			a, v = attrlist[i]
 			if a == attrname:
-				attrlist[i] = a, attrval
+				attrlist[i] = attrname, attrval
 				val = v
 				break
-			i = i + 1
 		if val is None:
-			attrlist.append((attrname, attrval))	
+			if attrname == 'id':
+				attrlist.insert(0, (attrname, attrval))
+			else:
+				attrlist.append((attrname, attrval))	
 		return val
 
 	# set fill = 'freeze' if last visible child has it
@@ -1056,13 +1054,9 @@ class SMILXhtmlSmilWriter(SMIL):
 
 		# find/compose/set region id
 		name = self.ch2name[region]
-		if self.ids_written.get(name):
-			self.ids_written[name] = self.ids_written[name] + 1
-			regionid = name + '%d' % self.ids_written[name]
-		else:
-			self.ids_written[name] = 1
-			regionid = name
-		divlist.append(('id', regionid))
+		self.ids_written[name] = 1
+		self.regions_alias[name] = [name,]
+		divlist.append(('id', name))
 
 		# apply region style and fill attribute
 		regstyle = self.getRegionStyle(region)
@@ -1077,6 +1071,8 @@ class SMILXhtmlSmilWriter(SMIL):
 	def writeanimatenode(self, node, root):
 		attrlist = []
 		tag = node.GetAttrDict().get('atag')
+
+		target = None
 		targetElement = None
 
 		if tag == 'animateMotion':
@@ -1087,7 +1083,6 @@ class SMILXhtmlSmilWriter(SMIL):
 			toxy = aparser.toDOMOriginPosAttr('to')
 			values = aparser.toDOMOriginPosValues()
 			path = aparser.toDOMOriginPath()
-
 		hasid = 0
 		attributes = self.attributes.get(tag, {})
 		for name, func, gname in smil_attrs:
@@ -1102,11 +1097,10 @@ class SMILXhtmlSmilWriter(SMIL):
 						if target.getClassName() in ('Region', 'Viewport'):
 							targetElement = self.ch2name[target]
 						else:
-							targetElement = self.getNodeId(target) + '_subreg'
+							targetElement = self.getNodeId(target)
 						value = targetElement
 					else:
 						targetElement = value
-						
 				if tag == 'animateMotion' and not isAdditive:
 					if name == 'from':value = fromxy
 					elif name == 'to':value = toxy
@@ -1122,10 +1116,18 @@ class SMILXhtmlSmilWriter(SMIL):
 		if not hasid:
 			id = 'm' + node.GetUID()
 			attrlist.append( ('id', id))
-		if not self.ids_written.has_key(targetElement):
-			region = self.getRegionFromName(targetElement)
-			self.writeEmptyRegion(region)
-		self.writetag('t:'+tag, attrlist)
+
+		# write it
+		if target is None or target.getClassName() not in ('Region', 'Viewport'):
+			# node animation
+			self.writetag('t:'+tag, attrlist)
+		else:
+			# region animation
+			if not self.ids_written.has_key(targetElement):
+				self.writeEmptyRegion(target)
+			for name in self.regions_alias[targetElement]:
+				self.replaceAttrVal(attrlist, 'targetElement', name)				
+				self.writetag('t:'+tag, attrlist)
 	
 	def getLayoutStyle(self):
 		x, y = 20, 20
