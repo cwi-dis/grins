@@ -656,6 +656,7 @@ class ChannelView(ViewDialog, GLDialog):
 				continue
 			type = list[i]
 			break
+		self.setwin()
 		gl.setcursor(_CHANNEL, 0, 0)
 		self.placing_channel = PLACING_NEW
 		self.placing_type = type
@@ -678,6 +679,7 @@ class ChannelView(ViewDialog, GLDialog):
 		if not editmgr.transaction():
 			return		# Not possible at this time
 		editmgr.rollback()
+		self.setwin()
 		gl.setcursor(_CHANNEL, 0, 0)
 		self.placing_channel = PLACING_COPY
 		self.placing_orig = name
@@ -700,6 +702,7 @@ class ChannelView(ViewDialog, GLDialog):
 		if not editmgr.transaction():
 			return		# Not possible at this time
 		editmgr.rollback()
+		self.setwin()
 		gl.setcursor(_CHANNEL, 0, 0)
 		self.placing_channel = PLACING_MOVE
 		self.placing_orig = name
@@ -708,6 +711,7 @@ class ChannelView(ViewDialog, GLDialog):
 	        placement_type = self.placing_channel
 	        self.placing_channel = 0
 		index = self.channelgapindex(x)
+		self.setwin()
 	        gl.setcursor(0, 0, 0)
 		editmgr = self.editmgr
 		if not editmgr.transaction():
