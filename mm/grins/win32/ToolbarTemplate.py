@@ -12,6 +12,7 @@
 import grinsRC
 import usercmd
 import wndusercmd
+from ToolbarIcons import *
 
 #
 # This is a hack by Jack copied from the editor by Sjoerd. We need fixed ID values
@@ -43,19 +44,19 @@ class Pulldown:
 		self.width = width
 
 GENERAL_TEMPLATE = (
-	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_GRINSED, (
-		Button(usercmd.OPENFILE, 1),
-		Button(usercmd.CLOSE, 7),
-		Button(usercmd.HELP, 9),
+	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, (
+		Button(usercmd.OPENFILE, TBICON_OPENFILE),
+		Button(usercmd.CLOSE, TBICON_CLOSE),
+		Button(usercmd.HELP, TBICON_HELP),
 		)
 	)
 )
 
 PLAYER_TEMPLATE = (
-	('Player Controls', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_PLAYER, (
-		Button(usercmd.PLAY, 0),
-		Button(usercmd.PAUSE, 1),
-		Button(usercmd.STOP, 2),
+	('Player Controls', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_COMMON, (
+		Button(usercmd.PLAY, TBICON_PLAY),
+		Button(usercmd.PAUSE, TBICON_PAUSE),
+		Button(usercmd.STOP, TBICON_STOP),
 		)
 	)
 )
