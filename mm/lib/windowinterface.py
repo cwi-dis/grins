@@ -42,7 +42,7 @@ _watch.reverse()			# Turn it upside-down
 gl.defcursor(_WATCH, _watch*8)
 gl.curorigin(_WATCH, 8, 8)
 
-class _Toplevel():
+class _Toplevel:
 	def init(self):
 		if debug: print 'TopLevel.init()'
 		self._parent_window = None
@@ -90,7 +90,7 @@ class _Toplevel():
 		if debug: print 'TopLevel.usewindowlock()'
 		self._win_lock = lock
 
-class _Event():
+class _Event:
 	def init(self):
 		if debug: print 'Event.init()'
 		self._queue = []
@@ -279,7 +279,7 @@ class _Event():
 	def getfd(self):
 		return gl.qgetfd()
 			
-class _Font():
+class _Font:
 	def init(self, fontname, size):
 		self._font = _findfont(fontname, size)
 		self._baseline, self._fontheight, = self._fontparams()
@@ -329,7 +329,7 @@ class _Font():
 		baseline = fontheight - yorig
 		return baseline, fontheight
 
-class _Button():
+class _Button:
 	def init(self, dispobj, x, y, w, h):
 		self._dispobj = dispobj
 		window = dispobj._window
@@ -408,7 +408,7 @@ class _Button():
 
 # Display List.  A window may have several display lists.  When the
 # list is rendered, it becomes the active display list.
-class _DisplayList():
+class _DisplayList:
 	def init(self, window):
 		self._window = window	# window to which this belongs
 		self._rendered = 0	# 1 iff rendered at some point
@@ -705,7 +705,7 @@ class _DisplayList():
 		return oldx, oldy, maxx - oldx, \
 			  newy - oldy + self._fontheight - self._baseline
 
-class _Window():
+class _Window:
 	def init(self, parent, x, y, w, h, title):
 		if debug: print 'Window.init'+`parent, x, y, w, h, title`
 		if _toplevel._win_lock:

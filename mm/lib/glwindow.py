@@ -149,7 +149,7 @@ def del_anchor(button):
 
 def dispatch(dev, val):
 	global focuswindow, focuswid
-##	print `dev,val`
+##	print 'dispatch:', `dev,val` #DBG
 	waslocked = 0
 	if GLLock.gl_lock:
 ##		print 'try acquire'
@@ -159,6 +159,7 @@ def dispatch(dev, val):
 ##		print 'release'
 		GLLock.gl_lock.release()
 	event = windowinterface._event._doevent(dev, val)
+##	print 'dispatch now:', event #DBG
 	if event:
 		global highlight
 		window, event, value = event
