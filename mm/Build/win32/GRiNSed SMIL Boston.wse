@@ -19,17 +19,17 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-117.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-122.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
   Upload Directory=/var/www/htdocs/intranet/grins
   Per-User Version ID=1
   Dialogs Version=7
-  Version File=2.0
+  Version File=2.1
   Version Description=GRiNS/SMIL 2.0
-  Version Copyright=Copyright 2001 Oratrix Holding B.V.
-  Version Company=Oratrix Holding B.V.
+  Version Copyright=Copyright 2001 Oratrix
+  Version Company=Oratrix
   Crystal Format=10111100101100000010001001001001
   Distribute Type=2
   Step View=All
@@ -2610,7 +2610,7 @@ item: Edit Registry
   Total Keys=5
   item: Key
     Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
-    New Value=2.0
+    New Value=2.1
     Value Name=DisplayVersion
     Root=2
   end
@@ -2622,7 +2622,7 @@ item: Edit Registry
   end
   item: Key
     Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
-    New Value=Oratrix Development BV
+    New Value=Oratrix
     Value Name=Publisher
     Root=2
   end
