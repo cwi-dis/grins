@@ -157,7 +157,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 			return self.xywh(rc)
 		return 0, 0, 0, 0
 		
-	def update(self, rc=None):
+	def update(self, rc=None, exclwnd=None):
 		if not self._ddraw or not self._frontBuffer or not self._backBuffer:
 			return
 		if self._frontBuffer.IsLost():
@@ -177,7 +177,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		if rc and (rc[2]==0 or rc[3]==0): 
 			return 
 
-		self.paint(rc)
+		self.paint(rc, exclwnd)
 		
 		if rc is None:
 			x, y, w, h = self._viewport._rect
@@ -201,7 +201,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 	def getwindowpos(self, rel=None):
 		return self._rect
 
-	def paint(self, rc=None):
+	def paint(self, rc=None, exclwnd=None):
 		if rc is None:
 			x, y, w, h = self._viewport._rect
 			rcPaint = x, y, x+w, y+h
@@ -218,7 +218,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 			return
 
 		if self._viewport:
-			self._viewport.paint(rc)
+			self._viewport.paint(rc, exclwnd)
 		
 
 
