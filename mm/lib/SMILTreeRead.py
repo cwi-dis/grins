@@ -710,7 +710,8 @@ class SMILParser(xmllib.XMLParser):
 				self.warning('unknown idref in endsync attribute')
 
 	seq_attributes = {'id':None, 'dur':None, 'begin':None, 'end':None,
-			  'repeat':'1', 'bitrate':None, 'language':None,
+			  'repeat':'1', 'fill':'remove',
+			  'bitrate':None, 'language':None,
 			  'screen-size':None, 'screen-depth':None}
 	def start_seq(self, attributes):
 		self.NewContainer('seq', attributes)
@@ -743,7 +744,7 @@ class SMILParser(xmllib.XMLParser):
 
 	basic_attributes = {'id':None, 'src':None, 'type':None, 'channel':None,
 			    'dur':None, 'begin':None, 'end':None, 'repeat':'1',
-			    'bitrate':None, 'language':None,
+			    'fill':'remove', 'bitrate':None, 'language':None,
 			    'screen-size':None, 'screen-depth':None}
 	ref_attributes = basic_attributes.copy()
 	ref_attributes['range'] = None
