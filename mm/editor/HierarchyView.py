@@ -1800,6 +1800,7 @@ def slidestart(pnode, url, index):
 	i = index
 	if i == -1:
 		i = len(pnode.children)
+	urls = {}
 	start = MMAttrdefs.getattr(pnode, 'preroll')
 	purl = MMAttrdefs.getattr(pnode, 'file')
 	filesize = 0
@@ -1812,7 +1813,9 @@ def slidestart(pnode, url, index):
 			if not curl:
 				continue
 			curl = MMurl.basejoin(purl,curl)
-			filesize = filesize + Bandwidth.GetSize(curl)
+			if not urls.has_key(curl):
+				filesize = filesize + Bandwidth.GetSize(curl)
+			urls[curl] = 0
 	filesize = filesize + Bandwidth.GetSize(url)
 	minstart = float(filesize) * 8 / MMAttrdefs.getattr(pnode, 'bitrate')
 	return start, minstart
