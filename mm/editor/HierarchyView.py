@@ -490,8 +490,9 @@ class HierarchyView(HierarchyViewDialog):
 		self.window.setcanvassize((self.sizes.SIZEUNIT, x, y))
 		
 		# Known bug: this will actually cause a Hierarchyview.redraw() event.
-		self.displist = self.window.newdisplaylist(BGCOLOR)
+		self.displist = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
 		
+		self.scene_graph.moveto((0,0,x,y))
 		self.scene_graph.recalc()
 		self.scene_graph.draw(self.displist)
 		
@@ -594,6 +595,8 @@ class HierarchyView(HierarchyViewDialog):
 	def mouse(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
 		x, y = params[0:2]
+		x = x * self.mcanvassize[0]
+		y = y * self.mcanvassize[1]
 		self.select(x, y)
 		self.draw()
 
@@ -619,6 +622,9 @@ class HierarchyView(HierarchyViewDialog):
 	def dropfile(self, maybenode, window, event, params):
 		# Called when a file is dragged-and-dropped onto this HeirachyView
 		x, y, filename = params
+		# Convert to pixels.
+		x = x * self.mcanvassize[0]
+		y = y * self.mcanvassize[1]
 
 		if maybenode is not None:
 			# but how did dropfile() get a node?? Nevertheless..
@@ -704,6 +710,9 @@ class HierarchyView(HierarchyViewDialog):
 
 	def dragfile(self, dummy, window, event, params):
 		x, y = params
+		# Convert to absolute coordinates
+		x = x * self.mcanvassize[0]
+		y = y * self.mcanvassize[1]
 		obj = self.whichhit(x, y)
 		if not obj:
 			windowinterface.setdragcursor('dragnot')
@@ -1243,7 +1252,10 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Handle a selection click at (x, y)
 	def select(self, x, y):
+		print "Selecting whatever is at ", x, y
 		widget = self.scene_graph.get_obj_at((x,y))
+		if widget == None:
+			print "No widget under the mouse."
 		if widget==None or widget==self.selected_widget:
 			return
 		else:
