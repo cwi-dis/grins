@@ -79,6 +79,8 @@ class _DisplayList:
 		self._old_fontinfo = None
 ##		self._clonebboxes = []
 		self._really_rendered = FALSE	# Set to true after the first real redraw
+		self._tmprgn = Qd.NewRgn()
+		self._need_convert_coordinates = 1
 		
 		# associate cmd names with list indices
 		# used by animation experimental methods
@@ -256,23 +258,26 @@ class _DisplayList:
 		
 	def _render(self, clonestart=0, rgn=None):
 		# rgn (region to be redrawn, None for everything) ignored for now
+##		import Evt
+##		t0 = Evt.TickCount()
 		self._really_rendered = 1
 		window = self._window
 		grafport = window._mac_getoswindowport()
-##		print 'DBG render to', grafport
 		window._active_displist = self
 		self._restorecolors()
 		if clonestart:
 			list = self._list[clonestart:]
 		else:
-##			if window._transparent <= 0:
-##				# XXXX Or should we erase the onscreen window?
-##				Qd.EraseRect(window.qdrect())
 			list = self._list
+		self._dbg_did = 0
+		if self._window._convert_coordinates((0,0,1,1), units = self.__units) == (0,0,1,1):
+			self._need_convert_coordinates = 0
 		for entry in list:
-			self._render_one(entry, window, grafport)
+			self._render_one(entry, window, grafport, rgn)
+##		print "Redraw time:", (Evt.TickCount()-t0)/60.0, self._dbg_did, 'of', len(list)
+		self._need_convert_coordinates = 1
 			
-	def _render_one(self, entry, window, grafport):
+	def _render_one(self, entry, window, grafport, rgn):
 		cmd = entry[0]
 		
 		if cmd == 'clear':
@@ -292,25 +297,34 @@ class _DisplayList:
 		elif cmd == 'font':
 			entry[1]._setfont(grafport)
 		elif cmd == 'text':
-			x, y = self._convert_coordinates(entry[1:3])
+			x, y, w, h = self._convert_coordinates(entry[1:5])
+			if not self._overlaprgn(rgn, (x, y-h, x+w, y)):
+				return
 			Qd.MoveTo(x, y)
 			 # XXXX Incorrect for long strings:
-			Qd.DrawText(entry[3], 0, len(entry[3]))
+			Qd.DrawText(entry[5], 0, len(entry[5]))
 		elif cmd == 'icon':
-			if entry[2] != None:
-				x0, y0, x1, y1 = self._convert_coordinates(entry[1])
-				if x1-x0 < ICONSIZE_PXL:
-					leftextra = (ICONSIZE_PXL - (x1-x0))/2
-					x0 = x0 + leftextra
-					x1 = x0 + ICONSIZE_PXL
-				if y1-y0 < ICONSIZE_PXL:
-					topextra = (ICONSIZE_PXL - (y1-y0))/2
-					y0 = y0 + topextra
-					y1 = y0 + ICONSIZE_PXL
-				Icn.PlotCIcon((x0, y0, x1, y1), entry[2])
+			icon = entry[2]
+			if icon == None:
+				return
+			rect = self._convert_coordinates(entry[1])
+			if not self._overlaprgn(rgn, rect):
+				return
+			x0, y0, x1, y1 = rect
+			if x1-x0 < ICONSIZE_PXL:
+				leftextra = (ICONSIZE_PXL - (x1-x0))/2
+				x0 = x0 + leftextra
+				x1 = x0 + ICONSIZE_PXL
+			if y1-y0 < ICONSIZE_PXL:
+				topextra = (ICONSIZE_PXL - (y1-y0))/2
+				y0 = y0 + topextra
+				y1 = y0 + ICONSIZE_PXL
+			Icn.PlotCIcon((x0, y0, x1, y1), icon)
 		elif cmd == 'image':
 			mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
 			dstrect = self._convert_coordinates((dstx, dsty, w, h))
+			if not self._overlaprgn(rgn, dstrect):
+				return
 			w = dstrect[2]-dstrect[0]
 			h = dstrect[3]-dstrect[1]
 			srcrect = srcx, srcy, srcx+w, srcy+h
@@ -344,6 +358,8 @@ class _DisplayList:
 			self._setfgcolor(color1)
 			x0, y0 = self._convert_coordinates((x0, y))
 			x1, y1 = self._convert_coordinates((x1, y))
+			if not self._overlaprgn(rgn, (x0, y0, x1, y1+1)):
+				return
 			Qd.MoveTo(x0, y0)
 			Qd.LineTo(x1, y1)
 			self._setfgcolor(color2)
@@ -353,27 +369,36 @@ class _DisplayList:
 			self._restorecolors()
 		elif cmd == 'box':
 			rect = self._convert_coordinates(entry[1])
+			if not self._overlaprgn(rgn, rect):
+				return
 			Qd.FrameRect(rect)
 		elif cmd == 'fbox':
 			color = entry[1]
 			rect = self._convert_coordinates(entry[2])
+			if not self._overlaprgn(rgn, rect):
+				return
 			self._setfgcolor(color)
 			Qd.PaintRect(rect)
 			self._restorecolors()
 		elif cmd == 'linewidth':
 			Qd.PenSize(entry[1], entry[1])
 		elif cmd == 'fpolygon':
+			polyhandle = self._polyhandle(entry[2], cliprgn=rgn)
+			if not polyhandle:
+				return
 			self._setfgcolor(entry[1])
-			polyhandle = self._polyhandle(entry[2])
 			Qd.PaintPoly(polyhandle)
 			self._restorecolors()
 		elif cmd == '3dbox':
+			rect = self._convert_coordinates(entry[2])
+			if not self._overlaprgn(rgn, rect):
+				return
+			l, t, r, b = rect
 			cl, ct, cr, cb = entry[1]
 			clt = _colormix(cl, ct)
 			ctr = _colormix(ct, cr)
 			crb = _colormix(cr, cb)
 			cbl = _colormix(cb, cl)
-			l, t, r, b = self._convert_coordinates(entry[2])
 ##			print '3Dbox', (l, t, r, b) # DBG
 ##			print 'window', window.qdrect() # DBG
 			# l, r, t, b are the corners
@@ -412,7 +437,10 @@ class _DisplayList:
 			
 			self._restorecolors()
 		elif cmd == 'diamond':
-			x, y, x1, y1 = self._convert_coordinates(entry[1])
+			rect = self._convert_coordinates(entry[1])
+			if not self._overlaprgn(rgn, rect):
+				return
+			x, y, x1, y1 = rect
 			w = x1-x
 			h = y1-y
 			Qd.MoveTo(x, y + h/2)
@@ -421,7 +449,10 @@ class _DisplayList:
 			Qd.LineTo(x + w/2, y + h)
 			Qd.LineTo(x, y + h/2)
 		elif cmd == 'fdiamond':
-			x, y, x1, y1 = self._convert_coordinates(entry[2])
+			rect = self._convert_coordinates(entry[2])
+			if not self._overlaprgn(rgn, rect):
+				return
+			x, y, x1, y1 = rect
 			w = x1-x
 			h = y1-y
 			self._setfgcolor(entry[1])
@@ -433,8 +464,11 @@ class _DisplayList:
 			Qd.PaintPoly(polyhandle)
 			self._restorecolors()
 		elif cmd == '3ddiamond':
+			rect = self._convert_coordinates(entry[2])
+			if not self._overlaprgn(rgn, rect):
+				return
+			l, t, r, b = rect
 			cl, ct, cr, cb = entry[1]
-			l, t, r, b = self._convert_coordinates(entry[2])
 			w = r-l
 			h = b-t
 			r = l + w
@@ -470,6 +504,8 @@ class _DisplayList:
 			src = entry[2]
 			dst = entry[3]
 			x0, y0, x1, y1, points = self._arrowdata(src,dst)
+			if not self._overlaprgn(rgn, (x0, y0, x1, y1)):
+				return
 
 			self._setfgcolor(color)
 
@@ -480,11 +516,13 @@ class _DisplayList:
 			self._restorecolors()
 		else:
 			raise 'Unknown displaylist command', cmd
+		self._dbg_did = self._dbg_did + 1
 
 	def _convert_coordinates(self, coords):
-		"""Convert coordinates from window xywh style to quickdraw style"""						
+		"""Convert coordinates from window xywh style to quickdraw style"""
 		xscrolloffset, yscrolloffset = self._window._scrolloffset()
-		coords = self._window._convert_coordinates(coords, units = self.__units)
+		if self._need_convert_coordinates:
+			coords = self._window._convert_coordinates(coords, units = self.__units)
 		x = coords[0] + xscrolloffset
 		y = coords[1] + yscrolloffset
 		if len(coords) == 2:
@@ -492,7 +530,17 @@ class _DisplayList:
 		else:
 			w, h = coords[2:]
 			return (x, y, x+w, y+h)
-			
+	
+	def _overlaprgn(self, rgn, rect):
+		"""Return true if there is an overlap between the region and the rect"""
+		r2 = self._tmprgn
+		Qd.RectRgn(r2, rect)
+		Qd.SectRgn(rgn, r2, r2)
+		empty = Qd.EmptyRgn(r2)
+##		Qd.DisposeRgn(r2)
+##		print '_overlaprgn', rect, '->', not empty
+		return not empty
+		
 	def _pixel2units(self, coords):
 		if self.__units == UNIT_PXL:
 			return coords
@@ -505,8 +553,9 @@ class _DisplayList:
 			color = self._bgcolor
 		else:
 			color = self._window._convert_color(color)
-		self._list.append(('fg', color))
-		self._fgcolor = color
+		if color != self._fgcolor:
+			self._list.append(('fg', color))
+			self._fgcolor = color
 
 
 	# Define a new button. Coordinates are in window relatives
@@ -667,7 +716,7 @@ class _DisplayList:
 			window.arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
 		return nsx, nsy, ndx, ndy, points
 	
-	def _polyhandle(self, pointlist, conv=1):
+	def _polyhandle(self, pointlist, conv=1, cliprgn=None):
 		"""Return polygon structure"""
 		xscrolloffset, yscrolloffset = self._window._scrolloffset()
 
@@ -682,6 +731,8 @@ class _DisplayList:
 		if conv:
 			minx, miny = self._convert_coordinates((minx, miny))
 			maxx, maxy = self._convert_coordinates((maxx, maxy))
+		if cliprgn and not self._overlaprgn(cliprgn, (minx, miny, maxx, maxy)):
+			return
 		# Create structure head
 		size = len(pointlist)*4 + 10
 		data = struct.pack("hhhhh", size, miny, minx, maxy, maxx)
@@ -765,9 +816,11 @@ class _DisplayList:
 		oldy = oldy - base
 		maxx = oldx
 		for str in strlist:
-			list.append(('text', x, y, str))
 			twidth = Qd.TextWidth(str, 0, len(str))
-			self._curpos = x + float(twidth) / w._rect[_WIDTH], y
+			if self.__units != UNIT_PXL:
+				twidth = float(twidth) / w._rect[_WIDTH]
+			list.append(('text', x, y, twidth, height, str))
+			self._curpos = x + twidth, y
 			x = self._xpos
 			y = y + height
 			if self._curpos[0] > maxx:
