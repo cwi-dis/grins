@@ -10,6 +10,18 @@ import os
 # temporary constant: this constant will be remove as soon as it will be reliable
 activeFullSmilCss = 1
 
+# enable or dissable language extensions
+profileExtensions = {
+	'AccessKeyTiming': 0,
+	'InlineTransitions': 0,
+	'MediaClipMarkers': 0,
+	'MediaMarkerTiming': 0,
+	'SplineAnimation': 1,
+	'SyncMaster': 0,
+	'TimeContainerAttributes': 0,
+	'TimeManipulations': 1,
+}
+
 # settings that cannot be changed when running
 noprearm = 1				# don't prearm
 
