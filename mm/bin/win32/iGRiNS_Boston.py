@@ -21,7 +21,7 @@ toplevel=None
 import os
 import sys
 	
-CMIFDIR=r'd:\ufs\mm\cmif'
+CMIFDIR=r'c:\ufs\mm\cmif'
 
 # TEMP TEST FOLDER
 
