@@ -2762,6 +2762,22 @@ CreateDirectDraw(PyObject *self, PyObject *args)
 	return (PyObject*)obj;
 }
 
+static char CreateDirectDrawWrapper__doc__[] =
+""
+;
+static PyObject *
+CreateDirectDrawWrapper(PyObject *self, PyObject *args)
+{
+	IDirectDraw *pI;
+	if (!PyArg_ParseTuple(args, "i", &pI))
+		return NULL;
+	DirectDrawObject *obj = newDirectDrawObject();
+	if (obj == NULL) return NULL;
+	obj->pI = pI;
+	obj->pI->AddRef();
+	return (PyObject*)obj;
+}
+
 #ifdef USE_DDRAWEX
 static char CreateDirectDraw2__doc__[] =
 ""
@@ -2878,6 +2894,7 @@ CoUninitialize(PyObject *self, PyObject *args)
 
 static struct PyMethodDef ddraw_methods[] = {
 	{"CreateDirectDraw", (PyCFunction)CreateDirectDraw, METH_VARARGS, CreateDirectDraw__doc__},
+	{"CreateDirectDrawWrapper", (PyCFunction)CreateDirectDrawWrapper, METH_VARARGS, CreateDirectDrawWrapper__doc__},
 #ifdef USE_DDRAWEX
 	{"CreateDirectDraw2", (PyCFunction)CreateDirectDraw2, METH_VARARGS, CreateDirectDraw2__doc__},
 #endif
