@@ -1037,10 +1037,14 @@ class AnimateContext:
 		self._player = player
 		self._effAnimators = {}
 		self._id2key = {}
-		if player: ctx=player.context
-		elif node: ctx=node.GetContext()
+		if player:
+			self._root = player.root
+			ctx=player.context
+		elif node:
+			self._root = node.GetRoot()
+			ctx=node.GetContext()
 		self._ctx = ctx
-		self._cssResolver = ctx.newCssResolver()
+		self._cssResolver = ctx.newCssResolver(self._root)
 		self._cssDomResolver = None # will be created if needed
 	
 	def reset(self):
@@ -1071,12 +1075,12 @@ class AnimateContext:
 	
 	def getCssResolver(self):
 		if not self._cssResolver:
-			self._cssResolver = self._ctx.newCssResolver()
+			self._cssResolver = self._ctx.newCssResolver(self._root)
 		return self._cssResolver
 
 	def getDOMCssResolver(self):
 		if not self._cssDomResolver:
-			self._cssDomResolver = self._ctx.newCssResolver()
+			self._cssDomResolver = self._ctx.newCssResolver(self._root)
 		return self._cssDomResolver
 
 	def getAbsPos(self, mmobj):

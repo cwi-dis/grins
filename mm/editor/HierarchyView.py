@@ -1485,7 +1485,8 @@ class HierarchyView(HierarchyViewDialog):
 			    'The clipboard does not contain a node to paste',
 			    mtype = 'error', parent = self.window)
 			return
-		if self.get_selected_node() is None:
+		fnode = self.get_selected_node()
+		if fnode is None:
 			windowinterface.showmessage(
 				'There is no selection to paste into',
 			 	mtype = 'error', parent = self.window)
@@ -1505,7 +1506,7 @@ class HierarchyView(HierarchyViewDialog):
 			for n in node:	# I can't use insertnode because I need to access the editmanager.
 				if n.context is not self.root.context:
 					n = n.CopyIntoContext(self.root.context)
-				self.editmgr.addnode(self.get_selected_node(), -1, n)
+				self.editmgr.addnode(fnode, -1, n)
 			self.editmgr.commit()
 
 	def insertnode(self, node, where, index = -1, start_transaction = 1, end_transaction = 1):
