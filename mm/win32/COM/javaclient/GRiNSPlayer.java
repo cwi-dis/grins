@@ -9,14 +9,14 @@ public class GRiNSPlayer implements Renderer {
     public Component getComponent() 
     {
         if(component==null)
-            component = new GPCanvas();
+            component = new PlayerCanvas();
         return component;
     }
     
     public void setComponent(Component c) 
     {
         component = c;
-        if(c!=null && c instanceof Renderable) {
+        if(c!=null && c instanceof PlayerCanvas) {
             ((Renderable)c).setRenderer(this);
         }
     }
@@ -24,6 +24,17 @@ public class GRiNSPlayer implements Renderer {
     public void update()
     {
         if(hgrins!=0) nupdate(hgrins);
+    }
+    
+    public void mouseClicked(int x, int y)
+    {
+        if(hgrins!=0) nmouseClicked(hgrins, x, y);
+        System.out.println("mouseClicked "+x+", "+y);
+    }
+    public boolean mouseMoved(int x, int y)
+    {
+        if(hgrins!=0) return nmouseMoved(hgrins, x, y);
+        return false;
     }
     
     public void open(String fn) throws GRiNSInterfaceException
@@ -104,19 +115,7 @@ public class GRiNSPlayer implements Renderer {
         if(hgrins!=0) return ngetSpeed(hgrins);
         return 1.0;
     }
-    
-    private class GPCanvas extends Canvas implements Renderable {
-        public void setRenderer(Renderer renderer) {
-            this.renderer = renderer;
-        }
-    
-	    public void paint(Graphics g) {
-		    if(renderer!=null) renderer.update();
-		    else super.paint(g);
-	    }
-        private Renderer renderer;
-    }
-            
+                
 	private int hgrins;
 	private Component component; 
     private native int nconnect();
@@ -135,6 +134,8 @@ public class GRiNSPlayer implements Renderer {
     private native double ngetTime(int hgrins);
     private native void nsetSpeed(int hgrins, double v);
     private native double ngetSpeed(int hgrins);
+    private native void nmouseClicked(int hgrins, int x, int y);
+    private native boolean nmouseMoved(int hgrins, int x, int y);
     static {
          System.loadLibrary("grinsp");
      }
