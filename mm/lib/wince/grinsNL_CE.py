@@ -37,7 +37,7 @@ class Main(MainDialog):
 				sys.exit(0)
 
 		self.do_init()
-		self.recent_file_list = []
+##		self.recent_file_list = []
 				
 	def do_init(self, license=None):
 		# We ignore the license, not needed in the player
@@ -50,17 +50,17 @@ class Main(MainDialog):
 		self.commandlist = [
 			OPEN(callback = (self.open_callback, ())),
 			OPENFILE(callback = (self.openfile_callback, ())),
-			OPEN_RECENT(callback = self.open_recent_callback),	# Dynamic cascade
-#			RELOAD(callback = (self.reload_callback, ())), 
-			PREFERENCES(callback = (self.preferences_callback, ())),
-			CHECKVERSION(callback=(self.checkversion_callback, ())),
+##			OPEN_RECENT(callback = self.open_recent_callback),	# Dynamic cascade
+##			RELOAD(callback = (self.reload_callback, ())), 
+##			PREFERENCES(callback = (self.preferences_callback, ())),
+##			CHECKVERSION(callback=(self.checkversion_callback, ())),
 			EXIT(callback = (self.close_callback, ())),
 			]
-		import settings
-		if hasattr(windowinterface, 'is_embedded') and windowinterface.is_embedded():
-			settings.factory_defaults()
+##		import settings
+##		if hasattr(windowinterface, 'is_embedded') and windowinterface.is_embedded():
+##			settings.factory_defaults()
 		MainDialog.__init__(self, 'GRiNS')
-		self._update_recent(None)
+##		self._update_recent(None)
 
 	def openURL_callback(self, url):
 		import windowinterface
@@ -82,43 +82,43 @@ class Main(MainDialog):
 			self.tops.append(top)
 			top.show()
 			top.player.show()
-			self._update_recent(url)
+##			self._update_recent(url)
 			top.player.play_callback()
 
-	def open_recent_callback(self, url):
-		self.openURL_callback(url)
+##	def open_recent_callback(self, url):
+##		self.openURL_callback(url)
 		
-	def _update_recent(self, url):
-		if url:
-			self.add_recent_file(url)
-		doclist = self.get_recent_files()
-		self.set_recent_list(doclist)
+##	def _update_recent(self, url):
+##		if url:
+##			self.add_recent_file(url)
+##		doclist = self.get_recent_files()
+##		self.set_recent_list(doclist)
 
-	def get_recent_files(self):
-		if not hasattr(self, 'set_recent_list'):
-			return
-		import settings
-		import posixpath
-		recent = settings.get('recent_documents')
-		doclist = []
-		for url in recent:
-			base = posixpath.basename(url)
-			doclist.append( (base, (url,)))
-		return doclist
+##	def get_recent_files(self):
+##		if not hasattr(self, 'set_recent_list'):
+##			return
+##		import settings
+##		import posixpath
+##		recent = settings.get('recent_documents')
+##		doclist = []
+##		for url in recent:
+##			base = posixpath.basename(url)
+##			doclist.append( (base, (url,)))
+##		return doclist
 
-	def add_recent_file(self, url):
-		# Add url to the top of the recent file list.
-		import windowinterface
-		assert url
-		import settings
-		recent = settings.get('recent_documents')
-		if url in recent:
-			recent.remove(url)
-		recent.insert(0, url)
-		if len(recent) > NUM_RECENT_FILES:
-			recent = recent[:NUM_RECENT_FILES]
-		settings.set('recent_documents', recent)
-		settings.save()
+##	def add_recent_file(self, url):
+##		# Add url to the top of the recent file list.
+##		import windowinterface
+##		assert url
+##		import settings
+##		recent = settings.get('recent_documents')
+##		if url in recent:
+##			recent.remove(url)
+##		recent.insert(0, url)
+##		if len(recent) > NUM_RECENT_FILES:
+##			recent = recent[:NUM_RECENT_FILES]
+##		settings.set('recent_documents', recent)
+##		settings.save()
 
 	def close_callback(self, exitcallback=None):
 		for top in self.tops[:]:
@@ -127,39 +127,39 @@ class Main(MainDialog):
 			import MacOS
 			MacOS.OutputSeen()
 
-	def preferences_callback(self):
-		import Preferences
-		Preferences.showpreferences(1, self.prefschanged)
+##	def preferences_callback(self):
+##		import Preferences
+##		Preferences.showpreferences(1, self.prefschanged)
 
-	def prefschanged(self):
-		for top in self.tops:
-			top.prefschanged()
+##	def prefschanged(self):
+##		for top in self.tops:
+##			top.prefschanged()
 
-	def checkversion_callback(self):
-		import MMurl
-		import version
-		import windowinterface
-		import settings
-		url = 'http://www.oratrix.com/indir/%s/updatecheck.txt'%version.shortversion
-		try:
-			fp = MMurl.urlopen(url)
-			data = fp.read()
-			fp.close()
-		except:
-			windowinterface.showmessage('Unable to check for upgrade. You can try again later, or visit www.oratrix.com with your webbrowser.')
-			print "Could not load URL", url
-			return
-		data = data.strip()
-		if not data:
-			windowinterface.showmessage('You are running the latest version of the software')
-			return
-		cancel = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to know more?')
-		if cancel:
-			return
-		# Pass the version and the second item of the license along.
-		id = settings.get('license').split('-')[1]
-		url = '%s?version=%s&id=%s'%(data, version.shortversion, id)
-		windowinterface.htmlwindow(url)
+##	def checkversion_callback(self):
+##		import MMurl
+##		import version
+##		import windowinterface
+##		import settings
+##		url = 'http://www.oratrix.com/indir/%s/updatecheck.txt'%version.shortversion
+##		try:
+##			fp = MMurl.urlopen(url)
+##			data = fp.read()
+##			fp.close()
+##		except:
+##			windowinterface.showmessage('Unable to check for upgrade. You can try again later, or visit www.oratrix.com with your webbrowser.')
+##			print "Could not load URL", url
+##			return
+##		data = data.strip()
+##		if not data:
+##			windowinterface.showmessage('You are running the latest version of the software')
+##			return
+##		cancel = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to know more?')
+##		if cancel:
+##			return
+##		# Pass the version and the second item of the license along.
+##		id = settings.get('license').split('-')[1]
+##		url = '%s?version=%s&id=%s'%(data, version.shortversion, id)
+##		windowinterface.htmlwindow(url)
 
 	def closetop(self, top):
 		if self._closing:
