@@ -21,9 +21,11 @@ DONE	New channels sometimes show up as main window (->Sjoerd, appears problem wi
 DONE	Timeline: syncarc focus is lost on canvas resize (->Sjoerd)
 DONE	timeline: next/prev minidocument should be disabled if inappropriate (->Sjoerd)
 DONE	Hierarchy: zoomin on stacked node gives crash (->Sjoerd)
+DONE	Play of .ra is attempted within a switch
+DONE	Syncarcs should ignore switch/a elements in sibling-check
+DONE	View source
+DONE	Help window
 15-10	CR/LF probleem? Alleen in CMIF documents?
-15-10	View source
-15-10	Help window
 15-10	Balloon help for popup menus
 15-10	Focus in lists disappears with window in the back, should be outlined
 15-10	Attribute help messages should contain SMIL-compatability
@@ -36,5 +38,3 @@ DONE	Hierarchy: zoomin on stacked node gives crash (->Sjoerd)
 19-10	rubberbox: Wat doet hij op unix met directe OK?
 20-10	List selection with keyboard, list focus
 20-10	Default folder for StandardGetFile
-DONE	Play of .ra is attempted within a switch
-04-11	Syncarcs should ignore switch/a elements in sibling-check
