@@ -677,6 +677,10 @@ SOURCE=.\M_parsehtml.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_parseutil.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_patchlevel.c
 # End Source File
 # Begin Source File
@@ -1262,6 +1266,10 @@ SOURCE=.\M_winerror.c
 # Begin Source File
 
 SOURCE=.\M_winlayout.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_winversion.c
 # End Source File
 # Begin Source File
 
