@@ -11,7 +11,7 @@ import os
 
 # Write a node to a CMF file, given by filename
 
-def WriteFile(root, filename):
+def WriteFile(root, filename, evallicense=0):
 	fp = open(filename, 'w')
 	fixroot(root)
 	writenode(root, fp)
