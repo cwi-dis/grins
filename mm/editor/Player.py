@@ -87,7 +87,11 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			stop,
 			]
 		self.alllist = self.pauselist
-
+		import settings
+		if settings.activeFullSmilCss:
+			from SMILCssResolver import SMILCssResolver
+			self.cssResolver = SMILCssResolver(self.context)
+		
 	def destroy(self):
 		if not hasattr(self, 'toplevel'):
 			# already destroyed
