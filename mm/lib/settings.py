@@ -167,6 +167,7 @@ SMIL_20_MODULES = SMIL_PSS5_MODULES + [
 extensions = {}				# filled in by switch_profile()
 
 def switch_profile(modulelist):
+	global current_profile
 	from SMIL import SMIL1, SMIL2ns, PSS4ns, PSS5ns
 	if __debug__:
 		if modulelist is SMIL_20_MODULES:
@@ -197,7 +198,9 @@ def switch_profile(modulelist):
 		extensions[PSS5ns] = 1
 	elif modulelist is SMIL_PSS4_MODULES:
 		extensions[PSS4ns] = 1
+	current_profile = modulelist
 
+current_profile = None
 switch_profile(SMIL_20_MODULES)
 
 # settings that cannot be changed when running

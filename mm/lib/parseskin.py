@@ -78,7 +78,7 @@ basic = re.compile(r'\bbasic\b', re.IGNORECASE)
 def parsegskin(file):
 	dict = {}
 	lineno = 0
-	profile = settings.SMIL_20_MODULES
+	profile = settings.current_profile
 	modules = []
 	prefs = {}
 	while 1:
