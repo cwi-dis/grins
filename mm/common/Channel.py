@@ -1249,7 +1249,7 @@ class ChannelWindow(Channel):
 		if not self._in_modeless_resize:
 			return
 		pchan = self._get_parent_channel()
-		if not pchan:
+		if not pchan or not pchan.window:
 			return
 		pchan.window.cancel_create_box()
 
