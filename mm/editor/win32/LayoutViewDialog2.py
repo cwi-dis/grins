@@ -84,7 +84,7 @@ class LayoutViewDialog2:
 	# specific win32 dialog box
 	
 	def chooseBgColor(self, currentBg):
-		r, g, b = currentBg
+		r, g, b = currentBg or (255, 255, 255)
 		dlg = win32ui.CreateColorDialog(win32api.RGB(r,g,b),win32con.CC_ANYCOLOR,self.__window)
 		if dlg.DoModal() == win32con.IDOK:
 			newcol = dlg.GetColor()
