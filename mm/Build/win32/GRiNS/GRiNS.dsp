@@ -108,6 +108,22 @@ LINK32=link.exe
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# Begin Source File
+
+SOURCE=.\cmifdocp.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\Player.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\Player.rc
+# End Source File
+# Begin Source File
+
+SOURCE=.\smildocp.ico
+# End Source File
 # End Group
 # Begin Group "Python Source files"
 
