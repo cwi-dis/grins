@@ -1137,6 +1137,14 @@ SOURCE=.\M_tokenize.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_Toolbars.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_ToolbarTemplate.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_TopLevel.c
 # End Source File
 # Begin Source File

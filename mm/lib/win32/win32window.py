@@ -232,14 +232,15 @@ class Window:
 	def _DPtoLP(self, point):
 		return point
 
-	def onMouseEvent(self,point, ev):
+	def onMouseEvent(self,point, ev, params=None):
+		# Called from, for example, self.OnLButtonDown which is called from a view's mouse event.
 		cont, stop = 0, 1
 		if self.is_closed(): return cont
-		point = self._DPtoLP(point)
+		point = self._DPtoLP(point) # does absolutely nothing. -mjvdg
 		for wnd in self._subwindows:
 			# test that point is inside the window (not the media space area)
 			if wnd.inside(point):
-				if wnd.onMouseEvent(point, ev):
+				if wnd.onMouseEvent(point, ev,params=params):
 					return stop
 			
 		disp = self._active_displist
@@ -252,7 +253,8 @@ class Window:
 			for button in disp._buttons:
 				if button._inside(x,y):
 					buttons.append(button)
-			if self.onEvent(ev,(x, y, buttons)):
+			# I don't know who did this, but I kind of like to get all params, not just (x,y,buttons) -mjvdg.
+			if self.onEvent(ev,(x, y, buttons, params)): # mjvdg added params. It's a hack.
 				# a button has received event, so we have to stop
 				return stop
 
