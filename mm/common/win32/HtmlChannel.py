@@ -3,7 +3,7 @@ __version__ = "$Id$"
 #
 # WIN32 HTML channel.
 #
-
+	
 """ @win32doc|HtmlChannel
 The HtmlChannel extends the ChannelWindow
 
@@ -48,11 +48,14 @@ import sys, string
 
 import windowinterface
 import win32ui,win32con
-
+	
 error = 'HtmlChannel.error'
-
+	
 class HtmlChannel(Channel.ChannelWindow):
-	node_attrs = Channel.ChannelWindow.node_attrs + ['fgcolor', 'font']
+	if Channel.CMIF_MODE:
+		node_attrs = Channel.ChannelWindow.node_attrs + ['fgcolor', 'font']
+	else:
+		chan_attrs = Channel.ChannelWindow.chan_attrs + ['fgcolor', 'font']
 	_window_type = windowinterface.HTM
 
 	def __init__(self, name, attrdict, scheduler, ui):
