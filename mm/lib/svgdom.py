@@ -177,9 +177,10 @@ class SvgElement(SvgNode):
 		cssclass = self.attrdict.get('class')
 		if cssclass is not None:
 			stylenode = self.document.getStyleElement()
-			cssdef = stylenode.textcssdefs.getValue().get(cssclass)
-			if cssdef is not None:
-				self.style = cssdef.getValue().copy()
+			if stylenode is not None:
+				cssdef = stylenode.textcssdefs.getValue().get(cssclass)
+				if cssdef is not None:
+					self.style = cssdef.getValue().copy()
 		val = self.attrdict.get('style')
 		if val:
 			val = string.strip(val)
@@ -303,6 +304,10 @@ class SvgG(SvgElement):
 
 class SvgSvg(SvgElement):
 	def parseAttributes(self):
+		x, y = self.attrdict.get('x'), self.attrdict.get('y')
+		self.attrdict['x'] = SVGCoordinate(self, x, 0)
+		self.attrdict['y'] = SVGCoordinate(self, y, 0)
+
 		width, height = self.attrdict.get('width'), self.attrdict.get('height')
 		self.attrdict['width'] = SVGLength(self, width)
 		self.attrdict['height'] = SVGLength(self, height)
@@ -310,6 +315,10 @@ class SvgSvg(SvgElement):
 		viewBox = self.attrdict.get('viewBox')
 		if viewBox is not None:
 			self.attrdict['viewBox'] = SVGNumberList(self, viewBox)
+
+		preserveAspectRatio = self.attrdict.get('preserveAspectRatio')
+		if preserveAspectRatio is not None:
+			self.attrdict['preserveAspectRatio'] = SVGAspectRatio(self, preserveAspectRatio)
 				
 	def getSize(self):
 		return self.get('width'), self.get('height')
@@ -657,6 +666,7 @@ class SvgDocument(SvgNode):
 		# other instance variables
 		self.defs = []
 		self.entitydefs = None
+		self.styles = []
 
 		# create DOM
 		p = SvgDOMBuilder(self)
@@ -694,9 +704,8 @@ class SvgDocument(SvgNode):
 		return self.getFirstChildByType('svg')
 		
 	def getStyleElement(self):
-		root = self.getFirstChildByType('svg')
-		if root:
-			return root.getFirstChildByType('style')	
+		if self.styles:
+			return self.styles[0]
 		return None
 
 	def getElementDef(self, id):
@@ -733,6 +742,8 @@ class SvgDocument(SvgNode):
 		el = domclass(type, self)
 		if type == 'defs':
 			self.defs.append(el)
+		elif type == 'style':
+			self.styles.append(el)
 		return el
 
 	# 
