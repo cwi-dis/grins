@@ -293,6 +293,8 @@
 #define IDD_EDITATTR_TEMPLATE0          484
 #define IDD_EDITATTR_TEMPLATE2          485
 #define IDD_EDITATTR_PREFPRO            486
+#define IDC_CDARROW                     487
+#define IDC_CDARROWHIT                  488
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -955,7 +957,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        487
+#define _APS_NEXT_RESOURCE_VALUE        489
 #define _APS_NEXT_COMMAND_VALUE         32906
 #define _APS_NEXT_CONTROL_VALUE         1564
 #define _APS_NEXT_SYMED_VALUE           104
