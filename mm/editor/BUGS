@@ -15,18 +15,13 @@ make text anchors be text selections, not boxes in the window
 
 ------------------------------ CRASHES ----------------------------
 
+(Lynda: "I was adding and deleting sync arcs":)
 MMExc.AssertError: 'bad delsyncarc call'
 > /ufs/guido/mm/demo/lib/EditMgr.py(162)delsyncarc:
 	raise MMExc.AssertError, 'bad delsyncarc call'
-
-ValueError: 'list.remove(x): x not in list'
-  <string>(1)
-  /ufs/guido/mm/demo/mm4/main.py(135): main()
-  /ufs/guido/mm/demo/mm4/main.py(103)main: pdb.post_mortem(sys.exc_traceback)
-  ./TopLevel.py(90)run: return fl.do_forms()
-  /ufs/guido/mm/demo/lib/glwindow.py(202)dispatch: callback(arg)
-  /ufs/guido/mm/demo/mm4/SoundChannel.py(175)done: self.player.cancel(self.dummy_event_id)
-> /ufs/guido/lib/python/sched.py(63)cancel: self.queue.remove(event)
+[I wonder how this could happen -- this means the sync arc doesn't exist!
+One possibility could be that the parameters of the sync arc have changed?
+Anyway it's hard to reproduce.]
 
 Kaboo!: None
   <string>(1)
@@ -48,18 +43,12 @@ sequence the video channel doesn't play on top of the black
 background.  I have an explicit synch arc to force the background
 (image) node to play first, and then have the video channel play on
 top of it.  If I turn off the video landscape channel, then turn it on
-again it works OK.
+again it works OK.  [Probably same as next]
 
 (Lynda:) When I go through the "Leisure section" via "Carre" to Sjoerd
 reciting his poem then I don't get the video showing first attempt
 either.  It is cured by turning the video (left) channel off then on
-again.
-
-(Lynda:) The version of CMIF I'm now using (/mnt/lynda/cmif/bin/cmifed)
-has decided to play my voice (now recorded at 16K) at 22.05 K.  (I was
-at the "shops" part of Leisure activities.)  [This is caused by
-Terminator, and by Sjoerd not checking and setting the rate often
-enough.]
+again.  [Probably same as previous]
 
 after editing an anchor, the anchors of a node aren't always redrawn
 correctly
@@ -107,6 +96,10 @@ window hangs the entire application.
 block view: on resize, the menu bar changes height in a weird way
 
 ------------------------------ PERFORMANCE ------------------------
+
+Because REDRAW events are saved up a long time, windows may get
+several of them in a row.  Maybe this can be changed by keeping a
+separate "redraw queue" in glwindow?
 
 Do garbage collection of windows, esp. forms (or DGL runs out eventually...)
 [Partly done]
@@ -578,8 +571,27 @@ file
 
 hyperjumps often beep when the mouse up event arrives
 
+--- 13 Oct 1992 ---
+
 (when deleting a channel while there's also a hierarchy view; order of
 view creation matters:)
 ValueError: 'list.index(x): x not in list'
 > .../ChannelView.py(671)reshape:
 	i = self.mother.context.channelnames.index(self.name)
+
+ValueError: 'list.remove(x): x not in list'
+  <string>(1)
+  /ufs/guido/mm/demo/mm4/main.py(135): main()
+  /ufs/guido/mm/demo/mm4/main.py(103)main: pdb.post_mortem(sys.exc_traceback)
+  ./TopLevel.py(90)run: return fl.do_forms()
+  /ufs/guido/mm/demo/lib/glwindow.py(202)dispatch: callback(arg)
+  /ufs/guido/mm/demo/mm4/SoundChannel.py(175)done: self.player.cancel(self.dummy_event_id)
+> /ufs/guido/lib/python/sched.py(63)cancel: self.queue.remove(event)
+[Sjoerd has fixed this by placing the cancel() call in a try: which
+ignores the error.]
+
+(Lynda:) The version of CMIF I'm now using (/mnt/lynda/cmif/bin/cmifed)
+has decided to play my voice (now recorded at 16K) at 22.05 K.  (I was
+at the "shops" part of Leisure activities.)  [This is caused by
+Terminator, and by Sjoerd not checking and setting the rate often
+enough.]  [Fixed by Sjoerd -- soundchannel.c is much more careful now.]

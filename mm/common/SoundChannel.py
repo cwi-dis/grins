@@ -169,6 +169,7 @@ class SoundChannel(Channel):
 		self.threads.play()
 		dummy = \
 		   self.player.enter(0.001, 1, self.player.opt_prearm, node)
+	#
 	#DEBUG: remove dummy entry from queue and call proper done method
 	def done(self, arg):
 		if self.dummy_event_id:
@@ -179,9 +180,10 @@ class SoundChannel(Channel):
 				pass
 			self.dummy_event_id = None
 		if not self.node:
-			# apparantly someone has already called stop()
+			# apparently someone has already called stop()
 			return
 		Channel.done(self, arg)
+		self.node = None
 		
 	#
 	def setrate(self, rate):
@@ -189,11 +191,11 @@ class SoundChannel(Channel):
 		self.threads.setrate(rate)
 	#
 	def stop(self):
+##		print 'SoundChannel.stop: self.threads = ' + `self.threads`
 		if self.node:
 			self.node.setarmedmode(ARM_DONE)
 			self.node = None
-##		print 'SoundChannel.stop: self.threads = ' + `self.threads`
-		self.threads.stop()
+			self.threads.stop()
 	#
 	def reset(self):
 		pass

@@ -115,10 +115,12 @@ class TopLevel(ViewDialog, BasicDialog):
 	#
 	def make_form(self):
 		width, height = self.width, self.height
-		bheight = height/10
+		bheight = height/11
 		self.form = form = fl.make_form(FLAT_BOX, width, height)
 		#
-		# The top four buttons in the menu open/close views.
+		# The topmost button is a shortcut to start playing.
+		#
+		# The next four buttons in the menu open/close views.
 		# They show a light which indicates whether the view
 		# is open or closed.
 		# The fifth button opens/closes the Help window,
@@ -127,6 +129,10 @@ class TopLevel(ViewDialog, BasicDialog):
 		# Their callbacks are set later, in makeviews.
 		#
 		x, y, w, h = 0, height, width, bheight
+		#
+		y = y - h
+		self.playbutton = \
+			form.add_button(INOUT_BUTTON,x,y,w,h, 'Play')
 		#
 		y = y - h
 		self.pvbutton = \
@@ -207,6 +213,7 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.cvbutton.set_call_back(self.view_callback, \
 						self.channelview)
 		self.pvbutton.set_call_back(self.view_callback, self.player)
+		self.playbutton.set_call_back(self.play_callback, None)
 		self.svbutton.set_call_back(self.view_callback, self.styleview)
 		self.lvbutton.set_call_back(self.view_callback, self.links)
 		self.helpbutton.set_call_back(self.view_callback, self.help)
@@ -228,6 +235,11 @@ class TopLevel(ViewDialog, BasicDialog):
 		for v in self.views: v.destroy()
 	#
 	# Callbacks.
+	#
+	def play_callback(self, (obj, arg)):
+		if obj.get_button():
+			self.player.show()
+			self.player.playsubtree(self.root)
 	#
 	def view_callback(self, (obj, view)):
 		if obj.get_button():
