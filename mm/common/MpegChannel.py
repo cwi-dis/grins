@@ -6,6 +6,8 @@ from AnchorDefs import *
 
 
 class MpegChannel(ChannelWindowThread):
+	node_attrs = ChannelWindowThread.node_attrs + ['bucolor', 'hicolor']
+
 	def threadstart(self):
 		import mpegchannel
 		return mpegchannel.init()
