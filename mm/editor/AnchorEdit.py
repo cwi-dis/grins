@@ -112,7 +112,6 @@ class AnchorEditor(AnchorEditorDialog):
 		hasfixed = self.toplevel.player.updatefixedanchors(self.node)
 		self.editable = (not hasfixed)
 		anchorlist = MMAttrdefs.getattr(self.node, 'anchorlist')
-		modanchorlist(anchorlist)
 		if anchorlist <> self.anchorlist:
 			# Communicate new anchors to Link editor:
 			for a in anchorlist:
