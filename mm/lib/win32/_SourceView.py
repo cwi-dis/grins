@@ -402,6 +402,9 @@ class _SourceView(GenView, docview.RichEditView):
 			self.SetWindowText(self.__text)
 			self.SetModify(0)
 			self.__setting = 0
+			# raz apply and revert
+			self.enableDlgBarComponent(self.__apply, 0)
+			self.enableDlgBarComponent(self.__revert, 0)
 				
 	def set_mother(self, mother):
 		self.__mother = mother
