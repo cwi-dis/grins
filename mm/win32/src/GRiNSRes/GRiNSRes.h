@@ -45,6 +45,7 @@
 #define IDI_GRINS_STOP                  248
 #define IDD_ENTER_KEY                   249
 #define IDD_INTERNAL                    250
+#define IDR_STRUCT_EDIT                 251
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
 #define IDC_EDIT_LOCATION               1020
@@ -168,13 +169,17 @@
 #define IDUC_UGROUPS                    32825
 #define IDUC_PASTEFILE                  32827
 #define IDUC_OPENURL                    32828
+#define IDUC_PLAYNODE                   32829
+#define ID_ACCEL32830                   32830
+#define IDUC_INFO                       32831
+#define IDUC_ATTRIBUTES                 32832
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        251
-#define _APS_NEXT_COMMAND_VALUE         32829
+#define _APS_NEXT_RESOURCE_VALUE        252
+#define _APS_NEXT_COMMAND_VALUE         32833
 #define _APS_NEXT_CONTROL_VALUE         1133
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
