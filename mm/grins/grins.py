@@ -134,7 +134,7 @@ def main():
 		opts, files = getopt.getopt(sys.argv[1:], 'qj:')
 	except getopt.error, msg:
 		usage(msg)
-	if not files:
+	if not files and os.name != 'mac':
 		usage('No files specified')
 
 	try:
