@@ -468,6 +468,8 @@ class HierarchyView(HierarchyViewDialog):
 			self.window.setcanvassize((self.sizes.SIZEUNIT, x, y)) # Causes a redraw() event.
 
 			self.timemapper = None
+		else:
+			self.draw_scene()
 		
 	def draw_scene(self):
 		# Only draw the scene, nothing else.
@@ -1199,6 +1201,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.toplevel.setwaiting()
 		self.showplayability = not self.showplayability
 		self.settoggle(PLAYABLE, self.showplayability)
+		self.dirty = 1
 		self.draw()
 
 	def timescalecall(self, which):
