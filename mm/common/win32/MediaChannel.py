@@ -102,9 +102,6 @@ class MediaChannel:
 		
 		if MMurl.urlretrieved(url):
 			url = MMurl.urlretrieve(url)[0]
-		else:
-			url = MMurl.canonURL(url)
-			url = MMurl.unquote(url)
 
 		if not self.__armBuilder.RenderFile(url, self.__channel._exporter):
 			self.__armFileHasBeenRendered=0
@@ -276,9 +273,6 @@ class VideoStream:
 		
 		if MMurl.urlretrieved(url):
 			url = MMurl.urlretrieve(url)[0]
-		else:
-			url = MMurl.canonURL(url)
-			url = urllib.unquote(url)
 
 		if not self.__mmstream.open(url, self.__channel._exporter):
 			raise error, 'Cannot render: %s'% url

@@ -72,7 +72,6 @@ def __WriteFileG2(root, filename, smilurl, oldfilename='', evallicense = 0):
 		fss.SetCreatorType('PNst', 'PNRA')
 		macostools.touched(fss)
 	ramurl = MMurl.pathname2url(ramfile)
-	ramurl = MMurl.unquote(ramurl)
 	try:
 		writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense, templatedir, compatibility.G2)
 		writer.write()
@@ -93,7 +92,6 @@ def __WriteFileQT(root, filename, smilurl, oldfilename='', evallicense = 0):
 	# This is a bit of a hack. G2 appears to want its URLs without
 	# %-style quoting.
 	#
-	smilurl = MMurl.unquote(smilurl)
 	fp = open(filename, 'w')
 	
 	try:
