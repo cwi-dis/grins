@@ -2083,11 +2083,14 @@ class NodeBox(GO, NodeBoxCommand):
 		# Maybe draw a thumbnail image
 ##		print 'rect', l, t, r, b
 		xindent, yindent = d.get3dbordersize()
+##		print 'indent', xindent, yindent
 		thumb_l = l + xindent
 		thumb_t = t + yindent
 		thumb_w = (r-l)/2 - 2*xindent
 		thumb_h = (b-t) - 2*yindent
+##		print 'thumb', thumb_l, thumb_t, thumb_w, thumb_h
 		if self.mother.thumbnails and \
+		   thumb_w > 0 and thumb_h > 0 and \
 		   self.node.GetChannelType() == 'image':
 			import MMurl
 			try:
