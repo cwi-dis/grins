@@ -1,11 +1,12 @@
 __version__ = "$Id$"
 
-import win32ui, win32con
+import win32ui, win32con, win32api
 Sdk=win32ui.GetWin32Sdk()
 Afx=win32ui.GetAfx()
 
 import GenWnd
 import usercmd, usercmdui	
+from WMEVENTS import *
 	
 WM_USER_OPEN = win32con.WM_USER+1
 WM_USER_CLOSE = win32con.WM_USER+2
@@ -15,6 +16,8 @@ WM_USER_PAUSE = win32con.WM_USER+5
 WM_USER_GETSTATUS = win32con.WM_USER+6
 WM_USER_SETHWND = win32con.WM_USER+7
 WM_USER_UPDATE = win32con.WM_USER+8
+WM_USER_MOUSE_CLICKED  = win32con.WM_USER+9
+WM_USER_MOUSE_MOVED  = win32con.WM_USER+10
 
 STOPPED, PAUSING, PLAYING = range(3)
 UNKNOWN = -1
@@ -33,6 +36,8 @@ class ListenerWnd(GenWnd.GenWnd):
 		self.HookMessage(self.OnGetStatus, WM_USER_GETSTATUS)
 		self.HookMessage(self.OnSetWindow, WM_USER_SETHWND)
 		self.HookMessage(self.OnUpdate, WM_USER_UPDATE)
+		self.HookMessage(self.OnMouseClicked, WM_USER_MOUSE_CLICKED)
+		self.HookMessage(self.OnMouseMoved, WM_USER_MOUSE_MOVED)
 
 	def OnOpen(self, params):
 		# lParam (params[3]) is a pointer to a c-string
@@ -71,73 +76,64 @@ class ListenerWnd(GenWnd.GenWnd):
 		wnd = self._toplevel.get_embedded_wnd(params[2])
 		if wnd: wnd.update()
 
+	def OnMouseClicked(self, params):
+		wnd = self._toplevel.get_embedded_wnd(params[2])
+		x, y = win32api.LOWORD(params[3]),win32api.HIWORD(params[3])
+		wnd.onMouseEvent((x,y),Mouse0Press)
+		wnd.onMouseEvent((x,y),Mouse0Release)
+
+	def OnMouseMoved(self, params):
+		wnd = self._toplevel.get_embedded_wnd(params[2])
+		x, y = win32api.LOWORD(params[3]),win32api.HIWORD(params[3])
+		wnd.onMouseMoveEvent((x,y))
+
 ############################
 import win32window
+import ddraw
 from pywinlib.mfc import window
 from appcon import *
-from WMEVENTS import *
 import win32mu
 import grinsRC
 
-class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
+class EmbeddedWnd(win32window.DDWndLayer):
 	def __init__(self, wnd, w, h, units, bgcolor, hwnd=0, title='', id=0):
 		self._cmdframe = wnd
+		self._peerwnd = wnd
 		self._smildoc = wnd.getgrinsdoc()
 		self._peerid = id
-		self._destroywnd = 0
-		if hwnd:
-			window.Wnd.__init__(self, win32ui.CreateWindowFromHandle(hwnd))
-		else:
-			window.Wnd.__init__(self, win32ui.CreateWnd())
-			self.createOsWnd( (0,0,w,h), bgcolor, title)
-			self._destroywnd = 1
-					
-		win32window.Window.__init__(self)
-		self.create(None, (0,0,w,h), units, 0, 0, bgcolor)
+		self._bgcolor = bgcolor
+
+		self._viewport = win32window.Viewport(self, 0, 0, w, h, bgcolor)
+		self._rect = 0, 0, w, h
 
 		win32window.DDWndLayer.__init__(self, self, bgcolor)
+		if hwnd:
+			self._peerwnd = window.Wnd(win32ui.CreateWindowFromHandle(hwnd))
+			self.createDDLayer(w, h, hwnd)
+		else:
+			self.createBackDDLayer(w, h, wnd.GetSafeHwnd())
+		self.settitle(title)
 
-		self.createDDLayer(w, h)
-		self._viewport = win32window.Viewport(self, 0, 0, w, h, bgcolor)
-
-		self.imgAddDocRef = wnd.imgAddDocRef
-		self.__lastMouseMoveParams = None
-		if not hwnd: self.setClientRect(w, h)
-		else: 
+		try:
 			from __main__ import commodule
-			commodule.AdviceSetSize(id, w, h)
+			commodule.AdviceSetSize(self._peerid, w, h)
+		except:
+			pass
 
-	def OnCreate(self, params):
-		self.HookMessage(self.onLButtonDown, win32con.WM_LBUTTONDOWN)
-		self.HookMessage(self.onLButtonUp, win32con.WM_LBUTTONUP)
-		self.HookMessage(self.onMouseMove, win32con.WM_MOUSEMOVE)				
-
-	def OnDestroy(self, msg):
-		self.destroyDDLayer()		
-
-	def OnClose(self):
-		self._cmdframe.PostMessage(win32con.WM_COMMAND, usercmdui.class2ui[usercmd.CLOSE].id)
-
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
-		return self._viewport.newwindow(coordinates, pixmap, transparent, z, type_channel, units, bgcolor)
-		
-	def pop(self, poptop=1):
-		pass
-
-	def is_closed(self):
-		return not self._obj_ or not self.IsWindow()
-
-	def closeViewport(self, viewport):
+	def attach(self, hwnd):
 		self.destroyDDLayer()
-		if self._destroywnd:
-			self.DestroyWindow()
-	
+		self._peerwnd = window.Wnd(win32ui.CreateWindowFromHandle(hwnd))
+		x, y, w, h = self._rect
+		self.createDDLayer(w, h, hwnd)
+
 	def settitle(self,title):
 		import urllib
 		title=urllib.unquote(title)
 		self._title=title
-		self.SetWindowText(title)
-
+		if self._peerwnd:
+			parent = self._peerwnd.GetParent()
+			if parent:
+				parent.SetWindowText(title)
 	#
 	# Playback query support
 	#
@@ -155,54 +151,24 @@ class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
 		if not player: return UNKNOWN
 		return player.getstate()
 
+
 	#
-	# Mouse input
+	# paint
 	#
-	def onLButtonDown(self, params):
-		msg=win32mu.Win32Msg(params)
-		self.onMouseEvent(msg.pos(),Mouse0Press)
-
-	def onLButtonUp(self, params):
-		msg=win32mu.Win32Msg(params)
-		self.onMouseEvent(msg.pos(),Mouse0Release)
-
-	def updateMouseCursor(self):
-		self.onMouseMove()
-
-	def onMouseMove(self, params=None):
-		if not params and not self.__lastMouseMoveParams:
-			return
-		if not params: params = self.__lastMouseMoveParams
-		else: self.__lastMouseMoveParams = params
-		msg=win32mu.Win32Msg(params)
-		flags = 0
-		point=msg.pos()	
-		self._viewport.onMouseMove(flags, point)
-
-	def onMouseEvent(self, point, ev):
-		return  self._viewport.onMouseEvent(point, ev)
-
-
-	def OnPaint(self):
-		dc, paintStruct = self.BeginPaint()
-		self.update()
-		self.EndPaint(paintStruct)
-			
 	def update(self, rc=None, exclwnd=None):
-		if self.is_closed(): return
 		if not self._ddraw or not self._frontBuffer or not self._backBuffer:
 			return
 		if self._frontBuffer.IsLost():
 			if not self._frontBuffer.Restore():
 				# we can't do anything for this
 				# system is busy with video memory
-				self.InvalidateRect(self.GetClientRect())
+				#self.InvalidateRect(self.GetClientRect())
 				return
 		if self._backBuffer.IsLost():
 			if not self._backBuffer.Restore():
 				# and for this either
 				# system should be out of memory
-				self.InvalidateRect(self.GetClientRect())
+				#self.InvalidateRect(self.GetClientRect())
 				return
 		
 		# do we have anything to update?
@@ -218,17 +184,11 @@ class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
 			rc = self.rectAnd(rc, self._viewport._rect)
 			rcBack = rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3]
 		
-		rcFront = self.ClientToScreen(rcBack)
+		rcFront = self.getContextOsWnd().ClientToScreen(rcBack)
 		try:
 			self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
 		except ddraw.error, arg:
 			print 'EmbeddedWnd.update', arg
-	
-	def getContextOsWnd(self):
-		return self
-
-	def getwindowpos(self, rel=None):
-		return self._rect
 
 	def paint(self, rc=None, exclwnd=None):
 		if rc is None:
@@ -238,16 +198,63 @@ class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
 			rc = self.rectAnd(rc, self._viewport._rect)
 			rcPaint = rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3] 
 
-		if self._convbgcolor == None:
-			self._convbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255, 255, 255) )
 		try:
-			self._backBuffer.BltFill(rcPaint, self._convbgcolor)
+			self._backBuffer.BltFill(rcPaint, self._ddbgcolor)
 		except ddraw.error, arg:
 			print 'EmbeddedWnd.paint',arg
 			return
 
 		if self._viewport:
 			self._viewport.paint(rc, exclwnd)
+
+
+	def getRGBBitCount(self):
+		return self._pxlfmt[0]
+
+	def getPixelFormat(self):
+		returnself._pxlfmt
+
+	def getDirectDraw(self):
+		return self._ddraw
+
+	def getContextOsWnd(self):
+		return self._peerwnd
+
+	def pop(self, poptop=1):
+		pass
+
+	def getwindowpos(self):
+		return self._viewport._rect
+
+	def closeViewport(self, viewport):
+		del viewport
+		self.destroyDDLayer()
+
+	def getDrawBuffer(self):
+		return self._backBuffer
+
+	def updateMouseCursor(self):
+		pass
+
+	def imgAddDocRef(self, file):
+		self._cmdframe.imgAddDocRef(file)
+
+	def CreateSurface(self, w, h):
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
+		ddsd.SetSize(w,h)
+		dds = self._ddraw.CreateSurface(ddsd)
+		dds.BltFill((0, 0, w, h), self._ddbgcolor)
+		return dds
+
+	def ltrb(self, xywh):
+		x,y,w,h = xywh
+		return x, y, x+w, y+h
+
+	def xywh(self, ltrb):
+		l,t,r,b = ltrb
+		return l, t, r-l, b-t
 
 	def rectAnd(self, rc1, rc2):
 		# until we make calcs
@@ -257,6 +264,25 @@ class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
 			return self.xywh(rc)
 		return 0, 0, 0, 0
 
+	#
+	# Mouse input
+	#
+	def onMouseEvent(self, point, ev):
+		return  self._viewport.onMouseEvent(point, ev)
+
+	def onMouseMoveEvent(self, point):
+		return  self._viewport.onMouseMove(0, point)
+
+	def setcursor(self, strid):
+		try:
+			from __main__ import commodule
+			commodule.AdviceSetCursor(self._peerid, strid)
+		except:
+			pass
+
+	#
+	# OS windows 
+	#
 	def setClientRect(self, w, h):
 		l1, t1, r1, b1 = self.GetWindowRect()
 		l2, t2, r2, b2 = self.GetClientRect()
@@ -281,7 +307,20 @@ class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
 		strclass=Afx.RegisterWndClass(clstyle,cursor,brush,icon)
 		self.CreateWindowEx(exstyle,strclass,title,style,
 			self.ltrb(rect), None, 0)		
-		#self.ShowWindow(win32con.SW_SHOW)
+		self.ShowWindow(win32con.SW_SHOW)
+
+class showmessage:
+	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
+		     cancelCallback = None, name = 'message',
+		     title = 'GRiNS', parent = None, identity = None):
+		self._res = win32con.IDOK
+		if callback and self._res==win32con.IDOK:
+			apply(apply,callback)
+		elif cancelCallback and self._res==win32con.IDCANCEL:
+			apply(apply,cancelCallback)
+
+
+
 
 
 
