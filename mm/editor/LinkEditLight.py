@@ -123,7 +123,6 @@ class LinkEditLight:
 					em.setnodeattr(anchor, 'sendTo', 'rpbrowser')
 		else:
 			em.setnodeattr(anchor, 'show', 'replace')
-			em.setnodeattr(anchor, 'sourcePlaystate', 'stop')
 		if not notransaction:
 			em.commit()
 		if interesting:
