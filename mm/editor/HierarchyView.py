@@ -809,8 +809,10 @@ class Object:
 					except IOError:
 						pass
 					else:
-						d.display_image_from_file(f, center = 0, coordinates = (l+hmargin, t+vmargin, r-l-2*hmargin, 2*titleheight))
-						t = t + 2*titleheight + vmargin
+						box = d.display_image_from_file(f, center = 0, coordinates = (l+hmargin, t+vmargin, r-l-2*hmargin, 2*titleheight))
+						d.fgcolor(TEXTCOLOR)
+						d.drawbox(box)
+						t = box[1] + box[3]
 		else:
 			b1 = min(b, t + titleheight + vmargin)
 		d.fgcolor(TEXTCOLOR)
