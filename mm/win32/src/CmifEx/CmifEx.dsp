@@ -41,8 +41,9 @@ RSC=rc.exe
 # PROP Intermediate_Dir "..\Build\Temp\CMifEx\Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
+F90=df.exe
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /D LEAVE=__LEAVE /D FINALLY=__FINALLY /D EXCEPT=__EXCEPT /D CRTAPI1=_cdecl /D CRTAPI2=_cdecl /D _X86=1 /D WINVER=0x0400 /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /FR /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "../GRiNSRes" /D LEAVE=__LEAVE /D FINALLY=__FINALLY /D EXCEPT=__EXCEPT /D CRTAPI1=_cdecl /D CRTAPI2=_cdecl /D _X86=1 /D WINVER=0x0400 /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /FR /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x408 /d "NDEBUG"
@@ -68,8 +69,9 @@ LINK32=link.exe
 # PROP Intermediate_Dir "..\Build\Temp\cmifex\Debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
+F90=df.exe
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /FR /FD /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "../GRiNSRes" /D "_DEBUG" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /FR /FD /c
 # SUBTRACT CPP /Gy /YX
 # ADD BASE MTL /nologo /D "_DEBUG" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
@@ -94,22 +96,15 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90"
 # Begin Source File
 
-SOURCE=.\Cmif.rc
-
-!IF  "$(CFG)" == "CmifEx - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CmifEx - Win32 Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\cmifexhelp.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\cmifexmodule.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\winclass.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -127,109 +122,9 @@ SOURCE=.\cmifexhelp.h
 
 SOURCE=.\StdAfx.h
 # End Source File
-# End Group
-# Begin Group "Resource Files"
-
-# PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
 # Begin Source File
 
-SOURCE=.\Res\C_no04.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\cmif.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\cmif.rc2
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\Copy4way.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\cur00001.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\cur00002.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\cursor1.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\cursor2.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\cursor9.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\grab_han.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\H_move.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\H_ne.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\H_ns.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\H_nw.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\H_point.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\H_we.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\hand.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\l_strech.cur
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\Misc06.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\pause.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\play.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\python.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\stop.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\Timer01.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\Res\ul_strec.cur
+SOURCE=.\winclass.h
 # End Source File
 # End Group
 # End Target
