@@ -66,7 +66,7 @@ default_settings = {
 	'no_image_cache': 0,		# Don't cache images (or info about them)
 	'noskip': 0,			# Don't skip initial part of continuous media
 	'vertical_icons': 1,		# Display icons vertically in Structure View
-	'vertical_spread': 0,		# Fill vertical free space in Structure View
+	'vertical_spread': 1,		# Fill vertical free space in Structure View
 # HierarchyView colors
 	'structure_bgcolor': (150, 150, 150), # Light gray
 	'structure_leafcolor': (255,255,222),
