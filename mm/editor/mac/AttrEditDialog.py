@@ -219,7 +219,7 @@ class TabPage:
 		# Sanity check
 		if __debug__:
 			if self.attreditor._dialog.CountDITL() != self.item0+self.N_ITEMS:
-				raise 'CountDITL != N_ITEMS', (self._dialog.CountDITL(), self.item0+self.N_ITEMS)
+				raise 'CountDITL != N_ITEMS', (self.attreditor._dialog.CountDITL(), self.item0+self.N_ITEMS)
 		return self.item0 + self.N_ITEMS
 		
 	def close(self):
@@ -481,7 +481,6 @@ class OptionTabPage(SingleTabPage):
 
 class ChannelTabPage(OptionTabPage):
 	attrs_on_page=['channel']
-##	type_supported='channel' # XXXX does not work
 	
 	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_CHANNEL
 	ITEM_GROUP=1
@@ -528,17 +527,17 @@ class InfoTabPage(MultiStringTabPage):
 	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_INFO
 	ITEM_GROUP=1
 	ITEM_TITLE=3
-	ITEM_ABSTRACT=5
-	ITEM_AUTHOR=7
-	ITEM_COPYRIGHT=9
+	ITEM_AUTHOR=5
+	ITEM_COPYRIGHT=7
+	ITEM_ABSTRACT=9
 	ITEM_ALT=11
 	ITEM_LONGDESC=13
 	N_ITEMS=13
 	_attr_to_item = {
 		'title': ITEM_TITLE,
-		'abstract': ITEM_ABSTRACT,
 		'author': ITEM_AUTHOR,
 		'copyright': ITEM_COPYRIGHT,
+		'abstract': ITEM_ABSTRACT,
 		'alt': ITEM_ALT,
 		'longdesc': ITEM_LONGDESC,
 	}
@@ -548,7 +547,12 @@ class InfoTabPage(MultiStringTabPage):
 class InteriorInfoTabPage(InfoTabPage):
 	"""Info page without the alt and longdesc items"""
 	items_to_hide = [10, 11, 12, 13]
-	attrs_on_page = ['title', 'abstract', 'author', 'copyright']
+	attrs_on_page = ['title', 'author', 'copyright', 'abstract']
+
+class InteriorInfoTabPage(InfoTabPage):
+	"""Info page without the alt and longdesc items"""
+	items_to_hide = [8, 9, 10, 11, 12, 13]
+	attrs_on_page = ['title', 'author', 'copyright']
 
 class TimingTabPage(MultiStringTabPage):
 	TAB_LABEL='Timing'
@@ -563,6 +567,31 @@ class TimingTabPage(MultiStringTabPage):
 		'duration': ITEM_DURATION,
 		'loop': ITEM_LOOP,
 		'begin': ITEM_BEGIN,
+	}
+	attrs_on_page = _attr_to_item.keys()
+	_items_on_page = _attr_to_item.values()
+
+class UploadTabPage(MultiStringTabPage):
+	TAB_LABEL='Upload'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_UPLOAD
+	ITEM_GROUP=1
+	ITEM_WEBGROUP=2
+	ITEM_WEBHOST=4
+	ITEM_WEBUSER=6
+	ITEM_WEBDIR=8
+	ITEM_MEDIAGROUP=9
+	ITEM_MEDIAHOST=11
+	ITEM_MEDIAUSER=13
+	ITEM_MEDIADIR=15
+	N_ITEMS=15
+	_attr_to_item = {
+		'project_ftp_host': ITEM_WEBHOST,
+		'project_ftp_user': ITEM_WEBUSER,
+		'project_ftp_dir': ITEM_WEBDIR,
+		'project_ftp_host_media': ITEM_MEDIAHOST,
+		'project_ftp_user_media': ITEM_MEDIAUSER,
+		'project_ftp_dir_media': ITEM_MEDIADIR,
 	}
 	attrs_on_page = _attr_to_item.keys()
 	_items_on_page = _attr_to_item.values()
@@ -761,16 +790,19 @@ class ConversionTabPage(MultiTabPage):
 
 class Conversion1TabPage(MultiTabPage):
 	# audio: no videotype
+	items_to_hide = [12, 13]
 	attrs_on_page = ['project_convert', 'project_targets', 
 		'project_audiotype', 'project_mobile', 'project_perfect']
 
 class Conversion2TabPage(MultiTabPage):
 	# Lightweight video: no convert/mobile/perfect buttons
+	items_to_hide = [2, 14, 15]
 	attrs_on_page = ['project_targets', 'project_videotype',
 		'project_audiotype']
 
 class Conversion3TabPage(MultiTabPage):
 	# Lightweight audio: no convert/mobile/perfect buttons, no video
+	items_to_hide = [2, 12, 13, 14, 15]
 	attrs_on_page = ['project_targets', 'project_audiotype']
 
 class GeneralTabPage(MultiTabPage):
@@ -964,6 +996,166 @@ class SystemPropertiesTabPage(MultiTabPage):
 		
 		value = self.attreditor._getlabel(self.item0+self.ITEM_SCREENSIZE)
 		self.fieldlist[6]._savevaluefrompage(value)
+		
+class TransitionTabPage(MultiTabPage):
+	TAB_LABEL='Transition'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_TRANSITION
+	ITEM_GROUP=1
+	ITEM_TYPE=3
+	ITEM_BEGIN=5
+	ITEM_DUR=7
+	ITEM_COLOR=9
+	ITEM_PICK=10
+	N_ITEMS=10
+	_attr_to_item = {
+		'start': ITEM_BEGIN,
+		'tduration': ITEM_DUR,
+		'color': ITEM_COLOR,
+	}
+	attrs_on_page = ['tag', 'start', 'tduration', 'color']
+	_items_on_page = _attr_to_item.values()
+	
+	def close(self):
+		del self._attr_to_field
+		self._typepopup.delete()
+		MultiTabPage.close(self)
+		
+	def init_controls(self, item0):
+		rv = MultiTabPage.init_controls(self, item0)
+		# We want the fields as a dictionary, as there are many different
+		# variants of this tab
+		self._attr_to_field = {}
+		for f in self.fieldlist:
+			name = f.getname()
+			self._attr_to_field[name] = f
+		self._typepopup = windowinterface.SelectWidget(self.attreditor._dialog, 
+				self.item0+self.ITEM_TYPE, [], None)
+		return rv
+
+	def do_itemhit(self, item, event):
+		if item-self.item0 == self.item0+self.ITEM_TYPE:
+			return 1
+		elif item-self.item0 in self._items_on_page:
+			# text field
+			return 1
+		elif item-self.item0 == self.ITEM_PICK:
+			self._select_color()
+			return 1
+		return 0
+		
+	def _select_color(self):
+		import ColorPicker
+		value = self.attreditor._getlabel(self.item0+self.ITEM_COLOR)
+		import string
+		rgb = string.split(string.strip(value))
+		if len(rgb) == 3:
+			r = g = b = 0
+			try:
+				r = string.atoi(rgb[0])
+				g = string.atoi(rgb[1])
+				b = string.atoi(rgb[2])
+			except ValueError:
+				pass
+			if r > 255: r = 255
+			if g > 255: g = 255
+			if b > 255: b = 255
+			if r < 0: r = 0
+			if g < 0: g = 0
+			if b < 0: b = 0
+		else:
+			r = g = b = 0
+		color, ok = ColorPicker.GetColor("Select color", ( (r|r<<8), (g|g<<8), b|b<<8))
+		if ok:
+			r, g, b = color
+			value = "%d %d %d"%((r>>8), (g>>8), (b>>8))
+			self.attreditor._setlabel(self.item0+self.ITEM_COLOR, value)
+			self.attreditor._selectinputfield(self.item0+self.ITEM_COLOR)
+
+	def update(self):
+		for attr, item in self._attr_to_item.items():
+			if self._attr_to_field.has_key(attr):
+				field = self._attr_to_field[attr]
+				value = field._getvalueforpage()
+				self.attreditor._setlabel(self.item0+item, value)
+		self.update_popup(self._attr_to_field['tag'], self._typepopup)
+		
+	def update_popup(self, field, popup):
+		value = field._getvalueforpage()
+		list = field.getoptions()
+		popup.setitems(list, value)
+
+	def save(self):
+		for attr, item in self._attr_to_item.items():
+			if self._attr_to_field.has_key(attr):
+				field = self._attr_to_field[attr]
+				value = self.attreditor._getlabel(self.item0+item)
+				field._savevaluefrompage(value)
+		self.save_popup(self._attr_to_field['tag'], self._typepopup)
+
+	def save_popup(self, field, popup):
+		value = popup.getselectvalue()
+		field._savevaluefrompage(value)
+
+class Transition1TabPage(TransitionTabPage):
+	# Without duration
+	items_to_hide = [6, 7]
+	attrs_on_page = ['tag', 'start', 'color']
+	
+class Transition2TabPage(TransitionTabPage):
+	# Without color
+	items_to_hide = [8, 9, 10]
+	attrs_on_page = ['tag', 'start', 'tduration']
+	
+class WipeTabPage(MultiTabPage):
+	TAB_LABEL='Wipe'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_WIPE
+	ITEM_GROUP=1
+	ITEM_TYPE=3
+	ITEM_DIRECTION=5
+	N_ITEMS=5
+	_attr_to_item = {
+		'wipetype': ITEM_TYPE,
+		'direction': ITEM_DIRECTION,
+	}
+	attrs_on_page = _attr_to_item.keys()
+	
+	def init_controls(self, item0):
+		rv = MultiTabPage.init_controls(self, item0)
+		self._typepopup = windowinterface.SelectWidget(self.attreditor._dialog, 
+				self.item0+self.ITEM_TYPE, [], None)
+		self._directionpopup = windowinterface.SelectWidget(self.attreditor._dialog,
+				self.item0+self.ITEM_DIRECTION, [], None)
+		return rv
+
+	def close(self):
+		self._typepopup.delete()
+		self._directionpopup.delete()
+		TabPage.close(self)
+		
+	def do_itemhit(self, item, event):
+		if item == self.item0+self.ITEM_TYPE:
+			return 1
+		elif item == self.item0+self.ITEM_DIRECTION:
+			# popup
+			return 1
+		return 0
+		
+	def update(self):
+		value = self.fieldlist[0]._getvalueforpage()
+		list = self.fieldlist[0].getoptions()
+		self._typepopup.setitems(list, value)
+		value = self.fieldlist[1]._getvalueforpage()
+		list = self.fieldlist[1].getoptions()
+		self._directionpopup.setitems(list, value)
+
+	def save(self):
+		value = self._typepopup.getselectvalue()
+		self.fieldlist[0]._savevaluefrompage(value)
+		value = self._directionpopup.getselectvalue()
+		self.fieldlist[1]._savevaluefrompage(value)
+
 
 #
 # List of classes handling pages with multiple attributes. The order is
@@ -977,6 +1169,9 @@ class SystemPropertiesTabPage(MultiTabPage):
 MULTI_ATTR_CLASSES = [ 
 	GeneralTabPage,
 	TimingTabPage,
+	TransitionTabPage,
+	Transition1TabPage,
+	Transition2TabPage,
 	XXFileTabPage,
 	InfoTabPage,
 	InteriorInfoTabPage,
@@ -989,6 +1184,8 @@ MULTI_ATTR_CLASSES = [
 	Conversion3TabPage,
 	TargetAudienceTabPage,
 	ClipTabPage,
+	UploadTabPage,
+	WipeTabPage,
 ]
 #
 # List of classes handling a generic page for a single attribute.
