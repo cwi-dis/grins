@@ -68,8 +68,6 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		# init dims
 		l,t,r,b=self.GetClientRect()
 		self._rect=self._canvas=(0,0,r-l,b-t)
-		if USE_NEWSUBWINDOWSIMPL:
-			self._recta = 0,0,r-l,b-t
 
 		# set std attributes
 		self._title = ''	
@@ -459,12 +457,41 @@ class _CmifPlayerView(_CmifView):
 		self._canclose=1
 
 	def OnDraw(self,dc):
+		if self.in_create_box_mode() and self.get_box_modal_wnd()==self:
+			self.notifyListener('OnDraw',dc)
+			return
 		if not USE_NEWSUBWINDOWSIMPL:
 			_CmifView.OnDraw(self,dc)
-			return
-		self.PaintOn(dc)
-		for i in range(len(self._subwindows)):
-			self._subwindows[i].paintOn(dc)
+		else:
+			self.paintOn(dc)
+
+	def getwindowpos(self):
+		return self._rect
+
+	def paintOn(self, dc):
+		# first paint opaque subwindows
+		trsubwindows = []
+		for w in self._subwindows:
+			if w._transparent == 0 or \
+			   (w._transparent == -1 and
+			    w._active_displist):
+				w.paintOn(dc)
+			else:
+				trsubwindows.append(w)
+		
+		# then paint self
+		x, y, w, h = self.getwindowpos()
+		x0, y0 = dc.SetWindowOrg((-x,-y))
+		if self._active_displist:
+			self._active_displist._render(dc,None)
+		if self._redrawfunc:
+			self._redrawfunc()
+		dc.SetWindowOrg((x0,y0))
+
+		# then paint transparent children
+		trsubwindows.reverse()
+		for w in trsubwindows:
+			w.paintOn(dc)
 
 #################################################
 # Specialization of _CmifView for smooth drawing	
@@ -1050,10 +1077,9 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 #################################################
 USE_NEWSUBWINDOWSIMPL = 0
 
-import win32window
-
 def _NewSubWindow(parent, rel_coordinates, transparent, type_channel, 
 	defcmap, pixmap, z=0, units=None):
+	import win32window
 	return win32window.SubWindow(parent, rel_coordinates, transparent, z, units)
 
 if USE_NEWSUBWINDOWSIMPL:
