@@ -6,7 +6,7 @@ import urllib, MMurl
 import StringStuff
 import MMAttrdefs
 import win32con
-import cmifex
+from win32modules import cmifex
 
 
 [SINGLE, HTM, TEXT] = range(3)
