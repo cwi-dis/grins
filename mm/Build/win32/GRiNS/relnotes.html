@@ -8,11 +8,11 @@
     <h1>GR<i>i</i>NS Player for Windows Release Notes</h1>
     <p>
       These are the release notes for the GR<i>i</i>NS player for
-      Windows 95/98/NT4, Release 0.2, patchlevel 1. More
-      information on GR<i>i</i>NS can be obtained at <A
-	HREF="http://www.cwi.nl/GRiNS">http://www.cwi.nl/GRiNS</A>, or 
-      by email to <A
-	HREF="mailto:grins-request@cwi.nl">grins-request@cwi.nl</A>. 
+      Windows 95/98/NT4, Release 0.5, patchlevel . More information on
+      GR<i>i</i>NS can be obtained at <A
+      HREF="http://www.oratrix.com/GRiNS">http://www.oratrix.com/GRiNS</A>,
+      or by email to <A
+      HREF="mailto:grins-request@oratrix.com">grins-request@oratrix.com</A>.
     </p>
 
     <p>
@@ -23,14 +23,8 @@
     <h3>Prerequisites</h3>
     <p>
       For decent performance you probably need at least a 100Mhz
-      Pentium with 16Mb, but 32Mb is definitely preferred. You need
-      about 15Mb of free diskspace.
-    </p>
-    <p>
-      You need Python 1.5 with PythonWin and preferrably Microsoft
-      Internet Explorer 3.02 or later (see <A HREF="#ie">below</A> for
-      details) . All of these are included in the distribution, see
-      below.
+      Pentium with 16Mb, but 32Mb is definitely preferred (as is a
+      faster processor). You need about 10Mb of free diskspace.
     </p>
     <p>
       For some older versions of Windows 95, and possibly NT too, you
@@ -39,117 +33,26 @@
       and the solution.
     </p>
 
-    <h3>Installation instructions</h3>
-    <p>
-      The order in which you should install things is to first install
-      Python and Internet Explorer (if needed) and only then the
-      GR<i>i</i>NS player. You can skip either of the first steps if
-      you already have that package installed, but <b>do</b> note that
-      GR<i>i</i>NS needs exactly version 1.5 of Python, and a specific
-      build number at that.
-    </p>
-    <p>
-      If you have already installed Python it may be prudent not 
-      to install this version of GR<i>i</i>NS but wait for a
-      self-contained version, which should be available in August.
-    </p>
-    <p>
-      It is possible to use the GR<i>i</i>NS player without installing 
-      Internet Explorer, see the section on <A HREF="#ie">Internet
-	Explorer dependency</A> below.
-    <p>
-      Install everything in the following order:
-    </p>
-
-    <ul>
-      <li>
-	Python 1.5 and PythonWin (the order is important):
-
-	<ol>
-	  <li>
-	    Run <code>python15.exe</code> to install the Python 1.5 core.
-	  </li>
-	  <li>
-	    Run <code>win32-104.exe</code>.
-	  </li>
-	  <li>
-	    Run <code>win32com-103.exe</code>.
-	  </li>
-	  <li>
-	    Run <code>pywin-107.exe</code>. These last three steps install the
-	    PythonWin extensions.
-	  </li>
-	</ol>
-      </li>
-
-      <li>
-	To install Internet Explorer run <code>msie302r.exe</code>.
-      </li>
-
-      <li>
-	Install the GR<i>i</i>NS player by running
-	<code>grins.exe</code>. 
-    </ul>
-
-    <p>
-      Once the installation is complete, you may run the viewer using
-      the start menu, the desktop shortcut or by double-clicking a
-      <code>.smi</code> or <code>.smil</code> file.
-    </p>
-
-    <h3>Issues resolved</h3>
-
-    <p>
-      The following issues have been fixed since the previous release:
-    </p>
-
-    <ul>
-      <li>
-        The "open file" dialog works again. </li>
-      <li>
-        The .smi/.smil filetype issues have been solved. </li>
-    </ul>
-        
-    
-    <h3>Customization</h3>
-    <p>
-      One aspect of GR<i>i</i>NS can be customized: the handling of
-      the test attributes such as bitrates and language (see section
-      4.4 of the <a
-	href="http://www.w3.org/TR/1998/REC-smil-19980615/">SMIL
-	specification</a>). See the <A
-	HREF="http://www.cwi.nl/GRiNS/examples.html">examples
-	section</A> on the homepage for details.
-    </p>
 
     <h3>Feedback</h3>
     <p>
       Bug reports and other technical feedback should be sent to <A
-HREF="mailto:grins-support@cwi.nl">grins-support@cwi.nl</A>, please
-      check the <A
-	HREF="http://www.cwi.nl/GRiNS/feedback.html">feedback
-	section</A> on the homepage for details.
+      HREF="mailto:grins-support@oratrix.com">grins-support@oratrix.com</A>,
+      please check the <A
+      HREF="http://www.oratrix.com/GRiNS/feedback.html">feedback
+      section</A> on the homepage for details.
     </p>
 
     <p>
       Non-technical feedback should be sent to <A
-	HREF="mailto:grins-request@cwi.nl">grins-request@cwi.nl</A>.
-    </p>
-
-    <h3>The SMIL language</h3>
-    <p>
-      The GR<i>i</i>NS player supports the complete
-      <a href="http://www.w3.org/TR/1998/REC-smil-19980615/">SMIL 1.0</a>
-      definition except where noted <a href="#unsup">below</a>.  A
-      conforming SMIL document can be correctly parsed, but a few
-      features are not implemented.
+      HREF="mailto:info@oratrix.com">info@oratrix.com</A>.
     </p>
 
     <h3>Platform dependencies in media handling</h3>
     <p>
       There are some differences between the various platforms.  See
       the <a
-	href="http://www.cwi.nl/GRiNS/relnotes/supported.html">chart
+	href="http://www.oratrix.com/GRiNS/relnotes/supported.html">chart
 	of supported media types</a> on the GR<i>i</i>NS website
       for the supported media types on the various supported
       platforms.
@@ -205,80 +108,39 @@ HREF="mailto:grins-support@cwi.nl">grins-support@cwi.nl</A>, please
 
     <p>
       As issues are reported they are added to the <A
-      HREF="http://www.cwi.nl/GRiNS/relnotes.html">release notes</A>
-      and <A HREF="http://www.cwi.nl/GRiNS/issues.txt">open issues</a>
+      HREF="http://www.oratrix.com/GRiNS/relnotes.html">release
+      notes</A> and <A
+      HREF="http://www.oratrix.com/GRiNS/issues.txt">open issues</a>
       sections on the home page.
     </p>
 
-    <h3><A NAME="problems">Compatability problems</A></h3>
+    <h3><A NAME="problems">HTML problems</A></h3>
     <p>
-    If you are running Windows 95 or NT 3.51 and do not have a recent
-release of Internet Explorer, you may encounter the following error
-when starting Pythonwin:
+      GRiNS can render HTML either through the Webster HTML Control,
+      which is built-in, or through the Internet Explorer HTML
+      Control, which is part of IE4. If you have problems rendering
+      HTML try changing the control, in the preferences dialog.
     </p>
-
-    <pre><code>
-	import win32api [or some other win32 module]
-	ImportError: DLL load failed: One of the library files needed to run this application 
-	cannot be found.
-    </code></pre>
-
     <p>
-      In that case run <code>oadist.exe</code> to update COM.
+      Each control has its good and bad points. IE4 has more features 
+      but always shows scrollbars which is not very pretty. Webster is 
+      a HTML 3 control only, and has problems with some things like
+      using tags in URLs.
     </p>
 
     <h3>Sound and video problems</h3>
     <p>
       If sounds or videos are not played correctly on your machine
       (e.g. <code>*.aiff</code> or <code>*.mpeg</code>) try installing
-      Active Movie by running <code>amovie.exe</code>. For
-      details see <code>grins-mci.txt</code>.
+      Active Movie.
     </p>
 
-    <h3><A NAME="ie">Internet Explorer dependency</A></h3>
-
-    <p>
-      MS Internet explorer is needed in order to use MSIE
-      functionality in html pages or just components using the HTML
-      channel. If you do not want to depend on MSIE, follow the
-      following steps.
-    </p>
-
-    <p>
-      In the PyDLLs directory you will find the file
-      <code>Htmlex.pyd</code>, <code>HtmlexMS.pyd</code> and
-      <code>HtmlexW.pyd</code>.  The two first are the same. The
-      working file is always <code>Htmlex.pyd</code>.  If you want to
-      use the Webster HTML Control, which is totally independent from
-      MSIE, the file you need is <code>HtmlexW.pyd</code>. You just
-      need to rename it to Htmlex.pyd and get rid of the old file. By
-      that moment the working pyd file will be the Webster version and
-      not MSIE version. The MSIE version will be at
-      <code>HtmlexMS.pyd</code>. If you want to switch back to MSIE
-      control you should follow the same steps, keeping a copy of
-      <code>Htmlex.pyd</code> (W) renaming it to
-      <code>HtmlexW.pyd</code> and renaming <code>HtmlexMS.pyd</code>
-      to <code>Htmlex.pyd</code>.
-    </p>
-
-    <p>
-      In the next version the choice of the HTML control will be made
-      through the setup process. But since it was a change at the last
-      moment, we thought we should release this version, even if it is
-      not done automatically through the setup process.
-    </p>
-    <p>
-      We suggest the following: If you have MSIE installed, use the
-      default (MS) version. If you have no MS installed, use the
-      "Webster version", although it lacks high-level functionality
-      such as Java. The choice is yours.
-    </p>
 
     <hr>
-    <address><a href="http://www.cwi.nl/GRiNS/">the GRiNS support staff</a></address>
+    <address><a href="http://www.oratrix.com/GRiNS/">the GRiNS support staff</a></address>
 <!-- Created: Thu Jul 23 16:58:52 MET DST 1998 -->
 <!-- hhmts start -->
-Last modified: Fri Jul 24 18:25:22 MET DST 1998
+Last modified: Wed Mar 24 14:21:36 MET 1999
 <!-- hhmts end -->
   </body>
 </html>
