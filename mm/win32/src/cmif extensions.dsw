@@ -84,7 +84,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "GRiNS Hutchinson"="..\..\Build\win32\Hutchinson\Hutchinson.dsp" - Package Owner=<4>
+Project: "GRiNS Mobile"="..\..\Build\win32\Hutchinson\Hutchinson.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
