@@ -62,6 +62,11 @@ class csfile():
 		self.f.close()
 			
 
+def armdone(arg):
+	pass
+def stopped(arg):
+	pass
+
 class SoundChannel(Channel):
 	#
 	# Declaration of attributes that are relevant to this channel,
@@ -78,6 +83,12 @@ class SoundChannel(Channel):
 		self.armed_node = None
 		self.armed_info = None
 		self.node = None
+		#DEBUG: to spoof Jack's scheduler
+		self.dummy_event_id = None
+		import mm, soundchannel
+		self.threads = mm.init(soundchannel.init(), \
+			  0, self.deviceno, None)
+##		print 'SoundChannel.init: self.threads = ' + `self.threads`
 		return self
 	#
 	def __repr__(self):
@@ -97,8 +108,23 @@ class SoundChannel(Channel):
 			return
 		filename = self.getfilename(node)
 		try:
+			import glwindow, mm
+			glwindow.devregister(`self.deviceno`+':'+`mm.armdone`,\
+				  armdone, 0)
+			glwindow.devregister(`self.deviceno`+':'+`mm.stopped`,\
+				  stopped, 0)
 			self.armed_info = getinfo(filename)
 			prepare(self.armed_info)	# Do a bit of readahead
+			f, nchannels, nsampframes, sampwidth, samprate, format = self.armed_info
+##			print 'SoundChannel.arm: self.threads = ' + `self.threads`
+			self.threads.arm(f.f, 0, 0, \
+				  [('nchannels', int(nchannels)), \
+				   ('nsampframes', int(nsampframes)), \
+				   ('sampwidth', int(sampwidth)), \
+				   ('samprate', int(samprate)), \
+				   ('format', format), \
+				   ('offset', int(f.f.tell()))], \
+				  None)
 		except IOError:
 			self.armed_info = None
 			print 'cannot open sound file ' + filename
@@ -106,16 +132,17 @@ class SoundChannel(Channel):
 		self.armed_node = node
 		
 	def play(self, (node, callback, arg)):
-		self.node = node
-		self.cb = (callback, arg)
-
-		node.setarmedmode(ARM_PLAYING)
-
 		if not self.is_showing():
 			# Don't play it, but still let the duration pass
 			dummy = self.player.enter(node.t1-node.t0, 0, \
 				self.done, None)
 			return
+
+		self.node = node
+		self.cb = (callback, arg)
+
+		node.setarmedmode(ARM_PLAYING)
+
 		if self.armed_node <> node:
 			print 'SoundChannel: not the armed node'
 			self.arm(node)
@@ -123,106 +150,42 @@ class SoundChannel(Channel):
 		if not self.armed_info:		# If the arm failed...
 			self.done(None)
 			return
-		
+
 		self.old_info = self.info
 		self.info = self.armed_info
 		
 		self.armed_node = None
 		self.armed_info = None
 		
-		self.framestodo = self.info[2] # nsampframes
-		if self.port == None or self.old_info[1] <> self.info[1] \
-			  or self.old_info[3] <> self.info[3] \
-			  or self.old_info[4] <> self.info[4]:
-			self.port, self.config = openport(self.info)
-		if self.port == None:
-			# Don't play it, but still let the duration pass
-			dummy = \
-			  self.player.enter(node.t1-node.t0, 0,  callback, arg)
-			return
-	        dummy = \
-		   self.player.enter(0.001, 0, self._poll, ())
+##		print 'SoundChannel.play: self.threads = ' + `self.threads`
+		import glwindow, mm
+		glwindow.devregister(`self.deviceno`+':'+`mm.playdone`, \
+			  self.done, None)
+		glwindow.devregister(`self.deviceno`+':'+`mm.stopped`, \
+			  stopped, 0)
+		#DEBUG: enter something in queue to fool scheduler
+		self.dummy_event_id = self.player.enter(1000000, 1, self.done, None)
+		self.threads.play()
 		dummy = \
 		   self.player.enter(0.001, 1, self.player.opt_prearm, node)
-	#
-	def readsamples(self, f, nsamples, width, chunk):
-		data = f.read(nsamples*width)
-		if len(data) < nsamples*width:
-			print 'short read from sound file, got', len(data), \
-				  'wanted',nsamples*width
-		if self.rate > 1.0:
-			ndata = ''
-			while len(data):
-				ndata = ndata + data[:int(chunk)*width]
-				data = data[int(chunk*self.rate)*width:]
-			data = ndata
-		return data		
-			
-	def _poll(self):
-		self.qid = None
-		f, nchannels, nsampframes, sampwidth, samprate, format = \
-			self.info
-		framewidth = nchannels * sampwidth
-		sampspersec = nchannels * samprate
-		framestofill = min(self.port.getfillable(), self.framestodo)
-		data = self.readsamples(f, framestofill, framewidth, sampspersec/30)
-		if self.showing:
-			self.port.writesamps(data)
-		else:
-			self.port.writesamps('\0'*len(data))
-		self.framestodo = self.framestodo - framestofill
-		duration = self.port.getfilled()/float(sampspersec)
-		duration = duration - 0.5
-		duration = max(duration, 0.2)
-		if self.framestodo + self.port.getfilled() > 0:
-			self.qid = self.player.enter(duration, 0, \
-				  self._poll, ())
-		else:
-			self.stop()
-			callback, arg = self.cb
-			callback(arg)
-
-	def unfill(self):
-		import al
-		if self.port == None:
-			return
-		f, nchannels, nsampframes, sampwidth, samprate, format = \
-			self.info
-		port = self.port
-		filled = int(port.getfilled() * self.rate)
-		port.closeport()
-		self.framestodo = self.framestodo + filled
-		try:
-			self.port = al.openport('SoundChannel', 'w', \
-				self.config)
-		except RuntimeError:
-			print 'al.openport failed'
-			self.port = self.config = None
-		f.seek(-filled*nchannels*sampwidth, 1)
+	#DEBUG: remove dummy entry from queue and call proper done method
+	def done(self, arg):
+		if self.dummy_event_id:
+			self.player.cancel(self.dummy_event_id)
+			self.dummy_event_id = None
+		Channel.done(self, arg)
 		
 	#
 	def setrate(self, rate):
-		if self.qid:
-			self.unfill()		
-			self.player.cancel(self.qid)
-			self.qid = None
-			self.cancelled_qid = 1
-		self.rate = rate
-		if self.rate and self.cancelled_qid:
-			self.qid = self.player.enter(0, 0, self._poll, ())
-			self.cancelled_qid = 0
+##		print 'SoundChannel.setrate: self.threads = ' + `self.threads`
+		self.threads.setrate(rate)
 	#
 	def stop(self):
 		if self.node:
 			self.node.setarmedmode(ARM_DONE)
 			self.node = None
-		if self.port <> None:
-			closeport(self.port)
-			self.info = self.port = self.config = None
-		if self.qid <> None:
-			self.player.cancel(self.qid)
-			self.qid = None
-		self.cancelled_qid = 0
+##		print 'SoundChannel.stop: self.threads = ' + `self.threads`
+		self.threads.stop()
 	#
 	def reset(self):
 		pass
@@ -232,7 +195,10 @@ class SoundChannel(Channel):
 	def getfilename(self, node):
 		return aiffcache.get(MMAttrdefs.getattr(node, 'file'))
 	#
-
+	def destroy(self):
+##		print 'SoundChannel.destroy: self.threads = ' + `self.threads`
+		self.threads = None
+		Channel.destroy(self)
 
 def getduration(filename):
 	f, nchannels, nsampframes, sampwidth, samprate, format = \
@@ -285,106 +251,14 @@ def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
 		offset, blocksize = aiff.read_ssnd_chunk(f)
 	else:
 		offset, blocksize = 0, 0
-	# For unknown reasons you get a queue that is bigger than you ask
-	# for. For that reason, we read a little more ahead
-	f.readahead(MAXQSIZE*sampwidth*nchannels)
 
-
-# Global administration:
-# - count number of ports
-# - if at least one port is open:
-#   - current and original sampling rate
-#
-n_open_ports = 0
-current_rate = 0
-original_rate = 0
-
-
-# Open a port with the appropriate parameters.
-# Return (port, config) or (None, None) if something fails.
-#
-def openport(f, nchannels, nsampframes, sampwidth, samprate, format):
-	import al
-	global n_open_ports, current_rate, original_rate
-	# If there is already an open port,
-	# check that the sampling rate is compatible;
-	# else, save the original and set the current sampling rate
-	if n_open_ports <> 0:
-		if n_open_ports < 0:
-			print 'SoundChannel: n_open_ports < 0 !?!?'
-			return None, None
-		if samprate <> current_rate:
-			print 'SoundChannel: incompatible sampling rates'
-			return None, None
-##		print 'openport: another port is already open -- no action'
-	else:
-##		print 'openport: setting sampling rate'
-		# Save original rate
-		pv = [AL.OUTPUT_RATE, 0]
-		al.getparams(AL.DEFAULT_DEVICE, pv)
-		original_rate = pv[1]
-		# Set sampling rate (can't be done at the port level :-( )
-		pv = [AL.OUTPUT_RATE, int(samprate)]
-		al.setparams(AL.DEFAULT_DEVICE, pv)
-		current_rate = samprate
-##	print 'openport:', n_open_ports, '++'
-	n_open_ports = n_open_ports + 1
-	# Compute queue size such that it can contain QSECS seconds of sound,
-	# but it shouldn't be bigger than 100K (else the library crashes :-( )
-	QSECS = 10.0
-	queuesize = int(min(samprate * nchannels * QSECS, MAXQSIZE))
-	# Create a config object
-	config = al.newconfig()
-	config.setchannels(nchannels)
-	config.setwidth(sampwidth)
-	config.setqueuesize(queuesize)
-	# Create a port object
-	try:
-		port = al.openport('SoundChannel', 'w', config)
-	except RuntimeError:
-		print 'al.openport failed'
-		port = config = None
-		closeport(None) # Fix administration
-	return port, config
-
-
-# Closing counterpart of openport().
-#
-def closeport(port):
-	global n_open_ports, current_rate, original_rate
-##	print 'closeport:', n_open_ports, '--'
-	n_open_ports = n_open_ports - 1
-	if n_open_ports < 0:
-		raise CheckError, 'closeport called too often'
-	if port <> None:
-##		print 'closeport: closing port'
-		port.closeport()
-	else:
-##		print 'closeport: port == None'
-		pass
-	if n_open_ports > 0:
-##		print 'closeport: another port is still open -- no action'
-		pass
-	else:
-##		print 'closeport: last port -- restore the original rate'
-		import al
-		pv = [AL.OUTPUT_RATE, original_rate]
-		al.setparams(AL.DEFAULT_DEVICE, pv)
-		original_rate = current_rate = 0
 
 
 # External interface to restore the original sampling rate.
 # This must work even when called from a "finally" handler in main().
-# (No abused to clean up the aiff temporary file cache as well.)
+# (Now abused to just clean up the aiff temporary file cache.)
 #
 def restore():
-	global n_open_ports, current_rate, original_rate
-	if original_rate <> 0:
-		print 'Restoring original sampling rate'
-		import al
-		pv = [AL.OUTPUT_RATE, original_rate]
-		al.setparams(AL.DEFAULT_DEVICE, pv)
-		original_rate = 0
 	cleanup()
 
 

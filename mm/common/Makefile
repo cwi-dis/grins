@@ -1,11 +1,11 @@
-all:		prepimg showprep
+PYTHON = /ufs/sjoerd/src/python
+CFLAGS = -DMM_DEBUG -g -G0 -xansi -D__STDC__ -I$(PYTHON)/src
 
-prepimg:	prepimg.o
-		$(CC) prepimg.o -limage -o prepimg
+OBJS =	\
+	soundchannelmodule.o \
+	nullchannelmodule.o \
+	mmmodule.o
 
-showprep:	showprep.o
-		$(CC) showprep.o -lgl_s -o showprep
+all:	$(OBJS)
 
-# Not needed any more...
-showimg:	showimg.o
-		$(CC) showimg.o -limage -lgl_s -o showimg
+$(OBJS):	mmmodule.h
