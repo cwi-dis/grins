@@ -9,7 +9,7 @@ __version__ = "$Id$"
 import windowinterface, WMEVENTS, StringStuff
 import MMAttrdefs
 import MMNode
-from ViewDialog import ViewDialog
+from HierarchyViewDialog import HierarchyViewDialog
 
 
 def fix(r, g, b): return r, g, b	# Hook for color conversions
@@ -48,7 +48,7 @@ INNERBOX = 1
 LEAFBOX = 2
 
 
-class HierarchyView(ViewDialog):
+class HierarchyView(HierarchyViewDialog):
 
 	#################################################
 	# Outside interface                             #
@@ -66,86 +66,13 @@ class HierarchyView(ViewDialog):
 		self.focusnode = self.root
 		self.editmgr = self.root.context.editmgr
 		self.destroynode = None	# node to be destroyed later
-		ViewDialog.__init__(self, 'hview_')
-		self.menu = [
-			('Canvas', [
-				(None, 'Double height',
-				 (self.canvascall,
-				  (windowinterface.DOUBLE_HEIGHT,))),
-				(None, 'Double width',
-				 (self.canvascall,
-				  (windowinterface.DOUBLE_WIDTH,))),
-				(None, 'Reset',
-				 (self.canvascall,
-				  (windowinterface.RESET_CANVAS,))),
-				]),
-			('Edit', [
-				(None, 'New node', [
-					(None, 'Before focus',
-					 (self.createbeforecall, ())),
-					(None, 'After focus',
-					 (self.createaftercall, ())),
-					(None, 'Under focus',
-					 (self.createundercall, ())),
-					(None, 'Above focus', [
-						(None, 'Sequential',
-						 (self.createseqcall, ())),
-						(None, 'Parallel',
-						 (self.createparcall, ())),
-						(None, 'Choice',
-						 (self.createbagcall, ())),
-						(None, 'Alternate',
-						 (self.createaltcall, ())),
-						]),
-					]),
-				('d', 'Delete focus', (self.deletecall, ())),
-				None,
-				('x', 'Cut focus', (self.cutcall, ())),
-				('c', 'Copy focus', (self.copycall, ())),
-				(None, 'Paste', [
-					(None, 'Before focus',
-					 (self.pastebeforecall, ())),
-					(None, 'After focus',
-					 (self.pasteaftercall, ())),
-					(None, 'Under focus',
-					 (self.pasteundercall, ())),
-					])
-				]),
-			('Node', [
-				('p', 'Play node', (self.playcall, ())),
-				('G', 'Play from node', (self.playfromcall, ())),
-				None,
-				('i', 'Node info...', (self.infocall, ())),
-				('a', 'Node attr...', (self.attrcall, ())),
-				('e', 'Edit contents...', (self.editcall, ())),
-				('t', 'Edit anchors...', (self.anchorcall, ())),
-				None,
-				('L', 'Finish hyperlink...', (self.hyperlinkcall, ()))
-				]),
-			('Focus', [
-				('f', 'Push focus', (self.focuscall, ())),
-				('z', 'Zoom out', (self.zoomoutcall, ())),
-				('.', 'Zoom here', (self.zoomherecall, ())),
-				('Z', 'Zoom in', (self.zoomincall, ()))
-				]),
-			]
+		HierarchyViewDialog.__init__(self)
 
 	def __repr__(self):
 		return '<HierarchyView instance, root=' + `self.root` + '>'
 
 	def show(self):
-		if self.is_showing():
-			return
-		self.toplevel.showstate(self, 1)
-		title = 'Hierarchy View (' + self.toplevel.basename + ')'
-		self.load_geometry()
-		x, y, w, h = self.last_geometry
-		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, menubar=self.menu, canvassize = (w, h))
-		if self.waiting:
-			self.window.setcursor('watch')
-		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
-		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
-		self.window.register(WMEVENTS.WindowExit, self.hide, None)
+		HierarchyViewDialog.show(self)
 		self.window.bgcolor(BGCOLOR)
 		self.objects = []
 		# Other administratrivia
@@ -159,11 +86,7 @@ class HierarchyView(ViewDialog):
 		if not self.is_showing():
 			return
 		self.toplevel.showstate(self, 0)
-		self.save_geometry()
-		self.window.close()
-		self.window = None
-		self.displist = None
-		self.new_displist = None
+		HierarchyViewDialog.hide(self)
 		self.cleanup()
 		self.editmgr.unregister(self)
 		self.toplevel.checkviews()
@@ -217,11 +140,6 @@ class HierarchyView(ViewDialog):
 		if self.new_displist:
 			# setfocusnode may have drawn already
 			self.render()
-
-	def fixtitle(self):
-		if self.is_showing():
-			title = 'Hierarchy View (' + self.toplevel.basename + ')'
-			self.window.settitle(title)
 
 	#################################################
 	# Event handlers                                #
