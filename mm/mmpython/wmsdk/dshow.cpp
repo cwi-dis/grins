@@ -168,20 +168,20 @@ GraphBuilder_AddSourceFilter(GraphBuilderObject *self, PyObject *args)
 {
 	HRESULT res;
 	char *pszFile;
-	BaseFilterObject *pBFO;
+	BaseFilterObject *obj;
 	if (!PyArg_ParseTuple(args, "s", &pszFile))
 		return NULL;
-	pBFO = newBaseFilterObject();
+	obj = newBaseFilterObject();
 	WCHAR wPath[MAX_PATH];
 	MultiByteToWideChar(CP_ACP,0,pszFile,-1,wPath,MAX_PATH);
-	res = self->pGraphBuilder->AddSourceFilter(wPath,L"File reader",&pBFO->pFilter);
+	res = self->pGraphBuilder->AddSourceFilter(wPath,L"File reader",&obj->pFilter);
 	if (FAILED(res)) {
 		seterror("GraphBuilder_AddSourceFilter", res);
-		pBFO->pFilter=NULL;
-		Py_DECREF(pBFO);
+		obj->pFilter=NULL;
+		Py_DECREF(obj);
 		return NULL;
 	}
-	return (PyObject *) pBFO;
+	return (PyObject *) obj;
 }
 
 static char GraphBuilder_AddFilter__doc__[] =
@@ -193,13 +193,13 @@ GraphBuilder_AddFilter(GraphBuilderObject *self, PyObject *args)
 {
 	HRESULT res;
 	char *psz;
-	BaseFilterObject *pBFO;
-	if (!PyArg_ParseTuple(args, "Os", &psz,&pBFO))
+	BaseFilterObject *obj;
+	if (!PyArg_ParseTuple(args, "Os", &obj, &psz))
 		return NULL;
 
 	WCHAR wsz[MAX_PATH];
 	MultiByteToWideChar(CP_ACP,0,psz,-1,wsz,MAX_PATH);
-	res = self->pGraphBuilder->AddFilter(pBFO->pFilter,wsz);
+	res = self->pGraphBuilder->AddFilter(obj->pFilter,wsz);
 	if (FAILED(res)) {
 		seterror("GraphBuilder_AddFilter", res);
 		return NULL;
