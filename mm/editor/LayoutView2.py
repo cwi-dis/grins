@@ -428,6 +428,7 @@ class LayoutView2(LayoutViewDialog2):
 
 		self.currentKeyTimeIndex = None
 		self.timeValueChanged = 1
+		self.isAKeyTime = 0
 		self.currentTimeValue = None
 		
 	def fixtitle(self):
@@ -883,6 +884,7 @@ class LayoutView2(LayoutViewDialog2):
 		return None
 
 	def setKeyTimeIndex(self, keyTimeIndex, nodeRef):
+		self.isAKeyTime = 0
 		if self.currentKeyTimeIndex != keyTimeIndex:
 			self.timeValueChanged = 1
 		self.currentKeyTimeIndex = keyTimeIndex
@@ -890,6 +892,7 @@ class LayoutView2(LayoutViewDialog2):
 			animationData = nodeRef.getAnimationData()
 			timeList = animationData.getTimes()
 			self.currentTimeValue = timeList[keyTimeIndex]
+			self.isAKeyTime = 1
 		else:
 			self.currentTimeValue = None
 
@@ -902,8 +905,10 @@ class LayoutView2(LayoutViewDialog2):
 		if self.currentTimeValue != currentTimeValue:
 			self.timeValueChanged = 1
 		self.currentTimeValue = currentTimeValue
+		self.isAKeyTime = 0
 		keyTimeIndex = self.getKeyForThisTime(timeList, currentTimeValue)
 		if self.currentKeyTimeIndex != keyTimeIndex:
+			self.isAKeyTime = 1
 			self.timeValueChanged = 1
 		self.currentKeyTimeIndex = keyTimeIndex
 
@@ -922,7 +927,8 @@ class LayoutView2(LayoutViewDialog2):
 
 		if index > 0 and index < len(timeList):
 			# can only insert a key between the first and the end
-			data.insert(index, data[index-1])
+			newData = (animationData.getRectAt(tp), animationData.getColorAt(tp))
+			data.insert(index, newData)
 			timeList.insert(index, tp)
 			self.setKeyTimeIndex(index, nodeRef)
 			self.keyTimeSliderWidget.insertKey(tp)
@@ -943,7 +949,6 @@ class LayoutView2(LayoutViewDialog2):
 		
 		if not time is None and not animationData is None:
 			# XXX should move in another place
-			animationData.createAnimators()
 			wingeom = animationData.getRectAt(time)
 		else:
 			wingeom = nodeRef.getPxGeom()
@@ -1203,9 +1208,9 @@ class LayoutView2(LayoutViewDialog2):
 			keyTimeIndex = self.getKeyTimeIndex()
 			currentTimeValue = self.getCurrentTimeValue()
 			if not currentTimeValue is None:
-				if not self.getKeyForThisTime(timeList,currentTimeValue):
+				if not self.isAKeyTime:
 					self.insertKeyTime(animatedNode, currentTimeValue)
-					keyTimeIndex = self.getKeyForThisTime(animationData.getTimes(),currentTimeValue)
+					keyTimeIndex = self.getKeyTimeIndex()
 					
 		for nodeRef, attrName, attrValue in nodeRefAndValueList:
 			nodeType = self.getNodeType(nodeRef)
@@ -1228,8 +1233,8 @@ class LayoutView2(LayoutViewDialog2):
 					self.editmgr.setchannelattr(nodeRef.name, attrName, attrValue)
 				elif nodeType == TYPE_MEDIA:
 					self.editmgr.setnodeattr(nodeRef, attrName, attrValue)
-			if animationEnabled:
-				nodeRef.applyAnimationData(self.editmgr)
+		if animationEnabled:
+			nodeRef.applyAnimationData(self.editmgr)
 				
 		self.editmgr.commit()
 
