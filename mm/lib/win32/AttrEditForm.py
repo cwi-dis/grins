@@ -1752,21 +1752,13 @@ class EventCtrl(AttrCtrl):
 					self._eventstruct.get_region() or '', filter = 'topLayout')
 				if dlg.show():
 					self._eventstruct.set_region(dlg.gettext())
-				viewports = self._eventstruct.get_viewports()
-				#l = []
-				#for i in viewports:
-				#	l.append((i, (self._thingbuttondialogcallback, (i,))))
-				#d = win32dialog.Dialog(list=l, title="Select viewport", prompt="Viewport:", parent=self._wnd._form)
-			#else:
-				#print "TODO: More than just editing the wallclock."
 			elif c == 'node':
 				# Pop up a node select dialog.
 				nodename = self._eventstruct.get_thing_string()[1]
 				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node,\
 					nodename, filter = 'node')
 				if dlg.show():
-					# XXX: supposing that this is the correct interface to change a sync node.
-					self._eventstruct._setnode = dlg.getmmobject()
+					self._eventstruct.set_node(dlg.getmmobject())
 			self.enableApply()
 			self.update()
 
