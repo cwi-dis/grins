@@ -935,10 +935,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			SMILTreeWriteHtmlTime.WriteFileAsHtmlTime(self.root, filename,
 						cleanSMIL = 1,
 						grinsExt = 0,
-						copyFiles = 1,
+						copyFiles = 0,
 						evallicense=evallicense,
 						progress = progress,
-						convertURLs = 1)
+						convertURLs = 0)
 		except IOError, msg:
 			operation = 'Publish'
 			windowinterface.showmessage('%s failed:\n%s'%(operation, msg))
