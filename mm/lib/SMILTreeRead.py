@@ -2503,8 +2503,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# always fix the pixel geometry value for viewport.
 			self.__context.cssResolver.setRawAttrs(cssId, [('width', width),
 								       ('height', height)])
-			ch['width'] = width
-			ch['height'] = height
+##			ch['width'] = width
+##			ch['height'] = height
 
 		# cleanup
 		for cssId in self.__cssIdTmpList:
@@ -2902,7 +2902,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		   not ctx.getviewports():
 			self.__newTopRegion()
 		self.Recurse(self.__root, self.FixSyncArcs)
-		if not features.editor and settings.get('skin') and len(ctx.getviewports()) == 1:
+		if not features.editor and self.__skin and len(ctx.getviewports()) == 1:
 			self.__fixskin()
 		self.FixLayouts()
 		self.FixSizes()
