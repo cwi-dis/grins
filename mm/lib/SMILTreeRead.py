@@ -407,6 +407,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if res is not None:
 					val = res.group('name')
 				attrdict['name'] = val
+			elif attr in ('abstract', 'copyright', 'title'):
+				if val:
+					attrdict[attr] = val
 			elif attr == 'src':
 				# Special case: # is used as a placeholder for empty URL fields
 				if val != '#':
@@ -1719,8 +1722,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				par = node.GetParent()
 				while par is not None:
 					if par.__chanlist.has_key(name):
-						if par.GetType() == 'par':
+						ptype = par.GetType()
+						if ptype == 'par':
 							# conflict
+							name = None
+							break
+						elif ptype == 'excl':
+							# potential conflict
 							name = None
 							break
 						else:
@@ -2598,11 +2606,48 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def end_excl(self):
 		self.end_parexcl('excl')
 
+	__prioattrs = {'higher': ('stop', 'pause'),
+		       'peers': ('stop', 'pause', 'defer', 'never'),
+		       'lower': ('defer', 'never'),
+		       'pauseDisplay': ('disable', 'hide', 'show'),
+		       }
 	def start_prio(self, attributes):
-		pass
-
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
+		if not self.__in_smil:
+			self.syntax_error('priorityClass not in smil')
+		if self.__in_layout:
+			self.syntax_error('priorityClass in layout')
+			return
+		if self.__container.type not in ('excl', 'prio'):
+			return
+		node = self.__context.newnode('prio')
+		self.__container._addchild(node)
+		self.__container = node
+		node.__chanlist = {}
+		node.__syncarcs = []
+		node.__anchorlist = []
+		attrdict = node.attrdict
+		for attr, val in attributes.items():
+			val = string.strip(val)
+			if attr == 'id':
+				self.__nodemap[val] = node
+				self.__idmap[val] = node.GetUID()
+				res = namedecode.match(val)
+				if res is not None:
+					val = res.group('name')
+				attrdict['name'] = val
+			elif self.__prioattrs.has_key(attr):
+				if val in self.__prioattrs[attr]:
+					attrdict[attr] = val
+				else:
+					self.syntax_error("illegal value for `%s' attribute" % attr)
+			elif attr in ('abstract', 'copyright', 'title'):
+				if val:
+					attrdict[attr] = val
+					
 	def end_prio(self):
-		pass
+		self.__container = self.__container.GetParent()
 
 	def start_choice(self, attributes):
 		self.__fix_attributes(attributes)
