@@ -9,7 +9,7 @@ from usercmd import *
 # Some commands are optional, depending on preference settings:
 ALL=''
 CMIF='cmif'
-DEBUG='debug'
+DBG='debug'
 #
 # Commands that we know are not implemented on the mac:
 UNUSED_COMMANDS=(MAGIC_PLAY,)   # Is implemented, but the check code doesn't know it
@@ -27,13 +27,13 @@ MENUBAR=(
 		(ALL, SEP,),
 		(ALL, ENTRY, 'Preferences...', None, PREFERENCES),
 		(ALL, SEP,),
-		(DEBUG, CASCADE, 'Debug', (
-			(DEBUG, ENTRY, 'Dump scheduler data', None, SCHEDDUMP),
-			(DEBUG, TOGGLE, 'Enable call tracing', None, TRACE),
-			(DEBUG, ENTRY, 'Enter debugger', None, DEBUG),
-			(DEBUG, ENTRY, 'Crash', None, CRASH),
-			(DEBUG, ENTRY, 'Show log/debug window', None, CONSOLE))),
-		(DEBUG, SEP,),
+		(DBG, CASCADE, 'Debug', (
+			(DBG, ENTRY, 'Dump scheduler data', None, SCHEDDUMP),
+			(DBG, TOGGLE, 'Enable call tracing', None, TRACE),
+			(DBG, ENTRY, 'Enter debugger', None, DEBUG),
+			(DBG, ENTRY, 'Crash', None, CRASH),
+			(DBG, ENTRY, 'Show log/debug window', None, CONSOLE))),
+		(DBG, SEP,),
 		(ALL, ENTRY, 'Quit', 'Q', EXIT))),
 
 	(ALL, CASCADE, 'Edit', (
@@ -43,12 +43,12 @@ MENUBAR=(
 		(ALL, ENTRY, 'Copy', 'C', COPY),
 		(ALL, ENTRY, 'Paste', 'V', PASTE),
 		(ALL, ENTRY, 'Clear', None, DELETE))),
-		
+
 	(ALL, CASCADE, 'Play', (
 		(ALL, TOGGLE, 'Play', 'P', PLAY),
 		(ALL, TOGGLE, 'Stop', 'H', STOP),
 		(ALL, TOGGLE, 'Pause', 'B', PAUSE))),
-		
+
 	(ALL, CASCADE, 'Views', (
 		(ALL, SPECIAL, 'Open documents', 'documents'),
 		(ALL, SPECIAL, 'Open windows', 'windows'),
@@ -58,8 +58,8 @@ MENUBAR=(
 		(ALL, SEP,),
 		(ALL, ENTRY, 'View source', None, SOURCE),
 		(ALL, ENTRY, 'View help window', '?', HELP))))
-		
-			
+
+
 #
 # Adornments
 #
@@ -82,4 +82,3 @@ CHANNEL_ADORNMENTS = {
 #
 # CNTL resource for the toolbar and its height
 TOOLBAR=(2500, 62, 22)
-		
