@@ -2,19 +2,11 @@
  * 
  *  $Id$
  *
- *  Copyright (C) 1995,1996,1997 RealNetworks, Inc.
- *  All rights reserved.
- *
- *  http://www.real.com/devzone
- *
- *  This program contains proprietary information of RealNetworks, Inc.,
- *  and is licensed subject to restrictions on use and distribution.
- *
- *  exadvsnk.h
  *
  *  Client Advise Sink Interfaces
  *
  */
+
 #ifndef _EXAMPLECLSNK_
 #define _EXAMPLECLSNK_
 
@@ -26,6 +18,10 @@ struct IRMAClientAdviseSink;
 struct IUnknown;
 struct IRMAPNRegistry;
 
+// for PyObject
+#ifndef Py_PYTHON_H
+#include "Python.h"
+#endif
 
 /****************************************************************************
  *
@@ -38,6 +34,9 @@ class ExampleClientAdviceSink : public IRMAClientAdviseSink
     /****** Public Class Methods ******************************************/
     ExampleClientAdviceSink(IUnknown* /*IN*/ pUnknown);
 
+	void SetPyAdviceSink(PyObject *obj);
+	PyObject *GetPyAdviceSink();
+	PyObject *m_pyAdviceSink;
 
    /************************************************************************
     *  IRMAClientAdviseSink Interface Methods               ref:  rmaclsnk.h
