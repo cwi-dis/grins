@@ -84,7 +84,9 @@ clip = re.compile(_opS + r'(?:'
 		  # smpte/smpte-25/smpte-30-drop=...
 		   '(?:(?P<smpte>smpte(?:-30-drop|-25)?)' + _opS + r'=' + _opS + r'(?P<smpteclip>[^-]*))|'
 		  # clock value
-		   '(?P<clock>'+clock_val+')'
+		   '(?P<clock>'+clock_val+')|'
+		  # marker=
+		   '(?:(?P<marker>marker)' + _opS + '=' + _opS +'(?P<markerclip>[^()<> \t\r\n]+))'
 		   ')' + _opS + r'$')
 smpte_time = re.compile(r'(?:(?:\d{2}:)?\d{2}:)?\d{2}(?P<f>\.\d{2})?' + _opS + r'$')
 namedecode = re.compile(r'(?P<name>.*)-\d+$')
@@ -1510,10 +1512,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if clip_begin:
 			res = clip.match(clip_begin)
 			if res:
-				node.attrdict['clipbegin'] = clip_begin
+				node.attrdict['clipbegin'] = string.join(string.split(clip_begin), '')
 				if res.group('clock') and \
 				   not self.__context.attributes.get('project_boston'):
 					self.syntax_error('invalid clip-begin attribute; should be "npt=<time>"')
+				elif res.group('marker') and \
+				     not self.__context.attributes.get('project_boston'):
+					self.syntax_error('%s marker value not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
 			else:
 				self.syntax_error('invalid clip-begin attribute')
 		clip_end = attributes.get('clipEnd')
@@ -1528,10 +1534,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if clip_end:
 			res = clip.match(clip_end)
 			if res:
-				node.attrdict['clipend'] = clip_end
+				node.attrdict['clipend'] = string.join(string.split(clip_end), '')
 				if res.group('clock') and \
 				   not self.__context.attributes.get('project_boston'):
 					self.syntax_error('invalid clip-end attribute; should be "npt=<time>"')
+				elif res.group('marker') and \
+				     not self.__context.attributes.get('project_boston'):
+					self.syntax_error('%s marker value not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
 			else:
 				self.syntax_error('invalid clip-end attribute')
 		if self.__in_a:
@@ -3880,48 +3890,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if value in ('begin', 'end'):
 				return value
 		raise error, 'bogus presentation counter'
-
-	def __parseclip(self, val):
-		res = clip.match(val)
-		if res is None:
-			raise error, 'bogus clip parameter'
-		if res.group('npt'):
-			val = res.group('nptclip')
-			if val:
-				val = float(self.__parsecounter(val, maybe_relative = 0))
-			else:
-				start = None
-		elif res.group('clock'):
-			val = res.group('clock')
-			if val:
-				val = float(self.__parsecounter(val))
-			else:
-				start = None
-		else:
-			import smpte
-			smpteval = res.group('smpte')
-			if smpteval == 'smpte':
-				cl = smpte.Smpte30
-			elif smpteval == 'smpte-25':
-				cl = smpte.Smpte25
-			elif smpteval == 'smpte-30-drop':
-				cl = smpte.Smpte30Drop
-			else:
-				raise error, 'bogus clip parameter'
-			val = res.group('smpteclip')
-			if val:
-				res = smpte_time.match(val)
-				if res is None:
-					raise error, 'bogus clip parameter'
-				if not res.group('f'):
-					# smpte and we have different
-					# ideas of which parts are
-					# optional
-					val = val + '.00'
-				val = cl(val)
-			else:
-				val = None
-		return val
 
 	def __destanchor(self, node):
 		anchorlist = node.__anchorlist
