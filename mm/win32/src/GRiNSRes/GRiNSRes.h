@@ -186,7 +186,7 @@
 #define IDD_EDITATTR_LS1x               390
 #define IDD_SOURCEEDIT1                 391
 #define IDD_EDITATTR_QTPREF             392
-
+#define IDD_LAYOUT_T2                   393
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -455,8 +455,12 @@
 #define IDC_PROGRESS1                   1317
 #define IDC_BUTTON7                     1318
 #define IDC_PROMPT1                     1319
-#define IDC_STOP						1320
-
+#define IDC_STOP                        1320
+#define IDC_X                           1321
+#define IDC_Y                           1322
+#define IDC_W                           1323
+#define IDC_H                           1324
+#define IDC_Z                           1325
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -539,15 +543,13 @@
 #define IDUC_DISTRIBUTE_HORIZONTALLY    32875
 #define IDUC_DISTRIBUTE_VERTICALLY      32876
 
-
-
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        393
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1321
+#define _APS_NEXT_CONTROL_VALUE         1326
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
