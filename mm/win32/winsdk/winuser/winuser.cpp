@@ -13,10 +13,14 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 PyObject *ErrorObject;
 
+#include "winuser_app.h"
 #include "winuser_main.h"
 #include "winuser_wnd.h"
 #include "winuser_menu.h"
+
+#ifndef _WIN32_WCE
 #include "winuser_ofn.h"
+#endif
 
 #include "mtpycall.h"
 
@@ -24,6 +28,8 @@ PyInterpreterState*
 PyCallbackBlock::s_interpreterState = NULL;
 
 static struct PyMethodDef winuser_methods[] = {
+	{"GetApplication", (PyCFunction)Winuser_GetApplication, METH_VARARGS, ""},
+
 	{"MessageLoop", (PyCFunction)Winuser_MessageLoop, METH_VARARGS, ""},
 	{"PostQuitMessage", (PyCFunction)Winuser_PostQuitMessage, METH_VARARGS, ""},
 	{"MessageBox", (PyCFunction)Winuser_MessageBox, METH_VARARGS, ""},
@@ -52,7 +58,6 @@ static struct PyMethodDef winuser_methods[] = {
 #endif
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 	};
-
 
 extern "C" __declspec( dllexport )
 void initwinuser()
