@@ -1055,7 +1055,7 @@ class _Button:
 			Qd.CloseRgn(rgn)
 		elif self._shape == 'circle':
 			print 'Circle not supported yet'
-		elif self._shape == 'ELIPSE':
+		elif self._shape == 'ellipse':
 			# Note: rx/ry are width/height, not points
 			x, y, rx, ry = self._dispobj._window._convert_coordinates(self._coordinates)
 			Qd.OpenRgn()
@@ -1076,8 +1076,8 @@ class _Button:
 			return self._insidePoly(x, y)
 		elif self._shape == 'circle':
 			return self._insideCircle(x, y)
-		elif self._shape == 'elipse':
-			return self._insideElipse(x, y)
+		elif self._shape == 'ellipse':
+			return self._insideEllipse(x, y)
 
 		print 'Internal error: invalid shape type'			
 		return 0
@@ -1117,12 +1117,12 @@ class _Button:
 		wx, wy, ww, wh = self._dispobj._window.getgeometry(UNIT_PXL)
 		return CheckInsideArea.insideCircle(x*ww, y*wh, cx*ww, cy*wh, rd*ww)
 
-	# Returns true if the point is inside the elipse	
-	def _insideElipse(self, x, y):
+	# Returns true if the point is inside the ellipse	
+	def _insideEllipse(self, x, y):
 		# for now
 		cx, cy, rdx, rdy = self._coordinates
 		wx, wy, ww, wh = self._dispobj._window.getgeometry(UNIT_PXL)
-		return CheckInsideArea.insideElipse(x*ww, y*wh, cx*ww, cy*wh, rdx*ww, rdy*wh)
+		return CheckInsideArea.insideEllipse(x*ww, y*wh, cx*ww, cy*wh, rdx*ww, rdy*wh)
 
 	def updatecoordinates(self, coords):
 		if self.is_closed(): return
