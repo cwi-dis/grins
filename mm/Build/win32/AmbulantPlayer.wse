@@ -1,6 +1,6 @@
 Document Type: WSE
 item: Global
-  Version=9.01
+  Version=9.02
   Title=Ambulant/G Player for SMIL 2.0 Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -23,7 +23,7 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=..\..\bin\win32\AmbulantG-2a.exe
+  EXE Filename=..\..\bin\win32\AmbulantG-3.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
