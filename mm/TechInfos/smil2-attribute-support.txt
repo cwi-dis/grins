@@ -221,6 +221,8 @@ Tag animate:
 		Implemented, common
 	Attribute end:
 		Implemented, common
+	Attribute fill:
+		to be supplied
 	Attribute from:
 		Implemented
 	Attribute id:
@@ -324,6 +326,8 @@ Tag animateColor:
 		Implemented, common
 	Attribute end:
 		Implemented, common
+	Attribute fill:
+		to be supplied
 	Attribute from:
 		Implemented
 	Attribute id:
@@ -423,6 +427,8 @@ Tag animateMotion:
 		Implemented, common
 	Attribute end:
 		Implemented, common
+	Attribute fill:
+		to be supplied
 	Attribute from:
 		Implemented
 	Attribute id:
@@ -529,6 +535,8 @@ Tag animation:
 	Attribute dur:
 		to be supplied
 	Attribute end:
+		to be supplied
+	Attribute endsync:
 		to be supplied
 	Attribute erase:
 		to be supplied
@@ -772,6 +780,8 @@ Tag audio:
 		to be supplied
 	Attribute end:
 		to be supplied
+	Attribute endsync:
+		to be supplied
 	Attribute erase:
 		to be supplied
 	Attribute fill:
@@ -961,6 +971,8 @@ Tag brush:
 	Attribute dur:
 		to be supplied
 	Attribute end:
+		to be supplied
+	Attribute endsync:
 		to be supplied
 	Attribute erase:
 		to be supplied
@@ -1289,6 +1301,8 @@ Tag img:
 		to be supplied
 	Attribute end:
 		to be supplied
+	Attribute endsync:
+		to be supplied
 	Attribute erase:
 		to be supplied
 	Attribute fill:
@@ -1602,6 +1616,8 @@ Tag param:
 		to be supplied
 	Attribute name:
 		to be supplied
+	Attribute skip-content:
+		to be supplied
 	Attribute system-bitrate:
 		to be supplied
 	Attribute system-captions:
@@ -1852,6 +1868,8 @@ Tag ref:
 	Attribute dur:
 		to be supplied
 	Attribute end:
+		to be supplied
+	Attribute endsync:
 		to be supplied
 	Attribute erase:
 		to be supplied
@@ -2288,6 +2306,8 @@ Tag set:
 		Implemented, common
 	Attribute end:
 		to be supplied
+	Attribute fill:
+		to be supplied
 	Attribute id:
 		Implemented, common
 	Attribute longdesc:
@@ -2449,6 +2469,8 @@ Tag text:
 		to be supplied
 	Attribute end:
 		to be supplied
+	Attribute endsync:
+		to be supplied
 	Attribute erase:
 		to be supplied
 	Attribute fill:
@@ -2589,6 +2611,8 @@ Tag textstream:
 	Attribute dur:
 		to be supplied
 	Attribute end:
+		to be supplied
+	Attribute endsync:
 		to be supplied
 	Attribute erase:
 		to be supplied
@@ -2831,6 +2855,8 @@ Tag video:
 	Attribute dur:
 		to be supplied
 	Attribute end:
+		to be supplied
+	Attribute endsync:
 		to be supplied
 	Attribute erase:
 		to be supplied
