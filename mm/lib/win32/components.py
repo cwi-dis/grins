@@ -57,6 +57,9 @@ class LightWeightControl:
 	def sendmessage_getrect(self,msg,wparam,lparam=0):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessageGetRect(self._hwnd,msg,wparam,lparam)	
+	def sendmessage_setrect(self, msg, wparam, rect):
+		if not self._hwnd: raise error, 'os control has not been created'
+		return Sdk.SendMessageGetRect(self._hwnd,msg,wparam,rect)	
 	def sendmessage_ms(self, msg, wparam, lparam):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessageMS(self._hwnd, msg, wparam, lparam)
@@ -614,6 +617,24 @@ class Tooltip(Control):
 		hwnd = self._parent.GetSafeHwnd()
 		Sdk.UpdateTipText(self._hwnd, hwnd, toolid, text, cp)
 
+	# removes a displayed tooltip window from view. 
+	def pop(self):
+		self.sendmessage(commctrl.TTM_POP, 0, 0)
+
+	# forces the current tool to be redrawn. 
+	def update(self):
+		self.sendmessage(commctrl.TTM_UPDATE, 0, 0)
+
+	# sets the top, left, bottom, and right margins for a tooltip window. 
+	# a margin is the distance, in pixels, between the tooltip window border 
+	# and the text contained within the tooltip window. 
+	def setmargin(self, rc):
+		self.sendmessage_setrect(commctrl.TTM_SETMARGIN, 0, rc)
+
+	# set the maximum width for a tooltip window. 
+	def setmaxtipwidth(self, w):
+		self.sendmessage(commctrl.TTM_SETMAXTIPWIDTH, 0, w)
+
 	def setdelay(self, which, msecs):
 		whichid = None
 		if which == 'autopop':
@@ -629,6 +650,9 @@ class Tooltip(Control):
 		r, g, b = color
 		self.sendmessage(commctrl.TTM_SETTIPTEXTCOLOR, win32api.RGB(r, g, b), 0)
 
+	def settipbgcolor(self, color):
+		r, g, b = color
+		self.sendmessage(commctrl.TTM_SETTIPBKCOLOR, win32api.RGB(r, g, b), 0)
 	
 ##############################
 # Base class for controls creation classes
