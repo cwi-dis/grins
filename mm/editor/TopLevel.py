@@ -1057,16 +1057,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			node = node.context.mapuid(node.SMILidmap[aid])
 		if dtype == A_DEST_PLAY:
 			top.player.show()
-			# WARNING
-			# for now, jump to the begin of document playfromanchor doesn't work
-			top.player.play()
-#			top.player.playfromanchor(node, aid)
+##			top.player.play()
+			top.player.playfromanchor(node, aid)
 		elif dtype == A_DEST_PAUSE:
 			top.player.show()
-			# WARNING
-			# for now, jump to the begin of document playfromanchor doesn't work			
-			top.player.play()
-#			top.player.playfromanchor(node, aid)
+##			top.player.play()
+			top.player.playfromanchor(node, aid)
 			top.player.pause(1)
 		else:
 			print 'jump to external: invalid destination state'

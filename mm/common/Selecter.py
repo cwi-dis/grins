@@ -256,7 +256,9 @@ class Selecter:
 			else:
 				gototime = seek_node.start_time
 			self.scheduler.settime(gototime)
-			self.root.sctx.gototime(self.root, gototime, timestamp)
+			self.scheduler.sctx_list[0].gototime(self.root, gototime, timestamp)
+
+##			self.root.sctx.gototime(self.root, gototime, timestamp)
 			self.scheduler.setpaused(0)
 			return 1	# succeeded
 		# XXX
@@ -286,7 +288,8 @@ class Selecter:
 			path.append(x)
 			x = x.GetSchedParent()
 		path.reverse()
-		self.root.sctx.gototime(self.root, gototime, timestamp, path)
+		self.scheduler.sctx_list[0].gototime(self.root, gototime, timestamp, path)
+##		self.root.sctx.gototime(self.root, gototime, timestamp, path)
 		self.scheduler.setpaused(0)
 		return 0
 
