@@ -28,7 +28,7 @@ def findfile(name):
 			import sys
 			cmifpath = [os.path.split(sys.executable)[0]]
 			try:
-				link = os.readline(sys.executable)
+				link = os.readlink(sys.executable)
 			except (os.error, AttributeError):
 				pass
 			else:
