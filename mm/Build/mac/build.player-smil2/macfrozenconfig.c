@@ -119,9 +119,6 @@ extern void initimgpgm();
 #ifndef initstrop
 extern void initstrop();
 #endif
-#ifndef initmac
-extern void initmac();
-#endif
 #ifndef init_TE
 extern void init_TE();
 #endif
@@ -154,6 +151,9 @@ extern void initimgppm();
 #endif
 #ifndef initmath
 extern void initmath();
+#endif
+#ifndef initmac
+extern void initmac();
 #endif
 #ifndef initerrno
 extern void initerrno();
@@ -236,7 +236,6 @@ struct _inittab _PyImport_Inittab[] = {
 	{"_Qt", init_Qt},
 	{"imgpgm", initimgpgm},
 	{"strop", initstrop},
-	{"mac", initmac},
 	{"_TE", init_TE},
 	{"imgcolormap", initimgcolormap},
 	{"imgsgi", initimgsgi},
@@ -248,6 +247,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"imageop", initimageop},
 	{"imgppm", initimgppm},
 	{"math", initmath},
+	{"mac", initmac},
 	{"errno", initerrno},
 	{"_App", init_App},
 	{"imgpbm", initimgpbm},
