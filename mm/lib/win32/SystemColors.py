@@ -58,3 +58,5 @@ def init_colors():
 	# initialize the reverse table	
 	for name, color in colors.items():
 		rcolors[color] = name
+
+init_colors()
