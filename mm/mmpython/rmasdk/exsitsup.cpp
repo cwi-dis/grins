@@ -44,6 +44,7 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer, void *hwnd,
     , m_WindowWasCreated(0)
 	, m_pWindowlessSite(NULL)
 	, m_windowless(wl)
+	, m_pPyVideoRenderer(NULL)
 {
     if (m_pUnkPlayer)
 		{
@@ -56,6 +57,7 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer, void *hwnd,
 		m_pUnkPlayer->AddRef();
 		}
     memset(&m_PNxWindow,0,sizeof(PNxWindow));
+	if(!m_windowless) {
 	if (hwnd != 0 &&
 #ifdef _UNIX
 		dpy != 0 &&
@@ -73,6 +75,7 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer, void *hwnd,
 	    m_PNxWindow.clipRect.top = y;
 	    m_PNxWindow.clipRect.right = x + w;
 	    m_PNxWindow.clipRect.bottom = y + h;
+		}
 	}
 }
 
@@ -88,7 +91,9 @@ ExampleSiteSupplier::~ExampleSiteSupplier()
     PN_RELEASE(m_pCCF);
     PN_RELEASE(m_pUnkPlayer);
     Py_XDECREF(pPythonWindow);
+	Py_XDECREF(m_pPyVideoRenderer);
     pPythonWindow = NULL;
+	m_pPyVideoRenderer = NULL;
 	}
 
 
@@ -127,6 +132,9 @@ ExampleSiteSupplier::SitesNeeded
 		if (PNR_OK != hres)goto exit;
 		hres = m_pWindowlessSite->QueryInterface(IID_IRMAValues,(void**)&pSiteProps);
 		if (PNR_OK != hres)goto exit;
+		m_pWindowlessSite->SetPyVideoRenderer(m_pPyVideoRenderer);
+		Py_XDECREF(m_pPyVideoRenderer);
+		m_pPyVideoRenderer = NULL;
 		}
 	else { // m_windowless
 	
