@@ -1479,6 +1479,7 @@ class EventCtrl(AttrCtrl):
 		self._eventstruct = n
 		self.enableApply()
 		self.update()
+		self._list.setcursel(len(self._value)-1) # select new list element
 
 	def OnDelete(self, id, code):
 		# callback for the "delete" button
@@ -1579,8 +1580,7 @@ class EventCtrl(AttrCtrl):
 			
 		i = self._eventstruct.get_event_index()
 		if i is not self._old_eventlist_selection:
-			if i:
-				self._eventwidget.setcursel(i)
+			self._eventwidget.setcursel(i)
 			self._old_eventlist_selection = i
 			
 	def set_textwidget(self):
@@ -1658,7 +1658,7 @@ class EventCtrl(AttrCtrl):
 			self.initevent()
 			self.dont_update = 0
 		else:
-			print "error: wierdly selected list member: ", i
+			print "error: weirdly selected list member: ", i
 
 ##	def _causewidgetcallback(self, id, code):
 ##		if not self._eventstruct:

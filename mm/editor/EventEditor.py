@@ -277,10 +277,11 @@ class EventStruct:
 		if self.get_node() == newnode:
 			return
 		if newnode is None:
-			# Find the first topLayout.
 			self._setnode = None
 			return
 		self._setnode = newnode
+		if not self.get_event():
+			self.set_event('begin')
 
 	def get_relative(self):
 		if not self.has_node():
