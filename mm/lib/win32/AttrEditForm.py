@@ -4195,7 +4195,12 @@ class AttrEditForm(GenFormView):
 		if hasattr(a.wrapper,'node'):
 			self._node = a.wrapper.node
  			if hasattr(a.wrapper, 'toplevel') and a.wrapper.toplevel:
-				self._channel =  a.wrapper.toplevel.root.context.channeldict[self.getchannel(self._node)]
+				try:
+					chname = self.getchannel(self._node)
+					if chname:
+						self._channel =  a.wrapper.toplevel.root.context.channeldict[chname]
+				except:
+					self._channel =  None
 		else:
  			self._node = None		
 	
