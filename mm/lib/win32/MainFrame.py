@@ -49,7 +49,8 @@ from sysmetrics import *
 import grinsRC
 
 import win32mu
-import usercmd,wndusercmd,usercmdui
+import usercmd, usercmdui, wndusercmd
+
 from components import *
 
 import win32menu, MenuTemplate
@@ -378,7 +379,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		if self._active_child and\
 			hasattr(self._active_child._view,'_commandlist') and\
 			self._active_child._view._commandlist:
-			self.PostMessage(win32con.WM_COMMAND,usercmdui.CLOSE_WINDOW_UI.id)
+			id=usercmdui.class2ui[usercmd.CLOSE_WINDOW]
+			self.PostMessage(win32con.WM_COMMAND,id)
 		else:
 			f.PostMessage(win32con.WM_CLOSE)
 	
@@ -812,10 +814,9 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	# Called by the framework when the user closes the window
 	def OnClose(self):
 		if len(__main__.toplevel._subwindows)>1:
-			self.PostMessage(win32con.WM_COMMAND,usercmdui.CLOSE_UI.id)
+			self.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CLOSE].id)
 		else:
-			#self.SendMessage(win32con.WM_COMMAND,usercmdui.CLOSE_UI.id)
-			self.PostMessage(win32con.WM_COMMAND,usercmdui.EXIT_UI.id)
+			self.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.EXIT].id)
 
 	# Bring to top of peers
 	def pop(self):
