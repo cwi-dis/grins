@@ -154,7 +154,10 @@ class MACDialog:
 	def hide(self):
 		"""Hide the dialog."""
 		self._window.hide()
-
+		
+	def rungrabbed(self):
+		self._window.rungrabbed()
+			
 	def settitle(self, title):
 		"""Set (change) the title of the window.
 
@@ -349,20 +352,7 @@ class SelectionDialog(DialogWindow):
 			self.close()
 		return 1
 		
-class _GrabbedDialog:
-	def __init__(self):
-		self.__done = 0
-		
-	def grabdone(self):
-		self.__done = 1
-
-	def rungrabbed(self):
-		mw_globals.toplevel.grab(self)
-		while not self.__done:
-			mw_globals.toplevel._eventloop(100)
-		mw_globals.toplevel.grab(None)
-			
-class SingleSelectionDialog(SelectionDialog, _GrabbedDialog):
+class SingleSelectionDialog(SelectionDialog):
 	def __init__(self, list, title, prompt):
 		# XXXX ignore title for now
 		self.__dict = {}
@@ -377,7 +367,6 @@ class SingleSelectionDialog(SelectionDialog, _GrabbedDialog):
 				k, v = item
 				self.__dict[k] = v
 				keylist.append(k)
-		_GrabbedDialog.__init__(self)
 		SelectionDialog.__init__(self, prompt, '', keylist, keylist[0], 
 				fixed=1, hascancel=hascancel)
 
@@ -445,12 +434,11 @@ class InputURLDialog(InputDialog):
 			return 1
 		return InputDialog.do_itemhit(self, item, event)
 
-class NewChannelDialog(DialogWindow, _GrabbedDialog):
+class NewChannelDialog(DialogWindow):
 	DIALOG_ID= ID_NEWCHANNEL_DIALOG
 	
 	def __init__(self, prompt, default, types, cb, cancelCallback = None):
 		# First create dialogwindow and set static items
-		_GrabbedDialog.__init__(self)
 		DialogWindow.__init__(self, self.DIALOG_ID, title=prompt,
 				default=ITEM_INPUT_OK, cancel=ITEM_INPUT_CANCEL)
 ##		# XXXX Use title here?
