@@ -75,6 +75,7 @@ MENUBAR=(
 		(ENTRY, 'Play node', None, PLAYNODE),
 		(ENTRY, 'Play from node', None, PLAYFROM),
 		(SEP,),
+		(DYNAMICCASCADE, 'User groups', USERGROUPS),
 		(DYNAMICCASCADE, 'Channel visibility', CHANNELS))),
 
 	(CASCADE, 'Tools', (
