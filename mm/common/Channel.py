@@ -582,7 +582,8 @@ class Channel:
 		if debug:
 			print 'Channel.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		self.do_play(node)
+		if self._is_shown:
+			self.do_play(node)
 		self.play_1()
 
 	def stopplay(self, node):
