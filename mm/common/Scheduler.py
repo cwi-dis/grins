@@ -295,6 +295,8 @@ class SchedulerContext:
 				self.scheduled_children = self.scheduled_children - 1
 ##			else:
 ##				node.parent.scheduled_children = node.parent.scheduled_children - 1
+		else:
+			node.scheduled_children = node.scheduled_children - 1
 		if debugevents: print 'trigger', `arc`, timestamp
 		if not arc.isstart:
 			if node.playing != MMStates.PLAYING:
@@ -749,6 +751,8 @@ class Scheduler(scheduler):
 						else:
 							# root node
 							sctx.scheduled_children = sctx.scheduled_children + 1
+					else:
+						arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
 					arc.timestamp = timestamp+arc.delay
 					arc.qid = self.enterabs(timestamp+arc.delay, 0, sctx.trigger, (arc,))
 				self.sched_arcs(sctx, arc.dstnode, dev, timestamp=timestamp+arc.delay)
@@ -795,7 +799,7 @@ class Scheduler(scheduler):
 ##				if arg.GetType() in interiortypes or \
 ##				   arg.realpix_body or arg.caption_body:
 ##					self.remove_terminate(sctx, arg)
-				arg.stopplay()
+				arg.freeze_play()
 				for ch in arg.children:
 					ch.reset()
 				if arg.fullduration is None:
@@ -856,6 +860,7 @@ class Scheduler(scheduler):
 		chan = self.ui.getchannelbynode(node)
 		node.set_armedmode(ARM_DONE)
 		chan.stopplay(node)
+		node.stopplay()
 
 	#
 	# Execute a TERMINATE SR.
@@ -863,6 +868,9 @@ class Scheduler(scheduler):
 	def do_terminate(self, sctx, node, timestamp):
 		if debugevents: print 'terminate',node,timestamp
 		node.terminate_play()
+		ev = (SR.SCHED_STOPPING, node)
+		if sctx.srdict.has_key(ev):
+			self.event(sctx, ev, timestamp)
 		return
 		if node.GetType() in interiortypes:
 			node.stoplooping()

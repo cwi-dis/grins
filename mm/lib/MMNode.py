@@ -950,9 +950,22 @@ class MMNode:
 	def stopplay(self):
 		self.playing = MMStates.PLAYED
 
+	def freeze_play(self):
+		if debug: print 'freeze_play',`self`
+		if self.playing == MMStates.PLAYING:
+			getchannelfunc = self.context.getchannelbynode
+			if self.type in leaftypes and getchannelfunc:
+				chan = getchannelfunc(self)
+				if chan:
+					if debug: print 'freeze',`self`
+					chan.freeze(self)
+			for c in self.children:
+				c.freeze_play()
+			self.playing = MMStates.FROZEN
+
 	def terminate_play(self):
 		if debug: print 'terminate_play',`self`
-		if self.playing != MMStates.PLAYING:
+		if self.playing in (MMStates.PLAYING, MMStates.FROZEN):
 			getchannelfunc = self.context.getchannelbynode
 			if self.type in leaftypes and getchannelfunc:
 				chan = getchannelfunc(self)
@@ -2295,9 +2308,6 @@ class MMNode:
 		#
 		# Trickery to handle dur and end correctly:
 		#
-		if duration is not None:
-			scheddone_events.append((SYNC_DONE, self_body))
-			terminate_actions.append((SYNC_DONE, self_body))
 		if scheddone_events and terminating_children:
 			# Terminating_children means we have a
 			# terminator attribute that points to a child.
