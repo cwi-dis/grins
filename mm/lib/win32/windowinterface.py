@@ -77,3 +77,6 @@ def beep():
 
 def lopristarting():
 	pass
+
+import win32api
+def RGB(c):return win32api.RGB(c[0],c[1],c[2])
