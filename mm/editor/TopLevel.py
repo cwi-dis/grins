@@ -35,6 +35,8 @@ from TopLevelDialog import TopLevelDialog
 
 Error = 'TopLevel.Error'
 
+hasLayoutView2 = None
+
 class TopLevel(TopLevelDialog, ViewDialog):
 	def __init__(self, main, url, new_file):
 		ViewDialog.__init__(self, 'toplevel_')
@@ -212,13 +214,19 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		import TransitionView
 		self.transitionview = TransitionView.TransitionView(self)
 
-		try:
-			import LayoutView2
-		except ImportError:
-			self.layoutview2 = None
+		global hasLayoutView2
+		if hasLayoutView2 is None or hasLayoutView2:
+			try:
+				import LayoutView2
+			except ImportError:
+				hasLayoutView2 = 0
+				self.layoutview2 = None
+			else:
+				hasLayoutView2 = 1
+				self.layoutview2 = LayoutView2.LayoutView2(self)
 		else:
-			self.layoutview2 = LayoutView2.LayoutView2(self)
-		
+			self.layoutview2 = None
+
 		if not features.lightweight:
 			import ChannelView
 			self.channelview = ChannelView.ChannelView(self)
