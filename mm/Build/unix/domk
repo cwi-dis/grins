@@ -327,6 +327,10 @@ no)	;;
 		-m imgsgi imggif imgpgm imgppm imgpbm imgtiff imgjpeg imgbmp \
 		imgxbm imgpng &&
 	cd frozen.$freeze.$ARCH &&
+	sed -n 's/^\(M_[^:]*\): \(.*\)/\1\
+\2/p' Makefile | sort -u > /usr/tmp/domk.$$.1 &&
+	ls -1 M_* | comm -13 /usr/tmp/domk.$$.1 - | xargs rm -f &&
+	rm -f /usr/tmp/domk.$$.1 &&
 	make CHAMELEON=$CHAMELEON
 	;;
 esac
