@@ -1007,9 +1007,10 @@ class KeyTimesSlider(window.Wnd):
 
 	def OnReleaseCapture(self, std, extra):
 		pos = self.GetPos()
-		print 0.01*pos, ' dur'
+		if self._listener:
+			self._listener.onCursorPosChanged(0.01*pos)
 
-	def setTime(self, t):
+	def setCursorPos(self, t):
 		self.SetPos(int(t*100+0.5))
 
 	def setKeyTimes(self, keyTimes, data=None):
@@ -1066,8 +1067,10 @@ class KeyTimesSlider(window.Wnd):
 		if self._dragging:
 			self._dragging = None
 			self._parent.ReleaseCapture()
+			if self._listener:
+				self._listener.onKeyTimeChanged(self._selected, self._keyTimes[self._selected])
 
-	def select(self, index):
+	def selectKeyTime(self, index):
 		self._selected = index
 		self.updateKeyTimes()
 
@@ -1084,7 +1087,7 @@ class KeyTimesSlider(window.Wnd):
 				v = self._keyTimes[n+1] - self.DELTA
 			self._keyTimes[self._selected] = v
 			self.updateKeyTimes()
-
+			
 	def onActivate(self, point, flags):
 		if not self.insideKeyTimes(point):
 			return
