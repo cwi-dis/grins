@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Hyperlink management module
 
 # An 'Hlinks' instance maintains a list of hyperlinks.
