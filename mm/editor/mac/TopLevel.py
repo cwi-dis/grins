@@ -9,12 +9,11 @@ from EditMgr import EditMgr
 import Timing
 from ViewDialog import ViewDialog
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
+import UserCmd
+import EasyDialogs
 
 # an empty document
 EMPTY = "(seq '1' ((channellist) (hyperlinks)))"
-
-# List of currently open toplevel windows
-opentops = []
 
 class TopLevel(ViewDialog):
 	def __init__(self, main, filename, new_file):
@@ -55,9 +54,8 @@ class TopLevel(ViewDialog):
 		self.filename = url
 		self.main = main
 		self.read_it()
+		self.show()	# Added by Jack so the views come up in the right group
 		self.makeviews()
-		self.window = None
-		opentops.append(self)
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
@@ -66,29 +64,33 @@ class TopLevel(ViewDialog):
 		if self.showing:
 			return
 		self.load_geometry()
-		buttons = [('Play', (self.play_callback, ())),
-			   # The numbers below correspond with the
-			   # positions in the `self.views' list (see
-			   # `makeviews' below).
-			   ('Player', (self.view_callback, (0,)), 't'),
-			   ('Hierarchy view', (self.view_callback, (1,)), 't'),
-			   ('Channel view', (self.view_callback, (2,)), 't'),
-			   ('Hyperlinks', (self.view_callback, (3,)), 't'),
-			   None,
-			   ('Open...', (self.open_callback, ())),
-			   ('Save', (self.save_callback, ())),
-			   ('Save for Player', (self.save_player_callback, ())),
-			   ('Save as...', (self.saveas_callback, ())),
-			   ('Restore', (self.restore_callback, ())),
-			   ('Close', (self.close_callback, ())),
-			   None,
-			   ('Debug', (self.debug_callback, ())),
-			   ('Trace', (self.trace_callback, ()), 't')]
-		if hasattr(self.root, 'source') and \
-		   hasattr(windowinterface, 'TextEdit'):
-			buttons.insert(5, ('View Source...', (self.source_callback, ())))
-		self.buttons = windowinterface.MainDialog(
-			buttons,
+		buttons = [
+			(UserCmd.PLAY, (self.play_callback, ())),
+			# The numbers below correspond with the
+			# positions in the `self.views' list (see
+			# `makeviews' below).
+			(UserCmd.PLAYERVIEW, (self.view_callback, (0,))),
+			(UserCmd.HIERARCHYVIEW, (self.view_callback, (1,))),
+			(UserCmd.CHANNELVIEW, (self.view_callback, (2,))),
+			(UserCmd.LINKVIEW, (self.view_callback, (3,)))]
+##		if hasattr(self.root, 'source') and \
+##		   hasattr(windowinterface, 'TextEdit'):
+##			buttons = buttons + [
+##			(5, (UserCmd.SOURCEVIEW, (self.source_callback, ())))]
+		buttons = buttons + [
+##			None,
+##			(UserCmd.OPEN_FILE, (self.open_callback, ())),
+			(UserCmd.SAVE, (self.save_callback, ())),
+##			(UserCmd.SAVE_FOR_PLAYER, (self.save_player_callback, ())),
+			(UserCmd.SAVE_AS, (self.saveas_callback, ())),
+			(UserCmd.RESTORE, (self.restore_callback, ())),
+			(UserCmd.CLOSE, (self.close_callback, ())),
+##			None,
+##			(UserCmd.DEBUG, (self.debug_callback, ())),
+##			(UserCmd.TRACE, (self.trace_callback, ()))
+		]
+		self.buttons = self.window = windowinterface.MainDialog(
+			buttons, title=self.basename,
 			grab = 0, vertical = 1)
 ##		self.makemenu()
 		self.source = None
@@ -104,8 +106,9 @@ class TopLevel(ViewDialog):
 		if not self.showing:
 			return
 		self.hideviews()
-##		self.window.close()
-##		self.window = None
+		self.window.close()
+		self.window = None
+		self.buttons = None
 		self.showing = 0
 
 	def showstate(self, view, showing):
@@ -115,9 +118,10 @@ class TopLevel(ViewDialog):
 
 	def destroy(self):
 		self.destroyviews()
-##		if self.window:
-##			self.window.close()
-##			self.window = None
+		if self.window:
+			self.window.close()
+			self.window = None
+		self.buttons = None
 		self.showing = 0
 		self.root.Destroy()
 		import Clipboard
@@ -128,8 +132,8 @@ class TopLevel(ViewDialog):
 		for v in self.views:
 			v.toplevel = None
 		self.views = []
-		if self in opentops:
-			opentops.remove(self)
+		if self in self.main.tops:
+			self.main.tops.remove(self)
 
 	def timer_callback(self):
 		self._last_timer_id = None
@@ -477,21 +481,16 @@ class TopLevel(ViewDialog):
 		ok = self.close_ok()
 		if ok:
 			self.destroy()
-			if len(opentops) == 0:
-				raise SystemExit, 0
 
 	def close_ok(self):
 		if not self.changed:
 			return 1
 		prompt = 'You haven\'t saved your changes yet;\n' + \
 			 'do you want to save them before closing?'
-		b1 = 'Save'
-		b2 = "Don't save"
-		b3 = 'Cancel'
-		reply = windowinterface.multchoice(prompt, [b1, b2, b3], -1)
-		if reply == 2:
+		reply = EasyDialogs.AskYesNoCancel(prompt)
+		if reply < 0:
 			return 0
-		if reply == 1:
+		if reply == 0:
 			return 1
 		utype, url = MMurl.splittype(self.filename)
 		host, url = MMurl.splithost(url)
@@ -579,7 +578,7 @@ class TopLevel(ViewDialog):
 			url = '//%s%s' % (host, url)
 		if utype:
 			url = '%s:%s' % (utype, url)
-		for top in opentops:
+		for top in self.main.tops:
 			if top is not self and top.is_document(url):
 				break
 		else:
@@ -637,7 +636,7 @@ class TopLevel(ViewDialog):
 
 	def getallexternalanchors(self):
 		rv = []
-		for top in opentops:
+		for top in self.main.tops:
 			if top is not self:
 				rv = rv + top._getlocalexternalanchors()
 		return rv
@@ -646,5 +645,6 @@ class TopLevel(ViewDialog):
 	# Geometry support.
 	#
 	def get_geometry(self):
-		if self.showing:
-			self.last_geometry = self.window.getgeometry()
+##		if self.showing:
+##			self.last_geometry = self.window.getgeometry()
+		pass
