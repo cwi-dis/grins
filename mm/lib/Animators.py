@@ -1748,14 +1748,17 @@ class AnimateElementParser:
 			return []
 		sl = string.split(keySplines,';')
 		
-		# len of keySplines must be equal to num of intervals (=len(keyTimes)-1)
-		tt = self.__getInterpolationKeyTimes()
-		if tt and len(sl) != len(tt)-1:
-			print 'intervals vs splines mismatch'
-			return []
-		if not tt and len(sl) != 1:
-			print 'intervals vs splines mismatch'
-			return []
+		# there must be one fewer sets of control points 
+		# the keySplines attribute than there are keyTimes.
+		# This semantic (the duration is divided into n-1 even periods) 
+		# applies as well when the keySplines attribute is specified, but keyTimes is not 
+		keyTimes = self.getKeyTimes()
+		if keyTimes:
+			tl = string.split(keyTimes,';')
+			if len(sl) != len(tl)-1:
+				print 'intervals vs splines mismatch'
+				return []
+
 		rl = []
 		for e in sl:
 			vl = self.__split(e)
