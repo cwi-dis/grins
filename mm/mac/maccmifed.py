@@ -6,15 +6,13 @@ __version__ = "$Id$"
 
 # First, immedeately disable the console window
 import sys
-#if len(sys.argv) > 1 and sys.argv[1] == '-v':
-#	del sys.argv[1]
-#	print '** Verbose **'
-#	quietconsole=None
-#else:
-#	import quietconsole
-#	quietconsole.install()
-quietconsole=None
-
+if len(sys.argv) > 1 and sys.argv[1] == '-v':
+	del sys.argv[1]
+	print '** Verbose **'
+	quietconsole=None
+else:
+	import quietconsole
+	quietconsole.install()
 
 ID_SPLASH_DIALOG=513
 # XXXX Debugging code: assure the resource file is available
@@ -44,6 +42,70 @@ except ImportError:
 else:
 	STANDALONE=1
 	
+#
+# Mangle sys.path. Here are the directives for macfreeze:
+#
+# macfreeze: path :
+# macfreeze: path ::editor:mac
+# macfreeze: path ::editor
+# macfreeze: path ::common
+# macfreeze: path ::lib
+# macfreeze: path ::pylib
+# macfreeze: path ::pylib:audio
+#
+# and some modules we don't want:
+# macfreeze: exclude X_window
+# macfreeze: exclude X_windowbase
+# macfreeze: exclude GL_window
+# macfreeze: exclude GL_windowbase
+# macfreeze: exclude WIN32_window
+# macfreeze: exclude WIN32_windowbase
+# macfreeze: exclude fastimp
+# macfreeze: exclude fm
+# macfreeze: exclude gl
+# macfreeze: exclude Xlib
+# macfreeze: exclude Xt
+# macfreeze: exclude Xm
+# macfreeze: exclude Xtdefs
+# macfreeze: exclude glXconst
+# macfreeze: exclude mv
+# macfreeze: exclude SOCKS
+# macfreeze: exclude signal
+# macfreeze: exclude mm
+# macfreeze: exclude thread
+# macfreeze: exclude SUNAUDIODEV
+# macfreeze: exclude Xcursorfont
+# macfreeze: exclude FCNTL
+# macfreeze: exclude sunaudiodev
+# macfreeze: exclude X
+# macfreeze: exclude newdir
+# macfreeze: exclude glX
+# macfreeze: exclude dummy_window
+# macfreeze: exclude mpegex
+# macfreeze: exclude al
+# macfreeze: exclude imageex
+# macfreeze: exclude Xmd
+# macfreeze: exclude VFile
+# macfreeze: exclude NTVideoDuration
+# macfreeze: exclude MpegDuration
+# macfreeze: exclude fcntl
+# macfreeze: exclude MovieChannel
+# macfreeze: exclude MpegChannel
+# macfreeze: exclude MidiChannel
+# macfreeze: exclude VcrChannel
+# macfreeze: exclude NTVideoChannel
+# macfreeze: exclude MPEGVideoChannel
+# macfreeze: exclude audiohcom
+# macfreeze: exclude audio8svx
+# macfreeze: exclude audiosdnr
+# macfreeze: exclude audiosndt
+# macfreeze: exclude audiosndr
+# macfreeze: exclude audiovoc
+# macfreeze: exclude imgpng
+
+
+#
+# And here's the code for non-standalone version of the editor:
 
 if not STANDALONE:
 	# For now:
