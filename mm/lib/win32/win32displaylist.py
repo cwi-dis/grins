@@ -301,7 +301,8 @@ class _DisplayList:
 				return
 			dc.FillSolidRect(entry[2],RGB(entry[1]))
 		elif cmd == 'stipplebox':
-			if not self._overlap(region, entry[2]):
+			l, t, r, b = entry[2]
+			if not self._overlap(region, (l,t, r-l, b-t)):
 				return
 			brush = entry[1]
 			rect = entry[2]
@@ -317,8 +318,10 @@ class _DisplayList:
 			if 1: # begin trick for more dense grid pattern 
 				brush.UnrealizeObject()
 				dc.SetBrushOrg(((x + 4) % 8, y % 8))
+				dc.SelectObject(brush)
 				dc.Rectangle(rect)
 				# end_trick
+			oldbrush.UnrealizeObject()
 			dc.SetBrushOrg(oldorg)
 			dc.SelectObject(oldbrush)
 			dc.SelectObject(oldpen)
@@ -697,8 +700,12 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates, units=units)
-		brush = win32ui.CreateBrush(win32con.BS_HATCHED, 
-			RGB(self._convert_color(color)), win32con.HS_DIAGCROSS)
+		try:
+			brush = win32ui.CreateBrush(win32con.BS_HATCHED, 
+				RGB(self._convert_color(color)), win32con.HS_DIAGCROSS)
+		except win32ui.error, arg:
+			print arg
+			return
 		self._list.append(('stipplebox', brush,
 				   (x, y, x+w, y+h)))
 		self._optimize((1,))
