@@ -285,7 +285,7 @@ def getsrc(writer, node):
 			if writer.copycache.has_key(nurl):
 				nfile = writer.copycache[nurl]
 			else:
-				nfile = writer.copyfile(nurl)
+				nfile = writer.copyfile(nurl, attrs)
 				writer.copycache[nurl] = nfile
 			attrs['file'] = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(nfile))
 		rp.tags = ntags
