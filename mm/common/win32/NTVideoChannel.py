@@ -1,12 +1,12 @@
 from Channel import ChannelWindow, MPEG, error
 import urllib, MMurl
-import mpegex, win32con
+import time, win32con
 import win32ui, mmsystem
 from MMExc import *			# exceptions
 from AnchorDefs import *
 import string
 import MMAttrdefs
-import timerex2, time
+from win32modules import timerex2, mpegex
 
 debug = 1
 
