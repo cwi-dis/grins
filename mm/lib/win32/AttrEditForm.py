@@ -320,13 +320,12 @@ class AttrEditForm(docview.ListView):
 		header_list=[("Property",l[0]),("Current Value",l[1]),("Default",l[2]),("Explanation",l[3]),]
 		self.InsertListHeader(header_list)
 		self.FillAttrList()
-
+		
 		self.selecteditem=None
 		self._dlgBar=None
 		self._attr_type=None
 		self.SetStdDlgBar()
 		self.GetParent().HookNotify(self.OnNotifyItemChanged,commctrl.LVN_ITEMCHANGED)
-		self.SelectItem(0)
 
 		# use tab to set focus
 		self.HookKeyStroke(self.onTabKey,9)    #tab
@@ -335,6 +334,9 @@ class AttrEditForm(docview.ListView):
 		
 		# resize 
 		self.GetParent().HookMessage(self.onSize,win32con.WM_SIZE)
+
+		# select first element
+		# self.SelectItem(0)
 
 	# Response to a list control selection change
 	def OnNotifyItemChanged(self,nm, nmrest):
@@ -457,21 +459,10 @@ class AttrEditForm(docview.ListView):
 		self.SetItemText(i,3,hd[2])
 
 	# Set the selction on the list control to the index	
-	#   SetItem args:
-	#	@pyparm int|item||The item number.
-	#	@pyparm int|subItem||The sub-item number.
-	#	@pyparm int|state||The items state.
-	#	@pyparm int|stateMask||A mask indicating which of the state bits are valid..
-	#	@pyparm string|text||The text for the item
-	#	@pyparm int|iImage||The image offset for the item
-	#	@pyparm int|userObject||Any integer to be associated with the item.				
 	def SelectItem(self,nItem=0):
-		#args: nItem,nSubItem,nMask,szItem,nImage,nState,nStateMask,lParam
-		nSubItem=nImage=lParam=0;szItem=''
 		nMask=commctrl.LVIF_STATE
-		nState=nStateMask=commctrl.LVIS_SELECTED|commctrl.LVIS_FOCUSED
-		self.SetItem((nItem,nSubItem,nState,nMask,szItem,nImage,lParam))
-		#self.SetItem(nItem,nSubItem,nMask,szItem,nImage,nState,nStateMask,lParam)
+		nState=commctrl.LVIS_SELECTED | commctrl.LVIS_FOCUSED
+		(self.GetListCtrl()).SetItemState(nItem,nState,nMask)
 
 	# Response to WM_SIZE
 	def onSize(self,params):
