@@ -112,6 +112,7 @@ else:
 # macfreeze: exclude TERMIOS
 # macfreeze: exclude cmifex
 # macfreeze: exclude readline
+# macfreeze: exclude CORBA.services
 # XXXX it should optionally do this: macfreeze: exclude staticlicense
 #
 # And here's the code for non-standalone version of the editor:
