@@ -64,6 +64,8 @@ seterror(const char *funcname, HRESULT hr)
 	LocalFree(pszmsg);
 }
 
+void seterror(const char *msg){PyErr_SetString(ErrorObject, msg);}
+
 
 /* Declarations for objects of type GraphBuilder */
 
@@ -296,7 +298,7 @@ newWMConverterObject()
 typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
-	IUnknown* pUk;
+	IUnknown* pI;
 } UnknownObject;
 
 staticforward PyTypeObject UnknownType;
@@ -309,7 +311,7 @@ newUnknownObject()
 	self = PyObject_NEW(UnknownObject, &UnknownType);
 	if (self == NULL)
 		return NULL;
-	self->pUk = NULL;
+	self->pI = NULL;
 	/* XXXX Add your own initializers here */
 	return self;
 }
@@ -357,6 +359,7 @@ newEnumFiltersObject()
 	/* XXXX Add your own initializers here */
 	return self;
 }
+
 
 
 //////////////////
@@ -441,6 +444,34 @@ newDirectDrawStreamSampleObject()
 		return NULL;
 	self->pI = NULL;
 	/* XXXX Add your own initializers here */
+	return self;
+}
+
+
+typedef struct {
+	PyObject_HEAD
+	LONGLONG ob_ival;
+} LargeIntObject;
+
+staticforward PyTypeObject LargeIntType;
+
+static LargeIntObject *
+newLargeIntObject(LONG HighPart,DWORD LowPart)
+{
+	LargeIntObject *self = PyObject_NEW(LargeIntObject, &LargeIntType);
+	if (self == NULL)return NULL;
+	LARGE_INTEGER li;
+	li.HighPart = HighPart;		
+	li.LowPart = LowPart;
+	self->ob_ival=li.QuadPart;
+	return self;
+}
+static LargeIntObject *
+newLargeIntObject(LONGLONG val)
+{
+	LargeIntObject *self = PyObject_NEW(LargeIntObject, &LargeIntType);
+	if (self == NULL)return NULL;
+	self->ob_ival=val;
 	return self;
 }
 
@@ -1829,7 +1860,7 @@ RealConverter_SetInterface(RealConverterObject *self, PyObject *args)
 	WCHAR wsz[MAX_PATH];
 	MultiByteToWideChar(CP_ACP,0,hint,-1,wsz,MAX_PATH);
 	Py_BEGIN_ALLOW_THREADS
-	self->pRealConverter->SetInterface(obj->pUk,wsz);
+	self->pRealConverter->SetInterface(obj->pI,wsz);
 	Py_END_ALLOW_THREADS
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -1901,7 +1932,7 @@ WMConverter_SetWMWriter(WMConverterObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "O",&obj))
 		return NULL;
 	Py_BEGIN_ALLOW_THREADS
-	self->pWMConverter->SetWMWriter(obj->pUk);
+	self->pWMConverter->SetWMWriter(obj->pI);
 	Py_END_ALLOW_THREADS
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -1918,7 +1949,7 @@ WMConverter_SetAudioInputProps(WMConverterObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "iO",&dwInputNum,&obj))
 		return NULL;
 	Py_BEGIN_ALLOW_THREADS
-	self->pWMConverter->SetAudioInputProps(dwInputNum, obj->pUk);
+	self->pWMConverter->SetAudioInputProps(dwInputNum, obj->pI);
 	Py_END_ALLOW_THREADS
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -1935,7 +1966,7 @@ WMConverter_SetVideoInputProps(WMConverterObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "iO",&dwInputNum,&obj))
 		return NULL;
 	Py_BEGIN_ALLOW_THREADS
-	self->pWMConverter->SetVideoInputProps(dwInputNum, obj->pUk);
+	self->pWMConverter->SetVideoInputProps(dwInputNum, obj->pI);
 	Py_END_ALLOW_THREADS
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -2007,7 +2038,7 @@ static void
 Unknown_dealloc(UnknownObject *self)
 {
 	/* XXXX Add your own cleanup code here */
-	RELEASE(self->pUk);
+	RELEASE(self->pI);
 	PyMem_DEL(self);
 }
 
@@ -2229,38 +2260,49 @@ static char MultiMediaStream_Initialize__doc__[] =
 static PyObject *
 MultiMediaStream_Initialize(MultiMediaStreamObject *self, PyObject *args)
 {
-	HRESULT hr;
-	if (!PyArg_ParseTuple(args, ""))
+	GraphBuilderObject *obj=NULL;
+	if (!PyArg_ParseTuple(args, "|O!",&GraphBuilderType,&obj))
 		return NULL;
-	IGraphBuilder* pGraphBuilder=NULL;
-	hr = self->pI->Initialize(STREAMTYPE_READ,0,pGraphBuilder);
+	IGraphBuilder* pGraphBuilder=obj?obj->pGraphBuilder:NULL;
+	HRESULT hr = self->pI->Initialize(STREAMTYPE_READ,0,pGraphBuilder);
 	if (FAILED(hr)) {
-		seterror("Initialize", hr);
+		seterror("MultiMediaStream_Initialize", hr);
 		return NULL;
 	}
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
-
-static char MultiMediaStream_AddMediaStream__doc__[] =
+static char MultiMediaStream_AddPrimaryVideoMediaStream__doc__[] =
 ""
 ;
-
 static PyObject *
-MultiMediaStream_AddMediaStream(MultiMediaStreamObject *self, PyObject *args)
+MultiMediaStream_AddPrimaryVideoMediaStream(MultiMediaStreamObject *self, PyObject *args)
 {
-	HRESULT hr;
-	if (!PyArg_ParseTuple(args, ""))
+	UnknownObject *streamObject=NULL;
+	if (!PyArg_ParseTuple(args, "|O",&streamObject))
 		return NULL;
-	hr = self->pI->AddMediaStream(NULL,&MSPID_PrimaryVideo,0,NULL);
+	IUnknown *pI=streamObject?streamObject->pI:NULL;
+	HRESULT hr = self->pI->AddMediaStream(pI,&MSPID_PrimaryVideo,0,NULL);
 	if (FAILED(hr)) {
-		seterror("AddMediaStream", hr);
+		seterror("MultiMediaStream_AddPrimaryVideoMediaStream", hr);
 		return NULL;
 	}
-	hr = self->pI->AddMediaStream(NULL,&MSPID_PrimaryAudio,AMMSF_ADDDEFAULTRENDERER,NULL);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char MultiMediaStream_AddPrimaryAudioMediaStream__doc__[] =
+""
+;
+static PyObject *
+MultiMediaStream_AddPrimaryAudioMediaStream(MultiMediaStreamObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	HRESULT hr = self->pI->AddMediaStream(NULL,&MSPID_PrimaryAudio,AMMSF_ADDDEFAULTRENDERER,NULL);
 	if (FAILED(hr)) {
-		seterror("MultiMediaStream_AddMediaStream", hr);
+		seterror("MultiMediaStream_AddPrimaryAudioMediaStream", hr);
 		return NULL;
 	}
 	Py_INCREF(Py_None);
@@ -2306,54 +2348,106 @@ MultiMediaStream_Render(MultiMediaStreamObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char MultiMediaStream_GetPrimaryVideoMediaStream__doc__[] =
+""
+;
+static PyObject *
+MultiMediaStream_GetPrimaryVideoMediaStream(MultiMediaStreamObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	MediaStreamObject *obj = newMediaStreamObject();
+	HRESULT hr = self->pI->GetMediaStream(MSPID_PrimaryVideo,&obj->pI);
+	if (FAILED(hr)) {
+		Py_DECREF(obj);
+		seterror("MultiMediaStream_GetPrimaryVideoMediaStream", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
+static char MultiMediaStream_SetState__doc__[] =
+""
+;
+static PyObject *
+MultiMediaStream_SetState(MultiMediaStreamObject *self, PyObject *args)
+{
+	int state;
+	if (!PyArg_ParseTuple(args, "i", &state))
+		return NULL;
+	HRESULT hr = self->pI->SetState(state?STREAMSTATE_RUN:STREAMSTATE_STOP);
+	if (FAILED(hr)) {
+		seterror("MultiMediaStream_SetState", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char MultiMediaStream_GetState__doc__[] =
+""
+;
+static PyObject *
+MultiMediaStream_GetState(MultiMediaStreamObject *self, PyObject *args)
+{
+	int state;
+	if (!PyArg_ParseTuple(args, "i", &state))
+		return NULL;
+	STREAM_STATE currentState;
+	HRESULT hr = self->pI->GetState(&currentState);
+	if (FAILED(hr)) {
+		seterror("MultiMediaStream_GetState", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i",currentState);
+}
+
 static char MultiMediaStream_GetDuration__doc__[] =
 ""
 ;
 static PyObject *
 MultiMediaStream_GetDuration(MultiMediaStreamObject *self, PyObject *args)
 {
-	HRESULT hr;
-	STREAM_TIME duration;
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	hr = self->pI->GetDuration(&duration);
+	STREAM_TIME duration;
+	HRESULT hr = self->pI->GetDuration(&duration);
 	if (FAILED(hr)) {
 		seterror("MultiMediaStream_GetDuration", hr);
 		return NULL;
 	}
-	return PyInt_FromLong((long) duration);
+	return (PyObject*)newLargeIntObject(duration);	
 }
 
-
-static char MultiMediaStream_GetMediaStream__doc__[] =
+static char MultiMediaStream_Seek__doc__[] =
 ""
 ;
-
 static PyObject *
-MultiMediaStream_GetMediaStream(MultiMediaStreamObject *self, PyObject *args)
+MultiMediaStream_Seek(MultiMediaStreamObject *self, PyObject *args)
 {
-	if (!PyArg_ParseTuple(args, ""))
+	LargeIntObject *liobj;
+	if (!PyArg_ParseTuple(args,"O",&liobj))
 		return NULL;
-	IMediaStream *pPrimaryVidStream;
-	HRESULT hr = self->pI->GetMediaStream(MSPID_PrimaryVideo,&pPrimaryVidStream);
+	HRESULT hr = self->pI->Seek(liobj->ob_ival);
 	if (FAILED(hr)) {
-		seterror("MultiMediaStream_GetMediaStream", hr);
+		seterror("MultiMediaStream_Seek", hr);
 		return NULL;
 	}
-	IDirectDrawMediaStream *pDDStream;
-	hr=pPrimaryVidStream->QueryInterface(IID_IDirectDrawMediaStream,(void**)&pDDStream);
-	pPrimaryVidStream->Release();
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
 static struct PyMethodDef MultiMediaStream_methods[] = {
 	{"Initialize", (PyCFunction)MultiMediaStream_Initialize, METH_VARARGS, MultiMediaStream_Initialize__doc__},
-	{"AddMediaStream", (PyCFunction)MultiMediaStream_AddMediaStream, METH_VARARGS, MultiMediaStream_AddMediaStream__doc__},
+	{"AddPrimaryVideoMediaStream", (PyCFunction)MultiMediaStream_AddPrimaryVideoMediaStream, METH_VARARGS, MultiMediaStream_AddPrimaryVideoMediaStream__doc__},
+	{"AddPrimaryAudioMediaStream", (PyCFunction)MultiMediaStream_AddPrimaryAudioMediaStream, METH_VARARGS, MultiMediaStream_AddPrimaryAudioMediaStream__doc__},
+	{"GetPrimaryVideoMediaStream", (PyCFunction)MultiMediaStream_GetPrimaryVideoMediaStream, METH_VARARGS, MultiMediaStream_GetPrimaryVideoMediaStream__doc__},
 	{"OpenFile", (PyCFunction)MultiMediaStream_OpenFile, METH_VARARGS, MultiMediaStream_OpenFile__doc__},
 	{"Render", (PyCFunction)MultiMediaStream_Render, METH_VARARGS, MultiMediaStream_Render__doc__},
+	{"SetState", (PyCFunction)MultiMediaStream_SetState, METH_VARARGS, MultiMediaStream_SetState__doc__},
+	{"GetState", (PyCFunction)MultiMediaStream_GetState, METH_VARARGS, MultiMediaStream_GetState__doc__},
 	{"GetDuration", (PyCFunction)MultiMediaStream_GetDuration, METH_VARARGS, MultiMediaStream_GetDuration__doc__},
-	{"GetMediaStream", (PyCFunction)MultiMediaStream_GetMediaStream, METH_VARARGS, MultiMediaStream_GetMediaStream__doc__},
+	{"Seek", (PyCFunction)MultiMediaStream_Seek, METH_VARARGS, MultiMediaStream_Seek__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}
 };
 
@@ -2409,22 +2503,27 @@ static PyTypeObject MultiMediaStreamType = {
 /////////////////////////////////////////////
 // MediaStream object
 
-static char MediaStream_Ping__doc__[] =
+static char MediaStream_QueryIDirectDrawMediaStream__doc__[] =
 ""
 ;
-
 static PyObject *
-MediaStream_Ping(MediaStreamObject *self, PyObject *args)
+MediaStream_QueryIDirectDrawMediaStream(MediaStreamObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	Py_INCREF(Py_None);
-	return Py_None;
+	DirectDrawMediaStreamObject *obj = newDirectDrawMediaStreamObject();
+	HRESULT hr = self->pI->QueryInterface(IID_IDirectDrawMediaStream,(void**)&obj->pI);
+	if (FAILED(hr)) {
+		Py_DECREF(obj);
+		seterror("MediaStream_QueryIDirectDrawMediaStream", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
 }
 
 
 static struct PyMethodDef MediaStream_methods[] = {
-	{"Ping", (PyCFunction)MediaStream_Ping, METH_VARARGS, MediaStream_Ping__doc__},
+	{"QueryIDirectDrawMediaStream", (PyCFunction)MediaStream_QueryIDirectDrawMediaStream, METH_VARARGS, MediaStream_QueryIDirectDrawMediaStream__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}
 };
 
@@ -2479,22 +2578,27 @@ static PyTypeObject MediaStreamType = {
 /////////////////////////////////////////////
 // DirectDrawMediaStream object
 
-static char DirectDrawMediaStream_Ping__doc__[] =
+static char DirectDrawMediaStream_CreateSample__doc__[] =
 ""
 ;
-
 static PyObject *
-DirectDrawMediaStream_Ping(DirectDrawMediaStreamObject *self, PyObject *args)
+DirectDrawMediaStream_CreateSample(DirectDrawMediaStreamObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	Py_INCREF(Py_None);
-	return Py_None;
+	DirectDrawStreamSampleObject *obj = newDirectDrawStreamSampleObject();
+	HRESULT hr = self->pI->CreateSample(NULL,NULL,0,&obj->pI);
+	if (FAILED(hr)) {
+		Py_DECREF(obj);
+		seterror("DirectDrawMediaStream_CreateSample", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
 }
 
 
 static struct PyMethodDef DirectDrawMediaStream_methods[] = {
-	{"Ping", (PyCFunction)DirectDrawMediaStream_Ping, METH_VARARGS, DirectDrawMediaStream_Ping__doc__},
+	{"CreateSample", (PyCFunction)DirectDrawMediaStream_CreateSample, METH_VARARGS, DirectDrawMediaStream_CreateSample__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}
 };
 
@@ -2549,22 +2653,29 @@ static PyTypeObject DirectDrawMediaStreamType = {
 /////////////////////////////////////////////
 // DirectDrawStreamSample object
 
-static char DirectDrawStreamSample_Ping__doc__[] =
+
+static char DirectDrawStreamSample_GetSurface__doc__[] =
 ""
 ;
-
 static PyObject *
-DirectDrawStreamSample_Ping(DirectDrawStreamSampleObject *self, PyObject *args)
+DirectDrawStreamSample_GetSurface(DirectDrawStreamSampleObject *self, PyObject *args)
 {
-	if (!PyArg_ParseTuple(args, ""))
+	UnknownObject *directDrawSurface;
+	if (!PyArg_ParseTuple(args, "O",&directDrawSurface))
 		return NULL;
-	Py_INCREF(Py_None);
-	return Py_None;
+	RECT rc; // sample's clipping rectangle
+	IDirectDrawSurface *pI = (IDirectDrawSurface *)(directDrawSurface->pI);
+	HRESULT hr = self->pI->GetSurface(&pI,&rc);
+	if (FAILED(hr)) {
+		seterror("DirectDrawStreamSample_GetSurface", hr);
+		return NULL;
+	}	
+	return Py_BuildValue("iiii",rc.left,rc.top,rc.right,rc.bottom);
 }
 
 
 static struct PyMethodDef DirectDrawStreamSample_methods[] = {
-	{"Ping", (PyCFunction)DirectDrawStreamSample_Ping, METH_VARARGS, DirectDrawStreamSample_Ping__doc__},
+	{"GetSurface", (PyCFunction)DirectDrawStreamSample_GetSurface, METH_VARARGS, DirectDrawStreamSample_GetSurface__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}
 };
 
@@ -2615,6 +2726,315 @@ static PyTypeObject DirectDrawStreamSampleType = {
 
 // End of code for DirectDrawStreamSample object 
 /////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////
+// LargeInt object 
+static char LargeInt_low__doc__[] =
+""
+;
+static PyObject *
+LargeInt_low(LargeIntObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,""))return NULL;
+	LARGE_INTEGER li;li.QuadPart = self->ob_ival;
+	return Py_BuildValue("l",li.LowPart);
+}
+
+static char LargeInt_high__doc__[] =
+""
+;
+static PyObject *
+LargeInt_high(LargeIntObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,""))return NULL;
+	LARGE_INTEGER li;li.QuadPart = self->ob_ival;
+	return Py_BuildValue("l",li.HighPart);
+}
+
+static struct PyMethodDef LargeInt_methods[] = {
+	{"low", (PyCFunction)LargeInt_low, METH_VARARGS, LargeInt_low__doc__},
+	{"high", (PyCFunction)LargeInt_high, METH_VARARGS, LargeInt_high__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+LargeInt_dealloc(LargeIntObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	PyMem_DEL(self);
+}
+
+static PyObject *
+LargeInt_getattr(LargeIntObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(LargeInt_methods, (PyObject *)self, name);
+}
+
+static int
+LargeInt_compare(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG i = v->ob_ival;
+	LONGLONG j = w->ob_ival;
+	return (i < j) ? -1 : (i > j) ? 1 : 0;
+}
+
+static int
+LargeInt_print(LargeIntObject *v, FILE *fp, int flags)
+{
+	fprintf(fp, "%I64d", v->ob_ival);
+	return 0;
+}
+
+static PyObject *
+LargeInt_repr(LargeIntObject *v)
+{
+	char buf[40];
+	sprintf(buf, "%I64d", v->ob_ival);
+	return PyString_FromString(buf);
+}
+
+static long
+LargeInt_hash(LargeIntObject *v)
+{
+	LARGE_INTEGER li;li.QuadPart = v -> ob_ival;
+	long x = li.LowPart;
+	if (x == -1)
+		x = -2;
+	return x;
+}
+
+static PyObject *
+LargeInt_add(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b, x;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	x = a + b;
+	return (PyObject*)newLargeIntObject(x);
+}
+
+static PyObject *
+LargeInt_sub(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b, x;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	x = a - b;
+	return (PyObject*)newLargeIntObject(x);
+}
+
+static PyObject *
+LargeInt_mul(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b, x;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	x = a * b;
+	return (PyObject*)newLargeIntObject(x);
+}
+
+static PyObject *
+LargeInt_div(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b, x;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	x = a / b;
+	return (PyObject*)newLargeIntObject(x);
+}
+
+static PyObject *
+LargeInt_mod(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b, x;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	x = a % b;
+	return (PyObject*)newLargeIntObject(x);
+}
+
+static PyObject *
+LargeInt_divmod(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b, x, y;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	x = a / b;
+	y = a % b;
+	LargeIntObject *d = newLargeIntObject(x);
+	LargeIntObject *m = newLargeIntObject(y);
+	PyObject *r = Py_BuildValue("(OO)", d, m);
+	Py_DECREF(d);Py_DECREF(m);
+	return r;
+}
+
+static PyObject *
+LargeInt_neg(LargeIntObject *v)
+{
+	return (PyObject*)newLargeIntObject(-v->ob_ival);
+}
+
+static PyObject *
+LargeInt_pos(LargeIntObject *v)
+{
+	Py_INCREF(v);
+	return (PyObject *)v;
+}
+
+static PyObject *
+LargeInt_abs(LargeIntObject *v)
+{
+	if (v->ob_ival >= 0)
+		return LargeInt_pos(v);
+	else
+		return LargeInt_neg(v);
+}
+
+static int
+LargeInt_nonzero(LargeIntObject *v)
+{
+	return v->ob_ival != 0;
+}
+
+static PyObject *
+LargeInt_invert(LargeIntObject *v)
+{
+	return (PyObject*)newLargeIntObject(~v->ob_ival);
+}
+
+static PyObject *
+LargeInt_lshift(LargeIntObject *v,PyIntObject *w)
+{
+	return (PyObject*)newLargeIntObject(v->ob_ival << w->ob_ival);
+}
+
+static PyObject *
+LargeInt_rshift(LargeIntObject *v,PyIntObject *w)
+{
+	return (PyObject*)newLargeIntObject(v->ob_ival >> w->ob_ival);
+}
+
+static PyObject *
+LargeInt_and(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	return (PyObject*)newLargeIntObject(a & b);
+}
+
+static PyObject *
+LargeInt_xor(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	return (PyObject*)newLargeIntObject(a ^ b);
+}
+
+static PyObject *
+LargeInt_or(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	return (PyObject*)newLargeIntObject(a | b);
+}
+
+static PyObject *
+LargeInt_int(LargeIntObject *v)
+{	
+	return Py_BuildValue("i",int(v->ob_ival));
+}
+
+static PyObject *
+LargeInt_long(LargeIntObject *v)
+{
+	return PyLong_FromLong(long(v->ob_ival));
+}
+
+static PyObject *
+LargeInt_float(LargeIntObject *v)
+{
+	return PyFloat_FromDouble(double(v -> ob_ival));
+}
+
+static PyObject *
+LargeInt_oct(LargeIntObject *v)
+{
+	char buf[100];
+	LONGLONG x = v -> ob_ival;
+	sprintf(buf, "O%I64o", x);
+	return PyString_FromString(buf);
+}
+
+static PyObject *
+LargeInt_hex(LargeIntObject *v)
+{
+	char buf[100];
+	LONGLONG x = v -> ob_ival;
+	sprintf(buf, "0x%I64x", x);
+	return PyString_FromString(buf);
+}
+
+static PyNumberMethods LargeInt_as_number = {
+	(binaryfunc)LargeInt_add, /*nb_add*/
+	(binaryfunc)LargeInt_sub, /*nb_subtract*/
+	(binaryfunc)LargeInt_mul, /*nb_multiply*/
+	(binaryfunc)LargeInt_div, /*nb_divide*/
+	(binaryfunc)LargeInt_mod, /*nb_remainder*/
+	(binaryfunc)LargeInt_divmod, /*nb_divmod*/
+	(ternaryfunc)0,//LargeInt_pow, /*nb_power*/
+	(unaryfunc)LargeInt_neg, /*nb_negative*/
+	(unaryfunc)LargeInt_pos, /*nb_positive*/
+	(unaryfunc)LargeInt_abs, /*nb_absolute*/
+	(inquiry)LargeInt_nonzero, /*nb_nonzero*/
+	(unaryfunc)LargeInt_invert, /*nb_invert*/
+	(binaryfunc)LargeInt_lshift, /*nb_lshift*/
+	(binaryfunc)LargeInt_rshift, /*nb_rshift*/
+	(binaryfunc)LargeInt_and, /*nb_and*/
+	(binaryfunc)LargeInt_xor, /*nb_xor*/
+	(binaryfunc)LargeInt_or, /*nb_or*/
+	0,		/*nb_coerce*/
+	(unaryfunc)LargeInt_int, /*nb_int*/
+	(unaryfunc)LargeInt_long, /*nb_long*/
+	(unaryfunc)LargeInt_float, /*nb_float*/
+	(unaryfunc)LargeInt_oct, /*nb_oct*/
+	(unaryfunc)LargeInt_hex, /*nb_hex*/
+};
+
+static char LargeIntType__doc__[] =
+""
+;
+
+static PyTypeObject LargeIntType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"LargeInt",			/*tp_name*/
+	sizeof(LargeIntObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)LargeInt_dealloc,	/*tp_dealloc*/
+	(printfunc)LargeInt_print,		/*tp_print*/
+	(getattrfunc)LargeInt_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)LargeInt_compare, /*tp_compare*/
+	(reprfunc)LargeInt_repr,		/*tp_repr*/
+	&LargeInt_as_number,/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)LargeInt_hash,/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	LargeIntType__doc__ /* Documentation string */
+};
+
+// End of code for LargeInt object 
+////////////////////////////////////////////
 
 
 ///////////////////////////////////////////
@@ -2788,6 +3208,42 @@ CreateMultiMediaStream(PyObject *self, PyObject *args)
 	return (PyObject *) obj;
 }
 
+static char large_int__doc__[] =
+""
+;
+static PyObject *
+large_int(PyObject *self, PyObject *args)
+{
+	char *psz;
+	LONGLONG ll;
+	if (!PyArg_ParseTuple(args,"s",&psz))
+		{
+		PyErr_Clear();
+		long hi,low;
+		if (!PyArg_ParseTuple(args,"ll",&hi,&low))
+			{
+			PyErr_Clear();
+			long lv=0;
+			if (!PyArg_ParseTuple(args,"l",&lv))
+				return NULL;
+			ll = (LONGLONG)lv;
+			}
+		else
+			{
+			LARGE_INTEGER li;li.HighPart=hi;li.LowPart=low;
+			ll = li.QuadPart;
+			}
+		}
+	else if(sscanf(psz,"%I64d",&ll)==EOF)
+		{
+		seterror("large_int_from_string failed");
+		return NULL;
+		}
+	LargeIntObject *obj = newLargeIntObject(ll);
+	if (obj == NULL)return NULL;
+	return (PyObject*)obj;
+}
+
 static char CoInitialize__doc__[] =
 ""
 ;
@@ -2818,6 +3274,7 @@ static struct PyMethodDef DShow_methods[] = {
 	{"CreateGraphBuilder", (PyCFunction)CreateGraphBuilder, METH_VARARGS, CreateGraphBuilder__doc__},
 	{"CreateFilter", (PyCFunction)CreateFilter, METH_VARARGS, CreateFilter__doc__},
 	{"CreateMultiMediaStream", (PyCFunction)CreateMultiMediaStream, METH_VARARGS, CreateMultiMediaStream__doc__},
+	{"large_int", (PyCFunction)large_int, METH_VARARGS, large_int__doc__},
 	{"CoInitialize", (PyCFunction)CoInitialize, METH_VARARGS, CoInitialize__doc__},
 	{"CoUninitialize", (PyCFunction)CoUninitialize, METH_VARARGS, CoUninitialize__doc__},
 
