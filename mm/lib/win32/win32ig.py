@@ -59,6 +59,13 @@ class ImageLib:
 		if img<0: return 10,10,8
 		return self.lib.image_dimensions_get(img)
 
+	def read(self, img, crop = None):
+		if crop is None:
+			data = self.lib.area_get(img)
+		else:
+			data = self.lib.area_get(img, crop)
+		return data
+
 	# Render image
 	def render(self,hdc,bgcolor,mask, img, 
 		src_x, src_y,dest_x, dest_y, width, height,rcKeep):
