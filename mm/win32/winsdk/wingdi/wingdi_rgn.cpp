@@ -6,13 +6,9 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 /*************************************************************************/
 
-#include "Python.h"
-
-#include <windows.h>
+#include "wingdi_rgn.h"
 
 #include "utils.h"
-
-#include "wingdi_rgn.h"
 
 struct PyRgn
 	{
@@ -116,6 +112,10 @@ PyObject* Wingdi_CombineRgn(PyObject *self, PyObject *args)
 	return (PyObject*)PyRgn::createInstance(hrgnDest);
 	}
 
+PyObject* CreatePyRgnFromHandle(HRGN hRgn)
+	{
+	return (PyObject*)PyRgn::createInstance(hRgn);
+	}
 ///////////////////////////////
 // module
 
