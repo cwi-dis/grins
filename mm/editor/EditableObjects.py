@@ -182,7 +182,7 @@ class EditableMMNode(MMNode.MMNode):
 		em = self.context.editmgr
 		if not em.transaction():
 			return
-		e = MMNode.MMSyncArc(self, 'begin', srcnode=othernode, event=event)
+		e = MMNode.MMSyncArc(self, 'begin', srcnode=othernode, event=event, delay=0)
 		em.addsyncarc(self, 'beginlist', e)
 		em.commit()
 

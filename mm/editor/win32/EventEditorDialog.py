@@ -45,7 +45,10 @@ class EventEditorDialog(win32dialog.ResDialog):
 		self._eventwidget.resetcontent()
 		l = self._eventstruct.get_possible_events()
 		if l:
+			#self._eventwidget.setreadonly(0) # combo boxes don't have readonly attributes.
 			map(self._eventwidget.addstring, l)
+		#else:
+			#self._eventwidget.setreadonly(1)
 		i = self._eventstruct.get_event_index()
 		if i:
 			self._eventwidget.setcursel(i)
@@ -56,9 +59,11 @@ class EventEditorDialog(win32dialog.ResDialog):
 	def set_textwidget(self):
 		name, string, isnumber, isreadonly = self._eventstruct.get_thing_string()
 		if isreadonly or string is None:
-			self._textwidget.setmodify(1)
+			print "DEBUG: readonly text widget."
+			self._textwidget.setreadonly(1)
 		else:
-			self._textwidget.setmodify(0)
+			print "DEBUG: readwrite text widget."
+			self._textwidget.setreadonly(0)
 		if string:
 			self._textwidget.settext(string)
 		else:
@@ -71,11 +76,11 @@ class EventEditorDialog(win32dialog.ResDialog):
 		# TODO:
 		r = self._eventstruct.get_offset()
 		if r:
-			self._offsetwidget.setmodify(1)
+			self._offsetwidget.setreadonly(0)
 			self._offsetwidget.settext(r)
 		else:
 			self._offsetwidget.settext("")
-			self._offsetwidget.setmodify(0)
+			self._offsetwidget.setreadonly(1)
 
 	def _causewidgetcallback(self, id, code):
 		if code == win32con.CBN_SELCHANGE:

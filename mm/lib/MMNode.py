@@ -1282,11 +1282,19 @@ class MMAnchor:
 		return MMAnchor(self.aid, self.atype, self.aargs, self.atimes, self.aaccess)
 
 # The Sync Arc class
-#
+# Sjoerd: if you have free time, could you describe (better than I can) what this is at some stage
+# (low priority documentation nag). -mjvdg
 class MMSyncArc:
 	def __init__(self, dstnode, action, srcnode=None, srcanchor=None,
 		     channel=None, event=None, marker=None, wallclock=None,
 		     accesskey=None, delay=None):
+		# dstnode is the destination MMNode for this syncarc, i.e. what is started, ended etc.
+		# action is one of ['begin', 'min', 'dur', 'end'] where:
+		#    'begin' means this starts the node.
+		#    'min' means that self determines the minimum time for the node
+		#    'dur' means that self determines the duration of the node.
+		#    'end' means that self determines when the node ends.
+		# -mjvdg
 		self.__isresolvedcalled = 0
 		if __debug__:
 			assert event is None or marker is None
