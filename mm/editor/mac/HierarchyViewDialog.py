@@ -6,9 +6,13 @@ from ViewDialog import ViewDialog
 from usercmd import *
 import windowinterface
 import WMEVENTS
+from MenuTemplate import POPUP_HVIEW_LEAF, POPUP_HVIEW_STRUCTURE
 
 class HierarchyViewDialog(ViewDialog):
-
+	
+	interior_popupmenu = POPUP_HVIEW_STRUCTURE
+	leaf_popupmenu = POPUP_HVIEW_LEAF
+	
 	def __init__(self):
 		ViewDialog.__init__(self, 'hview_')
 
@@ -42,6 +46,9 @@ class HierarchyViewDialog(ViewDialog):
 
 	def setcommands(self, commandlist):
 		self.window.set_commandlist(commandlist)
+		
+	def setpopup(self, template):
+		self.window.setpopupmenu(template)
 		
 	def helpcall(self):
 		import Help
