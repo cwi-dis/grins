@@ -151,7 +151,7 @@ def WriteFTP(root, filename, ftpparams, grinsExt = 1, qtExt = features.EXPORT_QT
 		srcdir, dstdir, filedict = writer.getcopyinfo()
 		del writer
 		del ftp
-		if filedict and copyFiles:
+		if copyFiles and filedict:
 			conn.chmkdir(dstdir)
 			totfiles = len(filedict.keys())
 			num = 0
@@ -266,7 +266,6 @@ def getsrc(writer, node):
 		val = 'data:%s,%s' % (mime, MMurl.quote(data))
 	else:
 		return None
-
 	if chtype == 'RealPix':
 		# special case for RealPix nodes, which we should write
 		# sometimes, but don't want to write always
@@ -312,27 +311,27 @@ def getsrc(writer, node):
 			# If not exporting we insert a placeholder
 			val = '#'
 		return val
-	ctx = writer.context
 	if not writer.copydir:
 		if writer.convertURLs:
-			val = MMurl.canonURL(ctx.findurl(val))
+			val = MMurl.canonURL(writer.context.findurl(val))
 			if val[:len(writer.convertURLs)] == writer.convertURLs:
 				val = val[len(writer.convertURLs):]
 		return val
-	url = ctx.findurl(val)
+	url = writer.context.findurl(val)
+	return copysrc(writer, node, url)
+
+def copysrc(writer, node, url):
 	if writer.copycache.has_key(url):
 		# already seen and copied
-		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(writer.copycache[url]))
+		nurl = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(writer.copycache[url]))
 		if writer.rpExt and not writer.grinsExt:
-			val = MMurl.unquote(val)
-		return val
-	if chtype == 'RealPix' or (chtype == 'video' and val and val[:33] == 'data:image/vnd.rn-realpix;base64,'):
+			nurl = MMurl.unquote(nurl)
+		return nurl
+	import urlcache
+	if urlcache.mimetype(url) == 'image/vnd.rn-realpix':
 		# special case code for RealPix file
 		import realsupport
-		if chtype == 'RealPix':
-			if not hasattr(node, 'slideshow'):
-				import realnode
-				node.slideshow = realnode.SlideShow(node)
+		if node and hasattr(node, 'slideshow'):
 			rp = node.slideshow.rp
 		else:
 			f = MMurl.urlopen(url)
@@ -340,8 +339,9 @@ def getsrc(writer, node):
 			if head != '<imf':
 				f.close()
 				# delete rptmpfile attr if it exists
-				node.rptmpfile = None
-				del node.rptmpfile
+				if node:
+					node.rptmpfile = None
+					del node.rptmpfile
 				return url # ???
 			rp = realsupport.RPParser(url)
 			rp.feed(head)
@@ -355,34 +355,37 @@ def getsrc(writer, node):
 			ntags.append(attrs)
 			if attrs.get('tag','fill') not in ('fadein', 'crossfade', 'wipe'):
 				continue
-			nurl = attrs.get('file')
-			if not nurl:
+			iurl = attrs.get('file')
+			if not iurl:
 				# XXX URL missing for transition
-				import windowinterface
-				msg = 'No URL specified in transition'
-				windowinterface.showmessage(msg + '\nThe document will not be playable.')
-				if node.children:
-					node.children[i].set_infoicon('error', msg)
-				else:
-					node.set_infoicon('error', msg)
+				if node:
+					import windowinterface
+					msg = 'No URL specified in transition'
+					windowinterface.showmessage(msg + '\nThe document will not be playable.')
+					if node.children:
+						node.children[i].set_infoicon('error', msg)
+					else:
+						node.set_infoicon('error', msg)
 				continue
-			nurl = ctx.findurl(nurl)
-			if writer.copycache.has_key(nurl):
-				nfile = writer.copycache[nurl]
+			iurl = writer.context.findurl(iurl)
+			if writer.copycache.has_key(iurl):
+				nfile = writer.copycache[iurl]
 			else:
-				nfile = writer.copyfile(nurl, attrs)
-				writer.copycache[nurl] = nfile
+				nfile = writer.copyfile(iurl, attrs)
+				writer.copycache[iurl] = nfile
 			attrs['file'] = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(nfile))
 		rp.tags = ntags
 		file = writer.newfile(url)
-		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
-		ofile = node.GetRawAttrDef('file', None)
-		node.SetAttr('file', val)
+		nurl = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
+		if node:
+			ofile = node.GetRawAttrDef('file', None)
+			node.SetAttr('file', nurl)
 		realsupport.writeRP(os.path.join(writer.copydir, file), rp, node)
-		if ofile:
-			node.SetAttr('file', ofile)
-		else:
-			node.DelAttr('file')
+		if node:
+			if ofile:
+				node.SetAttr('file', ofile)
+			else:
+				node.DelAttr('file')
 		writer.files_generated[file] = ''
 		rp.tags = otags
 	else:
@@ -390,14 +393,15 @@ def getsrc(writer, node):
 			file = writer.copyfile(url, node)
 		except IOError, msg:
 			import windowinterface
-			windowinterface.showmessage('Cannot copy %s: %s\n'%(val, msg)+'The URL is left unchanged; the document may not be playable.', cancelCallback = (writer.cancelwrite, ()))
-			node.set_infoicon('error', msg)
-			return val
+			windowinterface.showmessage('Cannot copy %s: %s\n'%(url, msg)+'The URL is left unchanged; the document may not be playable.', cancelCallback = (writer.cancelwrite, ()))
+			if node:
+				node.set_infoicon('error', msg)
+			return url
 	writer.copycache[url] = file
-	val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
+	nurl = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
 	if writer.rpExt and not writer.grinsExt:
-		val = MMurl.unquote(val)
-	return val
+		nurl = MMurl.unquote(nurl)
+	return nurl
 
 def translatecolor(val, use_name = 1):
 	if use_name and colors.rcolors.has_key(val):
@@ -2516,7 +2520,14 @@ class SMILWriter(SMIL):
 				      x.GetUID()
 			a1, a2, dir = links[0]
 			if type(a2) is type(''):
-				href = a2
+				import urlparse
+				utype, host, path, params, query, fragment = urlparse.urlparse(a2)
+				if (not utype or utype == 'file') and (not host or host == 'localhost'):
+					# link to local file
+					srcurl = urlparse.urlunparse((utype, host, path, params, query, ''))
+					href = copysrc(self, a1, srcurl)
+				else:
+					href = a2
 			else:
 				href = '#' + self.uid2name[a2.GetUID()]
 			attrlist.append(('href', href))
@@ -2630,7 +2641,7 @@ class SMILWriter(SMIL):
 			else:
 				convert = node.GetRawAttrDef('project_convert', 1)
 		else:
-			convert = 1
+			convert = 0
 
 		if convert and u.headers.maintype == 'audio' and \
 		   string.find(u.headers.subtype, 'real') < 0:
