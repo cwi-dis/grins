@@ -888,7 +888,11 @@ class MediaNode(Node):
 		if self.mmRegPoint:
 			return self.mmRegPoint
 		regPoint = self.getRegPoint()
-		return self.context.getDocumentContext().GetRegPoint(regPoint)
+		mmregpoint = self.context.getDocumentContext().GetRegPoint(regPoint)
+		if mmregpoint == None:
+			# if no regpoint defined, return the default regpoint ('topLeft'): it avoids a crahes
+			mmregpoint=self.context.getDocumentContext().GetRegPoint('topLeft')
+		return mmregpoint
 	
 	def move(self, pos):
 		self.dx = int(pos[0])
