@@ -1,6 +1,6 @@
 Document Type: WSE
 item: Global
-  Version=7.01
+  Version=7.04
   Title=Oratrix GRiNS 0.5 Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=1879701592
+  File Checksum=72226410
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1133,6 +1133,31 @@ end
 item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
+item: Install File
+  Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
+  Destination=%MAINDIR%\WebPro32.ocx
+  Flags=0001001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\Msvcrt40.dll
+  Destination=%SYS32%\Msvcrt40.dll
+  Flags=0000001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\Msvcrt.dll
+  Destination=%SYS32%\Msvcrt.dll
+  Flags=0000001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\Olepro32.dll
+  Destination=%SYS32%\Olepro32.dll
+  Flags=0001001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\Mfc42.dll
+  Destination=%SYS32%\Mfc42.dll
+  Flags=0001001010000011
+end
 item: If/While Statement
   Variable=COMPONENTS
   Value=C
@@ -1206,111 +1231,6 @@ end
 item: Install File
   Source=d:\ufs\mm\examples\stroll2sw.smil
   Destination=%MAINDIR%\Examples\stroll2sw.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\bigw.jpg
-  Destination=%MAINDIR%\Intro\data\bigw.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\links.html
-  Destination=%MAINDIR%\Intro\data\links.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo1.jpg
-  Destination=%MAINDIR%\Intro\data\logo1.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo10.jpg
-  Destination=%MAINDIR%\Intro\data\logo10.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo11.jpg
-  Destination=%MAINDIR%\Intro\data\logo11.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo12.jpg
-  Destination=%MAINDIR%\Intro\data\logo12.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo13.jpg
-  Destination=%MAINDIR%\Intro\data\logo13.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo14.jpg
-  Destination=%MAINDIR%\Intro\data\logo14.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo15.jpg
-  Destination=%MAINDIR%\Intro\data\logo15.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo16.jpg
-  Destination=%MAINDIR%\Intro\data\logo16.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo2.jpg
-  Destination=%MAINDIR%\Intro\data\logo2.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo3.jpg
-  Destination=%MAINDIR%\Intro\data\logo3.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo4.jpg
-  Destination=%MAINDIR%\Intro\data\logo4.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo5.jpg
-  Destination=%MAINDIR%\Intro\data\logo5.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo6.jpg
-  Destination=%MAINDIR%\Intro\data\logo6.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo7.jpg
-  Destination=%MAINDIR%\Intro\data\logo7.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo8.jpg
-  Destination=%MAINDIR%\Intro\data\logo8.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\logo9.jpg
-  Destination=%MAINDIR%\Intro\data\logo9.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\thanks.html
-  Destination=%MAINDIR%\Intro\data\thanks.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\welcome.au
-  Destination=%MAINDIR%\Intro\data\welcome.au
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\data\wgrins.jpg
-  Destination=%MAINDIR%\Intro\data\wgrins.jpg
   Flags=0000000010000010
 end
 item: Install File
@@ -1428,22 +1348,12 @@ item: Install File
   Destination=%MAINDIR%\Examples\h284bw.jpg
   Flags=0000000010000010
 end
-item: Install File
-  Source=d:\ufs\mm\cmif\Intro\intro.smil
-  Destination=%MAINDIR%\Intro\intro.smil
-  Flags=0000000010000010
-end
 item: End Block
 end
 item: Install File
   Source=d:\Program Files\Wise InstallMaker\Unwise.exe
   Destination=%MAINDIR%\Unwise.exe
   Flags=0000000010000010
-end
-item: Install File
-  Source=c:\Winnt\system32\Mfc42.dll
-  Destination=%MAINDIR%\Mfc42.dll
-  Flags=0001001010010011
 end
 item: If/While Statement
   Variable=COMPONENTS
@@ -1456,13 +1366,83 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Templates\captions.smil
+  Destination=%MAINDIR%\Templates\captions.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\Extended-Slideshow.smil
+  Destination=%MAINDIR%\Templates\Extended-Slideshow.smil
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\Templates\empty.smil
   Destination=%MAINDIR%\Templates\empty.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\captions.smil
-  Destination=%MAINDIR%\Templates\captions.smil
+  Source=d:\ufs\mm\cmif\Templates\Basic-Slideshow.smil
+  Destination=%MAINDIR%\Templates\Basic-Slideshow.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\null.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\null.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\layout.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\layout.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\image.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\image.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\html.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\html.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\sound.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\sound.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\text.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\text.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\video.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\video.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Data\bgm.aiff
+  Destination=%MAINDIR%\Data\bgm.aiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Data\index.html
+  Destination=%MAINDIR%\Data\index.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Data\h218.jpg
+  Destination=%MAINDIR%\Data\h218.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Data\h168.jpg
+  Destination=%MAINDIR%\Data\h168.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Data\map.jpg
+  Destination=%MAINDIR%\Data\map.jpg
   Flags=0000000010000010
 end
 item: Install File
@@ -1507,41 +1487,6 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\win32ui.pyd
   Destination=%MAINDIR%\win32ui.pyd
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Data\html.tiff
-  Destination=%MAINDIR%\Data\html.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Data\image.tiff
-  Destination=%MAINDIR%\Data\image.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Data\layout.tiff
-  Destination=%MAINDIR%\Data\layout.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Data\null.tiff
-  Destination=%MAINDIR%\Data\null.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Data\sound.tiff
-  Destination=%MAINDIR%\Data\sound.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Data\text.tiff
-  Destination=%MAINDIR%\Data\text.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Data\video.tiff
-  Destination=%MAINDIR%\Data\video.tiff
   Flags=0000000010000010
 end
 item: Set Variable
