@@ -21,11 +21,15 @@ __version__ = "$Id$";
     EXPORT_WMP,                        # export to windows media player
 
     # If these do not appear in feature_set, they don't apper in GRiNS.
+    STRUCTURE_VIEW,
     PLAYER_VIEW,
+    TRANSITION_VIEW,
     STRUCTURE_VIEW,
     TIMELINE_VIEW,
     LAYOUT_VIEW,
     HYPERLINKS_VIEW,
+    LINKEDIT_LIGHT,                     # I'm not sure about this.. see TopLevel.py
+    CHANNEL_VIEW,
     USER_GROUPS,
     TRANSITIONS,
     SOURCE,
@@ -40,5 +44,5 @@ __version__ = "$Id$";
     H_DROPBOX,                          # Show an empty drop box at the end of a sequence.
     H_COLLAPSE,                         # Enable internal node collapsing.
     H_TIMESTRIP,						# Show snap!-like documents with correct toplevel par/seq
-] = range(21)                           # don't forget to update the range!
+] = range(25)                           # don't forget to update this range!
 

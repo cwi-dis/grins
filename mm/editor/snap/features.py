@@ -6,8 +6,9 @@ from compatibility import *
 from FeatureSet import *
 import sys
 
+# Warning: removing some of these will stop different parts of the program from working.
 feature_set = [EXPORT_CMIF, EXPORT_SMIL2, EXPORT_QT, EXPORT_WMP,
-               PLAYER_VIEW, STRUCTURE_VIEW,
+               PLAYER_VIEW, STRUCTURE_VIEW, LINKEDIT_LIGHT, #TRANSITION_VIEW, TIMELINE_VIEW, LAYOUT_VIEW, HYPERLINKS_VIEW, CHANNEL_VIEW, USER_GROUPS, TRANSITIONS,
                UNIFIED_FOCUS, 
                H_MODIFY_STRUCTURE,
                H_TRANSITIONS, H_VBANDWIDTH,
