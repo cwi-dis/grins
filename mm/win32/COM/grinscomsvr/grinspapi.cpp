@@ -10,6 +10,7 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include "Python.h"
 
 #include "comobj.h"
+#include "commod.h"
 
 static PyObject *errorObject;
 
@@ -39,35 +40,6 @@ seterror(const char *funcname, HRESULT hr)
 
 ///////////////////////////////////////////
 // Objects declarations
-
-class ComModule
-	{
-	public:
-	virtual ~ComModule(){}
-	virtual void lock() = 0;
-	virtual void unlock() = 0;
-	virtual void* getContext() const = 0;
-	};
-
-class GRiNSPlayerComModule : public ComModule
-	{
-	public:
-	virtual void lock() {CoAddRefServerProcess();}
-	virtual void unlock()
-		{
-		if(CoReleaseServerProcess()==0)
-			PostThreadMessage(m_dwThreadID,WM_QUIT,0,0);
-		}
-	virtual void* getContext() const {return (void*)&m_hListenerWnd;}
-	
-	GRiNSPlayerComModule(DWORD dwThreadID=0) : m_dwThreadID(dwThreadID), m_hListenerWnd(0) {}
-	void setListenerThreadID(DWORD dwThreadID) {m_dwThreadID = dwThreadID;}
-	DWORD getListenerThreadID() const { return m_dwThreadID;}
-	void setListener(HWND hwnd) {m_hListenerWnd=hwnd;}
-	private:
-	DWORD m_dwThreadID;
-	HWND m_hListenerWnd;
-	};
 
 typedef struct {
 	PyObject_HEAD
@@ -156,7 +128,7 @@ ComModule_SetListener(ComModuleObject *self, PyObject *args)
 	HWND hwnd;
 	if (!PyArg_ParseTuple(args, "i", &hwnd))
 		return NULL;
-	self->pModule->setListener(hwnd);
+	self->pModule->setListenerHwnd(hwnd);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
