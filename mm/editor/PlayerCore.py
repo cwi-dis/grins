@@ -32,6 +32,10 @@ class PlayerCore(Selecter, PlayerCommon):
 		self.context.registergetchannelbynode(self.getchannelbynode)
 		self.__ichannels = {} # internal channels map
 
+		# this flag allow to know if the renderer have to be checked (because edited)
+		# it's used for optimization purpose: the renderers are checked only if this flag has changed
+		self.mustCheckRenderer = 0 
+
 	#
 	# EditMgr interface (as dependent client).
 	#
@@ -56,6 +60,8 @@ class PlayerCore(Selecter, PlayerCommon):
 		if type in ('REGION_GEOM', 'MEDIA_GEOM'):
 			if self.playing:
 				return
+
+		self.mustCheckRenderer = 1
 		
 		self.checkchannels()
 		if self.showing:
@@ -120,6 +126,13 @@ class PlayerCore(Selecter, PlayerCommon):
 		self.playing = 1
 		self.showstate()
 
+	def play(self):
+		# if the document has been edited, we have to check (and rebuild) the renderer channels
+		if self.mustCheckRenderer:
+			self.checkRendererChannels()
+			self.mustCheckRenderer = 0
+		Selecter.play(self)
+		
 	#
 	def anchorinit(self, node):
 		if not self.showing:
@@ -235,12 +248,12 @@ class PlayerCore(Selecter, PlayerCommon):
 	def checkRendererChannels(self):
 		self.clearRendererChannels()
 		self.makeRendererChannels()
+		
 			
 	#
 	def checkchannels(self):
 		self.checkRegions()
 		self.__checkichannels()
-		self.checkRendererChannels()
 		if self.showing:
 			# (3) reset all variable _want_shown to zero
 			for name in self.channelnames:
