@@ -1381,6 +1381,112 @@ BEGIN
                     24,169,10
 END
 
+IDD_EDITATTR_CONV3 DIALOG DISCARDABLE  0, 0, 300, 172
+STYLE DS_ABSALIGN | WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Target audience",IDC_11,5,10,287,57
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    CONTROL         "28k8 modem",IDC_12,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,36,22,66,10
+    CONTROL         "56k modem",IDC_13,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    36,37,66,10
+    CONTROL         "Singe ISDN",IDC_14,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,36,52,66,10
+    CONTROL         "Double ISDN",IDC_15,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,177,22,66,10
+    CONTROL         "Cable modem",IDC_16,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,178,37,66,10
+    CONTROL         "LAN",IDC_17,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,178,
+                    52,66,10
+    COMBOBOX        IDC_22,50,76,100,95,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Video type:",IDC_21,6,78,35,8
+    LTEXT           "Audio type:",IDC_31,6,101,35,8
+    COMBOBOX        IDC_32,50,99,100,95,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
+                    WS_TABSTOP
+END
+
+IDD_EDITATTR_CONV2 DIALOG DISCARDABLE  0, 0, 300, 172
+STYLE DS_ABSALIGN | WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Target audience",IDC_11,5,10,287,57
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    CONTROL         "28k8 modem",IDC_12,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,36,22,66,10
+    CONTROL         "56k modem",IDC_13,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    36,37,66,10
+    CONTROL         "Singe ISDN",IDC_14,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,36,52,66,10
+    CONTROL         "Double ISDN",IDC_15,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,177,22,66,10
+    CONTROL         "Cable modem",IDC_16,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,178,37,66,10
+    CONTROL         "LAN",IDC_17,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,178,
+                    52,66,10
+    LTEXT           "Audio type:",IDC_31,6,83,35,8
+    COMBOBOX        IDC_32,50,81,100,95,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
+                    WS_TABSTOP
+END
+
+IDD_EDITATTR_CONV4 DIALOG DISCARDABLE  0, 0, 300, 172
+STYLE DS_ABSALIGN | WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Target audience",IDC_11,5,10,287,57
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    CONTROL         "28k8 modem",IDC_12,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,36,22,66,10
+    CONTROL         "56k modem",IDC_13,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    36,37,66,10
+    CONTROL         "Singe ISDN",IDC_14,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,36,52,66,10
+    CONTROL         "Double ISDN",IDC_15,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,177,22,66,10
+    CONTROL         "Cable modem",IDC_16,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,178,37,66,10
+    CONTROL         "LAN",IDC_17,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,178,
+                    52,66,10
+    LTEXT           "Audio type:",IDC_31,6,79,35,8
+    COMBOBOX        IDC_32,50,77,100,95,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "Perfect play",IDC_41,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,6,97,52,10
+    CONTROL         "Mobile play",IDC_51,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,6,114,51,10
+END
+
+IDD_EDITATTR_CONV5 DIALOG DISCARDABLE  0, 0, 300, 172
+STYLE DS_ABSALIGN | WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Target audience",IDC_11,5,10,287,57
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    CONTROL         "28k8 modem",IDC_12,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,36,22,66,10
+    CONTROL         "56k modem",IDC_13,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    36,37,66,10
+    CONTROL         "Singe ISDN",IDC_14,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,36,52,66,10
+    CONTROL         "Double ISDN",IDC_15,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,177,22,66,10
+    CONTROL         "Cable modem",IDC_16,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,178,37,66,10
+    CONTROL         "LAN",IDC_17,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,178,
+                    52,66,10
+    COMBOBOX        IDC_22,50,71,100,95,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Video type:",IDC_21,6,73,35,8
+    LTEXT           "Audio type:",IDC_31,6,89,35,8
+    COMBOBOX        IDC_32,50,87,100,95,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "Perfect play",IDC_41,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,6,104,52,10
+    CONTROL         "Mobile play",IDC_51,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,6,118,51,10
+END
+
 IDD_EDITATTR_S2a DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
