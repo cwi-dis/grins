@@ -135,9 +135,9 @@ class URLopener:
 	def open(self, fullurl, data=None):
 		fullurl = unwrap(fullurl)
 		if self.tempcache and self.tempcache.has_key(fullurl):
-			filename, headers = self.tempcache[fullurl]
+			filename, headers, url = self.tempcache[fullurl]
 			fp = open(filename, 'rb')
-			return addinfourl(fp, headers, fullurl)
+			return addinfourl(fp, headers, url)
 		type, url = splittype(fullurl)
 		if not type: type = 'file'
 		if self.proxies.has_key(type):
@@ -173,7 +173,7 @@ class URLopener:
 	def retrieve(self, url, filename=None):
 		url = unwrap(url)
 		if self.tempcache and self.tempcache.has_key(url):
-			return self.tempcache[url]
+			return self.tempcache[url][:2]
 		type, url1 = splittype(url)
 		if not filename and (not type or type == 'file'):
 			try:
@@ -196,7 +196,7 @@ class URLopener:
 			self.__tempfiles.append(filename)
 		result = filename, headers
 		if self.tempcache is not None:
-			self.tempcache[url] = result
+			self.tempcache[url] = result + (fp.url,)
 		tfp = open(filename, 'wb')
 		bs = 1024*8
 		block = fp.read(bs)
