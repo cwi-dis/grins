@@ -40,9 +40,6 @@ class ChannelViewDialog(ViewDialog):
 		
 	def setcommands(self, commandlist, title):
 		self.window.set_commandlist(commandlist)
-		self.window.set_dynamiclist(ANCESTORS, self.baseobject.ancestors)
-		self.window.set_dynamiclist(SIBLINGS, self.baseobject.siblings)
-		self.window.set_dynamiclist(DESCENDANTS, self.baseobject.descendants)
 		self.window.set_dynamiclist(SYNCARCS, (self.focus and self.focus.arcmenu) or [])
 ##		self.window.set_dynamiclist(LAYOUTS, self.layouts)
 		

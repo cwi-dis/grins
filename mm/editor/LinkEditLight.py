@@ -3,7 +3,7 @@ __version__ = "$Id$"
 import MMAttrdefs
 import windowinterface
 from Hlinks import ANCHOR1, ANCHOR2, DIR, TYPE, DIR_1TO2, DIR_2TO1, \
-		   DIR_2WAY, TYPE_JUMP
+		   DIR_2WAY, TYPE_JUMP, A_SRC_STOP, A_DEST_PLAY
 from AnchorDefs import *
 
 class LinkEditLight:
@@ -45,9 +45,9 @@ class LinkEditLight:
 		uid = node.GetUID()
 		hlinks = self.context.hyperlinks
 		for a in node.GetAttrDef('anchorlist', []):
-			if a[A_TYPE] not in SourceAnchors:
+			if a.atype not in SourceAnchors:
 				continue
-			anchor = uid, a[A_ID]
+			anchor = uid, a.aid
 			if not hlinks.findsrclinks(anchor):
 				self.interesting.append(anchor)
 		for c in node.GetChildren():
@@ -66,8 +66,8 @@ class LinkEditLight:
 		for nid, aid in self.interesting:
 			node = self.context.mapuid(nid)
 			for a in MMAttrdefs.getattr(node, 'anchorlist'):
-				if a[A_ID] == aid:
-					if a[A_TYPE] not in SourceAnchors or \
+				if a.aid == aid:
+					if a.atype not in SourceAnchors or \
 					   hlinks.findsrclinks((nid, aid)):
 						# exists, but wrong type or has link
 						dlist.append((nid, aid))
@@ -83,8 +83,8 @@ class LinkEditLight:
 		uid = node.GetUID()
 		hlinks = self.context.hyperlinks
 		for a in alist:
-			anchor = uid, a[A_ID]
-			if a[A_TYPE] in SourceAnchors and \
+			anchor = uid, a.aid
+			if a.atype in SourceAnchors and \
 			   hlinks.findsrclinks(anchor):
 				return 1
 		return 0
@@ -100,13 +100,13 @@ class LinkEditLight:
 		dest = whole = None
 		for i in range(len(alist)):
 			a = alist[i]
-			if a[A_TYPE] == ATYPE_DEST:
+			if a.atype == ATYPE_DEST:
 				dest = i
-			elif a[A_TYPE] == ATYPE_WHOLE:
+			elif a.atype == ATYPE_WHOLE:
 				whole = i
-			if type == a[A_TYPE]:
+			if type == a.atype:
 				if type == ATYPE_DEST or not create:
-					return (node.GetUID(), a[A_ID])
+					return (node.GetUID(), a.aid)
 				else:
 					windowinterface.showmessage("Such an anchor already exists on this node")
 					return None
@@ -114,20 +114,24 @@ class LinkEditLight:
 			return None
 		if type == ATYPE_DEST and whole is not None:
 			# return whole-node anchor for destination anchor
-			return (node.GetUID(), alist[whole][A_ID])
+			return (node.GetUID(), alist[whole].aid)
 		em = self.editmgr
 		if not notransaction and not em.transaction():
 			return None
+		alist = alist[:]
 		if type == ATYPE_WHOLE and dest is not None:
 			# we can upgrade the destination-only anchor
-			alist[i] = a = (alist[i][0], ATYPE_WHOLE, alist[i][2], alist[i][3])
+			a = alist[i].copy()
+			a.atype = ATYPE_WHOLE
+			alist[i] = a
 		else:
-			a = ('0', type, [], (0,0))
+			from MMNode import MMAnchor
+			a = MMAnchor('0', type, [], (0,0), None)
 			alist.append(a)
-		em.setnodeattr(node, 'anchorlist', alist[:])
+		em.setnodeattr(node, 'anchorlist', alist)
 		if not notransaction:
 			em.commit()
-		rv = (node.GetUID(), a[A_ID])
+		rv = (node.GetUID(), a.aid)
 		if interesting:
 			self.interesting.append(rv)
 		return rv
@@ -157,7 +161,7 @@ class LinkEditLight:
 		self.interesting.remove(srcanchor)
 		if dstanchor in self.interesting:
 			self.interesting.remove(dstanchor)
-		link = srcanchor, dstanchor, DIR_1TO2, TYPE_JUMP
+		link = srcanchor, dstanchor, DIR_1TO2, TYPE_JUMP, A_SRC_STOP, A_DEST_PLAY
 		em.addlink(link)
 		if not notransaction:
 			em.commit()
@@ -170,7 +174,7 @@ class LinkEditLight:
 			return aid + ' in ' + uid
 		node = self.context.mapuid(uid)
 		nodename = node.GetRawAttrDef('name', '#' + uid)
-		if self.findanchor(anchor)[A_TYPE] == ATYPE_DEST:
+		if self.findanchor(anchor).atype == ATYPE_DEST:
 			return nodename
 		if type(aid) is not type(''): aid = `aid`
 		return nodename + '.' + aid
@@ -178,13 +182,15 @@ class LinkEditLight:
 	def findanchor(self, anchor):
 		if anchor is not None:
 			if type(anchor) is not type(()):
-				return (anchor, ATYPE_DEST, [], (0,0))
+				from MMNode import MMAnchor
+				return MMAnchor(anchor, ATYPE_DEST, [], (0,0), None)
 			uid, aid = anchor
 			if '/' in uid:
 				# external anchor
-				return (aid, ATYPE_DEST, [], (0,0))
+				from MMNode import MMAnchor
+				return MMAnchor(aid, ATYPE_DEST, [], (0,0), None)
 			node = self.context.mapuid(uid)
 			for a in MMAttrdefs.getattr(node, 'anchorlist'):
-				if a[A_ID] == aid:
+				if a.aid == aid:
 					return a
 		return None

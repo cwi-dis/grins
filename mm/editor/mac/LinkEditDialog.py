@@ -180,13 +180,6 @@ class LinkBrowserDialog(windowinterface.MACDialog):
 			print 'Unexpected dialog browser event, item', item, 'event', event
 		return 1
 		
-## 	def _listclick(self, event, list, cbfunc, cbarg):
-## 		(what, message, when, where, modifiers) = event
-## 		Qd.SetPort(self._dialog)
-## 		where = Qd.GlobalToLocal(where)
-## 		item, is_double = list.click(where, modifiers)
-## 		apply(cbfunc, cbarg)
-## 		
 	def _showmenu(self, event, baseitem, menu):
 		tp, h, (x0, y0, x1, y1) = self._dialog.GetDialogItem(baseitem)
 		Qd.SetPort(self._dialog)

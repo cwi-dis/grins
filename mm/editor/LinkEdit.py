@@ -13,7 +13,7 @@ from MMTypes import *
 from MMNode import interiortypes
 
 from Hlinks import ANCHOR1, ANCHOR2, DIR, TYPE, DIR_1TO2, DIR_2TO1, \
-		   DIR_2WAY, TYPE_JUMP
+		   DIR_2WAY, TYPE_JUMP, A_SRC_STOP, A_SRC_PLAY, A_DEST_PLAY
 ##typestr = ['JUMP', 'CALL', 'FORK']
 typestr = ['Replace', 'Pause', 'New']
 dirstr = ['->', '<-', '<->']
@@ -134,7 +134,7 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 				# destination-only anchor, or, if there is
 				# none, first whole-node anchor
 				for anchor in self.left.anchors:
-					atype = self.findanchor(anchor)[A_TYPE]
+					atype = self.findanchor(anchor).atype
 					if atype == ATYPE_DEST:
 						aid = anchor[1]
 						break
@@ -427,11 +427,11 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		ranchor = self.findanchor(rfocus)
 		if lanchor is None or ranchor is None or \
 		   lanchor == ranchor or \
-		   ((lanchor[A_TYPE] not in SourceAnchors or
+		   ((lanchor.atype not in SourceAnchors or
 		     hlinks.findsrclinks(lfocus) or
-		     ranchor[A_TYPE] not in DestinationAnchors) and \
-		    (lanchor[A_TYPE] not in DestinationAnchors or
-		     ranchor[A_TYPE] not in SourceAnchors or
+		     ranchor.atype not in DestinationAnchors) and \
+		    (lanchor.atype not in DestinationAnchors or
+		     ranchor.atype not in SourceAnchors or
 		     hlinks.findsrclinks(rfocus))):
 			# can only add links between a source and a
 			# destionation anchor, and only if the source
@@ -468,15 +468,15 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 				print 'LinkEdit: cannot find anchors!'
 				return
 			hlinks = self.context.hyperlinks
-			if a1[A_TYPE] not in SourceAnchors or hlinks.findsrclinks(n1):
+			if a1.atype not in SourceAnchors or hlinks.findsrclinks(n1):
 				# left node can only be destination
-				if a2[A_TYPE] not in SourceAnchors or hlinks.findsrclinks(n2):
+				if a2.atype not in SourceAnchors or hlinks.findsrclinks(n2):
 					print 'LinkEdit: 2 destination achors!'
 					return
 				dir = DIR_2TO1
 			else:
 				dir = DIR_1TO2
-			editlink = (n1, n2, dir, TYPE_JUMP)
+			editlink = (n1, n2, dir, TYPE_JUMP, A_SRC_STOP, A_DEST_PLAY)
 		self.editorshow(editlink, not fromfocus)
 
 	# Callback functions
@@ -602,11 +602,11 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		em.dellink(l)
 		# maybe add anchors of old link to interesting
 		a = self.findanchor(l[ANCHOR1])
-		if a[A_TYPE] in SourceAnchors and \
+		if a.atype in SourceAnchors and \
 		   not self.context.hyperlinks.findsrclinks(l[ANCHOR1]):
 			self.set_interesting(l[ANCHOR1])
 		a = self.findanchor(l[ANCHOR2])
-		if a[A_TYPE] in SourceAnchors and \
+		if a.atype in SourceAnchors and \
 		   not self.context.hyperlinks.findsrclinks(l[ANCHOR2]):
 			self.set_interesting(l[ANCHOR2])
 		em.commit()
@@ -650,13 +650,13 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		return self.toplevel.hierarchyview.getfocus()
 
 	# EditMgr interface
-	def transaction(self):
+	def transaction(self, type):
 		return 1
 
 	def rollback(self):
 		pass
 
-	def commit(self):
+	def commit(self, type):
 		self.updateform()
 
 	def kill(self):
@@ -674,11 +674,11 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			em.dellink(l)
 			# maybe add anchors of old link to interesting
 			a = self.findanchor(l[ANCHOR1])
-			if a[A_TYPE] in SourceAnchors and \
+			if a.atype in SourceAnchors and \
 			   not self.context.hyperlinks.findsrclinks(l[ANCHOR1]):
 				self.set_interesting(l[ANCHOR1])
 			a = self.findanchor(l[ANCHOR2])
-			if a[A_TYPE] in SourceAnchors and \
+			if a.atype in SourceAnchors and \
 			   not self.context.hyperlinks.findsrclinks(l[ANCHOR2]):
 				self.set_interesting(l[ANCHOR2])
 		em.addlink(editlink)
@@ -692,10 +692,10 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 class LinkEditEditor(LinkEditorDialog):
 	def __init__(self, parent, title, editlink, isnew):
 		self.parent = parent
-		a1, a2, dir, type = self.editlink = editlink
+		a1, a2, dir, type, stype, dtype = self.editlink = editlink
 		self.changed = isnew
-		ltype = parent.findanchor(a1)[A_TYPE]
-		rtype = parent.findanchor(a2)[A_TYPE]
+		ltype = parent.findanchor(a1).atype
+		rtype = parent.findanchor(a2).atype
 		hlinks = parent.context.hyperlinks
 		llinks = rlinks = []
 		if ltype in SourceAnchors:
@@ -706,6 +706,8 @@ class LinkEditEditor(LinkEditorDialog):
 			rlinks = hlinks.findsrclinks(a2)
 			if not isnew and dir in (DIR_2TO1, DIR_2WAY) and rlinks:
 				del rlinks[0]
+		# XXX To do extend this interface with the new types
+		# for now, keep the compatibility
 		LinkEditorDialog.__init__(self, title, dirstr, typestr,
 					  dir, type,
 					  [ltype in SourceAnchors and
@@ -731,8 +733,9 @@ class LinkEditEditor(LinkEditorDialog):
 		l = self.editlink
 		if l[DIR] != linkdir:
 			self.changed = 1
+			# XXX for now, ignore sourcePlaystate and destinationPlaystate
 			self.editlink = l[ANCHOR1], l[ANCHOR2], linkdir, \
-					l[TYPE]
+					l[TYPE], A_SRC_PLAY, A_DEST_PLAY
 			self.linkdirsetchoice(linkdir)
 			self.oksetsensitive(self.changed)
 
@@ -741,8 +744,9 @@ class LinkEditEditor(LinkEditorDialog):
 		l = self.editlink
 		if l[TYPE] != linktype:
 			self.changed = 1
+			# XXX for now, ignore sourcePlaystate and destinationPlaystate
 			self.editlink = l[ANCHOR1], l[ANCHOR2], l[DIR], \
-					linktype
+					linktype, A_SRC_PLAY, A_DEST_PLAY
 			self.linktypesetchoice(linktype)
 			self.oksetsensitive(self.changed)
 
@@ -760,7 +764,7 @@ def getanchors(node, recursive):
 	uid = node.GetUID()
 	anchors = []
 	for i in rawanchors:
-		anchors.append((uid, i[A_ID]))
+		anchors.append((uid, i.aid))
 	if recursive and node.GetType() in interiortypes:
 		children = node.GetChildren()
 		for i in children:

@@ -29,10 +29,10 @@ ITEM_TO_COMMAND={
 	ITEM_LAYOUT_NEW: NEW_LAYOUT,
 	ITEM_LAYOUT_RENAME: RENAME,
 	ITEM_LAYOUT_DELETE: DELETE,
-	ITEM_CHANNEL_NEW: NEW_CHANNEL,
-	ITEM_CHANNEL_REMOVE: REMOVE_CHANNEL,
+	ITEM_CHANNEL_NEW: NEW_REGION,
+	ITEM_CHANNEL_REMOVE: REMOVE_REGION,
 	ITEM_CHANNEL_ATTRS: ATTRIBUTES,
-	ITEM_OCHANNEL_ADD: ADD_CHANNEL,
+	ITEM_OCHANNEL_ADD: ADD_REGION,
 }
 
 class LayoutViewDialog(windowinterface.MACDialog):
@@ -63,15 +63,6 @@ class LayoutViewDialog(windowinterface.MACDialog):
 		else:
 			print 'LayoutViewDialog: unexpected item/event:', item, event
 		return 1
-
-## 	def _listclick(self, event, list, cbfunc, cbarg):
-## 		(what, message, when, where, modifiers) = event
-## 		Qd.SetPort(self._window._wid)
-## 		where = Qd.GlobalToLocal(where)
-## 		old_select = list.getselect()
-## 		item, is_double = list.click(where, modifiers)
-## 		if old_select != item:
-## 			apply(cbfunc, cbarg)
 
 	def setlayoutlist(self, layouts, cur):
 		if layouts != self.__layoutlist.get():

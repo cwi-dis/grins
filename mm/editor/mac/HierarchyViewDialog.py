@@ -28,6 +28,7 @@ class HierarchyViewDialog(ViewDialog):
 		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, 
 			commandlist=self.commands, canvassize = (w, h), adornments=adornments)
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
+		self.window.register(WMEVENTS.Mouse0Release, self.mouse0release, None)
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
 		self.window.register(WMEVENTS.WindowExit, self.hide, None)
@@ -63,8 +64,22 @@ class HierarchyViewDialog(ViewDialog):
 		w = self.window
 		w.set_toggle(THUMBNAIL, self.thumbnails)
 		w.set_toggle(PLAYABLE, self.showplayability)
-		w.set_toggle(TIMESCALE, self.timescale)
+		w.set_toggle(TIMESCALE, self.root.showtime == 'focus')
+		if self.selected_widget is None:
+			w.set_toggle(LOCALTIMESCALE, 0)
+			w.set_toggle(CORRECTLOCALTIMESCALE, 0)
+		else:
+			n = self.selected_widget.get_node()
+			w.set_toggle(LOCALTIMESCALE, n.showtime == 'focus')
+			w.set_toggle(CORRECTLOCALTIMESCALE, n.showtime == 'cfocus')
 
 	def helpcall(self):
 		import Help
 		Help.givehelp('Hierarchy')
+
+	# this method is called when the mouse is dragged
+	# begin != 0 means that you start the drag, otherwise, assume that the drag is finished
+	# on some plateform (at least Windows), it allows to tell to the system to continue to
+	# send the event even if the mouse go outside the window (during dragging)
+	def mousedrag(self, begin):
+		pass
