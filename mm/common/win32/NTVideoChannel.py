@@ -330,8 +330,12 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if width==0 or height==0:
 			print 'warning: zero size media rect' 
 			width, height = w_width, w_height
-		self.__rcMediaWnd=(left,top,width,height)
+		self.__rcMediaWnd = left, top, width, height
 		
+		# preset for animation
+		window.setmediadisplayrect(self.__rcMediaWnd)
+		window.setmediafit(MMAttrdefs.getattr(node, 'scale'))
+
 		return (left/float(w_width), top/float(w_height), width/float(w_width), height/float(w_height))
 
 	def getMediaWndRect(self):
