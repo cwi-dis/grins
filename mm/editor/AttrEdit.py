@@ -398,7 +398,7 @@ class NodeWrapper(Wrapper):
 			'begin', 'duration', 'loop', 'repeatdur', # Time stuff
 			'restart',
 			('clipbegin',), ('clipend',),	# More time stuff
-			('fill',),
+			('fill',), ('fillDefault',),
 			'title', 'abstract', ('alt',), ('longdesc',), 'author',
 			'copyright', 'comment',
 			'layout', 'u_group',
@@ -417,6 +417,8 @@ class NodeWrapper(Wrapper):
 		if ntype in leaftypes or \
 		   self.context.attributes.get('project_boston', 0):
 			namelist.append('fill')
+		if self.context.attributes.get('project_boston', 0):
+			namelist.append('fillDefault')
 		if ntype == 'bag':
 			namelist.append('bag_index')
 		if ntype == 'par':
