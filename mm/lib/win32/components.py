@@ -7,13 +7,17 @@ Sdk=win32ui.GetWin32Sdk()
 import grinsRC
 from usercmd import *
 
+[FALSE, TRUE] = range(2)
+error = 'lib.win32.components.error'
+
 class LightWeightControl:
 	def __init__(self,parent=None,id=-1,hwnd=None):
 		self._id=id
 		self._parent=parent
-		if parent and hasattr(parent,'_subwindows'):
-			parent._subwindows.append(self)
+		if parent and hasattr(parent,'_subwndlist'):
+			parent._subwndlist.append(self)
 		self._hwnd=hwnd
+		self._cb=None
 	def sendmessage(self,msg,wparam=0,lparam=0):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessage(self._hwnd,msg,wparam,lparam)
@@ -25,19 +29,23 @@ class LightWeightControl:
 		return Sdk.SendMessageRS(self._hwnd,msg,wparam,lparam)
 	def enable(self,f):
 		if not self._hwnd: raise error, 'os control has not been created'
+		if f==None:f=0
 		Sdk.EnableWindow(self._hwnd,f)
 	def show(self):
 		if not self._hwnd: raise error, 'os control has not been created'
-		Sdk.ShowWindow(self._hwnd,SW_SHOW)
+		Sdk.ShowWindow(self._hwnd,win32con.SW_SHOW)
 	def hide(self):
 		if not self._hwnd: raise error, 'os control has not been created'
-		Sdk.ShowWindow(self._hwnd,SW_HIDE)
+		Sdk.ShowWindow(self._hwnd,win32con.SW_HIDE)
 	def attach(self,hwnd):
 		self._hwnd=hwnd
 	def attach_to_parent(self):
 		if not self._parent: raise error, 'attach_to_parent without parent'	
 		hparent = self._parent.GetSafeHwnd()
 		self.attach(Sdk.GetDlgItem(hparent,self._id))
+	def init(self):
+		"""called when os wnd exists"""
+		pass
 	def detach(self):
 		hwnd=self._hwnd
 		self._hwnd=None
@@ -65,14 +73,54 @@ class LightWeightControl:
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.GetWindowRect(self._hwnd)
 
+	def setcb(self,cb):
+		self._cb=cb
+	def callcb(self):
+		if self._cb: 
+			apply(apply,self._cb)
+
 # shortcut
 Control = LightWeightControl
 
 class Button(Control):
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
+
+class RadioButton(Control):
+	def __init__(self,owner=None,id=-1):
+		Control.__init__(self,owner,id)
+	def setcheck(self,i):
+		if i>0:f=win32con.BST_CHECKED
+		elif i==0:f=win32con.BST_UNCHECKED
+		else:f=win32con.BST_INDETERMINATE
+		self.sendmessage(win32con.BM_SETCHECK,i)
+	def getcheck(self):
+		i=self.sendmessage(win32con.BM_GETCHECK)
+		if i==win32con.BST_CHECKED:return 1
+		elif i==win32con.BST_UNCHECKED:return 0
+		return -1
+
+class CheckButton(Control):
+	def __init__(self,owner=None,id=-1):
+		Control.__init__(self,owner,id)
+	def setcheck(self,i):
+		if i>0:f=win32con.BST_CHECKED
+		elif i==0:f=win32con.BST_UNCHECKED
+		else:f=win32con.BST_INDETERMINATE
+		self.sendmessage(win32con.BM_SETCHECK,i)
+	def getcheck(self):
+		i=self.sendmessage(win32con.BM_GETCHECK)
+		if i==win32con.BST_CHECKED:return 1
+		elif i==win32con.BST_UNCHECKED:return 0
+		return -1
+
+class Static(Control):
+	def __init__(self,owner=None,id=-1):
+		Control.__init__(self,owner,id)
+	def settext(self,str):
+		self.sendmessage_ls(win32con.WM_SETTEXT,0,str)
 				
-class TextInput(Control):
+class Edit(Control):
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
 	def settext(self,str):
@@ -82,21 +130,43 @@ class TextInput(Control):
 	def gettext(self):
 		n=self.gettextlength()+1
 		return self.sendmessage_rs(win32con.WM_GETTEXT,n,n)	
+	def getlinecount(self):
+		return self.sendmessage(win32con.EM_GETLINECOUNT)
+	def getline(self,ix):
+		n=self.sendmessage(win32con.EM_LINELENGTH)+1
+		return self.sendmessage_rs(win32con.EM_GETLINE,ix,n)
+	def getmodify(self):
+		return self.sendmessage(win32con.EM_GETMODIFY)
+	
+	def getlines(self):
+		if hasattr(self,'_textlines'):
+			if self.getmodify()==0:
+				return self._textlines
+		self._textlines=[]
+		nl=self.getlinecount()
+		for ix in range(nl):
+			line=self.getline(ix)
+			self._textlines.append(line)
+		return self._textlines
+
 	# cmif interface
 	# gettext
 	# settext
 
-class List(Control):
+
+class ListBox(Control):
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
 		self.__icmif() 
 	def setcursel(self,index):
-		if not index: index=-1
+		if index==None: index=-1
 		self.sendmessage(win32con.LB_SETCURSEL,index)
 	def getcursel(self):
 		return self.sendmessage(win32con.LB_GETCURSEL)
 	def getcount(self):
 		return self.sendmessage(win32con.LB_GETCOUNT)
+	def deletestring(self,index):
+		self.sendmessage(win32con.LB_DELETESTRING,index)
 	def insertstring(self,ix,str):
 		self.sendmessage_ls(win32con.LB_INSERTSTRING,ix,str)
 	def addstring(self,ix,str):
@@ -115,11 +185,14 @@ class List(Control):
 		self.selectitem=self.setcursel
 		self.getselection=self.getcursel
 		self.delalllistitems=self.resetcontent
-		self._cb=None		
 	def addlistitem(self, item, pos):
 		if pos < 0:
 			pos = self.getcount()
 		self.insertstring(pos,item)
+	
+	def replace(self, pos, newitem):
+		self.deletestring(pos)
+		self.insertstring(pos,newitem)
 
 	def getlist(self):
 		l=[]
@@ -127,9 +200,16 @@ class List(Control):
 			l.append(self.gettext(ix))
 		return l
 
-	def addlistitems(self,list,ix):
-		for pos in range(ix,len(list)):
-			self.insertstring(pos,list[pos])
+	def addlistitems(self,list,ix=0):
+		if type(list)==type(''): 
+			self.insertstring(ix,list)
+			return
+		if ix==-1:
+			for pos in range(len(list)):
+				self.insertstring(-1,list[pos])
+		elif ix>=0:
+			for pos in range(ix,len(list)):
+				self.insertstring(pos,list[pos])
 					
 	def getselected(self):
 		pos = self.getselection()
@@ -139,27 +219,76 @@ class List(Control):
 	def getlistitem(self,ix):
 		return self.gettext(ix)
 
-	def setcb(self,cb):
-		self._cb=cb
-	def callcb(self):
-		if self._cb: 
-			apply(apply,self._cb)
 
+
+class ComboBox(Control):
+	def __init__(self,owner=None,id=-1):
+		Control.__init__(self,owner,id)
+		self.__icmif() 
+	def setcursel(self,index):
+		if index==None: index=-1
+		self.sendmessage(win32con.CB_SETCURSEL,index)
+	def getcursel(self):
+		return self.sendmessage(win32con.CB_GETCURSEL)
+	def getcount(self):
+		return self.sendmessage(win32con.CB_GETCOUNT)
+	def insertstring(self,ix,str):
+		if not str:str='<none>'
+		self.sendmessage_ls(win32con.CB_INSERTSTRING,ix,str)
+	def addstring(self,str):
+		if not str:str='<none>'
+		return self.sendmessage_ls(win32con.CB_ADDSTRING,0,str)
+	def gettextlen(self,ix):
+		return self.sendmessage(win32con.CB_GETLBTEXTLEN,ix)
+	def gettext(self,ix):
+		n = self.gettextlen(ix) + 1
+		return self.sendmessage_rs(win32con.CB_GETLBTEXT,ix,n)
+	def resetcontent(self):
+		self.sendmessage(win32con.CB_RESETCONTENT)
+
+	# cmif interface
+	def __icmif(self):
+		self._optionlist=[]
+		
+	# it is called when os wnd exists
+	def init(self):
+		for s in self._optionlist:
+			self.addstring(s)
+		self.setcursel(0)
+
+	def getpos(self):
+		'''Get the index of the currently selected option.'''
+		return self.getcursel()
+
+	def getvalue(self):
+		'''Get the value of the currently selected option.'''
+		sel=self.getcursel()
+		return self.gettext(sel)
+
+	def setoptions(self, optionlist, startpos=0):
+		if not optionlist: return
+		for pos in range(startpos,len(optionlist)):
+			self.insertstring(pos,optionlist[pos])
+	def initoptions(self, optionlist,seloption=None):
+		if not optionlist: return
+		self.setoptions(optionlist)
+		self.setcursel(seloption)	
+	def setoptions_cb(self, optionlist):
+		for item in optionlist:
+			if type(item)==type(()):
+				self.addstring(item[0])
+		self.setcursel(0)
 
 ####################################################
 # TAB CONTROL STUFF
 
-# commctrl extensions tab control
-LVM_FIRST  =            0x1000      # ListView messages
-TV_FIRST   =            0x1100      # TreeView messages
-HDM_FIRST  =            0x1200      # Header messages
-TCM_FIRST  =            0x1300      # Tab control messages
-TCN_FIRST =-550       
-TCN_LAST=-580
-TCN_SELCHANGE  = TCN_FIRST - 1
-TCN_SELCHANGING= TCN_FIRST - 2
-
 class TabCtrl(Control):
+	TCM_FIRST  =            0x1300      # Tab control messages
+	TCN_FIRST =-550       
+	TCN_LAST=-580
+	TCN_SELCHANGE  = TCN_FIRST - 1
+	TCN_SELCHANGING= TCN_FIRST - 2
+
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
 	def insertitem(self,ix,text):
@@ -171,6 +300,19 @@ class TabCtrl(Control):
 		self.sendmessage(commctrl.TCM_SETCURSEL,ix)
 	def getcursel(self):
 		return self.sendmessage(commctrl.TCM_GETCURSEL)
+
+##############################
+class ControlsDict:
+	def __init__(self):
+		self._subwnddict={}	
+	def __nonzero__(self):return 1
+	def __len__(self): return len(self._subwnddict)
+	def __getitem__(self, key): return self._subwnddict[key]
+	def __setitem__(self, key, item): self._subwnddict[key] = item
+	def keys(self): return self._subwnddict.keys()
+	def items(self): return self._subwnddict.items()
+	def values(self): return self._subwnddict.values()
+	def has_key(self, key): return self._subwnddict.has_key(key)
 	
 ##############################
 class ResDialog(dialog.Dialog):
@@ -179,11 +321,15 @@ class ResDialog(dialog.Dialog):
 			import __main__
 			resdll=__main__.resdll
 		dialog.Dialog.__init__(self,id,resdll,parent)
-		self._subwindows = []
-	def attach_handles_to_controls(self):
+		self._subwndlist = [] # controls add thrmselves to this list
+
+	def attach_handles_to_subwindows(self):
 		hdlg = self.GetSafeHwnd()
-		for ctrl in self._subwindows:
+		for ctrl in self._subwndlist:
 			ctrl.attach(Sdk.GetDlgItem(hdlg,ctrl._id))
+	def init_subwindows(self):
+		for w in self._subwndlist:
+			w.init()
 	def onevent(self,event):
 		try:
 			func, arg = self._callbacks[event]			
@@ -197,13 +343,13 @@ class OpenLocationDlg(ResDialog):
 		ResDialog.__init__(self,grinsRC.IDD_DIALOG_OPENLOCATION,parent)
 		self._callbacks=callbacks
 
-		self._text= TextInput(self,grinsRC.IDC_EDIT_LOCATION)
+		self._text= Edit(self,grinsRC.IDC_EDIT_LOCATION)
 		self._bcancel = Button(self,win32con.IDCANCEL)
 		self._bopen = Button(self,win32con.IDOK)
 		self._bbrowse= Button(self,grinsRC.IDC_BUTTON_BROWSE)
 
 	def OnInitDialog(self):	
-		self.attach_handles_to_controls()	
+		self.attach_handles_to_subwindows()	
 		self._bopen.enable(0)
 		self._text.hookcommand(self,self.OnEditChange)
 		self._bbrowse.hookcommand(self,self.OnBrowse)
@@ -230,66 +376,245 @@ class OpenLocationDlg(ResDialog):
 
 
 ##############################
-class LayoutDlg(ResDialog):
-	def __init__(self,cmddict=None,parent=None):
-		ResDialog.__init__(self,grinsRC.IDD_LAYOUT,parent)
-		self._parent=parent
-		self._layoutlist=List(self,grinsRC.IDC_LAYOUTS)
-		self._channellist=List(self,grinsRC.IDC_LAYOUT_CHANNELS)
-		self._otherlist=List(self,grinsRC.IDC_OTHER_CHANNELS)
-		self._usercmd_ui={
-			 NEW_LAYOUT:Button(self,grinsRC.IDC_NEW_LAYOUT),
-			 RENAME:Button(self,grinsRC.IDC_RENAME_LAYOUT),
-			 DELETE:Button(self,grinsRC.IDC_DELETE_LAYOUT),
-			 NEW_CHANNEL:Button(self,grinsRC.IDC_NEW_CHANNEL),
-			 REMOVE_CHANNEL:Button(self,grinsRC.IDC_REMOVE_CHANNEL),
-			 #ATTRIBUTES:Button(self,grinsRC.IDC_CHANNEL_ATTR),
-			 ADD_CHANNEL:Button(self,grinsRC.IDC_ADD_CHANNEL),
-			 }
-		self.CreateWindow()
-		
-	def OnInitDialog(self):
-		self.attach_handles_to_controls()
-		return ResDialog.OnInitDialog(self)
-
-	# cmif interface
-	def create(self):
-		if self.GetSafeHwnd()==0:
-			self.CreateWindow()		
-	def show(self):
-		if self.GetSafeHwnd()==0:
-			self.CreateWindow()
-		self.ShowWindow(win32con.SW_SHOW)
-	def close(self):
-		if self.GetSafeHwnd():
-			self.DestroyWindow() 
-	def hide(self):
-		self.ShowWindow(win32con.SW_HIDE)
-	def setcursor(self,cursor):
-		import win32mu
-		win32mu.SetCursor(cursor)
-	def is_showing(self):
-		if self.GetSafeHwnd()==0: return 0
-		return self.IsWindowVisible()
-	def set_commandlist(self, list):
-		if self._parent:
-			self._parent.set_commandlist(list,'view')
 
 class LayoutNameDlg(ResDialog):
-	def __init__(self,callbacks=None,parent=None):
+	def __init__(self,promp,default_text,cb_ok,cancelCallback=None,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_LAYOUT_NAME,parent)
-		self._callbacks=callbacks
+		self._text= Edit(self,grinsRC.IDC_EDIT1)
+		self._cb_ok=cb_ok
+		self._cbd_cancel=cancelCallback
+		self._default_text=default_text
+
 	def OnInitDialog(self):
+		self.attach_handles_to_subwindows()
+		self._text.settext(self._default_text)
 		return ResDialog.OnInitDialog(self)
+
 	def show(self):
 		self.DoModal()
 
+	def OnOK(self):
+		text=self._text.gettext()
+		self._obj_.OnOK()
+		if self._cb_ok:
+			apply(self._cb_ok,(text,))
+
+	def OnCancel(self):
+		self._obj_.OnCancel()
+		if self._cbd_cancel:
+			apply(apply,self._cbd_cancel)
+
+		self.__chantype=w._chantype
+		w._cbd_ok=(self.__okchannel, (0,))
+		w._cbd_cancel=(self.__okchannel, (1,))
+
 class NewChannelDlg(ResDialog):
-	def __init__(self,callbacks=None,parent=None):
+	def __init__(self,title,grab=1,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_NEW_CHANNEL,parent)
-		self._callbacks=callbacks
+		self._title=title
+		self._parent=parent
+		self._chantext= Edit(self,grinsRC.IDC_CHANNEL_NAME)
+		self._chantype=ComboBox(self,grinsRC.IDC_CHANNEL_TYPE)
+		self._cbd_ok=None
+		self._cbd_cancel=None
+
 	def OnInitDialog(self):
+		self.attach_handles_to_subwindows()
+		self.init_subwindows()
 		return ResDialog.OnInitDialog(self)
+
 	def show(self):
 		self.DoModal()
+	def close(self):
+		self.EndDialog(win32con.IDCANCEL)
+
+	def OnOK(self):
+		if self._cbd_ok:
+			apply(apply,self._cbd_ok)
+	def OnCancel(self):
+		if self._cbd_cancel:
+			apply(apply,self._cbd_cancel)
+
+class ModelessMessageBox(ResDialog):
+	def __init__(self,text,title,parent=None):
+		ResDialog.__init__(self,grinsRC.IDD_MESSAGE_BOX,parent)
+		self._text= Static(self,grinsRC.IDC_STATIC1)
+		self.CreateWindow()
+		self._text.attach_to_parent()
+		self.SetWindowText(title)
+		self._text.settext(text)
+
+class showmessage:
+	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
+		     cancelCallback = None, name = 'message',
+		     title = 'message', parent = None):
+		self._wnd=None
+		if grab==0:
+			self._wnd=ModelessMessageBox(text,title,parent)
+			return
+		if mtype == 'error':
+			style = win32con.MB_OK |win32con.MB_ICONERROR
+				
+		elif mtype == 'warning':
+			style = win32con.MB_OK |win32con.MB_ICONWARNING
+			
+		elif mtype == 'information':
+			style = win32con.MB_OK |win32con.MB_ICONINFORMATION
+	
+		elif mtype == 'message':
+			style = win32con.MB_OK|win32con.MB_ICONINFORMATION
+			
+		elif mtype == 'question':
+			style = win32con.MB_YESNO|win32con.MB_ICONQUESTION
+		
+		if not parent:	
+			self._res = win32ui.MessageBox(text,title,style)
+		else:
+			self_res = parent.MessageBox(text,title,style)
+			
+	def getresult(self):
+		return self._res
+
+
+class _Question:
+	def __init__(self, text, parent = None):
+		self.answer = None
+		self.answer=showmessage(text, mtype = 'question',
+			    callback = (self.callback, (TRUE,)),
+			    cancelCallback = (self.callback, (FALSE,)),
+			    parent = parent)
+
+	def callback(self, answer):
+#		if _in_create_box:
+#			return
+		self.answer = answer
+
+def showquestion(text, parent = None):
+	q=_Question(text, parent = parent)
+	return q.answer
+
+			
+class _MultChoice:
+	def __init__(self, prompt, msg_list, defindex, parent = None):
+		#self.looping = FALSE
+		self.answer = None
+		self.msg_list = msg_list
+		list = []
+#		for msg in msg_list:
+#			list.append(msg, (self.callback, (msg,)))
+		str='_MultChoice request'+prompt
+		win32ui.MessageBox(str)
+
+def multchoice(prompt, list, defindex, parent = None):
+	m=_MultChoice(prompt, list, defindex, parent = parent)
+	return None
+
+# use DoModal
+class InputDialog(dialog.Dialog):
+	def __init__(self, prompt, defValue, title ):
+		self.title=title
+		dialog.Dialog.__init__(self, win32ui.IDD_SIMPLE_INPUT)
+		self.AddDDX(win32ui.IDC_EDIT1,'result')
+		self.AddDDX(win32ui.IDC_PROMPT1, 'prompt')
+		self._obj_.data['result']=defValue
+		self._obj_.data['prompt']=prompt
+	def OnInitDialog(self):
+		self.SetWindowText(self.title)
+		return dialog.Dialog.OnInitDialog(self)
+
+# use CreateWindow
+# if not closed by def OK,Cancel call DestroyWindow()
+# design decision: Dlg closes itself or the callback? 
+class ModelessInputDialog(InputDialog):
+	def __init__(self, prompt, defValue, title):
+		InputDialog.__init__(self, prompt, defValue, title)
+		self._ok_callback=None
+		self._cancel_callback=None
+	def OnOK(self):
+		self._obj_.UpdateData(1) # do DDX
+		if self._ok_callback:
+			self._ok_callback(self)
+		return self._obj_.OnOK()
+	def OnCancel(self):
+		if self._cancel_callback:
+			self._cancel_callback(self)
+		return self._obj_.OnCancel()
+
+def GetYesNoCancel(promp,parent=None):
+	if parent:m=parent
+	else: m=win32ui
+	res=m.MessageBox(promp,'CMIFed',win32con.MB_YESNOCANCEL|win32con.MB_ICONQUESTION)
+	if res==win32con.IDYES:return 0
+	elif res==win32con.IDNO:return 1
+	else: return 2
+	
+
+class CreateBoxDlg(ResDialog):
+	def __init__(self,text,callback,cancelCallback,parent=None):
+		ResDialog.__init__(self,grinsRC.IDD_CREATE_BOX,parent)
+		self._text= Static(self,grinsRC.IDC_STATIC1)
+		self.CreateWindow()
+		self._text.attach_to_parent()
+		self._text.settext(text)
+		self._callback=callback
+		self._cancelCallback=cancelCallback
+		self.ShowWindow(win32con.SW_SHOW)
+		self.UpdateWindow()
+	def OnOK(self):
+		self._obj_.OnOK()
+		if self._callback:
+			apply(apply,self._callback)
+	def OnCancel(self):
+		self._obj_.OnCancel()
+		if self._cancelCallback:
+			apply(apply,self._cancelCallback)
+
+
+class SimpleSelectDlg(ResDialog):
+	def __init__(self,list, title = '', prompt = None,parent = None):
+		ResDialog.__init__(self,grinsRC.IDD_SELECT_ONE,parent)
+		self._prompt_ctrl= Static(self,grinsRC.IDC_STATIC1)
+		self._list_ctrl= ComboBox(self,grinsRC.IDC_COMBO1)
+		self._list=list
+		self._title=title
+		self._prompt=prompt
+		
+	def OnInitDialog(self):
+		dialog.Dialog.OnInitDialog(self)
+
+		self._prompt_ctrl.attach_to_parent()
+		if not self._prompt:self._prompt='Select:'
+		self._prompt_ctrl.settext(self._prompt)
+
+		if not self._title:
+			if self._prompt:self._title=self._prompt
+			else: self._title='Select'
+		self.SetWindowText(self._title)
+		
+		self._list_ctrl.attach_to_parent()
+		self._list_ctrl.setoptions_cb(self._list)
+
+	def OnOK(self):
+		ix=self._list_ctrl.getcursel()
+		res=self._obj_.OnOK()
+		if ix>=0:
+			item=self._list[ix]
+			if type(item)==type(()):
+				apply(apply,item[1])
+		return res
+
+	def OnCancel(self):
+		# nothing
+		return self._obj_.OnCancel()
+	
+	def HookKeyStroke(self,cb,key):
+		if hasattr(self,'_obj_') and self._obj_:	
+			self.HookKeyStroke(cb,key)
+
+def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1,
+	   parent = None):
+	dlg=SimpleSelectDlg(list,title,prompt,parent)
+	if grab==1:dlg.DoModal()
+	else:dlg.CreateWindow()
+	return dlg
 
