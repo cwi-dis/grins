@@ -7,6 +7,10 @@ import string
 # An Animator entity implements the interpolation part
 # of animate elements taking into account the calc mode.
 # It also implements the semantics of the 'accumulate' attr.
+
+# rem: we can implement also at this level time manipulations
+#      (speed, accelerate-decelerate and autoReverse)
+#      speed and autoReverse must be taken into account also at higher levels
 class Animator:
 	def __init__(self, attr, domval, values, dur, mode='linear', 
 			times=None, splines=None, accumulate='none', additive='replace'): 
@@ -262,14 +266,14 @@ class EffectiveAnimator:
 	# this method is a notification from some animator 
 	# or some other knowledgeable entity that something has changed
 	def update(self):
-		cv = self._domval
-		for a in self._animators:
+		cv = self.__domval
+		for a in self.__animators:
 			if a.isAdditive():
 				cv = cv + a.getCurrValue()
 			else:
 				cv = a.getCurrValue()
-		if self.__targetchan:
-			self.__targetchan.updateattr(self.__node, self.__attr, cv)
+		if self.__chan:
+			self.__chan.updateattr(self.__node, self.__attr, cv)
 		self.__currvalue = cv
 	
 
@@ -283,6 +287,17 @@ class EffectiveAnimator:
 class AnimateContext:
 	def __init__(self):
 		self._effAnimators = {}
+
+	def getEffectiveAnimator(self, targnode, targattr, domval):
+		key = "n%d-%s" % (id(targnode), targattr)
+		if self._effAnimators.has_key(key):
+			return self._effAnimators[key]
+		else:
+			ea = EffectiveAnimator(targattr, domval)
+			self._effAnimators[key] = ea
+			return ea
+
+animateContext = AnimateContext()
 
 
 ###########################
