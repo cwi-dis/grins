@@ -33,7 +33,7 @@ item: Global
   Distribute Path=\\UNIXSERVER\auginet\GRiNS
   Distribute Type=1
   Step View=All
-  File Checksum=3117688464
+  File Checksum=317708832
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1125,173 +1125,208 @@ item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\grins-logo-bg.gif
-  Destination=%MAINDIR%\images\grins-logo-bg.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\helpmenu.htm
+  Destination=%MAINDIR%\help\html\helpmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_9.gif
-  Destination=%MAINDIR%\images\P20_9.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\helpintro.htm
+  Destination=%MAINDIR%\help\html\helpintro.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_8.gif
-  Destination=%MAINDIR%\images\P20_8.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\help.htm
+  Destination=%MAINDIR%\help\html\help.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_7.gif
-  Destination=%MAINDIR%\images\P20_7.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\filemenu.htm
+  Destination=%MAINDIR%\help\html\filemenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_6.gif
-  Destination=%MAINDIR%\images\P20_6.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\file.htm
+  Destination=%MAINDIR%\help\html\file.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_5.gif
-  Destination=%MAINDIR%\images\P20_5.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\editmenu.htm
+  Destination=%MAINDIR%\help\html\editmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_4.gif
-  Destination=%MAINDIR%\images\P20_4.gif
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\edit.htm
+  Destination=%MAINDIR%\help\html\edit.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_3.gif
-  Destination=%MAINDIR%\images\P20_3.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_2.gif
-  Destination=%MAINDIR%\images\P20_2.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_11.gif
-  Destination=%MAINDIR%\images\P20_11.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_10.gif
-  Destination=%MAINDIR%\images\P20_10.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_1.gif
-  Destination=%MAINDIR%\images\P20_1.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\windowmenu.htm
-  Destination=%MAINDIR%\html\windowmenu.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\window.htm
-  Destination=%MAINDIR%\html\window.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\viewmenu.htm
-  Destination=%MAINDIR%\html\viewmenu.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\view.htm
-  Destination=%MAINDIR%\html\view.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\use.htm
-  Destination=%MAINDIR%\html\use.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\title.htm
-  Destination=%MAINDIR%\html\title.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\playmenu.htm
-  Destination=%MAINDIR%\html\playmenu.htm
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\cont.htm
+  Destination=%MAINDIR%\help\html\cont.htm
   Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\playeruse.htm
-  Destination=%MAINDIR%\html\playeruse.htm
+  Destination=%MAINDIR%\help\html\playeruse.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\playermenu.htm
-  Destination=%MAINDIR%\html\playermenu.htm
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\playmenu.htm
+  Destination=%MAINDIR%\help\html\playmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\play.htm
-  Destination=%MAINDIR%\html\play.htm
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\title.htm
+  Destination=%MAINDIR%\help\html\title.htm
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\view.htm
+  Destination=%MAINDIR%\help\html\view.htm
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\new_GS.css
+  Destination=%MAINDIR%\help\new_GS.css
   Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\index.html
-  Destination=%MAINDIR%\index.html
+  Destination=%MAINDIR%\help\index.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\viewmenu.htm
+  Destination=%MAINDIR%\help\html\viewmenu.htm
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\window.htm
+  Destination=%MAINDIR%\help\html\window.htm
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\windowmenu.htm
+  Destination=%MAINDIR%\help\html\windowmenu.htm
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\use.htm
+  Destination=%MAINDIR%\help\html\use.htm
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\intro.htm
+  Destination=%MAINDIR%\help\html\intro.htm
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\main.htm
+  Destination=%MAINDIR%\help\html\main.htm
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\play.htm
+  Destination=%MAINDIR%\help\html\play.htm
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\playermenu.htm
+  Destination=%MAINDIR%\help\html\playermenu.htm
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_1.gif
+  Destination=%MAINDIR%\help\images\P20_1.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_10.gif
+  Destination=%MAINDIR%\help\images\P20_10.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_11.gif
+  Destination=%MAINDIR%\help\images\P20_11.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_2.gif
+  Destination=%MAINDIR%\help\images\P20_2.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_3.gif
+  Destination=%MAINDIR%\help\images\P20_3.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\grins-logo-bg.gif
+  Destination=%MAINDIR%\help\images\grins-logo-bg.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_9.gif
+  Destination=%MAINDIR%\help\images\P20_9.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_8.gif
+  Destination=%MAINDIR%\help\images\P20_8.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_7.gif
+  Destination=%MAINDIR%\help\images\P20_7.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\lllicense.txt
+  Destination=%MAINDIR%\lllicense.txt
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\prefs.txt
+  Destination=%MAINDIR%\prefs.txt
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\splash.bmp
+  Destination=%MAINDIR%\splash.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\splash.ill
+  Destination=%MAINDIR%\splash.ill
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\splash.psd
+  Destination=%MAINDIR%\splash.psd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\splash8bit.bmp
+  Destination=%MAINDIR%\splash8bit.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_6.gif
+  Destination=%MAINDIR%\help\images\P20_6.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_5.gif
+  Destination=%MAINDIR%\help\images\P20_5.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\P20_4.gif
+  Destination=%MAINDIR%\help\images\P20_4.gif
   Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\new_GS.css
   Destination=%MAINDIR%\new_GS.css
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\cont.htm
-  Destination=%MAINDIR%\html\cont.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\edit.htm
-  Destination=%MAINDIR%\html\edit.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\editmenu.htm
-  Destination=%MAINDIR%\html\editmenu.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\file.htm
-  Destination=%MAINDIR%\html\file.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\filemenu.htm
-  Destination=%MAINDIR%\html\filemenu.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\help.htm
-  Destination=%MAINDIR%\html\help.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\helpintro.htm
-  Destination=%MAINDIR%\html\helpintro.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\helpmenu.htm
-  Destination=%MAINDIR%\html\helpmenu.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\intro.htm
-  Destination=%MAINDIR%\html\intro.htm
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\main.htm
-  Destination=%MAINDIR%\html\main.htm
   Flags=0000000010000010
 end
 item: Install File
