@@ -45,6 +45,8 @@ class ChannelMap:
 				exec 'from %(chan)s import %(chan)s' % \
 				     {'chan': chan}
 			except ImportError, arg:
+				if type(arg) is type(self):
+					arg = arg.args[0]
 				print 'Warning: cannot import channel %s: %s' % (chan, arg)
 			else:
 				mod = eval(chan)

@@ -24,12 +24,17 @@ class ImageChannel(ChannelWindow):
 		try:
 			f = urlretrieve(f)[0]
 		except IOError, arg:
-			print 'ImageChannel %s: Cannot resolve URL "%s": %s'%(self._name, f, arg)
+			if type(arg) is type(self):
+				arg = arg.strerror
+			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
+			return 1
 		# remember coordinates for anchor editing (and only for that!)
 		try:
 			self._arm_imbox = self.armed_display.display_image_from_file(f, scale = MMAttrdefs.getattr(node, 'scale'), crop = MMAttrdefs.getattr(node, 'crop'))
 		except (windowinterface.error, IOError), msg:
-			if type(msg) is type(()):
+			if type(msg) is type(self):
+				msg = msg.strerror
+			elif type(msg) is type(()):
 				msg = msg[1]
 			self.errormsg(node, f + ':\n' + msg)
 			return 1
