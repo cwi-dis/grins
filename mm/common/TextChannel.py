@@ -10,9 +10,6 @@ class TextChannel(ChannelWindow):
 						 'fgcolor', 'font',
 						 'pointsize', 'noanchors']
 
-	def __repr__(self):
-		return '<TextChannel instance, name=' + `self._name` + '>'
-
 	def updatefixedanchors(self, node):
 		str = self.getstring(node)
 		parlist = extract_paragraphs(str)
