@@ -109,6 +109,58 @@ static unsigned long cv_8_to_32[256];
 
 static int nplaying;		/* number of instances playing */
 
+#ifdef USE_XM
+static unsigned char cv_8_to_8[256];
+static int cv_8_to_8_inited;
+
+static void
+colormask(mask, shiftp, maskp)
+	unsigned long mask;
+	int *shiftp;
+	unsigned long *maskp;
+{
+	unsigned long shift = 0, width = 0;
+
+	while ((mask & 1) == 0) {
+		shift++;
+		mask >>= 1;
+	}
+	while (mask != 0) {
+		width++;
+		mask >>= 1;
+	}
+	*shiftp = shift;
+	*maskp = (1 << width) - 1;
+}
+
+static void
+mkcolormap(rs, rm, gs, gm, bs, bm)
+	int rs, gs, bs;
+	unsigned long rm, gm, bm;
+{
+	int n;
+	int r, g, b;
+
+	if (rm != 7 || gm != 7 || bm != 3) {
+		for (n = 0; n < 256; n ++) {
+			r = ((n >> 5) & 7) / 7. * rm + .5;
+			g = ((n     ) & 7) / 7. * gm + .5;
+			b = ((n >> 3) & 3) / 3. * bm + .5;
+			cv_8_to_8[n] = (r << rs) | (g << gs) | (b << bs);
+		}
+		cv_8_to_8_inited = 1;
+	} else if (rs != 5 || gs != 0 || bs != 3) {
+		for (n = 0; n < 256; n ++) {
+			r = (n >> 5) & 7;
+			g = (n     ) & 7;
+			b = (n >> 3) & 3;
+			cv_8_to_8[n] = (r << rs) | (g << gs) | (b << bs);
+		}
+		cv_8_to_8_inited = 1;
+	}
+}
+#endif /* USE_XM */
+
 static int
 movie_init(self)
 	mmobject *self;
@@ -205,6 +257,14 @@ movie_init(self)
 			XVisualInfo *vptr = getvisualinfovalue(v);
 			PRIV->m_visual = vptr->visual;
 			PRIV->m_arm.m_planes = vptr->depth;
+			if (vptr->depth == 8) {
+				unsigned long rm, gm, bm;
+				int rs, gs, bs;
+				colormask(vptr->red_mask, &rs, &rm);
+				colormask(vptr->green_mask, &gs, &gm);
+				colormask(vptr->blue_mask, &bs, &bm);
+				mkcolormap(rs, rm, gs, gm, bs, bm);
+			}
 		} else {
 			ERROR(movie_init, PyExc_RuntimeError, "no visual specified");
 			goto error_return;
@@ -597,7 +657,7 @@ movie_readframe(self, ptr, fd)
 			}
 			if (read(fd, ptr->m_frame, ptr->m_size)
 			    != ptr->m_size)
-				dprintf(("movie_armer: read incorrect amount\n"));
+				dprintf(("movie_readframe: read incorrect amount\n"));
 		} else
 #endif /* USE_CL */
 		{
@@ -625,7 +685,7 @@ movie_readframe(self, ptr, fd)
 	case WIN_GL:
 		if (read(fd, ptr->m_frame, ptr->m_size)
 		    != ptr->m_size)
-			dprintf(("movie_armer: read incorrect amount\n"));
+			dprintf(("movie_readframe: read incorrect amount\n"));
 		break;
 #endif /* USE_GL */
 	default:
@@ -637,7 +697,7 @@ movie_readframe(self, ptr, fd)
 		if (clDecompress(ptr->m_decomp, 1, ptr->m_size,
 				 ptr->m_frame, ptr->m_bframe)
 		    == FAILURE)
-			dprintf(("movie_armer: decompress failed"));
+			dprintf(("movie_readframe: decompress failed"));
 	} else
 #endif /* USE_CL */
 	if (ptr->m_depth == 4 && ptr->m_format == FORMAT_RGB8) {
@@ -648,6 +708,14 @@ movie_readframe(self, ptr, fd)
 		for (i = ptr->m_size; i > 0; i--)
 			*lp++ = cv_8_to_32[*p++];
 	}
+#ifdef USE_XM
+	if (ptr->m_depth == 1 && cv_8_to_8_inited && windowsystem == WIN_X) {
+		for (p = (unsigned char *) ptr->m_bframe, i = ptr->m_size;
+		     i > 0;
+		     p++, i--)
+			*p = cv_8_to_8[*p];
+	}
+#endif /* USE_XM */
 }
 
 static void
@@ -743,7 +811,7 @@ movie_armer(self)
 			params[1] = CL_RGBX;
 			params[3] = CL_BOTTOM_UP;
 			PRIV->m_arm.m_planes = 24;
-			PRIV->m_arm.m_depth = 8;
+			PRIV->m_arm.m_depth = 4;
 			break;
 #endif
 		default:
