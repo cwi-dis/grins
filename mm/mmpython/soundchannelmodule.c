@@ -35,6 +35,9 @@ struct sound_data {
 	int bufsize;		/* size of sampbuf in samples */
 	char *sampbuf;		/* buffer used for read/writing samples */
 	int sampsread;		/* # of samples in sampbuf */
+#ifdef sun
+	int ulaw;		/* convert to u-law */
+#endif
 };
 struct sound {
 	type_sema s_sema;	/* semaphore to protect s_flag */
@@ -162,6 +165,9 @@ sound_arm(self, file, delay, duration, attrlist, anchorlist)
 	PRIV->s_arm.sampwidth = 1;
 	PRIV->s_arm.offset = 0;
 	PRIV->s_playrate = 1.0;
+#ifdef sun
+	PRIV->s_arm.ulaw = 0;
+#endif
 	v = PyDict_GetItemString(attrlist, "nchannels");
 	if (v && PyInt_Check(v))
 		PRIV->s_arm.nchannels = PyInt_AsLong(v);
@@ -341,7 +347,39 @@ sound_player(self)
 	hdr.channels = PRIV->s_play.nchannels;
 	hdr.encoding = AUDIO_ENCODING_LINEAR;
 	hdr.data_size = PRIV->s_play.nsamples * PRIV->s_play.sampwidth;
-	audio_set_play_config(PRIV->s_port, &hdr);
+	switch (audio_set_play_config(PRIV->s_port, &hdr)) {
+	case AUDIO_SUCCESS:
+		dprintf(("sound_player(%lx): audio_set_play_config successful\n", (long) self));
+		break;
+	case AUDIO_ERR_ENCODING:
+	case AUDIO_ERR_NOEFFECT:
+		/* linear didn't work, try u-law */
+		dprintf(("sound_player(%lx): audio_set_play_config unsuccessful\n", (long) self));
+		hdr.sample_rate = PRIV->s_play.framerate;
+		hdr.samples_per_unit = 1;
+		hdr.bytes_per_unit = 1;
+		hdr.channels = PRIV->s_play.nchannels;
+		hdr.encoding = AUDIO_ENCODING_ULAW;
+		hdr.data_size = PRIV->s_play.nsamples * PRIV->s_play.sampwidth;
+		if (audio_set_play_config(PRIV->s_port, &hdr)==AUDIO_SUCCESS) {
+			int i;
+			short *ps = (short *) PRIV->s_play.sampbuf;
+			char *pc = PRIV->s_play.sampbuf;
+			dprintf(("sound_player(%lx): using u-law\n", (long) self));
+			PRIV->s_play.ulaw = 1;
+			for (i = 0; i < PRIV->s_play.sampsread; i++, ps++)
+				*pc++ = audio_s2u(*ps);
+			break;
+		}
+		/* else fall through */
+	default:		/* all other errors */
+		printf("Warning: error setting audio configuration\n");
+		up_sema(PRIV->s_sema);
+		down_sema(device_sema);
+		device_used--;
+		up_sema(device_sema);
+		return;
+	}
 	audio_set_eof(PRIV->s_port, 0);
 	audio_getinfo(PRIV->s_port, &audio_info);
 	audio_info.play.buffer_size = PRIV->s_play.bufsize;
@@ -375,6 +413,15 @@ sound_player(self)
 			} else {
 				dprintf(("sound_player(%lx): fread %d samples\n", (long) self, n));
 			}
+#ifdef sun
+			if (PRIV->s_play.ulaw) {
+				int i;
+				short *ps = (short *) PRIV->s_play.sampbuf;
+				char *pc = PRIV->s_play.sampbuf;
+				for (i = 0; i < n; i++, ps++)
+					*pc++ = audio_s2u(*ps);
+			}
+#endif
 		} else
 			n = 0;
 
@@ -412,7 +459,7 @@ sound_player(self)
 			perror("poll");
 			break;
 		}
-		dprintf(("sound_player(%lx): poll returned\n", (long) self));
+		dprintf(("sound_player(%lx): poll returned %x %x\n", (long) self, pollfd[0].revents, pollfd[1].revents));
 		if (pollfd[0].revents & POLLIN) {
 			char c;
 			long filled;
@@ -497,7 +544,7 @@ sound_player(self)
 #endif
 #ifdef sun
 			write(PRIV->s_port, PRIV->s_play.sampbuf,
-			      n * PRIV->s_play.sampwidth);
+			      PRIV->s_play.ulaw ? n : n * PRIV->s_play.sampwidth);
 			if (nsamps == 0)
 				audio_play_eof(PRIV->s_port);
 #endif
