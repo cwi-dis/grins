@@ -229,6 +229,12 @@ class _LayoutView2(GenFormView):
 				ctrlName = 'AsOutLine'
 			elif id == self['ShowRbg']._id:
 				ctrlName = 'ShowRbg'
+			elif id == self['ViewportCheck']._id:
+				ctrlName = 'ViewportCheck'
+			elif id == self['RegionCheck']._id:
+				ctrlName = 'RegionCheck'
+			elif id == self['MediaCheck']._id:
+				ctrlName = 'MediaCheck'						
 			if ctrlName != None:
 				value = self[ctrlName].getcheck()
 				self._dialogHandler.onCheckCtrl(ctrlName, value)
