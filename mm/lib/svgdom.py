@@ -136,6 +136,9 @@ class SvgNode:
 	def isVisible(self):
 		return 0
 
+	def get(self, name, atype='XML'):
+		return None
+
 class SvgComment(SvgNode):
 	def svgrepr(self):
 		return '<!--' + self.data + '-->'
