@@ -59,8 +59,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.commands = [
 			CLOSE_WINDOW(callback = (self.hide, ())),
 
-			NEW_BEFORE(callback = (self.createbeforecall, ())),
-			NEW_AFTER(callback = (self.createaftercall, ())),
 			NEW_UNDER(callback = (self.createundercall, ())),
 
 			COPY(callback = (self.copycall, ())),
@@ -85,12 +83,16 @@ class HierarchyView(HierarchyViewDialog):
 					(windowinterface.RESET_CANVAS,))),
 			THUMBNAIL(callback = (self.thumbnailcall, ())),
 			]
-		self.pastecommands = [
-			PASTE_BEFORE(callback = (self.pastebeforecall, ())),
-			PASTE_AFTER(callback = (self.pasteaftercall, ())),
+		self.pasteinteriorcommands = [
 			PASTE_UNDER(callback = (self.pasteundercall, ())),
 			]
+		self.pastenotatrootcommands = [
+			PASTE_BEFORE(callback = (self.pastebeforecall, ())),
+			PASTE_AFTER(callback = (self.pasteaftercall, ())),
+			]
 		self.notatrootcommands = [
+			NEW_BEFORE(callback = (self.createbeforecall, ())),
+			NEW_AFTER(callback = (self.createaftercall, ())),
 			NEW_SEQ(callback = (self.createseqcall, ())),
 			NEW_PAR(callback = (self.createparcall, ())),
 			NEW_CHOICE(callback = (self.createbagcall, ())),
@@ -123,11 +125,19 @@ class HierarchyView(HierarchyViewDialog):
 	def aftersetfocus(self):
 		import Clipboard
 		commands = self.commands
-		if self.focusnode and self.focusnode != self.root:
-			commands = commands + self.notatrootcommands
-		t, n = Clipboard.getclip()
-		if t == 'node' and n is not None:
-			commands = commands + self.pastecommands
+		if self.focusnode:	# probably always true...
+			if self.focusnode != self.root:
+				# can't do certain things to the root
+				commands = commands + self.notatrootcommands
+			t, n = Clipboard.getclip()
+			if t == 'node' and n is not None:
+				# can only paste if there's something to paste
+				if self.focusnode.GetType() in MMNode.interiortypes:
+					# can only paste inside interior nodes
+					commands = commands + self.pasteinteriorcommands
+				if self.focusnode != self.root:
+					# can't paste before/after root node
+					commands = commands + self.pastenotatrootcommands
 		self.setcommands(commands)
 
 	def show(self):
