@@ -55,8 +55,6 @@ class HTMLWidget:
 		self.rect = rect
 		vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
 		dr = (0, 0, vr[2]-vr[0], 0)
-		if self.name == 'HelpHeader':
-			print 'HELPHEADER vr', vr, 'dr', dr
 		Qd.SetPort(window)
 		Qd.TextFont(4)
 		Qd.TextSize(9)
@@ -98,10 +96,12 @@ class HTMLWidget:
 		need_bary = ((dr[3]-dr[1]) >= (vr[3]-vr[1]))
 		if need_bary:
 			vr = l+LEFTMARGIN, t+TOPMARGIN, r-(RIGHTMARGIN+SCROLLBARWIDTH-1), b-BOTTOMMARGIN
-			dr = dr[0], dr[1], vr[2]-vr[0], dr[3]
+			dr = dr[0], dr[1], dr[0]+vr[2]-vr[0], dr[3]
 			self.ted.WESetViewRect(vr)
 			self.ted.WESetDestRect(dr)
 			self.ted.WECalText()
+			vr = self.ted.WEGetViewRect()
+			dr = self.ted.WEGetDestRect()
 			rect = r-(SCROLLBARWIDTH-1), t-1, r+1, b+1
 			if reset:
 				vy = 0
@@ -112,7 +112,7 @@ class HTMLWidget:
 			self.updatedocview()
 		else:
 			vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
-			dr = dr[0], dr[1], vr[2]-vr[0], dr[3]
+			dr = dr[0], dr[1], dr[0]+vr[2]-vr[0], dr[3]
 			self.ted.WESetViewRect(vr)
 			self.ted.WESetDestRect(dr)
 			self.ted.WECalText()
@@ -140,7 +140,6 @@ class HTMLWidget:
 		dr = self.ted.WEGetDestRect()
 		value = self.bary.GetControlValue()
 		self.ted.WEScroll(vr[0]-dr[0], vr[1]-dr[1]-value)
-			
 		
 	def scrollbar_callback(self, which, where):
 		if which != self.bary:
@@ -232,10 +231,6 @@ class HTMLWidget:
 		(what, message, when, where, modifiers) = evt
 		Qd.SetPort(self.wid)
 		Qd.RGBBackColor(self.bg_color)
-		if down == self.last_mouse_was_down:
-			# Two downs or ups in a row, probably due to window-raise or something
-			return
-		self.last_mouse_was_down = down
 		if down:
 			# Check for control
 			ptype, ctl = Ctl.FindControl(local, self.wid)
@@ -243,7 +238,16 @@ class HTMLWidget:
 				part = ctl.TrackControl(local)
 				if part:
 					self.scrollbar_callback(ctl, part)
+					return
+			# Remember, so we react to mouse-up next time
+			self.last_mouse_was_down = 1
 		else:
+			if not self.last_mouse_was_down:
+				# Two ups in a row,
+				# probably due to window-raise or something
+				return
+			self.last_mouse_was_down = 0
+			
 			# Check for anchor
 			if not self._cbanchor:
 				return
@@ -285,7 +289,7 @@ class HTMLWidget:
 		p.feed(data)
 		
 		self.anchor_hrefs = p.anchorlist[:]
-		
+
 		# Restore updating, recalc, set focus
 		self.ted.WESetSelection(0, 0)
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
@@ -295,7 +299,6 @@ class HTMLWidget:
 		if self.name == 'HelpHeader':
 			vr = self.ted.WEGetViewRect()
 			dr = self.ted.WEGetDestRect()
-			print 'HELPHEADER READY vr', vr, 'dr', dr
 		
 	def mysetstyle(self, which, how):
 		self.ted.WESelView()
@@ -317,6 +320,7 @@ class HTMLWidget:
 	#
 	
 	def html_init(self):
+		self.para_count = 0
 		self.html_font = [0, 0, 0, 0]
 		self.html_style = 0
 		self.html_color = self.fg_color
@@ -325,6 +329,7 @@ class HTMLWidget:
 		self.anchor_offsets = []
 	
 	def new_font(self, font):
+		self.delayed_para_send()
 		if font == None:
 			font = (0, 0, 0, 0)
 		font = map(lambda x:x, font)
@@ -351,12 +356,15 @@ class HTMLWidget:
 				(font, face, size, self.html_color))
 		
 	def new_margin(self, margin, level):
+		self.delayed_para_send()
 		self.ted.WEInsert('[Margin %s %s]'%(margin, level), None, None)
 		
 	def new_spacing(self, spacing):
+		self.delayed_para_send()
 		self.ted.WEInsert('[spacing %s]'%spacing, None, None)
 			
 	def new_styles(self, styles):
+		self.delayed_para_send()
 		self.html_style = 0
 		self.html_color = self.fg_color
 		if 'anchor' in styles:
@@ -370,32 +378,47 @@ class HTMLWidget:
 		self.new_font(self.html_font)
 
 	def send_paragraph(self, blankline):
-		self.ted.WEInsert('\r'*(blankline+1), None, None)
+		self.para_count = self.para_count + blankline + 1
+		
+	def delayed_para_send(self):
+		if not self.para_count: return
+		self.ted.WEInsert('\r'*self.para_count, None, None)
+		self.para_count = 0
 		
 	def send_line_break(self):
+		self.delayed_para_send()
 		self.ted.WEInsert('\r', None, None)
 		
 	def send_hor_rule(self, *args, **kw):
 		# Ignore ruler options, for now
+		self.delayed_para_send()
 		dummydata = Res.Resource('')
 		self.ted.WEInsertObject('rulr', dummydata, (0,0))
 		
 	def send_label_data(self, data):
+		self.delayed_para_send()
 		self.ted.WEInsert(data, None, None)
 		
 	def send_flowing_data(self, data):
+		self.delayed_para_send()
 		self.ted.WEInsert(data, None, None)
 		
 	def send_literal_data(self, data):
+		self.delayed_para_send()
 		data = regsub.gsub('\n', '\r', data)
 		data = string.expandtabs(data)
 		self.ted.WEInsert(data, None, None)
 		
 	def send_image(self, data):
+		self.delayed_para_send()
 		self.ted.WEInsertObject('GIF ', data, (0, 0))
 		
 class MyFormatter(formatter.AbstractFormatter):
 
+	def __init__(self, writer):
+		formatter.AbstractFormatter.__init__(self, writer)
+		self.parskip = 1
+		
 	def my_add_image(self, image):
 		self.writer.send_image(image)
 			
