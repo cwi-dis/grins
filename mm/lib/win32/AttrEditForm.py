@@ -13,6 +13,7 @@ Afx=win32ui.GetAfx()
 
 # win32 lib modules
 import win32mu,components,sysmetrics
+import win32dialog
 
 # std mfc windows stuf
 from pywin.mfc import window,object,docview,dialog
@@ -613,7 +614,7 @@ class AnchorlistCtrl(AttrCtrl):
 		if self.__curanchor is None:
 			if box is not None:
 				self.__box = box
-				w = components.AnchorNameDlg('Anchor name', '', self.__newCBbox,
+				w = win32dialog.AnchorNameDlg('Anchor name', '', self.__newCBbox,
 							     parent = self._wnd._form)
 				w.show()
 			return None
@@ -641,18 +642,18 @@ class AnchorlistCtrl(AttrCtrl):
 		self.fill(newlist = 0)
 
 	def OnNew(self, id, code):
-		w = components.AnchorNameDlg('Anchor name', '', self.__newCB,
+		w = win32dialog.AnchorNameDlg('Anchor name', '', self.__newCB,
 					     parent = self._wnd._form)
 		w.show()
 
 	def __newCB(self, name, partial = 0):
 		if not name:
 			# no name, do we want to give an error message?
-##			components.showmessage('No name given', mtype = 'error', parent = self._wnd._form)
+##			win32dialog.showmessage('No name given', mtype = 'error', parent = self._wnd._form)
 			return
 		if self.__anchorlinks.has_key(name):
 			# not unique, so don't change
-			components.showmessage('Name should be unique', mtype = 'error', parent = self._wnd._form)
+			win32dialog.showmessage('Name should be unique', mtype = 'error', parent = self._wnd._form)
 			return
 		if partial:
 			atype = AnchorDefs.ATYPE_NORMAL
@@ -673,7 +674,7 @@ class AnchorlistCtrl(AttrCtrl):
 	def OnRename(self, id, code):
 		if self.__curanchor is None:
 			return
-		w = components.AnchorNameDlg('Anchor name', self.__curanchor,
+		w = win32dialog.AnchorNameDlg('Anchor name', self.__curanchor,
 					     self.__renameCB, parent = self._wnd._form)
 		w.show()
 
@@ -683,11 +684,11 @@ class AnchorlistCtrl(AttrCtrl):
 			return
 		if not name:
 			# no name, do we want to give an error message?
-##			components.showmessage('No name given', mtype = 'error', parent = self._wnd._form)
+##			win32dialog.showmessage('No name given', mtype = 'error', parent = self._wnd._form)
 			return
 		if self.__anchorlinks.has_key(name):
 			# not unique, so don't change
-			components.showmessage('Name should be unique', mtype = 'error', parent = self._wnd._form)
+			win32dialog.showmessage('Name should be unique', mtype = 'error', parent = self._wnd._form)
 			return
 		a = self.__anchorlinks[self.__curanchor]
 		if len(a) == 4:
@@ -2350,8 +2351,7 @@ class MediaRenderer(Renderer):
 	def load(self,rurl):
 		self.release()
 		try:
-			import MediaChannel
-			self._builder = MediaChannel.GraphBuilder()
+			self._builder = GraphBuilder()
 		except:
 			self._builder=None
 
