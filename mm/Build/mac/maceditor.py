@@ -121,6 +121,8 @@ else:
 # macfreeze: exclude win32ig
 # macfreeze: optional rma
 # macfreeze: exclude NodeInfoHelper
+# macfreeze: exclude dshow
+# macfreeze: exclude win32ui
 
 #
 # And here's the code for non-standalone version of the editor:
