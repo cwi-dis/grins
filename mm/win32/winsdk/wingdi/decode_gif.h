@@ -21,6 +21,19 @@ class GifDecoder : public ImgDecoder
 	virtual ~GifDecoder();
 	virtual bool can_decode();
 	virtual DIBSurf *decode();
+	
+	virtual bool is_transparent() 
+		{ return m_transparent>=0;}
+	virtual void get_transparent_color(BYTE *rgb)
+		{
+		if(m_transparent>=0)
+			{
+			le::rgbquad& t = m_palette[m_transparent];
+			rgb[0] = t.r;
+			rgb[1] = t.g;
+			rgb[2] = t.b;
+			}
+		}
 
 	private:
 	void parse_metadata();
@@ -31,12 +44,20 @@ class GifDecoder : public ImgDecoder
 	int next_code(int code_size, bool flag);
 	int next_lzwbyte(bool flag, int input_code_size);
 	void skip_block();
+	int get_data_block(UCHAR *buf);
+
+	UINT to_uint(UCHAR a, UCHAR b) { return (b<<8) | a;}
 
 	DIBSurf *m_pdibsurf;
 	le::rgbquad *m_palette;
 	int m_scr_width;
 	int m_scr_height;
 	int m_scr_colors;
+
+	int m_transparent;
+	int m_delayTime;
+	int m_inputFlag;
+	int m_disposal;
 
 	int m_curbit, m_lastbit, m_lastbyte;
 	bool m_done;
@@ -50,7 +71,8 @@ inline GifDecoder::GifDecoder(memfile& mf, HDC hDC, ERROR_FUNCT ef)
 :	ImgDecoder(mf, hDC, ef), 
 	m_pdibsurf(NULL), m_palette(NULL),
 	m_curbit(0), m_lastbit(0), m_lastbyte(0),
-	m_last_block_size(-1), m_done(false)
+	m_last_block_size(-1), m_done(false),
+	m_transparent(-1)
 	{
 	}
 
@@ -108,9 +130,9 @@ inline DIBSurf* GifDecoder::decode()
 	return m_pdibsurf;
 	}
 
-
 inline void GifDecoder::parse_metadata()
 	{
+	UCHAR ext_buf[256];
 	while(true) 
 		{
 		uchar_t blockType = m_mf.get_byte();
@@ -127,6 +149,14 @@ inline void GifDecoder::parse_metadata()
 			if (label == 0xf9) 
 				{ 
  				//cout << "Graphics Control Extension" << endl;
+				if(get_data_block(ext_buf)>0)
+					{
+					m_disposal= (ext_buf[0]>>2)	& 0x7;
+					m_inputFlag	= (ext_buf[0]>>1) & 0x1;
+					m_delayTime	= to_uint(ext_buf[1], ext_buf[2]);
+					if((ext_buf[0] & 0x1) != 0)
+						m_transparent = ext_buf[3];
+					}
 				skip_block();
 				} 
 			else if (label == 0x1) 
@@ -166,6 +196,14 @@ inline void GifDecoder::skip_block()
 		} while (length > 0);
 	}
 
+inline int GifDecoder::get_data_block(UCHAR *buf)
+	{
+	int length = m_mf.get_byte();
+	if(m_mf.read(buf, length) != length)
+		return -1;
+	return length;
+	}
+
 // 9 bytes header + color_map + data
 inline void GifDecoder::parse_image()
 	{
@@ -203,11 +241,11 @@ inline void GifDecoder::parse_image()
 	//cout << "image" << char(img_terminator) << endl;
 	}
 
-inline int GifDecoder::next_block(UCHAR *m_buf)
+inline int GifDecoder::next_block(UCHAR *buf)
 	{
 	UCHAR count = m_mf.get_byte();
 	m_last_block_size = count;
-	m_mf.read(m_buf, count);
+	m_mf.read(buf, count);
 	return count;
 	}
 

@@ -21,16 +21,25 @@ struct PyDIBSurf
 	HBITMAP m_hBmp;
 
 	surface<le::trible> *m_psurf;
+	bool m_is_transparent;
+	BYTE m_rgb[3];
 
 	static PyTypeObject type;
 	static PyMethodDef methods[];
 
-	static PyDIBSurf *createInstance(HBITMAP hBmp = NULL, surface<le::trible> *psurf = NULL)
+	static PyDIBSurf *createInstance(HBITMAP hBmp = NULL, surface<le::trible> *psurf = NULL, bool istransp = false, BYTE *rgb = NULL)
 		{
 		PyDIBSurf *instance = PyObject_NEW(PyDIBSurf, &type);
 		if (instance == NULL) return NULL;
 		instance->m_hBmp = hBmp;
 		instance->m_psurf = psurf;
+		instance->m_is_transparent = istransp;
+		if(istransp)
+			{
+			instance->m_rgb[0] = rgb[0];
+			instance->m_rgb[1] = rgb[1];
+			instance->m_rgb[2] = rgb[2];
+			}
 		return instance;
 		}
 
@@ -128,13 +137,17 @@ PyObject* Wingdi_CreateDIBSurfaceFromFile(PyObject *self, PyObject *args)
 		return NULL;
 		}
 	DIBSurf *pDIBSurf = decoder->decode();
+	bool istransp = decoder->is_transparent();
+	BYTE rgb[3];
+	if(istransp) 
+		decoder->get_transparent_color(rgb);
 	delete decoder;
 	if(pDIBSurf == NULL)
 		return NULL;
 	HBITMAP hBmp = pDIBSurf->detach_handle();
 	surface<le::trible>* psurf = pDIBSurf->detach_pixmap();
 	delete pDIBSurf;
-	return (PyObject*)PyDIBSurf::createInstance(hBmp, psurf);
+	return (PyObject*)PyDIBSurf::createInstance(hBmp, psurf, istransp, rgb);
 	}
 
 PyObject* Wingdi_BitBltDIBSurface(PyObject *self, PyObject *args)
@@ -289,6 +302,26 @@ static PyObject* PyDIBSurf_Fill(PyDIBSurf *self, PyObject *args)
 		self->m_psurf->fill(color);
 		}
 	return none();
+	}
+
+static PyObject* PyDIBSurf_IsTransparent(PyDIBSurf *self, PyObject *args)
+	{ 
+	if(!PyArg_ParseTuple(args, ""))
+		return NULL;
+	return Py_BuildValue("i", (self->m_is_transparent?1:0));
+	}
+
+static PyObject* PyDIBSurf_GetTransparentColor(PyDIBSurf *self, PyObject *args)
+	{ 
+	if(!PyArg_ParseTuple(args, ""))
+		return NULL;
+
+	if(!self->m_is_transparent)
+		{
+		seterror("BitBltDIBSurface", "Surface not transparent");
+		return NULL;
+		}
+	return Py_BuildValue("iii", int(self->m_rgb[0]), int(self->m_rgb[1]), int(self->m_rgb[2]));
 	}
 
 PyMethodDef PyDIBSurf::methods[] = {
