@@ -150,6 +150,7 @@ class Window:
 				return
 		if self._canscroll:
 			self._ptdown = point
+		self.updateForeignObject(Mouse0Press, point)
 
 	def _onlbuttonup(self, point):
 		for wnd in self._subwindows:
@@ -158,6 +159,7 @@ class Window:
 				return
 		if self._canscroll:
 			self._ptdown = None
+		self.updateForeignObject(Mouse0Release, point)
 
 	def _onmousemove(self, point):
 		for wnd in self._subwindows:
@@ -166,6 +168,17 @@ class Window:
 				return
 		if self._canscroll and self._ptdown:	
 			self.setscrollpos(point)
+		self.updateForeignObject(MouseMove, point)
+
+	def updateForeignObject(self, event, pt):
+		callback =  self._callbacks.get(event)
+		if not callback: return
+		func, arg = callback
+		if arg == 'foreignObject':
+			x0, y0 = self.getwindowpos()[:2]
+			x, y = pt
+			self.onEvent(event, (x-x0, y-y0, None, None))
+		
 	#
 	# WMEVENTS section
 	#
