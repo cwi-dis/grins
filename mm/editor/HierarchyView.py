@@ -385,7 +385,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.window.bgcolor(BGCOLOR)
 ##		self.objects = []
 		# Other administratrivia
-		self.editmgr.register(self)
+		self.editmgr.register(self,1) # 1 means we want to participate in global focus management.
 		self.toplevel.checkviews()
 		if self.expand_on_show:
 			# Only do this the first time: open a few nodes
@@ -466,6 +466,14 @@ class HierarchyView(HierarchyViewDialog):
 		if not self.root.IsAncestorOf(node):
 			raise RuntimeError, 'bad node passed to globalsetfocus'
 		self.setfocusnode(node)
+
+	def globalfocuschanged(self, focustype, focusobject):
+		# Callback from the editmanager to set the focus to a specific node.
+		if focusobject and focusobject is not self.focusnode:
+			self.select_node(focusobject);
+			self.aftersetfocus();
+			self.draw();
+
 
 	#################################################
 	# Event handlers                                #
@@ -665,6 +673,7 @@ class HierarchyView(HierarchyViewDialog):
 		em.commit()
 
 	def copyfocus(self):
+		# Copies the focus to the clipboard.
 		node = self.focusnode
 		if not node:
 			windowinterface.beep()
@@ -1027,6 +1036,7 @@ TODO:
 		self.setfocusnode(children[i])
 
 	def select_widget(self, widget):
+		# Set the focus to a specific widget on the user interface.
 		# Make the widget the current selection.
 		if isinstance(self.selected_widget, Interactive.Interactive):
 			self.selected_widget.unselect()
@@ -1040,6 +1050,20 @@ TODO:
 			self.focusnode = widget.node
 			widget.select()
 			self.window.scrollvisible(widget.get_box())
+		self.editmgr.setglobalfocus("Exactly what am I meant to set the focus to?", widget.node); 
+
+	def select_node(self, node):
+		# Set the focus to a specfic MMNode (obviously the focus did not come from the UI)
+		self.setfocusnode(node);
+		
+	def setfocusnode(self, node):
+		# Try not to call this function
+		if not node:
+			self.select_widget(None);
+		else:
+			widget = node.views['struct_view'];
+			self.select_widget(widget);
+		self.editmgr.setglobalfocus("I don't know what the focustype is meant to be", node);
 
 	# Handle a selection click at (x, y)
 	def select(self, x, y):
@@ -1119,12 +1143,12 @@ TODO:
 ##		self.aftersetfocus()
 
 	# Select the given node as focus
-	def setfocusnode(self, node):
-		if not node:
-			self.select_widget(None);
-		else:
-			widget = node.views['struct_view'];
-			self.select_widget(widget);
+##	def setfocusnode(self, node):
+##		if not node:
+##			self.select_widget(None);
+##		else:
+##			widget = node.views['struct_view'];
+##			self.select_widget(widget);
 
 ##		if not node:
 ##			self.setfocusobj(None)
