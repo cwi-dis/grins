@@ -109,6 +109,8 @@ class findfont:
 			old_fontinfo = _savefontinfo(wid)
 		self._setfont(wid)
 		self.ascent, self.descent, widMax, self.leading = Qd.GetFontInfo()
+		# XXXX leading gives too much space. An experiment: zap it.
+		self.leading = 0
 		if wid:
 			_restorefontinfo(wid, old_fontinfo)
 
