@@ -2667,6 +2667,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				val = self.__convert_color(val)
 				if val is not None:
 					attrdict['backgroundColor'] = val
+			elif attr == 'background-color':
+				# backgroundColor overrides background-color
+				if not attrdict.has_key('backgroundColor'):
+					val = self.__convert_color(val)
+					if val is not None:
+						attrdict['backgroundColor'] = val
+##			elif attr == 'editBackground':
+##				val = self.__convert_color(val)
+##				if val is not None:
+##					attrdict['editBackground'] = val
 			elif attr == 'showBackground':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -2675,12 +2685,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('illegal showBackground attribute value')
 					val = 'always'
 				attrdict['showBackground'] = val
-			elif attr == 'background-color':
-				# backgroundColor overrides background-color
-				if not attrdict.has_key('backgroundColor'):
-					val = self.__convert_color(val)
-					if val is not None:
-						attrdict['backgroundColor'] = val
 			elif attr == 'soundLevel':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
