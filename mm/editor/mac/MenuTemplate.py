@@ -187,13 +187,6 @@ MENUBAR=(
 			)),
 		(FLAG_CMIF, SEP,),
 		(FLAG_CMIF, TOGGLE, 'Timeline view follows player', None, SYNCCV),
-		(FLAG_CMIF, CASCADE, 'Minidoc navigation', (
-			(FLAG_CMIF, ENTRY, 'Next', None, NEXT_MINIDOC),
-			(FLAG_CMIF, ENTRY, 'Previous', None, PREV_MINIDOC),
-			(FLAG_CMIF, DYNAMICCASCADE, 'Ancestors', ANCESTORS),
-			(FLAG_CMIF, DYNAMICCASCADE, 'Descendants', DESCENDANTS),
-			(FLAG_CMIF, DYNAMICCASCADE, 'Siblings', SIBLINGS),
-			)),
 		)),
 
 	(FLAG_ALL, CASCADE, 'Windows', (
