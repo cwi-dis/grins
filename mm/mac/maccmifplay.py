@@ -6,7 +6,6 @@ import os
 import sys
 import string
 import macfs
-import addpack
 
 # For now:
 progdir=os.path.split(sys.argv[0])[0]
@@ -19,14 +18,6 @@ CMIFPATH = [
 	CMIFDIR+":lib"
 ]
 sys.path[0:0] = CMIFPATH
-
-addpack.addpack('Tools')
-addpack.addpack('bgen')
-addpack.addpack('snd')
-addpack.addpack('evt')
-addpack.addpack('win')
-addpack.addpack('qd')
-addpack.addpack('qt')
 
 os.environ["CMIF"] = CMIFDIR
 #os.environ["CHANNELDEBUG"] = "1"
