@@ -8,6 +8,8 @@ import settings
 import features
 import windowinterface
 
+from SMILCssResolver import SMILCssResolver
+
 ALL_LAYOUTS = '(All Channels)'
 
 debug = 0
@@ -557,6 +559,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.timeValueChanged = 1
 		self.isAKeyTime = 0
 		self.currentTimeValue = None
+		self.currentAnimatedNode = None
 		
 	def fixtitle(self):
 		pass			# for now...
@@ -698,6 +701,8 @@ class LayoutView2(LayoutViewDialog2):
 		self.previousSelectedNodeList = []
 		self.currentFocus = None
 		self.myfocus = None
+
+		self.currentAnimatedNode = None		
 		
 	def transaction(self, type):
 		return 1		# It's always OK to start a transaction
@@ -892,10 +897,12 @@ class LayoutView2(LayoutViewDialog2):
 					animationData = nodeRef.computeAnimationData(nodeRef._animparent)
 			if animationData is not None and not animationData.isEmpty():
 				enabled = 1
-					
+				self.currentAnimatedNode = nodeRef
+				
 		if enabled:
 			self.settoggle(ENABLE_ANIMATION, 1)
 		else:
+			self.currentAnimatedNode = None
 			self.settoggle(ENABLE_ANIMATION, 0)
 
 		if not enabled or self.currentFocus is None or len(self.currentFocus) != 1:
@@ -1088,6 +1095,9 @@ class LayoutView2(LayoutViewDialog2):
 	def getCurrentTimeValue(self):
 		return self.currentTimeValue
 
+	def getCurrentAnimatedNode(self):
+		return self.currentAnimatedNode
+	
 	def insertKeyTime(self, nodeRef, tp):
 		animationData = nodeRef.getAnimationData()
 		timeList = animationData.getTimes()
@@ -1123,36 +1133,6 @@ class LayoutView2(LayoutViewDialog2):
 		else:
 			wingeom = nodeRef.getPxGeom()
 			
-		return wingeom
-
-	def getPxGeomMediaWithContextAnimation(self, nodeRef):
-		animationData = nodeRef.getAnimationData()
-		time = self.currentTimeValue
-		if not time is None and not animationData is None:
-			x, y, w, h = animationData.getRectAt(time)
-			# XXX modify temporarly the css attribute values to be able to get the right values
-			saveLeftValue = nodeRef.getCssRawAttr('left')
-			saveTopValue = nodeRef.getCssRawAttr('top')
-			saveWidthValue = nodeRef.getCssRawAttr('width')
-			saveHeightValue = nodeRef.getCssRawAttr('height')
-			saveRightValue = nodeRef.getCssRawAttr('right')
-			saveBottomValue = nodeRef.getCssRawAttr('bottom')
-			nodeRef.setCssAttr('left',x)
-			nodeRef.setCssAttr('top', y)
-			nodeRef.setCssAttr('width', w)
-			nodeRef.setCssAttr('height', h)
-			nodeRef.setCssAttr('right', None)
-			nodeRef.setCssAttr('bottom',None)
-			wingeom = nodeRef.getPxGeomMedia()[1]
-			# restore the raw values
-			nodeRef.setCssAttr('left',saveLeftValue)
-			nodeRef.setCssAttr('top', saveTopValue)
-			nodeRef.setCssAttr('width', saveWidthValue)
-			nodeRef.setCssAttr('height', saveHeightValue)
-			nodeRef.setCssAttr('right', saveRightValue)
-			nodeRef.setCssAttr('bottom',saveBottomValue)			
-		else:
-			wingeom = nodeRef.getPxGeomMedia()[1]
 		return wingeom
 		
 	# Test whether x is ancestor of node
@@ -2734,7 +2714,12 @@ class KeyTimeSliderWidget(LightWidget):
 		if self.isEnabled:
 			nodeType, nodeRef = self._selected
 			self._context.setCurrentTimeValue(pos, nodeRef)
-			self._context.updateFocus(1)
+			previewWidget = self._context.previousWidget
+			if previewWidget is not None:
+				previewWidget.fastUpdate()
+			context = self._context
+			context.onFastGeomUpdate(nodeRef, context.getPxGeomWithContextAnimation(nodeRef))
+#			self._context.updateFocus(1)
 
 	def onKeyTimeChanged(self, index, time):
 		if self.isEnabled:
@@ -3064,6 +3049,7 @@ class PreviousWidget(Widget):
 		self.__selecting = 0
 		
 		self.__mustBeUpdated = 1
+		self._cssResolver =  SMILCssResolver(self._context.context)
 
 	#
 	# inherited methods
@@ -3366,7 +3352,7 @@ class PreviousWidget(Widget):
 				if nodeTree._graphicCtrl is obj:
 					self._context.onFastGeomUpdate(nodeRef, obj.getGeom())
 					break
-		
+
 	def onGeomChanged(self, objectList):		
 		applyList = []
 		# xxx to optimize
@@ -3380,6 +3366,10 @@ class PreviousWidget(Widget):
 
 	def mustBeUpdated(self):
 		self.__mustBeUpdated = 1
+
+	def fastUpdate(self):
+		if self.currentViewport is not None:
+			self.currentViewport.fastUpdateAllAttrdict()
 		
 class Node:
 	def __init__(self, nodeRef, ctx):
@@ -3388,6 +3378,9 @@ class Node:
 		self._ctx = ctx
 		self._parent = None
 		self._viewport = None
+
+		self._cssResolver = ctx._cssResolver
+		self._cssNode = None
 		
 		# graphic control (implementation: system dependant)
 		self._graphicCtrl = None		
@@ -3396,7 +3389,6 @@ class Node:
 		self._z = self._nodeRef.GetAttrDef('z', 0)
 
 		# default attribute		
-		self.importAttrdict()
 		self._nodeType = TYPE_UNKNOWN
 
 		# avoid a recursive loop when selecting:
@@ -3405,6 +3397,7 @@ class Node:
 
 		self._wantToShow = 0
 		self._mustUpdateEditBackground = 1
+		self._curattrdict = {}
 		
 	def _cleanup(self):
 		if self.isShowed:
@@ -3440,7 +3433,7 @@ class Node:
 	
 	def importAttrdict(self):
 		self._curattrdict = {}
-					
+								
 	def getNodeRef(self):
 		return self._nodeRef
 
@@ -3481,12 +3474,23 @@ class Node:
 		if self.isShowed():
 			self._graphicCtrl.setAttrdict(self._curattrdict)
 
+	def fastUpdateAttrdict(self):
+		# by default, do nothing.
+		pass
+
 	def updateAllAttrdict(self):
 		if not self.isShowed():
 			return
 		self.updateAttrdict()
 		for child in self._children:
 			child.updateAllAttrdict()
+
+	# this method has to be executed pretty quicky
+	# It is used for animation preview and dynamic update (update during editing operation)
+	def fastUpdateAllAttrdict(self):
+		self.fastUpdateAttrdict()
+		for child in self._children:
+			child.fastUpdateAllAttrdict()		
 
 	def getGeom(self):
 		return self._curattrdict['wingeom']
@@ -3589,7 +3593,6 @@ class Node:
 		for node in nodeToShow:
 			if node.getNodeType() != TYPE_VIEWPORT:
 				if debug: print 'Node.toShowState show parent',node.getName()
-				node.importAttrdict()
 				node.show()
 		if debug: print 'Node.toShowState end'
 
@@ -3602,15 +3605,33 @@ class Node:
 			child.toHiddenState()	
 		self.hide()
 
+	# get the geom for region and media which depends of whether we edit or not an animation.
+	# if this node is being animated, we have to get an interpolated value, and put the result into
+	# the local css resolver in order than all geom children are correctly updated
+	def getWinGeom(self):
+		context = self._ctx._context
+		currentAnimatedNode = context.getCurrentAnimatedNode()
+		if currentAnimatedNode is self._nodeRef:
+			wingeom = x, y, w, h = context.getPxGeomWithContextAnimation(self._nodeRef)
+			updatedList = [('left', x), ('top', y), ('width', w), ('height', h), ('right', None), ('bottom', None)]
+			self._cssResolver.setRawAttrs(self._cssNode, updatedList)
+		else:
+			wingeom = self._cssResolver.getPxGeom(self._cssNode)
+		return wingeom
+
 class Region(Node):
 	def __init__(self, nodeRef, ctx):
 		Node.__init__(self, nodeRef, ctx)
 		self._nodeType = TYPE_REGION
 		self._wantToShow = 0
+
+		self._cssNode = self._cssResolver.newRegion()
 		
 	def importAttrdict(self):
 		Node.importAttrdict(self)
 
+		self._cssNode.copyRawAttrs(self._nodeRef.getCssId())
+			
 		z = self._nodeRef.GetAttrDef('z', 0)
 		if z != self._z:
 			self._z = z
@@ -3627,7 +3648,7 @@ class Region(Node):
 			self._curattrdict['bgcolor'] = self._nodeRef.GetInherAttrDef('bgcolor', (0,0,0))
 			self._curattrdict['transparent'] = self._nodeRef.GetInherAttrDef('transparent', 1)
 
-		self._curattrdict['wingeom'] = self._ctx._context.getPxGeomWithContextAnimation(self._nodeRef)
+		self._curattrdict['wingeom'] = wingeom = self.getWinGeom()
 	
 	def show(self):
 		if debug: print 'Region.show : ',self.getName()
@@ -3635,11 +3656,28 @@ class Region(Node):
 		if self.isShowed():
 			# hide this node and its sub-nodes
 			self.hideAllNodes()
-			
+
 		if self._wantToShow and self._parent._graphicCtrl != None:
+			parent = self._parent
+			self._cssResolver.link(self._cssNode, parent._cssNode)
+
+			self.importAttrdict()
 			self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self.getName())
 			self._graphicCtrl.showName(self.getShowName())		
 			self._graphicCtrl.setListener(self)
+
+	def fastUpdateAttrdict(self):
+		if self._graphicCtrl is not None:
+			# XXX do a copy to force the low level to update
+			self._curattrdict = self._curattrdict.copy()
+			self._curattrdict['wingeom'] = self.getWinGeom()
+			self._graphicCtrl.setAttrdict(self._curattrdict)
+
+	def hide(self):
+		if self.isShowed():
+			parent = self._parent
+			self._cssResolver.unlink(self._cssNode)			
+			Node.hide(self)
 
 	def showAllNodes(self):
 		if self._wantToShow:
@@ -3690,8 +3728,15 @@ class MediaRegion(Region):
 		self._nodeType = TYPE_MEDIA
 		self._wantToShow = 1
 
+		self._cssNode = self._cssResolver.newRegion()
+		self._mediaCssNode = self._cssResolver.newMedia(self._nodeRef.GetDefaultMediaSize)
+
 	def importAttrdict(self):
 		Node.importAttrdict(self)
+
+		self._cssNode.copyRawAttrs(self._nodeRef.getSubRegCssId())
+		self._mediaCssNode.copyRawAttrs(self._nodeRef.getMediaCssId())
+				
 		showMode = self._ctx._context.getShowEditBackgroundMode(self._nodeRef)
 		if showMode == 'editBackground':
 			self._curattrdict['transparent'] = 1			
@@ -3706,7 +3751,7 @@ class MediaRegion(Region):
 		# at some point we'll have to do the same thing for regions		
 		channel = self._nodeRef.GetChannel()
 
-		wingeom = self._ctx._context.getPxGeomWithContextAnimation(self._nodeRef)
+		wingeom = self.getWinGeom()
 			
 		# determinate the real fit attribute		
 		self.fit = fit = self._nodeRef.getCssAttr('fit','hidden')
@@ -3750,7 +3795,17 @@ class MediaRegion(Region):
 			# hide this node and its sub-nodes
 			self.hideAllNodes()
 
-		self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self.getName())
+
+		parent = self._parent
+
+		# for sub reg
+		self._cssResolver.link(self._cssNode, parent._cssNode)
+		# for media
+		self._cssResolver.link(self._mediaCssNode, self._cssNode)
+
+		self.importAttrdict()
+		
+		self._graphicCtrl = parent._graphicCtrl.addRegion(self._curattrdict, self.getName())
 		self._graphicCtrl.showName(0)		
 		self._graphicCtrl.setListener(self)
 		
@@ -3781,7 +3836,7 @@ class MediaRegion(Region):
 			canBeScaled = 0
 
 		if f is not None:
-			mediadisplayrect  = self._ctx._context.getPxGeomMediaWithContextAnimation(self._nodeRef)
+			mediadisplayrect  = self._cssResolver.getPxGeom(self._mediaCssNode)
 			self._graphicCtrl.drawbox(mediadisplayrect)
 			
 			# the algorithm to show the preview of the media depend of its type
@@ -3871,7 +3926,25 @@ class MediaRegion(Region):
 					for indX in range(iconXNumber):
 						self._graphicCtrl.setImage(f, fit, (offsetX+xShift*indX, \
 															offsetY+yShift*indY, iconWidth, iconHeight))
-										
+
+	def fastUpdateAttrdict(self):
+		# for now, just recreat the media
+		self.hide()
+		self.show()
+			
+	def hide(self):
+		if self.isShowed():
+			parent = self._parent
+			self._cssResolver.unlink(self._mediaCssNode)			
+			self._cssResolver.unlink(self._cssNode)			
+			Node.hide(self)
+
+	def _cleanup(self):
+		# XXX should allow the gc to destroy the media
+		# XXX To check if really need it
+		self._mediaCssNode.defaultSizeHandler = None
+		Node._cleanup(self)
+		
 	def onProperties(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self._ctx._context.editProperties(self.getNodeRef())
@@ -3885,9 +3958,12 @@ class Viewport(Node):
 		self._nodeType = TYPE_VIEWPORT
 		self._viewport = self
 
+		self._cssNode = self._cssResolver.newRootNode()
+		
 	def importAttrdict(self):
 		Node.importAttrdict(self)
 
+		self._cssNode.copyRawAttrs(self._nodeRef.getCssId())
 			
 #		if editBackground != None:				
 #				self._curattrdict['bgcolor'] = editBackground
@@ -3903,6 +3979,7 @@ class Viewport(Node):
 
 	def show(self):
 		if debug: print 'Viewport.show : ',self.getName()
+		self.importAttrdict()
 		self._graphicCtrl = self._ctx.previousCtrl.newViewport(self._curattrdict, self.getName())
 
 		# show a the trace image if specified		
@@ -3964,7 +4041,7 @@ class Viewport(Node):
 		# for now refresh all
 		if self.isShowed():
 			self.showAllNodes()
-		
+
 	def onProperties(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self._ctx._context.editProperties(self.getNodeRef())
