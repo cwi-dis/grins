@@ -11,6 +11,7 @@ from PythonChannel import PythonChannel
 from VcrChannel import VcrChannel
 from SocketChannel import SocketChannel
 from MpegChannel import MpegChannel
+from CmifChannel import CmifChannel
 
 channelmap = { \
 	'null': 	NullChannel, \
@@ -23,6 +24,7 @@ channelmap = { \
 	'vcr':		VcrChannel, \
 	'socket':	SocketChannel, \
 	'mpeg':		MpegChannel, \
+	'cmif':		CmifChannel, \
 	}
 
 channeltypes = ['null', 'text', 'image']
