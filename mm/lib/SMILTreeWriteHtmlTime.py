@@ -636,7 +636,7 @@ class SMILHtmlTimeWriter(SMIL):
 	def writeanimatenode(self, node, root):
 		attrlist = []
 		targetElement = None
-		tag = node.GetAttrDict().get('tag')
+		tag = node.GetAttrDict().get('atag')
 
 		if tag == 'animateMotion':
 			from Animators import AnimateElementParser

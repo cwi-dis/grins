@@ -922,7 +922,7 @@ def getadditive(writer, node):
 
 def getcalcmode(writer, node):
 	mode = MMAttrdefs.getattr(node, 'calcMode')
-	tag = MMAttrdefs.getattr(node, 'tag')
+	tag = MMAttrdefs.getattr(node, 'atag')
 	if tag!='animateMotion' and mode == 'linear':
 		return None
 	elif tag=='animateMotion' and mode == 'paced':
@@ -2234,7 +2234,7 @@ class SMILWriter(SMIL):
 
 	def writeanimatenode(self, node):
 		attrlist = []
-		tag = node.GetAttrDict().get('tag')
+		tag = node.GetAttrDict().get('atag')
 		attributes = self.attributes.get(tag, {})
 		for name, func in smil_attrs:
 			if attributes.has_key(name):

@@ -571,6 +571,9 @@
 
 # animation module
 
+(atag (enum animate set animateMotion animateColor region transition area) animate 'Animation type' default
+	'Animation type' normal (smil2 cmif))
+
 (targetElement (string) '' 'Target element' default
 	'Animation target element' normal (g2 qt smil10 smil2 cmif))
 
