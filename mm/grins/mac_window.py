@@ -17,7 +17,6 @@ newwindow = toplevel.newwindow
 select_setcallback = toplevel.select_setcallback
 setcursor = toplevel.setcursor
 settimer = toplevel.settimer
-usewindowlock = toplevel.usewindowlock
 setidleproc = toplevel.setidleproc
 cancelidleproc = toplevel.cancelidleproc
 lopristarting = toplevel.lopristarting
