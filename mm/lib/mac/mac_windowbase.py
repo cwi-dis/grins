@@ -20,6 +20,7 @@ import imageop
 import sys
 from types import *
 import UserCmd
+import Qt
 
 UNIT_MM, UNIT_SCREEN, UNIT_PXL = 0, 1, 2
 
@@ -173,7 +174,7 @@ ReadMask, WriteMask = 1, 2
 SINGLE, HTM, TEXT, MPEG = 0, 1, 2, 3
 
 EVENTMASK=0xffff
-MINIMAL_TIMEOUT=1	# How long we yield at the very least
+MINIMAL_TIMEOUT=0	# How long we yield at the very least
 TICKS_PER_SECOND=60.0	# Standard mac thing
 
 _X=0
@@ -224,6 +225,7 @@ class _Event:
 		self._time = Evt.TickCount()/TICKS_PER_SECOND
 		self._idles = []
 		self._grabbed = None
+		self._active_movies = 0
 		l, t, r, b = Qd.qd.screenBits.bounds
 		self._draglimit = l+4, t+4+_screen_top_offset, r-4, b-4
 		self.removed_splash = 0
@@ -255,7 +257,7 @@ class _Event:
 					self._timers[0] = sec, cb, tid
 					break
 					
-			if self._idles:
+			if self._idles or self._active_movies:
 				timeout = MINIMAL_TIMEOUT
 			elif self._timers:
 				timeout = int(self._timers[0][0]*TICKS_PER_SECOND)
@@ -284,9 +286,15 @@ class _Event:
 			if gotone:
 				while gotone:
 					self._handle_event(event)
+					if self._active_movies:
+						Qt.MoviesTask(0)
 					gotone, event = Evt.WaitNextEvent(EVENTMASK, 0)
+				if self._active_movies:
+					Qt.MoviesTask(0)
 				return 1
 			else:
+				if self._active_movies:
+					Qt.MoviesTask(0)
 				if self.needmenubarrecalc and self._command_handler:
 					self._command_handler.update_menus()
 					self.needmenubarrecalc = 0
@@ -499,6 +507,15 @@ class _Event:
 	# file descriptor interface
 	def select_setcallback(self, fd, func, args, mask = ReadMask):
 		raise error, 'No select_setcallback for the mac'
+		
+	# Routine to maintain the number of currently active movies
+	def _set_movie_active(self, is_active):
+		if is_active:
+			self._active_movies = self._active_movies + 1
+		else:
+			self._active_movies = self._active_movies - 1
+		if self._active_movies < 0:
+			raise 'Too many movies deactivated'
 		
 # The _Toplevel class represents the root of all windows.  It is never
 # accessed directly by any user code.
@@ -914,11 +931,13 @@ class _CommonWindow:
 		self._redrawfunc = None
 		self._clickfunc = None
 		self._accelerators = {}
+		self._active_movie = 0
 		
 	def close(self):
 		"""Close window and all subwindows"""
 		if self._parent is None:
 			return		# already closed
+		self._set_movie_active(0)
 		Qd.SetPort(self._wid)
 		self._parent._subwindows.remove(self)
 		Win.InvalRect(self.qdrect())
@@ -939,6 +958,12 @@ class _CommonWindow:
 		del self._clickfunc
 		del self._wid
 		del self._accelerators
+		
+	def _set_movie_active(self, isactive):
+		if isactive == self._active_movie:
+			return
+		self._active_movie = isactive
+		toplevel._set_movie_active(isactive)
 			
 	def _close_wid(self, wid):
 		"""Called by children to close wid. Only implements real close
@@ -1081,7 +1106,6 @@ class _CommonWindow:
 
 		
 		if ENABLE_TRANSPARENT_IMAGES and hasattr(reader, 'transparent'):
-			#import pdb ; pdb.set_trace() # DBG
 			r = img.reader(imgformat.xrgb8, file)
 			for i in range(len(r.colormap)):
 				r.colormap[i] = 255, 255, 255
@@ -1123,16 +1147,20 @@ class _CommonWindow:
 		x, y = coordinates[:2]
 ##		if not (0 <= x <= 1 and 0 <= y <= 1):
 ##			raise error, 'coordinates out of bounds'
-		px = int((self._rect[_WIDTH] - 1) * x + 0.5) + self._rect[_X]
-		py = int((self._rect[_HEIGHT] - 1) * y + 0.5) + self._rect[_Y]
+##		px = int((self._rect[_WIDTH] - 1) * x + 0.5) + self._rect[_X]
+##		py = int((self._rect[_HEIGHT] - 1) * y + 0.5) + self._rect[_Y]
+		px = int(self._rect[_WIDTH] * x) + self._rect[_X]
+		py = int(self._rect[_HEIGHT] * y) + self._rect[_Y]
 		if len(coordinates) == 2:
 			return px, py
 		w, h = coordinates[2:]
 ##		if not (0 <= w <= 1 and 0 <= h <= 1 and
 ##			0 <= x + w <= 1 and 0 <= y + h <= 1):
 ##			raise error, 'coordinates out of bounds'
-		pw = int((self._rect[_WIDTH] - 1) * w + 0.5)
-		ph = int((self._rect[_HEIGHT] - 1) * h + 0.5)
+##		pw = int((self._rect[_WIDTH] - 1) * w + 0.5)
+##		ph = int((self._rect[_HEIGHT] - 1) * h + 0.5)
+		pw = int(self._rect[_WIDTH] * w)
+		ph = int(self._rect[_HEIGHT] * h)
 		return px, py, pw, ph
 		
 	def _convert_color(self, (r, g, b)):
@@ -1744,7 +1772,6 @@ class _DisplayList:
 			dstrect = dstx, dsty, dstx+w, dsty+h
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 			if mask:
-				# import pdb ; pdb.set_trace() #DBG
 				Qd.CopyMask(image[0], mask[0], wid.GetWindowPort().portBits,
 					srcrect, srcrect, dstrect)
 			else:
@@ -2016,7 +2043,6 @@ class findfont:
 		self._fontnum = Fm.GetFNum(_fontmap[fontname][0])
 		self._fontface = _fontmap[fontname][1]
 		self._pointsize = pointsize
-##DBG:		self._fontnum = 1; self._fontface = 0; self._pointsize = 0
 		self._inited = 0
 		
 	def _getinfo(self):
