@@ -331,6 +331,10 @@ class TopLevel(TopLevelDialog):
 
 		if grinsTarget:
 			top.show()
+			# update the recent list.
+			if self.main != None:
+				self.main._update_recent(None)
+			
 			node = top.root
 			if hasattr(node, 'SMILidmap') and node.SMILidmap.has_key(aid):
 				val = node.SMILidmap[aid]
@@ -340,7 +344,7 @@ class TopLevel(TopLevelDialog):
 					uid, aid = val, None
 				node = node.context.mapuid(uid)
 			if dtype == A_DEST_PLAY:
-				top.player.show()
+				top.player.show()				
 				top.player.playfromanchor(node, aid)
 			elif dtype == A_DEST_PAUSE:
 				top.player.show()

@@ -1629,6 +1629,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				
 		if grinsTarget:
 			top.show()
+			# update the recent list.
+			if self.main != None:
+				self.main._update_recent(None)
+				
 			node = top.root
 			if hasattr(node, 'SMILidmap') and node.SMILidmap.has_key(aid):
 				val = node.SMILidmap[aid]
