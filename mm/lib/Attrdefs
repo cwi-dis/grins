@@ -486,25 +486,25 @@
 
 # animation module
 
-(targetElement (string) '' 'Target node' default
-	'Animation target node' normal (all))
+(targetElement (string) '' 'Target element' default
+	'Animation target element' normal (all))
 
 (attributeName (string) '' 'Attribute name' default
-	'Animation target attribute' normal (all))
+	'Animation target attribute name' normal (all))
 
 (attributeType (enum CSS XML auto) XML 'Attribute type' default
 	'Target attribute namespace' normal (all))
 
-(additive (enum replace sum) replace 'Add effects' default
+(additive (enum replace sum) replace 'Additive' default
 	'Add animation effect' normal (all))
 
 (accumulate (enum none sum) none 'Accumulate' default
 	'Accumulate animation effect' normal (all))
 
-(calcMode (enum discrete linear paced spline) linear 'Interpolation mode' default
+(calcMode (enum discrete linear paced spline) linear 'Calculation mode' default
 	'Interpolation mode for the animation' normal (all))
 
-(values (string) '' 'Interpolation values' default
+(values (string) '' 'Values' default
 	'Interpolation values' normal (all))
 
 (keyTimes (string) '' 'Key times' default
@@ -531,7 +531,7 @@
 
 # time manipulations
 
-(speed (float) 1.0 'Playback speed' default
+(speed (float) 1.0 'Speed' default
 	'Playback speed of element time' normal (all))
 
 (accelerate (float) 0.0 'Accelerate' default
