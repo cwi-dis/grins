@@ -35,7 +35,8 @@ class ArcEditor:
 		sld = f.add_valslider(HS,180,210,180,30,'Delay')
 		sld.set_call_back(self.sld_callback, None)
 		sld.set_slider_return(FL.FALSE)
-		sld.set_slider_bounds(0, 10)
+		sld.set_slider_bounds(0.0, 100.0)
+		sld.set_slider_precision(1)
 		self.sld = sld
 		dst = f.bgn_group()
 		dst_b1 = f.add_button(RB,380,180,140,40,'Destination start')
@@ -54,9 +55,9 @@ class ArcEditor:
 		cancel.set_call_back(self.cancelcallback, None)
 		restore = f.add_button(NB, 72, 2, 66, 26, 'Restore')
 		restore.set_call_back(self.restorecallback, None)
-		apply = f.add_button(XB, 402, 2, 66, 26, 'Apply')
+		apply = f.add_button(NB, 402, 2, 66, 26, 'Apply')
 		apply.set_call_back(self.applycallback, None)
-		ok = f.add_button(NB, 472, 2, 66, 26, 'OK')
+		ok = f.add_button(XB, 472, 2, 66, 26, 'OK')
 		ok.set_call_back(self.okcallback, None)
 		self.all = [src_b1, src_b2, sld, dst_b1, dst_b2, cancel, restore, apply, ok]
 		self.setbuttons()
