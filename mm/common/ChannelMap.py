@@ -14,7 +14,8 @@ class ChannelMap:
 		'shell': 	'ShellChannel',
 		'vcr':		'VcrChannel',
 		'socket':	'SocketChannel',
-		'mpeg':		'MpegChannel',
+		'video':	'VideoChannel',
+		'mpeg':		'VideoChannel',
 		'cmif':		'CmifChannel',
 		'html':		['HtmlChannel', 'PseudoHtmlChannel'],
 		'label':	'LabelChannel',
@@ -57,13 +58,13 @@ class ChannelMap:
 channelmap = ChannelMap()
 
 channeltypes = ['null', 'text', 'image']
-commonchanneltypes = ['text', 'image', 'sound', 'movie', 'layout']
+commonchanneltypes = ['text', 'image', 'sound', 'video', 'layout']
 otherchanneltypes = []
 channelhierarchy = [
     ('text', ['label', 'text', 'html']),
     ('image', ['image', 'graph']),
     ('sound', ['sound']),
-    ('movie', ['movie', 'mpeg', 'vcr']),
+    ('movie', ['video', 'movie', 'mpeg', 'vcr']),
     ('control', ['layout', 'cmif', 'socket', 'shell', 'python', 'external',
 		 'null']),
     ('ole', ['word']),
@@ -75,7 +76,8 @@ for t in ct:
 	if t not in channeltypes:
 		channeltypes.append(t)
 	if t not in commonchanneltypes:
-		otherchanneltypes.append(t)
+		if t not in ('mpeg', 'movie'): # deprecated
+			otherchanneltypes.append(t)
 del ct, t
 
 shortcuts = {
@@ -84,6 +86,7 @@ shortcuts = {
 	'label':	'L',
 	'sound':	'S',
 	'image': 	'I',
+	'video':	'v',
 	'movie': 	'M',
 	'python': 	'P',
 	'shell': 	'!',
