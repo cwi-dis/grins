@@ -38,7 +38,7 @@ import macfs
 # Set variable for standalone cmif:
 #
 try:
-	import MMNode
+	import SR
 except ImportError:
 	STANDALONE=0
 else:
@@ -111,6 +111,7 @@ else:
 # macfreeze: exclude TERMIOS
 # macfreeze: exclude cmifex
 # macfreeze: exclude readline
+# macfreeze: exclude staticlicense
 
 
 #
@@ -177,7 +178,7 @@ try:
 			import profile
 			fss, ok = macfs.StandardPutFile("Profile output:")
 			if not ok: sys.exit(1)
-			profile.run("import grins", fss.as_pathname())
+			profile.run("import cmifed", fss.as_pathname())
 		else:
 			import cmifed
 		no_exception=1
