@@ -48,6 +48,8 @@ error = 'lib.win32.AttrEditForm.error'
 # AttrEditor as a tab-dialog
 
 class AttrCtrl:
+	want_colon_after_label = 1
+
 	def __init__(self,wnd,attr,resid):
 		self._wnd=wnd
 		self._attr=attr
@@ -61,7 +63,7 @@ class AttrCtrl:
 		a=self._attr
 		hd=a.gethelpdata()
 		if hd[1]:
-			infoc.settext(hd[2]+' - default: ' + hd[1])
+			infoc.settext("%s (leave empty for %s)"%(hd[2], hd[1]))
 		else:
 			infoc.settext(hd[2])
 	
@@ -92,7 +94,10 @@ class OptionsCtrl(AttrCtrl):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
 		self._options.attach_to_parent()
-		self._attrname.settext(self._attr.getlabel())
+		label = self._attr.getlabel()
+		if self.want_colon_after_label:
+			label = label + ':'
+		self._attrname.settext(label)
 		list = self._attr.getoptions()
 		val = self._attr.getcurrent()
 		self.setoptions(list,val)
@@ -149,7 +154,10 @@ class OptionsRadioCtrl(AttrCtrl):
 	def OnInitCtrl(self):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
-		self._attrname.settext(self._attr.getlabel())
+		label = self._attr.getlabel()
+		if self.want_colon_after_label:
+			label = label + ':'
+		self._attrname.settext(label)
 		list = self._attr.getoptions()
 		n = len(list)
 		for ix in range(n):
@@ -206,7 +214,10 @@ class OptionsCheckCtrl(AttrCtrl):
 	def OnInitCtrl(self):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
-		self._attrname.settext(self._attr.getlabel())
+		label = self._attr.getlabel()
+		if self.want_colon_after_label:
+			label = label + ':'
+		self._attrname.settext(label)
 		list = self._attr.getoptions()
 		n = len(list)
 		for ix in range(n):
@@ -267,7 +278,10 @@ class FileCtrl(AttrCtrl):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
 		self._attrval.attach_to_parent()
-		self._attrname.settext(self._attr.getlabel())
+		label = self._attr.getlabel()
+		if self.want_colon_after_label:
+			label = label + ':'
+		self._attrname.settext(label)
 		self._attrval.settext(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
@@ -305,7 +319,10 @@ class ColorCtrl(AttrCtrl):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
 		self._attrval.attach_to_parent()
-		self._attrname.settext(self._attr.getlabel())
+		label = self._attr.getlabel()
+		if self.want_colon_after_label:
+			label = label + ':'
+		self._attrname.settext(label)
 		self._attrval.settext(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
@@ -401,7 +418,10 @@ class StringCtrl(AttrCtrl):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
 		self._attrval.attach_to_parent()
-		self._attrname.settext(self._attr.getlabel())
+		label = self._attr.getlabel()
+		if self.want_colon_after_label:
+			label = label + ':'
+		self._attrname.settext(label)
 		self.setvalue(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnReset,self._resid[2])
@@ -437,7 +457,10 @@ class TupleCtrl(AttrCtrl):
 	def OnInitCtrl(self):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
-		self._attrname.settext(self._attr.getlabel())
+		label = self._attr.getlabel()
+		if self.want_colon_after_label:
+			label = label + ':'
+		self._attrname.settext(label)
 		for i in range(self._nedit):		
 			self._attrval[i].attach_to_parent()
 		strxy=self._attr.getcurrent()
@@ -590,6 +613,18 @@ class AttrPage(dialog.PropertyPage):
 			raise error,'tab index is uninitialized'
 		tabctrl.SetItemText(self._tabix,self._title)
 
+# On some pages we don't want the colon after the attribute name,
+# because we put the attribute name on the groupbox, not before the editable
+# field. These classes are there specifically to override this behaviour
+# of adding a colon to the attribute name
+class OptionsRadioNocolonCtrl(OptionsRadioCtrl):
+	want_colon_after_label = 0
+
+class OptionsCheckNocolonCtrl(OptionsCheckCtrl):
+	want_colon_after_label = 0
+
+class StringNocolonCtrl(StringCtrl):
+	want_colon_after_label = 0
 
 ###############################	
 class SingleAttrPage(AttrPage):
@@ -602,35 +637,35 @@ class SingleAttrPage(AttrPage):
 	CTRLMAP_BYNAME = {
 		'layout':		# Two radio buttons
 			(grinsRC.IDD_EDITATTR_R2,
-			 OptionsRadioCtrl,
+			 OptionsRadioNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
 		'visible':		# Three radio buttons
 			(grinsRC.IDD_EDITATTR_R3,
-			 OptionsRadioCtrl,
+			 OptionsRadioNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5)),
 		'drawbox':		# Three radio buttons
 			(grinsRC.IDD_EDITATTR_R3,
-			 OptionsRadioCtrl,
+			 OptionsRadioNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5)),
 		'popup':		# Three radio buttons
 			(grinsRC.IDD_EDITATTR_R3,
-			 OptionsRadioCtrl,
+			 OptionsRadioNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5)),
 		'transparent':	# Four radio buttons
 			(grinsRC.IDD_EDITATTR_R4,
-			 OptionsRadioCtrl,
+			 OptionsRadioNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6)),
 		'project_audiotype':	# Four radio buttons
 			(grinsRC.IDD_EDITATTR_R4,
-			 OptionsRadioCtrl,
+			 OptionsRadioNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6)),
 		'project_videotype':	# Four radio buttons
 			(grinsRC.IDD_EDITATTR_R4,
-			 OptionsRadioCtrl,
+			 OptionsRadioNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6)),
 		'project_targets':	# Six check buttons
 			(grinsRC.IDD_EDITATTR_C6,
-			 OptionsCheckCtrl,
+			 OptionsCheckNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_CHECK1,grinsRC.IDC_CHECK2,grinsRC.IDC_CHECK3,grinsRC.IDC_CHECK4,grinsRC.IDC_CHECK5,
 			  grinsRC.IDC_CHECK6,grinsRC.IDC_8)),
 		}
@@ -653,7 +688,7 @@ class SingleAttrPage(AttrPage):
 			 (grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13)),
 		'text':
 			(grinsRC.IDD_EDITATTR_E1,
-			 StringCtrl,
+			 StringNocolonCtrl,
 			 (grinsRC.IDC_GROUP1,grinsRC.IDC_12,grinsRC.IDC_13)),
 		}
 
