@@ -11,6 +11,7 @@ from winfont import findfont
 
 import wincon
 import wingdi
+import winstruct
 
 class DisplayList:
 	def __init__(self, window, bgcolor, units):
