@@ -3,14 +3,14 @@ __version__ = "$Id$"
 
 import MMAttrdefs
 import string
+import math
 
 # An Animator entity implements the interpolation part
 # of animate elements taking into account the calc mode.
-# It also implements the semantics of the 'accumulate' attr.
-
-# rem: we can implement also at this level time manipulations
-#      (speed, accelerate-decelerate and autoReverse)
-#      speed and autoReverse must be taken into account also at higher levels
+# It also implements the semantics of the 'accumulate' attr
+# and time manipulations:
+#      speed, accelerate-decelerate and autoReverse
+# speed and autoReverse must be taken into account also at a higher level
 class Animator:
 	def __init__(self, attr, domval, values, dur, mode='linear', 
 			times=None, splines=None, accumulate='none', additive='replace'): 
@@ -75,23 +75,40 @@ class Animator:
 		# current value
 		self.__curvalue = None
 
+		# time manipulators
+		self._speed = 1.0
+		self._accelerate = 0.0
+		self._decelerate = 0.0
+		self._autoReverse = 0
+
 	def getDOMValue(self):
 		return self._domval
 
 	def getAttrName(self):
 		return self._attr
 
+	# set local time to t and return value at t
 	def getValue(self, t):
+		# time manipulate transform
+		t = self._transformTime(t)
+
+		# boundary values
 		if t<0 or t>self._dur:
 			return self._domval
 		if self._dur == 0:
 			return self._values[0]
+
+		# calcMode
+		v = self._inrepol(t)
+
+		# accumulate
 		if self._accumulate=='sum' and self.__accValue:
-			v = self.__accValue + self._inrepol(t)
-		else:
-			v = self._inrepol(t)
+			v = self.__accValue + v
+
+		# convertion
 		if self._convert:
 			v = self._convert(v)
+
 		self.__curvalue = v
 		return v
 
@@ -159,8 +176,71 @@ class Animator:
 
 	def setRetunedValuesConvert(self, cvt):
 		self._convert = cvt
+
+	#
+	# begin time manipulation section
+	#
+	def getTimeManipulatedDur(self):
+		dur = self._dur
+		if self._autoReverse:
+			dur = 2*self._dur
+		if self._speed!=1.0:
+			dur = self._speed*dur
+		return dur
 		
+	def _setAutoReverse(self,t=0):
+		self._autoReverse = t
+
+	def _setAccelerateDecelerate(self, a, b):
+		self._accelerate = a
+		self._decelerate = b
+
+	def _setSpeed(self,s):
+		self._speed = s
+
+	def _transformTime(self, t):
+		if self._autoReverse:
+			t = self._autoReverse(t)
+		if (self._accelerate+self._decelerate)>0.0:
+			t = self._accelerate_decelerate(t)
+		if self._speed!=1.0:
+			t = self._speed(t)
+		return t
+
+	def _accelerate_decelerate(self, t):
+		a = self._accelerate
+		b = self._decelerate
+		d = self._dur
+		ad = a*d
+		bd = b*t
+		t2 = t*t
+		r = 1.0/(1.0 - 0.5*a - 0.5*b)
+		if t>=0 and t<=ad:
+			tp = 0.5*r*t2/ad
+		elif t>a*d and t<=(d-bd):
+			 tp = r*t
+		elif t>(d-bd) and t<=d:
+			tp = r * ((0.5*t2 - (d-bd))/bd)
+		else:
+			tp = t
+		return tp
+
+	def _autoReverse(self, t):
+		if t > 2*self._dur: 
+			return 0
+		elif t > self._dur:
+			return t - dur
+		else:
+			return t
+
+	def _speed(self, t):
+		if self._speed<0:
+			t = self._dur - t
+		return math.fabs(self._speed)*t
+
+	#
 	# temporary parametric form
+	#
 	def bezier(self, t, e = (0,0,1,1)):
 		res = 20
 		step = 1.0/float(res)
@@ -357,7 +437,7 @@ class AnimateElementParser:
 		self.__accelerate = MMAttrdefs.getattr(self.__anim, 'accelerate')
 		self.__decelerate = MMAttrdefs.getattr(self.__anim, 'decelerate')
 		dt =  self.__accelerate + self.__decelerate
-		if(dt>1.0)
+		if dt>1.0:
 			# *the timing module draft says accelerate is clamped to 1 and decelerate=1-accelerate
 			self.__accelerate = self.__accelerate/dt
 			self.__decelerate = self.__decelerate/dt
@@ -408,6 +488,7 @@ class AnimateElementParser:
 			anim = Animator(attr, domval, values, dur, mode, times, splines, 
 				accumulate, additive)
 			anim.setRetunedValuesConvert(_round)
+			self.__setTimeManupulators(anim)
 			return anim
 		## End temp grins extensions
 
@@ -435,6 +516,7 @@ class AnimateElementParser:
 			print 'Dont know how to animate attribute.',self.__attrname,self.__attrtype
 			anim = ConstAnimator(attr, domval, domval, dur)
 
+		self.__setTimeManupulators(anim)
 		return anim
 
 	def getAttrName(self):
@@ -460,6 +542,15 @@ class AnimateElementParser:
 
 	def getKeySplines(self):
 		return MMAttrdefs.getattr(self.__anim, 'keySplines')
+
+	# set time manipulators to the animator
+	def __setTimeManupulators(self, anim):
+		if self.__autoReverse=='true':
+			anim._setAutoReverse(1)
+		if (self.__accelerate+self.__decelerate)>0.0:
+			anim._setAccelerateDecelerate(self.__accelerate, self.__decelerate)
+		if self.__speed!=1.0:
+			anim._setSpeed(self.__speed)
 
 	# check that we have a valid target
 	def __checkTarget(self):
