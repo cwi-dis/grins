@@ -13,6 +13,7 @@ import sys
 import windowinterface
 import MMurl
 from TextChannel import getfont, mapfont
+import parsehtml
 try:
 	import Xrm
 	has_xrm = 1
@@ -206,6 +207,15 @@ class HtmlChannel(Channel.ChannelWindow):
 				if self.armed_anchor:
 					print 'multiple whole-node anchors on node'
 				self.armed_anchor = a
+		anchors = []
+		for a in alist:
+			atype = a[A_TYPE]
+			if atype in SourceAnchors and \
+			   atype not in WholeAnchors:
+				anchors.append(a[A_ID])
+		parser = parsehtml.Parser(anchors)
+		parser.feed(self.armed_str)
+		self.armed_str = parser.close()
 		return 1
 
 	_boldfonts = [('boldFont', 9.0),
