@@ -3657,6 +3657,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if value:
 			attributes['trtype'] = value
 			del attributes['type']
+		value = attributes.get('subType')
+		if value:
+			self.syntax_error('transitionFilter attribute subType should be subtype')
+			attributes['subtype'] = value
+			del attributes['subType']
+
 		value = attributes.get('fadeColor')
 		if value:
 			attributes['fadeColor'] = value
