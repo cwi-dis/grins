@@ -4,6 +4,7 @@ from Channel import ChannelWindow
 import windowinterface
 import time
 import MMurl
+import MMAttrdefs
 import os
 import Qt
 import QuickTime
@@ -76,7 +77,7 @@ class VideoChannel(ChannelWindow):
 		self.__begin = self.getclipbegin(node, 'sec')
 		self.__end = self.getclipend(node, 'sec')
 		self.arm_loop = self.getloop(node)
-		self.place_movie(self.arm_movie)
+		self.place_movie(node, self.arm_movie)
 		self.make_ready(self.arm_movie)
 		return 1
 		
@@ -101,13 +102,37 @@ class VideoChannel(ChannelWindow):
 		movie.GoToBeginningOfMovie()
 ##		movie.MoviesTask(0)  
 	
-	def place_movie(self, movie):
+	def place_movie(self, node, movie):
 		# XXXX This always scales or positions, but it should look at the scale
 		# attribute
 		self.window._macsetwin()
 		screenBox = self.window.qdrect()
-		movieBox = movie.GetMovieBox()
-		nMovieBox = self._scalerect(screenBox, movieBox)
+		l, t, r, b = movie.GetMovieBox()
+		if node:
+			scale = MMAttrdefs.getattr(node, 'scale')
+			center = MMAttrdefs.getattr(node, 'center')
+		else:
+			# This happens during a resize: we don't know scale/center anymore.
+			scale = 1
+			center = 1
+		# Compute real scale for scale-to-fit
+		if scale <= 0:
+			sl, st, sr, sb = screenBox
+			print 'movie', l, t, r, b
+			print 'screen', sl, st, sr, sb
+			if l == r:
+				maxxscale = 1  # Empty window, so don't divide by 0
+			else:
+				maxxscale = float(sr-sl)/(r-l)
+			if t == b:
+				maxyscale = 1  # Empty window, so don't divide by 0
+			else:
+				maxyscale = float(sb-st)/(b-t)
+			scale = min(maxxscale, maxyscale)
+			print 'scale=', scale, maxxscale, maxyscale
+				
+		movieBox = l, t, int(l+(r-l)*scale), int(t+(b-t)*scale)
+		nMovieBox = self._scalerect(screenBox, movieBox, center)
 		if nMovieBox != screenBox:
 			movie.SetMovieBox(nMovieBox)
 		
@@ -152,7 +177,7 @@ class VideoChannel(ChannelWindow):
 		
 		self.fixidleproc()
 		
-	def _scalerect(self, (sl, st, sr, sb), (ml, mt, mr, mb)):
+	def _scalerect(self, (sl, st, sr, sb), (ml, mt, mr, mb), center):
 		maxwidth, maxheight = sr-sl, sb-st
 		movwidth, movheight = mr-ml, mb-mt
 		if movwidth > maxwidth:
@@ -163,8 +188,11 @@ class VideoChannel(ChannelWindow):
 			# Movie is too high. Scale.
 			movwidth = movwidth*maxheight/movheight
 			movheight = maxheight
-		movleft = (maxwidth-movwidth)/2
-		movtop = (maxheight-movheight)/2
+		if center:
+			movleft = (maxwidth-movwidth)/2
+			movtop = (maxheight-movheight)/2
+		else:
+			movleft = movtop = 0
 		return sl+movleft, st+movtop, sl+movleft+movwidth, st+movtop+movheight
 					
 	# We override 'play', since we handle our own duration
