@@ -167,9 +167,8 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		for i in node.children:
 			if i.type in MMNode.leaftypes:
 				# i is a leafnode
-				bob = self._factory.createnode(node)
-				container.add(bob)
-				n = bob.GetChannelName()
+				bob = self._factory.createnode(i)
+				n = bob.get_channel()
 				print "Debug: bob is: <"+n+">"
 				self.channelWidgets[n].append(bob)
 			else:
@@ -177,6 +176,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 				bob = self.__init_create_widgets(i)
 				self._add_breaks(bob)
 				# TODO: what do I do with the struct nodes?
+			container.add(bob)
 		return container
 
 	def _add_breaks(self, widget):
@@ -232,7 +232,8 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		t = 2
 		l = 2
 		r = 2 + CHANNELWIDTH
-		# Move all of my children (channels)
+
+		# Move all of the channels into position.
 		for i in self.channelWidgets.values():
 			i.moveto((l,t,r,t+self.channelHeight))
 			t = t + self.channelHeight + 2
@@ -458,14 +459,18 @@ class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 		self.editmgr = self.node.context.editmgr
 
 	def set_x(self, l,r):
-		print "TimeWidget.set_x(", l, r, ")"
+		print "TimeWidget.set_x(", l, r, ")", self
 		x,y,w,h = self.get_box()
 		self.moveto((l,y,r,y+h))
 		
 	def set_y(self, t,b):
-		print "TimeWidget.set_y(", t, b, ")"
+		print "TimeWidget.set_y(", t, b, ")", self
 		x,y,w,h = self.get_box()
 		self.moveto((x,t,x+w,b))
+
+	def GetTimes(self):
+		return self.node.GetTimes()
+
 
 class MMWidget(TimeWidget, GeoDisplayWidget):
 	# This is the box which represents one leaf node.
@@ -503,8 +508,9 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 	def get_channel(self):
 		# Returns a string which is this node's channel.
 		if not self.node.GetChannel():
-			print self.node,'no channel'
-			return ''
+			print "ERROR: no channel", self.node, self.node.GetChannel()
+			return 'undefined'
+		print "DEBUG: get_channel returning: ", self.node.GetChannel().GetLayoutChannel().name
 		return self.node.GetChannel().GetLayoutChannel().name
 
 	def get_starttime(self):
@@ -535,7 +541,11 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 	get_y_end = get_y_start
 
 	def GetChannelName(self):
-		return self.node.GetChannelName()
+		print "TODO: deprecated api used."
+		return self.get_channel()
+
+	def recalc(self):
+		pass
 
 # delete me.
 ##class SyncBarWidget(TimeWidget, GeoDisplayWidget):
@@ -693,6 +703,7 @@ class SeqMMWidget(MultiMMWidget):
 		print "DEBUG: seqwidget.recalc()", self.subwidgets
 		mytimes = self.node.GetTimes()
 		x,y,w,h = self.get_box()
+		print "DEBUG: SeqWidget.getbox:  ", x, y, w, h
 		if mytimes[1]-mytimes[0] > 0:
 			ppt = w/(mytimes[1]-mytimes[0])	# pixels per time
 		else:
@@ -700,8 +711,8 @@ class SeqMMWidget(MultiMMWidget):
 		
 		for i in self.subwidgets:
 			ctime = i.GetTimes()
-			cl = (ctime[0]-mytimes[0])*ppt
-			cr = (ctime[1]-mytimes[0])*ppt
+			cl = (ctime[0]-mytimes[0])*ppt + x + BARWIDTH
+			cr = (ctime[1]-mytimes[0])*ppt + x + BARWIDTH
 			i.set_x(cl, cr)
 			i.recalc()
 
@@ -721,7 +732,7 @@ class SeqMMWidget(MultiMMWidget):
 			return self.y_end_cached
 		else:
 			if len(self.subwidgets) > 0:
-				bob = self.subwidgets[len(self.subwidgets)-1]
+				bob = self.subwidgets[len(self.subwidgets)-1].get_y_end()
 				self.y_end_cached = bob
 				return bob
 			else:
@@ -734,6 +745,7 @@ class BarMMWidget(MultiMMWidget):
 		MultiMMWidget.setup(self)
 		self.w_startbar = self.graph.AddWidget(Box(self.mother))
 		self.w_endbar = self.graph.AddWidget(Box(self.mother))
+		self.w_endbar.set_color((255,255,255))
 		self.y_start_cached = None
 		self.y_end_cached = None
 
@@ -741,70 +753,99 @@ class BarMMWidget(MultiMMWidget):
 		return "I'm a BarMMWidget"
 
 	def moveto(self, coords):
-		size = BARSIZE
+		size = BARWIDTH
 		l,t,r,b = coords
-		self.w_startbar.moveto((l,t,l+size,b))
-		self.w_endbar.moveto((r-size, t, r, b))
-		TimeWidget.moveto(coords)
+
+		# bars are moved in the recalc() function
+		#self.w_startbar.moveto((l,t,l+size,b))
+		#self.w_endbar.moveto((r-size, t, r, b))
+		TimeWidget.moveto(self,coords)
 		
 	def destroy(self):
 		self.graph.DelWidget(self.w_startbar)
 		self.graph.DelWidget(self.w_endbar)
 
-	def GetTimes(self):
-		return self.node.GetTimes()
-
 	def recalc(self):
 		# recurse through my subwidgets, resizing each.
+		# also, set the bar sizes.
 		print "DEBUG: barwidget.recalc()"
 		mytimes = self.node.GetTimes()
 		x,y,w,h = self.get_box()
+		print "DEBUG: barwidget.get_box:", x,y,w,h
 
-		top = None
-		bottom = None
-		
+		# Set the bars position
+		# The start bar..
+		t,b = self.get_y_start()
+		# The +2's are to make this show from behind other bars
+		self.w_startbar.moveto((x+2, t+2, x+BARWIDTH+2, b+2))
+		# The end bar..
+		t,b = self.get_y_end()
+		self.w_endbar.moveto((x+w-BARWIDTH-2, t-2, x+w-2, b-2))
+
 		w = w - 2*BARWIDTH	# remember the size of the bars!
+		x = x + BARWIDTH
 		if mytimes[1]-mytimes[0] > 0:
 			ppt = w/(mytimes[1]-mytimes[0])	# pixels per time
+			for i in self.subwidgets:
+				ctime = i.GetTimes()
+				cl = (ctime[0]-mytimes[0])*ppt
+				cr = (ctime[1]-mytimes[0])*ppt
+				print "DEBUG: BarWidget: cl:", cl, " cr:", cr
+				i.set_x(cl+x, cr+x)
+				i.recalc()
 		else:
-			ppt = 0
-		
-		for i in self.subwidgets:
-			ctime = i.GetTimes()
-			cl = (ctime[0]-mytimes[0])*ppt
-			cr = (ctime[1]-mytimes[0])*ppt
-			i.set_x(cl, cr)
-			i.recalc()
+			print "Error: times are equal: ", mytimes[0], mytimes[1]
 
 	def get_y_start(self):
-		# return.. er.. the mean of the child nodes.
+		# returns a tuple of the top and bottom of the front of this node.
 		if self.y_start_cached is not None:
 			return self.y_start_cached
 		elif len(self.subwidgets) > 0:
-			# calculate the mean of all of my subwidgets.
-			total = 0
+			# calculate the highest and lowest widgets.
+			highest = None
+			lowest = None
 			for i in self.subwidgets:
-				total = total + i.get_y_start()
-			bob = total / len(self.subwidgets)
-			self.y_start_cached = bob
-			return bob
+				t,b = i.get_y_start()
+				print "Bleep!", t, b
+				if highest == None:
+					highest = t
+				elif t < highest:
+					highest = t
+				if lowest == None:
+					lowest = b
+				elif b > lowest:
+					lowest = b
+			self.y_start_cached = (highest, lowest)
+			print "DEBUG: get_y_start returning ", self.y_start_cached
+			return (highest, lowest)
 		else:
 			# TODO: node with no subwidgets.
 			assert 0
 
 	def get_y_end(self):
-		# return the mean of the ends of the child nodes.
+		# returns a tuple of the top and bottom of the end of this node
 		if self.y_end_cached is not None:
+			print "DEBUG: get_y_end returning: ", self.y_end_cached
 			return self.y_end_cached
 		elif len(self.subwidgets) > 0:
-			total = 0
+			highest = None
+			lowest = None
 			for i in self.subwidgets:
-				total = total + i.get_y_end()
-			bob = total / len(self.subwidgets)
-			self.y_end_cached = bob
-			return bob
+				print "DEBUG: i is: ", i
+				(t,b) = i.get_y_end()
+				if highest == None:
+					highest = t
+				elif t < highest:
+					highest = t
+				if lowest == None:
+					lowest = b
+				elif b > lowest:
+					lowest = b
+			self.y_end_cached = (highest, lowest)
+			print "DEBUG: get_y_end returning: ", highest, lowest
+			return (highest, lowest)
 		else:
-			assert 0	# node with no subwidgets.
+			assert 0	# node with no children. I'm not happy.
 
 
 class ParMMWidget(BarMMWidget):
