@@ -1102,8 +1102,8 @@ class LayoutWnd:
 		point, flags = msg.pos(), msg._wParam
 		x, y = point
 		# x and y are signed number
-		x = win32mu.UInt16ToInt16(x)
-		y = win32mu.UInt16ToInt16(y)
+		x = win32mu.UInt16ToInt(x)
+		y = win32mu.UInt16ToInt(y)
 		point = x,y
 		
 		if self._lbuttondown is not None:
