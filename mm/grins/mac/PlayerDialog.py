@@ -122,14 +122,14 @@ class PlayerDialog:
 		if w is not None:
 			w.set_dynamiclist(usercmd.USERGROUPS, menu)
 
-	def setugroup(self, ugroup, onoff):
+	def setusergroup(self, ugroup, onoff):
 		i = self.__ugroupdict.get(ugroup)
 		if i is None:
 			raise RuntimeError, 'unknown user group'
 		if self.__ugroups[i][2] == onoff:
 			return
 		self.__ugroups[i] = self.__ugroups[i][:2] + (onoff,)
-		self.setugroups(self.__ugroups)
+		self.setusergroups(self.__ugroups)
 
 	def setchannels(self, channels):
 		self.__channels = channels
