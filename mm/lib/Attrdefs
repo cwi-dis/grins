@@ -569,7 +569,7 @@
 (decelerate (float) 0.0 'Decelerate' default
 	'Proportion of the simple duration to decelerate' normal (all))
 
-(autoReverse (enum true false) false 'Auto reverse' default
+(autoReverse (bool) 0 'Auto reverse' default
 	'Play forwards then backwards' normal (all))
 
 # Transitions

@@ -850,7 +850,7 @@ def gettransition(writer, node, which):
 	
 def getautoreverse(writer, node):
 	autoReverse = MMAttrdefs.getattr(node, 'autoReverse')
-	if autoReverse == 'true':
+	if autoReverse:
 		return 'true'
 	return None
 

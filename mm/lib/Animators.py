@@ -1184,7 +1184,7 @@ class AnimateElementParser:
 			
 	# set time manipulators to the animator
 	def __setTimeManipulators(self, anim):
-		if self.__autoReverse=='true':
+		if self.__autoReverse:
 			anim._setAutoReverse(1)
 		if (self.__accelerate+self.__decelerate)>0.0:
 			anim._setAccelerateDecelerate(self.__accelerate, self.__decelerate)

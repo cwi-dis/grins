@@ -703,11 +703,31 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					attrdict['transparent'] = 1
 					attrdict['bgcolor'] = 0,0,0
+			elif attr == 'speed':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				try:
+					speed = string.atof(val)
+				except string.atof_error:
+					self.syntax_error('bad speed attribute')
+				else:
+					attrdict['speed'] = speed
+			elif attr == 'autoReverse':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val not in ('true', 'false'):
+					self.syntax_error('bad autoReverse attribute')
+				else:
+					attrdict['autoReverse'] = val == 'true'
+				
 			elif compatibility.QT == features.compatibility and \
 				self.addQTAttr(attr, val, node):
 				pass
 			elif attr not in smil_node_attrs:
 				# catch all
+				# this should not be used for normal operation
 				try:
 					attrdict[attr] = parseattrval(attr, val, self.__context)
 				except:
@@ -1059,6 +1079,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if CASCADE and not self.__has_layout:
 				self.__defleft = self.__defleft + 20
 				self.__deftop = self.__deftop + 10
+			self.__in_layout = LAYOUT_SMIL
 			self.start_region(ch, checkid = 0)
 			self.end_region()
 			self.__in_layout = LAYOUT_NONE
