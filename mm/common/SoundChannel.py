@@ -11,18 +11,21 @@
 # We also support sound files created by our tools on the 4D/25.
 
 
-# Don't import 'al' here; this makes it possible to use the CMIF editor
-# on workstations without audio, as long as the document has no sound...
-import AL
-import aiff
 import posix
 from stat import ST_SIZE
 import string
 
 
-from Channel import Channel
+# Don't import 'al' here; this makes it possible to use the CMIF editor
+# on workstations without audio, as long as the document has no sound...
+import AL
+import aiff
+
+
 from MMExc import *
 import MMAttrdefs
+
+from Channel import Channel
 
 
 class SoundChannel() = Channel():
@@ -30,8 +33,8 @@ class SoundChannel() = Channel():
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = Channel.chan_attrs + []
-	node_attrs = Channel.node_attrs + ['file']
+	chan_attrs = []
+	node_attrs = ['file']
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, (name, attrdict, player))
