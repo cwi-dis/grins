@@ -125,7 +125,7 @@ class Main(MainDialog):
 		files.sort()
 		for file in files:
 			url = MMurl.pathname2url(file)
-			if mimetypes.guess_type(url)[0] != 'application/smil':
+			if mimetypes.guess_type(url)[0] != 'application/x-grins-project':
 				continue
 			pathname = os.path.join(self.templatedir, file)
 			try:
@@ -160,7 +160,7 @@ class Main(MainDialog):
 			windowinterface.TemplateDialog(names, descriptions,self._new_ok_callback, parent=self.getparentwindow())
 		else:
 			windowinterface.showmessage("No Templates found, creating empty document")
-			top = TopLevel.TopLevel(self, self.getnewdocumentname(mimetype="application/smil"), 1)
+			top = TopLevel.TopLevel(self, self.getnewdocumentname(mimetype="application/x-grins-project"), 1)
 			self.new_top(top)
 	
 	def help_callback(self, params=None):
