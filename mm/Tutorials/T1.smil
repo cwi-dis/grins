@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- Created with an evaluation copy of GRiNS -->
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+  <head>
+    <meta name="title" content=" pictures "/>
+    <meta name="generator" content="GRiNS editor 1.0Beta win32 patchlevel 1"/>
+    <layout>
+      <root-layout id="pictures-" width="303" height="276"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="pictures" width="303" height="229" fit="meet" GRiNS:type="image"/>
+    </layout>
+  </head>
+  <body>
+    <seq id="Images">
+      <img id="Map" region="pictures" src="Assets/map.jpg" dur="5s"/>
+      <img id="HG-168" region="pictures" src="Assets/h168.jpg" dur="5s"/>
+      <img id="HG-218" region="pictures" src="Assets/h218.jpg" dur="5s"/>
+    </seq>
+  </body>
+</smil>
