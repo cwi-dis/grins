@@ -60,7 +60,16 @@ def createKey(strkey, rootkey = win32con.HKEY_CURRENT_USER):
 		print arg
 	else:
 		win32api.RegCloseKey(key)
-	
+
+def hasKey(strkey, rootkey = win32con.HKEY_CURRENT_USER):
+	retval = None
+	try:
+		key = win32api.RegOpenKeyEx(rootkey, strkey, 0, win32con.KEY_READ)
+	except win32api.error, arg:
+		return 0
+	win32api.RegCloseKey(key)
+	return 1
+
 # if the file ext exists in the registry db and has an entry 'Content Type'
 # then this function returns content type registry value as a string 
 # else returns None
@@ -152,7 +161,3 @@ if __name__ == '__main__':
 
 	print getShellCmd('.smi')
 	print getShellApp('.smi')
-
-	createKey(r'Software\Oratrix\toolbars')
-	setKeyValue(r'Software\Oratrix\toolbars', 'entry1', '1')
-	print getKeyValue(r'Software\Oratrix\toolbars', 'entry1')
