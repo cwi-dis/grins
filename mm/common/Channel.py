@@ -1158,7 +1158,12 @@ class Channel:
 		# to edit an anchor.
 		return 0
 
+	__stopping = 0
 	def errormsg(self, node, msg):
+		if self.__stopping:
+			# don't put up second error message dialog if we're
+			# already stopping
+			return
 		if node:
 			node.set_infoicon('error', msg)
 			name = MMAttrdefs.getattr(node, 'name')
@@ -1171,7 +1176,16 @@ class Channel:
 			'While arming%s on channel %s:\n%s' %
 				(nmsg, self._name, msg),
 			mtype = 'question',
-			cancelCallback = (self._player.cc_stop, ()))
+			cancelCallback = (self.__delaystop, ()))
+
+	def __delaystop(self):
+		Channel.__stopping = 1
+		self._player.pause(1)
+		windowinterface.settimer(0.001, (self.__stop, ()))
+
+	def __stop(self):
+		self._player.cc_stop()
+		Channel.__stopping = 0
 
 ### dictionary with channels that have windows
 ##ChannelWinDict = {}
