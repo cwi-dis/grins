@@ -460,7 +460,8 @@ class FileDialog:
 		cd=Sdk.GetCurrentDirectory()
 		dlg.SetOFNInitialDir(directory)
 		result=dlg.DoModal()
-		Sdk.SetCurrentDirectory(cd)
+		if directory!=None and directory!='.':
+			Sdk.SetCurrentDirectory(cd)
 		if result==win32con.IDOK:
 			if cb_ok: cb_ok(dlg.GetPathName())
 		else:
