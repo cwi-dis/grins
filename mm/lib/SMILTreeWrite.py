@@ -454,11 +454,23 @@ def getsyncarc(writer, node, isend):
 	list = []
 	nomultiple = 0
 	for arc in node.GetRawAttrDef(attr, []):
-		if arc.srcnode is None and arc.event is None and arc.marker is None and arc.delay is None:
+		if arc.srcnode is None and arc.event is None and arc.marker is None and arc.delay is None and arc.wallclock is None:
 			nomultiple = 1
 			list.append('indefinite')
-		elif arc.srcnode is None and arc.event is None and arc.marker is None:
+		elif arc.srcnode is None and arc.event is None and arc.marker is None and arc.wallclock is None:
 			list.append('%gs' % arc.delay)
+		elif arc.wallclock is not None:
+			yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = arc.wallclock
+			if yr is not None:
+				date = '%04d-%02d-%02dT' % (yr, mt, dy)
+			else:
+				date = ''
+			time = '%02d:%02d:%05.2f' % (hr, mn, sc)
+			if tzhr is not None:
+				tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
+			else:
+				tz = ''
+			list.append('wallclock(%s%s%s)' % (date, time, tz))
 		elif arc.marker is None:
 			if arc.srcnode is None:
 				# huh?

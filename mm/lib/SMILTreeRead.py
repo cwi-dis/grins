@@ -317,6 +317,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if res is None:
 						self.syntax_error('bad wallclock value')
 						continue
+					# can't fail because of matching regexp
 					yr,mt,dy,hr,mn,tzhr,tzmn = map(lambda v: v and string.atoi(v), res.group('year','month','day','hour','min','tzhour','tzmin'))
 					sc, tzsg = res.group('sec', 'tzsign')
 					if sc is not None:
@@ -325,7 +326,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						tzhr = tzmn = 0
 						tzsg = '+'
 					print 'wallclock',yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn
-##					list.append(MMNode.MMSyncArc(node, attr, wallclock = XXX, delay=offset or 0))
+					list.append(MMNode.MMSyncArc(node, attr, wallclock = (yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn), delay=offset or 0))
 					continue
 				if val[:5] == 'prev.':
 					event = val[5:]

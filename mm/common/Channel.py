@@ -532,8 +532,9 @@ class Channel:
 		self._qid = None
 
 	def onclick(self, *unused):
-		self._played_node.event(self._scheduler.timefunc(), 'click')
-		self._scheduler.sched_arcs(self._playcontext, self._played_node, 'click')
+		timestamp = self._scheduler.timefunc()
+		self._played_node.event(timestamp, 'click')
+		self._scheduler.sched_arcs(self._playcontext, self._played_node, 'click', timestamp=timestamp)
 
 	def play_1(self):
 		# This does the final part of playing a node.  This
@@ -554,11 +555,11 @@ class Channel:
 			elif self.armed_duration > 0:
 				self._qid = self._scheduler.enterabs(
 					  self._played_node.start_time+self.armed_duration, 0,
-					  self.playdone, (0,))
+					  self.playdone, (0, self._played_node.start_time+self.armed_duration))
 		else:
 			self.playdone(0)
 
-	def playdone(self, outside_induced):
+	def playdone(self, outside_induced, end_time = None):
 		# This method should be called by a superclass
 		# (possibly through play_1) to indicate that the node
 		# has finished playing.
@@ -574,6 +575,10 @@ class Channel:
 				return
 			raise error, 'not playing'
 		self._qid = None
+		if end_time is None:
+			self._played_node.end_time = self._scheduler.timefunc()
+		else:
+			self._played_node.end_time = end_time
 		# If this node has a pausing anchor, don't call the
 		# callback just yet but wait till the anchor is hit.
 		if self._has_pause:
@@ -582,7 +587,7 @@ class Channel:
 			if not outside_induced:
 				if self._try_auto_anchors():
 					return
-			self._playcontext.play_done(self._played_node)
+			self._playcontext.play_done(self._played_node, end_time)
 		self._playstate = PLAYED
 
 	def _try_auto_anchors(self):
@@ -598,6 +603,7 @@ class Channel:
 		if didfire and self._playstate == PLAYING and \
 		   self._played_node is node:
 			if not self.syncplay:
+				self._played_node.end_time = self._scheduler.timefunc()
 				self._playcontext.play_done(node)
 			self._playstate = PLAYED
 		return didfire
