@@ -889,7 +889,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val in ('discrete', 'linear', 'paced'):
 					attrdict['calcMode'] = val
 				elif val == 'spline':
-					self.warning('non-standard value for attribute %s' % attr, self.lineno)
+					if not settings.profileExtensions.get('SplineAnimation'):
+						self.warning('non-standard value for attribute %s' % attr, self.lineno)
 					attrdict['calcMode'] = val
 				else:
 					self.syntax_error("bad %s attribute" % attr)
