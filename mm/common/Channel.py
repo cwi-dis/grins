@@ -9,7 +9,7 @@ import os
 debug = os.environ.has_key('CHANNELDEBUG')
 import MMAttrdefs
 from MMExc import NoSuchAttrError
-import windowinterface, WMEVENTS
+import windowinterface, WMEVENTS 
 from windowinterface import SINGLE, TEXT, HTM, MPEG
 from windowinterface import TRUE, FALSE
 import string
@@ -706,8 +706,13 @@ class Channel:
 		if not self._armcontext:
 			# The player has aborted
 			return
-		# this method
+		# experimentale code	
+		if not self._is_shown:
+			self.setActive()			
+		# end experimentale code
+		
 		self._prepareAnchors(node)
+		
 		self.arm_1()	
 		
 	# this method have to be override by visible channels
@@ -1154,7 +1159,10 @@ class ChannelWindow(Channel):
 		self.__callback = None
 		self.__out_trans_qid = None
 		self._active_multiregion_transition = None
-		self.__wingeom = None		
+		self._wingeom = None		
+		self._activeMediaNumber = 0
+		self._setVisible(0)
+
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
 			PLAY(callback = (ui.play_callback, ())),
@@ -1162,6 +1170,29 @@ class ChannelWindow(Channel):
 			STOP(callback = (ui.stop_callback, ())),
 			MAGIC_PLAY(callback = (ui.magic_play, ())),
 			]
+
+	# Return true if this channel have to show the background when you start the document.
+	# this value depend of showBackground attribute
+	def _hasBackgroundAtStart(self):
+		try:
+			self.__hasBgAtStart
+		except:
+			pchan = self
+			found = 0
+			while pchan != None:
+				if pchan._get_parent_channel() != None:					
+					if not pchan._get_parent_channel()._hasBackgroundAtStart():
+						found = 1
+						break;
+					elif pchan._attrdict['showBackground'] == 'whenActive':
+						found = 1
+						break;
+				pchan = pchan._get_parent_channel()
+			if found:
+				self.__hasBgAtStart = 0
+			else:
+				self.__hasBgAtStart = 1
+		return self.__hasBgAtStart
 
 	def destroy(self):
 		del self._player.ChannelWinDict[self._name]
@@ -1401,7 +1432,7 @@ class ChannelWindow(Channel):
 			self.hide()
 			self.show()
 			self._player.editmgr.commit()
-##		self.highlight()
+##		self.highlight()				
 
 	def do_show(self, pchan):
 		if debug:
@@ -1410,21 +1441,18 @@ class ChannelWindow(Channel):
 #			del self.winoff
 #		except AttributeError:
 #			pass
-		# create a window for this channel
-		units = self._attrdict.get('units',
-					   windowinterface.UNIT_SCREEN)
 		if pchan:
 			#
 			# Find the base layout channel window geom.
 			#
-			if self.__wingeom == None:
+			if self._wingeom == None:
 				# by default channel area is the same as LayoutChannel area
 				left, top, width, height = pchan._attrdict['base_winoff']
-				self.__wingeom = 0, 0, width, height
+				self._wingeom = 0, 0, width, height
 			
-			pgeom = self.__wingeom
+			pgeom = self._wingeom
 #			if pchan._attrdict.has_key('base_winoff'):
-#				self.wingeom = pgeom = pchan._attrdict['base_winoff']
+#				self._wingeom = pgeom = pchan._attrdict['base_winoff']
 #			elif self._player.playing:
 #				windowinterface.showmessage(
 #					'No geometry for subchannel %s known' % self._name,
@@ -1449,9 +1477,49 @@ class ChannelWindow(Channel):
 #				self._attrdict['base_winoff'] = pgeom
 #				self._attrdict['units'] = units
 			self._curvals['base_winoff'] = pgeom, None
-		self.create_window(pchan, pgeom, units)
+			
+		# we have to render visible the channel at start according to the 
+		# showBackground attribute
+		if self._hasBackgroundAtStart():
+			self._setVisible(1)
 		return 1
 
+	# Set this channel visible/unvisible according to the showBackground attribute
+
+	###################################### WARNING ###################################
+	# for now, we destroy the window when the channel pass inactive (only method which
+	# actually work). We also destroy all windows inside
+	# we can't use hide/show because they modify a lot of things (structure of channel,
+	# state in some case, ...). Otherwise you have a crash in a lot of cases.
+	# The best method whould be call hide/show without destroy and rebuild the window, 
+	# but it doesn't work actually
+	##################################################################################
+
+	def _setVisible(self, fl):
+		if self.window == None and fl:
+			# print 'set visible :',self
+			# create a window for this channel
+			units = self._attrdict.get('units',
+						   windowinterface.UNIT_SCREEN)
+			self.create_window(self._get_parent_channel(), self._wingeom, units)
+			
+		elif self.window != None and not fl:
+			# print 'set unvisible :',self
+			self.window.close()
+			self.window = None
+				
+	def updateToActiveState(self):
+		self._activeMediaNumber = 1
+		pchan = self._get_parent_channel()
+		pchan.updateToActiveState()
+		self._setVisible(1)
+						
+	def updateToInactiveState(self):
+		self._activeMediaNumber = 0
+		self._setVisible(0)
+		pchan = self._get_parent_channel()
+		pchan.updateToInactiveState()
+			
 ##	def _box_callback(self, *pgeom):
 ##		if not pgeom:
 ##			# subwindow was not drawn, so hide it
@@ -1494,6 +1562,7 @@ class ChannelWindow(Channel):
 ##				self.editmgr.commit()
 
 	def arm_0(self, node):
+		self.updateToActiveState()
 		same = Channel.arm_0(self, node)
 		if same and self.armed_display and \
 		   not self.armed_display.is_closed():
@@ -1513,9 +1582,9 @@ class ChannelWindow(Channel):
 		# when the scale computation will be clean, we'll be able to resize the
 		# window from play method just before display the media.
 		wingeom = self.getwingeom(node)
-		if wingeom != self.__wingeom:
-			self.__wingeom = wingeom
-			# print 'old geom : ',self.__wingeom
+		if wingeom != self._wingeom:
+			self._wingeom = wingeom
+			# print 'old geom : ',self._wingeom
 			# print 'new geom : ',wingeom
 			units = self._attrdict.get('units',
 				   windowinterface.UNIT_SCREEN)
@@ -1535,12 +1604,14 @@ class ChannelWindow(Channel):
 		# by default all window area
 		self.armBox = (0.0, 0.0, 1.0, 1.0)
 		
+		# set foreground color
+		fgcolor = self.getfgcolor(node)
+		self.armed_display.fgcolor(fgcolor)
+		
 		# WARNING: Can't be done here: we don't know at this point the real display area size of 
 		# media. So we can't create the sensitive button here. Otherwise we have to select all region, and 
 		# not just the media area !. Instead, this code is done is _prepareAnchors method
 		
-		fgcolor = self.getfgcolor(node)
-		self.armed_display.fgcolor(fgcolor)
 #		alist = node.GetRawAttrDef('anchorlist', [])
 #		armed_anchor = None
 		
@@ -1766,6 +1837,9 @@ class ChannelWindow(Channel):
 
 		# print 'subreg geom : ',subreg_left, subreg_top, subreg_width, subreg_height
 		return subreg_left, subreg_top, subreg_width, subreg_height
+		
+	def hide(self):
+		Channel.hide(self)
 
 	def play(self, node):
 		if debug:
@@ -1773,24 +1847,13 @@ class ChannelWindow(Channel):
 		self.play_0(node)
 		if not self._armcontext:
 			return
-		if self._is_shown and node.ShouldPlay() and self.window:
-#				self.hide()
-#				self.show()
-#			try:
-#				winoff = self.winoff
-#				winoff = MMAttrdefs.getattr(node, 'base_winoff')
-#			except (AttributeError, KeyError):
-#				pass
-#			else:
-#				if wingeom != self.wingeom:
-#				if winoff != self.winoff:
-#					self.hide()
-#					self.show()
+		if self._is_shown and node.ShouldPlay() \
+		   and self.window:
 			self.check_popup()
 			self.schedule_transitions(node)
 			if self.armed_display.is_closed():
-				# assume that we are going to get a
-				# resize event
+			# assume that we are going to get a
+			# resize event
 				pass
 			else:
 				self.armed_display.render()
@@ -1800,7 +1863,7 @@ class ChannelWindow(Channel):
 			self.armed_display = None
 			self.do_play(node)
 		self.play_1()
-
+	
 	def stopplay(self, node):
 		if debug:
 			print 'ChannelWindow.stopplay('+`self`+','+`node`+')'
@@ -1814,6 +1877,8 @@ class ChannelWindow(Channel):
 			self.played_display.close()
 			self.played_display = None
 
+		self.updateToInactiveState()
+		
 	def setpaused(self, paused):
 		if debug:
 			print 'ChannelWindow.setpaused('+`self`+','+`paused`+')'

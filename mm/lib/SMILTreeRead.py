@@ -1639,6 +1639,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attrdict.has_key('base_window'):
 			ch['base_window'] = attrdict['base_window']
 			del attrdict['base_window']
+		if attrdict.has_key('showBackground'):
+			ch['showBackground'] = attrdict['showBackground']
+			del attrdict['showBackground']
+		
 		if mtype in ('text', 'image', 'movie', 'video', 'mpeg',
 			     'html', 'label', 'graph', 'layout', 'RealPix','RealText', 'RealVideo',
 			     'sound', 'brush'):
@@ -1693,6 +1697,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# other fit options not implemented
 
 			ch['base_winoff'] = x, y, w, h
+			
 		# keep all attributes that we didn't use
 		for attr, val in attrdict.items():
 			if attr not in ('minwidth', 'minheight', 'units',
@@ -1864,7 +1869,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				# end new
 				
 		node.attrdict['channel'] = name
-		
+
 		# complete chanlist
 		par = node.GetParent()
 		while par is not None:
@@ -2312,6 +2317,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				val = self.__convert_color(val)
 				if val is not None:
 					attrdict['backgroundColor'] = val
+			elif attr == 'showBackground':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val not in ('always', 'whenActive'):
+					self.syntax_error('illegal showBackground attribute value')
+					val = 'always'
+				attrdict['showBackground'] = val
 			elif attr == 'background-color':
 				# backgroundColor overrides background-color
 				if not attrdict.has_key('backgroundColor'):
