@@ -375,7 +375,7 @@ POPUP_HVIEW_LEAF = (
 		#	(FLAG_ALL, ENTRY, 'with child', None, MERGE_CHILD),
 		#	)),
 		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'P&lay node', None, PLAYNODE),
+		(FLAG_ALL, ENTRY, 'P&review node', None, PLAYNODE),
 		(FLAG_ALL, ENTRY, 'Preview &from node', None, PLAYFROM),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Use as event &source', None, CREATE_EVENT_SOURCE),
