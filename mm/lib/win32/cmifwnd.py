@@ -121,10 +121,14 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			numfiles=win32api.DragQueryFile(hDrop,-1)
 			for ix in range(numfiles):
 				filename=win32api.DragQueryFile(hDrop,ix)
-				self.onEvent(DropFile,(x, y, filename))
+				self.onDropEvent(DropFile,(x, y, filename))
 				print 'DropFile',x,y,filename
 		win32api.DragFinish(hDrop)
 	
+	def onDropEvent(self, event, (x, y, filename)):
+		x,y = self._inverse_coordinates((x, y),self._canvas)
+		print 'DROP', (x, y, filename)
+		self.onEvent(event, (x, y, filename))
 		
 	# Called by the core system to create a subwindow
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
@@ -511,6 +515,8 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			     Mouse2Press, Mouse2Release, 
 				 DropFile, PasteFile, WindowExit):
 			self._callbacks[event] = func, arg
+			if event == DropFile:
+				self.dragAcceptFiles()
 		else:
 			raise error, 'Internal error in Register Callback'
 
@@ -518,6 +524,8 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 	def unregister(self, event):
 		try:
 			del self._callbacks[event]
+			if event == DropFile:
+				self.dragRefuseFiles()
 		except KeyError:
 			pass
 

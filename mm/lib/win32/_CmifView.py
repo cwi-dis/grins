@@ -385,7 +385,7 @@ class _CmifStructView(_CmifView):
 	def OnCreate(self,params):
 		_CmifView.OnCreate(self,params)
 		# enable drag and drop
-		self.dragAcceptFiles()
+		# self.dragAcceptFiles()
 
 	def PaintOn(self,dc):
 		# only paint the rect that needs repainting
