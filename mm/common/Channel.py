@@ -1807,6 +1807,13 @@ class ChannelWindow(Channel):
 			if regalign in ('bottomLeft', 'bottomMid', 'bottomRight'):
 				area_height = regpoint_y
 
+			media_ratio = float(media_width)/float(media_height)
+			# print 'ratio=',media_ratio
+			if area_height*media_ratio < area_width:
+				area_height = area_width/media_ratio
+			else:
+				area_width = area_height*media_ratio
+
 		if regalign in ('topLeft', 'topMid', 'topRight'):
 			area_top = regpoint_y
 		if regalign in ('topLeft', 'midLeft', 'bottomLeft'):
