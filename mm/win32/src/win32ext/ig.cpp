@@ -80,17 +80,17 @@ static PyObject* ig_load_gif(PyObject *self, PyObject *args)
 
 static PyObject* ig_load_mem(PyObject *self, PyObject *args)
 	{
-	LPVOID pImage;
-	DWORD dwSize;
-	UINT nPageNum=1;
-	UINT nTileNum=1;
-	if(!PyArg_ParseTuple(args,"ll",&pImage,&dwSize))
+	char *pImage;
+	int dwSize;
+	int nPageNum=1;
+	int nTileNum=1;
+	if(!PyArg_ParseTuple(args,"s#|ll",&pImage,&dwSize,&nPageNum,&nTileNum))
 		return NULL;
 	if(pImage==0)
 		RETURN_ERR("Invalid pointer to image");
 	
 	HIGEAR img;
-	AT_ERRCOUNT nError=IG_load_mem(pImage,dwSize,nPageNum,nTileNum,&img);
+	AT_ERRCOUNT nError=IG_load_mem((LPVOID)pImage,(DWORD)dwSize,(UINT)nPageNum,(UINT)nTileNum,&img);
 	if(nError!=0) img=-1;
 	return Py_BuildValue("l",img);
 	}
@@ -241,13 +241,52 @@ static PyObject* ig_image_delete(PyObject *self, PyObject *args)
 	}
 	
 
+static PyObject *ig_area_get(PyObject *self, PyObject *args)
+{
+	long img;
+	AT_RECT rect;
+	AT_DIMENSION width, height;
+	UINT bpp;
+	PyObject *v;
+	int len;
+
+	if (!PyArg_ParseTuple(args, "l(llll)", &img, &rect.left, &rect.top, &rect.right, &rect.bottom))
+		return NULL;
+	if (IG_image_dimensions_get((HIGEAR) img, &width, &height, &bpp)) {
+		PyErr_SetString(PyExc_ValueError, "bad image handle");
+		return NULL;
+	}
+	if (rect.right > width || rect.right == 0)
+		rect.right = width;
+	if (rect.bottom > height || rect.bottom == 0)
+		rect.bottom = height;
+	if (rect.left >= rect.right)
+		rect.left = rect.right - 1;
+	if (rect.top >= rect.bottom)
+		rect.top = rect.bottom - 1;
+	len = (rect.right-rect.left)*(rect.bottom-rect.top);
+	if (bpp > 8)
+		len *= 3;
+	v = PyString_FromStringAndSize(NULL, len);
+	if (v == NULL)
+		return NULL;
+	if (IG_DIB_area_get((HIGEAR) img, &rect, (AT_PIXEL *) PyString_AS_STRING(v), IG_DIB_AREA_UNPACKED)) {
+		PyErr_SetString(PyExc_RuntimeError, "area get failed");
+		Py_DECREF(v);
+		return NULL;
+	}
+	return v;
+}
+	
+
 BEGIN_PYMETHODDEF(ig)
 	{ "load_file", ig_load_file, 1},
 #ifdef INCLUDE_GIF
 	{ "load_gif", ig_load_gif, 1},
 #endif
 	{ "load_mem", ig_load_mem, 1},
-    { "image_dimensions_get",ig_image_dimensions_get, 1},
+	{ "area_get", ig_area_get, 1},
+	{ "image_dimensions_get",ig_image_dimensions_get, 1},
 	{ "display_transparent_set",ig_display_transparent_set,1},
 	{ "device_rect_set",ig_device_rect_set,1},
 	{ "display_desktop_pattern_set",ig_display_desktop_pattern_set,1},
@@ -255,8 +294,8 @@ BEGIN_PYMETHODDEF(ig)
 	{ "display_image", ig_display_image,1},
 	{ "image_delete",ig_image_delete,1},
 	{ "palette_entry_get",ig_palette_entry_get,1},
-{"error_check",ig_error_check,1},
-{"error_get",ig_error_get,1},
+	{"error_check",ig_error_check,1},
+	{"error_get",ig_error_get,1},
 END_PYMETHODDEF()
 
 
