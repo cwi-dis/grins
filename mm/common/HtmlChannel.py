@@ -261,7 +261,14 @@ class HtmlChannel(Channel.ChannelWindow):
 		if href[:5] <> 'cmif:':
 			self.www_jump(href, 'GET', None, None)
 			return
-		self.cbcmifanchor(href, None)
+		i = string.find(href, '?')
+		if i > 0:
+			list = map(lambda x:tuple(string.splitfields(x,'=',1)),
+				   string.splitfields(href[i+1:], '&'))
+			href = href[:i]
+		else:
+			list = None
+		self.cbcmifanchor(href, list)
 
 	def cbform(self, widget, userdata, calldata):
 		if widget is not self.htmlw:
@@ -299,7 +306,11 @@ class HtmlChannel(Channel.ChannelWindow):
 		anchorlist = []
 		for a in allanchorlist:
 			if a[:5] == 'cmif:':
-				anchorlist.append(a[5:])
+				i = string.find(a, '?')
+				if i > 0:
+					anchorlist.append(a[5:i])
+				else:
+					anchorlist.append(a[5:])
 		if len(anchorlist) == 0:
 			return
 		nodeanchorlist = MMAttrdefs.getattr(node, 'anchorlist')[:]
@@ -360,20 +371,16 @@ class HtmlChannel(Channel.ChannelWindow):
 	def www_jump(self, href, method, enctype, list):
 		#
 		# Check that we understand what is happening
+		if method is not None:
+			method = string.upper(method)
 		if enctype is not None:
 			print 'HtmlChannel: unknown enctype:', enctype
 			return
-		if method not in (None, 'GET'):
-			print 'HtmlChannel: unknown method:', method
-			print 'href:', href
-			print 'method:', method
-			print 'enctype:', enctype
-			print 'list:', list
-			return
+		data = None
 		if href:
 			if href == 'XXXX:back':
 				if len(self.backlist) > 1:
-					href = self.backlist[-2]
+					href, data = self.backlist[-2]
 					del self.backlist[-2:]
 				else:
 					href = 'XXXX:play/node'
@@ -385,13 +392,25 @@ class HtmlChannel(Channel.ChannelWindow):
 			href = urllib.basejoin(self.url, href)
 		else:
 			href = self.url
+		type, rest = urllib.splittype(href)
+		if method not in (None, 'GET') and \
+		   (type != 'http' or method != 'POST'):
+			print 'HtmlChannel: unknown method:', method
+			print 'href:', href
+			print 'method:', method
+			print 'enctype:', enctype
+			print 'list:', list
+			return
 		self._player.toplevel.setwaiting()
 		if list:
-			href = addquery(href, list)
-		self.backlist.append(href)
+			if method == 'POST':
+				data = mkquery(list)
+			else:
+				href = addquery(href, list)
+		self.backlist.append((href, data))
 		self.url, tag = urllib.splittag(href)
 		try:
-			u = urlopen(self.url)
+			u = urlopen(self.url, data)
 			if u.headers.maintype == 'image':
 				newtext = '<IMG SRC="%s">\n' % self.url
 			else:
@@ -408,14 +427,18 @@ image_cache = {}
 
 def addquery(href, list):
 	if not list: return href
+	query = mkquery(list)
+	href = href + '?' + query
+	return href
+
+def mkquery(list):
 	if len(list) == 1 and list[0][0] == 'isindex':
 		query = encodestring(list[0][1])
 	else:
 		list = map(encodequery, list)
 		list = map(lambda x:x[0]+'='+x[1], list)
 		query = string.joinfields(list, '&')
-	href = href + '?' + query
-	return href
+	return query
 
 def encodequery(query):
 	name, value = query
@@ -521,11 +544,11 @@ class HtmlUrlOpener(urllib.FancyURLopener):
 		self.looping = 0
 
 _urlopener = None
-def urlopen(url):
+def urlopen(url, data = None):
 	global _urlopener
 	if not _urlopener:
 		_urlopener = HtmlUrlOpener()
-	return _urlopener.open(url)
+	return _urlopener.open(url, data)
 
 def urlretrieve(url, filename = None):
 	global _urlopener
