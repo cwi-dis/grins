@@ -1775,37 +1775,35 @@ class LayoutScale:
 
 ##################################
 # LayoutPage
-import win32window
 import winlayout
 import appcon, sysmetrics
 import string
 
-class LayoutPage(AttrPage,win32window.Window):
+class LayoutPage(AttrPage):
 	def __init__(self,form):
-		AttrPage.__init__(self,form)
-		win32window.Window.__init__(self)
-		self._units=self._form.getunits()
-		self._layoutctrl=None
-		self._isintscale=1
+		AttrPage.__init__(self, form)
+		self._units = self._form.getunits()
+		self._layoutctrl = None
+		self._isintscale = 1
 		self._boxoff = 0, 0
 		self._inupdate = 0
 			
 	def OnInitDialog(self):
 		if not AttrPage.OnInitDialog(self):
 			return
-		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
-		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
-		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
-		preview=components.Control(self,grinsRC.IDC_PREVIEW)
+		self.HookMessage(self.onLButtonDown, win32con.WM_LBUTTONDOWN)
+		self.HookMessage(self.onLButtonUp, win32con.WM_LBUTTONUP)
+		self.HookMessage(self.onMouseMove, win32con.WM_MOUSEMOVE)
+		preview = components.Control(self, grinsRC.IDC_PREVIEW)
 		preview.attach_to_parent()
-		l1,t1,r1,b1=self.GetWindowRect()
-		l2,t2,r2,b2=preview.getwindowrect()
-		self._layoutpos =(l2-l1,t2-t1)
-		self._layoutsize = (r2-l2,b2-t2)
+		l1, t1, r1, b1 = self.GetWindowRect()
+		l2, t2, r2, b2 = preview.getwindowrect()
+		self._layoutpos = l2-l1, t2-t1
+		self._layoutsize = r2-l2, b2-t2
 		self.createLayoutContext(self._form._winsize)
-		self._layoutctrl=self.createLayoutCtrl()
+		self._layoutctrl = self.createLayoutCtrl()
 
-		t=components.Static(self,grinsRC.IDC_SCALE1)
+		t = components.Static(self,grinsRC.IDC_SCALE1)
 		t.attach_to_parent()
 		if self._isintscale:
 			t.settext('scale 1 : %.0f' % self._xscale)
@@ -1815,86 +1813,94 @@ class LayoutPage(AttrPage,win32window.Window):
 
 	# hack messages! 
 	def onLButtonDown(self,params):
-		self._layoutctrl._notifyListener('onLButtonDown',params)
-		self._layoutctrl._notifyListener('onLButtonUp',params)
+		pass
+		#self._layoutctrl._notifyListener('onLButtonDown',params)
+		#self._layoutctrl._notifyListener('onLButtonUp',params)
 	def onLButtonUp(self,params):
-		self._layoutctrl._notifyListener('onLButtonUp',params)
+		pass
+		#self._layoutctrl._notifyListener('onLButtonUp',params)
 	def onMouseMove(self,params):
 		pass #self._layoutctrl.notifyListener('onLButtonUp',params)
 
 	def OnSetActive(self):
-		if self._layoutctrl: # and not self._layoutctrl.in_create_box_mode():
-			pass #self.create_box(self.getcurrentbox())
+		if self._layoutctrl:
+			if not self._layoutctrl._region:
+				self.create_box(self.getcurrentbox())
+			else:
+				self._layoutctrl._drawContext.reset()
 		return self._obj_.OnSetActive()
 
 	def OnKillActive(self): 
 		return self._obj_.OnKillActive()
 
 	def OnDestroy(self,params):
-		if self._layoutctrl:
-			pass #self._layoutctrl.exit_create_box()
+		pass
 
 	def createLayoutCtrl(self):
-		v = winlayout.LayoutOsWnd()
-		x,y,w,h=self.getboundingbox()
-		dw=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)
-		dh=2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)
-		rc=(self._layoutpos[0],self._layoutpos[1],w+dw,h+dh)
-		v.createWindow(self, rc, (0,0,0))
-		# self.init_tk(v)
+		v = winlayout.LayoutOsWndCtrl(self, self._xscale)
+		x, y, w, h = self.getboundingbox()
+		dw = 2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)
+		dh = 2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)
+		rc = self._layoutpos[0], self._layoutpos[1], w+dw, h+dh
+		v.createWindow(self, rc, (255,255,255))
+		self.initLayoutCtrl(v)
 		return v
 	
-	def init_tk(self, v):
-		v.SetLayoutMode(0)
-		self._scale=LayoutScale(v,self._xscale,self._yscale,self._boxoff)
-		v.SetScale(self._scale)
+	def initLayoutCtrl(self, v):
+		#v.SetLayoutMode(0)
+		self._scale = LayoutScale(v,self._xscale,self._yscale,self._boxoff)
+		#v.SetScale(self._scale)
+		return
 
-		(x,y,w,h),bunits=self._form.GetBBox()
-		rc=(x,y,x+w,y+h)
+		(x,y,w,h), bunits = self._form.GetBBox()
+		rc = x, y, x+w, y+h
 		rc = v._convert_coordinates(rc, units = bunits)
-		rc=self._scale.layoutbox(rc,UNIT_PXL)
+		rc = self._scale.layoutbox(rc, UNIT_PXL)
 		v.SetBRect(rc)
 
-		(x,y,w,h),bunits=self._form.GetCBox()
-		rc=(x,y,x+w,y+h)
+		(x,y,w,h), bunits = self._form.GetCBox()
+		rc= x, y, x+w, y+h
 		rc = v._convert_coordinates(rc, units = bunits)
-		rc=self._scale.layoutbox(rc,UNIT_PXL)
+		rc = self._scale.layoutbox(rc,UNIT_PXL)
 		v.SetCRect(rc)
 
 	def createLayoutContext(self,winsize=None,units=appcon.UNIT_PXL):
 		if winsize:
-			sw,sh=winsize
+			sw, sh = winsize
 		else:
-			sw,sh=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
+			sw, sh = sysmetrics.scr_width_pxl, sysmetrics.scr_height_pxl
 		
 		# try first an int scale
 		n = max(1, (sw+self._layoutsize[0]-1)/self._layoutsize[0], 
 			(sh+self._layoutsize[1]-1)/self._layoutsize[1])
-		scale=float(n)
-		self._xmax=int(sw/scale+0.5)
-		self._ymax=int(sh/scale+0.5)
-		self._isintscale=1
+		scale = float(n)
+		self._xmax = int(sw/scale+0.5)
+		self._ymax = int(sh/scale+0.5)
+		self._isintscale = 1
 		if n!=1 and (self._xmax<3*self._layoutsize[0]/4 or self._ymax<3*self._layoutsize[1]/4):
 			# try to find a better scale
 			scale = max(1, float(sw)/self._layoutsize[0], float(sh)/self._layoutsize[1])
-			self._xmax=int(sw/scale+0.5)
-			self._ymax=int(sh/scale+0.5)
-			self._isintscale=0
+			self._xmax = int(sw/scale+0.5)
+			self._ymax = int(sh/scale+0.5)
+			self._isintscale = 0
 		
 		# finally the exact scale:
-		self._xscale=float(sw)/self._xmax
-		self._yscale=float(sh)/self._ymax
+		self._xscale = float(sw)/self._xmax
+		self._yscale = float(sh)/self._ymax
 	
 	def getboundingbox(self):
-		return (0,0,self._xmax,self._ymax)
+		return  0, 0, self._xmax, self._ymax
 
 	def create_box(self,box):
-		#self._layoutctrl.exit_create_box()
+		self._layoutctrl._region = None
+		self._layoutctrl.update()
 		if box and (box[2]==0 or box[3]==0):box=None
-		# call create box against layout control but be modeless and cool!
-		modeless=1;cool=1;
-		#self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
-		self.check_units()
+		#self.check_units()
+		if box is None:
+			self._layoutctrl.selectTool('shape')
+		else:
+			self._layoutctrl.setObject(box)
+			self._layoutctrl.selectTool('select')
 
 	def check_units(self):
 		units=self._form.getunits()
@@ -1921,26 +1927,26 @@ class LayoutPage(AttrPage,win32window.Window):
 	######################
 	# subclass overrides
 
-	def getcurrentbox(self,saved=1):
-		lc=self.getctrl('base_winoff')
+	def getcurrentbox(self, saved=1):
+		lc = self.getctrl('base_winoff')
 		if saved:
-			val=lc.getcurrent()
+			val = lc.getcurrent()
 		else:
 			val = lc.getvalue()
-		box=self.val2box(val)
-		lbox=self._scale.layoutbox(box,self._units)
+		box = self.val2box(val)
+		lbox = self._scale.layoutbox(box,self._units)
 		return lbox
 
 	def setvalue2layout(self,val):
-		box=self.val2box(val)
-		lbox=self._scale.layoutbox(box,self._units)
+		box = self.val2box(val)
+		lbox = self._scale.layoutbox(box, self._units)
 		self.create_box(lbox)
 	
 	def val2box(self,val):
 		if not val:
-			box=None
+			box = None
 		else:
-			box=atoft(val)
+			box = atoft(val)
 		return box
 		
 	def islayoutattr(self,attr):
@@ -1951,14 +1957,14 @@ class LayoutPage(AttrPage,win32window.Window):
 
 	# called back by create_box on every change
 	# the user can press reset to cancel changes
-	def update(self,*box):
+	def updateBox(self, *box):
 		if self._initdialog:
 			self._inupdate=1
 			lc=self.getctrl('base_winoff')
 			if not box:
 				lc.setvalue('')
 			else:	
-				box=self._scale.orgbox(box,self._units)
+				box=self._scale.orgbox(box, self._units)
 				if self._units==UNIT_PXL:prec=0
 				elif self._units==UNIT_SCREEN:prec=1
 				else: prec=2
@@ -2016,7 +2022,7 @@ class PosSizeLayoutPage(LayoutPage):
 
 	# called back by create_box on every change
 	# the user can press reset to cancel changes
-	def update(self,*box):
+	def updateBox(self,*box):
 		if self._initdialog:
 			self._inupdate=1
 			lc=self.getctrl('base_winoff')
@@ -2108,7 +2114,7 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 			url = a.wrapper.getcontext().findurl(f)
 			self.loadimg(url)
 
-	def init_tk(self, v):
+	def initLayoutCtrl(self, v):
 		v.SetLayoutMode(0)
 		self._scale=LayoutScale(v,self._xscale,self._yscale,self._boxoff)
 		v.SetScale(self._scale)
@@ -2145,7 +2151,7 @@ class AnchorlistPage(LayoutPage):
 		box = self._group.anchorlistctrl.getbox(saved)
 		if box:
 			box = box[0]+self._boxoff[0], box[1]+self._boxoff[1], box[2], box[3]
-			box = self._scale.layoutbox(box,self._units)
+			box = self._scale.layoutbox(box, self._units)
 		return box
 
 	def setvalue2layout(self, val):
@@ -2157,7 +2163,7 @@ class AnchorlistPage(LayoutPage):
 
 	# called back by create_box on every change
 	# the user can press reset to cancel changes
-	def update(self,*box):
+	def updateBox(self,*box):
 		if self._initdialog:
 			grp = self._group
 			self._inupdate=1
@@ -2222,10 +2228,11 @@ class AnchorlistPage(LayoutPage):
 			url = a.wrapper.getcontext().findurl(f)
 			self.loadimg(url)
 
-	def init_tk(self, v):
+	def initLayoutCtrl(self, v):
 		#v.SetLayoutMode(0)
 		self._scale=LayoutScale(v, self._xscale, self._yscale, self._boxoff)
 		#v.SetScale(self._scale)
+		return
 
 		x = y = 0
 		w, h = self._imagesize
@@ -4422,4 +4429,5 @@ class AttrEditForm(GenFormView):
 		if self._tid:
 			import __main__
 			__main__.toplevel.canceltimer(self._tid)
+ 
  
