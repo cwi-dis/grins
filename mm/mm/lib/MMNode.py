@@ -36,13 +36,13 @@ class MMNodeContext():
 	def mapuid(self, uid):
 		_stat('mapuid')
 		if not self.uidmap.has_key(uid):
-			raise NoSuchUIDError
+			raise NoSuchUIDError, 'in mapuid()'
 		return self.uidmap[uid]
 	#
 	def knownode(self, (uid, node)):
 		_stat('knownode')
 		if self.uidmap.has_key(uid):
-			raise DuplicateUIDError
+			raise DuplicateUIDError, 'in knownode()'
 		self.uidmap[uid] = node
 	#
 	def forgetnode(self, uid):
@@ -77,7 +77,7 @@ class MMNodeContext():
 						attrdict['style'])
 				except NoSuchAttrError:
 					pass
-		raise NoSuchAttrError, 'in lookinstyles'
+		raise NoSuchAttrError, 'in lookinstyles()'
 	#
 
 
@@ -173,7 +173,7 @@ class MMNode():
 		try:
 			return self.attrdict[name]
 		except RuntimeError:
-			raise NoSuchAttrError, 'in GetRawAttr'
+			raise NoSuchAttrError, 'in GetRawAttr()'
 	#
 	def GetRawAttrDef(self, (name, default)):
 		_stat('GetRawAttrDef')
@@ -202,7 +202,7 @@ class MMNode():
 		try:
 			styles = self.attrdict['style']
 		except RuntimeError:
-			raise NoSuchAttrError, 'in GetDefAttr'
+			raise NoSuchAttrError, 'in GetDefAttr()'
 		return self.context.lookinstyles(name, styles)
 	#
 	def GetAttrDef(self, (name, default)):
@@ -221,7 +221,7 @@ class MMNode():
 				except NoSuchAttrError:
 					pass
 			x = x.parent
-		raise NoSuchAttrError, 'in GetInherAttr'
+		raise NoSuchAttrError, 'in GetInherAttr()'
 	#
 	def GetInherAttrDef(self, (name, default)):
 		_stat('GetInherAttrDef')
@@ -295,7 +295,7 @@ class MMNode():
 	def DelAttr(self, name):
 		_stat('DelAttr')
 		if not self.attrdict.has_key(name):
-			return NoSuchAttrError, 'in DelAttr()'
+			raise NoSuchAttrError, 'in DelAttr()'
 		del self.attrdict[name]
 		self._updsummaries([name])
 	#
