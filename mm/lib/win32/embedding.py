@@ -162,16 +162,7 @@ class SliderPeer:
 		self.media = []
 		self.url2mtype = {}
 		self.findMedia(player.userplayroot, self.media, self.url2mtype)
-		
-		framerate = 0
-		for rurl in self.media:
-			mt = self.url2mtype[rurl]
-			if mt[0] == 'video':
-				url = ctx.findurl(rurl)
-				framerate = FrameRate.GetFrameRate(url, mt[0], mt[1])
-				break
-		if framerate == 0: 
-			framerate = 20
+		framerate = self.findFrameRate()
 
 		# update peer for dur and first video/audio frameRate
 		try:
@@ -227,6 +218,19 @@ class SliderPeer:
 		if nt in MMTypes.interiortypes:
 			for child in node.GetChildren():
 				self.findMedia(child, media, url2mtype)
+
+	def findFrameRate(self):
+		for rurl in self.media:
+			mt = self.url2mtype[rurl]
+			if mt[0] == 'video':
+				url = self.ctx.findurl(rurl)
+				return FrameRate.GetFrameRate(url, mt[0], mt[1])
+		for rurl in self.media:
+			mt = self.url2mtype[rurl]
+			if mt[0] == 'audio':
+				url = self.ctx.findurl(rurl)
+				return FrameRate.GetFrameRate(url, mt[0], mt[1])
+		return 20 
 
 ############################
 import win32window

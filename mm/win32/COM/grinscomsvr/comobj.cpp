@@ -471,14 +471,23 @@ HRESULT __stdcall GRiNSPlayerAuto::getFrameRate(/* [out] */ long __RPC_FAR *pfr)
 	return S_OK;
 	}
 
+
+
 HRESULT __stdcall GRiNSPlayerAuto::getMediaFrameRate(/* [string][in] */ wchar_t __RPC_FAR *wszFileOrUrl,
-            /* [out] */ long __RPC_FAR *pfr)
+            /* [out] */ long __RPC_FAR *pfr) 
 	{
-	char *buf = new char[MAX_PATH];
-    if(WideCharToMultiByte(CP_ACP, 0, wszFileOrUrl, -1, buf, MAX_PATH, NULL, NULL))
+	*pfr = 1;
+	if(getPyListener())
 		{
-		//SendMessage(getListener(), WM_USER_OPEN, WPARAM(this), LPARAM(buf));
-		*pfr = m_framerate;
+		CallbackHelper helper("GetMediaFrameRate",getPyListener());
+		if(helper.cancall())
+			{
+			int fr = 2;
+			char buf[MAX_PATH];
+			WideCharToMultiByte(CP_ACP, 0, wszFileOrUrl, -1, buf, MAX_PATH, NULL, NULL);
+			PyObject *arg = Py_BuildValue("(is)",int(this), buf);
+			if(helper.call(arg) && helper.retval(fr)) *pfr = fr;
+			}
 		}
 	return S_OK;
 	}
