@@ -5,9 +5,6 @@
 
 --------------------------- BIG PLANS -----------------------------
 
-rewrite the block view without using FORMS, so user interface can be
-improved
-
 redo the user interface for creating and editing hyperlinks to be more
 intuitive
 
@@ -15,6 +12,9 @@ perhaps: make things more object-oriented so the list of commands
 pertaining to an object depends on the object only, not on the view...
 
 ------------------------------ CRASHES ----------------------------
+
+Pressing the "reset" button next to the channel name in a channel
+attributes dialog causes a crash -- self.currenttext is None.
 
 (Lynda: "I was adding and deleting sync arcs":)
 MMExc.AssertError: 'bad delsyncarc call'
@@ -617,3 +617,8 @@ enough.]  [Fixed by Sjoerd -- soundchannel.c is much more careful now.]
 
 renaming a channel when the player is also open (possibly only when it
 is opened after the channel view) causes a crash.
+
+--- 2 Feb 1992 ---
+
+rewrite the block view without using FORMS, so user interface can be
+improved

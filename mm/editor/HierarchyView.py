@@ -617,8 +617,6 @@ class Object:
 		b = b-1
 		# Draw a Motif style border
 		# (True Motif would also require making the focus darker)
-		# XXX Alas, it looks silly when you have a lot of nesting
-		# XXX (-: like a Mexican Pyramid :-)
 		cl = FOCUSLEFT
 		ct = FOCUSTOP
 		cr = FOCUSRIGHT
@@ -662,85 +660,6 @@ class Object:
 		gl.v2i(rr, bb)
 		gl.v2i(r1, b1)
 		gl.endpolygon()
-		return
-		gl.RGBcolor(FOCUSBORDER)
-		gl.linewidth(1)
-		gl.bgnclosedline()
-		gl.v2i(l1, t)
-		gl.v2i(r, t)
-		gl.v2i(r, b)
-		gl.v2i(l1, b)
-		gl.endclosedline()
-
-	def olddrawfocus(self):
-		l, t, r, b = self.box
-		l = l+1
-		t = t+1
-		r = r-1
-		b = b-1
-		# Draw a "3D" border if selected, else an "engraved" outline
-		if self.selected:
-			l1 = l - 1
-			t1 = t - 1
-			r1 = r
-			b1 = b
-			ll = l + 3
-			tt = t + 3
-			rr = r - 3
-			bb = b - 3
-			gl.RGBcolor(FOCUSLEFT)
-			gl.bgnpolygon()
-			gl.v2i(l1, t1)
-			gl.v2i(ll, tt)
-			gl.v2i(ll, bb)
-			gl.v2i(l1, b1)
-			gl.endpolygon()
-			gl.RGBcolor(FOCUSTOP)
-			gl.bgnpolygon()
-			gl.v2i(l1, t1)
-			gl.v2i(r1, t1)
-			gl.v2i(rr, tt)
-			gl.v2i(ll, tt)
-			gl.endpolygon()
-			gl.RGBcolor(FOCUSRIGHT)
-			gl.bgnpolygon()
-			gl.v2i(r1, t1)
-			gl.v2i(r1, b1)
-			gl.v2i(rr, bb)
-			gl.v2i(rr, tt)
-			gl.endpolygon()
-			gl.RGBcolor(FOCUSBOTTOM)
-			gl.bgnpolygon()
-			gl.v2i(l1, b1)
-			gl.v2i(ll, bb)
-			gl.v2i(rr, bb)
-			gl.v2i(r1, b1)
-			gl.endpolygon()
-			gl.RGBcolor(FOCUSBORDER)
-			gl.linewidth(1)
-			gl.bgnclosedline()
-			gl.v2i(l1, t)
-			gl.v2i(r, t)
-			gl.v2i(r, b)
-			gl.v2i(l1, b)
-			gl.endclosedline()
-		else:
-			# Outline the box in 'engraved' look
-			gl.RGBcolor(BORDERCOLOR)
-			gl.linewidth(1)
-			gl.bgnclosedline()
-			gl.v2i(l-1, t)
-			gl.v2i(r, t)
-			gl.v2i(r, b-1)
-			gl.v2i(l-1, b-1)
-			gl.endclosedline()
-			gl.RGBcolor(BORDERLIGHT)
-			gl.bgnclosedline()
-			gl.v2i(l, t+1)
-			gl.v2i(r+1, t+1)
-			gl.v2i(r+1, b)
-			gl.v2i(l, b)
-			gl.endclosedline()
 
 	# Menu handling functions
 
@@ -826,8 +745,8 @@ class Object:
 		('a', 'Node attr...', attrcall), \
 		('e', 'Edit contents...', editcall), \
 		('t', 'Edit anchors...%l', anchorcall), \
-		('Z', 'Zoom out', zoomoutcall), \
-		('z', 'Zoom in%l', zoomincall), \
+		('z', 'Zoom out', zoomoutcall), \
+		('Z', 'Zoom in%l', zoomincall), \
 		('h', 'Help...', helpcall), \
 		]
 	# XXX navigation commands: up/down/prev/next
