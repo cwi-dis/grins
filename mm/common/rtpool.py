@@ -59,4 +59,4 @@ class rtpool:
 			del self.pool[rvind]
 			return rv
 		return None
-		
+
