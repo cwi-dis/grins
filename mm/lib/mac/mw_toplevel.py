@@ -83,7 +83,7 @@ _y_pixel_per_mm = _y_pixel_per_inch / 25.4
 #
 _screen_top_offset = 26	# XXXX Should be gotten from GetMBarHeight()
 _window_top_offset=21	# XXXX Is this always correct?
-_l, _t, _r, _b = Qd.qd.screenBits.bounds
+_l, _t, _r, _b = Qd.GetQDGlobalsScreenBits().bounds
 DEFAULT_WIDTH, DEFAULT_HEIGHT = (_r-_l)/2, (_b-_t)/2
 del _l, _t, _r, _b
 #
@@ -124,7 +124,7 @@ class _Event(AEServer):
 		self._last_mouse_where = (-100, -100)
 		self._last_mouse_when = -100
 		self._eventmask = NO_AE_EVENTMASK
-		l, t, r, b = Qd.qd.screenBits.bounds
+		l, t, r, b = Qd.GetQDGlobalsScreenBits().bounds
 		self._draglimit = l+4, t+4+_screen_top_offset, r-4, b-4
 		self.removed_splash = 0
 		self._scrap_to_TE()
@@ -179,7 +179,6 @@ class _Event(AEServer):
 	def mainloop(self):
 		"""The event mainloop"""
 		last_memory_check = Evt.TickCount()
-		memory_warned = 0
 		self._initcommands()
 		while 1:
 			try:
@@ -215,17 +214,9 @@ class _Event(AEServer):
 				if not self._eventloop(timeout):
 					for rtn in self._idles.values():
 						rtn()
-					if not memory_warned and \
-							Evt.TickCount() > last_memory_check+MEMORY_CHECK_INTERVAL*TICKS_PER_SECOND:
-						last_memory_check = Evt.TickCount()
-						if MacOS.MaxBlock() < MEMORY_WARN:
-							Dlg.CautionAlert(MEMORY_ALERT_ID, None)
-							memory_warned = 1
 			except SystemExit:
 				raise
 			except:
-				import quietconsole
-				quietconsole.revert()
 				if hasattr(sys, 'exc_info'):
 					exc_type, exc_value, exc_traceback = sys.exc_info()
 				else:
@@ -324,7 +315,7 @@ class _Event(AEServer):
 				AE.AEProcessAppleEvent(event)
 			except AE.Error, err:
 				print 'Error in AppleEvent processing: ', err
-		else:
+		elif hasattr(MacOS, 'HandleEvent'):
 			MacOS.HandleEvent(event)
 			
 	def _handle_dialogevent(self, event):
@@ -365,11 +356,17 @@ class _Event(AEServer):
 		what, message, when, where, modifiers = event
 		wid = Win.WhichWindow(message)
 		if not wid:
-			MacOS.HandleEvent(event)
+			if hasattr(MacOS, 'HandleEvent'):
+				MacOS.HandleEvent(event)
+			else:
+				print 'DBG: unhandled event', event
 		else:
 			ourwin = self._find_wid(wid)
 			if not ourwin:
-				MacOS.HandleEvent(event)
+				if hasattr(MacOS, 'HandleEvent'):
+					MacOS.HandleEvent(event)
+				else:
+					print 'DBG: unhandled event', event
 			else:
 				Qd.SetPort(wid)
 				if beginupdate:
@@ -386,12 +383,18 @@ class _Event(AEServer):
 		wid = Win.WhichWindow(message)
 		if not wid:
 			self._install_window_commands(None)
-			MacOS.HandleEvent(event)
+			if hasattr(MacOS, 'HandleEvent'):
+				MacOS.HandleEvent(event)
+			else:
+				print 'DBG: unhandled event', event
 		else:
 			ourwin = self._find_wid(wid)
 			if not ourwin:
 				self._install_window_commands(None)
-				MacOS.HandleEvent(event)
+				if hasattr(MacOS, 'HandleEvent'):
+					MacOS.HandleEvent(event)
+				else:
+					print 'DBG: unhandled event', event
 			else:
 				self._activate_ours(ourwin, modifiers&1)
 		# We appear to miss activates, at least with the Sioux window
@@ -429,7 +432,7 @@ class _Event(AEServer):
 			pass
 		
 	def _TE_to_scrap(self):
-		Scrap.ZeroScrap()
+		Scrap.ClearCurrentScrap()
 		TE.TEToScrap()
 	
 	def _activate_ours(self, ourwin, activate):
@@ -452,7 +455,10 @@ class _Event(AEServer):
 		if not wid:
 			# It is not ours.
 			self._mouseregionschanged()
-			MacOS.HandleEvent(event)
+			if hasattr(MacOS, 'HandleEvent'):
+				MacOS.HandleEvent(event)
+			else:
+				print 'DBG: unhandled event', event
 			return
 		if partcode == Windows.inGrow:
 			# Since we don't draw the grow region usually there may
@@ -461,7 +467,10 @@ class _Event(AEServer):
 			if not (modifiers & Events.optionKey):
 				window = self._find_wid(wid)
 				if not window:
-					MacOS.HandleEvent(event)
+					if hasattr(MacOS, 'HandleEvent'):
+						MacOS.HandleEvent(event)
+					else:
+						print 'DBG: unhandled event', event
 					return
 				rv = wid.GrowWindow(where, (32, 32, 0x3fff, 0x3fff))
 				if rv:
@@ -529,7 +538,10 @@ class _Event(AEServer):
 		else:
 			# In desk or syswindow. Pass on.
 			self._mouseregionschanged()
-			MacOS.HandleEvent(event)
+			if hasattr(MacOS, 'HandleEvent'):
+				MacOS.HandleEvent(event)
+			else:
+				print 'DBG: unhandled event', event
 
 	def _handle_mouseup(self, event):
 		"""Handle a MacOS mouseUp event"""
@@ -555,7 +567,10 @@ class _Event(AEServer):
 			if not handled:
 				beep()
 			return
-		MacOS.HandleEvent(event)
+		if hasattr(MacOS, 'HandleEvent'):
+			MacOS.HandleEvent(event)
+		else:
+			print 'DBG: unhandled event', event
 		
 	def _handle_menu_event(self, event):
 		result = MenuMODULE.MenuEvent(event)
@@ -660,9 +675,7 @@ class _Toplevel(_Event):
 		self._init_cursors()
 		self._clearall()
 		self._initmenu()
-		
-		MacOS.EnableAppswitch(0)
-		
+				
 		Dlg.SetUserItemHandler(None)
 		self._dialog_user_item_handler = \
 		    Dlg.SetUserItemHandler(self._do_user_item)
@@ -712,7 +725,6 @@ class _Toplevel(_Event):
 		if self._command_handler:
 			del self._command_handler
 		self._clearall()
-		MacOS.EnableAppswitch(1)
 
 	def addclosecallback(self, func, args):
 		"""Specify a routine to be called on termination"""
@@ -871,6 +883,7 @@ class _Toplevel(_Event):
 	def _openwindow(self, x, y, w, h, title, units, resizable=1, extras=(0,0,0,0)):
 		"""Internal - Open window given xywh, title.
 		Returns window-id"""
+		print 'DBG TopLevel._openwindow', (x, y, w, h), units, 'extra', extras
 		extraw, extrah, minw, minh = extras
 		if w <= 0 or h <= 0:
 			units = UNIT_PXL
@@ -891,7 +904,7 @@ class _Toplevel(_Event):
 		elif units == UNIT_PXL:
 			pass
 		elif units == UNIT_SCREEN:
-			l, t, r, b = Qd.qd.screenBits.bounds
+			l, t, r, b = Qd.GetQDGlobalsScreenBits().bounds
 			t = t + _screen_top_offset
 			scrw = r-l
 			scrh = b-t
@@ -909,7 +922,7 @@ class _Toplevel(_Event):
 		elif units == UNIT_PXL:
 			pass
 		elif units == UNIT_SCREEN:
-			l, t, r, b = Qd.qd.screenBits.bounds
+			l, t, r, b = Qd.GetQDGlobalsScreenBits().bounds
 			t = t + _screen_top_offset
 			scrw = r-l
 			scrh = b-t
@@ -924,7 +937,7 @@ class _Toplevel(_Event):
 		#
 		# Check that it all fits
 		#
-		l, t, r, b = Qd.qd.screenBits.bounds
+		l, t, r, b = Qd.GetQDGlobalsScreenBits().bounds
 		if w >= (r-l)-8:
 			w = (r-l)-8
 		if h >= (b-t)-(_screen_top_offset + _window_top_offset + 4):
@@ -952,6 +965,7 @@ class _Toplevel(_Event):
 			defprocid = 0
 		else:
 			defprocid = 4
+		print 'DBG TopLevel._openwindow sizes', (x, y, x1, y1)
 		wid = Win.NewCWindow((x, y, x1, y1), title, 1, defprocid, -1, 1, 0 )
 		
 		return wid, w, h
@@ -1068,7 +1082,7 @@ class _Toplevel(_Event):
 		# The default cursor is either arrow or hand, and the resize cursor
 		# is used when hovering over the resize area.
 		#
-		arrow_cursor = Qd.qd.arrow
+		arrow_cursor = Qd.GetQDGlobalsArrow()
 		hand_cursor = Qd.GetCursor(512).data
 		resize_cursor = Qd.GetCursor(515).data
 		watch_cursor = Qd.GetCursor(4).data
@@ -1259,7 +1273,7 @@ class _Toplevel(_Event):
 		pass
 
 	def getscreensize(self):
-		l, t, r, b = Qd.qd.screenBits.bounds
+		l, t, r, b = Qd.GetQDGlobalsScreenBits().bounds
 		return (r-l), (b-t)
 		
 	def getscreendepth(self):
