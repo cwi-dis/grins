@@ -148,6 +148,10 @@ class Win32Msg:
 		if (self._wParam & win32con.SIZE_MINIMIZED):
 			return 1
 		return 0
+	def maximized(self):
+		if (self._wParam & win32con.SIZE_MAXIMIZED):
+			return 1
+		return 0
 
 	def cmdid(self): return self.LOWORD_wParam()
 	
