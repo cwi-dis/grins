@@ -395,7 +395,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		"""
 		pass
 		
-	def leftbuttonssetsensitive(self, sensitive):
+	def leftbuttonssetsensitive(self, sensitive, bottom = 0):
 		"""Make the left buttons (in)sensitive.
 
 		Arguments (no defaults):
@@ -403,7 +403,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 			sensitive or insensitive
 		"""
 		self.EnableCmd('LeftPushFocus',sensitive)
-		self.EnableCmd('LeftAnchorEd',sensitive)
+		self.EnableCmd('LeftAnchorEd',bottom and sensitive)
 
 	# Interface to the right list and associated buttons.
 	def righthide(self):
@@ -484,7 +484,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		"""
 		pass
 
-	def rightbuttonssetsensitive(self, sensitive):
+	def rightbuttonssetsensitive(self, sensitive, bottom = 0):
 		"""Make the right buttons (in)sensitive.
 
 		Arguments (no defaults):
@@ -492,7 +492,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 			sensitive or insensitive
 		"""
 		self.EnableCmd('RightPushFocus',sensitive) 
-		self.EnableCmd('RightAnchorEd',sensitive) 
+		self.EnableCmd('RightAnchorEd',bottom and sensitive) 
 		 
 	# Interface to the middle list and associated buttons.
 	def middlehide(self):
