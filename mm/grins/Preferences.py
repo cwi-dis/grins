@@ -44,7 +44,7 @@ class Preferences(PreferencesDialog):
 				if value in allowed_values:
 					value = allowed_values.index(value)
 			if not value in (None, 0, 1):
-				windowinterface.showmessage("Warning: illegal value '%s' for preference %s"
+				windowinterface.showmessage("Unexpected value '%s' for %s"
 						% (value, name))
 				value = 0
 			self.setboolitem(name, value)
@@ -56,14 +56,14 @@ class Preferences(PreferencesDialog):
 		for name in self.int_names:
 			value = settings.get(name)
 			if value != None and not type(value) == type(1):
-				windowinterface.showmessage("Warning: illegal value '%s' for preference %s"
+				windowinterface.showmessage("Unexpected value '%s' for %s"
 						% (value, name))
 				value = None
 			self.setintitem(name, value)
 		for name in self.float_names:
 			value = settings.get(name)
 			if value is not None and not type(value) in (type(0),type(0.0)):
-				windowinterface.showmessage("Warning: illegal value `%s' for preference %s" % (value, name))
+				windowinterface.showmessage("Unexpected value '%s' for %s" % (value, name))
 				value = None
 			self.setfloatitem(name, value)
 
