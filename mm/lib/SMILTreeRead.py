@@ -2822,12 +2822,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ctx.cssResolver.setRawAttrs(img.getSubRegCssId(), [])
 		ctx.cssResolver.setRawAttrs(img.getMediaCssId(), [])
 		img.attrdict['duration'] = -1
+		img.attrdict['syncBehavior'] = 'independent'
 		img.attrdict['channel'] = 'Skin Image'
 		par = ctx.newnode('par')
 		par.__forcechild = None, 0
 		brush = ctx.newnode('brush')
 		brush.attrdict['fgcolor'] = dict.get('displaybgcolor', vp.attrdict.get('bgcolor') or (0,0,0))
 		brush.attrdict['channel'] = 'Skin Area'
+		brush.attrdict['syncBehavior'] = 'independent'
 		par._addchild(brush)
 		if dict.has_key('displayimage'):
 			import Sizes
@@ -2839,6 +2841,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				i = ctx.newnode('ext')
 				par._addchild(i)
 				i.attrdict['file'] = MMurl.basejoin(skin, dict['displayimage'])
+				i.attrdict['syncBehavior'] = 'independent'
 				i.attrdict['regAlign'] = 'center'
 				i.attrdict['regPoint'] = 'center'
 				i.attrdict['channel'] = 'Skin Area'
