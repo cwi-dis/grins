@@ -2,7 +2,6 @@ __version__ = "$Id$"
 
 # Cache durations of movie files
 
-import FileCache
 import MMurl
 import Qt
 import windowinterface
@@ -10,12 +9,12 @@ if not windowinterface._qtavailable():
 	Qt = None
 import QuickTime
 
-def getduration(filename):
+def get(url):
 	if not Qt:
 		print 'QuickTime not available, cannot obtain movie duration'
 		return 0
 	try:
-		filename = MMurl.urlretrieve(filename)[0]
+		filename = MMurl.urlretrieve(url)[0]
 	except IOError:
 		return 0
 	Qt.EnterMovies()
@@ -34,7 +33,3 @@ def getduration(filename):
 		print 'Cannot obtain movie duration for', filename
 		duration = 0
 	return duration
-
-duration_cache = FileCache.FileCache(getduration)
-
-get = duration_cache.get
