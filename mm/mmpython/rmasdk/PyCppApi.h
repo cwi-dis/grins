@@ -66,8 +66,9 @@ inline void Trace(const char*, ...){}
 extern DLL_API PyObject *module_error;
 
 #ifdef _WIN32
-#include <fstream>
-#define MessageLog(str)do{ofstream ofs("log.txt",ios::app);if(ofs) ofs << str << endl;ofs.close();}while(false)
+//#include <fstream>
+//#define MessageLog(str)do{ofstream ofs("log.txt",ios::app);if(ofs) ofs << str << endl;ofs.close();}while(false)
+#define MessageLog(str) fprintf(stdout,str)
 #else
 #define MessageLog(str) fprintf(stdout,str)
 #endif
