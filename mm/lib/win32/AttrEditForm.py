@@ -826,6 +826,9 @@ class AttrPage(dialog.PropertyPage):
 # because we put the attribute name on the groupbox, not before the editable
 # field. These classes are there specifically to override this behaviour
 # of adding a colon to the attribute name
+class OptionsNocolonCtrl(OptionsCtrl):
+	want_colon_after_label = 0
+
 class OptionsRadioNocolonCtrl(OptionsRadioCtrl):
 	want_colon_after_label = 0
 
@@ -2193,7 +2196,7 @@ class ImgregionGroup(AttrGroup):
 		else:
 			cd[a]=OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))		
 		a=self.getattr(self._attrnames['anchor'])
-		cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
+		cd[a]=OptionsNocolonCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
 		return cd
 
 	def oninitdialog(self,wnd):
