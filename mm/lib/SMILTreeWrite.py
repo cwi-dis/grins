@@ -203,12 +203,19 @@ def getsrc(writer, node):
 	else:
 		return None
 	if not val or not writer.copydir:
+##		if ':' in val: #DBG
+##			import pdb #DBG
+##			pdb.set_trace() #DBG
 		return val
 	ctx = node.GetContext()
 	url = ctx.findurl(val)
 	if writer.copycache.has_key(url):
 		# already seen and copied
-		return MMurl.basejoin(writer.copydirurl, writer.copycache[url])
+		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(writer.copycache[url]))
+##		if ':' in val: #DBG
+##			import pdb #DBG
+##			pdb.set_trace() #DBG
+		return val
 	if node.GetChannelType() == 'RealPix':
 		# special case code for RealPix file
 		if not hasattr(node, 'slideshow'):
@@ -238,11 +245,19 @@ def getsrc(writer, node):
 		realsupport.writeRP(os.path.join(writer.copydir, file), rp, node)
 		rp.tags = otags
 		writer.copycache[url] = file
-		return MMurl.basejoin(writer.copydirurl, file)
+		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
+##		if ':' in val: #DBG
+##			import pdb #DBG
+##			pdb.set_trace() #DBG
+		return val
 	else:
 		file = copyfile(url, writer.copydir)
 		writer.copycache[url] = file
-		return MMurl.basejoin(writer.copydirurl, file)
+		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
+##		if ':' in val: #DBG
+##			import pdb #DBG
+##			pdb.set_trace() #DBG
+		return val
 
 def getcmifattr(writer, node, attr):
 	val = MMAttrdefs.getattr(node, attr)
@@ -556,11 +571,12 @@ class SMILWriter(SMIL):
 		if copyFiles:
 			dir, base = os.path.split(filename)
 			base, ext = os.path.splitext(base)
+			base = MMurl.pathname2url(base)
 			if not ext:
 				base = base + '.dir'
 			newdir = newfile(base, dir)
 			self.copydir = os.path.join(dir, newdir)
-			self.copydirurl = newdir + '/'
+			self.copydirurl = MMurl.pathname2url(newdir) + '/'
 			self.copycache = {}
 			try:
 				os.mkdir(self.copydir)
