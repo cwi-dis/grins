@@ -95,7 +95,7 @@ class _convert_dialog:
 	result = fl.file_selector('Select file', dir, '*', file)
 	if result:
 	    self.input_filename.set_input(result)
-    def callback_convert(self,(obj,value)):
+    def callback_convert(self,obj,value):
 	fn = self.input_filename.get_input()
 	if obj == self.button_convert and _file_exists(fn):
 	    self.err_group.show_object()

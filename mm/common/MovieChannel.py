@@ -78,7 +78,7 @@ class MovieWindow(ChannelWindow):
 		#
 		gl.clear()
 	#
-	def setfile(self, (filename, node, do_warm)):
+	def setfile(self, filename, node, do_warm):
 		self.clear()
 		self.vfile = None
 		try:

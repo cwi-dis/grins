@@ -36,9 +36,9 @@ class csfile:
 	def __repr__(self):
 		return '<csfile instance, f=' + `self.f` + '>'
 
-	def seek(self, arg):
+	def seek(self, *args):
 		self.cached = ''
-		return self.f.seek(arg)
+		return apply(self.f.seek, args)
 
 	def read(self, n):
 		if n <= len(self.cached):

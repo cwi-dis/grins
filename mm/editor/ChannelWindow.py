@@ -105,7 +105,8 @@ class ChannelWindow(GLDialog):
 			self.cmenu = make_cmenu(self.name)
 		self.domenu(self.cmenu)
 
-	def domenu(self, (menu, actions)):
+	def domenu(self, mdef):
+		menu, actions = mdef
 		i = gl.dopup(menu)
 		if 0 < i <= len(actions):
 			actions[i-1](self)
@@ -185,7 +186,8 @@ class ChannelWindow(GLDialog):
 			if m <> om:
 				self.sqqnewxy(m)
 			
-	def sqqnewxy(self, (mx, my)):
+	def sqqnewxy(self, m):
+		mx, my = m
 		if not self.sqq_square:
 			raise 'Mouse-move event while not sq-querying?'
 		mx, my = int(mx), int(my)
@@ -198,7 +200,8 @@ class ChannelWindow(GLDialog):
 		self.sqqredraw()
 
 	# sqconvert converts GL xyxy to X-style (0,0 top left) percentages
-	def sqconvert(self, (x0, y0, x1, y1)):
+	def sqconvert(self, sq):
+		x0, y0, x1, y1 = sq
 		gl.winset(self.wid)
 		w, h = gl.getsize()
 		if x0 > x1: x0, x1 = x1, x0

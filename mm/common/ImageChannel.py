@@ -100,7 +100,7 @@ class ImageWindow(ChannelWindow):
 		mx, my = fl.get_mouse()
 		return self.convmouse(mx, my)
 
-	def convmouse(self, (mx, my)):
+	def convmouse(self, mx, my):
 		mx = int((mx - self.ninfo.xcorner) / self.ninfo.mousescale)
 		my = int((my - self.ninfo.ycorner) / self.ninfo.mousescale)
 		return mx, my
@@ -141,7 +141,7 @@ class ImageWindow(ChannelWindow):
 			self.channel.haspauseanchor = 0
 			self.channel.done(0)
 	#
-	def armimage(self, (filename_arg, node)):
+	def armimage(self, filename_arg, node):
 		self.arm_ninfo = ImageNodeInfo().init()
 		# (Import imgfile here so if it doesn't exist we can
 		# still play documents that don't contain images...)

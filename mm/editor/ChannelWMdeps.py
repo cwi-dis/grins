@@ -171,7 +171,7 @@ class Channel:
 		if self.haspauseanchor and not self.player.ignore_pauses:
 			return
 		callback, arg = self.cb
-		callback(arg)
+		apply(callback, arg)
 		if self.autoanchor:
 			rv = self.player.anchorfired(self.node, [self.autoanchor])
 		self.autoanchor = None

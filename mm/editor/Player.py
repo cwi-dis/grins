@@ -93,16 +93,16 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	#
 	# FORMS callbacks.
 	#
-	def play_callback(self, (obj, arg)):
+	def play_callback(self, obj, arg):
 		self.play()
 	#
-	def pause_callback(self, (obj, arg)):
+	def pause_callback(self, obj, arg):
 		self.pause()
 	#
-	def stop_callback(self, (obj, arg)):
+	def stop_callback(self, obj, arg):
 		self.stop()
 	#
-	def cmenu_callback(self, (obj, arg)):
+	def cmenu_callback(self, obj, arg):
 		i = self.cmenubutton.get_menu() - 1
 		if 0 <= i < len(self.channelnames):
 			name = self.channelnames[i]
@@ -121,7 +121,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	#		self.measure_armtimes = 1
 	#		obj.set_button(1)
 	#
-	def omenu_callback(self, (obj, arg)):
+	def omenu_callback(self, obj, arg):
 		i = self.omenubutton.get_menu()
 		if i == 1:
 			self.measure_armtimes = (not self.measure_armtimes)
@@ -140,10 +140,10 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			print 'Player: Option menu: funny choice', i
 		self.makeomenu()
 		
-	def dummy_callback(self, dummy):
+	def dummy_callback(self, *dummy):
 		pass
 	#
-	def timer_callback(self, (obj, arg)):
+	def timer_callback(self, obj, arg):
 		gap = None
 		while self.queue:
 			when, prio, action, argument = self.queue[0]

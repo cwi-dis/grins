@@ -104,7 +104,7 @@ def _do_times_work(node):
 	pt = pseudotime().init(0.0)
 	q = sched.scheduler().init(pt.timefunc, pt.delayfunc)
 	node.counter[HD] = 1
-	decrement(q, (0, node, HD))
+	decrement(q, 0, node, HD)
 	q.run()
 
 # Interface to get the "initial arms" nodes of a tree.
@@ -249,9 +249,9 @@ def adddep(xnode, xside, delay, ynode, yside):
 		xnode.deps[xside].append(delay, ynode, yside)
 
 
-def decrement(q, (delay, node, side)):
+def decrement(q, delay, node, side):
 	if delay > 0:
-		id = q.enter(delay, 0, decrement, (q, (0, node, side)))
+		id = q.enter(delay, 0, decrement, (q, 0, node, side))
 		return
 	x = node.counter[side] - 1
 	node.counter[side] = x
@@ -275,7 +275,7 @@ def decrement(q, (delay, node, side)):
 		t1 = time.millitimer()
 		global getd_times
 		getd_times = getd_times + (t1-t0)
-		id = q.enter(dt, 0, decrement, (q, (0, node, TL)))
+		id = q.enter(dt, 0, decrement, (q, 0, node, TL))
 		cname = None
 		try:
 			cname = MMAttrdefs.getattr(node, 'channel')
@@ -290,8 +290,8 @@ def decrement(q, (delay, node, side)):
 					global initial_arms
 					initial_arms.append(node)
 			last_node[cname] = node
-	for arg in node.deps[side]:
-		decrement(q, arg)
+	for d, n, s in node.deps[side]:
+		decrement(q, d, n, s)
 
 
 class pseudotime:

@@ -35,8 +35,8 @@ class Scheduler(scheduler):
 	# but the call to it from enter() doesn't mind.
 	# There is no delayfunc() since we don't have a run() function.
 	#
-	def enterabs(self, args):
-		id = scheduler.enterabs(self, args)
+	def enterabs(self, time, priority, action, argument):
+		id = scheduler.enterabs(self, time, priority, action, argument)
 		self.updatetimer()
 		return id
 	#
@@ -145,8 +145,8 @@ class Scheduler(scheduler):
 			# XXX Attempted fix by Jack: get rid of
 			# multiple-arms of first few events
 			if pn.t0 > 0:
-				pn.prearm_event = self.rtpool.enter(pn.t0, d, \
-				  c.arm_only, pn)
+				pn.prearm_event = self.rtpool.enter( \
+					(pn.t0, d, c.arm_only, pn))
 			else:
 				c.arm_only(pn)
 		self.resume_2_playing()
@@ -163,7 +163,7 @@ class Scheduler(scheduler):
 			self.toplevel.channelview.globalsetfocus(self.playroot)
 		return self.start_2_playing(1)
 	#
-	def resume_1_playing(self,rate):
+	def resume_1_playing(self, rate):
 		self.toplevel.setwaiting()
 		if self.sync_cv:
 			self.toplevel.channelview.globalsetfocus(self.playroot)
@@ -227,8 +227,8 @@ class Scheduler(scheduler):
 	def dummy(arg):
 		pass
 	#
-	def decrement(self, (delay, node, side)):
-		#print 'DEC', delay, node, side, ' of ', node.counter[side]
+	def decrement(self, delay, node, side):
+##		print 'DEC', delay, node, side, ' of ', node.counter[side]
 	        self.freeze()
 		if delay > 0: # Sync arc contains delay
 			id = self.enter(delay, 0, self.decrement, \
@@ -271,7 +271,7 @@ class Scheduler(scheduler):
 				    self.seek_nodelist.append(node)
 			    else:
 				    d = chan.getduration(node)
-##				    print 'Player: Skip node duration=', d
+				    print 'Player: Skip node duration=', d
 				    dummy = self.enter(d, 0, self.decrement, \
 					      (0, node, TL))
 			elif doit:
@@ -286,7 +286,7 @@ class Scheduler(scheduler):
 			    # we do the arm before the play.
 			    #
 			    must_arm = 1
-			    #print 'Node ', MMAttrdefs.getattr(node, 'name')
+##			    print 'Node', MMAttrdefs.getattr(node, 'name')
 			    try:
 				if node.prearm_event == None:
 				    must_arm = 0
@@ -301,10 +301,10 @@ class Scheduler(scheduler):
 				    MMAttrdefs.getattr(node, 'channel'), node.uid
 				if self.measure_armtimes:
 					dummy = self.enter(0.0, -1, \
-						  chan.arm_and_measure, node)
+						chan.arm_and_measure, (node,))
 				else:
 					dummy = self.enter(0.0, -1, \
-						  chan.arm_only, node)
+						chan.arm_only, (node,))
 			    dummy = self.enter(0.0, 0, chan.play, \
 				(node, self.decrement, (0, node, TL)))
 			    if self.setcurrenttime_callback:
@@ -325,9 +325,10 @@ class Scheduler(scheduler):
 			for child in children:
 				chan = self.getchannel(child)
 				if chan <> None:
-					dummy = self.enter(0.0, 1, chan.clearnode, child)
-		for arg in node.deps[side]:
-			self.decrement(arg)
+					dummy = self.enter(0.0, 1, \
+						chan.clearnode, (child,))
+		for d, n, s in node.deps[side]:
+			self.decrement(d, n, s)
 		if node == self.playroot and side == TL:
 			# The whole mini-document is finished -- stop playing.
 			if self.setcurrenttime_callback:
@@ -364,8 +365,8 @@ class Scheduler(scheduler):
 			c = self.getchannel(pn)
 			if c:
 				pn.setarmedmode(ARM_SCHEDULED)
-				pn.prearm_event = self.rtpool.enter(pn.t0, d, \
-					c.arm_only, pn)
+				pn.prearm_event = self.rtpool.enter( \
+					(pn.t0, d, c.arm_only, pn))
 	#
 	# Channel access utilities.
 	#

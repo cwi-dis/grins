@@ -208,7 +208,7 @@ class PlayerCore(Scheduler):
 		del self.channels[name]
 		del self.channeltypes[name]
 	#
-	def newchannel(self, (name, attrdict)):
+	def newchannel(self, name, attrdict):
 		if not attrdict.has_key('type'):
 			raise TypeError, \
 				'channel ' +`name`+ ' has no type attribute'
