@@ -165,7 +165,8 @@ class MMNodeContext:
 				c['transparent'] = -1
 				c['center'] = 0
 				c['drawbox'] = 0
-				c['scale'] = 1
+				if type in ('image', 'video'):
+					c['scale'] = 1
 				if type == 'text':
 					c['bgcolor'] = 255,255,255
 				else:
