@@ -136,14 +136,12 @@ class TextChannel() = Channel():
 			try:
 				fp = open(file, 'r')
 			except:
-				print 'Cannot open file:', `file`
-				return
+				print 'Cannot open text file', `file`
+				return ''
 			text = fp.read()
 			if text[-1:] = '\n':
 				text = text[:-1]
 			return text
-		elif node.type = 'grp':
-			return '<group text not yet implemented>'
 		else:
 			raise CheckError, \
 				'gettext on wrong node type: ' +`node.type`
