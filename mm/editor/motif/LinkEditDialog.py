@@ -485,7 +485,7 @@ class LinkBrowserDialog:
 		pass
 
 class LinkEditorDialog:
-	def __init__(self, title, dirstr, typestr, dir, type):
+	def __init__(self, title, dirstr, typestr, dir, type, dirsens):
 		"""Create the LinkEditor dialog.
 		"""
 
@@ -523,6 +523,9 @@ class LinkEditorDialog:
 		self.linktypegetchoice = self.__link_type.getpos
 
 		self.show()
+
+		for i in range(len(dirsens)):
+			self.linkdirsetsensitive(i, dirsens[i])
 
 	def close(self):
 		"""Close the dialog and free resources."""
