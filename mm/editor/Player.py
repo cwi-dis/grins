@@ -47,42 +47,55 @@ class Player() = scheduler():
 	# Initialization.
 	#
 	def init(self, root):
-		# Initialize the scheduler and parameters for timefunc
 		self.queue = []
 		self.resettimer()
-		# Initialize the player
 		self.root = root
-		self.playing = 0
-		self.abcontrol = ()
-		# Make the channel objects -- this pops up windows...
-		self.channels = {}
-		self.channelnames = []
-		self.makechannels()
-		# Initialize the setcurrenttime callback
+		self.root.GetContext().geteditmgr().register(self)
 		self.setcurrenttime_callback = None
-		# Make the control panel last, to show we're ready, finally...
-		self.makecpanel()
-		# Return self, as any class initializer
+		self.showing = self.playing = self.locked = 0
 		return self
+	#
+	# EditMgr interface (as dependent client).
+	#
+	def transaction(self):
+		# Disallow changes while we are playing.
+		if self.playing:
+			fl.show_message('Document is playing', '', '')
+			return 0
+		self.locked = 1
+		return 1
+	#
+	def commit(self):
+		# XXX Should check that all our channels still exist!
+		self.locked = 0
+	#
+	def rollback(self):
+		# Nothing has changed after all.
+		self.locked = 0
 	#
 	# Toplevel interface.
 	#
 	def show(self):
+		if self.showing: return
+		self.abcontrol = ()
+		self.makechannels()
+		self.makecpanel()
 		self.reset()
 		self.showchannels()
 		self.showcpanel()
+		self.showing = 1
 		self.showstate()
 	#
 	def hide(self):
+		if not self.showing: return
 		self.stop()
 		self.reset()
-		self.hidechannels()
-		self.hidecpanel()
+		self.destroychannels()
+		self.destroycpanel()
+		self.showing = 0
 	#
 	def destroy(self):
 		self.hide()
-		self.destroychannels()
-		self.destroycpanel()
 	#
 	def set_setcurrenttime_callback(self, setcurrenttime):
 		self.setcurrenttime_callback = setcurrenttime
@@ -94,7 +107,6 @@ class Player() = scheduler():
 		self.resetchannels()
 		if self.setcurrenttime_callback:
 			self.setcurrenttime_callback(0.0)
-	#
 	#
 	# Queue interface, based upon sched.scheduler.
 	# This queue has variable time, to implement pause and slow/fast,
@@ -170,13 +182,11 @@ class Player() = scheduler():
 		self.playbutton = \
 			cpanel.add_button(INOUT_BUTTON, x,y,w,h, 'Play')
 		self.playbutton.set_call_back(self.play_callback, None)
-		# self.playbutton.active = 0
 		#
 		x, y, w, h = 100, 50, 48, 48
 		self.pausebutton = \
 			cpanel.add_button(INOUT_BUTTON,x,y,w,h, 'Pause')
 		self.pausebutton.set_call_back(self.pause_callback, None)
-		# self.pausebutton.active = 0
 		#
 		x, y, w, h = 150, 50, 48, 48
 		self.stopbutton = \
@@ -218,14 +228,17 @@ class Player() = scheduler():
 		width, height = 300, 100
 		glwindow.setgeometry(h, v, width, height)
 		#
-		self.cpanel.show_form(PLACE_SIZE, TRUE, 'Control Panel')
+		self.cpanel.show_form(PLACE_SIZE, TRUE, 'Presentation Control')
 	#
 	def hidecpanel(self):
+		gl.winset(self.cpanel.window)
+		h, v, width, height = glwindow.getgeometry()
+		# XXX need transaction here!
+		self.root.SetAttr('player_winpos', (h, v))
 		self.cpanel.hide_form()
 	#
 	def destroycpanel(self):
-		self.hide()
-		# XXX Ougt to garbage-collect everything now...
+		self.hidecpanel()
 	#
 	# FORMS callbacks.
 	#
@@ -339,8 +352,7 @@ class Player() = scheduler():
 		self.showstate()
 	#
 	def maystart(self):
-		import AttrEdit
-		return not AttrEdit.hasattreditor(self.root)
+		return not self.locked
 	#
 	def showstate(self):
 		if not self.playing:
@@ -369,6 +381,8 @@ class Player() = scheduler():
 	#
 	def makechannels(self):
 		#
+		self.channelnames = []
+		self.channels = {}
 		for name in self.root.context.channelnames:
 			attrdict = self.root.context.channeldict[name]
 			self.channelnames.append(name)
@@ -385,6 +399,9 @@ class Player() = scheduler():
 	def destroychannels(self):
 		for name in self.channelnames:
 			self.channels[name].destroy()
+			# The channels must first hide themselves
+		self.channelnames = []
+		self.channels = {}
 	#
 	def newchannel(self, (name, attrdict)):
 		if not attrdict.has_key('type'):
@@ -413,7 +430,6 @@ class Player() = scheduler():
 			return 0
 		self.playing = 1
 		self.reset()
-		Timing.calctimes(self.root)
 		Timing.prepare(self.root)
 		self.root.counter[HD] = 1
 		self.decrement(0, self.root, HD)
@@ -424,7 +440,6 @@ class Player() = scheduler():
 		self.stopchannels() # Tell the channels to quit it
 		self.queue[:] = [] # Erase all events with brute force!
 		self.setrate(0.0) # Stop the clock
-		Timing.cleanup(self.root) # Collect some garbage
 		self.showstate()
 	#
 	def decrement(self, (delay, node, side)):
