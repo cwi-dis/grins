@@ -231,7 +231,7 @@ class _DisplayList:
 				imghdc = image.GetDC()
 				if imghdc:
 					imgdc = win32ui.CreateDCFromHandle(imghdc)
-					dc.BitBlt((dest_x, dest_y),(width, height),imgdc,(0, 0), ddraw.DDBLT_WAIT)
+					dc.BitBlt((dest_x, dest_y),(width, height),imgdc,(0, 0), win32con.SRCCOPY)
 					imgdc.Detach()
 					image.ReleaseDC(imghdc)				
 			else:
