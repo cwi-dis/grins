@@ -2102,7 +2102,7 @@ BEGIN
     LTEXT           "Fit:",IDC_FITL,223,95,10,8
     COMBOBOX        IDC_FITV,235,93,45,103,CBS_DROPDOWNLIST | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Z-index:",IDC_WIDTHL3,147,95,26,8
+    LTEXT           "Z-index:",IDC_ZL,147,95,26,8
     EDITTEXT        IDC_ZV,175,93,32,13,ES_AUTOHSCROLL
 END
 
