@@ -57,14 +57,13 @@ class AttrCtrl:
 	def drawOn(self,dc):
 		pass
 
-	def enableApply(self,flag=-1):
-		if self._wnd._form:
-			if flag==-1:
-				if self._attr.getcurrent()!=self.getvalue():
-					flag=1
-				else:
-					flag=0	
-			self._wnd._form.enableApply(flag)
+	def enableApply(self):
+		if not self._wnd._form: return
+		if self._attr.getcurrent()!=self.getvalue():
+			flag=1
+		else:
+			flag=0	
+		self._wnd._form.enableApply(self._attr, flag)
 
 # temp stuff not safe
 def atoft(str):
@@ -1793,7 +1792,7 @@ class AttrEditForm(GenFormView):
 		self._a2p={}
 		self._pages=[]
 		self._tid=None
-		self._nattrchanged=0
+		self._attrchanged={}
 
 	# Creates the actual OS window
 	def createWindow(self,parent):
@@ -2007,13 +2006,15 @@ class AttrEditForm(GenFormView):
 				return a
 		return None
 
-	def enableApply(self,flag):
+	def enableApply(self, attr, flag):
 		if flag!=0: 
-			self._nattrchanged=self._nattrchanged+1
+			self._attrchanged[attr]=1
 		else:
-			self._nattrchanged=self._nattrchanged-1
-		self._nattrchanged=max(0,self._nattrchanged)
-		if self._nattrchanged>0 and self._prsht:
+			self._attrchanged[attr]=0
+		nchanged=0
+		for val in self._attrchanged.values():
+			nchanged=nchanged+val
+		if nchanged>0 and self._prsht:
 			self._prsht.enableApply(1)
 		elif self._prsht:
 			self._prsht.enableApply(0)
