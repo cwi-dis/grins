@@ -73,7 +73,7 @@ class ColorSelector(glwindow.glwindow):
 		#
 		return rgb
 
-	def ok_callback(self, dummy):
+	def ok_callback(self, *dummy):
 		# Honor changes to the input fields that we haven't
 		# seen yet because the user didn't press TAB
 		# (I still think FORMS should do this though)
@@ -85,22 +85,22 @@ class ColorSelector(glwindow.glwindow):
 				self.hsv_callback((b, None))
 		raise Done
 
-	def cancel_callback(self, dummy):
+	def cancel_callback(self, *dummy):
 		self.from_rgb(self.save, 1)
 		raise Done
 
-	def restore_callback(self, dummy):
+	def restore_callback(self, *dummy):
 		self.from_rgb(self.save, 1)
 
-	def slider_callback(self, dummy):
+	def slider_callback(self, *dummy):
 		h, s, v = self.get_hsv()
 		v = self.slider.get_slider_value()
 		self.from_hsv((h, s, v), 1)
 
-	def hsv_callback(self, dummy):
+	def hsv_callback(self, *dummy):
 		self.from_hsv(self.get_hsv(), 1)
 
-	def rgb_callback(self, dummy):
+	def rgb_callback(self, *dummy):
 		self.from_rgb(self.get_rgb(), 1)
 
 	def get_hsv(self):
@@ -144,13 +144,13 @@ class ColorSelector(glwindow.glwindow):
 		self.box.setwin()
 		self.box.render()
 
-	def set_hsv(self, h, s, v):
+	def set_hsv(self, (h, s, v)):
 		self.h_b.set_input(`fix(h, 3)`)
 		self.s_b.set_input(`fix(s, 3)`)
 		self.v_b.set_input(`fix(v, 3)`)
 		self.slider.set_slider_value(v)
 
-	def set_rgb(self, r, g, b):
+	def set_rgb(self, (r, g, b)):
 		self.r_b.set_input(`r`)
 		self.g_b.set_input(`g`)
 		self.b_b.set_input(`b`)
