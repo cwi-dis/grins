@@ -167,6 +167,17 @@ class MMNodeContext:
 	#
 	# Channel administration
 	#
+
+	# compute a channel name according to the region name
+	def newChannelName(self, regionName):
+		# search a new channel name
+		name = regionName + ' %d'
+		i = 0
+		while self.channeldict.has_key(name % i):
+			i = i + 1
+
+		return name	% i
+		
 	def compatchtypes(self, url):
 		import MMmimetypes, ChannelMime, ChannelMap
 		mtype = MMmimetypes.guess_type(url)[0]
