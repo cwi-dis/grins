@@ -1409,9 +1409,7 @@ class AttrEditor(AttrEditorDialog):
 		# first collect all changes
 		dict = {}
 		newchannel = None
-		mustChangeChannel = 0
 		checkType = 0
-		regionName = None
 		for b in self.attrlist:
 			name = b.getname()
 			str = b.getvalue()
@@ -1424,9 +1422,6 @@ class AttrEditor(AttrEditorDialog):
 					except ValueError:
 						# probably shouldn't happen...
 						pass
-					mustChangeChannel = 1
-					regionName = newchannel
-					continue
 				try:
 					value = b.parsevalue(str)
 				except:
@@ -1450,19 +1445,6 @@ class AttrEditor(AttrEditorDialog):
 				# and re, compute the computedMimeType, channel type, ...
 				if name in ('file', 'mimetype', '.type', 'channel'):
 					checkType = 1
-				# if the mime type change, we have to change the channel as well
-				if name == 'file':
-					compatChannelTypeList = self.wrapper.getcontext().compatchtypes(value)
-					currentChannelType = self.wrapper.node.GetChannelType()
-					if currentChannelType not in compatChannelTypeList:
-						mustChangeChannel = 1
-				# if we change the region, we have to determinate (and create) the channel
-				# WARNING: 'channel' attribute is now a region name (chosen by the user)
-				elif name == 'channel': 
-					mustChangeChannel = 1
-					regionName = value
-					# we don't save this value which is a region name
-					continue
 				# for now, assume that url is all the time value
 				# Anyway, to filter the valid url according the GRiNS version, you'll have
 				# to modify this code
@@ -1492,8 +1474,6 @@ class AttrEditor(AttrEditorDialog):
 				self.wrapper.delattr(name)
 			else:
 				self.wrapper.setattr(name, value)
-		if mustChangeChannel:
-			self.changeChannel(self.wrapper.node, regionName)
 		if checkType:
 			self.checkType(self.wrapper.node)
 			
@@ -1503,54 +1483,7 @@ class AttrEditor(AttrEditorDialog):
 	# for now, do nothing
 	def checkType(self, node):
 		pass
-			
-	def changeChannel(self, node, newRegionName):
-		# get the current region name
-		em = self.wrapper.editmgr
-		regionName = None
-		if newRegionName == None:
-			# the region name hasn't changed. We have to get the old one
-			channel = self.wrapper.node.GetChannel()
-			if channel != None:
-				region = channel.GetLayoutChannel()
-				if region != None:
-					regionName = region.name
-		else:
-			regionName = newRegionName
-
-		if regionName != None:
-			ctx = self.wrapper.getcontext()
-			# guess the channel type
-			url = self.wrapper.getattr('file')
-			compatChannelTypeList = ctx.compatchtypes(url)
-			oldChannelName = None
-			if len(compatChannelTypeList) == 0:
-				# if not valid URL yet, the channel have to be cleared
-				channelName = None
-			else:
-				channelName = ctx.newChannelName(regionName)
-				# if not exist, create the channel
-				chtype = compatChannelTypeList[0]
-				em.addchannel(channelName, 0, chtype)
-				em.setchannelattr(channelName, 'base_window', regionName)
-				# get old channel name
-				oldChannelName = node.GetRawAttrDef('channel', None)
-				
-			# at last, associate the channel to the node
-			em.setnodeattr(node, 'channel', channelName)
-
-			# remove old channel if no media node associated anymore
-			if oldChannelName != None:
-				found = 0
-				for uid in ctx.uidmap.keys():
-					n = ctx.uidmap[uid]
-					channelName = n.GetRawAttrDef('channel', None)
-					if oldChannelName == channelName:
-						found = 1
-						break
-				if not found:
-					em.delchannel(oldChannelName)
-		
+					
 	def checkurl(self, url):
 		import settings
 		if not features.lightweight:
@@ -2484,22 +2417,21 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 
 		# XXXX: HACK:
 		# value is either a channel name or a region name (if new)
-		if hasattr(self, 'newchannels'):
-			if len(self.newchannels) > 0:
-				if value == self.newchannels[0]:
-					return value
+#		if hasattr(self, 'newchannels'):
+#			if len(self.newchannels) > 0:
+#				if value == self.newchannels[0]:
+#					return value
 			
 		# experimental SMIL Boston layout code
-		ch = self.wrapper.context.getchannel(value)
-		if ch == None:
-			return UNDEFINED
-		ch = ch.GetLayoutChannel()
-		try:
-			value = ch.name
-		except:
-			pass
+#		ch = self.wrapper.context.getchannel(value)
+#		if ch == None:
+#			return UNDEFINED
+#		ch = ch.GetLayoutChannel()
+#		try:
+#			value = ch.name
+#		except:
+#			pass
 		# end experimental	
-
 		return value
 
 	def channelprops(self):

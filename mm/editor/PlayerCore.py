@@ -7,14 +7,14 @@ import windowinterface
 #from MMExc import *
 import MMAttrdefs
 from Selecter import Selecter
-
+from PlayerCommon import PlayerCommon
 
 # The Player class normally has only a single instance.
 #
 # It implements a queue using "virtual time" using an invisible timer
 # object in its form.
 
-class PlayerCore(Selecter):
+class PlayerCore(Selecter, PlayerCommon):
 	#
 	# Initialization.
 	#
@@ -28,8 +28,10 @@ class PlayerCore(Selecter):
 		self.editmgr.register(self)
 		self.chans_showing = 0
 		Selecter.__init__(self)
+		PlayerCommon.__init__(self)
 		self.context.registergetchannelbynode(self.getchannelbynode)
 		self.__ichannels = {} # internal channels map
+
 	#
 	# EditMgr interface (as dependent client).
 	#
@@ -204,41 +206,38 @@ class PlayerCore(Selecter):
 	#
 	def maystart(self):
 		return not self.locked
-	#
-	# Channels.
-	#
-	def makechannels(self):
-		for name in self.context.channelnames:
-			attrdict = self.context.channeldict[name]
-			self.newchannel(name, attrdict)
-			self.channelnames.append(name)
-		self.makemenu()
-		self.__makeichannels()
 
-	#
-	def checkchannels(self):
+	def checkRegions(self):
 		# XXX Ought to detect renamed channels...
 		# (1) Delete channels that have disappeared
 		# or whose type has changed
 		for name in self.channelnames[:]:
+			channel = self.channels[name]
+			if channel._attrdict.get('type') != 'layout':
+				continue
 			if name not in self.context.channelnames:
-## 				print 'Detected deleted channel'
 				self.killchannel(name)
-			else:
-				oldtype = self.channeltypes[name]
-				newtype = \
-				    self.context.channeldict[name]['type']
-				if oldtype <> newtype:
-## 					print 'Detected retyped channel'
-					self.killchannel(name)
+
 		# (2) Add new channels that have appeared
 		for name in self.context.channelnames:
 			if name not in self.channelnames:
 ## 				print 'Detected new channel'
 				attrdict = self.context.channeldict[name]
+				if attrdict.get('type') != 'layout':
+					continue
 				self.newchannel(name, attrdict)
 				i = self.context.channelnames.index(name)
 				self.channelnames.insert(i, name)
+		
+	def checkRendererChannels(self):
+		self.clearRendererChannels()
+		self.makeRendererChannels()
+			
+	#
+	def checkchannels(self):
+		self.checkRegions()
+		self.__checkichannels()
+		self.checkRendererChannels()
 		if self.showing:
 			# (3) reset all variable _want_shown to zero
 			for name in self.channelnames:
@@ -248,7 +247,7 @@ class PlayerCore(Selecter):
 				self.channels[name].check_visible()
 			# (5) Update layout and menu
 			self.setlayout(self.curlayout, self.curchannel)
-		self.__checkichannels()
+		return
 
 	#
 	def getchannelbyname(self, name):
@@ -259,9 +258,15 @@ class PlayerCore(Selecter):
 		else:
 			return None
 	#
+
 	def getchannelbynode(self, node):
-		cname = MMAttrdefs.getattr(node, 'channel')
-		return self.getchannelbyname(cname)
+		import MMTypes
+		if node.GetType() in MMTypes.mediatypes:
+			return self.getRenderer(node)
+		else:
+			cname = MMAttrdefs.getattr(node, 'channel')
+			return self.getchannelbyname(cname)		
+
 	#
 	def before_chan_show(self, chan = None):
 		self.chans_showing = self.chans_showing + 1
@@ -277,6 +282,24 @@ class PlayerCore(Selecter):
 		if aftershow:
 			apply(apply, aftershow)
 
+	#
+	# Channels.
+	#
+	def makechannels(self):
+		# make layout channels
+		for name in self.context.channelnames:
+			attrdict = self.context.channeldict[name]
+			if attrdict.get('type') == 'layout':
+				self.newchannel(name, attrdict)
+				self.channelnames.append(name)
+		# make renderer channels
+		self.makeRendererChannels()
+		
+		# make internal channels
+		self.__makeichannels()
+		
+		self.makemenu()
+								
 	def showchannels(self):
 		for name in self.channelnames:
 			ch = self.channels[name]
@@ -318,7 +341,6 @@ class PlayerCore(Selecter):
 		ch.uipaused(self.pausing)
 		self.channels[name] = ch
 		self.channeltypes[name] = type
-
 
 	##########################
 	#
