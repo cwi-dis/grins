@@ -158,6 +158,9 @@ MENUBAR=(
 		)),
 
 	(FLAG_ALL, CASCADE, 'Tools', (
+#		(FLAG_PRO, TOGGLE, 'Bandwidth Usage Strip', None, TOGGLE_BWSTRIP),
+		(FLAG_ALL, ENTRY, 'Check Bandwidth', None, COMPUTE_BANDWIDTH),
+		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, 'RealPix to SMIL 2.0', None, RPCONVERT),
 		(FLAG_PRO, ENTRY, 'SMIL 2.0 to RealPix', None, CONVERTRP),
 		(FLAG_ALL, SEP,),
@@ -187,10 +190,8 @@ MENUBAR=(
 		(FLAG_PRO, ENTRY, 'Fit in Window', None, CANVAS_RESET),
 		(FLAG_PRO, SEP,),
 		(FLAG_PRO, TOGGLE, 'Unused Channels', None, TOGGLE_UNUSED),
-		(FLAG_PRO, TOGGLE, 'Sync Arcs', None, TOGGLE_ARCS),
+#		(FLAG_PRO, TOGGLE, 'Sync Arcs', None, TOGGLE_ARCS),
 		(FLAG_PRO, TOGGLE, 'Image Thumbnails', None, THUMBNAIL),
-		(FLAG_PRO, TOGGLE, 'Bandwidth Usage Strip', None, TOGGLE_BWSTRIP),
-		(FLAG_ALL, ENTRY, 'Check Bandwidth', None, COMPUTE_BANDWIDTH),
 		(FLAG_PRO, TOGGLE, 'Show Playable', None, PLAYABLE),
 		(FLAG_ALL, CASCADE, 'Show Time in Structure', (
 			(FLAG_ALL, TOGGLE, 'Whole Document, Adaptive', None, TIMESCALE),
