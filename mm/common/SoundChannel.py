@@ -27,7 +27,7 @@ from ArmStates import *
 
 from Channel import Channel
 
-class csfile():
+class csfile:
 	def open(self, fname, mode):
 		self.cached = ''
 		self.f = open(fname, mode)
@@ -213,48 +213,11 @@ def getduration(filename):
 
 def getinfo(filename):
 	f = csfile().open(filename, 'r')
-	magic = f.read(4)
-	# Look for AIFF header as produced by recordaiff
-	if magic == 'FORM':
-		totalsize = aiff.read_long(f)
-		aiff.read_form_chunk(f)
-		type, size = aiff.read_chunk_header(f)
-		if type <> 'COMM':
-			raise aiff.Error, 'no COMM chunk where expected'
-		nchannels, nsampframes, sampwidth, samprate = \
-			aiff.read_comm_chunk(f)
-		sampwidth = sampwidth / 8 # Convert to bytes now
-		format = 'FORM'
-	else:
-		# Look for old-fashioned header
-		offset = 4
-		if magic == '0008':
-			samprate = 8000.0
-		elif magic == '0016':
-			samprate = 16000.0
-		elif magic == '0032':
-			samprate = 32000.0
-		else:
-			# Assume old-fashioned file without header
-			samprate = 8000.0
-			offset = 0
-		st = os.stat(filename)
-		size = st[ST_SIZE]
-		nchannels = 1
-		sampwidth = 1
-		nsampframes = size - offset
-		format = ''
-	#
-	return f, nchannels, nsampframes, sampwidth, samprate, format
+	a = aiff.Aiff().init(f, 'rf')
+	return f, a.nchannels, a.nsampframes, a.sampwidth, a.samprate, 'AIFF'
 
 def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
-	if format == 'FORM':
-		type, size = aiff.read_chunk_header(f)
-		if type <> 'SSND':
-			raise aiff.Error, 'no SSND header where expected'
-		offset, blocksize = aiff.read_ssnd_chunk(f)
-	else:
-		offset, blocksize = 0, 0
+	pass
 
 
 
