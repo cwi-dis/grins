@@ -74,6 +74,8 @@ class MediaChannel:
 		self._playBuilder=None
 		self._playBegin=0
 		self._playEnd=0
+		self._armFileHasBeenRendered=0
+		self._playFileHasBeenRendered=0
 		
 		# main thread monitoring fiber id
 		self._fiber_id=0
@@ -136,9 +138,11 @@ class MediaChannel:
 		url = MMurl.canonURL(url)
 		url=urllib.unquote(url)
 		if not self._armBuilder.RenderFile(url):
+			self._armFileHasBeenRendered=0
 			print 'Failed to render',url
 			return -1
 
+		self._armFileHasBeenRendered=1
 		return 1
 
 
@@ -149,6 +153,10 @@ class MediaChannel:
 		self.release_player()
 		self._playBuilder=self._armBuilder
 		self._armBuilder=None
+		if not self._armFileHasBeenRendered:
+			self._playFileHasBeenRendered=0
+			return 0
+		self._playFileHasBeenRendered=1
 		self.arm2playASX()		
 		self.play_loop = self.getloop(node)
 
@@ -200,7 +208,7 @@ class MediaChannel:
 			self._playBuilder.SetVisible(1)
 
 	def paint(self):
-		if hasattr(self,'window') and self.window:
+		if hasattr(self,'window') and self.window and self._playFileHasBeenRendered:
 			self.window.UpdateWindow()
 
 	# Set Window Media window size from scale and center attributes
@@ -242,7 +250,7 @@ class MediaChannel:
 		builder.SetWindowPosition(rcMediaWnd)
 
 	def update(self,dc=None):
-		if self._playBuilder and (self.__playdone or self.__paused):
+		if self._playBuilder and self._playFileHasBeenRendered and (self.__playdone or self.__paused):
 			self.window.RedrawWindow()
 	
 	# capture end of media

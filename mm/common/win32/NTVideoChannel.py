@@ -62,7 +62,11 @@ class VideoChannel(Channel.ChannelWindowAsync,MediaChannel.MediaChannel):
 		if res==0:
 			self.showwarning(node,'System missing infrastructure to playback')
 		elif res==-1:
-			self.showwarning(node,'Failed to render file')
+			import MMurl, urllib
+			url=self.getfileurl(node)
+			url = MMurl.canonURL(url)
+			url=urllib.unquote(url)
+			self.showwarning(node,'Failed to render file %s' % url)
 		return 1
 
 	def do_play(self, node):
