@@ -208,7 +208,7 @@ class _Window:
 		return _DisplayList(self, bgcolor)
 
 	def settitle(self, title):
-		if self._parent != toplevel:
+		if self._parent is not toplevel:
 			raise error, 'can only settitle at top-level'
 		pass
 
