@@ -53,8 +53,7 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 		self.interesting = []
 		self.editor = None
 
-		LinkBrowserDialog.__init__(self, self.__maketitle(), dirstr,
-			typestr,
+		LinkBrowserDialog.__init__(self, self.__maketitle(), 
 			[('All', (self.menu_callback, (self.left, M_ALL))),
 			 ('Dangling',
 			  (self.menu_callback, (self.left, M_DANGLING))),
@@ -679,7 +678,8 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 
 class LinkEditEditor(LinkEditorDialog):
 	def __init__(self, parent, title, editlink, isnew):
-		LinkEditorDialog.__init__(self, title, editlink[DIR], editlink[TYPE])
+		LinkEditorDialog.__init__(self, title, dirstr, typestr,
+					  editlink[DIR], editlink[TYPE])
 		self.parent = parent
 		self.editlink = editlink
 		self.changed = isnew
@@ -687,6 +687,9 @@ class LinkEditEditor(LinkEditorDialog):
 		
 	def close(self):
 		if self.changed:
+			# XXXX This may well be wrong in case of
+			# a close because of a change in another
+			# part of cmifed (recursive transaction)
 			rv = windowinterface.multchoice("This will close the currently open hyperlink\neditor. Do you want to save?",
 				["save", "discard"], 0)
 			if rv == 0:

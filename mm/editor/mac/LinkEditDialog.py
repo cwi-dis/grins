@@ -96,7 +96,7 @@ ITEMLIST_EDITOR_ALL=ITEMrange(ITEM_DIR_TITLE, ITEM_EDITOR_BALLOONHELP)
 __version__ = "$Id$"
 
 class LinkBrowserDialog(windowinterface.MACDialog):
-	def __init__(self, title, dirstr, typestr, menu1, cbarg1, menu2, cbarg2):
+	def __init__(self, title, menu1, cbarg1, menu2, cbarg2):
 		"""Create the LinkEditor dialog.
 
 		Create the dialog window (non-modal, so does not grab
@@ -105,8 +105,6 @@ class LinkBrowserDialog(windowinterface.MACDialog):
 
 		Arguments (no defaults):
 		title -- string to be display as window title
-		dirstr -- list of strings used as menu labels for the
-			link direction menu in the edit group
 		menu1 -- list of tuples -- the menu for the left list
 			(see module doc for description of tuples)
 		cbarg1 -- any object -- argument passed on to
@@ -463,7 +461,7 @@ class LinkBrowserDialog(windowinterface.MACDialog):
 ##XXXX
 
 class LinkEditorDialog(windowinterface.MACDialog):
-	def __init__(self, title, dir, type):
+	def __init__(self, title, dirstr, typestr, dir, type):
 		"""Create the LinkEditor dialog.
 		"""
 		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_LINKEDIT,
