@@ -16,9 +16,16 @@ import string
 
 Error="Bandwidth.Error"
 
-CONTINUOUS_CHANNELS = ['video', 'mpeg', 'movie', 'sound',  'RealAudio',
-			     'RealVideo']
-REAL_CHANNELS = ['RealAudio', 'RealVideo', 'RealText', 'RealPix', 'RealFlash']
+# These rates are derived from the Real Producer SDK documentation.
+# Later we may want to give the user the ability to change the bitrates.
+TARGET_BITRATES = [
+	20 * 1024,			# 28k8 modem
+	34 * 1024,			# 56k modem
+	45 * 1024,			# Single ISDN
+	80 * 1024,			# Dual ISDN
+	220 * 1024,			# Cable modem
+	150 * 1024,			# LAN
+	]
 
 def get(node, target=0):
 	ntype = node.GetType()
@@ -46,7 +53,19 @@ def get(node, target=0):
 ##		print "DBG: Bandwidth.get: skip nonlocal", url
 		return None, None
 
-	if ctype in REAL_CHANNELS:
+	if urlcache[url].has_key('mimetype'):
+		maintype, subtype = urlcache[url]['mimetype']
+	else:
+		try:
+			u = MMurl.urlopen(url)
+		except IOError:
+			raise Error, 'Media item does not exist'
+		maintype = u.headers.getmaintype()
+		subtype = u.headers.getsubtype()
+		urlcache[url]['mimetype'] = maintype, subtype
+		u.close()
+		del u
+	if string.find(subtype, 'real') >= 0:
 		# For real channels we parse the header and such
 		# XXXX If we want to do real-compatible calculations
 		# we have to take preroll time and such into account.
@@ -59,28 +78,23 @@ def get(node, target=0):
 ##		print "DBG: Bandwidth.get: real:", url, prearm, bandwidth
 		urlcache[url]['bandwidth'] = prearm, bandwidth
 		return prearm, bandwidth
+	if maintype == 'audio' or maintype == 'video':
+		targets = MMAttrdefs.getattr(node, 'project_targets')
+		bitrate = TARGET_BITRATES[0] # default: 28k8 modem
+		for i in range(len(TARGET_BITRATES)):
+			if targets & (1 << i):
+				bitrate = TARGET_BITRATES[i]
+		# don't cache since the result depends on project_targets
+		return 0, bitrate
 
 	attrs = {'project_quality':MMAttrdefs.getattr(node, 'project_quality')}
 	filesize = GetSize(url, target, attrs)
+	if filesize is None:
+		return None, 0
 
-	if ctype in CONTINUOUS_CHANNELS:
-		if filesize == None:
-			return 0, None
-		try:
-			duration = Duration.get(node, ignoreloop=1, wanterror=1)
-		except IOError:
-			raise Error, 'Media item does not exist'
-		if duration == 0:
-			return 0, 0
-##		print 'DBG: Bandwidth.get: continuous',filename, filesize, float(filesize)*8/duration
-		urlcache[url]['bandwidth'] = 0, float(filesize)*8/duration
-		return 0, float(filesize)*8/duration
-	else:
-		if filesize == None:
-			return None, 0
-##		print 'DBG: Bandwidth.get: discrete',filename, filesize, float(filesize)*8
-		urlcache[url]['bandwidth'] = float(filesize)*8, 0
-		return float(filesize)*8, 0
+##	print 'DBG: Bandwidth.get: discrete',filename, filesize, float(filesize)*8
+	urlcache[url]['bandwidth'] = float(filesize)*8, 0
+	return float(filesize)*8, 0
 
 def GetSize(url, target=0, attrs = {}):
 	val = urlcache[url].get('filesize')
@@ -103,13 +117,12 @@ def GetSize(url, target=0, attrs = {}):
 	except IOError:
 		raise Error, 'Media item does not exist'
 	tmp = None
-	if target:
-		if hdrs.maintype == 'image':
-			import tempfile, realconvert
-			tmp = tempfile.mktemp('.jpg')
-			dir, file = os.path.split(tmp)
-			file = realconvert.convertimagefile(None, url, dir, file, attrs)
-			filename = tmp = os.path.join(dir, file)
+	if target and hdrs.maintype == 'image':
+		import tempfile, realconvert
+		tmp = tempfile.mktemp('.jpg')
+		dir, file = os.path.split(tmp)
+		file = realconvert.convertimagefile(None, url, dir, file, attrs)
+		filename = tmp = os.path.join(dir, file)
 	try:
 		# XXXX Incorrect for mac (resource fork size)
 		statb = os.stat(filename)
