@@ -38,8 +38,6 @@ DEFINE_GUID(IID_IWMConverter,
 struct IWMConverter : public IUnknown
 	{
 	virtual HRESULT __stdcall SetWMWriter(IUnknown *pI)=0;
-	virtual HRESULT __stdcall SetAudioInputProps(DWORD dwInputNum,IUnknown *pI)=0;
-	virtual HRESULT __stdcall SetVideoInputProps(DWORD dwInputNum,IUnknown *pI)=0;
 	};
 
 static PyObject *ErrorObject;
@@ -1944,44 +1942,9 @@ WMConverter_SetWMWriter(WMConverterObject *self, PyObject *args)
 	return Py_None;
 }
 
-static char WMConverter_SetAudioInputProps__doc__[] =
-""
-;
-static PyObject *
-WMConverter_SetAudioInputProps(WMConverterObject *self, PyObject *args)
-{
-	DWORD dwInputNum;
-	UnknownObject *obj;
-	if (!PyArg_ParseTuple(args, "iO",&dwInputNum,&obj))
-		return NULL;
-	Py_BEGIN_ALLOW_THREADS
-	self->pWMConverter->SetAudioInputProps(dwInputNum, obj->pI);
-	Py_END_ALLOW_THREADS
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-static char WMConverter_SetVideoInputProps__doc__[] =
-""
-;
-static PyObject *
-WMConverter_SetVideoInputProps(WMConverterObject *self, PyObject *args)
-{
-	DWORD dwInputNum;
-	UnknownObject *obj;
-	if (!PyArg_ParseTuple(args, "iO",&dwInputNum,&obj))
-		return NULL;
-	Py_BEGIN_ALLOW_THREADS
-	self->pWMConverter->SetVideoInputProps(dwInputNum, obj->pI);
-	Py_END_ALLOW_THREADS
-	Py_INCREF(Py_None);
-	return Py_None;
-}
 
 static struct PyMethodDef WMConverter_methods[] = {
 	{"SetWMWriter", (PyCFunction)WMConverter_SetWMWriter, METH_VARARGS, WMConverter_SetWMWriter__doc__},
-	{"SetAudioInputProps", (PyCFunction)WMConverter_SetAudioInputProps, METH_VARARGS, WMConverter_SetAudioInputProps__doc__},
-	{"SetVideoInputProps", (PyCFunction)WMConverter_SetVideoInputProps, METH_VARARGS, WMConverter_SetVideoInputProps__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
