@@ -506,7 +506,7 @@ class NodeInfo(NodeInfoDialog):
 	#
 	def browser_callback(self):
 		node = self.node
-		import MMurl, urlparse
+		import MMurl, urlparse, ChannelMime
 		cwd = self.toplevel.dirname
 		if cwd:
 			cwd = MMurl.url2pathname(cwd)
