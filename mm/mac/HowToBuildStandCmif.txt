@@ -21,3 +21,5 @@ Creating a standalone CMIF for the mac.
 
 Don't forget to include fonts and such on the cdrom!!
 
+This line is a test for MacCVS, please ignore.
+
