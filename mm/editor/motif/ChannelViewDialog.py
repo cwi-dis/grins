@@ -103,6 +103,7 @@ class ChannelViewDialog(ViewDialog):
 		self.window.set_toggle(TOGGLE_ARCS, self.showarcs)
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
+		self.window.register(WMEVENTS.DropFile, self.dropfile, None)
 
 	def hide(self, *rest):
 		self.save_geometry()

@@ -278,6 +278,24 @@ class ChannelView(ChannelViewDialog):
 			self.toplevel.setwaiting()
 			self.select(x, y)
 
+	def dropfile(self, dummy, window, event, params):
+		import MMurl
+		x, y, filename = params
+		obj = self.whichhit(x, y)
+		if not obj or not obj.is_node_object:
+			windowinterface.beep()
+			return
+		self.init_display()
+		self.deselect()
+		obj.select()
+		em = self.editmgr
+		if not em.transaction():
+			self.render()
+			return
+		url = MMurl.pathname2url(filename)
+		obj.node.SetAttr('file', url)
+		em.commit()
+
 	# Time-related subroutines
 
 	def timerange(self):
@@ -770,12 +788,8 @@ class ChannelView(ChannelViewDialog):
 	def select(self, x, y):
 		self.init_display()
 		self.deselect()
-		hits = []
-		for obj in self.objects:
-			if obj.ishit(x, y):
-				hits.append(obj)
-		if hits:
-			obj = hits[-1]	# Last object (the one drawn on top)
+		obj = self.whichhit(x, y)
+		if obj:
 			if self.lockednode:
 			    if obj.is_node_object:
 				obj.finishlink()
@@ -796,6 +810,15 @@ class ChannelView(ChannelViewDialog):
 			obj = self.baseobject
 		self.setcommands(obj.commandlist, title = obj.menutitle)
 		self.setpopup(obj.popupmenu)
+
+	def whichhit(self, x, y):
+		# find last object (the one drawn on top)
+		objects = self.objects[:]
+		objects.reverse()	# now find first object...
+		for obj in objects:
+			if obj.ishit(x, y):
+				return obj
+		return None
 
 	# Global focus stuff
 
