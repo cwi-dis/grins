@@ -26,6 +26,7 @@ class SchedulerContext():
 		self.sractions = []
 		self.srevents = {}
 		self.playroot = node
+		self.parent.duration_ind.label = '??:??'
 
 		self.prepare_minidoc(stop_on_end)
 		return self
@@ -107,6 +108,8 @@ class SchedulerContext():
 		pll = []
 		for time, ev in prearmlaterlist:
 			self.parent.add_lopriqueue(self, time, ev)
+		d = int(self.playroot.t1 - self.playroot.t0)
+		self.parent.duration_ind.label = `d/60`+':'+`d/10%6`+`d%10`
 	#
 	# Zap first prearm event on each channel and return list of
 	# arm-done events.
@@ -460,15 +463,16 @@ class Scheduler(scheduler):
 		if not self.playing:
 			delay = 0
 			#print 'updatetimer: not playing' #DBG
-		elif self.runqueues[PRIO_PREARM_NOW] or \
-			  self.runqueues[PRIO_RUN] or \
-			  self.runqueues[PRIO_LO]:
+		elif self.rate and ( self.runqueues[PRIO_PREARM_NOW] or \
+			  self.runqueues[PRIO_RUN]):
 			#
 			# We have SR actions to execute. Make the callback
 			# happen as soon as possible.
 			#
 			delay = 0.001
 			#print 'updatetimer: runnable events' #DBG
+		elif self.runqueues[PRIO_LO]:
+			delay = 0.001
 		elif self.queue:
 			#
 			# We have activity in the timed queue. Make sure we
@@ -482,6 +486,8 @@ class Scheduler(scheduler):
 				# It is overdue. Make the callback happen
 				# fast.
 				delay = 0.001
+			else:
+				self.showtime()
 			#print 'updatetimer: timed events' #DBG
 		elif not self.FutureWork():
 			#
@@ -489,6 +495,7 @@ class Scheduler(scheduler):
 			# We're thru.
 			#
 			#print 'updatetimer: no more work' #DBG
+			self.showtime()
 			self.stop_playing()
 			return
 		else:
@@ -496,6 +503,7 @@ class Scheduler(scheduler):
 			# Nothing to do for the moment. Stop the clock.
 			#
 			delay = 0
+			self.showtime()
 			#print 'updatetimer: idle' #DBG
 		#print 'updatetimer: delay=', delay
 		self.timerobject.set_timer(delay)
@@ -548,11 +556,12 @@ class Scheduler(scheduler):
 		# First look in the high priority queues. We always run all
 		# the events here.
 		#
-		for i in range(N_PRIO-1):
-			if self.runqueues[i]:
-				queue = self.runqueues[i]
-				self.runqueues[i] = []
-				return queue
+		if self.rate:
+			for i in range(N_PRIO-1):
+				if self.runqueues[i]:
+					queue = self.runqueues[i]
+					self.runqueues[i] = []
+					return queue
 		#
 		# Otherwise we run one event from the lo-pri queue.
 		#
@@ -644,31 +653,31 @@ class Scheduler(scheduler):
 		return id
 	#
 	def timefunc(self):
-	        if self.frozen: return self.frozen_value
+	        #if self.frozen: return self.frozen_value
 		if not self.rate:
 			return self.time_pause - self.time_origin
 		return time.time() - self.time_origin
 	#
 	def resettimer(self):
 		self.rate = 0.0		# Initially the clock is frozen
-		self.frozen = 0
-		self.frozen_value = 0
+		#self.frozen = 0
+		#self.frozen_value = 0
 		self.time_origin = time.time()
 		self.time_pause = self.time_origin
 	#
 	def skiptimer(self, amount):
 		self.time_origin = self.time_origin - amount
 	#
-	def freeze(self):
-	        if not self.frozen:
-			self.frozen_value = self.timefunc()
-		self.frozen = self.frozen + 1
-	#
-	def unfreeze(self):
-	        self.frozen = self.frozen - 1
-		if self.frozen < 0:
-			print 'Player: self.frozen < 0!'
-			raise 'Kaboo!'
+##	def freeze(self):
+##	        if not self.frozen:
+##			self.frozen_value = self.timefunc()
+##		self.frozen = self.frozen + 1
+##	#
+##	def unfreeze(self):
+##	        self.frozen = self.frozen - 1
+##		if self.frozen < 0:
+##			print 'Player: self.frozen < 0!'
+##			raise 'Kaboo!'
 	#
 	# XXXX Can be a lot simpler, because rate can only be 1 or 0
 	def setrate(self, rate):
@@ -678,8 +687,11 @@ class Scheduler(scheduler):
 			return
 
 		# Subtract time paused
-		self.time_origin = self.time_origin - \
-			  (time.time()-self.time_pause)
+		if rate:
+			self.time_origin = self.time_origin - \
+				  (time.time()-self.time_pause)
+		else:
+			self.time_pause = time.time()
 		self.rate = rate
 		for cname in self.channelnames:
 			self.channels[cname].setrate(self.rate)
