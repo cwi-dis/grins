@@ -150,6 +150,10 @@
 #define IDD_PREFERENCES2                379
 #define IDD_LAYOUT2                     380
 #define IDD_EDITATTR_LS1O4              381
+#define IDD_EDITATTR_GENERAL            382
+#define IDD_EDITATTR_O2                 383
+#define IDD_EDITATTR_TRANSITION         384
+#define IDD_EDITATTR_SUBREGION          385
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
@@ -171,6 +175,7 @@
 #define IDC_LAYOUT_BACKGROUND           1033
 #define IDCMD_ADD_CHANNEL               1034
 #define IDC_COMBO1                      1034
+#define IDC_82                          1034
 #define IDC_COMBO2                      1035
 #define IDC_LAYOUT_SENDBACK             1035
 #define IDUC_APPLY                      1036
@@ -375,7 +380,9 @@
 #define IDC_LAYOUT_REGIONLIST           1262
 #define IDC_LAYOUT_VIEWPORT_RADIO       1263
 #define IDC_LAYOUT_REGION_RADIO         1264
+#define IDC_81                          1264
 #define IDC_LAYOUT_MEDIA_RADIO          1265
+#define IDC_34x                         1267
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -454,7 +461,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        295
 #define _APS_NEXT_COMMAND_VALUE         32860
-#define _APS_NEXT_CONTROL_VALUE         1264
+#define _APS_NEXT_CONTROL_VALUE         1268
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
