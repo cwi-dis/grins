@@ -429,7 +429,7 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 			shape.onGeomChanging(rc)
 			self._isGeomChanging = 1
 			shape._rc = rc
-		else:
+		elif not self._isGeomChanging:
 			shape.onSelected()
 			self._isGeomChanging = 0
 						
@@ -491,7 +491,7 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		# update user events
 		if self._selectedShape:
 			if self._isGeomChanging:
-					self._selectedShape.onGeomChanged(self._selectedShape._rc)
+					self._selectedShape.onGeomChanged(self._selectedShape._rectb)
 	
 	def onMouseMove(self, params):
 		msg=win32mu.Win32Msg(params)
