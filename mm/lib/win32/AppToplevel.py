@@ -527,7 +527,10 @@ class FileDialog:
 			flags=win32con.OFN_HIDEREADONLY|win32con.OFN_OVERWRITEPROMPT
 		if not parent:
 			import __main__
-			parent=__main__.toplevel._subwindows[0]
+			try:
+				parent=__main__.toplevel._subwindows[0]
+			except IndexError:
+				pass
 		if not filter or type(filter) == type('') and not '/' in filter:
 			# Old style (pattern) filter
 			if not filter or filter == '*':
