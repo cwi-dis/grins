@@ -6,8 +6,11 @@ from compatibility import *
 from FeatureSet import *
 import sys
 
-feature_set = [];                       # TODO: add to this.
-
+feature_set = [EXPORT_CMIF, EXPORT_SMIL2, EXPORT_QT, EXPORT_WMP,
+               PLAYER_VIEW, STRUCTURE_VIEW, TIMELINE_VIEW, LAYOUT_VIEW, HYPERLINKS_VIEW,
+               USER_GROUPS, TRANSITIONS,
+               H_NIPPLES, H_VBANDWIDTH, H_MODIFY_STRUCTURE
+               ];
 #
 version = 'pro'                         # I'm not sure here.. mjvdg
 compatibility = Boston
