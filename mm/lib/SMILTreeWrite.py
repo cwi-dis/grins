@@ -1469,7 +1469,7 @@ class SMILWriter(SMIL):
 		self.close()
 
 	def calcugrnames(self, node):
-		"""Calculate unique names for usergroups"""
+		# Calculate unique names for usergroups
 		usergroups = self.context.usergroups
 		if not usergroups:
 			return
@@ -1487,7 +1487,7 @@ class SMILWriter(SMIL):
 			self.ugr2name[ugroup] = name
 
 	def calctransitionnames(self, node):
-		"""Calculate unique names for transitions"""
+		# Calculate unique names for transitions
 		transitions = self.context.transitions
 		if not transitions:
 			return
@@ -1505,7 +1505,7 @@ class SMILWriter(SMIL):
 			self.transition2name[transition] = name
 
 	def calclayoutnames(self, node):
-		"""Calculate unique names for layouts"""
+		# Calculate unique names for layouts
 		layouts = self.context.layouts
 		if not layouts:
 			return
@@ -1523,7 +1523,7 @@ class SMILWriter(SMIL):
 			self.layout2name[layout] = name
 
 	def calcnames1(self, node):
-		"""Calculate unique names for nodes; first pass"""
+		# Calculate unique names for nodes; first pass
 		if self.prune and not node.WillPlay():
 			# skip unplayable nodes when pruning
 			return
@@ -1543,7 +1543,7 @@ class SMILWriter(SMIL):
 			self.calcnames1(child)
 
 	def calcnames2(self, node):
-		"""Calculate unique names for nodes; second pass"""
+		# Calculate unique names for nodes; second pass
 		if self.prune and not node.WillPlay():
 			# skip unplayable nodes when pruning
 			return
@@ -1568,7 +1568,7 @@ class SMILWriter(SMIL):
 			self.calcnames2(child)
 
 	def calcchnames1(self, node):
-		"""Calculate unique names for channels; first pass"""
+		# Calculate unique names for channels; first pass
 		channels = self.context.channels
 		for ch in channels:
 			name = identify(ch.name)
@@ -1590,7 +1590,7 @@ class SMILWriter(SMIL):
 			self.__title = channels[0].name
 
 	def calcchnames2(self, node):
-		"""Calculate unique names for channels; second pass"""
+		# Calculate unique names for channels; second pass
 		top0 = None
 		for ch in self.context.getviewports():
 			if ChannelMap.isvisiblechannel(ch['type']):
@@ -1680,7 +1680,7 @@ class SMILWriter(SMIL):
 			self.writetag('regPoint', attrlist)
 
 	def writelayout(self):
-		"""Write the layout section"""
+		# Write the layout section
 		attrlist = []
 		self.writetag('layout', attrlist)
 		self.push()
@@ -2026,7 +2026,7 @@ class SMILWriter(SMIL):
 				('height', `h`)])
 
 	def writenode(self, x, root = 0):
-		"""Write a node (possibly recursively)"""
+		# Write a node (possibly recursively)
 		if self.prune and not x.WillPlay():
 			# skip unplayable nodes when pruning
 			return
@@ -2203,8 +2203,8 @@ class SMILWriter(SMIL):
 		self.pop()
 
 	def getrealtextcaptions(self, node):
-		"""Return None or, only for RealPix nodes with captions, the source
-		for the realtext caption file and the channel to play it on"""
+		# Return None or, only for RealPix nodes with captions, the source
+		# for the realtext caption file and the channel to play it on
 		ntype = node.GetType()
 		chtype = node.GetChannelType()
 		if ntype != 'ext' or chtype != 'RealPix':
@@ -2677,7 +2677,7 @@ htmlnamechars = string.letters + string.digits + '_'
 namechars = htmlnamechars + '-.'
 
 def identify(name, html = 0):
-	"""Turn a CMIF name into an identifier"""
+	# Turn a CMIF name into an identifier
 	if html:
 		minus = '_'
 		nmchrs = htmlnamechars

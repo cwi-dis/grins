@@ -4356,7 +4356,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					callback(float(self.lineno)/self.linenumber)
 				
 class SMILMetaCollector(xmllib.XMLParser):
-	"""Collect the meta attributes from a smil file"""
+	# Collect the meta attributes from a smil file
 
 	def __init__(self, file=None):
 		self.meta_data = {}

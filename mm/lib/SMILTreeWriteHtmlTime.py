@@ -872,7 +872,7 @@ class SMILHtmlTimeWriter(SMIL):
 	#
 	#
 	def calcugrnames(self, node):
-		"""Calculate unique names for usergroups"""
+		# Calculate unique names for usergroups
 		usergroups = node.GetContext().usergroups
 		if not usergroups:
 			return
@@ -889,7 +889,7 @@ class SMILHtmlTimeWriter(SMIL):
 			self.ugr2name[ugroup] = name
 
 	def calclayoutnames(self, node):
-		"""Calculate unique names for layouts"""
+		# Calculate unique names for layouts
 		layouts = node.GetContext().layouts
 		if not layouts:
 			return
@@ -907,7 +907,7 @@ class SMILHtmlTimeWriter(SMIL):
 			self.layout2name[layout] = name
 
 	def calctransitionnames(self, node):
-		"""Calculate unique names for transitions"""
+		# Calculate unique names for transitions
 		transitions = node.GetContext().transitions
 		if not transitions:
 			return
@@ -925,7 +925,7 @@ class SMILHtmlTimeWriter(SMIL):
 			self.name2transition[name] = transition
 
 	def calcnames1(self, node):
-		"""Calculate unique names for nodes; first pass"""
+		# Calculate unique names for nodes; first pass
 		uid = node.GetUID()
 		name = node.GetRawAttrDef('name', '')
 		if name:
@@ -941,7 +941,7 @@ class SMILHtmlTimeWriter(SMIL):
 					self.calcnames1(c)
 
 	def calcnames2(self, node):
-		"""Calculate unique names for nodes; second pass"""
+		# Calculate unique names for nodes; second pass
 		uid = node.GetUID()
 		name = node.GetRawAttrDef('name', '')
 		if not self.uid2name.has_key(uid):
@@ -966,7 +966,7 @@ class SMILHtmlTimeWriter(SMIL):
 					self.calcnames2(c)
 
 	def calcchnames1(self, node):
-		"""Calculate unique names for channels; first pass"""
+		# Calculate unique names for channels; first pass
 		context = node.GetContext()
 		channels = context.channels
 		for ch in channels:
@@ -985,7 +985,7 @@ class SMILHtmlTimeWriter(SMIL):
 			self.__title = channels[0].name
 
 	def calcchnames2(self, node):
-		"""Calculate unique names for channels; second pass"""
+		# Calculate unique names for channels; second pass
 		context = node.GetContext()
 		channels = context.channels
 		for ch in context.getviewports():
@@ -1168,7 +1168,7 @@ TRANSITIONDICT = {
 }
 
 def TransitionFactory(trtype, subtype):
-	"""Return the class that implements this transition. """
+	# Return the class that implements this transition. 
 	if TRANSITIONDICT_OK.has_key((trtype, subtype)):
 		return TRANSITIONDICT_OK[(trtype, subtype)]
 	if TRANSITIONDICT_OK.has_key((trtype, None)):

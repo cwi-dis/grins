@@ -27,9 +27,9 @@ from TransitionBitBlit import BlitterClass, R1R2BlitterClass, R1R2OverlapBlitter
 class TransitionClass:
 
 	def __init__(self, engine, dict):
-		"""Initialize a transition. Engine is our machine-dependent engine (not
-		used here but the blitter may want it) and dict is the MMNode transition
-		object"""
+		# Initialize a transition. Engine is our machine-dependent engine (not
+		# used here but the blitter may want it) and dict is the MMNode transition
+		# object
 		# This is funky but it works: we know that our subclasses will inherit
 		# some for of BlitterClass.
 		BlitterClass.__init__(self, engine, dict)
@@ -37,15 +37,15 @@ class TransitionClass:
 		self.dict = dict
 		
 	def move_resize(self, ltrb):
-		"""Called by the engine whenever the windowinterface code has resized
-		or moved the window, or when a new window has joined the transition.
-		Can be overridden by subclasses."""
+		# Called by the engine whenever the windowinterface code has resized
+		# or moved the window, or when a new window has joined the transition.
+		# Can be overridden by subclasses.
 		self.ltrb = ltrb
 		
 	def computeparameters(self, value):
-		"""Compute a set of parameters (understandable to our blitter) that fully
-		describe the state the display should be in. The engine is responsible for
-		comparing this to the previous set and not doing an update if not needed."""
+		# Compute a set of parameters (understandable to our blitter) that fully
+		# describe the state the display should be in. The engine is responsible for
+		# comparing this to the previous set and not doing an update if not needed.
 		return None
 		
 
@@ -1126,7 +1126,7 @@ TRANSITIONDICT = {
 }
 
 def TransitionFactory(trtype, subtype):
-	"""Return the class that implements this transition. """
+	# Return the class that implements this transition. 
 	if TRANSITIONDICT.has_key((trtype, subtype)):
 		return TRANSITIONDICT[(trtype, subtype)]
 	if TRANSITIONDICT.has_key((trtype, None)):

@@ -46,8 +46,8 @@ class Features:
 	
 class License:
 	def __init__(self, features, newlicense=None, user="", organization=""):
-		"""Obtain a license, and state that we need at least one
-		of the features given"""
+		# Obtain a license, and state that we need at least one
+		# of the features given
 		import settings
 		if newlicense:
 			lic = newlicense
@@ -108,22 +108,22 @@ class License:
 			settings.set('license_organization', organization)
 
 	def have(self, *features):
-		"""Check whether we have the given features"""
+		# Check whether we have the given features
 		for f in features:
 			if not f in self.__available_features:
 				return 0
 		return 1
 
 	def need(self, *features):
-		"""Obtain a locked license for the given features.
-		The features are released when the returned object is
-		freed"""
+		# Obtain a locked license for the given features.
+		# The features are released when the returned object is
+		# freed
 		if not apply(self.have, features):
 			raise Error, "Required license feature not available"
 		return Features(self, features)
 
 	def userinfo(self):
-		"""If this license is personal return the user name/company"""
+		# If this license is personal return the user name/company
 		return self.__licensee
 
 	def _release(self, features):
