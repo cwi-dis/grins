@@ -2497,6 +2497,11 @@ class TransitionAttrEditorField(PopupAttrEditorField):
 			return value[0]
 		return value
 
+	def transitionprops(self):
+		tr = self.getvalue()
+		if tr is not None and self.wrapper.context.transitions.has_key(tr):
+			showtransitionattreditor(self.wrapper.toplevel, tr)
+
 class WipeDirectionAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['left', 'right', 'up', 'down']
 
@@ -2633,101 +2638,101 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		return regionList
 		# end experimental code
 		
-		# channelnames1 -- compatible channels in node's layout
-		# channelnames2 -- new channel
-		# channelnames3 -- incompatible channels in node's layout
-		# channelnames4 -- compatible channels not in node's layout
-		# channelnames5 -- incompatible channels not in node's layout
-		# In the lite version there are no layouts, so all channels
-		# are in category 1 or 3.  Only channelnames1 is shown.
-		ctx = self.wrapper.context
-		node = self.wrapper.node
-		chtype = node.GetChannelType()
-		b = self.attreditor._findattr('file')
-		if b is not None:
-			url = b.getvalue()
-		else:
-			url = None
-		chlist = ctx.compatchannels(url, chtype)
-		lightweight = features.lightweight
-		layoutchannels = {}
-		if not lightweight:
-			layout = MMAttrdefs.getattr(node, 'layout')
-			if layout != UNDEFINED:
-				for ch in ctx.layouts.get(layout, []):
-					layoutchannels[ch.name] = 1
-		channelnames1 = []
-		if hasattr(self, 'newchannels'):
-			channelnames2 = self.newchannels[:]
-		else:
-			channelnames2 = []
-		channelnames3 = []
-		channelnames4 = []
-		channelnames5 = []
-		for ch in ctx.channels:
-			# experimental SMIL Boston layout code
-			if ch.get('type') != 'layout':
-				continue
-			# end experimental
-			if lightweight or layoutchannels.has_key(ch.name):
-				if ch.get('type','') != 'layout' and ch.name in chlist:
-					channelnames1.append(ch.name)
-				else:
-					channelnames3.append(ch.name)
-			else:
-				if ch.get('type','') != 'layout' and ch.name in chlist:
-					channelnames4.append(ch.name)
-				else:
-					channelnames5.append(ch.name)
-		channelnames1.sort()
-		channelnames2.sort()
-		channelnames3.sort()
-		channelnames4.sort()
-		channelnames5.sort()
-		if lightweight:
-			if channelnames1:
-				return channelnames1
-			allchannelnames = [UNDEFINED]
-			if channelnames3:
-				allchannelnames.append(None)
-				allchannelnames = allchannelnames + channelnames3
-			return allchannelnames
-		all = [UNDEFINED]
-		if channelnames1:
-			# add separator between lists
-			if all:
-				all.append(None)
-			all = all + channelnames1
-		if channelnames2:
-			# add separator between lists
-			if all:
-				all.append(None)
-			all = all + channelnames2
-		if channelnames3:
-			# add separator between lists
-			if all:
-				all.append(None)
-			all = all + channelnames3
-		if channelnames4:
-			# add separator between lists
-			if all:
-				all.append(None)
-			all = all + channelnames4
-		if channelnames5:
-			# add separator between lists
-			if all:
-				all.append(None)
-			all = all + channelnames5
-		if hasattr(self, 'newchannels') and not self.newchannels:
-			if all:
-				all.append(None)
-			all = all + [NEW_REGION]
-		return all
+##		# channelnames1 -- compatible channels in node's layout
+##		# channelnames2 -- new channel
+##		# channelnames3 -- incompatible channels in node's layout
+##		# channelnames4 -- compatible channels not in node's layout
+##		# channelnames5 -- incompatible channels not in node's layout
+##		# In the lite version there are no layouts, so all channels
+##		# are in category 1 or 3.  Only channelnames1 is shown.
+##		ctx = self.wrapper.context
+##		node = self.wrapper.node
+##		chtype = node.GetChannelType()
+##		b = self.attreditor._findattr('file')
+##		if b is not None:
+##			url = b.getvalue()
+##		else:
+##			url = None
+##		chlist = ctx.compatchannels(url, chtype)
+##		lightweight = features.lightweight
+##		layoutchannels = {}
+##		if not lightweight:
+##			layout = MMAttrdefs.getattr(node, 'layout')
+##			if layout != UNDEFINED:
+##				for ch in ctx.layouts.get(layout, []):
+##					layoutchannels[ch.name] = 1
+##		channelnames1 = []
+##		if hasattr(self, 'newchannels'):
+##			channelnames2 = self.newchannels[:]
+##		else:
+##			channelnames2 = []
+##		channelnames3 = []
+##		channelnames4 = []
+##		channelnames5 = []
+##		for ch in ctx.channels:
+##			# experimental SMIL Boston layout code
+##			if ch.get('type') != 'layout':
+##				continue
+##			# end experimental
+##			if lightweight or layoutchannels.has_key(ch.name):
+##				if ch.get('type','') != 'layout' and ch.name in chlist:
+##					channelnames1.append(ch.name)
+##				else:
+##					channelnames3.append(ch.name)
+##			else:
+##				if ch.get('type','') != 'layout' and ch.name in chlist:
+##					channelnames4.append(ch.name)
+##				else:
+##					channelnames5.append(ch.name)
+##		channelnames1.sort()
+##		channelnames2.sort()
+##		channelnames3.sort()
+##		channelnames4.sort()
+##		channelnames5.sort()
+##		if lightweight:
+##			if channelnames1:
+##				return channelnames1
+##			allchannelnames = [UNDEFINED]
+##			if channelnames3:
+##				allchannelnames.append(None)
+##				allchannelnames = allchannelnames + channelnames3
+##			return allchannelnames
+##		all = [UNDEFINED]
+##		if channelnames1:
+##			# add separator between lists
+##			if all:
+##				all.append(None)
+##			all = all + channelnames1
+##		if channelnames2:
+##			# add separator between lists
+##			if all:
+##				all.append(None)
+##			all = all + channelnames2
+##		if channelnames3:
+##			# add separator between lists
+##			if all:
+##				all.append(None)
+##			all = all + channelnames3
+##		if channelnames4:
+##			# add separator between lists
+##			if all:
+##				all.append(None)
+##			all = all + channelnames4
+##		if channelnames5:
+##			# add separator between lists
+##			if all:
+##				all.append(None)
+##			all = all + channelnames5
+##		if hasattr(self, 'newchannels') and not self.newchannels:
+##			if all:
+##				all.append(None)
+##			all = all + [NEW_REGION]
+##		return all
 
 	def parsevalue(self, str):
 		if str == UNDEFINED: 
 			return None
-		# XXXX: Hack: on windows plateform, this value correspond to the separator
+		# XXXX: Hack: on windows platform, this value correspond to the separator
 		# in this case, if the user select this value, we assume it's a undefined value
 		elif str == '---':
 			return None
