@@ -10,7 +10,7 @@ This is in contrast to all the objects exported by the
 win32ui pyd which exports inherited objects from MFC objects
 """
 
-import win32ui,win32con
+import win32ui, win32con, win32api
 import commctrl
 import afxres
 Sdk=win32ui.GetWin32Sdk()
@@ -574,6 +574,8 @@ class Tooltip(Control):
 		self.relayEvent(params)
 
 	def onLButtonUp(self, params):
+		if not self._lbuttondown:
+			return
 		self._lbuttondown = 0
 		self.relayEvent(params)
 
@@ -588,6 +590,26 @@ class Tooltip(Control):
 		hwnd = self._parent.GetSafeHwnd()
 		Sdk.NewToolRect(self._hwnd, hwnd, self._id, rc)
 		self.relayEvent(params)
+
+	def activate(self, flag):
+		if flag: flag = 1
+		else: flag = 0
+		self.sendmessage(commctrl.TTM_ACTIVATE, flag, 0)
+
+	def setdelay(self, which, msecs):
+		whichid = None
+		if which == 'autopop':
+			whichid = commctrl.TTDT_AUTOPOP
+		elif which == 'initial':
+			whichid = commctrl.TTDT_INITIAL
+		elif which == 'reshow':
+			whichid = commctrl.TTDT_RESHOW
+		if whichid is not None:
+			self.sendmessage(commctrl.TTM_SETDELAYTIME, whichid, msecs)
+	
+	def settiptextcolor(self, color):
+		r, g, b = color
+		self.sendmessage(commctrl.TTM_SETTIPTEXTCOLOR, win32api.RGB(r, g, b), 0)
 
 ##############################
 # Base class for controls creation classes
