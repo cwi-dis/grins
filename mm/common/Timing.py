@@ -47,9 +47,7 @@ def computetimes(node, which):
 ##		_do_times_work(node)
 		print 'No endtime for', node
 		node.t1 = node.t0 + 10.0
-##	if node.t1 == node.t0:
-##		node.t1 = node.t0 + 10
-	propdown(node, node.t1, node.t0)
+	propdown(node, node, node.t1, node.t0)
 
 def _do_times_work(node):
 	pt = pseudotime(0.0)
@@ -141,7 +139,10 @@ def prep2(node, root):
 	# zero. 
 	delay, downloadlag = node.GetDelays(timingtype)
 	delay = delay + downloadlag
-	parent = node.GetSchedParent(0)
+	parent = node.GetSchedParent(1)
+	# in case the root of the tree we're interested in is a switch
+	if parent is None or parent.IsAncestorOf(root):
+		parent = root
 	if delay > 0 and parent is not None:
 		if parent.GetType() == 'seq':
 			xnode = parent
@@ -160,7 +161,7 @@ def prep2(node, root):
 
 
 # propdown - propagate timing down the tree again
-def propdown(node, stoptime, dftstarttime=0):
+def propdown(root, node, stoptime, dftstarttime=0):
 	tp = node.GetType()
 	# Assure we have a start time and stop time
 	if not hasattr(node, 't0'):
@@ -174,8 +175,31 @@ def propdown(node, stoptime, dftstarttime=0):
 	node.t2 = stoptime
 
 	if tp in ('par', 'switch', 'excl', 'prio') or tp in leaftypes:
-		for c in node.GetSchedChildren(1):
-			propdown(c, stoptime, node.t0)
+		term = node.GetTerminator()
+		children = node.GetSchedChildren(1)
+		if term == 'LAST':
+			stoptime = 0
+		elif term == 'FIRST':
+			stoptime = -1
+		elif term == 'ALL':
+			if len(node.GetSchedChildren(0)) == len(children):
+				stoptime = 0
+			else:
+				stoptime = -1
+		for c in children:
+			if term in ('LAST', 'ALL'):
+				if (stoptime >= 0 and c.t1 > stoptime) or c.t1 < 0:
+					stoptime = c.t1
+			elif term == 'FIRST':
+				if stoptime >= 0 and c.t1 < stoptime:
+					stoptime = c.t1
+			elif term == MMAttrdefs.getattr(c, 'name'):
+				stoptime = c.t1
+		node.t1 = stoptime
+		if node is root:
+			node.t2 = stoptime
+		for c in children:
+			propdown(root, c, stoptime, node.t0)
 	elif tp == 'seq': # XXX not right!
 		children = node.GetSchedChildren(1)
 		if not children:
@@ -195,7 +219,7 @@ def propdown(node, stoptime, dftstarttime=0):
 				endtime = node.t2
 			else:
 				endtime = c.t1
-			propdown(c, endtime, nextstart)
+			propdown(root, c, endtime, nextstart)
 			nextstart = c.t1
 
 def adddep(xnode, xside, delay, ynode, yside):
