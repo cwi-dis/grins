@@ -508,7 +508,7 @@ class Shape:
 
 	def getAncestors(self):
 		return []
-
+	
 # base class for all drawing tools										
 class DrawTool:
 	def __init__(self, ctx):
@@ -638,7 +638,7 @@ class SelectTool(DrawTool):
 
 
 # base class for shape creation tools
-# its concrete and ready to be used for any ine-kind shapes
+# its concrete and ready to be used for any one-kind shapes
 class ShapeTool(DrawTool):
 	def __init__(self, ctx):
 		DrawTool.__init__(self, ctx)
@@ -674,6 +674,96 @@ class ShapeTool(DrawTool):
 				ctx.setcursor('cross')
 			else:
 				ctx._seltool.onMouseMove(flags, point)
+
+
+class Polyline:
+	def __init__(self, points):
+		self._points = points
+		self._device2logical = 1.0
+
+	#
+	# Scaling support
+	#
+	def setDeviceToLogicalScale(self, d2lscale):
+		if d2lscale<=0: d2lscale = 1.0
+		self._device2logical = d2lscale
+
+	def getDeviceToLogicalScale(self):
+		return self._device2logical
+
+	def DPtoLP(self, pt):
+		x, y = pt
+		sc = self._device2logical
+		return sc*x, sc*y
+
+	def DRtoLR(self, rc):
+		x, y, w, h = rc
+		sc = self._device2logical
+		return sc*x, sc*y, sc*w, sc*h
+
+	def LPtoDP(self, pt):
+		x, y = pt
+		sc = 1.0/self._device2logical
+		return sc*x, sc*y
+
+	def LRtoDR(self, rc, round=0):
+		x, y, w, h = rc
+		sc = 1.0/self._device2logical
+		if round:
+			return int(sc*x+0.5), int(sc*y+0.5), int(sc*w+0.5), int(sc*h+0.5)
+		return sc*x, sc*y, sc*w, sc*h
+
+	def LDtoDD(self, d):
+		return d/self._device2logical
+
+	def DDtoLD(self, d):
+		return d*self._device2logical
+
+	#
+	# Drag & Resize interface
+	#
+	# return drag handle position in device coordinates
+	def getDragHandle(self, ix):
+		return self.LPtoDP(self._points[ix])
+
+	# return drag handle rectangle in device coordinates
+	def getDragHandleRect(self, ix):
+		x, y = self.LPtoDP(self._points[ix])
+		return x-3, y-3, 7, 7
+
+	def getDragHandleCount(self):
+		return len(self._points)
+
+	def getDragHandleCursor(self, ix):
+		return 'sizenesw'
+
+	# return drag handle at device coordinates
+	def getDragHandleAt(self, point):
+		xp, yp = point
+		for ix in range(len(self._points)):
+			x, y, w, h = self.getDragHandleRect(ix)
+			l, t, r, b = x, y, x+w, y+h
+			if xp>=l and xp<r and yp>=t and yp<b:
+				return ix
+		return 0
+
+	# move drag handle in device coordinates to point in device coordinates
+	def moveDragHandleTo(self, ixHandle, point):
+		xp, yp = self.DPtoLP(point)
+		self._points[ixHandle] = xp, yp
+		self.update()
+
+	def moveBy(self, delta):
+		pass
+		
+	def invalidateDragHandles(self):
+		self.update()
+
+	def isResizeable(self):
+		return 1
+	
+	def update(self):
+		pass
 
 ################################
 
