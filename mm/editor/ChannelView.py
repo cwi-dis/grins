@@ -21,6 +21,8 @@ import MenuMaker
 from Dialog import GLDialog
 from ViewDialog import ViewDialog
 
+_CHANNEL=2    # XXXX Temporary, created in GL_windowinterface
+
 from MMNode import alltypes, leaftypes, interiortypes
 import MMAttrdefs
 import Timing
@@ -99,6 +101,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.focus = None
 		self.future_focus = None
 		self.showall = 0
+		self.placing_channel = 0
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		self = ViewDialog.init(self, 'cview_')
 		return GLDialog.init(self, title)
@@ -235,6 +238,9 @@ class ChannelView(ViewDialog, GLDialog):
 		y = height - (y - y0)
 		#
 		if dev == DEVICE.LEFTMOUSE:
+		        if self.placing_channel:
+			        self.finish_channel(x, y)
+				return
 			if val == 0: # up
 				self.select(x, y)
 		elif dev == DEVICE.RIGHTMOUSE:
@@ -285,6 +291,19 @@ class ChannelView(ViewDialog, GLDialog):
 			return 0, 0
 		width = float(self.timescaleborder) / nchannels
 		return (i + 0.1) * width, (i + 0.9) * width
+
+	def channelgapindex(self, x):
+		list = self.visiblechannels()
+		nchannels = len(list)
+		if nchannels == 0:
+		    return 0
+		width = float(self.timescaleborder) / nchannels
+		rv = int((x+width/2)/width)
+		if rv < 0:
+		    rv = 0
+		elif rv > nchannels:
+		    rv = nchannels
+		return rv
 
 	# Clear the list of objects we know
 
@@ -590,7 +609,7 @@ class ChannelView(ViewDialog, GLDialog):
 			GLLock.gl_lock.release()
 
 	# Create a new channel
-
+	# XXXX Index is obsolete!
 	def newchannel(self, index):
 		if self.visiblechannels() <> self.context.channels:
 			fl.show_message( \
@@ -598,12 +617,20 @@ class ChannelView(ViewDialog, GLDialog):
 				  'unless you are showing unused channels', \
 				  '(use shortcut \'T\')')
 			return
+	        if self.placing_channel:
+		        fl.show_message(
+			    'Please place the other channel first!', '','')
+			return
+		#
+		# Slightly hacky code: we try to check here whether
+		# the transaction is possible, but we don't do it till later.
 		editmgr = self.editmgr
 		if not editmgr.transaction():
 			return		# Not possible at this time
+		editmgr.rollback()
 		import windowinterface
 		from ChannelMap import commonchanneltypes, otherchanneltypes
-		prompt = 'Channel type:'
+		prompt = 'Select channel type, then place channel:'
 		list = commonchanneltypes[:]
 		list.append('Other...')
 		list.append('Cancel')
@@ -614,13 +641,24 @@ class ChannelView(ViewDialog, GLDialog):
 			default = len(list)-1
 			i = windowinterface.multchoice(prompt, list, default)
 			if i+1 >= len(list):
-				editmgr.rollback()
 				return		# User doesn't want to choose
 			elif list[i] == 'Other...':
 				list, olist = olist, list
 				continue
 			type = list[i]
 			break
+		gl.setcursor(_CHANNEL, 0, 0)
+		self.placing_channel = 1
+		self.placing_type = type
+
+	def finish_channel(self, x, y):
+	        self.placing_channel = 0
+		type = self.placing_type
+		index = self.channelgapindex(x)
+	        gl.setcursor(0, 0, 0)
+		editmgr = self.editmgr
+		if not editmgr.transaction():
+		    return		    
 		i = 1
 		base = 'NEW'
 		name = base + `i`
