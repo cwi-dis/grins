@@ -91,7 +91,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if features.compatibility == compatibility.Boston:
 			self.commandlist = self.commandlist + [
 				TRANSITIONVIEW(callback = (self.view_callback, (6, ))),
-				HIDE_TRANSITIONVIEW(callback = (self.hide_view_callback, (6, )))]
+				HIDE_TRANSITIONVIEW(callback = (self.hide_view_callback, (6, ))),
+				LAYOUTVIEW2(callback = (self.view_callback, (7, ))),
+				HIDE_LAYOUTVIEW2(callback = (self.hide_view_callback, (7, )))]
 				
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
@@ -205,6 +207,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		import TransitionView
 		self.transitionview = TransitionView.TransitionView(self)
 
+		import LayoutView2
+		self.layoutview2 = LayoutView2.LayoutView2(self)
+		
 		if not features.lightweight:
 			import ChannelView
 			self.channelview = ChannelView.ChannelView(self)
@@ -229,7 +234,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# Views that are destroyed by restore (currently all)
 		self.views = [self.player, self.hierarchyview,
 			      self.channelview, self.links, self.layoutview,
-			      self.ugroupview, self.transitionview]
+			      self.ugroupview, self.transitionview, self.layoutview2]
 
 	def hideviews(self):
 		for v in self.views:
