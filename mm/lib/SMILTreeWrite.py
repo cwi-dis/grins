@@ -378,7 +378,7 @@ smil_mediatype={
 	'label':'text',
 	'midi':'audio',
 	'RealAudio':'audio',
-	'RealPix':'image',
+	'RealPix':'img',
 	'RealText':'text',
 	'RealVideo':'video',
 }
