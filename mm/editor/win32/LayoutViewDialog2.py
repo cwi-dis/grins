@@ -1,12 +1,14 @@
 # experimental layout view
 
-treeVersion = 0
+treeVersion = 1
 
 import windowinterface
 import win32ui, win32api, win32con
 
 from usercmd import *
 IMPL_AS_FORM=1
+
+from _LayoutView2 import treeVersion
 
 class LayoutViewDialog2:
 	def __init__(self):

@@ -437,8 +437,12 @@ class _LayoutView2(GenFormView):
 
 class TreeManager:
 	def __init__(self):
-		self.__imageList = win32ui.CreateImageList(32, 32, 0, 10, 5)
+		self.__imageList = win32ui.CreateImageList(16, 16, 0, 10, 5)
 		self.bitmapNameToId = {}
+		self._handler = None
+
+	def setHandler(self, handler):
+		self._handler = handler
 		
 	def onInitialUpdate(self, parent):
 		# get the tree control form the dialog box ressource
@@ -449,6 +453,9 @@ class TreeManager:
 
 		# init the image list used in the tree
 		self.__initImageList()
+
+		# hook messages
+		parent.HookNotify(self._onSelect,commctrl.TVN_SELCHANGED)
 
 	def _loadbmp(self, idRes):
 		import win32dialog
@@ -483,7 +490,7 @@ class TreeManager:
 		iImage = self.bitmapNameToId.get(imageName)
 		iSelectedImage = self.bitmapNameToId.get(selectedImageName)
 		mask = int(commctrl.TVIF_TEXT|commctrl.TVIF_IMAGE|commctrl.TVIF_SELECTEDIMAGE)
-		ret = self.treeCtrl.InsertItem(mask,
+		item = self.treeCtrl.InsertItem(mask,
 						text, # text
 						iImage, # iImage
 						iSelectedImage, # iSelectedImage
@@ -491,10 +498,36 @@ class TreeManager:
 						0, #state mask
 						None, #lParam
 						parent, # parent
-						commctrl.TVI_FIRST) 
-		return ret
-								  		
+						commctrl.TVI_FIRST)
+		return item
 
+	# ExpandBranch - Expands a branch completely
+	def expandBranch(self, item):
+		treeCtrl = self.treeCtrl
+		if treeCtrl.ItemHasChildren(item):
+			treeCtrl.Expand( item, commctrl.TVE_EXPAND )
+			child = treeCtrl.GetChildItem(item)
+			while child != None:
+				self.expandBranch(child)
+				# XXX find the right method
+				try:
+					child = treeCtrl.GetNextSiblingItem(child)
+				except:
+					child = None
+
+	def destroyAllNodes(self):								  		
+		self.treeCtrl.DeleteAllItems()
+
+	def selectNode(self, item):
+		self.treeCtrl.SelectItem(item)
+		
+	def _onSelect(self, std, extra):
+		action, itemOld, itemNew, ptDrag = extra
+		# XXX the field number doesn't correspond with API documention ???
+		item, field2, field3, field4, field5, field6, field7, field8 = itemNew
+		if self._handler != None:
+			self._handler.onSelectTreeNodeCtrl(item)
+		
 ###########################
 class LayoutManager(window.Wnd, win32window.DrawContext):
 	def __init__(self):
