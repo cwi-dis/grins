@@ -1100,6 +1100,12 @@ class _Event:
 		self._timeout_called = 1
 ##		Xlib.PutBackEvent(toplevel._main.Display(), '\0'*96)
 
+	def _input_callback(self, client_data, fd, id):
+		self.entereventunique(None, FileEvent, fd)
+		Xt.RemoveInput(self._fdlist[fd])
+		del self._fdlist[fd]
+		self._savefds.append(fd)
+
 	def _getevent(self, timeout):
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
@@ -1284,12 +1290,6 @@ class _Event:
 			self._select_fdlist.append(fd)
 		self._select_dict[fd] = (cb, arg)
 		self.setfd(fd)
-
-	def _input_callback(self, client_data, fd, id):
-		self.entereventunique(None, FileEvent, fd)
-		Xt.RemoveInput(self._fdlist[fd])
-		del self._fdlist[fd]
-		self._savefds.append(fd)
 
 	def startmodal(self):
 		self._modal = 1
