@@ -570,6 +570,12 @@ class _Window(_AdornmentSupport):
 				raise error, 'only WindowExit event for top-level windows'
 			widget.deleteResponse = Xmd.DO_NOTHING
 			self._callbacks[event] = func, arg
+		elif event == DropFile:
+			self._callbacks[event] = func, arg
+			self._form.DropSiteRegister({
+				'importTargets': [toplevel._compound_text],
+				'dropSiteOperations': Xmd.DROP_COPY,
+				'dropProc': self.__handle_drop})
 		else:
 			raise error, 'Internal error'
 
@@ -578,6 +584,28 @@ class _Window(_AdornmentSupport):
 			del self._callbacks[event]
 		except KeyError:
 			pass
+		else:
+			if event == DropFile:
+				self._form.DropSiteUnregister()
+
+	def __handle_drop(self, w, client_data, drop_data):
+		if drop_data.dropAction != Xmd.DROP or \
+		   drop_data.operation != Xmd.DROP_COPY:
+			args = {'transferStatus': Xmd.TRANSFER_FAILURE}
+		else:
+			x = drop_data.x
+			y = drop_data.y
+			x, y = self._pxl2rel((x, y))
+			transferList = [((x,y), toplevel._compound_text)]
+			args = {'dropTransfers': transferList,
+				'transferProc': self.__handle_transfer}
+		drop_data.dragContext.DropTransferStart(args)
+
+	def __handle_transfer(self, w, (x,y), seltype, type, value, length, format):
+		if type == toplevel._compound_text and \
+		   self._callbacks.has_key(DropFile):
+			func, arg = self._callbacks[DropFile]
+			func(arg, self, DropFile, (x, y, value))
 
 	def destroy_menu(self):
 		if self._menu:
