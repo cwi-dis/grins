@@ -182,6 +182,26 @@ class HierarchyView(HierarchyViewDialog):
 	def __init__(self, toplevel):
 		lightweight = features.lightweight
 		self.sizes = sizes_notime
+
+		# These are easier to see near the constructor definition.
+		
+		self.window = None
+		self.displist = None
+		self.new_displist = None
+		self.last_geometry = None
+		self.toplevel = toplevel
+		self.root = self.toplevel.root # : MMNode - the root of the MMNode heirachy
+		self.focusnode = self.prevfocusnode = self.root	# : MMNode
+		self.editmgr = self.root.context.editmgr
+		self.destroynode = None	# node to be destroyed later
+		self.expand_on_show = 1
+		self.thumbnails = 1
+		self.showplayability = 1
+		self.timescale = 0
+		from cmif import findfile
+		self.datadir = findfile('GRiNS-Icons')
+
+		
 		self.commands = [
 			CLOSE_WINDOW(callback = (self.hide, ())),
 
@@ -286,21 +306,6 @@ class HierarchyView(HierarchyViewDialog):
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commands.append(HELP(callback=(self.helpcall,())))
 
-		self.window = None
-		self.displist = None
-		self.new_displist = None
-		self.last_geometry = None
-		self.toplevel = toplevel
-		self.root = self.toplevel.root # : MMNode - the root of the MMNode heirachy
-		self.focusnode = self.prevfocusnode = self.root	# : MMNode
-		self.editmgr = self.root.context.editmgr
-		self.destroynode = None	# node to be destroyed later
-		self.expand_on_show = 1
-		self.thumbnails = 1
-		self.showplayability = 1
-		self.timescale = 0
-		from cmif import findfile
-		self.datadir = findfile('GRiNS-Icons')
 		HierarchyViewDialog.__init__(self)
 
 	def __repr__(self):
