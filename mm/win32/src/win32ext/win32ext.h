@@ -12,7 +12,6 @@ DECLARE_PYMODULECLASS(Imageex);
 DECLARE_PYMODULECLASS(Midiex);
 DECLARE_PYMODULECLASS(Mpegex);
 DECLARE_PYMODULECLASS(Timerex);
-DECLARE_PYMODULECLASS(Timerex2);
 
 #define DEF_EXT_PY_METHODS \
 	{"GetCmifex",MCmifex::create,1},\
@@ -24,7 +23,6 @@ DECLARE_PYMODULECLASS(Timerex2);
 	{"GetMidiex",MMidiex::create,1},\
 	{"GetMpegex",MMpegex::create,1},\
 	{"GetTimerex",MTimerex::create,1},\
-	{"GetTimerex2",MTimerex2::create,1},\
 
 
 #endif

@@ -247,7 +247,7 @@ static PyObject* py_cmifex_CreateChildWindow(PyObject *self, PyObject *args)
 		return NULL;
 
 	newWnd = new myWin;
-	parentWnd = GetWndPtr(ob);
+	parentWnd = GetWndPtr( ob );
 
 	TRACE("hWnd: %p, Name: %s, X: %d, Y: %d, W: %d, H: %d\n", parentWnd->m_hWnd, wndName, x, y, nWidth, nHeight );
 		
@@ -265,7 +265,7 @@ static PyObject* py_cmifex_CreateChildWindow(PyObject *self, PyObject *args)
 		return Py_None;
 	}	
   
-	testWnd = PyCWnd::make(testWnd->type, newWnd);
+	testWnd = testWnd->make(testWnd->type, newWnd);
 	testOb = testWnd->GetGoodRet();
 
 	return Py_BuildValue("O", testOb);
@@ -2369,8 +2369,8 @@ BEGIN_PYMETHODDEF(Cmifex)
 
 	//Set... Functions
 	{ "SetCursor", py_cmifex_SetCursor, 1 },
-	{ "SetFlag", (PyCFunction)py_example_SetFlag, 1},
-	{ "SetScrollInfo", (PyCFunction)py_cmifex_SetScrollInfo, 1},
+	{ "SetFlag", py_example_SetFlag, 1},
+	{ "SetScrollInfo", py_cmifex_SetScrollInfo, 1},
 
 	//Utilities 
 	{ "ScreenToBox", py_cmifex_ScreenToBox, 1 },
@@ -2378,11 +2378,11 @@ BEGIN_PYMETHODDEF(Cmifex)
 	{ "BroadcastMessage", py_cmifex_Broadcast, 1},
 
 	// Textex functions
-	{ "PutText", (PyCFunction)py_example_PutText, 1},
-    { "PrepareText", (PyCFunction)py_example_PrepareText, 1},
-	{ "GetScrollPos", (PyCFunction)py_example_GetScrollPos, 1},
-	{ "SetScrollPos", (PyCFunction)py_example_SetScrollPos, 1},
-	{ "ClearXY", (PyCFunction)py_example_ClearXY, 1},
+	{ "PutText", py_example_PutText, 1},
+    { "PrepareText", py_example_PrepareText, 1},
+	{ "GetScrollPos", py_example_GetScrollPos, 1},
+	{ "SetScrollPos", py_example_SetScrollPos, 1},
+	{ "ClearXY", py_example_ClearXY, 1},
 END_PYMETHODDEF();
 
 

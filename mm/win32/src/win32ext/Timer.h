@@ -3,6 +3,10 @@
 #ifndef _INC_TIMER
 #define _INC_TIMER
 
+#ifndef _INC_MMSYSTEM
+#include <mmsystem.h>
+#endif
+
 // Constants
 #ifndef SUCCESS
 #define SUCCESS TRUE        // Error returns for all member functions

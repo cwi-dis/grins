@@ -3,6 +3,7 @@
 #include "ContainerWnd.h"
 #include "..\GRiNSRes\GRiNSRes.h" // Resources defines in the GRiNS resource DLL.
 
+#include "win32ui.h"
 #include "win32win.h"
 
 
@@ -11,19 +12,10 @@ DECLARE_PYMODULECLASS(Htmlex);
 IMPLEMENT_PYMODULECLASS(Htmlex,GetHtmlex,"Htmlex Module Wrapper Object");
 
 
+
+// global
 PyObject *CallbackMap = NULL;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-DEFINE_MODULEERROR(Htmlex);
-
-
-extern void CallbackExErrorFunc(char *str);
-extern void initcallbackex();
-static PyObject *CallbackExError;
 
 #define ARROW_CURSOR		0
 #define WAIT_CURSOR			1
@@ -34,43 +26,8 @@ static PyObject *CallbackExError;
 
 
 static char cmifClass[100]="";
-
 static WNDPROC	orgProc;
 static BOOL flag=FALSE;
-
-//PYW_EXPORT CWnd *GetWndPtr(PyObject *);
-//PYW_EXPORT CFrameWnd *GetFramePtr(PyObject *self);
-
-
-static LRESULT CALLBACK MyWndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
-{
-
-	//HWND parent;
-	//HWND grandparent;
-			
-	switch (iMsg)
-	{
-		case WM_CLOSE:
-			if (!flag)
-			{
-				ShowWindow(hwnd, SW_HIDE);
-			}
-			//flag = FALSE;
-			//MessageBox(hwnd, "Window Hidden", "Test", MB_OK);
-			return 0;
-			
-		case WM_DESTROY:
-			if (!flag)
-			{
-				return CallWindowProc(orgProc, hwnd, iMsg, wParam, lParam) ;
-			}
-			//flag = FALSE;
-			//MessageBox(hwnd, "Window Hidden", "Test", MB_OK);
-			return 0;
-	}
-	return CallWindowProc(orgProc, hwnd, iMsg, wParam, lParam) ;
-}
-
 
 
 static PyObject* py_example_SetFlag(PyObject *self, PyObject *args)
@@ -78,20 +35,14 @@ static PyObject* py_example_SetFlag(PyObject *self, PyObject *args)
 	int x;
 			
 	if(!PyArg_ParseTuple(args, "i", &x))
-	{
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
+		return NULL;
 
 	if (x==1)
 		flag = TRUE;
 	else flag = FALSE;
 
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-
+	RETURN_NONE;
+	}
 
 
 static PyObject* py_Html_CreateHtmlCtrl(PyObject *self, PyObject *Wnd)
@@ -105,12 +56,11 @@ static PyObject* py_Html_CreateHtmlCtrl(PyObject *self, PyObject *Wnd)
 	
 
 	if(!PyArg_ParseTuple(Wnd, "O", &Ob))
-	{
-		Py_INCREF(Py_None);
-		return Py_None;return NULL;
-	}    
+		return NULL;
 	
 	Container = (CContainerWnd*) GetWndPtr(Ob);
+	if(Container==NULL)
+		RETURN_ERR("Container not created");
 
 	if (Container->m_ctrl_cr)		// OCX exists, no need to be created again
 		return Py_BuildValue("i", 2);
@@ -118,7 +68,7 @@ static PyObject* py_Html_CreateHtmlCtrl(PyObject *self, PyObject *Wnd)
 
 	CContainerWnd* Parent = (CContainerWnd*) Container->GetParent();
 
-	Container->m_ctrl_cr = TRUE;
+	
 
 	if (Parent == NULL)
 	{
@@ -140,6 +90,7 @@ static PyObject* py_Html_CreateHtmlCtrl(PyObject *self, PyObject *Wnd)
 		
 		SetWindowText(Container->m_Status, "Ready");
 
+		Container->m_ctrl_cr = TRUE;
 		return Py_BuildValue("i", bRet);
 	}
 	else  //the parent Container has the status Bar
@@ -151,6 +102,7 @@ static PyObject* py_Html_CreateHtmlCtrl(PyObject *self, PyObject *Wnd)
 		BOOL bRet = Container->m_html.Create(NULL, WS_VISIBLE|WS_CLIPSIBLINGS ,
 						rc, Container, 3000);
 		
+		Container->m_ctrl_cr = TRUE;
 		Container->m_Status = NULL;
 
 		return Py_BuildValue("i", bRet);
@@ -158,9 +110,22 @@ static PyObject* py_Html_CreateHtmlCtrl(PyObject *self, PyObject *Wnd)
 }
 	
 
-static PyObject* py_Html_OpenUrl(PyObject *self, PyObject *args)
+static PyObject* py_retrieve_url(PyObject *self, PyObject *args)
 {
-		
+	PyObject *Ob;
+	char *url;
+	if(!PyArg_ParseTuple(args, "Os", &Ob, &url))
+		return NULL;
+
+	CContainerWnd *Container = (CContainerWnd*) GetWndPtr(Ob);
+	if(Container==NULL) RETURN_ERR("Container not created");
+	
+	Container->m_html.Navigate(url,NULL,NULL,NULL,NULL);
+	
+	return Py_BuildValue("s", url);
+	
+
+	/*
 	PyObject *Ob = Py_None;
 	CContainerWnd *Container; 
 	char *string;
@@ -168,11 +133,7 @@ static PyObject* py_Html_OpenUrl(PyObject *self, PyObject *args)
 	CString str;
 	
 	if(!PyArg_ParseTuple(args, "Os", &Ob, &string))
-	{
-		Py_INCREF(Py_None);
-		AfxMessageBox("Cannot parse arguments!");
-		return Py_None;return NULL;
-	}
+		return NULL;
 
 
 	static char filter[] = "HTM Files (*.HTM)|*.HTM|All Files (*.*)|*.*||";
@@ -186,13 +147,8 @@ static PyObject* py_Html_OpenUrl(PyObject *self, PyObject *args)
 
 	
 	Container = (CContainerWnd*) GetWndPtr(Ob);
+	if(Container==NULL) RETURN_ERR("Container not created");
 
-	
-	
-	
-	/*CString temp2;
-	temp2.Format("str is %s\n", str);
-	AfxMessageBox(temp2, MB_OK);*/   //has been used for debugging purposes
 	
 	//check if the given string is a file or other protocol's url 
 	if ((str.Find("www.") == -1) && (str.Find("http:")==-1))
@@ -203,13 +159,6 @@ static PyObject* py_Html_OpenUrl(PyObject *self, PyObject *args)
 
 		CString help = CString("\\");
 		char c = help.GetAt(0);     // c is the newline character
-		
-		/*for (int j=0; j<k; j++)
-		{
-		
-			if (str.GetAt(j)== (TCHAR)('/')) 
-				str.SetAt(j, (TCHAR)c);
-		}*/
 
 		for (int j=0; j<k; j++)
 		{
@@ -233,22 +182,13 @@ static PyObject* py_Html_OpenUrl(PyObject *self, PyObject *args)
 		{
 			str = "file:///" + str.Left(1) + "|" + str.Right(str.GetLength()-2) ;
 		}
-		
-			
 	}
 		
 		
 	strcpy(url, str);
-
-	//Container->BeginWaitCursor();
-
 	Container->m_html.Navigate(url,NULL,NULL,NULL,NULL);
-
-	//Container->EndWaitCursor();
-
-	
 	return Py_BuildValue("s", url);
-
+	*/
 }
 
 
@@ -256,6 +196,7 @@ static PyObject* py_Html_OpenUrl(PyObject *self, PyObject *args)
 static PyObject* py_Html_virtual_FileDialog(PyObject *self,PyObject *args)
 {
 		
+
 	char res[256];
 	CString strPath, strurl;
 	char* FileName;
@@ -265,15 +206,11 @@ static PyObject* py_Html_virtual_FileDialog(PyObject *self,PyObject *args)
 
 
 	if(!PyArg_ParseTuple(args, "Os", &Ob, &FileName))
-	{
-		Py_INCREF(Py_None);
-		AfxMessageBox("Error Receiving CMIF presentation String", MB_OK);
-		return Py_None;
 		return NULL;
-	
-	}
+
 
 	Container = (CContainerWnd*) GetWndPtr(Ob);
+	if(Container==NULL) RETURN_ERR("Container not created");
 
 	static char filter[] = "HTM Files (*.HTM)|*.HTM|All Files (*.*)|*.*||";
 	CFileDialog Dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY|OFN_OVERWRITEPROMPT, 
@@ -291,13 +228,13 @@ static PyObject* py_Html_virtual_FileDialog(PyObject *self,PyObject *args)
 		if (strPath.GetAt(i) == ((TCHAR)'\\'))
 			strPath.SetAt(i, '/');
 	}
-	strPath.SetAt(1, '|');
+	//strPath.SetAt(1, '|');
 	TRACE("Path variable is now %s\n", strPath);
-	CString temp("file:///");
+	CString temp("file://");
 	strurl = temp + strPath;
-	TRACE("URL is: %s \n", strurl);
 
-	strcpy(res, strurl);
+
+	lstrcpy(res, strurl);
 
 	Container->m_html.Navigate(res,NULL,NULL,NULL,NULL);
 
@@ -315,20 +252,15 @@ static PyObject* py_Html_CancelUrl(PyObject *self, PyObject *args)
 	char *url;
 
 	if(!PyArg_ParseTuple(args, "Os", &Ob, &url))
-	{
-		Py_INCREF(Py_None);
-		return Py_None;return NULL;
-	}
+		return NULL;
 
 	Container = (CContainerWnd*) GetWndPtr(Ob);
+	if(Container==NULL) RETURN_ERR("Container not created");
+
 	CString str = url;
-	//COleVariant vr((LPCTSTR)str);
 	Container->m_html.Stop();
 	
-	//Container->m_html.Cancel(variant);
 	strcpy(res, str);
-	//AfxMessageBox(str, MB_OK);
-
 	return Py_BuildValue("s", res);
 
 }
@@ -339,12 +271,10 @@ static PyObject* py_Html_DestroyOcx(PyObject *self, PyObject *args)
 	CContainerWnd *Container; 
 
 	if(!PyArg_ParseTuple(args, "O", &Ob))
-	{
-		Py_INCREF(Py_None);
-		return Py_None;return NULL;
-	}
+		return NULL;
 
 	Container = (CContainerWnd*) GetWndPtr(Ob);
+	if(Container==NULL) RETURN_ERR("Container not created");
 
 	Container->m_html.DestroyWindow();
 
@@ -359,12 +289,10 @@ static PyObject* py_Html_UpdateOcx(PyObject *self, PyObject *args)
 	CContainerWnd *Container; 
 
 	if(!PyArg_ParseTuple(args, "O", &Ob))
-	{
-		Py_INCREF(Py_None);
-		return Py_None;return NULL;
-	}
+		return NULL;
 
 	Container = (CContainerWnd*) GetWndPtr(Ob);
+	if(Container==NULL) RETURN_ERR("Container not created");
 
 	Container->m_html.UpdateWindow();
 
@@ -385,10 +313,7 @@ static PyObject* py_CreateWindow(PyObject *self, PyObject *args)
 	newWnd = new CContainerWnd;
 
 	if(!PyArg_ParseTuple(args, "siiiii", &wndName, &top, &left, &right, &bottom, &visible))
-	{
-		Py_INCREF(Py_None);
-		return Py_None;return NULL;
-	}
+		return NULL;
 
 	mainWnd = AfxGetMainWnd();
 
@@ -418,8 +343,7 @@ static PyObject* py_CreateWindow(PyObject *self, PyObject *args)
 	else
 	{
 		TRACE("CmifEx CreateWindow FALSE!\n");
-		Py_INCREF(Py_None);
-		return Py_None;
+		return NULL;
 	}	
 
 	CString title(wndName);
@@ -428,8 +352,8 @@ static PyObject* py_CreateWindow(PyObject *self, PyObject *args)
 								//to serve as an identifier of the owner
 								//of the displayed messages 
 
-
-	orgProc = (WNDPROC)SetWindowLong(newWnd->m_hWnd, GWL_WNDPROC, (LONG)MyWndProc);
+	// We will revisit module
+	//orgProc = (WNDPROC)SetWindowLong(newWnd->m_hWnd, GWL_WNDPROC, (LONG)MyWndProc);
 
 	testWnd = testWnd->make(testWnd->type, (CWnd*)(newWnd));
 	testOb = testWnd->GetGoodRet();
@@ -448,10 +372,7 @@ static PyObject* py_CreateChildWindow(PyObject *self, PyObject *args)
 	char *title;
 		
 	if(!PyArg_ParseTuple(args, "sOiiii", &title, &ob, &left, &top, &right, &bottom))
-	{
-		Py_INCREF(Py_None);
-		return Py_None;return NULL;
-	}
+		return NULL;
 
 	newWnd = new CContainerWnd;
 	parentWnd = GetWndPtr(ob);
@@ -470,8 +391,7 @@ static PyObject* py_CreateChildWindow(PyObject *self, PyObject *args)
 	else
 	{
 		TRACE("CmifEx CreateChildWindow FALSE!\n");
-		Py_INCREF(Py_None);
-		return Py_None;
+		return NULL;
 	}	
   
 	CString wndtitle(title);
@@ -493,13 +413,10 @@ static PyObject* py_Html_BeginWait(PyObject *self, PyObject *args)
 	CContainerWnd *Container; 
 	
 	if(!PyArg_ParseTuple(args, "O", &Ob))
-	{
-		Py_INCREF(Py_None);
-		AfxMessageBox("Cannot parse arguments!");
-		return Py_None;return NULL;
-	}
+		RETURN_ERR("Cannot parse arguments!");
 	
 	Container = (CContainerWnd*) GetWndPtr(Ob);
+	if(Container==NULL) RETURN_ERR("Container not created");
 
 	Container->BeginWaitCursor();
 	Container->m_html.BeginWaitCursor();
@@ -515,13 +432,11 @@ static PyObject* py_Html_EndWait(PyObject *self, PyObject *args)
 	CContainerWnd *Container; 
 	
 	if(!PyArg_ParseTuple(args, "O", &Ob))
-	{
-		Py_INCREF(Py_None);
-		AfxMessageBox("Cannot parse arguments!");
-		return Py_None;return NULL;
-	}
+		RETURN_ERR("DevMsg: py_Html_EndWait");
+
 	
 	Container = (CContainerWnd*) GetWndPtr(Ob);
+	if(Container==NULL) RETURN_ERR("Container not created");
 
 	Container->EndWaitCursor();
 	Container->m_html.EndWaitCursor();
@@ -540,29 +455,25 @@ static PyObject* py_CreateCallback(PyObject *self, PyObject *args)
 	static int ID=0;
 	
 	if(!PyArg_ParseTuple(args, "OO",  &callback, &ob))
-	{
-		CallbackExErrorFunc("CreateCallback(Callable Function, Window Handle)");
-		return Py_BuildValue("i", status);
-	}
+			RETURN_ERR("DevMsg: py_CreateCallback");
+
 
 	pContainer = (CContainerWnd*) GetWndPtr(ob);   //get Wnd pointer
+	if(pContainer==NULL) RETURN_ERR("Container not created");
 
 
 	// make sure the callback is a valid callable object
 	if (!PyCallable_Check (callback))
-	{
-		CallbackExErrorFunc("argument must be a callable object");
-		return Py_BuildValue("i", status);
-	}
+		RETURN_ERR("DevMsg: argument must be a callable object");
 
 	callbackID = Py_BuildValue ("i", (int)ID);
 
 	// associate the timer id with the given callback function
+	if(CallbackMap==NULL)
+		CallbackMap = PyDict_New();
+
 	if (PyObject_SetItem (CallbackMap, callbackID, callback) == -1)
-	{
-		CallbackExErrorFunc("internal error, couldn't set timer id callback item");
-		return Py_BuildValue("i", status);
-	}
+			RETURN_ERR("DevMsg: PyObject_SetItem");
 
 	//CallableFunction(i, ID);
 	pContainer->m_id = ID;
@@ -581,17 +492,15 @@ static PyObject* py_Html_SetCur(PyObject *self, PyObject *args)
 		
 	PyObject *Ob = Py_None;
 	CWnd *Wind; 
-	int cur_type;
+	int cur_type=0;
 
 	
 	if(!PyArg_ParseTuple(args, "Oi", &Ob, &cur_type))
-	{
-		Py_INCREF(Py_None);
-		AfxMessageBox("Htmlex.SetCursor(window hwnd, cursor_type)", MB_OK);
-		return Py_None;return NULL;
-	}
+		RETURN_ERR("DevMsg: py_Html_SetCur");
+
 	
 	Wind = (CWnd*) GetWndPtr(Ob);
+	if(Wind==NULL) RETURN_ERR("Wind not created");
 
 	switch (cur_type)
 	{
@@ -624,17 +533,12 @@ static PyObject* py_Html_SetCur(PyObject *self, PyObject *args)
 static PyObject* py_FDlg(PyObject *self, PyObject *args)
 {
 	PyObject *testOb = Py_None, *ob = Py_None;
-	//PyCWnd *testWnd;
 	char *title, *fname, *fltr;
 	char filename[256];
 	char filter[512];
 	
 	if(!PyArg_ParseTuple(args, "sss", &title, &fname, &fltr))
-	{
-		AfxMessageBox("Cannot parse arguments!", MB_OK);
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
+		RETURN_ERR("DevMsg: py_FDlg");
 
 	strcpy(filename, fname);
 	strcpy(filter, fltr);
@@ -665,19 +569,16 @@ static PyObject* py_Html_SetBkColor(PyObject *self, PyObject *args)
 	COLORREF color;
 
 	if(!PyArg_ParseTuple(args, "O(iii)", &Ob, &r, &g, &b))
-	{
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
+		RETURN_ERR("DevMsg: py_Html_SetBkColor");
 
 	Container = (CContainerWnd*) GetWndPtr(Ob);
+	if(Container==NULL) RETURN_ERR("Container not created");
 
 	color = RGB(r,g,b);
 
 	//Container->m_html.SetBackColor((unsigned long) color);
 
-	Py_INCREF(Py_None);
-	return Py_None;
+	RETURN_NONE;
 }	
 
 
@@ -690,41 +591,22 @@ static PyObject* py_Html_SetFgColor(PyObject *self, PyObject *args)
 	COLORREF color;
 
 	if(!PyArg_ParseTuple(args, "O(iii)", &Ob, &r, &g, &b))
-	{
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
+		RETURN_ERR("DevMsg: py_Html_SetFgColor");
 
 	Container = (CContainerWnd*) GetWndPtr(Ob);
+	if(Container==NULL) RETURN_ERR("Container not created");
 
 	color = RGB(r,g,b);
 
 	//Container->m_html.SetForeColor((unsigned long) color);
 
-	Py_INCREF(Py_None);
-	return Py_None;
+	RETURN_NONE;
 }	
-
-
-
-
-#ifdef _DEBUG
-static PyObject *
-py_CallbackMap (PyObject * self, PyObject * args)
-{
-	if (!PyArg_ParseTuple (args, ""))
-		return NULL;
-	
-  Py_INCREF (CallbackMap);
-  return (CallbackMap);
-}
-#endif
-
 
 
 BEGIN_PYMETHODDEF(Htmlex)
 	{ "CreateViewer", py_Html_CreateHtmlCtrl, 1},
-	{ "RetrieveUrl", py_Html_OpenUrl, 1},
+	{ "RetrieveUrl", py_retrieve_url, 1},
 	{ "RetrieveFileUrl",py_Html_virtual_FileDialog, 1},
 	{ "Stop", py_Html_CancelUrl, 1},
 	{ "DestroyOcx", py_Html_DestroyOcx, 1},
@@ -736,27 +618,10 @@ BEGIN_PYMETHODDEF(Htmlex)
 	{ "EndWaitCursor", py_Html_EndWait, 1},
 	{ "SetCursor", py_Html_SetCur, 1},
 	{ "FDlg", py_FDlg, 1},
-	{ "SetFlag", (PyCFunction)py_example_SetFlag, 1},
-	{ "SetBkColor", (PyCFunction)py_Html_SetBkColor, 1},
-	{ "SetFgColor", (PyCFunction)py_Html_SetFgColor, 1},
-#ifdef _DEBUG
-	{ "_idMap",			py_CallbackMap,	1},
-#endif
+	{ "SetFlag", py_example_SetFlag, 1},
+	{ "SetBkColor", py_Html_SetBkColor, 1},
+	{ "SetFgColor", py_Html_SetFgColor, 1},
 END_PYMETHODDEF()
 
-
-PY_INITMODULE(Htmlex);
-
-void CallbackExErrorFunc(char *str)
-{
-	PyErr_SetString (CallbackExError, str);
-	PyErr_Print();
-}
-
-
-
-#ifdef __cplusplus
-}
-#endif
 
 DEFINE_PYMODULETYPE("PyHtmlex",Htmlex);

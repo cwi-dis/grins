@@ -81,9 +81,6 @@ IMPLEMENT_PYMODULECLASS(Gifex,GetGifex,"Gifex Module Wrapper Object");
 
 static PyObject *gifexError;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 //***************************
 //Things to do:
 //	- built a LinkList with the used windows so as to preserve MemoryManagement
@@ -558,33 +555,22 @@ static PyObject* py_gifex_ReadGIF(PyObject *self, PyObject *args)
 	BOOL ok = TRUE;
 			
 	if(!PyArg_ParseTuple(args, "ss", &filename, &tofile))
-	{
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
+		return NULL;
 
-	if ((filep = fopen(filename, "rb")) == NULL) {
-	    Py_INCREF(Py_None);
-		return Py_None;
-	}
+	if ((filep = fopen(filename, "rb")) == NULL)
+	    RETURN_ERR("Cannot open file");
 	
 	
 	lmap = GIFreadheader(filep,left,top,width,height,ncolors,
 						aspect,interlaced,bpp,transp,ok);
 	if ( lmap == NULL)
-	{
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
+		return NULL;
 
 	b2t = 0;
 	rowlen = (width+3) & ~3;	// SGI images 32bit aligned
 	
 	if( (rv=PyString_FromStringAndSize(NULL, rowlen*height)) == NULL )
-	    {
-			Py_INCREF(Py_None);
-			return Py_None;
-		}
+		return NULL;
 	
 	if(rv!=NULL)
 	{
@@ -681,8 +667,7 @@ static PyObject* py_gifex_ReadGIF(PyObject *self, PyObject *args)
 	if ( lmap != NULL )
 		free(lmap);
 	
-	tmp = Py_BuildValue("i", 1);
-	return tmp;
+	return Py_BuildValue("i", 1);
 }
 
 
@@ -697,15 +682,10 @@ static PyObject* py_gifex_TestGIF(PyObject *self, PyObject *args)
 	BOOL ok = TRUE;
 			
 	if(!PyArg_ParseTuple(args, "s", &filename))
-	{
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
+		return NULL;
 
-	if ((filep = fopen(filename, "rb")) == NULL) {
-	    Py_INCREF(Py_None);
-		return Py_None;
-	}
+	if ((filep = fopen(filename, "rb")) == NULL)
+		RETURN_ERR("Cannot open file");
 	
 	
 	lmap = GIFreadheader(filep,left,top,width,height,ncolors,
@@ -731,25 +711,10 @@ static PyObject* py_gifex_TestGIF(PyObject *self, PyObject *args)
 }
 
 
-
 BEGIN_PYMETHODDEF(Gifex)
 	{ "ReadGIF",	py_gifex_ReadGIF,	1},
 	{ "TestGIF",	py_gifex_TestGIF,	1},
 END_PYMETHODDEF()
 
-/*
-__declspec(dllexport) 
-void initgifex()
-{
-	PyObject *m, *d;
-	m = Py_InitModule("gifex", gifexMethods);
-	d = PyModule_GetDict(m);
-	gifexError = PyString_FromString("gifex.error");
-	PyDict_SetItemString(d, "error", gifexError);
-}*/
-
-#ifdef __cplusplus
-}
-#endif
 
 DEFINE_PYMODULETYPE("PyGifex",Gifex);

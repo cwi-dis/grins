@@ -1,82 +1,57 @@
 #include "stdafx.h"
 
 #include "mcidll.h"
+#include "win32win.h"
 
 
 #include "moddef.h"
 DECLARE_PYMODULECLASS(Mpegex);
-IMPLEMENT_PYMODULECLASS(Mpegex,GetMpegex,"Mpegex Module Wrapper Object");
+IMPLEMENT_PYMODULECLASS(Mpegex,GetMpegex,"Mpegex Module Wrapper pPyObjject");
 
 ///////////////////////////////////
 #define MAX_CHAN  10
-
-
-MCI_AVI_STRUCT  *ChanTable[MAX_CHAN];
-
-
-static PyObject *MpegExError;
-
-BOOL first;
-
-PYW_EXPORT CWnd *GetWndPtr(PyObject *);
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void MpegExErrorFunc(char *str);
+static MCI_AVI_STRUCT  *ChanTable[MAX_CHAN];
+static BOOL first=TRUE;
 
 static void init()
 {
-	TRACE("Initializing...\n");
 	for (UINT k=0; k<MAX_CHAN; k++)
 		ChanTable[k] = NULL;
-
 	first = FALSE;
-
 }
 
 static PyObject*  py_mpeg_arm(PyObject *self, PyObject *args)
 {
-	TRACE("Entering mpeg_arm\n");
-	if (first)
-		init();
+	if (first) init();
     
-	UINT k;
-	CWnd *Wnd; 
-	BOOL bStretch, bRet, center;
-	PyObject *Ob = Py_None;
+	PyObject *pPyObj;
 	char *FileName;
+	BOOL bStretch,center;
 	float scale;
 	long clipbegin, clipend;
 
-	if(!PyArg_ParseTuple(args, "Osifill", &Ob, &FileName, &bStretch, &scale, &center, &clipbegin, &clipend))
-	{
-		MpegExErrorFunc("py_mpeg_prepare(parent, filename, Stretch, scale, center,clipbegin, clipend");
-		return NULL;
-	}
+	if(!PyArg_ParseTuple(args, "Osifill", &pPyObj, &FileName, &bStretch, &scale, &center, &clipbegin, &clipend))
+		RETURN_ERR("py_mpeg_prepare");
 
-	Wnd = GetWndPtr(Ob);
-	TRACE("Retrieved: Handle %X filename %s", Wnd->m_hWnd, FileName);
 
-	for (k=0; k<MAX_CHAN; k++)
+	CWnd *pWnd = GetWndPtr(pPyObj);
+	if(!pWnd) return NULL;
+
+	for (UINT k=0; k<MAX_CHAN; k++)
 	{
 		if (ChanTable[k] == NULL)
 		{
 			ChanTable[k] = (MCI_AVI_STRUCT*) malloc(sizeof(MCI_AVI_STRUCT));
-			TRACE("New struct allocated, index %d\n", k);
 			break;
 		}
 		if (k == MAX_CHAN-1)
-			AfxMessageBox("Unable to activate another channel", MB_OK);
+			RETURN_ERR("Unable to activate another channel");
 
 	}
 
 
-	ChanTable[k]->hWndParent = Wnd->m_hWnd;
+	ChanTable[k]->hWndParent = pWnd->m_hWnd;
 	strcpy(ChanTable[k]->szFileName, FileName);
-	TRACE("Filename in struct is: %s\n", ChanTable[k]->szFileName);
 	ChanTable[k]->fReverse=FALSE;
     ChanTable[k]->fNotify=TRUE;
 	ChanTable[k]->fStretch = bStretch;
@@ -85,74 +60,54 @@ static PyObject*  py_mpeg_arm(PyObject *self, PyObject *args)
 	ChanTable[k]->center = center;
 	ChanTable[k]->lAVIduration = 0;
 
-	bRet = AviOpen(ChanTable[k]);
+	GUI_BGN_SAVE;
+	BOOL bRet = AviOpen(ChanTable[k]);
+	GUI_END_SAVE;
 
-	if (! bRet)
-	{
+	if(!bRet)
+		{
 		free(ChanTable[k]);
 		ChanTable[k] = NULL;
-	}
-    else
-    {
-		ChanTable[k]->playstart = AviClip(ChanTable[k], clipbegin);
-		ChanTable[k]->playend = AviClip(ChanTable[k], clipend);
-	}
+		RETURN_ERR("AviOpen failed");
+		}
 
-	if (!bRet)
-		return Py_BuildValue("i", -1);
-	
+	ChanTable[k]->playstart = AviClip(ChanTable[k], clipbegin);
+	ChanTable[k]->playend = AviClip(ChanTable[k], clipend);
+
 	return Py_BuildValue("i", k);
-}
+	}
 
 static PyObject* py_mpeg_play(PyObject *self, PyObject *args)
 {
-	TRACE("Entering mpeg_play\n");
-
-	BOOL bRet;
 	int k;
 	long d;
-	PyObject *Ob = Py_None;
-		
 	if(!PyArg_ParseTuple(args, "il", &k, &d))
-	{
-		Py_INCREF(Py_None);
-		//AfxMessageBox("Error", MB_OK);
-		MpegExErrorFunc("py_mpeg_play(file identifier, duration)");
-		return Py_None;
-	}
+		RETURN_ERR("py_mpeg_play");
+	if(ChanTable[k] == NULL)
+		RETURN_ERR("py_mpeg_play::invalid index");
 
-	if (ChanTable[k] != NULL)
-	{
-		ChanTable[k]->lAVIduration = d;
-		bRet = AviPlay(ChanTable[k]);
-	}
-	
-	TRACE("Playing struct with index %d\n", k);
-	
+	ChanTable[k]->lAVIduration = d;
+	GUI_BGN_SAVE;
+	BOOL bRet = AviPlay(ChanTable[k]);
+	GUI_END_SAVE;
+	ChanTable[k]->lAVIduration = 0;
+
 	return Py_BuildValue("i", bRet);
 }
 
+
 static PyObject* py_mpeg_playstop(PyObject *self, PyObject *args)
 {
-	TRACE("Entering mpeg_playstop\n");
-
-	BOOL bRet;
 	int k;
-	PyObject *Ob = Py_None;
-	
 	if(!PyArg_ParseTuple(args, "i", &k))
-	{
-		Py_INCREF(Py_None);
-		//AfxMessageBox("Error", MB_OK);
-		MpegExErrorFunc("py_mpeg_playstop(file identifier)");
-		return Py_None;
-	
-	}
+		RETURN_ERR("py_mpeg_playstop");
+	if(ChanTable[k] == NULL)
+		RETURN_ERR("py_mpeg_playstop::invalid index");
 
-	if (ChanTable[k] != NULL)
-	bRet = AviStop(ChanTable[k]);				
-	TRACE("Stopping struct indexed %d\n", k);
-
+	GUI_BGN_SAVE;
+	BOOL bRet = AviStop(ChanTable[k]);
+	GUI_END_SAVE;
+				
 	return Py_BuildValue("i", bRet);
 }
 
@@ -160,29 +115,19 @@ static PyObject* py_mpeg_playstop(PyObject *self, PyObject *args)
 
 static PyObject* py_mpeg_finished(PyObject *self, PyObject *args)
 {
-	TRACE("Entering mpeg_finished\n");
-
-	BOOL bRet;
 	int k;
-	PyObject *Ob = Py_None;
-
-	
 	if(!PyArg_ParseTuple(args, "i", &k))
-	{
-		Py_INCREF(Py_None);
-		//AfxMessageBox("Error", MB_OK);
-		MpegExErrorFunc("py_mpeg_finished(file identifier)");
-		return Py_None;	
-	}
+		RETURN_ERR("mpeg_finished");
 
-	if (ChanTable[k] != NULL)
-	bRet = AviClose(ChanTable[k]);
-				
-	TRACE("About to free struct indexed %d\n", k);
+	if(ChanTable[k] == NULL)
+		RETURN_ERR("py_mpeg_finished::invalid index");
+
+	GUI_BGN_SAVE;
+	BOOL bRet = AviClose(ChanTable[k]);
+	GUI_END_SAVE;
+
 	free(ChanTable[k]);
 	ChanTable[k] = NULL;
-
-	
 	return Py_BuildValue("i", bRet);
 }
 
@@ -190,193 +135,130 @@ static PyObject* py_mpeg_finished(PyObject *self, PyObject *args)
 
 static PyObject* py_mpeg_GetFrame(PyObject *self, PyObject *args)
 {
-	TRACE("Entering mpeg_playstop\n");
-
 	int k;
-	long bRet = -1;
-	PyObject *Ob = Py_None;
-	
 	if(!PyArg_ParseTuple(args, "i", &k))
-	{
-		Py_INCREF(Py_None);
-		//AfxMessageBox("Error", MB_OK);
-		MpegExErrorFunc("py_mpeg_GetFrame(file identifier)");
-		return Py_None;
-	
-	}
+		RETURN_ERR("py_mpeg_GetFrame");
 
-	if (ChanTable[k] != NULL)
-		bRet = AviFrame(ChanTable[k]);				
-	
+	if (ChanTable[k] == NULL)
+		RETURN_ERR("py_mpeg_GetFrame::invalid index");
 
-	return Py_BuildValue("l", bRet);
+	GUI_BGN_SAVE;
+	BOOL bRet = AviFrame(ChanTable[k]);	
+	GUI_END_SAVE;
+	
+	return Py_BuildValue("i", bRet);
 }
 
 
 static PyObject* py_mpeg_position(PyObject *self, PyObject *args)
 {
-	TRACE("Entering mpeg_position\n");
-
-	BOOL bRet;
 	int k;
-	PyObject *Ob = Py_None;
-
-	
 	if(!PyArg_ParseTuple(args, "i", &k))
-	{
-		Py_INCREF(Py_None);
-		//AfxMessageBox("Error", MB_OK);
-		MpegExErrorFunc("py_mpeg_position(file identifier)");
-		return Py_None;
-	
-	}
+		RETURN_ERR("py_mpeg_position");
 
-	if (ChanTable[k] != NULL)
-	{
-		// It seems that there is no need to stop and restatr the movie
-		// Just place the window
-		//BOOL b1 = AviStop(ChanTable[k]);
-		positionMovie(ChanTable[k]);
-		//BOOL b2 = AviPlay(ChanTable[k]);
-		//bRet = b1*b2;
-		bRet=1;
-	}
+	if (ChanTable[k] == NULL)
+		RETURN_ERR("py_mpeg_position::invalid index");
 
-	return Py_BuildValue("i", bRet);
+	// It seems that there is no need to stop and restatr the movie
+	// Just place the window
+	//BOOL b1 = AviStop(ChanTable[k]);
+	positionMovie(ChanTable[k]);
+	//BOOL b2 = AviPlay(ChanTable[k]);
+	//bRet = b1*b2;
+	return Py_BuildValue("l", 1);
 }
 
 static PyObject* py_mpeg_duration(PyObject *self, PyObject *args)
 {
-	TRACE("Entering mpeg_duration\n");
-
-	long bRet, length;
 	int k;
-	PyObject *Ob = Py_None;
-
-	
 	if(!PyArg_ParseTuple(args, "i", &k))
-	{
-		Py_INCREF(Py_None);
-		MpegExErrorFunc("py_mpeg_duration(file identifier)");
-		return Py_None;
-	
-	}
+		RETURN_ERR("py_mpeg_duration");
 
-	length = (long) AviDuration(ChanTable[k]);
-	
+	if (ChanTable[k] == NULL)
+		RETURN_ERR("py_mpeg_duration::invalid index");
+
+	GUI_BGN_SAVE;
+	long length = (long) AviDuration(ChanTable[k]);
+	GUI_END_SAVE;
+
+	long lRet;	
 	if(ChanTable[k]->playend != 0)
-		bRet = ChanTable[k]->playend-ChanTable[k]->playstart;
+		lRet = ChanTable[k]->playend-ChanTable[k]->playstart;
 	else if(ChanTable[k]->playstart != 0)
-		bRet = length - ChanTable[k]->playstart;
-	else bRet = length;
+		lRet = length - ChanTable[k]->playstart;
+	else lRet = length;
 
-	if(bRet < 0)
-		bRet = length;
-		
-	
-	return Py_BuildValue("l", bRet);
+	if(lRet < 0)
+		lRet = length;
+			
+	return Py_BuildValue("l", lRet);
 }
+
 
 
 static PyObject* py_mpeg_seekstart(PyObject *self, PyObject *args)
 {
-	TRACE("Entering mpeg_seekstart\n");
-
-	BOOL bRet;
 	int k;
-	PyObject *Ob = Py_None;
-	
 	if(!PyArg_ParseTuple(args, "i", &k))
-	{
-		Py_INCREF(Py_None);
-		MpegExErrorFunc("py_mpeg_seekstart(file identifier)");
-		//AfxMessageBox("Error", MB_OK);
-		return Py_None;
-	}
+		RETURN_ERR("py_mpeg_seekstart");
+	if (ChanTable[k] == NULL)
+		RETURN_ERR("py_mpeg_seekstart::invalid index");
 
-	if (ChanTable[k] != NULL){
-		ChanTable[k]->iSeekThere = ChanTable[k]->playstart;
-		bRet = AviSeek(ChanTable[k]);				
-	}
-
-	TRACE("Rewind struct indexed %d\n", k);
-
+	ChanTable[k]->iSeekThere = ChanTable[k]->playstart;
+	GUI_BGN_SAVE;
+	BOOL bRet = AviSeek(ChanTable[k]);	
+	GUI_END_SAVE;
+	
 	return Py_BuildValue("i", bRet);
 }
 
 static PyObject* py_mpeg_seek(PyObject *self, PyObject *args)
 {
-	TRACE("Entering mpeg_seek\n");
-
-	BOOL bRet;
 	int k, d;
-	PyObject *Ob = Py_None;
-	
 	if(!PyArg_ParseTuple(args, "ii", &k, &d))
-	{
-		Py_INCREF(Py_None);
-		MpegExErrorFunc("py_mpeg_seek(file identifier, position)");
-		//AfxMessageBox("Error", MB_OK);
-		return Py_None;
-	}
+		RETURN_ERR("py_mpeg_seek");
+	if (ChanTable[k] == NULL)
+		RETURN_ERR("py_mpeg_seek::invalid index");
 
-	if (ChanTable[k] != NULL)
-	{
-		ChanTable[k]->iSeekThere = d;
-		bRet = AviSeek(ChanTable[k]);				
-	}
-
-	TRACE("Rewind struct indexed %d\n", k);
-
+	ChanTable[k]->iSeekThere = d;
+	GUI_BGN_SAVE;
+	BOOL bRet = AviSeek(ChanTable[k]);
+	GUI_END_SAVE;				
 	return Py_BuildValue("i", bRet);
 }
 
 
 static PyObject* py_mpeg_Update(PyObject *self, PyObject *args)
 {
-	int bRet;
 	int k;
-	PyObject *Ob = Py_None;
-
-	
 	if(!PyArg_ParseTuple(args, "i", &k))
-	{
-		Py_INCREF(Py_None);
-		//AfxMessageBox("Function Usage : Mpeg Duration(Index)", MB_OK);
-		MpegExErrorFunc("Update(file identifier)");
-		return Py_None;
-	
-	}
+		RETURN_ERR("py_mpeg_Update");
 
-	bRet = (int) AviUpdate(ChanTable[k]);
-	 
-	
+	if (ChanTable[k] == NULL)
+		RETURN_ERR("py_mpeg_Update::invalid index");
+
+	GUI_BGN_SAVE;
+	BOOL bRet = (int) AviUpdate(ChanTable[k]);
+	GUI_END_SAVE;
+
 	return Py_BuildValue("i", bRet);
 }
 
 
 static PyObject*  py_mpeg_SizeOfImage(PyObject *self, PyObject *args)
 {
-	CWnd *Wnd; 
-	PyObject *Ob = Py_None;
+	PyObject *pPyObj;
 	char *FileName;
-	int bRet = 0;
-	MCI_AVI_STRUCT* temp = NULL;
-	RECT rc;
-	
-	if(!PyArg_ParseTuple(args, "Os", &Ob, &FileName))
-	{
-		Py_INCREF(Py_None);
-		MpegExErrorFunc("SizeOfImage(parent, filename)");
-		return Py_None;
-	
-	}
+	if(!PyArg_ParseTuple(args, "Os", &pPyObj, &FileName))
+		RETURN_ERR("py_mpeg_SizeOfImage");
 
-	Wnd = GetWndPtr(Ob);
+	CWnd *pWnd = GetWndPtr(pPyObj);
+	if(pWnd==NULL) return NULL;
+
+
+	MCI_AVI_STRUCT* temp = (MCI_AVI_STRUCT*) malloc(sizeof(MCI_AVI_STRUCT));
 	
-	temp = (MCI_AVI_STRUCT*) malloc(sizeof(MCI_AVI_STRUCT));
-	
-	temp->hWndParent = Wnd->m_hWnd;
+	temp->hWndParent = pWnd->m_hWnd;
 	strcpy(temp->szFileName, FileName);
 	temp->fReverse=FALSE;
     temp->fNotify=TRUE;
@@ -385,78 +267,38 @@ static PyObject*  py_mpeg_SizeOfImage(PyObject *self, PyObject *args)
 	temp->scale = 0;
 	temp->center = 0;
  
-	bRet = AviOpen(temp);
+	RECT rc={0,0,100,100};
+	GUI_BGN_SAVE;
+	BOOL bRet = AviOpen(temp);
+	if(bRet)
+		{
+		AviSize(temp, &rc);
+		AviClose(temp);
+		}
+	GUI_END_SAVE;
+	free(temp);	
 
-	if (! bRet)
-	{
-		free(temp);
-		temp = NULL;
-		return Py_BuildValue("ll", 0, 0);
-	}
+	if (!bRet)
+		RETURN_ERR("AviOpen failed");
 
-	AviSize(temp, &rc);
-	AviClose(temp);
-
-	free(temp);
-	temp = NULL;
-	
 	return Py_BuildValue("ll", rc.right, rc.bottom);
 }
 
 
 
-static PyMethodDef MpegExMethods[] = 
-{
-	{ "arm", (PyCFunction)py_mpeg_arm, 1},
-	{ "play",(PyCFunction)py_mpeg_play, 1},
-	{ "finished", (PyCFunction)py_mpeg_finished, 1},
-	{ "stop", (PyCFunction)py_mpeg_playstop, 1},
-	{ "position", (PyCFunction)py_mpeg_position, 1},
-	{ "GetFrame", (PyCFunction)py_mpeg_GetFrame, 1},
-	{ "GetDuration",(PyCFunction)py_mpeg_duration,1},
-	{ "seek", (PyCFunction)py_mpeg_seek, 1},
-	{ "seekstart", (PyCFunction)py_mpeg_seekstart, 1},
-	{ "Update", (PyCFunction)py_mpeg_Update, 1},
-	{ "SizeOfImage", (PyCFunction)py_mpeg_SizeOfImage, 1},
-	{ NULL, NULL }
-};
-
-
-PyEXPORT 
-void initmpegex()
-{
-	PyObject *m, *d;
-	first = TRUE;
-	m = Py_InitModule("mpegex", MpegExMethods);
-	d = PyModule_GetDict(m);
-	MpegExError = PyString_FromString("mpegex.error");
-	PyDict_SetItemString(d, "error", MpegExError);
-}
-
-void MpegExErrorFunc(char *str)
-{
-	PyErr_SetString (MpegExError, str);
-	PyErr_Print();
-}
-
-
-#ifdef __cplusplus
-}
-#endif
-
-
 BEGIN_PYMETHODDEF(Mpegex)
-	{ "arm", (PyCFunction)py_mpeg_arm, 1},
-	{ "play",(PyCFunction)py_mpeg_play, 1},
-	{ "finished", (PyCFunction)py_mpeg_finished, 1},
-	{ "stop", (PyCFunction)py_mpeg_playstop, 1},
-	{ "position", (PyCFunction)py_mpeg_position, 1},
-	{ "GetFrame", (PyCFunction)py_mpeg_GetFrame, 1},
-	{ "GetDuration",(PyCFunction)py_mpeg_duration,1},
-	{ "seek", (PyCFunction)py_mpeg_seek, 1},
-	{ "seekstart", (PyCFunction)py_mpeg_seekstart, 1},
-	{ "Update", (PyCFunction)py_mpeg_Update, 1},
-	{ "SizeOfImage", (PyCFunction)py_mpeg_SizeOfImage, 1},
+	{ "arm", py_mpeg_arm, 1},
+	{ "play",py_mpeg_play, 1},
+	{ "finished", py_mpeg_finished, 1},
+	{ "stop", py_mpeg_playstop, 1},
+	{ "position", py_mpeg_position, 1},
+	{ "GetFrame", py_mpeg_GetFrame, 1},
+	{ "GetDuration",py_mpeg_duration,1},
+	{ "seek", py_mpeg_seek, 1},
+	{ "seekstart", py_mpeg_seekstart, 1},
+	{ "Update", py_mpeg_Update, 1},
+	{ "SizeOfImage", py_mpeg_SizeOfImage, 1},
 END_PYMETHODDEF();
+
 
 DEFINE_PYMODULETYPE("PyMpegex",Mpegex);
