@@ -3104,7 +3104,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif show == 'new':
 			ltype = TYPE_FORK
 
-		destinationPlaystate = attributes['destinationPlaystate']
+		destinationPlaystate = attributes.get('destinationPlaystate', 'play')
 
 		if destinationPlaystate == 'play':
 			dtype = A_DEST_PLAY
