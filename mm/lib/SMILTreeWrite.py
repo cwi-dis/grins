@@ -641,8 +641,8 @@ smil_mediatype={
 	'label':'text',
 	'midi':'audio',
 	'RealAudio':'audio',
-	'RealPix':'img',
-	'RealText':'text',
+	'RealPix':'animation',
+	'RealText':'textstream',
 	'RealVideo':'video',
 	'unknown': 'ref',
 }
@@ -1351,13 +1351,13 @@ class SMILWriter(SMIL):
 		parentattrlist = []
 		for attr, val in attrlist:
 			if attr in ('id', 'begin'):
-				parentattrlist.append(attr, val)
+				parentattrlist.append((attr, val))
 		for item in parentattrlist:
 			attrlist.remove(item)
 		self.writetag('par', parentattrlist)
 		self.push()
 		self.writemedianode(x, attrlist, mtype)
-		self.writetag('text', [('src', rturl), ('region', region)])
+		self.writetag('textstream', [('src', rturl), ('region', region)])
 		self.pop()
 		
 	def getrealtextcaptions(self, node):
