@@ -664,7 +664,9 @@ class SeekDialog(ResDialog):
 		ResDialog.__init__(self,grinsRC.IDD_SEEK, parent)
 		self._parent=parent
 		self.IDC_SLIDER = grinsRC.IDC_SLIDER_POS+1
-
+		self.updateposcallback = None
+		self._curpos = 0
+		
 		self.CreateWindow(parent)
 		self.ShowWindow(win32con.SW_SHOW)
 		self.UpdateWindow()
@@ -689,10 +691,12 @@ class SeekDialog(ResDialog):
 		return ResDialog.OnInitDialog(self)
 
 	def close(self):
+		if self.updateposcallback:
+			self.updateposcallback(0)
 		self.EndDialog(win32con.IDCANCEL)
 
 	def OnCancel(self):
-		self.EndDialog(win32con.IDCANCEL)
+		self.close()
 	
 	def setRange(self, min, max):
 		self.slider.SetRange(int(math.floor(min)), int(math.ceil(max)))
@@ -701,7 +705,11 @@ class SeekDialog(ResDialog):
 		self.slider.SetPos(int(pos+0.5))
 
 	def OnNotify(self, params):
-		print self.slider.GetPos()
+		pos = self.slider.GetPos()
+		if pos != self._curpos:
+			self._curpos = pos
+			if self.updateposcallback:
+				self.updateposcallback(pos)
 
 
 		
