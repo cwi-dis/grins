@@ -96,7 +96,7 @@ class XHTML_TIME:
 
 	__animate_elements = ['animate', 'animateMotion', 'animateColor', 'set']
 
-	__containers = ['par', 'seq', 'excl', 'priorityClass', ]
+	__containers = ['par', 'seq', 'switch', 'excl''priorityClass', ]
 
 
 
@@ -106,13 +106,6 @@ class XHTML_TIME:
 
 	def hasElement(self, element):
 		return element in __allElements
-
-# scripting support
-
-# begin = sTime | end = sTime
-# sTime: clock-value | id.begin[+clock-value] | id.event[+clock-value] | indefinite
-
-# timeParent
 
 
 #
@@ -1022,6 +1015,7 @@ class SMILHtmlTimeWriter(SMIL):
 #   Util
 #
 def scriptid(name):
+	if not name: return name
 	l = []
 	for ch in name:
 		if ch=='-': ch = '_'
