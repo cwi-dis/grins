@@ -900,7 +900,7 @@ class SelectionDialog:
 				ret = func(self.nameinput.get_input())
 				if ret:
 					if type(ret) is StringType:
-						showmessage(ret, type = 'error')
+						showmessage(ret, mtype = 'error')
 					return
 		if arg == 'Cancel':
 			try:
@@ -911,7 +911,7 @@ class SelectionDialog:
 				ret = func()
 				if ret:
 					if type(ret) is StringType:
-						showmessage(ret, type = 'error')
+						showmessage(ret, mtype = 'error')
 					return
 		self.close()
 
