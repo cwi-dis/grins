@@ -697,6 +697,11 @@ class MMRegPoint:
 		self.isdef = 0
 		self.attrdict = {}
 
+	# allow to know the class name without use 'import xxx; isinstance'
+	# note: this method should be implemented for all basic classes of the document
+	def getClassName(self):
+		return 'MMRegPoint'
+
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__, `self.name`)
 
@@ -908,6 +913,11 @@ class MMChannel(MMTreeElement):
 			# allow to maintains the compatibility with old version
 			# this flag shouldn't be accessible in the future
 			self.attrdict['base_winoff'] = (0, 0, 100, 100)
+
+	# allow to know the class name without use 'import xxx; isinstance'
+	# note: this method should be implemented for all basic classes of the document
+	def getClassName(self):
+		return 'MMChannel'
 
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__, `self.name`)
@@ -1255,6 +1265,11 @@ class MMAnchor:
 		self.atimes = atimes
 		self.aaccess = aaccess
 
+	# allow to know the class name without use 'import xxx; isinstance'
+	# note: this method should be implemented for all basic classes of the document
+	def getClassName(self):
+		return 'MMAnchor'
+
 	def copy(self):
 		return MMAnchor(self.aid, self.atype, self.aargs, self.atimes, self.aaccess)
 
@@ -1327,6 +1342,11 @@ class MMSyncArc:
 	if debug:
 		def __del__(self):
 			print 'MMSyncArc.__del__',`self`
+
+	# allow to know the class name without use 'import xxx; isinstance'
+	# note: this method should be implemented for all basic classes of the document
+	def getClassName(self):
+		return 'MMSyncArc'
 
 	def __repr__(self):
 		if self.path:
@@ -1774,6 +1794,11 @@ class MMNode(MMTreeElement):
 		self.computedMimeType = None
 		self.channelType = None
 		self.reset()
+
+	# allow to know the class name without use 'import xxx; isinstance'
+	# note: this method should be implemented for all basic classes of the document
+	def getClassName(self):
+		return 'MMNode'
 		
 	#
 	# Return string representation of self
