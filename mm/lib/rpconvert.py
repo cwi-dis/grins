@@ -39,7 +39,8 @@ def rpconvert(node):
 	f.close()
 	rp.close()
 
-	regionname = ch.GetLayoutChannel().name
+	region = ch.GetLayoutChannel()
+	regionname = region.name
 	
 	em = ctx.editmgr
 	if not em.transaction():
@@ -52,6 +53,12 @@ def rpconvert(node):
 	em.setnodeattr(node, 'file', None)
 	em.setnodetype(node, 'par')
 	em.setnodeattr(node, 'channel', None)
+	try:
+		del node._internalchtype
+	except AttributeError:
+		pass
+	em.setnodeattr(node, 'bgcolor', None)
+	em.setnodeattr(node, 'transparent', None)
 
 	# First deal with fadein transitions that specify an
 	# associated fadeout.  We just create an explicit fadeout for
@@ -97,11 +104,12 @@ def rpconvert(node):
 
 	# width and height of the region
 	# this had better be in pixels
-	rw, rh = ctx.channeldict[regionname].getPxGeom()[2:]
+	rw, rh = region.getPxGeom()[2:]
 	i = 0				# used to create unique channel name
 	start = 0			# start time of last transition
 	for tagdict in tags:
 		transition = tagdict['tag']
+		start = start + tagdict.get('start', 0)
 		if transition in ('viewchange', 'animate'):
 			print "ignoring transition we can't convert"
 			continue
@@ -109,8 +117,14 @@ def rpconvert(node):
 		em.addnode(node, -1, newnode)
 		if transition in ('fadeout', 'fill'):
 			chtype = 'brush'
+			em.setnodeattr(newnode, 'fgcolor', tagdict['color'])
 		else:
 			chtype = 'image'
+			em.setnodeattr(newnode, 'file', MMurl.basejoin(furl, tagdict['file']))
+			if tagdict.get('aspect', rp.aspect == 'true'):
+				em.setnodeattr(newnode, 'scale', 0)
+			else:
+				em.setnodeattr(newnode, 'scale', -3)
 		newnode._internalchtype = chtype
 		chname = '%s %d' % (regionname, i)
 		while ctx.channeldict.has_key(chname):
@@ -118,7 +132,9 @@ def rpconvert(node):
 			chname = '%s %d' % (regionname, i)
 		em.addchannel(chname, len(ctx.channelnames), chtype)
 		em.setchannelattr(chname, 'base_window', regionname)
-		em.setchannelattr(chname, 'transparent', 1)
+		# XXX are these two correct?
+		em.setchannelattr(chname, 'transparent', region.get('transparent', 0))
+		em.setchannelattr(chname, 'bgcolor', region.get('bgcolor', (255,255,255)))
 		em.setchannelattr(chname, 'center', 0)
 		em.setchannelattr(chname, 'drawbox', 0)
 		em.setchannelattr(chname, 'z', -1)
@@ -136,16 +152,7 @@ def rpconvert(node):
 		em.setnodeattr(newnode, 'width', w)
 		em.setnodeattr(newnode, 'height', h)
 		em.setnodeattr(newnode, 'channel', chname)
-		if tagdict.get('aspect', rp.aspect == 'true'):
-			em.setnodeattr(newnode, 'scale', 0)
-		else:
-			em.setnodeattr(newnode, 'scale', -3)
-		start = start + tagdict.get('start', 0)
 		em.setnodeattr(newnode, 'beginlist', [MMSyncArc(newnode, 'begin', srcnode='syncbase', delay=start)])
-		if transition in ('fadein', 'crossfade', 'wipe'):
-			em.setnodeattr(newnode, 'file', MMurl.basejoin(furl, tagdict['file']))
-		elif transition in ('fill', 'fadeout'):
-			em.setnodeattr(newnode, 'fgcolor', tagdict['color'])
 		if transition in ('fadein', 'fadeout', 'crossfade', 'wipe'):
 			# the real transtions
 			trdict = {'dur': tagdict.get('tduration', 0),
