@@ -1845,10 +1845,6 @@ class ChannelWindow(Channel):
 			subreg_height = 1
 		if subreg_width == 0:
 			subreg_width = 1
-		if subreg_top == 0:
-			subreg_top = 1
-		if subreg_height == 0:
-			subreg_height = 1
 
 		node.__subreg_height = subreg_height
 		node.__subreg_width = subreg_width
