@@ -47,11 +47,14 @@ class PreferencesDialog(ResDialog,ControlsDict):
 		self.DestroyWindow()
 
 	# Response to the button OK
-	def OnOK(self):	apply(apply,self._cbd['OK'])
+	def OnOK(self):
+		self.win32special()	
+		apply(apply,self._cbd['OK'])
 	# Response to the button Cancel
 	def OnCancel(self):apply(apply,self._cbd['Cancel'])
 	# Response to the button Reset
-	def OnReset(self,id,code):apply(apply,self._cbd['Reset'])
+	def OnReset(self,id,code):
+		apply(apply,self._cbd['Reset'])
 
 
 	# Called by the core syatem to show the Dialog
@@ -145,3 +148,13 @@ class PreferencesDialog(ResDialog,ControlsDict):
 		for k in self.keys():
 			if self.is_bool(k):l.append(k)
 		return l
+
+	def win32special(self):
+		lang=self['system_language'].gettext()
+		import Font
+		if lang=='el' or lang=='EL':
+			cb=(Font.set_win32_charset, ('GREEK',))
+		else:
+			cb=(Font.set_win32_charset, ('DEFAULT',))			
+		apply(apply,cb)
+			
