@@ -46,7 +46,8 @@ class EditAnchorDlgBar(DlgBar):
 		self._composite=components.Static(self,grinsRC.IDC_STATIC1)
 		self._composite.attach_to_parent()
 		self._idedit_cb=1
-		self._prevsel=0;
+		self._prevsel=0
+		self._parent=parent
 
 	# Response to a chenge in the text of the edit box	
 	def OnEdit(self,id,code):
@@ -69,6 +70,14 @@ class EditAnchorDlgBar(DlgBar):
 		self._idedit.settext(id)
 		self._idedit_cb=1
 
+	def enableEdit(self,flag):
+		id=self._idedit._id
+		frame=self._parent
+		if flag:
+			frame.HookCommandUpdate(frame.OnUpdateCmdEnable,id)
+		else:
+			frame.HookCommandUpdate(frame.OnUpdateCmdDissable,id)
+			
 # A dialog bar containing the buttons New,Edit,Delete,Export.
 class AnchorDlgBar(DlgBar):
 	# Class constructor. Call base class constructor and associates controls to ids
@@ -268,7 +277,7 @@ class AnchorEditForm(docview.ListView):
 
 	# Select a row in the list cntrol			
 	def SelectItem(self,nItem=None):
-		if not nItem:nItem=-1
+		if nItem==None:nItem=-1
 		#args: nItem,nSubItem,nMask,szItem,nImage,nState,nStateMask,lParam
 		nSubItem=nImage=lParam=0;szItem=''
 		nMask=commctrl.LVIF_STATE
@@ -395,7 +404,7 @@ class AnchorEditForm(docview.ListView):
 	# called.
 	def selection_seteditable(self, editable):
 		"""Make the selected string editable or not."""
-		self._editBar._idedit.enable(editable)
+		self._editBar.enableEdit(editable)
 
 	def selection_setlist(self, list, initial):
 		"""Set the list of strings.
@@ -429,7 +438,9 @@ class AnchorEditForm(docview.ListView):
 		The return value is the index of the currently
 		selected item, or None if no item is selected.
 		"""
+		self._selecteditem=self.GetSelected()
 		return self._selecteditem
+
 
 	def selection_append(self, item):
 		"""Append an item to the end of the list.
@@ -450,11 +461,14 @@ class AnchorEditForm(docview.ListView):
 		[ This method is called in the id_callback to get the
 		new value of the currently selected item. ]
 		"""
-		if self._selecteditem:
+		self._selecteditem=self.GetSelected()
+		txt='None'
+		if self._selecteditem!=None:
 			try:
-				return self.GetItemText(self._selecteditem,0)
+				txt= self.GetItemText(self._selecteditem,0)
 			except:
-				return ''
+				txt = 'Except'
+		return txt
 
 	def selection_replaceitem(self, pos, item):
 		"""Replace the indicated item with a new value.
