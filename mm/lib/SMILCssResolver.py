@@ -1013,7 +1013,6 @@ class MediaNode(Node):
 	# get the space display area of media according to registration points /alignement and fit attribute
 	# return pixel values
 	def _getMediaSpaceArea(self):
-
 		# if no intrinsic size, the size area is the entire region		
 		if self.intrinsicHeight == None or self.intrinsicWidth == None:
 			return 0, 0, self.container.pxwidth, self.container.pxheight
@@ -1025,8 +1024,9 @@ class MediaNode(Node):
 		# for now, regpoint come from directly MMContext.
 		# It's not a problem as long as regpoint element is not animable
 		regPoint = self.getRegPoint()
+
 		regPointObject = self.context.getDocumentContext().GetRegPoint(regPoint)
-		
+
 		regpoint_x = regPointObject.getx(self.container.pxwidth)
 		regpoint_y = regPointObject.gety(self.container.pxheight)
 
@@ -1130,7 +1130,7 @@ class MediaNode(Node):
 		if area_width <= 0: area_width = 1
 		if area_height <= 0: area_height = 1
 		
-		return area_left, area_top, area_width, area_height
+		return int(area_left), int(area_top), int(area_width), int(area_height)
 
 	def getScale(self):
 		if self.scale != None:
