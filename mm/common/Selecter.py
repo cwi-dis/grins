@@ -259,22 +259,35 @@ class Selecter:
 			self.root.sctx.gototime(self.root, gototime, timestamp)
 			self.scheduler.setpaused(0)
 			return 1	# succeeded
-
 		# XXX
-		# need to implement "fast forward"
-		gototime = seek_node.isresolved()
-		if gototime is not None:
-			self.root.sctx.gototime(self.root, gototime, timestamp)
-			self.scheduler.setpaused(0)
-			return 1	# succeeded
-
 		x = seek_node
-		path = [x]
-		while x.playing == MMStates.IDLE:
-			x = x.GetSchedParent()
+		path = []
+		while x is not None:
 			path.append(x)
+			resolved = x.isresolved()
+			if resolved is not None:
+				break
+			x = x.GetSchedParent()
 		path.reverse()
-		
+		for x in path:
+			resolved = x.isresolved()
+			if x.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
+				gototime = x.start_time
+			elif x.playing == MMStates.PLAYED:
+				gototime = x.time_list[0][0]
+			elif resolved is not None:
+				gototime = resolved
+			else:
+				x.start_time = gototime
+		self.scheduler.settime(gototime)
+		x = seek_node
+		path = []
+		while x is not None:
+			path.append(x)
+			x = x.GetSchedParent()
+		path.reverse()
+		self.root.sctx.gototime(self.root, gototime, timestamp, path)
+		self.scheduler.setpaused(0)
 		return 0
 
 	def followcompanchors(self, node, aid):
