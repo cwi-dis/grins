@@ -24,7 +24,7 @@ real_interiortypes = ('par', 'seq', 'alt', 'excl')
 # Any circularities in the sync arcs are detected and "reported"
 # as exceptions.
 
-def needtimes(node):
+def computetimes(node):
 	node.t1 = 0
 	del node.t1
 

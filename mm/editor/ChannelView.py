@@ -24,7 +24,6 @@ from usercmd import *
 from BandwidthCompute import BandwidthAccumulator
 
 import MMAttrdefs
-import Timing
 from MMExc import *
 from AnchorDefs import *
 from ArmStates import *
@@ -540,7 +539,6 @@ class ChannelView(ChannelViewDialog):
 	def reshape(self):
 		from windowinterface import UNIT_MM
 		self.discontinuities = []
-		Timing.needtimes(self.viewroot)
 		self.calculatechannellines()
 		channellines = self.channellines
 		visiblechannels = self.visiblechannels()
@@ -665,7 +663,6 @@ class ChannelView(ChannelViewDialog):
 	# Node stuff
 
 	def initnodes(self, focus):
-		Timing.needtimes(self.viewroot)
 		for c in self.context.channels: c.used = 0
 		self.baseobject.descendants[:] = []
 		self.scantree(self.viewroot, focus)
@@ -1480,11 +1477,11 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 		d.fgcolor(TEXTCOLOR)
 		d.centerstring(0, bwpos-f_height/2, self.mother.channelright,
 			       bwpos+f_height/2, self.bwname)
-		if self.usedbandwidth.maxused > self.usedbandwidth.max:
+		maxbw, maxused = self.usedbandwidth.getmaxandused()
+		if maxused > maxbw:
 			d.fgcolor(PLAYERRORCOLOR)
 			d.centerstring(0, t, self.mother.channelright,
-				       t+f_height, self._bwstr(
-					       self.usedbandwidth.maxused))
+				       t+f_height, self._bwstr(maxused))
 
 		for box in self.boxes:
 			self._drawbox(box, 0)
