@@ -246,7 +246,7 @@ class SoundChannel(ChannelAsync):
 			self.play_fp = None
 			if self.__qid is not None:
 				return
-			t = node.get_start_time() + float(nframes) / rate
+			t = self._played_node.get_start_time() + float(nframes) / rate
 			self.__qid = self._scheduler.enterabs(t, 0, self.playdone, (0, t))
 		if self.__rc:
 			self.__rc.stopit()
@@ -382,7 +382,6 @@ class Player:
 	def __playsome(self):
 		self.__tid = None
 		port = self.__port
-		converter = self.__converter
 		while 1:
 			if not self.__data:
 				port.wait()

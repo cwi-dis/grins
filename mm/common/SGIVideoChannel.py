@@ -181,8 +181,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.played_size = self.armed_size
 		self.played_bg = self.armed_bg
 		self.played_flag = self.armed_flag
-		duration = node.GetAttrDef('duration', None)
-		begin = 0
 		if self.__begin:
 			movie.SetStartTime(long(self.__begin * 1000L), 1000)
 		t0 = self._scheduler.timefunc()
@@ -194,7 +192,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				self.playdone(0, max(curtime, start_time + self.__mediadur))
 				return
 			movie.SetCurrentTime(long((self.__begin + late) * 1000L), 1000)
-		begin = movie.GetStartTime(1000) / 1000.0
 		if self.__end:
 			movie.SetEndTime(long(self.__end * 1000L), 1000)
 		window.setredrawfunc(self.redraw)
