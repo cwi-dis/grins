@@ -369,7 +369,7 @@ class _CommonWindow:
 
 		try:
 			reader = img.reader(format, file)
-		except img.error, arg:
+		except (img.error, IOError), arg:
 			raise error, arg
 		w = xsize = reader.width
 		h = ysize = reader.height
