@@ -545,7 +545,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		# Returns the icon to show for incoming and outgiong hyperlinks.
 		links = self.node.context.hyperlinks
 		is_src, is_dst = links.findnodelinks(self.node)
-		is_dangling = 0
+		is_dangling = links.nodehasdanglinganchor(self.node)
 ##		print 'DBG: getlinkicon', node, is_src, is_dst
 		rv = []
 		if is_dangling:
