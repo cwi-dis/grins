@@ -42,8 +42,9 @@ import WMEVENTS
 
 def ITEMrange(fr, to): return range(fr, to+1)
 # Dialog info
-from mw_resources import ID_DIALOG_LINKEDIT
+from mw_resources import ID_DIALOG_LINKBROWSE, ID_DIALOG_LINKEDIT
 
+# Browser window dialog
 ITEM_LEFT_ATITLE=1
 ITEM_LEFT_NODE=2
 ITEM_LEFT_NODESELECT=3
@@ -69,29 +70,32 @@ ITEM_LINKS_EDIT=16
 ITEM_LINKS_DELETE=17
 ITEMLIST_LINKS=ITEMrange(ITEM_LINKS_TITLE, ITEM_LINKS_DELETE)
 
-ITEM_CUR_TITLE=18
-ITEM_DIR_TITLE=19
-ITEM_DIR_RIGHT=20
-ITEM_DIR_LEFT=21
-ITEM_DIR_BOTH=22
-ITEM_TYPE_TITLE=23
-ITEM_TYPE_JUMP=24
-ITEM_TYPE_CALL=25
-ITEM_TYPE_FORK=26
-ITEM_CANCEL=27
-ITEM_OK=28
+ITEM_BROWSER_BALLOONHELP=18
+ITEMLIST_BROWSER_ALL=ITEMrange(ITEM_LEFT_ATITLE, ITEM_BROWSER_BALLOONHELP)
 
-ITEM_BALLOONHELP=29
 
-ITEMLIST_EDITGROUP=ITEMrange(ITEM_CUR_TITLE, ITEM_OK)
+# Editor window dialog
+ITEM_DIR_TITLE=1
+ITEM_DIR_RIGHT=2
+ITEM_DIR_LEFT=3
+ITEM_DIR_BOTH=4
+ITEM_TYPE_TITLE=5
+ITEM_TYPE_JUMP=6
+ITEM_TYPE_CALL=7
+ITEM_TYPE_FORK=8
+ITEM_CANCEL=9
+ITEM_OK=10
+
+ITEM_EDITOR_BALLOONHELP=1
+
 ITEMLIST_DIR=ITEMrange(ITEM_DIR_TITLE, ITEM_DIR_BOTH)
 ITEMLIST_TYPE=ITEMrange(ITEM_TYPE_TITLE, ITEM_TYPE_FORK)
 
-ITEMLIST_ALL=ITEMrange(ITEM_LEFT_ATITLE, ITEM_BALLOONHELP)
+ITEMLIST_EDITOR_ALL=ITEMrange(ITEM_DIR_TITLE, ITEM_EDITOR_BALLOONHELP)
 
 __version__ = "$Id$"
 
-class LinkEditDialog(windowinterface.MACDialog):
+class LinkBrowserDialog(windowinterface.MACDialog):
 	def __init__(self, title, dirstr, typestr, menu1, cbarg1, menu2, cbarg2):
 		"""Create the LinkEditor dialog.
 
@@ -112,8 +116,8 @@ class LinkEditDialog(windowinterface.MACDialog):
 		cbarg2 -- any object -- argument passed on to
 			callbacks related to the right list
 		"""
-		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_LINKEDIT,
-				ITEMLIST_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
+		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_LINKBROWSE,
+				ITEMLIST_BROWSER_ALL)
 		self._window.register(WMEVENTS.WindowExit, self._close_window, ())
 		
 		self._left_client_data = cbarg1
@@ -160,26 +164,9 @@ class LinkEditDialog(windowinterface.MACDialog):
 			self.link_edit_callback()
 		elif item == ITEM_LINKS_DELETE:
 			self.link_delete_callback()
-		elif item in ITEMLIST_DIR:
-			self._dirclick(item-ITEM_DIR_RIGHT)
-		elif item in ITEMLIST_TYPE:
-			self._typeclick(item-ITEM_TYPE_JUMP)
-			
-		elif item == ITEM_CANCEL:
-			self.cancel_callback()
-		elif item == ITEM_OK:
-			self.ok_callback()
 		else:
-			print 'Unexpected dialog event, item', item, 'event', event
+			print 'Unexpected dialog browser event, item', item, 'event', event
 		return 1
-		
-	def _typeclick(self, item):
-		self.linktypesetchoice(item)
-		self.linktype_callback()
-		
-	def _dirclick(self, item):
-		self.linkdirsetchoice(item)
-		self.linkdir_callback()
 		
 	def _listclick(self, event, list, cbfunc, cbarg):
 		(what, message, when, where, modifiers) = event
@@ -437,32 +424,81 @@ class LinkEditDialog(windowinterface.MACDialog):
 		"""
 		self._setsensitive([ITEM_LINKS_DELETE], sensitive)
 
-	# Interface to the edit group.
-	def editgrouphide(self):
-		"""Hide the edit group."""
-		self._hideitemlist(ITEMLIST_EDITGROUP)
 
-	def editgroupshow(self):
-		"""Show the edit group."""
-		self._showitemlist(ITEMLIST_EDITGROUP)
+	# Callback functions.  These functions should be supplied by
+	# the user of this class (i.e., the class that inherits from
+	# this class).
+	def delete_callback(self):
+		"""Called when `Delete' button is pressed."""
+		pass
 
+	def show_callback(self, client_data):
+		"""Called when a new entry in the left or right list is selected."""
+		pass
+
+	def anchoredit_callback(self, client_data):
+		"""Called when the left or right `Anchor editor...' button is pressed."""
+		pass
+
+	def anchor_browser_callback(self, client_data):
+		"""Called when the left or right `Push focus' button is pressed."""
+		pass
+
+	def link_new_callback(self):
+		"""Called when the `Add...' button is pressed."""
+		pass
+
+	def link_edit_callback(self):
+		"""Called when the `Edit...' button is pressed."""
+		pass
+
+	def link_delete_callback(self):
+		"""Called when the `Delete' button is pressed."""
+		pass
+
+	def link_browser_callback(self):
+		"""Called when a new selection is made in the middle list."""
+		pass
+
+##XXXX
+
+class LinkEditorDialog(windowinterface.MACDialog):
+	def __init__(self, title, dir, type):
+		"""Create the LinkEditor dialog.
+		"""
+		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_LINKEDIT,
+				ITEMLIST_EDITOR_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
+		self.linkdirsetchoice(dir)
+		self.linktypesetchoice(type)
+		self.show()
+				
+	def _close_window(self, *dummies):
+		self.delete_callback()
+		
 	def oksetsensitive(self, sensitive):
-		"""Make the Add button (in)sensitive.
-
-		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
-		self._setsensitive([ITEM_OK], sensitive)
-
-	def cancelsetsensitive(self, sensitive):
-		"""Make the Add button (in)sensitive.
-
-		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
-		self._setsensitive([ITEM_CANCEL], sensitive)
+		self._setsensitive([ITEM_OK], sensitive)	
+						
+	def do_itemhit(self, item, event):
+		if item in ITEMLIST_DIR:
+			self._dirclick(item-ITEM_DIR_RIGHT)
+		elif item in ITEMLIST_TYPE:
+			self._typeclick(item-ITEM_TYPE_JUMP)
+			
+		elif item == ITEM_CANCEL:
+			self.cancel_callback()
+		elif item == ITEM_OK:
+			self.ok_callback()
+		else:
+			print 'Unexpected link edit dialog event, item', item, 'event', event
+		return 1
+		
+	def _typeclick(self, item):
+		self.linktypesetchoice(item)
+		self.linktype_callback()
+		
+	def _dirclick(self, item):
+		self.linkdirsetchoice(item)
+		self.linkdir_callback()
 
 	def linkdirsetsensitive(self, pos, sensitive):
 		"""Make an entry in the link dir menu (in)sensitive.
@@ -533,9 +569,6 @@ class LinkEditDialog(windowinterface.MACDialog):
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
 	# this class).
-	def delete_callback(self):
-		"""Called when `Delete' button is pressed."""
-		pass
 
 	def linkdir_callback(self):
 		"""Called when a new link direction entry is selected."""
@@ -553,30 +586,3 @@ class LinkEditDialog(windowinterface.MACDialog):
 		"""Called when `Cancel' button is pressed."""
 		pass
 
-	def show_callback(self, client_data):
-		"""Called when a new entry in the left or right list is selected."""
-		pass
-
-	def anchoredit_callback(self, client_data):
-		"""Called when the left or right `Anchor editor...' button is pressed."""
-		pass
-
-	def anchor_browser_callback(self, client_data):
-		"""Called when the left or right `Push focus' button is pressed."""
-		pass
-
-	def link_new_callback(self):
-		"""Called when the `Add...' button is pressed."""
-		pass
-
-	def link_edit_callback(self):
-		"""Called when the `Edit...' button is pressed."""
-		pass
-
-	def link_delete_callback(self):
-		"""Called when the `Delete' button is pressed."""
-		pass
-
-	def link_browser_callback(self):
-		"""Called when a new selection is made in the middle list."""
-		pass

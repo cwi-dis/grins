@@ -28,9 +28,9 @@ M_NONE = 7
 M_EXTERNAL = 8
 M_KEEP = 9
 
-from LinkEditDialog import LinkEditDialog
+from LinkEditDialog import LinkBrowserDialog, LinkEditorDialog
 
-class LinkEdit(ViewDialog, LinkEditDialog):
+class LinkEdit(ViewDialog, LinkBrowserDialog):
 	def __init__(self, toplevel):
 		ViewDialog.__init__(self, 'links_')
 		self.last_geometry = None
@@ -49,11 +49,11 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 		self.right.focus = None
 		self.left.hidden = 0
 		self.right.hidden = 0
-		self.linkedit = 0
 		self.linkfocus = None
 		self.interesting = []
+		self.editor = None
 
-		LinkEditDialog.__init__(self, self.__maketitle(), dirstr,
+		LinkBrowserDialog.__init__(self, self.__maketitle(), dirstr,
 			typestr,
 			[('All', (self.menu_callback, (self.left, M_ALL))),
 			 ('Dangling',
@@ -120,22 +120,24 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 		if not self.is_showing():
 			self.toplevel.showstate(self, 1)
 			self.updateform()
-			LinkEditDialog.show(self)
+			LinkBrowserDialog.show(self)
 			self.toplevel.checkviews()
 			self.editmgr.register(self)
 
 	def hide(self):
 		if self.is_showing():
+			self.editorhide()
 			self.toplevel.showstate(self, 0)
 			self.editmgr.unregister(self)
-			LinkEditDialog.hide(self)
+			LinkBrowserDialog.hide(self)
 			self.toplevel.checkviews()
 
 	def delete_callback(self):
 		self.hide()
 
 	def destroy(self):
-		LinkEditDialog.close(self)
+		self.editorhide()
+		LinkBrowserDialog.close(self)
 		del self.left.browser_setlabel
 		del self.left.browser_show
 		del self.left.browser_hide
@@ -379,10 +381,8 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 				pass
 ##		if str.focus is None and str.anchors:
 ##			str.focus = 0
-##			self.linkedit = 0
 		if str.focus is None and len(str.anchors) == 1:
 			str.focus = 0
-			self.linkedit = 0
 		if str.focus is not None:
 			str.browser_selectitem(str.focus)
 			if scroll:
@@ -397,14 +397,14 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 
 	# This function reloads the link browser or makes it invisible
 	def reloadlinks(self):
+		self.editorhide()
 		slf = self.left.focus
 		srf = self.right.focus
 		if slf is None or (srf is None and not self.right.hidden):
 			# At least one unfocussed anchorlist. No browser
 			self.middlehide()
-			self.editgrouphide()
+			self.editorhide()
 			self.linkfocus = None
-			self.linkedit = 0
 			return
 		lfocus = self.left.anchors[slf]
 		if self.right.hidden:
@@ -429,7 +429,7 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 				self.linkfocus = self.links.index(fvalue)
 			except ValueError:
 				pass
-		if self.links and self.linkfocus is None and not self.linkedit:
+		if self.links and self.linkfocus is None and not self.editor:
 			self.linkfocus = 0
 		if self.linkfocus is None:
 			self.editsetsensitive(0)
@@ -459,32 +459,6 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 			# can only add links between a source and a
 			# destionation anchor
 			self.addsetsensitive(0)
-		if self.linkedit:
-			self.set_radio_buttons()
-			if lanchor is None or ranchor is None:
-				# shouldn't happen
-				return
-			ltype = lanchor[A_TYPE]
-			rtype = ranchor[A_TYPE]
-			if ltype in SourceAnchors and \
-			   rtype in DestinationAnchors:
-				self.linkdirsetsensitive(0, 1)
-			else:
-				self.linkdirsetsensitive(0, 0)
-			if ltype in DestinationAnchors and \
-			   rtype in SourceAnchors:
-				self.linkdirsetsensitive(1, 1)
-			else:
-				self.linkdirsetsensitive(1, 0)
-			if ltype in SourceAnchors and \
-			   ltype in DestinationAnchors and \
-			   rtype in SourceAnchors and \
-			   rtype in DestinationAnchors:
-				self.linkdirsetsensitive(2, 1)
-			else:
-				self.linkdirsetsensitive(2, 0)
-		else:
-			self.editgrouphide()
 
 	# Reload/redisplay all data
 	def updateform(self, str = None):
@@ -497,38 +471,34 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 		if fromfocus and  self.linkfocus is None:
 			print 'LinkEdit: Start editing without focus!'
 			return
-		self.linkedit = 1
 		if fromfocus:
-			self.editlink = self.links[self.linkfocus]
+			editlink = self.links[self.linkfocus]
 		else:
 			slf = self.left.focus
 			srf = self.right.focus
 			if slf is None or (srf is None and not self.right.hidden):
 				print 'LinkEdit: edit without anchor focus!'
-				self.linkedit = 0
 				return
 			n1 = self.left.anchors[slf]
 			n2 = self.right.anchors[srf]
 			if n1 == n2:
 				windowinterface.beep()
-				self.linkedit = 0
 				return
 			a1 = self.__findanchor(n1)
 			a2 = self.__findanchor(n2)
 			if a1 is None or a2 is None:
 				print 'LinkEdit: cannot find anchors!'
-				self.linkedit = 0
 				return
 			if a1[A_TYPE] not in SourceAnchors:
 				# left node can only be destination
 				if a2[A_TYPE] not in SourceAnchors:
 					print 'LinkEdit: 2 destination achors!'
-					self.linkedit = 0
 					return
 				dir = DIR_2TO1
 			else:
 				dir = DIR_1TO2
-			self.editlink = (n1, n2, dir, TYPE_JUMP)
+			editlink = (n1, n2, dir, TYPE_JUMP)
+		self.editorshow(editlink, not fromfocus)
 
 	def __findanchor(self, anchor):
 		if anchor is not None:
@@ -542,33 +512,12 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 					return a
 		return None
 
-	# Update the link edit radio buttons to reflect the state of
-	# the edited link
-	def set_radio_buttons(self):
-		linkdir = self.editlink[DIR]
-		linktype = self.editlink[TYPE]
-		self.linkdirsetchoice(linkdir)
-		self.linktypesetchoice(linktype)
-		self.editgroupshow()
-		if self.linkfocus is None:
-			# We seem to be adding
-			self.oksetsensitive(1)
-			self.cancelsetsensitive(1)
-			return
-		link = self.links[self.linkfocus]
-		if linkdir == link[DIR] and linktype == link[TYPE]:
-			self.oksetsensitive(0)
-			self.cancelsetsensitive(1)
-		else:
-			self.oksetsensitive(1)
-			self.cancelsetsensitive(1)
 
 	# Callback functions
 	def anchor_browser_callback(self, str):
 		focus = str.browser_getselected()
 		if focus != str.focus:
 			str.focus = focus
-			self.linkedit = 0
 			self.updateform(str)
 
 	def show_callback(self, str):
@@ -643,14 +592,13 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 	def link_browser_callback(self):
 		focus = self.middlegetselected()
 		if focus != self.linkfocus:
-			self.linkedit = 0
 			self.linkfocus = focus
 			self.updateform()
 
 	def link_new_callback(self, *dummy):
 		self.linkfocus = None
 		self.startlinkedit(0)
-		self.updateform()
+##		self.updateform()
 
 	def link_delete_callback(self):
 		if self.linkfocus is None:
@@ -668,42 +616,7 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 			print 'LinkEdit: edit w/o focus!'
 			return
 		self.startlinkedit(1)
-		self.updateform()
-
-	def linkdir_callback(self):
-		linkdir = self.linkdirgetchoice()
-		l = self.editlink
-		if l[DIR] != linkdir:
-			self.editlink = l[ANCHOR1], l[ANCHOR2], linkdir, \
-					l[TYPE]
-			self.set_radio_buttons()
-
-	def linktype_callback(self):
-		linktype = self.linktypegetchoice()
-		l = self.editlink
-		if l[TYPE] != linktype:
-			self.editlink = l[ANCHOR1], l[ANCHOR2], l[DIR], \
-					linktype
-			self.set_radio_buttons()
-
-	def ok_callback(self):
-		# XXX Focus isn't correct after an add.
-		if not self.linkedit:
-			print 'LinkEdit: OK while not editing!'
-			return
-		em = self.editmgr
-		if not em.transaction(): return
-		if self.linkfocus is not None:
-			l = self.links[self.linkfocus]
-			em.dellink(l)
-		em.addlink(self.editlink)
-		self.linkedit = 0
-		em.commit()
-		self.updateform()
-
-	def cancel_callback(self):
-		self.linkedit = 0
-		self.updateform()
+##		self.updateform()
 
 	def anchoredit_callback(self, str):
 		if str.focus is None:
@@ -737,9 +650,79 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 
 	def kill(self):
 		self.hide()
+		
+	def editorhide(self):
+		if self.editor:
+			editor = self.editor
+			self.editor = None
+			editor.close()
+			
+	def editorshow(self, editlink, isnew):
+		self.editorhide()
+		self.editor = LinkEditEditor(self, "Hyperlink attributes", editlink, isnew)
+		
+	def editsave(self, editlink):
+		em = self.editmgr
+		if not em.transaction(): return
+		if self.editor:
+			self.editor.changed = 0
+		if self.linkfocus is not None:
+			l = self.links[self.linkfocus]
+			em.dellink(l)
+		em.addlink(editlink)
+		em.commit()
+			
+	def editdone(self):
+		self.updateform()
+		self.editorhide()
 
 
+class LinkEditEditor(LinkEditorDialog):
+	def __init__(self, parent, title, editlink, isnew):
+		LinkEditorDialog.__init__(self, title, editlink[DIR], editlink[TYPE])
+		self.parent = parent
+		self.editlink = editlink
+		self.changed = isnew
+		self.oksetsensitive(self.changed)
+		
+	def close(self):
+		if self.changed:
+			rv = windowinterface.multchoice("This will close the currently open hyperlink\neditor. Do you want to save?",
+				["save", "discard"], 0)
+			if rv == 0:
+				self.parent.editsave(self.editlink)
+		LinkEditorDialog.close(self)
+		self.parent = None
+		self.editlink = None
 
+	def linkdir_callback(self):
+		linkdir = self.linkdirgetchoice()
+		l = self.editlink
+		if l[DIR] != linkdir:
+			self.changed = 1
+			self.editlink = l[ANCHOR1], l[ANCHOR2], linkdir, \
+					l[TYPE]
+			self.linkdirsetchoice(linkdir)
+			self.oksetsensitive(self.changed)
+
+	def linktype_callback(self):
+		linktype = self.linktypegetchoice()
+		l = self.editlink
+		if l[TYPE] != linktype:
+			self.changed = 1
+			self.editlink = l[ANCHOR1], l[ANCHOR2], l[DIR], \
+					linktype
+			self.linktypesetchoice(linktype)
+			self.oksetsensitive(self.changed)
+
+	def ok_callback(self):
+		self.parent.editsave(self.editlink)
+		if self.parent:
+			self.parent.editdone()
+
+	def cancel_callback(self):
+		self.changed = 0
+		self.parent.editdone()
 
 #
 # General functions
