@@ -181,6 +181,16 @@ class EditMgr:
 		else:
 			raise MMExc.AssertError, 'bad setsyncarcdelay call'
 	#
+	# Hyperlink operations
+	#
+	def addlink(self, link):
+		self.addstep('addlink', link)
+		self.context.hyperlinks.addlink(link)
+
+	def dellink(self, link):
+		self.addstep('dellink', link)
+		self.context.hyperlinks.dellink(link)
+	#
 	# Channel operations
 	#
 	def addchannel(self, name, i, type):
