@@ -229,7 +229,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		win32window.Window.__init__(self)
 		DropTarget.DropTarget.__init__(self)
 		self._toolbarCombo = []
-
+		
 		# menu support
 		self._menu = None		# Dynamically created rightmousemenu
 		self._popupmenu = None	# Statically created rightmousemenu (for views)
@@ -247,6 +247,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 
 		# full screen player
 		self.__fsPlayer = None
+
+		# 
+		self._createEmbedded = 0
 
 	# Create the OS window and set the toolbar	
 	def createOsWnd(self,title):
@@ -560,21 +563,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		l,t,r,b=self.GetClientRect()
 		self._canvas=self._rect=(l,t,r-l,b-t)
 	
-	# Called when a new document is opened
-	def newdocumentXXX(self,cmifdoc,adornments,commandlist):
-		if not self._cmifdoc:
-			self.setdocument(cmifdoc,adornments,commandlist)
-			return self
-		else:
-			frame = MDIFrameWnd()
-			frame.create(self._qtitle['frame'])
-			frame.init_cmif(None, None, 0, 0,self._qtitle['frame'],
-				UNIT_MM,None,self.get_commandlist('frame'))
-			frame.setdocument(cmifdoc,adornments,commandlist)
-			return frame
 
 	# Associate this frame with the document
-	def setdocument(self,cmifdoc,adornments,commandlist):
+	def setdocument(self,cmifdoc,adornments,commandlist, embedded=0):
+		self._createEmbedded = embedded
 		self._cmifdoc=cmifdoc
 		import urllib
 		basename=urllib.unquote(cmifdoc.basename)
@@ -617,7 +609,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		if strid=='pview_':
 			exporting = adornments.get('exporting')
 			toplevel = __main__.toplevel
-			if toplevel.is_embedded():
+			if toplevel.is_embedded() or self._createEmbedded:
 				return self.newEmbedded(x, y, w, h, title, units, adornments, canvassize, commandlist, strid, bgcolor)
 			elif exporting:
 				return self.newExport(x, y, w, h, title, units, adornments,canvassize, commandlist,strid, bgcolor)
@@ -648,7 +640,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 	def newEmbedded(self, x, y, w, h, title, units = UNIT_MM, adornments=None, canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
 		id, hwnd =  __main__.toplevel.get_last_embedded_hwnd()
 		import embedding
-		wnd = embedding.EmbeddedWnd(self, w, h, units, bgcolor, hwnd, title, id)
+		wnd = embedding.EmbeddedWnd(self, w, h, units, bgcolor, title, id, hwnd)
 		__main__.toplevel.set_embedded_wnd(id, wnd)
 		return wnd
 
@@ -1766,3 +1758,4 @@ class ChildFrameForm(window.MDIChildWnd):
 	# Target for commands that are dissabled
 	def OnUpdateCmdDissable(self,cmdui):
 		cmdui.Enable(0)
+ 
