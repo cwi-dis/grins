@@ -1,4 +1,5 @@
 # Color assignments (RGB)
+import settings;
 
 BGCOLOR = settings.get('structure_bgcolor')
 LEAFCOLOR = settings.get('structure_leafcolor')
