@@ -574,7 +574,7 @@ class HierarchyView(HierarchyViewDialog):
 			x = x * self.mcanvassize[0]
 			y = y * self.mcanvassize[1]
 		obj = self.scene_graph.get_clicked_obj_at((x,y))
-		print "DEBUG: mouse0release, object is: ", obj
+##		print "DEBUG: mouse0release, object is: ", obj
 		if obj:
 			obj.mouse0release((x,y))
 			self.draw()
@@ -1172,7 +1172,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.select_widget(clicked_widget, scroll=0)
 		elif isinstance(clicked_widget, StructureWidgets.MMWidgetDecoration):
 			select_me = clicked_widget.get_mmwidget()
-			self.select_widget(select_me)
+			self.select_widget(select_me, scroll=0)
 		else:
 			print "DEBUG: no widget selectable."
 
