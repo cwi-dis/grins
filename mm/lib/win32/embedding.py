@@ -20,6 +20,7 @@ WM_USER_MOUSE_CLICKED  = win32con.WM_USER+9
 WM_USER_MOUSE_MOVED  = win32con.WM_USER+10
 WM_USER_SETPOS = win32con.WM_USER+11
 WM_USER_SETSPEED = win32con.WM_USER+12
+WM_USER_GETPOS = win32con.WM_USER+13
 
 STOPPED, PAUSING, PLAYING = range(3)
 UNKNOWN = -1
@@ -32,20 +33,20 @@ class ListenerWnd(GenWnd.GenWnd):
 		self.create()
 		self._docmap = {}
 		self._slidermap = {}
+		from __main__ import commodule
+		commodule.SetPyListener(self)
+
 		self.HookMessage(self.OnOpen, WM_USER_OPEN)
 		self.HookMessage(self.OnClose, WM_USER_CLOSE)
 		self.HookMessage(self.OnPlay, WM_USER_PLAY)
 		self.HookMessage(self.OnStop, WM_USER_STOP)
 		self.HookMessage(self.OnPause, WM_USER_PAUSE)
-		self.HookMessage(self.OnGetStatus, WM_USER_GETSTATUS)
 		self.HookMessage(self.OnSetWindow, WM_USER_SETHWND)
 		self.HookMessage(self.OnUpdate, WM_USER_UPDATE)
 		self.HookMessage(self.OnMouseClicked, WM_USER_MOUSE_CLICKED)
 		self.HookMessage(self.OnMouseMoved, WM_USER_MOUSE_MOVED)
 		self.HookMessage(self.OnSetPos, WM_USER_SETPOS)
 		self.HookMessage(self.OnSetSpeed, WM_USER_SETSPEED)
-		self.HookMessage(self.OnTimer, win32con.WM_TIMER)
-		self.__timerid = self.SetTimer(1,100)
 
 	def OnDestroy(self, params):
 		if self.__timerid:
@@ -66,25 +67,23 @@ class ListenerWnd(GenWnd.GenWnd):
 		self._slidermap[params[2]] = SliderPeer(frame._cmifdoc, params[2])
 	
 	def OnClose(self, params):
-		frame = self._docmap.get(params[2])
-		if frame: frame.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CLOSE].id)
-		del self._docmap[params[2]]
-		del self._slidermap[params[2]]
+		id = params[2]
+		frame = self._docmap.get(id)
+		if frame: frame.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CLOSE].id)
+		del self._docmap[id]
+		del self._slidermap[id]
 
 	def OnPlay(self, params):
 		frame = self._docmap.get(params[2])
-		if frame: frame.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PLAY].id)
+		if frame: frame.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PLAY].id)
 
 	def OnStop(self, params):
 		frame = self._docmap.get(params[2])
-		if frame: frame.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.STOP].id)
+		if frame: frame.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.STOP].id)
 
 	def OnPause(self, params):
 		frame = self._docmap.get(params[2])
-		if frame: frame.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PAUSE].id)
-
-	def OnGetStatus(self, params):
-		print 'OnGetStatus'
+		if frame: frame.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PAUSE].id)
 
 	def OnSetWindow(self, params):
 		frame = self._docmap.get(params[2])
@@ -122,9 +121,11 @@ class ListenerWnd(GenWnd.GenWnd):
 		speed = 0.001*params[3]
 		self._slidermap[params[2]].setSpeed(speed)
 
-	def OnTimer(self, params):
-		for slider in self._slidermap.values():
-			slider.OnTimer(params)
+	def GetPos(self, id):
+		return int(1000*self._slidermap[id].getPos())
+
+	def GetState(self, id):
+		return self._slidermap[id].getState()
 
 ############################
 class SliderPeer:
@@ -153,21 +154,21 @@ class SliderPeer:
 		self.updateposcallback(pos)
 		self.__updatepeer = 1
 
+	def getPos(self):
+		if self.canusetimefunction and\
+			self.canusetimefunction() and self.timefunction:
+			return self.timefunction()
+		return 0
+
+	def getState(self):
+		return self.getstatefunction()
+
 	# set player speed
 	def setSpeed(self, speed):
 		self.__updatepeer = 0
 		pass # setspeed 
 		self.__updatepeer = 1
 
-	# update peer for pos and state
-	def OnTimer(self, params):
-		if self.__updatepeer and self.canusetimefunction and\
-			self.canusetimefunction() and self.timefunction:
-			try:
-				from __main__ import commodule
-				commodule.AdviceSetPos(self.__peerid, self.timefunction())
-				commodule.AdviceSetState(self.__peerid, self.getstatefunction())
-			except: pass
 
 ############################
 import win32window
@@ -216,23 +217,6 @@ class EmbeddedWnd(win32window.DDWndLayer):
 			parent = self._peerwnd.GetParent()
 			if parent:
 				parent.SetWindowText(title)
-	#
-	# Playback query support
-	#
-	def getTime(self):
-		player = self._smildoc.player
-		if not player: return UNKNOWN
-		scheduler = player.scheduler
-		return scheduler.timefunc()
-
-	def getDuration(self):
-		return -1
-
-	def getState(self):
-		player = self._smildoc.player
-		if not player: return UNKNOWN
-		return player.getstate()
-
 
 	#
 	# paint
