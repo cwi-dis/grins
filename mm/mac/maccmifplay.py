@@ -5,8 +5,13 @@ __version__ = "$Id$"
 #
 
 # First, immedeately disable the console window
-import quietconsole
-quietconsole.install()
+import sys
+if len(sys.argv) > 1 and sys.argv[1] == '-v':
+	del sys.argv[1]
+	print '** Verbose **'
+else:
+	import quietconsole
+	quietconsole.install()
 
 # Next, show the splash screen
 import MacOS
@@ -14,7 +19,6 @@ MacOS.splash(513)
 
 # Now time for real work.
 import os
-import sys
 import string
 import macfs
 
@@ -50,6 +54,7 @@ if not STANDALONE:
 if len(sys.argv) > 1 and sys.argv[1] == '-p':
 	profile = 1
 	del sys.argv[1]
+	print '** Profile **'
 else:
 	profile = 0
 
