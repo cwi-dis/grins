@@ -26,16 +26,15 @@ def ReadFile(url):
 	return rv
 
 def ReadFileContext(url, context):
-	import MMurl
+	import MMurl, urlparse
 	context.setbaseurl(url)
-	utype, rest = MMurl.splittype(url)
+	utype, host, path, params, query, fragment = urlparse.urlparse(url)
 	if not utype or utype == 'file':
 		utype = None
-		host, path = MMurl.splithost(rest)
 		if host == 'localhost':
 			host = None
 	if not utype and not host:
-		root = MMCache.loadcache(MMurl.url2pathname(url), context)
+		root = MMCache.loadcache(MMurl.url2pathname(path), context)
 	else:
 		root = None
 	if root:
@@ -52,7 +51,7 @@ def ReadFileContext(url, context):
 	if not utype and not host:
 		import MMWrite
 		MMWrite.fixroot(root)
-		MMCache.dumpcache(root, MMurl.url2pathname(url))
+		MMCache.dumpcache(root, MMurl.url2pathname(path))
 		MMWrite.unfixroot(root)
 	return root
 
