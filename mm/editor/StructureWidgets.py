@@ -29,7 +29,7 @@ def create_MMNode_widget(node, mother):
 		return SeqWidget(node, mother)
 	elif ntype == 'par':
 		return ParWidget(node, mother)
-	elif ntype == 'alt':				# The switch
+	elif ntype == 'switch':
 		return SwitchWidget(node, mother)
 	elif ntype == 'ext':
 		return MediaWidget(node, mother)
@@ -279,7 +279,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.mother.insertparent('bag')
 
 	def createaltcall(self):
-		self.mother.insertparent('alt')
+		self.mother.insertparent('switch')
 
 	def pastebeforecall(self):
 		self.mother.paste(-1)

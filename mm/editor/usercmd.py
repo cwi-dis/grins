@@ -188,7 +188,7 @@ class NEW_BEFORE_EXCL(_CommandBase):
 	help = 'Create new exclusive node before selected node'
 class NEW_BEFORE_CHOICE(_CommandBase):
 	help = 'Create new choice node before selected node'
-class NEW_BEFORE_ALT(_CommandBase):
+class NEW_BEFORE_SWITCH(_CommandBase):
 	help = 'Create new alt node before selected node'
 class NEW_BEFORE_ANIMATION(_CommandBase):
 	help = 'Create new animation node before selected node'
@@ -214,7 +214,7 @@ class NEW_AFTER_EXCL(_CommandBase):
 	help = 'Create new exclusive node after selected node'
 class NEW_AFTER_CHOICE(_CommandBase):
 	help = 'Create new choice node after selected node'
-class NEW_AFTER_ALT(_CommandBase):
+class NEW_AFTER_SWITCH(_CommandBase):
 	help = 'Create new alt node after selected node'
 class NEW_AFTER_ANIMATION(_CommandBase):
 	help = 'Create new animation node after selected node'
@@ -240,7 +240,7 @@ class NEW_UNDER_EXCL(_CommandBase):
 	help = 'Create new exclusive node under selected node'
 class NEW_UNDER_CHOICE(_CommandBase):
 	help = 'Create new choice node under selected node'
-class NEW_UNDER_ALT(_CommandBase):
+class NEW_UNDER_SWITCH(_CommandBase):
 	help = 'Create new alt node under selected node'
 class NEW_UNDER_ANIMATION(_CommandBase):
 	help = 'Create new animation node under selected node'
@@ -252,7 +252,7 @@ class NEW_EXCL(_CommandBase):
 	help = 'Create new exclusive node above selected node'
 class NEW_CHOICE(_CommandBase):
 	help = 'Create new choice node above selected node'
-class NEW_ALT(_CommandBase):
+class NEW_SWITCH(_CommandBase):
 	help = 'Create new alt node above selected node'
 class NEW_ANIMATION(_CommandBase):
 	help = 'Create new animation node above selected node'

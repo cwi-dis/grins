@@ -130,10 +130,10 @@ MENUBAR=(
 			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_SEQ),
 		)),
 		(FLAG_ALL, CASCADE, 'Switch node', (
-			(FLAG_ALL, ENTRY, 'Parent', None, NEW_ALT),
-			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_ALT),
-			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_ALT),
-			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_ALT),
+			(FLAG_ALL, ENTRY, 'Parent', None, NEW_SWITCH),
+			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_SWITCH),
+			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SWITCH),
+			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_SWITCH),
 		)),
 		(FLAG_CMIF, CASCADE, 'Choice node', (
 			(FLAG_ALL, ENTRY, 'Parent', None, NEW_CHOICE),
@@ -258,9 +258,9 @@ POPUP_HVIEW_LEAF = (
 				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SEQ),
 			)),
 			(FLAG_ALL, CASCADE, 'Switch node', (
-				(FLAG_ALL, ENTRY, 'Parent', None, NEW_ALT),
-				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_ALT),
-				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_ALT),
+				(FLAG_ALL, ENTRY, 'Parent', None, NEW_SWITCH),
+				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_SWITCH),
+				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SWITCH),
 			)),
 			(FLAG_CMIF, CASCADE, 'Choice node', (
 				(FLAG_ALL, ENTRY, 'Parent', None, NEW_CHOICE),
@@ -352,10 +352,10 @@ POPUP_HVIEW_STRUCTURE = (
 				(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_SEQ),
 			)),
 			(FLAG_ALL, CASCADE, 'Switch node', (
-				(FLAG_ALL, ENTRY, 'Parent', None, NEW_ALT),
-				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_ALT),
-				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_ALT),
-				(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_ALT),
+				(FLAG_ALL, ENTRY, 'Parent', None, NEW_SWITCH),
+				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_SWITCH),
+				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SWITCH),
+				(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_SWITCH),
 			)),
 			(FLAG_CMIF, CASCADE, 'Choice node', (
 				(FLAG_ALL, ENTRY, 'Parent', None, NEW_CHOICE),
