@@ -289,7 +289,7 @@ def main():
 		opts, files = getopt.getopt(sys.argv[1:], 'qj:')
 	except getopt.error, msg:
 		usage(msg)
-	if not files and sys.platform not in ('mac', 'win32'):
+	if not files and sys.platform not in ('darwin', 'mac', 'win32'):
 		usage('No files specified')
 
 	if sys.argv[0] and sys.argv[0][0] == '-':
