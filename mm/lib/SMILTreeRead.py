@@ -934,7 +934,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def AddAttrs(self, node, attributes):
 		node.__syncarcs = []
 		attrdict = node.attrdict
-		pnode = node.GetSchedParent()
 		self.AddTestAttrs(attrdict, attributes)
 		self.AddCoreAttrs(attrdict, attributes)
 		if node.type == 'animate':
@@ -972,6 +971,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			attrdict['file'] = MMurl.basejoin(self.__base, val)
 
 	def __do_sync(self, node, attr, val, attrdict):
+		pnode = node.GetSchedParent()
 		if attr == 'begin' and \
 		   pnode is not None and \
 		   pnode.type == 'seq' and \
