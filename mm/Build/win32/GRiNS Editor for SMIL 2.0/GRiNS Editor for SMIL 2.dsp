@@ -129,6 +129,10 @@ SOURCE=.\M__AssetsView.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M__ErrorsView.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M__FSPlayerView.c
 # End Source File
 # Begin Source File
@@ -398,6 +402,14 @@ SOURCE=.\M_EditMgr.c
 # Begin Source File
 
 SOURCE=.\M_embedding.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_ErrorsView.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_ErrorsViewDialog.c
 # End Source File
 # Begin Source File
 
@@ -1061,6 +1073,10 @@ SOURCE=.\M_SMILCssResolver.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_smiltime.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_SMILTreeRead.c
 # End Source File
 # Begin Source File
@@ -1165,10 +1181,6 @@ SOURCE=.\M_svgrender.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_svgtime.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_svgtypes.c
 # End Source File
 # Begin Source File
@@ -1210,6 +1222,10 @@ SOURCE=.\M_token.c
 # Begin Source File
 
 SOURCE=.\M_tokenize.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_ToolbarIcons.c
 # End Source File
 # Begin Source File
 
