@@ -122,20 +122,27 @@ class MMNodeContext:
 	# Timing computation
 	#
 	def needtimes(self, which):
-		# XXXX For now
+		if not which in ('virtual', 'bandwidth'):
+			raise 'Unknown time-type %s'%which
+		if which != 'virtual':
+			# For the bandwidth-dependent times we need the virtual times first
+			self.needtimes('virtual')
 		if not self.root:
 			uid = self.uidmap.keys()[0]
 			self.root = self.uidmap[uid].GetRoot()
+			if not self.root:
+				raise 'Cannot find root for this document'
+		if which == 'bandwidth':
+			import BandwidthCompute
+			BandwidthCompute.compute_bandwidth(self.root, storetiming='bandwidth')
 		import Timing
-		if self.root:
-			Timing.computetimes(self.root)
+		Timing.computetimes(self.root, which)
 		# XXX Temp
 		for node in self.uidmap.values():
 			timeobj = node.GetTimesObject(which)
 			timeobj.t0 = node.t0
 			timeobj.t1 = node.t1
 			timeobj.t2 = node.t2
-			timeobj.downloadtime = 0
 			del node.t0
 			del node.t1
 			del node.t2
@@ -1130,10 +1137,10 @@ class _TimingInfo:
 		self.t0 = 'error'
 		self.t1 = 'error'
 		self.t2 = 'error'
-		self.downloadtime = 0
+		self.downloadlag = 0
 		
 	def GetTimes(self):
-		return self.t0, self.t1, self.t2, self.downloadtime
+		return self.t0, self.t1, self.t2, self.downloadlag
 	
 class MMNode:
 	# MMNode is the base class from which other Node classes are implemented.
@@ -1674,14 +1681,14 @@ class MMNode:
 	def GetTimes(self, which='virtual'):
 		if not self.timing_info_dict.has_key(which):
 			self.context.needtimes(which)
-		t0, t1, t2, downloadtime = self.timing_info_dict[which].GetTimes()
+		t0, t1, t2, downloadlag = self.timing_info_dict[which].GetTimes()
 		begindelay = 0.0
 		if self.attrdict.has_key('beginlist'):
 			arcs = self.attrdict['beginlist']
 			for arc in arcs:
 				if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
 					begindelay = arc.delay
-		return t0, t1, t2, downloadtime, begindelay
+		return t0, t1, t2, downloadlag, begindelay
 		
 	def GetTimesObject(self, which='virtual'):
 		if not self.timing_info_dict.has_key(which):
@@ -1690,6 +1697,22 @@ class MMNode:
 		
 	def ClearTimesObjects(self):
 		self.timing_info_dict = {}
+		
+	def GetDelays(self, which):
+		# Returns begin delay and download lag delay for timing of type 'which'. Does
+		# not recompute anything; in fact this method is there only for the t0/t1 recomputation
+		# in the Timing module.
+		begindelay = 0.0
+		if self.attrdict.has_key('beginlist'):
+			arcs = self.attrdict['beginlist']
+			for arc in arcs:
+				if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
+					begindelay = arc.delay
+		downloadlag = 0.0
+		if self.timing_info_dict.has_key(which):
+			dummy, dummy, dummy, downloadlag = self.timing_info_dict[which].GetTimes()
+		print 'GetDelays', which, begindelay, downloadlag, self
+		return begindelay, downloadlag
 	#
 	# Presentation values management
 	#
