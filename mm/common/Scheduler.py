@@ -400,6 +400,7 @@ class SchedulerContext:
 				if node.playing not in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 					# ignore end event if not playing
 					if debugevents: print 'node not playing',parent.timefunc()
+					node.endtime = (timestamp, arc.getevent())
 					parent.updatetimer()
 					return
 				if debugevents: print 'terminating node',parent.timefunc()
@@ -568,6 +569,12 @@ class SchedulerContext:
 		# fill is remove, we don't play.  Duration is
 		# determined from the real duration and the min and
 		# max times.
+		runchild = 1
+		if hasattr(node, 'endtime'):
+			tm, ev = node.endtime
+			if tm == timestamp or ev in ('begin', 'end'):
+				runchild = 0
+			del node.endtime
 		ndur = node.calcfullduration(self)
 		mintime, maxtime = node.GetMinMax()
 		if ndur is None:
@@ -579,8 +586,6 @@ class SchedulerContext:
 			ndur = max(maxtime, ndur) # don't play longer than this
 		if ndur >= 0 and timestamp + ndur <= parent.timefunc() and node.GetFill() == 'remove':
 			runchild = 0
-		else:
-			runchild = 1
 		srdict = pnode.gensr_child(node, runchild, path = path, sctx = self, curtime = parent.timefunc())
 		self.srdict.update(srdict)
 		if debugdump: self.dump()
@@ -635,6 +640,8 @@ class SchedulerContext:
 			# cancel any dependant arcs
 			deparcs = arc.dstnode.deparcs[ev]
 			arc.dstnode.deparcs[ev] = []
+			if arc.timestamp == timestamp:
+				return
 			if arc.isstart and cancel_gensr:
 				self.cancel_gensr(arc.dstnode)
 			for a in deparcs:
