@@ -256,7 +256,12 @@ class Node:
 
 		self.pxleft, self.pxwidth, self.pxtop, self.pxheight = self._getMediaSpaceArea()
 		self._onGeomChanged()
-		
+	
+	def getAbsPos(self):
+		X, Y = self.container.getAbsPos()
+		x, y = self.left, self.right
+		return X+x, Y+y, w, h
+			
 	def __dump(self):
 		print self.__class__.__name__, self.mmobj, self.getPxGeom(), 'scale=',self.scale, 'media=',self.media
 		for child in self.children:
@@ -811,6 +816,9 @@ class RootNode(RegionNode):
 	def updateTree(self):
 		for child in self.children:
 			child.updateTree()
+	
+	def getAbsPos(self):
+		return 0, 0
 			
 	def _onGeomChanged(self):
 		self.context._onPxValuesChanged(self, self._getPxGeom())
