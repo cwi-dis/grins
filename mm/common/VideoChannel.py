@@ -32,7 +32,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		return 1
 
 	def __ginitCB(self, widget, visual, calldata):
-		self.__context = widget.CreateContext(visual, None, GL_TRUE)
+		self.__context = widget.CreateContext(visual, None, 1)
 
 	def do_hide(self):
 		if self.__context:
@@ -212,8 +212,6 @@ def _selcb():
 
 try:
 	import mv, glX
-	from glconst import *
-	from glXconst import *
 except ImportError:
 	from MpegChannel import *
 	VideoChannel = MpegChannel
