@@ -104,6 +104,7 @@ class MMNodeWidget(Widgets.Widget):	 # Aka the old 'HierarchyView.Object', and t
 		self.node.infoicon = icon
 		self.node.errormessage = msg
 		self.root.dirty = 1	# The root needs redrawing
+		self.root.draw()	# Draw anyway. TODO: bad hack here.
 
 	def getlinkicon(self):
 		# Returns the icon to show for incoming and outgiong hyperlinks.
@@ -1037,7 +1038,7 @@ class MediaWidget(MMNodeWidget):
 
 	def show_mesg(self):
 		if self.node.errormessage:
-			windowinterface.showmessage(self.node.errormessage, parent=self.root.window)
+			windowinterface.showmessage("This node's message:\n\t"+self.node.errormessage, parent=self.root.window)
 
 	def recalc(self):
 		l,t,r,b = self.pos_rel

@@ -716,7 +716,6 @@ class HierarchyView(HierarchyViewDialog):
 		if self.destroynode:
 			self.destroynode.Destroy()
 		self.destroynode = None
-
 		self.refresh_scene_graph();
 
 	def kill(self):
