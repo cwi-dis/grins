@@ -368,8 +368,9 @@ class HierarchyView(HierarchyViewDialog):
 		if self.root.showtime:
 			commands = commands + self.timelinezoomcommands
 		if fntype not in MMTypes.interiortypes and \
+		   fntype not in ('anchor', 'animpar', 'animate', 'prefetch') and \
 		   fnode.GetChannelType() != 'sound' and \
-		   not (self.toplevel.links and self.toplevel.links.islinksrc(fnode)):
+		   self.toplevel.links.findwholenodeanchor(fnode) is None:
 			commands = commands + self.createanchorcommands
 
 		if fnode is not self.root:
