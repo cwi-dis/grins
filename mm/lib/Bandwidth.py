@@ -9,7 +9,6 @@ __version__ = "$Id$"
 import MMAttrdefs
 import os
 from stat import ST_SIZE
-import Duration
 import MMurl
 from urlcache import urlcache
 import string
