@@ -356,9 +356,9 @@ class AttrEditForm(docview.ListView):
 	def onTabKey(self,key):
 		if self._dlgBar:self._dlgBar.SetFocus();
 	def onEnter(self,key):
-		if self._dlgBar:self.call('OK')
+		self.call('OK')
 	def onEsc(self,key):
-		if self._dlgBar:self.call('Cancel')
+		self.call('Cancel')
 
 	# Helper function to set the extented style of the list control
 	def SetExStyle(self,or_style):
