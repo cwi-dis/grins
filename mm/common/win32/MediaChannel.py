@@ -135,7 +135,7 @@ class MediaChannel:
 		clip_end = self.__channel.getclipend(node,'sec')
 		self.__playBegin = clip_begin
 		t0 = self.__channel._scheduler.timefunc()
-		if t0 > node.start_time:
+		if t0 > node.start_time and not self.__channel._exporter:
 			print 'skipping',node.start_time,t0,t0-node.start_time
 			clip_begin = clip_begin + t0 - node.start_time
 		self.__playBuilder.SetPosition(clip_begin)
@@ -348,7 +348,7 @@ class VideoStream:
 		clip_begin = self.__channel.getclipbegin(node,'sec')
 		clip_end = self.__channel.getclipend(node,'sec')
 		t0 = self.__channel._scheduler.timefunc()
-		if t0 > node.start_time:
+		if t0 > node.start_time and not self.__channel._exporter:
 			print 'skipping',node.start_time,t0,t0-node.start_time
 			clip_begin = clip_begin + t0 - node.start_time
 		self.__mmstream.seek(clip_begin)
