@@ -36,7 +36,7 @@ else:
 	wmfapi.CoInitialize()
 		
 class WMWriter:
-	def __init__(self, exporter, dds, profile=20):
+	def __init__(self, exporter, dds, profile=19):
 		self._exporter = exporter
 		self._dds = dds
 		self._writer = None
@@ -72,6 +72,9 @@ class WMWriter:
 			self._writer.EndWriting()
 			self._writing = 0
 
+	#
+	# Update on viewport change
+	# 
 	def update(self, now):
 		now = int(1000.0*now+0.5)
 		now = 100*(now/100)
@@ -84,14 +87,11 @@ class WMWriter:
 		self._lasttm = now
 
 	#
-	#  Audio section
-	#
-
-	#
-	# IRendererAdviceSink for audio
+	# Audio IRendererAdviceSink
 	# 
 	def OnRenderSample(self, ms):
 		if self._writing:
+			self._exporter.audiofragment(ms)
 			self._writer.WriteDSAudioSample(ms, self._audiooffset)
 
 	def OnActive(self):
@@ -101,15 +101,16 @@ class WMWriter:
 	def OnInactive(self):
 		self._writingaudio = 0
 
-	# this should be dissabled if setAudioFormatFromFile is used
 	def OnSetMediaType(self, mt):
 		self._writer.SetDSAudioFormat(mt)
 
+	#
+	#  Audio helper methods
+	#
 
 	# set the audio format to that of the audio/video file
 	def setAudioFormatFromFile(self, filename):
 		dummy  = AudioFormatSetter(self._writer, filename)
-
 
 	# alter filter graph so that audio samples are feeded to the writer
 	def redirectAudioFilter(self, fg, hint=None):
@@ -165,8 +166,10 @@ class AudioFormatSetter:
 
 	def __createFilterGraph(self, filename):
 		fg = dshow.CreateGraphBuilder()
-		fg.RenderFile(filename)
-		
+		try:
+			fg.RenderFile(filename)
+		except:
+			return None
 		# find renderer
 		try:
 			aurenderer=fg.FindFilterByName('Default DirectSound Device')
