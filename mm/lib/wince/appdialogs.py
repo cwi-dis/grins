@@ -148,10 +148,16 @@ class FileDialog:
 		#os.chdir(curdir)
 		if result==wincon.IDOK:
 			import winkernel
-			if cb_ok: 
-				winkernel.SetThreadPriority(wincon.THREAD_PRIORITY_HIGHEST)
+			if cb_ok:
+				try:
+					winkernel.SetThreadPriority(wincon.THREAD_PRIORITY_HIGHEST)
+				except:
+					pass
 				cb_ok(dlg.GetPathName())
-				winkernel.SetThreadPriority(wincon.THREAD_PRIORITY_NORMAL)
+				try:
+					winkernel.SetThreadPriority(wincon.THREAD_PRIORITY_NORMAL)
+				except:
+					pass
 		else:
 			if cb_cancel: cb_cancel()
 	# Returns the filename selected. Must be called after the dialog dismised.
