@@ -1431,10 +1431,9 @@ class HierarchyView(HierarchyViewDialog):
 		if self.selected_widget:
 			self.begin_event_source = self.selected_widget.get_node() # which works even if it's an icon.
 	def create_begin_event_dest(self):
-		if self.selected_widget:
-			n = self.selected_widget.get_node()
-			print "TODO: create event from here to ", n
+		if self.selected_widget and self.begin_event_source:
+			self.selected_widget.get_node().NewBeginEvent(self.begin_event_source, 'activateEvent')
 			
-#def expandnode(node):
-#	# Bad hack. I shouldn't refer to private attrs of a node.
-#	node.collapsed = 0
+def expandnode(node):
+	# Bad hack. I shouldn't refer to private attrs of a node.
+	node.collapsed = 0
