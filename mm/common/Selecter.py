@@ -309,7 +309,7 @@ class Selecter:
 				new_sctx = None
 			if not new_sctx:
 				node = None
-##				print 'bag_event: early termination of bag'
+##				print 'bag_event: early termination of choice node'
 				self.scheduler.event(sctx, (SR.BAG_DONE, bag))
 			else:
 				self.bags_needing_done_ev.append(bag)
@@ -317,7 +317,7 @@ class Selecter:
 		elif event == SR.BAG_STOP:
 			slot = self.findslotbybag(bag)
 			if slot is None:
-				print 'bag_event: Bag not active:', bag
+				print 'bag_event: Choice node not active:', bag
 				self.dumpbaglist()
 				return
 			self.killslot(slot)
@@ -352,7 +352,7 @@ class Selecter:
 			if sctx:
 				str = 'node '
 			else:
-				str = 'bag/alt '
+				str = 'choice/alt '
 			str = str + nodename(mini)
 			str = str + ' in '
 			str = str + nodename(bag)
@@ -366,7 +366,7 @@ class Selecter:
 			if sctx:
 				str = 'node '
 			else:
-				str = 'bag/alt '
+				str = 'choice/alt '
 			str = str + nodename(mini)
 			str = str + ' in '
 			str = str + nodename(bag)
@@ -400,7 +400,7 @@ def choosebagitem(node, interactive):
 	if not interactive:
 		return None
 	list.append('Cancel')
-	prompt = 'Please select an item\nfrom the bag:'
+	prompt = 'Please select an item\nfrom the choice node:'
 	choice = windowinterface.multchoice(prompt, list, len(list) - 1)
 	if 0 <= choice < len(children):
 		return children[choice]

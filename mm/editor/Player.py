@@ -365,10 +365,10 @@ class Player(ViewDialog, PlayerCore):
 			menu.append('', '   Calculate timing',
 				    (self.omenu_callback, (1,)))
 		if self.play_all_bags:
-			menu.append('', '\xa4 Play all bags',
+			menu.append('', '\xa4 Play all nodes within choice/alt',
 				    (self.omenu_callback, (2,)))
 		else:
-			menu.append('', '   Play all bags',
+			menu.append('', '   Play all nodes within choice/alt',
 				    (self.omenu_callback, (2,)))
 		if self.ignore_delays:
 			menu.append('', '\xa4 Ignore delays',

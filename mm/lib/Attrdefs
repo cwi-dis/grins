@@ -37,8 +37,8 @@
 (axis (tuple (float) (float)) (-1.0 -1.0) 'Axis' default
 	'Draw axis if >0, specifies tick-interval' channel)
 
-(bag_index (name) undefined 'Bag index' childnodename
-	'Name of child used as index' normal)
+(bag_index (name) undefined 'Choice index' childnodename
+	'Name of child auto-started when choice node plays' normal)
 
 (base_window (name) 'undefined' 'Channel base window' basechannelname
 	'Name of window in which channelwin is created' raw)
