@@ -140,8 +140,6 @@ class EditMgr:
 	# player state interface
 	#
 	def setplayerstate(self, nodetype, nodeobject):
-		if not features.SYNCHRONIZE_PLAYERSTATE in features.feature_set:
-			return		
 		if (nodetype, nodeobject) == self.playerstate:
 			return
 		if self.playerstate_busy: raise MMExc.AssertError, 'recursive playerstate'

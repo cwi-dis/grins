@@ -34,7 +34,6 @@ __version__ = "$Id$";
     SOURCE,
     
     UNIFIED_FOCUS,						# All views share their focus
-    SYNCHRONIZE_PLAYERSTATE,            # the player state is synchonized beetween. All views (eq: when you pause, start play, and end play)
 
     # Different capabilities within the hierarchy view
     H_TRANSITIONS,
@@ -44,4 +43,4 @@ __version__ = "$Id$";
     H_DROPBOX,                          # Show an empty drop box at the end of a sequence.
     H_COLLAPSE,                         # Enable internal node collapsing.
     H_TIMESTRIP,						# Show snap!-like documents with correct toplevel par/seq
-] = range(25)                           # don't forget to update this range!
+] = range(24)                           # don't forget to update this range!
