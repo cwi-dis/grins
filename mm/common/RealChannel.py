@@ -57,7 +57,7 @@ class RealEngine:
 		
 	def stopusing(self):
 		if self.usagecount <= 0:
-			raise error, 'RealEngine usage count <= 0'
+			raise error, 'RealEngine usage count <= 0 (internal error).'
 		self.usagecount = self.usagecount - 1
 		if NEEDTICKER and self.usagecount == 0:
 			self._stopticker()
@@ -75,7 +75,7 @@ class RealEngine:
 		elif os.name == 'posix':
 			self.engine.EventOccurred((0, 0, 0, (0, 0), 0))
 		else:
-			raise error, 'Unknown environment (_tick)'
+			raise error, 'Unknown environment in _tick (internal error).'
 
 
 class RealChannel:
@@ -84,7 +84,7 @@ class RealChannel:
 
 	def __init__(self, channel):
 		if not self.__has_rma_support:
-			raise error, "No RealPlayer playback support in this version"
+			raise error, "No RealPlayer playback support in this version."
 		self.__channel = channel
 		self.__rmaplayer = None
 		self.__qid = None
@@ -133,7 +133,7 @@ class RealChannel:
 		if url is None:
 			url = self.__channel.getfileurl(node)
 		if not url:
-			self.__channel.errormsg(node, 'No URL set on this node')
+			self.__channel.errormsg(node, 'No URL set on node.')
 			return 0
 		url = MMurl.canonURL(url)
 		mediarepeat = MMAttrdefs.getattr(node, 'mediaRepeat')
@@ -165,7 +165,7 @@ class RealChannel:
 		try:
 			self.__rmaplayer.OpenURL(url)
 		except rma.error:
-			raise error, "Cannot open file: `%s'" % url
+			raise error, "Cannot open: %s" % url
 		
 		t0 = self.__channel._scheduler.timefunc()
 		if t0 > start_time:
@@ -175,7 +175,7 @@ class RealChannel:
 			try:
 				self.__rmaplayer.Begin()
 			except rma.error:
-				raise error, "Cannot open file: `%s'" % url
+				raise error, "Cannot open: %s" % url
 		self.__engine.startusing()
 		self.__using_engine = 1
 		return 1
@@ -247,7 +247,7 @@ class RealChannel:
 	def ErrorOccurred(self,str):
 		if realenginedebug:
 			print 'RealChannel.ErrorOccurred', self
-		windowinterface.settimer(0.1,(self.__channel.errormsg,(None,str)))
+		windowinterface.settimer(0.1,(self.__channel.errormsg,(None,'RealPlayer error: %s.' % str)))
 
 	def pauseit(self, paused):
 		if self.__rmaplayer:
@@ -281,4 +281,4 @@ class RealChannel:
 			try:
 				self.__rmaplayer.Pause()
 			except rma.error, arg:
-				windowinterface.settimer(0.1,(self.__channel.errormsg,(None,arg)))
+				windowinterface.settimer(0.1,(self.__channel.errormsg,(None,'RealPlayer error: %s.'%arg)))

@@ -21,17 +21,17 @@ class VideoChannel(ChannelWindowThread):
 		if same and self.armed_display:
 			return 1
 		if node.type != 'ext':
-			self.errormsg(node, 'Node must be external')
+			self.errormsg(node, 'Node must be external.')
 			return 1
 		url = self.getfileurl(node)
 		if not url:
-			self.errormsg(node, 'No URL set on this node')
+			self.errormsg(node, 'No URL set on node.')
 			return 1
 		try:
 			filename = MMurl.urlretrieve(url)[0]
 			fp = open(filename, 'rb')
 		except IOError, msg:
-			self.errormsg(node, url + ':\n' + msg[1])
+			self.errormsg(node, 'Cannot open: %s\n\n%s.' % (url, msg[1]))
 			return 1
 		try:
 			import MMAttrdefs
@@ -113,7 +113,7 @@ class VideoChannel(ChannelWindowThread):
 
 	def defanchor(self, node, anchor, cb):
 		import windowinterface
-		windowinterface.showmessage('The whole window will be hot.')
+		windowinterface.showmessage('The whole item will be sensitive.')
 		cb(anchor)
 
 	def stoparm(self):

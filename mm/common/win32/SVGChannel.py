@@ -36,17 +36,17 @@ class SVGChannel(Channel.ChannelWindow):
 	
 	def do_arm(self, node, same=0):
 		if node.type != 'ext':
-			self.errormsg(node, 'Node must be external')
+			self.errormsg(node, 'Node must be external.')
 			return 1
 		
 		url = self.getfileurl(node)
 		if not url:
-			self.errormsg(node, 'No URL set on node')
+			self.errormsg(node, 'No URL set on node.')
 			return 1
 		
 		from winversion import osversion
 		if osversion.isWin9x():
-			self.errormsg(node, 'SVG preview is not supported on Windows 9x versions')
+			self.errormsg(node, 'SVG preview is not supported on Windows 9x versions.')
 			return 1
 
 		if svgdom.doccache.hasdoc(url):
@@ -57,7 +57,7 @@ class SVGChannel(Channel.ChannelWindow):
 			except IOError, arg:
 				if type(arg) is type(self):
 					arg = arg.strerror
-				self.errormsg(node, 'Cannot resolve URL "%s": %s' % (url, arg))
+				self.errormsg(node, 'Cannot open: %s\n\n%s.' % (url, arg))
 				return 1
 			
 			source = u.read()
@@ -190,18 +190,18 @@ class SVGOsChannel(Channel.ChannelWindow):
 	
 	def do_arm(self, node, same=0):
 		if node.type != 'ext':
-			self.errormsg(node, 'Node must be external')
+			self.errormsg(node, 'Node must be external.')
 			return 1
 		f = self.getfileurl(node)
 		if not f:
-			self.errormsg(node, 'No URL set on node')
+			self.errormsg(node, 'No URL set on node.')
 			return 1
 		try:
 			f = MMurl.urlretrieve(f)[0]
 		except IOError, arg:
 			if type(arg) is type(self):
 				arg = arg.strerror
-			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
+			self.errormsg(node, 'Cannot open: %s\n\n%s.' % (f, arg))
 			return 1
 		
 		if self.HAS_SVG_SUPPORT: 
@@ -211,11 +211,11 @@ class SVGOsChannel(Channel.ChannelWindow):
 					try:
 						self.window.CreateSvgCtrl()
 					except:
-						self.errormsg(node, 'Failed to create SVG control.\nCheck that the control has been installed properly')
+						self.errormsg(node, 'Failed to create SVG control.\nCheck that the control has been installed properly.')
 					else:
 						self.window.SetSvgSrc(f)
 		else:
-			self.errormsg(node, 'No SVG support detected on this system')
+			self.errormsg(node, 'No SVG support on this system.')
 		return 1
 
 	def stopplay(self, node, curtime):

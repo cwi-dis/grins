@@ -29,12 +29,8 @@ class RealAudioChannel(Channel.ChannelAsync):
 	def do_play(self, node, curtime):
 		if not self.__rc.playit(node):
 			import windowinterface, MMAttrdefs
-			name = MMAttrdefs.getattr(node, 'name')
-			if not name:
-				name = '<unnamed node>'
-			chtype = self.__class__.__name__[:-7] # minus "Channel"
-			windowinterface.showmessage('No playback support for %s on this system\n'
-						    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
+			self.errormsg(node, 'No playback support for %s on this system.\n'
+						     % chtype)
 			self.playdone(0, curtime)
 
 	# toggles between pause and run

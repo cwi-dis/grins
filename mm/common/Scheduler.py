@@ -20,6 +20,12 @@ debugtimer = 0
 debugevents = 0
 debugdump = 0
 
+# A complicated error message for a technical simple case.
+NODE_NOT_RUN="""Not rendered.
+
+The duration, freeze and other constraints
+caused this item to be skipped completely."""
+
 SCHEDULE_DEPTH = 3			# how deep we should go scheduling sync arcs
 					# a value < 3 gave various continuation problems
 
@@ -612,7 +618,7 @@ class SchedulerContext:
 		if not found:
 			# we didn't find a time interval
 			if debugevents: print 'not allowed to start',node,parent.timefunc()
-			node.set_infoicon('error', 'node not run')
+			node.set_infoicon('error', NODE_NOT_RUN)
 			srdict = pnode.gensr_child(curtime, node, runchild = 0, sctx = self)
 			self.srdict.update(srdict)
 			ev = (SR.SCHED_DONE, node)
@@ -760,7 +766,7 @@ class SchedulerContext:
 			parent.event(self, (SR.SCHED, node), timestamp)
 		else:
 			if debugevents: print 'trigger, no run',parent.timefunc()
-			node.set_infoicon('error', 'node not run')
+			node.set_infoicon('error', NODE_NOT_RUN)
 			node.startplay(timestamp)
 			timestamp = timestamp + ndur # we know ndur >= 0
 			node.stopplay(timestamp)

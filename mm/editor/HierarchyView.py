@@ -1189,7 +1189,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Test for invalid targets.
 		if t == ('imm','brush','animate','prefetch'):
 			self.draw()
-			windowinterface.showmessage('destination node is an immediate node, change to external?', mtype = 'question', callback = (self.cvdrop, (obj.node, window, event, params)), parent = self.window)
+			windowinterface.showmessage('Drop target is an immediate node. Change to external?', mtype = 'question', callback = (self.cvdrop, (obj.node, window, event, params)), parent = self.window)
 			return
 		else:
 			interior = (obj.node.GetType() in MMNode.interiortypes)
@@ -1234,7 +1234,7 @@ class HierarchyView(HierarchyViewDialog):
 			if features.lightweight and \
 			   obj.node.GetChannelName() not in ctx.compatchannels(url):
 				self.draw()
-				windowinterface.showmessage("file not compatible with channel type `%s'" % obj.node.GetChannelType(), mtype = 'error', parent = self.window)
+				windowinterface.showmessage("File not compatible with channel type %s." % obj.node.GetChannelType(), mtype = 'error', parent = self.window)
 				return
 			em = self.editmgr
 			if not em.transaction():
@@ -1320,9 +1320,10 @@ class HierarchyView(HierarchyViewDialog):
 		lightweight = features.lightweight
 		node = self.get_selected_node()
 		if node is None:
+			# Should not happen.
 			self.draw()
 			windowinterface.showmessage(
-				'There is no selection to insert into',
+				'There is no selection to insert into.',
 				mtype = 'error', parent = self.window)
 			return
 
@@ -1333,9 +1334,10 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			pnode = node
 		if parent is None and where != 0:
+			# Should not happen.
 			self.draw()
 			windowinterface.showmessage(
-				"Can't insert before/after the root",
+				"Cannot insert before or after the root.",
 				mtype = 'error', parent = self.window)
 			return
 
@@ -1506,15 +1508,17 @@ class HierarchyView(HierarchyViewDialog):
 		# Inserts a parent node before this one.
 		# XXX TODO: rewrite me.
 		if not self.get_selected_widget():
+			# Should not happen.
 			windowinterface.showmessage(
-				'There is no selection to insert at',
+				'There is no selection to insert at.',
 				mtype = 'error', parent = self.window)
 			return None
 		node = self.get_selected_widget().get_node()
 		parent = node.GetParent()
 		if parent is None:
+			# Should not happen.
 			windowinterface.showmessage(
-				"Can't insert above the root",
+				"Canot insert above the root.",
 				mtype = 'error', parent = self.window)
 			return
 
@@ -1576,14 +1580,16 @@ class HierarchyView(HierarchyViewDialog):
 
 		nodeList = self.editmgr.getclip()
 		if len(nodeList) == 0:
+			# Should not happen.
 			windowinterface.showmessage(
-			    'The clipboard does not contain a node to paste',
+			    'The clipboard does not contain a node to paste.',
 			    mtype = 'error', parent = self.window)
 			return
 		fnode = self.get_selected_node()
 		if fnode is None:
+			# Should not happen.
 			windowinterface.showmessage(
-				'There is no selection to paste into',
+				'There is no selection to paste into.',
 			 	mtype = 'error', parent = self.window)
 			return
 		self.toplevel.setwaiting()
@@ -1615,8 +1621,9 @@ class HierarchyView(HierarchyViewDialog):
 			# Get the parent
 			parent = focus.GetParent()
 			if parent is None:
+				# Should not happen.
 				windowinterface.showmessage(
-					"Can't insert before/after the root",
+					"Cannot insert before or after the root.",
 					mtype = 'error', parent = self.window)
 				node.Destroy()
 				return 0
@@ -1624,8 +1631,8 @@ class HierarchyView(HierarchyViewDialog):
 			# Special condition for animate
 			ntype = self.get_selected_widget().get_node().GetType()
 			if ntype not in MMNode.interiortypes and \
-			   (ntype != 'ext' or
-			    node.GetChannelType() != 'animate'):
+				   (ntype != 'ext' or node.GetChannelType() != 'animate'):
+				# Should not happen.
 				windowinterface.showmessage('Selection is a leaf node!',
 							    mtype = 'error', parent = self.window)
 				node.Destroy()
@@ -1743,7 +1750,7 @@ class HierarchyView(HierarchyViewDialog):
 			dstwidget = dstwidget.mmwidget
 		dstnode = dstwidget.node
 		if cmd == 'move' and srcnode.IsAncestorOf(dstnode):
-			windowinterface.showmessage("You cannot move a node to its children")
+			windowinterface.showmessage("You cannot move a node to one of its children.")
 			if mustdestroy:
 				mustdestroy.Destroy()
 			self.draw()
@@ -2219,12 +2226,12 @@ class HierarchyView(HierarchyViewDialog):
 		# Never the less..
 		if self.selected_icon and len(self.selected_icon.arrowto) > 0:
 			if len(self.selected_icon.arrowto) > 1:
-				windowinterface.showmessage("This node has more than one associated event!", mtype='error', parent=self.window)
+				# XXXX To be fixed, this is silly.
+				windowinterface.showmessage("This node has more than one associated event, selecting the first one.", mtype='error', parent=self.window)
 				return
-			else:
-				other_icon = self.selected_icon.arrowto[0]
-				self.select_widget(other_icon)
-				self.draw()
+			other_icon = self.selected_icon.arrowto[0]
+			self.select_widget(other_icon)
+			self.draw()
 
 	def merge_parent(self):
 		# This merges a child node with it's parent.
@@ -2241,19 +2248,23 @@ class HierarchyView(HierarchyViewDialog):
 		# first check if this can happen.
 		widget = self.get_selected_widget()
 		if widget is None:
-			self.popup_error("No selected node!")
+			# Should not happen
+			self.popup_error("No selected node.")
 			return
 		if not isinstance(widget, StructureWidgets.MMNodeWidget):
-			self.popup_error("You can only merge nodes!")
+			# Should not happen.
+			self.popup_error("You can only merge nodes.")
 			return
 		child = widget.node
 		if not child.parent:
-			self.popup_error("The root node has no parent to merge with!")
+			# Should not happen.
+			self.popup_error("The root node has no parent to merge with.")
 			return
 		parent = child.GetParent()
 		# Now, check that this node is an only child.
 		if len(parent.GetChildren()) != 1:
-			self.popup_error("You can only merge a node with it's parents if it has no siblings.")
+			# Should not happen
+			self.popup_error("You can only merge a node with its parent if it has no siblings.")
 			return
 		# also check that the child is not an immediate node
 		# After a brief discussion with Sjoerd, this shouldn't be a problem.

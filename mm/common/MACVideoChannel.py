@@ -90,12 +90,12 @@ class VideoChannel(ChannelWindowAsync):
 		self.__ready = 0	# set when arm succeeded
 		node.__type = ''
 		if node.type != 'ext':
-			self.errormsg(node, 'Node must be external')
+			self.errormsg(node, 'Node must be external.')
 			return 1
 		if debug: print 'VideoChannel: arm', node
 		fn = self.getfileurl(node)
 		if not fn:
-			self.errormsg(node, 'No URL set on this node')
+			self.errormsg(node, 'No URL set on node.')
 			return 1
 		import MMmimetypes, string
 		mtype = MMmimetypes.guess_type(fn)[0]
@@ -116,14 +116,14 @@ class VideoChannel(ChannelWindowAsync):
 					self.__ready = 1
 			return 1
 		if not QT_AVAILABLE:
-			self.errormsg(node, "QuickTime not available")
+			self.errormsg(node, "QuickTime not available.")
 			return 1
 		try:
 			fn = MMurl.urlretrieve(fn)[0]
 		except IOError, arg:
 			if type(arg) == type(()):
 				arg = arg[-1]
-			self.errormsg(node, 'Cannot open %s: %s'%(fn, arg))
+			self.errormsg(node, 'Cannot open: %s\n\n%s.'%(fn, arg))
 		self.window._mac_setwin()
 		
 		try:
@@ -131,7 +131,7 @@ class VideoChannel(ChannelWindowAsync):
 		except (ValueError, Qt.Error), arg:
 			if type(arg) == type(()):
 				arg = arg[-1]
-			self.errormsg(node, 'QuickTime cannot open %s: %s'%(fn, arg))
+			self.errormsg(node, 'QuickTime cannot open: %s\n\n%s.'%(fn, arg))
 			return 1
 		try:
 			self.arm_movie, d1, d2 = Qt.NewMovieFromFile(movieResRef, 0,
@@ -141,7 +141,7 @@ class VideoChannel(ChannelWindowAsync):
 			Qt.CloseMovieFile(movieResRef)
 			if type(arg) == type(()):
 				arg = arg[-1]
-			self.errormsg(node, 'QuickTime cannot parse %s: %s'%(fn, arg))
+			self.errormsg(node, 'QuickTime cannot parse: %s\n\n%s.'%(fn, arg))
 			return 1
 		self.place_movie(node, self.arm_movie)
 ##		self.make_ready(self.arm_movie)
@@ -333,7 +333,7 @@ class VideoChannel(ChannelWindowAsync):
 					
 	# interface for anchor creation
 	def defanchor(self, node, anchor, cb):
-		windowinterface.showmessage('The whole window will be hot.')
+		windowinterface.showmessage('The whole item will be sensitive.')
 		cb(anchor)
 
 	def prepare_armed_display(self,node):

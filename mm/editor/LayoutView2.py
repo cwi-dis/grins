@@ -2116,13 +2116,15 @@ class LayoutView2(LayoutViewDialog2):
 					clipList.append(node)
 			elif nodeType in (TYPE_REGION, TYPE_VIEWPORT):
 				if nodeRef.isDefault():
-					msg = "you can't copy or cut the default region"
+					# Should not happen.
+					msg = "you cannot copy or cut the default region."
 					windowinterface.showmessage(msg, mtype = 'error')
 					return []
 				if isACopy:
 					clipList.append(nodeRef.DeepCopy())
 				elif len(currentViewportList) == 1 and nodeRef is currentViewportList[0]:
-					msg = "you can't delete or cut the last viewport"
+					# Should not happen
+					msg = "you cannot delete or cut the last viewport."
 					windowinterface.showmessage(msg, mtype = 'error')
 					return []
 				else:
@@ -2271,7 +2273,7 @@ class LayoutView2(LayoutViewDialog2):
 		# check if the viewport already exist
 		for viewportRef in self.getViewportRefList():
 			if viewportRef.name == name:
-				windowinterface.showmessage("A top layout element with the same id already exists", mtype = 'error')
+				windowinterface.showmessage("A top layout element with the same id already exists.", mtype = 'error')
 				return
 		self.applyNewViewport(name)
 		self.setglobalfocus([self.nameToNodeRef(name)])
@@ -2466,13 +2468,13 @@ class LayoutView2(LayoutViewDialog2):
 
 		if error == 4:
 			# show in priority that error
-			windowinterface.showmessage("you can't delete the last viewport", mtype = 'error')
+			windowinterface.showmessage("you cannot delete the last viewport.", mtype = 'error')
 		elif error == 3:
-			windowinterface.showmessage("You can't remove any media from the Layout view.\n Use Cut/Paste or Drag/Drop to move a media.", mtype = 'error')
+			windowinterface.showmessage("You cannot delete media items in the Layout view.", mtype = 'error')
 		elif error == 2:
-			windowinterface.showmessage("You can't remove the default region", mtype = 'error')
+			windowinterface.showmessage("You cannot delete the default region.", mtype = 'error')
 		elif error == 1:
-			ret = windowinterface.GetOKCancel("At least one item that you want to remove contains some medias. Do you want to continue ?", self.toplevel.window)
+			ret = windowinterface.GetOKCancel("The item is not empty, deleting it will move the media items to a default region.", self.toplevel.window)
 			if ret == 0:
 				# ok
 				error = 0
@@ -4333,7 +4335,7 @@ class Viewport(Node):
 				except IOError, arg:
 					if type(arg) is type(self):
 						arg = arg.strerror
-					windowinterface.showmessage('Cannot resolve the trace image URL "%s": %s' % (f, arg), mtype = 'error')
+					windowinterface.showmessage('Cannot open trace image %s:\n %s' % (f, arg), mtype = 'error')
 
 		self._graphicCtrl.setListener(self)
 		

@@ -1041,21 +1041,22 @@ class Channel:
 			# don't put up second error message dialog if we're
 			# already stopping
 			return
+		nmsg = ''
 		if node:
 			node.set_infoicon('error', msg)
 			name = MMAttrdefs.getattr(node, 'name')
-			if not name:
-				name = '<unnamed node>'
-			nmsg = ' node ' + name
-		else:
-			nmsg = ''
+			if name:
+				nmsg = 'Media item ' + name + ': \n'
+			# And give the node focus.
+			if hasattr(self, 'editmgr'):
+				self.editmgr.setglobalfocus([node])
 		if hasattr(self, 'window'):
 			pwindow = self.window
 		else:
 			pwindow = None
 		windowinterface.showmessage(
-			'While arming%s on channel %s:\n%s' %
-				(nmsg, self._name, msg),
+			'%s%s\n\nContinue playing?' %
+				(nmsg, msg),
 			mtype = 'question', parent = pwindow,
 			cancelCallback = (self.__delaystop, ()))
 

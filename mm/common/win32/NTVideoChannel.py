@@ -124,11 +124,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		node.__type = ''
 		node.__subtype = ''
 		if node.type != 'ext':
-			self.errormsg(node, 'Node must be external')
+			self.errormsg(node, 'Node must be external.')
 			return 1
 		url = self.getfileurl(node)
 		if not url:
-			self.errormsg(node, 'No URL set on node')
+			self.errormsg(node, 'No URL set on node.')
 			return 1
 		import MMmimetypes, string
 		mtype = MMmimetypes.guess_type(url)[0]
@@ -218,23 +218,13 @@ class VideoChannel(Channel.ChannelWindowAsync):
 					res =self.__rc.playit(node,windowless=1,start_time=start_time)
 				else:
 					res = self.__rc.playit(node, self._getoswindow(), self._getoswinpos(), start_time = start_time)
-			except RealChannel.error, msg:
-				import windowinterface, MMAttrdefs
-				name = MMAttrdefs.getattr(node, 'name')
-				if not name:
-					name = '<unnamed node>'
-## Don't call this.  The ErrorOccurred callback is called which produces the error message.
-##				windowinterface.showmessage('Error while starting to play node %s on channel %s:\n%s' % (name, self._name, msg), mtype = 'warning')
+				## Don't forward the error
+				## The ErrorOccurred callback is called which produces the error message.
 				self.playdone(0, curtime)
 				return
 			if not res:
-				import windowinterface, MMAttrdefs
-				name = MMAttrdefs.getattr(node, 'name')
-				if not name:
-					name = '<unnamed node>'
-				chtype = self.__class__.__name__[:-7] # minus "Channel"
-				windowinterface.showmessage('No playback support for %s on this system\n'
-							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
+				self.errormsg(node, 'No playback support for %s on this system.\n'
+								 % chtype)
 				self.playdone(0, curtime)
 
 		elif self.__type == 'qt' and MediaChannel.HasQtSupport():
@@ -242,7 +232,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				self.playdone(0, curtime)
 			else:
 				if not self.__qc.playit(node, curtime, self.window, start_time):
-					windowinterface.showmessage('Failed to play media file', mtype = 'warning')
+					self.errormsg(node, 'Could not play QuickTime movie.')
 					self.playdone(0, curtime)
 				
 		else:
@@ -252,7 +242,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				if not self.__windowless_wm_rendering:
 					self.window.CreateOSWindow(rect=self.getMediaWndRect())
 				if not self.__mc.playit(node, curtime, self.window, start_time):
-					windowinterface.showmessage('Failed to play media file', mtype = 'warning')
+					self.errormsg(node, 'Could not play Windows Media file.')
 					self.playdone(0, curtime)
 
 	# toggles between pause and run
@@ -301,7 +291,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	# interface for anchor creation
 	def defanchor(self, node, anchor, cb):
-		windowinterface.showmessage('The whole window will be hot.')
+		windowinterface.showmessage('The whole media item will be sensitive.')
 		cb((anchor[0], anchor[1], [A_SHAPETYPE_RECT,0.0,0.0,1.0,1.0], anchor[3]))
 
 	def prepare_armed_display(self,node):
