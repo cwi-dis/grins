@@ -301,6 +301,28 @@ newMediaPositionObject()
 	return self;
 }
 
+ 
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IEnumFilters* pI;
+} EnumFiltersObject;
+
+staticforward PyTypeObject EnumFiltersType;
+
+static EnumFiltersObject *
+newEnumFiltersObject()
+{
+	EnumFiltersObject *self;
+
+	self = PyObject_NEW(EnumFiltersObject, &EnumFiltersType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
 ////////////////////////////////////////////////////
 
 static char GraphBuilder_AddSourceFilter__doc__[] =
@@ -356,6 +378,31 @@ GraphBuilder_AddFilter(GraphBuilderObject *self, PyObject *args)
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+
+
+static char GraphBuilder_EnumFilters__doc__[] =
+""
+;
+
+static PyObject *
+GraphBuilder_EnumFilters(GraphBuilderObject *self, PyObject *args)
+{
+	HRESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	EnumFiltersObject *obj = newEnumFiltersObject();
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pGraphBuilder->EnumFilters(&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("GraphBuilder_EnumPins", res);
+		Py_DECREF(obj);
+		obj->pI=NULL;
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
 
 static char GraphBuilder_Render__doc__[] =
 ""
@@ -685,6 +732,7 @@ static struct PyMethodDef GraphBuilder_methods[] = {
 	{"QueryIMediaPosition", (PyCFunction)GraphBuilder_QueryIMediaPosition, METH_VARARGS, GraphBuilder_QueryIMediaPosition__doc__},
 	{"QueryIVideoWindow", (PyCFunction)GraphBuilder_QueryIVideoWindow, METH_VARARGS, GraphBuilder_QueryIVideoWindow__doc__},
 	{"QueryIMediaEventEx", (PyCFunction)GraphBuilder_QueryIMediaEventEx, METH_VARARGS, GraphBuilder_QueryIMediaEventEx__doc__},
+	{"EnumFilters", (PyCFunction)GraphBuilder_EnumFilters, METH_VARARGS, GraphBuilder_EnumFilters__doc__},
 	{"Connect", (PyCFunction)GraphBuilder_Connect, METH_VARARGS, GraphBuilder_Connect__doc__},
 	{"Release", (PyCFunction)GraphBuilder_Release, METH_VARARGS, GraphBuilder_Release__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
@@ -792,7 +840,28 @@ BaseFilter_QueryIFileSinkFilter(BaseFilterObject *self, PyObject *args)
 	return (PyObject *) obj;
 }
 
+static char BaseFilter_QueryFilterName__doc__[] =
+""
+;
 
+static PyObject *
+BaseFilter_QueryFilterName(BaseFilterObject *self, PyObject *args)
+{
+	HRESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	FILTER_INFO fi;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pFilter->QueryFilterInfo(&fi);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("BaseFilter_QueryFilterName", res);
+		return NULL;
+	}
+	char buf[256];
+	WideCharToMultiByte(CP_ACP,0,fi.achName,-1,buf,256,NULL,NULL);		
+	return Py_BuildValue("s",buf);
+}
 
 static char BaseFilter_QueryIRealConverter__doc__[] =
 ""
@@ -845,6 +914,7 @@ static struct PyMethodDef BaseFilter_methods[] = {
 	{"FindPin", (PyCFunction)BaseFilter_FindPin, METH_VARARGS, BaseFilter_FindPin__doc__},
 	{"QueryIFileSinkFilter", (PyCFunction)BaseFilter_QueryIFileSinkFilter, METH_VARARGS, BaseFilter_QueryIFileSinkFilter__doc__},
 	{"QueryIRealConverter", (PyCFunction)BaseFilter_QueryIRealConverter, METH_VARARGS, BaseFilter_QueryIRealConverter__doc__},
+	{"QueryFilterName", (PyCFunction)BaseFilter_QueryFilterName, METH_VARARGS, BaseFilter_QueryFilterName__doc__},
 	{"EnumPins", (PyCFunction)BaseFilter_EnumPins, METH_VARARGS, BaseFilter_EnumPins__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
@@ -1257,6 +1327,91 @@ static PyTypeObject EnumPinsType = {
 };
 
 // End of code for EnumPins object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// EnumFilters object 
+
+
+static char EnumFilters_Next__doc__[] =
+""
+;
+
+static PyObject *
+EnumFilters_Next(EnumFiltersObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	BaseFilterObject *obj = newBaseFilterObject();
+	ULONG fetched=0;
+	HRESULT res;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->Next(1,&obj->pFilter,&fetched);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("EnumFilters_Next", res);
+		Py_DECREF(obj);
+		obj->pFilter=NULL;
+		return NULL;
+	}
+	if(fetched==1)
+		return (PyObject*) obj;
+	Py_DECREF(obj);
+	obj->pFilter=NULL;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static struct PyMethodDef EnumFilters_methods[] = {
+	{"Next", (PyCFunction)EnumFilters_Next, METH_VARARGS, EnumFilters_Next__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+EnumFilters_dealloc(EnumFiltersObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+EnumFilters_getattr(EnumFiltersObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(EnumFilters_methods, (PyObject *)self, name);
+}
+
+static char EnumFiltersType__doc__[] =
+""
+;
+
+static PyTypeObject EnumFiltersType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"EnumFilters",			/*tp_name*/
+	sizeof(EnumFiltersObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)EnumFilters_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)EnumFilters_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	EnumFiltersType__doc__ /* Documentation string */
+};
+
+// End of code for EnumFilters object 
 ////////////////////////////////////////////
 
 /////////////////////////////////////////////
