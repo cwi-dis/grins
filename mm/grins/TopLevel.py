@@ -28,9 +28,9 @@ class TopLevel(TopLevelDialog):
 		else:
 			# remote file
 			self.dirname = ''
-		if base[-5:] == '.cmif':
-			self.basename = base[:-5]
-		elif base[-4:] == '.smi':
+##		if base[-5:] == '.cmif':
+##			self.basename = base[:-5]
+		if base[-4:] == '.smi':
 			self.basename = base[:-4]
 		elif base[-5:] == '.smil':
 			self.basename = base[:-5]
@@ -167,9 +167,9 @@ class TopLevel(TopLevelDialog):
 		if mtype in ('application/x-grins-project', 'application/smil'):
 			import SMILTreeRead
 			self.root = SMILTreeRead.ReadFile(self.filename, self.printfunc)
-		elif mtype == 'application/x-grins-cmif':
-			import MMRead
-			self.root = MMRead.ReadFile(self.filename)
+##		elif mtype == 'application/x-grins-cmif':
+##			import MMRead
+##			self.root = MMRead.ReadFile(self.filename)
 		else:
 			import SMILTreeRead
 			if mtype is None or \
@@ -238,8 +238,10 @@ class TopLevel(TopLevelDialog):
 				import MMmimetypes, MMurl
 				utype, url2 = MMurl.splittype(url)
 				mtype = MMmimetypes.guess_type(url)[0]
-				if mtype in ('application/smil', 'application/x-grins-project', \
-					'application/x-grins-cmif'):
+				if mtype in ('application/smil',
+					     'application/x-grins-project',
+##					     'application/x-grins-cmif',
+					     ):
 					# in this case, the document is handle by grins
 					top = TopLevel(self.main, url)
 				else:
@@ -307,7 +309,7 @@ class TopLevel(TopLevelDialog):
 		rv = []
 		alist = MMAttrdefs.getattr(self.root, 'anchorlist')
 		for a in alist:
-			rv.append((fn, a[A_ID]))
+			rv.append((fn, a.aid))
 		return rv
 
 	def getallexternalanchors(self):
