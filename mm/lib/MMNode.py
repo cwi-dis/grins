@@ -4869,7 +4869,7 @@ required = [
 	'// The format of this file is solely for SMIL 2.0 Interop testing.',
 	'// It must not be supported in publicly-released software.',
 	]
-def parsemarkerfile(url):
+def _parsemarkerfile(url):
 	u = MMurl.urlopen(url)		# can raise IOError
 	if required:
 		line = u.readline()
@@ -4903,3 +4903,15 @@ def parsemarkerfile(url):
 		markers[id] = (start, dur, title)
 	u.close()
 	return markers
+
+import xmmflib
+def parsemarkerfile(url):
+	u = MMurl.urlopen(url)		# can raise IOError
+	data = u.read()
+	u.close()
+	if data[:len(required[0])] == required[0]:
+		return _parsemarkerfile(url)
+	p = xmmflib.XMMFParser(url)
+	p.feed(data)
+	p.close()
+	return p.markers
