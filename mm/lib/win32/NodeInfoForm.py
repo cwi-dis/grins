@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # std win32 modules
 import win32ui,win32con,win32api
 
@@ -11,37 +13,39 @@ import afxres,commctrl
 # GRiNS resource ids
 import grinsRC
 
-class ControlsDict:
-	def __init__(self):
-		self._subwnddict={}	
-	def __nonzero__(self):return 1
-	def __len__(self): return len(self._subwnddict)
-	def __getitem__(self, key): return self._subwnddict[key]
-	def __setitem__(self, key, item): self._subwnddict[key] = item
-	def keys(self): return self._subwnddict.keys()
-	def items(self): return self._subwnddict.items()
-	def values(self): return self._subwnddict.values()
-	def has_key(self, key): return self._subwnddict.has_key(key)
+# General libs
+import string
 
-class DlgBar(window.Wnd,ControlsDict):
+""" @win32doc|NodeInfoForm
+Implements the NodeInfo dialog for the win32 platform according to the specifications
+represented by the interface class NodeInfoDialog in editor/win32/NodeInfoDialog.py
+"""
+
+# Base class for dialog bars
+class DlgBar(window.Wnd,components.ControlsDict):
 	AFX_IDW_DIALOGBAR=0xE805
 	def __init__(self):
-		ControlsDict.__init__(self)
+		components.ControlsDict.__init__(self)
 		AFX_IDW_DIALOGBAR=0xE805
 		window.Wnd.__init__(self,win32ui.CreateDialogBar())
+	# Create the OS window
 	def create(self,frame,resid,align=afxres.CBRS_ALIGN_BOTTOM):
 		self._obj_.CreateWindow(frame,resid,
 			align,self.AFX_IDW_DIALOGBAR)
+		self._template=resid
 	def show(self):
 		self.ShowWindow(win32con.SW_SHOW)
 	def hide(self):
 		self.ShowWindow(win32con.SW_HIDE)
+	# Set callback
 	def set_cbd(self,cbd):
 		self._cbd=cbd
 
+# Main toolbar with Name,Type and Channel controls
 class NodeInfoDlgBar(DlgBar):
 	def __init__(self):
 		DlgBar.__init__(self)
+	# Create the OS window,associate controls with ids, and hook commands
 	def create(self,parent,cbd=None):
 		DlgBar.create(self,parent,grinsRC.IDD_NODE_INFO_BAR,afxres.CBRS_ALIGN_TOP)
 		self['Name']=components.Edit(self,grinsRC.IDC_NODE_NAME)
@@ -52,20 +56,26 @@ class NodeInfoDlgBar(DlgBar):
 		parent.HookCommand(self.OnType,self['Type']._id)
 		parent.HookCommand(self.OnChannel,self['Channel']._id)
 		self._cbd=cbd
+	# Call the callback
 	def call(self,cbid):
 		if self._cbd and cbid in self._cbd.keys():
 			apply(apply,self._cbd[cbid])
+	# Response to name change
 	def OnName(self,id,code):
 		if code==win32con.EN_CHANGE:self.call('Name')
+	# Response to type change
 	def OnType(self,id,code):
 		if code==win32con.CBN_SELCHANGE:self.call('Type')
+	# Response to channel change
 	def OnChannel(self,id,code):
 		if code==win32con.CBN_SELCHANGE :self.call('Channel')
 			
+# A standard dialog bar with a row of buttons (OK,Cancel,Restore,etc)
 
 class StdDlgBar(DlgBar):
 	def __init__(self):
 		DlgBar.__init__(self)
+	# Create the OS window,associate controls with ids, and hook commands
 	def create(self, parent,cbd=None):
 		DlgBar.create(self,parent,grinsRC.IDD_NODE_INFO_CMDBAR,afxres.CBRS_ALIGN_TOP)
 		self['Cancel']=components.Button(self,grinsRC.IDUC_CANCEL)
@@ -78,24 +88,30 @@ class StdDlgBar(DlgBar):
 		for i in self.keys():
 			parent.HookCommand(self.onCmd,self[i]._id)
 			self[i].attach_to_parent()
+	# Call the callback with key
 	def call(self,k):
 		d=self._cbd
 		if d and k in d.keys() and d[k]:
 			apply(apply,d[k])
+	# Response to commands
 	def onCmd(self,id,code):
 		for i in self.keys():
 			if id==self[i]._id:
 				self.call(i)
+	# Enable/dissable control
 	def enable(self,strid,f):
 		self[strid].enable(f)
 							
 
+# Implementation of the Immediate Group 
 
 class ImmGroup(DlgBar):
 	def __init__(self):
 		DlgBar.__init__(self)
 		self._edit=components.Edit(self,grinsRC.IDC_IMM_EDIT)
 		self._support={'settext':self.settext,'gettext':self.gettext,'gettextlines':self.gettextlines}
+
+	# Create the OS window,associate controls with ids
 	def create(self, parent,cbd=None):
 		DlgBar.create(self,parent,grinsRC.IDD_IMM_GROUP,afxres.CBRS_ALIGN_TOP)
 		self._edit.attach_to_parent()
@@ -112,21 +128,35 @@ class ImmGroup(DlgBar):
 		"""
 		if not immtext:immtext=''
 		if type(immtext)==type([]):
-			str=immtext[0]
-			for i in range(1,len(immtext)):
-				str=str+'\r\n'+immtext[i]
+			str=string.join(immtext, '\r\n')
 			self._edit.settext(str)
 		else:
-			self._edit.settext(immtext)
+			str=self.convert2ws(immtext)
+			self._edit.settext(str)
 
 	def gettext(self):
 		"""Return the current text as one string."""
-		str= self._edit.gettext()
+		text = self._edit.gettext()
+		text = string.join(string.split(text, '\r\n'), '\n')
+		text = string.join(string.split(text, '\r'), '\n')
+		return text
 
 	def gettextlines(self):
 		"""Return the current text as a list of strings."""
 		return self._edit.getlines()
 
+	# Convert the text from unix or mac to windows
+	def convert2ws(self,text):
+		nl=string.split(text,'\n')
+		rl=string.split(text,'\r')
+		if len(nl)==len(rl):# line_separator='\r\n'
+			return text
+		if len(nl)>len(rl):	# line_separator='\n'
+			return string.join(nl, '\r\n')
+		if len(nl)<len(rl):	# line_separator='\r'
+			return string.join(rl, '\r\n')
+
+# Implementation of the External Group 
 
 class ExtGroup(DlgBar):
 	def __init__(self):
@@ -135,21 +165,30 @@ class ExtGroup(DlgBar):
 		self._browse=components.Button(self,grinsRC.IDUC_BROWSE)
 		self._call_ed=components.Button(self,grinsRC.IDUC_EDIT)
 		self._support={'setfilename':self.setfilename,'getfilename':self.getfilename}
+	# Create the OS window, and hook commands
 	def create(self, parent,cbd=None):
 		DlgBar.create(self,parent,grinsRC.IDD_EXT_GROUP,afxres.CBRS_ALIGN_TOP)
 		self._edit.attach_to_parent()
 		self._browse.attach_to_parent()
 		self._call_ed.attach_to_parent()
+		parent.HookCommand(self.OnURL,self._edit._id)
 		parent.HookCommand(self.OnBrowse,self._browse._id)
 		parent.HookCommand(self.OnCallEditor,self._call_ed._id)
 		self._cbd=cbd
+	# Response to button browse
 	def OnBrowse(self,id,code):
 		if self._cbd and 'Browse' in self._cbd.keys():
 			apply(apply,self._cbd['Browse'])
+	# Response to button CallEditor
 	def OnCallEditor(self,id,code):
 		if self._cbd and 'CallEditor' in self._cbd.keys():
 			apply(apply,self._cbd['CallEditor'])
-		
+	# Response to Url change
+	def OnURL(self,id,code):
+		if code==win32con.EN_CHANGE:
+			if self._cbd and 'URL' in self._cbd.keys():
+				apply(apply,self._cbd['URL'])
+				
 	# Interface to the external part.  This part consists of a
 	# text field with a URL (with or without the protocol, and if
 	# without protocol, absolute or relative) and a `Browser...'
@@ -166,6 +205,7 @@ class ExtGroup(DlgBar):
 		"""Return the value of the filename text field."""
 		return self._edit.gettext()
 
+# Implementation of the Internal Group 
 
 class IntGroup(DlgBar):
 	def __init__(self):
@@ -173,12 +213,14 @@ class IntGroup(DlgBar):
 		self._list=components.ListBox(self,grinsRC.IDC_INT_LIST)
 		self._open=components.Button(self,grinsRC.IDC_OPENCHILD)
 		self._support={'setchildren':self.setchildren,'getchild':self.getchild}
+	# Create the OS window, and hook commands
 	def create(self, parent,cbd=None):
 		DlgBar.create(self,parent,grinsRC.IDD_INT_GROUP,afxres.CBRS_ALIGN_TOP)
 		self._list.attach_to_parent()
 		self._open.attach_to_parent()
 		parent.HookCommand(self.OnOpenChild,self._open._id)
 		self._cbd=cbd
+	# Response to button open
 	def OnOpenChild(self,id,code):
 		if self._cbd and 'OpenChild' in self._cbd.keys():
 			apply(apply,self._cbd['OpenChild'])
@@ -205,15 +247,13 @@ class IntGroup(DlgBar):
 		return self._list.getcursel()
 
 				
-					
-class FormViewBase(docview.FormView,ControlsDict):
-	def __init__(self,doc,id):
-		docview.FormView.__init__(self,doc,id)
-		ControlsDict.__init__(self)
+
+# Implementation of the NodeInfoDialog needed by the core system
 				
-class NodeInfoForm(FormViewBase):
+class NodeInfoForm(docview.FormView,components.ControlsDict):
 	def __init__(self,doc):
-		FormViewBase.__init__(self,doc,grinsRC.IDD_FORM)
+		docview.FormView.__init__(self,doc,grinsRC.IDD_FORM)
+		components.ControlsDict.__init__(self)
 		self._title='NodeInfo Editor'
 		self._nodeinfo=NodeInfoDlgBar()
 		self._cmdbar=StdDlgBar()
@@ -230,6 +270,7 @@ class NodeInfoForm(FormViewBase):
 		for entry in self._ext_group._support.keys():
 			self.__dict__[entry]= self._ext_group._support[entry]		
 
+	# Called after the window has been created. It creates the  helper bars 
 	def OnInitialUpdate(self):
 		frame=self.GetParent()
 		self._nodeinfo.create(frame)
@@ -238,26 +279,28 @@ class NodeInfoForm(FormViewBase):
 		self._imm_group.create(frame)
 		self._int_group.create(frame)
 
-
+	# Adjust dimensions to fit size to bars
 	def fitbars(self):
 		if not self._nodeinfo or not self._cmdbar or not self._cur_group: return
-		rc1=win32mu.Rect(self._nodeinfo.GetWindowRect())
-		rc2=win32mu.Rect(self._cmdbar.GetWindowRect())
-		rc3=win32mu.Rect(self._cur_group.GetWindowRect())
-		from sysmetrics import cycaption,cyborder
+		rc1=win32mu.DlgTemplate(self._nodeinfo._template).getRect()
+		rc2=win32mu.DlgTemplate(self._cmdbar._template).getRect()
+		rc3=win32mu.DlgTemplate(self._cur_group._template).getRect()
+		from sysmetrics import cycaption,cyborder,cxborder,cxframe
 		h=rc1.height()+rc2.height()+rc3.height()+cycaption+2*cyborder+ cycaption/2
 		w=rc1.width()
 		if rc2.width()>w:w=rc2.width()
 		if rc3.width()>w:w=rc3.width()
+		w=w+2*cxframe+2*cxborder
 		flags=win32con.SWP_NOZORDER|win32con.SWP_NOACTIVATE|win32con.SWP_NOMOVE
 		self.GetParent().SetWindowPos(0, (0,0,w,h),flags)
-		#self.GetParent().RecalcLayout()
 
-	# called by mainwnd
+
+	# Called by the framework when this view is activated/deactivated 
 	def onActivate(self,f):
 		pass
 
 	# cmif general interface
+	# Called by the core to close this window
 	def close(self):
 		if hasattr(self,'GetParent'):
 			self.GetParent().DestroyWindow()
@@ -271,6 +314,7 @@ class NodeInfoForm(FormViewBase):
 		self.ShowWindow(win32con.SW_SHOW)
 		self.pop() 
 
+	# Bring window in front of peers
 	def pop(self):
 		if not hasattr(self,'GetParent'):return
 		childframe=self.GetParent()
@@ -287,6 +331,7 @@ class NodeInfoForm(FormViewBase):
 	def OnClose(self):
 		self.call('Cancel')
 
+	# Call the callback with key
 	def call(self,k):
 		d=self._cbdict
 		if d and k in d.keys() and d[k]:
@@ -295,6 +340,7 @@ class NodeInfoForm(FormViewBase):
 	#########################################################
 	# cmif specific interface
 
+	# Core system's initialization of this window
 	def do_init(self, title, channelnames, initchannel, types, inittype,
 		     name, filename, children, immtext, adornments):
 		"""Create the NodeInfo dialog.
@@ -337,7 +383,7 @@ class NodeInfoForm(FormViewBase):
 		self._children=children
 		self._filename=filename
 
-
+	# Display data
 	def setdata(self):	
 		self.settitle(self._title)
 		self.setchannelnames(self._channelnames,self._initchannel)
@@ -349,7 +395,8 @@ class NodeInfoForm(FormViewBase):
 			self._int_group.setchildren(self._children)
 		elif self._filename:
 			self._ext_group.setfilename(self._filename)
-		
+	
+	# Enable callbacks	
 	def enable_cbs(self):
 		self._nodeinfo.set_cbd(self._cbdict)
 		self._cmdbar.set_cbd(self._cbdict)
