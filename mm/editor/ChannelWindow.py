@@ -5,22 +5,20 @@ import gl
 from Dialog import GLDialog
 
 class ChannelWindow(GLDialog):
-	#
-	# Initialization function.
-	#
+
 	def init(self, (title, attrdict)):
 		self.attrdict = attrdict
 		return GLDialog.init(self, title)
-	#
+
 	def show(self):
-		if self.wid <> 0:
-			gl.winset(self.wid)
+		if self.is_showing():
+			self.pop()
 			return
 		GLDialog.show(self)
 		# Use RGB mode
 		gl.RGBmode()
 		gl.gconfig()
-	#
+
 	def load_geometry(self):
 		# Get the window size
 		if self.attrdict.has_key('winsize'):
@@ -33,7 +31,7 @@ class ChannelWindow(GLDialog):
 		else:
 			h, v = -1, -1
 		self.last_geometry = h, v, width, height
-	#
+
 	def save_geometry(self):
 		self.get_geometry() # Make sure last_geometry is up-to-date
 		if self.last_geometry:
@@ -41,4 +39,3 @@ class ChannelWindow(GLDialog):
 			# XXX transaction!
 			self.attrdict['winpos'] = h, v
 			self.attrdict['winsize'] = width, height
-	#
