@@ -34,3 +34,6 @@
 #if __POWERPC__
 #define WITH_RMA_SUPPORT	/* Support for real media types */
 #endif
+#ifndef WITH_RMA_SUPPORT
+#define initrma 0
+#endif
