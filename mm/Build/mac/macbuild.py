@@ -34,7 +34,7 @@ import macfreeze
 # Resources for the dialog
 #
 RESFILE="macbuild.rsrc"
-h = Res.OpenResFile(RESFILE)
+h = Res.FSpOpenResFile(RESFILE, 0)
 DIALOG_ID=512
 I_OK=1
 I_CANCEL=2
@@ -54,7 +54,10 @@ I_SMILPRO_BUILD=14
 I_QTPRO_FREEZE=16
 I_QTPRO_BUILD=17
 
-N_BUTTONS=18			# Last button plus one
+I_SMIL2PLAYER_FREEZE=19
+I_SMIL2PLAYER_BUILD=20
+
+N_BUTTONS=21			# Last button plus one
 
 #
 # Names of the various files/folders
@@ -65,6 +68,16 @@ class PLAYER:
 	
 	SRC="macplayer.py"
 	DIR="build.player"
+	PROJECT="player.prj"
+	#TARGET="Player FAT"
+	TARGET="Player PPC"
+
+class SMIL2PLAYER:
+	FREEZE_I = I_SMIL2PLAYER_FREEZE
+	BUILD_I = I_SMIL2PLAYER_BUILD
+	
+	SRC="macsmil2player.py"
+	DIR="build.player-smil2"
 	PROJECT="player.prj"
 	#TARGET="Player FAT"
 	TARGET="Player PPC"
@@ -109,7 +122,7 @@ class QTPRO:
 	#TARGET="Editor FAT"
 	TARGET="Editor PPC"
 
-ALL=(G2PRO, G2LITE, SMILPRO, QTPRO, PLAYER)
+ALL=(G2PRO, G2LITE, SMILPRO, QTPRO, PLAYER, SMIL2PLAYER)
 
 #
 # Names of the Attrdefs input file and module.
@@ -122,15 +135,23 @@ ATTRDEFS_OUTPUT=":::Lib:Attrdefs.py"
 #
 import aetools
 import AppleEvents
-from Metrowerks_Shell_Suite import Metrowerks_Shell_Suite
-from CodeWarrior_Standard_Suite import CodeWarrior_Standard_Suite
-from Required_Suite import Required_Suite
+OLDAESUPPORT = 0
 
-class MwShell(Metrowerks_Shell_Suite, CodeWarrior_Standard_Suite,
-				Required_Suite, aetools.TalkTo):
-	pass
+if OLDAESUPPORT:
+	from Metrowerks_Shell_Suite import Metrowerks_Shell_Suite
+	from CodeWarrior_suite import CodeWarrior_suite
+	from Metrowerks_Standard_Suite import Metrowerks_Standard_Suite
+	from Required_Suite import Required_Suite
+
+	class MwShell(Metrowerks_Shell_Suite, CodeWarrior_suite, Metrowerks_Standard_Suite,
+					Required_Suite, aetools.TalkTo):
+		pass
+else:
+	import CodeWarrior
+
+	MwShell = CodeWarrior.CodeWarrior
+
 MWERKS_CREATOR="CWIE"
-
 #
 #
 
