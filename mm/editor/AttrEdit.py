@@ -1645,6 +1645,10 @@ class AttrEditor(AttrEditorDialog):
 						pass
 				try:
 					value = b.parsevalue(str)
+				except MParsingError, message:
+					# in this case, the parsing error has been handled by the displayer
+					self.showmessage(message, mtype = 'error')
+					return 1
 				except (ValueError, MTypeError, MSyntaxError), eparam:
 					print "DEBUG: ValueError exception: ", eparam
 					typedef = self.wrapper.getdef(name)[0]
