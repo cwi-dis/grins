@@ -800,21 +800,16 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 
 	# Dispatch mouse events
 	def dispatchMouseEvent(self,point,ev):
-		ws=self._parent._subwindows;n=len(ws);ix=ws.index(self)
 		rc=self.GetClientRect()
-		for i in range(0,n):
-			if ws[i]._transparent in (1,-1) and ws[i]._active_displist==None:
-				continue
-			if not ws[i]._active_displist:
-				continue
-			rc_self=self.MapCoordTo(rc,ws[i])
-			rc_other= ws[i].GetClientRect() 
+		for win in self._parent._subwindows:
+			rc_self=self.MapCoordTo(rc,win)
+			rc_other= win.GetClientRect() 
 			rc_common,ans= Sdk.IntersectRect(rc_self,rc_other)
 			if ans: # they ovelap
 				ptList=[point,]
-				wspt = self.MapWindowPoints(ws[i],ptList)[0]
-				if ws[i].inside(wspt):
-					if ws[i].onMouseEvent(wspt,ev):return 1
+				wspt = self.MapWindowPoints(win,ptList)[0]
+				if win.inside(wspt):
+					if win.onMouseEvent(wspt,ev):return 1
 		else: return 0
 
 
