@@ -498,6 +498,8 @@ class _Event:
 			return None
 
 	def setfd(self, fd):
+		if type(fd) <> type(1):
+			fd = fd.fileno()
 		if fd not in self._fdlist:
 			self._fdlist.append(fd)
 
@@ -547,6 +549,8 @@ class _Event:
 				self.register(win, event, None, None)
 
 	def select_setcallback(self, fd, cb, arg):
+		if type(fd) <> type(1):
+			fd = fd.fileno()
 		if cb == None:
 			self._select_fdlist.remove(fd)
 			del self._select_dict[fd]
