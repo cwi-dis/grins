@@ -1252,59 +1252,33 @@ class MMNode:
 		out0, out1 = self.sync_to
 		arg = self
 		if settings.noprearm:
-			result = [([(SCHED, arg)] + in0, [(PLAY, arg)] + out0)]
+			srlist = [([(SCHED, arg)] + in0, [(PLAY, arg)] + out0)]
 		else:
-			result = [([(SCHED, arg), (ARM_DONE, arg)] + in0,
+			srlist = [([(SCHED, arg), (ARM_DONE, arg)] + in0,
 				   [(PLAY, arg)] + out0)]
-		result.append(
+		fill = self.attrdict.get('fill')
+		if fill is None:
+			if not self.attrdict.has_key('duration') and \
+			   not self.attrdict.has_key('endlist') and \
+			   not self.attrdict.has_key('repeatCount') and \
+			   not self.attrdict.has_key('repeatDur'):
+				fill = 'freeze'
+			else:
+				fill = 'remove'
+		sched_done = [(SCHED_DONE,arg)] + out1
+		sched_stop = []
+		if fill == 'remove':
+			sched_done.append((PLAY_STOP, arg))
+		else:
+			# XXX should be refined
+			sched_stop.append((PLAY_STOP, arg))
+		srlist.append(
 			([(PLAY_DONE, arg)] + in1,
 			 [(SCHED_STOPPING,arg)]))
-		result.append(
-			([(SCHED_STOPPING,arg)],
-			 [(SCHED_DONE,arg)] + out1))
-		result.append(([(SCHED_STOP, arg)],
-			       [(PLAY_STOP, arg)]))
-##		if not Duration.get(self):
-##			# there is no (intrinsic or explicit) duration
-##			# PLAY_DONE comes immediately, so in effect
-##			# only wait for sync arcs
-##			result.append(
-##				([(PLAY_DONE, arg)] + in1,
-##				 [(SCHED_STOPPING,arg)]))
-##			result.append(
-##				([(SCHED_STOPPING,arg)],
-##				 [(SCHED_DONE,arg)] + out1))
-##			result.append(([(SCHED_STOP, arg)],
-##				       [(PLAY_STOP, arg)]))
-##		elif not MMAttrdefs.getattr(self, 'duration'):
-##			# there is an intrinsic but no explicit duration
-##			# keep active until told to stop
-##			# terminate on sync arcs
-##			for ev in in1:
-##				result.append(([ev], [(TERMINATE, self)]))
-##			result.append(
-##				([(PLAY_DONE, arg)],
-##				 [(SCHED_STOPPING,arg)]))
-##			result.append(
-##				([(SCHED_STOPPING,arg)],
-##				 [(SCHED_DONE,arg)] + out1))
-##			result.append(([(SCHED_STOP, arg)],
-##				       [(PLAY_STOP, arg)]))
-##		else:
-##			# there is an explicit duration
-##			# stop when done playing
-##			# terminate on sync arc
-##			for ev in in1:
-##				result.append(([ev], [(TERMINATE, self)]))
-##			result.append(
-##				([(PLAY_DONE, arg)],
-##				 [(SCHED_STOPPING,arg)]))
-##			result.append(
-##				([(SCHED_STOPPING,arg)],
-##				 [(SCHED_DONE,arg), (PLAY_STOP, arg)] + out1))
-##			result.append(([(SCHED_STOP, arg)], []))
+		srlist.append(([(SCHED_STOPPING,arg)], sched_done))
+		srlist.append(([(SCHED_STOP, arg)], sched_stop))
 		srdict = {}
-		for events, actions in result:
+		for events, actions in srlist:
 			action = [len(events), actions]
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
