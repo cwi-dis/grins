@@ -30,6 +30,8 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer)
     , m_pSiteManager(NULL)
     , m_pCCF(NULL)
     , m_pUnkPlayer(pUnkPlayer)
+    , pPythonWindow(NULL)
+    , m_WindowWasCreated(0)
 {
     if (m_pUnkPlayer)
 		{
@@ -42,7 +44,6 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer)
 		m_pUnkPlayer->AddRef();
 		}
     memset(&m_PNxWindow,0,sizeof(PNxWindow));
-    m_WindowWasCreated = 0;
 }
 
 
@@ -56,6 +57,8 @@ ExampleSiteSupplier::~ExampleSiteSupplier()
     PN_RELEASE(m_pSiteManager);
     PN_RELEASE(m_pCCF);
     PN_RELEASE(m_pUnkPlayer);
+    Py_XDECREF(pPythonWindow);
+    pPythonWindow = NULL;
 	}
 
 
