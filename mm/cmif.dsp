@@ -75,6 +75,10 @@ SOURCE=.\common\win32\HtmlChannel.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\common\win32\MediaChannel.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\common\win32\MidiChannel.py
 # End Source File
 # Begin Source File
