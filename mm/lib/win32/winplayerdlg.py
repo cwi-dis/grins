@@ -84,13 +84,7 @@ class PlayerDlgBar(window.Wnd):
 		self.hide()
 	
 	def OnFloatStatus(self, params):
-		try:
-			miniframe = self.GetParent().GetParent()
-		except:
-			pass
-		else:
-			if type(miniframe) == self._miniframetype:
-				self.eraseClose()
+		self.eraseClose()
 			
 	def destroy(self):
 		self.DestroyWindow()
@@ -110,15 +104,23 @@ class PlayerDlgBar(window.Wnd):
 		self._parent.DockControlBar(self)
 
 	def eraseClose(self):
-		if not Preferences.ERASE_CLOSE: return
-		miniframe = self.GetParent().GetParent()
-		menu = miniframe.GetSystemMenu()
-		if menu:
-			try:
-				menu.DeleteMenu(win32con.SC_CLOSE, win32con.MF_BYCOMMAND)
-			except:
-				pass
-		miniframe.DrawMenuBar()
+		if not Preferences.ERASE_CLOSE: 
+			return
+		if not self.IsWindowVisible(): 
+			return
+		try:
+			miniframe = self.GetParent().GetParent()
+		except:
+			return
+		if type(miniframe) == self._miniframetype:
+			menu = miniframe.GetSystemMenu()
+			if menu:
+				try:
+					miniframe.DeleteMenu(win32con.SC_CLOSE, win32con.MF_BYCOMMAND)
+				except:
+					pass
+				else:
+					miniframe.DrawMenuBar()
 
 	def createResourceItems(self, attributes):
 		id = 1
