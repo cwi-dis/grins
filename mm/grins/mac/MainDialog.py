@@ -20,7 +20,7 @@ self.close_callback is also called.
 """
 import usercmd
 import os
-import macfs
+import Carbon.File
 import MMurl
 import windowinterface
 import features
@@ -124,11 +124,11 @@ class MainDialog:
 			aliases=[aliases]
 		for alias in aliases:
 			try:
-				fss, changed = alias.Resolve()
-			except macfs.error, arg:
+				fsr, changed = alias.FSResolveAlias(None)
+			except Carbon.File.error, arg:
 				windowinterface.message("Cannot resolve: %s"%str(arg))
 				return
-			pathname = fss.as_pathname()
+			pathname = fsr.as_pathname()
 			url = MMurl.pathname2url(pathname)
 			self.openURL_callback(url)
 		

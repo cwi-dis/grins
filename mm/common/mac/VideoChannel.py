@@ -162,11 +162,11 @@ class VideoChannel(ChannelWindowAsync):
 		movie_end = movie.GetMovieDuration()
 		self.__extra_end_delay = 0
 		if clipbegin:
-			begin = clipbegin*tbrate
+			begin = int(clipbegin*tbrate)
 		else:
 			begin = 0
 		if clipend:
-			end = clipend*tbrate
+			end = int(clipend*tbrate)
 			if end > movie_end:
 				self.__extra_end_delay = (end-movie_end) / tbrate
 				end = movie_end
@@ -178,7 +178,7 @@ class VideoChannel(ChannelWindowAsync):
 		start_time = node.get_start_time()
 		self.__movieend = start_time + dur
 		if t0 > start_time:
-			extra_delay = (t0-start_time)*tbrate
+			extra_delay = int((t0-start_time)*tbrate)
 		else:
 			extra_delay = 0
 		if debug: print "DBG: movie Rate, end,", tbrate, movie_end
@@ -187,7 +187,13 @@ class VideoChannel(ChannelWindowAsync):
 		if debug: print "DBG: extra_delay, extra_end_delay", extra_delay, self.__extra_end_delay
 		# Next preroll
 		rate = movie.GetMoviePreferredRate()
-		movie.PrerollMovie(begin, rate)
+		try:
+			movie.PrerollMovie(begin, rate)
+		except Qt.Error, arg:
+			if arg[0] == -50:
+				print 'Warning: error -50 from PrerollMovie(%d, %d)' % (begin, rate)
+			else:
+				raise
 		# Now set active area
 		movie.SetMovieActiveSegment(begin, dur)
 		# And go to the beginning of it.
@@ -212,10 +218,10 @@ class VideoChannel(ChannelWindowAsync):
 			fit = 'hidden'
 		if debug: print 'fit=', fit
 		# Compute real scale for scale-to-fit
+		sl, st, sr, sb = screenBox
+		if debug: print 'movie', l, t, r, b
+		if debug: print 'screen', sl, st, sr, sb
 		if fit is not None and fit != 'hidden':
-			sl, st, sr, sb = screenBox
-			if debug: print 'movie', l, t, r, b
-			if debug: print 'screen', sl, st, sr, sb
 			if l == r:
 				maxxscale = 1  # Empty window, so don't divide by 0
 			else:
@@ -226,9 +232,11 @@ class VideoChannel(ChannelWindowAsync):
 				maxyscale = float(sb-st)/(b-t)
 			scale = min(maxxscale, maxyscale)
 			if debug: print 'scale=', scale, maxxscale, maxyscale
-			movieBox = l, t, int(l+(r-l)*scale), int(t+(b-t)*scale)
+			movieBox = sl, st, sl+int((r-l)*scale), sr+int((b-t)*scale)
 			nMovieBox = self._scalerect(screenBox, movieBox, 0)
-			movie.SetMovieBox(nMovieBox)
+		else:
+			nMovieBox = sl, st, sl + (r-l), st + (b-t)
+		movie.SetMovieBox(nMovieBox)
 		
 		movie.SetMovieDisplayClipRgn(screenClip)
 		if debug: print 'placed movie'
