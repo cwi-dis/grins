@@ -110,8 +110,9 @@ class SCHEDDUMP(_CommandBase):
 #
 class PASTE_BEFORE(_CommandBase):
 	help = 'Paste copied/cut node before selected node'
-class PASTE_AFTER(_CommandBase):
-	help = 'Paste copied/cut node after selected node'
+##class PASTE_AFTER(_CommandBase):
+##	help = 'Paste copied/cut node after selected node'
+PASTE_AFTER=PASTE
 class PASTE_UNDER(_CommandBase):
 	help = 'Paste copied/cut node under selected node'
 class NEW_BEFORE(_CommandBase):
