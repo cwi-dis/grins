@@ -277,16 +277,46 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				except string.atoi_error:
 					self.syntax_error('bad bitrate attribute')
 				else:
+					if not attrdict.has_key('system_bitrate'):
+						attrdict['system_bitrate'] = bitrate
+			elif attr == 'systemBitrate':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+				self.__context.attributes['project_boston'] = 1
+				try:
+					bitrate = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('bad bitrate attribute')
+				else:
 					attrdict['system_bitrate'] = bitrate
 			elif attr == 'system-screen-size':
 				res = screen_size.match(val)
 				if res is None:
 					self.syntax_error('bad screen-size attribute')
 				else:
-					attrdict['system_screen_size'] = \
-						tuple(map(string.atoi,
-							  res.group('x','y')))
+					if not attrdict.has_key('system_screen_size'):
+						attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
+			elif attr == 'systemScreenSize':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+				self.__context.attributes['project_boston'] = 1
+				res = screen_size.match(val)
+				if res is None:
+					self.syntax_error('bad screen-size attribute')
+				else:
+					attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
 			elif attr == 'system-screen-depth':
+				try:
+					depth = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('bad screen-depth attribute')
+				else:
+					if not attrdict.has_key('system_screen_depth'):
+						attrdict['system_screen_depth'] = depth
+			elif attr == 'systemScreenDepth':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+				self.__context.attributes['project_boston'] = 1
 				try:
 					depth = string.atoi(val)
 				except string.atoi_error:
@@ -295,25 +325,61 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['system_screen_depth'] = depth
 			elif attr == 'system-captions':
 				if val == 'on':
+					if not attrdict.has_key('system_captions'):
+						attrdict['system_captions'] = 1
+				elif val == 'off':
+					if not attrdict.has_key('system_captions'):
+						attrdict['system_captions'] = 0
+				else:
+					self.syntax_error('bad system-captions attribute')
+			elif attr == 'systemCaptions':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+				self.__context.attributes['project_boston'] = 1
+				if val == 'on':
 					attrdict['system_captions'] = 1
 				elif val == 'off':
 					attrdict['system_captions'] = 0
 				else:
 					self.syntax_error('bad system-captions attribute')
 			elif attr == 'system-language':
+				if not attrdict.has_key('system_language'):
+					attrdict['system_language'] = val
+			elif attr == 'systemLanguage':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+				self.__context.attributes['project_boston'] = 1
 				attrdict['system_language'] = val
 			elif attr == 'system-overdub-or-caption':
+				if val in ('caption', 'overdub'):
+					if not attrdict.has_key('system_overdub_or_caption'):
+						attrdict['system_overdub_or_caption'] = val
+				else:
+					self.syntax_error('bad system-overdub-or-caption attribute')
+			elif attr == 'systemOverdubOrCaption':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+				self.__context.attributes['project_boston'] = 1
 				if val in ('caption', 'overdub'):
 					attrdict['system_overdub_or_caption'] = val
 				else:
 					self.syntax_error('bad system-overdub-or-caption attribute')
 			elif attr == 'system-required':
+				if not attrdict.has_key('system_required'):
+					attrdict['system_required'] = val
+			elif attr == 'systemRequired':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+				self.__context.attributes['project_boston'] = 1
 				attrdict['system_required'] = val
 			elif attr == 'uGroup':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('backgroundColor attribute not compatible with SMIL 1.0')
+				self.__context.attributes['project_boston'] = 1
 				if self.__u_groups.has_key(val):
 					attrdict['u_group'] = val
 				else:
-					self.syntax_error("unknown u-group `%s'" % val)
+					self.syntax_error("unknown uGroup `%s'" % val)
 			elif attr == 'layout':
 				if self.__layouts.has_key(val):
 					attrdict['layout'] = val
@@ -779,7 +845,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				h = float(h) / height
 			if type(b) is type(0):
 				b = float(b) / height
-			attrdict['units'] = UNIT_SCREEN
+			attrdict['units'] = units = UNIT_SCREEN
 			break
 		else:
 			# all the same type or 0/None
@@ -1369,6 +1435,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for attr, val in attributes.items():
 			if attr[:len(GRiNSns)+1] == GRiNSns + ' ':
 				attr = attr[len(GRiNSns)+1:]
+			val = string.strip(val)
 			if attr == 'id':
 				attrdict[attr] = id = val
 				res = xmllib.tagfind.match(id)
@@ -1387,16 +1454,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				try:
 					if val[-1] == '%':
 						val = string.atof(val[:-1]) / 100.0
-						if val < 0 or val > 1:
-							self.syntax_error('region with impossible size')
-							if val < 0: val = 0.0
-							else: val = 1.0
+						if attr in ('width','height') and val < 0:
+							self.syntax_error('region with negative %s' % attr)
+							val = 0.0
 					else:
 						if val[-2:] == 'px':
 							val = val[:-2]
 						val = string.atoi(val)
-						if val < 0:
-							self.syntax_error('region with impossible size')
+						if attr in ('width','height') and val < 0:
+							self.syntax_error('region with negative %s' % attr)
 							val = 0
 				except (string.atoi_error, string.atof_error):
 					self.syntax_error('invalid region attribute value')
@@ -1449,6 +1515,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 
 		if self.__region is not None:
+			if self.__top_layout is None:
+				self.syntax_error('no nested regions allowed in root-layout windows')
 			if self.__context.attributes.get('project_boston') == 0:
 				self.syntax_error('nested regions not compatible with SMIL 1.0')
 			self.__context.attributes['project_boston'] = 1
@@ -1533,7 +1601,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
 		if self.__in_layout != LAYOUT_EXTENDED:
-			self.syntax_error('top-layout not allowed in layout type %s' % LAYOUT_SMIL)
+			self.syntax_error('top-layout not allowed in layout type %s' % SMIL_BASIC)
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('top-layout not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1

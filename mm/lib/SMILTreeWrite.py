@@ -588,13 +588,20 @@ smil_attrs=[
 	("clip-end", lambda writer, node: getcmifattr(writer, node, 'clipend')),
 	("endsync", getterm),
 	("repeat", lambda writer, node:getrepeat(writer, node)),
-	("system-bitrate", lambda writer, node:getrawcmifattr(writer, node, "system_bitrate")),
-	("system-captions", getcaptions),
-	("system-language", lambda writer, node:getrawcmifattr(writer, node, "system_language")),
-	("system-overdub-or-captions", lambda writer, node:getrawcmifattr(writer, node, "system_overdub_or_captions")),
-	("system-required", lambda writer, node:getrawcmifattr(writer, node, "system_required")),
-	("system-screen-size", getscreensize),
-	("system-screen-depth", lambda writer, node:getrawcmifattr(writer, node, "system_screen_depth")),
+	("system-bitrate", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_bitrate")) or None),
+	("system-captions", lambda writer, node:(not writer.smilboston and getcaptions(writer, node)) or None),
+	("system-language", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_language")) or None),
+	("system-overdub-or-captions", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_overdub_or_captions")) or None),
+	("system-required", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_required")) or None),
+	("system-screen-size", lambda writer, node:(not writer.smilboston and getscreensize(writer, node)) or None),
+	("system-screen-depth", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_screen_depth")) or None),
+	("systemBitrate", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_bitrate")) or None),
+	("systemCaptions", lambda writer, node:(writer.smilboston and getcaptions(writer, node)) or None),
+	("systemLanguage", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_language")) or None),
+	("systemOverdubOrCaptions", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_overdub_or_captions")) or None),
+	("systemRequired", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_required")) or None),
+	("systemScreenSize", lambda writer, node:(writer.smilboston and getscreensize(writer, node)) or None),
+	("systemScreenDepth", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_screen_depth")) or None),
 	("choice-index", getbagindex),
 	("uGroup", getugroup),
 	("layout", getlayout),
@@ -949,6 +956,8 @@ class SMILWriter(SMIL):
 					      'midi', 'external'):
 				# top-level channel with window
 				self.top_levels.append(ch)
+				if not self.__subchans.has_key(ch.name):
+					self.__subchans[ch.name] = []
 				if not self.__title:
 					self.__title = ch.name
 			# also check if we need to use the CMIF extension
@@ -965,9 +974,7 @@ class SMILWriter(SMIL):
 		context = node.GetContext()
 		channels = context.channels
 		if self.top_levels:
-			top0 = self.top_levels[0]
-			if not self.__subchans.has_key(top0):
-				self.__subchans[top0] = []
+			top0 = self.top_levels[0].name
 		else:
 			top0 = None
 		for ch in channels:
@@ -1028,7 +1035,10 @@ class SMILWriter(SMIL):
 		"""Write the layout section"""
 		import settings
 		compatibility = settings.get('compatibility')
-		self.writetag('layout') # default: type="text/smil-basic-layout"
+		attrlist = []
+		if self.smilboston:
+			attrlist.append(('type', SMIL_EXTENDED))
+		self.writetag('layout', attrlist)
 		self.push()
 		channels = self.root.GetContext().channels
 		for ch in self.top_levels:
@@ -1280,7 +1290,7 @@ class SMILWriter(SMIL):
 					self.ids_used[name] = 1
 					break
 
-		attributes = self.attributes[xtype]
+		attributes = self.attributes.get(xtype, {})
 		for name, func in smil_attrs:
 			value = func(self, x)
 			# gname is the attribute name as recorded in attributes
