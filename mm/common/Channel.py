@@ -6,6 +6,8 @@ import os
 debug = os.environ.has_key('CHANNELDEBUG')
 import MMAttrdefs
 import windowinterface, WMEVENTS
+from windowinterface import SINGLE, TEXT, HTM, MPEG
+from windowinterface import TRUE, FALSE
 error = 'Channel.error'
 
 channel_device = 1
@@ -20,6 +22,8 @@ PIDLE = 1
 PLAYING = 2
 PLAYED = 3
 
+[ FALSE, TRUE ] = range(2)
+
 def isin(elem, list):
 	# faster than "elem in list"
 	for x in list:
@@ -33,6 +37,7 @@ class Channel:
 	#
 	chan_attrs = ['visible']
 	node_attrs = ['file']
+	_visible = FALSE
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		# Create and initialize a Channel object instance.
@@ -363,7 +368,7 @@ class Channel:
 		if self._armed_node is not node:
 			raise error, 'node was not the armed node '+`self,node`
 		if self._playstate != PIDLE:
-			raise error, 'play not idle'
+			raise error, 'play not idle on '+self._name
 		if self._armstate != ARMED:
 			raise error, 'arm not ready'
 		self._playcontext = self._armcontext
@@ -694,6 +699,8 @@ class Channel:
 class ChannelWindow(Channel):
 	chan_attrs = Channel.chan_attrs + ['base_window', 'base_winoff', 'transparent']
 	node_attrs = Channel.node_attrs + ['duration', 'bgcolor']
+	_visible = TRUE
+	_window_type = SINGLE
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.__init__(self, name, attrdict, scheduler, ui)
@@ -819,10 +826,12 @@ class ChannelWindow(Channel):
 				transparent = 0
 			if self.want_default_colormap:
 				self.window = pchan.window.newcmwindow(pgeom,
-						transparent = transparent)
+						transparent = transparent,
+						type_channel = self._window_type)
 			else:
 				self.window = pchan.window.newwindow(pgeom,
-						transparent = transparent)
+						transparent = transparent,
+						type_channel = self._window_type)
 			if hasattr(self._player, 'editmgr'):
 				menu.append(None)
 				menu.append('', 'resize', (self.resize_window, (pchan,)))
@@ -840,10 +849,14 @@ class ChannelWindow(Channel):
 				x, y = 20, 20
 			if self.want_default_colormap:
 				self.window = windowinterface.newcmwindow(x, y,
-						width, height, self._name)
+					width, height, self._name,
+					visible_channel = self._visible,
+					type_channel = self._window_type)
 			else:
 				self.window = windowinterface.newwindow(x, y,
-						width, height, self._name)
+					width, height, self._name,
+					visible_channel = self._visible,
+					type_channel = self._window_type)
 			self.window.register(WMEVENTS.WindowExit,
 					     self._destroy_callback, None)
 			if hasattr(self._player.toplevel, 'hierarchyview'):
@@ -1151,6 +1164,9 @@ class _ChannelThread:
 				attrdict['widget'] = self.window._form
 				attrdict['gc'] = self.window._gc
 				attrdict['visual'] = self.window._topwindow._visual
+			elif hasattr(self.window, '_hWnd'):
+				# Win32 windowinterface
+				attrdict['HWND'] = self.window._hWnd
 			else:
 				print 'can\' work with this windowinterface'
 				return 0

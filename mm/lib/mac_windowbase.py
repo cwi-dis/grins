@@ -61,6 +61,7 @@ error = 'windowinterface.error'
 Continue = 'Continue'
 FALSE, TRUE = 0, 1
 ReadMask, WriteMask = 1, 2
+SINGLE, HTM, TEXT, MPEG = 0, 1, 2, 3
 
 EVENTMASK=0xffff
 MINIMAL_TIMEOUT=1	# How long we yield at the very least
@@ -367,14 +368,14 @@ class _Toplevel(_Event):
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
 
-	def newwindow(self, x, y, w, h, title, pixmap = 0, transparent = 0):
+	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, transparent = 0):
 		wid, w, h = self._openwindow(x, y, w, h, title)
 		rv = _Window(self, wid, 0, 0, w, h, 0, pixmap, transparent)
 		self._wid_to_window[wid] = rv
 		self._wid_to_title[wid] = title
 		return rv
 
-	def newcmwindow(self, x, y, w, h, title, pixmap = 0, transparent = 0):
+	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, transparent = 0):
 		wid, w, h = self._openwindow(x, y, w, h, title)
 		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, transparent)
 		self._wid_to_window[wid] = rv
@@ -516,13 +517,13 @@ class _CommonWindow:
 		"""Return true if window is closed"""
 		return self._parent is None
 
-	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
+	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, type_channel = SINGLE):
 		"""Create a new subwindow"""
 		rv = _SubWindow(self, self._wid, (x, y, w, h), 0, pixmap, transparent)
 		self._clipchanged()
 		return rv
 
-	def newcmwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
+	def newcmwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, type_channel = SINGLE):
 		"""Create a new subwindow"""
 		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap, transparent)
 		self._clipchanged()
