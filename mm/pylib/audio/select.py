@@ -1,7 +1,6 @@
 
 __version__ = "$Id$"
 
-from audio import Error
 import string
 
 class select:
