@@ -1575,6 +1575,7 @@ class SMILWriter(SMIL):
 			self.pop()
 
 	def writeanimatenode(self, node, root):
+		grins2smil = {'file':'src', 'bgcolor':'backgroundColor',}
 		attrlist = []
 		attributes = self.attributes.get('animate', {})
 		for name, func in smil_attrs:
@@ -1583,12 +1584,16 @@ class SMILWriter(SMIL):
 			   value != attributes[name]:
 				attrlist.append((name, value))
 		for name, value in node.GetAttrDict().items():
+			if name=='attributeName' and grins2smil.has_key(value):
+				value = grins2smil[value]
 			if type(value) == type(1.0):
 				value = '%.3f' % value
 				if value[-4:] == '.000':
 					value = value[:-4]
 			elif type(value) == type(1):
 				value = '%d' % value
+			if name == 'file':
+				name = 'src'
 			if value and attributes.has_key(name) and \
 			   value != attributes[name]:
 				attrlist.append((name, value))
