@@ -21,7 +21,51 @@ class PlayerCommon:
 		self.__rendererNoreuse = {}
 		self.__animateNodeList = []
 		self.__iChannelList = []
-		
+		self.__tabindex = []
+		self.__curentry = None
+
+	def addtabindex(self, tabindex, node, chan):
+		import bisect
+		inode = (tabindex, node, chan)
+		if inode not in self.__tabindex:
+			bisect.insort(self.__tabindex, inode)
+
+	def deltabindex(self, tabindex, node, chan):
+		entry = (tabindex, node, chan)
+		try:
+			i = self.__tabindex.index(entry)
+		except ValueError:
+			# not in list, so nothing to do
+			return
+		del self.__tabindex[i]
+		if self.__curentry == entry:
+			chan.anchor_highlight(node, 0)
+			if self.__tabindex:
+				self.__curentry = self.__tabindex[i % len(self.__tabindex)]
+			else:
+				self.__curentry = None
+
+	def tab(self):
+		if self.__curentry is not None:
+			if len(self.__tabindex) == 1:
+				return
+			i = self.__tabindex.index(self.__curentry) + 1
+			tabindex, node, chan = self.__curentry
+			chan.anchor_highlight(node, 0)
+		elif self.__tabindex:
+			i = 0
+		else:
+			return
+		self.__curentry = self.__tabindex[i % len(self.__tabindex)]
+		tabindex, node, chan = self.__curentry
+		chan.anchor_highlight(node, 1)
+
+	def activate(self):
+		if self.__curentry is None:
+			return
+		tabindex, node, chan = self.__curentry
+		chan.onclick(node)
+				
 	def clearRendererChannels(self):
 		# kill all renderers
 		for node, renderer in self.nodeToRenderer.items():
