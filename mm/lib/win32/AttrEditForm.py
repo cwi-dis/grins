@@ -1207,17 +1207,19 @@ class AttrSheet(dialog.PropertySheet):
 	def createButtons(self):
 		l,t,r,b = self.GetDlgItem(win32con.IDOK).GetWindowRect()
 		h = b-t
-		ctrl = components.Button(self,101)
-		ctrl.create(components.BUTTON(), (0,0,100,h), 'Show all properties')
-		ctrl.setstate(1)
-		ctrl.hookmessage(self.onShowAll, win32con.WM_LBUTTONDOWN)
-		self._showAll = ctrl
+		if self._form._has_showAll:
+			ctrl = components.CheckButton(self,101)
+			ctrl.create(components.CHECKBOX(), (0,0,116,h), 'Show all properties')
+			ctrl.setcheck(self._form._showAll_initial)
+			ctrl.hookmessage(self.onShowAll, win32con.WM_LBUTTONDOWN)
+			self._showAll = ctrl
 
-		ctrl = components.Button(self,102)
-		ctrl.create(components.BUTTON(), (0,0,100,h), 'Follow selection')
-		ctrl.setstate(1)
-		ctrl.hookmessage(self.onFollowSelection, win32con.WM_LBUTTONDOWN)
-		self._followSelection = ctrl
+		if self._form._has_followSelection:
+			ctrl = components.CheckButton(self,102)
+			ctrl.create(components.CHECKBOX(), (0,0,100,h), 'Follow selection')
+			ctrl.setcheck(1)
+			ctrl.hookmessage(self.onFollowSelection, win32con.WM_LBUTTONDOWN)
+			self._followSelection = ctrl
 		
 		# set button font
 		lf = {'name':'', 'pitch and family':win32con.FF_SWISS,'charset':win32con.ANSI_CHARSET}
@@ -1228,24 +1230,28 @@ class AttrSheet(dialog.PropertySheet):
 		elif d.has_key('Microsoft Sans Serif'): # not win2k
 			logfont = {'name':'Microsoft Sans Serif', 'height': 11, 'weight': win32con.FW_MEDIUM, 'charset':win32con.ANSI_CHARSET}
 		if logfont:
-			self._showAll.setfont(logfont)
-			self._followSelection.setfont(logfont)
+			if self._showAll:
+				self._showAll.setfont(logfont)
+			if self._followSelection:
+				self._followSelection.setfont(logfont)
 	
 	def onShowAll(self, params):
-		if self._showAll.ispushed():
-			self._showAll.setstate(0)
-			print 'show most important' 
-		else:
-			self._showAll.setstate(1) 
-			print 'show all' 
+		self._form.call('Showall')
+#		if self._showAll.getcheck():
+#			self._showAll.setcheck(0)
+#			print 'show most important' 
+#		else:
+#			self._showAll.setcheck(1) 
+#			print 'show all' 
 
 	def onFollowSelection(self, params):
-		if self._followSelection.ispushed():
-			self._followSelection.setstate(0) 
-			print 'do not follow selection' 
-		else:
-			self._followSelection.setstate(1) 
-			print 'follow selection' 
+		self._form.call('Followselection')
+#		if self._followSelection.getcheck():
+#			self._followSelection.setcheck(0) 
+#			print 'do not follow selection' 
+#		else:
+#			self._followSelection.setcheck(1) 
+#			print 'follow selection' 
 		
 	def onSize(self, params):
 		if self._showAll:
@@ -1255,7 +1261,8 @@ class AttrSheet(dialog.PropertySheet):
 			msg = win32mu.Win32Msg(params)
 			flags = win32con.SWP_NOSIZE | win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE
 			self._showAll.setwindowpos(0, (6 ,msg.height()-h-dh, w+4, msg.height()-dh), flags)
-			self._followSelection.setwindowpos(0, (w+8 ,msg.height()-h-dh, w+w+4, msg.height()-dh), flags)
+			if self._followSelection:
+				self._followSelection.setwindowpos(0, (w+8 ,msg.height()-h-dh, w+w+4, msg.height()-dh), flags)
 
 
 		

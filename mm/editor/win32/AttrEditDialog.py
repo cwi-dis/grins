@@ -59,12 +59,23 @@ class AttrEditorDialog:
 			'Restore':(self.restore_callback, ()),
 			'Apply':(self.apply_callback, ()),
 			'OK':(self.ok_callback, ()),
+			'Showall': (self.showall_callback, ()),
+			'Followselection': (self.followselection_callback, ()),
 			}
 		w._initattr = initattr
+		# Not sure that this is the right way to pass this info
+		# to AttrEditForm...
+		w._has_showAll = 0
+		w._has_followSelection = 0
+
 		for a in attriblist:
 			a.attach_ui(w)
 		self.__window=w
 		if self.wrapper.canhideproperties():
+			# Not sure that this is the right way to pass this info
+			# to AttrEditForm...
+			w._has_showAll = 1
+			w._showAll_initial = self.show_all_attributes
 			commandlist = [
 				usercmd.SHOWALLPROPERTIES(callback = (self.showall_callback, ()))
 			]
