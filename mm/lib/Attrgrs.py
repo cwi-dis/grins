@@ -67,6 +67,16 @@ attrgrs=(
 		'system_screen_size',
 		]},
 
+	{'name':'preferences1',
+	'title': 'GRiNS preferences',
+	'attrs':[
+		'system_bitrate',
+		'system_captions',
+		'system_language',
+		'system_overdub_or_caption',
+		'html_control',
+		]},
+
 	{'name':'preferences',
 	'title': 'GRiNS preferences',
 	'attrs':[
