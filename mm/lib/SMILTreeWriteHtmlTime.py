@@ -15,6 +15,18 @@ def WriteFileAsHtmlTime(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles =
 	writer.writeAsHtmlTime()
 
 
+not_xhtml_time_elements = ('switch', 'brush', 'prefetch', 'text', 'textstream', )
+
+not_xhtml_time_attrs = ('min', 'max', 'endsync', 'customTest', 'fillDefault', 
+	'restartDefault', 'syncBehaviorDefault','syncToleranceDefault', 'repeat',
+	'regPoint', 'regAlign',
+	'close', 'open', 'pauseDisplay',
+	'showBackground',
+	)
+
+not_xhtml_time_attrs_values = ('prev.', '.activateEvent', 'accessKey')
+
+
 #
 #	XHTML+TIME DTD 
 # 
@@ -31,10 +43,10 @@ class XHTML_TIME:
 		'repeatDur':None,
 	}
 
-
 	__Timing = {'restart':None,
 		'syncBehavior':None,
 		'syncMaster':None,
+		'syncTolerance':None,
 		'timeAction':'visibility'
 	}
 	__Timing.update(__basicTiming)
@@ -91,6 +103,9 @@ class XHTML_TIME:
 	#
 	__allElements = __media_object + __animate_elements + __containers
 
+
+	def hasElement(self, element):
+		return element in __allElements
 
 # scripting support
 
@@ -156,7 +171,15 @@ class SMILHtmlTimeWriter(SMIL):
 
 		self.ch2style = {}
 		self.ids_written = {}
-		
+	
+		self.__warnings = {}
+
+	def showunsupported(self, key):
+		from windowinterface import showmessage
+		if not self.__warnings.has_key(key):
+			msg = '%s: not supported by XHTML+TIME' % key
+			showmessage(msg, mtype = 'warning')
+			self.__warnings[key]=1
 
 	def writeAsHtmlTime(self):
 		write = self.fp.write
@@ -307,6 +330,11 @@ class SMILHtmlTimeWriter(SMIL):
 		for name, func in attrs:
 			value = func(self, x)
 			if value and attributes.has_key(name) and value != attributes[name]:
+				if name in not_xhtml_time_attrs:
+					self.showunsupported(name)
+				for v in not_xhtml_time_attrs_values:
+					if string.find(value, v)>=0:
+						self.showunsupported(v)
 				if interior:
 					attrlist.append((name, value))
 				else:	
@@ -321,10 +349,16 @@ class SMILHtmlTimeWriter(SMIL):
 						transIn = value
 					elif name == 'transOut':
 						transOut = value
-					if name not in ('id', 'top','left','width','height','right','bottom', 'backgroundColor', 'region', 'src', 'transIn', 'transOut'):
+					elif name == 'backgroundColor':
+						pass
+					else:
 						attrlist.append((name, value))
 		
 		if interior:
+			if mtype in not_xhtml_time_elements:
+				self.showunsupported(mtype)
+				return
+
 			if not root:
 				if self.__currRegion!=None:
 					self.pop()
@@ -337,6 +371,9 @@ class SMILHtmlTimeWriter(SMIL):
 				self.pop()
 
 		elif type in ('imm', 'ext'):
+			if mtype in not_xhtml_time_elements:
+				self.showunsupported(mtype)
+				return
 			children = x.GetChildren()
 			if not children:				
 				self.writemedianode(x, nodeid, attrlist, mtype, regionName, src, transIn, transOut)
@@ -368,10 +405,9 @@ class SMILHtmlTimeWriter(SMIL):
 		pushed = 0
 	
 		lch = self.root.GetContext().getchannel(regionName)
-		assert(lch.get('type') == 'layout')
 
 		# 
-		if self.__currRegion==None or self.__currRegion!=lch:
+		if lch and (self.__currRegion==None or self.__currRegion!=lch):
 			if self.__currRegion!=None:
 				self.pop()
 			self.__currRegion = lch
