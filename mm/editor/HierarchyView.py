@@ -500,7 +500,8 @@ class HierarchyView(HierarchyViewDialog):
 			self.scene_graph.addcollisions(None, None)
 			if self.timescale:
 				self.timemapper.calculate()
-				maxx = self.timemapper.time2pixel(self.root.t1, align='right')
+				t0, t1, t2, dummy, dummy = self.root.GetTimes()
+				maxx = self.timemapper.time2pixel(t1, align='right')
 				if maxx > x:
 					x = maxx
 			else:
