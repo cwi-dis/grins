@@ -789,49 +789,44 @@ class LayoutManager(LayoutManagerBase):
 
 	# called by base class OnDraw or OnPaint
 	def paintOn(self, dc):
-		l, t, w, h = self._canvas
-		r, b = l+w, t+h
-
-		rgn = self.getClipRgn()
-
-		# background decoration on dcc
-		dc.FillSolidRect((l, t, r, b),win32mu.RGB(self._bgcolor or (255,255,255)))
+		# fill background
+		lc, tc, rc, bc = dc.GetClipBox()
+		dc.FillSolidRect((lc, tc, rc, bc), win32mu.RGB(self._bgcolor or (255,255,255)))
 
 		# draw objects on dc
 		if self._viewport:
-			self._viewport.paintOn(dc)
-			dc.SelectClipRgn(rgn)
 			self._viewport._draw3drect(dc, self._hasfocus)
+			self._viewport.paintOn(dc)
 			self.drawTracker(dc)
 
-		rgn.DeleteObject()
-
 	def drawTracker(self, dc):
+		v = self._viewport
+		xv, yv, wv, hv = v.LRtoDR(v.getwindowpos(), round=1)
+		ltrbv = xv, yv, xv+wv, yv+hv
+
 		for wnd in self._drawContext._selections:
-			# frame selection with self._selPen
 			rc = wnd.LRtoDR(wnd.getwindowpos(), round=1)
 			l, t, r, b = wnd.ltrb(rc)
-			
-			rgn = self.getCanvasClipRgn()
-			dc.SelectClipRgn(rgn)	
+
+			hsave = dc.SaveDC()
+			dc.ExcludeClipRect(ltrbv)
 			oldpen = dc.SelectObjectFromHandle(self._selPenDot)
 			win32mu.DrawRectanglePath(dc, (l, t, r-1, b-1))
 			dc.SelectObjectFromHandle(oldpen)
+			dc.RestoreDC(hsave)
 
-			rgn = self._viewport.getClipRgn()
-			dc.SelectClipRgn(rgn)
+			hsave = dc.SaveDC()
+			dc.IntersectClipRect(ltrbv)
 			oldpen = dc.SelectObjectFromHandle(self._selPen)
 			win32mu.DrawRectanglePath(dc, (l, t, r-1, b-1))
 			dc.SelectObjectFromHandle(oldpen)
+			dc.RestoreDC(hsave)
 
-			rgn = self.getCanvasClipRgn()
-			dc.SelectClipRgn(rgn)	
 			nHandles = wnd.getDragHandleCount()		
 			for ix in range(1,nHandles+1):
 				x, y, w, h = wnd.getDragHandleRect(ix)
 				dc.FillSolidRect((x, y, x+w, y+h), win32api.RGB(255,127,80))
 				dc.FrameRectFromHandle((x, y, x+w, y+h), self._blackBrush)
-				#dc.PatBlt((x, y), (w, h), win32con.DSTINVERT);
 
 	def hilight(self, f):
 		self._hasfocus = f
@@ -867,12 +862,13 @@ class Viewport(win32window.Window, UserEventMng):
 		self._ctx = context
 		win32window.Window.__init__(self)
 		UserEventMng.__init__(self)
+		self._uidx, self._uidy = 8, 8
 		self.setDeviceToLogicalScale(d2lscale)
 
 		self._cycaption = 0 #win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
 		self._cycaptionlog = 0 # int(self._device2logical*self._cycaption+0.5)
+
 		x, y, w, h = attrdict.get('wingeom')
-		self._rc = (x, y, w, h)
 		units = attrdict.get('units')
 		z = 0
 		transparent = attrdict.get('transparent')
@@ -882,7 +878,10 @@ class Viewport(win32window.Window, UserEventMng):
 				transparent = 0
 			else:
 				transparent = 1
-		self.create(None, self._rc, units, z, transparent, bgcolor)
+
+
+		self.create(None, (self._uidx, self._uidy, w, h), units, z, transparent, bgcolor)
+		self.setDeviceToLogicalScale(d2lscale)
 
 		# adjust some variables
 		self._topwindow = self
@@ -890,10 +889,6 @@ class Viewport(win32window.Window, UserEventMng):
 		# disp list of this window
 		# use shortcut instead of render 
 		self._active_displist = self.newdisplaylist()
-
-		# XXX: test
-		#filename = r'D:\ufs\mmdocuments\smil2time\FLC-Cream.jpg'
-		#self.setImage(filename, fit='fill')
 
 		self._showname = 1
 
@@ -904,6 +899,10 @@ class Viewport(win32window.Window, UserEventMng):
 				bgcolor = self._bgcolor
 		return win32window._ResizeableDisplayList(self, bgcolor)
 
+	def close(self):
+		if self._active_displist:
+			self._active_displist.close()
+
 	# 
 	# interface implementation: function called from an external module
 	#
@@ -911,7 +910,7 @@ class Viewport(win32window.Window, UserEventMng):
 	# return the current geometry
 	def getGeom(self):
 		x, y, w, h = self._rectb
-		return int(x+0.5), int(y+0.5), int(w+0.5), int(h+0.5)
+		return 0, 0, int(w+0.5), int(h+0.5)
 	
 	# add a sub region	
 	def addRegion(self, attrdict, name):
@@ -920,7 +919,6 @@ class Viewport(win32window.Window, UserEventMng):
 
 	# remove a sub region
 	def removeRegion(self, region):
-		
 		# update the selection
 		selectChanged = 0
 		for ind in range(len(self._ctx._selectedList)):
@@ -936,6 +934,10 @@ class Viewport(win32window.Window, UserEventMng):
 			if self._subwindows[ind] is region:
 				del self._subwindows[ind]
 				break
+
+		# do not forget to close region
+		# important resources like images will not be freed 
+		region.close()
 					
 	def setAttrdict(self, attrdict):
 		# print 'setAttrdict', attrdict
@@ -983,6 +985,13 @@ class Viewport(win32window.Window, UserEventMng):
 	def pop(self, poptop=1):
 		pass
 	
+	# override win32window.Window method
+	def setDeviceToLogicalScale(self, d2lscale):
+		win32window.Window.setDeviceToLogicalScale(self, d2lscale)
+		x, y, w, h = self._rectb
+		dx, dy = self.DPtoLP( (self._uidx, self._uidy) )
+		self._rectb = int(dx+0.5), int(dy+0.5), w, h
+
 	def insideCaption(self, point):
 		x, y, w, h = self.getwindowpos()
 		l, t, r, b = x, y-self._cycaptionlog, x+w, y
@@ -1010,8 +1019,8 @@ class Viewport(win32window.Window, UserEventMng):
 		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
 		ltrb = l, t, r, b = x, y, x+w, y+h
 
-		rgn = self.getClipRgn()
-		dc.SelectClipRgn(rgn)
+		hsave = dc.SaveDC()
+		dc.IntersectClipRect(ltrb)
 
 		x0, y0 = dc.SetWindowOrg((-l,-t))
 		if self._active_displist:
@@ -1023,7 +1032,10 @@ class Viewport(win32window.Window, UserEventMng):
 		for w in L:
 			w.paintOn(dc, rc)
 
+		dc.RestoreDC(hsave)
+
 	def _draw3drect(self, dc, hilight=0):
+		hsave = dc.SaveDC()
 		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
 		l, t, r, b = x, y-self._cycaption, x+w, y+h
 		l, t, r, b = l-3, t-3, r+2, b+2
@@ -1037,6 +1049,7 @@ class Viewport(win32window.Window, UserEventMng):
 				dc.Draw3dRect((l,t,r,b),win32api.RGB(c1, c1, c1), win32api.RGB(c2, c2, c2))
 			c1, c2 = c1-15, c2-15
 			l, t, r, b = l+1, t+1, r-1, b-1
+		dc.RestoreDC(hsave)
 
 	def _drawcaption(self, dc):
 		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
@@ -1048,14 +1061,6 @@ class Viewport(win32window.Window, UserEventMng):
 		dc.TextOut(l+4,t-2,self._name)
 		dc.SetTextColor(clr_org)
 
-	def invalidateDragHandles(self):
-		x, y, w, h  = self.LRtoDR(self.getwindowpos(), round=1)
-		delta = 5
-		x = x-delta
-		y = y-delta - self._cycaption
-		w = w+2*delta
-		h = h+2*delta + self._cycaption
-		self.update((x, y, w, h))
 				
 ###########################
 
@@ -1070,7 +1075,7 @@ class Region(win32window.Window, UserEventMng):
 		UserEventMng.__init__(self)
 		self.setDeviceToLogicalScale(d2lscale)
 
-		self._rc = x, y, w, h = attrdict.get('wingeom')
+		x, y, w, h = attrdict.get('wingeom')
 		units = attrdict.get('units')
 		z = attrdict.get('z')
 		transparent = attrdict.get('transparent')
@@ -1080,7 +1085,7 @@ class Region(win32window.Window, UserEventMng):
 				transparent = 0
 			else:
 				transparent = 1
-		self.create(parent, self._rc, units, z, transparent, bgcolor)
+		self.create(parent, (x, y, w, h), units, z, transparent, bgcolor)
 		
 		# disp list of this window
 		# use shortcut instead of render 
@@ -1099,24 +1104,26 @@ class Region(win32window.Window, UserEventMng):
 				bgcolor = self._bgcolor
 		return win32window._ResizeableDisplayList(self, bgcolor)
 	
+	def close(self):
+		if self._active_displist:
+			self._active_displist.close()
+
 	def paintOn(self, dc, rc=None):
 		ltrb = l, t, r, b = self.ltrb(self.LRtoDR(self.getwindowpos(), round=1))
 
-		rgn = self.getClipRgn()
-
-		dc.SelectClipRgn(rgn)
+		hsave = dc.SaveDC()
+		dc.IntersectClipRect(ltrb)
 
 		x0, y0 = dc.SetWindowOrg((-l,-t))
 		if self._active_displist:
-			self._active_displist._render(dc, None)
+			self._active_displist._render(dc, rc)
 		dc.SetWindowOrg((x0,y0))
 
 		L = self._subwindows[:]
 		L.reverse()
 		for w in L:
-			w.paintOn(dc)
+			w.paintOn(dc, rc)
 
-		dc.SelectClipRgn(rgn)
 		if self._showname:
 			dc.SetBkMode(win32con.TRANSPARENT)
 			dc.DrawText(self._name, ltrb, win32con.DT_SINGLELINE|win32con.DT_CENTER|win32con.DT_VCENTER)
@@ -1124,6 +1131,8 @@ class Region(win32window.Window, UserEventMng):
 		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
 		dc.FrameRectFromHandle(ltrb, br)
 		Sdk.DeleteObject(br)
+
+		dc.RestoreDC(hsave)
 
 	def getClipRgn(self, rel=None):
 		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
@@ -1160,7 +1169,6 @@ class Region(win32window.Window, UserEventMng):
 
 	# remove a sub region
 	def removeRegion(self, region):
-		
 		# update the selection
 		selectChanged = 0
 		for ind in range(len(self._ctx._selectedList)):
@@ -1170,12 +1178,15 @@ class Region(win32window.Window, UserEventMng):
 				break
 		if selectChanged:
 			self._ctx._drawContext.selectShapes(self._ctx._selectedList)
-
+		
 		# remove the link with the parent
 		for ind in range(len(self._subwindows)):
 			if self._subwindows[ind] is region:
 				del self._subwindows[ind]
 				break
+		# do not forget to close region
+		# important resources like images will not be freed 
+		region.close()
 
 	def setAttrdict(self, attrdict):
 		newBgcolor = attrdict.get('bgcolor')
