@@ -33,6 +33,8 @@ class ImgDecoder
 	virtual ~ImgDecoder() {}
 	virtual bool can_decode() = 0;
 	virtual DIBSurf* decode() = 0;
+	virtual bool is_transparent() { return false; }
+	virtual void get_transparent_color(BYTE *rgb) {}
 
 	protected:
 	memfile& m_mf;
