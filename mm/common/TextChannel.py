@@ -234,24 +234,11 @@ class TextChannel(Channel):
 		self.window.save_geometry()
 	#
 	def getduration(self, node):
-		wait = MMAttrdefs.getattr(node, 'wait_for_close')
-		if wait:
-			# An approximation of infinity for the
-			# time analysis algorithm
-			return 1000000.0
-		else:
-			return Channel.getduration(self, node)
+		return Channel.getduration(self, node)
 	#
 	def play(self, (node, callback, arg)):
 		self.showtext(node)
-		wait = MMAttrdefs.getattr(node, 'wait_for_close')
-		if wait:
-			self.player.pause() # Should have another interface
-			now = self.player.timefunc()
-			self.qid = self.player.enter(now + 0.001, 0, \
-						self.done, (callback, arg))
-		else:
-			Channel.play(self, (node, callback, arg))
+		Channel.play(self, (node, callback, arg))
 	#
 	def reset(self):
 		self.window.settext('', None)
