@@ -912,6 +912,13 @@ class SchedulerContext:
 		parent = self.parent
 		if debugevents: print 'do_terminate',node,curtime,timestamp,fill,parent.timefunc()
 		if debugdump: parent.dump()
+		try:
+			if node.__terminating:
+				if debugevents: print 'recursive terminate',node
+				return
+		except AttributeError:
+			pass
+		node.__terminating = 1
 		if fill != 'remove' and node.GetSchedParent() is None:
 			fill = 'remove'
 		if not ignore_erase and MMAttrdefs.getattr(node, 'erase') == 'never':
@@ -941,6 +948,10 @@ class SchedulerContext:
 					chan.stopplay(xnode, curtime)
 					self.sched_arcs(xnode, curtime, 'endEvent', timestamp = curtime)
 			if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
+				if node.playing == MMStates.FROZEN:
+					node.time_list[-1] = node.time_list[-1][0], node.time_list[-1][1], timestamp
+				else:
+					node.time_list[-1] = node.time_list[-1][0], timestamp, timestamp
 				for c in [node.looping_body_self,
 					  node.realpix_body,
 					  node.caption_body] + \
@@ -950,6 +961,7 @@ class SchedulerContext:
 					c.has_min = 0 # just to be sure
 					self.do_terminate(c, curtime, timestamp, fill=fill, cancelarcs=cancelarcs)
 					if not parent.playing:
+						node.__terminating = 0
 						return
 				node.stopplay(timestamp)
 				node.cleanup_sched(parent)
@@ -958,6 +970,7 @@ class SchedulerContext:
 		elif fill != 'remove' and node.playing in (MMStates.PLAYING, MMStates.PAUSED):
 			self.freeze_play(node, curtime, timestamp)
 			if not parent.playing:
+				node.__terminating = 0
 				return
 		pnode = node.GetSchedParent()
 		if pnode is not None and \
@@ -968,6 +981,7 @@ class SchedulerContext:
 		parent.paused = 0
 		self.flushqueue(curtime, 1)
 		if not parent.playing:
+			node.__terminating = 0
 			return
 		parent.paused = paused
 		ev = (SR.SCHED_STOPPING, node)
@@ -1016,6 +1030,7 @@ class SchedulerContext:
 		if mint is not None:
 			t, arc = mint
 			self.sched_arc(node, arc, curtime, 'begin', timestamp = t - arc.delay, force = 1)
+		node.__terminating = 0
 		if debugevents: print 'do_terminate: return',node
 
 	# callback from channel to indicate that a transition finished

@@ -4406,7 +4406,7 @@ def __doParse(parser, data):
 	except MSyntaxError:
 		# a fatal errors has been occured
 		# in this, case the root node is not valid, and we create a fake node just to have
-		# the minimum requiered by TopLevel
+		# the minimum required by TopLevel
 		root = parser.MakeRoot(MMNode.FakeRootNode)
 		context = root.GetContext()
 		errors = MMNode.MMErrors('fatal')
