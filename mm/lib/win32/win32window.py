@@ -25,7 +25,8 @@ class Window:
 		self._redrawfunc = None
 		self._callbacks = {}
 		self._showing = None
-		
+		self._curcursor = ''
+
 	def __repr__(self):
 		return '<Window instance at %x>' % id(self)
 
@@ -333,6 +334,9 @@ class Window:
 		ps=self.getsizes()
 		return float(int(100.0*ps[0]+0.5)/100.0),float(int(100.0*ps[1]+0.5)/100.0),float(int(100.0*ps[2]+0.5)/100.0),float(int(100.0*ps[3]+0.5)/100.0)
 
+	def _convert_color(self, color):
+		return color 
+
 	# Returns the size of the image
 	def _image_size(self, file):
 		toplevel=__main__.toplevel
@@ -559,6 +563,10 @@ class Window:
 		x, y, w, h = self._rectb
 		return X+x, Y+y, w, h
 
+	def getwindowrect(self):
+		x,y,w,h=self.getwindowpos()
+		return x, y, x+w, y+h
+
 	#
 	# Private methods
 	#
@@ -660,6 +668,18 @@ class SubWindow(Window):
 			self._passiveMemDC.drawOn(dc)
 			return
 
+		# first paint opaque subwindows
+		trsubwindows = []
+		for w in self._subwindows:
+			if 0 and (w._transparent == 0 or \
+			   (w._transparent == -1 and
+			    w._active_displist)):
+				w.paintOn(dc)
+				dc.ExcludeClipRect(w.getwindowrect())
+			else:
+				trsubwindows.append(w)
+
+		# then paint self
 		x, y, w, h = self.getwindowpos()
 		if offsetOrg:
 			x0, y0 = dc.SetWindowOrg((-x,-y))
@@ -670,9 +690,9 @@ class SubWindow(Window):
 		if offsetOrg:
 			dc.SetWindowOrg((x0,y0))
 
-		L = self._subwindows[:]
-		L.reverse()
-		for w in L:
+		# then paint transparent children
+		trsubwindows.reverse()
+		for w in trsubwindows:
 			w.paintOn(dc)
 
 		if self._showing:
@@ -715,6 +735,16 @@ class SubWindow(Window):
 	def update(self):
 		x, y, w, h = self.getwindowpos()
 		self._topwindow.InvalidateRect((x, y, x+w, y+h))			
+
+	def ValidateRgn(self):
+		x, y, w, h = self.getwindowpos()
+		rgn = win32ui.CreateRgn()
+		rgn.CreateRectRgn((x, y, x+w, y+h))
+		self._topwindow.ValidateRgn(rgn)
+		rgn.DeleteObject()
+
+	def ValidateRect(self):
+		self._topwindow.ValidateRect(self.getwindowrect())
 
 	def Redraw(self):
 		x, y, w, h = self.getwindowpos()
@@ -767,13 +797,13 @@ class SubWindow(Window):
 			for button in self._active_displist._buttons:
 				if button._inside(x,y):
 					if self._cursor != 'hand':
-						self.setcursor('hand')
+						self.setcurcursor('hand')
 					return
 		if self._cursor != 'arrow':
-			self.setcursor('arrow')
+			self.setcurcursor('arrow')
 	
-	def setcursor(self, strid):
-		self._cursor = strid
+	def setcurcursor(self, strid):
+		self._curcursor = strid
 		self._topwindow.setcursor(strid)
 
 	#
@@ -785,7 +815,7 @@ class SubWindow(Window):
 		
 		# keep old pos
 		x0, y0, w0, h0 = self._rectb
-		x1, y1 = self.getwindowpos()[:2]
+		x1, y1, w1, h1 = self.getwindowpos()
 		
 		# move or/and resize window
 		if len(coordinates)==2:
@@ -801,18 +831,22 @@ class SubWindow(Window):
 		self._canvas = 0, 0, w, h # client canvas in pixels
 		self._rectb = x, y, w, h  # rect with respect to parent in pixels
 		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
-		x2, y2 = self.getwindowpos()[:2]
+		x2, y2, w2, h2 = self.getwindowpos()
 		
+
 		# update
 		rgn1 = win32ui.CreateRgn()
-		rgn1.CreateRectRgn((x1, y1, x1+w0, y1+h0))
+		rgn1.CreateRectRgn((x1, y1, x1+w1, y1+h1))
 		rgn2 = win32ui.CreateRgn()
-		rgn2.CreateRectRgn((x2, y2, x2+w, y2+h))				
+		rgn2.CreateRectRgn((x2, y2, x2+w2, y2+h2))				
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn((0, 0, 0, 0))
-		rgn.CombineRgn(rgn1,rgn2,win32con.RGN_OR)
+		rgn.CombineRgn(rgn1,rgn2,win32con.RGN_OR)		
+
+
 		flags = win32con.RDW_INVALIDATE | win32con.RDW_UPDATENOW | win32con.RDW_ERASE
 		self._topwindow.RedrawWindow(None, rgn, flags)
+
 		rgn1.DeleteObject()
 		rgn2.DeleteObject()
 		rgn.DeleteObject()
@@ -857,10 +891,7 @@ class SubWindow(Window):
 	def begintransition(self, inout, runit, dict):
 		if not self._passiveMemDC:
 			self._passiveMemDC = MemDC(self)
-		factory = win32transitions.TransitionFactory(dict, self._passiveMemDC)
-		transinst = factory.getTransition()
-		print transinst, inout, runit, dict
-		self._transition = win32transitions.TransitionEngine(transinst, dict)
+		self._transition = win32transitions.TransitionEngine(self, inout, runit, dict)
 		if runit:
 			self._transition.begintransition()
 
