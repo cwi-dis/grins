@@ -19,6 +19,7 @@ import compatibility
 import ChannelMap
 import EditableObjects
 import SystemColors
+import parseutil
 
 error = 'SMILTreeRead.error'
 
@@ -281,8 +282,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			event = res.group('event')
 			if event:
 				try:
-					delay = self.__parsecounter(event, maybe_relative = 1)
-				except error:
+					delay = parseutil.parsecounter(event, maybe_relative = 1, syntax_error = self.syntax_error, context = self.__context)
+				except parseutil.error:
 					return
 			else:
 				delay = 0
@@ -315,8 +316,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					list.append(MMNode.MMSyncArc(node, attr))
 					continue
 				try:
-					offset = self.__parsecounter(val, withsign = 1)
-				except error:
+					offset = parseutil.parsecounter(val, withsign = 1, syntax_error = self.syntax_error, context = self.__context)
+				except parseutil.error:
 					if val[0] in '-+' + string.digits:
 						self.syntax_error('%s value starting with sign or digit must be offset value' % attr)
 						continue
@@ -379,8 +380,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					# above
 					if tokens[i] in ('-','+'):
 						try:
-							offset = self.__parsecounter(''.join(tokens[i:]), withsign = 1)
-						except error:
+							offset = parseutil.parsecounter(''.join(tokens[i:]), withsign = 1, syntax_error = self.syntax_error, context = self.__context)
+						except parseutil.error:
 							self.syntax_error('bad offset value or unescaped - in identifier')
 							if tokens[i] == '-':
 								# try to fix it
@@ -563,8 +564,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						self.syntax_error("no `media' value allowed on dur attribute on non-media elements")
 				else:
 					try:
-						attrdict['duration'] = self.__parsecounter(val)
-					except error, msg:
+						attrdict['duration'] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
+					except parseutil.error, msg:
 						self.syntax_error(msg)
 			elif attr in ('min', 'max'):
 				if self.__context.attributes.get('project_boston') == 0:
@@ -584,8 +585,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						self.syntax_error("no `indefinite' value allowed on min attribute")
 				else:
 					try:
-						attrdict[attr] = self.__parsecounter(val)
-					except error, msg:
+						attrdict[attr] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
+					except parseutil.error, msg:
 						self.syntax_error(msg)
 					else:
 						if attr == 'min' and \
@@ -626,8 +627,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['repeatdur'] = -1
 				else:
 					try:
-						attrdict['repeatdur'] = self.__parsecounter(val)
-					except error, msg:
+						attrdict['repeatdur'] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
+					except parseutil.error, msg:
 						self.syntax_error(msg)
 			elif attr == 'restart':
 				if self.__context.attributes.get('project_boston') == 0:
@@ -661,7 +662,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					elif attr in ('mediaSize', 'bandwidth'):
 						p = string.atof(val)
 					elif attr == 'mediaTime':
-						p = self.__parsecounter(val) 
+						p = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context) 
 					attrdict[attr] = val;	
 				except string.atof_error:
 					self.syntax_error('bad %s attribute' % attr)
@@ -3255,8 +3256,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				pass	# any value is ok
 			elif name == 'dur':
 				try:
-					value = self.__parsecounter(value)
-				except error, msg:
+					value = parseutil.parsecounter(value, syntax_error = self.syntax_error, context = self.__context)
+				except parseutil.error, msg:
 					self.syntax_error(msg)
 					continue
 			elif name == 'borderColor' and value == 'blend':
@@ -3816,8 +3817,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		begin = attributes.get('begin')
 		if begin is not None:
 			try:
-				begin = self.__parsecounter(begin)
-			except error, msg:
+				begin = parseutil.parsecounter(begin, syntax_error = self.syntax_error, context = self.__context)
+			except parseutil.error, msg:
 				self.syntax_error(msg)
 				begin = None
 			else:
@@ -3825,8 +3826,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		end = attributes.get('end')
 		if end is not None:
 			try:
-				end = self.__parsecounter(end)
-			except error, msg:
+				end = parseutil.parsecounter(end, syntax_error = self.syntax_error, context = self.__context)
+			except parseutil.error, msg:
 				self.syntax_error(msg)
 				end = None
 			else:
@@ -4168,56 +4169,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.fatalerror()
 
 	# helper methods
-
-	def __parsecounter(self, value, maybe_relative = 0, withsign = 0):
-		res = offsetvalue.match(value)
-		if res:
-			sign = res.group('sign')
-			if sign and not withsign:
-				self.syntax_error('no sign allowed')
-				sign = None
-			if sign:
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('sign not compatible with SMIL 1.0')
-					if not features.editor:
-						raise error, 'SMIL 2.0 presentation counter'
-				self.__context.attributes['project_boston'] = 1
-			if res.group('use_clock'):
-				h, m, s, f = res.group('hours', 'minutes',
-						       'seconds', 'fraction')
-				offset = 0
-				if h is not None:
-					offset = offset + string.atoi(h) * 3600
-				m = string.atoi(m)
-				if m >= 60:
-					self.syntax_error('minutes out of range')
-				s = string.atoi(s)
-				if s >= 60:
-					self.syntax_error('seconds out of range')
-				offset = offset + m * 60 + s
-				if f is not None:
-					offset = offset + string.atof(f + '0')
-			elif res.group('use_timecount'):
-				tc, f, sc = res.group('timecount', 'units', 'metric')
-				offset = string.atoi(tc)
-				if f is not None:
-					offset = offset + string.atof(f)
-				if sc == 'h':
-					offset = offset * 3600
-				elif sc == 'min':
-					offset = offset * 60
-				elif sc == 'ms':
-					offset = offset / 1000.0
-				# else already in seconds
-			else:
-				raise error, 'internal error'
-			if sign and sign == '-':
-				offset = -offset
-			return offset
-		if maybe_relative:
-			if value in ('begin', 'end'):
-				return value
-		raise error, 'bogus presentation counter'
 
 	def __destanchor(self, node):
 		anchorlist = node.__anchorlist
