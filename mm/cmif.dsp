@@ -981,6 +981,10 @@ SOURCE=.\lib\win32\win32window.py
 
 SOURCE=.\lib\win32\windowinterface.py
 # End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\winplayerdlg.py
+# End Source File
 # End Group
 # Begin Group "lib/motif"
 
