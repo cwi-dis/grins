@@ -20,6 +20,7 @@ __version__ = "$Id$";
 	EXPORT_REAL,
 	EXPORT_QT,			# export to Quicktime-capable SMIL
 	EXPORT_WMP,			# export to windows media player
+	EXPORT_XMT,			# export to XMT-0
 	EXPORT_HTML_TIME,		# export to Internet Explorer HTML+TIME
 
 	# If these do not appear in feature_set, they don't apper in GRiNS.
@@ -48,4 +49,4 @@ __version__ = "$Id$";
 	H_DROPBOX,			# Show an empty drop box at the end of a sequence.
 	H_COLLAPSE,			# Enable internal node collapsing.
 	H_TIMESTRIP,			# Show snap!-like documents with correct toplevel par/seq
-] = range(29)				# don't forget to update this range!
+] = range(30)				# don't forget to update this range!
