@@ -715,7 +715,6 @@ class _Button:
 		x0, y0 = Qd.LocalToGlobal((x0, y0))
 		x1, y1 = Qd.LocalToGlobal((x1, y1))
 		box = x0, y0, x1, y1
-		print 'DBG button', box
 		rgn = Qd.NewRgn()
 		Qd.RectRgn(rgn, box)
 		return rgn
