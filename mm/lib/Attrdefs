@@ -28,6 +28,9 @@
 ('_schedcache' (any) (1 2) 'Scheduler record list cache' default
 	'Scheduler record list cache' raw)
 
+(align (string) 'left' 'Alignment' default
+	'Alignment of short datasets' channel)
+
 (anchorid (int) 1 'Next anchor UID' hidden
 	'Next anchor UID to use' raw)
 
@@ -82,6 +85,9 @@
 
 (font (string) 'default' 'Font' font
 	'Font used to display text' channel)
+
+(gtype (string) 'line' 'Graphtype' default
+	'Type of graph: bar, line, hline' channel)
 
 (hicolor (tuple (int) (int) (int)) (255 0 0) 'Hilight color' color
 	'Color used for anchors in window' channel)

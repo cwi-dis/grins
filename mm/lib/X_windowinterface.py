@@ -945,6 +945,50 @@ class _DisplayList:
 			  float(win_w) / window._width, \
 			  float(win_h) / window._height
 
+	def drawline(self, color, points):
+		window = self._window
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if debug: print `self`+'.drawline'+`points`
+
+		if toplevel._win_lock:
+			toplevel._win_lock.acquire()
+		color = self._window._convert_color()
+		self._gc.foreground = color
+
+		x0, y0 = points[0]
+		for x, y in points[1:]:
+			x, y, h, w = window._convert_coordinates(x, y, 0, 0)
+			self._gc.DrawLine(x0, y0, x, y)
+		self._gc.foreground = self._xfgcolor
+		if toplevel._win_lock:
+			toplevel._win_lock.release()
+
+	def drawfbox(self, color, *coordinates):
+		window = self._window
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if len(coordinates) == 1 and type(coordinates) == type(()):
+			coordinates = coordinates[0]
+		if len(coordinates) != 4:
+			raise TypeError, 'arg count mismatch'
+		if debug: print `self`+'.drawbox'+`coordinates`
+		x, y, w, h = coordinates
+		x, y, w, h = window._convert_coordinates(x, y, w, h)
+		if toplevel._win_lock:
+			toplevel._win_lock.acquire()
+		color = self._window._convert_color()
+		self._gc.foreground = color
+		self._gc.FillRectangle(x, y, w, h)
+		self._gc.foreground = self._xfgcolor
+		if toplevel._win_lock:
+			toplevel._win_lock.release()
+
+
 class _Button:
 	def __init__(self, dispobj, x, y, w, h):
 		if debug: print '_Button.init'+`dispobj,x,y,w,h`+' --> '+`self`
