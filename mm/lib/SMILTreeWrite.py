@@ -967,7 +967,7 @@ class SMILWriter(SMIL):
 		"""Calculate unique names for anchors"""
 		uid = node.GetUID()
 		alist = MMAttrdefs.getattr(node, 'anchorlist')
-		for id, type, args in alist:
+		for id, type, args, times in alist:
 			aid = (uid, id)
 			if type in SourceAnchors:
 				if isidre.match(id) is None or \
@@ -1218,7 +1218,7 @@ class SMILWriter(SMIL):
 		if not self.ids_used[name]:
 			alist = x.GetAttrDef('anchorlist', [])
 			hlinks = x.GetContext().hyperlinks
-			for id, atype, args in alist:
+			for id, atype, args, times in alist:
 				if hlinks.finddstlinks((uid, id)):
 					self.ids_used[name] = 1
 					break
@@ -1315,7 +1315,7 @@ class SMILWriter(SMIL):
 		hassrc = 0		# 1 if has other source anchors
 		alist = MMAttrdefs.getattr(x, 'anchorlist')
 		# deal with whole-node source anchors
-		for id, type, args in alist:
+		for id, type, args, times in alist:
 			if type == ATYPE_WHOLE:
 				links = x.GetContext().hyperlinks.findsrclinks((x.GetUID(), id))
 				if links:
@@ -1332,10 +1332,10 @@ class SMILWriter(SMIL):
 		self.writetag(mtype, attrlist)
 		if hassrc:
 			self.push()
-			for id, type, args in alist:
+			for id, type, args, times in alist:
 				if type in SourceAnchors and \
 				   type != ATYPE_WHOLE:
-					self.writelink(x, id, type, args)
+					self.writelink(x, id, type, args, times)
 			self.pop()
 		for i in range(pushed):
 			self.pop()
@@ -1367,17 +1367,17 @@ class SMILWriter(SMIL):
 		attrs.append(('href', href))
 		return attrs
 
-	def writelink(self, x, id, atype, args):
+	def writelink(self, x, id, atype, args, times):
 		attrlist = []
 		aid = (x.GetUID(), id)
 		attrlist.append(('id', self.aid2name[aid]))
 
 		links = x.GetContext().hyperlinks.findsrclinks(aid)
-		if len(links) > 1:
-			print '** Multiple links on anchor', \
-			      x.GetRawAttrDef('name', '<unnamed>'), \
-			      x.GetUID()
 		if links:
+			if len(links) > 1:
+				print '** Multiple links on anchor', \
+				      x.GetRawAttrDef('name', '<unnamed>'), \
+				      x.GetUID()
 			a1, a2, dir, ltype = links[0]
 			attrlist[len(attrlist):] = self.linkattrs(a2, ltype)
 		if atype == ATYPE_NORMAL:
@@ -1417,6 +1417,11 @@ class SMILWriter(SMIL):
 			else:
 				attrlist.append(('%s:fragment-id' % NSprefix,
 						 id))
+		begin, end = times
+		if begin:
+			attrlist.append(('begin', '%.3fs' % begin))
+		if end:
+			attrlist.append(('end', '%.3fs' % end))
 		self.writetag('anchor', attrlist)
 
 	def newfile(self, srcurl):

@@ -604,7 +604,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__idmap[id] = node.GetUID()
 			anchorlist = node.__anchorlist
 			id = _uniqname(map(lambda a: a[2], anchorlist), id)
-			anchorlist.append((0, len(anchorlist), id, ATYPE_WHOLE, []))
+			anchorlist.append((0, len(anchorlist), id, ATYPE_WHOLE, [], (0, 0)))
 			self.__links.append((node.GetUID(), id, href, ltype))
 
 	def NewContainer(self, type, attributes):
@@ -1024,7 +1024,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					if self.__nodemap.has_key(tag):
 						dst = self.__nodemap[tag]
-						dst = self.__wholenodeanchor(dst)
+						dst = self.__destanchor(dst)
 					else:
 						self.warning("unknown node id `%s'" % tag)
 						continue
@@ -1711,16 +1711,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ltype = TYPE_JUMP
 		atype = ATYPE_WHOLE
 		aargs = []
-		# extension: accept z-index attribute
-		z = attributes.get('z-index', '0')
-		try:
-			z = string.atoi(z)
-		except string.atoi_error:
-			self.syntax_error('invalid z-index value')
-			z = 0
-		if z < 0:
-			self.syntax_error('anchor with negative z-index')
-			z = 0
 		coords = attributes.get('coords')
 		if coords is not None:
 ## 			if attributes.has_key('shape') and attributes['shape'] != 'rect':
@@ -1760,6 +1750,30 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# x,y,w,h are now floating point if they were
 			# percentages, otherwise they are ints.
 			aargs = [x0, y0, x1-x0, y1-y0]
+		begin = attributes.get('begin')
+		if begin is not None:
+			try:
+				begin = self.__parsecounter(begin, 0)
+			except error, msg:
+				self.syntax_error(msg)
+				begin = None
+		end = attributes.get('end')
+		if end is not None:
+			try:
+				end = self.__parsecounter(end, 0)
+			except error, msg:
+				self.syntax_error(msg)
+				end = None
+		# extension: accept z-index attribute
+		z = attributes.get('z-index', '0')
+		try:
+			z = string.atoi(z)
+		except string.atoi_error:
+			self.syntax_error('invalid z-index value')
+			z = 0
+		if z < 0:
+			self.syntax_error('anchor with negative z-index')
+			z = 0
 		anchorlist = self.__node.__anchorlist
 		aid = _uniqname(map(lambda a: a[2], anchorlist), None)
 		if attributes.has_key('fragment-id'):
@@ -1773,7 +1787,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			aid = id
 		if id is not None:
 			self.__anchormap[id] = (uid, aid)
-		anchorlist.append((z, len(anchorlist), aid, atype, aargs))
+		anchorlist.append((z, len(anchorlist), aid, atype, aargs, (begin or 0, end or 0)))
 		if href is not None:
 			self.__links.append((uid, (aid, atype, aargs),
 					     href, ltype))
@@ -1989,13 +2003,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				val = None
 		return val
 
-	def __wholenodeanchor(self, node):
+	def __destanchor(self, node):
 		anchorlist = node.__anchorlist
 		for a in anchorlist:
 			if a[3] == ATYPE_DEST:
 				break
 		else:
-			a = 0, len(anchorlist), '0', ATYPE_DEST, []
+			a = 0, len(anchorlist), '0', ATYPE_DEST, [], (0, 0)
 			anchorlist.append(a)
 		return node.GetUID(), a[2]
 
