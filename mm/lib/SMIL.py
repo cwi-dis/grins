@@ -87,7 +87,7 @@ class SMIL:
 		'meta': {'content':None,
 			 'name':None,
 			 },
-		SMIL2+' '+'metadata': {},
+		'metadata': {},
 		'layout': {'type':SMIL_BASIC,
 			   },
 		'root-layout': {'background-color':'transparent',
@@ -97,7 +97,7 @@ class SMIL:
 				'skip-content':'true',
 				'width':'0',
 				},
-		SMIL2+' '+'viewport': {'background-color':'transparent',
+		'viewport': {'background-color':'transparent',
 				       'backgroundColor':None,
 				       'customTest':None,
 				       'height':'0',
@@ -138,7 +138,7 @@ class SMIL:
 			   GRiNSns+' ' 'type':None,
 			   GRiNSns+' ' 'visible':None,
 			   },
-		SMIL2+' '+'regPoint': {'bottom':None,
+		'regPoint': {'bottom':None,
 				       'customTest':None,
 				       'left':None,
 				       'regAlign':None,
@@ -165,7 +165,7 @@ class SMIL:
 ##			GRiNSns+' ' 'comment':None,
 ##			},
 		'switch': {__layout:None},
-		SMIL2+' '+'excl': {'abstract':'',
+		'excl': {'abstract':'',
 				   'author':'',
 				   'copyright':'',
 				   'customTest':None,
@@ -174,7 +174,7 @@ class SMIL:
 				   __layout:None,
 				   GRiNSns+' ' 'comment':None,
 				   },
-		SMIL2+' '+'priorityClass': {'higher':'pause',
+		'priorityClass': {'higher':'pause',
 					    'lower':'defer',
 					    'pauseDisplay':None,
 					    'peers':'stop',
@@ -238,7 +238,7 @@ class SMIL:
 			QTns+' ' 'chapter':None,
 			QTns+' ' 'composite-mode':None,
 			},
-		SMIL2+' '+'brush': {'abstract':'',
+		'brush': {'abstract':'',
 				    'alt':None,
 				    'author':'',
 ##				    'clip-begin':None,
@@ -291,7 +291,7 @@ class SMIL:
 		      SMIL2+' '+'tabindex':None,
 		      SMIL2+' '+'target':None,
 		      },
-		SMIL2+' '+'area': {SMIL2+' '+'accesskey':None,
+		'area': {SMIL2+' '+'accesskey':None,
 				   SMIL2+' '+'actuate':None,
 				   'alt':None,
 				   'coords':None,
@@ -309,12 +309,12 @@ class SMIL:
 				   SMIL2+' '+'target':None,
 				   SMIL2+' '+'destinationPlaystate':None,
 				   },
-		SMIL2+' '+'customAttributes': {},
-		SMIL2+' '+'customTest': {'defaultState':'false',
+		'customAttributes': {},
+		'customTest': {'defaultState':'false',
 					 'override':'not-allowed',
 					 'uid':None,
 					 },
-		SMIL2+' '+'transition':{'type':None,
+		'transition':{'type':None,
 					'subtype':None,
 					'dur':'1s',
 					'startProgress':'0.0',
@@ -328,7 +328,7 @@ class SMIL:
 					'coordinated':'false',
 					'clipBoundary':'children',
 					},
-		SMIL2+' '+'transitionFilter': {'borderWidth':None,
+		'transitionFilter': {'borderWidth':None,
 					       'childrenClip':None,
 					       'color':None,
 					       'coordinated':None,
@@ -340,7 +340,7 @@ class SMIL:
 					       'type':None,
 					       'vertRepeat':None,
 					       },
-		SMIL2+' '+'prefetch': {'clip-begin':None,
+		'prefetch': {'clip-begin':None,
 				       'clip-end':None,
 				       'src':None,
 				       'mediaSize':None,
@@ -351,11 +351,11 @@ class SMIL:
 
 	attributes['seq'] = attributes['body']
 	attributes[__bag] = attributes[__choice]
-	attributes['anchor'] = attributes[SMIL2+' '+'area']
+	attributes['anchor'] = attributes['area']
 
 	__media_object = ['audio', 'video', 'text', 'img', 'animation',
-			  'textstream', 'ref', SMIL2+' '+'brush',
-			  SMIL2+' '+'prefetch',
+			  'textstream', 'ref', 'brush',
+			  'prefetch',
 			  __null, __cmif, __shell, __socket]
 
 	__at = None
@@ -373,8 +373,8 @@ class SMIL:
 		else:
 			attributes[__el] = attributes['ref']
 
-	__animate_elements = [SMIL2+' '+'animate', SMIL2+' '+'animateMotion',
-			      SMIL2+' '+'animateColor', SMIL2+' '+'set']
+	__animate_elements = ['animate', 'animateMotion',
+			      'animateColor', 'set']
 	__animate_attrs_core = {SMIL2+' '+'attributeName':'',
 				SMIL2+' '+'attributeType':None,
 ##				SMIL2+' '+'autoReverse':'false',
@@ -392,28 +392,28 @@ class SMIL:
 ##				 SMIL2+' '+'keyTimes':None,
 				 SMIL2+' '+'values':None,
 				 }
-	attributes[SMIL2+' '+'animateMotion'] = __animate_attrs_core.copy()
-	attributes[SMIL2+' '+'animateMotion'].update(__animate_attrs_extra)
-	del attributes[SMIL2+' '+'animateMotion'][SMIL2+' '+'attributeName']
-	del attributes[SMIL2+' '+'animateMotion'][SMIL2+' '+'attributeType']
-	attributes[SMIL2+' '+'animateMotion'][SMIL2+' '+'calcMode'] = 'paced'
-	attributes[SMIL2+' '+'animateMotion'][SMIL2+' '+'path'] = None
-	attributes[SMIL2+' '+'animateMotion'][SMIL2+' '+'origin'] = None
+	attributes['animateMotion'] = __animate_attrs_core.copy()
+	attributes['animateMotion'].update(__animate_attrs_extra)
+	del attributes['animateMotion'][SMIL2+' '+'attributeName']
+	del attributes['animateMotion'][SMIL2+' '+'attributeType']
+	attributes['animateMotion'][SMIL2+' '+'calcMode'] = 'paced'
+	attributes['animateMotion'][SMIL2+' '+'path'] = None
+	attributes['animateMotion'][SMIL2+' '+'origin'] = None
 
-	attributes[SMIL2+' '+'animate'] = __animate_attrs_core.copy()
-	attributes[SMIL2+' '+'animate'].update(__animate_attrs_extra)
+	attributes['animate'] = __animate_attrs_core.copy()
+	attributes['animate'].update(__animate_attrs_extra)
 
-	attributes[SMIL2+' '+'animateColor'] = __animate_attrs_core.copy()
-	attributes[SMIL2+' '+'animateColor'].update(__animate_attrs_extra)
+	attributes['animateColor'] = __animate_attrs_core.copy()
+	attributes['animateColor'].update(__animate_attrs_extra)
 
-	attributes[SMIL2+' '+'set'] = __animate_attrs_core.copy()
+	attributes['set'] = __animate_attrs_core.copy()
 
 	del __animate_attrs_core, __animate_attrs_extra
 
 
-	__schedule = ['par', 'seq', SMIL2+' '+'excl', __choice, __bag] + __media_object
+	__schedule = ['par', 'seq', 'excl', __choice, __bag] + __media_object
 	__container_content = __schedule + ['switch', 'a'] + __animate_elements
-	__assoc_link = ['anchor', SMIL2+' '+'area'] + __animate_elements
+	__assoc_link = ['anchor', 'area'] + __animate_elements
 
 	# Core, Test and I18n attribs are added to all elements in the language
 	for __el in attributes.keys():
@@ -436,16 +436,16 @@ class SMIL:
 		attributes[__el].update(__I18n)
 
 	# add basicTiming to certain elements
-	for __el in (SMIL2+' '+'animate', SMIL2+' '+'set',
-		     SMIL2+' '+'animateMotion', SMIL2+' '+'animateColor',
-		     SMIL2+' '+'area', 'anchor', SMIL2+' '+'transition',
-		     SMIL2+' '+'transitionFilter', SMIL2+' '+'prefetch'):
+	for __el in ('animate', 'set',
+		     'animateMotion', 'animateColor',
+		     'area', 'anchor', 'transition',
+		     'transitionFilter', 'prefetch'):
 		attributes[__el].update(__basicTiming)
 
 	# add Timing to certain other elements
 	for __el in ('text', 'img', 'audio', 'animation', 'video', 'ref',
-		     'textstream', SMIL2+' '+'brush', 'body', 'par', 'seq',
-		     SMIL2+' '+'excl', __choice):
+		     'textstream', 'brush', 'body', 'par', 'seq',
+		     'excl', __choice):
 		if __el[:len(GRiNSns)+1] == GRiNSns+' ':
 			for __key, __val in __Timing.items():
 				if ' ' in __key:
@@ -478,26 +478,21 @@ class SMIL:
 	# no allowed content is default, so we don't specify empty ones here
 	entities = {
 		'smil': ['head', 'body'],
-		'head': ['layout', 'switch', 'meta', SMIL2+' '+'metadata',
-			 SMIL2+' '+'customAttributes', __layouts,
-			 SMIL2+' '+'transition'],
-		SMIL2+' '+'customAttributes': [SMIL2+' '+'customTest'],
-		'layout': ['region', 'root-layout', SMIL2+' '+'viewport',
-			   SMIL2+' '+'regPoint', SMIL2+' '+'switch'],
-		SMIL2+' '+'viewport': ['region', SMIL2+' '+'switch'],
-		'region': ['region', SMIL2+' '+'switch'],
+		'head': ['layout', 'switch', 'meta', 'metadata',
+			 'customAttributes', __layouts, 'transition'],
+		'customAttributes': ['customTest'],
+		'layout': ['region', 'root-layout', 'viewport', 'regPoint', 'switch'],
+		'viewport': ['region', 'switch'],
+		'region': ['region', 'switch'],
 		__layouts: [__layout],
 		'body': __container_content,
 		'par': __container_content,
 		'seq': __container_content,
-		SMIL2+' '+'excl': __container_content +
-				  [SMIL2+' '+'priorityClass'],
-		SMIL2+' '+'priorityClass': __container_content +
-					   [SMIL2+' '+'priorityClass'],
+		'excl': __container_content + ['priorityClass'],
+		'priorityClass': __container_content + ['priorityClass'],
 		__choice: __container_content,
 		__bag: __container_content,
-		'switch': ['layout', SMIL2+' '+'region',
-			   SMIL2+' '+'viewport'] + __container_content,
+		'switch': ['layout', 'region', 'viewport'] + __container_content,
 		'ref': __assoc_link,
 		'audio': __assoc_link,
 		'img': __assoc_link,
