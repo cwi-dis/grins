@@ -107,7 +107,8 @@ class UsergroupEditDialog:
 			'OK':(self.ok_callback, ()),
 			}
 		w=self.getparent().getwindow()
-		self.__window=w=windowinterface.UsergroupEditDialog(w)
+		import _UsergroupView
+		self.__window=w=_UsergroupView.UsergroupEditDialog(w)
 		w.do_init(ugroup, title, ustate, override, cbdict, uid)
 		w.show()
 

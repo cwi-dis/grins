@@ -18,8 +18,6 @@ __version__ = "$Id$"
 
 PreferencesDialogError="PreferencesDialog.Error"
 
-import windowinterface
-
 stringitems = {
 	'system_language': '2-character name for a language',
 	}
@@ -47,7 +45,8 @@ class PreferencesDialog:
 			'OK':(self.ok_callback, ()),
 			'Cancel':(self.cancel_callback, ()),
 			'Reset':(self.reset_callback, ()),}
-		self.__window = windowinterface.PreferencesDialog(callbacks)
+		import _PreferencesDialog
+		self.__window = _PreferencesDialog.PreferencesDialog(callbacks)
 		self.__window.create()
 
 	def close(self):

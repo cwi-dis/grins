@@ -415,8 +415,9 @@ class LinkEditorDialog:
 				'LinkDir':(self.linkdir_callback, ()),
 				'LinkType':(self.linktype_callback, ()),
 		}
-		self.window = windowinterface.LinkPropDlg(cbd, dir, type, dirsens,
-							  parent = self.parent.window)
+		from _LinkView import LinkPropDlg
+		self.window = LinkPropDlg(cbd, dir, type, dirsens,
+					  parent = self.parent.window)
 
 	def show(self):
 		self.window.show()
