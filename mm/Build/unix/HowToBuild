@@ -1,0 +1,121 @@
+Creating SGI Inst Files
+
+On bireme (or snelboot--don't do this on oratrix since that's not an O2):
+
+# some or all of the following may or may not be necessary:
+# you may have to change the CVS/Root files since they point to my
+# CVSROOT directory (but I don't think so):
+#	cd /ufs/multimedia/sjoerd/src
+#	find mm python -name Root -print | while read f; do echo 'trawler.cwi.nl:/hosts/mm/CVSPRIVATE' > $f; done
+cd /ufs/multimedia/sjoerd/src/mm
+cvs update -d
+cd /ufs/multimedia/sjoerd/src/python
+cvs update -d
+cd Extensions/X11
+cvs update -d
+cd ../img
+cvs update -d
+
+# now the real work starts
+cd /ufs/multimedia/sjoerd/src
+./domk freeze && ./domk freeze editor
+
+That's it!
+
+If all goes well, the result can be found here:
+GRiNS player-only install files:
+      dist/grins
+      dist/grins.*
+GRiNS player and editor install files:
+      dist/grinsed
+      dist/grinsed.*
+
+Frozen binaries (part of the above):
+       frozen.editor.irix65/cmifed
+       frozen.grins.irix65/grins
+
+Creating the Tar Files
+
+On oratrix as root (because you need to install in /usr/local):
+
+cd /ufs/multimedia/sjoerd/src/dist
+
+inst -f grins
+Inst> go
+Inst> quit
+
+tar cf - -C /usr/local/grins . | gzip > grins-sgi-play-XXX.tgz
+
+inst -f grinsed
+Inst> go
+Inst> quit
+
+tar cf - -C /usr/local/grins . | gzip > grins-sgi-full-XXX.tgz
+
+tar cf grins-sgi-play-XXX.tardist inst.README grins grins.*
+tar cf grins-sgi-full-XXX.tardist inst.README grinsed grinsed.*
+
+Special Instructions for IRIX 6.3
+
+On trawler.cwi.nl:
+
+cd /hosts/multimedia/sjoerd/chameleon/mm
+cvs up -d
+cd /hosts/multimedia/sjoerd/chameleon/python
+cvs up -d
+cd Extensions/X11
+cvs update -d
+cd ../img
+cvs update -d
+
+# now the real work starts
+cd /hosts/multimedia/sjoerd/chameleon
+./domk freeze
+# Note that near the end of the output there is a call to gendist
+# which fails because gendist couldn't be found.  Remember the call
+# and the arguments.
+
+./domk freeze editor
+# Again remember the call to gendist.
+
+On zeus.cwi.nl:
+# Execute the two gendist commands, but without the
+# -creator 'ORATRiX Development B.V.' argument:
+cd /hosts/multimedia/sjoerd/chameleon
+gendist -sbase /hosts/multimedia/sjoerd/chameleon \
+	-idb /hosts/multimedia/sjoerd/chameleon/grins.rawidb \
+	-spec /hosts/multimedia/sjoerd/chameleon/grins.spec \
+	-dist /hosts/multimedia/sjoerd/chameleon/dist -all
+gendist -sbase /hosts/multimedia/sjoerd/chameleon \
+	-idb /hosts/multimedia/sjoerd/chameleon/grinsed.rawidb \
+	-spec /hosts/multimedia/sjoerd/chameleon/grinsed.spec \
+	-dist /hosts/multimedia/sjoerd/chameleon/dist -all
+
+Creating Sun Files
+
+On hera.cwi.nl:
+
+cd /ufs/multimedia/sjoerd/src/mm
+cvs update -d
+cd /ufs/multimedia/sjoerd/src/python
+cvs update -d
+cd Extensions/X11
+cvs update -d
+cd ../img
+cvs update -d
+
+# now the real work starts
+cd /ufs/multimedia/sjoerd/src
+./domk freeze && ./domk freeze editor
+
+That's it!
+
+Frozen binaries:
+       frozen.editor.sunos5/cmifed
+       frozen.grins.sunos5/grins
+
+Creating the Tar Files
+
+The easiest way is to start with the SGI tar files (or the inst or
+tardist files) and just replace grins (player and editor) and grinsed
+(editor only) with the Sun versions.  All other files are the same.
