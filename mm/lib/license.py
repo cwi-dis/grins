@@ -101,7 +101,7 @@ class WaitLicense(LicenseDialog):
 			if not self.license.msg:
 				return 1	# Everything fine, permanent license
 			# Evaluation license 
-			self.msg = msg
+			self.msg = self.license.msg
 			self.can_try = 1
 			self.can_eval = 1
 		except Error, arg:
