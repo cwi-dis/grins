@@ -120,7 +120,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		parseErrors = context.getParseErrors()
 		if parseErrors is not None:
 			if parseErrors.getType() == 'fatal':
-				message = 'The source document contains an unrecoverable error\n\n' + \
+				message = 'The source document contains an unrecoverable error:\n\n' + \
 					  parseErrors.getFormatedErrorsMessage(5) + \
 					  '\nDo you want to edit the source file?'
 				allowCancel = 0
@@ -129,9 +129,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					raise MSyntaxError
 				return
 			else:
-				message = "The source document contains "+`parseErrors.getErrorNumber()`+" errors : \n\n" + \
+				message = "The source document contains "+`parseErrors.getErrorNumber()`+" errors: \n\n" + \
 					  parseErrors.getFormatedErrorsMessage(5) + \
-					  "\nDo you wish to accept GRiNS' automatic fixes?"
+					  "\nShall I attempt to fix these?"
 			if allowCancel:
 				ret = windowinterface.GetYesNoCancel(message, self.window)
 			else:
@@ -600,8 +600,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return
 		utype, host, path, params, query, fragment = urlparse(self.filename)
 		if (utype and utype != 'file') or (host and host != 'localhost'):
-			windowinterface.showmessage('Cannot save to remote URL',
-						    mtype = 'warning')
+			windowinterface.showmessage('Cannot save to nonlocal URL.',
+						    mtype = 'error')
 			return
 		file = MMurl.url2pathname(path)
 		self.setwaiting()
@@ -651,7 +651,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.setwaiting()
 		license = self.main.wanttosave()
 		if not license:
-			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+			windowinterface.showmessage('Cannot obtain a license to save.', mtype='error')
 			return
 		evallicense= (license < 0)
 		if not self.save_to_file(filename, exporting = 1):
@@ -807,7 +807,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.upload(compatibility.XMT)
 
 	def upload_WMP_callback(self):
-		windowinterface.showmessage("Please purchase the full version of GRiNS today!")
 		self.upload(compatibility.WMP)
 		return
 
@@ -820,7 +819,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		#
 		# XXXX The multi-stage password asking code here is ugly.
 		if not self.filename:
-			windowinterface.showmessage('Please save your work first')
+			windowinterface.showmessage('Cannot upload unsaved document.\nPlease save first.')
 			return
 		filename, smilurl, self.w_ftpinfo, self.m_ftpinfo = self.get_upload_info()
 			
@@ -854,7 +853,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				attr = 'project_ftp_host_media'
 				missing = '\n- Mediaserver FTP info'
 		if missing:
-			if windowinterface.showquestion('Please set these parameters then try again:'+missing):
+			if windowinterface.showquestion('Document properties needed but not set:'+missing+
+					'\n\nDo you want to set these?'):
 				self.prop_callback(attr)
 			return
 		if have_web_page:
@@ -862,7 +862,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			fn = MMurl.url2pathname(string.split(smilurl, '/')[-1])
 			if os.path.split(filename)[1] != os.path.split(fn)[1]:
 				# The SMIL upload filename and URL don't match. Warn.
-				if not windowinterface.showquestion('Warning: Mediaserver SMIL URL appears incorrect:\n'+smilurl):
+				if not windowinterface.showquestion('Warning: Mediaserver SMIL URL appears incorrect:\n'+smilurl+'\nContinue anyway?'):
 					return
 		hostname, username, passwd, dirname = self.w_ftpinfo
 		if username and not passwd:
@@ -1054,17 +1054,17 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def save_to_file(self, filename, exporting = 0):
 		license = self.main.wanttosave()
 		if not license:
-			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+			windowinterface.showmessage('Cannot obtain a license to save.')
 			return 0
 		evallicense= (license < 0)
 		url = MMurl.pathname2url(filename)
 		mimetype = MMmimetypes.guess_type(url)[0]
 		if exporting and mimetype != 'application/smil':
-			windowinterface.showmessage('Publish to SMIL (*.smi or *.smil) files only')
+			windowinterface.showmessage('Publish to SMIL (*.smi or *.smil) files only.')
 			return
 		if mimetype == 'application/smil':
 			if not exporting:
-				answer = windowinterface.GetOKCancel('You will lose GRiNS specific information by saving your project as SMIL.')
+				answer = windowinterface.GetOKCancel('GRiNS-specific information will be lost if you save your project as SMIL.')
 				if answer != 0:
 					return
 		else:
@@ -1146,7 +1146,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def save_to_ftp(self, filename, smilurl, w_ftpparams, m_ftpparams):
 		license = self.main.wanttosave()
 		if not license:
-			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+			windowinterface.showmessage('Cannot obtain a license to save.')
 			return 0
 		evallicense= (license < 0)
 		self.pre_save()
@@ -1230,13 +1230,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def export_to_html_time(self, filename):
 		license = self.main.wanttosave()
 		if not license:
-			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+			windowinterface.showmessage('Cannot obtain a license to save.')
 			return 0
 		evallicense= (license < 0)
 		url = MMurl.pathname2url(filename)
 		mimetype = MMmimetypes.guess_type(url)[0]
 		if mimetype != 'text/html':
-			windowinterface.showmessage('Publish to HTML (*.htm or *.html) files only')
+			windowinterface.showmessage('Publish to HTML (*.htm or *.html) files only.')
 			return
 		self.pre_save()
 		try:
@@ -1267,13 +1267,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def restore_callback(self):
 		if self.changed or (self.sourceview != None and self.sourceview.is_changed()):
-			l1 = 'Are you sure you want to re-read the file?\n'
-			l2 = '(This will destroy the changes you have made)\n'
-			l3 = 'Click OK to restore, Cancel to keep your changes'
 			windowinterface.showmessage(
-				l1+l2+l3, mtype = 'question',
+				'This will discard all changes since the last save.\n\n'+
+				'Are you sure you want to do this?',
+				mtype = 'question',
 				callback = (self.do_restore, ()),
-				title = 'Destroy?')
+				title = 'Revert to saved?')
 			return
 		self.do_restore()
 
@@ -1561,9 +1560,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 		# the things to do depend of the case
 		if sourceModified:
-			message = 'Are you sure you want to close the document?\n'+\
-					'(This will destroy the changes you have made)\n' +\
-					'Click OK to close, Cancel to keep your changes.'
+			message = 'There are unsaved changes in the source view.\n' + \
+				'Discard these changes?'
 			ret = windowinterface.GetOKCancel(message, self.window)
 			if ret == 0:
 				# yes, the user is agree to discard the modifications
@@ -1573,7 +1571,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				return 0
 
 		# the source has been modified			
-		message = 'You haven\'t saved your changes yet.\n' + \
+		message = 'There are unsaved changes in your document.\n' + \
 			 'Do you want to save them before closing?'			
 		ret = windowinterface.GetYesNoCancel(message, self.window)
 		
@@ -1587,7 +1585,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# the user want to save the document, before to close
 		utype, host, path, params, query, fragment = urlparse(self.filename)
 		if (utype and utype != 'file') or (host and host != 'localhost'):
-			windowinterface.showmessage('Cannot save to URL',
+			windowinterface.showmessage('Cannot save nonlocal document.',
 						    mtype = 'warning')
 			return 0
 		file = MMurl.url2pathname(path)
@@ -1679,9 +1677,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					else:
 						msg = msg.args[0]
 				windowinterface.showmessage(
-					'Open operation failed.\n'+
-					'File: '+url+'\n'+
-					'Error: '+`msg`)
+					'Cannot open: %s\n\n%s.' % (url, msg))
 				return 0
 
 		if grinsTarget:

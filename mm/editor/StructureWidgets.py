@@ -686,7 +686,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			try:
 				return MMurl.urlretrieve(url)[0]
 			except IOError, arg:
-				self.set_infoicon('error', 'Cannot load image: %s'%`url`)
+				self.set_infoicon('error', 'Cannot open image: %s'%url)
 		# either not an image, or image couldn't be found
 		return os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
 
