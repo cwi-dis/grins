@@ -200,6 +200,7 @@ class _CommonWindow:
 		self._fgcolor = parent._fgcolor
 		self._clip = None
 		self._clipincludingchildren = None
+		self._redrawguarantee = None
 		self._button_region = None
 		self._active_displist = None
 		self._eventhandlers = {}
@@ -375,20 +376,21 @@ class _CommonWindow:
 		self._wtd_cursor = cursor
 		## Warn parent? self._parent.setcursor(cursor)
 
-	def newdisplaylist(self, bgcolor=None):
+	def newdisplaylist(self, bgcolor=None, units=UNIT_SCREEN):
 		"""Return new, empty display list"""
 		if bgcolor is None:
 			if not self._transparent:
 				bgcolor = self._bgcolor
 		else:
 			bgcolor = self._convert_color(bgcolor)
-		return mw_displaylist._DisplayList(self, bgcolor)
+		return mw_displaylist._DisplayList(self, bgcolor, units)
 
 	def setredrawfunc(self, func):
 		if func is None or callable(func):
 			self._redrawfunc = func
 		else:
 			raise error, 'invalid function'
+		self._mac_setredrawguarantee(None)
 
 	def setclickfunc(self, func):
 		"""Intercept low-level mouse clicks (mac-specific)"""
@@ -1084,6 +1086,13 @@ class _CommonWindow:
 				Qd.UnionRgn(r, r2, r)
 				Qd.DisposeRgn(r2)
 				didsome = 1
+		elif self._redrawguarantee != None:
+			print 'Pickup redraw guarantee', self._redrawguarantee, 'out of', self.qdrect() #DBG
+			r2 = Qd.NewRgn()
+			Qd.RectRgn(r2, self._redrawguarantee)
+			Qd.UnionRgn(r, r2, r)
+			Qd.DisposeRgn(r2)
+			didsome = 1
 		# The difficult case: we're not active, but our children may be.
 		for w in self._subwindows:
 			r2 = w._getredrawguarantee()
@@ -1099,6 +1108,11 @@ class _CommonWindow:
 		Qd.SectRgn(r, r2, r)
 		Qd.DisposeRgn(r2)
 		return r
+		
+	def _mac_setredrawguarantee(self, box):
+		print 'set redrawguarantee', self, box #DBG
+		self._redrawguarantee = box
+		self._clipchanged()
 					
 	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
 		global _in_create_box
@@ -2168,6 +2182,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
 			title="", adornments=None, canvassize = None, commandlist=None,
 			resizable=1, bgcolor=None):
+		print 'DBG: mainwindow, coords=', (x, y, w, h)
 		self._title = title
 		self._istoplevel = 1
 		self._resizable = resizable
@@ -2518,6 +2533,7 @@ class _SubWindow(_CommonWindow):
 		
 		self._istoplevel = 0
 		self._units = units
+		print 'DBG: subwindow, units=', units, 'coords=', coordinates
 		_CommonWindow.__init__(self, parent, wid, z, bgcolor)
 		
 		x, y, w, h = parent._convert_coordinates(coordinates, units = units)
