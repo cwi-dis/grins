@@ -2142,6 +2142,9 @@ class ChannelWindow(Channel):
 					# for optimization
 					if xsize == -1:
 						xsize, ysize = node.GetDefaultMediaSize(100, 100)
+						# after a arming default, xsize or ysize value are equal to 0 !
+						if xsize == 0: xsize=1
+						if ysize == 0: ysize=1
 						
 					# test if xCoordinates or yCoordinates
 					if n%2 == 0:
@@ -2157,6 +2160,9 @@ class ChannelWindow(Channel):
 			rArgs = [A_SHAPETYPE_ELIPSE]
 			xCenter, yCenter, radius = args[1:]
 			xsize, ysize = node.GetDefaultMediaSize(100, 100)
+			# after a arming default, xsize or ysize value are equal to 0 !
+			if xsize == 0: xsize=1
+			if ysize == 0: ysize=1
 			
 			if type(xCenter) == type(0): # any integer number
 				rArgs.append(float(xCenter)/xsize)
