@@ -126,7 +126,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'uGroup': (self.start_u_group, self.end_u_group),
 			'region': (self.start_region, self.end_region),
 			'root-layout': (self.start_root_layout, self.end_root_layout),
-			'topLayout': (self.start_top_layout, self.end_top_layout),
+			'viewport': (self.start_viewport, self.end_viewport),
 			GRiNSns+' '+'layouts': (self.start_layouts, self.end_layouts),
 			GRiNSns+' '+'layout': (self.start_Glayout, self.end_Glayout),
 			'body': (self.start_body, self.end_body),
@@ -167,7 +167,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__context = context
 		self.__root = None
 		self.__root_layout = None
-		self.__top_layout = None
+		self.__viewport = None
 		self.__tops = {}
 		self.__topchans = []
 		self.__container = None
@@ -1940,7 +1940,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 
 		if self.__region is not None:
-			if self.__top_layout is None:
+			if self.__viewport is None:
 				self.syntax_error('no nested regions allowed in root-layout windows')
 			if self.__context.attributes.get('project_boston') == 0:
 				self.syntax_error('nested regions not compatible with SMIL 1.0')
@@ -1948,9 +1948,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			pregion = self.__region[0]
 			attrdict['base_window'] = pregion
 			self.__childregions[pregion].append(id)
-		elif self.__top_layout is not None:
-			attrdict['base_window'] = self.__top_layout
-			self.__childregions[self.__top_layout].append(id)
+		elif self.__viewport is not None:
+			attrdict['base_window'] = self.__viewport
+			self.__childregions[self.__viewport].append(id)
 		else:
 			if not self.__tops.has_key(None):
 				attrs = {}
@@ -1968,7 +1968,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__region = id, self.__region
 		self.__regionlist.append(id)
 		self.__childregions[id] = []
-		self.__topregion[id] = self.__top_layout # None if not in topLayout
+		self.__topregion[id] = self.__viewport # None if not in viewport
 
 	def end_region(self):
 		if self.__region is None:
@@ -2020,22 +2020,22 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def end_root_layout(self):
 		pass
 
-	def start_top_layout(self, attributes):
+	def start_viewport(self, attributes):
 		if self.__in_layout != LAYOUT_SMIL and \
 		   self.__in_layout != LAYOUT_EXTENDED:
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
 		if self.__in_layout != LAYOUT_EXTENDED:
-			self.syntax_error('topLayout not allowed in layout type %s' % SMIL_BASIC)
+			self.syntax_error('viewport not allowed in layout type %s' % SMIL_BASIC)
 		if self.__context.attributes.get('project_boston') == 0:
-			self.syntax_error('topLayout not compatible with SMIL 1.0')
+			self.syntax_error('viewport not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if id is None:
-			id = self.__mkid('topLayout')
+			id = self.__mkid('viewport')
 			attributes['id'] = id
-		self.__top_layout = id
+		self.__viewport = id
 		self.__childregions[id] = []
 		width = attributes['width']
 		if width[-2:] == 'px':
@@ -2067,8 +2067,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				   'declheight':height,
 				   'attrs':attributes}
 
-	def end_top_layout(self):
-		self.__top_layout = None
+	def end_viewport(self):
+		self.__viewport = None
 
 	def start_user_attributes(self, attributes):
 		if self.__context.attributes.get('project_boston') == 0:
