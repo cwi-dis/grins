@@ -119,6 +119,25 @@ class SelectPopupMenu(PopupMenu):
 #
 _arrow = Qd.qd.arrow
 _watch = Qd.GetCursor(4).data
+_hand = None
+_channel = None
+_link = None
+CURSORS={}
+
+def _init_cursors():
+	global _hand, _channel, _link, CURSORS
+	_hand = Qd.GetCursor(512).data
+	_channel = Qd.GetCursor(513).data
+	_link = Qd.GetCursor(514).data
+	
+	# These funny names are the X names for the cursors, used by the
+	# rest of the code
+	CURSORS={
+		'watch': _watch,
+		'stop': _channel,
+		'channel': _channel,
+		'link': _link
+	}
 
 #
 # ID's of resources
@@ -202,10 +221,23 @@ class _Event:
 		self._timerfunc = None
 		self._time = Evt.TickCount()/TICKS_PER_SECOND
 		self._idles = []
+		self._grabbed = None
 		l, t, r, b = Qd.qd.screenBits.bounds
 		self._draglimit = l+4, t+4+_screen_top_offset, r-4, b-4
 		self.removed_splash = 0
 
+	def grab(self, dialog):
+		print 'grab', dialog
+		if dialog:
+			if self._grabbed:
+				print 'Another window is already grabbed!'
+				beep()
+				self._grabbed = None
+				return
+			self._grabbed = dialog._wid
+		else:
+			self._grabbed = None
+					
 	def mainloop(self):
 		while 1:
 			while self._timers:
@@ -246,6 +278,7 @@ class _Event:
 				import splash
 				splash.splash()
 				self.removed_splash = 1
+			self._fixcursor() # Should return a region
 			gotone, event = Evt.WaitNextEvent(EVENTMASK, timeout)
 		
 			if gotone:
@@ -294,6 +327,9 @@ class _Event:
 	
 	def _handle_activate_event(self, event):
 		what, message, when, where, modifiers = event
+		# XXXX Shouldn't be here, only on process switches
+		self._cur_cursor = None	# We don't know the active cursor
+		
 		wid = Win.WhichWindow(message)
 ##		print 'DBG activate', wid, event
 		if not wid:
@@ -347,10 +383,19 @@ class _Event:
 			else:
 				partcode = Windows.inContent
 		if partcode == Windows.inContent:
-			if wid == Win.FrontWindow():
+			frontwin = Win.FrontWindow()
+			if wid == frontwin:
+				# Check that we don't have a grabbed window that has been pushed behind
+				if self._grabbed and self._grabbed != wid:
+					beep()
+					self._grabbed.SelectWindow()
+					return
 				# Frontmost. Handle click.
 				self._handle_contentclick(wid, 1, where, event, (modifiers & Events.shiftKey))
 			else:
+				if self._grabbed and self._grabbed != wid:
+					beep()
+					wid = self._grabbed
 				# Not frontmost. Activate.
 				wid.SelectWindow()
 		elif partcode == Windows.inDrag:
@@ -456,8 +501,9 @@ class _Event:
 # The _Toplevel class represents the root of all windows.  It is never
 # accessed directly by any user code.
 class _Toplevel(_Event):
-	def __init__(self):
+	def __init__(self, closing=0):
 		_Event.__init__(self)
+		_init_cursors()
 		self._closecallbacks = []
 		self._subwindows = []
 		self._windowgroups = []
@@ -468,6 +514,8 @@ class _Toplevel(_Event):
 		self._hfactor = self._vfactor = 1.0
 		self.defaultwinpos = 10	# 1 cm from topleft we open the first window
 		self._command_handler = None
+		self._cursor_is_default = 1
+		self._cur_cursor = None
 
 		self._initmenu()		
 		MacOS.EnableAppswitch(0)
@@ -526,7 +574,7 @@ class _Toplevel(_Event):
 			group.close()
 		if self._command_handler:
 			del self._command_handler
-		self.__init__()		# clears all lists
+		self.__init__(1)		# clears all lists
 		MacOS.EnableAppswitch(1)
 
 	def addclosecallback(self, func, args):
@@ -736,10 +784,28 @@ class _Toplevel(_Event):
 		return 1
 
 	def setcursor(self, cursor):
-		if cursor == 'watch':
-			Qd.SetCursor(_watch)
+		if CURSORS.has_key(cursor):
+			data = CURSORS[cursor]
+			Qd.SetCursor(data)
+			self._cursor_is_default = 0
 		else:
-			Qd.SetCursor(_arrow)
+			self._cursor_is_default = 1
+			self._cur_cursor = None
+			self._fixcursor()
+			
+	def _fixcursor(self):
+		"""Select watch or hand cursor"""
+		wtd_cursor = _arrow
+		wid = Win.FrontWindow()
+		if self._wid_to_window.has_key(wid):
+			win = self._wid_to_window[wid]
+			Qd.SetPort(wid)
+			where = Evt.GetMouse()
+			if win._mouse_over_button(where):
+				wtd_cursor = _hand
+		if wtd_cursor != self._cur_cursor: 
+			Qd.SetCursor(wtd_cursor)
+			self._cur_cursor = wtd_cursor
 
 	def pop(self):
 		pass
@@ -1093,6 +1159,27 @@ class _CommonWindow:
 			sys.exc_traceback = None
 			return
 		func(arg, self, (0, 0, 0))
+		
+	def _mouse_over_button(self, where):
+		for ch in self._subwindows:
+			if Qd.PtInRect(where, ch.qdrect()):
+				try:
+					return ch._mouse_over_button(where)
+				except Continue:
+					pass
+		
+		# XXXX Need to cater for html windows and such
+		
+		wx, wy, ww, wh = self._rect
+		x, y = where
+		x = float(x-wx)/ww
+		y = float(y-wy)/wh
+
+		if self._active_displist:
+			for b in self._active_displist._buttons:
+				if b._inside(x, y):
+					return 1
+		return 0
 		
 	def _contentclick(self, down, where, event, shifted):
 		"""A click in our content-region. Note: this method is extended
@@ -1917,6 +2004,8 @@ def showmessage(text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'message',
 		     title = 'message'):
 	import EasyDialogs
+	if '\n' in text:
+		text = string.join(string.split(text, '\n'), '\r')
 	EasyDialogs.Message(text)
 	if callback:
 		callback()
