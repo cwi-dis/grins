@@ -47,9 +47,11 @@ class _FileDict:
 		return module
 _filedict = _FileDict()
 
-def reader(filename):
-	file = open(filename, 'rb')
-	filetype = what.what(file)
+def reader(file, filetype = None):
+	if type(file) == type(''):
+		file = open(file, 'rb')
+	if filetype is None:
+		filetype = what.what(file)
 	if not filetype:
 		file.close()
 		raise audio.Error, 'Unknown audio file type (bad magic number)'
