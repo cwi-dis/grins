@@ -156,6 +156,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "rma"=..\..\mmpython\rmasdk\rma.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "win32api"=..\..\..\python\Extensions\win32\win32api.dsp - Package Owner=<4>
 
 Package=<5>
