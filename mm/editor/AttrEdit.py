@@ -1830,6 +1830,25 @@ class CssColorAttrEditorField(AttrEditorField):
 			return colors.rcolors[color]
 		return svalue[1]+' '+svalue[2]+' '+svalue[3]		
 
+	def getInheritedValue(self):
+		node = self.wrapper.getselection()
+		
+		# get the layout parent. because the current 'inherit' value is not applied yet
+		if node.getClassName() == 'MMNode':
+			parentNode = node.GetChannel()
+		else:
+			parentNode = node.GetParent()
+		if parentNode is None:
+			return None
+		
+		transparent = parentNode.GetInherAttrDef('transparent', None)
+		if transparent:
+			bgcolor = None
+		else:
+			bgcolor = parentNode.GetInherAttrDef('bgcolor', None)
+
+		return bgcolor
+
 class CssPosAttrEditorField(AttrEditorField):
 # a parsed value is either:
 # - a real number (0 to 1) representing a percent value

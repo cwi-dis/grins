@@ -774,6 +774,9 @@ class ColorCtrl(AttrCtrl):
 	def drawOn(self,dc):
 		rc=self._indicatorRC
 		ct=self.getdispcolor()
+		if ct == None:
+			# do not draw when transparent color
+			return
 		for c in ct:
 			if not (0 <= c <= 255):
 				return
@@ -914,20 +917,18 @@ class CssColorCtrl(ColorCtrl):
 				self._radioTransparent.setcheck(1)
 				self._radioInherit.setcheck(0)
 				self._radioColor.setcheck(0)
-				self._attrval.settext('')
 			elif val == 'inherit':
 				self.enable(0)
 				self._radioInherit.setcheck(1)
 				self._radioTransparent.setcheck(0)
 				self._radioColor.setcheck(0)
-				self._attrval.settext('')
 			else:
 				self.enable(1)
 				self._radioColor.setcheck(1)
 				self._radioTransparent.setcheck(0)
 				self._radioInherit.setcheck(0)
-				self._attrval.settext(val)
-				self.invalidateInd()
+			self.__updateText()
+			self.invalidateInd()
 		self.__setting = 0
 
 	def getvalue(self):
@@ -941,10 +942,22 @@ class CssColorCtrl(ColorCtrl):
 				self.invalidateInd()
 				self.currentValue = self._attrval.gettext()
 				self.enableApply()
+
+	def getdispcolor(self):
+		if self.currentValue in ('','transparent'):
+			return None
+		if self.currentValue  == 'inherit':
+			color = self._attr.getInheritedValue()
+		else:
+			color = ColorCtrl.getdispcolor(self)
+		return color
 			
 	def OnBrowse(self,id,code):
 		if not self._initctrl: return
-		r,g,b=self.getdispcolor()
+		dispcolor = self.getdispcolor()
+		if dispcolor is None:
+			dispcolor = ColorCtrl.getdispcolor(self)
+		r, g, b = dispcolor
 		rv = self.ColorSelect(r, g, b)
 		if rv != None:
 			self._radioTransparent.setcheck(0)
@@ -959,18 +972,41 @@ class CssColorCtrl(ColorCtrl):
 	def onColorCheck(self, id, code):
 		self.enable(1)
 		self.currentValue = self._attrval.gettext()
+		if self.currentValue == '':
+			self.currentValue = 'transparent'
+		self.invalidateInd()
 		self.enableApply()
 		
 	def onTransparentCheck(self, id, code):
 		self.enable(0)
 		self.currentValue = 'transparent'
+		self.__updateText()
+		self.invalidateInd()
 		self.enableApply()
 
 	def onInheritCheck(self, id, code):
 		self.enable(0)
 		self.currentValue = 'inherit'
+		self.__updateText()
+		self.invalidateInd()
 		self.enableApply()
 
+	def __updateText(self):
+		value = self.currentValue
+		if value is None or value == 'transparent':
+			txt = ''
+		elif value == 'inherit':
+			color = self._attr.getInheritedValue()
+			if color is None:
+				txt = ''
+			else:
+				txt = self.convertcolor(self.getdispcolor())
+		else:
+			txt = value
+		self.__setting = 1
+		self._attrval.settext(txt)
+		self.__setting = 0
+		
 # Ctrl representing a css pos value
 class CssPosCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
