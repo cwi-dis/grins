@@ -211,9 +211,9 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		if self._showing:
 			old=dc.SetTextColor(win32mu.RGB(self._showing))
 		if hasattr(self,'_z'):
-			s = '%s (z=%d t=%d)'%(self._title,self._z,self._transparent)
+			s = '%s (z=%d)'%(self._title,self._z)
 		else:
-			s = '%s: z undefined'%self._title
+			s = self._title
 		rc.inflateRect(-2,-2)
 		dc.SetBkMode(win32con.TRANSPARENT)
 		dc.DrawText(s,rc.tuple(),win32con.DT_SINGLELINE|win32con.DT_TOP|win32con.DT_CENTER)
