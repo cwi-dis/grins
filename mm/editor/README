@@ -1,20 +1,34 @@
-This directory contains a new CMIF viewer.  As always, it is not
-complete (I'm going on vacation first).  Here's a little road map of
-the code -- read the comments in each file to learn more.
+This is (will be, at least) the integrated version of the MM editor.
+I am collecting the different views (player, block view and channel
+view) and will glue them together with a little menu that allows the
+user to open and close individual views and to quit.  Saving may also
+be a possibility.
 
-presview.py		Main program for testing the viewer.
+
+main.py			Main program for testing the MM editor.
 
 Player.py		The viewer, or presentation view.  This lets
 			you play, pause and stop the presentation.
 			It also lets you edit the attributes of the
 			root node, but this is not particularly useful.
 
-Clist.py		Display a list of buttons, one for each
+BlockView.py		RobertL's block view.  I try to minimize the
+			hacking, but I have to add things like init(),
+			destroy(), show() and hide().
+
+ChannelEdit.py		Display a list of buttons, one for each
 			channel, and lets you edit the channel's
 			attributes.  This should be extended with
 			functions to create and delete channels.
 			The channels actually use (some of) the
-			attributes you set here!
+			attributes you set here!  *** This will go
+			away ***
+
+StyleEdit.py		A dialog box that lets you edit the style
+			dictionary.  Currently you can add, rename and
+			delete styles, but you can't edit them; for
+			that I still need to make a "style" wrapper
+			in ../lib/AttrEdit.py.
 
 Channel.py		Base class for all channels.  Defines the
 			interface to a channel and implements a null
@@ -24,43 +38,37 @@ NullChannel.py		Null channel class.  (This is just a renaming
 			of Channel, which already implements dummy
 			versions of all methods.)
 
-SoundChannel.py		Sound channel class (currently also a null
-			channel).
-
 TextChannel.py		Text channel class.  Currently very primitive
 			(prints only one string, no 'grp' nodes).
 			In the future, this should also incorporate an
 			internal editor for text leaves.
 
-glwindow.py		Low-level abstraction to dispatch events to GL
-			windows.  Also contains functions to dispatch
-			events (continuously or one-at-a-time) and a
-			utility to translate X-style window geometry
-			into GL prefsize() or prefposition() calls.
+SoundChannel.py		Sound channel class.  This uses the new SGI
+			audio board and library, available in IRIX 4.0
+			only, on the Indigo and 4D/35 machines only.
+			It supports the sound format created by the
+			recordaiff utility, but also understands sound
+			files created by my tools on the 4D/25.
 
+ImageChannel.py		Image channel class.  This works by forking a
+			separate process that execs a hacked version
+			of showimg, taking care that showimg's window
+			is placed in the center of the image channel's
+			window.  Don't move the window in the demo,
+			and don't use images larger than the window :-)
 
 
 There are plenty of things to do.
 
-One of the most obvious requirements is to add more channels (GIF,
-images, PostScript, Indigo sound) and to give the existing ones more
-functionality (support structured and multi-line text in the text
-channel).  This is also quite boring.
+One of the most obvious requirements is to give the channels more
+functionality (like support for structured and multi-line text in the
+text channel).  This is quite boring -- but it has to be done.
 
 Creating an integrated editor for text objects is more of a challenge.
 
 Turning the entire presentation view into something in which you can
 actually edit the structure of the document (if it is not too
 complicated) is a three-starred exercise.
-
-Integration with the other views (channel view, block view, tree view)
-is technically simple: all the other views are implemented by one or
-more forms whose callbacks get handled by the main loop in the
-Player's run() method.  There can be a global (similar to FrameMaker's
-small global menu window) to control which views are currently visible.
-
-By this time we should also have a way to save the changed document to
-a file.  This is simple enough.
 
 Problems arise when we want to ensure that views don't allow editing
 while the presentation view is actually playing the document (play or
@@ -72,8 +80,8 @@ Let's not forget that the real goal is an annotation editor -- we need
 a whole buch of high-level editing operations to support this.
 
 Another original goal of the project is portability.  With the current
-set-up we can forget that: FORMS requires GL in RGB mode, the audio
-channel will require Indigo or 4D/35 sound, etc.  The only
+set-up we can forget that: FORMS requires GL in RGB mode, the sound
+channel requires Indigo or 4D/35 sound, etc.  About the only
 parametrization left is screen size (Indigo: 1024 x 768, 4D/35: 1280 x
 1024), but that's pretty boring.
 
@@ -85,4 +93,4 @@ files in the current directory.)  When integrated with a power mail
 reader like MH, this may make a spiffy demonstration of multimedia
 mail...
 
---Guido, 15 Aug 1991
+--Guido, 11 Sep 1991
