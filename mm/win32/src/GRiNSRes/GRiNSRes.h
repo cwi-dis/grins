@@ -375,6 +375,7 @@
 #define IDC_34                          1159
 #define IDC_SAUDIODESCL                 1159
 #define IDC_41                          1160
+#define IDC_GROUP8                      1160
 #define IDC_42                          1161
 #define IDC_43                          1162
 #define IDC_51                          1163
@@ -401,6 +402,7 @@
 #define IDC_14                          1177
 #define IDC_SCUSTOMTESTSV               1177
 #define IDC_15                          1178
+#define IDC_SOPERATINGSYSTEML2          1178
 #define IDC_17                          1179
 #define IDC_SCALE1                      1180
 #define IDC_TEMPLATECOMBO               1181
