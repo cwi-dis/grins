@@ -114,7 +114,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	def __add_commands(self):
 		# Add the user-interface commands that are used for this window.
-		lightweight = features.lightweight
 		self.commands = [
 			CLOSE_WINDOW(callback = (self.hide, ())),
 
@@ -141,6 +140,7 @@ class HierarchyView(HierarchyViewDialog):
 			DRAG_MEDIA(),
 			DRAG_ANIMATE(),
 			DRAG_BRUSH(),
+			TIMESCALE(callback = (self.timescalecall, ('global',))),
 			TOGGLE_BWSTRIP(callback = (self.timescalecall, ('bwstrip',))),
 			]
 
@@ -149,8 +149,7 @@ class HierarchyView(HierarchyViewDialog):
 			#MERGE_CHILD(callback = (self.merge_child, ())),
 		]
 
-		if not lightweight:
-			self.interiorcommands.append(TIMESCALE(callback = (self.timescalecall, ('global',))))
+		if not features.lightweight:
 			self.interiorcommands.append(LOCALTIMESCALE(callback = (self.timescalecall, ('focus',))))
 			self.interiorcommands.append(CORRECTLOCALTIMESCALE(callback = (self.timescalecall, ('cfocus',))))
 			self.commands.append(PLAYABLE(callback = (self.playablecall, ())))
@@ -1263,6 +1262,7 @@ class HierarchyView(HierarchyViewDialog):
 		pass
 
 	def commit(self, type):
+		self.toplevel.setwaiting() # in case this hadn't been done yet
 		oldscrollpos = self.window.getscrollposition(units=windowinterface.UNIT_PXL)
 		self.refresh_scene_graph()
 
