@@ -16,18 +16,12 @@
 #include "win32cmd.h"
 #include "win32win.h"
 
-//HtmlEx Header Files
-#include "resource.h"
-#define PyIMPORT  __declspec(dllimport)
-#define PyEXPORT  __declspec(dllexport)
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void PyErr_Print (void);
 void CallbackExErrorFunc(char *str);
-PyEXPORT void initcallbackex();
+void initcallbackex();
 
 #ifdef __cplusplus
 }
