@@ -6,7 +6,7 @@ import Ctl
 import Controls
 import Events
 import Drag
-# import Dragconst
+import Dragconst
 import MacOS
 import mac_image
 import imgformat
@@ -1651,9 +1651,43 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		self._drop_enabled = onoff
 		
 	def _trackhandler(self, message, dragref, wid):
-		pass #print 'TRACK', message, dragref, wid
+##		print 'TRACK', message, dragref, wid
+		if not message in (Dragconst.kDragTrackingEnterWindow, 
+				Dragconst.kDragTrackingLeaveWindow):
+##			print 'skip message', message
+			return
+##		print 'DOIT', message, dragref, wid
+		rect = None
+		oldport = Qd.GetPort()
+		Qd.SetPort(self._wid)
+		dummy, where = dragref.GetDragMouse()
+		where = Qd.GlobalToLocal(where)
+ 		x, y = self._convert_qdcoords(where)
+## 		if 0 < x < 1 and 0 < y < 1:
+		if 1:
+			rect = self.qdrect()
+			rgn = Qd.NewRgn()
+			Qd.RectRgn(rgn, rect)
+			if message == Dragconst.kDragTrackingEnterWindow:
+				dragref.ShowDragHilite(rgn, 1)
+			else:
+				dragref.HideDragHilite()
+			Qd.DisposeRgn(rgn)
+		Qd.SetPort(oldport)
+##		print x, y, 'rect', rect
+					
 		
 	def _receivehandler(self, dragref, wid):
+		try:
+			func, arg = self._eventhandlers[DropFile]
+		except KeyError:
+			print 'No DropFile handler!'
+			return
+		dummy, where = dragref.GetDragMouse()
+		Qd.SetPort(self._wid)
+		where = Qd.GlobalToLocal(where)
+		x, y = self._convert_qdcoords(where)
+##		print 'MOUSE', x, y
 		n = dragref.CountDragItems()
 		for i in range(1, n+1):
 			refnum = dragref.GetDragItemReferenceNumber(i)
@@ -1663,10 +1697,13 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 				print 'Wrong type...', i, dragref.GetFlavorType(refnum, 1)
 				MacOS.SysBeep()
 				return
-			print 'hfs', fflags
+##			print 'hfs', fflags
 			datasize = dragref.GetFlavorDataSize(refnum, 'hfs ')
 			data = dragref.GetFlavorData(refnum, 'hfs ', datasize, 0)
-			print '        ->', self._decode_hfs_dropdata(data)
+			tp, cr, flags, fss = self._decode_hfs_dropdata(data)
+			fname = fss.as_pathname()
+##			print 'FILE', fname
+			func(arg, self, DropFile, (x, y, fname))
 
 	def _decode_hfs_dropdata(self, data):
 		tp = data[0:4]
