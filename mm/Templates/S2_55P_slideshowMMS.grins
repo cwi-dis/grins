@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/" xmlns:rn="http://features.real.com/2001/SMIL20/Extensions">
+  <head>
+    <meta name="title" content="MMS Slideshow"/>
+    <meta name="template_name" content="Automated MMS Slideshow"/>
+    <meta name="template_description" content="An MMS slideshow with automated authoring support."/>
+    <meta name="template_snapshot" content="T-icons/slideshow_MMS.bmp"/>
+    <meta name="project_html_page" content="external_player.html"/>
+    <layout>
+      <root-layout id="MMS_Slideshow" backgroundColor="black" width="240" height="270" GRiNS:collapsed="false"/>
+      <region id="audio" GRiNS:type="sound" GRiNS:collapsed="true"/>
+      <region id="Image" width="100%" height="70%" fit="meet" GRiNS:type="image" GRiNS:collapsed="false" GRiNS:showEditBackground="false" GRiNS:editBackground="#c000c0"/>
+      <region id="Text" width="100%" top="70%" height="30%" fit="meet" GRiNS:type="text" GRiNS:collapsed="false" GRiNS:showEditBackground="false" GRiNS:editBackground="#00c0c0"/>
+    </layout>
+    <GRiNS:viewinfo view="structure" top="10" left="10" width="426" height="383"/>
+  </head>
+  <body id="MMS Slideshow"
+        GRiNS:project_default_region_image="Image"
+        GRiNS:project_default_region_sound="audio"         GRiNS:project_default_region_text="Text"
+        GRiNS:thumbnailIcon="T-icons/slideshow_MMS.bmp"
+        GRiNS:thumbnailScale="false"
+        GRiNS:showtime="bwstrip"
+        GRiNS:timezoom="14"
+        GRiNS:project_forcechild="MMS_Slide"
+        GRiNS:emptyIcon="T-icons/dropITS.tif"
+        GRiNS:emptyText="Drop Slides onto Icon"
+        GRiNS:emptyColor="#f7f388" 
+        GRiNS:emptyDur="8s"
+        GRiNS:nonEmptyIcon="T-icons/dropITS.tif">
+
+    <GRiNS:assets skip-content="true">
+      <par id="MMS_Slide" GRiNS:thumbnailScale="false">
+        <img    region="Image"  dur="5s" src="#" GRiNS:allowedmimetypes="image"/>
+        <text   region="Text"   dur="5s" src="#" GRiNS:allowedmimetypes="text"/>
+        <audio  region="audio"           src="#" GRiNS:allowedmimetypes="audio"/>
+      </par>
+    </GRiNS:assets>
+  </body>
+</smil>
