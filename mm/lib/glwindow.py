@@ -109,7 +109,7 @@ from DEVICE import REDRAW, KEYBD, MOUSE3, MOUSE2, MOUSE1, INPUTCHANGE
 from DEVICE import WINSHUT, WINQUIT
 
 def dispatch(dev, val):
-	if dev = REDRAW:
+	if dev == REDRAW:
 		# Ignore events for unregistered windows
 		key = `val`
 		if windowmap.has_key(key):
@@ -118,7 +118,7 @@ def dispatch(dev, val):
 			window.redraw()
 		else:
 			report('REDRAW event for unregistered window')
-	elif dev = KEYBD:
+	elif dev == KEYBD:
 		if state.focuswindow:
 			gl.winset(state.focuswid)
 			state.focuswindow.keybd(val)
@@ -130,7 +130,7 @@ def dispatch(dev, val):
 			state.focuswindow.mouse(dev, val)
 		else:
 			report('MOUSE event with no focus window')
-	elif dev = INPUTCHANGE:
+	elif dev == INPUTCHANGE:
 		if state.focuswindow:
 			gl.winset(state.focuswid)
 			state.focuswindow.leavewindow()
@@ -145,7 +145,7 @@ def dispatch(dev, val):
 				state.focuswindow.enterwindow()
 			else:
 				report('INPUTCHANGE for unregistered window')
-	elif dev = WINSHUT:
+	elif dev == WINSHUT:
 		key = `val`
 		if windowmap.has_key(key):
 			gl.winset(val)
@@ -153,7 +153,7 @@ def dispatch(dev, val):
 			window.winshut()
 		else:
 			report('WINSHUT for unregistered window')
-	elif dev = WINQUIT:
+	elif dev == WINQUIT:
 		report('WINQUIT')
 		key = `val`
 		if windowmap.has_key(key):
@@ -181,18 +181,18 @@ def report(s):
 # XXX from right/top end!
 
 def setgeometry(arg):
-	if arg = None:
+	if arg == None:
 		return # Everything default
 	h, v, width, height = arg
-	if h < 0 and v < 0 and width = 0 and height = 0:
+	if h < 0 and v < 0 and width == 0 and height == 0:
 		return # Everything default
-	if width = 0 and height = 0:
+	if width == 0 and height == 0:
 		height = 300
 		width = 400
 	else:
 		# Default aspect ratio (height/width) is 3/4
-		if width = 0: width = int(height / 0.75)
-		elif height = 0: height = int(width * 0.75)
+		if width == 0: width = int(height / 0.75)
+		elif height == 0: height = int(width * 0.75)
 	if h < 0 and v < 0:
 		gl.prefsize(width, height)
 	else:
@@ -219,7 +219,7 @@ def getgeometry():
 # Change the geometry of a window
 
 def relocate(arg):
-	if arg = None: return
+	if arg == None: return
 	h, v, width, height = arg
 	scrwidth = gl.getgdesc(GL.GD_XPMAX)
 	scrheight = gl.getgdesc(GL.GD_YPMAX)
