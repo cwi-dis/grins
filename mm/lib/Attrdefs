@@ -40,7 +40,7 @@
 (bag_index (name) undefined 'Bag index' childnodename
 	'Name of child used as index' normal)
 
-(base_window (name) 'undefined' 'Channel base window' channelname
+(base_window (name) 'undefined' 'Channel base window' basechannelname
 	'Name of window in which channelwin is created' raw)
 
 (base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
