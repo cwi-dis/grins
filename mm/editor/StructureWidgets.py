@@ -1812,10 +1812,12 @@ class Icon(MMWidgetDecoration):
 		return self
 
 	def select(self):
+		print "DEBUG: Icon selected.", self
 		if self.selectable:
 			self.mother.need_redraw = 1 # TODO: optimise.
 			MMWidgetDecoration.select(self)
 	def unselect(self):
+		print "DEBUG: Icon unselected.", self
 		if self.selectable:
 			self.mother.need_redraw = 1
 			MMWidgetDecoration.unselect(self)
