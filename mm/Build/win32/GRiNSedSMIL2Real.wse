@@ -2191,6 +2191,76 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\QSG-T1.data\Pict-3.jpg
+  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Pict-3.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\QSG-T1.data\Pict-2.jpg
+  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Pict-2.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\QSG-T1.data\Pict-1.jpg
+  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Pict-1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\QSG-T1.data\Grachten.ra
+  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Grachten.ra
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\QSG-T1.data\Fiets.jpg
+  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Fiets.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\QSG-T1.data\Back3.gif
+  Destination=%MAINDIR%\DocCommon\QSG-T1.data\Back3.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\Assets\Pict-3.jpg
+  Destination=%MAINDIR%\DocCommon\Assets\Pict-3.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\Assets\Pict-2.jpg
+  Destination=%MAINDIR%\DocCommon\Assets\Pict-2.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\Assets\Pict-1.jpg
+  Destination=%MAINDIR%\DocCommon\Assets\Pict-1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\Assets\Grachten.mp3
+  Destination=%MAINDIR%\DocCommon\Assets\Grachten.mp3
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\Assets\Fiets.gif
+  Destination=%MAINDIR%\DocCommon\Assets\Fiets.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\QSG-T1.smil
+  Destination=%MAINDIR%\DocCommon\QSG-T1.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\QSG-T1.html
+  Destination=%MAINDIR%\DocCommon\QSG-T1.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\DocCommon\QSG-T1.grins
+  Destination=%MAINDIR%\DocCommon\QSG-T1.grins
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\Build\products\smil2real\tutorials.pdf
   Destination=%MAINDIR%\tutorials.pdf
   Flags=0000000010000010
