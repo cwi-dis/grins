@@ -56,6 +56,11 @@ os.environ["CMIF_USE_WIN32"] = "ON"
 if not os.environ.has_key('HOME'):
 	os.environ['HOME']=CMIFDIR
 
+# Turn pathnames into their full NT version
+import longpath
+for i in range(1, len(sys.argv)):
+	if os.path.exists(sys.argv[i]):
+		sys.argv[i] = longpath.short2longpath(sys.argv[i])
 
 import string
 import win32api
