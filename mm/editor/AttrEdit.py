@@ -420,11 +420,13 @@ class AttrEditor:
 			return
 		if not self.wrapper.transaction():
 			return
+		windowinterface.setcursor('watch')
 		for name in dict.keys():
 			value = dict[name]
 			self.wrapper.delattr(name)
 			self.wrapper.setattr(name, value)
 		self.wrapper.commit()
+		windowinterface.setcursor('')
 
 	#
 	# EditMgr interface
@@ -565,6 +567,9 @@ class FileButtonRow(ButtonRow):
 	def getlistentry(self):
 		name, label, help, bclass, s = ButtonRow.getlistentry(self)
 		return name, label, help, windowinterface.AttrFile, self
+
+	def parsevalue(self, string):
+		return string
 
 class TupleButtonRow(ButtonRow):
 	def __repr__(self):
