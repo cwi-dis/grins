@@ -63,8 +63,8 @@ int cl_format_wanted;
 int rgb_mode;
 int pixel_size;
 
-static type_lock gl_lock;
-extern type_lock getlocklock Py_PROTO((PyObject *));
+static PyThread_type_lock gl_lock;
+extern PyThread_type_lock getlocklock Py_PROTO((PyObject *));
 
 struct mpeg_data {
 	int m_width;		/* width of movie */
@@ -92,7 +92,7 @@ struct mpeg {
 	struct mpeg_data m_play; /* mpeg being played */
 	struct mpeg_data m_arm; /* movie being armed */
 	int m_pipefd[2];	/* pipe for synchronization with player */
-	type_sema m_dispsema;
+	PyThread_type_sema m_dispsema;
 #ifdef USE_GL
 	int m_wid;		/* window ID */
 #endif
