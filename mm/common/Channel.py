@@ -1183,6 +1183,7 @@ class ChannelWindow(Channel):
 		self._active_multiregion_transition = None
 		self._wingeom = None
 		self.__transparent = 1
+		self.__z = -1
 		self.__bgcolor = None
 		self.__viewportChan = None
 
@@ -1362,18 +1363,16 @@ class ChannelWindow(Channel):
 #			print self.__transparent
 #			print self.__bgcolor
 			# determinate the z-index
-			z = self._attrdict.get('z', -1)
-			self._curvals['z'] = (z, -1)
 			if self.want_default_colormap:
 				self.window = pchan.window.newcmwindow(pgeom,
 						transparent = self.__transparent,
-						z = z,
+						z = self.__z,
 						type_channel = self._window_type,
 						units = units)
 			else:
 				self.window = pchan.window.newwindow(pgeom,
 						transparent = self.__transparent,
-						z = z,
+						z = self.__z,
 						type_channel = self._window_type,
 						units = units)
 
@@ -1524,6 +1523,9 @@ class ChannelWindow(Channel):
 		self.__transparent = transparent
 		self.__bgcolor = bgcolor
 
+		# get the local z-index value from the node
+		self.__z = node.GetAttrDef('z', -1)
+		
 		if settings.activeFullSmilCss:
 			pchan = self._get_parent_channel()
 			pchan.childToActiveState()
