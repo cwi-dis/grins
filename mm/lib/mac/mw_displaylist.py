@@ -185,11 +185,10 @@ class _DisplayList:
 		else:
 			render_now = self._can_render_now()
 		if render_now:
-			if not window._clip:
-				window._mkclip()
+			clip = window._mac_getclip()
 			saveclip = Qd.NewRgn()
 			Qd.GetClip(saveclip)
-			Qd.SetClip(window._clip)
+			Qd.SetClip(clip)
 			self._render(clonestart)
 			Qd.SetClip(saveclip)
 			Qd.DisposeRgn(saveclip)

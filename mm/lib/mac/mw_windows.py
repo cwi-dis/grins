@@ -284,6 +284,15 @@ class _CommonWindow:
 		for ch in self._subwindows:
 			ch._clipchanged()
 			
+	def _mac_getclip(self, includechildren=0):
+		"""Get the clip region for ourselves, or for ourselves plus our children"""
+		if not self._clip:
+			self._mkclip()
+		if includechildren:
+			return self._ckipincludingchildren
+		else:
+			return self._clip
+			
 	def _buttonschanged(self):
 		"""Buttons have changed, zap the mouse region cache. This escalates upwards"""
 		if not self._parent or not self._onscreen_wid:
