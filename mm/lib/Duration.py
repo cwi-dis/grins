@@ -15,14 +15,13 @@ def get(node):
 	duration = MMAttrdefs.getattr(node, 'duration')
 	channel = node.GetChannel()
 	if duration == 0 and channel is not None and channel.has_key('type'):
+		loop = MMAttrdefs.getattr(node, 'loop')
+		if loop == 0:
+			return 0
 		context = node.GetContext()
 		ctype = channel['type']
 		filename = MMAttrdefs.getattr(node, 'file')
 		filename = context.findurl(filename)
-		loop = MMAttrdefs.getattr(node, 'loop')
-		if loop == 0:
-			# indefinite duration
-			return -1
 		if ctype == 'video':
 			import VideoDuration
 			try:

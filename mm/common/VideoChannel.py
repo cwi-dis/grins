@@ -158,6 +158,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if range[1]:
 			movie.SetEndFrame(range[1])
 		loop = self.armed_loop
+		self.played_loop = loop
 		if loop == 0:
 			movie.SetPlayLoopLimit(mv.MV_LIMIT_FOREVER)
 		else:
@@ -173,6 +174,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		r.UnionRectWithRegion(0, 0, window._form.width, window._form.height)
 		r.SubtractRegion(window._region)
 		window._topwindow._do_expose(r)
+		if loop == 0 and not self.armed_duration:
+			self.playdone(0)
 
 	def __stopplay(self):
 		if self.played_movie:

@@ -12,7 +12,6 @@ class MMNodeContext(MMNodeBase.MMNodeContext):
 	def __init__(self, nodeclass):
 		MMNodeBase.MMNodeContext.__init__(self, nodeclass)
 		self.nextuid = 1
-		self.editmgr = None
 		self.armedmode = None
 
 	def newnode(self, type):
@@ -139,15 +138,6 @@ class MMNodeContext(MMNodeBase.MMNodeContext):
 		   and self.uidmap[uid2].GetRoot() in self._roots))
 		return (srcok and dstok)
 
-	#
-	# Editmanager
-	#
-	def seteditmgr(self, editmgr):
-		self.editmgr = editmgr
-
-	def geteditmgr(self):
-		return self.editmgr
-
 class MMChannel(MMNodeBase.MMChannel):
 	def _setname(self, name): # Only called from context.setchannelname()
 		self.name = name
@@ -253,12 +243,6 @@ class MMNode(MMNodeBase.MMNode):
 					pass
 			x = x.parent
 		raise NoSuchAttrError, 'in GetInherDefAttr()'
-
-	def HasPauseAnchor(self):
-		for i in MMAttrdefs.getattr(self, 'anchorlist'):
-			if i[A_TYPE] == ATYPE_PAUSE:
-				return 1
-		return 0
 
 ## 	def GetSummary(self, name):
 ## 		if not self.summaries.has_key(name):
@@ -662,12 +646,12 @@ class MMNode(MMNodeBase.MMNode):
 
 	def EndPruneTree(self):
 		pass
-##		del self.sync_from
-##		del self.sync_to
-##		if self.type in ('seq', 'par'):
-##			for c in self.wtd_children:
-##				c.EndPruneTree()
-##			del self.wtd_children
+## 		del self.sync_from
+## 		del self.sync_to
+## 		if self.type in ('seq', 'par'):
+## 			for c in self.wtd_children:
+## 				c.EndPruneTree()
+## 			del self.wtd_children
 
 #	def gensr(self):
 #		if self.type in ('imm', 'ext'):
@@ -688,33 +672,35 @@ class MMNode(MMNodeBase.MMNode):
 	def gensr_leaf(self):
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
-		self.undef_dur = 0	# until proven otherwise
 		arg = self
 		result = [([(SCHED, arg), (ARM_DONE, arg)] + in0,
 			   [(PLAY, arg)] + out0)]
-		if not MMAttrdefs.getattr(self, 'duration'):
-			# there is no explicit duration
+		if not Duration.get(self):
+			# there is no (intrinsic or explicit) duration
+			# PLAY_DONE comes immediately, so in effect
+			# only wait for sync arcs
+			result.append(
+				([(PLAY_DONE, arg)] + in1,
+				 [(SCHED_DONE,arg)] + out1))
+			result.append(([(SCHED_STOP, arg)],
+				       [(PLAY_STOP, arg)]))
+		elif not MMAttrdefs.getattr(self, 'duration'):
+			# there is an intrinsic but no explicit duration
 			# keep active until told to stop
-			if in1:
-				# there is a terminating sync arc
-				if Duration.get(self) != 0:
-					# there is an intrinsic duration
-					# terminate when sync arc triggers
-					result.append((in1,
-						       [(TERMINATE, self)]))
-					in1 = []
-			elif not self.HasPauseAnchor() and \
-			     Duration.get(self) == 0:
-				self.undef_dur = 1
-			result.append(([(PLAY_DONE, arg)] + in1,
-				       [(SCHED_DONE,arg)] + out1))
+			# terminate on sync arcs
+			for ev in in1:
+				result.append(([ev], [(TERMINATE, self)]))
+			result.append(
+				([(PLAY_DONE, arg)],
+				 [(SCHED_DONE,arg)] + out1))
 			result.append(([(SCHED_STOP, arg)],
 				       [(PLAY_STOP, arg)]))
 		else:
 			# there is an explicit duration
 			# stop when done playing
-			if in1:
-				result.append((in1, [(TERMINATE, self)]))
+			# terminate on sync arc
+			for ev in in1:
+				result.append(([ev], [(TERMINATE, self)]))
 			result.append(
 				([(PLAY_DONE, arg)],
 				 [(SCHED_DONE,arg), (PLAY_STOP, arg)] + out1))
@@ -735,16 +721,13 @@ class MMNode(MMNodeBase.MMNode):
 		if in1:
 			# wait for sync arcs
 			srlist.append((in1, final))
-			self.undef_dur = 0
 		elif duration > 0:
 			# wait for duration
 			actions.append((SYNC, (duration, self)))
 			srlist.append(([(SYNC_DONE, self)], final))
-			self.undef_dur = 0
 		else:
-			# don't wait, but duration is undefined
+			# don't wait
 			actions[len(actions):] = final
-			self.undef_dur = 1
 		return srlist
 		
 	# XXXX temporary hack to do at least something on ALT nodes
@@ -755,7 +738,6 @@ class MMNode(MMNodeBase.MMNode):
 		out0, out1 = self.sync_to
 		srlist = []
 		duration = MMAttrdefs.getattr(self, 'duration')
-		self.undef_dur = 1
 		if duration > 0:
 			# if duration set, we must trigger a timeout
 			# and we must catch the timeout to terminate
@@ -763,21 +745,24 @@ class MMNode(MMNodeBase.MMNode):
 			out0 = out0 + [(SYNC, (duration, self))]
 			srlist.append(([(SYNC_DONE, self)],
 					[(TERMINATE, self)]))
-			self.undef_dur = 0
-		if in1:
-			srlist.append((in1, [(TERMINATE, self)]))
-			self.undef_dur = 0
-		arg = self.wtd_children[0]
-		srlist.append(([(SCHED, self)] + in0, [(SCHED, arg)] + out0))
-		srlist = srlist + arg.gensr()
-		srlist.append(([(SCHED_DONE, arg)],
-			       [(SCHED_DONE, self)] + out1))
-		srlist.append(([(SCHED_STOP, self)], [(SCHED_STOP, arg)]))
-		srlist.append(([(TERMINATE, self)],
-			       [(TERMINATE, arg), (SCHED_DONE, self)]))
-		if self.undef_dur:
-			self.undef_dur = arg.undef_dur
-		return srlist
+		prereqs = [(SCHED, self)] + in0
+		actions = out0[:]
+		tlist = []
+		actions.append((SCHED, self.wtd_children[0]))
+		srlist.append((prereqs, actions))
+		prereqs = [(SCHED_DONE, self.wtd_children[0])]
+		actions = [(SCHED_STOP, self.wtd_children[0])]
+		tlist.append((TERMINATE, self.wtd_children[0]))
+		last_actions = actions
+		actions = [(SCHED_DONE, self)]
+		srlist.append((prereqs, actions))
+		srlist.append(([(SCHED_STOP, self)],
+			       last_actions + out1))
+		tlist.append((SCHED_DONE, self))
+		srlist.append(([(TERMINATE, self)], tlist))
+		for ev in in1:
+			srlist.append(([ev], [(TERMINATE, self)]))
+		return srlist + self.wtd_children[0].gensr()
 
 	def gensr_bag(self):
 		if not self.wtd_children:
@@ -788,9 +773,8 @@ class MMNode(MMNodeBase.MMNode):
 			  ([(BAG_DONE, self)],     [(SCHED_DONE,self)] + out1),
 			  ([(SCHED_STOP, self)],   [(BAG_STOP, self)]),
 			  ([(TERMINATE, self)],    [])]
-		if in1:
-			result.append((in1, [(TERMINATE, self)]))
-		self.undef_dur = 0
+		for ev in in1:
+			result.append(([ev], [(TERMINATE, self)]))
 		return result
 	#
 	# gensr_headactions returns a list of srrecords and a list of
@@ -877,7 +861,6 @@ class MMNode(MMNodeBase.MMNode):
 		last_actions = []
 		t_list = []
 		duration = MMAttrdefs.getattr(self, 'duration')
-		self.undef_dur = 1
 		if duration > 0:
 			# if duration set, we must trigger a timeout
 			# and we must catch the timeout to terminate
@@ -885,38 +868,29 @@ class MMNode(MMNodeBase.MMNode):
 			out0 = out0 + [(SYNC, (duration, self))]
 			sr_list.append(([(SYNC_DONE, self)],
 					[(TERMINATE, self)]))
-		if in1:
-			sr_list.append((in1, [(TERMINATE, self)]))
 		for i in range(n_sr):
-			no_action = 0
 			if i == 0:
 				prereq = trigger_events
 				actions = out0[:]
 			else:
 				arg = self.wtd_children[i-1]
 				sr_list = sr_list + arg.gensr()
-				self.undef_dur = arg.undef_dur
 				prereq = [(SCHED_DONE, arg)]
 				actions = [(SCHED_STOP, arg)]
-				if i < n_sr-1 and \
-				   arg.undef_dur and \
-				   not self.wtd_children[i].sync_to[0]:
-					no_action = 1
 			if i == n_sr-1:
 				last_actions = actions
 				tail_srlist = self.gensr_tailactions(prereq,
 						    looping)
 				sr_list[len(sr_list):] = tail_srlist
 			else:
-				arg = self.wtd_children[i]
-				actions.append((SCHED, arg))
-				t_list.append((TERMINATE, arg))
-				if no_action:
-					actions = []
+				actions.append((SCHED, self.wtd_children[i]))
 				sr_list.append((prereq, actions))
-		if duration > 0 or in1:
-			self.undef_dur = 0
+			if i < n_sr-1:
+				t_list.append((TERMINATE,
+					       self.wtd_children[i]))
 		sr_list.append( ([(SCHED_STOP, self)], last_actions) )
+		for ev in in1:
+			sr_list.append(([ev], [(TERMINATE, self)]))
 ## 		t_list.append((SCHED_DONE, self))
 		sr_list.append(([(TERMINATE, self)], t_list))
 		return sr_list
@@ -940,32 +914,25 @@ class MMNode(MMNodeBase.MMNode):
 		result.append(([(SCHED_STOP, self)], slist))
 		result.append(([(TERMINATE, self)], tlist))
 
-		self.undef_dur = 1
-		if in1:
-			result.append((in1, [(TERMINATE, self)]))
-			self.undef_dur = 0
+		for ev in in1:
+			result.append(([ev], [(TERMINATE, self)]))
 		added_entry = 0
 		for arg in self.wtd_children:
 			alist.append((SCHED, arg))
 			slist.append((SCHED_STOP, arg))
 			tlist.append((TERMINATE, arg))
 			result = result + arg.gensr()
-			if not arg.undef_dur and termtype == 'FIRST':
-				self.undef_dur = 0
+			if termtype == 'FIRST':
 				added_entry = 1
 				result.append(([(SCHED_DONE, arg)],
 					       [(TERMINATE, self)]))
 			elif termtype != 'FIRST' and \
 			     termtype != 'LAST' and \
 			     MMAttrdefs.getattr(arg, 'name') == termtype:
-				if self.undef_dur:
-					self.undef_dur = arg.undef_dur
 				added_entry = 1
 				result.append(([(SCHED_DONE, arg)],
 					       [(TERMINATE, self)]))
 			else:
-				if self.undef_dur:
-					self.undef_dur = arg.undef_dur
 				plist.append((SCHED_DONE, arg))
 		if plist:
 			# come here only when there were children, and
@@ -991,19 +958,13 @@ class MMNode(MMNodeBase.MMNode):
 			# and we must catch the timeout to terminate
 			# the node
 			alist.append((SYNC, (duration, self)))
-			if self.undef_dur:
-				plist.append((SYNC_DONE, self))
-				self.undef_dur = 0
-			elif not added_entry:
+			if not added_entry:
 				tail_srlist = self.gensr_tailactions(
 					[(SYNC_DONE, self)], looping)
 				result[len(result):] = tail_srlist
 			else:
 				result.append(([(SYNC_DONE, self)],
 					       [(TERMINATE, self)]))
-		elif not self.wtd_children:
-			# XXXX Jack: This "shouldn't happen", I guess?
-			alist[len(alist):] = [(SCHED_DONE, self)] + out1
 		return result
 # 	#
 #	# gensr_arcs returns 4 lists of sync arc events: incoming head,
@@ -1028,12 +989,12 @@ class MMNode(MMNodeBase.MMNode):
 		if not seeknode:
 			seeknode = self
 ## Commented out for now: this cache messes up Scheduler.GenAllPrearms()
-##		if hasattr(seeknode, 'sractions'):
-##			sractions = seeknode.sractions[:]
-##			srevents = {}
-##			for key, val in seeknode.srevents.items():
-##				srevents[key] = val
-##			return sractions, srevents
+## 		if hasattr(seeknode, 'sractions'):
+## 			sractions = seeknode.sractions[:]
+## 			srevents = {}
+## 			for key, val in seeknode.srevents.items():
+## 				srevents[key] = val
+## 			return sractions, srevents
 		#
 		# First generate arcs
 		#
@@ -1048,11 +1009,7 @@ class MMNode(MMNodeBase.MMNode):
 		# Now run through the tree
 		#
 		srlist = self.gensr()
-		if self.undef_dur:
-			srlist.append(([(SCHED_DONE, self)], []))
-		else:
-			srlist.append(([(SCHED_DONE, self)],
-				       [(SCHED_STOP, self)]))
+		srlist.append(([(SCHED_DONE, self)], [(SCHED_STOP, self)]))
 
 		sractions, srevents = self.splitsrlist(srlist)
 		
@@ -1060,8 +1017,6 @@ class MMNode(MMNodeBase.MMNode):
 		seeknode.srevents = {}
 		for key, val in srevents.items():
 			seeknode.srevents[key] = val
-		if self.context.editmgr:
-			self.context.editmgr.register(seeknode)
 		return sractions, srevents
 
 	def splitsrlist(self, srlist, offset=0):
@@ -1116,7 +1071,6 @@ class MMNode(MMNodeBase.MMNode):
 			del self.prearmlists
 		except AttributeError:
 			pass
-		self.context.editmgr.unregister(self)
 
 	def kill(self):
 		pass
