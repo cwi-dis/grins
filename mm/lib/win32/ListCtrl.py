@@ -26,7 +26,7 @@ class ListCtrl(window.Wnd, DropTarget.DropTargetProxy):
 
 		# drag support
 		self._down = 0
-		self._dragging = 0
+##		self._dragging = 0
 
 		# drag and drop callbacks map
 		DropTarget.DropTargetProxy.__init__(self)
@@ -68,28 +68,30 @@ class ListCtrl(window.Wnd, DropTarget.DropTargetProxy):
 	# response to hooked windows messages
 	#
 	def OnLButtonDown(self, params):
-		msg = win32mu.Win32Msg(params)
-		point = msg.pos()
-		flags = msg._wParam
+##		msg = win32mu.Win32Msg(params)
+##		point = msg.pos()
+##		flags = msg._wParam
 		self._down = 1
-		self._dragging = 0
+##		self._dragging = 0
 		return 1
 
 	def OnLButtonUp(self, params):
 		self._down = 0
 ##		self._dragging = 0
-		if self._dragging:
-			self.ReleaseCapture()
+##		if self._dragging:
+##			self.ReleaseCapture()
 		return 1
 
 	def OnMouseMove(self, params):
-		if self._down and not self._dragging:
+##		print 'OnMouseMove', params, self._down
+		if self._down: # and not self._dragging:
 			if hasattr(self.parent, 'startDrag'):
 				if self.parent.startDrag():
-					self._dragging = 1
-					self.SetCapture()
+##					self._dragging = 1
+##					self.SetCapture()
+					self._down = 0
 					return 1
-			self.ReleaseCapture()
+##			self.ReleaseCapture()
 		return 1
 
 	def OnRButtonDown(self, params):		
