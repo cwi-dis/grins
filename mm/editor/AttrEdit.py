@@ -702,12 +702,6 @@ class AnimationWrapper(NodeWrapper):
 				'Animate node type', 'normal', flags.FLAG_ALL)
 		return NodeWrapper.getdef(self, name)
 
-	def setattr(self, name, value):
-		if name == 'targetElement':
-			root = self.node.GetRoot()
-			targnode = root.GetChildByName(value)
-			self.node.targetnode = targnode
-		NodeWrapper.setattr(self, name, value)
 		
 class PrefetchWrapper(NodeWrapper):
 	def __init__(self, toplevel, node):
