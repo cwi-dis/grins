@@ -442,35 +442,65 @@ class DnDListBox(ListBox):
 # ComboBox control class
 class ComboBox(Control):
 	def __init__(self,owner=None,id=-1):
+		self.__cancelindex = None
 		Control.__init__(self,owner,id)
 		self.__icmif() 
+
 	def setcursel(self,index):
-		if index==None: index=-1
+		if index is None:
+			index = -1
+		if self.__cancelindex is not None:
+			if index == self.__cancelindex:
+				index = 0
+			elif index > self.__cancelindex:
+				index = index - 1
 		self.sendmessage(win32con.CB_SETCURSEL,index)
+
 	def getcursel(self):
-		return self.sendmessage(win32con.CB_GETCURSEL)
+		index = self.sendmessage(win32con.CB_GETCURSEL)
+		if self.__cancelindex is not None and index >= self.__cancelindex:
+			index = index + 1
+		return index
+
 	def getcount(self):
-		return self.sendmessage(win32con.CB_GETCOUNT)
-	def insertstring(self,ix,str):
+		return self.sendmessage(win32con.CB_GETCOUNT) + (self.__cancelindex is not None)
+
+	def insertstring(self,index,str):
 		if not str: str='---'
-		self.sendmessage_ls(win32con.CB_INSERTSTRING,ix,str)
+		if self.__cancelindex is not None and index > self.__cancelindex:
+			index = index - 1
+		self.sendmessage_ls(win32con.CB_INSERTSTRING,index,str)
+
 	def addstring(self,str):
 		if not str: str='---'
 		return self.sendmessage_ls(win32con.CB_ADDSTRING,0,str)
-	def gettextlen(self,ix):
-		return self.sendmessage(win32con.CB_GETLBTEXTLEN,ix)
-	def gettext(self,ix):
-		n = self.gettextlen(ix) + 1
-		return self.sendmessage_rs(win32con.CB_GETLBTEXT,ix,n)
+
+	def gettextlen(self,index):
+		if self.__cancelindex is not None and index > self.__cancelindex:
+			index = index - 1
+		return self.sendmessage(win32con.CB_GETLBTEXTLEN,index)
+
+	def gettext(self,index):
+		if self.__cancelindex is not None and index > self.__cancelindex:
+			index = index - 1
+		n = self.gettextlen(index) + 1
+		return self.sendmessage_rs(win32con.CB_GETLBTEXT,index,n)
+
 	def resetcontent(self):
 		self.sendmessage(win32con.CB_RESETCONTENT)
+
 	def deletestring(self,index):
+		if self.__cancelindex is not None and index > self.__cancelindex:
+			index = index - 1
 		self.sendmessage(win32con.CB_DELETESTRING,index)
+
 	# edit box like interface
 	def setedittext(self,str):
 		self.sendmessage_ls(win32con.WM_SETTEXT,0,str)
+
 	def getedittextlength(self):
 		return self.sendmessage(win32con.WM_GETTEXTLENGTH)
+
 	def getedittext(self):
 		n=self.getedittextlength()+1
 		return self.sendmessage_rs(win32con.WM_GETTEXT,n,n)	
@@ -488,6 +518,7 @@ class ComboBox(Control):
 	def getpos(self):
 		'''Get the index of the currently selected option.'''
 		return self.getcursel()
+
 	def setpos(self,pos):
 		'''Set the index of the selected option.'''
 		self.setcursel(pos)
@@ -502,30 +533,39 @@ class ComboBox(Control):
 		for pos in range(startpos,len(optionlist)):
 			self.insertstring(pos,optionlist[pos])
 			self._optionlist.append(optionlist[pos])
+
 	def initoptions(self, optionlist,seloption=None):
 		self.resetcontent()
 		if not optionlist: return
 		self.setoptions(optionlist)
 		self.setcursel(seloption)	
+
 	def setoptions_cb(self, optionlist):
-		for item in optionlist:
+		for i in range(len(optionlist)):
+			item = optionlist[i]
 			if type(item)==type(()):
-				if item[0]=='Cancel':continue
+				if item[0]=='Cancel' and self.__cancelindex is None:
+					self.__cancelindex = i
+					continue
 				self.addstring(item[0])
 				self._optionlist.append(item[0])
 		self.setcursel(0)
+
 	def setsensitive(self,pos,f):
 		seloption=self.getcursel()
+		opos = pos
+		if self.__cancelindex is not None and pos > self.__cancelindex:
+			pos = pos - 1
 		str=self._optionlist[pos]
 		if f:
-			self.deletestring(pos)
-			self.insertstring(pos,str) # add it
+			self.deletestring(opos)
+			self.insertstring(opos,str) # add it
 		else: 
-			self.deletestring(pos) # remove it
+			self.deletestring(opos) # remove it
 			str='['+str+']'
-			self.insertstring(pos,str)
+			self.insertstring(opos,str)
 		self.setcursel(seloption)
-	
+
 
 ##################
 # A special class that it is both an MFC window and A LightWeightControl
