@@ -35,11 +35,10 @@ class _Convert:
 	def ok(self, file):
 		import os
 		if os.path.exists(file):
-			dummy = windowinterface.Dialog(
-				'Error', 'File already exists. Overwrite?',
-				1, 0,
-				[('Overwrite', (self.convert, (file,))),
-				 'Cancel'])
+			windowinterface.showmessage(
+				'File already exists. Overwrite?',
+				type = 'question', title = 'Overwrite?',
+				callback = (self.convert, (file,)))
 			return 1	# don't remove dialog
 		self.convert(file)
 
