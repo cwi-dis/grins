@@ -401,6 +401,24 @@ GetDeviceCaps(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", caps);
 }
 
+static char SetMiterLimit__doc__[] =
+"sets the limit for the length of miter joins for the specified device context"
+;
+static PyObject*
+SetMiterLimit(PyObject *self, PyObject *args)
+{
+	HDC hdc;
+	float eNewLimit;
+	if (!PyArg_ParseTuple(args, "if", &hdc, &eNewLimit))
+		return NULL;
+	float eOldLimit;
+	BOOL res = SetMiterLimit(hdc, eNewLimit, &eOldLimit);
+	if(!res){
+		seterror("SetMiterLimit", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("f", eOldLimit);
+}
 ////////////////////////////////////////
 // Path
 
@@ -1088,6 +1106,20 @@ PaintRgn(PyObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char PtInRegion__doc__[] =
+"determines whether the specified point is inside the region"
+;
+static PyObject*
+PtInRegion(PyObject *self, PyObject *args)
+{
+	HRGN hrgn;
+	int x, y;
+	if (!PyArg_ParseTuple(args, "i(ii)", &hrgn, &x, &y))
+		return NULL;
+	BOOL res = PtInRegion(hrgn, x, y);
+	return Py_BuildValue("i", res);
+}
+
 
 static struct PyMethodDef wingdi_methods[] = {
 	{"SetWorldTransform", (PyCFunction)SetWorldTransform, METH_VARARGS, SetWorldTransform__doc__},
@@ -1110,6 +1142,7 @@ static struct PyMethodDef wingdi_methods[] = {
 	{"SetPolyFillMode", (PyCFunction)SetPolyFillMode, METH_VARARGS, SetPolyFillMode__doc__},
 	{"SetArcDirection", (PyCFunction)SetArcDirection, METH_VARARGS, SetArcDirection__doc__},
 	{"GetDeviceCaps", (PyCFunction)GetDeviceCaps, METH_VARARGS, GetDeviceCaps__doc__},
+	{"SetMiterLimit", (PyCFunction)SetMiterLimit, METH_VARARGS, SetMiterLimit__doc__},
 
 	{"BeginPath", (PyCFunction)BeginPath, METH_VARARGS, BeginPath__doc__},
 	{"EndPath", (PyCFunction)EndPath, METH_VARARGS, EndPath__doc__},
@@ -1148,6 +1181,7 @@ static struct PyMethodDef wingdi_methods[] = {
 	{"PathToRegion", (PyCFunction)PathToRegion, METH_VARARGS, PathToRegion__doc__},
 	{"SelectClipRgn", (PyCFunction)SelectClipRgn, METH_VARARGS, SelectClipRgn__doc__},
 	{"PaintRgn", (PyCFunction)PaintRgn, METH_VARARGS, PaintRgn__doc__},
+	{"PtInRegion", (PyCFunction)PtInRegion, METH_VARARGS, PtInRegion__doc__},
 
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
