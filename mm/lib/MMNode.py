@@ -193,6 +193,7 @@ class MMNode(MMNodeBase.MMNode):
 ##		self.isloopnode = 0
 ##		self.isinfiniteloopnode = 0
 		self.looping_body_self = None
+		self.curloopcount = 0
 
 	#
 	# Private methods to build a tree
@@ -762,6 +763,16 @@ class MMNode(MMNodeBase.MMNode):
 	def gensr_alt(self):
 		if not self.wtd_children:
 			return self.gensr_empty()
+		selected_child = None
+		for child in self.wtd_children:
+			if child.IsPlayable():
+				selected_child = child
+				break
+		if selected_child:
+			self.wtd_children = [selected_child]
+		else:
+			self.wtd_children = []
+			return self.gensr_empty()
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
 		srlist = []
@@ -776,11 +787,11 @@ class MMNode(MMNodeBase.MMNode):
 		prereqs = [(SCHED, self)] + in0
 		actions = out0[:]
 		tlist = []
-		actions.append((SCHED, self.wtd_children[0]))
+		actions.append((SCHED, selected_child))
 		srlist.append((prereqs, actions))
-		prereqs = [(SCHED_DONE, self.wtd_children[0])]
-		actions = [(SCHED_STOP, self.wtd_children[0])]
-		tlist.append((TERMINATE, self.wtd_children[0]))
+		prereqs = [(SCHED_DONE, selected_child)]
+		actions = [(SCHED_STOP, selected_child)]
+		tlist.append((TERMINATE, selected_child))
 		last_actions = actions
 		actions = [(SCHED_DONE, self)]
 		srlist.append((prereqs, actions))
@@ -790,7 +801,7 @@ class MMNode(MMNodeBase.MMNode):
 		srlist.append(([(TERMINATE, self)], tlist))
 		for ev in in1:
 			srlist.append(([ev], [(TERMINATE, self)]))
-		return srlist + self.wtd_children[0].gensr()
+		return srlist + selected_child.gensr()
 
 	def gensr_bag(self):
 		if not self.wtd_children:
@@ -1089,6 +1100,7 @@ class MMNode(MMNodeBase.MMNode):
 		
 			
 	def GenAllSR(self, seeknode):
+		self.SetPlayability()
 		if not seeknode:
 			seeknode = self
 ## Commented out for now: this cache messes up Scheduler.GenAllPrearms()
@@ -1158,10 +1170,6 @@ class MMNode(MMNodeBase.MMNode):
 
 	def stoplooping(self):
 		self.curloopcount = 0
-
-	def SetPlayable(self):
-		# XXXX to be done by Jack
-		pass
 
 	# eidtmanager stuff
 	def transaction(self):
