@@ -150,12 +150,13 @@ class _StructView(DisplayListView):
 	def onMouseMove(self, params):
 		if self._tooltip is not None:
 			self.notifyTooltipForMouseMove(params)
-		msg=win32mu.Win32Msg(params)
-		point=msg.pos()
+		msg = win32mu.Win32Msg(params)
+		point = msg.pos()
+		point = self._DPtoLP(point)
 		self.onEvent(MouseMove, point)
 		if self._enableNodeDragDrop and self._dragging:
 			xp, yp = self._dragging
-			x, y =win32mu.Win32Msg(params).pos()
+			x, y = win32mu.Win32Msg(params).pos()
 			if math.fabs(xp-x)>4 or math.fabs(yp-y)>4:
 				str='%d %d' % (xp, yp)
 				# Enter C++ code...
