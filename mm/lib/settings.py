@@ -6,16 +6,18 @@ import windowinterface
 
 
 # Defaults:
-system_bitrate=14400	# Slow modem
-system_captions=0		# Don't show captions
-system_language=''		# No language preference
-system_overdub_or_caption='caption'
-				# Captions preferred over overdub
-system_screen_size=windowinterface.getscreensize()
-				# Size of screen
-system_screen_depth=windowinterface.getscreendepth()
-				# Depth of screen
-system_required=()	# Needs special handling in match...
+default_settings = {
+	'system_bitrate': 14400,	# Slow modem
+	'system_captions': 0,		# Don't show captions
+	'system_language': '',		# No language preference
+	'system_overdub_or_caption': 'caption', # Captions preferred over overdub
+	'system_screen_size': windowinterface.getscreensize(), # Size of screen
+	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
+	'system_required': (),		# Needs special handling in match...
+	'license': 'A-BAAA-O4BLB-HA-TPL0',
+}
+
+user_settings = {}
 
 # Which of these should match exactly:
 EXACT=['system_captions', 'system_language', 'system_overdub_or_captions']
@@ -28,19 +30,40 @@ ALL=['system_bitrate', 'system_captions', 'system_language',
 if os.name == 'posix':
 	PREFSFILENAME=os.environ['HOME']+'/.grins'
 elif os.name == 'mac':
-	PREFSFILENAME='Grins Preferences'
+	import macfs, MACFS
+	vrefnum, dirid = macfs.FindFolder(MACFS.kOnSystemDisk, 'pref', 1)
+	fss = macfs.FSSpec((vrefnum, dirid, 'GRiNS Preferences'))
+	PREFSFILENAME=fss.as_pathname()
 else:
 	PREFSFILENAME='grprefs.txt'
 
-if os.path.exists(PREFSFILENAME):
-	execfile(PREFSFILENAME)
+def restore():
+	global user_settings
+	user_settings = {}
+	if os.path.exists(PREFSFILENAME):
+		execfile(PREFSFILENAME, user_settings)
+	# Remove __globals__ and such from the user_settings dict
+	for k in user_settings.keys():
+		if k[:2] == '__':
+			del user_settings[k]
+		
+restore()
+
+def factory_defaults():
+	global user_settings
+	user_settings = {}
+	
+def get(name):
+	real_value = user_settings.get(name)
+	if real_value is None:		
+		real_value = default_settings.get(name)
+		if real_value is None:
+			print 'Warning: unknown system attribute', name
+			return 0
+	return real_value
 
 def match(name, wanted_value):
-	try:
-		real_value = globals()[name]
-	except KeyError:
-		print 'Warning: unknown system attribute', name
-		return 0
+	real_value = get(name)
 	if name in EXACT:
 		return (real_value == wanted_value)
 	elif name in ELEMENT:
@@ -50,3 +73,18 @@ def match(name, wanted_value):
 
 def getsettings():
 	return ALL
+	
+def set(setting, value):
+	user_settings[setting] = value
+	
+def save():
+	try:
+		fp = open(PREFSFILENAME, 'w')
+	except IOError:
+		return 0
+	for name, value in user_settings.items():
+		fp.write('%s = %s\n'%(name, `value`))
+	fp.close()
+	return 1
+	
+	

@@ -7,7 +7,7 @@ class reader:
 		self.width = 320
 		self.height = 240
 		self.format = imgformat.rgb
-		self.format_choices = (imgformat.rgb,)
+		self.format_choices = (self.format,)
 
 	def read(self):
 		return '''\
