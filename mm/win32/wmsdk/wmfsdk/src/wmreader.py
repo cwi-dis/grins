@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import wmfapi
 large_int = wmfapi.large_int
 
@@ -68,7 +70,7 @@ agent = WMAPlayerAgent()
 readercbobj = wmfapi.CreatePyReaderCallback(agent)
 #readercbobj = wmfapi.CreatePyReaderCallbackAdvanced(agent)
 
-reader.Open(r'D:\ufs\mm\cmif\win32\wmsdk\wmfsdk\src\test.wma',readercbobj)
+reader.Open(r'D:\ufs\mm\cmif\win32\wmsdk\wmfsdk\src\testdata\test.wma',readercbobj)
 readercbobj.WaitOpen()
 
 # print some info for windows media file
