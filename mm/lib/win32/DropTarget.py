@@ -15,10 +15,14 @@ class DropTarget:
 	cfmap={'FileName':Sdk.RegisterClipboardFormat('FileName')}
 	def __init__(self):
 		self._isregistered=0
-		self._dropmap={'FileName':(self.dragfile,self.dropfile)}
+		self._dropmap={
+			'FileName':(self.dragfile,self.dropfile),
+			'URL': (self.dragurl, self.dropurl),
+		}
 		
 		# shortcut
 		self.CF_FILE=self.getClipboardFormat('FileName')
+		self.CF_URL = self.getClipboardFormat('URL')
 
 	def registerDropTarget(self):
 		if not self._isregistered:
@@ -81,5 +85,22 @@ class DropTarget:
 			x,y=self._DPtoLP((x,y))
 			x,y = self._pxl2rel((x, y),self._canvas)
 			self.onEvent(WMEVENTS.DropFile,(x, y, filename))
+			return 1
+		return 0
+
+	def dragurl(self,dataobj,kbdstate,x,y):
+		url=dataobj.GetGlobalData(self.CF_URL)
+		if url:
+			x,y=self._DPtoLP((x,y))
+			x,y = self._pxl2rel((x, y),self._canvas)
+			return self.onEventEx(WMEVENTS.DragURL,(x, y, url))
+		return 0
+
+	def dropurl(self,dataobj,effect,x,y):
+		url=dataobj.GetGlobalData(self.CF_URL)
+		if url:
+			x,y=self._DPtoLP((x,y))
+			x,y = self._pxl2rel((x, y),self._canvas)
+			self.onEvent(WMEVENTS.DropURL,(x, y, url))
 			return 1
 		return 0

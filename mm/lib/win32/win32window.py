@@ -193,11 +193,12 @@ class Window:
 			     Mouse0Release, Mouse1Press, Mouse1Release,
 			     Mouse2Press, Mouse2Release, 
 			     DropFile, PasteFile, DragFile,
+				 DragURL, DropURL,
 			     DragNode, DropNode,
 			     WindowExit, WindowContentChanged,
 			     MouseMove, DragEnd):
 			self._callbacks[event] = func, arg
-			if event in (DropFile, PasteFile, DragFile, DragNode, DropNode):
+			if event in (DropFile, PasteFile, DragFile, DragURL, DropURL, DragNode, DropNode):
 				self.registerDropTarget()
 		else:
 			raise error, 'Registering unknown event %d'%event
@@ -206,6 +207,7 @@ class Window:
 	def unregister(self, event):
 		try:
 			del self._callbacks[event]
+			# XXX Jack thinks the whole list above should feature here too
 			if event == DropFile:
 				self.revokeDropTarget()
 		except KeyError:
