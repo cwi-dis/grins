@@ -2514,7 +2514,8 @@ class MediaRegion(Region):
 			f = os.path.join(self.datadir, '%s.tiff' % chtype)
 			
 		if f is not None:
-			self._graphicCtrl.setImage(f, fit)
+			mediadisplayrect  = self._nodeRef.getPxGeomMedia()[1]
+			self._graphicCtrl.setImage(f, fit, mediadisplayrect)
 		
 	def onProperties(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
