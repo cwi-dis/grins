@@ -26,6 +26,12 @@ import appcon
 from win32mu import Point,Size,Rect # shorcuts
 from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 
+# input validators
+ENABLE_VALIDATORS = 0
+
+if ENABLE_VALIDATORS:
+	import InputValidator
+
 error = 'lib.win32.AttrEditForm.error'
 
 ##################################################
@@ -40,6 +46,7 @@ class AttrCtrl:
 		self._attr=attr
 		self._resid=resid
 		self._initctrl=None
+		self._validator=None
 
 	def sethelp(self):
 		if not self._initctrl: return
@@ -65,6 +72,13 @@ class AttrCtrl:
 		else:
 			flag=0	
 		self._wnd._form.enableApply(self._attr, flag)
+
+	def OnKeyDown(self,params):
+		vk = params[2]
+		if self._validator:
+			return self._validator.onKey(vk,'')
+		else:
+			return 1
 
 # temp stuff not safe
 def atoft(str):
@@ -377,6 +391,8 @@ class ColorCtrl(AttrCtrl):
 		AttrCtrl.__init__(self,wnd,attr,resid)
 		self._attrname=components.Edit(wnd,resid[0])
 		self._attrval=components.Edit(wnd,resid[1])
+		if ENABLE_VALIDATORS:
+			self._validator=InputValidator.ColorValidator()
 
 	def OnInitCtrl(self):
 		self._initctrl=self
@@ -390,6 +406,8 @@ class ColorCtrl(AttrCtrl):
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
 		self.calcIndicatorRC()
+		if self._validator:
+			self._attrval.hookmessage(self.OnKeyDown,win32con.WM_KEYDOWN)
 
 	def calcIndicatorRC(self):
 		place='edit'
@@ -469,6 +487,16 @@ class ColorCtrl(AttrCtrl):
 		elif code==win32con.EN_CHANGE:
 			self.invalidateInd()
 			self.enableApply()
+
+	def OnKeyDown(self,params):
+		vk = params[2]
+		p1,p2=self._attrval.getsel()
+		if p1<p2: pos=p1
+		else: pos=p2
+		if self._validator:
+			return self._validator.onKey(vk,self._attrval.gettext(),pos)
+		else:
+			return 1
 
 
 ##################################
