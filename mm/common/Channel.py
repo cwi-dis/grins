@@ -658,6 +658,12 @@ class Channel:
 		# Override this method to enable animations.
 		pass
 
+	def canupdateattr(self, node, name):
+		# This is for efficiency
+		# Override this method to enable animations.
+		# Return true for supported attributes
+		return 0
+
 	#
 	# The following methods can be called by the scheduler.
 	#
