@@ -1330,7 +1330,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					self.syntax_error('bad %s attribute' % attr)
 			elif attr == 'showtime':
-				if val in ('focus', 'cfocus'):
+				if val in ('focus', 'cfocus', 'bwstrip'):
 					# ignore in player
 					if features.editor:
 						node.showtime = val
