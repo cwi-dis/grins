@@ -48,10 +48,14 @@ class MpegChannel(ChannelWindowThread):
 			modanchorlist(alist)
 		except NoSuchAttrError:
 			alist = []
+		self.armed_display.fgcolor(self.getbucolor(node))
+		hicolor = self.gethicolor(node)
 		for a in alist:
+			if a[A_TYPE] in DestOnlyAnchors:
+				continue
 			b = self.armed_display.newbutton((0,0,1,1))
-			#b.hiwidth(3)
-			#b.hicolor(hicolor)
+			b.hiwidth(3)
+			b.hicolor(hicolor)
 			self.setanchor(a[A_ID], a[A_TYPE], b)
 		return self.syncarm
 
