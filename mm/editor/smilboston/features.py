@@ -29,8 +29,10 @@ feature_set = [
 	SHOW_MEDIA_CHILDREN,
 	MULTIPLE_TOPLAYOUT,
 	INTERNAL_LINKS,
+	AUTO_EVALUATE,
 	]
 
+auto_evaluate_cookie = 'Ajax'
 version = 'pro'
 compatibility = Boston
 compatibility_short = 'SMIL2'
