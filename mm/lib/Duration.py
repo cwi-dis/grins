@@ -7,7 +7,7 @@ import MMAttrdefs
 import ChannelMap
 from sys import platform
 
-def get(node):
+def get(node, ignoreloop=0):
 	# If node has "fduration" attribute, use that.  This attribute
 	# is set in mkcmifcache and nowhere else, so is only available
 	# in the player.
@@ -16,9 +16,12 @@ def get(node):
 	duration = MMAttrdefs.getattr(node, 'duration')
 	channel = node.GetChannel()
 	if duration == 0 and channel is not None and channel.has_key('type'):
-		loop = MMAttrdefs.getattr(node, 'loop')
-		if loop == 0:
-			return 0
+		if ignoreloop:
+			loop = 1
+		else:
+			loop = MMAttrdefs.getattr(node, 'loop')
+			if loop == 0:
+				return 0
 		context = node.GetContext()
 		ctype = channel['type']
 		filename = MMAttrdefs.getattr(node, 'file')
