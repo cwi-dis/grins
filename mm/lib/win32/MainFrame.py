@@ -139,7 +139,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		# register top frame class
 		clstyle=win32con.CS_DBLCLKS
 		exstyle=0
-		icon=Afx.GetApp().LoadIcon(grinsRC.IDI_GRINS_ED)
+		#icon=Afx.GetApp().LoadIcon(grinsRC.IDI_GRINS_ED)
+		icon=Afx.GetApp().LoadIcon(grinsRC.IDR_GRINSED)
 		cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
 		brush=0 #Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(self._bgcolor),0)
 		return Afx.RegisterWndClass(clstyle,cursor,brush,icon)
@@ -163,8 +164,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self._mainmenu=win32menu.Menu()
 		self._mainmenu.create_from_menubar_spec_list(MenuTemplate.MENUBAR,self.get_cmdclass_id)
 		cs.hMenu=self._mainmenu.GetHandle()
-
 		return cs.to_csd()
+
 	# return commnds class id
 	def get_cmdclass_id(self,cmdcl):
 		if cmdcl in usercmdui.class2ui.keys():
@@ -172,6 +173,12 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		else: 
 			print 'CmdClass not found',cmdcl
 			return -1
+
+	# Returns a submenu from its string id (e.g 'File','Edit',etc)
+	def get_submenu(self,strid):
+		if not strid in self._mainmenu._submenus_dict.keys():
+			return None
+		return self._mainmenu._submenus_dict[strid]
 
 	# Called after the window has been created for further initialization
 	# Called after CWnd::OnCreate
