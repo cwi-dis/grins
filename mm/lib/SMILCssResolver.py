@@ -827,6 +827,16 @@ class MediaNode(Node):
 		# get the intrinsic size
 		# note: for optimization, the defaultSizeHandler method has a cache
 		self.intrinsicWidth, self.intrinsicHeight = self.defaultSizeHandler(None, None)
+		# check invalid value to avoid a crash
+		# shouldn't happend. If happend, assume no intrinsic size
+		if self.intrinsicWidth != None and self.intrinsicWidth <= 0:
+#			print 'Error: SMILCssResolver, intrinsic media width = ',self.intrinsicWidth
+			self.intrinsicWidth = None
+			self.intrinsicHeight = None
+		if self.intrinsicHeight != None and self.intrinsicHeight <= 0:
+#			print 'Error: SMILCssResolver, intrinsic media height = ',self.intrinsicHeight
+			self.intrinsicWidth = None
+			self.intrinsicHeight = None
 		
 		self.pxleft, self.pxtop, self.pxwidth, self.pxheight = self._getMediaSpaceArea()
 		if self.pxwidth <= 0: self.pxwidth = 1
