@@ -2483,6 +2483,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('invalid soundLevel attribute value')
 					val = 1.0
 				attrdict[attr] = val
+				self.__context._maxsoundlevel = max(self.__context._maxsoundlevel, val)
+				self.__context._minsoundlevel = min(self.__context._minsoundlevel, val)
 			elif attr == 'type':
 				# map channel type to something we can deal with
 				# this should loop at most twice (RealPix->RealVideo->video)
