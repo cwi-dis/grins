@@ -117,13 +117,7 @@ class TopLevel:
 	#
 	def open_okcallback(self, filename):
 		if os.path.isabs(filename):
-			cwd = self.dirname
-			if cwd:
-				cwd = MMurl.url2pathname(cwd)
-				if not os.path.isabs(cwd):
-					cwd = os.path.join(os.getcwd(), cwd)
-			else:
-				cwd = os.getcwd()
+			cwd = os.getcwd()
 			if os.path.isdir(filename):
 				dir, file = filename, os.curdir
 			else:
