@@ -485,6 +485,15 @@ def getregionname(writer, node):
 		return None
 	return writer.ch2name[ch.GetLayoutChannel()]
 
+def getdefaultregion(writer, node):
+	chname = node.GetRawAttrDef('project_default_region', None)
+	if not chname:
+		return None
+	ch = node.GetContext().getchannel(chname)
+	if ch is None:
+		return None
+	return writer.ch2name[ch]
+
 def getduration(writer, node, attr = 'duration'):
 	duration = MMAttrdefs.getattr(node, attr)
 	if not duration:		# 0 or None
@@ -525,7 +534,7 @@ def getpercentage(writer, node, attr, default=100):
 	if not prop or prop==default:
 		return None
 	else:
-		return fmtfloat(prop, suffix = '%')
+		return fmtfloat(prop * 100, suffix = '%')
 
 def escape_name(name, quote_initial = 1):
 	name = string.join(string.split(name, '.'), '\\.')
@@ -896,6 +905,9 @@ smil_attrs=[
 	("id", getid),
 	("title", lambda writer, node:getcmifattr(writer, node, "title")),
 	("region", getregionname),
+	("project_default_region", getdefaultregion),
+	("project_default_type", lambda writer, node:getrawcmifattr(writer, node, 'project_default_type')),
+	("project_bandwidth_fraction", lambda writer, node:getpercentage(writer, node, 'project_bandwidth_fraction', -1)),
 	("type", getmimetype),
 	("author", lambda writer, node:getcmifattr(writer, node, "author")),
 	("copyright", lambda writer, node:getcmifattr(writer, node, "copyright")),
@@ -1285,7 +1297,7 @@ class SMILWriter(SMIL):
 			fp.write('<!--%s-->\n' % ctx.comment)
 		attrlist = []
 		if self.smilboston:
-			attrlist.append(('xmlns', SMIL2Language))
+			attrlist.append(('xmlns', SMIL2ns[0]))
 		if self.uses_grins_namespace:
 			attrlist.append((xmlnsGRiNS, GRiNSns))
 		if self.uses_qt_namespace:

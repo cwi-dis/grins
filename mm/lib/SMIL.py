@@ -9,6 +9,9 @@ SMILBostonPubid = "-//W3C//DTD SMIL 2.0//EN"
 SMILBostonDtd = "http://www.w3.org/TR/REC-smil/2000/SMIL20.dtd"
 SMIL2 = 'http://www.w3.org/TR/REC-smil/2000/SMIL20'
 SMIL2Language = SMIL2 + '/Language'
+# namespaces recognized for SMIL 2.0
+# the first one is the required default namespace
+SMIL2ns = [SMIL2Language, SMIL2]
 GRiNSns = "http://www.oratrix.com/"
 QTns = "http://www.apple.com/quicktime/resources/smilextensions"
 
@@ -493,14 +496,14 @@ class SMIL:
 		if ' ' not in __el:
 			# SMIL 1.0 element, make a SMIL 2.0 copy
 			__atd = __atd.copy()
-			attributes[SMIL2+' '+__el] = __atd
-			attributes[SMIL2Language+' '+__el] = __atd
+			for __ns in SMIL2ns:
+				attributes[__ns+' '+__el] = __atd
 			for __at, __vl in __atd.items():
 				if ' ' not in __at:
-					__atd[SMIL2+' '+__at] = __vl
-					__atd[SMIL2Language+' '+__at] = __vl
+					for __ns in SMIL2ns:
+						__atd[__ns+' '+__at] = __vl
 					del __atd[__at]
-	del __el, __atd, __at, __vl, __key, __val
+	del __el, __atd, __at, __vl, __key, __val, __ns
 
 	# all entities with their allowed content
 	# no allowed content is default, so we don't specify empty ones here
