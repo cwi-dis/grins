@@ -345,7 +345,7 @@ class _Toplevel:
 		wnd=self.genericwnd()
 		wnd.create()
 		wnd.HookMessage(self.OnTimer, win32con.WM_TIMER)
-		id=wnd.SetTimer(1,50)
+		id=wnd.SetTimer(1,10)
 		
 		# com automation support
 		self.enableCOMAutomation()
