@@ -755,19 +755,11 @@ SOURCE=.\lib\win32\Font.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\win32\fsm.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\lib\win32\GenFormView.py
 # End Source File
 # Begin Source File
 
 SOURCE=.\lib\win32\GenWnd.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\win32\InputValidator.py
 # End Source File
 # Begin Source File
 
