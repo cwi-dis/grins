@@ -69,6 +69,10 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		self.hide()
 		self.toplevel.save_source_callback(text)
 
+	def apply_callback(self):
+		text = self.get_text()
+		self.toplevel.save_source_callback(text)
+
 	def close_callback(self):
 		#self.toplevel.save_source_callback(text)
 		if self.is_changed():

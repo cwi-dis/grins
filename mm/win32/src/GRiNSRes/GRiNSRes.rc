@@ -1867,6 +1867,18 @@ BEGIN
                     ES_WANTRETURN | ES_NUMBER
 END
 
+IDD_SOURCEEDIT DIALOG DISCARDABLE  0, 0, 402, 235
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT1,7,7,388,201,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_AUTOHSCROLL | ES_NOHIDESEL | ES_WANTRETURN | 
+                    WS_VSCROLL | WS_HSCROLL
+    DEFPUSHBUTTON   "OK",IDC_BUTTON1,7,215,50,14,WS_GROUP
+    PUSHBUTTON      "Apply",IDC_BUTTON2,64,215,50,14
+    PUSHBUTTON      "Revert",IDC_BUTTON3,121,215,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2199,6 +2211,14 @@ BEGIN
     BEGIN
         RIGHTMARGIN, 424
         BOTTOMMARGIN, 246
+    END
+
+    IDD_SOURCEEDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 395
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 229
     END
 END
 #endif    // APSTUDIO_INVOKED

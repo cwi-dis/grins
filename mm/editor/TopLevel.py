@@ -64,7 +64,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		url = urlunparse((utype, host, path, params, query, None))
 		self.filename = url
 		self.window = None	# Created in TopLevelDialog.py
-		self.source = None
+##		self.source = None
 		self.read_it()
 
 		self.commandlist = [
@@ -335,20 +335,20 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def stop_callback(self):
 		self.player.stop_callback()
 
-	def source_callback(self):
-		print "ERROR: You shouldn't be calling TopLevel.sourcecallback!"
-		license = self.main.wanttosave()
-		if not license:
-			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
-			return
-		evallicense= (license < 0)
-		import SMILTreeWrite
-		self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense), readonly = 0)
+##	def source_callback(self):
+##		print "ERROR: You shouldn't be calling TopLevel.sourcecallback!"
+##		license = self.main.wanttosave()
+##		if not license:
+##			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+##			return
+##		evallicense= (license < 0)
+##		import SMILTreeWrite
+##		self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense), readonly = 0)
 
-	def hide_source_callback(self):
-		print "ERROR! You shouldn't be calling TopLevel.soucecallback!"
-		if self.source:
-			self.showsource(None)
+##	def hide_source_callback(self):
+##		print "ERROR! You shouldn't be calling TopLevel.soucecallback!"
+##		if self.source:
+##			self.showsource(None)
 
 	def save_source_callback(self, text):
 		# This is a function that is called from the source view when the user decides to save.
@@ -1064,8 +1064,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.makeviews()
 		for i in showing:
 			self.views[i].show()
-		if self.source and not self.source.is_closed():
-			self.source_callback()
+##		if self.source and not self.source.is_closed():
+##			self.source_callback()
 
 	def read_it(self):
 		self.changed = 0
@@ -1166,9 +1166,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def close_callback(self):
 		self.setwaiting()
-		if self.source and not self.source.is_closed():
-			self.source.close()
-		self.source = None
+##		if self.source and not self.source.is_closed():
+##			self.source.close()
+##		self.source = None
 		self.close()
 
 	def close(self):
@@ -1224,15 +1224,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# Fix the timing -- views may depend on this.
 		if not self._in_prefschanged:
 			self.changed = 1
-		if self.source:
-			# reshow source
-			license = self.main.wanttosave()
-			if not license:
-				windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
-				return
-			evallicense= (license < 0)
-			import SMILTreeWrite
-			self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense), optional=1)
+##		if self.source:
+##			# reshow source
+##			license = self.main.wanttosave()
+##			if not license:
+##				windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+##				return
+##			evallicense= (license < 0)
+##			import SMILTreeWrite
+##			self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense), optional=1)
 		undocommandlist = []
 		if self.editmgr.history:
 			undocommandlist = undocommandlist + self.undocommandlist[:1]
