@@ -378,6 +378,7 @@ class HtmlChannel(Channel.ChannelWindow):
 				anchor = self.url
 				if tag:
 					anchor = anchor + '#' + tag
+				self._player.topleve.waspaused = 0
 				self._player.toplevel.jumptoexternal(anchor, Hlinks.TYPE_JUMP)
 				return
 			else:
