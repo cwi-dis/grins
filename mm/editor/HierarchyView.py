@@ -28,9 +28,6 @@ import compatibility
 import Interactive			# mjvdg 13-oct-2000.
 from StructureViews import *
 
-# TODO: this is not used properly everywhere in this file.
-grins_snap = features.H_NIPPLES in features.feature_set
-
 import settings
 
 # Color settings
@@ -64,8 +61,9 @@ class HierarchyView(HierarchyViewDialog):
 		self.thumbnails = 1
 		self.showplayability = 1
 		self.timescale = 0
-		self.pushbackbars = 1;
-
+		self.pushbackbars = features.H_VBANDWIDTH in features.feature_set 	# display download times as pushback bars on MediaWidgets.
+		self.dropbox = features.H_DROPBOX in features.feature_set	# display a drop area at the end of every node.
+		self.transboxes = features.H_TRANSITIONS in features.feature_set # display transitions
 		self.sizes = sizes_notime
 		from cmif import findfile
 		self.datadir = findfile('GRiNS-Icons')
@@ -1114,7 +1112,12 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Select the given node as focus
 	def setfocusnode(self, node):
-		assert 0 
+		if not node:
+			self.select_widget(None);
+		else:
+			widget = node.views['struct_view'];
+			self.select_widget(widget);
+
 ##		if not node:
 ##			self.setfocusobj(None)
 ##			self.render()
