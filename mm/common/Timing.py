@@ -1,5 +1,6 @@
 # Interface to calculate the timing of a (sub)tree
 
+import time
 import sched
 import MMAttrdefs
 from MMExc import *
@@ -26,7 +27,7 @@ def changedtimes(node):
 
 def hastimes(node):
 	try:
-		if node.initial_arms <> None:
+		if node.initial_arms is not None:
 			return 1
 	except AttributeError: # initial_arms does not exist
 		pass
@@ -34,7 +35,7 @@ def hastimes(node):
 
 def needtimes(node):
 	try:
-		if node.initial_arms <> None:
+		if node.initial_arms is not None:
 			return # The cached value is valid
 	except AttributeError: # initial_arms does not exist
 		pass
@@ -54,7 +55,6 @@ def needtimes(node):
 # as exceptions.
 
 def do_times(node):
-	import time
 	t0 = time.time()
 	print 'do_times...'
 	
@@ -113,7 +113,6 @@ def getinitial(node):
 # with meanings that can be deduced from the code below. :-) :-) :-)
 #
 def prepare(node):
-	import time
 	print '\tprepare...'
 	t0 = time.time()
 	prep1(node)
@@ -209,7 +208,7 @@ def prep1(node):
 
 
 def prep2(node, root):
-	if not node.GetSummary('synctolist'): return
+##	if not node.GetSummary('synctolist'): return
 	arcs = MMAttrdefs.getattr(node, 'synctolist')
 	for arc in arcs:
 		xuid, xside, delay, yside = arc
@@ -270,7 +269,6 @@ def decrement(q, delay, node, side):
 	if node.GetType() in real_interiortypes:
 		node.t0t1_inherited = 1
 	elif side == HD:
-		import time
 		t0 = time.time()
 		dt = getduration(node)
 		node.t0t1_inherited = (dt == 0 and len(node.deps[TL]) <= 1)

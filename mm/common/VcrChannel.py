@@ -18,7 +18,7 @@ except ImportError:
 class VcrChannel(Channel):
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.__init__(self, name, attrdict, scheduler, ui)
-		if VCR == None or VcrIndex == None:
+		if VCR is None or VcrIndex is None:
 			print 'ERROR: VCR or VcrIndex module not found. Expect a crash soon'
 			return
 		self.vcr = VCR.VCR()
@@ -69,7 +69,7 @@ class VcrChannel(Channel):
 			if len(list) in (1,2):
 				try:
 					start = eval(list[0])
-					if type(start) <> type(()) or \
+					if type(start) is not type(()) or \
 						  len(start) <> 4:
 						raise 'foo'
 				except 'DBGDBG':
@@ -77,7 +77,7 @@ class VcrChannel(Channel):
 			if len(list) == 2:
 				try:
 					stop = eval(list[1])
-					if type(stop) <> type(()) or \
+					if type(stop) is not type(()) or \
 						  len(start) <> 4:
 						raise 'foo'
 				except:
@@ -107,7 +107,7 @@ class VcrChannel(Channel):
 		dummy = self.vcr.mute('video', 1)
 		start, stop = self.getstartstop(node)
 		if self.seekinfo:
-			if self.seekinfo[0] == node:
+			if self.seekinfo[0] is node:
 				start = self.seekinfo[1]
 			else:
 				print 'VcrChannel: seek info for wrong node'
@@ -143,7 +143,7 @@ class VcrChannel(Channel):
 		if a[A_TYPE] == ATYPE_WHOLE:
 			return
 		pos = a[A_ARGS]
-		if type(pos) <> type(()) or len(pos) <> 4:
+		if type(pos) is not type(()) or len(pos) <> 4:
 			print 'vcrchannel: ill-formatted anchor:', aid
 			return
 		self.seekinfo = (node, pos)
