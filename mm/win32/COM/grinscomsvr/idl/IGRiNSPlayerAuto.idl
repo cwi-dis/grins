@@ -36,6 +36,8 @@ interface IGRiNSPlayerAuto : IUnknown
 	HRESULT getSpeed([out] double *ps);
 	HRESULT setSpeed([in] double s);
 	HRESULT getCookie([out] long *cookie);
+	HRESULT getFrameRate([out] long *pfr);
+	HRESULT getMediaFrameRate([in, string] wchar_t *szFileOrUrl, [out] long *pfr);
 	};
 
 
