@@ -682,7 +682,6 @@ class _Toplevel(_Event):
 		      type_channel = None, pixmap = 0, units=UNIT_MM,
 		      adornments=None, canvassize=None, commandlist=[],
 		      resizable=1):
-		print 'NEWWINDOW', x, y
 		extras = mw_windows.calc_extra_size(adornments, canvassize)
 		wid, w, h = self._openwindow(x, y, w, h, title, units, resizable, extras)
 		rv = mw_windows._Window(self, wid, 0, 0, w, h, 0, pixmap,
@@ -695,7 +694,6 @@ class _Toplevel(_Event):
 			type_channel = None, pixmap = 0, units=UNIT_MM,
 			adornments=None, canvassize=None, commandlist=[],
 			resizable=1):
-		print 'NEWCMWINDOW', x, y
 		extras = mw_windows.calc_extra_size(adornments, canvassize)
 		wid, w, h = self._openwindow(x, y, w, h, title, units, resizable, extras)
 		rv = mw_windows._Window(self, wid, 0, 0, w, h, 1, pixmap,

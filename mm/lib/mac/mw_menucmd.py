@@ -249,6 +249,7 @@ class CommandHandler:
 		elif entrytype == MenuTemplate.DYNAMICCASCADE:
 			cmd = subcontent
 			dynamicmenu = _DynamicMenu(submenu, self.dynamic_callback, (cmd,))
+			mw_globals._all_commands[cmd] = 1
 			self.cmd_to_menu[cmd] = dynamicmenu
 			self.cmd_enabled[cmd] = 1
 			return (entrytype, cmd, dynamicmenu)

@@ -111,9 +111,11 @@ class _WindowGroup:
 		for item in list:
 			cmd = item.__class__
 ### This code does not work anymore with per-window button commands.
-##			if __debug__:
-##				if not mw_globals._all_commands.has_key(cmd):
-##					print 'Warning: user has no way to issue command', cmd
+### but we work around it by adding those commands to the UNUSED_COMMANDS
+### set.
+			if __debug__:
+				if not mw_globals._all_commands.has_key(cmd):
+					print 'Warning: user has no way to issue command', cmd
 			dict[cmd] = item
 		self._set_cmd_dict(dict)
 		
@@ -1154,6 +1156,7 @@ class _AdornmentsMixin:
 		self._cmd_to_cntl = {}
 		self._cntl_to_cmd = {}
 		self._cntl_handlers = {}
+		self._keyboard_shortcuts = {}
 		self._add_adornments(adornments)
 		
 	def _add_adornments(self, adornments):
@@ -1187,6 +1190,10 @@ class _AdornmentsMixin:
 			#
 			x, y, w, h = self._rect
 			self._rect = x, y+height, w, h-height
+		if adornments.has_key('shortcuts'):
+			self._keyboard_shortcuts = adornments['shortcuts']
+			for k in self._keyboard_shortcuts.keys():
+				mw_globals._all_commands[k] = 1
 			
 	def close(self):
 		del self._cmd_to_cntl
@@ -1231,6 +1238,12 @@ class _AdornmentsMixin:
 ##		print 'DBG controlhit', ctl, part, self._cntl_to_cmd[ctl]
 		cmd = self._cntl_to_cmd[ctl]
 		self.call_command(cmd)
+		
+	def _check_for_shortcut(self, key):
+		if self._keyboard_shortcuts.has_key(key):
+			self.call_command(self._keyboard_shortcuts[key])
+			return 1
+		return 0
 			
 	def set_commandlist(self, cmdlist):
 		enabled = {}
@@ -1379,9 +1392,11 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		_CommonWindow._contentclick(self, down, where, event, shifted)
 
 	def _keyboardinput(self, char, where, event):
-		"""A mouse click in our data-region"""
+		"""A character typed in our data-region"""
 		if not self._wid or not self._parent:
 			return
+		if self._check_for_shortcut(char):
+			return 1
 		Qd.SetPort(self._wid)
 		where = Qd.GlobalToLocal(where)
 		return _CommonWindow._keyboardinput(self, char, where, event)
