@@ -12,6 +12,8 @@ __version__ = "$Id$"
 # import Sjoerd's XMLParser 
 import xmllib
 
+import MMurl
+
 from ASXNode import *
 
 #########################################
@@ -86,6 +88,8 @@ class ASXdoc:
 		'base': __empty,
 		'param': __empty
 		}
+
+	# remove abbreviations
 	del __asxChilds, __entryChilds, __durEntries, __empty
 	
 
@@ -114,8 +118,6 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 		self.__in_asx = 0
 		self.__in_entry=0
 		self.__node = None
-
-		self._playlist=[]
 	
 	def read(self, url):
 		import MMurl
@@ -142,7 +144,7 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 		self.__in_asx = 0
 		if not self.__root:
 			self.error('empty document', self.lineno)
-		self.__root.Dump()
+		#self.__root.Dump()
 
 	# asx par media container
 	def start_entry(self,attrs):
@@ -162,10 +164,6 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 
 	def start_ref(self, attrs):
 		self.__newNode('ref', attrs)
-		# temp
-		if self.__in_entry:
-			self._playlist.append(attrs.get('href'))
-
 	def end_ref(self):
 		self.__endNode()
 
@@ -311,43 +309,115 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 	def __endNode(self):
 		self.__node = None
 
-BEGIN_ASF = """
+	def getPlaylist(self):
+		entries = self.__root.GetChildrenOfType('entry')
+		playlist = []
+		for node in entries:
+			refs = node.GetChildrenOfType('ref')
+			if refs:
+				href = refs[0].GetAttr('href')
+				playlist.append(href)
+		return playlist
+
+	# experimental dirty code
+	def __getASXEntry(self, rootinfo, index, entrynode):
+		str = """<par id="entry%d">\n<switch id="switch%d">""" % (index, index)
+		entries = entrynode.GetChildrenOfType('ref')
+		altix = 1
+		for e in entries:
+			url = MMurl.guessurl(e.GetAttr('href'))
+			str = str + """<video id="subject%d_alt%d" region="main" src="%s" dur="18s"/>"""\
+				% (index, altix, url)
+			altix = altix + 1
+		str = str + "\n</switch>"
+
+		entryinfo = entrynode.GetASXInfo()
+		bannerNode = entryinfo['banner']
+
+		if bannerNode:
+			url = MMurl.guessurl(bannerNode.GetAttr('href'))
+			str = str + """\n<img id="banner%d" region="banner" src="%s" fill="freeze">""" \
+				% (index, url)
+			moreinfoNode = bannerNode.GetChildOfType('moreinfo')
+			if moreinfoNode:
+				url = MMurl.guessurl(moreinfoNode.GetAttr('href'))
+				str = str + """<anchor id="moreInfo%d" show="new" href="%s"/>"""\
+					% (index, url)
+			str = str + "</img>"
+
+		# if empty replace doc defaults
+		title = entryinfo['title'].strip()
+		author = entryinfo['author'].strip()
+		copyright = entryinfo['copyright'].strip()
+		if not author:
+			pass # use doc author
+		if not copyright:
+			pass # use doc copyright
+
+		# quote strings
+		title = MMurl.quote(title or '')
+		author = MMurl.quote(author or '')
+		copyright = MMurl.quote(copyright or '')
+
+		str = str + """
+		<seq id="infoSequence%d" repeat="2">
+        <text id="info%d_1" region="info" src="data:,%s" type="text/plain" dur="3s"/>
+        <text id="info%d_2" region="info" src="data:,%s" type="text/plain" dur="3s"/>
+        <text id="info%d_3" region="info" src="data:,%s" type="text/plain" dur="3s"/>
+		</seq>
+		</par> """ % (index, index, title, index, author, index, copyright)
+		return str
+
+	# experimental dirty code
+	def getASXBody(self):
+		rootinfo = self.__root.GetASXInfo()
+		title = rootinfo['title'].strip()
+		title = MMurl.quote(title or '')
+		str = """
+			<body>
+			<par id="ASXPresentation">"""
+		if title:
+			str = str + """
+			<text id="asxtitle" region="title" src="data:,%s" type="text/plain"/>
+			""" % title
+		str = str + """
+			<seq id="ASXPlaylist">"""
+			
+		# for each entry:
+		entries = self.__root.GetChildrenOfType('entry')
+		for index in range(len(entries)):
+			str = str + self.__getASXEntry(rootinfo, index+1, entries[index])
+
+		# close body
+		str = str + "</seq></par></body>\n"
+		return str
+
+#########################################
+
+ASX_HEAD = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <smil xmlns:GRiNS="http://www.oratrix.com/">
   <head>
+    <meta name="title" content="ASX Show Template"/>
+    <meta name="generator" content="GRiNS Pro for RealSystem G2, v1.5.1 "/>
+    <meta name="project_links" content="http://www.oratrix.com http://www.oratrix.com/"/>
     <layout>
-      <root-layout id="playerWindow" width="400" height="300"/>
-      <region id="videoRegion" width="400" height="300" GRiNS:type="video"/>
+      <root-layout id="player" width="400" height="300"/>
+      <region id="title" left="21" width="363" height="20" z-index="1" background-color="#8080ff" GRiNS:transparent="0" GRiNS:type="text"/>
+      <region id="watermark" left="158" top="90" width="100" height="100" GRiNS:type="image"/>
+      <region id="banner" left="101" top="239" width="194" height="32" z-index="1" GRiNS:type="image"/>
+      <region id="main" left="116" top="54" width="173" height="165" z-index="1" GRiNS:type="video"/>
+      <region id="main_audio" GRiNS:type="sound"/>
+      <region id="info" left="15" top="280" width="375" height="20" z-index="1" background-color="#8080ff" GRiNS:transparent="0" GRiNS:type="text"/>
     </layout>
   </head>
-  <body>
-    <par id="ASXPresentation">
-      <seq id="Playlist">
 """
-
-END_ASF = """
-      </seq>
-    </par>
-  </body>
-</smil>
-
-"""
-
-
-# an asx file is a sequence of parallel nodes (<entry> ... </entry>)
-# in the most general case for each parallel node we may have 5 channels active:
-#  channel 1, video or sound, the actual presentation
-#  channel 2: text channel, sequence of doc or entry info strings
-#  channel 3: image channel, advertising banner below presentation with a link and tooltip
-#  channel 4: text channel, static presentation title
-#  channel 5: image channel, image displayed while buffering
-# note: 4 and 5 may be ignored
 
 def asx2smil(filename):
 	parser = ASXParser()
 	parser.read(filename)
-	str = BEGIN_ASF
-	for e in parser._playlist:
-		str = str + '<video region="videoRegion" src="%s"/>\n' % e
-	str = str + END_ASF
+	playlist = parser.getPlaylist()
+	str = ASX_HEAD
+	str = str + parser.getASXBody()
+	str = str + "</smil>\n"
 	return str
 
