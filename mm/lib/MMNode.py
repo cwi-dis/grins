@@ -921,11 +921,14 @@ class MMChannel:
 		self.attrdict[key] = value
 
 	def __delitem__(self, key):
-		del self.attrdict[key]
+		if self.isCssAttr(key):
+			self.setCssAttr(key, None)
+		else:
+			del self.attrdict[key]
 		if key == 'base_window':
 			if self.attrdict.get('type') == 'layout':
 					self.context.cssResolver.unlink(self._cssId)
-
+		
 	def has_key(self, key):
 		return self.attrdict.has_key(key)
 
