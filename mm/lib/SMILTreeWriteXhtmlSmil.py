@@ -454,16 +454,8 @@ class SMILXhtmlSmilWriter(SMIL):
 			else:
 				# IE hack first please!
 				# set fill = 'freeze' if last visible child has it
-				if mtype == 'seq' and not hasfill and x.GetChildren():
-					children = x.GetChildren()[:]
-					children.reverse()
-					for i in range(len(children)):
-						last = children[i]
-						if last.GetType() != 'audio':
-							lastfill = MMAttrdefs.getattr(last, 'fill')
-							if lastfill == 'freeze':
-								attrlist.append( ('fill', 'freeze') )
-							break
+				if mtype == 'seq' and not hasfill:
+					self.applyFillHint(x, attrlist)
 				# normal
 				self.writetag('t:'+mtype, attrlist)
 			self.push()
@@ -479,13 +471,64 @@ class SMILXhtmlSmilWriter(SMIL):
 			raise CheckError, 'bad node type in writenode'
 
 	def writemedianode(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
-		pushed = 0
-		inpar = 0
-		pardur = None
-
+		pushed, inpar, pardur, regionid = 0, 0, None, ''
+		if not nodeid: 
+			nodeid = 'm' + node.GetUID()
+		
 		# write media node region
+		if mtype != 'audio': 
+			pushed, inpar, pardur, regionid  = \
+				self.writeMediaNodeRegion(node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill)
+	
+		# apply subregion's style
+		attrlist = self.applySubregionStyle(node, nodeid, attrlist, mtype)
+
+		# write anchors
+		if self.writeAnchors(node, nodeid):
+			attrlist.append(('usemap', '#'+nodeid+'map'))
+
+		# extent conditionally the node to a time container
+		if self.hasTimeChildren(node):
+			if not inpar:
+				attrlist.append(('timeContainer', 'par'))
+			elif pardur is not None:
+				attrlist.append(('dur', pardur))
+
+		# write media node
+		if mtype=='brush':
+			attrlist.append( ('class','time') )
+			self.writetag('div', attrlist)
+			self.closehtmltag()
+		elif mtype=='img' and self.issensitive(node):
+			# interactivity enabler hack
+			self.writetag('a', [('href', '#')])
+			self.push()
+			self.writetag(mtype, attrlist)
+			self.pop()
+		else:
+			self.writetag('t:'+mtype, attrlist)
+		
+		# write not anchors children (animations, etc)
+		self.writeChildren(node)
+
+		# write transition(s)
+		if transIn or transOut:
+			if transIn and not transOut:
+				self.writeTransition(transIn, None, nodeid, regionid)
+			elif transOut and not transIn:
+				self.writeTransition(None, transOut, nodeid, regionid)
+			else:
+				self.writeTransition(transIn, None, nodeid, regionid)
+				self.writeTransition(None, transOut, nodeid, regionid)
+
+		# restore stack
+		while pushed:
+			self.pop()
+			pushed = pushed - 1
+
+	def writeMediaNodeRegion(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
+		pushed, inpar, pardur, regionid = 0, 0, None, ''
 		path = self.getRegionPath(regionName)
-		regionid = ''
 		if path and mtype != 'audio':
 			lch = path[0]
 			name = self.ch2name[lch]
@@ -529,11 +572,12 @@ class SMILXhtmlSmilWriter(SMIL):
 						divlist.append(('dur', pardur))
 			self.writetag('div', divlist)
 			self.push()
-			pushed = pushed + 1
-	
-		# find subregion's position, size and style
-		if not nodeid:
-			nodeid = 'm' + node.GetUID()
+			pushed = 1
+			return pushed, inpar, pardur, regionid
+		return pushed, inpar, pardur, regionid
+
+
+	def applySubregionStyle(self, node, nodeid, attrlist, mtype):
 		subRegGeom, mediaGeom = None, None
 		try:
 			geoms = node.getPxGeomMedia()
@@ -559,60 +603,7 @@ class SMILXhtmlSmilWriter(SMIL):
 						l.append((a, v))
 				attrlist = l
 			attrlist.append( ('style', style) )
-
-		# write anchors
-		if self.writeAnchors(node, nodeid):
-			attrlist.append(('usemap', '#'+nodeid+'map'))
-
-		# extent conditionally the node to a time container
-		if node.GetChildren(): # XXX: check for time children
-			if not inpar:
-				attrlist.append(('timeContainer', 'par'))
-			elif pardur is not None:
-				attrlist.append(('dur', pardur))
-
-		# write media node
-		if mtype=='brush':
-			attrlist.append( ('class','time') )
-			self.writetag('div', attrlist)
-			self.closehtmltag()
-		elif mtype=='img' and self.issensitive(node):
-			# interactivity enabler hack
-			self.writetag('a', [('href', '#')])
-			self.push()
-			self.writetag(mtype, attrlist)
-			self.pop()
-		else:
-			self.writetag('t:'+mtype, attrlist)
-		
-		# write children
-		kids = 0
-		for child in node.GetChildren():
-			type = child.GetType()
-			if type != 'anchor':
-				if not kids:
-					self.push()
-					pushed = pushed + 1
-					kids = 1
-				self.writenode(child)
-		if kids:
-			self.pop()
-			pushed = pushed - 1
-
-		# write transition
-		if transIn or transOut:
-			if transIn and not transOut:
-				self.writeTransition(transIn, None, nodeid, regionid)
-			elif transOut and not transIn:
-				self.writeTransition(None, transOut, nodeid, regionid)
-			else:
-				self.writeTransition(transIn, None, nodeid, regionid)
-				self.writeTransition(None, transOut, nodeid, regionid)
-
-		# restore stack
-		while pushed:
-			self.pop()
-			pushed = pushed - 1
+		return attrlist
 
 	def writeTransition(self, transIn, transOut, nodeid, regionid):
 		transitions = self.root.GetContext().transitions
@@ -648,6 +639,38 @@ class SMILXhtmlSmilWriter(SMIL):
 			trattrlist.append( ('from','0') )
 			trattrlist.append( ('to','1') )
 		self.writetag('t:transitionFilter', trattrlist)
+
+	def writeChildren(self, node):
+		kids = 0
+		for child in node.GetChildren():
+			type = child.GetType()
+			if type != 'anchor':
+				if not kids:
+					self.push()
+					kids = 1
+				self.writenode(child)
+		if kids:
+			self.pop()
+
+	def hasTimeChildren(self, node):
+		for child in node.GetChildren():
+			type = child.GetType()
+			if type != 'anchor':
+				return 1
+		return 0
+
+	# set fill = 'freeze' if last visible child has it
+	def applyFillHint(self, x, attrlist):
+		if x.GetChildren():
+			children = x.GetChildren()[:]
+			children.reverse()
+			for i in range(len(children)):
+				last = children[i]
+				if last.GetType() != 'audio':
+					lastfill = MMAttrdefs.getattr(last, 'fill')
+					if lastfill == 'freeze':
+						attrlist.append( ('fill', 'freeze') )
+					break
 
 	def writeAnchors(self, x, name):
 		hassrc = 0
