@@ -251,8 +251,8 @@
 (winprog (string) '' 'Windows program name' CMIFdefault
 	'Application name (windows only)' channel)
 
-(winsize (tuple (float) (float)) (0 0) 'Window size' hidden
-	'Initial window size (width, height)' raw)
+(winsize (tuple (float) (float)) (0 0) 'Window size' default
+	'Initial window size' raw)
 
 (z (int) 0 'Z order' default
 	'Z order' normal)
