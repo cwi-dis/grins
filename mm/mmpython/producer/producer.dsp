@@ -171,7 +171,7 @@ SOURCE=.\rprod.cpp
 
 !ELSEIF  "$(CFG)" == "producer - Win32 Debug"
 
-# ADD CPP /I "./win32" /I "..\..\..\python\Include" /I "..\..\..\python\PC" /I "..\..\..\python\Extensions\win32\src"
+# ADD CPP /I "./win32" /I "..\..\..\python\Extensions\win32\src"
 # SUBTRACT CPP /YX /Yc /Yu
 
 !ENDIF 
@@ -179,7 +179,7 @@ SOURCE=.\rprod.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\enceng.lib
+SOURCE=.\win32\lib\enceng.lib
 # End Source File
 # End Group
 # End Target
