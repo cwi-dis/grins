@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from Channel import *
 from MMExc import *			# exceptions
 from AnchorDefs import *
