@@ -11,13 +11,12 @@ def init():
 	if gl_rawlock is None:
 		import thread
 		gl_rawlock = thread.allocate_lock()
-		gl_lock = LockWrapper().init(gl_rawlock)
+		gl_lock = LockWrapper(gl_rawlock)
 
 class LockWrapper:
-	def init(self, lock):
+	def __init__(self, lock):
 		self.lock = lock
 		self.count = 0
-		return self
 
 	def acquire(self, *args):
 		if self.count < 0:

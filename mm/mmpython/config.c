@@ -307,8 +307,8 @@ extern void initrgbimg();
 #endif
 /* -- ADDMODULE MARKER 1 -- */
 extern void initmm();
-#ifndef sun			/* these not yet ported */
 extern void initmoviechannel();
+#ifndef sun			/* these not yet ported */
 extern void initmpegchannel();
 #endif
 extern void initsoundchannel();
@@ -505,8 +505,8 @@ struct {
 /* -- ADDMODULE MARKER 2 -- */
 	{"mm", initmm},
 	{"soundchannel", initsoundchannel},
-#ifndef sun
 	{"moviechannel", initmoviechannel},
+#ifndef sun
 	{"mpegchannel", initmpegchannel},
 #endif
 

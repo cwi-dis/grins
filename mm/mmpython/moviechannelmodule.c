@@ -87,6 +87,10 @@ struct movie {
 
 #define PRIV	((struct movie *) self->mm_private)
 
+#ifdef sun
+#define CONVERT_32
+#endif
+
 #ifdef USE_GL
 static char graphics_version[12]; /* gversion() output */
 static int is_entry_indigo;	/* true iff we run on an Entry Indigo */
@@ -96,6 +100,9 @@ static int colors_saved;	/* whether we've already saved the colors */
 static int first_index;		/* used for restoring the colormap */
 static type_lock gl_lock;	/* interlock of window system */
 extern type_lock getlocklock PROTO((object *));
+#ifdef CONVERT_32
+static unsigned long cv_8_to_32[256];
+#endif
 #endif /* USE_GL */
 
 static int nplaying;		/* number of instances playing */
@@ -155,6 +162,7 @@ movie_init(self)
 		}
 		windowsystem = WIN_GL;
 		PRIV->m_wid = getintvalue(v);
+#ifndef sun_xyzzy
 		v = dictlookup(self->mm_attrdict, "gl_lock");
 		if (v == NULL || (gl_lock = getlocklock(v)) == NULL) {
 			err_setstr(RuntimeError, "no graphics lock specified");
@@ -162,6 +170,7 @@ movie_init(self)
 		}
 		dprintf(("movie_init(%lx): gl_lock = %lx\n",
 			 (long) self, (long) gl_lock));
+#endif
 	}
 #endif /* USE_GL */
 #ifdef USE_XM
@@ -292,8 +301,6 @@ init_colormap(self)
 	double c0v, c1v, c2v;
 	void (*convcolor)(double, double, double, int *, int *, int *);
 
-	denter(init_colormap);
-
 	switch (PRIV->m_play.m_format) {
 	case FORMAT_RGB8:
 		if (PRIV->m_play.m_bframe) /* RGB mode; don't setup colormap */
@@ -303,6 +310,9 @@ init_colormap(self)
 	case FORMAT_CL:
 		return;		/* uses RGB mode */
 	}
+
+	denter(init_colormap);
+
 	bgr = (PRIV->m_play.m_bgcolor >> 16) & 0xff;
 	bgg = (PRIV->m_play.m_bgcolor >>  8) & 0xff;
 	bgb = (PRIV->m_play.m_bgcolor      ) & 0xff;
@@ -535,7 +545,6 @@ movie_armer(self)
 	int fd;
 	int i;
 	unsigned char *p;
-	long *lp;
 
 	denter(movie_armer);
 	if (PRIV->m_arm.m_frame) {
@@ -677,8 +686,18 @@ movie_armer(self)
 		if (read(fd, PRIV->m_arm.m_frame, PRIV->m_arm.m_size)
 		    != PRIV->m_arm.m_size)
 			dprintf(("movie_armer: read incorrect amount\n"));
+#ifdef CONVERT_32
+		if (PRIV->m_arm.m_format == FORMAT_RGB8) {
+			unsigned long *lp;
+			PRIV->m_arm.m_bframe = malloc(sizeof(long)*PRIV->m_arm.m_size);
+			p = (unsigned char *) PRIV->m_arm.m_frame;
+			lp = (unsigned long *) PRIV->m_arm.m_bframe;
+			for (i = PRIV->m_arm.m_size; i > 0; i--)
+				*lp++ = cv_8_to_32[*p++];
+		}
+#endif /* CONVERT_32 */
 		break;
-#endif
+#endif /* USE_GL */
 	default:
 		abort();
 	}
@@ -738,7 +757,7 @@ movie_play(self)
 		return 0;
 	}
 	/* empty the pipe */
-	(void) fcntl(PRIV->m_pipefd[0], F_SETFL, FNDELAY);
+	(void) fcntl(PRIV->m_pipefd[0], F_SETFL, O_NONBLOCK);
 	while (read(PRIV->m_pipefd[0], &c, 1) == 1)
 		;
 	(void) fcntl(PRIV->m_pipefd[0], F_SETFL, 0);
@@ -815,19 +834,66 @@ movie_play(self)
 	return 1;
 }
 
-#ifdef USE_XM
 static void
 movie_do_display(self)
 	mmobject *self;
 {
-	if (PRIV->m_play.m_image)
-		XPutImage(XtDisplay(PRIV->m_widget), XtWindow(PRIV->m_widget),
-			  PRIV->m_gc, PRIV->m_play.m_image, 0, 0,
-			  (PRIV->m_width - PRIV->m_play.m_width) / 2,
-			  (PRIV->m_height - PRIV->m_play.m_height) / 2,
-			  PRIV->m_play.m_width, PRIV->m_play.m_height);
-}
+#ifdef USE_GL
+	long xorig, yorig;
+	double scale;
+#endif
+
+	denter(movie_do_display);
+	switch (windowsystem) {
+#ifdef USE_GL
+	case WIN_GL:
+		scale = PRIV->m_play.m_scale;
+		if (scale == 0) {
+			scale = PRIV->m_width / PRIV->m_play.m_width;
+			if (scale > PRIV->m_height / PRIV->m_play.m_height)
+				scale = PRIV->m_height / PRIV->m_play.m_height;
+			if (scale < 1)
+				scale = 1;
+		}
+		xorig = (PRIV->m_width - PRIV->m_play.m_width * scale) / 2;
+		yorig = (PRIV->m_height - PRIV->m_play.m_height * scale) / 2;
+		winset(PRIV->m_wid);
+		rectzoom(scale, scale);
+		if (PRIV->m_play.m_bframe) {
+			pixmode(PM_SIZE, 32);
+			lrectwrite(xorig, yorig,
+				   xorig + PRIV->m_play.m_width - 1,
+				   yorig + PRIV->m_play.m_height - 1,
+				   PRIV->m_play.m_bframe);
+		} else {
+			pixmode(PM_SIZE, 8);
+			if (PRIV->m_play.m_bgindex >= 0)
+				writemask(0xff);
+			lrectwrite(xorig, yorig,
+				   xorig + PRIV->m_play.m_width - 1,
+				   yorig + PRIV->m_play.m_height - 1,
+				   PRIV->m_play.m_frame);
+			if (PRIV->m_play.m_bgindex >= 0)
+				writemask(0xffffffff);
+		}
+		gflush();
+		break;
+#endif /* USE_GL */
+#ifdef USE_XM
+	case WIN_X:
+		if (PRIV->m_play.m_image)
+			XPutImage(XtDisplay(PRIV->m_widget),
+				  XtWindow(PRIV->m_widget),
+				  PRIV->m_gc, PRIV->m_play.m_image, 0, 0,
+				  (PRIV->m_width - PRIV->m_play.m_width) / 2,
+				  (PRIV->m_height - PRIV->m_play.m_height) / 2,
+				  PRIV->m_play.m_width, PRIV->m_play.m_height);
+		break;
 #endif /* USE_XM */
+	default:
+		abort();
+	}
+}
 
 static void
 movie_player(self)
@@ -849,7 +915,6 @@ movie_player(self)
 	struct pollfd pollfd;
 	int i;
 	int size;
-	long *lp;
 	unsigned char *p;
 
 	denter(movie_player);
@@ -868,38 +933,15 @@ movie_player(self)
 		case WIN_GL:
 			dprintf(("movie_player(%lx): window id = %d\n",
 				 (long) self, PRIV->m_wid));
-			scale = PRIV->m_play.m_scale;
-			if (scale == 0) {
-				scale = PRIV->m_width / PRIV->m_play.m_width;
-				if (scale > PRIV->m_height / PRIV->m_play.m_height)
-					scale = PRIV->m_height / PRIV->m_play.m_height;
-				if (scale < 1)
-					scale = 1;
-			}
-			xorig = (PRIV->m_width - PRIV->m_play.m_width * scale) / 2;
-			yorig = (PRIV->m_height - PRIV->m_play.m_height * scale) / 2;
-			acquire_lock(gl_lock, WAIT_LOCK);
-			winset(PRIV->m_wid);
-			rectzoom(scale, scale);
-			if (PRIV->m_play.m_bframe) {
-				pixmode(PM_SIZE, 32);
-				lrectwrite(xorig, yorig,
-					   xorig + PRIV->m_play.m_width - 1,
-					   yorig + PRIV->m_play.m_height - 1,
-					   PRIV->m_play.m_bframe);
-			} else {
-				pixmode(PM_SIZE, 8);
-				if (PRIV->m_play.m_bgindex >= 0)
-					writemask(0xff);
-				lrectwrite(xorig, yorig,
-					   xorig + PRIV->m_play.m_width - 1,
-					   yorig + PRIV->m_play.m_height - 1,
-					   PRIV->m_play.m_frame);
-				if (PRIV->m_play.m_bgindex >= 0)
-					writemask(0xffffffff);
-			}
-			gflush();
-			release_lock(gl_lock);
+#ifdef sun_xyzzy
+			my_qenter(self->mm_ev, 3);
+#else
+			if (gl_lock)
+				acquire_lock(gl_lock, WAIT_LOCK);
+			movie_do_display(self);
+			if (gl_lock)
+				release_lock(gl_lock);
+#endif
 			break;
 #endif /* USE_GL */
 #ifdef USE_XM
@@ -995,6 +1037,15 @@ movie_player(self)
 			if (read(fd, PRIV->m_play.m_frame, size) != size)
 				dprintf((
 				"movie_player: read incorrect amount\n"));
+#ifdef CONVERT_32
+			if (PRIV->m_play.m_format == FORMAT_RGB8) {
+				unsigned long *lp;
+				p = (unsigned char *) PRIV->m_play.m_frame;
+				lp = (unsigned long *) PRIV->m_play.m_bframe;
+				for (i = PRIV->m_play.m_size; i > 0; i--)
+					*lp++ = cv_8_to_32[*p++];
+			}
+#endif
 			break;
 #endif /* USE_GL */
 		default:
@@ -1080,7 +1131,8 @@ movie_resized(self)
 	case WIN_GL: {
 		long width, height;
 
-		acquire_lock(gl_lock, WAIT_LOCK);
+		if (gl_lock)
+			acquire_lock(gl_lock, WAIT_LOCK);
 		winset(PRIV->m_wid);
 		getsize(&width, &height);
 		PRIV->m_width = width;
@@ -1103,32 +1155,10 @@ movie_resized(self)
 					 (PRIV->m_play.m_bgcolor      ) & 0xff);
 				clear();
 			}
-			scale = PRIV->m_play.m_scale;
-			if (scale == 0) {
-				scale = PRIV->m_width / PRIV->m_play.m_width;
-				if (scale > PRIV->m_height / PRIV->m_play.m_height)
-					scale = PRIV->m_height / PRIV->m_play.m_height;
-				if (scale < 1)
-					scale = 1;
-			}
-			xorig = (PRIV->m_width - PRIV->m_play.m_width * scale) / 2;
-			yorig = (PRIV->m_height - PRIV->m_play.m_height * scale) / 2;
-			rectzoom(scale, scale);
-			if (PRIV->m_play.m_bframe)
-				lrectwrite(xorig, yorig,
-					   xorig + PRIV->m_play.m_width - 1,
-					   yorig + PRIV->m_play.m_height - 1,
-					   PRIV->m_play.m_bframe);
-			else
-				lrectwrite(xorig, yorig,
-					   xorig + PRIV->m_play.m_width - 1,
-					   yorig + PRIV->m_play.m_height - 1,
-					   PRIV->m_play.m_frame);
-			if (PRIV->m_play.m_bgindex >= 0)
-				writemask(0xffffffff);
-			gflush();
+			movie_do_display(self);
 		}
-		release_lock(gl_lock);
+		if (gl_lock)
+			release_lock(gl_lock);
 		break;
 	}
 #endif /* USE_GL */
@@ -1280,9 +1310,7 @@ static struct mmfuncs movie_channel_funcs = {
 	movie_setrate,
 	movie_init,
 	movie_dealloc,
-#ifdef USE_XM
 	movie_do_display,
-#endif
 };
 
 static channelobject *movie_chan_obj;
@@ -1339,7 +1367,7 @@ moviechannel_init(self, args)
 	} else {
 		INCREF(movie_chan_obj);
 	}
-	return movie_chan_obj;
+	return (object *) movie_chan_obj;
 }
 
 static struct methodlist moviechannel_methods[] = {
@@ -1350,11 +1378,24 @@ static struct methodlist moviechannel_methods[] = {
 void
 initmoviechannel()
 {
-	int i;
+	int r, g, b;
 
 #ifdef MM_DEBUG
 	moviechannel_debug = getenv("MOVIEDEBUG") != 0;
 #endif
 	dprintf(("initmoviechannel\n"));
 	(void) initmodule("moviechannel", moviechannel_methods);
+#if defined(USE_GL) && defined(CONVERT_32)
+	for (r = 0; r < 8; r++) {
+		int R = (int) ((double) r / 7.0 * 255.0);
+		for (g = 0; g < 8; g++) {
+			int G = (int) ((double) g / 7.0 * 255.0);
+			for (b = 0; b < 4; b++) {
+				int B = (int) ((double) b / 3.0 * 255.0);
+				cv_8_to_32[(r<<5)|(b<<3)|(g)] =
+					(B << 16) | (G << 8) | (R);
+			}
+		}
+	}
+#endif
 }

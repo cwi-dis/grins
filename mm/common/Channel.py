@@ -950,19 +950,19 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 
 	def playstop(self):
 		import GLLock
-		if GLLock.gl_lock.count:
+		if GLLock.gl_lock and GLLock.gl_lock.count:
 			GLLock.gl_lock.lock.release()
 		_ChannelThread.playstop(self)
-		if GLLock.gl_lock.count:
+		if GLLock.gl_lock and GLLock.gl_lock.count:
 			GLLock.gl_lock.lock.acquire()
 		ChannelWindow.playstop(self)
 
 	def armstop(self):
 		import GLLock
-		if GLLock.gl_lock.count:
+		if GLLock.gl_lock and GLLock.gl_lock.count:
 			GLLock.gl_lock.lock.release()
 		_ChannelThread.armstop(self)
-		if GLLock.gl_lock.count:
+		if GLLock.gl_lock and GLLock.gl_lock.count:
 			GLLock.gl_lock.lock.acquire()
 		ChannelWindow.armstop(self)
 
