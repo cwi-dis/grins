@@ -6,9 +6,9 @@
 #endif
 #include <stropts.h>
 #include <poll.h>
-#include "thread.h"
 #include "allobjects.h"
 #include "modsupport.h"
+#include "thread.h"
 #include "mmmodule.h"
 
 #ifdef MM_DEBUG

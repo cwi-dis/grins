@@ -29,9 +29,9 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  * For extensive comments on this code, see the file mmmodule.doc.
  */
 
-#include "thread.h"
 #include "allobjects.h"
 #include "modsupport.h"
+#include "thread.h"
 #include "mmmodule.h"
 
 #ifdef MM_DEBUG
@@ -41,8 +41,6 @@ static int mm_debug = 0;
 #define dprintf(args)
 #endif
 #define denter(func)		dprintf(( # func "(%lx)\n", (long) self))
-
-extern typeobject Mmtype;	/* Really static, forward */
 
 static object *MmError;		/* exception mm.error */
 
