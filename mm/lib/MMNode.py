@@ -3886,7 +3886,7 @@ class MMNode(MMTreeElement):
 				if self.type in interiortypes:
 					duration = None	# shouldn't happen
 				else:
-					duration = Duration.get(self, ignoreloop=1)
+					duration = Duration.get(self, ignoreloop=1, ignoredur=1)
 			repeatDur = self.attrdict.get('repeatdur')
 			repeatCount = self.attrdict.get('loop')
 			endlist = self.GetEndList()
