@@ -35,6 +35,9 @@ import win32mu
 import usercmd,usercmdui
 import sysmetrics
 
+# constants to select web browser control
+[IE_CONTROL, WEBSTER_CONTROL]=0, 1
+HTML_CTRL_SEL=WEBSTER_CONTROL
 
 ###########################################################
 # import window core stuff
@@ -572,10 +575,11 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		if self._transparent in (-1,1):
 			self.setWndTransparent()
 		if self.isclient():self.SetClient(1)
+		self.UseHtmlCtrl(HTML_CTRL_SEL)
 
 	# Called by the Html channel. The request is delegated to the Html control
 	# Part of WebBrowsing support
-	def RetrieveUrl(self,fileOrUrl):
+	def RetrieveUrl(self,fileOrUrl):	
 		if not hasattr(self,'Navigate'):
 			self.CreateHtmlWnd()
 			self.show()
