@@ -496,10 +496,14 @@ class HierarchyView(HierarchyViewDialog):
 				else:
 					pnode = self.focusnode
 				purl = ctx.findurl(MMAttrdefs.getattr(pnode, 'file'))
-				w,h = Sizes.GetSize(MMurl.basejoin(purl,url))
+				furl = MMurl.basejoin(purl,url)
+				w,h = Sizes.GetSize(furl)
 				if w != 0 and h != 0:
 					node.SetAttr('subregionwh', (w,h))
 					node.SetAttr('imgcropwh', (w,h))
+				start, minstart = slidestart(pnode, furl, index)
+				if minstart > start:
+					node.SetAttr('start', minstart - start)
 			else:
 				node.SetAttr('tag', 'fill')
 		else:
@@ -1370,7 +1374,6 @@ class DummyRP:
 	# used when parsing the RealPix file failed for some reason
 	aspect = 'true'
 	author = None
-	bitrate = 14400
 	width = height = 0
 	duration = 0
 	copyright = None
@@ -1379,6 +1382,22 @@ class DummyRP:
 	title = None
 	url = None
 	tags = []
+
+	def __init__(self):
+		bitrate = settings.get('system_bitrate')
+		if bitrate >= 112000:
+			bitrate = 80000
+		elif bitrate >= 64000:
+			bitrate = 45000
+		elif bitrate >= 56000:
+			bitrate = 34000
+		elif bitrate >= 28800:
+			bitrate = 20000
+		elif bitrate >= 14400:
+			bitrate = 10000
+		else:
+			bitrate = bitrate * 0.7
+		self.bitrate = bitrate
 
 class SlideShow:
 	__callback_added = 0
@@ -1775,3 +1794,25 @@ def cvslideurl(url, purl):
 			return
 	# nothing wrong with this URL that we can see
 	return url
+
+def slidestart(pnode, url, index):
+	import Bandwidth
+	i = index
+	if i == -1:
+		i = len(pnode.children)
+	start = MMAttrdefs.getattr(pnode, 'preroll')
+	purl = MMAttrdefs.getattr(pnode, 'file')
+	filesize = 0
+	children = pnode.children
+	for i in range(0, i):
+		child = children[i]
+		start = start + MMAttrdefs.getattr(child, 'start')
+		if MMAttrdefs.getattr(child,'tag') in ('fadein', 'crossfade', 'wipe'):
+			curl = MMAttrdefs.getattr(child, 'file')
+			if not curl:
+				continue
+			curl = MMurl.basejoin(purl,curl)
+			filesize = filesize + Bandwidth.GetSize(curl)
+	filesize = filesize + Bandwidth.GetSize(url)
+	minstart = float(filesize) * 8 / MMAttrdefs.getattr(pnode, 'bitrate')
+	return start, minstart

@@ -599,26 +599,26 @@ class AttrEditor(AttrEditorDialog):
 				C = AttrEditorField
 			b = C(self, name, labeltext or name)
 			list.append(b)
-		self.__list = list
+		self.attrlist = list
 		AttrEditorDialog.__init__(self, wrapper.maketitle(), list)
 
 	def resetall(self):
-		for b in self.__list:
+		for b in self.attrlist:
 			b.reset_callback()
 
 	def restore_callback(self):
-		for b in self.__list:
+		for b in self.attrlist:
 			b.setvalue(b.valuerepr(None))
 
 	def close(self):
 		AttrEditorDialog.close(self)
-		for b in self.__list:
+		for b in self.attrlist:
 			b.close()
 		self.wrapper.unregister(self)
 		if self.__new:
 			self.wrapper.delete()
 		self.wrapper.close()
-		del self.__list
+		del self.attrlist
 		del self.wrapper
 
 	def cancel_callback(self):
@@ -632,7 +632,7 @@ class AttrEditor(AttrEditorDialog):
 		self.__new = 0
 		# first collect all changes
 		dict = {}
-		for b in self.__list:
+		for b in self.attrlist:
 			name = b.getname()
 			str = b.getvalue()
 			if str != b.getcurrent():
@@ -682,9 +682,9 @@ class AttrEditor(AttrEditorDialog):
 			if namelist != self.__namelist:
 				# re-open with possibly different size
 				AttrEditorDialog.close(self)
-				for b in self.__list:
+				for b in self.attrlist:
 					b.close()
-				del self.__list
+				del self.attrlist
 				self.__open_dialog()
 			else:
 ##				self.fixvalues()
@@ -703,12 +703,19 @@ class AttrEditorField(AttrEditorDialogField):
 	def __init__(self, attreditor, name, label):
 		self.__name = name
 		self.label = label
+		self.attreditor = attreditor
 		self.wrapper = attreditor.wrapper
 		self.__attrdef = self.wrapper.getdef(name)
 
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__,
 						   self.__name)
+
+	def close(self):
+		AttrEditorDialogField.close(self)
+		del self.attreditor
+		del self.wrapper
+		del self.__attrdef
 
 	def getname(self):
 		return self.__name
@@ -833,13 +840,27 @@ class FileAttrEditorField(StringAttrEditorField):
 
 	def __ok_cb(self, pathname):
 		import MMurl, os
+		url = MMurl.pathname2url(pathname)
 		if self.wrapper.__class__ is SlideWrapper:
 			import HierarchyView
 			node = self.wrapper.node
-			purl = node.GetContext().findurl(MMAttrdefs.getattr(node.GetParent(), 'file'))
-			url = HierarchyView.cvslideurl(MMurl.pathname2url(pathname), purl)
-			if not url:
+			pnode = node.GetParent()
+			purl = node.GetContext().findurl(MMAttrdefs.getattr(pnode, 'file'))
+			relurl = HierarchyView.cvslideurl(url, purl)
+			if not relurl:
 				return
+			start, minstart = HierarchyView.slidestart(pnode, url, pnode.children.index(node))
+			url = relurl
+			for b in self.attreditor.attrlist:
+				if b.getname() == 'start':
+					str = b.getvalue()
+					try:
+						value = b.parsevalue(str)
+					except:
+						value = 0
+					if minstart - start > value:
+						b.setvalue(b.valuerepr(minstart-start))
+					break
 		else:
 			if os.path.isabs(pathname):
 				cwd = self.wrapper.toplevel.dirname
