@@ -47,6 +47,8 @@ def optcalctimes(root):
 # as exceptions.
 #
 def docalctimes(root):
+	global getd_times
+	getd_times = 0
 	import time
 	print 'docalctime...'
 	t0 = time.millitimer()
@@ -64,14 +66,15 @@ def docalctimes(root):
 	decrement(q, (0, root, HD))
 	q.run()
 	t1 = time.millitimer()
-	print 'done in', (t1-t0) * 0.001, 'sec.'
+	print 'done in', (t1-t0) * 0.001, 'sec.',
+	print '(of which', getd_times*0.001, 'sec. in getduration())'
 
 def getinitial(root):
         if initial_arms == None or root <> ia_root:
 	    print 'Timing.getinitial: have to compute initial arms'
 	    calctimes(root)
 	return initial_arms
-	    
+
 
 # Interface to the prep1() and prep2() functions; these are also used
 # by the player (which uses a different version of decrement()).
@@ -79,8 +82,15 @@ def getinitial(root):
 # with meanings that can be deduced from the code below. :-) :-) :-)
 #
 def prepare(root):
+	import time
+	print '\tprepare...'
+	t0 = time.millitimer()
 	prep1(root)
+	t1 = time.millitimer()
 	prep2(root, root)
+	t2 = time.millitimer()
+	print '\tdone in', (t1-t0) * 0.001, '+', (t2-t1) * 0.001,
+	print '=', (t2-t0) * 0.001, 'sec'
 	if root.counter[HD] <> 0:
 		raise CheckError, 'head of root has dependencies!?!'
 
@@ -192,7 +202,12 @@ def decrement(q, (delay, node, side)):
 	node.node_to_arm = None
 	if node.GetType() not in interiortypes:
 		if side == HD:
+			import time
+			t0 = time.millitimer()
 			dt = getduration(node)
+			t1 = time.millitimer()
+			global getd_times
+			getd_times = getd_times + (t1-t0)
 			id = q.enter(dt, 0, decrement, (q, (0, node, TL)))
 			try:
 				cname = MMAttrdefs.getattr(node, 'channel')
