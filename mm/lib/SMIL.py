@@ -259,6 +259,7 @@ class SMIL:
 			GRiNSns+' ' 'scale':None,
 			GRiNSns+' ' 'captionchannel':None,
 			GRiNSns+' ' 'project_audiotype':None,
+			GRiNSns+' ' 'project_convert':None,
 			GRiNSns+' ' 'project_mobile':None,
 			GRiNSns+' ' 'project_perfect':None,
 			GRiNSns+' ' 'project_quality':None,
