@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=2593089604
+  File Checksum=260594745
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1867,16 +1867,6 @@ item: Edit Registry
     New Value=%MAINDIR%\GRiNS_G2L.exe,2
     Root=32
   end
-end
-item: Edit Registry
-  Total Keys=1
-  Key=.cmc
-  New Value=CMIFCacheFile
-end
-item: Edit Registry
-  Total Keys=1
-  Key=CMIFCacheFile
-  New Value=GRiNS CMIF Cache File
 end
 item: Edit Registry
   Total Keys=1
