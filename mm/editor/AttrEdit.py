@@ -434,7 +434,8 @@ class NodeWrapper(Wrapper):
 			namelist.append('syncBehaviorDefault')
 			namelist.append('min')
 			namelist.append('max')
-			namelist.append('erase')
+			if ntype in leaftypes:
+				namelist.append('erase')
 		if ntype == 'bag':
 			namelist.append('bag_index')
 		if ntype == 'par':

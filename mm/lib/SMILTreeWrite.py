@@ -461,9 +461,11 @@ def getbgcoloratt(writer, node, attr):
 	except:
 		return None
 
-def getcmifattr(writer, node, attr):
+def getcmifattr(writer, node, attr, default = None):
 	val = MMAttrdefs.getattr(node, attr)
 	if val is not None:
+		if default is not None and val == default:
+			return None
 		val = str(val)
 	return val
 
@@ -540,12 +542,6 @@ def getpercentage(writer, node, attr, default=100):
 		return None
 	else:
 		return fmtfloat(prop, suffix = '%')
-
-def getfill(writer, node, attr, default):
-	fill = getcmifattr(writer, node, attr)
-	if fill != default:
-		return fill
-	return None
 
 def escape_name(name, quote_initial = 1):
 	name = string.join(string.split(name, '.'), '\\.')
@@ -899,13 +895,6 @@ def getattributename(writer, node):
 	attr = MMAttrdefs.getattr(node, 'attributeName')
 	return attr
 
-def getpausedisplay(writer, node):
-	if writer.smilboston:
-		pd = getcmifattr(writer, node, 'pauseDisplay')
-		if pd != 'inherited':
-			return pd
-	return None
-
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
@@ -925,16 +914,17 @@ smil_attrs=[
 	("min", getmin),
 	("max", getmax),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
-	("fill", lambda writer, node: getfill(writer, node, 'fill', 'default')),
-	("fillDefault", lambda writer, node: getfill(writer, node, 'fillDefault', 'inherit')),
-	("syncBehavior", lambda writer, node: getfill(writer, node, 'syncBehavior', 'default')),
-	("syncBehaviorDefault", lambda writer, node: getfill(writer, node, 'syncBehaviorDefault', 'inherit')),
+	("fill", lambda writer, node: getcmifattr(writer, node, 'fill', 'default')),
+	("fillDefault", lambda writer, node: getcmifattr(writer, node, 'fillDefault', 'inherit')),
+	("erase", lambda writer, node:getcmifattr(writer, node, 'erase', 'whenDone')),
+	("syncBehavior", lambda writer, node: getcmifattr(writer, node, 'syncBehavior', 'default')),
+	("syncBehaviorDefault", lambda writer, node: getcmifattr(writer, node, 'syncBehaviorDefault', 'inherit')),
 	("endsync", getterm),
 	("repeat", lambda writer, node:(not writer.smilboston and getrepeat(writer, node)) or None),
 	("repeatCount", lambda writer, node:(writer.smilboston and getrepeat(writer, node)) or None),
 	("repeatDur", lambda writer, node:getduration(writer, node, "repeatdur")),
-	("restart", lambda writer, node: getfill(writer, node, 'restart', 'default')),
-	("restartDefault", lambda writer, node: getfill(writer, node, 'restartDefault', 'inherit')),
+	("restart", lambda writer, node: getcmifattr(writer, node, 'restart', 'default')),
+	("restartDefault", lambda writer, node: getcmifattr(writer, node, 'restartDefault', 'inherit')),
 	("src", lambda writer, node:getsrc(writer, node)),
 	("clip-begin", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipbegin')) or None),
 	("clip-end", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipend')) or None),
@@ -1005,10 +995,10 @@ prio_attrs = [
 	("author", lambda writer, node:getcmifattr(writer, node, "author")),
 	("copyright", lambda writer, node:getcmifattr(writer, node, "copyright")),
 	("abstract", lambda writer, node:getcmifattr(writer, node, "abstract")),
-	('lower', lambda writer, node: getcmifattr(writer, node, 'lower')),
-	('peers', lambda writer, node: getcmifattr(writer, node, 'peers')),
-	('higher', lambda writer, node: getcmifattr(writer, node, 'higher')),
-	('pauseDisplay', getpausedisplay),
+	('lower', lambda writer, node: getcmifattr(writer, node, 'lower', 'defer')),
+	('peers', lambda writer, node: getcmifattr(writer, node, 'peers', 'stop')),
+	('higher', lambda writer, node: getcmifattr(writer, node, 'higher', 'pause')),
+	('pauseDisplay', lambda writer, node: getcmifattr(writer, node, 'pauseDisplay', 'inherit')),
 	]
 
 # attributes that we know about and so don't write into the SMIL file using
@@ -1016,7 +1006,7 @@ prio_attrs = [
 cmif_node_attrs_ignore = {
 	'arm_duration':0, 'styledict':0, 'name':0, 'bag_index':0,
 	'anchorlist':0, 'channel':0, 'file':0, 'duration':0,
-	'min':0, 'max':0,
+	'min':0, 'max':0, 'erase':0,
 	'system_bitrate':0, 'system_captions':0, 'system_language':0,
 	'system_overdub_or_caption':0, 'system_overdub_or_subtitle':0,
 	'system_required':0, 'system_audiodesc':0, 'system_operating_system':0,
@@ -1952,20 +1942,20 @@ class SMILWriter(SMIL):
 				      name[:6] == 'xmlns:'):
 				attrlist.append((name, value))
 		is_realpix = type == 'ext' and x.GetChannelType() == 'RealPix'
-		is_brush = x.GetChannelType() == 'brush'
-		for key, val in x.GetAttrDict().items():
-			if type == 'prio' and cmif_node_prio_attrs_ignore.has_key(key):
-				continue
-			if key[-7:] == '_winpos' or key[-8:] == '_winsize':
-				continue
-			if type == 'prio' or \
-			   (not qt_node_attrs.has_key(key) and
-			    not cmif_node_attrs_ignore.has_key(key) and
-			    (not is_brush or key != 'fgcolor') and
-			    (not is_realpix or
-			     not cmif_node_realpix_attrs_ignore.has_key(key))):
-				attrlist.append(('%s:%s' % (NSGRiNSprefix, key),
-						 MMAttrdefs.valuerepr(key, val)))
+##		is_brush = x.GetChannelType() == 'brush'
+##		for key, val in x.GetAttrDict().items():
+##			if type == 'prio' and cmif_node_prio_attrs_ignore.has_key(key):
+##				continue
+##			if key[-7:] == '_winpos' or key[-8:] == '_winsize':
+##				continue
+##			if type == 'prio' or \
+##			   (not qt_node_attrs.has_key(key) and
+##			    not cmif_node_attrs_ignore.has_key(key) and
+##			    (not is_brush or key != 'fgcolor') and
+##			    (not is_realpix or
+##			     not cmif_node_realpix_attrs_ignore.has_key(key))):
+##				attrlist.append(('%s:%s' % (NSGRiNSprefix, key),
+##						 MMAttrdefs.valuerepr(key, val)))
 		if interior:
 			if type == 'seq' and self.copydir and not x.GetChildren():
 				# Warn the user for a bug in G2
