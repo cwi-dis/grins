@@ -376,14 +376,16 @@ class _DisplayList:
 				    center = 1, coordinates = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		w = self._window
+		win = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       w._prepare_image(file, crop, scale, center, coordinates)
+		       win._prepare_image(file, crop, scale, center, coordinates)
 		self._list.append('image', mask, image, src_x, src_y,
 				  dest_x, dest_y, width, height)
 		self._optimize(2)
 ##		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
-		x, y, w, h = w._rect # XXXXSCROLL
+		x, y, w, h = win._rect
+		wf, hf = win._scrollsizefactors()
+		w, h = w*wf, h*hf
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
 
