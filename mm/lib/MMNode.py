@@ -1065,6 +1065,10 @@ class MMTreeElement(Owner):
 		raise xpath_error, "unrecognized XPath component `%s'" % xhead
 
 	def Destroy(self):
+		if self.context is None:
+			# already destroyed
+			# this case can happen (see EditMgr.__clean_node method for more details)
+			return
 		self.context.forgetnode(self.uid)
 		for child in self.children:
 			child.parent = None
@@ -1230,13 +1234,14 @@ class MMChannel(MMTreeElement):
 
 	def Destroy(self):
 		context = self.context
-		if context == None:
-			print 'MMChannel.Destroy: The channel is already destroyed : ',self.name
+		if self.context is None:
+			# already destroyed
+			# this case can happen (see EditMgr.__clean_node method for more details)
 			return
 		
 		# unlink the css id if not done
 		if self.attrdict.get('type') == 'layout':
-			self.context.cssResolver.unlink(self._cssId)			
+			context.cssResolver.unlink(self._cssId)			
 		# remove completly the channel from the document
 		context._delchannel(self.name)
 		# remove common chidren and common attributes
@@ -1520,6 +1525,12 @@ class MMRegionAssociation(Owner):
 	def getMediaNode(self):
 		return self.mediaNode
 
+	def GetParent(self):
+		return None
+
+	def Destroy(self):
+		self.mediaNode = None
+	
 # MMChannel tree class
 #
 # this class exposes an easy to use interface 
@@ -3350,6 +3361,10 @@ class MMNode(MMTreeElement):
 ##		self._updsummaries([name])
 
 	def Destroy(self, fakeroot = 0):
+		if self.context is None:
+			# already destroyed
+			# this case can happen (see EditMgr.__clean_node method for more details)
+			return
 		if self.parent is not None:
 			raise CheckError, 'Destroy() non-root node'
 
