@@ -26,3 +26,12 @@ Use:
 	type or paste the smil filename or url of the file you want to open
 	press open and the play
 	(You can pass also the filename as param in GRiNSPlayer.html)
+	
+
+Warning:
+	For Internet Explorer you should close the smil document 
+	(by pressing button 'Close') before closing the browser. 
+	(for Netscape this is not needed).
+	It seems that Internet Explorer, some times, does not wait 
+	for the plugin to release its resources.
+	
