@@ -23,3 +23,6 @@ class AssetsViewDialog:
 
 	def hide(self):
 		pass
+
+	def get_geometry(self):
+		return None
