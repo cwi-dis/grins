@@ -454,7 +454,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def export_WMP_callback(self):	# mjvdg 11-oct-2000
 		import wmpsupport
-		wmpsupport.Exporter('output.wmv', self.player)
+		if wmpsupport.haswmpruntimecomponents():
+			wmpsupport.Exporter('output.wmv', self.player)
+		else:
+			windowinterface.showmessage('No WMP export components on this system.')
 
 	def export(self, exporttype):
 		self.exporttype = exporttype
