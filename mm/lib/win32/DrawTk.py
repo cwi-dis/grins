@@ -572,10 +572,10 @@ class DrawTk:
 	def IsScaled(self):
 		return hasattr(self,'_has_scale') and self._has_scale
 	def ToScaledCoord(self,rc):
-		l=int(self._xscale*rc.left+0.5)
-		t=int(self._yscale*rc.top+0.5)
-		w=int(self._xscale*rc.width()+0.5)
-		h=int(self._yscale*rc.height()+0.5)
+		l=int(rc.left/self._xscale+0.5)
+		t=int(rc.top/self._yscale+0.5)
+		w=int(rc.width()/self._xscale+0.5)
+		h=int(rc.height()/self._yscale+0.5)
 		r=l+w;b=t+h
 		return Rect((l,t,r,b))
 	def	SetBRect(self,rc):
