@@ -199,12 +199,18 @@ ExampleErrorSink::ConvertErrorToString(const ULONG32 ulRMACode, char* pszBuffer)
         case PNR_UNEXPECTED:
             strcpy(pszBuffer, "PNR_UNEXPECTED");
             break;
+#ifdef PNR_MISSING_COMPONENTS
+        case PNR_MISSING_COMPONENTS:
+            strcpy(pszBuffer, "PNR_MISSING_COMPONENTS");
+            break;
+#else
         case PNR_NO_FILEFORMAT:
             strcpy(pszBuffer, "PNR_NO_FILEFORMAT");
             break;
         case PNR_NO_RENDERER:
             strcpy(pszBuffer, "PNR_NO_RENDERER");
             break;
+#endif
 
         case PNR_BUFFERING:
             strcpy(pszBuffer, "PNR_BUFFERING");
