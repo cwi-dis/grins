@@ -47,15 +47,15 @@ I_CANCEL=8
 #
 # Names of the various files/folders
 #
-GRINS_SRC="macgrins.py"
-GRINS_DIR="build.macgrins"
-GRINS_PROJECT="macgrins.prj"
-GRINS_TARGET="GRiNS FAT"
+GRINS_SRC="macplayer.py"
+GRINS_DIR="build.player"
+GRINS_PROJECT="player.prj"
+GRINS_TARGET="Player FAT"
 
-CMIFED_SRC="maccmifed.py"
-CMIFED_DIR="build.maccmifed"
-CMIFED_PROJECT="maccmifed.prj"
-CMIFED_TARGET="cmifed FAT"
+CMIFED_SRC="maceditor.py"
+CMIFED_DIR="build.editor"
+CMIFED_PROJECT="editor.prj"
+CMIFED_TARGET="Editor FAT"
 
 #
 # Names of the Attrdefs input file and module.
