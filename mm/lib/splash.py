@@ -13,7 +13,12 @@ def _colormask(mask):
 		shift = shift + 1
 		mask = mask >> 1
 	if mask < 0:
-		width = 32 - shift	# assume integers are 32 bits
+		try:
+			i = 0x100000000
+		except OverflowError:
+			width = 32 - shift
+		else:
+			width = 64 - shift
 	else:
 		width = 0
 		while mask != 0:
