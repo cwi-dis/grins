@@ -42,6 +42,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
+F90=df.exe
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "GRINSPROXY_EXPORTS" /YX /FD /c
 # ADD CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "GRINSPROXY_EXPORTS" /D _WIN32_WINNT=0x0400 /D "REGISTER_PROXY_DLL" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -78,6 +79,7 @@ SOURCE="$(InputPath)"
 # PROP Intermediate_Dir "Debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
+F90=df.exe
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "GRINSPROXY_EXPORTS" /YX /FD /GZ /c
 # ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "GRINSPROXY_EXPORTS" /D _WIN32_WINNT=0x0400 /D "REGISTER_PROXY_DLL" /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
@@ -113,6 +115,23 @@ SOURCE="$(InputPath)"
 # Begin Source File
 
 SOURCE=.\dlldata.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\IGRiNSPlayerAuto.idl
+
+!IF  "$(CFG)" == "grinsproxy - Win32 Release"
+
+# ADD MTL /Oicf
+# SUBTRACT MTL /nologo /D "NDEBUG" /mktyplib203
+
+!ELSEIF  "$(CFG)" == "grinsproxy - Win32 Debug"
+
+# ADD MTL /Oicf
+# SUBTRACT MTL /nologo /mktyplib203
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 

@@ -11,23 +11,14 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name grinsproxy
+    End Project Dependency
 }}}
 
 ###############################################################################
 
 Project: "grinsproxy"=.\idl\grinsproxy.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "winclient"=..\winclient\winclient.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
