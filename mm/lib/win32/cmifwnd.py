@@ -642,9 +642,9 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		elif how == DOUBLE_SIZE:
 			w = w * 2
 			h = h * 2
-		elif how == FIT_WINDOW:
+		elif how == RESET_CANVAS:
 			w, h = self._rect[2],self._rect[3]
-		else: # RESET_CANVAS
+		else: # RESET_TODOC
 			if hasattr(self,'_doc_rect'):
 				w,h=self._doc_rect[2:4]
 
