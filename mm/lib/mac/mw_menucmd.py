@@ -8,6 +8,12 @@ import MenuTemplate
 import mw_globals
 
 #
+# Extra commands dictionary. This is a bit of a hack: this dict is filled
+# by the CommandHandler init routine. It's a global variable because the popup
+# menus also need it, and it is cheaper to generate it only once.
+#
+extra_command_dict = {}
+#
 # Our menus are pretty similar to FrameWork menus, but we handle
 # dispatching a bit different. So, we inherit the FrameWork menus
 # but override a few methods.
@@ -49,6 +55,7 @@ class MyPopupMenu(MyMenuMixin, PopupMenu):
 		self._submenus[sub.id] = sub
 		
 	def dispatch(self, id, item, window, event):
+		print 'Submenu Command', id, item #DBG
 		if id == self.id:
 			MyMenuMixin.dispatch(self, id, item, window, event)
 		else:
@@ -119,6 +126,7 @@ class FullPopupMenu:
 class ContextualPopupMenu:
 	"""This is a contextual (right-mouse) popup menu that maps to usercmds"""
 	def __init__(self, list, callbackfunc):
+		self._cmd_to_item = {}
 		self._themenu = mw_globals.toplevel._addpopup()
 		self._fill_menu(self._themenu, list, callbackfunc)
 		
@@ -128,9 +136,10 @@ class ContextualPopupMenu:
 		self._cmd_to_item = {}
 		
 	def _fill_menu(self, menu, list, callbackfunc):
-		self._cmd_to_item = {}
 		for item in list:
 			flag = item[0]
+			if not extra_command_dict[flag]:
+				continue
 			if item[1] == MenuTemplate.SEP:
 				menu.addseparator()
 			elif item[1] == MenuTemplate.ENTRY:
@@ -140,6 +149,7 @@ class ContextualPopupMenu:
 				m = MenuItem(menu, itemstring, '',
 					     callback)
 				self._cmd_to_item[cmd] = m
+				m.enable(0) #DBG
 			elif item[1] == MenuTemplate.CASCADE:
 				itemstring = item[2]
 				list = item[3]
@@ -230,7 +240,7 @@ class _SpecialMenu(_DynamicMenu):
 class CommandHandler:
 	def __init__(self, menubartemplate):
 		import settings
-		self._extra_commands = {}
+		self._extra_commands = extra_command_dict
 		self._extra_commands[''] = 1
 		self._extra_commands['cmif'] = settings.get('cmif')
 		self._extra_commands['debug'] = settings.get('debug')
