@@ -399,7 +399,7 @@ class Viewport(Node):
 			self._curattrdict['bgcolor'] = self._defattrdict.get('bgcolor')
 			self._curattrdict['transparent'] = self._defattrdict.get('transparent')
 		
-		w,h=self._defattrdict.get('winsize')
+		w,h=self._defattrdict.get('width'),self._defattrdict.get('height')
 		self._curattrdict['wingeom'] = (self.currentX,self.currentY,w,h)
 
 	def getRegion(self, name):
@@ -1220,8 +1220,9 @@ class LayoutView2(LayoutViewDialog2):
 		
 		# test if possible at this time
 		if self.editmgr.transaction('REGION_GEOM'):
-			self.editmgr.setchannelattr(viewport.getName(), 'winsize', geom)
-			self.editmgr.setchannelattr(viewport.getName(), 'units', UNIT_PXL)						
+			w,h =  geom
+			self.editmgr.setchannelattr(viewport.getName(), 'width', geom[0])
+			self.editmgr.setchannelattr(viewport.getName(), 'height', geom[1])
 			self.editmgr.commit('REGION_GEOM')
 
 	def applyGeomOnRegion(self, region, geom):
@@ -1315,8 +1316,10 @@ class LayoutView2(LayoutViewDialog2):
 		if self.editmgr.transaction():
 			self.editmgr.addchannel(name, 0, 'layout')
 			self.editmgr.setchannelattr(name, 'transparent', 0)
-			self.editmgr.setchannelattr(name, 'winsize', (400, 400))
-			self.editmgr.setchannelattr(name, 'units', UNIT_PXL)									
+			self.editmgr.setchannelattr(name, 'width', 400)
+			self.editmgr.setchannelattr(name, 'height', 400)
+#			self.editmgr.setchannelattr(name, 'winsize', (400, 400))
+#			self.editmgr.setchannelattr(name, 'units', UNIT_PXL)									
 			self.editmgr.commit('REGION_TREE')
 
 	def applyDelRegion(self, regionId):
@@ -1363,7 +1366,7 @@ class LayoutView2(LayoutViewDialog2):
 			
 		# get the current geom value
 		dict = viewport.getDocDict()
-		geom = dict.get('winsize')		
+		geom = dict.get('width'), dict.get('height')
 
 		self.dialogCtrl.enable('ShowRbg',1)
 		showEditBackground = dict.get('showEditBackground')
@@ -1647,7 +1650,7 @@ class LayoutView2(LayoutViewDialog2):
 
 	def __updateGeomOnViewport(self, ctrlName, value):
 		dict = self.currentNodeSelected.getDocDict()
-		w,h = dict.get('winsize')
+		w,h = dict.get('width'), dict.get('height')
 		if ctrlName == 'RegionW':
 			w = value
 		elif ctrlName == 'RegionH':

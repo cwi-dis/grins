@@ -872,10 +872,8 @@ class MMChannel:
 				# keep the compatibility with old version
 				self.setPxGeom(value)
 				return
-		elif key == 'winsize':
-			w,h = value
-			self.setCssAttr('width', w)
-			self.setCssAttr('height', h)
+		elif self.isCssAttr(key):
+			self.setCssAttr(key, value)
 			
 		self.attrdict[key] = value
 

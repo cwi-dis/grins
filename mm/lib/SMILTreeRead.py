@@ -2109,7 +2109,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.__context.cssResolver.setRawAttrs(cssId, [('width', ch.get('width')),
 																		   ('height',ch.get('height'))])
 					# if not width or height specified, guess it
-					width, height = ch['winsize'] = self.__context.cssResolver.getPxGeom(ch.getCssId())
+					width, height = self.__context.cssResolver.getPxGeom(ch.getCssId())
 					# fix all the time a pixel geom value for viewport.
 					self.__context.cssResolver.setRawAttrs(cssId, [('width', width),
 																		   ('height', height)])

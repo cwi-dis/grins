@@ -423,7 +423,7 @@
 	'Application name (windows only)' channel (cmif))
 
 (winsize (tuple (float) (float)) (0 0) 'Window size' default
-	'Initial window size' raw (g2 qt smil10 smil2 cmif))
+	'Initial window size' raw (g2 qt smil10 cmif))
 
 (z (int) 0 'Z order' default
 	'Stacking order for channels, higher numbers are on top' normal (g2 qt smil10 smil2 cmif snap))
