@@ -1691,7 +1691,7 @@ class AnimateElementParser:
 		elif path: return path
 		 
 	#
-	# The following 3 translate methods are used by SMILTreeWriteHtmlTime
+	# The following 3 translate methods are used by SMILTreeWriteXhtmlSmil
 	#
 	def toDOMOriginPosAttr(self, attr):
 		val = MMAttrdefs.getattr(self.__anim, attr)
@@ -1733,7 +1733,7 @@ class AnimateElementParser:
 		return repr(path)
 
 
-	# Translate methods for SMILTreeWriteHtmlTime
+	# Translate methods for SMILTreeWriteXhtmlSmil
 	def convertColorValue(self, value):
 		if value is None or value.find('rgb') < 0:
 			return value

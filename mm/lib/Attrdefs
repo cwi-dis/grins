@@ -28,7 +28,7 @@
 # blank lines and comments may be inserted freely.
 
 (accesskey (string) '' 'Access key' default
-	'Key to actuate anchor' raw (advanced smil2 cmif))
+	'Key to actuate anchor' raw (smil2 cmif))
 
 (actuate (enum onRequest onLoad) onRequest 'Anchor type' default
 	'How the anchor gets actuated' raw (advanced smil2 cmif))
@@ -41,6 +41,29 @@
 
 (acoords (list (enclosed (float))) () 'Coordinates' acoords
 	'Anchor coordinates' raw (advanced smil2 cmif))
+
+(show (enum new pause replace) replace 'Show' default
+	'How to show current presentation after hyperjump' raw (smil2))
+
+(sourcePlaystate (enum play pause stop) play 'Source play state' default
+	'What happens to current presentation after hyperjump' raw (smil2))
+
+(destinationPlaystate (enum play pause) play 'Destination play state' default
+	'What happens to new presentation after hyperjump' raw (smil2))
+
+(external (bool) 0 'External link' default
+	'Use external application to open destination of hyperlink' raw (advanced smil2))
+
+(target (string) '' 'Target window' default
+	'Target window for hyperjump' raw (advanced smil2))
+
+(sourceLevel (float) 1 'Source level' percent
+	'Specifies the relative volume in percent of the source presentation after hyperjump'
+	raw (advanced smil2))
+
+(destinationLevel (float) 1 'Destination level' percent
+	'Specifies the relative volume in percent of the destination presentation after hyperjump'
+	raw (advanced smil2))
 
 (abstract (string) '' 'Abstract' default 'A brief description of the contents (informational only)' raw (g2 qt smil10 smil2 cmif snap))
 
@@ -536,7 +559,7 @@
 (mediaOpacity (float) 1.0 'Media opacity' percent
 	'Makes all opaque areas transparent' normal (advanced g2 smil2))
 (sendTo (enum rpcontextwin rpbrowser osdefaultbrowser) rpbrowser 'Send to' default
-	'Specifies window that opens the HTML page' normal (advanced g2 smil2))
+	'Specifies window that opens the HTML page' normal (g2 smil2))
 (reliable (bool) 0 'Reliable transmission' default
 	'Ensures reliable transmission' normal (advanced g2 smil2))
 (strbitrate (int) 12288 'Stream bitrate' default

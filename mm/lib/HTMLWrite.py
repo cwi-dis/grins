@@ -7,7 +7,6 @@ from MMExc import *		# Exceptions
 import MMCache
 import MMAttrdefs
 import Hlinks
-from AnchorDefs import *
 import string
 import os
 import MMurl
