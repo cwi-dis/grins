@@ -19,12 +19,14 @@ ChannelMime = {
 		'image/x-xwindowdump',
 		],
 	'sound': [
+		'application/vnd.rn-realmedia', # but only if it's audio only
 		'audio/basic',
 		'audio/vnd.rn-realaudio',
 		'audio/x-aiff',
 		'audio/x-wav',
 		],
 	'video': [
+		'application/vnd.rn-realmedia', # but only if it contains video
 		'application/x-shockwave-flash',
 		'image/vnd.rn-realflash',
 		'video/mpeg',
