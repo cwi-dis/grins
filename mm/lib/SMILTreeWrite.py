@@ -446,6 +446,12 @@ def getfill(writer, node):
 	if node.GetChannelType() in ('image', 'text'):
 		return 'freeze'
 
+def escape_name(name, quote_initial = 1):
+	name = string.join(string.split(name, '.'), '\\.')
+	if quote_initial and name in ['prev', 'wallclock', ]:
+		name = '\\' + name
+	return name
+
 def getsyncarc(writer, node, isend):
 	if isend:
 		attr = 'endlist'
@@ -480,9 +486,9 @@ def getsyncarc(writer, node, isend):
 			elif arc.srcnode is node:
 				name = ''
 			else:
-				name = writer.uid2name[arc.srcnode.GetUID()] + '.'
+				name = escape_name(writer.uid2name[arc.srcnode.GetUID()]) + '.'
 			if arc.event is not None:
-				name = name + arc.event
+				name = name + escape_name(arc.event, 0)
 			if arc.delay is not None:
 				if arc.delay > 0:
 					name = '%s+%g' % (name, arc.delay)
@@ -490,7 +496,7 @@ def getsyncarc(writer, node, isend):
 					name = name + '%g' % arc.delay
 			list.append(name)
 		else:
-			list.append('%s.marker(%s)' % (writer.uid2name[arc.srcnode.GetUID()], arc.marker))
+			list.append('%s.marker(%s)' % (escape_name(writer.uid2name[arc.srcnode.GetUID()]), arc.marker))
 	if not list:
 		return
 	return string.join(list, ';')

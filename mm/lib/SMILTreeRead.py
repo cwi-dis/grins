@@ -369,6 +369,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				elif name is None:
 					xnode = node
 				else:
+					if name[0] == '\\':
+						name = name[1:]
+						if not name:
+							self.syntax_error('invalid name')
+							continue
 					xnode = self.__nodemap.get(name)
 					if xnode is None:
 						self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
