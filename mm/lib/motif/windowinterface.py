@@ -863,6 +863,9 @@ class InputDialog:
 		self._form.SelectionBoxGetChild(
 			Xmd.DIALOG_HELP_BUTTON).UnmanageChild()
 		self._form.ManageChild()
+		self._form.SelectionBoxGetChild(
+			Xmd.DIALOG_TEXT).TextFieldSetSelection(
+				0, len(default or ''), 0)
 		toplevel._subwindows.append(self)
 
 	def _ok(self, w, client_data, call_data):
@@ -1652,12 +1655,11 @@ class List(_Widget, _List):
 class TextInput(_Widget):
 	def __init__(self, parent, prompt, inittext, chcb, accb,
 		     useGadget = _def_useGadget, name = 'windowTextfield',
-		     modifyCB = None, tooltip = None,
-		     **options):
+		     modifyCB = None, tooltip = None, **options):
 		attrs = {}
 		self._attachments(attrs, options)
 		if prompt is not None:
-			if useGadget and tooltip is None:
+			if useGadget:
 				labelwidget = Xm.LabelGadget
 			else:
 				labelwidget = Xm.Label
