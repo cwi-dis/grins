@@ -31,6 +31,10 @@ class LightWeightControl:
 			parent._subwndlist.append(self)
 		self._hwnd=hwnd
 		self._cb=None
+		self._hfont = 0
+	def __del__(self):
+		if self._hfont:
+			Sdk.DeleteObject(self._hfont)
 	def sendmessage(self,msg,wparam=0,lparam=0):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessage(self._hwnd,msg,wparam,lparam)
@@ -112,6 +116,14 @@ class LightWeightControl:
 	def callcb(self):
 		if self._cb: 
 			apply(apply,self._cb)
+	def setfont(self, lf=None):
+		if self._hfont:
+			Sdk.DeleteObject(self._hfont)
+		if lf is None:
+			lf = {'name':'MS San Serif', 'height': 11, 'weight': win32con.FW_NORMAL}
+		self._hfont = Sdk.CreateFontIndirect(lf)
+		if self._hfont:
+			self.sendmessage(win32con.WM_SETFONT, self._hfont, 1)
 
 # shortcut
 Control = LightWeightControl
