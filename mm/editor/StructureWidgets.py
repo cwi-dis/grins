@@ -531,7 +531,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def set_dangling_event(self):
 		if self.cause_event_icon:
 			self.iconbox.del_icon(self.cause_event_icon)
-		self.cause_event_icon = self.iconbox.add_icon('danglingev')
+		self.cause_event_icon = self.iconbox.add_icon('danglingevent')
 		
 	def clear_dangling_event(self):
 		# XXXX Note that this is not really correct: if there was a causeevent icon before
@@ -2328,7 +2328,7 @@ class IconBox(MMWidgetDecoration):
 			icon.add_arrow(arrowto)
 		i = 0
 		for n in ('error', 
-			      'danglingev', 'danglinganchor',
+			      'danglingevent', 'danglinganchor',
 			      'linkdst', 'beginevent',
 			      'linksrc','causeevent',
 			      'endevent',  # Not sure where this one should go....
@@ -2339,6 +2339,7 @@ class IconBox(MMWidgetDecoration):
 			if i < len(self._iconlist) and self._iconlist[i].icon == n:
 				i = i + 1
 		else:
+			print 'Icon has no fixed position:', iconname
 			self._iconlist.append(icon)
 		self.recalc_minsize()
 		return icon
