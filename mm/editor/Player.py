@@ -407,8 +407,10 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			if self.channels[name].is_showing():
 				onoff = ''
 			else:
-				onoff = '(off)'
-			self.menubutton.addto_menu(name + ' ' + onoff + '|')
+				onoff = ' (off)'
+			self.menubutton.addto_menu(name + onoff)
+			# XXX This is for FORMS version 2.0b;
+			# XXX for version 2.0 (beta), append a '|'.
 	#
 	def showchannels(self):
 		for name in self.channelnames:
