@@ -58,7 +58,7 @@ ExampleClientContext::~ExampleClientContext()
  */
 void ExampleClientContext::Init(IUnknown* /*IN*/pUnknown)
 {
-    m_pErrorSink	= new ExampleErrorSink();
+    m_pErrorSink	= new ExampleErrorSink(pUnknown);
     m_pClientSink	= new ExampleClientAdviceSink(pUnknown);
     m_pAuthMgr      = new ExampleAuthenticationManager();
     m_pSiteSupplier	= new ExampleSiteSupplier(pUnknown);
@@ -67,6 +67,7 @@ void ExampleClientContext::Init(IUnknown* /*IN*/pUnknown)
     if (m_pErrorSink)m_pErrorSink->AddRef();
     if(m_pAuthMgr)m_pAuthMgr->AddRef();
     if(m_pSiteSupplier)m_pSiteSupplier->AddRef();
+
 }
 
 
