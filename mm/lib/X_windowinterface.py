@@ -205,7 +205,9 @@ class _Toplevel:
 		self._main.RealizeWidget()
 
 	def _setupcolormap(self, dpy):
-		visuals = dpy.GetVisualInfo({'c_class': X.TrueColor})
+		visattr = {'class': X.TrueColor}
+##		visattr['depth'] = 8
+		visuals = dpy.GetVisualInfo(visattr)
 		if visuals:
 			# found one, use the deepest
 			v_best = visuals[0]
@@ -227,7 +229,7 @@ class _Toplevel:
 					  self._blue_shift, self._blue_mask)
 			return
 		visuals = dpy.GetVisualInfo({'depth': 8,
-					     'c_class': X.PseudoColor})
+					     'class': X.PseudoColor})
 		if len(visuals) == 0:
 			raise error, 'no proper visuals available'
 		self._visual = visuals[0]
@@ -585,6 +587,9 @@ class _Window:
 			return		# why were we called anyway?
 		if call_data:
 			event = call_data.event
+			toplevel._win_lock.acquire()
+			self._gc.FillRectangle(event.x, event.y, event.width, event.height)
+			toplevel._win_lock.release()
 			if event.count > 0:
 				if debug: print `self`+'._expose_callback() -- count > 0'
 				return
@@ -602,14 +607,14 @@ class _Window:
 			for but in self._active_display_list._buttonlist:
 				if but._highlighted:
 					buttons.append(but)
-			self._active_display_list.render()
+			self._active_display_list.render(expose = 1)
 			for but in buttons:
 				but.highlight()
-		else:
-			# clear the window
-			toplevel._win_lock.acquire()
-			self._gc.FillRectangle(0, 0, self._width, self._height)
-			toplevel._win_lock.release()
+##		else:
+##			# clear the window
+##			toplevel._win_lock.acquire()
+##			self._gc.FillRectangle(0, 0, self._width, self._height)
+##			toplevel._win_lock.release()
 
 	def _do_resize(self):
 		x, y, w, h = self._sizes
@@ -1178,22 +1183,10 @@ class _DisplayList:
 		self._baseline = 0
 		#
 		window._displaylists.append(self)
-		toplevel._win_lock.acquire()
-		self._pixmap = window._form.CreatePixmap(window._width,
-							 window._height,
-							 window._depth)
-		# reversed foreground and background for clearing
-		self._gc = self._pixmap.CreateGC({
-			  'background': self._xbgcolor,
-			  'foreground': self._xbgcolor,
-			  'line_width': 1})
-		# clear pixmap since it may contain garbage
-		self._gc.FillRectangle(0, 0, window._width, window._height)
-		# set foreground and background properly
-		self._gc.background = self._xbgcolor
-		self._gc.foreground = self._xfgcolor
-		self._gc.line_width = self._linewidth
-		toplevel._win_lock.release()
+		self._list = [('clear', self._xbgcolor, self._xfgcolor, self._linewidth)]
+		self._cloneof = None
+		self._clonestart = 0
+		self._optimdict = {}
 
 	def close(self):
 		if debug: print `self`+'.close()'
@@ -1203,32 +1196,195 @@ class _DisplayList:
 			but.close()
 		window = self._window
 		window._displaylists.remove(self)
+		for d in window._displaylists:
+			if d._cloneof is self:
+				d._cloneof = None
 		if window._active_display_list == self:
 			window._active_display_list = None
 			window._expose_callback(None, None, None)
 		del self._window
 		del self._buttonlist
-		del self._gc
-		del self._pixmap
 		del self._font
+		del self._list
+		del self._cloneof
+		del self._optimdict
 
 	def is_closed(self):
 		return not hasattr(self, '_window')
 
-	def render(self):
+	def render(self, expose = 0):
 		if debug: print `self`+'.render()'
 		if self.is_closed():
 			raise error, 'displaylist already closed'
 		self._rendered = TRUE
-		w = self._window
-		if w._active_display_list:
-			for but in w._active_display_list._buttonlist:
+		window = self._window
+		if window._active_display_list:
+			for but in window._active_display_list._buttonlist:
 				but._highlighted = FALSE
-		w._active_display_list = self
 		toplevel._win_lock.acquire()
-		self._pixmap.CopyArea(w._form, self._gc, 0, 0, w._width, w._height, 0, 0)
-		w._form.UpdateDisplay()
+		gc = window._form.CreateGC({})
+		width, height = window._width, window._height
+		if not self._cloneof or \
+		   self._cloneof is not window._active_display_list or \
+		   window._active_display_list._buttonlist:
+			self._clonestart = 0
+		font = fg = None
+		i = 0
+		while i < self._clonestart:
+			entry = self._list[i]
+			if entry[0] == 'font':
+				font = entry[1]
+			elif entry[0] == 'fg':
+				fg = entry[1]
+			i = i + 1
+		if fg is not None:
+			gc.foreground = fg
+		if font is not None:
+			gc.SetFont(font)
+		fg = gc.foreground
+		for entry in self._list[self._clonestart:]:
+			cmd = entry[0]
+			if cmd == 'clear':
+				if not expose:
+					gc.foreground = entry[1]
+					gc.FillRectangle(0, 0, width, height)
+				gc.background = entry[1]
+				gc.foreground = fg = entry[2]
+				gc.line_width = entry[3]
+			elif cmd == 'fg':
+				gc.foreground = fg = entry[1]
+			elif cmd == 'image':
+				apply(gc.PutImage, entry[1:])
+			elif cmd == 'linewidth':
+				gc.line_width = entry[1]
+			elif cmd == 'line':
+				gc.foreground = entry[1]
+				points = entry[2]
+				x0, y0 = points[0]
+				for x, y in points[1:]:
+					gc.DrawLine(x0, y0, x, y)
+					x0, y0 = x, y
+				gc.foreground = fg
+			elif cmd == 'fpolygon':
+				gc.foreground = entry[1]
+				gc.FillPolygon(entry[2], X.Convex, X.CoordModeOrigin)
+				gc.foreground = fg
+			elif cmd == 'box':
+				apply(gc.DrawRectangle, entry[1:])
+			elif cmd == 'fbox':
+				gc.foreground = entry[1]
+				apply(gc.FillRectangle, entry[2:])
+				gc.foreground = fg
+			elif cmd == '3dbox':
+				cl, ct, cr, cb = entry[1:1+4]
+				l, t, w, h = entry[5:5+4]
+				r, b = l + w, t + h
+				l = l+1
+				t = t+1
+				r = r-1
+				b = b-1
+				l1 = l - 1
+				t1 = t - 1
+				r1 = r
+				b1 = b
+				ll = l + 2
+				tt = t + 2
+				rr = r - 2
+				bb = b - 3
+				gc.foreground = cl
+				gc.FillPolygon([(l1, t1), (ll, tt), (ll, bb), (l1, b1)],
+					       X.Convex, X.CoordModeOrigin)
+				gc.foreground = ct
+				gc.FillPolygon([(l1, t1), (r1, t1), (rr, tt), (ll, tt)],
+					       X.Convex, X.CoordModeOrigin)
+				gc.foreground = cr
+				gc.FillPolygon([(r1, t1), (r1, b1), (rr, bb), (rr, tt)],
+					       X.Convex, X.CoordModeOrigin)
+				gc.foreground = cb
+				gc.FillPolygon([(l1, b1), (ll, bb), (rr, bb), (r1, b1)],
+					       X.Convex, X.CoordModeOrigin)
+				gc.foreground = fg
+			elif cmd == 'diamond':
+				x, y, w, h = entry[1:]
+				gc.DrawLines([(x, y + h/2),
+					      (x + w/2, y),
+					      (x + w, y + h/2),
+					      (x + w/2, y + h),
+					      (x, y + h/2)],
+					     X.CoordModeOrigin)
+			elif cmd == 'fdiamond':
+				gc.foreground = entry[1]
+				x, y, w, h = entry[2:]
+				gc.FillPolygon([(x, y + h/2),
+						(x + w/2, y),
+						(x + w, y + h/2),
+						(x + w/2, y + h),
+						(x, y + h/2)],
+					       X.Convex, X.CoordModeOrigin)
+				gc.foreground = fg
+			elif cmd == '3ddiamond':
+				cl, ct, cr, cb = entry[1:1+4]
+				l, t, w, h = entry[5:5+4]
+				r = l + w
+				b = t + h
+				x = l + w/2
+				y = t + h/2
+				n = int(3.0 * w / h + 0.5)
+				ll = l + n
+				tt = t + 3
+				rr = r - n
+				bb = b - 3
+				gc.foreground = cl
+				gc.FillPolygon([(l, y), (x, t), (x, tt), (ll, y)],
+					       X.Convex, X.CoordModeOrigin)
+				gc.foreground = ct
+				gc.FillPolygon([(x, t), (r, y), (rr, y), (x, tt)],
+					       X.Convex, X.CoordModeOrigin)
+				gc.foreground = cr
+				gc.FillPolygon([(r, y), (x, b), (x, bb), (rr, y)],
+					       X.Convex, X.CoordModeOrigin)
+				gc.foreground = cb
+				gc.FillPolygon([(l, y), (ll, y), (x, bb), (x, b)],
+					       X.Convex, X.CoordModeOrigin)
+				gc.foreground = fg
+			elif cmd == 'arrow':
+				gc.foreground = entry[1]
+				apply(gc.DrawLine, entry[2:2+4])
+				gc.FillPolygon(entry[6], X.Convex, X.CoordModeOrigin)
+				gc.foreground = fg
+			elif cmd == 'font':
+				gc.SetFont(entry[1])
+			elif cmd == 'text':
+				apply(gc.DrawString, entry[1:])
+		window._active_display_list = self
+		window._form.UpdateDisplay()
 		toplevel._win_lock.release()
+
+	def _optimize(self, ignore = []):
+		if type(ignore) is type(0):
+			ignore = [ignore]
+		entry = self._list[-1]
+		x = []
+		for i in range(len(entry)):
+			if i not in ignore:
+				z = entry[i]
+				if type(z) is type([]):
+					z = tuple(z)
+				x.append(z)
+		x = tuple(x)
+		try:
+			i = self._optimdict[x]
+		except KeyError:
+			pass
+		else:
+			del self._list[i]
+			del self._optimdict[x]
+			if i < self._clonestart:
+				self._clonestart = self._clonestart - 1
+			for key, val in self._optimdict.items():
+				if val > i:
+					self._optimdict[key] = val - 1
+		self._optimdict[x] = len(self._list) - 1
 
 	def clone(self):
 		if debug: print `self`+'.clone()'
@@ -1236,17 +1392,8 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		w = self._window
 		new = _DisplayList(w, self._bgcolor)
-		ngc = new._gc
-		ogc = self._gc
-		toplevel._win_lock.acquire()
-		self._pixmap.CopyArea(new._pixmap, self._gc, 0, 0, w._width, w._height, 0, 0)
-		# somehow copy GC too
-		ngc.foreground = ogc.foreground
-		ngc.line_width = ogc.line_width
-		if self._font:
-			ngc.SetFont(self._font._font)
-		toplevel._win_lock.release()
 		# copy all instance variables
+		new._list = self._list[:]
 		new._fgcolor = self._fgcolor
 		new._xfgcolor = self._xfgcolor
 		new._bgcolor = self._bgcolor
@@ -1255,6 +1402,11 @@ class _DisplayList:
 		new._font = self._font
 		new._fontheight = self._fontheight
 		new._baseline = self._baseline
+		if self._rendered:
+			new._cloneof = self
+			new._clonestart = len(self._list)
+		for key, val in self._optimdict.items():
+			new._optimdict[key] = val
 		return new
 
 	#
@@ -1272,9 +1424,7 @@ class _DisplayList:
 			raise TypeError, 'arg count mismatch'
 		self._fgcolor = color
 		self._xfgcolor = self._window._convert_color(self._fgcolor)
-		toplevel._win_lock.acquire()
-		self._gc.foreground = self._xfgcolor
-		toplevel._win_lock.release()
+		self._list.append('fg', self._xfgcolor)
 
 	#
 	# Buttons
@@ -1317,8 +1467,9 @@ class _DisplayList:
 		toplevel._win_lock.acquire()
 		xim = toplevel._visual.CreateImage(window._depth, X.ZPixmap, 0,
 				image, im_w, im_h, depth * 8, im_w * depth)
-		self._gc.PutImage(xim, im_x, im_y, win_x, win_y, win_w, win_h)
 		toplevel._win_lock.release()
+		self._list.append('image', xim, im_x, im_y, win_x, win_y, win_w, win_h)
+		self._optimize(1)
 		return float(win_x) / window._width, \
 			  float(win_y) / window._height, \
 			  float(win_w) / window._width, \
@@ -1334,9 +1485,7 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		self._linewidth = width
-		toplevel._win_lock.acquire()
-		self._gc.line_width = width
-		toplevel._win_lock.release()
+		self._list.append('linewidth', width)
 
 	def drawline(self, color, points):
 		if self.is_closed():
@@ -1346,18 +1495,12 @@ class _DisplayList:
 		if debug: print `self`+'.drawline'+`points`
 
 		window = self._window
-		color = self._window._convert_color(color)
-		self._gc.foreground = color
-
-		toplevel._win_lock.acquire()
-		x0, y0 = points[0]
-		x0, y0 = window._convert_coordinates(x0, y0, 0, 0)[:2]
-		for x, y in points[1:]:
+		p = []
+		for x, y in points:
 			x, y = window._convert_coordinates(x, y, 0, 0)[:2]
-			self._gc.DrawLine(x0, y0, x, y)
-			x0, y0 = x, y
-		self._gc.foreground = self._xfgcolor
-		toplevel._win_lock.release()
+			p.append(x, y)
+		color = window._convert_color(color)
+		self._list.append('line', color, p)
 
 	def drawfpolygon(self, color, points):
 		if self.is_closed():
@@ -1365,19 +1508,16 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		if debug: print `self`+'.drawfpolygon'+`points`
+
 		window = self._window
-		gc = self._gc
-		color = window._convert_color(color)
 		p = []
 		for x, y in points:
 			x, y = window._convert_coordinates(x, y, 0, 0)[:2]
 			p.append(x, y)
-		toplevel._win_lock.acquire()
-		gc.foreground = color
-		gc.FillPolygon(p, X.Convex, X.CoordModeOrigin)
-		gc.foreground = self._xfgcolor
-		toplevel._win_lock.release()
-
+		color = window._convert_color(color)
+		self._list.append('fpolygon', color, p)
+		self._optimize(1)
+		
 	def drawbox(self, *coordinates):
 		if self.is_closed():
 			raise error, 'displaylist already closed'
@@ -1388,12 +1528,10 @@ class _DisplayList:
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
 		if debug: print `self`+'.drawbox'+`coordinates`
-		window = self._window
 		x, y, w, h = coordinates
-		x, y, w, h = window._convert_coordinates(x, y, w, h)
-		toplevel._win_lock.acquire()
-		self._gc.DrawRectangle(x, y, w, h)
-		toplevel._win_lock.release()
+		x, y, w, h = self._window._convert_coordinates(x, y, w, h)
+		self._list.append('box', x, y, w, h)
+		self._optimize()
 
 	def drawfbox(self, color, *coordinates):
 		if self.is_closed():
@@ -1413,11 +1551,8 @@ class _DisplayList:
 			y, h = y + h, -h
 		x, y, w, h = window._convert_coordinates(x, y, w, h)
 		color = self._window._convert_color(color)
-		toplevel._win_lock.acquire()
-		self._gc.foreground = color
-		self._gc.FillRectangle(x, y, w, h)
-		self._gc.foreground = self._xfgcolor
-		toplevel._win_lock.release()
+		self._list.append('fbox', color, x, y, w, h)
+		self._optimize(1)
 
 	def draw3dbox(self, cl, ct, cr, cb, *coordinates):
 		if self.is_closed():
@@ -1430,40 +1565,14 @@ class _DisplayList:
 			raise TypeError, 'arg count mismatch'
 		if debug: print `self`+'.draw3dbox'+`coordinates`
 		window = self._window
-		gc = self._gc
 		x, y, w, h = coordinates
 		l, t, w, h = window._convert_coordinates(x, y, w, h)
-		r, b = l + w, t + h
-		l = l+1
-		t = t+1
-		r = r-1
-		b = b-1
-		l1 = l - 1
-		t1 = t - 1
-		r1 = r
-		b1 = b
-		ll = l + 2
-		tt = t + 2
-		rr = r - 2
-		bb = b - 3
 		cl = window._convert_color(cl)
 		ct = window._convert_color(ct)
 		cr = window._convert_color(cr)
 		cb = window._convert_color(cb)
-		toplevel._win_lock.acquire()
-		gc.foreground = cl
-		gc.FillPolygon([(l1, t1), (ll, tt), (ll, bb), (l1, b1)],
-			       X.Convex, X.CoordModeOrigin)
-		gc.foreground = ct
-		gc.FillPolygon([(l1, t1), (r1, t1), (rr, tt), (ll, tt)],
-			       X.Convex, X.CoordModeOrigin)
-		gc.foreground = cr
-		gc.FillPolygon([(r1, t1), (r1, b1), (rr, bb), (rr, tt)],
-			       X.Convex, X.CoordModeOrigin)
-		gc.foreground = cb
-		gc.FillPolygon([(l1, b1), (ll, bb), (rr, bb), (r1, b1)],
-			       X.Convex, X.CoordModeOrigin)
-		toplevel._win_lock.release()
+		self._list.append('3dbox', cl, ct, cr, cb, l, t, w, h)
+		self._optimize(range(1,5))
 
 	def drawdiamond(self, *coordinates):
 		if self.is_closed():
@@ -1478,14 +1587,8 @@ class _DisplayList:
 		window = self._window
 		x, y, w, h = coordinates
 		x, y, w, h = window._convert_coordinates(x, y, w, h)
-		toplevel._win_lock.acquire()
-		self._gc.DrawLines([(x, y + h/2),
-				    (x + w/2, y),
-				    (x + w, y + h/2),
-				    (x + w/2, y + h),
-				    (x, y + h/2)],
-				   X.CoordModeOrigin)
-		toplevel._win_lock.release()
+		self._list.append('diamond', x, y, w, h)
+		self._optimize()
 
 	def drawfdiamond(self, color, *coordinates):
 		if self.is_closed():
@@ -1498,23 +1601,15 @@ class _DisplayList:
 			raise TypeError, 'arg count mismatch'
 		if debug: print `self`+'.drawbox'+`coordinates`
 		window = self._window
-		gc = self._gc
 		x, y, w, h = coordinates
 		if w < 0:
 			x, w = x + w, -w
 		if h < 0:
 			y, h = y + h, -h
 		x, y, w, h = window._convert_coordinates(x, y, w, h)
-		toplevel._win_lock.acquire()
-		gc.foreground = window._convert_color(color)
-		gc.FillPolygon([(x, y + h/2),
-				(x + w/2, y),
-				(x + w, y + h/2),
-				(x + w/2, y + h),
-				(x, y + h/2)],
-			       X.Convex, X.CoordModeOrigin)
-		gc.foreground = self._xfgcolor
-		toplevel._win_lock.release()
+		color = window._convert_color(color)
+		self._list.append('fdiamond', color, x, y, w, h)
+		self._optimize(1)
 
 	def draw3ddiamond(self, cl, ct, cr, cb, *coordinates):
 		if self.is_closed():
@@ -1527,34 +1622,14 @@ class _DisplayList:
 			raise TypeError, 'arg count mismatch'
 		if debug: print `self`+'.draw3dbox'+`coordinates`
 		window = self._window
-		gc = self._gc
+		cl = window._convert_color(cl)
+		ct = window._convert_color(ct)
+		cr = window._convert_color(cr)
+		cb = window._convert_color(cb)
 		x, y, w, h = coordinates
 		l, t, w, h = window._convert_coordinates(x, y, w, h)
-		r = l + w
-		b = t + h
-		x = l + w/2
-		y = t + h/2
-		n = int(3.0 * w / h + 0.5)
-		ll = l + n
-		tt = t + 3
-		rr = r - n
-		bb = b - 3
-
-		toplevel._win_lock.acquire()
-		gc.foreground = window._convert_color(cl)
-		gc.FillPolygon([(l, y), (x, t), (x, tt), (ll, y)],
-			       X.Convex, X.CoordModeOrigin)
-		gc.foreground = window._convert_color(ct)
-		gc.FillPolygon([(x, t), (r, y), (rr, y), (x, tt)],
-			       X.Convex, X.CoordModeOrigin)
-		gc.foreground = window._convert_color(cr)
-		gc.FillPolygon([(r, y), (x, b), (x, bb), (rr, y)],
-			       X.Convex, X.CoordModeOrigin)
-		gc.foreground = window._convert_color(cb)
-		gc.FillPolygon([(l, y), (ll, y), (x, bb), (x, b)],
-			       X.Convex, X.CoordModeOrigin)
-		gc.foreground = self._xfgcolor
-		toplevel._win_lock.release()
+		self._list.append('3ddiamond', cl, ct, cr, cb, l, t, w, h)
+		self._optimize(range(1,5))
 
 	def drawarrow(self, color, sx, sy, dx, dy):
 		import math
@@ -1564,7 +1639,6 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
-		gc = self._gc
 		sx, sy = window._convert_coordinates(sx, sy, 0, 0)[:2]
 		dx, dy = window._convert_coordinates(dx, dy, 0, 0)[:2]
 		color = self._window._convert_color(color)
@@ -1582,12 +1656,8 @@ class _DisplayList:
 			      roundi(dy + ARR_LENGTH*sin - ARR_HALFWIDTH*cos))
 		points.append(roundi(dx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
 			      roundi(dy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos))
-		toplevel._win_lock.acquire()
-		gc.foreground = color
-		gc.DrawLine(sx, sy, dx, dy)
-		gc.FillPolygon(points, X.Convex, X.CoordModeOrigin)
-		gc.foreground = self._xfgcolor
-		toplevel._win_lock.release()
+		self._list.append('arrow', color, sx, sy, dx, dy, points)
+		self._optimize(1)
 
 	#
 	# Font and text handling
@@ -1598,13 +1668,11 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		self._font = fontobj
-		toplevel._win_lock.acquire()
-		self._gc.SetFont(fontobj._font)
-		toplevel._win_lock.release()
 		f = float(_screenheight) / _mscreenheight / self._window._height
 		self._baseline = fontobj.baseline() * f
 		self._fontheight = fontobj.fontheight() * f
 		if debug: print `self`+'.usefont('+`fontobj`+') --> '+`self._baseline,self._fontheight,fontobj.pointsize()`
+		self._list.append('font', fontobj._font)
 		return self._baseline, self._fontheight, fontobj.pointsize()
 
 	def setfont(self, font, size):
@@ -1747,7 +1815,7 @@ class _DisplayList:
 		toplevel._win_lock.acquire()
 		for str in strlist:
 			x0, y0 = self._window._convert_coordinates(x, y, 0, 0)[:2]
-			self._gc.DrawString(x0, y0, str)
+			self._list.append('text', x0, y0, str)
 			self._curpos = x + float(self._font._font.TextWidth(str)) / window._width, y
 			x = self._xpos
 			y = y + self._fontheight
@@ -1766,7 +1834,7 @@ class _Button:
 		self._dispobj = dispobj
 		window = dispobj._window
 		self._corners = x, y, x + w, y + h
-		self._coordinates = window._convert_coordinates(x, y, w, h)
+		self._coordinates = x, y, w, h = window._convert_coordinates(x, y, w, h)
 		self._color = dispobj._fgcolor
 		self._hicolor = dispobj._fgcolor
 		self._xcolor = dispobj._xfgcolor
@@ -1781,9 +1849,7 @@ class _Button:
 		if self._color == dispobj._bgcolor and \
 		   self._hicolor == dispobj._bgcolor:
 			return
-		toplevel._win_lock.acquire()
-		apply(dispobj._gc.DrawRectangle, self._coordinates)
-		toplevel._win_lock.release()
+		dispobj._list.append('box', x, y, w, h)
 
 	def close(self):
 		if debug: print `self`+'.close()'
