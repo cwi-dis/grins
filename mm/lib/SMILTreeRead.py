@@ -1887,8 +1887,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def FixBaseWindow(self):
 		if not self.__topchans:
 			return
+		xCurrent = 0
+		yCurrent = 0
 		for ch in self.__context.channels:
 			if ch in self.__topchans:
+				ch['winpos'] = (xCurrent, yCurrent)
+				xCurrent = xCurrent+20
+				yCurrent = yCurrent+20
 				continue
 			# old 03-07-2000
 			#if ch.has_key('base_window'):
@@ -2293,17 +2298,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if features.compatibility == features.QT:
 			self.parseQTAttributeOnSmilElement(attributes)
 
-	def __checkid(self, attributes):
+	def __checkid(self, attributes, defaultPrefixId='id'):
 		id = attributes.get('id')
 		if id is not None:
 			res = xmllib.tagfind.match(id)
 			if res is None or res.end(0) != len(id):
 				self.syntax_error("illegal ID value `%s'" % id)
+				self.__ids[id] = 0
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
+				id = self.__mkid(defaultPrefixId)
 			self.__ids[id] = 0
+			
 		return id
-
+		
 	def __mkid(self, tag):
 		# create an ID for an element that doesn't have one
 		# note that we create an ID that is not legal XML, so
@@ -2897,11 +2905,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('viewport not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
-		self.__fix_attributes(attributes)
-		id = self.__checkid(attributes)
+		id = self.__checkid(attributes,'viewport')
 		if id is None:
 			id = self.__mkid('viewport')
-			attributes['id'] = id
+			
+		attributes['id'] = id
+		self.__fix_attributes(attributes)
+						
 		self.__viewport = id
 		self.__childregions[id] = []
 		width = attributes['width']
@@ -2929,14 +2939,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.syntax_error('root-layout height not a positive integer')
 				height = 0
 
-		close = attributes['close']
-		if close not in ('never', 'whenNotActive'):
-			self.syntax_error('illegal close attribute value')
+		close = attributes.get('close')
+		if close != None:
+			if close not in ('never', 'whenNotActive'):
+				self.syntax_error('illegal close attribute value')
+				close = 'never'
+		else:
 			close = 'never'
 
-		open = attributes['open']
-		if open not in ('always', 'whenActive'):
-			self.syntax_error('illegal open attribute value')
+		open = attributes.get('open')
+		if open != None:
+			if open not in ('always', 'whenActive'):
+				self.syntax_error('illegal open attribute value')
+				open = 'always'
+		else:
 			open = 'always'
 
 		self.__tops[id] = {'width':width,
