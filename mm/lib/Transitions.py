@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Machine-independent part of transitions.
 #
 # This module creates a number of transition classes. Each transition class

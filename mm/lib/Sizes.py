@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import string, MMurl, urlcache
 
 def GetSize(url, maintype = None, subtype = None):
