@@ -189,6 +189,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__u_groups = {}
 		self.__layouts = {}
 		self.__realpixnodes = []
+		self.__animatenodes = []
 		self.__new_file = new_file
 		self.__check_compatibility = check_compatibility
 		self.__regionno = 0
@@ -977,56 +978,60 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		self.__container = self.__container.GetParent()
 
-	def NewVirualNode(self, tagname, attributes):
+	def NewAnimateNode(self, tagname, attributes):
 		# mimetype -- the MIME type of the node as specified in attr
 		# mediatype, subtype -- mtype split into parts
 		# tagname -- the tag name in the SMIL file (None for "ref")
 		# nodetype -- the CMIF node type (imm/ext/...)
+
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
+
 		if not self.__in_smil:
 			self.syntax_error('node not in smil')
 			return
 		if self.__in_layout:
 			self.syntax_error('node in layout')
 			return
-		if self.__node:
-			# the warning comes later from xmllib
-			self.EndNode()
 		
+		# find target node
+		targetnode = None
+		targetid = None
+		if self.__node:
+			targetnode = self.__node
+		else:
+			targetid = attributes.get('targetElement')
+			if not targetid:
+				self.syntax_error('the target element of "%s" is unspecified' % tagname)
+				return
+			if self.__nodemap.has_key(targetid):
+				targetnode = self.__nodemap[targetid]
+			
 		# keep most common attr version
 		aname = attributes.get('attribute')
 		if aname:
 			attributes['attributeName']	= aname
 			del attributes['attribute']
 
+		# create the node
 		nodetype = 'imm'
 		chtype = 'animate'
-		mediatype = 'virtual'
-		subtype = 'internal'
 
-		# create the node
-		if not self.__root:
-			# "can't happen"
-			node = self.MakeRoot(nodetype)
-		elif not self.__container:
-			self.syntax_error('node not in container')
-			return
-		else:
-			node = self.__context.newnode(nodetype)
-			self.__container._addchild(node)
-		self.__node = node
+		node = self.__context.newnode(nodetype)
 		self.AddAttrs(node, attributes)
-		node.__chantype = chtype
-		self.__attributes = attributes
-		node.__mediatype = mediatype, subtype
-		self.__attributes = attributes
-		node.attrdict['mimetype'] = '%s/%s' % (mediatype, subtype)
-		node.type = 'imm'
 
-	def EndVirtualNode(self):
-		self.__node = None
-		del self.__attributes
+		node.type = nodetype
+		node.attrdict['channel'] = chtype
+		node.attrdict['mimetype'] = 'animate/%s' % tagname
+		
+		if targetnode:
+			targetnode.animations.append(node)
+		elif targetid:
+			node.__targetid = targetid
+			self.__animatenodes.append(node)
+
+	def EndAnimateNode(self):
+		pass
 
 	def Recurse(self, root, *funcs):
 		for func in funcs:
@@ -1547,6 +1552,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node.attrdict['anchorlist'] = alist
 		del node.__anchorlist
 		
+	def FixAnimateTargets(self):
+		for node in self.__animatenodes:
+			targetid = node.__targetid
+			if self.__nodemap.has_key(targetid):
+				targetnode = self.__nodemap[targetid]
+				targetnode.animations.append(node)
+				del node.__targetid
+		del self.__animatenodes
+			
 	def parseQTAttributeOnSmilElement(self, attributes):
 		for key, val in attributes.items():
 			if key == 'time-slider':
@@ -1658,6 +1672,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for node in self.__realpixnodes:
 			node.slideshow = SlideShow(node, self.__new_file)
 		del self.__realpixnodes
+		self.FixAnimateTargets()
 
 	# head/body sections
 
@@ -2423,37 +2438,37 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('animate not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
-		self.NewVirualNode('animate', attributes)
+		self.NewAnimateNode('animate', attributes)
 
 	def end_animate(self):
-		self.EndVirtualNode()
+		self.EndAnimateNode()
 
 	def start_set(self, attributes):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('set not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
-		self.NewVirualNode('set', attributes)
+		self.NewAnimateNode('set', attributes)
 
 	def end_set(self):
-		self.EndVirtualNode()
+		self.EndAnimateNode()
 
 	def start_animatemotion(self, attributes):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('animateMotion not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
-		self.NewVirualNode('animateMotion', attributes)
+		self.NewAnimateNode('animateMotion', attributes)
 
 	def end_animatemotion(self):
-		self.EndVirtualNode()
+		self.EndAnimateNode()
 
 	def start_animatecolor(self, attributes):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('animateColor not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
-		self.NewVirualNode('animateColor', attributes)
+		self.NewAnimateNode('animateColor', attributes)
 
 	def end_animatecolor(self):
-		self.EndVirtualNode()
+		self.EndAnimateNode()
 
 	# other callbacks
 
