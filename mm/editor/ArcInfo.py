@@ -149,7 +149,6 @@ class ArcInfo(ArcInfoDialog):
 		delay = self.delay_getvalue()
 		if delay != self.delay:
 			changed = 1
-		self.delay_setvalue(self.delay)
 		# XXX For now, clip sides to [0, 1]
 		sside = min(self.src_getpos(), 1)
 		if sside != self.sside:
@@ -169,5 +168,6 @@ class ArcInfo(ArcInfoDialog):
 			editmgr.addsyncarc(self.snode, self.sside, self.delay,
 					   self.dnode, self.dside)
 			editmgr.commit()
+		self.delay_setvalue(self.delay)
 
 showarcinfo = ArcInfo
