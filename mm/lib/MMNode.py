@@ -600,6 +600,7 @@ class MMNode:
 		self.playing = MMStates.IDLE
 		self.events = {}	# events others are interested in
 		self.sched_children = []
+		self.scheduled_children = 0
 
 	#
 	# Return string representation of self
@@ -1324,7 +1325,13 @@ class MMNode:
 			  ([(TERMINATE, self)], [])]
 		endlist = MMAttrdefs.getattr(self, 'endlist')
 		for arc in endlist:
-			if arc.srcnode is None or arc.srcnode is self:
+			if arc.srcnode is None:
+				refnode = self.parent
+				for c in refnode.children:
+					if c is self:
+						break
+					refnode = c
+			elif arc.srcnode is self:
 				refnode = self.looping_body_self or self
 			else:
 				refnode = arc.srcnode
@@ -1369,7 +1376,13 @@ class MMNode:
 		duration = MMAttrdefs.getattr(self, 'duration')
 		endlist = MMAttrdefs.getattr(self, 'endlist')
 		for arc in endlist:
-			if arc.srcnode is None or arc.srcnode is self:
+			if arc.srcnode is None:
+				refnode = self.parent
+				for c in refnode.children:
+					if c is self:
+						break
+					refnode = c
+			elif arc.srcnode is self:
 				refnode = self.looping_body_self or self
 			else:
 				refnode = arc.srcnode
@@ -1420,7 +1433,13 @@ class MMNode:
 		duration = MMAttrdefs.getattr(self, 'duration')
 		endlist = MMAttrdefs.getattr(self, 'endlist')
 		for arc in endlist:
-			if arc.srcnode is None or arc.srcnode is self:
+			if arc.srcnode is None:
+				refnode = self.parent
+				for c in refnode.children:
+					if c is self:
+						break
+					refnode = c
+			elif arc.srcnode is self:
 				refnode = self.looping_body_self or self
 			else:
 				refnode = arc.srcnode
@@ -1503,7 +1522,13 @@ class MMNode:
 		
 		endlist = MMAttrdefs.getattr(self, 'endlist')
 		for arc in endlist:
-			if arc.srcnode is None or arc.srcnode is self:
+			if arc.srcnode is None:
+				refnode = self.parent
+				for c in refnode.children:
+					if c is self:
+						break
+					refnode = c
+			elif arc.srcnode is self:
 				refnode = self.looping_body_self or self
 			else:
 				refnode = arc.srcnode
@@ -1756,16 +1781,26 @@ class MMNode:
 						break
 			else:
 				for arc in beginlist:
-					if arc.srcnode is None or \
-					   arc.srcnode is self:
-						refnode = body
+					if arc.srcnode is None:
+						refnode = self
+						for c in refnode.children:
+							if c is child:
+								break
+							refnode = c
+					elif arc.srcnode is self:
+						refnode = self.looping_body_self or self
 					else:
 						refnode = arc.srcnode
 					refnode.sched_children.remove(arc)
 			for arc in MMAttrdefs.getattr(child, 'endlist'):
-				if arc.srcnode is None or \
-				   arc.srcnode is self:
-					refnode = body
+				if arc.srcnode is None:
+					refnode = self
+					for c in refnode.children:
+						if c is child:
+							break
+						refnode = c
+				elif arc.srcnode is self:
+					refnode = self.looping_body_self or self
 				else:
 					refnode = arc.srcnode
 				refnode.sched_children.remove(arc)
@@ -1796,9 +1831,14 @@ class MMNode:
 			else:
 				schedule = 0
 				for arc in beginlist:
-					if arc.srcnode is None or \
-					   arc.srcnode is self:
-						refnode = self_body
+					if arc.srcnode is None:
+						refnode = self
+						for c in refnode.children:
+							if c is child:
+								break
+							refnode = c
+					elif arc.srcnode is self:
+						refnode = self.looping_body_self or self
 					else:
 						refnode = arc.srcnode
 					refnode.sched_children.append(arc)
@@ -1813,6 +1853,18 @@ class MMNode:
 					       [(TERMINATE, self_body)]))
 			elif schedule or termtype == 'ALL':
 				scheddone_events.append((SCHED_DONE, child))
+			for arc in MMAttrdefs.getattr(child, 'endlist'):
+				if arc.srcnode is None:
+					refnode = self
+					for c in refnode.children:
+						if c is child:
+							break
+						refnode = c
+				elif arc.srcnode is self:
+					refnode = self.looping_body_self or self
+				else:
+					refnode = arc.srcnode
+				refnode.sched_children.append(arc)
 
 		#
 		# Trickery to handle dur and end correctly:

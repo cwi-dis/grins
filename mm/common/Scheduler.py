@@ -16,7 +16,7 @@ import settings
 import MMStates
 
 debugtimer = 0
-debugevents = 0
+debugevents = 1
 
 # Priorities for the various events:
 N_PRIO = 6
@@ -274,6 +274,7 @@ class SchedulerContext:
 
 	def trigger(self, arc):
 		node = arc.dstnode
+		node.parent.scheduled_children = node.parent.scheduled_children - 1
 		if debugevents: print 'trigger', `node`
 		if not arc.isstart:
 			if node.playing != MMStates.PLAYING:
@@ -651,13 +652,14 @@ class Scheduler(scheduler):
 		#
 		return []
 
-	def sched_arcs(self, sctx, node, event):
+	def sched_arcs(self, sctx, node, event = None, marker = None):
 		if debugevents: print 'sched_arcs',`node`,event
 		for arc in node.sched_children:
 			if arc.event == event and \
-			   arc.marker is None and \
+			   arc.marker == marker and \
 			   arc.delay is not None:
-				self.enter(self.delay, 0, sctx.trigger, (arc,))
+				arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
+				self.enter(arc.delay, 0, sctx.trigger, (arc,))
 
 	def runone(self, (sctx, todo, dummy)):
 		if not sctx.active:
@@ -691,9 +693,13 @@ class Scheduler(scheduler):
 			self.sched_arcs(sctx, arg.looping_body_self, 'begin')
 		else:
 			if action == SR.SCHED_STOPPING and \
-			   (arg.GetType() in interiortypes or arg.realpix_body or arg.caption_body):
+			   (arg.GetType() in interiortypes or arg.realpix_body or arg.caption_body) and \
+			   not arg.scheduled_children:
 				self.remove_terminate(sctx, arg)
 			if action == SR.SCHED_STOPPING:
+				if arg.scheduled_children:
+					print 'not stopping',`arg`
+					return
 				arg.playing = MMStates.PLAYED
 				for ch in arg.children:
 					ch.playing = MMStates.IDLE
@@ -739,6 +745,7 @@ class Scheduler(scheduler):
 		chan = self.ui.getchannelbynode(node)
 		node.set_armedmode(ARM_PLAYING)
 		node.playing = MMStates.PLAYING
+		self.sched_arcs(sctx, node, 'begin')
 		chan.play(node)
 	#
 	# Execute a PLAY_STOP SR.

@@ -508,20 +508,9 @@ class Channel:
 				f = self._playcontext.anchorfired
 			self._anchors[button] = f, (node, [(name, type)], None)
 		self._qid = None
-		for arc in node.sched_children:
-			if arc.marker is None and \
-			   arc.event == 'begin' and \
-			   arc.delay is not None:
-				qid = self._scheduler.enter(arc.delay, 0, self._playcontext.trigger, (arc,))
 
 	def onclick(self, *unused):
-		for arc in self._played_node.sched_children:
-			if arc.event != 'click':
-				continue
-			if arc.delay <= 0:
-				self._playcontext.trigger(arc)
-			else:
-				qid = self._scheduler.enter(arc.delay, 0, self._playcontext.trigger, (arc,))
+		self._scheduler.sched_arcs(self._playcontext, self._played_node, 'click')
 
 	def play_1(self):
 		# This does the final part of playing a node.  This
@@ -566,11 +555,6 @@ class Channel:
 		# callback just yet but wait till the anchor is hit.
 		if self._has_pause:
 			return
-		for arc in self._played_node.sched_children:
-			if arc.marker is None and \
-			   arc.event == 'end' and \
-			   arc.delay is not None:
-				qid = self._scheduler.enter(arc.delay, 0, self._playcontext.trigger, (arc,))
 		if not self.syncplay:
 			if not outside_induced:
 				if self._try_auto_anchors():
