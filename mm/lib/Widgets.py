@@ -192,17 +192,6 @@ class Widget:
 
 	def moveto(self, newpos):
 		# Also handles resizing - new size is in newpos as well.
-		l,t,r,b = newpos
-		
-		if l > 0xefff:
-			l = 0xefff
-		if r > 0xefff:
-			r = 0xefff
-		if b > 0xefff:
-			b = 0xefff
-		if t > 0xefff:
-			t = 0xefff
-		
 		self.pos_abs = newpos
 
 	def set_append(self, otherobject, position):
