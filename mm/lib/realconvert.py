@@ -131,8 +131,21 @@ def convertimagefile(u, srcurl, dstdir, file, node):
 	import imgjpeg, imgconvert
 	if u is not None:
 		u.close()
-	f = MMurl.urlretrieve(srcurl)[0]
+	f, hdr = MMurl.urlretrieve(srcurl)
 	wt = imgjpeg.writer(fullpath)
+	wt.restart_interval = 1
+	if node is not None:
+		if type(node) == type({}):
+			quality = node.get('project_quality')
+		else:
+			quality = node.GetAttrDef('project_quality', None)
+		if quality:
+			wt.quality = quality
+	if hdr.subtype == 'jpeg':
+		# special-case code for JPEG images so that we don't loose info
+		rdr = imgjpeg.reader(f)
+		wt.copy(rdr)
+		return file
 	if sys.platform == 'win32':
 		import __main__
 		import imgformat
@@ -154,14 +167,6 @@ def convertimagefile(u, srcurl, dstdir, file, node):
 	wt = imgconvert.stackwriter(srcfmt, wt)
 	wt.width = width
 	wt.height = height
-	wt.restart_interval = 1
-	if node is not None:
-		if type(node) == type({}):
-			quality = node.get('project_quality')
-		else:
-			quality = MMAttrdefs.getattr(node, 'project_quality')
-		if quality:
-			wt.quality = quality
 	wt.write(data)
 	return file
 
