@@ -48,7 +48,6 @@ class view () :
 		self._initcommanddict()
 		self.channellist = []
 		self.arrowlist = []
-		Timing.calctimes(root)
 	 	duration = self.calcDuration(root) # for channel headers
 		self.channellist.sort()
 		self.nrchannels = len(self.channellist)
@@ -76,6 +75,7 @@ class view () :
 		return self
 
 	def recalc(self):
+		# XXX This should be called in response to commit...
 		Timing.calctimes(self.root)
 		self.unitheight = (self.h - HDR_SIZE) / self.root.t1
 		self.re_mkView((0,0,self.w / 2,self.h,self.h-HDR_SIZE),self.root)
