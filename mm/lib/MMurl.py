@@ -297,6 +297,10 @@ def guessurl(filename):
 
 _pathname2url = pathname2url
 def pathname2url(path):
+	import os
+	if os.name != 'ce':
+		import longpath
+		filename = longpath.short2longpath(path)
 	url = _pathname2url(path)
 	type, rest = splittype(url)
 	if not type and rest[:1] == '/':
