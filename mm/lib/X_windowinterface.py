@@ -210,6 +210,8 @@ class _Toplevel:
 		_channelcursor = dpy.CreateFontCursor(Xcursorfont.draped_box)
 		_linkcursor = dpy.CreateFontCursor(Xcursorfont.hand1)
 		self._main.RealizeWidget()
+		self._timer_callback_func = None
+		self._fdmap = {}
 
 	def _setupcolormap(self, dpy):
 		visattr = {'class': X.TrueColor}
@@ -310,6 +312,51 @@ class _Toplevel:
 		else:
 			self._win_lock = _DummyLock()
 
+	def mainloop(self):
+		Xt.MainLoop()
+
+	# timer interface
+	def settimer(self, sec, arg):
+		id = Xt.AddTimeOut(int(sec * 1000), self._timer_callback, arg)
+		return id
+
+	def canceltimer(self, id):
+		if id is not None:
+			Xt.RemoveTimeOut(id)
+
+	def settimerfunc(self, func, arg):
+		self._timer_callback_func = func, arg
+
+	def _timer_callback(self, client_data, id):
+		if self._timer_callback_func:
+			func, arg = self._timer_callback_func
+			func(arg, None, TimerEvent, client_data)
+
+	# file descriptor interface
+	def select_setcallback(self, fd, func, arg, mask = ReadMask):
+		if type(fd) is not IntType:
+			fd = fd.fileno()
+		try:
+			id = self._fdmap[fd]
+		except KeyError:
+			pass
+		else:
+			Xt.RemoveInput(id)
+			del self._fdmap[fd]
+		if func is None:
+			return
+		xmask = 0
+		if mask & ReadMask:
+			xmask = xmask | Xtdefs.XtInputReadMask
+		if mask & WriteMask:
+			xmask = xmask | Xtdefs.XtInputWriteMask
+		self._fdmap[fd] = Xt.AddInput(fd, xmask, self._input_callback,
+					      (func, arg))
+
+	def _input_callback(self, client_data, fd, id):
+		func, arg = client_data
+		func(arg)
+
 class _Window:
 	def __init__(self, parent, x, y, w, h, title, defcmap, **options):
 		if debug: print '_Window.init() --> '+`self`
@@ -319,6 +366,7 @@ class _Window:
 			pixmap = 0
 		self._parent_window = parent
 		self._origpos = x, y
+		self._callbacks = {}
 		if toplevel._visual.c_class == X.TrueColor:
 			defcmap = FALSE
 		if defcmap:
@@ -410,7 +458,6 @@ class _Window:
 		self._menu_title = None
 		self._menu_list = None
 		self._accelerators = {}
-		self._closecallbacks = []
 		self.setcursor(self._parent_window._cursor)
 		if pixmap:
 			self._pixmap = None # force creation of pixmap later on
@@ -427,8 +474,7 @@ class _Window:
 			del self._pixmap
 		except AttributeError:
 			pass
-		for func in self._closecallbacks[:]:
-			func(self)
+		self._callbacks = {}
 		for win in self._subwindows[:]:
 			win.close()
 		for displist in self._displaylists[:]:
@@ -554,10 +600,6 @@ class _Window:
 				win._open_win()
 		self._subwindows_closed = FALSE
 
-	def _call_on_close(self, func):
-		if not func in self._closecallbacks:
-			self._closecallbacks.append(func)
-
 	def _input_callback(self, widget, client_data, call_data):
 		if self.is_closed():
 			return
@@ -572,8 +614,13 @@ class _Window:
 				f, a = self._accelerators[string]
 				apply(f, a)
 				return
-			for i in range(len(string)):
-				enterevent(self, KeyboardInput, string[i])
+			try:
+				func, arg = self._callbacks[KeyboardInput]
+			except KeyError:
+				pass
+			else:
+				for c in string:
+					func(arg, self, KeyboardInput, c)
 		elif event.type == X.KeyRelease:
 			pass
 		elif event.type in (X.ButtonPress, X.ButtonRelease):
@@ -611,7 +658,12 @@ class _Window:
 				for but in adl._buttonlist:
 					if but._inside(x, y):
 						buttons.append(but)
-			enterevent(self, ev, (x, y, buttons))
+			try:
+				func, arg = self._callbacks[ev]
+			except KeyError:
+				pass
+			else:
+				func(arg, self, ev, (x, y, buttons))
 		else:
 			print 'unknown event',`event.type`
 
@@ -687,10 +739,20 @@ class _Window:
 			win._do_resize()
 		if hasattr(self, '_rb_dl'):
 			self._rb_cancel()
-		enterevent(self, ResizeWindow, None)
+		try:
+			func, arg = self._callbacks[ResizeWindow]
+		except KeyError:
+			pass
+		else:
+			func(arg, self, ResizeWindow, None)
 
 	def _delete_callback(self, widget, client_data, call_data):
-		enterevent(self, WindowExit, None)
+		try:
+			func, arg = self._callbacks[WindowExit]
+		except KeyError:
+			pass
+		else:
+			func(arg, self, WindowExit, None)
 
 	def newwindow(self, *coordinates, **options):
 		return apply(self._new_window, (coordinates, FALSE), options)
@@ -927,10 +989,25 @@ class _Window:
 		return _image_size_cache[file]
 
 	def register(self, ev, func, arg):
-		event.register(self, ev, func, arg)
+		if ev in (ResizeWindow, KeyboardInput, Mouse0Press,
+			  Mouse0Release, Mouse1Press, Mouse1Release,
+			  Mouse2Press, Mouse2Release):
+			self._callbacks[ev] = func, arg
+		elif ev == WindowExit:
+			self._callbacks[ev] = func, arg
+			try:
+				widget = self._shell
+			except AttributeError:
+				widget = self._main
+			widget.deleteResponse = Xmd.DO_NOTHING
+		else:
+			raise error, 'Internal error'
 
 	def unregister(self, ev):
-		event.unregister(self, ev)
+		try:
+			del self._callbacks[ev]
+		except KeyError:
+			pass
 
 	def sizebox(self, (x, y, w, h), constrainx, constrainy, callback):
 		showmessage('windowinterface.sizebox not implmented',
@@ -1994,328 +2071,6 @@ class _Button:
 			self._highlighted = FALSE
 			self._dispobj.render()
 
-class _Event:
-	def __init__(self):
-		self._queue = []
-		self._timeout_called = FALSE
-		self._fdlist = {}
-		self._savefds = []
-		self._timers = []
-		self._callbacks = {}
-		self._windows = {}
-		self._select_fdlist = []
-		self._select_dict = {}
-		self._timenow = time.time()
-		self._timerid = 0
-		self._modal = FALSE
-		self._looping = FALSE
-
-	def _checktime(self):
-		if self._modal:
-			return
-		timenow = time.time()
-		timediff = timenow - self._timenow
-		while self._timers:
-			(t, arg, tid) = self._timers[0]
-			t = t - timediff
-			if t > 0:
-				self._timers[0] = (t, arg, tid)
-				self._timenow = timenow
-				return
-			# Timer expired, enter it in event queue.
-			# Also, check next timer in timer queue (by looping).
-			del self._timers[0]
-			self._queue.append((None, TimerEvent, arg))
-			timediff = -t	# -t is how much too late we were
-		self._timenow = timenow # Fix by Jack
-		if self._looping:
-			self._loop()
-
-	def _looping_timeout_callback(self, client_data, id):
-		if debug: print 'event._looping_timeout_callback'
-		self._checktime()
-
-	def settimer(self, sec, arg):
-		self._checktime()
-		if self._looping:
-			id = Xt.AddTimeOut(int(sec * 1000),
-				  self._looping_timeout_callback, None)
-		t = 0
-		self._timerid = self._timerid + 1
-		for i in range(len(self._timers)):
-			time, dummy, tid = self._timers[i]
-			if t + time > sec:
-				self._timers[i] = (time - sec + t, dummy, tid)
-				self._timers.insert(i, (sec - t, arg, self._timerid))
-				return self._timerid
-			t = t + time
-		self._timers.append(sec - t, arg, self._timerid)
-		return self._timerid
-
-	def canceltimer(self, id):
-		for i in range(len(self._timers)):
-			t, arg, tid = self._timers[i]
-			if tid == id:
-				del self._timers[i]
-				if i < len(self._timers):
-					tt, arg, tid = self._timers[i]
-					self._timers[i] = (tt + t, arg, tid)
-				return
-##		raise error, 'unknown timer id'
-
-	def entereventunique(self, win, event, arg):
-		if (win, event, arg) not in self._queue:
-			self._queue.append((win, event, arg))
-			if self._looping:
-				self._loop()
-
-	def enterevent(self, win, event, arg):
-		self._checktime()
-		self._queue.append((win, event, arg))
-		if self._looping:
-			self._loop()
-
-	def _timeout_callback(self, client_data, id):
-		if debug: print 'event._timeout_callback'
-		self._timeout_called = TRUE
-
-	def _input_callback(self, fd_mask, fd, id):
-		if debug: print 'event._input_callback'
-		self.entereventunique(None, FileEvent, fd)
-		if not self._looping:
-			Xt.RemoveInput(self._fdlist[fd])
-			del self._fdlist[fd]
-			self._savefds.append(fd_mask)
-
-	def _getevent(self, timeout):
-		toplevel._win_lock.acquire()
-		for fd, mask in self._savefds:
-			self._fdlist[fd] = Xt.AddInput(fd, mask,
-					self._input_callback, (fd, mask))
-		self._savefds = []
-		if timeout is not None and timeout > 0.001:
-			if debug: print '_getevent: timeout:',`timeout`
-			self._timeout_called = FALSE
-			id = Xt.AddTimeOut(int(timeout * 1000),
-				  self._timeout_callback, None)
-		else:
-			if debug: print '_getevent: no timeout'
-			self._timeout_called = TRUE
-		qtest = Xt.Pending()
-		while TRUE:
-			# get all pending events
-			while qtest:
-				toplevel._win_lock.release()
-				event = Xt.ProcessEvent(Xtdefs.XtIMAll)
-				toplevel._win_lock.acquire()
-				qtest = Xt.Pending()
-			# if there were any for us, return
-			if self._queue:
-				if not self._timeout_called:
-					Xt.RemoveTimeOut(id)
-				toplevel._win_lock.release()
-				return TRUE
-			# if we shouldn't block, return
-			if timeout is not None:
-				if self._timeout_called:
-					toplevel._win_lock.release()
-					return FALSE
-			# block on next iteration
-			qtest = TRUE
-
-	def _trycallback(self):
-		if not self._queue:
-			raise error, 'internal error: event expected'
-		window, event, value = self._queue[0]
-		if self._modal:
-			if event != ResizeWindow:
-				if debug: print 'event._trycallback: modal, no resize'
-				return FALSE
-		if event == FileEvent:
-			if self._select_dict.has_key(value):
-				if debug: print 'event._trycallback: FileEvent: callback'
-				del self._queue[0]
-				func, arg = self._select_dict[value]
-				apply(func, arg)
-				return TRUE
-			if debug: print 'event._trycallback: FileEvent: no callback'
-		if window and window.is_closed():
-			return FALSE
-		for w in [window, None]:
-			while TRUE:
-				for key in [(w, event), (w, None)]:
-					if self._windows.has_key(key):
-						del self._queue[0]
-						func, arg = self._windows[key]
-						apply(func, (arg, window,
-							  event, value))
-						return TRUE
-				if not w:
-					break
-				w = w._parent_window
-				if w == toplevel:
-					break
-		return FALSE
-
-	def _loop(self):
-		while self._queue:
-			if not self._trycallback():
-				window, event, value = self._queue[0]
-				if event == _EndLoopEvent:
-					return
-				del self._queue[0]
-
-	def testevent(self):
-		while TRUE:
-			self._checktime()
-			if self._getevent(0):
-				if not self._trycallback():
-					# get here if the first event
-					# in the queue does not cause
-					# a callback
-					return TRUE
-				continue
-			# get here only when there are no pending events
-			return FALSE
-
-	def peekevent(self):
-		if self.testevent():
-			return self._queue[0]
-		else:
-			return None
-
-	def readevent_timeout(self, timeout):
-		if self._getevent(timeout):
-			event = self._queue[0]
-			del self._queue[0]
-			return event
-		else:
-			return None
-
-	def waitevent_timeout(self, timeout):
-		dummy = self._getevent(timeout)
-
-	def waitevent(self):
-		self.waitevent_timeout(None)
-
-	def readevent(self):
-		while TRUE:
-			if self.testevent():
-				return self.readevent_timeout(None)
-			modal = self._modal
-			if not modal and self._timers:
-				(t, arg, tid) = self._timers[0]
-				t0 = time.time()
-			else:
-				t = None
-			self.waitevent_timeout(t)
-			if not modal and self._timers:
-				t1 = time.time()
-				dt = t1 - t0
-				self._timers[0] = (t - dt, arg, tid)
-
-	def pollevent(self):
-		if self.testevent():
-			return self.readevent()
-		else:
-			return None
-
-	def setfd(self, fd, mask = ReadMask):
-		if debug: print 'setfd',`fd`
-		if type(fd) is not IntType:
-			fd = fd.fileno()
-		xmask = 0
-		if mask & ReadMask:
-			xmask = xmask | Xtdefs.XtInputReadMask
-		if mask & WriteMask:
-			xmask = xmask | Xtdefs.XtInputWriteMask
-		self._fdlist[fd] = Xt.AddInput(fd, xmask,
-			  self._input_callback, (fd, xmask))
-
-	def rmfd(self, fd):
-		if self._fdlist.has_key(fd):
-			id = self._fdlist[fd]
-			Xt.RemoveInput(id)
-			del self._fdlist[fd]
-		for i in range(len(self._savefds)):
-			if self._savefds[i][0] == fd:
-				del self._savefds[i]
-				break
-
-	def getfd(self):
-		return -1		# for now...
-
-	def register(self, win, event, func, arg):
-		if event == WindowExit:
-			if win and hasattr(win, '_shell'):
-				win._shell.deleteResponse = Xmd.DO_NOTHING
-			else:
-				toplevel._main.deleteResponse = Xmd.DO_NOTHING
-		key = (win, event)
-		if func:
-			self._windows[key] = (func, arg)
-			if win:
-				win._call_on_close(self.remove_window_callbacks)
-		elif self._windows.has_key(key):
-			del self._windows[key]
-		else:
-			raise error, 'not registered'
-
-	def unregister(self, win, event):
-		try:
-			self.register(win, event, None, None)
-		except error:
-			pass
-
-	def getregister(self, win, event):
-		try:
-			return self._windows[(win, event)]
-		except KeyError:
-			raise error, 'not registered'
-
-	def remove_window_callbacks(self, window):
-		# called when window closes
-		for w, e in self._windows.keys():
-			if w == window:
-				self.unregister(w, e)
-
-	def setcallback(self, event, func, arg):
-		self.register(None, event, func, arg)
-
-	def clean_callbacks(self):
-		for win, event in self._windows.keys():
-			if win and win.is_closed():
-				self.register(win, event, None, None)
-
-	def select_setcallback(self, fd, cb, arg, mask = ReadMask):
-		if type(fd) is not IntType:
-			fd = fd.fileno()
-		if cb is None:
-			self._select_fdlist.remove(fd)
-			del self._select_dict[fd]
-			self.rmfd(fd)
-			return
-		if not self._select_dict.has_key(fd):
-			self._select_fdlist.append(fd)
-		self._select_dict[fd] = (cb, arg)
-		self.setfd(fd, mask)
-
-	def startmodal(self, window):
-		self._modal = TRUE
-
-	def endmodal(self):
-		self._modal = FALSE
-
-	def mainloop(self):
-		self._looping = TRUE
-		t = 0
-		for time, arg, tid in self._timers:
-			time = time + t
-			t = time
-			id = Xt.AddTimeOut(int(time * 1000),
-				  self._looping_timeout_callback, None)
-		Xt.MainLoop()
-
 class _Font:
 	def __init__(self, fontname, size):
 		if debug: print '_Font.init'+`fontname,size`+' --> '+`self`
@@ -2435,7 +2190,6 @@ _fontmap = {
 fonts = _fontmap.keys()
 
 toplevel = _Toplevel()
-event = _Event()
 
 def newwindow(x, y, w, h, title, **options):
 	return apply(toplevel.newwindow, (x, y, w, h, title), options)
@@ -2458,39 +2212,6 @@ def usewindowlock(lock):
 def getmouse():
 	return toplevel.getmouse()
 
-def readevent():
-	return event.readevent()
-
-def readevent_timeout(timeout):
-	return event.readevent_timeout(timeout)
-
-def pollevent():
-	return event.pollevent()
-
-def waitevent():
-	event.waitevent()
-
-def waitevent_timeout(timeout):
-	event.waitevent_timeout(timeout)
-
-def peekevent():
-	return event.peekevent()
-
-def testevent():
-	return event.testevent()
-
-def enterevent(win, ev, arg):
-	event.enterevent(win, ev, arg)
-
-def setfd(fd):
-	event.setfd(fd)
-
-def rmfd(fd):
-	event.rmfd(fd)
-
-def getfd():
-	return -1
-
 def findfont(fontname, pointsize):
 	return _Font(fontname, pointsize)
 
@@ -2504,37 +2225,21 @@ def endmonitormode():
 	pass
 
 def settimer(sec, arg):
-	return event.settimer(sec, arg)
+	return toplevel.settimer(sec, arg)
 
-def setcallback(ev, func, arg):
-	event.setcallback(ev, func, arg)
-
-def register(win, ev, func, arg):
-	event.register(win, ev, func, arg)
-
-def unregister(win, ev):
-	event.unregister(win, ev)
-
-def getregister(win, ev):
-	event.getregister(win, ev)
-
-def clean_callbacks():
-	event.clean_callbacks()
+def settimerfunc(func, arg):
+	toplevel.settimerfunc(func, arg)
 
 def select_setcallback(fd, cb, arg, mask = ReadMask):
-	event.select_setcallback(fd, cb, arg, mask)
-
-def startmodal(window):
-	event.startmodal(window)
-
-def endmodal():
-	event.endmodal()
+	toplevel.select_setcallback(fd, cb, arg, mask)
 
 def mainloop():
-	event.mainloop()
+	toplevel.mainloop()
 
 def canceltimer(id):
-	event.canceltimer(id)
+	toplevel.canceltimer(id)
+
+_end_loop = '_end_loop'			# exception for ending a loop
 
 class _Question:
 	def __init__(self, text):
@@ -2546,18 +2251,16 @@ class _Question:
 
 	def run(self):
 		try:
-			event.startmodal(None)
 			self.looping = TRUE
-			while self.answer is None:
-				dummy = event.readevent()
-		finally:
-			event.endmodal()
+			Xt.MainLoop()
+		except _end_loop:
+			pass
 		return self.answer
 
 	def callback(self, answer):
 		self.answer = answer
 		if self.looping:
-			event.enterevent(self, _EndLoopEvent, 0)
+			raise _end_loop
 
 def showquestion(text):
 	return _Question(text).run()
@@ -2574,12 +2277,10 @@ class _MultChoice:
 
 	def run(self):
 		try:
-			event.startmodal(None)
 			self.looping = TRUE
-			while self.answer is None:
-				dummy = event.readevent()
-		finally:
-			event.endmodal()
+			Xt.MainLoop()
+		except _end_loop:
+			pass
 		return self.answer
 
 	def callback(self, msg):
@@ -2587,7 +2288,7 @@ class _MultChoice:
 			if msg == self.msg_list[i]:
 				self.answer = i
 				if self.looping:
-					event.enterevent(self,_EndLoopEvent,0)
+					raise _end_loop
 				return
 
 def multchoice(prompt, list, defindex):
