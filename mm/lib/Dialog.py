@@ -59,12 +59,9 @@ class BasicDialog() = (glwindow.glwindow)():
 	def show(self):
 		if self.showing: return
 		self.load_geometry()
+		self.fix_geometry()
 		glwindow.setgeometry(self.last_geometry)
-		if self.last_geometry = None:
-			place = PLACE_SIZE
-		else:
-			place = PLACE_FREE
-		self.form.show_form(place, TRUE, self.title)
+		self.form.show_form(PLACE_FREE, TRUE, self.title)
 		glwindow.register(self, self.form.window)
 		gl.winset(self.form.window)
 		gl.winconstraints()
@@ -88,6 +85,15 @@ class BasicDialog() = (glwindow.glwindow)():
 	#
 	def winshut(self):
 		self.hide()
+	#
+	def fix_geometry(self):
+		if self.last_geometry <> None:
+			x, y, w, h = self.last_geometry
+		else:
+			x, y, w, h = -1, -1, 0, 0
+		if w = 0: w = self.width
+		if h = 0: h = self.height
+		self.last_geometry = x, y, w, h
 	#
 	# Clients can override these methods to copy self.last_geometry
 	# from/to more persistent storage:
