@@ -19,8 +19,8 @@
   </head>
   <body GRiNS:hidden="true">
     <par id="BasicSlideshow" GRiNS:thumbnailScale="false" GRiNS:thumbnailIcon="icons/slideshow_1A.bmp" GRiNS:project_default_region_image="Images" GRiNS:project_default_region_sound="audio" GRiNS:project_default_region_text="Images" GRiNS:showtime="cfocus">
-      <seq id="ImageSet" fillDefault="freeze" GRiNS:emptyShow="true" GRiNS:emptyIcon="icons/image.tiff" GRiNS:emptyDur="40s" GRiNS:emptyText="Place Main Images here." GRiNS:emptyColor="#a0a0a0"/>
-      <seq id="BkgdClip" GRiNS:emptyText="Place Background Audio here." GRiNS:emptyShow="true" GRiNS:emptyIcon="icons/sound.tiff" GRiNS:emptyColor="#c0c0c0"/>
+      <seq id="ImageSet" fillDefault="freeze" GRiNS:emptyIcon="icons/image.tiff" GRiNS:emptyDur="40s" GRiNS:emptyText="Place Main Images here." GRiNS:emptyColor="#a0a0a0" GRiNS:nonEmptyIcon="icons/image.tiff" GRiNS:nonEmptyText="Place Main Images here." GRiNS:nonEmptyColor="#a0a0a0"/>
+      <seq id="BkgdClip" GRiNS:emptyText="Place Background Audio here." GRiNS:emptyIcon="icons/sound.tiff" GRiNS:emptyColor="#c0c0c0" GRiNS:nonEmptyText="Place Background Audio here." GRiNS:nonEmptyIcon="icons/sound.tiff" GRiNS:nonEmptyColor="#c0c0c0"/>
       <img id="BkgdImg" fill="freeze" region="bkgd_image" src="media/Back3.gif"/>
     </par>
   </body>

@@ -23,7 +23,7 @@
   </head>
   <body GRiNS:hidden="true">
     <par id="Slideshow" GRiNS:thumbnailScale="false" GRiNS:thumbnailIcon="icons/slideshow_2AC.bmp" GRiNS:project_default_region_image="Images" GRiNS:project_default_region_sound="audio_1" GRiNS:project_default_region_text="Captions" GRiNS:showtime="cfocus">
-      <seq id="ImagesAndAudioSequence" GRiNS:emptyShow="false" GRiNS:emptyDur="10s" GRiNS:emptyText="Place ImageTextAudio object from Asset View here." GRiNS:emptyColor="#c0c0c0">
+      <seq id="ImagesAndAudioSequence" GRiNS:emptyDur="10s" GRiNS:emptyText="Place ImageTextAudio object from Asset View here." GRiNS:emptyColor="#c0c0c0">
       </seq>
       <seq id="BkgdClip" GRiNS:emptyText="Place Background Audio here." GRiNS:emptyColor="#c0c0c0"/>
       <img id="BkgdImg" fill="freeze" region="bkgd_image" src="media/Back3.gif"/>
