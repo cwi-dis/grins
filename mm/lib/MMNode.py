@@ -1831,7 +1831,7 @@ class MMNode:
 		if fill is None or fill == 'default':
 			if self.attrdict.get('duration') is None and \
 			   not self.attrdict.get('endlist') and \
-			   self.attrdict.get('repeatDur') is None and \
+			   self.attrdict.get('repeatdur') is None and \
 			   self.attrdict.get('loop') is None:
 				fill = 'freeze'
 			else:
@@ -2171,8 +2171,7 @@ class MMNode:
 		# ourselves.
 		#
 		if self.curloopcount < 0:
-			sched_actions = sched_actions + scheddone_actions
-			#terminate_actions.append( (TERMINATE, self) )
+##			sched_actions = sched_actions + scheddone_actions
 			srlist.append( ([(LOOPEND_DONE, self)], []) )
 		else:
 			srlist.append( ([(LOOPEND_DONE, self)],
@@ -2513,7 +2512,7 @@ class MMNode:
 		if self.fullduration is not None:
 			return
 		duration = self.attrdict.get('duration')
-		repeatDur = self.attrdict.get('repeatDur')
+		repeatDur = self.attrdict.get('repeatdur')
 		repeatCount = self.attrdict.get('loop')
 		endlist = self.attrdict.get('endlist')
 		if endlist is not None and duration is None and \
