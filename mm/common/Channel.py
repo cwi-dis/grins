@@ -277,9 +277,8 @@ class Channel:
 				if not self.is_layout_channel:
 					return
 
-				elif self._attrdict.has_key('showBackground'):
-					if self._attrdict['showBackground'] == 'whenActive':
-						return
+				if self._attrdict.get('showBackground') == 'whenActive':
+					return
 			else:
 				# case for the top window
 				if self._attrdict.has_key('open'):
@@ -371,10 +370,9 @@ class Channel:
 		# force equal 0 is used only in internal. By default the channel is hide
 		# only when showBackground attribute equal whenActive
 		if not force:
-			if self._get_parent_channel() != None:
-				if self._attrdict.has_key('showBackground'):
-					if self._attrdict['showBackground'] == 'always':
-						return
+			if self._get_parent_channel() is not None:
+				if self._attrdict.get('showBackground', 'always') == 'always':
+					return
 			else:
 				# case for the top window
 				if self._attrdict.has_key('close'):
