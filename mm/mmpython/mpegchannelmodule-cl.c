@@ -665,10 +665,6 @@ mpeg_player(self)
 			dprintf(("pollin event!\n"));
 			(void) read(PRIV->m_pipefd[0], &c, 1);
 			dprintf(("mpeg_player(%lx): read %c\n", (long) self, c));
-			if (c == 's') {
-			    mpeg_free_old(&PRIV->m_play, 1);
-			    break;
-			}
 			if (c == 'p') {
 				struct timeval tm1;
 
@@ -676,6 +672,10 @@ mpeg_player(self)
 				(void) read(PRIV->m_pipefd[0], &c, 1);
 				dprintf(("mpeg_player(%lx): continue playing, read %c\n", (long) self, c));
 				gettimeofday(&tm0, NULL);
+			}
+			if (c == 's') {
+			    mpeg_free_old(&PRIV->m_play, 1);
+			    break;
 			}
 		}
 	}
