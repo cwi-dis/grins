@@ -1619,40 +1619,46 @@ def _makefontname(font):
 
 _fontcache = {}
 
-class findfont:
-	def __init__(self, fontname, pointsize):
-		if not _fontmap.has_key(fontname):
-			raise error, 'Unknown font ' + `fontname`
-		key = fontname + `pointsize`
-		try:
-			thefont, psize = _fontcache[key]
-		except KeyError:
-			fontname = _fontmap[fontname]
-			parsedfontname = _parsefontname(fontname)
-			fontlist = toplevel._main.ListFonts(fontname)
-			pixelsize = pointsize * toplevel._dpi_y / 72.0
-			bestsize = 0
+def findfont(fontname, pointsize):
+	key = fontname + `pointsize`
+	try:
+		return _fontcache[key]
+	except KeyError:
+		pass
+	try:
+		fontname = _fontmap[fontname]
+	except KeyError:
+		raise error, 'Unknown font ' + `fontname`
+	parsedfontname = _parsefontname(fontname)
+	fontlist = toplevel._main.ListFonts(fontname)
+	pixelsize = pointsize * toplevel._dpi_y / 72.0
+	bestsize = 0
+	psize = pointsize
+	for font in fontlist:
+		parsedfont = _parsefontname(font)
+		if parsedfont[_PIXELS] == '0':
+			# scalable font
+			parsedfont[_PIXELS] = '*'
+			parsedfont[_POINTS] = `int(pointsize * 10)`
+			parsedfont[_RES_X] = `toplevel._dpi_x`
+			parsedfont[_RES_Y] = `toplevel._dpi_y`
+			parsedfont[_AVG_WIDTH] = '*'
+			thefont = _makefontname(parsedfont)
 			psize = pointsize
-			for font in fontlist:
-				parsedfont = _parsefontname(font)
-				if parsedfont[_PIXELS] == '0':
-					# scalable font
-					parsedfont[_PIXELS] = '*'
-					parsedfont[_POINTS] = `int(pointsize * 10)`
-					parsedfont[_RES_X] = `toplevel._dpi_x`
-					parsedfont[_RES_Y] = `toplevel._dpi_y`
-					parsedfont[_AVG_WIDTH] = '*'
-					thefont = _makefontname(parsedfont)
-					psize = pointsize
-					break
-				p = string.atoi(parsedfont[_PIXELS])
-				if p <= pixelsize and p > bestsize:
-					bestsize = p
-					thefont = font
-					psize = p * 72.0 / toplevel._dpi_y
-			_fontcache[key] = thefont, psize
-		self._font = toplevel._main.LoadQueryFont(thefont)
-		self._pointsize = psize
+			break
+		p = string.atoi(parsedfont[_PIXELS])
+		if p <= pixelsize and p > bestsize:
+			bestsize = p
+			thefont = font
+			psize = p * 72.0 / toplevel._dpi_y
+	fontobj = _Font(thefont, psize)
+	_fontcache[key] = fontobj
+	return fontobj	
+	
+class _Font:
+	def __init__(self, fontname, pointsize):
+		self._font = toplevel._main.LoadQueryFont(fontname)
+		self._pointsize = pointsize
 
 	def close(self):
 		self._font = None
