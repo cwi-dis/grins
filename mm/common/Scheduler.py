@@ -417,7 +417,7 @@ class SchedulerContext:
 				# node is not playing so we should
 				# ignore terminating arcs
 				if debugevents: print 'trigger: idle',`arc`
-				self.cancelarc(arc, timestamp, propagate = 1)
+				self.cancelarc(arc, timestamp, propagate = 1, syncbase = 0)
 				parent.updatetimer(curtime)
 				return
 			if node.has_min and not arc.isstart and not arc.ismin:
@@ -432,11 +432,11 @@ class SchedulerContext:
 ##					self.do_terminate(node, curtime, timestamp, fill = node.GetFill())
 				parent.updatetimer(curtime)
 				return
-			if arc.getevent() == 'end' and arc.refnode().playing == MMStates.IDLE:
-				if debugevents: print 'ignoring',arc
-				self.cancelarc(arc, timestamp, propagate = 1)
-				parent.updatetimer(curtime)
-				return
+##			if arc.getevent() == 'end' and arc.refnode().playing == MMStates.IDLE:
+##				if debugevents: print 'ignoring',arc
+##				self.cancelarc(arc, timestamp, propagate = 1)
+##				parent.updatetimer(curtime)
+##				return
 			for nd, ev in arc.depends:
 				try:
 					nd.deparcs[ev].remove(arc)
@@ -568,8 +568,10 @@ class SchedulerContext:
 			return
 		endlist = node.GetEndList()
 		endlist = node.FilterArcList(endlist)
-		equal = 0
-		if endlist:
+		endtime = node.calcendfreezetime(self)
+		if endtime is not None and endtime >= 0 and endtime <= curtime:
+			found = 0
+		elif endlist:
 			found = 0
 			for a in endlist:
 				if a.event is not None and a.event not in ('begin', 'end'):
@@ -580,22 +582,24 @@ class SchedulerContext:
 					found = 1
 				else:
 					ats = a.resolvedtime(self)
-					if ats > timestamp:
+					if ats > curtime:
 						found = 1
-					elif ats == timestamp:
+					elif ats == curtime:
 						equal = 1
 						found = 1
 						break
-			if not found:
-				# we didn't find a time interval
-				if debugevents: print 'not allowed to start',parent.timefunc()
-				srdict = pnode.gensr_child(curtime, node, runchild = 0, sctx = self)
-				self.srdict.update(srdict)
-				ev = (SR.SCHED_DONE, node)
-				if debugevents: print 'trigger: queueing',SR.ev2string(ev), timestamp, parent.timefunc()
-				parent.event(self, ev, timestamp)
-				parent.updatetimer(curtime)
-				return
+		else:
+			found = 1
+		if not found:
+			# we didn't find a time interval
+			if debugevents: print 'not allowed to start',node,parent.timefunc()
+			srdict = pnode.gensr_child(curtime, node, runchild = 0, sctx = self)
+			self.srdict.update(srdict)
+			ev = (SR.SCHED_DONE, node)
+			if debugevents: print 'trigger: queueing',SR.ev2string(ev), timestamp, parent.timefunc()
+			parent.event(self, ev, timestamp)
+			parent.updatetimer(curtime)
+			return
 		# now we know for sure the node should start
 		# if node is playing (or not stopped), must terminate it first
 		if node.playing not in (MMStates.IDLE, MMStates.PLAYED):
@@ -748,7 +752,7 @@ class SchedulerContext:
 			parent.event(self, ev, timestamp)
 		parent.updatetimer(curtime)
 
-	def cancelarc(self, arc, timestamp, cancel_gensr = 1, propagate = 0):
+	def cancelarc(self, arc, timestamp, cancel_gensr = 1, propagate = 0, syncbase = 1):
 		if debugevents: print 'cancelarc',`arc`,timestamp
 # the commented-out lines fix a problem with
 # Default_Fill_on_time_container1.smil but cause worse problems with
@@ -792,7 +796,8 @@ class SchedulerContext:
 			if arc.isstart and cancel_gensr:
 				self.cancel_gensr(arc.dstnode)
 			for a in deparcs:
-				self.cancelarc(a, timestamp, cancel_gensr, propagate)
+				if syncbase or a.srcnode != 'syncbase':
+					self.cancelarc(a, timestamp, cancel_gensr, propagate)
 
 	def gototime(self, node, gototime, timestamp, path = None):
 		# XXX trigger syncarcs that should go off after gototime?
@@ -1023,6 +1028,7 @@ class SchedulerContext:
 			self.queue = parent.selectqueue()
 			if not self.queue:
 				break
+		if debugevents: print 'flushqueue return'
 
 	def freeze_play(self, node, curtime, timestamp = None):
 		parent = self.parent

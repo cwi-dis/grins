@@ -29,6 +29,10 @@ class Selecter:
 		if not self.sctx:
 			return
 		self.playing = 1
+		paused = self.scheduler.paused
+		self.scheduler.paused = 0
+		self.sctx.flushqueue(starttime)
+		self.scheduler.paused = paused
 		self.showstate()
 	#
 	def stop(self):
