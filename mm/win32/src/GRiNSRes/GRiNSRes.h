@@ -551,7 +551,6 @@
 #define IDC_BOTTOML                     1385
 #define IDC_LEFTV                       1386
 #define IDC_FITV                        1388
-#define IDC_WIDTHL3                     1389
 #define IDC_REGALIGNV                   1390
 #define IDC_REGALIGNL                   1391
 #define IDC_REGPOINTV                   1392
