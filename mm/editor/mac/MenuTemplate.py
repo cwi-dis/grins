@@ -24,7 +24,8 @@ UNUSED_COMMANDS=(
 MENUBAR=(
 	(ALL, CASCADE, 'File', (
 		(ALL, ENTRY, 'New', 'N', NEW_DOCUMENT),
-		(ALL, ENTRY, 'Open...', 'O', OPEN),
+		(ALL, ENTRY, 'Open...', 'O', OPENFILE),
+		(ALL, ENTRY, 'Open URL...', 'L', OPEN),
 		(ALL, DYNAMICCASCADE, 'Open recent', OPEN_RECENT),
 		(ALL, ENTRY, 'Close window', 'W', CLOSE_WINDOW),
 		(ALL, ENTRY, 'Close document', None, CLOSE),
@@ -54,7 +55,6 @@ MENUBAR=(
 		(ALL, ENTRY, 'Paste', 'V', PASTE),
 		(ALL, CASCADE, 'Paste node', (
 			(ALL, ENTRY, 'Before', None, PASTE_BEFORE),
-			(ALL, ENTRY, 'After', None, PASTE_AFTER),
 			(ALL, ENTRY, 'Within', None, PASTE_UNDER))),
 		(ALL, ENTRY, 'Delete', None, DELETE),
 		(ALL, SEP,),
@@ -93,7 +93,7 @@ MENUBAR=(
 		(ALL, SEP,),
 		(ALL, ENTRY, 'Create simple anchor', 'R', CREATEANCHOR),
 		(ALL, ENTRY, 'Finish hyperlink to focus', 'H', FINISH_LINK),
-		(ALL, ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC))),
+		(ALL, ENTRY, 'Create syncarc from focus...', None, FINISH_ARC))),
 		
 	(ALL, CASCADE, 'Navigate', (
 		(ALL, ENTRY, 'Expand/Collapse', None, EXPAND),
@@ -213,7 +213,7 @@ POPUP_CVIEW_NODE = (
 		(SEP,),
 		(ENTRY, 'Create simple anchor', None, CREATEANCHOR),
 		(ENTRY, 'Finish hyperlink to focus', 'H', FINISH_LINK),
-		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC),
+		(ENTRY, 'Create syncarc from focus...', None, FINISH_ARC),
 		(SEP,),
 		(ENTRY, 'Info...', 'I', INFO),
 		(ENTRY, 'Properties...', 'A', ATTRIBUTES),
