@@ -147,6 +147,8 @@ class SMILHtmlTimeWriter(SMIL):
 		# body
 		self.writetag('body')
 		self.push()
+		self.writetag('t:seq')
+		self.push()
 		
 		# body contents
 		# viewports
@@ -426,10 +428,10 @@ class SMILHtmlTimeWriter(SMIL):
 			pushed = pushed - 1
 			if transIn:
 				trans = 'transIn(%s, \'%s\')' % (subregid, transInName)
-				self.writetag('t:set', [ ('begin','%s.begin' % nodeid), ('dur', '%d' % transInDur), ('onbegin', trans), ])
+				self.writetag('t:set', [ ('begin','%s.begin' % nodeid), ('dur', '%.1f' % transInDur), ('onbegin', trans), ])
 			if transOut:	
 				trans = 'transOut(%s, \'%s\')' % (subregid, transOutName)
-				self.writetag('t:set', [ ('begin','%s.end-%d' % (nodeid,transOutDur)), ('dur', '%d' % transOutDur), ('onbegin', trans), ])
+				self.writetag('t:set', [ ('begin','%s.end-%.1f' % (nodeid,transOutDur)), ('dur', '%.1f' % transOutDur), ('onbegin', trans), ])
 			self.pop()
 			pushed = pushed - 1
 		
@@ -889,9 +891,9 @@ class SMILHtmlTimeWriter(SMIL):
 #
 #	Transitions
 # 
-transInScript="function transIn(obj, name){\n  var fname=\"DXImageTransform.Microsoft.\" + name;\n  var filter=obj.filters[fname];\n filter.Apply();\n  obj.style.visibility = \"visible\";\n  filter.Play();\n}\n"
-transOutScript="function transOut(obj, name){\n  var fname=\"DXImageTransform.Microsoft.\" + name;\n  var filter=obj.filters[fname];\n  filter.Play();\n}\n"
-transScript = "<SCRIPT LANGUAGE=JavaScript>\n%s%s</SCRIPT>\n" % (transInScript, transOutScript)
+transInScript="function transIn(obj, name){\n  var fname=\"DXImageTransform.Microsoft.\" + name;\n  var filter=obj.filters[fname];\n  if(filter!=null) filter.Apply();\n  obj.style.visibility = \"visible\";\n  if(filter!=null) filter.Play();\n}\n"
+transOutScript="function transOut(obj, name){\n  var fname=\"DXImageTransform.Microsoft.\" + name;\n  var filter=obj.filters[fname];\n  if(filter!=null) filter.Play();\n}\n"
+transScript = "<script language=JavaScript>\n%s%s</script>\n" % (transInScript, transOutScript)
 
 msfilter = 'progid:DXImageTransform.Microsoft'
 
@@ -899,31 +901,31 @@ def trans(trname='Iris', properties='dur=1.0'):
 	return "progid:DXImageTransform.Microsoft.%s(%s) " % (trname, properties)
 	
 def transIris(dur=1, style='circle', motion='out'):
-	return "progid:DXImageTransform.Microsoft.Iris(irisStyle=%s, motion=%s, duration=%f) " % (style, motion, dur)
+	return "progid:DXImageTransform.Microsoft.Iris(irisStyle=%s, motion=%s, duration=%.1f) " % (style, motion, dur)
 
 def transBarn(dur=1, orientation='vertical', motion='in'):
-	return "progid:DXImageTransform.Microsoft.Barn(orientation=%s, motion=%s, duration=%f) " % (orientation, motion, dur)
+	return "progid:DXImageTransform.Microsoft.Barn(orientation=%s, motion=%s, duration=%.1f) " % (orientation, motion, dur)
 
 def transSlide(dur=1, direction='up', bands=1):
-	return "progid:DXImageTransform.Microsoft.Slide(direction=%s, bands=%d, duration=%f) " % (direction, bands, dur)
+	return "progid:DXImageTransform.Microsoft.Slide(direction=%s, bands=%d, duration=%.1f) " % (direction, bands, dur)
 	
 def transStrips(dur=1, motion='leftdown'):
-	return "progid:DXImageTransform.Microsoft.Strips(motion=%s, duration=%f) " % (motion, dur)
+	return "progid:DXImageTransform.Microsoft.Strips(motion=%s, duration=%.1f) " % (motion, dur)
 
 def transBlinds(dur=1, direction='right'):
-	return "progid:DXImageTransform.Microsoft.Blinds(direction=%s, duration=%f) " % (direction, dur)
+	return "progid:DXImageTransform.Microsoft.Blinds(direction=%s, duration=%.1f) " % (direction, dur)
 
 def transCheckerBoard(dur=1, direction='down'):
-	return "progid:DXImageTransform.Microsoft.CheckerBoard(direction=%s, duration=%f) " % (direction, dur)
+	return "progid:DXImageTransform.Microsoft.CheckerBoard(direction=%s, duration=%.1f) " % (direction, dur)
 
 def transRandomBars(dur=1, orientation='horizontal'):
-	return "progid:DXImageTransform.Microsoft.RandomBars(orientation=%s, duration=%f) " % (orientation, dur)
+	return "progid:DXImageTransform.Microsoft.RandomBars(orientation=%s, duration=%.1f) " % (orientation, dur)
 
 def transFade(dur=1):
-	return "progid:DXImageTransform.Microsoft.Fade(duration=%f)" % dur
+	return "progid:DXImageTransform.Microsoft.Fade(duration=%.1f)" % dur
 
 def transRandomDissolve(dur=1):
-	return "progid:DXImageTransform.Microsoft.RandomDissolve(duration=%f) " % dur
+	return "progid:DXImageTransform.Microsoft.RandomDissolve(duration=%.1f) " % dur
 
 def filterAlpha(opacity=100, finishOpacity=0, style=3):
 	return "progid:DXImageTransform.Microsoft.Alpha(Opacity=%d, FinishOpacity=%d, Style=%d) " % (opacity, finishOpacity, style)
