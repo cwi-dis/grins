@@ -96,7 +96,10 @@ DEP_CPP_RPROD=\
 	"..\..\..\..\mmpython\producer\include\engcodec.h"\
 	"..\..\..\..\mmpython\producer\include\engtargs.h"\
 	"..\..\..\..\mmpython\producer\include\engtypes.h"\
+	"..\..\..\..\mmpython\producer\include\pnbastsd.h"\
 	"..\..\..\..\mmpython\producer\include\pncom.h"\
+	"..\..\..\..\mmpython\producer\include\pnresult.h"\
+	"..\..\..\..\mmpython\producer\include\pntypes.h"\
 	"..\..\..\..\mmpython\producer\include\pnwintyp.h"\
 	"..\..\..\..\mmpython\producer\include\progsink.h"\
 	"..\..\..\..\mmpython\producer\include\rmaenum.h"\
@@ -105,10 +108,9 @@ DEP_CPP_RPROD=\
 	"..\..\..\..\mmpython\producer\include\rmmetain.h"\
 	
 NODEP_CPP_RPROD=\
-	".\mavalue.h"\
-	".\nbastsd.h"\
-	".\nresult.h"\
-	".\ntypes.h"\
+	"..\..\..\..\mmpython\producer\include\types\vxTypesOld.h"\
+	"..\..\..\..\mmpython\producer\include\vxWorks.h"\
+	"..\..\..\..\mmpython\producer\include\vxworks\MemOverd.h"\
 	
 # End Source File
 # Begin Source File
@@ -166,7 +168,7 @@ SOURCE=.\vid2rm.rc
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\mmpython\producer\lib\enceng.lib
+SOURCE=..\..\..\..\mmpython\producer\win32\lib\enceng.lib
 # End Source File
 # End Target
 # End Project
