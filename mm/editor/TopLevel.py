@@ -335,7 +335,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if mtype == 'application/smil':
 			import SMILTreeRead
 			self.root = SMILTreeRead.ReadFile(filename, self.printfunc)
-		elif mtype == 'application/x-cmif':
+		elif mtype == 'application/x-grins-cmif':
 			import MMRead
 			self.root = MMRead.ReadFile(filename)
 		else:
