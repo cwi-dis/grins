@@ -1294,7 +1294,14 @@ class AttrPage(dialog.PropertyPage):
 		dll=__main__.resdll
 		dialog.PropertyPage.__init__(self,id,dll,grinsRC.IDR_GRINSED)
 		
+	def do_close(self):
+		self._form = None
+		# XXXX More may be needed...
+
 	def OnInitDialog(self):
+		if not self._form:
+			# Closing down the property sheet
+			return 0
 		self._initdialog=self
 		dialog.PropertyPage.OnInitDialog(self)
 		self._attrinfo.attach_to_parent()
@@ -1308,6 +1315,7 @@ class AttrPage(dialog.PropertyPage):
 			self._tooltipctrl.Activate(1)
 			self.SetToolTipCtrl(self._tooltipctrl)
 			self.settooltips()
+		return 1
 		
 	def OnPaint(self):
 		dc, paintStruct = self.BeginPaint()
@@ -1507,7 +1515,8 @@ class SingleAttrPage(AttrPage):
 		self._attr=attr
 
 	def OnInitDialog(self):
-		AttrPage.OnInitDialog(self)
+		if not AttrPage.OnInitDialog(self):
+			return
 		ctrl=self._cd[self._attr]
 		ctrl.OnInitCtrl()
 		ctrl.sethelp()
@@ -1630,7 +1639,8 @@ class LayoutPage(AttrPage,win32window.Window):
 		self._inupdate = 0
 			
 	def OnInitDialog(self):
-		AttrPage.OnInitDialog(self)
+		if not AttrPage.OnInitDialog(self):
+			return
 		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
@@ -1900,6 +1910,8 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		self._wh=None
 
 	def OnInitDialog(self):
+		if not AttrPage.OnInitDialog(self):
+			return
 		tag = None
 		file = None
 		for a in self._form._attriblist:
@@ -1909,7 +1921,6 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 				file = a
 			if tag is not None and file is not None:
 				break
-		AttrPage.OnInitDialog(self)
 		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
@@ -2022,12 +2033,13 @@ class AnchorlistPage(LayoutPage):
 		self.create_box(self.getcurrentbox(0))
 
 	def OnInitDialog(self):
+		if not AttrPage.OnInitDialog(self):
+			return
 		file = None
 		for a in self._form._attriblist:
 			if a.getname() == 'file':
 				file = a
 				break
-		AttrPage.OnInitDialog(self)
 		self.HookMessage(self.onLButtonDown, win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onLButtonUp, win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouseMove, win32con.WM_MOUSEMOVE)
@@ -2581,7 +2593,8 @@ class PreviewPage(AttrPage):
 			self._renderer=Renderer(self,self._prevrc,self._form._baseURL)
 
 	def OnInitDialog(self):
-		AttrPage.OnInitDialog(self)
+		if not AttrPage.OnInitDialog(self):
+			return
 		if PreviewPage.dragaccept:
 			self.DragAcceptFiles(1)
 			self.HookMessage(self.onDropFiles,win32con.WM_DROPFILES)
@@ -3895,6 +3908,7 @@ class AttrEditForm(GenFormView):
 		self._pages=[]
 		self._tid=None
 		self._attrchanged={}
+		self._window_created = 0
 
 	# Creates the actual OS window
 	def createWindow(self,parent):
@@ -3903,9 +3917,28 @@ class AttrEditForm(GenFormView):
 		dll=__main__.resdll
 		prsht=AttrSheet(self)
 		prsht.EnableStackedTabs(1)
+		self._prsht = prsht
 
 		self.buildcontext()
 
+		initindex = self.buildpages()
+
+		if not self._window_created:
+			self.CreateWindow(parent)
+			self._window_created = 1
+		prsht.CreateWindow(self,win32con.DS_CONTEXTHELP | win32con.DS_SETFONT | win32con.WS_CHILD | win32con.WS_VISIBLE)
+		self.HookMessage(self.onSize,win32con.WM_SIZE)		
+		rc=self.GetWindowRect()
+		prsht.SetWindowPos(0,(0,0,0,0),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
+
+		self.finishbuildpages(initindex)
+
+		# remove the next line to disable tabs shortcuts
+##		self._tabshortcut = TabShortcut(self)
+
+	def buildpages(self):
+		prsht = self._prsht
 		grattrl=[] # list of attr in groups (may be all)
 		# create groups pages
 		grattrl=self.creategrouppages()
@@ -3949,15 +3982,10 @@ class AttrEditForm(GenFormView):
 			page.do_init()
 			prsht.AddPage(page)
 			page.settabix(0)
-
-		self.CreateWindow(parent)
-		prsht.CreateWindow(self,win32con.DS_CONTEXTHELP | win32con.DS_SETFONT | win32con.WS_CHILD | win32con.WS_VISIBLE)
-		self.HookMessage(self.onSize,win32con.WM_SIZE)		
-		rc=self.GetWindowRect()
-		prsht.SetWindowPos(0,(0,0,0,0),
-			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
-		self._prsht=prsht
-
+		return initindex
+	
+	def finishbuildpages(self, initindex):
+		prsht = self._prsht
 		tabctrl=prsht.GetTabCtrl()
 		for page in self._pages:
 			page.settabtext(tabctrl)
@@ -3965,8 +3993,29 @@ class AttrEditForm(GenFormView):
 		prsht.SetActivePage(self._pages[initindex])
 		prsht.RedrawWindow()
 
-		# remove the next line to disable tabs shortcuts
-##		self._tabshortcut = TabShortcut(self)
+	def removepages(self):
+		for p in self._pages:
+			p.do_close()
+		for p in self._pages:
+			self._prsht.RemovePage(p)
+##		self._prsht = None # XXX Should we close or something?
+		self._pages = []
+
+	def RecreateWindow(self):
+		self.SetRedraw(0)
+		self.removepages()
+##		self.createWindow(self._parent)
+##		return
+		self.buildcontext()
+
+		initindex = self.buildpages()
+
+		self._prsht.SetWindowPos(0,(0,0,0,0),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
+
+		self.finishbuildpages(initindex)
+		self.SetRedraw(1)
+		self.RedrawWindow()
 
 	def getcurattr(self):
 		page = self._prsht.GetActivePage()
