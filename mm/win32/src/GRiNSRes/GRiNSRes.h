@@ -358,8 +358,9 @@
 #define IDC_LAYOUT_VIEWPORT_SEL         1253
 #define IDC_LAYOUT_SHOW_NAMES           1254
 #define IDC_PREVIOUS_AREA               1255
-#define IDC_LAYOUT_SHOW_BGCOLOR         1255
+#define IDC_LAYOUT_AS_OUTLINE           1255
 #define IDC_SUBREG_X                    1256
+#define IDC_LAYOUT_SHOW_RBG             1256
 #define IDC_SUBREG_Y                    1257
 #define IDC_SUBREG_W                    1258
 #define IDC_SUBREG_H                    1259
