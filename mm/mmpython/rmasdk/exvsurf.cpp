@@ -58,19 +58,10 @@ ExampleVideoSurface::ExampleVideoSurface(IUnknown* pContext, ExampleWindowlessSi
     memset(&m_lastBitmapInfo, 0, sizeof(RMABitmapInfoHeader));
 }
 
-void ExampleVideoSurface::SetPyVideoRenderer(PyObject *obj)
-	{
-	Py_XDECREF(m_pPyVideoRenderer);
-	if(obj==Py_None)m_pPyVideoRenderer=NULL;
-	else m_pPyVideoRenderer=obj;
-	Py_XINCREF(m_pPyVideoRenderer);
-	}
-
 
 ExampleVideoSurface::~ExampleVideoSurface()
 {
 	Py_XDECREF(m_pPyVideoRenderer);
-	m_pPyVideoRenderer=NULL;	
     PN_RELEASE(m_pContext);
 }
 

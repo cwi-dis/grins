@@ -38,6 +38,7 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 	// window-less support
 	BOOL m_windowless;
 	ExampleWindowlessSite *m_pWindowlessSite;
+	PyObject *m_pPyVideoRenderer;
 	
     public:
     /****** Public Class Methods ******************************************/
@@ -76,7 +77,11 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 		m_PNxWindow.clipRect.bottom = p.y+s.cy;
 	}
 
-	ExampleWindowlessSite *GetWindowlessSite() {return m_pWindowlessSite;}
+	void SetPyVideoRenderer(PyObject *obj){
+		Py_XDECREF(m_pPyVideoRenderer);
+		m_pPyVideoRenderer = obj;
+		Py_XINCREF(m_pPyVideoRenderer);	
+	}
 	
     /************************************************************************
      *  IRMASiteSupplier Interface Methods                     ref:  rmawin.h
