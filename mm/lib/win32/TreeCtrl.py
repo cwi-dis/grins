@@ -43,6 +43,7 @@ class TreeCtrl(window.Wnd):
 		self._selEventSource = None
 
 		self.__selecting = 0
+		self.__deleting = 0
 		if resId != None:		
 			self._setEvents()
 		
@@ -455,7 +456,6 @@ class TreeCtrl(window.Wnd):
 		if len(list) > 0:				
 			firstItemList = list[:-1]
 			lastItem = list[-1]
-
 			# for the last item, select normally item the same way base would do
 			self.SelectItem(lastItem)
 			self.SetItemState(lastItem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
@@ -495,7 +495,7 @@ class TreeCtrl(window.Wnd):
 	def OnMultiSelChanged(self):
 		# don't update the listener when selecting
 		# avoid some recursive problems
-		if not self.__selecting:
+		if not self.__selecting and not self.__deleting:
 			for listener in self._multiSelListeners:
 				listener.OnMultiSelChanged()
 			if debug:
@@ -535,6 +535,7 @@ class TreeCtrl(window.Wnd):
 			self._multiSelListeners.remove(listener)
 
 	def DeleteItem(self, item):
+		self.__deleting = 1
 		state = self.GetItemState(item, commctrl.TVIS_SELECTED)
 		# if this item is already selected, unselect it, and remove from selected list
 		if state & commctrl.TVIS_SELECTED:
@@ -543,7 +544,8 @@ class TreeCtrl(window.Wnd):
 			self._selections.remove(item)
 		
 		self._obj_.DeleteItem(item)
-		
+		self.__deleting = 0
+				   
 	def appendSelection(self, item):
 		if item not in self._selections:
 			self._selections.append(item)
