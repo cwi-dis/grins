@@ -117,6 +117,9 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 	virtual HRESULT __stdcall setSpeed(/* [in] */ double s);
     virtual HRESULT __stdcall getCookie(/* [out] */ long __RPC_FAR *cookie);
     virtual HRESULT __stdcall getFrameRate(/* [out] */ long __RPC_FAR *pfr);
+    virtual HRESULT __stdcall getMediaFrameRate( 
+            /* [string][in] */ wchar_t __RPC_FAR *szFileOrUrl,
+            /* [out] */ long __RPC_FAR *pfr);
 
 	// Implemenation
 	GRiNSPlayerAuto(GRiNSPlayerComModule *pModule);
@@ -465,6 +468,18 @@ HRESULT __stdcall GRiNSPlayerAuto::getCookie(/* [out] */ long __RPC_FAR *cookie)
 HRESULT __stdcall GRiNSPlayerAuto::getFrameRate(/* [out] */ long __RPC_FAR *pfr)
 	{
 	*pfr = m_framerate;
+	return S_OK;
+	}
+
+HRESULT __stdcall GRiNSPlayerAuto::getMediaFrameRate(/* [string][in] */ wchar_t __RPC_FAR *wszFileOrUrl,
+            /* [out] */ long __RPC_FAR *pfr)
+	{
+	char *buf = new char[MAX_PATH];
+    if(WideCharToMultiByte(CP_ACP, 0, wszFileOrUrl, -1, buf, MAX_PATH, NULL, NULL))
+		{
+		//SendMessage(getListener(), WM_USER_OPEN, WPARAM(this), LPARAM(buf));
+		*pfr = m_framerate;
+		}
 	return S_OK;
 	}
 
