@@ -139,18 +139,23 @@ class diamond():
 # the hotspot is the arrowhead
 class arrow():
 
-	def new(self, (fx, fy, tx, ty, arc)):
+	def new(self, (fx, fy, tx, ty, arc, src, dst)):
+		self.repos(fx, fy, tx, ty)
+		self.arc = arc
+		self.hidden = 0
+		self.src = src
+		self.dst = dst
+		return self
+
+	def repos(self, (fx, fy, tx, ty)):
 		self.fx = fx
 		self.fy = fy
 		self.lx = tx - fx
 		self.ly = ty - fy
-		self.arc = arc
 		self.length = int(sqrt(self.lx*self.lx+self.ly*self.ly))
 		self.angle = atan2(self.lx, self.ly)
 		self.cos = cos(self.angle)
 		self.sin = sin(self.angle)
-		self.hidden = 0
-		return self
 
 	def draw(self):
 		if self.hidden <> 0:
@@ -195,4 +200,38 @@ def putlabel(label):
 	cmov2(-w/2, -h/2)
 	color(BLACK)
 	charstr(label)
+
+# define a thermometer with vertex at (x,y); width w and heigth h.
+class thermo():
+
+	def new(self,(x,y,w,h)):
+		self.x = x
+		self.y = y
+		self.w = w
+		self.h = h
+		return self
+
+	def draw(self, val):
+		color(YELLOW)
+		x = self.x
+		y = self.y
+		w = self.w
+		h = self.h
+		print 'polygon', x, y, w, h, val
+		pushmatrix()
+		translate(x, y, 0)
+		bgnpolygon()
+		v2f(0, 0)
+		v2f(w, 0)
+		v2f(w, h - val)
+		v2f(0, h - val)
+		endpolygon()
+		color(BLUE)
+		bgnpolygon()
+		v2f(0, h - val)
+		v2f(w, h - val)
+		v2f(w, h)
+		v2f(0, h)
+		endpolygon()
+		popmatrix()
 
