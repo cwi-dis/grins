@@ -217,6 +217,12 @@ class StructureObjWidget(MMNodeWidget):
         # Draw only the children.
         for i in self.children:
             i.draw(displist)
+        # Draw the title.
+        displist.fgcolor(CTEXTCOLOR);
+        displist.usefont(f_title)
+        l,t,r,b = self.pos_rel;
+        b = t + self.get_rely(sizes_notime.TITLESIZE) + self.get_rely(sizes_notime.VEDGSIZE);
+        displist.centerstring(l,t,r,b, self.node.GetChannelName())
 
 
 class SeqWidget(StructureObjWidget):
@@ -286,6 +292,8 @@ class SeqWidget(StructureObjWidget):
             min_width = min_width + self.dropbox.get_minsize()[0] + xgap;
 
         min_height = min_height + 2*self.get_rely(sizes_notime.VEDGSIZE)
+        # Add the title
+        min_height = min_height + self.get_rely(sizes_notime.TITLESIZE);
         return min_width, min_height
 
     def get_minsize_abs(self):
@@ -309,9 +317,10 @@ class SeqWidget(StructureObjWidget):
 
         if self.root.dropbox:
             mw = mw + self.dropbox.get_minsize_abs()[0] + sizes_notime.GAPSIZE;
-            
+
         mh = mh + 2*sizes_notime.VEDGSIZE
-        
+        # Add the title box.
+        mh = mh + sizes_notime.TITLESIZE
         return mw, mh
         
     def recalc(self):
@@ -325,6 +334,12 @@ class SeqWidget(StructureObjWidget):
         min_width, min_height = self.get_minsize()
 
         free_width = ((r-l) - min_width)
+
+        # Add the title        free
+
+        t = t + self.get_rely(sizes_notime.TITLESIZE)
+        min_height = min_height - self.get_rely(sizes_notime.TITLESIZE)
+        
         if len(self.children) > 0:
             overhead_width = 2.0*self.get_relx(sizes_notime.HEDGSIZE) + float(len(self.children)-1)*self.get_relx(sizes_notime.GAPSIZE);
         else:
@@ -424,6 +439,10 @@ class VerticalWidget(StructureObjWidget):
                 min_width = w
             min_height = min_height + h
 
+        # Add the text label to the top.
+        titleheight = self.get_rely(sizes_notime.TITLESIZE)
+        min_height = min_height + titleheight;
+
         ygap = self.get_rely(sizes_notime.GAPSIZE)
 
         #assert min_width < 1.0
@@ -461,6 +480,8 @@ class VerticalWidget(StructureObjWidget):
             if w > mw: mw=w
             mh=mh+h
         mh = mh + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.VEDGSIZE
+        # Add the titleheight
+        mh = mh + sizes_notime.TITLESIZE
         mw = mw + 2*sizes_notime.HEDGSIZE
         return mw, mh
 
@@ -472,8 +493,12 @@ class VerticalWidget(StructureObjWidget):
         # TODO: This does not test for maxheight()
         
         l, t, r, b = self.pos_rel
+        # Add the titlesize;
+        t = t + self.get_rely(sizes_notime.TITLESIZE)
         min_width, min_height = self.get_minsize()
-        overhead_height = 2.0*self.get_relx(sizes_notime.VEDGSIZE) + float(len(self.children)-1)*self.get_relx(sizes_notime.GAPSIZE)
+        min_height = min_height - self.get_rely(sizes_notime.TITLESIZE);
+
+        overhead_height = 2.0*self.get_rely(sizes_notime.VEDGSIZE) + float(len(self.children)-1)*self.get_rely(sizes_notime.GAPSIZE)
         free_height = (b-t) - min_height
 ##        print "***"
 ##        print "DEBUG: Vertical: calculating free height";
@@ -527,6 +552,7 @@ class VerticalWidget(StructureObjWidget):
 #                    print "Par: drawing bar";
                     i.pushbackbar.draw(display_list);
         StructureObjWidget.draw(self, display_list);
+
 
 class ParWidget(VerticalWidget):
     def draw(self, display_list):
@@ -629,12 +655,12 @@ class MediaWidget(MMNodeWidget):
 
     def recalc(self):
         l,t,r,b = self.pos_rel
-        vsixth = (1.0 / 6.0)*(b-t)
         self.transition_in.moveto((l,b-(1.0/6.0)*(b-t),l+(r-l)*(1.0/6.0),b))
         self.transition_out.moveto((l+(5.0/6.0)*(r-l),b-(1.0/6.0)*(b-t),r,b))
         lag = self.get_relx(self.downloadtime_lag)
-        dt = self.get_relx(self.downloadtime)
-        self.pushbackbar.moveto((l-(lag+dt),t-vsixth,l,t))
+#        dt = self.get_relx(self.downloadtime)
+        h = self.get_rely(6);          # 12 pixels high.
+        self.pushbackbar.moveto((l-lag,t+(b-t)/2.0-h,l,t+(b-t)/2.0+h))
         MMNodeWidget.recalc(self) # This is probably not necessary.
 
     def get_minsize(self):

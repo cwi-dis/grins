@@ -398,7 +398,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Callbacks for the Widget classes.
 	def get_window_size_abs(self):
-		return self.window.getcanvassize(self.sizes.SIZEUNIT)
+		return self.mcanvassize;
 
 	def show(self):
 		if self.is_showing():
@@ -424,6 +424,7 @@ class HierarchyView(HierarchyViewDialog):
 		#self.toplevel.setwaiting()
 
 		x,y = self.scene_graph.get_minsize_abs()
+		self.mcanvassize = x,y
 		self.window.setcanvassize((self.sizes.SIZEUNIT, x, y))
 
 		# Known bug: this will actually cause a Hierarchyview.redraw() event.
