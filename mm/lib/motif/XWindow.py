@@ -610,12 +610,15 @@ class _Window(_AdornmentSupport):
 			widget.deleteResponse = Xmd.DO_NOTHING
 			self._callbacks[event] = func, arg
 		elif event in (DropFile, DropURL):
+			if not self._callbacks.has_key(DropFile) and \
+			   not self._callbacks.has_key(DropURL):
+				self._form.DropSiteRegister({
+					'importTargets':
+						[toplevel._compound_text,
+						 toplevel._netscape_url],
+					'dropSiteOperations': Xmd.DROP_COPY,
+					'dropProc': self.__handle_drop})
 			self._callbacks[event] = func, arg
-			self._form.DropSiteRegister({
-				'importTargets': [toplevel._compound_text,
-						  toplevel._netscape_url],
-				'dropSiteOperations': Xmd.DROP_COPY,
-				'dropProc': self.__handle_drop})
 		else:
 			raise error, 'Internal error'
 
@@ -625,7 +628,10 @@ class _Window(_AdornmentSupport):
 		except KeyError:
 			pass
 		else:
-			if event == DropFile:
+			if (event == DropFile and
+			    not self._callbacks.has_key(DropURL)) or \
+			   (event == DropURL and
+			    not self._callbacks.has_key(DropFile)):
 				self._form.DropSiteUnregister()
 
 	def __handle_drop(self, w, client_data, drop_data):
@@ -636,13 +642,18 @@ class _Window(_AdornmentSupport):
 			x = drop_data.x
 			y = drop_data.y
 			x, y = self._pxl2rel((x, y))
-			if toplevel._netscape_url in drop_data.dragContext.exportTargets:
-				t = toplevel._netscape_url
-			else:
-				t = toplevel._compound_text
-			transferList = [((x,y), t)]
+			transferList = []
 			args = {'dropTransfers': transferList,
 				'transferProc': self.__handle_transfer}
+			if toplevel._netscape_url in drop_data.dragContext.exportTargets:
+				t = toplevel._netscape_url
+				if not self._callbacks.has_key(DropURL):
+					args = {'transferStatus': Xmd.TRANSFER_FAILURE}
+			else:
+				t = toplevel._compound_text
+				if not self._callbacks.has_key(DropFile):
+					args = {'transferStatus': Xmd.TRANSFER_FAILURE}
+			transferList.append(((x, y), t))
 		drop_data.dragContext.DropTransferStart(args)
 
 	def __handle_transfer(self, w, (x,y), seltype, type, value, length, format):
