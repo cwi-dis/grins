@@ -137,6 +137,10 @@ SOURCE=.\stdio_mpeg_input_stream.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\wave_out_device.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\wnds_mpeg_input_stream.h
 # End Source File
 # End Group
