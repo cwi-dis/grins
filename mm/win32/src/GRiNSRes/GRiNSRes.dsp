@@ -351,5 +351,13 @@ SOURCE=.\RES\wallcloc.ico
 
 SOURCE=.\GRiNSRes.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\RES\zoomin.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\zoomout.ico
+# End Source File
 # End Target
 # End Project

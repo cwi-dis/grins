@@ -420,6 +420,12 @@ attrgrs=(
 	'attrs':[
 		'cssbgcolor',
 		]},
+
+	{'name':'timelist',
+	 'title':'Events',
+	 'attrs':['beginlist', 'endlist',],
+	 },
+
 	)
 
 

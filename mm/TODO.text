@@ -1,31 +1,29 @@
 TODO for Michael :-) 
 ---------------------------------------------
 
-* Add two buttons "revert" and "close" to the source view.
-* Error management (go to the source view if there is an error)
-* Retain comments in the source view.
-* Multiple selection in the structure view.
-* Asset management.
-
+* Event dialog boxs.
+* Bug - right-clicking on a node first doesn't work.
+* Events seem to be a bit wrong! Test them.
 * Test if editing the document makes the events stay properly.
+* Bug - EM commits in the layout view lose the focus.
+
+* Undo - doesn't work with drag and drop in the StructureView.
+
+* Error management (go to the source view if there is an error)
+* Asset management (Jack is working on this.)
+* Delete icons doesn't work.
+
 * Hyperlinks have dissapeared.
 * Multiple selection.
+	- Dragging and dropping.
+	- clipboard operations
+	- delete
+	- properties
+	- multiple focus issues.
+
 * Errors in the player - make them selectable in a menu somewhere.
-* Dragging and dropping on the top-leftmost icon crashes the editor.
 
---> Assets window
-	- File-based assets? Explorer window?
-	- Play media on the clipboard.
-	- 
---> Event editing
-	- Add little icons to show events.
-	- Add little arrows to those icons.
-
---> Source editor view.
-	- Handle import errors well.
-	- Selections - go to a specific line.
-	- Remove the menu entry that I added (edit in source view)
-	- Edit regions in the source view.
-
-* Create templates
 * Show whether a node is empty or not (in the Hierarchy View?).
+* Bug - right-clicking on a node first doesn't work.
+
+* Structure widgets optimisation - make them constructed with MMNodes.

@@ -996,37 +996,37 @@ class HierarchyView(HierarchyViewDialog):
 		for c in root.GetChildren():
 			self.fixsyncarcs(c, node)
 
-	def deletefocus(self, cut):
-		# Deletes the node with focus.
-		node = self.focusnode
-		if not node or node is self.root:
-			windowinterface.beep()
-			return
-		em = self.editmgr
-		if not em.transaction():
-			return
-		self.toplevel.setwaiting()
-		parent = node.GetParent()
-		siblings = parent.GetChildren()
-		nf = siblings.index(node)
-		if nf < len(siblings)-1:
-			self.select_node(siblings[nf+1])
-		elif nf > 0:
-			self.select_node(siblings[nf-1])
-		else:
-			self.select_node(parent)
-		
-		em.delnode(node)
-		self.fixsyncarcs(parent.GetRoot(), node)
-		
-		if cut:
-			t, n = Clipboard.getclip()
-##			if t == 'node' and node is not None:
-##				self.destroynode = n
-			Clipboard.setclip('node', node)
+##	def deletefocus(self, cut):
+##		# Deletes the node with focus.
+##		node = self.focusnode
+##		if not node or node is self.root:
+##			windowinterface.beep()
+##			return
+##		em = self.editmgr
+##		if not em.transaction():
+##			return
+##		self.toplevel.setwaiting()
+##		parent = node.GetParent()
+##		siblings = parent.GetChildren()
+##		nf = siblings.index(node)
+##		if nf < len(siblings)-1:
+##			self.select_node(siblings[nf+1])
+##		elif nf > 0:
+##			self.select_node(siblings[nf-1])
 ##		else:
-##			self.destroynode = node
-		em.commit()
+##			self.select_node(parent)
+		
+##		em.delnode(node)
+##		self.fixsyncarcs(parent.GetRoot(), node)
+		
+##		if cut:
+##			t, n = Clipboard.getclip()
+####			if t == 'node' and node is not None:
+####				self.destroynode = n
+##			Clipboard.setclip('node', node)
+####		else:
+####			self.destroynode = node
+##		em.commit()
 
 	def copyfocus(self):
 		# Copies the node with focus to the clipboard.

@@ -435,7 +435,7 @@
 #define IDC_EDIT                        1292
 #define IDC_BUTTON9                     1293
 #define IDC_STATIC2                     1294
-#define IDC_EVENTCAUSE                  1296
+#define IDC_EVENTCAUSE1                 1296
 #define IDC_EVENTTYPE                   1297
 #define IDC_EDIT11                      1298
 #define IDC_EDIT13                      1299

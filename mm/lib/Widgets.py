@@ -235,8 +235,6 @@ class Widget:
 		try:
 			l,t,r,b = self.pos_abs
 		except:
-			print "DEBUG: I am: ", self
-			print "DEBUG: self.pos_abs is: ", self.pos_abs
 			assert 0
 		return l,t,r-l,b-t
 	
