@@ -128,6 +128,15 @@ class _LayoutView2(GenFormView):
 		else:
 			childframe.DestroyWindow()
 
+	def close(self):
+		self.deactivate()
+		if hasattr(self,'_obj_') and self._obj_:
+			# pypass splitter
+			try:
+				self.GetParent().GetParent().DestroyWindow()
+			except:
+				pass
+
 	def OnInitialUpdate(self):
 		# we use a splitter so don't call GenFormView version
 		#GenFormView.OnInitialUpdate(self)
@@ -220,12 +229,7 @@ class _LayoutView2(GenFormView):
 	def set_commandlist(self, list):
 		GenFormView.set_commandlist(self, list)
 		self.set_localcommandlist(list)
-		
-	def close(self):
-		self.deactivate()
-		# pypass splitter
-		self.GetParent().GetParent().DestroyWindow()
-		
+				
 	# Sets the acceptable commands. 
 	def set_localcommandlist(self,commandlist):
 		frame=self.GetParent()
@@ -648,9 +652,15 @@ class LayoutManager(LayoutManagerBase):
 	
 	def OnDestroy(self, params):
 		LayoutManagerBase.OnDestroy(self, params)
-		Sdk.DeleteObject(self._blackBrush)
-		Sdk.DeleteObject(self._selPen)
-		Sdk.DeleteObject(self._selPenDot)
+		if self._blackBrush:
+			Sdk.DeleteObject(self._blackBrush)
+			self._blackBrush = 0
+		if self._selPen:
+			Sdk.DeleteObject(self._selPen)
+			self._selPen = 0
+		if self._selPenDot:
+			Sdk.DeleteObject(self._selPenDot)
+			self._selPenDot = 0
 					
 	#
 	# winlayout.MSDrawContext listener interface
