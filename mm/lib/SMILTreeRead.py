@@ -3353,7 +3353,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			id = res.group('id')
 			if self.__nodemap.has_key(id):
 				child = self.__nodemap[id]
-				if child in node.GetChildren():
+				if node.IsTimeChild(child):
 					node.attrdict['terminator'] = child.GetRawAttr('name')
 					return
 			# id not found among the children
