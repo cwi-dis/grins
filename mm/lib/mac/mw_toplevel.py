@@ -1258,3 +1258,6 @@ class _Toplevel(_Event):
 	def _getmmfactors(self):
 		return _x_pixel_per_mm, _y_pixel_per_mm
 	
+	def dumpwindows(self):
+		for w in self._wid_to_window.values():
+			w.dumpwindow()
