@@ -28,8 +28,8 @@ class EditableMMNode(MMNode.MMNode):
 	# Editable version of an MMNode.
 	def setup(self):			# like a constructer, but without parameters.
 		pass
-	def __repr__(self):
-		return "EditableMMNode instance, name: "+self.GetName()+" type: "+self.GetType()
+##	def __repr__(self):
+##		return "EditableMMNode instance, name: "+self.GetName()+" type: "+self.GetType()
 
 	def GetName(self):
 		try:
