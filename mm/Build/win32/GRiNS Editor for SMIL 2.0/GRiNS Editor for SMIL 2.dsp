@@ -193,6 +193,10 @@ SOURCE=.\M_appcon.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_AppDefaults.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_AppToplevel.c
 # End Source File
 # Begin Source File
@@ -289,6 +293,10 @@ SOURCE=.\M_bdb.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_bitrates.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_BrushChannel.c
 # End Source File
 # Begin Source File
@@ -342,10 +350,6 @@ SOURCE=.\M_cmifed.c
 # Begin Source File
 
 SOURCE=.\M_colors.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_ColorScheme.c
 # End Source File
 # Begin Source File
 
@@ -526,10 +530,6 @@ SOURCE=.\M_imgsgi.c
 # Begin Source File
 
 SOURCE=.\M_imgxbm.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_Interactive.c
 # End Source File
 # Begin Source File
 
@@ -885,10 +885,6 @@ SOURCE=.\M_random.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_rbtk.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_re.c
 # End Source File
 # Begin Source File
@@ -1025,6 +1021,10 @@ SOURCE=.\M_StringStuff.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_StructureWidgets.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_svgpath.c
 # End Source File
 # Begin Source File
@@ -1038,6 +1038,10 @@ SOURCE=.\M_tempfile.c
 # Begin Source File
 
 SOURCE=.\M_TextChannel.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_TimeMapper.c
 # End Source File
 # Begin Source File
 
@@ -1145,6 +1149,10 @@ SOURCE=.\M_whrandom.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_Widgets.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_win32con.c
 # End Source File
 # Begin Source File
@@ -1198,6 +1206,14 @@ SOURCE=.\M_winerror.c
 # Begin Source File
 
 SOURCE=.\M_WMEVENTS.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_wmpsupport.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_wmwriter.c
 # End Source File
 # Begin Source File
 
