@@ -512,9 +512,9 @@ class TopLevel(ViewDialog):
 			self._tracing = 1
 			trace.set_trace()
 
-	def help_callback(self):
-		import Help
-		Help.showhelpwindow()
+## 	def help_callback(self):
+## 		import Help
+## 		Help.showhelpwindow()
 
 	def setwaiting(self):
 		if self.waiting: return
