@@ -28,6 +28,7 @@ class Window:
 		self._callbacks = {}
 		self._showing = None
 		self._curcursor = ''
+		self._isvisible = 1
 
 	def __repr__(self):
 		return '<Window instance at %x>' % id(self)
@@ -140,10 +141,12 @@ class Window:
 		return self._showing
 
 	def show(self):
-		pass
+		self._isvisible = 1
+		self.update()
 
 	def hide(self):
-		pass
+		self._isvisible = 0
+		self.update()
 
 	def setcursor(self, cursor):
 		self._cursor = cursor
@@ -716,8 +719,6 @@ class SubWindow(Window):
 		return x, y, x+w, y+h
 
 	def update(self):
-		if self.is_closed():
-			print 'update while closed'
 		self._topwindow.update()
 
 	def HookMessage(self, f, m):
@@ -793,6 +794,17 @@ class SubWindow(Window):
 		if hasattr(self,'_anchorcallback') and self._anchorcallback:
 			self._anchorcallback(url)
 
+	def show(self):
+		self._isvisible = 1
+		if self._oswnd:
+			self._oswnd.ShowWindow(win32con.SW_SHOW)
+		self.update()
+
+	def hide(self):
+		self._isvisible = 0
+		if self._oswnd:
+			self._oswnd.ShowWindow(win32con.SW_HIDE)
+		self.update()
 
 	#
 	# Inage management
@@ -915,6 +927,9 @@ class SubWindow(Window):
 		buf.Blt(rc_dst, srfc, rc_src, ddraw.DDBLT_WAIT)
 
 	def paint(self):
+		if not self._isvisible:
+			return
+
 		if self._oswnd:
 			self._oswnd.RedrawWindow()
 			return
