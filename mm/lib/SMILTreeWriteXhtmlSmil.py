@@ -1764,10 +1764,8 @@ smil20event2xhtml = {'.activateEvent':'.click', '.beginEvent':'.begin', '.endEve
 def event2xhtml(value):
 	if not value: 
 		return value
-	for ev in smil20event2xhtml.keys():	
-		l = string.split(value, ev)
-		if len(l)==2:
-			return l[0]+smil20event2xhtml[ev] + l[1]
+	for ev in smil20event2xhtml.keys():
+		value = value.replace(ev, smil20event2xhtml[ev])
 	return value
 
 def replacePrevShortcut(value, node):
