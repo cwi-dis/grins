@@ -88,7 +88,8 @@ class StdDlgBar(DlgBar):
 		DlgBar.create(self,parent,grinsRC.IDD_NODE_INFO_CMDBAR,afxres.CBRS_ALIGN_TOP)
 		self['Cancel']=components.Button(self,grinsRC.IDUC_CANCEL)
 		self['Restore']=components.Button(self,grinsRC.IDUC_RESTORE)
-		self['ChanAttr']=components.Button(self,grinsRC.IDUC_ATTRIBUTES)
+		self['NodeAttr']=components.Button(self,grinsRC.IDUC_NODE_ATTRIBUTES)
+		self['ChanAttr']=components.Button(self,grinsRC.IDUC_CHANNEL_ATTRIBUTES)
 		self['Anchors']=components.Button(self,grinsRC.IDUC_ANCHORS)
 		self['Apply']=components.Button(self,grinsRC.IDUC_APPLY)
 		self['OK']=components.Button(self,grinsRC.IDUC_OK)
@@ -290,6 +291,7 @@ class NodeInfoForm(docview.FormView,components.ControlsDict):
 		self._ext_group.create(frame)
 		self._imm_group.create(frame)
 		self._int_group.create(frame)
+		
 
 	# Adjust dimensions to fit size to bars
 	def fitbars(self):
@@ -325,7 +327,7 @@ class NodeInfoForm(docview.FormView,components.ControlsDict):
 
 	def show(self):
 		self.ShowWindow(win32con.SW_SHOW)
-		self.pop() 
+		self.pop()
 
 	# Bring window in front of peers
 	def pop(self):
@@ -408,6 +410,8 @@ class NodeInfoForm(docview.FormView,components.ControlsDict):
 			self._int_group.setchildren(self._children)
 		elif self._filename:
 			self._ext_group.setfilename(self._filename)
+		self._nodeinfo.SetFocus()
+
 	
 	# Enable callbacks	
 	def enable_cbs(self):
