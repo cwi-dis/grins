@@ -1062,11 +1062,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	# will be called first, so it can fix the timing for the others.
 	# It also flushes the attribute cache maintained by MMAttrdefs.
 	#
-	def transaction(self):
+	def transaction(self, type):
 		# Always allow transactions
 		return 1
 
-	def commit(self):
+	def commit(self, type):
 		# Fix the timing -- views may depend on this.
 		if not self._in_prefschanged:
 			self.changed = 1
