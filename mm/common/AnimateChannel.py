@@ -198,7 +198,9 @@ class AnimateChannel(Channel.ChannelAsync):
 			dt = dt - self.__duration * int(float(dt) / self.__duration)
 		val = self.__animator.getValue(dt)
 		if self.__effAnimator:
-			if self.__lastvalue != val:
+			# update always for now
+			# for discrete animations the window does not exist at startup
+			if 1: # or self.__lastvalue != val:
 				self.__effAnimator.update(self.__getTargetChannel())
 				self.__lastvalue = val
 			
