@@ -1690,6 +1690,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def commit(self, type):
 		# Fix the timing -- views may depend on this.
+		if not hasattr(self, 'root'):
+			return
 		MMAttrdefs.flushcache(self.root)
 		self.context.changedtimes(self.root)
 		self.root.clear_infoicon()
