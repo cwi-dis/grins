@@ -125,7 +125,7 @@ class HIDE_USERGROUPVIEW(_CommandBase): pass
 class HIDE_SOURCE(_CommandBase): pass
 class HIDE_TRANSITIONVIEW(_CommandBase): pass
 class HIDE_LAYOUTVIEW2(_CommandBase): pass
-class HIDE_TEMPORALVIEW(_CommandBase): pass
+class HIDE_TEMPORALVIEW(_CommandBase):pass
 
 #
 # Player view commands

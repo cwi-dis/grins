@@ -14,22 +14,22 @@ class TemporalView(TemporalViewDialog):
 		TemporalViewDialog.__init__(self)
 		self.toplevel = toplevel
 		self.root = toplevel.root
-
+		self.window = None	# I still don't know where the window comes from.
+		
 		# Oooh yes, let's do some really cool selection code.
 		# Of course, I'll write it _later_.
 		self.selected_channels = [] # Alain: catch me if you caaaan!! :-)
 		self.selected_nodes = [] # This is a must!
-
+		
 		self.time = 0		# Currently selected "time" - in seconds.
 		self.zoomfactorx = 0	# Scale everything to this! Done in the Widgets for this
 					# node rather than the geometric primitives!
 		self.__add_commands()
 		self.showing = 0
-
+		
 		self.geodl = GeoWidget(self) # This is the basic graph of geometric primitives.
 		self.scene = None	# This is the collection of widgets which define the behaviour of the geo privs.
 		self.editmgr = self.root.context.editmgr
-
 		self.recurse_lock = 0	# a lock to prevent recursion.
 
 	def destroy(self):
@@ -51,6 +51,20 @@ class TemporalView(TemporalViewDialog):
 		TemporalViewDialog.show(self)
 		self.recalc()
 		self.draw()
+
+	def hide(self):
+		print "DEBUG: self.hide() called."
+		if not self.is_showing():
+			print "Error: window is not actually showing."
+			return
+		TemporalViewDialog.hide(self)
+		self.cleanup()
+		self.editmgr.unregister(self)
+		self.toplevel.checkviews()
+		self.showing = 0
+
+	def cleanup(self):
+		pass
 
 	def is_showing(self):
 		return self.showing
@@ -79,8 +93,12 @@ class TemporalView(TemporalViewDialog):
 
 	def get_geometry(self):
 		# (?!) called when this window is saved.
-		self.last_geometry = self.geodl.getgeometry()
-
+		if self.window:
+			self.last_geometry = self.geodl.getgeometry()
+			print "DEBUG: last geo is:" , self.last_geometry
+		else:
+			self.last_geometry = (0,0,0,0) # guessing the data type
+			
 ######################################################################
 		# Selection management.
 
