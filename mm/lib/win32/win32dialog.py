@@ -307,11 +307,13 @@ class SelectElementDlg(ResDialog):
 	ET_TOPLAYOUT, ET_REGION, ET_SUBREGION = range(3)
 	mtypes = {'image':0, 'audio':1, 'video':2, 'text':3, 'html':4, 'brush':0, 'svg':5, 'null': 0}
 	images = [grinsRC.IDB_IMAGE, grinsRC.IDB_SOUND, grinsRC.IDB_VIDEO, grinsRC.IDB_TEXT, grinsRC.IDB_HTML, grinsRC.IDB_SVG]
-	def __init__(self, parent, mmnode, selection=''):
+	def __init__(self, parent, mmnode, selection='', filter = ''):
 		ResDialog.__init__(self,grinsRC.IDD_SELECT_ELEMENT, parent)
 		self._mmnode = mmnode
 		self._selection = selection
+		self._filter = filter
 		self._selectionid = 0
+		self._rootid = 0
 		self.__isoswnd = 0
 
 		self._bselect = Button(self,win32con.IDOK)
@@ -338,8 +340,10 @@ class SelectElementDlg(ResDialog):
 		self._tree.SetImageList(self._imageList, commctrl.LVSIL_NORMAL)
 		self.buildElementsTree()
 		self.HookNotify(self.OnSelChanged, commctrl.TVN_SELCHANGED)
-		if self._selectionid:
-			self._tree.Select(self._selectionid,commctrl.TVGN_CARET)
+		if self._selection and self._selectionid:
+			self._tree.Select(self._selectionid, commctrl.TVGN_CARET)
+		else:
+			self._tree.Select(self._rootid, commctrl.TVGN_CARET)
 		return ResDialog.OnInitDialog(self)
 
 	def OnOK(self):
@@ -377,6 +381,7 @@ class SelectElementDlg(ResDialog):
 		for top in top_levels:
 			name = top.GetUID()
 			itemid = self.insertLabel(name, self.ET_TOPLAYOUT, self.ET_TOPLAYOUT)
+			if not self._rootid: self._rootid = itemid
 			self.__reg2id[top] = itemid
 			self.__appendRegions(top, itemid)
 		self.__appendNodes(root)
@@ -427,11 +432,23 @@ class SelectElementDlg(ResDialog):
 		nmsg = win32mu.Win32NotifyMsg(std, extra, 'tree')
 		itemid = nmsg.itemNew[0]
 		text = self._tree.GetItemText(itemid)
-		self.settext(text)
-		self.sethelpstring(itemid)
-
-	def sethelpstring(self, itemid):
 		etype = self._tree.GetItemData(itemid)
+		self.setfilteredtext(etype, text)
+		self.sethelpstring(etype)
+
+	def setfilteredtext(self, etype, text):
+		if not self._filter:
+			self.settext(text)
+		elif etype == self.ET_REGION and self._filter == 'region':
+			self.settext(text)
+		elif etype == self.ET_SUBREGION and self._filter == 'node':
+			self.settext(text)
+		elif etype == self.ET_TOPLAYOUT and self._filter in ('topLayout', 'region'):
+			self.settext(text)
+		else:
+			self.settext('')
+			
+	def sethelpstring(self, etype):
 		if etype == self.ET_REGION:
 			self._msg.settext('Element type: region')
 		elif etype == self.ET_SUBREGION:

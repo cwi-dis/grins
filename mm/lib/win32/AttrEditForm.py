@@ -1699,13 +1699,23 @@ class EventCtrl(AttrCtrl):
 				self._eventstruct.set_wallclock(dialog.getvalue())
 			elif c == 'region':
 				# Pop up a region select dialog.
+				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node,\
+					self._eventstruct.get_region() or '', filter = 'region')
+				if dlg.DoModal() == win32con.IDOK:
+					self._eventstruct.set_region(dlg.gettext())
 				viewports = self._eventstruct.get_viewports()
-				l = []
-				for i in viewports:
-					l.append((i, (self._thingbuttondialogcallback, (i,))))
-				d = win32dialog.Dialog(list=l, title="Select viewport", prompt="Viewport:", parent=self._wnd._form)
+				#l = []
+				#for i in viewports:
+				#	l.append((i, (self._thingbuttondialogcallback, (i,))))
+				#d = win32dialog.Dialog(list=l, title="Select viewport", prompt="Viewport:", parent=self._wnd._form)
 			#else:
 				#print "TODO: More than just editing the wallclock."
+			elif c == 'node':
+				# Pop up a node select dialog.
+				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node,\
+					'', filter = 'node')
+				if dlg.DoModal() == win32con.IDOK:
+					print dlg.gettext()
 			self.enableApply()
 			self.update()
 
