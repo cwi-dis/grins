@@ -51,7 +51,7 @@ alignment: 4
 style: 4
 size: 11.000000
 lcol: 2
-label: 00:12
+label: --:--
 name: statebutton
 callback: dummy_callback
 argument: 0
