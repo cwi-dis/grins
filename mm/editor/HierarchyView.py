@@ -898,6 +898,7 @@ class HierarchyView(HierarchyViewDialog):
 			copyme = self.focusnode.DeepCopy()
 			self.__clean_clipboard()
 			self.editmgr.setclip('node', copyme)
+		self.aftersetfocus()
 
 	def __clean_clipboard(self):
 		# Note: after this call you *MUST* set the clipboard to
@@ -1109,19 +1110,6 @@ class HierarchyView(HierarchyViewDialog):
 		for c in root.GetChildren():
 			self.fixsyncarcs(c, nodelist)
 
-	def copyfocus(self):
-		# Copies the node with focus to the clipboard.
-		node = self.focusnode
-		if not node:
-			windowinterface.beep()
-			return
-		t, n = self.editmgr.getclip()
-		if t == 'node' and n is not None:
-			n.Destroy()
-		self.editmgr.setclip('node', node.DeepCopy())
-		self.aftersetfocus()
-
-		
 	def create(self, where, url = None, index = -1, chtype = None, ntype = None):
 		# Create a new node in the Structure view.
 		# (assuming..) 'where' is -1:before, 0:here, 1:after. -mjvdg
