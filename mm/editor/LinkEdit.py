@@ -315,11 +315,16 @@ class LinkEdit(ViewDialog):
 			if str.node.GetRoot() <> self.root:
 				str.node = None
 				str.fillfunc = self.fill_none
-		str.browser.delalllistitems()
+		if hasattr(str, 'anchors'):
+			oldanchors = str.anchors
+		else:
+			oldanchors = []
 		str.fillfunc(str)
-		for a in str.anchors:
-			name = self.makename(a)
-			str.browser.addlistitem(name, -1)
+		if str.anchors != oldanchors:
+			str.browser.delalllistitems()
+			for a in str.anchors:
+				name = self.makename(a)
+				str.browser.addlistitem(name, -1)
 		if focusvalue:
 			try:
 				str.focus = str.anchors.index(focusvalue)
@@ -460,8 +465,10 @@ class LinkEdit(ViewDialog):
 		except NoSuchUIDError:
 			print 'LinkEdit: anchor with unknown node UID!'
 			return
+		windowinterface.setcursor('watch')
 		self.toplevel.hierarchyview.globalsetfocus(node)
 		self.toplevel.channelview.globalsetfocus(node)
+		windowinterface.setcursor('')
 
 	def menu_callback(self, str, ind):
 		str.hidden = 0
