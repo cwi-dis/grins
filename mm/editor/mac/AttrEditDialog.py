@@ -60,7 +60,8 @@ class AttrEditorDialog(windowinterface.MACDialog):
 ##		self._setsensitive([ITEM_APPLY, ITEM_OK], 0)
 
 		self._setbutton(ITEM_SHOWALL, self.show_all_attributes)
-
+		if not self.wrapper.canhideproperties():
+			self._setsensitive([ITEM_SHOWALL], 0)
 		#
 		# Create the pages with the attributes, and the datastructures linking
 		# attributes and pages together.

@@ -211,6 +211,8 @@ class Wrapper: # Base class -- common operations
 		return MMAttrdefs.valuerepr(name, value)
 	def parsevalue(self, name, str):
 		return MMAttrdefs.parsevalue(name, str, self.context)
+	def canhideproperties(self):
+		return 1
 
 class NodeWrapper(Wrapper):
 	def __init__(self, toplevel, node):
@@ -943,6 +945,9 @@ class DocumentWrapper(Wrapper):
 		del self.toplevel.attreditor
 		Wrapper.close(self)
 
+	def canhideproperties(self):
+		return 0
+
 	def stillvalid(self):
 		return self.toplevel in self.toplevel.main.tops
 
@@ -1045,6 +1050,9 @@ class TransitionWrapper(Wrapper):
 			pass
 		Wrapper.close(self)
 
+	def canhideproperties(self):
+		return 0
+
 	def stillvalid(self):
 		if not self.toplevel in self.toplevel.main.tops:
 			return 0
@@ -1126,6 +1134,9 @@ class PreferenceWrapper(Wrapper):
 		global prefseditor
 		del self.__callback
 		prefseditor = None
+
+	def canhideproperties(self):
+		return 0
 
 	def getcontext(self):
 		raise RuntimeError, 'getcontext should not be called'
@@ -1245,8 +1256,11 @@ from AttrEditDialog import AttrEditorDialog, AttrEditorDialogField
 
 class AttrEditor(AttrEditorDialog):
 	def __init__(self, wrapper, new = 0, initattr = None, chtype = None):
-		import settings
-		self.show_all_attributes = settings.get('show_all_attributes')
+		if wrapper.canhideproperties():
+			import settings
+			self.show_all_attributes = settings.get('show_all_attributes')
+		else:
+			self.show_all_attributes = 1
 		self.__new = new
 		self.__chtype = chtype
 		self.wrapper = wrapper
