@@ -35,11 +35,11 @@ class _Toplevel:
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
 
-	def newwindow(self, x, y, w, h, title, pixmap = 0):
-		return _Window(self, x, y, w, h, title, 0, pixmap)
+	def newwindow(self, x, y, w, h, title, pixmap = 0, transparent=0):
+		return _Window(self, x, y, w, h, title, 0, pixmap, transparent)
 
-	def newcmwindow(self, x, y, w, h, title, pixmap = 0):
-		return _Window(self, x, y, w, h, title, 1, pixmap)
+	def newcmwindow(self, x, y, w, h, title, pixmap = 0, transparent):
+		return _Window(self, x, y, w, h, title, 1, pixmap, transparent)
 
 	def setcursor(self, cursor):
 		for win in self._subwindows:
@@ -144,7 +144,8 @@ class _Toplevel:
 				self._ofddict[fd] = func, args
 
 class _Window:
-	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0):
+	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0, 
+			transparent = 0):
 		parent._subwindows.append(self)
 		self._parent = parent
 		self._subwindows = []
@@ -156,6 +157,7 @@ class _Window:
 		# in toplevel)
 		self._hfactor = parent._hfactor / w
 		self._vfactor = parent._vfactor / h
+		self._rect = 0, 0, w, h
 
 	def close(self):
 		if self._parent is None:
@@ -170,11 +172,11 @@ class _Window:
 	def is_closed(self):
 		return self._parent is None
 
-	def newwindow(self, x, y, w, h, pixmap = 0):
-		return _Window(self, x, y, w, h, '', 0, pixmap)
+	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
+		return _Window(self, x, y, w, h, '', 0, pixmap, transparent)
 
-	def necmwwindow(self, x, y, w, h, pixmap = 0):
-		return _Window(self, x, y, w, h, '', 1, pixmap)
+	def necmwwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
+		return _Window(self, x, y, w, h, '', 1, pixmap, transparent)
 
 	def fgcolor(self, color):
 		r, g, b = color
