@@ -2533,7 +2533,7 @@ class SMILWriter(SMIL):
 			if attributes.has_key(name):
 				if name == 'type':
 					value = node.GetRawAttrDef('trtype', None)
-				elif keyToCheck is None or x.attrdict.has_key(keyToCheck):
+				elif keyToCheck is None or node.attrdict.has_key(keyToCheck):
 					value = func(self, node)
 				else:
 					value = None
@@ -2549,7 +2549,7 @@ class SMILWriter(SMIL):
 		attrlist = []
 		attributes = self._attributes.get('prefetch', {})
 		for name, func, keyToCheck in smil_attrs:
-			if attributes.has_key(name) and (keyToCheck is None or x.attrdict.has_key(keyToCheck)):
+			if attributes.has_key(name) and (keyToCheck is None or node.attrdict.has_key(keyToCheck)):
 				value = func(self, node)
 				if value is not None:
 					attrlist.append((name, value))
