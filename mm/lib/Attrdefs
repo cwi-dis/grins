@@ -68,7 +68,7 @@
 (abstract (string) '' 'Abstract' default 'A brief description of the contents (informational only)' raw (g2 qt smil10 smil2 cmif snap))
 
 (alt (string) '' 'Alternate text' default
-	'Alternate text for media object' raw (g2 qt smil10 smil2 cmif snap))
+	'Alternate text for object' raw (g2 qt smil10 smil2 cmif snap))
 
 (author (string) '' 'Author' default 'Author (informational only)' raw (g2 qt smil10 smil2 cmif snap))
 
@@ -91,17 +91,17 @@
 	'Color used for background of window' region (smil2 snap))
 
 (left (string) '' 'Left' csspos
-	'Left' region (advanced smil2 snap))
+	'Values are relative to enclosing region geometry, use auto to minimize' region (advanced smil2 snap))
 (width (string) '' 'Width' csspos
-	'Width' region (advanced smil2 snap))
+	'Values are relative to enclosing region geometry, use auto to maximize' region (advanced smil2 snap))
 (right (string) '' 'Right' csspos
-	'Right' region (advanced smil2 snap))
+	'Values are relative to enclosing region geometry, use auto to maximize' region (advanced smil2 snap))
 (top (string) '' 'Top' csspos
-	'Top' region (advanced smil2 snap))
+	'Values are relative to enclosing region geometry, use auto to minimize' region (advanced smil2 snap))
 (height (string) '' 'Height' csspos
-	'Height' region (advanced smil2 snap))
+	'Values are relative to enclosing region geometry, use auto to maximize' region (advanced smil2 snap))
 (bottom (string) '' 'Bottom' csspos
-	'Bottom' region (advanced smil2 snap))
+	'Values are relative to enclosing region geometry, use auto to maximize' region (advanced smil2 snap))
 
 #(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 #	'Color used for background of window. Overriden by "transparent".' channel (g2 qt smil10 smil2 cmif))
@@ -124,7 +124,7 @@
 (copyright (string) '' 'Copyright' default 'Copyright of the item (informational only)' raw (g2 qt smil10 smil2 cmif snap))
 
 (duration (float) 0.0 'Duration' default
-	'Duration of an object or subtree (default: intrinsic media duration)' normal (g2 qt smil10 smil2 cmif snap))
+	'Duration of this object (default: intrinsic media or subtree duration)' normal (g2 qt smil10 smil2 cmif snap))
 
 (editBackground (tuple (int) (int) (int)) (255 255 255) 'Edit background' color
 	'Color used for background of window in Layout View' channel (template g2 qt smil10 smil2 cmif snap))
@@ -133,7 +133,7 @@
 	'Image shown as background' raw (template g2 qt smil10 smil2 cmif snap))
 
 (erase (enum never whenDone) whenDone 'Erase media' default
-	'Whether to erase the media when done playing' raw (advanced cmif smil2))
+	'What happens to onscreen media when fill duration is over' raw (advanced cmif smil2))
 
 (fgcolor (tuple (int) (int) (int)) (0 0 0) 'Color' color
 	'Color used for text or brush in window' channel (cmif snap smil2))
@@ -174,7 +174,7 @@
 # valid values: freeze, remove, hold, transition
 # default depends on other attributes
 (fill (enum default auto remove freeze transition hold) default 'Fill' fill
-	'Whether data should be retained on screen after playing (default depends on type of object)' normal (smil2 cmif snap))
+	'What happens to onscreen media when active duration is over' normal (smil2 cmif snap))
 
 (fillDefault (enum inherit auto remove freeze transition hold) inherit 'Fill default' fill
 	'Default value for the fill property on the children of this group (default depends on type of object)' inherited (template smil2 cmif))
@@ -192,13 +192,13 @@
 	hidden 'List of layouts within this document (root node only)' raw (cmif))
 
 (longdesc (string) '' 'Long description URL' default
-	'Link (URL) to a long description of the media object' raw (g2 qt smil10 smil2 cmif snap))
+	'Link (URL) to a long description of the object' raw (g2 qt smil10 smil2 cmif snap))
 
 (loop (float) 1 'Repeat count' default
-	'Number of times the object should repeat' raw (g2 qt smil10 smil2 cmif))
+	'Number of times the object should repeat (default: 1)' raw (g2 qt smil10 smil2 cmif))
 
 (max (float) -1.0 'Maximum duration' default
-	'Maximum duration of a object or subtree' normal (advanced smil2 snap))
+	'Maximum duration of this object (default: indefinite)' normal (advanced smil2 snap))
 
 (mediaRepeat (enum strip preserve) preserve 'Media repeat' default
 	'Whether to obey or ignore intrinsic repeat in media' raw (advanced cmif smil2))
@@ -210,10 +210,10 @@
 	'Allowed MIMEtypes for media object' raw (template g2_pro qt_pro smil10 cmif smil2))
 
 (min (float) 0.0 'Minimum duration' default
-	'Minimum duration of an object or subtree' normal (advanced smil2 snap))
+	'Minimum duration of this object (default: 0 sec)' normal (advanced smil2 snap))
 
 (name (name) '' 'Name' default
-	'Name for the object' raw (g2 qt smil10 smil2 cmif snap))
+	'ID used when referencing this object' raw (g2 qt smil10 smil2 cmif snap))
 
 (close (enum onRequest whenNotActive) onRequest 'Close viewport' default
 	'When the viewport is to be closed' raw (advanced cmif smil2 snap))
@@ -329,16 +329,16 @@
 	'Region name' raw (advanced cmif smil2 snap))
 
 (repeatdur (float) 0 'Repeat duration' default
-	'Time the object should repeat' raw (smil2))
+	'Repeat the object for this number of seconds (overrides repeat count)' raw (smil2))
 
 (restart (enum default always whenNotActive never) default 'Restart object' restart
-	'When can the object be restarted' raw (advanced cmif smil2 snap))
+	'Should this node restart when a subsequent event occurs?' raw (advanced cmif smil2 snap))
 
 (restartDefault (enum inherit always whenNotActive never) inherit 'Restart default' restart
 	'Default value for the restart property on the children of this group' inherited (template cmif smil2 snap))
 
 (fit (enum meet hidden slice scroll fill) hidden 'Fit' fit
-	'Fit value' channel (g2 qt smil10 smil2 cmif snap))
+	'How media is scaled to the region' channel (g2 qt smil10 smil2 cmif snap))
 
 (sensitivity (float) 0 'Event sensitivity' percent
 	'Event sensitivity of media (percentage in range 0 - 100)' raw (advanced cmif smil2))
@@ -354,16 +354,16 @@
 	'Skip unknown content when parsing this document' raw (advanced cmif smil2))
 
 (syncBehavior (enum default canSlip locked independent) default 'Sync behavior' default
-	'Defines the runtime synchronization behavior for an element' normal (template smil2 cmif))
+	'Defines the runtime synchronization behavior for this object' normal (template smil2 cmif))
 
 (syncBehaviorDefault (enum inherit canSlip locked independent) inherit 'Sync behavior default' default
-	'Default value for the Sync behavior property on the children of this group' inherited (template smil2 cmif))
+	'Default sync behaviour for children of this group' inherited (template smil2 cmif))
 
 (syncMaster (bool) 0 'Sync master' default
 	'Whether this element is the master clock for sibling elements' normal (template smil2 cmif))
 
 (syncTolerance (float) -1 'Sync tolerance' default
-	'Defines the runtime synchronization tolerance for an element' normal (template smil2 cmif))
+	'Maximum number of seconds that this object may be out of sync with the master' normal (template smil2 cmif))
 
 (syncToleranceDefault (float) -1 'Sync tolerance default' default
 	'Default value for the Sync tolerance property on the children of this group' inherited (template smil2 cmif))
@@ -400,10 +400,10 @@
 # XXXX Transitions need a displayer
 # XXXX This allows for a single transition only (should be a list)
 (transIn (list (name)) () 'In-transition' transition
-	'Names of transition at start of item' raw (smil2 snap))
+	'Transition to perform at start of object playback' raw (smil2 snap))
 	
 (transOut (list (name)) () 'Out-transition' transition
-	'Names of transition at end of item' raw (smil2 snap))
+	'Transition to perform at end of object playback' raw (smil2 snap))
 	
 (transparent (int) 0 'Transparent' transparency
 	'Determines transparency of window, overrides background color' region (g2_pro smil10 cmif))
@@ -412,7 +412,7 @@
 	'Type of media this channel will be used for' raw (g2 qt smil10 smil2 cmif snap))
 
 (u_group (list (name)) () 'Custom tests' usergroup
-	'Custom tests that controls rendering of this object' inherited (advanced smil2 cmif))
+	'If set, play this object only if the specified custom test is enabled' inherited (advanced smil2 cmif))
 
 (units (int) 2 'Units' hidden
 	'What the size/position numbers are measured in' raw (g2_pro qt_pro smil10 cmif))
@@ -437,7 +437,7 @@
 	'The language of the media item' raw (advanced smil2 cmif))
 
 (z (int) 0 'Z order' default
-	'Stacking order for regions, higher numbers are on top' normal (g2 qt smil10 smil2 cmif snap))
+	'Stacking order within enclosing region (higher numbers are on top)' normal (g2 qt smil10 smil2 cmif snap))
 
 (namespace (string) '' 'Namespace of object' default
 	'Namespace of a foreign object' normal (advanced smil2))
@@ -448,27 +448,27 @@
 # XXX for now, most of these in template mode to not show then in Real
 # product
 (system_audiodesc (bool) 0 'System audio descriptions' bool3
-	'Play object only if end-user wants audio descriptions' raw (template smil2))
+	'If set, play object only if end-user wants audio descriptions' raw (template smil2))
 (system_bitrate (int) 0 'System bitrate' bitrate3
-	'Play object only if bitrate >= value here' raw (g2 qt smil10 smil2 cmif snap))
+	'If set, play object only if bitrate >= value here' raw (g2 qt smil10 smil2 cmif snap))
 (system_captions (bool) 0 'System captions' bool3
-	'Play object only if end-user wants captions' raw (template g2 qt smil10 smil2 cmif))
+	'If set, play object only if end-user wants captions' raw (template g2 qt smil10 smil2 cmif))
 (system_language (string) '' 'System language' language3
-	'Play object only if end-user prefers this language' raw (g2 qt smil10 smil2 cmif snap))
+	'If set, play object only if end-user prefers this language' raw (g2 qt smil10 smil2 cmif snap))
 (system_overdub_or_caption (string) '' 'System overdub or subtitle' captionoverdub3
-	'Play object only depending on end user overdub/subtitle preference' raw (template g2 qt smil10 smil2 cmif))
+	'If set, play object only depending on end user overdub/subtitle preference' raw (template g2 qt smil10 smil2 cmif))
 (system_required (list (string)) () 'System required' reqlist
-	'Play object only if player supports these features' raw (template g2 qt smil10 smil2 cmif))
+	'If set, play object only if player supports these features' raw (template g2 qt smil10 smil2 cmif))
 (system_screen_size (tuple (int) (int)) (0 0) 'System screen size' screensize
-	'Play object only if screen bigger than this (width height)' raw (template g2 qt smil10 smil2 cmif))
+	'If set, play object only if screen bigger than this (width height)' raw (template g2 qt smil10 smil2 cmif))
 (system_screen_depth (int) 0 'System screen depth' screendepth
-	'Play object only if screen has at least bits-per-pixel than this' raw (template g2 qt smil10 smil2 cmif))
+	'If set, play object only if screen has at least bits-per-pixel than this' raw (template g2 qt smil10 smil2 cmif))
 (system_operating_system (enum aix beos bsdi dgux freebsd hpux irix linux macos ncr nec netbsd nextstep nto openbsd openvms os2 osf palmos qnx sinix rhapsody sco solaris sonly sunos unixware win16 win32 win9x winnt wince unknown) unknown 'System operating system' opsys
-	'Play object only if running on the specified operating system' raw (template smil2))
+	'If set, play object only if running on the specified operating system' raw (template smil2))
 (system_cpu (enum alpha arm arm32 'hppa1.1' m68k mips ppc rs6000 vax x86 unknown) unknown 'System CPU' cpu
-	'Play object only if running on the specified CPU' raw (template smil2))
+	'If set, play object only if running on the specified CPU' raw (template smil2))
 (system_component (list (string)) () 'System component' default
-	'Play object only if the components are supported' raw (template smil2))
+	'If set, play object only if these components are supported' raw (template smil2))
 
 # RealPix attributes
 (aspect (bool) 1 'Keep aspect ratio' default
@@ -568,9 +568,9 @@
 (contextheight (int) 0 'Context window height' default
 	'Height of Context subwindow' normal (template smil2))
 (reliable (bool) 0 'Reliable transmission' default
-	'Ensures reliable transmission' normal (advanced g2 smil2))
+	'Prefer rebuffering over skipping media data' normal (advanced g2 smil2))
 (strbitrate (int) 12288 'Stream bitrate' default
-	'Sets a static clip\'s streaming speed' normal (advanced g2 smil2))
+	'Set streaming bitrate for static media (default: 12288)' normal (advanced g2 smil2))
 
 # QuickTime attributes
 
@@ -692,13 +692,13 @@
 	'Further refinement of transition to perform' raw (smil2))
 	
 (dur (float) 1.0 'Duration' default
-	'Duration of the transition' raw (smil2))
+	'Duration of the transition (default: 1 second)' raw (smil2))
 
 (startProgress (float) 0.0 'Start value' default
-	'Percentage at which the transition starts XXXX better wording?' raw (smil2))
+	'Example: use 0.3 to start transition with 30% of destination media visible' raw (smil2))
 	
 (endProgress (float) 1.0 'End value' default
-	'Percentage at which the transition ends XXXX better wording?' raw (smil2))
+	'Example: using 0.7 will end transition with 30% of source still visible, then full destination will be shown' raw (smil2))
 	
 (direction (enum forward reverse) forward 'Transition direction' default
 	'Spatial direction of the transition effect, if applicable' raw (smil2))
@@ -707,16 +707,16 @@
        'Color for transition effect' normal (smil2))
 
 (horzRepeat (int) 1 'Horizontal repeat' default
-	'How often the transition pattern is repeated horizontally, if applicable' raw (smil2))
+	'How often the transition pattern is repeated horizontally, if applicable (default: 1)' raw (smil2))
 
 (vertRepeat (int) 1 'Vertical repeat' default
-	'How often the transition pattern is repeated vertically, if applicable' raw (smil2))
+	'How often the transition pattern is repeated vertically, if applicable (default: 1)' raw (smil2))
 
 (borderColor (tuple (int) (int) (int)) (0 0 0) 'Border color' color
-       'Color for transition border (wipe only)' normal (smil2))
+       'Color for transition border, if applicable (default: black)' normal (smil2))
 
 (borderWidth (int) 0 'Border width' default
-	'Width of the border, applicable to wipe only' raw (smil2))
+	'Width of the border, if applicable (default: no border)' raw (smil2))
 	
 (coordinated (bool) 0 'Multi-element transition' default
 	'Whether this is a coordinated transition across multiple elements' raw (smil2))
@@ -733,10 +733,10 @@
 # registration points
 
 (regAlign (enum topLeft topMid topRight midLeft center midRight bottomLeft bottomMid bottomRight) topLeft 'RegAlign' default
-	'Alignment point associate to the media' raw (advanced smil2))
+	'Point on media which is aligned to regPoint' raw (advanced smil2))
 
 (regPoint (string) 'topLeft' 'RegPoint' regpoint
-	'Registration point associate to the region' region (advanced smil2))
+	'Point on region which is aligned to regAlign' region (advanced smil2))
 
 # prefetch
 
@@ -753,10 +753,10 @@
 # region
 
 (showBackground (enum always whenActive) always 'Show background' default
-	'Show when object is active the background color or always' raw (smil2))
+	'Is background color always visible or only when media is played?' raw (smil2))
 
 (soundLevel (float) 1 'Sound level' percent
-	'Specifies the relative volume in percent' raw (smil2))
+	'Relative audio volume as a fraction (default: 1.0)' raw (smil2))
 
 # settings
 (vertical_icons (bool) 1 'Vertical icons' default
