@@ -33,7 +33,9 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "AEDataModel.h"
 #include "Controls.h"
 #include "Lists.h"
+#define typeforward extern
 #else
+#define typeforward
 #ifdef WITHOUT_FRAMEWORKS
 #include <Types.h>
 #include <Files.h>
