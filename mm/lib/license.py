@@ -60,6 +60,9 @@ class WaitLicense(LicenseDialog):
 ##		import windowinterface
 ##		windowinterface.InputDialog("Enter key:", "", self.ok_callback, (self.cb_quit, ()))
 		import settings
+		user = settings.get('license_user')
+		if user[-18:] == ' (evaluation copy)':
+			user = user[:18]
 		EnterkeyDialog(self.ok_callback, user=settings.get('license_user'), org=settings.get('license_organization'))
 
 	def ok_callback(self, str, name=None, organization=None):
