@@ -4,12 +4,17 @@ __version__ = "$Id$"
 # XXXX This is a placeholder for the coming HTML channel. It is just
 # an ordinary text channel, but it's anchors have arguments.
 #
-from Channel import ChannelWindow, error
+from Channel import ChannelWindow, error, CMIF_MODE
 from AnchorDefs import *
 import string
 
 class HtmlChannel(ChannelWindow):
-	node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor',
+	if CMIF_MODE:
+		node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor',
+						 'fgcolor', 'font',
+						 'pointsize']
+	else:
+		chan_attrs = ChannelWindow.chan_attrs + ['bucolor', 'hicolor',
 						 'fgcolor', 'font',
 						 'pointsize']
 

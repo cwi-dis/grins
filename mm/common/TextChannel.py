@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-from Channel import ChannelWindow, error
+from Channel import ChannelWindow, error, CMIF_MODE
 from AnchorDefs import *
 import string
 import StringStuff
@@ -9,7 +9,12 @@ import os
 import re
 
 class TextChannel(ChannelWindow):
-	node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor',
+	if CMIF_MODE:
+		node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor',
+						 'fgcolor', 'font',
+						 'pointsize', 'noanchors']
+	else:
+		chan_attrs = ChannelWindow.chan_attrs + ['bucolor', 'hicolor',
 						 'fgcolor', 'font',
 						 'pointsize', 'noanchors']
 
