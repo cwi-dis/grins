@@ -133,7 +133,7 @@ class TopLevel(ViewDialog):
 			windowinterface.canceltimer(self._last_timer_id)
 		if delay:
 			self._last_timer_id = windowinterface.settimer(delay,
-				  self.player.timer_callback)
+				  (self.player.timer_callback, ()))
 
 	#
 	# View manipulation.

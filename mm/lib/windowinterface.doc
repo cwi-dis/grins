@@ -28,6 +28,12 @@ The functions are:
 		is called using apply(func, args), i.e., args must be
 		a tuple.
 
+	mainloop()
+		Main loop of the application.  This function gets
+		events from the window system and handles them,
+		calling callback functions as appropriate.  This
+		function does not return.
+
 	usewindowlock(lock)
 		Use the specified lock to lock out concurrent access
 		to the window system.  This method should be used when
@@ -65,24 +71,15 @@ The functions are:
 		returns a font object, the methods of which are
 		described below.
 
-	settimer(sec, arg) -> timer_id
+	settimer(sec, callback) -> timer_id
 		Set a timer to go off in sec seconds.  The return
 		value can be used to cancel the timer with the
 		canceltimer function.
-		When the timer expires the callback function that was
-		previously set with settimerfunc is called as follows:
-		func(arg1, None, TimerEvent, arg2).  Here arg1 is the
-		argument passed to settimerfunc, and arg2 is the
-		argument passed to settimer.
-		[ XXX -- interface needs to be changed, no need for
-		two separate user-supplied arguments ]
+		When the timer expires the provided callback is
+		called.
 
 	canceltimer(timer_id)
 		Cancel the timer with the given timer_id.
-
-	settimerfunc(func, arg)
-		Set the callback function to be called when a timer
-		expires.
 
 	select_setcallback(fd, func, args, mask = ReadMask)
 		Monitor the file descriptor given by fd for

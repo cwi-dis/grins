@@ -225,13 +225,6 @@ class Channel:
 		# without windows)
 		pass
 
-	def pause(self):
-		# Pause playing the current node.
-		# Not yet implemented.
-		if debug:
-			print 'Channel.pause('+`self`+')'
-		pass
-
 	def save_geometry(self):
 		pass
 
@@ -777,6 +770,7 @@ class ChannelWindow(Channel):
 			if hasattr(self._player, 'editmgr'):
 				menu.append(None)
 				menu.append('', 'resize', (self.resize_window, (pchan,)))
+			self.window.create_menu(menu, title = self._name)
 		else:
 			# no basewindow, create a top-level window
 			if self._attrdict.has_key('winsize'):
@@ -809,7 +803,6 @@ class ChannelWindow(Channel):
 		self.window.register(EVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(EVENTS.Mouse0Release, self.mouserelease,
 				     None)
-		self.window.create_menu(menu, title = self._name)
 
 	def _destroy_callback(self, *rest):
 		self._player.cmenu_callback(self._name)

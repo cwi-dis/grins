@@ -39,7 +39,6 @@ class Main:
 			self._mmfd = pipe_r
 			windowinterface.select_setcallback(pipe_r,
 						self._mmcallback, ())
-		windowinterface.settimerfunc(self.timeout, None)
 		new_file = 0
 		if not files:
 			files = ['NEW DOCUMENT.cmif']
@@ -70,9 +69,6 @@ class Main:
 
 		for top in self.tops:
 			top.setready()
-
-	def timeout(self, dummy, window, event, func):
-		func()
 
 	def do_exit(self, *args):
 		for top in self.tops:
