@@ -763,7 +763,7 @@ smil_attrs=[
 	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
 ##	("fill", getfill),
-`	("fill", lambda writer, node:getcmifattr(writer, node, "fill")),
+	("fill", lambda writer, node:getcmifattr(writer, node, "fill")),
 	("clip-begin", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipbegin')) or None),
 	("clip-end", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipend')) or None),
 	("clipBegin", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipbegin')) or None),
