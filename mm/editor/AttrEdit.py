@@ -685,7 +685,7 @@ class ChannelWrapper(Wrapper):
 
 
 class DocumentWrapper(Wrapper):
-	__stdnames = ['title', 'author', 'copyright', 'base']
+	__stdnames = ['title', 'author', 'copyright']
 	__publishnamesext = [
 			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir', 'project_smil_url']
 	__publishnames = [
