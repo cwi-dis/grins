@@ -636,8 +636,8 @@ class HierarchyView(HierarchyViewDialog):
 		width, height = sizeboxes(self.root)
 		cwidth, cheight = window.getcanvassize(UNIT_MM)
 		mwidth = mheight = 0 # until we have a way to get the min. size
-		if (cwidth <= width <= cwidth * 1.1 or width < cwidth <= mwidth) and \
-		   (cheight <= height <= cheight * 1.1 or height < cheight <= mheight):
+		if (width <= cwidth <= width * 1.1 or width < cwidth <= mwidth) and \
+		   (height <= cheight <= height * 1.1 or height < cheight <= mheight):
 			# size change not big enough, just redraw
 			self.redraw()
 		else:
