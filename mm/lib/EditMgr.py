@@ -899,8 +899,9 @@ class EditMgr(Clipboard.Clipboard):
 		oldvalue = dict.get(key)
 		if oldvalue == value:
 			return
-		# XXX should we delete key if value==None?
 		dict[key] = value
+		if value is None:
+			del dict[key]
 		self.addstep('settransitionvalue', name, key, oldvalue)
 ##		self.next_focus = []	# This object cannot have focus (yet)
 
