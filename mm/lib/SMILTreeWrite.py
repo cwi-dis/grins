@@ -167,19 +167,26 @@ def getterm(writer, node):
 	      node.GetRawAttrDef('name', '<unnamed>'),\
 	      node.GetUID()
 
+def getrepeat(writer, node):
+	value = node.GetRawAttrDef('loop', 1)
+	if value == 1:
+		return
+	else:
+		return `value`
+
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
 #
 smil_attrs=[
 	("id", getid),
-	("loc", getchname),
-	("href", lambda writer, node:getcmifattr(writer, node, "file")),
+	("channel", getchname),
+	("src", lambda writer, node:getcmifattr(writer, node, "file")),
 	("dur", lambda writer, node: getduration(writer, node, 'duration')),
 	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
 	("endsync", getterm),
-	("repeat", lambda writer, node:getcmifattr(writer, node, "loop")),
+	("repeat", lambda writer, node:getrepeat(writer, node)),
 ]
 
 # Mapping from CMIF channel types to smil media types
@@ -211,6 +218,9 @@ class SMILWriter:
 		self.uid2name = {}
 		self.calcnames(node)
 
+		self.aid2name = {}
+		self.calcanames(node)
+
 		self.chnames_used = {'':1}
 		self.ch2name = {}
 		self.bases_used = {}
@@ -221,7 +231,7 @@ class SMILWriter:
 		self.tmpdirname = filename + '.data'
 
 	def write(self):
-		self.fp.write('<smil lipsync="false">\n')
+		self.fp.write('<smil sync="soft">\n')
 		self.fp.push()
 		self.fp.write('<head>\n')
 		self.fp.push()
@@ -231,7 +241,6 @@ class SMILWriter:
 		self.fp.write('<body>\n')
 		self.fp.push()
 		self.writenode(self.root)
-		self.writelinks()
 		self.fp.pop()
 		self.fp.write('</body>\n')
 		self.fp.pop()
@@ -274,17 +283,29 @@ class SMILWriter:
 				base = ch['base_window']
 				self.bases_used[base] = 1
 
+	def calcanames(self, node):
+		"""Calculate unique names for anchors"""
+		uid = node.GetUID()
+		alist = node.GetAttrDef('anchorlist', [])
+		for id, type, args in alist:
+			aid = (uid, id)
+			aname = '%s-%s' % (self.uid2name[uid], id)
+			self.aid2name[aid] = aname
+		if node.GetType() in interiortypes:
+			for child in node.children:
+				self.calcanames(child)
+
 	def writelayout(self):
 		"""Write the layout section"""
-		self.fp.write('<layout type="text/smil-basic">\n')
+		self.fp.write('<layout>\n') # default: type="text/smil-basic"
 		self.fp.push()
 		channels = self.root.GetContext().channels
 		self.channels_defined = {}
 		for ch in channels:
 			dummy = mediatype(ch['type'], error=1)
-			attrlist = ['<tuner id=%s' %
+			attrlist = ['<channel id=%s' %
 				    nameencode(self.ch2name[ch])]
-			# if toplevel window, define a tuner elt, but
+			# if toplevel window, define a channel elt, but
 			# don't define coordinates (i.e., use defaults)
 			if ch.has_key('base_window') and \
 			   ch.has_key('base_winoff'):
@@ -344,7 +365,7 @@ class SMILWriter:
 			fp.close()
 			imm_href = MMurl.pathname2url(fname)
 		for name, func in smil_attrs:
-			if name == 'href' and imm_href:
+			if name == 'src' and imm_href:
 				value = imm_href
 			else:
 				value = func(self, x)
@@ -362,75 +383,47 @@ class SMILWriter:
 			self.fp.write('</%s>\n'%mtype)
 		elif type in ('imm', 'ext'):
 			# XXXX Not correct for imm
-			self.fp.write(attrlist+'/>\n')
+			self.fp.write(attrlist+'>\n')
+			self.fp.push()
+			self.writelinks(x)
+			self.fp.pop()
+			self.fp.write('</%s>\n'%mtype)
 		else:
 			raise CheckError, 'bad node type in writenode'
 
-	def writelinks(self):
-		context = self.root.GetContext()
-		links = context.hyperlinks
-		linklist = links.getall()
-		for a1, a2, dir, type in linklist:
-			if dir == Hlinks.DIR_1TO2:
-				self.writelink(a1, a2, type)
-			elif dir == Hlinks.DIR_2TO1:
-				self.writelink(a2, a1, type)
-			else:
-				self.writelink(a1, a2, type)
-				self.writelink(a2, a1, type)
+	def writelinks(self, x):
+		alist = x.GetAttrDef('anchorlist', [])
+		for id, type, args in alist:
+			self.writelink(x, id, type, args)
 
-	def writelink(self, a1, a2, type):
-		items = ["<hlink"]
-		if type == Hlinks.TYPE_CALL:
-			items.append('show="pause"')
-		elif type == Hlinks.TYPE_FORK:
-			items.append('show="new"')
-		self.fp.write(string.join(items, ' ') + '>\n')
-		self.fp.push()
-		self.writeanchor(a1, "src")
-		self.writeanchor(a2, "dst")
-		self.fp.pop()
-		self.fp.write('</hlink>\n')
-
-	def writeanchor(self, anchor, role):
-		# XXXX external anchor handling is broken
-		context = self.root.GetContext()
+	def writelink(self, x, id, atype, args):
 		items = ["<anchor"]
-		items.append('role="%s"'%role)
-		uid, aid = anchor
-		if '/' in uid:
-			# External. Try to convert
-			if aid:
-				href = uid + '#' + aid
+		aid = (x.GetUID(), id)
+		items.append('id="%s"'%self.aid2name[aid])
+
+		links = x.GetContext().hyperlinks.findsrclinks(aid)
+		if len(links) > 1:
+			print '** Multiple links on anchor', \
+			      x.GetRawAttrDef('name', '<unnamed>'), \
+			      x.GetUID()
+		if links:
+			a1, a2, dir, ltype = links[0]
+			if ltype == Hlinks.TYPE_CALL:
+				items.append('show="pause"')
+			elif ltype == Hlinks.TYPE_FORK:
+				items.append('show="new"')
+			# else show="replace" (default)
+			uid2, aid2 = a2
+			if '/' in uid2:
+				if aid2:
+					href = '%s#%s' % a2
+				else:
+					lastslash = string.rfind('/', uid2)
+					href = '%s#%s' % (uid2[:lastslash], uid2[lastslash+1:])
 			else:
-				lastslash = string.rfind('/', uid)
-				href = uid[:lastslash] + '#' + uid[lastslash+1:]
-			tp = AnchorDefs.ATYPE_DEST
-			args = []
-		else:
-			# Internal
-			href = '#' + self.uid2name[uid]
-			tp, args = self.getanchor(uid, aid, href)
-		items.append('href="%s"'%href)
-		# First fixup unimplemented tps
-		if tp == AnchorDefs.ATYPE_AUTO:
-			print "** unsupported auto anchor on", href
-			tp = AnchorDefs.ATYPE_DEST
-		if tp == AnchorDefs.ATYPE_PAUSE:
-			print "** unsupported pausing anchor on", href
-			tp = AnchorDefs.ATYPE_NORMAL
-		if tp == AnchorDefs.ATYPE_COMP:
-			print "** unsupported comp anchor on", href
-			tp = AnchorDefs.ATYPE_DEST
-		if tp == AnchorDefs.ATYPE_ARGS:
-			print "** unsupported args anchor on", href
-			tp = AnchorDefs.ATYPE_DEST # XXXX ATYPE_WHOLE
-		if tp == AnchorDefs.ATYPE_DEST:
-			pass
-		elif tp == AnchorDefs.ATYPE_WHOLE:
-			pass
-		elif tp == AnchorDefs.ATYPE_NORMAL:
-			# XXXX Hack: see if these are coordinates
+				href = '#' + self.aid2name[a2]
+			items.append('href="%s"'%href)
+		if atype == AnchorDefs.ATYPE_NORMAL:
 			ok = 0
 			if len(args) == 4:
 				x, y, w, h = tuple(args)
@@ -445,23 +438,14 @@ class SMILWriter:
 					ok = 1
 			if ok:
 				if (x, y, w, h) != (0,0,100,100):
-					print "** Document uses coords attribute in anchor"
-					items.append('shape="rect"')
-					items.append('coords="%d%%,%d%% %d%%,%d%%"'%
+					items.append('coords="%d%%,%d%%,%d%%,%d%%"'%
 						     (x,y,w,h))
 			elif args:
-				print '** Unparseable args on', href, args
-		self.fp.write(string.join(items, ' ')+'/>\n')
+				print '** Unparseable args on', aid, args
+			else:
+				items.append('iid="%s"'%id)
 
-	def getanchor(self, uid, aid, href):
-		context = self.root.GetContext()
-		node = context.mapuid(uid)
-		alist = node.GetAttrDef('anchorlist', [])
-		for id, type, args in alist:
-			if id == aid:
-				return type, args
-		print '** undefined anchor', href, aid
-		return AnchorDefs.ATYPE_DEST, []
+		self.fp.write(string.join(items) + '/>\n')
 
 	def smiltempfile(self, node, suffix = '.html'):
 		"""Return temporary file name for node"""
