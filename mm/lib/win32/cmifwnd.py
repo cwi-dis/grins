@@ -824,11 +824,11 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		if units == UNIT_PXL or (units is None and type(x) is type(0)):
 			px = int(x)
 		else:
-			px = int((rw - 1) * x + 0.5)
+			px = int(rw * x + 0.5)
 		if units == UNIT_PXL or (units is None and type(y) is type(0)):
 			py = int(y)
 		else:
-			py = int((rh - 1) * y + 0.5)
+			py = int(rh * y + 0.5)
 		pw = ph = 0
 		if crop:
 			if px < 0:
@@ -844,11 +844,11 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		if units == UNIT_PXL or (units is None and type(w) is type(0)):
 			pw = int(w + pw)
 		else:
-			pw = int((rw - 1) * w + 0.5) + pw
+			pw = int(rw * w + 0.5) + pw
 		if units == UNIT_PXL or (units is None and type(h) is type(0)):
 			ph = int(h + ph)
 		else:
-			ph = int((rh - 1) * h + 0.5) + ph
+			ph = int(rh * h + 0.5) + ph
 		if crop:
 			if pw <= 0:
 				pw = 1
@@ -872,14 +872,14 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		else:
 			rx, ry, rw, rh = self._rect
 
-		x = float(px - rx) / (rw - 1)
-		y = float(py - ry) / (rh - 1)
+		x = float(px - rx) / rw
+		y = float(py - ry) / rh
 		if len(coordinates) == 2:
 			return x, y
 
 		pw, ph = coordinates[2:]
-		w = float(pw) / (rw - 1)
-		h = float(ph) / (rh - 1)
+		w = float(pw) / rw
+		h = float(ph) / rh
 		return x, y, w, h
 
 	# convert from client (device) coordinates to canvas (logical)
