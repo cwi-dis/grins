@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # MMRead -- Multimedia tree reading interface
 
 # These routines raise an exception if the input is ill-formatted,
