@@ -141,7 +141,7 @@ class Channel:
 		self.node = None
 		
 	def clearnode(self, node):
-		print 'Clearnode: ', node, self.node
+##		print 'Clearnode: ', node, self.node
 		if node == self.node:
 			self.clear()
 

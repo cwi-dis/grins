@@ -109,7 +109,7 @@ class TextWindow(ChannelWindow):
 					  [self.pm[0], self.pm[1], mx, my])
 				self.redraw()
 			return
-		if (dev, val) <> (DEVICE.MOUSE3, 1):
+		if (dev, val) <> (DEVICE.MOUSE3, 0):
 			return
 		if not self.anchors:
 			print 'mouse: no anchors on this node'

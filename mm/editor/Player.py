@@ -209,7 +209,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		if (self.ff or self.seeking) and delay > 0:
 			self.skiptimer(delay)
 			self.timerobject.set_timer(0.001)
-			print 'Player: updatetimer: skipped ', delay
+##			print 'Player: updatetimer: skipped ', delay
 			return
 		delay = min(delay, 1.0 - now%1.0)
 		if delay <= 0:
@@ -303,8 +303,8 @@ class Player(ViewDialog, scheduler, BasicDialog):
 				break
 			del self.queue[0]
 			void = action(argument)
-		if not self.queue and self.rate > 0.0:
-			print 'Player: Huh? Nothing in the queue?'
+##		if not self.queue and self.rate > 0.0:
+##			print 'Player: Huh? Nothing in the queue?'
 		if not self.queue or self.rate == 0.0:
 			delay = 10000.0		# Infinite
 			now = self.timefunc()
@@ -523,7 +523,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 				pn.prearm_event = self.rtpool.enter(pn.t0, d, \
 				  c.arm_only, pn)
 			else:
-				print 'Pre-arm now'
+##				print 'Pre-arm now'
 				c.arm_only(pn)
 		self.resume_2_playing()
 		return 1
@@ -630,7 +630,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 				    self.seek_nodelist.append(node)
 			    else:
 				    d = chan.getduration(node)
-				    print 'Player: Skip node duration=', d
+##				    print 'Player: Skip node duration=', d
 				    dummy = self.enter(d, 0, self.decrement, \
 					      (0, node, TL))
 			elif doit:
@@ -659,8 +659,8 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			    except AttributeError:
 				pass
 			    if must_arm:
-				print 'Player: Node not pre-armed on', \
-				    MMAttrdefs.getattr(node, 'channel')
+##				print 'Player: Node not pre-armed on', \
+##				    MMAttrdefs.getattr(node, 'channel')
 				if self.measure_armtimes:
 					dummy = self.enter(0.0, -1, \
 						  chan.arm_and_measure, node)
@@ -681,7 +681,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			if not self.seeking:
 				self.opt_prearm(node)
 		elif type == 'par' and side == TL:
-			print 'Parnode finished'
+##			print 'Player: Parnode finished'
 			# A parallel node has finished. Tell the channels
 			# to clear their windows of the children nodes.
 			children = node.GetChildren()
@@ -743,7 +743,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			aid = (node.GetUID(), i[A_ID])
 			rv = self.context.hyperlinks.findsrclink(aid)
 			destlist = destlist + rv
-		print 'Player: Destinations:', destlist
+##		print 'Player: Destinations:', destlist
 		if not destlist:
 			if pause_anchor:
 				return 0
