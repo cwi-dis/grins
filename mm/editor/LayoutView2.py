@@ -653,16 +653,16 @@ class LayoutView2(LayoutViewDialog2):
 		regionNode = self.getRegion(regionId)
 		regionNode.hide()
 		parentNode = regionNode.getParent()
-		parentNode.removeNode(regionNode)
+		viewportNode = regionNode.getViewport()
 		if regionNode == self.currentNodeSelected:
 			self.currentNodeSelected = parentNode
+		parentNode.removeNode(regionNode)
 
 		if regionId in self.currentSelectedRegionList:
 			index = self.currentSelectedRegionList.index(regionId)
 			del self.currentSelectedRegionList[index]
 
 		# update data struture
-		viewportNode = regionNode.getViewport()
 		del self._nameToRegionNode[regionId]
 		list = self._viewportsRegions[viewportNode.getName()]
 		ind = list.index(regionId)
