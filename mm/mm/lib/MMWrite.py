@@ -8,14 +8,16 @@ AssertError = 'MMTree.AssertError'
 
 # Write a node to a CMF file, given by filename
 
-def WriteFile(x, filename):
-	WriteOpenFile(x, open(filename, 'w'))
+def WriteFile(root, filename):
+	WriteOpenFile(root, open(filename, 'w'))
 
 
 # Write a node to a CMF file that is already open (for writing)
 
-def WriteOpenFile(x, fp):
-	_writenode(x, fp)
+def WriteOpenFile(root, fp):
+	root.attrdict['styledict'] = root.context.styledict
+	_writenode(root, fp)
+	del root.attrdict['styledict']
 	fp.write('\n')
 
 
@@ -26,7 +28,8 @@ def WriteOpenFile(x, fp):
 #
 def _writenode(x, fp):
 	type = x.GetType()
-	fp.write('(' + type + '(')
+	uid = x.GetUID()
+	fp.write('(' + type + ' ' + `uid` + ' (')
 	_writedict(x.GetAttrDict(), fp)
 	fp.write(')')
 	if type in ('seq', 'par', 'grp'):
@@ -48,7 +51,9 @@ def _writenode(x, fp):
 # XXX This assumes the keys are identifiers
 #
 def _writedict(dict, fp):
-	for key in dict.keys():
+	keys = dict.keys()
+	keys.sort()
+	for key in keys:
 		fp.write('(' + key)
 		val = dict[key]
 		if type(val) in (type(()), type([])):
@@ -60,7 +65,7 @@ def _writedict(dict, fp):
 		else:
 			fp.write(' ')
 			_writevalue(dict[key], fp)
-		fp.write(')')
+		fp.write(')\n')
 
 
 # Write an arbitrary value (really one of a few known types)
