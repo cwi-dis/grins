@@ -65,6 +65,8 @@ class CHECKVERSION(_CommandBase):
 	help = 'Check for newer versions of the software'
 class CHOOSESKIN(_CommandBase):
 	help = 'Choose a skin descriptor file'
+class CHOOSECOMPONENTS(_CommandBase):
+	help = 'Choose a systemComponents configuration file'
 
 #
 # Player view commands
