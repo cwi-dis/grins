@@ -3317,6 +3317,7 @@ class List(_Widget, _List):
 					 'rightAttachment': Xmd.ATTACH_FORM,
 					 'bottomAttachment': Xmd.ATTACH_FORM,
 					 'visibleItemCount': 10,
+					 'width': 200,
 					 'selectionPolicy': Xmd.SINGLE_SELECT,
 					 'listSizePolicy': Xmd.CONSTANT})
 			list.ManageChild()
@@ -3325,6 +3326,7 @@ class List(_Widget, _List):
 			attrs['visibleItemCount'] = 10
 			attrs['selectionPolicy'] = Xmd.SINGLE_SELECT
 			attrs['listSizePolicy'] = Xmd.CONSTANT
+			attrs['width'] = 200
 			list = parent._form.CreateScrolledList('windowList',
 						     attrs)
 			widget = list
