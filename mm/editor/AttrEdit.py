@@ -1922,6 +1922,18 @@ class ColorAttrEditorField(TupleAttrEditorField):
 		return TupleAttrEditorField.valuerepr(self, value)
 
 class CssColorAttrEditorField(AttrEditorField):
+# a parsed value is a tuple of:
+# colortype, colorspec
+# colortype = either transparent inherit or color
+# colorspec is a tuple of three integers (rgb values)
+#
+# a string represented value is either:
+#
+# - 'transparent'
+# - 'inherit'
+# - any known string color (red, green, ...)
+# - a tuple of three integer values (r,g,b)
+
 	type = 'csscolor'
 	def parsevalue(self, str):
 		str = string.lower(string.strip(str))
