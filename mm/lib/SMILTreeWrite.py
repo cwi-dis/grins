@@ -423,13 +423,13 @@ def getfitatt(writer, node, attr):
 	except:
 		fit = None
 	else:
-		fit = 'hidden'
+		fit = None		# 'hidden' is default
 		if val == 0:
 			fit = 'meet'
 		elif val == -1:
 			fit = 'slice'
 		elif val == 1:
-			fit = 'hidden'
+			fit = None	# 'hidden' is default
 		elif val == -3:
 			fit = 'fill'
 	return fit
@@ -795,6 +795,8 @@ def getterm(writer, node):
 		return
 	if terminator == 'FIRST':
 		return 'first'
+	if terminator == 'ALL':
+		return 'all'
 	for child in node.children:
 		if child.GetRawAttrDef('name', '') == terminator:
 			return 'id(%s)' % writer.uid2name[child.GetUID()]
