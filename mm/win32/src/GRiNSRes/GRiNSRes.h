@@ -99,6 +99,8 @@
 #define IDD_EDITATTR_FO1                346
 #define IDD_EDITATTR_PREV_TEMP          347
 #define IDD_EDITATTR_S1R3S4             347
+#define IDD_EDITATTR_S1O2               348
+#define IDD_EDITATTR_P4                 349
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
@@ -309,6 +311,7 @@
 #define IDUC_PREVSIBLING                32834
 #define IDUC_NEXTSIBLING                32836
 #define IDUC_TOCHILD                    32837
+#define ID_ACCEL32838                   32838
 #define IDC_GROUP1                      65535
 #define ID_GROUP1                       65535
 
@@ -317,7 +320,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        272
-#define _APS_NEXT_COMMAND_VALUE         32838
+#define _APS_NEXT_COMMAND_VALUE         32839
 #define _APS_NEXT_CONTROL_VALUE         1200
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

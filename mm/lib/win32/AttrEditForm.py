@@ -659,6 +659,10 @@ class SingleAttrPage(AttrPage):
 			(grinsRC.IDD_EDITATTR_R2,
 			 OptionsRadioNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
+		'aspect':		# Two radio buttons
+			(grinsRC.IDD_EDITATTR_R2,
+			 OptionsRadioNocolonCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
 		'visible':		# Three radio buttons
 			(grinsRC.IDD_EDITATTR_R3,
 			 OptionsRadioNocolonCtrl,
@@ -1380,10 +1384,19 @@ class AttrGroup:
 
 	# decision interface (may be platform independent)
 	def visit(self,al):
-		self._al=[]
+		# we want the list of attributes in al that occur in self._data['attrs'],
+		# and we want it in the order of self._data['attrs'].
+		attrs = self._data['attrs']
+		# create a list of tuples of index into self._data['attrs'] plus element in al
+		list = []
 		for a in al:
-			if a.getname() in self._data['attrs']:
-				self._al.append(a)
+			name = a.getname()
+			if name in attrs:
+				list.append((attrs.index(name), a))
+		list.sort()
+		self._al = []
+		for i, a in list:
+			self._al.append(a)
 
 	def matches(self):
 		if not self._data.has_key('match'):
@@ -1450,8 +1463,9 @@ class AttrGroup:
 		pass
 	
 class StringGroup(AttrGroup):
-	def __init__(self,data):
-		AttrGroup.__init__(self,data)
+	data = None
+	def __init__(self,data = None):
+		AttrGroup.__init__(self,data or self.data)
 
 	def createctrls(self,wnd):
 		cd={}
@@ -1474,23 +1488,48 @@ class StringGroup(AttrGroup):
 
 class InfoGroup(StringGroup):
 	data=attrgrsdict['infogroup']
-	def __init__(self):
-		StringGroup.__init__(self,InfoGroup.data)
 
 class WebserverGroup(StringGroup):
 	data=attrgrsdict['webserver']
-	def __init__(self):
-		StringGroup.__init__(self,WebserverGroup.data)
 
 class MediaserverGroup(StringGroup):
 	data=attrgrsdict['mediaserver']
-	def __init__(self):
-		StringGroup.__init__(self,MediaserverGroup.data)
 
 class DurationGroup(StringGroup):
-	data=attrgrsdict['duration_and_loop']
+	data=attrgrsdict['timing1']
+
+class Duration2Group(StringGroup):
+	data=attrgrsdict['timing2']
+
+class DurationParGroup(AttrGroup):
+	data=attrgrsdict['timingpar']
+
 	def __init__(self):
-		StringGroup.__init__(self,DurationGroup.data)
+		AttrGroup.__init__(self, self.data)
+
+	def createctrls(self,wnd):
+		cd={}
+		for ix in range(len(self._al)):
+			a=self._al[ix]
+			if ix == 3:
+				cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42))
+			else:
+				cd[a]=StringCtrl(wnd,a,self.getctrlids(ix+1))
+		return cd
+
+	def getctrlids(self,ix):
+		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+2))
+
+	def getpageresid(self):
+		return getattr(grinsRC, 'IDD_EDITATTR_S%d' % len(self._al))
+
+	def oninitdialog(self,wnd):
+		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
+		ctrl.attach_to_parent()
+		ctrl.settext(self._data['title'])
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_P4
 
 
 # base_winoff
@@ -1607,7 +1646,7 @@ class PreferencesGroup(SystemGroup):
 class NameGroup(AttrGroup):
 	data=attrgrsdict['name']
 	def __init__(self):
-		AttrGroup.__init__(self,NameGroup.data)
+		AttrGroup.__init__(self,self.data)
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_S1O1C
 	def getctrlids(self,ix):
@@ -1625,21 +1664,15 @@ class NameGroup(AttrGroup):
 		return AttrGroup.getctrlclass(self,a)
 
 
-class CNameGroup(AttrGroup):
+class CNameGroup(NameGroup):
 	data=attrgrsdict['.cname']
-	def __init__(self):
-		AttrGroup.__init__(self,CNameGroup.data)
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_S1O1
-	def getctrlids(self,ix):
-		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+2))
 
-	def getpageclass(self):
-		return AttrPage
-		
-
-		
+class INameGroup(NameGroup):
+	data=attrgrsdict['intname']
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S1O2
 
 class FileGroup(AttrGroup):
 	data=attrgrsdict['file']
@@ -1725,8 +1758,11 @@ groupsui={
 	'preferences':PreferencesGroup,
 	'name':NameGroup,
 	'.cname':CNameGroup,
+	'intname':INameGroup,
 
-	'duration_and_loop':DurationGroup,
+	'timing1':DurationGroup,
+	'timing2':Duration2Group,
+	'timingpar':DurationParGroup,
 	'webserver':WebserverGroup,
 	'mediaserver':MediaserverGroup,
 	'file':FileGroup,
