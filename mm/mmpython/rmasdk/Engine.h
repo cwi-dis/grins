@@ -3,7 +3,7 @@
 
 struct IRMAClientEngine;
 
-IRMAClientEngine* GetEngine();
+IRMAClientEngine* GetEngine(PyObject *engine);
 void CloseEngine();
 void EngineObject_AddRef();
 void EngineObject_Release();
