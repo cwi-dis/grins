@@ -141,7 +141,7 @@ class HTMLWidget:
 			self._updatedocview()
 			if self.controlhandler:
 				self.controlhandler._add_control(self.bary, 
-						self._createscrollbars, self._createscrollbars)
+						self._scrollbarcallback, self._scrollbarcallback)
 		else:
 			vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
 			dr = dr[0], dr[1], dr[0]+vr[2]-vr[0], dr[3]
@@ -172,7 +172,7 @@ class HTMLWidget:
 		value = self.bary.GetControlValue()
 		self.ted.WEScroll(vr[0]-dr[0], vr[1]-dr[1]-value)
 		
-	def _createscrollbars(self, which, where):
+	def _scrollbarcallback(self, which, where):
 		if which != self.bary:
 			print 'funny control', which, 'not', self.bary
 			return 0
@@ -270,11 +270,11 @@ class HTMLWidget:
 			ptype, ctl = Ctl.FindControl(local, self.wid)
 			if ptype and ctl:
 				if ptype in TRACKED_PARTS:
-					dummy = ctl.TrackControl(local, self._createscrollbars)
+					dummy = ctl.TrackControl(local, self._scrollbarcallback)
 				else:
 					part = ctl.TrackControl(local)
 					if part:
-						self._createscrollbars(ctl, part)
+						self._scrollbarcallback(ctl, part)
 				return
 			# Remember, so we react to mouse-up next time
 			self.last_mouse_was_down = 1
@@ -399,7 +399,13 @@ class HTMLWidget:
 			if tag:
 				print 'Warning: no tag named', tag
 			pos = 0
+		# We first scroll to the end, in an attempt to put the anchor at
+		# the top of the widget.
+		self.ted.WESetSelection(pos+32000, pos+32000)
+		self.ted.WESelView()
 		self.ted.WESetSelection(pos, pos)
+##		self.ted.WESetSelection(pos, pos+32000)
+##		self.ted.WESetSelection(pos+32000, pos)
 		self.ted.WESelView()
 		self._updatescrollbars()
 				
