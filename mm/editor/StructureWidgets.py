@@ -13,6 +13,9 @@ from AppDefaults import *
 TIMELINE_AT_TOP = 1
 TIMELINE_IN_FOCUS = 1
 
+ICONSIZE = windowinterface.ICONSIZE_PXL
+
+print "TODO: remove circular references here."
 
 ######################################################################
 # Create new widgets
@@ -25,7 +28,7 @@ def create_MMNode_widget(node, mother):
 		# in snap
 		if node.parent == None and ntype == 'seq':
 			# Don't show toplevel root (actually the <body> in SMIL)
-			return UnseenVerticalWidget(node, mother)
+ 			return UnseenVerticalWidget(node, mother)
 		if node.parent and node.parent.parent == None and ntype == 'par':
 			# Don't show second-level par either
 			return UnseenVerticalWidget(node, mother)
@@ -174,9 +177,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		# print "DEBUG: set_infoicon called!"
 		self.node.infoicon = icon
 		self.node.errormessage = msg
-		# XXX This is fiendishly expensive.
-##		self.mother.need_redraw = 1 # The root needs redrawing
-##		self.mother.draw_scene()
+		print "DEBUG: adding to ", self
+		self.iconbox.add_icon(icon, callback = self.show_mesg)
 
 	def getlinkicon(self):
 		# Returns the icon to show for incoming and outgiong hyperlinks.
@@ -342,7 +344,9 @@ class StructureObjWidget(MMNodeWidget):
 				icon = 'closed'
 			else:
 				icon = 'open'
-			self.collapsebutton = Icon(icon, self, self.node, self.mother)
+			self.collapsebutton = Icon(self, self.mother)
+			self.collapsebutton.setup()
+			self.collapsebutton.set_icon(icon)
 			self.collapsebutton.set_callback(self.toggle_collapsed)
 		else:
 			self.collapsebutton = None
@@ -467,7 +471,7 @@ class StructureObjWidget(MMNodeWidget):
 			l,t,r,b = self.pos_abs
 			#l = l + self.get_relx(1)
 			#t = t + self.get_rely(2)
-			self.collapsebutton.moveto((l+1,t+2))
+			self.collapsebutton.moveto((l+1,t+2,0,0))
 		self.need_resize = 0
 
 	def set_need_resize(self):
@@ -1229,8 +1233,18 @@ class MediaWidget(MMNodeWidget):
 		self.downloadtime = 0.0		# not used??
 		self.downloadtime_lag = 0.0	# Distance to push this node to the right - relative coords. Not pixels.
 		self.downloadtime_lag_errorfraction = 1.0
-		self.infoicon = Icon(None, self, self.node, self.mother)
-		self.infoicon.set_callback(self.show_mesg)
+		#self.infoicon = Icon(None, self, self.node, self.mother)
+		#self.infoicon.set_callback(self.show_mesg)
+
+		self.iconbox = IconBox(self, self.mother)
+		self.iconbox.setup()
+
+		# DEBUG:
+		print "DEBUG: Adding debugging icons."
+		self.iconbox.add_icon('linksrc')
+		self.iconbox.add_icon('linksrcdst')
+		self.iconbox.add_icon('transout')
+
 		self.node.views['struct_view'] = self
 
 ##	def __repr__(self):
@@ -1249,13 +1263,17 @@ class MediaWidget(MMNodeWidget):
 		
 
 	def show_mesg(self):
+		print "DEBUG: calling show_mesg ", self
 		if self.node.errormessage:
 			windowinterface.showmessage(self.node.errormessage, parent=self.mother.window)
+		#else:
+		#	print "DEBUG: No message."
 
 	def recalc(self):
 		l,t,r,b = self.pos_abs
 
-		self.infoicon.moveto((l+1, t+2))
+		#self.infoicon.moveto((l+1, t+2))
+		self.iconbox.moveto((l+1, t+2,0,0))
 		# First compute pushback bar position
 		if self.pushbackbar:
 			if not self.is_timed:
@@ -1279,7 +1297,7 @@ class MediaWidget(MMNodeWidget):
 	def get_minsize(self):
 		# return the minimum size of this node, in pixels.
 		# Calld to work out the size of the canvas.
-		xsize = sizes_notime.MINSIZE
+		xsize = sizes_notime.MINSIZE + self.iconbox.get_minsize()[0]
 		ysize = sizes_notime.MINSIZE# + sizes_notime.TITLESIZE
 		return (xsize, ysize)
 
@@ -1330,19 +1348,23 @@ class MediaWidget(MMNodeWidget):
 					displist.drawbox(box)
 
 		# Draw the name
-		iconsizex = 16
-		iconsizey = 16
+		iconsizex = ICONSIZE
+		iconsizey = ICONSIZE
 		displist.fgcolor(CTEXTCOLOR)
 		displist.usefont(f_title)
 		l,t,r,b = self.pos_abs
 		b = t+sizes_notime.TITLESIZE + sizes_notime.VEDGSIZE
-		if self.node.infoicon:
-			l = l + iconsizex	  # Maybe have an icon there soon.
+		#if self.node.infoicon:
+		#	l = l + iconsizex	  # Maybe have an icon there soon.
+		l = l + self.iconbox.get_minsize()[0]
 		displist.centerstring(l,t,r,b,self.name)
 
 		# Draw the icon before the name.
-		self.infoicon.icon = self.node.infoicon
-		self.infoicon.draw(displist)
+		#self.infoicon.icon = self.node.infoicon
+		#self.infoicon.draw(displist)
+
+		# Draw the icon box.
+		self.iconbox.draw(displist)
 
 		# Draw the silly transitions.
 		if self.mother.transboxes:
@@ -1373,19 +1395,21 @@ class MediaWidget(MMNodeWidget):
 		return f
 
 	def get_obj_at(self, pos):
+		# Returns an MMWidget at pos. Compare get_clicked_obj_at()
 		if self.is_hit(pos):
 			return self
 		else:
 			return None
 
 	def get_clicked_obj_at(self, pos):
+		# Returns any object which can be clicked(). 
 		if self.is_hit(pos):
 			if self.transition_in.is_hit(pos):
 				return self.transition_in
 			elif self.transition_out.is_hit(pos):
 				return self.transition_out
-			elif self.infoicon.is_hit(pos):
-				return self.infoicon
+			elif self.iconbox.is_hit(pos):
+				return self.iconbox
 			elif self.pushbackbar and self.pushbackbar.is_hit(pos):
 				return self.pushbackbar
 			else:
@@ -1501,11 +1525,12 @@ class PushBackBarWidget(MMWidgetDecoration):
 class Icon(MMWidgetDecoration):
 	# Display an icon which can be clicked on. This can be used for
 	# any icon on screen.
-	def __init__(self, icon, parent, node, mother):
-		MMWidgetDecoration.__init__(self, parent, mother)
-		self.node = node
-		self.parent = parent
-		self.icon = icon
+
+	def setup(self):
+		self.callback = None
+	
+	def set_icon(self, iconname):
+		self.icon = iconname
 
 	def set_callback(self, callback, args=()):
 ##		print "DEBUG: callback set."
@@ -1521,10 +1546,10 @@ class Icon(MMWidgetDecoration):
 ##			print "DEBUG: no callback."
 
 	def moveto(self, pos):
-		x,y = pos
+		l,t,r,b = pos
 		iconsizex = sizes_notime.ERRSIZE
 		iconsizey = sizes_notime.ERRSIZE
-		MMWidgetDecoration.moveto(self, (x, y, x+iconsizex, y+iconsizey))
+		MMWidgetDecoration.moveto(self, (l, t, l+iconsizex, t+iconsizey))
 
 	def draw(self, displist):
 		if self.icon is not None:
@@ -1594,6 +1619,106 @@ class TimelineWidget(MMWidgetDecoration):
 				cur_tick_top = tick_top
 				cur_tick_bot = tick_bot
 			display_list.drawline(TEXTCOLOR, [(tick_x, cur_tick_top), (tick_x, cur_tick_bot)])			
+
+
+# A box with icons in it.
+# Comes before the node's name.
+class IconBox(MMWidgetDecoration):
+	def setup(self):
+		self._icons = {}
+		self.iconlist = []	# a list of icon names, the order is kept.
+		self.remember_click = (0,0)
+		self.selected_iconname = None
+	def add_icon(self, iconname, callback=None, contextmenu=None, arrowto=None):
+		# iconname - name of an icon, decides which icon to use.
+		# callback - function to call when icon is clicked on.
+		# contextmenu - pop-up menu to use.
+		# arrowto - Draw an arrow to another icon on the screen.
+		i = Icon(self.mmwidget, self.mother)
+		i.setup()
+		i.set_icon(iconname)
+		self._icons[iconname] = i
+		if iconname not in self.iconlist:
+			self.iconlist.append(iconname)
+	def del_icon(self, iconname):
+		del self._icons[iconname]
+		del self.iconlist[iconname]
+
+	def get_minsize(self):
+		# Always the number of icons.
+		return ((len(self._icons) * ICONSIZE), ICONSIZE)
+
+	def get_clicked_obj_at(self, coords):
+		# working here.
+		pass
+
+	def is_hit(self, pos):
+		l,t,a,b = self.pos_abs
+		x,y = pos
+		if l < x < l+(len(self._icons)*ICONSIZE) and t < y < t+ICONSIZE:
+			return 1
+		else:
+			return 0
+
+	def draw(self, display_list):
+		l,t,r,b = self.pos_abs
+		if self.selected_iconname:
+			i = self.iconlist.index(self.selected_iconname)
+			display_list.drawfbox((0,0,0), (l+i*ICONSIZE,t,ICONSIZE,ICONSIZE))
+		for iconname in self.iconlist:
+			i = self._icons[iconname]
+			i.moveto((l,t,r,b))
+			i.draw(display_list)
+			#display_list.drawicon((l,t,0,0),icon)
+			#arrowto = self._icons[icon][2]
+			#if arrowto is not None:
+			#	self.displaylist.drawarrow(arrowto['color'],(l,t),arrowto['dest'])
+			l = l + ICONSIZE
+
+	def __get_icon_name(self, x):
+		l,t,r,b = self.pos_abs
+		if len(self.iconlist) > 0:
+			index = int((x-l)/ICONSIZE)
+			if index >= 0 and index < len(self.iconlist):
+				return self.iconlist[index]
+		else:
+			return None
+
+	def __get_icon(self, x):
+		return self._icons[self.__get_icon_name(x)]
+
+	def mouse0release(self, coords):
+		x,y = coords
+		l,t,r,b = self.pos_abs
+		icon = self.__get_icon(x)
+		if icon:
+			icon.mouse0release(coords)
+			#callback = icon[0]
+			#if callback:
+			#	# Call the callback.
+			#	apply(callback)
+			#else:
+			#	pass # Maybe select the widget here?
+		else:
+			return
+		
+		#if self.callback:
+		#	apply(apply, self.callback)
+
+	def select(self):
+		x,y = self.remember_click
+		self.selected_iconname = self.__get_icon_name(x)
+		print "DEBUG: self.selected_icon is: ", self.selected_iconname
+		self.mother.need_redraw = 1
+		print "TODO: optimise redraws here."
+		if self.selected_iconname:
+			self._icons[self.selected_iconname].select()
+
+	def unselect(self):
+		if self.selected_iconname:
+			self._icons[self.selected_iconname].unselect()
+		self.selected_iconname = None
+
 
 ##############################################################################
 			# Crap at the end of the file.

@@ -65,6 +65,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Note that these should probably be done in a common class, e.g. the EditManager
 		self.selected_widget = None
 		self.old_selected_widget = None	# This is the node that used to have the focus but needs redrawing.
+		self.selected_icon = None
 
 		# These two variables should be removed at some stage.
 		self.focusobj = None	# Old Object() code - remove this when no longer used. TODO
@@ -1211,6 +1212,8 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		if isinstance(self.selected_widget, Widgets.Widget):
 			self.selected_widget.unselect()
+		if isinstance(self.selected_icon, StructureWidgets.IconBox):
+			self.selected_icon.unselect()
 		self.old_selected_widget = self.selected_widget
 		self.selected_widget = widget
 		self.focusobj = widget	# Used for callbacks.
@@ -1251,6 +1254,9 @@ class HierarchyView(HierarchyViewDialog):
 		elif isinstance(clicked_widget, StructureWidgets.MMWidgetDecoration):
 			select_me = clicked_widget.get_mmwidget()
 			self.select_widget(select_me, scroll=0)
+			if isinstance(clicked_widget, StructureWidgets.IconBox):
+				self.selected_icon = clicked_widget # keep it so we can unselect it later.
+				clicked_widget.select()
 		else:
 			print "DEBUG: no widget selectable."
 

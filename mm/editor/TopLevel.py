@@ -63,7 +63,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.basename = base
 		url = urlunparse((utype, host, path, params, query, None))
 		self.filename = url
-		self.window = None
+		self.window = None	# Created in TopLevelDialog.py
 		self.source = None
 		self.read_it()
 

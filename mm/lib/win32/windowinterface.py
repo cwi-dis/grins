@@ -46,7 +46,7 @@ cancelidleproc=toplevel.cancelidleproc
 register_event=toplevel.register_event
 
 genericwnd=toplevel.genericwnd
-textwindow=toplevel.textwindow
+#textwindow=toplevel.textwindow
 
 htmlwindow=AppToplevel.htmlwindow
 shell_execute=AppToplevel.shell_execute
