@@ -822,15 +822,13 @@ PyDC_TextOut(PyDC *self, PyObject *args)
 static PyObject*
 PyDC_DrawText(PyDC *self, PyObject *args)
 {
-	PyObject *pystr;
+	char *str;
 	RECT rc;
 	UINT uFormat = DT_SINGLELINE | DT_CENTER | DT_VCENTER;
-	if (!PyArg_ParseTuple(args, "O(iiii)|i", &pystr,
+	if (!PyArg_ParseTuple(args, "s(iiii)|i", &str,
 		&rc.left, &rc.top, &rc.right, &rc.bottom, &uFormat))
 		return NULL;
-	int cbstr = PyString_GET_SIZE(pystr);
-	char *pstr = PyString_AS_STRING(pystr);
-	BOOL res = DrawText(self->m_hDC, toTEXT(pstr), cbstr, &rc, uFormat);
+	BOOL res = DrawText(self->m_hDC, toTEXT(str), -1, &rc, uFormat);
 	if(!res){
 		seterror("DrawText", GetLastError());
 		return NULL;

@@ -39,11 +39,10 @@ static struct PyMethodDef wingdi_methods[] = {
 };
 
 
-extern "C" __declspec(dllexport)
+extern "C" __declspec( dllexport )
 void initwingdi()
 {
 	PyObject *m, *d;
-	bool bPyErrOccurred = false;
 	
 	// Create the module and add the functions
 	m = Py_InitModule4("wingdi", wingdi_methods,
