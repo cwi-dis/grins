@@ -1,0 +1,8 @@
+Things To Do, Bugs To Fix
+=========================
+
+editBackground should be saved as normal color (#xxxxxx) and
+internally represented as a tuple.
+
+fix channel properties box.
+
