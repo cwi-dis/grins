@@ -812,7 +812,8 @@ class ChannelWindow(Channel):
 				transparent = 0
 			if transparent:
 				raise windowinterface.Continue
-			self.highlight()
+			if hasattr(self._player, 'editmgr'):
+				self.highlight()
 		elif len(buttons) == 1:
 			button = buttons[0]
 			button.highlight()
@@ -837,7 +838,8 @@ class ChannelWindow(Channel):
 				transparent = 0
 			if transparent:
 				raise windowinterface.Continue
-			self.unhighlight()
+			if hasattr(self._player, 'editmgr'):
+				self.unhighlight()
 
 	def setanchorargs(self, (node, nametypelist, args), button, value):
 		# Return the (node, nametypelist, args) tuple.
@@ -848,14 +850,17 @@ class ChannelWindow(Channel):
 	def create_window(self, pchan, pgeom):
 		menu = []
 		if pchan:
-			menu.append('', 'raise', (self.popup, ()))
-			menu.append('', 'lower', (self.popdown, ()))
-			menu.append(None)
-			if hasattr(self._player.toplevel, 'hierarchyview'):
-				menu.append('', 'push focus', (self.focuscall, ()))
+			if hasattr(self._player, 'editmgr'):
+				menu.append('', 'raise', (self.popup, ()))
+				menu.append('', 'lower', (self.popdown, ()))
 				menu.append(None)
-			menu.append('', 'highlight', (self.highlight, ()))
-			menu.append('', 'unhighlight', (self.unhighlight, ()))
+				menu.append('', 'push focus',
+					    (self.focuscall, ()))
+				menu.append(None)
+				menu.append('', 'highlight',
+					    (self.highlight, ()))
+				menu.append('', 'unhighlight',
+					    (self.unhighlight, ()))
 			try:
 				transparent = self._attrdict['transparent']
 			except KeyError:
@@ -870,7 +875,8 @@ class ChannelWindow(Channel):
 						type_channel = self._window_type)
 			if hasattr(self._player, 'editmgr'):
 				menu.append(None)
-				menu.append('', 'resize', (self.resize_window, (pchan,)))
+				menu.append('', 'resize',
+					    (self.resize_window, (pchan,)))
 		else:
 			# no basewindow, create a top-level window
 			if self._attrdict.has_key('winsize'):
@@ -895,8 +901,9 @@ class ChannelWindow(Channel):
 					type_channel = self._window_type)
 			self.window.register(WMEVENTS.WindowExit,
 					     self._destroy_callback, None)
-			if hasattr(self._player.toplevel, 'hierarchyview'):
-				menu.append('', 'push focus', (self.focuscall, ()))
+			if hasattr(self._player, 'editmgr'):
+				menu.append('', 'push focus',
+					    (self.focuscall, ()))
 		if self._is_waiting:
 			self.window.setcursor('watch')
 		if self._attrdict.has_key('bgcolor'):
@@ -907,7 +914,8 @@ class ChannelWindow(Channel):
 		self.window.register(WMEVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(WMEVENTS.Mouse0Release, self.mouserelease,
 				     None)
-		self.window.create_menu(menu, title = self._name)
+		if menu:
+			self.window.create_menu(menu, title = self._name)
 
 	def _destroy_callback(self, *rest):
 		self._player.cmenu_callback(self._name)
