@@ -94,16 +94,41 @@ def GetYesNoCancel(prompt, parent = None):
 def GetOKCancel(prompt, parent = None):
 	return multchoice(prompt, ["OK", "Cancel"], 0)
 
-def textwindow(text, readonly = 1, closeCallback = None):
-	w = Window('Source', resizable = 1, deleteCallback = closeCallback or 'hide')
-	b = w.ButtonRow([('Close', (w.hide, ()))],
-			top = None, left = None, right = None,
-			vertical = 0)
-	t = w.TextEdit(text, None, editable = not readonly,
-		       top = b, left = None, right = None,
-		       bottom = None, rows = 30, columns = 80)
-	w.show()
-	return w
+class textwindow:
+	def __init__(self, text, readonly = 1, closeCallback = None):
+		w = Window('Source', resizable = 1, deleteCallback = closeCallback or 'hide')
+		b = w.ButtonRow([('Close', (w.hide, ()))],
+				top = None, left = None, right = None,
+				vertical = 0)
+		t = w.TextEdit(text, None, editable = not readonly,
+			       top = b, left = None, right = None,
+			       bottom = None, rows = 30, columns = 80)
+		w.show()
+		self.__window = w
+		self.__text = t
+
+	def settext(self, text):
+		self.__text.settext(text)
+
+	def gettext(self):
+		return self.__text.gettext()
+
+	def getLineNumber(self):
+		return 1		# XXX for now
+
+	def getCurrentCharIndex(self):
+		return 1		# XXX for now
+
+	def is_changed(self):
+		return 0		# XXX for now
+
+	def select_chars(self, start, end):
+		pass			# XXX for now
+
+	def close(self):
+		self.__window.close()
+		self.__window = None
+		self.__text = None
 
 ##class htmlwindow:
 ##	def __init__(self, url):
