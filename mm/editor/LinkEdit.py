@@ -286,7 +286,10 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 	def set_interesting(self, anchor):
 		self.interesting.append(anchor)
 
-	def makename(self, (uid, aid)):
+	def makename(self, anchor):
+		if type(anchor) is not type(()):
+			return anchor
+		uid, aid = anchor
 		if '/' in uid:
 			return aid + ' in ' + uid
 		node = self.context.mapuid(uid)
@@ -507,6 +510,8 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 
 	def __findanchor(self, anchor):
 		if anchor is not None:
+			if type(anchor) is not type(()):
+				return (anchor, ATYPE_DEST, ())
 			uid, aid = anchor
 			if '/' in uid:
 				# external anchor
@@ -530,6 +535,10 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 			print 'LinkEdit: show without a focus!'
 			return
 		anchor = str.anchors[str.focus]
+		if type(anchor) is not type(()):
+			# external anchor
+			print 'LinkEdit: anchor with unknown node UID!'
+			return
 		uid = anchor[0]
 		try:
 			node = self.context.mapuid(uid)
@@ -626,6 +635,10 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 	def anchoredit_callback(self, str):
 		if str.focus is None:
 			print 'LinkEdit: anchoredit without a focus!'
+			return
+		if type(anchor) is not type(()):
+			# external anchor
+			print 'LinkEdit: anchor with unknown node UID!'
 			return
 		anchor = str.anchors[str.focus]
 		uid = anchor[0]

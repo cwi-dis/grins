@@ -412,7 +412,10 @@ class HtmlChannel(Channel.ChannelWindow):
 				self.backlist[-1] = self.url, tag, data
 			if hdrs.type != 'text/html':
 				import Hlinks
-				self._player.toplevel.jumptoexternal(self.url, tag, Hlinks.TYPE_JUMP)
+				anchor = self.url
+				if tag:
+					anchor = anchor + '#' + tag
+				self._player.toplevel.jumptoexternal(anchor, Hlinks.TYPE_JUMP)
 				return
 			else:
 				newtext = open(fn, 'rb').read()

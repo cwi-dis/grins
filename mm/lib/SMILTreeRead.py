@@ -10,7 +10,7 @@ import string
 from AnchorDefs import *
 from Hlinks import DIR_1TO2, TYPE_JUMP, TYPE_CALL, TYPE_FORK
 import re
-import os
+import os, sys
 from SMIL import *
 import settings
 
@@ -596,14 +596,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			anchorlist.append((0, len(anchorlist), id, ATYPE_WHOLE, []))
 			self.__links.append((node.GetUID(), id, href, ltype))
 
-		anchorlist = node.__anchorlist
-		if anchorlist:
-			alist = []
-			anchorlist.sort()
-			for a in anchorlist:
-				alist.append(a[2:])
-			node.attrdict['anchorlist'] = alist
-
 	def NewContainer(self, type, attributes):
 		if not self.__in_smil:
 			self.syntax_error('%s not in smil' % type)
@@ -622,7 +614,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		node.__chanlist = {}
 		self.AddAttrs(node, attributes)
 
-	def EndContainer(self):
+	def EndContainer(self, type):
+		if self.__container is None or \
+		   self.__container.GetType() != type:
+			# erroneous end tag; error message from xmllib
+			return
 		self.__container = self.__container.GetParent()
 
 	def Recurse(self, root, *funcs):
@@ -983,7 +979,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def FixLinks(self):
 		hlinks = self.__context.hyperlinks
-		for node, aid, href, ltype in self.__links:
+		for node, aid, url, ltype in self.__links:
 			# node is either a node UID (int in string
 			# form) or a node id (anything else)
 			try:
@@ -996,7 +992,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if type(aid) is type(()):
 				aid, atype, args = aid
 			src = node, aid
-			href, tag = MMurl.splittag(href)
+			href, tag = MMurl.splittag(url)
 			if not href:
 				if self.__anchormap.has_key(tag):
 					dst = self.__anchormap[tag]
@@ -1009,14 +1005,22 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						continue
 				hlinks.addlink((src, dst, DIR_1TO2, ltype))
 			else:
-				if '/' not in href:
-					href = href + '/1'
-				hlinks.addlink((src, (href, tag or ''), DIR_1TO2, ltype))
+				hlinks.addlink((src, url, DIR_1TO2, ltype))
 
 	def CleanChanList(self, node):
 		if node.GetType() not in leaftypes:
 			del node.__chanlist
 
+	def FixAnchors(self, node):
+		anchorlist = node.__anchorlist
+		if anchorlist:
+			alist = []
+			anchorlist.sort()
+			for a in anchorlist:
+				alist.append(a[2:])
+			node.attrdict['anchorlist'] = alist
+		del node.__anchorlist
+		
 	# methods for start and end tags
 
 	# smil contains everything
@@ -1053,6 +1057,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.FixLayouts()
 		self.FixBaseWindow()
 		self.FixLinks()
+		self.Recurse(self.__root, self.FixAnchors)
 
 	# head/body sections
 
@@ -1417,7 +1422,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_par(self):
 		node = self.__container
-		self.EndContainer()
+		self.EndContainer('par')
 		endsync = node.__endsync
 		del node.__endsync
 		if endsync is None:
@@ -1455,7 +1460,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__ids[id] = 0
 		self.NewContainer('seq', attributes)
 
-	end_seq = EndContainer
+	def end_seq(self):
+		self.EndContainer('seq')
 
 	def start_choice(self, attributes):
 		for key, val in attributes.items():
@@ -1477,7 +1483,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_choice(self):
 		node = self.__container
-		self.EndContainer()
+		self.EndContainer('bag')
 		choice_index = node.__choice_index
 		del node.__choice_index
 		if choice_index is None:
@@ -1520,7 +1526,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def end_switch(self):
 		self.__in_head_switch = 0
 		if not self.__in_head:
-			self.EndContainer()
+			self.EndContainer('alt')
 
 	# media items
 
@@ -1816,6 +1822,27 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			message = 'error, line %d: %s' % (lineno, message)
 		raise MSyntaxError, msg + message
 
+	def goahead(self, end):
+		try:
+			xmllib.XMLParser.goahead(self, end)
+		except:
+			type, value, traceback = sys.exc_info()
+			if self.__printfunc is not None:
+				msg = 'Fatal error while parsing at line %d: %s' % (self.lineno, str(value))
+				if self.__printdata:
+					data = string.join(self.__printdata, '\n')
+					# first 30 lines should be enough
+					data = string.split(data, '\n')
+					if len(data) > 30:
+						data = data[:30]
+						data.append('. . .')
+				else:
+					data = []
+				data.insert(0, msg)
+				self.__printfunc(string.join(data, '\n'))
+				self.__printdata = []
+			raise		# re-raise
+			
 	# helper methods
 
 	def __parsecounter(self, value, maybe_relative):

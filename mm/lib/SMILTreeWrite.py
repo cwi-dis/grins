@@ -981,20 +981,23 @@ class SMILWriter(SMIL):
 		elif ltype == Hlinks.TYPE_FORK:
 			attrs.append(('show', "new"))
 		# else show="replace" (default)
-		uid2, aid2 = a2
-		if '/' in uid2:
-			if aid2:
-				href, tag = a2
+		if type(a2) is type(()):
+			uid2, aid2 = a2
+			if '/' in uid2:
+				if aid2:
+					href, tag = a2
+				else:
+					lastslash = string.rfind(uid2, '/')
+					href, tag = uid2[:lastslash], uid2[lastslash+1:]
+					if tag == '1':
+						tag = None
 			else:
-				lastslash = string.rfind(uid2, '/')
-				href, tag = uid2[:lastslash], uid2[lastslash+1:]
-				if tag == '1':
-					tag = None
+				href = ''
+				tag = self.uid2name[uid2]
+			if tag:
+				href = href + '#' + tag
 		else:
-			href = ''
-			tag = self.uid2name[uid2]
-		if tag:
-			href = href + '#' + tag
+			href = a2
 		attrs.append(('href', href))
 		return attrs
 
