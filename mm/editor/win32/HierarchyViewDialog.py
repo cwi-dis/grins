@@ -37,14 +37,13 @@ class HierarchyViewDialog(ViewDialog):
 		if self.is_showing():
 			self.window.pop(poptop=1)
 			return
-		title = 'Structure View (%s)' % self.toplevel.basename
 		self.load_geometry()
 		if self.last_geometry:
 			x, y, w, h = self.last_geometry
 		else:
 			x, y, w, h = -1, -1, -1, -1
 		toplevel_window=self.toplevel.window
-		self.window = toplevel_window.newview(x, y, w, h, title,
+		self.window = toplevel_window.newview(x, y, w, h, 'Structured Timeline',
 				units=windowinterface.UNIT_PXL,
 				adornments = self.adornments,
 				canvassize = (w, h),
@@ -83,9 +82,7 @@ class HierarchyViewDialog(ViewDialog):
 		self.new_displist = None
 
 	def fixtitle(self):
-		if self.is_showing():
-			title = 'Structure View (' + self.toplevel.basename + ')'
-			self.window.settitle(title)
+		pass
 
 	def settoggle(self, command, onoff):
 		self.window.set_toggle(command, onoff)

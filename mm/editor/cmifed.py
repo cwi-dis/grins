@@ -351,7 +351,7 @@ class Main(MainDialog):
 		if cancel:
 			return
 		data = string.strip(data)
-		url = self._add_license_id(self, url)
+		url = self._add_license_id(self, data)
 		windowinterface.htmlwindow(url)
 
 	def _get_versiondep_url(self, filename):

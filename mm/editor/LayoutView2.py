@@ -629,7 +629,8 @@ class LayoutView2(LayoutViewDialog2):
 				]
 		else:
 			self.commandMultiSiblingSItemList = []
-		self.__appendAlignCommands()
+		if features.ALIGNTOOL in features.feature_set:
+			self.__appendAlignCommands(self.commandMultiSiblingSItemList)
 		self.__appendCommonCommands(self.commandMultiSiblingSItemList)
 
 	def __appendCommonCommands(self, commandlist):
@@ -638,15 +639,17 @@ class LayoutView2(LayoutViewDialog2):
 		commandlist.append(DRAG_TOPLAYOUT())
 		commandlist.append(DRAG_REGION())
 			
-	def __appendAlignCommands(self):
-		self.commandMultiSiblingSItemList.append(ALIGN_LEFT(callback = (self.onAlignLeft, ())))
-		self.commandMultiSiblingSItemList.append(ALIGN_CENTER(callback = (self.onAlignCenter, ())))
-		self.commandMultiSiblingSItemList.append(ALIGN_RIGHT(callback = (self.onAlignRight, ())))
-		self.commandMultiSiblingSItemList.append(ALIGN_TOP(callback = (self.onAlignTop, ())))
-		self.commandMultiSiblingSItemList.append(ALIGN_MIDDLE(callback = (self.onAlignMiddle, ())))
-		self.commandMultiSiblingSItemList.append(ALIGN_BOTTOM(callback = (self.onAlignBottom, ())))
-		self.commandMultiSiblingSItemList.append(DISTRIBUTE_HORIZONTALLY(callback = (self.onDistributeHorizontally, ())))
-		self.commandMultiSiblingSItemList.append(DISTRIBUTE_VERTICALLY(callback = (self.onDistributeVertically, ())))
+	def __appendAlignCommands(self, list):
+		list.extend([
+			ALIGN_LEFT(callback = (self.onAlignLeft, ())),
+			ALIGN_CENTER(callback = (self.onAlignCenter, ())),
+			ALIGN_RIGHT(callback = (self.onAlignRight, ())),
+			ALIGN_TOP(callback = (self.onAlignTop, ())),
+			ALIGN_MIDDLE(callback = (self.onAlignMiddle, ())),
+			ALIGN_BOTTOM(callback = (self.onAlignBottom, ())),
+			DISTRIBUTE_HORIZONTALLY(callback = (self.onDistributeHorizontally, ())),
+			DISTRIBUTE_VERTICALLY(callback = (self.onDistributeVertically, ())),
+			])
 		
 	def show(self):
 		if self.is_showing():
