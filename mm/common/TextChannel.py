@@ -24,18 +24,18 @@ class TextChannel(ChannelWindow):
 		return 1
 		
 	def do_arm(self, node, same=0):
-	        if same and self.armed_display:
-		    return 1
+		if same and self.armed_display:
+			return 1
 		try:
 			str = self.getstring(node)
 		except error, arg:
-			print arg
+			self.errormsg(node, arg)
 			str = ''
 		parlist = extract_paragraphs(str)
 		if MMAttrdefs.getattr(node, 'noanchors'):
-		    taglist = []
+			taglist = []
 		else:
-		    taglist = extract_taglist(parlist)
+			taglist = extract_taglist(parlist)
 		fix_anchorlist(node, taglist)
 ##			if taglist: print `taglist`
 		fontspec = getfont(node)
