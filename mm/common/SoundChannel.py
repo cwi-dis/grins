@@ -101,6 +101,7 @@ class SoundChannel(ChannelAsync):
 		try:
 			fn = MMurl.urlretrieve(fn)[0]
 			self.arm_fp = audio.reader(fn, loop=loopcount)
+			rate = self.arm_fp.getframerate()
 		except IOError:
 			self.errormsg(node, '%s: Cannot open audio file' % fn)
 			self.arm_fp = None
@@ -111,13 +112,12 @@ class SoundChannel(ChannelAsync):
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
-		except audio.Error:
-			self.errormsg(node, '%s: Unknown audio file type' % fn)
+		except audio.Error, msg:
+			self.errormsg(node, '%s: %s' % (fn, msg))
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
 		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
-		rate = self.arm_fp.getframerate()
 		begin = int(self.getclipbegin(node, 'sec') * rate + .5)
 		end = int(self.getclipend(node, 'sec') * rate + .5)
 		if begin or end:
