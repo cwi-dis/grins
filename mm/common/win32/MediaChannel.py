@@ -182,6 +182,10 @@ class MediaChannel:
 		if self.__playBuilder:
 			self.__playBuilder.Stop()
 		
+	def freezeit(self):
+		if self.__playBuilder:
+			self.__playBuilder.Pause()
+		
 	def showit(self,window):
 		if self.__playBuilder: 
 			self.__playBuilder.SetVisible(1)
