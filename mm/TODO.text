@@ -1,20 +1,20 @@
 TODO for Michael :-) 
 ---------------------------------------------
 
+* Editing a wallclock attribute.
+* Small ui details: 
+	- repeat doesn't work yet.
+* NEW button doesn't work.	
+* Get rid of all the debug messages.
+
 * Editing events directly from the Structure view.
 * Events seem to be a bit wrong in the structure view! Test them.
 * Test if editing the document makes the events stay properly.
-* Bug - adding a new event when no others exists causes a crash.
-
-* Double click on events in the event view.
 
 * Undo - doesn't work with drag and drop in the StructureView.
 
-* Error management (go to the source view if there is an error)
-* Asset management (Jack is working on this.)
 * Delete icons doesn't work.
 
-* Hyperlinks have dissapeared.
 * Multiple selection.
 	- Dragging and dropping.
 	- clipboard operations
