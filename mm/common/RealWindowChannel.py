@@ -11,6 +11,7 @@ import Channel, RealChannel
 
 class RealWindowChannel(Channel.ChannelWindowAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
+		self.need_armdone = 0
 		self.__rc = None
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
@@ -77,3 +78,30 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 			x0, y0, x1, y1 = self.window.qdrect()
 			return ((x0, y0), (x1-x0, y1-y0))
 		return None
+
+	def play(self, node):
+		self.need_armdone = 0
+		self.play_0(node)
+		if self._is_shown and node.ShouldPlay() \
+		   and self.window and not self.syncplay:
+			self.check_popup()
+			if self.armed_display.is_closed():
+				# assume that we are going to get a
+				# resize event
+				pass
+			else:
+				self.armed_display.render()
+			if self.played_display:
+				self.played_display.close()
+			self.played_display = self.armed_display
+			self.armed_display = None
+			self.do_play(node)
+			self.need_armdone = 1
+		else:
+			self.play_1()
+
+	def playdone(self, dummy):
+		if self.need_armdone:
+			self.armdone()
+			self.need_armdone = 0
+		Channel.ChannelWindowAsync.playdone(self, dummy)
