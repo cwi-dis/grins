@@ -127,7 +127,7 @@ class Channel:
 		else:
 			self.save_geometry()
 			self.hide()
-
+			
 	def replaynode(self):
 		self.wait_for_arm()
 		# Now we should replay the node that was played when
@@ -268,6 +268,10 @@ class Channel:
 	def popup(self):
 		# raise the window to the front (dummy for channels
 		# without windows)
+		pass
+
+	def check_popup(self):
+		# raise the window unless disabled (dummy)
 		pass
 
 	def popdown(self):
@@ -728,7 +732,7 @@ class Channel:
 ##ChannelWinDict = {}
 
 class ChannelWindow(Channel):
-	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units']
+	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup']
 	node_attrs = Channel.node_attrs + ['duration', 'bgcolor']
 	_visible = TRUE
 	_window_type = SINGLE
@@ -762,6 +766,14 @@ class ChannelWindow(Channel):
 	def popup(self):
 		if self._is_shown and self.window:
 			self.window.pop()
+
+	def check_popup(self):
+		if self.nopop or not self._is_shown or not self.window:
+			return
+		if self._attrdict.has_key('popup'):
+			if self._attrdict['popup'] == 0:
+				return
+		self.window.pop()
 
 	def popdown(self):
 		if self._is_shown and self.window:
@@ -1042,8 +1054,7 @@ class ChannelWindow(Channel):
 				if winoff != self.winoff:
 					self.hide()
 					self.show()
-			if not self.nopop:
-				self.window.pop()
+			self.check_popup()
 			if self.armed_display.is_closed():
 				# assume that we are going to get a
 				# resize event
@@ -1321,8 +1332,7 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		if not self._is_shown or self.syncplay:
 			self.play_1()
 			return
-		if not self.nopop:
-			self.window.pop()
+		self.check_popup()
 		if self.armed_display.is_closed():
 			# assume that we are going to get a
 			# resize event
