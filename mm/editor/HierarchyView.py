@@ -64,6 +64,7 @@ class HierarchyView(ViewDialog):
 		self.viewroot = self.root
 		self.focusnode = self.root
 		self.editmgr = self.root.context.editmgr
+		self.destroynode = None	# node to be destroyed later
 		ViewDialog.__init__(self, 'hview_')
 
 	def __repr__(self):
@@ -200,9 +201,12 @@ class HierarchyView(ViewDialog):
 		return 1 # It's always OK to start a transaction
 
 	def rollback(self):
-		pass
+		self.destroynode = None
 
 	def commit(self):
+		if self.destroynode:
+			self.destroynode.Destroy()
+		self.destroynode = None
 		self.cleanup()
 		if self.is_showing():
 			self.fixviewroot()
@@ -234,7 +238,12 @@ class HierarchyView(ViewDialog):
 		em.delnode(node)
 		if cut:
 			import Clipboard
+			t, n = Clipboard.getclip()
+			if t == 'node' and node is not None:
+				self.destroynode = n
 			Clipboard.setclip('node', node)
+		else:
+			self.destroynode = node
 		em.commit()
 		self.toplevel.setready()
 
@@ -244,6 +253,9 @@ class HierarchyView(ViewDialog):
 			windowinterface.beep()
 			return
 		import Clipboard
+		t, n = Clipboard.getclip()
+		if t == 'node' and n is not None:
+			n.Destroy()
 		Clipboard.setclip('node', node.DeepCopy())
 
 	def create(self, where):
