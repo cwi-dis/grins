@@ -25,6 +25,12 @@ timeManipulations = settings.profileExtensions.get('TimeManipulations')
 debug = 0
 debugParser = 0
 
+# animateMotion default origin
+# though I don't know what its values are in smil20-profile
+# assume origin in ('default', 'layout', 'parent', 'topLayout')
+regionOrigin = 'parent' # smil20-profile ??? IE5.5 defaults to 'layout'
+mediaOrigin = 'layout' # smil20-profile
+
 # An Animator represents an animate element at run time.
 # An Animator entity implements interpolation taking into 
 # account the calc mode, the 'accumulate' attr and 
@@ -637,6 +643,19 @@ class EffMotionAnimator(Animator):
 		x, y = v.real, v.imag
 		return _round(x), _round(y)
 
+	def distValues(self, v1, v2):
+		x1, y1 = v1.real, v1.imag
+		x2, y2 = v2.real, v2.imag
+		dx = x2 - x1;dy=y2-y1
+		return math.sqrt(dx*dx+dy*dy)
+
+class SetMotionAnimator(Animator):
+	def __init__(self, attr, domval, value, dur):
+		Animator.__init__(self, attr, domval, (value, ), dur, mode ='discrete') 
+
+	def convert(self, v):
+		x, y = v.real, v.imag
+		return _round(x), _round(y)
 
 ###########################
 # An EffectiveAnimator is responsible to combine properly
@@ -684,7 +703,8 @@ class EffectiveAnimator:
 		return self.__node
 
 	def getCssObj(self, mmobj):
-		return self.__context._cssResolver.getCssObj(mmobj)
+		resolver = self.__context.getCssResolver()
+		return resolver.getCssObj(mmobj)
 
 	def getCssAttr(self, mmobj, name):		
 		return self.getCssObj(mmobj).getRawAttr(name)
@@ -724,7 +744,7 @@ class EffectiveAnimator:
 				cv = a.addCurrValue(cv)
 			else:
 				cv = a.getCurrValue()
-		
+
 		# keep a copy
 		self.__currvalue = cv
 
@@ -893,17 +913,26 @@ class EffectiveAnimator:
 		chan = self.__chan
 
 		if self.__attr == 'position':
-			# origin is 'parent' for subregion
-			# thus for media is its layout origin
+			# animateMotion for subregions seems not to be allowed in SMIL20 profile
+			# Since the origin for the animateMotion when applied to media elements 
+			# is the regAlign value animate regPoint
+			moveSubregion = 0
+			moveRegPoint = 1
 			csssubregion = self.getCssObj(self.__node)
-			csssubregion.move(value)
-			csssubregion.updateTree()
+			if moveSubregion:
+				csssubregion.move(value)
+				csssubregion.updateTree()
 			coords = csssubregion.getPxGeom()
 			scale = csssubregion.getScale()
 			mediacoords = None
 			if csssubregion.media:
-				csssubregion.media.update()
+				if moveRegPoint:
+					csssubregion.media.move(value)
+					csssubregion.media.update()
 				mediacoords = csssubregion.media.getPxGeom()
+			if moveRegPoint and csssubregion.media:
+				if csssubregion.media.isDOMRegPoint():
+					mediacoords = None
 			if chan.window:
 				chan.window.updatecoordinates(coords, UNIT_PXL, scale, mediacoords)
 
@@ -951,11 +980,13 @@ class EffectiveAnimator:
 # and is a document level entity.
 
 class AnimateContext:
-	def __init__(self, player):
+	def __init__(self, player=None, node=None):
 		self._player = player
 		self._effAnimators = {}
 		self._id2key = {}
-		self._mmtree = MMNode.MMChannelTree(player.context)
+		if player: ctx=player.context
+		elif node: ctx=node.GetContext()
+		self._mmtree = MMNode.MMChannelTree(ctx)
 		self._cssResolver = self._mmtree.newCssResolver()
 		self._cssDomResolver = None # will be created if needed
 	
@@ -964,6 +995,8 @@ class AnimateContext:
 		del self._effAnimators
 		self._effAnimators = {}
 		self._id2key = {}
+		self._cssResolver = None
+		self._cssDomResolver = None
 
 	def getEffectiveAnimator(self, targnode, targattr, domval):
 		key = "n%d-%s" % (id(targnode), targattr)
@@ -984,6 +1017,8 @@ class AnimateContext:
 			del self._id2key[eaid]
 	
 	def getCssResolver(self):
+		if not self._cssResolver:
+			self._cssResolver = self._mmtree.newCssResolver()
 		return self._cssResolver
 
 	def getDOMCssResolver(self):
@@ -1002,6 +1037,19 @@ class AnimateContext:
 		if region.container:
 			return region.container.getAbsPos()
 		return 0, 0
+
+	def getNodePosRelToParent(self, mmobj):
+		resolver = self.getDOMCssResolver()
+		region = resolver.getCssObj(mmobj)
+		if region.media:
+			x, y = region.media.getAbsPos()
+		else:
+			x, y = region.getAbsPos()
+		xp, yp = 0, 0
+		if region.container.container:
+			region = region.container.container
+			xp, yp = region.getAbsPos()
+		return x-xp, y-yp
 
 ###########################
 
@@ -1177,7 +1225,7 @@ class AnimateElementParser:
 			return self.__getSetAnimator()
 
 		# a discrete to animation or a to animation of a non addidive attribute is equivalent to set
-		if self.__animtype == 'to' and (self.__calcMode=='discrete' or not self.__isadditive):
+		if self.__animtype == 'to' and not self.__isadditive:
 			return self.__getSetAnimator()
 
 		################
@@ -1200,7 +1248,7 @@ class AnimateElementParser:
 		################
 		# to-only animation for additive attributes
 		# needs always special handling
-		if self.__animtype == 'to' and self.__isadditive and self.__calcMode!='discrete':
+		if self.__animtype == 'to' and self.__isadditive:
 			anim = None
 			if self.__attrtype == 'int':
 				v = string.atoi(self.getTo())
@@ -1215,7 +1263,6 @@ class AnimateElementParser:
 			elif self.__attrtype == 'position':
 				coords = self.__getNumPairInterpolationValues()
 				anim = EffMotionAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)
-				anim.setOrigin(self.getOrigin())
 			elif self.__attrtype == 'inttuple':
 				coords = self.__getNumTupleInterpolationValues()
 				anim = EffIntTupleAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)
@@ -1243,7 +1290,8 @@ class AnimateElementParser:
 			elif self.__attrtype == 'position':
 				path = svgpath.Path()
 				coords = self.__getNumPairInterpolationValues()
-				coords = self.translateToParent(coords=coords)
+				if not self.isAdditive():
+					coords = self.translateToDefault(coords=coords)
 				path.constructFromPoints(coords)
 				anim = MotionAnimator(attr, domval, path, dur, mode, times, splines, accumulate, additive='sum')
 			if anim: 
@@ -1269,10 +1317,12 @@ class AnimateElementParser:
 			path = svgpath.Path()
 			if strpath:
 				path.constructFromSVGPathString(strpath)
-				path = self.translateToParent(path=path)
+				if not self.isAdditive():
+					path = self.translateToDefault(path=path)
 			else:
 				coords = self.__getNumPairInterpolationValues()
-				coords = self.translateToParent(coords=coords)
+				if not self.isAdditive():
+					coords = self.translateToDefault(coords=coords)
 				path.constructFromPoints(coords)
 			if path.getLength():
 				anim = MotionAnimator(attr, domval, path, dur, mode, times, splines,
@@ -1364,6 +1414,12 @@ class AnimateElementParser:
 			value = map(string.atoi, value)
 			anim = SetAnimator(attr, domval, value, dur)
 
+		elif self.__attrtype == 'position':
+			x, y = self.__getNumPair(value)
+			if not self.isAdditive():
+				x, y = self.translateToDefault(coords=((x,y),))[0]
+			anim = SetMotionAnimator(attr, domval, complex(x, y), dur)
+
 		elif self.__attrtype == 'color':
 			value = self.__convert_color(value)
 			anim = SetAnimator(attr, domval, value, dur)
@@ -1436,33 +1492,59 @@ class AnimateElementParser:
 		if coords:
 			tcoords = []
 			for x, y in coords:
-				tcoords.append((x-dx, y-dy))
+				tcoords.append((x+dx, y+dy))
 			return tuple(tcoords)
 		elif path:
-			path.translate(-dx, -dy)
+			path.translate(dx, dy)
 			return path
-			
-	# translate from DOM origin to parent (our default origin)
-	def translateFromDOMToParent(self, coords, path):
-		x, y = self.__domval.real, self.__domval.imag
-		return self.translateTo((-x,-y), coords, path)	
+				
+	# origin in ('default', 'layout', 'parent', 'topLayout')
+	def translateToDefault(self, coords=None, path=None):			
+		# set default origin
+		origin = self.getOrigin()
+		if self.__target._type == 'region':
+			if not origin or origin=='default':
+				origin = regionOrigin
+		elif self.__target._type == 'mmnode':
+			if not origin or origin=='default':
+				origin = mediaOrigin
 
-	# translate from topLayout to parent (our default origin)
-	def translateFromTopLayoutToParent(self, coords, path):
-		x, y = self.__animateContext.getParentAbsPos(self.__mmtarget)
-		return self.translateTo((x, y), coords, path)	
-	
-	# dissabled until origin values are clarified
-	def translateToParent(self, coords=None, path=None):
+		# translate region coordiantes to  internal 'parent'
+		if self.__target._type == 'region':			
+
+			if origin == 'parent':
+				pass
+
+			elif origin == 'layout':
+				# coordinates of layout with respect to parent
+				x, y = self.__domval.real, self.__domval.imag
+				return self.translateTo((x, y), coords, path)	
+
+			elif origin == 'topLayout':
+				# coordinates of topLayout with respect to parent
+				x, y = self.__animateContext.getParentAbsPos(self.__mmtarget)
+				return self.translateTo((-x, -y), coords, path)	
+
+				return self.translateTo((x, y), coords, path)	
+
+		# translate media coordinates to internal 'layout'
+		elif self.__target._type == 'mmnode':
+
+			if origin == 'parent':
+				# coordinates of parent with respect to layout
+				x, y = self.__animateContext.getNodePosRelToParent(self.__target)
+				return self.translateTo((-x, -y), coords, path)	
+
+			elif origin == 'layout':
+				pass
+
+			elif origin == 'topLayout':
+				# coordinates of topLayout with respect to layout
+				x, y = self.__animateContext.getAbsPos(self.__target)
+				return self.translateTo((-x, -y), coords, path)
+					
 		if coords: return coords
 		elif path: return path
-		# probably
-		origin = self.getOrigin()
-		if not origin or origin=='default':
-			return self.translateFromDOMToParent(coords, path)
-		elif origin=='parent':
-			if coords: return coords
-			elif path: return path
 		 
 	#
 	# The following 3 translate methods are used by SMILTreeWriteHtmlTime
