@@ -842,9 +842,9 @@ class Viewport(win32window.Window, UserEventMng):
 		self._showname = bv
 		self._ctx.update()
 		
-	def setImage(self, filename, fit):
+	def setImage(self, filename, fit, mediadisplayrect = None):
 		if self._active_displist != None:
-			self._active_displist.newimage(filename, fit)
+			self._active_displist.newimage(filename, fit, mediadisplayrect)
 	#
 	#  end interface implementation
 	#
@@ -1076,9 +1076,9 @@ class Region(win32window.Window, UserEventMng):
 		self._showname = bv
 		self._ctx.update()
 
-	def setImage(self, filename, fit):
+	def setImage(self, filename, fit, mediadisplayrect = None):
 		if self._active_displist != None:
-			self._active_displist.newimage(filename, fit)
+			self._active_displist.newimage(filename, fit, mediadisplayrect)
 
 	# 
 	# end interface implementation
