@@ -3,6 +3,14 @@ from MMExc import *			# exceptions
 from AnchorDefs import *
 import windowinterface			# for windowinterface.error
 
+
+try:
+	from urlopen import urlretrieve
+except ImportError:
+	def urlretrieve(file):
+		return file, None
+
+
 class ImageChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + ['scale', 'scalefilter']
 
@@ -24,6 +32,7 @@ class ImageChannel(ChannelWindow):
 			self.errormsg('node must be external')
 			return 1
 		f = self.getfilename(node)
+		f = urlretrieve(f)[0]
 		# remember coordinates for anchor editing (and only for that!)
 		try:
 			self._arm_imbox = self.armed_display.display_image_from_file(f)
@@ -81,7 +90,9 @@ class ImageChannel(ChannelWindow):
 		if box == []:
 			box = boxes.create_box(self.window, msg)
 		else:
-			box = self.convert_args(self.getfilename(node), box)
+			f = self.getfilename(node)
+			f = urlretrieve(f)[0]
+			box = self.convert_args(f, box)
 			# convert coordinates from image size to window size.
 			x = box[0] * self._arm_imbox[2] + self._arm_imbox[0]
 			y = box[1] * self._arm_imbox[3] + self._arm_imbox[1]

@@ -1,6 +1,14 @@
 from Channel import *
 from debug import debug
 
+
+try:
+	from urlopen import urlretrieve
+except ImportError:
+	def urlretrieve(file):
+		return file, None
+
+
 class SoundChannel(ChannelThread):
 	def init(self, name, attrdict, scheduler, ui):
 		return ChannelThread.init(self, name, attrdict, scheduler, ui)
@@ -14,6 +22,7 @@ class SoundChannel(ChannelThread):
 
 	def do_arm(self, node):
 		filename = self.getfilename(node)
+		filename = urlretrieve(filename)[0]
 		import SoundDuration
 		try:
 			f, nchannels, nsampframes, sampwidth, samprate, format = \
