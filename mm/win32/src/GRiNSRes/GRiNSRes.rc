@@ -2609,7 +2609,7 @@ BEGIN
     DEFPUSHBUTTON   "Register",IDC_REGISTER,152,61,50,14
     PUSHBUTTON      "Don't register",IDC_DONTREGISTER,92,61,58,14
     PUSHBUTTON      "Remind me later",IDC_LATER,7,61,71,14
-    LTEXT           "You can register this product at the Oratrix website, to be eligible for tech support, updates and possibly discounts for updates, etc.\n\nDo you want to register now?",
+    LTEXT           "You must register this product with Oratrix to be eligible for extended technical support, updates and discounts on upgrades.\n\nDo you want to register now?",
                     IDC_STATIC,7,7,195,45
 END
 
