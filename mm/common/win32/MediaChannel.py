@@ -170,16 +170,20 @@ class MediaChannel:
 		if self.__playBuilder:
 			if paused:
 				self.__playBuilder.Pause()
+				self.__unregister_for_timeslices()
 			else:
 				self.__playBuilder.Run()
+				self.__register_for_timeslices()
 
 	def stopit(self):
 		if self.__playBuilder:
 			self.__playBuilder.Stop()
+			self.__unregister_for_timeslices()
 		
 	def freezeit(self):
 		if self.__playBuilder:
 			self.__playBuilder.Pause()
+			self.__unregister_for_timeslices()
 		
 	def showit(self,window):
 		if self.__playBuilder: 
@@ -297,7 +301,7 @@ class VideoStream:
 
 		t0 = self.__channel._scheduler.timefunc()
 		if t0 > node.start_time and not self.__channel._exporter:
-##			print 'skipping',node.start_time,t0,t0-node.start_time
+			if __debug__: print 'skipping',node.start_time,t0,t0-node.start_time
 			mediadur = self.__playEnd - self.__playBegin
 			late = t0 - node.start_time
 			if late > mediadur:
