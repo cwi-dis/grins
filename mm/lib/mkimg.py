@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-import sys, os, img, imgformat, getopt, struct
+import sys, os, img, imgformat, getopt, struct, string
 
 bigendian = struct.pack('i', 1)[0] == '\0'
 
@@ -57,7 +57,7 @@ __version__ = "$''' 'Id' '''$"
 
 import imgformat
 ''')
-	if byteorder:
+	if byteorder or hasattr(rdr, 'colormap'):
 		f.write('''\
 import struct
 
@@ -85,9 +85,21 @@ class reader:
 		self.format_choices = (format,)
 ''')
 	if hasattr(rdr, 'colormap'):
+		colormaple = []
+		colormapbe = []
+		colormap = rdr.colormap._map_as_string
+		for i in range(len(rdr.colormap)):
+			pixel = struct.unpack('i', colormap[i*4:i*4+4])[0]
+			colormaple.append(struct.pack('<i', pixel))
+			colormapbe.append(struct.pack('>i', pixel))
+		colormaple = string.join(colormaple, '')
+		colormapbe = string.join(colormapbe, '')
 		f.write('\t\timport imgcolormap\n')
+		f.write('\tif _bigendian:\n')
 		f.write('\t\tself.colormap = imgcolormap.new(')
-		writedata(f.write, rdr.colormap._map_as_string)
+		writedata(f.write, colormapbe)
+		f.write(')\n\telse:\t\tself.colormap = imgcolormap.new(')
+		writedata(f.write, colormaple)
 		f.write(')\n')
 	if hasattr(rdr, 'transparent'):
 		f.write('\t\tself.transparent = %d\n' % rdr.transparent)
