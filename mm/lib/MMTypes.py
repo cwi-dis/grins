@@ -1,5 +1,7 @@
 __version__ = "$Id$"
 
 leaftypes = ['imm', 'ext']
-interiortypes = ['seq', 'par', 'bag']
+bagtypes = ['bag', 'alt']
+interiortypes = ['seq', 'par'] + bagtypes
+playabletypes = leaftypes + bagtypes
 alltypes = leaftypes + interiortypes
