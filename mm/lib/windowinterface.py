@@ -1066,6 +1066,15 @@ class _Window:
 			  float(height - y1 - 1) / (height - 1), \
 			  float(x1 - x0) / (width - 1), \
 			  float(y1 - y0) / (height - 1)
+		# constrain coordinates to window
+		if x < 0:
+			x = 0
+		if y < 0:
+			y = 0
+		if x + w > 1:
+			w = 1 - x
+		if y + h > 1:
+			h = 1 - y
 		return x, y, w, h
 
 	def movebox(self, (x, y, w, h), constrainx, constrainy):
@@ -1130,6 +1139,15 @@ class _Window:
 			  float(height - y1 - 1) / (height - 1), \
 			  float(x1 - x0) / (width - 1), \
 			  float(y1 - y0) / (height - 1)
+		# constrain coordinates to window
+		if x < 0:
+			x = 0
+		if y < 0:
+			y = 0
+		if x + w > 1:
+			w = 1 - x
+		if y + h > 1:
+			h = 1 - y
 		return x, y, w, h
 
 	def pop(self):
