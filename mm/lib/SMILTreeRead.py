@@ -985,11 +985,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				elif val == 'slice':
 					attributes['scale'] = "-1"
 
-		# if no background color defined on the node, or no region, we fix the background color
-		# to transparent
-		if not attributes.has_key('backgroundColor') or not attributes.has_key('region'):
-			attributes['backgroundColor'] = 'transparent'
-
 		# create the node
 		if not self.__root:
 			# "can't happen"
@@ -1010,6 +1005,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if mimetype is not None:
 			node.attrdict['mimetype'] = mimetype
 
+		# if no background color defined on the node, or no region, we fix the background color
+		# to transparent
+		if not node.attrdict.has_key('bgcolor') or not attributes.has_key('region'):
+			node.attrdict['transparent'] = 1
+			node.attrdict['bgcolor'] = 0,0,0
+					
 		# experimental SMIL Boston layout code
 		node._internalchtype = chtype
 		# end experimental
@@ -1757,6 +1758,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attrdict.has_key('showBackground'):
 			ch['showBackground'] = attrdict['showBackground']
 			del attrdict['showBackground']
+		else:
+			ch['showBackground'] = MMAttrdefs.getdefattr(None, 'showBackground')
+
 		if attrdict.has_key('soundLevel'):
 			ch['soundLevel'] = attrdict['soundLevel']
 			del attrdict['soundLevel']
@@ -2471,11 +2475,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			del attrdict['right']
 		if attrdict.has_key('top') and attrdict.has_key('bottom') and attrdict.has_key('height'):
 			del attrdict['bottom']
-
+		
 		if id is None:
 			self.syntax_error('region without id attribute')
 			return
-
+		
 		if self.__region is not None:
 ##			if self.__viewport is None:
 ##				self.syntax_error('no nested regions allowed in root-layout windows')
