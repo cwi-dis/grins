@@ -425,6 +425,7 @@ class Scheduler(scheduler):
 		
 	def stop_all(self):
 ##		print 'STOP_ALL', self.sctx_list
+		self.toplevel.set_timer(0)
 		to_stop = self.sctx_list[:]
 		for sctx in to_stop:
 			sctx.stop()
