@@ -7,6 +7,7 @@ import java.applet.*;
 import java.io.*;
 
 import grins.*;
+import javax.swing.JSlider;
 
 public class DemoApplet extends Applet
 implements SMILListener
@@ -18,6 +19,7 @@ implements SMILListener
     private SMILRenderer renderer;
     
     private Viewport viewport;
+    private boolean dragging = false;
     
 	public void init()
 	{
@@ -28,7 +30,7 @@ implements SMILListener
 		// parse your Java file into its visual environment.
 		//{{INIT_CONTROLS
 		setLayout(null);
-		setSize(480,132);
+		setSize(480,148);
 		buttonOpen.setLabel("Open");
 		add(buttonOpen);
 		buttonOpen.setBackground(java.awt.Color.lightGray);
@@ -54,30 +56,13 @@ implements SMILListener
 		add(buttonClose);
 		buttonClose.setBackground(java.awt.Color.lightGray);
 		buttonClose.setBounds(368,56,104,28);
-		labelDur.setText("Dur");
-		add(labelDur);
-		labelDur.setBounds(12,96,40,24);
-		textFieldDur.setEditable(false);
-		textFieldDur.setText("0");
-		add(textFieldDur);
-		textFieldDur.setBounds(52,96,76,24);
-		labelPos.setText("Pos");
-		add(labelPos);
-		labelPos.setBounds(144,96,40,24);
-		textFieldPos.setEditable(false);
-		textFieldPos.setText("0");
-		add(textFieldPos);
-		textFieldPos.setBounds(184,96,76,24);
-		labelSetPos.setText("SetPos");
-		add(labelSetPos);
-		labelSetPos.setBounds(280,96,40,24);
-		textFieldSetPos.setText("0");
-		add(textFieldSetPos);
-		textFieldSetPos.setBounds(324,96,76,24);
-		buttonSetPos.setLabel("Set Pos");
-		add(buttonSetPos);
-		buttonSetPos.setBackground(java.awt.Color.lightGray);
-		buttonSetPos.setBounds(400,96,60,24);
+		JSlider1.setPaintTicks(true);
+		JSlider1.setMajorTickSpacing(5);
+		JSlider1.setToolTipText("Seek");
+		JSlider1.setMinorTickSpacing(1);
+		JSlider1.setValue(0);
+		add(JSlider1);
+		JSlider1.setBounds(8,100,464,32);
 		//}}
 	
 	    smil = GRiNSToolkit.createGRiNSDocument(this);
@@ -89,7 +74,10 @@ implements SMILListener
 		buttonPause.addActionListener(lSymAction);
 		buttonStop.addActionListener(lSymAction);
 		buttonClose.addActionListener(lSymAction);
-		buttonSetPos.addActionListener(lSymAction);
+		SymMouseMotion aSymMouseMotion = new SymMouseMotion();
+		JSlider1.addMouseMotionListener(aSymMouseMotion);
+		SymMouse aSymMouse = new SymMouse();
+		JSlider1.addMouseListener(aSymMouse);
 		//}}
 	}
 	
@@ -101,13 +89,7 @@ implements SMILListener
 	java.awt.Button buttonPause = new java.awt.Button();
 	java.awt.Button buttonStop = new java.awt.Button();
 	java.awt.Button buttonClose = new java.awt.Button();
-	java.awt.Label labelDur = new java.awt.Label();
-	java.awt.TextField textFieldDur = new java.awt.TextField();
-	java.awt.Label labelPos = new java.awt.Label();
-	java.awt.TextField textFieldPos = new java.awt.TextField();
-	java.awt.Label labelSetPos = new java.awt.Label();
-	java.awt.TextField textFieldSetPos = new java.awt.TextField();
-	java.awt.Button buttonSetPos = new java.awt.Button();
+	javax.swing.JSlider JSlider1 = new javax.swing.JSlider();
 	//}}
 	
 	private void message(String str) {
@@ -156,7 +138,7 @@ implements SMILListener
 		demoApplet.start();
 		frame.add("Center", demoApplet);
         frame.pack();
-		frame.setSize(480+8,132+24);
+		frame.setSize(480+8,148+24);
 		frame.setLocation(400,300);
 		frame.show();
 		}
@@ -177,8 +159,7 @@ implements SMILListener
 				buttonStop_ActionPerformed(event);
 			else if (object == buttonClose)
 				buttonClose_ActionPerformed(event);
-			else if (object == buttonSetPos)
-				buttonSetPos_ActionPerformed(event);
+			
 		}
 	}
 
@@ -223,16 +204,11 @@ implements SMILListener
     }
         
     public void setDur(double dur){
-        int intpart = (int)dur;
-        int decpart = (int)((dur - intpart)*1000.0); 
-        String str = ""+intpart+"."+decpart;
-        textFieldDur.setText(str);
+        JSlider1.setMaximum((int)(dur+1.0));
     }
     public void setPos(double pos){
-        int intpart = (int)pos;
-        int decpart = (int)((pos - intpart)*1000.0); 
-        String str = ""+intpart+"."+decpart;
-        textFieldPos.setText(str);
+        if(!dragging)
+            JSlider1.setValue((int)(pos+0.5));
     }
     
     
@@ -260,15 +236,40 @@ implements SMILListener
 		if(smil!=null) smil.close();
 	}
 
-
-	void buttonSetPos_ActionPerformed(java.awt.event.ActionEvent event)
+	class SymMouseMotion extends java.awt.event.MouseMotionAdapter
 	{
-		String strpos = textFieldSetPos.getText();
-		double pos = 0;
-		try {
-		    pos = Double.parseDouble(strpos.trim());
+		public void mouseDragged(java.awt.event.MouseEvent event)
+		{
+			Object object = event.getSource();
+			if (object == JSlider1)
+				JSlider1_mouseDragged(event);
 		}
-		catch(NumberFormatException e){message(""+e);return;}
-		if(player!=null) player.setTime(pos);
+	}
+
+	void JSlider1_mouseDragged(java.awt.event.MouseEvent event)
+	{
+	    dragging = true;
+		// to do: code goes here.
+			 
+	}
+
+	class SymMouse extends java.awt.event.MouseAdapter
+	{
+		public void mouseReleased(java.awt.event.MouseEvent event)
+		{
+			Object object = event.getSource();
+			if (object == JSlider1)
+				JSlider1_mouseReleased(event);
+		}
+	}
+
+	void JSlider1_mouseReleased(java.awt.event.MouseEvent event)
+	{
+		// to do: code goes here.
+		if(dragging){
+		    if(player!=null) player.setTime(JSlider1.getValue());
+	        dragging = false;
+		}
+			 
 	}
 }
