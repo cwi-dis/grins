@@ -206,8 +206,8 @@ class Channel:
 			chan._want_shown = want_shown
 		self.do_hide()
 		for chan in channels:
-			if isin(self, chan._subchannels):
-##			if self in chan._subchannels:
+##			if isin(self, chan._subchannels):
+			if self in chan._subchannels:
 				chan._subchannels.remove(self)
 			# XXX--is this faster?
 ##			try:
@@ -359,7 +359,7 @@ class Channel:
 		# callbacks.
 		if debug:
 			print 'Channel.play_0('+`self`+','+`node`+')'
-		if self._armed_node != node:
+		if self._armed_node is not node:
 			raise error, 'node was not the armed node '+`self,node`
 		if self._playstate != PIDLE:
 			raise error, 'play not idle'
@@ -546,7 +546,7 @@ class Channel:
 		# Node is only passed to do consistency checking.
 		if debug:
 			print 'Channel.stopplay('+`self`+','+`node`+')'
-		if node and self._played_node != node:
+		if node and self._played_node is not node:
 			raise error, 'node was not the playing node '+`self,node,self._played_node`
 		if self._playstate == PLAYING:
 			self._has_pause = 0
@@ -583,7 +583,7 @@ class Channel:
 			# the old context.  Save the old context for
 			# when we get a stopcontext for it.
 			self._playcontext = self._armcontext
-		if self._armcontext and self._armcontext != self._playcontext:
+		if self._armcontext and self._armcontext is not self._playcontext:
 			# When we get a startcontext while there are
 			# already two contexts active, raise an error.
 			# The test is sufficient, since this comes
@@ -761,9 +761,9 @@ class ChannelWindow(Channel):
 			except KeyError:
 				pass
 			else:
-				windowinterface.setcursor('watch')
+				self._player.toplevel.setwaiting()
 				dummy = apply(f, a)
-				windowinterface.setcursor('')
+				self._player.toplevel.setready()
 			if not button.is_closed():
 				button.unhighlight()
 
@@ -857,8 +857,8 @@ class ChannelWindow(Channel):
 			pass
 		# create a window for this channel
 		for chan in channels:
-			if isin(self, chan._subchannels):
-##			if self in chan._subchannels:
+##			if isin(self, chan._subchannels):
+			if self in chan._subchannels:
 				chan._subchannels.remove(self)
 			# XXX--is this faster?
 ##			try:
@@ -892,8 +892,8 @@ class ChannelWindow(Channel):
 					`self._name`+' not found',
 					type = 'error')
 				
-			if isin(pchan, pchan._subchannels):
-##			if pchan and self in pchan._subchannels:
+##			if isin(self, pchan._subchannels):
+			if pchan and self in pchan._subchannels:
 				windowinterface.showmessage(
 					'Channel '+`self._name`+' is part of'+
 					' a base-window loop',
