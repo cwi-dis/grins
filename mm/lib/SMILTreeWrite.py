@@ -37,8 +37,7 @@ NSprefix = 'GRiNS'
 # This string is written at the start of a SMIL file.
 SMILdecl = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
 EVALcomment = '<!-- Created with an evaluation copy of GRiNS -->\n'
-doctype = '<!DOCTYPE smil PUBLIC "%s"\n\
-                      "%s">\n' % (SMILpubid,SMILdtd)
+doctype = '<!DOCTYPE smil PUBLIC "%s"\n%s"%s">\n' % (SMILpubid,' '*22,SMILdtd)
 xmlns = 'xmlns:%s' % NSprefix
 
 nonascii = re.compile('[\200-\377]')
@@ -208,7 +207,7 @@ def getsyncarc(writer, node, isend):
 				print '** Delay required with end syncarc',\
 				      node.GetRawAttrDef('name', '<unnamed>'),\
 				      node.GetUID()
-## 			rv = rv+'+%.3f'%delay
+##			rv = rv+'+%.3f'%delay
 		else:
 			rv = rv+'(%.3fs)' % delay
 		for s in siblings:
@@ -370,6 +369,10 @@ cmif_node_attrs_ignore = [
 	'system_screen_size', 'system_screen_depth', 'layout',
 	'clipbegin', 'clipend', 'u_group', 'loop', 'synctolist',
 	'author', 'copyright', 'abstract', 'mimetype', 'terminator',
+	]
+cmif_node_realpix_attrs_ignore = [
+	'bitrate', 'size', 'duration', 'aspect', 'author', 'copyright',
+	'maxfps', 'preroll', 'title', 'href',
 	]
 cmif_chan_attrs_ignore = [
 	'id', 'title', 'base_window', 'base_winoff', 'z', 'scale',
@@ -926,10 +929,13 @@ class SMILWriter(SMIL):
 			if value and attributes.has_key(gname) and \
 			   value != attributes[gname]:
 				attrlist.append((name, value))
+		is_realpix = type == 'ext' and x.GetChannelType() == 'RealPix'
 		for key, val in x.GetAttrDict().items():
 			if key[-7:] != '_winpos' and \
 			   key[-8:] != '_winsize' and \
-			   key not in cmif_node_attrs_ignore:
+			   key not in cmif_node_attrs_ignore and \
+			   (not is_realpix or
+			    key not in cmif_node_realpix_attrs_ignore):
 				attrlist.append(('%s:%s' % (NSprefix, key),
 						 MMAttrdefs.valuerepr(key, val)))
 		if interior:
@@ -1072,4 +1078,3 @@ def identify(name):
 	if rv and rv[0] in string.digits:
 		rv.insert(0, '_')
 	return string.join(rv, '')
-
