@@ -1,6 +1,6 @@
 # A parser for XML, using the derived class as static DTD.
 
-import regex
+import re
 import string
 
 
@@ -9,36 +9,36 @@ import string
 _S = '[ \t\r\n]+'
 _opS = '[ \t\r\n]*'
 _Name = '[a-zA-Z_:][-a-zA-Z0-9._:]*'
-interesting = regex.compile('[&<]')
-incomplete = regex.compile('&\(' + _Name + '\|#[0-9]*\|#x[0-9a-fA-F]*\)?\|'
-			   '<\([a-zA-Z_:][^<>]*\|'
-			      '/\([a-zA-Z_:][^<>]*\)?\|'
-			      '![^<>]*\|'
-			      '\?[^<>]*\)?')
+interesting = re.compile('[&<]')
+incomplete = re.compile('&(' + _Name + '|#[0-9]*|#x[0-9a-fA-F]*)?|'
+			   '<([a-zA-Z_:][^<>]*|'
+			      '/([a-zA-Z_:][^<>]*)?|'
+			      '![^<>]*|'
+			      '\?[^<>]*)?')
 
-ref = regex.compile('&\(' + _Name + '\|#[0-9]+\|#x[0-9a-fA-F]+\);')
-entityref = regex.compile('&\(' + _Name + '\)[^-a-zA-Z0-9._:]')
-charref = regex.compile('&#\([0-9]+[^0-9]\|x[0-9a-fA-F]+[^0-9a-fA-F]+\)')
-space = regex.compile(_S)
-newline = regex.compile('\n')
+ref = re.compile('&(' + _Name + '|#[0-9]+|#x[0-9a-fA-F]+);?')
+entityref = re.compile('&(?P<name>' + _Name + ')[^-a-zA-Z0-9._:]')
+charref = re.compile('&#(?P<char>[0-9]+[^0-9]|x[0-9a-fA-F]+[^0-9a-fA-F])')
+space = re.compile(_S)
+newline = re.compile('\n')
 
-starttagopen = regex.compile('<' + _Name)
-endtagopen = regex.compile('</')
-starttagend = regex.compile(_opS + '\(/?\)>')
-endbracket = regex.compile('>')
-cdataopen = regex.compile('<!\[CDATA\[')
-cdataclose = regex.compile('\]\]>')
-special = regex.compile('<![^<>]*>')
-procopen = regex.compile('<\?\(' + _Name + '\)' + _S)
-procclose = regex.compile('\?>')
-commentopen = regex.compile('<!--')
-commentclose = regex.compile('-->')
-doubledash = regex.compile('--')
-tagfind = regex.compile(_Name)
-attrfind = regex.compile(
-    _S + '\(' + _Name + '\)'
-    '\(' + _opS + '=' + _opS +
-    '\(\'[^\']*\'\|"[^"]*"\|[-a-zA-Z0-9.:+*%?!()_#=~]+\)\)')
+starttagopen = re.compile('<' + _Name)
+endtagopen = re.compile('</')
+starttagend = re.compile(_opS + '(?P<slash>/?)>')
+endbracket = re.compile('>')
+tagfind = re.compile(_Name)
+cdataopen = re.compile('<!\[CDATA\[')
+cdataclose = re.compile('\]\]>')
+special = re.compile('<!(?P<special>[^<>]*)>')
+procopen = re.compile('<\?(?P<proc>' + _Name + ')' + _S)
+procclose = re.compile('\?>')
+commentopen = re.compile('<!--')
+commentclose = re.compile('-->')
+doubledash = re.compile('--')
+attrfind = re.compile(
+    _S + '(?P<name>' + _Name + ')'
+    '(' + _opS + '=' + _opS +
+    '(?P<value>\'[^\']*\'|"[^"]*"|[-a-zA-Z0-9.:+*%?!()_#=~]+))')
 
 
 # XML parser base class -- find tags and call handler functions.
@@ -90,27 +90,30 @@ class XMLParser:
 
     # Interface -- translate references
     def translate_references(self, data):
-	newdata = ''
+	newdata = []
 	i = 0
 	while 1:
-	    n = ref.search(data, i)
-	    if n < 0:
-		newdata = newdata + data[i:]
-		return newdata
-	    newdata = newdata + data[i:n]
-	    str = ref.group(1)
+	    res = ref.search(data, i)
+	    if res is None:
+		newdata.append(data[i:])
+		return string.join(newdata, '')
+	    if data[res.end(0) - 1] != ';':
+		self.syntax_error(self.lineno,
+				  '; missing after entity/char reference')
+	    newdata.append(data[i:res.start(0)])
+	    str = res.group(1)
 	    if str[0] == '#':
 		if str[1] == 'x':
-		    newdata = newdata + chr(string.atoi(str[2:], 16))
+		    newdata.append(chr(string.atoi(str[2:], 16)))
 		else:
-		    newdata = newdata + chr(string.atoi(str[1:]))
+		    newdata.append(chr(string.atoi(str[1:])))
 	    else:
 		try:
-		    newdata = newdata + self.entitydefs[str]
+		    newdata.append(self.entitydefs[str])
 		except KeyError:
 		    # can't do it, so keep the entity ref in
-		    newdata = newdata + '&' + str + ';'
-	    i = n + ref.match(data, n)
+		    newdata.append('&' + str + ';')
+	    i = res.end(0)
 
     # Interface -- add an entity
     def add_entitydef(self, name, value):
@@ -136,8 +139,11 @@ class XMLParser:
 		self.lineno = self.lineno + string.count(data, '\n')
 		i = n
 		break
-	    j = interesting.search(rawdata, i)
-	    if j < 0: j = n
+	    res = interesting.search(rawdata, i)
+	    if res:
+		    j = res.start(0)
+	    else:
+		    j = n
 	    if i < j:
 		data = rawdata[i:j]
 		self.handle_data(data)
@@ -145,7 +151,7 @@ class XMLParser:
 	    i = j
 	    if i == n: break
 	    if rawdata[i] == '<':
-		if starttagopen.match(rawdata, i) >= 0:
+		if starttagopen.match(rawdata, i):
 		    if self.literal:
 			data = rawdata[i]
 			self.handle_data(data)
@@ -157,14 +163,14 @@ class XMLParser:
 		    self.lineno = self.lineno + string.count(rawdata[i:k], '\n')
 		    i = k
 		    continue
-		if endtagopen.match(rawdata, i) >= 0:
+		if endtagopen.match(rawdata, i):
 		    k = self.parse_endtag(i)
 		    if k < 0: break
 		    self.lineno = self.lineno + string.count(rawdata[i:k], '\n')
 		    i =  k
 		    self.literal = 0
 		    continue
-		if commentopen.match(rawdata, i) >= 0:
+		if commentopen.match(rawdata, i):
 		    if self.literal:
 			data = rawdata[i]
 			self.handle_data(data)
@@ -173,68 +179,69 @@ class XMLParser:
 			continue
 		    k = self.parse_comment(i)
 		    if k < 0: break
-		    self.lineno = self.lineno + string.count(rawdata[i:i+k], '\n')
-		    i = i+k
+		    self.lineno = self.lineno + string.count(rawdata[i:k], '\n')
+		    i = k
 		    continue
-		if cdataopen.match(rawdata, i) >= 0:
+		if cdataopen.match(rawdata, i):
 		    k = self.parse_cdata(i)
 		    if k < 0: break
-		    self.lineno = self.lineno + string.count(rawdata[i:i+k], '\n')
-		    i = i+k
+		    self.lineno = self.lineno + string.count(rawdata[i:i], '\n')
+		    i = k
 		    continue
-		if procopen.match(rawdata, i) >= 0:
-		    k = self.parse_proc(i)
+		res = procopen.match(rawdata, i)
+		if res:
+		    k = self.parse_proc(i, res)
 		    if k < 0: break
-		    self.lineno = self.lineno + string.count(rawdata[i:i+k], '\n')
-		    i = i+k
+		    self.lineno = self.lineno + string.count(rawdata[i:k], '\n')
+		    i = k
 		    continue
-		k = special.match(rawdata, i)
-		if k >= 0:
+		res = special.match(rawdata, i)
+		if res:
 		    if self.literal:
 			data = rawdata[i]
 			self.handle_data(data)
 			self.lineno = self.lineno + string.count(data, '\n')
 			i = i+1
 			continue
-		    self.handle_special(rawdata[i+2:k-1])
-		    self.lineno = self.lineno + string.count(rawdata[i:i+k], '\n')
-		    i = i+k
+		    self.handle_special(res.group('special'))
+		    self.lineno = self.lineno + string.count(res.group(0), '\n')
+		    i = res.end(0)
 		    continue
 	    elif rawdata[i] == '&':
-		k = charref.match(rawdata, i)
-		if k >= 0:
-		    k = i+k
-		    if rawdata[k-1] != ';': k = k-1
-		    name = charref.group(1)[:-1]
-		    self.handle_charref(name)
-		    self.lineno = self.lineno + string.count(rawdata[i:k], '\n')
-		    i = k
+		res = charref.match(rawdata, i)
+		if res is not None:
+		    i = res.end(0)
+		    if rawdata[i-1] != ';':
+			self.syntax_error(self.lineno, '; missing in charref')
+			i = i-1
+		    self.handle_charref(res.group('char')[:-1])
+		    self.lineno = self.lineno + string.count(res.group(0), '\n')
 		    continue
-		k = entityref.match(rawdata, i)
-		if k >= 0:
-		    k = i+k
-		    if rawdata[k-1] != ';': k = k-1
-		    name = entityref.group(1)
-		    self.handle_entityref(name)
-		    self.lineno = self.lineno + string.count(rawdata[i:k], '\n')
-		    i = k
+		res = entityref.match(rawdata, i)
+		if res is not None:
+		    i = res.end(0)
+		    if rawdata[i-1] != ';':
+			self.syntax_error(self.lineno, '; missing in entityref')
+			i = i-1
+		    self.handle_entityref(res.group('name'))
+		    self.lineno = self.lineno + string.count(res.group(0), '\n')
 		    continue
 	    else:
 		raise RuntimeError, 'neither < nor & ??'
 	    # We get here only if incomplete matches but
 	    # nothing else
-	    k = incomplete.match(rawdata, i)
-	    if k < 0:
+	    res = incomplete.match(rawdata, i)
+	    if not res:
 		data = rawdata[i]
 		self.handle_data(data)
 		self.lineno = self.lineno + string.count(data, '\n')
 		i = i+1
 		continue
-	    j = i+k
+	    j = res.end(0)
 	    if j == n:
 		break # Really incomplete
 	    self.syntax_error(self.lineno, 'bogus < or &')
-	    data = rawdata[i:j]
+	    data = res.group(0)
 	    self.handle_data(data)
 	    self.lineno = self.lineno + string.count(data, '\n')
 	    i = j
@@ -252,64 +259,62 @@ class XMLParser:
 	rawdata = self.rawdata
 	if rawdata[i:i+4] <> '<!--':
 	    raise RuntimeError, 'unexpected call to handle_comment'
-	j = commentclose.search(rawdata, i+4)
-	if j < 0:
+	res = commentclose.search(rawdata, i+4)
+	if not res:
 	    return -1
-	if doubledash.search(rawdata, i+4) < j:
-	    self.syntax_error(self.lineno, '`--\' in comment')
-	self.handle_comment(rawdata[i+4: j])
-	j = j+commentclose.match(rawdata, j)
-	return j-i
+	# doubledash search will succeed because it's a subset of commentclose
+	if doubledash.search(rawdata, i+4).start(0) < res.start(0):
+	    self.syntax_error(self.lineno, "`--' inside comment")
+	self.handle_comment(rawdata[i+4: res.start(0)])
+	return res.end(0)
 
     # Internal -- handle CDATA tag, return lenth or -1 if not terminated
     def parse_cdata(self, i):
 	rawdata = self.rawdata
 	if rawdata[i:i+9] <> '<![CDATA[':
 	    raise RuntimeError, 'unexpected call to handle_cdata'
-	j = cdataclose.search(rawdata, i+9)
-	if j < 0:
+	res = cdataclose.search(rawdata, i+9)
+	if not res:
 	    return -1
-	self.handle_cdata(rawdata[i+9:j])
-	j = j+cdataclose.match(rawdata, j)
-	return j-i
+	self.handle_cdata(rawdata[i+9:res.start(0)])
+	return res.end(0)
 
-    def parse_proc(self, i):
+    def parse_proc(self, i, res):
 	rawdata = self.rawdata
-	j = procopen.match(rawdata, i)
-	if j < 0:
+	if not res:
 	    raise RuntimeError, 'unexpected call to parse_proc'
-	name = procopen.group(1)
-	k = procclose.search(rawdata, i+j)
-	if k < 0:
+	name = res.group('proc')
+	res = procclose.search(rawdata, res.end(0))
+	if not res:
 	    return -1
-	self.handle_proc(name, rawdata[i+j:k])
-	k = k+procclose.match(rawdata, k)
-	return k-i
+	self.handle_proc(name, rawdata[res.pos:res.start(0)])
+	return res.end(0)
 
     # Internal -- handle starttag, return length or -1 if not terminated
     def parse_starttag(self, i):
 	rawdata = self.rawdata
 	# i points to start of tag
-	j = endbracket.search(rawdata, i+1)
-	if j < 0:
+	end = endbracket.search(rawdata, i+1)
+	if not end:
 	    return -1
+	j = end.start(0)
 	# Now parse the data between i+1 and j into a tag and attrs
 	attrdict = {}
-	k = tagfind.match(rawdata, i+1)
-	if k < 0:
+	res = tagfind.match(rawdata, i+1)
+	if not res:
 	    raise RuntimeError, 'unexpected call to parse_starttag'
-	k = i+1+k
-	tag = string.lower(rawdata[i+1:k])
+	k = res.end(0)
+	tag = res.group(0)
 	if hasattr(self, tag + '_attributes'):
-		attrlist = getattr(self, tag + '_attributes')
+	    attrlist = getattr(self, tag + '_attributes')
 	else:
-		attrlist = None
+	    attrlist = None
 	self.lasttag = tag
 	while k < j:
-	    l = attrfind.match(rawdata, k)
-	    if l < 0: break
-	    attrname, rest, attrvalue = attrfind.group(1, 2, 3)
-	    if not rest:
+	    res = attrfind.match(rawdata, k)
+	    if not res: break
+	    attrname, attrvalue = res.group('name', 'value')
+	    if attrvalue is None:
 		self.syntax_error(self.lineno, 'no attribute value specified')
 		attrvalue = attrname
 	    elif attrvalue[:1] == "'" == attrvalue[-1:] or \
@@ -317,6 +322,7 @@ class XMLParser:
 		attrvalue = attrvalue[1:-1]
 	    else:
 		self.syntax_error(self.lineno, 'attribute value not quoted')
+	    # XXXX are attribute names case sensitive?
 	    attrname = string.lower(attrname)
 	    if attrlist is not None and attrname not in attrlist:
 		self.syntax_error(self.lineno,
@@ -325,29 +331,36 @@ class XMLParser:
 	    if attrdict.has_key(attrname):
 		self.syntax_error(self.lineno, 'attribute specified twice')
 	    attrdict[attrname] = self.translate_references(attrvalue)
-	    k = k + l
+	    k = res.end(0)
+	res = starttagend.match(rawdata, k)
+	if not res:
+	    self.syntax_error(self.lineno, 'garbage in start tag')
 	self.finish_starttag(tag, attrdict)
-	if starttagend.match(rawdata, k) > 0 and starttagend.group(1) == '/':
+	if res and res.group('slash') == '/':
 	    self.finish_endtag(tag)
-	return j+1
+	return end.end(0)
 
     # Internal -- parse endtag
     def parse_endtag(self, i):
 	rawdata = self.rawdata
-	j = endbracket.search(rawdata, i+1)
-	if j < 0:
+	end = endbracket.search(rawdata, i+1)
+	if not end:
 	    return -1
-	k = tagfind.match(rawdata, i+2)
-	if k < 0:
+	res = tagfind.match(rawdata, i+2)
+	if not res:
 	    self.syntax_error(self.lineno, 'no name specified in end tag')
 	    tag = ''
-	    k = 0
+	    k = i+2
 	else:
-	    tag = string.lower(rawdata[i+2:i+2+k])
-	if i+2+k != j and space.match(rawdata, i+2+k) != j-i-2-k:
-	    self.syntax_error(self.lineno, 'end tag not well-formed')
+	    tag = res.group(0)
+	    k = res.end(0)
+	if k != end.start(0):
+	    # check that there is only white space at end of tag
+	    res = space.match(rawdata, k)
+	    if res is None or res.end(0) != end.start(0):
+		self.syntax_error(self.lineno, 'garbage in end tag')
 	self.finish_endtag(tag)
-	return j+1
+	return end.end(0)
 
     # Internal -- finish processing of start tag
     # Return -1 for unknown tag, 1 for balanced tag
