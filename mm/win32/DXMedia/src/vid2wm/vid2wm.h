@@ -6,8 +6,6 @@ DEFINE_GUID(IID_IWMConverter,
 struct IWMConverter : public IUnknown
 	{
 	virtual HRESULT __stdcall SetWMWriter(IUnknown *pI)=0;
-	virtual HRESULT __stdcall SetAudioInputProps(DWORD dwInputNum,IUnknown *pI)=0;
-	virtual HRESULT __stdcall SetVideoInputProps(DWORD dwInputNum,IUnknown *pI)=0;
 	};
 
 class CVideoRenderer;
@@ -98,6 +96,7 @@ public:
 	int m_ixframe;
 	DWORD m_lastTimestamp;
 	WMWriter *m_pWMWriter;
+	ULONG m_sampleSize;
 
 }; 
 
