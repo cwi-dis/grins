@@ -939,6 +939,8 @@ class LayoutManager(LayoutManagerBase):
 		if self._autoscale and not self._cancroll:
 			d2lscale = self.findDeviceToLogicalScale(w, h + self._cycaption)
 			self.setDeviceToLogicalScale(d2lscale)
+		else:
+			self.updateCanvasSize()
 		self._viewport = Viewport(name, self, attrdict, self._device2logical)
 		self._drawContext.reset()
 		return self._viewport
@@ -958,6 +960,16 @@ class LayoutManager(LayoutManagerBase):
 		self._parent.showScale(d2lscale)
 		self.updateCanvasSize() 
 		self.InvalidateRect(self.GetClientRect())
+
+	# override the base method to set the canvas size according to the showed viewport size
+	def updateCanvasSize(self):
+		if self._viewport is not None:
+			wingeom = self._viewport._attrdict.get('wingeom')
+			if wingeom is not None:
+				x, y, w, h = wingeom
+				# fix the canvas size 30% bigger than the viewport
+				self._canvas = 0, 0, int((w*1.3)/self._device2logical+0.5), int((h*1.3)/self._device2logical+0.5)
+				self.SetScrollSizes(win32con.MM_TEXT,self._canvas[2:])
 
 	def getDeviceToLogicalScale(self):
 		return self._device2logical
@@ -1243,6 +1255,7 @@ class Viewport(win32window.Window, UserEventMng):
 
 		if oldGeom != newGeom:
 			self.updatecoordinates(newGeom, units=UNIT_PXL)			
+			self._ctx.updateCanvasSize()
 		if newBgcolor != oldBgcolor:
 			if newBgcolor != None:
 				self.updatebgcolor(newBgcolor)
