@@ -807,6 +807,13 @@ class Region(win32window.Window, UserEventMng):
 		
 		# allow to determinate if the region is resizing
 		self._isResizing = 0
+
+	# overide the default newdisplaylist method defined in win32window
+	def newdisplaylist(self, bgcolor = None):
+		if bgcolor is None:
+			if not self._transparent:
+				bgcolor = self._bgcolor
+		return win32window._ResizeableDisplayList(self, bgcolor)
 	
 	def paintOn(self, dc, rc=None):
 		ltrb = l, t, r, b = self.ltrb(self.LRtoDR(self.getwindowpos()))
@@ -888,7 +895,7 @@ class Region(win32window.Window, UserEventMng):
 		self._showname = bv
 		self._ctx.update()
 
-	def setImage(self, handle, filename, fit):
+	def setImage(self, filename, fit):
 		if self._active_displist != None:
 			self._active_displist.newimage(filename, fit)
 
