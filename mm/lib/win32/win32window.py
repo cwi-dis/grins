@@ -130,6 +130,7 @@ class Window:
 		if not self._ptdown or not self._canscroll: return	
 		x1, y1 = self._ptdown
 		x2, y2 = pos
+		self._ptdown = x2, y2
 		dx = x2-x1
 		dy = y2-y1
 		x, y = self._scrollpos
