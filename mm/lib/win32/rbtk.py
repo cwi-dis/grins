@@ -20,7 +20,7 @@ from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 import appcon
 
 # temp
-USE_NEWSUBWINDOWSIMPL = 1
+USE_NEWSUBWINDOWSIMPL = 0
 
 class _rbtk:
 	def __init__(self):

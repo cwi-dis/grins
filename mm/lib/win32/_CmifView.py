@@ -1080,7 +1080,7 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 
 
 #################################################
-USE_NEWSUBWINDOWSIMPL = 1
+USE_NEWSUBWINDOWSIMPL = 0
 
 def _NewSubWindow(parent, rel_coordinates, transparent, type_channel, 
 	defcmap, pixmap, z=0, units=None):
