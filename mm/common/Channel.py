@@ -194,7 +194,7 @@ class Channel:
 			# Next, check that the base window channel exists.
 			try:
 				pchan = self._player.ChannelWinDict[pname]
-			except KeyError:
+			except (AttributeError, KeyError):
 				pchan = None
 				windowinterface.showmessage(
 					'Base window '+`pname`+' for '+
@@ -726,7 +726,7 @@ class Channel:
 ##ChannelWinDict = {}
 
 class ChannelWindow(Channel):
-	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent']
+	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units']
 	node_attrs = Channel.node_attrs + ['duration', 'bgcolor']
 	_visible = TRUE
 	_window_type = SINGLE
@@ -780,7 +780,14 @@ class ChannelWindow(Channel):
 
 	def save_geometry(self):
 		if self._is_shown and self.window:
-			x, y, w, h = self.window.getgeometry()
+			try:
+				units = self._attrdict['units']
+			except KeyError:
+				units = windowinterface.UNIT_MM
+			else:
+				# convert to windowinterface value
+				units = units
+			x, y, w, h = self.window.getgeometry(units = units)
 			self._attrdict['winpos'] = x, y
 			self._attrdict['winsize'] = w, h
 
@@ -871,26 +878,37 @@ class ChannelWindow(Channel):
 					    (self.resize_window, (pchan,)))
 		else:
 			# no basewindow, create a top-level window
+			try:
+				units = self._attrdict['units']
+			except KeyError:
+				units = windowinterface.UNIT_MM
+			else:
+				# convert to windowinterface value
+				units = units
 			if self._attrdict.has_key('winsize'):
 				width, height = self._attrdict['winsize']
 			else:
 				# provide defaults
 				width, height = 50, 50
+				units = windowinterface.UNIT_MM
 			if self._attrdict.has_key('winpos'):
 				x, y = self._attrdict['winpos']
 			else:
 				# provide defaults
 				x, y = 20, 20
+				units = windowinterface.UNIT_MM
 			if self.want_default_colormap:
 				self.window = windowinterface.newcmwindow(x, y,
 					width, height, self._name,
 					visible_channel = self._visible,
-					type_channel = self._window_type)
+					type_channel = self._window_type,
+					units = units)
 			else:
 				self.window = windowinterface.newwindow(x, y,
 					width, height, self._name,
 					visible_channel = self._visible,
-					type_channel = self._window_type)
+					type_channel = self._window_type,
+					units = units)
 			self.window.register(WMEVENTS.WindowExit,
 					     self._destroy_callback, None)
 			if hasattr(self._player, 'editmgr'):
