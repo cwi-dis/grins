@@ -45,7 +45,7 @@ class MainDialog:
 
 	def open_callback(self):
 		import windowinterface
-		windowinterface.InputURLDialog('Open location', '',
+		windowinterface.InputURLDialog('Open location', self.last_location,
 					    self.openURL_callback)
 
 	def setbutton(self, button, value):
