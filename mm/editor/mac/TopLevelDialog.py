@@ -25,6 +25,9 @@ class TopLevelDialog:
 	def setbuttonstate(self, command, showing):
 		self.window.set_toggle(command, showing)
 
+	def setsettingsdict(self, dict):
+		pass
+
 	def showsource(self, source = None, optional=0):
 		if optional and self.source and self.source.is_closed():
 			self.source = None
