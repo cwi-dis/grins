@@ -33,7 +33,7 @@ import MMurl
 import MMAttrdefs
 
 # std win32 libs 
-import win32ui,win32con
+import win32ui, win32con, win32api
 
 # DirectShow support
 DirectShowSdk=win32ui.GetDS()
@@ -69,8 +69,7 @@ class MediaChannel:
 		# release any resources on exit
 		import windowinterface
 		windowinterface.addclosecallback(self.release_player,())
-
-
+		
 	def release_player(self):
 		if self._playBuilder:
 			self._playBuilder.Stop()
@@ -87,13 +86,14 @@ class MediaChannel:
 			except:
 				self._playBuilder=None
 		if not self._playBuilder:
+			print 'failed to create GraphBuilder'
 			return 0
 		return 1
 
 	def playit(self, node, window = None):
 		if not self._playBuilder:
 			return
-
+			
 		url = MMurl.canonURL(self.getfileurl(node))
 		if not self._playBuilder.RenderFile(url):
 			print 'Failed to render',url
@@ -120,22 +120,20 @@ class MediaChannel:
 			self._playEnd=self._playBuilder.GetDuration()
 
 		if window is not None:
-			self.adjustMediaWnd(node,window)
+			self._playBuilder.SetVisible(0)
 			self._playBuilder.SetWindow(window,WM_GRPAPHNOTIFY)
+			self.adjustMediaWnd(node,window)
 			window.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)
-			self.window.HookMessage(self.redraw,WM_REDRAW)
-			self._playBuilder.Run()
-			self._playBuilder.SetVisible(1)
-			window.PostMessage(WM_REDRAW)
+			window.HookMessage(self.redraw,WM_REDRAW)
+			window.PostMessage(WM_REDRAW)			
 		elif self._notifyWindow is None:
 			self._notifyWindow = genericwnd()
 			self._notifyWindow.create()
 			self._notifyWindow.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)
 			self._playBuilder.SetNotifyWindow(self._notifyWindow,WM_GRPAPHNOTIFY)
-			self._playBuilder.Run()
-		self.register_for_timeslices()
+		self._playBuilder.Run()
 		self.__playdone=0
-
+		self.register_for_timeslices()
 
 	def pauseit(self, paused):
 		if self._playBuilder:
@@ -151,8 +149,6 @@ class MediaChannel:
 		self.release_player()
 
 	def showit(self,wnd):
-		if self._playBuilder:
-			self._playBuilder.SetWindow(wnd,WM_GRPAPHNOTIFY)
 		if wnd:wnd.RedrawWindow()
 
 	# scheduler callback, at end of duration
@@ -188,9 +184,11 @@ class MediaChannel:
 		self._playBuilder.SetWindowPosition(rcMediaWnd)
 
 	def redraw(self,params):
+		if self._playBuilder:
+			self._playBuilder.SetVisible(1)
 		if self.window:
 			self.window.RedrawWindow()
-
+	
 	# capture end of media
 	def OnGraphNotify(self,params):
 		if self._playBuilder and not self.__playdone:
