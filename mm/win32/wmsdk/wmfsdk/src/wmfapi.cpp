@@ -1384,6 +1384,7 @@ WMWriter_WriteDSSample(DDWMWriterObject *self, PyObject *args)
 	BYTE *pbsBuffer;
 	hr = pINSSBuffer->GetBuffer(&pbsBuffer);
 	if (FAILED(hr)){
+		pINSSBuffer->Release();
 		seterror("DDWMWriter_WriteDSSample:GetBuffer", hr);
 		return NULL;
 	}
@@ -1824,6 +1825,68 @@ DDWMWriter_WriteDSSample(DDWMWriterObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char DDWMWriter_WriteDSAudioSample__doc__[] =
+""
+;
+static PyObject *
+DDWMWriter_WriteDSAudioSample(DDWMWriterObject *self, PyObject *args)
+{
+	PyObject *obj;
+	DWORD msecOffset=0;
+	DWORD dwFlags=0;
+	if (!PyArg_ParseTuple(args, "O|ii",&obj, &msecOffset, &dwFlags))
+		return NULL;	
+	
+	typedef struct {
+		PyObject_HEAD
+		IMediaSample *pI;
+	} MediaSampleObject;
+	IMediaSample *pMediaSample = ((MediaSampleObject*)obj)->pI;
+
+	REFERENCE_TIME tStart, tStop;
+    HRESULT hr = pMediaSample->GetTime(&tStart,&tStop);
+	if (FAILED(hr)){
+		seterror("DDWMWriter_WriteDSAudioSample:GetTime", hr);
+		return NULL;
+	}
+	BYTE *pBuffer;
+	hr = pMediaSample->GetPointer(&pBuffer);
+	if (FAILED(hr)){
+		seterror("WriteDSAudioSample:GetPointer", hr);
+		return NULL;
+	}
+
+	
+	INSSBuffer *pINSSBuffer = NULL;
+	hr = self->pIWMWriter->AllocateSample(pMediaSample->GetActualDataLength(),&pINSSBuffer);
+	if (FAILED(hr)){
+		seterror("WriteDSAudioSample:AllocateSample", hr);
+		return NULL;
+	}
+
+	BYTE *pbsBuffer;
+	hr = pINSSBuffer->GetBuffer(&pbsBuffer);
+	if (FAILED(hr)){
+		seterror("WriteDSAudioSample:GetBuffer", hr);
+		return NULL;
+	}
+	CopyMemory(pbsBuffer,pBuffer,pMediaSample->GetActualDataLength());
+
+	if(msecOffset>0)
+		{
+		QWORD cnsecOffset = QWORD(msecOffset)*QWORD(10000);
+		tStart += cnsecOffset;
+		}
+	hr = self->pIWMWriter->WriteSample(self->dwAudioInputNum, tStart, dwFlags, pINSSBuffer);
+	pINSSBuffer->Release();
+	
+	if (FAILED(hr)){
+		seterror("DDWMWriter_WriteDSAudioSample:WriteSample", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
 
 static char DDWMWriter_QueryIWMWriterAdvanced__doc__[] =
 ""
@@ -1890,6 +1953,79 @@ DDWMWriter_SetVideoFormat(DDWMWriterObject *self, PyObject *args)
 	if(FAILED(hr))
 		{
 		seterror("SetInputProps",hr);
+		return NULL;
+		}
+	Py_INCREF(Py_None);
+	return Py_None;
+	}
+
+static char DDWMWriter_SetAudioFormat__doc__[] =
+""
+;
+static PyObject *
+DDWMWriter_SetAudioFormat(DDWMWriterObject *self, PyObject *args)
+{
+	WMMediaTypeObject *obj;
+	if (!PyArg_ParseTuple(args, "O!", &WMMediaTypeType, &obj))
+		return NULL;	
+	if(!self->pIAudioInputProps){
+		seterror("Audioless profile");
+		return NULL;	
+	}
+	HRESULT hr = self->pIAudioInputProps->SetMediaType(obj->pMediaType);
+	if(FAILED(hr))
+		{
+		seterror("SetMediaType",hr);
+		return NULL;
+		}
+	hr = self->pIWMWriter->SetInputProps(self->dwAudioInputNum, self->pIAudioInputProps);
+	if(FAILED(hr))
+		{
+		seterror("SetInputProps",hr);
+		return NULL;
+		}
+	Py_INCREF(Py_None);
+	return Py_None;
+	}
+
+static char DDWMWriter_SetDSAudioFormat__doc__[] =
+""
+;
+static PyObject *
+DDWMWriter_SetDSAudioFormat(DDWMWriterObject *self, PyObject *args)
+{
+	PyObject *obj;
+	if (!PyArg_ParseTuple(args,"O",&obj)) 
+		return NULL;
+
+	typedef struct {
+		PyObject_HEAD
+		const CMediaType *pmt;
+	} MediaTypeObject;
+	const CMediaType *pmt = ((MediaTypeObject*)obj)->pmt;
+
+	WM_MEDIA_TYPE mt;
+	WM_MEDIA_TYPE *pType = &mt;
+    pType->majortype = *pmt->Type();
+    pType->subtype =  *pmt->Subtype();
+    pType->bFixedSizeSamples = pmt->IsFixedSize();
+    pType->bTemporalCompression = pmt->IsTemporalCompressed();
+    pType->lSampleSize = pmt->GetSampleSize();
+    pType->formattype = *pmt->FormatType();
+    pType->pUnk = NULL;
+    pType->cbFormat = pmt->FormatLength();
+	pType->pbFormat = pmt->Format();
+		
+	HRESULT hr = self->pIAudioInputProps->SetMediaType(pType);
+	if(FAILED(hr))
+		{
+		seterror("DDWMWriter_SetDSAudioFormat:SetMediaType",hr);
+		return NULL;
+		}
+	hr = self->pIWMWriter->SetInputProps(self->dwAudioInputNum, self->pIAudioInputProps);
+	if(FAILED(hr))
+		{
+		seterror("DDWMWriter_SetDSAudioFormat:SetInputProps",hr);
 		return NULL;
 		}
 	Py_INCREF(Py_None);
@@ -1977,9 +2113,12 @@ static struct PyMethodDef DDWMWriter_methods[] = {
 	{"AllocateSample", (PyCFunction)DDWMWriter_AllocateSample, METH_VARARGS, DDWMWriter_AllocateSample__doc__},
 	{"WriteSample", (PyCFunction)DDWMWriter_WriteSample, METH_VARARGS, DDWMWriter_WriteSample__doc__},
 	{"WriteDSSample", (PyCFunction)DDWMWriter_WriteDSSample, METH_VARARGS, DDWMWriter_WriteDSSample__doc__},
+	{"WriteDSAudioSample", (PyCFunction)DDWMWriter_WriteDSAudioSample, METH_VARARGS, DDWMWriter_WriteDSAudioSample__doc__},
 	{"QueryIWMWriterAdvanced", (PyCFunction)DDWMWriter_QueryIWMWriterAdvanced, METH_VARARGS, DDWMWriter_QueryIWMWriterAdvanced__doc__},
 	{"QueryIUnknown", (PyCFunction)DDWMWriter_QueryIUnknown, METH_VARARGS, DDWMWriter_QueryIUnknown__doc__},
 	{"SetVideoFormat", (PyCFunction)DDWMWriter_SetVideoFormat, METH_VARARGS, DDWMWriter_SetVideoFormat__doc__},
+	{"SetAudioFormat", (PyCFunction)DDWMWriter_SetAudioFormat, METH_VARARGS, DDWMWriter_SetAudioFormat__doc__},
+	{"SetDSAudioFormat", (PyCFunction)DDWMWriter_SetDSAudioFormat, METH_VARARGS, DDWMWriter_SetDSAudioFormat__doc__},
 	{"AllocateDDSample", (PyCFunction)DDWMWriter_AllocateDDSample, METH_VARARGS, DDWMWriter_AllocateDDSample__doc__},
 	{"WriteVideoSample", (PyCFunction)DDWMWriter_WriteVideoSample, METH_VARARGS, DDWMWriter_WriteVideoSample__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
@@ -2822,7 +2961,7 @@ WMInputMediaProps_SetDSMediaType(WMInputMediaPropsObject *self, PyObject *args)
     pType->majortype = *pmt->Type();
     pType->subtype =  *pmt->Subtype();
     pType->bFixedSizeSamples = pmt->IsFixedSize();
-    pType->bTemporalCompression = TRUE; // pmt->IsTemporalCompressed();
+    pType->bTemporalCompression = pmt->IsTemporalCompressed();
     pType->lSampleSize = pmt->GetSampleSize();
     pType->formattype = *pmt->FormatType();
     pType->pUnk = NULL;
