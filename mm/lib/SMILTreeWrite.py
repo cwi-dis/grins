@@ -1370,8 +1370,10 @@ class SMILWriter(SMIL):
 			if self.progress:
 				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
 			file = convertvideofile(u, srcurl, dstdir, file, node)
-			self.files_generated[file] = 'b'
-			return file
+			if file:
+				self.files_generated[file] = 'b'
+				return file
+			print 'convertvideofile returned',file
 		if u.headers.maintype == 'image':
 			from realconvert import convertimagefile
 			# XXXX This is a hack. convertimagefile may change the filename (and

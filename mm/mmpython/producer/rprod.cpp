@@ -4205,20 +4205,28 @@ RP_CreateRMBuildEngine(PyObject *self, PyObject *args)
 	return (PyObject *) obj;
 }
 
-static char RP_SetDllCategoryPaths__doc__[] =
+static char RP_SetDllAccessPath__doc__[] =
 "(string)->None. Set the name of the directory where the DLLs live."
 ;
 
-static PyObject *
-RP_SetDllCategoryPaths(PyObject *self, PyObject *args)
-{
-	char *szAppDir;
+STDAPI SetDLLAccessPath(const char *pPathDescriptor);
 
-	if (!PyArg_ParseTuple(args, "s", &szAppDir))
+static PyObject *
+RP_SetDllAccessPath(PyObject *self, PyObject *args)
+{
+	char *paths;
+	int length;	// not used but needed since paths contains NULs
+
+	if (!PyArg_ParseTuple(args, "s#", &paths, &length))
 		return NULL;
 
-	SetDllCategoryPaths(szAppDir);
-	
+	// Set the path used to load RealProducer Core G2 SDK DLL's
+#ifdef RN_DLL_ACCESS
+	GetDLLAccessPath()->SetAccessPaths(paths);
+#else
+	SetDLLAccessPath(paths);
+#endif
+
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -4227,50 +4235,11 @@ RP_SetDllCategoryPaths(PyObject *self, PyObject *args)
 
 static struct PyMethodDef RP_methods[] = {
 	{"CreateRMBuildEngine", (PyCFunction)RP_CreateRMBuildEngine, METH_VARARGS, RP_CreateRMBuildEngine__doc__},
-	{"SetDllCategoryPaths", (PyCFunction)RP_SetDllCategoryPaths, METH_VARARGS, RP_SetDllCategoryPaths__doc__},
+	{"SetDllAccessPath", (PyCFunction)RP_SetDllAccessPath, METH_VARARGS, RP_SetDllAccessPath__doc__},
 
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
-
-STDAPI SetDLLAccessPath(const char *pPathDescriptor);
-
-static void
-SetDllCategoryPaths(char *szAppDir)
-{
-	// Set the DLL Access paths
-	// Win32 DEBUG builds and all Mac builds set everything to the app dir
-	// All other builds look in subdirs underneath the app dir
-	UINT32 ulNumChars = 0;
-	char szDllPath[6*APP_MAX_PATH] = "";
-
-	ulNumChars += sprintf(szDllPath+ulNumChars,"DT_Plugins=%s",szAppDir)+1;
-	ulNumChars += sprintf(szDllPath+ulNumChars,"DT_Codecs=%s",szAppDir)+1;
-	ulNumChars += sprintf(szDllPath+ulNumChars,"DT_EncSDK=%s",szAppDir)+1;
-	ulNumChars += sprintf(szDllPath+ulNumChars,"DT_Common=%s",szAppDir)+1;
-	ulNumChars += sprintf(szDllPath+ulNumChars,"DT_Update=%s",szAppDir)+1;
-
-	// Set the path used to load RealProducer Core G2 SDK DLL's
-#ifdef RN_DLL_ACCESS
-	GetDLLAccessPath()->SetAccessPaths(szDllPath);
-#else
-	SetDLLAccessPath(szDllPath);
-#endif
-}
-
-static void
-SetDefaultDllCategoryPaths()
-{
-	char szAppDir[APP_MAX_PATH+1] = "";
-
-	// Get the app dir -- this is platform specific
-#if defined(_MACINTOSH)
-	strcpy(szAppDir, "flap:jack:cmif:mmpython:producer:mac:bin:");
-#else
-	strcpy(szAppDir, "d:\\ufs\\mm\\cmif\\bin\\win32\\");
-#endif
-	SetDllCategoryPaths(szAppDir);
-}
 
 /* Initialization function for the module (*must* be called initproducer) */
 
@@ -4286,11 +4255,6 @@ void
 initproducer()
 {
 	PyObject *m, *d, *x;
-
-#if 1
-	/* XXXX To be fixed shortly */
-	SetDefaultDllCategoryPaths();
-#endif
 
 	/* Create the module and add the functions */
 	m = Py_InitModule4("producer", RP_methods,
