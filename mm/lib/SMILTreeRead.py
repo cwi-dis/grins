@@ -3657,13 +3657,24 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif endsync == 'last':
 			node.attrdict['terminator'] = 'LAST'
 		elif endsync == 'all':
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error("endsync attribute value `all' not compatible with SMIL 1.0", node.__lineno)
+			self.__context.attributes['project_boston'] = 1
 			node.attrdict['terminator'] = 'ALL'
+		elif endsync == 'media':
+			self.syntax_error("endsync attribute value `media' not allowed in par and excl", node.__lineno)
 		else:
 			res = idref.match(endsync)
 			if res is None:
-				self.syntax_error('bad endsync attribute')
-				return
-			id = res.group('id')
+				# SMIL 2 version of endsync Id-value
+				if endsync[0] == '\\':
+					endsync = endsync[1:]
+				id = endsync
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('endsync attribute value not compatible with SMIL 1.0', node.__lineno)
+				self.__context.attributes['project_boston'] = 1
+			else:
+				id = res.group('id')
 			if self.__nodemap.has_key(id):
 				child = self.__nodemap[id]
 				if node.IsTimeChild(child):
@@ -4322,8 +4333,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# non-fatal syntax errors
 
-	def syntax_error(self, msg):
-		msg = 'warning: syntax error on line %d: %s' % (self.lineno, msg)
+	def syntax_error(self, msg, lineno = None):
+		msg = 'warning: syntax error on line %d: %s' % (lineno or self.lineno, msg)
 		if self.__printfunc is not None:
 			self.__printdata.append(msg)
 		else:
@@ -4870,6 +4881,3 @@ def parseattrval(name, string, context):
 	if MMAttrdefs.getdef(name)[0][0] == 'string':
 		return string
 	return MMAttrdefs.parsevalue(name, string, context)
-
-
- 
