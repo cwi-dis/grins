@@ -7,45 +7,47 @@ error = 'windowinterface.error'
 # try these visuals in this order
 tryvisuals = [(X.TrueColor, 24),
 	      (X.TrueColor, 32),
+	      (X.TrueColor, 16),
+	      (X.TrueColor, 15),
 	      (X.TrueColor, 8),
 	      (X.PseudoColor, 8)]
 
 resources = [
 # fonts
-'GRiNS*menuBar*fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*menubar*fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmLabel.fontList: -*-helvetica-bold-r-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmLabelGadget.fontList: -*-helvetica-bold-r-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmList.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmMenuShell*XmCascadeButton.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmMenuShell*XmCascadeButtonGadget.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmMenuShell*XmLabel.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmMenuShell*XmLabelGadget.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmMenuShell*XmPushButton.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmMenuShell*XmPushButtonGadget.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmMenuShell*XmToggleButton.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmMenuShell*XmToggleButtonGadget.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmPushButton.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmPushButtonGadget.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmScale*fontList: -*-helvetica-bold-r-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmText.fontList: -*-screen-medium-r-normal--15-*-*-*-*-*-iso8859-1',
-'GRiNS*XmTextField.fontList: -*-screen-medium-r-normal--15-*-*-*-*-*-iso8859-1',
-'GRiNS*XmToggleButton.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
-'GRiNS*XmToggleButtonGadget.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*menuBar*fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*menubar*fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmLabel.fontList: -*-helvetica-bold-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmLabelGadget.fontList: -*-helvetica-bold-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmList.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmCascadeButton.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmCascadeButtonGadget.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmLabel.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmLabelGadget.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmPushButton.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmPushButtonGadget.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmToggleButton.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmToggleButtonGadget.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmPushButton.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmPushButtonGadget.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmScale*fontList: -*-helvetica-bold-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmText.fontList: -*-screen-medium-r-normal--15-*-*-*-*-*-iso8859-1',
+'*XmTextField.fontList: -*-screen-medium-r-normal--15-*-*-*-*-*-iso8859-1',
+'*XmToggleButton.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmToggleButtonGadget.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
 # colors
-## 'GRiNS*XmDrawnButton.background: #999999',
-## 'GRiNS*XmList.background: #999999',
-'GRiNS*XmMenuShell*XmToggleButton.selectColor: #000000',
-'GRiNS*XmMenuShell*background: #999999',
-'GRiNS*help_label.foreground: #000000',
-'GRiNS*help_label.background: #eedd82',
-'GRiNS*XmMenuShell*help_label.background: #eedd82',
-## 'GRiNS*XmPushButton.background: #999999',
-'GRiNS*XmScale*foreground: #000000',
-'GRiNS*XmScale.XmScrollBar.foreground: #999999',
-'GRiNS*XmText.background: #b98e8e',
-'GRiNS*XmTextField.background: #b98e8e',
-'GRiNS*background: #999999',
+## '*XmDrawnButton.background: #999999',
+## '*XmList.background: #999999',
+'*XmMenuShell*XmToggleButton.selectColor: #000000',
+'*XmMenuShell*background: #e0e0e0',
+'*help_label.foreground: #000000',
+'*help_label.background: #eedd82',
+'*XmMenuShell*help_label.background: #eedd82',
+## '*XmPushButton.background: #999999',
+'*XmScale*foreground: #000000',
+'*XmScale.XmScrollBar.foreground: #999999',
+'*XmText.background: #b98e8e',
+'*XmTextField.background: #b98e8e',
+'*background: #e0e0e0',
 	]
 
 def _roundi(x):
@@ -147,7 +149,7 @@ class _Splash:
 		self.__initialized = 1
 		Xt.ToolkitInitialize()
 		Xt.SetFallbackResources(resources)
-		self.dpy = dpy = Xt.OpenDisplay(None, None, 'GRiNS',
+		self.dpy = dpy = Xt.OpenDisplay(None, None, 'Windowinterface',
 						[], sys.argv)
 ## 		dpy.Synchronize(1)
 		try:
@@ -247,13 +249,17 @@ class _Splash:
 			self.imgformat = myxrgb8
 		else:
 			# find an imgformat that corresponds with our visual
+			if visual.depth <= 16:
+				depth = 16
+			else:
+				depth = 32
 			for name, format in imgformat.__dict__.items():
 				if type(format) is not type(imgformat.rgb):
 					continue
 				descr = format.descr
 				if descr['type'] != 'rgb' or \
-				   descr['size'] != 32 or \
-				   descr['align'] != 32 or \
+				   descr['size'] != depth or \
+				   descr['align'] != depth or \
 				   descr['b2t'] != 0:
 					continue
 				r, g, b = descr['comp'][:3]
@@ -262,7 +268,7 @@ class _Splash:
 				   visual.blue_mask  == ((1<<b[1])-1) << b[0]:
 					break
 			else:
-				format = imgformat.rgb
+				raise error, 'no proper imgformat available'
 			self.imgformat = format
 		self.red_shift = red_shift
 		self.red_mask = red_mask
