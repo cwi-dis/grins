@@ -250,8 +250,11 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 
 	# Create the OS window and set the toolbar	
 	def createOsWnd(self,title):
-		strclass=self.registerwndclass()		
-		self._obj_.Create(strclass,title)
+		strclass=self.registerwndclass()
+		if __main__.toplevel.is_embedded():
+			self._obj_.Create(strclass, title, win32con.WS_OVERLAPPEDWINDOW)
+		else:		
+			self._obj_.Create(strclass, title, win32con.WS_VISIBLE | win32con.WS_OVERLAPPEDWINDOW)
 
 		# toolbar
 		self.EnableDocking(afxres.CBRS_ALIGN_ANY)
@@ -268,6 +271,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 	def registerwndclass(self):
 		# register top frame class
 		clstyle=win32con.CS_DBLCLKS
+		toplevel = __main__.toplevel
 		exstyle=0
 		#icon=Afx.GetApp().LoadIcon(grinsRC.IDI_GRINS_ED)
 		icon=Afx.GetApp().LoadIcon(grinsRC.IDR_GRINSED)
@@ -315,6 +319,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 	# Called after the window has been created for further initialization
 	# Called after CWnd::OnCreate
 	def OnCreate(self, createStruct):
+		toplevel = __main__.toplevel
 		self.HookMessage(self.onSize,win32con.WM_SIZE)
 		self.HookMessage(self.onMove,win32con.WM_MOVE)
 		self.HookMessage(self.onKey,win32con.WM_KEYDOWN)
@@ -640,7 +645,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		return win32window.ViewportContext(self, w, h, units, bgcolor)
 
 	def newEmbedded(self, x, y, w, h, title, units = UNIT_MM, adornments=None, canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
-		self.ShowWindow(win32con.SW_HIDE)
 		hwnd =  __main__.toplevel.get_embedded_hwnd()
 		import embedding
 		return embedding.EmbeddedWnd(self, w, h, units, bgcolor, hwnd, title)

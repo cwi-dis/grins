@@ -173,9 +173,6 @@ class _Toplevel:
 			for r in self._register_entries:
 				ev,cb,arg=r
 				frame.register(ev,cb,arg)
-			if self.is_embedded():
-				print 'running embedded'
-				frame.ShowWindow(win32con.SW_HIDE)
 		return self._subwindows[0]
 
 	# Called by win32 modules for every open document
@@ -192,9 +189,6 @@ class _Toplevel:
 		for r in self._register_entries:
 			ev,cb,arg=r
 			frame.register(ev,cb,arg)
-		if self.is_embedded():
-			print 'running embedded'
-			frame.ShowWindow(win32con.SW_HIDE)
 		return frame
 	
 	# Returns the active mainwnd
