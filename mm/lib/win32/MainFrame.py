@@ -810,20 +810,20 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		id_stop = usercmdui.usercmd2id(usercmd.STOP)
 		if state == Player.PLAYING:
 			self.HookCommandUpdate(self.OnUpdateCmdEnableAndUncheck,id_pause)
-			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_play)
-			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_stop)
+			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_play)
+			self.HookCommandUpdate(self.OnUpdateCmdEnableAndUncheck,id_stop)
 		elif state == Player.PAUSING:
 			self.HookCommandUpdate(self.OnUpdateCmdEnableAndUncheck,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdEnableAndCheck,id_pause)
-			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_stop)
+			self.HookCommandUpdate(self.OnUpdateCmdEnableAndUncheck,id_stop)
 		elif state == Player.STOPPED:
 			self.HookCommandUpdate(self.OnUpdateCmdEnableAndUncheck,id_play)
-			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_stop)
-			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_pause)
+			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_stop)
+			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_pause)
 		else:
-			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_pause)
-			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_play)
-			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_stop)
+			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_pause)
+			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_play)
+			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_stop)
 
 	# Return the commandlist for the context
 	def get_commandlist(self,context):
@@ -843,8 +843,18 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		cmdui.SetCheck(0)
 		cmdui.Enable(1)
 
-	def OnUpdateCmdDissable(self,cmdui):
+	def OnUpdateCmdDissableAndUncheck(self,cmdui):
 		cmdui.SetCheck(0)
+		cmdui.Enable(0)
+
+	def OnUpdateCmdDissable(self,cmdui):
+		# WARNING. Don't call the SetCheck method here.
+		# If you do this, it's turn a button from the PushBotton the to the CheckBox type (see MFC spec.),
+		# (and the button would stay push after an action of the user, instead to back automaticly)
+		# Currently the only buttons who needs to keep the 'push' state are : Play, Pause, and Stop
+		# for this three button, we have a special method (OnUpdateCmdDissableAndUncheck) with uncheck as well
+		# the control
+		# note: to change the state of any check marks (in menu), use a different method
 		cmdui.Enable(0)
 
 	# Response to a user command (menu selection)
