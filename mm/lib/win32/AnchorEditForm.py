@@ -1,3 +1,10 @@
+__version__ = "$Id$"
+
+""" @win32doc|AnchorEditForm
+This module contains the ui implementation of the Anchor Editor
+It is implemented as a ListView with dialog bars.
+"""
+
 # std win32 modules
 import win32ui,win32con,win32api
 
@@ -11,7 +18,9 @@ import afxres,commctrl
 # GRiNS resource ids
 import grinsRC
 
+# Base class for dialog bars
 class DlgBar(window.Wnd):
+	# Class constructor. Calls the base constructors and creates the OS window
 	def __init__(self,parent,resid,align=afxres.CBRS_ALIGN_BOTTOM):
 		AFX_IDW_DIALOGBAR=0xE805
 		wndDlgBar = win32ui.CreateDialogBar()
@@ -19,7 +28,9 @@ class DlgBar(window.Wnd):
 		wndDlgBar.CreateWindow(parent,resid,
 			align,AFX_IDW_DIALOGBAR)
 
+# A dialog bar to Edit Anchors
 class EditAnchorDlgBar(DlgBar):
+	# Class constructor. Calls base class constructor and associates controls to ids
 	def __init__(self,parent,id_cb,opt_cb):
 		DlgBar.__init__(self,parent,grinsRC.IDD_EDIT_ANCHOR_BAR,afxres.CBRS_ALIGN_BOTTOM)
 		self._id_cb=id_cb;self._opt_cb=opt_cb
@@ -34,16 +45,27 @@ class EditAnchorDlgBar(DlgBar):
 
 		self._composite=components.Static(self,grinsRC.IDC_STATIC1)
 		self._composite.attach_to_parent()
-		
+		self._idedit_cb=1
+	
+	# Response to a chenge in the text of the edit box	
 	def OnEdit(self,id,code):
+		if not self._idedit_cb:return
 		if code==win32con.EN_CHANGE and self._id_cb:
 			apply(self._id_cb,(self._idedit.gettext(),))
 
+	# Response to combo box change
 	def OnChangeOption(self,id,code):
 		if code==win32con.CBN_SELCHANGE and self._opt_cb:
 			apply(self._opt_cb,(self._options.getvalue(),))
 
+	def setid(self,id):
+		self._idedit_cb=None
+		self._idedit.settext(id)
+		self._idedit_cb=1
+
+# A dialog bar containing the buttons New,Edit,Delete,Export.
 class AnchorDlgBar(DlgBar):
+	# Class constructor. Call base class constructor and associates controls to ids
 	def __init__(self, parent,cbdict):
 		DlgBar.__init__(self,parent,grinsRC.IDD_ANCHOR_BAR,afxres.CBRS_ALIGN_RIGHT)
 		self._cbdict=cbdict
@@ -56,18 +78,31 @@ class AnchorDlgBar(DlgBar):
 		for i in self._buttons.keys():
 			parent.HookCommand(self.onCmd,b[i]._id)
 			b[i].attach_to_parent()
+			parent.HookCommandUpdate(parent.OnUpdateCmdEnable,b[i]._id)
+		
+	# helper function that given a string id calls the command
 	def call(self,k):
 		d=self._cbdict
 		if d and k in d.keys() and d[k]:
-			apply(apply,d[k])			
+			apply(apply,d[k])	
+	# Response to controls notification		
 	def onCmd(self,id,code):
 		for i in self._buttons.keys():
 			if id==self._buttons[i]._id:
 				self.call(i)
-	def enable(self,strid,f):
-		self._buttons[strid].enable(f)
 
+	# Enables/disables the control with string id.
+	def enable(self,strid,f):
+		if strid in self._buttons.keys():
+			parent=self.GetParent()
+			id=self._buttons[strid]._id
+			if f: parent.HookCommandUpdate(parent.OnUpdateCmdEnable,id)
+			else:parent.HookCommandUpdate(parent.OnUpdateCmdDissable,id)
+
+
+# A dialog bar containing the buttons Restore,Apply,Cancel,OK.
 class StdDlgBar(DlgBar):
+	# Class constructor. Calls base class constructor and associates controls with ids
 	def __init__(self, parent,cbdict):
 		DlgBar.__init__(self,parent,grinsRC.IDD_STDDLGBAR,afxres.CBRS_ALIGN_TOP)
 		parent.HookCommand(self.OnRestore,grinsRC.IDUC_RESTORE)
@@ -75,17 +110,24 @@ class StdDlgBar(DlgBar):
 		parent.HookCommand(self.OnCancel,win32con.IDCANCEL)
 		parent.HookCommand(self.OnOK,win32con.IDOK)
 		self._cbdict=cbdict
+	# helper function that given a string id of a command calls the callback
 	def call(self,k):
 		d=self._cbdict
 		if d and k in d.keys() and d[k]:
-			apply(apply,d[k])				
+			apply(apply,d[k])
+	# Response to button Restore				
 	def OnRestore(self,id,code):self.call('Restore')
+	# Response to button Apply				
 	def OnApply(self,id,code):self.call('Apply')
+	# Response to button OK				
 	def OnOK(self,id,code):self.call('OK')
+	# Response to button Cancel				
 	def OnCancel(self,id,code):self.call('Cancel')
 
-				
+
+# Implementation of the AnchorEditDialog needed by the core system. It is based on the framework class ListView				
 class AnchorEditForm(docview.ListView):
+	# Class constructor. Calls base class constructor and initializes members
 	def __init__(self,doc):
 		docview.ListView.__init__(self,doc)
 		self._title='Anchor Editor'
@@ -94,7 +136,9 @@ class AnchorEditForm(docview.ListView):
 		self._itemlist
 		self._cbdict={}
 		self._typelabels=None
-	
+		self._choice_sens={}
+
+	# part of the constructor initialization	
 	def do_init(self, title, typelabels, list, initial, adornments):
 		self._title=title
 		self._itemlist=list
@@ -102,14 +146,15 @@ class AnchorEditForm(docview.ListView):
 		self._typelabels=typelabels
 		self._cbdict=adornments['callbacks']
 
+	# Called by the framework after the OS window has been created
 	def OnInitialUpdate(self):
 		hwnd = self._obj_.GetSafeHwnd()
 		style = win32api.GetWindowLong(hwnd, win32con.GWL_STYLE);
 		win32api.SetWindowLong(hwnd, win32con.GWL_STYLE, 
-			(style & ~commctrl.LVS_TYPEMASK) | commctrl.LVS_REPORT | commctrl.LVS_SHOWSELALWAYS)
+			(style & ~commctrl.LVS_TYPEMASK) | commctrl.LVS_SINGLESEL | commctrl.LVS_REPORT | commctrl.LVS_SHOWSELALWAYS)
 		self.SetExStyle(commctrl.LVS_EX_FULLROWSELECT)
 		
-		header_list=[("ID",120),("Type",120),]
+		header_list=[("ID",400)]
 		self.InsertListHeader(header_list)
 		self.SetItemList()
 
@@ -117,15 +162,28 @@ class AnchorEditForm(docview.ListView):
 		self._stdDlgBar=StdDlgBar(frame,self._cbdict)
 		self._editBar=EditAnchorDlgBar(frame,self.UpdateID,self.UpdateType)
 		self._itemBar=AnchorDlgBar(frame,self._cbdict)
+
+		self.fittemplate()
 		frame.RecalcLayout()
 		
 		if self._typelabels:
-			self._editBar._options.setoptions(self._typelabels)
+			self._editBar._options.initoptions(self._typelabels,-1)
 
 		self.GetParent().HookNotify(self.OnNotifyItemChanged,commctrl.LVN_ITEMCHANGED)
 		self.SelectItem(self._itemlist_initial)
 		return 0
 
+	# Adjust dimensions to fit resource template
+	def fittemplate(self):
+		frame=self.GetParent()
+		rc=win32mu.DlgTemplate(grinsRC.IDD_EDIT_ANCHOR_BAR).getRect()
+		from sysmetrics import cycaption,cyborder,cxborder,cxframe
+		h= 240 #rc.height() + 2*cycaption+ 2*cyborder
+		w=rc.width()+2*cxframe+2*cxborder
+		flags=win32con.SWP_NOZORDER|win32con.SWP_NOACTIVATE|win32con.SWP_NOMOVE
+		frame.SetWindowPos(0, (0,0,w,h),flags)
+
+	# Called by the framework when the ListView selection has changed
 	def OnNotifyItemChanged(self,nm, nmrest):
 		(hwndFrom, idFrom, code), (itemNotify, sub, newState, oldState, change, point, lparam) = nm, nmrest
 		oldSel = (oldState & commctrl.LVIS_SELECTED)<>0
@@ -133,22 +191,24 @@ class AnchorEditForm(docview.ListView):
 		if oldSel != newSel and self._selecteditem!=itemNotify:
 			try:
 				self._selecteditem = itemNotify
-				self.call('Anchor')
 				self.ItemToEditor()
+				self.call('Anchor')
 			except win32ui.error:
 				self._selecteditem = None
 
+	# Response to key presed
 	def OnKeyDown(self,params):
 		msg=win32mu.Win32Msg(params)
 		print params
 		# set focus to dlg on Tab and Enter
 
+	# Set the extended style of the list control
 	def SetExStyle(self,or_style):
 		style=self.GetListCtrl().SendMessage(commctrl.LVM_GETEXTENDEDLISTVIEWSTYLE)
 		style = style | or_style
 		self.GetListCtrl().SendMessage(commctrl.LVM_SETEXTENDEDLISTVIEWSTYLE,0,style)
 
-
+	# Returns the index of the selected item
 	def GetSelected(self):
 		try:
 			index = self.GetNextItem(-1, commctrl.LVNI_SELECTED)
@@ -156,7 +216,7 @@ class AnchorEditForm(docview.ListView):
 			index=None
 		return index
 
-
+	# Transfer date from the list to the edit area
 	def ItemToEditor(self):
 		sel=self._selecteditem
 		if sel==None:return
@@ -164,43 +224,42 @@ class AnchorEditForm(docview.ListView):
 			id = self.GetItemText(sel,0)
 		except win32ui.error:
 			id=''
-#		try:
-#			type = self.GetItemText(sel,1)
-#		except win32ui.error:
-#			attrval=''
 
-		d=self._editBar
-		d._idedit.settext(id)
-#		d._options.setcursel(ix)
+		self._editBar.setid(id)
 		self.SetFocus()
 
+	# Felper function that calls the callback given a string id
 	def call(self,k):
 		d=self._cbdict
 		if d and k in d.keys() and d[k]:
-			apply(apply,d[k])			
+			apply(apply,d[k])
+
+	# Update the id column of the list		
 	def UpdateID(self,str):
-		self.SetItemText(self._selecteditem, 0, str)
+		if str:
+			self.SetItemText(self._selecteditem, 0, str)
 		self.call('EditId')
-	
+
+	# Update the Type column of the list
 	def UpdateType(self,str):
-		# not supported yet
-		#self.SetItemText(self._selecteditem, 1, str)	
 		self.call('Type')
 
+	# Inserts a column header to the list control
 	def InsertListHeader(self,header_list):
 		for ix in range(len(header_list)):
 			t=header_list[ix]
 			format=(commctrl.LVCFMT_LEFT, t[1], t[0], 0)
 			self.InsertColumn(ix, format)
 
+	# Insert the itemlist in the list control
 	def SetItemList(self):
 		itemlist=self._itemlist
 		for i in range(len(itemlist)):
 			l = itemlist[i]
 			if type(l)==type(''):
 				self.InsertItem(i,l)
-				self.SetItemText(i,1,' ')
-				
+
+	# Select a row in the list cntrol			
 	def SelectItem(self,nItem=None):
 		if not nItem:nItem=-1
 		#args: nItem,nSubItem,nMask,szItem,nImage,nState,nStateMask,lParam
@@ -209,38 +268,46 @@ class AnchorEditForm(docview.ListView):
 		nState=nStateMask=commctrl.LVIS_SELECTED|commctrl.LVIS_FOCUSED
 		self.SetItem(nItem,nSubItem,nMask,szItem,nImage,nState,nStateMask,lParam)
 
-	# called by mainwnd
+	# Called by the farmework when the view is activated or deactivated
 	def onActivate(self,f):
 		pass
 
 	# cmif general interface
+	# Called by the core to close this window
 	def close(self):
 		if hasattr(self,'GetParent'):
 			self.GetParent().DestroyWindow()
+
+	# Called by the core to set the title of this view
 	def settitle(self,title):
 		self._title=title
 		if hasattr(self,'GetParent'):
 			if self.GetParent().GetSafeHwnd():
 				self.GetParent().SetWindowText(title)
 
+	# Called by the core to show this view
 	def show(self):
 		self.pop() # for now
 
+	# Called by the core to bring this window  to the front
 	def pop(self):
 		childframe=self.GetParent()
 		childframe.ShowWindow(win32con.SW_SHOW)
 		frame=childframe.GetMDIFrame()
 		frame.MDIActivate(childframe)
 
+	# Called by the core to hide this view
 	def hide(self):
 		self.ShowWindow(win32con.SW_HIDE)
 
+	# Response to parent request to close
 	# the parent frame delegates the responcibility to us
 	# we must decide what to do (OK,Cancel,..)
 	# interpret it as a Cancel for now (we should ask, save or not)
 	def OnClose(self):
 		self.call('Cancel')
 
+	# Helper function that calls a callback given a string id
 	def call(self,k):
 		d=self._cbdict
 		if d and k in d.keys() and d[k]:
@@ -278,11 +345,11 @@ class AnchorEditForm(docview.ListView):
 	# possible to hide or deactivate this part of the window.
 	def type_choice_hide(self):
 		"""Hide the type choice part of the dialog."""
-		self._editBar._options.enable(0)
+		self._editBar._options.hide()
 
 	def type_choice_show(self):
 		"""Show the type choice part of the dialog."""
-		self._editBar._options.enable(1)
+		self._editBar._options.show()
 
 	def type_choice_setchoice(self, choice):
 		"""Set the current choice.
@@ -305,7 +372,7 @@ class AnchorEditForm(docview.ListView):
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		pass #self.__window.type_choice_setsensitive(pos, sensitive)
+		self._editBar._options.setsensitive(pos, sensitive)
 
 
 	# Interface to the selection area.  The selection area
@@ -317,7 +384,7 @@ class AnchorEditForm(docview.ListView):
 	# called.
 	def selection_seteditable(self, editable):
 		"""Make the selected string editable or not."""
-		pass
+		self._editBar._idedit.enable(editable)
 
 	def selection_setlist(self, list, initial):
 		"""Set the list of strings.
@@ -342,6 +409,7 @@ class AnchorEditForm(docview.ListView):
 		pos -- 0 <= pos < len(list) or None -- the index of
 			the item to be selected
 		"""
+		if pos==None:pos=-1
 		self.SelectItem(pos)
 
 	def selection_getselection(self):
@@ -362,7 +430,6 @@ class AnchorEditForm(docview.ListView):
 		"""
 		i=self.GetItemCount()
 		self.InsertItem(i,item)
-		self.SetItemText(i,1,'')
 		self.SelectItem(i)
 		
 	def selection_gettext(self):
@@ -373,7 +440,10 @@ class AnchorEditForm(docview.ListView):
 		new value of the currently selected item. ]
 		"""
 		if self._selecteditem:
-			return self.GetItemText(self._selecteditem,0)
+			try:
+				return self.GetItemText(self._selecteditem,0)
+			except:
+				return ''
 
 	def selection_replaceitem(self, pos, item):
 		"""Replace the indicated item with a new value.
@@ -385,8 +455,8 @@ class AnchorEditForm(docview.ListView):
 		The list which was given to selection_setlist or
 		__init__ (whichever was last) is modified.
 		"""
-		if item:
-			self.SetItemText(pos,0,item)
+		if not item:item=' '
+		self.SetItemText(pos,0,item)
 
 	def selection_deleteitem(self, pos):
 		"""Delete the indicated item from the list.

@@ -1,3 +1,22 @@
+__version__ = "$Id$"
+
+""" @win32doc|_LinkView
+This module contains the ui implementation of the LinkView.
+It is implemented as a Form view with dialog bars.
+The MFC CFormView is essentially a view that contains controls. 
+These controls are laid out based on a dialog-template resource
+similar to a dialog box.
+Objects of this class are exported to Python through the win32ui pyd
+as objects of type PyCFormView.
+The _LayoutView extends the PyCFormView and uses a PyCDialogBar
+.
+The _LayoutView is created using the resource dialog template with identifier IDD_LINKS.
+To edit this template, open it using the resource editor. 
+Like all resources it can be found in cmif\win32\src\GRiNSRes\GRiNSRes.rc.
+The resource project is cmif\win32\src\GRiNSRes\GRiNSRes.dsp which creates
+the run time GRiNSRes.dll
+"""
+
 import win32ui,win32con
 Sdk=win32ui.GetWin32Sdk()
 Afx=win32ui.GetAfx()
@@ -6,50 +25,48 @@ import win32mu,wc
 import grinsRC,win32menu
 import components
 import usercmd
+import win32mu
 
 from pywin.mfc import window,object,docview
 import afxres,commctrl
 
-class ControlsDict:
-	def __init__(self):
-		self._subwindows={}	
-	def __nonzero__(self):return 1
-	def __len__(self): return len(self._subwindows)
-	def __getitem__(self, key): return self._subwindows[key]
-	def __setitem__(self, key, item): self._subwindows[key] = item
-	def keys(self): return self._subwindows.keys()
-	def items(self): return self._subwindows.items()
-	def values(self): return self._subwindows.values()
-	def has_key(self, key): return self._subwindows.has_key(key)
+# This indermediate class based on the framework FormView class implements the 
+# std interface required by the core system. It is used to implement the LinkView
 
-class FormViewBase(docview.FormView,ControlsDict):
+class FormViewBase(docview.FormView,components.ControlsDict):
+
+	# Class constructor. Calls base classes constructors
 	def __init__(self,doc,id):
 		docview.FormView.__init__(self,doc,id)
-		ControlsDict.__init__(self)
+		components.ControlsDict.__init__(self)
 		self._close_cmd_list=[]
 
+	# Creates the actual OS window
 	def createWindow(self,parent):
 		self.CreateWindow(parent)
 		self.attach_handles_to_subwindows()
 
+	# Called by the framework after the OS window has been created.
 	def OnInitialUpdate(self):
 		self._mdiframe=(self.GetParent()).GetMDIFrame()
 
+	# Called by the framework when this view is activated
 	def onActivate(self,f):
 		if f:self._mdiframe.set_commandlist(self._close_cmd_list)
 		else:self._mdiframe.set_commandlist(None)
 
+	# Returns true if the OS window exists
 	def is_oswindow(self):
 		return (hasattr(self,'GetSafeHwnd') and self.GetSafeHwnd())
 
+	# Called by the frame work before closing this View
 	def OnClose(self):
 		if self._closecmdid>0:
 			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
 		else:
 			self.GetParent().DestroyWindow()
 
-	# called directly from cmif-core
-	# to close window
+	# Called directly from the core system to close the window
 	def close(self):
 		# 1. clean self contends
 		# self._close()
@@ -58,12 +75,13 @@ class FormViewBase(docview.FormView,ControlsDict):
 		if hasattr(self,'_obj_') and self._obj_:
 			self.GetParent().DestroyWindow()
 
+	# Return the user cmd from the command class
 	def GetUserCmdId(self,cmdcl):
 		if hasattr(self,'GetParent'):
 			return self.GetParent().GetUserCmdId(cmdcl)
 		return -1
 
-	# the close sequence must be delegated to parent
+	# Set the acceptable commands
 	def set_commandlist(self,commandlist):
 		contextcmds=self._activecmds
 		for id in contextcmds.keys():
@@ -82,59 +100,73 @@ class FormViewBase(docview.FormView,ControlsDict):
 				self._close_cmd_list.append(cmd)
 		self._mdiframe.set_commandlist(self._close_cmd_list)
 
+	# Called by the framework to show the view
 	def show(self):
 		pass
 
+	# Return true if this view is visible
 	def is_showing(self):
 		if not self._obj_: return 0
 		return self.GetSafeHwnd()
 
+	# Called by the core system to hide this view
 	def hide(self):
 		pass
 
+	# Set the cursor foer this window
 	def setcursor(self, cursor):
 		if cursor == self._cursor:
 			return
 		win32mu.SetCursor(cursor)
 		self._cursor = cursor
 
-
-	# delegate to parent for cmds and adorment functionality
+	# Sets the dynamic commands by delegating to its parent
 	def set_dynamiclist(self, cmd, list):
 		self._parent.set_dynamiclist(cmd,list)
+	# Sets the adornments by delegating to its parent
 	def set_adornments(self, adornments):
 		self._parent.set_adornments(adornments)
+	# Toggle commands by delegating to its parent
 	def set_toggle(self, command, onoff):
 		self._parent.set_toggle(command,onoff)
 		
+	# Sets the acceptable commands by delegating to its parent
 	def set_commandlist(self, list):
 		self._parent.set_commandlist(list,self._strid)
+	# Sets the title by delegating to its parent
 	def settitle(self,title):
 		self._parent.settitle(title,self._strid)
 
-
-class DlgBar(window.Wnd,ControlsDict):
+# Base class for dialog bars
+class DlgBar(window.Wnd,components.ControlsDict):
 	AFX_IDW_DIALOGBAR=0xE805
+	# Class contructor. Calls base classes constructor
 	def __init__(self):
 		AFX_IDW_DIALOGBAR=0xE805
 		window.Wnd.__init__(self,win32ui.CreateDialogBar())
-		ControlsDict.__init__(self)
+		components.ControlsDict.__init__(self)
+	# Create the OS window
 	def create(self,frame,resid,align=afxres.CBRS_ALIGN_BOTTOM):
 		self._obj_.CreateWindow(frame,resid,
 			align,self.AFX_IDW_DIALOGBAR)
 
+# Implements a dialog bar with the buttons OK and Cancel
 class OkCancelDlgBar(DlgBar):
+	# Class constructor. Initializes base classes and associates controls to ids
 	def __init__(self):
 		DlgBar.__init__(self)
 		self['OK']=components.Button(self,win32con.IDOK)
 		self['Cancel']=components.Button(self,win32con.IDCANCEL)
+	# Creates the OS window
 	def create(self,frame,cmdtgt):
 		DlgBar.create(self,frame,grinsRC.IDD_OKCANCELBARV,afxres.CBRS_ALIGN_RIGHT)
 		for i in self.keys():
 			frame.HookCommand(cmdtgt.onBarCmd,self[i]._id)
 			self[i].attach_to_parent()
 
+# This class implements the LinkView required by the core system
 class _LinkView(FormViewBase):
+	# Class constructor. Initializes base class and associates controls to ids
 	def __init__(self,doc):
 		FormViewBase.__init__(self,doc,grinsRC.IDD_LINKS)
 		self['LeftList']=components.ListBox(self,grinsRC.IDC_LIST1)
@@ -173,18 +205,21 @@ class _LinkView(FormViewBase):
 		self['OK']=components.Button(self,win32con.IDOK)
 		self['Cancel']=components.Button(self,win32con.IDCANCEL)
 
+	# Creates the actual OS window
 	def createWindow(self,parent):
 		self._parent=parent
 		self.CreateWindow(parent)
 		for ck in self.keys():
 			self[ck].attach_to_parent()
 		self.HookMessage(self.onCmd,win32con.WM_COMMAND)
-
+	
+	# Called after the OS window has been created to initialize the view
 	def OnInitialUpdate(self):
 		frame=self.GetParent()
 		self._mdiframe=frame.GetMDIFrame()
 		#self._stdDlgBar=OkCancelDlgBar()
 		#self._stdDlgBar.create(frame,self)# pass self as cmdtarget
+		self.fittemplate()
 		frame.RecalcLayout()
 
 		# predent that they are ours
@@ -196,14 +231,26 @@ class _LinkView(FormViewBase):
 		self._close_cmd_list.append(closecmd)
 		self.onActivate(1)
 
+	# Adjust dimensions to fit resource template
+	def fittemplate(self):
+		frame=self.GetParent()
+		rc=win32mu.DlgTemplate(grinsRC.IDD_LINKS).getRect()
+		from sysmetrics import cycaption,cyborder,cxborder,cxframe
+		h=rc.height() + 2*cycaption+ 2*cyborder
+		w=rc.width()+2*cxframe+2*cxborder+8
+		flags=win32con.SWP_NOZORDER|win32con.SWP_NOACTIVATE|win32con.SWP_NOMOVE
+		frame.SetWindowPos(0, (0,0,w,h),flags)
+	
+	# Internal function to implement a close window mechanism
 	def close_window_callback(self):
 		self._mdiframe.SendMessage(win32con.WM_COMMAND,self.GetUserCmdId(usercmd.LINKVIEW))
 
+	# Helper function that given the string id of the control calls the callback
 	def call(self,strcmd):
 		if strcmd in self._callbacks.keys():
 			apply(apply,self._callbacks[strcmd])
 
-
+	# Reponse to the WM_COMMAND message
 	def onCmd(self,params):
 		msg=win32mu.Win32Msg(params)
 		id=msg.cmdid()
@@ -222,17 +269,17 @@ class _LinkView(FormViewBase):
 				else:
 					self.call(key)
 				break
-
+	# Response to the user selection to diaplay a popup menu
 	def on_menu(self,menu,str):
 		lc,tc,rc,bc=self[str].getwindowrect()
 		menu.TrackPopupMenu((rc,tc),
 			win32con.TPM_LEFTALIGN|win32con.TPM_LEFTBUTTON,self) 
+	# Callback for commands from the popup menu
 	def menu_callback(self,id,code):
 		if id in self._mcb.keys(): 
 			apply(apply,self._mcb[id])
 
-	# called directly from cmif-core
-	# to close window
+	# Called directly from cmif-core to close window
 	def close(self):
 		# 1. clean self contends
 		del self._leftmenu
@@ -242,22 +289,25 @@ class _LinkView(FormViewBase):
 		if hasattr(self,'_obj_') and self._obj_:
 			self.GetParent().DestroyWindow()
 
-	# must return 1 if self is an os window
+	# Return 1 if self is an os window
 	def is_showing(self):
 		if not hasattr(self,'GetSafeHwnd'):
 			return 0
 		return self.GetSafeHwnd()
 
+	# Called by the core system to show this view
 	def show(self):
 		if hasattr(self,'GetSafeHwnd'):
 			if self.GetSafeHwnd():
 				self.GetParent().GetMDIFrame().MDIActivate(self.GetParent())
 
+	# Called by the core system to hide this view
 	def hide(self):
 		self.close()
 
 		
 	#########################################
+	# The actual initialization from the core system
 	def do_init(self, title, dirstr, typestr, menu1, cbarg1, menu2, cbarg2, adornments):
 		self._title=title
 
