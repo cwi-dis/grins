@@ -277,10 +277,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			redge = 0
 		return ledge, redge
 
-	def init_timemapper(self, timemapper):
+	def init_timemapper(self, timemapper, ignore_time = 0):
 		if not self.node.WillPlay():
 			return None
-		if timemapper is None and self.node.showtime:
+		if timemapper is None and self.node.showtime and not ignore_time:
 			if self.node.GetType() in ('excl', 'prio'):
 				showtime = self.node.showtime
 				self.node.showtime = 0
@@ -291,6 +291,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				if self.timeline is None:
 					self.timeline = TimelineWidget(self, self.mother)
 				self.timemapper = timemapper
+		elif self.node.showtime and not ignore_time:
+			if self.timeline is None:
+				self.timeline = TimelineWidget(self, self.mother)
 		else:
 			if self.timeline is not None:
 				self.timeline.destroy()
@@ -398,8 +401,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				return ICONSIZE+2*HEDGSIZE, MINSIZE
 		return xsize, ysize
 
-	def recalc_minsize(self, timemapper = None):
-		timemapper = self.init_timemapper(timemapper)
+	def recalc_minsize(self, timemapper = None, ignore_time = 0):
+		timemapper = self.init_timemapper(timemapper, ignore_time)
 		self.boxsize = self.calculate_minsize(timemapper)
 		self.fix_timemapper(timemapper)
 		return self.boxsize
@@ -845,8 +848,8 @@ class StructureObjWidget(MMNodeWidget):
 	def get_obj_near(self, (x, y), timemapper = None, timeline = None):
 		if self.timemapper is not None:
 			timemapper = self.timemapper
-		if self.timeline is not None:
-			timeline = self.timeline
+			if self.timeline is not None:
+				timeline = self.timeline
 		# first check self
 		if self.need_draghandles is not None:
 			l,r,t = self.need_draghandles
@@ -927,7 +930,7 @@ class StructureObjWidget(MMNodeWidget):
 			self.need_draghandles = None
 		else:
 			l,t,r,b = self.pos_abs
-			if self.timeline is not None:
+			if self.timemapper is not None and self.timeline is not None:
 				y = self.timeline.params[0]
 				self.need_draghandles = l,r,y-DRAGHANDLESIZE/2
 			else:
@@ -1000,14 +1003,14 @@ class HorizontalWidget(StructureObjWidget):
 				return i
 		return -1
 
-	def recalc_minsize(self, timemapper = None):
+	def recalc_minsize(self, timemapper = None, ignore_time = 0):
 		if self.iscollapsed():
-			return MMNodeWidget.recalc_minsize(self, timemapper)
+			return MMNodeWidget.recalc_minsize(self, timemapper, ignore_time)
 
 		if not self.children and self.channelbox is None:
-			return MMNodeWidget.recalc_minsize(self, timemapper)
+			return MMNodeWidget.recalc_minsize(self, timemapper, ignore_time)
 
-		timemapper = self.init_timemapper(timemapper)
+		timemapper = self.init_timemapper(timemapper, ignore_time)
 
 		mw=0
 		mh=0
@@ -1045,7 +1048,7 @@ class HorizontalWidget(StructureObjWidget):
 					elif t0 > lt2:
 						delays = delays + t0 - lt2
 					lt2 = t2
-			w,h = i.recalc_minsize(tm)
+			w,h = i.recalc_minsize(tm, ignore_time)
 			if h > mh: mh=h
 			mw = mw + w + pushover
 		if timemapper is not None and tottime > 0:
@@ -1255,11 +1258,11 @@ class HorizontalWidget(StructureObjWidget):
 class VerticalWidget(StructureObjWidget):
 	# Any node which is drawn vertically
 
-	def recalc_minsize(self, timemapper = None):
+	def recalc_minsize(self, timemapper = None, ignore_time = 0):
 		if not self.children or self.iscollapsed():
-			return MMNodeWidget.recalc_minsize(self, timemapper)
+			return MMNodeWidget.recalc_minsize(self, timemapper, ignore_time)
 
-		timemapper = self.init_timemapper(timemapper)
+		timemapper = self.init_timemapper(timemapper, ignore_time)
 
 		mw=0
 		mh=0
@@ -1287,7 +1290,7 @@ class VerticalWidget(StructureObjWidget):
 			if timemapper is not None:
 				if is_excl:
 					i.node.showtime = showtime
-			w,h = i.recalc_minsize(tm)
+			w,h = i.recalc_minsize(tm, ignore_time)
 			if timemapper is not None and not is_excl and i.node.WillPlay():
 				t0, t1, t2, download, begindelay = i.GetTimes('virtual')
 				# reserve space for begin delay
@@ -1524,11 +1527,11 @@ class UnseenVerticalWidget(StructureObjWidget):
 	# The top level par that doesn't get drawn.
 	HAS_COLLAPSE_BUTTON = 0
 
-	def recalc_minsize(self, timemapper = None):
+	def recalc_minsize(self, timemapper = None, ignore_time = 0):
 		if not self.children or self.iscollapsed():
-			return MMNodeWidget.recalc_minsize(self, timemapper)
+			return MMNodeWidget.recalc_minsize(self, timemapper, ignore_time)
 
-		timemapper = self.init_timemapper(timemapper)
+		timemapper = self.init_timemapper(timemapper, ignore_time)
 
 		minwidth, minheight = self.calculate_minsize(timemapper)
 
@@ -1536,7 +1539,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 		mh=0
 
 		for i in self.children:
-			w,h = i.recalc_minsize(timemapper)
+			w,h = i.recalc_minsize(timemapper, ignore_time)
 			if w > mw: mw=w
 			mh=mh+h
 		if self.timeline is not None:
@@ -1745,7 +1748,7 @@ class MediaWidget(MMNodeWidget):
 			self.pushbackbar = None
 		MMNodeWidget.destroy(self)
 
-	def init_timemapper(self, timemapper):
+	def init_timemapper(self, timemapper, ignore_time = 0):
 		if not self.node.WillPlay():
 			return None
 		return timemapper
@@ -2219,7 +2222,7 @@ class TimelineWidget(MMWidgetDecoration):
 
 	def moveto(self, coords, timemapper):
 		MMWidgetDecoration.moveto(self, coords)
-		self.timemapper = timemapper
+		self.__timemapper = timemapper
 		x, y, w, h = self.get_box()
 		if self.minwidth:
 			# remember updated minimum width
@@ -2254,7 +2257,7 @@ class TimelineWidget(MMWidgetDecoration):
 		# this method is way too complex.
 		x, y, w, h = self.get_box()
 		line_y, tick_top, tick_bot, longtick_top, longtick_bot, midtick_top, midtick_bot, endtick_top, endtick_bot, label_top, label_bot = self.params
-		timemapper = self.timemapper
+		timemapper = self.__timemapper
 		t0, t1, t2, download, begindelay = self.get_mmwidget().GetTimes('virtual')
 		min = timemapper.time2pixel(t0, 'left')
 		max = timemapper.time2pixel(t2, 'right')
