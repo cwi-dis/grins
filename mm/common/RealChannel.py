@@ -137,10 +137,11 @@ class RealChannel:
 			return 0
 		url = MMurl.canonURL(url)
 		mediarepeat = MMAttrdefs.getattr(node, 'mediaRepeat')
-		if '?' in url:
-			url = url + '&mediaRepeat=%s' % mediarepeat
-		else:
-			url = url + '?mediaRepeat=%s' % mediarepeat
+		if mediarepeat != 'preserve': # i.e. mediarepeat=='strip'
+			if '?' in url:
+				url = url + '&mediaRepeat=%s' % mediarepeat
+			else:
+				url = url + '?mediaRepeat=%s' % mediarepeat
 ##		try:
 ##			u = MMurl.urlopen(url)
 ##		except:
