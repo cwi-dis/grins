@@ -40,10 +40,10 @@ class MainDialog:
 			    right = None)
 		f = w.SubWindow(left = None, top = l, right = None,
 				horizontalSpacing = 5, verticalSpacing = 5)
+		b = f.Button('Browse...', (self.__openfile_callback, ()),
+			     top = None, right = None, bottom = None)
 		t = f.TextInput(None, '', None, (self.__tcallback, ()),
-				left = None, top = None, bottom = None)
-		f.Button('Browse...', (self.__openfile_callback, ()),
-			 top = None, left = t, right = None, bottom = None)
+				left = None, right = b, top = None, bottom = None)
 		s = w.Separator(top = f, left = None, right = None)
 		r = w.ButtonRow([('Open', (self.__tcallback, ())),
 				 ('Cancel', (self.__ccallback, ()))],
