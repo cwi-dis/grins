@@ -176,21 +176,29 @@ def rpconvert(node):
 				  'clipBoundary': 'children',
 				  }
 			if transition == 'wipe':
+				dir = tagdict['direction']
 				if tagdict['wipetype'] == 'normal':
 					trdict['trtype'] = 'barWipe'
+					if dir == 'left':
+						trdict['subtype'] = 'leftToRight'
+						trdict['direction'] = 'reverse'
+					elif dir == 'right':
+						trdict['subtype'] = 'leftToRight'
+					elif dir == 'up':
+						trdict['subtype'] = 'topToBottom'
+						trdict['direction'] = 'reverse'
+					elif dir == 'down':
+						trdict['subtype'] = 'topToBottom'
 				else:
 					trdict['trtype'] = 'pushWipe'
-				dir = tagdict['direction']
-				if dir == 'left':
-					trdict['subtype'] = 'leftToRight'
-				elif dir == 'right':
-					trdict['subtype'] = 'leftToRight'
-					trdict['direction'] = 'reverse'
-				elif dir == 'down':
-					trdict['subtype'] = 'topToBottom'
-				elif dir == 'down':
-					trdict['subtype'] = 'topToBottom'
-					trdict['direction'] = 'reverse'
+					if dir == 'left':
+						trdict['subtype'] = 'fromLeft'
+					elif dir == 'right':
+						trdict['subtype'] = 'fromRight'
+					elif dir == 'up':
+						trdict['subtype'] = 'fromTop'
+					elif dir == 'down':
+						trdict['subtype'] = 'fromBottom'
 			else:
 				trdict['trtype'] = 'fade'
 			for trname, trval in ctx.transitions.items():
