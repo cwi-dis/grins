@@ -1,6 +1,6 @@
 
 /***********************************************************
-Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
+Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 
                         All Rights Reserved
 
@@ -50,6 +50,7 @@ typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
 	IWMReader* pI;
+	HANDLE hEvent;
 } WMReaderObject;
 
 staticforward PyTypeObject WMReaderType;
@@ -163,6 +164,28 @@ newWMInputMediaPropsObject()
 typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
+	IWMOutputMediaProps* pI;
+} WMOutputMediaPropsObject;
+
+staticforward PyTypeObject WMOutputMediaPropsType;
+
+static WMOutputMediaPropsObject *
+newWMOutputMediaPropsObject()
+{
+	WMOutputMediaPropsObject *self;
+
+	self = PyObject_NEW(WMOutputMediaPropsObject, &WMOutputMediaPropsType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
 	INSSBuffer* pI;
 } NSSBufferObject;
 
@@ -204,6 +227,27 @@ newMediaTypeObject()
 	return self;
 }
 
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+    IWMReaderCallback *pI;	
+} WMReaderCallbackObject;
+
+staticforward PyTypeObject WMReaderCallbackType;
+
+static WMReaderCallbackObject *
+newWMReaderCallbackObject()
+{
+	WMReaderCallbackObject *self;
+	self = PyObject_NEW(WMReaderCallbackObject, &WMReaderCallbackType);
+	if (self == NULL)
+		return NULL;
+	self->pI=NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
 //(general but defined here for indepentance)
 typedef struct {
 	PyObject_HEAD
@@ -233,7 +277,255 @@ newGUIDObject(const GUID *p=NULL)
 ////////////////////////////////////////////
 // WMReader object 
 
+static char WMReader_Open__doc__[] =
+""
+;
+static PyObject *
+WMReader_Open(WMReaderObject *self, PyObject *args)
+{
+	char *pszURL;
+	WMReaderCallbackObject *obj;
+	if (!PyArg_ParseTuple(args, "sO!",&pszURL,&WMReaderCallbackType,&obj))
+		return NULL;	
+	HRESULT hr;
+	WCHAR pwszURL[MAX_PATH];
+	MultiByteToWideChar(CP_ACP,0,pszURL,-1,pwszURL,MAX_PATH);
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->Open(pwszURL,obj->pI,NULL);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		seterror("WMReader_Open", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+  
+static char WMReader_Close__doc__[] =
+""
+;
+static PyObject *
+WMReader_Close(WMReaderObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->Close();
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		seterror("WMReader_Close", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+        
+static char WMReader_GetOutputCount__doc__[] =
+""
+;
+static PyObject *
+WMReader_GetOutputCount(WMReaderObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	HRESULT hr;
+	DWORD cOutputs=0;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetOutputCount(&cOutputs);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		seterror("WMReader_GetOutputCount", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i",cOutputs);
+}
+
+static char WMReader_GetOutputProps__doc__[] =
+""
+;
+static PyObject *
+WMReader_GetOutputProps(WMReaderObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	HRESULT hr;
+	DWORD dwOutputNum=0;
+	WMOutputMediaPropsObject *obj = newWMOutputMediaPropsObject();
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetOutputProps(dwOutputNum,&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMReader_GetOutputProps", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+        
+static char WMReader_SetOutputProps__doc__[] =
+""
+;
+static PyObject *
+WMReader_SetOutputProps(WMReaderObject *self, PyObject *args)
+{
+	DWORD dwOutputNum;
+	WMOutputMediaPropsObject *obj;
+	if (!PyArg_ParseTuple(args, "iO!", &dwOutputNum,&WMOutputMediaPropsType,&obj))
+		return NULL;	
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->SetOutputProps(dwOutputNum,obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		seterror("WMReader_SetOutputProps", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+        
+static char WMReader_GetOutputFormatCount__doc__[] =
+""
+;
+static PyObject *
+WMReader_GetOutputFormatCount(WMReaderObject *self, PyObject *args)
+{
+	DWORD dwOutputNumber;
+	if (!PyArg_ParseTuple(args, "i", &dwOutputNumber))
+		return NULL;	
+	HRESULT hr;
+	DWORD cFormats;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetOutputFormatCount(dwOutputNumber,&cFormats);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		seterror("WMReader_GetOutputFormatCount", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i",cFormats);
+}
+        
+static char WMReader_GetOutputFormat__doc__[] =
+""
+;
+static PyObject *
+WMReader_GetOutputFormat(WMReaderObject *self, PyObject *args)
+{
+	DWORD dwOutputNum;
+	DWORD dwFormatNumber;
+	if (!PyArg_ParseTuple(args, "ii",&dwOutputNum,&dwFormatNumber))
+		return NULL;	
+	HRESULT hr;
+	WMOutputMediaPropsObject *obj = newWMOutputMediaPropsObject();	
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetOutputFormat(dwOutputNum,dwFormatNumber,&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMReader_GetOutputFormat", hr);
+		return NULL;
+	}
+	return (PyObject*) obj;
+}
+        
+static char WMReader_Start__doc__[] =
+""
+;
+static PyObject *
+WMReader_Start(WMReaderObject *self, PyObject *args)
+{
+	DWORD msStart,msDuration;
+	float fRate;
+	if (!PyArg_ParseTuple(args, "iid",&msStart,&msDuration,&fRate))
+		return NULL;	
+	HRESULT hr;
+	QWORD cnsStart=10000*msStart;
+	QWORD cnsDuration=10000*msDuration;
+	void *pvContext=NULL;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->Start(cnsStart,cnsDuration,fRate,pvContext);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		seterror("WMReader_Start", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+        
+static char WMReader_Stop__doc__[] =
+""
+;
+static PyObject *
+WMReader_Stop(WMReaderObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->Stop();
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		seterror("WMReader_Stop", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+        
+static char WMReader_Pause__doc__[] =
+""
+;
+static PyObject *
+WMReader_Pause(WMReaderObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->Pause();
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		seterror("WMReader_Pause", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+       
+static char WMReader_Resume__doc__[] =
+""
+;
+static PyObject *
+WMReader_Resume(WMReaderObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->Resume();
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		seterror("WMReader_Resume", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 static struct PyMethodDef WMReader_methods[] = {
+	{"Open", (PyCFunction)WMReader_Open, METH_VARARGS, WMReader_Open__doc__},
+	{"Close", (PyCFunction)WMReader_Close, METH_VARARGS, WMReader_Close__doc__},
+	{"GetOutputCount", (PyCFunction)WMReader_GetOutputCount, METH_VARARGS, WMReader_GetOutputCount__doc__},
+	{"GetOutputProps", (PyCFunction)WMReader_GetOutputProps, METH_VARARGS, WMReader_GetOutputProps__doc__},
+	{"SetOutputProps", (PyCFunction)WMReader_SetOutputProps, METH_VARARGS, WMReader_SetOutputProps__doc__},
+	{"GetOutputFormatCount", (PyCFunction)WMReader_GetOutputFormatCount, METH_VARARGS, WMReader_GetOutputFormatCount__doc__},
+	{"GetOutputFormat", (PyCFunction)WMReader_GetOutputFormat, METH_VARARGS, WMReader_GetOutputFormat__doc__},
+	{"Start", (PyCFunction)WMReader_Start, METH_VARARGS, WMReader_Start__doc__},
+	{"Stop", (PyCFunction)WMReader_Stop, METH_VARARGS, WMReader_Stop__doc__},
+	{"Pause", (PyCFunction)WMReader_Pause, METH_VARARGS, WMReader_Pause__doc__},
+	{"Resume", (PyCFunction)WMReader_Resume, METH_VARARGS, WMReader_Resume__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -286,7 +578,7 @@ static PyTypeObject WMReaderType = {
 
 
 ////////////////////////////////////////////
-// WMWriter object 
+// IWMWriter object 
 
 static char WMWriter_SetProfile__doc__[] =
 ""
@@ -758,7 +1050,7 @@ static PyTypeObject WMProfileType = {
 
 
 ////////////////////////////////////////////
-// IWMInputMediaProps object 
+// WMInputMediaProps object 
 
 static char WMInputMediaProps_GetType__doc__[] =
 ""
@@ -876,6 +1168,61 @@ static PyTypeObject WMInputMediaPropsType = {
 };
 
 // End of code for WMInputMediaProps object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// WMOutputMediaProps object 
+
+
+static struct PyMethodDef WMOutputMediaProps_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMOutputMediaProps_dealloc(WMOutputMediaPropsObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMOutputMediaProps_getattr(WMOutputMediaPropsObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMOutputMediaProps_methods, (PyObject *)self, name);
+}
+
+static char WMOutputMediaPropsType__doc__[] =
+""
+;
+
+static PyTypeObject WMOutputMediaPropsType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMOutputMediaProps",			/*tp_name*/
+	sizeof(WMOutputMediaPropsObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMOutputMediaProps_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMOutputMediaProps_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMOutputMediaPropsType__doc__ /* Documentation string */
+};
+
+// End of code for WMOutputMediaProps object 
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
@@ -1217,6 +1564,59 @@ static PyTypeObject MediaTypeType = {
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
+// WMReaderCallback object 
+
+static struct PyMethodDef WMReaderCallback_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMReaderCallback_dealloc(WMReaderCallbackObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMReaderCallback_getattr(WMReaderCallbackObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMReaderCallback_methods, (PyObject *)self, name);
+}
+
+static char WMReaderCallbackType__doc__[] =
+""
+;
+
+static PyTypeObject WMReaderCallbackType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMReaderCallback",			/*tp_name*/
+	sizeof(WMReaderCallbackObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMReaderCallback_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMReaderCallback_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMReaderCallbackType__doc__ /* Documentation string */
+};
+// End of code for WMReaderCallback object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
 // GUID object (general but defined here for indepentance) 
 			
 static struct PyMethodDef GUID_methods[] = {
@@ -1334,7 +1734,6 @@ CreateWriter(PyObject *self, PyObject *args)
 }
 
 
-//
 //
 static char CreateProfileManager__doc__[] =
 ""
