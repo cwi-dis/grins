@@ -102,3 +102,17 @@ def useattrdefs(mapping):
 # Initialize the attrdefs table.
 #
 attrdefs = readattrdefs(ATTRDEFS)
+
+
+# Functional interface to the attrdefs table.
+#
+def getdef(attrname):
+	if attrdefs.has_key(attrname):
+		return attrdefs[attrname]
+	# Undefuned attribute -- fake something reasonable
+	return (attrname, ('any', None), None, '', 'default', '')
+#
+def getnames():
+	names = attrdefs.keys()
+	names.sort()
+	return names
