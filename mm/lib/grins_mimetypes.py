@@ -18,7 +18,14 @@ mimetypes = {
 	'.rm': 'application/vnd.rn-realmedia',
 
 	'.mp3': 'audio/mpeg',
+	'.bmp': 'image/bmp',
+	'.asf': 'video/x-ms-asf',
+	'.wma': 'audio/x-ms-wma',
+	'.wmv': 'video/x-ms-wmv',
+
+	'.svg': 'image/svg-xml'
 	}
+
 
 descriptions = {
 	'application/smil': 'SMIL presentations',

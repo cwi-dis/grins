@@ -6,9 +6,13 @@ import string
 import sys
 
 FEATURES={
-	"editor": 0x01,	# Synonym
+	"editor": 0x01,
 	"light":0x02,
 	"pro": 0x04,
+	"smil2player": 0x100,
+	"smil2light": 0x200,
+	"smil2pro": 0x400,
+	"ALLPRODUCTS": 0x707,
 
 	# platform bits. The names are sys.platform values.
 	# Multiple names mapping to 1 bit is ok.
@@ -42,19 +46,36 @@ class License:
 	def __init__(self, features, newlicense=None, user="", organization=""):
 		"""Obtain a license, and state that we need at least one
 		of the features given"""
+		import settings
 		if newlicense:
 			lic = newlicense
 		else:
-			import settings
 			lic = settings.get('license')
 		self.__available_features, self.__licensee, self.__moredays = \
 					   _parselicense(lic)
+		if not user:
+			user = settings.get('license_user')
+			if user[-18:] == ' (evaluation copy)':
+				user = user[:-18]
+		if not organization:
+			organization = settings.get('license_organization')
+		# If this is a personalized license force the user/organization
+		if self.__licensee:
+			if ',' in self.__licensee:
+				lfields = string.split(self.__licensee, ',')
+				user = lfields[0]
+				organization = string.join(lfields[1:], ',')
+			else:
+				# One field: force only organization
+				organization = self.__licensee
 		for f in features:
 			if not self.have(f):
 				if f == sys.platform:
 					raise Error, "License not valid for this OS/platform"
 				else:
 					raise Error, "License not valid for this program"
+		if not user and not organization:
+			raise Error, "You must specify user or organization name"
 
 		self.msg = ""
 		if type(self.__moredays) == type(0):
@@ -62,7 +83,6 @@ class License:
 				raise Error, EXPIRED
 			self.msg = "Evaluation copy, %d more days left"%self.__moredays
 		if newlicense:
-			import settings
 			settings.set('license', newlicense)
 			if self.__moredays:
 				user = user + ' (evaluation copy)'
@@ -76,9 +96,14 @@ class License:
 				if user and organization:
 					self.__licensee = user + ', ' + organization
 				elif user:
-					self.__licensee = user
+					self.__licensee = user + ', '
 				else:
 					self.__licensee = organization
+		else:
+			if self.__moredays:
+				user = user + ' (evaluation copy)'
+			settings.set('license_user', user)
+			settings.set('license_organization', organization)
 
 	def have(self, *features):
 		"""Check whether we have the given features"""
@@ -153,9 +178,9 @@ def _decodelicense(str):
 	check = all[-1]
 	all = all[:-1]
 	if not len(all) in (4,5) or all[0] != 'A':
-		raise Error, "Invalid license"
+		raise Error, "This does not look like a license"
 	if _codecheckvalue(all) != _decodeint(check):
-		raise Error, "Invalid license"
+		raise Error, "Invalid license, possibly a typing error"
 	uniqid = _decodeint(all[1])
 	date = _decodedate(all[2])
 	features = _decodeint(all[3])
@@ -205,3 +230,35 @@ def mkdaynum((year, month, day)):
 	days = days + day
 	return days
 	
+def GetLicenseFromFile(filename):
+	try:
+		fp = open(filename)
+	except:
+		raise Error, "Cannot open license file"
+	firstline = 1
+	while 1:
+		line = fp.readline()
+		if not line:
+			raise Error, "File does not contain a recognizable license"
+		if firstline:
+			# Treat first line special: this may be a file with only a license in it
+			attempt = string.strip(line)
+			try:
+				_decodelicense(attempt)
+			except Error:
+				pass
+			else:
+				return attempt
+		firstline = 0
+		# For other lines we only look for "bla bla bla: licensekey"
+		if not ":" in line:
+			continue
+		fields = string.split(line, ":")
+		if len(fields) != 2:
+			continue
+		attempt = string.strip(fields[1])
+		try:
+			_decodelicense(attempt)
+		except Error:
+			continue
+		return attempt
