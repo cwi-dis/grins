@@ -5,12 +5,6 @@
 
 ------------------------------ BUGS -------------------------------
 
-when the root is a leaf, modifying it crashes in BlockView line 83.
-
-node/channel attr editors: when clicking OK, if the window size
-changes (because the list of defined attributes changes), the new
-window pops up for a nanosecond and then disappears again
-
 Player: playing multiple nodes in parallel on the same channel causes
 crashes or generally weird behaviour (each channel should protect
 itself against this!)
@@ -34,7 +28,7 @@ reproducible in very simple prog?)
 edit mgr: doesn't fix channel dictionary  [not confirmed]
 
 still occasional problems with the font manager?  (should slowly be
-fixed in 4.0.2+).
+fixed in 4.0.2+).  [maybe connected with malloc() crash?]
 
 toplevel: sometimes complaint about unknown command when clicking in
 toplevel menu while things are busy?
@@ -62,11 +56,9 @@ channel view: need to warn if a channel with nodes is deleted
 player: need "keep" attribute (default 0?) to keep a node on the
 screen after its time is up
 
-channel view: use a modal pop-up menu when creating a new channel
-
-add an action menu to nodes (active only in stopped mode)
-
 ------------------------------ NITS -------------------------------
+
+node info: want a menu of commands just like those in other windows
 
 block & channel view: use channel colors instead of default (gray)?
 
@@ -403,3 +395,24 @@ player: should ask "do you want to stop playing" before denying a
 transaction
 
 channel view: should redraw arrows after updating a single node
+
+--- 11 Jun 1992 ---
+
+node/channel attr editors: when clicking OK, if the window size
+changes (because the list of defined attributes changes), the new
+window pops up for a nanosecond (:-) and then disappears again
+
+channel view: use a modal pop-up menu when creating a new channel
+
+add an action menu to channel windows (active only in stopped mode)
+
+--- 24 Jun 1992 ---
+
+Python crashes in malloc() in Lynda's Amsterdam demo when the player
+is opened and more than 18 channels exist ["fixed" by linking with
+-lmalloc].
+
+blockview: when the focus is the view root, deleting it crashes.
+
+when the root is a leaf, modifying it crashes in BlockView line 83
+[can't reproduce this now?]
