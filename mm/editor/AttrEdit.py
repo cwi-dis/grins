@@ -2661,14 +2661,9 @@ class FontAttrEditorField(PopupAttrEditorField):
 		return [DEFAULT] + fonts
 
 Alltypes = interiortypes+mediatypes
-Alltypes[Alltypes.index('bag')] = 'choice'
 class NodeTypeAttrEditorField(PopupAttrEditorField):
 	def getoptions(self):
-		if cmifmode():
-			options = Alltypes[:]
-		else:
-			options = Alltypes[:]
-			options.remove('choice')
+		options = Alltypes[:]
 		ntype = self.wrapper.node.GetType()
 		if ntype in interiortypes:
 			if self.wrapper.node.GetChildren():
@@ -2679,13 +2674,9 @@ class NodeTypeAttrEditorField(PopupAttrEditorField):
 		return options
 
 	def parsevalue(self, str):
-		if str == 'choice':
-			return 'bag'
 		return str
 
 	def valuerepr(self, value):
-		if value == 'bag':
-			return 'choice'
 		return value
 
 class AnchorlistAttrEditorField(AttrEditorField):

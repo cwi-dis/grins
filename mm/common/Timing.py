@@ -138,8 +138,6 @@ def prep1(node):
 		dur = MMAttrdefs.getattr(node, 'duration')
 		if dur >= 0:
 			adddep(node, HD, dur, node, TL)
-	elif type in bagtypes:
-		adddep(node, HD, 0, node, TL)
 	else:
 		adddep(node, HD, -1, node, TL)
 

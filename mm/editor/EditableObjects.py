@@ -85,7 +85,6 @@ class EditableMMNode(MMNode.MMNode):
 			NEW_SEQ(callback = (self.createseqcall, ())),
 			NEW_PAR(callback = (self.createparcall, ())),
 			# What are these? Excl and Switch? Do them later anyway.
-			#NEW_CHOICE(callback = (self.createbagcall, ())),
 			#NEW_SWITCH(callback = (self.createaltcall, ())),
 			DELETE(callback = (self.deletecall, ())),
 			CUT(callback = (self.cutcall, ())),
@@ -95,12 +94,10 @@ class EditableMMNode(MMNode.MMNode):
 			NEW_BEFORE(callback = (self.createbeforecall, ())),
 			NEW_BEFORE_SEQ(callback = (self.createbeforeintcall, ('seq',))),
 			NEW_BEFORE_PAR(callback = (self.createbeforeintcall, ('par',))),
-			NEW_BEFORE_CHOICE(callback = (self.createbeforeintcall, ('bag',))),
 			NEW_BEFORE_SWITCH(callback = (self.createbeforeintcall, ('switch',))),
 			NEW_AFTER(callback = (self.createaftercall, ())),
 			NEW_AFTER_SEQ(callback = (self.createafterintcall, ('seq',))),
 			NEW_AFTER_PAR(callback = (self.createafterintcall, ('par',))),
-			NEW_AFTER_CHOICE(callback = (self.createafterintcall, ('bag',))),
 			NEW_AFTER_SWITCH(callback = (self.createafterintcall, ('switch',))),
 			]
 

@@ -275,9 +275,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def createparcall(self):
 		self.mother.insertparent('par')
 
-	def createbagcall(self):
-		self.mother.insertparent('bag')
-
 	def createaltcall(self):
 		self.mother.insertparent('switch')
 

@@ -14,8 +14,6 @@ from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK, ANCHOR2, TYPE, STYPE, DTYPE
 import windowinterface
 import SR
 
-[RS_NODE, RS_SCTX, RS_BAG, RS_PARENT] = range(4)
-
 class Selecter:
 	def __init__(self):
 		self.scheduler = Scheduler(self)

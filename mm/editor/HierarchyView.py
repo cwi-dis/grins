@@ -135,7 +135,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.notatrootcommands = [
 				NEW_SEQ(callback = (self.createseqcall, ())),
 				NEW_PAR(callback = (self.createparcall, ())),
-				NEW_CHOICE(callback = (self.createbagcall, ())),
 				NEW_SWITCH(callback = (self.createaltcall, ())),
 				DELETE(callback = (self.deletecall, ())),
 				CUT(callback = (self.cutcall, ())),
@@ -144,12 +143,10 @@ class HierarchyView(HierarchyViewDialog):
 				NEW_BEFORE(callback = (self.createbeforecall, ())),
 				NEW_BEFORE_SEQ(callback = (self.createbeforeintcall, ('seq',))),
 				NEW_BEFORE_PAR(callback = (self.createbeforeintcall, ('par',))),
-				NEW_BEFORE_CHOICE(callback = (self.createbeforeintcall, ('bag',))),
 				NEW_BEFORE_SWITCH(callback = (self.createbeforeintcall, ('switch',))),
 				NEW_AFTER(callback = (self.createaftercall, ())),
 				NEW_AFTER_SEQ(callback = (self.createafterintcall, ('seq',))),
 				NEW_AFTER_PAR(callback = (self.createafterintcall, ('par',))),
-				NEW_AFTER_CHOICE(callback = (self.createafterintcall, ('bag',))),
 				NEW_AFTER_SWITCH(callback = (self.createafterintcall, ('switch',))),
 				EDIT_TVIEW(callback = (self.edit_in_tview, ())),
 				]
@@ -1407,9 +1404,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	def createexclcall(self):
 		if self.focusobj: self.focusobj.createexclcall()
-
-	def createbagcall(self):
-		if self.focusobj: self.focusobj.createbagcall()
 
 	def createaltcall(self):
 		if self.focusobj: self.focusobj.createaltcall()
