@@ -47,7 +47,11 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 			return
 		
 		if hasattr(focusobject, 'char_positions') and focusobject.char_positions:
-			apply(self.select_chars, focusobject.char_positions)
+			# for now, make selection working only when the source is unmodified
+			# for now, make selection working only when the source is unmodified
+			# to avoid some position re-computations adter each modification
+			if not self.is_changed():
+				apply(self.select_chars, focusobject.char_positions)
 		
 	def globalfocuschanged(self, focustype, focusobject):
 		self.__setFocus(focustype, focusobject)
@@ -92,7 +96,10 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 			firstError = parseErrors.getErrorList()[0]
 			msg, line = firstError
 			if line != None:
-				self.select_line(line)
+				# for now, make selection working only when the source is unmodified
+				# to avoid some position re-computations adter each modification
+				if not self.is_changed():
+					self.select_line(line)
 			# XXX pop the source view
 			# to do
 			
