@@ -731,11 +731,37 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.push()
 			pushed = pushed + 1
 
+		# write media subregion if needed
+		subRegGeom, mediaGeom = None, None
+		try:
+			geoms = node.getPxGeomMedia()
+		except:
+			geoms = None
+		if geoms and mtype != 'audio':
+			subRegGeom, mediaGeom = geoms
+		if subRegGeom is not None and mediaGeom is not None and \
+			subRegGeom[0] == 0 and subRegGeom[1] == 0 and subRegGeom[2] == mediaGeom[2] and subRegGeom[3] == mediaGeom[3]:
+			# needed, possible overrides: fit, z-index, and backgroundColor 
+			self.removeAttr(divlist, 'volume')
+			self.removeAttr(divlist, 'id')
+			x, y, w, h = subRegGeom
+			bgcolor = getbgcoloratt(self, node, 'bgcolor')
+			z = getcmifattr(self, node, 'z')
+			fit = MMAttrdefs.getattr(node, 'fit')
+			overflow = self.getoverflow(fit)
+			regstyle = 'position:absolute;overflow:%s;left:%d;top:%d;width:%d;height:%d;' % (overflow, x, y, w, h)
+			if bgcolor: regstyle = regstyle + 'background-color:%s;' % bgcolor
+			if z: regstyle = regstyle + 'z-index:%s;' % z
+			self.replaceAttrVal(divlist, 'style', regstyle)
+			self.replaceAttrVal(divlist, 'begin', '0')
+			self.writetag('div', divlist)
+			self.push()
+			pushed = pushed + 1
+
 		# save current layout and return
 		self.currLayout = path
 		return pushed, inpar, pardur, regionid
-
-
+		
 	def applySubregionStyle(self, node, nodeid, attrlist, mtype):
 		subRegGeom, mediaGeom = None, None
 		try:
@@ -744,21 +770,15 @@ class SMILXhtmlSmilWriter(SMIL):
 			geoms = None
 		if geoms and mtype != 'audio':
 			subRegGeom, mediaGeom = geoms
-			x, y, w, h = subRegGeom
-			xm, ym, wm, hm = mediaGeom
-			mediarc = x, y, wm, hm
-		else:
-			mediarc = None
-		if mediarc:
+		if mediaGeom:
 			if nodeid:
 				attrlist.insert(0,('id', nodeid))
-			style = self.rc2style(mediarc)
+			style = self.rc2style(mediaGeom)
 			if mtype == 'brush':
 				color = self.removeAttr(attrlist, 'color')
 				if color is not None:
 					style = style + 'background-color:%s;' % color
 			attrlist.append( ('style', style) )
-
 
 	def rc2style(self, rc):
 		x, y, w, h = rc
