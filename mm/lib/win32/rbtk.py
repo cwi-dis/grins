@@ -77,7 +77,9 @@ class _rbtk:
 		if box:
 			# add the rect obj
 			# convert coordinates to pixel
-			box_pxl=self._convert_coordinates(box,units=units)
+			if self._coolmode:round_coord=0
+			else: round_coord=1
+			box_pxl=self._convert_coordinates(box,units=units,round=round_coord)
 			l,t,w,h=box_pxl
 			rectObj=DrawTk.DrawRect(Rect((l,t,l+w,t+h)),units=units)
 			self.Add(rectObj)
@@ -217,7 +219,7 @@ class _rbtk:
 				# If this is a modeless resize check whether something changed.
 				if self._objects:
 					drawObj=self._objects[0]
-					rb=self.inverse_coordinates(drawObj._position.tuple_ps(), units = self._rb_units, precision=2)
+					rb=self.inverse_coordinates(drawObj._position.tuple_ps(), units = self._rb_units)
 					if self._rb_dirty(rb):
 						if not self._coolmode:
 							self._rb_finish(win32con.IDOK)
