@@ -39,6 +39,8 @@ class TOOLBAR_GENERAL(_CommandBase):
 	help = 'Show/Hide the general toolbar'
 class TOOLBAR_PLAYER(_CommandBase):
 	help = 'Show/Hide the player controls'
+class TOOLBAR_ALIGNMENT(_CommandBase):
+	help = 'Show/Hide the region alignment toolbar'
 
 class TB_PLAY(_CommandBase):
 	help = 'Play document'

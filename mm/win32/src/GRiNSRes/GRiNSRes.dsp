@@ -313,6 +313,10 @@ SOURCE=.\RES\stop.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\tb_alignment.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\tb_player.bmp
 # End Source File
 # Begin Source File
