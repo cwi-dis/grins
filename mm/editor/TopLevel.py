@@ -83,7 +83,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		url = urlunparse((utype, host, path, params, query, None))
 		self.filename = url
 		self.window = None	# Created in TopLevelDialog.py
-##		self.source = None
 
 		# we create only one edit manager by toplevel window.		
 		self.editmgr = EditMgr(self)
@@ -259,12 +258,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(
 				HELP(callback = (self.help_callback, ())))
-##		if hasattr(self.root, 'source') and \
-##		   hasattr(windowinterface, 'textwindow'):
-##			self.commandlist = self.commandlist + [
-##				SOURCE(callback = (self.source_callback, ())),
-##				HIDE_SOURCE(callback = (self.hide_source_callback, ())),
-##				]
 
 		# make the commandlist specific to the plateform
 		TopLevelDialog.set_commandlist(self)
@@ -314,26 +307,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			viewnum = VIEWNAME2NUM[viewname]
 			self.views[viewnum].set_geometry(geometry)
 			self.views[viewnum].show()
-##		import settings
-##		defaultviews = settings.get('defaultviews')
-##		if 'hierarchy' in defaultviews and self.hierarchyview is not None:
-##			self.hierarchyview.show()
-##		if 'player' in defaultviews and self.player is not None:
-##			self.player.show()
-##		if 'transition' in defaultviews and self.transitionview is not None:
-##			self.transitionview.show()
-##		if 'layout' in defaultviews and self.layoutview is not None:
-##			self.layoutview.show()
-##		if 'layout2' in defaultviews and self.layoutview2 is not None:
-##			self.layoutview2.show()
-##		if 'ugroup' in defaultviews and self.ugroupview is not None:
-##			self.ugroupview.show()
-##		if 'link' in defaultviews and self.links is not None:
-##			self.links.show()
-##		if 'source' in defaultviews and self.sourceview is not None:
-##			self.sourceview.show()
-##		if 'assets' in defaultviews and self.assetsview is not None:
-##			self.assetsview.show()
 
 	def saveviewgeometries(self):
 		import settings
@@ -475,7 +448,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		for v in self.views:
 			if v is not None:
 				v.hide()
-##		self.hide_source_callback()
 
 	def destroyviews(self):
 		for v in self.views:
@@ -503,21 +475,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def stop_callback(self):
 		self.player.stop_callback()
-
-##	def source_callback(self):
-##		print "ERROR: You shouldn't be calling TopLevel.sourcecallback!"
-##		license = self.main.wanttosave()
-##		if not license:
-##			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
-##			return
-##		evallicense= (license < 0)
-##		import SMILTreeWrite
-##		self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense), readonly = 0)
-
-##	def hide_source_callback(self):
-##		print "ERROR! You shouldn't be calling TopLevel.soucecallback!"
-##		if self.source:
-##			self.showsource(None)
 
 	def save_source_callback(self, text):
 		# This is a function that is called from the source view when the user decides to save.
@@ -556,10 +513,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			view.show()
 		else:
 			windowinterface.showmessage('View does not exist!', mtype = 'error', parent = self.window)
-##		if view.is_showing():
-##			view.hide()
-##		else:
-##			view.show()
 
 	# load a source file without affect the current root
 	# return the new root
@@ -1103,7 +1056,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			os.rename(filename, make_backup_filename(filename))
 		except os.error:
 			pass
-##		print 'saving to', filename, '...'
 		settings.set('savedir', os.path.dirname(filename))
 		try:
 ##			if mimetype == 'application/x-grins-cmif':
@@ -1158,7 +1110,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				pass
 			windowinterface.showmessage('Publish interrupted.')
 			return 0
-##		print 'done saving.'
 		if sys.platform == 'mac':
 			import macostools
 			macostools.touched(filename)
@@ -1566,9 +1517,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	
 	def close_callback(self):
 		self.setwaiting()
-##		if self.source and not self.source.is_closed():
-##			self.source.close()
-##		self.source = None
 		self.close()
 
 	def close(self):
@@ -1639,17 +1587,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def commit(self, type):
 		# Fix the timing -- views may depend on this.
+		MMAttrdefs.flushcache(self.root)
+		self.context.changedtimes(self.root)
+		self.root.clear_infoicon()
+		self.root.ResetPlayability()
 		if type != 'preference':
 			self.changed = 1
-##		if self.source:
-##			# reshow source
-##			license = self.main.wanttosave()
-##			if not license:
-##				windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
-##				return
-##			evallicense= (license < 0)
-##			import SMILTreeWrite
-##			self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense), optional=1)
 		self.update_undocommandlist()
 		self.update_toolbarpulldowns()
 
