@@ -1012,7 +1012,7 @@ class ChannelBox(GO):
 		player = self.mother.toplevel.player
 		ch = self.channel
 		if player.is_showing():
-			player.cmenu_callback(ch.name)
+			player.channel_callback(ch.name)
 			self.mother.toplevel.setready()
 			return
 		try:
