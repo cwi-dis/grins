@@ -18,6 +18,18 @@ elif len(sys.argv) > 1 and sys.argv[1] == '-v':
 else:
 	import quietconsole
 	quietconsole.install()
+
+ID_SPLASH_DIALOG=513
+# XXXX Debugging code: assure the resource file is available
+import Res
+try:
+	Res.GetResource('DLOG', ID_SPLASH_DIALOG)
+except:
+	Res.OpenResFile(':macgrins.rsrc')
+	Res.OpenResFile(':playercontrols.rsrc')
+	Res.OpenResFile(':common.rsrc')
+	Res.OpenResFile(':grinsballoons.rsrc')
+Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 	
 # Now time for real work.
 import os
@@ -28,7 +40,7 @@ import macfs
 # Set variable for standalone cmif:
 #
 try:
-	import MMNode
+	import SR
 except ImportError:
 	STANDALONE=0
 else:
@@ -100,6 +112,7 @@ else:
 # macfreeze: exclude TERMIOS
 # macfreeze: exclude cmifex
 # macfreeze: exclude readline
+# XXXX it should optionally do this: macfreeze: exclude staticlicense
 #
 # And here's the code for non-standalone version of the editor:
 

@@ -1,0 +1,40 @@
+DONE	NodeEdit/AttrEdit close box sends window to grey limbo. Cmd-W?
+DONE	NodeEdit crashes
+DONE	Dynamiccascade windows don't grey out their entry
+DONE	Window placement is silly
+DONE	Open Location: OK->Open15-10	Test HTML scrollbars
+DONE	Put Windows and Documents under Views, move Views to the right
+DONE	Include default license
+DONE	Player control panel in editor should be replaced
+DONE	Appleevents for open doc
+DONE	Focus->Tools
+DONE	Rename canvas size naar iets anders.
+DONE	Browse on channel attr doesn't work
+DONE	Double sep in navigate menu
+DONE	Audio doesn't pause at beginning of webnews
+DONE	Large color (fgcolor) gives crash. (Actual reason: InvalRect without setport)
+DONE	Layout view: show "all channels" by default, enable "new channel" (->Sjoerd)
+DONE	Video doesn't loop
+DONE	Multiple selections in Layout view.
+DONE	New channels sometimes show up as main window (->Sjoerd, appears problem with SMIL reading)
+19-10	Anchor editor: "edit" always enabled (->Sjoerd)
+DONE	Timeline: syncarc focus is lost on canvas resize (->Sjoerd)
+DONE	timeline: next/prev minidocument should be disabled if inappropriate (->Sjoerd)
+DONE	Hierarchy: zoomin on stacked node gives crash (->Sjoerd)
+DONE	Play of .ra is attempted within a switch
+DONE	Syncarcs should ignore switch/a elements in sibling-check
+DONE	View source
+DONE	Help window
+15-10	CR/LF probleem? Alleen in CMIF documents?
+15-10	Balloon help for popup menus
+15-10	Focus in lists disappears with window in the back, should be outlined
+15-10	Attribute help messages should contain SMIL-compatability
+15-10	Change temp license code to be less obnoxious
+15-10	Change splash code to contain license info
+19-10	Better handling of quit AE (so shutdown works)
+19-10	Select channel in layout view doesn't highlight it
+19-10	Hyperlinks: close box doesn't work
+19-10	Allow defaults for which views to open on document open
+19-10	rubberbox: Wat doet hij op unix met directe OK?
+20-10	List selection with keyboard, list focus
+20-10	Default folder for StandardGetFile

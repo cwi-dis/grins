@@ -21,11 +21,28 @@
 import os
 import sys
 import macfs
+import Res
+import Ctl
+import Dlg
 
 # Find macfreeze directory
 FREEZEDIR=os.path.join(sys.prefix, ":Mac:Tools:macfreeze")
 sys.path.append(FREEZEDIR)
 import macfreeze
+
+#
+# Resources for the dialog
+#
+RESFILE="macbuild.rsrc"
+h = Res.OpenResFile(RESFILE)
+DIALOG_ID=512
+I_GRINS_FREEZE=1
+I_GRINS_BUILD=2
+I_CMIF_FREEZE=3
+I_CMIF_BUILD=4
+N_BUTTONS=6			# Last button plus one
+I_OK=7
+I_CANCEL=8
 
 #
 # Names of the various files/folders
@@ -58,6 +75,16 @@ MWERKS_CREATOR="CWIE"
 #
 
 def main():
+	results = dodialog()
+	do_grins_freeze = (I_GRINS_FREEZE in results)
+	do_grins_build = (I_GRINS_BUILD in results)
+	do_cmif_freeze = (I_CMIF_FREEZE in results)
+	do_cmif_build = (I_CMIF_BUILD in results)
+	print results
+	print do_grins_freeze, do_grins_build, do_cmif_freeze, do_cmif_build
+	if not results:
+		sys.exit(0)
+
 	workdir = os.path.split(sys.argv[0])[0]
 	print "workdir", workdir, sys.argv
 
@@ -69,8 +96,10 @@ def main():
 	cmifed_dir = myjoin(workdir, CMIFED_DIR)
 	cmifed_prj = myjoin(cmifed_dir, CMIFED_PROJECT)
 	
-	e1 = build(grins_py, grins_dir, grins_prj, GRINS_TARGET)
-	e2 = build(cmifed_py, cmifed_dir, cmifed_prj, CMIFED_TARGET)
+	e1 = build(grins_py, grins_dir, grins_prj, GRINS_TARGET, do_grins_freeze,
+				do_grins_build)
+	e2 = build(cmifed_py, cmifed_dir, cmifed_prj, CMIFED_TARGET, do_cmif_freeze,
+				do_cmif_build)
 	
 	if e1 or e2:
 		print "** Errors occurred during build"
@@ -84,24 +113,48 @@ def myjoin(dir, file):
 		sys.exit(1)
 	return rv
 		
-def build(src, dir, project, target):
+def build(src, dir, project, target, dofreeze, dobuild):
 	rv = 0
-	print "-- Freezing", src
-	macfreeze.process('source', src, dir)
+	if dofreeze:
+		print "-- Freezing", src
+		macfreeze.process('source', src, dir)
 
-	print "-- Building", target, "in", project
-	ide = MwShell(MWERKS_CREATOR)
-	ide.send_timeout = AppleEvents.kNoTimeOut
-	
-	ide.open(macfs.FSSpec(project))
-	ide.Set_Current_Target(target)
-	try:
-		ide.Make_Project()
-	except aetools.Error, arg:
-		print "** Failed:", arg
-		rv = 1
-	ide.Close_Project()
+	if dobuild:
+		print "-- Building", target, "in", project
+		ide = MwShell(MWERKS_CREATOR, start=1)
+		ide.send_timeout = AppleEvents.kNoTimeOut
+		
+		ide.open(macfs.FSSpec(project))
+		ide.Set_Current_Target(target)
+		try:
+			ide.Make_Project()
+		except aetools.Error, arg:
+			print "** Failed:", arg
+			rv = 1
+		ide.Close_Project()
 	return rv
+	
+def dodialog():
+	d = Dlg.GetNewDialog(DIALOG_ID, -1)
+	d.SetDialogDefaultItem(I_OK)
+	d.SetDialogCancelItem(I_CANCEL)
+	results = [0]*N_BUTTONS
+	while 1:
+		n = Dlg.ModalDialog(None)
+		if n == I_OK:
+			break
+		if n == I_CANCEL:
+			return []
+		if n < N_BUTTONS:
+			results[n] = (not results[n])
+			tp, h, rect = d.GetDialogItem(n)
+			h.as_Control().SetControlValue(results[n])
+	rv = []
+	for i in range(len(results)):
+		if results[i]:
+			rv.append(i)
+	return rv
+
 	
 if __name__ == '__main__':
 	main()

@@ -1,0 +1,143 @@
+STR# 26726 Editor help strings
+MENU 512 nodetype popup menu
+0.* Select the type for this node (media item, parallel, etc) here
+1.1 Immedeate nodes are media items where the data is stored with the item (as a "data:" URL). This is practical for small text nodes only
+2.1 External nodes are media items that refer to the actual data by URL
+3.1 Parallel nodes show all the nodes within them in parallel
+4.1 Sequential nodes show the nodes within them one-by-one, in order
+5.1 Alt nodes (not supported in SMIL) optionally show one of their children in a separate timeline.
+6.1 Choice nodes or switch nodes play exactly one of their children, the first one fitting the end user's profile. They are used to for multi-lingual content, different items depending on bandwidth, etc.
+END-MENU
+MENU 513 dummy channel menu
+0.* For media item nodes, select the channel on which this node is to be displayed
+END-MENU
+MENU 526 Attr Edit option menu
+0.* This attribute can have a number of fixed values. Select the value you want with this popup
+END-MENU
+DIALOG 516 Selection dialog
+1.1 Press here when you are happy with your selection
+2.1 Press here to cancel the current operation
+4.1 Select an item from this list, or type one in the text field below
+6.1 Type in an item here, or select one in the list above
+END-DIALOG
+DIALOG 517 LinkEditView
+2.2 The anchors you see in the list below belong to this node or set of nodes
+3.1 With this popup menu you can select which anchors to show in the list below
+4.1 Select an anchor here to add links, etc.
+5.1 Press this button to make the node containing the anchor selected above to be focussed in channel and hierarchy views
+6.1 Press this button to show the anchor editor for the node containing the selected anchor
+8.2 The anchors you see in the list below belong to this node or set of nodes
+9.1 With this popup menu you can select which anchors to show in the list below. External anchors are anchors that are exported from other currently open documents
+10.1 Select an anchor here to add links, etc.
+11.1 Press this button to make the node containing the anchor selected above to be focussed in channel and hierarchy views
+12.1 Press this button to show the anchor editor for the node containing the selected anchor
+14.1 Links between the anchors selected left and right are shown here. Select one to edit or delete it
+15.1 Press this button to add a link between the anchors selected in the left and right list
+16.1 Press this button to edit the link selected above
+16.2 This button is disabled because you have not selected a link above
+17.1 Press this button to delete the link selected above
+17.2 This button is disabled because you have not selected a link above
+20.1 Select this if the link should go from the left anchor to the right anchor
+20.3 The link is left-to-right: when you press the left anchor you will end up at the right anchor
+21.1 Select this if the link should go from the right anchor to the left anchor
+21.3 The link is right-to-left: when you press the right anchor you will end up at the left anchor
+22.1 Select this if the link should go both ways
+22.3 The link goes both ways: pressing either anchor will take you to the other one
+24.1 Select this if following the link should replace the original presentation with the new one
+24.3 Following the link will replace the original presentation with the new one
+25.1 Select this if the original presentation should be paused when following the link
+25.3 Following the link will pause the original presentation
+26.1 Select this if following the link should create a new, independent presentation while keeping the old one running too
+26.3 Following the link will create a new, independent presentation while keeping the old one running too
+27.1 Press this button if you want to forget the changes made to the link
+28.1 Press this button to create the new link, or accept the link modifications made above
+END-DIALOG
+DIALOG 518 Anchor edit dialog
+1.1 Select an anchor here if you want to edit or delete it. The changes are really made when you press "OK" or "apply"
+2.1 Press this button to create a new anchor. The anchor is really created when you press "OK" or "apply"
+3.1 Press this button to edit the location of the anchor in the media item
+4.1 Press this button to delete the anchor
+5.1 Press this button to export the anchor, which makes it available in the link editors for other currently open documents
+7.1 To rename an anchor enter the new name here and press the "change" button to the right
+8.1 To rename an anchor enter the new name in the textfield and press this button
+10.1 Select this if the anchor is to be used only as the destination of hyperlinks
+10.3 This  anchor is to be used only as the destination of hyperlinks
+11.1 Select this for a normal anchor. If the anchor is on an image node you will be prompted to draw the anchor
+11.3 This is a normal anchor, pressing "edit" allows you to change the position in the media item
+12.1 Select this for an anchor that will auto-pause the presentation on this node (not supported in SMIL)
+12.3 This is an anchor that will auto-pause the presentation on this node (not supported in SMIL)
+13.1 Select this for an anchor that will automatically fire when encountered (not supported in SMIL)
+13.3 This is an anchor that will automatically fire when encountered (not supported in SMIL)
+14.1 Select this for an anchor consisting of multiple sub-anchors (not supported in SMIL)
+14.3 This is an anchor consisting of multiple sub-anchors (not supported in SMIL)
+15.1 Select this for an anchor that will pass arguments to the jump destination (not supported in SMIL)
+15.3 This anchor will pass arguments to the jump destination (not supported in SMIL)
+16.1 Select this for a normal anchor that encompasses the whole node
+16.3 This is a normal anchor that occupies the whole node
+18.2 Enter the anchor-IDs for the sub-anchors
+19.1 Press this button to forget the changes made in the fields above (for a single anchor)
+20.1 Press this button to undo all changes made since opening this dialog or pressing "apply"
+21.1 Press this button to apply all changes made, but keep the dialog open
+22.1 Press this button to apply all changes made and close the dialog
+END-DIALOG
+DIALOG 519 ArcInfoDialog
+2.1 Select this if the syncarc delay is relative to the beginning of the source node
+3.1 Select this if the syncarc delay is relative to the end of the source node
+5.1 Select this if the syncarc should start the destination node
+6.1 Select this if the syncarc should terminate the destination node
+8.1 Enter the (optional) delay in seconds here. Use "." for decimal point
+10.1 Press here to cancel the whole operation
+11.1 Press here to undo the changes made above
+12.1 Press here to apply the changes made above, but keep the dialog open
+13.1 Press here to apply the changes made above and close the dialog
+END-DIALOG
+DIALOG 520 NodeInfoDialog
+2.1 Enter the name of the node here
+3.1 With this popup you can select whether the node is a media item, parallel or sequential node, etc.
+4.1 For media item nodes you can select the channel here. For SMIL documents, each channel is mapped to a SMIL region
+5.1 Press this button to cancel the changes made above and close the dialog
+6.1 Press this button to cancel the changes made above, but keep the dialog open
+7.1 Press this button to open an attribute editor for this node
+8.1 Press this button to open an anchor editor for this node
+9.1 Press this button to apply the changes made above, but keep the dialog open
+10.1 Press this button to apply the changes made above and close the dialog
+12.1 Enter the URL for this media item node here, or press the "browse" button to select a local file
+13.1 Press this button to select a local file, the relative URL of which will be filled in the field to the left
+14.1 Press this button to open an external editor on the media item. This will only work if the URL is for a local file, and your editors are configured correctly
+16.1 Enter the data for the immedeate media node here. This is only practical for text nodes
+END-DIALOG
+DIALOG 523 Node Attrs dialog
+1.1 Select the attribute you want to view or change in this list. Changes are not really made until you press "Apply" or "OK"
+5.2 The internal attribute name. Not all that interesting, really...
+6.2 The default value for this attribute, used when you provide no value
+7.2 What this attribute does. The text "(Not in SMIL)" means the attribute has no meaning for SMIL documents
+8.1 Press this to remove the attribute, resulting in the default being used
+9.1 Press this to undo ALL attribute changes made and close the dialog
+10.1 Press this to undo ALL attribute changes made, and revert the attribute values for this node to their previous values
+11.1 Press this to apply ALL changes made, but keep the dialog open. "Revert" has no effect after this
+12.1 Press this to apply ALL changes made and close the dialog
+13.1 Enter the value for the attribute here. Multiple values like coordinates should be separated by spaces. Use "." for decimal point
+14.1 Press this button to select a local file for which you want the URL to be used
+15.1 This attribute can have a number of fixed values. Select the value you want with this popup
+END-DIALOG
+DIALOG 526 LayoutViewDialog
+1.2 ¥stt¥ Layouts
+2.2 ¥stt¥ Channels in layout
+3.2 ¥stt¥ Other channels
+4.1 Select a layout here. A layout is a grouping of channels/regions that is an authoring convenience only. All channels in the selected layout are shown in the player (if visible)
+5.1 Press here to create a new layout
+6.1 Press here to change the name of a layout
+7.1 Press here to remove a layout. The corresponding channels are not deleted, only the layout itself
+8.1 These channels are part of the layout selected on the left. Select one to edit it and highlight it in the player window (when visible)
+9.1 Press this button to create a new channel and add it to the current layout. When the player is visible you will be asked to draw the channel location
+10.1 Press this button to remove the channel selected on the left from the current layout
+11.1 Press this button to show the attribute editor for the channel selected above
+12.1 These channels are not part of the selected layout
+13.1 Press this button to add the channel selected on the right to the current layout
+END-DIALOG
+DIALOG 527 NewChannelDialog
+1.1 Press this button to create the new channel
+2.1 Press this button to cancel the whole channel creation operation
+3.1 Enter the name of the channel here
+5.1 Select the type of the channel here. Channel types are required in CMIF but not supported in SMIL, where each channel is mapped to a region
+END-DIALOG

@@ -25,6 +25,9 @@ try:
 	Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 except:
 	Res.OpenResFile(':maccmifed.rsrc')
+	Res.OpenResFile(':playercontrols.rsrc')
+	Res.OpenResFile(':common.rsrc')
+	Res.OpenResFile(':cmifedballoons.rsrc')
 Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 
 # Now time for real work.
@@ -36,7 +39,7 @@ import macfs
 # Set variable for standalone cmif:
 #
 try:
-	import MMNode
+	import SR
 except ImportError:
 	STANDALONE=0
 else:
@@ -109,6 +112,7 @@ else:
 # macfreeze: exclude TERMIOS
 # macfreeze: exclude cmifex
 # macfreeze: exclude readline
+# XXXX it should optionally do this: macfreeze: exclude staticlicense
 
 
 #
@@ -175,7 +179,7 @@ try:
 			import profile
 			fss, ok = macfs.StandardPutFile("Profile output:")
 			if not ok: sys.exit(1)
-			profile.run("import grins", fss.as_pathname())
+			profile.run("import cmifed", fss.as_pathname())
 		else:
 			import cmifed
 		no_exception=1
