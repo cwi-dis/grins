@@ -47,6 +47,8 @@ GENERAL_TEMPLATE = (
 	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, (
 		Button(usercmd.OPENFILE, TBICON_OPENFILE),
 		Button(usercmd.CLOSE, TBICON_CLOSE),
+		Button(usercmd.RELOAD, TBICON_RESTORE),
+		Separator(12),
 		Button(usercmd.HELP, TBICON_HELP),
 		)
 	)
