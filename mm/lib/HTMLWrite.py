@@ -92,17 +92,29 @@ def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0):
 
 import FtpWriter
 def WriteFTP(root, filename, smilurl, ftpparams, oldfilename='', evallicense = 0):
-	# XXXX For the moment (to be fixed):
 	host, user, passwd, dir = ftpparams
-	# XXXX this is wrong
-	ramurl = smilurl
-	# XXXX Need to check for existing file here
+	#
+	# First create and upload the RAM file
+	#
+	smilurl = MMurl.unquote(smilurl)
+	ramfile = ramfilename(filename)
+	try:
+		ftp = FtpWriter.FtpWriter(host, ramfile, user=user, passwd=passwd, dir=dir, ascii=1)
+		ftp.write(smilurl+'\n')
+		ftp.close()
+	except FtpWriter.all_errors, msg:
+		windowinterface.showmessage('FTP upload failed:\n' + msg, mtype = 'error')
+		return
+	#
+	# Now create and upload the webpage
+	#
+	ramurl = MMurl.pathname2url(ramfile)
 	try:
 		ftp = FtpWriter.FtpWriter(host, filename, user=user, passwd=passwd, dir=dir, ascii=1)
-		fp = IndentedFile(ftp)
 		try:
-			writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense)
+			writer = HTMLWriter(root, ftp, filename, ramurl, oldfilename, evallicense)
 			writer.write()
+			ftp.close()
 		except Error, msg:
 			windowinterface.showmessage(msg, mtype = 'error')
 			return
@@ -155,9 +167,9 @@ class HTMLWriter:
 		# Step one - Read the template data. This is an html file
 		# with %(name)s constructs that will be filled in later
 		#
-		if not ctxa.has_key('template_html_page'):
+		if not ctxa.has_key('project_html_page'):
 			raise Error, 'No HTML template selected'
-		template_name = ctxa['template_html_page']
+		template_name = ctxa['project_html_page']
 		templatedir = findfile('Templates')
 		templatefile = os.path.join(templatedir, template_name)
 		if not os.path.exists(templatefile):
