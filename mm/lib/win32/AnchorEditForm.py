@@ -146,7 +146,7 @@ class AnchorEditForm(GenFormView):
 	# Helper function that calls a callback given a string id
 	def call(self,k):
 		d=self._cbdict
-		if d and k in d.keys() and d[k]:
+		if d and d.has_key(k) and d[k]:
 			apply(apply,d[k])				
 
 	# Transfer date from the list to the edit area
