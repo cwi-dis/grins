@@ -329,7 +329,6 @@
 #define ID_L                            32844
 #define ID_S                            32845
 #define ID_O                            32846
-#define ID_B                            32847
 #define ID_F                            32848
 #define ID_Z                            32849
 #define ID_N                            32850
@@ -338,6 +337,10 @@
 #define ID_D                            32853
 #define ID_R                            32854
 #define ID_V                            32855
+#define ID_K                            32856
+#define ID_C                            32857
+#define ID_E                            32858
+#define ID_M                            32859
 #define IDC_GROUP1                      65535
 #define ID_GROUP1                       65535
 
@@ -346,7 +349,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        276
-#define _APS_NEXT_COMMAND_VALUE         32856
+#define _APS_NEXT_COMMAND_VALUE         32860
 #define _APS_NEXT_CONTROL_VALUE         1203
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
