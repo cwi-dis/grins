@@ -50,6 +50,12 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 	def tkOnEndRendering(self):
 		pass
 
+	def delRegion(self, rgn):
+		wingdi.DeleteObject(rgn)
+
+	def inside(self, rgn, pt):
+		return wingdi.PtInRegion(rgn, pt)
+
 	# new graphics context
 	# self state reflects this new context
 	def tkOnBeginContext(self):
@@ -131,12 +137,8 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			tm = self.ctm.copy()
 			tm.applyTfList(tflist)
 			wingdi.SetWorldTransform(self.hdc, tm.getElements())
-		wingdi.BeginPath(self.hdc)
 
 	def endDraw(self, style, tflist):
-		wingdi.EndPath(self.hdc)
-		#print 'number of path points', wingdi.GetPath(self.hdc)
-
 		# fill should be painted first, then the stroke, and then the marker symbols
 		fill = self.getStyleAttr('fill', style)
 		stroke = self.getStyleAttr('stroke', style)
@@ -189,52 +191,83 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 
 		if tflist:
 			wingdi.SetWorldTransform(self.hdc, self.ctm.getElements())
+	
+	def getDeviceRegion(self):
+		dcid = wingdi.SaveDC(self.hdc)
+		hrgn = wingdi.PathToRegion(self.hdc)
+		wingdi.RestoreDC(self.hdc, dcid)			
+		return hrgn
 						
-	def drawRect(self, pos, size, rxy, style, tflist):
+	def drawRect(self, pos, size, rxy, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
+		wingdi.BeginPath(self.hdc)
 		ltrb = pos[0], pos[1], pos[0]+size[0], pos[1]+size[1]
 		rx, ry = rxy
 		if rx is None or ry is None:
 			wingdi.Rectangle(self.hdc, ltrb)
 		else:
 			wingdi.RoundRect(self.hdc, ltrb, rxy)
-			
+		wingdi.EndPath(self.hdc)
+		if a: hrgn = self.getDeviceRegion()
+		else: hrgn = None
 		self.endDraw(style, tflist)
+		return hrgn
 
-	def drawCircle(self, center, r, style, tflist):
+	def drawCircle(self, center, r, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
+		wingdi.BeginPath(self.hdc)
 		ltrb = center[0]-r, center[1]-r, center[0]+r, center[1]+r
 		wingdi.Ellipse(self.hdc, ltrb)
+		wingdi.EndPath(self.hdc)
+		if a: hrgn = self.getDeviceRegion()
+		else: hrgn = None
 		self.endDraw(style, tflist)
+		return hrgn
 
-	def drawEllipse(self, center, rxy, style, tflist):
+	def drawEllipse(self, center, rxy, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
+		wingdi.BeginPath(self.hdc)
 		ltrb = center[0]-rxy[0], center[1]-rxy[1], center[0]+rxy[0], center[1]+rxy[1]
 		wingdi.Ellipse(self.hdc, ltrb)
+		wingdi.EndPath(self.hdc)
+		if a: hrgn = self.getDeviceRegion()
+		else: hrgn = None
 		self.endDraw(style, tflist)
+		return hrgn
 
-	def drawLine(self, pt1, pt2, style, tflist):
+	def drawLine(self, pt1, pt2, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
+		wingdi.BeginPath(self.hdc)
 		wingdi.MoveToEx(self.hdc, pt1)
 		wingdi.LineTo(self.hdc, pt2)
+		wingdi.EndPath(self.hdc)
 		self.endDraw(style, tflist)
 
-	def drawPolyline(self, points, style, tflist):
+	def drawPolyline(self, points, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
+		wingdi.BeginPath(self.hdc)
 		wingdi.Polyline(self.hdc, points)
+		wingdi.EndPath(self.hdc)
 		self.endDraw(style, tflist)
-
-	def drawPolygon(self, points, style, tflist):
+		
+	def drawPolygon(self, points, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
+		wingdi.BeginPath(self.hdc)
 		wingdi.Polygon(self.hdc, points)
+		wingdi.EndPath(self.hdc)
+		if a: hrgn = self.getDeviceRegion()
+		else: hrgn = None
 		self.endDraw(style, tflist)
+		return hrgn
 
-	def drawPath(self, path, style, tflist):
+	def drawPath(self, path, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
+		wingdi.BeginPath(self.hdc)
 		self.drawPathSegList(path._pathSegList)
+		wingdi.EndPath(self.hdc)
 		self.endDraw(style, tflist)
 
-	def drawText(self, text, pos, style, tflist):
+	def drawText(self, text, pos, style, tflist, a = 0):
 		if tflist:
 			tm = self.ctm.copy()
 			tm.applyTfList(tflist)
