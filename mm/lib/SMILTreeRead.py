@@ -55,6 +55,7 @@ range_re = re.compile('^(?:'
 		   '(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smptestart>[^-]*)-(?P<smpteend>[^-]*))'
 		   ')$')
 smpte_time = re.compile(r'(?:(?:\d{2}:)?\d{2}:)?\d{2}(?P<f>\.\d{2})?$')
+namedecode = re.compile(r'(?P<name>.*)-\d+$')
 
 colors = {
 	'transparent': 'transparent',
@@ -195,10 +196,14 @@ class SMILParser(xmllib.XMLParser):
 		node.__syncarcs = []
 		for attr, val in attributes.items():
 			if attr == 'id':
-				node.attrdict['name'] = val
 				if self.__nodemap.has_key(val):
-					self.syntax_error('node name %s not unique'%val)
-				self.__nodemap[val] = node
+					self.syntax_error('node id %s not unique'%val)
+				else:
+					self.__nodemap[val] = node
+				res = namedecode.match(val)
+				if res is not None:
+					val = res.group('name')
+				node.attrdict['name'] = val
 			elif attr == 'src':
 				node.attrdict['file'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'begin' or attr == 'end':
