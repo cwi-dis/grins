@@ -88,7 +88,7 @@ class _Toplevel:
 	def setcursor(self, cursor):
 		if debug: print 'Toplevel.setcursor('+`cursor`+')'
 		for win in self._subwindows:
-			win._setcursor(cursor)
+			win.setcursor(cursor)
 		self._cursor = cursor
 
 	def newwindow(self, x, y, w, h, title):
@@ -909,7 +909,7 @@ class _Window:
 		_window_list[self._window_id] = self
 		self._redraw_func = None
 		self._redraw()
-		self._setcursor(self._parent_window._cursor)
+		self.setcursor(self._parent_window._cursor)
 		self._parent_window._subwindows.append(self)
 		if hasattr(self._parent_window, '_toplevel'):
 			self._toplevel = self._parent_window._toplevel
@@ -1254,9 +1254,9 @@ class _Window:
 				_toplevel._win_lock.release()
 		self._must_redraw = 0
 
-	def _setcursor(self, cursor):
+	def setcursor(self, cursor):
 		for win in self._subwindows:
-			win._setcursor(cursor)
+			win.setcursor(cursor)
 		if _toplevel._win_lock:
 			_toplevel._win_lock.acquire()
 		gl.winset(self._window_id)
