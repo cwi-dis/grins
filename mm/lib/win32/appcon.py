@@ -7,6 +7,8 @@ The more general win32 constants are mainly in win32con.py
 and of mfc in afxres.py
 """
 
+import win32con
+
 [UNIT_MM, UNIT_SCREEN, UNIT_PXL] = 0, 1, 2
 [PAINT, SIZE, LBUTTONDOWN, MM_MCI_NOTIFY, SET_CURSOR, WIN_DESTROY, LBUTTONUP] = range(7)
 [OPAQUE, TRANSPARENT] = range(2)
@@ -41,12 +43,6 @@ if IsEditor:
 else:
 	AppDisplayName='GRiNS Player'
 	
-# win32con or mfccon ++
-MLF_NOIDLEMSG      = 0x0001  # don't send WM_ENTERIDLE messages
-MLF_NOKICKIDLE     = 0x0002  # don't send WM_KICKIDLE messages
-MLF_SHOWONIDLE     = 0x0004  # show window if not visible at idle time
-
-WM_KICKIDLE        = 0x036A
 
 # DropEffects
 DROPEFFECT_NONE   = 0
@@ -54,3 +50,19 @@ DROPEFFECT_COPY   = 1
 DROPEFFECT_MOVE   = 2
 DROPEFFECT_LINK   = 4
 DROPEFFECT_SCROLL = 0x80000000 
+
+# Private window messages
+
+# win32con or mfccon ++
+MLF_NOIDLEMSG      = 0x0001  # don't send WM_ENTERIDLE messages
+MLF_NOKICKIDLE     = 0x0002  # don't send WM_KICKIDLE messages
+MLF_SHOWONIDLE     = 0x0004  # show window if not visible at idle time
+
+WM_KICKIDLE        = 0x036A
+
+WM_USER_CREATE_BOX_OK		= win32con.WM_USER + 1
+WM_USER_CREATE_BOX_CANCEL	= win32con.WM_USER + 2
+
+
+# start of unnamed messages
+WM_USER_GRINS				= win32con.WM_USER + 100
