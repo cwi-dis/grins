@@ -221,7 +221,7 @@ class NodeInfo(Dialog):
 	    self.channel_select.set_choice( \
 		self.allchannelnames.index(self.channelname)+1)
 	except ValueError:
-	    self.channel_select.set_choice(0)
+	    self.channel_select.set_choice(1) # 'undefined'
 	#
 	self.styles_browser.clear_browser()
 	for i in self.styles_list:

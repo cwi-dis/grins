@@ -13,6 +13,9 @@ intuitive
 
 make text anchors be text selections, not boxes in the window
 
+perhaps: make things more object-oriented so the list of commands
+pertaining to an object depends on the object only, not on the view...
+
 ------------------------------ CRASHES ----------------------------
 
 (Lynda: "I was adding and deleting sync arcs":)
@@ -36,6 +39,11 @@ Kaboo!: None
 > /ufs/guido/mm/demo/mm4/Scheduler.py(72)unfreeze: raise 'Kaboo!'
 
 ------------------------------ BUGS -------------------------------
+
+Nodes with unknown channel name still cause problems.
+
+renaming a channel when the player is also open (possibly only when it
+is opened after the channel view?) causes a crash.
 
 (Lynda:) One thing I forgot to mention, which would be nice to
 understand at least, is that sometimes when I start up the traffic
@@ -118,7 +126,8 @@ screen after its time is up (currently this is always done)
 
 ------------------------------ NITS -------------------------------
 
-sync arcs whose source is lost are kept around for no good reason
+sync arcs whose source is lost are kept around (although invisible)
+for no good reason
 
 block & channel view: use channel colors instead of default (gray)?
 
