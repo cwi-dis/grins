@@ -19,7 +19,7 @@ def GetSize(url, maintype = None, subtype = None):
 			maintype = u.headers.getmaintype()
 			subtype = u.headers.getsubtype()
 			cache['mimetype'] = maintype, subtype
-	if string.find(string.lower(subtype), 'real') >= 0:
+	if string.find(string.lower(subtype), 'real') >= 0 or string.find(subtype, 'shockwave') >= 0:
 		# any RealMedia type
 		import realsupport
 		info = realsupport.getinfo(url, u)
@@ -29,11 +29,14 @@ def GetSize(url, maintype = None, subtype = None):
 		if u is not None:
 			u.close()
 		del u
-		try:
-			file = MMurl.urlretrieve(url)[0]
-		except IOError:
-			return 0, 0
-		width, height = GetImageSize(file)
+		if subtype == 'svg-xml':
+			width, height = GetSvgSize(url)
+		else:
+			try:
+				file = MMurl.urlretrieve(url)[0]
+			except IOError:
+				return 0, 0
+			width, height = GetImageSize(file)
 	elif maintype == 'video':
 		if u is not None:
 			u.close()
@@ -57,6 +60,13 @@ def GetImageSize(file):
 	except:
 		return 0, 0
 
+def GetSvgSize(url):
+	import svgdom
+	try:
+		return svgdom.GetSvgSize(url)
+	except:
+		return 0, 0
+		
 def GetVideoSize(file):
 	import windowinterface
 	try:
