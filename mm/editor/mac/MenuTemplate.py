@@ -143,7 +143,7 @@ MENUBAR=(
 		(CMIF, ENTRY, 'User Groups', '0', USERGROUPVIEW),
 		(ALL, SEP,),
 		(ALL, ENTRY, 'Source', None, SOURCE),
-		(ALL, ENTRY, 'View Help Window', '?', HELP),
+		(ALL, ENTRY, 'View Help Window', None, HELP),
 		(ALL, SEP,),
 		(ALL, SPECIAL, 'Open Windows', 'windows'),
 		(ALL, SPECIAL, 'Open Documents', 'documents'),
