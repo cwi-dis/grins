@@ -158,6 +158,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.channelview.show()
 		if 'transition' in defaultviews and self.transitionview is not None:
 			self.transitionview.show()
+		if self.layoutview is None:
+			print "Layout is None!"
 		if 'layout' in defaultviews and self.layoutview is not None:
 			self.layoutview.show()
 		if 'ugroup' in defaultviews and self.ugroupview is not None:
@@ -203,48 +205,62 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	# View manipulation.
 	#
 	def makeviews(self):
-		import HierarchyView
-		self.hierarchyview = HierarchyView.HierarchyView(self)
+		# Reads settings from features.py and loads whichever views are needed..
+		self.channelview = None
+		self.layoutview = None
+		self.ugroupview = None
+		self.player = None
+		self.hierarchyview = None
+		self.links = None
+		self.layoutview2 = None
+		self.transitionview = None
+		
+		if features.STRUCTURE_VIEW in features.feature_set:
+			import HierarchyView
+			self.hierarchyview = HierarchyView.HierarchyView(self)
 
-		import Player
-		self.player = Player.Player(self)
+		if features.PLAYER_VIEW in features.feature_set:
+			import Player
+			self.player = Player.Player(self)
 
-		import TransitionView
-		self.transitionview = TransitionView.TransitionView(self)
+		if features.TRANSITION_VIEW in features.feature_set:
+			import TransitionView
+			self.transitionview = TransitionView.TransitionView(self)
 
-		global hasLayoutView2
-		if hasLayoutView2 is None or hasLayoutView2:
-			try:
-				import LayoutView2
-			except ImportError:
-				hasLayoutView2 = 0
-				self.layoutview2 = None
+		if features.LAYOUT_VIEW in features.feature_set:
+			global hasLayoutView2
+			if hasLayoutView2 is None or hasLayoutView2:
+				try:
+					import LayoutView2
+				except ImportError:
+					hasLayoutView2 = 0
+					self.layoutview2 = None
+				else:
+					hasLayoutView2 = 1
+					self.layoutview2 = LayoutView2.LayoutView2(self)
 			else:
-				hasLayoutView2 = 1
-				self.layoutview2 = LayoutView2.LayoutView2(self)
-		else:
-			self.layoutview2 = None
+		       		self.layoutview2 = None
 
-		if not features.lightweight:
+		if features.CHANNEL_VIEW in features.feature_set:
 			import ChannelView
 			self.channelview = ChannelView.ChannelView(self)
 
+		if features.HYPERLINKS_VIEW in features.feature_set:
 			import LinkEdit
 			self.links = LinkEdit.LinkEdit(self)
 
-			import LayoutView
-			self.layoutview = LayoutView.LayoutView(self)
+			# Alain's view is used instead of this.
+			#import LayoutView
+			#self.layoutview = LayoutView.LayoutView(self)
 
+	       	if features.USER_GROUPS in features.feature_set:
 			import UsergroupView
 			self.ugroupview = UsergroupView.UsergroupView(self)
 			
-		else:
+		if features.LINKEDIT_LIGHT in features.feature_set:
+			#I'm not sure what this does.. -mjvdg.
 			import LinkEditLight
 			self.links = LinkEditLight.LinkEditLight(self)
-
-			self.channelview = None
-			self.layoutview = None
-			self.ugroupview = None
 
 		# Views that are destroyed by restore (currently all)
 		self.views = [self.player, self.hierarchyview,

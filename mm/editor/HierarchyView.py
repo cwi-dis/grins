@@ -302,14 +302,14 @@ class HierarchyView(HierarchyViewDialog):
 		#else:			# else add really important commands...
 		if 1: # I don't want to break the indentation here -mjvdg.
 			commands = commands + self.noslidecommands
-			if self.toplevel.links.has_interesting(): # ??!! -mjvdg
+			if self.toplevel.links and self.toplevel.links.has_interesting(): # ??!! -mjvdg
 				commands = commands + self.finishlinkcommands
 			if fntype in MMNode.interiortypes or \
 			   (is_realpix and MMAttrdefs.getattr(fnode, 'file')):
 				commands = commands + self.interiorcommands # Add interior structure modifying commands.
 			if fntype not in MMNode.interiortypes and \
 			   fnode.GetChannelType() != 'sound' and \
-			   not self.toplevel.links.islinksrc(fnode):
+			   not (self.toplevel.links and self.toplevel.links.islinksrc(fnode)):
 				commands = commands + self.createanchorcommands
 
 		if fnode is not self.root:
@@ -512,6 +512,7 @@ class HierarchyView(HierarchyViewDialog):
 		return self.focusnode
 
 	def globalsetfocus(self, node):
+		print "DEBUG: HierarchyView received globalsetfocus with ", node
 		if not self.is_showing():
 			return
 		if not self.root.IsAncestorOf(node):
@@ -520,6 +521,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def globalfocuschanged(self, focustype, focusobject):
 		# Callback from the editmanager to set the focus to a specific node.
+		print "DEBUG: HierarchyView received globalsetfocus with ", focustype, focusobject
 		if focusobject and focusobject is not self.focusnode:
 			self.select_node(focusobject);
 			self.aftersetfocus();
