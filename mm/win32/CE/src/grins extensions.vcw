@@ -33,6 +33,45 @@ Package=<4>
 
 ###############################################################################
 
+Project: "all grins extensions"=".\all grins extensions.vcp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name GRiNS Player
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name python16
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wingdi
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name winkernel
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name winuser
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "cmif"="C:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\cmif.vcp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "python16"=..\..\..\..\PYTHON_CE\PCBUILD\CE\python16.vcp - Package Owner=<4>
 
 Package=<5>
