@@ -51,6 +51,7 @@ static PyObject *Qt_OpenMovieFileWin(PyObject *_self, PyObject *_args)
 		return NULL;
 	char sz[256];
 	strcpy(sz, psz);
+	UrlConvert(sz);
 	FSMakeFSSpec(0, 0L, c2pstr(sz), &fileSpec);
 	_err = OpenMovieFile(&fileSpec,
 	                     &resRefNum,
