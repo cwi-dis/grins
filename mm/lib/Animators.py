@@ -119,7 +119,7 @@ class Animator:
 		self._direction = 1
 
 		# composition context of this animator
-		self.__effectiveAnimator = None
+		self._effectiveAnimator = None
 
 	def getDOMValue(self):
 		return self._domval
@@ -251,12 +251,6 @@ class Animator:
 		ix, pdt = self._getinterval(t)
 		return vl[ix] + (vl[ix+1]-vl[ix])*self.bezier(pdt, el[ix])
 
-	def _calcto(self, t):
-		if not self.__effectiveAnimator:
-			return self._postinterpol(t)
-		self._values[0] = self.__effectiveAnimator.getcurrentbasevalue(self)
-		return self._postinterpol(t)
-
 	# set legal attr values range
 	def setRange(self, range):
 		self._range = range
@@ -289,7 +283,7 @@ class Animator:
 		self._convert = cvt
 
 	def setEffectiveAnimator(self, ea):
-		self.__effectiveAnimator = ea
+		self._effectiveAnimator = ea
 
 	def _setAutoReverse(self,f):
 		if f: self._autoReverse = 1
@@ -418,9 +412,13 @@ class EffValueAnimator(Animator):
 	def __init__(self, attr, domval, value, dur):
 		Animator.__init__(self, attr, domval, (domval, value,), dur, mode='linear',
 			times=None, splines=None, accumulate='none', additive='replace') 
-		self._postinterpol = self._inrepol
-		self._inrepol = self._calcto
-		self._values = list(self._values)
+	def getValue(self, t):
+		if not self._effectiveAnimator:
+			return Animator.getValue(self, t)
+		u, v = self._values[:2]
+		u = self._effectiveAnimator.getcurrentbasevalue(self)
+		self._values = u, v
+		return Animator.getValue(self, t)
 
 
 ###########################
@@ -494,6 +492,7 @@ class TupleAnimator(Animator):
 			nv.append(a.clamp(v[i]))
 		return tuple(nv)
 
+
 ###########################
 # 'animateColor'  element animator
 class ColorAnimator(TupleAnimator):
@@ -524,6 +523,20 @@ class ColorAnimator(TupleAnimator):
 		r, g, b = v
 		return _round(r), _round(g), _round(b)
 
+class EffColorAnimator(ColorAnimator):
+	def __init__(self, attr, domval, value, dur):
+		ColorAnimator.__init__(self, attr, domval, (domval, value,), dur, mode='linear',
+			times=None, splines=None, accumulate='none', additive='replace')
+	def getValue(self, t):
+		if not self._effectiveAnimator:
+			return TupleAnimator.getValue(self, t)
+		vl = self._effectiveAnimator.getcurrentbasevalue(self)
+		for i in range(len(self._animators)):
+			u, v = self._animators[i]._values[:2]
+			u = vl[i]
+			self._animators[i]._values = (u, v)
+		return TupleAnimator.getValue(self, t)
+
 class FloatTupleAnimator(TupleAnimator):
 	def __init__(self, attr, domval, values, dur, mode='linear', 
 			times=None, splines=None, accumulate='none', additive='replace'):
@@ -551,15 +564,17 @@ class IntTupleAnimator(FloatTupleAnimator):
 			l.append(_round(v[i]))
 		return tuple(l)
 
+
 ###########################
 # 'animateMotion' element animator
 class MotionAnimator(Animator):
 	def __init__(self, attr, domval, path, dur, mode='paced', 
-			times=None, splines=None, accumulate='none', additive='sum'):
+			times=None, splines=None, accumulate='none', additive='replace'):
 		self._path = path
 
-		# get values from path to support modes other than paced
-		values = path.getPoints()
+		# pass to base the length parameters of values or path
+		values = path.getLengthValues()
+
 		Animator.__init__(self, attr, domval, values, dur, mode, 
 			times, splines, accumulate, additive)
 		
@@ -567,16 +582,43 @@ class MotionAnimator(Animator):
 		self._time2length = path.getLength()/dur
 		
 	def _paced(self, t):
-		return self._path.getPointAt(t*self._time2length)
+		return self._path.getPointAtLength(t*self._time2length)
+
+	def _linear(self, t):
+		lv = Animator._linear(self, t)
+		return self._path.getPointAtLength(lv)
+
+	def _spline(self, t):
+		lv = Animator._spline(self, t)
+		return self._path.getPointAtLength(lv)
+
+	def _discrete(self, t):
+		lv = Animator._discrete(self, t)
+		return self._path.getPointAtLength(lv)
 
 	def convert(self, v):
 		x, y = v.real, v.imag
 		return _round(x), _round(y)
 	
-	def distValues(self, v1, v2):
-		dx = math.fabs(v2.real-v1.real)
-		dy = math.fabs(v2.imag-v1.imag)
-		return math.sqrt(dx*dx+dy*dy)
+class EffMotionAnimator(Animator):
+	def __init__(self, attr, domval, value, dur):
+		x, y = value
+		value = complex(x,y)
+		Animator.__init__(self, attr, domval, (domval, value,), dur, mode='linear',
+			times=None, splines=None, accumulate='none', additive='replace') 
+
+	def getValue(self, t):
+		if not self._effectiveAnimator:
+			return Animator.getValue(self, t)
+		u, v = self._values[:2]
+		u = self._effectiveAnimator.getcurrentbasevalue(self)
+		self._values = u, v
+		return Animator.getValue(self, t)
+
+	def convert(self, v):
+		x, y = v.real, v.imag
+		return _round(x), _round(y)
+
 
 ###########################
 # An EffectiveAnimator is responsible to combine properly
@@ -587,17 +629,6 @@ class MotionAnimator(Animator):
 # Implements animations composition semantics
 #	'additive' attribute + priorities
 #  and is an entity at a higher level than animators (and thus channels).
-
-# impl rem: 
-# *lower priority if previously started
-# if sync: lower priority if sync base source else lower if first in doc
-# 'first in doc' is a common case and easy to implement
-# restart element raises priority but not repeat
-# *animators should be kept for all their effective dur: ED = AD + frozenDur
-# we must monitor animations for all ED not only AD
-# * we must either assert that onAnimateBegin are called in the proper order
-# or implement within EffectiveAnimator a proper ordering method
-# 
 
 class EffectiveAnimator:
 	def __init__(self, context, targnode, attr, domval):
@@ -928,21 +959,6 @@ class AnimateContext:
 		return self._cssResolver
 
 ###########################
-# Gen impl. rem:
-# * restart doc removes all anim effects including frozen val
-# * on syntax error: we can ignore animation effects but not timing
-# * attrdefs specs: additive, legal_range 
-# * an animation can effect indirectly more than one attributes (for example anim 'region')
-
-# implNote
-# main decision attrs:
-# elementTag (__elementTag)
-# node type (self.__target._type)
-# valuesType, attrType, additivity
-# syntaxError:	invalidTarget, invalidValues, invalidKeyTimes, invalidKeySplines,
-#				invalidEnumAttr, invalidTimeManipAttr,
-# notSMILBostonAnimTarget
-
 
 additivetypes = ['int', 'float', 'color', 'position', 'inttuple', 'floattuple']
 alltypes = ['string',] + additivetypes
@@ -1124,15 +1140,30 @@ class AnimateElementParser:
 		################
 		# to-only animation for additive attributes
 		if self.__animtype == 'to' and self.__isadditive and self.__calcMode!='discrete':
-			v = string.atof(self.getTo())
-			anim = EffValueAnimator(attr, domval, v, dur)
 			if self.__attrtype == 'int':
+				v = string.atoi(self.getTo())
+				anim = EffValueAnimator(attr, domval, v, dur)
 				anim.setRetunedValuesConverter(_round)
+				self.__setTimeManipulators(anim)
+			elif self.__attrtype == 'float':
+				v = string.atof(self.getTo())
+				anim = EffValueAnimator(attr, domval, v, dur)
+				self.__setTimeManipulators(anim)
+			elif self.__attrtype == 'color':
+				values = self.__getColorValues()
+				anim = EffColorAnimator(attr, domval, values, dur)
+				self.__setTimeManipulators(anim)
+			elif self.__attrtype == 'position':
+				coords = self.__getNumPairInterpolationValues()
+				anim = EffMotionAnimator(attr, domval, coords, dur)
+				self.__setTimeManipulators(anim)
 			return anim
+		elif self.__animtype == 'to' and (self.__calcMode=='discrete' or not self.__isadditive):
+			return self.__getSetAnimator()
 
 		################
 		# by-only animation for additive attributes
-		if self.__animtype == 'by' and self.__isadditive:
+		if self.__animtype == 'by' and self.__isadditive and self.__elementTag not in ('animateColor', 'animateMotion'):
 			values = self.__getNumInterpolationValues()
 			anim = Animator(attr, domval, values, dur, mode=mode, accumulate=accumulate, additive='sum')
 			if self.__attrtype == 'int':
@@ -1689,7 +1720,7 @@ class AnimateElementParser:
 			dv = self.__convert_color(self.getBy())
 			return v1, (v1[0]+dv[0], v1[1]+dv[1], v1[2]+dv[2])
 		elif self.__animtype == 'to':
-			return 	self.__splitf(self.getTo())
+			return 	self.__convert_color(self.getTo())
 		elif self.__animtype == 'by':
 			dv = self.__convert_color(self.getBy())
 			return (0, 0, 0), dv
