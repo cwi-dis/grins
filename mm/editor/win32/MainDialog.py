@@ -49,10 +49,15 @@ class MainDialog:
 				usercmd.CONSOLE(callback=(self.console_callback, ())))
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
+			import cmif, MMurl
 			self.commandlist.append(
 				HELP_CONTENTS(callback = (self.help_contents_callback, ())))
 			self.commandlist.append(
 				GRINS_WEB(callback = (self.grins_web_callback, ('http://www.oratrix.com/GRiNS/index.html',))))
+			qsg = MMurl.pathname2url(cmif.findfile('QSG-L4G2.pdf'))
+##			qsg = MMurl.pathname2url(r'd:\ufs\mm\cmif\Build\common\QSG-L4G2.pdf')
+			self.commandlist.append(
+				GRINS_QSG(callback = (self.grins_web_callback, (qsg,))))
 		import windowinterface
 		# register events for all frame wnds
 		windowinterface.register_event(WMEVENTS.PasteFile, self.pastefile, None)
