@@ -20,9 +20,9 @@ the file "BugReportForm.txt" to fill out and mail a bug report to us.
 System Requirements
 -------------------
 
-GRiNS requires a PowerPC Macintosh running MacOS 8.1. The preferred configuration,
-though, is at least a 200Mhz machine, 32Mb of RAM and MacOS 8.5. To play back
-RealMedia 64Mb is required.
+GRiNS requires any PowerPC Macintosh running MacOS 8.5. The preferred
+configuration, though, is at least a 200Mhz machine and 32Mb of RAM. To
+play back RealMedia 64Mb is required.
 
 General Information
 -------------------
