@@ -1,6 +1,6 @@
 *.vcl
-ARMDbg
-ARMRel
+ARMDbg*
+ARMRel*
 RESOURCE.py
-X86EMDbg
-X86EMRel
+X86EMDbg*
+X86EMRel*
