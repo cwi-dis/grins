@@ -301,101 +301,101 @@ NODEP_CPP_WINUS=\
 !ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Release"
 
 DEP_CPP_WINUS=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	".\mtpycall.h"\
 	".\winuser_app.h"\
 	".\winuser_main.h"\
 	".\winuser_menu.h"\
 	".\winuser_ofn.h"\
 	".\winuser_wnd.h"\
-	{$(INCLUDE)}"abstract.h"\
-	{$(INCLUDE)}"bufferobject.h"\
-	{$(INCLUDE)}"ceval.h"\
-	{$(INCLUDE)}"classobject.h"\
-	{$(INCLUDE)}"cobject.h"\
-	{$(INCLUDE)}"complexobject.h"\
-	{$(INCLUDE)}"config.h"\
-	{$(INCLUDE)}"crtapi.h"\
-	{$(INCLUDE)}"dictobject.h"\
-	{$(INCLUDE)}"fileobject.h"\
-	{$(INCLUDE)}"floatobject.h"\
-	{$(INCLUDE)}"funcobject.h"\
-	{$(INCLUDE)}"import.h"\
-	{$(INCLUDE)}"intobject.h"\
-	{$(INCLUDE)}"intrcheck.h"\
-	{$(INCLUDE)}"listobject.h"\
-	{$(INCLUDE)}"longobject.h"\
-	{$(INCLUDE)}"methodobject.h"\
-	{$(INCLUDE)}"modsupport.h"\
-	{$(INCLUDE)}"moduleobject.h"\
-	{$(INCLUDE)}"mymalloc.h"\
-	{$(INCLUDE)}"myproto.h"\
-	{$(INCLUDE)}"object.h"\
-	{$(INCLUDE)}"objimpl.h"\
-	{$(INCLUDE)}"patchlevel.h"\
-	{$(INCLUDE)}"pydebug.h"\
-	{$(INCLUDE)}"pyerrors.h"\
-	{$(INCLUDE)}"pyfpe.h"\
-	{$(INCLUDE)}"pystate.h"\
-	{$(INCLUDE)}"Python.h"\
-	{$(INCLUDE)}"pythonrun.h"\
-	{$(INCLUDE)}"rangeobject.h"\
-	{$(INCLUDE)}"sliceobject.h"\
-	{$(INCLUDE)}"stringobject.h"\
-	{$(INCLUDE)}"sysmodule.h"\
-	{$(INCLUDE)}"traceback.h"\
-	{$(INCLUDE)}"tupleobject.h"\
-	{$(INCLUDE)}"unicodeobject.h"\
-	{$(INCLUDE)}"unistd.h"\
 	
 
 !ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Debug"
 
 DEP_CPP_WINUS=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	".\mtpycall.h"\
 	".\winuser_app.h"\
 	".\winuser_main.h"\
 	".\winuser_menu.h"\
 	".\winuser_ofn.h"\
 	".\winuser_wnd.h"\
-	{$(INCLUDE)}"abstract.h"\
-	{$(INCLUDE)}"bufferobject.h"\
-	{$(INCLUDE)}"ceval.h"\
-	{$(INCLUDE)}"classobject.h"\
-	{$(INCLUDE)}"cobject.h"\
-	{$(INCLUDE)}"complexobject.h"\
-	{$(INCLUDE)}"config.h"\
-	{$(INCLUDE)}"crtapi.h"\
-	{$(INCLUDE)}"dictobject.h"\
-	{$(INCLUDE)}"fileobject.h"\
-	{$(INCLUDE)}"floatobject.h"\
-	{$(INCLUDE)}"funcobject.h"\
-	{$(INCLUDE)}"import.h"\
-	{$(INCLUDE)}"intobject.h"\
-	{$(INCLUDE)}"intrcheck.h"\
-	{$(INCLUDE)}"listobject.h"\
-	{$(INCLUDE)}"longobject.h"\
-	{$(INCLUDE)}"methodobject.h"\
-	{$(INCLUDE)}"modsupport.h"\
-	{$(INCLUDE)}"moduleobject.h"\
-	{$(INCLUDE)}"mymalloc.h"\
-	{$(INCLUDE)}"myproto.h"\
-	{$(INCLUDE)}"object.h"\
-	{$(INCLUDE)}"objimpl.h"\
-	{$(INCLUDE)}"patchlevel.h"\
-	{$(INCLUDE)}"pydebug.h"\
-	{$(INCLUDE)}"pyerrors.h"\
-	{$(INCLUDE)}"pyfpe.h"\
-	{$(INCLUDE)}"pystate.h"\
-	{$(INCLUDE)}"Python.h"\
-	{$(INCLUDE)}"pythonrun.h"\
-	{$(INCLUDE)}"rangeobject.h"\
-	{$(INCLUDE)}"sliceobject.h"\
-	{$(INCLUDE)}"stringobject.h"\
-	{$(INCLUDE)}"sysmodule.h"\
-	{$(INCLUDE)}"traceback.h"\
-	{$(INCLUDE)}"tupleobject.h"\
-	{$(INCLUDE)}"unicodeobject.h"\
-	{$(INCLUDE)}"unistd.h"\
 	
 
 !ENDIF 
@@ -404,6 +404,21 @@ DEP_CPP_WINUS=\
 # Begin Source File
 
 SOURCE=.\winuser.def
+
+!IF  "$(CFG)" == "winuser - Win32 (WCE ARM) Release"
+
+!ELSEIF  "$(CFG)" == "winuser - Win32 (WCE ARM) Debug"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Debug"
+
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -526,98 +541,117 @@ NODEP_CPP_WINUSE=\
 !ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Release"
 
 DEP_CPP_WINUSE=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_app.h"\
-	{$(INCLUDE)}"abstract.h"\
-	{$(INCLUDE)}"bufferobject.h"\
-	{$(INCLUDE)}"ceval.h"\
-	{$(INCLUDE)}"classobject.h"\
-	{$(INCLUDE)}"cobject.h"\
-	{$(INCLUDE)}"complexobject.h"\
-	{$(INCLUDE)}"config.h"\
-	{$(INCLUDE)}"crtapi.h"\
-	{$(INCLUDE)}"dictobject.h"\
-	{$(INCLUDE)}"fileobject.h"\
-	{$(INCLUDE)}"floatobject.h"\
-	{$(INCLUDE)}"funcobject.h"\
-	{$(INCLUDE)}"import.h"\
-	{$(INCLUDE)}"intobject.h"\
-	{$(INCLUDE)}"intrcheck.h"\
-	{$(INCLUDE)}"listobject.h"\
-	{$(INCLUDE)}"longobject.h"\
-	{$(INCLUDE)}"methodobject.h"\
-	{$(INCLUDE)}"modsupport.h"\
-	{$(INCLUDE)}"moduleobject.h"\
-	{$(INCLUDE)}"mymalloc.h"\
-	{$(INCLUDE)}"myproto.h"\
-	{$(INCLUDE)}"object.h"\
-	{$(INCLUDE)}"objimpl.h"\
-	{$(INCLUDE)}"patchlevel.h"\
-	{$(INCLUDE)}"pydebug.h"\
-	{$(INCLUDE)}"pyerrors.h"\
-	{$(INCLUDE)}"pyfpe.h"\
-	{$(INCLUDE)}"pystate.h"\
-	{$(INCLUDE)}"Python.h"\
-	{$(INCLUDE)}"pythonrun.h"\
-	{$(INCLUDE)}"rangeobject.h"\
-	{$(INCLUDE)}"sliceobject.h"\
-	{$(INCLUDE)}"stringobject.h"\
-	{$(INCLUDE)}"sysmodule.h"\
-	{$(INCLUDE)}"traceback.h"\
-	{$(INCLUDE)}"tupleobject.h"\
-	{$(INCLUDE)}"unicodeobject.h"\
-	{$(INCLUDE)}"unistd.h"\
 	
 
 !ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Debug"
 
 DEP_CPP_WINUSE=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_app.h"\
-	{$(INCLUDE)}"abstract.h"\
-	{$(INCLUDE)}"bufferobject.h"\
-	{$(INCLUDE)}"ceval.h"\
-	{$(INCLUDE)}"classobject.h"\
-	{$(INCLUDE)}"cobject.h"\
-	{$(INCLUDE)}"complexobject.h"\
-	{$(INCLUDE)}"config.h"\
-	{$(INCLUDE)}"crtapi.h"\
-	{$(INCLUDE)}"dictobject.h"\
-	{$(INCLUDE)}"fileobject.h"\
-	{$(INCLUDE)}"floatobject.h"\
-	{$(INCLUDE)}"funcobject.h"\
-	{$(INCLUDE)}"import.h"\
-	{$(INCLUDE)}"intobject.h"\
-	{$(INCLUDE)}"intrcheck.h"\
-	{$(INCLUDE)}"listobject.h"\
-	{$(INCLUDE)}"longobject.h"\
-	{$(INCLUDE)}"methodobject.h"\
-	{$(INCLUDE)}"modsupport.h"\
-	{$(INCLUDE)}"moduleobject.h"\
-	{$(INCLUDE)}"mymalloc.h"\
-	{$(INCLUDE)}"myproto.h"\
-	{$(INCLUDE)}"object.h"\
-	{$(INCLUDE)}"objimpl.h"\
-	{$(INCLUDE)}"patchlevel.h"\
-	{$(INCLUDE)}"pydebug.h"\
-	{$(INCLUDE)}"pyerrors.h"\
-	{$(INCLUDE)}"pyfpe.h"\
-	{$(INCLUDE)}"pystate.h"\
-	{$(INCLUDE)}"Python.h"\
-	{$(INCLUDE)}"pythonrun.h"\
-	{$(INCLUDE)}"rangeobject.h"\
-	{$(INCLUDE)}"sliceobject.h"\
-	{$(INCLUDE)}"stringobject.h"\
-	{$(INCLUDE)}"sysmodule.h"\
-	{$(INCLUDE)}"traceback.h"\
-	{$(INCLUDE)}"tupleobject.h"\
-	{$(INCLUDE)}"unicodeobject.h"\
-	{$(INCLUDE)}"unistd.h"\
 	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\winuser_d.def
+
+!IF  "$(CFG)" == "winuser - Win32 (WCE ARM) Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "winuser - Win32 (WCE ARM) Debug"
+
+!ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Debug"
 
 !ENDIF 
 
@@ -728,97 +762,97 @@ NODEP_CPP_WINUSER=\
 !ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Release"
 
 DEP_CPP_WINUSER=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_main.h"\
-	{$(INCLUDE)}"abstract.h"\
-	{$(INCLUDE)}"bufferobject.h"\
-	{$(INCLUDE)}"ceval.h"\
-	{$(INCLUDE)}"classobject.h"\
-	{$(INCLUDE)}"cobject.h"\
-	{$(INCLUDE)}"complexobject.h"\
-	{$(INCLUDE)}"config.h"\
-	{$(INCLUDE)}"crtapi.h"\
-	{$(INCLUDE)}"dictobject.h"\
-	{$(INCLUDE)}"fileobject.h"\
-	{$(INCLUDE)}"floatobject.h"\
-	{$(INCLUDE)}"funcobject.h"\
-	{$(INCLUDE)}"import.h"\
-	{$(INCLUDE)}"intobject.h"\
-	{$(INCLUDE)}"intrcheck.h"\
-	{$(INCLUDE)}"listobject.h"\
-	{$(INCLUDE)}"longobject.h"\
-	{$(INCLUDE)}"methodobject.h"\
-	{$(INCLUDE)}"modsupport.h"\
-	{$(INCLUDE)}"moduleobject.h"\
-	{$(INCLUDE)}"mymalloc.h"\
-	{$(INCLUDE)}"myproto.h"\
-	{$(INCLUDE)}"object.h"\
-	{$(INCLUDE)}"objimpl.h"\
-	{$(INCLUDE)}"patchlevel.h"\
-	{$(INCLUDE)}"pydebug.h"\
-	{$(INCLUDE)}"pyerrors.h"\
-	{$(INCLUDE)}"pyfpe.h"\
-	{$(INCLUDE)}"pystate.h"\
-	{$(INCLUDE)}"Python.h"\
-	{$(INCLUDE)}"pythonrun.h"\
-	{$(INCLUDE)}"rangeobject.h"\
-	{$(INCLUDE)}"sliceobject.h"\
-	{$(INCLUDE)}"stringobject.h"\
-	{$(INCLUDE)}"sysmodule.h"\
-	{$(INCLUDE)}"traceback.h"\
-	{$(INCLUDE)}"tupleobject.h"\
-	{$(INCLUDE)}"unicodeobject.h"\
-	{$(INCLUDE)}"unistd.h"\
 	
 
 !ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Debug"
 
 DEP_CPP_WINUSER=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_main.h"\
-	{$(INCLUDE)}"abstract.h"\
-	{$(INCLUDE)}"bufferobject.h"\
-	{$(INCLUDE)}"ceval.h"\
-	{$(INCLUDE)}"classobject.h"\
-	{$(INCLUDE)}"cobject.h"\
-	{$(INCLUDE)}"complexobject.h"\
-	{$(INCLUDE)}"config.h"\
-	{$(INCLUDE)}"crtapi.h"\
-	{$(INCLUDE)}"dictobject.h"\
-	{$(INCLUDE)}"fileobject.h"\
-	{$(INCLUDE)}"floatobject.h"\
-	{$(INCLUDE)}"funcobject.h"\
-	{$(INCLUDE)}"import.h"\
-	{$(INCLUDE)}"intobject.h"\
-	{$(INCLUDE)}"intrcheck.h"\
-	{$(INCLUDE)}"listobject.h"\
-	{$(INCLUDE)}"longobject.h"\
-	{$(INCLUDE)}"methodobject.h"\
-	{$(INCLUDE)}"modsupport.h"\
-	{$(INCLUDE)}"moduleobject.h"\
-	{$(INCLUDE)}"mymalloc.h"\
-	{$(INCLUDE)}"myproto.h"\
-	{$(INCLUDE)}"object.h"\
-	{$(INCLUDE)}"objimpl.h"\
-	{$(INCLUDE)}"patchlevel.h"\
-	{$(INCLUDE)}"pydebug.h"\
-	{$(INCLUDE)}"pyerrors.h"\
-	{$(INCLUDE)}"pyfpe.h"\
-	{$(INCLUDE)}"pystate.h"\
-	{$(INCLUDE)}"Python.h"\
-	{$(INCLUDE)}"pythonrun.h"\
-	{$(INCLUDE)}"rangeobject.h"\
-	{$(INCLUDE)}"sliceobject.h"\
-	{$(INCLUDE)}"stringobject.h"\
-	{$(INCLUDE)}"sysmodule.h"\
-	{$(INCLUDE)}"traceback.h"\
-	{$(INCLUDE)}"tupleobject.h"\
-	{$(INCLUDE)}"unicodeobject.h"\
-	{$(INCLUDE)}"unistd.h"\
 	
 
 !ENDIF 
@@ -930,97 +964,97 @@ NODEP_CPP_WINUSER_=\
 !ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Release"
 
 DEP_CPP_WINUSER_=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_menu.h"\
-	{$(INCLUDE)}"abstract.h"\
-	{$(INCLUDE)}"bufferobject.h"\
-	{$(INCLUDE)}"ceval.h"\
-	{$(INCLUDE)}"classobject.h"\
-	{$(INCLUDE)}"cobject.h"\
-	{$(INCLUDE)}"complexobject.h"\
-	{$(INCLUDE)}"config.h"\
-	{$(INCLUDE)}"crtapi.h"\
-	{$(INCLUDE)}"dictobject.h"\
-	{$(INCLUDE)}"fileobject.h"\
-	{$(INCLUDE)}"floatobject.h"\
-	{$(INCLUDE)}"funcobject.h"\
-	{$(INCLUDE)}"import.h"\
-	{$(INCLUDE)}"intobject.h"\
-	{$(INCLUDE)}"intrcheck.h"\
-	{$(INCLUDE)}"listobject.h"\
-	{$(INCLUDE)}"longobject.h"\
-	{$(INCLUDE)}"methodobject.h"\
-	{$(INCLUDE)}"modsupport.h"\
-	{$(INCLUDE)}"moduleobject.h"\
-	{$(INCLUDE)}"mymalloc.h"\
-	{$(INCLUDE)}"myproto.h"\
-	{$(INCLUDE)}"object.h"\
-	{$(INCLUDE)}"objimpl.h"\
-	{$(INCLUDE)}"patchlevel.h"\
-	{$(INCLUDE)}"pydebug.h"\
-	{$(INCLUDE)}"pyerrors.h"\
-	{$(INCLUDE)}"pyfpe.h"\
-	{$(INCLUDE)}"pystate.h"\
-	{$(INCLUDE)}"Python.h"\
-	{$(INCLUDE)}"pythonrun.h"\
-	{$(INCLUDE)}"rangeobject.h"\
-	{$(INCLUDE)}"sliceobject.h"\
-	{$(INCLUDE)}"stringobject.h"\
-	{$(INCLUDE)}"sysmodule.h"\
-	{$(INCLUDE)}"traceback.h"\
-	{$(INCLUDE)}"tupleobject.h"\
-	{$(INCLUDE)}"unicodeobject.h"\
-	{$(INCLUDE)}"unistd.h"\
 	
 
 !ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Debug"
 
 DEP_CPP_WINUSER_=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_menu.h"\
-	{$(INCLUDE)}"abstract.h"\
-	{$(INCLUDE)}"bufferobject.h"\
-	{$(INCLUDE)}"ceval.h"\
-	{$(INCLUDE)}"classobject.h"\
-	{$(INCLUDE)}"cobject.h"\
-	{$(INCLUDE)}"complexobject.h"\
-	{$(INCLUDE)}"config.h"\
-	{$(INCLUDE)}"crtapi.h"\
-	{$(INCLUDE)}"dictobject.h"\
-	{$(INCLUDE)}"fileobject.h"\
-	{$(INCLUDE)}"floatobject.h"\
-	{$(INCLUDE)}"funcobject.h"\
-	{$(INCLUDE)}"import.h"\
-	{$(INCLUDE)}"intobject.h"\
-	{$(INCLUDE)}"intrcheck.h"\
-	{$(INCLUDE)}"listobject.h"\
-	{$(INCLUDE)}"longobject.h"\
-	{$(INCLUDE)}"methodobject.h"\
-	{$(INCLUDE)}"modsupport.h"\
-	{$(INCLUDE)}"moduleobject.h"\
-	{$(INCLUDE)}"mymalloc.h"\
-	{$(INCLUDE)}"myproto.h"\
-	{$(INCLUDE)}"object.h"\
-	{$(INCLUDE)}"objimpl.h"\
-	{$(INCLUDE)}"patchlevel.h"\
-	{$(INCLUDE)}"pydebug.h"\
-	{$(INCLUDE)}"pyerrors.h"\
-	{$(INCLUDE)}"pyfpe.h"\
-	{$(INCLUDE)}"pystate.h"\
-	{$(INCLUDE)}"Python.h"\
-	{$(INCLUDE)}"pythonrun.h"\
-	{$(INCLUDE)}"rangeobject.h"\
-	{$(INCLUDE)}"sliceobject.h"\
-	{$(INCLUDE)}"stringobject.h"\
-	{$(INCLUDE)}"sysmodule.h"\
-	{$(INCLUDE)}"traceback.h"\
-	{$(INCLUDE)}"tupleobject.h"\
-	{$(INCLUDE)}"unicodeobject.h"\
-	{$(INCLUDE)}"unistd.h"\
 	
 
 !ENDIF 
@@ -1134,99 +1168,99 @@ NODEP_CPP_WINUSER_O=\
 !ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Release"
 
 DEP_CPP_WINUSER_O=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_ofn.h"\
 	".\winuser_wnd.h"\
-	{$(INCLUDE)}"abstract.h"\
-	{$(INCLUDE)}"bufferobject.h"\
-	{$(INCLUDE)}"ceval.h"\
-	{$(INCLUDE)}"classobject.h"\
-	{$(INCLUDE)}"cobject.h"\
-	{$(INCLUDE)}"complexobject.h"\
-	{$(INCLUDE)}"config.h"\
-	{$(INCLUDE)}"crtapi.h"\
-	{$(INCLUDE)}"dictobject.h"\
-	{$(INCLUDE)}"fileobject.h"\
-	{$(INCLUDE)}"floatobject.h"\
-	{$(INCLUDE)}"funcobject.h"\
-	{$(INCLUDE)}"import.h"\
-	{$(INCLUDE)}"intobject.h"\
-	{$(INCLUDE)}"intrcheck.h"\
-	{$(INCLUDE)}"listobject.h"\
-	{$(INCLUDE)}"longobject.h"\
-	{$(INCLUDE)}"methodobject.h"\
-	{$(INCLUDE)}"modsupport.h"\
-	{$(INCLUDE)}"moduleobject.h"\
-	{$(INCLUDE)}"mymalloc.h"\
-	{$(INCLUDE)}"myproto.h"\
-	{$(INCLUDE)}"object.h"\
-	{$(INCLUDE)}"objimpl.h"\
-	{$(INCLUDE)}"patchlevel.h"\
-	{$(INCLUDE)}"pydebug.h"\
-	{$(INCLUDE)}"pyerrors.h"\
-	{$(INCLUDE)}"pyfpe.h"\
-	{$(INCLUDE)}"pystate.h"\
-	{$(INCLUDE)}"Python.h"\
-	{$(INCLUDE)}"pythonrun.h"\
-	{$(INCLUDE)}"rangeobject.h"\
-	{$(INCLUDE)}"sliceobject.h"\
-	{$(INCLUDE)}"stringobject.h"\
-	{$(INCLUDE)}"sysmodule.h"\
-	{$(INCLUDE)}"traceback.h"\
-	{$(INCLUDE)}"tupleobject.h"\
-	{$(INCLUDE)}"unicodeobject.h"\
-	{$(INCLUDE)}"unistd.h"\
 	
 
 !ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Debug"
 
 DEP_CPP_WINUSER_O=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_ofn.h"\
 	".\winuser_wnd.h"\
-	{$(INCLUDE)}"abstract.h"\
-	{$(INCLUDE)}"bufferobject.h"\
-	{$(INCLUDE)}"ceval.h"\
-	{$(INCLUDE)}"classobject.h"\
-	{$(INCLUDE)}"cobject.h"\
-	{$(INCLUDE)}"complexobject.h"\
-	{$(INCLUDE)}"config.h"\
-	{$(INCLUDE)}"crtapi.h"\
-	{$(INCLUDE)}"dictobject.h"\
-	{$(INCLUDE)}"fileobject.h"\
-	{$(INCLUDE)}"floatobject.h"\
-	{$(INCLUDE)}"funcobject.h"\
-	{$(INCLUDE)}"import.h"\
-	{$(INCLUDE)}"intobject.h"\
-	{$(INCLUDE)}"intrcheck.h"\
-	{$(INCLUDE)}"listobject.h"\
-	{$(INCLUDE)}"longobject.h"\
-	{$(INCLUDE)}"methodobject.h"\
-	{$(INCLUDE)}"modsupport.h"\
-	{$(INCLUDE)}"moduleobject.h"\
-	{$(INCLUDE)}"mymalloc.h"\
-	{$(INCLUDE)}"myproto.h"\
-	{$(INCLUDE)}"object.h"\
-	{$(INCLUDE)}"objimpl.h"\
-	{$(INCLUDE)}"patchlevel.h"\
-	{$(INCLUDE)}"pydebug.h"\
-	{$(INCLUDE)}"pyerrors.h"\
-	{$(INCLUDE)}"pyfpe.h"\
-	{$(INCLUDE)}"pystate.h"\
-	{$(INCLUDE)}"Python.h"\
-	{$(INCLUDE)}"pythonrun.h"\
-	{$(INCLUDE)}"rangeobject.h"\
-	{$(INCLUDE)}"sliceobject.h"\
-	{$(INCLUDE)}"stringobject.h"\
-	{$(INCLUDE)}"sysmodule.h"\
-	{$(INCLUDE)}"traceback.h"\
-	{$(INCLUDE)}"tupleobject.h"\
-	{$(INCLUDE)}"unicodeobject.h"\
-	{$(INCLUDE)}"unistd.h"\
 	
 
 !ENDIF 
@@ -1344,103 +1378,103 @@ NODEP_CPP_WINUSER_W=\
 !ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Release"
 
 DEP_CPP_WINUSER_W=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
 	".\mtpycall.h"\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_wnd.h"\
-	{$(INCLUDE)}"abstract.h"\
 	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"bufferobject.h"\
-	{$(INCLUDE)}"ceval.h"\
-	{$(INCLUDE)}"classobject.h"\
-	{$(INCLUDE)}"cobject.h"\
-	{$(INCLUDE)}"complexobject.h"\
-	{$(INCLUDE)}"config.h"\
-	{$(INCLUDE)}"crtapi.h"\
-	{$(INCLUDE)}"dictobject.h"\
-	{$(INCLUDE)}"fileobject.h"\
-	{$(INCLUDE)}"floatobject.h"\
-	{$(INCLUDE)}"funcobject.h"\
-	{$(INCLUDE)}"import.h"\
-	{$(INCLUDE)}"intobject.h"\
-	{$(INCLUDE)}"intrcheck.h"\
-	{$(INCLUDE)}"listobject.h"\
-	{$(INCLUDE)}"longobject.h"\
-	{$(INCLUDE)}"methodobject.h"\
-	{$(INCLUDE)}"modsupport.h"\
-	{$(INCLUDE)}"moduleobject.h"\
-	{$(INCLUDE)}"mymalloc.h"\
-	{$(INCLUDE)}"myproto.h"\
-	{$(INCLUDE)}"object.h"\
-	{$(INCLUDE)}"objimpl.h"\
-	{$(INCLUDE)}"patchlevel.h"\
-	{$(INCLUDE)}"pydebug.h"\
-	{$(INCLUDE)}"pyerrors.h"\
-	{$(INCLUDE)}"pyfpe.h"\
-	{$(INCLUDE)}"pystate.h"\
-	{$(INCLUDE)}"Python.h"\
-	{$(INCLUDE)}"pythonrun.h"\
-	{$(INCLUDE)}"rangeobject.h"\
 	{$(INCLUDE)}"sipapi.h"\
-	{$(INCLUDE)}"sliceobject.h"\
-	{$(INCLUDE)}"stringobject.h"\
-	{$(INCLUDE)}"sysmodule.h"\
-	{$(INCLUDE)}"traceback.h"\
-	{$(INCLUDE)}"tupleobject.h"\
-	{$(INCLUDE)}"unicodeobject.h"\
-	{$(INCLUDE)}"unistd.h"\
 	
 
 !ELSEIF  "$(CFG)" == "winuser - Win32 (WCE x86em) Debug"
 
 DEP_CPP_WINUSER_W=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
 	".\mtpycall.h"\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_wnd.h"\
-	{$(INCLUDE)}"abstract.h"\
 	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"bufferobject.h"\
-	{$(INCLUDE)}"ceval.h"\
-	{$(INCLUDE)}"classobject.h"\
-	{$(INCLUDE)}"cobject.h"\
-	{$(INCLUDE)}"complexobject.h"\
-	{$(INCLUDE)}"config.h"\
-	{$(INCLUDE)}"crtapi.h"\
-	{$(INCLUDE)}"dictobject.h"\
-	{$(INCLUDE)}"fileobject.h"\
-	{$(INCLUDE)}"floatobject.h"\
-	{$(INCLUDE)}"funcobject.h"\
-	{$(INCLUDE)}"import.h"\
-	{$(INCLUDE)}"intobject.h"\
-	{$(INCLUDE)}"intrcheck.h"\
-	{$(INCLUDE)}"listobject.h"\
-	{$(INCLUDE)}"longobject.h"\
-	{$(INCLUDE)}"methodobject.h"\
-	{$(INCLUDE)}"modsupport.h"\
-	{$(INCLUDE)}"moduleobject.h"\
-	{$(INCLUDE)}"mymalloc.h"\
-	{$(INCLUDE)}"myproto.h"\
-	{$(INCLUDE)}"object.h"\
-	{$(INCLUDE)}"objimpl.h"\
-	{$(INCLUDE)}"patchlevel.h"\
-	{$(INCLUDE)}"pydebug.h"\
-	{$(INCLUDE)}"pyerrors.h"\
-	{$(INCLUDE)}"pyfpe.h"\
-	{$(INCLUDE)}"pystate.h"\
-	{$(INCLUDE)}"Python.h"\
-	{$(INCLUDE)}"pythonrun.h"\
-	{$(INCLUDE)}"rangeobject.h"\
 	{$(INCLUDE)}"sipapi.h"\
-	{$(INCLUDE)}"sliceobject.h"\
-	{$(INCLUDE)}"stringobject.h"\
-	{$(INCLUDE)}"sysmodule.h"\
-	{$(INCLUDE)}"traceback.h"\
-	{$(INCLUDE)}"tupleobject.h"\
-	{$(INCLUDE)}"unicodeobject.h"\
-	{$(INCLUDE)}"unistd.h"\
 	
 
 !ENDIF 
