@@ -65,25 +65,25 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 		}
 	
 	// IGRiNSPlayerAuto
-    virtual HRESULT __stdcall setWindow( 
-            /* [in] */ HWND hwnd);
-    virtual HRESULT __stdcall open( 
-            /* [string][in] */ wchar_t __RPC_FAR *szFileOrUrl);
+    virtual HRESULT __stdcall setWindow(/* [in] */ HWND hwnd);
+    virtual HRESULT __stdcall open(/* [string][in] */ wchar_t __RPC_FAR *szFileOrUrl);
     virtual HRESULT __stdcall close();
     virtual HRESULT __stdcall play();
     virtual HRESULT __stdcall stop();
 	virtual HRESULT __stdcall pause();
 	virtual HRESULT __stdcall update();
-
+    virtual HRESULT __stdcall getSize(/* [out] */ int __RPC_FAR *pw, /* [out] */ int __RPC_FAR *ph);
 
 	// Implemenation
 	GRiNSPlayerAuto(GRiNSPlayerComModule *pModule);
 	~GRiNSPlayerAuto();
 	HWND getListener() {return m_pModule->getListenerHwnd();}
+	void adviceSetSize(int w, int h){m_width=w;m_height=h;}
 	private:
 	long m_cRef;
 	GRiNSPlayerComModule *m_pModule;
 	HWND m_hWnd;
+	int m_width, m_height;
 	};
 
 HRESULT GetGRiNSPlayerAutoClassObject(IClassFactory** ppv, GRiNSPlayerComModule *pModule)
@@ -92,8 +92,17 @@ HRESULT GetGRiNSPlayerAutoClassObject(IClassFactory** ppv, GRiNSPlayerComModule 
 	return ComCreator<Factory, GRiNSPlayerComModule>::CreateInstance(IID_IClassFactory, (void**)ppv, pModule);
 	}
 
+void GRiNSPlayerAutoAdviceSetSize(int id, int w, int h)
+	{
+	if(id!=0)
+		{
+		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
+		try {p->adviceSetSize(w, h);} catch(...){}
+		}
+	}
+
 GRiNSPlayerAuto::GRiNSPlayerAuto(GRiNSPlayerComModule *pModule)
-:	m_cRef(1), m_pModule(pModule), m_hWnd(0)
+:	m_cRef(1), m_pModule(pModule), m_hWnd(0), m_width(0), m_height(0)
 	{
 	m_pModule->lock();
 	}
@@ -148,3 +157,11 @@ HRESULT __stdcall GRiNSPlayerAuto::update()
 	PostMessage(getListener(), WM_USER_UPDATE, WPARAM(this), 0);
 	return S_OK;
 	}
+
+HRESULT __stdcall GRiNSPlayerAuto::getSize(/* [out] */ int __RPC_FAR *pw, /* [out] */ int __RPC_FAR *ph)
+	{
+	*pw = m_width;
+	*ph = m_height;
+	return S_OK;
+	}
+            
