@@ -68,6 +68,9 @@ class ChannelMap:
 
 	if platform == 'mac':
 		channelmap['movie'] = 'VideoChannel'
+	if platform == 'linux2':
+		channelmap['RealVideo'] = 'RealVideoChannel'
+		channelmap['RealAudio'] = 'RealAudioChannel'
 
 	has_key = channelmap.has_key
 	keys = channelmap.keys
@@ -131,7 +134,9 @@ channelhierarchy = {
     }
 SMILchanneltypes = ['image', 'sound', 'video', 'text']
 if features.compatibility == compatibility.G2:
-        SMILchanneltypes = SMILchanneltypes+['RealPix', 'RealText']
+	SMILchanneltypes = SMILchanneltypes+['RealPix', 'RealText']
+	if platform == 'linux2':
+		SMILchanneltypes = SMILchanneltypes+['RealAudio', 'RealVideo']
 SMILextendedchanneltypes = ['html']
 SMILBostonChanneltypes = ['brush', 'prefetch']
 
