@@ -3235,6 +3235,9 @@ IDI_REGION              ICON    DISCARDABLE     "res\\region.ico"
 IDI_BRUSH               ICON    DISCARDABLE     "res\\brush.ico"
 IDI_ANIMATE             ICON    DISCARDABLE     "res\\animate.ico"
 IDI_UNKNOWN             ICON    DISCARDABLE     "res\\unknown.ico"
+IDI_OPENEDEYE           ICON    DISCARDABLE     "RES\\openedeye.ico"
+IDI_OPENEDEYEKEY        ICON    DISCARDABLE     "RES\\openedeyekey.ico"
+IDI_CLOSEDEYE           ICON    DISCARDABLE     "RES\\closedeye.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
