@@ -447,6 +447,10 @@ class ATTRIBUTES_ANCHORS(_CommandBase):
 	help = 'Edit anchors'
 class ATTRIBUTES_LAYOUT(_CommandBase):
 	help = 'Edit layout'
+
+# XXX temporare
+class ENABLE_ANIMATION(_CommandBase):
+	help = 'Enable animation'
 	
 #
 # Property dialog commands

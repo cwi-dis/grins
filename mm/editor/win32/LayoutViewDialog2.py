@@ -79,6 +79,9 @@ class LayoutViewDialog2(ViewDialog.ViewDialog):
 #		self.window.set_dynamiclist(ANCESTORS, self.baseobject.ancestors)
 #		self.window.set_dynamiclist(SIBLINGS, self.baseobject.siblings)
 
+	def settoggle(self, command, onoff):
+		self.__window.set_toggle(command, onoff)
+
 	def assertwndcreated(self):
 		if self.__window is None or not hasattr(self.__window,'GetSafeHwnd'):
 			self.createviewobj()

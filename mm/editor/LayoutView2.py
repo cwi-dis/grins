@@ -397,6 +397,7 @@ class LayoutView2(LayoutViewDialog2):
 		# current state
 		self.currentSelectedNodeList = []
 		self.currentFocus = None
+		self.previousFocus = None
 		# allow to identify if the focus has been fixed by this view
 		self.myfocus = None	# used to break recursion in setglobalfocus -> globalfocuschanged
 
@@ -424,6 +425,9 @@ class LayoutView2(LayoutViewDialog2):
 		# - a previous widget which manage the previous area
 		# - some light widgets (geom field, z-index field, buttons control, ...)
 		self.widgetList = {}
+
+		self.currentKeyTimeIndex = None
+		self.keyTimeIndexChanged = 1
 		
 	def fixtitle(self):
 		pass			# for now...
@@ -456,6 +460,7 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandMediaList = [
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
+				ENABLE_ANIMATION(callback = (self.onEnableAnimation, ())),
 				]
 		else:
 			self.commandMediaList = []
@@ -537,7 +542,7 @@ class LayoutView2(LayoutViewDialog2):
 #		if node != None:
 #			self.playerstatechanged(type, node)
 			
-		# get the initial focus		
+		# get the initial focus
 		self.currentFocus = self.editmgr.getglobalfocus()
 		self.updateFocus()
 		
@@ -560,6 +565,7 @@ class LayoutView2(LayoutViewDialog2):
 
 		# clear all variables state
 		self.currentSelectedNodeList = []
+		self.previousFocus = None
 		self.currentFocus = None
 		self.myfocus = None
 		
@@ -755,14 +761,28 @@ class LayoutView2(LayoutViewDialog2):
 		localSelList = self.currentSelectedNodeList
 
 		# animation support
-		# if the node is animated, compute the animation data according to the MMNode tree
-		self.isAnimatedMode = 0
+		enabled = 0
 		if len(localSelList) == 1:
 			nodeRef = localSelList[0]
-			if hasattr(nodeRef,'computeAnimationData'):
+			nodeType = self.getNodeType(nodeRef)
+			if nodeType == TYPE_MEDIA and hasattr(nodeRef,'computeAnimationData'):
 				animationData = nodeRef.computeAnimationData()
-				if len(animationData) > 0:
-					self.isAnimateMode = 1
+				if not animationData.isEmpty():
+					enabled = 1
+					
+		if enabled:
+			self.settoggle(ENABLE_ANIMATION, 1)
+		else:
+			self.settoggle(ENABLE_ANIMATION, 0)
+
+		if not enabled or self.currentFocus is None or len(self.currentFocus) != 1:
+			self.setKeyTimeIndex(None)
+		elif (self.previousFocus is None or len(self.previousFocus) != 1 or (not self.currentFocus[0] is self.previousFocus[0])):
+			self.setKeyTimeIndex(0)
+				
+		if self.keyTimeIndexChanged:
+			self.previousWidget.updateRegionTree()
+			self.keyTimeIndexChanged = 0
 								
 		# update widgets
 		for id, widget in self.widgetList.items():
@@ -781,6 +801,8 @@ class LayoutView2(LayoutViewDialog2):
 			self.updateCommandList(self.commandMultiSiblingSItemList)
 		else:
 			self.updateCommandList(self.commandMultiSItemList)
+
+		self.previousFocus = self.currentFocus			
 
 	def globalfocuschanged(self, focusobject):
 		if debug: print 'LayoutView.globalfocuschanged focusobject=',focusobject
@@ -859,6 +881,29 @@ class LayoutView2(LayoutViewDialog2):
 			return region
 		return None
 
+	def setKeyTimeIndex(self, keyTimeIndex):
+		if self.currentKeyTimeIndex != keyTimeIndex:
+			self.keyTimeIndexChanged = 1
+		self.currentKeyTimeIndex = keyTimeIndex
+		
+	def getKeyTimeIndex(self):
+		return self.currentKeyTimeIndex
+
+	def getPxGeomWithContextAnimation(self, nodeRef):
+		keyTimeIndex = None
+		animationData = nodeRef.getAnimationData()
+		if animationData != None:
+			data = animationData.getData()
+			if data != None:
+				keyTimeIndex = self.getKeyTimeIndex()
+		
+		if keyTimeIndex is not None and keyTimeIndex < len(data):
+			wingeom, color = data[keyTimeIndex]
+		else:
+			wingeom = nodeRef.getPxGeom()
+			
+		return wingeom
+		
 	# Test whether x is ancestor of node
 	def IsAncestorOf(self, node, x):
 		while x is not None:
@@ -1003,7 +1048,14 @@ class LayoutView2(LayoutViewDialog2):
 		self.geomFieldWidget = widgetList['GeomFieldWidget'] = GeomFieldWidget(self)
 		widgetList['ZFieldWidget'] = ZFieldWidget(self)
 		self.keyTimeSliderWidget = widgetList['KeyTimeSliderWidget'] = KeyTimeSliderWidget(self)
-		
+
+	def updateKeyTimeGeoms(self, nodeRef, geom):
+		animationData = nodeRef.getAnimationData()
+		data = animationData.getData()
+		keyTimeIndex = self.getKeyTimeIndex()
+		if len(data) > keyTimeIndex:
+			data[keyTimeIndex] = geom, (0,0,0)
+
 	def applyGeom(self, nodeRef, geom):
 		# make a list of attr top apply according the geometry
 		list = []
@@ -1013,12 +1065,30 @@ class LayoutView2(LayoutViewDialog2):
 			transactionType = 'REGION_GEOM'
 		elif nodeType == TYPE_MEDIA:
 			transactionType = 'MEDIA_GEOM'
-				
+
+			keyTimeIndex = self.getKeyTimeIndex()
+			if keyTimeIndex is not None and keyTimeIndex >= 0:
+				self.updateKeyTimeGeoms(nodeRef, geom)
+				self.updateKeyTimes(nodeRef)
+				self.applyAnimationData(nodeRef)
+				return
+		
 		self.__makeAttrListToApplyFromGeom(nodeRef, geom, list)
 		self.applyAttrList(list)		
 
 	def applyGeomList(self, applyList):
 		list = []
+		
+		keyTimeIndex = self.getKeyTimeIndex()
+		if keyTimeIndex is not None and keyTimeIndex >= 0 and len(applyList) > 0:
+			nodeRef, geom = applyList[0]
+			nodeType = self.getNodeType(nodeRef)
+			if nodeType == TYPE_MEDIA:
+				self.updateKeyTimeGeoms(nodeRef, geom)
+				self.updateKeyTimes(nodeRef)
+				self.applyAnimationData(nodeRef)
+				return
+		
 		for nodeRef, geom in applyList:
 			self.__makeAttrListToApplyFromGeom(nodeRef, geom, list)
 		self.applyAttrList(list)
@@ -1089,11 +1159,20 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.setchannelattr(name, 'height', 400)
 			self.editmgr.commit('REGION_TREE')
 
-	def applyAnimationData(self, nodeRef):
-		# animation support
+	def updateKeyTimes(self, nodeRef):
+		# update the key times
+		keyTimeList = self.keyTimeSliderWidget.getKeyTimeList()
+		times = []
+		for keyTime in keyTimeList:
+			# fo now it should be the same value
+			times.append(keyTime)
+		animationData = nodeRef.getAnimationData()
+		animationData.setTimesData(times, animationData.getData())
+		
+	def applyAnimationData(self, nodeRef):		
 		# if the node is animated, compute the animation data according to the MMNode tree
-		if hasattr(nodeRef,'applyAnimationData'):
-			self.applyAnimationData(self.editmgr)
+		nodeRef.applyAnimationData(self.editmgr)
+		self.updateFocus()
 
 	def __makeRegionListToDel(self, nodeRef, list):
 		# remove the children before removing the node
@@ -1147,14 +1226,14 @@ class LayoutView2(LayoutViewDialog2):
 		referenceNode = self.currentSelectedNodeList[-1]
 
 		# determinate the reference value		
-		l,t,w,h = referenceNode.getPxGeom()
+		l,t,w,h = self.getPxGeomWithContextAnimation(referenceNode)
 		referenceValue = l
 
 		# make a list of node/attr to change
 		list = []
 		for nodeRef in self.currentSelectedNodeList:
 			if not nodeRef is referenceNode:
-				l,t,w,h = nodeRef.getPxGeom()
+				l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
 				l = referenceValue
 				# make the new geom
 				self.__makeAttrListToApplyFromGeom(nodeRef, (l,t,w,h), list)
@@ -1181,14 +1260,14 @@ class LayoutView2(LayoutViewDialog2):
 		referenceNode = self.currentSelectedNodeList[-1]
 
 		# for the reference object, determinate the center
-		l,t,w,h = referenceNode.getPxGeom()
+		l,t,w,h = self.getPxGeomWithContextAnimation(referenceNode)
 		referenceValue = int(l+w/2)
 		
 		# make a list of node/attr to change
 		list = []
 		for nodeRef in self.currentSelectedNodeList:
 			if not nodeRef is referenceNode:
-				l,t,w,h = nodeRef.getPxGeom()
+				l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
 				center = int(l+w/2)
 				diff = center-referenceValue
 				l = l-diff
@@ -1217,14 +1296,14 @@ class LayoutView2(LayoutViewDialog2):
 		referenceNode = self.currentSelectedNodeList[-1]
 
 		# for the reference object, determinate the right border
-		l,t,w,h = referenceNode.getPxGeom()
+		l,t,w,h = self.getPxGeomWithContextAnimation(referenceNode)
 		referenceValue = l+w
 
 		# make a list of node/attr to change
 		list = []
 		for nodeRef in self.currentSelectedNodeList:
 			if not nodeRef is referenceNode:
-				l,t,w,h = nodeRef.getPxGeom()
+				l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
 				diff = l+w-referenceValue
 				l = l-diff
 				# make the new geom
@@ -1252,14 +1331,14 @@ class LayoutView2(LayoutViewDialog2):
 		referenceNode = self.currentSelectedNodeList[-1]
 
 		# determinate the reference value		
-		l,t,w,h = referenceNode.getPxGeom()
+		l,t,w,h = self.getPxGeomWithContextAnimation(referenceNode)
 		referenceValue = t
 
 		# make a list of node/attr to change
 		list = []
 		for nodeRef in self.currentSelectedNodeList:
 			if not nodeRef is referenceNode:
-				l,t,w,h = nodeRef.getPxGeom()
+				l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
 				t = referenceValue
 				# make the new geom
 				self.__makeAttrListToApplyFromGeom(nodeRef, (l,t,w,h), list)
@@ -1286,14 +1365,14 @@ class LayoutView2(LayoutViewDialog2):
 		referenceNode = self.currentSelectedNodeList[-1]
 
 		# for the reference object, determinate the center
-		l,t,w,h = referenceNode.getPxGeom()
+		l,t,w,h = self.getPxGeomWithContextAnimation(referenceNode)
 		referenceValue = int(t+h/2)
 		
 		# make a list of node/attr to change
 		list = []
 		for nodeRef in self.currentSelectedNodeList:
 			if not nodeRef is referenceNode:
-				l,t,w,h = nodeRef.getPxGeom()
+				l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
 				center = int(t+h/2)
 				diff = center-referenceValue
 				t = t-diff
@@ -1322,14 +1401,14 @@ class LayoutView2(LayoutViewDialog2):
 		referenceNode = self.currentSelectedNodeList[-1]
 
 		# for the reference object, determinate the right border
-		l,t,w,h = referenceNode.getPxGeom()
+		l,t,w,h = self.getPxGeomWithContextAnimation(referenceNode)
 		referenceValue = t+h
 
 		# make a list of node/attr to change
 		list = []
 		for nodeRef in self.currentSelectedNodeList:
 			if not nodeRef is referenceNode:
-				l,t,w,h = nodeRef.getPxGeom()
+				l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
 				diff = t+h-referenceValue
 				t = t-diff
 				# make the new geom
@@ -1354,7 +1433,7 @@ class LayoutView2(LayoutViewDialog2):
 		som = 0
 		sortedList = []
 		for node in self.currentSelectedNodeList:
-			l,t,w,h = node.getPxGeom()
+			l,t,w,h = self.getPxGeomWithContextAnimation(node)
 			if referenceMinValue == None or l < referenceMinValue:
 				referenceMinValue = l
 			if referenceMaxValue == None or l+w > referenceMaxValue:
@@ -1370,10 +1449,10 @@ class LayoutView2(LayoutViewDialog2):
 		# make a list of node/attr to change
 		list = []
 		firstNodeRef = sortedList[0]
-		l,t,w,h = firstNodeRef.getPxGeom()
+		l,t,w,h = self.getPxGeomWithContextAnimation(firstNodeRef)
 		posRef = l+w
 		for nodeRef in sortedList[1:]:
-			l,t,w,h = nodeRef.getPxGeom()
+			l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
 			l = posRef+space
 			posRef = l+w
 			# make the new geom
@@ -1398,7 +1477,7 @@ class LayoutView2(LayoutViewDialog2):
 		som = 0
 		sortedList = []
 		for node in self.currentSelectedNodeList:
-			l,t,w,h = node.getPxGeom()
+			l,t,w,h = self.getPxGeomWithContextAnimation(node)
 			if referenceMinValue == None or t < referenceMinValue:
 				referenceMinValue = t
 			if referenceMaxValue == None or t+h > referenceMaxValue:
@@ -1414,10 +1493,10 @@ class LayoutView2(LayoutViewDialog2):
 		# make a list of node/attr to change
 		list = []
 		firstNodeRef = sortedList[0]
-		l,t,w,h = firstNodeRef.getPxGeom()
+		l,t,w,h = self.getPxGeomWithContextAnimation(firstNodeRef)
 		posRef = t+h
 		for nodeRef in sortedList[1:]:
-			l,t,w,h = nodeRef.getPxGeom()
+			l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
 			t = posRef+space
 			posRef = t+h
 			# make the new geom
@@ -1426,8 +1505,8 @@ class LayoutView2(LayoutViewDialog2):
 
 	# this method will be used by the sort method
 	def __cmpNode(self, node1, node2):
-		l1,t1,w1,h1 = node1.getPxGeom()
-		l2,t2,w2,h2 = node2.getPxGeom()
+		l1,t1,w1,h1 = self.getPxGeomWithContextAnimation(node1)
+		l2,t2,w2,h2 = self.getPxGeomWithContextAnimation(node2)
 		if self.__sortAttr == 'left':
 			if l1 < l2:
 				return -1
@@ -1451,7 +1530,25 @@ class LayoutView2(LayoutViewDialog2):
 		if len(self.currentSelectedNodeList) > 0:
 			import NodeEdit
 			NodeEdit.showeditor(self.currentSelectedNodeList[0])
-		
+
+	def onEnableAnimation(self):
+		if len(self.currentSelectedNodeList) > 0:
+			selectedNode = self.currentSelectedNodeList[0]
+			animationData = selectedNode.getAnimationData()
+			if animationData.isEmpty():
+				geom = selectedNode.getPxGeom()
+				item1 = geom, (0, 0, 0)
+				item2 = geom, (0, 0, 0)
+				# enable animation: just initialize the first and the last value with the current value
+				animationData.setTimesData([0.0, 1.0], [item1, item2])
+				self.setKeyTimeIndex(0)
+			else:
+				# disable animation: just remove all datas
+				animationData.setTimesData([], [])
+				self.setKeyTimeIndex(None)
+			self.applyAnimationData(selectedNode)
+			self.updateFocus(1)
+
 	def onEditProperties(self):
 		if len(self.currentSelectedNodeList) > 0:
 			self.editProperties(self.currentSelectedNodeList[0])
@@ -2061,7 +2158,7 @@ class GeomFieldWidget(LightWidget):
 		self.dialogCtrl.enable('RegionW',1)
 		self.dialogCtrl.enable('RegionH',1)
 
-		geom = nodeRef.getPxGeom()	
+		geom = self._context.getPxGeomWithContextAnimation(nodeRef)
 		self.updateRegionGeom(geom)
 		
 	def updateRegionGeom(self, geom):
@@ -2076,7 +2173,7 @@ class GeomFieldWidget(LightWidget):
 		self.dialogCtrl.enable('RegionW',1)
 		self.dialogCtrl.enable('RegionH',1)
 		
-		geom = nodeRef.getPxGeom()		
+		geom = self._context.getPxGeomWithContextAnimation(nodeRef)
 		self.updateMediaGeom(geom)
 						
 	def updateMediaGeom(self, geom):
@@ -2116,7 +2213,7 @@ class GeomFieldWidget(LightWidget):
 	def __onGeomOnRegionChanged(self, ctrlName, value):
 		if len(self._context.currentSelectedNodeList) > 0:		
 			nodeRef = self._context.currentSelectedNodeList[0]
-			x,y,w,h = nodeRef.getPxGeom()
+			x,y,w,h = self._context.getPxGeomWithContextAnimation(nodeRef)
 			if ctrlName == 'RegionX':
 				x = value
 			elif ctrlName == 'RegionY':
@@ -2130,7 +2227,7 @@ class GeomFieldWidget(LightWidget):
 	def __onGeomOnMediaChanged(self, ctrlName, value):
 		if len(self._context.currentSelectedNodeList) > 0:
 			nodeRef = self._context.currentSelectedNodeList[0]
-			x,y,w,h = nodeRef.getPxGeom()
+			x,y,w,h = self._context.getPxGeomWithContextAnimation(nodeRef)
 			if ctrlName == 'RegionX':
 				x = value
 			elif ctrlName == 'RegionY':
@@ -2147,16 +2244,20 @@ class KeyTimeSliderWidget(LightWidget):
 	#
 
 	def show(self):
+		self._selected = (0, None)
+		self.isEnabled = 0
+		self.__selecting = 0
 		self.sliderCtrl = self._context.keyTimeSliderCtrl
-#		self.sliderCtrl.setListener(self)
+		self.sliderCtrl.enable(self.isEnabled)
+		self.sliderCtrl.setListener(self)
 
 	def destroy(self):
-		pass
-#		self.sliderCtrl.removeListener()
+		self.sliderCtrl.removeListener()
 	
 	def selectNodeList(self, nodeRefList, keepShowedNodes=0):
 		nodeType, nodeRef = self.getSingleSelection(nodeRefList)
-				
+		self._selected = (nodeType, nodeRef)
+		
 		if nodeType == TYPE_VIEWPORT:
 			self.__updateViewport(nodeRef)
 		elif nodeType == TYPE_REGION:
@@ -2165,7 +2266,10 @@ class KeyTimeSliderWidget(LightWidget):
 			self.__updateMedia(nodeRef)
 		else:
 			self.__unselect()
-			
+
+	def getKeyTimeList(self):
+		return self.sliderCtrl.getKeyTimes()
+		
 	#
 	#
 	#
@@ -2174,8 +2278,9 @@ class KeyTimeSliderWidget(LightWidget):
 		self.__updateUnselected()						
 	
 	def __updateUnselected(self):
+		self.isEnabled = 0
 		self.sliderCtrl.setKeyTimes([0.0, 1.0])		
-#		self.sliderCtrl.enable(0)
+		self.sliderCtrl.enable(0)
 	
 	def __updateViewport(self, nodeRef):
 		self.__updateUnselected()
@@ -2184,17 +2289,71 @@ class KeyTimeSliderWidget(LightWidget):
 		self.__updateUnselected()
 	
 	def __updateMedia(self, nodeRef):
-		self.sliderCtrl.setKeyTimes([0.0, 1.0])		
-#		self.sliderCtrl.enable(1)
+		animationData = nodeRef.getAnimationData()
+		if animationData.isEmpty():
+			self.__updateUnselected()
+			return
+		times = animationData.getTimes()
+		keyTimeList = []
+		for keyTime in times:
+			# fo now it should be the same value
+			keyTimeList.append(keyTime)
+		self.sliderCtrl.setKeyTimes(keyTimeList)
+		timeIndex = self._context.getKeyTimeIndex()
+		if timeIndex >= 0:
+			self.__selecting = 1
+			self.sliderCtrl.select(timeIndex)
+			self.__selecting = 0
 
-		# if animated
-#		if 1:	
-										
+		self.isEnabled = 1
+		self.sliderCtrl.enable(1)
+
 	#
 	# interface implementation of 'dialog controls callback' 
 	#
 	
+	def onInsertKey(self, tp):
+		if self.isEnabled:
+			nodeType, nodeRef = self._selected
+			animationData = nodeRef.getAnimationData()
+			timeList = animationData.getTimes()
+			data = animationData.getData()
+			index = 0
+			for time in timeList:
+				if time > tp:
+					break
+				index = index+1
 
+			if index > 0 and index < len(timeList):
+				# can only insert a key between the first and the end
+				data.insert(index, data[index-1])
+				timeList.insert(index, tp)
+				self.sliderCtrl.insertKeyTime(tp)
+				self._context.setKeyTimeIndex(index)
+				self.sliderCtrl.select(index)
+				self._context.applyAnimationData(nodeRef)
+
+	def onRemoveKey(self, index):
+		if self.isEnabled:
+			nodeType, nodeRef = self._selected
+			animationData = nodeRef.getAnimationData()
+			timeList = animationData.getTimes()
+			if index > 0 and index < len(timeList)-1:
+				# can only remove a key between the first and the end
+				data = animationData.getData()
+				if index < len(timeList):
+					del data[index]
+					del timeList[index]
+					self.sliderCtrl.removeKeyTimeAtIndex(index)
+					self._context.setKeyTimeIndex(index-1)
+					self.sliderCtrl.select(index-1)
+					self._context.applyAnimationData(nodeRef)
+
+	def onSelected(self, index):
+		if self.isEnabled and not self.__selecting:
+			nodeType, nodeRef = self._selected
+			self._context.setKeyTimeIndex(index)
+			self._context.updateFocus(1)
 
 #
 # tree widget management
@@ -2763,7 +2922,7 @@ class PreviousWidget(Widget):
 				if nodeTree._graphicCtrl is obj:
 					applyList.append((nodeRef, obj.getGeom()))
 					break
-				
+
 		self._context.applyGeomList(applyList)
 						
 class Node:
@@ -2922,7 +3081,7 @@ class Region(Node):
 				self._curattrdict['bgcolor'] = self._nodeRef.GetInherAttrDef('bgcolor', (0,0,0))
 				self._curattrdict['transparent'] = self._nodeRef.GetInherAttrDef('transparent', 1)
 
-		self._curattrdict['wingeom'] = self._nodeRef.getPxGeom()
+		self._curattrdict['wingeom'] = self._ctx._context.getPxGeomWithContextAnimation(self._nodeRef)
 		self._curattrdict['z'] = self._nodeRef.GetAttrDef('z', 0)
 	
 	def show(self):
@@ -2994,10 +3153,11 @@ class MediaRegion(Region):
 		
 		# get wingeom according to the subregion positionning
 		# note this step is not done during the parsing in order to maintains all constraint information
-		# at some point we'll have to do the same thing for regions
+		# at some point we'll have to do the same thing for regions		
 		channel = self._nodeRef.GetChannel()
-		wingeom = self._nodeRef.getPxGeom()
 
+		wingeom = self._ctx._context.getPxGeomWithContextAnimation(self._nodeRef)
+			
 		# determinate the real fit attribute		
 		self.fit = fit = self._nodeRef.GetAttrDef('fit','hidden')
 
