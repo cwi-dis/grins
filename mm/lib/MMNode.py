@@ -1370,13 +1370,6 @@ class MMNode:
 			self.realpix_body = MMNode_realpix_body(self)
 			self.caption_body = MMNode_caption_body(self)
 			return self.gensr_interior(looping)
-		elif self.children:
-			# instead of gensr_leaf we must generate
-			# sr for par with contents this media item
-			# plus animations of this nedia item
-			print 'ignoring animations for node', self
-			for n in self.children:
-				print '\t',n.attrdict
 			
 		# Clean up realpix stuff: the node may have been a realpix node in the past
 		self.realpix_body = None
@@ -1409,6 +1402,25 @@ class MMNode:
 			 [(SCHED_STOPPING,self)]))
 		srlist.append(([(SCHED_STOPPING,self)], sched_done))
 		srlist.append(([(SCHED_STOP, self)], sched_stop))
+
+		# XXX: ignoring everything for now, 
+		# just kick childs	
+		for child in self.children:
+			srlist.append(( [(SCHED, self),], 
+				[(SCHED,child),(PLAY,self)]  ))
+			srlist.append((  [(SCHED,child),], 
+				[(PLAY,child)]  ))
+			srlist.append((  [(SCHED_STOPPING,child)], 
+				[(SCHED_DONE,child),(PLAY_STOP,child),]  ))
+			srlist.append((  [(SCHED_STOP,child)], 
+				[]  ))
+			srlist.append((  [(PLAY_DONE,child),], 
+				[(SCHED_STOPPING,child),]  ))
+			srlist.append((  [(SCHED_DONE,child),], 
+				[]  ))
+			srlist.append((  [(TERMINATE,self),], 
+				[(TERMINATE,child),]  ))
+
 		srdict = {}
 		for events, actions in srlist:
 			action = [len(events), actions]
@@ -1513,6 +1525,7 @@ class MMNode:
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
+		if debuggensr: self.__dump_srdict('gensr_alt', srdict)
 		return srdict
 
 	def gensr_bag(self):
@@ -1716,6 +1729,8 @@ class MMNode:
 ##		for event in in1+[(TERMINATE, self)]:
 ##			srdict[event] = self.srdict
 ##			self.srdict[event] = [1, terminate_actions]
+		if debuggensr: 
+			self.__dump_srdict('gensr_envelope_nonloop', srdict)
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_envelope_firstloop(self, gensr_body, loopcount,
@@ -1811,6 +1826,8 @@ class MMNode:
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
+		if debuggensr: 
+			self.__dump_srdict('gensr_envelope_firstloop', srdict)
 		return sched_actions, terminate_actions, srdict
 
 
@@ -1851,6 +1868,8 @@ class MMNode:
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
+		if debuggensr: 
+			self.__dump_srdict('gensr_envelope_laterloop', srdict)
 		return [], [], srdict
 
 	def cleanup(self):
@@ -1993,6 +2012,8 @@ class MMNode:
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
+		if debuggensr: 
+			self.__dump_srdict('gensr_body_parexcl', srdict)
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_body_realpix(self, sched_actions, scheddone_actions,
@@ -2045,6 +2066,8 @@ class MMNode:
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
+		if debuggensr: 
+			self.__dump_srdict('gensr_body_realpix', srdict)
 		return sched_actions, schedstop_actions, srdict
 			
 	def gensr_child(self, child, runchild = 1):
@@ -2095,6 +2118,8 @@ class MMNode:
 			numsrlist = self.srdict[(SCHED_STOP, body)]
 			srlist = numsrlist[1]
 			srlist.append((SCHED_STOP, child))
+		if debuggensr: 
+			self.__dump_srdict('gensr_child', srdict)
 		return srdict
 
 	def _is_realpix_with_captions(self):
@@ -2128,9 +2153,17 @@ class MMNode:
 		event, actions = (SCHED_DONE, self), [(SCHED_STOP, self)]
 		self.srdict[event] = [1, actions]
 		srdict[event] = self.srdict # or just self?
-
+		if debuggensr: self.__dump_srdict('GenAllSR', srdict)
 		return srdict
 
+	
+	# srdict is a map:  event -> [num, action_list]
+	# num: is the number of events associated with the same action_list
+	#	==the number of the events that must occure before action_list gets exec
+	#	==the number of events in srdict that are mapped to the same list
+	# event and action are pairs: (event_or_action_id, node)  --see SR module for ids
+	# Explicitly srdict has the form:
+	#	srdict: (evid,node) -> [num, [(acid,node),(acid,node),...]]
 	def __dump_srdict(self, msg, srd):
 		actions = {}
 		for ev, srdict in srd.items():
@@ -2140,7 +2173,7 @@ class MMNode:
 			if not actions.has_key(id(ac)):
 				actions[id(ac)] = [ac]
 			actions[id(ac)].append(ev)
-		print '------------------------------',msg
+		print '------------------------------',msg,self
 		for l in actions.values():
 			num, ac = l[0]
 			events = l[1:]
@@ -2152,11 +2185,10 @@ class MMNode:
 		print '----------------------------------'
 
 	def __dump_srlist(self, msg, srlist):
-		print '----------------------------------',msg
+		print '----------------------------------',msg,self
 		for events, actions in srlist:
 			print '\t',evlist2string(events), '-->', evlist2string(actions)
 		print '----------------------------------'
-
 
 	#
 	# Re-generate SR actions/events for a loop. Called for the
