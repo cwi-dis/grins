@@ -85,6 +85,39 @@ PyObject* Winmm_CreateVideoPlayerFromFile(PyObject *self, PyObject *args)
 	return NULL;
 	}
 
+PyObject* Winmm_GetVideoDuration(PyObject *self, PyObject *args)
+	{
+	char *filename;
+	if (!PyArg_ParseTuple(args, "s", &filename))
+		return NULL;
+	
+	int handle = platform::open(TextPtr(filename));
+	if(handle == -1)
+		{
+		char sz[MAX_PATH+32];
+		sprintf(sz, "cant find file %s", filename);
+		seterror("CreateVideoPlayerFromFile", sz);
+		return NULL;
+		}
+
+	VideoPlayer *player = 0;
+
+	// find/create decoder/player for given file
+	player = new MpegPlayer();
+	if(player->can_decode(handle))
+		{
+		double dur = player->get_duration();
+		delete player;
+		return Py_BuildValue("f", dur); 
+		}
+	else
+		delete player;
+
+	platform::close(handle);
+	seterror("GetVideoDuration", "cant find decoder for video format");
+	return NULL;
+	}
+
 PyObject* Winmm_GXOpenDisplay(PyObject *self, PyObject *args)
 	{
 	HWND hWnd;
@@ -116,11 +149,18 @@ static PyObject* PyVideoPlayer_GetVideoSize(PyVideoPlayer *self, PyObject *args)
 	return Py_BuildValue("ii", self->m_player->get_width(), self->m_player->get_height()); 
 	}
 
-static PyObject* PyVideoPlayer_GetVideoDuration(PyVideoPlayer *self, PyObject *args)
+static PyObject* PyVideoPlayer_GetVideoFrameRate(PyVideoPlayer *self, PyObject *args)
 	{
 	if (!PyArg_ParseTuple(args,""))
 		return NULL;
-	return Py_BuildValue("f", self->m_player->get_duration()); 
+	return Py_BuildValue("f", self->m_player->get_frame_rate()); 
+	}
+
+static PyObject* PyVideoPlayer_GetVideoBitRate(PyVideoPlayer *self, PyObject *args)
+	{
+	if (!PyArg_ParseTuple(args,""))
+		return NULL;
+	return Py_BuildValue("f", self->m_player->get_bit_rate()); 
 	}
 
 static PyObject* PyVideoPlayer_PreparePlayback(PyVideoPlayer *self, PyObject *args)
@@ -214,7 +254,8 @@ static PyObject* PyVideoPlayer_SetDirectUpdateBox(PyVideoPlayer *self, PyObject 
 
 PyMethodDef PyVideoPlayer::methods[] = {
 	{"GetVideoSize", (PyCFunction)PyVideoPlayer_GetVideoSize, METH_VARARGS, ""},
-	{"GetVideoDuration", (PyCFunction)PyVideoPlayer_GetVideoDuration, METH_VARARGS, ""},
+	{"GetVideoFrameRate", (PyCFunction)PyVideoPlayer_GetVideoFrameRate, METH_VARARGS, ""},
+	{"GetVideoBitRate", (PyCFunction)PyVideoPlayer_GetVideoBitRate, METH_VARARGS, ""},
 	{"PreparePlayback", (PyCFunction)PyVideoPlayer_PreparePlayback, METH_VARARGS, ""},
 	{"SuspendPlayback", (PyCFunction)PyVideoPlayer_SuspendPlayback, METH_VARARGS, ""},
 	{"ResumePlayback", (PyCFunction)PyVideoPlayer_ResumePlayback, METH_VARARGS, ""},
