@@ -1037,6 +1037,8 @@ class HierarchyView(HierarchyViewDialog):
 		children = node.GetChildren()
 		size = 0
 		horizontal = (t in ('par', 'alt', 'excl')) == DISPLAY_VERTICAL
+		if t in MMNode.leaftypes and node.GetChildren():
+			horizontal = 0
 		for child in children:
 			size = size + child.boxsize[not horizontal]
 			if DISPLAY_VERTICAL != horizontal:
@@ -1576,6 +1578,11 @@ class Object:
 					color = RPCOLOR
 				else:
 					color = RPCOLOR_NOPLAY
+			elif node.GetChannelType()=='animate':
+				if willplay:
+					color = SLIDECOLOR
+				else:
+					color = SLIDECOLOR_NOPLAY
 			else:
 				if willplay:
 					color = LEAFCOLOR
