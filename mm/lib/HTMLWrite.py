@@ -293,6 +293,19 @@ class HTMLWriter:
 		out = out + '<!-- END-GRINS-GENERATED-CODE singleregion -->\n'
 		outdict['singleregion'] = out
 		
+		if features.compatibility == compatibility.QT:
+			out = '<!-- START-GRINS-GENERATED-CODE external -->\n'
+	
+			out = out + '<div>\n'
+			
+			# we have to take account of slider's width and height in dimension calculation
+			out = out + self.outobjectQText([
+				('src', MMurl.unquote(self.ramurl))])
+				
+			out = out + '</div>\n'
+				
+			out = out + '<!-- END-GRINS-GENERATED-CODE external -->\n'
+			outdict['external'] = out
 		#
 		# Step three - generate the output
 		#
@@ -347,6 +360,14 @@ class HTMLWriter:
 		arglist.append(('height', `height`))
 		arglist.append(('type', 'video/quicktime'))
 		arglist.append(('nojava', 'true'))
+		out = self.outtag('embed', arglist)
+		return out
+		
+	def outobjectQText(self, arglist):
+		arglist = arglist[:]
+		arglist.append(('type', 'video/quicktime'))
+		arglist.append(('nojava', 'true'))
+		arglist.append(('target', 'quicktimeplayer'))
 		out = self.outtag('embed', arglist)
 		return out
 		
