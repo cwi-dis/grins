@@ -9,6 +9,8 @@ class AudioDevSUN:
 		     linear_16_mono_big,
 		     linear_16_stereo_big)
 
+	__rates = (8000, 11025, 16000, 22050, 32000, 44100, 48000)
+
 	def __init__(self, fmt = None, qsize = None):
 		self.__format = None
 		self.__port = None
@@ -23,7 +25,7 @@ class AudioDevSUN:
 		return self.__formats
 
 	def getframerates(self):
-		return (8000, 11025, 16000, 22050, 32000, 44100, 48000)
+		return self.__rates
 
 	def setformat(self, fmt):
 		if fmt not in self.__formats:
@@ -31,6 +33,8 @@ class AudioDevSUN:
 		self.__format = fmt
 
 	def setframerate(self, rate):
+		if rate not in self.__rates:
+			raise Error, 'bad output rate'
 		self.__framerate = rate
 
 	def writeframes(self, data):
