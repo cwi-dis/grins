@@ -108,7 +108,7 @@ class ChannelView(ViewDialog):
 	def show(self):
 		if self.is_showing():
 			return
-		selt.toplevel.showstate(self, 1)
+		self.toplevel.showstate(self, 1)
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
