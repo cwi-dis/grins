@@ -33,10 +33,10 @@ def ReadFile(filename):
 		f = open(cache, 'rb')
 	except IOError:
 		raise error, 'cannot open ' + cache
-	if os.name == 'mac':
-		fsize = os.stat(cache)[6]
-		import EasyDialogs
-		_progressbar = EasyDialogs.ProgressBar("Loading %s..."%os.path.split(cache)[1], fsize)
+##	if os.name == 'mac':
+##		fsize = os.stat(cache)[6]
+##		import EasyDialogs
+##		_progressbar = EasyDialogs.ProgressBar("Loading %s..."%os.path.split(cache)[1], fsize)
 	header = marshal.load(f)
 	if header != (Version, base, stf[ST_MTIME], stf[ST_SIZE]) and \
 	   header != (OldVersion, base, stf[ST_MTIME], stf[ST_SIZE]):
