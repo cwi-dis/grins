@@ -228,6 +228,17 @@ def getid(writer, node):
 	if writer.ids_used[name]:
 		return name
 
+def geturl(writer, node, attr):
+	val = node.GetAttrDef(attr, None)
+	if not val:
+		return val
+	ctx = node.GetContext()
+	if writer.convertURLs:
+		val = MMurl.canonURL(ctx.findurl(val))
+		if val[:len(writer.convertURLs)] == writer.convertURLs:
+			val = val[len(writer.convertURLs):]
+	return val
+
 def getsrc(writer, node):
 	ntype = node.GetType()
 	chtype = node.GetChannelType()
@@ -663,12 +674,16 @@ def getrepeat(writer, node):
 	else:
 		return fmtfloat(value)
 
-def getboolean(writer, node, attr):
+def getboolean(writer, node, attr, truefalse = 0):
 	value = node.GetRawAttrDef(attr, None)
 	if value is not None:
 		if value:
+			if truefalse:
+				return 'true'
 			return 'on'
 		else:
+			if truefalse:
+				return 'false'
 			return 'off'
 
 def getsysreq(writer, node, attr):
@@ -894,6 +909,8 @@ smil_attrs=[
 	("mediaTime", lambda writer, node: node.GetRawAttrDef("mediaTime", None), "mediaTime"),
 	("bandwidth", lambda writer, node: node.GetRawAttrDef("bandwidth", None), "bandwidth"),
 
+	("thumbnail-icon", lambda writer, node: geturl(writer, node, 'thumbnail_icon'), "thumbnail_icon"),
+	("thumbnail-scale", lambda writer, node: getboolean(writer, node, 'thumbnail_scale', 1), "thumbnail_scale"),
 	("collapsed", getcollapsed, None),
 	("showtime", getshowtime, None),
 ]
