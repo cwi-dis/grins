@@ -241,8 +241,8 @@ def main():
 ## 	sys.path.append(findfile('lib'))
 ## 	sys.path.append(findfile('video'))
 
-	import mimetypes, grins_mimetypes
-	mimetypes.types_map.update(grins_mimetypes.mimetypes)
+##	import mimetypes, grins_mimetypes
+##	mimetypes.types_map.update(grins_mimetypes.mimetypes)
 
 	import Channel
 	import GLLock
