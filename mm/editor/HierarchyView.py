@@ -895,7 +895,7 @@ class HierarchyView(HierarchyViewDialog):
 			# times are relative to node's syncbase.
 			# A node can't begin before its syncbase, and
 			# must begin before it ends.
-			return 0, nt2 - nt0 + begindelay
+			return 0, nt2 - nt1 + begindelay
 		# Calculating constraints for end time: times are
 		# relatvie to node begin.
 		pnode = node.GetParent()
@@ -937,7 +937,8 @@ class HierarchyView(HierarchyViewDialog):
 			delta_t0 = delta_dur = delta_next = 0
 			if side == 'left':
 				delta_t0 = t - old_t0
-				delta_dur = -delta_t0
+				##delta_dur = -delta_t0
+				delta_next = -delta_t0
 			else:
 				delta_dur = t - (old_dur or 0)
 				delta_next = -delta_dur
