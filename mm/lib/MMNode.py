@@ -3343,11 +3343,15 @@ class MMNode(MMTreeElement):
 		pnode = self.GetSchedParent()
 		if pnode is None:
 			presolved = 0
+			pend = None
 		else:
 			presolved = pnode.isresolved(sctx)
 			if presolved is None:
 				# if parent not resolved, we're not resolved
 				return None
+			pend = pnode.fullduration
+			if pend is not None and pend >= 0:
+				pend = presolved + pend
 		beginlist = self.GetBeginList()
 		beginlist = self.FilterArcList(beginlist)
 		endlist = self.FilterArcList(self.GetEndList())
@@ -3370,6 +3374,9 @@ class MMNode(MMTreeElement):
 					# can happen when self.type=='switch'
 					pchildren = pnode.GetChildren()
 				for c in pchildren:
+					if pend is not None and pend >= 0 and val > pend:
+						# start after parent end
+						return None
 					if c.IsAncestorOf(self):
 						if not self.checkendlist(sctx, val, endlist):
 							return None
@@ -3382,6 +3389,7 @@ class MMNode(MMTreeElement):
 						return val
 					e, MBcached = c.__calcendtime(val, sctx)
 					if e is None or e < 0:
+						# some previous sibling doesn't have a resolved end
 						return None
 					if maybecached and not MBcached:
 						maybecached = 0
@@ -3413,6 +3421,8 @@ class MMNode(MMTreeElement):
 		for arc in beginlist:
 			if arc.isresolved(sctx):
 				v = arc.resolvedtime(sctx)
+				if pend is not None and pend >= 0 and v > pend:
+					continue
 				if duration is not None and duration >= 0 and v + duration < presolved:
 					continue
 				if not self.checkendlist(sctx, v, endlist):
@@ -3428,10 +3438,10 @@ class MMNode(MMTreeElement):
 			self.start_time = min
 			parent = self.parent
 			while parent and parent.type in ('switch', 'foreign'):
-				parent.start_time = presolved + min
+				parent.start_time = min
 				parent = parent.parent
 		# return earliest resolved time
-		return presolved + min
+		return min
 
 	#
 	# There's a lot of common code for all nodes.
@@ -3996,7 +4006,7 @@ class MMNode(MMTreeElement):
 				return siblings[i+1].isresolved(sctx)
 		return pnode.calcendfreezetime(sctx)
 
-	def __calcendtime(self, syncbase, sctx, t0 = None):
+	def __calcendtime(self, syncbase, sctx, t0 = None, first = 1):
 		# returns:
 		#	None - no resolved begin
 		#	-1 - resolved begin, no resolved end
@@ -4034,8 +4044,8 @@ class MMNode(MMTreeElement):
 					t = a.resolvedtime(sctx) - syncbase
 				elif aevent == 'begin' or aevent == 'end':
 					n = a.refnode()
-					t0 = n.isresolved(sctx)
-					if t0 is None:
+					reft = n.isresolved(sctx)
+					if reft is None:
 						if aevent == 'begin' and n in self.GetPath():
 							# node depends on begin
 							# of ancestor, so if
@@ -4048,9 +4058,9 @@ class MMNode(MMTreeElement):
 						d = n.calcfullduration(sctx)
 						if d is None or d < 0:
 							continue
-						t = t0 + d
+						t = reft + d
 					else:
-						t = t0
+						t = reft
 					if t is not None:
 						if syncbase is not None:
 							t = t + a.delay - syncbase
@@ -4066,7 +4076,7 @@ class MMNode(MMTreeElement):
 						t = None
 				if t is None:
 					continue
-				if start is None or t < start:
+				if start is None or (first and t < start) or (not first and t > start):
 					if t0 is None or t >= t0:
 						start = t
 			self.__calcendtimecalled = 0
@@ -4086,7 +4096,7 @@ class MMNode(MMTreeElement):
 		end = start + d
 		if end < 0:
 			# find next one
-			return self.__calcendtime(syncbase, sctx, end)
+			return self.__calcendtime(syncbase, sctx, end, first)
 		return end, maybecached
 
 	def __calcduration(self, sctx):
@@ -4106,7 +4116,7 @@ class MMNode(MMTreeElement):
 			val = -1
 			scheduled_children = 0
 			for c in self.GetSchedChildren():
-				e, mc = c.__calcendtime(syncbase, sctx)
+				e, mc = c.__calcendtime(syncbase, sctx, first = termtype == 'FIRST')
 				if e is not None:
 					scheduled_children = 1
 				if not mc:
@@ -4181,8 +4191,8 @@ class MMNode(MMTreeElement):
 			endlist = self.FilterArcList(endlist)
 			beginlist = self.GetBeginList()
 			beginlist = self.FilterArcList(beginlist)
-			if len(beginlist) > 1 and self.GetRestart() == 'always':
-				maybecached = 0
+##			if len(beginlist) > 1 and self.GetRestart() == 'always':
+##				maybecached = 0
 			if endlist and duration is None and \
 			   repeatCount is None and repeatDur is None:
 				# "If an end attribute is specified but none
