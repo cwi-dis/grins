@@ -184,7 +184,9 @@
 #define IDC_LAYOUT_BRINGFRONT           1036
 #define IDC_OTHER_CHANNELS              1037
 #define IDC_LAYOUT_DELREGION            1037
+#define IDC_LAYOUT_HIDEMEDIA            1038
 #define IDC_LAYOUT_NEWVIEW              1039
+#define IDC_LAYOUT_HIDEREGION           1040
 #define IDUC_RESET                      1043
 #define IDUC_BROWSE                     1044
 #define IDUC_RESET2                     1044
