@@ -1456,7 +1456,8 @@ class SMILWriter(SMIL):
 		dstdir = self.copydir
 		file = self.newfile(srcurl)
 		u = MMurl.urlopen(srcurl)
-		if u.headers.maintype == 'audio' and \
+		convert = MMAttrdefs.getattr(node, 'project_convert')
+		if convert and u.headers.maintype == 'audio' and \
 		   string.find(u.headers.subtype, 'real') < 0:
 			from realconvert import convertaudiofile
 			# XXXX This is a hack. convertaudiofile may change the filename (and
@@ -1477,7 +1478,7 @@ class SMILWriter(SMIL):
 			import windowinterface
 			windowinterface.showmessage(msg)
 			u = MMurl.urlopen(srcurl)
-		if u.headers.maintype == 'video' and \
+		if convert and u.headers.maintype == 'video' and \
 		   string.find(u.headers.subtype, 'real') < 0:
 			from realconvert import convertvideofile
 			# XXXX This is a hack. convertvideofile may change the filename (and
@@ -1497,7 +1498,7 @@ class SMILWriter(SMIL):
 			import windowinterface
 			windowinterface.showmessage(msg)
 			u = MMurl.urlopen(srcurl)
-		if u.headers.maintype == 'image':
+		if convert and u.headers.maintype == 'image':
 			from realconvert import convertimagefile
 			# XXXX This is a hack. convertimagefile may change the filename (and
 			# will, currently, to '.jpg').
@@ -1513,7 +1514,7 @@ class SMILWriter(SMIL):
 			import windowinterface
 			windowinterface.showmessage(msg)
 			u = MMurl.urlopen(srcurl)
-		if u.headers.maintype == 'text' and \
+		if convert and u.headers.maintype == 'text' and \
 		   string.find(u.headers.subtype, 'real') < 0:
 			from realconvert import converttextfile
 			# XXXX This is a hack. convertaudiofile may change the filename (and
