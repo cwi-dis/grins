@@ -17,7 +17,7 @@
 
 #include "Std.h"
 #include "PyCppApi.h"
-
+#include "mtpycall.h"
 
 /****************************************************************************
  * Globals
@@ -81,8 +81,7 @@ ExampleClientAdviceSink::~ExampleClientAdviceSink(void)
 void ExampleClientAdviceSink::SetPyAdviceSink(PyObject *obj)
 	{
 	Py_XDECREF(m_pyAdviceSink);
-	if(obj==Py_None)m_pyAdviceSink=NULL;
-	else m_pyAdviceSink=obj;
+	m_pyAdviceSink=obj;
 	Py_XINCREF(m_pyAdviceSink);
 	}
 PyObject* ExampleClientAdviceSink::GetPyAdviceSink()
@@ -162,8 +161,12 @@ ExampleClientAdviceSink::OnPosLength(UINT32	  ulPosition,
     //fprintf(stdout, "OnPosLength(%ld, %ld)\n", ulPosition, ulLength);  
 	if(m_pyAdviceSink)
 		{
-		CallerHelper helper("OnPosLength",m_pyAdviceSink);
-		if(helper.HaveHandler())helper.call(ulPosition,ulLength);
+		CallbackHelper helper("OnPosLength",m_pyAdviceSink);
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("(ll)", ulPosition, ulLength);
+			helper.call(arg);
+			}
 		}
     return PNR_OK;
 	}
@@ -180,8 +183,12 @@ ExampleClientAdviceSink::OnPresentationOpened()
     //fprintf(stdout, "OnPresentationOpened()\n");
 	if(m_pyAdviceSink)
 		{
-		CallerHelper helper("OnPresentationOpened",m_pyAdviceSink);
-		if(helper.HaveHandler())helper.call();
+		CallbackHelper helper("OnPresentationOpened",m_pyAdviceSink);
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("()");
+			helper.call(arg);
+			}
 		}
     return PNR_OK;
 }
@@ -198,8 +205,12 @@ ExampleClientAdviceSink::OnPresentationClosed()
     //fprintf(stdout, "OnPresentationClosed()\n");
 	if(m_pyAdviceSink)
 		{
-		CallerHelper helper("OnPresentationClosed",m_pyAdviceSink);
-		if(helper.HaveHandler())helper.call();
+		CallbackHelper helper("OnPresentationClosed",m_pyAdviceSink);
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("()");
+			helper.call(arg);
+			}
 		}
     return PNR_OK;
 	}
@@ -282,10 +293,15 @@ ExampleClientAdviceSink::OnPreSeek(	UINT32	ulOldTime,
 						UINT32	ulNewTime)
 	{
 	//fprintf(stdout, "OnPreSeek(%ld, %ld)\n", ulOldTime, ulNewTime);
-	if(m_pyAdviceSink)
+	
+	if(0 && m_pyAdviceSink)
 		{
-		CallerHelper helper("OnPreSeek",m_pyAdviceSink);
-		if(helper.HaveHandler())helper.call(ulOldTime,ulNewTime);
+		CallbackHelper helper("OnPreSeek",m_pyAdviceSink);
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("(ii)", ulOldTime, ulNewTime);
+			helper.call(arg);
+			}
 		}
     return PNR_OK;
 	}
@@ -300,16 +316,20 @@ ExampleClientAdviceSink::OnPreSeek(	UINT32	ulOldTime,
  *  time for the stream's time line after the seek.
  */
 STDMETHODIMP
-ExampleClientAdviceSink::OnPostSeek(	UINT32	ulOldTime,
+ExampleClientAdviceSink::OnPostSeek(UINT32	ulOldTime,
 						UINT32	ulNewTime)
 	{
     //fprintf(stdout, "OnPostSeek(%ld, %ld)\n", ulOldTime, ulNewTime);
  	if(m_pyAdviceSink)
 		{
-		CallerHelper helper("OnPostSeek",m_pyAdviceSink);
-		if(helper.HaveHandler())helper.call(ulOldTime,ulNewTime);
+		CallbackHelper helper("OnPostSeek",m_pyAdviceSink);
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("(ii)", ulOldTime, ulNewTime);
+			helper.call(arg);
+			}
 		}
-   return PNR_OK;
+	return PNR_OK;
 	}
 
 
@@ -325,8 +345,12 @@ ExampleClientAdviceSink::OnStop(void)
     //fprintf(stdout, "OnStop()\n");
 	if(m_pyAdviceSink)
 		{
-		CallerHelper helper("OnStop",m_pyAdviceSink);
-		if(helper.HaveHandler())helper.call();
+		CallbackHelper helper("OnStop",m_pyAdviceSink);
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("()");
+			helper.call(arg);
+			}
 		}
     return PNR_OK;
 	}
@@ -345,8 +369,12 @@ ExampleClientAdviceSink::OnPause(UINT32 ulTime)
     //fprintf(stdout, "OnPause(%ld)\n", ulTime);
 	if(m_pyAdviceSink)
 		{
-		CallerHelper helper("OnPause",m_pyAdviceSink);
-		if(helper.HaveHandler())helper.call((int)ulTime);
+		CallbackHelper helper("OnPause",m_pyAdviceSink);
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("(i)", ulTime);
+			helper.call(arg);
+			}
 		}
     return PNR_OK;
 	}
@@ -365,8 +393,12 @@ ExampleClientAdviceSink::OnBegin(UINT32 ulTime)
     //fprintf(stdout, "OnBegin(%ld)\n", ulTime);
 	if(m_pyAdviceSink)
 		{
-		CallerHelper helper("OnBegin",m_pyAdviceSink);
-		if(helper.HaveHandler())helper.call((int)ulTime);
+		CallbackHelper helper("OnBegin",m_pyAdviceSink);
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("()");
+			helper.call(arg);
+			}
 		}
     return PNR_OK;
 	}
@@ -391,8 +423,12 @@ ExampleClientAdviceSink::OnBuffering
     //fprintf(stdout, "OnBuffering(%ld, %d)\n", ulFlags, unPercentComplete);
 	if(m_pyAdviceSink)
 		{
-		CallerHelper helper("OnBuffering",m_pyAdviceSink);
-		if(helper.HaveHandler())helper.call(ulFlags,unPercentComplete);
+		CallbackHelper helper("OnBuffering",m_pyAdviceSink);
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("(ii)", ulFlags, unPercentComplete);
+			helper.call(arg);
+			}
 		}
     return PNR_OK;
 	}
@@ -409,8 +445,12 @@ ExampleClientAdviceSink::OnContacting(const char* pHostName)
     //fprintf(stdout, "OnContacting(\"%s\")\n", pHostName);
 	if(m_pyAdviceSink)
 		{
-		CallerHelper helper("OnContacting",m_pyAdviceSink);
-		if(helper.HaveHandler())helper.call(pHostName);
+		CallbackHelper helper("OnContacting",m_pyAdviceSink);
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("(s)", pHostName);
+			helper.call(arg);
+			}
 		}
     return PNR_OK;
 	}
@@ -428,7 +468,6 @@ ExampleClientAdviceSink::OnContacting(const char* pHostName)
  */
 STDMETHODIMP_(UINT32) ExampleClientAdviceSink::AddRef()
 {
-	Py_XINCREF(m_pyAdviceSink);
     return InterlockedIncrement(&m_lRefCount);
 }
 
@@ -442,12 +481,6 @@ STDMETHODIMP_(UINT32) ExampleClientAdviceSink::AddRef()
  */
 STDMETHODIMP_(UINT32) ExampleClientAdviceSink::Release()
 {
-	if(m_pyAdviceSink && m_pyAdviceSink->ob_refcnt==1)
-		{
-		Py_XDECREF(m_pyAdviceSink);
-		m_pyAdviceSink=NULL;
-		}
-	else Py_XDECREF(m_pyAdviceSink);
     if (InterlockedDecrement(&m_lRefCount) > 0)
     {
         return m_lRefCount;

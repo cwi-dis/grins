@@ -7,6 +7,8 @@
 #define _EXSITSUP_H_
 
 
+class ExampleWindowlessSite;
+
 /****************************************************************************
  *
  *  ExampleSiteSupplier Class
@@ -33,13 +35,18 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 
 	PyObject *pPythonWindow;
 
+	// window-less support
+	BOOL m_windowless;
+	ExampleWindowlessSite *m_pWindowlessSite;
+	PyObject *m_pPyVideoRenderer;
+	
     public:
     /****** Public Class Methods ******************************************/
     ExampleSiteSupplier(IUnknown* pUnkPlayer, void *hwnd,
 #ifdef _UNIX
 			void *dpy,
 #endif
-			int x, int y, int w, int h);
+			int x, int y, int w, int h, int wl);
     
 
     /************************************************************************
@@ -50,6 +57,7 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 			 void *dpy,
 #endif
 			 PyObject *pw) {
+		if(m_windowless) return;
 		m_PNxWindow.window = hwnd;
 #ifdef _UNIX
 		m_PNxWindow.display = dpy;
@@ -70,7 +78,12 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 		m_PNxWindow.clipRect.bottom = p.y+s.cy;
 	}
 
-
+	void SetPyVideoRenderer(PyObject *obj){
+		Py_XDECREF(m_pPyVideoRenderer);
+		m_pPyVideoRenderer = obj;
+		Py_XINCREF(m_pPyVideoRenderer);	
+	}
+	
     /************************************************************************
      *  IRMASiteSupplier Interface Methods                     ref:  rmawin.h
      */

@@ -41,7 +41,7 @@ class ExampleClientContext : public IUnknown
 #ifdef _UNIX
 	      void *dpy,
 #endif
-	      int x, int y, int w, int h);
+	      int x, int y, int w, int h, int wl);
     void Close();
 
 

@@ -11,6 +11,8 @@ extern int WinObj_Convert(PyObject *, WindowPtr *);
 }
 #endif
 
+extern void seterror(const char *funcname, PN_RESULT res);
+
 class PlayerObject : public RMAObject {
 public:
 	MAKE_PY_CTOR(PlayerObject)
@@ -39,6 +41,8 @@ public:
 	static PyObject *ShowInNewWindow(PyObject *self, PyObject *args);
 	
 	static PyObject *SetPositionAndSize(PyObject *self, PyObject *args);
+	
+	static PyObject *SetPyVideoRenderer(PyObject *self, PyObject *args);
 
 protected:
 	PlayerObject();
@@ -54,7 +58,7 @@ private:
 #ifdef _UNIX
 			void *dpy,
 #endif
-			int x, int y, int w, int h);
+			int x, int y, int w, int h, int wl);
 	void ReleaseObjects();
 
 	PyObject *pEngine;
@@ -95,22 +99,21 @@ PlayerObject::~PlayerObject()
 
 PyObject *PlayerObject::CreateInstance(PyObject *engine, PyObject *args)
 {
-	int x = -1, y = -1, w = -1, h = -1;
+	int x = -1, y = -1, w = -1, h = -1, wl = 0;
 #ifdef _MACINTOSH
 	WindowPtr hwnd = 0;
 	
-	if (!PyArg_ParseTuple(args, "|O&((ii)(ii))", WinObj_Convert, &hwnd, &x, &y, &w, &h))
+	if (!PyArg_ParseTuple(args, "|O&((ii)(ii))i", WinObj_Convert, &hwnd, &x, &y, &w, &h, &wl))
 		return NULL;
 #else
 #ifdef _UNIX
 	int hwnd = 0, dpy = 0;
 	
-	if (!PyArg_ParseTuple(args, "|(ii)((ii)(ii))", &hwnd, &dpy, &x, &y, &w, &h))
+	if (!PyArg_ParseTuple(args, "|(ii)((ii)(ii))i", &hwnd, &dpy, &x, &y, &w, &h, &wl))
 		return NULL;
 #else
 	int hwnd = 0;
-	
-	if (!PyArg_ParseTuple(args, "|i((ii)(ii))", &hwnd, &x, &y, &w, &h))
+	if (!PyArg_ParseTuple(args, "|i((ii)(ii))i", &hwnd, &x, &y, &w, &h, &wl))
 		return NULL;
 #endif
 #endif
@@ -127,7 +130,7 @@ PyObject *PlayerObject::CreateInstance(PyObject *engine, PyObject *args)
 #ifdef _UNIX
 			(void *) dpy,
 #endif
-			x, y, w, h);
+			x, y, w, h, wl);
 	return obj;
 }
 
@@ -167,7 +170,11 @@ PlayerObject::OpenURL(PyObject *self, PyObject *args)
 	Py_BEGIN_ALLOW_THREADS
 	res=obj->pPlayer->OpenURL(psz);
 	Py_END_ALLOW_THREADS
-	return Py_BuildValue("i",res);
+	if(FAILED(res)){
+		seterror("PlayerObject::OpenURL", res);
+		return NULL;
+	}
+	RETURN_NONE;
 }
 
 PyObject *
@@ -178,7 +185,11 @@ PlayerObject::Begin(PyObject *self, PyObject *args)
 	Py_BEGIN_ALLOW_THREADS
 	res=((PlayerObject*)self)->pPlayer->Begin();
 	Py_END_ALLOW_THREADS
-	return Py_BuildValue("i",res);
+	if(FAILED(res)){
+		seterror("PlayerObject::Begin", res);
+		return NULL;
+	}
+	RETURN_NONE;
 }
 
 PyObject *
@@ -193,7 +204,11 @@ PlayerObject::Stop(PyObject *self, PyObject *args)
 #ifdef _WIN32
 	Py_END_ALLOW_THREADS
 #endif
-	return Py_BuildValue("i",res);
+	if(FAILED(res)){
+		seterror("PlayerObject::Stop", res);
+		return NULL;
+	}
+	RETURN_NONE;
 }
 
 PyObject *
@@ -208,7 +223,11 @@ PlayerObject::Pause(PyObject *self, PyObject *args)
 #ifdef _WIN32
 	Py_END_ALLOW_THREADS
 #endif
-	return Py_BuildValue("i",res);
+	if(FAILED(res)){
+		seterror("PlayerObject::Pause", res);
+		return NULL;
+	}
+	RETURN_NONE;
 }
 
 PyObject *
@@ -254,7 +273,11 @@ PlayerObject::Seek(PyObject *self, PyObject *args)
 	Py_BEGIN_ALLOW_THREADS
 	res=((PlayerObject*)self)->pPlayer->Seek(val);
 	Py_END_ALLOW_THREADS
-	return Py_BuildValue("i",res);
+	if(FAILED(res)){
+		seterror("PlayerObject::Seek", res);
+		return NULL;
+	}
+	RETURN_NONE;
 }
 
 PyObject *
@@ -297,6 +320,19 @@ PlayerObject::SetPyStatusListener(PyObject *self, PyObject *args)
 		}
 	else
 		RETURN_ERR("PlayerObject has no Context");
+	RETURN_NONE;
+}
+
+PyObject *
+PlayerObject::SetPyVideoRenderer(PyObject *self, PyObject *args)
+{
+	PyObject *obj;
+	if (!PyArg_ParseTuple(args, "O", &obj))
+		return NULL;
+	ExampleClientContext *pCC = ((PlayerObject*)self)->pContext;
+	if (pCC && pCC->m_pSiteSupplier){
+		pCC->m_pSiteSupplier->SetPyVideoRenderer(obj);
+		}
 	RETURN_NONE;
 }
 
@@ -405,6 +441,7 @@ static struct PyMethodDef PyRMPlayer_methods[] = {
 	{"SetOsWindow",PlayerObject::SetOsWindow,1}, 
 	{"ShowInNewWindow",PlayerObject::ShowInNewWindow,1}, 
 	{"SetPositionAndSize", PlayerObject::SetPositionAndSize, 1},
+	{"SetPyVideoRenderer", PlayerObject::SetPyVideoRenderer, 1},
 	{NULL, 	NULL}
 	};
 
@@ -419,7 +456,7 @@ PlayerObject::SetContext(void *hwnd,
 #ifdef _UNIX
 			 void *dpy,
 #endif
-			 int x, int y, int w, int h)
+			 int x, int y, int w, int h, int wl)
 {
 	if ((pContext = new ExampleClientContext()) == NULL)
 		return false;
@@ -430,7 +467,7 @@ PlayerObject::SetContext(void *hwnd,
 #ifdef _UNIX
 		       dpy,
 #endif
-		       x, y, w, h);
+		       x, y, w, h, wl);
 	pPlayer->SetClientContext(pContext);
 
 	pPlayer->QueryInterface(IID_IRMAErrorSinkControl, 
