@@ -2,8 +2,8 @@ __version__ = "$Id$"
 
 from dev import Error
 from format import *
-import Snd
-from Sound import *
+from Carbon import Snd
+from Carbon.Sound import *
 import time
 import struct
 import sys

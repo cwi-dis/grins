@@ -5,13 +5,13 @@ __version__ = "$Id$"
 # To be done:
 # - Functionality: find, etc.
 
-import Win
-import Qd
-import QuickDraw
-import Res
-import Fm
-import Ctl
-import Controls
+from Carbon import Win
+from Carbon import Qd
+from Carbon import QuickDraw
+from Carbon import Res
+from Carbon import Fm
+from Carbon import Ctl
+from Carbon import Controls
 import waste
 import WASTEconst
 import os
