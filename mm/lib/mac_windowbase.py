@@ -135,16 +135,24 @@ class _Event:
 				else:
 					self._timers[0] = sec, cb, tid
 					break
+					
 			if self._idles:
 				timeout = MINIMAL_TIMEOUT
 			elif self._timers:
 				timeout = int(self._timers[0][0]*TICKS_PER_SECOND)
 			else:
 				timeout = 100000
+				
 			if self.needmenubarredraw:
 				MenuMODULE.DrawMenuBar()
 				self.needmenubarredraw = 0
+				
+			# Clean up any stacktraces
+			sys.exc_traceback = None
+			sys.last_traceback = None
+			
 			gotone, event = Evt.WaitNextEvent(EVENTMASK, timeout)
+			
 			if gotone:
 				self._handle_event(event)
 			else:
