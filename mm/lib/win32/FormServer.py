@@ -19,9 +19,9 @@ from NodeInfoForm import NodeInfoForm
 from ArcInfoForm import ArcInfoForm
 
 appform={
-	0:{'cmd':-1,'hosted':0,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm,'maximize':1},
-	1:{'cmd':-1,'hosted':0,'title':'Anchor Editor','id':'anchor_edit','obj':None,'class':AnchorEditForm},
-	2:{'cmd':-1,'hosted':0,'title':'NodeInfo Editor','id':'node_info','obj':None,'class':NodeInfoForm},
+	0:{'cmd':-1,'hosted':0,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm},
+	1:{'cmd':-1,'hosted':0,'title':'Anchor Editor','id':'anchor_edit','obj':None,'class':AnchorEditForm,'freezesize':1},
+	2:{'cmd':-1,'hosted':0,'title':'NodeInfo Editor','id':'node_info','obj':None,'class':NodeInfoForm,'freezesize':1},
 	3:{'cmd':-1,'hosted':1,'title':'ArcInfo Editor','id':'arc_info','obj':None,'class':ArcInfoForm},
 	}
 
@@ -43,10 +43,10 @@ from pywin.mfc import window,object,docview,dialog
 
 # The ChildFrame purpose is to host the forms in its client area
 class ChildFrame(window.MDIChildWnd):
-	def __init__(self,form=None):
+	def __init__(self,form=None, freezesize=0):
 		window.MDIChildWnd.__init__(self,win32ui.CreateMDIChild())
 		self._form=form
-		self._sizeFreeze=0
+		self._freezesize=freezesize
 
 	# Create the OS window
 	def Create(self, title, rect = None, parent = None, maximize=0):
@@ -61,14 +61,8 @@ class ChildFrame(window.MDIChildWnd):
 	def PreCreateWindow(self, csd):
 		csd=self._obj_.PreCreateWindow(csd)
 		cs=win32mu.CreateStruct(csd)
-		#cs.style =cs.style & (~win32con.WS_THICKFRAME)
-		#cs.style =cs.style | win32con.WS_BORDER;
-
-		# remove the minimize and maximize buttons
-		# so that the MDI child frame "snaps" to the dialog.
-
-		#cs.style =cs.style & (~(win32con.WS_MINIMIZEBOX|win32con.WS_MAXIMIZEBOX))
-
+		if self._freezesize:
+			cs.style = win32con.WS_CHILD|win32con.WS_OVERLAPPED |win32con.WS_CAPTION|win32con.WS_BORDER|win32con.WS_SYSMENU|win32con.WS_MINIMIZEBOX
 		return cs.to_csd()
 	
 	# Called by the framework when this is activated or deactivated
@@ -132,13 +126,6 @@ class ChildFrame(window.MDIChildWnd):
 	def OnUpdateCmdDissable(self,cmdui):
 		cmdui.Enable(0)
 
-	# Freeze window size
-	def freezeSize(self):
-		self._sizeFreeze=1
-		l,t,r,b=self.GetWindowRect()
-		self._rc_freeze=(0,0,r-l-1,b-t-1)
-		self.ModifyStyle(win32con.WS_MAXIMIZEBOX|win32con.WS_THICKFRAME,0,0)
-
 # This class implements a Form Server. Any client can request
 # a form by passing its string id
 class FormServer:
@@ -148,11 +135,11 @@ class FormServer:
 	# Returns a new form object
 	def newformobj(self,strid):
 		formno=self.getformno(strid)
-		if not self.hosted(formno):
-			return self._newformobj(formno)
-		else:
+		if 'hosted' in appform[formno].keys() and appform[formno]['hosted']:
 			formclass=appform[formno]['class']
 			return formclass()
+		else:
+			return self._newformobj(formno)
 
 	# Show the form passed as argument
 	def showform(self,form,strid):
@@ -182,15 +169,12 @@ class FormServer:
 	
 	# Create a ChildFrame to host this view
 	def frameform(self,form,formno):
-		f=ChildFrame(form)
+		freezeSize=0
+		if 'freezesize' in appform[formno].keys():
+			freezeSize=appform[formno]['freezesize']
+		f=ChildFrame(form,freezeSize)
 		rc=self._context.getPrefRect()
-		if 'maximize' in appform[formno].keys():
-			maximize=1
-		else: maximize=0
 		f.Create(form._title,rc,self._context,0)
 		self._context.Activate(f)
 
-	# Returns the hosted attribute of this form (dialog bar or view)
-	def hosted(self,formno):
-		return appform[formno]['hosted']
 

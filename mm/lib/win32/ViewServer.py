@@ -47,12 +47,12 @@ if appcon.IsPlayer:
 	USERGROUPVIEW=None
 
 appview={
-	0:{'cmd':PLAYERVIEW,'title':'Player','id':'pview_','class':_PlayerView,'hosted':0},
-	1:{'cmd':HIERARCHYVIEW,'title':'Structure view','id':'hview_','class':_HierarchyView,'hosted':0},
-	2:{'cmd':CHANNELVIEW,'title':'Timeline view','id':'cview_','class':_ChannelView,'hosted':0},
-	3:{'cmd':LINKVIEW,'title':'Hyperlinks','id':'leview_','class':_LinkView,'hosted':0},
-	4:{'cmd':LAYOUTVIEW,'title':'Layout view','id':'lview_','class':_LayoutView,'hosted':0},
-	5:{'cmd':USERGROUPVIEW,'title':'User groups','id':'ugview_','class':_UsergroupView,'hosted':0},
+	0:{'cmd':PLAYERVIEW,'title':'Player','id':'pview_','class':_PlayerView,},
+	1:{'cmd':HIERARCHYVIEW,'title':'Structure view','id':'hview_','class':_HierarchyView,},
+	2:{'cmd':CHANNELVIEW,'title':'Timeline view','id':'cview_','class':_ChannelView,},
+	3:{'cmd':LINKVIEW,'title':'Hyperlinks','id':'leview_','class':_LinkView,'freezesize':1},
+	4:{'cmd':LAYOUTVIEW,'title':'Layout view','id':'lview_','class':_LayoutView,'freezesize':1},
+	5:{'cmd':USERGROUPVIEW,'title':'User groups','id':'ugview_','class':_UsergroupView,'freezesize':1},
 	6:{'cmd':SOURCE,'title':'Source','id':'sview_','class':_SourceView,'hosted':0},
 	7:{'cmd':-1,'title':'','id':'cmifview_','class':_CmifView,'hosted':0},
 }
@@ -62,10 +62,10 @@ appview={
 # according to the MDIFrameWnd pattern
 
 class ChildFrame(window.MDIChildWnd):
-	def __init__(self,view=None,decor=None):
+	def __init__(self,view=None,freezesize=0):
 		window.MDIChildWnd.__init__(self,win32ui.CreateMDIChild())
 		self._view=view
-		self._decor=decor
+		self._freezesize=freezesize
 		self._context=None
 		self._sizeFreeze=0
 
@@ -82,6 +82,8 @@ class ChildFrame(window.MDIChildWnd):
 	def PreCreateWindow(self, csd):
 		csd=self._obj_.PreCreateWindow(csd)
 		cs=win32mu.CreateStruct(csd)
+		if self._freezesize:
+			cs.style = win32con.WS_CHILD|win32con.WS_OVERLAPPED |win32con.WS_CAPTION|win32con.WS_BORDER|win32con.WS_SYSMENU|win32con.WS_MINIMIZEBOX
 		return cs.to_csd()
 
 	# Called by the framework when this window is activated or deactivated
@@ -144,12 +146,6 @@ class ChildFrame(window.MDIChildWnd):
 	def OnUpdateCmdDissable(self,cmdui):
 		cmdui.Enable(0)
 
-	# Freeze window size
-	def freezeSize(self):
-		self._sizeFreeze=1
-		l,t,r,b=self.GetWindowRect()
-		self._rc_freeze=(0,0,r-l-1,b-t-1)
-		self.ModifyStyle(win32con.WS_MAXIMIZEBOX|win32con.WS_THICKFRAME,0,0)
 
 # This class implements a View Server. Any client can request
 # a view by identifing the view by its string id
@@ -180,13 +176,13 @@ class ViewServer:
 	# Create a new view object 
 	def newviewobj(self,strid):
 		viewno=self.getviewno(strid)
-		if not self.hosted(viewno):
-			return self._newviewobj(viewno)
-		else:
+		if 'hosted' in appview[viewno].keys() and appview[viewno]['hosted']:
 			viewclass=appview[viewno]['class']
 			viewobj=viewclass()
 			self.add_common_interface(viewobj,viewno)
 			return viewobj
+		else:
+			return self._newviewobj(viewno)
 
 	# Show the view passed as argument
 	def showview(self,view,strid):
@@ -218,9 +214,10 @@ class ViewServer:
 
 	# Create the child frame that will host this view
 	def frameview(self,view,viewno):
-		decor=''
-		if viewno==self.getviewno('pview_'): decor='lview_'
-		f=ChildFrame(view,decor)
+		freezeSize=0
+		if 'freezesize' in appview[viewno].keys():
+			freezeSize=appview[viewno]['freezesize']
+		f=ChildFrame(view,freezeSize)
 		rc=self._context.getPrefRect()
 		f.Create(appview[viewno]['title'],None,self._context,0)
 		self._context.MDIActivate(f)
@@ -229,10 +226,6 @@ class ViewServer:
 	# returns None if not exists
 	def getviewframe(self,strid):
 		return self.GetParent()
-
-	# Returns the hosted attribute of this view (dialog bar or view)
-	def hosted(self,viewno):
-		return appview[viewno]['hosted']
 
 	# Adds to the view interface some common attributes
 	def add_common_interface(self,viewobj,viewno):
