@@ -115,7 +115,7 @@ class _ButtonRect(_Button):
 		gc = window._gc
 		gc.foreground = window._convert_color(self._hicolor)
 		gc.line_width = self._hiwidth
-		gc.SetRegion(window._clip)
+		gc.SetRegion(window._getmyarea())
 		x, y = self._coordinates[1:3]
 		w = self._coordinates[3] - x
 		h = self._coordinates[4] - y
