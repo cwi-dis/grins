@@ -347,7 +347,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Displays the about dialog
 	def OnAbout(self,id,code):
-		if self.in_create_box_mode():return
+		if self.in_modal_create_box_mode(): return
+		self.assert_not_in_create_box()
 		from version import version
 		dlg=AboutDlg(arg=0,version = 'GRiNS ' + version,parent=self)
 		dlg.DoModal()
@@ -363,7 +364,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Response to windows arrangement commands
 	def OnWndUserCmd(self,id,code):
-		if self.in_create_box_mode():return
+		if self.in_modal_create_box_mode(): return
+		self.assert_not_in_create_box()
 		client=self.GetMDIClient()
 		if id==afxres.ID_WINDOW_TILE_HORZ:
 			client.SendMessage(win32con.WM_MDITILE,win32con.MDITILE_HORIZONTAL)			
@@ -714,7 +716,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	
 	# Response to dynamic menus commands	
 	def OnUserDynCmd(self,id,code):
-		if self.in_create_box_mode():return
+		if self.in_modal_create_box_mode(): return
+		self.assert_not_in_create_box()
 		for cbd in self._dyncmds.values():
 			if cbd.has_key(id):
 				if not cbd[id]:return
@@ -762,7 +765,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Response to a user command (menu selection)
 	def OnUserCmd(self,id,code):
-		if self.in_create_box_mode():return
+		if self.in_modal_create_box_mode(): return
+		self.assert_not_in_create_box()
 		cmd=None
 
 		# special manipulation of exit to close first and release resources

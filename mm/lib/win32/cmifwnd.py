@@ -302,6 +302,8 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		if self._parent is None:
 			return		# already closed
 
+		self.assert_not_in_create_box()
+
 		self.setcursor('arrow')
 		for dl in self._displists[:]:
 			dl.close()
