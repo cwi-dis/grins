@@ -296,6 +296,7 @@ class RPParser(xmllib.XMLParser):
 		try:
 			xmllib.XMLParser.goahead(self, end)
 		except:
+			import sys
 			type, value, traceback = sys.exc_info()
 			if self.__printfunc is not None:
 				msg = 'Fatal error while parsing at line %d: %s' % (self.lineno, str(value))
@@ -424,6 +425,7 @@ class RPParser(xmllib.XMLParser):
 		destrect = self.__rect('dst', attributes)
 		duration = self.__time('duration', attributes)
 		maxfps = attributes.get('maxfps', self.maxfps)
+		dstrect = self.__rect('dst', attributes)
 		srcrect = self.__rect('src', attributes)
 		start = self.__time('start', attributes)
 		self.tags.append({'tag': 'viewchange', 'imgcrop': srcrect, 'subregion': dstrect, 'start': start, 'duration': duration, 'maxfps': maxfps})
