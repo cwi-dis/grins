@@ -20,7 +20,9 @@ def shownodeinfo(toplevel, node, new = 0):
 		nodeinfo.pop()
 
 
-class NodeInfo:
+from NodeInfoDialog import NodeInfoDialog
+
+class NodeInfo(NodeInfoDialog):
 
 	def __init__(self, toplevel, node, new):
 		self.new = new
@@ -32,88 +34,19 @@ class NodeInfo:
 		self.getvalues(1)
 		#
 		title = self.maketitle()
-		self.window = w = windowinterface.Window(title, resizable = 1,
-					deleteCallback = (self.close, ()))
-
-		top = w.SubWindow(left = None, right = None, top = None)
-
 		try:
 			i = self.allchannelnames.index(self.channelname)
 		except ValueError:
 			i = 0		# 'undefined'
-		self.channel_select = top.OptionMenu('Channel:',
-					self.allchannelnames,
-					i, (self.channel_callback, ()),
-					right = None, top = None)
-		self.type_select = top.OptionMenu('Type:', alltypes,
-						  alltypes.index(self.type),
-						  (self.type_callback, ()),
-						  right = self.channel_select,
-						  top = None)
-		self.name_field = top.TextInput('Name:', self.name, None, None,
-						left = None, top = None,
-						right = self.type_select)
-		butt = w.ButtonRow(
-			[('Cancel', (self.cancel_callback, ())),
-			 ('Restore', (self.restore_callback, ())),
-			 ('Node attr...', (self.attributes_callback, ())),
-			 ('Anchors...', (self.anchors_callback, ())),
-			 ('Apply', (self.apply_callback, ())),
-			 ('OK', (self.ok_callback, ()))],
-			bottom = None, left = None, right = None, vertical = 0)
-
-		midd = w.SubWindow(top = top, bottom = butt, left = None,
-				   right = None)
-
-		alter = midd.AlternateSubWindow(top = None, bottom = None,
-						right = None, left = None)
-		self.imm_group = alter.SubWindow()
-		self.ext_group = alter.SubWindow()
-		self.int_group = alter.SubWindow()
-
-		self.file_input = self.ext_group.TextInput('File:',
-				self.filename,
-				(self.file_callback, ()), None,
-				top = None, left = None, right = None)
-		butt = self.ext_group.ButtonRow(
-			[('Edit contents...', (self.conteditor_callback, ())),
-			 ('Browser...', (self.browser_callback, ()))],
-			top = self.file_input, left = None, right = None,
-			vertical = 0)
-
-		butt = self.int_group.ButtonRow(
-			[('Open...', (self.openchild_callback, ()))],
-			left = None, right = None, bottom = None, vertical = 0)
-		self.children_browser = self.int_group.List('Children:',
-				self.children,
-				[None, (self.openchild_callback, ())],
-				top = None, left = None, right = None,
-				bottom = butt)
-
-		label = self.imm_group.Label('Contents:',
-				top = None, left = None, right = None)
-		self.text_browser = self.imm_group.TextEdit(self.immtext, None,
-					top = label, left = None,
-					right = None, bottom = None)
-
-		self.imm_group.hide()
-		self.ext_group.hide()
-		self.int_group.hide()
-		self.cur_group = None
+		NodeInfoDialog.__init__(self, title, self.allchannelnames, i,
+					alltypes, alltypes.index(self.type),
+					self.name, self.filename,
+					self.children, self.immtext)
 		self.show_correct_group()
-
-		w.show()
-
 		self.editmgr.register(self)
 
 	def __repr__(self):
 		return '<NodeInfo instance, node=' + `self.node` + '>'
-
-	def pop(self):
-		self.window.pop()
-
-	def settitle(self, title):
-		self.window.settitle(title)
 
 	def transaction(self):
 		return 1
@@ -137,12 +70,10 @@ class NodeInfo:
 		return MMAttrdefs.getdefattr(self.node, name)
 
 	def setattr(self, name, value):
-		if self.editmgr is not None:   # DEBUG
-			self.editmgr.setnodeattr(self.node, name, value)
+		self.editmgr.setnodeattr(self.node, name, value)
 
 	def delattr(self, name):
-		if self.editmgr is not None:   # DEBUG
-			self.editmgr.setnodeattr(self.node, name, None)
+		self.editmgr.setnodeattr(self.node, name, None)
 
 	def commit(self):
 		if not self.stillvalid():
@@ -187,23 +118,21 @@ class NodeInfo:
 	def ch_immtext(self):
 		if self.type != 'imm':
 			return 0
-		if hasattr(self, 'immtext') and hasattr(self, 'text_browser'):
-			immtext = self.text_browser.getlines()
-			if len(immtext) != len(self.immtext):
+		immtext = self.gettextlines()
+		if len(immtext) != len(self.immtext):
+			self.changed = 1
+			return 1
+		for i in range(len(immtext)):
+			if immtext[i] != self.immtext[i]:
 				self.changed = 1
 				return 1
-			for i in range(len(immtext)):
-				if immtext[i] != self.immtext[i]:
-					self.changed = 1
-					return 1
 		return 0
 
 	def ch_name(self):
-		if hasattr(self, 'name') and hasattr(self, 'name_field'):
-			name = self.name_field.gettext()
-			if name != self.name:
-				self.changed = 1
-				return 1
+		name = self.getname()
+		if name != self.name:
+			self.changed = 1
+			return 1
 		return 0
 
 	def setvalues(self):
@@ -217,7 +146,7 @@ class NodeInfo:
 ##			em.setnodeattr(n, 'style', self.styles_list[:])
 ##			self.ch_styles_list = 0
 		if self.ch_name():
-			self.name = self.name_field.gettext()
+			self.name = self.getname()
 			em.setnodeattr(n, 'name', self.name)
 		if self.ch_channelname:
 			em.setnodeattr(n, 'channel', self.channelname)
@@ -234,7 +163,7 @@ class NodeInfo:
 				em.setnodeattr(n, 'file', None)
 			self.ch_filename = 0
 		if self.ch_immtext():
-			self.immtext = self.text_browser.getlines()
+			self.immtext = self.gettextlines()
 			em.setnodevalues(n, self.immtext)
 		self.changed = 0
 		em.commit()
@@ -243,68 +172,44 @@ class NodeInfo:
 	# Fill form from local data.  Clear the form beforehand.
 	#
 	def updateform(self):
-		self.name_field.settext(self.name)
+		self.setname(self.name)
 
-		self.type_select.setoptions(alltypes,
-					    alltypes.index(self.type))
+		self.settypes(alltypes, alltypes.index(self.type))
 
 		try:
 			i = self.allchannelnames.index(self.channelname)
 		except ValueError:
 			i = 0		# 'undefined'
-		self.channel_select.setoptions(self.allchannelnames, i)
+		self.setchannelnames(self.allchannelnames, i)
 
-		self.text_browser.settext(self.immtext)
+		self.settext(self.immtext)
 
-		self.file_input.settext(self.filename)
+		self.setfilename(self.filename)
 
-		self.children_browser.delalllistitems()
-		self.children_browser.addlistitems(self.children, -1)
-		if self.children:
-			self.children_browser.selectitem(0)
+		self.setchildren(self.children, 0)
 
-		self.imm_group.hide()
-		self.ext_group.hide()
-		self.int_group.hide()
-		self.cur_group = None
 		self.show_correct_group()
 	#
 	# show_correct_group - Show correct type-dependent group of buttons
 	#
 	def show_correct_group(self):
 		if self.type == 'imm':
-			group = self.imm_group
+			self.imm_group_show()
 		elif self.type == 'ext':
-			group = self.ext_group
+			self.ext_group_show()
 		else:
-			group = self.int_group
-		if group is self.cur_group:
-			return
-		if self.cur_group is not None:
-			self.cur_group.hide()
-		self.cur_group = group
-		if group is not None:
-			group.show()
+			self.int_group_show()
 
 	def close(self):
-		self.editmgr.unregister(self)
-		self.window.close()
-		del self.node.nodeinfo
-		del self.node
-		del self.toplevel
-		del self.context
-		del self.editmgr
-		del self.root
-		del self.window
-		del self.channel_select
-		del self.type_select
-		del self.name_field
-		del self.imm_group
-		del self.ext_group
-		del self.int_group
-		del self.file_input
-		del self.children_browser
-		del self.text_browser
+		if self.editmgr is not None:
+			self.editmgr.unregister(self)
+			NodeInfoDialog.close(self)
+			del self.node.nodeinfo
+			del self.node
+			del self.toplevel
+			del self.context
+			del self.root
+		self.editmgr = None
 	#
 	# Standard callbacks (from Dialog())
 	#
@@ -313,13 +218,13 @@ class NodeInfo:
 		self.updateform()
 
 	def cancel_callback(self):
-		self.close()
 		if self.new:
 			editmgr = self.editmgr
 			if not editmgr.transaction():
 				return # Not possible at this time
 			editmgr.delnode(self.node)
 			editmgr.commit()
+		self.close()
 
 	def apply_callback(self):
 		self.new = 0
@@ -338,7 +243,7 @@ class NodeInfo:
 	# Callbacks that are valid for all types
 	#
 	def type_callback(self):
-		newtype = self.type_select.getvalue()
+		newtype = self.gettype()
 		if newtype == self.type:
 			return
 		# Check that the change is allowed.
@@ -347,13 +252,13 @@ class NodeInfo:
 			pass	# This is ok.
 		elif ((self.type in interiortypes) and \
 		      self.children == []) or \
-		      (self.type == 'imm' and self.text_browser.gettext() == '') or \
+		      (self.type == 'imm' and self.gettext() == '') or \
 		      (self.type == 'ext'):
 			pass
 		else:
 			windowinterface.showmessage(
 				'Cannot change type on non-empty node')
-			self.type_select.setpos(alltypes.index(self.type))
+			self.settype(alltypes.index(self.type))
 			return
 		self.ch_type = 1
 		self.changed = 1
@@ -361,7 +266,7 @@ class NodeInfo:
 		self.show_correct_group()
 
 	def channel_callback(self):
-		self.channelname = self.channel_select.getvalue()
+		self.channelname = self.getchannelname()
 		if self.origchannelname <> self.channelname:
 			self.ch_channelname = 1
 			self.changed = 1
@@ -381,7 +286,7 @@ class NodeInfo:
 	# Callbacks for 'ext' type nodes
 	#
 	def file_callback(self):
-		filename = self.file_input.gettext()
+		filename = self.getfilename()
 		if filename <> self.filename:
 			self.ch_filename = 1
 			self.changed = 1
@@ -415,7 +320,7 @@ class NodeInfo:
 		self.ch_filename = 1
 		self.changed = 1
 		self.filename = pathname
-		self.file_input.settext(pathname)
+		self.setfilename(pathname)
 
 	def conteditor_callback(self):
 		import NodeEdit
@@ -424,7 +329,7 @@ class NodeInfo:
 	# Callbacks for interior type nodes
 	#
 	def openchild_callback(self):
-		i = self.children_browser.getselected()
+		i = self.getchild()
 		if i is None:
 			return
 		shownodeinfo(self.toplevel, self.children_nodes[i])
