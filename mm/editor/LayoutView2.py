@@ -3681,7 +3681,7 @@ class MediaRegion(Region):
 		wingeom = self._ctx._context.getPxGeomWithContextAnimation(self._nodeRef)
 			
 		# determinate the real fit attribute		
-		self.fit = fit = self._nodeRef.GetAttrDef('fit','hidden')
+		self.fit = fit = self._nodeRef.getCssAttr('fit','hidden')
 
 		# ajust the internal geom for edition. If no constraint neither on right nor botton,
 		# with fit==hidden: chg the internal region size.
