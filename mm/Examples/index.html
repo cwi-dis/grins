@@ -61,11 +61,6 @@
 	better than 28.8Kbps. See the document on <a
 	  href="http://www.cwi.nl/GRiNS/settings.html">customizing
 	  system attribute settins</a> for details.
-
-	<br>
-	<b>Note:</b> in the current GR<i>i</i>NS player some
-	synchronisation problems exist within <code>switch</code>,
-	these will be addressed shortly.
       </li>
     </ul>
 
@@ -280,12 +275,12 @@
     </p>
 
     <p>
-      <b>Note:</b> The anchors in this example are incorrect, they are 
-      specified as "left, top, width, height", while the SMIL standard 
-      says anchors should be specified as "left, top, right,
-      bottom". A new player with correct anchor implementation will be 
-      released shortly, at which time these examples will also be
-      fixed.
+      <b>Note:</b> The previous release of the GR<i>i</i>NS player interpreted
+      the anchors wrong.  According to the SMIL standard, the anchor
+      coordinates should be specified as "left, top, right, bottom", however
+      the previous version of the GR<i>i</i>NS player interpreted them as
+      "left, top, width, height".  The new player will give a warning
+      when it recognizes the wrong coordinates.
     </p>
     
     <table border align="center">
