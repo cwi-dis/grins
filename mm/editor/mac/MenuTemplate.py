@@ -120,6 +120,7 @@ MENUBAR=(
 		(TOGGLE, ('Show Hierarchy view', 'Hide Hierarchy view'), '3', HIERARCHYVIEW),
 		(TOGGLE, ('Show Timeline view', 'Hide Timeline view'), '4', CHANNELVIEW),
 		(TOGGLE, ('Show Hyperlink view', 'Hide Hyperlink view'), '5', LINKVIEW),
+		(TOGGLE, ('Show User group view', 'Hide User group view'), '6', USERGROUPVIEW),
 		(SEP,),
 		(ENTRY, 'View source', None, SOURCE),
 		(ENTRY, 'View help window', '?', HELP))),
