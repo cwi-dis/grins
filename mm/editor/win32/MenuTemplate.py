@@ -402,7 +402,6 @@ POPUP_HVIEW_STRUCTURE = (
 		(LIGHT, ENTRY, 'E&xpand all', None, EXPANDALL),
 		(LIGHT, ENTRY, 'C&ollapse all', None, COLLAPSEALL),
 		(LIGHT, SEP,),
-		(LIGHT, ENTRY, 'Create si&mple anchor', None, CREATEANCHOR),
 		(LIGHT, ENTRY, 'Finish hyperlin&k to selection', None, FINISH_LINK),
 		(LIGHT, SEP,),
 ##		(SMIL, ENTRY, '&Info...', None, INFO),
