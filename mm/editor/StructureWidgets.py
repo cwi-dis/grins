@@ -192,7 +192,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			othernode = arc.refnode()
 			if othernode:
 				if not othernode.views.has_key('struct_view'):
-					print "DEBUG: Node is not in the structure view: ", othernode
+					if __debug__: print "DEBUG: Node is not in the structure view: ", othernode
 					continue
 				otherwidget = othernode.views['struct_view'].get_cause_event_icon()
 				if icon is None:
@@ -2597,10 +2597,6 @@ class Icon(MMWidgetDecoration):
 
 ##############################################################################
 			# Crap at the end of the file.
-
-class BrushWidget(MMNodeWidget):
-	def __init__(self):
-		print "TODO: BrushWidget"
 
 class TimeStripSeqWidget(SeqWidget):
 	# A sequence that has a channel widget at the start of it.
