@@ -1504,13 +1504,13 @@ class TupleAttrEditorField(AttrEditorField):
 			return value
 		return AttrEditorField.valuerepr(self, value)
 
-from colors import colors
+import colors
 class ColorAttrEditorField(TupleAttrEditorField):
 	type = 'color'
 	def parsevalue(self, str):
 		str = string.lower(string.strip(str))
-		if colors.has_key(str):
-			return colors[str]
+		if colors.colors.has_key(str):
+			return colors.colors[str]
 		if str[:1] == '#':
 			rgb = []
 			if len(str) == 4:
@@ -1530,9 +1530,8 @@ class ColorAttrEditorField(TupleAttrEditorField):
 		return TupleAttrEditorField.parsevalue(self, str)
 
 	def valuerepr(self, value):
-		for name, rgb in colors.items():
-			if value == rgb:
-				return name
+		if colors.rcolors.has_key(value):
+			return colors.rcolors[value]
 		return TupleAttrEditorField.valuerepr(self, value)
 
 class PopupAttrEditorField(AttrEditorField):
