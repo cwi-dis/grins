@@ -37,11 +37,11 @@ class _Toplevel:
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
 
-	def newwindow(self, x, y, w, h, title, pixmap = 0, transparent = 0):
-		return _Window(self, x, y, w, h, title, 0, pixmap, transparent)
+	def newwindow(self, x, y, w, h, title, pixmap = 0):
+		return _Window(self, x, y, w, h, title, 0, pixmap, 0)
 
-	def newcmwindow(self, x, y, w, h, title, pixmap = 0, transparent = 0):
-		return _Window(self, x, y, w, h, title, 1, pixmap, transparent)
+	def newcmwindow(self, x, y, w, h, title, pixmap = 0):
+		return _Window(self, x, y, w, h, title, 1, pixmap, 0)
 
 	def setcursor(self, cursor):
 		for win in self._subwindows:
@@ -65,9 +65,7 @@ class _Toplevel:
 				sec = sec - (t - self._time)
 				self._time = t
 				if sec <= 0:
-					print 'BEFORE DEL', len(self._timers), self._timers[0][0]
 					del self._timers[0]
-					print 'AFTER DEL', len(self._timers), self._timers[0][0]
 					func, args = cb
 					apply(func, args)
 				else:
