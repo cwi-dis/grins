@@ -265,6 +265,15 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			self.create(0, url)
 
+	def dragfile(self, dummy, window, event, params):
+		x, y = params
+		obj = self.whichhit(x, y)
+		if not obj:
+			windowinterface.setdragcursor('dragnot')
+		elif obj.node.GetType() in MMNode.leaftypes:
+			windowinterface.setdragcursor('dragset')
+		else:
+			windowinterface.setdragcursor('dragadd')
 
 	#################################################
 	# Edit manager interface (as dependent client)  #

@@ -301,6 +301,14 @@ class ChannelView(ChannelViewDialog):
 		obj.node.SetAttr('file', url)
 		em.commit()
 
+	def dragfile(self, dummy, window, event, params):
+		x, y = params
+		obj = self.whichhit(x, y)
+		if not obj or not obj.is_node_object:
+			windowinterface.setdragcursor('dragnot')
+		else:
+			windowinterface.setdragcursor('dragset')
+
 	# Time-related subroutines
 
 	def timerange(self):
