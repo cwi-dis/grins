@@ -33,6 +33,7 @@
 
 #if __POWERPC__
 #define WITH_RMA_SUPPORT	/* Support for real media types */
+#define WITH_REALPRODUCER_SUPPORT /* Support for realmedia conversion */
 #endif
 
 #ifndef WITH_RMA_SUPPORT
