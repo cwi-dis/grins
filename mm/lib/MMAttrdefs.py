@@ -37,6 +37,7 @@
 #		attribute definition.  If this fails your tree is broken!
 
 
+from MMNode import _stat
 from MMExc import *
 import MMParser
 import sys
@@ -102,6 +103,7 @@ def readattrdefs(filename):
 # Map a typedef to a (func, arg) pair.
 #
 def usetypedef(typedef, mapping):
+	_stat('MMAttrdefs.usetypedef')
 	type, rest = typedef
 	func = mapping[type]
 	arg = None
@@ -119,6 +121,7 @@ def usetypedef(typedef, mapping):
 # Use the type definitions from the attrdefs table.
 #
 def useattrdefs(mapping):
+	_stat('MMAttrdefs.useattrdefs')
 	dict = {}
 	for attrname in attrdefs.keys():
 		dict[attrname] = usetypedef(attrdefs[attrname][0], mapping)
@@ -133,12 +136,14 @@ attrdefs = readattrdefs(ATTRDEFS)
 # Functional interface to the attrdefs table.
 #
 def getdef(attrname):
+	_stat('MMAttrdefs.getdef')
 	if attrdefs.has_key(attrname):
 		return attrdefs[attrname]
 	# Undefined attribute -- fake something reasonable
 	return (('any', None), None, '', 'default', '',  'normal')
 #
 def getnames():
+	_stat('MMAttrdefs.getnames')
 	names = attrdefs.keys()
 	names.sort()
 	return names
@@ -147,6 +152,7 @@ def getnames():
 # Get an attribute of a node according to the rules.
 #
 def getattr(node, attrname):
+	_stat('MMAttrdefs.getattr')
 	attrdef = getdef(attrname)
 	inheritance = attrdef[5]
 	defaultvalue = attrdef[1]
@@ -174,6 +180,7 @@ def getattr(node, attrname):
 # Get the default value for a node's attribute, *ignoring* its own value
 #
 def getdefattr(node, attrname):
+	_stat('MMAttrdefs.getdefattr')
 	attrdef = getdef(attrname)
 	inheritance = attrdef[5]
 	defaultvalue = attrdef[1]
@@ -204,11 +211,13 @@ def getdefattr(node, attrname):
 				' for attr ' + `attrname`
 
 def valuerepr(name, value):
+	_stat('MMAttrdefs.valuerepr')
 	import MMWrite
 	return MMWrite.valuerepr(value, getdef(name)[0])
 
 
 def parsevalue(name, string, context):
+	_stat('MMAttrdefs.parsevalue')
 	import MMParser
 	typedef = ('enclosed', getdef(name)[0])
 	return MMParser.parsevalue('('+string+')', typedef, context)
