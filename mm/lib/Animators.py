@@ -4,6 +4,7 @@ __version__ = "$Id$"
 import MMAttrdefs
 import string
 import math
+import svgpath
 
 # An Animator represents an animate element at run time.
 # An Animator entity implements interpolation taking into 
@@ -68,10 +69,10 @@ class Animator:
 		self._repeatCounter = 0
 
 		# cashed acc value
-		self.__accValue = 0
+		self._accValue = 0
 
 		# current value
-		self.__curvalue = None
+		self._curvalue = None
 
 		# time manipulators
 		self._speed = 1.0
@@ -101,17 +102,17 @@ class Animator:
 
 		# accumulate
 		if self._accumulate=='sum' and self.__accValue:
-			v = self.__accValue + v
+			v = self._accValue + v
 
 		# convertion
 		if self._convert:
 			v = self._convert(v)
 
-		self.__curvalue = v
+		self._curvalue = v
 		return v
 
 	def getCurrValue(self):
-		return self.__curvalue
+		return self._curvalue
 
 	def isAdditive(self):
 		return self._additive=='sum'
@@ -170,7 +171,7 @@ class Animator:
 		if self._accumulate=='sum':
 			n = len(self._values)
 			last = self._values[n-1]
-			self.__accValue = self._repeatCounter*last
+			self._accValue = self._repeatCounter*last
 
 	def setRetunedValuesConvert(self, cvt):
 		self._convert = cvt
@@ -258,23 +259,64 @@ class Animator:
 def _round(val):
 	return int(val+0.5)
 
+
+###########################
+class FeatureNotImplementedException:
+    def __init__(self, msg=''):
+        self.__msg = msg
+    def __repr__(self):
+        return self.__msg
+
 ###########################
 # A special animator to manage to-only additive animate elements
 class EffValueAnimator(Animator):
 	pass
 
+
+###########################
 # 'set' element animator
 class SetAnimator(Animator):
 	def __init__(self, attr, domval, value, dur):
 		Animator.__init__(self, attr, domval, (value, ), dur, mode ='discrete') 
 
+###########################
 # 'animateColor'  element animator
 class ColorAnimator(Animator):
-	pass
+	def __init__(self, attr, domval, values, dur, mode='linear', 
+			times=None, splines=None, accumulate='none', additive='replace'): 
+		Animator.__init__(self, attr, domval, values, dur, mode, 
+			times, splines, accumulate, additive)
 
-# 'animateMotion' animator
+###########################
+# 'animateMotion' element animator
 class MotionAnimator(Animator):
-	pass
+	def __init__(self, attr, domval, path, dur, mode='paced', 
+			times=None, splines=None, accumulate='none', additive='replace'):		
+		self._path = path
+
+		# values will be used if duration is undefined
+		l = path.getLength()
+		values = (path.getPointAt(0), path.getPointAt(l))
+		Animator.__init__(self, attr, domval, values, dur, mode, 
+			times, splines, accumulate, additive)
+		
+		# override acc value to be complex
+		self._accValue = complex(0,0)
+
+		# time to paced interval convertion factor
+		self._time2length = path.getLength()/dur
+
+	def _paced(self, t):
+		return self._path.getPointAt(t*self._time2length)
+
+	def _discrete(self, t):
+		return self._path.getPointAt(t*self._time2length)
+		
+	def _linear(self, t):
+		return self._path.getPointAt(t*self._time2length)
+
+	def _spline(self, t):
+		return self._path.getPointAt(t*self._time2length)
 
 
 ###########################
@@ -292,7 +334,7 @@ class MotionAnimator(Animator):
 # if sync: lower priority if sync base source else lower if first in doc
 # 'first in doc' is a common case and easy to implement
 # restart element raises priority but not repeat
-# *animators should be kept for all their effective due: ED = AD + frozenDur
+# *animators should be kept for all their effective dur: ED = AD + frozenDur
 # so, whats the best way to implement 'freeze'?
 # we must have a way to monitor animations for all ED not only AD
 # * we must either assert that onAnimateBegin are called in the proper order
@@ -397,7 +439,7 @@ animateContext = AnimateContext()
 # * there is an exceptional animation case that breaks std composition semantics: 
 #  this is the 'to-only animation for additive attributes'
 #  according to the draft the base value that should be used for the interpolation
-#  is the effecive value (the dynamic composite result of other animations).
+#  is the effective value (the dynamic composite result of other animations).
 #  are any other exceptions to std composition semantics?
 #  implement specialization: EffValueAnimator
 
@@ -447,7 +489,7 @@ class AnimateElementParser:
 	def getAnimator(self):
 		if self.__elementTag=='set':
 			return self.__getSetAnimator()
-
+	
 		# 1. Read animation attributes
 		attr = self.__attrname
 		domval = self.__domval
@@ -471,10 +513,11 @@ class AnimateElementParser:
 			print 'invalid target syntax error'
 			return None
 
-		nvalues = self.__countInterpolationValues()
-		if nvalues==0 or (nvalues==1 and mode!='discrete'):
-			print 'values syntax error'
-			return None
+		if self.__elementTag!='animateMotion':
+			nvalues = self.__countInterpolationValues()
+			if nvalues==0 or (nvalues==1 and mode!='discrete'):
+				print 'values syntax error'
+				return None
 
 		# 3. Return explicitly animators for special attributes
 
@@ -488,15 +531,27 @@ class AnimateElementParser:
 		## Begin temp grins extensions
 		# position animation
 		if self.__grinsext:
+			if self.__elementTag=='animateMotion':
+				strpath = MMAttrdefs.getattr(self.__anim, 'path')
+				path = svgpath.Path(strpath)
+				return MotionAnimator(attr, domval, path, dur, mode, times, splines,
+					accumulate, additive)
 			values = self.__getNumInterpolationValues()
 			anim = Animator(attr, domval, values, dur, mode, times, splines, 
-				accumulate, additive)
+					accumulate, additive)
 			anim.setRetunedValuesConvert(_round)
 			self.__setTimeManipulators(anim)
 			return anim
 		## End temp grins extensions
 
-		
+		if self.__elementTag=='animateColor':
+			# we don't support animateColor yet
+			# just return a discrete animator
+			mode = 'discrete' # override calc mode
+			values = self.__getAlphaInterpolationValues()
+			return ColorAnimator(attr, domval, values, dur, mode, times, splines,
+				accumulate, additive)
+
 		# 4. Return an animator based on the attr type
 		print 'Guessing animator for attribute',`self.__attrname`,'(', self.__attrtype,')'
 		anim = None
@@ -592,9 +647,16 @@ class AnimateElementParser:
 
 		self.__domval = MMAttrdefs.getattr(self.__target, self.__attrname)
 
+		# check extensions
+		if not self.__domval:
+			d = self.__target.GetChannel().attrdict
+			if self.__attrname=='backgroundColor': self.__attrname = 'bgcolor'
+			if not self.__domval and d.has_key(self.__attrname):
+				self.__domval = d[self.__attrname]
+
 		if not self.__domval:
 			self.__checkExtensions()
-
+			
 		if not self.__domval:
 			print 'Failed to get original DOM value for attr',self.__attrname,'from node',self.__target
 			return 0
@@ -679,7 +741,7 @@ class AnimateElementParser:
 		n = 0
 		v1 = self.getFrom()
 		if v1: n = n + 1
-		elif mode != 'discrete': n = n + 1
+		elif self._mode != 'discrete': n = n + 1
 
 		v2 = self.getTo()
 		dv = self.getBy()
@@ -774,6 +836,8 @@ class AnimateElementParser:
 				self.__domval = base_winoff[2]
 			elif self.__attrname == 'region.height':
 				self.__domval = base_winoff[3]
+			elif self.__attrname == 'region.position':
+				self.__domval = complex(base_winoff[0], base_winoff[1])
 
 	# temp
 	def _dump(self):
