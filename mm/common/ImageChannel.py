@@ -44,8 +44,7 @@ class ImageChannel(ChannelWindow):
 		try:
 			self._arm_imbox = self.armed_display.display_image_from_file(
 					f, scale = scale, crop = crop, center = center)
-			if hasattr(self.armed_display, 'knowcmd'):
-				self.armed_display.knowcmd('image')
+			self.armed_display.knowcmd('image')
 		except (windowinterface.error, IOError), msg:
 			if type(msg) is type(self):
 				msg = msg.strerror
@@ -173,8 +172,6 @@ class ImageChannel(ChannelWindow):
 
 	def do_updateattr(self, node, name, value):
 		self.do_update(node, animated=1)
-		if not hasattr(self.update_display,'updatecmd'):
-			return
 		if name == 'file':
 			cmd = self.update_display.getcmd('image')
 			if cmd and self.played_display:
@@ -209,8 +206,7 @@ class ImageChannel(ChannelWindow):
 		center = MMAttrdefs.getattr(node, 'center', animated)
 		try:
 			self._update_imbox = self.update_display.display_image_from_file(f, scale = scale, crop = crop, center = center)
-			if hasattr(self.update_display, 'knowcmd'):
-				self.update_display.knowcmd('image')
+			self.update_display.knowcmd('image')
 		except (windowinterface.error, IOError), msg:
 			if type(msg) is type(self):
 				msg = msg.strerror
