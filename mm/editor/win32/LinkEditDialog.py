@@ -36,8 +36,9 @@ All other callbacks are called without arguments.
 
 __version__ = "$Id"
 
-import cmifex2, win32api, win32con
+import win32api, win32con
 import windowinterface
+from win32modules import cmifex2
 
 class LinkEditDialog:
 	def __init__(self, title, dirstr, typestr, menu1, cbarg1, menu2, cbarg2):
