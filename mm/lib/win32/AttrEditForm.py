@@ -1580,7 +1580,7 @@ class ImgregionGroup(SubregionGroup):
 class SystemGroup(AttrGroup):
 	data=attrgrsdict['system']
 	def __init__(self):
-		AttrGroup.__init__(self,SystemGroup.data)
+		AttrGroup.__init__(self,self.data)
 
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_S1R3S5
@@ -1598,6 +1598,12 @@ class SystemGroup(AttrGroup):
 
 	def getpageclass(self):
 		return AttrPage
+
+class PreferencesGroup(SystemGroup):
+	data=attrgrsdict['preferences']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S1R3S4
 
 class NameGroup(AttrGroup):
 	data=attrgrsdict['name']
@@ -1717,6 +1723,7 @@ groupsui={
 	'imgregion':ImgregionGroup,
 
 	'system':SystemGroup,
+	'preferences':PreferencesGroup,
 	'name':NameGroup,
 	'.cname':CNameGroup,
 
