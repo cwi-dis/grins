@@ -2704,6 +2704,21 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
 END
 
+IDD_ANIMATE DIALOG DISCARDABLE  0, 0, 256, 85
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "scale 1:1",IDC_LAYOUT_SCALE,8,4,42,8
+    PUSHBUTTON      "",IDC_ZOOMIN,59,3,14,12,BS_ICON | BS_CENTER | 
+                    BS_VCENTER | NOT WS_VISIBLE | NOT WS_TABSTOP
+    PUSHBUTTON      "",IDC_ZOOMOUT,77,3,14,12,BS_ICON | BS_CENTER | 
+                    BS_VCENTER | NOT WS_VISIBLE | NOT WS_TABSTOP
+    PUSHBUTTON      "Preview Area",IDC_LAYOUT_PREVIEW,6,18,244,34,BS_FLAT | 
+                    NOT WS_VISIBLE
+    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    TBS_BOTH | WS_TABSTOP,0,56,213,20
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3138,6 +3153,11 @@ BEGIN
     IDD_EDITATTR_ITRANSITION, DIALOG
     BEGIN
         BOTTOMMARGIN, 163
+    END
+
+    IDD_ANIMATE, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 82
     END
 END
 #endif    // APSTUDIO_INVOKED
