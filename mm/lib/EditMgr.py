@@ -743,5 +743,6 @@ class EditMgr:
 		pass		
 
 	def clean_adddocument(self, root):
-		pass		
-				  
+		# destroy the root only if it's not the current root
+		if root is not self.root:
+			self.toplevel.destroyRoot(root)
