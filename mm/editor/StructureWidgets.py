@@ -2628,15 +2628,17 @@ class TimelineWidget(MMWidgetDecoration):
 		line_y, tick_top, tick_bot, longtick_top, longtick_bot, midtick_top, midtick_bot, endtick_top, endtick_bot, label_top, label_bot = self.params
 		timemapper = self.__timemapper
 ##		t0, t1, t2, download, begindelay = self.get_mmwidget().GetTimes('virtual')
-##		min = timemapper.time2pixel(t0, 'left')
-##		max = timemapper.time2pixel(t2, 'right')
+##		mn = timemapper.time2pixel(t0, 'left')
+##		mx = timemapper.time2pixel(t2, 'right')
 		segments = timemapper.gettimesegments()
 		t0 = segments[0][0]
-		min = segments[0][1]
+		mn = segments[0][1]
 		t2 = segments[-1][0]
-		max = segments[-1][2]
-		displist.drawline(TEXTCOLOR, [(min, line_y), (max, line_y)])
-		length = max - min	# length of real timeline
+		mx = segments[-1][2]
+		mn = max(mn, x)
+		mx = min(mx, x+w)
+		displist.drawline(TEXTCOLOR, [(mn, line_y), (mx, line_y)])
+		length = mx - mn	# length of real timeline
 		displist.usefont(f_timescale)
 		for time, left, right in timemapper.gettimesegments(range=(t0, t2)):
 			if left != right:
@@ -2665,7 +2667,7 @@ class TimelineWidget(MMWidgetDecoration):
 				label = fmtfloat(t0)
 			else:
 				label = '%02d:%02.2d'%(int(t0)/60, int(t0)%60)
-			displist.centerstring(min, label_top, max, label_bot, label)
+			displist.centerstring(mn, label_top, mx, label_bot, label)
 			return
 		labelwidth = displist.strsizePXL('000:00 ')[0]
 		halflabelwidth = labelwidth / 2
