@@ -1623,7 +1623,7 @@ class MMSyncArc:
 
 		uid = self.dstnode.uid
 		if uidremap.has_key(uid):
-			dstnode = self.context.mapuid(uidremap[uid])
+			dstnode = self.dstnode.context.mapuid(uidremap[uid])
 		else:
 			dstnode = self.dstnode
 		srcnode = self.srcnode
