@@ -76,15 +76,17 @@ from WMEVENTS import *
 import win32mu
 import grinsRC
 
-
 class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
-	def __init__(self, wnd, w, h, units, bgcolor, hwnd, title=''):
+	def __init__(self, wnd, w, h, units, bgcolor, hwnd=0, title='', id=0):
 		self._cmdframe = wnd
+		self._peerid = id
+		self._destroywnd = 0
 		if hwnd:
 			window.Wnd.__init__(self, win32ui.CreateWindowFromHandle(hwnd))
 		else:
 			window.Wnd.__init__(self, win32ui.CreateWnd())
 			self.createOsWnd( (0,0,w,h), bgcolor, title)
+			self._destroywnd = 1
 					
 		win32window.Window.__init__(self)
 		self.create(None, (0,0,w,h), units, 0, 0, bgcolor)
@@ -97,6 +99,9 @@ class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
 		self.imgAddDocRef = wnd.imgAddDocRef
 		self.__lastMouseMoveParams = None
 		if not hwnd: self.setClientRect(w, h)
+		else: 
+			from __main__ import commodule
+			commodule.AdviceSetSize(id, w, h)
 
 	def OnCreate(self, params):
 		self.HookMessage(self.onLButtonDown, win32con.WM_LBUTTONDOWN)
@@ -120,7 +125,8 @@ class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
 
 	def closeViewport(self, viewport):
 		self.destroyDDLayer()
-		self.DestroyWindow()
+		if self._destroywnd:
+			self.DestroyWindow()
 	
 	def settitle(self,title):
 		import urllib
