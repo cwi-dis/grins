@@ -177,6 +177,7 @@ class Player(Selecter):
 			 None,
 			 ('Quit', (self.do_exit, ())),
 			 None,
+			 ('Show console', (self.show_console, ())),
 			 ('Debug', (pdb.set_trace, ())),
 			 ('Trace', (self.trace_callback, ()), 't')],
 			title = self.toplevel.filename,
@@ -249,3 +250,7 @@ class Player(Selecter):
 		else:
 			self._tracing = 1
 			trace.set_trace()
+			
+	def show_console(self):
+		import quietconsole
+		quietconsole.revert()
