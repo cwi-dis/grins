@@ -1279,6 +1279,10 @@ SOURCE=.\grins\win32\PlayerDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\grins\win32\splashbmp.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\grins\win32\TopLevelDialog.py
 # End Source File
 # Begin Source File
