@@ -24,8 +24,6 @@ __version__ = "$Id$"
 import windowinterface
 
 class ArcInfoDialog:
-	__rangelist = ['0-1 sec', '0-10 sec', '0-100 sec']
-
 	def __init__(self, title, srclist, srcinit, dstlist, dstinit, delay):
 		"""Create the ArcInfo dialog.
 
@@ -44,58 +42,26 @@ class ArcInfoDialog:
 		delay -- 0.0 <= delay <= 100.0 -- the initial value of
 			the floating point value
 		"""
+		adornments = {
+			'form_id':'arc_info',
+			'host_id':'cview_',
+			'callbacks':{
+				'Cancel':(self.cancel_callback, ()),
+				'Restore':(self.restore_callback, ()),
+				'Apply':(self.apply_callback, ()),
+				'OK':(self.ok_callback, ()),
+			},
+		}
 
-		self.__window = windowinterface.Window(title, resizable = 1,
-					deleteCallback = (self.cancel_callback, ()))
-		s = self.__window.SubWindow(top = None, left = None, right = None)
-		s1 = s.SubWindow(top = None, left = None)
-		self.__src_choice = s1.OptionMenu('From:',
-					srclist, srcinit,
-					None, top = None, left = None,
-						  right = None)
-		b1 = s1.Button('Push focus', (self.pushsrcfocus_callback, ()),
-			       top = self.__src_choice, left = None,
-			       right = None, bottom = None)
-		s2 = s.SubWindow(top = None, left = s1, right = None)
-		self.__dst_choice = s2.OptionMenu('To:',
-					dstlist, dstinit,
-					None, top = None,
-					left = None, right = None)
-		b2 = s2.Button('Push focus', (self.pushdstfocus_callback, ()),
-			       top = self.__dst_choice, left = None,
-			       right = None, bottom = None)
-		if delay > 10.0:
-			rangeinit = 2
-		elif delay > 1.0:
-			rangeinit = 1
-		else:
-			rangeinit = 0
-		range = float(10 ** rangeinit)
-		ss = self.__window.SubWindow(top = s, left = None, right = None)
-		self.__delay_slider = ss.Slider(None, 0, delay, range,
-					None,
-					top = None, left = None, bottom = None)
-		self.__range_choice = ss.OptionMenu(None,
-					self.__rangelist,
-					rangeinit, (self.__range_callback, ()),
-					top = None,
-					left = self.__delay_slider, right = None, bottom = None)
-		buttons = self.__window.ButtonRow(
-			[('Cancel', (self.cancel_callback, ())),
-			 ('Restore', (self.restore_callback, ())),
-			 ('Apply', (self.apply_callback, ())),
-			 ('OK', (self.ok_callback, ()))],
-			left = None, top = ss, right = None, bottom = None,
-			vertical = 0)
-		self.__window.show()
+		formid=adornments['form_id']
+		hostid=adornments['host_id']
 
-	def __range_callback(self):
-		i = self.__range_choice.getpos()
-		range = float(10 ** i)
-		delay = min(range, self.__delay_slider.getvalue())
-		self.__delay_slider.setvalue(0)
-		self.__delay_slider.setrange(0, range)
-		self.__delay_slider.setvalue(delay)
+		fs=windowinterface.getformserver()
+		w=fs.newformobj(formid)
+		w.do_init(title, srclist, srcinit, dstlist, dstinit, delay, adornments)
+		frame=windowinterface.getviewframe(hostid)
+		w.create(frame)
+		self.__window=w
 
 	#
 	# interface methods
@@ -105,10 +71,6 @@ class ArcInfoDialog:
 		"""Close the dialog and free resources."""
 		self.__window.close()
 		del self.__window
-		del self.__src_choice
-		del self.__dst_choice
-		del self.__delay_slider
-		del self.__range_choice
 
 	def settitle(self, title):
 		"""Set (change) the title of the window.
@@ -125,11 +87,11 @@ class ArcInfoDialog:
 		Arguments (no defaults):
 		pos -- 0 <= pos < len(srclist) -- the requested position
 		"""
-		self.__src_choice.setpos(pos)
+		self.__window.src_setpos( pos)
 
 	def src_getpos(self):
 		"""Return the current selection in the source list."""
-		return self.__src_choice.getpos()
+		return self.__window.src_getpos()
 
 	# Interface to the destination list.
 	def dst_setpos(self, pos):
@@ -138,11 +100,11 @@ class ArcInfoDialog:
 		Arguments (no defaults):
 		pos -- 0 <= pos < len(srclist) -- the requested position
 		"""
-		self.__dst_choice.setpos(pos)
+		self.__window.dst_setpos(pos)
 
 	def dst_getpos(self):
 		"""Return the current selection in the destination list."""
-		return self.__dst_choice.getpos()
+		return self.__window.dst_getpos()
 
 	# Interface to the delay value.
 	def delay_setvalue(self, delay):
@@ -152,24 +114,12 @@ class ArcInfoDialog:
 		delay -- 0.0 <= delay <= 100.0 -- the new value of the
 			delay
 		"""
-		if delay > 10.0:
-			rangeinit = 2
-		elif delay > 1.0:
-			rangeinit = 1
-		else:
-			rangeinit = 0
-		range = float(10 ** rangeinit)
-		self.__range_choice.setpos(rangeinit)
-		self.__delay_slider.setvalue(0)
-		self.__delay_slider.setrange(0, range)
-		self.__delay_slider.setvalue(delay)
+		self.__window.delay_setvalue(delay)
 
 	def delay_getvalue(self):
 		"""Return the current value of the delay."""
 		# return delay with an accuracy of 2 digits
-		d = self.__delay_slider.getvalue()
-		p = 100.0 / self.__delay_slider.getrange()[1]
-		return int(d*p + 0.5) / p
+		return self.__window.delay_getvalue()
 
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from

@@ -53,6 +53,7 @@ class ChannelViewDialog(ViewDialog):
 				None,
 				('Select sync arc', SYNCARCS),
 				]),
+			('Layouts', LAYOUTS),
 			('View', [
 				(('Show unused channels',
 				  'Hide unused channels'),
@@ -89,27 +90,20 @@ class ChannelViewDialog(ViewDialog):
 		ViewDialog.__init__(self, 'cview_')
 
 	def show(self, title):
-		if self.is_showing():
-			return
-
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
-
-		# as it is now returns the frame instead of the view
-		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, 
-			adornments = self.adornments, canvassize = (w, h),context='view')
+		self.window=windowinterface.newview(x, y, w, h, title, 
+			adornments = self.adornments,canvassize = (w, h),
+			context='cview_')
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
 		self.window.set_toggle(TOGGLE_UNUSED, self.showall)
 		self.window.set_toggle(TOGGLE_ARCS, self.showarcs)
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
-		
 
 	def hide(self, *rest):
-		if not self.window:
-			return
 		self.save_geometry()
-		self.window.close()	
+		self.window.close()
 		self.window = None
 		self.displist = self.new_displist = None
 
@@ -119,6 +113,7 @@ class ChannelViewDialog(ViewDialog):
 		self.window.set_dynamiclist(SIBLINGS, self.baseobject.siblings)
 		self.window.set_dynamiclist(DESCENDANTS, self.baseobject.descendants)
 		self.window.set_dynamiclist(SYNCARCS, (self.focus and self.focus.arcmenu) or [])
+		self.window.set_dynamiclist(LAYOUTS, self.layouts)
 
 	def settoggle(self, command, onoff):
 		self.window.set_toggle(command, onoff)

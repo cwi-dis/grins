@@ -8,22 +8,25 @@ class LayoutViewDialog:
 		self.__window=None
 
 	def createviewobj(self):
-		w=windowinterface.newviewobj('lview_')
-		self.__window = w
+		f=windowinterface.getmainwnd()
+		w=f.newviewobj('lview_')
 
-		self.__layoutlist=w._layoutlist
+		self.__layoutlist=w['LayoutList']
 		self.__layoutlist.setcb((self.__layoutcb, ()))
 
-		self.__channellist=w._channellist
+		self.__channellist=w['ChannelList']
 		self.__channellist.setcb((self.__channelcb, ()))
 
-		self.__otherlist=w._otherlist
+		self.__otherlist=w['OtherList']
 		self.__otherlist.setcb((self.__othercb, ()))
+
+		self.__window = w
 
 	def destroy(self):
 		if self.__window is None:
-			return 
-		self.__window.close()
+			return
+		if hasattr(self.__window,'_obj_') and self.__window._obj_:
+			self.__window.close()
 		self.__window = None
 		del self.__layoutlist
 		del self.__channellist
@@ -31,7 +34,7 @@ class LayoutViewDialog:
 
 	def show(self):
 		self.assertwndcreated()	
-		windowinterface.showview(self.__window,'lview_')
+		self.__window.show()
 
 	def is_showing(self):
 		if self.__window is None:
@@ -40,13 +43,18 @@ class LayoutViewDialog:
 
 	def hide(self):
 		if self.__window is not None:
-			self.__window.hide()
+			#self.__window.hide()
+			self.__window.close()
+			self.__window = None
+			windowinterface.getmainwnd().set_toggle(LAYOUTVIEW,0)
 
 	def assertwndcreated(self):
 		if self.__window is None or not hasattr(self.__window,'GetSafeHwnd'):
 			self.createviewobj()
 		if self.__window.GetSafeHwnd()==0:
-			windowinterface.createview(self.__window)	
+			f=windowinterface.getmainwnd()
+			self.__window.create(f)
+			windowinterface.getmainwnd().set_toggle(LAYOUTVIEW,1)
 
 	def setlayoutlist(self, layouts, cur):
 		# the core should be corected but 
@@ -104,42 +112,32 @@ class LayoutViewDialog:
 		self.fill()
 
 	def setwaiting(self):
-		windowinterface.setcursor('watch')
-		#self.__window.setcursor('watch')
+		windowinterface.setwaiting()
 
 	def setready(self):
-		windowinterface.setcursor('')
-		#self.__window.setcursor('')
+		windowinterface.setready()
 
 	def setcommandlist(self, commandlist):
 		self.__window.set_commandlist(commandlist)
 
-	def asklayoutname_X(self, default):
-		windowinterface.InputDialog('Name for layout',
+	def asklayoutname(self, default):
+		w=windowinterface.LayoutNameDlg('Name for layout',
 					    default,
 					    self.newlayout_callback,
 					    cancelCallback = (self.newlayout_callback, ()),
 					    parent = self.__window)
-	def asklayoutname(self, default):
-		w=windowinterface.LayoutNameDlg()
 		w.show()
 
-	def askchannelnameandtype_X(self, default, types):
-		w = windowinterface.Window('newchanneldialog', grab = 1,
-					   parent = self.__window)
-		self.__chanwin = w
-		t = w.TextInput('Name for channel', default, None, None, left = None, right = None, top = None)
-		self.__chantext = t
-		o = w.OptionMenu('Choose type', types, 0, None, top = t, left = None, right = None)
-		self.__chantype = o
-		b = w.ButtonRow([('Cancel', (self.__okchannel, (0,))),
-				 ('OK', (self.__okchannel, (1,)))],
-				vertical = 0,
-				top = o, left = None, right = None, bottom = None)
-		w.show()
 
 	def askchannelnameandtype(self, default, types):
-		w=windowinterface.NewChannelDlg()
+		w=windowinterface.NewChannelDlg('newchanneldialog', grab = 1,
+					   parent = self.__window)
+		self.__chanwin = w
+		self.__chantext=w._chantext
+		self.__chantype=w._chantype
+		self.__chantype._optionlist=types[:]
+		w._cbd_ok=(self.__okchannel, (1,))
+		w._cbd_cancel=(self.__okchannel, (0,))
 		w.show()
 
 	def __okchannel(self, ok = 0):
@@ -148,12 +146,15 @@ class LayoutViewDialog:
 			type = self.__chantype.getvalue()
 		else:
 			name = type = None
-		self.__chanwin.close()
+		self.__chanwin.close() # <- end of grab mode
 		del self.__chantext
 		del self.__chantype
 		del self.__chanwin
+
 		# We can't call this directly since we're still in
 		# grab mode.  We must first return from this callback
 		# before we're out of that mode, so we must schedule a
 		# callback in the very near future.
-		windowinterface.settimer(0.00001, (self.newchannel_callback, (name, type)))
+		#windowinterface.settimer(0.00001, (self.newchannel_callback, (name, type)))
+		print 'calling newchannel_callback'
+		apply(apply,(self.newchannel_callback, (name, type)))

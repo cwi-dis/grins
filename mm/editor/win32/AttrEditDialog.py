@@ -37,49 +37,34 @@ class AttrEditorDialog:
 		attriblist -- list of instances of subclasses of
 			AttrEditorDialogField
 		"""
+		formid='attr_edit'
 
-		w = windowinterface.Window(title, resizable = 1,
-				deleteCallback = (self.cancel_callback, ()))
-		self.__window = w
-		buttons = w.ButtonRow(
-			[('Cancel', (self.cancel_callback, ())),
-			 ('Restore', (self.restore_callback, ())),
-			 ('Apply', (self.apply_callback, ())),
-			 ('OK', (self.ok_callback, ())),
-			 ],
-			left = None, right = None, bottom = None, vertical = 0)
-		sep = w.Separator(left = None, right = None, bottom = buttons)
-		form = w.SubWindow(left = None, right = None, top = None,
-				   bottom = sep)
-		height = 1.0 / len(attriblist)
-		helpb = rstb = wdg = None # "upstairs neighbors"
-		for i in range(len(attriblist)):
-			a = attriblist[i]
-			a.__tid = None
-			a.__help_popup = None
-			bottom = (i + 1) *  height
-			helpb = form.Label(a.getlabel(),
-					   left = None, top = helpb,
-					   right = 0.3, bottom = bottom,
-					   tooltip = (a.gethelptext, ()))
-			rstb = form.Button('Reset',
-					   (a.reset_callback, ()),
-					   right = None, top = rstb,
-					   bottom = bottom,
-					   tooltip = 'Reset to current value')
-			wdg = a._createwidget(self, form,
-					      left = helpb, right = rstb,
-					      top = wdg, bottom = bottom)
-		w.show()
+		fs=windowinterface.getformserver()
+		w=fs.newformobj(formid)
+		w._title=title
+		w._attriblist=attriblist
+		w._cbdict={
+			'Cancel':(self.cancel_callback, ()),
+			'Restore':(self.restore_callback, ()),
+			'Apply':(self.apply_callback, ()),
+			'OK':(self.ok_callback, ()),
+			}
+		for a in attriblist:
+			a.attach_ui(w)
+		self.__window=w
+		fs.showform(w,formid)
+		
 
 	def close(self):
 		"""Close the dialog and free resources."""
-		self.__window.close()
-		del self.__window
+		if self.__window:
+			self.__window.close()
+		self.__window=None
 
 	def pop(self):
 		"""Pop the dialog window to the foreground."""
-		self.__window.pop()
+		if self.__window:
+			self.__window.pop()
 
 	def settitle(self, title):
 		"""Set (change) the title of the window.
@@ -87,7 +72,8 @@ class AttrEditorDialog:
 		Arguments (no defaults):
 		title -- string to be displayed as new window title
 		"""
-		self.__window.settitle(title)
+		if self.__window:
+			self.__window.settitle(title)
 
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
@@ -105,73 +91,27 @@ class AttrEditorDialog:
 		pass
 
 class AttrEditorDialogField:
-	def _createwidget(self, parent, form, left, right, top, bottom):
-		"""Create the widgets for this attribute.  (internal method)
+	def attach_ui(self, form):
+		"""Set context for this attribute.  (internal method)
 
 		Arguments (no defaults):
-		parent -- instance of AttrEditorDialog
-		form -- X_window widget of which we create a child widget
-		left, right, bottom, top -- neighbors
+		form -- instance of AttrEditorForm
 		"""
-		t = self.gettype()
-		self.__type = t
-		if t == 'option':
-			# attribute value is one of a list of choices (option menu)
-			list = self.getoptions()
-			val = self.getcurrent()
-			if val not in list:
-				val = list[0]
-			self.__list = list
-			self.__type = 'option-menu'
-			w = form.OptionMenu(None, list,
-					    list.index(val), None,
-					    top = top, bottom = bottom,
-					    left = left, right = right)
-		elif t == 'file':
-			w = form.SubWindow(top = top, bottom = bottom,
-					   left = left, right = right)
-			brwsr = w.Button('Browser...',
-					 (self.browser_callback, ()),
-					 top = None, bottom = None,
-					 right = None,
-					 tooltip = 'Start file browser')
-			txt = w.TextInput(None, self.getcurrent(), None, None,
-					  top = None, bottom = None,
-					  left = None, right = brwsr)
-			self.__text = txt
-		else:
-			w = form.TextInput(None, self.getcurrent(), None, None,
-					   top = top, bottom = bottom,
-					   left = left, right = right)
-		self.__widget = w
-		return w
+		if hasattr(self,'__form'):
+			raise error, 'cmifcore-win32 name conflict'
+		self.__form=form
 
 	def close(self):
 		"""Close the instance and free all resources."""
-		t = self.__type
-		if t == 'option-button':
-			del self.__list
-			del self.__label
-		elif t == 'option-menu':
-			del self.__list
-		elif t == 'file':
-			del self.__text
-		del self.__widget
-		del self.__type
+		# nothing to free
+		pass
 
 	def getvalue(self):
 		"""Return the current value of the attribute.
 
 		The return value is a string giving the current value.
 		"""
-		t = self.__type
-		if t == 'option-button':
-			return self.__label
-		if t == 'option-menu':
-			return self.__widget.getvalue()
-		if t == 'file':
-			return self.__text.gettext()
-		return self.__widget.gettext()
+		return self.__form.getvalue(self)
 
 	def setvalue(self, value):
 		"""Set the current value of the attribute.
@@ -179,36 +119,12 @@ class AttrEditorDialogField:
 		Arguments (no defaults):
 		value -- string giving the new value
 		"""
-		t = self.__type
-		if t == 'option-button':
-			if not value:
-				value = self.__list[0]
-			self.__widget.setlabel(value)
-			self.__label = value
-		elif t == 'option-menu':
-			if not value:
-				value = self.__list[0]
-			self.__widget.setvalue(value)
-		elif t == 'file':
-			self.__text.settext(value)
-		else:
-			self.__widget.settext(value)
+		self.__form.setvalue(self,value)
 
 	def recalcoptions(self):
 		"""Recalculate the list of options and set the value."""
-		if self.__type[:6] == 'option':
-			val = self.getcurrent()
-			list = self.getoptions()
-			if self.__type == 'option-button':
-				self.__widget.setlabel(val)
-				self.__label = val
-			else:
-				if list != self.__list:
-					self.__widget.setoptions(
-						list, list.index(val))
-				else:
-					self.__widget.setvalue(val)
-			self.__list = list
+		self.__form.setoptions(self,self.getoptions(), self.getcurrent())
+
 
 	# Methods to be overridden by the sub class.
 	def gettype(self):
@@ -249,14 +165,3 @@ class AttrEditorDialogField:
 		"""Callback called when help is requested."""
 		pass
 
-class _MySelectionDialog(windowinterface.SelectionDialog):
-	def __init__(self, label, current, options, callback):
-		self.OkCallback = callback
-		windowinterface.SelectionDialog.__init__(
-			self, 'Choose from', label, options, current)
-
-	def OkCallback(self, value):
-		pass
-
-	def NomatchCallback(self, value):
-		return '%s is not a valid choice' % value
