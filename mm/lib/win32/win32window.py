@@ -802,7 +802,7 @@ class SubWindow(Window):
 	#
 	# Foreign renderers support
 	#
-	def CreateOSWindow(self, html=0):
+	def CreateOSWindow(self, rect=None, html=0):
 		if self._oswnd:
 			return self._oswnd
 		from pywin.mfc import window
@@ -810,6 +810,9 @@ class SubWindow(Window):
 		Sdk=win32ui.GetWin32Sdk()
 
 		x, y, w, h = self.getwindowpos()
+		if rect:
+			xp, yp, wp, hp = rect
+			x, y, w, h = x+xp, y+yp, wp, hp
 		if html: obj = win32ui.CreateHtmlWnd()
 		else: obj = win32ui.CreateWnd()
 		wnd = window.Wnd(obj)
