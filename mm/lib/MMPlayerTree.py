@@ -264,16 +264,17 @@ def GenAllPrearms(node, prearmlists):
 	for child in node.wtd_children:
 		GenAllPrearms(child, prearmlists)
 
+# this gets called very often so had better be as fast as possible
 def mapuid(context, uid):
 	try:
-		return context.mapuid(uid)
-	except NoSuchUIDError:
+		return context.uidmap[uid] # we know about the internals...
+	except KeyError:
 		return context.newnodeuid('xxx', uid)
 
 def newnodeuid(context, type, uid):
 	try:
-		node = context.mapuid(uid)
-	except NoSuchUIDError:
+		node = context.uidmap[uid] # we also know about the internals
+	except KeyError:
 		return context.newnodeuid(type, uid)
 	else:
 		node.type = type
