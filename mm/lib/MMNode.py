@@ -1523,6 +1523,15 @@ class MMNode:
 		
 		return subRegGeom, mediaGeom
 
+	def getPxGeom(self):
+		if self._subRegCssId == None:
+			return None
+		self.__linkCssId()
+		cssResolver = self.context.cssResolver
+		subRegGeom = cssResolver.getPxGeom(self._subRegCssId)
+		self.__unlinkCssId()
+		return subRegGeom
+
 	# this method return the media positioning (subregiongeom+mediageom) in pixel values
 	# All values are relative to the viewport.
 	# it should be use only in some rare cases (HTML+TIME export), ...
