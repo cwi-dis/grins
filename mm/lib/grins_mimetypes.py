@@ -9,6 +9,7 @@ mimetypes = {
 	'.cmif': 'application/x-grins-cmif',
 	'.grins': 'application/x-grins-project',
 	'.xgrins': 'application/x-grins-binary-project',
+	'.gskin': 'text/x-grins-skin',
 
 	'.ra': 'audio/vnd.rn-realaudio',
 	'.ram': 'audio/x-pn-realaudio',
@@ -38,4 +39,5 @@ descriptions = {
 	'application/x-grins-project': 'GRiNS Project files',
 	'application/x-grins-binary-project': 'GRiNS Binary Project files',
 	'image/vnd.rn-realpix': 'RealPix files',
+	'text/x-grins-skin': 'GRiNS Skin Description files',
 }
