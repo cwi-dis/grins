@@ -170,7 +170,7 @@ class URLopener:
 		result = filename, headers
 		if self.tempcache is not None:
 			self.tempcache[url] = result
-		tfp = open(filename, 'w')
+		tfp = open(filename, 'wb')
 		bs = 1024*8
 		block = fp.read(bs)
 		while block:
