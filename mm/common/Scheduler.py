@@ -556,11 +556,15 @@ class SchedulerContext:
 ##			self.sched_arcs(node, 'end', timestamp=timestamp)
 			self.parent.event(self, (SR.SCHED_DONE, node), timestamp)
 
-	def gototime(self, node, gototime, timestamp):
+	def gototime(self, node, gototime, timestamp, path = None):
 		# XXX trigger syncarcs that should go off after gototime?
 		if debugevents: print 'gototime',`node`,gototime,timestamp
 		# timestamp is "current" time
 		# gototime is time where we want to start
+		if not path:
+			path = None
+		elif node is path[0]:
+			del path[0]
 		for start, end in node.time_list:
 			if start > gototime:
 				# no more valid intervals
@@ -571,20 +575,47 @@ class SchedulerContext:
 					if node.GetSyncBehavior() == 'independent':
 						# leave this guy alone
 						return
-					if node.type in interiortypes:
+					if node.type in ('par', 'excl'):
 						# interior node that should be playing
 						# is already playing.  Recurse
 						for c in node.GetSchedChildren():
-							self.gototime(c, gototime, timestamp)
+							if path and c is path[0]:
+								self.gototime(c, gototime, timestamp, path)
+							else:
+								self.gototime(c, gototime, timestamp)
+						if node.type == 'par' or not path:
+							return
+					if node.type in ('seq', 'excl'):
+						if path:
+							if path[0] in node.GetSchedChildren():
+								self.gototime(path[0], gototime, timestamp, path)
+								return
+							raise error, 'internal error'
+						for c in node.GetSchedChildren():
+							for s, e in c.time_list:
+								if s > gototime:
+									break
+								if e is None or e > gototime:
+									self.gototime(c, gototime, timestamp)
+									return
+						# XXX no children that want to start?
 						return
 				# start interior node not yet playing or
 				# start any leaf node
 				self.trigger(None, node, start)
 				self.sched_arcs(node, 'begin', timestamp = start)
 				return
-		# no valid intervals, so node should not play
 		if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
+			# no valid intervals, so node should not play
 			self.do_terminate(node, timestamp)
+		elif node.playing == MMStates.IDLE:
+			# no intervals yet, check whether we should play
+			resolved = node.isresolved()
+			if path is not None and resolved is None:
+				resolved = gototime
+			if resolved is not None:
+				self.trigger(None, node, resolved)
+				self.sched_arcs(node, 'begin', timestamp = resolved)
 		return
 
 	def do_terminate(self, node, timestamp):
@@ -636,6 +667,15 @@ class SchedulerContext:
 				srlist = srdict[e][1]
 				if ev in srlist:
 					srlist.remove(ev)
+		for qid in self.parent.queue[:]:
+			time, priority, action, argument = qid
+			if action != self.trigger:
+				continue
+			arc = argument[0]
+			if arc.srcnode is node and arc.event == 'end':
+				if debugevents: print 'sched_arcs: cancel',`arc`
+				self.parent.cancel(qid)
+				arc.qid = None
 
 	def freeze_play(self, node):
 		if debugevents: print 'freeze_play',`node`

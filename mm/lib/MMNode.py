@@ -1027,11 +1027,16 @@ class MMNode:
 		self.scheduled_children = 0
 		self.arcs = []
 		self.durarcs = []
+		self.time_list = []
 
 	def startplay(self, sctx, timestamp):
 		self.playing = MMStates.PLAYING
 		self.sctx = sctx
-		self.time_list.append((timestamp, None))
+		if self.fullduration is not None:
+			endtime = timestamp+self.fullduration
+		else:
+			endtime = None
+		self.time_list.append((timestamp, endtime))
 
 	def stopplay(self, timestamp):
 		self.playing = MMStates.PLAYED
