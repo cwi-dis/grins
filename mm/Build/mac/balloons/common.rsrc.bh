@@ -1,0 +1,36 @@
+DIALOG 512 About dialog
+1.1 Press the mouse here to make the about box go away
+2.1 Press the mouse here to make the about box go away
+END-DIALOG
+DIALOG 521 Message dialog
+1.1 Press OK to make the message go away
+END-DIALOG
+DIALOG 524 InputDialog
+1.1 Press here to continue with the input provided above
+2.1 Press here to cancel the whole current operation
+3.1 Enter the requested input here
+END-DIALOG
+DIALOG 525 InputURLDialog
+1.1 Press here to open the URL provided in the input field
+2.1 Press here to cancel the Open operation
+3.1 Enter a URL here
+4.1 Press here to select a local file, which is filled into the URL field
+END-DIALOG
+DIALOG 522 Question dialog
+1.1 Press this button for yes
+3.1 Press this button for no
+END-DIALOG
+DIALOG 528 Settings
+1.2 ¥stt¥ Internet connection speed (bps)
+2.2 ¥stt¥ Preferred language (2-char abbrev)
+3.1 Turn this item on if you would rather have closed-captions than overdub, in presentations which have both
+3.3 Turn this item off if you would rather have overdub than closed-captions, in presentations which have both
+4.1 Turn this item on if you would like to see optional closed-caption subtitles, if the presentation has them
+4.3 Turn this item off if you don't need optional closed-caption subtitles
+5.1 The approximate speed of your internet connection. This is used by presentations to decided whether or not to show high-bandwidth video, etc.
+6.1 The two-letter code of your preferred language: en, de, fr, etc. This is used to select items in multi-lingual presentations
+7.1 Press here to close the dialog and ignore your changes
+8.1 Press here to restore all items to their factory settings and close the dialog
+9.1 Press here to save your preference changes and close the dialog
+END-DIALOG
+END
