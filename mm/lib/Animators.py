@@ -343,7 +343,7 @@ class Animator:
 		if t>=0 and t<=ad:
 			tp = 0.5*m*t2/ad
 		elif t>=a*d and t<=(d-bd):
-			 tp = 0.5*m*ad + (t-ad)*m
+			tp = 0.5*m*ad + (t-ad)*m
 		elif t>=(d-bd) and t<=d:
 			tp = d - 0.5*m*dt2/bd
 		if tp<0 or tp>d:
@@ -1295,7 +1295,7 @@ class AnimateElementParser:
 		return 0
 
 	def __canBeAdditive(self):
-		 return self.__attrtype == 'int' or self.__attrtype == 'float'
+		return self.__attrtype == 'int' or self.__attrtype == 'float'
 
 	# animation (value) types
 	VALUES_ERROR, VALUES, FROM_TO, FROM_BY, NONE_TO, NONE_BY = range(6)
