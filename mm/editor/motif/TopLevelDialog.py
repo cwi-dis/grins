@@ -69,10 +69,7 @@ class TopLevelDialog:
 		prompt = 'Document %s:\n' % self.filename + \
 			 "You haven't saved your changes yet;\n" \
 			 'do you want to save them before closing?'
-		b1 = 'Save'
-		b2 = "Don't save"
-		b3 = 'Cancel'
-		return windowinterface.multchoice(prompt, [b1, b2, b3], -1)
+		return windowinterface.GetYesNoCancel(prompt)
 
 	def setcommands(self, commandlist):
 		self.window.set_commandlist(commandlist)
