@@ -2200,6 +2200,8 @@ class DialogWindow(_Window):
 		if not self._parent:
 			return
 		self.hide()
+		for w in self._widgetdict.values():
+			w.close()
 		del self._widgetdict
 		del self._item_to_cmd
 		del self._itemhandler
@@ -2271,7 +2273,12 @@ class DialogWindow(_Window):
 		widget = mw_widgets._ImageWidget(self._wid, item, image)
 		self.addwidget(item, widget)
 		return widget
-
+		
+	def SelectWidget(self, item, items=[], default=None, callback=None):
+		widget = mw_widgets._SelectWidget(self._wid, item, items, default, callback)
+		self.addwidget(item, widget)
+		return widget
+	
 	def set_commandlist(self, cmdlist):
 		# First build the cmd->item mapping from the item->cmd mapping
 		cmd_to_item = {}

@@ -48,7 +48,7 @@ class _Reader:
 			self.audiotrack = self.audiomedia = None
 			self.audiodescr = {}
 		else:
-			handle = Res.Resource('')
+			handle = Res.Handle('')
 			self.audiomedia.GetMediaSampleDescription(1, handle)
 			print len(handle.data)
 			self.audiodescr = MediaDescr.SoundDescription.decode(handle.data)
@@ -62,7 +62,7 @@ class _Reader:
 		except Qt.Error:
 			self.videotrack = self.videomedia = self.videotimescale = None
 		else:
-			handle = Res.Resource('')
+			handle = Res.Handle('')
 			self.videomedia.GetMediaSampleDescription(1, handle)
 			print 'video', len(handle.data)
 			self.videodescr = MediaDescr.ImageDescription.decode(handle.data)

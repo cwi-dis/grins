@@ -452,7 +452,7 @@ class _DisplayList:
 		self._fgcolor = color
 
 
-	def newbutton(self, coordinates, z = 0, times = None):
+	def newbutton(self, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		return _Button(self, coordinates)
@@ -653,8 +653,7 @@ class _DisplayList:
 ##		self._update_bbox(nsx, nsy, ndx, ndy)
 		
 	def _polyhandle(self, pointlist):
-		"""Return poligon structure"""
-		# XXXX Note: This leaks handles like anything!!
+		"""Return polygon structure"""
 		xscrolloffset, yscrolloffset = self._window._scrolloffset()
 
 		# Find the bounding box
@@ -672,7 +671,7 @@ class _DisplayList:
 ##		self._update_bbox(minx, miny, maxx, maxy)
 		for x, y in pointlist:
 			data = data + struct.pack("hh", y+yscrolloffset, x+xscrolloffset)
-		return Res.Resource(data)
+		return Res.Handle(data)
 
 	def get3dbordersize(self):
 		return self._window._pxl2rel((0,0,SIZE_3DBORDER,SIZE_3DBORDER))[2:4]

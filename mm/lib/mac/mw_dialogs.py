@@ -537,7 +537,7 @@ class NewChannelDialog(DialogWindow):
 		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
 		Dlg.SetDialogItemText(h, _string2dialog(default))
 		self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
-		self.type_select=mw_widgets.SelectWidget(self._wid, ITEM_NEWCHANNEL_TYPE, types)
+		self.type_select=self.SelectWidget(ITEM_NEWCHANNEL_TYPE, types)
 		self._cb = cb
 		self._cancel = cancelCallback
 		
@@ -583,7 +583,7 @@ class TemplateDialog(DialogWindow):
 		DialogWindow.__init__(self, self.DIALOG_ID, title="New Document",
 				default=ITEM_TEMPLATE_OK, cancel=ITEM_TEMPLATE_CANCEL)
 
-		self.type_select=mw_widgets.SelectWidget(self._wid, ITEM_TEMPLATE_POPUP, names)
+		self.type_select=self.SelectWidget(ITEM_TEMPLATE_POPUP, names)
 		self.snapshot = self.ImageWidget(ITEM_TEMPLATE_IMAGE)
 		self._cb = cb
 		self._cancel = cancelCallback
@@ -599,6 +599,7 @@ class TemplateDialog(DialogWindow):
 		self.grabdone()
 		self.type_select.delete()
 		del self.type_select
+		del self.snapshot
 		DialogWindow.close(self)
 		
 	def do_itemhit(self, item, event):
