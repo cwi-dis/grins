@@ -458,7 +458,8 @@ class _DisplayList:
 		return _Button(self, coordinates)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
-				    center = 1, coordinates = None):
+				    center = 1, coordinates = None,
+				    clip = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		win = self._window
@@ -499,7 +500,7 @@ class _DisplayList:
 		x2, dummy = w._convert_coordinates((x2, y))
 		self._list.append('3dhline', color1, color2, x1, x2, y)
 
-	def drawbox(self, coordinates):
+	def drawbox(self, coordinates, clip = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._window._convert_coordinates(coordinates)
