@@ -345,6 +345,7 @@ class SMIL:
 			'regPoint':None,
 			'regAlign':None,
 
+			'backgroundColor':None,
 			__layout:None,
 			GRiNSns+' ' 'bgcolor':None,
 			GRiNSns+' ' 'comment':None,
@@ -413,6 +414,7 @@ class SMIL:
 			  'regPoint':None,
 			  'regAlign':None,
 
+		          'backgroundColor':None,
 			  __layout:None,
 			  GRiNSns+' ' 'bgcolor':None,
 			  GRiNSns+' ' 'comment':None,
