@@ -442,6 +442,7 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 			ps=self._inverse_coordinates(box,self._canvas)
 			return float(int(100.0*ps[0]+0.5)/100.0),float(int(100.0*ps[1]+0.5)/100.0),float(int(100.0*ps[2]+0.5)/100.0),float(int(100.0*ps[3]+0.5)/100.0)
 		elif units == UNIT_MM:
+			toplevel=__main__.toplevel
 			x, y, w, h = self._canvas
 			return float(x) / toplevel._pixel_per_mm_x, \
 			       float(y) / toplevel._pixel_per_mm_y, \
