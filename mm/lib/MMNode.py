@@ -2277,6 +2277,9 @@ class MMNode(MMTreeElement):
 	def __init__(self, type, context, uid):
 		# ASSERT type in alltypes
 		MMTreeElement.__init__(self, context, uid)
+		if type in ('ext', 'imm'):
+			# default for media objects is reversed
+			self.collapsed = 1
 		self.type = type	# see MMTypes.py
 		self.attrdict = {}	# Attributes of this MMNode
 		self.d_attrdict = {}	# Dynamic (changing) attrs of this MMNode
