@@ -357,8 +357,17 @@ class _CmifStructView(_CmifView):
 
 	# Response to left button double click
 	def onLButtonDblClk(self, params):
-		import usercmdui
-		self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.INFO_UI.id)
+		import usercmd, usercmdui
+		#self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.INFO_UI.id)
+		callAttr=0
+		for cmd in self._commandlist:
+			if cmd.__class__==usercmd.INFO:
+				self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.INFO_UI.id)
+				return
+			if cmd.__class__==usercmd.ATTRIBUTES:
+				callAttr=1
+		if callAttr:
+			self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.ATTRIBUTES_UI.id)
 
 	# Response to mouse move
 	def onMouseMove(self, params):
