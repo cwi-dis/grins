@@ -3934,7 +3934,7 @@ class FileGroup(AttrGroup):
 		if not self.canpreview():
 			cd[a]=FileCtrl(wnd,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3))
 
-		elif self._mtypesig=='image' or self._mtypesig=='html' or self._mtypesig=='text':
+		elif self._mtypesig in ('image', 'svg', 'html', 'text'):
 			# static media
 			cd[a]=FileCtrl(wnd,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3))
 
@@ -3952,7 +3952,7 @@ class MediaGroup(FileGroup):
 
 	def getpageresid(self):
 		if self.canpreview():
-			if self._mtypesig=='image' or self._mtypesig=='html' or self._mtypesig=='text': 
+			if self._mtypesig in ('image', 'svg', 'html', 'text'): 
 				# static media
 				return grinsRC.IDD_EDITATTR_PF2
 			else: 
