@@ -12,7 +12,7 @@ debug = 0
 
 # abstraction of animation target 
 # represents MMNode and MMRegion targets 
-# makes explicit what is needed by AnimationData
+# makes explicit what is needed by AnimationTarget
 class AnimationTarget:
 	def __init__(self, node):
 		animparent = None
@@ -82,13 +82,6 @@ class AnimationTarget:
 				if anim is not None and anim not in children: 
 					children.append(anim)
 			self.__getSelfAnimations(node, children)
-
-
-# AnimationData arguments:
-# root: document root (MMNode)
-# target: animation target element (MMNode or MMRegion)
-# animparent: animations will be read and written under this node (MMNode)
-# animparent can be target
 
 class AnimationDefaultWrapper:
 	def createAnimators(self, animnode):

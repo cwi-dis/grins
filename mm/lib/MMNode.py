@@ -18,7 +18,6 @@ import string, os
 import MMStates
 ##import Bandwidth
 import Duration
-import AnimationData
 import re
 import parseutil
 
