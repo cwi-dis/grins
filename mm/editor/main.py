@@ -35,7 +35,6 @@ def usage(msg):
 class Main:
 	def __init__(self, opts, files):
 		import TopLevel, windowinterface
-		self.splash = None
 		self.tops = []
 		self._mm_callbacks = {}
 		try:
@@ -78,9 +77,6 @@ class Main:
 
 		for top in self.tops:
 			top.setready()
-
-		if self.splash is not None:
-			self.splash.unsplash()
 
 	def do_exit(self, *args):
 		for top in self.tops:
@@ -190,7 +186,9 @@ def main():
 
 	m = Main(opts, files)
 
-	m.splash = splash
+	if splash is not None:
+		splash.unsplash()
+
 
 	try:
 		try:

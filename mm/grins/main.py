@@ -26,7 +26,6 @@ def usage(msg):
 class Main:
 	def __init__(self, opts, files):
 		import TopLevel, windowinterface
-		self.splash = None
 		self._mm_callbacks = {}
 		try:
 			import mm, posix
@@ -47,9 +46,6 @@ class Main:
 				top.player.playfromanchor(top.root, arg)
 			else:
 				top.player.playsubtree(top.root)
-
-		if self.splash is not None:
-			self.splash.unsplash()
 
 	def run(self):
 		import windowinterface
@@ -139,7 +135,8 @@ def main():
 
 	m = Main(opts, files)
 
-	m.splash = splash
+	if splash is not None:
+		splash.unsplash()
 
 	try:
 		try:
