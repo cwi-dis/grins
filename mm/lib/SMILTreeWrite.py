@@ -261,7 +261,7 @@ class SMILWriter:
 		self.ids_used = {}
 
 		self.ch2name = {}
-		self.bases_used = {}
+		self.top_levels = []
 		self.calcchnames1(node)
 
 		self.uid2name = {}
@@ -275,7 +275,7 @@ class SMILWriter:
 		self.aid2name = {}
 		self.calcanames(node)
 
-		if len(self.bases_used) > 1:
+		if len(self.top_levels) > 1:
 			print '** Document uses multiple toplevel channels'
 			self.uses_cmif_extension = 1
 		
@@ -354,9 +354,8 @@ class SMILWriter:
 			if not self.ids_used.has_key(name):
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
-			if ch.has_key('base_window'):
-				base = ch['base_window']
-				self.bases_used[base] = 1
+			if not ch.has_key('base_window'):
+				self.top_levels.append(ch)
 			# also check if we need to use the CMIF extension
 			if not self.uses_cmif_extension and \
 			   not smil_mediatype.has_key(ch['type']) and \
@@ -378,10 +377,6 @@ class SMILWriter:
 				name = nn
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
-			# remove base windows that aren't top-level
-			if self.bases_used.has_key(ch.name) and \
-			   ch.has_key('base_window'):
-				del self.bases_used[ch.name]
 
 	def calcanames(self, node):
 		"""Calculate unique names for anchors"""
@@ -410,8 +405,42 @@ class SMILWriter:
 		self.fp.push()
 		channels = self.root.GetContext().channels
 		self.regions_defined = {}
+		if len(self.top_levels) == 1:
+			attrlist = ['<root-layout']
+			ch = self.top_levels[0]
+			if ch['type'] == 'layout':
+				attrlist.append('id=%s' % nameencode(self.ch2name[ch]))
+			if ch.has_key('transparent') and \
+			   ch['transparent'] == 1:
+				# background-color="transparent" is default
+				pass
+			elif ch.has_key('bgcolor'):
+				attrlist.append('background-color="#%02x%02x%02x"' % ch['bgcolor'])
+			if ch.has_key('winsize'):
+				units = ch.get('units', 0)
+				w, h = ch['winsize']
+				if units == 0:
+					# convert mm to pixels
+					# (assuming 100 dpi)
+					w = int(w / 25.4 * 100.0 + .5)
+					h = int(h / 25.4 * 100.0 + .5)
+					units = 2
+				if units == 1:
+					attrlist.append('width="%d%%"' % int(w * 100 + .5))
+					attrlist.append('height="%d%%"' % int(h * 100 + .5))
+				else:
+					attrlist.append('width="%d"' % int(w + .5))
+					attrlist.append('height="%d"' % int(h + .5))
+			attrs = string.join(attrlist, ' ')
+			attrs = attrs + '/>\n'
+			self.fp.write(attrs)
 		for ch in channels:
 			dummy = mediatype(ch['type'], error=1)
+			if len(self.top_levels) == 1 and \
+			   ch['type'] == 'layout' and \
+			   not ch.has_key('base_window'):
+				# top-level layout channel has been handled
+				continue
 			attrlist = ['<region id=%s' %
 				    nameencode(self.ch2name[ch])]
 			# if toplevel window, define a region elt, but
@@ -432,10 +461,7 @@ class SMILWriter:
 								(name, value))
 			if ch.has_key('z') and ch['z'] > 0:
 				attrlist.append('z-index="%d"' % ch['z'])
-			if ch.has_key('scale'):
-				scale = ch['scale']
-			else:
-				scale = 0
+			scale = ch.get('scale', 0)
 			if scale == 0:
 				fit = 'meet'
 			elif scale == -1:
@@ -445,7 +471,7 @@ class SMILWriter:
 			else:
 				fit = None
 				print '** Channel uses unsupported scale value', name
-			if fit is not None and fit != 'meet':
+			if fit is not None and fit != 'hidden':
 				attrlist.append('fit="%s"' % fit)
 
 			if ch.has_key('transparent') and \
@@ -508,27 +534,19 @@ class SMILWriter:
 		if type == 'imm':
 			data = string.join(x.GetValues(), '\n')
 			if mtype != 'text' and mtype[:5] != 'cmif:':
+				# binary data, use base64 encoding
 				import base64
 				data = base64.encodestring(data)
 			elif '<' in data or '&' in data:
+				# text data containing < or &: use
+				# <!{CDATA[...]]>
 				# "quote" ]]> in string
 				data = string.join(string.split(data, ']]>'),
 						   ']]>]]<![CDATA[>')
 				data = '<![CDATA[%s]]>\n' % data
 			else:
+				# other text data, can go as is
 				data = data + '\n'
-## 			if chtype == 'html':
-## 				suff = '.html'
-## 			else:
-## 				suff = '.txt'
-## 			fname = self.smiltempfile(x, suff)
-## 			fp = open(fname, 'w')
-## 			data = string.join(x.GetValues(), '\n')
-## 			if data[-1:] != '\n':
-## 				data = data + '\n'
-## 			fp.write(data)
-## 			fp.close()
-## 			imm_href = MMurl.pathname2url(fname)
 		else:
 			data = None
 
