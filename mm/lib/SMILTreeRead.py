@@ -637,6 +637,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad %s attribute' % attr)
 				else:
 					attrdict['readIndex'] = readIndex
+			elif attr == 'sensitivity':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val in ('opaque', 'transparent', 'alpha'):
+					attrdict['sensitivity'] = val
+				else:
+					self.syntax_error('bad sensitivity attribute value')
 			elif attr == 'system-bitrate':
 				try:
 					bitrate = string.atoi(val)

@@ -820,6 +820,7 @@ smil_attrs=[
 	("clip-end", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipend')) or None),
 	("clipBegin", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipbegin')) or None),
 	("clipEnd", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipend')) or None),
+	("sensitivity", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'sensitivity', 'alpha')) or None),
 	("targetElement", lambda writer, node: node.GetRawAttrDef("targetElement", None)),
 	("attributeName", lambda writer, node: node.GetRawAttrDef("attributeName", None)),
 	("attributeType", getattributetype),
