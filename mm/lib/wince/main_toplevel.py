@@ -48,17 +48,17 @@ class Toplevel:
 			self._mainwnd.create()
 		return self._mainwnd
 
-	def serve_events(self,params=None):	
+	def serve_events(self,params=None):
 		global preload_list, preload_list_msg
 		if preload_list:
-			self._mainwnd.setStatusMsg('Loading module %s' % preload_list[0])
+##			self._mainwnd.setStatusMsg('Loading module %s' % preload_list[0])
 			try:
 				__import__(preload_list[0])
 			except:
 				pass
 			del preload_list[0]
 		elif preload_list_msg == 0:
-			self._mainwnd.setStatusMsg('')
+##			self._mainwnd.setStatusMsg('')
 			self._mainwnd.setReady()
 			preload_list_msg = 1
 

@@ -2749,6 +2749,90 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.NewContainer('seq', attributes)
 		self.__set_defaultregpoints()
 		
+	def __parseskin(self):
+		from parseskin import parsegskin
+		import Sizes
+		skin = settings.get('skin')
+		try:
+			f = MMurl.urlopen(skin)
+			dict = parsegskin(f)
+		except:
+			self.warning('error parsing skin description file')
+			return
+		image = MMurl.basejoin(skin, dict['image'])
+		width, height = Sizes.GetSize(image)
+		if width == 0 or height == 0:
+			self.warning('error getting skin image dimensions')
+			return
+		ctx = self.__context
+		vp = ctx.getviewports()[0] # we already know there's exactly one
+		top = ctx.newviewport('The Skin', -1, 'layout')
+		top.addOwner(OWNER_DOCUMENT)
+		reg = ctx.newchannel('Skin Image', -1, 'layout')
+		top._addchild(reg)
+		root = ctx.newnode('par')
+		root.__forcechild = None, 0
+		img = ctx.newnode('ext')
+		root._addchild(img)
+		img.attrdict['file'] = image
+		top['width'] = reg['width'] = width
+		top['height'] = reg['height'] = height
+		ctx.cssResolver.setRawAttrs(top.getCssId(), [('width', width), ('height', height)])
+		ctx.cssResolver.setRawAttrs(reg.getCssId(), [('width', width), ('height', height)])
+		ctx.cssResolver.setRawAttrs(img.getSubRegCssId(), [])
+		ctx.cssResolver.setRawAttrs(img.getMediaCssId(), [])
+		img.attrdict['duration'] = -1
+		img.attrdict['channel'] = 'Skin Image'
+		beginlist = []
+		endlist = []
+		for key, val in dict.items():
+			if key == 'image':
+				continue
+			if key == 'display':
+				coords = val[1]
+				lcd = ctx.newchannel('Skin Area', -1, 'layout')
+				reg._addchild(lcd)
+				lcd['left'] = coords[0]
+				lcd['top'] = coords[1]
+				lcd['width'] = coords[2]
+				lcd['height'] = coords[3]
+				lcd['showBackground'] = 'whenActive'
+				ctx.cssResolver.setRawAttrs(lcd.getCssId(), [('left', coords[0]), ('top', coords[1]), ('width', coords[2]), ('height', coords[3])])
+			else:
+				a = ctx.newnode('anchor')
+				a.attrdict['ashape'] = val[0]
+				a.attrdict['acoords'] = val[1]
+				img._addchild(a)
+				if key in ('play', 'toggle'):
+					arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = a, event = 'activateEvent', delay = 0)
+					beginlist.append(arc)
+				elif key in ('stop', 'toggle'):
+					arc = MMNode.MMSyncArc(self.__root, 'end', srcnode = a, event = 'activateEvent', delay = 0)
+					endlist.append(arc)
+				elif key in ('pause', 'open', 'exit'):
+					self.__links.append((a, 'grins:%s()' % key))
+		arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = 'syncbase', delay = 0)
+		beginlist.append(arc)
+		self.__root.attrdict['beginlist'] = beginlist
+		self.__root.attrdict['endlist'] = endlist
+		self.__root.attrdict['restart'] = 'whenNotActive'
+		self.__root.removeOwner(OWNER_DOCUMENT)
+		root._addchild(self.__root)
+		assets = []
+		for c in self.__root.children:
+			if c.type == 'assets':
+				assets.append(c)
+			for c in assets:
+				c.Extract()
+				root._addchild(c)
+		root.SMILidmap = self.__root.SMILidmap
+		del self.__root.SMILidmap
+		self.__root = root
+		for r in vp.GetChildren()[:]:
+			r.Extract()
+			lcd._addchild(r)
+		vp.Destroy()
+
 	def end_smil(self):
 		ctx = self.__context
 		if __debug__:
@@ -2761,76 +2845,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__newTopRegion()
 		self.Recurse(self.__root, self.FixSyncArcs)
 		if not features.editor and settings.get('skin') and len(ctx.getviewports()) == 1:
-			from parseskin import parseskin
-			import Sizes
-			vp = ctx.getviewports()[0] # we already know there's exactly one
-			skin = settings.get('skin')
-			f = MMurl.urlopen(skin)
-			dict, buttons = parseskin(f)
-			top = ctx.newviewport('The Skin', -1, 'layout')
-			top.addOwner(OWNER_DOCUMENT)
-			reg = ctx.newchannel('Skin Image', -1, 'layout')
-			top._addchild(reg)
-			root = ctx.newnode('par')
-			root.__forcechild = None, 0
-			img = ctx.newnode('ext')
-			root._addchild(img)
-			img.attrdict['file'] = MMurl.basejoin(skin, dict['File1x'])
-			width, height = Sizes.GetSize(img.attrdict['file'])
-			top['width'] = reg['width'] = width
-			top['height'] = reg['height'] = height
-			ctx.cssResolver.setRawAttrs(top.getCssId(), [('width', width), ('height', height)])
-			ctx.cssResolver.setRawAttrs(reg.getCssId(), [('width', width), ('height', height)])
-			ctx.cssResolver.setRawAttrs(img.getSubRegCssId(), [])
-			ctx.cssResolver.setRawAttrs(img.getMediaCssId(), [])
-			img.attrdict['duration'] = -1
-			img.attrdict['channel'] = 'Skin Image'
-			play = None
-			for key, val in buttons.items():
-				if key == 'LCD':
-					lcd = ctx.newchannel('Skin Area', -1, 'layout')
-					reg._addchild(lcd)
-					lcd['left'] = val[0]
-					lcd['top'] = val[1]
-					lcd['width'] = val[2]
-					lcd['height'] = val[3]
-					lcd['showBackground'] = 'whenActive'
-					ctx.cssResolver.setRawAttrs(lcd.getCssId(), [('left', val[0]), ('top', val[1]), ('width', val[2]), ('height', val[3])])
-				else:
-					a = ctx.newnode('anchor')
-					a.attrdict['name'] = key
-					a.attrdict['acoords'] = [val[0], val[1], val[0] + val[2], val[1] + val[3]]
-					img._addchild(a)
-					if key == 'App1Button':
-						play = a
-					elif key == 'PowerButton':
-						self.__links.append((a, 'grins:exit()'))
-					elif key == 'App4Button':
-						self.__links.append((a, 'grins:open()'))
-			arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = 'syncbase', delay = 0)
-			self.__root.attrdict['beginlist'] = [arc]
-			if play is not None:
-				arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = play, event = 'activateEvent', delay = 0)
-				self.__root.attrdict['beginlist'].append(arc)
-				arc = MMNode.MMSyncArc(self.__root, 'end', srcnode = play, event = 'activateEvent', delay = 0)
-				self.__root.attrdict['endlist'] = [arc]
-			self.__root.attrdict['restart'] = 'whenNotActive'
-			self.__root.removeOwner(OWNER_DOCUMENT)
-			root._addchild(self.__root)
-			assets = []
-			for c in self.__root.children:
-				if c.type == 'assets':
-					assets.append(c)
-				for c in assets:
-					c.Extract()
-					root._addchild(c)
-			root.SMILidmap = self.__root.SMILidmap
-			del self.__root.SMILidmap
-			self.__root = root
-			for r in vp.GetChildren()[:]:
-				r.Extract()
-				lcd._addchild(r)
-			vp.Destroy()
+			self.__parseskin()
 		self.FixLayouts()
 		self.FixSizes()
 		self.FixBaseWindow()
