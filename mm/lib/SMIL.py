@@ -498,9 +498,16 @@ class SMIL:
 		for __el in ('animate', 'set', 'animateMotion', 'animateColor',):
 			attributes[__el].update(__timeManipulations)
 
+	# Abbreviations for collections of elements
+	__Schedule = ['par', 'seq', 'excl']
+	__MediaContent = ['text', 'img', 'audio', 'video', 'ref', 'animation', 'textstream', 'brush', 'param']
+	__ContentControl = ['switch', 'prefetch']
+	__LinkAnchor = ['a', 'area', 'anchor']
+	__Animation = ['animate', 'set', 'animateMotion', 'animateColor']
+
 	__schedule = ['par', 'seq', 'excl', __choice, __bag] + __media_object
 	__container_content = __schedule + ['switch', 'a'] + __animate_elements
-	__media_content = ['anchor', 'area', 'param'] + __animate_elements
+	__media_content = ['anchor', 'area', 'param', 'switch'] + __animate_elements
 
 	# Core, Test and I18n attribs are added to all elements in the language
 	for __el in attributes.keys():
@@ -586,6 +593,30 @@ class SMIL:
 		__shell: __media_content,
 		__socket: __media_content,
 		'a': __schedule + ['switch'],
+
+##		'switch': __Schedule + __MediaContent + __ContentControl + __LinkAnchor + __Animation + ['priorityClass','layout'],
+##		'customAttributes': ['customTest'],
+##		'region': ['region'],
+##		'topLayout': ['region'],
+##		'layout': ['root-layout', 'region', 'topLayout', 'viewport', 'regPoint'],
+##		'a': __Schedule + __MediaContent + __ContentControl + __Animation,
+##		'area': ['animate', 'set'],
+##		'anchor': ['animate', 'set'],
+##		'text': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'img': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'audio': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'animation': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'video': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'ref': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'textstream': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'brush': ['param', 'area', 'anchor', 'switch'] + __Animation,
+##		'smil': ['head', 'body'],
+##		'head': ['meta', 'customAttributes', 'metadata', 'layout', 'switch', 'transition'],
+##		'body': __Schedule + __MediaContent + __ContentControl + ['a'],
+##		'par': __Schedule + __MediaContent + __ContentControl + ['a'] + __Animation,
+##		'seq': __Schedule + __MediaContent + __ContentControl + ['a'] + __Animation,
+##		'excl': __Schedule + __MediaContent + __ContentControl + ['a'] + __Animation + ['priorityClass'],
+##		'priorityClass': __Schedule + __MediaContent + __ContentControl + ['a'] + __Animation,
 		}
 	entities['viewport'] = entities['topLayout'][:]
 
@@ -599,7 +630,7 @@ class SMIL:
 
 _modules = {
 	# SMIL 2.0 Modules
-	'AccessKeyTiming': 0,
+	'AccessKeyTiming': 1,
 	'AudioLayout': 1,
 	'BasicAnimation': 1,
 	'BasicContentControl': 1,

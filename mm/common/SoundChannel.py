@@ -96,17 +96,9 @@ class SoundChannel(ChannelAsync):
 			return 1
 		if player is None:
 			return 1
-		loopcount = self.getloop(node)
-		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
-		if repeatdur and loopcount == 1:
-			loopcount = 0
-		self.arm_loop = loopcount
-		if loopcount == 0:
-			loopcount = None
-		print 'DBG: repeatdur, loopcount', repeatdur, loopcount
 		try:
 			fn = MMurl.urlretrieve(fn)[0]
-			self.arm_fp = audio.reader(fn, loop=loopcount)
+			self.arm_fp = audio.reader(fn)
 			rate = self.arm_fp.getframerate()
 		except IOError:
 			self.errormsg(node, '%s: Cannot open audio file' % fn)
@@ -149,22 +141,21 @@ class SoundChannel(ChannelAsync):
 		self.__type = node.__type
 		if not self.__ready:
 			# arming failed, so don't even try playing
-			self.playdone(0)
+			self.playdone(0, node.start_time)
 			return
 		if node.__type == 'real':
 			if not self.__rc or not self.__rc.playit(node):
-				self.playdone(0)
+				self.playdone(0, node.start_time)
 			return
 		if not self.arm_fp or player is None:
 ##			print 'SoundChannel: not playing'
 			self.play_fp = None
 			self.arm_fp = None
-			self.playdone(0)
+			self.playdone(0, node.start_time)
 			return
 
 		if debug: print 'SoundChannel: play', node
 		self.play_fp = self.arm_fp
-		self.play_loop = self.arm_loop
 		self.play_markers = self.armed_markers
 		self.arm_fp = None
 		self.armed_markers = {}
@@ -183,40 +174,31 @@ class SoundChannel(ChannelAsync):
 		for marker, t in self.play_markers.items():
 			qid = self._scheduler.enter(t, 0, self.__marker, (node, marker))
 			self.__evid.append(qid)
-		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
-		if repeatdur > 0:
-			self.__qid = self._scheduler.enter(
-				repeatdur, 0, self.__stopplay, ())
 		t0 = self._scheduler.timefunc()
 		if t0 > node.start_time:
+			late = t0 - node.start_time
+			mediadur = float(self.play_fp.getnframes()) / rate
+			if late > mediadur:
+				self.playdone(0, node.start_time + mediadur)
+				return
 			from audio.select import select
-			print 'skipping',node.start_time,t0,t0-node.start_time
-			self.play_fp = select(self.play_fp, [(int((t0-node.start_time)*rate+.5), None)])
+			print 'skipping',node.start_time,t0,late
+			self.play_fp = select(self.play_fp, [(int((late)*rate+.5), None)])
 		self.event('beginEvent')
 		try:
-			player.play(self.play_fp, (self.my_playdone, ()))
+			player.play(self.play_fp, (self.my_playdone, (node.start_time + mediadur,)))
 		except audio.Error, msg:
 			print 'error reading file %s: %s' % (self.getfileurl(node), msg)
-			self.playdone(0)
+			self.playdone(0, node.start_time)
 			return
-		if self.play_loop == 0 and repeatdur == 0:
-			self.playdone(0)
 
-	def __stopplay(self):
-		self.__qid = None
-		if self.play_fp is not None:
-			player.stop(self.play_fp)
-			self.play_fp = None
-		self.playdone(0)
-
-	def my_playdone(self):
+	def my_playdone(self, endtime):
 		if debug: print 'SoundChannel: playdone',`self`
 		if self.play_fp:
 			self.play_fp = None
 			if self.__qid is not None:
 				return
-			self.playdone(0)
-			return
+			self.playdone(0, endtime)
 
 	def playstop(self):
 		if debug: print 'SoundChannel: playstop'
@@ -261,7 +243,7 @@ class SoundChannel(ChannelAsync):
 				nframes = 1
 			rate = self.play_fp.getframerate()
 			self.play_fp = None
-			if self.__qid is not None or self.play_loop == 0:
+			if self.__qid is not None:
 				return
 			self.__qid = self._scheduler.enter(
 				float(nframes) / rate, 0,

@@ -219,16 +219,16 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				chtype = self.__class__.__name__[:-7] # minus "Channel"
 				windowinterface.showmessage('No playback support for %s on this system\n'
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
-				self.playdone(0)
+				self.playdone(0, node,start_time)
 		else:
 			if not self.__mc:
-				self.playdone(0)
+				self.playdone(0, node.start_time)
 			else:
 				if not self.__windowless_wm_rendering:
 					self.window.CreateOSWindow(rect=self.getMediaWndRect())
 				if not self.__mc.playit(node, self.window):
 					windowinterface.showmessage('Failed to play media file', mtype = 'warning')
-					self.playdone(0)
+					self.playdone(0, node.start_time)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
@@ -314,11 +314,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.need_armdone = 0 # play_1 calls armdone()
 			self.play_1()
 
-	def playdone(self, outside_induced):
+	def playdone(self, outside_induced, end_time):
 		if self.need_armdone:
 			self.need_armdone = 0
 			self.armdone()
-		Channel.ChannelWindowAsync.playdone(self, outside_induced)
+		Channel.ChannelWindowAsync.playdone(self, outside_induced, end_time)
 		if not outside_induced:
 			self.__playing = None
 

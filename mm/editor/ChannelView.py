@@ -113,7 +113,6 @@ class ChannelView(ChannelViewDialog):
 		self.last_geometry = None
 		self.toplevel = toplevel
 		self.root = toplevel.root
-		self.viewroot = None
 		self.context = self.root.context
 		self.editmgr = self.context.editmgr
 		self.focus = None
@@ -154,7 +153,6 @@ class ChannelView(ChannelViewDialog):
 ##		self.editmgr.register(self, 1)
 		self.toplevel.checkviews()
 		# Compute objects to draw and where to draw them, then draw
-		self.fixviewroot()
 		focus = self.focus
 		if not focus: focus = ('b', None)
 		self.recalc(focus)
@@ -218,7 +216,6 @@ class ChannelView(ChannelViewDialog):
 			focus = '', None
 		self.cleanup()
 		if self.is_showing():
-			self.fixviewroot()
 			self.recalc(focus)
 			self.reshape()
 
@@ -353,8 +350,8 @@ class ChannelView(ChannelViewDialog):
 
 	def timerange(self):
 		# Return the range of times used in the window
-		v = self.viewroot
-		t0, t1, t2, dummy, dummy = self.viewroot.GetTimes()
+		v = self.root
+		t0, t1, t2, dummy, dummy = self.root.GetTimes()
 		t0 = t0 - self.prerolltime
 		return t0, max(t2, t0 + 10)
 
@@ -490,17 +487,6 @@ class ChannelView(ChannelViewDialog):
 		self.objects[len(self.objects):] = self.arcs
 		self.initbwstrip()
 
-		# enable Next and Prev Minidoc commands if there are minidocs
-## XXXX Needs to be fixed for dynamically generated commandlists!x
-##		if self.baseobject.descendants or \
-##		   self.baseobject.ancestors or \
-##		   self.baseobject.siblings:
-##			for obj in self.objects:
-##				obj.commandlist = obj.commandlist + [
-##					NEXT_MINIDOC(callback = (obj.nextminicall, ())),
-##					PREV_MINIDOC(callback = (obj.prevminicall, ())),
-##					]
-
 		focus = self.focus
 		self.baseobject.select()
 		if focus is not None:
@@ -615,71 +601,16 @@ class ChannelView(ChannelViewDialog):
 			if focus[0] == 'c' and focus[1] is c:
 				obj.select()
 
-	# View root stuff
-
-	def nextviewroot(self):
-		for c in self.viewroot.GetChildren():
-			node = c.FirstMiniDocument()
-			if node: break
-		else:
-			node = self.viewroot.NextMiniDocument()
-			if node is None:
-				node = self.root.FirstMiniDocument()
-		self.setviewroot(node)
-
-	def prevviewroot(self):
-		children = self.viewroot.GetChildren()[:]
-		children.reverse()
-		for c in children:
-			node = c.LastMiniDocument()
-			if node: break
-		else:
-			node = self.viewroot.PrevMiniDocument()
-			if node is None:
-				node = self.root.LastMiniDocument()
-		self.setviewroot(node)
-
-	# Make sure the view root is set to *something*, and fix the title
-	def fixviewroot(self):
-		node = self.viewroot
-		if node is not None and node.GetRoot() is not self.root:
-			node = None
-		if node is not None and not node.IsMiniDocument():
-			node = None
-		if node is None:
-			node = self.root.FirstMiniDocument()
-		if node is None:
-			node = self.root
-		self.viewroot = node
-		self.fixtitle()
-
-	# Change the view root
-	def setviewroot(self, node):
-		if node is None or node is self.viewroot:
-			return
-		self.cleanup()
-		self.viewroot = node
-		self.recalc(('b', None))
-		self.reshape()
-		self.fixtitle()
-
 	def focuscall(self):
 		top = self.toplevel
 		top.setwaiting()
 		if top.hierarchyview is not None:
-			top.hierarchyview.globalsetfocus(self.viewroot)
-
-	def setviewrootcb(self, node):
-		self.toplevel.setwaiting()
-		self.setviewroot(node)
+			top.hierarchyview.globalsetfocus(self.root)
 
 	def fixtitle(self):
 		import MMurl
 		basename = MMurl.unquote(self.toplevel.basename)
 		title = 'Timeline View (' + basename + ')'
-		if None is not self.viewroot is not self.root:
-			name = MMAttrdefs.getattr(self.viewroot, 'name')
-			title = title + ': ' + name
 		if self.is_showing():
 			self.window.settitle(title)
 
@@ -687,8 +618,7 @@ class ChannelView(ChannelViewDialog):
 
 	def initnodes(self, focus):
 		for c in self.context.channels: c.used = 0
-		self.baseobject.descendants[:] = []
-		self.scantree(self.viewroot, focus)
+		self.scantree(self.root, focus)
 		self.usedchannels = []
 		for c in self.context.channels:
 			c.chview_map = None
@@ -696,8 +626,6 @@ class ChannelView(ChannelViewDialog):
 				self.usedchannels.append(c)
 			elif not self.showall:
 				c.chview_map = 0, 0, 0, 0
-		self.addancestors()
-		self.addsiblings()
 
 	def scantree(self, node, focus):
 		t = node.GetType()
@@ -719,51 +647,11 @@ class ChannelView(ChannelViewDialog):
 						self.channelnodes[channel].append(obj)
 					else:
 						self.channelnodes[channel] = [obj]
-		elif t in bagtypes:
-			self.scandescendants(node)
 		else:
 			obj = INodeBox(self, node)
 			self.objects.append(obj)
 			for c in node.GetChildren():
 				self.scantree(c, focus)
-
-	def scandescendants(self, node):
-		for c in node.GetChildren():
-			t = c.GetType()
-			if t in bagtypes:
-				self.scandescendants(c)
-			elif c.IsMiniDocument():
-				name = c.GetRawAttrDef('name', '(NoName)')
-				self.baseobject.descendants.append((name, (c,)))
-			elif t in interiortypes:
-				self.scandescendants(c)
-
-	def addancestors(self):
-		self.baseobject.ancestors[:] = []
-		path = self.viewroot.GetPath()
-		for node in path[:-1]:
-			if node.IsMiniDocument():
-				name = node.GetRawAttrDef('name', '(NoName)')
-				self.baseobject.ancestors.append((name, (node,)))
-
-	def addsiblings(self):
-		self.baseobject.siblings[:] = []
-		parent = self.viewroot.GetParent()
-		if parent:
-			while parent.parent and \
-				  parent.parent.GetType() in bagtypes:
-				parent = parent.parent
-			self.scansiblings(parent)
-
-	def scansiblings(self, node):
-		for c in node.GetChildren():
-			if c.GetType() in bagtypes:
-				self.scansiblings(c)
-			elif c.IsMiniDocument():
-				name = c.GetRawAttrDef('name', '(NoName)')
-				if c is self.viewroot:
-					name = name + ' (current)'
-				self.baseobject.siblings.append((name, (c,)))
 
 	# Arc stuff
 
@@ -771,7 +659,7 @@ class ChannelView(ChannelViewDialog):
 		if not self.showarcs:
 			return
 		arcs = []
-		self.scanarcs(self.viewroot, focus, arcs)
+		self.scanarcs(self.root, focus, arcs)
 		self.arcs = arcs
 
 	def scanarcs(self, node, focus, arcs):
@@ -811,13 +699,12 @@ class ChannelView(ChannelViewDialog):
 			except NoSuchUIDError:
 				# Skip sync arc from non-existing node
 				continue
-			if xnode.FindMiniDocument() is self.viewroot:
-				obj = ArcBox(self,
-					     xnode, xside, delay, ynode, yside)
-				arcs.append(obj)
-				if focus[0] == 'a' and \
-				   focus[1] == (xnode, xside, delay, ynode, yside):
-					obj.select()
+			obj = ArcBox(self,
+				     xnode, xside, delay, ynode, yside)
+			arcs.append(obj)
+			if focus[0] == 'a' and \
+			   focus[1] == (xnode, xside, delay, ynode, yside):
+				obj.select()
 
 	# Bandwidth strip stuff
 
@@ -926,13 +813,9 @@ class ChannelView(ChannelViewDialog):
 			return None
 
 	def globalsetfocus(self, node):
-		# May have to switch view root
-		mini = node.FindMiniDocument()
 		if not self.is_showing():
-			self.viewroot = mini
 			self.focus = ('n', node)
 			return
-		self.setviewroot(mini) # No-op if already there
 		self.init_display()
 		if hasattr(node, 'cv_obj'):
 			obj = node.cv_obj
@@ -1136,11 +1019,6 @@ class GO(GOCommand):
 		self.is_bandwidth_strip = 0
 		self.bandwidthboxes = []
 
-		# Submenus listing related mini-documents
-
-		self.ancestors = []
-		self.descendants = []
-		self.siblings = []
 		self.arcmenu = []
 		self.commandlist = None
 
@@ -1165,9 +1043,6 @@ class GO(GOCommand):
 				CANVAS_RESET(callback = (mother.canvascall,
 						(windowinterface.RESET_CANVAS,))),
 				NEW_CHANNEL(callback = (mother.newchannel, ())),
-				ANCESTORS(callback = mother.setviewrootcb),
-				SIBLINGS(callback = mother.setviewrootcb),
-				DESCENDANTS(callback = mother.setviewrootcb),
 				TOGGLE_UNUSED(callback = (mother.toggleshow, ())),
 				THUMBNAIL(callback = (mother.thumbnailcall, ())),
 				TOGGLE_ARCS(callback = (mother.togglearcs, ())),
@@ -1257,23 +1132,6 @@ class GO(GOCommand):
 		return 0
 
 	# Methods corresponding to the menu entries
-
-##	def helpcall(self):
-##		import Help
-##		Help.givehelp('Channel_view')
-
-##	def newchannelcall(self, chtype = None):
-##		self.mother.newchannel(self.newchannelindex(), chtype)
-
-##	def nextminicall(self):
-##		mother = self.mother
-##		mother.toplevel.setwaiting()
-##		mother.nextviewroot()
-
-##	def prevminicall(self):
-##		mother = self.mother
-##		mother.toplevel.setwaiting()
-##		mother.prevviewroot()
 
 	def newchannelindex(self):
 		# NB Overridden by ChannelBox to insert before current!

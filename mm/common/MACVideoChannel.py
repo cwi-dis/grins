@@ -31,7 +31,6 @@ class VideoChannel(ChannelWindowAsync):
 		if debug: print 'VideoChannel: init', name
 		self.arm_movie = None
 		self.play_movie = None
-		self.play_loop = -1
 		self.has_callback = 0
 		self.idleprocactive = 0
 		self._paused = 0
@@ -224,12 +223,6 @@ class VideoChannel(ChannelWindowAsync):
 		
 		if self.play_movie.IsMovieDone():
 			# XXX Should cater for self.extra_end_delay!
-			if self.play_loop == 0 or self.play_loop > 1:
-				# Either looping infinitely, or more loops to be done
-				if self.play_loop != 0:
-					self.play_loop = self.play_loop - 1
-				self.play_movie.GoToBeginningOfMovie()
-				return
 			self.__stoplooping()
 			
 	def __stopplay(self):
@@ -242,7 +235,6 @@ class VideoChannel(ChannelWindowAsync):
 			self.__qid = None
 		if not self.play_movie:
 			return
-		self.play_loop = -1	# Truly finished
 		self.play_movie.StopMovie()
 ##		self.play_movie = None
 ##		if self.window:
@@ -269,14 +261,6 @@ class VideoChannel(ChannelWindowAsync):
 			return
 			
 		if debug: print 'VideoChannel: play', node
-		self.play_loop = self.getloop(node)
-		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
-		if repeatdur and self.play_loop == 1:
-			self.play_loop = 0
-		if debug: print 'DBG: repeatdur, playloop', repeatdur, self.play_loop
-		if repeatdur > 0:
-			self.__qid = self._scheduler.enter(
-				repeatdur, 0, self.__stopplay, ())
 		self.play_movie = self.arm_movie
 		self.arm_movie = None
 

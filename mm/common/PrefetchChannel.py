@@ -43,7 +43,6 @@ class PrefetchChannel(Channel.ChannelAsync):
 		self.__fetching = node
 
 		# get timing
-		self.play_loop = self.getloop(node)
 		self.__duration = node.GetAttrDef('duration', None)
 		
 		self.__startFetch()
@@ -92,7 +91,7 @@ class PrefetchChannel(Channel.ChannelAsync):
 	def __ready(self):
 		return self.__urlopener!=None
 			
-	def __startFetch(self, repeat=0):
+	def __startFetch(self):
 		self.__start = self.__fetching.start_time
 		if self.__start is None:
 			print 'Warning: None start_time for node',self.__fetching
@@ -125,15 +124,7 @@ class PrefetchChannel(Channel.ChannelAsync):
 	def __onFetchDur(self):
 		if not self.__fetching:
 			return
-		if self.play_loop:
-			self.play_loop = self.play_loop - 1
-			if self.play_loop: # more loops ?
-				self.__startFetch(repeat=1)
-				return
-			self.playdone(0)
-			return
-		# self.play_loop is 0 so repeat
-		self.__startFetch(repeat=1)
+		self.playdone(0)
 
 	def onIdle(self):
 		self.__fiber_id = None

@@ -1331,9 +1331,15 @@ class MMSyncArc:
 		return refnode
 
 	def getevent(self):
-		if self.srcnode == 'prev' and \
-		   self.refnode() is self.dstnode.GetSchedParent():
-			return 'begin'
+		if self.srcnode in ('prev', 'syncbase'):
+			refnode = self.refnode()
+			pnode = self.dstnode.GetSchedParent()
+			if pnode.looping_body_self:
+				pnode = pnode.looping_body_self
+			if refnode is pnode:
+				return 'begin'
+			else:
+				return 'end'
 		return self.event
 
 	def isresolved(self, sctx):
@@ -1630,7 +1636,6 @@ class MMNode:
 		self.canplay = None
 		self.parent = None	# The parent of this MMNode
 		self.children = []	# The sub-nodes of this MMNode
-		self.setgensr()
 		self.looping_body_self = None
 		self.realpix_body = None
 		self.caption_body = None
@@ -1654,9 +1659,9 @@ class MMNode:
 		self.has_min = 0
 		self.delayed_arcs = []
 		self.__calcendtimecalled = 0
-		self.views = {};	# Map {string -> Interactive} - that is, a list of views
+		self.views = {}		# Map {string -> Interactive} - that is, a list of views
 					# looking at this object.
-		self.collapsed = 0;	# Whether this node is collapsed in the structure view.
+		self.collapsed = 0	# Whether this node is collapsed in the structure view.
 		self.timing_info_dict = {}
 
 		if settings.activeFullSmilCss:
@@ -1680,7 +1685,6 @@ class MMNode:
 		self.willplay = None	# Used for colours in the editor
 		self.shouldplay = None
 		self.canplay = None
-		self.gensr = None
 		self.parent = None	# The parent of this MMNode
 		self.children = None	# The sub-nodes of this MMNode
 		self.wtd_children = None
@@ -1704,9 +1708,9 @@ class MMNode:
 		self.has_min = None
 		self.delayed_arcs = None
 		self.__calcendtimecalled = None
-		self.views = None;	# Map {string -> Interactive} - that is, a list of views
+		self.views = None	# Map {string -> Interactive} - that is, a list of views
 					# looking at this object.
-		self.collapsed = None;	# Whether this node is collapsed in the structure view.
+		self.collapsed = None	# Whether this node is collapsed in the structure view.
 		self.timing_info_dict = None
 		self.happenings = None
 		
@@ -1910,6 +1914,21 @@ class MMNode:
 		self.context.cssResolver.changePxValue(self._subRegCssId, 'height', height)
 		self.__unlinkCssId()
 
+	def set_start_time(self, timestamp, include_pseudo = 1):
+		self.start_time = timestamp
+		p = self.parent
+		while p and p.type == 'alt':
+			p.start_time = timestamp
+			p = p.parent
+		if not include_pseudo:
+			return
+		if self.looping_body_self:
+			self.looping_body_self.start_time = self.start_time
+		if self.realpix_body:
+			self.realpix_body.start_time = self.start_time
+		if self.caption_body:
+			self.caption_body.start_time = self.start_time
+
 	def startplay(self, timestamp):
 		if debug: print 'startplay',`self`,timestamp,self.fullduration
 		self.playing = MMStates.PLAYING
@@ -1936,11 +1955,11 @@ class MMNode:
 ##			c.resetall(self.sctx.parent)
 
 	def add_arc(self, arc, sctx, body = None):
+		if debug: print 'add_arc', `self`, `body`, `arc`
 		if body is None:
 			body = self
 		if arc in body.sched_children:
 			return
-		if debug: print 'add_arc', `body`, `arc`
 		body.sched_children.append(arc)
 		if self.playing != MMStates.IDLE and \
 		   self.playing != MMStates.PLAYED and \
@@ -2080,6 +2099,15 @@ class MMNode:
 
 	def GetMax(self):
 		return self.GetMinMax()[1]
+
+	def GetTerminator(self):
+		terminator = self.attrdict.get('terminator')
+		if terminator is None:
+			if self.type in interiortypes:
+				terminator = 'LAST'
+			else:
+				terminator = 'MEDIA'
+		return terminator
 
 	def __parsecount(self, val, attr):
 		global clock_val
@@ -2501,7 +2529,7 @@ class MMNode:
 		if self.attrdict.has_key('beginlist'):
 			arcs = self.attrdict['beginlist']
 			for arc in arcs:
-				if arc.srcnode == 'syncbase' and arc.getevent() is None and arc.marker is None and arc.channel is None:
+				if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
 					begindelay = arc.delay
 		return t0, t1, t2, downloadlag, begindelay
 
@@ -2521,7 +2549,7 @@ class MMNode:
 		if self.attrdict.has_key('beginlist'):
 			arcs = self.attrdict['beginlist']
 			for arc in arcs:
-				if arc.srcnode == 'syncbase' and arc.getevent() is None and arc.marker is None and arc.channel is None:
+				if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
 					begindelay = arc.delay
 		downloadlag = 0.0
 		if self.timing_info_dict.has_key(which):
@@ -2633,32 +2661,25 @@ class MMNode:
 	# If there is overlap between parnode children the node in error
 	# is returned.
 	def GetAllChannels(self):
-##		if self.type in bagtypes:
-##			return [], None
+		errnode = None
+		overlap = []
+		list = []
 		if self.type in leaftypes:
 			import MMTypes
 			if self.GetType() in MMTypes.mediatypes:
 				# XXX warning: this name is put from PlayerCore
 				try:
-					list = [self._rendererName]
+					list.append(self._rendererName)
 				except AttributeError:
 					# undefined renderer
-					list = ['undefined']
+					list.append('undefined')
 			else:
 				# special types (animate, prefetch, ...)
-				list = [MMAttrdefs.getattr(self, 'channel')]
+				list.append(MMAttrdefs.getattr(self, 'channel'))
 			# special case for real compatibility
 			captionchannel = MMAttrdefs.getattr(self, 'captionchannel')
 			if captionchannel and captionchannel != 'undefined':
 				list.append(captionchannel)
-			# add any animate elements
-			for node in self.children:
-				if node.GetType() == 'animate':
-					list.append(MMAttrdefs.getattr(node, 'channel'))
-			return list, None
-		errnode = None
-		overlap = []
-		list = []
 		for ch in self.children:
 			chlist, cherrnode = ch.GetAllChannels()
 			if cherrnode:
@@ -2666,8 +2687,6 @@ class MMNode:
 			list, choverlap = MergeLists(list, chlist)
 			if choverlap:
 				overlap = overlap + choverlap
-#		if overlap and self.type == 'par':
-#			errnode = (self, overlap)
 		return list, errnode
 						
 	#
@@ -2805,12 +2824,10 @@ class MMNode:
 		
 		if self.type in interiortypes and type in interiortypes:
 			self.type = type
-			self.setgensr()
 			return
 		if self.children <> []: # TEMP! or self.values <> []:
 			raise CheckError, 'SetType() on non-empty node'
 		self.type = type
-		self.setgensr()
 
 	def SetValues(self, values):
 		if self.type <> 'imm':
@@ -2886,7 +2903,7 @@ class MMNode:
 		self.parent = None
 		parent.children.remove(self)
 		name = MMAttrdefs.getattr(self, 'name')
-		if name and MMAttrdefs.getattr(parent, 'terminator') == name:
+		if name and parent.GetTerminator() == name:
 			parent.DelAttr('terminator')
 ##		parent._fixsummaries(self.summaries)
 
@@ -2905,148 +2922,12 @@ class MMNode:
 ##		parent._rmsummaries(self.summaries.keys())
 
 
-	def GetPrevious(self):		# mjvdg 27-sept-2000
-		# Return the previous node to this one.
-		# Don't search out of the local seq of this node.
-		# return None if there is no previous node.
-
-		if self.GetParent() is None:
-			return None
-		selfsiblings = self.GetParent().GetChildren()
-		selfindex = selfsiblings.index(self)
-
-		if selfindex > 0:	# Assuming a few things..
-			return selfsiblings[selfindex-1]
-		else:
-			return None
-
-	def GetNext(self):
-		# Return the next node to this one.
-		# Don't search out of the local seq of this node.
-		# Return None if this is the last node.
-
-		if self.GetParent() is None:
-			return None;
-		selfsiblings = self.GetParent().GetChildren();
-		selfindex = selfsiblings.index(self);
-
-		if selfindex == len(selfsiblings)-1:
-			# Then this is at the end of the list.
-			return None;
-		else:
-			try:		# Don't crash.. keep going.
-				return selfsiblings[selfindex+1];
-			except IndexError:
-				print "ERROR: List index out of range."
-				print "MMNode.GetNext().";
-				return None;
-
 	def ExpandParents(self):
 		# Recurse through my parents, expanding all of them.
 		self.collapsed = 0
 		if self.GetParent() is not None:
 			self.GetParent().ExpandParents()
 
-	#
-	# Methods for mini-document management
-	#
-	# Check whether a node is the top of a mini-document
-	def IsMiniDocument(self):
-		return self.GetSchedParent() is None
-##		if self.type in bagtypes:
-##			return 0
-##		parent = self.GetSchedParent()
-##		return parent is None or parent.type in bagtypes
-
-	# Find the first mini-document in a tree
-	def FirstMiniDocument(self):
-		if self.IsMiniDocument():
-			return self
-		for child in self.GetSchedChildren():
-			mini = child.FirstMiniDocument()
-			if mini is not None:
-				return mini
-		return None
-
-	# Find the last mini-document in a tree
-	def LastMiniDocument(self):
-		if self.IsMiniDocument():
-			return self
-		res = None
-		for child in self.GetSchedChildren():
-			mini = child.LastMiniDocument()
-			if mini is not None:
-				res = mini
-		return res
-
-	# Find the next mini-document in a tree after the given one
-	# Return None if this is the last one
-	def NextMiniDocument(self):
-		node = self
-		while 1:
-			parent = node.GetSchedParent()
-			if parent is None:
-				break
-			siblings = parent.GetSchedChildren()
-			index = siblings.index(node) # Cannot fail
-			while index+1 < len(siblings):
-				index = index+1
-				mini = siblings[index].FirstMiniDocument()
-				if mini is not None:
-					return mini
-			node = parent
-		return None
-
-	# Find the previous mini-document in a tree after the given one
-	# Return None if this is the first one
-	def PrevMiniDocument(self):
-		node = self
-		while 1:
-			parent = node.GetSchedParent()
-			if parent is None:
-				break
-			siblings = parent.GetSchedChildren()
-			index = siblings.index(node) # Cannot fail
-			while index > 0:
-				index = index-1
-				mini = siblings[index].LastMiniDocument()
-				if mini is not None:
-					return mini
-			node = parent
-		return None
-
-	# Find the root of a node's mini-document
-	def FindMiniDocument(self):
-		return self.GetRoot()
-##		node = self
-##		parent = node.parent
-##		while parent is not None and parent.type not in bagtypes:
-##			node = parent
-##			parent = node.parent
-##		return node
-
-	# Find the nearest bag given a minidocument
-	def FindMiniBag(self):
-		return None
-##		bag = self.parent
-##		if bag is not None and bag.type not in bagtypes:
-##			raise CheckError, 'FindMiniBag: minidoc not rooted in a choice node!'
-##		return bag
-
-	#
-	# Set the correct method for generating scheduler records.
-	def setgensr(self):
-		type = self.type
-		if type in ('imm', 'ext', 'brush', 'animate', 'prefetch'):
-			self.gensr = self.gensr_leaf
-##		elif type == 'bag':
-##			self.gensr = self.gensr_bag
-		elif type in ('seq', 'par', 'excl', 'alt', 'bag'):
-			self.gensr = self.gensr_interior
-		elif type == 'prio':
-			self.gensr = None # should never be called
-		else:
-			raise CheckError, 'MMNode: unknown type %s' % self.type
 	#
 	# Methods for building scheduler records. The interface is as follows:
 	# - PruneTree() is called first, with a parameter that specifies the
@@ -3114,7 +2995,7 @@ class MMNode:
 		self.caption_body = None
 		self.force_switch_choice = 0
 		self.wtd_children = self.GetSchedChildren()[:]
-		for c in self.GetSchedChildren():
+		for c in self.wtd_children:
 			c._FastPruneTree()
 
 
@@ -3205,83 +3086,7 @@ class MMNode:
 		return presolved + min
 
 	#
-	# Generate schedrecords for leaf nodes.
-	# The looping parmeter is only for pseudo-par-nodes implementing RealPix with
-	# captions.
-	#
-	def gensr_leaf(self, looping=0, overrideself=None, path=None, sctx=None, curtime=None):
-		if overrideself:
-			# overrideself is passed for the interior
-			self = overrideself
-		elif self._is_realpix_with_captions():
-			self.realpix_body = MMNode_realpix_body(self)
-			self.caption_body = MMNode_caption_body(self)
-			return self.gensr_interior(looping, sctx=sctx, curtime=curtime)
-
-		# Clean up realpix stuff: the node may have been a realpix node in the past
-		self.realpix_body = None
-		self.caption_body = None
-		if settings.noprearm:
-			srlist = [([(SCHED, self)], [(PLAY, self)])]
-		else:
-			srlist = [([(SCHED, self), (ARM_DONE, self)],
-				   [(PLAY, self)])]
-		fill = self.GetFill()
-
-		sched_done = [(SCHED_DONE,self)]
-		sched_stop = []
-		if fill == 'remove':
-			sched_done.append((PLAY_STOP, self))
-		else:
-			# XXX should be refined
-			sched_stop.append((PLAY_STOP, self))
-		srlist.append(
-			([(PLAY_DONE, self)],
-			 [(SCHED_STOPPING,self)]))
-		srlist.append(([(SCHED_STOPPING,self)], sched_done))
-		srlist.append(([(SCHED_STOP, self)], sched_stop))
-
-		# XXX: ignoring animate elements timing for now,
-		# just kick animate children in a parallel envelope
-		for child in self.GetSchedChildren():
-			if child.GetType() != 'animate':
-				continue
-			srlist.append(( [(SCHED, self),],
-				[(SCHED,child),(PLAY,self)]  ))
-
-			srlist.append((  [(SCHED_STOPPING,self),],
-				[(SCHED_DONE,self), (PLAY_STOP, self), ]  ))
-
-			srlist.append((  [(SCHED,child),],
-				[(PLAY,child)]  ))
-
-			if settings.noprearm:
-				srlist.append((  [(SCHED,child),],
-					[(PLAY,child)]  ))
-			else:
-				srlist.append((  [(SCHED,child),(ARM_DONE, child),],
-					[(PLAY,child)]  ))
-
-			srlist.append((  [(SCHED_STOP,self),],
-				[(PLAY_STOP,self),(PLAY_STOP,child)]  ))
-
-			srlist.append((  [(SCHED_DONE,child),],
-				[]  ))
-
-			srlist.append((  [(PLAY_DONE,child),],
-				[(PLAY_STOP,child),]  ))
-
-		srdict = {}
-		for events, actions in srlist:
-			action = [len(events), actions]
-			for event in events:
-				self.srdict[event] = action # MUST all be same object
-				srdict[event] = self.srdict # or just self?
-		if debuggensr: self.__dump_srdict('gensr_leaf', srdict)
-		return srdict
-
-	#
-	# There's a lot of common code for par and seq nodes.
+	# There's a lot of common code for all nodes.
 	# We attempt to factor that out with a few helper routines.
 	# All the helper routines accept at least two arguments
 	# - the actions to be taken when the node is "starting"
@@ -3292,9 +3097,9 @@ class MMNode:
 	# - actions to be taken upon SCHED_STOP
 	# - a list of all (event, action) tuples to be generated
 	#
-	def gensr_interior(self, looping=0, path=None, sctx=None, curtime=None):
+	def gensr(self, looping=0, path=None, sctx=None, curtime=None):
 		#
-		# If the node is empty there is very little to do.
+		# Select the generator for the body of the node.
 		#
 		is_realpix = 0
 		if self._is_realpix_with_captions():
@@ -3380,7 +3185,7 @@ class MMNode:
 			self.srdict[ev] = [1, sched_done]
 			srdict[ev] = self.srdict
 
-		if debuggensr: self.__dump_srdict('gensr_interior', srdict)
+		if debuggensr: self.__dump_srdict('gensr', srdict)
 		return srdict
 
 	def gensr_envelope_nonloop(self, gensr_body, repeatCount, sched_actions,
@@ -3571,10 +3376,7 @@ class MMNode:
 		if self_body is None:
 			self_body = self
 
-		if self.type in ('par', 'excl'):
-			termtype = MMAttrdefs.getattr(self, 'terminator')
-		else:
-			termtype = 'LAST'
+		termtype = self.GetTerminator()
 
 		if self.type == 'alt':
 			chosen = self.ChosenSwitchChild(self.wtd_children)
@@ -3589,7 +3391,7 @@ class MMNode:
 
 		if termtype == 'FIRST':
 			terminating_children = wtd_children[:]
-		elif termtype in ('LAST', 'ALL'):
+		elif termtype in ('LAST', 'ALL', 'MEDIA'):
 			terminating_children = []
 		else:
 			terminating_children = []
@@ -3615,7 +3417,10 @@ class MMNode:
 		else:
 			defbegin = 0.0
 
-		duration = self.GetAttrDef('duration', None)
+		if self.type in interiortypes:
+			duration = self.GetAttrDef('duration', None)
+		else:
+			duration = Duration.get(self, ignoreloop=1)
 		if duration is not None and self_body is not self:
 			if duration == -1:
 				delay = None
@@ -3791,7 +3596,7 @@ class MMNode:
 		else:
 			srdict = {}
 		body = self.looping_body_self or self
-		termtype = MMAttrdefs.getattr(self, 'terminator')
+		termtype = self.GetTerminator()
 		if not self.srdict.has_key((SCHED_DONE, child)):
 			if termtype in ('LAST', 'ALL'):
 				# add child to list of children to wait for
@@ -3929,7 +3734,8 @@ class MMNode:
 		# internal method to calculate the duration of a node
 		# not taking into account the duration/end/repeat* attrs
 		maybecached = 1
-		if self.type in leaftypes:
+		termtype = self.GetTerminator()
+		if self.type in leaftypes and termtype == 'MEDIA':
 			return Duration.get(self, ignoreloop=1), maybecached
 		elif self.type == 'excl':
 			# XXX it's too hard to calculate this properly with all
@@ -3937,8 +3743,7 @@ class MMNode:
 			return None, 0
 		else:
 			syncbase = self.isresolved(sctx)
-			if self.type in ('par', 'excl'):
-				termtype = MMAttrdefs.getattr(self, 'terminator')
+			if self.type in partypes + ['excl']:
 				if termtype not in ('LAST', 'FIRST', 'ALL'):
 					for c in self.GetSchedChildren():
 						if MMAttrdefs.getattr(c, 'name') == termtype:

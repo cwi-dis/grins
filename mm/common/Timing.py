@@ -80,10 +80,8 @@ def cleanup(node):
 	node.counter = node.deps = None
 	del node.counter
 	del node.deps
-	type = node.GetType()
-	if type in interiortypes:
-		for c in node.GetChildren():
-			cleanup(c)
+	for c in node.GetChildren():
+		cleanup(c)
 
 
 # Return a node's nominal duration, in seconds, as a floating point value.
@@ -131,7 +129,7 @@ def prep1(node):
 			adddep(xnode, xside, 0, c, HD)
 			xnode, xside = c, TL
 		adddep(xnode, xside, 0, node, TL)
-	elif type in ('par', 'alt', 'excl'):
+	elif type in ('par', 'alt', 'excl') or (type in leaftypes and node.GetSchedChildren(0)):
 		for c in node.GetSchedChildren(0):
 			prep1(c)
 			adddep(node, HD, 0, c, HD)
@@ -173,23 +171,8 @@ def prep2(node, root):
 			xnode = parent
 			xside = HD
 		adddep(xnode, xside, delay, node, HD)
-##		# don't modify the list!!
-##		arcs = [(xnode.GetUID(), xside, delay, HD)] + arcs
-##	for arc in arcs:
-##		xuid, xside, delay, yside = arc
-##		try:
-##			xnode = node.MapUID(xuid)
-##		except NoSuchUIDError:
-##			# Skip sync arc from non-existing node
-##			continue
-##		if xside not in (HD, TL):
-##			xside = HD	# XYZZY
-##		# skip out-of-minidocument sync arcs
-##		if xnode.FindMiniDocument() is node.FindMiniDocument():
-##			adddep(xnode, xside, delay, node, yside)
-	#
-	if node.GetType() in real_interiortypes:
-		for c in node.GetSchedChildren(0): prep2(c, root)
+	for c in node.GetSchedChildren(0):
+		prep2(c, root)
 
 
 # propdown - propagate timing down the tree again
@@ -206,7 +189,7 @@ def propdown(node, stoptime, dftstarttime=0):
 
 	node.t2 = stoptime
 
-	if tp in ('par', 'alt', 'excl', 'prio'):
+	if tp in ('par', 'alt', 'excl', 'prio') or tp in leaftypes:
 		for c in node.GetChildren():
 			propdown(c, stoptime, node.t0)
 	elif tp == 'seq': # XXX not right!
@@ -246,14 +229,14 @@ def decrement(q, delay, node, side):
 	if x > 0:
 		return
 	if x < 0:
-		raise ChseckError, 'counter below zero!?!?'
+		raise CheckError, 'counter below zero!?!?'
 	if side == HD:
 		node.t0 = q.timefunc()
 	elif side == TL:
 		node.t1 = q.timefunc()
 	node.node_to_arm = None
 	node.t0t1_inherited = node.GetFill() != 'remove'
-	if node.GetType() not in interiortypes and side == HD:
+	if node.GetType() not in interiortypes and side == HD and not node.GetSchedChildren(0):
 		dt = getduration(node)
 		id = q.enter(dt, 0, decrement, (q, 0, node, TL))
 	for d, n, s in node.deps[side]:

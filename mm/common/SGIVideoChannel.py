@@ -160,17 +160,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 					    self.window._form.height - y - h,
 					    mv.DM_TRUE)
 			self.armed_size = None
-		rate = track.GetImageRate()
-		if rate == 30:
-			units = 'smpte-30'
-		elif rate == 25:
-			units = 'smpte-25'
-		elif rate == 24:
-			units = 'smpte-24'
-		else:
-			units = 'smpte-30-drop'
-		self.__begin = self.getclipbegin(node, units)
-		self.__end = self.getclipend(node, units)
+		self.__begin = self.getclipbegin(node, 'sec')
+		self.__end = self.getclipend(node, 'sec')
+		if not self.__end:
+			self.__end = movie.GetMovieDuration(1000) / 1000.0
+		self.__mediadur = self.__end - self.__begin
 		bg = self.getbgcolor(node)
 		movie.SetViewBackground(bg)
 		self.armed_bg = self.window._convert_color(bg)
@@ -182,33 +176,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.armed_display.fgcolor(self.getbgcolor(node))
 
 		self.setArmBox(imbox)
-		
-# NOW this part is in ChannelWindow.arm_1
-			
-#		hicolor = self.gethicolor(node)
-#		for a in node.GetRawAttrDef('anchorlist', []):
-#			atype = a.atype
-#			if atype not in SourceAnchors or atype in (ATYPE_AUTO, ATYPE_WHOLE):
-#				continue
-#			args = a.aargs
-#			if len(args) == 0:
-#				args = [0,0,1,1]
-#			elif len(args) == 4:
-#				args = self.convert_args(f, args)
-#			if len(args) != 4:
-#				print 'VideoChannel: funny-sized anchor'
-#				continue
-#			x, y, w, h = args[0], args[1], args[2], args[3]
-			# convert coordinates from image to window size
-#			x = x * imbox[2] + imbox[0]
-#			y = y * imbox[3] + imbox[1]
-#			w = w * imbox[2]
-#			h = h * imbox[3]
-#			b = self.armed_display.newbutton((x,y,w,h), times = a.atimes)
-#			b.hiwidth(3)
-#			if drawbox:
-#				b.hicolor(hicolor)
-#			self.setanchor(a.aid, a.atype, b, a.atimes)
 		return 1
 
 	def do_play(self, node):
@@ -216,12 +183,28 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.played_movie = movie = self.armed_movie
 		self.armed_movie = None
 		if movie is None:
-			self.playdone(0)
+			self.playdone(0, node.start_time)
 			return
 		self.played_scale = self.armed_scale
 		self.played_size = self.armed_size
 		self.played_bg = self.armed_bg
 		self.played_flag = self.armed_flag
+		duration = node.GetAttrDef('duration', None)
+		begin = 0
+		if self.__begin:
+			movie.SetStartTime(long(self.__begin * 1000L), 1000)
+		t0 = self._scheduler.timefunc()
+		if t0 > node.start_time:
+			if __debug__:
+				print 'skipping',node.start_time,t0,t0-node.start_time
+			late = t0 - node.start_time
+			if late > self.__mediadur:
+				self.playdone(0, node.start_time + self.__mediadur)
+				return
+			movie.SetCurrentTime(long((self.__begin + late) * 1000L), 1000)
+		begin = movie.GetStartTime(1000) / 1000.0
+		if self.__end:
+			movie.SetEndTime(long(self.__end * 1000L), 1000)
 		window.setredrawfunc(self.redraw)
 		try:
 			movie.BindOpenGLWindow(self.window._form, self.__context)
@@ -233,47 +216,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				'Cannot play movie node %s on channel %s:\n%s'%
 					(name, self._name, msg),
 				mtype = 'warning')
-			self.playdone(0)
+			self.playdone(0, node.start_time)
 			return
-		duration = node.GetAttrDef('duration', None)
-		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
-		loop = node.GetAttrDef('loop', None)
-		self.played_loop = loop
-		if loop is None:
-			if repeatdur:
-				loop = 0
-			else:
-				loop = 1
-		if loop == 0:
-			movie.SetPlayLoopLimit(mv.MV_LIMIT_FOREVER)
-		else:
-			movie.SetPlayLoopLimit(loop)
-		if loop != 1:
-			movie.SetPlayLoopMode(mv.MV_LOOP_CONTINUOUSLY)
-		begin = 0
-		if self.__begin:
-			movie.SetStartFrame(self.__begin)
-		t0 = self._scheduler.timefunc()
-		if t0 > self._played_node.start_time:
-			print 'skipping',self._played_node.start_time,t0,t0-self._played_node.start_time
-			track = movie.FindTrackByMedium(mv.DM_IMAGE)
-			movie.SetCurrentFrame(self.__begin + (t0 - self._played_node.start_time) * track.GetImageRate())
-		begin = movie.GetStartTime(1000) / 1000.0
-		if self.__end:
-			movie.SetEndFrame(self.__end)
-			end = movie.GetEndTime(1000) / 1000.0
-		else:
-			end = 0
-		if duration is not None and duration > 0 and \
-		   (not end or (end > begin and duration < end - begin)):
-			movie.SetEndTime(long(1000L * (begin + duration)), 1000)
-		elif duration is not None:
-			# XXX need special code to freeze temporarily at
-			# the end of each loop
-			pass
-		if repeatdur > 0:
-			self.__qid = self._scheduler.enter(
-				repeatdur, 0, self.__stopplay, ())
 		self.event('beginEvent')
 		movie.Play()
 		self.__stopped = 0
@@ -281,17 +225,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		r.UnionRectWithRegion(0, 0, window._form.width, window._form.height)
 		r.SubtractRegion(window._region)
 		window._topwindow._do_expose(r)
-##		if loop == 0 and not repeatdur:
-##			self.playdone(0)
-
-	def __stopplay(self):
-		if self.played_movie:
-			self.played_movie.Stop()
-			self.played_movie.UnbindOpenGLWindow()
-			del _mvmap[self.played_movie]
-			self.played_movie = None
-			self.__qid = None
-		self.playdone(0)
 
 	def playstop(self):
 		if self.__qid:
@@ -361,7 +294,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if not self.__stopped:
 			if self.__qid:
 				return
-			self.playdone(0)
+			self.playdone(0, self._played_node.start_time + self.__mediadur)
 
 	# Convert pixel offsets into relative offsets.
 	# If the offsets are in the range [0..1], we don't need to do

@@ -482,9 +482,6 @@ class Channel:
 		self._armed_anchors = []
 		self._armed_anchor2button = {}
 		duration = node.GetAttrDef('duration', None)
-		repeatdur = node.GetAttrDef('repeatdur', None)
-		if repeatdur is not None:
-			duration = repeatdur
 		self.armed_duration = duration
 			
 		return 0
@@ -552,7 +549,6 @@ class Channel:
 					# something about that.
 					pass
 				self._qid = None
-			self._has_pause = 0
 			self.playdone(0)
 
 	def play_0(self, node):
@@ -590,26 +586,6 @@ class Channel:
 		self._played_anchors = self._armed_anchors[:]
 		self._played_anchor2button.update(self._armed_anchor2button)
 		durationattr = node.GetAttrDef('duration', None)
-		repeatdur = node.GetAttrDef('repeatdur', None)
-		loop = node.GetAttrDef('loop', None)
-		if loop is not None and loop > 0 and \
-		   durationattr is not None and durationattr >= 0:
-			self._has_pause = 0
-		elif repeatdur is not None and repeatdur < 0:
-			self._has_pause = 1
-		elif repeatdur is not None:
-			self._has_pause = 0
-		elif durationattr is not None and durationattr < 0:
-			self._has_pause = 1
-		elif MMAttrdefs.getattr(node, 'endlist'):
-			self._has_pause = 1
-		else:
-			self._has_pause = 0
-		for (name, type, button, times) in self._played_anchors:
-			if type == ATYPE_PAUSE:
-##				print 'found pause anchor'
-				self._has_pause = 1
-			self._anchors[button] = self.onclick, (node, [(name, type)], None)
 		self._qid = None
 
 	def onclick(self, node, anchorlist, arg):
@@ -669,7 +645,7 @@ class Channel:
 		self.armdone()
 		if not self.syncplay:
 			if not self.armed_duration:
-				self.playdone(0)
+				self.playdone(0, end_time = self._played_node.start_time)
 ##			elif self.armed_duration > 0:
 ##				self._qid = self._scheduler.enterabs(
 ##					self._played_node.start_time+self.armed_duration, 0,
@@ -687,11 +663,7 @@ class Channel:
 		# (possibly through play_1) to indicate that the node
 		# has finished playing.
 		if debug:
-			if self._has_pause:
-				s = ' (pause)'
-			else:
-				s = ''
-			print 'Channel.playdone('+`self`+')' + s
+			print 'Channel.playdone('+`self`+')'
 		if self._playstate != PLAYING:
 			if not outside_induced and not self._qid:
 				# timer callback couldn't be cancelled
@@ -704,8 +676,6 @@ class Channel:
 			self.event('endEvent')
 		# If this node has a pausing anchor, don't call the
 		# callback just yet but wait till the anchor is hit.
-		if self._has_pause:
-			return
 		if not self.syncplay:
 			# in cmif mode, an auto anchor is triggered at the end of active duration
 			# in smil mode, an auto anchor is triggered at the begin of active duration
@@ -764,7 +734,6 @@ class Channel:
 				# something about that.
 				pass
 			self._qid = None
-		self._has_pause = 0
 		self.playdone(1)
 
 	def do_arm(self, node, same=0):
@@ -891,7 +860,6 @@ class Channel:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
 		if self._playstate == PLAYING:
-			self._has_pause = 0
 			self.playstop()
 		if self._playstate != PLAYED:
 			raise error, 'not played'

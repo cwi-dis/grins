@@ -36,7 +36,7 @@ class RealAudioChannel(Channel.ChannelAsync):
 			chtype = self.__class__.__name__[:-7] # minus "Channel"
 			windowinterface.showmessage('No playback support for %s on this system\n'
 						    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
-			self.playdone(0)
+			self.playdone(0, node.start_time)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
