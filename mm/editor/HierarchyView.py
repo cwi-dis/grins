@@ -953,7 +953,7 @@ class HierarchyView(HierarchyViewDialog):
 			defattrlist.remove('name')
 		if 'file' in defattrlist:
 			defattrlist.remove('file')
-		copylist = windowinterface.mmultchoice('Select properties to copy', attrlist, defattrlist)
+		copylist = windowinterface.mmultchoice('Select properties to copy', attrlist, defattrlist, parent=self.getparentwindow())
 		if not copylist: return
 		newnode = context.newattrcontainer()
 		dict = self._copyattrdict(node, newnode, copylist)
@@ -1265,18 +1265,28 @@ class HierarchyView(HierarchyViewDialog):
 				AttrEdit.showattreditor(self.toplevel, node, 'channel')
 
 	def insertparent(self, type):
-		node = self.focusnode
-		if node is None:
+		# Inserts a parent node before this one.
+		if not self.selected_widget:
 			windowinterface.showmessage(
 				'There is no selection to insert at',
 				mtype = 'error', parent = self.window)
-			return
+			return None
+		node = self.selected_widget.get_node()
 		parent = node.GetParent()
 		if parent is None:
 			windowinterface.showmessage(
 				"Can't insert above the root",
 				mtype = 'error', parent = self.window)
 			return
+
+		attrlist = node.getattrnames()
+		defattrlist = attrlist[:]
+		for a in ['name', 'file']:
+			if a in defattrlist: defattrlist.remove(a)
+
+		copylist = windowinterface.mmultchoice('Select properties for new parent node', attrlist, defattrlist, parent=self.getparentwindow())
+		if not copylist: return
+
 		em = self.editmgr
 		if not em.transaction():
 			return
@@ -1287,6 +1297,7 @@ class HierarchyView(HierarchyViewDialog):
 		newnode = node.GetContext().newnode(type)
 		em.addnode(parent, i, newnode)
 		em.addnode(newnode, 0, node)
+		self._copyattrdict(newnode, node, copylist, editmgr=em)
 		em.setglobalfocus('MMNode', newnode)
 		expandnode(newnode)
 		self.aftersetfocus()
@@ -1782,10 +1793,12 @@ class HierarchyView(HierarchyViewDialog):
 		if self.selected_widget: self.selected_widget.createunderintcall(ntype)
 
 	def createseqcall(self):
-		if self.selected_widget: self.selected_widget.createseqcall()
-
+		if self.selected_widget: #self.selected_widget.createseqcall()
+			self.insertparent('seq')
+			
 	def createparcall(self):
-		if self.selected_widget: self.selected_widget.createparcall()
+		if self.selected_widget: #self.selected_widget.createparcall()
+			self.insertparent('par')
 
 	def createexclcall(self):
 		if self.selected_widget: self.selected_widget.createexclcall()
