@@ -100,7 +100,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			mtype = MMmimetypes.guess_type(url)[0]
 		else:
 			mtype = urlcache.mimetype(url)
-		if mtype in ('application/x-grins-project', 'application/smil', 'application/x-grins-binary-project'):
+		if mtype in ('application/x-grins-project', 'application/smil', 'application/smil+xml', 'application/x-grins-binary-project'):
 			self.basename = posixpath.splitext(base)[0]
 		else:
 			self.basename = base
@@ -1110,7 +1110,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# remote file
 			self.dirname = ''
 		mtype = urlcache.mimetype(self.filename)
-		if mtype in ('application/x-grins-project', 'application/smil', 'application/x-grins-binary-project'):
+		if mtype in ('application/x-grins-project', 'application/smil', 'application/smil+xml', 'application/x-grins-binary-project'):
 			self.basename = posixpath.splitext(base)[0]
 		else:
 			self.basename = base
@@ -1147,11 +1147,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		evallicense= (license < 0)
 		url = MMurl.pathname2url(filename)
 		mimetype = MMmimetypes.guess_type(url)[0]
-		if exporting and mimetype != 'application/smil':
+		if exporting and mimetype not in ('application/smil', 'application/smil+xml'):
 			if features.CREATE_TEMPLATES not in features.feature_set or mimetype != 'application/x-grins-project':
 				windowinterface.showmessage('Publish to SMIL (*.smi or *.smil) files only.')
 				return
-		if mimetype == 'application/smil':
+		if mimetype in ('application/smil', 'application/smil+xml'):
 			if not exporting:
 				answer = windowinterface.GetOKCancel('GRiNS-specific information will be lost if you save your project as SMIL.')
 				if answer != 0:
@@ -1193,7 +1193,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			progress.set('Publishing document...')
 			progress = progress.set
 		else:
-			grinsExt = mimetype != 'application/smil'
+			grinsExt = mimetype not in ('application/smil', 'application/smil+xml')
 			qtExt = features.EXPORT_QT in features.feature_set
 			rpExt = features.EXPORT_REAL in features.feature_set
 			pss4Ext = 0
@@ -1460,13 +1460,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##		print 'parsing', filename, '...'
 ##		t0 = time.time()
 		mtype = urlcache.mimetype(filename)
-		if mtype not in ('application/x-grins-project', 'application/smil', 'application/x-grins-binary-project'):
+		if mtype not in ('application/x-grins-project', 'application/smil', 'application/smil+xml', 'application/x-grins-binary-project'):
 			if windowinterface.showquestion('MIME type not application/smil or application/x-grins-project.\nOpen as SMIL document anyway?'):
 				mtype = 'application/smil'
-		if mtype in ('application/smil', 'application/x-grins-project'):
+		if mtype in ('application/smil', 'application/smil+xml', 'application/x-grins-project'):
 			import SMILTreeRead
 			# init progress dialog
-			if mtype == 'application/smil':
+			if mtype in ('application/smil', 'application/smil+xml'):
 				self.progress = windowinterface.ProgressDialog("Import")
 				self.progressMessage = "Importing SMIL document..."
 			else:
@@ -1495,12 +1495,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			
 			# the progress dialog will disappear
 			self.progress = None
-			
-##				# For the lightweight version we set SMIL files as being "new"
-##				if light and mtype == 'application/smil':
-##					# XXXX Not sure about this, this may mess up code in read_it
-##					self.new_file = 1
-
 		elif mtype == 'application/x-grins-binary-project':
 			self.progress = windowinterface.ProgressDialog("Loading")
 			self.progressMessage = "Loading GRiNS document..."
@@ -1772,6 +1766,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				mtype = urlcache.mimetype(url)
 				utype, url2 = MMurl.splittype(url)
 				if mtype in ('application/smil',
+					     'application/smil+xml',
 					     'application/x-grins-project',
 					     ) and \
 				   not MMAttrdefs.getattr(srcanchor, 'external'):

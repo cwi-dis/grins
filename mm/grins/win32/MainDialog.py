@@ -82,7 +82,7 @@ class MainDialog:
 		url=MMurl.pathname2url(filename)
 		import urlcache, windowinterface
 		mimetype = urlcache.mimetype(url)
-		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
+		if mimetype in ('application/x-grins-project', 'application/smil', 'application/smil+xml', 'application/x-grins-cmif'):
 			return windowinterface.DROPEFFECT_COPY
 		else:
 			return windowinterface.DROPEFFECT_NONE
@@ -92,7 +92,7 @@ class MainDialog:
 		url=MMurl.pathname2url(filename)
 		import urlcache, windowinterface
 		mimetype = urlcache.mimetype(url)
-		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
+		if mimetype in ('application/x-grins-project', 'application/smil', 'application/smil+xml', 'application/x-grins-cmif'):
 			self.openURL_callback(url)
 		else:
 			windowinterface.showmessage('Only GRiNS or SMIL files can be dropped.')
