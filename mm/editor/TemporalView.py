@@ -421,6 +421,9 @@ class TemporalView(TemporalViewDialog):
 	def copycall(self):
 		if self.focusobj: self.focusobj.copycall()
 
+	def copyfocus(self):
+		print "TODO: copy a node."
+
 	def createbeforecall(self, chtype=None):
 		if self.focusobj: self.focusobj.createbeforecall(chtype)
 
