@@ -12,6 +12,11 @@ class Element;
 #define	FLAGS_BLOCKED		0x00000001
 #define	FLAGS_DEADSOCKET    0x00000002
 
+// for PyObject
+#ifndef Py_PYTHON_H
+#include "Python.h"
+#endif
+
 class Connection 
 	{
 	public:
@@ -73,6 +78,9 @@ class Connection
 	// statistics
 	int sendB, recvB;
 
+	// cmd receiver
+	PyObject *pListener;
+
 	// cmd handlers
 	typedef void (Connection::*CMD_HANDLER)(Element *pe);
 	map<string, CMD_HANDLER> cmdHandlers;
@@ -80,6 +88,11 @@ class Connection
 
 	// dtd commands
 	void executeOpenCmd(Element *pe);
+	void executeCloseCmd(Element *pe);
+	void executePlayCmd(Element *pe);
+	void executeStopCmd(Element *pe);
+	void executePauseCmd(Element *pe);
+	void executeOnClickCmd(Element *pe);
 
 	enum {READ_SIZE=8192};
 	static char s_readbuf[READ_SIZE];	
