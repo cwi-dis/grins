@@ -22,6 +22,8 @@ class CmifChannel(Channel):
 			try:
 				fp = urlopen(filename)
 			except IOError, msg:
+				if type(msg) is type(()):
+					msg = msg[1]
 				self.errormsg(node, filename + ':\n' + msg)
 				cmds = []
 			else:
