@@ -248,7 +248,6 @@ def set(setting, value):
 	user_settings[setting] = value
 
 def save():
-	needrestart = 0
 	try:
 		fp = open(PREFSFILENAME, 'w')
 	except IOError:

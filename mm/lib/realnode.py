@@ -195,7 +195,6 @@ class SlideShow:
 			self.destroy()
 			# XXX what to do with node.tmpfile?
 			if hasattr(node, 'tmpfile'):
-				import os
 				try:
 					os.unlink(node.tmpfile)
 				except:
@@ -252,7 +251,6 @@ class SlideShow:
 					node.SetAttr('file', url)
 				else:
 					# no, discard changes
-					import os
 					try:
 						os.unlink(node.tmpfile)
 					except:
@@ -388,7 +386,7 @@ class SlideShow:
 				   (host and host != 'localhost'):
 					windowinterface.showmessage('cannot edit remote RealPix files')
 					return
-				import tempfile, os
+				import tempfile
 				pre = tempfile.gettempprefix()
 				dir = os.path.dirname(MMurl.url2pathname(path))
 				while 1:

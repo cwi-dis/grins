@@ -317,7 +317,6 @@ class DoubleSweepWipeTransition(TransitionClass, PolylistR2OverlapBlitterClass):
 	def computeparameters(self, value):
 		x0, y0, x1, y1 = self.ltrb
 		xmid = (x0+x1)/2
-		ymid = (y0+y1)/2
 		width = (x1-x0)
 		height = (y1-y0)
 		if value <= 0.5:
@@ -350,7 +349,6 @@ class SaloonDoorWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 	def computeparameters(self, value):
 		x0, y0, x1, y1 = self.ltrb
 		xmid = (x0+x1)/2
-		ymid = (y0+y1)/2
 		width = (x1-x0)
 		height = (y1-y0)
 		if value <= 0.5:
