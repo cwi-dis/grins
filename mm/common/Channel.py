@@ -1032,7 +1032,7 @@ class ChannelWindow(Channel):
 				# resize event
 				pass
 			else:
-				self.armed_display.render_now()
+				self.armed_display.render()
 			if self.played_display:
 				self.played_display.close()
 			self.played_display = self.armed_display
