@@ -48,7 +48,9 @@ import sys, string
 
 import windowinterface
 import win32ui,win32con
-	
+
+import parsehtml
+
 error = 'HtmlChannel.error'
 	
 class HtmlChannel(Channel.ChannelWindow):
@@ -97,7 +99,19 @@ class HtmlChannel(Channel.ChannelWindow):
 		if node.type != 'ext':
 			self.armed_str = self.getstring(node)
 		else:
-			self.armed_str=''		
+			self.armed_str = None
+		anchors = []
+		for a in node.GetRawAttrDef('anchorlist', []):
+			atype = a.atype
+			if atype in SourceAnchors and \
+			   atype not in WholeAnchors:
+				anchors.append(a.aid)
+		if anchors:
+			if self.armed_str is None:
+				self.armed_str = self.getstring(node)
+			parser = parsehtml.Parser(anchors)
+			parser.feed(self.armed_str)
+			self.armed_str = parser.close()
 		self.armed_url=self.getfileurl(node)
 		# XXXX Should we check that the URL is non-empty?
 		self.__armed=0
@@ -137,7 +151,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		
 
 	def __arm(self,node):
-		if node.type == 'imm':
+		if self.armed_str is not None:
 			self.window.SetImmHtml(self.armed_str)
 		else:
 			import settings
