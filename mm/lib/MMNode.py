@@ -939,6 +939,14 @@ class MMNode:
 			x = x.parent
 		return default
 
+	def GetRawAttrDefProduct(self, name, default):
+		v = 1.0
+		x = self
+		while x is not None:
+			v = v * x.GetRawAttrDef(name, default)
+			x = x.parent
+		return v
+
 ##	def GetSummary(self, name):
 ##		if not self.summaries.has_key(name):
 ##			self.summaries[name] = self._summarize(name)
