@@ -1074,20 +1074,20 @@ class _BareSubWindow:
 	def pop(self):
 		parent = self._parent
 		# move self to front of _subwindows
-		if self is parent._subwindows[0]:
-			return		# no-op
-		parent._subwindows.remove(self)
-		parent._subwindows.insert(0, self)
-		# recalculate clipping regions
-		parent._mkclip()
-		# draw the window's contents
-		if not self._transparent or self._active_displist:
-			self._do_expose(self._region)
-			if hasattr(self, '_pixmap'):
-				x, y, w, h = self._rect
-				self._gc.SetRegion(self._region)
-				self._pixmap.CopyArea(self._form, self._gc,
-						      x, y, w, h, x, y)
+		if self is not parent._subwindows[0]:
+			parent._subwindows.remove(self)
+			parent._subwindows.insert(0, self)
+			# recalculate clipping regions
+			parent._mkclip()
+			# draw the window's contents
+			if not self._transparent or self._active_displist:
+				self._do_expose(self._region)
+				if hasattr(self, '_pixmap'):
+					x, y, w, h = self._rect
+					self._gc.SetRegion(self._region)
+					self._pixmap.CopyArea(self._form,
+							      self._gc,
+							      x, y, w, h, x, y)
 		parent.pop()
 
 	def push(self):
@@ -1621,7 +1621,6 @@ _fontmap = {
 	  'Greek-Bold': ['-*-arial-bold-r-*--*-*-*-*-p-*-iso8859-7',
 			 '-*-*-bold-r-*-*-*-*-*-*-*-*-iso8859-7'],
 	  'Greek-Italic': '-*-arial-regular-i-*-*-*-*-*-*-p-*-iso8859-7',
-	  'Amie': '-sgi-amie-medium-r-normal--*-*-*-*-p-*--ascii',
 	  }
 fonts = _fontmap.keys()
 
