@@ -3,18 +3,18 @@
                       "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
 <smil>
   <head>
-    <meta name="base" content="http://www.cwi.nl/GRiNS/examples/"/>
     <meta name="title" content="  A'DAM FACADES - HERENGRACHT "/>
+    <meta name="base" content="http://www.cwi.nl/GRiNS/examples/"/>
     <layout>
-      <root-layout id="A-DAM-FACADES--HERENGRACHT-" title="  A'DAM FACADES - HERENGRACHT " width="500" height="400"/>
+      <root-layout id="A-DAM-FACADES--HERENGRACHT-" title="  A'DAM FACADES - HERENGRACHT " width="600" height="400"/>
       <region id="Acknowledgements1" title="Acknowledgements1" left="5%" top="95%" z-index="3"/>
-      <region id="image1" title="image1" left="20%" top="10%" width="65%" height="80%"/>
-      <region id="image2" title="image2" left="41%" top="10%" width="46%" height="80%"/>
-      <region id="image3" title="image3" left="35%" top="25%" width="38%" height="80%" fit="meet"/>
-      <region id="image4" title="image4" left="25" top="1%" width="450" height="25"/>
-      <region id="adress" title="adress" left="5%" top="80%" width="30%" height="5%" z-index="3"/>
-      <region id="year" title="year" left="74%" top="80%" width="20%" height="5%" z-index="3"/>
-      <region id="style" title="style" left="5%" top="88%" width="80%" height="10%" z-index="3"/>
+      <region id="image1" title="image1" left="24%" top="13%" width="65%" height="80%"/>
+      <region id="image2" title="image2" left="44%" top="10%" width="46%" height="80%"/>
+      <region id="image3" title="image3" left="38%" top="15%" width="38%" height="80%" fit="meet"/>
+      <region id="image4" title="image4" left="75" top="1%" width="450" height="25"/>
+      <region id="adress" title="adress" left="5%" top="80%" width="50%" height="5%" z-index="3"/>
+      <region id="year" title="year" left="77%" top="80%" width="25%" height="5%" z-index="3"/>
+      <region id="style" title="style" left="5%" top="88%" width="95%" height="10%" z-index="3"/>
       <region id="style1" title="style1" left="5%" top="88%" width="96%" height="10%" z-index="3"/>
       <region id="sound" title="sound"/>
     </layout>
@@ -56,5 +56,6 @@
          </par>
         </seq>
     </par>
+      <text type="text/plain" id="Credits1" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam" dur="10s"/>
   </body>
 </smil>
