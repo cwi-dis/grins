@@ -477,6 +477,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 				self.__slider.timefunction = player.scheduler.timefunc
 				self.__slider.canusetimefunction = player.isplaying
 
+	def settoolbarpulldowns(self, pulldownmenus):
+		self.setToolbarPulldowns(pulldownmenus)
+
 	def setEditorDocumentMenu(self, flag):
 		if USE_NODOC_MENUBAR:
 			temp=self._mainmenu
