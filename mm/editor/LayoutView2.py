@@ -245,7 +245,6 @@ class TreeHelper:
 			parentNode = self.__nodeList.get(parentRef)
 		self.__onDelNode(parentNode, node)
 
-		
 class TreeNodeHelper:
 	def __init__(self, nodeRef, type):
 		self.isNew = 1
@@ -990,10 +989,11 @@ class LayoutView2(LayoutViewDialog2):
 					self.editmgr.setchannelattr(nodeRef.name, name, value)
 			self.editmgr.commit()
 
-	def applyNewRegion(self, parentRef, name):
+	def applyNewRegion(self, parentRef, id, regionName):
 		if self.editmgr.transaction():
-			self.editmgr.addchannel(name, 0, 'layout')
-			self.editmgr.setchannelattr(name, 'base_window', parentRef.name)
+			self.editmgr.addchannel(id, 0, 'layout')
+			self.editmgr.setchannelattr(id, 'base_window', parentRef.name)
+			self.editmgr.setchannelattr(id, 'regionName', regionName)
 			self.editmgr.commit('REGION_TREE')
 
 	def applyNewViewport(self, name):
@@ -1005,20 +1005,34 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.setchannelattr(name, 'height', 400)
 			self.editmgr.commit('REGION_TREE')
 
+	def __recurDelNode(self, nodeRef):
+		nodeType = self.getNodeType(nodeRef)
+		# if the node is a media, we just remove the link with the region
+		if nodeType == TYPE_MEDIA:
+			# we do nothing.
+			# XXX we can't remove the region link, because a media may be associated to more than one channel
+			# XXX (region name). need to think about
+			pass
+		elif nodeType in (TYPE_VIEWPORT, TYPE_REGION):
+			# remove the children before to remove the node
+			children = self.getChildren(nodeRef)
+			for child in children:
+				self.__recurDelNode(child)
+			self.treeHelper.delNode(nodeRef) 
+			self.editmgr.delchannel(nodeRef.name)
+			
 	def applyDelRegion(self, regionRef):
 		if self.editmgr.transaction():
 			# update directly (more efficient. No need to compare all nodes)
-			self.treeHelper.delNode(regionRef) 
+			self.__recurDelNode(regionRef)
 			self.commitAlreadyUpdated = 1 
-			self.editmgr.delchannel(regionRef.name)
 			self.editmgr.commit('REGION_TREE')
 			
 	def applyDelViewport(self, viewportRef):
 		if self.editmgr.transaction():
 			# update directly (more efficient. No need to compare all nodes)
-			self.treeHelper.delNode(viewportRef)
+			self.__recurDelNode(viewportRef)
 			self.commitAlreadyUpdated = 1 
-			self.editmgr.delchannel(viewportRef.name)
 			self.editmgr.commit('REGION_TREE')
 
 	def applyAttrList(self, nodeRefAndValueList):
@@ -1376,10 +1390,11 @@ class LayoutView2(LayoutViewDialog2):
 			name = baseName + `i`
 			
 		self.__parentRef = parentRef
+		self.__id = name
 		self.askname(name, 'Name for region', self.__regionNamedCallback)
 
 	def __regionNamedCallback(self, name):
-		self.applyNewRegion(self.__parentRef, name)
+		self.applyNewRegion(self.__parentRef, self.__id, name)
 		self.setglobalfocus([self.nameToNodeRef(name)])
 		self.updateFocus()
 
@@ -1401,12 +1416,13 @@ class LayoutView2(LayoutViewDialog2):
 		self.updateFocus()
 
 	def delRegion(self, regionRef):
-		# for now, we can only erase an empty viewport
-#		if not self.isEmpty(regionRef):
-#			msg = "you have to delete before the sub regions and associated medias"
-#			windowinterface.showmessage(msg, mtype = 'error')
-#			return
-		
+		# if this region or any sub region contain a media, show a warning message, and ask confirmation
+		if self.doesContainMedias(regionRef):
+			ret = windowinterface.GetOKCancel("The region that you want to remove contains some medias. Do you want to continue ?", self.toplevel.window)
+			if ret != 0:
+				# cancel
+				return
+			
 		parentRef = self.getParentNodeRef(regionRef, TYPE_REGION)
 		self.setglobalfocus([parentRef])
 		self.updateFocus()
@@ -1420,6 +1436,17 @@ class LayoutView2(LayoutViewDialog2):
 			return len(children) == 0
 		return 1
 
+	# checking if the region/viewport or sub-regions contain any media
+	def doesContainMedias(self, nodeRef):
+		if self.getNodeType(nodeRef) == TYPE_MEDIA:
+			return 1
+		children = self.getChildren(nodeRef)
+		for child in children:
+			if self.doesContainMedias(child):
+				return 1
+
+		return 0
+	
 	def delViewport(self, nodeRef):
 		# for now, we have to keep at least one viewport
 		currentViewportList = self.getViewportRefList()
@@ -1428,11 +1455,12 @@ class LayoutView2(LayoutViewDialog2):
 			windowinterface.showmessage(msg, mtype = 'error')
 			return
 
-		# for now, we can only erase an empty viewport
-#		if not self.isEmpty(nodeRef):
-#			msg = "you have to delete before the sub regions and associated medias"
-#			windowinterface.showmessage(msg, mtype = 'error')
-#			return
+		# if this region or any sub region contain a media, show a warning message, and ask confirmation
+		if self.doesContainMedias(nodeRef):
+			ret = windowinterface.GetOKCancel("The topLayout element that you want to remove contains some medias. Do you want to continue ?", self.toplevel.window)
+			if ret != 0:
+				# cancel
+				return
 		
 		# change the focus
 		# choice another viewport to show (this first in the list)
