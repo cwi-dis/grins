@@ -70,7 +70,7 @@ Redistribution (NFR) Version of its Player products:
     the Software.
 
 (b) Except as set forth in the foregoing limited warranty, Oratrix
-    Development disclaims all other warraties or conditions, either
+    Development disclaims all other warranties or conditions, either
     expressed or implied, including merchantability, fitness for any
     purpose, or noninfringement.
 

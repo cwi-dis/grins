@@ -46,7 +46,7 @@ Oratrix Development provides the following warranties for a Not For Redistributi
 
 (a) Oratrix Development warrants that the distribution created by us is complete and consistent with the delivered documentation for the Software.
 
-(b) Except as set forth in the foregoing limited warranty, Oratrix Development disclaims all other warraties or conditions, either expressed or implied, including merchantability, fitness for any purpose, or noninfringement.
+(b) Except as set forth in the foregoing limited warranty, Oratrix Development disclaims all other warranties or conditions, either expressed or implied, including merchantability, fitness for any purpose, or noninfringement.
 
 
 6. Exclusive Remedy
