@@ -25,8 +25,8 @@ appform={
 	3:{'cmd':-1,'title':'ArcInfo Editor','id':'arc_info','obj':None,'class':ArcInfoForm,'freezesize':1},
 	}
 
-import __main__
-if hasattr(__main__,'use_tab_attr_editor') and __main__.use_tab_attr_editor:
+import settings
+if settings.get('use_tab_attr_editor'):
 	appform[0]=	{'cmd':-1,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm,'freezesize':1}
 
 
