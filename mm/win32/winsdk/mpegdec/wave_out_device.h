@@ -47,6 +47,21 @@ class wave_out_device
 		return true;
 		}
 
+	static bool can_play(int nSamplesPerSec, int wBitsPerSample, int nChannels)
+		{
+		int nBlockAlign = nChannels*wBitsPerSample/8; 
+		long nAvgBytesPerSec = nBlockAlign*nSamplesPerSec;
+		WAVEFORMATEX wfx = {WAVE_FORMAT_PCM, 
+			WORD(nChannels), 
+			DWORD(nSamplesPerSec),
+			DWORD(nAvgBytesPerSec),
+			WORD(nBlockAlign),
+			WORD(wBitsPerSample),
+			WORD(0) 
+			};
+		return can_play(wfx);
+		}
+
 	bool open(WAVEFORMATEX& wfx)
 		{
 		MMRESULT mmres = waveOutOpen(&m_hWaveOut, WAVE_MAPPER, &wfx, (DWORD)wave_out_device::callback, (DWORD)this, CALLBACK_FUNCTION);
@@ -59,30 +74,13 @@ class wave_out_device
 		return true;
 		}
 
-	bool open(int nSamplesPerSec, int nChannels)
+	bool open(int nSamplesPerSec, int wBitsPerSample, int nChannels)
 		{
-		int wBitsPerSample = 16; 
 		int nBlockAlign = nChannels*wBitsPerSample/8; 
 		long nAvgBytesPerSec = nBlockAlign*nSamplesPerSec;
 		WAVEFORMATEX wfx = {WAVE_FORMAT_PCM, 
 			WORD(nChannels), 
 			DWORD(nSamplesPerSec),
-			DWORD(nAvgBytesPerSec),
-			WORD(nBlockAlign),
-			WORD(wBitsPerSample),
-			WORD(0) 
-			};
-		return open(wfx);
-		}
-
-	bool open2(int nSamplesPerSec, int nChannels)
-		{
-		int wBitsPerSample = 16; 
-		int nBlockAlign = nChannels*wBitsPerSample/8; 
-		long nAvgBytesPerSec = nBlockAlign*nSamplesPerSec;
-		WAVEFORMATEX wfx = {WAVE_FORMAT_PCM, 
-			WORD(nChannels), 
-			DWORD(nSamplesPerSec/nChannels),
 			DWORD(nAvgBytesPerSec),
 			WORD(nBlockAlign),
 			WORD(wBitsPerSample),
@@ -98,6 +96,13 @@ class wave_out_device
 			waveOutClose(m_hWaveOut);
 			m_hWaveOut = NULL;
 			}
+		}
+
+	void set_pitch(DWORD pitch)
+		{
+		MMRESULT mmres = waveOutSetPitch(m_hWaveOut, pitch);
+		if(mmres != MMSYSERR_NOERROR)
+			seterror("waveOutSetPitch()");
 		}
 
 	bool reset() 
