@@ -651,7 +651,3 @@ class htmlwindow:
 		shell_execute(url,'open')	
 	def close(self):pass
 	def is_closed(self):return 1
-		
-
-
- 
