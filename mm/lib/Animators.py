@@ -1270,19 +1270,7 @@ class AnimateElementParser:
 	def getAnimationType(self):
 		return self.__animtype
 
-	def getPath(self):
-		strpath = ''
-		if splineAnimation:
-			strpath = MMAttrdefs.getattr(self.__anim, 'path')
-		path = svgpath.Path()
-		if strpath:
-			path.constructFromSVGPathString(strpath)
-		else:
-			coords = self.__getNumPairInterpolationValues()
-			path.constructFromPoints(coords)
-		return path
-
-	def translatePosAttr(self, attr):
+	def toDOMOriginPosAttr(self, attr):
 		val = MMAttrdefs.getattr(self.__anim, attr)
 		if not val: return val
 		x, y = map(string.atoi, string.split(val,','))
@@ -1291,17 +1279,33 @@ class AnimateElementParser:
 		y = y - dy
 		return '%d, %d' % (x, y)
 
-	def translatePosValues(self):
-		val = MMAttrdefs.getattr(self.__anim, 'values')
-		if not val: return val
-		# ...
-		return val
+	# transform pos values to coordinates with the dom value as origin 
+	def toDOMOriginPosValues(self):
+		values = MMAttrdefs.getattr(self.__anim, 'values')
+		if not values: return values
+		dx, dy = self.__domval.real, self.__domval.imag
+		strcoord = string.split(values,';')
+		coords = []
+		retstr = ''
+		for str in strcoord:
+			x, y = self.__getNumPair(str)
+			x = x - dx
+			y = y - dy
+			retstr = retstr + '%d, %d;' % (x, y)
+			if pt!=None:
+				coords.append(pt)
+		if retstr:
+			return retstr[:-1]
+		return values
 
-	def translatePath(self):
-		val = MMAttrdefs.getattr(self.__anim, 'path')
-		if not val: return val
-		# ...
-		return val
+	def toDOMOriginPath(self):
+		strpath = MMAttrdefs.getattr(self.__anim, 'path')
+		if not strpath: return strpath
+		dx, dy = self.__domval.real, self.__domval.imag
+		path = svgpath.Path()
+		path.constructFromSVGPathString(strpath)
+		path.translate(-dx, -dy)
+		return repr(path)
 
 	# set time manipulators to the animator
 	def __setTimeManipulators(self, anim):
