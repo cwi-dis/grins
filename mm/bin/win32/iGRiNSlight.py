@@ -127,7 +127,7 @@ def GuessCMIFRoot():
 	if found:return dir
 	return 'd:\\ufs\\mm\\cmif'
 
-import settings
-settings.default_settings['lightweight'] = 1
+#import settings
+#settings.default_settings['lightweight'] = 1
 
 Boot(WHAT)
