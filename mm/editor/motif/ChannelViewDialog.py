@@ -184,8 +184,8 @@ class NodeBoxCommand:
 
 class ArcBoxCommand:
 	POPUP_SYNCARC = (
-##		(SMIL, 'Info...', INFO),
-##		(SMIL, None),
+		(SMIL, 'Properties...', ATTRIBUTES),
+		(SMIL, None),
 		(SMIL, 'Delete', DELETE),
 		)
 
