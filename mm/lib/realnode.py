@@ -422,61 +422,61 @@ class SlideShow:
 		return 2
 
 
-	def computebandwidth(self):
-		"""See whether bandwidth usage of our (slide) children is OK"""
-		import Bandwidth
-		seconds_extra = 0
-		errorcount = 0
-		urls_done = {}
-		ctx = self.node.GetContext()
-		bandwidth = self.rp.bitrate
-		if self.rp.preroll:
-			preload_cur_time = -self.rp.preroll
-		else:
-			preload_cur_time = 0
-		playout_cur_time = 0
-		index = 0
-		for index in range(len(self.rp.tags)):
-			slide = self.rp.tags[index]
-			if index < len(self.node.children):
-				slide_node = self.node.children[index]
-			else:
-				slide_node = None
-			start = slide.get('start', 0)
-			playout_cur_time = playout_cur_time + start		# The time the data should be loaded
-			if not slide['tag'] in ('fadein', 'crossfade', 'wipe'):
-				continue	# For non-image nodes we're done
-			url = slide.get('file', None)
-			if not url:
-				if slide_node:
-					slide_node.set_infoicon('error', 'Image file not set')
-				continue	# If there is no image we're also done
-			if urls_done.has_key(url):
-				if slide_node:
-					slide_node.set_infoicon('bandwidthgood')
-				continue	# And if we saw it before we're done too
-			try:
-				filesize = Bandwidth.GetSize(ctx.findurl(url), target=1, attrs=slide, convert = slide.get('project_convert', 1))
-			except Bandwidth.Error, arg:
-				if slide_node:
-					slide_node.set_infoicon('error', arg)
-				continue
-			if filesize == None:
-				# Unknown (probably remote url)
-				continue
-			urls_done[url] = 1
-			preload_cur_time = preload_cur_time + (filesize*8/bandwidth)
-			if preload_cur_time > playout_cur_time:
-				toolate = preload_cur_time - playout_cur_time
-				seconds_extra = seconds_extra + toolate
-				errorcount = errorcount + 1
-				if slide_node:
-					slide_node.set_infoicon('bandwidthbad', 'This image needs %d seconds extra to load'%toolate)
-				preload_cur_time = playout_cur_time # So rest of checks makes sense
-			else:
-				if slide_node:
-					slide_node.set_infoicon('bandwidthgood')
-		return seconds_extra, errorcount
+##	def computebandwidth(self):
+##		"""See whether bandwidth usage of our (slide) children is OK"""
+##		import Bandwidth
+##		seconds_extra = 0
+##		errorcount = 0
+##		urls_done = {}
+##		ctx = self.node.GetContext()
+##		bandwidth = self.rp.bitrate
+##		if self.rp.preroll:
+##			preload_cur_time = -self.rp.preroll
+##		else:
+##			preload_cur_time = 0
+##		playout_cur_time = 0
+##		index = 0
+##		for index in range(len(self.rp.tags)):
+##			slide = self.rp.tags[index]
+##			if index < len(self.node.children):
+##				slide_node = self.node.children[index]
+##			else:
+##				slide_node = None
+##			start = slide.get('start', 0)
+##			playout_cur_time = playout_cur_time + start		# The time the data should be loaded
+##			if not slide['tag'] in ('fadein', 'crossfade', 'wipe'):
+##				continue	# For non-image nodes we're done
+##			url = slide.get('file', None)
+##			if not url:
+##				if slide_node:
+##					slide_node.set_infoicon('error', 'Image file not set')
+##				continue	# If there is no image we're also done
+##			if urls_done.has_key(url):
+##				if slide_node:
+##					slide_node.set_infoicon('bandwidthgood')
+##				continue	# And if we saw it before we're done too
+##			try:
+##				filesize = Bandwidth.GetSize(ctx.findurl(url), target=1, attrs=slide, convert = slide.get('project_convert', 1))
+##			except Bandwidth.Error, arg:
+##				if slide_node:
+##					slide_node.set_infoicon('error', arg)
+##				continue
+##			if filesize == None:
+##				# Unknown (probably remote url)
+##				continue
+##			urls_done[url] = 1
+##			preload_cur_time = preload_cur_time + (filesize*8/bandwidth)
+##			if preload_cur_time > playout_cur_time:
+##				toolate = preload_cur_time - playout_cur_time
+##				seconds_extra = seconds_extra + toolate
+##				errorcount = errorcount + 1
+##				if slide_node:
+##					slide_node.set_infoicon('bandwidthbad', 'This image needs %d seconds extra to load'%toolate)
+##				preload_cur_time = playout_cur_time # So rest of checks makes sense
+##			else:
+##				if slide_node:
+##					slide_node.set_infoicon('bandwidthgood')
+##		return seconds_extra, errorcount
 
 def deltmpfiles():
 	import os
