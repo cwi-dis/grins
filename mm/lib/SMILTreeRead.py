@@ -1507,9 +1507,12 @@ def ReadFileContext(url, context):
 	context.setdirname(dir)
 	p = SMILParser(context)
 	u = MMurl.urlopen(url)
-	p.feed(u.read())
+	data = u.read()
+	p.feed(data)
 	p.close()
-	return p.GetRoot()
+	root = p.GetRoot()
+	root.source = data
+	return root
 
 def ReadString(string, name):
 	return ReadStringContext(string, name,
@@ -1519,7 +1522,9 @@ def ReadStringContext(string, name, context):
 	p = SMILParser(context)
 	p.feed(string)
 	p.close()
-	return p.GetRoot()
+	root = p.GetRoot()
+	root.source = string
+	return root
 
 def _minsize(start, extent, minsize):
 	# Determine minimum size for top-level window given that it
