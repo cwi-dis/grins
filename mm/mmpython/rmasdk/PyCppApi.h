@@ -18,7 +18,9 @@
 // class SyncObject and CEnterLeavePython
 #include "mt.h"
 
+#if !defined(_ABIO32) || _ABIO32 == 0
 #include "string"
+#endif
 
 inline void Trace(const char*, ...){}
 #define TRACE Trace
@@ -96,7 +98,11 @@ class DLL_API RMAObject : public PyObject
 	static RMAObject* make(TypeObject &type);
 
 	// virtuals for Python support
+#if !defined(_ABIO32) || _ABIO32 == 0
 	virtual string repr();
+#else
+	virtual char *repr();
+#endif
 	virtual PyObject *getattr(char *name);
 	virtual int setattr(char *name, PyObject *v);
 	virtual void cleanup();
@@ -155,7 +161,9 @@ class DLL_API CallerHelper
 	BOOL retval( long &ret );
 	BOOL retval( PyObject* &ret );
 	BOOL retval( char * &ret );
+#if !defined(_ABIO32) || _ABIO32 == 0
 	BOOL retval( string &ret );
+#endif
 	BOOL retnone();
 	PyObject *GetHandler();
 	
@@ -164,7 +172,9 @@ class DLL_API CallerHelper
 	PyObject *handler;
 	PyObject *retVal;
 	PyObject *py_ob;
+#if !defined(_ABIO32) || _ABIO32 == 0
 	string csHandlerName;
+#endif
 	};
 
 #endif
