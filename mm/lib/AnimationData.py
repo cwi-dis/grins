@@ -219,6 +219,9 @@ class AnimationData:
 			targname = self._target.getUID()
 		context = self._target.getContext()
 
+		# update/insert animation nodes starting at this index
+		nodeIndex = 0 
+
 		anim = existing.get('pos')
 		if anim is not None:
 			self._updateNode(anim, keyTimes, animateMotionValues)
@@ -230,7 +233,8 @@ class AnimationData:
 			# XXX end temporare
 			anim.targetnode = self._target.getTargetNode()
 			self._updateNode(anim, keyTimes, animateMotionValues, None, targname)
-			em.addnode(parent, 0, anim)
+			em.addnode(parent, nodeIndex, anim)
+			nodeIndex = nodeIndex + 1
 
 		anim = existing.get('width')
 		if anim is not None:
@@ -243,7 +247,8 @@ class AnimationData:
 			# XXX end temporare
 			anim.targetnode = self._target.getTargetNode()
 			self._updateNode(anim, keyTimes, animateWidthValues, 'width', targname)
-			em.addnode(parent, 1, anim)
+			em.addnode(parent, nodeIndex, anim)
+			nodeIndex = nodeIndex + 1
 
 		anim = existing.get('height')
 		if anim is not None:
@@ -256,7 +261,8 @@ class AnimationData:
 			# XXX end temporare
 			anim.targetnode = self._target.getTargetNode()
 			self._updateNode(anim, keyTimes, animateHeightValues, 'height', targname)
-			em.addnode(parent, 2, anim)
+			em.addnode(parent, nodeIndex, anim)
+			nodeIndex = nodeIndex + 1
 
 		anim = existing.get('color')
 		if anim is not None:
@@ -269,7 +275,8 @@ class AnimationData:
 			# XXX end temporare
 			anim.targetnode = self._target.getTargetNode()
 			self._updateNode(anim, keyTimes, animateColorValues, 'backgroundColor', targname)
-			em.addnode(parent, 3, anim)
+			em.addnode(parent, nodeIndex, anim)
+			nodeIndex = nodeIndex + 1
 		
 #		em.commit()
 		return 1
@@ -282,19 +289,14 @@ class AnimationData:
 		animateHeightValues, animateColorValues = self._dataToValues()
 		
 		dur = 1.0
-		accumulate = 'none'
-		additive = 'replace'
 		times = self._times
 
 		# animateMotion
 		path = svgpath.Path()
 		coords = animateMotionValues
 		path.constructFromPoints(coords)
-		attr = 'position'
 		domval = complex(self._domrect[0],self._domrect[1])
-		mode = 'paced'
-		splines = None
-		self._animateMotion = Animators.MotionAnimator(attr, domval, path, dur, mode, times, splines, accumulate, additive)
+		self._animateMotion = Animators.MotionAnimator('position', domval, path, dur, mode='linear', times=times)
 		
 		# animate width and height
 		self._animateWidth = Animators.Animator('width', self._domrect[2], animateWidthValues, dur, mode='linear', times=times)
