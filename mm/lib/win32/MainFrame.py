@@ -67,16 +67,16 @@ if features.editor:
 	# Not the simplest way of coding it, but it seems to work -mjvdg.
 	##### THIS IS ONLY ACCESSED WITHIN THIS FILE #####
 	appview={
-		'pview_':{'cmd':usercmd.HIDE_PLAYERVIEW,'title':'Player','class':_PlayerView,},
-		'hview_':{'cmd':usercmd.HIDE_HIERARCHYVIEW,'title':'Structure view','class':_HierarchyView,},
+		'pview_':{'cmd':usercmd.HIDE_PLAYERVIEW,'title':'Previewer','class':_PlayerView,},
+		'hview_':{'cmd':usercmd.HIDE_HIERARCHYVIEW,'title':'Structured Timeline','class':_HierarchyView,},
 		'leview_':{'cmd':usercmd.HIDE_LINKVIEW,'title':'Hyperlinks', 'class':_LinkView},
-		'lview_':{'cmd':usercmd.HIDE_LAYOUTVIEW,'title':'Layout view', 'class':_LayoutView},
-		'ugview_':{'cmd':usercmd.HIDE_USERGROUPVIEW,'title':'Custom tests','class':_UsergroupView},
+		'lview_':{'cmd':usercmd.HIDE_LAYOUTVIEW,'title':'Layout', 'class':_LayoutView},
+		'ugview_':{'cmd':usercmd.HIDE_USERGROUPVIEW,'title':'Custom Tests','class':_UsergroupView},
 		'trview_':{'cmd':usercmd.HIDE_TRANSITIONVIEW,'title':'Transitions','class':_TransitionView},
 		'sview_':{'cmd':usercmd.HIDE_SOURCEVIEW,'title':'Source','class':_SourceView},
-		'lview2_':{'cmd':usercmd.HIDE_LAYOUTVIEW2,'title':'Layout view','class':_LayoutView2},
-		'attr_edit':{'cmd':-1,'title':'Property Editor','class':AttrEditForm},
-		'aview_':{'cmd':usercmd.HIDE_ASSETSVIEW,'title':'Assets view','class':_AssetsView,},
+		'lview2_':{'cmd':usercmd.HIDE_LAYOUTVIEW2,'title':'Layout','class':_LayoutView2},
+		'attr_edit':{'cmd':-1,'title':'Properties','class':AttrEditForm},
+		'aview_':{'cmd':usercmd.HIDE_ASSETSVIEW,'title':'Assets','class':_AssetsView,},
 		'erview_':{'cmd':usercmd.HIDE_ERRORSVIEW,'title':'Error messages','class':_ErrorsView},
 	}
 else:
@@ -559,14 +559,14 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		return self._doc
 
 	# Create a text viewer
-	def textwindow(self, text, xywh=None, readonly = 0, close_callback = None):
+	def textwindow(self, text, xywh=None, readonly = 0, close_callback = None, title = ''):
 		sv=self.newviewobj('sview_')
 		sv.settext(text)
 		sv.set_readonly(readonly)
 		sv.set_closecallback(close_callback)
 		self.showview(sv,'sview_', xywh)
 		if self._cmifdoc:
-			sv.GetParent().SetWindowText('Source (%s)'%self._cmifdoc.basename)
+			sv.GetParent().SetWindowText(title)
 		return sv
 
 	# Creates a new ChildFrame 
