@@ -2254,6 +2254,7 @@ class Viewport(Region):
 		self._height = height
 		
 		self._ctx = context
+		self._hibutton = None
 			
 	def __repr__(self):
 		return '<Viewport instance at %x>' % id(self)
@@ -2326,6 +2327,27 @@ class Viewport(Region):
 	# 
 	# Painting section
 	# 
+	def _highlight(self, button, hilite):
+		rc1 = rc2 = None
+		if self._hibutton is not None:
+			if self._hibutton is button and hilite:
+				# highlighted button must be highlighted
+				return
+			rc1 = self._hibutton.getbbox()
+			self._hibutton = None
+		if hilite:
+			self._hibutton = button
+			rc2 = button.getbbox()
+		if rc1 and rc2:
+			rc = self.rectOr(rc1, rc2)
+		elif rc1:
+			rc = rc1
+		elif rc2:
+			rc = rc2
+		else:
+			return
+		self.update(rc)
+
 	def update(self, rc=None, exclwnd=None):
 		self._ctx.update(rc, exclwnd)
 		if self._callbacks.has_key(WindowContentChanged):
@@ -2357,6 +2379,17 @@ class Viewport(Region):
 		for w in L:
 			if w!=exclwnd:
 				w.paint(rc, exclwnd)
+
+		if self._hibutton is not None:
+			try:
+				hdc = drawBuffer.GetDC()
+			except ddraw.error, arg:
+				print arg
+				return
+			dc = win32ui.CreateDCFromHandle(hdc)
+			self._hibutton.paint(dc)
+			dc.Detach()
+			drawBuffer.ReleaseDC(hdc)
 
 	# 
 	# Mouse section
