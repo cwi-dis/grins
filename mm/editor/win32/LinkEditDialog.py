@@ -409,6 +409,9 @@ class LinkEditorDialog:
 	def show(self):
 		self.__window.show()
 
+	def close(self):
+		pass
+
 	def oksetsensitive(self, sensitive):
 		"""Make the Add button (in)sensitive.
 
