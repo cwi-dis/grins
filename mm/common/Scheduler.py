@@ -9,8 +9,8 @@ import Timing
 import rtpool
 from MMNode import alltypes, leaftypes, interiortypes
 from ArmStates import *
-from AnchorEdit import A_ID, A_TYPE, ATYPE_PAUSE
 from HDTL import HD, TL
+from AnchorDefs import *
 
 import fl	# For fl.showmessage only
 
@@ -164,7 +164,7 @@ class Scheduler(scheduler):
 		return self.start_2_playing(1)
 	#
 	def resume_1_playing(self,rate):
-		self.setwaiting()
+		self.toplevel.setwaiting()
 		if self.sync_cv:
 			self.toplevel.channelview.globalsetfocus(self.playroot)
 		self.playing = 1
@@ -189,7 +189,7 @@ class Scheduler(scheduler):
 		self.duration_ind.label = label
 		self.playroot.counter[HD] = 1
 		self.decrement(0, self.playroot, HD)
-		dummy = self.enter(0.1, 0, self.setready, ())
+		dummy = self.enter(0.1, 0, self.toplevel.setready, ())
 	#
 	def suspend_playing(self):
 		self.stopchannels() # Tell the channels to quit it
@@ -199,7 +199,7 @@ class Scheduler(scheduler):
 		self.setrate(0.0) # Stop the clock
 		self.showstate()
 		unarmallnodes(self.playroot)
-		self.setready()
+		self.toplevel.setready()
 	#
 	def stop_playing(self):
 		self.playing = 0

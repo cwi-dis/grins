@@ -40,7 +40,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 		form = flp.parse_form('LinkEditForm', 'form')
 		width, height = form[0].Width, form[0].Height
 		title = 'Hyperlinks (' + toplevel.basename + ')'
-		self = BasicDialog.init(self, (width, height, title))
+		self = BasicDialog.init(self, width, height, title)
 		self.left = Struct()
 		self.right = Struct()
 		self.left.fillfunc = self.fill_none
@@ -129,7 +129,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 		if str.hidden:
 			str.anchor_browser.hide_object()
 			str.node_show.hide_object()
-			str.node_group.hide_object()
+			str.node_name.hide_object()
 		else:
 			str.anchor_browser.show_object()
 		# Try to keep focus correct
@@ -146,8 +146,12 @@ class LinkEdit(ViewDialog, BasicDialog):
 				str.fillfunc = self.fill_none
 		str.anchor_browser.clear_browser()
 		str.fillfunc(str)
-		for i in str.anchors:
-			name = '#' + i[0] + '.' + `i[1]`
+		for a in str.anchors:
+			uid, aid = a
+			node = self.context.mapuid(uid)
+			nodename = node.GetRawAttrDef('name', uid)
+			if type(aid) <> type(''): aid = `aid`
+			name = '#' + nodename + '.' + aid
 			str.anchor_browser.add_browser_line(name)
 		if focusvalue:
 			try:
@@ -159,15 +163,18 @@ class LinkEdit(ViewDialog, BasicDialog):
 			self.linkedit = 0
 		if str.focus <> None:
 			str.anchor_browser.select_browser_line(str.focus+1)
+			str.anchor_browser.set_browser_topline(str.focus+1)
 			str.node_show.show_object()
+			str.anchoredit_show.show_object()
 		else:
 			str.node_show.hide_object()
+			str.anchoredit_show.hide_object()
 		if str.node:
 			str.node_name.label = \
 				  MMAttrdefs.getattr(str.node, 'name')
-			str.node_group.show_object()
+			str.node_name.show_object()
 		else:
-			str.node_group.hide_object()
+			str.node_name.hide_object()
 	#
 	# This function reloads the link browser or invisibilizes it
 	#
@@ -386,7 +393,16 @@ class LinkEdit(ViewDialog, BasicDialog):
 		self.updateform()
 	def anchoredit_callback(self, (but, str)):
 		str = getattr(self, str)
-		node = str.node
+		if str.focus == None:
+			print 'LinkEdit: anchoredit without a focus!'
+			return
+		anchor = str.anchors[str.focus]
+		uid = anchor[0]
+		try:
+			node = self.context.mapuid(uid)
+		except NoSuchUIDError:
+			print 'LinkEdit: anchor with unknown node UID!'
+			return
 		import AnchorEdit
 		AnchorEdit.showanchoreditor(self.toplevel, node)
 	#

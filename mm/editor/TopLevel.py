@@ -245,12 +245,16 @@ class TopLevel(ViewDialog, BasicDialog):
 	#
 	def play_callback(self, (obj, arg)):
 		if obj.get_button():
+			self.setwaiting()
 			self.player.show()
 			self.player.playsubtree(self.root)
+			self.setready()
 	#
 	def view_callback(self, (obj, view)):
 		if obj.get_button():
+			self.setwaiting()
 			view.show()
+			self.setready()
 		else:
 			view.hide()
 	#
@@ -428,3 +432,15 @@ class TopLevel(ViewDialog, BasicDialog):
 	def winshut(self):
 		self.closebutton.set_button(1)
 		self.close()
+	#
+	# watch cursor management
+	#
+	def setwaiting(self):
+		BasicDialog.setwaiting(self)
+		for v in self.views:
+			v.setwaiting()
+	#
+	def setready(self):
+		BasicDialog.setready(self)
+		for v in self.views:
+			v.setready()

@@ -45,7 +45,7 @@ class Channel:
 	# parameters out of the attribute dictionary each time it
 	# is reset, so changes made while it was dormant are noted.
 
-	def init(self, (name, attrdict, player)):
+	def init(self, name, attrdict, player):
 		global channel_device
 		self.name = name
 		self.attrdict = attrdict
@@ -156,7 +156,7 @@ class Channel:
 
 	# Start playing a node.
 
-	def play(self, (node, callback, arg)):
+	def play(self, node, callback, arg):
 		node.setarmedmode(ARM_PLAYING)
 		secs = self.getduration(node)
 		self.cb = (callback, arg)

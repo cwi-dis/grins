@@ -24,7 +24,7 @@ import MMAttrdefs
 import Timing
 from ArmStates import *
 from MMExc import *
-from AnchorEdit import A_TYPE, ATYPE_PAUSE
+from AnchorDefs import *
 
 
 # Round an 8-bit RGB color triple to 4-bit (as used by doublebuffer)

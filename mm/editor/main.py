@@ -65,8 +65,10 @@ def main():
 			import Help
 			Help.sethelpdir(arg)
 	#
+	tops = []
 	for fn in files:
 		top = TopLevel.TopLevel().init(fn)
+		top.setwaiting()
 		top.show()
 		for opt, arg in opts:
 			if opt == '-T':
@@ -82,6 +84,10 @@ def main():
 			elif opt == '-L':
 				top.links.show()
 		top.checkviews()
+		tops.append(top)
+	#
+	for top in tops:
+		top.setready()
 	#
 	try:
 		try:

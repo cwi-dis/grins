@@ -16,8 +16,8 @@ class PythonChannel(Channel):
 	chan_attrs = ['startupfile']
 	node_attrs = ['duration', 'file']
 
-	def init(self, args):
-		self = Channel.init(self, args)
+	def init(self, name, attrdict, player):
+		self = Channel.init(self, name, attrdict, player)
 		self.reset()
 		return self
 
@@ -34,6 +34,8 @@ class PythonChannel(Channel):
 		self.env['node'] = None
 		if self.attrdict.has_key('startupfile'):
 			startupfile = self.attrdict['startupfile']
+			startupfile = \
+				self.player.toplevel.findfile(startupfile)
 			try:
 				execfile(startupfile, self.env)
 			except:
@@ -41,7 +43,7 @@ class PythonChannel(Channel):
 				print '***exception***:',
 				print sys.exc_type + ':', sys.exc_value
 
-	def play(self, (node, callback, arg)):
+	def play(self, node, callback, arg):
 		if self.is_showing():
 			type = node.GetType()
 			if type == 'imm':
@@ -59,7 +61,7 @@ class PythonChannel(Channel):
 				print '***exception***:',
 				print sys.exc_type + ':', sys.exc_value
 			self.env['node'] = None
-		Channel.play(self, (node, callback, arg))
+		Channel.play(self, node, callback, arg)
 
 	def done(self, dummy):
 		Channel.done(self, dummy)

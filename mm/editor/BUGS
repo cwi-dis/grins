@@ -40,6 +40,11 @@ Kaboo!: None
 
 ------------------------------ BUGS -------------------------------
 
+ImageChannel: anchor editing doesn't scale the anchor we're editing
+right
+
+Player: "Ignore delays" option makes the time run as fast as it can
+
 Nodes with unknown channel name still cause problems.
 
 (Lynda:) One thing I forgot to mention, which would be nice to

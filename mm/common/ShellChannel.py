@@ -17,14 +17,14 @@ class ShellChannel(Channel):
 	chan_attrs = []
 	node_attrs = ['duration', 'file']
 
-	def init(self, args):
+	def init(self, name, attrdict, player):
 		self.pid = None
-		return Channel.init(self, args)
+		return Channel.init(self, name, attrdict, player)
 
 	def __repr__(self):
 		return '<ShellChannel instance, name=' + `self.name` + '>'
 
-	def play(self, (node, callback, arg)):
+	def play(self, node, callback, arg):
 		self.pid = None
 		if self.is_showing():
 			type = node.GetType()
@@ -37,7 +37,7 @@ class ShellChannel(Channel):
 				prog = MMAttrdefs.getattr(node, 'file')
 				argv = [prog]
 			self.pid = startprog(prog, argv)
-		Channel.play(self, (node, callback, arg))
+		Channel.play(self, node, callback, arg)
 
 	def done(self, dummy):
 		if self.pid:
