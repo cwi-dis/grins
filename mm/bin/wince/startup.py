@@ -18,20 +18,20 @@ GRINSDIR = r'\Program Files\GRiNS'
 specificPath = "grins"
 
 GRINSPATH = [
-	os.path.join(GRINSDIR, 'lib\\wince'), # override folder
-#	os.path.join(GRINSDIR, 'bin\\wince'), # bin (set by exe)
+	os.path.join(GRINSDIR, r'lib\wince'), # override folder
+#	os.path.join(GRINSDIR, r'bin\wince'), # bin (set by exe)
 
-	os.path.join(GRINSDIR, '%s\\smil20\\win32' % specificPath),
-	os.path.join(GRINSDIR, '%s\\smil20' % specificPath),
-	os.path.join(GRINSDIR, '%s\\wince' % specificPath),
-	os.path.join(GRINSDIR, '%s\\win32' % specificPath),
-	os.path.join(GRINSDIR, '%s' % specificPath),
+	os.path.join(GRINSDIR, r'%s\smil20\win32' % specificPath),
+	os.path.join(GRINSDIR, r'%s\smil20' % specificPath),
+	os.path.join(GRINSDIR, r'%s\wince' % specificPath),
+	os.path.join(GRINSDIR, r'%s\win32' % specificPath),
+	os.path.join(GRINSDIR, r'%s' % specificPath),
 
-	os.path.join(GRINSDIR, 'common\\wince'),
+	os.path.join(GRINSDIR, r'common\wince'),
 
-	os.path.join(GRINSDIR, 'common'),
-	os.path.join(GRINSDIR, 'lib'),
-	os.path.join(GRINSDIR, 'pylib'),
+	os.path.join(GRINSDIR, r'common'),
+	os.path.join(GRINSDIR, r'lib'),
+	os.path.join(GRINSDIR, r'pylib'),
 ]
 
 sys.path[0:0] = GRINSPATH
