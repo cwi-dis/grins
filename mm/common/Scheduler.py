@@ -1338,6 +1338,8 @@ class Scheduler(scheduler):
 			when, prio, action, argument = self.queue[0]
 			del self.queue[0]
 			apply(action, argument)
+			if not self.playing:
+				return
 			now = self.timefunc()
 		#
 		# Now the normal runqueue
@@ -1346,13 +1348,13 @@ class Scheduler(scheduler):
 		if queue:
 			self.toplevel.setwaiting()
 			for action in queue:
-				if not self.playing:
-					break
 				timestamp = None
 				if len(action) > 3:
 					timestamp = action[3]
 					action = action[:3]
 				self.runone(action, curtime, timestamp)
+				if not self.playing:
+					return
 		self.updatetimer(curtime)
 	#
 	# FutureWork returns true if any of the scheduler contexts
@@ -1548,6 +1550,8 @@ class Scheduler(scheduler):
 					self.do_play(sctx, arg, curtime, timestamp)
 				else:
 					arg.startplay(timestamp)
+				if not self.playing:
+					return
 				sctx.sched_arcs(arg, curtime, 'begin', timestamp=timestamp)
 ##				adur = arg.calcfullduration(self)
 ##				if arg.fullduration is not None and adur is not None and adur >= 0:
