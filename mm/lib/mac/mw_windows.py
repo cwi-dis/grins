@@ -848,16 +848,29 @@ class _CommonWindow:
 			func(arg, self, KeyboardInput, char)
 			return 1
 		
+	def _do_move(self, deltax, deltay):
+		# Move a window and it's subwindows. Note that this function does
+		# not schedule redraws or invalidate clipping regions.
+		x, y, w, h = self._rect
+		self._rect = x+deltax, y+deltay, w, h
+		self._sizes = self._parent._pxl2rel(self._rect)
+		for w in self._subwindows:
+			w._do_move(deltax, deltay)
+		
 	def _do_resize(self):
 		"""The (sub)window has changed size through external means. Recompute
 		everything for ourselves and our children"""
+		self._sizes = self._parent._pxl2rel(self._rect)
+		if self._istoplevel:
+			self._clipchanged()
+		else:
+			self._parent._clipchanged()
 		for d in self._displists[:]:
 			d.close()
 		self._do_resize0()
 		
 	def _do_resize0(self):
 		"""Common code for resize and double width/height"""
-		x, y, width, height = self._rect
 
 		for w in self._subwindows:
 			w._do_resize1()
@@ -1340,10 +1353,9 @@ class _CommonWindow:
 
 	# Experimental animation interface
 	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
-		return # XXXX
 		# first convert any coordinates to pixel
-		coordinates = self._convert_coordinates(coordinates,units=units)
-		print 'window.updatecoordinates',coordinates, units
+		coordinates = self._parent._convert_coordinates(coordinates,units=units)
+##		print 'window.updatecoordinates',coordinates, units
 		
 		x, y = coordinates[:2]
 
@@ -1354,12 +1366,27 @@ class _CommonWindow:
 			w, h = coordinates[2:]
 		else:
 			raise AssertionError
-		self._rect = x, y, w, h
-		self._units = units
-		self._do_resize()
+		
+		if units == self._units and (x, y, w, h) == self._rect:
+			return
+			
+		Qd.SetPort(self._onscreen_wid)
+		Win.InvalRect(self.qdrect())
+		
+		old_x, old_y, old_w, old_h = self._rect
+		if units == self._units and w == old_w and h == old_h:
+			if self._istoplevel:
+				self._clipchanged()
+			else:
+				self._parent._clipchanged()
+			self._do_move(x-old_x, y-old_y)
+		else:
+			self._rect = x, y, w, h
+			self._units = units
+			self._do_resize()
+		Win.InvalRect(self.qdrect())
 
 	def updatezindex(self, z):
-		return # XXXX
 		self._z = z
 		self._updatezorder(redraw=1)
 		print 'window.updatezindex',z
@@ -1369,7 +1396,7 @@ class _CommonWindow:
 		self._transparent = 0 # XXXX Correct?
 		for dl in self._displists:
 			dl.updatebgcolor(color)
-		print 'window.updatebgcolor',color, self
+##		print 'window.updatebgcolor',color, self
 		Qd.SetPort(self._onscreen_wid)
 		Win.InvalRect(self.qdrect())
 
@@ -2276,7 +2303,6 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		# XXXX Should also update size of offscreen maps?
 		Qd.SetPort(self._onscreen_wid)
 		Win.InvalRect(self.qdrect())
-		self._clipchanged()
 
 		old_x, old_y, old_w, old_h = self._rect
 		if x is None:
