@@ -609,12 +609,12 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		self._canvas = 0, 0, w, h
 		self._rectb = x, y, w, h
 		self._sizes = parent._inverse_coordinates(self._rectb)
+		self._units = units
 
 		# create an artificial name 
 		self._num = len(parent._subwindows)+1
 		self._title = 'c%d'%self._num
 
-		
 		# insert window in _subwindows list at correct z-order
 		for i in range(len(parent._subwindows)):
 			if self._z > parent._subwindows[i]._z:
@@ -654,6 +654,25 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		self.HookMessage(self.onCreateBoxOK,WM_USER_CREATE_BOX_OK)
 		self.HookMessage(self.onCreateBoxCancel,WM_USER_CREATE_BOX_CANCEL)
 		self.show()
+
+		# drag parameters
+		self._enable_content_dragging = 0 # is content dragging enabled?
+		self._wndorg = (0,0) # window origin from canvas origin in pixel
+		self._dxmax = 0 # max x-coord in pixels of wndorg
+		self._dymax = 0 # max y-coord in pixels of wndorg
+		self._dragging = 0 # are we dragging?
+
+	# call this method to set content canvas and enable dragging
+	def setcontentcanvas(self, w, h, units = UNIT_SCREEN):
+		x, y, w, h = self._convert_coordinates((0,0,w,h),
+					crop = 0, units = units)
+		xb,yb,wb,hb = self._rectb
+		dw = w-wb
+		dh = h-hb
+		if dw>0 or dh>0:
+			self._enable_content_dragging = 1
+			self._dxmax = max(0,dw)
+			self._dymax = max(0,dh)
 
 	# Called by the core system to create a child window to the subwindow
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
@@ -759,10 +778,14 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 			self.notifyListener('OnDraw',dc)
 			return
 		rc=dc.GetClipBox()
+		if self._enable_content_dragging:
+			dc.SetViewportOrg((-self._wndorg[0],-self._wndorg[1]))
 		if self._redrawfunc:
 			self._redrawfunc()
 		elif self._active_displist:
 			self._active_displist._render(dc,rc)
+		if self._enable_content_dragging:
+			dc.SetViewportOrg((0,0));
 		if self._showing: # i.e. we must draw a frame around as
 			self.showwindow_on(dc)
 	
@@ -770,10 +793,11 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 	# Part of our mechanism for correctly updatinh overlapping transparent windows					
 	# returns 1 to indicate 'done'	
 	def OnEraseBkgnd(self,dc):
+
 		# while in create box mode special handling
 		if self.in_create_box_mode() and self.get_box_modal_wnd()==self:
 			return
-
+		
 		# do not erase bkgnd for video channel when active 
 		if self._active_displist and (self._window_type==HTM): #self._window_type==MPEG or 
 			return 1
@@ -911,6 +935,10 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		point=msg.pos()
 		self.dispatchMouseEvent(point,Mouse0Press)
 
+		if self._enable_content_dragging:
+			self._dragging = 1
+			self._dragpoint = point
+
 	# Response to left button up
 	def onLButtonUp(self, params):
 		if self.in_create_box_mode():
@@ -919,6 +947,8 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		msg=win32mu.Win32Msg(params)
 		point=msg.pos()
 		self.dispatchMouseEvent(point,Mouse0Release)
+
+		self._dragging = 0
 
 	# Dispatch mouse events
 	def dispatchMouseEvent(self,point,ev):
@@ -934,6 +964,25 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 					if win.onMouseEvent(wspt,ev):return 1
 		else: return 0
 
+	def dragwndorigin(self, point):
+		if not self._dragging: return
+		dx =  -(point[0] - self._dragpoint[0])
+		dy =  -(point[1] - self._dragpoint[1])
+		x, y = self._wndorg
+		xn = x + dx
+		yn = y + dy
+		if xn<0:
+			xn = 0
+		elif xn > self._dxmax:
+			xn = self._dxmax
+		if yn<0:
+			yn = 0
+		elif yn > self._dymax:
+			yn = self._dymax
+		self._wndorg = (xn, yn)
+		self._dragpoint = point
+		self.ScrollWindow(-(xn-x),-(yn-y))
+
 
 	def onMouseMove(self, params):
 		if self.in_create_box_mode():
@@ -941,6 +990,9 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 			return
 		msg=win32mu.Win32Msg(params)
 		point=msg.pos()
+
+		if self._dragging:
+			self.dragwndorigin(point)
 
 		p=self._parent;ws=p._subwindows;n=len(ws)
 		ix=ws.index(self)
