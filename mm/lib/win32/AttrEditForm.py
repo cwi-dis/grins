@@ -21,9 +21,6 @@ import afxres,commctrl
 # GRiNS resource ids
 import grinsRC
 
-# GRiNS constants
-import AnchorDefs
-
 # App constants
 import appcon
 from win32mu import Point,Size,Rect # shorcuts
@@ -521,182 +518,6 @@ class _TupleCtrlIntermediate:
 	def __getitem__(self, i):
 		return self.__controls[i]
 
-from AnchorList import AnchorList
-
-class AnchorlistCtrl(AttrCtrl, AnchorList):
-	def __init__(self, wnd, attr, resid):
-		AttrCtrl.__init__(self, wnd, attr, resid)
-##		hasfixed = self._attr.wrapper.toplevel.player.updatefixedanchors(self._attr.wrapper.node)
-##		self.__editable = not hasfixed
-		AnchorList.__init__(self)
-		self._list = components.ListBox(wnd, grinsRC.IDC_ALIST)
-		self._new = components.Button(wnd, grinsRC.IDC_NEW)
-		self._rename = components.Button(wnd, grinsRC.IDC_RENAME)
-		self._delete = components.Button(wnd, grinsRC.IDC_DELETE)
-		self._link = components.Button(wnd, grinsRC.IDC_LINK)
-##		self._type = components.ComboBox(wnd, grinsRC.IDC_ATYPE)
-		self._type = components.CheckButton(wnd, grinsRC.IDC_ATYPE)
-		xywh = []		# x,y,w,h coordinates
-		for i in range(2,2+4):
-			xywh.append(components.Edit(wnd, getattr(grinsRC, 'IDC_1%d' % i)))
-		self._xywh = _TupleCtrlIntermediate(xywh, 1)
-		se = []
-		for i in range(2,2+2):	# start,end values
-			se.append(components.Edit(wnd, getattr(grinsRC, 'IDC_%d2' % i)))
-		self._se = _TupleCtrlIntermediate(se, 0)
-		self._iconplay = win32ui.GetApp().LoadIcon(grinsRC.IDI_PLAY)
-		self._iconpause = win32ui.GetApp().LoadIcon(grinsRC.IDI_PAUSE)
-		self._iconstop = win32ui.GetApp().LoadIcon(grinsRC.IDI_STOP)
-		self._bplay = components.Button(wnd, grinsRC.IDC_PLAY)
-		self._bpause = components.Button(wnd, grinsRC.IDC_PAUSE)
-		self._bstop = components.Button(wnd, grinsRC.IDC_STOP)
-		
-	def OnInitCtrl(self):
-		self._initctrl = self
-		self._list.attach_to_parent()
-		self._xywh.attach_to_parent()
-		self._xywh.hookcommand(self._wnd, self.OnEdit)
-		self._se.attach_to_parent()
-		self._se.hookcommand(self._wnd, self.OnEdit)
-		AnchorList.setvalue(self, self._attr.getcurrent() or {})
-		self._wnd.HookCommand(self.OnList, grinsRC.IDC_ALIST)
-		self._type.attach_to_parent()
-##		self._type.resetcontent()
-##		self._type.setoptions(AnchorDefs.TypeLabels)
-##		self._type.setcursel(None)
-		self._type.setcheck(0)
-		self._wnd.HookCommand(self.OnType, grinsRC.IDC_ATYPE)
-		self._new.attach_to_parent()
-		self._new.enable(1)
-		self._wnd.HookCommand(self.OnNew, grinsRC.IDC_NEW)
-		self._rename.attach_to_parent()
-		self._wnd.HookCommand(self.OnRename, grinsRC.IDC_RENAME)
-		self._delete.attach_to_parent()
-		self._wnd.HookCommand(self.OnDelete, grinsRC.IDC_DELETE)
-		self._link.attach_to_parent()
-		self._wnd.HookCommand(self.OnLink, grinsRC.IDC_LINK)
-		self._bplay.attach_to_parent()
-		self._bpause.attach_to_parent()
-		self._bstop.attach_to_parent()
-		self._bplay.seticon(self._iconplay)
-		self._bpause.seticon(self._iconpause)
-		self._bstop.seticon(self._iconstop)
-		self._wnd.HookCommand(self.OnPlay, grinsRC.IDC_PLAY)
-		self._wnd.HookCommand(self.OnPause, grinsRC.IDC_PAUSE)
-		self._wnd.HookCommand(self.OnStop, grinsRC.IDC_STOP)
-		self.setstate('stop')
-		self.fill()
-
-	def getvalue(self):
-		if self._initctrl:
-			return AnchorList.getvalue(self)
-		return self._attr.getcurrent() or {}
-
-	def setvalue(self,val):
-		pass
-		#self.__anchorlinks = val
-
-	def askanchorname(self):
-		win32dialog.AnchorNameDlg('Anchor name', '', self.__newCBbox,
-					 parent = self._wnd._form).show()
-
-	def create_box(self, getbox):
-		if self._wnd._layoutctrl:
-			if getbox:
-				box = self._wnd.getcurrentbox()
-			else:
-				box = None
-			self._wnd.create_box(box)
-
-	def OnList(self, id, code):
-		self.sethelp()
-		if code != win32con.CBN_SELCHANGE:
-			return
-		i = self._list.getcursel()
-		self.listcb(i)
-
-	def OnNew(self, id, code):
-		win32dialog.AnchorNameDlg('Anchor name', '', self.newanchor,
-					 parent = self._wnd._form).show()
-
-	def showmessage(self, *args, **kw):
-		nkw = {'parent': self._wnd._form}
-		nkw.update(kw)
-		apply(win32dialog.showmessage, args, nkw)
-
-	def __newCBbox(self, name):
-		self.newanchor(name, partial = 1)
-
-	def OnRename(self, id, code):
-		name = AnchorList.getcurrent(self)
-		if name is None:
-			return
-		w = win32dialog.AnchorNameDlg('Anchor name', name,
-					      self.renamecb, parent = self._wnd._form)
-		w.show()
-
-	def OnDelete(self, id, code):
-		self.deletecb()
-
-	def OnType(self, id, code):
-		if code != win32con.BN_CLICKED:
-			return
-		self.typecb()
-
-	def OnLink(self, id, code):
-		self.linkcb(self._attr)
-
-	def OnEdit(self, id, code):
-		if code == win32con.EN_SETFOCUS:
-			self.sethelp()
-		elif code == win32con.EN_CHANGE:
-			self.editcb()
-			self.notifylisteners('change')
-
-	def OnPlay(self,id,code):
-		if hasattr(self._wnd,'OnPlay'):
-			self.setstate('play')
-			self._wnd.OnPlay()
-
-	def OnPause(self,id,code):
-		if hasattr(self._wnd,'OnPause'):
-			self.setstate('pause')
-			self._wnd.OnPause()
-
-	def OnStop(self,id,code):
-		if hasattr(self._wnd,'OnStop'):
-			self.setstate('stop')
-			self._wnd.OnStop()
-	
-	def setstate(self,state):
-		if state=='stop': # stopped
-			self._bplay.enable(1)
-			self._bpause.enable(0)
-			self._bstop.enable(0)
-		elif state=='play': # playing
-			self._bplay.enable(0)
-			self._bpause.enable(1)
-			self._bstop.enable(1)
-		elif state=='pause': # pausing
-			self._bplay.enable(1)
-			self._bpause.enable(0)
-			self._bstop.enable(1)
-
-	def settooltips(self, tooltipctrl):
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_ALIST),self.gethelp(),None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_NEW),'Create new anchor',None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_RENAME),'Rename current anchor',None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_DELETE),'Delete current anchor',None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_ATYPE),'Type of current anchor',None,0)
-		for c in self._xywh:
-			tooltipctrl.AddTool(self._wnd.GetDlgItem(c._id),'Coordinates of current anchor',None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_22),'Start time of current anchor in seconds',None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_32),'Duration of current anchor in seconds',None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_PLAY),'Play',None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_PAUSE),'Pause',None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_STOP),'Stop',None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_LINK), 'Go to Hyperlink View',None,0)
-		
 ##################################
 class FileCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -2652,102 +2473,6 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		if self._layoutctrl:
 			self._layoutctrl.setImage(f, fit='fill', mediadisplayrect = None)
 		
-class AnchorlistPage(LayoutPage):
-	def getcurrentbox(self, saved = 1):
-		box = self._group.anchorlistctrl.getbox(saved)
-		if box:
-			box = box[0]+self._boxoff[0], box[1]+self._boxoff[1], box[2], box[3]
-			box = self._scale.layoutbox(box, self._units)
-		return box
-
-	def setvalue2layout(self, val):
-		box = self._group.anchorlistctrl.getbox(0)
-		x, y = self._boxoff
-		box = box[0]+x, box[1]+y, box[2], box[3]
-		box = self._scale.layoutbox(box, self._units)
-		self.create_box(box)
-
-	# called back by create_box on every change
-	# the user can press reset to cancel changes
-	def updateBox(self,*box):
-		if self._initdialog:
-			grp = self._group
-			self._inupdate=1
-			if box:
-				if not grp.anchorlistctrl._type.getcheck():
-					grp.anchorlistctrl._type.setcheck(1)
-					grp.anchorlistctrl.fixtype()
-				box = self._scale.orgbox(box, self._units)
-				x, y = self._boxoff
-				box = box[0]-x, box[1]-y, box[2], box[3]
-				grp.anchorlistctrl.setbox(box)
-				grp.anchorlistctrl.fill(newlist = 0, nocreatebox = 1)
-			self._inupdate=0
-			grp.anchorlistctrl.enableApply()
-
-	def onevent(self, attr, event):
-		if self._inupdate:
-			return
-		self.create_box(self.getcurrentbox(0))
-
-	def OnInitDialog(self):
-		if not AttrPage.OnInitDialog(self):
-			return
-		file = None
-		for a in self._form._attriblist:
-			if a.getname() == 'file':
-				file = a
-				break
-		self.HookMessage(self.onLButtonDown, win32con.WM_LBUTTONDOWN)
-		self.HookMessage(self.onLButtonUp, win32con.WM_LBUTTONUP)
-		self.HookMessage(self.onMouseMove, win32con.WM_MOUSEMOVE)
-		preview = components.Control(self, grinsRC.IDC_PREVIEW)
-		preview.attach_to_parent()
-		l1,t1,r1,b1 = self.GetWindowRect()
-		l2,t2,r2,b2 = preview.getwindowrect()
-		self._layoutpos = l2-l1, t2-t1
-		self._layoutsize = r2-l2, b2-t2
-		if file is not None:
-			f = file.getvalue()
-		else:
-			f = None
-		if f:
-			import Sizes
-			url = a.wrapper.getcontext().findurl(f)
-			w, h = Sizes.GetSize(url)
-			if w == 0 or h == 0:
-				w, h = self._layoutsize
-		else:
-			w, h = self._layoutsize
-		self._imagesize = w, h
-		self.findLayoutScale((w, h))
-		self._layoutctrl = self.createLayoutCtrl()
-
-		t = components.Static(self, grinsRC.IDC_SCALE1)
-		t.attach_to_parent()
-		if self._isintscale:
-			t.settext('scale 1 : %.0f' % self._xscale)
-		else:
-			t.settext('scale 1 : %.1f' % self._xscale)
-		self.create_box(self.getcurrentbox())
-		if file:
-			url = a.wrapper.getcontext().findurl(f)
-			self.loadimg(url)
-
-	def initLayoutCtrl(self, v):
-		self._scale = LayoutScale(v, self._xscale, self._yscale, self._boxoff)
-		# add regions of interest to layout control
-
-	def loadimg(self,url):
-		import MMurl
-		try:
-			f = MMurl.urlretrieve(url)[0]
-		except IOError, arg:
-##			print 'failed to retrieve',url
-			return
-		if self._layoutctrl:
-			self._layoutctrl.setImage(f, fit='fill', mediadisplayrect = None)
-		
 ############################
 # Base class for media renderers
 
@@ -3986,25 +3711,6 @@ class SubregionGroup(Subregion1Group):
 ##	def getpageclass(self):
 ##		return PosSizeLayoutPage
 
-class AnchorlistGroup(AttrGroup):
-	data=attrgrsdict['anchorlist']
-
-	def __init__(self):
-		self._preview = -1
-		AttrGroup.__init__(self, self.data)
-
-	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_ANCHOR1
-
-	def getpageclass(self):
-		return AnchorlistPage
-
-	def createctrls(self, wnd):
-		cd = {}
-		a = self.getattr('.anchorlist')
-		self.anchorlistctrl = cd[a] = AnchorlistCtrl(wnd, a, ())
-		return cd
-
 class TransitionGroup(AttrGroup):
 	data=attrgrsdict['transition']
 	def __init__(self):
@@ -4882,7 +4588,6 @@ groupsui={
 	'subregion1':Subregion1Group,
 	'subregion2':Subregion2Group,
 ##	'subregion3':Subregion3Group,
-	'anchorlist':AnchorlistGroup,
 
 	'convert1':Convert1Group,
 	'convert2':Convert2Group,

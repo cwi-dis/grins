@@ -468,14 +468,14 @@ class _DisplayList:
 		self._fgcolor = color
 
 	# Define a new button. Coordinates are in window relatives
-	def newbutton(self, coordinates, z = 0, times = None, sensitive = 1):
+	def newbutton(self, coordinates, z = 0, sensitive = 1):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		
 		# Split tuple. It should'n be unified anyway
 		shape, coordinates = coordinates[0], coordinates[1:]
 		
-		return _Button(self, shape, coordinates, z, times, sensitive)
+		return _Button(self, shape, coordinates, z, sensitive)
 
 	# display image from file
 	def display_image_from_file(self, file, crop = (0,0,0,0), fit = 'meet',
@@ -1077,12 +1077,11 @@ from AnchorDefs import *
 import CheckInsideArea
 
 class _Button:
-	def __init__(self, dispobj, shape, coordinates, z, times, sensitive):
+	def __init__(self, dispobj, shape, coordinates, z, sensitive):
 		self._dispobj = dispobj
 		self._shape = shape
 		self._coordinates = coordinates
 		self._z = z
-		self._times = times
 		self._sensitive = sensitive
 
 		buttons = dispobj._buttons
@@ -1131,7 +1130,7 @@ class _Button:
 
 	def issensitive(self):
 		# returns whether the button is currently sensitive
-		return self._dispobj is not None and self._dispobj.isrendered() and self._sensitive and self._insidetemporal()
+		return self._dispobj is not None and self._dispobj.isrendered() and self._sensitive
 
 	# Increment height
 	def hiwidth(self, width):
@@ -1152,23 +1151,11 @@ class _Button:
 	def _do_highlight(self):
 		pass
 
-	# Returns true if the time is inside the temporal space
-	def _insidetemporal(self):
-		if self._times:
-			import time
-			curtime = time.time() - self._dispobj.starttime
-			t0, t1 = self._times
-			if (not t0 or t0 <= curtime) and \
-			   (not t1 or curtime < t1):
-				return 1
-			return 0
-		return 1
-	
 	def _inside(self, x, y):
 		if not self._sensitive:
 			# if not sensitive, no click is inside
 			return 0
-		return self._insidetemporal() and self._insideshape(x, y)
+		return self._insideshape(x, y)
 
 	# Returns true if the point is inside the box	
 	def _insideRect(self, x, y):

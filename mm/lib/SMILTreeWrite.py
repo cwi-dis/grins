@@ -4,7 +4,7 @@ __version__ = "$Id$"
 
 
 from MMExc import *		# Exceptions
-from MMNode import alltypes, leaftypes, interiortypes
+from MMTypes import mediatypes, interiortypes
 import MMCache
 import MMAttrdefs
 import Hlinks
@@ -232,7 +232,7 @@ def geturl(writer, node, attr):
 	val = node.GetAttrDef(attr, None)
 	if not val:
 		return val
-	ctx = node.GetContext()
+	ctx = writer.context
 	if writer.convertURLs:
 		val = MMurl.canonURL(ctx.findurl(val))
 		if val[:len(writer.convertURLs)] == writer.convertURLs:
@@ -301,7 +301,7 @@ def getsrc(writer, node):
 			# If not exporting we insert a placeholder
 			val = '#'
 		return val
-	ctx = node.GetContext()
+	ctx = writer.context
 	if not writer.copydir:
 		if writer.convertURLs:
 			val = MMurl.canonURL(ctx.findurl(val))
@@ -448,7 +448,7 @@ def getcmifattr(writer, node, attr, default = None):
 	return val
 
 def getmimetype(writer, node):
-	if node.GetType() not in leaftypes:
+	if node.GetType() not in mediatypes: # XXX or prefetch?
 		return
 	if writer.copydir:
 		# MIME type may be changed by copying, so better not to return any
@@ -456,10 +456,7 @@ def getmimetype(writer, node):
 	return node.GetRawAttrDef('mimetype', None)
 
 def getdescr(writer, node, attr):
-	if node.GetType() not in leaftypes:
-		return
-	val = node.GetRawAttrDef(attr, None)
-	return val or None
+	return node.GetRawAttrDef(attr, None) or None
 
 def getregionname(writer, node):
 	ch = node.GetDefinedChannel()
@@ -471,7 +468,7 @@ def getdefaultregion(writer, node):
 	chname = node.GetRawAttrDef('project_default_region', None)
 	if not chname:
 		return None
-	ch = node.GetContext().getchannel(chname)
+	ch = writer.context.getchannel(chname)
 	if ch is None:
 		return None
 	return writer.ch2name[ch]
@@ -619,9 +616,6 @@ def getsyncarc(writer, node, isend):
 				continue
 			elif writer.prune and srcnode is not None and not srcnode.WillPlay():
 				continue
-			elif arc.srcanchor:
-				aid = (srcnode.GetUID(), arc.srcanchor)
-				name = escape_name(writer.aid2name[aid])
 			elif srcnode is node:
 				name = ''
 			else:
@@ -655,7 +649,7 @@ def getterm(writer, node):
 		return 'first'
 	if terminator == 'ALL':
 		return 'all'
-	if terminator == 'MEDIA' and ntype in leaftypes:
+	if terminator == 'MEDIA' and ntype in mediatypes:
 		return
 	for child in node.children:
 		if child.GetRawAttrDef('name', '') == terminator:
@@ -710,7 +704,7 @@ def getscreensize(writer, node):
 		return '%dX%d' % (value[1], value[0])
 
 def getugroup(writer, node):
-	if not node.GetContext().usergroups:
+	if not writer.context.usergroups:
 		return
 	names = []
 	for u_group in node.GetRawAttrDef('u_group', []):
@@ -723,7 +717,7 @@ def getugroup(writer, node):
 	return string.join(names, ' + ')
 
 def getlayout(writer, node):
-	if not node.GetContext().layouts:
+	if not writer.context.layouts:
 		return
 	layout = node.GetRawAttrDef('layout', 'undefined')
 	if layout == 'undefined':
@@ -735,7 +729,7 @@ def getlayout(writer, node):
 		return
 
 def gettransition(writer, node, which):
-	if not node.GetContext().transitions:
+	if not writer.context.transitions:
 		return
 	transition = node.GetRawAttrDef(which, None)
 	if not transition:
@@ -819,6 +813,7 @@ def getallowedmimetypes(writer, node):
 	if not mimetypes:
 		return None
 	return string.join(mimetypes, ',')
+
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
@@ -957,7 +952,7 @@ prio_attrs = [
 # our namespace extension
 cmif_node_attrs_ignore = {
 	'styledict':0, 'name':0, 'bag_index':0,
-	'anchorlist':0, 'channel':0, 'file':0, 'duration':0,
+	'channel':0, 'file':0, 'duration':0,
 	'min':0, 'max':0, 'erase':0,
 	'system_bitrate':0, 'system_captions':0, 'system_language':0,
 	'system_overdub_or_caption':0, 'system_overdub_or_subtitle':0,
@@ -1041,7 +1036,11 @@ class SMILWriter(SMIL):
 		     evallicense = 0, tmpcopy = 0, progress = None,
 		     convertURLs = 0, convertfiles = 1, set_char_pos = 0, prune = 0):
 		self.set_char_pos = set_char_pos
-		ctx = node.GetContext()
+
+		# some abbreviations
+		self.context = ctx = node.GetContext()
+		self.hyperlinks = ctx.hyperlinks
+
 		if convertURLs:
 			url = MMurl.canonURL(MMurl.pathname2url(filename))
 			i = string.rfind(url, '/')
@@ -1129,14 +1128,6 @@ class SMILWriter(SMIL):
 		if assets:
 			for anode in assets:
 				self.calcchnames2(anode)
-
-		# must come after second pass
-		self.aid2name = {}
-		self.anchortype = {}
-		self.calcanames(node)
-		if assets:
-			for anode in assets:
-				self.calcanames(anode)
 
 		self.syncidscheck(node)
 		if assets:
@@ -1255,7 +1246,7 @@ class SMILWriter(SMIL):
 		self.__stack.append((tag, hasprefix, x))
 	
 	def writeQTAttributeOnSmilElement(self, attrlist):
-		attributes = self.root.GetContext().attributes
+		attributes = self.context.attributes
 		for key, val in attributes.items():
 			if key == 'qttimeslider':
 				defvalue = MMAttrdefs.getdefattr(None, key)
@@ -1278,7 +1269,7 @@ class SMILWriter(SMIL):
 	
 	def write(self):
 		import version
-		ctx = self.root.GetContext()
+		ctx = self.context
 		fp = self.fp
 
 		# if the document is not valid, just write the raw source code
@@ -1390,7 +1381,7 @@ class SMILWriter(SMIL):
 
 	def calcugrnames(self, node):
 		"""Calculate unique names for usergroups"""
-		usergroups = node.GetContext().usergroups
+		usergroups = self.context.usergroups
 		if not usergroups:
 			return
 		self.smilboston = 1
@@ -1408,7 +1399,7 @@ class SMILWriter(SMIL):
 
 	def calctransitionnames(self, node):
 		"""Calculate unique names for transitions"""
-		transitions = node.GetContext().transitions
+		transitions = self.context.transitions
 		if not transitions:
 			return
 		self.smilboston = 1
@@ -1426,7 +1417,7 @@ class SMILWriter(SMIL):
 
 	def calclayoutnames(self, node):
 		"""Calculate unique names for layouts"""
-		layouts = node.GetContext().layouts
+		layouts = self.context.layouts
 		if not layouts:
 			return
 		self.uses_grins_namespaces = 1
@@ -1485,8 +1476,7 @@ class SMILWriter(SMIL):
 
 	def calcchnames1(self, node):
 		"""Calculate unique names for channels; first pass"""
-		context = node.GetContext()
-		channels = context.channels
+		channels = self.context.channels
 		for ch in channels:
 			name = identify(ch.name)
 			if not self.ids_used.has_key(name):
@@ -1508,10 +1498,8 @@ class SMILWriter(SMIL):
 
 	def calcchnames2(self, node):
 		"""Calculate unique names for channels; second pass"""
-		context = node.GetContext()
-		channels = context.channels
 		top0 = None
-		for ch in context.getviewports():
+		for ch in self.context.getviewports():
 			if ChannelMap.isvisiblechannel(ch['type']):
 				if top0 is None:
 					# first top-level channel
@@ -1520,7 +1508,7 @@ class SMILWriter(SMIL):
 					# second top-level, must be SMIL 2.0
 					self.smilboston = 1
 					break
-		for ch in channels:
+		for ch in self.context.channels:
 			if not self.ch2name.has_key(ch):
 				name = identify(ch.name)
 				i = 0
@@ -1538,34 +1526,6 @@ class SMILWriter(SMIL):
 					if sch['type'] == 'layout':
 						self.smilboston = 1
 						break
-
-	def calcanames(self, node):
-		"""Calculate unique names for anchors"""
-		if self.prune and not node.WillPlay():
-			# skip unplayable nodes when pruning
-			return
-		uid = node.GetUID()
-		for a in node.GetRawAttrDef('anchorlist', []):
-			aid = (uid, a.aid)
-			self.anchortype[aid] = a.atype
-			if a.atype in SourceAnchors:
-				if isidre.match(a.aid) is None or \
-				   self.ids_used.has_key(a.aid):
-					aname = '%s-%s' % (self.uid2name[uid], a.aid)
-					aname = identify(aname)
-				else:
-					aname = a.aid
-				if self.ids_used.has_key(aname):
-					i = 0
-					nn = '%s-%d' % (aname, i)
-					while self.ids_used.has_key(nn):
-						i = i+1
-						nn = '%s-%d' % (aname, i)
-					aname = nn
-				self.aid2name[aid] = aname
-				self.ids_used[aname] = 0
-		for child in node.children:
-			self.calcanames(child)
 
 	def syncidscheck(self, node):
 		# make sure all nodes referred to in sync arcs get their ID written
@@ -1598,9 +1558,6 @@ class SMILWriter(SMIL):
 					pass
 				elif self.prune and srcnode is not None and not srcnode.WillPlay():
 					pass
-				elif arc.srcanchor is not None:
-					aid = (srcnode.GetUID(), arc.srcanchor)
-					self.ids_used[self.aid2name[aid]] = 1
 				elif srcnode is not node:
 					self.ids_used[self.uid2name[srcnode.GetUID()]] = 1
 			else:
@@ -1609,8 +1566,7 @@ class SMILWriter(SMIL):
 			self.syncidscheck(child)
 
 	def __writeRegPoint(self):
-		regpoints = self.root.GetContext().regpoints
-		for name, regpoint in regpoints.items():
+		for name, regpoint in self.context.regpoints.items():
 			if regpoint.isdefault():
 				continue
 				
@@ -1637,8 +1593,7 @@ class SMILWriter(SMIL):
 		self.push()
 		if self.smilboston:
 			self.__writeRegPoint()		
-		channels = self.root.GetContext().channels
-		for ch in self.root.GetContext().getviewports():
+		for ch in self.context.getviewports():
 			attrlist = []
 			if ch['type'] == 'layout':
 				attrlist.append(('id', self.ch2name[ch]))
@@ -1877,7 +1832,7 @@ class SMILWriter(SMIL):
 			self.pop()
 
 	def writeusergroups(self):
-		u_groups = self.root.GetContext().usergroups
+		u_groups = self.context.usergroups
 		if not u_groups:
 			return
 		self.writetag('customAttributes')
@@ -1898,7 +1853,7 @@ class SMILWriter(SMIL):
 		self.pop()
 
 	def writetransitions(self):
-		transitions = self.root.GetContext().transitions
+		transitions = self.context.transitions
 		if not transitions:
 			return
 		defaults = {
@@ -1936,7 +1891,7 @@ class SMILWriter(SMIL):
 			self.writetag('transition', attrlist)
 
 	def writegrinslayout(self):
-		layouts = self.root.GetContext().layouts
+		layouts = self.context.layouts
 		if not layouts:
 			return
 		self.writetag('%s:layouts' % NSGRiNSprefix)
@@ -1951,7 +1906,7 @@ class SMILWriter(SMIL):
 		self.pop()
 	
 	def writeviewinfo(self):
-		viewinfo = self.root.GetContext().getviewinfo()
+		viewinfo = self.context.getviewinfo()
 		if not viewinfo:
 			return
 		for view, geometry in viewinfo:
@@ -1981,6 +1936,9 @@ class SMILWriter(SMIL):
 				self.writetag('body', [('%s:hidden' % NSGRiNSprefix, 'true')])
 				self.push()
 			self.writeprefetchnode(x)
+			return
+		elif type == 'anchor':
+			self.writeanchor(x)
 			return
 		elif type == 'comment':
 			self.writecomment(x)
@@ -2019,13 +1977,8 @@ class SMILWriter(SMIL):
 		# if node used as destination, make sure it's id is written
 		uid = x.GetUID()
 		name = self.uid2name[uid]
-		if not self.ids_used[name]:
-			alist = x.GetAttrDef('anchorlist', [])
-			hlinks = x.GetContext().hyperlinks
-			for a in alist:
-				if hlinks.finddstlinks((uid, a.aid)):
-					self.ids_used[name] = 1
-					break
+		if not self.ids_used[name] and self.hyperlinks.finddstlinks(x):
+			self.ids_used[name] = 1
 
 		attributes = self.attributes.get(xtype, {})
 		if type == 'prio':
@@ -2175,7 +2128,6 @@ class SMILWriter(SMIL):
 	def writemedianode(self, x, attrlist, mtype):
 		# XXXX Not correct for imm
 		pushed = 0
-		alist = x.GetRawAttrDef('anchorlist', [])
 
 		if self.uses_qt_namespace:
 			self.writeQTAttributeOnMediaElement(x,attrlist)
@@ -2187,25 +2139,11 @@ class SMILWriter(SMIL):
 				self.push()
 				pushed = 1
 			self.writetag('param', [('name','fgcolor'),('value',translatecolor(fg))], x)
-		hassrc = 0		# 1 if has source anchors
-		for a in alist:
-			if a.atype in SourceAnchors:
-				hassrc = 1
-				break
-		if hassrc:
+		for child in x.GetChildren():
 			if not pushed:
 				self.push()
 				pushed = 1
-			for a in alist:
-				if a.atype in SourceAnchors:
-					self.writelink(x, a)
-		children = x.GetChildren()
-		if children:
-			if not pushed:
-				self.push()
-				pushed = 1
-			for child in x.GetChildren():
-				self.writenode(child)
+			self.writenode(child)
 		if pushed:
 			self.pop()
 
@@ -2235,7 +2173,7 @@ class SMILWriter(SMIL):
 
 
 
-	def linkattrs(self, a2, ltype, stype, dtype, accesskey):
+	def linkattrs(self, a2, ltype, stype, dtype):
 		attrs = []
 		# deprecated
 #		if ltype == Hlinks.TYPE_CALL:
@@ -2260,88 +2198,64 @@ class SMILWriter(SMIL):
 				attrs.append(('destinationPlaystate', 'pause'))
 							
 		# else show="replace" (default)
-		if type(a2) is type(()):
-			uid2, aid2 = a2
-			if '/' in uid2:
-				if aid2:
-					href, tag = a2
-				else:
-					lastslash = string.rfind(uid2, '/')
-					href, tag = uid2[:lastslash], uid2[lastslash+1:]
-					if tag == '1':
-						tag = None
-			else:
-				href = ''
-				if self.anchortype.get(a2) == ATYPE_NORMAL and \
-				   self.aid2name.has_key(a2):
-					tag = self.aid2name[a2]
-				else:
-					tag = self.uid2name[uid2]
-			if tag:
-				href = href + '#' + tag
-		else:
+		if type(a2) is type(''):
 			href = a2
+		else:
+			href = '#' + self.uid2name[a2.GetUID()]
 		attrs.append(('href', href))
-
-		if accesskey is not None:
-			attrs.append(('accesskey', accesskey))
 
 		return attrs
 
-	def writelink(self, x, a):
+	def writeanchor(self, anchor):
 		attrlist = []
-		aid = (x.GetUID(), a.aid)
-		attrlist.append(('id', self.aid2name[aid]))
+		id = getid(self, anchor)
+		if id is not None:
+			attrlist.append(('id', id))
 
-		links = x.GetContext().hyperlinks.findsrclinks(aid)
+		links = self.hyperlinks.findsrclinks(anchor)
 		if links:
 			if len(links) > 1:
 				print '** Multiple links on anchor', \
 				      x.GetRawAttrDef('name', '<unnamed>'), \
 				      x.GetUID()
 			a1, a2, dir, ltype, stype, dtype = links[0]
-			attrlist[len(attrlist):] = self.linkattrs(a2, ltype, stype, dtype, a.aaccess)
-		if a.atype == ATYPE_NORMAL:
-			ok = 0
-			# WARNING HACK HACK HACK : How know if it's a shape or a fragment ?
-			try:
-				shapeType = a.aargs[0]
-				if shapeType == A_SHAPETYPE_RECT or shapeType == A_SHAPETYPE_POLY or \
-						shapeType == A_SHAPETYPE_CIRCLE:
-					coords = []
-					for c in a.aargs[1:]:
-						if type(c) == type(0):
-							# pixel coordinates
-							coords.append('%d' % c)
-						else:
-							# relative coordinates
-							coords.append(fmtfloat(c*100, '%', prec = 2))
-					coords = string.join(coords, ',')
-					ok = 1
-				elif shapeType == A_SHAPETYPE_ALLREGION:
-					ok = 1
-			except:
-				pass						
-			if ok:
-				if shapeType == A_SHAPETYPE_POLY:
-					attrlist.append(('shape', 'poly'))
-				elif shapeType == A_SHAPETYPE_CIRCLE:
-					attrlist.append(('shape', 'circle'))
-				elif shapeType == A_SHAPETYPE_RECT:
-					attrlist.append(('shape', 'rect'))
-					
-				if shapeType != A_SHAPETYPE_ALLREGION:
-					attrlist.append(('coords', coords))
+			attrlist[len(attrlist):] = self.linkattrs(a2, ltype, stype, dtype)
+		else:
+			attrlist.append(('nohref', 'nohref'))
+
+		fragment = MMAttrdefs.getattr(anchor, 'fragment')
+		if fragment:
+			attrlist.append(('fragment', fragment))
+
+		shape = MMAttrdefs.getattr(anchor, 'ashape')
+		if shape != 'rect':
+			attrlist.append(('shape', shape))
+		coords = []
+		for c in MMAttrdefs.getattr(anchor, 'acoords'):
+			if type(c) is type(0):
+				# pixel coordinates
+				coords.append('%d' % c)
 			else:
-				attrlist.append(('fragment', a.aid))						
-		elif a.atype == ATYPE_AUTO:
-			attrlist.append(('actuate', 'onLoad'));
-			
-		begin, end = a.atimes
-		if begin:
-			attrlist.append(('begin', fmtfloat(begin, 's')))
-		if end:
-			attrlist.append(('end', fmtfloat(end, 's')))
+				# relative coordinates
+				coords.append(fmtfloat(c*100, '%', prec = 2))
+		if coords:
+			attrlist.append(('coords', ','.join(coords)))
+
+		begin = getsyncarc(self, anchor, 0)
+		if begin is not None:
+			attrlist.append(('begin', begin))
+		end = getsyncarc(self, anchor, 1)
+		if end is not None:
+			attrlist.append(('end', end))
+
+		actuate = MMAttrdefs.getattr(anchor, 'actuate')
+		if actuate != 'onRequest':
+			attrlist.append(('actuate', actuate))
+
+		accesskey = anchor.GetAttrDef('accesskey', None)
+		if accesskey is not None:
+			attrs.append(('accesskey', accesskey))
+
 		if self.smilboston:
 			self.writetag('area', attrlist)
 		else:
