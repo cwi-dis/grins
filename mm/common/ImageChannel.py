@@ -1,6 +1,6 @@
 # Image channel
 
-from MMExc import *
+import MMExc
 import MMAttrdefs
 
 import gl
