@@ -1,21 +1,4 @@
 
-static PyObject *MovieObj_NewMovieControllerWin(MovieObject *_self, PyObject *_args)
-{
-	PyObject *_res = NULL;
-	MovieController _rv;
-	Rect movieRect;
-	long someFlags = mcTopLeftMovie | mcWithFrame;
-	if (!PyArg_ParseTuple(_args, "O&|l",
-	                      ToRect, &movieRect,
-	                      &someFlags))
-		return NULL;
-	_rv = NewMovieController(_self->ob_itself,
-	                         &movieRect,
-	                         someFlags);
-	_res = Py_BuildValue("O&",
-	                     MovieCtlObj_New, _rv);
-	return _res;
-}
 
 static PyObject *MovieObj_SetMovieGWorldWin(MovieObject *_self, PyObject *_args)
 {
@@ -40,7 +23,5 @@ static PyObject *MovieObj_SetMovieGWorldWin(MovieObject *_self, PyObject *_args)
 }
 
 #define APPEND_WIN_MovieObj_methods \
-	{"NewMovieControllerWin", (PyCFunction)MovieObj_NewMovieControllerWin, 1,\
-	"(Rect rc, long flags) -> (ComponentResult _rv)"},\
 	{"SetMovieGWorldWin", (PyCFunction)MovieObj_SetMovieGWorldWin, 1,\
 	"(Rect rc, long flags) -> (ComponentResult _rv)"},
