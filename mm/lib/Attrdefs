@@ -227,6 +227,12 @@
 (project_html_page (string) '' 'HTML template' default
 	'Template used to generate web page for this presentation' raw light)
 
+(project_mobile (bool) 0 'Mobile play' default
+	'Allow download' raw smil)
+
+(project_perfect (bool) 1 'Perfect play' default
+	'Buffered playback' raw smil)
+
 (project_quality (int) 75 'Image quality' quality
 	'Quality of image conversion to JPEG' raw light)
 
