@@ -569,7 +569,8 @@ class Channel:
 		# returns 0, we should not call arm_1() because that
 		# will happen later.
 		same = self.arm_0(node)
-		if self._is_shown and not self.do_arm(node, same):
+		if self._is_shown and node.IsPlayable() and \
+		   not self.do_arm(node, same):
 			return
 		self.arm_1()
 
@@ -610,7 +611,9 @@ class Channel:
 		if debug:
 			print 'Channel.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if self._is_shown:
+		if self._is_shown and node.IsPlayable():
+			# XXXX This depends on node playability not changing,
+			# otherwise we may have to re-arm.
 			self.do_play(node)
 		self.play_1()
 
@@ -1114,7 +1117,8 @@ class ChannelWindow(Channel):
 		   not self.armed_display.is_closed():
 		        return 1
 		#if same: print 'Same, but no armed_display' # DBG
-		if not self._is_shown or not self.window:
+		if not self._is_shown or not node.IsPlayable() \
+		   or not self.window:
 			return 0
 		if self.armed_display:
 			self.armed_display.close()
@@ -1145,7 +1149,7 @@ class ChannelWindow(Channel):
 		if debug:
 			print 'ChannelWindow.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if self._is_shown and self.window:
+		if self._is_shown and node.IsPlayable() and self.window:
 			try:
 				winoff = self.winoff
 				winoff = MMAttrdefs.getattr(node, 'base_winoff')
@@ -1283,7 +1287,8 @@ class _ChannelThread:
 		if debug:
 			print 'ChannelThread.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if not self._is_shown or self.syncplay:
+		if not self._is_shown or not node.IsPlayable() \
+		   or self.syncplay:
 			self.play_1()
 			return
 		thread_play_called = 0
@@ -1431,7 +1436,8 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		if debug:
 			print 'ChannelWindowThread.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if not self._is_shown or self.syncplay:
+		if not self._is_shown or not node.IsPlayable() \
+		   or self.syncplay:
 			self.play_1()
 			return
 		self.check_popup()
@@ -1474,7 +1480,8 @@ class ChannelAsync(Channel):
 		if debug:
 			print 'ChannelAsync.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if not self._is_shown or self.syncplay:
+		if not self._is_shown or not node.IsPlayable() \
+		   or self.syncplay:
 			self.play_1()
 			return
 		if self._is_shown:
@@ -1486,7 +1493,8 @@ class ChannelWindowAsync(ChannelWindow):
 		if debug:
 			print 'ChannelWindowAsync.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if self._is_shown and self.window and not self.syncplay:
+		if self._is_shown and node.IsPlayable() \
+		   and self.window and not self.syncplay:
 			try:
 				winoff = self.winoff
 				winoff = MMAttrdefs.getattr(node, 'base_winoff')
