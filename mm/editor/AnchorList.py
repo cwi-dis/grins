@@ -264,6 +264,8 @@ class AnchorList:
 			return
 		a = self.__anchorlinks[self.__curanchor]
 		aargs = self._xywh.getval()
+		if aargs == [0,0,0,0]:
+			aargs = []
 		times = self._se.getval()
 		self.__anchorlinks[self.__curanchor] = (a[0], aargs, tuple(times)) + a[3:]
 		self.enableApply()
