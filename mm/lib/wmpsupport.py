@@ -67,6 +67,7 @@ class Exporter:
 			print 'End export', self.writer._filename
 			self.writer = None
 			self.topwindow = None
+		windowinterface.sleep(1)
 		if self.progress:
 			del self.progress
 			self.progress = None
@@ -104,11 +105,11 @@ class Exporter:
 
 	# temp: document duration estimation
 	def _getdocdurestimate(self):
-		return 30
+		return 30.0
 
 	# temp: get progess based on doc duration estimation
 	def _getprogress(self, dt):
-		d = 0.5*self._getdocdurestimate()
+		d = self._getdocdurestimate()/3.0
 		i = 1
 		p = 0
 		while 1:
