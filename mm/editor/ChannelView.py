@@ -339,7 +339,7 @@ class ChannelView(ChannelViewDialog):
 
 		# Calculate our position in relative time
 		top = self.nodetop
-		height = 1.0 - top - self.new_displist.strsize('m')[0]
+		height = self.nodebottom - top
 		vt0, vt1 = self.timerange()
 		dt = vt1 - vt0
 
@@ -482,8 +482,14 @@ class ChannelView(ChannelViewDialog):
 		bl, fh, ps = displist.usefont(f_title)
 ##		self.channelright = displist.strsize('999999')[0]
 ##		self.nodetop = min(self.channelright * 2, self.channelright + .05)
+		self.thumbwidth = displist.strsize('999')[0]
 		self.channelright = displist.strsize('999999999999')[0]
 		self.nodetop = self.channelright + displist.get3dbordersize()[1]
+		self.nodebottom = 1.0 - displist.strsize('m')[0]
+		self.nodemargin = displist.strsize('x')[0] / 15
+		w, h = displist.strsize('m')
+		self.aboxsize = w / 2, h / 3
+
 		self.timescaleborder = 1.0 - float(TSHEIGHT) / height
 		if self.showbandwidthstrip:
 			stripheight = float(STRIPHEIGHT) / height
@@ -1235,7 +1241,7 @@ class TimeScaleBox(GO):
 		f_width = d.strsize('x')[0]
 		d.fgcolor(BORDERCOLOR)
 		# Draw rectangle around boxes
-		hmargin = d.strsize('x')[0] / 9
+		hmargin = f_width / 9
 		vmargin = d.fontheight() / 4
 		l = l + hmargin
 		t = t + vmargin
@@ -1530,15 +1536,14 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 		if width <= 0:
 			return
 		d = self.mother.new_displist
-##		f_width = d.strsize('x')[0]
+		f_width, f_height = d.strsize('x')
 ##		d.fgcolor(BORDERCOLOR)
-		hmargin = d.strsize('x')[0] / 9
+		hmargin = f_width / 9
 		l = l + hmargin
 		r = r - hmargin
 		# Draw the axes
 		d.drawline(BORDERCOLOR, [(l, t), (l, b), (r, b)])
 		bwpos = (t+b)/2 # XXXX
-		f_height = d.strsize('x')[1]
 		d.drawline(BORDERCOLOR, [(l, bwpos), (r, bwpos)])
 		d.fgcolor(TEXTCOLOR)
 		d.centerstring(0, bwpos-f_height/2, self.mother.channelright,
@@ -1755,7 +1760,7 @@ class ChannelBox(GO, ChannelBoxCommand):
 		# Draw the name
 		xindent, yindent = d.get3dbordersize()
 		thumb_r = r - xindent
-		thumb_l = thumb_r - d.strsize('999')[0]
+		thumb_l = thumb_r - self.mother.thumbwidth
 		name_t = t + yindent
 		name_b = b - yindent
 		name_l = l + xindent
@@ -2021,7 +2026,7 @@ class NodeBox(GO, NodeBoxCommand):
 		    self.mother.discontinuities.append(
 			self.node.t0+self.node.timing_discont)
 
-		hmargin = self.mother.new_displist.strsize('x')[0] / 15
+		hmargin = self.mother.nodemargin
 		left = left + hmargin
 		right = right - hmargin
 
@@ -2038,9 +2043,7 @@ class NodeBox(GO, NodeBoxCommand):
 		l, t, r, b = self.left, self.top, self.right, self.bottom
 
 		d = self.mother.new_displist
-		w, h = d.strsize('m')
-		haboxsize = w / 2
-		vaboxsize = h / 3
+		haboxsize, vaboxsize = self.mother.aboxsize
 
 		# give box a minimal size
 		if l + haboxsize > r:
