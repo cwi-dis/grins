@@ -116,7 +116,8 @@ MENUBAR=(
 			(DYNAMICCASCADE, 'Ancestors', ANCESTORS),
 			(DYNAMICCASCADE, 'Descendants', DESCENDANTS),
 			(DYNAMICCASCADE, 'Siblings', SIBLINGS))),
-		(DYNAMICCASCADE, 'Layout navigation', LAYOUTS))),
+##		(DYNAMICCASCADE, 'Layout navigation', LAYOUTS),
+		)),
 		
 	(CASCADE, 'Views', (
 		(TOGGLE, ('Show Player', 'Hide Player'), '5', PLAYERVIEW),
