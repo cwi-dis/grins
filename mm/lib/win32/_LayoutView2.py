@@ -165,11 +165,9 @@ class _LayoutView2(GenFormView):
 			self.EnableCmd(ck,0)
 		self.HookMessage(self.OnCmd,win32con.WM_COMMAND)
 
-		# set normal size from frame to be 640x480
-		flags, sw, minpos, maxpos, rcnorm = self.GetParent().GetWindowPlacement()
-		l, t = rcnorm[:2]
-		splitter = self.GetParent()
-		splitter.GetParent().SetWindowPlacement(flags, sw, minpos, maxpos, (l,t,640,480))
+		# set frame size to 640x480
+		self.getViewFrame().SetWindowPos(0, (0, 0, 640, 480),
+				win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
 
 		# enable all lists
 		for name in self.__ctrlNames:	
@@ -486,6 +484,9 @@ class _LayoutView2(GenFormView):
 		w, h = msg.width(), msg.height()
 		worg, horg = self.__orgctrlpos[-1]
 		self.resizeCtrls(w, h)
+
+	def getViewFrame(self):
+		return self.GetParent().GetParent()
 
 ###########################
 # tree component management
