@@ -159,6 +159,17 @@ class Channel:
 		a commit"""
 		return 0
 
+	# return true is the channel is showing
+	def isShown(self):
+		return self._is_shown
+
+	# return the playing node
+	# None is not in playing state
+	def getPlayingNode(self):
+		if self._playstate == PLAYING:
+			return self._played_node
+		return None
+	
 	def kill(self):
 		if hasattr(self, '_player'):
 			self.destroy()
@@ -1966,7 +1977,7 @@ class ChannelWindow(Channel):
 		if not self._armcontext:
 			return
 		if self._is_shown and node.ShouldPlay() \
-		   and self.window:
+			and self.window:
 			self.check_popup()
 			self.schedule_transitions(node)
 			if self.armed_display.is_closed():
