@@ -27,6 +27,8 @@ ANCHOR1 = 0
 ANCHOR2 = 1
 DIR     = 2
 TYPE    = 3
+STYPE   = 4
+DTYPE   = 5
 
 # Link directions
 DIR_1TO2 = 0
