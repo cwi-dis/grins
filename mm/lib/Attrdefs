@@ -26,11 +26,23 @@
 ##(bbox (tuple (int) (int) (int) (int)) (0 0 0 0) 'Bounding box' default
 ##	'Bounding box for embedded PostScript image' channel)
 
+(blockview_winpos (tuple (int) (int)) (-1 -1) 'Block view winpos' default
+	 'Window position for block view' raw)
+
+(blockview_winsize (tuple (int) (int)) (450 900) 'Block view winsize' default
+	 'Window size for block view' raw)
+
 ##(center (bool) 0 'Center' default
 ##	'If on, text is centered within the margins')
 
 (channel (name) undefined 'Channel' default
 	'Name of channel used to render this node/subtree' inherited)
+
+(cview_winpos  (tuple (int) (int)) (-1 -1) 'Channel view winpos' default
+	 'Window position for channel view ' raw)
+
+(cview_winsize  (tuple (int) (int)) (400 800) 'Channel view winsize' default
+	 'Window size for channel view ' raw)
 
 (channellist (list (enclosed (tuple (name) (attrdict)))) ()
 	'Channel List' default
@@ -81,6 +93,9 @@
 (style (list (name)) () 'Style(s)' default
 	'List of style names that apply to this node/subtree' raw)
 
+(style_winpos (tuple (int) (int)) (-1 -1) 'Style editor winpos' default
+	 'Window position for style editor' raw)
+
 (styledict (namedict (attrdict)) () 'Style Dictionary' default
 	'Styles used in this document (root node only)')
 
@@ -101,8 +116,8 @@
 	() 'SyncTo list' default
 	'List of sync arcs ending at this node' raw)
 
-(toplevel_winpos (tuple (int) (int)) (-1 -1) 'Toplevel winpos' default
-	 'Window position for toplevel menu' raw)
+(toplevel_winpos (tuple (int) (int)) (-1 -1) 'Top level winpos' default
+	 'Window position for top level menu' raw)
 
 (type (name) undefined 'Channel type' default
 	'Channel type (channel dictionary only)' raw)
