@@ -133,8 +133,6 @@ class _Toplevel:
 		self._closecallbacks = []
 		self._subwindows = []
 
-		win32ig.deltemp()
-
 		import Font
 		Font.delfonts()
 		
