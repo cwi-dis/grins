@@ -44,3 +44,5 @@ class Version:
 		return Version.platform == win32con.VER_PLATFORM_WIN32_NT and\
 			Version.major == 5 and Version.minor == 1
 		
+
+osversion = Version()
