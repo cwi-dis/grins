@@ -8,16 +8,16 @@ What am I doing:
 
 * Fix drag and drop and copy of everything.
 
-* Do the is_hit algorithm - test every widget for hittedness.
+* Do the is_hit algorithm - test _every_ widget for hittedness to prevent unhittedness if the 
+	widget steps out of it's boundry (esp: pushbackbars).
 
 
 Priority top-to-bottom.
 ------------------------
-* Audio, Video images in the MediaWidgets.
-
-* Fancy graphics.
 
 * Get Jack to make a routine to find download times for nodes.
+
+* Fancy graphics.
 
 * Transition boxes
 
@@ -26,8 +26,6 @@ Priority top-to-bottom.
 * New build for Dick of Snap! and the 2.0 player.
 
 * Rename all the view classes to Widget classes.
-
-* Fix crash when clicking on grey stuff.
 
 * Disable drag + drop of structure nodes.
 
@@ -45,6 +43,8 @@ Priority top-to-bottom.
 	in features.py.
 
 * Add nice handles to the par and seq nodes.
+
+* Bug - the play button is stuck.
 
 Incoming
 --------

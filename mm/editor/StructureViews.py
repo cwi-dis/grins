@@ -5,6 +5,7 @@
 import Interactive
 import MMurl, MMAttrdefs, MMmimetypes
 import features
+import os
 from AppDefaults import *
 
 # remove this. TODO
@@ -220,6 +221,10 @@ class StructureObjWidget(MMNodeWidget):
 
 
 class SeqWidget(StructureObjWidget):
+    def __init__(self, node, root):
+        self.dropbox = DropBoxWidget(root);
+        StructureObjWidget.__init__(self, node, root);
+    
     def draw(self, display_list):
         if self.selected: 
             display_list.drawfbox(self.highlight(SEQCOLOR), self.get_box())
@@ -234,6 +239,7 @@ class SeqWidget(StructureObjWidget):
                     i.pushbackbar.draw(display_list);
 
         StructureObjWidget.draw(self, display_list)
+        self.dropbox.draw(display_list);
 
     def get_minsize(self):
         # Return the minimum size that I can be.
@@ -257,8 +263,8 @@ class SeqWidget(StructureObjWidget):
         #assert min_height < 1.0
 
         #             current +   gaps between nodes  +  gaps at either end      
-        min_width = min_width + xgap*( len(self.children)-1) + 2*self.get_relx(sizes_notime.HEDGSIZE)
-        min_height = min_height + 2 *self.get_rely(sizes_notime.VEDGSIZE)
+        min_width = min_width + xgap*( len(self.children)) + 2*self.get_relx(sizes_notime.HEDGSIZE) + self.dropbox.get_minsize()[0];
+        min_height = min_height + 2*self.get_rely(sizes_notime.VEDGSIZE)
         return min_width, min_height
 
     def get_minsize_abs(self):
@@ -272,7 +278,9 @@ class SeqWidget(StructureObjWidget):
             w,h = i.get_minsize_abs()
             if h > mh: mh=h
             mw = mw + w + pushover;
-        mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE 
+        mw = mw + sizes_notime.GAPSIZE*(len(self.children)) + 2*sizes_notime.HEDGSIZE + self.dropbox.get_minsize_abs()[0];
+        # Without the dropbox: 
+        #mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE
         mh = mh + 2*sizes_notime.VEDGSIZE
         return mw, mh
         
@@ -286,7 +294,7 @@ class SeqWidget(StructureObjWidget):
         l, t, r, b = self.pos_rel
         min_width, min_height = self.get_minsize()
 
-        free_width = (r-l) - min_width #- self.get_relx(sizes_notime.HANDLESIZE) - self.get_relx(sizes_notime.DROPAREASIZE);
+        free_width = ((r-l) - min_width) - self.dropbox.get_minsize()[0]
         if free_width < 0.0:
             print "Warning! free_width is less than 0.0!:", free_width
             free_width = 0.0
@@ -328,7 +336,29 @@ class SeqWidget(StructureObjWidget):
             medianode.moveto((l,t,r,b))
             medianode.recalc()
             l = r + self.get_relx(sizes_notime.GAPSIZE)
-        
+
+        # Position the stupid drop-box at the end.
+        w,h = self.dropbox.get_minsize();
+        print "DEBUG: dropbox coords are ", w, h
+        print "Moving dropbox to", l,t,(float(w)/min_width)*free_width,b
+        if free_width == 0.0:
+            r = l+w;
+        else:
+            r = l+(w/min_width)*free_width;
+        self.dropbox.moveto((l,t,r,b));
+
+
+class DropBoxWidget(Interactive.Interactive):
+    # This is the stupid drop-box at the end of a sequence. Looks like a
+    # MediaNode, acts like a MediaNode, but isn't a MediaNode.
+    def draw(self, displist):
+        displist.drawfbox(LEAFCOLOR, self.get_box());
+        displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
+    def get_minsize(self):
+        return self.get_relx(sizes_notime.MINSIZE), self.get_rely(sizes_notime.MINSIZE);
+    def get_minsize_abs(self):
+        return sizes_notime.MINSIZE, sizes_notime.MINSIZE;
+    # Hmm.. as I said. Easy.
         
 class VerticalWidget(StructureObjWidget):
     def get_minsize(self):
@@ -515,12 +545,12 @@ class MediaWidget(MMNodeWidget):
 
     def recalc(self):
         l,t,r,b = self.pos_rel
+        vsixth = (1.0 / 6.0)*(b-t);
         self.transition_in.moveto((l,b-(1.0/6.0)*(b-t),l+(r-l)*(1.0/6.0),b))
         self.transition_out.moveto((l+(5.0/6.0)*(r-l),b-(1.0/6.0)*(b-t),r,b))
         lag = self.get_relx(self.downloadtime_lag);
         dt = self.get_relx(self.downloadtime);
-        tw = (1.0 / 12.0)*(b-t);
-        self.pushbackbar.moveto((l-(lag+dt),t-tw,l,t+tw));
+        self.pushbackbar.moveto((l-(lag+dt),t-vsixth,l,t));
         MMNodeWidget.recalc(self) # This is probably not necessary.
 
     def get_minsize(self):
@@ -561,7 +591,7 @@ class MediaWidget(MMNodeWidget):
                 self.__get_image_filename(),
                 center = 1,
                 # The coordinates should all be floating point numbers.
-                coordinates = (x+w/6, y+h/6, 4*(w/6), 4*(h/6)),
+                coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6)),
                 scale = -2
                 )
             displist.fgcolor(TEXTCOLOR)
@@ -574,27 +604,30 @@ class MediaWidget(MMNodeWidget):
 
     def __get_image_filename(self):
         # I just copied this.. I don't know what it does. -mjvdg.
+        f = None;
         
         url = self.node.GetAttrDef('file', None)
-
         if url:
             media_type = MMmimetypes.guess_type(url)[0]
         else:
-#            print "DEBUG: get_image_filename : url is None."
+            #print "DEBUG: get_image_filename : url is None."
             return None
-
+        
         channel_type = self.node.GetChannelType()
-        if channel_type == 'sound' or channel_type == 'video':
+#        if channel_type == 'sound' or channel_type == 'video':
             # TODO: return a sound or video bitmap.
 #            print "DEBUG: get_image_filename: url is a sound or video."
-            return None
-        elif url and self.root.thumbnails and channel_type == 'image':
+ #           return None
+        if url and self.root.thumbnails and channel_type == 'image':
             url = self.node.context.findurl(url)
             try:
                 f = MMurl.urlretrieve(url)[0]
             except IOError, arg:
                 print "DEBUG: Could not load image!"
                 self.root.set_infoicon('error', 'Cannot load image: %s'%`arg`)
+        else:
+            f = os.path.join(self.root.datadir, '%s.tiff'%channel_type)
+        print "DEBUG: f is ", f;
         return f
 
     def get_obj_at(self, pos):
