@@ -512,7 +512,7 @@ class AnchorlistCtrl(AttrCtrl):
 		pass
 		#self.__anchorlinks = val
 
-	def fill(self, newlist = 1):
+	def fill(self, newlist = 1, nocreatebox = 0):
 		if newlist:
 			self.__anchors = self.__anchorlinks.keys()
 			self.__anchors.sort()
@@ -520,7 +520,7 @@ class AnchorlistCtrl(AttrCtrl):
 			self._list.addlistitems(self.__anchors)
 		if self.__curanchor is not None and not self.__anchorlinks.has_key(self.__curanchor):
 			self.__curanchor = None
-		if self._wnd._layoutctrl:
+		if self._wnd._layoutctrl and not nocreatebox:
 			self._wnd.create_box(None)
 		if self.__curanchor is None:
 			self._list.setcursel(None)
@@ -567,7 +567,7 @@ class AnchorlistCtrl(AttrCtrl):
 					# maybe convert to pixel values
 					self.__convert(aargs)
 				self.setbox(aargs or None)
-				if self._wnd._layoutctrl:
+				if self._wnd._layoutctrl and not nocreatebox:
 					self._wnd.create_box(self._wnd.getcurrentbox())
 			else:
 				self._type.setcheck(0)
@@ -610,6 +610,11 @@ class AnchorlistCtrl(AttrCtrl):
 
 	def setbox(self, box = None):
 		if self.__curanchor is None:
+			if box is not None:
+				self.__box = box
+				w = components.AnchorNameDlg('Anchor name', '', self.__newCBbox,
+							     parent = self._wnd._form)
+				w.show()
 			return None
 		atype, aargs = self.__anchorlinks[self.__curanchor][:2]
 		if atype not in AnchorDefs.WholeAnchors:
@@ -624,6 +629,7 @@ class AnchorlistCtrl(AttrCtrl):
 				boxstr = '','','',''
 			for i in range(4):
 				self._xywh[i].settext(boxstr[i])
+			self.enableApply()
 
 	def OnList(self, id, code):
 		self.sethelp()
@@ -638,7 +644,7 @@ class AnchorlistCtrl(AttrCtrl):
 					     parent = self._wnd._form)
 		w.show()
 
-	def __newCB(self, name):
+	def __newCB(self, name, partial = 0):
 		if not name:
 			# no name, do we want to give an error message?
 ##			components.showmessage('No name given', mtype = 'error', parent = self._wnd._form)
@@ -647,9 +653,21 @@ class AnchorlistCtrl(AttrCtrl):
 			# not unique, so don't change
 			components.showmessage('Name should be unique', mtype = 'error', parent = self._wnd._form)
 			return
-		self.__anchorlinks[name] = AnchorDefs.TypeValues[0], [], (0,0), [], ''
+		if partial:
+			atype = AnchorDefs.ATYPE_NORMAL
+		else:
+			atype = AnchorDefs.ATYPE_WHOLE
+		self.__anchorlinks[name] = atype, [], (0,0), [], ''
 		self.__curanchor = name
 		self.fill()
+
+	def __newCBbox(self, name):
+		box = self.__box
+		del self.__box
+		self.__newCB(name, partial = 1)
+		if self.__curanchor == name:
+			self.setbox(box)
+			self.fill()
 
 	def OnRename(self, id, code):
 		if self.__curanchor is None:
@@ -687,8 +705,8 @@ class AnchorlistCtrl(AttrCtrl):
 		self.fill()
 		self.enableApply()
 
-	def OnType(self, id, code):
-		if self.__curanchor is None or code != win32con.BN_CLICKED:
+	def fixtype(self):
+		if self.__curanchor is None:
 			return
 		a = self.__anchorlinks[self.__curanchor]
 		if self._type.getcheck():
@@ -696,6 +714,11 @@ class AnchorlistCtrl(AttrCtrl):
 		else:
 			atype = AnchorDefs.ATYPE_WHOLE
 		self.__anchorlinks[self.__curanchor] = (atype,) + a[1:]
+
+	def OnType(self, id, code):
+		if self.__curanchor is None or code != win32con.BN_CLICKED:
+			return
+		self.fixtype()
 		self.fill(newlist = 0)
 		self.enableApply()
 
@@ -1964,10 +1987,14 @@ class AnchorlistPage(LayoutPage):
 			grp = self._group
 			self._inupdate=1
 			if box:
+				if not grp.anchorlistctrl._type.getcheck():
+					grp.anchorlistctrl._type.setcheck(1)
+					grp.anchorlistctrl.fixtype()
 				box = self._scale.orgbox(box, self._units)
 				x, y = self._boxoff
 				box = box[0]-x, box[1]-y, box[2], box[3]
 				grp.anchorlistctrl.setbox(box)
+				grp.anchorlistctrl.fill(newlist = 0, nocreatebox = 1)
 			self._inupdate=0
 			grp.anchorlistctrl.enableApply()
 
