@@ -294,7 +294,7 @@ class SMILParser(xmllib.XMLParser):
 
 		# find out type of file
 		subtype = None
-		mtype = attributes.get('type')
+		mimetype = mtype = attributes.get('type')
 # not allowed to look at extension...
 ## 		if mtype is None and is_ext:
 ## 			import mimetypes
@@ -343,6 +343,8 @@ class SMILParser(xmllib.XMLParser):
 		self.AddAttrs(node, attributes)
 		node.__mediatype = mediatype, subtype
 		self.__attributes = attributes
+		if mimetype is not None:
+			node.attrdict['mimetype'] = mimetype
 
 	def EndNode(self):
 		node = self.__node

@@ -143,6 +143,9 @@
 (mcttl (int) 3 'Multicast TTL' default
 	'TTL for outgoing multicast messages' raw)
 
+(mimetype (string) '' 'MIME type' default
+	'MIME type of media object' raw)
+
 (name (name) '' 'Node name' default
 	'Name given to a node' raw)
 
