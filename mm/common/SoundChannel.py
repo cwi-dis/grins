@@ -43,6 +43,7 @@ class SoundChannel() = Channel():
 		return self
 	#
 	def getduration(self, node):
+		# NB This never uses the 'duration' attribute!
 		filename = self.getfilename(node)
 		try:
 			return getduration(filename)
