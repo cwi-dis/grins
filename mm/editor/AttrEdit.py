@@ -270,10 +270,7 @@ class ChannelWrapper(Wrapper):
 	#
 	def attrnames(self):
 		namelist = ['.cname', 'type', 'comment']
-		if self.channel.has_key('type'):
-			ctype = self.channel['type']
-		else:
-			ctype = 'unknown'
+		ctype = self.channel.get('type', 'unknown')
 		if channelmap.has_key(ctype):
 			cclass = channelmap[ctype]
 			# Add the class's declaration of attributes
@@ -308,6 +305,8 @@ class ChannelWrapper(Wrapper):
 ## 		if not cmifmode():
 ## 			if 'file' in rv: rv.remove('file')
 ## 			if 'scale' in rv: rv.remove('scale')
+		if ctype == 'layout' and not cmifmode():
+			rv.remove('type')
 		return rv
 	#
 	# Override three methods from Wrapper to fake channel name attribute
