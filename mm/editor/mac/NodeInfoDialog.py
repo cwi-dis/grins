@@ -230,6 +230,7 @@ class NodeInfoDialog(windowinterface.MACDialog):
 		name -- string
 		"""
 		self._setlabel(ITEM_NAME, name)
+		self._selectinputfield(ITEM_NAME)
 
 	def getname(self):
 		"""Return the current value of the name field."""
@@ -271,6 +272,7 @@ class NodeInfoDialog(windowinterface.MACDialog):
 		filename -- string giving the URL
 		"""
 		self._setlabel(ITEM_URL, filename)
+		self._selectinputfield(ITEM_URL)
 
 	def getfilename(self):
 		"""Return the value of the filename text field."""
@@ -310,6 +312,7 @@ class NodeInfoDialog(windowinterface.MACDialog):
 		if type(immtext) == type([]):
 			immtext = string.join(immtext, '\r')
 		self._setlabel(ITEM_IMM, immtext)
+		self._selectinputfield(ITEM_IMM)
 
 	def gettext(self):
 		"""Return the current text as one string."""
