@@ -41,7 +41,7 @@ class GraphBuilder:
 	def Release(self):
 		pass
 
-	def RenderFile(self, url, exporter=None):
+	def RenderFile(self, url):
 		try:
 			self._builder.RenderFile(url)
 		except dshow.error, arg:
@@ -49,12 +49,12 @@ class GraphBuilder:
 			self._rendered = 0
 		else:
 			self._rendered = 1
-			if exporter:
-				writer = exporter.getWriter()
-				if writer:
-					writer.redirectAudioFilter(self._builder)
 		return self._rendered
 
+	def RedirectAudioFilter(self, writer):
+		if writer and self._rendered:
+			writer.redirectAudioFilter(self._builder)
+		
 	def Run(self):
 		if self._builder and self._rendered:
 			mc = self._builder.QueryIMediaControl()
@@ -241,7 +241,7 @@ class MMStream:
 			f = enumobj.Next()
 		return filters
 
-	def open(self, url, exporter=None):
+	def open(self, url):
 		mmstream = 	self._mmstream
 		try:
 			self._mmstream.OpenFile(url)
@@ -250,17 +250,16 @@ class MMStream:
 			self._parsed = 0
 			return 0
 		self._parsed = 1
-		if exporter:
-			fg = self._mmstream.GetFilterGraph()
-			writer = exporter.getWriter()
-			if writer:
-				writer.redirectAudioFilter(fg, hint='0001')
 		self._mstream = self._mmstream.GetPrimaryVideoMediaStream()
 		self._ddstream = self._mstream.QueryIDirectDrawMediaStream()
 		self._sample = self._ddstream.CreateSample()
 		self._dds = ddraw.CreateSurfaceObject()
 		self._rect = self._sample.GetSurface(self._dds)
 		return 1
+
+	def redirectAudioFilter(self, writer):
+		if writer and self._parsed:
+			writer.redirectAudioFilter(self._builder, hint='0001')
 
 	def __del__(self):
 		del self._mstream
