@@ -218,13 +218,12 @@ class Main(MainDialog):
 				message = message+': %s' % msg
 			import windowinterface
 			windowinterface.showmessage(message,  mtype='error')
-		except UserCancel:
-			return
-		except TopLevel.Error:
-			return
-		self.new_top(top)
-		if htmltemplate:
-			top.context.attributes['project_html_page'] = htmltemplate
+		except (UserCancel, TopLevel.Error):
+			pass
+		else:
+			self.new_top(top)
+			if htmltemplate:
+				top.context.attributes['project_html_page'] = htmltemplate
 
 	def getnewdocumentname(self, templatename=None, mimetype=None):
 		name = 'Untitled%d'%self._untitled_counter
