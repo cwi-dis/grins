@@ -2512,16 +2512,16 @@ class _ResizeableDisplayList(_DisplayList):
 		elif cmd == 'image':
 			imgid = entry[1]
 			fit = entry[2]
+			wi, hi, bpp = gear32sd.image_dimensions_get(imgid)
+			wi, hi = wnd.LPtoDP((wi, hi))
 			if fit=='fill':
 				gear32sd.device_rect_set(imgid, ltrb)
 			elif fit=='meet':
 				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, ltrb, gear32sd.IG_ASPECT_DEFAULT)
 				gear32sd.device_rect_set(imgid,(x,y,x+rp-lp,y+bp-tp))
 			elif fit=='hidden':
-				wi, hi, bpp = gear32sd.image_dimensions_get(imgid)
 				gear32sd.device_rect_set(imgid,(x,y,x+wi,y+hi))
 			elif fit=='slice':
-				wi, hi, bpp = gear32sd.image_dimensions_get(imgid)
 				wr = w/float(wi)
 				hr = h/float(hi)
 				if wr>hr: r = wr
@@ -2530,7 +2530,6 @@ class _ResizeableDisplayList(_DisplayList):
 				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, (x,y,x+wp,y+hp), gear32sd.IG_ASPECT_DEFAULT)
 				gear32sd.device_rect_set(imgid,(x,y,x+rp-lp,y+bp-tp))
 			elif fit=='scroll':
-				wi, hi, bpp = gear32sd.image_dimensions_get(imgid)
 				gear32sd.device_rect_set(imgid,(x,y,x+wi,y+hi))
 			gear32sd.display_desktop_pattern_set(imgid,0)
 			gear32sd.display_image(imgid,dc.GetSafeHdc())
