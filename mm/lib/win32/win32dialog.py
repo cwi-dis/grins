@@ -425,7 +425,7 @@ class SelectElementDlg(ResDialog):
 				name = self._mmobj.GetRawAttrDef('name', '')
 			return name or 'no name'
 
-	def __init__(self, parent, root, selection=None, filter = ''):
+	def __init__(self, parent, root, selection=None, filter = '', title=''):
 		ResDialog.__init__(self,grinsRC.IDD_SELECT_ELEMENT, parent)
 		self._root = root
 		self._filter = filter
@@ -439,7 +439,9 @@ class SelectElementDlg(ResDialog):
 		self.__lockupdate = 0
 
 		# create default dialog title
-		if not filter:
+		if title:
+			self._title = title
+		elif not filter:
 			self._title = 'Select element'
 		elif filter == 'region':
 			self._title = 'Select region'
