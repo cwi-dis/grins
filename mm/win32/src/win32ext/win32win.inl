@@ -790,7 +790,22 @@ ui_window_do_drag_drop(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", dropEffect);
 }
 
-// SubclassDlgItem
+
+// @pymethod <o PyCWnd>|win32ui|EnableToolTips|Enable tooltips for this window.
+PyObject *
+ui_window_enable_tool_tips(PyObject *self, PyObject *args)
+{
+	BOOL bEnable;
+	if (!PyArg_ParseTuple(args, "i:EnableToolTips", &bEnable)) 
+		return NULL;
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd)
+		return NULL;
+	GUI_BGN_SAVE;
+	pWnd->EnableToolTips(bEnable);
+	GUI_END_SAVE;
+	RETURN_NONE;
+}
 
 ///////////////////////
 // @pymeth GetWindowLong|Gets the style of a window.
@@ -819,7 +834,8 @@ ui_window_do_drag_drop(PyObject *self, PyObject *args)
 	{"RegisterDropTarget",ui_window_register_drop_target,1},\
 	{"RevokeDropTarget",ui_window_revoke_drop_target,1},\
 	{"DoDragDrop",ui_window_do_drag_drop,1},\
-	{"SubclassDlgItem",ui_window_subclass_dlg_item,1}, 
+	{"SubclassDlgItem",ui_window_subclass_dlg_item,1},\
+	{"EnableToolTips",ui_window_enable_tool_tips,1}, 
 
 
 /*
