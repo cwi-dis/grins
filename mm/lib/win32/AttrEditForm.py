@@ -1742,8 +1742,6 @@ class AttrEditFormNew(GenFormView):
 		self._a2p[attrobj].setoptions(attrobj,list,val)
 
 
-import __main__
-if hasattr(__main__,'use_tab_attr_editor') and __main__.use_tab_attr_editor:
+import settings
+if settings.get('use_tab_attr_editor'):
 	AttrEditForm=AttrEditFormNew
-
-

@@ -28,6 +28,7 @@ default_settings = {
 	'root_expanded': 0,		# Root node always expanded
 	'recent_documents':[],		# Recently used documents
 	'thumbnail_size':10.0,		# Size of thumbnail (mm)
+	'use_tab_attr_editor':0,	# New tabs-based props editor
 # HierarchyView colors
 	'structure_bgcolor': (150, 150, 150), # Light gray
 	'structure_leafcolor': (255,255,222),
