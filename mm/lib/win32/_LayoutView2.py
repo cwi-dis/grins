@@ -50,6 +50,8 @@ class _LayoutView2(GenFormView):
 		self._slider = None
 
 		self.__ctrlNames=n=('RegionX','RegionY','RegionW','RegionH','RegionZ','AnimateEnable','Fit', 'FitLabel')
+		self.__animatedCtrlList=('RegionX','RegionY','RegionW','RegionH')
+		
 		self.__listeners = {}
 		
 		# save the current value.
@@ -338,6 +340,12 @@ class _LayoutView2(GenFormView):
 		id=msg.cmdid()
 		nmsg=msg.getnmsg()
 
+		if self.__playing and nmsg!=win32con.BN_CLICKED:
+			# do nothing if animate previewing
+			for ctrlName in self.__animatedCtrlList:
+				if id == self[ctrlName]._id:
+					return
+
 		if id==win32con.IDOK or nmsg == win32con.EN_KILLFOCUS:
 			self.flushChangement()
 			return
@@ -510,7 +518,7 @@ class _LayoutView2(GenFormView):
 	# on selection change call
 	def StopPreview(self):
 		if self._slider and self._slider.isEnabled():
-			self._stop()
+			self.stop()
 		else:
 			self.EnablePreview(0)
 				
@@ -871,6 +879,7 @@ class LayoutManager(LayoutManagerBase):
 	# XXX should be managed directly by the low level
 	#
 	def onLButtonDown(self, params):
+		self.GetParent().StopPreview()
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
 		if (flags & win32con.MK_CONTROL):
@@ -890,7 +899,6 @@ class LayoutManager(LayoutManagerBase):
 	#
 	#
 	def onDSelChanged(self, selections):
-		self.GetParent().StopPreview()
 		if len(selections) == 1 and isinstance(selections[0], winlayout.Polyline):
 			return
 		self._selectedList = selections
