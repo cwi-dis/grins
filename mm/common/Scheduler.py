@@ -862,8 +862,6 @@ class SchedulerContext:
 			del node.GetSchedParent().srdict[ev]
 
 	def do_terminate(self, node, timestamp, fill = 'remove', cancelarcs = 0, chkevent = 1, skip_cancel = 0, ignore_erase = 0):
-		if timestamp is None:
-			import traceback; traceback.print_stack()
 		parent = self.parent
 		if debugevents: print 'do_terminate',node,timestamp,fill,parent.timefunc()
 		if debugdump: parent.dump()
