@@ -104,7 +104,7 @@ class _Toplevel:
 		self._image_cache = {}
 
 	def addclosecallback(self, func, args):
-		self._closecallbacks.append(func, args)
+		self._closecallbacks.append((func, args))
 
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
