@@ -49,6 +49,7 @@ import win32window
 
 class _CmifWnd(win32window.Window, DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 	def __init__(self):
+		win32window.Window.__init__(self)
 		DropTarget.__init__(self)
 		rbtk._rbtk.__init__(self)
 		DrawTk.DrawLayer.__init__(self)

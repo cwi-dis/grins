@@ -545,9 +545,6 @@ class _CmifPlayerView(_CmifView):
 		self._clipper = self._ddraw.CreateClipper(self.GetSafeHwnd())
 		self._frontBuffer.SetClipper(self._clipper)
 		self._pxlfmt = self._frontBuffer.GetPixelFormat()
-		
-		# temp: uninitialized win32window.Window members
-		self._convcolor = None
 
 	def __delDD(self):
 		del self._frontBuffer
