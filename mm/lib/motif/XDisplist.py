@@ -25,6 +25,7 @@ _iconmap = {
 
 class _DisplayList:
 	def __init__(self, window, bgcolor):
+		self.starttime = 0
 		self._window = window
 		window._displists.append(self)
 		self._buttons = []
@@ -105,6 +106,8 @@ class _DisplayList:
 		return new
 
 	def render(self):
+		import time
+		self.starttime = time.time()
 		window = self._window
 		if window._transparent == -1 and window._active_displist is None:
 			window._active_displist = self
@@ -348,10 +351,10 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		self._linewidth = width
 
-	def newbutton(self, coordinates, z = 0):
+	def newbutton(self, coordinates, z = 0, times = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		return _Button(self, coordinates, z)
+		return _Button(self, coordinates, z, times)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
 				    center = 1, coordinates = None,

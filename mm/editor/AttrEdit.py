@@ -1918,6 +1918,9 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		ch = self.wrapper.context.getchannel(self.getvalue())
 		if ch is not None:
 			showchannelattreditor(self.wrapper.toplevel, ch)
+			
+	def channelexists(self, name):
+		return self.wrapper.context.getchannel(name) is not None
 
 	def newchannelname(self):
 		base = 'NEW'
@@ -1973,6 +1976,9 @@ class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			return self.__nocaptions
 		return value
 
+	def channelexists(self, name):
+		return self.wrapper.context.getchannel(name) is not None
+
 	def channelprops(self):
 		ch = self.wrapper.context.getchannel(self.getvalue())
 		if ch is not None:
@@ -2026,7 +2032,10 @@ class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			except NoSuchAttrError:
 				pass
 		list.sort()
-		return ['LAST', 'FIRST'] + list
+		extras = ['LAST', 'FIRST']
+		if self.wrapper.context.attributes.get('project_boston', 0):
+			extras.append('ALL')
+		return extras + list
 
 	def getcurrent(self):
 		val = self.wrapper.getvalue(self.getname())

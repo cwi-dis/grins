@@ -190,7 +190,7 @@ class SchedulerContext:
 			if ev[1].t0 <= now:
 				prearmnowlist.append(ev)
 			else:
-				prearmlaterlist.append(ev[1].t0, ev)
+				prearmlaterlist.append((ev[1].t0, ev))
 		for ev in prearmnowlist:
 			parent.add_runqueue(self, PRIO_PREARM_NOW, ev)
 		prearmlaterlist.sort()
@@ -278,21 +278,26 @@ class SchedulerContext:
 		if debugevents: print 'Event', `node`, aid
 		side = node.eventdst[aid]
 		if side == TL:
+			if debugevents: print 'terminating node'
 			self.parent.do_terminate(self, node)
 			return
 		# side == HD
 		pnode = node.GetParent()
 		if not pnode or pnode.playing != MMStates.PLAYING:
 			# ignore event when node can't play
+			if debugevents: print 'parent not playing'
 			return
-		if (node.playing == MMStates.PLAYING and MMAttrdefs.getattr(node, 'restart') != 'whenNotActive') or \
+		if (node.playing == MMStates.PLAYING and MMAttrdefs.getattr(node, 'restart') != 'always') or \
 		   (node.playing == MMStates.PLAYED and MMAttrdefs.getattr(node, 'restart') == 'never'):
 			# ignore event when node doesn't want to play
+			if debugevents: print 'node won\'t play'
 			return
 		if node.playing == MMStates.PLAYING:
 			# node is playing, must terminate it first
+			if debugevents: print 'terminating node'
 			self.parent.do_terminate(self, node)
 		# we must start the node, but how?
+		if debugevents: print 'starting node'
 		srdict = pnode.gensr_child_par(node)
 		self.srdict.update(srdict)
 		self.parent.event(self, (SR.SCHED, node))
@@ -592,7 +597,7 @@ class Scheduler(scheduler):
 	# Add the given SR to one of the runqueues.
 	#
 	def add_runqueue(self, sctx, prio, sr):
-		self.runqueues[prio].append(sctx, sr, 0)
+		self.runqueues[prio].append((sctx, sr, 0))
 
 	def add_lopriqueue(self, sctx, time, sr):
 		runq = self.runqueues[PRIO_LO]
@@ -600,7 +605,7 @@ class Scheduler(scheduler):
 			if runq[i][2] > time:
 				runq.insert(i, (sctx, sr, time))
 				return
-		runq.append(sctx, sr, time)
+		runq.append((sctx, sr, time))
 
 	#
 	# Try to run one SR. Return 0 if nothing to be done.
@@ -854,6 +859,7 @@ class Scheduler(scheduler):
 	# There is no delayfunc() since we don't have a run() function.
 	#
 	def enterabs(self, time, priority, action, argument):
+		print 'enterabs',time,priority,action,argument
 		id = scheduler.enterabs(self, time, priority, action, argument)
 		self.updatetimer()
 		return id
