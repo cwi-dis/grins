@@ -778,7 +778,7 @@ class LayoutManager(LayoutManagerBase, win32window.MSDrawContext):
 		if self._base == window.Wnd: 
 			return pt
 		dc=self.GetDC()
-		x, y = dc.DPtoLP(pt)
+		pt = dc.DPtoLP(pt)
 		self.ReleaseDC(dc)
 		return pt
 
