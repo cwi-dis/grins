@@ -1123,7 +1123,7 @@ class Window:
 			x, y = self.getDragHandle(ix)
 		else:	
 			x, y = self.LPtoDP(self.getDragHandle(ix))
-		return x-3, y-3, 6, 6
+		return x-2, y-2, 5, 5
 
 	def getDragHandleCount(self):
 		return 8
