@@ -870,13 +870,12 @@ class Window:
 		else:
 			X, Y, W, H = 0, 0, 0, 0
 		x, y, w, h = self._rectb
-		return X+x, Y+y, w, h
+		return int(X+x+0.5), int(Y+y+0.5), int(w+0.5), int(h+0.5)
 				
 	def inside(self, (xp, yp)):
 		x, y, w, h = self.getwindowpos()
 		return x <= xp < x + w and y <= yp < y + h
-
-
+	
 	#
 	# Private methods
 	#
@@ -1004,42 +1003,62 @@ class Window:
 	def settransitionvalue(self, value):
 		pass
 		
-
-
 	#
 	# Scaling support
 	#
-	def setDeviceToLogicalScale(self, scale):
-		self._device2logical = scale
+	# design decision:
+	# window rectangles, the methods getwindowpos, inside, etc
+	# are all kept in their original coordinate system (i.e. unscaled)
+	
+	# note that when there is scaling
+	# window rectangles become floating tuples
+
+	# naming convention:
+	# the original system is called 'logical' (L)
+	# the display system is called 'device' (D)
+
+	def setDeviceToLogicalScale(self, d2lscale):
+		if d2lscale<=0: d2lscale = 1.0
+		self._device2logical = d2lscale
 		for wnd in self._subwindows:
-			wnd.setDeviceToLogicalScale(scale)
+			wnd.setDeviceToLogicalScale(d2lscale)
+
+	def getDeviceToLogicalScale(self):
+		return self._device2logical
 
 	def DPtoLP(self, pt):
 		x, y = pt
 		sc = self._device2logical
-		return int(sc*x+0.5), int(sc*y+0.5)
+		return sc*x, sc*y
 
 	def DRtoLR(self, rc):
 		x, y, w, h = rc
 		sc = self._device2logical
-		return int(sc*x+0.5), int(sc*y+0.5), int(sc*w+0.5), int(sc*h+0.5)
+		return sc*x, sc*y, sc*w, sc*h
 
 	def LPtoDP(self, pt):
 		x, y = pt
 		sc = 1.0/self._device2logical
-		return int(sc*x+0.5), int(sc*y+0.5)
+		return sc*x, sc*y
 
-	def LRtoDR(self, rc):
+	def LRtoDR(self, rc, round=0):
 		x, y, w, h = rc
 		sc = 1.0/self._device2logical
-		return int(sc*x+0.5), int(sc*y+0.5), int(sc*w+0.5), int(sc*h+0.5)
+		if round:
+			return int(sc*x+0.5), int(sc*y+0.5), int(sc*w+0.5), int(sc*h+0.5)
+		return sc*x, sc*y, sc*w, sc*h
 
-
+	def LDtoDD(self, d):
+		return d/self._device2logical
 	#
 	# Drag & Resize interface
 	#
+
+	# return drag handle position in device coordinates
 	def getDragHandle(self, ix):
-		x, y, w, h = self.getwindowpos()
+		rc = self.LRtoDR(self.getwindowpos(), round=1)
+		x, y, w, h = rc
+		w, h = w-1, h-1
 		xc = x + w/2
 		yc = y + h/2
 		if ix == 1:
@@ -1069,12 +1088,9 @@ class Window:
 		return x, y
 
 	# return drag handle rectangle in device coordinates
-	def getDragHandleRect(self, ix, log=0):
-		if log:
-			x, y = self.getDragHandle(ix)
-		else:	
-			x, y = self.LPtoDP(self.getDragHandle(ix))
-		return x-2, y-2, 5, 5
+	def getDragHandleRect(self, ix):
+		x, y = self.getDragHandle(ix)
+		return x-3, y-3, 7, 7
 
 	def getDragHandleCount(self):
 		return 8
@@ -1087,17 +1103,19 @@ class Window:
 		else: id = 'arrow'
 		return id
 
+	# return drag handle at device coordinates
 	def getDragHandleAt(self, point):
 		xp, yp = point
 		for ix in range(1,9):
-			x, y, w, h = self.getDragHandleRect(ix, log=1)
+			x, y, w, h = self.getDragHandleRect(ix)
 			l, t, r, b = x, y, x+w, y+h
 			if xp>=l and xp<r and yp>=t and yp<b:
 				return ix
 		return 0
 
+	# move drag handle in device coordinates to point in device coordinates
 	def moveDragHandleTo(self, ixHandle, point):
-		xp, yp = point
+		xp, yp = self.DPtoLP(point)
 		x, y, w, h = self.getwindowpos()
 		l, t, r, b = x, y, x+w, y+h
 		if	ixHandle== 1:
@@ -1127,13 +1145,13 @@ class Window:
 		self.updatecoordinates((l, t, r-l, b-t), units=UNIT_PXL)
 
 	def moveBy(self, delta):
-		dx, dy = delta
+		dx, dy = self.DPtoLP(delta)
 		xr, yr, w, h = self._rectb
 		self.updatecoordinates((xr+dx, yr+dy, w, h), units=UNIT_PXL)
 		
 	def invalidateDragHandles(self):
-		x, y, w, h  = self.LRtoDR(self.getwindowpos())
-		delta = 4
+		x, y, w, h  = self.getwindowpos()
+		delta = 7
 		x = x-delta
 		y = y-delta
 		w = w+2*delta
