@@ -5,7 +5,6 @@ __version__ = "$Id$"
 
 from MMExc import *		# Exceptions
 from MMTypes import mediatypes, interiortypes
-import MMCache
 import MMAttrdefs
 import Hlinks
 import ChannelMap
