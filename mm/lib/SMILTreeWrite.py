@@ -2417,7 +2417,7 @@ class SMILWriter(SMIL):
 				progress = (self.progress, ("Converting %s"%os.path.split(file)[1], None, None))
 			else:
 				progress = None
-			cfile = convertaudiofile(u, dstdir, file, node,
+			cfile = convertaudiofile(u, srcurl, dstdir, file, node,
 						progress = progress)
 			if cfile:
 				self.files_generated[cfile] = 'b'
