@@ -253,6 +253,8 @@ mpeg_dealloc(self)
 	mmobject *self;
 {
 	denter(mpeg_dealloc);
+	if (self->mm_private == NULL)
+		return;
 	mpeg_free_old(&PRIV->m_play, 0);
 	mpeg_free_old(&PRIV->m_arm, 0);
 	(void) close(PRIV->m_pipefd[0]);
