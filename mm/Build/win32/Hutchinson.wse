@@ -1469,6 +1469,51 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=..\..\My Devices\H3G2.gskin
+  Destination=%MAINDIR%\My Devices\H3G2.gskin
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\My Devices\H3G.gskin
+  Destination=%MAINDIR%\My Devices\H3G.gskin
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\My Devices\DeviceXrocker.gskin
+  Destination=%MAINDIR%\My Devices\DeviceXrocker.gskin
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\My Devices\DeviceX.gskin
+  Destination=%MAINDIR%\My Devices\DeviceX.gskin
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\My Devices\DeviceX.gif
+  Destination=%MAINDIR%\My Devices\DeviceX.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\My Devices\Classic.gskin
+  Destination=%MAINDIR%\My Devices\Classic.gskin
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\My Devices\Classic.gif
+  Destination=%MAINDIR%\My Devices\Classic.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\My Devices\begin_end_icon2.gif
+  Destination=%MAINDIR%\My Devices\begin_end_icon2.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\My Devices\begin_end_icon.gif
+  Destination=%MAINDIR%\My Devices\begin_end_icon.gif
+  Flags=0000000010000010
+end
+item: Install File
   Source=..\..\Templates\T-icons\slideshow_MMS.bmp
   Destination=%MAINDIR%\Templates\T-icons\slideshow_MMS.bmp
   Flags=0000000010000010
