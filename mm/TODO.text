@@ -7,14 +7,16 @@ What am I doing:
 * Trying to add things to the Hierarchy view and test the 
 	new Interactive() code.
 
+* Context menus.
 
+* Get Jack to make a routine to find download times for nodes.
 
 Priority top-to-bottom.
 ------------------------
 
 * New build for Dick of Snap! and the 2.0 player.
 
-* Create the interactive class.
+* Rename all the view classes to Widget classes.
 
 * Disable drag + drop of structure nodes.
 
@@ -31,6 +33,8 @@ Priority top-to-bottom.
 
 * Traverse through the files and use the options
 	in features.py.
+
+* Make the Interactive resize it's own window.
 
 
 Incoming

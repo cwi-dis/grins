@@ -26,112 +26,15 @@ import MMmimetypes
 import features
 import compatibility
 import Interactive;			# mjvdg 13-oct-2000.
+from StructureViews import *;
 
 # TODO: this is not used properly everywhere in this file.
 grins_snap = features.H_NIPPLES in features.feature_set
 
 import settings
-hierarchy_minimum_sizes = settings.get('hierarchy_minimum_sizes')
-root_expanded = settings.get('root_expanded')
-structure_name_size = settings.get('structure_name_size')
-show_links = settings.get('show_links')
 
 # Color settings
-from ColorScheme import *;
-
-# Box types
-
-ANCESTORBOX = 0
-INNERBOX = 1
-LEAFBOX = 2
-
-
-# Fonts used below
-f_title = windowinterface.findfont('Helvetica', 10)
-f_channel = windowinterface.findfont('Helvetica', 8)
-f_timescale = f_channel
-
-##class oldsizes:
-##	SIZEUNIT = windowinterface.UNIT_MM # units for the following
-##	MINSIZE = settings.get('thumbnail_size') # minimum size for a node
-##	MAXSIZE = 2 * MINSIZE
-##	TITLESIZE = f_title.fontheight()*1.2
-##	CHNAMESIZE = f_channel.fontheight()*1.2
-##	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
-##	HOREXTRASIZE = f_title.strsize('XX')[0]
-##	ARRSIZE = f_title.strsize('xx')[0]	# width of collapse/expand arrow
-##	GAPSIZE = 1.0						# size of gap between nodes
-##	HEDGSIZE = 1.0						# size of edges
-##	VEDGSIZE = 1.0						# size of edges
-##	FLATBOX = 0
-
-class sizes_time:
-	SIZEUNIT = windowinterface.UNIT_PXL # units for the following
-	MINSIZE = 48 
-	MAXSIZE = 128
-	TITLESIZE = int(f_title.fontheightPXL()*1.2)
-	if TITLESIZE < windowinterface.ICONSIZE_PXL:
-		TITLESIZE = windowinterface.ICONSIZE_PXL
-	CHNAMESIZE = int(f_channel.fontheightPXL()*1.2) #0
-	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
-	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
-	ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
-	ERRSIZE = windowinterface.ICONSIZE_PXL	# width of error/bandwidth indicator
-	GAPSIZE = 0 #2						# size of gap between nodes
-	HEDGSIZE = 0 #3						# size of edges
-	VEDGSIZE = 3 #3						# size of edges
-	FLATBOX = 1
-	TIMEBARHEIGHT = f_timescale.strsizePXL('X')[1]*3
-	DROPAREA = MINSIZE + HOREXTRASIZE
-
-class sizes_notime:
-	SIZEUNIT = windowinterface.UNIT_PXL # units for the following
-	MINSIZE = 48 
-	MAXSIZE = 128
-	TITLESIZE = int(f_title.fontheightPXL()*1.2)
-	if TITLESIZE < windowinterface.ICONSIZE_PXL:
-		TITLESIZE = windowinterface.ICONSIZE_PXL
-	CHNAMESIZE = 0
-	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
-	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
-	ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
-	ERRSIZE = windowinterface.ICONSIZE_PXL	# width of error/bandwidth indicator
-
-	if grins_snap:		
-		GAPSIZE = 16;
-		HEDGSIZE = 16;
-		VEDGSIZE = 12 #3						# size of edges		
-	else:
-		GAPSIZE = 2 #2						# size of gap between nodes
-		HEDGSIZE = 3 #3						# size of edges
-		VEDGSIZE = 3 #3						# size of edges
-
-	DROPAREASIZE = 32;		# size of the decoration at the end of a "roll of film"
-	FLATBOX = 0
-	TIMEBARHEIGHT = 0
-	DROPAREA = MINSIZE + HOREXTRASIZE
-
-##class othersizes:
-##	SIZEUNIT = windowinterface.UNIT_MM # units for the following
-##	MINSIZE = settings.get('thumbnail_size') # minimum size for a node
-##	MAXSIZE = 2 * MINSIZE
-##	TITLESIZE = f_title.fontheight()*1.2
-##	CHNAMESIZE = 0
-##	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
-##	HOREXTRASIZE = f_title.strsize('XX')[0]
-##	ARRSIZE = f_title.strsize('xx')[0]	# width of collapse/expand arrow
-##	GAPSIZE = 1.0						# size of gap between nodes
-##	HEDGSIZE = 1.0						# size of edges
-##	VEDGSIZE = 1.0						# size of edges
-##	FLATBOX = 0
-
-
-#
-# We expand a number of hierarchy levels on first open. The number
-# given here is the number of _nodes_ we minimally want to open.
-# We (of course) continue to open all nodes on the same level.
-#
-NODES_WANTED_OPEN = 7
+from AppDefaults import *;
 
 class HierarchyView(HierarchyViewDialog):
 
@@ -151,7 +54,10 @@ class HierarchyView(HierarchyViewDialog):
 		self.objects = [];	# A list of objects that are displayed on the screen.
 		self.scene_graph = None; # The next generation list of objects that are displayed on the screen
 					# of type EditWindow.
-		self.focusnode = self.prevfocusnode = self.root	# : MMNode
+		self.selected_widget = None;
+		self.focusobj = None;	# Old Object() code - remove this when no longer used. TODO
+		self.focusnode = self.prevfocusnode = self.root	# : MMNode - remove when no longer used.
+
 		self.editmgr = self.root.context.editmgr
 		self.destroynode = None	# node to be destroyed later
 		self.expand_on_show = 1
@@ -164,8 +70,9 @@ class HierarchyView(HierarchyViewDialog):
 		self.datadir = findfile('GRiNS-Icons')
 		
 		self.__add_commands();
-		self.create_scene_graph();
 		HierarchyViewDialog.__init__(self)		
+
+		self.create_scene_graph(); # A hierarchy of displayable objects for the screen.
 
 
 	def __add_commands(self):
@@ -437,6 +344,10 @@ class HierarchyView(HierarchyViewDialog):
 				if fnode is not self.root and fntype != 'slide':
 					# can't paste before/after root node
 					commands = commands + self.pastenotatrootcommands
+
+		print "DEBUG: Setting commands to ", commands;
+		print "DEBUG: Setting popupmenu to ", popupmenu;
+		
 		self.setcommands(commands)
 		self.setpopup(popupmenu)
 		self.setstate()
@@ -451,13 +362,11 @@ class HierarchyView(HierarchyViewDialog):
 	def create_scene_graph(self):
 		# Iterate through the MMNode structure (starting from self.root)
 		# and create a scene graph from it.
-		ntype = self.root.GetType();
-		if ntype == 'seq':
-			print "TODO: HierarchyView:456";
-			# self.scene_graph = SeqView(self.root);
-		else:
-			print "Mildly fatal error: First node is not a sequence.";
-		
+		self.scene_graph = create_MMNode_view(self.root, self);
+
+	# Callbacks for the Interactive classes.
+	def get_window_size_abs(self):
+		return self.window.getcanvassize(self.sizes.SIZEUNIT);
 
 	def show(self):
 		if self.is_showing():
@@ -538,18 +447,28 @@ class HierarchyView(HierarchyViewDialog):
 	#################################################
 
 	def redraw(self, *rest):
+		# TODO: make this faster.
 		# RESIZE event. (the routine is misnamed)
 		self.toplevel.setwaiting()
-		self.cleanup()
 		self.new_displist = self.window.newdisplaylist(BGCOLOR)
 		self.displist = None
+		# Wrong, because canvas_size will be relative values.
+		# canvas_size = self.scene_graph.get_minsize_abs();
+		# self.window.setcanvassize((self.sizes.SIZEUNIT, canvas_size[0], canvas_size[1]));
 		self.recalcboxes()
 		self.draw()
 
 	def mouse(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
 		x, y = params[0:2]
-		self.select(x, y)
+
+		# TODO: remove this to make things work again. -mjvdg
+		self.scene_graph.click((x,y))
+		
+		return;
+	
+		# TODO: use this to make things work again.
+		#self.select(x, y)
 
 	def cvdrop(self, node, window, event, params):
 		em = self.editmgr
@@ -1023,7 +942,13 @@ class HierarchyView(HierarchyViewDialog):
 	#################################################
 
 	# Clear the list of objects
-	def cleanup(self):
+   	def cleanup(self):
+		print "DEBUG: Hierarchyview.cleanup called";
+		import traceback;
+		traceback.print_stack();
+		return;
+	
+##	 	assert(0);
 		for obj in self.objects:
 			obj.cleanup()
 		self.objects = []
@@ -1077,44 +1002,51 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Handle a selection click at (x, y)
 	def select(self, x, y):
-		obj = self.whichhit(x, y)
-		if not obj:
-			windowinterface.beep()
-			return
-		if (not root_expanded or obj.node is not self.root) and \
-		   hasattr(obj.node, 'abox'):
-			l, t, r, b = obj.node.abox
-			if l <= x <= r and t <= y <= b:
-				self.prevfocusnode = self.focusnode
-				self.focusnode = obj.node
-				obj.expandcall()
-				return
-		if obj.node is not self.focusnode:
-			self.setfocusobj(obj)
-			self.render()
-		if obj.iconbox:
-			l, t, w, h = obj.iconbox
-			if l <= x <= l+w and t <= y <= t+h:
-				if obj.node.infoicon:
-					# If we hit the iconbox and there is something in it
-					# print the message
-					msg = obj.node.errormessage
-					if msg:
-						windowinterface.showmessage('%s'%msg, parent = self.window)
-						return
-				if show_links and obj.getlinkicon():
-					self.toplevel.links.show(node=obj.node)
+		assert 0;
+##		obj = self.whichhit(x, y)
+##		if not obj:
+##			windowinterface.beep()
+##			return
+##		if (not root_expanded or obj.node is not self.root) and \
+##		   hasattr(obj.node, 'abox'):
+##			l, t, r, b = obj.node.abox
+##			if l <= x <= r and t <= y <= b:
+##				self.prevfocusnode = self.focusnode
+##				self.focusnode = obj.node
+##				obj.expandcall()
+##				return
+##		if obj.node is not self.focusnode:
+##			self.setfocusobj(obj)
+##			self.render()
+##		if obj.iconbox:
+##			l, t, w, h = obj.iconbox
+##			if l <= x <= l+w and t <= y <= t+h:
+##				if obj.node.infoicon:
+##					# If we hit the iconbox and there is something in it
+##					# print the message
+##					msg = obj.node.errormessage
+##					if msg:
+##						windowinterface.showmessage('%s'%msg, parent = self.window)
+##						return
+##				if show_links and obj.getlinkicon():
+##					self.toplevel.links.show(node=obj.node)
 
 	# Find the smallest object containing (x, y)
 	def whichhit(self, x, y):
-		hitobj = None
-		for obj in self.objects:
-			if obj.ishit(x, y):
-				hitobj = obj
-		return hitobj
+		# Now a bad hack.
+		# Return the scene object which is at position x,y.
+		# Used for dragging and dropping objects.
+		return self.scene_graph.get_obj_at((x,y));
+		
+##		hitobj = None
+##		for obj in self.objects:
+##			if obj.ishit(x, y):
+##				hitobj = obj
+##		return hitobj
 
 	# Find the object corresponding to the node
 	def whichobj(self, node):
+		assert 0;		
 		for obj in self.objects:
 			if obj.node is node:
 				return obj
@@ -1122,40 +1054,58 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Select the given object, deselecting the previous focus
 	def setfocusobj(self, obj):
-		self.init_display()
-		if self.focusobj:
-			self.focusobj.deselect()
-		self.prevfocusnode = self.focusnode
-		if obj:
-			self.focusnode = obj.node
-			self.focusobj = obj
-			self.focusobj.select()
-		else:
-			self.focusnode = None
-			self.focusobj = None
-		self.aftersetfocus()
+		assert 0;
+##		assert isinstance(obj, Interactive.Interactive);
+
+##		self.init_display()
+##		if self.focusobj:
+##			self.focusobj.deselect()
+##		self.prevfocusnode = self.focusnode
+##		if obj:
+##			self.focusnode = obj.node
+##			self.focusobj = obj
+##			self.focusobj.select()
+##		else:
+##			self.focusnode = None
+##			self.focusobj = None
+##		self.aftersetfocus()
 
 	# Select the given node as focus
 	def setfocusnode(self, node):
-		if not node:
-			self.setfocusobj(None)
-			self.render()
-			return
-		obj = self.whichobj(node)
-		if obj:
-			self.setfocusobj(obj)
-			x1,y1,x2,y2 = obj.box
-			self.window.scrollvisible((x1,y1,x2-x1,y2-y1))
-			self.render()
-			return
-		self.prevfocusnode = self.focusnode
-		self.focusnode = node
-		# Need to expand some nodes
-		node = node.GetParent()
-		while node is not None:
-			expandnode(node)
-			node = node.GetParent()
-		self.recalc()
+		assert 0; 
+##		if not node:
+##			self.setfocusobj(None)
+##			self.render()
+##			return
+##		obj = self.whichobj(node)
+##		if obj:
+##			self.setfocusobj(obj)
+##			x1,y1,x2,y2 = obj.box
+##			self.window.scrollvisible((x1,y1,x2-x1,y2-y1))
+##			self.render()
+##			return
+##		self.prevfocusnode = self.focusnode
+##		self.focusnode = node
+##		# Need to expand some nodes
+##		node = node.GetParent()
+##		while node is not None:
+##			expandnode(node)
+##			node = node.GetParent()
+##		self.recalc()
+
+	def select_widget(self, widget):
+		# Make the widget the current selection.
+		if isinstance(self.selected_widget, Interactive.Interactive):
+			self.selected_widget.unselect();
+		print "DEBUG: Selecting widget ", widget;
+		self.selected_widget = widget;		
+		self.focusobj = widget;	# Used for callbacks.
+		self.prevfocusnode = self.focusnode;
+		if widget == None:
+			self.focusnode = None;
+		else: 
+			self.focusnode = widget.node;
+		self.window.scrollvisible(widget.get_box());
 
 	# Recursively position the boxes. Minimum sizes are already set, we may only have
 	# to extend them.
@@ -1246,67 +1196,71 @@ class HierarchyView(HierarchyViewDialog):
 	# sizes are already set. We only have to compute gapsizes (based on current w/h),
 	# call makeboxes to position the boxes and create the objects.
 	def recalcboxes(self):
-		self.focusobj = None
-		prevfocusobj = None
-		rootobj = None
-		rw, rh = self.window.getcanvassize(self.sizes.SIZEUNIT)
-		rw = float(rw)
-		rh = float(rh)
-		self.canvassize = rw, rh
-		self.titleheight = float(self.sizes.TITLESIZE) / rh
-		self.chnameheight = float(self.sizes.CHNAMESIZE) / rh
-		self.horedge = float(self.sizes.HEDGSIZE) / rw
-		self.veredge = float(self.sizes.VEDGSIZE) / rh
-		self.horgap = float(self.sizes.GAPSIZE) / rw
-		self.vergap = float(self.sizes.GAPSIZE) / rh
-		self.horsize = float(self.sizes.MINSIZE + self.sizes.HOREXTRASIZE) / rw
-		self.versize = float(self.sizes.MINSIZE + self.sizes.LABSIZE) / rh
-		self.arrwidth = float(self.sizes.ARRSIZE) / rw
-		self.arrheight = float(self.sizes.ARRSIZE) / rh
-		self.errwidth = float(self.sizes.ERRSIZE) / rw
-		self.errheight = float(self.sizes.ERRSIZE) / rh
-		self.droparea = float(self.sizes.DROPAREA) / rw
-		list = []
-		if self.timescale:
-			timebarheight = float(self.sizes.TIMEBARHEIGHT)/rh
-			self.timescalebox = (0, 0, 1, 0.666*timebarheight)
-			databox = (0, timebarheight, 1, 1)
-		else:
-			self.timescalebox = None
-			databox = (0, 0, 1, 1)
-		self.makeboxes(list, self.root, databox)
-		for item in list:	
-			obj = Object(self, item)
-			self.objects.append(obj)						
+		self.scene_graph.recalc();
+		return;
+		
+	# TODO: Remove this code -mjvdg
+##		self.focusobj = None
+##		prevfocusobj = None
+##		rootobj = None
+##		rw, rh = self.window.getcanvassize(self.sizes.SIZEUNIT)
+##		rw = float(rw)
+##		rh = float(rh)
+##		self.canvassize = rw, rh
+##		self.titleheight = float(self.sizes.TITLESIZE) / rh
+##		self.chnameheight = float(self.sizes.CHNAMESIZE) / rh
+##		self.horedge = float(self.sizes.HEDGSIZE) / rw
+##		self.veredge = float(self.sizes.VEDGSIZE) / rh
+##		self.horgap = float(self.sizes.GAPSIZE) / rw
+##		self.vergap = float(self.sizes.GAPSIZE) / rh
+##		self.horsize = float(self.sizes.MINSIZE + self.sizes.HOREXTRASIZE) / rw
+##		self.versize = float(self.sizes.MINSIZE + self.sizes.LABSIZE) / rh
+##		self.arrwidth = float(self.sizes.ARRSIZE) / rw
+##		self.arrheight = float(self.sizes.ARRSIZE) / rh
+##		self.errwidth = float(self.sizes.ERRSIZE) / rw
+##		self.errheight = float(self.sizes.ERRSIZE) / rh
+##		self.droparea = float(self.sizes.DROPAREA) / rw
+##		list = []
+##		if self.timescale:
+##			timebarheight = float(self.sizes.TIMEBARHEIGHT)/rh
+##			self.timescalebox = (0, 0, 1, 0.666*timebarheight)
+##			databox = (0, timebarheight, 1, 1)
+##		else:
+##			self.timescalebox = None
+##			databox = (0, 0, 1, 1)
+##		self.makeboxes(list, self.root, databox)
+##		for item in list:	
+##			obj = Object(self, item)
+##			self.objects.append(obj)						
 
-			# Attach nipples to media nodes only
-			if grins_snap and obj.node.GetType() in MMNode.leaftypes:
-				left_nipple = Nipple(self, item);
-				left_nipple.append_to_left();
-				self.objects.append(left_nipple);
-				right_nipple = Nipple(self, item);
-				right_nipple.append_to_right();
-				self.objects.append(right_nipple);
+##			# Attach nipples to media nodes only
+##			if grins_snap and obj.node.GetType() in MMNode.leaftypes:
+##				left_nipple = Nipple(self, item);
+##				left_nipple.append_to_left();
+##				self.objects.append(left_nipple);
+##				right_nipple = Nipple(self, item);
+##				right_nipple.append_to_right();
+##				self.objects.append(right_nipple);
 
-			if item[0] is self.focusnode:
-				self.focusobj = obj
-			if item[0] is self.prevfocusnode:
-				prevfocusobj = obj
-			if item[0] is self.root:
-				rootobj = obj
-		if self.focusobj is not None:
-			self.focusobj.selected = 1
-		elif prevfocusobj is not None:
-			self.focusnode = self.prevfocusnode
-			self.focusobj = prevfocusobj
-			prevfocusobj.selected = 1
-		else:
-			self.focusnode = self.root
-			self.focusobj = rootobj
-			rootobj.selected = 1
-		self.aftersetfocus()
-		x1,y1,x2,y2 = self.focusobj.box
-		self.window.scrollvisible((x1,y1,x2-x1,y2-y1))
+##			if item[0] is self.focusnode:
+##				self.focusobj = obj
+##			if item[0] is self.prevfocusnode:
+##				prevfocusobj = obj
+##			if item[0] is self.root:
+##				rootobj = obj
+##		if self.focusobj is not None:
+##			self.focusobj.selected = 1
+##		elif prevfocusobj is not None:
+##			self.focusnode = self.prevfocusnode
+##			self.focusobj = prevfocusobj
+##			prevfocusobj.selected = 1
+##		else:
+##			self.focusnode = self.root
+##			self.focusobj = rootobj
+##			rootobj.selected = 1
+##		self.aftersetfocus()
+##		x1,y1,x2,y2 = self.focusobj.box
+##		self.window.scrollvisible((x1,y1,x2-x1,y2-y1))
 
 	# First step in box recomputation after an edit (or changing expand/collapse, etc):
 	# computes minimum sizes of all nodes, and does either a redraw (if everything still
@@ -1314,12 +1268,12 @@ class HierarchyView(HierarchyViewDialog):
 	# a redraw)
 	def recalc(self):
 		window = self.window
-		self.cleanup()
+#		self.cleanup()
 		if root_expanded:
 			expandnode(self.root) # root always expanded
-		if self.timescale:
-			Timing.needtimes(self.root)
-			self.timescalefactor = settings.get('time_scale_factor')
+#		if self.timescale:
+#			Timing.needtimes(self.root)
+#			self.timescalefactor = settings.get('time_scale_factor')
 		width, height, begin = self.sizeboxes(self.root)
 		width = width + begin
 		cwidth, cheight = window.getcanvassize(self.sizes.SIZEUNIT)
@@ -1339,19 +1293,15 @@ class HierarchyView(HierarchyViewDialog):
 	def draw(self):
 		displist = self.new_displist
 		dummy = displist.usefont(f_title)
-		for obj in self.objects:
-			obj.draw()
-		if self.timescale:
-			self.drawtimescale()
 
-		# DEBUG, and make it obvious :-)
-		# Uncomment this code if you want a big, ugly box in the middle of the screen.
-		print "DEBUG: remove this (HierarchyView.py:1327)";
-#		import Interactive;
-#		bob = Interactive.Interactive(self);
-#		bob.pos_rel = (0.25,0.25,0.75,0.75);
-#		bob.window_size_abs = (0,0,200,200);
-#		bob.draw(displist);
+		#for obj in self.objects:
+		#	obj.draw()
+		#if self.timescale:
+		#	self.drawtimescale()
+
+		# Render the scene graph. Ooooh yess..
+		# I'll be a happy man when this works.. -mjvdg.
+		self.scene_graph.draw(displist);
 
 		self.new_displist = None
 		displist.render()
@@ -1424,7 +1374,9 @@ class HierarchyView(HierarchyViewDialog):
 		width = displist.strsize(ticklabel)[0]
 		displist.centerstring(r-width, t, r, m, ticklabel)
 
-	# Menu handling functions
+	##############################################################################
+	# Menu handling functions - Callbacks.
+	##############################################################################
 
 ##	def helpcall(self):
 ##		if self.focusobj: self.focusobj.helpcall()
@@ -1468,7 +1420,7 @@ class HierarchyView(HierarchyViewDialog):
 		
 	def bandwidthcall(self):
 		self.toplevel.setwaiting()
-		import settings
+#		import settings # settings has already been imported -mjvdg.
 		import BandwidthCompute
 		bandwidth = settings.get('system_bitrate')
 		if bandwidth > 1000000:
@@ -1485,6 +1437,7 @@ class HierarchyView(HierarchyViewDialog):
 		dialog.done()
 
 	def playcall(self):
+		print "DEBUG: Hierarchyview: focusobj is: ", self.focusobj;
 		if self.focusobj: self.focusobj.playcall()
 
 	def playfromcall(self):
@@ -1698,555 +1651,558 @@ def countlevels(node, numwanted):
 		level = level + 1
 
 # XXX The following should be merged with ChannelView's GO class :-(
+# Actually, this will be using a completely different approach now :-). -mjvdg.
 
-# (Graphical) object class
-class Object:
-	# This is a representation of an MMNode on the screen
-	# e.g. all the boxes in the structure view. TODO: elaborate.
+# class Object:
+# 	# Will soon be deprecated.
 	
-	def __init__(self, mother, item):
-		# mother is a HierachyView
-		# item is a tuple of (MMNode, int, box) where box is (float, float, float, float)		
-		self.mother = mother	# : HierarchyView
-		node, self.boxtype, self.box = item
-		node.box = self.box	# Assigning the coords to the MMNode
-		node.set_infoicon = self.set_infoicon # Temp override of class method
-		self.node = node	# : MMNode
-		self.iconbox = None
-		if self.node.__class__ is SlideMMNode:
-			self.name = MMAttrdefs.getattr(node, 'tag')
-		else:
-			self.name = MMAttrdefs.getattr(node, 'name')
-		self.selected = 0
-		self.ok = 1
-		if node.GetType() == 'ext' and \
-		   node.GetChannelType() == 'RealPix':
-			if not hasattr(node, 'slideshow'):
-				import realnode
-				node.slideshow = realnode.SlideShow(node)
+# 	def __init__(self, mother, item):
+# 		# mother is a HierachyView
+# 		# item is a tuple of (MMNode, int, box) where box is (float, float, float, float)		
+# 		print "TODO: Objects will soon no longer be used. -mjvdg.";
+# 		self.mother = mother	# : HierarchyView
+# 		node, self.boxtype, self.box = item
+# 		node.box = self.box	# Assigning the coords to the MMNode
+# 		node.set_infoicon = self.set_infoicon # Temp override of class method
+# 		self.node = node	# : MMNode
+# 		self.iconbox = None
+# 		if self.node.__class__ is SlideMMNode:
+# 			self.name = MMAttrdefs.getattr(node, 'tag')
+# 		else:
+# 			self.name = MMAttrdefs.getattr(node, 'name')
+# 		self.selected = 0
+# 		self.ok = 1
+# 		if node.GetType() == 'ext' and \
+# 		   node.GetChannelType() == 'RealPix':
+# 			if not hasattr(node, 'slideshow'):
+# 				import realnode
+# 				node.slideshow = realnode.SlideShow(node)
 
-	# Make this object the focus
-	def select(self):
-		if self.selected:
-			return
-		self.selected = 1
-		if self.ok:
-			self.drawfocus()
+# 	# Make this object the focus
+# 	def select(self):
+# 		if self.selected:
+# 			return
+# 		self.selected = 1
+# 		if self.ok:
+# 			self.drawfocus()
 
-	# Remove this object from the focus
-	def deselect(self):
-		if not self.selected:
-			return
-		self.selected = 0
-		if self.ok:
-			self.drawfocus()
+# 	# Remove this object from the focus
+# 	def deselect(self):
+# 		if not self.selected:
+# 			return
+# 		self.selected = 0
+# 		if self.ok:
+# 			self.drawfocus()
 
-	# Check for mouse hit inside this object
-	def ishit(self, x, y):
-		l, t, r, b = self.box
-		return l <= x <= r and t <= y <= b
+# 	# Check for mouse hit inside this object
+# 	def ishit(self, x, y):
+# 		l, t, r, b = self.box
+# 		return l <= x <= r and t <= y <= b
 
-	def cleanup(self):
-		self.mother = None
-		node = self.node
-		del node.box
-		del node.set_infoicon  # Makes class method visible again
+# 	def cleanup(self):
+# 		self.mother = None
+# 		node = self.node
+# 		del node.box
+# 		del node.set_infoicon  # Makes class method visible again
 
-	def draw(self):
-		d = self.mother.new_displist
-		dummy = d.usefont(f_title)
-		rw, rh = self.mother.canvassize
-		titleheight = self.mother.titleheight
-		awidth = self.mother.arrwidth
-		aheight = self.mother.arrheight
-		chnameheight = self.mother.chnameheight
-		##hmargin = d.strsize('x')[0] / 1.5
-		##vmargin = titleheight / 5
-		hmargin, vmargin = d.get3dbordersize()
-		hmargin = hmargin*1.5
-		vmargin = vmargin*1.5
-		l, t, r, b = self.box
-		node = self.node
-		ntype = node.GetType()
-		willplay = not self.mother.showplayability or node.WillPlay()
-		if ntype in MMNode.leaftypes:
-			if node.GetChannelType() == 'RealPix':
-				if willplay:
-					color = RPCOLOR
-				else:
-					color = RPCOLOR_NOPLAY
-			elif node.GetChannelType()=='animate':
-				if willplay:
-					color = SLIDECOLOR
-				else:
-					color = SLIDECOLOR_NOPLAY
-			else:
-				if willplay:
-					color = LEAFCOLOR
-				else:
-					color = LEAFCOLOR_NOPLAY
-		elif ntype == 'seq':
-			if willplay:
-				color = SEQCOLOR
-			else:
-				color = SEQCOLOR_NOPLAY
-		elif ntype == 'par':
-			if willplay:
-				color = PARCOLOR
-			else:
-				color = PARCOLOR_NOPLAY
-		elif ntype == 'excl':
-			if willplay:
-				color = EXCLCOLOR
-			else:
-				color = EXCLCOLOR_NOPLAY
-		elif ntype == 'prio':
-			if willplay:
-				color = PRIOCOLOR
-			else:
-				color = PRIOCOLOR_NOPLAY
-		elif ntype == 'bag':
-			if willplay:
-				color = BAGCOLOR
-			else:
-				color = BAGCOLOR_NOPLAY
-		elif ntype == 'alt':
-			if willplay:
-				color = ALTCOLOR
-			else:
-				color = ALTCOLOR_NOPLAY
-		elif ntype == 'slide':
-			if willplay:
-				color = SLIDECOLOR
-			else:
-				color = SLIDECOLOR_NOPLAY
-		else:
-			color = 255, 0, 0 # Red -- error indicator
-		d.drawfbox(color, (l, t, r - l, b - t))
-		self.drawfocus()
-		t1 = min(b, t + titleheight + vmargin)
-		if node.GetType() not in MMNode.interiortypes and \
-		   not hasattr(node, 'expanded') and \
-		   b-t-vmargin >= titleheight+chnameheight:
-			if chnameheight:
-				b1 = b - chnameheight
-				# draw channel name along bottom of box
-				if node.__class__ is not SlideMMNode:
-					self.drawchannelname(l+hmargin/2, b1,
-							     r-hmargin/2, b-vmargin/2)
-			else:
-				b1 = b - 1.5*vmargin
-			# draw thumbnail/icon if enough space
-##			if b1-t1 >= titleheight and \
-##			   r-l >= hmargin * 2.5:
-			url = node.GetAttrDef('file', None)
-			if url:
-				mtype = MMmimetypes.guess_type(url)[0]
-			else:
-				mtype = None
-			ctype = node.GetChannelType()
-			if node.__class__ is SlideMMNode and \
-			   MMAttrdefs.getattr(node, 'tag') in ('fadein', 'crossfade', 'wipe'):
-				ctype = 'image'
-			elif ctype == 'sound' and mtype and string.find(mtype, 'real') >= 0:
-				ctype = 'RealAudio'
-			elif ctype == 'video' and mtype and string.find(mtype, 'real') >= 0:
-				ctype = 'RealVideo'
-			f = os.path.join(self.mother.datadir, '%s.tiff' % ctype)
-			if url and self.mother.thumbnails and ctype == 'image':
-				url = node.context.findurl(url)
-				try:
-					f = MMurl.urlretrieve(url)[0]
-				except IOError, arg:
-					self.set_infoicon('error', 'Cannot load image: %s'%`arg`)
-			ih = b1-t1
-			iw = r-l-2*hmargin
-			# XXXX The "0" values below need to be thought about
-			if iw <= 0 or ih <= 0:
-				# The box is too small, ignore the preview
-				pass
-			elif node.__class__ is SlideMMNode and \
-			   MMAttrdefs.getattr(node, 'tag') in ('fill','fadeout'):
-				d.drawfbox(MMAttrdefs.getattr(node, 'color'), (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
-				d.fgcolor(TEXTCOLOR)
-				d.drawbox((l+hmargin, (t1+b1-ih)/2, iw, ih))
-			elif node.GetChannelType() == 'brush':
-				d.drawfbox(MMAttrdefs.getattr(node, 'fgcolor'), (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
-				d.fgcolor(TEXTCOLOR)
-				d.drawbox((l+hmargin, (t1+b1-ih)/2, iw, ih))
-			elif f is not None:
-				try:
-					box = d.display_image_from_file(f, center = 1, coordinates = (l+hmargin, (t1+b1-ih)/2, iw, ih), scale=-2)
-				except windowinterface.error:
-					pass
-				else:
-					d.fgcolor(TEXTCOLOR)
-					d.drawbox(box)
-			# Draw the transition handles. WORKING HERE mjvdg
-			# Actually, I was just mucking around. Delete this.
-			#gap = sizes_notime.GAPSIZE/pix_winwidth
-			#wsize = gap/2;
-			#hsize = (b-t)/3;
-			#th_top = t +  ( (b-t)/2 - hsize/2 ) # top of box.
-			#th1_left = l - gap/2		    			
-			#th2_left = r;
-			#d.drawbox((th1_left, th_top, wsize, hsize));
-			#d.drawbox((th2_left, th_top, wsize, hsize));
+# 	def draw(self):
+# 		d = self.mother.new_displist
+# 		dummy = d.usefont(f_title)
+# 		rw, rh = self.mother.canvassize
+# 		titleheight = self.mother.titleheight
+# 		awidth = self.mother.arrwidth
+# 		aheight = self.mother.arrheight
+# 		chnameheight = self.mother.chnameheight
+# 		##hmargin = d.strsize('x')[0] / 1.5
+# 		##vmargin = titleheight / 5
+# 		hmargin, vmargin = d.get3dbordersize()
+# 		hmargin = hmargin*1.5
+# 		vmargin = vmargin*1.5
+# 		l, t, r, b = self.box
+# 		node = self.node
+# 		ntype = node.GetType()
+# 		willplay = not self.mother.showplayability or node.WillPlay()
+# 		if ntype in MMNode.leaftypes:
+# 			if node.GetChannelType() == 'RealPix':
+# 				if willplay:
+# 					color = RPCOLOR
+# 				else:
+# 					color = RPCOLOR_NOPLAY
+# 			elif node.GetChannelType()=='animate':
+# 				if willplay:
+# 					color = SLIDECOLOR
+# 				else:
+# 					color = SLIDECOLOR_NOPLAY
+# 			else:
+# 				if willplay:
+# 					color = LEAFCOLOR
+# 				else:
+# 					color = LEAFCOLOR_NOPLAY
+# 		elif ntype == 'seq':
+# 			if willplay:
+# 				color = SEQCOLOR
+# 			else:
+# 				color = SEQCOLOR_NOPLAY
+# 		elif ntype == 'par':
+# 			if willplay:
+# 				color = PARCOLOR
+# 			else:
+# 				color = PARCOLOR_NOPLAY
+# 		elif ntype == 'excl':
+# 			if willplay:
+# 				color = EXCLCOLOR
+# 			else:
+# 				color = EXCLCOLOR_NOPLAY
+# 		elif ntype == 'prio':
+# 			if willplay:
+# 				color = PRIOCOLOR
+# 			else:
+# 				color = PRIOCOLOR_NOPLAY
+# 		elif ntype == 'bag':
+# 			if willplay:
+# 				color = BAGCOLOR
+# 			else:
+# 				color = BAGCOLOR_NOPLAY
+# 		elif ntype == 'alt':
+# 			if willplay:
+# 				color = ALTCOLOR
+# 			else:
+# 				color = ALTCOLOR_NOPLAY
+# 		elif ntype == 'slide':
+# 			if willplay:
+# 				color = SLIDECOLOR
+# 			else:
+# 				color = SLIDECOLOR_NOPLAY
+# 		else:
+# 			color = 255, 0, 0 # Red -- error indicator
+# 		d.drawfbox(color, (l, t, r - l, b - t))
+# 		self.drawfocus()
+# 		t1 = min(b, t + titleheight + vmargin)
+# 		if node.GetType() not in MMNode.interiortypes and \
+# 		   not hasattr(node, 'expanded') and \
+# 		   b-t-vmargin >= titleheight+chnameheight:
+# 			if chnameheight:
+# 				b1 = b - chnameheight
+# 				# draw channel name along bottom of box
+# 				if node.__class__ is not SlideMMNode:
+# 					self.drawchannelname(l+hmargin/2, b1,
+# 							     r-hmargin/2, b-vmargin/2)
+# 			else:
+# 				b1 = b - 1.5*vmargin
+# 			# draw thumbnail/icon if enough space
+# ##			if b1-t1 >= titleheight and \
+# ##			   r-l >= hmargin * 2.5:
+# 			url = node.GetAttrDef('file', None)
+# 			if url:
+# 				mtype = MMmimetypes.guess_type(url)[0]
+# 			else:
+# 				mtype = None
+# 			ctype = node.GetChannelType()
+# 			if node.__class__ is SlideMMNode and \
+# 			   MMAttrdefs.getattr(node, 'tag') in ('fadein', 'crossfade', 'wipe'):
+# 				ctype = 'image'
+# 			elif ctype == 'sound' and mtype and string.find(mtype, 'real') >= 0:
+# 				ctype = 'RealAudio'
+# 			elif ctype == 'video' and mtype and string.find(mtype, 'real') >= 0:
+# 				ctype = 'RealVideo'
+# 			f = os.path.join(self.mother.datadir, '%s.tiff' % ctype)
+# 			if url and self.mother.thumbnails and ctype == 'image':
+# 				url = node.context.findurl(url)
+# 				try:
+# 					f = MMurl.urlretrieve(url)[0]
+# 				except IOError, arg:
+# 					self.set_infoicon('error', 'Cannot load image: %s'%`arg`)
+# 			ih = b1-t1
+# 			iw = r-l-2*hmargin
+# 			# XXXX The "0" values below need to be thought about
+# 			if iw <= 0 or ih <= 0:
+# 				# The box is too small, ignore the preview
+# 				pass
+# 			elif node.__class__ is SlideMMNode and \
+# 			   MMAttrdefs.getattr(node, 'tag') in ('fill','fadeout'):
+# 				d.drawfbox(MMAttrdefs.getattr(node, 'color'), (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
+# 				d.fgcolor(TEXTCOLOR)
+# 				d.drawbox((l+hmargin, (t1+b1-ih)/2, iw, ih))
+# 			elif node.GetChannelType() == 'brush':
+# 				d.drawfbox(MMAttrdefs.getattr(node, 'fgcolor'), (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
+# 				d.fgcolor(TEXTCOLOR)
+# 				d.drawbox((l+hmargin, (t1+b1-ih)/2, iw, ih))
+# 			elif f is not None:
+# 				try:
+# 					box = d.display_image_from_file(f, center = 1,
+# 									coordinates = (l+hmargin, (t1+b1-ih)/2, iw, ih), scale=-2)
+# 				except windowinterface.error:
+# 					pass
+# 				else:
+# 					d.fgcolor(TEXTCOLOR)
+# 					d.drawbox(box)
+# 			# Draw the transition handles. WORKING HERE mjvdg
+# 			# Actually, I was just mucking around. Delete this.
+# 			#gap = sizes_notime.GAPSIZE/pix_winwidth
+# 			#wsize = gap/2;
+# 			#hsize = (b-t)/3;
+# 			#th_top = t +  ( (b-t)/2 - hsize/2 ) # top of box.
+# 			#th1_left = l - gap/2		    			
+# 			#th2_left = r;
+# 			#d.drawbox((th1_left, th_top, wsize, hsize));
+# 			#d.drawbox((th2_left, th_top, wsize, hsize));
 			
-		# draw a little triangle to indicate expanded/collapsed state
-		title_left = l+hmargin
-		if (node.GetType() in MMNode.interiortypes and not \
-		    (root_expanded and node is self.mother.root)) \
-		    or \
-		   (node.GetType() == 'ext' and
-		    node.GetChannelType() == 'RealPix'):
-			left_pos = title_left
-			title_left = title_left + awidth
-			# Check whether it fits
-			if l+awidth+2*hmargin <= r and t+aheight+2*vmargin <= b:
-				node.abox = left_pos, t+vmargin, title_left, t+vmargin+aheight
-				# We assume here that the icon has room around the edges
-				# Also, don't set self.iconbox (yet: erroricons on structnodes TBD)
-				iconbox = left_pos, t+vmargin, awidth, aheight
-				if hasattr(node, 'expanded'):
-					d.drawicon(iconbox, 'open')
-				else:
-					d.drawicon(iconbox, 'closed')
-			else:
-				node.abox = (0, 0, -1, -1)
+# 		# draw a little triangle to indicate expanded/collapsed state
+# 		title_left = l+hmargin
+# 		if (node.GetType() in MMNode.interiortypes and not \
+# 		    (root_expanded and node is self.mother.root)) \
+# 		    or \
+# 		   (node.GetType() == 'ext' and
+# 		    node.GetChannelType() == 'RealPix'):
+# 			left_pos = title_left
+# 			title_left = title_left + awidth
+# 			# Check whether it fits
+# 			if l+awidth+2*hmargin <= r and t+aheight+2*vmargin <= b:
+# 				node.abox = left_pos, t+vmargin, title_left, t+vmargin+aheight
+# 				# We assume here that the icon has room around the edges
+# 				# Also, don't set self.iconbox (yet: erroricons on structnodes TBD)
+# 				iconbox = left_pos, t+vmargin, awidth, aheight
+# 				if hasattr(node, 'expanded'):
+# 					d.drawicon(iconbox, 'open')
+# 				else:
+# 					d.drawicon(iconbox, 'closed')
+# 			else:
+# 				node.abox = (0, 0, -1, -1)
 				
-		# Draw a decoration at the end of the node.
-		if ntype == 'seq' and grins_snap and (not self.boxtype==LEAFBOX or self.node==self.mother.root): 
-			border = float(sizes_notime.HEDGSIZE)/rw;
-			base = float(sizes_notime.VEDGSIZE)/rh
+# 		# Draw a decoration at the end of the node.
+# 		if ntype == 'seq' and grins_snap and (not self.boxtype==LEAFBOX or self.node==self.mother.root): 
+# 			border = float(sizes_notime.HEDGSIZE)/rw;
+# 			base = float(sizes_notime.VEDGSIZE)/rh
 			
-			dec_right = r-border;
-			minsize = float(sizes_notime.DROPAREASIZE)/rw;
-			dec_left = dec_right - self.mother.droparea;
-			dec_bottom = b-base;
-			dec_top = t+titleheight;
+# 			dec_right = r-border;
+# 			minsize = float(sizes_notime.DROPAREASIZE)/rw;
+# 			dec_left = dec_right - self.mother.droparea;
+# 			dec_bottom = b-base;
+# 			dec_top = t+titleheight;
 			
-			d.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM,
-				    (dec_left, dec_top, dec_right-dec_left, dec_bottom-dec_top));
-			d.drawfbox( LEAFCOLOR,
-				    (dec_left+hmargin, dec_top+vmargin, dec_right-dec_left-2*hmargin, dec_bottom-dec_top-2*vmargin) );
+# 			d.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM,
+# 				    (dec_left, dec_top, dec_right-dec_left, dec_bottom-dec_top));
+# 			d.drawfbox( LEAFCOLOR,
+# 				    (dec_left+hmargin, dec_top+vmargin, dec_right-dec_left-2*hmargin, dec_bottom-dec_top-2*vmargin) );
 
-		# animate++
-		if node.GetType() in MMNode.leaftypes and node.GetChildren() and \
-		   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
-			left_pos = title_left
-			title_left = title_left + awidth
-			# Check whether it fits
-			if l+awidth+2*hmargin <= r and t+aheight+2*vmargin <= b:
-				node.abox = left_pos, t+vmargin, title_left, t+vmargin+aheight
-				iconbox = left_pos, t+vmargin, awidth, aheight
-				if hasattr(node, 'expanded'):
-					d.drawicon(iconbox, 'open')
-				else:
-					d.drawicon(iconbox, 'closed')
-			else:
-				node.abox = (0, 0, -1, -1)
+# 		# animate++
+# 		if node.GetType() in MMNode.leaftypes and node.GetChildren() and \
+# 		   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
+# 			left_pos = title_left
+# 			title_left = title_left + awidth
+# 			# Check whether it fits
+# 			if l+awidth+2*hmargin <= r and t+aheight+2*vmargin <= b:
+# 				node.abox = left_pos, t+vmargin, title_left, t+vmargin+aheight
+# 				iconbox = left_pos, t+vmargin, awidth, aheight
+# 				if hasattr(node, 'expanded'):
+# 					d.drawicon(iconbox, 'open')
+# 				else:
+# 					d.drawicon(iconbox, 'closed')
+# 			else:
+# 				node.abox = (0, 0, -1, -1)
 
-		# And leave room for the bandwidth and/or error icon
-		left_pos = title_left
-		title_left = title_left + awidth
-		self.iconbox = left_pos, t+vmargin, awidth, aheight
-		if node.infoicon:
-			d.drawicon(self.iconbox, node.infoicon)
-		elif show_links:
-			d.drawicon(self.iconbox, self.getlinkicon())
-		else:
-			d.drawicon(self.iconbox, '')
-		# draw the name
-		d.fgcolor(TEXTCOLOR)
-		d.centerstring(title_left, t+vmargin/2, r-hmargin/2, t1, self.name)
-		# If this is a node with suppressed detail,
-		# draw some lines
-		if self.boxtype == LEAFBOX and \
-		   node.GetType() in MMNode.interiortypes and \
-		   len(node.GetChildren()) > 0:
-			l1 = l + hmargin*2
-			t1 = t + titleheight + vmargin
-			r1 = r - hmargin*2
-			b1 = b - vmargin*2
-			if l1 < r1 and t1 < b1:
-				if node.GetType() in ('par', 'alt', 'excl', 'prio'):
-					# Draw horizontal lines
-					stepsize = (b1-t1)/2
-					while stepsize > vmargin*4:
-						stepsize = stepsize / 2
-					x = l1
-					y = t1
-					while y <= b1:
-						d.drawline(TEXTCOLOR,
-							   [(l1, y), (r1, y)])
-						y = y + stepsize
-				else:
-					# Draw verticle lines.
-					stepsize = (r1-l1)/2
-					while stepsize > hmargin*4:
-						stepsize = stepsize / 2
-					x = l1
-					while x <= r1:
-						d.drawline(TEXTCOLOR,
-							   [(x, t1), (x, b1)])
-						x = x + stepsize
+# 		# And leave room for the bandwidth and/or error icon
+# 		left_pos = title_left
+# 		title_left = title_left + awidth
+# 		self.iconbox = left_pos, t+vmargin, awidth, aheight
+# 		if node.infoicon:
+# 			d.drawicon(self.iconbox, node.infoicon)
+# 		elif show_links:
+# 			d.drawicon(self.iconbox, self.getlinkicon())
+# 		else:
+# 			d.drawicon(self.iconbox, '')
+# 		# draw the name
+# 		d.fgcolor(TEXTCOLOR)
+# 		d.centerstring(title_left, t+vmargin/2, r-hmargin/2, t1, self.name)
+# 		# If this is a node with suppressed detail,
+# 		# draw some lines
+# 		if self.boxtype == LEAFBOX and \
+# 		   node.GetType() in MMNode.interiortypes and \
+# 		   len(node.GetChildren()) > 0:
+# 			l1 = l + hmargin*2
+# 			t1 = t + titleheight + vmargin
+# 			r1 = r - hmargin*2
+# 			b1 = b - vmargin*2
+# 			if l1 < r1 and t1 < b1:
+# 				if node.GetType() in ('par', 'alt', 'excl', 'prio'):
+# 					# Draw horizontal lines
+# 					stepsize = (b1-t1)/2
+# 					while stepsize > vmargin*4:
+# 						stepsize = stepsize / 2
+# 					x = l1
+# 					y = t1
+# 					while y <= b1:
+# 						d.drawline(TEXTCOLOR,
+# 							   [(l1, y), (r1, y)])
+# 						y = y + stepsize
+# 				else:
+# 					# Draw verticle lines.
+# 					stepsize = (r1-l1)/2
+# 					while stepsize > hmargin*4:
+# 						stepsize = stepsize / 2
+# 					x = l1
+# 					while x <= r1:
+# 						d.drawline(TEXTCOLOR,
+# 							   [(x, t1), (x, b1)])
+# 						x = x + stepsize
 
-	def drawchannelname(self, l, t, r, b):
-		d = self.mother.new_displist
-		d.fgcolor(CTEXTCOLOR)
-		dummy = d.usefont(f_channel)
-		d.centerstring(l, t, r, b, self.node.GetChannelName())
-		dummy = d.usefont(f_title)
+# 	def drawchannelname(self, l, t, r, b):
+# 		d = self.mother.new_displist
+# 		d.fgcolor(CTEXTCOLOR)
+# 		dummy = d.usefont(f_channel)
+# 		d.centerstring(l, t, r, b, self.node.GetChannelName())
+# 		dummy = d.usefont(f_title)
 
-	def drawfocus(self):
-		cl = FOCUSLEFT
-		ct = FOCUSTOP
-		cr = FOCUSRIGHT
-		cb = FOCUSBOTTOM
-		if self.selected:
-			cl, cr = cr, cl
-			ct, cb = cb, ct
-		d = self.mother.new_displist
-		l, t, r, b = self.box
-		if self.mother.sizes.FLATBOX:
-			d.fgcolor(ct)
-			d.drawbox((l, t, r-l, b-t))
-		else:
-			d.draw3dbox(cl, ct, cr, cb, (l, t, r - l, b - t))
+# 	def drawfocus(self):
+# 		cl = FOCUSLEFT
+# 		ct = FOCUSTOP
+# 		cr = FOCUSRIGHT
+# 		cb = FOCUSBOTTOM
+# 		if self.selected:
+# 			cl, cr = cr, cl
+# 			ct, cb = cb, ct
+# 		d = self.mother.new_displist
+# 		l, t, r, b = self.box
+# 		if self.mother.sizes.FLATBOX:
+# 			d.fgcolor(ct)
+# 			d.drawbox((l, t, r-l, b-t))
+# 		else:
+# 			d.draw3dbox(cl, ct, cr, cb, (l, t, r - l, b - t))
 			
-	def set_infoicon(self, icon, msg=None):
-		"""Redraw the informational icon for this node"""
-		self.node.infoicon = icon
-		self.node.errormessage = msg
-		if not self.iconbox:
-			return
-		d = self.mother.opt_init_display()
-		if not d:
-			return
-		if not icon:
-			icon = self.getlinkicon()
-		d.drawicon(self.iconbox, icon)
-		self.mother.render()
+# 	def set_infoicon(self, icon, msg=None):
+# 		"""Redraw the informational icon for this node"""
+# 		self.node.infoicon = icon
+# 		self.node.errormessage = msg
+# 		if not self.iconbox:
+# 			return
+# 		d = self.mother.opt_init_display()
+# 		if not d:
+# 			return
+# 		if not icon:
+# 			icon = self.getlinkicon()
+# 		d.drawicon(self.iconbox, icon)
+# 		self.mother.render()
 
-	def getlinkicon(self):
-		"""Return icon to draw for showing incoming/outgoing hyperlinks"""
-		links = self.node.context.hyperlinks
-		is_src, is_dst = links.findnodelinks(self.node)
-		if is_src:
-			if is_dst:
-				return 'linksrcdst'
-			else:
-				return 'linksrc'
-		else:
-			if is_dst:
-				return 'linkdst'
-			else:
-				return ''
+# 	def getlinkicon(self):
+# 		"""Return icon to draw for showing incoming/outgoing hyperlinks"""
+# 		links = self.node.context.hyperlinks
+# 		is_src, is_dst = links.findnodelinks(self.node)
+# 		if is_src:
+# 			if is_dst:
+# 				return 'linksrcdst'
+# 			else:
+# 				return 'linksrc'
+# 		else:
+# 			if is_dst:
+# 				return 'linkdst'
+# 			else:
+# 				return ''
 
-	def GetPrevious(self):		# mjvdg 27-sept-2000
-		# returns the object prior to this one.
-		if isinstance(self.node, MMNode.MMNode):
-			#import pdb;
-			#pdb.set_trace()
-			return self.mother.whichobj(self.node.GetPrevious());
-		else:
-			# This shouldn't happen.. in theory.
-			print "DEBUG: Object does not have an MMNode!";
-			return None;
+# 	def GetPrevious(self):		# mjvdg 27-sept-2000
+# 		# returns the object prior to this one.
+# 		if isinstance(self.node, MMNode.MMNode):
+# 			#import pdb;
+# 			#pdb.set_trace()
+# 			return self.mother.whichobj(self.node.GetPrevious());
+# 		else:
+# 			# This shouldn't happen.. in theory.
+# 			print "DEBUG: Object does not have an MMNode!";
+# 			return None;
 
-	def HasNoURL(self):		# mjvdg 27-sept-2000
-		# returns True if this object's URL is empty.
-		if isinstance(self.node, MMNode.MMNode):
-			return not self.node.attrdict.has_key('file');
-		else:
-			return 0;
+# 	def HasNoURL(self):		# mjvdg 27-sept-2000
+# 		# returns True if this object's URL is empty.
+# 		if isinstance(self.node, MMNode.MMNode):
+# 			return not self.node.attrdict.has_key('file');
+# 		else:
+# 			return 0;
 	
 
-	#
-	# Menu handling functions, aka callbacks.
-	#
+# 	#
+# 	# Menu handling functions, aka callbacks.
+# 	#
 
-##	def helpcall(self):
-##		import Help
-##		Help.givehelp('Hierarchy_view')
+# ##	def helpcall(self):
+# ##		import Help
+# ##		Help.givehelp('Hierarchy_view')
 
-	def expandcall(self):
-		# 'Expand' the view of this node.
-		self.mother.toplevel.setwaiting()
-		if hasattr(self.node, 'expanded'):
-			collapsenode(self.node)
-		else:
-			expandnode(self.node)
-		self.mother.recalc()
+# 	def expandcall(self):
+# 		# 'Expand' the view of this node.
+# 		self.mother.toplevel.setwaiting()
+# 		if hasattr(self.node, 'expanded'):
+# 			collapsenode(self.node)
+# 		else:
+# 			expandnode(self.node)
+# 		self.mother.recalc()
 
-	def expandallcall(self, expand):
-		# Expand the view of this node and all kids.
-		self.mother.toplevel.setwaiting()
-		if do_expand(self.node, expand, None, 1):
-			# there were changes
-			# make sure root isn't collapsed
-			self.mother.recalc()
+# 	def expandallcall(self, expand):
+# 		# Expand the view of this node and all kids.
+# 		self.mother.toplevel.setwaiting()
+# 		if do_expand(self.node, expand, None, 1):
+# 			# there were changes
+# 			# make sure root isn't collapsed
+# 			self.mother.recalc()
 
-	def playcall(self):
-		top = self.mother.toplevel
-		top.setwaiting()
-		top.player.playsubtree(self.node)
+# 	def playcall(self):
+# 		top = self.mother.toplevel
+# 		top.setwaiting()
+# 		top.player.playsubtree(self.node)
 
-	def playfromcall(self):
-		top = self.mother.toplevel
-		top.setwaiting()
-		top.player.playfrom(self.node)
+# 	def playfromcall(self):
+# 		top = self.mother.toplevel
+# 		top.setwaiting()
+# 		top.player.playfrom(self.node)
 
-	def attrcall(self):
-		self.mother.toplevel.setwaiting()
-		import AttrEdit
-		AttrEdit.showattreditor(self.mother.toplevel, self.node)
+# 	def attrcall(self):
+# 		self.mother.toplevel.setwaiting()
+# 		import AttrEdit
+# 		AttrEdit.showattreditor(self.mother.toplevel, self.node)
 
-	def infocall(self):
-		self.mother.toplevel.setwaiting()
-		import NodeInfo
-		NodeInfo.shownodeinfo(self.mother.toplevel, self.node)
+# 	def infocall(self):
+# 		self.mother.toplevel.setwaiting()
+# 		import NodeInfo
+# 		NodeInfo.shownodeinfo(self.mother.toplevel, self.node)
 
-	def editcall(self):
-		self.mother.toplevel.setwaiting()
-		import NodeEdit
-		NodeEdit.showeditor(self.node)
-	def _editcall(self):
-		self.mother.toplevel.setwaiting()
-		import NodeEdit
-		NodeEdit._showeditor(self.node)
-	def _opencall(self):
-		self.mother.toplevel.setwaiting()
-		import NodeEdit
-		NodeEdit._showviewer(self.node)
+# 	def editcall(self):
+# 		self.mother.toplevel.setwaiting()
+# 		import NodeEdit
+# 		NodeEdit.showeditor(self.node)
+# 	def _editcall(self):
+# 		self.mother.toplevel.setwaiting()
+# 		import NodeEdit
+# 		NodeEdit._showeditor(self.node)
+# 	def _opencall(self):
+# 		self.mother.toplevel.setwaiting()
+# 		import NodeEdit
+# 		NodeEdit._showviewer(self.node)
 
-	def anchorcall(self):
-		self.mother.toplevel.setwaiting()
-		import AnchorEdit
-		AnchorEdit.showanchoreditor(self.mother.toplevel, self.node)
+# 	def anchorcall(self):
+# 		self.mother.toplevel.setwaiting()
+# 		import AnchorEdit
+# 		AnchorEdit.showanchoreditor(self.mother.toplevel, self.node)
 
-	def createanchorcall(self):
-		self.mother.toplevel.links.wholenodeanchor(self.node)
+# 	def createanchorcall(self):
+# 		self.mother.toplevel.links.wholenodeanchor(self.node)
 
-	def hyperlinkcall(self):
-		self.mother.toplevel.links.finish_link(self.node)
+# 	def hyperlinkcall(self):
+# 		self.mother.toplevel.links.finish_link(self.node)
 
-	def focuscall(self):
-		top = self.mother.toplevel
-		top.setwaiting()
-		if top.channelview is not None:
-			top.channelview.globalsetfocus(self.node)
+# 	def focuscall(self):
+# 		top = self.mother.toplevel
+# 		top.setwaiting()
+# 		if top.channelview is not None:
+# 			top.channelview.globalsetfocus(self.node)
 
-	def deletecall(self):
-		self.mother.deletefocus(0)
+# 	def deletecall(self):
+# 		self.mother.deletefocus(0)
 
-	def cutcall(self):
-		self.mother.deletefocus(1)
+# 	def cutcall(self):
+# 		self.mother.deletefocus(1)
 
-	def copycall(self):
-		mother = self.mother
-		mother.toplevel.setwaiting()
-		mother.copyfocus()
+# 	def copycall(self):
+# 		mother = self.mother
+# 		mother.toplevel.setwaiting()
+# 		mother.copyfocus()
 
-	def createbeforecall(self, chtype=None):
-		self.mother.create(-1, chtype=chtype)
+# 	def createbeforecall(self, chtype=None):
+# 		self.mother.create(-1, chtype=chtype)
 
-	def createbeforeintcall(self, ntype):
-		self.mother.create(-1, ntype=ntype)
+# 	def createbeforeintcall(self, ntype):
+# 		self.mother.create(-1, ntype=ntype)
 
-	def createaftercall(self, chtype=None):
-		self.mother.create(1, chtype=chtype)
+# 	def createaftercall(self, chtype=None):
+# 		self.mother.create(1, chtype=chtype)
 
-	def createafterintcall(self, ntype):
-		self.mother.create(1, ntype=ntype)
+# 	def createafterintcall(self, ntype):
+# 		self.mother.create(1, ntype=ntype)
 
-	def createundercall(self, chtype=None):
-		self.mother.create(0, chtype=chtype)
+# 	def createundercall(self, chtype=None):
+# 		self.mother.create(0, chtype=chtype)
 
-	def createunderintcall(self, ntype):
-		self.mother.create(0, ntype=ntype)
+# 	def createunderintcall(self, ntype):
+# 		self.mother.create(0, ntype=ntype)
 
-	def createseqcall(self):
-		self.mother.insertparent('seq')
+# 	def createseqcall(self):
+# 		self.mother.insertparent('seq')
 
-	def createparcall(self):
-		self.mother.insertparent('par')
+# 	def createparcall(self):
+# 		self.mother.insertparent('par')
 
-	def createbagcall(self):
-		self.mother.insertparent('bag')
+# 	def createbagcall(self):
+# 		self.mother.insertparent('bag')
 
-	def createaltcall(self):
-		self.mother.insertparent('alt')
+# 	def createaltcall(self):
+# 		self.mother.insertparent('alt')
 
-	def pastebeforecall(self):
-		self.mother.paste(-1)
+# 	def pastebeforecall(self):
+# 		self.mother.paste(-1)
 
-	def pasteaftercall(self):
-		self.mother.paste(1)
+# 	def pasteaftercall(self):
+# 		self.mother.paste(1)
 
-	def pasteundercall(self):
-		self.mother.paste(0)
+# 	def pasteundercall(self):
+# 		self.mother.paste(0)
 
 
-class Nipple(Object):
-	# The Nipples of an object are a graphical representation of the transitions
-	# between the MMNodes that the object refers to.
+# class Nipple(Interactive.Interactive):
+# 	# The Nipples of an object are a graphical representation of the transitions
+# 	# between the MMNodes that the object refers to.
 
-	def __init__(self, mother, item):
-		self.mother = mother;
-		self.node, self.boxtype, self.box = item; # self.node is shared with another Object.
-		self.breast = self.mother.whichobj(self.node); # The object that I'm attached to.
-		self.iconbox = None;	# This is the relevant icon for this nipple.
-		self.top = None;
-		self.left = None;
-		self.width = None;
-		self.height = None;
+# 	# TODO: rewrite this code.
 
-	def select(self):
-		Object.select(self.breast);
+# 	def __init__(self, mother, item):
+# 		self.mother = mother;
+# 		self.node, self.boxtype, self.box = item; # self.node is shared with another Object.
+# 		self.breast = self.mother.whichobj(self.node); # The object that I'm attached to.
+# 		self.iconbox = None;	# This is the relevant icon for this nipple.
+# 		self.top = None;
+# 		self.left = None;
+# 		self.width = None;
+# 		self.height = None;
 
-	def deselect(self):
-		Object.deselect(self.breast);
+# 	def select(self):
+# 		Object.select(self.breast);
 
-	def draw(self):
-		d = self.mother.new_displist;
-		d.drawbox((self.left, self.top, self.width, self.height));
+# 	def deselect(self):
+# 		Object.deselect(self.breast);
 
-	def append_to_left(self):
-		# Calulates size and position for appending to left of an Object.
-		l, t, r, b = self.box;
+# 	def draw(self):
+# 		d = self.mother.new_displist;
+# 		d.drawbox((self.left, self.top, self.width, self.height));
 
-		canvas_width, canvas_height = self.mother.canvassize;
-		wgapsize = (sizes_notime.GAPSIZE)/canvas_width;
+# 	def append_to_left(self):
+# 		# Calulates size and position for appending to left of an Object.
+# 		l, t, r, b = self.box;
+
+# 		canvas_width, canvas_height = self.mother.canvassize;
+# 		wgapsize = (sizes_notime.GAPSIZE)/canvas_width;
 		
-		self.left = l - wgapsize/2;
-		self.top = t + (b-t)/3;
-		self.width = wgapsize/2;
-		self.height = (b-t)/3;
+# 		self.left = l - wgapsize/2;
+# 		self.top = t + (b-t)/3;
+# 		self.width = wgapsize/2;
+# 		self.height = (b-t)/3;
 
-	def append_to_right(self):
-		# Calulates size and position for appending to right of an Object.
-		l, t, r, b = self.box;
+# 	def append_to_right(self):
+# 		# Calulates size and position for appending to right of an Object.
+# 		l, t, r, b = self.box;
 
-		canvas_width, canvas_height = self.mother.canvassize;
-		wgapsize = (sizes_notime.GAPSIZE)/canvas_width;
+# 		canvas_width, canvas_height = self.mother.canvassize;
+# 		wgapsize = (sizes_notime.GAPSIZE)/canvas_width;
 
-		self.left = r;
-		self.top = t + (b-t)/3;
-		self.width = wgapsize/2;
-		self.height = (b-t)/3;
+# 		self.left = r;
+# 		self.top = t + (b-t)/3;
+# 		self.width = wgapsize/2;
+# 		self.height = (b-t)/3;
 		
-	def ishit(self, x, y):
-		if self.top < y <= self.top+self.height and self.left < x < self.left+self.width:
-			print "Hit!!";
-			return 1;
-		else:
-			return 0;
+# 	def ishit(self, x, y):
+# 		if self.top < y <= self.top+self.height and self.left < x < self.left+self.width:
+# 			print "Hit!!";
+# 			return 1;
+# 		else:
+# 			return 0;
 
-	def cleanup(self):
-		return;			# no cleanup needs to be done on a Nipple.
-					# This is handled by the assoc-ed Object.
+# 	def cleanup(self):
+# 		return;			# no cleanup needs to be done on a Nipple.
+# 					# This is handled by the assoc-ed Object.
 				       		
 # specialized node for RealPix slides (transitions)
 class SlideMMNode(MMNode.MMNode):

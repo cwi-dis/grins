@@ -46,7 +46,7 @@ class MMNodeContext:
 		self.comment = ''
 		self.metadata = ''
 
-	def __repr__(self):
+	def __repr__(self):		
 		return '<MMNodeContext instance, channelnames=' \
 			+ `self.channelnames` + '>'
 
@@ -1081,6 +1081,8 @@ class MMNode:
 		self.has_min = 0
 		self.delayed_arcs = []
 		self.__calcendtimecalled = 0
+		self.views = {};	# Map {string -> Interactive} - that is, a list of views
+					# looking at this object.
 
 	#
 	# Return string representation of self
