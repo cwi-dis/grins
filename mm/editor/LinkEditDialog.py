@@ -39,7 +39,7 @@ __version__ = "$Id"
 import windowinterface
 
 class LinkEditDialog:
-	def __init__(self, title, dirstr, menu1, cbarg1, menu2, cbarg2):
+	def __init__(self, title, dirstr, typestr, menu1, cbarg1, menu2, cbarg2):
 		"""Create the LinkEditor dialog.
 
 		Create the dialog window (non-modal, so does not grab
@@ -70,13 +70,17 @@ class LinkEditDialog:
 					       (self.linkdir_callback, ()),
 					       bottom = None, left = None,
 					       top = None)
+		self.__link_type = e.OptionMenu('type:', typestr, 0,
+						(self.linktype_callback, ()),
+						bottom = None, top = None,
+						left = self.__link_dir)
 		self.__ok_group = e.ButtonRow(
 			[('OK', (self.ok_callback, ())),
 			 ('Cancel', (self.cancel_callback, ())),
 			 ],
 			vertical = 0,
 			bottom = None, top = None, right = None,
-			left = self.__link_dir)
+			left = self.__link_type)
 
 		win1 = w.SubWindow(top = None, left = None, right = 1.0/3.0,
 				   bottom = self.__edit_group)
@@ -155,12 +159,16 @@ class LinkEditDialog:
 		self.linkdirsetsensitive = self.__link_dir.setsensitive
 		self.linkdirsetchoice = self.__link_dir.setpos
 		self.linkdirgetchoice = self.__link_dir.getpos
+		self.linktypesetsensitive = self.__link_type.setsensitive
+		self.linktypesetchoice = self.__link_type.setpos
+		self.linktypegetchoice = self.__link_type.getpos
 
 	def close(self):
 		"""Close the dialog and free resources."""
 		self.__window.close()
 		del self.__window
 		del self.__link_dir
+		del self.__link_type
 		del self.__ok_group
 		del self.__left_buttons
 		del self.__left_browser
@@ -524,6 +532,28 @@ class LinkEditDialog:
 		"""Return the current choice in the link dir list."""
 		return self.__link_dir.getpos()
 
+	def linktypesetsensitive(self, pos, sensitive):
+		"""Make an entry in the link type menu (in)sensitive.
+
+		Arguments (no defaults):
+		pos -- the index of the entry to be made (in)sensitve
+		sensitive -- boolean indicating whether to make
+			sensitive or insensitive
+		"""
+		self.__link_type.setsensitive(pos, sensitive)
+
+	def linktypesetchoice(self, choice):
+		"""Set the current choice of the link type list.
+
+		Arguments (no defaults):
+		choice -- index of the new choice
+		"""
+		self.__link_type.setpos(choice)
+
+	def linktypegetchoice(self):
+		"""Return the current choice in the link type list."""
+		return self.__link_type.getpos()
+
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
 	# this class).
@@ -533,6 +563,10 @@ class LinkEditDialog:
 
 	def linkdir_callback(self):
 		"""Called when a new link direction entry is selected."""
+		pass
+
+	def linktype_callback(self):
+		"""Called when a new link type entry is selected."""
 		pass
 
 	def ok_callback(self):
