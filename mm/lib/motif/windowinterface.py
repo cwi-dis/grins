@@ -622,7 +622,8 @@ class _AdornmentSupport(_CommandSupport, _ButtonSupport):
 					{'colormap': toplevel._default_colormap,
 					 'visual': toplevel._default_visual,
 					 'depth': toplevel._default_visual.depth,
-					 'orientation': Xmd.VERTICAL})
+					 'orientation': Xmd.VERTICAL,
+					 'tearOffModel': Xmd.TEAR_OFF_ENABLED})
 				button = menu.CreateManagedWidget(
 					'submenuLabel', Xm.CascadeButton,
 					{'labelString': label,
@@ -3150,7 +3151,8 @@ def _create_menu(menu, list, visual, colormap, acc = None, widgets = {}):
 				{'colormap': colormap,
 				 'visual': visual,
 				 'depth': visual.depth,
-				 'orientation': Xmd.VERTICAL})
+				 'orientation': Xmd.VERTICAL,
+				 'tearOffModel': Xmd.TEAR_OFF_ENABLED})
 			button = menu.CreateManagedWidget(
 				'submenuLabel', cascade,
 				{'labelString': labelString, 'subMenuId': submenu})
