@@ -96,7 +96,8 @@ class AnchorEditor:
 						  (self.anchor_callback, ()),
 						  top = None, left = None,
 						  right = self.buttons,
-						  bottom = self.type_choice)
+						  bottom = self.type_choice,
+						  enterCallback = (self.id_callback, ()))
 		w.fix()
 
 	def __repr__(self):
@@ -338,16 +339,17 @@ class AnchorEditor:
 		self.focus = len(self.anchorlist)-1
 		self.show_focus()
 
-	def id_callback(self, *dummy):
+	def id_callback(self):
 		# XXXX Does not work for non-whole-node anchors if
 		# self.editable is false
-		self.changed = 1
 		if self.focus == None:
-			raise 'id callback without focus!'
+			return
+		self.changed = 1
 		anchor = self.anchorlist[self.focus]
-		id = self.id_input.get_input()
+		id = self.anchor_browser.getselection()
 		anchor = (id, anchor[1], anchor[2])
 		self.anchorlist[self.focus] = anchor
+		self.anchor_browser.replacelistitem(self.focus, id)
 		self.show_focus()
 
 	def delete_callback(self):
