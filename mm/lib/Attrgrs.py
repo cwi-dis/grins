@@ -414,6 +414,12 @@ attrgrs=(
 		'system_operating_system',
 		'system_cpu',
 		]},
+
+	{'name':'CssBackgroundColor',
+	'title':'Background color',
+	'attrs':[
+		'cssbgcolor',
+		]},
 	)
 
 

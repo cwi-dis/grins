@@ -1798,6 +1798,22 @@ BEGIN
     PUSHBUTTON      "Hide",IDC_LAYOUT_HIDEREGION,381,54,25,13
 END
 
+IDD_EDITATTR_COLORSEL DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "",IDC_LABEL,7,11,288,44
+    EDITTEXT        IDC_COLORS,158,27,72,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Pick color...",IDC_COLOR_PICK,234,27,46,12
+    CONTROL         "Radio1",IDC_CTYPES,"Button",BS_AUTORADIOBUTTON,145,27,9,
+                    12
+    CONTROL         "transparent",IDC_CTYPET,"Button",BS_AUTORADIOBUTTON,15,
+                    28,54,8
+    CONTROL         "Inherit",IDC_CTYPEI,"Button",BS_AUTORADIOBUTTON,89,28,
+                    44,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2112,6 +2128,11 @@ BEGIN
     BEGIN
         RIGHTMARGIN, 424
         BOTTOMMARGIN, 242
+    END
+
+    IDD_EDITATTR_COLORSEL, DIALOG
+    BEGIN
+        RIGHTMARGIN, 295
     END
 END
 #endif    // APSTUDIO_INVOKED

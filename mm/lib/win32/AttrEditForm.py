@@ -877,7 +877,98 @@ class ColorCtrl(AttrCtrl):
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Pick color from color dialog',None,0)
 
+class CssColorCtrl(ColorCtrl):
+	def __init__(self,wnd,attr,resid):
+		ColorCtrl.__init__(self, wnd, attr, resid)
+		self._radioColor = components.RadioButton(wnd,resid[3])
+		self._radioTransparent = components.RadioButton(wnd,resid[4])
+		self._radioInherit = components.RadioButton(wnd,resid[5])
+		self.currentValue = self._attr.getcurrent()
 
+	def OnInitCtrl(self):
+		self._initctrl=self
+		self._attrname.attach_to_parent()
+		self._attrval.attach_to_parent()
+		self._radioTransparent.attach_to_parent()
+		self._radioInherit.attach_to_parent()
+		self._radioColor.attach_to_parent()
+
+		if self.want_label:
+			label = self._attr.getlabel()
+			if self.want_colon_after_label:
+				label = label + ':'
+			self._attrname.settext(label)
+
+		self.calcIndicatorRC()
+
+		self.setvalue(self.currentValue)		
+
+		self._wnd.HookCommand(self.OnEdit,self._resid[1])
+		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
+		if self._validator:
+			self._attrval.hookmessage(self.OnKeyDown,win32con.WM_KEYDOWN)
+			
+		self._wnd.HookCommand(self.onColorCheck,self._resid[3])
+		self._wnd.HookCommand(self.onTransparentCheck,self._resid[4])
+		self._wnd.HookCommand(self.onInheritCheck,self._resid[5])
+
+	def setvalue(self, val):
+		self.currentValue = val
+		if self._initctrl:
+			if val == 'transparent':			
+				self.enable(0)
+				self._radioTransparent.setcheck(1)
+				self._attrval.settext('')
+			elif val == 'inherit':
+				self.enable(0)
+				self._radioInherit.setcheck(1)
+				self._attrval.settext('')
+			else:
+				self.enable(1)
+				self._radioColor.setcheck(1)
+				self._attrval.settext(val)
+				self.invalidateInd()
+
+	def getvalue(self):
+		return self.currentValue
+
+	def OnEdit(self,id,code):
+		if code==win32con.EN_SETFOCUS:
+			self.sethelp()
+		elif code==win32con.EN_CHANGE:
+			self.invalidateInd()
+			self.currentValue = self._attrval.gettext()
+			self.enableApply()
+			
+	def OnBrowse(self,id,code):
+		if not self._initctrl: return
+		r,g,b=self.getdispcolor()
+		rv = self.ColorSelect(r, g, b)
+		if rv != None:
+			self._radioTransparent.setcheck(0)
+			self._radioInherit.setcheck(0)
+			self._radioColor.setcheck(1)
+			self.enable(1)
+			colorstring = "%d %d %d"%rv
+			self._attrval.settext(colorstring)
+			self.currentValue = colorstring
+			self.invalidateInd()
+		
+	def onColorCheck(self, id, code):
+		self.enable(1)
+		self.currentValue = self._attrval.gettext()
+		self.enableApply()
+		
+	def onTransparentCheck(self, id, code):
+		self.enable(0)
+		self.currentValue = 'transparent'
+		self.enableApply()
+
+	def onInheritCheck(self, id, code):
+		self.enable(0)
+		self.currentValue = 'inherit'
+		self.enableApply()
+		
 ##################################
 class StringCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -3489,8 +3580,20 @@ class CalcModeGroup(AttrGroup):
 		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
 		return cd
 
-
-
+class CssBackgroundColorGroup(AttrGroup):
+	data=attrgrsdict['CssBackgroundColor']
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_COLORSEL
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('cssbgcolor')
+		cd[a] = CssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
+									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
+									grinsRC.IDC_CTYPEI))
+		return cd
+	
 #
 class TransitionTypeGroup(NameGroup):
 	data=attrgrsdict['transitionType']
@@ -3524,6 +3627,7 @@ groupsui={
 
 	'base_winoff':LayoutGroup,
 	'base_winoff_and_units':LayoutGroupWithUnits,
+	'CssBackgroundColor':CssBackgroundColorGroup,
 	'subregion':SubregionGroup,
 	'imgregion':ImgregionGroup,
 	'subregion1':Subregion1Group,
