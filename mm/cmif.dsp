@@ -23,8 +23,8 @@ CFG=cmif - Win32 Debug
 
 # Begin Project
 # PROP AllowPerConfigDependencies 0
-# PROP Scc_ProjName ""$/cmif", TRAAAAAA"
-# PROP Scc_LocalPath "."
+# PROP Scc_ProjName ""
+# PROP Scc_LocalPath ""
 MTL=midl.exe
 
 !IF  "$(CFG)" == "cmif - Win32 Release"
@@ -67,6 +67,10 @@ MTL=midl.exe
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\common\win32\Help_.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\common\win32\HtmlChannel.py
 # End Source File
 # Begin Source File
@@ -96,6 +100,10 @@ SOURCE=.\common\mac\HtmlChannel.py
 # Begin Source File
 
 SOURCE=.\common\mac\PreferencesDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\mac\RealAudioChannel.py
 # End Source File
 # Begin Source File
 
@@ -220,10 +228,6 @@ SOURCE=.\common\NullChannel.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\common\parsehtml.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\common\Preferences.py
 # End Source File
 # Begin Source File
@@ -233,6 +237,22 @@ SOURCE=.\common\PseudoHtmlChannel.py
 # Begin Source File
 
 SOURCE=.\common\PythonChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\RealAudioChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\RealPixChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\RealTextChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\RealVideoChannel.py
 # End Source File
 # Begin Source File
 
@@ -533,6 +553,26 @@ SOURCE=.\editor\Player.py
 # Begin Source File
 
 SOURCE=.\editor\PlayerCore.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\test_AnchorEditorDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\test_ArcInfoDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\test_NodeInfoDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\test_window.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\test_windowdialogs.py
 # End Source File
 # Begin Source File
 
@@ -876,7 +916,15 @@ SOURCE=.\lib\glwindow.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\grins_mimetypes.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\Hlinks.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\license.py
 # End Source File
 # Begin Source File
 
@@ -1004,6 +1052,10 @@ SOURCE=.\lib\SR.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\staticlicense.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\StringStuff.py
 # End Source File
 # Begin Source File
@@ -1112,6 +1164,10 @@ SOURCE=.\grins\grins.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\grins\patchlevel.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\grins\Player.py
 # End Source File
 # Begin Source File
@@ -1136,7 +1192,7 @@ SOURCE=.\grins\version.py
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\pylib\urllib.py
+SOURCE=.\pylib\longpath.py
 # End Source File
 # Begin Source File
 
@@ -1153,6 +1209,38 @@ SOURCE=.\pylib\xmllib.py
 
 SOURCE=.\bin\win32\iGRiNS.py
 # End Source File
+# End Group
+# End Group
+# Begin Group "mmextensions"
+
+# PROP Default_Filter ""
+# Begin Group "real"
+
+# PROP Default_Filter ""
+# Begin Group "real/win32"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\mmextensions\real\win32\RealAudioChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\mmextensions\real\win32\RealPixChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\mmextensions\real\win32\RealTextChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\mmextensions\real\win32\RealVideoChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\mmextensions\real\win32\RealWindowChannel.py
+# End Source File
+# End Group
 # End Group
 # End Group
 # End Target
