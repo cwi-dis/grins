@@ -67,7 +67,7 @@ MENUBAR=(
 			(ENTRY, '&After', None, PASTE_AFTER),
 			(ENTRY, '&Under', None, PASTE_UNDER),
 			)),
-		(ENTRY, '&Delete\tDel', None, DELETE),
+		(ENTRY, '&Delete\tCtrl+Del', None, DELETE),
 		(SEP,),
 		(CASCADE, '&New node', (
 			(ENTRY, '&Before', None, NEW_BEFORE),
