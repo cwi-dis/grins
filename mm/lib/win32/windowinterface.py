@@ -65,15 +65,13 @@ from Font import findfont,fonts
 
 # dialogs
 from AppToplevel import FileDialog
-from components import *
+from win32dialog import *
 
 # Auxiliary functions
 from AppToplevel import beep
 
 # needed directly?
 GetImageSize=toplevel.GetImageSize
-GetVideoSize=toplevel.GetVideoSize
-GetMediaDuration=toplevel.GetMediaDuration
 from _PreferencesDialog import PreferencesDialog
 from _UsergroupView import UsergroupEditDialog
 from _LinkView import LinkPropDlg
