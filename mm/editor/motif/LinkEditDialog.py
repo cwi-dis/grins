@@ -67,7 +67,7 @@ class LinkBrowserDialog:
 		menu = win1.PulldownMenu([('Set anchorlist', menu1)],
 					 top = None, left = None, right = None)
 		self.__left_buttons = win1.ButtonRow(
-			[('Push focus', (self.show_callback, (cbarg1,))),
+			[('Sync selection', (self.show_callback, (cbarg1,))),
 			 ('Anchor editor...',
 			  (self.anchoredit_callback, (cbarg1,))),
 			 ],
@@ -97,7 +97,7 @@ class LinkBrowserDialog:
 		menu = win3.PulldownMenu([('Set anchorlist', menu2)],
 					 top = None, left = None, right = None)
 		self.__right_buttons = win3.ButtonRow(
-			[('Push focus', (self.show_callback, (cbarg2,))),
+			[('Sync selection', (self.show_callback, (cbarg2,))),
 			 ('Anchor editor...', (self.anchoredit_callback, (cbarg2,))),
 			 ],
 			vertical = 1, bottom = None, left = None, right = None)
