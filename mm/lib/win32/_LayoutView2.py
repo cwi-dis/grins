@@ -580,7 +580,10 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		if rc:
 			x, y, w, h = rc
 			rc = x, y, x+w, y+h
-		self.InvalidateRect(rc or self.GetClientRect())
+		try:
+			self.InvalidateRect(rc or self.GetClientRect())
+		except:
+			print '_LayoutView2: LayoutManager.update: unexpected error ?'
 
 	def getClipRgn(self, rel=None):
 		rgn = win32ui.CreateRgn()
