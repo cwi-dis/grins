@@ -84,8 +84,11 @@ class AttrEditorDialog:
 		toplevel_window.showform(w,formid)
 
 
-	def close(self):
+	def close(self, willreopen=0):
 ##		"""Close the dialog and free resources."""
+		# XXXX To be done: if willreopen=1 we should not close the window but
+		# reset it to the initial state. Also, in the init routine we should not
+		# create __window if it already exists.
 		if self.__window:
 			self.__window.close()
 		self.__window=None

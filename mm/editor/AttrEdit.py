@@ -193,7 +193,7 @@ class Wrapper: # Base class -- common operations
 	def getcontext(self):
 		return self.context
 	def register(self, object):
-		self.editmgr.register(object)
+		self.editmgr.register(object, want_focus=1)
 	def unregister(self, object):
 		self.editmgr.unregister(object)
 	def transaction(self):
@@ -213,6 +213,12 @@ class Wrapper: # Base class -- common operations
 		return MMAttrdefs.parsevalue(name, str, self.context)
 	def canhideproperties(self):
 		return 1
+	def canfollowselection(self):
+		return 0
+	def link_to_selection(self, onoff, attreditor):
+		raise 'link_to_selection() called for attreditor not supporting it'
+	def selection_changed(self, seltype, selvalue):
+		raise 'selection_changed() called for attreditor not supporting it'
 
 class NodeWrapper(Wrapper):
 	def __init__(self, toplevel, node):
@@ -224,6 +230,7 @@ class NodeWrapper(Wrapper):
 		return '<NodeWrapper instance, node=' + `self.node` + '>'
 
 	def close(self):
+		self.node.attreditor = None
 		del self.node.attreditor
 		del self.node
 		del self.root
@@ -231,6 +238,32 @@ class NodeWrapper(Wrapper):
 
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
+		
+	def canfollowselection(self):
+		return 1
+		
+	def link_to_selection(self, onoff, attreditor):
+		if onoff:
+			if self.node.attreditor != attreditor:
+				print 'attreditor confusion'
+				print 'I am', attreditor
+				print 'node has', self.node.attreditor
+				raise 'attreditor confusion'
+			del self.node.attreditor
+		else:
+			if hasattr(self.node, 'attreditor'):
+				raise 'Node already has attreditor!'
+			self.node.attreditor = attreditor
+			
+	def selection_changed(self, seltype, selvalue):
+		if seltype != 'MMNode':
+			return 0
+		if type(selvalue) in (type(()), type([])):
+			print 'Multinode not yet supported'
+			return 0
+		self.node = selvalue
+##		self.root = self.node.GetRoot()   # XXXX Is this needed?
+		return 1
 
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
@@ -1276,6 +1309,7 @@ class AttrEditor(AttrEditorDialog):
 			self.show_all_attributes = settings.get('show_all_attributes')
 		else:
 			self.show_all_attributes = 1
+		self.follow_selection = 0
 		self.__new = new
 		self.__chtype = chtype
 		self.wrapper = wrapper
@@ -1449,8 +1483,10 @@ class AttrEditor(AttrEditorDialog):
 		self.redisplay()
 
 	def followselection_callback(self):
-		print 'follow-selection notimp'
-
+		self.follow_selection = not self.follow_selection
+		self.wrapper.link_to_selection(self.follow_selection, self)
+		self.redisplay()
+		
 	def cancel_callback(self):
 		self.close()
 
@@ -1642,6 +1678,13 @@ class AttrEditor(AttrEditorDialog):
 			self.close()
 		else:
 			self.redisplay()
+			
+	def globalfocuschanged(self, focustype, focusobject):
+		if not self.follow_selection:
+			return
+##		print 'Focus changed', (focustype, focusobject)
+		if self.wrapper.selection_changed(focustype, focusobject):
+			self.redisplay()
 		
 	def redisplay(self):	
 		namelist = self.wrapper.attrnames()
@@ -1650,7 +1693,7 @@ class AttrEditor(AttrEditorDialog):
 			attr = self.getcurattr()
 			if attr:
 				attr = attr.getname()
-			AttrEditorDialog.close(self)
+			AttrEditorDialog.close(self, willreopen=1)
 			for b in self.attrlist:
 				b.close()
 			del self.attrlist

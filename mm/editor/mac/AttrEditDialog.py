@@ -38,7 +38,8 @@ ITEM_APPLY=3
 ITEM_SELECT=4
 ITEM_HELPSTRING=5
 ITEM_SHOWALL=6
-ITEM_LAST_COMMON=6
+ITEM_FOLLOWSELECTION=7
+ITEM_LAST_COMMON=7
 
 class AttrEditorDialog(windowinterface.MACDialog):
 	def __init__(self, title, attriblist, toplevel=None, initattr=None):
@@ -53,15 +54,23 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		attriblist -- list of instances of subclasses of
 			AttrEditorDialogField
 		"""
-		windowinterface.MACDialog.__init__(self, title, mw_resources.ID_DIALOG_ATTREDIT,
+		if hasattr(self, '_window'):
+			# If we are re-opening the window and dialog are already there.
+			# close() has trimmed them back to the original setting.
+			self.settitle(title)
+			mustshow = 0
+		else:
+			windowinterface.MACDialog.__init__(self, title, mw_resources.ID_DIALOG_ATTREDIT,
 				default=ITEM_OK, cancel=ITEM_CANCEL)
+			mustshow = 1
 ## This doesn't work for (a) tabbing to a field and (b) popup menus
 		self._ok_enabled = 0
 ##		self._setsensitive([ITEM_APPLY, ITEM_OK], 0)
 
 		self._setbutton(ITEM_SHOWALL, self.show_all_attributes)
-		if not self.wrapper.canhideproperties():
-			self._setsensitive([ITEM_SHOWALL], 0)
+		self._setbutton(ITEM_FOLLOWSELECTION, self.follow_selection)
+		self._setsensitive([ITEM_SHOWALL], self.wrapper.canhideproperties())
+		self._setsensitive([ITEM_FOLLOWSELECTION], self.wrapper.canfollowselection())
 		#
 		# Create the pages with the attributes, and the datastructures linking
 		# attributes and pages together.
@@ -117,20 +126,24 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		except KeyError:
 			initpagenum = 0
 		self._selectpage(initpagenum)
-
-		self.show()
+		if mustshow:
+			self.show()
 ##		# Should work above...
 ##		self._hideitemcontrols(allgroups)
 ##		self._selectpage(initpagenum)
 
-	def close(self):
+	def close(self, willreopen=0):
 		for p in self._pages:
 			p.close()
-		del self._pagebrowser
 		del self._pages
 		del self._attr_to_pageindex
 		del self._cur_page
-		windowinterface.MACDialog.close(self)
+		if willreopen:
+			self._dialog.ShortenDITL(self._dialog.CountDITL() - ITEM_LAST_COMMON)
+			self._pagebrowser._delete()
+		else:
+			windowinterface.MACDialog.close(self)
+			del self._pagebrowser
 		
 	def getcurattr(self):
 		if not self._cur_page:
@@ -165,6 +178,8 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			self.apply_callback()
 		elif item == ITEM_SHOWALL:
 			self.showall_callback()
+		elif item == ITEM_FOLLOWSELECTION:
+			self.followselection_callback()
 		elif self._cur_page and self._cur_page.do_itemhit(item, event):
 			pass
 ##		elif item == ITEM_RESTORE:
@@ -187,14 +202,15 @@ class AttrEditorDialog(windowinterface.MACDialog):
 				return
 		self._cur_page = None
 
-		if item != None:
+		if not self._pages:
+			self._sethelpstring('There are no properties to display.')
+		elif item == None:
+			self._sethelpstring('Select a property-page with the browser.')
+		else:
 			self._cur_page = self._pages[item]
 			self._cur_page.show()
 			self._sethelpstring(self._cur_page.helpstring)
 			self._pagebrowser.select(item)
-		else:
-			self._sethelpstring('Select a property-page with the browser.')
-
 
 	def _is_shown(self, attrfield):
 		"""Return true if this attr is currently being displayed"""
@@ -239,7 +255,7 @@ class TabPage:
 		self.item0 = item0
 		if __debug__:
 			if self.attreditor._dialog.CountDITL() != self.item0:
-				raise 'CountDITL != item0', (self._dialog.CountDITL(), self.item0)
+				raise 'CountDITL != item0', (self.attreditor._dialog.CountDITL(), self.item0)
 		self.attreditor._dialog.AppendDialogItemList(self.ID_DITL, 0)
 		# Sanity check
 		if __debug__:
