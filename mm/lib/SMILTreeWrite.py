@@ -638,6 +638,49 @@ def getlayout(writer, node):
 		return
 	return writer.layout2name[layout]
 
+def getautoreverse(writer, node):
+	autoReverse = MMAttrdefs.getattr(node, 'autoReverse')
+	if autoReverse == 'false':
+		return None
+	return autoReverse
+
+def getattributetype(writer, node):
+	atype = MMAttrdefs.getattr(node, 'attributeType')
+	if atype == 'XML':
+		return None
+	return atype
+
+def getstringattr(writer, node, attr):
+	return MMAttrdefs.getattr(node, attr)
+
+def getaccumulate(writer, node):
+	accumulate = MMAttrdefs.getattr(node, 'accumulate')
+	if accumulate == 'none':
+		return None
+	return accumulate
+
+def getadditive(writer, node):
+	additive = MMAttrdefs.getattr(node, 'additive')
+	if additive == 'replace':
+		return None
+	return replace
+
+def getcalcmode(writer, node):
+	mode = MMAttrdefs.getattr(node, 'calcMode')
+	tag = MMAttrdefs.getattr(node, 'tag')
+	if tag!='animateMotion' and mode == 'linear':
+		return None
+	elif tag=='animateMotion' and mode == 'paced':
+		return None
+	return mode
+
+def getattributename(writer, node):
+	grins2smil = {'file':'src', 'bgcolor':'backgroundColor',}
+	attr = MMAttrdefs.getattr(node, 'attributeName')
+	if grins2smil.has_key(attr):
+		return grins2smil[attr]
+	return attr
+
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
@@ -648,6 +691,9 @@ smil_attrs=[
 	("region", getregionname),
 	("src", lambda writer, node:getsrc(writer, node)),
 	("type", getmimetype),
+	("targetElement", lambda writer, node:getstringattr(writer, node, "targetElement")),
+	("attributeName", getattributename),
+	("attributeType", getattributetype),
 	("author", lambda writer, node:getcmifattr(writer, node, "author")),
 	("copyright", lambda writer, node:getcmifattr(writer, node, "copyright")),
 	("abstract", lambda writer, node:getcmifattr(writer, node, "abstract")),
@@ -687,6 +733,18 @@ smil_attrs=[
 	("uGroup", getugroup),
 	("layout", getlayout),
 	("color", getcolor),		# only for brush element
+	("from", lambda writer, node:getstringattr(writer, node, "from")),
+	("to", lambda writer, node:getstringattr(writer, node, "to")),
+	("by", lambda writer, node:getstringattr(writer, node, "by")),
+	("values", lambda writer, node:getstringattr(writer, node, "values")),
+	("path", lambda writer, node:getstringattr(writer, node, "path")),
+	("origin", lambda writer, node:getstringattr(writer, node, "origin")),
+	("accumulate", getaccumulate),
+	("additive", getadditive),
+	("calcMode", getcalcmode),
+	("keyTimes", lambda writer, node:getstringattr(writer, node, "keyTimes")),
+	("keySplines", lambda writer, node:getstringattr(writer, node, "keySplines")),
+
 ]
 
 # attributes that we know about and so don't write into the SMIL file using
@@ -1613,29 +1671,14 @@ class SMILWriter(SMIL):
 			self.pop()
 
 	def writeanimatenode(self, node, root):
-		grins2smil = {'file':'src', 'bgcolor':'backgroundColor',}
 		attrlist = []
-		attributes = self.attributes.get('animate', {})
-		for name, func in smil_attrs:
-			value = func(self, node)
-			if value and attributes.has_key(name) and \
-			   value != attributes[name]:
-				attrlist.append((name, value))
-		for name, value in node.GetAttrDict().items():
-			if name=='attributeName' and grins2smil.has_key(value):
-				value = grins2smil[value]
-			if type(value) == type(1.0):
-				value = '%.3f' % value
-				if value[-4:] == '.000':
-					value = value[:-4]
-			elif type(value) == type(1):
-				value = '%d' % value
-			if name == 'file':
-				name = 'src'
-			if value and attributes.has_key(name) and \
-			   value != attributes[name]:
-				attrlist.append((name, value))
 		tag = node.GetAttrDict().get('tag')
+		attributes = self.attributes.get(tag, {})
+		for name, func in smil_attrs:
+			if attributes.has_key(name):
+				value = func(self, node)
+				if value and value != attributes[name]:
+					attrlist.append((name, value))
 		self.writetag(tag, attrlist)
 
 	def linkattrs(self, a2, ltype):
