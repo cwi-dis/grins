@@ -388,6 +388,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if not ok:
 					continue
 
+				# XXXX No longer pertinant -mjvdg
 				if tokens[0] == 'prev':
 					if len(tokens) != 3 or tokens[1] != '.' or tokens[2] not in ('begin', 'end'):
 						self.syntax_error('bad sync-to-prev value')
