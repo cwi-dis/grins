@@ -48,10 +48,6 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 		Py_XINCREF(pPythonWindow);
 	}
 	
-	void ShowInNewWindow(BOOL f) {
-		m_showInNewWnd=f;
-	}
-	
 	void SetOsWindowPosSize(PNxPoint p, PNxSize s) {
 		m_PNxWindow.x = p.x;
 		m_PNxWindow.y = p.y;
