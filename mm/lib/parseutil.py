@@ -24,17 +24,18 @@ def parsecounter(value, maybe_relative = 0, withsign = 0, syntax_error = _syntax
 	if res:
 		sign = res.group('sign')
 		if sign and not withsign:
+			msg = 'no sign allowed in value (%s)' % value
 			if sign == '+':
-				syntax_error('no sign allowed')
+				syntax_error(msg)
 			else:
-				raise error, 'no sign allowed'
+				raise error, msg
 			sign = None
 		if sign and context is not None:
 			if context.attributes.get('project_boston') == 0:
 				import features
-				syntax_error('sign not compatible with SMIL 1.0')
+				syntax_error('sign not compatible with SMIL 1.0 (%s)' % value)
 				if not features.editor:
-					raise error, 'SMIL 2.0 presentation counter'
+					raise error, 'SMIL 2.0 presentation counter (%s)' % value
 			context.attributes['project_boston'] = 1
 		if res.group('use_clock'):
 			h, m, s, f = res.group('hours', 'minutes',
@@ -44,10 +45,10 @@ def parsecounter(value, maybe_relative = 0, withsign = 0, syntax_error = _syntax
 				offset = offset + string.atoi(h) * 3600
 			m = string.atoi(m)
 			if m >= 60:
-				syntax_error('minutes out of range')
+				syntax_error('minutes out of range (%s)' % value)
 			s = string.atoi(s)
 			if s >= 60:
-				syntax_error('seconds out of range')
+				syntax_error('seconds out of range (%s)' % value)
 			offset = offset + m * 60 + s
 			if f is not None:
 				offset = offset + string.atof(f + '0')
@@ -71,4 +72,4 @@ def parsecounter(value, maybe_relative = 0, withsign = 0, syntax_error = _syntax
 	if maybe_relative:
 		if value in ('begin', 'end'):
 			return value
-	raise error, 'not a clock value'
+	raise error, "value `%s' is not a clock value" % value
