@@ -285,6 +285,7 @@ class NodeInfoForm(docview.FormView,components.ControlsDict):
 		rc1=win32mu.DlgTemplate(self._nodeinfo._template).getRect()
 		rc2=win32mu.DlgTemplate(self._cmdbar._template).getRect()
 		rc3=win32mu.DlgTemplate(self._cur_group._template).getRect()
+		if not rc1 or not rc2 or not rc3:return
 		from sysmetrics import cycaption,cyborder,cxborder,cxframe
 		h=rc1.height()+rc2.height()+rc3.height()+cycaption+2*cyborder+ cycaption/2
 		w=rc1.width()
