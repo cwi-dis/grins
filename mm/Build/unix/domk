@@ -605,17 +605,18 @@ no)	;;
 		esac &&
 		PLe=`sed -n 's/.*patchlevel \([0-9][0-9]*\).*/\1/p' mm/editor/motif/patchlevel.py` &&
 		PLp=`sed -n 's/.*patchlevel \([0-9][0-9]*\).*/\1/p' mm/grins/motif/patchlevel.py` &&
+		PLe=`expr ${PLe:-0} + 10000` &&
+		PLp=`expr ${PLp:-0} + 10000` &&
 		case $freeze in
 		editor)	PL=$PLe;;
 		grins)	PL=$PLp;;
 		esac &&
-		PL=`expr $PL + 1000` &&
 		rm -f $dist.spec~ &&
 		cp $dist.spec $dist.spec~ &&
 		sed -e "s/version [0-9][0-9]*/version $PL/" \
-		    -e "s/\(grins\.[a-z][a-z]*\.[a-z][a-z]*\) [0-9][0-9]* [0-9][0-9]*/\1 $PLp $PLp/" \
-		    -e "s/\(grinsed\.[a-z][a-z]*\.[a-z][a-z]*\) [0-9][0-9]* [0-9][0-9]*/\1 $PLe $PLe/" \
-		    -e "s/\(replaces grins\.[a-z][a-z]*\.[a-z][a-z]* 0\) [0-9][0-9]*/\1 $PLp/" \
+		    -e 's/\(grins\.[a-z][a-z]*\.[a-z][a-z]*\) [0-9][0-9]* [0-9][0-9]*/\1 '"$PLp $PLp/" \
+		    -e 's/\(grinsed\.[a-z][a-z]*\.[a-z][a-z]*\) [0-9][0-9]* [0-9][0-9]*/\1 '"$PLe $PLe/" \
+		    -e 's/\(replaces grins\.[a-z][a-z]*\.[a-z][a-z]* 0\) [0-9][0-9]*/\1 '"$PLp/" \
 			$dist.spec~ > $dist.spec &&
 		sort -o $RAWIDB +4u -6 -u $RAWIDB &&
 		gendist -sbase $CHAMELEON -idb $RAWIDB -spec $CHAMELEON/$dist.spec -dist $CHAMELEON/dist -all -creator 'ORATRiX Development B.V.'

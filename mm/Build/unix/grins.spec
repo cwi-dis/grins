@@ -1,12 +1,12 @@
 product grins
-    id "GRiNS Player 1.0beta"
-    cutpoint usr/grins
+    id "GRiNS Player for SMIL 1.0"
+    cutpoint usr/local/grins
     image sw
-        id "GRiNS Player 1.0beta Software"
-        version 1000
+        id "GRiNS Player for SMIL 1.0 Software"
+        version 10001
         order 9999
         subsys player default
-            id "GRiNS Player 1.0beta Base Software"
+            id "GRiNS Player for SMIL 1.0 Base Software"
             replaces self
             prereq (
                 compiler_eoe.sw.lib 1275056010 maxint
@@ -21,29 +21,29 @@ product grins
         endsubsys
     endimage
     image help
-        id "GRiNS Player 1.0beta Help Files"
-        version 1000
+        id "GRiNS Player for SMIL 1.0 Help Files"
+        version 10001
         order 9999
         subsys examples default
-            id "GRiNS Player 1.0beta SMIL Examples"
+            id "GRiNS Player for SMIL 1.0 SMIL Examples"
             replaces self
             prereq (
-                grins.sw.player 0 0
+                grins.sw.player 10001 10001
             )
             exp grins.help.examples
         endsubsys
         subsys documentation default
-            id "GRiNS Player 1.0beta Documentation"
+            id "GRiNS Player for SMIL 1.0 Documentation"
             replaces self
             exp grins.help.documentation
         endsubsys
     endimage
     image relnotes
-        id "GRiNS Player 1.0beta Release Notes"
-        version 1000
+        id "GRiNS Player for SMIL 1.0 Release Notes"
+        version 10001
         order 9999
         subsys relnotes default
-            id "GRiNS Player 1.0beta Release Notes"
+            id "GRiNS Player for SMIL 1.0 Release Notes"
             replaces self
             exp grins.relnotes.relnotes
         endsubsys
