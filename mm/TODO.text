@@ -11,9 +11,13 @@ What am I doing:
 * Do the is_hit algorithm - test _every_ widget for hittedness to prevent unhittedness if the 
 	widget steps out of it's boundry (esp: pushbackbars).
 
+* Fix the widget placement.
+
 
 Priority top-to-bottom.
 ------------------------
+
+* Bug: Empty scene graph isn't right.
 
 * Get Jack to make a routine to find download times for nodes.
 
