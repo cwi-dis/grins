@@ -690,8 +690,14 @@ class Viewport(win32window.Window, UserEventMng):
 
 	# remove a sub region
 	def removeRegion(self, region):
-		print 'removeRegion: not implemented yet'
-
+		# I'm not sure it's enough
+		ind = 0
+		for w in self._subwindows:
+			if w == region:
+				del self._subwindows[ind]
+				break
+			ind = ind+1
+				
 	def select(self):
 		self._ctx.select(self)
 
@@ -872,7 +878,13 @@ class Region(win32window.Window, UserEventMng):
 
 	# remove a sub region
 	def removeRegion(self, region):
-		print 'removeRegion: not implemented yet'
+		# I'm not sure it's enough
+		ind = 0
+		for w in self._subwindows:
+			if w == region:
+				del self._subwindows[ind]
+				break
+			ind = ind+1
 
 	def select(self):
 		self._ctx.selectRequest(self)
