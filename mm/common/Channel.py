@@ -1562,16 +1562,20 @@ class ChannelWindow(Channel):
 			return
 		self.cleanup_transitions()
 		Channel.stopplay(self, node)
-		fill = MMAttrdefs.getattr(node, 'fill')
-		if self.window and fill == 'transition':
-			# XXX For now we only do transition, fill=hold is somewhat similar
-			self.window.freeze_content('transition')
+		self.extended_fill(node)
 		if self.played_display:
 			self.played_display.close()
 			self.played_display = None
 			
+	def extended_fill(self, node):
+		# Handle fill=transition and (in the future) fill=hold
+		fill = MMAttrdefs.getattr(node, 'fill')
+		if self.window and fill == 'transition':
+			# XXX For now we only do transition, fill=hold is somewhat similar
+			self.window.freeze_content('transition')
+			
 	def playstop(self):
-		self.cleanup_transitions()
+		self.cleanup_transitions() # XXXX incorrect!
 		return Channel.playstop(self)
 
 	def schedule_transitions(self, node):
@@ -1677,6 +1681,7 @@ class ChannelWindowAsync(ChannelWindow):
 ##					self.hide()
 ##					self.show()
 			self.check_popup()
+			self.schedule_transitions(node)
 			if self.armed_display.is_closed():
 				# assume that we are going to get a
 				# resize event
