@@ -41,6 +41,9 @@ PERFORMANCE OF THIS SOFTWARE.
 
 
 /* -- ADDMODULE MARKER 1 -- */
+#ifndef initQdoffs
+extern void initQdoffs();
+#endif
 #ifndef initimgsgi
 extern void initimgsgi();
 #endif
@@ -59,14 +62,14 @@ extern void initicglue();
 #ifndef initCtl
 extern void initCtl();
 #endif
-#ifndef initList
-extern void initList();
-#endif
 #ifndef initQd
 extern void initQd();
 #endif
 #ifndef initmac
 extern void initmac();
+#endif
+#ifndef initList
+extern void initList();
 #endif
 #ifndef initQt
 extern void initQt();
@@ -170,6 +173,9 @@ extern void initcStringIO();
 #ifndef initimgpgm
 extern void initimgpgm();
 #endif
+#ifndef initimgpng
+extern void initimgpng();
+#endif
 #ifndef initstruct
 extern void initstruct();
 #endif
@@ -186,15 +192,16 @@ extern void initimp();
 struct _inittab _PyImport_Inittab[] = {
 
 /* -- ADDMODULE MARKER 2 -- */
+	{"Qdoffs", initQdoffs},
 	{"imgsgi", initimgsgi},
 	{"imgcolormap", initimgcolormap},
 	{"imageop", initimageop},
 	{"Win", initWin},
 	{"icglue", initicglue},
 	{"Ctl", initCtl},
-	{"List", initList},
 	{"Qd", initQd},
 	{"mac", initmac},
+	{"List", initList},
 	{"Qt", initQt},
 	{"AE", initAE},
 	{"TE", initTE},
@@ -229,6 +236,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"Dlg", initDlg},
 	{"cStringIO", initcStringIO},
 	{"imgpgm", initimgpgm},
+	{"imgpng", initimgpng},
 	{"struct", initstruct},
 	{"audioop", initaudioop},
 	{"MacOS", initMacOS},
