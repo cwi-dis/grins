@@ -6,6 +6,7 @@ import os
 class RealPixChannel(RealWindowChannel):
 	node_attrs = RealWindowChannel.node_attrs + \
 		     ['size', 'aspect', 'bitrate', 'maxfps', 'preroll', 'href', 'captionchannel']
+	node_attrs.remove('project_convert')
 
 	tmpfiles = []
 	__callback_added = 0
