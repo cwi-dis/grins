@@ -28,8 +28,6 @@ from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 error = 'lib.win32.AttrEditForm.error'
 
 ##################################################
-##################################################
-##################################################
 # AttrEditor as a tab-dialog
 
 class AttrCtrl:
@@ -87,7 +85,6 @@ class OptionsCtrl(AttrCtrl):
 		val = self._attr.getcurrent()
 		self.setoptions(list,val)
 		self._wnd.HookCommand(self.OnCombo,self._resid[1])
-		self._wnd.HookCommand(self.OnReset,self._resid[2])
 	
 	def setoptions(self,list,val):
 		if val not in list:
@@ -121,7 +118,7 @@ class OptionsCtrl(AttrCtrl):
 class ChannelCtrl(OptionsCtrl):
 	def OnInitCtrl(self):
 		OptionsCtrl.OnInitCtrl(self)
-		self._wnd.HookCommand(self.OnChannel,self._resid[3])
+		self._wnd.HookCommand(self.OnChannel,self._resid[2])
 
 	def OnChannel(self,id,code):
 		if self._attr:
@@ -148,7 +145,6 @@ class OptionsRadioCtrl(AttrCtrl):
 		for ix in range(n):
 			self._radio[ix].attach_to_parent()
 			self._radio[ix].hookcommand(self._wnd,self.OnRadio)
-		self._wnd.HookCommand(self.OnReset,self._resid[n+1])
 		val = self._attr.getcurrent()
 		self.setoptions(list,val)
 	
@@ -208,7 +204,6 @@ class OptionsCheckCtrl(AttrCtrl):
 		for ix in range(n):
 			self._check[ix].attach_to_parent()
 			self._check[ix].hookcommand(self._wnd,self.OnCheck)
-		self._wnd.HookCommand(self.OnReset,self._resid[n+1])
 		val = self._attr.getcurrent()
 		self.setoptions(list,val)
 	
@@ -270,7 +265,6 @@ class FileCtrl(AttrCtrl):
 		self._attrval.settext(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
-		self._wnd.HookCommand(self.OnReset,self._resid[3])
 
 	def setvalue(self, val):
 		if self._initctrl:
@@ -311,7 +305,6 @@ class ColorCtrl(AttrCtrl):
 		self._attrval.settext(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
-		self._wnd.HookCommand(self.OnReset,self._resid[3])
 		self.calcIndicatorRC()
 
 	def calcIndicatorRC(self):
@@ -409,7 +402,6 @@ class StringCtrl(AttrCtrl):
 		self._attrname.settext(label)
 		self.setvalue(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
-		self._wnd.HookCommand(self.OnReset,self._resid[2])
 
 	def setvalue(self, val):
 		if self._initctrl:
@@ -452,7 +444,6 @@ class TupleCtrl(AttrCtrl):
 		self.setvalue(strxy)
 		for i in range(self._nedit):
 			self._attrval[i].hookcommand(self._wnd,self.OnEdit)
-		self._wnd.HookCommand(self.OnReset,self._resid[self._nedit+1])
 
 	def setvalue(self, val):
 		if self._initctrl:
@@ -632,58 +623,58 @@ class SingleAttrPage(AttrPage):
 		'layout':		# Two radio buttons
 			(grinsRC.IDD_EDITATTR_R2,
 			 OptionsRadioNocolonCtrl,
-			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
 		'visible':		# Three radio buttons
 			(grinsRC.IDD_EDITATTR_R3,
 			 OptionsRadioNocolonCtrl,
-			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5)),
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
 		'drawbox':		# Three radio buttons
 			(grinsRC.IDD_EDITATTR_R3,
 			 OptionsRadioNocolonCtrl,
-			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5)),
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
 		'popup':		# Three radio buttons
 			(grinsRC.IDD_EDITATTR_R3,
 			 OptionsRadioNocolonCtrl,
-			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5)),
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
 		'transparent':	# Four radio buttons
 			(grinsRC.IDD_EDITATTR_R4,
 			 OptionsRadioNocolonCtrl,
-			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6)),
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5)),
 		'project_audiotype':	# Four radio buttons
 			(grinsRC.IDD_EDITATTR_R4,
 			 OptionsRadioNocolonCtrl,
-			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6)),
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5)),
 		'project_videotype':	# Four radio buttons
 			(grinsRC.IDD_EDITATTR_R4,
 			 OptionsRadioNocolonCtrl,
-			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6)),
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5)),
 		'project_targets':	# Six check buttons
 			(grinsRC.IDD_EDITATTR_C6,
 			 OptionsCheckNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_CHECK1,grinsRC.IDC_CHECK2,grinsRC.IDC_CHECK3,grinsRC.IDC_CHECK4,grinsRC.IDC_CHECK5,
-			  grinsRC.IDC_CHECK6,grinsRC.IDC_8)),
+			  grinsRC.IDC_CHECK6)),
 		}
 	CTRLMAP_BYTYPE = {
 		'option':		# An option selected from a list (as a popup menu)
 			(grinsRC.IDD_EDITATTR_O1,
 			 OptionsCtrl,
-			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
+			 (grinsRC.IDC_1,grinsRC.IDC_2)),
 		'file':			# A file, with optional preview area
 			(grinsRC.IDD_EDITATTR_F1,
 			 FileCtrl,
-			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
 		'color':		# A color, with a color picker
 			(grinsRC.IDD_EDITATTR_C1,
 			 ColorCtrl,
-			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
 		'string':		# Default: a simple string field
 			(grinsRC.IDD_EDITATTR_S1,
 			 StringCtrl,
-			 (grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13)),
+			 (grinsRC.IDC_11,grinsRC.IDC_12)),
 		'text':
 			(grinsRC.IDD_EDITATTR_E1,
 			 StringNocolonCtrl,
-			 (grinsRC.IDC_GROUP1,grinsRC.IDC_12,grinsRC.IDC_13)),
+			 (grinsRC.IDC_11,grinsRC.IDC_12)),
 		}
 
 	def __init__(self,form,attr):
@@ -1403,8 +1394,7 @@ class StringGroup(AttrGroup):
 
 	def getctrlids(self,ix):
 		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+2))
 
 	def getpageresid(self):
 		return getattr(grinsRC, 'IDD_EDITATTR_S%d' % len(self._al))
@@ -1450,7 +1440,7 @@ class LayoutGroup(AttrGroup):
 	def createctrls(self,wnd):
 		cd={}
 		a=self.getattr('base_winoff')
-		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_16))
+		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14,grinsRC.IDC_15))
 		return cd
 
 	def getpageclass(self):
@@ -1470,9 +1460,9 @@ class LayoutGroupWithUnits(LayoutGroup):
 	def createctrls(self,wnd):
 		cd={}
 		a=self.getattr('base_winoff')
-		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_16))
+		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14,grinsRC.IDC_15))
 		a=self.getattr('units')
-		cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))
+		cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
 		return cd
 
 class SubregionGroup(AttrGroup):
@@ -1491,13 +1481,13 @@ class SubregionGroup(AttrGroup):
 	def createctrls(self,wnd):
 		cd={}
 		a=self.getattr(self._attrnames['xy'])
-		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_16))
+		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13))
 		a=self.getattr(self._attrnames['wh'])
-		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_17))
+		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14,grinsRC.IDC_15))
 		a=self.getattr(self._attrnames['full'])
-		cd[a]=OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24))		
+		cd[a]=OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))		
 		a=self.getattr(self._attrnames['anchor'])
-		cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33))		
+		cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))		
 		return cd
 
 	def oninitdialog(self,wnd):
@@ -1527,12 +1517,14 @@ class SystemGroup(AttrGroup):
 		return grinsRC.IDD_EDITATTR_S1R3S5
 
 	def getctrlids(self,ix):
-		ids = getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
-			  getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
-			  getattr(grinsRC, 'IDC_%d' % (ix*10+3))
 		if ix == 2:
-			ids = ids + (getattr(grinsRC, 'IDC_%d' % (ix*10+4)),
-						 getattr(grinsRC, 'IDC_%d' % (ix*10+5)))
+			ids = getattr(grinsRC, 'IDC_%d' % (ix*10+1)),\
+				getattr(grinsRC, 'IDC_%d' % (ix*10+2)),\
+				getattr(grinsRC, 'IDC_%d' % (ix*10+3)),\
+				getattr(grinsRC, 'IDC_%d' % (ix*10+4))
+		else:
+			ids = getattr(grinsRC, 'IDC_%d' % (ix*10+1)),\
+					getattr(grinsRC, 'IDC_%d' % (ix*10+2))
 		return ids
 
 	def getpageclass(self):
@@ -1546,10 +1538,9 @@ class NameGroup(AttrGroup):
 		return grinsRC.IDD_EDITATTR_S1O1C
 	def getctrlids(self,ix):
 		val = getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
-		      getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
-		      getattr(grinsRC, 'IDC_%d' % (ix*10+3))
+		      getattr(grinsRC, 'IDC_%d' % (ix*10+2))
 		if self._al[ix-1].getname() == 'channel':
-			val = val + (getattr(grinsRC, 'IDC_%d' % (ix*10+4)),)
+			val = val + (getattr(grinsRC, 'IDC_%d' % (ix*10+3)),)
 		return val
 	def getpageclass(self):
 		return AttrPage
@@ -1568,8 +1559,7 @@ class CNameGroup(AttrGroup):
 		return grinsRC.IDD_EDITATTR_S1O1
 	def getctrlids(self,ix):
 		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+2))
 
 	def getpageclass(self):
 		return AttrPage
@@ -1584,7 +1574,7 @@ class FileGroup(AttrGroup):
 	def createctrls(self,wnd):
 		cd={}
 		a=self.getattr('file')
-		cd[a]=FileCtrl(wnd,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4))
+		cd[a]=FileCtrl(wnd,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3))
 		return cd
 
 	def canpreview(self):
@@ -1632,13 +1622,13 @@ class FadeoutGroup(AttrGroup):
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('fadeout')
-		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14))
+		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13))
 		a = self.getattr('fadeoutcolor')
-		cd[a] = ColorCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24))
+		cd[a] = ColorCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))
 		a = self.getattr('fadeouttime')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33))
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
 		a = self.getattr('fadeoutduration')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42))
 		return cd
 
 ##	def oninitdialog(self,wnd):
