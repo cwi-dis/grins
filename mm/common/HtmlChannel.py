@@ -10,6 +10,10 @@ import MMAttrdefs
 import sys
 import windowinterface
 
+if windowinterface.Version <> 'X':
+	print 'HtmlChannel: Cannot work without X (use CMIF_USE_X=1)'
+	raise ImportError
+
 try:
 	import urlopen
 	URLOPEN = urlopen.urlopen
