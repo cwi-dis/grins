@@ -6,7 +6,7 @@ def convertToPx(value, containersize):
 	else:
 		return None
 
-class LayoutConstraintResolver:
+class SMILCssResolver:
 	def __init__(self, documentContext):
 		self.rootNode = None
 		self.nodeGeomChangedList = []
@@ -21,10 +21,10 @@ class LayoutConstraintResolver:
 
 		return node
 
-	def initialUpdate(self):
+	def updateAll(self):
 		self.nodeGeomChangedList = []
 		self.rawAttributesChangedList = []
-		self.rootNode.initialUpdate()
+		self.rootNode.updateAll()
 		self._updateListeners()
 
 	def getDocumentContext(self):
@@ -54,15 +54,19 @@ class LayoutConstraintResolver:
 		for listener, attrname, value in self.rawAttributesChangedList:
 			listener(attrname, value)
 
-	def newRegion(self, container):
+	def newRegion(self):
 		node = RegionNode()
-		container.addNode(node)
 
 		return node
 
-	def newMedia(self, container):
+	def link(self, node, container):
+		node.link(container)
+
+	def unlink(self, node):
+		node.unlink()
+		
+	def newMedia(self):
 		node = MediaNode()
-		container.addNode(node)
 
 		return node
 
@@ -90,6 +94,9 @@ class LayoutConstraintResolver:
 	def removeListener(self, node, listener):
 		node.removeListener(listener)
 
+	def getPxGeom(self, node):
+		return node.getPxGeom()
+	
 	def _onPxValuesChanged(self, node, geom):
 		if node.pxValuesListener != None:
 			self.nodeGeomChangedList.append((node.pxValuesListener, geom))
@@ -123,19 +130,27 @@ class Node:
 		self.pxheight = None
 
 		self.pxValuesHasChanged = 0
+		
+		self.isInit = 0
 
-	def addNode(self, node):
-		self.children.append(node)
-		node.container = self
+	def link(self, container):
+		self.container = container
+		self.context = container.context		
+		container.children.append(self)
 
-	def destroyNode(self, node):
+		if container.isInit:			
+			self._initialUpdate()
+			self.isInit = 1
+
+	def unlink(self):
+		self.isInit = 0
+		self.container = None
 		try:
-			index = self.children.index(node)
+			index = self.container.index(self)
+			del self.container[index]
 		except:
-			index = None
-		if index != None:
-			del self.children[index]
-
+			pass
+		
 	def setRawPosAttrListener(self, listener):
 		self.rawValuesListener = listener
 
@@ -148,11 +163,6 @@ class RegionNode(Node):
 		self.regAlign = None
 		self.regPoint = None
 		self.scale = None
-
-	def addNode(self, node):
-		Node.addNode(self, node)
-
-		node.context = self.context
 
 	def _initialUpdate(self):
 		self.pxleft, self.pxwidth = self._resolveCSS2Rule(self.left, self.width, self.right, self.container.pxwidth)
@@ -186,7 +196,7 @@ class RegionNode(Node):
 					pxbegin = containersize-pxsize
 			elif endValue == None:
 				pxbegin = 0
-				pxsize = convertToPx(sizeValue)
+				pxsize = convertToPx(sizeValue,containersize)
 			else:
 				pxsize = convertToPx(sizeValue, containersize)
 				pxbegin = containersize-pxsize-convertToPx(endValue, containersize)                        
@@ -455,8 +465,10 @@ class RegionNode(Node):
 		self.pxValuesHasChanged = 1
 
 	def _onGeomChanged(self):
-		self.context._onPxValuesChanged(self, (self.pxleft, self.pxwidth,
-										self.pxtop, self.pxheight))
+		self.context._onPxValuesChanged(self, self.getPxGeom())
+
+	def getPxGeom(self):
+		return (self.pxleft, self.pxtop, self.pxwidth, self.pxheight)
 		
 	def getScale(self):
 		if self.scale != None:
@@ -494,14 +506,20 @@ class RootNode(RegionNode):
 
 		self.pxwidth = width
 		self.pxheight = height
+		# we assume that this node is init as soon as we know its size
+		self.isInit = 1
 
-	def initialUpdate(self):
-		self._onGeomChanged()
-		for child in self.children:
-			child._initialUpdate()
+	def updateAll(self):
+		if self.isInit:
+			self._onGeomChanged()
+			for child in self.children:
+				child._initialUpdate()
 			
 	def _onGeomChanged(self):
-		self.context._onPxValuesChanged(self, (self.pxwidth, self.pxheight))
+		self.context._onPxValuesChanged(self, self.getPxGeom())
+
+	def getPxGeom(self):
+		return (self.pxwidth, self.pxheight)
 
 class MediaNode(Node):
 	def __init__(self):
@@ -702,6 +720,8 @@ class MediaNode(Node):
 		self.pxValuesHasChanged = 1
 
 	def _onGeomChanged(self):
-		self.context._onPxValuesChanged(self, (self.pxleft, self.pxwidth,
-												self.pxtop, self.pxheight))
+		self.context._onPxValuesChanged(self, self.getPxGeom())
+
+	def getPxGeom(self):
+		return (self.pxleft, self.pxtop, self.pxwidth, self.pxheight)
 
