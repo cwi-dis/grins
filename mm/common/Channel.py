@@ -280,8 +280,8 @@ class Channel:
 			raise error, 'no context to arm in'
 		self._armstate = ARMING
 		if self._armed_node is node:
-		        # Same as last time, apparently
-			print 'Same node on', self # DBG
+			# Same as last time, apparently
+			##print 'Same node on', self # DBG
 			return 1
 		self._armed_node = node
 		self._armed_anchors = []
@@ -1001,7 +1001,7 @@ class ChannelWindow(Channel):
 		if same and self.armed_display and \
 		   not self.armed_display.is_closed():
 		        return 1
-		if same: print 'Same, but no armed_display' # DBG
+		#if same: print 'Same, but no armed_display' # DBG
 		if not self._is_shown or not self.window:
 			return 0
 		if self.armed_display:
