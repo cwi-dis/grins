@@ -71,7 +71,7 @@ class HtmlChannel(Channel.ChannelWindow):
 
 	def _stop(self, params):
 		print 'Entering stop handler..'
-		CMIFDIR = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Chameleon\\CmifPath")
+		CMIFDIR = os.environ["CMIFPATH"]
 		Htmlex.RetrieveUrl(self.window._hWnd, CMIFDIR+'\\tmp.htm')
 
 	def do_arm(self, node, same=0):
