@@ -4723,7 +4723,7 @@ def _minsizeRp(wR1, wR2, wM1, wM2, minsize):
 			if wN > newsize:
 				newsize = wN
 	elif type(wR1) is type (0):
-		wN = wR2 + wM1
+		wN = wR1 + wM1
 		if wN > newsize:
 			newsize = wN
 	else:
