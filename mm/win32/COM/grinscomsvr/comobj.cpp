@@ -271,7 +271,7 @@ CSimpleMap<int, GRiNSPlayerAuto*> GRiNSPlayerAuto::s_documents;
 
 GRiNSPlayerAuto::GRiNSPlayerAuto(GRiNSPlayerComModule *pModule)
 :	m_cRef(1), m_pModule(pModule), m_hWnd(0), m_nViewports(0),
-	m_dur(0), m_focuswndid(0), m_framerate(20), m_permission(0)
+	m_dur(-2.0), m_focuswndid(0), m_framerate(20), m_permission(0)
 	{
 	s_documents.Add(int(this), this);
 	adviceSetCursor("arrow");
@@ -317,7 +317,7 @@ HRESULT __stdcall GRiNSPlayerAuto::open(wchar_t *wszFileOrUrl)
 	char *buf = new char[MAX_PATH];
     if(WideCharToMultiByte(CP_ACP, 0, wszFileOrUrl, -1, buf, MAX_PATH, NULL, NULL))
 		{
-		SendMessage(getListener(), WM_USER_OPEN, WPARAM(this), LPARAM(buf));
+		PostMessage(getListener(), WM_USER_OPEN, WPARAM(this), LPARAM(buf));
 		}
 	return S_OK;
 	}
