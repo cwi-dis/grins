@@ -2,15 +2,8 @@
  * 
  *  $Id$
  *  
- *  Copyright (C) 1995,1996,1997 Progressive Networks.
- *  All rights reserved.
- *
- *  This program contains proprietary 
- *  information of Progressive Networks, Inc, and is licensed
- *  subject to restrictions on use and distribution.
  *
  */
-
 
 #include <stdio.h>
 
@@ -33,6 +26,9 @@
 #include "exvsurf.h"
 #include "exnwsite.h"
 
+// CallerHelper
+#include "std.h"
+#include "PyCppApi.h"
 
 #ifdef _DEBUG
 #undef PN_THIS_FILE		
@@ -46,6 +42,8 @@ ExampleVideoSurface::ExampleVideoSurface(IUnknown* pContext, ExampleWindowlessSi
     , m_pContext(pContext)
     , m_pSiteWindowless(pSiteWindowless)
     , m_pBitmapInfo(NULL)
+	, m_pyVideoSurface(NULL)
+
 { 
     if (m_pContext)
     {
@@ -59,6 +57,14 @@ ExampleVideoSurface::~ExampleVideoSurface()
 {
     PN_RELEASE(m_pContext);
 }
+
+void ExampleVideoSurface::SetPyVideoSurface(PyObject *obj)
+	{
+	Py_XDECREF(m_pyVideoSurface);
+	if(obj==Py_None)m_pyVideoSurface=NULL;
+	else m_pyVideoSurface=obj;
+	Py_XINCREF(m_pyVideoSurface);
+	}
 
 // *** IUnknown methods ***
 
@@ -99,6 +105,7 @@ ExampleVideoSurface::QueryInterface(REFIID riid, void** ppvObj)
 STDMETHODIMP_(ULONG32) 
 ExampleVideoSurface::AddRef()
 {
+	Py_XINCREF(m_pyVideoSurface);
     return InterlockedIncrement(&m_lRefCount);
 }
 
@@ -112,6 +119,13 @@ ExampleVideoSurface::AddRef()
 STDMETHODIMP_(ULONG32) 
 ExampleVideoSurface::Release()
 {
+	if(m_pyVideoSurface && m_pyVideoSurface->ob_refcnt==1)
+		{
+		Py_XDECREF(m_pyVideoSurface);
+		m_pyVideoSurface=NULL;
+		}
+	else Py_XDECREF(m_pyVideoSurface);
+
     if (InterlockedDecrement(&m_lRefCount) > 0)
     {
         return m_lRefCount;
@@ -166,7 +180,6 @@ ExampleVideoSurface::BeginOptimizedBlt(RMABitmapInfoHeader* pBitmapInfo)
 	// see if we have new format 
 	if (m_lastBitmapInfo.biWidth != pBitmapInfo->biWidth ||
 	    m_lastBitmapInfo.biHeight != pBitmapInfo->biHeight ||
-	    m_lastBitmapInfo.biHeight != pBitmapInfo->biHeight ||
 	    m_lastBitmapInfo.biBitCount != pBitmapInfo->biBitCount ||
 	    m_lastBitmapInfo.biCompression != pBitmapInfo->biCompression)
 	{
@@ -176,7 +189,6 @@ ExampleVideoSurface::BeginOptimizedBlt(RMABitmapInfoHeader* pBitmapInfo)
 
 	    // save settings for comparison next time 
 	    m_lastBitmapInfo.biWidth = pBitmapInfo->biWidth;
-	    m_lastBitmapInfo.biHeight = pBitmapInfo->biHeight;
 	    m_lastBitmapInfo.biHeight = pBitmapInfo->biHeight;
 	    m_lastBitmapInfo.biBitCount = pBitmapInfo->biBitCount;
 	    m_lastBitmapInfo.biCompression = pBitmapInfo->biCompression;
@@ -199,16 +211,34 @@ ExampleVideoSurface::OptimizedBlt(UCHAR* pImageBits,
     {
 	return PNR_UNEXPECTED;
     }
+	
+	// For dev only, pass strings not ids 
+	string s;
+    switch (m_lastBitmapInfo.biCompression)
+		{
+		case RMA_RGB3_ID:s="RMA_RGB3_ID";break;
+		case RMA_RGB555_ID:s="RMA_RGB555_ID";break;
+		case RMA_RGB565_ID:s="RMA_RGB565_ID";break;
+		case RMA_RGB24_ID:s="RMA_RGB24_ID";break;
+		case RMA_8BIT_ID:s="RMA_8BIT_ID";break;
+		case RMA_BITFIELDS:s="RMA_BITFIELDS";break; 
+		case RMA_RGB:s="RMA_RGB";break;
+		case RMA_YUV420_ID:s="RMA_YUV420_ID";break;
+		}
+
+	// Actual plot
+	if(m_pyVideoSurface)
+		{
+		CallerHelper helper("Blt",m_pyVideoSurface);
+		if(helper.HaveHandler())helper.call(m_lastBitmapInfo.biWidth,
+			m_lastBitmapInfo.biHeight,
+			m_lastBitmapInfo.biBitCount,
+			s.c_str(),
+			(void*)pImageBits);
+		}
 
 
-    //
-    // this is where we would actually blit the image if we were /
-    // interested in doing that sort of thing
-    //
-    //
-
-
-    printf("ExampleVideoSurface::OptimizedBlt - yeah baby!\n");
+    //printf("ExampleVideoSurface::OptimizedBlt - yeah baby!\n");
 
     return PNR_OK;
  }

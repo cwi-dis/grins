@@ -19,6 +19,10 @@
 // forward declares
 class ExampleWindowlessSite;
 
+// for PyObject
+#ifndef Py_PYTHON_H
+#include "Python.h"
+#endif
 
 
 class ExampleVideoSurface : IRMAVideoSurface
@@ -41,6 +45,9 @@ public:
     ExampleVideoSurface(IUnknown* pContext, ExampleWindowlessSite* pSiteWindowless);
 
     PN_RESULT	Init();
+
+	void SetPyVideoSurface(PyObject *obj);
+	PyObject *m_pyVideoSurface;
 
     /*
      *	IUnknown methods
