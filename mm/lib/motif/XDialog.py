@@ -165,7 +165,7 @@ class FileDialog:
 		if not filter:
 			filter = '*'
 		if type(filter) != type('') or '/' in filter:
-			import mimetypes, grins_mimetypes
+			import MMmimetypes, grins_mimetypes
 			descr = None
 			if type(filter) == type(''):
 				filter = [filter]
@@ -182,7 +182,7 @@ class FileDialog:
 				b1.ManageChild()
 			allext = []
 			for f in filter:
-				extlist = mimetypes.get_extensions(f)
+				extlist = MMmimetypes.get_extensions(f)
 				if not extlist:
 					extlist = ['*']
 				else:
