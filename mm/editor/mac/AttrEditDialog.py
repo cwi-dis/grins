@@ -65,7 +65,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			mustshow = 1
 ## This doesn't work for (a) tabbing to a field and (b) popup menus
 		self._ok_enabled = 0
-##		self._setsensitive([ITEM_APPLY, ITEM_OK], 0)
+		self._setsensitive([ITEM_APPLY, ITEM_OK], 0)
 
 		self._setbutton(ITEM_SHOWALL, self.show_all_attributes)
 		self._setbutton(ITEM_FOLLOWSELECTION, self.follow_selection)
@@ -119,7 +119,10 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		for a in self._pages:
 			label = a.createwidget()
 			pagenames.append(label)
-		self._pagebrowser = self._window.ListWidget(ITEM_SELECT, pagenames)
+		if hasattr(self, '_pagebrowser'):
+			self._pagebrowser.setitems(pagenames)
+		else:
+			self._pagebrowser = self._window.ListWidget(ITEM_SELECT, pagenames)
 		self._pagebrowser.setkeyboardfocus()
 		try:
 			initpagenum = self._attr_to_pageindex[initattr]
@@ -158,15 +161,21 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		else:
 			self._selectpage(num)
 		
-	def _enable_ok(self):
+	def valuechanged_callback(self):
 		if self._ok_enabled:
 			return
 		self._ok_enabled = 1
 		self._setsensitive([ITEM_APPLY, ITEM_OK], 1)
+		
+	def pagechange_allowed(self):
+		return 1
 
 	def do_itemhit(self, item, event):
 		if item == ITEM_SELECT:
 			item = self._pagebrowser.getselect()
+			if not self.pagechange_allowed():
+				self._unselectpage()
+				return
 			self._selectpage(item)
 			# We steal back the keyboard focus
 			self._pagebrowser.setkeyboardfocus()
@@ -211,6 +220,13 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			self._cur_page.show()
 			self._sethelpstring(self._cur_page.helpstring)
 			self._pagebrowser.select(item)
+			
+	def _unselectpage(self):
+		if self._cur_page:
+			index = self._pages.index(self._cur_page)
+			self._pagebrowser.select(index)
+		else:
+			self._pagebrowser.select(None)
 
 	def _is_shown(self, attrfield):
 		"""Return true if this attr is currently being displayed"""
@@ -365,7 +381,7 @@ class StringTabPage(SingleDefaultTabPage):
 
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_STRING:
-			self.attreditor._enable_ok()
+			self.attreditor.valuechanged_callback()
 			return 1
 		return 0
 
@@ -389,7 +405,7 @@ class TextTabPage(SingleTabPage):
 
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_STRING:
-			self.attreditor._enable_ok()
+			self.attreditor.valuechanged_callback()
 			return 1
 		return 0
 
@@ -417,7 +433,7 @@ class FileTabPage(SingleTabPage):
 
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_STRING:
-			self.attreditor._enable_ok()
+			self.attreditor.valuechanged_callback()
 			return 1
 		elif item == self.item0+self.ITEM_BROWSE:
 			self.fieldlist[0].browser_callback()
@@ -452,7 +468,7 @@ class ColorTabPage(SingleDefaultTabPage):
 
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_STRING:
-			self.attreditor._enable_ok()
+			self.attreditor.valuechanged_callback()
 			return 1
 		elif item == self.item0+self.ITEM_PICK:
 			self._select_color(self.item0+self.ITEM_STRING)
@@ -493,6 +509,7 @@ class ColorTabPage(SingleDefaultTabPage):
 		if ok:
 			r, g, b = color
 			value = "%d %d %d"%((r>>8), (g>>8), (b>>8))
+			self.attreditor.valuechanged_callback()
 			self.attreditor._setlabel(stringitem, value)
 			self.attreditor._selectinputfield(stringitem)
 		
@@ -517,6 +534,7 @@ class OptionTabPage(SingleTabPage):
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_MENU:
 			self._option_click()
+			self.attreditor.valuechanged_callback()
 			return 1
 		return 0
 
@@ -580,6 +598,7 @@ class MultiStringTabPage(MultiTabPage):
 	
 	def do_itemhit(self, item, event):
 		if item-self.item0 in self._items_on_page:
+			self.attreditor.valuechanged_callback() # Over the top, should compare values
 			return 1
 		return 0
 		
@@ -753,6 +772,7 @@ class TargetAudienceTabPage(MultiTabPage):
 
 	def do_itemhit(self, item, event):
 		if item-self.item0 in self._items_on_page:
+			self.attreditor.valuechanged_callback()
 			self.attreditor._togglebutton(item)
 			return 1
 		return 0
@@ -800,9 +820,11 @@ class ImageConversionTabPage(MultiTabPage):
 
 	def do_itemhit(self, item, event):
 		if item-self.item0 == self.ITEM_CONVERT:
+			self.attreditor.valuechanged_callback()
 			self.attreditor._togglebutton(item)
 			return 1
 		elif item-self.item0 == self.ITEM_QUALITY:
+			self.attreditor.valuechanged_callback()
 			self.call_optional_cb(self.fieldlist[1])
 			return 1
 		return 0
@@ -885,13 +907,16 @@ class ConversionTabPage(MultiDictTabPage):
 
 	def do_itemhit(self, item, event):
 		if item-self.item0 == self.ITEM_AUDIOTYPE:
+			self.attreditor.valuechanged_callback()
 			self.call_optional_cb(self._attr_to_field['project_audiotype'])
 			return 1
 		elif item-self.item0 == self.ITEM_VIDEOTYPE:
+			self.attreditor.valuechanged_callback()
 			self.call_optional_cb(self._attr_to_field['project_videotype'])
 			return 1
 		elif item-self.item0 in self._items_on_page:
 			# The rest are all toggle buttons
+			self.attreditor.valuechanged_callback()
 			self.attreditor._togglebutton(item)
 			return 1
 		return 0
@@ -986,9 +1011,11 @@ class GeneralLiteTabPage(MultiTabPage):
 		
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_NODENAME:
+			self.attreditor.valuechanged_callback()
 			return 1
 		elif item == self.item0+self.ITEM_NODETYPE:
 			# popup
+			self.attreditor.valuechanged_callback()
 			self.call_optional_cb(self.fieldlist[1])
 			return 1
 		return 0
@@ -1037,16 +1064,20 @@ class GeneralTabPage(MultiTabPage):
 		
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_NODENAME:
+			self.attreditor.valuechanged_callback()
 			return 1
 		elif item == self.item0+self.ITEM_CHANNEL:
+			self.attreditor.valuechanged_callback()
 			self.call_optional_cb(self.fieldlist[1])
 			self._fixbutton()
 			return 1
 		elif item == self.item0+self.ITEM_CHANNELPROPS:
+			self.attreditor.valuechanged_callback()
 			self.fieldlist[1].channelprops()
 			return 1
 		elif item == self.item0+self.ITEM_NODETYPE:
 			# popup
+			self.attreditor.valuechanged_callback()
 			self.call_optional_cb(self.fieldlist[2])
 			return 1
 		return 0
@@ -1104,11 +1135,14 @@ class ChGeneralTabPage(MultiTabPage):
 		
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_CHNAME:
+			self.attreditor.valuechanged_callback()
 			return 1
 		elif item == self.item0+self.ITEM_CHTYPE:
+			self.attreditor.valuechanged_callback()
 			self.call_optional_cb(self.fieldlist[1])
 			return 1
 		elif item == self.item0+self.ITEM_TITLE:
+			self.attreditor.valuechanged_callback()
 			return 1
 		return 0
 		
@@ -1176,22 +1210,29 @@ class SystemPropertiesTabPage(MultiTabPage):
 		
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_BITRATE:
+			self.attreditor.valuechanged_callback()
 			self.call_optional_cb(self.fieldlist[0])
 			return 1
 		elif item-self.item0 in self.ILIST_CAPTION:
+			self.attreditor.valuechanged_callback()
 			self.do_radio(item-self.item0, self.ILIST_CAPTION)
 			return 1
 		elif item == self.item0+self.ITEM_LANGUAGE:
+			self.attreditor.valuechanged_callback()
 			self.call_optional_cb(self.fieldlist[2])
 			return 1
 		elif item-self.item0 in self.ILIST_OVERDUB_CAPTION:
+			self.attreditor.valuechanged_callback()
 			self.do_radio(item-self.item0, self.ILIST_OVERDUB_CAPTION)
 			return 1
 		elif item == self.item0+self.ITEM_REQUIRED:
+			self.attreditor.valuechanged_callback()
 			return 1
 		elif item == self.item0+self.ITEM_SCREENDEPTH:
+			self.attreditor.valuechanged_callback()
 			return 1
 		elif item == self.item0+self.ITEM_SCREENSIZE:
+			self.attreditor.valuechanged_callback()
 			return 1
 		return 0
 
@@ -1312,10 +1353,12 @@ class TransitionTabPage(MultiDictTabPage, ColorTabPage):
 
 	def do_itemhit(self, item, event):
 		if item-self.item0 == self.ITEM_TYPE:
+			self.attreditor.valuechanged_callback()
 			self.call_optional_cb(self._attr_to_field['tag'])
 			return 1
 		elif item-self.item0 in self._items_on_page:
 			# text field
+			self.attreditor.valuechanged_callback()
 			return 1
 		elif item-self.item0 == self.ITEM_PICK:
 			self._select_color(self.item0+self.ITEM_COLOR)
@@ -1385,10 +1428,12 @@ class WipeTabPage(MultiTabPage):
 		
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_TYPE:
+			self.attreditor.valuechanged_callback()
 			self.call_optional_cb(self.fieldlist[0])
 			return 1
 		elif item == self.item0+self.ITEM_DIRECTION:
 			# popup
+			self.attreditor.valuechanged_callback()
 			self.call_optional_cb(self.fieldlist[1])
 			return 1
 		return 0
@@ -1429,12 +1474,14 @@ class FadeoutTabPage(MultiTabPage, ColorTabPage):
 	
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_FADEOUT:
+			self.attreditor.valuechanged_callback()
 			self.attreditor._togglebutton(self.item0+self.ITEM_FADEOUT)
 			return 1
 		elif item == self.item0+self.ITEM_COLORPICK:
 			self._select_color(self.item0+self.ITEM_COLOR)
 			return 1
 		elif item-self.item0 in self._items_on_page:
+			self.attreditor.valuechanged_callback()
 			return 1
 		return 0
 		
@@ -1471,9 +1518,11 @@ class AreaTabPage(MultiDictTabPage):
 		
 	def do_itemhit(self, item, event):
 		if item-self.item0 in self._checkboxes:
+			self.attreditor.valuechanged_callback()
 			self.attreditor._togglebutton(item)
 			return 1
 		elif item-self.item0 in self._xywhfields:
+			self.attreditor.valuechanged_callback()
 			self._labels_to_preview()
 			if self.ITEM_WHOLE:
 				self.attreditor._setbutton(self.item0+self.ITEM_WHOLE, 0)
@@ -1481,9 +1530,11 @@ class AreaTabPage(MultiDictTabPage):
 				self.attreditor._setbutton(self.item0+self.ITEM_PARTIAL, 1)
 			return 1
 		elif item-self.item0 in self._otherfields:
+			self.attreditor.valuechanged_callback()
 			return 1
 		elif item-self.item0 == self.ITEM_PREVIEW:
 ##			self._preview_to_labels() XXXX Doesn't work??!? use callback
+			self.attreditor.valuechanged_callback()
 			return 1
 		return 0
 		
@@ -1745,6 +1796,7 @@ class ChannelAreaTabPage(AreaTabPage):
 		
 	def do_itemhit(self, item, event):
 		if item-self.item0 == self.ITEM_UNITS:
+			self.attreditor.valuechanged_callback()
 			xywh = self._values_to_pixels(self._getlabelfields())
 			self._curunits = self._unitspopup.getselectvalue()
 			self._setlabelfields(self._pixels_to_values(xywh))
@@ -1904,6 +1956,7 @@ class Atab_wrap_control:
 		
 	def do_itemhit(self, item, event):
 		if item == self.item:
+			self.attreditor.valuechanged_callback()
 			self.callback()
 			return 1
 		return 0
@@ -1944,6 +1997,7 @@ class Atab_wrap_checkbox(Atab_wrap_control):
 		
 	def do_itemhit(self, item, event):
 		if item == self.item:
+			self.attreditor.valuechanged_callback()
 			self.attreditor._togglebutton(self.item)
 			self.callback()
 			return 1
@@ -1964,6 +2018,7 @@ class Atab_wrap_xywh:
 		
 	def do_itemhit(self, item, event):
 		if item in self.itemlist:
+			self.attreditor.valuechanged_callback()
 			self.callback()
 			return 1
 		return 0
@@ -2086,9 +2141,11 @@ class AnchorTabPage(TabPage, AnchorList.AnchorList):
 		
 	def do_itemhit(self, item, event):
 		if item-self.item0 == self.ITEM_PREVIEW:
+			self.attreditor.valuechanged_callback()
 			return 1
 		for wrapper in self.__allwrappers:
 			if wrapper.do_itemhit(item, event):
+## Unsure:		self.attreditor.valuechanged_callback()
 				return 1
 		return 0
 		
@@ -2278,7 +2335,7 @@ class AttrEditorDialogField:
 		if self.attreditor._is_shown(self):
 			self.attreditor._updatepagevalues()
 		if value != self.getcurrent():
-			self.attreditor._enable_ok()
+			self.attreditor.valuechanged_callback()
 			
 	def recalcoptions(self):
 		"""Recalculate the list of options and set the value."""
