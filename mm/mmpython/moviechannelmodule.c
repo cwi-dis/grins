@@ -5,6 +5,7 @@
 #include "Python.h"
 #include "modsupport.h"
 #include "pythread.h"
+#include "pysema.h"
 #include "mmmodule.h"
 #include <sys/time.h>
 #include <errno.h>

@@ -32,6 +32,7 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "Python.h"
 #include "modsupport.h"
 #include "pythread.h"
+#include "pysema.h"
 #include "mmmodule.h"
 #include <sys/time.h>
 
