@@ -124,7 +124,7 @@
 # valid values: freeze, remove, hold, transition
 # default depends on other attributes
 (fill (string) '' 'Fill' fill
-	'Whether data should be retained on screen after playing' normal (cmif))
+	'Whether data should be retained on screen after playing' normal (smil2 cmif))
 
 (font (string) 'Times-Roman' 'Font' font
 	'Font used to display text' channel (cmif))
@@ -162,8 +162,8 @@
 (longdesc (string) '' 'Long description URL' default
 	'Link (URL) to a long description of the media object' raw (all))
 
-(loop (float) 1 'Loop' default
-	'Number of times the node should loop, 0 for indefinite' raw (all))
+(loop (float) 1 'Repeat count' default
+	'Number of times the node should repeat' raw (all))
 
 (macprog (string) '' 'Mac program signature' default
 	'4-byte application signature (mac only)' channel (cmif))
@@ -255,7 +255,7 @@
 	'Audio playback queue size' channel (cmif))
 
 (repeatdur (float) 0 'Repeat duration' default
-	'Time the node should loop, 0 for indefinite' raw (smil2))
+	'Time the node should repeat' raw (smil2))
 
 (restart (enum always whenNotActive never) always 'Restart node' restart
 	'When can the node be restart' raw (smil2))
