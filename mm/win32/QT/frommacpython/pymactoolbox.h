@@ -14,7 +14,7 @@
 #include <Components.h>
 #include <Lists.h>
 #include <Movies.h>
-#include <Errors.h>
+#include <MacErrors.h>
 #else
 #include <Carbon/Carbon.h>
 #include <QuickTime/QuickTime.h>
