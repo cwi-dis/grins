@@ -415,13 +415,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		   string.find(string.lower(subtype), 'real') >= 0:
 			# if it's a RealMedia type, use tag to determine chtype
 			if tagname == 'audio':
-				chtype = 'RealAudio'
+				chtype = 'sound'
 			elif tagname == 'image':
 				chtype = 'RealPix'
 			elif tagname == 'text':
 				chtype = 'RealText'
 			else:
-				chtype = 'RealVideo'
+				chtype = 'video'
 		elif mediatype == 'audio':
 			chtype = 'sound'
 		elif mediatype == 'image':
@@ -435,7 +435,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				chtype = 'html'
 		elif mediatype == 'application' and \
 		     subtype == 'x-shockwave-flash':
-			chtype = 'RealVideo'
+			chtype = 'video'
 		elif mediatype == 'cmif_cmif':
 			chtype = 'cmif'
 		elif mediatype == 'cmif_socket':

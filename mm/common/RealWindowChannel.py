@@ -9,13 +9,13 @@ __version__ = "$Id$"
 """
 import Channel, RealChannel
 
-class RealWindowChannel(Channel.ChannelWindowAsync, RealChannel.RealChannel):
+class RealWindowChannel(Channel.ChannelWindowAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
-		RealChannel.RealChannel.__init__(self)
+		self.__rc = RealChannel.RealChannel(self)
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def do_arm(self, node, same = 0):
-		if not self.prepare_player(node):
+		if not self.__rc.prepare_player(node):
 			import MMAttrdefs
 			name = MMAttrdefs.getattr(node, 'name')
 			if not name:
@@ -31,20 +31,22 @@ class RealWindowChannel(Channel.ChannelWindowAsync, RealChannel.RealChannel):
 		return 1
 
 	def do_hide(self):
-		self.stopit()
+		self.__rc.stopit()
 		Channel.ChannelWindowAsync.do_hide(self)
+		self.__rc.destroy()
+		del self.__rc
 		
 	def do_play(self, node):
-		if not self.playit(node, self._getoswindow(), self._getoswinpos() ):
+		if not self.__rc.playit(node, self._getoswindow(), self._getoswinpos() ):
 			self.playdone(0)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
 		Channel.ChannelWindowAsync.setpaused(self, paused)
-		self.pauseit(paused)
+		self.__rc.pauseit(paused)
 
 	def stopplay(self, node):
-		self.stopit()
+		self.__rc.stopit()
 		Channel.ChannelWindowAsync.stopplay(self, node)
 
 	def _getoswindow(self):

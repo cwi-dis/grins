@@ -125,7 +125,10 @@ class _Toplevel:
 
 	# Registration function for close callbacks
 	def addclosecallback(self, func, args):
-		self._closecallbacks.append(func, args)
+		self._closecallbacks.append((func, args))
+
+	def removeclosecallback(self, func, args):
+		self._closecallbacks.remove((func, args))
 
 	# Called by the core to create a window
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,

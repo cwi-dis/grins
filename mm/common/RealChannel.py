@@ -14,6 +14,8 @@ if os.name == 'mac':
 else:
 	NEEDTICKER = 0
 
+error = 'RealChannel.error'
+
 class RealEngine:
 	# This class holds the RMA engine and a useage counter. This counter is
 	# needed because on the mac (and maybe on unix) whenever any player is active
@@ -42,7 +44,7 @@ class RealEngine:
 		
 	def stopusing(self):
 		if self.usagecount <= 0:
-			raise 'RealEngine usage count <= 0'
+			raise error, 'RealEngine usage count <= 0'
 		self.usagecount = self.usagecount - 1
 		if NEEDTICKER and self.usagecount == 0:
 			self._stopticker()
@@ -61,19 +63,21 @@ class RealChannel:
 	__engine = None
 	__has_rma_support = rma is not None
 
-	def __init__(self):
+	def __init__(self, channel):
+		if not self.__has_rma_support:
+			raise error, 'no RMA support'
+		self.__channel = channel
 		self.__rmaplayer = None
 		self.__qid = None
 		self.__using_engine = 0
 		if self.__engine is None and self.__has_rma_support:
-			try:
-				RealChannel.__engine = RealEngine()
-			except:
-				windowinterface.showmessage('No playback support for RealMedia on this system')
-				RealChannel.__has_rma_support = 0
+			RealChannel.__engine = RealEngine()
 ##		# release any resources on exit
 ##		windowinterface.addclosecallback(self.release_player,())
 		
+	def destroy(self):
+		del self.__channel
+
 	def release_player(self):
 		self.__rmaplayer = None
 
@@ -84,16 +88,16 @@ class RealChannel:
 			try:
 				self.__rmaplayer = self.__engine.CreatePlayer()
 			except:
-				self.errormsg(node, 'No playback support for RealMedia on this system')
+				self.__channel.errormsg(node, 'No playback support for RealMedia on this system')
 				return 0
 		return 1
 
 	def playit(self, node, window = None, winpossize=None):
 		if not self.__rmaplayer:
 			return 0
-		self.__loop = self.getloop(node)
-		duration = self.getduration(node)
-		url = MMurl.canonURL(self.getfileurl(node))
+		self.__loop = self.__channel.getloop(node)
+		duration = self.__channel.getduration(node)
+		url = MMurl.canonURL(self.__channel.getfileurl(node))
 		self.__url = url
 ##		self.__window = window
 		self.__rmaplayer.SetStatusListener(self)
@@ -103,7 +107,7 @@ class RealChannel:
 			pos, size = winpossize
 			self.__rmaplayer.SetPositionAndSize(pos, size)
 		if duration > 0:
-			self.__qid = self._scheduler.enter(duration, 0,
+			self.__qid = self.__channel._scheduler.enter(duration, 0,
 							   self.__stop, ())
 		self.__playdone_called = 0
 		# WARNING: RealMedia player doesn't unquote, so we must do it
@@ -121,10 +125,10 @@ class RealChannel:
 			self.__rmaplayer.Stop()
 			# This may cause OnStop to be called, and it may not....
 			if not self.__playdone_called:
-				self.playdone(0)
+				self.__channel.playdone(0)
 				self.__playdone_called = 1
 		else:
-			self.playdone(0)
+			self.__channel.playdone(0)
 
 	def OnStop(self):
 		if self.__loop:
@@ -132,7 +136,7 @@ class RealChannel:
 			if self.__loop == 0:
 				if self.__qid is None:
 					if not self.__playdone_called:
-						self.playdone(0)
+						self.__channel.playdone(0)
 						self.__playdone_called = 1
 				return
 ##		print 'looping'
@@ -141,7 +145,7 @@ class RealChannel:
 #		self.__rmaplayer.Begin()
 
 	def ErrorOccurred(self,str):
-		self.errormsg(None, str)
+		self.__channel.errormsg(None, str)
 
 	def pauseit(self, paused):
 		if self.__rmaplayer:
