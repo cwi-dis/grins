@@ -964,12 +964,16 @@ class InputDialog(DialogBase):
 		dll=None
 		if passwd:
 			id = grinsRC.IDD_PASSWD_DIALOG
+			idedit=grinsRC.IDC_EDIT1
+			idprompt=grinsRC.IDC_PROMPT1
 		else:
 			id = win32ui.IDD_SIMPLE_INPUT
+			idedit=win32ui.IDC_EDIT1
+			idprompt=win32ui.IDC_PROMPT1
 		DialogBase.__init__(self, id, parent, dll)
 		self._parent=parent
-		self.AddDDX(win32ui.IDC_EDIT1,'result')
-		self.AddDDX(win32ui.IDC_PROMPT1, 'prompt')
+		self.AddDDX(idedit,'result')
+		self.AddDDX(idprompt, 'prompt')
 		self._obj_.data['result']=defValue
 		self._obj_.data['prompt']=prompt
 		self._ok_callback=okCallback
