@@ -12,7 +12,6 @@ class TemporalView(TemporalViewDialog):
 		TemporalViewDialog.__init__(self)
 		self.toplevel = toplevel
 		self.root = toplevel.root
-		self.scene_graph = None	# : TemporalWidget; This graph remains here the whole time.
 
 		# Oooh yes, let's do some really cool selection code.
 		# Of course, I'll write it _later_.
@@ -24,6 +23,10 @@ class TemporalView(TemporalViewDialog):
 					# node rather than the geometric primitives!
 		self.__add_commands()
 		self.showing = 0
+
+		self.geodl = GeoWidget(self) # This is the basic graph of geometric primitives.
+		self.scene = None	# This is the collection of widgets which define the behaviour of the geo privs.
+		self.init_scene()
 
 	def destroy(self):
 		pass;
@@ -39,17 +42,17 @@ class TemporalView(TemporalViewDialog):
 		self.showing = 1
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		TemporalViewDialog.show(self)
-
-		# DEBUG: Draw something on the window.	
-		dl = self.window.newdisplaylist((50,50,50), windowinterface.UNIT_PXL)
-		dl.drawbox((50,50,100,100))
-		dl.render()
+		self.draw()
 
 	def is_showing(self):
 		return self.showing
 
 	def init_scene(self):
-		f = TemporalWidgetFactory()
-		self.scene_graph = f.createNewTree(self.root)
-		geodl = GeoWidget(self)
-		self.scene_graph.set_display(geodl)
+		self.scene = TimeCanvas(self.root, self)
+		self.scene.set_display(self.geodl)
+
+	def get_geodl(self):
+		return self.geodl
+
+	def draw(self):
+		self.geodl.redraw()
