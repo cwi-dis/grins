@@ -39,10 +39,10 @@ def ReadOpenFileContext(fp, filename, context):
 # Read a CMF file from a string
 #
 def ReadString(string, name):
-	return ReadString(string, name, _newctx())
+	return ReadStringContext(string, name, _newctx())
 
 def ReadStringContext(string, name, context):
-	p = MMParser.MMParser().init(MMParser.StringInput(string), context)
+	p = MMParser.MMParser().init(MMParser.StringInput().init(string), context)
 	return _readparser(p, name)
 
 
