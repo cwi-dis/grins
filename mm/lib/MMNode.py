@@ -1151,7 +1151,6 @@ class MMNode:
 			raise CheckError, 'Seeknode not in tree!'
 		self.sync_from = ([],[])
 		self.sync_to = ([],[])
-		self.looping_body_self = None
 		self.realpix_body = None
 		self.caption_body = None
 		self.force_switch_choice = 0
@@ -1190,7 +1189,6 @@ class MMNode:
 	def _FastPruneTree(self):
 		self.sync_from = ([],[])
 		self.sync_to = ([],[])
-		self.looping_body_self = None
 		self.realpix_body = None
 		self.caption_body = None
 		self.force_switch_choice = 0
