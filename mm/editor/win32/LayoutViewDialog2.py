@@ -125,10 +125,17 @@ class LayoutViewDialog2(ViewDialog.ViewDialog):
 					    cancelCallback = cancelCallBack,
 					    parent = self.__window)
 
-	def zoomIn(self):
+	def zoomIn(self, factor=None):
 		if self.__window is not None:
-			self.__window.zoomIn()
+			self.__window.zoomIn(factor)
 		
-	def zoomOut(self):
+	def zoomOut(self, factor=None):
 		if self.__window is not None:
-			self.__window.zoomOut()
+			self.__window.zoomOut(factor)
+
+
+	def zoomReset(self):
+		if self.__window is not None:
+			self.__window.zoomReset()
+
+
