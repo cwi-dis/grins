@@ -881,8 +881,8 @@ class DrawLayer:
 
 		# show draw area
 		if not self.drawTk.InLayoutMode():
+			l,t,w,h=self._canvas
 			if self.drawTk._bkimg<0:
-				l,t,w,h=self._canvas
 				dcc.FillSolidRect((l,t,l+w,t+h),win32mu.RGB((0,0,0)))
 				dcc.FillSolidRect(self.drawTk._crect.tuple(),win32mu.RGB((200,200,0)))
 				dcc.FillSolidRect(self.drawTk._brect.tuple(),win32mu.RGB((255,255,255)))
@@ -891,6 +891,7 @@ class DrawLayer:
 			else:
 				ig = win32ui.Getig()
 				img = self.drawTk._bkimg
+				ig.device_rect_set(img,(0,0,w,h))
 				ig.display_desktop_pattern_set(img,0)
 				ig.display_image(img,dcc.GetSafeHdc())
 
