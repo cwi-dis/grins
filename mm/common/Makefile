@@ -3,6 +3,7 @@ CFLAGS = -DMM_DEBUG -g -G0 -xansi -D__STDC__ -I$(PYTHON)/src
 
 OBJS =	\
 	soundchannelmodule.o \
+	moviechannelmodule.o \
 	nullchannelmodule.o \
 	mmmodule.o
 

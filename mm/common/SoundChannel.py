@@ -207,6 +207,7 @@ class SoundChannel(Channel):
 	#
 	def destroy(self):
 ##		print 'SoundChannel.destroy: self.threads = ' + `self.threads`
+		self.threads.close()
 		self.threads = None
 		Channel.destroy(self)
 

@@ -17,6 +17,8 @@ import VFile
 
 from ArmStates import *
 
+import main				# for gl_lock
+
 # Errors that VFile operations may raise
 VerrorList = VFile.Error, os.error, IOError, RuntimeError, EOFError
 
@@ -46,6 +48,8 @@ class MovieWindow(ChannelWindow):
 		if self.wid == 0: return
 		gl.reshapeviewport()
 		self.erase()
+		if self.channel.threads and self.vfile:
+			self.channel.threads.resized()
 	#
 	def clear(self):
 		self.node = self.vfile = self.lookahead = None
@@ -87,7 +91,7 @@ class MovieWindow(ChannelWindow):
 				try:
 					self.vfile.readcache()
 				except VFile.Error:
-					print filename, ': no caced index'
+					print filename, ': no cached index'
 		except EOFError:
 			print 'Empty movie file', `filename`
 			return
@@ -148,6 +152,11 @@ class MovieWindow(ChannelWindow):
 
 # XXX Make the movie channel class a derived class from MovieWindow?!
 
+def armdone(arg):
+	pass
+def stopped(arg):
+	pass
+
 class MovieChannel(Channel):
 	#
 	# Declaration of attributes that are relevant to this channel,
@@ -160,6 +169,12 @@ class MovieChannel(Channel):
 		self = Channel.init(self, name, attrdict, player)
 		self.window = MovieWindow().init(name, attrdict, self)
 		self.armed_node = None
+		#DEBUG: to spoof Jack's scheduler
+		self.dummy_event_id = None
+		import mm, moviechannel
+		self.threads = mm.init(moviechannel.init(), \
+			  0, self.deviceno, None)
+##		print 'MovieChannel.init: self.threads = ' + `self.threads`
 		return self
 	#
 	def __repr__(self):
@@ -176,6 +191,13 @@ class MovieChannel(Channel):
 		return self.window.is_showing()
 	#
 	def destroy(self):
+##		print 'MovieChannel.destroy'
+		if main.gl_lock:
+			main.gl_lock.release()
+		self.threads.close()
+		self.threads = None
+		if main.gl_lock:
+			main.gl_lock.acquire()
 		self.window.destroy()
 	#
 	def save_geometry(self):
@@ -186,17 +208,48 @@ class MovieChannel(Channel):
 			return
 		filename = self.getfilename(node)
 		self.window.setfile(filename, node, 1)
+##		print 'MovieChannel.arm: self.threads = ' + `self.threads`
+		if self.window.vfile:
+			import glwindow, mm
+			glwindow.devregister(`self.deviceno`+':'+`mm.armdone`,\
+				  armdone, 0)
+			glwindow.devregister(`self.deviceno`+':'+`mm.stopped`,\
+				  stopped, 0)
+			if not main.gl_lock:
+				import thread
+				main.gl_lock = thread.allocate_lock()
+			self.threads.arm(self.window.vfile.fp, 0, 0, \
+				  {'width': self.window.vfile.width, \
+				   'height': self.window.vfile.height, \
+				   'format': self.window.vfile.format, \
+				   'index': self.window.vfile.index, \
+				   'wid': self.window.wid, \
+				   'gl_lock': main.gl_lock}, \
+				   None)
 		self.armed_node = node
 	#
 	def late_arm(self, node):
 		filename = self.getfilename(node)
 		self.window.setfile(filename, node, 0)
+##		print 'MovieChannel.late_arm: self.threads = ' + `self.threads`
+		if self.window.vfile:
+			if not main.gl_lock:
+				import thread
+				main.gl_lock = thread.allocate_lock()
+			self.threads.arm(self.window.vfile.fp, 0, 0, \
+				  {'width': self.window.vfile.width, \
+				   'height': self.window.vfile.height, \
+				   'format': self.window.vfile.format, \
+				   'index': self.window.vfile.index, \
+				   'wid': self.window.wid, \
+				   'gl_lock': main.gl_lock}, \
+				   None)
 		self.armed_node = node
 	#
 	def play(self, node, callback, arg):
 		self.node = node
 		self.cb = (callback, arg)
-		if not self.is_showing():
+		if not self.is_showing() or not self.window.vfile:
 			dummy = self.player.enter(node.t1-node.t0, 0, \
 				self.done, None)
 			return
@@ -208,9 +261,42 @@ class MovieChannel(Channel):
 			self.window.popup()
 		node.setarmedmode(ARM_PLAYING)
 		self.armed_node = None
-		self.starttime = self.player.timefunc()
-		self.played = self.skipped = 0
-		self.poll() # Put on the first image right now
+##		self.starttime = self.player.timefunc()
+##		self.played = self.skipped = 0
+##		self.poll() # Put on the first image right now
+##		print 'MovieChannel.play: self.threads = ' + `self.threads`
+		import glwindow, mm
+		glwindow.devregister(`self.deviceno`+':'+`mm.playdone`, \
+			  self.done, None)
+		glwindow.devregister(`self.deviceno`+':'+`mm.stopped`, \
+			  stopped, 0)
+		#DEBUG: enter something in queue to fool scheduler
+		self.dummy_event_id = self.player.enter(1000000, 1, self.done, None)
+		self.threads.play()
+		dummy = \
+		   self.player.enter(0.001, 1, self.player.opt_prearm, node)
+	#
+	#DEBUG: remove dummy entry from queue and call proper done method
+	def done(self, arg):
+		if self.dummy_event_id:
+			try:
+				self.player.cancel(self.dummy_event_id)
+			except ValueError:
+				# probably already removed by someone else
+				pass
+			self.dummy_event_id = None
+		if not self.node:
+			# apparently someone has already called stop()
+			return
+		Channel.done(self, arg)
+		self.node = None
+	#
+	def stop(self):
+		self.threads.stop()
+		Channel.stop(self)
+	#
+	def setrate(self, rate):
+		self.threads.setrate(rate)
 	#
 	def poll(self):
 		self.qid = None
