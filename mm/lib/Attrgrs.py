@@ -86,6 +86,30 @@ attrgrs=(
 		'duration',
 		'loop',
 		]},
+
+ 	{'name':'webserver',
+	'title':'Webserver',
+	'attrs':[
+		'project_ftp_host',
+		'project_ftp_dir',
+		'project_ftp_user'
+		]},
+
+  	{'name':'mediaserver',
+	'title':'Mediaserver',
+	'attrs':[
+		'project_ftp_host_media',
+		'project_ftp_dir_media',
+		'project_ftp_user_media',
+		'project_smil_url',
+		]},
+
+	{'name':'file',
+	'title':'URL',
+	'attrs':[
+		'file',
+		]},
+
 	)
 
 
