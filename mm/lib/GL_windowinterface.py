@@ -1776,6 +1776,11 @@ class _Window:
 		y0, y1 = self._height - y1 - 1, self._height - y0 - 1
 		return x0, y0, x1, y1
 
+	def register(self, ev, func, arg):
+		event.register(self, ev, func, arg)
+
+	def unregister(self, ev):
+		event.unregister(self, ev)
 
 # Font stuff
 def _findfont(fontname, size):
