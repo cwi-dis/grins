@@ -146,4 +146,4 @@ def getvalidchanneltypes(context):
 
 def isvisiblechannel(type):
 	return type in ('text', 'image', 'video', 'html', 'layout', 'brush',
-			'RealPix', 'RealText', 'RealVideo')
+			'RealPix', 'RealText', 'RealVideo', 'svg')
