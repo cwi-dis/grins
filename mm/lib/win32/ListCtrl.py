@@ -209,7 +209,7 @@ class ListCtrl(window.Wnd):
 			self.InsertColumn(index, (fmtflag, width, text, 0))
 			index = index + 1
 
-	def inertItem(self, row, text, imageindex, iteminfo):
+	def insertItem(self, row, text, imageindex, iteminfo):
 		self.InsertItem(row, text, imageindex)
 		subindex = 1
 		for text in iteminfo:

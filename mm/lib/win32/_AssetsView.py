@@ -12,6 +12,15 @@ import grinsRC
 from pywinlib.mfc import docview
 import GenView
 
+ICONNAME_TO_RESID={
+	'text': grinsRC.IDI_GRINS_INFO,
+	'image': grinsRC.IDI_GRINS_QUESTION,
+	'video': None,
+	'audio': None,
+	'html': None,
+	'node': None,
+}
+
 class _AssetsView(GenView.GenView, docview.ListView):
 	def __init__(self, doc, bgcolor=None):
 		GenView.GenView.__init__(self, bgcolor)
@@ -25,6 +34,18 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		self._showUnused = components.RadioButton(self._dlgBar, grinsRC.IDC_RADIO_UNUSED)
 		
 		self.listCtrl = None
+		self.initicons()
+
+	def initicons(self):
+		self.iconlist_small = []
+		self.iconname_to_index = {}
+		for k, v in ICONNAME_TO_RESID.items():
+			if v is None:
+				self.iconname_to_index[k] = None
+				continue
+			if not v in self.iconlist_small:
+				self.iconlist_small.append(v)
+			self.iconname_to_index[k] = self.iconlist_small.index(v)
 
 	def OnCreate(self, cs):
 		# create dialog bar
@@ -42,9 +63,7 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		# redirect all command messages to self.OnCmd
 		self.GetParent().HookMessage(self.OnCmd, win32con.WM_COMMAND)
 		
-		# build demo
-		builder = ListCtrlBuilder(self.listCtrl)
-		builder.buildDemo()
+		self.rebuildList()
 
 	def OnCmd(self, params):
 		msg = Win32Msg(params)
@@ -71,18 +90,11 @@ class _AssetsView(GenView.GenView, docview.ListView):
 	def showUnused(self):
 		print 'showUnused'
 
-
-class ListCtrlBuilder:
-	def __init__(self, listCtrl):
-		self.listCtrl = listCtrl
-
-	def buildDemo(self):
+	def rebuildList(self):
 		lc = self.listCtrl
 		
 		# set icons
-		normalList = grinsRC.IDI_GRINS_INFO, grinsRC.IDI_GRINS_QUESTION, grinsRC.IDI_GRINS_STOP
-		smallList = grinsRC.IDI_GRINS_INFO, grinsRC.IDI_GRINS_QUESTION, grinsRC.IDI_GRINS_STOP
-		lc.setIconLists(normalList, smallList)
+		lc.setIconLists(self.iconlist_small, self.iconlist_small)
 
 		# insert columns: (align, width, text) list
 		columnsTemplate = [('left', 200, 'column 1'), ('left', 600, 'column 2')]
@@ -90,11 +102,11 @@ class ListCtrlBuilder:
 
 		# insert item at row 0
 		row, text, imageindex, iteminfo = 0, 'entry 1', 1, ('entry 1 info', )
-		lc.inertItem(row, text, imageindex, iteminfo)
+		lc.insertItem(row, text, imageindex, iteminfo)
 
 		# insert item at row 1
 		row, text, imageindex, iteminfo = 1, 'entry 2', 0, ('entry 2 info', )
-		lc.inertItem(row, text, imageindex, iteminfo)
+		lc.insertItem(row, text, imageindex, iteminfo)
 
 		print lc.getItemCount(), 'items in list'
 
