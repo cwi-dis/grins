@@ -935,6 +935,10 @@ class SubWindow(Window):
 		if self._active_displist:
 			hdc = dds.GetDC()
 			dc = win32ui.CreateDCFromHandle(hdc)
+			rgn = win32ui.CreateRgn()
+			rgn.CreateRectRgn((x,y,x+w,y+h))
+			dc.SelectClipRgn(rgn)
+			rgn.DeleteObject()
 			x0, y0 = dc.SetWindowOrg((-x,-y))
 			self._active_displist._render(dc,None)
 			if self._redrawfunc:

@@ -602,6 +602,10 @@ class _CmifPlayerView(_CmifView):
 		dc = self.GetDDDC()
 		if not dc: return
 		x, y, w, h = self.getwindowpos()
+		rgn = win32ui.CreateRgn()
+		rgn.CreateRectRgn((x,y,x+w,y+h))
+		dc.SelectClipRgn(rgn)
+		rgn.DeleteObject()
 		x0, y0 = dc.SetWindowOrg((-x,-y))
 		if self._active_displist:
 			self._active_displist._render(dc,None)
