@@ -651,9 +651,10 @@ class OpenLocationDlg(ResDialog):
 
 # Implementation of the Layout name dialog
 class LayoutNameDlg(ResDialog):
-	def __init__(self,promp,default_text,cb_ok,cancelCallback=None,parent=None):
-		ResDialog.__init__(self,grinsRC.IDD_LAYOUT_NAME,parent)
-		self._text= Edit(self,grinsRC.IDC_EDIT1)
+	resource = grinsRC.IDD_LAYOUT_NAME
+	def __init__(self,prompt,default_text,cb_ok,cancelCallback=None,parent=None):
+		ResDialog.__init__(self, self.resource, parent)
+		self._text= Edit(self, grinsRC.IDC_EDIT1)
 		self._cb_ok=cb_ok
 		self._cbd_cancel=cancelCallback
 		self._default_text=default_text
@@ -677,14 +678,14 @@ class LayoutNameDlg(ResDialog):
 		if self._cbd_cancel:
 			apply(apply,self._cbd_cancel)
 
+class AnchorNameDlg(LayoutNameDlg):
+	resource = grinsRC.IDD_ANCHOR_NAME
 
 # Implementation of the new channel dialog
 class NewChannelDlg(ResDialog):
 	def __init__(self,title,default,grab=1,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_NEW_CHANNEL,parent)
-		self._title=title
 		self._default_name=default
-		self._parent=parent
 		self._chantext= Edit(self,grinsRC.IDC_CHANNEL_NAME)
 		self._chantype=ComboBox(self,grinsRC.IDC_CHANNEL_TYPE)
 		self._cbd_ok=None
@@ -698,12 +699,14 @@ class NewChannelDlg(ResDialog):
 
 	def show(self):
 		self.DoModal()
+
 	def close(self):
 		self.EndDialog(win32con.IDCANCEL)
 
 	def OnOK(self):
 		if self._cbd_ok:
 			apply(apply,self._cbd_ok)
+
 	def OnCancel(self):
 		if self._cbd_cancel:
 			apply(apply,self._cbd_cancel)
@@ -1248,19 +1251,19 @@ class ModelessInputDialog(InputDialog):
 		return self._obj_.OnCancel()
 
 # Displays a message and requests from the user to select Yes or No or Cancel
-def GetYesNoCancel(promp,parent=None):
+def GetYesNoCancel(prompt,parent=None):
 	if parent:m=parent
 	else: m=win32ui
-	res=m.MessageBox(promp,'GRiNS Editor',win32con.MB_YESNOCANCEL|win32con.MB_ICONQUESTION)
+	res=m.MessageBox(prompt,'GRiNS Editor',win32con.MB_YESNOCANCEL|win32con.MB_ICONQUESTION)
 	if res==win32con.IDYES:return 0
 	elif res==win32con.IDNO:return 1
 	else: return 2
 	
 # Displays a message and requests from the user to select OK or Cancel
-def GetOKCancel(promp,parent=None):
+def GetOKCancel(prompt,parent=None):
 	if parent:m=parent
 	else: m=win32ui
-	res=m.MessageBox(promp,'GRiNS Editor',win32con.MB_OKCANCEL|win32con.MB_ICONQUESTION)
+	res=m.MessageBox(prompt,'GRiNS Editor',win32con.MB_OKCANCEL|win32con.MB_ICONQUESTION)
 	if res==win32con.IDOK:return 0
 	else: return 1
 	
