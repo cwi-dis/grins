@@ -39,12 +39,19 @@ class MACDialog:
 	def __init__(self, title, resid, allitems=[], default=None, cancel=None,
 				cmdbuttons=None):
 		self._itemlist_shown = allitems[:]
+		if not hasattr(self, 'last_geometry'):
+			self.last_geometry = None
 		self._window = DialogWindow(resid, title=title, default=default, 
-			cancel=cancel, cmdbuttons=cmdbuttons)
+			cancel=cancel, cmdbuttons=cmdbuttons, geometry = self.last_geometry)
 		self._dialog = self._window.getdialogwindowdialog()
 		# Override event handler:
 		self._window.set_itemhandler(self.do_itemhit)
 
+	def get_geometry(self):
+		if self._window and self._window.is_showing():
+			self.last_geometry = self._window.getgeometry(mw_globals.UNIT_PXL)
+			return self.last_geometry
+			 
 	def do_itemhit(self, item, event):
 		return 0
 
@@ -166,7 +173,7 @@ class MACDialog:
 
 	def show(self):
 		"""Show the dialog."""
-		self._window.show()
+		self._window.show(geometry=self.last_geometry)
 		self._window.pop()
 		self._window.register(WMEVENTS.WindowExit, self.goaway, ())
 		

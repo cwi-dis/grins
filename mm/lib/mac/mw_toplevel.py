@@ -76,7 +76,9 @@ _y_pixel_per_mm = _y_pixel_per_inch / 25.4
 #
 _screen_top_offset = 26	# XXXX Should be gotten from GetMBarHeight()
 _window_top_offset=21	# XXXX Is this always correct?
-
+_l, _t, _r, _b = Qd.qd.screenBits.bounds
+DEFAULT_WIDTH, DEFAULT_HEIGHT = (_r-_l)/2, (_b-_t)/2
+del _l, _t, _r, _b
 #
 # Event loop parameters
 #
@@ -863,12 +865,14 @@ class _Toplevel(_Event):
 		"""Internal - Open window given xywh, title.
 		Returns window-id"""
 		extraw, extrah, minw, minh = extras
-		if w == 0 and h == 0:
+		if w <= 0 or h <= 0:
 			units = UNIT_PXL
-			w = minw
-			h = minh
-		if w <= 0 and h <= 0:
-			raise 'Illegal window size'
+			w = DEFAULT_WIDTH
+			h = DEFAULT_HEIGHT
+			if w < minw:
+				w = minw
+			if h < minh:
+				h = minh
 		#
 		# First determine x, y position
 		#
