@@ -92,7 +92,15 @@ class ImageLib:
 			print 'warning: win32 image management bug'
 			return
 		rc=(dest_x, dest_y, dest_x+width, dest_y+height)
-		self.lib.ip_crop(img,rcKeep)
+		try:
+			self.lib.ip_crop(img,rcKeep)
+		except:
+			errcodes = []
+			for i in range(self.lib.error_check()):
+				errcodes.append(`self.lib.error_get(i)`)
+			from windowinterface import error
+			from string import join
+			raise error, 'failed to load image, errcode(s) = %s' % join(errcodes, ', ')
 		if self._transpdict.has_key(img):
 			trans_rgb = self._transpdict[img]
 			self.lib.display_transparent_set(img,trans_rgb,1)
