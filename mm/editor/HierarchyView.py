@@ -65,16 +65,17 @@ LEAFBOX = 2
 f_title = windowinterface.findfont('Helvetica', 10)
 f_channel = windowinterface.findfont('Helvetica', 8)
 
-SIZEUNIT = windowinterface.UNIT_MM # units for the following (don't change)
-MINSIZE = settings.get('thumbnail_size') # minimum size for a node
-MAXSIZE = 2 * MINSIZE
-TITLESIZE = f_title.fontheight()*1.2
-CHNAMESIZE = f_channel.fontheight()*1.2
-LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
-HOREXTRASIZE = f_title.strsize('XX')[0]
-ARRSIZE = f_title.strsize('xx')[0]	# width of collapse/expand arrow
-GAPSIZE = 1.0				# size of gap between nodes
-EDGSIZE = 1.0				# size of edges
+class sizes:
+	SIZEUNIT = windowinterface.UNIT_MM # units for the following (don't change)
+	MINSIZE = settings.get('thumbnail_size') # minimum size for a node
+	MAXSIZE = 2 * MINSIZE
+	TITLESIZE = f_title.fontheight()*1.2
+	CHNAMESIZE = f_channel.fontheight()*1.2
+	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
+	HOREXTRASIZE = f_title.strsize('XX')[0]
+	ARRSIZE = f_title.strsize('xx')[0]	# width of collapse/expand arrow
+	GAPSIZE = 1.0						# size of gap between nodes
+	EDGSIZE = 1.0						# size of edges
 
 #
 # We expand a number of hierarchy levels on first open. The number
@@ -90,6 +91,7 @@ class HierarchyView(HierarchyViewDialog):
 	#################################################
 
 	def __init__(self, toplevel):
+		self.sizes = sizes
 		self.commands = [
 			CLOSE_WINDOW(callback = (self.hide, ())),
 
@@ -276,7 +278,7 @@ class HierarchyView(HierarchyViewDialog):
 	#################################################
 
 	def redraw(self, *rest):
-		# RESIZE event.
+		# RESIZE event. (the routine is misnamed)
 		self.toplevel.setwaiting()
 		self.cleanup()
 		self.new_displist = self.window.newdisplaylist(BGCOLOR)
@@ -747,7 +749,8 @@ class HierarchyView(HierarchyViewDialog):
 			node = node.GetParent()
 		self.recalc()
 
-	# Recalculate the set of objects
+	# Recursively position the boxes. Minimum sizes are already set, we may only have
+	# to extend them.
 	def makeboxes(self, list, node, box):
 		t = node.GetType()
 		left, top, right, bottom = box
@@ -818,21 +821,24 @@ class HierarchyView(HierarchyViewDialog):
 		list[listindex] = node, INNERBOX, box
 		return box
 
+	# Intermedeate step in the recomputation of boxes. At this point the minimum
+	# sizes are already set. We only have to compute gapsizes (based on current w/h),
+	# call makeboxes to position the boxes and create the objects.
 	def recalcboxes(self):
 		self.focusobj = None
 		prevfocusobj = None
 		rootobj = None
-		rw, rh = self.window.getcanvassize(SIZEUNIT)
+		rw, rh = self.window.getcanvassize(self.sizes.SIZEUNIT)
 		self.canvassize = rw, rh
-		self.titleheight = float(TITLESIZE) / rh
-		self.chnameheight = float(CHNAMESIZE) / rh
-		self.horedge = float(EDGSIZE) / rw
-		self.veredge = float(EDGSIZE) / rh
-		self.horgap = float(GAPSIZE) / rw
-		self.vergap = float(GAPSIZE) / rh
-		self.horsize = float(MINSIZE + HOREXTRASIZE) / rw
-		self.versize = float(MINSIZE + LABSIZE) / rh
-		self.arrsize = float(ARRSIZE) / rw
+		self.titleheight = float(self.sizes.TITLESIZE) / rh
+		self.chnameheight = float(self.sizes.CHNAMESIZE) / rh
+		self.horedge = float(self.sizes.EDGSIZE) / rw
+		self.veredge = float(self.sizes.EDGSIZE) / rh
+		self.horgap = float(self.sizes.GAPSIZE) / rw
+		self.vergap = float(self.sizes.GAPSIZE) / rh
+		self.horsize = float(self.sizes.MINSIZE + self.sizes.HOREXTRASIZE) / rw
+		self.versize = float(self.sizes.MINSIZE + self.sizes.LABSIZE) / rh
+		self.arrsize = float(self.sizes.ARRSIZE) / rw
 		list = []
 		self.makeboxes(list, self.root, (0, 0, 1, 1))
 		for item in list:
@@ -858,17 +864,21 @@ class HierarchyView(HierarchyViewDialog):
 		x1,y1,x2,y2 = self.focusobj.box
 		self.window.scrollvisible((x1,y1,x2-x1,y2-y1))
 
+	# First step in box recomputation after an edit (or changing expand/collapse, etc):
+	# computes minimum sizes of all nodes, and does either a redraw (if everything still
+	# fits in the window) or a setcanvassize (which results in a resize, and hence
+	# a redraw)
 	def recalc(self):
 		window = self.window
 		self.cleanup()
 		if root_expanded:
 			expandnode(self.root) # root always expanded
-		width, height, begin = sizeboxes(self.root, self.timescale)
+		width, height, begin = self.sizeboxes(self.root, self.timescale)
 		if DISPLAY_VERTICAL:
 			height = height + begin
 		else:
 			width = width + begin
-		cwidth, cheight = window.getcanvassize(SIZEUNIT)
+		cwidth, cheight = window.getcanvassize(self.sizes.SIZEUNIT)
 		mwidth = mheight = 0 # until we have a way to get the min. size
 		if not hierarchy_minimum_sizes and \
 		   (width <= cwidth <= width * 1.1 or width < cwidth <= mwidth) and \
@@ -877,9 +887,11 @@ class HierarchyView(HierarchyViewDialog):
 			self.redraw()
 		else:
 			# this call causes a ResizeWindow event
-			window.setcanvassize((SIZEUNIT, width, height))
+			window.setcanvassize((self.sizes.SIZEUNIT, width, height))
 
-	# Draw the window, assuming the object shapes are all right
+	# Draw the window, assuming the object shapes are all right. This is the final
+	# step in the redraw code (and the only step needed if we only enable
+	# thumbnails, or do a similar action that does not affect box coordinates).
 	def draw(self):
 		displist = self.new_displist
 		dummy = displist.usefont(f_title)
@@ -999,70 +1011,70 @@ class HierarchyView(HierarchyViewDialog):
 		if self.focusobj: self.focusobj.pasteundercall()
 
 
-# Recursive procedure to calculate geometry of boxes.
-def sizeboxes(node, structure_duration):
-	ntype = node.GetType()
-	minsize = MINSIZE
-	if structure_duration:
-		begin = MMAttrdefs.getattr(node, 'begin') * settings.get('time_scale_factor')
-	else:
-		begin = 0
-	if structure_duration and ntype in MMNode.leaftypes:
-		import Duration, math
-		dur = Duration.get(node) * settings.get('time_scale_factor')
-		if dur < 0:
-			dur = 0
-		elif dur > 1000:
-			dur = 1000
-		minsize = dur
-	if DISPLAY_VERTICAL:
-		minwidth = MINSIZE
-		minheight = minsize
-	else:
-		minwidth = minsize
-		minheight = MINSIZE
-	if structure_duration:
-		pass
-	elif structure_name_size:
-		name = MMAttrdefs.getattr(node, 'name')
-		namewidth = (name and f_title.strsize(name)[0]) or 0
-		if ntype in MMNode.interiortypes or \
-		   (ntype == 'ext' and node.GetChannelType() == 'RealPix'):
-			namewidth = namewidth + ARRSIZE
-		minwidth = max(min(MAXSIZE, namewidth), minwidth) + HOREXTRASIZE
-	else:
-		minwidth = minwidth + HOREXTRASIZE
-	children = node.GetChildren()
-	if not hasattr(node, 'expanded') or not children:
-		node.boxsize = minwidth, minheight + LABSIZE, begin
-		return node.boxsize
-	nchildren = len(children)
-	width = height = 0
-	horizontal = (ntype in ('par', 'alt')) == DISPLAY_VERTICAL
-	for child in children:
-		w, h, b = sizeboxes(child, structure_duration)
-		if horizontal:
-			# children laid out horizontally
-			if h > height:
-				height = h
-			width = width + w + GAPSIZE
+	# Recursive procedure to calculate geometry of boxes.
+	def sizeboxes(self, node, structure_duration):
+		# Helper for first step in size recomputation: compute minimum sizes of
+		# all node boxes.
+		ntype = node.GetType()
+		minsize = self.sizes.MINSIZE
+		if structure_duration:
+			begin = MMAttrdefs.getattr(node, 'begin') * settings.get('time_scale_factor')
 		else:
-			# children laid out vertically
-			if w > width:
-				width = w
-			height = height + h + GAPSIZE
+			begin = 0
+		if structure_duration and ntype in MMNode.leaftypes:
+			import Duration, math
+			dur = Duration.get(node) * settings.get('time_scale_factor')
+			if dur < 0:
+				dur = 0
+			elif dur > 1000:
+				dur = 1000
+			minsize = dur
 		if DISPLAY_VERTICAL:
-			height = height + b
+			minwidth = self.sizes.MINSIZE
+			minheight = minsize
 		else:
-			width = width + b
-	if horizontal:
-		width = width - GAPSIZE
-	else:
-		height = height - GAPSIZE
-	width = max(width + 2 * EDGSIZE, minwidth)
-	height = height + EDGSIZE + LABSIZE
-	node.boxsize = width, height, begin
-	return node.boxsize
+			minwidth = minsize
+			minheight = self.sizes.MINSIZE
+		if structure_name_size:
+			name = MMAttrdefs.getattr(node, 'name')
+			namewidth = (name and f_title.strsize(name)[0]) or 0
+			if ntype in MMNode.interiortypes or \
+			   (ntype == 'ext' and node.GetChannelType() == 'RealPix'):
+				namewidth = namewidth + self.sizes.ARRSIZE
+			minwidth = max(min(self.sizes.MAXSIZE, namewidth), minwidth) + self.sizes.HOREXTRASIZE
+		else:
+			minwidth = minwidth + self.sizes.HOREXTRASIZE
+		children = node.GetChildren()
+		if not hasattr(node, 'expanded') or not children:
+			node.boxsize = minwidth, minheight + self.sizes.LABSIZE, begin
+			return node.boxsize
+		nchildren = len(children)
+		width = height = 0
+		horizontal = (ntype in ('par', 'alt')) == DISPLAY_VERTICAL
+		for child in children:
+			w, h, b = self.sizeboxes(child, structure_duration)
+			if horizontal:
+				# children laid out horizontally
+				if h > height:
+					height = h
+				width = width + w + self.sizes.GAPSIZE
+			else:
+				# children laid out vertically
+				if w > width:
+					width = w
+				height = height + h + self.sizes.GAPSIZE
+			if DISPLAY_VERTICAL:
+				height = height + b
+			else:
+				width = width + b
+		if horizontal:
+			width = width - self.sizes.GAPSIZE
+		else:
+			height = height - self.sizes.GAPSIZE
+		width = max(width + 2 * self.sizes.EDGSIZE, minwidth)
+		height = height + self.sizes.EDGSIZE + self.sizes.LABSIZE
+		node.boxsize = width, height, begin
+		return node.boxsize
 
 def do_expand(node, expand, nlevels=None):
 	if nlevels == 0:
