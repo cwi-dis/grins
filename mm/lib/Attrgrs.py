@@ -146,13 +146,19 @@ attrgrs=(
 		'imgcropanchor',
 		]},
 
-        {'name':'fadeout',
-         'title':'Fadeout',
-         'attrs':['fadeout',
-                  'fadeoutcolor',
-                  'fadeouttime',
-                  'fadeoutduration',
-                  ]},
+	{'name':'fadeout',
+	'title':'Fadeout',
+	'attrs':['fadeout',
+		'fadeoutcolor',
+		'fadeouttime',
+		'fadeoutduration',
+		]},
+
+	{'name':'wipe',
+	'title':'Wipe',
+	'attrs':['wipetype',
+		'direction',
+		]},
 
 	)
 
