@@ -44,6 +44,9 @@ unregister=toplevel.unregister
 genericwnd=toplevel.genericwnd
 textwindow=toplevel.textwindow
 
+htmlwindow=AppToplevel.htmlwindow
+shell_execute=AppToplevel.shell_execute
+
 # SDI-MDI Model Support
 createmainwnd=toplevel.createmainwnd
 newdocument=toplevel.newdocument
