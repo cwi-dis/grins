@@ -1117,7 +1117,7 @@ class NodeBox(GO):
 
 	def unlock(self):
 		if self.locked:
-			self.mother.initdisplay()
+			self.mother.init_display()
 			self.locked = 0
 			self.mother.lockednode = None
 			self.drawfocus()
