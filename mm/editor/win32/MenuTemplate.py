@@ -206,7 +206,6 @@ MENUBAR=(
 
 	('&Tools', (
 		(FLAG_ALL, ENTRY, 'Check bandwidth &usage', None, COMPUTE_BANDWIDTH),
-#		(FLAG_PRO, TOGGLE, '&Bandwidth usage strip', None, TOGGLE_BWSTRIP),
 		(FLAG_ALL, SEP,),
 		(FLAG_BOSTON, ENTRY, 'RealPix to S&MIL 2.0', None, RPCONVERT),
 		(FLAG_PRO, ENTRY, 'SMIL 2.0 to RealPi&x', None, CONVERTRP),
@@ -257,7 +256,8 @@ MENUBAR=(
 		((features.H_THUMBNAILS,), TOGGLE, '&Image thumbnails', None, THUMBNAIL),
 		((features.H_PLAYABLE,), TOGGLE, 'Show &Playable', None, PLAYABLE),
 ##		(FLAG_ALL, TOGGLE, 'Sho&w Time in Structure', None, CORRECTLOCALTIMESCALE),
-		(FLAG_ALL, TOGGLE, 'Show &Bandwidth Usage', None, TOGGLE_BWSTRIP),
+		(FLAG_ALL, ENTRY, 'Show Timeline/Bandwidth Usage', None, TOGGLE_TIMESCALE),
+##		(FLAG_ALL, TOGGLE, 'Show &Bandwidth Usage', None, TOGGLE_BWSTRIP),
 		(FLAG_ALL, TOGGLE, 'Show Animation &Path', None, SHOW_ANIMATIONPATH),
 ##		(FLAG_ALL, CASCADE, 'Sho&w Time in Structure', (
 ##			(FLAG_ALL, TOGGLE, '&Whole Document, Adaptive', None, TIMESCALE),
