@@ -9,9 +9,6 @@ from Hlinks import *
 from AnchorDefs import *
 from usercmd import *
 
-# an empty document
-EMPTY = "(seq '1' ((channellist) (hyperlinks)))"
-
 from TopLevelDialog import TopLevelDialog
 
 class TopLevel(TopLevelDialog):
@@ -55,12 +52,17 @@ class TopLevel(TopLevelDialog):
 		   hasattr(windowinterface, 'textwindow'):
 			self.commandlist.append(
 				SOURCE(callback = (self.source_callback, ())))
-			import settings
-			if settings.get('showsource'):
-				self.source_callback()
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
+
+	def show(self):
+		TopLevelDialog.show(self)
+		if hasattr(self.root, 'source') and \
+		   hasattr(windowinterface, 'textwindow'):
+			import settings
+			if settings.get('showsource'):
+				self.source_callback()
 
 	def destroy(self):
 		if self in self.main.tops:
