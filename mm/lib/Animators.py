@@ -1755,11 +1755,17 @@ class AnimateElementParser:
 			self.__attrtype = 'position'
 			rc = None
 			if self.__target._type == 'mmnode':
-				rc = self.__target.getPxGeom()
+				try:
+					rc = self.__target.getPxGeom()
+				except:
+					rc = None
 				self.__mmtarget = self.__target
 			elif self.__target._type == 'region':
 				ch = self.__target._region
-				rc = ch.getPxGeom()
+				try:
+					rc = ch.getPxGeom()
+				except:
+					rc = None
 				self.__mmtarget = ch
 			if rc:
 				x, y, w, h = rc
@@ -1798,10 +1804,16 @@ class AnimateElementParser:
 			self.__attrtype = 'int'
 			rc = None
 			if self.__target._type == 'mmnode':
-				rc = self.__target.getPxGeom()
+				try:
+					rc = self.__target.getPxGeom()
+				except:
+					rc = None
 			elif self.__target._type == 'region':
 				ch = self.__target._region
-				rc = ch.getPxGeom()
+				try:
+					rc = ch.getPxGeom()
+				except:
+					rc = None
 			if rc:
 				if attr == 'left':
 					v = rc[0]
@@ -2031,11 +2043,14 @@ class AnimateElementParser:
 	# copy from SMILTreeRead
 	def __convert_color(self, val):
 		from colors import colors
+		from colorsex import colorsx11
 		from SMILTreeRead import color
 		val = string.lower(val)
 		val = string.strip(val)
 		if colors.has_key(val):
 			return colors[val]
+		elif colorsx11.has_key(val):
+			return colorsx11[val]
 		if val in ('transparent', 'inherit'):
 			return 0, 0, 0 # XXX: val
 		res = color.match(val)
