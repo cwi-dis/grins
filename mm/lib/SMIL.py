@@ -126,7 +126,6 @@ class SMIL:
 			GRiNSns+' ' 'system-screen-depth':None,
 			GRiNSns+' ' 'system-screen-size':None,
 			GRiNSns+' ' 'title':None,
-			GRiNSns+' ' 'bag-index':None,
 			__u_group:None,
 			__layout:None,
 			GRiNSns+' ' 'comment':None,

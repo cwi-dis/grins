@@ -346,9 +346,9 @@ smil_attrs=[
 	("system-required", lambda writer, node:getrawcmifattr(writer, node, "system_required")),
 	("system-screen-size", getscreensize),
 	("system-screen-depth", lambda writer, node:getrawcmifattr(writer, node, "system_screen_depth")),
-	("%s:bag-index" % NSprefix, getbagindex),
-	("%s:u-group" % NSprefix, getugroup),
-	("%s:layout" % NSprefix, getlayout),
+	("bag-index", getbagindex),
+	("u-group", getugroup),
+	("layout", getlayout),
 ]
 cmif_node_attrs_ignore = [
 	'arm_duration', 'styledict', 'name', 'bag_index', 'anchorlist',
@@ -853,11 +853,18 @@ class SMILWriter(SMIL):
 				value = imm_href
 			else:
 				value = func(self, x)
+			# gname is the attribute name as recorded in attributes
+			# name is the attribute name as recorded in SMIL file
+			gname = '%s %s' % (GRiNSns, name)
+			if attributes.has_key(gname):
+				name = '%s:%s' % (NSprefix, name)
+			else:
+				gname = name
 			# only write attributes that have a value and are
 			# legal for the type of node
 			# other attributes are caught below
-			if value and attributes.has_key(name) and \
-			   value != attributes[name]:
+			if value and attributes.has_key(gname) and \
+			   value != attributes[gname]:
 				attrlist.append((name, value))
 		for key, val in x.GetAttrDict().items():
 			if key[-7:] != '_winpos' and \
