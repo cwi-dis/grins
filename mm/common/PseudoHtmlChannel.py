@@ -6,13 +6,7 @@ from Channel import ChannelWindow
 from AnchorDefs import *
 from debug import debug
 import string
-
-try:
-	from urlopen import urlopen
-except ImportError:
-	print 'HtmlChannel: warning: no url support!'
-	def urlopen(file):
-		return open(file, 'r')
+from urllib import urlopen
 
 class HtmlChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + ['fgcolor', 'font', \
