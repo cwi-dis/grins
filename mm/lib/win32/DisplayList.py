@@ -217,18 +217,18 @@ class DisplayList:
 			l, t, w, h = entry[2]
 			r, b = l + w, t + h
 			# l, r, t, b are the corners
-			l3 = l+3
-			t3 = t + 3
-			r3 = r - 3
-			b3 = b - 3
+			l1 = l + 1
+			t1 = t + 1
+			r1 = r - 1
+			b1 = b - 1
 			# draw left side
-			FillPolygon(dc, [(l,t), (l3,t3), (l3,b3), (l,b)], cl)
+			FillPolygon(dc, [(l,t), (l1,t1), (l1,b1), (l,b)], cl)
 			# draw top side
-			FillPolygon(dc, [(l,t), (r,t), (r3,t3), (l3,t3)], ct)
+			FillPolygon(dc, [(l,t), (r,t), (r1,t1), (l1,t1)], ct)
 			# draw right side
-			FillPolygon(dc, [(r3,t3), (r,t), (r,b), (r3,b3)], cr)
+			FillPolygon(dc, [(r1,t1), (r,t), (r,b), (r1,b1)], cr)
 			# draw bottom side
-			FillPolygon(dc, [(l3,b3), (r3,b3), (r,b), (l,b)], cb)
+			FillPolygon(dc, [(l1,b1), (r1,b1), (r,b), (l,b)], cb)
 ##			l = l+1
 ##			t = t+1
 ##			r = r-1
