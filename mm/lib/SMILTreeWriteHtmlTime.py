@@ -16,33 +16,53 @@ def WriteFileAsHtmlTime(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles =
 
 
 class SMILHtmlTimeWriter(SMILWriter):
-	def writeAsHtmlTime(self):
-		write = self.fp.write
-		writetag = SMILWriter.writetag
+	def __init__(self, node, fp, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0,
+		     evallicense = 0, tmpcopy = 0, progress = None,
+		     convertURLs = 0):
+		
+		SMILWriter.__init__(self, node, fp, filename, cleanSMIL, grinsExt, copyFiles,
+		     evallicense, tmpcopy, progress,
+		     convertURLs )
+		ctx = node.GetContext()
+		self.__title = ctx.gettitle()
 		self._viewportClass = ''
 
+	def writeAsHtmlTime(self):
+		write = self.fp.write
+		import version
+
+		write('<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\">\n')
 		write('<html xmlns:t =\"urn:schemas-microsoft-com:time\">\n')
 
-		writetag(self,'head')
+		self.basewritetag('head')
+		self.push()
+		
+		if self.__title:
+			self.basewritetag('meta', [('name', 'title'),
+					       ('content', self.__title)])
+		self.basewritetag('meta', [('name', 'generator'),
+				       ('content','GRiNS %s'%version.version)])
+
+		self.basewritetag('style', [('type', 'text/css'),])
 		self.push()
 
-		writetag(self,'style')
-		self.push()
-
-		write('.time { behavior: url(#default#time2) }\n')
+		# Internet explorer style conventions for HTML+TIME support
+		write('.time {behavior: url(#default#time2);}\n')
+		write('t\:* {behavior: url(#default#time2);}\n')
+		
 		self.writelayout()
 		
-		self.pop()
+		self.pop() # </style>
 
-		write('<?IMPORT namespace=\"t\" implementation=\"#default#time2\">\n')
-
-		self.pop()
-
-		writetag(self,'body')
+		#write('<?IMPORT namespace=\"t\" implementation=\"#default#time2\">\n')
+		
+		self.pop() # </head>
+			
+		self.basewritetag('body')
 		self.push()
 
 		if self._viewportClass:
-			SMILWriter.writetag(self, "div", [('class', self._viewportClass),])
+			self.basewritetag('div', [('class', self._viewportClass),])
 			self.push()
 
 		self.writenode(self.root, root = 1)
@@ -50,24 +70,29 @@ class SMILHtmlTimeWriter(SMILWriter):
 		if self._viewportClass:
 			self.pop()
 
-		self.pop()
+		self.pop() # </body>
+
 		write('</html>\n')
 
 		self.close()
 
 
+	def basewritetag(self, tag, attrs = None):
+		SMILWriter.writetag(self, tag, attrs)
+
 	def writetag(self, tag, attrs = None):
 		# layout
 		if tag == 'layout': return
 		elif tag == 'viewport':
-			attrs.append(('left','40'))
-			attrs.append(('top','40'))
+			attrs.append(('left','20'))
+			attrs.append(('top','20'))
+			#attrs.append(('border', 'solid gray'))
 			self._viewportClass = self.writeRegionClass(attrs)
-			print 'viewportClass', self._viewportClass
 			return	
 		elif tag == 'region':
 			self.writeRegionClass(attrs)
 			return;
+
 
 		# containers
 		if tag in ('seq', 'par', 'excl', 'switch'):
@@ -110,7 +135,6 @@ class SMILHtmlTimeWriter(SMILWriter):
 		SMILWriter.writetag(self, tag, attrs)
 		self.pop()
 
-
 	def writelayout(self):
 		"""Write the layout section"""
 		attrlist = []
@@ -119,37 +143,23 @@ class SMILHtmlTimeWriter(SMILWriter):
 			attrlist = []
 			if ch['type'] == 'layout':
 				attrlist.append(('id', self.ch2name[ch]))
+			
 			title = ch.get('title')
 			if title:
 				attrlist.append(('title', title))
 			elif self.ch2name[ch] != ch.name:
 				attrlist.append(('title', ch.name))
+			
 			if ch.has_key('bgcolor'):
 				bgcolor = ch['bgcolor']
-			elif features.compatibility == features.G2:
-				bgcolor = 0,0,0
 			else:
 				bgcolor = 255,255,255
 			if colors.rcolors.has_key(bgcolor):
 				bgcolor = colors.rcolors[bgcolor]
 			else:
 				bgcolor = '#%02x%02x%02x' % bgcolor
-			if self.smilboston:
-				attrlist.append(('backgroundColor', bgcolor))
-			else:
-				attrlist.append(('background-color', bgcolor))
-				
-			if self.smilboston:
-				# write only not default value
-				if ch.has_key('open'):
-					val = ch['open']
-					if val != 'always':
-						attrlist.append(('open', val))
-				if ch.has_key('close'):
-					val = ch['close']
-					if val != 'never':
-						attrlist.append(('close', val))
-		
+			attrlist.append(('background', bgcolor))
+						
 			if ch.has_key('winsize'):
 				units = ch.get('units', 0)
 				w, h = ch['winsize']
@@ -166,11 +176,8 @@ class SMILHtmlTimeWriter(SMILWriter):
 					attrlist.append(('width', '%d' % int(w + .5)))
 					attrlist.append(('height', '%d' % int(h + .5)))
 
-			if self.smilboston:
-				for key, val in ch.items():
-					if not cmif_chan_attrs_ignore.has_key(key):
-						attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
-				self.writetag('viewport', attrlist)
+			self.writetag('viewport', attrlist)
+
 			for ch in self.top_levels:
 				self.writeregion(ch)
 
