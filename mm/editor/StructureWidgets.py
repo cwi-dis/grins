@@ -2316,7 +2316,7 @@ class IconBox(MMWidgetDecoration):
 		if arrowto:
 			icon.add_arrow(arrowto)
 		i = 0
-		for n in ('linksrc','linkdst','beginevent','causeevent','endevent','error'):
+		for n in ('error', 'linkdst', 'beginevent', 'linksrc','causeevent','endevent'):
 			if iconname == n:
 				self._iconlist.insert(i, icon)
 				break
