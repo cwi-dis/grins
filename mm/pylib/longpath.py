@@ -40,7 +40,8 @@ def pathIsUNC(pathname):
 		return 0
 
 
-if __name__ == '__main__':
-	while 1:
-		x = raw_input()
-		print short2longpath(x)
+if __debug__:
+	if __name__ == '__main__':
+		while 1:
+			x = raw_input()
+			print short2longpath(x)
