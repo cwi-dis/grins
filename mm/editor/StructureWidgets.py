@@ -90,7 +90,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		Widgets.Widget.__init__(self, mother)
 		self.node = node			   # : MMNode
 		self.name = MMAttrdefs.getattr(node, 'name')
-		node.set_infoicon = self.set_infoicon
 		self.node.views['struct_view'] = self
 		self.old_pos = None	# used for recalc optimisations.
 		self.dont_draw_children = 0
@@ -113,9 +112,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			#      don't move things around anymore.
 			self.playicon = Icon(self, self.mother)
 			self.playicon.set_properties(selectable=0, callbackable=0)
-			if self.isvisible(): # terribily inefficient
-				node.set_armedmode = self.set_armedmode
-			self.set_armedmode(node.armedmode, redraw = 0)
 		# these 5 are never set in this class but are provided for the benefit of subclasses
 		# this means we also don't destroy these
 		self.collapsebutton = None
@@ -133,11 +129,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 	def destroy(self):
 		# Prevent cyclic dependancies.
+		node = self.node
 		if self.playicon is not None:
 			self.playicon.destroy()
 			self.playicon = None
-			self.node.set_armedmode = None
-			del self.node.set_armedmode
 		self.cause_event_icon = None
 		self.infoicon = None
 		if self.iconbox is not None:
@@ -148,9 +143,13 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.timeline = None
 		if self.timemapper is not None:
 			self.timemapper = None
-		if self.node is not None:
-			del self.node.views['struct_view']
-			del self.node.set_infoicon
+		if node is not None:
+			node.views['struct_view'] = None
+			del node.views['struct_view']
+			node.set_armedmode = None
+			del node.set_armedmode
+			node.set_infoicon = None
+			del node.set_infoicon
 			self.node = None
 		Widgets.Widget.destroy(self)
 
@@ -206,7 +205,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 	def uncollapse_all(self):
 		# Placeholder for a recursive function.
-		return					  
+		return
 
 	def collapse_all(self):		  # Is this doable using a higher-order function?
 		return
@@ -361,8 +360,18 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		# return the minimum size of this node, in pixels.
 		# Called to work out the size of the canvas.
 		xsize = MINSIZE
+		node = self.node
 		if self.dropbox is not None:
 			xsize = xsize  + GAPSIZE + self.dropbox.recalc_minsize()[0]
+		if node.infoicon and self.infoicon is None:
+			self.infoicon = self.iconbox.add_icon(node.infoicon, callback = self.show_mesg)
+		elif not node.infoicon and self.infoicon is not None:
+			self.iconbox.del_icon(self.infoicon)
+			self.infoicon.destroy()
+			self.infoicon = None
+		node.set_infoicon = self.set_infoicon
+		node.set_armedmode = self.set_armedmode
+		self.set_armedmode(node.armedmode, redraw = 0)
 		ixsize = self.iconbox.recalc_minsize()[0]
 		if self.collapsebutton is not None:
 			ixsize = ixsize + self.collapsebutton.recalc_minsize()[0]
@@ -457,7 +466,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		l,r,t = self.need_draghandles
 		displist.drawfbox((0,0,0), (l,t,DRAGHANDLESIZE,DRAGHANDLESIZE))
 		displist.drawfbox((0,0,0), (r-DRAGHANDLESIZE,t,DRAGHANDLESIZE,DRAGHANDLESIZE))
-		
+
 	# used by MediaWidget and CommentWidget
 	def do_draw_image(self, image_filename, (x,y,w,h), displist):
 		if not image_filename or w <= 0 or h <= 0:
@@ -498,7 +507,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 						fit = 'icon')
 					displist.drawbox(box)
 
-	#   
+	#
 	# These a fillers to make this behave like the old 'Object' class.
 	#
 	def select(self):
@@ -561,15 +570,14 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if self.cause_event_icon:
 			self.iconbox.del_icon(self.cause_event_icon)
 		self.cause_event_icon = self.iconbox.add_icon('danglingevent')
-		
+
 	def clear_dangling_event(self):
 		# XXXX Note that this is not really correct: if there was a causeevent icon before
 		# we installed the dangling icon we now lose it.
 		if self.cause_event_icon:
 			self.iconbox.del_icon(self.cause_event_icon)
 		self.cause_event_icon = None
-		
-		
+
 	def getlinkicons(self):
 		# Returns the icon to show for incoming and outgiong hyperlinks.
 		links = self.node.context.hyperlinks
@@ -782,6 +790,8 @@ class StructureObjWidget(MMNodeWidget):
 	def remove_set_armedmode(self):
 		self.node.set_armedmode = None
 		del self.node.set_armedmode
+		self.node.set_infoicon = None
+		del self.node.set_infoicon
 		if not self.iscollapsed():
 			for c in self.children:
 				c.remove_set_armedmode()
@@ -803,6 +813,7 @@ class StructureObjWidget(MMNodeWidget):
 		if self.playicon is not None:
 			self.node.set_armedmode = self.set_armedmode
 			self.set_armedmode(self.node.armedmode, redraw = 0)
+			self.node.set_infoicon = self.set_infoicon
 		if not self.iscollapsed():
 			for c in self.children:
 				c.add_set_armedmode()
@@ -1592,7 +1603,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 			else:
 				thisnode_free_height = int((float(h)/(min_height-overhead_height)) * free_height)
 			# Give the node the free width.
-			b = t + h + thisnode_free_height 
+			b = t + h + thisnode_free_height
 			# r = l + w # Wrap the node to it's minimum size.
 			this_l = l
 			this_r = r
@@ -1735,11 +1746,14 @@ class MediaWidget(MMNodeWidget):
 	def remove_set_armedmode(self):
 		self.node.set_armedmode = None
 		del self.node.set_armedmode
+		self.node.set_infoicon = None
+		del self.node.set_infoicon
 
 	def add_set_armedmode(self):
 		if self.playicon is not None:
 			self.node.set_armedmode = self.set_armedmode
 			self.set_armedmode(self.node.armedmode, redraw = 0)
+			self.node.set_infoicon = self.set_infoicon
 
 	def is_hit(self, pos):
 		hit = (self.transition_in is not None and self.transition_in.is_hit(pos)) or \
@@ -1936,7 +1950,7 @@ class MediaWidget(MMNodeWidget):
 			return None
 
 	def get_clicked_obj_at(self, pos):
-		# Returns any object which can be clicked(). 
+		# Returns any object which can be clicked().
 		if self.is_hit(pos):
 			if self.transition_in is not None and self.transition_in.is_hit(pos):
 				return self.transition_in
@@ -1991,7 +2005,7 @@ class CommentWidget(MMNodeWidget):
 		self.__draw(displist)
 
 	def __draw(self, displist):
-		x,y,w,h = self.get_box()	 
+		x,y,w,h = self.get_box()
 		y = y + TITLESIZE
 		h = h - TITLESIZE
 
@@ -2013,7 +2027,7 @@ class CommentWidget(MMNodeWidget):
 			return None
 
 	def get_clicked_obj_at(self, pos):
-		# Returns any object which can be clicked(). 
+		# Returns any object which can be clicked().
 		if self.is_hit(pos):
 			if self.iconbox.is_hit(pos):
 				return self.iconbox.get_clicked_obj_at(pos)
@@ -2210,7 +2224,7 @@ class TimelineWidget(MMWidgetDecoration):
 			midtick_bot = (tick_bot+longtick_bot)/2
 			endtick_top = line_y - (h/3)
 			endtick_bot = longtick_bot
-			label_top = y 
+			label_top = y
 			label_bot = y + (h/2)
 		else:
 			line_y = y + (h/2)
@@ -2362,12 +2376,12 @@ class IconBox(MMWidgetDecoration):
 		if arrowto:
 			icon.add_arrow(arrowto)
 		i = 0
-		for n in ('error', 
-			      'danglingevent', 'danglinganchor',
-			      'linkdst', 'beginevent',
-			      'linksrc','causeevent',
-			      'endevent',  # Not sure where this one should go....
-			      ):
+		for n in ('error',
+			  'danglingevent', 'danglinganchor',
+			  'linkdst', 'beginevent',
+			  'linksrc','causeevent',
+			  'endevent',  # Not sure where this one should go....
+			  ):
 			if iconname == n:
 				self._iconlist.insert(i, icon)
 				break
@@ -2378,7 +2392,7 @@ class IconBox(MMWidgetDecoration):
 			self._iconlist.append(icon)
 		self.recalc_minsize()
 		return icon
-		
+
 	def del_icon(self, icon):
 		self._iconlist.remove(icon)
 		self.recalc_minsize()
@@ -2441,7 +2455,7 @@ class Icon(MMWidgetDecoration):
 		self.arrowto = []	# a list of other MMWidgets.
 		self.icon = ""
 		self.contextmenu = None
-		self.initattr = None	# this is the attribute that gets selected in the 
+		self.initattr = None	# this is the attribute that gets selected in the
 
 		self.set_properties()
 
@@ -2596,7 +2610,7 @@ class ImageBoxWidget(MMWidgetDecoration):
 		return self.boxsize
 
 	def draw(self, displist):
-		x,y,w,h = self.get_box()	 
+		x,y,w,h = self.get_box()
 
 		# Draw the image.
 		image_filename = self._get_image_filename()
@@ -2604,7 +2618,7 @@ class ImageBoxWidget(MMWidgetDecoration):
 			try:
 				sx = DROPAREASIZE
 				sy = sx
-				cx = x + w/2 # center 
+				cx = x + w/2 # center
 				cy = y + h/2
 				box = displist.display_image_from_file(
 					image_filename,
@@ -2635,7 +2649,7 @@ class DropBoxWidget(ImageBoxWidget):
 class ChannelBoxWidget(ImageBoxWidget):
 	# This is the box at the start of a Sequence which represents which channel it 'owns'
 	def __init__(self, parent, node, mother):
-		Widgets.Widget.__init__(self, mother) 
+		Widgets.Widget.__init__(self, mother)
 		self.node = node
 		self.parent = parent
 
