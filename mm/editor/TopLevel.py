@@ -187,7 +187,8 @@ class TopLevel(ViewDialog):
 				filename = file
 		try:
 			top = TopLevel(self.main, filename, 0)
-		except (IOError, MMExc.MTypeError, MMExc.MSyntaxError), msg:
+		except:
+			msg = sys.exc_value
 			if type(msg) is type(self):
 				if hasattr(msg, 'strerror'):
 					msg = msg.strerror
