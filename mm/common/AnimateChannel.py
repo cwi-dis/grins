@@ -37,6 +37,8 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__fiber_id=0
 		self.__playdone = 0
 		self.__animator = None
+		self.__targetchan = None
+		self.__isattrsupported = 0
 
 	def __repr__(self):
 		return '<AnimateChannel instance, name=' + `self._name` + '>'
@@ -54,18 +56,24 @@ class AnimateChannel(Channel.ChannelAsync):
 	def do_arm(self, node, same=0):
 		print 'AnimateChannel.do_arm',node.attrdict
 		print 'target node:',node.targetnode.attrdict
-		
 		parser = Animators.AnimateElementParser(node, node.targetnode)
 		self.__animator = parser.getAnimator()
 		if self.__animator:
 			print 'animate attr start value:',self.__animator.getValue(0)
-		
+
+		targetchname = node.targetnode.attrdict['channel']
+		self.__targetchan = self._player.getchannelbyname(targetchname)
+		if self.__targetchan and self.__animator:
+			self.__isattrsupported = self.__targetchan.canupdateattr(node.targetnode, self.__animator.getAttrName())
+			if not self.__isattrsupported:
+				print 'animation of attribute is not supported, continue for now'
+				self.__isattrsupported = 1
 		return 1
 
 	def do_play(self, node):
 		print 'AnimateChannel.do_play'
 		
-		if not self.__animator:
+		if not self.__animator or not self.__targetchan or not self.__isattrsupported:
 			# arming failed, so don't even try playing
 			self.playdone(0)
 			return
@@ -96,9 +104,16 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__register_for_timeslices()
 
 	def __stopAnimate(self):
-		if self.__animator:
-			print 'stop animation, restoring dom value', self.__animator.getDOMValue()
 		self.__unregister_for_timeslices()
+		if not self.__animating or not self.__animator:
+			return
+		# restore dom value
+		node = self.__animating
+		attr = self.__animator.getAttrName()
+		val = self.__animator.getDOMValue()
+		if self.__targetchan:
+			self.__targetchan.updateattr(node, attr, val)
+		print 'stop animation, restoring dom value', self.__animator.getDOMValue()
 
 	def __pauseAnimate(self, paused):
 		if self.__animating:
@@ -108,9 +123,13 @@ class AnimateChannel(Channel.ChannelAsync):
 				self.__register_for_timeslices()
 
 	def __animate(self):
-		# animate target node.attribute
-		# taking into account additive, accumulate attrs
 		dt = time.time()-self.__start
+		node = self.__animating
+		attr = self.__animator.getAttrName()
+		val = self.__animator.getValue(dt)
+		if node and self.__targetchan:
+			self.__targetchan.updateattr(node, attr, val)
+
 		msg = 'animating %s =' % self.__animator.getAttrName()
 		print msg, self.__animator.getValue(dt)
 
