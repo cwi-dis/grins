@@ -970,12 +970,19 @@ class LayoutView2(LayoutViewDialog2):
 			return
 
 		# get the node the most on the left
-		referenceValue = None
-		for node in self.currentSelectedNodeList:
-			l,t,w,h = node.getPxGeom()
-			if referenceValue == None or l < referenceValue:
-				referenceNode = node
-				referenceValue = l
+#		referenceValue = None
+#		for node in self.currentSelectedNodeList:
+#			l,t,w,h = node.getPxGeom()
+#			if referenceValue == None or l < referenceValue:
+#				referenceNode = node
+#				referenceValue = l
+
+		# the reference node is the last selected
+		referenceNode = self.currentSelectedNodeList[-1]
+
+		# determinate the reference value		
+		l,t,w,h = referenceNode.getPxGeom()
+		referenceValue = l
 
 		# make a list of node/attr to change
 		list = []
@@ -993,12 +1000,15 @@ class LayoutView2(LayoutViewDialog2):
 			return
 
 		# get the node the most on the left
-		referenceValue = None
-		for node in self.currentSelectedNodeList:
-			l,t,w,h = node.getPxGeom()
-			if referenceValue == None or l < referenceValue:
-				referenceNode = node
-				referenceValue = l
+#		referenceValue = None
+#		for node in self.currentSelectedNodeList:
+#			l,t,w,h = node.getPxGeom()
+#			if referenceValue == None or l < referenceValue:
+#				referenceNode = node
+#				referenceValue = l
+
+		# the reference node is the last selected
+		referenceNode = self.currentSelectedNodeList[-1]
 
 		# for the reference object, determinate the center
 		l,t,w,h = referenceNode.getPxGeom()
@@ -1022,12 +1032,15 @@ class LayoutView2(LayoutViewDialog2):
 			return
 
 		# get the node the most on the left
-		referenceValue = None
-		for node in self.currentSelectedNodeList:
-			l,t,w,h = node.getPxGeom()
-			if referenceValue == None or l < referenceValue:
-				referenceNode = node
-				referenceValue = l
+#		referenceValue = None
+#		for node in self.currentSelectedNodeList:
+#			l,t,w,h = node.getPxGeom()
+#			if referenceValue == None or l < referenceValue:
+#				referenceNode = node
+#				referenceValue = l
+
+		# the reference node is the last selected
+		referenceNode = self.currentSelectedNodeList[-1]
 
 		# for the reference object, determinate the right border
 		l,t,w,h = referenceNode.getPxGeom()
@@ -1050,12 +1063,19 @@ class LayoutView2(LayoutViewDialog2):
 			return
 
 		# get the node the most on the left
-		referenceValue = None
-		for node in self.currentSelectedNodeList:
-			l,t,w,h = node.getPxGeom()
-			if referenceValue == None or t < referenceValue:
-				referenceNode = node
-				referenceValue = t
+#		referenceValue = None
+#		for node in self.currentSelectedNodeList:
+#			l,t,w,h = node.getPxGeom()
+#			if referenceValue == None or t < referenceValue:
+#				referenceNode = node
+#				referenceValue = t
+
+		# the reference node is the last selected
+		referenceNode = self.currentSelectedNodeList[-1]
+
+		# determinate the reference value		
+		l,t,w,h = referenceNode.getPxGeom()
+		referenceValue = t
 
 		# make a list of node/attr to change
 		list = []
@@ -1073,12 +1093,15 @@ class LayoutView2(LayoutViewDialog2):
 			return
 
 		# get the node the most on the left
-		referenceValue = None
-		for node in self.currentSelectedNodeList:
-			l,t,w,h = node.getPxGeom()
-			if referenceValue == None or l < referenceValue:
-				referenceNode = node
-				referenceValue = t
+#		referenceValue = None
+#		for node in self.currentSelectedNodeList:
+#			l,t,w,h = node.getPxGeom()
+#			if referenceValue == None or l < referenceValue:
+#				referenceNode = node
+#				referenceValue = t
+
+		# the reference node is the last selected
+		referenceNode = self.currentSelectedNodeList[-1]
 
 		# for the reference object, determinate the center
 		l,t,w,h = referenceNode.getPxGeom()
@@ -1102,12 +1125,15 @@ class LayoutView2(LayoutViewDialog2):
 			return
 
 		# get the node the most on the left
-		referenceValue = None
-		for node in self.currentSelectedNodeList:
-			l,t,w,h = node.getPxGeom()
-			if referenceValue == None or l < referenceValue:
-				referenceNode = node
-				referenceValue = t
+#		referenceValue = None
+#		for node in self.currentSelectedNodeList:
+#			l,t,w,h = node.getPxGeom()
+#			if referenceValue == None or l < referenceValue:
+#				referenceNode = node
+#				referenceValue = t
+
+		# the reference node is the last selected
+		referenceNode = self.currentSelectedNodeList[-1]
 
 		# for the reference object, determinate the right border
 		l,t,w,h = referenceNode.getPxGeom()
