@@ -153,8 +153,6 @@ class Main(MainDialog):
 			print 'Warning: unknown device in mmcallback'
 
 def main():
-	import os
-	os.environ['CMIF_USE_X'] = '1'
 	try:
 		opts, files = getopt.getopt(sys.argv[1:], 'qj:')
 	except getopt.error, msg:
@@ -270,13 +268,10 @@ def main():
 # *********  If you change this, also change ../lib/cmif.py   ***********
 # WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
 
-DEFAULTDIR = '/ufs/guido/mm/demo'	# Traditional default
-
 cmifpath = None
 
 def findfile(name):
 	global cmifpath
-	import os
 	if os.path.isabs(name):
 		return name
 	if cmifpath is None:
@@ -288,8 +283,13 @@ def findfile(name):
 			cmifpath = [os.environ['CMIF']]
 		else:
 			import sys
-			cmifpath = [os.path.split(sys.executable)[0],
-				    DEFAULTDIR]
+			cmifpath = [os.path.split(sys.executable)[0]]
+			try:
+				link = os.readline(sys.executable)
+			except (os.error, AttributeError):
+				pass
+			else:
+				cmifpath.append(os.path.dirname(os.path.join(os.path.dirname(sys.executable), link)))
 	for dir in cmifpath:
 		fullname = os.path.join(dir, name)
 		if os.path.exists(fullname):
