@@ -447,4 +447,4 @@ CHANNEL_ADORNMENTS = {
 
 #
 # CNTL resource for the toolbar and its height
-TOOLBAR=(None, 64, 24)
+TOOLBAR=(None, 66, 24)
