@@ -699,7 +699,7 @@ class Scheduler(scheduler):
 					num = num - 1
 					if num == 0:
 						if ev[0] == SR.SCHED_DONE:
-							sctx.queuesrlist(srlist)
+							sctx.queuesrlist(numsrlist[1])
 						numsrlist[:] = []
 					else:
 						numsrlist[0] = num
