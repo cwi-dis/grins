@@ -144,13 +144,15 @@ class ColorSelector(glwindow.glwindow):
 		self.box.setwin()
 		self.box.render()
 
-	def set_hsv(self, (h, s, v)):
+	def set_hsv(self, hsv):
+		h, s, v = hsv
 		self.h_b.set_input(`fix(h, 3)`)
 		self.s_b.set_input(`fix(s, 3)`)
 		self.v_b.set_input(`fix(v, 3)`)
 		self.slider.set_slider_value(v)
 
-	def set_rgb(self, (r, g, b)):
+	def set_rgb(self, rgb):
+		r, g, b = rgb
 		self.r_b.set_input(`r`)
 		self.g_b.set_input(`g`)
 		self.b_b.set_input(`b`)
@@ -331,7 +333,8 @@ def x_hsv_to_rgb(hsv):
 	return int(r*255), int(g*255), int(b*255)
 
 # Convert rgb-scaled-to-255 to hsv
-def x_rgb_to_hsv((r, g, b)):
+def x_rgb_to_hsv(rgb):
+	r, g, b = rgb
 	return rgb_to_hsv((r/255.0, g/255.0, b/255.0))
 
 
@@ -343,7 +346,8 @@ def x_rgb_to_hsv((r, g, b)):
 #      V: 0 == just black ... 1.0 == maximum brightness
 # All input and output values are floats in the range [0.0 ... 1.0]
 
-def rgb_to_hsv((r, g, b)):
+def rgb_to_hsv(rgb):
+	r, g, b = rgb
 	maxc = max(r, g, b)
 	minc = min(r, g, b)
 	v = maxc
@@ -364,7 +368,8 @@ def rgb_to_hsv((r, g, b)):
 		h = h + 1.0
 	return h, s, v
 
-def hsv_to_rgb((h, s, v)):
+def hsv_to_rgb(hsv):
+	h, s, v = hsv
 	if s == 0.0:
 		return v, v, v
 	i = int(h*6.0)
