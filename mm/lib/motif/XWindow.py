@@ -127,6 +127,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 		self._do_init(parent)
 		if bgcolor is not None:
 			self._bgcolor = bgcolor
+		# else already inherited from parent (i.e. toplevel)
 		self._topwindow = self
 		self._exp_reg = Xlib.CreateRegion()
 
@@ -646,8 +647,14 @@ class _Window(_AdornmentSupport, _RubberBand):
 		self._fgcolor = r, g, b
 
 	def bgcolor(self, color):
-		r, g, b = color
-		self._bgcolor = r, g, b
+		if self._topwindow is self and color is None:
+			color = self._topwindow._bgcolor
+		if color == self._bgcolor:
+			return
+		bgcolor = self._bgcolor
+		self._bgcolor = color
+		if (bgcolor is None) != (color is None):
+			self._parent._mkclip()
 		# set window background if nothing displayed on it
 		if self._topwindow is self and not self._active_displist and \
 		   not self._subwindows:
@@ -660,6 +667,14 @@ class _Window(_AdornmentSupport, _RubberBand):
 			if self._pixmap is not None:
 				self._pixmap.CopyArea(self._form, self._gc,
 						      x, y, w, h, x, y)
+			# we may have overwritten our transparent children
+			r = Xlib.CreateRegion()
+			for w in self._subwindows:
+				if w._transparent == 1 or \
+				   (w._transparent == -1 and not w._active_displist):
+					apply(r.UnionRectWithRegion, w._rect)
+			if not r.EmptyRegion():
+				self._do_expose(r)
 
 	def setcursor(self, cursor):
 		if cursor == _WAITING_CURSOR:
@@ -677,9 +692,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 		self._curcursor = cursor
 
 	def newdisplaylist(self, bgcolor = None):
-		if bgcolor is None:
-			if not self._transparent:
-				bgcolor = self._bgcolor
 		return _DisplayList(self, bgcolor)
 
 	def settitle(self, title):
@@ -897,6 +909,16 @@ class _Window(_AdornmentSupport, _RubberBand):
 		h = float(ph) / rh
 		return x, y, w, h
 
+	def _opaque_children(self):
+		r = Xlib.CreateRegion()
+		for w in self._subwindows:
+			if w._transparent == 0 or \
+			   (w._transparent == -1 and w._active_displist):
+				apply(r.UnionRectWithRegion, w._rect)
+			else:
+				r.UnionRegion(w._opaque_children())
+		return r
+
 	def _mkclip(self):
 		if self._parent is None:
 			return
@@ -905,12 +927,8 @@ class _Window(_AdornmentSupport, _RubberBand):
 		apply(region.UnionRectWithRegion, self._rect)
 		self._buttonregion = bregion = Xlib.CreateRegion()
 		# subtract all subwindows
+		region.SubtractRegion(self._opaque_children())
 		for w in self._subwindows:
-			if w._transparent == 0 or \
-			   (w._transparent == -1 and w._active_displist):
-				r = Xlib.CreateRegion()
-				apply(r.UnionRectWithRegion, w._rect)
-				region.SubtractRegion(r)
 			w._mkclip()
 			bregion.UnionRegion(w._buttonregion)
 		# create region for all visible buttons
@@ -1238,7 +1256,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 				x, y, w, h = self._rect
 				pm.CopyArea(form, self._gc, x, y, w, h, x, y)
 
-	def _do_expose(self, region, recursive = 0):
+	def _do_expose(self, region, recursive = 0, transparent = 1):
 		if self._parent is None:
 			return
 		# check if there is any overlap of our window with the
@@ -1251,20 +1269,25 @@ class _Window(_AdornmentSupport, _RubberBand):
 			return
 		# first redraw opaque subwindow, top-most first
 		for w in self._subwindows:
-			if w._transparent == 0 or \
-			   (w._transparent == -1 and w._active_displist):
-				w._do_expose(region, 1)
+			w._do_expose(region, 1, 0)
+		if not transparent and \
+		   (self._transparent == 1 or
+		    (self._transparent == -1 and not self._active_displist)):
+			return
 		# then draw background window
 		r = Xlib.CreateRegion()
 		r.UnionRegion(self._clip)
 		r.IntersectRegion(region)
 		if not r.EmptyRegion():
-			if self._transparent and not recursive and \
-			   (not self._active_displist or not self._active_displist._fullwindow):
+			if not recursive and \
+			   (self._transparent == 1 or
+			    (self._transparent == -1 and
+			     (not self._active_displist or
+			      not self._active_displist._fullwindow))):
 				self._parent._do_expose(r)
 			elif self._active_displist:
 				self._active_displist._render(r)
-			elif self._transparent == 0 or self._topwindow is self:
+			elif self._bgcolor is not None:	# not tranparent
 				gc = self._gc
 				gc.SetRegion(r)
 				gc.foreground = self._convert_color(self._bgcolor)
@@ -1349,8 +1372,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 
 	def updatebgcolor(self, color):
 		self.bgcolor(color)
-		if self._active_displist and self._active_displist._list and self._active_displist._list[0][0] == 'clear':
-			self._active_displist._list[0] = ('clear', self._convert_color(color))
+		if self._active_displist:
 			self._do_expose(self._clip)
 
 	# transition interface, placeholder
@@ -1391,15 +1413,14 @@ class _SubWindow(_Window):
 		else:
 			parent._subwindows.append(self)
 		self._do_init(parent)
+		if transparent == 1:
+			self._bgcolor = None
 		if bgcolor is not None:
 			self._bgcolor = bgcolor
 		self._motion_handler = parent._motion_handler
-		if parent._transparent:
-			self._transparent = parent._transparent
-		else:
-			if transparent not in (-1, 0, 1):
-				raise error, 'invalid value for transparent arg'
-			self._transparent = transparent
+		if transparent not in (-1, 0, 1):
+			raise error, 'invalid value for transparent arg'
+		self._transparent = transparent
 		self._topwindow = parent._topwindow
 
 		self._form = parent._form

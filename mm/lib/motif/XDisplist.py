@@ -34,14 +34,9 @@ class _DisplayList:
 		self._bgcolor = bgcolor
 		self._linewidth = 1
 		self._gcattr = {'foreground': window._convert_color(self._fgcolor),
-				'background': window._convert_color(bgcolor),
 				'line_width': 1}
 		self._list = []
-		if window._transparent <= 0 or bgcolor is not None:
-			self._list.append(('clear', bgcolor))
-			self._fullwindow = 1
-		else:
-			self._fullwindow = 0
+		self._list.append(('clear',))
 		self._optimdict = {}
 		self._cloneof = None
 		self._clonestart = 0
@@ -171,6 +166,13 @@ class _DisplayList:
 			w._active_displist = None
 			w._do_expose(region)
 		gc = w._gc
+		gcattr = self._gcattr.copy()
+		bgcolor = self._bgcolor
+		if bgcolor is None and w._transparent != 1:
+			bgcolor = w._bgcolor
+		if bgcolor is None:
+			bgcolor = 255,255,255
+		gcattr['background'] = w._convert_color(bgcolor)
 		gc.ChangeGC(self._gcattr)
 		gc.SetRegion(region)
 		if clonestart == 0 and self._imagemask:
@@ -203,11 +205,12 @@ class _DisplayList:
 		w = self._window
 		gc = w._gc
 		if cmd == 'clear':
-			color = entry[1]
+			color = self._bgcolor
 			if color is None:
 				color = w._bgcolor
-			gc.foreground = w._convert_color(color)
-			apply(gc.FillRectangle, w._rect)
+			if color is not None:
+				gc.foreground = w._convert_color(color)
+				apply(gc.FillRectangle, w._rect)
 		elif cmd == 'image':
 			clip = entry[2]
 			r = region
