@@ -151,3 +151,9 @@ def _fixcontext(root):
 		root.DelAttr('channellist')
 	except NoSuchAttrError:
 		pass
+
+	try:
+		root.context.addlayouts(root.GetRawAttr('layouts'))
+		root.DelAttr('layouts')
+	except NoSuchAttrError:
+		pass

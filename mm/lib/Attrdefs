@@ -128,6 +128,12 @@
 	'Hyperlink list' hidden
 	'Hyperlinks within this document (root node only)' raw)
 
+(layout (name) '' 'Layout' layoutname
+	'Layout for this node and its descendants' inherited)
+
+(layouts (list (enclosed (tuple (name) (list (name))))) () 'Layouts list'
+	hidden 'List of layouts within this document (root node only)' raw)
+
 (links_winpos  (tuple (float) (float)) (-1 -1) 'Link edit window position' hidden
 	 'Position of link edit window' raw)
 

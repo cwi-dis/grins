@@ -3,7 +3,7 @@
 This is a very simple dialog, it consists of four choices and three
 callback functions.
 
-Thex choices are labeled `Open Location...', `Open File...', and
+The choices are labeled `New', `Open Location...', `Open File...', and
 `Exit'.  If either of the Open choices is selected, a dialog window
 asks for a URL or a file name respectively, and if one is selected,
 the callback self.open_callback is called with the selected location
@@ -19,6 +19,8 @@ self.close_callback is also called.
 
 __version__ = "$Id$"
 
+from usercmd import *
+
 class MainDialog:
 	def __init__(self, title):
 		"""Create the Main dialog.
@@ -32,41 +34,38 @@ class MainDialog:
 		"""
 
 		import windowinterface
+		self.__window = windowinterface.createmainwnd(None, None, 0, 0,
+				title, adornments = None,
+				commandlist = self.commandlist)
 
-		#self._window = w = windowinterface.Window(
-		#	title, resizable = 0,
-		#	deleteCallback = (self.close_callback, ()))
-		buttons = [('Open Location...', (self.__openURL_callback, ())),
-			 ('Open File...', (self.__openfile_callback, ())),
-			 ('Trace', (self.trace_callback, ()), 't'),
-			 ('Debug', (self.debug_callback, ())),
-			 ('About', (self.about_callback, ())),
-			 ('Exit', (self.close_callback, ()))
-			 ]
-		#print " "
-		self._window = w = windowinterface.MainDialog(
-			buttons, title, grab = 0, del_Callback = (self.close_callback, ()))
-		#print " "
-		#buttons = w.ButtonRow(
-		#    [('Open Location...', (self.__openURL_callback, ())),
-		#	 ('Open File...', (self.__openfile_callback, ())),
-		#	 ('Trace', (self.trace_callback, ()), 't'),
-		#	 ('Debug', (self.debug_callback, ())),
-		#	 ('Exit', (self.close_callback, ())),
-		#	 ],
-		#  vertical = 1, tight = 1, left = 0, top = 0, right = 100, bottom = 600)
-
-		#self._window.show()
-
-	def __openURL_callback(self):
+	def open_callback(self):
+		callbacks={
+			'Browse':(self.__openfile_callback, ()),
+			'Open': (self.__tcallback, ()),
+			'Cancel':(self.__ccallback, ()),
+			}
 		import windowinterface
-		windowinterface.InputDialog('Open location', '',
-					    self.open_callback)
+		self.__owindow=windowinterface.OpenLocationDlg(callbacks,self.__window)
+		self.__text=self.__owindow._text
+		self.__owindow.show()
+
+
+	def __ccallback(self):
+		self.__owindow.close()
+		self.__owindow = None
+		self.__text = None
+
+	def __tcallback(self):
+		text = self.__text.gettext()
+		self.__ccallback()
+		if text:
+			self.openURL_callback(text)
 
 	def __openfile_callback(self):
 		import windowinterface
 		windowinterface.FileDialog('Open file', '.', '*.smil', '',
-					   self.__filecvt, None, existing = 1)
+					   self.__filecvt, None, 1,
+					   parent = self.__owindow)
 
 	def __filecvt(self, filename):
 		import os, MMurl
@@ -82,27 +81,5 @@ class MainDialog:
 				file = os.path.join(f, file)
 			if dir == cwd:
 				filename = file
-		self.open_callback(MMurl.pathname2url(filename))
+		self.__text.settext(MMurl.pathname2url(filename))
 
-	# Callback functions.  These functions should be supplied by
-	# the user of this class (i.e., the class that inherits from
-	# this class).
-
-	def about_callback(self):
-		import windowinterface
-		windowinterface.showmessage('Copyright © 1995-98 \n\nEpsilon Software S.A.\
-							\nC.W.I.\
-							\n\nWebster Pro Control Copyright © 1995-1998 Home Page Software Inc.\
-						   	 \nAccusoft Corp.   		')
-
-	def open_callback(self, url):
-		pass
-
-	def close_callback(self):
-		pass
-
-	def trace_callback(self):
-		pass
-
-	def debug_callback(self):
-		pass

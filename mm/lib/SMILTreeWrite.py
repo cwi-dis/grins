@@ -352,6 +352,7 @@ class SMILWriter(SMIL):
 		self.tmpdirname = abs, rel # record both names
 
 	def write(self):
+		import version
 		fp = self.fp
 		fp.write(SMILdecl)
 		if self.uses_cmif_extension:
@@ -365,6 +366,8 @@ class SMILWriter(SMIL):
 		if self.__title:
 			self.fp.write('<meta name="title" content=%s/>\n' %
 				      nameencode(self.__title))
+		self.fp.write('<meta name="generator" content="GRiNS %s"/>\n' %
+			      version.version)
 		self.writelayout()
 		fp.pop()
 		fp.write('</head>\n')
@@ -768,9 +771,10 @@ class SMILWriter(SMIL):
 				if y < 0: y = 0
 				if w > 100: w = 100
 				if h > 100: h = 100
-				if (x, y, w, h) != (0,0,100,100):
+				x0, y0, x1, y1 = x, y, x+w, y+h
+				if (x0, y0, x1, y1) != (0,0,100,100):
 					items.append('coords="%d%%,%d%%,%d%%,%d%%"'%
-						     (x,y,w,h))
+						     (x0,y0,x1,y1))
 			elif args:
 				print '** Unparseable args on', aid, args
 			else:

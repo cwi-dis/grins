@@ -22,8 +22,8 @@ LAYOUT_UNKNOWN = -1
 
 layout_name = ' SMIL '			# name of layout channel
 
-coordre = re.compile(r'^(?P<x>\d+%?),(?P<y>\d+%?),'
-		     r'(?P<w>\d+%?),(?P<h>\d+%?)$')
+coordre = re.compile(r'^(?P<x0>\d+%?),(?P<y0>\d+%?),'
+		     r'(?P<x1>\d+%?),(?P<y1>\d+%?)$')
 idref = re.compile(r'id\((?P<id>' + xmllib._Name + r')\)')
 clock_val = re.compile(r'(?:(?P<use_clock>' # hours:mins:secs[.fraction]
 		       r'(?:(?P<hours>\d{2}):)?'
@@ -184,7 +184,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if xnode is None:
 				self.warning('ignoring sync arc from %s to unknown node' % node.attrdict.get('name','<unnamed>'))
 				return
-			for n in node.GetParent().GetChildren():
+			for n in GetTemporalSiblings(node):
 				if n is xnode:
 					break
 			else:
@@ -605,6 +605,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__width, self.__height
 		layout['units'] = 2 # UNIT_PXL
 
+	def FixBaseWindow(self):
+		if self.__layout is None:
+			return
+		for ch in self.__context.channels:
+			if ch is self.__layout:
+				continue
+			ch['base_window'] = self.__title
+
 	def FixChannel(self, node):
 		if node.GetType() not in leaftypes:
 			return
@@ -671,7 +679,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__layout is None:
 					# create a layout channel
 					self.CreateLayout()
-				ch['base_window'] = self.__title
 				title = attrdict.get('title')
 				if title is not None:
 					ch['comment'] = title
@@ -786,6 +793,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.error('empty document', self.lineno)
 		self.FixSizes()
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
+		self.FixBaseWindow()
 		self.FixLinks()
 
 	# head/body sections
@@ -856,7 +864,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__title = ' %s ' % content
 		elif name == 'base':
 			self.__base = content
-		elif name in ('pics-label', 'PICS-label'):
+		elif name in ('pics-label', 'PICS-label', 'generator'):
 			pass
 		else:
 			self.warning('unrecognized meta property', self.lineno)
@@ -1265,26 +1273,35 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if not res:
 				self.syntax_error('syntax error in coords attribute', self.lineno)
 				return
-			x, y, w, h = res.group('x', 'y', 'w', 'h')
-			if x[-1] == '%':
-				x = string.atoi(x[:-1]) / 100.0
+			x0, y0, x1, y1 = res.group('x0', 'y0', 'x1', 'y1')
+			if (x0[-1]=='%') != (x1[-1]=='%') or\
+			   (y0[-1]=='%') != (y1[-1]=='%'):
+				self.warning('Cannot mix pixels and percentages in anchor',
+					self.lineno)
+			if x0[-1] == '%':
+				x0 = string.atoi(x0[:-1]) / 100.0
 			else:
-				x = string.atoi(x)
-			if y[-1] == '%':
-				y = string.atoi(y[:-1]) / 100.0
+				x0 = string.atoi(x0)
+			if y0[-1] == '%':
+				y0 = string.atoi(y0[:-1]) / 100.0
 			else:
-				y = string.atoi(y)
-			if w[-1] == '%':
-				w = string.atoi(w[:-1]) / 100.0
+				y0 = string.atoi(y0)
+			if x1[-1] == '%':
+				x1 = string.atoi(x1[:-1]) / 100.0
 			else:
-				w = string.atoi(w)
-			if h[-1] == '%':
-				h = string.atoi(h[:-1]) / 100.0
+				x1 = string.atoi(x1)
+			if y1[-1] == '%':
+				y1 = string.atoi(y1[:-1]) / 100.0
 			else:
-				h = string.atoi(h)
+				y1 = string.atoi(h)
+			if x1 <= x0 or y1 <= y0:
+				self.warning('Anchor coordinates incorrect. XYWH-style?.',
+					self.lineno)
+##					x1 = x1 + x0
+##					y1 = y1 + y0
 			# x,y,w,h are now floating point if they were
 			# percentages, otherwise they are ints.
-			aargs = [x, y, w, h]
+			aargs = [x0, y0, x1-x0, y1-y0]
 		try:
 			anchorlist = self.__node.__anchorlist
 		except AttributeError:
@@ -1672,3 +1689,18 @@ def _uniqname(namelist, defname):
 	while ('%s_%d' % (defname, id)) in namelist:
 		id = id + 1
 	return '%s_%d' % (defname, id)
+
+def GetTemporalSiblings(node):
+	"""Get siblings of a node, ignoring <switch> nodes"""
+	parent = node.GetParent()
+	while parent and parent.GetType() == 'alt':
+		parent = parent.parent
+	siblings = []
+	possible = parent.GetChildren()[:]
+	while possible:
+		this = possible[0]
+		del possible[0]
+		if this.GetType() == 'alt':
+			possible = possible + this.GetChildren()
+		siblings.append(this)
+	return siblings
