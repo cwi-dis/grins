@@ -1367,7 +1367,7 @@ class MMChannel(MMTreeElement):
 		for attrName in ('project_default_region_image', 'project_default_region_video',
 						 'project_default_region_sound', 'project_default_region_text'):
 			attrValue = nodeRef.GetAttrDef(attrName, None)
-			if attrValue != None and attrValue in regionNameList:
+			if attrValue != None and attrValue in allChannelId:
 				editmgr.setnodeattr(nodeRef, attrName, None)
 
 		# XXX to do: event
