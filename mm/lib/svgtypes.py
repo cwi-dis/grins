@@ -767,7 +767,7 @@ class TM:
 	
 	# tm is a TM instance 
 	def multiply(self, tm):
-		matrix(tm.elements)
+		self.matrix(tm.elements)
 
 	# helpers
 	def UPtoDP(self, point):
