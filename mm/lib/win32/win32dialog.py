@@ -313,10 +313,13 @@ class SelectElementDlg(ResDialog):
 	def __init__(self, parent, mmnode, selection='', filter = ''):
 		ResDialog.__init__(self,grinsRC.IDD_SELECT_ELEMENT, parent)
 		self._mmnode = mmnode
-		self._selection = selection
 		self._filter = filter
 		
+		# selection refs
+		self._selection = selection
 		self._selectionid = 0
+		self._mmobj = None
+
 		self._rootid = 0
 
 		self.__isoswnd = 0
@@ -379,7 +382,10 @@ class SelectElementDlg(ResDialog):
 		return ResDialog.OnInitDialog(self)
 
 	def OnOK(self):
+		# update sel refs from edit text
 		self._selection = self._editsel.gettext()
+		self._selectionid = self._name2item.get(self._selection)
+		self._mmobj = self._item2element.get(self._selectionid)
 		
 		# force selection and filter?
 		if not self.__validate():
@@ -422,7 +428,7 @@ class SelectElementDlg(ResDialog):
 	# if dlg.show(): 
 	#	use(dlg.gettext())
 	def show(self):
-		return self.DoModal() == win32com.IDOK
+		return self.DoModal() == win32con.IDOK
 
 	def OnEdit(self, id, code):
 		if code==win32con.EN_CHANGE:
@@ -437,6 +443,13 @@ class SelectElementDlg(ResDialog):
 			return self._editsel.gettext()
 		return self._selection
 			
+	def getmmobject(self):
+		if self.__isoswnd:
+			text = self._editsel.gettext()
+			item = self._name2item.get(text)
+			return self._item2element.get(item)
+		return self._mmobj
+
 	def settext(self, text):
 		self._selection = text
 		if self.__isoswnd:
