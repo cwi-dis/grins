@@ -285,10 +285,10 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	def magic_play(self):
 		if self.playing:
 			# toggle pause if playing
-			self.pause()
+			self.pause_callback()
 		else:
 			# start playing if stopped
-			self.play()
+			self.play_callback()
 
 	def close_callback(self):
 		self.hide()
