@@ -1268,6 +1268,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		if not self.__regions.has_key(region):
 			self.syntax_error('unknown region')
+			region = 'unnamed region'
 		# this two lines allow to avoid a crash if region name = top level window name !!!
 		# I tried to resolve this problem clearly --> but I had too many new problems !.
 		# After I day full time spended, i gived up
