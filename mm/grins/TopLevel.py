@@ -8,9 +8,6 @@ from MMExc import *
 from Hlinks import *
 from usercmd import *
 import settings
-# RTIPA start
-import features
-# RTIPA end
 import systemtestnames
 
 from TopLevelDialog import TopLevelDialog
@@ -34,26 +31,6 @@ class TopLevel(TopLevelDialog):
 		else:
 			# remote file
 			self.dirname = ''
-			# RTIPA start
-			# add a query string with width/height/class parameters to URL
-			if hasattr(features, 'RTIPA') and features.RTIPA and settings.get('RTIPA_add_params'):
-				import socket
-				width, height = windowinterface.getscreensize()
-				query = 'width=%d&height=%d' % (width, height)
-				try:
-					hostname = settings.get('RTIPA_client_IP')
-					ip = socket.gethostbyname(hostname)
-				except socket.error:
-					# host unknown
-					pass
-				else:
-					ip = socket.inet_aton(ip)
-					qos = settings.RTIPA_classes.get(ip)
-					if qos is not None:
-						query = query + '&class=' + qos
-				if settings.get('RTIPA_debug'):
-					windowinterface.showmessage('Adding query string "%s"' % query)
-			# RTIPA end
 ##		if base[-5:] == '.cmif':
 ##			self.basename = base[:-5]
 		if base[-4:] == '.smi':
