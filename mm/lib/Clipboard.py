@@ -7,72 +7,64 @@ __version__ = "$Id$"
 #
 # Unfortunately, there is no link with the X clipboard facility (yet).
 #
-# The clipboard is typed: you always specify a type string and a data object.
-# Standard type strings are:
+# The clipboard node typed: you always specify a list of objects.
+# the type of object is known with the 'getClassName' method
+# Standard type we currently support
 #
-# type		data type
+# type		
 #
-# 'text'	string (plain ASCII text)
-# 'node'	MM subtree (must not have a parent)
-# 'multinode'	List of MM subtrees (none of which may have parent)
-# 'region'	MMChannel instance
-# 'viewport'	MMChannel instance representing a topLayout
-# 'media'	MMNode media element (LayoutView only)
-# ''		None (meaning the clipboard is empty)
+# 'MMNode'					MM subtree (must not have a parent)
+# 'Region'					MMChannel instance
+# 'Viewport'				MMChannel instance representing a topLayout
+# 'RegionAssociation'		MMRegionAssociation instance (LayoutView only)
+# 'Properties'			 	MMAttrContainer instance
 #
-# To implement Cut/Copy/Paste of MM nodes:
+# To implement Cut/Copy/Paste (example with single selection)
 #
 # 'Cut':	use x.Extract() to remove the node from its tree,
-#		then call setclip('node', x)
+#		then call setclip([x])
 # 'Copy':	use y = x.DeepCopy() to make a copy of the tree,
-#		then call setclip('node', y)
+#		then call setclip([y])
 # 'Paste':	insert the actual contents from the clipboard in the tree,
 #		then *copy* it back to the clipboard:
-#		type, x = getclip(); setclip(type, x.DeepCopy())
+#		list = getclip(); x=[list]; setclip(type, [x.DeepCopy()])
 
 class Clipboard:
 
 	def __init__(self):
-		self.__type = ''
-		self.__data = None
+		self.__data = []
 		self.__owned = 0
 
 	def __repr__(self):
 		return '<Clipboard instance, type=' + `self.type` + '>'
 
-	def setclip(self, type, data, owned=0):
+	def setclip(self, data, owned=0):
+		if not type(data) in (type(()), type([])):
+			print 'Clipboard.setclip : data is not a list ',data
+			return
 		if self.__owned:
 			self.clearclip()
-		self.__type = type
 		self.__data = data
 		self.__owned = owned
 
 	def getclip(self):
-		return self.__type, self.__data
+		return self.__data
 		
 	def getclipcopy(self):
-		type, data = self.getclip()
-		if type == 'node':
-			new_data = data.DeepCopy()
-		elif type == 'multinode':
-			new_data = []
-			for d in data:
-				new_data.append(d.DeepCopy())
-		elif type in ('region', 'viewport'):
-			new_data = data.DeepCopy()
-		# We return the old one and put the new one on the clipboard
+		data = self.getclip()
+		new_data = []
+		for node in data:
+			if hasattr(node, 'getClassName') and node.getClassName() in ('MMNode', 'Region', 'Viewport'):
+				# We return the old one and put the new one on the clipboard
+				new_data.append(node.DeepCopy())
 		self.__owned = 0 # So setclip doesn't destroy what we are going to return
-		self.setclip(type, new_data, owned=1)
-		return type, data
+		self.setclip(new_data, owned=1)
+		return data
 
 	def clearclip(self):
 		if self.__owned:
-			if hasattr(self.__data, 'Destroy'):
-				self.__data.Destroy()
-			elif type(self.__data) in (type(()), type([])):
-				for i in self.__data:
-					if hasattr(i, 'Destroy'):
-						i.Destroy()
+			for node in self.__data:
+				if hasattr(node, 'Destroy'):
+					node.Destroy()
 			self.__owned = 0
-		self.__type = ''
-		self.__data = None
+		self.__data = []

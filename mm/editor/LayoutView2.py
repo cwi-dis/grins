@@ -766,22 +766,26 @@ class LayoutView2(LayoutViewDialog2):
 	def updateCommandList(self, basecommandlist):
 		commandlist = basecommandlist[:]
 
-		# determinate is paste is valid		
+		# determinate is paste is valid	depending on what is in the clipboard.	
 		activePaste = 0
-		t, n = self.editmgr.getclip()
-		if t == 'viewport' and n is not None:
-			activePaste = 1
-		elif len(self.currentSelectedNodeList) == 1: # only simple selection
-			selectedNode = self.currentSelectedNodeList[0]
-			selectedType = self.getNodeType(selectedNode)
-			# Enable "paste" commands depending on what is in the clipboard.
-			if selectedType in (TYPE_VIEWPORT, TYPE_REGION) and \
-				t in ('region', 'viewport') and n is not None:
+		nodeList = self.editmgr.getclip()
+		for node in nodeList:
+			className = node.getClassName()
+			if className == 'Viewport':
 				activePaste = 1
-			elif t == 'media' and selectedType == TYPE_REGION and COPY_PASTE_MEDIAS:
-				# check that the media is valid and still in the 'body' part
-				if self.existRef(selectedNode):
+				break
+			elif len(self.currentSelectedNodeList) == 1: # only single selection
+				selectedNode = self.currentSelectedNodeList[0]
+				selectedType = self.getNodeType(selectedNode)
+				if selectedType in (TYPE_VIEWPORT, TYPE_REGION) and \
+					className == 'Region':
 					activePaste = 1
+					break
+				elif className == 'MMNode' and selectedType == TYPE_REGION and COPY_PASTE_MEDIAS:
+					# check that the media is valid and still in the 'body' part
+					if self.existRef(selectedNode):
+						activePaste = 1
+						break
 
 		if activePaste:
 			commandlist.append(PASTE(callback = (self.onPaste, ())))
@@ -1631,14 +1635,7 @@ class LayoutView2(LayoutViewDialog2):
 		for node in nodeList:
 			cNodeList.append(node.DeepCopy())
 
-		# XXX for now, support only single selection
-		node = cNodeList[-1]
-		className = node.getClassName()
-		if className == 'Region':
-			type = 'region'
-		elif className == 'Viewport':
-			type = 'viewport'
-		self.editmgr.setclip(type, node, owned = 1)
+		self.editmgr.setclip(cNodeList, owned = 1)
 		
 		self.editmgr.commit()
 		
@@ -1665,16 +1662,7 @@ class LayoutView2(LayoutViewDialog2):
 		else:
 			self.setglobalfocus([])
 
-		# XXX for now only single cut is supported
-		type = None
-		node = nodeList[-1]
-		nodeType = self.getNodeType(node)
-		if nodeType == TYPE_VIEWPORT:
-			type = 'viewport'
-		elif nodeType == TYPE_REGION:
-			type = 'region'
-		if type != None:
-			self.editmgr.setclip(type, node)
+		self.editmgr.setclip(nodeList)
 
 		self.editmgr.commit()
 				
@@ -1693,12 +1681,7 @@ class LayoutView2(LayoutViewDialog2):
 		if not self.editmgr.transaction():
 			return
 
-		# XXX temporare, node should be all the time a list
-		type, node = self.editmgr.getclipcopy()
-		if type in ('region', 'viewport', 'MMNode', 'RegionAssociation'):
-			nodeList = [node]
-		else:
-			nodeList = node
+		nodeList = self.editmgr.getclipcopy()
 
 		newFocus = []			
 		for node in nodeList:

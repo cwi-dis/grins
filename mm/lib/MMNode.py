@@ -1114,7 +1114,10 @@ class MMAttrContainer(MMTreeElement):
 
 	def ClearTimesObjects(self):
 		pass
-		
+
+	def getClassName(self):
+		return 'Properties'
+	
 class MMChannel(MMTreeElement):
 	def __init__(self, context, name, type='undefined'):
 		MMTreeElement.__init__(self, context, name)

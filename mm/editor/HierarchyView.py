@@ -387,8 +387,13 @@ class HierarchyView(HierarchyViewDialog):
 				commands = commands + self.convertrpcommands
 
 		# Enable "paste" commands depending on what is in the clipboard.
-		t, n = self.editmgr.getclip()
-		if t in ('node', 'multinode') and n is not None:
+		nodeList = self.editmgr.getclip()
+		enablePaste = 0
+		for node in nodeList:
+			if node.getClassName() == 'MMNode':
+				enablePaste = 1
+				break
+		if enablePaste:
 			if fntype in MMNode.interiortypes:
 				# can only paste inside interior nodes
 				commands = commands + self.pasteinteriorcommands
@@ -1013,12 +1018,7 @@ class HierarchyView(HierarchyViewDialog):
 		for i in nodes:
 			copyme.append(i.DeepCopy())
 
-		if len(copyme) == 0:
-			self.editmgr.setclip('', None)
-		elif len(copyme) == 1:
-			self.editmgr.setclip('node', copyme[0], owned = 1)
-		else:
-			self.editmgr.setclip('multinode', copyme, owned = 1)
+		self.editmgr.setclip(copyme, owned = 1)
 
 		self.aftersetfocus()
 
@@ -1042,16 +1042,17 @@ class HierarchyView(HierarchyViewDialog):
 		newnode = context.newattrcontainer()
 		dict = self._copyattrdict(node, newnode, copylist)
 		# XXXX Clear clip
-		context.editmgr.setclip('properties', newnode, owned=1)
+		context.editmgr.setclip([newnode], owned=1)
 
 	def pastepropertiescall(self):
 		nodes = self.get_selected_nodes()
 		assert(nodes)
 		em = self.root.context.editmgr
-		tp, clipnode = em.getclip()
-		if tp != 'properties':
+		nodeList = em.getclip()
+		if len(nodeList) != 1 or nodeList[0].getClassName() != 'Properties':
 			windowinterface.beep()
 			return
+		clipnode = nodeList[0]
 		assert isinstance(clipnode, MMNode.MMAttrContainer)
 		if not em.transaction():
 			return
@@ -1089,12 +1090,7 @@ class HierarchyView(HierarchyViewDialog):
 		for n in nodes:
 			self.editmgr.delnode(n)
 ##		self.fixsyncarcs(self.root, nodes)
-		if len(nodes) == 0:
-			self.editmgr.setclip('', None)
-		elif len(nodes) == 1:
-			self.editmgr.setclip('node', nodes[0])
-		else:
-			self.editmgr.setclip('multinode', nodes)
+		self.editmgr.setclip(nodes)
 		self.editmgr.commit()
 
 
@@ -1482,8 +1478,8 @@ class HierarchyView(HierarchyViewDialog):
 	def paste(self, where):
 		# where is -1 (before), 0 (under) or 1 (after)
 
-		type, node = self.editmgr.getclip()
-		if node is None:
+		nodeList = self.editmgr.getclip()
+		if len(nodeList) == 0:
 			windowinterface.showmessage(
 			    'The clipboard does not contain a node to paste',
 			    mtype = 'error', parent = self.window)
@@ -1496,25 +1492,18 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		self.toplevel.setwaiting()
 
-		type, node = self.editmgr.getclipcopy()
-		if type == 'node':
-			# If there is a single node on the clipboard.
-			# The hierarchyview always copies and cuts multnodes..
+		nodeList = self.editmgr.getclipcopy()
+		if not self.editmgr.transaction():
+			return
+		focus = fnode
+		for node in nodeList:
 			if node.context is not self.root.context:
 				node = node.CopyIntoContext(self.root.context)
-			self.insertnode(node, where)
-		elif type == 'multinode':
-			if not self.editmgr.transaction():
-				return
-			focus = self.get_selected_node()
-			for n in node:
-				if n.context is not self.root.context:
-					n = n.CopyIntoContext(self.root.context)
-				self.insertnode(n, where, start_transaction = 0, end_transaction = 0, focus = focus)
-				# next node inserted should come after this one
-				focus = n
-				where = 1
-			self.editmgr.commit()
+			self.insertnode(node, where, start_transaction = 0, end_transaction = 0, focus = focus)
+			# next node inserted should come after this one
+			focus = node
+			where = 1
+		self.editmgr.commit()
 
 	def insertnode(self, node, where, index = -1, start_transaction = 1, end_transaction = 1, focus = None):
 		# 'where' is coded as follows: -1: before 0: under 1: after
