@@ -73,7 +73,7 @@ class Main(MainDialog):
 		self._untitled_counter = 1
 		self.template_info = None
 		try:
-			import mm, posix, fcntl, FCNTL
+			import mm, posix, fcntl
 		except ImportError:
 			pass
 		else:
@@ -82,7 +82,7 @@ class Main(MainDialog):
 			self._mmfd = pipe_r
 			windowinterface.select_setcallback(pipe_r,
 						self._mmcallback,
-						(posix.read, fcntl.fcntl, FCNTL))
+						(posix.read, fcntl.fcntl, fcntl.F_SETFL, posix.O_NDELAY))
 		self.commandlist = [
 			EXIT(callback = (self.close_callback, ())),
 			NEW_DOCUMENT(callback = (self.new_callback, ())),
@@ -415,13 +415,13 @@ class Main(MainDialog):
 		elif self._mm_callbacks.has_key(dev):
 			del self._mm_callbacks[dev]
 
-	def _mmcallback(self, read, fcntl, FCNTL):
+	def _mmcallback(self, read, fcntl, F_SETFL, O_NDELAY):
 		# set in non-blocking mode
-		dummy = fcntl(self._mmfd, FCNTL.F_SETFL, FCNTL.O_NDELAY)
+		dummy = fcntl(self._mmfd, F_SETFL, O_NDELAY)
 		# read a byte
 		devval = read(self._mmfd, 1)
 		# set in blocking mode
-		dummy = fcntl(self._mmfd, FCNTL.F_SETFL, 0)
+		dummy = fcntl(self._mmfd, F_SETFL, 0)
 		# return if nothing read
 		if not devval:
 			return
