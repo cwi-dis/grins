@@ -186,38 +186,6 @@ SOURCE=.\M_Attrgrs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_audio.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_audio__aifc.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_audio__au.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_audio__convert.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_audio__file.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_audio__format.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_audio__wav.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_audio__what.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_base64.c
 # End Source File
 # Begin Source File
@@ -787,10 +755,6 @@ SOURCE=.\M_SMIL.c
 # Begin Source File
 
 SOURCE=.\M_SMILTreeRead.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_SMILTreeWrite.c
 # End Source File
 # Begin Source File
 
