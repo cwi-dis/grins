@@ -70,7 +70,12 @@ class PlayerCore(Selecter, PlayerCommon):
 		self.pause(1)
 		self.play()
 		if not self.gotonode(node, anchor, None):
+			# update the state to play (changed by gotonode).
+			# XXX this state should be changed directly from gotonode
+			self.pausing = 0
+			self.showstate()
 			return
+		# XXX shouldn't pass here. gotonode return all the time 0
 		self.playing = 1
 		self.showstate()
 
