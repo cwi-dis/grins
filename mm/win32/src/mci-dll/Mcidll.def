@@ -14,3 +14,7 @@ EXPORTS
     MidiSeek		@12               
     MCIError		@13
 	positionMovie	@14
+	AviFrame		@15
+	AviDuration		@16
+	AviUpdate		@17
+	AviSize 		@18

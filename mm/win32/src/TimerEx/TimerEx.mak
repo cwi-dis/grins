@@ -33,8 +33,8 @@ NULL=nul
 ################################################################################
 # Begin Project
 # PROP Target_Last_Scanned "TimerEx - Win32 Debug"
-RSC=rc.exe
 CPP=cl.exe
+RSC=rc.exe
 MTL=mktyplib.exe
 
 !IF  "$(CFG)" == "TimerEx - Win32 Release"
@@ -216,41 +216,41 @@ LINK32_OBJS= \
 
 SOURCE=.\timerexmodule.cpp
 DEP_CPP_TIMER=\
-	"..\..\python1.4\Src\Include\accessobject.h"\
-	"..\..\python1.4\Src\Include\bltinmodule.h"\
-	"..\..\python1.4\Src\Include\ceval.h"\
-	"..\..\python1.4\Src\Include\classobject.h"\
-	"..\..\python1.4\Src\Include\cobject.h"\
-	"..\..\python1.4\Src\Include\complexobject.h"\
-	"..\..\python1.4\Src\Include\config.h"\
-	"..\..\python1.4\Src\Include\fileobject.h"\
-	"..\..\python1.4\Src\Include\floatobject.h"\
-	"..\..\python1.4\Src\Include\funcobject.h"\
-	"..\..\python1.4\Src\Include\import.h"\
-	"..\..\python1.4\Src\Include\intobject.h"\
-	"..\..\python1.4\Src\Include\intrcheck.h"\
-	"..\..\python1.4\Src\Include\listobject.h"\
-	"..\..\python1.4\Src\Include\longobject.h"\
-	"..\..\python1.4\Src\Include\mappingobject.h"\
-	"..\..\python1.4\Src\Include\methodobject.h"\
-	"..\..\python1.4\Src\Include\moduleobject.h"\
-	"..\..\python1.4\Src\Include\mymalloc.h"\
-	"..\..\python1.4\Src\Include\myproto.h"\
-	"..\..\python1.4\Src\Include\object.h"\
-	"..\..\python1.4\Src\Include\objimpl.h"\
-	"..\..\python1.4\Src\Include\pydebug.h"\
-	"..\..\python1.4\Src\Include\pyerrors.h"\
-	"..\..\python1.4\Src\Include\pythonrun.h"\
-	"..\..\python1.4\Src\Include\rangeobject.h"\
-	"..\..\python1.4\Src\Include\rename2.h"\
-	"..\..\python1.4\Src\Include\sliceobject.h"\
-	"..\..\python1.4\Src\Include\stringobject.h"\
-	"..\..\python1.4\Src\Include\sysmodule.h"\
-	"..\..\python1.4\Src\Include\thread.h"\
-	"..\..\python1.4\Src\Include\traceback.h"\
-	"..\..\python1.4\Src\Include\tupleobject.h"\
 	".\StdAfx.h"\
 	".\timerex.h"\
+	"D:\Python1.4\Src\Include\accessobject.h"\
+	"D:\Python1.4\Src\Include\bltinmodule.h"\
+	"D:\Python1.4\Src\Include\ceval.h"\
+	"D:\Python1.4\Src\Include\classobject.h"\
+	"D:\Python1.4\Src\Include\cobject.h"\
+	"D:\Python1.4\Src\Include\complexobject.h"\
+	"D:\Python1.4\Src\Include\config.h"\
+	"D:\Python1.4\Src\Include\fileobject.h"\
+	"D:\Python1.4\Src\Include\floatobject.h"\
+	"D:\Python1.4\Src\Include\funcobject.h"\
+	"D:\Python1.4\Src\Include\import.h"\
+	"D:\Python1.4\Src\Include\intobject.h"\
+	"D:\Python1.4\Src\Include\intrcheck.h"\
+	"D:\Python1.4\Src\Include\listobject.h"\
+	"D:\Python1.4\Src\Include\longobject.h"\
+	"D:\Python1.4\Src\Include\mappingobject.h"\
+	"D:\Python1.4\Src\Include\methodobject.h"\
+	"D:\Python1.4\Src\Include\moduleobject.h"\
+	"D:\Python1.4\Src\Include\mymalloc.h"\
+	"D:\Python1.4\Src\Include\myproto.h"\
+	"D:\Python1.4\Src\Include\object.h"\
+	"D:\Python1.4\Src\Include\objimpl.h"\
+	"D:\Python1.4\Src\Include\pydebug.h"\
+	"D:\Python1.4\Src\Include\pyerrors.h"\
+	"D:\Python1.4\Src\Include\pythonrun.h"\
+	"D:\Python1.4\Src\Include\rangeobject.h"\
+	"D:\Python1.4\Src\Include\rename2.h"\
+	"D:\Python1.4\Src\Include\sliceobject.h"\
+	"D:\Python1.4\Src\Include\stringobject.h"\
+	"D:\Python1.4\Src\Include\sysmodule.h"\
+	"D:\Python1.4\Src\Include\thread.h"\
+	"D:\Python1.4\Src\Include\traceback.h"\
+	"D:\Python1.4\Src\Include\tupleobject.h"\
 	{$(INCLUDE)}"\abstract.h"\
 	{$(INCLUDE)}"\allobjects.h"\
 	{$(INCLUDE)}"\modsupport.h"\
