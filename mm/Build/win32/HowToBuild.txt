@@ -47,9 +47,14 @@ a) Set the absolute folders in cmif\Build\win32\Editor\domkp.bat
 and \cmif\Build\win32\GRiNS\domkp.bat to agree with your configuration
 (usually only the drive letter)
 b) Run the bat files 
-c) Build GRiNSed and GRiNS projects (use Set Active Configuratio)
-d) To test them transfer in an emty folder:
+c) in "GRiNSed files" in the "cmif extensions" workspace, replace all
+   source files in the "source files" subfolder.
+d) build "GRiNSed files"
+e) follow the same two steps for "GRiNS files" for the player.
 
+6. In Build/win32, open GRiNSed.wse. Compile. This leaves an installer in
+  the bin directory. Using "distribute" will send it to the unix fileserver.
+  
 
 Thats all.
 
