@@ -65,6 +65,10 @@ class EventStruct:
 			self._syncarc = syncarc
 			self.__init__set_vars()
 			
+	# we need this method so that the Apply button gets enabled and disabled properly
+	def __cmp__(self, other):
+		return cmp(self.as_string(), other.as_string())
+
 	def get_value(self):
 		# Returns the result of editing this syncarc.
 		s = self._syncarc
@@ -84,16 +88,20 @@ class EventStruct:
 			return s
 		elif c == 'node':# and self._setnode:
 			# The problem here is that I don't know how to map a name of a node to it's instance.
-			if not s.srcnode:
+			if self._setnode is not None:
+				node = self._setnode
+			else:
+				node = s.srcnode
+			if not node:
 				print "TODO: No node!! (EventEditor)"
 			e = self.get_event()
 			if e.startswith('repeat'):
 				e = e + '(' + `self.get_repeat()` + ')'
 			if e == 'marker':
-				s.__init__(self._node, action, srcnode = s.srcnode, marker = self.get_marker(),
+				s.__init__(self._node, action, srcnode = node, marker = self.get_marker(),
 					   delay=self.get_offset())
 			else:
-				s.__init__(self._node, action, srcnode = s.srcnode, event=e,
+				s.__init__(self._node, action, srcnode = node, event=e,
 					   delay=self.get_offset())
 		elif c == 'region' and self._setregion:
 			ch = self.get_region()
@@ -185,9 +193,7 @@ class EventStruct:
 
 		# Now for the offset things
 		elif c == 'node':
-			n, r, _, _ = self.get_thing_string()
-			if n == 'XPath:':
-				r = 'xpath(%s)' % r
+			r = self.get_thing_string()[1]
 			e = self.get_event()
 			if r: r = r + '.' + e
 			else: r = e
@@ -217,13 +223,10 @@ class EventStruct:
 		else:
 			print "ERROR: Unknown cause: ", c
 		d = self.get_offset()
-		if d == None:
-			return r
+		if d is None:
+			d = ''
 		else:
-			if d < 0:
-				d = fmtfloat(d)
-			else:
-				d = "+"+fmtfloat(d)
+			d = fmtfloat(d, suffix = 's', withsign = 1)
 		return r+d
 		
 	def get_cause(self):
@@ -253,12 +256,47 @@ class EventStruct:
 		self._setcause = newcause
 
 	def has_node(self):
+		if self._setnode is not None:
+			return 1
 		if isinstance(self._syncarc.srcnode, MMNode.MMNode):
 			return 1
 		elif type(self._syncarc.srcnode) is type('') and self._syncarc.srcnode not in ('prev', 'syncbase'):
 			return 1
 		else:
 			return 0
+
+	def get_relative(self):
+		if not self.has_node():
+			return 0
+		node = self._setnode
+		if not node:
+			node = self._syncarc.srcnode
+		return not isinstance(node, MMNode.MMNode)
+
+	def set_relative(self, relative):
+		if not self.has_node():
+			return 0
+		node = self._setnode
+		if not node:
+			node = self._syncarc.srcnode
+		if isinstance(node, MMNode.MMNode):
+			if relative:
+				savenode = self._syncarc.srcnode
+				self._syncarc.srcnode = node
+				self._setnode = self._syncarc.xpath()
+				self._syncarc.srcnode = savenode
+			# else already relative
+		else:
+			if not relative:
+				savenode = self._syncarc.srcnode
+				self._syncarc.srcnode = node
+				self._setnode = self._syncarc.refnode()
+				self._syncarc.srcnode = savenode
+				if self._setnode is None:
+					self._setnode = node
+					return 0
+		return 1
+
 	def get_event(self):
 		# Only return the element which is in EVENTS_whatever list.
 		if self._setevent:
@@ -272,6 +310,7 @@ class EventStruct:
 			return 'marker'
 		else:
 			return self.event
+
 	def get_event_index(self):
 		# return the current event index from the list of possible events.
 		e = self.get_event()
@@ -282,9 +321,11 @@ class EventStruct:
 				return self.get_possible_events().index(e)
 			except Exception:
 				return None
+
 	def set_event(self, newevent):
 		assert newevent in EVENTS_NODE or newevent in EVENTS_REGION
 		self._setevent = newevent
+
 	def get_possible_events(self):
 		if self.get_cause() == 'node':
 			return EVENTS_NODE
@@ -292,6 +333,7 @@ class EventStruct:
 			return EVENTS_REGION
 		else:
 			return None
+
 	def get_thing_string(self):
 		# returns a tuple of (name string, value string, Bool isnumber, Bool readonly)
 		# isnumber is if the string is a number.
@@ -309,19 +351,22 @@ class EventStruct:
 			elif isinstance(self._syncarc, MMNode.MMSyncArc) and isinstance(self._syncarc.srcnode, MMNode.MMNode):
 				thing = self._syncarc.srcnode.GetName()
 			elif type(self._syncarc.srcnode) is type('') and self._syncarc.srcnode not in ('prev','syncbase'):
-				name = 'XPath:'
-				thing = self._syncarc.srcnode
+				refnode = self._syncarc.refnode()
+				if refnode is None:
+					thing = 'Dangling node'
+				else:
+					thing = refnode.GetName()
 			else:
 				thing = "SomeNode"
 		elif c == 'region':
-			name = "Top Level:"
+			name = "Top Layout:"
 			readonly = 1
 			if self._setregion:
 				thing = self._setregion
 			elif isinstance(self._syncarc, MMNode.MMSyncArc):
 				thing = self._syncarc.channel.name
 			else:
-				thing = "Unknown toplevel"
+				thing = "Unknown topLayout"
 			#return ("Region:", repr(self._syncarc.channel), 0, 0)
 		elif c == 'accesskey':
 			name = "Key:"
@@ -366,8 +411,9 @@ class EventStruct:
 			print "DEBUG: Unknown cause: ", c
 			assert 0
 		return None		# return an error otherwise.
+
 	def get_offset(self):
-		if self._setoffset:
+		if self._setoffset is not None:
 			return self._setoffset
 		if self._syncarc and self.get_cause() in ['node', 'accesskey', 'delay', 'region']: # TODO: check these.
 			if self._syncarc.delay:
@@ -376,10 +422,13 @@ class EventStruct:
 				return 0
 		else:
 			return None
+
 	def set_offset(self, newoffset):
-		self._setoffset = newoffset
+		if self.get_offset() != newoffset:
+			self._setoffset = newoffset
+
 	def get_repeat(self):
-		if self._setrepeat:
+		if self._setrepeat is not None:
 			return self._setrepeat
 		elif self.get_event() and self.get_event().startswith("repeat"):
 			a = self._syncarc.get_repeat()
@@ -389,17 +438,23 @@ class EventStruct:
 				return 1
 		else:
 			return None
+
 	def set_repeat(self, repeat):
-		self._setrepeat = repeat
+		if self.get_repeat() != repeat:
+			self._setrepeat = repeat
+
 	def get_wallclock(self):
-		if self._setwallclock:
+		if self._setwallclock is not None:
 			return self._setwallclock
-		elif self._syncarc.wallclock:
+		elif self._syncarc.wallclock is not None:
 			return self._syncarc.wallclock
 		else:
 			return (None, None, None, 12, 0, 0.0, None, None, None)
+
 	def set_wallclock(self, value):
-		self._setwallclock = value
+		if self.get_wallclock() != value:
+			self._setwallclock = value
+
 	def get_region(self):
 		if self._setregion:
 			return self._setregion
@@ -407,9 +462,12 @@ class EventStruct:
 			return self._syncarc.channel.name
 		else:
 			return 'No viewports available'
+
 	def set_region(self, newregion):
+		if self.get_region() == newregion:
+			return
 		if newregion is None:
-			# Find the first toplevel.
+			# Find the first topLayout.
 			self._setregion = self.get_viewports()[0]
 			return
 		assert isinstance(newregion, type(""))
@@ -427,7 +485,7 @@ class EventStruct:
 		return names
 
 	def get_marker(self):
-		if self._setmarker:
+		if self._setmarker is not None:
 			return self._setmarker
 		else:
 			if self._syncarc.marker:
@@ -436,4 +494,5 @@ class EventStruct:
 				return "?"
 
 	def set_marker(self, value):
-		self._setmarker = value
+		if self.get_marker() != value:
+			self._setmarker = value

@@ -1296,6 +1296,9 @@ class FloatTupleCtrl(TupleCtrl):
 				self._attrval[i].settext(s)
 
 from fmtfloat import fmtfloat
+import parseutil
+
+RADIO,EVENT,TEXT,OFFSET,RESULT,REPEAT,RELATIVE = 0x01,0x02,0x04,0x08,0x10,0x20,0x40
 
 class EventCtrl(AttrCtrl):
 	# This is an editor for the 'begin' and 'end'tabs.
@@ -1318,8 +1321,9 @@ class EventCtrl(AttrCtrl):
 		(grinsRC.IDC_RNODE, 'This event fires relative to the start or end of another node'),
 		(grinsRC.IDC_RLAYOUT, 'This event fires to something which happens with a region'),
 		(grinsRC.IDC_RINDEFINITE, 'This event never fires.\nIf this is the only event, the node will either never start or never end'),
-		(grinsRC.IDC_RACCESSKEY, 'This event fires when the user presses the specified key on the keyboard.'),
-		(grinsRC.IDC_RWALLCLOCK, 'This event fires at a certain time of day.'),
+		(grinsRC.IDC_RACCESSKEY, 'This event fires when the user presses the specified key on the keyboard'),
+		(grinsRC.IDC_RWALLCLOCK, 'This event fires at a certain time of day'),
+		(grinsRC.IDC_RELATIVE, 'Save association as relative path'),
 		]
 
 	def __init__(self, wnd, attr, resid):
@@ -1348,15 +1352,19 @@ class EventCtrl(AttrCtrl):
 		self._offsetwidget = components.Edit(self._wnd, grinsRC.IDC_EDITOFFSET)
 		self._repeatwidget = components.Edit(self._wnd, grinsRC.IDC_EDITREPEAT)
 		self._repeatlabel = components.Static(self._wnd, grinsRC.IDC_REPEATLABEL)
+		self._relative = components.CheckButton(wnd, grinsRC.IDC_RELATIVE)
+		self._radiobuttonwidgets = {}
+		for k,v in self.__radiobuttons.items():
+			new = components.RadioButton(self._wnd, k)
+			self._radiobuttonwidgets[v] = new
 
 		# Keep state for the event drop-down
 		self._old_eventlist = None
 		self._old_eventlist_selection = None
 
-		self._radiobuttonwidgets = {}
-		
 		self._node = self._wnd._form._node	# MMNode. Needed for creating new nodes.
 					# now that also feels like a hack. Oh well.
+
 	def OnInitCtrl(self):
 		self._initctrl=self
 
@@ -1371,7 +1379,15 @@ class EventCtrl(AttrCtrl):
 		self._offsetwidget.attach_to_parent()
 		self._repeatwidget.attach_to_parent()
 		self._repeatlabel.attach_to_parent()
-		self.__init_radiobuttons()
+		self._relative.attach_to_parent()
+		for b in self._radiobuttonwidgets.values():
+ 			b.attach_to_parent()
+			b.hookcommand(self._wnd, self._radiobuttoncallback)
+
+		# do this before setting the callback functions
+		bob = self._attr.getcurrent()
+		self.setvalue(self._attr.getcurrent())
+		self.update()
 
 		# Top half of window.
 		self._list.hookcommand(self._wnd, self._listcallback)
@@ -1385,34 +1401,32 @@ class EventCtrl(AttrCtrl):
 		self._offsetwidget.hookcommand(self._wnd, self._offsetwidgetcallback)
 		self._repeatwidget.hookcommand(self._wnd, self._repeatwidgetcallback)
 		self._thingbutton.hookcommand(self._wnd, self._thingbuttoncallback)
+		self._relative.hookcommand(self._wnd, self._relativecallback)
 
-		bob = self._attr.getcurrent()
-		self.setvalue(bob)
-		self.update()
-
-	def __init_radiobuttons(self):
-		for k,v in self.__radiobuttons.items():
-			new = components.RadioButton(self._wnd, k)
-			self._radiobuttonwidgets[v] = new
-			new.attach_to_parent()
-			new.hookcommand(self._wnd, self._radiobuttoncallback)
-
-	def update(self):
+	def update(self, flags = RADIO|EVENT|TEXT|OFFSET|RESULT|REPEAT|RELATIVE):
 		# Updates all the widgets.
 		if self.dont_update:
 			return		# If I don't do this, the widgets refresh themselves ad inifinitium.
 		self.dont_update = 1
 		self.resetlist()
-		self.initevent()
+		self.initevent(flags)
 		self.dont_update = 0
 
-	def initevent(self):
-		self.set_radiobuttons()
-		self.set_eventwidget()
-		self.set_textwidget()
-		self.set_offsetwidget()
-		self.set_resultwidget()
-		self.set_repeatwidget()
+	def initevent(self, flags = RADIO|EVENT|TEXT|OFFSET|RESULT|REPEAT|RELATIVE):
+		if flags & RADIO:
+			self.set_radiobuttons()
+		if flags & EVENT:
+			self.set_eventwidget()
+		if flags & TEXT:
+			self.set_textwidget()
+		if flags & OFFSET:
+			self.set_offsetwidget()
+		if flags & RESULT:
+			self.set_resultwidget()
+		if flags & REPEAT:
+			self.set_repeatwidget()
+		if flags & RELATIVE:
+			self.set_relative()
 
 	def sethelp(self):
 		print "TODO: sethelp."
@@ -1488,6 +1502,20 @@ class EventCtrl(AttrCtrl):
 			if not self._eventstruct.has_node():
 				self._radiobuttonwidgets['node'].enable(0)
 
+	def set_relative(self):
+		if not self._eventstruct:
+			self._relative.enable(1)
+			self._relative.setcheck(0)
+			self._relative.enable(0)
+		else:
+			cause = self._eventstruct.get_cause()
+			if cause == 'node' and self._eventstruct.has_node():
+				self._relative.enable(1)
+				relative = self._eventstruct.get_relative()
+				self._relative.setcheck(relative)
+				if relative and self._eventstruct._setnode is None and self._eventstruct._syncarc.refnode() is None:
+					self._relative.enable(0)
+
 	def set_eventwidget(self):
 		# Sets the value of the event widget.
 		if not self._eventstruct:
@@ -1532,6 +1560,7 @@ class EventCtrl(AttrCtrl):
 			self._resultwidget.settext("")
 		else:
 			self._resultwidget.settext(self._eventstruct.as_string())
+
 	def set_offsetwidget(self):
 		if not self._eventstruct:
 			self._offsetwidget.settext("")
@@ -1579,7 +1608,7 @@ class EventCtrl(AttrCtrl):
 		if code != win32con.CBN_SELCHANGE:
 			return
 		i = self._list.getselected()
-		if i >= 0 and i < len(self._value):
+		if 0 <= i < len(self._value):
 			self._eventstruct = self._value[i]
 			self.dont_update = 1
 			self.initevent()
@@ -1594,6 +1623,7 @@ class EventCtrl(AttrCtrl):
 ##			s = self._causewidget.getvalue()
 ##			self._eventstruct.set_cause(s)
 ##			self.set_eventwidget()
+
 	def _eventwidgetcallback(self, id, code):
 		if not self._eventstruct:
 			return
@@ -1602,29 +1632,36 @@ class EventCtrl(AttrCtrl):
 			self._eventstruct.set_event(s)
 			self.enableApply()
 			self.update()
+
 	def _textwidgetcallback(self, id, code):
 		if not self._eventstruct:
 			return
-		self.enableApply()
-		if code != win32con.EN_KILLFOCUS:
+		if code != win32con.EN_CHANGE:
 			return
 		t = self._textwidget.gettext()
 		error = self._eventstruct.set_thing_string(t)
 		if error:
 			print "ERROR:", error
-		self.update()
+		self.enableApply()
+		self.update(RADIO|EVENT|OFFSET|RESULT|REPEAT)
+
 	def _offsetwidgetcallback(self, id, code):
 		if not self._eventstruct:
 			return
+		if code != win32con.EN_CHANGE:
+			return
+		t = self._offsetwidget.gettext()
+		if t:
+			try:
+				self._eventstruct.set_offset(parseutil.parsecounter(self._offsetwidget.gettext(), withsign = 1))
+			except parseutil.error, msg:
+##				win32dialog.showmessage(msg, parent=self._wnd._form)
+				return
+		else:
+			self._eventstruct.set_offset(None)
 		self.enableApply()
-		if code != win32con.EN_KILLFOCUS:
-			return
-		try:
-			self._eventstruct.set_offset(float(self._offsetwidget.gettext()))
-		except ValueError:
-			win32dialog.showmessage("Must be a number!", parent=self._wnd._form)
-			return
-		self.update()
+		self.update(RADIO|EVENT|TEXT|RESULT|REPEAT)
+
 	def _radiobuttoncallback(self, id, code):
 		if code == win32con.BN_CLICKED and self._eventstruct:
 			newcause = self.__radiobuttons[id]
@@ -1632,23 +1669,27 @@ class EventCtrl(AttrCtrl):
 			self.enableApply()
 			self.update()
 			self.selected_radiobutton = newcause
+
 	def _repeatwidgetcallback(self, id, code):
-		if code == win32con.EN_KILLFOCUS and self._eventstruct:
-			self.enableApply()
+		if code == win32con.EN_CHANGE and self._eventstruct:
 			e = self._eventstruct.get_event()
 			if e.startswith('repeat'):
-				try:
-					self._eventstruct.set_repeat(int(self._repeatwidget.gettext()))
-				except ValueError:
-					win32dialog.showmessage("Repeat must be a number!", parent=self._wnd._form)
-					return
+				t = self._repeatwidget.gettext()
+				if t:
+					try:
+						self._eventstruct.set_repeat(int(self._repeatwidget.gettext()))
+					except ValueError:
+						win32dialog.showmessage("Repeat must be a number!", parent=self._wnd._form)
+						return
+				else:
+					self._eventstruct.set_repeat(1)
 			elif e=='marker':
 				self._eventstruct.set_marker(self._repeatwidget.gettext())
-			self.update()
+			self.enableApply()	
+			self.update(RADIO|EVENT|TEXT|OFFSET|RESULT)
 
 	def _thingbuttoncallback(self, id, code):
 		if code == win32con.BN_CLICKED and self._eventstruct:
-			self.enableApply()
 			c = self._eventstruct.get_cause()
 			if c == 'wallclock':
 				# TODO: more than just the wallclock.
@@ -1665,10 +1706,18 @@ class EventCtrl(AttrCtrl):
 				d = win32dialog.Dialog(list=l, title="Select viewport", prompt="Viewport:", parent=self._wnd._form)
 			#else:
 				#print "TODO: More than just editing the wallclock."
+			self.enableApply()
 			self.update()
 
 	def _thingbuttondialogcallback(self, region):
 		self._eventstruct.set_region(region)
+
+	def _relativecallback(self, id, code):
+		if code != win32con.BN_CLICKED:
+			return
+		relative = self._relative.getcheck()
+		if not self._eventstruct.set_relative(relative):
+			self._relative.setcheck(not relative)
 
 ##################################
 # StringOptionsCtrl can be used as a StringCtrl but the user 
