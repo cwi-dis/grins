@@ -175,6 +175,27 @@ class MMNode:
 		return '<MMNode instance, type=' + `self.type` \
 			+ ', uid=' + `self.uid` + '>'
 	#
+	# Compare two nodes, recursively.
+	# This purposely ignores the value of the context.
+	# (The uid is compared, so a deep copy will compare different.
+	# This is hard to avoid since deep copying may also change
+	# attributes that contain uid references.)
+	#
+	def __cmp__(self, other):
+		##_stat('__cmp__')
+		i = cmp(self.type, other.type)
+		if i: return i
+		i = cmp(self.uid, other.uid)
+		if i: return i
+		i = cmp(self.attrdict, other.attrdict)
+		if i: return i
+		if self.type in interiortypes:
+			return cmp(self.children, other.children)
+		elif self.type == 'imm':
+			return cmp(self.values, other.values)
+		else:
+			return 0
+	#
 	# Private methods to build a tree
 	#
 	def _addchild(self, child):
