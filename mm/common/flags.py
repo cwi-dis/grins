@@ -51,6 +51,13 @@ def curflags():
 		import settings
 		import features
 		flags = 0
+		if hasattr(features, 'feature_set'):
+			if features.EXPORT_REAL in features.feature_set:
+				flags = flags | FLAG_G2
+			if features.EXPORT_QT in features.feature_set:
+				flags = flags | FLAG_QT
+			if features.EXPORT_SMIL2 in features.feature_set:
+				flags = flags | FLAG_BOSTON
 		if hasattr(features, 'grins_snap') and features.grins_snap:
 			flags = flags | FLAG_SNAP
 		elif features.compatibility == features.G2:
