@@ -221,12 +221,12 @@ class PlayerCommon:
 					parent._addchild(n)
 					n.targetnode = parent
 					n.attrdict['internal'] = 1
-					from MMNode import MMSyncArc
+#					from MMNode import MMSyncArc
 #					n.attrdict['endlist'] = [MMSyncArc(n, 'end', srcnode = parent, event = 'end', delay = 0)]
 					# to avoid any behavior differences, use the same duration as publish
 					duration = n.targetnode.GetDuration()
 					if duration is not None and duration >= 0:
-						n.attrdict['endlist'] = [MMSyncArc(n, 'end', srcnode='syncbase', delay=duration)]					
+						n.attrdict['duration'] = duration
 					times = []
 					vals = []
 					for t, v in animvals:
