@@ -57,11 +57,39 @@ public class GRiNSPlayer implements Renderer {
     public void pause() {
         if(hgrins!=0) npause(hgrins);
     }
+    
+    public int getState() {
+        if(hgrins!=0) return ngetState(hgrins);
+        return -1;
+    }
+        
     public Dimension getPreferredSize() {
         if(hgrins!=0) return ngetPreferredSize(hgrins);
         return null;
     }
      
+    public double getDuration() {
+        if(hgrins!=0) return ngetDuration(hgrins);
+        return -1;
+    }
+    public void setTime(double t) {
+        if(hgrins!=0) nsetTime(hgrins, t);
+    }
+    
+    public double getTime() {
+        if(hgrins!=0) return ngetTime(hgrins);
+        return -1.0;
+    }
+     
+    public void setSpeed(double v) {
+        if(hgrins!=0) nsetSpeed(hgrins, v);
+    }
+    
+    public double getSpeed() {
+        if(hgrins!=0) return ngetSpeed(hgrins);
+        return 1.0;
+    }
+    
     private class GPCanvas extends Canvas implements Renderable {
         public void setRenderer(Renderer renderer) {
             this.renderer = renderer;
@@ -85,7 +113,13 @@ public class GRiNSPlayer implements Renderer {
     private native void nstop(int hgrins);
     private native void npause(int hgrins);
     private native void nupdate(int hgrins);
+    private native int ngetState(int hgrins);
     private native Dimension ngetPreferredSize(int hgrins);
+    private native double ngetDuration(int hgrins);
+    private native void nsetTime(int hgrins, double t);
+    private native double ngetTime(int hgrins);
+    private native void nsetSpeed(int hgrins, double v);
+    private native double ngetSpeed(int hgrins);
     static {
          System.loadLibrary("grinsp");
      }

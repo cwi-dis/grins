@@ -186,11 +186,87 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_npause(JNIEnv *env, jobject player, jint
  * Method:    stop
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_GRiNSPlayer_nstop(JNIEnv *, jobject, jint hgrins)
+JNIEXPORT void JNICALL Java_GRiNSPlayer_nstop(JNIEnv *env, jobject player, jint hgrins)
 	 {
 	 IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	 if(pIGRiNSPlayer)pIGRiNSPlayer->stop();		
 	 }
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    ngetDuration
+ * Signature: (I)D
+ */
+JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetDuration(JNIEnv *env, jobject player, jint hgrins)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	double dur;
+	if(pIGRiNSPlayer)pIGRiNSPlayer->getDuration(&dur);		
+	return jdouble(dur);
+	}
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    ngetSpeed
+ * Signature: (I)D
+ */
+JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetSpeed(JNIEnv *env, jobject player, jint hgrins)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	double speed;
+	if(pIGRiNSPlayer)pIGRiNSPlayer->getSpeed(&speed);		
+	return jdouble(speed);
+	}
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    ngetState
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_GRiNSPlayer_ngetState(JNIEnv *env, jobject player, jint hgrins)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	int plstate;
+	if(pIGRiNSPlayer)pIGRiNSPlayer->getState(&plstate);		
+	return jint(plstate);
+	}
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    ngetTime
+ * Signature: (I)D
+ */
+JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetTime(JNIEnv *env, jobject player, jint hgrins)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	double t;
+	if(pIGRiNSPlayer)pIGRiNSPlayer->getTime(&t);		
+	return jdouble(t);
+	}
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    nsetSpeed
+ * Signature: (ID)V
+ */
+JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetSpeed(JNIEnv *env, jobject player, jint hgrins, jdouble speed)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	if(pIGRiNSPlayer) pIGRiNSPlayer->setSpeed(speed);		
+	}
+
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    nsetTime
+ * Signature: (ID)V
+ */
+JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetTime(JNIEnv *env, jobject player, jint hgrins, jdouble t)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	if(pIGRiNSPlayer) pIGRiNSPlayer->setTime(t);		
+	}
+
 
 } //extern "C"
 
