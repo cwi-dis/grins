@@ -66,7 +66,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.is_timed = 0
 
 	def __repr__(self):
-		return "MMNodeWidget, name = " + self.name
+		return '<%s instance, name="%s", id=%X>' % (self.__class__.__name__, self.name, id(self))
 
 	def collapse_levels(self, level):
 		# Place holder for a recursive function.
