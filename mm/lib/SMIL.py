@@ -181,6 +181,7 @@ class SMIL:
 			GRiNSns+' ' 'project_default_region':None,
 			GRiNSns+' ' 'project_default_type':None,
 			GRiNSns+' ' 'project_bandwidth_fraction':None,
+			GRiNSns+' ' 'project_readonly':None,
 			},
 		'switch': {'customTest':None,
 			   __layout:None},
