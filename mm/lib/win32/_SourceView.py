@@ -27,7 +27,6 @@ class _SourceView(docview.EditView):
 
 	# Create the OS window
 	def createWindow(self,parent):
-		import traceback; traceback.print_stack()
 		self.CreateWindow(parent)
 	
 	# Called by the framework after the OS window has been created
