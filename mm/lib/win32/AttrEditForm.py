@@ -670,10 +670,12 @@ class ElementSelCtrl(AttrCtrl):
 		return self._attr.getcurrent()
 
 	def OnBrowse(self,id,code):
+		print 'ElelementSelCtrl.OnBrowse: to be fixed (targetElement needs to point to UID)'
+		return
 		parent = self._wnd._form
 		mmnode = self._wnd._form._node
 		selected = self._attrval.gettext()
-		dlg = win32dialog.SelectElementDlg(parent, mmnode, selected)
+		dlg = win32dialog.SelectElementDlg(parent, mmnode.GetRoot(), selected)
 		if dlg.show():
 			if selected != dlg.gettext():
 				self.setvalue(dlg.gettext())
@@ -1535,8 +1537,7 @@ class EventCtrl(AttrCtrl):
 		if code == win32con.BN_CLICKED and self._eventstruct:
 			newcause = self.__radiobuttons[id]
 			if newcause == 'node' and not self._eventstruct.has_node():
-				nodename = self._eventstruct.get_thing_string()[1]
-				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node, nodename, filter = 'node')
+				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node.GetRoot(), self._eventstruct.get_node(), filter = 'node')
 				if dlg.show():
 					self._eventstruct.set_node(dlg.getmmobject())
 			self._eventstruct.set_cause(newcause)
@@ -1573,15 +1574,14 @@ class EventCtrl(AttrCtrl):
 				self._eventstruct.set_wallclock(dialog.getvalue())
 			elif c == 'region':
 				# Pop up a region select dialog.
-				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node,\
+				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node.GetRoot(),
 					self._eventstruct.get_region() or '', filter = 'topLayout')
 				if dlg.show():
 					self._eventstruct.set_region(dlg.gettext())
 			elif c == 'node':
 				# Pop up a node select dialog.
-				nodename = self._eventstruct.get_thing_string()[1]
-				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node,\
-					nodename, filter = 'node')
+				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node.GetRoot(),
+					self._eventstruct.get_node(), filter = 'node')
 				if dlg.show():
 					self._eventstruct.set_node(dlg.getmmobject())
 			self.enableApply()

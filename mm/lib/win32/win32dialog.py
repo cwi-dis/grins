@@ -385,38 +385,17 @@ class SelectElementDlg(ResDialog):
 			return SelectElementDlg.tag2imgid.get(self._tag) or grinsRC.IDB_IMAGE
 
 		def getDisplayName(self):
-			name = self.getId()
-			if not name:
-				return "no name"
-			return name
-##			# 1. no MMObj -> tag 
-##			dname = self._tag
-##			if self._mmobj is None: 
-##				return dname
-##			
-##			# 2. MMObj with id -> tag id="..."
-##			id = self.getId()
-##			if id:
-##				dname = dname + ' id=\"' + id + '\"'
-##
-##			# 3. MMObj with region -> tag id="..."
-##			regname = self.getRegName()
-##			if regname:
-##				dname = dname + ' region=\"' + regname + '\"'
-##
-##			return dname
-		
-##		def getRegName(self):
-##			if not self.isRegion():
-##				mmchan = self._mmobj.GetChannel()
-##				if mmchan:
-##					reg = mmchan.GetLayoutChannel()
-##					return reg.GetUID()
-##			return ''
+			if self._mmobj is None:
+				name = ''
+			elif self._mmobj.getClassName() in ('Region', 'Viewport'):
+				name = self._mmobj.GetUID()
+			else:
+				name = self._mmobj.GetRawAttrDef('name', '')
+			return name or 'no name'
 
-	def __init__(self, parent, mmnode, selection='', filter = ''):
+	def __init__(self, parent, root, selection=None, filter = ''):
 		ResDialog.__init__(self,grinsRC.IDD_SELECT_ELEMENT, parent)
-		self._mmnode = mmnode
+		self._root = root
 		self._filter = filter
 		
 		# selection refs
@@ -479,32 +458,22 @@ class SelectElementDlg(ResDialog):
 
 		# controls binding
 		self.attach_handles_to_subwindows()
-		self._editsel.settext(self._selection)
-		self.HookCommand(self.OnEdit, self._editsel._id)
 		
 		# tree
 		self._tree = self.GetDlgItem(grinsRC.IDC_TREE1)
 		self._tree.SetImageList(self._imageList, commctrl.LVSIL_NORMAL)
-		self.buildElementsTree()
+		self.buildElementsTree() # also potentially sets self._selwrapper
 		self.HookNotify(self.OnSelChanged, commctrl.TVN_SELCHANGED)
 
 		# set initial tree selection
-		if self._selection:
-			self._selwrapper = self._mmid2wrapper.get(self._selection)
-			if self._selwrapper:
-				self._tree.Select(self._selwrapper.getDisplayId(), commctrl.TVGN_CARET)
+		if self._selwrapper is not None:
+			self._tree.Select(self._selwrapper.getDisplayId(), commctrl.TVGN_CARET)
+			self._editsel.settext(self._selwrapper.getDisplayName())
+		else:
+			self._editsel.settext('')
 		return ResDialog.OnInitDialog(self)
 
 	def OnOK(self):
-		# update sel refs from edit text
-		self._selection = self.gettext()
-		if self._selection:
-			self._selwrapper = self._mmid2wrapper.get(self._selection)
-		
-		# force selection and filter?
-		if not self.__validate():
-			return
-		# else	
 		self.__isoswnd = 0
 		self.__cleanup()
 		return self._obj_.OnOK()
@@ -519,37 +488,10 @@ class SelectElementDlg(ResDialog):
 		del self._mmid2wrapper
 		del self._tag2index
 
-	# showmessage and return false for invalid selections
-	# invalid selections: element without id or not in filter set
-	def __validate(self):
-		msg = None
-		if not self._selection or not self._selwrapper:
-			msg = 'Invalid element ID' 
-		else:
-			if self._filter == 'topLayout' and self._selwrapper.getTag() != 'topLayout':
-				msg = 'Selected element is not a topLayout' 
-			elif self._filter == 'region' and not self._selwrapper.isRegion():
-				msg = 'Selected element is not a region' 
-			elif self._filter == 'node' and self._selwrapper.isRegion():
-				msg = 'Selected element is not a timing node' 
-			elif self._filter == 'node' and self._selwrapper.getTag() in self.ctrlinteriortypes:
-				msg = 'Selected element is not a timing node' 
-		if msg:
-			showmessage(msg, mtype='warning', parent = self)
-			return 0
-		return 1
-
 	def __updateSelectEnable(self):
 		enable = 1
-		self._selection = self.gettext()
-		if self._selection:
-			self._selwrapper = self._mmid2wrapper.get(self._selection)
-		else:
-			print 'Warning: SelectItem: unknown selection', self._selection
-			self._selwrapper = None
-		if not self._selection or not self._selwrapper:
-			enable = 0
-		else:
+		if self._selwrapper is not None:
+			self._selection = self._selwrapper.getMMObj()
 			if self._filter == 'topLayout' and self._selwrapper.getTag() != 'topLayout':
 				enable = 0
 			elif self._filter == 'region' and not self._selwrapper.isRegion():
@@ -558,6 +500,9 @@ class SelectElementDlg(ResDialog):
 				enable = 0
 			elif self._filter == 'node' and self._selwrapper.getTag() in self.ctrlinteriortypes:
 				enable = 0
+		else:
+			self._selection = None
+			enable = 0
 		self._bselect.enable(enable)
 
 	# replacement of DoModal within a platform independent context
@@ -567,39 +512,10 @@ class SelectElementDlg(ResDialog):
 	def show(self):
 		return self.DoModal() == win32con.IDOK
 
-	def OnEdit(self, id, code):
-		if self.__lockupdate: return
-		if code==win32con.EN_CHANGE:
-			self.__lockupdate = 1
-			self._selection = self._editsel.gettext()
-			if self._selection:
-				self._selwrapper = self._mmid2wrapper.get(self._selection)
-			if self._selwrapper:
-				self._tree.Select(self._selwrapper.getDisplayId(), commctrl.TVGN_CARET)
-			self.__lockupdate = 0
-		# XXX Should we call __updateSelectEnable here? Should
-		# we allow editing in the first place?
-
-	def gettext(self):
-		if self.__isoswnd:
-			return self._editsel.gettext()
-		return self._selection
-			
 	def getmmobject(self):
-		if self.__isoswnd:
-			text = self._editsel.gettext()
-			if text:
-				wrapper = self._mmid2wrapper.get(text)
-				if wrapper:
-					return wrapper.getMMObj()
-		elif self._selwrapper:
+		if self._selwrapper:
 			return self._selwrapper.getMMObj()
 		return None
-
-	def settext(self, text):
-		self._selection = text
-		if self.__isoswnd:
-			self._editsel.settext(text)
 
 	def settitle(self, text):
 		self._title = text
@@ -616,8 +532,8 @@ class SelectElementDlg(ResDialog):
 	
 	# build layout tree
 	def __buildLayoutTree(self):
-		ctx = self._mmnode.GetContext()
-		root = self._mmnode.GetRoot()
+		root = self._root
+		ctx = root.GetContext()
 		top_levels = ctx.getviewports()
 		wrapper = self.MMObjWrapper(None, 'layout')
 		layoutid = self.insertMMObjWrapper(wrapper)
@@ -635,8 +551,7 @@ class SelectElementDlg(ResDialog):
 		
 	# build body tree
 	def __buildBodyTree(self):
-		ctx = self._mmnode.GetContext()
-		root = self._mmnode.GetRoot()
+		root = self._root
 		wrapper = self.MMObjWrapper(root, 'body')
 		rootid = self.insertMMObjWrapper(wrapper)
 		self.__appendNodes(root, rootid)
@@ -670,9 +585,10 @@ class SelectElementDlg(ResDialog):
 		nmsg = win32mu.Win32NotifyMsg(std, extra, 'tree')
 		itemid = nmsg.itemNew[0]
 		wrapper = self._wrappers.get(itemid)
-		if wrapper:
+		self._selwrapper = wrapper
+		if wrapper is not None:
 			self.__lockupdate = 1
-			self._editsel.settext(wrapper.getId())
+			self._editsel.settext(wrapper.getDisplayName())
 			self._msg.settext(wrapper.getSrc())
 			self._msg2.settext(wrapper.getMimetype())
 			self.__lockupdate = 0
@@ -684,18 +600,15 @@ class SelectElementDlg(ResDialog):
 	def insertMMObjWrapper(self, wrapper, parent = commctrl.TVI_ROOT, after = commctrl.TVI_LAST):
 		mask = commctrl.TVIF_TEXT | commctrl.TVIF_PARAM |  commctrl.TVIF_IMAGE | commctrl.TVIF_SELECTEDIMAGE
 		name = wrapper.getDisplayName()
-		imageix = self._tag2index.get(wrapper.getTag()) or 0
+		imageix = self._tag2index.get(wrapper.getTag(), 0)
 		itemid = self._tree.InsertItem(mask, name, imageix, imageix, 0, 0, 0, parent, after)
 		wrapper.setDisplayId(itemid)
 		if not self._wrappers.has_key(itemid):
 			self._wrappers[itemid] = wrapper
 		else:
 			print 'Warning: SelectElement: duplicate itemid', itemid
-		mmid = wrapper.getId()
-		if mmid:
-			self._mmid2wrapper[mmid] = wrapper
-		else:
-			pass # print 'Warning: SelectElement: no mmid for', itemid
+		if self._selection is not None and wrapper.getMMObj() is self._selection:
+			self._selwrapper = wrapper
 		return itemid
 
 # Implementation of the Layout name dialog
