@@ -1291,9 +1291,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attributes.has_key('fragment-id'):
 			aid = attributes['fragment-id']
 			atype = ATYPE_NORMAL
-		elif nname is not None and aid[:len(nname)+1] == nname + '-':
+		elif nname is not None and id is not None and \
+		     id[:len(nname)+1] == nname + '-':
 			# undo CMIF encoding of anchor ID
-			aid = aid[len(nname)+1:]
+			aid = id[len(nname)+1:]
 		if id is not None:
 			self.__anchormap[id] = (uid, aid)
 		anchorlist.append((z, len(anchorlist), aid, atype, aargs))
