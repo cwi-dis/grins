@@ -1,12 +1,14 @@
+# XXXX Still needs some work, esp. in the callback time calc section
+#
 from Channel import ChannelAsync
 import windowinterface
 import time
-import audiodev
+import Audio_mac
 import aifc
 import urllib
 import os
 
-debug = 1 # os.environ.has_key('CHANNELDEBUG')
+debug = os.environ.has_key('CHANNELDEBUG')
 
 class SoundChannel(ChannelAsync):
 	def __repr__(self):
@@ -19,6 +21,7 @@ class SoundChannel(ChannelAsync):
 		self.arm_fp = None
 		self.play_fp = None
 		self._timer_id = None
+		self.maxbytes = 0
 
 	def _openport(self):
 		if debug: print 'SoundChannel: openport'
@@ -28,11 +31,12 @@ class SoundChannel(ChannelAsync):
 		if self.port:
 			return 1
 		try:
-			self.port = audiodev.AudioDev()
-		except audiodev.error, arg:
+			self.port = Audio_mac.Play_Audio_mac(qsize=200000)
+		except Audio_mac.error, arg:
 			print 'Error: No audio available:', arg
 			self.port = 'no-audio'
 			return 0
+		self.maxbytes = self.port.getfillable()
 		return 1
 
 	def do_arm(self, node, same=0):
@@ -57,21 +61,34 @@ class SoundChannel(ChannelAsync):
 		self.arm_nchannels = self.arm_fp.getnchannels()
 		self.arm_bps = self.arm_nchannels*self.arm_sampwidth
 		self.arm_readsize = self.arm_framerate	# XXXX 1 second, tied to timer!!
+		if self.arm_readsize*self.arm_bps*2 > self.maxbytes:
+			# The audio output queue is too small to fit our readsize. Lower it.
+			self.arm_readsize = self.maxbytes / self.arm_bps / 2
+			print 'AudioChannel: Warning: reading',self.arm_readsize,'samples per cycle'
+		self.arm_time = float(self.arm_readsize/self.arm_bps)/self.arm_framerate/2
 		self.arm_data = self.arm_fp.readframes(self.arm_readsize)
+		if debug:
+			print 'Audio arm: framerate', self.arm_framerate
+			print 'Audio arm: sampwidth', self.arm_sampwidth
+			print 'Audio arm: nchannels', self.arm_nchannels
+			print 'Audio arm: bps', self.arm_bps
+			print 'Audio arm: readsize', self.arm_readsize
+			print 'Audio arm: len(data)', len(self.arm_data)
+			print 'Audio arm: timer', self.arm_time
 		return 1
 		
 	def _playsome(self, *dummy):
-		if debug: print 'SoundChannel: playsome'
 		if self._paused or not self.play_fp or not self.port:
 			if debug:
 				print 'not playing some...', self._paused, self.play_fp, self.port
 			return
 		in_buffer = len(self.play_data)/self.play_bps
+		if debug: print 'SoundChannel: playsome', in_buffer, self.port.getfillable()
 		while self.port.getfillable() >= in_buffer and self.play_data:
 			self.port.writeframes(self.play_data)
 			self.play_data = self.play_fp.readframes(self.play_readsize)
 		if self.play_data:
-			self._timer_id = windowinterface.settimer(0.5, (self._playsome, ()))
+			self._timer_id = windowinterface.settimer(self.arm_time, (self._playsome, ()))
 		else:
 			samples_left = self.port.getfilled()
 			time_left = samples_left/float(self.play_framerate)
