@@ -335,7 +335,8 @@ static PyObject *
 GraphBuilder_WaitForCompletion(GraphBuilderObject *self, PyObject *args)
 {
 	HRESULT res;
-	if (!PyArg_ParseTuple(args, ""))
+	long msTimeout=INFINITE;
+	if (!PyArg_ParseTuple(args, "|l",&msTimeout))
 		return NULL;
 
     IMediaEventEx *pME;
@@ -345,15 +346,17 @@ GraphBuilder_WaitForCompletion(GraphBuilderObject *self, PyObject *args)
 		return NULL;
 	}
 	long evCode=0;
-	res=pME->WaitForCompletion(INFINITE,&evCode);
-	if (FAILED(res)) {
-		seterror("WaitForCompletion", res);
-		pME->Release();
-		return NULL;
-	}
+	res=pME->WaitForCompletion(msTimeout,&evCode);
 	pME->Release();
-	Py_INCREF(Py_None);
-	return Py_None;
+	
+	// res is S_OK or E_ABORT 
+	// evCode is:
+	//		EC_COMPLETE  Operation completed.  
+	//		EC_ERRORABORT  Error. Playback can't continue.  
+	//		EC_USERABORT  User terminated the operation.  
+	//		Zero Operation has not completed.  
+	int ret=(res==S_OK && evCode!=0)?1:0; 
+	return Py_BuildValue("i", ret);
 }
 
 
