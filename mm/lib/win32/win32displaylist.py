@@ -158,7 +158,7 @@ class _DisplayList:
 		for b in self._buttons:
 			b._highlighted = 0 
 		wnd._active_displist = self
-		wnd.pop()
+##		wnd.pop()
 		wnd.update()
 
 	# Render the display list on dc within the region	
