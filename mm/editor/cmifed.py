@@ -213,7 +213,7 @@ class Main(MainDialog):
 		import windowinterface
 		self.last_location = url
 		windowinterface.setwaiting()
-		from MMExc import MSyntaxError
+		from MMExc import MSyntaxError, UserCancel
 		import TopLevel
 		for top in self.tops:
 			if top.is_document(url):
@@ -227,6 +227,8 @@ class Main(MainDialog):
 		except MSyntaxError:
 			import windowinterface
 			windowinterface.showmessage('parsing document %s failed' % url)
+		except UserCancel:
+			return
 		except TopLevel.Error:
 			return
 		else:
