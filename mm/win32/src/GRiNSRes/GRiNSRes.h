@@ -205,6 +205,8 @@
 #define IDD_ASSETSBAR                   408
 #define IDD_WALLCLOCKPOPUP              409
 #define IDD_EDITATTR_ACTIVEDUR1         410
+#define IDD_EDITATTR_LAYOUT1            411
+#define IDD_EDITATTR_LAYOUT2            412
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -233,11 +235,17 @@
 #define IDC_CHANNEL_NAME                1026
 #define IDC_CHANNEL_TYPE                1027
 #define IDC_EDIT1                       1028
+#define IDC_WIDTHV                      1029
 #define IDCMD_NEW_CHANNEL               1030
+#define IDC_RIGHTV                      1030
 #define IDCMD_REMOVE_CHANNEL            1031
+#define IDC_TOPV                        1031
 #define IDCMD_ATTRIBUTES                1032
+#define IDC_HEIGHTV                     1032
 #define IDC_LAYOUT_BACKGROUND           1033
+#define IDC_BOTTOMV                     1033
 #define IDCMD_ADD_CHANNEL               1034
+#define IDC_ZV                          1034
 #define IDC_LAYOUT_SENDBACK             1035
 #define IDUC_APPLY                      1036
 #define IDC_LAYOUT_DELREGION            1037
@@ -439,6 +447,7 @@
 #define IDC_COLORS                      1274
 #define IDC_COLOR_PICK                  1275
 #define IDC_LABEL                       1277
+#define IDC_LABEL2                      1278
 #define IDC_SLIDER_POS                  1279
 #define IDC_MIN                         1280
 #define IDC_MAX                         1281
@@ -528,6 +537,26 @@
 #define IDC_REPDURL                     1370
 #define IDC_ENDSYNCV                    1371
 #define IDC_ENDSYNCL                    1372
+#define IDC_LEFTU                       1374
+#define IDC_WIDTHU                      1375
+#define IDC_RIGHTU                      1376
+#define IDC_TOPU                        1377
+#define IDC_HEIGHTU                     1378
+#define IDC_BOTTOMU                     1379
+#define IDC_LEFTL                       1380
+#define IDC_WIDTHL                      1381
+#define IDC_HEIGHTL                     1382
+#define IDC_TOPL                        1383
+#define IDC_RIGHTL                      1384
+#define IDC_BOTTOML                     1385
+#define IDC_LEFTV                       1386
+#define IDC_WIDTHL2                     1387
+#define IDC_FITV                        1388
+#define IDC_WIDTHL3                     1389
+#define IDC_REGALIGNV                   1390
+#define IDC_REGALIGNL                   1391
+#define IDC_REGPOINTV                   1392
+#define IDC_REGPOINTL                   1393
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -616,7 +645,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        411
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1374
+#define _APS_NEXT_CONTROL_VALUE         1387
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
