@@ -1283,6 +1283,8 @@ class ChannelWindow(Channel):
 		if not hasattr(self._player, 'ChannelWinDict'):
 			self._player.ChannelWinDict = {}
 		self._player.ChannelWinDict[self._name] = self
+		if settings.activeFullSmilCss:
+			self.cssResolver = self._player.cssResolver
 		self.window = None
 		self.armed_display = self.played_display = None
 		self.update_display = None
@@ -1621,17 +1623,46 @@ class ChannelWindow(Channel):
 		self.__transparent = transparent
 		self.__bgcolor = bgcolor
 
-		# force show of channel.
-		self.show(1)
+		if settings.activeFullSmilCss:
+			pchan = self._get_parent_channel()
+			pchan.childToActiveState()
 
-		pchan = self._get_parent_channel()
-		pchan.childToActiveState()
+			# region geometry			
+			self.idCssNode = self.cssResolver.newRegion()
+			pchan = self._get_parent_channel()
+			self.cssResolver.setRawAttrPos(self.idCssNode,
+										   node.GetAttrDef('left',None), node.GetAttrDef('width',None),
+										   node.GetAttrDef('right',None), node.GetAttrDef('top',None),
+										   node.GetAttrDef('height',None), node.GetAttrDef('bottom',None))
+			self.cssResolver.link(self.idCssNode, pchan.idCssNode)
+			self._wingeom = self.cssResolver.getPxGeom(self.idCssNode)
+
+			# space are geometry			
+			self.idCssMedia = self.cssResolver.newMedia()
+			self.cssResolver.setAlignAttr(self.idCssMedia, 'regPoint', node.GetAttrDef('regPoint',None))
+			self.cssResolver.setAlignAttr(self.idCssMedia, 'regAlign', node.GetAttrDef('regAlign',None))
+			self.cssResolver.setAlignAttr(self.idCssMedia, 'scale', node.GetAttrDef('scale',None))
+			self.cssResolver.link(self.idCssMedia, self.idCssNode)
+			self._mediageom = self.cssResolver.getPxGeom(self.idCssMedia)
+			
+			# force show of channel.
+			self.show(1)			
+		else:
+			# force show of channel.
+			self.show(1)
+
+			pchan = self._get_parent_channel()
+			pchan.childToActiveState()
+
 
 	# Updates channels to unvisible if according to the showBackground/open and close attributes
 	def updateToInactiveState(self):
 
 		# force hide the channel.
 		self.hide(1)
+		if settings.activeFullSmilCss:
+			self.cssResolver.unlink(self.idCssMedia)
+			self.cssResolver.unlink(self.idCssNode)
 
 		self.__transparent = 1
 		self.__bgcolor = None
@@ -1686,8 +1717,9 @@ class ChannelWindow(Channel):
 		# experimental subregion and regpoint code
 		# determinate the channel size before to show the window
 		# For now, it allows to avoid a dynamic resize window (updatecoordinates)
-		wingeom = self.getwingeom(node)
-		self._wingeom = wingeom
+		if not settings.activeFullSmilCss:
+			wingeom = self.getwingeom(node)
+			self._wingeom = wingeom
 		# experimental subregion and regpoint code
 
 		self.updateToActiveState(node)
@@ -1816,6 +1848,12 @@ class ChannelWindow(Channel):
 	# get the space display area of media according to registration points
 	# return pourcent values relative to the subregion or region
 	def getmediageom(self, node):
+		if settings.activeFullSmilCss:
+			subreg_left, subreg_top, subreg_width, subreg_height = self._wingeom
+			area_left, area_top, area_width, area_height = self._mediageom
+			return float(area_left)/subreg_width, float(area_top)/subreg_height, \
+					 float(area_width)/subreg_width, float(area_height)/subreg_height
+		
 		subreg_height = node.__subreg_height
 		subreg_width = node.__subreg_width
 		subreg_top = node.__subreg_top

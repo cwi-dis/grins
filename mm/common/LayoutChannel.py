@@ -11,6 +11,13 @@ class LayoutChannel(ChannelWindow):
 		self.is_layout_channel = 1
 		self._activeMediaNumber = 0
 		self._wingeomInPixel = None
+		
+		if settings.activeFullSmilCss:
+			parentChannel = self._get_parent_channel()
+			if parentChannel == None:
+				self.idCssNode = self.cssResolver.newRootNode()
+			else:
+				self.idCssNode = self.cssResolver.newRegion()
 
 	# for now
 	# get the parent window geometry in pixel
@@ -101,6 +108,10 @@ class LayoutChannel(ChannelWindow):
 			units = self._attrdict.get('units',
 						   windowinterface.UNIT_MM)
 			width, height = self._attrdict.get('winsize', (50, 50))
+			
+			if settings.activeFullSmilCss:
+				self.cssResolver.setRootSize(self.idCssNode, width,height)
+			
 			self._curvals['winsize'] = ((width, height), (50,50))
 			x, y = self._attrdict.get('winpos', (None, None))
 			if self.want_default_colormap:
@@ -147,38 +158,55 @@ class LayoutChannel(ChannelWindow):
 	
 		if pchan:
 			# parent is not None, so it's not the main window
-			if self._attrdict.has_key('base_winoff'):
-				self._wingeom = pgeom = self._attrdict['base_winoff']
-			elif self._player.playing:
-				windowinterface.showmessage(
-					'No geometry for subchannel %s known' % self._name,
-					mtype = 'error', grab = 1)
-				pchan._subchannels.remove(self)
-				pchan = None
+			if settings.activeFullSmilCss:
+				# we create dynamicly a new css node instance
+				self.cssResolver.setRawAttrPos(self.idCssNode,
+									   self._attrdict.get('left'), self._attrdict.get('width'),
+									   self._attrdict.get('right'), self._attrdict.get('top'),
+									   self._attrdict.get('height'), self._attrdict.get('bottom'))
+				self.cssResolver.link(self.idCssNode, pchan.idCssNode)
+				self._wingeom = pgeom = self.cssResolver.getPxGeom(self.idCssNode)
 			else:
+				if self._attrdict.has_key('base_winoff'):
+					self._wingeom = pgeom = self._attrdict['base_winoff']
+				elif self._player.playing:
+					windowinterface.showmessage(
+						'No geometry for subchannel %s known' % self._name,
+						mtype = 'error', grab = 1)
+					pchan._subchannels.remove(self)
+					pchan = None
+				else:
 ##				pchan.window.create_box(
 ##					'Draw a subwindow for %s in %s' %
 ##						(self._name, pchan._name),
 ##					self._box_callback,
 ##					units = units)
 ##				return None
-				#
-				# Window without position/size. Set to whole parent, and remember
-				# in the attributes. (Note: technically wrong, changing the attrdict
-				# without using the edit mgr).
-				# Or should I skip the curvals stuff below, to do this correctly?
-				#
-				self._wingeom = pgeom = (0.0, 0.0, 1.0, 1.0)
-				units = windowinterface.UNIT_SCREEN
-				self._attrdict['base_winoff'] = pgeom
-				self._attrdict['units'] = units
+					#
+					# Window without position/size. Set to whole parent, and remember
+					# in the attributes. (Note: technically wrong, changing the attrdict
+					# without using the edit mgr).
+					# Or should I skip the curvals stuff below, to do this correctly?
+					#
+					self._wingeom = pgeom = (0.0, 0.0, 1.0, 1.0)
+					units = windowinterface.UNIT_SCREEN
+					self._attrdict['base_winoff'] = pgeom
+					self._attrdict['units'] = units
 			self._curvals['base_winoff'] = pgeom, None
 		
-		units = self._attrdict.get('units', windowinterface.UNIT_SCREEN)
+		if settings.activeFullSmilCss:
+			units = windowinterface.UNIT_PXL
+		else:
+			units = self._attrdict.get('units', windowinterface.UNIT_SCREEN)
 		self.create_window(pchan, self._wingeom, units)
 		
 		return 1
-		
+
+	def do_hide(self):
+		ChannelWindow.do_hide(self)
+		if settings.activeFullSmilCss:
+			self.cssResolver.unlink(self.idCssNode)			
+				
 	def play(self, node):
 		print "can't play LayoutChannel"
 
