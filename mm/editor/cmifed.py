@@ -212,9 +212,12 @@ class Main(MainDialog):
 		except IOError:
 			import windowinterface
 			windowinterface.showmessage('Cannot open: %s' % filename)
-		except MSyntaxError:
+		except MSyntaxError, msg:
+			message = 'Parse error in document: %s' % filename
+			if msg is not None:
+				message = message+': %s' % msg
 			import windowinterface
-			windowinterface.showmessage('Parse error in document: %s' % filename)
+			windowinterface.showmessage(message,  mtype='error')
 		except UserCancel:
 			return
 		except TopLevel.Error:
@@ -260,9 +263,12 @@ class Main(MainDialog):
 		except IOError:
 			import windowinterface
 			windowinterface.showmessage('Cannot open: %s' % url)
-		except MSyntaxError:
+		except MSyntaxError, msg:
+			message = 'Parse error in document: %s' % url
+			if msg is not None:
+				message = message+': %s' % msg
 			import windowinterface
-			windowinterface.showmessage('Parse error in document: %s' % url)
+			windowinterface.showmessage(message, mtype='error')
 		except UserCancel:
 			return
 		except TopLevel.Error:
