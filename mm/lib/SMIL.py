@@ -9,6 +9,7 @@ class SMIL:
 	__layout = GRiNSns + ' ' + 'layout'
 	__choice = GRiNSns + ' ' 'choice'
 	__bag = GRiNSns + ' ' 'bag'
+	__null = GRiNSns + ' ' 'null'
 	__cmif = GRiNSns + ' ' 'cmif'
 	__shell = GRiNSns + ' ' 'shell'
 	__socket = GRiNSns + ' ' 'socket'
@@ -188,7 +189,8 @@ class SMIL:
 	attributes[__bag] = attributes[__choice]
 
 	__media_object = ['audio', 'video', 'text', 'img', 'animation',
-			  'textstream', 'ref', __cmif, __shell, __socket]
+			  'textstream', 'ref', __null, __cmif, __shell,
+			  __socket]
 
 	__at = None
 	for __el in __media_object:
@@ -231,6 +233,7 @@ class SMIL:
 		'text': __assoc_link,
 		'animation': __assoc_link,
 		'textstream': __assoc_link,
+		__null: __assoc_link,
 		__cmif: __assoc_link,
 		__shell: __assoc_link,
 		__socket: __assoc_link,
