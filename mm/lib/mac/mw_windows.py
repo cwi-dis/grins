@@ -1223,7 +1223,7 @@ class _AdornmentsMixin:
 		if down:
 			# Check for control
 			ptype, ctl = Ctl.FindControl(local, self._wid)
-			if ptype and ctl:
+			if ptype and ctl and self._cntl_handlers.has_key(ctl):
 				control_callback, track_callback = self._cntl_handlers[ctl]
 				if ptype in TRACKED_PARTS and track_callback:
 					dummy = ctl.TrackControl(local, track_callback)
