@@ -312,9 +312,9 @@ class SchedulerContext:
 			if debugevents: print 'parent not playing'
 			return
 		if (node.playing == MMStates.PLAYING and MMAttrdefs.getattr(node, 'restart') != 'always') or \
-		   (node.playing == MMStates.PLAYED and MMAttrdefs.getattr(node, 'restart') == 'never'):
+		   (node.playing in (MMStates.FROZEN, MMStates.PLAYED) and MMAttrdefs.getattr(node, 'restart') == 'never'):
 			# ignore event when node doesn't want to play
-			if debugevents: print 'node won\'t play'
+			if debugevents: print "node won't restart"
 			return
 		endlist = MMAttrdefs.getattr(node, 'endlist')
 		if endlist:
@@ -338,7 +338,7 @@ class SchedulerContext:
 				self.parent.event(self, (SR.SCHED_DONE, node), timestamp)
 				return
 		# if node is playing (or not stopped), must terminate it first
-		if node.playing in (MMStates.PLAYING, MMStates.PLAYED):
+		if node.playing != MMStates.IDLE:
 			if debugevents: print 'terminating node'
 			self.parent.do_terminate(self, node, timestamp)
 		if pnode.type == 'excl' or pnode.type == 'seq':
@@ -351,7 +351,7 @@ class SchedulerContext:
 				if c is not node and c.playing != MMStates.IDLE:
 					self.parent.do_terminate(self, c, timestamp)
 		# we must start the node, but how?
-		if debugevents: print 'starting node',`node`
+		if debugevents: print 'starting node',`node`; self.dump()
 		srdict = pnode.gensr_child(node)
 		self.srdict.update(srdict)
 		if debugevents: self.dump()
@@ -877,6 +877,13 @@ class Scheduler(scheduler):
 			else:
 				# not yet queued
 				self.event(sctx, ev, timestamp)
+		ev = (SR.SCHED_STOP, node)
+		if sctx.srdict.has_key(ev):
+			self.event(sctx, ev, timestamp)
+			for e, srdict in sctx.srdict.items():
+				srlist = srdict[e][1]
+				if ev in srlist:
+					srlist.remove(ev)
 		return
 		if node.GetType() in interiortypes:
 			node.stoplooping()
