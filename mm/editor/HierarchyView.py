@@ -1297,7 +1297,7 @@ class HierarchyView(HierarchyViewDialog):
 		newnode = node.GetContext().newnode(type)
 		em.addnode(parent, i, newnode)
 		em.addnode(newnode, 0, node)
-		self._copyattrdict(newnode, node, copylist, editmgr=em)
+		self._copyattrdict(node, newnode, copylist, editmgr=em)
 		em.setglobalfocus('MMNode', newnode)
 		expandnode(newnode)
 		self.aftersetfocus()
@@ -2000,6 +2000,7 @@ class HierarchyView(HierarchyViewDialog):
 			attrnamelist = attrdict.keys()
 		for attrname in attrnamelist:
 			attrvalue = attrdict[attrname]
+			# note to self(mjvdg) - If it fails here, do you have oldnode and newnode the right way around?
 			# beginlist and endlist need special handling because the arcs contain
 			# backreferences to the node
 			if attrname in ('beginlist', 'endlist'):
