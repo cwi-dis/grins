@@ -144,6 +144,8 @@ class NodeWrapper(Wrapper):
 		namelist = ['name', 'channel', 'comment']
 		if self.node.GetType() == 'bag':
 			namelist.append('bag_index')
+		if self.node.GetType() == 'par':
+			namelist.append('terminator')
 		# Get the channel class (should be a subroutine!)
 		ctype = self.node.GetChannelType()
 		if channelmap.has_key(ctype):
@@ -323,6 +325,8 @@ class AttrEditor(AttrEditorDialog):
 				C = ChanneltypeAttrEditorField
 			elif displayername == 'units':
 				C = UnitsAttrEditorField
+			elif displayername == 'termnodename':
+				C = TermnodenameAttrEditorField
 			elif displayername == 'transparency':
 				C = TransparencyAttrEditorField
 			elif type == 'bool':
@@ -711,6 +715,18 @@ class ChildnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 				pass
 		list.sort()
 		return ['Default', 'undefined'] + list
+
+class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
+	# Choose from the node's children or the values LAST or FIRST
+	def getoptions(self):
+		list = []
+		for child in self.wrapper.node.GetChildren():
+			try:
+				list.append(child.GetAttr('name'))
+			except NoSuchAttrError:
+				pass
+		list.sort()
+		return ['Default', 'LAST', 'FIRST'] + list
 
 class ChanneltypeAttrEditorField(PopupAttrEditorField):
 	# Choose from the standard channel types

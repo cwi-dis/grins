@@ -217,7 +217,7 @@ class SchedulerContext:
 	# Incoming events from channels, or the start event.
 	#
 	def event(self, ev):
-		srlist = self.getsrlist(ev)
+		srlist, firstevents = self.getsrlist(ev)
 		for sr in srlist:
 			if sr[0] == SR.PLAY:
 				prio = PRIO_START
@@ -226,6 +226,8 @@ class SchedulerContext:
 			else:
 				prio = PRIO_INTERN
 			self.parent.add_runqueue(self, prio, sr)
+		for sr in firstevents:
+			self.parent.add_runqueue(self, PRIO_LO, sr)
 	#
 	def arm_ready(self, chan):
 		if not self.prearmlists.has_key(chan):
@@ -256,16 +258,24 @@ class SchedulerContext:
 		srlist = self.sractions[actionpos]
 		if srlist is None:
 			raise 'Scheduler: actions already sched for ev:', ev
-		num, srlist = srlist
+		if len(srlist) == 2:
+			num, srlist = srlist
+			firstactions = []
+		else:
+			#
+			# Firstactions are executed when the first
+			# event comes in and then immedeately forgotten
+			#
+			num, srlist, firstactions = srlist
 		num = num - 1
 		if num < 0:
 			raise 'Scheduler: waitcount<0:', (num, srlist)
 		elif num == 0:
 			self.sractions[actionpos] = None
-			return srlist
 		else:
 			self.sractions[actionpos] = (num, srlist)
-		return []
+			srlist = []
+		return srlist, firstactions
 		
 class Scheduler(scheduler):
 	def __init__(self, ui):

@@ -14,8 +14,9 @@ import SR
 
 error = 'MMTree.error'
 
-Version = 'PlayerCache 3.0'		# version of player file
-OldVersion = 'PlayerCache 2.1'
+Version = 'PlayerCache 3.1'		# version of player file
+OldVersion = 'PlayerCache 3.0'
+VeryOldVersion = 'PlayerCache 2.1'
 
 def ReadFile(filename):
 	try:
@@ -35,9 +36,10 @@ def ReadFile(filename):
 		MacOS.splash(514)	# Show "Loading document" splash screen
 	header = marshal.load(f)
 	if header != (Version, base, stf[ST_MTIME], stf[ST_SIZE]) and \
-	   header != (OldVersion, base, stf[ST_MTIME], stf[ST_SIZE]):
-		if header[0] != Version:
-			if header[0] == OldVersion:
+	   header != (OldVersion, base, stf[ST_MTIME], stf[ST_SIZE]) and \
+	   header != (VeryOldVersion, base, stf[ST_MTIME], stf[ST_SIZE]):
+		if header[0] not in (Version, OldVersion):
+			if header[0] == VeryOldVersion:
 				print 'Warning: old version of player file'
 			else:
 				raise error, 'version mismatch'
@@ -129,6 +131,8 @@ def attrnames(node):
 	namelist = ['name', 'channel', 'comment']
 	if node.GetType() == 'bag':
 		namelist.append('bag_index')
+	if node.GetType() == 'par':
+		namelist.append('terminator')
 	ctype = node.GetChannelType()
 	if channelmap.has_key(ctype):
 		cclass = channelmap[ctype]
@@ -185,7 +189,11 @@ def dump(node, mini, targets, list, dellist):
 		prearmlists = gen_prearms(node, mini)
 		# convert MMNode instances to UIDs
 		for i in range(len(sractions)):
-			nevents, actions = sractions[i]
+			if len(sractions[i]) == 2:
+				nevents, actions = sractions[i]
+				firstactions = []
+			else:
+				nevents, actions, firstactions = sractions[i]
 			newactions = []
 			for a, n in actions:
 				try:
@@ -193,7 +201,18 @@ def dump(node, mini, targets, list, dellist):
 				except AttributeError:
 					pass
 				newactions.append(a, n)
-			sractions[i] = (nevents, newactions)
+			newfirstactions = []
+			for a, n in firstactions:
+				try:
+					n = n.uid
+				except AttributeError:
+					pass
+				newfirstactions.append(a, n)
+			if newfirstactions:
+				sractions[i] = (nevents, newactions,
+						newfirstactions)
+			else:
+				sractions[i] = (nevents, newactions)
 		newevents = {}
 		for event, action in srevents.items():
 			a, n = event

@@ -179,6 +179,9 @@
 	() 'SyncTo list' hidden
 	'List of sync arcs ending at this node' raw)
 
+(terminator (name) 'LAST' 'Terminator child' termnodename
+	'Name of child that terminates parallel node' normal)
+
 (toplevel_winpos (tuple (float) (float)) (-1 -1) 'Top level winpos' hidden
 	 'Window position for top level menu' raw)
 
