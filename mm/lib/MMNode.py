@@ -895,7 +895,8 @@ class MMChannel:
 class MMChannelTree:
 	def __init__(self, node):
 		self.top_levels = []
-		self.subchans = {}
+		self.subchans = {}	# This is a tree of all channels
+					# of type channel_name:String->[subchannels:MMChannel]
 		self.__calc1(node)
 		self.__calc2(node)
 		self.__node = node
@@ -905,19 +906,20 @@ class MMChannelTree:
 		channels = context.channels
 		for ch in channels:
 			del ch.__parent
-		
+
 	def getchannel(self, chan):
 		if type(chan) != type(''):
 			return chan
 		context = self.__node.GetContext()
 		return context.channeldict.get(chan)
 
-	def getsubchanels(self, chan):
+	def getsubchannels(self, chan):
 		if type(chan) != type(''):
 			chan = chan.name
 		if self.subchans.has_key(chan):
 			return self.subchans[chan]
-		return []
+		else:
+			return []
 
 	def getparent(self, chan):
 		if type(chan) != type(''):
@@ -934,15 +936,37 @@ class MMChannelTree:
 			path.insert(0, chan)
 			chan = chan.__parent
 		return path
-						
+
+	def getsubregions(self, chan):
+		# Returns a list of all the sub-regions of a certain channel (which could be a region).
+		if type(chan) != type(''):
+			chan = chan.name
+		return_me = []
+		kids = self.subchans[chan]
+		for i in kids:
+			if i.get('type') =='layout':
+				return_me.append(i)
+		return return_me
+
+	def getviewports(self):
+		return self.top_levels
+
+#	def getviewport(self, chan):
+#		# Returns the name of this node's viewport.
+#		print "TODO"
+#		return None
+# Kleanthis: have you called this "self.top_levels"??
+
 	def __calc1(self, node):
+		# Find the base windows, aka viewports.
 		context = node.GetContext()
 		channels = context.channels
 		for ch in channels:
+			# If the channel has a base window that I don't know about, add it (? -mjvdg)
 			if ch.has_key('base_window'):
-				pch = ch['base_window']
-				if not self.subchans.has_key(pch):
-					self.subchans[pch] = []
+				pch = ch['base_window']	# pch is the parent channel.
+				if not self.subchans.has_key(pch): # if I don't know about this base window, 
+					self.subchans[pch] = []	# I, er, add it as an empty list (?!).
 				self.subchans[pch].append(ch)
 			if not ch.has_key('base_window') and \
 			   ch['type'] not in ('sound', 'shell', 'python',
@@ -957,7 +981,7 @@ class MMChannelTree:
 		context = node.GetContext()
 		channels = context.channels
 		if self.top_levels:
-			top0 = self.top_levels[0].name
+			top0 = self.top_levels[0].name # top0 is the main base window.
 		else:
 			top0 = None
 		for ch in channels:
@@ -966,13 +990,15 @@ class MMChannelTree:
 					  'null', 'vcr', 'socket', 'cmif',
 					  'midi', 'external') and top0:
 				self.subchans[top0].append(ch)
+				
 		# enable bottom up search
 		for ch in channels:
-			ch.__parent = None
+			ch.__parent = None # A private variable in another class.
 		for parentName, childs in self.subchans.items():
 			parchan = node.GetContext().getchannel(parentName)
 			for ch in childs:
 				ch.__parent = parchan
+
 
 # representation of anchors
 class MMAnchor:
