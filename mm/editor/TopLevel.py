@@ -231,10 +231,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.publishcommandlist = [
 				SAVE_AS(callback = (self.saveas_callback, ())),
 				]
-			self.saveg2commandlist = [
-				EXPORT_G2(callback = (self.bandwidth_callback, ('real', self.export_G2_callback))),
-				UPLOAD_G2(callback = (self.bandwidth_callback, ('real', self.upload_G2_callback))),
-				]
+			if features.EXPORT_REAL in features.feature_set:
+				self.publishcommandlist = self.publishcommandlist + [
+					EXPORT_G2(callback = (self.bandwidth_callback, ('real', self.export_G2_callback))),
+					UPLOAD_G2(callback = (self.bandwidth_callback, ('real', self.upload_G2_callback))),
+					]
 			if features.EXPORT_QT in features.feature_set:
 				self.publishcommandlist = self.publishcommandlist + [
 					EXPORT_QT(callback = (self.bandwidth_callback, ('qt', self.export_QT_callback))),
@@ -257,7 +258,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				EXPORT_PRUNE(callback = (self.saveas_callback, (1,))),
 				]
 		else:
-			self.savecommandlist = self.publishcommandlist = self.saveg2commandlist = []
+			self.savecommandlist = self.publishcommandlist = self.publishg2commandlist = []
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(
@@ -1064,38 +1065,45 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		except os.error:
 			pass
 		settings.set('savedir', os.path.dirname(filename))
-		try:
-			if compatibility.QT == features.compatibility:
-				cleanSMIL = 0
-				if mimetype == 'application/smil':
-					grinsExt = 0
-				else:
-					grinsExt = 1
-			else:
-				cleanSMIL = (mimetype == 'application/smil')					
-				grinsExt = not cleanSMIL
 
+		if exporting:
+			exporttype = self.exporttype
+			grinsExt = 0
+			copyfiles = 1
+			qtExt = 0
+			rpExt = 0
+			convertfiles = 0
+			if exporttype == compatibility.G2:
+				rpExt = 1
+				convertfiles = 1
+			elif exporttype == compatibility.QT:
+				qtExt = 1
+			# XXX enabling this currently crashes the application on Windows during video conversion
+			progress = windowinterface.ProgressDialog("Publishing", self.cancel_upload)
+			progress.set('Publishing document...')
+			progress = progress.set
+		else:
+			grinsExt = mimetype != 'application/smil'
+			qtExt = features.EXPORT_QT in features.feature_set
+			rpExt = features.EXPORT_REAL in features.feature_set
+			copyfiles = 0
+			convertfiles = 0
+			progress = None
+			exporttype = None
+
+		try:
 			import SMILTreeWrite
-			if exporting:
-				# XXX enabling this currently crashes the application on Windows during video conversion
-				progress = windowinterface.ProgressDialog("Publishing", self.cancel_upload)
-				progress.set('Publishing document...')
-				progress = progress.set
-				exporttype = self.exporttype
-			else:
-				progress = None
-				exporttype = None
 			try:
 				SMILTreeWrite.WriteFile(self.root, filename,
-							cleanSMIL = cleanSMIL,
 							grinsExt = grinsExt,
-							copyFiles = exporting,
-							evallicense=evallicense,
-							progress = progress,
+							qtExt = qtExt,
+							rpExt = rpExt,
+							copyFiles = copyfiles,
+							convertfiles = convertfiles,
 							convertURLs = 1,
-							convertfiles = exporting and exporttype not in (compatibility.SMIL10, compatibility.Boston),
-							prune = self.prune,
-							compatibility = exporttype)
+							evallicense = evallicense,
+							progress = progress,
+							prune = self.prune)
 			finally:
 				self.prune = 0
 		except IOError, msg:
@@ -1131,22 +1139,43 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		evallicense= (license < 0)
 		self.pre_save()
 		have_web_page = (self.exporttype in (compatibility.G2, compatibility.QT))
+
+		#
+		# Export params
+		#
+		exporttype = self.exporttype
+		qtExt = 0
+		rpExt = 0
+		convertfiles = 0
+		if exporttype == compatibility.G2:
+			rpExt = 1
+			convertfiles = 1
+		elif exporttype == compatibility.QT:
+			qtExt = 1
 		#
 		# Progress dialog
 		#
 		progress = windowinterface.ProgressDialog("Uploading", self.cancel_upload)
 		progress.set("Generating document...")
+
 		#
 		# First save and upload the SMIL file (and the data items)
 		#
 		try:
 			import SMILTreeWrite
-			SMILTreeWrite.WriteFTP(self.root, filename, m_ftpparams,
-						cleanSMIL = 1,
-						copyFiles = 1,
-						convertfiles = (self.exporttype not in (compatibility.SMIL10, compatibility.Boston)),
-						evallicense=evallicense,
-						progress=progress.set)
+			try:
+				SMILTreeWrite.WriteFTP(self.root, filename, m_ftpparams,
+							grinsExt = 0,
+							qtExt = qtExt,
+							rpExt = rpExt,
+							copyFiles = 1,
+							convertfiles = convertfiles,
+							convertURLs = 1,
+							evallicense = evallicense,
+							progress = progress.set,
+							prune = self.prune)
+			finally:
+				self.prune = 0
 		except IOError, msg:
 			windowinterface.showmessage('Media upload failed:\n%s'%(msg,))
 			return 0

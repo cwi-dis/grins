@@ -189,6 +189,10 @@ SOURCE=.\M_AnimationData.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_AnimationWrappers.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_Animators.c
 # End Source File
 # Begin Source File

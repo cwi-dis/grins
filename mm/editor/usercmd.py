@@ -97,9 +97,9 @@ class SAVE(_CommandBase):
 class SAVE_AS(_CommandBase):
 	help = 'Save document in new file'
 class EXPORT_G2(_CommandBase):
-	help = 'Create G2 SMIL file and media items'
+	help = 'Create RealPlayer SMIL file and media items'
 class UPLOAD_G2(_CommandBase):
-	help = 'Upload G2 SMIL file and media items to FTP server'
+	help = 'Upload RealPlayer SMIL file and media items to FTP server'
 class EXPORT_QT(_CommandBase):
 	help = 'Save document in new file as pure SMIL'
 class UPLOAD_QT(_CommandBase):
