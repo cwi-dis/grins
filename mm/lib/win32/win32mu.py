@@ -42,8 +42,8 @@ class Rect:
 		self.right=r[2];self.bottom=r[3]
 
 		# obsolete
-		self.tuple = ltrb_tuple
-		self.tuple_ps = xywh_tuple
+		self.tuple = self.ltrb_tuple
+		self.tuple_ps = self.xywh_tuple
 
 	def ltrb_tuple(self):
 		return self.left,self.top,self.right,self.bottom
