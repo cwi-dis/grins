@@ -134,7 +134,7 @@ class Menu:
 	# create menu from a <menu_spec_list>
 	# appends remaining to self <menu_exec_list>
 	def _create_menu(self,menu,list):
-		[ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE] = range(5)
+		from MenuTemplate import ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE
 		flags=win32con.MF_STRING|win32con.MF_ENABLED
 		id=-1
 		for item in list:
