@@ -204,11 +204,9 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 				if layout is None:
 					ch.check_visible()
 					ch.unhighlight()
-					ch.hideimg()
 					ch.sensitive()
 				else:
 					ch.show()
-					ch.showimg()
 					if channel is not None and \
 					   channel == chname:
 						##ch.highlight(RED)
@@ -227,7 +225,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 					ch.sensitive((selectchannelcb, (chname,)))
 			elif not ch._attrdict.has_key('base_window'):
 				ch.show()
-				ch.showimg()
 				ch.sensitive((selectchannelcb, (chname,)))
 			else:
 				ch.hide()
