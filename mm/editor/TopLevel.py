@@ -659,13 +659,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if not filename:
 			return 'no file specified'
 		self.setwaiting()
+		prune = self.prune
 		if self.save_to_file(filename):
 			if self.closeonsave:
 				self.close()
 				return 1
-			self.filename = MMurl.pathname2url(filename)
-##			self.context.setbaseurl(self.filename)
-			self.fixtitle()
+			if not prune:
+				self.filename = MMurl.pathname2url(filename)
+##				self.context.setbaseurl(self.filename)
+				self.fixtitle()
 		else:
 			return 1
 
