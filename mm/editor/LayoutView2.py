@@ -43,12 +43,41 @@ class TreeHelper:
 		self.__mmnodeTreeRef = mmnodeTreeRef
 		self.__nodeList = {}
 		self.__rootList = {}
+		self.__initDefaultRegion()
 
 	def destroy(self):
 		self.__channelTreeRef = None
 		self.__mmnodeTreeRef = None
 		self.__nodeList = None
 		self.__rootList = None
+
+	#
+	# Experimental code to manage a default region
+	#
+	
+	def __initDefaultRegion(self):
+		self.__defaultRegion = None
+		self.__defaultViewport = None
+
+	def __getDefaultViewport(self):
+		viewportRefList = self.__channelTreeRef.getviewports()
+		self.__defaultViewport = viewportRefList[0]
+		return self.__defaultViewport
+	
+	def __getDefaultRegion(self):
+		if self.__defaultRegion == None:
+			defaultViewport = self.__getDefaultViewport()
+			self.__defaultRegion = FakeMMChannel('Unreferenced medias')
+			self.__defaultRegion.setParent(defaultViewport)
+		return self.__defaultRegion
+
+	def _checkDefaultViewport(self):
+		if self.__defaultRegion != None:
+			self.__checkRegionNodeList(self.__defaultViewport, self.__defaultRegion, 1)
+
+	#
+	# End experimental code to manage a default region
+	#
 		
 	# return tree if node is a valid media nodes
 	def _isValidMMNode(self, node):
@@ -58,7 +87,7 @@ class TreeHelper:
 		if not node.type in leaftypes:
 			return 0
 		chtype = node.GetChannelType()
-		if chtype == None:
+		if chtype == None or chtype == 'animate':
 			return 0
 		return 1
 
@@ -66,21 +95,22 @@ class TreeHelper:
 	def __checkMediaNodeList(self, nodeRef):
 		if debug2: print 'treeHelper.__checkMediaNodeList : start ',nodeRef
 		if self._isValidMMNode(nodeRef):
-			channel = nodeRef.GetChannel()
-			if channel != None:
-				region = channel.GetLayoutChannel()
-				if region != None:
-					parentRef = region
-					tParentNode =  self.__nodeList.get(parentRef)
-					if tParentNode == None:
-						tParentNode = self.__nodeList[parentRef] = TreeNodeHelper(parentRef, TYPE_REGION)
-					tNode =  self.__nodeList.get(nodeRef)
-					if tNode == None or not tParentNode.hasChild(tNode):
-						tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_MEDIA)
-						tParentNode.addChild(tNode)
-					else:
-						tNode.checkMainUpdate()
-						tNode.isUsed = 1
+			region = nodeRef.GetChannel()
+			if region == None:
+				# the region doesn't exist, return the default region
+				parentRef = self.__getDefaultRegion()
+			else:
+				parentRef = region
+			tParentNode =  self.__nodeList.get(parentRef)
+			if tParentNode == None:
+				tParentNode = self.__nodeList[parentRef] = TreeNodeHelper(parentRef, TYPE_REGION)
+			tNode =  self.__nodeList.get(nodeRef)
+			if tNode == None or not tParentNode.hasChild(tNode):
+				tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_MEDIA)
+				tParentNode.addChild(tNode)
+			else:
+				tNode.checkMainUpdate()
+				tNode.isUsed = 1
 						
 		for child in nodeRef.GetChildren():
 			self.__checkMediaNodeList(child)
@@ -91,7 +121,7 @@ class TreeHelper:
 		self.__checkMediaNodeList(self.__mmnodeTreeRef)
 
 	# check the region/viewport node references and update the internal structure
-	def __checkRegionNodeList(self, parentRef, nodeRef):
+	def __checkRegionNodeList(self, parentRef, nodeRef, isFakePart = 0):
 		if debug2: print 'treeHelper.__checkRegionNodeList : start ',nodeRef
 		tNode =  self.__nodeList.get(nodeRef)
 		if parentRef != None:
@@ -122,8 +152,10 @@ class TreeHelper:
 			tNode.checkMainUpdate()							
 			tNode.isUsed = 1
 		
-		for subreg in self.__channelTreeRef.getsubregions(nodeRef):
-			self.__checkRegionNodeList(nodeRef, subreg)
+		if not isFakePart:
+			for subreg in self.__channelTreeRef.getsubregions(nodeRef):
+				self.__checkRegionNodeList(nodeRef, subreg)
+						
 		if debug2: print 'treeHelper.__checkRegionNodeList : end ',nodeRef
 
 	# check the region/viewport node references and update the internal structure
@@ -222,7 +254,9 @@ class TreeHelper:
 	# in the right order for each basic operation
 	def onTreeMutation(self):
 		if debug: print 'treeHelper.onTreeMutation start'
+		self.__initDefaultRegion()
 		self._checkMediaNodeList()
+		self._checkDefaultViewport()
 		self._checkRegionNodeList()
 		self._detectMutation()
 		if debug: print 'treeHelper.onTreeMutation end'
@@ -286,6 +320,33 @@ class TreeHelper:
 			parentNode = self.__nodeList.get(parentRef)
 		self.__onDelNode(parentNode, node)
 
+#
+# Experimental code to manage a default region
+#
+	
+class FakeMMChannel:
+	def __init__(self, name):
+		self._parent = None
+		self.attrdict = {}
+		self.name = name
+		self.collapsed = 0
+
+	def GetAttrDef(self, attr, default=None):
+		return default
+		
+	def getClassName(self):
+		return 'FakeMMChannel'
+	
+	def GetParent(self):
+		return self._parent
+
+	def setParent(self, parent):
+		self._parent = parent
+
+	#
+	# End experimental code to manage a default region
+	#
+	
 class TreeNodeHelper:
 	def __init__(self, nodeRef, type):
 		# this method is called a lot of times. It has to be optimized
@@ -562,10 +623,12 @@ class LayoutView2(LayoutViewDialog2):
 	def onNewNodeRef(self, parentRef, nodeRef):
 		nodeType = self.getNodeType(nodeRef)
 		if nodeType == TYPE_VIEWPORT:
-			self.previousWidget.addViewport(nodeRef)			
+			if nodeRef.getClassName() != 'FakeMMChannel':
+				self.previousWidget.addViewport(nodeRef)			
 			self.treeWidget.appendViewport(nodeRef)
 		elif nodeType == TYPE_REGION:
-			self.previousWidget.addRegion(parentRef, nodeRef)
+			if nodeRef.getClassName() != 'FakeMMChannel':
+				self.previousWidget.addRegion(parentRef, nodeRef)
 			self.treeWidget.appendRegion(parentRef, nodeRef)
 		elif nodeType == TYPE_MEDIA:
 			self.treeWidget.appendMedia(parentRef, nodeRef)
@@ -573,10 +636,12 @@ class LayoutView2(LayoutViewDialog2):
 	def onDelNodeRef(self, parentRef, nodeRef):
 		nodeType = self.getNodeType(nodeRef)
 		if nodeType == TYPE_VIEWPORT:
-			self.previousWidget.removeViewport(nodeRef)
+			if nodeRef.getClassName() != 'FakeMMChannel':
+				self.previousWidget.removeViewport(nodeRef)
 			self.treeWidget.removeNode(nodeRef)
 		elif nodeType == TYPE_REGION:
-			self.previousWidget.removeRegion(nodeRef)
+			if nodeRef.getClassName() != 'FakeMMChannel':
+				self.previousWidget.removeRegion(nodeRef)
 			self.treeWidget.removeNode(nodeRef)
 		elif nodeType == TYPE_MEDIA:
 			self.treeWidget.removeNode(nodeRef)
@@ -1127,21 +1192,22 @@ class LayoutView2(LayoutViewDialog2):
 			for child in children:
 				self.__recurDelNode(child)
 
-			self.treeHelper.delNode(nodeRef) 
-			self.editmgr.delchannel(nodeRef.name)
+#			self.treeHelper.delNode(nodeRef)
+			if nodeRef.getClassName() != 'FakeMMChannel':
+				self.editmgr.delchannel(nodeRef.name)
 			
 	def applyDelRegion(self, regionRef):
 		if self.editmgr.transaction():
 			# update directly (more efficient. No need to compare all nodes)
 			self.__recurDelNode(regionRef)
-			self.commitAlreadyUpdated = 1 
+#			self.commitAlreadyUpdated = 1 
 			self.editmgr.commit('REGION_TREE')
 			
 	def applyDelViewport(self, viewportRef):
 		if self.editmgr.transaction():
 			# update directly (more efficient. No need to compare all nodes)
 			self.__recurDelNode(viewportRef)
-			self.commitAlreadyUpdated = 1 
+#			self.commitAlreadyUpdated = 1 
 			self.editmgr.commit('REGION_TREE')
 
 	def applyAttrList(self, nodeRefAndValueList):
@@ -1741,6 +1807,9 @@ class LayoutView2(LayoutViewDialog2):
 		if sourceNodeRef == None or targetNodeRef == None:
 			return 0
 
+		if targetNodeRef.getClassName() == 'FakeMMChannel':
+			return 0
+		
 		if sourceNodeRef.IsAncestorOf(targetNodeRef) or sourceNodeRef is targetNodeRef:
 			return 0
 				
@@ -1901,7 +1970,12 @@ class ZFieldWidget(LightWidget):
 			self.__unselect()
 			return
 		nodeRef = nodeRefList[0]
+		
 		nodeType = self._context.getNodeType(nodeRef)
+		if nodeRef.getClassName() == 'FakeMMChannel' or (nodeType == TYPE_MEDIA and not nodeRef.GetChannel()):
+			self.__unselect()
+			return
+		
 		if nodeType == TYPE_VIEWPORT:
 			self.dialogCtrl.enable('RegionZ',0)
 			self.dialogCtrl.setFieldCtrl('RegionZ',"")
@@ -1970,7 +2044,13 @@ class GeomFieldWidget(LightWidget):
 			self.__unselect()
 			return
 		nodeRef = nodeRefList[0]
+		
 		nodeType = self._context.getNodeType(nodeRef)
+		
+		if nodeRef.getClassName() == 'FakeMMChannel' or (nodeType == TYPE_MEDIA and not nodeRef.GetChannel()):
+			self.__unselect()
+			return
+		
 		if nodeType == TYPE_VIEWPORT:
 			self.__updateViewport(nodeRef)
 		elif nodeType == TYPE_REGION:
@@ -2396,6 +2476,8 @@ class PreviousWidget(Widget):
 
 		for nodeRef in nodeRefList:			
 			nodeType = self._context.getNodeType(nodeRef)
+			if nodeRef.getClassName() == 'FakeMMChannel' or (nodeType == TYPE_MEDIA and not nodeRef.GetChannel()):
+				continue
 			if nodeType == TYPE_VIEWPORT:
 				viewport = nodeRef
 			elif nodeType == TYPE_REGION:
@@ -2406,7 +2488,8 @@ class PreviousWidget(Widget):
 		viewport = None
 		if len(nodeRefList) > 0:
 			lastNodeRef = nodeRefList[-1]
-			viewport = self._context.getViewportRef(lastNodeRef)
+			if lastNodeRef.getClassName() != 'FakeMMChannel' and (nodeType != TYPE_MEDIA or nodeRef.GetChannel()):
+				viewport = self._context.getViewportRef(lastNodeRef)
 		if viewport != None:
 			self.__showViewport(nodeRef)
 
@@ -2443,6 +2526,8 @@ class PreviousWidget(Widget):
 		# We assume here that no region has been added or supressed
 		viewportRefList = self._context.getViewportRefList()
 		for viewportRef in viewportRefList:
+			if viewportRef.getClassName() == 'FakeMMChannel':
+				continue
 			viewportNode = self.getNode(viewportRef)
 			if debug: print 'LayoutView.updateRegionTree: update viewport',viewportNode.getName()
 			viewportNode.updateAllAttrdict()
