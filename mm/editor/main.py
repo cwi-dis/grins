@@ -166,7 +166,7 @@ def main():
 			print '\t' + sys.exc_type + ':', `sys.exc_value`
 			print
 			import os
-			sts = os.system('sfplay /ufs/guido/lib/woowoo &')
+			sts = os.system('/ufs/guido/bin/playaudio /ufs/guido/lib/woowoo &')
 			import pdb
 			pdb.post_mortem(sys.exc_traceback)
 	finally:
