@@ -26,7 +26,24 @@ class SMIL:
 			 'name':None},
 		'layout': {'id':None,
 			   'type':SMIL_BASIC},
+		'root-layout': {'background-color':'transparent',
+				'backgroundColor':None,
+				'height':'0',
+				'id':None,
+				'overflow':'hidden',
+				'skip-content':'true',
+				'title':None,
+				'width':'0'},
+		'top-layout': {'background-color':'transparent',
+			       'backgroundColor':None,
+			       'height':'0',
+			       'id':None,
+			       'skip-content':'true',
+			       'title':None,
+			       'width':'0',
+			       },
 		'region': {'background-color':'transparent',
+			   'backgroundColor':None,
 			   'fit':'hidden',
 			   'height':'0',
 			   'id':None,
@@ -51,13 +68,6 @@ class SMIL:
 			   GRiNSns+' ' 'type':None,
 			   GRiNSns+' ' 'visible':None,
 			   },
-		'root-layout': {'background-color':'transparent',
-				'height':'0',
-				'id':None,
-				'overflow':'hidden',
-				'skip-content':'true',
-				'title':None,
-				'width':'0'},
 		__layouts: {GRiNSns+' ' 'id':None},
 		__layout: {GRiNSns+' ' 'id':None,
 ##			   GRiNSns+' ' 'title':None,
@@ -219,17 +229,16 @@ class SMIL:
 	__schedule = ['par', 'seq', __choice, __bag] + __media_object
 	__container_content = __schedule + ['switch', 'a']
 	__assoc_link = ['anchor']
-	__empty = []
 
 	# all entities with their allowed content
+	# no allowed content is default, so we don't specify empty ones here
 	entities = {
 		'smil': ['head', 'body'],
 		'head': ['layout', 'switch', 'meta', 'userAttributes', __layouts],
 		'userAttributes': ['uGroup'],
-		'uGroup': __empty,
-		'layout': ['region', 'root-layout'],
+		'layout': ['region', 'root-layout', 'top-layout'],
+		'top-layout': ['region'],
 		'region': ['region'],
-		'meta': __empty,
 		__layouts: [__layout],
 		'body': __container_content,
 		'par': __container_content,
@@ -249,11 +258,10 @@ class SMIL:
 		__shell: __assoc_link,
 		__socket: __assoc_link,
 		'a': __schedule + ['switch'],
-		'anchor': __empty,
 		}
 
 	# cleanup
 	del __choice, __bag, __cmif, __shell, __socket
 	del __media_object, __schedule, __container_content,
-	del __assoc_link, __empty
+	del __assoc_link
 	del __layouts, __layout
