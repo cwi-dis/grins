@@ -1,7 +1,7 @@
 Document Type: WSE
 item: Global
   Version=9.01
-  Title=Oratrix GRiNS Editor for SMIL 2.0 - Hutchinson Version Installation
+  Title=Oratrix GRiNS Editor for SMIL 2.0 - Mobile SMIL Version Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
   Japanese Font Name=MS Gothic
@@ -21,7 +21,7 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=..\..\bin\win32\grins_H3G_win_2.0-140.exe
+  EXE Filename=..\..\bin\win32\grins_MS2_win_2.0-140.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -29,7 +29,7 @@ item: Global
   Per-User Version ID=1
   Dialogs Version=7
   Version File=2.2
-  Version Description=GRiNS/SMIL 2.0/H3G
+  Version Description=GRiNS/SMIL 2.0/Mobile
   Version Copyright=Copyright © 2002 Oratrix
   Version Company=Oratrix
   Crystal Format=10111100101100000010001001001001
@@ -56,7 +56,7 @@ item: If/While Statement
 end
 item: Search for File
   Variable=FIND_DIRECTORY
-  Pathname List=GRiNS_H3G.exe
+  Pathname List=GRiNS_MS2.exe
   Description=Checking for previously installed components...
   Flags=00000001
 end
@@ -117,12 +117,12 @@ item: End Block
 end
 item: Set Variable
   Variable=APPTITLE
-  Value=Oratrix GRiNS Editor for SMIL 2.0 - Hutchinson Version
+  Value=Oratrix GRiNS Editor for SMIL 2.0 - Mobile SMIL Version
   Flags=10000000
 end
 item: Set Variable
   Variable=GROUP
-  Value=Oratrix GRiNS\GRiNS Editor for SMIL 2.0 H3G
+  Value=Oratrix GRiNS\GRiNS Editor for SMIL 2.0 Mobile Version
   Flags=10000000
 end
 item: Set Variable
@@ -131,7 +131,7 @@ item: Set Variable
 end
 item: Set Variable
   Variable=MAINDIR
-  Value=Oratrix\GRiNS_H3G
+  Value=Oratrix\GRiNS_MS2
   Flags=10000000
 end
 item: Check Configuration
@@ -1469,8 +1469,8 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
-  Source=..\..\bin\win32\GRiNS_H3G.exe
-  Destination=%MAINDIR%\GRiNS_H3G.exe
+  Source=..\..\bin\win32\GRiNS_MS2.exe
+  Destination=%MAINDIR%\GRiNS_MS2.exe
   Flags=0000000010000011
 end
 item: Install File
@@ -2304,7 +2304,7 @@ item: Create Shortcut
 end
 item: Create Shortcut
   Source=%MAINDIR%\Unwise.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS for SMIL 2.0.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS for SMIL 2.0 Mobile Version.lnk
   Icon Number=0
 end
 item: If/While Statement
@@ -2374,8 +2374,8 @@ item: If/While Statement
   Flags=00001010
 end
 item: Create Shortcut
-  Source=%MAINDIR%\GRiNS_H3G.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Editor for SMIL 2.0.lnk
+  Source=%MAINDIR%\GRiNS_MS2.exe
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Editor for SMIL 2.0 Mobile Version.lnk
   Icon Number=0
   Flags=01000000
 end
@@ -2387,8 +2387,34 @@ item: If/While Statement
   Flags=00001010
 end
 item: Create Shortcut
-  Source=%MAINDIR%\GRiNS_H3G.exe
-  Destination=%CDESKTOPDIR%\GRiNS Hutchinson Editor for SMIL 2.0.lnk
+  Source=%MAINDIR%\GRiNS_MS2.exe
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Editor for SMIL 2.0 Mobile Version.lnk
+  Icon Number=0
+  Flags=01000000
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\GRiNS_MS2.exe
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Editor for SMIL 2.0 Mobile Version.lnk
+  Icon Number=0
+  Flags=01000000
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\GRiNS_MS2.exe
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Editor for SMIL 2.0 Mobile Version.lnk
   Icon Number=0
   Flags=01000000
 end
@@ -2403,8 +2429,8 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL 2.0
-  Command Line=%MAINDIR%\GRiNS_H3G.exe
+  Icon Name=GRiNS Editor for SMIL 2.0 Mobile Version
+  Command Line=%MAINDIR%\GRiNS_MS2.exe
 end
 item: End Block
 end
@@ -2415,8 +2441,8 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Hutchinson Editor for SMIL 2.0
-  Command Line=%MAINDIR%\GRiNS_H3G.exe
+  Icon Name=GRiNS Editor for SMIL 2.0 Mobile Version
+  Command Line=%MAINDIR%\GRiNS_MS2.exe
 end
 item: End Block
 end
@@ -2456,7 +2482,7 @@ item: Add ProgMan Icon
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=Uninstall GRiNS for SMIL 2.0
+  Icon Name=Uninstall GRiNS for SMIL 2.0 Mobile Version
   Command Line=%MAINDIR%\Unwise.exe
 end
 item: If/While Statement
@@ -2504,7 +2530,7 @@ item: Edit Registry
   end
   item: Key
     Key=SMILfile\DefaultIcon
-    New Value=%MAINDIR%\GRiNS_H3G.exe,2
+    New Value=%MAINDIR%\GRiNS_MS2.exe,2
     New Value=
     Root=32
   end
@@ -2525,7 +2551,7 @@ item: Edit Registry
   end
   item: Key
     Key=SMILfile\shell\edit\command
-    New Value=%MAINDIR%\GRiNS_H3G.exe "%%1"
+    New Value=%MAINDIR%\GRiNS_MS2.exe "%%1"
     New Value=
     Root=32
   end
@@ -2544,7 +2570,7 @@ item: Edit Registry
   end
   item: Key
     Key=GRiNSProject\DefaultIcon
-    New Value=%MAINDIR%\GRiNS_H3G.exe,2
+    New Value=%MAINDIR%\GRiNS_MS2.exe,2
     New Value=
   end
   item: Key
@@ -2562,7 +2588,7 @@ item: Edit Registry
   end
   item: Key
     Key=GRiNSProject\shell\edit\command
-    New Value=%MAINDIR%\GRiNS_H3G.exe "%%1"
+    New Value=%MAINDIR%\GRiNS_MS2.exe "%%1"
     New Value=
     Root=32
   end
@@ -2571,7 +2597,7 @@ item: Edit Registry
   Total Keys=3
   item: Key
     Key=SMILfile\shell\open\command
-    New Value=%MAINDIR%\GRiNS_H3G.exe "%%1"
+    New Value=%MAINDIR%\GRiNS_MS2.exe "%%1"
     New Value=
     Root=32
   end
@@ -2582,7 +2608,7 @@ item: Edit Registry
   end
   item: Key
     Key=GRiNSProject\shell\open\command
-    New Value=%MAINDIR%\GRiNS_H3G.exe "%%1"
+    New Value=%MAINDIR%\GRiNS_MS2.exe "%%1"
     New Value=
     Root=32
   end
@@ -2777,12 +2803,12 @@ item: Custom Dialog Set
       Text Swedish=< &Tillbaka
     end
     item: Checkbox
-      Rectangle=90 82 166 110
+      Rectangle=90 82 262 110
       Variable=FINISH_ACTIONS
       Enabled Color=00000000000000001111111111111111
       Create Flags=01010000000000010000000000000011
       Text=View QuickStart Guide
-      Text=Start Editor
+      Text=Start %APPTITLE%
       Text=
     end
     item: Set Control Attribute
@@ -2846,7 +2872,7 @@ item: If/While Statement
   Flags=00000010
 end
 item: Execute Program
-  Pathname=%MAINDIR%\GRiNS_H3G.exe
+  Pathname=%MAINDIR%\GRiNS_MS2.exe
 end
 item: End Block
 end
