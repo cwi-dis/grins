@@ -887,7 +887,7 @@ class MMRegPoint:
 
 	def items(self):
 		return self.attrdict.items()
-
+		
 class MMTreeElement:
 	def __init__(self, context, uid):
 		self.context = context	# From MMContext
@@ -993,6 +993,19 @@ class MMTreeElement:
 		else:
 			parent.children.insert(i, self)
 		self.parent = parent
+
+	def getattrnames(self):
+		if not hasattr(self, 'attrdict'):
+			# Have to test for that since the attrdict attribute is declared
+			# in the subclasses, not here.
+			return []
+		names = self.attrdict.keys()
+		names.sort()  # There may be a more useful way to sort the items...
+		return names
+		
+	def getallattrnames(self):
+		print "Warning: getallattrnames not overridden:", self
+		return []
 
 class MMChannel(MMTreeElement):
 	def __init__(self, context, name, type='undefined'):
@@ -4540,6 +4553,142 @@ class MMNode(MMTreeElement):
 		self.canplay = self.willplay = self.shouldplay = None
 		for child in self.children:
 			child.ResetPlayability()
+			
+	def getallattrnames(self):
+		import ChannelMap
+		ntype = self.GetType()
+		if ntype == 'prio':
+			# special case for prio nodes
+			return ['name', 'title', 'abstract', 'author',
+				'copyright', 'comment',
+				'higher', 'peers', 'lower', 'pauseDisplay']
+		elif ntype == 'comment':
+			# special case for comment nodes
+			return []
+		elif ntype == 'foreign':
+			return self.node.attrdict.keys()
+
+		# Tuples are optional names and will be removed if they
+		# aren't set
+		namelist = [
+			'name', 'channel', 'file', # From nodeinfo window
+			'.type',
+			'terminator',
+			'beginlist', 'endlist',
+			'duration', 'min', 'max', 'loop', 'repeatdur', # Time stuff
+			'restart', 'restartDefault',
+			'clipbegin', 'clipend',	# More time stuff
+			'sensitivity',
+			'top', 'height', 'bottom',
+			'left', 'width', 'right',
+			'fit',
+			'fill', 'fillDefault', 'erase',
+			'syncBehavior', 'syncBehaviorDefault',
+			'title', 'abstract', 'alt', 'longdesc', 'readIndex', 'author',
+			'copyright', 'comment',
+			'layout', 'u_group',
+			'fgcolor',
+			'mimetype',	# XXXX Or should this be with file?
+			'system_audiodesc', 'system_bitrate',
+			'system_captions', 'system_cpu',
+			'system_language', 'system_operating_system',
+			'system_overdub_or_caption', 'system_required',
+			'system_screen_size', 'system_screen_depth',
+			]
+		ctype = self.GetChannelType()
+		if ntype in leaftypes:
+			namelist.append('channel')
+		namelist.append('abstract')
+		namelist.append('system_captions')
+		namelist.append('system_overdub_or_caption')
+		namelist.append('system_required')
+		namelist.append('system_screen_size')
+		namelist.append('system_screen_depth')
+		namelist.append('system_audiodesc')
+		namelist.append('system_cpu')
+		namelist.append('system_operating_system')
+		namelist.append('system_component')
+		if ntype != 'switch':
+			namelist.append('restart')
+			namelist.append('restartDefault')
+			namelist.append('fillDefault')
+			namelist.append('syncBehavior')
+			namelist.append('syncBehaviorDefault')
+			namelist.append('min')
+			namelist.append('max')
+		if ntype in leaftypes:
+			namelist.append('readIndex')
+			namelist.append('erase')
+		if  ntype != 'switch':
+			namelist.append('fill')
+		namelist.append('alt')
+		namelist.append('longdesc')
+		if ntype in ('par', 'excl') or (ntype in leaftypes):
+			namelist.append('terminator')
+		if ntype in ('par', 'seq', 'excl'):
+			namelist.append('duration')
+		if ntype == 'switch':
+			if 'begin' in namelist:
+				namelist.remove('begin')
+			namelist.remove('loop')
+			namelist.remove('duration')
+			namelist.remove('repeatdur')
+			namelist.remove('beginlist')
+			namelist.remove('endlist')
+		if ntype in leaftypes:
+			namelist.append('alt')
+			namelist.append('longdesc')
+			namelist.append('clipbegin')
+			namelist.append('clipend')
+			if ChannelMap.isvisiblechannel(ctype):
+				namelist.append('left')
+				namelist.append('width')
+				namelist.append('right')
+				namelist.append('top')
+				namelist.append('height')
+				namelist.append('bottom')
+				namelist.append('fit')
+				namelist.append('regPoint')
+				namelist.append('regAlign')
+				namelist.append('z')
+				namelist.append('sensitivity')
+					
+			# specific time preference
+			namelist.append('immediateinstantiationmedia')
+			namelist.append('bitratenecessary')
+			namelist.append('systemmimetypesupported')
+			namelist.append('attachtimebase')
+			namelist.append('qtchapter')
+			namelist.append('qtcompositemode')
+			
+		if 'layout' in namelist and not self.context.layouts:
+			# no sense bothering the user with an attribute that
+			# doesn't do anything...
+			namelist.remove('layout')
+		# Get the channel class (should be a subroutine!)
+		if ChannelMap.channelmap.has_key(ctype):
+			cclass = ChannelMap.channelmap[ctype]
+			# Add the class's declaration of attributes
+			namelist = namelist + cclass.node_attrs
+		# Merge in nonstandard attributes
+		extras = []
+		for name in self.GetAttrDict().keys():
+			if name not in namelist and \
+				     MMAttrdefs.getdef(name)[3] <> 'hidden':
+				extras.append(name)
+		extras.sort()
+		namelist = namelist + extras
+		retlist = []
+		for name in namelist:
+			if name in retlist:
+				continue
+			retlist.append(name)
+			
+##		if not cmifmode():
+##			# cssbgcolor is used instead
+##			if 'bgcolor' in retlist: retlist.remove('bgcolor')
+##			if 'transparent' in retlist: retlist.remove('transparent')
+		return retlist
 
 class FakeRootNode(MMNode):
 	def __init__(self, root):
