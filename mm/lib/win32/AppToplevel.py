@@ -387,7 +387,7 @@ class _Toplevel:
 		return self._fiber_id
 	# Register for receiving timeslices
 	def unregister(self,id):
-		if id in self._registry.keys():
+		if self._registry.has_key(id):
 			del self._registry[id]
 	# Dispatch timeslices
 	def serve_timeslices(self):
