@@ -293,6 +293,7 @@ class MMStream:
 		return 1
 
 	def __del__(self):
+		del self._dds
 		del self._mstream
 		del self._ddstream
 		del self._sample
