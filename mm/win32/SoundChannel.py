@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
 from Channel import ChannelWindow, FALSE
-import urllib
+import MMurl
 import midiex, win32con
 import win32ui, mmsystem
 error = 'Channel.error'
@@ -44,7 +44,7 @@ class SoundChannel(ChannelWindow):
 			self.errormsg(node, 'Node must be external')
 			return 1
 		filename = self.getfileurl(node)
-		filename = urllib.url2pathname(filename)
+		filename = MMurl.url2pathname(filename)
 		print filename
 		#if (self._armed_soundIndex <> None) : 
 		#the previously armed node was not played

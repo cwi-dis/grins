@@ -6,8 +6,8 @@ from TextChannel import mapfont, fix_anchorlist
 #from TextChannel import mapfont
 from AnchorDefs import *
 import string
-import urllib
-from urllib import urlopen, urlretrieve
+import MMurl
+from MMurl import urlopen, urlretrieve
 import MMAttrdefs
 import textex
 
@@ -131,7 +131,7 @@ class LabelChannel(ChannelWindow):
 		elif node.type == 'ext':
 			#filename = self.getfileurl(node)
 			url = self.getfileurl(node)
-			filename = urllib.url2pathname(url)
+			filename = MMurl.url2pathname(url)
 			self._filename = filename
 			try:
 				#fp = urlopen(filename)

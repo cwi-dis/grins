@@ -3,8 +3,8 @@ __version__ = "$Id$"
 from Channel import ChannelWindow
 from AnchorDefs import *
 import string
-#from urllib import urlopen
-import urllib
+#from MMurl import urlopen
+import MMurl
 import StringStuff
 import MMAttrdefs
 import textex, win32con
@@ -112,7 +112,7 @@ class TextChannel(ChannelWindow):
 			#if external read the text from the file
 			#filename = self.getfileurl(node)
 			url = self.getfileurl(node)
-			filename = urllib.url2pathname(url)
+			filename = MMurl.url2pathname(url)
 			try:
 				#fp = urlopen(filename)
 				fp = open(filename)

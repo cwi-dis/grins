@@ -5,7 +5,7 @@ debug = os.environ.has_key('CHANNELDEBUG')
 from Channel import Channel
 import string
 import os
-import urllib
+import MMurl
 import win32api, win32con
 
 [ WINNT, WIN95] = range(2)
@@ -36,10 +36,10 @@ class ShellChannel(Channel):
 			#print 'cmd is'
 			prog =""
  			#prog = self.getfileurl(node)
-			#prog = urllib.url2pathname(prog)
+			#prog = MMurl.url2pathname(prog)
 		else:
 			#prog = self.getfileurl(node)
-			#prog = urllib.url2pathname(prog)
+			#prog = MMurl.url2pathname(prog)
 			prog =""
 			argv = [prog]
 		self.pid = startprog(prog, argv)
