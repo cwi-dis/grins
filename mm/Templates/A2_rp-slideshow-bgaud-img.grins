@@ -6,6 +6,7 @@
     <meta name="template_name" content="RealPix Slideshow"/>
     <meta name="template_description" content="Realpix slideshow with two soundtracks and a background image"/>
     <meta name="template_snapshot" content="rp_2x_audio.bmp"/>
+    <meta name="project_html_page" content="external_player.html"/>
     <layout>
       <root-layout id="Player-Window" width="420" height="260"/>
       <region id="audioRegion_1" GRiNS:type="sound"/>
