@@ -265,12 +265,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			pass
 		print 'saving to', filename, '...'
 		try:
-			if filename[-4:] == '.smi' or filename[-5:] == '.smil':
-				import SMILTreeWrite
-				SMILTreeWrite.WriteFile(self.root, filename)
-			else:
+			if filename[-4:] == '.cmi' or filename[-5:] == '.cmif':
 				import MMWrite
 				MMWrite.WriteFile(self.root, filename)
+			else:
+				import SMILTreeWrite
+				SMILTreeWrite.WriteFile(self.root, filename)
 		except IOError, msg:
 			windowinterface.showmessage('Save operation failed.\n'+
 						    'File: '+filename+'\n'+
