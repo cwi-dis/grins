@@ -30,11 +30,6 @@ if os.name == 'posix':
 else:
 	platform = sys.platform
 
-#
-# This could be done better, by putting the version number in here.
-#
-DEFAULT_BASE_URL="http://www.oratrix.com/GRiNS/help/%s/index.html"%platform
-
 def sethelpprogram(program):
 	global helpprogram
 	helpprogram = program
@@ -53,7 +48,9 @@ def fixhelpdir():
 			basefile = os.path.join(helpdir, 'index.html')
 			helpbase = MMurl.pathname2url(basefile)
 		else:
-			helpbase = DEFAULT_BASE_URL
+			import settings
+			helpdir = settings.get('helpdir_url')
+			helpbase = '%s/%s/index.html'%(helpdir, platform)
 		
 
 def givehelp(topic):
