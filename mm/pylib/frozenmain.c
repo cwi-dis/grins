@@ -37,6 +37,7 @@ PERFORMANCE OF THIS SOFTWARE.
 extern void PyWinFreeze_ExeInit();
 extern void PyWinFreeze_ExeTerm();
 extern int PyInitFrozenExtensions();
+#include <windows.h>
 #endif
 
 #ifdef HAVE_UNISTD_H
@@ -84,9 +85,16 @@ Py_FrozenMain(argc, argv)
 	PySys_SetArgv(argc, argv);
 
 	n = PyImport_ImportFrozenModule("__main__");
-	if (n == 0)
+	if (n == 0){
+#ifdef MS_WIN32
+		MessageBox(NULL,"FatalError: __main__ not frozen", "GRiNS", MB_OK);
+#endif
 		Py_FatalError("__main__ not frozen");
+		}
 	if (n < 0) {
+#ifdef MS_WIN32
+		MessageBox(NULL,"Failed to startup.\n\nPyErr on ImportFrozenModule __main__", "GRiNS", MB_OK);
+#endif
 		PyErr_Print();
 		sts = 1;
 	}
