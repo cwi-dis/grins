@@ -7,6 +7,7 @@ import Ctl
 import Controls
 import ControlAccessor
 import App
+import Evt
 
 import img
 import imgformat
@@ -157,7 +158,7 @@ class _ListWidget(_ControlWidget):
 		Ctl.SetKeyboardFocus(self.wid, self.control, Controls.kControlListBoxPart)
 
 class _AreaWidget(_ControlWidget):
-	def __init__(self, wid, item):
+	def __init__(self, wid, item, callback=None):
 		self.wid = wid
 		self.control = wid.GetDialogItemAsControl(item)
 		self.rect = self.control.GetControlRect()
@@ -169,6 +170,7 @@ class _AreaWidget(_ControlWidget):
 		self.otherrects = []
 		self.ourrect = (0, 0, 1, 1)
 		self.recalc()
+		self.callback = callback
 		
 	def close(self):
 		del self.wid
@@ -180,21 +182,28 @@ class _AreaWidget(_ControlWidget):
 ##			App.DrawThemeGenericWell(self.rect, 1)
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 			Qd.EraseRect(self.rect)
-			Qd.RGBForeColor((0,0,0))
+			Qd.RGBForeColor((0x7fff, 0x7fff, 0x7fff))
 			Qd.FrameRect(self.rect)
 			for r in self.otherrects:
-				Qd.RGBForeColor((0x7fff, 0x7fff, 0x7fff))
+				Qd.RGBForeColor((0x0, 0x7fff, 0x7fff))
 				Qd.FrameRect(r)
-			Qd.RGBForeColor((0xffff, 0, 0))
-			Qd.FrameRect(self.ourrect)
-			for l in self.lurven:
-				Qd.PaintRect(l)
+			self.drawourrect()
 		except:
 			import traceback, sys
 			exc_type, exc_value, exc_traceback = sys.exc_info()
 			traceback.print_exception(exc_type, exc_value, None)
 			traceback.print_tb(exc_traceback)
 
+	def drawourrect(self):
+		port = self.wid.GetWindowPort()
+		Qd.RGBForeColor((0x0, 0, 0))
+		oldmode = port.pnMode
+		Qd.PenMode(QuickDraw.srcXor)
+		Qd.FrameRect(self.ourrect)
+		for l in self.lurven:
+			Qd.PaintRect(l)
+		Qd.PenMode(oldmode)
+	
 	def hittest(self, ctl, (x, y)):
 		try:
 			print "hittest", ctl, x, y
@@ -202,7 +211,10 @@ class _AreaWidget(_ControlWidget):
 				lx0, ly0, lx1, ly1 = self.lurven[i]
 				if lx0 <= x <= lx1 and ly0 <= y <= ly1:
 					# track
-					print 'track lurf', i
+					if Evt.StillDown():
+						self.tracklurf(i, (x, y))
+					if self.callback:
+						self.callback()
 					return 1
 			return 0
 		except:
@@ -210,6 +222,48 @@ class _AreaWidget(_ControlWidget):
 			exc_type, exc_value, exc_traceback = sys.exc_info()
 			traceback.print_exception(exc_type, exc_value, None)
 			traceback.print_tb(exc_traceback)
+			
+	def tracklurf(self, lurf, (x, y)):
+		x0, y0, x1, y1 = self.rect
+		if lurf == 4:
+			# Adapt pinning rectangle for middle lurf
+			rx0, ry0, rx1, ry1 = self.ourrect
+			w = (rx1-rx0)/2
+			h = (ry1-ry0)/2
+			x0 = x0 + w
+			x1 = x1 - w
+			y0 = y0 + h
+			y1 = y1 - h
+		while Evt.WaitMouseUp():
+			newx, newy = Evt.GetMouse()
+			# Pin the mouse to our rectangle
+			if newx < x0: newx = x0
+			if newx > x1: newx = x1
+			if newy < y0: newy = y0
+			if newy > y1: newy = y1
+			deltax = newx-x
+			deltay = newy-y
+			x = newx
+			y = newy
+			if deltax or deltay:
+				# Something has changed. Recompute and redraw
+				self.drawourrect()
+				rx0, ry0, rx1, ry1 = self.ourrect
+				if lurf in (0, 3, 4, 6):
+					rx0 = rx0 + deltax
+					if rx0 > rx1: rx0 = rx1
+				if lurf in (0, 1, 2, 4):
+					ry0 = ry0 + deltay
+					if ry0 > ry1: ry0 = ry1
+				if lurf in (2, 4, 5, 8):
+					rx1 = rx1 + deltax
+					if rx1 < rx0: rx1 = rx0
+				if lurf in (4, 6, 7, 8):
+					ry1 = ry1 + deltay
+					if ry1 < ry0: ry1 = ry0
+				self.ourrect = rx0, ry0, rx1, ry1
+				self.recalclurven()
+				self.drawourrect()
 		
 ##	def tracking(self, *args):
 ##		print "tracking", args
@@ -247,11 +301,13 @@ class _AreaWidget(_ControlWidget):
 		Win.InvalRect(fullrect)
 		
 	def recalclurven(self):
+		print 'ourrect', self.ourrect
 		x0, y0, x1, y1 = self.ourrect
 		self.lurven = []
-		for x in (x0, (x0+x1)/2, x1):
-			for y in (y0, (y0+y1)/2, y1):
+		for y in (y0, (y0+y1)/2, y1):
+			for x in (x0, (x0+x1)/2, x1):
 				self.lurven.append((x-2, y-2, x+2, y+2))
+		print 'lurven', self.lurven
 		
 	def set(self, rect):
 		self.ourrect = self.rect2screen(rect)
