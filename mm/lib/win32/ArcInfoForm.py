@@ -145,4 +145,9 @@ class ArcInfoForm(DlgBar):
 
 	# Get delay value
 	def delay_getvalue(self):
-		return float(self['Delay'].gettext())
+		try:
+			rv = float(self['Delay'].gettext())
+		except ValueError:
+			win32ui.MessageBox("Illegal delay, 0.0 used")
+			rv = 0.0
+		return rv
