@@ -494,6 +494,11 @@ POPUP_CVIEW_SYNCARC = (
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
 )
 
+POPUP_EVENT = (
+	(FLAG_ALL, ENTRY, 'Find event source', None, FIND_EVENT_SOURCE),
+	(FLAG_ALL, ENTRY, 'Properties...', None, ATTRIBUTES),
+	)
+
 MAIN_FRAME_POPUP = (
 		(FLAG_ALL, ENTRY, '&Paste document', None, PASTE_DOCUMENT),
 		(FLAG_ALL, SEP,),

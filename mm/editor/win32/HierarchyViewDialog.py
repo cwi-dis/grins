@@ -17,7 +17,7 @@ import MMNode
 import windowinterface
 
 from usercmd import *
-from MenuTemplate import POPUP_HVIEW_LEAF, POPUP_HVIEW_TRANS, POPUP_HVIEW_SLIDE, POPUP_HVIEW_STRUCTURE
+from MenuTemplate import POPUP_HVIEW_LEAF, POPUP_HVIEW_TRANS, POPUP_HVIEW_SLIDE, POPUP_HVIEW_STRUCTURE, POPUP_EVENT
 
 class HierarchyViewDialog(ViewDialog):
 	adornments = {}
@@ -25,6 +25,7 @@ class HierarchyViewDialog(ViewDialog):
 	leaf_popupmenu = POPUP_HVIEW_LEAF
 	slide_popupmenu = POPUP_HVIEW_SLIDE
 	transition_popupmenu = POPUP_HVIEW_TRANS
+	event_popupmenu = POPUP_EVENT
 
 	def __init__(self):
 		ViewDialog.__init__(self, 'hview_')
