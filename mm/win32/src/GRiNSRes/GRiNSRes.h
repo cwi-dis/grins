@@ -126,6 +126,7 @@
 #define IDD_EDITATTR_DR3                363
 #define IDD_EDITATTR_ANCHOR1            364
 #define IDD_ANCHOR_NAME                 365
+#define IDD_EDITATTR_CK1                366
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
