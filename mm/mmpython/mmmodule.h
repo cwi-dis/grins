@@ -17,12 +17,12 @@ typedef struct {
 	PyObject_HEAD
 	int mm_ev;		/* event number */
 	int mm_flags;		/* flags */
-	type_sema mm_flagsema;	/* semaphore to protect mm_flags */
+	PyThread_type_sema mm_flagsema;	/* semaphore to protect mm_flags */
 	PyObject *mm_attrdict;	/* channel attribute dictionary */
-	type_sema mm_armsema;	/* semaphore for starting arm thread */
-	type_sema mm_playsema;	/* semaphore for starting play thread */
-	type_sema mm_exitsema;	/* semaphore used for exiting */
-	type_sema mm_armwaitsema; /* semaphore to wait for synchronous arm */
+	PyThread_type_sema mm_armsema;	/* semaphore for starting arm thread */
+	PyThread_type_sema mm_playsema;	/* semaphore for starting play thread */
+	PyThread_type_sema mm_exitsema;	/* semaphore used for exiting */
+	PyThread_type_sema mm_armwaitsema; /* semaphore to wait for synchronous arm */
 	struct channelobject *mm_chanobj; /* pointers to the channel's functions */
 	void *mm_private;	/* private pointer */
 } mmobject;
