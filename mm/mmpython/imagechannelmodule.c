@@ -1,4 +1,4 @@
-#include "thread.h"
+#include "pythread.h"
 #include "Python.h"
 #include "modsupport.h"
 #include "mmmodule.h"
