@@ -5,12 +5,12 @@ __version__ = "$Id$"
 import MMurl
 import string
 
-def getsize(filename, bufsiz = 10240):
+def getsize(url, bufsiz = 10240):
 	# sanity check
 	if bufsiz < 1024:
 		bufsiz = 1024
 
-	filename = MMurl.urlretrieve(filename)[0]
+	filename = MMurl.urlretrieve(url)[0]
 	fp = open(filename, 'rb')
 	nframes = 0
 

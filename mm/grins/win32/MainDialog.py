@@ -80,8 +80,8 @@ class MainDialog:
 	def dropeffect(self, dummy, window, event, params):
 		x,y,filename=params
 		url=self.__path2url(filename)
-		import MMmimetypes, windowinterface
-		mimetype = MMmimetypes.guess_type(url)[0]
+		import urlcache, windowinterface
+		mimetype = urlcache.mimetype(url)
 		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
 			return windowinterface.DROPEFFECT_COPY
 		else:
@@ -90,8 +90,8 @@ class MainDialog:
 	def dropfile(self, arg, window, event, value):
 		x,y,filename=value
 		url=self.__path2url(filename)
-		import MMmimetypes, windowinterface
-		mimetype = MMmimetypes.guess_type(url)[0]
+		import urlcache, windowinterface
+		mimetype = urlcache.mimetype(url)
 		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
 			self.openURL_callback(url)
 		else:

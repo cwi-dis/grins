@@ -8,12 +8,12 @@ import string
 VidRateNum = [30., 24., 24., 25., 30., 30., 50., 60.,
 	      60., 15., 30., 30., 30., 30., 30., 30.]
 
-def get(filename, bufsiz = 10240):
+def get(url, bufsiz = 10240):
 	# sanity check
 	if bufsiz < 1024:
 		bufsiz = 1024
 
-	filename = MMurl.urlretrieve(filename)[0]
+	filename = MMurl.urlretrieve(url)[0]
 	fp = open(filename, 'rb')
 	nframes = 0
 	rate = 0

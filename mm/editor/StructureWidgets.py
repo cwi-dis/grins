@@ -5,7 +5,7 @@
 __version__ = "$Id$"
 
 import Widgets
-import MMurl, MMAttrdefs, MMmimetypes, MMNode, MMTypes
+import MMurl, MMAttrdefs, MMNode, MMTypes
 import os, windowinterface
 import settings
 import TimeMapper

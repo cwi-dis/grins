@@ -1309,29 +1309,29 @@ class AttrEditor(AttrEditorDialog):
 	def checkType(self, node):
 		pass
 					
-	def checkurl(self, url):
-		if not features.lightweight:
-			return 1
-		#if self.wrapper.__class__ is SlideWrapper:
-		if isinstance(self.wrapper, SlideWrapper):
-			# node is a slide
-			import MMmimetypes
-			mtype = MMmimetypes.guess_type(url)[0]
-			if not mtype:
-				# unknown type, not compatible
-				return 0
-			# compatible if image and not RealPix
-			return mtype[:5] == 'image' and string.find(mtype, 'real') < 0
-		b = self._findattr('channel')
-		if b is not None:
-			str = b.getvalue()
-			try:
-				chan = b.parsevalue(str)
-			except:
-				chan = ''
-			return chan in self.wrapper.getcontext().compatchannels(url)
-		# not found, assume compatible
-		return 1
+##	def checkurl(self, url):
+##		if not features.lightweight:
+##			return 1
+##		#if self.wrapper.__class__ is SlideWrapper:
+##		if isinstance(self.wrapper, SlideWrapper):
+##			# node is a slide
+##			import MMmimetypes
+##			mtype = MMmimetypes.guess_type(url)[0]
+##			if not mtype:
+##				# unknown type, not compatible
+##				return 0
+##			# compatible if image and not RealPix
+##			return mtype[:5] == 'image' and string.find(mtype, 'real') < 0
+##		b = self._findattr('channel')
+##		if b is not None:
+##			str = b.getvalue()
+##			try:
+##				chan = b.parsevalue(str)
+##			except:
+##				chan = ''
+##			return chan in self.wrapper.getcontext().compatchannels(url)
+##		# not found, assume compatible
+##		return 1
 
 	def newchannel(self, channelname):
 		em = self.wrapper.editmgr

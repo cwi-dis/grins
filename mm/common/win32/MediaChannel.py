@@ -104,7 +104,7 @@ class MediaChannel:
 			url = MMurl.urlretrieve(url)[0]
 		else:
 			url = MMurl.canonURL(url)
-			url = urllib.unquote(url)
+			url = MMurl.unquote(url)
 
 		if not self.__armBuilder.RenderFile(url, self.__channel._exporter):
 			self.__armFileHasBeenRendered=0

@@ -13,7 +13,6 @@ import string
 from ViewDialog import ViewDialog
 import WMEVENTS
 import MMNode
-import MMmimetypes
 import windowinterface
 
 from usercmd import *
@@ -138,11 +137,13 @@ class HierarchyViewDialog(ViewDialog):
 				url = MMurl.pathname2url(filename)
 			else:
 				url = filename
-			mimetype = MMmimetypes.guess_type(url)[0]
-			if '/' in mimetype:
+			import urlcache
+			mimetype = urlcache.mimetype(url)
+			if mimetype:
 				mimetype = string.split(mimetype, '/')[0]
 			if not mimetype in mimetypes:
-				print 'Type', mimetype, 'not in', mimetypes
+				if __debug__:
+					print 'Type', mimetype, 'not in', mimetypes
 				self.draw()
 				return windowinterface.DROPEFFECT_NONE
 		# All seems fine. Return copy or link depending on
