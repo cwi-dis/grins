@@ -1467,7 +1467,7 @@ class Region(Window):
 		# implementation specific
 		self._oswnd = None
 		self._redrawdds = None
-						
+								
 	def __repr__(self):
 		return '<Region instance at %x>' % id(self)
 		
@@ -1919,45 +1919,51 @@ class Region(Window):
 			for wnd in L:
 				wnd.paintOnDDS(dds, rel, exclwnd)
 
+	def getVisibleWindowPos(self, rel = None):
+		rgn = self.getClipRgn(self._topwindow)
+		l, t, r, b = rgn.GetRgnBox()[1]
+		return l, t, r-l, b-t
+
 	# get a copy of the screen area of this window
 	def getBackDDS(self, exclwnd = None, dopaint = 1):
-		dds = self.createDDS()
+		x, y, w, h = self.getVisibleWindowPos(self._topwindow)
+		dds = self._topwindow.CreateSurface(w, h)
 		bf = self._topwindow.getDrawBuffer()
 		if bf.IsLost() and not bf.Restore():
 			return dds
-		x, y, w, h = self.getwindowpos()
 		if dopaint:
 			self._topwindow.paint(rc=(x, y, w, h), exclwnd=exclwnd)
 			if bf.IsLost() and not bf.Restore():
 				return dds
 		try:
-			dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
+			dds.Blt((0, 0, w, h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
 		except ddraw.error, arg:
 			print 'getBackDDS', arg
 		return dds
 
 	def updateBackDDS(self, dds, exclwnd=None):
-		rc = x, y, w, h = self.getwindowpos()
+		rc = x, y, w, h = self.getVisibleWindowPos(self._topwindow)
 		self._topwindow.paint(rc, exclwnd=exclwnd)
 		bf = self._topwindow.getDrawBuffer()
 		if bf.IsLost() and not bf.Restore():
 			return dds
 		try:
-			dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
+			dds.Blt((0, 0, w, h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
 		except ddraw.error, arg:
 			print 'updateBackDDS', arg
 		return dds
 
 	def bltDDS(self, srfc):
-		rc_dst = self.getwindowpos()
-		src_w, src_h = srfc.GetSurfaceDesc().GetSize()
-		rc_src = (0, 0, src_w, src_h)
+		# get clip region (in topwindow coords) 
+		x, y, w, h = self.getVisibleWindowPos(self._topwindow)
+		l, t, r, b = x, y, x+w, y+h
+
 		bf = self._topwindow.getDrawBuffer()
 		if bf.IsLost() and not bf.Restore():
 			return
-		if rc_dst[2]!=0 and rc_dst[3]!=0:
+		if r!=l and b!=t:
 			try:
-				bf.Blt(self.ltrb(rc_dst), srfc, rc_src, ddraw.DDBLT_WAIT)
+				bf.Blt((l, t, r, b), srfc, (0, 0, r-l, b-t), ddraw.DDBLT_WAIT)
 			except ddraw.error, arg:
 				print arg			
 
@@ -2012,7 +2018,7 @@ class Region(Window):
 	# trans engine: calls self._paintOnDDS(self._drawsurf)
 	# i.e. trans engine is responsible to paint only this 
 	def _paint_1(self, rc=None, exclwnd=None):
-		#print 'transition, multiElement==false', self
+		# print 'transition, multiElement==false', self
 		if exclwnd==self: return
 
 		# first paint self transition surface
