@@ -1188,7 +1188,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 						x, y, width, height = self._rect
 						x = float(event.x - x) / width
 						y = float(event.y - y) / height
-						func(arg, self, Mouse2Press, (x, y, []))
+						func(arg, self, Mouse2Press, (x, y, [], ''))
 					menu = self._menu or self._popupmenu
 					if menu:
 						menu.MenuPosition(event)
@@ -1223,7 +1223,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 				for but in adl._buttons:
 					if but._inside(x, y):
 						buttons.append(but)
-			func(arg, self, ev, (x, y, buttons))
+			func(arg, self, ev, (x, y, buttons, ''))
 		else:
 			print 'unknown event',`event.type`
 

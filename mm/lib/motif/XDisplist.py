@@ -14,26 +14,31 @@ from AnchorDefs import *
 # mapping from icon name to module
 _iconmap = {
 	'': 'emptyicon',
-	'error': 'stopicon',
-	'bandwidthgood': 'bandwidthgood',
 	'bandwidthbad': 'bandwidthbad',
-	'open': 'folderopen',
+	'bandwidthgood': 'bandwidthgood',
+	'beginevent': 'beginevent',
+	'causeevent': 'causeevent',
 	'closed': 'folderclosed',
-	'paropen': 'folderopen',
-	'parclosed': 'folderclosed',
-	'seqopen': 'folderopen',
-	'seqclosed': 'folderclosed',
-	'switchopen': 'folderopen',
-	'switchclosed': 'folderclosed',
-	'prioopen': 'folderopen',
-	'prioclosed': 'folderclosed',
-	'exclopen': 'folderopen',
-	'exclclosed': 'folderclosed',
-	'linksrc': 'emptyicon', # XXXX
-	'linkdst': 'emptyicon', # XXXX
-	'linksrcdst': 'emptyicon', # XXXX
+	'error': 'stopicon',
+	'exclclosed': 'exclclosed',
+	'exclopen': 'exclopen',
+	'idle': 'idleicon',
+	'linkdst': 'linkdst',
+	'linksrc': 'linksrc',
+	'linksrcdst': 'linksrcdst',
+	'open': 'folderopen',
+	'parclosed': 'parclosed',
+	'paropen': 'paropen',
+	'playing': 'playicon',
+	'prioclosed': 'prioclosed',
+	'prioopen': 'prioopen',
+	'seqclosed': 'seqclosed',
+	'seqopen': 'seqopen',
+	'switchclosed': 'switchclosed',
+	'switchopen': 'switchopen',
 	'transin': 'intransition',
 	'transout': 'outtransition',
+	'waitstop': 'waitstopicon',
 	}
 
 class _DisplayList:
