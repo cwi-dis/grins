@@ -21,9 +21,9 @@ interface IRendererAdviceSink : public IUnknown
 	};
 
 // {BDBC884C-0FCE-414f-9941-035F900E43B6}
-DEFINE_GUID(IID_IWMConverter,
+DEFINE_GUID(IID_IPipe,
 0xbdbc884c, 0xfce, 0x414f, 0x99, 0x41, 0x3, 0x5f, 0x90, 0xe, 0x43, 0xb6);
-interface IWMConverter : public IUnknown
+interface IPipe : public IUnknown
 	{
 	virtual HRESULT __stdcall SetRendererAdviceSink(IRendererAdviceSink *pI) = 0;
 	};
