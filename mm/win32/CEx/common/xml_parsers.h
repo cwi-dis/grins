@@ -37,10 +37,25 @@ class ExpatParser
 			XML_ParserFree(expatParser);
 		}
 
-	virtual bool parse(const char *buf, int len, bool isFinal = false) const
+	virtual bool parse(const char *buf, int len, bool isFinal) const
 		{
-		if(!expatParser) return false;
-		if (!XML_Parse(expatParser, buf, len, isFinal?1:0)) 
+		if(expatParser == NULL)
+			{
+			std::string str("ExpatParser creation failed");
+			m_handler->show_error(str);
+			return false;
+			}
+		
+		char *xbuf = (char*)XML_GetBuffer(expatParser, len);
+		if(xbuf == NULL)
+			{
+			std::string str("ExpatParser mem allocation error");
+			m_handler->show_error(str);
+			return false;
+			}
+
+		memcpy(xbuf, buf, len);
+		if(XML_ParseBuffer(expatParser, len, (isFinal?1:0)) == 0) 
 			{
 			std::string str;
 			str << XML_ErrorString(XML_GetErrorCode(expatParser))
