@@ -739,8 +739,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			geoms = None
 		if geoms and mtype != 'audio':
 			subRegGeom, mediaGeom = geoms
-		if subRegGeom is not None and mediaGeom is not None and \
-			subRegGeom[0] == 0 and subRegGeom[1] == 0 and subRegGeom[2] == mediaGeom[2] and subRegGeom[3] == mediaGeom[3]:
+		if subRegGeom is not None and mediaGeom is not None:
 			# needed, possible overrides: fit, z-index, and backgroundColor 
 			self.removeAttr(divlist, 'volume')
 			self.removeAttr(divlist, 'id')
