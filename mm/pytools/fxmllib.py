@@ -162,7 +162,7 @@ dfaelem1 = re.compile(_opS+r'(?P<token>[)|,])')
 dfaelem2 = re.compile(r'(?P<token>[+*?])')
 mixedre = re.compile(r'\('+_opS+'#PCDATA'+'(('+_opS+r'\|'+_opS+_Name+')*'+_opS+r'\)\*|'+_opS+r'\))')
 paren = re.compile('[()]')
-attdef = re.compile(_S+'(?P<atname>'+_Name+')'+_S+'(?P<attype>CDATA|ID(?:REFS?)?|ENTIT(?:Y|IES)|NMTOKENS?|NOTATION'+_S+r'\('+_opS+_Name+'(?:'+_opS+r'\|'+_opS+_Name+')*'+_opS+r'\)|\('+_opS+_Nmtoken+'(?:'+_opS+r'\|'+_opS+_Nmtoken+')*'+_opS+r'\))'+_S+'(?P<atvalue>#REQUIRED|#IMPLIED|(?:#FIXED'+_S+')?(?P<atstring>'+_QStr+'))')
+attdef = re.compile(_S+'(?P<atname>'+_Name+')'+_S+'(?P<attype>CDATA|ID(?:REFS?)?|ENTIT(?:Y|IES)|NMTOKENS?|NOTATION'+_S+r'\((?P<notation>'+_opS+_Name+'(?:'+_opS+r'\|'+_opS+_Name+')*'+_opS+r')\)|\('+_opS+_Nmtoken+'(?:'+_opS+r'\|'+_opS+_Nmtoken+')*'+_opS+r'\))'+_S+'(?P<atvalue>#REQUIRED|#IMPLIED|(?:#FIXED'+_S+')?(?P<atstring>'+_QStr+'))')
 attlist = re.compile('<!ATTLIST'+_S+'(?P<elname>'+_Name+')(?P<atdef>(?:'+attdef.pattern+')*)'+_opS+'>')
 _EntityVal = '"(?:[^"&%]|'+ref.pattern+'|%'+_Name+';)*"|' \
              "'(?:[^'&%]|"+ref.pattern+"|%"+_Name+";)*'"
@@ -577,6 +577,10 @@ class XMLParser:
             if value not in attype:
                 self.__error("attribute `%s' in element `%s' not valid" % (attrname, tagname), data, attrstart, fatal = 0)
             return value
+        if type(attype) is type(()):
+            if value not in attype[1]:
+                self.__error("attribute `%s' in element `%s' not valid" % (attrname, tagname), data, attrstart, fatal = 0)
+            return value
         if attype == 'ID':
             if name.match(value) is None:
                 self.__error("attribute `%s' in element `%s' is not an ID" % (attrname, tagname), data, attrstart, fatal = 0)
@@ -860,6 +864,11 @@ class XMLParser:
                     if elemval[0] is not None:
                         # XXX is this an error?
                         self.__error('non-unique element name declaration', data, i, fatal = 0)
+                    elif content == 'EMPTY':
+                        # check for NOTATION on EMPTY element
+                        for atname, (attype, atvalue, atstring) in elemval[1].items():
+                            if type(attype) is type(()) and attype[0] == 'NOTATION':
+                                self.__error("NOTATION not allowed on EMPTY element", data, i)
                 if content[0] == '(':
                     i = res.start('content')
                     j, content, start, end = self.__dfa(data, i)
@@ -889,6 +898,11 @@ class XMLParser:
                     atname, attype, atvalue, atstring = ares.group('atname', 'attype', 'atvalue', 'atstring')
                     if attype[0] == '(':
                         attype = map(string.strip, string.split(attype[1:-1], '|'))
+                    elif attype[:8] == 'NOTATION':
+                        if self.elems[elname][0] == 'EMPTY':
+                            self.__error("NOTATION not allowed on EMPTY element", data, ares.start('attype'))
+                        atnot = map(string.strip, string.split(ares.group('notation'), '|'))
+                        attype = ('NOTATION', atnot)
                     if atstring:
                         atstring = atstring[1:-1] # remove quotes
                         atstring = self.__parse_attrval(atstring, attype)
@@ -898,6 +912,9 @@ class XMLParser:
                             atstring = string.join(string.split(atstring, '\t'), ' ')
                     if type(attype) is type([]):
                         if atstring is not None and atstring not in attype:
+                            self.__error("default value for attribute `%s' on element `%s' not listed as possible value" % (atname, elname), data, i)
+                    elif type(attype) is type(()):
+                        if atstring is not None and atstring not in attype[1]:
                             self.__error("default value for attribute `%s' on element `%s' not listed as possible value" % (atname, elname), data, i)
                     if not self.elems[elname][1].has_key(atname):
                         # first definition counts
