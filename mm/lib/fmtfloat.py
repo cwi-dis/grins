@@ -70,3 +70,14 @@ def trunc(x):
 # round a floating point number to the nearest integer
 def round(x):
 	return trunc(x + 0.5)
+
+# return the precision of the number represented by str
+def getprec(str):
+	prec = 0
+	if '.' in str:
+		while str[-1] == '0':
+			str = str[:-1]
+		while str[-1] != '.':
+			str = str[:-1]
+			prec = prec + 1
+	return prec	
