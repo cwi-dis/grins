@@ -992,8 +992,8 @@ smil_attrs=[
 	("bottom", lambda writer, node:getsubregionatt(writer, node, 'bottom')),
 	("fit", lambda writer, node:getfitatt(writer, node, 'scale')),
 	# registration points
-	("regPoint", lambda writer, node:getcmifattr(writer, node, "regPoint", 'topLeft')),
-	("regAlign", lambda writer, node:getcmifattr(writer, node, "regAlign", 'topLeft')),
+	("regPoint", lambda writer, node:getrawcmifattr(writer, node, "regPoint", 'topLeft')),
+	("regAlign", lambda writer, node:getrawcmifattr(writer, node, "regAlign", 'topLeft')),
 	
 	("backgroundColor", lambda writer, node:getbgcoloratt(writer, node, "bgcolor")),	
 	("from", lambda writer, node:getstringattr(writer, node, "from")),
