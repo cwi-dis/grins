@@ -552,26 +552,9 @@ class TimeStripSeqWidget(SeqWidget):
     HAS_CHANNEL_BOX = 1
     pass
 
+class ImageBoxWidget(Widgets.Widget):
+    # Common baseclass for dropbox and channelbox
     
-class DropBoxWidget(Widgets.Widget):
-    # This is the stupid drop-box at the end of a sequence. Looks like a
-    # MediaWidget, acts like a MediaWidget, but isn't a MediaWidget.
-    def draw(self, displist):
-        displist.drawfbox(LEAFCOLOR, self.get_box());
-        displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
-    def get_minsize(self):
-        return self.get_relx(sizes_notime.MINSIZE), self.get_rely(sizes_notime.MINSIZE);
-    def get_minsize_abs(self):
-        return sizes_notime.MINSIZE, sizes_notime.MINSIZE;
-    # Hmm.. as I said. Easy.
-        
-
-class ChannelBoxWidget(Widgets.Widget):
-    # This is the box at the start of a Sequence which represents which channel it 'owns'
-    def __init__(self, node, root):
-        self.node = node
-        Widgets.Widget.__init__(self, root)
-        
     def get_minsize(self):
         return self.get_relx(sizes_notime.MINSIZE), self.get_rely(sizes_notime.MINSIZE);
 
@@ -582,11 +565,11 @@ class ChannelBoxWidget(Widgets.Widget):
         x,y,w,h = self.get_box()     
         
         # Draw the image.
-        image_filename = self.__get_image_filename()
+        image_filename = self._get_image_filename()
         if image_filename != None:
             try:
                 box = displist.display_image_from_file(
-                    self.__get_image_filename(),
+                    image_filename,
                     center = 1,
                     # The coordinates should all be floating point numbers.
                     coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6)),
@@ -597,9 +580,21 @@ class ChannelBoxWidget(Widgets.Widget):
             displist.fgcolor(TEXTCOLOR)
             displist.drawbox(box)
     
-    def __get_image_filename(self):
-        # I just copied this.. I don't know what it does. -mjvdg.
-                
+class DropBoxWidget(ImageBoxWidget):
+    # This is the stupid drop-box at the end of a sequence. Looks like a
+    # MediaWidget, acts like a MediaWidget, but isn't a MediaWidget.
+
+    def _get_image_filename(self):
+        f = os.path.join(self.root.datadir, 'dropbox.tiff')
+        return f
+
+class ChannelBoxWidget(ImageBoxWidget):
+    # This is the box at the start of a Sequence which represents which channel it 'owns'
+    def __init__(self, node, root):
+        self.node = node
+        Widgets.Widget.__init__(self, root) 
+    
+    def _get_image_filename(self):
         channel_type = MMAttrdefs.getattr(self.node, 'project_default_type')
         if not channel_type:
             channel_type = 'null'
