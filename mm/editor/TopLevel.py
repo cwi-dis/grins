@@ -509,6 +509,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					basename, self.export_HTML_TIME_okcallback, None)
 	
 	def export_HTML_TIME_okcallback(self, pathname):
+		if self.player: self.player.stop_callback()
 		self.export_to_html_time(pathname)
 		if sys.platform=='win32':
 			windowinterface.shell_execute(pathname,'open')
