@@ -87,7 +87,7 @@ struct mpeg_data {
 #endif
 };
 struct mpeg {
-	int m_width, m_height;	/* width and height of window */
+	int m_rect[4];		/* origin and size of window */
 	int initial_clear_done;  /* True after initial clear */
 	struct mpeg_data m_play; /* mpeg being played */
 	struct mpeg_data m_arm; /* movie being armed */
@@ -102,6 +102,10 @@ struct mpeg {
 	int m_depth;		/* depth of the window */
 #endif
 };
+#define X	0
+#define Y	1
+#define WIDTH	2
+#define HEIGHT	3
 
 #define PRIV	((struct mpeg *) self->mm_private)
 
@@ -240,6 +244,23 @@ mpeg_init(self)
 		ERROR(mpeg_init, PyExc_RuntimeError, "no window specified");
 		goto error_return;
 	}
+	v = PyDict_GetItemString(self->mm_attrdict, "rect");
+	if (v && PyTuple_Check(v) && PyTuple_Size(v) == 4) {
+		int i;
+		PyObject *t;
+
+		for (i = 0; i < 4; i++) {
+			t = PyTuple_GetItem(v, i);
+			if (!PyInt_Check(t)) {
+				ERROR(mpeg_init, PyExc_RuntimeError, "bad size specification");
+				goto error_return;
+			}
+			PRIV->m_rect[i] = PyInt_AsLong(t);
+		}
+	} else {
+		ERROR(mpeg_init, PyExc_RuntimeError, "no size specified");
+		goto error_return;
+	}
 	return 1;		/* normal return */
 
  error_return:
@@ -343,24 +364,33 @@ mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 	*/
 	fd = fileno(PyFile_AsFile(PRIV->m_arm.m_f));
 	dprintf(("mpeg_arm(%lx): fd: %d\n", (long) self, fd));
-	headersize = clQueryMaxHeaderSize(CL_MPEG_VIDEO);
-	if ( (header=malloc(headersize)) == NULL ) {
+	if ( (header=malloc(16)) == NULL ) {
 	    ERROR(mpeg_arm, err_object, "not enough memory for header");
 	    return 0;
 	}
 	lseek(fd, 0, SEEK_SET);
-	headersize = read(fd, header, headersize);
-	if ( headersize <= 0 ) {
+	headersize = read(fd, header, 16);
+	if ( headersize != 16 ) {
+	    ERROR(mpeg_arm, err_object, "cannot read header");
+	    return 0;
+	}
+	if ( clQueryScheme(header) != CL_MPEG_VIDEO) {
+	    ERROR(mpeg_arm, err_object, "Not an MPEG file");
+	    return 0;
+	}
+	headersize = clQueryMaxHeaderSize(CL_MPEG_VIDEO);
+	if ( (header=realloc(header, headersize)) == NULL ) {
+	    ERROR(mpeg_arm, err_object, "not enough memory for header");
+	    return 0;
+	}
+	headersize = read(fd, header+16, headersize-16) + 16;
+	if ( headersize <= 16 ) {
 	    ERROR(mpeg_arm, err_object, "cannot read header");
 	    return 0;
 	}
 	clOpenDecompressor(CL_MPEG_VIDEO, &decHandle); /* XXXX Error chk */
 	PRIV->m_arm.m_decHdl = decHandle;
 	headersize = clReadHeader(decHandle, headersize, header); /* XXXX */
-	if ( headersize <= 0 ) {
-	    ERROR(mpeg_arm, err_object, "Not an MPEG file");
-	    return 0;
-	}
 	dprintf(("mpeg_armer: headersize %d\n", headersize));
 	free(header);
 	lseek(fd, 0, SEEK_SET);
@@ -482,13 +512,6 @@ mpeg_play(self)
 		 * acquire_lock(gl_lock, WAIT_LOCK);
 		 */
 		winset(PRIV->m_wid);
-		{
-			long width, height;
-
-			getsize(&width, &height);
-			PRIV->m_width = width;
-			PRIV->m_height = height;
-		}
 
 		/* initialize window */
 		winpop();		/* pop up the window */
@@ -522,24 +545,11 @@ mpeg_play(self)
 #endif /* USE_GL */
 #ifdef USE_XM
 	case WIN_X:
-		/* get the window size */
-		{
-			Dimension width, height;
-
-			XtVaGetValues(PRIV->m_widget,
-				      "width", &width, "height", &height,
-				      NULL);
-			PRIV->m_width = width;
-			PRIV->m_height = height;
-		}
-		/* pop up the window */
-		XRaiseWindow(XtDisplay(PRIV->m_widget),
-			     XtWindow(PRIV->m_widget));
 		/* clear the window */
 		if ( !PRIV->initial_clear_done ) {
 		    XFillRectangle(XtDisplay(PRIV->m_widget),
 				   XtWindow(PRIV->m_widget), PRIV->m_gc, 0, 0,
-				   PRIV->m_width, PRIV->m_height);
+				   PRIV->m_rect[WIDTH], PRIV->m_rect[HEIGHT]);
 		    PRIV->initial_clear_done = 1;
 		}
 		break;
@@ -558,7 +568,7 @@ mpeg_player(self)
 	long timediff_actual, timediff_wanted;
 	int fd;
 	struct pollfd pollfd;
-	int size, wrap;
+	int size, wrap, lastsize = 0;
 	char *curdataptr;
 
 	denter(mpeg_player);
@@ -605,8 +615,10 @@ mpeg_player(self)
 		    /* EOF on input. Stop if buffer also empty */
 		    size = clQueryValid(PRIV->m_play.m_inbufHdl, 1,
 					(void **)&curdataptr, &wrap);
-		    if ( size + wrap == 0 )
+		    dprintf(("mpeg_player(%lx): valid: %d + %d\n", (long) self, size, wrap));
+		    if ( size + wrap == 0 || wrap == 0 && size == lastsize )
 		      break;
+		    lastsize = size + wrap;
 		} else {
 		    PRIV->m_play.m_feof =
 		      mpeg_fill_inbuffer(PRIV->m_play.m_inbufHdl, fd);
@@ -636,7 +648,7 @@ mpeg_player(self)
 			perror("poll");
 			break;
 		}
-		dprintf(("mpeg_player(%lx): polling done\n", (long) self));
+		dprintf(("mpeg_player(%lx): polling done (%x)\n", (long) self, pollfd.revents));
 		/*
 		** Either the next event is due or we got a command from the
 		** main thread. Check.
@@ -675,14 +687,14 @@ mpeg_display_frame(self)
     case WIN_GL:
 	scale = PRIV->m_play.m_scale;
 	if (scale == 0) {
-	    scale = PRIV->m_width / PRIV->m_play.m_width;
-	    if (scale > PRIV->m_height / PRIV->m_play.m_height)
-		scale = PRIV->m_height / PRIV->m_play.m_height;
+	    scale = PRIV->m_rect[WIDTH] / PRIV->m_play.m_width;
+	    if (scale > PRIV->m_rect[HEIGHT] / PRIV->m_play.m_height)
+		scale = PRIV->m_rect[HEIGHT] / PRIV->m_play.m_height;
 	    if (scale < 1)
 		scale = 1;
 	}
-	xorig = (PRIV->m_width - PRIV->m_play.m_width * scale) / 2;
-	yorig = (PRIV->m_height - PRIV->m_play.m_height * scale) / 2;
+	xorig = PRIV->m_rect[X] + (PRIV->m_rect[WIDTH] - PRIV->m_play.m_width * scale) / 2;
+	yorig = PRIV->m_rect[Y] + (PRIV->m_rect[HEIGHT] - PRIV->m_play.m_height * scale) / 2;
 	winset(PRIV->m_wid);
 	pixmode(PM_SIZE, pixel_size);
 	rectzoom(scale, scale);
@@ -698,8 +710,8 @@ mpeg_display_frame(self)
 	if (PRIV->m_play.m_image)
 	    XPutImage(XtDisplay(PRIV->m_widget), XtWindow(PRIV->m_widget),
 		      PRIV->m_gc, PRIV->m_play.m_image, 0, 0,
-		      (PRIV->m_width - PRIV->m_play.m_width) / 2,
-		      (PRIV->m_height - PRIV->m_play.m_height) / 2,
+		      PRIV->m_rect[X] + (PRIV->m_rect[WIDTH] - PRIV->m_play.m_width) / 2,
+		      PRIV->m_rect[Y] + (PRIV->m_rect[HEIGHT] - PRIV->m_play.m_height) / 2,
 		      PRIV->m_play.m_width, PRIV->m_play.m_height);
 	break;
 #endif /* USE_XM */
@@ -733,57 +745,14 @@ mpeg_fill_inbuffer(bufhdl, fd)
 	
 
 static int
-mpeg_resized(self)
+mpeg_resized(self, x, y, w, h)
 	mmobject *self;
+	int x, y, w, h;
 {
-#if 0
-	long xorig, yorig;
-	double scale;
-
-	if (PRIV->m_wid < 0)
-		return 1;
-	denter(mpeg_resized);
-	getsize(&PRIV->m_width, &PRIV->m_height);
-	if (PRIV->m_play.m_frame) {
-		winset(PRIV->m_wid);
-		if (PRIV->m_play.m_bframe == NULL)
-			pixmode(PM_SIZE, 8);
-		if (PRIV->m_play.m_bgindex >= 0) {
-			color(PRIV->m_play.m_bgindex);
-			clear();
-			writemask(0xff);
-		} else {
-			RGBcolor((PRIV->m_play.m_bgcolor >> 16) & 0xff,
-				 (PRIV->m_play.m_bgcolor >>  8) & 0xff,
-				 (PRIV->m_play.m_bgcolor      ) & 0xff);
-			clear();
-		}
-		scale = PRIV->m_play.m_scale;
-		if (scale == 0) {
-			scale = PRIV->m_width / PRIV->m_play.m_width;
-			if (scale > PRIV->m_height / PRIV->m_play.m_height)
-				scale = PRIV->m_height / PRIV->m_play.m_height;
-			if (scale < 1)
-				scale = 1;
-		}
-		xorig = (PRIV->m_width - PRIV->m_play.m_width * scale) / 2;
-		yorig = (PRIV->m_height - PRIV->m_play.m_height * scale) / 2;
-		rectzoom(scale, scale);
-		if (PRIV->m_play.m_bframe)
-			lrectwrite(xorig, yorig,
-				   xorig + PRIV->m_play.m_width - 1,
-				   yorig + PRIV->m_play.m_height - 1,
-				   PRIV->m_play.m_bframe);
-		else
-			lrectwrite(xorig, yorig,
-				   xorig + PRIV->m_play.m_width - 1,
-				   yorig + PRIV->m_play.m_height - 1,
-				   PRIV->m_play.m_frame);
-		if (PRIV->m_play.m_bgindex >= 0)
-			writemask(0xffffffff);
-		gflush();
-	}
-#endif
+	PRIV->m_rect[X] = x;
+	PRIV->m_rect[Y] = y;
+	PRIV->m_rect[WIDTH] = w;
+	PRIV->m_rect[HEIGHT] = h;
 	return 1;
 }
 
@@ -837,8 +806,9 @@ mpeg_finished(self)
 #ifdef USE_XM
 	    case WIN_X:
 		XFillRectangle(XtDisplay(PRIV->m_widget),
-			       XtWindow(PRIV->m_widget), PRIV->m_gc, 0, 0,
-			       PRIV->m_width, PRIV->m_height);
+			       XtWindow(PRIV->m_widget), PRIV->m_gc,
+			       PRIV->m_rect[X], PRIV->m_rect[Y],
+			       PRIV->m_rect[WIDTH], PRIV->m_rect[HEIGHT]);
 		break;
 #endif /* USE_XM */
 	    }

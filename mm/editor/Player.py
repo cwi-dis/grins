@@ -317,7 +317,7 @@ class Player(ViewDialog, PlayerCore):
 	#
 	def showpauseanchor(self, pausing):
 		d = self.displist.clone()
-		self.drawpausebutton(self.pausing, d)
+		self.drawpausebutton(pausing, d)
 		d.render()
 		self.displist.close()
 		self.displist = d

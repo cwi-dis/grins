@@ -15,6 +15,8 @@ error = 'windowinterface.error'
 ReadMask, WriteMask = 1, 2
 Version = 'GL'
 
+[_X, _Y, _WIDTH, _HEIGHT] = range(4)
+
 def startmonitormode():
 	pass
 def endmonitormode():
@@ -328,7 +330,7 @@ class _Event:
 					gl.winset(win._window_id)
 					w, h = gl.getsize()
 					toplevel._win_lock.release()
-					if (w, h) != (win._width, win._height):
+					if (w, h) != (win._rect[2:]):
 						win._resize()
 				return
 		elif dev == DEVICE.KEYBD:
@@ -360,8 +362,8 @@ class _Event:
 				gl.winset(self._curwin._window_id)
 				x0, y0 = gl.getorigin()
 				toplevel._win_lock.release()
-				x = float(x - x0) / self._curwin._width
-				y = 1.0 - float(y - y0) / self._curwin._height
+				x = float(x - x0) / self._curwin._rect[_WIDTH]
+				y = 1.0 - float(y - y0) / self._curwin._rect[_HEIGHT]
 				if x < 0 or x > 1 or y < 0 or y > 1:
 					print 'mouse click outside of window'
 				buttons = []
@@ -804,7 +806,8 @@ class _DisplayList:
 		if _drawbox or window._drawbox:
 			gl.linewidth(1)
 			gl.RGBcolor(self._fgcolor)
-			gl.recti(0, 0, window._width - 1, window._height - 1)
+			x, y, w, h = self._rect
+			gl.recti(x, y, x + w - 1, y + h - 1)
 		gl.gflush()
 		toplevel._win_lock.release()
 		self._rendered = 1
@@ -841,24 +844,15 @@ class _DisplayList:
 	#
 	# Images
 	#
-	def display_image_from_file(self, file, *crop):
+	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0):
 		if self.is_closed():
 			raise error, 'displaylist already closed'
 		window = self._window
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(crop) == 4:
-			top, bottom, left, right = crop
-			if top + bottom >= 1 or left + right >= 1:
-				raise TypeError, 'arg count mismatch'
-		elif len(crop) == 0:
-			top, bottom, left, right = 0, 0, 0, 0
-		else:
-			raise TypeError, 'arg count mismatch'
 		win_x, win_y, win_w, win_h, im_x, im_y, im_w, im_h, \
-			  depth, scale, image = \
-				  window._prepare_image_from_file(file,
-					  top, bottom, left, right)
+		       depth, scale, image = \
+		       window._prepare_image_from_file(file, crop, scale)
 		d = self._displaylist
 		d.append(gl.rectzoom, (scale, scale))
 		if depth == 1:
@@ -875,10 +869,10 @@ class _DisplayList:
 				  win_x+win_w-1, win_y+win_h-1,
 				  image[(im_w*im_y+im_x)*depth:]))
 			d.append(gl.pixmode, (GL.PM_STRIDE, 0))
-		return float(win_x) / window._width, \
-			  float(win_y) / window._height, \
-			  float(win_w) / window._width, \
-			  float(win_h) / window._height
+		return float(win_x) / window._rect[_WIDTH], \
+			  float(win_y) / window._rect[_HEIGHT}, \
+			  float(win_w) / window._rect[_WIDTH], \
+			  float(win_h) / window._rect[_HEIGHT]
 
 	#
 	# Drawing methods
@@ -957,7 +951,7 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		window = self._window
 		self._font = fontobj
-		f = float(_screenheight) / _mscreenheight / window._height
+		f = float(_screenheight) / _mscreenheight / window._rect[_HEIGHT]
 		self._baseline = fontobj.baseline() * f
 		self._fontheight = fontobj.fontheight() * f
 		return self._baseline, self._fontheight, fontobj.pointsize()
@@ -989,9 +983,9 @@ class _DisplayList:
 		fontobj = findfont(fontname, 100)
 		firsttime = 1
 		height = fontobj.fontheight() * _screenheight / _mscreenheight
-		while firsttime or nlines * height > window._height * mfac:
+		while firsttime or nlines * height > window._rect[_HEIGHT] * mfac:
 			firsttime = 0
-			ps = float(window._height*mfac*_mscreenheight*fontobj.pointsize())/\
+			ps = float(window._rect[_HEIGHT]*mfac*_mscreenheight*fontobj.pointsize())/\
 				  float(nlines*fontobj.fontheight()*_screenheight)
 			fontobj.close()
 			if ps <= 0:
@@ -1001,8 +995,8 @@ class _DisplayList:
 		for str in strlist:
 			width, height = fontobj.strsize(str)
 			width = width * _screenwidth / _mscreenwidth
-			while width > window._width * mfac:
-				ps = float(window._width) * mfac * fontobj.pointsize() / width
+			while width > window._rect[_WIDTH] * mfac:
+				ps = float(window._rect[_WIDTH]) * mfac * fontobj.pointsize() / width
 				if ps <= 0:
 					raise error, 'string does not fit in window'
 				fontobj.close()
@@ -1048,7 +1042,7 @@ class _DisplayList:
 			if width > maxwidth:
 				maxwidth = width
 			maxheight = maxheight + self._fontheight
-		return float(maxwidth) / self._window._width, maxheight
+		return float(maxwidth) / self._window._rect[_WIDTH], maxheight
 
 	def strfit(self, text, width, height):
 		# this could be made more efficient
@@ -1104,7 +1098,7 @@ class _DisplayList:
 			d.append(gl.cmov2, (x0, y0))
 			d.append(fm.prstr, str)
 			self._curpos = x + float(f.getstrwidth(
-				  str)) / w._width, y
+				  str)) / w._rect[_WIDTH], y
 			x = self._xpos
 			y = y + self._fontheight
 			if self._curpos[0] > maxx:
@@ -1176,8 +1170,9 @@ class _Window:
 		gl.RGBmode()
 		gl.gconfig()
 		gl.reshapeviewport()
-		self._width, self._height = gl.getsize()
-		gl.ortho2(-0.5, self._width-0.5, -0.5, self._height-0.5)
+		width, height = gl.getsize()
+		self._rect = (0, 0) + width, height
+		gl.ortho2(-0.5, width - 0.5, -0.5, height - 0.5)
 		toplevel._win_lock.release()
 		self._bgcolor = self._parent_window._bgcolor
 		self._fgcolor = self._parent_window._fgcolor
@@ -1358,8 +1353,9 @@ class _Window:
 			gl.winposition(x0, x1, y0, y1)
 		gl.winset(self._window_id)	# just to be sure
 		gl.reshapeviewport()
-		self._width, self._height = gl.getsize()
-		gl.ortho2(-0.5, self._width-0.5, -0.5, self._height-0.5)
+		width, height = gl.getsize()
+		self._rect = self._rect[_X], self._rect[_Y], width, height
+		gl.ortho2(-0.5, width - 0.5, -0.5, height - 0.5)
 		toplevel._win_lock.release()
 		# close all display objects after a resize
 		for displist in self._displaylists[:]:
@@ -1411,7 +1407,8 @@ class _Window:
 			else:
 				color = self._fgcolor
 			gl.RGBcolor(color)
-			gl.recti(0, 0, self._width - 1, self._height - 1)
+			x, y, w, h = self._rect
+			gl.recti(x, y, x + w - 1, y + h - 1)
 			toplevel._win_lock.release()
 		self._must_redraw = 0
 
@@ -1438,9 +1435,10 @@ class _Window:
 				toplevel._win_lock.release()
 		self._cursor = cursor
 
-	def _prepare_image_from_file(self, file, top, bottom, left, right):
+	def _prepare_image_from_file(self, file, crop, scale):
 		global _cache_full
-		cachekey = `file`+':'+`self._width`+'x'+`self._height`
+		crop = top, bottom, left, right
+		cachekey = `file`+':'+`self._rect[_WIDTH]`+'x'+`self._rect[_HEIGHT]`
 		if _image_cache.has_key(cachekey):
 			retval = _image_cache[cachekey]
 			filename = retval[-1]
@@ -1470,9 +1468,10 @@ class _Window:
 		bottom = int(bottom * ysize + 0.5)
 		left = int(left * xsize + 0.5)
 		right = int(right * xsize + 0.5)
-		width, height = self._width, self._height
-		scale = min(float(width)/(xsize - left - right), \
-			    float(height)/(ysize - top - bottom))
+		width, height = self._rect[2:]
+		if scale == 0:
+			scale = min(float(width)/(xsize - left - right),
+				    float(height)/(ysize - top - bottom))
 		width, height = xsize, ysize
 		if scale != int(scale):
 			import imageop
@@ -1485,8 +1484,8 @@ class _Window:
 			left = int(left * scale)
 			right = int(right * scale)
 			scale = 1.0
-		x, y = (self._width-(width-left-right))/2, \
-			  (self._height-(height-top-bottom))/2
+		x, y = (self._rect[_WIDTH]-(width-left-right))/2, \
+			  (self._rect[_HEIGHT]-(height-top-bottom))/2
 		retval = x, y, width - left - right, height - top - bottom, \
 			  left, bottom, width, height, 4, scale, \
 			  image
@@ -1525,11 +1524,12 @@ class _Window:
 		x1, y1 = x + w, y + h
 		# convert relative sizes to pixel sizes relative to
 		# lower-left corner of the window
-		x0 = int((self._width - 1) * x0 + 0.5)
-		y0 = int((self._height - 1) * y0 + 0.5)
-		x1 = int((self._width - 1) * x1 + 0.5)
-		y1 = int((self._height - 1) * y1 + 0.5)
-		y0, y1 = self._height - y1 - 1, self._height - y0 - 1
+		width, height = self._rect[2:]
+		x0 = int((width - 1) * x0 + 0.5)
+		y0 = int((height - 1) * y0 + 0.5)
+		x1 = int((width - 1) * x1 + 0.5)
+		y1 = int((height - 1) * y1 + 0.5)
+		y0, y1 = height - y1 - 1, height - y0 - 1
 		return x0, y0, x1, y1
 
 	def register(self, ev, func, arg):

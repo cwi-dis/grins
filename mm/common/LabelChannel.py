@@ -7,8 +7,8 @@ import MMAttrdefs
 
 class LabelChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + \
-		     ['fgcolor', 'font', 'pointsize', 'bgimg', 'noanchors',
-		      'textalign']
+		     ['fgcolor', 'font', 'pointsize', 'textalign',
+		      'bgimg', 'scale', 'noanchors']
 
 	def __repr__(self):
 		return '<NewChannel instance, name=' + `self._name` + '>'
@@ -23,7 +23,7 @@ class LabelChannel(ChannelWindow):
 			except IOError:
 				pass
 			try:
-				box = self.armed_display.display_image_from_file(img)
+				box = self.armed_display.display_image_from_file(img, scale = MMAttrdefs.getattr(node, 'scale'))
 			except (windowinterface.error, IOError), msg:
 				if type(msg) == type(()):
 					msg = msg[1]
@@ -122,9 +122,11 @@ class LabelChannel(ChannelWindow):
 			pchar = 0
 			y = y + fontheight
 		# draw boxes for the anchors
-		self.armed_display.fgcolor(self.gethicolor(node))
+		self.armed_display.fgcolor(self.getbucolor(node))
+		hicolor = self.gethicolor(node)
 		for name, box, type in buttons:
 			button = self.armed_display.newbutton(box)
+			button.hicolor(hicolor)
 			button.hiwidth(3)
 			self.setanchor(name, type, button)
 		return 1

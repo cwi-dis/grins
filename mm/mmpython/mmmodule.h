@@ -31,7 +31,7 @@ typedef struct {
 struct mmfuncs {
 	void (*armer) Py_PROTO((mmobject *));
 	void (*player) Py_PROTO((mmobject *));
-	int (*resized) Py_PROTO((mmobject *));
+	int (*resized) Py_PROTO((mmobject *, int, int, int, int));
 	int (*arm) Py_PROTO((mmobject *, PyObject *, int, int, PyObject *, PyObject *));
 	int (*armstop) Py_PROTO((mmobject *));
 	int (*play) Py_PROTO((mmobject *));

@@ -119,7 +119,8 @@ class MMParser:
 			t = self.getobject()
 		else:
 			sign = ''
-		if t[0] in digits: return float(eval(sign + t))
+		if t[0] in digits or (t[0] == '.' and t[1] in digits):
+			return float(eval(sign + t))
 		raise TypeError, (t, 'float')
 	#
 	def getstringvalue(self, dummy):

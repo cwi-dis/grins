@@ -90,11 +90,12 @@ class TextChannel(ChannelWindow):
 			dummy = self.armed_display.writestr(curlines[line][pchar:] + '\n')
 			pchar = 0
 ##			print 'buttons:',`buttons`
-		self.armed_display.fgcolor(self.gethicolor(node))
+		self.armed_display.fgcolor(self.getbucolor(node))
+		hicolor = self.gethicolor(node)
 		for (name, box, type) in buttons:
 			button = self.armed_display.newbutton(box)
+			button.hicolor(hicolor)
 			button.hiwidth(3)
-##			button.hicolor(self.getfgcolor(node))
 			self.setanchor(name, type, button)
 ##			dummy = self.armed_display.writestr(string.joinfields(curlines, '\n'))
 		# Draw a little square if some text did not fit.

@@ -648,7 +648,8 @@ class ChannelView(ViewDialog):
 		if not editmgr.transaction():
 			return		# Not possible at this time
 		editmgr.rollback()
-		windowinterface.setcursor('channel')
+		windowinterface.setcursor('stop')
+		self.window.setcursor('channel')
 		self.placing_channel = PLACING_COPY
 		self.placing_orig = name
 
@@ -672,7 +673,8 @@ class ChannelView(ViewDialog):
 		if not editmgr.transaction():
 			return		# Not possible at this time
 		editmgr.rollback()
-		windowinterface.setcursor('channel')
+		windowinterface.setcursor('stop')
+		self.window.setcursor('channel')
 		self.placing_channel = PLACING_MOVE
 		self.placing_orig = name
 
@@ -1008,15 +1010,15 @@ class ChannelBox(GO):
 			color = CHANNELCOLOR
 		else:
 			color = CHANNELOFFCOLOR
-		d.drawfdiamond(color, l, t, r - l, b - t)
+		d.drawfdiamond(color, (l, t, r - l, b - t))
 
 		# Outline the diamond; 'engraved' normally,
 		# 'sticking out' if selected
 		if self.selected:
 			d.draw3ddiamond(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT,
-					FOCUSBOTTOM, l, t, r - l, b - t)
+					FOCUSBOTTOM, (l, t, r - l, b - t))
 		d.fgcolor(BORDERCOLOR)
-		d.drawdiamond(l, t, r - l, b - t)
+		d.drawdiamond((l, t, r - l, b - t))
 
 		# Draw the name
 		d.fgcolor(TEXTCOLOR)
@@ -1256,7 +1258,7 @@ class NodeBox(GO):
 		# Draw a "3D" border if selected, else an "engraved" outline
 		if self.selected:
 			d.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT,
-				    FOCUSBOTTOM, l, t, r - l, b - t)
+				    FOCUSBOTTOM, (l, t, r - l, b - t))
 		else:
 			d.fgcolor(BORDERCOLOR)
 			d.drawbox((l, t, r - l, b - t))
@@ -1341,8 +1343,8 @@ class ArcBox(GO):
 
 	def ishit(self, x, y):
 		if not self.ok: return 0
-		return self.mother.window.hitarrow(x, y, self.sx, self.sy,
-						   self.dx, self.dy)
+		return self.mother.window.hitarrow((x, y), (self.sx, self.sy),
+						   (self.dx, self.dy))
 
 	def drawfocus(self):
 		# The entire sync arc has the focus color if selected
@@ -1350,8 +1352,8 @@ class ArcBox(GO):
 			color = FOCUSCOLOR
 		else:
 			color = ARROWCOLOR
-		self.mother.new_displist.drawarrow(color, self.sx, self.sy,
-						   self.dx, self.dy)
+		self.mother.new_displist.drawarrow(color, (self.sx, self.sy),
+						   (self.dx, self.dy))
 
 	# Menu stuff beyond what GO offers
 

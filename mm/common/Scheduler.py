@@ -466,7 +466,7 @@ class Scheduler(scheduler):
 			#
 ##			delay = 1
 ##			self.ui.showtime()
-			#self.ui.showpauseanchor(1) # Does not work...
+			#self.ui.showpauseanchor(1) # Does not work look nice
 			if debugtimer:  'updatetimer: idle' #DBG
 			return
 		if debugtimer: print 'updatetimer: delay=', delay
