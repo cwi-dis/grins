@@ -96,7 +96,7 @@ class Selecter:
 			dtype = Hlinks.A_DEST_PAUSE
 		anchor2 = link[Hlinks.ANCHOR2]
 		if MMAttrdefs.getattr(anchor1, 'external') or ltype != Hlinks.TYPE_JUMP or type(anchor2) is type(''):
-			return self.toplevel.jumptoexternal(anchor2, ltype, stype, dtype)
+			return self.toplevel.jumptoexternal(anchor1, anchor2, ltype, stype, dtype)
 		return self.gotonode(anchor2, arg)
 
 	def gotonode(self, seek_node, arg):

@@ -1684,21 +1684,21 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	#
 	# Global hyperjump interface
 	#
-	def jumptoexternal(self, anchor, atype, stype=A_SRC_PLAY, dtype=A_DEST_PLAY):
+	def jumptoexternal(self, srcanchor, dstanchor, atype, stype=A_SRC_PLAY, dtype=A_DEST_PLAY):
 		# XXXX Should check that document isn't active already,
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
-		if type(anchor) is type(''):
-			url, aid = MMurl.splittag(anchor)
+		if type(dstanchor) is type(''):
+			url, aid = MMurl.splittag(dstanchor)
 			url = MMurl.basejoin(self.filename, url)
 		else:
 			url = self.filename
 			for aid, uid in self.root.SMILidmap.items():
-				if uid == anchor.GetUID():
+				if uid == dstanchor.GetUID():
 					break
 			else:
 				# XXX can't find the SMIL name, guess...
-				aid = MMAttrdefs.getattr(anchor, 'name')
+				aid = MMAttrdefs.getattr(dstanchor, 'name')
 
 		# by default, the document target will be handled by GRiNS
 		# note: this varib allow to manage correctly the sourcePlaystate attribute
@@ -1711,13 +1711,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			try:
 				# if the destination document is not a smil/grins document,
-				# it's handle by an external application
+				# or if the external attribute is set,
+				# it's handled by an external application
 				mtype = urlcache.mimetype(url)
 				utype, url2 = MMurl.splittype(url)
 				if mtype in ('application/smil',
 					     'application/x-grins-project',
-					     ):
-					# in this case, the document is handle by grins
+					     ) and \
+				   not MMAttrdefs.getattr(srcanchor, 'external'):
+					# in this case, the document is handled by grins
 					top = TopLevel(self.main, url, 0)
 				else:
 					grinsTarget = 0
@@ -1752,7 +1754,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				top.player.pause(1)
 			else:
 				print 'jump to external: invalid destination state'
-			
+
 		if atype == TYPE_JUMP:
 			if grinsTarget:
 				self.close()

@@ -294,7 +294,7 @@ class TopLevel(TopLevelDialog):
 	#
 	# Global hyperjump interface
 	#
-	def jumptoexternal(self, anchor, atype, stype=A_SRC_PLAY, dtype=A_DEST_PLAY):
+	def jumptoexternal(self, srcanchor, anchor, atype, stype=A_SRC_PLAY, dtype=A_DEST_PLAY):
 		# XXXX Should check that document isn't active already,
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
