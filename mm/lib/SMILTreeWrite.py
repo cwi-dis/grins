@@ -296,8 +296,7 @@ class SMILWriter:
 						attrlist.append('%s="%d%%"'%
 								(name, value))
 			if ch.has_key('z'):
-				# CMIF default is 0, SMIL default is 1
-				attrlist.append('z="%d"' % (ch['z'] + 1))
+				attrlist.append('z-index="%d"' % ch['z'])
 ## 			if len(attrlist) == 1:
 ## 				# Nothing to define
 ## 				continue

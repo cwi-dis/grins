@@ -182,7 +182,8 @@ class SMILParser(xmllib.XMLParser):
 					self.__channels[channel] = ch = \
 						{'minwidth': 0, 'minheight': 0,
 						 'left': 0, 'top': 0,
-						 'width': 0, 'height': 0}
+						 'width': 0, 'height': 0,
+						 'z-index': 0,}
 				node.__size = width, height
 				if ch['minwidth'] < width:
 					ch['minwidth'] = width
@@ -352,6 +353,7 @@ class SMILParser(xmllib.XMLParser):
 						self.__width, self.__height
 					layout['units'] = UNIT_PXL
 				ch['base_window'] = 'layout'
+				ch['z'] = attrdict['z-index']
 				x = attrdict['left']
 				y = attrdict['top']
 				w = attrdict['width']
@@ -483,7 +485,7 @@ class SMILParser(xmllib.XMLParser):
 	def end_layout(self):
 		self.__in_layout = LAYOUT_NONE
 
-	tuner_attributes = ['id', 'left', 'top', 'z', 'width', 'height']
+	tuner_attributes = ['id', 'left', 'top', 'z-index', 'width', 'height']
 	def start_tuner(self, attributes):
 		if not self.__in_layout:
 			self.error('tuner not in layout')
@@ -492,7 +494,7 @@ class SMILParser(xmllib.XMLParser):
 			return
 		attrdict = {'left': 0,
 			    'top': 0,
-			    'z': 0,
+			    'z-index': 0,
 			    'width': 0,
 			    'height': 0,
 			    'minwidth': 0,
@@ -512,22 +514,21 @@ class SMILParser(xmllib.XMLParser):
 				except (string.atoi_error, string.atof_error):
 					self.syntax_error(self.lineno, 'invalid tuner attribute value')
 					val = 0
-			elif attr == 'z':
+			elif attr == 'z-index':
 				try:
 					val = string.atoi(val)
 				except string.atoi_error:
 					self.syntax_error(self.lineno, 'invalid tuner attribute value')
-					val = 1
-				if val <= 0:
-					self.error('tuner with negative z')
-				val = val - 1 # SMIL def is 1, CMIF def is 0
+					val = 0
+				if val < 0:
+					self.error('tuner with negative z-index')
 			elif attr == 'id':
 				seen_id = 1
 				if self.__channels.has_key(val):
 					self.warning('multiple tuner tags for id=%s' % val)
 				self.__channels[val] = attrdict
 			else:
-				self.warning('unknown attribute in tuner tag')
+				self.warning('unknown attribute %s in tuner tag' % `attr`)
 			attrdict[attr] = val
 		if not seen_id:
 			self.error('tuner without id attribute')
