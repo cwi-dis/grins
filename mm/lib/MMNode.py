@@ -492,7 +492,8 @@ class MMRegPoint:
 			self.attrdict[key] = value
 		
 	def __getitem__(self, key):
-		regpoint = self.attrdict.get(key)
+		val = self.attrdict.get(key)
+		return val
 	
 	def isdefault(self):
 		return self.isdef
@@ -535,6 +536,22 @@ class MMRegPoint:
 		
 		return y
 	
+	# return the tuple x,y alignment in pourcent value
+	# alignOveride is an optional overide id
+	def getxyAlign(self, alignOveride=None):
+		alignId = None
+		if alignOveride == None:
+			alignId = self.getregalign()
+		else:
+			alignId = alignOveride
+			
+		from RegpointDefs import alignDef
+		xy = alignDef.get(alignId)
+		if xy == None:		
+			# impossible value, avoid a crash if bug
+			xy = (0.0, 0,0)
+		return xy
+			
 	def items(self):
 		return self.attrdict.items()
 		
