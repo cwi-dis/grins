@@ -1039,7 +1039,15 @@ class Channel:
 		return MMAttrdefs.getattr(node, 'bgcolor', animated)
 
 	def getfgcolor(self, node, animated=0):
-		return MMAttrdefs.getattr(node, 'fgcolor', animated)
+##		return MMAttrdefs.getattr(node, 'fgcolor', animated)
+		fgcolor = node.GetAttrDef('fgcolor', None)
+		if fgcolor is not None:
+			return fgcolor
+		r,g,b = self.getbgcolor(node, animated)
+		if r*r + g*g + b*b >= 3*128*128:
+			return 0,0,0
+		else:
+			return 255,255,255
 
 	def getbucolor(self, node, animated=0):
 		return MMAttrdefs.getattr(node, 'bucolor', animated)
