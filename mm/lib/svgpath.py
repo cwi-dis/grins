@@ -1,7 +1,5 @@
 __version__ = '$Id$'
 
-# Minimum svg path related code to support animateMotion
-
 import string
 import math
 

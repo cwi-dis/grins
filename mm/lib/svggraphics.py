@@ -24,7 +24,12 @@ class SVGGraphics:
 		# clipping region
 		# ...
 		# XXX:  initialize according to spec
-		self.cstyle = {'stroke-width': 1, 'font-family': 'Verdana', 'font-size':15}
+		self.cstyle = {
+			'stroke-width': svgtypes.SVGLength(None, '1'), 
+			'font-family': 'Verdana', 
+			'font-size':svgtypes.SVGLength(None, '15'),
+			'fill':svgtypes.SVGColor(None, 'black'),
+			}
 
 	def __repr__(self):
 		style = ''
@@ -78,6 +83,7 @@ class SVGGraphics:
 	def onEndRendering(self):
 		self.tkOnEndRendering()
 
+
 	#
 	#  platform toolkit renderer notifications interface
 	#
@@ -110,6 +116,10 @@ class SVGGraphics:
 
 	# copy platform toolkit objects to 'other' 
 	def tkInitInstance(self, other):
+		pass
+
+	# clip box
+	def tkClipBox(self, clipbox):
 		pass
 
 	#
