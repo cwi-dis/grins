@@ -307,6 +307,8 @@ def parsevalue(name, string, context):
 	typedef = ('enclosed', getdef(name)[0])
 	return MMParser.parsevalue('('+string+')', typedef, context)
 
+def getattrtype(attrname):
+	return getdef(attrname)[0][0]
 
 # Initialize the attrdefs table.
 #
