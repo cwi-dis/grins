@@ -197,6 +197,12 @@ class HierarchyViewDialog(ViewDialog):
 	def setpopup(self, template):
 		self.window.setpopupmenu(template, curflags())
 
+	def setstate(self):
+		w = self.window
+		w.set_toggle(THUMBNAIL, self.thumbnails)
+		w.set_toggle(PLAYABLE, self.showplayability)
+		w.set_toggle(TIMESCALE, self.timescale)
+
 	def getparentwindow(self):
 		# Used by machine-independent code to pass as parent
 		# parameter to dialogs

@@ -38,7 +38,6 @@ class HierarchyViewDialog(ViewDialog):
 				canvassize = (w, h),
 				commandlist = self.commands,strid='hview_')
 
-		self.window.set_toggle(THUMBNAIL, self.thumbnails)
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
 		self.window.register(WMEVENTS.PasteFile, self.dropfile, None)
@@ -72,7 +71,13 @@ class HierarchyViewDialog(ViewDialog):
 
 	def setpopup(self, template):
 		self.window.setpopupmenu(template)
-		
+
+	def setstate(self):
+		w = self.window
+		w.set_toggle(THUMBNAIL, self.thumbnails)
+		w.set_toggle(PLAYABLE, self.showplayability)
+		w.set_toggle(TIMESCALE, self.timescale)
+
 	def helpcall(self):
 		import Help
 		Help.givehelp('Hierarchy')

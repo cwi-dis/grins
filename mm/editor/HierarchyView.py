@@ -359,6 +359,7 @@ class HierarchyView(HierarchyViewDialog):
 					commands = commands + self.pastenotatrootcommands
 		self.setcommands(commands)
 		self.setpopup(popupmenu)
+		self.setstate()
 
 		# make sure focus is visible
 		node = fnode.GetParent()
