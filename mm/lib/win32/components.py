@@ -70,8 +70,10 @@ class LightWeightControl:
 		return self._class__(hwnd)
 	def hookcommand(self,obj,cb):
 		obj.HookCommand(cb,self._id)
-	def hookmessage(self,obj,cb):
-		obj.HookMessage(cb,self._id)
+	def hookmessage(self,cb,msgid):
+		if not self._hwnd: raise error, 'os control has not been created'
+		wnd=window.Wnd(win32ui.CreateWindowFromHandle(self._hwnd))
+		wnd.HookMessage(cb,msgid)
 	def hasid(self,id):
 		return id==self._id
 	def create(self,wc,name,pos,size,parent,id):
