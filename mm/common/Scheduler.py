@@ -815,7 +815,7 @@ class SchedulerContext:
 			if arc.isstart and cancel_gensr:
 				self.cancel_gensr(arc.dstnode)
 			for a in deparcs:
-				if syncbase or a.srcnode != 'syncbase':
+				if syncbase or (a.srcnode != 'syncbase' and not a.implicit):
 					self.cancelarc(a, timestamp, cancel_gensr, propagate)
 
 	def gototime(self, node, gototime, timestamp, path = None):

@@ -1751,7 +1751,7 @@ _repeat_regexp = None
 class MMSyncArc:
 	def __init__(self, dstnode, action, srcnode=None, srcanchor=None,
 		     channel=None, event=None, marker=None, wallclock=None,
-		     accesskey=None, delay=None):
+		     accesskey=None, delay=None, implicit=0):
 		# dstnode is the destination MMNode for this syncarc, i.e. what is started, ended etc.
 		# action is one of ['begin', 'min', 'dur', 'end'] where:
 		#    'begin' means this starts the node.
@@ -1806,6 +1806,7 @@ class MMSyncArc:
 		self.accesskey = accesskey
 		self.wallclock = wallclock
 		self.delay = delay
+		self.implicit = implicit
 		self.reinit()
 		if debug: print 'MMSyncArc.__init__', `self`
 
@@ -1911,7 +1912,7 @@ class MMSyncArc:
 		return MMSyncArc(dstnode, action, srcnode,
 				 None, self.channel, self.event,
 				 self.marker, self.wallclock,
-				 self.accesskey, self.delay)
+				 self.accesskey, self.delay, self.implicit)
 
 	def refnode(self):
 		node = self.dstnode
@@ -4171,7 +4172,7 @@ class MMNode(MMTreeElement):
 			elif not beginlist:
 				if defbegin is None:
 					child.set_infoicon('error', 'node cannot start')
-				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin)
+				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin, implicit = 1)
 				self_body.arcs.append((srcnode, arc))
 				srcnode.add_arc(arc, curtime, sctx)
 				schedule = defbegin is not None
