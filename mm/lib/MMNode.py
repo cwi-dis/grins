@@ -45,7 +45,11 @@ class MMNodeContext:
 	def findfile(self, filename):
 		##_stat('findfile')
 		import os
-		if os.path.isabs(filename):
+		import urllib
+		filename = os.path.expandvars(filename)
+		filename = os.path.expanduser(filename)
+		urltype, urlpath = urllib.splittype(filename)
+		if urltype or os.path.isabs(filename):
 			return filename
 		if self.dirname:
 			altfilename = os.path.join(self.dirname, filename)
