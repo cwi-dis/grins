@@ -6,7 +6,7 @@
 #endif
 
 #ifndef INC_SURFACE
-#include "surface.h"
+#include "../common/surface.h"
 #endif
 
 #ifndef INC_PARSE_I
