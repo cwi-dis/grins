@@ -14,6 +14,7 @@ import grinsRC
 
 from pywinlib.mfc import docview
 import GenView
+import string
 
 ICONNAME_TO_RESID={
 	None: grinsRC.IDI_ICON_ASSET_BLANK,
@@ -41,6 +42,7 @@ ICONNAME_TO_RESID={
 
 class _AssetsView(GenView.GenView, docview.ListView):
 	CF_URL = Sdk.RegisterClipboardFormat('URL')
+	CF_NODEUID = Sdk.RegisterClipboardFormat('NodeUID')
 
 	def __init__(self, doc, bgcolor=None):
 		GenView.GenView.__init__(self, bgcolor)
@@ -175,7 +177,16 @@ class _AssetsView(GenView.GenView, docview.ListView):
 			return 0
 		if type == 'URL':
 			rv = self.listCtrl.DoDragDrop(self.CF_URL, value)
-			print 'DoDragDrop RV=', `rv`
+			print 'DoDragDrop URL RV=', `rv`
+			return 1
+		elif type == 'node':
+			value = string.join(value, ',')
+			print 'DBG DoDragDrop', self.CF_NODEUID, value
+			rv = self.listCtrl.DoDragDrop(self.CF_NODEUID, value)
+			print 'DoDragDrop NodeUID rv=', `rv`
+			cb = self._cmddict.get('finishdrag')
+			if cb:
+				cb(rv)
 			return 1
 		print 'Unknown assetview dragtype', type
 		return 0

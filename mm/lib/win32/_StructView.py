@@ -15,6 +15,7 @@ import win32mu
 import usercmd, usercmdui, wndusercmd
 
 import math
+import string
 
 # drag & drop constants
 import DropTarget
@@ -32,6 +33,7 @@ class _StructView(DisplayListView):
 		# shortcut for GRiNS private clipboard format
 		self.CF_NODE = self.getClipboardFormat('Node')
 		self.CF_TOOL = self.getClipboardFormat('Tool')
+		self.CF_NODEUID = self.getClipboardFormat('NodeUID')
 
 		# enable or disable node drag and drop
 		self._enableNodeDragDrop = 1
@@ -39,6 +41,7 @@ class _StructView(DisplayListView):
 		if self._enableNodeDragDrop:
 			self._dropmap['Node']=(self.dragnode, self.dropnode)
 			self._dropmap['Tool']=(self.dragtool, self.droptool)
+			self._dropmap['NodeUID']=(self.dragnodeuid, self.dropnodeuid)
 			self._dragging = None
 
 		self._tooltip = None
@@ -201,7 +204,6 @@ class _StructView(DisplayListView):
 
 	def dropnode(self, dataobj, effect, x, y):
 		#print "DEBUG: dropped."
-		DROP_FAILED, DROP_SUCCEEDED = 0, 1
 		node = dataobj.GetGlobalData(self.CF_NODE) 
 		if node and self._dragging:
 			
@@ -218,9 +220,6 @@ class _StructView(DisplayListView):
 
 			self._dragging = None
 
-			# if the operation can not be executed return DROP_FAILED
-			# else return DROP_SUCCEEDED
-
 			if effect == DropTarget.DROPEFFECT_MOVE:
 				cmd = 'copy'
 			else:
@@ -229,7 +228,7 @@ class _StructView(DisplayListView):
 			return self.onEventEx(DropNode,
 					(x, y, cmd, usercmd.DRAG_NODE, (xf, yf)))
 
-		return DROP_FAILED
+		return DropTarget.DROPEFFECT_NONE
 							
 	def dragtool(self, dataobj, kbdstate, x, y):
 		cmdid=dataobj.GetGlobalData(self.CF_TOOL)
@@ -242,17 +241,49 @@ class _StructView(DisplayListView):
 		return DropTarget.DROPEFFECT_NONE
 
 	def droptool(self, dataobj, effect, x, y):
-		DROP_FAILED, DROP_SUCCEEDED = 0, 1
 		cmdid = dataobj.GetGlobalData(self.CF_TOOL)
 		if cmdid:
 			ucmd = usercmdui.id2usercmd(eval(cmdid))
 			x, y = self._DPtoLP((x,y))
 			x, y = self._pxl2rel((x, y),self._canvas)
 
-			# if the operation can not be executed return DROP_FAILED
-			# else return DROP_SUCCEEDED
 			return self.onEventEx(DropNode,
 					(x, y, 'copy', ucmd, None))
-			return DROP_SUCCEEDED
+		return DropTarget.DROPEFFECT_NONE
 
-		return DROP_FAILED
+	def dragnodeuid(self, dataobj, kbdstate, x, y):
+		data = dataobj.GetGlobalData(self.CF_NODEUID)
+		if data:
+			contextid, nodeuid = string.split(data, ',')
+			contextid = string.strip(contextid)
+			nodeuid = string.strip(nodeuid)
+			ucmd = usercmd.DRAG_NODEUID
+			x, y = self._DPtoLP((x,y))
+			x, y = self._pxl2rel((x, y),self._canvas)
+			if self.isShiftPressed(kbdstate):
+				cmd = 'move'
+			else:
+				cmd = 'copy'
+			return self.onEventEx(DragNode,
+					(x, y, cmd, ucmd, (contextid, nodeuid)))
+		return DropTarget.DROPEFFECT_NONE
+
+	def dropnodeuid(self, dataobj, effect, x, y):
+		data = dataobj.GetGlobalData(self.CF_NODEUID)
+		if data:
+			contextid, nodeuid = string.split(data, ',')
+			contextid = string.strip(contextid)
+			nodeuid = string.strip(nodeuid)
+			ucmd = usercmd.DRAG_NODEUID
+			x, y = self._DPtoLP((x,y))
+			x, y = self._pxl2rel((x, y),self._canvas)
+
+			if effect == DropTarget.DROPEFFECT_MOVE:
+				cmd = 'copy'
+			else:
+				cmd = 'move'
+
+			return self.onEventEx(DropNode,
+					(x, y, cmd, ucmd, (contextid, nodeuid)))
+
+		return DropTarget.DROPEFFECT_NONE
