@@ -76,7 +76,11 @@ class EditMgr:
 
 	def __delete(self, list):
 		# hook to delete (destroy) instances in list
-		pass
+		for trans in list:
+			for action in trans:
+				cmd = action[0]
+				func = getattr(self, 'clean_'+cmd)
+				apply(func, action[1:])
 	#
 	# Dependent client interface.
 	#
@@ -201,7 +205,6 @@ class EditMgr:
 			action = actions[i]
 			cmd = action[0]
 			func = getattr(self, 'undo_'+cmd)
-			print 'undoing', cmd
 			apply(func, action[1:])
 		
 	def undo(self):
@@ -253,12 +256,18 @@ class EditMgr:
 	def undo_delnode(self, parent, i, node):
 		self.addnode(parent, i, node)
 
+	def clean_delnode(self, parent, i, node):
+		node.Destroy()
+
 	def addnode(self, parent, i, node):
 		self.addstep('addnode', node)
 		node.AddToTree(parent, i)
 
 	def undo_addnode(self, node):
 		self.delnode(node)
+
+	def clean_addnode(self, node):
+		pass
 
 	def setnodetype(self, node, type):
 		oldtype = node.GetType()
@@ -267,6 +276,9 @@ class EditMgr:
 
 	def undo_setnodetype(self, node, oldtype):
 		self.setnodetype(node, oldtype)
+
+	def clean_setnodetype(self, node, oldtype):
+		pass
 
 	def setnodeattr(self, node, name, value):
 		oldvalue = node.GetRawAttrDef(name, None)
@@ -279,12 +291,18 @@ class EditMgr:
 	def undo_setnodeattr(self, node, name, oldvalue):
 		self.setnodeattr(node, name, oldvalue)
 
+	def clean_setnodeattr(self, node, name, oldvalue):
+		pass
+
 	def setnodevalues(self, node, values):
 		self.addstep('setnodevalues', node, node.GetValues())
 		node.SetValues(values)
 
 	def undo_setnodevalues(node, oldvalues):
 		self.setnodevalues(node, oldvalues)
+
+	def clean_setnodevalues(node, oldvalues):
+		pass
 
 	#
 	# Sync arc operations
@@ -300,6 +318,9 @@ class EditMgr:
 	def undo_addsyncarc(self, node, attr, arc):
 		self.delsyncarc(node, attr, arc)
 
+	def clean_addsyncarc(self, node, attr, arc):
+		pass
+
 	def delsyncarc(self, node, attr, arc):
 		list = node.GetRawAttrDef(attr, [])[:]
 		if arc not in list:
@@ -314,6 +335,9 @@ class EditMgr:
 	def undo_delsyncarc(self, node, attr, arc):
 		self.addsyncarc(node, attr, arc)
 
+	def clean_delsyncarc(self, node, attr, arc):
+		pass
+
 	#
 	# Hyperlink operations
 	#
@@ -324,12 +348,18 @@ class EditMgr:
 	def undo_addlink(self, link):
 		self.dellink(link)
 
+	def clean_addlink(self, link):
+		pass
+
 	def dellink(self, link):
 		self.addstep('dellink', link)
 		self.context.hyperlinks.dellink(link)
 
 	def undo_dellink(self, link):
 		self.addlink(link)
+
+	def clean_dellink(self, link):
+		pass
 
 	def addexternalanchor(self, url):
 		self.addstep('addexternalanchor', url)
@@ -338,12 +368,18 @@ class EditMgr:
 	def undo_addexternalanchor(self, url):
 		self.delexternalanchor(url)
 
+	def clean_addexternalanchor(self, url):
+		pass
+
 	def delexternalanchor(self, url):
 		self.addstep('delexternalanchor', url)
 		self.context.externalanchors.remove(url)
 
 	def undo_delexternalanchor(self, url):
 		self.addexternalanchor(url)
+
+	def clean_delexternalanchor(self, url):
+		pass
 
 	#
 	# Channel operations
@@ -358,6 +394,9 @@ class EditMgr:
 
 	def undo_addchannel(self, name):
 		self.delchannel(name)
+
+	def clean_addchannel(self, name):
+		pass
 
 	def copychannel(self, name, i, orig):
 		c = self.context.getchannel(name)
@@ -374,6 +413,9 @@ class EditMgr:
 	def undo_copychannel(self, name):
 		self.delchannel(name)
 
+	def clean_copychannel(self, name):
+		pass
+
 	def movechannel(self, name, i):
 		old_i = self.context.channelnames.index(name)
 		self.addstep('movechannel', name, old_i)
@@ -381,6 +423,9 @@ class EditMgr:
 
 	def undo_movechannel(self, name, old_i):
 		self.movechannel(name, old_i)
+
+	def clean_movechannel(self, name, old_i):
+		pass
 
 	def delchannel(self, name):
 		c = self.context.getchannel(name)
@@ -399,6 +444,9 @@ class EditMgr:
 				continue
 			self.setchannelattr(name, key, val)
 
+	def clean_delchannel(self, name, i, attrdict):
+		pass
+
 	def setchannelname(self, name, newname):
 		if newname == name:
 			return # No change
@@ -411,6 +459,9 @@ class EditMgr:
 
 	def undo_setchannelname(self, oldname, name):
 		self.setchannelname(name, oldname)
+
+	def clean_setchannelname(self, oldname, name):
+		pass
 
 	def setchannelattr(self, name, attrname, value):
 		c = self.context.getchannel(name)
@@ -432,6 +483,9 @@ class EditMgr:
 	def undo_setchannelattr(self, name, attrname, oldvalue):
 		self.setchannelattr(name, attrname, oldvalue)
 
+	def clean_setchannelattr(self, name, attrname, oldvalue):
+		pass
+
 	#
 	# Layout operations
 	#
@@ -445,6 +499,9 @@ class EditMgr:
 	def undo_addlayout(self, name):
 		self.dellayout(name)
 
+	def clean_addlayout(self, name):
+		pass
+
 	def dellayout(self, name):
 		layout = self.context.layouts.get(name)
 		if layout is None:
@@ -456,6 +513,9 @@ class EditMgr:
 		self.addlayout(name)
 		for channel in layout:
 			self.addlayoutchannel(name, channel)
+
+	def clean_dellayout(self, name, layout):
+		pass
 
 	def addlayoutchannel(self, name, channel):
 		layout = self.context.layouts.get(name)
@@ -471,6 +531,9 @@ class EditMgr:
 	def undo_addlayoutchannel(self, name, channel):
 		self.dellayoutchannel(name, channel)
 
+	def clean_addlayoutchannel(self, name, channel):
+		pass
+
 	def dellayoutchannel(self, name, channel):
 		layout = self.context.layouts.get(name)
 		if layout is None:
@@ -484,6 +547,9 @@ class EditMgr:
 
 	def undo_dellayoutchannel(self, name, channel):
 		self.addlayoutchannel(name, channel)
+
+	def clean_dellayoutchannel(self, name, channel):
+		pass
 
 	def setlayoutname(self, name, newname):
 		if newname == name:
@@ -500,6 +566,9 @@ class EditMgr:
 	def undo_setlayoutname(self, oldname, name):
 		self.setlayoutname(name, oldname)
 
+	def clean_setlayoutname(self, oldname, name):
+		pass
+
 	#
 	# User group operations
 	#
@@ -512,6 +581,9 @@ class EditMgr:
 
 	def undo_addusergroup(self, name):
 		self.delusergroup(name)
+
+	def clean_addusergroup(self, name):
+		pass
 
 	def delusergroup(self, name):
 		usergroup = self.context.usergroups.get(name)
@@ -535,8 +607,14 @@ class EditMgr:
 		self.addstep('setusergroupname', name, newname)
 		self.context.setusergroupname(name, newname)
 
+	def clean_delusergroup(self, name, usergroup):
+		pass
+
 	def undo_setusergroupname(self, oldname, name):
 		self.setusergroupname(name, oldname)
+
+	def clean_setusergroupname(self, oldname, name):
+		pass
 
 	#
 	# Transitions operations
@@ -551,6 +629,9 @@ class EditMgr:
 	def undo_addtransition(self, name):
 		self.deltransition(name)
 
+	def clean_addtransition(self, name):
+		pass
+
 	def deltransition(self, name):
 		transition = self.context.transitions.get(name)
 		if transition is None:
@@ -562,6 +643,9 @@ class EditMgr:
 		self.addtransition(name)
 		for key, val in transition.items():
 			self.settransitionvalue(name, key, val)
+
+	def clean_deltransition(self, name, transition):
+		pass
 
 	def settransitionname(self, name, newname):
 		if newname == name:
@@ -578,6 +662,9 @@ class EditMgr:
 	def undo_settransitionname(self, oldname, name):
 		self.settransitionname(name, oldname)
 
+	def clean_settransitionname(self, oldname, name):
+		pass
+
 	def settransitionvalue(self, name, key, value):
 		if not self.context.transitions.has_key(name):
 			raise MMExc.AssertError, \
@@ -592,3 +679,6 @@ class EditMgr:
 
 	def undo_settransitionvalue(self, name, key, oldvalue):
 		self.settransitionvalue(name, key, oldvalue)
+
+	def clean_settransitionvalue(self, name, key, oldvalue):
+		pass
