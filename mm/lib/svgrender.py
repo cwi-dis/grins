@@ -71,31 +71,65 @@ class SVGRenderer:
 		self.restoreGraphics()
 		self.graphics.tkOnEndContext()
 
+	def getViewboxTfList(self, size, viewbox, align, meetOrSlice):
+		vw, vh = size
+		x, y, w, h = viewbox
+		xs, ys = vw/float(w), vh/float(h)
+		tflist = []
+
+		if align == 'none':
+			tflist.append(('scale', [xs, ys]))
+			if x or y:
+				tflist.append(('translate', [-x, -y]))
+			return tflist
+
+		if meetOrSlice == 'meet':
+			scale = min(xs, ys)
+			xscale, yscale = scale, scale
+		elif meetOrSlice == 'slice':
+			scale = max(xs, ys)
+			xscale, yscale = scale, scale
+
+		dx, dy, dw, dh = xscale*x, yscale*y, xscale*w, yscale*h
+		xalign, yalign = align[1:4], align[5:]
+		if xalign == 'Min':
+			dx = 0
+		elif xalign == 'Mid':
+			dx = vw/2 - dw/2
+		elif xalign == 'Max':
+			dx = vw - dw
+		if yalign == 'Min':
+			dy = 0
+		elif yalign == 'Mid':
+			dy = vh/2 - dh/2
+		elif yalign == 'Max':
+			dy = vh - dh
+
+		tflist.append(('translate', [dx, dy]))
+		tflist.append(('scale', [xscale, yscale]))
+		if x or y:
+			tflist.append(('translate', [-x, -y]))
+		return tflist
+	
+
 	#
 	# SVG elements processors
 	#
-
 	def svg(self, node):
 		self.saveGraphics()
+		x, y, w, h = node.get('x'), node.get('y'), node.get('width'), node.get('height')
+		self.graphics.tkClipBox((x, y, w, h))
+		self.graphics.applyTfList([('translate', [x, y]),])
+
 		viewbox = node.getViewBox()
 		if viewbox is not None:
-			vw, vh = node.getSize()
-			print 'size is', vw, vh, 
-			x, y, w, h = viewbox
-			tflist = []
-			if x or y:
-				tflist.append(('translate', [-x, -y]))
 			ar = node.get('preserveAspectRatio')
 			if ar is None:
-				scale = min(vw/float(w), vh/float(h))
-				xscale, yscale = scale, scale
-			elif ar == 'none':
-				xscale, yscale = vw/float(w), vh/float(h)
+				align = 'xMidYMid'
+				meetOrSlice = 'meet'
 			else:
-				# XXX: not correct (fit)
-				scale = min(vw/float(w), vh/float(h))
-				xscale, yscale = scale, scale
-			tflist.append(('scale', [xscale, yscale]))
+				align, meetOrSlice = ar
+			tflist = self.getViewboxTfList(node.getSize(), viewbox, align, meetOrSlice)
 			self.graphics.applyTfList(tflist)
 		self.graphics.applyStyle(node.getStyle())
 		self.graphics.applyTfList(node.getTransform())
@@ -242,6 +276,7 @@ svgSource = """<?xml version="1.0" standalone="no"?>
         style="fill:none; stroke:red; stroke-width:5" />
 </svg>
 """
+
 
 #################
 
