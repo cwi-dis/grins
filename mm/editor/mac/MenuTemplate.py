@@ -65,6 +65,32 @@ MENUBAR=(
 		(ALL, SEP,),
 		(ALL, ENTRY, 'New node...', 'K', NEW_AFTER),
 		(ALL, CASCADE, 'New node special', (
+			(ALL, CASCADE, 'Image node', (
+				(ALL, ENTRY, 'Before', None, NEW_BEFORE_IMAGE),
+				(ALL, ENTRY, 'After', None, NEW_AFTER_IMAGE),
+				(ALL, ENTRY, 'Within', None, NEW_UNDER_IMAGE),
+			)),
+			(ALL, CASCADE, 'Slideshow node', (
+				(ALL, ENTRY, 'Before', None, NEW_BEFORE_SLIDESHOW),
+				(ALL, ENTRY, 'After', None, NEW_AFTER_SLIDESHOW),
+				(ALL, ENTRY, 'Within', None, NEW_UNDER_SLIDESHOW),
+			)),
+			(ALL, CASCADE, 'Text node', (
+				(ALL, ENTRY, 'Before', None, NEW_BEFORE_TEXT),
+				(ALL, ENTRY, 'After', None, NEW_AFTER_TEXT),
+				(ALL, ENTRY, 'Within', None, NEW_UNDER_TEXT),
+			)),
+			(ALL, CASCADE, 'Sound node', (
+				(ALL, ENTRY, 'Before', None, NEW_BEFORE_SOUND),
+				(ALL, ENTRY, 'After', None, NEW_AFTER_SOUND),
+				(ALL, ENTRY, 'Within', None, NEW_UNDER_SOUND),
+			)),
+			(ALL, CASCADE, 'Video node', (
+				(ALL, ENTRY, 'Before', None, NEW_BEFORE_VIDEO),
+				(ALL, ENTRY, 'After', None, NEW_AFTER_VIDEO),
+				(ALL, ENTRY, 'Within', None, NEW_UNDER_VIDEO),
+			)),
+			(ALL, SEP,),
 			(ALL, ENTRY, 'Before...', None, NEW_BEFORE),
 			(ALL, ENTRY, 'Within...', 'D', NEW_UNDER),
 			(ALL, ENTRY, 'Par Parent', None, NEW_PAR),

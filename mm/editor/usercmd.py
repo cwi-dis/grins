@@ -136,10 +136,40 @@ class PASTE_UNDER(_CommandBase):
 	help = 'Paste copied/cut node under selected node'
 class NEW_BEFORE(_CommandBase):
 	help = 'Create new node before selected node'
+class NEW_BEFORE_IMAGE(_CommandBase):
+	help = 'Create new image node before selected node'
+class NEW_BEFORE_TEXT(_CommandBase):
+	help = 'Create new text node before selected node'
+class NEW_BEFORE_SOUND(_CommandBase):
+	help = 'Create new sound node before selected node'
+class NEW_BEFORE_VIDEO(_CommandBase):
+	help = 'Create new video node before selected node'
+class NEW_BEFORE_SLIDESHOW(_CommandBase):
+	help = 'Create new slideshow node before selected node'
 class NEW_AFTER(_CommandBase):
 	help = 'Create new node after selected node'
+class NEW_AFTER_IMAGE(_CommandBase):
+	help = 'Create new image node after selected node'
+class NEW_AFTER_TEXT(_CommandBase):
+	help = 'Create new text node after selected node'
+class NEW_AFTER_SOUND(_CommandBase):
+	help = 'Create new sound node after selected node'
+class NEW_AFTER_VIDEO(_CommandBase):
+	help = 'Create new video node after selected node'
+class NEW_AFTER_SLIDESHOW(_CommandBase):
+	help = 'Create new slideshow node after selected node'
 class NEW_UNDER(_CommandBase):
 	help = 'Create new node under selected node'
+class NEW_UNDER_IMAGE(_CommandBase):
+	help = 'Create new image under selected node'
+class NEW_UNDER_TEXT(_CommandBase):
+	help = 'Create new text node under selected node'
+class NEW_UNDER_SOUND(_CommandBase):
+	help = 'Create new sound node under selected node'
+class NEW_UNDER_VIDEO(_CommandBase):
+	help = 'Create new video node under selected node'
+class NEW_UNDER_SLIDESHOW(_CommandBase):
+	help = 'Create new slideshow node under selected node'
 class NEW_SEQ(_CommandBase):
 	help = 'Create new sequential node above selected node'
 class NEW_PAR(_CommandBase):
