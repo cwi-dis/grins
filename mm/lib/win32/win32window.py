@@ -798,11 +798,42 @@ class DDWndLayer:
 		ddcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
 		self._backBuffer.BltFill((0, 0, w, h), ddcolor)
 
+	def createFullScreenDDLayer(self):
+		from __main__ import toplevel
+		w = toplevel._scr_width_pxl
+		h = toplevel._scr_height_pxl
+
+		self._ddraw = ddraw.CreateDirectDraw()
+		self._ddraw.SetCooperativeLevel(self._wnd.GetSafeHwnd(), 
+			ddraw.DDSCL_EXCLUSIVE | ddraw.DDSCL_FULLSCREEN)
+		self._ddraw.SetDisplayMode(800,600,16)
+
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_CAPS | ddraw.DDSD_BACKBUFFERCOUNT)
+		ddsd.SetCaps(ddraw.DDSCAPS_PRIMARYSURFACE | ddraw.DDSCAPS_FLIP | ddraw.DDSCAPS_COMPLEX)
+		ddsd.SetBackBufferCount(1)
+		self._frontBuffer = self._ddraw.CreateSurface(ddsd)
+
+		self._backBuffer = self._frontBuffer.GetAttachedSurface(ddraw.DDSCAPS_BACKBUFFER)	
+		self._pxlfmt = self._frontBuffer.GetPixelFormat()
+
+		# fill back buffer with default player background (white)
+		ddcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
+		self._frontBuffer.BltFill((0, 0, w, h), ddcolor)
+		self._backBuffer.BltFill((0, 0, w, h), ddcolor)
+		
 	def destroyDDLayer(self):
 		if self._ddraw:
 			del self._frontBuffer
 			del self._backBuffer
 			del self._clipper
+			del self._ddraw
+			self._ddraw = None
+
+	def destroyFullScreenDDLayer(self):
+		if self._ddraw:
+			self._ddraw.RestoreDisplayMode()
+			del self._frontBuffer
 			del self._ddraw
 			self._ddraw = None
 
@@ -850,6 +881,21 @@ class DDWndLayer:
 				self.paint()
 		self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
 
+	def flipFullScreen(self):
+		if self._frontBuffer.IsLost():
+			if not self._frontBuffer.Restore():
+				# we can't do anything for this
+				# system is busy with video memory
+				return 
+		if self._backBuffer.IsLost():
+			if not self._backBuffer.Restore():
+				# and for this either
+				# system should be out of memory
+				return 
+			else:
+				# OK, backBuffer resored, paint it
+				self.paint()
+		self._frontBuffer.Flip(0, ddraw.DDFLIP_WAIT)
 
 ########################################
 
