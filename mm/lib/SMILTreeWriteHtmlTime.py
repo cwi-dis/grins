@@ -1,9 +1,9 @@
 __version__ = "$Id$"
 
 
-from SMILTreeWrite import *
-
-
+#
+#	Export interface 
+# 
 def WriteFileAsHtmlTime(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evallicense = 0, progress = None, convertURLs = 0):
 	fp = IndentedFile(open(filename, 'w'))
 	try:
@@ -14,6 +14,47 @@ def WriteFileAsHtmlTime(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles =
 		return
 	writer.writeAsHtmlTime()
 
+
+#
+#	XHTML+TIME DTD 
+# 
+class XHTML_TIME:
+	__basicTiming = {'begin':None,
+			 'dur':None,
+			 'end':None,
+			 'repeatCount':None,
+			 'repeatDur':None,
+			 }
+	__Timing = {'restart':None,
+		    'syncBehavior':None,
+		    'syncMaster':None,
+		    }
+	__TimeManipulators = {'speed':None,
+		    'accelerate':None,
+		    'decelerate':None,
+		    'autoReverse':None,
+		    }
+	attributes = {
+		'animate': {}
+		'animateColor': {}
+		'animateMotion': {}
+		'audio': {}
+		'excl': {}
+		'img': {}
+		'media': {}
+		'par': {}
+		'priorityClass': {}
+		'ref': {}
+		'seq': {}
+		'set': {}
+		'video': {}
+	}
+
+
+#
+#	SMILHtmlTimeWriter
+# 
+from SMILTreeWrite import *
 
 class SMILHtmlTimeWriter(SMIL):
 	def __init__(self, node, fp, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0,
@@ -90,6 +131,8 @@ class SMILHtmlTimeWriter(SMIL):
 
 		# Internet explorer style conventions for HTML+TIME support part 2
 		write('<?IMPORT namespace=\"t\" implementation=\"#default#time2\">\n')
+
+		write(transScript)
 
 		self.pop() # head
 
@@ -598,6 +641,49 @@ class SMILHtmlTimeWriter(SMIL):
 			for ch in childs:
 				ch.__parent = parchan
 
+
+#
+#	Transitions
+# 
+transInScript="function transIn(obj){\n  obj.filters[0].Apply();\n  obj.style.visibility = \"visible\";\n  obj.filters[0].Play();\n}\n"
+transOutScript="function transOut(obj){\n  obj.filters[0].Play();\n}\n"
+transScript = "<SCRIPT LANGUAGE=JavaScript>\n%s%s</SCRIPT>\n" % (transInScript, transOutScript)
+
+msfilter = 'filter:progid:DXImageTransform.Microsoft'
+
+def trans(trname='Iris', properties='dur=1.0'):
+	return "filter:progid:DXImageTransform.Microsoft.%s(%s);" % (trname, properties)
+	
+def transIris(dur=1, style='circle', motion='out'):
+	return "filter:progid:DXImageTransform.Microsoft.Iris(irisStyle=%s, motion=%s, duration=%f);" % (style, motion, dur)
+
+def transBarn(dur=1, orientation='vertical', motion='in'):
+	return "filter:progid:DXImageTransform.Microsoft.Barn(orientation=%s, motion=%s, duration=%f);" % (orientation, motion, dur)
+
+def transSlide(dur=1, direction='up', bands=1):
+	return "filter:progid:DXImageTransform.Microsoft.Slide(direction=%s, bands=%d, duration=%f);" % (direction, bands, dur)
+	
+def transStrips(dur=1, motion='leftdown'):
+	return "filter:progid:DXImageTransform.Microsoft.Strips(motion=%s, duration=%f);" % (motion, dur)
+
+def transBlinds(dur=1, direction='right'):
+	return "filter:progid:DXImageTransform.Microsoft.Blinds(direction=%s, duration=%f);" % (direction, dur)
+
+def transCheckerBoard(dur=1, direction='down'):
+	return "filter:progid:DXImageTransform.Microsoft.CheckerBoard(direction=%s, duration=%f);" % (direction, dur)
+
+def transRandomBars(dur=1, orientation='horizontal'):
+	return "filter:progid:DXImageTransform.Microsoft.RandomBars(orientation=%s, duration=%f);" % (orientation, dur)
+
+def transFade(dur=1):
+	return "filter:progid:DXImageTransform.Microsoft.Fade(duration=%f)" % dur
+
+def transRandomDissolve(dur=1):
+	return "filter:progid:DXImageTransform.Microsoft.RandomDissolve(duration=%f)" % dur
+
+def filterAlpha(opacity=100, finishOpacity=0, style=3):
+	return "filter:progid:DXImageTransform.Microsoft.Alpha(Opacity=%d, FinishOpacity=%d, Style=%d)" % (opacity, finishOpacity, style)
+
 #
 #########################
 
@@ -613,4 +699,5 @@ class SMILHtmlTimeWriter(SMIL):
 
 
 
+ 
  
