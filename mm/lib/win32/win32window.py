@@ -1879,7 +1879,7 @@ class Region(Window):
 ##			self._frozen = None
 ##			self.update()
 
-	def jointransition(self, window):
+	def jointransition(self, window, cb):
 		# Join the transition already created on "window".
 		if not window._transition:
 			print 'Joining without a transition', self, window, window._transition
@@ -1888,7 +1888,7 @@ class Region(Window):
 			return
 		ismaster = self._windowlevel() < window._windowlevel()
 		self._transition = window._transition
-		self._transition.join(self, ismaster)
+		self._transition.join(self, ismaster, cb)
 		
 	def settransitionvalue(self, value):
 		if self._transition:
@@ -2612,8 +2612,3 @@ class _ResizeableDisplayList(_DisplayList):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		self._list.append(('label', str))
-
-
-
- 
- 
