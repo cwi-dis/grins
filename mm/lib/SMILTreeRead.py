@@ -261,6 +261,7 @@ class SMILParser(xmllib.XMLParser):
 				pass
 			else:
 				file = attributes['src']
+				file = self.__context.findurl(file)
 				try:
 					if mediatype == 'image':
 						import img
@@ -301,6 +302,7 @@ class SMILParser(xmllib.XMLParser):
 				else:
 					import mv
 					file = attributes['src']
+					file = self.__context.findurl(file)
 					try:
 						file = MMurl.urlretrieve(file)[0]
 						movie = mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
