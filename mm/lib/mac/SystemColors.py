@@ -4,9 +4,6 @@
 
 colors = {
 }
-
-rcolors = {
-}
 	
 def init_colors():
 	# to do: fill the table. The values are system dependant
