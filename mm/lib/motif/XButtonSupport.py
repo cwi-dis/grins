@@ -3,7 +3,7 @@ __version__ = "$Id$"
 import Xm, Xmd, X
 from types import *
 from XTopLevel import toplevel
-##from XConstants import *
+from XConstants import error
 
 class _ButtonSupport:
 	# helper class to create a button

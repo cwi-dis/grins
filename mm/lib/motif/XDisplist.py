@@ -5,8 +5,7 @@ import string, math
 from types import ListType
 RegionType = type(Xlib.CreateRegion())
 from XTopLevel import toplevel
-from XConstants import *
-from XConstants import _WIDTH
+from XConstants import TRUE, FALSE, error, ARR_HALFWIDTH, ARR_LENGTH, _WIDTH
 from XFont import findfont
 from XButton import _Button
 from splash import roundi

@@ -3,6 +3,7 @@ __version__ = "$Id$"
 import Xm, Xmd
 from types import *
 from XConstants import _def_useGadget
+from XConstants import error
 from XTopLevel import toplevel
 
 def _setcursor(form, cursor):
