@@ -29,13 +29,17 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		else:
 			SourceViewDialog.SourceViewDialog.show(self) # creates the text widget
 			self.read_text()
-			self.editmgr.register(self)
+			self.editmgr.register(self, want_focus = 1)
 
 	def hide(self):
 		if not self.is_showing():
 			return
 		self.editmgr.unregister(self)
 		SourceViewDialog.SourceViewDialog.hide(self)
+
+	def globalfocuschanged(self, focustype, focusobject):
+		if hasattr(focusobject, 'char_positions') and focusobject.char_positions:
+			apply(self.select_chars, focusobject.char_positions)
 
 	def transaction(self,type):
 		if self.is_changed():
@@ -51,7 +55,7 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 
 	def read_text(self):
 		# Converts the MMNode structure into SMIL and puts it in the window.
-		text = SMILTreeWrite.WriteString(self.root)
+		text = SMILTreeWrite.WriteString(self.root, set_char_pos = 1)
 		self.set_text(text)
 
 	def write_text(self):
