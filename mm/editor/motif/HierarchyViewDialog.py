@@ -62,7 +62,7 @@ class HierarchyViewDialog(ViewDialog):
 				('Edit content...', CONTENT),
 				None,
 				('Create simple anchor', CREATEANCHOR),
-				('Finish hyperlink', FINISH_LINK)
+				('Finish hyperlink to focus', FINISH_LINK)
 				]),
 			('Navigate', [
 				('Zoom in', ZOOMIN),
