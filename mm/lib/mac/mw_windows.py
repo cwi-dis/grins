@@ -527,8 +527,12 @@ class _CommonWindow:
 			raise error, 'bad units specified'
 		
 	def _pxl2rel(self, coordinates):
+		# XXXX incorrect for scrollable windows? Or does fixing the sizes
+		# (rw, rh) do enough because x/y offsets are catered for by convert_qdcoords?
 		px, py = coordinates[:2]
 		rx, ry, rw, rh = self._rect
+		wfactor, hfactor = self._scrollsizefactors()
+		rw, rh = rw*wfactor, rh*hfactor
 		x = float(px - rx) / rw
 		y = float(py - ry) / rh
 		if len(coordinates) == 2:
@@ -650,15 +654,15 @@ class _CommonWindow:
 			return # Not wanted
 			
 		x, y = self._convert_qdcoords(where)
-		print 'self, rect, where, x/y', self, self._rect, where, x, y
+##		print 'self, rect, where, x/y', self, self._rect, where, x, y
 		
 		buttons = []
 		if self._active_displist:
 			for b in self._active_displist._buttons:
 				if b._inside(x, y):
 					buttons.append(b)
-			print 'active buttons', len(self._active_displist._buttons)
-		print 'buttons', buttons
+##			print 'active buttons', len(self._active_displist._buttons)
+##		print 'buttons', buttons
 				
 		func(arg, self, evttype, (x, y, buttons))
 		
@@ -1181,7 +1185,6 @@ class _ScrollMixin:
 	def _scrollsizefactors(self):
 		if self._canvassize is None:
 			return 1, 1
-		print 'DBG factor', self._canvassize
 		return self._canvassize
 		
 	def setcanvassize(self, how):
@@ -1195,6 +1198,7 @@ class _ScrollMixin:
 			h = h * 2
 		else:
 			w, h = 1.0, 1.0
+		self.arrowcache = {}
 		self._canvassize = (w, h)
 		self._adjust_scrollbar_max()
 		self._do_resize0()
@@ -1205,7 +1209,6 @@ class _ScrollMixin:
 		self._canvassize = 1, 1	# Not very elegant, but better than nothing
 		self._adjust_scrollbar_max()
 		return
-		print 'DBG old', self._canvassize
 		x, y, w, h = self._rect
 		wf, hf = self._canvassize
 		virtual_w, virtual_h = w*wf, h*hf
@@ -1213,8 +1216,8 @@ class _ScrollMixin:
 		new_hf = virtual_h / height
 		if new_wf < 1: new_wf = 1
 		if new_hf < 1: new_hf = 1
+		self.arrowcache = {}
 		self._canvassize = wf, hf
-		print 'DBG new', self._canvassize
 		
 	def _adjust_scrollbar_max(self):
 		"""Adjust scrollbar maximum for new window/canvassize. This may update
