@@ -6,7 +6,7 @@ from types import TupleType
 import img
 from XTopLevel import toplevel
 from XConstants import *
-from XConstants import _WAITING_CURSOR, _READY_CURSOR
+from XConstants import _WAITING_CURSOR, _READY_CURSOR, _WIDTH, _HEIGHT
 from XAdornment import _AdornmentSupport, _CommandSupport
 from XDisplist import _DisplayList
 from XDialog import showmessage
