@@ -1189,7 +1189,7 @@ class MMNode:
 	# the parent. 
 
 	# Nodes are used for representing the structure of the GRiNS production
-	# in a heirachical manner. Playing the GRiNS production involves recursing
+	# in a hierarchical manner. Playing the GRiNS production involves recursing
 	# through the leaf-nodes of the MMNode structure by calling MMNode.startplay(..).
 	# -mjvdg
 	
@@ -2940,6 +2940,28 @@ class MMNode:
 			self.__dump_srdict('gensr_child', srdict)
 		return srdict
 
+	def calcendfreezetime(self):
+		# calculate end of freeze period
+		# can only be called when start time is resolved
+		# XXX should we do something special for fill="transition"?
+		# currently it is handled like fill="freeze"
+		fill = self.GetFill()
+		if fill == 'remove':
+			resolved = self.isresolved()
+			return resolved+self.__calcendtime(resolved)[0]
+		pnode = self.GetSchedParent()
+		if not pnode:
+			resolved = self.isresolved()
+			return resolved+self.__calcendtime(resolved)[0]
+		if fill == 'hold':
+			return pnode.calcendfreezetime()
+		if pnode.type == 'seq':
+			siblings = pnode.GetSchedChildren()
+			i = siblings.index(self)
+			if i < len(siblings) - 1:
+				return siblings[i+1].isresolved()
+		return pnode.calcendfreezetime()
+
 	def __calcendtime(self, syncbase, t0 = None):
 		# returns:
 		#	None - no resolved begin
@@ -2954,7 +2976,7 @@ class MMNode:
 		beginlist = self.FilterArcList(beginlist)
 		pnode = self.GetSchedParent()
 		if not beginlist:
-			if pnode.type == 'excl':
+			if pnode is not None and pnode.type == 'excl':
 				return None, 1
 			start = 0
 			maybecached = 1
