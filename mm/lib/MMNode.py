@@ -701,7 +701,10 @@ class MMNode:
 	# Private methods for DeepCopy
 	#
 	def _deepcopy(self, uidremap, context):
+		nodeclass = context.nodeclass
+		context.nodeclass = self.__class__
 		copy = context.newnode(self.type)
+		context.nodeclass = nodeclass
 		uidremap[self.uid] = copy.uid
 		copy.attrdict = _valuedeepcopy(self.attrdict)
 		copy.values = _valuedeepcopy(self.values)

@@ -4,6 +4,7 @@ import windowinterface
 import MMAttrdefs
 from ChannelMap import channelmap
 from MMExc import *			# exceptions
+import MMNode
 
 # There are two basic calls into this module (but see below for more):
 # showattreditor(node) creates an attribute editor form for a node
@@ -16,7 +17,16 @@ def showattreditor(toplevel, node):
 	try:
 		attreditor = node.attreditor
 	except AttributeError:
-		attreditor = AttrEditor(NodeWrapper(toplevel, node))
+		if node.__class__ is MMNode.MMNode:
+			wrapperclass = NodeWrapper
+			if node.GetType() == 'ext' and \
+			   node.GetChannelType() == 'RealPix' and \
+			   not hasattr(node, 'slideshow'):
+				import HierarchyView
+				node.slideshow = HierarchyView.SlideShow(node)
+		else:
+			wrapperclass = SlideWrapper
+		attreditor = AttrEditor(wrapperclass(toplevel, node))
 		node.attreditor = attreditor
 	else:
 		attreditor.pop()
@@ -195,11 +205,12 @@ class NodeWrapper(Wrapper):
 			cclass = channelmap[ctype]
 			# Add the class's declaration of attributes
 			namelist = namelist + cclass.node_attrs
-			for name in cclass.chan_attrs:
-				if name in namelist: continue
-				defn = MMAttrdefs.getdef(name)
-				if defn[5] == 'channel':
-					namelist.append(name)
+			if cmifmode():
+				for name in cclass.chan_attrs:
+					if name in namelist: continue
+					defn = MMAttrdefs.getdef(name)
+					if defn[5] == 'channel':
+						namelist.append(name)
 			for name in cclass.node_attrs:
 				if name in namelist: continue
 				namelist.append(name)
@@ -211,6 +222,25 @@ class NodeWrapper(Wrapper):
 				extras.append(name)
 		extras.sort()
 		return namelist + extras
+
+class SlideWrapper(NodeWrapper):
+	def attrnames(self):
+		import realsupport
+		tag = self.node.GetAttrDict()['tag']
+		if tag == 'fill':
+			namelist = ['color', 'subregion', 'start']
+		elif tag in ('fadein', 'crossfade', 'wipe'):
+			namelist = ['file', 'imgcrop', 'aspect', 'subregion', 'start', 'duration', 'maxfps', 'href']
+			if tag == 'wipe':
+				namelist.append('wipetype')
+		elif tag == 'fadeout':
+			namelist = ['color', 'subregion', 'start', 'duration', 'maxfps']
+		elif tag == 'viewchange':
+			namelist = ['imgcrop', 'subregion', 'start', 'duration', 'maxfps']
+		else:
+			namelist = []
+		namelist.insert(0, 'tag')
+		return namelist
 
 
 class ChannelWrapper(Wrapper):
@@ -473,6 +503,8 @@ class AttrEditor(AttrEditorDialog):
 				C = TransparencyAttrEditorField
 			elif displayername == 'usergroup':
 				C = UsergroupAttrEditorField
+			elif displayername == 'transition':
+				C = TransitionAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -600,10 +632,11 @@ class AttrEditorField(AttrEditorDialogField):
 		return self.label
 
 	def gethelptext(self):
-		return 'atribute: %s\n' \
-		       'default: %s\n' \
-		       '%s' % (self.__name, self.getdefault(),
-			       self.__attrdef[4])
+		return '%s\ndefault: %s' % (self.__attrdef[4], self.getdefault())
+##		return 'atribute: %s\n' \
+##		       'default: %s\n' \
+##		       '%s' % (self.__name, self.getdefault(),
+##			       self.__attrdef[4])
 
 	def gethelpdata(self):
 		return self.__name, self.getdefault(), self.__attrdef[4]
@@ -810,6 +843,12 @@ class UnitsAttrEditorField(PopupAttrEditorField):
 		if value is None:
 			return 'Default'
 		return self.__values[self.__valuesmap.index(value)]
+
+class TransitionAttrEditorField(PopupAttrEditorField):
+	__values = ['fill', 'fadein', 'fadeout', 'crossfade', 'wipe', 'viewchange']
+
+	def getoptions(self):
+		return ['Default'] + self.__values
 
 class TransparencyAttrEditorField(PopupAttrEditorField):
 	__values = ['never', 'when empty', 'always']
