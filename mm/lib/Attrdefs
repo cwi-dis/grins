@@ -168,7 +168,7 @@
 	'TTL for outgoing multicast messages' raw cmif)
 
 (mimetype (string) '' 'MIME type' default
-	'MIME type of media object' raw light)
+	'MIME type of media object' raw smil)
 
 (name (name) '' 'Node name' default
 	'Name given to a node' raw light)
@@ -237,10 +237,10 @@
 	 'Window size for top level menu' raw light)
 
 (transparent (int) 0 'Transparent' transparency
-	'Determines transparency of window. Overrides background color.' raw light)
+	'Determines transparency of window. Overrides background color.' raw smil)
 
 (type (name) null 'Channel type' channeltype
-	'Type of media this channel will be used for' raw light)
+	'Type of media this channel will be used for' raw smil)
 
 (u_group (name) undefined 'User group' usergroup
 	'User group that controls rendering of this node' inherited cmif)
@@ -253,7 +253,7 @@
 
 (usergroups (list (enclosed (tuple (name) (tuple (string) (bool) (bool)))))
 	() 'User groups' hidden
-	'Usergroups used in this document (root node only)' normal light)
+	'Usergroups used in this document (root node only)' normal cmif)
 
 (video (bool) 0 'Video output' default
 	'Do image smoothing for video output' channel cmif)
