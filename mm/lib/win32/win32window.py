@@ -713,10 +713,6 @@ class Window:
 				del __main__.toplevel._image_cache[file]
 			except:
 				pass
-			try:
-				del __main__.toplevel._image_size_cache[file]
-			except:
-				pass
 
 		# scale image sizes
 		w=xsize
@@ -1656,24 +1652,11 @@ class Region(Window):
 	#
 	# Returns the size of the image
 	def _image_size(self, file):
-		toplevel = __main__.toplevel
-		try:
-			xsize, ysize = toplevel._image_size_cache[file]
-		except KeyError:
-			img = win32ig.load(file)
-			xsize, ysize, depth = win32ig.size(img)
-			toplevel.cacheimage(self.getgrinsdoc(), file, img, (xsize, ysize))
-		return xsize, ysize
+		return __main__.toplevel._image_size(file, self.getgrinsdoc())
 
 	# Returns handle of the image
 	def _image_handle(self, file):
-		try:
-			return  __main__.toplevel._image_cache[file]
-		except:
-			img = win32ig.load(file)
-			xsize, ysize, depth = win32ig.size(img)
-			toplevel.cacheimage(self.getgrinsdoc(), file, img, (xsize, ysize))
-			return img
+		return __main__.toplevel._image_handle(file, self.getgrinsdoc())
 
 	def getgrinsdoc(self):
 		if self != self._topwindow:

@@ -27,6 +27,7 @@ import grins_mimetypes
 import GenWnd
 
 import os
+from stat import ST_MTIME
 
 def beep():
 	win32api.MessageBeep()
@@ -84,7 +85,6 @@ class _Toplevel:
 		self._pseudo_id_list = []
 		self._cursor = ''
 
-		self._image_size_cache = {}
 		self._image_cache = {}
 		self._image_docmap = {}
 				
@@ -149,7 +149,7 @@ class _Toplevel:
 		      commandlist = None, resizable = 1, bgcolor = None):
 		frame = adornments.get('frame')
 		if frame is None:
-			raise 'error', 'newwindow without frame specification'
+			raise error, 'newwindow without frame specification'
 		wnd = frame.newwindow(x, y, w, h, title, visible_channel,
 		      type_channel, pixmap, units,
 		      adornments, canvassize,
@@ -451,14 +451,45 @@ class _Toplevel:
 	################################
 	#utility functions
 	
-	def cacheimage(self, doc, file, img, size):
-		self._image_size_cache[file] = size
-		self._image_cache[file] = img
+	def __check_image_cache(self, file, doc):
+		try:
+			stat = os.stat(file)
+		except:
+			stmtime = -1
+		else:
+			stmtime = stat[ST_MTIME]
+		if self._image_cache.has_key(file):
+			img, size, mtime = self._image_cache[file]
+			if mtime == stmtime:
+				# cached value is valid
+				return
+			win32ig.delete(img)
+			del self._image_cache[file]
+		if stmtime == -1:
+			raise error, 'file does not exist'
+		img = win32ig.load(file) # raises error if unsuccessful
+		xsize, ysize, depth = win32ig.size(img)
+		self._image_cache[file] = img, (xsize, ysize), stmtime
 		if self._image_docmap.has_key(doc):
 			if file not in self._image_docmap[doc]:
 				self._image_docmap[doc].append(file)
 		else:
 			self._image_docmap[doc]=[file,]
+
+	def _image_size(self, file, doc):
+		self.__check_image_cache(file, doc)
+		try:
+			xsize, ysize = self._image_cache[file][1]
+		except KeyError:
+			xsize, ysize, depth = win32ig.size(-1)
+		return xsize, ysize
+
+	def _image_handle(self, file, doc):
+		self.__check_image_cache(file, doc)
+		try:
+			return  self._image_cache[file][0]
+		except:
+			return -1
 
 	def cleardoccache(self, doc):
 		if not self._image_docmap.has_key(doc): return
@@ -470,9 +501,8 @@ class _Toplevel:
 		for file in imglist:
 			if not self._image_cache.has_key(file):continue
 			if file in otherimglist:continue
-			img=self._image_cache[file]
+			img=self._image_cache[file][0]
 			del self._image_cache[file]
-			del self._image_size_cache[file]
 			win32ig.delete(img)
 		del self._image_docmap[doc]
 
