@@ -1,0 +1,4 @@
+*.pyd
+*.dll
+grprefs.txt
+
