@@ -573,8 +573,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif attr in ('min', 'max'):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-				if not features.editor:
-					continue
+					if not features.editor:
+						continue
 				self.__context.attributes['project_boston'] = 1
 				if val == 'media':
 					if node.type in leaftypes:
@@ -599,8 +599,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if attr == 'repeatCount':
 					if self.__context.attributes.get('project_boston') == 0:
 						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
+						if not features.editor:
+							continue
 					self.__context.attributes['project_boston'] = 1
 				ignore = attr == 'repeat' and attrdict.has_key('loop')
 				if val == 'indefinite':
