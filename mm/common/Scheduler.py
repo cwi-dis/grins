@@ -486,6 +486,7 @@ class SchedulerContext:
 			self.do_terminate(node, timestamp)
 			if not parent.playing:
 				return
+			self.sched_arcs(node, 'begin', timestamp=timestamp)
 		if pnode.type == 'excl':
 			action = 'nothing'
 			for sib in pnode.GetSchedChildren():
