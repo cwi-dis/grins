@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # XXXX Movie disposal
 # XXXX Resizing
 # XXXX Stop play
