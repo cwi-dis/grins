@@ -112,7 +112,7 @@ else:
 # macfreeze: exclude TERMIOS
 # macfreeze: exclude cmifex
 # macfreeze: exclude readline
-# macfreeze: exclude staticlicense
+# XXXX it should optionally do this: macfreeze: exclude staticlicense
 
 
 #
