@@ -49,7 +49,7 @@ BEGIN
             VALUE "FileDescription", "GRiNS/QT Pro\0"
             VALUE "FileVersion", "1.5\0"
             VALUE "InternalName", "GRiNS_QTP\0"
-            VALUE "LegalCopyright", "Copyright © 2000 Oratrix Holding B.V.\0"
+            VALUE "LegalCopyright", "Copyright © 2001 Oratrix Holding B.V.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "GRiNS_QTP.exe\0"
             VALUE "PrivateBuild", "\0"
