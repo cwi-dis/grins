@@ -209,6 +209,15 @@ class ListCtrl(window.Wnd):
 			self.InsertColumn(index, (fmtflag, width, text, 0))
 			index = index + 1
 
+	def deleteAllColumns(self):
+		# There must be a better way to do this, but we don't seem to
+		# have GetHeaderCtrl() in Python
+		try:
+			while 1:
+				self.DeleteColumn(0)
+		except win32ui.error:
+			pass
+
 	def insertItem(self, row, text, imageindex, iteminfo):
 		self.InsertItem(row, text, imageindex)
 		subindex = 1
