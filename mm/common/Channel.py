@@ -1772,7 +1772,8 @@ class ChannelWindow(Channel):
 			self.__out_trans_qid = None
 		if self.window:
 			self.window.endtransition()
-		self._active_multiregion_transition = None
+		lchan = self.find_layout_channel()
+		lchan._active_multiregion_transition = None
 			
 	def _find_multiregion_transition(self, trans, transtime):
 		if not trans.get('multiElement', 0):
@@ -1780,22 +1781,39 @@ class ChannelWindow(Channel):
 		# Unfortunately the transition name isn't in the dictionary. 
 		# We use the id of the dictionary as its unique value
 		trid = id(trans)
-		print '_find_multiregion_transition', trid, self
-		rv = self.pchan._has_multiregion_transition(trid, transtime)
-		if not rv:
-			for child in self._subchannels:
-				rv = child._has_multiregion_transition(trid, transtime)
-				if rv:
-					break
-		self._active_multiregion_transition = (trid, transtime)
+		#
+		# Tricky code ahead. For transitions we want to look at the channel hierarchy ignoring
+		# all non-layout channels (since layout channels correspond to regions, and multielement
+		# transitions are region-based).
+		# XXXX The code may be incorrect too: it looks up one level to find a matching transition,
+		# but downwards all the way through the tree. This means that if the regions have
+		# a grandparent/grandchild relation it will depend on scheduling order whether they match
+		# up. I think the standard doesn't allow this, but we should check.
+		#
+		our_lchan = self.find_layout_channel()
+		if our_lchan.pchan:
+			top_lchan = our_lchan.pchan.find_layout_channel()
+		else:
+			top_lchan = our_lchan
+		rv = top_lchan._has_multiregion_transition(trid, transtime, recursive=1)
+		our_lchan._active_multiregion_transition = (trid, transtime)
 		return rv
 		
-	def _has_multiregion_transition(self, trid, transtime):
-		print '_has_multiregion_transition', trid, transtime, self, self._active_multiregion_transition
+	def _has_multiregion_transition(self, trid, transtime, recursive=0):
 		if (trid, transtime) == self._active_multiregion_transition:
 			return self.window
+		if recursive:
+			for child in self._subchannels:
+				rv = child._has_multiregion_transition(trid, transtime, recursive=1)
+				if rv:
+					return rv
 		return None
 			
+	def find_layout_channel(self):
+		if self.is_layout_channel or not self.pchan:
+			return self
+		return self.pchan.find_layout_channel()
+		
 	# use this code to get the error message in the window instead
 	# of in a popup window
 ##	def errormsg(self, node, msg):
