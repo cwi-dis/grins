@@ -14,12 +14,14 @@ class ViewDialog:
 	#
 	def __init__(self, geom_name):
 		self.geom_name = geom_name
+		self.last_geometry = None
 	#
 	def __repr__(self):
 		return '<ViewDialog instance, geom_name=' \
 			+ `self.geom_name` + '>'
 	#
 	def load_geometry(self):
+		return
 		name = self.geom_name
 		posname = name + 'winpos'
 		sizename = name + 'winsize'
@@ -38,24 +40,28 @@ class ViewDialog:
 					# And clear (so next window appears staggered again)
 					##settings.set(name + 'winpos', (-1, -1))
 					##settings.save()
+
+	def set_geometry(self, geom):
+		if geom:
+			self.last_geometry = geom
 	#
 	def save_geometry(self):
 		self.get_geometry()
-		if self.last_geometry is None:
-			return
-		name = self.geom_name
-		h, v, width, height = self.last_geometry
-		# XXX need transaction here!
-		if h >= 0 and v >= 0:
-			self.root.SetAttr(name + 'winpos', (h, v))
-		if width <> 0 and height <> 0:
-			self.root.SetAttr(name + 'winsize', (width, height))
-		MMAttrdefs.flushcache(self.root)
-		if 1 or sys.platform == 'mac':
-			import settings
-			settings.set(name + 'winpos', (h, v))
-			settings.set(name + 'winsize', (width, height))
-			settings.save()
+##		if self.last_geometry is None:
+##			return
+##		name = self.geom_name
+##		h, v, width, height = self.last_geometry
+##		# XXX need transaction here!
+##		if h >= 0 and v >= 0:
+##			self.root.SetAttr(name + 'winpos', (h, v))
+##		if width <> 0 and height <> 0:
+##			self.root.SetAttr(name + 'winsize', (width, height))
+##		MMAttrdefs.flushcache(self.root)
+##		if 1 or sys.platform == 'mac':
+##			import settings
+##			settings.set(name + 'winpos', (h, v))
+##			settings.set(name + 'winsize', (width, height))
+##			settings.save()
 	#
 	def getfocus(self):
 		# views can override this to return their focus node
@@ -74,3 +80,4 @@ class ViewDialog:
 		# Default method, can be overridden
 		if self.window:
 			self.last_geometry = self.window.getgeometry(windowinterface.UNIT_PXL)
+			return self.last_geometry
