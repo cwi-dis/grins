@@ -3315,6 +3315,11 @@ BEGIN
     BUTTON      IDUC_EVENT_SOURCE
     BUTTON      IDUC_BEGIN_EVENT
     BUTTON      IDUC_END_EVENT
+    BUTTON      IDUC_MEDIA
+    BUTTON      IDUC_ANIMATE
+    BUTTON      IDUC_BRUSH
+    BUTTON      IDUC_REGION
+    BUTTON      IDUC_TOPLAYOUT
 END
 
 IDR_TB_COMMON TOOLBAR DISCARDABLE  16, 15
@@ -3447,6 +3452,15 @@ BEGIN
     IDUC_BEGIN_EVENT        "Create begin event\nCreate begin event"
     IDUC_END_EVENT          "Create end event\nCreate end event"
     IDUC_EVENT_SOURCE       "Event source\nEvent source"
+    IDUC_MEDIA              "Create media item\nCreate media item"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDUC_ANIMATE            "Create animate node\nCreate animate node"
+    IDUC_BRUSH              "Create brush node\nCreate brush node"
+    IDUC_REGION             "Create region\nCreate region"
+    IDUC_TOPLAYOUT          "Create TopLayout\nCreate TopLayout"
 END
 
 #endif    // English (U.S.) resources

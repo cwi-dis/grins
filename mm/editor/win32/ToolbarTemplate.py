@@ -128,6 +128,13 @@ CONTAINERS_TEMPLATE = (
 		Button(usercmd.DRAG_SWITCH, TBICON_SWITCH),
 		Button(usercmd.DRAG_EXCL, TBICON_EXCL),
 		Button(usercmd.DRAG_PRIO, TBICON_PRIO),
+		Separator(6),
+		Button(usercmd.DRAG_MEDIA, TBICON_MEDIA),
+		Button(usercmd.DRAG_ANIMATE, TBICON_ANIMATE),
+		Button(usercmd.DRAG_BRUSH, TBICON_BRUSH),
+		Separator(6),
+		Button(usercmd.DRAG_TOPLAYOUT, TBICON_TOPLAYOUT),
+		Button(usercmd.DRAG_REGION, TBICON_REGION),
 		)
 	)
 )

@@ -110,7 +110,6 @@ class HierarchyViewDialog(ViewDialog):
 	def __dragfile(self, dummy, window, event, params):
 		# event handler for mouse moves while dragging a file over the window.
 		self.droppable_widget = None
-		print 'dragfile', params #DBG
 		x, y, filename = params
 		if not (0 <= x < 1 and 0 <= y < 1):
 			self.draw()
@@ -138,7 +137,6 @@ class HierarchyViewDialog(ViewDialog):
 
 	def dragnode(self, dummy, window, event, params):
 		# event handler for dragging a node over the window.
-		print 'dragnode', params #DBG
 		dstx, dsty, cmd, ucmd, args = params
 		self.droppable_widget = None
 		if not (0 <= dstx < 1 and 0 <= dsty < 1):
@@ -185,7 +183,6 @@ class HierarchyViewDialog(ViewDialog):
 			
 	def dropnode(self, dummy, window, event, params):
 		# event handler for dropping the node.
-		print 'dropnode', params #DBG
 		dstx, dsty, cmd, ucmd, args = params
 		self.droppable_widget = None
 		if not (0 <= dstx < 1 and 0 <= dsty < 1):
@@ -210,9 +207,9 @@ class HierarchyViewDialog(ViewDialog):
 		dstx = dstx * self.mcanvassize[0]
 		dsty = dsty * self.mcanvassize[1]
 		if ucmd in (DRAG_PAR, DRAG_SEQ, DRAG_SWITCH, DRAG_EXCL,
-				DRAG_PRIO):
+				DRAG_PRIO, DRAG_MEDIA, DRAG_ANIMATE, DRAG_BRUSH):
 			return self.dropnewstructnode(ucmd, (dstx, dsty))
-		else:
+		elif ucmd == DRAG_NODE:
 			rv = self.dropexistingnode(cmd, (dstx, dsty), srcnode, srcpos)
 			if rv == 'copy':
 				return windowinterface.DROPEFFECT_COPY
@@ -222,9 +219,13 @@ class HierarchyViewDialog(ViewDialog):
 				return windowinterface.DROPEFFECT_LINK
 			else:
 				return windowinterface.DROPEFFECT_NONE
+		elif ucmd in (DRAG_REGION, DRAG_TOPLAYOUT):
+			return windowinterface.DROPEFFECT_NONE
+		else:
+			print "Unknown dragged usercmd:", ucmd
+			return windowinterface.DROPEFFECT_NONE
 
 	def __dropfile(self, maybenode, window, event, params):
-		print 'dropfile', params #DBG
 		self.droppable_widget = None
 		self.dropfile(maybenode, window, event, params)
 
