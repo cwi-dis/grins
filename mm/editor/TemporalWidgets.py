@@ -51,8 +51,8 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 
 	def __init__(self, node, root):
 		MMNodeWidget.__init__(self, node, root)
-		import Timing
-		Timing.needtimes(node)
+##		import Timing
+##		Timing.needtimes(node)
 		self._factory = TemporalWidgetFactory()
 		self._factory.set_root(root)
 		self.channelWidgets = {} # All channel widgets, which node widgets belong to.
@@ -122,7 +122,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 			for i in node.GetSchedChildren():
 				# Create a node for each child and add it here.. conceptually only.
 				self.__init_create_widgets(i, leftbar, rightbar)
-		elif node.type not in ['excl', 'switch']: # if this is a leaf node.
+		elif node.type not in ['excl', 'switch'] and node.GetChannel(): # if this is a leaf node.
 			bob = self._factory.createnode(node)
 			# This is pretty obscure code here!
 			self.channelWidgets[bob.get_channel()].append(bob)
@@ -349,7 +349,7 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		self.w_fbox = self.graph.AddWidget(FBox(self.root))
 		self.w_fbox.set_color((205,207,194))
 		self.w_outerbox = self.graph.AddWidget(Box(self.root))
-		self.name = self.node.GetAttr('name')
+		self.name = self.node.GetAttrDef('name', '')
 		self.w_text = self.graph.AddWidget(Text(self.root))
 		self.w_text.set_text(self.name)
 		self.node.views['tempview'] = self
@@ -376,6 +376,9 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 
 	def get_channel(self):
 		# Returns a string which is this node's channel.
+		if not self.node.GetChannel():
+			print self.node,'no channel'
+			return ''
 		return self.node.GetChannel().GetLayoutChannel().name
 
 	def get_starttime(self):
