@@ -663,7 +663,6 @@ class MMChannel:
 			self._cssId = self.context.cssResolver.newRegion()
 		else:
 			self._cssId = self.context.cssResolver.newRootNode()
-		self.attrdict['cssId'] = self._cssId
 		return self._cssId
 
 	def _setname(self, name): # Only called from context.setchannelname()
