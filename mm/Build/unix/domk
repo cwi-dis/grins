@@ -121,6 +121,17 @@ mkclean() {
 		esac
 		cd $depth
 	fi
+	case $ARCH in
+	linux)	cd mm/mmpython/rmasdk/build.$ARCH
+		case $1 in
+		all|binary)	rm -f *.o *.so;;
+		esac
+		case $1 in
+		all|config)	rm -f Makefile Makefile.pre config.c sedscript;;
+		esac
+		cd $depth
+		;;
+	esac
 }
 
 while [ $# -gt 0 ]
@@ -220,7 +231,7 @@ then
 	then
 		./config.status
 	else
-		../configure --without-gcc `[ -f /usr/include/dmedia/moviefile.h ] || echo --with-thread`
+		../configure `[ "$ARCH" = linux ] || echo --without-gcc` `[ -f /usr/include/dmedia/moviefile.h ] || echo --with-thread`
 	fi
 else
 	:
