@@ -4226,6 +4226,10 @@ class SMILMetaCollector(xmllib.XMLParser):
 		self.elements = {
 			'meta': (self.start_meta, None)
 		}
+		for key, val in self.elements.items():
+			if ' ' not in key:
+				self.elements[SMIL2+' '+key] = val
+				self.elements[SMIL2Language+' '+key] = val
 		self.__file = file or '<unknown file>'
 		xmllib.XMLParser.__init__(self)
 
@@ -4237,6 +4241,26 @@ class SMILMetaCollector(xmllib.XMLParser):
 
 	def syntax_error(self, msg):
 		print 'warning: syntax error on line %d: %s' % (self.lineno, msg)
+
+	# the rest is to check that the nesting of elements is done
+	# properly (i.e. according to the SMIL DTD)
+	def finish_starttag(self, tagname, attrdict, method):
+		nstag = string.split(tagname, ' ')
+		if len(nstag) == 2 and \
+		   nstag[0] in (SMIL1, SMIL2Language, SMIL2, GRiNSns):
+			ns, tagname = nstag
+			d = {}
+			for key, val in attrdict.items():
+				nstag = string.split(key, ' ')
+				if len(nstag) == 2 and \
+				   nstag[0] in (SMIL1, SMIL2, SMIL2Language, GRiNSns):
+					key = nstag[1]
+				if not d.has_key(key) or d[key] == self.attributes.get(tagname, {}).get(key):
+					d[key] = val
+			attrdict = d
+		else:
+			ns = ''
+		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 
 def ReadMetaData(file):
 	p = SMILMetaCollector(file)
