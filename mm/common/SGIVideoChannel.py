@@ -313,11 +313,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if self.played_movie:
 			if paused:
 				self.played_movie.Stop()
-				if paused < 0:
+				if paused == 'hide':
 					self.played_movie.UnbindOpenGLWindow()
 				self.__stopped = 1
 			else:
-				if self._paused < 0:
+				if self._paused == 'hide':
 					self.played_movie.BindOpenGLWindow(self.window._form, self.__context)
 				self.played_movie.Play()
 				self.__stopped = 0

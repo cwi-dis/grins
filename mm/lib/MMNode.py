@@ -1817,9 +1817,9 @@ class MMNode:
 			srlist = [([(SCHED, self), (ARM_DONE, self)],
 				   [(PLAY, self)])]
 		fill = self.attrdict.get('fill')
-		if fill is None:
+		if fill is None or fill == 'default':
 			fill = self.GetInherAttrDef('fillDefault', None)
-		if fill is None:
+		if fill is None or fill == 'default':
 			if self.attrdict.get('duration') is None and \
 			   not self.attrdict.get('endlist') and \
 			   self.attrdict.get('repeatDur') is None and \
@@ -2013,8 +2013,10 @@ class MMNode:
 ##			self.add_arc(arc)
 
 		fill = self.attrdict.get('fill')
-		if fill is None:
+		if fill is None or fill == 'default':
 			fill = self.GetInherAttrDef('fillDefault', 'remove')
+			if fill == 'default':
+				fill = 'remove'
 
 		#
 		# We are started when we get our SCHED and all our

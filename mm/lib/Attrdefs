@@ -123,11 +123,11 @@
 
 # valid values: freeze, remove, hold, transition
 # default depends on other attributes
-(fill (string) '' 'Fill' fill
-	'Whether data should be retained on screen after playing' normal (smil2 cmif))
+(fill (enum default remove freeze transition hold) default 'Fill' fill
+	'Whether data should be retained on screen after playing (default depends on type of node)' normal (smil2 cmif))
 
-(filldefault (string) '' 'Fill Default' fill
-	'Default value for the fill property on the children of this node' inherited (smil2 cmif))
+(fillDefault (enum default remove freeze transition hold) default 'Fill Default' fill
+	'Default value for the fill property on the children of this node (default depends on type of node)' inherited (smil2 cmif))
 
 (font (string) 'Times-Roman' 'Font' font
 	'Font used to display text' channel (cmif))

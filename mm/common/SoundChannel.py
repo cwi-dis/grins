@@ -380,7 +380,7 @@ class Player:
 			self.__playsome()
 
 	def setpaused(self, paused):
-		if self.__pausing == paused:
+		if (not self.__pausing) == (not paused):
 			return
 		self.__pausing = paused
 		if not self.__merger:

@@ -1188,8 +1188,6 @@ class AttrEditor(AttrEditorDialog):
 				C = BitrateAttrEditorField
 			elif displayername == 'bitrate3':
 				C = BitrateAttrEditorFieldWithDefault
-			elif displayername == 'fill':
-				C = FillAttrEditorFieldWithDefault
 			elif displayername == 'quality':
 				C = QualityAttrEditorField
 			elif displayername == 'chanpos':
@@ -1860,18 +1858,6 @@ class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
 
 	def getoptions(self):
 		return [self.default] + self.__values
-
-class FillAttrEditorFieldWithDefault(PopupAttrEditorField):
-	__values = ['remove', 'freeze']
-	__values_boston = ['hold', 'transition']
-	default = 'Default'
-	nodefault = 0
-
-	def getoptions(self):
-		v = [self.default] + self.__values
-		if self.wrapper.context.attributes.get('project_boston', 0):
-			v = v + self.__values_boston
-		return v
 
 ##class SubtitleOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
 ##	__values = ['subtitle', 'overdub']
