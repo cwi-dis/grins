@@ -119,6 +119,7 @@ class _Event:
 		self._idles = []
 		l, t, r, b = Qd.qd.screenBits.bounds
 		self._draglimit = l+4, t+4+_screen_top_offset, r-4, b-4
+		self.removed_splash = 0
 
 	def mainloop(self):
 		while 1:
@@ -151,6 +152,10 @@ class _Event:
 			sys.exc_traceback = None
 			sys.last_traceback = None
 			
+			if not self.removed_splash:
+				import MacOS
+				MacOS.splash()
+				self.removed_splash = 1
 			gotone, event = Evt.WaitNextEvent(EVENTMASK, timeout)
 			
 			if gotone:

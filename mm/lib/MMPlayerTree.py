@@ -56,7 +56,11 @@ def ReadFile(filename):
 		_progressbar.set(fsize) # Not true, but who cares...
 	root.sroffs = marshal.load(f)
 	root.fildes = f
-	_progressbar = None
+	if _progressbar:
+		_progressbar = None
+		if os.name == 'mac':
+			import MacOS
+			MacOS.splash(514)
 	context.addhyperlinks(root.attrdict['hyperlinks'])
 	context.addchannels(root.attrdict['channellist'])
 	del root.attrdict['hyperlinks']
