@@ -352,6 +352,8 @@ class _Window:
 			title = ''
 		if debug: print 'CreatePopupShell, geometry:',geometry
 		attrs = {'geometry' : geometry,
+			 'minWidth': min(w, 60),
+			 'minHeight': min(h, 60),
 			 'width': w, 'height': h,
 			 'colormap': self._colormap,
 			 'visual': self._visual,
@@ -3977,6 +3979,7 @@ class Window(_WindowHelpers, _MenuSupport):
 			title = ''
 		self._title = title
 		wattrs = {'title': title,
+			  'minWidth': 60, 'minHeight': 60,
 			  'colormap': toplevel._default_colormap,
 			  'visual': toplevel._default_visual,
 			  'depth': toplevel._default_visual.depth}
