@@ -179,7 +179,7 @@ class LayoutChannel(ChannelWindow):
 		return 1
 		
 	def play(self, node):
-		print 'can''t play LayoutChannel'
+		print "can't play LayoutChannel"
 
 	# A channel pass active (when one more media play inside).
 	# We have to update the visibility of all channels 
