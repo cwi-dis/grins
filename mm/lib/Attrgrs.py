@@ -54,12 +54,14 @@ attrgrs=(
 	'attrs':[
 		'base_winoff',
 		'units',
+		'z',
 		]},
 
 	{'name':'base_winoff',
 	'title':'Position and size',
 	'attrs':[
 		'base_winoff',
+		'z',
 		]},
 
 	{'name':'system',

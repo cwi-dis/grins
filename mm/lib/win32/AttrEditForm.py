@@ -2808,6 +2808,8 @@ class LayoutGroup(AttrGroup):
 		cd={}
 		a=self.getattr('base_winoff')
 		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14,grinsRC.IDC_15))
+		a=self.getattr('z')
+		cd[a]=StringNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
 		return cd
 
 	def getpageclass(self):
@@ -2825,9 +2827,11 @@ class LayoutGroupWithUnits(LayoutGroup):
 	def createctrls(self,wnd):
 		cd={}
 		a=self.getattr('base_winoff')
-		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14,grinsRC.IDC_15))
+		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14,grinsRC.IDC_15))
 		a=self.getattr('units')
-		cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		cd[a]=OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		a=self.getattr('z')
+		cd[a]=StringNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
 		return cd
 
 class Imgregion1Group(AttrGroup):
