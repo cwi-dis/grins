@@ -1206,6 +1206,7 @@ class MMChannel(MMTreeElement):
 		self.d_attrdict = {}
 		self.views = {}
 		self._cssId = None
+		self._animationData = []
 
 		if type == 'layout':
 			# by default it's a viewport
@@ -2317,6 +2318,8 @@ class MMNode(MMTreeElement):
 		self.channelType = None
 		self.reinit(recurse = 0)
 		self.reset()
+
+		self._animationData = []
 
 	def reinit(self, recurse = 1):
 		self.looping_body_self = None
