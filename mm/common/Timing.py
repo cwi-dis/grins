@@ -20,27 +20,21 @@ real_interiortypes = ('par', 'seq', 'alt')
 # are correct (this is used to set the 'calculate times' button).
 
 def changedtimes(node):
-	try:
+	if hasattr(node, 'initial_arms'):
 		del node.initial_arms
-	except (KeyError, AttributeError): # initial_arms does not exist
-		pass
 	for child in node.GetChildren():
 		changedtimes(child)
 
 def hastimes(node):
-	try:
+	if hasattr(node, 'initial_arms'):
 		if node.initial_arms is not None:
 			return 1
-	except AttributeError: # initial_arms does not exist
-		pass
 	return 0
 
 def needtimes(node):
-	try:
+	if hasattr(node, 'initial_arms'):
 		if node.initial_arms is not None:
 			return # The cached value is valid
-	except AttributeError: # initial_arms does not exist
-		pass
 	do_times(node)
 
 
@@ -77,9 +71,7 @@ def do_times(node):
 
 	prepare(node)
 	_do_times_work(node)
-	try:
-		void = node.t1
-	except AttributeError:
+	if not hasattr(node, 't1'):
 ## XXXX The most common cause for this, nowadays, is an interior node
 ##      with indefinite duration, so we don't show the warning but set
 ##      a random time.
@@ -233,13 +225,9 @@ def prep2(node, root):
 def propdown(node, stoptime, dftstarttime=0):
 	tp = node.GetType()
 	# Assure we have a start time and stop time
-	try:
-		dummy = node.t0
-	except AttributeError:
+	if not hasattr(node, 't0'):
 		node.t0 = dftstarttime
-	try:
-		dummy = node.t1
-	except AttributeError:
+	if not hasattr(node, 't1'):
 		node.t1 = stoptime
 		node.timing_discont = node.t1 - node.t0 - 0.1
 

@@ -101,6 +101,7 @@ class ChannelView(ChannelViewDialog):
 		self.future_focus = None
 		self.showall = 1
 		self.placing_channel = 0
+		self.thumbnails = 0
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		ChannelViewDialog.__init__(self)
 		self.delayed_drawarcs_id = None
@@ -213,6 +214,14 @@ class ChannelView(ChannelViewDialog):
 			focus = '', None
 		self.recalc(focus)
 		self.reshape()
+		self.draw()
+
+	def thumbnailcall(self):
+		self.thumbnails = not self.thumbnails
+		if self.new_displist:
+			self.new_displist.close()
+		self.new_displist = self.window.newdisplaylist(BGCOLOR)
+		bl, fh, ps = self.new_displist.usefont(f_title)
 		self.draw()
 
 	def canvascall(self, code):
@@ -622,12 +631,12 @@ class ChannelView(ChannelViewDialog):
 				  "You can't create a new channel\n" +
 				  "unless you are showing unused channels\n" +
 				  "(use shortcut 'T')",
-				  mtype = 'warning')
+				  mtype = 'warning', parent = self.window)
 			return
 	        if self.placing_channel:
 		        windowinterface.showmessage(
 				'Please place the other channel first!',
-				mtype = 'error')
+				mtype = 'error', parent = self.window)
 			return
 		#
 		# Slightly hacky code: we try to check here whether
@@ -643,7 +652,7 @@ class ChannelView(ChannelViewDialog):
 			list.append(name, (self.select_cb, (name,)))
 		list.append(None)
 		list.append('Cancel')
-		windowinterface.Dialog(list, title = 'Select', prompt = prompt, grab = 1, vertical = 1)
+		windowinterface.Dialog(list, title = 'Select', prompt = prompt, grab = 1, vertical = 1, parent = self.window)
 
 	def select_cb(self, name):
 		self.placing_channel = PLACING_NEW
@@ -1336,6 +1345,22 @@ class NodeBox(GO, NodeBoxCommand):
 		else:
 			d.fgcolor(BORDERCOLOR)
 			d.drawbox((l, t, r - l, b - t))
+
+		# Maybe draw a thumbnail image
+		if self.mother.thumbnails and \
+		   r - l >= haboxsize * 6 and \
+		   b - t >= vaboxsize * 9 and \
+		   self.node.GetChannelType() == 'image':
+			import MMurl
+			try:
+				f = MMurl.urlretrieve(self.node.context.findurl(MMAttrdefs.getattr(self.node, 'file')))[0]
+			except IOError:
+				pass
+			else:
+				box = d.display_image_from_file(f, center = 0, coordinates = (l, t, haboxsize * 6, vaboxsize * 9))
+				l = box[0] + box[2]
+				d.fgcolor((0,0,0))
+				d.drawbox(box)
 
 		# Draw the name, centered in the box
 		d.fgcolor(TEXTCOLOR)

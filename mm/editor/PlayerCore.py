@@ -76,7 +76,6 @@ class PlayerCore(Selecter):
 		if self.pausing:
 			self.pause(0)
 		self.stopped()
-		self.showstate()
 	#
 	def playsubtree(self, node):
 		if not self.showing:
@@ -164,20 +163,20 @@ class PlayerCore(Selecter):
 		for name in self.channelnames[:]:
 			if name not in self.context.channelnames:
 				chchanged = 1
-				print 'Detected deleted channel'
+## 				print 'Detected deleted channel'
 				self.killchannel(name)
 			else:
 				oldtype = self.channeltypes[name]
 				newtype = \
 				    self.context.channeldict[name]['type']
 				if oldtype <> newtype:
-					print 'Detected retyped channel'
+## 					print 'Detected retyped channel'
 					self.killchannel(name)
 					chchanged = 1
 		# (2) Add new channels that have appeared
 		for name in self.context.channelnames:
 			if name not in self.channelnames:
-				print 'Detected new channel'
+## 				print 'Detected new channel'
 				attrdict = self.context.channeldict[name]
 				self.newchannel(name, attrdict)
 				i = self.context.channelnames.index(name)

@@ -104,9 +104,11 @@ class NodeInfo(NodeInfoDialog):
 		# First get all values (except those changed, if
 		# always is true)
 		#
+		allchannelnames = self.context.channelnames + \
+				  self.newchannels
+		allchannelnames.sort()
 		self.allchannelnames = [UNDEFINED] + \
-				       self.context.channelnames + \
-				       self.newchannels + \
+				       allchannelnames + \
 				       [NEW_CHANNEL]
 		if always:
 			self.changed = 0
@@ -360,6 +362,9 @@ class NodeInfo(NodeInfoDialog):
 			if self.channelname not in all:
 				self.newchannels.append(self.channelname)
 				all.insert(len(all) - 1, self.channelname)
+				l = all[1:-1]
+				l.sort()
+				all[1:-1] = l
 		self.setchannelnames(all, all.index(self.channelname))
 			
 	def attributes_callback(self):
