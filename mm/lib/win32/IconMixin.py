@@ -31,6 +31,7 @@ ICONNAME_TO_RESID={
 	'html': grinsRC.IDI_ICON_ASSET_TEXT,
 	'animation': grinsRC.IDI_ANIMATION,
 	'svg': grinsRC.IDI_ANIMATION,
+	'anchor': grinsRC.IDI_ICON_LINKSRC,
 
 	# Node types:
 	'node': grinsRC.IDI_ICON_NODE,

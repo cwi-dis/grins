@@ -574,6 +574,10 @@ POPUP_REGIONTREE_MEDIA = (
 		(FLAG_ALL, ENTRY, '&Edit Content...', 'E', CONTENT),
 )
 
+POPUP_REGIONTREE_ANCHOR = (
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+)
+
 POPUP_REGIONPREVIEW_TOPLAYOUT = (
 		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
 		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
@@ -611,6 +615,15 @@ POPUP_REGIONPREVIEW_MEDIA = (
 #		(FLAG_ALL, ENTRY, 'Anchors...', None, ATTRIBUTES_ANCHORS),
 		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
 		(FLAG_ALL, ENTRY, '&Edit Content...', 'E', CONTENT),
+		(FLAG_PRO, SEP,),
+		(FLAG_PRO, ENTRY, '&Zoom in', None, ZOOMIN),
+		(FLAG_PRO, ENTRY, '&Zoom out', None, ZOOMOUT),
+)
+
+POPUP_REGIONPREVIEW_ANCHOR = (
+#		(FLAG_ALL, ENTRY, 'Layout...', None, ATTRIBUTES_LAYOUT),
+#		(FLAG_ALL, ENTRY, 'Anchors...', None, ATTRIBUTES_ANCHORS),
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
 		(FLAG_PRO, SEP,),
 		(FLAG_PRO, ENTRY, '&Zoom in', None, ZOOMIN),
 		(FLAG_PRO, ENTRY, '&Zoom out', None, ZOOMOUT),
