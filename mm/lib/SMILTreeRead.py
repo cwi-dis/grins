@@ -1958,6 +1958,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		# add this node to the tree if it is possible
 		# else keep it for later fix
+		node.targetnode = None
 		if targetnode:
 			node.targetnode = targetnode
 		elif targetid:
@@ -2324,10 +2325,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for node, lineno in self.__animatenodes:
 			targetid = node.__targetid
 			del node.__targetid
+			mmobj = None
 			if self.__nodemap.has_key(targetid):
-				targetnode = self.__nodemap[targetid]
-				node.targetnode = targetnode
-			elif not self.__regions.has_key(targetid):
+				node.targetnode =  self.__nodemap.get(targetid)
+			elif self.__regions.has_key(targetid):
+				node.targetnode = self.__context.channeldict.get(targetid)
+			else:
 				self.warning("unknown targetElement `%s'" % targetid, lineno)
 		del self.__animatenodes
 
