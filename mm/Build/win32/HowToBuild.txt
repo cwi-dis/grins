@@ -1,3 +1,21 @@
+How to build GRiNS or part thereof.
+===================================
+
+
+Prerequisites
+-------------
+
+* WinCvs (I use version 1.1b14) from http://www.wincvs.org/ and a
+* method - perhaps SSH (on \\unixserver\alllnst\windows\goodies\ssh*)
+* Visual C++ 6.0 (we use Service Pack 3).  Wise Installer creater (and
+  patch called "patch704.exe" on the network above)
+
+
+Getting the Sources
+--------------------
+
+The sources also includes python, webpro32 and various libraries.
+
 In the following, replace CVSROOT with the actual value.  At Oratrix,
 the value is
 	oratrix.oratrix.nl:/ufs/mm/CVSPRIVATE
@@ -6,31 +24,31 @@ Other possibilities are values of the type
 where USERNAME has to be replaced by the actual value.  In this case
 you need to login first (once).
 
-Prerequisites
 
-WinCvs (we use version 1.1b7) from http://www.wincvs.org/
-Visual C++ 6.0 (we use Service Pack 3).
+Create a directory where you're going to put the sources.  Change the
+WinCvs browser location to this directory (use View/Browser -> Change
+browser location...).
 
-Getting the Sources
+Then execute the following commands (use Admin -> CommandLine... or
+use a DOS/Unix prompt):
 
-Create a directory where you're going to put the sources.  Change the WinCvs
-browser location to this directory (use View -> Change browser location...).
-Then execute the following commands (use Admin -> CommandLine...):
-
-cvs -d CVSROOT checkout -d cmif mm/demo
-cvs -d :pserver:pythoncvs@cvs.python.org:/projects/cvsroot checkout -d python python/dist/src
+cvs -d CVSROOT checkout -r smil-boston -d cmif mm/demo
+cvs -z3 -d:pserver:anonymous@cvs.python.sourceforge.net:/cvsroot/python checkout -d python python/dist/src
 cvs -d CVSROOT checkout lib-src/jpeg
 cvs -d CVSROOT checkout python/Extensions/img python/Extensions/Pythonwin python/Extensions/win32
 
-The anonymous CVS password for the Python repository is "snakeoil".
-You will have to login to the repository (once only).
+The anonymous CVS password for the Python repository is "" (i.e.,
+there is no password).  You will have to login to the repository (once
+only).
+
 
 Compiling
+---------
 
 [patching getpathp.c and import_nt.c plus adding IGNORE_REGISTRY define]
 
 Open the Visual C++ workspace
-	cmif\win32\src\cmif extensions.dsw
+	"cmif\win32\src\cmif extensions.dsw"
 Make sure the Active Configuration is "All cmif extensions/Win32
 Release" and then build everything.
 
@@ -40,15 +58,17 @@ cmif\bin\win32.
 After the compilation completed successfully, you should run the batch 
 file cmif\win32\DXMedia\bin\reg.bat.
 
+
 Configuring and Testing
+------------------------
 
 If you didn't install things into D:\ufs\mm you need to make a few
 changes to various files.
 
 Edit cmif\bin\pythonwin.ini and replace all occurences of the string
 "d:\ufs\mm" (or "D:\ufs\mm") to the absolute path name of the folder
-you created above.  In other words, to the folder with the cmif and
-python subfolders.  Also make the same change in cmif\bin\win32\iGRiNS.py.
+you created above.  Also make the same change in
+cmif\bin\win32\iGRiNS*.py.
 
 You should now be able to double click cmif\bin\win32\pythonwin.exe
 which should start a Python interpreter in a window.  If this works,
@@ -74,24 +94,68 @@ C++ sources you need to rebuild.)
 
 
 Freezing
+--------
 
-This section is not finished and is here only to remind the author.
+Rather than release python source code, we "freeze" the GRiNS
+editor/player into a single executable with DLL's that can be executed
+on any win32 machine irregardless of whether they have Python
+installed.
 
-5. Freeze (read also the readme.txt in cmif\Build\win32\Editor)
-a) Set the absolute folders in cmif\Build\win32\Editor\domkp.bat
-and \cmif\Build\win32\GRiNS\domkp.bat to agree with your configuration
-(usually only the drive letter)
-b) Run the bat files 
-c) in "GRiNSed files" in the "cmif extensions" workspace, replace all
-   source files in the "source files" subfolder.
-d) build "GRiNSed files"
-e) follow the same two steps for "GRiNS files" for the player.
+Before freezing, if you are going to release the executable to the big
+wide world, you need to increment the patch numbers. These are hidden
+within Visual C++ and a few python source files. (xxx mikevdg note to
+self - find and document these).
 
-6. In Build/win32, open GRiNSed.wse. Compile. This leaves an installer in
-  the bin directory. Using "distribute" will send it to the unix fileserver.
-  
+Also, you need to install the HTML page viewer thingy, in
+cmif/Build/win32/WebsterPro.
+
+Navigate to "cmif/build/win32/Grins player for SMIL 2.0".
+Execute domkp.bat - this will take some time.
+
+This will put many M_*.c files in 
+"cmif/Build/win32/GRins...SMIL 2.0/" that contain python
+byte-codes. These will be compiled into an executable called
+"GRiNSP_SV2.exe" as follows:
+
+Go back to MS VC++ (or reopen the same window from before) using
+"mm/cmif/win32/src/cmif extensions.dsw". Navigate to the collection of
+files needed for building the player ("Resource view ~ Grins player
+smil2 files ~ source files"), delete all of them and re-add them from
+"cmif/Build/.../GRiNS...SMIL 2.0/M_*.c". Right-click on the "GRiNS
+player 2.0 files" and select "Build (selection only)" to build the
+python byte-code. This produces the "GRiNSP_SV2.exe" file.
+
+Note that GRiNSP_SV2.exe is not quite a stand-alone executable. It
+requires the company of some friendly DLL's. 
+
+/*
+ * 5. Freeze (read also the readme.txt in cmif\Build\win32\Editor)
+ * a) Set the absolute folders in cmif\Build\win32\Editor\domkp.bat
+ * and \cmif\Build\win32\GRiNS\domkp.bat to agree with your configuration
+ * (usually only the drive letter)
+ * b) Run the bat files 
+ * c) in "GRiNSed files" in the "cmif extensions" workspace, replace all
+ *    source files in the "source files" subfolder.
+ * d) build "GRiNSed files"
+ * e) follow the same two steps for "GRiNS files" for the player.
+ */
+
+
+Creating the installer
+-----------------------
+
+Make sure that the Wise installer program has been installed on your
+computer. Be gentle with it - it isn't very stable. Don't be tempted
+to edit the .wse files by hand - they won't work for long.
+
+Navigate to cmif/Build/win32/. Open "GRiNSPlayer SMIL2.wse". Click on
+"compile". This produces an executable called "grinspx.x.x.EXE" in
+cmif/bin/win32. Clicking on "distribute" will upload it to the unix
+fileserver.
+
+/*
+ * 6. In Build/win32, open GRiNSed.wse. Compile. This leaves an installer in
+ *    the bin directory. Using "distribute" will send it to the unix fileserver.
+ */  
 
 Thats all.
-
-
-  
