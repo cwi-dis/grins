@@ -374,6 +374,8 @@ class AttrEditor:
 				C = ColorButtonRow
 			elif displayername == 'channelname':
 				C = ChannelnameButtonRow
+			elif displayername == 'basechannelname':
+				C = BaseChannelnameButtonRow
 			elif displayername == 'childnodename':
 				C = ChildnodenameButtonRow
 			elif displayername == 'channeltype':
@@ -634,6 +636,23 @@ class ChannelnameButtonRow(PopupButtonRow):
 	def choices(self):
 		list = ['undefined']
 		ctx = self.wrapper.context
+		for name in ctx.channelnames:
+			if ctx.channeldict[name].attrdict['type'] != 'layout':
+				list.append(name)
+		return list
+
+	def parsevalue(self, value):
+		return value
+
+class BaseChannelnameButtonRow(PopupButtonRow):
+	# Choose from the current channel names
+	def __repr__(self):
+		return '<BaseChannelnameButtonRow instance, name=' \
+			+ `self.name` + '>'
+
+	def choices(self):
+		list = ['undefined']
+		ctx = self.wrapper.context
 		chname = self.wrapper.channel.name
 		for name in ctx.channelnames:
 			if name == chname:
@@ -642,7 +661,6 @@ class ChannelnameButtonRow(PopupButtonRow):
 			if ch.attrdict['type'] == 'layout':
 				list.append(name)
 		return list
-##		return ['undefined'] + self.wrapper.context.channelnames
 
 	def parsevalue(self, value):
 		return value
