@@ -1030,7 +1030,7 @@ class NodeBox(GO):
 		if alist: # Not None and not []
 			self.hasanchors = 1
 			for a in alist:
-				if a[A_TYPE] == ATYPE_PAUSE:
+				if a[A_TYPE] in (ATYPE_PAUSE, ATYPE_ARGS):
 					self.haspause = 1
 					break
 		node.cv_obj = self

@@ -280,7 +280,7 @@ class Channel:
 			if not self._player.toplevel.waitevent():
 				return
 
-	def pause_triggered(self, node, anchorlist):
+	def pause_triggered(self, node, anchorlist, arg):
 		# Callback which is called when the button of a pause
 		# anchor is pressed.
 		# If the anchor didn't fire, we're done playing the
@@ -288,7 +288,7 @@ class Channel:
 		if self._playstate == PLAYED:
 			# someone pushed the button again, I guess
 			return
-		if not self._playcontext.anchorfired(node, anchorlist):
+		if not self._playcontext.anchorfired(node, anchorlist, arg):
 			if self._qid:
 				try:
 					self._scheduler.cancel(self._qid)
@@ -304,6 +304,12 @@ class Channel:
 				self._qid = None
 			self._has_pause = 0
 			self.playdone(None)
+
+	def arganchor_triggered(self, node, anchorlist, arg):
+		print 'ARG ANCHOR TRIGGERED'
+		arg = dialogs.multchoice('Give anchor value:', ['0', '1', '2'], 0)
+		print 'VALUE=', arg
+		self.pause_triggered(node, anchorlist, arg)
 
 	def play_0(self, node):
 		# This does the initial part of playing a node.
@@ -332,10 +338,13 @@ class Channel:
 ##				print 'found pause anchor'
 				f = self.pause_triggered
 				self._has_pause = 1
+			elif type == ATYPE_ARGS:
+				f = self.arganchor_triggered
+				self._has_pause = 1
 			else:
 				f = self._playcontext.anchorfired
 			self._player.add_anchor(button, f, \
-				  (node, [(name, type)]))
+				  (node, [(name, type)], None))
 		self._qid = None
 
 	def play_1(self):
@@ -442,11 +451,13 @@ class Channel:
 			return
 		self.arm_1()
 
-	def seekanchor(self, node, aid):
+	def seekanchor(self, node, aid, args):
 		# Called before arm on the node. Signifies that the node
 		# is played because a hyperjump to the specified anchor
 		# was executed. The channels can override this method, for
-		# instance to highlight the anchor.
+		# instance to highlight the anchor. If the source anchor
+		# had arguments (as in HTML forms) these args are passed to
+		# the destination anchor here.
 		pass
 
 	def play(self, node):
@@ -1018,7 +1029,7 @@ class AnchorContext:
 	def arm_ready(self, channel):
 		raise error, 'AnchorContext.arm_ready() called'
 
-	def anchorfired(self, node, anchorlist):
+	def anchorfired(self, node, anchorlist, arg):
 		raise error, 'AnchorContext.anchorfired() called'
 
 	def play_done(self, node):

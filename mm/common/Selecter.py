@@ -149,7 +149,7 @@ class Selecter:
 				else:
 					seeknode = None
 				sctx = self.scheduler.play(mini, seeknode, \
-					  None, END_STOP)
+					  None, None, END_STOP)
 				if not sctx:
 					dummy = self.killconflictingbags( \
 						  baglist)
@@ -181,7 +181,7 @@ class Selecter:
 	# Return 1 if the anchor fired, 0 if nothing happened.
 	# XXXX This routine should also get a source-context arg.
 	#
-	def anchorfired(self, old_sctx, node, anchorlist):
+	def anchorfired(self, old_sctx, node, anchorlist, arg):
 		self.showpauseanchor(0)
 		self.toplevel.setwaiting()
 		destlist = []
@@ -202,11 +202,13 @@ class Selecter:
 				'No hyperlink source at this anchor')
 			return 0
 		for dest in destlist:
-			if not self.gotoanchor(dest):
+			if not self.gotoanchor(dest, arg):
 				return 0
+		if arg:
+			dialogs.showmessage('Args:'+`arg`)
 		return 1
 
-	def gotoanchor(self, (anchor1, anchor2, dir, type)):
+	def gotoanchor(self, (anchor1, anchor2, dir, type), arg):
 		if type <> 0:
 			dialogs.showmessage('Sorry, will JUMP anyway')
 		dest_uid, dest_aid = anchor2
@@ -220,9 +222,9 @@ class Selecter:
 			self.toplevel.setready()
 			dialogs.showmessage('Dangling hyperlink selected')
 			return 0
-		return self.gotonode(seek_node, dest_aid)
+		return self.gotonode(seek_node, dest_aid, arg)
 
-	def gotonode(self, seek_node, dest_aid):
+	def gotonode(self, seek_node, dest_aid, arg):
 		# First check whether this is an indirect anchor
 		list = self.followcompanchors(seek_node, dest_aid)
 		if list <> None:
@@ -235,7 +237,7 @@ class Selecter:
 					dialogs.showmessage('Dangling: \n'+\
 						  `(node_id, aid)`)
 					continue
-				if self.gotonode(node, aid):
+				if self.gotonode(node, aid, arg):
 					rv = 1
 			return rv
 		# It is not a composite anchor. Continue
@@ -251,7 +253,7 @@ class Selecter:
 			return 0
 		mini, sctx, bag, parent = baglist[0]
 		new_sctx = self.scheduler.play(mini, seek_node, dest_aid, \
-			  END_STOP)
+			  arg, END_STOP)
 		if not new_sctx:
 			dummy = self.killconflictingbags(baglist)
 			self.toplevel.setready()
@@ -288,7 +290,7 @@ class Selecter:
 			node = choosebagitem(bag, 0)
 			if node:
 				new_sctx = self.scheduler.play(node, \
-					  None, None, END_STOP)
+					  None, None, None, END_STOP)
 			else:
 ##				print 'bag_event: no node to play'
 				new_sctx = None

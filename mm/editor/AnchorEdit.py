@@ -26,8 +26,10 @@ from AnchorDefs import *
 
 form_template = None	# result of flp.parse_form is stored here
 
-TypeValues = [ ATYPE_WHOLE, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO, ATYPE_COMP]
-TypeLabels = [ 'dest only', 'normal', 'pausing', 'auto-firing', 'composite']
+TypeValues = [ ATYPE_WHOLE, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO, ATYPE_COMP,
+	  ATYPE_ARGS]
+TypeLabels = [ 'dest only', 'normal', 'pausing', 'auto-firing', 'composite',
+	  'with arguments']
 
 # Top-level interface to show/hide a node's anchor editor
 
@@ -235,7 +237,8 @@ class AnchorEditor(Dialog):
 		for i in range(len(TypeValues)):
 			if type == TypeValues[i]:
 				self.type_choice.set_choice(i+1)
-		if type in (ATYPE_NORMAL, ATYPE_PAUSE) and self.editable:
+		if type in (ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_ARGS) \
+			  and self.editable:
 			self.edit_button.show_object()
 		else:
 			self.edit_button.hide_object()
