@@ -4,7 +4,7 @@ __version__ = "$Id$"
 # XXXX This is a placeholder for the coming HTML channel. It is just
 # an ordinary text channel, but it's anchors have arguments.
 #
-from Channel import ChannelWindow
+from Channel import ChannelWindow, error
 from AnchorDefs import *
 import string
 from urllib import urlopen
