@@ -16,6 +16,7 @@ static soundchannel_debug = 0;
 
 struct sound_data {
 	FILE *f;		/* file from which to read samples */
+	object *file;		/* file object from which f is gotten */
 	int nchannels;		/* # of channels (mono or stereo) */
 	int sampwidth;		/* size of samples in bytes */
 	int nsamples;		/* # of samples to play */
@@ -62,6 +63,8 @@ sound_init(self)
 	}
 	PRIV->s_play.sampbuf = NULL;
 	PRIV->s_arm.sampbuf = NULL;
+	PRIV->s_arm.file = NULL;
+	PRIV->s_play.file = NULL;
 	PRIV->s_sema = allocate_sema(1);
 	if (PRIV->s_sema == NULL) {
 		err_setstr(RuntimeError, "cannot allocate semaphore");
@@ -94,6 +97,8 @@ sound_dealloc(self)
 		free(PRIV->s_play.sampbuf);
 	if (PRIV->s_arm.sampbuf)
 		free(PRIV->s_arm.sampbuf);
+	XDECREF(PRIV->s_arm.file);
+	XDECREF(PRIV->s_play.file);
 	(void) close(PRIV->s_pipefd[0]);
 	(void) close(PRIV->s_pipefd[1]);
 	free(self->mm_private);
@@ -135,6 +140,9 @@ sound_arm(self, file, delay, duration, attrlist, anchorlist)
 	v = dictlookup(attrlist, "offset");
 	if (v && is_intobject(v))
 		PRIV->s_arm.offset = getintvalue(v);
+	XDECREF(PRIV->s_arm.file);
+	PRIV->s_arm.file = file;
+	INCREF(PRIV->s_arm.file);
 	PRIV->s_arm.f = getfilefile(file);
 	return 1;
 }
@@ -174,8 +182,10 @@ sound_play(self)
 	PRIV->s_flag = 0;
 	if (PRIV->s_play.sampbuf)
 		free(PRIV->s_play.sampbuf);
+	XDECREF(PRIV->s_play.file);
 	PRIV->s_play = PRIV->s_arm;
 	PRIV->s_arm.sampbuf = NULL;
+	PRIV->s_arm.file = NULL;
 	return 1;
 }
 
@@ -233,6 +243,7 @@ sound_player(self)
 			if (n <= 0) {
 				dprintf(("sound_player(%lx): fread returned %d at %ld (nsamps = %d)\n", (long) self, n, ftell(PRIV->s_play.f), nsamps));
 				n = 0;
+				nsamps = 0;
 			} else {
 				dprintf(("sound_player(%lx): fread %d samples\n", (long) self, n));
 			}
@@ -332,14 +343,6 @@ sound_player(self)
 }
 
 static int
-sound_done(self)
-	mmobject *self;
-{
-	denter(sound_done);
-	return 1;
-}
-
-static int
 sound_resized(self)
 	mmobject *self;
 {
@@ -348,7 +351,15 @@ sound_resized(self)
 }
 
 static int
-sound_stop(self)
+sound_armstop(self)
+	mmobject *self;
+{
+	denter(sound_armstop);
+	return 1;
+}
+
+static int
+sound_playstop(self)
 	mmobject *self;
 {
 	denter(sound_stop);
@@ -379,8 +390,8 @@ sound_setrate(self, rate)
 		PRIV->s_playrate = rate;
 	}
 	/* it can happen that the channel has already been stopped but the */
-	/* player thread hasn't reacted yet.  Hence the check on STOPPING. */
-	if ((self->mm_flags & (PLAYING | STOPPING)) == PLAYING) {
+	/* player thread hasn't reacted yet.  Hence the check on STOPPLAY. */
+	if ((self->mm_flags & (PLAYING | STOPPLAY)) == PLAYING) {
 		dprintf(("sound_setrate(%lx): writing %c\n", (long) self, msg));
 		(void) write(PRIV->s_pipefd[1], &msg, 1);
 	}
@@ -391,11 +402,11 @@ sound_setrate(self, rate)
 static struct mmfuncs sound_channel_funcs = {
 	sound_armer,
 	sound_player,
-	sound_done,
 	sound_resized,
 	sound_arm,
+	sound_armstop,
 	sound_play,
-	sound_stop,
+	sound_playstop,
 	sound_setrate,
 	sound_init,
 	sound_dealloc,

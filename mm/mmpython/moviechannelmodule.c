@@ -36,6 +36,7 @@ struct movie_data {
 	object *m_f;		/* file where movie comes from */
 	long m_offset;		/* offset in file before we go seeking */
 	void *m_frame;		/* one frame */
+	void *m_bframe;		/* one frame, converted to big format */
 	int m_size;		/* size of frame */
 	long m_bgcolor;		/* background color for window */
 	int m_bgindex;		/* colormap index for background color */
@@ -53,6 +54,7 @@ static char graphics_version[12]; /* gversion() output */
 static int is_entry_indigo;	/* true iff we run on an Entry Indigo */
 static int maxbits;		/* max # of bitplanes for color index */
 static short colors[256][3];	/* saved color map entries */
+static int colormap[256];	/* rgb8 -> rgb24 conversion */
 static int window_used, initialized;
 
 static int
@@ -75,9 +77,11 @@ movie_init(self)
 	}
 	PRIV->m_play.m_index = NULL;
 	PRIV->m_play.m_frame = NULL;
+	PRIV->m_play.m_bframe = NULL;
 	PRIV->m_play.m_f = NULL;
 	PRIV->m_arm.m_index = NULL;
 	PRIV->m_arm.m_frame = NULL;
+	PRIV->m_arm.m_bframe = NULL;
 	PRIV->m_arm.m_f = NULL;
 	window_used++;
 	return 1;
@@ -90,32 +94,132 @@ movie_dealloc(self)
 	int i;
 
 	denter(movie_dealloc);
+#if 0
 	if (--window_used == 0 && gl_lock) {
-		acquire_lock(gl_lock, WAIT_LOCK);
 		if (maxbits < 11 && !is_entry_indigo) {
+			acquire_lock(gl_lock, WAIT_LOCK);
 			winset(PRIV->m_play.m_wid);
 			for (i = 0; i < 256; i++) {
 				mapcolor(i, colors[i][0], colors[i][1],
 					 colors[i][2]);
+				/*
 				dprintf(("movie_player(%lx): colors %d %d %d\n",
 					 (long) self, colors[i][0],
 					 colors[i][1], colors[i][2]));
+				*/
 			}
+			release_lock(gl_lock);
 		}
-		release_lock(gl_lock);
 	}
+#endif
 	XDECREF(PRIV->m_play.m_index);
 	XDECREF(PRIV->m_arm.m_index);
 	XDECREF(PRIV->m_play.m_f);
 	XDECREF(PRIV->m_arm.m_f);
 	if (PRIV->m_play.m_frame)
 		free(PRIV->m_play.m_frame);
+	if (PRIV->m_play.m_bframe)
+		free(PRIV->m_play.m_bframe);
 	if (PRIV->m_arm.m_frame)
 		free(PRIV->m_arm.m_frame);
+	if (PRIV->m_arm.m_bframe)
+		free(PRIV->m_arm.m_bframe);
 	(void) close(PRIV->m_pipefd[0]);
 	(void) close(PRIV->m_pipefd[1]);
 	free(self->mm_private);
 	self->mm_private = NULL;
+}
+
+static void
+conv_rgb8(double rgb, double d1, double d2, int *rp, int *gp, int *bp)
+{
+	int rgb_i = rgb * 255.0;
+
+	*rp = ((rgb_i >> 5) & 0x07) / 7.0 * 255.0;
+	*gp = ((rgb_i     ) & 0x07) / 7.0 * 255.0;
+	*bp = ((rgb_i >> 3) & 0x03) / 3.0 * 255.0;
+}
+
+static void
+init_colorconv()
+{
+	int r, g, b;
+	int index;
+
+	for (index = 0; index < 256; index++) {
+		conv_rgb8(index / 255.0, 0.0, 0.0, &r, &g, &b);
+		colormap[index] = (b<<16)|(g<<8)|r;
+		dprintf(("%d %d %d %d\n", index, r, g, b));
+	}
+}
+
+static void
+init_colormap(self)
+	mmobject *self;
+{
+	int c0, c1, c2;
+	int c0bits = PRIV->m_play.m_c0bits;
+	int c1bits = PRIV->m_play.m_c1bits;
+	int maxc0, maxc1, maxc2;
+	int r, g, b;
+	int bgr, bgg, bgb;
+	int d, dist = 3 * 256;	/* bigger than it can be */
+	int index;
+	int offset = PRIV->m_play.m_moffset;
+	double c0v, c1v, c2v;
+	void (*convcolor)(double, double, double, int *, int *, int *);
+
+	denter(init_colormap);
+
+	switch (PRIV->m_play.m_format) {
+	case FORMAT_RGB8:
+		convcolor = conv_rgb8;
+		if (PRIV->m_play.m_bframe)
+			return;
+		break;
+	}
+	bgr = (PRIV->m_play.m_bgcolor >> 16) & 0xff;
+	bgg = (PRIV->m_play.m_bgcolor >>  8) & 0xff;
+	bgb = (PRIV->m_play.m_bgcolor      ) & 0xff;
+	maxc0 = 1 << c0bits;
+	maxc1 = 1 << c1bits;
+	maxc2 = 1 << PRIV->m_play.m_c2bits;
+	if (offset == 0 && maxbits == 11)
+		offset = 2048;
+	if (maxbits != 11)
+		offset &= (1 << maxbits) - 1;
+	for (c0 = 0; c0 < maxc0; c0++) {
+		c0v = c0 / (double) (maxc0 - 1);
+		for (c1 = 0; c1 < maxc1; c1++) {
+			if (maxc1 == 1)
+				c1v = 0;
+			else
+				c1v = c1 / (double) (maxc1 - 1);
+			for (c2 = 0; c2 < maxc2; c2++) {
+				if (maxc2 == 1)
+					c2v = 0;
+				else
+					c2v = c2 / (double) (maxc2 - 1);
+				index = offset + c0 + (c1<<c0bits) +
+					(c2 << (c0bits+c1bits));
+				if (index < MAXMAP) {
+					(*convcolor)(c0v, c1v, c2v, &r, &g, &b);
+					/*dprintf(("mapcolor(%d,%d,%d,%d)\n", index, r, g, b));*/
+					mapcolor(index, r, g, b);
+					if (index == offset)
+						color(index);
+
+					/* find nearest color to background */
+					d = abs(r - bgr) + abs(g - bgg) + abs(b - bgb);
+					if (d < dist) {
+						PRIV->m_play.m_bgindex = index;
+						dist = d;
+					}
+				}
+			}
+		}
+	}
+	gflush();
 }
 
 static int
@@ -263,6 +367,10 @@ movie_armer(self)
 		free(PRIV->m_arm.m_frame);
 		PRIV->m_arm.m_frame = NULL;
 	}
+	if (PRIV->m_arm.m_bframe) {
+		free(PRIV->m_arm.m_bframe);
+		PRIV->m_arm.m_bframe = NULL;
+	}
 	v = getlistitem(PRIV->m_arm.m_index, 0);
 	if (v == NULL || !is_tupleobject(v) || gettuplesize(v) < 2) {
 		dprintf(("movie_armer(%lx): index[0] not a proper tuple\n", (long) self));
@@ -287,87 +395,23 @@ movie_armer(self)
 	offset = getintvalue(t);
 
 	PRIV->m_arm.m_frame = malloc(PRIV->m_arm.m_size);
+	if (!is_entry_indigo && maxbits < 11)
+		PRIV->m_arm.m_bframe = malloc(PRIV->m_arm.m_size * 4);
 	fd = fileno(getfilefile(PRIV->m_arm.m_f));
 	PRIV->m_arm.m_offset = lseek(fd, 0L, SEEK_CUR);
 	(void) lseek(fd, offset, SEEK_SET);
 	if (read(fd, PRIV->m_arm.m_frame, PRIV->m_arm.m_size) != PRIV->m_arm.m_size)
 		dprintf(("movie_armer: read incorrect amount\n"));
-}
+	if (PRIV->m_arm.m_bframe) {
+		long *lp;
+		unsigned char *p;
+		int i;
 
-static void
-conv_rgb8(double rgb, double d1, double d2, int *rp, int *gp, int *bp)
-{
-	int rgb_i = rgb * 255.0;
-
-	*rp = ((rgb_i >> 5) & 0x07) / 7.0 * 255.0;
-	*gp = ((rgb_i     ) & 0x07) / 7.0 * 255.0;
-	*bp = ((rgb_i >> 3) & 0x03) / 3.0 * 255.0;
-}
-
-static void
-init_colormap(self)
-	mmobject *self;
-{
-	int c0, c1, c2;
-	int c0bits = PRIV->m_play.m_c0bits;
-	int c1bits = PRIV->m_play.m_c1bits;
-	int maxc0, maxc1, maxc2;
-	int r, g, b;
-	int bgr, bgg, bgb;
-	int d, dist = 3 * 256;	/* bigger than it can be */
-	int index;
-	int offset = PRIV->m_play.m_moffset;
-	double c0v, c1v, c2v;
-	void (*convcolor)(double, double, double, int *, int *, int *);
-
-	denter(init_colormap);
-
-	switch (PRIV->m_play.m_format) {
-	case FORMAT_RGB8:
-		convcolor = conv_rgb8;
-		break;
+		lp = (long *) PRIV->m_arm.m_bframe;
+		p = (unsigned char *) PRIV->m_arm.m_frame;
+		for (i = PRIV->m_arm.m_size; i > 0; i--)
+			*lp++ = colormap[*p++];
 	}
-	bgr = (PRIV->m_play.m_bgcolor >> 16) & 0xff;
-	bgg = (PRIV->m_play.m_bgcolor >>  8) & 0xff;
-	bgb = (PRIV->m_play.m_bgcolor      ) & 0xff;
-	maxc0 = 1 << c0bits;
-	maxc1 = 1 << c1bits;
-	maxc2 = 1 << PRIV->m_play.m_c2bits;
-	if (offset == 0 && maxbits == 11)
-		offset = 2048;
-	if (maxbits != 11)
-		offset &= (1 << maxbits) - 1;
-	for (c0 = 0; c0 < maxc0; c0++) {
-		c0v = c0 / (double) (maxc0 - 1);
-		for (c1 = 0; c1 < maxc1; c1++) {
-			if (maxc1 == 1)
-				c1v = 0;
-			else
-				c1v = c1 / (double) (maxc1 - 1);
-			for (c2 = 0; c2 < maxc2; c2++) {
-				if (maxc2 == 1)
-					c2v = 0;
-				else
-					c2v = c2 / (double) (maxc2 - 1);
-				index = offset + c0 + (c1<<c0bits) +
-					(c2 << (c0bits+c1bits));
-				if (index < MAXMAP) {
-					(*convcolor)(c0v, c1v, c2v, &r, &g, &b);
-					/*dprintf(("mapcolor(%d,%d,%d,%d)\n", index, r, g, b));*/
-					mapcolor(index, r, g, b);
-					if (index == offset)
-						color(index);
-					/* find nearest color to background */
-					d = abs(r - bgr) + abs(g - bgg) + abs(b - bgb);
-					if (d < dist) {
-						PRIV->m_play.m_bgindex = index;
-						dist = d;
-					}
-				}
-			}
-		}
-	}
-	gflush();
 }
 
 static int
@@ -382,9 +426,12 @@ movie_play(self)
 	XDECREF(PRIV->m_play.m_f);
 	if (PRIV->m_play.m_frame)
 		free(PRIV->m_play.m_frame);
+	if (PRIV->m_play.m_bframe)
+		free(PRIV->m_play.m_bframe);
 	PRIV->m_play = PRIV->m_arm;
 	PRIV->m_arm.m_index = NULL;
 	PRIV->m_arm.m_frame = NULL;
+	PRIV->m_arm.m_bframe = NULL;
 	PRIV->m_arm.m_f = NULL;
 	if (PRIV->m_play.m_frame == NULL) {
 		/* apparently the arm failed */
@@ -398,6 +445,9 @@ movie_play(self)
 		;
 	(void) fcntl(PRIV->m_pipefd[0], F_SETFL, 0);
 	/* get the window size */
+	/* DEBUG: should call:
+	 * acquire_lock(gl_lock, WAIT_LOCK);
+	 */
 	winset(PRIV->m_play.m_wid);
 	getsize(&PRIV->m_width, &PRIV->m_height);
 	/* initialize color map */
@@ -415,8 +465,10 @@ movie_play(self)
 			}
 		}
 	}
-	if (PRIV->m_arm.m_format == FORMAT_RGB8 && is_entry_indigo &&
-	    strcmp(graphics_version, "GL4DLG-4.0.") == 0) {
+	winpop();		/* pop up the window */
+	if ((PRIV->m_arm.m_format == FORMAT_RGB8 && is_entry_indigo &&
+	     strcmp(graphics_version, "GL4DLG-4.0.") == 0) ||
+	    PRIV->m_play.m_bframe) {
 		/* only on entry-level Indigo running IRIX 4.0.5 */
 		RGBmode();
 		gconfig();
@@ -424,7 +476,10 @@ movie_play(self)
 			 (PRIV->m_play.m_bgcolor >>  8) & 0xff,
 			 (PRIV->m_play.m_bgcolor      ) & 0xff);
 		clear();
-		pixmode(PM_SIZE, 8);
+		if (PRIV->m_play.m_bframe)
+			pixmode(PM_SIZE, 32);
+		else
+			pixmode(PM_SIZE, 8);
 	} else {
 		cmode();
 		gconfig();
@@ -432,7 +487,9 @@ movie_play(self)
 		color(PRIV->m_play.m_bgindex);
 		clear();
 	}
-	winpop();		/* pop up the window */
+	/* DEBUG: should call:
+	 * release_lock(gl_lock);
+	 */
 	return 1;
 }
 
@@ -465,9 +522,13 @@ movie_player(self)
 		/*dprintf(("movie_player(%lx): writing image %d\n", (long) self, index));*/
 		acquire_lock(gl_lock, WAIT_LOCK);
 		winset(PRIV->m_play.m_wid);
-		pixmode(PM_SIZE, 8);
-		if (PRIV->m_play.m_bgindex >= 0)
-			writemask(0xff);
+		if (PRIV->m_play.m_bframe) {
+			pixmode(PM_SIZE, 32);
+		} else {
+			pixmode(PM_SIZE, 8);
+			if (PRIV->m_play.m_bgindex >= 0)
+				writemask(0xff);
+		}
 		scale = PRIV->m_play.m_scale;
 		if (scale == 0) {
 			scale = PRIV->m_width / PRIV->m_play.m_width;
@@ -479,9 +540,16 @@ movie_player(self)
 		xorig = (PRIV->m_width - PRIV->m_play.m_width * scale) / 2;
 		yorig = (PRIV->m_height - PRIV->m_play.m_height * scale) / 2;
 		rectzoom(scale, scale);
-		lrectwrite(xorig, yorig, xorig + PRIV->m_play.m_width - 1,
-			   yorig + PRIV->m_play.m_height - 1,
-			   PRIV->m_play.m_frame);
+		if (PRIV->m_play.m_bframe)
+			lrectwrite(xorig, yorig,
+				   xorig + PRIV->m_play.m_width - 1,
+				   yorig + PRIV->m_play.m_height - 1,
+				   PRIV->m_play.m_bframe);
+		else
+			lrectwrite(xorig, yorig,
+				   xorig + PRIV->m_play.m_width - 1,
+				   yorig + PRIV->m_play.m_height - 1,
+				   PRIV->m_play.m_frame);
 		if (PRIV->m_play.m_bgindex >= 0)
 			writemask(0xffffffff);
 		gflush();
@@ -520,6 +588,16 @@ movie_player(self)
 		offset = getintvalue(t);
 		lseek(fd, offset, SEEK_SET);
 		read(fd, PRIV->m_play.m_frame, PRIV->m_play.m_size);
+		if (PRIV->m_play.m_bframe) {
+			long *lp;
+			unsigned char *p;
+			int i;
+
+			lp = (long *) PRIV->m_play.m_bframe;
+			p = (unsigned char *) PRIV->m_play.m_frame;
+			for (i = PRIV->m_play.m_size; i > 0; i--)
+				*lp++ = colormap[*p++];
+		}
 		gettimeofday(&tm, NULL);
 		td = (tm.tv_sec - tm0.tv_sec) * 1000 +
 			(tm.tv_usec - tm0.tv_usec) / 1000 - timediff;
@@ -542,8 +620,15 @@ movie_player(self)
 			dprintf(("pollin event!\n"));
 			(void) read(PRIV->m_pipefd[0], &c, 1);
 			dprintf(("movie_player(%lx): read %c\n", (long) self, c));
-			if (c == 's')
+			if (c == 's') {
+				if (PRIV->m_play.m_frame)
+					free(PRIV->m_play.m_frame);
+				PRIV->m_play.m_frame = NULL;
+				if (PRIV->m_play.m_bframe)
+					free(PRIV->m_play.m_bframe);
+				PRIV->m_play.m_bframe = NULL;
 				break;
+			}
 			if (c == 'p') {
 				struct timeval tm1;
 
@@ -563,14 +648,6 @@ movie_player(self)
 }
 
 static int
-movie_done(self)
-	mmobject *self;
-{
-	denter(movie_done);
-	return 1;
-}
-
-static int
 movie_resized(self)
 	mmobject *self;
 {
@@ -581,7 +658,8 @@ movie_resized(self)
 	getsize(&PRIV->m_width, &PRIV->m_height);
 	if (PRIV->m_play.m_frame) {
 		winset(PRIV->m_play.m_wid);
-		pixmode(PM_SIZE, 8);
+		if (PRIV->m_play.m_bframe == NULL)
+			pixmode(PM_SIZE, 8);
 		if (PRIV->m_play.m_bgindex >= 0) {
 			color(PRIV->m_play.m_bgindex);
 			clear();
@@ -603,9 +681,16 @@ movie_resized(self)
 		xorig = (PRIV->m_width - PRIV->m_play.m_width * scale) / 2;
 		yorig = (PRIV->m_height - PRIV->m_play.m_height * scale) / 2;
 		rectzoom(scale, scale);
-		lrectwrite(xorig, yorig, xorig + PRIV->m_play.m_width - 1,
-			   yorig + PRIV->m_play.m_height - 1,
-			   PRIV->m_play.m_frame);
+		if (PRIV->m_play.m_bframe)
+			lrectwrite(xorig, yorig,
+				   xorig + PRIV->m_play.m_width - 1,
+				   yorig + PRIV->m_play.m_height - 1,
+				   PRIV->m_play.m_bframe);
+		else
+			lrectwrite(xorig, yorig,
+				   xorig + PRIV->m_play.m_width - 1,
+				   yorig + PRIV->m_play.m_height - 1,
+				   PRIV->m_play.m_frame);
 		if (PRIV->m_play.m_bgindex >= 0)
 			writemask(0xffffffff);
 		gflush();
@@ -614,10 +699,19 @@ movie_resized(self)
 }
 
 static int
-movie_stop(self)
+movie_armstop(self)
 	mmobject *self;
 {
-	denter(movie_stop);
+	denter(movie_armstop);
+	/* arming doesn't take long, so don't bother to actively stop it */
+	return 1;
+}
+
+static int
+movie_playstop(self)
+	mmobject *self;
+{
+	denter(movie_playstop);
 	if (write(PRIV->m_pipefd[1], "s", 1) < 0)
 		perror("write");
 	return 1;
@@ -637,8 +731,8 @@ movie_setrate(self, rate)
 		msg = 'r';
 	}
 	/* it can happen that the channel has already been stopped but the */
-	/* player thread hasn't reacted yet.  Hence the check on STOPPING. */
-	if ((self->mm_flags & (PLAYING | STOPPING)) == PLAYING) {
+	/* player thread hasn't reacted yet.  Hence the check on STOPPLAY. */
+	if ((self->mm_flags & (PLAYING | STOPPLAY)) == PLAYING) {
 		dprintf(("movie_setrate(%lx): writing %c\n", (long) self, msg));
 		if (write(PRIV->m_pipefd[1], &msg, 1) < 0)
 			perror("write");
@@ -649,11 +743,11 @@ movie_setrate(self, rate)
 static struct mmfuncs movie_channel_funcs = {
 	movie_armer,
 	movie_player,
-	movie_done,
 	movie_resized,
 	movie_arm,
+	movie_armstop,
 	movie_play,
-	movie_stop,
+	movie_playstop,
 	movie_setrate,
 	movie_init,
 	movie_dealloc,
@@ -740,5 +834,5 @@ initmoviechannel()
 	maxbits = getgdesc(GD_BITS_NORM_SNG_CMODE);
 	if (maxbits > 11)
 		maxbits = 11;
-
+	init_colorconv();
 }

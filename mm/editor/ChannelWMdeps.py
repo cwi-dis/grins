@@ -204,6 +204,7 @@ class Channel:
 			print 'cancel', self.name, self.qid
 			self.scheduler.cancel(self.qid)
 			self.qid = None
+		self.clear()
 
 	# Reset the channel's state.
 	# This should only be called in stopped state.

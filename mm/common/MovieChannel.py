@@ -101,10 +101,8 @@ class MovieWindow(ChannelWindow):
 
 # XXX Make the movie channel class a derived class from MovieWindow?!
 
-def armdone(arg):
-	pass
-def stopped(arg):
-	pass
+##def armdone(arg):
+##	pass
 
 class MovieChannel(Channel):
 	#
@@ -154,10 +152,8 @@ class MovieChannel(Channel):
 ##		print 'MovieChannel.do_arm: self.threads = ' + `self.threads`
 		if self.window.vfile:
 			import glwindow, mm
-			glwindow.devregister(`self.deviceno`+':'+`mm.armdone`,\
-				  armdone, 0)
-			glwindow.devregister(`self.deviceno`+':'+`mm.stopped`,\
-				  stopped, 0)
+##			glwindow.devregister(`self.deviceno`+':'+`mm.armdone`,\
+##				  armdone, 0)
 			if not GLLock.gl_lock:
 				GLLock.init()
 			# The C code doesn't support all the formats that
@@ -177,7 +173,7 @@ class MovieChannel(Channel):
 				   'wid': self.window.wid, \
 				   'bgcolor': MMAttrdefs.getattr(node, 'bgcolor'), \
 				   'gl_lock': GLLock.gl_lock}, \
-				   None)
+				   None, 1)
 			except RuntimeError, msg:
 				print 'Bad movie file', \
 				      self.window.vfile.filename, msg
@@ -214,8 +210,6 @@ class MovieChannel(Channel):
 		import glwindow, mm
 		glwindow.devregister(`self.deviceno`+':'+`mm.playdone`, \
 			  self.done, None)
-		glwindow.devregister(`self.deviceno`+':'+`mm.stopped`, \
-			  stopped, 0)
 		self.window.cleared = 0
 		self.threads.play()
 		self.scheduler.arm_ready(self.name)
@@ -231,7 +225,7 @@ class MovieChannel(Channel):
 		if self.window.vfile:
 			if GLLock.gl_lock:
 				GLLock.gl_lock.release()
-			self.threads.stop()
+			self.threads.playstop()
 			if GLLock.gl_lock:
 				GLLock.gl_lock.acquire()
 		Channel.stop(self)

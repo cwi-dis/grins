@@ -64,25 +64,34 @@ mm_armer(arg)
 		down_sema(self->mm_armsema);
 
 		down_sema(self->mm_flagsema);
-		if (self->mm_flags & EXIT)
+		if (self->mm_flags & EXIT) {
+			/* we must tell them that we finished arming, */
+			/* even if we didn't do a thing */
+			if ((self->mm_flags & (ARMING|SYNCARM)) == ARMING)
+				qenter(self->mm_ev, ARMDONE);
 			break;
+		}
 		up_sema(self->mm_flagsema);
 
 		(*self->mm_chanobj->chan_funcs->armer)(self);
 
 		down_sema(self->mm_flagsema);
-		if (self->mm_flags & EXIT)
-			break;
-		if (self->mm_flags & STOPPING) {
-			dprintf(("mm_armer(%lx): qenter(self->mm_ev, STOPPED);\n", (long) self));
-			qenter(self->mm_ev, STOPPED);
+		self->mm_flags &= ~(ARMING|STOPARM);
+		self->mm_flags |= ARMED;
+		if (self->mm_flags & SYNCARM) {
+			dprintf(("mm_armer(%lx): done synchronous arm\n",
+				 (long) self));
+			up_sema(self->mm_armwaitsema);
 		} else {
-			dprintf(("mm_armer(%lx): qenter(self->mm_ev, ARMDONE);\n", (long) self));
+			dprintf(("mm_armer(%lx): qenter(self->mm_ev, ARMDONE);\n",
+				 (long) self));
 			qenter(self->mm_ev, ARMDONE);
 		}
-		self->mm_flags &= ~(ARMING|STOPPING);
+#if 0
+		if (self->mm_flags & EXIT)
+			break;
+#endif
 		up_sema(self->mm_flagsema);
-		/*DEBUG*/up_sema(self->mm_waitarm);
 	}
 	up_sema(self->mm_flagsema);
 	up_sema(self->mm_exitsema);
@@ -102,51 +111,32 @@ mm_player(arg)
 		down_sema(self->mm_playsema);
 
 		down_sema(self->mm_flagsema);
-		if (self->mm_flags & EXIT)
+		if (self->mm_flags & EXIT) {
+			/* we must tell them that we finished playing, */
+			/* even if we didn't do a thing */
+			if (self->mm_flags & PLAYING)
+				qenter(self->mm_ev, PLAYDONE);
 			break;
+		}
 		up_sema(self->mm_flagsema);
 
 		(*self->mm_chanobj->chan_funcs->player)(self);
 
 		down_sema(self->mm_flagsema);
+		self->mm_flags &= ~(PLAYING|STOPPLAY);
+		dprintf(("mm_player(%lx): qenter(self->mm_ev, PLAYDONE);\n",
+			 (long) self));
+		qenter(self->mm_ev, PLAYDONE);
+#if 0
 		if (self->mm_flags & EXIT)
 			break;
-		if (self->mm_flags & STOPPING) {
-			dprintf(("mm_player(%lx): qenter(self->mm_ev, STOPPED);\n", (long) self));
-			qenter(self->mm_ev, STOPPED);
-		} else {
-			dprintf(("mm_player(%lx): qenter(self->mm_ev, PLAYDONE);\n", (long) self));
-			qenter(self->mm_ev, PLAYDONE);
-		}
-		self->mm_flags &= ~(PLAYING|STOPPING);
+#endif
 		up_sema(self->mm_flagsema);
 	}
 	up_sema(self->mm_flagsema);
 	up_sema(self->mm_exitsema);
 	exit_thread();
 	/*NOTREACHED*/
-}
-
-/*
- * done()
- *	Stops the channel, closes the window.
- *	Note 1: disabling a channel is done through this mechanism as
- *	  well. The python wrapper will have to take care of timing
- *	  dependencies.
- */
-static object *
-mm_done(self, args)
-	mmobject *self;
-	object *args;
-{
-	CheckMmObject(self);
-	denter(mm_done);
-	if (!getnoarg(args))
-		return NULL;
-	if (!(*self->mm_chanobj->chan_funcs->done)(self))
-		return NULL;
-	INCREF(None);
-	return None;
 }
 
 /*
@@ -185,13 +175,19 @@ mm_arm(self, args)
 	mmobject *self;
 	object *args;
 {
-	int delay, duration;
+	int delay, duration, syncarm;
 	object *file, *attrlist, *anchorlist;
 
 	CheckMmObject(self);
 	denter(mm_arm);
-	if (!getargs(args, "(OiiOO)", &file, &delay, &duration, &attrlist, &anchorlist))
-		return NULL;
+	if (!getargs(args, "(OiiOOi)", &file, &delay, &duration, &attrlist,
+		     &anchorlist, &syncarm)) {
+		err_clear();
+		syncarm = 0;
+		if (!getargs(args, "(OiiOO)", &file, &delay, &duration,
+			     &attrlist, &anchorlist))
+			return NULL;
+	}
 	down_sema(self->mm_flagsema);
 	if (self->mm_flags & ARMING) {
 		up_sema(self->mm_flagsema);
@@ -200,18 +196,21 @@ mm_arm(self, args)
 	}
 	self->mm_flags |= ARMING;
 	self->mm_flags &= ~ARMED;
+	if (syncarm)
+		self->mm_flags |= SYNCARM;
+	else
+		self->mm_flags &= ~SYNCARM;
 	up_sema(self->mm_flagsema);
-	if (!(*self->mm_chanobj->chan_funcs->arm)(self, file, delay, duration, attrlist, anchorlist)) {
+	if (!(*self->mm_chanobj->chan_funcs->arm)(self, file, delay, duration,
+						  attrlist, anchorlist)) {
 		down_sema(self->mm_flagsema);
 		self->mm_flags &= ~ARMING;
 		up_sema(self->mm_flagsema);
 		return NULL;
 	}
-	down_sema(self->mm_flagsema);
-	self->mm_flags |= ARMED;
-	up_sema(self->mm_flagsema);
 	up_sema(self->mm_armsema);
-	/*DEBUG*/down_sema(self->mm_waitarm);
+	if (syncarm)
+		down_sema(self->mm_armwaitsema);
 	INCREF(None);
 	return None;
 }
@@ -257,30 +256,31 @@ mm_play(self, args)
 }
 
 /*
- * stop()
- *	Stop playing and arming. A STOPPED event is generated to help
- *	resynchronising. 
+ * do_stop()
+ *	Stop playing or arming depending on args.
  */
 static object *
-mm_stop(self, args)
+do_stop(self, args, busyflag, stopflag, func)
 	mmobject *self;
 	object *args;
+	int busyflag, stopflag;
+	int (*func) PROTO((mmobject *));
 {
 	CheckMmObject(self);
-	denter(mm_stop);
-	if (!getnoarg(args))
+	if (args && !getnoarg(args))
 		return NULL;
+
 	down_sema(self->mm_flagsema);
-	if (self->mm_flags & (ARMING|PLAYING)) {
-		self->mm_flags |= STOPPING;
+	if (self->mm_flags & busyflag) {
+		self->mm_flags |= stopflag;
 		up_sema(self->mm_flagsema);
-		if (!(*self->mm_chanobj->chan_funcs->stop)(self))
+		if (!(*func)(self))
 			return NULL;
-		/*DEBUG: wait until armer and player have actually stopped */
+		/*DEBUG: wait until player has actually stopped */
 		for (;;) {
 			down_sema(self->mm_flagsema);
 			dprintf(("looping %x\n", self->mm_flags));
-			if ((self->mm_flags & (ARMING|PLAYING)) == 0) {
+			if ((self->mm_flags & busyflag) == 0) {
 				up_sema(self->mm_flagsema);
 				break;
 			}
@@ -294,6 +294,34 @@ mm_stop(self, args)
 	}
 	INCREF(None);
 	return None;
+}
+
+/*
+ * playstop()
+ *	Stop playing.
+ */
+static object *
+mm_playstop(self, args)
+	mmobject *self;
+	object *args;
+{
+	denter(mm_playstop);
+	return do_stop(self, args, PLAYING, STOPPLAY,
+		       self->mm_chanobj->chan_funcs->playstop);
+}
+
+/*
+ * armstop()
+ *	Stop arming.
+ */
+static object *
+mm_armstop(self, args)
+	mmobject *self;
+	object *args;
+{
+	denter(mm_armstop);
+	return do_stop(self, args, ARMING, STOPARM,
+		       self->mm_chanobj->chan_funcs->armstop);
 }
 
 /*
@@ -322,14 +350,18 @@ static void
 do_close(self)
 	mmobject *self;
 {
+	int flags;
+
 	/* tell other threads to exit */
 	down_sema(self->mm_flagsema);
 	self->mm_flags |= EXIT;
-	if ((self->mm_flags & ARMING) == 0)
-		up_sema(self->mm_armsema);
-	if ((self->mm_flags & PLAYING) == 0)
-		up_sema(self->mm_playsema);
 	up_sema(self->mm_flagsema);
+	do_stop(self, NULL, ARMING, STOPARM,
+		self->mm_chanobj->chan_funcs->armstop);
+	up_sema(self->mm_armsema);
+	do_stop(self, NULL, PLAYING, STOPPLAY,
+		self->mm_chanobj->chan_funcs->playstop);
+	up_sema(self->mm_playsema);
 
 	/* wait for other threads to exit */
 	down_sema(self->mm_exitsema);
@@ -349,8 +381,8 @@ do_close(self)
 	self->mm_flagsema = NULL;
 	free_sema(self->mm_exitsema);
 	self->mm_exitsema = NULL;
-	/*DEBUG*/free_sema(self->mm_waitarm);
-	/*DEBUG*/self->mm_waitarm = NULL;
+	free_sema(self->mm_armwaitsema);
+	self->mm_armwaitsema = NULL;
 	DECREF(self->mm_chanobj);
 	self->mm_chanobj = NULL;
 }
@@ -367,11 +399,11 @@ mm_close(self)
 }
 
 static struct methodlist channel_methods[] = {
-	{"done",		mm_done},
 	{"resized",		mm_resized},
 	{"arm",			mm_arm},
+	{"armstop",		mm_armstop},
 	{"play",		mm_play},
-	{"stop",		mm_stop},
+	{"playstop",		mm_playstop},
 	{"setrate",		mm_setrate},
 	{"close",		mm_close},
 	{NULL,			NULL}		/* sentinel */
@@ -413,11 +445,11 @@ static typeobject Mmtype = {
 };
 
 static object *
-newmmobject(wid, ev, attrlist, armsema, playsema, flagsema, exitsema, waitarm, chanobj)
+newmmobject(wid, ev, attrlist, armsema, playsema, flagsema, exitsema, armwaitsema, chanobj)
 	int wid;
 	int ev;
 	object *attrlist;
-	type_sema armsema, playsema, flagsema, exitsema, waitarm;
+	type_sema armsema, playsema, flagsema, exitsema, armwaitsema;
 	channelobject *chanobj;
 {
 	mmobject *mmp;
@@ -433,7 +465,7 @@ newmmobject(wid, ev, attrlist, armsema, playsema, flagsema, exitsema, waitarm, c
 	mmp->mm_playsema = playsema;
 	mmp->mm_flagsema = flagsema;
 	mmp->mm_exitsema = exitsema;
-	/*DEBUG*/mmp->mm_waitarm = waitarm;
+	mmp->mm_armwaitsema = armwaitsema;
 	INCREF(chanobj);
 	mmp->mm_chanobj = chanobj;
 	mmp->mm_private = NULL;
@@ -452,9 +484,6 @@ newmmobject(wid, ev, attrlist, armsema, playsema, flagsema, exitsema, waitarm, c
  *	will be one of the following:
  *	ARMDONE - when the current arm is done
  *	PLAYDONE - when the current file has finished playing
- *	STOPPED - A stop command has been processed. This is needed to
- *		synchronize on the stop command (because there might still be
- *		old events in the event queue).
  *
  *	Attrlist is a list of (attributename, value) pairs specifying
  *	things like background color, etc.
@@ -473,7 +502,7 @@ mm_init(self, args)
 	object *mmp;
 	channelobject *chanobj;
 	type_sema armsema = NULL, playsema = NULL;
-	type_sema flagsema = NULL, exitsema = NULL, waitarm = NULL;
+	type_sema flagsema = NULL, exitsema = NULL, armwaitsema = NULL;
 	int i;
 
 	dprintf(("mm_init\n"));
@@ -486,7 +515,8 @@ mm_init(self, args)
 		err_setstr(RuntimeError, "first arg must be channel object");
 		return NULL;
 	}
-	dprintf(("mm_init: chanobj = %lx (%s)\n", (long) mmp, mmp->ob_type->tp_name));
+	dprintf(("mm_init: chanobj = %lx (%s)\n", (long) mmp,
+		 mmp->ob_type->tp_name));
 	chanobj = (channelobject *) mmp;
 
 	/* allocate necessary semaphores */
@@ -494,17 +524,18 @@ mm_init(self, args)
 	    (playsema = allocate_sema(0)) == NULL ||
 	    (flagsema = allocate_sema(1)) == NULL ||
 	    (exitsema = allocate_sema(0)) == NULL ||
-	    (waitarm = allocate_sema(0)) == NULL) {
+	    (armwaitsema = allocate_sema(0)) == NULL) {
 		err_setstr(IOError, "could not allocate all semaphores");
 		if (armsema) free_sema(armsema);
 		if (playsema) free_sema(playsema);
 		if (flagsema) free_sema(flagsema);
 		if (exitsema) free_sema(exitsema);
-		if (waitarm) free_sema(waitarm);
+		if (armwaitsema) free_sema(armwaitsema);
 		return NULL;
 	}
 
-	mmp = newmmobject(wid, ev, attrlist, armsema, playsema, flagsema, exitsema, waitarm, chanobj);
+	mmp = newmmobject(wid, ev, attrlist, armsema, playsema, flagsema,
+			  exitsema, armwaitsema, chanobj);
 	dprintf(("newmmobject() --> %lx\n", (long) mmp));
 	if (mmp == NULL ||
 	    !(*chanobj->chan_funcs->init)((mmobject *) mmp) ||
@@ -517,7 +548,7 @@ mm_init(self, args)
 		free_sema(playsema);
 		free_sema(flagsema);
 		free_sema(exitsema);
-		free_sema(waitarm);
+		free_sema(armwaitsema);
 		XDECREF(((mmobject *) mmp)->mm_attrlist);
 		DECREF(((mmobject *) mmp)->mm_chanobj);
 		DECREF(mmp);
@@ -552,10 +583,6 @@ initmm()
 	v = newintobject((long) PLAYDONE);
 	if (v == NULL || dictinsert(d, "playdone", v) != 0)
 		fatal("can't define mm.playdone");
-
-	v = newintobject((long) STOPPED);
-	if (v == NULL || dictinsert(d, "stopped", v) != 0)
-		fatal("can't define mm.stopped");
 
 	MmError = newstringobject("mm.error");
 	if (MmError == NULL || dictinsert(d, "error", MmError) != 0)
