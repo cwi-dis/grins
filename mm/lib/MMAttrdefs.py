@@ -45,6 +45,7 @@ import sys
 
 # The file from which the attribute definitions are read.
 #
+ATTRDEFS_LOCAL = './Attrdefs'
 ATTRDEFS = '/ufs/guido/mm/demo/lib/Attrdefs'
 
 
@@ -130,7 +131,12 @@ def useattrdefs(mapping):
 
 # Initialize the attrdefs table.
 #
-attrdefs = readattrdefs(ATTRDEFS)
+try:
+    attrdefs = readattrdefs(ATTRDEFS_LOCAL)
+    print '(Using local Attrdefs file)'
+except:
+    attrdefs = readattrdefs(ATTRDEFS)
+
 
 
 # Functional interface to the attrdefs table.
