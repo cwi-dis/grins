@@ -12,6 +12,10 @@ from Hlinks import DIR_1TO2, TYPE_JUMP
 import string
 import os
 
+DEFAULT = 'Default'
+UNDEFINED = 'undefined'
+NEW_CHANNEL = 'New channel...'
+
 # There are two basic calls into this module (but see below for more):
 # showattreditor(node) creates an attribute editor form for a node
 # and hideattreditor(node) hides it again.  Since the editor may also
@@ -345,7 +349,6 @@ class NodeWrapper(Wrapper):
 
 	def getdef(self, name):
 		if name == '.hyperlink':
-			# Channelname -- special case
 			return (('string', None), '',
 				'Hyperlink', 'default',
 				'Hyperlink', 'raw', 'light')
@@ -887,6 +890,11 @@ class AttrEditor(AttrEditorDialog):
 		self.attrlist = list
 		AttrEditorDialog.__init__(self, wrapper.maketitle(), list, wrapper.toplevel, initattrinst)
 
+	def _findattr(self, attr):
+		for b in self.attrlist:
+			if b.getname() == attr:
+				return b
+
 	def resetall(self):
 		for b in self.attrlist:
 			b.reset_callback()
@@ -917,10 +925,21 @@ class AttrEditor(AttrEditorDialog):
 		self.__new = 0
 		# first collect all changes
 		dict = {}
+		newchannel = None
 		for b in self.attrlist:
 			name = b.getname()
 			str = b.getvalue()
 			if str != b.getcurrent():
+				if hasattr(b, 'newchannels') and \
+				   str not in self.wrapper.getcontext().channelnames:
+					newchannel = str
+					try:
+						b.newchannels.remove(str)
+					except ValueError:
+						# probably shouldn't happen...
+						pass
+					dict[name] = str
+					continue
 				try:
 					value = b.parsevalue(str)
 				except:
@@ -944,7 +963,7 @@ class AttrEditor(AttrEditorDialog):
 					self.showmessage('URL not compatible with channel', mtype = 'error')
 					return 1
 				dict[name] = value
-		if not dict:
+		if not dict and not newchannel:
 			# nothing to change
 			return
 		if not self.wrapper.transaction():
@@ -952,6 +971,8 @@ class AttrEditor(AttrEditorDialog):
 			return 1
 		# this may take a while...
 		self.wrapper.setwaiting()
+		if newchannel:
+			self.newchannel(newchannel)
 		for name, value in dict.items():
 			if value is None:
 				self.wrapper.delattr(name)
@@ -972,16 +993,102 @@ class AttrEditor(AttrEditorDialog):
 				return 0
 			# compatible if image and not RealPix
 			return mtype[:5] == 'image' and string.find(mtype, 'real') < 0
-		for b in self.attrlist:
-			if b.getname() == 'channel':
-				str = b.getvalue()
-				try:
-					chan = b.parsevalue(str)
-				except:
-					chan = ''
-				return chan in self.wrapper.getcontext().compatchannels(url)
+		b = self._findattr('channel')
+		if b is not None:
+			str = b.getvalue()
+			try:
+				chan = b.parsevalue(str)
+			except:
+				chan = ''
+			return chan in self.wrapper.getcontext().compatchannels(url)
 		# not found, assume compatible
 		return 1
+
+	def newchannel(self, channelname):
+		em = self.wrapper.editmgr
+		context = self.wrapper.getcontext()
+		b = self._findattr('file')
+		if b:
+			url = b.getvalue()
+		else:
+			url = ''
+		root = None
+		for key, val in context.channeldict.items():
+			if val.get('base_window') is None:
+				# we're looking at a top-level channel
+				if root is None:
+					# first one
+					root = key
+				else:
+					# multiple root windows
+					root = ''
+		index = len(context.channelnames)
+		em.addchannel(channelname, index, self.guesstype(url))
+		ch = context.channeldict[channelname]
+		if root:
+			ch['base_window'] = root
+		if ChannelMap.isvisiblechannel(ch['type']):
+			units = ch.get('units', windowinterface.UNIT_SCREEN)
+			if units == windowinterface.UNIT_PXL:
+				if url:
+					import Sizes
+					w, h = Sizes.GetSize(context.findurl(url))
+				else:
+					w = h = 0
+				if w == 0:
+					w = 100 # default size
+				if h == 0:
+					h = 100 # default size
+				ch['base_winoff'] = 0,0,w,h
+			elif units == windowinterface.UNIT_SCREEN:
+				ch['base_winoff'] = 0,0,.2,.2
+		# if the node belongs to a layout, add the new channel
+		# to that layouf
+		layout = MMAttrdefs.getattr(self.wrapper.node, 'layout')
+		if layout != 'undefined' and context.layouts.has_key(layout):
+			em.addlayoutchannel(layout, ch)
+
+	def guesstype(self, url):
+		# guess channel type from URL
+		b = self._findattr('.type')
+		if b:
+			ntype = b.getvalue()
+		else:
+			# can't determine node type
+			return 'null'
+		if ntype == 'imm':
+			# assume all immediate nodes are text nodes
+			return 'text'
+		if ntype != 'ext':
+			# interior node, doesn't make much sense
+			return 'null'
+		if not url:
+			return 'null'
+		import mimetypes
+		mtype = mimetypes.guess_type(url)[0]
+		if mtype is None:
+			import settings
+			# just guessing now...
+			if settings.get('compatibility') == settings.G2:
+				# G2 player doesn't do HTML
+				return 'text'
+			return 'html'
+		mtype, subtype = string.split(mtype, '/')
+		if mtype == 'audio':
+			return 'sound'
+		if mtype == 'image':
+			if subtype == 'vnd.rn-realpix':
+				return 'RealPix'
+			return 'image'
+		if mtype == 'video':
+			return 'video'
+		if mtype == 'text':
+			if subtype == 'html':
+				return 'html'
+			if subtype == 'vnd.rn-realtext':
+				return 'RealText'
+		# fallback
+		return 'text'
 
 	#
 	# EditMgr interface
@@ -1155,12 +1262,11 @@ class FileAttrEditorField(StringAttrEditorField):
 			chtype = 'image'
 		else:
 			chtype = None
-			for b in self.attreditor.attrlist:
-				if b.getname() == 'channel':
-					ch = self.wrapper.context.getchannel(b.getvalue())
-					if ch:
-						chtype = ch['type']
-					break
+			b = self.attreditor._findattr('channel')
+			if b is not None:
+				ch = self.wrapper.context.getchannel(b.getvalue())
+				if ch:
+					chtype = ch['type']
 		mtypes = ChannelMime.ChannelMime.get(chtype, [])
 		if chtype:
 			mtypes = ['/%s file' % string.capitalize(chtype)] + mtypes
@@ -1184,16 +1290,15 @@ class FileAttrEditorField(StringAttrEditorField):
 			node = self.wrapper.node
 			pnode = node.GetParent()
 			start, minstart = HierarchyView.slidestart(pnode, url, pnode.children.index(node))
-			for b in self.attreditor.attrlist:
-				if b.getname() == 'start':
-					str = b.getvalue()
-					try:
-						value = b.parsevalue(str) or 0
-					except:
-						value = 0
-					if minstart - start > value:
-						b.setvalue(b.valuerepr(minstart-start))
-					break
+			b = self.attreditor._findattr('start')
+			if b is not None:
+				str = b.getvalue()
+				try:
+					value = b.parsevalue(str) or 0
+				except:
+					value = 0
+				if minstart - start > value:
+					b.setvalue(b.valuerepr(minstart-start))
 
 class TextAttrEditorField(AttrEditorField):
 	type = 'text'
@@ -1255,16 +1360,16 @@ class PopupAttrEditorField(AttrEditorField):
 
 	def getoptions(self):
 		# derived class overrides this to defince the choices
-		return ['Default']
+		return [DEFAULT]
 
 	def parsevalue(self, str):
-		if str == 'Default':
+		if str == DEFAULT:
 			return None
 		return str
 
 	def valuerepr(self, value):
 		if value is None:
-			return 'Default'
+			return DEFAULT
 		return value
 
 class PopupAttrEditorFieldWithUndefined(PopupAttrEditorField):
@@ -1274,14 +1379,14 @@ class PopupAttrEditorFieldWithUndefined(PopupAttrEditorField):
 
 	def getoptions(self):
 		# derived class overrides this to defince the choices
-		return ['Default', 'undefined']
+		return [DEFAULT, UNDEFINED]
 
 	def valuerepr(self, value):
 		if value is None:
-			return 'Default'
+			return DEFAULT
 		options = self.getoptions()
 		if value not in options:
-			return 'undefined'
+			return UNDEFINED
 		return value
 
 	def reset_callback(self):
@@ -1469,11 +1574,11 @@ class RMTargetsAttrEditorField(PopupAttrEditorField):
 
 	# Choose from a list of unit types
 	def getoptions(self):
-##		return ['Default'] + self.__values
+##		return [DEFAULT] + self.__values
 		return self.__values
 
 	def parsevalue(self, str):
-		if str == 'Default':
+		if str == DEFAULT:
 			str = '28k8 modem,56k modem'
 		strs = string.split(str, ',')
 		rv = 0
@@ -1526,37 +1631,122 @@ class LayoutnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	def getoptions(self):
 		list = self.wrapper.context.layouts.keys()
 		list.sort()
-		return ['Default', 'undefined'] + list
+		return [DEFAULT, UNDEFINED] + list
 
 class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current channel names
+	newchannels = []
 	def getoptions(self):
 		import settings
-		list = []
+		# channelnames1 -- compatible channels in node's layout
+		# channelnames2 -- new channel
+		# channelnames3 -- incompatible channels in node's layout
+		# channelnames4 -- compatible channels not in node's layout
+		# channelnames5 -- incompatible channels not in node's layout
+		# In the lite version there are no layouts, so all channels
+		# are in category 1 or 3.  Only channelnames1 is shown.
 		ctx = self.wrapper.context
-		if settings.get('lightweight'):
-			ch = self.wrapper.node.GetContext().getchannel(self.wrapper.getvalue(self.getname()))
-			if ch is not None:
-				chtype = ch.get('type')
+		node = self.wrapper.node
+		chtype = node.GetChannelType()
+		b = self.attreditor._findattr('file')
+		if b is not None:
+			url = b.getvalue()
+		else:
+			url = None
+		chlist = ctx.compatchannels(url, chtype)
+		lightweight = settings.get('lightweight')
+		layoutchannels = {}
+		if not lightweight:
+			layout = MMAttrdefs.getattr(node, 'layout')
+			if layout != UNDEFINED:
+				for ch in ctx.layouts.get(layout, []):
+					layoutchannels[ch.name] = 1
+		channelnames1 = []
+		channelnames2 = self.newchannels[:]
+		channelnames3 = []
+		channelnames4 = []
+		channelnames5 = []
+		for ch in ctx.channels:
+			if lightweight or layoutchannels.has_key(ch.name):
+				if ch.get('type','') != 'layout' and ch.name in chlist:
+					channelnames1.append(ch.name)
+				else:
+					channelnames3.append(ch.name)
 			else:
-				chtype = None
-			chlist = ctx.compatchannels(None, chtype)
-			chlist.sort()
-			if not chlist and not chtype:
-				chlist = ctx.channelnames[:]
-				chlist.sort()
-				chlist = ['undefined', None] + chlist
-			return chlist or ['undefined']
-		for name in ctx.channelnames:
-			if ctx.channeldict[name].attrdict['type'] != 'layout':
-				list.append(name)
-		list.sort()
-		return ['Default', 'undefined'] + list
+				if ch.get('type','') != 'layout' and ch.name in chlist:
+					channelnames4.append(ch.name)
+				else:
+					channelnames5.append(ch.name)
+		channelnames1.sort()
+		channelnames2.sort()
+		channelnames3.sort()
+		channelnames4.sort()
+		channelnames5.sort()
+		if lightweight:
+			if channelnames1:
+				return channelnames1
+			allchannelnames = [UNDEFINED]
+			if channelnames3:
+				allchannelnames.append(None)
+				allchannelnames = allchannelnames + channelnames3
+			return allchannelnames
+		all = [UNDEFINED]
+		if channelnames1:
+			# add separator between lists
+			if all:
+				all.append(None)
+			all = all + channelnames1
+		if channelnames2:
+			# add separator between lists
+			if all:
+				all.append(None)
+			all = all + channelnames2
+		if channelnames3:
+			# add separator between lists
+			if all:
+				all.append(None)
+			all = all + channelnames3
+		if channelnames4:
+			# add separator between lists
+			if all:
+				all.append(None)
+			all = all + channelnames4
+		if channelnames5:
+			# add separator between lists
+			if all:
+				all.append(None)
+			all = all + channelnames5
+		if not self.newchannels:
+			if all:
+				all.append(None)
+			all = all + [NEW_CHANNEL]
+		return all
 
 	def channelprops(self):
 		ch = self.wrapper.context.getchannel(self.getvalue())
 		if ch is not None:
 			showchannelattreditor(self.wrapper.toplevel, ch)
+
+	def newchannelname(self):
+		base = 'NEW'
+		i = 1
+		name = base + `i`
+		channeldict = self.wrapper.context.channeldict
+		while channeldict.has_key(name):
+			i = i+1
+			name = base + `i`
+		return name
+
+	def newchan_callback(self, name = None):
+		name = name or UNDEFINED
+		if name != UNDEFINED and name not in self.wrapper.context.channelnames:
+			self.newchannels.append(name)
+		self.recalcoptions()
+		self.setvalue(name)
+			
+	def optioncb(self):
+		if self.getvalue() == NEW_CHANNEL:
+			self.askchannelname(self.newchannelname())
 
 class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current RealText channel names
@@ -1598,7 +1788,7 @@ class BaseChannelnameAttrEditorField(ChannelnameAttrEditorField):
 ##			if ch.attrdict['type'] == 'layout':
 			list.append(name)
 		list.sort()
-		return ['Default', 'undefined'] + list
+		return [DEFAULT, UNDEFINED] + list
 
 	def channelprops(self):
 		ch = self.wrapper.context.getchannel(self.getvalue())
@@ -1609,7 +1799,7 @@ class UsergroupAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	def getoptions(self):
 		list = self.wrapper.context.usergroups.keys()
 		list.sort()
-		return ['Default', 'undefined'] + list
+		return [DEFAULT, UNDEFINED] + list
 
 class ChildnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the node's children
@@ -1621,7 +1811,7 @@ class ChildnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			except NoSuchAttrError:
 				pass
 		list.sort()
-		return ['Default', 'undefined'] + list
+		return [DEFAULT, UNDEFINED] + list
 
 class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the node's children or the values LAST or FIRST
@@ -1653,14 +1843,14 @@ class ChanneltypeAttrEditorField(PopupAttrEditorField):
 			# Can happen if we open, say, a full-smil document
 			# in the G2 editor
 			all = all + [current]
-		return ['Default'] + all
+		return [DEFAULT] + all
 
 class FontAttrEditorField(PopupAttrEditorField):
 	# Choose from all possible font names
 	def getoptions(self):
 		fonts = windowinterface.fonts[:]
 		fonts.sort()
-		return ['Default'] + fonts
+		return [DEFAULT] + fonts
 
 Alltypes = alltypes[:]
 Alltypes[Alltypes.index('bag')] = 'choice'
