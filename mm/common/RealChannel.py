@@ -195,13 +195,21 @@ class RealChannel:
 			return 0
 		return 1
 
-	def playit(self, node, window = None, winpossize=None, url=None):
+	def __createplayer(self):
+		if not self.__has_rma_support:
+			return 0
 		if not self.__rmaplayer:
 			try:
-				self.__rmaplayer = self.__engine.CreatePlayer(window, winpossize)
+				self.__rmaplayer = apply(self.__engine.CreatePlayer, self.__winpos)
 			except:
 				self.__channel.errormsg(node, 'Cannot initialize RealPlayer G2 playback.')
 				return 0
+		return 1
+
+	def playit(self, node, window = None, winpossize=None, url=None):
+		self.__winpos = window, winpossize
+		if not self.__createplayer():
+			return 0
 		self.__loop = self.__channel.getloop(node)
 		duration = self.__channel.getduration(node)
 		if url is None:
@@ -242,7 +250,7 @@ class RealChannel:
 		node, window, winpossize, url = self._playargs
 		temp = self.__rmaplayer
 		self.__rmaplayer = None
-		self.prepare_player(node)
+		self.__createplayer()
 		self.__rmaplayer.SetStatusListener(self)
 		if window is not None:
 			self.__rmaplayer.SetOsWindow(window)
