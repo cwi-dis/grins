@@ -210,6 +210,12 @@
 (nonlocal (bool) 0 'Remote only' default
 	'Ignore incoming messages from local machine' raw (cmif))
 
+(close (enum onRequest whenNotActive) onRequest 'Close viewport' default
+	'When the viewport is to be closed' raw (cmif smil2 snap))
+
+(open (enum onStart whenActive) onStart 'Open viewport' default
+	'When the viewport is to be opened' raw (cmif smil2 snap))
+
 (player_winpos (tuple (float) (float)) (-1 -1) 'Player winpos' hidden
 	 'Window position for player control panel' raw (g2 qt smil10 smil2 cmif snap))
 
