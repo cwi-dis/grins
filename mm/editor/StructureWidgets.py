@@ -182,8 +182,7 @@ class MMNodeWidget(Widgets.Widget):
 
     def pasteundercall(self):
         self.root.paste(0)
-
-
+        
 class StructureObjWidget(MMNodeWidget):
     # TODO: make this inherit only from Widgets.Widget and aggregate a list.
     # A view of a seq, par, excl or something else that might exist.
@@ -821,16 +820,19 @@ class TransitionWidget(MMNodeWidget):
         self.parent = parent
 
     def select(self):
-        self.parent.select();
+        # XXXX Note: this code assumes the select() is done on mousedown, and
+        # that we can still post a menu at this time.
+        self.parent.select()
+        self.posttransitionmenu()
 
     def unselect(self):
-        self.parent.unselect();
+        self.parent.unselect()
     
     def draw(self, displist):
         if self.in_or_out is 'in':
-            displist.drawicon(self.get_box(), 'transin');
+            displist.drawicon(self.get_box(), 'transin')
         else:
-            displist.drawicon(self.get_box(), 'transout');
+            displist.drawicon(self.get_box(), 'transout')
 
     def attrcall(self):
         self.root.toplevel.setwaiting()
@@ -840,6 +842,33 @@ class TransitionWidget(MMNodeWidget):
         else:
             AttrEdit.showattreditor(self.root.toplevel, self.node, 'transOut')
 
+    def posttransitionmenu(self):
+        transitionnames = self.node.context.transitions.keys()
+        transitionnames.sort()
+        transitionnames.insert(0, 'No transition')
+        if self.in_or_out == 'in':
+            which = 'transIn'
+        else:
+            which = 'transOut'
+        curtransition = MMAttrdefs.getattr(self.node, which)
+        if not curtransition:
+            curtransition = 'No Transition'
+        if curtransition in transitionnames:
+            transitionnames.remove(curtransition)
+        transitionnames.insert(0, curtransition)
+        # XXXX Post menu and interact
+        print 'CURTRANS', curtransition, 'LIST', transitionnames
+        new = curtransition # XXXX Get from menu selection
+        if new == curtransition:
+            return
+        if new == 'No transition':
+            new = ''
+        editmgr = self.root.context.editmgr
+        if not editmgr.transaction():
+            return # Not possible at this time
+        editmgr.setnodeattr(self.node, which, new)
+        editmgr.commit()
+ 
 class PushBackBarWidget(Widgets.Widget):
     # This is a push-back bar between nodes.
     def draw(self, displist):
