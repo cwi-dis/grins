@@ -10,6 +10,7 @@
 #endif
 
 PyObject* Wingdi_CreateDCFromHandle(PyObject *self, PyObject *args);
+PyObject* Wingdi_GetDesktopDC(PyObject *self, PyObject *args);
 
 inline HDC GetHandleFromPyDC(PyObject *self)
 	{
