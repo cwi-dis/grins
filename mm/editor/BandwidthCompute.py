@@ -113,10 +113,22 @@ class BandwidthAccumulator:
 					overflow = newusedbps - maxusedbps
 			else:
 				tp = None
-			boxes.append((t0, cur_t1, oldusedbps, newusedbps, tp))
+			# Note that the boxes are for drawing only. Hence we clamp them
+			# to the [0..maxusedbps] range
+			box_lobps = oldusedbps
+			box_hibps = newusedbps
+			if box_hibps > maxusedbps:
+				box_hibps = maxusedbps
+				box_lobps = maxusedbps - usedbps
+			if box_lobps < 0:
+				box_lobps = 0
+			boxes.append((t0, cur_t1, box_lobps, box_hibps, tp))
 			self.used[i] = (t0, newusedbps, maxusedbps)
 			
-			bits = bits - usedbps*(t1-t0)
+			bits = bits - usedbps*(cur_t1-t0)
+			assert (bits >= 0)
+			if t1-t0 < 1.0 or cur_t1 >= t1:
+				assert(bits == 0)
 
 ##			if newbw > maxbw:
 ##				# Compute how much too much we've used
@@ -129,8 +141,9 @@ class BandwidthAccumulator:
 				break
 		return overflow, boxes
 		
-	def getstalltime(self):
+	def getstallinfo(self):
 		totaloverflowseconds = 0
+		stalls = []
 		t1 = self.used[0][0]
 		for t0, usedbps, maxbps in self.used:
 			if usedbps > maxbps:
@@ -138,8 +151,9 @@ class BandwidthAccumulator:
 				overflowbits = overflowbps * (t1-t0)
 				overflowseconds = overflowbits / self.initialmax
 				totaloverflowseconds = totaloverflowseconds + overflowseconds
+				stalls.append((t1, overflowseconds))
 			t1 = t0
-		return totaloverflowseconds
+		return totaloverflowseconds, stalls
 		
 ##	def prearmreserve(self, t0, t1, size):
 ##		# First pass: see whether we can do it. For each "slot"
@@ -196,6 +210,7 @@ class BandwidthAccumulator:
 def compute_bandwidth(root, seticons=1, storetiming=None):
 	"""Compute bandwidth usage of a tree. Sets error icons, and returns
 	a tuple (bandwidth, prerolltime, delaycount, errorseconds, errorcount)"""
+	assert(not storetiming) # Not implemented in this version yet
 	import settings
 	maxbandwidth = settings.get('system_bitrate')
 	prerolltime = 0
@@ -233,7 +248,8 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 ##	for t0, t1, node, prearm, bandwidth in allbandwidthdata:
 	for tp, t0, t1, node, bits, minbps, maxbps in allbandwidthdata:
 		if bits:
-			overflow, dummy = accum.reserve(t0, t1, bits, minbps, maxbps)
+			overflow, boxes = accum.reserve(t0, t1, bits, minbps, maxbps)
+			node.set_bandwidthboxes(boxes)
 ##			print 'BW', node, overflow, dummy
 			if overflow and seticons:
 				if overflow > 1000000:
@@ -282,8 +298,8 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 		for tp, t0, t1, node, bits, minbps, maxbps in allbandwidthdata:
 			if not errornodes.has_key(node):
 				node.set_infoicon('bandwidthgood')
-	errorseconds = accum.getstalltime()
-	return maxbandwidth, prerolltime, delaycount, errorseconds, errorcount
+	errorseconds, stalls = accum.getstallinfo()
+	return maxbandwidth, prerolltime, delaycount, errorseconds, errorcount, stalls
 	
 def _getallbandwidthdata(datalist, node):
 	"""Recursively get all bandwidth usage info. Modifies first argument"""
