@@ -7,7 +7,6 @@
 # - remember 'locked' over commit
 # - remember sync arc focus over commit
 # - redraw all sync arcs whenever a node is redrawn
-# - show arm colors
 # - what about group nodes?  (I'd say draw a box to display them?)
 # - store focus and locked node as attributes
 # - improve color scheme
@@ -69,6 +68,7 @@ class ChannelView(ViewDialog, GLDialog):
 	def init(self, toplevel):
 		self.toplevel = toplevel
 		self.root = self.toplevel.root
+		self.viewroot = None
 		self.context = self.root.context
 		self.editmgr = self.context.editmgr
 		self.focus = None
@@ -86,7 +86,7 @@ class ChannelView(ViewDialog, GLDialog):
 
 	def unarm_all(self):
 		if self.is_showing():
-			self.unarm_node(self.root)
+			self.unarm_node(self.viewroot)
 
 	def unarm_node(self, node):
 		self.setarmedmode(node, ARM_NONE)
@@ -105,6 +105,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.editmgr.register(self)
 		self.toplevel.checkviews()
 		# Compute objects to draw and where to draw them, then draw
+		self.setviewroot()
 		self.recalc(('b', None))
 		self.getshape()
 		self.reshape()
@@ -150,6 +151,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.cleanup()
 		if self.is_showing():
 			self.setwin()
+			self.setviewroot()
 			self.recalc(focus)
 			self.reshape()
 			self.draw()
@@ -249,7 +251,7 @@ class ChannelView(ViewDialog, GLDialog):
 	# Recompute the locations where the objects should be drawn
 
 	def reshape(self):
-		Timing.optcalctimes(self.root)
+		Timing.needtimes(self.viewroot)
 		for obj in self.objects:
 			obj.reshape()
 
@@ -270,12 +272,53 @@ class ChannelView(ViewDialog, GLDialog):
 			if focus[0] == 'c' and focus[1] == name:
 				obj.select()
 
+	# View root stuff
+
+	def setviewroot(self):
+		node = self.viewroot
+		if node <> None and node.GetRoot() <> self.root:
+			node = None
+		if node <> None and not isminidocument(node):
+			node = None
+		if node == None:
+			node = firstminidocument(self.root)
+		if node == None:
+			node = self.root
+		self.viewroot = node
+		self.fixtitle()
+
+	def nextviewroot(self):
+		self.cleanup()
+		self.viewroot = nextminidocument(self.viewroot)
+		if self.viewroot == None:
+			self.viewroot = firstminidocument(self.root)
+		self.fixtitle()
+		self.recalc(('b', None))
+		self.setwin()
+		self.reshape()
+		self.draw()
+
+	def prevviewroot(self):
+		self.cleanup()
+		self.viewroot = prevminidocument(self.viewroot)
+		if self.viewroot == None:
+			self.viewroot = lastminidocument(self.root)
+		self.fixtitle()
+		self.recalc(('b', None))
+		self.setwin()
+		self.reshape()
+		self.draw()
+
+	def fixtitle(self):
+		name = MMAttrdefs.getattr(self.viewroot, 'name')
+		self.settitle('Channel view: ' + name)
+
 	# Node stuff
 
 	def initnodes(self, focus):
-		Timing.optcalctimes(self.root)
+		Timing.needtimes(self.viewroot)
 		arcs = []
-		self.scantree(self.root, focus, arcs)
+		self.scantree(self.viewroot, focus, arcs)
 		self.objects[len(self.objects):] = self.arcs = arcs
 
 	def scantree(self, node, focus, arcs):
@@ -295,7 +338,7 @@ class ChannelView(ViewDialog, GLDialog):
 		for arc in MMAttrdefs.getattr(ynode, 'synctolist'):
 			xuid, xside, delay, yside = arc
 			xnode = ynode.MapUID(xuid)
-			if self.root.IsAncestorOf(xnode) and \
+			if self.viewroot.IsAncestorOf(xnode) and \
 				xnode.GetType() in leaftypes and \
 				MMAttrdefs.getattr(xnode, 'channel') in \
 					self.context.channelnames:
@@ -336,6 +379,74 @@ class ChannelView(ViewDialog, GLDialog):
 			self.setwin()
 			self.deselect()
 			obj.select()
+
+
+# Check whether a node is the top of a mini-document
+
+def isminidocument(node):
+	if node.GetType() == 'bag':
+		return 0
+	parent = node.GetParent()
+	return parent == None or parent.GetType() == 'bag'
+
+# Find the first mini-document in a tree
+
+def firstminidocument(node):
+	if node.GetType() <> 'bag':
+		return node
+	for child in node.GetChildren():
+		mini = firstminidocument(child)
+		if mini <> None:
+			return mini
+	return None
+
+# Find the last mini-document in a tree
+
+def lastminidocument(node):
+	if node.GetType() <> 'bag':
+		return node
+	res = None
+	for child in node.GetChildren():
+		mini = firstminidocument(child)
+		if mini <> None:
+			res = mini
+	return res
+
+# Find the next mini-document in a tree after the given one
+# Return None if this is the last one
+
+def nextminidocument(node):
+	while 1:
+		parent = node.GetParent()
+		if not parent:
+			break
+		siblings = parent.GetChildren()
+		index = siblings.index(node) # Cannot fail
+		while index+1 < len(siblings):
+			index = index+1
+			mini = firstminidocument(siblings[index])
+			if mini <> None:
+				return mini
+		node = parent
+	return None
+
+# Find the previous mini-document in a tree after the given one
+# Return None if this is the first one
+
+def prevminidocument(node):
+	while 1:
+		parent = node.GetParent()
+		if not parent:
+			break
+		siblings = parent.GetChildren()
+		index = siblings.index(node) # Cannot fail
+		while index > 0:
+			index = index-1
+			mini = lastminidocument(siblings[index])
+			if mini <> None:
+				return mini
+		node = parent
+	return None
 
 
 # Base class for Graphical Objects.
@@ -408,10 +519,10 @@ class GO:
 		totaltop = self.mother.nodetop
 		totalbottom = self.mother.height
 		totalheight = totalbottom - totaltop - gl.getheight()
-		totaltime = self.mother.root.t1 - self.mother.root.t0
+		totaltime = self.mother.viewroot.t1 - self.mother.viewroot.t0
 		if totaltime <= 0: totaltime = 1
-		starttime = node.t0 - self.mother.root.t0
-		stoptime  = node.t1 - self.mother.root.t0
+		starttime = node.t0 - self.mother.viewroot.t0
+		stoptime  = node.t1 - self.mother.viewroot.t0
 
 		# Compute the 'ideal' top/bottom
 		top = totaltop + (totalheight * starttime / totaltime)
@@ -480,6 +591,12 @@ class GO:
 		import AttrEdit
 		AttrEdit.showchannelattreditor(context, name)
 
+	def nextminicall(self):
+		self.mother.nextviewroot()
+
+	def prevminicall(self):
+		self.mother.prevviewroot()
+
 	def newchannelindex(self):
 		return len(self.mother.context.channelnames)
 
@@ -489,6 +606,8 @@ class GO:
 	commandlist = c = []
 	c.append('h', 'Help...',         helpcall)
 	c.append('c', 'New channel...',  newchannelcall)
+	c.append('N', 'Next mini-document', nextminicall)
+	c.append('P', 'Previous mini-document', prevminicall)
 	menu, menuprocs, keymap = makemenu('Base ops', commandlist)
 
 

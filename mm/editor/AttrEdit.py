@@ -211,6 +211,8 @@ class NodeWrapper(Wrapper):
 	#
 	def attrnames(self):
 		namelist = ['name', 'channel', 'closed']
+		if self.node.GetType() == 'bag':
+			namelist.append('bag_index')
 		try:
 			# Get the channel class (should be a subroutine!)
 			cname = MMAttrdefs.getattr(self.node, 'channel')

@@ -75,7 +75,8 @@ class Channel:
 			
 	def check_visible(self):
 		if self.may_show():
-			self.show()
+			if not self.is_showing():
+				self.show()
 		else:
 			self.hide()
 
