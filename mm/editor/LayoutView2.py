@@ -16,6 +16,7 @@ TYPE_ABSTRACT, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT = range(4)
 
 class Node:
 	def __init__(self, name, dict, ctx):
+		self._canShow = 1
 		self._name = name
 		self._defattrdict = dict
 		self._parent = None
@@ -46,7 +47,7 @@ class Node:
 				del self._children[ind]
 				break
 			ind = ind+1
-			
+
 	def _do_init(self, parent):
 		self._parent = parent
 		parent._children.append(self)
@@ -63,9 +64,22 @@ class Node:
 	
 	def importAttrdict(self):
 		self._curattrdict = {}
-		# no share attributes
-		pass
-	
+		
+		isExclude = self._defattrdict.get('isExclude')
+		# todo: optimize
+		if isExclude == None:
+			parent = self.getParent()
+			while parent != None:
+				isExclude = parent._defattrdict.get('isExclude')
+				if isExclude:
+					break
+				parent = parent.getParent()
+		
+			if parent == None:
+				isExclude = 0
+				
+		self._canShow = not isExclude
+			
 	def getDocDict(self):
 		return self._defattrdict
 
@@ -120,7 +134,13 @@ class Node:
 		if showEditBackground != None and showEditBackground == 1:
 			return 1
 		return 0		
-					
+
+	def isExclude(self):
+		return 0
+
+	def canShow(self):
+		return self._canShow
+	
 class Region(Node):
 	def __init__(self, name, dict, ctx):
 		Node.__init__(self, name, dict, ctx)
@@ -147,26 +167,30 @@ class Region(Node):
 		self._curattrdict['z'] = self._defattrdict.get('z')
 	
 	def show(self):
-		self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
-		self._graphicCtrl.showName(self.getShowName())		
-		self._graphicCtrl.addListener(self)
+		if self.canShow():
+			self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
+			self._graphicCtrl.showName(self.getShowName())		
+			self._graphicCtrl.addListener(self)
 
 	def showAllNodes(self):
-		self.show()
-		for child in self._children:
-			child.showAllNodes()
+		if self.canShow():
+			self.show()
+			for child in self._children:
+				child.showAllNodes()
 
 	#
 	# update of visualization attributes (not document)
 	#
 
 	def updateShowName(self,value):
-		self._graphicCtrl.showName(value)
+		if self.canShow():
+			self._graphicCtrl.showName(value)
 		
 	def updateAllShowNames(self, value):
-		self.updateShowName(value)
-		for child in self._children:
-			child.updateAllShowNames(value)
+		if self.canShow():
+			self.updateShowName(value)
+			for child in self._children:
+				child.updateAllShowNames(value)
 
 	def updateAllAsOutLines(self, value):
 		if value:
@@ -174,7 +198,8 @@ class Region(Node):
 		else:
 			self._curattrdict['transparent'] = 0
 
-		self._graphicCtrl.setAttrdict(self._curattrdict)
+		if self.canShow():
+			self._graphicCtrl.setAttrdict(self._curattrdict)
 
 		for child in self._children:
 			child.updateAllAsOutLines(value)
@@ -200,6 +225,11 @@ class Region(Node):
 	def onProperties(self):
 		self._ctx.selectBgColor(self)
 
+	def isExclude(self):
+		isExclude = self._defattrdict.get('isExclude')
+		
+		return isExclude
+	
 class MediaRegion(Region):
 	def __init__(self, name, node, ctx):
 		self.mmnode = node
@@ -258,6 +288,9 @@ class MediaRegion(Region):
 		self._ctx.onPreviousSelectMedia(self)
 
 	def show(self):
+		if not self.canShow():
+			return
+			
 		self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
 		self._graphicCtrl.showName(0)		
 		self._graphicCtrl.addListener(self)
@@ -382,7 +415,7 @@ class Viewport(Node):
 
 	def onProperties(self):
 		self._ctx.selectBgColor(self)
-		
+
 ###########################
 
 class LayoutView2(LayoutViewDialog2):
@@ -403,8 +436,10 @@ class LayoutView2(LayoutViewDialog2):
 
 		self.lastViewportNameSelected = None
 		self.currentRegionNameList = []
+		self.currentRegionNameListSel = []
 		self.lastRegionNameSelected = None
 		self.currentMediaRegionList = []
+		self.currentMediaRegionListSel = []
 		self.lastMediaNameSelected = None
 		
 		# init state of different dialog controls
@@ -472,7 +507,6 @@ class LayoutView2(LayoutViewDialog2):
 	def globalfocuschanged(self, focustype, focusobject):
 		from MMNode import MMNode
 
-		lastSelectedObject = self.currentNodeSelected
 		# ensure that the last media selected node will be removed
 		self.unSetMediaNode()
 		
@@ -481,22 +515,17 @@ class LayoutView2(LayoutViewDialog2):
 			self.setMediaNode(focusobject)
 			
 		if len(self.currentMediaRegionList) > 0:
-			self.fillMediaListOnDialogBox()
-			self.enableMediaListOnDialogBox()
 			firstMediaRegion, parentRegion = self.currentMediaRegionList[0]
-			self.currentNodeSelected = firstMediaRegion
-			firstMediaRegion.select()
-			self.updateMediaOnDialogBox(firstMediaRegion)
+			self.select(firstMediaRegion)
 		else:			
 			# if no media selected any more desactive the media selecter
 			self.disableMediaListOnDialogBox()
 			# active the region of the last selected media
 			if self.currentNodeSelected.getNodeType() == TYPE_MEDIA:				
+				self.currentNodeSelected.hide()
 				region = self.currentNodeSelected.getParent()
 				if region != None:
-					self.currentNodeSelected.hide()
-					region.select()
-					self.updateRegionOnDialogBox(region)					
+					self.select(region)
 				
 	def kill(self):
 		self.destroy()
@@ -545,17 +574,10 @@ class LayoutView2(LayoutViewDialog2):
 		for viewportName in viewportNameList:	
 			viewport = self._viewports[viewportName]
 			viewport.updateAllAttrdict()
+		self.updateExcludeRegionOnDialogBox()
+			
 		if self.currentNodeSelected != None:
-			self.currentNodeSelected.select()
-
-			# update dialog box as well
-			nodeType = self.currentNodeSelected.getNodeType()
-			if nodeType == TYPE_VIEWPORT:
-				self.updateViewportOnDialogBox(self.currentNodeSelected)
-			elif nodeType == TYPE_REGION:
-				self.updateRegionOnDialogBox(self.currentNodeSelected)
-			elif nodeType == TYPE_MEDIA:
-				self.updateMediaOnDialogBox(self.currentNodeSelected)
+			self.select(self.currentNodeSelected)
 
 	def unSetMediaNode(self):
 		if len(self.currentMediaRegionList) > 0:
@@ -588,6 +610,7 @@ class LayoutView2(LayoutViewDialog2):
 		# add the list of new media regions
 		for mediaRegion, parentRegion in self.currentMediaRegionList:
 			parentRegion.addNode(mediaRegion)
+			mediaRegion.importAttrdict()
 			mediaRegion.show()
 						
 	# extra pass to initialize map the region name list to the node object
@@ -597,6 +620,31 @@ class LayoutView2(LayoutViewDialog2):
 			self._nameToRegionNode[regionName] = node
 		for child in node._children:
 			self.__initRegionList(child,0)
+
+	# general method for select a node
+	# the rule is
+	#    if the current node can't be displayed, go up into the hierarchy, and display the first found
+	def select(self, node):
+		sNode = node
+		while sNode != None:
+			if sNode.canShow():
+				break
+			sNode = sNode.getParent()
+
+		if sNode != None:
+			self.currentNodeSelected = sNode
+
+			# select the node in layout area
+			sNode.select()
+			
+			# update dialog box as well
+			nodeType = sNode.getNodeType()
+			if nodeType == TYPE_VIEWPORT:
+				self.updateViewportOnDialogBox(sNode)
+			elif nodeType == TYPE_REGION:
+				self.updateRegionOnDialogBox(sNode)
+			elif nodeType == TYPE_MEDIA:
+				self.updateMediaOnDialogBox(sNode)
 
 	def getViewportList(self):
 		return self._viewportsRegions.keys()
@@ -620,9 +668,7 @@ class LayoutView2(LayoutViewDialog2):
 			
 		self.currentViewport = self._viewports[name]
 		self.currentViewport.showAllNodes()
-		self.currentViewport.select()
-		self.updateViewportOnDialogBox(self.currentViewport)
-		self.currentNodeSelected = self.currentViewport
+		self.select(self.currentViewport)
 
 	def selectBgColor(self, node):
 		if node.getNodeType() != TYPE_MEDIA:
@@ -783,6 +829,15 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.setchannelattr(node.getName(), 'transparent', transparent)
 			self.editmgr.commit()
 
+	def applyIsExclude(self, region, value):
+		# test if possible 
+		if self.editmgr.transaction():
+			if value:
+				self.editmgr.setchannelattr(region.getName(), 'isExclude', 1)
+			else:
+				self.editmgr.setchannelattr(region.getName(), 'isExclude', None)
+			self.editmgr.commit()
+
 	def applyZOrderOnRegion(self, region, value):
 		# test if possible 
 		if self.editmgr.transaction():
@@ -803,6 +858,22 @@ class LayoutView2(LayoutViewDialog2):
 				for name, value in attrList:
 					self.editmgr.setchannelattr(node.getName(), name, value)
 				self.editmgr.commit()
+
+	def updateExcludeRegionOnDialogBox(self):
+		# set exclude region name list
+		excludeList = []
+		ind = 0
+		for regionName in self.currentRegionNameList:
+			regionNode = self.getRegion(regionName)
+			if regionNode != None:
+				if regionNode.isExclude():
+					self.dialogCtrl.setMultiSelecterCtrl('RegionList', ind, 1)
+					excludeList.append(regionName)
+				else:
+					self.dialogCtrl.setMultiSelecterCtrl('RegionList', ind, 0)
+			ind = ind+1
+			
+		self.currentExcludeRegionNameList = excludeList
 		
 	def updateViewportOnDialogBox(self, viewport):
 		# update region list
@@ -812,10 +883,12 @@ class LayoutView2(LayoutViewDialog2):
 			self.lastRegionNameSelected = None
 			self.lastViewportNameSelected = viewportName
 			
-		self.dialogCtrl.fillSelecterCtrl('RegionSel', self.currentRegionNameList)
-		self.currentExcludeRegionNameList = self.currentRegionNameList
-		self.dialogCtrl.fillMultiSelCtrl('RegionList', self.currentExcludeRegionNameList)
+		self.fillRegionListOnDialogBox()
+		self.fillMediaListOnDialogBox()
 
+		self.dialogCtrl.fillMultiSelCtrl('RegionList', self.currentRegionNameList)
+		self.updateExcludeRegionOnDialogBox()
+	
 		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
 			
 		# get the current geom value
@@ -860,6 +933,9 @@ class LayoutView2(LayoutViewDialog2):
 	def updateRegionOnDialogBox(self, region):
 		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
 
+		self.fillRegionListOnDialogBox()
+		self.fillMediaListOnDialogBox()
+
 		self.lastRegionNameSelected = region.getName()
 								
 		# enable valid fields
@@ -889,8 +965,8 @@ class LayoutView2(LayoutViewDialog2):
 		self.updateRegionGeomOnDialogBox(geom)
 
 		# update the selecter
-		if self.currentRegionNameList != None:
-			index = self.currentRegionNameList.index(region.getName())
+		if len(self.currentRegionNameListSel) > 0:
+			index = self.currentRegionNameListSel.index(region.getName())
 			if index >= 0:
 				self.dialogCtrl.setSelecterCtrl('RegionSel',index)
 		self.dialogCtrl.setCheckCtrl('ViewportCheck',0)
@@ -905,32 +981,70 @@ class LayoutView2(LayoutViewDialog2):
 
 	def fillMediaListOnDialogBox(self):
 		list = []
+		self.currentMediaNameList = []
 		for mediaRegion, parentRegion in self.currentMediaRegionList:
 			mmnode = mediaRegion.mmnode
-			list.append(mmnode.attrdict.get('name'))
-		self.currentMediaNameList = list
-		self.dialogCtrl.fillSelecterCtrl('MediaSel', self.currentMediaNameList)
+			name = mmnode.attrdict.get('name')
+			if mediaRegion.canShow():
+				list.append(name)
+			self.currentMediaNameList.append(name)
+			
+		self.currentMediaNameListSel = list
+			
+		if len(list) > 0:
+			self.dialogCtrl.fillSelecterCtrl('MediaSel', list)
+			self.enableMediaListOnDialogBox()
+		else:
+			self.disableMediaListOnDialogBox()
 
 	def disableMediaListOnDialogBox(self):
 		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)		
 		self.dialogCtrl.enable('MediaSel',0)
-		self.currentMediaNameList = None
 		self.dialogCtrl.enable('MediaCheck', 0)
 
 	def enableMediaListOnDialogBox(self):
 		self.dialogCtrl.enable('MediaSel',1)
 		self.dialogCtrl.enable('MediaCheck', 1)
+
+	def fillRegionListOnDialogBox(self):
+		list = []
+		for regionName in self.currentRegionNameList:
+			region = self.getRegion(regionName)
+			if region != None:
+				name = region.getName()
+				if region.canShow():
+					list.append(name)
+						
+		self.currentRegionNameListSel = list
+		if len(list) > 0:
+			self.dialogCtrl.fillSelecterCtrl('RegionSel', list)
+			self.enableRegionListOnDialogBox()
+		else:
+			self.disableRegionListOnDialogBox()
+
+	def disableRegionListOnDialogBox(self):
+		self.dialogCtrl.setSelecterCtrl('RegionSel',-1)		
+		self.dialogCtrl.enable('RegionSel',0)
+		self.dialogCtrl.enable('RegionCheck', 0)
+
+	def enableRegionListOnDialogBox(self):
+		self.dialogCtrl.enable('RegionSel',1)
+		self.dialogCtrl.enable('RegionCheck', 1)
 		
 	def updateMediaOnDialogBox(self, media):
 		mmnode = media.mmnode
 		mediaName = mmnode.attrdict.get('name')
 		self.lastMediaNameSelected = mediaName
+		
+		self.fillRegionListOnDialogBox()
+		self.fillMediaListOnDialogBox()
+			
 		# update the media selecter
-		if self.currentMediaNameList != None:
-			index = self.currentMediaNameList.index(mediaName)
+		if len(self.currentMediaNameListSel) > 0:
+			index = self.currentMediaNameListSel.index(mediaName)
 			if index >= 0:
 				self.dialogCtrl.setSelecterCtrl('MediaSel',index)
-			
+
 		# update the region selecter
 		region = media.getParent()
 		regionName = region.getName()
@@ -970,10 +1084,35 @@ class LayoutView2(LayoutViewDialog2):
 		self.updateRegionGeomOnDialogBox(geom)
 
 	def excludeRegionList(self, regionListIndex):
-		pass
-#		for index in regionListIndex:
-#			if currentExcludeRegionNameList != None:
-#				break
+		# looking for the element which has changed
+		regionName = None
+		for index in regionListIndex:
+			item = self.currentRegionNameList[index]
+			try:
+				self.currentExcludeRegionNameList.index(item)
+			except:
+				# select
+				value = 1
+				regionName = item
+				break
+			
+		if regionName == None:
+			# not found yet
+			for item in self.currentExcludeRegionNameList:
+				ind = self.currentRegionNameList.index(item)
+				try:
+					regionListIndex.index(ind)
+				except:
+					# unselect
+					value = 0
+					regionName = item
+					break
+
+		# if found
+		if regionName != None:
+			region = self.getRegion(regionName)
+			if region != None:
+				self.applyIsExclude(region, value)
 		
 	#
 	# internal methods
@@ -1057,10 +1196,8 @@ class LayoutView2(LayoutViewDialog2):
 			
 		region = self.getRegion(name)
 		if region != None:
-			region.select()
+			self.select(region)
 			self.lastRegionNameSelected = name
-			self.currentNodeSelected = region												
-			self.updateRegionOnDialogBox(region)
 
 	def __selectMedia(self, name=None):
 		if name == None:
@@ -1071,10 +1208,8 @@ class LayoutView2(LayoutViewDialog2):
 				
 		media = self.getMedia(name)
 		if media != None:
-			media.select()
+			self.select(media)
 			self.lastMediaNameSelected = name
-			self.currentNodeSelected = media
-			self.updateMediaOnDialogBox(media)
 
 	def __showEditBackground(self, value):
 		node = self.currentNodeSelected
