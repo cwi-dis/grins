@@ -807,13 +807,15 @@
 #define IDUC_BRUSH                      32897
 #define IDUC_REGION                     32898
 #define IDUC_TOPLAYOUT                  32899
+#define IDUC_ZOOMIN                     32900
+#define IDUC_ZOOMOUT                    32901
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        464
-#define _APS_NEXT_COMMAND_VALUE         32900
+#define _APS_NEXT_COMMAND_VALUE         32902
 #define _APS_NEXT_CONTROL_VALUE         1466
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

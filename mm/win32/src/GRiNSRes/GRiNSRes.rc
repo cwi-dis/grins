@@ -1917,10 +1917,6 @@ IDD_LAYOUT_T2 DIALOG DISCARDABLE  0, 0, 313, 123
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    PUSHBUTTON      "",IDC_ZOOMIN,59,3,14,12,BS_ICON | BS_CENTER | 
-                    BS_VCENTER | NOT WS_VISIBLE
-    PUSHBUTTON      "",IDC_ZOOMOUT,77,3,14,12,BS_ICON | BS_CENTER | 
-                    BS_VCENTER | NOT WS_VISIBLE
     LTEXT           "",IDC_TREEFOCUS,100,4,38,9,WS_TABSTOP
     LTEXT           "",IDC_PANEFOCUS,151,4,38,9,WS_TABSTOP
     EDITTEXT        IDC_LAYOUT_REGION_X,6,62,23,14,ES_AUTOHSCROLL | 
@@ -3492,6 +3488,8 @@ BEGIN
     BUTTON      IDUC_BRUSH
     BUTTON      IDUC_REGION
     BUTTON      IDUC_TOPLAYOUT
+    BUTTON      IDUC_ZOOMIN
+    BUTTON      IDUC_ZOOMOUT
 END
 
 IDR_TB_COMMON TOOLBAR DISCARDABLE  16, 15
@@ -3633,6 +3631,8 @@ BEGIN
     IDUC_BRUSH              "Create brush node\nCreate brush node"
     IDUC_REGION             "Create region\nCreate region"
     IDUC_TOPLAYOUT          "Create TopLayout\nCreate TopLayout"
+    IDUC_ZOOMIN             "Zoom in\nZoom in"
+    IDUC_ZOOMOUT            "Zoom out\nZoom out"
 END
 
 #endif    // English (U.S.) resources
