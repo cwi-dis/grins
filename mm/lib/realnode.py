@@ -88,7 +88,7 @@ class SlideShow:
 			else:
 				if is_data:
 					file = None
-					baseurl = ctx.findurl('')
+					baseurl = ''
 				else:
 					file = url
 					baseurl = ourl
