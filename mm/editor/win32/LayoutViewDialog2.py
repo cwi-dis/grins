@@ -7,9 +7,6 @@ from usercmd import *
 IMPL_AS_FORM=1
 
 class LayoutViewDialog2:
-	# xxx temporarly. Should be move in another module
-	DROPEFFECT_NONE = appcon.DROPEFFECT_NONE
-	DROPEFFECT_MOVE = appcon.DROPEFFECT_MOVE
 	
 	def __init__(self):
 		self.__window=None

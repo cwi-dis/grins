@@ -39,6 +39,7 @@ from fmtfloat import fmtfloat
 from appcon import *
 
 from GenFormView import GenFormView
+import DropTarget
 
 class _LayoutView2(GenFormView):
 	def __init__(self,doc,bgcolor=None):
@@ -646,11 +647,13 @@ class TreeManager:
 
 	def OnDragOver(self, item, type, objectId):
 		if self._listener != None:
-			return self._listener.onDragOver(item, type, objectId)
+			effect = self._listener.onDragOver(item, type, objectId)
+			return DropTarget.Name2DragEffect(effect)
 
 	def OnDrop(self, item, type, objectId):
 		if self._listener != None:
-			return self._listener.onDrop(item, type, objectId)
+			effect = self._listener.onDrop(item, type, objectId)
+			return DropTarget.Name2DragEffect(effect)
 
 	#
 	#  popup menu

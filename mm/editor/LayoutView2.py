@@ -470,7 +470,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.commandViewportList = [
 				ATTRIBUTES(callback = (self.onSelectBgColor, ())),
 				]
-		self.__appendZoomCommands(self.commandViewportList)
+		self.__appendCommonCommands(self.commandViewportList)
 
 	def mkregioncommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
@@ -487,7 +487,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.commandRegionList = [
 				ATTRIBUTES(callback = (self.onSelectBgColor, ())),
 				]
-		self.__appendZoomCommands(self.commandRegionList)
+		self.__appendCommonCommands(self.commandRegionList)
 
 	def mkmediacommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
@@ -503,7 +503,7 @@ class LayoutView2(LayoutViewDialog2):
 		else:
 			self.commandMediaList = []
 		self.commandMediaList.append(CONTENT(callback = (self.onContent, ())))
-		self.__appendZoomCommands(self.commandMediaList)
+		self.__appendCommonCommands(self.commandMediaList)
 			
 	def mknositemcommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
@@ -512,7 +512,7 @@ class LayoutView2(LayoutViewDialog2):
 				]
 		else:
 			self.commandNoSItemList = []
-		self.__appendZoomCommands(self.commandNoSItemList)
+		self.__appendCommonCommands(self.commandNoSItemList)
 
 	# available command when several items are selected
 	def mkmultisitemcommandlist(self):
@@ -525,7 +525,7 @@ class LayoutView2(LayoutViewDialog2):
 				]
 		else:
 			self.commandMultiSItemList = []		
-		self.__appendZoomCommands(self.commandMultiSItemList)
+		self.__appendCommonCommands(self.commandMultiSItemList)
 		
 	def mkmultisiblingsitemcommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
@@ -538,11 +538,13 @@ class LayoutView2(LayoutViewDialog2):
 		else:
 			self.commandMultiSiblingSItemList = []
 		self.__appendAlignCommands()
-		self.__appendZoomCommands(self.commandMultiSiblingSItemList)
+		self.__appendCommonCommands(self.commandMultiSiblingSItemList)
 
-	def __appendZoomCommands(self, commandlist):
+	def __appendCommonCommands(self, commandlist):
 		commandlist.append(CANVAS_ZOOM_IN(callback = (self.onZoomIn, ())))
 		commandlist.append(CANVAS_ZOOM_OUT(callback = (self.onZoomOut, ())))
+		commandlist.append(DRAG_TOPLAYOUT())
+		commandlist.append(DRAG_REGION())
 			
 	def __appendAlignCommands(self):
 		self.commandMultiSiblingSItemList.append(ALIGN_LEFT(callback = (self.onAlignLeft, ())))
@@ -1729,7 +1731,7 @@ class LayoutView2(LayoutViewDialog2):
 	def newViewport(self):
 		# choice a default name which doesn't exist		
 		channeldict = self.context.channeldict
-		baseName = 'viewport'
+		baseName = 'TopLayout'
 		i = 1
 		name = baseName + `i`
 		while channeldict.has_key(name):
@@ -1783,7 +1785,7 @@ class LayoutView2(LayoutViewDialog2):
 	# move the source node into a target node
 	def moveNode(self, sourceNodeRef, targetNodeRef):
 		if not self.isValidMove(sourceNodeRef, targetNodeRef):
-			return 0
+			return None
 		
 		sourceNodeType = self.getNodeType(sourceNodeRef)
 		targetNodeType = self.getNodeType(targetNodeRef)
@@ -1799,7 +1801,7 @@ class LayoutView2(LayoutViewDialog2):
 #				self.editmgr.setchannelattr(sourceNodeRef.name, 'base_window', targetNodeRef.name)
 				self.editmgr.commit('REGION_TREE')
 
-		return 1
+		return 'move'
 	
 	# checking if the region/viewport node contains any sub-region or media
 	def isEmpty(self, nodeRef):
@@ -2383,28 +2385,54 @@ class TreeWidget(Widget):
 			try:
 				nodeRef = self._context.context.mapuid(objectId)
 			except:
-				nodeRef = None
+				pass
 						
 		elif type == 'Region':
 			# retrieve the reference of the source node
 			nodeRef = self._context.context.getchannel(objectId)
-
 		return nodeRef			
 		
 	def onDragOver(self, nodeTreeCtrlId, type, objectId):
 		targetNodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
-		sourceNodeRef = self.__dragObjectIdToNodeRef(type, objectId)
-		if self._context.isValidMove(sourceNodeRef, targetNodeRef):
-			# XXX should change
-			return LayoutViewDialog2.DROPEFFECT_MOVE
-		else:
-			# XXX should change
-			return LayoutViewDialog2.DROPEFFECT_NONE
+		if type == 'Tool':
+			if objectId == DRAG_TOPLAYOUT:
+				# Viewports can only be dragged to "nowhere"
+				if targetNodeRef == None:
+					return 'copy'
+			elif objectId == DRAG_REGION:
+				# Regions can be dragged to viewports or regions
+				if targetNodeRef and \
+						targetNodeRef.getClassName() != 'MMNode':
+					return 'copy'
+			# Otherwise we can't drop it here.
+			return None
+		elif type in ('Region', 'Media'):
+			sourceNodeRef = self.__dragObjectIdToNodeRef(type, objectId)
+			if self._context.isValidMove(sourceNodeRef, targetNodeRef):
+				return 'move'
+		return None
 
 	def onDrop(self, nodeTreeCtrlId, type, objectId):
 		targetNodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
-		sourceNodeRef = self.__dragObjectIdToNodeRef(type, objectId)
-		return self._context.moveNode(sourceNodeRef, targetNodeRef)
+		if type == 'Tool':
+			if objectId == DRAG_TOPLAYOUT:
+				# Viewports can only be dragged to "nowhere"
+				if targetNodeRef == None:
+					self._context.flushChangement() # XXXX Is this needed?
+					self._context.newViewport()
+					return 'copy'
+			elif objectId == DRAG_REGION:
+				# Regions can be dragged to viewports or regions
+				if targetNodeRef and \
+						targetNodeRef.getClassName() != 'MMNode':
+					self._context.flushChangement() # XXXX Is this needed?
+					self._context.newRegion(targetNodeRef)
+					return 'copy'
+			# Otherwise we can't drop it here.
+			return None
+		elif type in ('Region', 'Media'):
+			sourceNodeRef = self.__dragObjectIdToNodeRef(type, objectId)
+			return self._context.moveNode(sourceNodeRef, targetNodeRef)
 						   
 class PreviousWidget(Widget):
 	def __init__(self, context):
