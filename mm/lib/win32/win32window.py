@@ -1950,7 +1950,13 @@ class Region(Window):
 			self._scalesurf = None
 
 		self._mediacoords = mediacoords
-										
+
+		if self._mediacoords and self._fromsurf and self._transition:
+			tr = self._transition
+			self._transition = None
+			self._fromsurf = self.getBackDDS()
+			self._transition = tr
+											
 		# resize/move
 		self._rect = 0, 0, w, h # client area in pixels
 		self._canvas = 0, 0, w, h # client canvas in pixels
