@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Multiple choice modal dialog using FORMS.
 
 import fl, FL
