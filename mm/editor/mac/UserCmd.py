@@ -93,12 +93,12 @@ MENUBAR=(
 		(ENTRY, 'New', 'N', NEW_DOCUMENT),
 		(ENTRY, 'Open URL...', 'U', OPEN_URL),
 		(ENTRY, 'Open...', 'O', OPEN_FILE),
-		(ENTRY, 'Close', 'W', CLOSE_WINDOW),
+		(ENTRY, 'Close window', 'W', CLOSE_WINDOW),
+		(ENTRY, 'Close document', None, CLOSE),
 		(SEP,),
 		(ENTRY, 'Save', 'S', SAVE),
 		(ENTRY, 'Save as...', None, SAVE_AS),
 		(ENTRY, 'Restore', None, RESTORE),
-		(ENTRY, 'Close document', None, CLOSE),
 		(SEP,),
 		(CASCADE, 'Debug', (
 			(TOGGLE, 'Enable call tracing', None, TRACE),
@@ -137,10 +137,11 @@ MENUBAR=(
 		(TOGGLE, 'Channel/timeline', '3', CHANNELVIEW),
 		(TOGGLE, 'Hyperlinks', '4', LINKVIEW),
 		(SEP,),
-		(CASCADE, 'Canvas size', (
-			(ENTRY, 'Enlarge width', None, CANVAS_WIDTH),
-			(ENTRY, 'Enlarge height', None, CANVAS_HEIGHT),
-			(ENTRY, 'Reset', None, CANVAS_RESET))),
+## Not yet implemented:
+##		(CASCADE, 'Canvas size', (
+##			(ENTRY, 'Enlarge width', None, CANVAS_WIDTH),
+##			(ENTRY, 'Enlarge height', None, CANVAS_HEIGHT),
+##			(ENTRY, 'Reset', None, CANVAS_RESET))),
 		(ENTRY, 'Zoom in', None, ZOOMIN),
 		(ENTRY, 'Zoom out', None, ZOOMOUT),
 		(ENTRY, 'Zoom to focus', 'Z', ZOOMHERE),
