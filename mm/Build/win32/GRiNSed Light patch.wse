@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=1183607400
+  File Checksum=2586989565
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1420,14 +1420,6 @@ item: Install File
   Patch Previous=
 end
 item: End Block
-end
-item: Install File
-  Source=C:\Program Files\Wise InstallMaker\Unwise.exe
-  Destination=%MAINDIR%\Unwise.exe
-  Flags=0000000010000010
-  Patch Existing=%MAINDIR%\Unwise.exe
-  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2L\Unwise.exe
-  Patch Previous=
 end
 item: If/While Statement
   Variable=COMPONENTS
