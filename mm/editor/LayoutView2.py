@@ -907,8 +907,9 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentTimeValue = currentTimeValue
 		self.isAKeyTime = 0
 		keyTimeIndex = self.getKeyForThisTime(timeList, currentTimeValue)
-		if self.currentKeyTimeIndex != keyTimeIndex:
+		if not keyTimeIndex is None:
 			self.isAKeyTime = 1
+		if self.currentKeyTimeIndex != keyTimeIndex:
 			self.timeValueChanged = 1
 		self.currentKeyTimeIndex = keyTimeIndex
 
