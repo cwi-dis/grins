@@ -20,10 +20,11 @@ class ImageWindow() = (glwindow.glwindow)():
 		self.attrdict = attrdict
 		self.process = None # Initially, no process
 		self.filename = None # Nor a filename
+		self.wid = 0 # Nor a window
 		return self
 	#
 	def show(self):
-		# Get the window size (given in lines and characters!)
+		# Get the window size
 		if self.attrdict.has_key('winsize'):
 			width, height = self.attrdict['winsize']
 		else:
