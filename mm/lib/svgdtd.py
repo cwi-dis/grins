@@ -158,7 +158,7 @@ class SVG:
 		'restart': 'always',
 		'repeatCount': None,
 		'repeatDur': None,
-		'fill': 'remove',}
+		'fill': 'remove','smil:fill':'remove',}
 	attrset['%animValueAttrs'] = {'values': None,
 		'keyTimes': None,
 		'keySplines': None,
@@ -207,6 +207,17 @@ class SVG:
 		    'accelerate':None,
 		    'decelerate':None,
 		    'autoReverse':None,}
+		attrset['%timeIntegration'] = {'timeContainer':'none',
+		    'timeAction':'intrinsic',}
+		attrset['%timeContainers'] = {'endsync':None,}
+		attrset['%extraTiming'] = {'fillDefault':None,
+		    'restart':None,
+		    'restartDefault':None,
+		    'syncBehavior':None,
+		    'syncBehaviorDefault':None,
+		    'syncMaster':None,
+		    'syncTolerance':None,
+		    'syncToleranceDefault':None,}
 
 	##############
 	# attributes
@@ -629,8 +640,12 @@ class SVG:
 	__dtm = ['desc', 'title', 'metadata']
 
 	__animations = ['animate','set','animateMotion','animateColor','animateTransform',]
+	__timeContainers = ['par', 'seq', 'excl',]
 
 	__core = __dtm + __animations
+	if smil2extensions:
+		for name in __timeContainers:
+			__core.append(name)
 
 	__lineArt = ['path','text','rect','circle','ellipse','line','polyline','polygon',]
 	
@@ -649,6 +664,9 @@ class SVG:
              'linearGradient','radialGradient','pattern','filter','cursor','font',
              'animate','set','animateMotion','animateColor','animateTransform',
              'color-profile','font-face']
+	if smil2extensions:
+		for name in __timeContainers:
+			__svg.append(name)
 
 	entities['#document'] = ['svg', ]
 	entities['svg'] = __svg      	
@@ -708,10 +726,14 @@ class SVG:
 	entities['font-face'] = __dtm	+ ['font-face-src', 'definition-src', ]
 	entities['font-face-src'] = ['font-face-uri', 'font-face-name', ]
 	entities['font-face-uri'] = ['font-face-format', ]
-	
+
+	if smil2extensions:
+		for name in __timeContainers:
+			entities[name] = __svg
 
 	dataEntities = ['title', 'desc', 'text', ]
 	cdataEntities = ['style', ]
+	timeEntities = __animations + __timeContainers
 
 	##############
 	# update element sets with std collections
@@ -722,17 +744,31 @@ class SVG:
 			if attr[0]=='%': # attr set macro
 				attributes[__el].update(attrset[attr])
 				del attributes[__el][attr]
+			
+	if smil2extensions:
+		del attrset['%animTimingAttrs']['fill']
+		for __el in attributes.keys():
+			if entities.get(__el) and 'set' in entities[__el]:
+				attributes[__el].update(attrset['%animTimingAttrs'])
+				attributes[__el].update(attrset['%extraTiming'])
+
 	del __el
 
 	##############
 	if smil2extensions:
 		for name in __animations:
 			attributes[name].update(attrset['%timeManipulations'])
-
+		for name in ('svg', 'g'):
+			attributes[name].update(attrset['%timeIntegration'])
+			attributes[name].update(attrset['%timeContainers'])
+		for name in __timeContainers:
+			attributes[name] = attrset['%animationCore'].copy()
+			attributes[name].update(attrset['%timeContainers'])
 	##############
 	# cleanup
 	del __dtm
 	del __animations
+	del __timeContainers
 	del __core
 	del __lineArt
 	del __controlsCore
@@ -789,5 +825,23 @@ def PrintDOMAttrs():
 		print entry
 	print '\t}',
 
+def PrintSelDOMAttrs():
+	svgelements = SVG.attributes.keys()
+	elements = ['svg',]
+	attrdict = {}
+	for tag in elements:
+		attrs = SVG.attributes[tag]
+		for name, defval in attrs.items():
+			attrdict[name] = defval
+	print '# svg attribute defs'
+	print 'SVGAttrdefs = {',
+	keys = attrdict.keys()
+	keys.sort()
+	for name in keys:
+		defval = attrdict[name]
+		entry = '\t%s: (stringtype, %s),' % (`name`, `defval`)
+		print entry
+	print '\t}',
+
 if __name__ == '__main__':
-	PrintDOMAttrs()
+	PrintSelDOMAttrs()
