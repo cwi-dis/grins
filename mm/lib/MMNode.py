@@ -44,14 +44,14 @@ class MMNodeContext:
 		self.baseurl = baseurl
 		self.baseurlset = 1
 
-	def findurl(self, filename):
+	def findurl(self, url):
 		"Locate a file given by url-style filename."
-		urltype, urlpath = MMurl.splittype(filename)
-		if urltype or filename[:1] == '/':
-			return filename
+##		urltype, urlpath = MMurl.splittype(url)
+##		if urltype or url[:1] == '/':
+##			return url
 		if self.baseurl:
-			filename = MMurl.basejoin(self.baseurl, filename)
-		return filename
+			url = MMurl.basejoin(self.baseurl, url)
+		return url
 
 	def newnode(self, type):
 		return self.newnodeuid(type, self.newuid())
