@@ -1393,27 +1393,27 @@ class ModelessInputDialog(InputDialog):
 		return self._obj_.OnCancel()
 
 # Displays a message and requests from the user to select Yes or No or Cancel
-def GetYesNoCancel(prompt,parent=None):
+def GetYesNoCancel(prompt,parent=None,title='GRiNS'):
 	if parent:m=parent
 	else: m=win32ui
-	res=m.MessageBox(prompt,'GRiNS Editor',win32con.MB_YESNOCANCEL|win32con.MB_ICONQUESTION)
+	res=m.MessageBox(prompt,title,win32con.MB_YESNOCANCEL|win32con.MB_ICONQUESTION)
 	if res==win32con.IDYES:return 0
 	elif res==win32con.IDNO:return 1
 	else: return 2
 	
 # Displays a message and requests from the user to select OK or Cancel
-def GetOKCancel(prompt,parent=None):
+def GetOKCancel(prompt,parent=None,title='GRiNS'):
 	if parent:m=parent
 	else: m=win32ui
-	res=m.MessageBox(prompt,'GRiNS Editor',win32con.MB_OKCANCEL|win32con.MB_ICONQUESTION)
+	res=m.MessageBox(prompt,title,win32con.MB_OKCANCEL|win32con.MB_ICONQUESTION)
 	if res==win32con.IDOK:return 0
 	else: return 1
 
 # Displays a message and requests from the user to select Yes or Cancel
-def GetYesNo(prompt,parent=None):
+def GetYesNo(prompt,parent=None,title='GRiNS'):
 	if parent:m=parent
 	else: m=win32ui
-	res=m.MessageBox(prompt,'GRiNS Editor',win32con.MB_YESNO|win32con.MB_ICONQUESTION)
+	res=m.MessageBox(prompt,title,win32con.MB_YESNO|win32con.MB_ICONQUESTION)
 	if res==win32con.IDYES:return 0
 	else: return 1
 	
