@@ -148,6 +148,44 @@ SetMapMode(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", fnOldMapMode);
 }
 
+static char SetWindowExtEx__doc__[] =
+"sets the horizontal and vertical extents of the window for a device context"
+;
+static PyObject*
+SetWindowExtEx(PyObject *self, PyObject *args)
+{
+	HDC hdc;
+	SIZE s;
+	if (!PyArg_ParseTuple(args, "i(ii)", &hdc, &s.cx, &s.cy))
+		return NULL;
+	SIZE sold;
+	BOOL res = SetWindowExtEx(hdc, s.cx, s.cy, &sold);
+	if(!res){
+		seterror("SetWindowExtEx", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("ii", sold.cx, sold.cy);
+}
+
+static char GetWindowExtEx__doc__[] =
+"retrieves the x-extent and y-extent of the window"
+;
+static PyObject*
+GetWindowExtEx(PyObject *self, PyObject *args)
+{
+	HDC hdc;
+	if (!PyArg_ParseTuple(args, "i", &hdc))
+		return NULL;
+	SIZE s;
+	BOOL res = GetWindowExtEx(hdc, &s);
+	if(!res){
+		seterror("GetWindowExtEx", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("ii", s.cx, s.cy);
+}
+
+
 static char SetViewportExtEx__doc__[] =
 "sets the horizontal and vertical extents of the viewport"
 ;
@@ -990,6 +1028,8 @@ static struct PyMethodDef wingdi_methods[] = {
 	{"RestoreDC", (PyCFunction)RestoreDC, METH_VARARGS, RestoreDC__doc__},
 	{"SetGraphicsMode", (PyCFunction)SetGraphicsMode, METH_VARARGS, SetGraphicsMode__doc__},
 	{"SetMapMode", (PyCFunction)SetMapMode, METH_VARARGS, SetMapMode__doc__},
+	{"SetWindowExtEx", (PyCFunction)SetWindowExtEx, METH_VARARGS, SetWindowExtEx__doc__},
+	{"GetWindowExtEx", (PyCFunction)GetWindowExtEx, METH_VARARGS, GetWindowExtEx__doc__},
 	{"SetViewportExtEx", (PyCFunction)SetViewportExtEx, METH_VARARGS, SetViewportExtEx__doc__},
 	{"GetViewportExtEx", (PyCFunction)GetViewportExtEx, METH_VARARGS, GetViewportExtEx__doc__},
 	{"SetViewportOrgEx", (PyCFunction)SetViewportOrgEx, METH_VARARGS, SetViewportOrgEx__doc__},
