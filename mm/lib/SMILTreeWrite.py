@@ -818,7 +818,7 @@ def getallowedmimetypes(writer, node):
 	mimetypes = node.GetRawAttrDef('allowedmimetypes', None)
 	if not mimetypes:
 		return None
-	return MMAttrdefs.valuerepr('allowedmimetypes', mimetypes)
+	return string.join(mimetypes, ',')
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr

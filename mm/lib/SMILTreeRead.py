@@ -1328,8 +1328,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					self.syntax_error('bad %s attribute' % attr)
 			elif attr == 'allowedmimetypes':
-				vallist = string.split(val, ',')
-				attrdict[attr] = vallist
+				attrdict[attr] = map(string.strip, val.split(','))
 			elif attr == 'skip-content':
 				if val in ('true', 'false'):
 					attrdict['skip_content'] = val == 'true'
