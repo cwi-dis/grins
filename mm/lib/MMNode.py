@@ -35,6 +35,9 @@ class MMNodeContext:
 		self.attributes = {}	# unrecognized SMIL meta values
 		self.__registers = []
 		self.externalanchors = []
+		self._ichannelnames = []  # internal channels
+		self._ichannels = []
+		self._ichanneldict = {}
 
 	def __repr__(self):
 		return '<MMNodeContext instance, channelnames=' \
@@ -225,6 +228,15 @@ class MMNodeContext:
 
 	def registergetchannelbynode(self, func):
 		self.getchannelbynode = func
+
+	def addinternalchannels(self, list):
+		for name, dict in list:
+			c = MMChannel(self, name)
+			c.attrdict = dict
+			self._ichanneldict[name] = c
+			self._ichannelnames.append(name)
+			self._ichannels.append(c)
+
 	#
 	# Hyperlink administration
 	#
@@ -926,6 +938,10 @@ class MMNode:
 			captionchannel = MMAttrdefs.getattr(self, 'captionchannel')
 			if captionchannel and captionchannel != 'undefined':
 				list.append(captionchannel)
+			# add any animate elements
+			for node in self.children:
+				if MMAttrdefs.getattr(node, 'type')=='animate':
+					list.append(MMAttrdefs.getattr(node, 'channel'))
 			return list, None
 		errnode = None
 		overlap = []
