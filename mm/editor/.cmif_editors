@@ -32,38 +32,39 @@
 text:vi-xterm:xterm -e vi $file
 text:vi-wsh:wsh -C 0,8,3,1 -fScreen-Bold.15 -c vi $file
 text:emacs:emacs $file
-text:gnuclient:gnuclient $file
-text:emacsclient:emacsclient $file
+text:gnuclient:/usr/local/bin/gnuclient $file
+text:emacsclient:/usr/local/emacs/bin/emacsclient $file
 
 label:vi-xterm:xterm -e vi $file
 label:vi-wsh:wsh -C 0,8,3,1 -fScreen-Bold.15 -c vi $file
 label:emacs:emacs $file
-label:gnuclient:gnuclient $file
-label:emacsclient:emacsclient $file
+label:gnuclient:/usr/local/bin/gnuclient $file
+label:emacsclient:/usr/local/emacs/bin/emacsclient $file
 
 graph:vi-xterm:xterm -e vi $file
 graph:vi-wsh:wsh -C 0,8,3,1 -fScreen-Bold.15 -c vi $file
 graph:emacs:emacs $file
-graph:gnuclient:gnuclient $file
-graph:emacsclient:emacsclient $file
+graph:gnuclient:/usr/local/bin/gnuclient $file
+graph:emacsclient:/usr/local/emacs/bin/emacsclient $file
 
 python:vi-xterm:xterm -e vi $file
 python:vi-wsh:wsh -C 0,8,3,1 -fScreen-Bold.15 -c vi $file
 python:emacs:emacs $file
-python:gnuclient:gnuclient $file
-python:emacsclient:emacsclient $file
+python:gnuclient:/usr/local/bin/gnuclient $file
+python:emacsclient:/usr/local/emacs/bin/emacsclient $file
 
 shell:vi-xterm:xterm -e vi $file
 shell:vi-wsh:wsh -C 0,8,3,1 -fScreen-Bold.15 -c vi $file
 shell:emacs:emacs $file
-shell:gnuclient:gnuclient $file
-shell:emacsclient:emacsclient $file
+shell:gnuclient:/usr/local/bin/gnuclient $file
+shell:emacsclient:/usr/local/emacs/bin/emacsclient $file
 
-image:imp:imp $file
+image:imp:/ufs/guido/bin/sgi/imp $file
 image:imged:imged $file
 image:ipaste:ipaste $file
 image:xv:xv $file
 
+sound:sounded:/ufs/sjoerd/bin.sgi5/sounded $file
 sound:soundeditor:soundeditor $file
 sound:sfplay:sfplay $file
 sound:sfinfo:sfinfo $file
@@ -78,8 +79,8 @@ movie:Vedit:/ufs/guido/bin/sgi/Vedit $file
 html:vi-xterm:xterm -e vi $file
 html:vi-wsh:wsh -C 0,8,3,1 -fScreen-Bold.15 -c vi $file
 html:emacs:emacs $file
-html:gnuclient:gnuclient $file
-html:emacsclient:emacsclient $file
+html:gnuclient:/usr/local/bin/gnuclient $file
+html:emacsclient:/usr/local/emacs/bin/emacsclient $file
 html:netscape:netscape $file
 html:netscape-remote:netscape -remote "openFile($file)"
 html:Mosaic:xmosaic $file
