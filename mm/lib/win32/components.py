@@ -13,10 +13,12 @@ win32ui pyd which exports inherited objects from MFC objects
 
 import win32ui,win32con
 import commctrl
+import afxres
 Sdk=win32ui.GetWin32Sdk()
 import grinsRC
 import win32mu
 import string
+
 
 [FALSE, TRUE] = range(2)
 error = 'lib.win32.components.error'
@@ -1377,20 +1379,6 @@ def multchoice(prompt, list, defindex, parent = None):
 			return list.index('Cancel')
 		else:
 			return -1
-
-#####################################
-# std win32 modules
-import win32ui,win32con,win32api
-
-# win32 lib modules
-import win32mu,components
-
-# std mfc windows stuf
-from pywin.mfc import window,object,docview
-import afxres,commctrl
-
-# GRiNS resource ids
-import grinsRC
 
 # Base class for dialog bars
 class DlgBar(window.Wnd,ControlsDict):
