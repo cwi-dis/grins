@@ -671,14 +671,14 @@ class SMILHtmlTimeWriter(SMIL):
 		x, y, w, h = ch.getPxGeom()
 		style = 'position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;' % (dx+x, dy+y, w, h)
 		
-		if ch.has_key('bgcolor'):
-			bgcolor = ch['bgcolor']
+		transparent = ch.get('transparent', None)
+		bgcolor = ch.get('bgcolor', None)
+		if bgcolor and transparent==0:
 			if colors.rcolors.has_key(bgcolor):
 				bgcolor = colors.rcolors[bgcolor]
 			else:
 				bgcolor = '#%02x%02x%02x' % bgcolor
-			if bgcolor != 'black':
-				style = style + 'background-color=%s;' % bgcolor
+			style = style + 'background-color=%s;' % bgcolor
 			
 		z = ch.get('z', 0)
 		if z > 0:
