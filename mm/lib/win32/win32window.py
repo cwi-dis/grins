@@ -2051,6 +2051,89 @@ class Viewport(Region):
 		self.setcurcursor('arrow')
 
 
+##########################
+class ViewportContext:
+	def __init__(self, w, h, units, bgcolor):
+		self._viewport = Viewport(self, 0, 0, w, h, bgcolor)
+		self._wnd = Sdk.GetDesktopWindow()
+		self._bgcolor = bgcolor
+
+		self._ddraw = ddraw.CreateDirectDraw()
+		self._ddraw.SetCooperativeLevel(self._wnd.GetSafeHwnd(), ddraw.DDSCL_NORMAL)
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
+		ddsd.SetSize(w,h)
+		self._backBuffer = self._ddraw.CreateSurface(ddsd)
+		self._pxlfmt = self._backBuffer.GetPixelFormat()
+
+		self._ddbgcolor = self._backBuffer.GetColorMatch(bgcolor or (255,255,255))
+		self._backBuffer.BltFill((0, 0, w, h), self._ddbgcolor)
+
+	def update(self, rc):
+		if self._backBuffer.IsLost():
+			if not self._backBuffer.Restore():
+				return
+		
+		# do we have anything to update?
+		if rc and (rc[2]==0 or rc[3]==0): 
+			return 
+
+		if rc is None:
+			x, y, w, h = self._viewport._rect
+			rcPaint = x, y, x+w, y+h
+		else:
+			rcPaint = rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3] 
+		try:
+			self._backBuffer.BltFill(rcPaint, self._ddbgcolor)
+		except ddraw.error, arg:
+			print arg
+			return
+
+		if self._viewport:
+			self._viewport.paint(rc)
+
+	def setcursor(self, strid):
+		pass
+
+	def getRGBBitCount(self):
+		return self._pxlfmt[0]
+
+	def getPixelFormat(self):
+		returnself._pxlfmt
+
+	def getDirectDraw(self):
+		return self._ddraw
+
+	def getContextOsWnd(self):
+		return self._wnd
+
+	def pop(self, poptop=1):
+		pass
+
+	def getwindowpos(self):
+		return self._viewport._rect
+
+	def closeViewport(self, viewport):
+		del viewport
+
+	def getDrawBuffer(self):
+		return self._backBuffer
+
+	def updateMouseCursor(self):
+		pass
+
+	def imgAddDocRef(self, file):
+		pass
+
+	def CreateSurface(self, w, h):
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
+		ddsd.SetSize(w,h)
+		dds = self._ddraw.CreateSurface(ddsd)
+		dds.BltFill((0, 0, w, h), self._ddcolor)
+
 #############################
 
 # selection modes
