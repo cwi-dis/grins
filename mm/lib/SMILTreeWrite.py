@@ -17,12 +17,28 @@ import re
 
 from SMIL import *
 
+def nameencode(value):
+	"""Quote a value"""
+	value = string.join(string.split(value,'&'),'&amp;')
+	value = string.join(string.split(value,'>'),'&gt;')
+	value = string.join(string.split(value,'<'),'&lt;')
+	value = string.join(string.split(value,'"'),'&quot;')
+##	if '&' in value:
+##		value = regsub.gsub('&', '&amp;', value)
+##	if '>' in value:
+##		value = regsub.gsub('>', '&gt;', value)
+##	if '<' in value:
+##		value = regsub.gsub('<', '&lt;', value)
+##	if '"' in value:
+##		value = regsub.gsub('"', '&quot;', value)
+	return '"' + value + '"'
+
 NSprefix = 'GRiNS'
 # This string is written at the start of a SMIL file.
 SMILdecl = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
-NSdecl = '<?xml:namespace ns="%s" prefix="%s"?>\n' % (CMIFns, NSprefix)
 doctype = '<!DOCTYPE smil PUBLIC "%s"\n\
                       "%s">\n' % (SMILpubid,SMILdtd)
+xmlns = 'xmlns:%s' % NSprefix
 
 nonascii = re.compile('[\200-\377]')
 
@@ -78,7 +94,6 @@ def WriteFile(root, filename):
 	fp = IndentedFile(open(filename, 'w'))
 	writer = SMILWriter(root, fp, filename)
 	writer.write()
-	fp.close()
 	if os.name == 'mac':
 		import macfs
 		import macostools
@@ -335,6 +350,9 @@ def mediatype(chtype, error=0):
 
 class SMILWriter(SMIL):
 	def __init__(self, node, fp, filename):
+		self.__isopen = 0
+		self.__stack = []
+
 		self.uses_cmif_extension = 0
 		self.root = node
 		self.fp = fp
@@ -370,34 +388,90 @@ class SMILWriter(SMIL):
 		abs = os.path.join(dir, rel) # possibly absolute name of same
 		self.tmpdirname = abs, rel # record both names
 
+	def push(self):
+		if self.__isopen:
+			self.fp.write('>\n')
+			self.__isopen = 0
+		self.fp.push()
+
+	def pop(self):
+		fp = self.fp
+		if self.__isopen:
+			fp.write('/>\n')
+			self.__isopen = 0
+			del self.__stack[-1]
+		fp.pop()
+		fp.write('</%s>\n' % self.__stack[-1][0])
+		del self.__stack[-1]
+
+	def close(self):
+		fp = self.fp
+		if self.__isopen:
+			fp.write('/>\n')
+			self.__isopen = 0
+			del self.__stack[-1]
+		while self.__stack:
+			self.pop()
+		fp.close()
+
+	def writetag(self, tag, attrs = None):
+		if attrs is None:
+			attrs = []
+		write = self.fp.write
+		if self.__isopen:
+			write('/>\n')
+			self.__isopen = 0
+			del self.__stack[-1]
+		write('<' + tag)
+		if self.__stack and self.__stack[-1][1]:
+			hasprefix = 1
+		else:
+			hasprefix = 0
+		if not hasprefix:
+			for attr, val in attrs:
+				if attr == xmlns:
+					hasprefix = 1
+					break
+				if attr[:len(NSprefix)] == NSprefix:
+					attrs.insert(0, (xmlns, CMIFns))
+					hasprefix = 1
+					break
+		if not hasprefix:
+			if tag[:len(NSprefix)] == NSprefix:
+				attrs.insert(0, (xmlns, CMIFns))
+				hasprefix = 1
+		for attr, val in attrs:
+			write(' %s=%s' % (attr, nameencode(val)))
+		self.__isopen = 1
+		self.__stack.append((tag, hasprefix))
+
 	def write(self):
 		import version
 		fp = self.fp
 		fp.write(SMILdecl)
-		if self.uses_cmif_extension:
-			fp.write(NSdecl)
 		fp.write(doctype)
-		fp.write('<smil>\n')
-		fp.push()
-		fp.write('<head>\n')
-		fp.push()
-## 		fp.write('<meta name="sync" content="soft"/>\n')
+		attrlist = []
+		if self.uses_cmif_extension:
+			attrlist.append((xmlns, CMIFns))
+		self.writetag('smil', attrlist)
+		self.push()
+		self.writetag('head')
+		self.push()
+##		self.writetag('meta', [('name', 'sync'), ('content', 'soft')])
 		if self.__title:
-			self.fp.write('<meta name="title" content=%s/>\n' %
-				      nameencode(self.__title))
-		self.fp.write('<meta name="generator" content="GRiNS %s"/>\n' %
-			      version.version)
+			self.writetag('meta', [('name', 'title'),
+					       ('content', self.__title)])
+		self.writetag('meta', [('name', 'generator'),
+				       ('content','GRiNS %s'%version.version)])
 		self.writelayout()
 		self.writeusergroups()
-		fp.pop()
-		fp.write('</head>\n')
-		fp.write('<body>\n')
-		fp.push()
+		self.pop()
+		self.writetag('body')
+		self.push()
 		self.writenode(self.root, root = 1)
-		fp.pop()
-		fp.write('</body>\n')
-		fp.pop()
-		fp.write('</smil>\n')
+##		self.pop()
+##		self.pop()
+		self.close()
 
 	def calcugrnames(self, node):
 		"""Calculate unique names for usergroups"""
@@ -521,21 +595,21 @@ class SMILWriter(SMIL):
 
 	def writelayout(self):
 		"""Write the layout section"""
-		self.fp.write('<layout>\n') # default: type="text/smil-basic-layout"
-		self.fp.push()
+		self.writetag('layout') # default: type="text/smil-basic-layout"
+		self.push()
 		channels = self.root.GetContext().channels
 		self.regions_defined = {}
 		if len(self.top_levels) == 1:
-			attrlist = ['<root-layout']
+			attrlist = []
 			ch = self.top_levels[0]
 			if ch['type'] == 'layout':
-				attrlist.append('id=%s' % nameencode(self.ch2name[ch]))
-			attrlist.append('title=%s' % nameencode(ch.name))
+				attrlist.append(('id', self.ch2name[ch]))
+			attrlist.append(('title', ch.name))
 			if ch.get('transparent', 0) == 1:
 				# background-color="transparent" is default
 				pass
 			elif ch.has_key('bgcolor'):
-				attrlist.append('background-color="#%02x%02x%02x"' % ch['bgcolor'])
+				attrlist.append(('background-color', '#%02x%02x%02x' % ch['bgcolor']))
 			if ch.has_key('winsize'):
 				units = ch.get('units', 0)
 				w, h = ch['winsize']
@@ -546,14 +620,12 @@ class SMILWriter(SMIL):
 					h = int(h / 25.4 * 100.0 + .5)
 					units = 2
 				if units == 1:
-					attrlist.append('width="%d%%"' % int(w * 100 + .5))
-					attrlist.append('height="%d%%"' % int(h * 100 + .5))
+					attrlist.append(('width', '%d%%' % int(w * 100 + .5)))
+					attrlist.append(('height', '%d%%' % int(h * 100 + .5)))
 				else:
-					attrlist.append('width="%d"' % int(w + .5))
-					attrlist.append('height="%d"' % int(h + .5))
-			attrs = string.join(attrlist, ' ')
-			attrs = attrs + '/>\n'
-			self.fp.write(attrs)
+					attrlist.append(('width', '%d' % int(w + .5)))
+					attrlist.append(('height', '%d' % int(h + .5)))
+			self.writetag('root-layout', attrlist)
 		for ch in channels:
 			dummy = mediatype(ch['type'], error=1)
 			if len(self.top_levels) == 1 and \
@@ -561,9 +633,8 @@ class SMILWriter(SMIL):
 			   not ch.has_key('base_window'):
 				# top-level layout channel has been handled
 				continue
-			attrlist = ['<region id=%s title=%s' %
-				    (nameencode(self.ch2name[ch]),
-				     nameencode(ch.name))]
+			attrlist = [('id', self.ch2name[ch]),
+				    ('title', ch.name)]
 			# if toplevel window, define a region elt, but
 			# don't define coordinates (i.e., use defaults)
 			if ch.has_key('base_window') and \
@@ -575,10 +646,9 @@ class SMILWriter(SMIL):
 				for name, value in data:
 					value = int(value*100)
 					if value:
-						attrlist.append('%s="%d%%"'%
-								(name, value))
+						attrlist.append((name, '%d%%'%value))
 			if ch.has_key('z') and ch['z'] > 0:
-				attrlist.append('z-index="%d"' % ch['z'])
+				attrlist.append(('z-index', "%d" % ch['z']))
 			scale = ch.get('scale', 0)
 			if scale == 0:
 				fit = 'meet'
@@ -590,46 +660,37 @@ class SMILWriter(SMIL):
 				fit = None
 				print '** Channel uses unsupported scale value', name
 			if fit is not None and fit != 'hidden':
-				attrlist.append('fit="%s"' % fit)
+				attrlist.append(('fit', fit))
 
 			if ch.has_key('transparent') and \
 			   ch['transparent'] == 1:
 				# background-color="transparent" is default
 				pass
 			elif ch.has_key('bgcolor'):
-				attrlist.append('background-color="#%02x%02x%02x"' % ch['bgcolor'])
+				attrlist.append(('background-color', "#%02x%02x%02x" % ch['bgcolor']))
 
-## 			if len(attrlist) == 1:
-## 				# Nothing to define
-## 				continue
 			self.regions_defined[ch] = 1
-			attrs = string.join(attrlist, ' ')
-			attrs = attrs + '/>\n'
-			self.fp.write(attrs)
-		self.fp.pop()
-		self.fp.write('</layout>\n')
+			self.writetag('region', attrlist)
+		self.pop()
 
 	def writeusergroups(self):
 		u_groups = self.root.GetContext().usergroups
 		if not u_groups:
 			return
-		self.fp.write('<%s:user_attributes>\n' % NSprefix)
-		self.fp.push()
+		self.writetag('%s:user_attributes' % NSprefix)
+		self.push()
 		for key, val in u_groups.items():
-			attrlist = ['<%s:u_group' % NSprefix]
-			attrlist.append('id=%s' % nameencode(self.ugr2name[key]))
+			attrlist = []
+			attrlist.append(('id', self.ugr2name[key]))
 			title, u_state, override = val
 			if title:
-				attrlist.append('title=%s' % nameencode(title))
+				attrlist.append(('title', title))
 			if u_state != 'RENDERED':
-				attrlist.append('u_state=%s' % nameencode(u_state))
+				attrlist.append(('u_state', u_state))
 			if override != 'allowed':
-				attrlist.append('override=%s' % nameencode(override))
-			attrs = string.join(attrlist, ' ')
-			self.fp.write(attrs + '/>\n')
-		self.fp.pop()
-		self.fp.write('</%s:user_attributes>\n' % NSprefix)
-
+				attrlist.append(('override', override))
+			self.writetag('%s:u_group' % NSprefix, attrlist)
+		self.pop()
 
 	def writenode(self, x, root = 0):
 		"""Write a node (possibly recursively)"""
@@ -653,9 +714,9 @@ class SMILWriter(SMIL):
 				chtype = 'unknown'
 			mtype = mediatype(chtype)
 
-		attrlist = ['<%s'%mtype]
+		attrlist = []
 		if not interior and chtype in ('label', 'text'):
-			attrlist.append('type="text/plain"')
+			attrlist.append(('type', "text/plain"))
 
 		# if node used as destination, make sure it's id is written
 		uid = x.GetUID()
@@ -669,24 +730,6 @@ class SMILWriter(SMIL):
 					break
 
 		imm_href = None
-## 		if type == 'imm':
-## 			data = string.join(x.GetValues(), '\n')
-## 			if mtype != 'text' and mtype[:5] != '%s:' % NSprefix:
-## 				# binary data, use base64 encoding
-## 				import base64
-## 				data = base64.encodestring(data)
-## 			elif '<' in data or '&' in data:
-## 				# text data containing < or &: use
-## 				# <!{CDATA[...]]>
-## 				# "quote" ]]> in string
-## 				data = string.join(string.split(data, ']]>'),
-## 						   ']]>]]<![CDATA[>')
-## 				data = '<![CDATA[%s]]>\n' % data
-## 			else:
-## 				# other text data, can go as is
-## 				data = data + '\n'
-## 		else:
-## 			data = None
 		if type == 'imm':
 			if chtype == 'html':
 				mime = 'text/html'
@@ -696,7 +739,6 @@ class SMILWriter(SMIL):
 			if nonascii.search(data):
 				mime = mime + ';charset=ISO-8859-1'
 			imm_href = 'data:%s,%s' % (mime, MMurl.quote(data))
-		data = None
 
 		for name, func in smil_attrs:
 			if name == 'src' and type == 'imm':
@@ -704,27 +746,23 @@ class SMILWriter(SMIL):
 			else:
 				value = func(self, x)
 			if value:
-				value = nameencode(value)
-				attrlist.append('%s=%s'%(name, value))
+				attrlist.append((name, value))
 		if interior:
-			if root and (len(attrlist) > 1 or type != 'seq'):
+			if root and (attrlist or type != 'seq'):
 				root = 0
-			attrlist = string.join(attrlist, ' ')
 			if not root:
-				self.fp.write(attrlist+'>\n')
-				self.fp.push()
+				self.writetag(mtype, attrlist)
+				self.push()
 			for child in x.GetChildren():
 				self.writenode(child)
 			if not root:
-				self.fp.pop()
-				self.fp.write('</%s>\n'%mtype)
+				self.pop()
 		elif type in ('imm', 'ext'):
-			attrlist = string.join(attrlist, ' ')
-			self.writemedianode(x, attrlist, mtype, data)
+			self.writemedianode(x, attrlist, mtype)
 		else:
 			raise CheckError, 'bad node type in writenode'
 
-	def writemedianode(self, x, attrlist, mtype, data):
+	def writemedianode(self, x, attrlist, mtype):
 		# XXXX Not correct for imm
 		pushed = 0		# 1 if has whole-node source anchor
 		hassrc = 0		# 1 if has other source anchors
@@ -739,69 +777,51 @@ class SMILWriter(SMIL):
 						      x.GetRawAttrDef('name', '<unnamed>'), \
 						      x.GetUID()
 					a1, a2, dir, ltype = links[0]
-					self.fp.write('<a %s>\n' % self.linkattrs(a2, ltype))
-					self.fp.push()
+					self.writetag('a', self.linkattrs(a2, ltype))
+					self.push()
 					pushed = pushed + 1
 			elif type in SourceAnchors:
 				hassrc = 1
-		self.fp.write(attrlist)
-		if not hassrc and not data:
-			# if no source anchors, make empty element
-			self.fp.write('/')
-		self.fp.write('>\n')
-		if data:
-			self.fp.push()
-			if data[:9] == '<![CDATA[':
-				data = string.split(data, '\n')
-				self.fp.write(data[0])
-				level = self.fp.level
-				self.fp.level = 0
-				for line in data[1:]:
-					self.fp.write(line)
-				self.fp.level = level
-			else:
-				self.fp.write(data)
-			self.fp.pop()
+		self.writetag(mtype, attrlist)
 		if hassrc:
-			self.fp.push()
+			self.push()
 			for id, type, args in alist:
 				if type in SourceAnchors and \
 				   type != ATYPE_WHOLE:
 					self.writelink(x, id, type, args)
-			self.fp.pop()
-		if data or hassrc:
-			self.fp.write('</%s>\n'%mtype)
+			self.pop()
 		for i in range(pushed):
-			self.fp.pop()
-			self.fp.write('</a>\n')
+			self.pop()
 
 	def linkattrs(self, a2, ltype):
 		attrs = []
 		if ltype == Hlinks.TYPE_CALL:
-			attrs.append('show="pause"')
+			attrs.append(('show', "pause"))
 		elif ltype == Hlinks.TYPE_FORK:
-			attrs.append('show="new"')
+			attrs.append(('show', "new"))
 		# else show="replace" (default)
 		uid2, aid2 = a2
 		if '/' in uid2:
 			if aid2:
-				href = '%s#%s' % a2
+				base, tag = a2
 			else:
 				lastslash = string.rfind(uid2, '/')
 				base, tag = uid2[:lastslash], uid2[lastslash+1:]
 				if tag == '1':
-					href = base
-				else:
-					href = '%s#%s' % (base, tag)
+					tag = None
 		else:
-			href = '#' + self.uid2name[uid2]
-		attrs.append('href=%s' % nameencode(MMurl.quote(href)))
-		return string.join(attrs)
+			base = ''
+			tag = self.uid2name[uid2]
+		href = MMurl.quote(base)
+		if tag:
+			href = href + '#' + MMurl.quote(tag)
+		attrs.append(('href', href))
+		return attrs
 
 	def writelink(self, x, id, atype, args):
-		items = ["<anchor"]
+		attrlist = []
 		aid = (x.GetUID(), id)
-		items.append('id=%s' % nameencode(self.aid2name[aid]))
+		attrlist.append(('id', self.aid2name[aid]))
 
 		links = x.GetContext().hyperlinks.findsrclinks(aid)
 		if len(links) > 1:
@@ -810,7 +830,7 @@ class SMILWriter(SMIL):
 			      x.GetUID()
 		if links:
 			a1, a2, dir, ltype = links[0]
-			items.append(self.linkattrs(a2, ltype))
+			attrlist[len(attrlist):] = self.linkattrs(a2, ltype)
 		if atype == ATYPE_NORMAL:
 			ok = 0
 			if len(args) == 4:
@@ -831,14 +851,15 @@ class SMILWriter(SMIL):
 				if h > 100: h = 100
 				x0, y0, x1, y1 = x, y, x+w, y+h
 				if (x0, y0, x1, y1) != (0,0,100,100):
-					items.append('coords="%d%%,%d%%,%d%%,%d%%"'%
-						     (x0,y0,x1,y1))
+					attrlist.append(('coords',
+							 "%d%%,%d%%,%d%%,%d%%"%
+							 (x0,y0,x1,y1)))
 			elif args:
 				print '** Unparseable args on', aid, args
 			else:
-				items.append('fragment-id=%s'%nameencode(id))
-
-		self.fp.write(string.join(items) + '/>\n')
+				attrlist.append(('%s:fragment-id' % NSprefix,
+						 id))
+		self.writetag('anchor', attrlist)
 
 	def smiltempfile(self, node, suffix = '.html'):
 		"""Return temporary file name for node"""
@@ -848,18 +869,6 @@ class SMILWriter(SMIL):
 		filename = nodename + suffix
 		return os.path.join(self.tmpdirname[1], filename)
 
-
-def nameencode(value):
-	"""Quote a value"""
-	if '&' in value:
-		value = regsub.gsub('&', '&amp;', value)
-	if '>' in value:
-		value = regsub.gsub('>', '&gt;', value)
-	if '<' in value:
-		value = regsub.gsub('<', '&lt;', value)
-	if '"' in value:
-		value = regsub.gsub('"', '&quot;', value)
-	return '"' + value + '"'
 
 namechars = string.letters + string.digits + '_-.'
 
