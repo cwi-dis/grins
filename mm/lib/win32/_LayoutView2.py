@@ -454,10 +454,14 @@ class TreeManager:
 		
 	def onInitialUpdate(self, parent):
 		# get the tree control form the dialog box ressource
-		import win32con, win32ui
-		Sdk=win32ui.GetWin32Sdk()
-		parentHwnd = parent.GetSafeHwnd()
-		self.treeCtrl = parent.GetDlgItem(grinsRC.IDC_TREE1)
+		#import win32con, win32ui
+		#Sdk=win32ui.GetWin32Sdk()
+		#parentHwnd = parent.GetSafeHwnd()
+		#self.treeCtrl = parent.GetDlgItem(grinsRC.IDC_TREE1)
+
+		import TreeCtrl
+		self.treeCtrl = TreeCtrl.TreeCtrl()
+		self.treeCtrl.createAsDlgItem(parent, grinsRC.IDC_TREE1)
 
 		# init the image list used in the tree
 		self.__initImageList()
