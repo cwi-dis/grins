@@ -6,12 +6,12 @@ __version__ = "$Id$"
 
 # First, immedeately disable the console window
 import sys
-##if len(sys.argv) > 1 and sys.argv[1] == '-v':
-##	del sys.argv[1]
-##	print '** Verbose **'
-##else:
-##	import quietconsole
-##	quietconsole.install()
+if len(sys.argv) > 1 and sys.argv[1] == '-v':
+	del sys.argv[1]
+	print '** Verbose **'
+else:
+	import quietconsole
+	quietconsole.install()
 	
 # Next, show the splash screen
 import MacOS
@@ -59,12 +59,23 @@ if len(sys.argv) > 1 and sys.argv[1] == '-p':
 else:
 	profile = 0
 
+
+##import trace
+##trace.set_trace()
+
 if len(sys.argv) < 2:
 	MacOS.splash()
-	fss, ok = macfs.StandardGetFile('TEXT')
-	if not ok: sys.exit(0)
+	fss, ok = macfs.PromptGetFile('SMIL file (cancel for URL)', 'TEXT')
+	if ok:
+		sys.argv = ["macgrins", fss.as_pathname()]
+	else:
+		import EasyDialogs
+		url = EasyDialogs.AskString("SMIL URL")
+		if url is None:
+			sys.exit(0)
+		sys.argv = ["macgrins", url]
+		
 	
-	sys.argv = ["macgrins", fss.as_pathname()]
 
 if profile:
 	import profile
