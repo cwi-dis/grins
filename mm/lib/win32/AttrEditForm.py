@@ -397,6 +397,7 @@ class FileCtrl(AttrCtrl):
 
 	def settooltips(self,tooltipctrl):
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Choose File for URL',None,0)
 
 # a file ctrl with icon buttons play, pause and stop
 # indented for continous media preview
@@ -574,6 +575,7 @@ class ColorCtrl(AttrCtrl):
 
 	def settooltips(self,tooltipctrl):
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Pick color from color dialog',None,0)
 
 
 ##################################
