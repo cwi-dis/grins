@@ -10,6 +10,7 @@ error = 'Channel.error'
 from ChannelWMdeps import ChannelWM, ChannelWindowWM
 
 channel_device = 1
+channels = []				# list of channels
 
 # arm states
 AIDLE = 1
@@ -50,10 +51,13 @@ class Channel(ChannelWM):
 		self._qid = None
 		self._scheduler = scheduler
 		self._paused = 1
+		self._subchannels = []
+		self._want_shown = 0
 		self.syncarm = 0
 		self.syncplay = 0
 		if debug:
 			print 'Channel.init() -> '+`self`
+		channels.append(self)
 		return self
 
 	def __repr__(self):
@@ -66,7 +70,7 @@ class Channel(ChannelWM):
 		# methods of this instance may be called anymore.
 		if debug:
 			print 'Channel.destroy('+`self`+')'
-		if self.is_showing():
+		if self._is_shown:
 			self.hide()
 		del self._armcontext
 		del self._armed_anchors
@@ -83,6 +87,7 @@ class Channel(ChannelWM):
 		del self._playstate
 		del self._qid
 		del self._scheduler
+		channels.remove(self)
 
 	def may_show(self):
 		# Indicate to the higher level whether this channel is
@@ -97,12 +102,12 @@ class Channel(ChannelWM):
 		# state.
 		if debug:
 			print 'Channel.show('+`self`+')'
+		self._want_shown = 1
 		if self._is_shown:
 			return
-		self._is_shown = 1
 		if not self.do_show():
-			self._is_shown = 0
 			return
+		self._is_shown = 1
 		# Since the calls to arm() and play() lied to the
 		# scheduler when the channel was hidden, we must do a
 		# few things so that the real state of things is once
@@ -139,15 +144,25 @@ class Channel(ChannelWM):
 			raise error, 'don\'t know if this can happen'
 		self.syncarm = 0
 		self.syncplay = 0
+		# now that we are visible, see if any other channels
+		# can become visible
+		for chan in self._subchannels[:]:
+			if chan._want_shown:
+				chan.show()
 
 	def hide(self):
 		# Indicate that the channel must enter the HIDDEN
 		# state.
 		if debug:
 			print 'Channel.hide('+`self`+')'
+		self._want_shown = 0
 		if not self._is_shown:
 			return
 		self._is_shown = 0
+		for chan in self._subchannels:
+			want_shown = chan._want_shown
+			chan.hide()
+			chan._want_shown = want_shown
 		self.do_hide()
 		if self._armstate == ARMING:
 			self.arm_1()
@@ -166,7 +181,7 @@ class Channel(ChannelWM):
 	#
 	def is_showing(self):
 		# Indicate whether the channel is being shown.
-		return self._is_shown
+		return self._want_shown
 
 	def do_show(self):
 		# Actually do the work to show the channel.  Return 1
@@ -389,7 +404,7 @@ class Channel(ChannelWM):
 		# returns 0, we should not call arm_1() because that
 		# will happen later.
 		self.arm_0(node)
-		if self.is_showing() and not self.do_arm(node):
+		if self._is_shown and not self.do_arm(node):
 			return
 		self.arm_1()
 
@@ -569,6 +584,9 @@ class ChannelWindow(ChannelWindowWM, Channel):
 		if debug:
 			print 'ChannelWindow.do_show('+`self`+')'
 		# create a window for this channel
+		for chan in channels:
+			if self in chan._subchannels:
+				chan._subchannels.remove(self)
 		pgeom = None
 		pchan = None
 		if self._attrdict.has_key('base_window'):
@@ -580,8 +598,11 @@ class ChannelWindow(ChannelWindowWM, Channel):
 				raise error, \
 					  'base window '+`pname`+' for '+\
 					  `self._name`+' not found'
-			if not pchan.window:
-				pchan.show()
+			if self in pchan._subchannels:
+				raise error, 'internal error'
+			pchan._subchannels.append(self)
+			if not pchan._is_shown:
+				return 0
 			if not pchan.window:
 				raise error, 'parent window for ' + \
 					  `self._name` + ' not shown'
@@ -622,9 +643,9 @@ class ChannelWindow(ChannelWindowWM, Channel):
 	def do_hide(self):
 		if debug:
 			print 'ChannelWindow.do_hide('+`self`+')'
-		import events, EVENTS
-		events.unregister(self.window, EVENTS.ResizeWindow)
 		if self.window:
+			import events, EVENTS
+			events.unregister(self.window, EVENTS.ResizeWindow)
 			self.window.close()
 			self.window = None
 			self.armed_display = self.played_display = None
@@ -668,7 +689,7 @@ class ChannelWindow(ChannelWindowWM, Channel):
 
 	def arm_0(self, node):
 		Channel.arm_0(self, node)
-		if not self.is_showing():
+		if not self._is_shown:
 			return
 		if self.armed_display:
 			self.armed_display.close()
@@ -680,7 +701,7 @@ class ChannelWindow(ChannelWindowWM, Channel):
 		if debug:
 			print 'ChannelWindow.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if self.is_showing():
+		if self._is_shown:
 			if not self.nopop:
 				self.window.pop()
 			if self.armed_display.is_closed():
@@ -764,7 +785,7 @@ class _ChannelThread:
 		if debug:
 			print 'ChannelThread.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if not self.is_showing() or self.syncplay:
+		if not self._is_shown or self.syncplay:
 			self.play_1()
 			return
 		thread_play_called = 0
@@ -779,17 +800,17 @@ class _ChannelThread:
 	def playstop(self):
 		if debug:
 			print 'ChannelThread.playstop('+`self`+')'
-		if self.is_showing():
+		if self._is_shown:
 			self.threads.playstop()
 
 	def armstop(self):
 		if debug:
 			print 'ChannelThread.armstop('+`self`+')'
-		if self.is_showing():
+		if self._is_shown:
 			self.threads.armstop()
 
 	def setpaused(self, paused):
-		if self.is_showing():
+		if self._is_shown:
 			self.threads.setrate(not paused)
 
 	def stopplay(self, node):
@@ -906,7 +927,7 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		if debug:
 			print 'ChannelWindowThread.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if not self.is_showing() or self.syncplay:
+		if not self._is_shown or self.syncplay:
 			self.play_1()
 			return
 		if not self.nopop:
