@@ -435,7 +435,7 @@ class TopLevel(TopLevelDialog):
 		if command == 'open()':
 			# self.player.stop() ??
 			# self.close_callback() ??
-			self.main.open_callback()
+			self.main.openfile_callback()
 			return 1
 		if command == 'exit()':
 			self.main.close_callback()

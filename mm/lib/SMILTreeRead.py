@@ -2794,6 +2794,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					lcd['top'] = val[1]
 					lcd['width'] = val[2]
 					lcd['height'] = val[3]
+					lcd['showBackground'] = 'whenActive'
 					ctx.cssResolver.setRawAttrs(lcd.getCssId(), [('left', val[0]), ('top', val[1]), ('width', val[2]), ('height', val[3])])
 				else:
 					a = ctx.newnode('anchor')
@@ -2804,10 +2805,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						play = a
 					elif key == 'PowerButton':
 						self.__links.append((a, 'grins:exit()'))
-			arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = play, event = 'activateEvent', delay = 0)
+					elif key == 'App4Button':
+						self.__links.append((a, 'grins:open()'))
+			arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = 'syncbase', delay = 0)
 			self.__root.attrdict['beginlist'] = [arc]
-			arc = MMNode.MMSyncArc(self.__root, 'end', srcnode = play, event = 'activateEvent', delay = 0)
-			self.__root.attrdict['endlist'] = [arc]
+			if play is not None:
+				arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = play, event = 'activateEvent', delay = 0)
+				self.__root.attrdict['beginlist'].append(arc)
+				arc = MMNode.MMSyncArc(self.__root, 'end', srcnode = play, event = 'activateEvent', delay = 0)
+				self.__root.attrdict['endlist'] = [arc]
 			self.__root.attrdict['restart'] = 'whenNotActive'
 			self.__root.removeOwner(OWNER_DOCUMENT)
 			root._addchild(self.__root)
@@ -3981,19 +3987,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attributes.has_key(attr):
 			val = attributes[attr]
 			del attributes[attr]
-			if self.__context.attributes.get('project_boston') == 0:
-				self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-			if features.editor:
-				self.__context.attributes['project_boston'] = 1		
-			if self.__context.attributes.get('project_boston'):
-				try:
-					index = int(val)
-					if index < 0:
-						raise ValueError, 'negative value'
-				except ValueError:
-					self.syntax_error('bad %s attribute' % attr)
-				else:
-					attrdict[attr] = index
+			self.__do_index(None, attr, val, attrdict)
 		attr = 'target'
 		if attributes.has_key(attr):
 			val = attributes[attr]

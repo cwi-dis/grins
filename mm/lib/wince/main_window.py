@@ -12,6 +12,7 @@ import usercmdinterface
 
 class MainWnd(usercmdinterface.UserCmdInterface):
 	def __init__(self, toplevel):
+		self.__have_menu = 1
 		usercmdinterface.UserCmdInterface.__init__(self)
 		self.__dict__['_obj_'] = None
 		self._toplevel = toplevel
@@ -121,8 +122,25 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 				id = usercmdui.usercmd2id(cmdcl)
 				self.EnableMenuItem(1, id, self._activecmds[context].has_key(cmdcl))
 					
+	def HideMenu(self):
+		if not self.__have_menu:
+			return
+		try:
+			hmenu = self.HideMenuBar()
+		except:
+			# no menu
+			pass
+		self.__have_menu = 0
+
 	def EnableMenuItem(self, submenu_index, id, enabled):
-		hmenu = self.GetMenuHandle()
+		if not self.__have_menu:
+			return
+		try:
+			hmenu = self.GetMenuHandle()
+		except:
+			# no menu
+			self.__have_menu = 0
+			return
 		menu = winuser.CreateMenuFromHandle(hmenu)
 		submenu = menu.wce_GetSubMenu(submenu_index)
 		if enabled:
@@ -132,7 +150,14 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		submenu.EnableMenuItem(id, flags)				
 
 	def CheckMenuItem(self, submenu_index, id, checked):
-		hmenu = self.GetMenuHandle()
+		if not self.__have_menu:
+			return
+		try:
+			hmenu = self.GetMenuHandle()
+		except:
+			# no menu
+			self.__have_menu = 0
+			return
 		menu = winuser.CreateMenuFromHandle(hmenu)
 		submenu = menu.wce_GetSubMenu(submenu_index)
 		if checked:
@@ -232,14 +257,14 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		
 		# assume fit = 'meet' if viewport can not fit
 		scale = max(xs, ys)
-		self._d2l = max(1.0, scale)
+##		self._d2l = max(1.0, scale)
 
 		# center scaled viewport
 		sw, sh = self.LStoDS((width, height), round = 1)
 		sx = max(0, (w - sw)/2)
 		sy = max(0, (h - sh)/2)
 		if 1: sx = max(sx, 2); sy = 2 # bias to top for now
-		self._xd_org, self._yd_org = sx, sy
+##		self._xd_org, self._yd_org = sx, sy
 		
 		# assume 'white' as default
 		bgcolor = bgcolor or (255, 255, 255)
@@ -346,7 +371,18 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self.redraw()
 
 	def loadSplash(self):
-		filename = r'\Program Files\GRiNS\cesplash.bmp'
+		skin = settings.get('skin')
+		if skin:
+			import parseskin, MMurl
+			try:
+				dict, buttons = parseskin.parseskin(MMurl.urlopen(skin))
+				filename = MMurl.urlretrieve(MMurl.basejoin(skin, dict['File1x']))[0]
+			except:
+				settings.set('skin', '')
+			else:
+				self.HideMenu()
+		else:
+			filename = r'\Program Files\GRiNS\cesplash.bmp'
 		dc = wingdi.GetDesktopDC()
 		try:
 			self._splash = wingdi.CreateDIBSurfaceFromFile(dc, filename)

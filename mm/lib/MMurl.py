@@ -306,6 +306,13 @@ def pathname2url(path):
 			url = 'file://' + url
 	return url
 
+_url2pathname = url2pathname
+def url2pathname(url):
+	type, rest = splittype(url)
+	if type and type != 'file':
+		raise RuntimeError, 'Cannot convert non-local URL to pathname'
+	return _url2pathname(rest)
+
 def canonURL(url):
 	type, rest = splittype(url)
 	if not type or type == 'file':
