@@ -6,7 +6,7 @@ SMILpubid = '-//W3C//DTD SMIL 1.0//EN'
 SMILdtd = 'http://www.w3.org/TR/REC-smil/SMIL10.dtd'
 SMIL1 = 'http://www.w3.org/TR/REC-smil'
 SMILBostonPubid = '-//W3C//DTD SMIL 2.0//EN'
-SMILBostonDtd = 'http://www.w3.org/2001/SMIL20/WD/SMIL20.dtd'
+SMILBostonDtd = 'http://www.w3.org/2001/SMIL20/PR/SMIL20.dtd'
 SMIL2 = 'http://www.w3.org/2001/SMIL20/PR/'
 # namespaces recognized by GRiNS
 # the first one is the required default namespace, but SMIL1
@@ -22,6 +22,9 @@ SMIL2ns = ['http://www.w3.org/2001/SMIL20/PR/Language',
 	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/Language',
 	   'http://www.w3.org/TR/REC-smil/2000/SMIL20',
 	   SMIL1]
+SMIL2DTDs = [SMILBostonDtd,
+	     'http://www.w3.org/2001/SMIL20/WD/SMIL20.dtd',
+	     ]
 GRiNSns = 'http://www.oratrix.com/'
 QTns = 'http://www.apple.com/quicktime/resources/smilextensions'
 
