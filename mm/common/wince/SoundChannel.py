@@ -115,7 +115,6 @@ class AudioPlayer:
 		cbwnd = windowinterface.getmainwnd()
 		self.hook_callbacks(cbwnd)
 		self._waveout = winmm.WaveOutOpen(self._wfx, cbwnd.GetSafeHwnd())
-		
 		self._waveout.Pause()
 		for hdr in self._wavhdrs:
 			hdr.PrepareHeader(self._waveout)
@@ -128,6 +127,7 @@ class AudioPlayer:
 			for hdr in self._wavhdrs:
 				hdr.UnprepareHeader(self._waveout)
 		del self._wavhdrs
+		self._waveout = None
 		self.decoder = None
 
 	def read_basic_audio(self, u, atype):
@@ -361,9 +361,11 @@ class AudioPlayer:
 			waveout = winmm.WaveOutFromHandle(wParam)
 			hdr.UnprepareHeader(waveout)
 			waveout.Detach()
-		if len(self._wavhdrs) < AudioPlayer.buffers_low and self._u is not None:
+		if self._u is not None and len(self._wavhdrs) < AudioPlayer.buffers_low:
 			self.read_more()
-
+		if self._u is None and len(self._wavhdrs) == 0 and self._waveout is not None:
+			self._waveout.Close()
+			self._waveout = None
 
 #########################################
 # The simplest possible form of SoundChannel
