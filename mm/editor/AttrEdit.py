@@ -854,7 +854,7 @@ class PreferenceWrapper(Wrapper):
 	def attrnames(self):
 		import settings
 		attrs = self.__strprefs.keys() + self.__intprefs.keys() + self.__boolprefs.keys() + self.__specprefs.keys()
-		if settings.get('compatibility') != settings.G2:
+		if settings.get('compatibility') == settings.G2:
 			attrs.remove('cmif')
 			attrs.remove('html_control')
 		elif os.name in ('posix', 'mac'):
