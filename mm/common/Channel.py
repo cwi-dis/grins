@@ -705,7 +705,7 @@ class Channel:
 					return node.context.findurl(val)
 		return node.context.findurl(MMAttrdefs.getattr(node, 'file'))
 
-	def getstring(self, node, urlopen=MMurl.urlopen):
+	def getstring(self, node):
 		if node.type == 'imm':
 			self.armed_url = ''
 			return string.joinfields(node.GetValues(), '\n')
@@ -713,13 +713,15 @@ class Channel:
 			url = self.getfileurl(node)
 			self.armed_url = url
 			try:
-				fp = urlopen(url)
+				# use urlretrieve so that data gets cached
+				fn = MMurl.urlretrieve(url)[0]
+				self.armed_url = MMurl._urlopener.openedurl
+				fp = open(fn, 'r')
+				text = fp.read()
+				fp.close()
 			except IOError:
 				import sys
 				raise error, 'Cannot open %s: %s, %s'%(url, sys.exc_type, sys.exc_value)
-			self.armed_url = fp.geturl()
-			text = fp.read()
-			fp.close()
 			#
 			# Convert dos/mac newlines to ours
 			#

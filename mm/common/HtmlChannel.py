@@ -439,12 +439,12 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.backlist.append((href, data))
 		self.url, tag = MMurl.splittag(href)
 		try:
-			u = MMurl.urlopen(self.url, data)
-			self.url = u.geturl()
-			if u.headers.maintype == 'image':
+			fn, hdrs = MMurl.urlretrieve(self.url, data)
+			self.url = MMurl._urlopener.openedurl
+			if hdrs.maintype == 'image':
 				newtext = '<IMG SRC="%s">\n' % self.url
 			else:
-				newtext = u.read()
+				newtext = open(fn, 'rb').read()
 		except IOError:
 			newtext = '<H1>Cannot Open</H1><P>'+ \
 				  'Cannot open '+self.url+':<P>'+ \
