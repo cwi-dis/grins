@@ -1021,7 +1021,7 @@ class MMChannel(MMTreeElement):
 			if attrName != 'type':
 				context.editmgr.setchannelattr(channelTarget.name, attrName, attrValue)
 		# restore the 'collapsed' information
-		channelTarget.collapsed = self['collapsed']
+		channelTarget.collapsed = self.get('collapsed')
 					
 	# compute a region name according to a base name
 	def __getName(self, context, name):
@@ -1215,6 +1215,9 @@ class MMChannel(MMTreeElement):
 		elif key == 'base_winoff':
 			# keep the compatibility with old version
 			self.setPxGeom(value)
+			return
+		elif key == 'collapsed':
+			self.collapsed = value
 			return
 		elif self.isCssAttr(key):
 			self.setCssAttr(key, value)
