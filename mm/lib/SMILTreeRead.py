@@ -392,7 +392,7 @@ class SMILParser(xmllib.XMLParser):
 					{'minwidth': 0, 'minheight': 0,
 					 'left': 0, 'top': 0,
 					 'width': 0, 'height': 0,
-					 'z-index': 0, 'fit': 'meet',
+					 'z-index': 0, 'fit': 'hidden',
 					 'background-color': 'transparent'}
 		if mediatype in ('image', 'video'):
 			x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
@@ -854,7 +854,7 @@ class SMILParser(xmllib.XMLParser):
 		self.__in_layout = LAYOUT_NONE
 
 	region_attributes = {'id':None, 'left':'0', 'top':'0', 'z-index':'0',
-			      'width':'0', 'height':'0', 'fit':'meet',
+			      'width':'0', 'height':'0', 'fit':'hidden',
 			      'background-color':'transparent',
 			      'skip-content':'true', 'title':None}
 	def start_region(self, attributes):
