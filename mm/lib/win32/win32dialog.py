@@ -1686,6 +1686,7 @@ class WallclockDialog(ResDialog):
 		self.__setwidget_asnum(self.w_hr, hr)
 		self.__setwidget_asnum(self.w_mn, mn)
 		self.__setwidget_asnum(self.w_sc, sc)
+		
 		self.w_tzsg.setoptions(['East', 'West'])
 		if tzsg == '+':
 			self.w_tzsg.setcursel(0) # east
@@ -1786,14 +1787,25 @@ class WallclockDialog(ResDialog):
 			self.disable_tz()
 
 	def enable_date(self):
+		# initialize fields
+		# XXX: it would be probably better at some point to initialize with the current day
+		self.w_dy.settext("1")
+		self.w_mt.setcursel(0) # january
+		self.w_yr.settext("2001")
+		
 		self.w_yr.enable(1)
 		self.w_mt.enable(1) # is a combo box.
 		self.w_dy.enable(1)
-
+		
 	def disable_date(self):
 		self.w_yr.enable(0)
 		self.w_mt.enable(0) # is a combo box.
 		self.w_dy.enable(0)
+
+		# clear fields
+		self.w_dy.settext("")
+		self.w_mt.setcursel(-1) 
+		self.w_yr.settext("")
 
 	def enable_tz(self):
 		self.w_tzsg.enable(1)	# combo box
