@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+  <head>
+    <meta name="title" content=" root-layout "/>
+    <meta name="generator" content="GRiNS editor 0.5 win32 patchlevel 5"/>
+    <layout>
+      <root-layout id="root-layout-" title=" root-layout " width="532" height="289"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="NEW1" title="NEW1" GRiNS:type="sound"/>
+    </layout>
+  </head>
+  <body>
+    <audio region="NEW1" src="mms://streammedia.cnet.com/radio/pm06-04.asf"/>
+  </body>
+</smil>
