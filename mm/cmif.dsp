@@ -688,6 +688,10 @@ SOURCE=.\editor\LayoutView.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\LayoutView2.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\LinkEdit.py
 # End Source File
 # Begin Source File
@@ -720,7 +724,27 @@ SOURCE=.\editor\splashimg.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\StructureWidgets.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\TemporalView.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\TemporalWidgets.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\TimeMapper.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\TopLevel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\TransitionView.py
 # End Source File
 # Begin Source File
 
@@ -1124,6 +1148,10 @@ SOURCE=.\lib\FtpWriter.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\GeometricPrimitives.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\GL_window.py
 # End Source File
 # Begin Source File
@@ -1276,6 +1304,10 @@ SOURCE=.\lib\SMILTreeWrite.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\SMILTreeWriteHtmlTime.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\smpte.py
 # End Source File
 # Begin Source File
@@ -1316,11 +1348,19 @@ SOURCE=.\lib\watchcursor.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\Widgets.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\windowinterface.doc
 # End Source File
 # Begin Source File
 
 SOURCE=.\lib\WMEVENTS.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\wmpsupport.py
 # End Source File
 # End Group
 # Begin Group "grins"
@@ -1530,6 +1570,62 @@ SOURCE=.\pylib\audio\wav.py
 SOURCE=.\pylib\audio\what.py
 # End Source File
 # End Group
+# Begin Group "pywinlib"
+
+# PROP Default_Filter ""
+# Begin Group "mfc"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\pylib\pywinlib\mfc\activex.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\pywinlib\mfc\afxres.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\pywinlib\mfc\dialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\pywinlib\mfc\docview.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\pywinlib\mfc\object.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\pywinlib\mfc\thread.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\pywinlib\mfc\window.py
+# End Source File
+# End Group
+# Begin Group "framework"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\pylib\pywinlib\framework\app.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\pywinlib\framework\interact.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\pywinlib\framework\intpyapp.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\pywinlib\framework\winout.py
+# End Source File
+# End Group
+# End Group
 # Begin Source File
 
 SOURCE=.\pylib\longpath.py
@@ -1556,6 +1652,10 @@ SOURCE=.\bin\win32\iGRiNS.py
 # Begin Source File
 
 SOURCE=.\bin\win32\iGRiNS_Boston.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\iGRiNS_Snap.py
 # End Source File
 # Begin Source File
 
