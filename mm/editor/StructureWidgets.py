@@ -739,16 +739,16 @@ class TimeStripSeqWidget(SeqWidget):
 	# Wow. I like this sort of code. If only the rest of the classes were this easy. -mjvdg
 	HAS_COLLAPSE_BUTTON = 0
 	HAS_CHANNEL_BOX = 1
-	def __repr__(self):
-		return "TimeStripSeqWidget"
+##	def __repr__(self):
+##		return "TimeStripSeqWidget"
 
 
 class ImageBoxWidget(MMNodeWidget):
 	# Common baseclass for dropbox and channelbox
 	# This is only for images shown as part of the sequence views; This
 	# is not used for any image on screen.
-	def __repr__(self):
-		return "ImageBoxWidget"
+##	def __repr__(self):
+##		return "ImageBoxWidget"
 	
 	def get_minsize(self):
 		return sizes_notime.MINSIZE, sizes_notime.MINSIZE
@@ -785,8 +785,8 @@ class DropBoxWidget(ImageBoxWidget):
 	# This is the stupid drop-box at the end of a sequence. Looks like a
 	# MediaWidget, acts like a MediaWidget, but isn't a MediaWidget.
 
-	def __repr__(self):
-		return "DropBoxWidget"
+##	def __repr__(self):
+##		return "DropBoxWidget"
 
 	def _get_image_filename(self):
 		f = os.path.join(self.mother.datadir, 'dropbox.tiff')
@@ -800,8 +800,8 @@ class ChannelBoxWidget(ImageBoxWidget):
 		self.node = node
 		self.parent = parent
 
-	def __repr__(self):
-		return "ChannelBoxWidget"
+##	def __repr__(self):
+##		return "ChannelBoxWidget"
 
 	def draw(self, displist):
 		ImageBoxWidget.draw(self, displist)
@@ -866,8 +866,8 @@ class UnseenVerticalWidget(StructureObjWidget):
 	def __init__(self, node, mother):
 		StructureObjWidget.__init__(self, node, mother)
 			
-	def __repr__(self):
-		return "UnseenVerticalWidget, name = "+self.name
+##	def __repr__(self):
+##		return "UnseenVerticalWidget, name = "+self.name
 
 	def get_minsize(self):
 		mw=0
@@ -990,8 +990,8 @@ class UnseenVerticalWidget(StructureObjWidget):
 class VerticalWidget(StructureObjWidget):
 	# Any node which is drawn vertically
 
-	def __repr__(self):
-		return "VerticalWidget, name is: " + self.name
+##	def __repr__(self):
+##		return "VerticalWidget, name is: " + self.name
 
 	def get_minsize(self):
 		mw=0
@@ -1165,7 +1165,7 @@ class ParWidget(VerticalWidget):
 		VerticalWidget.draw(self, display_list)
 
 
-class ExclWidget(VerticalWidget):
+class ExclWidget(SeqWidget):
 	# Exclusive node.
 	def draw(self, display_list):
 		willplay = not self.mother.showplayability or self.node.WillPlay()
@@ -1179,7 +1179,7 @@ class ExclWidget(VerticalWidget):
 		else:
 			display_list.drawfbox(color, self.get_box())
 			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
-		VerticalWidget.draw(self, display_list)
+		StructureObjWidget.draw(self, display_list)
 
 
 class PrioWidget(VerticalWidget):
@@ -1196,7 +1196,7 @@ class PrioWidget(VerticalWidget):
 		else:
 			display_list.drawfbox(color, self.get_box())
 			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
-		VerticalWidget.draw(self, display_list)
+		StructureObjWidget.draw(self, display_list)
 
 
 class SwitchWidget(VerticalWidget):
@@ -1247,8 +1247,8 @@ class MediaWidget(MMNodeWidget):
 		self.infoicon.set_callback(self.show_mesg)
 		self.node.views['struct_view'] = self
 
-	def __repr__(self):
-		return "MediaWidget, name: " + self.name
+##	def __repr__(self):
+##		return "MediaWidget, name: " + self.name
 
 	def destroy(self):
 		# Remove myself from the MMNode view{} dict.
@@ -1531,8 +1531,8 @@ class Icon(MMNodeWidget):
 
 class TimelineWidget(MMNodeWidget):
 	# A widget showing the timeline
-	def __repr__(self):
-		return "TimelineWidget"
+##	def __repr__(self):
+##		return "TimelineWidget"
 	
 	def get_minsize(self):
 		return f_timescale.strsizePXL(' 000:00 000:00 000:00 ')[0], 2*sizes_notime.TITLESIZE
