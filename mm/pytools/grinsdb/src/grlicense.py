@@ -15,20 +15,19 @@ Error = license.Error
 
 def main():
 	try:
-		options, args = getopt.getopt(sys.argv[1:], "lcrn:d:f:u:")
+		options, args = getopt.getopt(sys.argv[1:], "lcrn:d:f:u:Eo:")
 	except getopt.error:
 		usage()
 		sys.exit(1)
 	list = 0
 	create = 0
 	remove = 0
+	eval = 0
 	newid = None
 	date = None
 	name = None
 	features = []
-	if not args:
-		usage()
-		sys.exit(1)
+	outfile = None
 	for opt, optarg in options:
 		if opt == '-l':
 			list = 1
@@ -36,6 +35,9 @@ def main():
 			create = 1
 		if opt == '-r':
 			remove = 1
+		if opt == '-E':
+			eval = 1
+			create = 1
 		if opt == '-n':
 			try:
 				newid = string.atoi(optarg)
@@ -57,7 +59,16 @@ def main():
 				print "Error: -f:", arg
 		if opt == '-u':
 			name = optarg
-	if list + create  +remove != 1:
+		if opt == '-o':
+			outfile = optarg
+	if not eval and not args:
+		usage()
+		sys.exit(1)
+	if eval and not date:
+		print "Error: evaluation licenses need a date"
+		usage()
+		sys.exit(1)
+	if list + create  + remove != 1:
 		print "Error: exactly one of -c, -r or -l should be specified"
 		usage()
 		sys.exit(1)
@@ -70,7 +81,18 @@ def main():
 		usage()
 		sys.exit(1)
 	dbase = grinsdb.Database()
-	if list:
+	if outfile:
+		sys.stdout = open(outfile+".NEW", "w")
+	if eval:
+		if not features:
+			features = getdefaultfeatures()
+		if not newid:
+			newid = grinsdb.uniqueid()
+		license = codelicense(newid, date, features, name)
+		grinsdb.loglicense(license)
+		print "Evaluation-License:", license
+		print "Expires: %d/%d/%d"%date
+	elif list:
 		for email in args:
 			license = getfield(dbase, email, 'License')
 			if license:
@@ -90,17 +112,27 @@ def main():
 			else:
 				thisid = grinsdb.uniqueid()
 			license = codelicense(thisid, date, features, name)
+			grinsdb.loglicense(license)
 			addfield(dbase, email, 'License', license)
+	if outfile:
+		sys.stdout.close()
+		try:
+			os.rename(outfile, outfile+"~")
+		except OSError:
+			pass
+		os.rename(outfile+".NEW", outfile)
 
 def usage():
 	print "Usage: grlicense [options] user"
 	print " -l           Print license"
 	print " -c           Create license"
 	print " -r           Remove license"
+	print " -E           Evaluation license, no user required"
 	print " -n id        Use this id for new license"
-	print " -d yyyymmdd  Use this expiry date"
+	print " -d yyyymmdd  Use this expiry date (+N for N days in future)"
 	print " -f f1,f2,... Enable these features"
 	print " -u name      Encode this licenseename"
+	print " -o file      Write output to file (with backup)"
 
 def getdefaultfeatures():
 	return license.FEATURES["editor"]
@@ -116,6 +148,17 @@ def getfeatures(str):
 	return features
 			
 def getdate(str):
+	if str[0] == '+':
+		# A number of days in the future
+		try:
+			days = string.atoi(str[1:])
+		except string.atoi_error:
+			raise ValueError, "Incorrect date offset"
+		import time
+		tv = time.time()
+		tv = tv + days*24*60*60
+		yyyy, mm, dd = time.localtime(tv)[:3]
+		return (yyyy, mm, dd)
 	if len(str) != 8:
 		raise ValueError, "Incorrect date"
 	try:
