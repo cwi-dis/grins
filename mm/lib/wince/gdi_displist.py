@@ -460,7 +460,8 @@ class DisplayList:
 	def fitfont(self, fontname, str, margin = 0):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		return self.usefont(findfont(fontname, 10))
+		ptsize = self._window._topwindow.LDtoDD(10, round=1)
+		return self.usefont(findfont(fontname, ptsize))
 
 	# Returns font's  baseline
 	def baselinePXL(self):

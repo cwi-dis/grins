@@ -56,18 +56,29 @@ class Region(base_window.Window):
 	def update(self, rc = None):
 		if self._topwindow and self._topwindow != self:
 			if rc is None:
-				rc = self.getwindowpos()
+				rc = self.getVisibleWindowPos()
 			self._topwindow.update(rc)
 
 	def updateNow(self, rc = None):
 		if self._topwindow and self._topwindow != self:
 			if rc is None:
-				rc = self.getwindowpos()
+				rc = self.getVisibleWindowPos()
 			self._topwindow.updateNow(rc)
 	
 	def getDR(self):
-		rc = self.getwindowpos()
+		rc = self.getVisibleWindowPos()
 		return self._topwindow.LRtoDR(rc, round = 1)
+
+	def getVisibleWindowPos(self, rel = None):
+		if not self._parent:
+			return self.getwindowpos()
+		# clip to parent
+		ltrb1a = winstruct.ltrb(self.getwindowpos())
+		ltrb1b = winstruct.ltrb(self._parent.getwindowpos())
+		ltrb2 = winstruct.rectAnd(ltrb1a, ltrb1b)
+		if ltrb2 is None: 
+			return 0, 0, 0, 0
+		return self.xywh(ltrb2)
 
 	def getClipDR(self, dc):
 		# dc box
@@ -83,7 +94,8 @@ class Region(base_window.Window):
 		# common box
 		return winstruct.rectAnd(ltrb1, ltrb2)
 
-	def _paintOnSurf(self, surf, wnd_dc = None):
+
+	def _paintOnSurf(self, surf, wnd_dc = None, xywh_clip = None):
 		if wnd_dc is None:
 			wnd_dc = wingdi.GetDesktopDC()
 			release_wnd_dc = 1
@@ -94,7 +106,13 @@ class Region(base_window.Window):
 		oldsurf = dc.SelectObject(surf)
 
 		ws, hs = surf.GetSize()
-		xywh_dst = ltrb = 0, 0, ws, hs
+		xywh_dst = 0, 0, ws, hs
+
+		if xywh_clip is None:
+			ltrb = 0, 0, ws, hs
+		else:
+			ltrb = self.ltrb(xywh_clip)
+
 		if self._active_displist:
 			entry = self._active_displist._list[0]
 			bgcolor = None
@@ -164,8 +182,10 @@ class Region(base_window.Window):
 	# trans engine: calls self.paintOn(dc)
 	# i.e. trans engine is responsible to paint only this region
 	def _paint_1(self, dc, exclwnd = None):
+		if exclwnd==self: return
+
 		# first paint self transition surface
-		self._topwindow.blitSurfaceOn(dc, self._drawsurf, self.getwindowpos())
+		self._topwindow.blitSurfaceOn(dc, self._drawsurf, self.getVisibleWindowPos())
 		
 		# then paint children bottom up normally
 		L = self._subwindows[:]
@@ -177,13 +197,17 @@ class Region(base_window.Window):
 	# trans engine: calls self.paintOnDDS(self._drawsurf, self)
 	# i.e. trans engine responsible to paint correctly everything below 
 	def _paint_2(self, dc, exclwnd = None):
-		pass
+		if exclwnd==self: return
+
+		# paint transition surface
+		self._topwindow.blitSurfaceOn(dc, self._drawsurf, self.getVisibleWindowPos())
 
 	# transition, multiElement==true, childrenClip==true
 	# trans engine: calls self.paintOnDDS(self._drawsurf, self)
 	# i.e. trans engine is responsible to paint correctly everything below
 	def _paint_3(self, dc, exclwnd = None):
-		pass
+		if exclwnd==self: return
+		# not implemented yet
 		
 	def paint(self, dc, exclwnd = None):
 		if not self._isvisible or exclwnd == self:
@@ -392,7 +416,7 @@ class Viewport(Region):
 	
 	def cloneSurface(self, region, exclwnd = None, dopaint = 1):
 		# what rect to clone
-		rcd = xd, yd, wd, hd = self.LRtoDR(region.getwindowpos(), round = 1)
+		rcd = xd, yd, wd, hd = self.LRtoDR(region.getVisibleWindowPos(), round = 1)
 
 		wnd = self._ctx
 		dc = wingdi.GetDesktopDC()
@@ -426,7 +450,7 @@ class Viewport(Region):
 
 	def updateSurface(self, surf, region, exclwnd = None):
 		# what rect to update
-		rcd = xd, yd, wd, hd = self.LRtoDR(region.getwindowpos(), round = 1)
+		rcd = xd, yd, wd, hd = self.LRtoDR(region.getVisibleWindowPos(), round = 1)
 
 		wnd = self._ctx
 		dc = wingdi.GetDesktopDC()
