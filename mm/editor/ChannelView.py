@@ -626,26 +626,6 @@ class ChannelView(ViewDialog):
 		editmgr.rollback()
 		from ChannelMap import commonchanneltypes, otherchanneltypes
 		prompt = 'Select channel type, then place channel:'
-##		list = commonchanneltypes[:]
-##		list.append('Other...')
-##		list.append('Cancel')
-##		olist = otherchanneltypes[:]
-##		olist.append('Other...')
-##		olist.append('Cancel')
-##		while 1:
-##			default = len(list)-1
-##			i = windowinterface.multchoice(prompt, list, default)
-##			if i+1 >= len(list):
-##				return		# User doesn't want to choose
-##			elif list[i] == 'Other...':
-##				list, olist = olist, list
-##				continue
-##			type = list[i]
-##			break
-##		windowinterface.setcursor('channel')
-##		self.placing_channel = PLACING_NEW
-##		self.placing_type = type
-
 		list = []
 		for name in commonchanneltypes + otherchanneltypes:
 			list.append(name, (self.select_cb, (name,)))
