@@ -68,10 +68,10 @@ class LicenseDialog(components.ResDialog):
 		dc.DeleteDC()
 
 	def loadbmp(self):
-		import __main__, settings
+		import __main__, features
 		resdll=__main__.resdll
 		self.__bmp=win32ui.CreateBitmap()
-		if settings.get('lightweight'):
+		if features.lightweight:
 			self.__bmp.LoadBitmap(grinsRC.IDB_SPLASHLITE,resdll)
 		else:
 			self.__bmp.LoadBitmap(grinsRC.IDB_SPLASHPRO,resdll)
