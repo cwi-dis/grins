@@ -13,6 +13,17 @@ import grinsRC
 import usercmd
 import wndusercmd
 
+#
+# This is a hack by Jack copied from the editor by Sjoerd. We need fixed ID values
+# for the toolbars, because that is how their state
+# is saved in the registry. However, I couldn't find
+# a reasonable way to get these values into GRiNSRes.
+# The values are magic and deduced from afxres.h and from
+# the docktool example in the MSDN library.
+IDW_TOOLBAR_GENERAL=0xe803
+IDW_TOOLBAR_PLAYER=0xe804
+
+
 class Button:
 	def __init__(self, cmdid, iconindex):
 		self.type = 'button'
@@ -32,7 +43,7 @@ class Pulldown:
 		self.width = width
 
 GENERAL_TEMPLATE = (
-	('General', wndusercmd.TOOLBAR_GENERAL, grinsRC.IDR_GRINSED, (
+	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_GRINSED, (
 		Button(usercmd.OPENFILE, 1),
 		Button(usercmd.CLOSE, 7),
 		Button(usercmd.HELP, 9),
@@ -41,7 +52,7 @@ GENERAL_TEMPLATE = (
 )
 
 PLAYER_TEMPLATE = (
-	('Player Controls', wndusercmd.TOOLBAR_PLAYER, grinsRC.IDR_TB_PLAYER, (
+	('Player Controls', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_PLAYER, (
 		Button(usercmd.PLAY, 0),
 		Button(usercmd.PAUSE, 1),
 		Button(usercmd.STOP, 2),
