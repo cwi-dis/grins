@@ -218,6 +218,7 @@ sound_player(self)
 		buf[0] = AL_OUTPUT_RATE;
 		buf[1] = PRIV->s_play.samprate;
 		ALsetparams(AL_DEFAULT_DEVICE, buf, 2L);
+		sound_rate = PRIV->s_play.samprate;
 	}
 	config = ALnewconfig();
 	ALsetwidth(config, PRIV->s_play.sampwidth);
@@ -239,7 +240,11 @@ sound_player(self)
 				n = PRIV->s_play.bufsize;
 			n = fread(PRIV->s_play.sampbuf, PRIV->s_play.sampwidth,
 				  n, PRIV->s_play.f);
-			dprintf(("fread %d samples\n", n));
+			if (n <= 0) {
+				dprintf(("fread returned %d at %ld (nsamps = %d)\n", n, ftell(PRIV->s_play.f), nsamps));
+			} else {
+				dprintf(("fread %d samples\n", n));
+			}
 		} else
 			n = 0;
 
