@@ -53,6 +53,8 @@ ID is either an integer or an object that can be maped to an integer
 #	ModifyMenu|Modify an item in a menu.
 #	TrackPopupMenu|Creates a popup menu anywhere on the screen.
 
+import flags
+
 class Menu:
 	def __init__(self,type='menu'):
 		if type=='menu':m=win32ui.CreateMenu()
@@ -60,10 +62,7 @@ class Menu:
 		self.__dict__['_obj_'] = m
 		self._dynamic_cascade_dict={}	# dict holding dynamic menus, valid until next call
 		self._toggles={}
-		self._optional_dict = {'':1}
-		import settings
-		self._optional_dict['cmif'] = settings.get('cmif')
-		self._optional_dict['debug'] = settings.get('debug')
+		self._optional_flags = flags.curflags()
 
 	# Delete the underlying win32 object
 	def __del__(self):
@@ -139,7 +138,7 @@ class Menu:
 		flags=win32con.MF_STRING|win32con.MF_ENABLED
 		id=-1
 		for item in list:
-			if not self._optional_dict[item[0]]:
+			if not item[0] & self._optional_flags:
 				continue
 			if item[1]==ENTRY:
 				if self._cb_obj2id:id=self._cb_obj2id(item[4])
