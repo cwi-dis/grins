@@ -32,6 +32,7 @@ error = 'lib.win32.AttrEditForm.error'
 
 class AttrCtrl:
 	want_colon_after_label = 1
+	want_default_help = 1
 
 	def __init__(self,wnd,attr,resid):
 		self._wnd=wnd
@@ -45,7 +46,7 @@ class AttrCtrl:
 		infoc=self._wnd._attrinfo
 		a=self._attr
 		hd=a.gethelpdata()
-		if hd[1]:
+		if hd[1] or self.want_default_help:
 			infoc.settext("%s (leave empty for %s)"%(hd[2], hd[1]))
 		else:
 			infoc.settext(hd[2])
@@ -71,6 +72,8 @@ def fttoa(t,n,prec):
 
 ##################################
 class OptionsCtrl(AttrCtrl):
+	want_default_help = 0
+
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
 		self._attrname=components.Edit(wnd,resid[0])
@@ -130,6 +133,8 @@ class ChannelCtrl(OptionsCtrl):
 			self._attr.channelprops()
 
 class OptionsRadioCtrl(AttrCtrl):
+	want_default_help = 0
+
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
 		self._attrname=components.Control(wnd,resid[0])
@@ -191,6 +196,8 @@ class OptionsRadioCtrl(AttrCtrl):
 			self.enableApply()
 
 class OptionsCheckCtrl(AttrCtrl):
+	want_default_help = 0
+
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
 		self._attrname=components.Control(wnd,resid[0])
