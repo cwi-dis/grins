@@ -161,6 +161,7 @@ class SoundChannel(ChannelAsync):
 			if mark is None or not self.play_markers.has_key(mark):
 				continue
 			t = self.play_markers[mark] / float(rate) + (arc.delay or 0)
+			arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
 			if t <= 0:
 				self._playcontext.trigger(arc)
 			else:
