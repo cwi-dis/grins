@@ -28,7 +28,7 @@ debugParser = 0
 # animateMotion default origin
 # assume origin in ('layout', 'parent', 'topLayout')
 regionOrigin = 'parent' # smil20-profile (IE5.5 defaults to 'layout')
-mediaOrigin = 'layout' # smil20-profile
+mediaOrigin = 'parent' # smil20-profile
 
 
 # An Animator represents an animate element at run time.
