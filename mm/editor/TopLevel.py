@@ -87,11 +87,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	# the user whether he wants the editor to fix the errors
 	# automatically. Note: this test is a bit different than the
 	# test in the source view: if any error, there is no rollback
-	def __checkInitialErrors(self):
+	def __checkInitialErrors(self, allowCancel = 1):
 		context = self.root.GetContext()
 		parseErrors = context.getParseErrors()
 		if parseErrors != None:
-			ret = windowinterface.GetYesNoCancel("The source document contains some errors.\nDo you wish to accept GRiNS' automatic fixes?", self.window)
+			message = "The source document contains some errors.\nDo you wish to accept GRiNS' automatic fixes?"
+			if allowCancel:
+				ret = windowinterface.GetYesNoCancel(message, self.window)
+			else:
+				ret = windowinterface.GetYesNo(message, self.window)
 			if ret == 0: # yes
 				# accept the errors automatically fixed by GRiNS
 				context.setParseErrors(None)
@@ -1195,8 +1199,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# read the document		
 		self.read_it()
 
-		# check initial errors		
-		self.__checkInitialErrors()
+		# check initial errors, and don't allow cancel
+		self.__checkInitialErrors(0)
 
 		# update command list, re-make the views, and show the views prviously showed		
 		self.set_commandlist()
