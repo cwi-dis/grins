@@ -372,7 +372,7 @@ def getcolor(writer, node):
 def getsubregionatt(writer, node, attr):
 	from windowinterface import UNIT_PXL, UNIT_SCREEN
 
-	val = node.getCssRawAttr(attr)
+	val = node.GetRawAttrDef(attr, None)
 	if val is not None:
 		# save only if subregion positioning is different than region
 		if val == 0:
@@ -386,7 +386,7 @@ def getsubregionatt(writer, node, attr):
 
 def getfitatt(writer, node, attr):
 	try:
-		val = node.getCssRawAttr(attr)
+		val = node.getRawAttrDef(attr)
 	except:
 		fit = None
 	else:
@@ -834,16 +834,16 @@ smil_attrs=[
 	("layout", getlayout, "layout"),
 	("color", getcolor, "fgcolor"),		# only for brush element
 	# subregion positioning
-	("left", lambda writer, node:getsubregionatt(writer, node, 'left'), None),
-	("right", lambda writer, node:getsubregionatt(writer, node, 'right'), None),
-	("width", lambda writer, node:getsubregionatt(writer, node, 'width'), None),
-	("top", lambda writer, node:getsubregionatt(writer, node, 'top'), None),
-	("bottom", lambda writer, node:getsubregionatt(writer, node, 'bottom'), None),
-	("height", lambda writer, node:getsubregionatt(writer, node, 'height'), None),
-	("fit", lambda writer, node:getcmifattr(writer, node, 'fit', 'hidden'), None),
+	("left", lambda writer, node:getsubregionatt(writer, node, 'left'), "left"),
+	("right", lambda writer, node:getsubregionatt(writer, node, 'right'), "right"),
+	("width", lambda writer, node:getsubregionatt(writer, node, 'width'), "width"),
+	("top", lambda writer, node:getsubregionatt(writer, node, 'top'), "top"),
+	("bottom", lambda writer, node:getsubregionatt(writer, node, 'bottom'), "bottom"),
+	("height", lambda writer, node:getsubregionatt(writer, node, 'height'), "height"),
+	("fit", lambda writer, node:getcmifattr(writer, node, 'fit', 'hidden'), "fit"),
 	# registration points
-	("regPoint", lambda writer, node:getcmifattr(writer, node, "regPoint", 'topLeft'), None),
-	("regAlign", lambda writer, node:getcmifattr(writer, node, "regAlign", 'topLeft'), None),
+	("regPoint", lambda writer, node:getcmifattr(writer, node, "regPoint", 'topLeft'), "regPoint"),
+	("regAlign", lambda writer, node:getcmifattr(writer, node, "regAlign", 'topLeft'), "regAlign"),
 	
 	("backgroundColor", lambda writer, node:getbgcoloratt(writer, node, "bgcolor"), "bgcolor"),	
 	("z-index", lambda writer, node:getcmifattr(writer, node, "z"), "z"),	
@@ -1571,7 +1571,7 @@ class SMILWriter(SMIL):
 						attrlist.append(('close', val))
 
 			for name in ['width', 'height']:
-				value = ch.getCssRawAttr(name)
+				value = ch.GetAttrDef(name, None)
 				if type(value) == type(0.0):
 					attrlist.append((name, '%d%%' % int(value * 100 + .5)))
 				elif type(value) == type(0):
@@ -1624,7 +1624,7 @@ class SMILWriter(SMIL):
 			attrlist.append(('title', ch.name))
 	
 		for name in ['left', 'width', 'right', 'top', 'height', 'bottom']:
-			value = ch.getCssRawAttr(name)
+			value = ch.GetAttrDef(name, None)
 			# write only no auto values
 			if value != None:
 				if type(value) is type(0.0):
@@ -1636,7 +1636,7 @@ class SMILWriter(SMIL):
 			z = ch.get('z', 0)
 			if z > 0:
 				attrlist.append(('z-index', "%d" % z))
-			fit = ch.getCssRawAttr('fit','hidden')
+			fit = ch.GetAttrDef('fit','hidden')
 			if fit not in ('meet','slice','hidden','fill','scroll'):
 				fit = None
 				print '** Channel uses unsupported fit value', name
