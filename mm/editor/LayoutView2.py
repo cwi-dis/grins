@@ -963,6 +963,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.mkmediacommandlist()
 		self.mkregioncommandlist()
 		self.mkviewportcommandlist()
+		self.mknositemcommandlist()
 		
 	def fixtitle(self):
 		pass			# for now...
@@ -982,6 +983,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.commandViewportList = [
 				ATTRIBUTES(callback = (self.__editProperties, ())),
 				NEW_REGION(callback = (self.__newRegion, ())),
+				NEW_TOPLAYOUT(callback = (self.__newViewport, ())),
 				DELETE(callback = (self.__delNode, ())),
 				]
 		else:
@@ -994,6 +996,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.commandRegionList = [
 				ATTRIBUTES(callback = (self.__editProperties, ())),
 				NEW_REGION(callback = (self.__newRegion, ())),
+				NEW_TOPLAYOUT(callback = (self.__newViewport, ())),
 				DELETE(callback = (self.__delNode, ())),
 				]
 		else:
@@ -1005,6 +1008,15 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandMediaList = [
 				ATTRIBUTES(callback = (self.__editProperties, ())),
+				NEW_TOPLAYOUT(callback = (self.__newViewport, ())),
+				]
+		else:
+			self.commandMediaList = []
+
+	def mknositemcommandlist(self):
+		if features.CUSTOM_REGIONS in features.feature_set:
+			self.commandNoSItemList = [
+				NEW_TOPLAYOUT(callback = (self.__newViewport, ())),
 				]
 		else:
 			self.commandMediaList = []
@@ -1177,7 +1189,7 @@ class LayoutView2(LayoutViewDialog2):
 
 	def focusOnUnknown(self, focusobject):
 		# update command list
-		self.setcommandlist([])
+		self.setcommandlist(self.commandNoSItemList)
 		
 		# update previous area
 		self.previousWidget.selectUnknown(focusobject)
