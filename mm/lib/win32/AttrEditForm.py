@@ -4641,6 +4641,7 @@ class Convert4Group(Convert2Group):
 	def oninitdialog(self, wnd):
 		Convert2Group.oninitdialog(self, wnd)
 		self.__convert._check.hookcommand(wnd, self.__onconvert)
+		self.__onconvert(0, win32con.BN_CLICKED)
 
 	def __onconvert(self, id, code):
 		if code == win32con.BN_CLICKED:
