@@ -145,11 +145,16 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	# View manipulation.
 	#
 	def makeviews(self):
+		import settings
+
 		import HierarchyView
 		self.hierarchyview = HierarchyView.HierarchyView(self)
 
-		import ChannelView
-		self.channelview = ChannelView.ChannelView(self)
+		if not settings.get('lightweight'):
+			import ChannelView
+			self.channelview = ChannelView.ChannelView(self)
+		else:
+			self.channelview = None
 
 		import Player
 		self.player = Player.Player(self)
@@ -157,11 +162,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		import LinkEdit
 		self.links = LinkEdit.LinkEdit(self)
 
-		import LayoutView
-		self.layoutview = LayoutView.LayoutView(self)
+		if not settings.get('lightweight'):
+			import LayoutView
+			self.layoutview = LayoutView.LayoutView(self)
 
-		import UsergroupView
-		self.ugroupview = UsergroupView.UsergroupView(self)
+			import UsergroupView
+			self.ugroupview = UsergroupView.UsergroupView(self)
+		else:
+			self.layoutview = None
+			self.ugroupview = None
 
 		# Views that are destroyed by restore (currently all)
 		self.views = [self.player, self.hierarchyview,
