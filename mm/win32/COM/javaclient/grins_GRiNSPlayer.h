@@ -57,6 +57,14 @@ JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayer_ngetDuration
 
 /*
  * Class:     grins_GRiNSPlayer
+ * Method:    ngetFrameRate
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetFrameRate
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     grins_GRiNSPlayer
  * Method:    ngetSpeed
  * Signature: (I)D
  */
