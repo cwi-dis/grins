@@ -49,7 +49,7 @@ class SoundChannel() = Channel():
 			return getduration(filename)
 		except:
 			print 'cannot get duration for sound file ' + filename
-			return 0.0
+			return MMAttrdefs.getattr(node, 'duration')
 	#
 	def play(self, (node, callback, arg)):
 		filename = self.getfilename(node)
