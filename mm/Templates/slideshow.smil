@@ -3,10 +3,12 @@
                       "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
 <smil>
   <head>
-    <meta name="title" content="pictures"/>
+    <meta name="title" content=" slideshow "/>
+    <meta name="generator" content="GRiNS editor 0.4 Unix/motif patchlevel 0"/>
     <layout>
-      <region id="pictures" title="pictures" height="83%" fit="meet"/>
+      <root-layout id="slideshow-" title=" slideshow " width="320" height="320"/>
       <region id="audio" title="audio" fit="meet"/>
+      <region id="pictures" title="pictures" width="320" height="256" fit="meet"/>
     </layout>
   </head>
   <body>
