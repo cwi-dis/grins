@@ -1,0 +1,12 @@
+0. update editor\win32\patchlevel.py
+1. cvs update
+2. cd Build\win32\GRiNSedSMIL2Real
+3. execute domkp.bat
+4. update file list in Visual Studio (GRiNSedSMIL2Real -> Source
+   Files)
+5. build the project
+6. update destination file in installer
+   (Build\win32\GRiNSedSMIL2Real.wse, Build Settings -> Installation
+   EXE Name)
+7. compile installation
+8. distribute installation
