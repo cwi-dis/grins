@@ -712,8 +712,8 @@ class RegionNode(Node):
 		return minsize
 
 	def guessSize(self):
-		minWidth = 500
-		minHeight = 500
+		minWidth = 100
+		minHeight = 100
 		for child in self.children:
 			widthChild, heightChild = child.guessSize()
 			width = self._minsize(self.left, self.width,
