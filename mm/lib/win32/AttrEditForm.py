@@ -1665,7 +1665,7 @@ class AttrEditFormNew(GenFormView):
 		for ch in channels:
 			self._channels[ch.name]=ch
 #			print ch.attrdict
-			units=ch.attrdict['units']
+			units=ch.attrdict.get('units',0)
 			if ch.attrdict.has_key('winsize'):
 				w,h=ch.attrdict['winsize']
 				self._winsize=(w,h)
