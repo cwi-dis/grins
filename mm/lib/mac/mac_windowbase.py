@@ -145,6 +145,7 @@ def _init_cursors():
 #
 # ID's of resources
 ABOUT_ID=512
+ABOUT_VERSION_ITEM=2
 
 #
 # The fontfaces (which are unfortunately not defined in QuickDraw.py)
@@ -541,7 +542,7 @@ class _Toplevel(_Event):
 		
 	def _initmenu(self):
 		self._menubar = MenuBar(self)
-		AppleMenu(self._menubar, "About CMIF...", self._mselect_about)
+		AppleMenu(self._menubar, "About GRiNS...", self._mselect_about)
 		self._menus = []
 		
 	def initcommands(self, commandlist):
@@ -571,17 +572,20 @@ class _Toplevel(_Event):
 		if not d:
 			return
 		w = d.GetDialogWindow()
-		port = w.GetWindowPort()
-		l, t, r, b = port.portRect
-		sl, st, sr, sb = Qd.qd.screenBits.bounds
-		x = ((sr-sl) - (r-l)) / 2
-		y = ((sb-st-16) - (b-t)) / 5
-		w.MoveWindow(x, y, 0)
+##		port = w.GetWindowPort()
+##		l, t, r, b = port.portRect
+##		sl, st, sr, sb = Qd.qd.screenBits.bounds
+##		x = ((sr-sl) - (r-l)) / 2
+##		y = ((sb-st-16) - (b-t)) / 5
+##		w.MoveWindow(x, y, 0)
+		tp, h, rect = d.GetDialogItem(ABOUT_VERSION_ITEM)
+		import version
+		Dlg.SetDialogItemText(h, 'GRiNS ' + version.version)
 		w.ShowWindow()
 		d.DrawDialog()
 		while 1:
 			n = Dlg.ModalDialog(None)
-			if n == 1:
+			if n > 0:
 				return
 			print 'Huh? Selected', n
 		
