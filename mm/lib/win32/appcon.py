@@ -1,11 +1,10 @@
 __version__ = "$Id$"
 
-""" @win32doc|appcon
-This module contains all the win32 constants peculiar to
-the cmif application
-The more general win32 constants are mainly in win32con.py
-and of mfc in afxres.py
-"""
+# @win32doc|appcon
+# This module contains all the win32 constants peculiar to
+# the cmif application
+# The more general win32 constants are mainly in win32con.py
+# and of mfc in afxres.py
 
 import win32con
 
