@@ -803,7 +803,6 @@ class MMNode(MMNodeBase.MMNode):
 		termtype = MMAttrdefs.getattr(self, 'terminator')
 		alist = out0[:]
 		plist = []
-		ptlist = []
 		slist = []
 		tlist = []
 		result = [([(SCHED, self)] + in0, alist),
@@ -816,8 +815,7 @@ class MMNode(MMNodeBase.MMNode):
 			alist.append((SCHED, arg))
 			slist.append((SCHED_STOP, arg))
 			tlist.append((TERMINATE, arg))
-			cdur = Duration.get(arg)
-			if termtype == 'FIRST' and cdur > 0:
+			if termtype == 'FIRST':
 				added_entry = 1
 				result.append(([(SCHED_DONE, arg)],
 					       [(TERMINATE, self)]))
@@ -827,18 +825,22 @@ class MMNode(MMNodeBase.MMNode):
 				added_entry = 1
 				result.append(([(SCHED_DONE, arg)],
 					       [(TERMINATE, self)]))
-			elif cdur > 0:
-				ptlist.append((SCHED_DONE, arg))
 			else:
 				plist.append((SCHED_DONE, arg))
-		if plist or ptlist:
-			if (ptlist or duration == 0 or added_entry) and \
-			   (not added_entry or termtype == 'LAST'):
+		if plist:
+			# come here only when there were children, and
+			# termtype != 'FIRST' and (if termtype refers to
+			# a node) there were other children as well
+			if not added_entry:
+				# termtype=='LAST' or termtype refers to
+				# non-existent child
 				added_entry = 1
-				result.append((plist+ptlist,
+				result.append((plist,
 					       [(SCHED_DONE, self)] + out1))
 			else:
-				result.append((plist+ptlist, []))
+				# termtype refers to child, basically
+				# ignore the other children
+				result.append((plist, []))
 		if termtype != 'LAST' and added_entry:
 			tlist[len(tlist):] = [(SCHED_DONE, self)] + out1
 		if duration > 0:
