@@ -387,6 +387,7 @@ POPUP_HVIEW_STRUCTURE = (
 #			)),
 		(FLAG_ALL, ENTRY, 'Paste &file', None, PASTE_FILE),
 		(FLAG_ALL, SEP,),
+		(FLAG_PRO, ENTRY, 'Edit in Temporal view', None, EDIT_TVIEW),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
 		(FLAG_ALL, CASCADE, '&Insert', (
 			(FLAG_ALL, CASCADE, '&Image node', (

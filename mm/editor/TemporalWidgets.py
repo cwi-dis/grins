@@ -617,13 +617,13 @@ class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 		return 0;
 
 	def select_parents(self):
-		if self.node.parent:
+		if self.node.parent and self.node.parent.views.has_key('tempview'):
 			self.node.parent.views['tempview'].select_parents()
 		if not self.selected:
 			self.select()
 
 	def unselect_parents(self):
-		if self.node.parent:
+		if self.node.parent and self.node.parent.views.has_key('tempview'):
 			self.node.parent.views['tempview'].unselect_parents()
 		if self.selected:
 			self.unselect()

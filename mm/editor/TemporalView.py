@@ -156,6 +156,13 @@ class TemporalView(TemporalViewDialog):
 	def get_geodl(self):
 		return self.geodl
 
+	def goto_node(self, node):
+		if not isinstance(node, MMNode.MMNode):
+			print "DEBUG: temporal view could not jump to a non-MMNode."
+			return -1
+		self.root = node
+		self.redraw()
+
 	def draw(self):
 		self.geodl.redraw()
 
@@ -331,7 +338,7 @@ class TemporalView(TemporalViewDialog):
 		pass
 
 	def ev_exit(self, dummy, window, event, params):
-		print "I should kill myself (the window, that is :-) )"
+		print "TODO: Exit event."
 
 	def ev_pastefile(self, dummy, window, event, params):
 		print "Pasting a file!"

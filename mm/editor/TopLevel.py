@@ -294,6 +294,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def checkviews(self):
 		pass
+
+	def open_node_in_tview(self, node):
+		# This causes the temporal view to open the particular node as the root.
+		if self.temporalview:
+			self.temporalview.show()
+			self.temporalview.goto_node(node)
+		else:
+			windowinterface.showmessage('Sorry, but there is no temporal view here.')
 	
 	#
 	# Callbacks.
