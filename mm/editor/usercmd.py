@@ -340,6 +340,7 @@ class FIND_EVENT_SOURCE(_CommandBase):
 
 # Pseudo-commands for drag/drop
 class DRAG_NODE(_CommandBase): pass
+class DRAG_NODEUID(_CommandBase): pass
 class DRAG_PAR(_CommandBase): pass
 class DRAG_SEQ(_CommandBase): pass
 class DRAG_SWITCH(_CommandBase): pass

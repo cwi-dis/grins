@@ -9,6 +9,7 @@ import urlparse
 import posixpath
 import string
 import usercmd
+import windowinterface
 
 class AssetsView(AssetsViewDialog):
 	COLUMNLIST={
@@ -162,15 +163,28 @@ class AssetsView(AssetsViewDialog):
 			url = self.listdata[index][5]
 			return 'URL', url
 		if self.whichview == 'unused':
-			if type(self.listdata[index][0]) == type(''):
+			iteminfo = self.listdata[index][0]
+			if type(iteminfo) == type(''):
 				# String means it's a url
 				url = self.listdata[index][3]
 				return 'URL', url
+			elif hasattr(iteminfo, 'getClassName') and iteminfo.getClassName() == 'MMNode':
+				contextid = `id(iteminfo.context)`
+				nodeuid = iteminfo.GetUID()
+				return 'node', (contextid, nodeuid)
 			else:
 				windowinterface.beep()
 				return None, None
 		print 'Unknown self.whichview', self.whichview
 		return None, None
+
+	def finishdrag_callback(self, how):
+		if how == 'copy':
+			print "AssetView: Object was copied"
+		elif how == 'move':
+			print "AssetView: Object was moved, we have to delete"
+		else:
+			print "AssetView: nothing to do", how
 
 	def getunusedassets(self):
 		assetlist = []
@@ -180,7 +194,7 @@ class AssetsView(AssetsViewDialog):
 			# all others as clippings.
 			tp = node.GetType()
 			if tp == 'ext':
-				url = node.GetRawAttr('file')
+				url = node.GetRawAttrDef('file', '')
 			else:
 				url = ''
 			name = MMAttrdefs.getattr(node, 'name')
@@ -215,7 +229,7 @@ class AssetsView(AssetsViewDialog):
 		rv = []
 		tp = node.GetType()
 		if tp == 'ext':
-			url = node.GetRawAttr('file')
+			url = node.GetRawAttrDef('file','')
 			if url:
 				mimetype = node.GetComputedMimeType()
 				mimetype = string.split(mimetype, '/')[0]

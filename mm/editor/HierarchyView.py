@@ -923,11 +923,6 @@ class HierarchyView(HierarchyViewDialog):
 	#
 
 
-	#def movenode(self, bla)
-	# def cb_copynode(self, bla): clipboard interface
-	# whatever..
-
-
 	######################################################################
 	# Adding a node.
 	# This code is near the end of this class under various createbefore.. createafter.. callbacks.
@@ -1530,7 +1525,7 @@ class HierarchyView(HierarchyViewDialog):
 		return 1
 
 	# Copy node at position src to position dst
-	def dropnewstructnode(self, type, dest, pos):
+	def dropnewstructnode(self, type, pos):
 		self.toplevel.setwaiting()
 		xd, yd = pos
 		# Problem: dstobj will be an internal node.
@@ -1551,80 +1546,87 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		dummy = self.create(0, ntype=ntype)
 
-	# Copy node at position src to position dst
-	def copynode(self, dst, src):
+	def dropexistingnode(self, cmd, dstpos, srcnode=None, srcpos=None):
+		# cmd can be 'copy' or 'move'. The return value is the
+		# same or it can be 'copydone' which means the caller
+		# does not have to worry: we've copied its object if needed)
+		# (Actually pretty similar to None: nothing happened).
+		#
 		self.toplevel.setwaiting()
-		xd, yd = dst
-		xs, ys = src
-		# Problem: dstobj will be an internal node.
-		dstobj = self.whichhit(xd, yd)
-		srcobj = self.whichhit(xs, ys)
-
-		srcnode = srcobj.node.DeepCopy()
-		if srcnode.context is not self.root.context:
-			srcnode = srcnode.CopyIntoContext(self.root.context)
-		self.select_widget(dstobj)
-		dummy = self.insertnode(srcnode, 0)
-
-	# Move node at position src to position dst
-	def movenode(self, dst, src):
-		# XXX TODO: check this code.
-		xd, yd = dst
-		xs, ys = src
-		srcobj = self.whichhit(xs, ys)
-		dstobj = self.whichhit(xd, yd)
-
-		if srcobj is dstobj:
-			self.draw()
-			return
-
-		# We need to keep the nodes, because the objects get purged during each commit.
-		srcnode = srcobj.get_node()
-		destnode = dstobj.get_node()
-
-		# If srcnode is a parent of destnode, then we have a major case of incest.
-		# the node will be removed from it's position and appended to one of it's children.
-		# and then, garbage collected.
-		if srcnode.IsAncestorOf(destnode):
-			self.draw()
-			windowinterface.showmessage("You can't move a node into one of it's children.", mtype='error', parent = self.window)
-			return
-
-		if not srcnode or srcnode is self.root:
-			self.draw()
-			windowinterface.beep()
-			return
-
-		# Check that the node isn't itself, or a leaf node.
-		# If so, redraw and return.
-		if isinstance(dstobj, StructureWidgets.StructureObjWidget): # If it's an internal node.
-			nodeindex = dstobj.get_nearest_node_index(dst) # works for seqs and verticals!! :-)
-			self.select_node(destnode)
-			if nodeindex != -1:
-				assert nodeindex < len(destnode.children)
-				self.select_node(destnode.children[nodeindex])
-				if self.get_selected_widget() is srcnode: # The same node.
-					self.draw()
-					return
+		#
+		# Find source, optionally copy it (into context or straight)
+		#
+		mustdestroy = None
+		mustunlinksrc = 0
+		if not srcnode:
+			# Compat code for x/y based drag-drop.
+			sx, sy = srcpos
+			srcwidget = self.whichhit(sx, sy)
+			srcnode = srcwidget.node
+			if not srcnode:
+				# shouldn't happen
+				print "Drag-drop from nowhere..."
+				self.draw()
+				return None
+			if cmd == 'copy':
+				cmd = 'copydone'
+				srcnode = srcnode.DeepCopy()
+				mustdestroy = srcnode
 			else:
-				if len(destnode.children)>0 and destnode.children[-1] is srcnode:
-					# The same node.
-					self.draw()
-					return
+				mustunlinksrc = 1
+		if srcnode.context is not self.root.context:
+			# Node comes from another document.
+			srcnode = srcnode.CopyIntoContext(self.root.context)
+			mustdestroy = srcnode
+			cmd = 'copydone'
+		#
+		# Find destination node and check ancestry makes sense
+		#
+		dx, dy = dstpos
+		dstwidget = self.whichhit(dx, dy)
+		if not dstwidget:
+			print 'Drag-drop to nowhere...'
+			self.draw()
+			if mustdestroy:
+				mustdestroy.Destroy()
+			return None
+		dstnode = dstwidget.node
+		if cmd == 'move' and srcnode.IsAncestorOf(dstnode):
+			windowinterface.showmessage("You cannot move a node to its children")
+			if mustdestroy: 
+				mustdestroy.Destroy()
+			self.draw()
+			return None
+		#
+		# Find destination position
+		#
+		if isinstance(dstwidget, StructureWidgets.StructureObjWidget): # If it's an internal node.
+			nodeindex = dstwidget.get_nearest_node_index((dx, dy)) # works for seqs and verticals!! :-)
 		else:
 			# can't move to leaf node
+			if mustdestroy:
+				mustdestroy.Destroy()
 			self.draw()
 			windowinterface.beep()
-			return
-
+			return None
+		#
+		# Move or copy the node
+		#
 		em = self.editmgr
 		if not em.transaction():
+			if mustdestroy:
+				mustdestroy.Destroy()
 			self.draw()
 			return
 		self.toplevel.setwaiting()
-		em.delnode(srcnode)
-		em.addnode(destnode, nodeindex, srcnode)
+		if mustunlinksrc:
+			em.delnode(srcnode)
+		em.addnode(dstnode, nodeindex, srcnode)
 		em.commit()
+		#
+		# Return an indication of what we did
+		#
+		return cmd
 
 	#################################################
 	# Internal subroutines                          #
