@@ -687,16 +687,15 @@ class MMNode(MMNodeBase.MMNode):
 		arg = self
 		result = [([(SCHED, arg), (ARM_DONE, arg)] + in0,
 			   [(PLAY, arg)] + out0)]
-		for ev in in1:
-			result.append(([ev], [(TERMINATE, self)]))
-		if not MMAttrdefs.getattr(self, 'duration'):
+		if not Duration.get(self):
 			result.append(
-				([(PLAY_DONE, arg)],
+				([(PLAY_DONE, arg)] + in1,
 				 [(SCHED_DONE,arg)] + out1))
 			result.append(([(SCHED_STOP, arg)],
 				       [(PLAY_STOP, arg)]))
 		else:
-##			print 'Duration set to',MMAttrdefs.getattr(self, 'duration') 
+			for ev in in1:
+				result.append(([ev], [(TERMINATE, self)]))
 			result.append(
 				([(PLAY_DONE, arg)],
 				 [(SCHED_DONE,arg), (PLAY_STOP, arg)] + out1))
@@ -773,14 +772,14 @@ class MMNode(MMNodeBase.MMNode):
 				actions = [(SCHED_STOP, self.wtd_children[i-1])]
 			if i == n_sr-1:
 				last_actions = actions
-				actions = [(SCHED_DONE, self)]
+				actions = [(SCHED_DONE, self)] + out1
 			else:
 				actions.append((SCHED, self.wtd_children[i]))
 			sr_list.append((prereq, actions))
 			if i < n_sr-1:
 				t_list.append((TERMINATE,
 					       self.wtd_children[i]))
-		sr_list.append( ([(SCHED_STOP, self)], last_actions+out1) )
+		sr_list.append( ([(SCHED_STOP, self)], last_actions) )
 		for ev in in1:
 			sr_list.append(([ev], [(TERMINATE, self)]))
 ## 		t_list.append((SCHED_DONE, self))
@@ -795,7 +794,7 @@ class MMNode(MMNodeBase.MMNode):
 		alist = out0[:]
 		plist = []
 		ptlist = []
-		slist = out1[:]
+		slist = []
 		tlist = []
 		result = [([(SCHED, self)] + in0, alist),
 			  ([(SCHED_STOP, self)], slist),
@@ -827,11 +826,11 @@ class MMNode(MMNodeBase.MMNode):
 			   (not added_entry or termtype == 'LAST'):
 				added_entry = 1
 				result.append((plist+ptlist,
-					       [(SCHED_DONE, self)]))
+					       [(SCHED_DONE, self)] + out1))
 			else:
 				result.append((plist+ptlist, []))
-		if (termtype == 'FIRST' or termtype != 'LAST') and added_entry:
-			tlist.append((SCHED_DONE, self))
+		if termtype != 'LAST' and added_entry:
+			tlist[len(tlist):] = [(SCHED_DONE, self)] + out1
 		if duration > 0:
 			# if duration set, we must trigger a timeout
 			# and we must catch the timeout to terminate
@@ -839,12 +838,12 @@ class MMNode(MMNodeBase.MMNode):
 			alist.append((SYNC, (duration, self)))
 			if not added_entry:
 				result.append(([(SYNC_DONE, self)],
-					       [(SCHED_DONE, self)]))
+					       [(SCHED_DONE, self)] + out1))
 			else:
 				result.append(([(SYNC_DONE, self)],
 					       [(TERMINATE, self)]))
 		elif not self.wtd_children:
-			alist.append((SCHED_DONE, self))
+			alist[len(alist):] = [(SCHED_DONE, self)] + out1
 		return result, self.wtd_children
 # 	#
 #	# gensr_arcs returns 4 lists of sync arc events: incoming head,

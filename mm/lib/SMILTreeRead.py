@@ -62,31 +62,26 @@ class SMILParser(xmllib.XMLParser):
 		name, counter, delay = _parsetime(val)
 		if name is None:
 			# relative to parent/previous/start
-			if yside == TL:
-				# XXXX wrong if there's also a begin attr
-				xside = HD # rel to start of node
-				xnode = node
-			else:
-				parent = node.GetParent()
-				ptype = parent.GetType()
-				if ptype == 'seq':
-					xnode = None
-					for n in parent.GetChildren():
-						if n is node:
-							break
-						xnode = n
-					else:
-						self.error('node not in parent')
-					if xnode is None:
-						# first, relative to parent
-						xside = HD # rel to start of parent
-						xnode = parent
-					else:
-						# not first, relative to previous
-						xside = TL # rel to end of previous
+			parent = node.GetParent()
+			ptype = parent.GetType()
+			if ptype == 'seq':
+				xnode = None
+				for n in parent.GetChildren():
+					if n is node:
+						break
+					xnode = n
 				else:
+					self.error('node not in parent')
+				if xnode is None:
+					# first, relative to parent
 					xside = HD # rel to start of parent
 					xnode = parent
+				else:
+					# not first, relative to previous
+					xside = TL # rel to end of previous
+			else:
+				xside = HD # rel to start of parent
+				xnode = parent
 			synctolist.append((xnode.GetUID(), xside, delay, yside))
 		else:
 			# relative to other node
