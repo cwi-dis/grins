@@ -770,10 +770,7 @@ class MMNode:
 
 	def SetChannel(self, c):
 		if c is None:
-			try:
-				self.DelAttr('channel')
-			except NoSuchAttrError:
-				pass
+			self.DelAttr('channel')
 		else:
 			self.SetAttr('channel', c.name)
 
@@ -918,7 +915,7 @@ class MMNode:
 
 	def DelAttr(self, name):
 		if not self.attrdict.has_key(name):
-			raise NoSuchAttrError, 'in DelAttr()'
+			return		# nothing to do
 		del self.attrdict[name]
 		MMAttrdefs.flushcache(self)
 ##		self._updsummaries([name])

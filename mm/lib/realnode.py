@@ -80,10 +80,7 @@ class SlideShow:
 					# zap the URL so that the
 					# template doesn't get
 					# overwritten
-					try:
-						node.DelAttr('file')
-					except NoSuchAttrError:
-						pass
+					node.DelAttr('file')
 					url = self.url = ''
 				except:
 					pass
@@ -109,10 +106,7 @@ class SlideShow:
 				fp.close()
 			if is_data:
 				# zap the URL for "immediate" RP files
-				try:
-					node.DelAttr('file')
-				except NoSuchAttrError:
-					pass
+				node.DelAttr('file')
 				self.url = url = ''
 		self.url = url
 		self.rp = rp
