@@ -147,8 +147,7 @@ class EditMgr:
 	#
 	# Sync arc operations
 	#
-	def addsyncarc(self, xnode, xside, delay, ynode, yside):
-		skip = 0
+	def __isbegin(self, xnode, xside, ynode, yside):
 		if yside == HD:
 			if ynode.GetParent().GetType() == 'seq' and xside == TL:
 				prev = None
@@ -157,15 +156,21 @@ class EditMgr:
 						break
 					prev = n
 				if prev is not None and xnode is prev:
-					self.setnodeattr(ynode, 'begin', delay)
-					skip = 1
+					return 1
 			elif xside == HD and xnode is ynode.GetParent():
-				self.setnodeattr(ynode, 'begin', delay)
-				skip = 1
+				return 1
+		return 0
+
+	def addsyncarc(self, xnode, xside, delay, ynode, yside):
+		skip = 0
+		if self.__isbegin(xnode, xside, ynode, yside):
+			skip = 1
+			self.setnodeattr(ynode, 'begin', delay)
 		list = ynode.GetRawAttrDef('synctolist', None)
-		if list is None and not skip:
+		if list is None:
 			list = []
-			ynode.SetAttr('synctolist', list)
+			if not skip:
+				ynode.SetAttr('synctolist', list)
 		xuid = xnode.GetUID()
 		for item in list:
 			xn, xs, de, ys = item
@@ -176,21 +181,11 @@ class EditMgr:
 		if not skip:
 			self.addstep('addsyncarc', xnode, xside, delay, ynode, yside)
 			list.append((xuid, xside, delay, yside))
-	#
+
 	def delsyncarc(self, xnode, xside, delay, ynode, yside):
-		if yside == HD:
-			if ynode.GetParent().GetType() == 'seq' and xside == TL:
-				prev = None
-				for n in ynode.GetParent().GetChildren():
-					if n is ynode:
-						break
-					prev = n
-				if prev is not None and xnode is prev and ynode.GetAttrDef('begin',None) == delay:
-					self.setnodeattr(ynode, 'begin', None)
-					return
-			elif xside == HD and xnode is ynode.GetParent() and ynode.GetAttrDef('begin',None) == delay:
-				self.setnodeattr(ynode, 'begin', None)
-				return
+		if self.__isbegin(xnode, xside, ynode, yside):
+			self.setnodeattr(ynode, 'begin', None)
+			return
 		list = ynode.GetRawAttrDef('synctolist', [])
 		xuid = xnode.GetUID()
 		for item in list:

@@ -31,6 +31,7 @@ class SoundChannel(ChannelAsync):
 		self.arm_fp = None
 		self.play_fp = None
 		self.__qid = None
+		self.__evid = []
 		self.__rc = None
 		self.__playing = None
 
@@ -120,6 +121,10 @@ class SoundChannel(ChannelAsync):
 		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
 		begin = int(self.getclipbegin(node, 'sec') * rate + .5)
 		end = int(self.getclipend(node, 'sec') * rate + .5)
+		self.armed_markers = {}
+		for mid, mpos, mname in self.arm_fp.getmarkers() or []:
+			if mname:
+				self.armed_markers[mname] = mpos - begin
 		if begin or end:
 			from audio.select import select
 			self.arm_fp = select(self.arm_fp, [(begin, end)])
@@ -147,7 +152,19 @@ class SoundChannel(ChannelAsync):
 		if debug: print 'SoundChannel: play', node
 		self.play_fp = self.arm_fp
 		self.play_loop = self.arm_loop
+		self.play_markers = self.armed_markers
 		self.arm_fp = None
+		self.armed_markers = {}
+		rate = self.play_fp.getframerate()
+		for mark in node.events.keys():
+			for delay, ynode, aid in node.events[mark]:
+				if self.play_markers.has_key(mark):
+					t = self.play_markers[mark] / float(rate) + delay
+					if t <= 0:
+						self.__signal(ynode, aid)
+					else:
+						qid = self._scheduler.enter(t, 0, self.__signal, (ynode, aid,))
+						self.__evid.append(qid)
 		if self.armed_duration > 0:
 			self.__qid = self._scheduler.enter(
 				self.armed_duration, 0, self.__stopplay, ())
@@ -159,6 +176,9 @@ class SoundChannel(ChannelAsync):
 			return
 		if self.play_loop == 0 and self.armed_duration == 0:
 			self.playdone(0)
+
+	def __signal(self, ynode, aid):
+		self._playcontext.Event(ynode, aid)
 
 	def __stopplay(self):
 		self.__qid = None
@@ -183,6 +203,12 @@ class SoundChannel(ChannelAsync):
 				if self.__rc:
 					self.__rc.stopit()
 			else:
+				for qid in self.__evid:
+					try:
+						self._scheduler.cancel(qid)
+					except:
+						pass
+				self.__evid = []
 				if self.__qid is not None:
 					self._scheduler.cancel(self.__qid)
 					self.__qid = None
