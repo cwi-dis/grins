@@ -1,6 +1,9 @@
 __version__ = "$Id$"
 
+import string
 from urllib import *
+# Grr, 2.1 __all__ compatibility:
+from urllib import unwrap, pathname2url, url2pathname, splittype, splithost, splitquery, splitattr
 
 _OriginalFancyURLopener = FancyURLopener
 
