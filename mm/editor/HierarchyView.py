@@ -20,6 +20,7 @@ def fix(r, g, b): return r, g, b	# Hook for color conversions
 import settings
 DISPLAY_VERTICAL = settings.get('vertical_structure')
 hierarchy_minimum_sizes = settings.get('hierarchy_minimum_sizes')
+root_expanded = settings.get('root_expanded')
 
 
 # Color assignments (RGB)
@@ -177,6 +178,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Other administratrivia
 		self.editmgr.register(self)
 		self.toplevel.checkviews()
+		self.root.expanded = 1
 		self.recalc()
 
 	def hide(self, *rest):
@@ -526,7 +528,8 @@ class HierarchyView(HierarchyViewDialog):
 		if not obj:
 			windowinterface.beep()
 			return
-		if obj.node is not self.root and hasattr(obj.node, 'abox'):
+		if (not root_expanded or obj.node is not self.root) and \
+		   hasattr(obj.node, 'abox'):
 			l, t, r, b = obj.node.abox
 			if l <= x <= r and t <= y <= b:
 				self.prevfocusnode = self.focusnode
@@ -699,7 +702,8 @@ class HierarchyView(HierarchyViewDialog):
 		from windowinterface import UNIT_MM
 		window = self.window
 		self.cleanup()
-		self.root.expanded = 1	# root always expanded
+		if root_expanded:
+			self.root.expanded = 1	# root always expanded
 		width, height = sizeboxes(self.root)
 		cwidth, cheight = window.getcanvassize(UNIT_MM)
 		mwidth = mheight = 0 # until we have a way to get the min. size
@@ -843,7 +847,7 @@ def sizeboxes(node):
 		else:
 			height = height - GAPSIZE
 		width = width + 2 * EDGSIZE
-		height = height + 2 * EDGSIZE
+		height = height + EDGSIZE
 	else:
 		# minimum size if no children
 		width = height = MINSIZE
@@ -965,7 +969,7 @@ class Object:
 			if hasattr(node, 'expanded'):
 				# expanded node, point down
 				expcolor = EXPCOLOR
-				if node == self.mother.root:
+				if root_expanded and node is self.mother.root:
 					expcolor = BGCOLOR
 				d.drawfpolygon(expcolor,
 					[(l+hmargin, t+vmargin),
