@@ -45,6 +45,8 @@ ARR_LENGTH = 18
 ARR_HALFWIDTH = 5
 ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
+import ToolTip
+
 # The _Toplevel class represents the root of all windows.  It is never
 # accessed directly by any user code.
 class _Toplevel:
@@ -280,100 +282,6 @@ class _Timer:
 		apply(apply, client_data)
 		toplevel.setready()
 
-class _ToolTip:
-	def __init__(self):
-		self.__tid = None
-		self.__tooltips = {}
-		self.__popupwidget = None
-
-	def addtthandler(self, widget, tooltip):
-		# add a tooltip handler for the given widget
-		self.deltthandler(widget)
-		widget.AddEventHandler(X.EnterWindowMask|X.LeaveWindowMask, 0,
-				       self.__tooltipeh, tooltip)
-		self.__tooltips[widget] = tooltip
-		for w in widget.children or []:
-			if not w.IsSubclass(Xm.Gadget):
-				self.addtthandler(w, tooltip)
-
-	def deltthandler(self, widget):
-		# remove the tooltip handler for the given widget, if any
-		self.rmtt(widget)
-		tt = self.__tooltips.get(widget)
-		if tt is None:
-			return
-		del self.__tooltips[widget]
-		widget.RemoveEventHandler(X.EnterWindowMask|X.LeaveWindowMask,
-					  0, self.__tooltipeh, tt)
-
-	def rmtt(self, widget = None):
-		# remove the current tooltip, if any
-		if self.__popupwidget is not None:
-			popup, w = self.__popupwidget
-			if widget is None or w is widget:
-				self.__popupwidget = None
-				popup.Popdown()
-				popup.DestroyWidget()
-
-	def __ttdestroy(self, widget, client_data, call_data):
-		if self.__popupwidget is not None and \
-		   widget is self.__popupwidget[0]:
-			self.__popupwidget = None
-
-	def __tooltipeh(self, widget, tooltip, event):
-		if self.__tid is not None:
-			Xt.RemoveTimeOut(self.__tid)
-			self.__tid = None
-		self.rmtt()
-		if event.type == X.EnterNotify:
-			self.__tid = Xt.AddTimeOut(500, self.__tooltipto,
-						   (tooltip, widget))
-
-	def __tooltipto(self, (tooltip, widget), id):
-		self.__tid = None
-		try:
-			x, y = widget.TranslateCoords(0, 0)
-		except:
-			# maybe widget was already destroyed
-			return
-		if not widget.IsRealized() or not widget.IsManaged():
-			# widget not visible so don't display tooltip
-			return
-		if callable(tooltip):
-			tooltip = tooltip()
-		elif type(tooltip) is type(()):
-			tooltip = apply(apply, tooltip)
-		# else assume string
-		popup = widget.CreatePopupShell('help_popup', Xt.OverrideShell,
-				{'visual': toplevel._default_visual,
-				 'colormap': toplevel._default_colormap,
-				 'depth': toplevel._default_visual.depth})
-		self.__popupwidget = popup, widget
-		popup.AddCallback('destroyCallback', self.__ttdestroy, None)
-		label = popup.CreateManagedWidget('help_label', Xm.Label,
-						  {'labelString': tooltip})
-		# figure out placement
-		val = widget.GetValues(['width', 'height'])
-		w = val['width']
-		h = val['height']
-		# place below center of widget
-		x = x+w/2
-		y = y+h+5
-		# see if it fits there
-		val = label.GetValues(['width', 'height'])
-		width = val['width']
-		height = val['height']
-		if x + width > toplevel._screenwidth:
-			# too wide: extend to the left
-			x = x - width
-		if y + height > toplevel._screenheight:
-			# too hight: place above widget
-			y = y - h - 10 - height
-		popup.SetValues({'x': x, 'y': y})
-		popup.Popup(0)
-
-_tooltip = _ToolTip()
-
 class _CommandSupport:
 	def __init__(self):
 		self.__commandlist = []	# list of currently valid command insts
@@ -407,7 +315,7 @@ class _CommandSupport:
 				if not newdict.has_key(c):
 					for w in self.__widgetmap.get(c, []):
 						w.SetSensitive(0)
-						_tooltip.deltthandler(w)
+						ToolTip.deltthandler(w)
 			# then add new commands
 			for cmd in list:
 				c = cmd.__class__
@@ -415,7 +323,7 @@ class _CommandSupport:
 					for w in self.__widgetmap.get(c, []):
 						w.SetSensitive(1)
 						if cmd.help:
-							_tooltip.addtthandler(w, cmd.help)
+							ToolTip.addtthandler(w, cmd.help)
 		# reassign callbacks for accelerators
 		for c in oldlist:
 			for key in self.__accelmap.get(c, []):
@@ -435,7 +343,7 @@ class _CommandSupport:
 					widget.labelString = label[onoff]
 
 	def __callback(self, widget, callback, call_data):
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		if type(callback) is ClassType:
 			callback = self.__commanddict.get(callback)
 			if callback is not None:
@@ -1593,7 +1501,7 @@ class _Window(_AdornmentSupport):
 		self.close()
 
 	def _delete_callback(self, form, client_data, call_data):
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		self._arrowcache = {}
 		w = _in_create_box
 		if w:
@@ -1615,7 +1523,7 @@ class _Window(_AdornmentSupport):
 		toplevel.setready()
 
 	def _input_callback(self, form, client_data, call_data):
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		if self._parent is None:
 			return		# already closed
 		if _in_create_box:
@@ -1763,7 +1671,7 @@ class _Window(_AdornmentSupport):
 			self.showwindow(self._showing)
 
 	def _scr_resize_callback(self, w, form, call_data):
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		if self.is_closed():
 			return
 		width = max(self._form.width, w.width)
@@ -1771,7 +1679,7 @@ class _Window(_AdornmentSupport):
 		self._form.SetValues({'width': width, 'height': height})
 
 	def _resize_callback(self, form, client_data, call_data):
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		val = self._form.GetValues(['width', 'height'])
 		x, y = self._rect[:2]
 		width, height = val['width'], val['height']
@@ -3170,7 +3078,7 @@ class showmessage:
 		return self._main is None
 
 	def _callback(self, widget, callback, call_data):
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		if not self._main:
 			return
 		if _in_create_box and _in_create_box._rb_dialog is not self:
@@ -3403,7 +3311,7 @@ class FileDialog:
 		return self._main is None
 
 	def _cancel_callback(self, *rest):
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		must_close = TRUE
@@ -3421,7 +3329,7 @@ class FileDialog:
 			toplevel.setready()
 
 	def _ok_callback(self, widget, existing, call_data):
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		self._do_ok_callback(widget, existing, call_data)
@@ -3529,7 +3437,7 @@ class SelectionDialog:
 			self._main = None
 
 	def _nomatch_callback(self, widget, client_data, call_data):
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		ret = self.NomatchCallback(call_data.value)
@@ -3538,7 +3446,7 @@ class SelectionDialog:
 		toplevel.setready()
 
 	def _ok_callback(self, widget, client_data, call_data):
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		try:
@@ -3557,7 +3465,7 @@ class SelectionDialog:
 		toplevel.setready()
 
 	def _cancel_callback(self, widget, client_data, call_data):
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		try:
@@ -3615,7 +3523,7 @@ class InputDialog:
 		self.setcursor(_WAITING_CURSOR)
 
 	def _ok(self, w, client_data, call_data):
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		value = call_data.value
@@ -3625,7 +3533,7 @@ class InputDialog:
 			toplevel.setready()
 
 	def _cancel(self, w, client_data, call_data):
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		self.close()
@@ -3734,7 +3642,7 @@ class _Widget(_MenuSupport):
 		_MenuSupport.__init__(self)
 		self._form.AddCallback('destroyCallback', self._destroy, None)
 		if tooltip is not None:
-			_tooltip.addtthandler(widget, tooltip)
+			ToolTip.addtthandler(widget, tooltip)
 
 	def __repr__(self):
 		return '<_Widget instance at %x>' % id(self)
@@ -3747,7 +3655,7 @@ class _Widget(_MenuSupport):
 			pass
 		else:
 			del self._form
-			_tooltip.deltthandler(form)
+			ToolTip.deltthandler(form)
 			_MenuSupport.close(self)
 			form.DestroyWidget()
 		if self._parent:
@@ -3760,7 +3668,7 @@ class _Widget(_MenuSupport):
 
 	def _callback(self, widget, callback, call_data):
 		'''Generic callback.'''
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		apply(apply, callback)
@@ -4030,7 +3938,7 @@ class OptionMenu(_Widget):
 		self.setpos(startpos)
 
 	def _cb(self, widget, value, call_data):
-		_tooltip.rmtt()
+		ToolTip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		self._value = value
