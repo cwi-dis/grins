@@ -202,7 +202,13 @@ class Win32Msg:
 		s='message=%d wparam=%d lparam=%d' % (self._message,self._wParam,self._lParam)
 		return '<%s instance, %s>' % (self.__class__.__name__, s)
 	
-
+class Win32NotifyMsg:
+	def __init__(self, std, extra, ctrltype=None):
+		self.hwndFrom, self.idFrom, self.code = std
+		if ctrltype == 'tree':
+			self.action, self.itemOld, self.itemNew, self.pt = extra
+		elif ctrltype == 'list':
+			self.row, self.col, self.state = extra[:3]
 
 class CreateStruct:
 	def __init__(self,csd):
