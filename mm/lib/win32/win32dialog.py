@@ -304,7 +304,9 @@ class OpenLocationDlg(ResDialog):
 ##############################
 
 class SelectElementDlg(ResDialog):
-	ET_TOPLAYOUT, ET_REGION, ET_SUBREGION = 1, 2, 3
+	ET_TOPLAYOUT, ET_REGION, ET_SUBREGION = range(3)
+	mtypes = {'image':0, 'audio':1, 'video':2, 'text':3, 'html':4, 'brush':0, 'svg':5}
+	images = [grinsRC.IDB_IMAGE, grinsRC.IDB_SOUND, grinsRC.IDB_VIDEO, grinsRC.IDB_TEXT, grinsRC.IDB_HTML, grinsRC.IDB_SVG]
 	def __init__(self, parent, mmnode, selection=''):
 		ResDialog.__init__(self,grinsRC.IDD_SELECT_ELEMENT, parent)
 		self._mmnode = mmnode
@@ -316,13 +318,24 @@ class SelectElementDlg(ResDialog):
 		self._bcancel = Button(self,win32con.IDCANCEL)
 		self._editsel = Edit(self, grinsRC.IDC_EDIT1)
 		self._msg = Edit(self, grinsRC.IDC_STATIC_MSG)
+
 		self._tree = None
+		self._imageList = win32ui.CreateImageList(16, 12, 0, 8, 8)
+		self.appendImage(grinsRC.IDB_VIEWPORT)
+		self.appendImage(grinsRC.IDB_REGION)
+		for id in self.images:
+			self.appendImage(id)
+	
+	def appendImage(self, resid):
+		bitmap = loadBitmapFromResId(resid)
+		self._imageList.Add(bitmap.GetHandle(), 0)
 
 	def OnInitDialog(self):	
 		self.__isoswnd = 1
 		self.attach_handles_to_subwindows()
 		self._editsel.settext(self._selection)
 		self._tree = self.GetDlgItem(grinsRC.IDC_TREE1)
+		self._tree.SetImageList(self._imageList, commctrl.LVSIL_NORMAL)
 		self.buildElementsTree()
 		if self._selectionid:
 			self._tree.SetItemState(self._selectionid, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
@@ -364,7 +377,8 @@ class SelectElementDlg(ResDialog):
 		top_levels = ctx.getviewports()
 		self.__reg2id = {}
 		for top in top_levels:
-			itemid = self.insertLabel(top.GetUID(), self.ET_TOPLAYOUT)
+			name = top.GetUID()
+			itemid = self.insertLabel(name, self.ET_TOPLAYOUT, 0)
 			self.__reg2id[top] = itemid
 			self.__appendRegions(top, itemid)
 		self.__appendNodes(root)
@@ -376,7 +390,8 @@ class SelectElementDlg(ResDialog):
 	def __appendRegions(self, parent, itemid):
 		for reg in parent.GetChildren():
 			if reg.get('type') == 'layout':
-				childitemid = self.insertLabel(reg.GetUID(), self.ET_REGION, itemid)
+				name = reg.GetUID()
+				childitemid = self.insertLabel(name, self.ET_REGION, 0, itemid)
 				self.__reg2id[reg] = childitemid
 				self.__appendRegions(reg, childitemid)
 
@@ -401,7 +416,9 @@ class SelectElementDlg(ResDialog):
 					reg = mmchan.GetLayoutChannel()
 					regid = self.__reg2id.get(reg)
 					if regid is not None:
-						self.insertLabel(name, self.ET_SUBREGION, regid) 
+						mimetype = node.GetComputedMimeType()
+						mtype = string.split(mimetype, '/')[0]
+						self.insertLabel(name, self.ET_SUBREGION, self.mtypes.get(mtype) or 0, regid) 
 			self.__appendNodes(node)
 
 	def OnSelChanged(self, std, extra):
@@ -420,8 +437,9 @@ class SelectElementDlg(ResDialog):
 		elif etype == self.ET_TOPLAYOUT:
 			self._msg.settext('Element type: topLayout')
 
-	def insertLabel(self, text, etype = 0, parent = commctrl.TVI_ROOT, after = commctrl.TVI_LAST):
-		itemid = self._tree.InsertItem(commctrl.TVIF_TEXT | commctrl.TVIF_PARAM, text, 0, 0, 0, 0, etype, parent, after)
+	def insertLabel(self, text, etype = 0, imageix = 0, parent = commctrl.TVI_ROOT, after = commctrl.TVI_LAST):
+		mask = commctrl.TVIF_TEXT | commctrl.TVIF_PARAM |  commctrl.TVIF_IMAGE | commctrl.TVIF_SELECTEDIMAGE
+		itemid = self._tree.InsertItem(mask, text, etype+imageix, etype+imageix, 0, 0, etype, parent, after)
 		if text == 	self._selection:
 			self._selectionid = itemid
 		return itemid
