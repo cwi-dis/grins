@@ -155,13 +155,14 @@
 #define IDUC_SOURCE                     32824
 #define IDUC_UGROUPS                    32825
 #define IDUC_PASTEFILE                  32827
+#define IDUC_OPENURL                    32828
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        245
-#define _APS_NEXT_COMMAND_VALUE         32828
+#define _APS_NEXT_COMMAND_VALUE         32829
 #define _APS_NEXT_CONTROL_VALUE         1124
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
