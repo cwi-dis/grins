@@ -58,7 +58,7 @@ class NodeInfo:
 					'left': alter})
 		self.styles_browser = self.style_group.List('Styles:', [],
 				None,
-				{'top': top, 'right': None, 'left': None})
+				{'top': None, 'right': None, 'left': None})
 		self.styles_select = self.style_group.OptionMenu('All styles:',
 					['No styles'], 0, None,
 					{'left': None, 'bottom': None,
