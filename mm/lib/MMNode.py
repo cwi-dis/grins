@@ -57,6 +57,17 @@ class MMNodeContext:
 		self._soundlevelinfo = {} # doc soundLevel stat
 		from SMILCssResolver import SMILCssResolver
 		self.cssResolver = SMILCssResolver(self)
+		
+		self.__parseErrors = None # keep the parse errors (fatal, normal and warning)
+
+	def isValidDocument(self):
+		return self.getParseErrors() == None
+	
+	def getParseErrors(self):
+		return self.__parseErrors
+
+	def setParseErrors(self, errors):
+		self.__parseErrors = errors
 
 	def destroy(self):
 		# Well, I can cheat..
@@ -4278,6 +4289,30 @@ class FakeRootNode(MMNode):
 		del self.__root
 		self.Destroy(fakeroot = 1)
 
+class MMErrors:
+	def __init__(self, type):
+		self.list = []
+		self.type = type
+		self.source = None
+
+	def setType(self, type):
+		self.type = type
+
+	def getType(self):
+		return self.type
+	
+	def setErrorList(self, list):
+		self.list = list
+		
+	def getErrorList(self):
+		return self.list
+
+	def setSource(self, source):
+		self.source = source
+
+	def getSource(self):
+		return self.source
+	
 # Make a "deep copy" of an arbitrary value
 #
 def _valuedeepcopy(value):
@@ -4468,3 +4503,4 @@ def parseclockval(val, attr):
 	else:
 		raise ValueError('internal error')
 	return offset
+
