@@ -874,7 +874,7 @@ smil_attrs=[
 	("autoReverse", getautoreverse, "autoReverse"),
 	("system-bitrate", lambda writer, node:(not writer.prune and not writer.smilboston and getcmifattr(writer, node, "system_bitrate")) or None, "system_bitrate"),
 	("system-captions", lambda writer, node:(not writer.prune and not writer.smilboston and getboolean(writer, node, 'system_captions')) or None, "system_captions"),
-	("system-language", lambda writer, node:(not writer.prune and not writer.smilboston and getcmifattr(writer, node, "system_language")) or None, "system_language"),
+	("system-language", lambda writer, node:((not writer.prune or None) and (not writer.smilboston or None) and getcmifattr(writer, node, "system_language")), "system_language"),
 	("system-overdub-or-caption", lambda writer, node:(not writer.prune and not writer.smilboston and {'overdub':'overdub','subtitle':'caption'}.get(getcmifattr(writer, node, "system_overdub_or_caption"))) or None, None),
 	("system-required", lambda writer, node:(not writer.prune and not writer.smilboston and getcmifattr(writer, node, "system_required")) or None, "system_required"),
 	("system-screen-size", lambda writer, node:(not writer.prune and not writer.smilboston and getscreensize(writer, node)) or None, "system_screen_size"),
@@ -884,7 +884,7 @@ smil_attrs=[
 	("systemCaptions", lambda writer, node:(not writer.prune and writer.smilboston and getboolean(writer, node, 'system_captions')) or None, "system_captions"),
 	("systemComponent", lambda writer, node:(not writer.prune and writer.smilboston and getsyscomp(writer, node, 'system_component')) or None, "system_component"),
 	("systemCPU", lambda writer, node:(not writer.prune and writer.smilboston and getcmifattr(writer, node, "system_cpu")) or None, "system_cpu"),
-	("systemLanguage", lambda writer, node:(not writer.prune and writer.smilboston and getcmifattr(writer, node, "system_language")) or None, "system_language"),
+	("systemLanguage", lambda writer, node:((not writer.prune or None) and (writer.smilboston or None) and getcmifattr(writer, node, "system_language")), "system_language"),
 	("systemOperatingSystem", lambda writer, node:(not writer.prune and writer.smilboston and getcmifattr(writer, node, "system_operating_system")) or None, "system_operating_system"),
 	("systemOverdubOrSubtitle", lambda writer, node:(not writer.prune and writer.smilboston and getcmifattr(writer, node, "system_overdub_or_caption")) or None, "system_overdub_or_caption"),
 	("systemRequired", lambda writer, node:(not writer.prune and writer.smilboston and getsysreq(writer, node, "system_required")) or None, "system_required"),
@@ -2050,7 +2050,7 @@ class SMILWriter(SMIL):
 				value = func(self, x)
 				# gname is the attribute name as recorded in attributes
 				# name is the attribute name as recorded in SMIL file
-				if value:
+				if value is not None:
 					gname1 = '%s %s' % (GRiNSns, name)
 					gname2 = '%s %s' % (QTns, name)
 					if attributes.has_key(gname1):
