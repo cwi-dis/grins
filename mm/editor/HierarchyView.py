@@ -595,8 +595,9 @@ class HierarchyView(HierarchyViewDialog):
 	def mouse(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
 		x, y = params[0:2]
-		x = x * self.mcanvassize[0]
-		y = y * self.mcanvassize[1]
+		if x < 1.0 and y < 1.0:
+			x = x * self.mcanvassize[0]
+			y = y * self.mcanvassize[1]
 		self.mousehitx = x
 		self.mousehity = y
 		self.select(x, y)
@@ -605,8 +606,9 @@ class HierarchyView(HierarchyViewDialog):
 	def mouse0release(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
 		x,y = params[0:2]
-		x = x * self.mcanvassize[0]
-		y = y * self.mcanvassize[1]
+		if x < 1.0 and y < 1.0:
+			x = x * self.mcanvassize[0]
+			y = y * self.mcanvassize[1]
 		obj = self.scene_graph.get_obj_at((x,y))
 		obj.mouse0release()
 		self.draw()
@@ -625,8 +627,9 @@ class HierarchyView(HierarchyViewDialog):
 		# Called when a file is dragged-and-dropped onto this HeirachyView
 		x, y, filename = params
 		# Convert to pixels.
-		x = x * self.mcanvassize[0]
-		y = y * self.mcanvassize[1]
+		if x < 1.0 and y < 1.0:
+			x = x * self.mcanvassize[0]
+			y = y * self.mcanvassize[1]
 
 		if maybenode is not None:
 			# but how did dropfile() get a node?? Nevertheless..
@@ -713,9 +716,13 @@ class HierarchyView(HierarchyViewDialog):
 	def dragfile(self, dummy, window, event, params):
 		x, y = params
 		# Convert to absolute coordinates
-		x = x * self.mcanvassize[0]
-		y = y * self.mcanvassize[1]
+		if x < 1.0 and y < 1.0:
+			x = x * self.mcanvassize[0]
+			y = y * self.mcanvassize[1]
 		obj = self.whichhit(x, y)
+
+		print "DEBUG: Dragged to: ", obj
+
 		if not obj:
 			windowinterface.setdragcursor('dragnot')
 		elif obj.node.GetType() in MMNode.interiortypes:
@@ -1299,6 +1306,8 @@ class HierarchyView(HierarchyViewDialog):
 		# Now a bad hack.
 		# Return the scene object which is at position x,y.
 		# Used for dragging and dropping objects.
+		if x < 1.0 or y < 1.0:
+			print "DEBUG: Warning! Either this was a click at the top-right corner or we have unconverted relative coords."
 		return self.scene_graph.get_obj_at((x,y))
 		
 ##		hitobj = None
