@@ -57,12 +57,10 @@ class LicenseDialog(components.ResDialog):
 	# because of our resource file structure.
 	def OnDrawItem(self,params):
 		lParam=params[3]
-		print 'OnDrawItem', lParam
 		sdk = win32ui.GetWin32Sdk()
 		hdc=sdk.ParseDrawItemStruct(lParam)
 		dc=win32ui.CreateDCFromHandle(hdc)
 		rct=self.__splash.GetClientRect()
-		print 'rect=', rct
 		win32mu.BitBltBmp(dc,self.__bmp,rct)
 		br=sdk.CreateBrush(win32con.BS_SOLID,0,0)	
 		dc.FrameRectFromHandle(rct,br)
