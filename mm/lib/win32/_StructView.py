@@ -88,7 +88,7 @@ class _StructView(DisplayListView):
 
 		# draw objects on dcc
 		if self._active_displist:
-			self._active_displist._render(dcc,rect.xywh_tuple())
+			self._active_displist._render(dcc, rect.ltrb_tuple())
 
 		# copy bitmap
 		dcc.SetViewportOrg((0, 0))
