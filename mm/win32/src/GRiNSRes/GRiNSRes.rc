@@ -13,26 +13,6 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Neutral (Default) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
-#ifdef _WIN32
-LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
-IDC_STOP                CURSOR  DISCARDABLE     "RES\\Stop.cur"
-#endif    // Neutral (Default) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
 // English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -157,10 +137,9 @@ IDD_EDITSTRINGATTR DIALOG DISCARDABLE  0, 0, 285, 22
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Property:",IDC_STATIC,1,6,30,14
-    EDITTEXT        IDC_EDIT1,31,4,71,14,ES_AUTOHSCROLL | ES_READONLY | NOT 
+    EDITTEXT        IDC_EDIT1,6,4,90,14,ES_AUTOHSCROLL | ES_READONLY | NOT 
                     WS_TABSTOP
-    EDITTEXT        IDC_EDIT2,105,4,137,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT2,100,4,137,14,ES_AUTOHSCROLL
     PUSHBUTTON      "Reset",IDUC_RESET,244,4,33,14
 END
 
@@ -168,10 +147,9 @@ IDD_EDITOPTIONSATTR DIALOG DISCARDABLE  0, 0, 285, 22
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Property:",IDC_STATIC,1,6,27,12
-    EDITTEXT        IDC_EDIT1,31,4,71,14,ES_AUTOHSCROLL | ES_READONLY | NOT 
+    EDITTEXT        IDC_EDIT1,6,4,90,14,ES_AUTOHSCROLL | ES_READONLY | NOT 
                     WS_TABSTOP
-    COMBOBOX        IDC_COMBO1,105,5,134,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    COMBOBOX        IDC_COMBO1,100,5,134,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     PUSHBUTTON      "Reset",IDUC_RESET,244,4,33,14
 END
@@ -180,22 +158,21 @@ IDD_EDITFILEATTR DIALOG DISCARDABLE  0, 0, 285, 22
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    EDITTEXT        IDC_EDIT2,105,4,99,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT2,100,4,96,14,ES_AUTOHSCROLL
     PUSHBUTTON      "Reset",IDUC_RESET,244,4,33,14,NOT WS_TABSTOP
-    LTEXT           "Property:",IDC_STATIC,1,6,29,12
-    EDITTEXT        IDC_EDIT1,31,4,71,14,ES_AUTOHSCROLL | ES_READONLY | NOT 
+    EDITTEXT        IDC_EDIT1,6,4,90,14,ES_AUTOHSCROLL | ES_READONLY | NOT 
                     WS_TABSTOP
-    PUSHBUTTON      "Browse...",IDUC_BROWSE,205,4,34,14
+    PUSHBUTTON      "Browse...",IDUC_BROWSE,203,4,37,14
 END
 
-IDD_STDDLGBAR DIALOG DISCARDABLE  0, 0, 285, 25
+IDD_STDDLGBAR DIALOG DISCARDABLE  0, 0, 256, 25
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    PUSHBUTTON      "&Restore",IDUC_RESTORE,64,7,50,14
-    PUSHBUTTON      "&Apply",IDUC_APPLY,168,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,8,7,50,14
-    PUSHBUTTON      "OK",IDOK,227,7,50,14
+    DEFPUSHBUTTON   "OK",IDOK,198,7,50,14
+    PUSHBUTTON      "&Apply",IDUC_APPLY,144,7,50,14
+    PUSHBUTTON      "&Restore",IDUC_RESTORE,59,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,6,7,50,14
 END
 
 IDD_NODE_INFO_CMDBAR DIALOG DISCARDABLE  0, 0, 305, 24
@@ -508,8 +485,9 @@ BEGIN
 
     IDD_STDDLGBAR, DIALOG
     BEGIN
-        LEFTMARGIN, 8
-        RIGHTMARGIN, 277
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 248
+        VERTGUIDE, 2
         BOTTOMMARGIN, 23
     END
 
@@ -803,12 +781,12 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Dutch (Netherlands) resources
+// Neutral resources
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NLD)
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
 #ifdef _WIN32
-LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
-#pragma code_page(1252)
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#pragma code_page(1253)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -817,7 +795,28 @@ LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
 //
 
 IDB_SPLASHPLAY          BITMAP  DISCARDABLE     "RES\\player8bit.bmp"
-#endif    // Dutch (Netherlands) resources
+IDB_SPLASH              BITMAP  DISCARDABLE     "res\\splashimg.bmp"
+#endif    // Neutral resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Neutral (Default) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
+#pragma code_page(1253)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
+IDC_STOP                CURSOR  DISCARDABLE     "RES\\Stop.cur"
+#endif    // Neutral (Default) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -832,6 +831,14 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Cursor
+//
+
+IDC_DRAGMOVE            CURSOR  DISCARDABLE     "RES\\Dragmove.cur"
+IDC_DRAGLINK            CURSOR  DISCARDABLE     "RES\\Draglink.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // Icon
 //
 
@@ -839,21 +846,6 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 // remains consistent on all systems.
 IDI_GRINS_ED            ICON    DISCARDABLE     "res\\grins_ed.ico"
 IDI_CREATE_BOX          ICON    DISCARDABLE     "res\\ico00001.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Bitmap
-//
-
-IDB_SPLASH              BITMAP  DISCARDABLE     "res\\splashimg.bmp"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_DRAGMOVE            CURSOR  DISCARDABLE     "RES\\Dragmove.cur"
-IDC_DRAGLINK            CURSOR  DISCARDABLE     "RES\\Draglink.cur"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
