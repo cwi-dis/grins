@@ -12,11 +12,12 @@ import mac_image
 import imgformat
 import img
 import imageop
+import sys
 
 #
 # The cursors we need
 #
-_arrow = Qd.arrow
+_arrow = Qd.qd.arrow
 _watch = Qd.GetCursor(4).data
 
 #
@@ -34,10 +35,10 @@ _y_pixel_per_mm = _y_pixel_per_inch / 25.4
 # Conversion from inner-window coordinates (as in cmif) to outer
 # XXXX Not correct
 #
-_window_left_offset=2
-_window_right_offset=2
-_window_top_offset=2
-_window_bottom_offset=2
+_window_left_offset=0
+_window_right_offset=0
+_window_top_offset=0
+_window_bottom_offset=0
 
 #
 # Assorted constants
@@ -89,6 +90,8 @@ class _Event:
 		self._timerfunc = None
 		self._time = Evt.TickCount()/TICKS_PER_SECOND
 		self._idles = []
+		l, t, r, b = Qd.qd.screenBits.bounds
+		self._draglimit = l+4, t+4, r-4, b-4
 
 	def mainloop(self):
 		while 1:
@@ -138,6 +141,7 @@ class _Event:
 				else:
 					Qd.SetPort(wid)
 					wid.BeginUpdate()
+					# XXXX region to redraw
 					ourwin._redraw()
 					wid.EndUpdate()
 		else:
@@ -162,13 +166,7 @@ class _Event:
 				wid.SelectWindow()
 				return
 		elif partcode == Windows.inDrag:
-			if wid == Win.FrontWindow():
-				# Frontmost. Handle click.
-				pass # XXXX
-			else:
-				# Not frontmost. Activate.
-				wid.SelectWindow()
-				return
+			wid.DragWindow(where, self._draglimit)
 		elif partcode == Windows.inGrow:
 			pass # XXXX
 		elif partcode == Windows.inGoAway:
