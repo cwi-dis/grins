@@ -557,12 +557,13 @@ class _Event(AEServer):
 			return 1
 		return 0
 
-	def _do_user_item(self, wid, item):
+	def _do_user_item(self, dlg, item):
 		"""Handle redraw for user items in dialogs"""
+		wid = dlg.GetDialogWindow()
 		try:
 			win = self._wid_to_window[wid]
 		except KeyError:
-			print "Unknown dialog for user item redraw", wid, item
+			print "Unknown dialog for user item redraw", wid, dlg, item
 		else:
 			try:
 				redrawfunc = win.do_itemdraw
