@@ -24,9 +24,6 @@ import rma
 
 # ddraw.error
 import ddraw
-
-# temporary
-dissable_windowless_real_rendering = 1
 	
 class VideoChannel(Channel.ChannelWindowAsync):
 	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
@@ -198,10 +195,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			if self.__subtype=='flash':
 				self.__windowless_real_rendering = 0
 			
-			# temporary
-			if dissable_windowless_real_rendering:
-				self.__windowless_real_rendering = 0
-
 			if not self.__windowless_real_rendering:
 				self.window.CreateOSWindow(rect=self.getMediaWndRect())
 			if not self.__rc:
@@ -425,8 +418,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			except ddraw.error, arg:
 				print arg
 				return
-			if self.window:
-				self.window.update(self.window.getwindowpos())
+			windowinterface.settimer(0.01,(self.bltUpdate,()))
+
+	def bltUpdate(self):
+		if self.window:
+			self.window.update(self.window.getwindowpos())
 
 	def EndBlt(self):
 		# do not remove video yet 
