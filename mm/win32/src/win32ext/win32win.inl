@@ -112,6 +112,34 @@ ui_window_child_window_from_point(PyObject *self, PyObject *args)
 	return PyCWnd::make( UITypeFromCObject(pChild), pChild )->GetGoodRet();
 }
 
+static PyObject *
+ui_window_validate_rect(PyObject *self, PyObject *args)
+{
+	CWnd *pWnd = GetWndPtr(self);
+	BOOL erase=TRUE;
+
+	if (!pWnd)
+		return NULL;
+	CRect rect(CFrameWnd::rectDefault), *r;
+	// @pyparm (left, top, right, bottom)|rect|(0,0,0,0)|Rectangle to be
+	// updated.  If default param is used, the entire window is validated.
+	if (!PyArg_ParseTuple (args,
+	                      "(iiii):ValidateRect",
+	                      &rect.left, &rect.top,
+	                      &rect.right, &rect.bottom)) {
+		return NULL;
+	}
+	if (rect==CFrameWnd::rectDefault)
+		r = NULL;
+	else
+		r = &rect;
+	GUI_BGN_SAVE;
+	pWnd->ValidateRect(r);
+	// @pyseemfc CWnd|ValidateRect
+	GUI_END_SAVE;
+	RETURN_NONE;
+}
+
 
 /* 
 // @pymethod |PyCWnd|LockWindowUpdate|Disables drawing in the given window
@@ -707,7 +735,8 @@ ui_window_print_client(PyObject *self, PyObject *args)
 	{"ChildWindowFromPoint",ui_window_child_window_from_point,1},\
 	{"SubclassWindow",ui_window_subclass_window,1},\
 	{"ScrollWindow",ui_window_scroll_window,1},\
-	{"PrintClient",ui_window_print_client,1},
+	{"PrintClient",ui_window_print_client,1},\
+	{"ValidateRect",ui_window_validate_rect,1},
 
 
 
