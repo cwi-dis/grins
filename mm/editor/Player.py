@@ -55,6 +55,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.set_timer = toplevel.set_timer
 		self.timer_callback = self.scheduler.timer_callback
 		self.makechannels()
+		self._exporter = None
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (self.close_callback, ()),
 				     help = 'Close the Player View'),
@@ -94,6 +95,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.hide()
 		self.destroychannels()
 		self.close()
+		del self._exporter
 		del self.channelnames
 		del self.channels
 		del self.channeltypes
@@ -122,7 +124,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	def is_showing(self):
 		return self.showing
 
-	def show(self, afterfunc = None):
+	def show(self, afterfunc = None, offscreen = 0):
 		if self.is_showing():
 			PlayerDialog.show(self)
 			for ch in self.channels.values():
@@ -239,10 +241,23 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 
 	def stopped(self):
 		PlayerCore.stopped(self)
+		if self._exporter:
+			# XXX Or should we do this before calling stopped()?
+			self._exporter.finished(0)  # XXX
+			self.hide()
+			self.show()
 		if self.curlayout is None:
 			self.setlayout(self.savecurlayout, self.savecurchannel, self.savecallback)
 		else:
 			self.setlayout(self.curlayout, self.curchannel, self.savecallback)
+			
+	def exportplay(self, exporter):
+		self.hide()
+		self._exporter = exporter
+		self.show(offscreen=1)
+		for ch in self.channels.values():
+			ch.register_exporter(exporter) 
+		self.play()
 	#
 	# FORMS callbacks.
 	#

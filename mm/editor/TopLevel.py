@@ -117,7 +117,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				]
 				
 			print "TODO: make this version dependant. TopLevel.py:__init__()"
-			self.commandlist.append(EXPORT_WMP(callback = (self.bandwidth_callback, (self.export_WMP_callback,))));
+##			self.commandlist.append(EXPORT_WMP(callback = (self.bandwidth_callback, (self.export_WMP_callback,))));
+			self.commandlist.append(EXPORT_WMP(callback = (self.export_WMP_callback,())))
 			self.commandlist.append(UPLOAD_WMP(callback = (self.bandwidth_callback, (self.upload_WMP_callback,))));
 			
 			if compatibility.SMIL10 == features.compatibility:
@@ -419,9 +420,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def export_WMP_callback(self):	# mjvdg 11-oct-2000
 		# Actually... this isn't implemented yet!
 		print "DEBUG: WMP not implemented yet.";
-		windowinterface.showmessage("Please purchase the full version of GRiNS today!");
-		return;		       		    
-		self.export(compatibility.WMP);
+		import wmpsupport
+		wmpsupport.Exporter('output.wmv', self.player)
+##		windowinterface.showmessage("Please purchase the full version of GRiNS today!");
+##		return;		       		    
+##		self.export(compatibility.WMP);
 
 	def export(self, exporttype):
 		if exporttype != features.compatibility:
