@@ -1613,7 +1613,6 @@ class HierarchyView(HierarchyViewDialog):
 		# Find source, optionally copy it (into context or straight)
 		#
 		mustdestroy = None
-		mustunlinksrc = 0
 		if not srcnode:
 			# Compat code for x/y based drag-drop.
 			sx, sy = srcpos
@@ -1628,8 +1627,6 @@ class HierarchyView(HierarchyViewDialog):
 				cmd = 'link'
 				srcnode = srcnode.DeepCopy()
 				mustdestroy = srcnode
-			else:
-				mustunlinksrc = 1
 		if srcnode.context is not self.root.context:
 			# Node comes from another document.
 			srcnode = srcnode.CopyIntoContext(self.root.context)
@@ -1675,7 +1672,9 @@ class HierarchyView(HierarchyViewDialog):
 			self.draw()
 			return
 		self.toplevel.setwaiting()
-		if mustunlinksrc:
+		if srcnode.GetParent():
+			 # If the source is still in the tree this is a
+			 # move from ourselves so we unlink it.
 			em.delnode(srcnode)
 		em.addnode(dstnode, nodeindex, srcnode)
 		em.commit()
