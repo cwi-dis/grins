@@ -140,15 +140,17 @@ class AnchorEditor(AnchorEditorDialog):
 		if not new_alist:
 			new_alist = None
 		em.setnodeattr(n, 'anchorlist', new_alist)
-		for a in self.anchorlist:
-			if a not in old_alist:
+		old_alist = map(lambda a: a[A_ID], old_alist)
+		new_alist = map(lambda a: a[A_ID], new_alist)
+		for aid in new_alist:
+			if aid not in old_alist:
 				# new anchor
-				aid = (self.uid, a[A_ID])
+				aid = (self.uid, aid)
 				self.toplevel.links.set_interesting(aid)
-		for a in old_alist:
-			if a not in self.anchorlist:
+		for aid in old_alist:
+			if aid not in new_alist:
 				# deleted anchor
-				aid = (self.uid, a[A_ID])
+				aid = (self.uid, aid)
 				hlinks = self.context.hyperlinks
 				for link in hlinks.findalllinks(aid, None):
 					hlinks.dellink(link)
