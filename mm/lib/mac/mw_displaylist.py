@@ -109,34 +109,36 @@ class _DisplayList:
 		Qd.SetPort(window._wid)
 		if window._transparent == -1:
 			window._parent._clipchanged()
-		window._active_displist = self
-		if self._buttons:
-			window._buttonschanged()
 		#
-		# We make one optimization here: if we are a clone
-		# and our parent is the current display list and
-		# our parent has already been really rendered (i.e.
-		# the update event has been received) we don't have
-		# to send an InvalRect for the whole window area but
-		# only for the bit that differs between clone and parent.
+		# Optimize rendering. There are two cases in which we want to draw immedeately:
+		# - If we are the topmost window and no update event is pending for us (so things
+		#   look a bit more snappy)
+		# - If we are a clone and our parent is already rendered we render now, and only
+		#   the bits that are needed.
 		#
-		# XXXX This stopped working due to a mod by Sjoerd...
-		if 0 and self._cloneof and self._cloneof is window._active_displist \
-				and self._cloneof._really_rendered and self._clonebboxes:
-			for bbox in self._clonebboxes:
-				Win.InvalRect(bbox)
-			self._clonebboxes = []
-		elif self._can_render_now():
+		clonestart = self._clonestart
+		if self._cloneof and self._cloneof == window._active_displist and \
+				self._cloneof._really_rendered:
+		   render_now = 1
+		else:
+			render_now = self._can_render_now()
+		if render_now:
+			Qd.SetPort(window._wid)
 			if not window._clip:
 				window._mkclip()
 			saveclip = Qd.NewRgn()
 			Qd.GetClip(saveclip)
 			Qd.SetClip(window._clip)
-			self._render()
+			self._render(clonestart)
 			Qd.SetClip(saveclip)
 			Qd.DisposeRgn(saveclip)
 		else:
 			Win.InvalRect(window.qdrect())
+		
+		window._active_displist = self
+		if self._buttons:
+			window._buttonschanged()
+
 	
 	def _can_render_now(self):
 		"""Return true if we can do the render now, in stead of
@@ -152,14 +154,18 @@ class _DisplayList:
 		Qd.DisposeRgn(rgn)
 		return ok
 		
-	def _render(self):
+	def _render(self, clonestart=0):
 		self._really_rendered = 1
 		self._window._active_displist = self
 		Qd.RGBBackColor(self._bgcolor)
 		Qd.RGBForeColor(self._fgcolor)
-		if self._window._transparent <= 0:
-			Qd.EraseRect(self._window.qdrect())
-		for i in self._list:
+		if clonestart:
+			list = self._list[clonestart:]
+		else:
+			if self._window._transparent <= 0:
+				Qd.EraseRect(self._window.qdrect())
+			list = self._list
+		for i in list:
 			self._render_one(i)
 			
 	def _render_one(self, entry):
