@@ -11,6 +11,9 @@ from tokenize import tokenprog
 
 from string import letters, digits
 
+import re
+lf = re.compile('^[\r\n]*$')
+
 
 # Parser for CMIF files.
 # Conceivably subclassing from this class might make sense.
@@ -424,7 +427,7 @@ class MMParser:
 			else:
 				self.tokstart, self.pos = res.regs[3]
 			token = self.nextline[self.tokstart:self.pos]
-			if token != '\n': return token
+			if not lf.match(token): return token
 	#
 	# Default error handlers.
 	#
