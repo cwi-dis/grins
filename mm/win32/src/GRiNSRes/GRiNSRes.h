@@ -565,6 +565,7 @@
 #define IDC_EVENTLASSOO2                1348
 #define IDC_RADIO_UNUSED                1349
 #define IDC_RESULT                      1350
+#define IDC_RADIO_CLIPBOARD             1350
 #define IDC_YR                          1351
 #define IDC_CBDATE                      1353
 #define IDC_CBTZ                        1354
