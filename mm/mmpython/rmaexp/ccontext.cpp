@@ -8,24 +8,7 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "Python.h"
 
-#include "pntypes.h" 
-
-#if defined(_ABIO32) && _ABIO32 != 0
-typedef int bool;
-enum { false, true, };
-#endif
-
-
-#include "pncom.h"
-#include "pnresult.h"
-
-#include "rmacore.h"
-
-#include "pnwintyp.h"
-#include "rmawin.h"
-#include "rmaerror.h"
-#include "rmaclsnk.h"
-#include "rmaauth.h"
+#include "rma.h" 
 
 // our client context interfaces
 #include "rmapyclient.h"
@@ -67,6 +50,8 @@ ClientContext::ClientContext()
 
 ClientContext::~ClientContext()
 	{
+	for(int i=0;i<m_nInterfaces;i++)
+		m_aInterfaces[i]->Release();
 	}
 
 STDMETHODIMP

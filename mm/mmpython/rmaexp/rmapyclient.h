@@ -1,3 +1,11 @@
+
+/***********************************************************
+Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
+
+                        All Rights Reserved
+
+******************************************************************/
+
 #ifndef INC_RMAPYCLIENT
 #define INC_RMAPYCLIENT
 
@@ -17,6 +25,8 @@ struct IPyErrorSink: public IRMAErrorSink
 	{
     STDMETHOD(SetPyErrorSink)(THIS_
 				PyObject *obj) PURE;
+    STDMETHOD(SetErrorMessagesSupplier)(THIS_
+		IRMAErrorMessages* p) PURE;
 	};
 
 struct IPySiteSupplier: public IRMASiteSupplier
@@ -27,6 +37,10 @@ struct IPySiteSupplier: public IRMASiteSupplier
     STDMETHOD(SetOsWindowPosSize)(THIS_
 				PNxPoint p, 
 				PNxSize s) PURE;
+    STDMETHOD(SetSiteManager)(THIS_
+		IRMASiteManager* p) PURE;
+    STDMETHOD(SetCommonClassFactory)(THIS_
+		IRMACommonClassFactory* p) PURE;
 	};
 
 struct IPyAuthenticationManager: public IRMAAuthenticationManager

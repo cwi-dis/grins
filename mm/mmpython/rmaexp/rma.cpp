@@ -8,28 +8,25 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "Python.h"
 
-#include "pntypes.h" 
-
-#if defined(_ABIO32) && _ABIO32 != 0
-typedef int bool;
-enum { false, true, };
-#endif
-
-
-#include "pncom.h"
-#include "pnresult.h"
-
-#include "rmacore.h"
-
 #define INITGUID
-#include "pnwintyp.h"
-#include "rmawin.h"
-#include "rmaerror.h"
-#include "rmaclsnk.h"
-#include "rmaauth.h"
+#include "rma.h" 
+
+#ifdef _MACINTOSH
+#include <Events.h>
+#include <Folders.h>
+#include "macglue.h"
+
+#include <Windows.h>
+extern "C" {
+extern int WinObj_Convert(PyObject *, WindowPtr *);
+}
+#endif
 
 // our client context interfaces
 #include "rmapyclient.h"
+
+// thread python callback helpers
+#include "mtpycall.h"
 
 /////////////////////
 
@@ -39,12 +36,16 @@ void seterror(const char *msg){PyErr_SetString(ErrorObject, msg);}
 
 #define RELEASE(x) if(x) x->Release();x=NULL;
 
-/////////////////////
+#ifdef WITH_THREAD
+PyInterpreterState*
+PyCallbackBlock::s_interpreterState = NULL;
+#endif
 
+/////////////////////
 struct errors {
 	PN_RESULT error;
 	char *name;
-} errorlist [] = {
+}	errorlist [] = {
 	{ PNR_NOTIMPL              ,"NOTIMPL ", },     
 	{ PNR_OUTOFMEMORY		,"OUTOFMEMORY", }, 		
 	{ PNR_INVALID_PARAMETER	,"INVALID_PARAMETER", }, 	
@@ -54,7 +55,7 @@ struct errors {
 	{ PNR_ABORT                ,"ABORT", },                 
 	{ PNR_FAIL                 ,"FAIL", },                  
 	{ PNR_ACCESSDENIED         ,"ACCESSDENIED", },          
-	{ PNR_IGNORE			,"IGNORE", }, 			
+//	{ PNR_IGNORE			,"IGNORE", }, 			
 	{ PNR_OK				,"OK", }, 				
 
 	{ PNR_INVALID_OPERATION	,"INVALID_OPERATION", }, 	
@@ -213,10 +214,10 @@ struct errors {
 	{ PNR_BIN_OFFSET_PAST_END,"BIN_OFFSET_PAST_END", },					   
 	{ PNR_ENC_NO_ENCODED_DATA,"ENC_NO_ENCODED_DATA", },					
 	{ PNR_ENC_INVALID_DLL	,"ENC_INVALID_DLL", },						
-	{ PNR_NOT_INDEXABLE		,"NOT_INDEXABLE", },							
-	{ PNR_ENC_NO_BROWSER	,"ENC_NO_BROWSER", },						
-	{ PNR_ENC_NO_FILE_TO_SERVER,"ENC_NO_FILE_TO_SERVER", },					
-	{ PNR_ENC_INSUFFICIENT_DISK_SPACE,"ENC_INSUFFICIENT_DISK_SPACE_SPACE", },
+//	{ PNR_NOT_INDEXABLE		,"NOT_INDEXABLE", },							
+//	{ PNR_ENC_NO_BROWSER	,"ENC_NO_BROWSER", },						
+//	{ PNR_ENC_NO_FILE_TO_SERVER,"ENC_NO_FILE_TO_SERVER", },					
+//	{ PNR_ENC_INSUFFICIENT_DISK_SPACE,"ENC_INSUFFICIENT_DISK_SPACE_SPACE", },
 
 	{ PNR_RMT_USAGE_ERROR	,"RMT_USAGE_ERROR", },					
 	{ PNR_RMT_INVALID_ENDTIME,"RMT_INVALID_ENDTIME", },				
@@ -237,10 +238,9 @@ struct errors {
 	{ PNR_RMT_NO_DUMP_FILES	,"RMT_NO_DUMP_FILES", },					
 	{ PNR_RMT_NO_EVENT_DUMP_FILE,"RMT_NO_EVENT_DUMP_FILE", },	
 	{ PNR_RMT_NO_IMAP_DUMP_FILE,"RMT_NO_IMAP_DUMP_FILE", },				
-	{ PNR_RMT_NO_DATA		,"RMT_NO_DATA", },						
-	{ PNR_RMT_EMPTY_STREAM	,"RMT_EMPTY_STREAM", },					
-	{ PNR_RMT_READ_ONLY_FILE,"RMT_READ_ONLY_FILE", },				
-
+//	{ PNR_RMT_NO_DATA		,"RMT_NO_DATA", },						
+//	{ PNR_RMT_EMPTY_STREAM	,"RMT_EMPTY_STREAM", },					
+//	{ PNR_RMT_READ_ONLY_FILE,"RMT_READ_ONLY_FILE", },				
 
 	{ PNR_PROP_NOT_FOUND	,"PROP_NOT_FOUND", },			
 	{ PNR_PROP_NOT_COMPOSITE,"PROP_NOT_COMPOSITE", },		
@@ -259,8 +259,8 @@ struct errors {
 	{ PNR_INVALID_HTTP_PROXY_HOST,"INVALID_HTTP_PROXY_HOST", },	
 	{ PNR_INVALID_METAFILE	,"INVALID_METAFILE", },					
 	{ PNR_BROWSER_LAUNCH	,"BROWSER_LAUNCH", },					
-	{ PNR_VIEW_SOURCE_NOCLIP,"VIEW_SOURCE_NOCLIP", },				
-	{ PNR_VIEW_SOURCE_DISSABLED,"VIEW_SOURCE_DISSABLED", },				
+//	{ PNR_VIEW_SOURCE_NOCLIP,"VIEW_SOURCE_NOCLIP", },				
+//	{ PNR_VIEW_SOURCE_DISSABLED,"VIEW_SOURCE_DISSABLED", },				
 
 	{ PNR_RESOURCE_NOT_CACHED,"RESOURCE_NOT_CACHED", },				
 	{ PNR_RESOURCE_NOT_FOUND,"RESOURCE_NOT_FOUND", },				
@@ -277,8 +277,8 @@ struct errors {
 	{ PNR_PPV_OLD_PLAYER	,"PPV_OLD_PLAYER", },					
 	{ PNR_PPV_ACCOUNT_LOCKED,"PPV_ACCOUNT_LOCKED", },				
 // 	{ PNR_PPV_PROTOCOL_IGNORES,"PPV_PROTOCOL_IGNORES", },				
-	{ PNR_PPV_DBACCESS_ERROR   ,"PPV_DBACCESS_ERROR", },             
-	{ PNR_PPV_USER_ALREADY_EXISTS,"PPV_USER_ALREADY_EXISTS", },   
+//	{ PNR_PPV_DBACCESS_ERROR   ,"PPV_DBACCESS_ERROR", },             
+//	{ PNR_PPV_USER_ALREADY_EXISTS,"PPV_USER_ALREADY_EXISTS", },   
 
 //eruto-upgrade (RealUpdate) errors
 	{ PNR_UPG_AUTH_FAILED	,"UPG_AUTH_FAILED", },			
@@ -395,6 +395,73 @@ newRMAErrorSinkControlObject()
 	return self;
 }
 
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IRMASiteManager* pI;
+
+} RMASiteManagerObject;
+
+staticforward PyTypeObject RMASiteManagerType;
+
+static RMASiteManagerObject *
+newRMASiteManagerObject()
+{
+	RMASiteManagerObject *self;
+
+	self = PyObject_NEW(RMASiteManagerObject, &RMASiteManagerType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IRMACommonClassFactory* pI;
+
+} RMACommonClassFactoryObject;
+
+staticforward PyTypeObject RMACommonClassFactoryType;
+
+static RMACommonClassFactoryObject *
+newRMACommonClassFactoryObject()
+{
+	RMACommonClassFactoryObject *self;
+
+	self = PyObject_NEW(RMACommonClassFactoryObject, &RMACommonClassFactoryType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IRMAErrorMessages* pI;
+} RMAErrorMessagesObject;
+
+staticforward PyTypeObject RMAErrorMessagesType;
+
+static RMAErrorMessagesObject *
+newRMAErrorMessagesObject()
+{
+	RMAErrorMessagesObject *self;
+	self = PyObject_NEW(RMAErrorMessagesObject, &RMAErrorMessagesType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
 
 //
 typedef struct {
@@ -501,6 +568,7 @@ newAuthenticationManagerObject()
 	return self;
 }
 
+
 //(general but defined here for indepentance)
 typedef struct {
 	PyObject_HEAD
@@ -511,17 +579,19 @@ typedef struct {
 staticforward PyTypeObject UnknownType;
 
 static UnknownObject *
-newUnknownObject()
+newUnknownObject(void *pI=NULL)
 {
 	UnknownObject *self;
 
 	self = PyObject_NEW(UnknownObject, &UnknownType);
 	if (self == NULL)
 		return NULL;
-	self->pI = NULL;
+	self->pI = (IUnknown*)pI;
+	if(self->pI)self->pI->AddRef();
 	/* XXXX Add your own initializers here */
 	return self;
 }
+
 
 ///////////////////////////////////////////
 ///////////////////////////////////////////
@@ -532,7 +602,7 @@ newUnknownObject()
 // RMAClientEngine object 
 
 static char RMAClientEngine_CreatePlayer__doc__[] =
-""
+"Creates a new RMAPlayer instance"
 ;
 static PyObject *
 RMAClientEngine_CreatePlayer(RMAClientEngineObject *self, PyObject *args)
@@ -550,15 +620,30 @@ RMAClientEngine_CreatePlayer(RMAClientEngineObject *self, PyObject *args)
 		return NULL;
 	}
 	
-	// keep engine alive
+	// keep engine ref
 	obj->pEngine=self;
 	Py_INCREF(self);
 	
 	return (PyObject*)obj;
 }
 
+
+static char RMAClientEngine_GetPlayerCount__doc__[] =
+"Returns the current number of RMAPlayer instances supported by this client engine instance"
+;
+static PyObject *
+RMAClientEngine_GetPlayerCount(RMAClientEngineObject *self, PyObject *args)
+{
+	int nPlayers=0;
+	if (!PyArg_ParseTuple(args,""))
+		return NULL;
+	nPlayers = self->pI->GetPlayerCount();	
+	return Py_BuildValue("i",nPlayers);
+}
+
+
 static char RMAClientEngine_EventOccurred__doc__[] =
-""
+"Clients call this to pass OS events to all players. PNxEvent defines a cross-platform event."
 ;
 static PyObject *
 RMAClientEngine_EventOccurred(RMAClientEngineObject *self, PyObject *args)
@@ -590,6 +675,8 @@ RMAClientEngine_EventOccurred(RMAClientEngineObject *self, PyObject *args)
 
 static struct PyMethodDef RMAClientEngine_methods[] = {
 	{"CreatePlayer", (PyCFunction)RMAClientEngine_CreatePlayer, METH_VARARGS, RMAClientEngine_CreatePlayer__doc__},
+	{"GetPlayerCount", (PyCFunction)RMAClientEngine_GetPlayerCount, METH_VARARGS, RMAClientEngine_GetPlayerCount__doc__},
+	{"EventOccurred", (PyCFunction)RMAClientEngine_EventOccurred, METH_VARARGS, RMAClientEngine_EventOccurred__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -597,9 +684,12 @@ static void
 RMAClientEngine_dealloc(RMAClientEngineObject *self)
 {
 	/* XXXX Add your own cleanup code here */
+	
 	if (self->pI) {
+		// we should first close players
+		// int nPlayers = self->pI->GetPlayerCount();
 		self->fpCloseEngine(self->pI);
-		self->pI = NULL;
+		RELEASE(self->pI);
 	}
 	if (self->hDll) {
 		FreeLibrary(self->hDll);
@@ -660,9 +750,7 @@ RMAPlayer_OpenURL(RMAPlayerObject *self, PyObject *args)
 	char *psz;
 	if (!PyArg_ParseTuple(args, "s", &psz))
 		return NULL;
-	Py_BEGIN_ALLOW_THREADS
 	res = self->pI->OpenURL(psz);
-	Py_END_ALLOW_THREADS
 	if (FAILED(res)){
 		seterror("RMAPlayer_OpenURL", res);
 		return NULL;
@@ -679,10 +767,10 @@ RMAPlayer_Begin(RMAPlayerObject *self, PyObject *args)
 {
 	PN_RESULT res;
 	if (!PyArg_ParseTuple(args, ""))
-		return NULL;	
-	Py_BEGIN_ALLOW_THREADS
+		return NULL;
+	Py_BEGIN_ALLOW_THREADS	
 	res = self->pI->Begin();
-	Py_END_ALLOW_THREADS
+	Py_END_ALLOW_THREADS	
 	if (FAILED(res)){
 		seterror("RMAPlayer_Begin", res);
 		return NULL;
@@ -755,9 +843,7 @@ RMAPlayer_IsLive(RMAPlayerObject *self, PyObject *args)
 	BOOL res;
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;	
-	Py_BEGIN_ALLOW_THREADS
 	res=self->pI->IsLive();
-	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i",res);
 }
 
@@ -770,9 +856,7 @@ RMAPlayer_GetCurrentPlayTime(RMAPlayerObject *self, PyObject *args)
 	ULONG32 res;
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;	
-	Py_BEGIN_ALLOW_THREADS
 	res=self->pI->GetCurrentPlayTime();
-	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i",res);
 }
 
@@ -786,9 +870,7 @@ RMAPlayer_Seek(RMAPlayerObject *self, PyObject *args)
 	PN_RESULT res;
 	if (!PyArg_ParseTuple(args, "i", &val))
 		return NULL;
-	Py_BEGIN_ALLOW_THREADS
 	res=self->pI->Seek(val);
-	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i",res);
 }
 
@@ -803,9 +885,7 @@ RMAPlayer_SetClientContext(RMAPlayerObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "O!",&ClientContextType,&obj))
 		return NULL;
 	
-	Py_BEGIN_ALLOW_THREADS
 	res= self->pI->SetClientContext(obj->pI);
-	Py_END_ALLOW_THREADS
 	if (FAILED(res)){
 		seterror("RMAPlayer_SetClientContext", res);
 		return NULL;
@@ -826,20 +906,11 @@ RMAPlayer_AddAdviseSink(RMAPlayerObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "O!",&ClientAdviseSinkType,&obj))
 		return NULL;
 
-	IRMAClientAdviseSink* pI=NULL;
-	res=self->pI->QueryInterface(IID_IRMAErrorSinkControl,(void**)&pI);
-	if (FAILED(res)){
-		seterror("RMAPlayer_QueryIRMAErrorSinkControl", res);
-		return NULL;
-	}	
-
-	Py_BEGIN_ALLOW_THREADS
-	res= self->pI->AddAdviseSink(pI);
-	Py_END_ALLOW_THREADS
+	res= self->pI->AddAdviseSink(obj->pI);
 	if (FAILED(res)){
 		seterror("RMAPlayer_AddAdviseSink", res);
 		return NULL;
-	}	
+	}
 	Py_INCREF(Py_None);
 	return Py_None;	
 }
@@ -857,12 +928,73 @@ RMAPlayer_QueryIRMAErrorSinkControl(RMAPlayerObject *self, PyObject *args)
 		return NULL;	
 	obj = newRMAErrorSinkControlObject();
 	if(obj==NULL) return NULL;
-	Py_BEGIN_ALLOW_THREADS
 	res = self->pI->QueryInterface(IID_IRMAErrorSinkControl,(void**)&obj->pI);
-	Py_END_ALLOW_THREADS
 	if (FAILED(res)){
 		Py_DECREF(obj);
 		seterror("RMAPlayer_QueryIRMAErrorSinkControl", res);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
+static char RMAPlayer_QueryIRMASiteManager__doc__[] =
+""
+;
+static PyObject *
+RMAPlayer_QueryIRMASiteManager(RMAPlayerObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	RMASiteManagerObject *obj;	
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	obj = newRMASiteManagerObject();
+	if(obj==NULL) return NULL;
+	res = self->pI->QueryInterface(IID_IRMASiteManager,(void**)&obj->pI);
+	if (FAILED(res)){
+		Py_DECREF(obj);
+		seterror("RMAPlayer_QueryIRMASiteManager", res);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
+static char RMAPlayer_QueryIRMACommonClassFactory__doc__[] =
+""
+;
+static PyObject *
+RMAPlayer_QueryIRMACommonClassFactory(RMAPlayerObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	RMACommonClassFactoryObject *obj;	
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	obj = newRMACommonClassFactoryObject();
+	if(obj==NULL) return NULL;
+	res = self->pI->QueryInterface(IID_IRMACommonClassFactory,(void**)&obj->pI);
+	if (FAILED(res)){
+		Py_DECREF(obj);
+		seterror("RMAPlayer_QueryIRMACommonClassFactory", res);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
+static char RMAPlayer_QueryIRMAErrorMessages__doc__[] =
+""
+;
+static PyObject *
+RMAPlayer_QueryIRMAErrorMessages(RMAPlayerObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	RMAErrorMessagesObject *obj;	
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	obj = newRMAErrorMessagesObject();
+	if(obj==NULL) return NULL;
+	res = self->pI->QueryInterface(IID_IRMAErrorMessages,(void**)&obj->pI);
+	if (FAILED(res)){
+		Py_DECREF(obj);
+		seterror("RMAPlayer_QueryIRMAErrorMessages", res);
 		return NULL;
 	}
 	return (PyObject*)obj;
@@ -879,7 +1011,11 @@ static struct PyMethodDef RMAPlayer_methods[] = {
 	{"Seek", (PyCFunction)RMAPlayer_Seek, METH_VARARGS, RMAPlayer_Seek__doc__},
 	{"SetClientContext", (PyCFunction)RMAPlayer_SetClientContext, METH_VARARGS, RMAPlayer_SetClientContext__doc__},
 	{"AddAdviseSink", (PyCFunction)RMAPlayer_AddAdviseSink, METH_VARARGS, RMAPlayer_AddAdviseSink__doc__},
+
 	{"QueryIRMAErrorSinkControl", (PyCFunction)RMAPlayer_QueryIRMAErrorSinkControl, METH_VARARGS, RMAPlayer_QueryIRMAErrorSinkControl__doc__},
+	{"QueryIRMASiteManager", (PyCFunction)RMAPlayer_QueryIRMASiteManager, METH_VARARGS, RMAPlayer_QueryIRMASiteManager__doc__},
+	{"QueryIRMACommonClassFactory", (PyCFunction)RMAPlayer_QueryIRMACommonClassFactory, METH_VARARGS, RMAPlayer_QueryIRMACommonClassFactory__doc__},
+	{"QueryIRMAErrorMessages", (PyCFunction)RMAPlayer_QueryIRMAErrorMessages, METH_VARARGS, RMAPlayer_QueryIRMAErrorMessages__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -890,8 +1026,8 @@ RMAPlayer_dealloc(RMAPlayerObject *self)
 	if (self->pI) {
 		self->pEngine->pI->ClosePlayer(self->pI);
 		self->pI->Release();
-		self->pI = NULL;
-		Py_DECREF(self->pEngine);
+		if(self->pEngine->ob_refcnt>1)
+			Py_DECREF(self->pEngine);
 	}
 	PyMem_DEL(self);
 }
@@ -944,21 +1080,7 @@ static char RMAErrorSinkControl_QueryIUnknown__doc__[] =
 static PyObject *
 RMAErrorSinkControl_QueryIUnknown(RMAErrorSinkControlObject *self, PyObject *args)
 {
-	PN_RESULT res;
-	UnknownObject *obj;	
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;	
-	obj = newUnknownObject();
-	if(obj==NULL) return NULL;
-	Py_BEGIN_ALLOW_THREADS
-	res = self->pI->QueryInterface(IID_IUnknown,(void**)&obj->pI);
-	Py_END_ALLOW_THREADS
-	if (FAILED(res)){
-		Py_DECREF(obj);
-		seterror("RMAErrorSinkControl_QueryIUnknown", res);
-		return NULL;
-	}
-	return (PyObject*)obj;
+	return (PyObject*)newUnknownObject(self->pI);
 }
 
 static char RMAErrorSinkControl_AddErrorSink__doc__[] =
@@ -973,9 +1095,15 @@ RMAErrorSinkControl_AddErrorSink(RMAErrorSinkControlObject *self, PyObject *args
 	if (!PyArg_ParseTuple(args, "O!|ii", &ErrorSinkType,&obj,
 		&low_severity,&hi_severity))
 		return NULL;
-	Py_BEGIN_ALLOW_THREADS
-	res = self->pI->AddErrorSink((IRMAErrorSink*)obj->pI,UINT8(low_severity),UINT8(hi_severity));
-	Py_END_ALLOW_THREADS
+
+	IRMAErrorSink* pI=NULL;
+	res=obj->pI->QueryInterface(IID_IRMAErrorSink,(void**)&pI);
+	if (FAILED(res)){
+		seterror("ErrorSinkObject_QueryIRMAErrorSink", res);
+		return NULL;
+	}	
+	
+	res = self->pI->AddErrorSink(pI,UINT8(low_severity),UINT8(hi_severity));
 	if (FAILED(res)){
 		seterror("RMAErrorSinkControl_AddErrorSink", res);
 		return NULL;
@@ -1037,9 +1165,204 @@ static PyTypeObject RMAErrorSinkControlType = {
 // End of code for RMAErrorSinkControl object 
 ////////////////////////////////////////////
 
+
+////////////////////////////////////////////
+// RMASiteManager object 
+
+static char RMASiteManager_QueryIUnknown__doc__[] =
+""
+;
+static PyObject *
+RMASiteManager_QueryIUnknown(RMASiteManagerObject *self, PyObject *args)
+{
+	return (PyObject*)newUnknownObject(self->pI);
+}
+
+
+static struct PyMethodDef RMASiteManager_methods[] = {
+	{"QueryIUnknown", (PyCFunction)RMASiteManager_QueryIUnknown, METH_VARARGS, RMASiteManager_QueryIUnknown__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+RMASiteManager_dealloc(RMASiteManagerObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI)
+	PyMem_DEL(self);
+}
+
+static PyObject *
+RMASiteManager_getattr(RMASiteManagerObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(RMASiteManager_methods, (PyObject *)self, name);
+}
+
+static char RMASiteManagerType__doc__[] =
+""
+;
+
+static PyTypeObject RMASiteManagerType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"RMASiteManager",			/*tp_name*/
+	sizeof(RMASiteManagerObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)RMASiteManager_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)RMASiteManager_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	RMASiteManagerType__doc__ /* Documentation string */
+};
+
+// End of code for RMASiteManager object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// RMACommonClassFactory object 
+
+static char RMACommonClassFactory_QueryIUnknown__doc__[] =
+""
+;
+static PyObject *
+RMACommonClassFactory_QueryIUnknown(RMACommonClassFactoryObject *self, PyObject *args)
+{
+	return (PyObject*)newUnknownObject(self->pI);
+}
+
+
+static struct PyMethodDef RMACommonClassFactory_methods[] = {
+	{"QueryIUnknown", (PyCFunction)RMACommonClassFactory_QueryIUnknown, METH_VARARGS, RMACommonClassFactory_QueryIUnknown__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+RMACommonClassFactory_dealloc(RMACommonClassFactoryObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI)
+	PyMem_DEL(self);
+}
+
+static PyObject *
+RMACommonClassFactory_getattr(RMACommonClassFactoryObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(RMACommonClassFactory_methods, (PyObject *)self, name);
+}
+
+static char RMACommonClassFactoryType__doc__[] =
+""
+;
+
+static PyTypeObject RMACommonClassFactoryType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"RMACommonClassFactory",			/*tp_name*/
+	sizeof(RMACommonClassFactoryObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)RMACommonClassFactory_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)RMACommonClassFactory_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	RMACommonClassFactoryType__doc__ /* Documentation string */
+};
+
+// End of code for RMACommonClassFactory object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// RMAErrorMessages object 
+
+static char RMAErrorMessages_QueryIUnknown__doc__[] =
+""
+;
+static PyObject *
+RMAErrorMessages_QueryIUnknown(RMAErrorMessagesObject *self, PyObject *args)
+{
+	return (PyObject*)newUnknownObject(self->pI);
+}
+
+static struct PyMethodDef RMAErrorMessages_methods[] = {
+	{"QueryIUnknown", (PyCFunction)RMAErrorMessages_QueryIUnknown, METH_VARARGS, RMAErrorMessages_QueryIUnknown__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+RMAErrorMessages_dealloc(RMAErrorMessagesObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI)
+	PyMem_DEL(self);
+}
+
+static PyObject *
+RMAErrorMessages_getattr(RMAErrorMessagesObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(RMAErrorMessages_methods, (PyObject *)self, name);
+}
+
+static char RMAErrorMessagesType__doc__[] =
+""
+;
+
+static PyTypeObject RMAErrorMessagesType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"RMAErrorMessages",			/*tp_name*/
+	sizeof(RMAErrorMessagesObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)RMAErrorMessages_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)RMAErrorMessages_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	RMAErrorMessagesType__doc__ /* Documentation string */
+};
+
+// End of code for RMAErrorMessages object 
+////////////////////////////////////////////
+
+
 ////////////////////////////////////////////
 // ClientContext object 
-
 
 static char ClientContext_AddInterface__doc__[] =
 ""
@@ -1051,9 +1374,7 @@ ClientContext_AddInterface(ClientContextObject *self, PyObject *args)
 	UnknownObject *obj;
 	if (!PyArg_ParseTuple(args, "O!", &UnknownType,&obj))
 		return NULL;
-	Py_BEGIN_ALLOW_THREADS
 	res = self->pI->AddInterface(obj->pI);
-	Py_END_ALLOW_THREADS
 	if (FAILED(res)){
 		seterror("ClientContext_AddInterface", res);
 		return NULL;
@@ -1124,21 +1445,7 @@ static char ClientAdviseSink_QueryIUnknown__doc__[] =
 static PyObject *
 ClientAdviseSink_QueryIUnknown(ClientAdviseSinkObject *self, PyObject *args)
 {
-	PN_RESULT res;
-	UnknownObject *obj;	
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;	
-	obj = newUnknownObject();
-	if(obj==NULL) return NULL;
-	Py_BEGIN_ALLOW_THREADS
-	res = self->pI->QueryInterface(IID_IUnknown,(void**)&obj->pI);
-	Py_END_ALLOW_THREADS
-	if (FAILED(res)){
-		Py_DECREF(obj);
-		seterror("ClientAdviseSink_QueryIUnknown", res);
-		return NULL;
-	}
-	return (PyObject*)obj;
+	return (PyObject*)newUnknownObject(self->pI);
 }
 
 static char ClientAdviseSink_SetPyListener__doc__[] =
@@ -1218,25 +1525,47 @@ static char ErrorSink_QueryIUnknown__doc__[] =
 static PyObject *
 ErrorSink_QueryIUnknown(ErrorSinkObject *self, PyObject *args)
 {
+	return (PyObject*)newUnknownObject(self->pI);
+}
+
+static char ErrorSink_SetErrorMessagesSupplier__doc__[] =
+""
+;
+static PyObject *
+ErrorSink_SetErrorMessagesSupplier(ErrorSinkObject *self, PyObject *args)
+{
 	PN_RESULT res;
-	UnknownObject *obj;	
-	if (!PyArg_ParseTuple(args, ""))
+	RMAErrorMessagesObject *obj;	
+	if (!PyArg_ParseTuple(args, "O!",&RMAErrorMessagesType,&obj))
 		return NULL;	
-	obj = newUnknownObject();
-	if(obj==NULL) return NULL;
-	Py_BEGIN_ALLOW_THREADS
-	res = self->pI->QueryInterface(IID_IUnknown,(void**)&obj->pI);
-	Py_END_ALLOW_THREADS
+	res = self->pI->SetErrorMessagesSupplier(obj->pI);
 	if (FAILED(res)){
 		Py_DECREF(obj);
-		seterror("ErrorSink_QueryIUnknown", res);
+		seterror("ErrorSink_SetErrorMessagesSupplier", res);
 		return NULL;
 	}
-	return (PyObject*)obj;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char ErrorSink_SetPyListener__doc__[] =
+""
+;
+static PyObject *
+ErrorSink_SetPyListener(ErrorSinkObject *self, PyObject *args)
+{
+	PyObject *obj;	
+	if (!PyArg_ParseTuple(args, "O",&obj))
+		return NULL;	
+	self->pI->SetPyErrorSink(obj);
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 static struct PyMethodDef ErrorSink_methods[] = {
 	{"QueryIUnknown", (PyCFunction)ErrorSink_QueryIUnknown, METH_VARARGS, ErrorSink_QueryIUnknown__doc__},
+	{"SetErrorMessagesSupplier", (PyCFunction)ErrorSink_SetErrorMessagesSupplier, METH_VARARGS, ErrorSink_SetErrorMessagesSupplier__doc__},
+	{"SetPyListener", (PyCFunction)ErrorSink_SetPyListener, METH_VARARGS, ErrorSink_SetPyListener__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1297,25 +1626,68 @@ static char SiteSupplier_QueryIUnknown__doc__[] =
 static PyObject *
 SiteSupplier_QueryIUnknown(SiteSupplierObject *self, PyObject *args)
 {
+	return (PyObject*)newUnknownObject(self->pI);
+}
+
+static char SiteSupplier_SetOsWindow__doc__[] =
+""
+;
+static PyObject *
+SiteSupplier_SetOsWindow(SiteSupplierObject *self, PyObject *args)
+{
 	PN_RESULT res;
-	UnknownObject *obj;	
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;	
-	obj = newUnknownObject();
-	if(obj==NULL) return NULL;
-	Py_BEGIN_ALLOW_THREADS
-	res = self->pI->QueryInterface(IID_IUnknown,(void**)&obj->pI);
-	Py_END_ALLOW_THREADS
+	PyObject *pywin = NULL;
+#ifdef _MACINTOSH
+	WindowPtr hwnd;
+	if (!PyArg_ParseTuple(args, "O&", WinObj_Convert, &hwnd))
+		return NULL;
+	(void)PyArg_ParseTuple(args, "O", &pywin);
+#else
+	/* Windows */
+	int hwnd;
+	if (!PyArg_ParseTuple(args, "i", &hwnd))
+		return NULL;
+#endif
+	res = self->pI->SetOsWindow((void*)hwnd, pywin);
 	if (FAILED(res)){
-		Py_DECREF(obj);
-		seterror("SiteSupplier_QueryIUnknown", res);
+		seterror("SiteSupplier_SetOsWindow", res);
 		return NULL;
 	}
-	return (PyObject*)obj;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
+
+static char SiteSupplier_SetPositionAndSize__doc__[] =
+""
+;
+static PyObject *
+SiteSupplier_SetPositionAndSize(SiteSupplierObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	int x, y, w, h;
+	PNxPoint pos;
+	PNxSize size;
+	
+	if (!PyArg_ParseTuple(args, "(ii)(ii)", &x, &y, &w, &h))
+		return NULL;
+	pos.x = x;
+	pos.y = y;
+	size.cx = w;
+	size.cy = h;
+	res = self->pI->SetOsWindowPosSize(pos, size);
+	if (FAILED(res)){
+		seterror("SiteSupplier_SetOsWindowPosSize", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 
 static struct PyMethodDef SiteSupplier_methods[] = {
 	{"QueryIUnknown", (PyCFunction)SiteSupplier_QueryIUnknown, METH_VARARGS, SiteSupplier_QueryIUnknown__doc__},
+	{"SetOsWindow", (PyCFunction)SiteSupplier_SetOsWindow, METH_VARARGS, SiteSupplier_SetOsWindow__doc__},
+	{"SetPositionAndSize", (PyCFunction)SiteSupplier_SetPositionAndSize, METH_VARARGS, SiteSupplier_SetPositionAndSize__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1374,23 +1746,9 @@ static char AuthenticationManager_QueryIUnknown__doc__[] =
 ""
 ;
 static PyObject *
-AuthenticationManager_QueryIUnknown(SiteSupplierObject *self, PyObject *args)
+AuthenticationManager_QueryIUnknown(AuthenticationManagerObject *self, PyObject *args)
 {
-	PN_RESULT res;
-	UnknownObject *obj;	
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;	
-	obj = newUnknownObject();
-	if(obj==NULL) return NULL;
-	Py_BEGIN_ALLOW_THREADS
-	res = self->pI->QueryInterface(IID_IUnknown,(void**)&obj->pI);
-	Py_END_ALLOW_THREADS
-	if (FAILED(res)){
-		Py_DECREF(obj);
-		seterror("AuthenticationManager_QueryIUnknown", res);
-		return NULL;
-	}
-	return (PyObject*)obj;
+	return (PyObject*)newUnknownObject(self->pI);
 }
 
 static struct PyMethodDef AuthenticationManager_methods[] = {
@@ -1444,6 +1802,7 @@ static PyTypeObject AuthenticationManagerType = {
 
 // End of code for AuthenticationManager object 
 ////////////////////////////////////////////
+
 
 ////////////////////////////////////////////
 // Unknown object (general but defined here for indepentance) 
@@ -1505,7 +1864,7 @@ static PyTypeObject UnknownType = {
 // MODULE
 //
 
-static bool
+static PN_RESULT
 CreateRMAClientEngine(RMAClientEngineObject *obj)
 {
 	// initialize the globals
@@ -1576,11 +1935,11 @@ CreateRMAClientEngine(RMAClientEngineObject *obj)
 		// get the path to pnen 
 		hRes = RegQueryValue(hKey, "", szDllName, (long *)&bufSize); 
 		RegCloseKey(hKey); 
-		if(hRes!=ERROR_SUCCESS) return false;
+		if(hRes!=ERROR_SUCCESS) return PNR_FAILED;
 	}
 	else {
 		// No RealPlayer registry entries
-		return false;
+		return PNR_FAILED;
 	}
 	strcat(szDllName, "pnen3260.dll");
 
@@ -1599,7 +1958,7 @@ CreateRMAClientEngine(RMAClientEngineObject *obj)
 		fprintf(stdout, "Failed to load the '%s' library.\n", szDllName);
 #endif
 #endif
-		return false;
+		return PNR_FAILED;
 	}
 
 
@@ -1609,14 +1968,14 @@ CreateRMAClientEngine(RMAClientEngineObject *obj)
  
 	if (obj->fpCreateEngine == NULL ||
 	    obj->fpCloseEngine == NULL) {
-		return false;
+		return PNR_FAILED;
 	}
 
 	// create client engine 
 	if (PNR_OK != obj->fpCreateEngine(&obj->pI)) {
-		return false;
+		return PNR_FAILED;
 	}
-	return true;
+	return PNR_OK;
 }
 
 
@@ -1626,20 +1985,22 @@ static char RMA_CreateRMAClientEngine__doc__[] =
 static PyObject *
 RMA_CreateRMAClientEngine(PyObject *self, PyObject *args)
 {
+	PN_RESULT res;
 	RMAClientEngineObject *obj;
 
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-
+	
 	obj = newRMAClientEngineObject();
 	if (obj == NULL)
 		return NULL;
-	if(!CreateRMAClientEngine(obj)){
+	res = CreateRMAClientEngine(obj);
+	if(FAILED(res)){
 		Py_DECREF(obj);
-		seterror("CreateRMAClientEngine");
+		seterror("CreateRMAClientEngine",res);
 		return NULL;
 	}
-		
+			
 	return (PyObject *) obj;
 }
 
@@ -1674,7 +2035,8 @@ RMA_CreateClientAdviseSink(PyObject *self, PyObject *args)
 {
 	PN_RESULT res;
 	ClientAdviseSinkObject *obj;
-	if (!PyArg_ParseTuple(args, ""))
+	RMAPlayerObject *objPlayer=NULL;
+	if (!PyArg_ParseTuple(args, "|O!",&RMAPlayerType,&objPlayer))
 		return NULL;
 
 	obj = newClientAdviseSinkObject();
@@ -1686,6 +2048,15 @@ RMA_CreateClientAdviseSink(PyObject *self, PyObject *args)
 		seterror("CreateClientAdviseSink");
 		return NULL;
 	}
+	if(objPlayer){
+		res = objPlayer->pI->AddAdviseSink((IRMAClientAdviseSink*)obj->pI);
+		if(FAILED(res)){
+			Py_DECREF(obj);
+			seterror("RMA_CreateClientAdviseSink::AddAdviseSink",res);
+			return NULL;
+		}
+		
+	}	
 	return (PyObject *) obj;
 }
 
@@ -1697,20 +2068,51 @@ RMA_CreateErrorSink(PyObject *self, PyObject *args)
 {
 	PN_RESULT res;
 	ErrorSinkObject *obj;
-	if (!PyArg_ParseTuple(args, ""))
+	RMAPlayerObject *objPlayer=NULL;
+	if (!PyArg_ParseTuple(args, "|O!",&RMAPlayerType,&objPlayer))
 		return NULL;
-
+	
 	obj = newErrorSinkObject();
 	if (obj == NULL)
 		return NULL;
 	res = CreateErrorSink(&obj->pI);
 	if(FAILED(res)){
 		Py_DECREF(obj);
-		seterror("CreateErrorSink");
+		seterror("CreateErrorSink",res);
 		return NULL;
 	}
+	
+	if(objPlayer)
+		{
+		IRMAErrorMessages *pIRMAErrorMessages=NULL;
+		res=objPlayer->pI->QueryInterface(IID_IRMAErrorMessages,(void**)&pIRMAErrorMessages);
+		if(FAILED(res)){
+			Py_DECREF(obj);
+			seterror("RMA_CreateErrorSink::QueryInterface_IRMAErrorMessages",res);
+			return NULL;
+			}
+		obj->pI->SetErrorMessagesSupplier(pIRMAErrorMessages);
+		pIRMAErrorMessages->Release();
+		
+		IRMAErrorSinkControl *pIRMAErrorSinkControl=NULL;
+		res=objPlayer->pI->QueryInterface(IID_IRMAErrorSinkControl,(void**)&pIRMAErrorSinkControl);
+		if(FAILED(res)){
+			Py_DECREF(obj);
+			seterror("RMA_CreateErrorSink::QueryInterface_IRMAErrorSinkControl",res);
+			return NULL;
+			}
+		res = pIRMAErrorSinkControl->AddErrorSink(obj->pI,PNLOG_EMERG,PNLOG_INFO);
+		if(FAILED(res)){
+			pIRMAErrorSinkControl->Release();
+			Py_DECREF(obj);
+			seterror("RMA_CreateErrorSink::AddErrorSink",res);
+			return NULL;
+			}
+		pIRMAErrorSinkControl->Release();
+		}
 	return (PyObject *) obj;
 }
+
 
 static char RMA_CreateSiteSupplier__doc__[] =
 ""
@@ -1719,11 +2121,11 @@ static PyObject *
 RMA_CreateSiteSupplier(PyObject *self, PyObject *args)
 {
 	PN_RESULT res;
-	SiteSupplierObject *obj;
-	if (!PyArg_ParseTuple(args, ""))
+	RMAPlayerObject *objPlayer=NULL;
+	if (!PyArg_ParseTuple(args, "|O!",&RMAPlayerType,&objPlayer))
 		return NULL;
 
-	obj = newSiteSupplierObject();
+	SiteSupplierObject *obj = newSiteSupplierObject();
 	if (obj == NULL)
 		return NULL;
 	res = CreateSiteSupplier(&obj->pI);
@@ -1732,6 +2134,26 @@ RMA_CreateSiteSupplier(PyObject *self, PyObject *args)
 		seterror("CreateSiteSupplier");
 		return NULL;
 	}
+	if(objPlayer)
+		{
+		IRMASiteManager *pIRMASiteManager=NULL;
+		res=objPlayer->pI->QueryInterface(IID_IRMASiteManager,(void**)&pIRMASiteManager);
+		if(FAILED(res)){
+			seterror("QueryInterface_IRMASiteManager",res);
+			return NULL;
+			}
+		obj->pI->SetSiteManager(pIRMASiteManager);
+		pIRMASiteManager->Release();
+		
+		IRMACommonClassFactory *pIRMACommonClassFactory=NULL;
+		res=objPlayer->pI->QueryInterface(IID_IRMACommonClassFactory,(void**)&pIRMACommonClassFactory);
+		if(FAILED(res)){
+			seterror("QueryInterface_IRMACommonClassFactory",res);
+			return NULL;
+			}
+		obj->pI->SetCommonClassFactory(pIRMACommonClassFactory);
+		pIRMACommonClassFactory->Release();
+		}
 	return (PyObject *) obj;
 }
 
@@ -1743,7 +2165,8 @@ RMA_CreateAuthenticationManager(PyObject *self, PyObject *args)
 {
 	PN_RESULT res;
 	AuthenticationManagerObject *obj;
-	if (!PyArg_ParseTuple(args, ""))
+	RMAPlayerObject *objPlayer=NULL;
+	if (!PyArg_ParseTuple(args, "|O!",&RMAPlayerType,&objPlayer))
 		return NULL;
 
 	obj = newAuthenticationManagerObject();
@@ -1782,7 +2205,7 @@ __declspec(dllexport)
 void
 initrma()
 {
-	PyObject *m, *d;
+	PyObject *m, *d, *x;
 
 	/* Create the module and add the functions */
 	m = Py_InitModule4("rma", rma_methods,
@@ -1794,6 +2217,13 @@ initrma()
 	ErrorObject = PyString_FromString("rma.error");
 	PyDict_SetItemString(d, "error", ErrorObject);
 
+	x = PyString_FromString("Copyright 1991-2000 by Oratrix Development BV");
+	PyDict_SetItemString(d,"copyright",x);
+	
+#ifdef WITH_THREAD
+	PyCallbackBlock::init();
+#endif
+	
 	/* Check for errors */
 	if (PyErr_Occurred()) {
 		Py_FatalError("can't initialize module rma");
