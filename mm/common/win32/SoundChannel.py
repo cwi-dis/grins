@@ -4,6 +4,44 @@ __version__ = "$Id$"
 # WIN32 Sound channel.
 #
 
+""" @win32doc|SoundChannel
+The SoundChannel extends Channel
+(although it repeats the ChannelAsync implementation)
+
+In this module ue use an object called GraphBuilder
+that supports the interface:
+
+interface IGraphBuilder:
+	def RenderFile(self,fn):return 1
+
+	def Run(self):pass
+	def Stop(self):pass
+	def Pause(self):pass
+
+	def GetDuration(self):return 0
+	def SetPosition(self,pos):pass
+	def GetPosition(self,pos):return 0
+
+	def SetNotifyWindow(self,w):pass
+
+
+We have implemented an object that supports this interface 
+by using the win32 DirectShow Sdk. 
+The C++ module that exports to Python this object is GraphBuilder.cpp 
+in thre folder cmif/win32/src/win32ext.
+We get access to the this module from the win32ui 
+which acts as a module server in this context by the call:
+DirectShowSdk=win32ui.GetDS()
+and request an object with the above interface with the call
+builder=DirectShowSdk.CreateGraphBuilder()
+
+Note that the same object is used for the NTVideoChannel.
+The MidiChannel is an alias to the SoundChannel
+
+For more on the DirectShow architecture see MS documentation.
+
+"""
+
 from Channel import *
 
 # node attributes
@@ -32,31 +70,46 @@ class SoundChannel(Channel):
 		
 		# DirectShow Graph builders
 		self._builders={}
+
+		# active builder from self._builders
 		self._playBuilder=None
+		self._playDuration=0
 
 		# notification mechanism
-		self._notifyWindow = genericwnd()
-		self._notifyWindow.create()
-		self._notifyWindow.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)
+		self._notifyWindow = None
 
 		# scheduler notification mechanism
 		self.__qid=None
 
 		# main thread monitoring fiber id
 		self._fiber_id=0
+		self.__playdone=1
 
 	def __repr__(self):
 		return '<SoundChannel instance, name=' + `self._name` + '>'
 
 	def do_hide(self):
-		if self._playBuilder:
-			self._playBuilder.Stop()
+		for b in self._builders.values():
+			b.Stop()
+			b.Release()
+		del self._builders
+		self._builders={}
+		self._playBuilder=None
+		if self._notifyWindow and self._notifyWindow.IsWindow():
+			self._notifyWindow.DestroyWindow()
+		self._notifyWindow=None
 		Channel.do_hide(self)
 
 	def destroy(self):
+		for b in self._builders.values():
+			b.Stop()
+			b.Release()
 		del self._builders
-		if self._notifyWindow.IsWindow():
+		self._builders={}
+		self._playBuilder=None
+		if self._notifyWindow and self._notifyWindow.IsWindow():
 			self._notifyWindow.DestroyWindow()
+		self._notifyWindow=None
 		self.unregister_for_timeslices()
 		Channel.destroy(self)
 
@@ -72,7 +125,9 @@ class SoundChannel(Channel):
 		fn = self.toabs(fn)
 		builder=DirectShowSdk.CreateGraphBuilder()
 		if builder:
-			builder.RenderFile(fn)
+			if not builder.RenderFile(fn):
+				print 'Failed to render',fn
+				builder=None
 			self._builders[node]=builder
 		else:
 			print 'Failed to create GraphBuilder'
@@ -104,20 +159,28 @@ class SoundChannel(Channel):
 			self._scheduler.enter(duration, 0, self._stopplay, ())
 
 		self._playBuilder=self._builders[node]
+		if not self._playBuilder:
+			self.playdone(0)
+			return
 		self._playBuilder.SetPosition(0)
+		self._playDuration=self._playBuilder.GetDuration()
+		if not self._notifyWindow:
+			self._notifyWindow = genericwnd()
+			self._notifyWindow.create()
+			self._notifyWindow.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)
 		self._playBuilder.SetNotifyWindow(self._notifyWindow,WM_GRPAPHNOTIFY)
 		self._playBuilder.Run()
 		self.register_for_timeslices()
+		self.__playdone=0
 
 		if self.play_loop == 0 and duration == 0:
+			self.__playdone=1
 			self.playdone(0)
 
 	# scheduler callback, at end of duration
 	def _stopplay(self):
 		self.__qid = None
-		if self._playBuilder:
-			self._playBuilder.Stop()
-			self._playBuilder = None
+		self.__playdone=1
 		self.playdone(0)
 
 	# part of stop sequence
@@ -141,10 +204,9 @@ class SoundChannel(Channel):
 
 	# capture end of media
 	def OnGraphNotify(self,params):
-		if self._playBuilder:
-			duration=self._playBuilder.GetDuration()
+		if self._playBuilder and not self.__playdone:
 			t_msec=self._playBuilder.GetPosition()
-			if t_msec>=duration:self.OnMediaEnd()
+			if t_msec>=self._playDuration:self.OnMediaEnd()
 
 	def OnMediaEnd(self):
 		if debug: print 'SoundChannel: OnMediaEnd',`self`
@@ -157,14 +219,36 @@ class SoundChannel(Channel):
 				self._playBuilder.Run()
 				return
 			# no more loops
-			self._playBuilder.Stop()
-			self._playBuilder=None
+			self.__playdone=1
 			# if event wait scheduler
 			if self.__qid is not None:return
 			# else end
 			self.playdone(0)
 			return
+		# self.play_loop is 0 so repeat
+		self._playBuilder.SetPosition(0)
+		self._playBuilder.Run()
 
+
+	############################### ui delays management
+	def on_idle_callback(self):
+		if self._playBuilder and not self.__playdone:
+			t_msec=self._playBuilder.GetPosition()
+			if t_msec>=self._playDuration:self.OnMediaEnd()
+
+	def is_callable(self):
+		return self._playBuilder
+	def register_for_timeslices(self):
+		if self._fiber_id: return
+		import windowinterface
+		self._fiber_id=windowinterface.register((self.is_callable,()),(self.on_idle_callback,()))
+	def unregister_for_timeslices(self):
+		if not self._fiber_id: return
+		import windowinterface
+		windowinterface.unregister(self._fiber_id)
+		self._fiber_id=0
+
+	################################# general url stuff
 	def islocal(self,url):
 		utype, url = MMurl.splittype(url)
 		host, url = MMurl.splithost(url)
@@ -179,26 +263,3 @@ class SoundChannel(Channel):
 				filename=os.path.join(os.getcwd(),filename)
 				filename=ntpath.normpath(filename)	
 		return filename
-
-
-	# ui delays management
-	def on_idle_callback(self):
-		if self._playBuilder:
-			if self._playBuilder.IsCompleteEvent():
-				self.OnMediaEnd()
-			else: # not actualy needed but I am burned!
-				duration=self._playBuilder.GetDuration()
-				t_msec=self._playBuilder.GetPosition()
-				if t_msec>=duration:self.OnMediaEnd()
-
-	def is_callable(self):
-		return self._playBuilder
-	def register_for_timeslices(self):
-		if self._fiber_id: return
-		import windowinterface
-		self._fiber_id=windowinterface.register((self.is_callable,()),(self.on_idle_callback,()))
-	def unregister_for_timeslices(self):
-		if not self._fiber_id: return
-		import windowinterface
-		windowinterface.unregister(self._fiber_id)
-		self._fiber_id=0
