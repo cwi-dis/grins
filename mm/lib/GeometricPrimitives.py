@@ -82,7 +82,7 @@ class Line(GeoClientWidget):
 		self.displist.drawline(self.color, [(x,y), (x+w, y+h)])
 
 class HLine3D(GeoClientWidget):
-	pass;
+	print "TODO"
 
 class Box(GeoClientWidget):
 	color = (0,0,0)
@@ -103,10 +103,13 @@ class FBox(GeoClientWidget):
 #FBox=Box # Use this for debugging.
 
 class Marker(GeoClientWidget):
-	pass;
+	print "TODO"
 
 class Text(GeoClientWidget):
-	text = "No text set."
+	def __init__(self, mother):
+		GeoClientWidget.__init__(self, mother)
+		self.textalign = 'c'
+		self.text = "Error - no text set."
 	def set_text(self, text):
 		self.text = text
 	# fonts??
@@ -114,8 +117,17 @@ class Text(GeoClientWidget):
 		l,t,w,h = self.get_box()
 		self.displist.usefont(f_channel)
 		self.displist.fgcolor((0,0,0))
-		self.displist.centerstring(l,t,l+w,t+h,self.text)
+		if self.textalign == 'c':
+			self.displist.centerstring(l,t,l+w,t+h,self.text)
+		elif self.textalign == 'l':
+			print 'DEBUG: Writing left-aligned text.'
+			self.displist.setpos(l, t+h)
+			self.displist.writestr(self.text)
 
+	def align(self, bob):
+		self.textalign = bob
+
+		
 class FPolygon(GeoClientWidget):
 	pass;
 
