@@ -156,7 +156,8 @@ def dump(node, mini, targets, list, dellist):
 	if node.type in interiortypes:
 		children = node.children
 		extra = len(children)
-		if node.type != 'bag':
+		# XXXX Is this correct? Or should alt be handled as par/seq?
+		if node.type not in bagtypes:
 			channels, err = node.GetAllChannels()
 			if err:
 				print 'Error: overlap in channels'
@@ -175,7 +176,7 @@ def dump(node, mini, targets, list, dellist):
 			node.attrdict[name] = MMAttrdefs.getattr(node, name)
 			newattrs.append(name)
 	parent = node.parent
-	if parent is None or parent.type == 'bag':
+	if parent is None or parent.type in bagtypes:
 		if parent is not None:
 			node.attrdict['bag'] = parent.uid
 		else:
@@ -184,7 +185,7 @@ def dump(node, mini, targets, list, dellist):
 		mini = node
 	node.attrdict['mini'] = mini.uid
 	newattrs.append('mini')
-	if node is mini or node.uid in targets or node.GetType() == 'bag':
+	if node is mini or node.uid in targets or node.type in bagtypes:
 		sractions, srevents = mini.GenAllSR(node)
 		prearmlists = gen_prearms(node, mini)
 		# convert MMNode instances to UIDs
@@ -252,7 +253,7 @@ def load(list, context, f):
 		children = []
 		for i in range(extra):
 			children.append(load(list, context, f))
-		if node.type == 'bag':
+		if node.type in bagtypes:
 			node.children = children
 		else:
 			node.channels = attrdict['channels']
@@ -321,7 +322,7 @@ def gen_prearms(node, mini):
 
 def GenAllPrearms(node, prearmlists, prearmlists_uid):
 	nodetype = node.GetType()
-	if nodetype == 'bag':
+	if nodetype in bagtypes:
 		return
 	if nodetype in leaftypes:
 		chan = MMAttrdefs.getattr(node, 'channel')
