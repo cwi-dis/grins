@@ -351,6 +351,9 @@ class LinkEdit(ViewDialog):
 			self.linkedit = 0
 		if str.focus <> None:
 			str.browser.selectitem(str.focus)
+			if not str.browser.is_visible(str.focus):
+				str.browser.scrolllist(str.focus,
+						       windowinterface.CENTER)
 			str.browser.show()
 			str.node_show.show()
 			str.anchoredit_show.show()
@@ -405,6 +408,9 @@ class LinkEdit(ViewDialog):
 			pass
 		else:
 			self.link_browser.selectitem(self.linkfocus)
+			if not self.link_browser.is_visible(self.linkfocus):
+				self.link_browser.scrolllist(self.linkfocus,
+							windowinterface.CENTER)
 			self.link_edit.show()
 		if self.linkedit:
 			self.set_radio_buttons()
