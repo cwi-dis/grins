@@ -125,13 +125,15 @@ class HtmlChannel(Channel.ChannelWindow):
 		windowinterface.setcursor('watch')
 		context = Channel.AnchorContext()
 		self.startcontext(context)
+		save_syncarm = self.syncarm
 		self.syncarm = 1
 		self.arm(node)
+		save_syncplay = self.syncplay
 		self.syncplay = 1
 		self.play(node)
 		self.stopplay(node)
-		self.syncarm = 0
-		self.syncplay = 0
+		self.syncarm = save_syncarm
+		self.syncplay = save_syncplay
 		windowinterface.setcursor('')
 		return 1
 
