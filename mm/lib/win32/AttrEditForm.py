@@ -3807,8 +3807,8 @@ class AttrEditForm(GenFormView):
 		rc=mainframe.ScreenToClient(rc)
 #		frc=(30,4,frc[2]-frc[0]+36,frc[3]-frc[1]+4)
 		dw=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)
-		dh=2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)
-		frc=(rc[0],rc[1]%8,frc[2]-frc[0]+rc[0]+dw,frc[3]-frc[1] + rc[1]%8)
+		dh=3*win32api.GetSystemMetrics(win32con.SM_CYEDGE)
+		frc=(rc[0],rc[1]%8,frc[2]-frc[0]+rc[0]+dw,frc[3]-frc[1] + dh + rc[1]%8)
 		self._parent.MoveWindow(frc) 
 
 	# Called when the view is activated 
