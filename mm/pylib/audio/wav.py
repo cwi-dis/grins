@@ -101,6 +101,8 @@ class reader:
 	def getframerate(self):
 		if self.__format is None:
 			self.__read_until('fmt ')
+		if self.__data_chunk is None:
+			self.__read_until('data')
 		return self.__framerate
 
 	def readframes(self, nframes = -1):
