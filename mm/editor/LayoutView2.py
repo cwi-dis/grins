@@ -1891,8 +1891,6 @@ class LayoutView2(LayoutViewDialog2):
 				editmgr.setnodeattr(selectedNode, 'animated', 1)
 					
 			editmgr.commit()
-			if animateNode is not None:
-				self.updateFocus()
 
 	def onShowAnimationPath(self):
 		selectedNode = self.currentSelectedNodeList[0]
