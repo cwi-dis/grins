@@ -236,8 +236,9 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		# drag/drop is enabled by register
 		
 		# copy/paste support
-		client.HookMessage(self.onRButtonDown,win32con.WM_RBUTTONDOWN)
-		self.setpopupmenu(MenuTemplate.MAIN_FRAME_POPUP)
+		if hasattr(MenuTemplate,'MAIN_FRAME_POPUP'):
+			client.HookMessage(self.onRButtonDown,win32con.WM_RBUTTONDOWN)
+			self.setpopupmenu(MenuTemplate.MAIN_FRAME_POPUP)
 		
 		return 0
 
