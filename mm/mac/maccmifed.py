@@ -15,6 +15,7 @@ import sys
 #	quietconsole.install()
 quietconsole=None
 
+
 ID_SPLASH_DIALOG=513
 # XXXX Debugging code: assure the resource file is available
 import Res
