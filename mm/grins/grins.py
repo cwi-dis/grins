@@ -121,7 +121,7 @@ class Main(MainDialog):
 
 	def skin_callback(self):
 		import windowinterface
-		windowinterface.FileDialog('Open skin file', '.', ['text/x-grins-skin'], '',
+		windowinterface.FileDialog('Open Components File', '.', ['text/x-grins-skin'], '',
 					   self.__skin_done, None, 1,
 					   parent = windowinterface.getmainwnd())
 
