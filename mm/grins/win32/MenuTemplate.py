@@ -30,9 +30,7 @@ from wndusercmd import *
 [ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE] = range(5)
 
 # Some commands are optional, depending on preference settings:
-ALL=''
-CMIF='cmif'
-DBG='debug'
+from flags import *
 
 MENUBAR=(
 	('&File', (
