@@ -5,15 +5,11 @@
 from usercmd import *
 
 # Types of menu entries
-[ENTRY, TOGGLE, SEP, CASCADE] = range(4)
+[ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE] = range(5)
 
 #
 # commands we know are not useable on the Mac:
 UNUSED_COMMANDS=(
-	ANCESTORS,
-	DESCENDANTS,
-	SIBLINGS,
-	SYNCARCS,
 	MAGIC_PLAY,
 )
 
@@ -22,7 +18,7 @@ UNUSED_COMMANDS=(
 #
 
 MENUBAR=(
-	('File', (
+	(CASCADE, 'File', (
 		(ENTRY, 'New', 'N', NEW_DOCUMENT),
 		(ENTRY, 'Open...', 'O', OPEN),
 		(ENTRY, 'Close window', 'W', CLOSE_WINDOW),
@@ -42,7 +38,7 @@ MENUBAR=(
 		(SEP,),
 		(ENTRY, 'Quit', 'Q', EXIT))),
 
-	('Edit', (
+	(CASCADE, 'Edit', (
 		(ENTRY, 'Undo', 'Z', UNDO),
 		(SEP,),
 		(ENTRY, 'Cut', 'X', CUT),
@@ -67,7 +63,7 @@ MENUBAR=(
 		(ENTRY, 'Copy channel', None, COPY_CHANNEL),
 		(ENTRY, 'Toggle channel state', None, TOGGLE_ONOFF))),
 
-	('View', (
+	(CASCADE, 'View', (
 		(TOGGLE, 'Player', '1', PLAYERVIEW),
 		(TOGGLE, 'Layout', '2', LAYOUTVIEW),
 		(TOGGLE, 'Hierarchy', '3', HIERARCHYVIEW),
@@ -86,25 +82,34 @@ MENUBAR=(
 		(TOGGLE, 'Show sync arcs', None, TOGGLE_ARCS),
 		(TOGGLE, 'Show image thumbnails', None, THUMBNAIL),
 		(SEP,),
-		(CASCADE, 'Mini-document', (
+		(CASCADE, 'Minidoc navigation', (
 			(ENTRY, 'Next', None, NEXT_MINIDOC),
-			(ENTRY, 'Previous', None, PREV_MINIDOC))))),
+			(ENTRY, 'Previous', None, PREV_MINIDOC),
+			(DYNAMICCASCADE, 'Ancestors', ANCESTORS),
+			(DYNAMICCASCADE, 'Descendants', DESCENDANTS),
+			(DYNAMICCASCADE, 'Siblings', SIBLINGS))),
+		(DYNAMICCASCADE, 'Layout navigation', LAYOUTS))),
 		
-	('Play', (
+		
+	(CASCADE, 'Play', (
 		(ENTRY, 'Play document', 'P', PLAY),
 		(ENTRY, 'Pause', None, PAUSE),
 		(ENTRY, 'Stop', None, STOP),
 		(SEP,),
 		(ENTRY, 'Play node', None, PLAYNODE),
-		(ENTRY, 'Play from node', None, PLAYFROM))),
+		(ENTRY, 'Play from node', None, PLAYFROM),
+		(SEP,),
+		(DYNAMICCASCADE, 'Channel visibility', CHANNELS))),
 
-	('Focus', (
+	(CASCADE, 'Focus', (
 		(ENTRY, 'Synchronize', 'F', PUSHFOCUS),
 		(SEP,),
 		(ENTRY, 'Show info', 'I', INFO),
 		(ENTRY, 'Show attributes', 'A', ATTRIBUTES),
 		(ENTRY, 'Show anchors', 'T', ANCHORS),
 		(ENTRY, 'Edit content', 'E', CONTENT),
+		(SEP,),
+		(DYNAMICCASCADE, 'Select syncarc', SYNCARCS),
 		(SEP,),
 		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
 		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC))))
