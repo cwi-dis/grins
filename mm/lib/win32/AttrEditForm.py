@@ -1870,10 +1870,13 @@ class PosSizeLayoutPage(LayoutPage):
 
 	def onevent(self,attr,event):
 		if self._inupdate: return
-		if attr.getname()=='subregionxy' or attr.getname()=='subregionwh':
+		attrname = attr.getname()
+		if attrname=='subregionxy' or attrname=='subregionwh' or \
+		   attrname=='imgcropxy' or attrname=='imgcropwh':
 			self.create_box(self.getcurrentbox(0))
-		elif attr.getname()=='imgcropxy' or attr.getname()=='imgcropwh':
-			self.create_box(self.getcurrentbox(0))
+			grp = self._group
+			a = grp.getattr(grp._attrnames['full'])
+			a.setvalue('off')
 
 class SubImgLayoutPage(PosSizeLayoutPage):
 	def __init__(self, form):
@@ -3044,8 +3047,7 @@ class ImgregionGroup(Imgregion1Group):
 	data=attrgrsdict['imgregion']
 	_attrnames = {'xy':'imgcropxy',
 		      'wh':'imgcropwh',
-		      'full':'fullimage',
-		      'anchor':'imgcropanchor'}
+		      'full':'fullimage',}
 
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LS1O2
@@ -3062,17 +3064,6 @@ class Subregion2Group(ImgregionGroup):
 
 	def getpageclass(self):
 		return PosSizeLayoutPage
-
-class Subregion4Group(Subregion2Group):
-	data=attrgrsdict['subregion4']
-	_attrnames = {'xy':'subregionxy',
-		      'wh':'subregionwh',
-		      'full':'displayfull',
-		      'anchor':'subregionanchor',
-		      }
-
-	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_DR3
 
 class Subregion1Group(Subregion2Group):
 	data=attrgrsdict['subregion1']
@@ -3093,7 +3084,6 @@ class SubregionGroup(Subregion1Group):
 	_attrnames = {'xy':'subregionxy',
 		      'wh':'subregionwh',
 		      'full':'displayfull',
-		      'anchor':'subregionanchor',
 		      }
 
 	def getpageresid(self):
@@ -3459,7 +3449,6 @@ groupsui={
 	'subregion1':Subregion1Group,
 	'imgregion1':Imgregion1Group,
 	'subregion2':Subregion2Group,
-	'subregion4':Subregion4Group,
 	'anchorlist':AnchorlistGroup,
 
 	'convert1':Convert1Group,
