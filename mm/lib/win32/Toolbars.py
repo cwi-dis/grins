@@ -147,7 +147,7 @@ class ToolbarMixin(PanelMixin):
 ##				bar.RedrawWindow()
 
 	def IsFirstTime(self):
-		return win32ui.GetProfileVal('ToolbarDefault-Summary', 'Bars', -1) == -1
+		return win32ui.GetProfileVal('GRiNSToolBars-Summary', 'Bars', -1) == -1
 
 	def PositionForFirstTime(self):
 		y = 10000
