@@ -613,7 +613,9 @@ class SMILXhtmlSmilWriter(SMIL):
 					del values[n]
 				else:
 					break
-			text = string.join(values, '<br>')
+			for i in range(len(values)):
+				values[i] = nameencode(values[i])[1:-1]
+			text = string.join(values, '<br/>')
 			if text:
 				self.fp.write(text)
 			self.fp.write('</p>')
@@ -630,7 +632,11 @@ class SMILXhtmlSmilWriter(SMIL):
 				self.push()
 				self.fp.write('<p>')
 				if text:
-					text = string.join(string.split(text, '\n'), '<br>\n')
+					text_list = string.split(text, '\n')
+					ne_text_list = []
+					for line in text_list:
+						ne_text_list.append(nameencode(line)[1:-1])
+					text = string.join(ne_text_list, '<br/>')
 					self.fp.write(text)
 				self.fp.write('</p>')
 				self.pop()
