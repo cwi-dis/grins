@@ -86,7 +86,10 @@ class _LayoutView2(GenFormView):
 		
 		# allow to valid the field with the return key
 		self.lastModifyCtrlField = None
-			
+		
+		# org positions
+		self.__orgctrlpos = {}
+								
 	# special initialization because previous control is not managed like any another component
 	# allow to have a handle on previous component from an external module
 	def getPreviousComponent(self):
@@ -95,6 +98,10 @@ class _LayoutView2(GenFormView):
 	# for now avoid to have one handler by dialog ctrl
 	def getDialogComponent(self):
 		return self
+	
+	# returning true will make frame resizeable
+	def isResizeable(self):
+		return 1
 
 	# define a handler for callbacks fnc
 	def setListener(self, ctrlName, listener):
@@ -111,6 +118,12 @@ class _LayoutView2(GenFormView):
 
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
+
+		# set normal size from frame to be 640x480
+		flags, sw, minpos, maxpos, rcnorm = self.GetParent().GetWindowPlacement()
+		l, t = rcnorm[:2]
+		self.GetParent().SetWindowPlacement(flags, sw, minpos, maxpos, (l,t,640,480))
+
 		# enable all lists
 		for name in self.__ctrlNames:	
 			self.EnableCmd(name,1)
@@ -120,11 +133,16 @@ class _LayoutView2(GenFormView):
 		preview.attach_to_parent()
 		l1,t1,r1,b1 = self.GetWindowRect()
 		l2,t2,r2,b2 = preview.getwindowrect()
-		rc = l2-l1, t2-t1, r2-l2, b2-t2
+		rc = l2-l1, t2-t1-2, r2-l2, b2-t2
 		bgcolor = (255, 255, 255)
 		self._layout.onInitialUpdate(self, rc, bgcolor)
 
 		self._treeComponent.onInitialUpdate(self)
+		
+		# resizing
+		self.saveOrgCtrlPos()
+		self.resizeCtrls(r1-l1, b1-t1)
+		self.HookMessage(self.OnSize, win32con.WM_SIZE)
 			
 		# we have to notify layout if has capture
 		self.HookMessage(self.onMouse,win32con.WM_LBUTTONDOWN)
@@ -297,6 +315,70 @@ class _LayoutView2(GenFormView):
 		t.attach_to_parent()
 		str = fmtfloat(scale, prec=1)
 		t.settext('scale 1 : %s' % str)
+
+	#
+	# Reposition controls on size
+	#
+	def getCtrlIds(self):
+		return (
+			grinsRC.IDC_X, grinsRC.IDC_LAYOUT_REGION_X,
+			grinsRC.IDC_Y, grinsRC.IDC_LAYOUT_REGION_Y,
+			grinsRC.IDC_W, grinsRC.IDC_LAYOUT_REGION_W,
+			grinsRC.IDC_H, grinsRC.IDC_LAYOUT_REGION_H,
+			grinsRC.IDC_Z, grinsRC.IDC_LAYOUT_REGION_Z,
+			grinsRC.IDCMD_ATTRIBUTES)
+
+	def resizeCtrls(self, w, h):
+		# controls margin + posibly scrollbar
+		cm = 48 
+
+		lf, tf, rf, bf = self.GetWindowRect()
+
+		# resize preview pane
+		ll, tl, rl, bl = self._layout.GetWindowRect()
+		wp = rf - ll - 20
+		hp = bf - tl - cm
+		newrc = 0, 0, wp, hp
+		self._layout.SetWindowPos(self._layout.GetSafeHwnd(), newrc,
+				win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
+		
+		# resize controls
+		ctrlIDs = self.getCtrlIds()
+		flags = win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOSIZE
+		for id in ctrlIDs:
+			ctrl = components.Control(self,id)
+			ctrl.attach_to_parent()
+			l1,t1,r1,b1 = ctrl.getwindowrect()
+			hc = b1-t1
+			if hc<15: dh =12
+			else: dh=8
+			newrc = self.__orgctrlpos[id], tl-tf+hp+dh, r1-l1, b1-t1
+			ctrl.setwindowpos(ctrl._hwnd, newrc, flags)
+
+		# resize tree (temp: will be replaced by a tree view pane)
+		tree = self.GetDlgItem(grinsRC.IDC_TREE1)
+		lt, tt, rt, bt = tree.GetWindowRect()
+		wt = rt - lt
+		ht = bf - tf - (tt-tf) - 14
+		newrc = lt-lf, tl-tf, wt, ht
+		tree.SetWindowPos(tree.GetSafeHwnd(), newrc,
+				win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
+
+	def saveOrgCtrlPos(self):
+		lf, tf, rf, bf = self.GetWindowRect()
+		ctrlIDs = self.getCtrlIds()
+		for id in ctrlIDs:
+			ctrl = components.Control(self,id)
+			ctrl.attach_to_parent()
+			l1,t1,r1,b1 = ctrl.getwindowrect()
+			self.__orgctrlpos[id] = l1-lf
+		self.__orgctrlpos[-1] = self.GetClientRect()[2:]
+
+	def OnSize(self, params):
+		msg = win32mu.Win32Msg(params)
+		w, h = msg.width(), msg.height()
+		worg, horg = self.__orgctrlpos[-1]
+		self.resizeCtrls(w, h)
 
 ###########################
 # tree component management
@@ -489,6 +571,12 @@ class LayoutManager(LayoutManagerBase, win32window.MSDrawContext):
 			self.UpdateWindow()		
 		self.__initState()
 
+	def setCanvasSize(self, w, h):
+		if self._base == docview.ScrollView:
+			x1, y1, w1, h1 = self._canvas
+			self._canvas = x1, y1, w, h
+			self.SetScrollSizes(win32con.MM_TEXT,self._canvas[2:])
+
 	def __initState(self):
 		# allow to know the last state about shape (selected, moving, resizing)
 		self._selectedList = []
@@ -566,6 +654,7 @@ class LayoutManager(LayoutManagerBase, win32window.MSDrawContext):
 			self._device2logical = self.findDeviceToLogicalScale(w, h + self._cycaption)
 		else:
 			self._device2logical = 1
+			#self.setCanvasSize(w+32, h+32)
 		self._parent.showScale(self._device2logical)
 		self.__initState()
 		self._viewport = Viewport(name, self, attrdict, self._device2logical)
