@@ -1616,7 +1616,13 @@ class _Dialogs:
 		self.dialog = Xm.CreateErrorDialog(toplevel._main, 'popup', {})
 		self._after_create(text)
 		Xm.MessageBoxGetChild(self.dialog, Xmd.DIALOG_CANCEL_BUTTON).UnmanageChild()
-		answer = self._run()
+		if event._looping:
+			# display window but don't wait for it to disappear
+			# while it's up we don't do anything but redraws
+			event.startmodal()
+			self.dialog.ManageChild()
+		else:
+			answer = self._run()
 
 	def showquestion(self, text):
 		self.dialog = Xm.CreateQuestionDialog(toplevel._main, 'popup', {})
