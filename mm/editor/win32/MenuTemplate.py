@@ -216,10 +216,10 @@ MENUBAR=(
 			(FLAG_CMIF, DYNAMICCASCADE, '&Siblings', SIBLINGS),
 			)),
 ##		(FLAG_ALL, DYNAMICCASCADE, '&Layout navigation', LAYOUTS),
-                )
-         ),
+		)
+	 ),
  
-        ('&Window', (
+	('&Window', (
 		(FLAG_ALL, ENTRY, 'Cl&ose\tCtrl+W', 'W', CLOSE_ACTIVE_WINDOW),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Cascade', 'C', CASCADE_WNDS),
@@ -262,6 +262,7 @@ if curflags() & FLAG_SNAP:
 #
 # Popup menus for various states
 #
+
 POPUP_HVIEW_LEAF = (
 		# XXXX Need to add the "new xxx node" commands for the
 		# light version
@@ -340,6 +341,10 @@ POPUP_HVIEW_LEAF = (
 ##		(FLAG_PRO, ENTRY, '&Anchors...', None, ANCHORS),
 		(FLAG_ALL, ENTRY, '&Edit content', None, CONTENT),
 )
+
+POPUP_HVIEW_NONE = (
+	(FLAG_ALL, ENTRY, '&New node...', None, NEW_AFTER)
+	)
 
 POPUP_HVIEW_TRANS = (
 		(FLAG_ALL, DYNAMICCASCADE, '&Transition', TRANSITION),
