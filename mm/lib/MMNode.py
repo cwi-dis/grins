@@ -2584,12 +2584,15 @@ class MMNode:
 	# Note: for now, the channel type is useful to determinate either:
 	# - the renderer class (ChannelXXX classes)
 	# - select the properties to edit from the dialog box
-	def guessChannelType(self):
-		if self.type in ('brush', 'animate', 'prefetch'):
+	def guessChannelType(self, type=None, computedMimeType = None):
+		if type == None:
+			type = self.type
+		if type in ('brush', 'animate', 'prefetch'):
 			# for now, direct mapping
-			return self.type
+			return type
 		else:
-			computedMimeType = self.GetComputedMimeType()
+			if computedMimeType == None:
+				computedMimeType = self.GetComputedMimeType()
 			# find the channel type according to the computed mime type
 			if computedMimeType == None:
 				return 'null'
