@@ -457,6 +457,12 @@ class SchedulerContext:
 	def after_chan_show(self, ch):
 		pass
 
+	def getchannelbyname(self, name):
+		for ch in self.channels:
+			if ch._name == name:
+				return ch
+		return None
+
 	# end temporary code for testing animations
 	#
 	##########################
