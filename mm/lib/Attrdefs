@@ -249,8 +249,8 @@
 (queuesize (float) 0 'Queue size' default
 	'Audio playback queue size' channel (cmif))
 
-(scale (float) 0.0 'Scale factor' default
-	'Image magnification, 0 gives biggest possible size within channel' channel (all))
+(scale (float) 0.0 'Scale factor' scale
+	'Aspect ratio is maintained for all options' channel (all))
 
 (scalefilter (name) '' 'Scaling filter' default
 	'Name of filter used after image scaling' channel (cmif))
