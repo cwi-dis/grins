@@ -1568,14 +1568,23 @@ class Region(Window):
 					vdds.Restore()
 
 			# draw now the display list but after clear
-			hdc = dds.GetDC()
+			try:
+				hdc = dds.GetDC()
+			except ddarw.error, arg:
+				print arg
+				return
+
 			dc = win32ui.CreateDCFromHandle(hdc)
 			if rgn:
 				dc.SelectClipRgn(rgn)
 			x0, y0 = dc.SetWindowOrg((-x,-y))
 
-			self._active_displist._render(dc, None, clear=0)
-
+			try:
+				self._active_displist._render(dc, None, clear=0)
+			except:
+				dc.Detach()
+				dds.ReleaseDC(hdc)
+				return
 
 			if self._showing:
 				win32mu.FrameRect(dc,self._rect,self._showing)
