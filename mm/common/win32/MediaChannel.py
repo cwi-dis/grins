@@ -343,7 +343,7 @@ class VideoStream:
 
 	def destroy(self):
 		if self.__window:
-			self.__window._dlsurf = None
+			self.__window.removevideo()
 		self.__unregister_for_timeslices()
 		del self.__mmstream
 		self.__mmstream = None
@@ -397,8 +397,8 @@ class VideoStream:
 		elif self.play_loop == 0 and repeatdur == 0:
 			self.__channel.playdone(0)
 		
+		window.setvideo(self.__mmstream._dds, self.__rcMediaWnd, self.__mmstream._rect)
 		self.__window = window
-		window._dlsurf = self.__mmstream._dds, self.__rcMediaWnd
 		self.__mmstream.run()
 		self.__mmstream.update()
 		self.__window.update()
