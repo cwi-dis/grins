@@ -15,6 +15,7 @@ from AnchorEdit import A_ID, A_TYPE, A_ARGS, ATYPE_NORMAL, ATYPE_PAUSE, \
 	ATYPE_AUTO
 
 import FileCache
+import pipes
 
 
 def between(v, x0, x1):
@@ -372,48 +373,60 @@ class ImageChannel(Channel):
 	#
 
 
+torgb = {}
+
+t = pipes.Template().init()
+t.append('fromppm $IN $OUT', 'ff')
+torgb['pnm'] = t
+
+t = pipes.Template().init()
+t.append('fromgif $IN $OUT', 'ff')
+torgb['gif'] = t
+
+t = pipes.Template().init()
+t.append('tifftopnm', '--')
+t.append('frompnm $IN $OUT', 'ff')
+torgb['tiff'] = t
+
+t = pipes.Template().init()
+t.append('fromsun $IN $OUT', 'ff')
+torgb['rast'] = t
+
+uncompress = pipes.Template().init()
+uncompress.append('uncompress', '--')
+
 temps = []
 
 def makergbfile(filename):
 	import imghdr
+	import tempfile
 	import os
-	uncompressed = None
+	compressed = 0
 	if filename[-2:] == '.Z':
-		filename = uncompressed = conv('zcat <$1 >$2', filename)
+		temp = tempfile.mktemp()
+		temps.append(temp)
+		sts = uncompress.copy(filename, temp)
+		if sts:
+			print 'uncompress of', filename, 'failed.'
+			return filename
+		filename = temp
+		compressed = 1
 	try:
 		type = imghdr.what(filename)
 	except IOError:
 		type = None
-	if type == 'pnm':
-		res = conv('fromppm $1 $2', filename)
-	elif type == 'gif':
-		res = conv('fromgif $1 $2', filename)
-	elif type == 'tiff':
-		tempname = conv('tifftopnm <$1 >$2', filename)
-		res = conv('fromppm $1 $2', tempname)
-		os.unlink(tempname)
-		temps.remove(tempname)
-	elif type == 'rast':
-		res = conv('fromsun $1 $2', filename)
-	else:
-		res = filename
-	if None <> uncompressed <> res:
-		os.unlink(uncompressed)
-		temps.remove(uncompressed)
-	return res
-
-def conv(cmd, filename):
-	import os
-	import tempfile
-	tempname = tempfile.mktemp()
-	temps.append(tempname)
-	cmd = 'set ' + filename + ' ' + tempname + '; ' + cmd
-	print 'Executing:', cmd
-	sts = os.system(cmd)
-	if sts:
-		print cmd
-		print  'Exit status:', sts
-	return tempname
+	if type and torgb.has_key(type):
+		temp = tempfile.mktemp()
+		temps.append(temp)
+		sts = torgb[type].copy(filename, temp)
+		if sts:
+			print 'conversion of', filename, 'failed.'
+			return filename
+		if compressed:
+			os.unlink(filename)
+			temps.remove(filename)
+		filename = temp
+	return filename
 
 def cleanup():
 	import os
