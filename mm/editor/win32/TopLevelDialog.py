@@ -17,13 +17,17 @@ import bitrates, languages
 
 class TopLevelDialog:
 	def __init__(self):
-		self.commandlist = self.commandlist + [
-			PAUSE(callback = (self.pause_callback, ())),
-			STOP(callback = (self.stop_callback, ())),
-			PLAY(callback = (self.play_callback, ())),
-			SCHEDDUMP(callback = (self.__dump, ())),
-		]
-
+		pass
+	
+	def set_commandlist(self):
+		if not self.context.disableviews:
+			self.commandlist = self.commandlist + [
+				PAUSE(callback = (self.pause_callback, ())),
+				STOP(callback = (self.stop_callback, ())),
+				PLAY(callback = (self.play_callback, ())),
+				SCHEDDUMP(callback = (self.__dump, ())),
+			]
+	
 	def __dump(self):
 		self.player.scheduler.dump()
 

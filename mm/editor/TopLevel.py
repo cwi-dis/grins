@@ -74,6 +74,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.read_it()
 		
 		self.__checkInitialErrors()
+
+		# when a document with errors, and if the user accept the errors,
+		# the views are not relevant in this case. So we set a flag on the context to say
+		# the don't show views (except the source view). It's an easy way to remember when you restore (with undo command)
+		# the original document
+		if not self.context.isValidDocument():
+			self.context.disableviews = 1
 		
 		self.set_commandlist()
 
@@ -128,17 +135,22 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 	def set_commandlist(self):
 		self.commandlist = [
-			PLAY(callback = (self.play_callback, ())),
-			PLAYERVIEW(callback = (self.view_callback, (0,))),
-			HIERARCHYVIEW(callback = (self.view_callback, (1,))),
 			RESTORE(callback = (self.restore_callback, ())),
 			CLOSE(callback = (self.close_callback, ())),
-			PROPERTIES(callback = (self.prop_callback, ())),
-
-			HIDE_PLAYERVIEW(callback = (self.hide_view_callback, (0,))),
-			HIDE_HIERARCHYVIEW(callback = (self.hide_view_callback, (1,))),
 			]
-		if not features.lightweight:
+			
+		if not self.context.disableviews:
+			self.commandlist = self.commandlist + [
+				PLAY(callback = (self.play_callback, ())),
+				PLAYERVIEW(callback = (self.view_callback, (0,))),
+				HIERARCHYVIEW(callback = (self.view_callback, (1,))),
+				PROPERTIES(callback = (self.prop_callback, ())),
+
+				HIDE_PLAYERVIEW(callback = (self.hide_view_callback, (0,))),
+				HIDE_HIERARCHYVIEW(callback = (self.hide_view_callback, (1,))),
+				]
+		
+		if not features.lightweight and not self.context.disableviews:
 			self.commandlist = self.commandlist + [
 				CHANNELVIEW(callback = (self.view_callback, (2,))),
 				LINKVIEW(callback = (self.view_callback, (3,))),
@@ -215,6 +227,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##				HIDE_SOURCE(callback = (self.hide_source_callback, ())),
 ##				]
 
+		# make the commandlist specific to the plateform
+		TopLevelDialog.set_commandlist(self)
+			
 	def update_undocommandlist(self):
 		undocommandlist = []
 		if self.editmgr.history:
@@ -233,13 +248,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			self.setcommands(self.commandlist + self.commandlist_g2)
 
-		# if the document is not valid (parse error),
-		# show the source view only
-		if not self.context.isValidDocument():
-			if self.sourceview != None and not self.sourceview.is_showing():
-				self.sourceview.show()
-		else:
-			self.showdefaultviews()
+		# This flag allow to know if the current views are disabled.
+		# It's use the following raison: if you fix all errors after the initial state, you can easily known that
+		# you have to turn on the views
+		self.viewsdisabled = 1
+		
+		self.updateShowingViews()
 		
 	def showdefaultviews(self):
 		import settings
@@ -462,8 +476,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.context.seteditmgr(self.editmgr)
 		self.editmgr.register(self)
 		self.makeviews()
-		for i in showing:
-			self.views[i].show()
+
+		self.updateShowingViews(showing)
+		
 		self.changed = 1
 		
 	def view_callback(self, viewno):
@@ -917,8 +932,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 #		self.context.seteditmgr(self.editmgr)
 #		self.editmgr.register(self)
 		self.makeviews()
-		for i in showing:
-			self.views[i].show()
+
+		self.updateShowingViews(showing)
+
 		self.changed = 1
 
 	#
@@ -1196,11 +1212,18 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# check initial errors, and don't allow cancel
 		self.__checkInitialErrors(0)
 
+		if not self.context.isValidDocument():
+			self.context.disableviews = 1
+			
 		# update command list, re-make the views, and show the views prviously showed		
 		self.set_commandlist()
+		
+		# update the undo/redo 
+		self.update_undocommandlist()
+		
 		self.makeviews()
-		for i in showing:
-			self.views[i].show()
+
+		self.updateShowingViews(showing)
 
 	def read_it(self):
 		self.changed = 0
@@ -1328,7 +1351,28 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			viewport.Destroy()
 		# finish some context cleanup
 		context.destroy()
-			
+
+	def updateShowingViews(self, listViewsToShow=None):
+		if self.context.disableviews:
+			self.viewsdisabled = 1
+			if self.sourceview != None and not self.sourceview.is_showing():
+				self.sourceview.show()
+		else:
+			forceSourceToShow = 0
+			if self.viewsdisabled or listViewsToShow == None:
+				self.viewdisabled = 0
+				self.showdefaultviews()
+				forceSourceToShow = 1
+			else:
+				for i in showing:
+					self.views[i].show()
+
+			# if the document is not valid (parse error),
+			# show in addition the source view
+			if not self.context.isValidDocument() or forceSourceToShow:
+				if self.sourceview != None and not self.sourceview.is_showing():
+					self.sourceview.show()		
+					
 	def changeRoot(self, root, text=None):
 		# raz the focus
 		self.editmgr.setglobalfocus(None, None)
@@ -1346,15 +1390,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 		# restore the views			
 		self.makeviews()
-		for i in showing:
-			self.views[i].show()
-
-		# if the document is not valid (parse error),
-		# show the source view
-		# XXX may change
-		if not self.context.isValidDocument():
-			if self.sourceview != None and not self.sourceview.is_showing():
-				self.sourceview.show()
+		self.updateShowingViews(showing)
 		
 		# re-build the command list. If the document contains some parse errors,
 		# we some command are disactivate. In addition, the available views may not
