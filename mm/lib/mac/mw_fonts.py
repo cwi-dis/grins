@@ -90,7 +90,8 @@ class findfont:
 		
 	def _setfont(self, wid):
 		"""Set our font, saving the old one for later"""
-		Qd.SetPort(wid)
+		if wid:
+			Qd.SetPort(wid)
 		Qd.TextFont(self._fontnum)
 		Qd.TextFace(self._fontface)
 		Qd.TextSize(self._pointsize)
@@ -99,15 +100,17 @@ class findfont:
 		"""Check whether our font needs to be installed in this wid"""
 		return _checkfontinfo(wid, (self._fontnum, self._fontface, self._pointsize))
 		
-	def _initparams(self, wid):
+	def _initparams(self, wid=None):
 		"""Obtain font params like ascent/descent, if needed"""
 		if self._inited:
 			return
 		self._inited = 1
-		old_fontinfo = _savefontinfo(wid)
+		if wid:
+			old_fontinfo = _savefontinfo(wid)
 		self._setfont(wid)
 		self.ascent, self.descent, widMax, self.leading = Qd.GetFontInfo()
-		_restorefontinfo(wid, old_fontinfo)
+		if wid:
+			_restorefontinfo(wid, old_fontinfo)
 
 	def close(self):
 		pass
@@ -116,6 +119,7 @@ class findfont:
 		return 0
 
 	def strsizePXL(self, wid, str):
+		self._initparams(wid)
 		strlist = string.splitfields(str, '\n')
 		maxwidth = 0
 		maxheight = len(strlist) * (self.ascent + self.descent + self.leading)
@@ -140,6 +144,7 @@ class findfont:
 		
 
 	def baselinePXL(self):
+		self._initparams()
 		return self.ascent+self.leading
 		
 	def baseline(self):
@@ -148,6 +153,7 @@ class findfont:
 		return float(self.baselinePXL()) / _y_pixel_per_mm
 
 	def fontheightPXL(self):
+		self._initparams()
 		return self.ascent + self.descent + self.leading
 
 	def fontheight(self):
