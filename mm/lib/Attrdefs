@@ -1,0 +1,421 @@
+# $Id$
+#
+# Attribute definitions
+# ---------------------
+#
+# Each definition is a 7-tuple enclosed in parenthes:
+# (attrname, typedef, defaultvalue, labeltext, displayername, helptext,
+#  inheritance)
+#
+# Attributes with names starting with _ are for caching only, these
+# are only written to the .cmc file, not to the .cmif file.
+#
+# The typedef is used to determine how to parse the default value,
+# with the provision that tuples, lists and dictionaries must
+# be surrounded by an extra pair of parentheses.
+#
+# The helptext should be one line explaining what the attribute is for.
+#
+# Inheritance can be one of four names: (raw, normal, inherited, channel).
+# Values 'raw', 'normal' and 'inherited' mean that node.GetRawAttr(),
+# node.GetAttr() or node.GetInherAttr(), respectively, should be used to
+# get this type of attribute.  The value 'channel' is the same as
+# 'inherited', but means that the default can also be gotten from
+# the channel attributes.  (For the time being, inheritance is optional,
+# defaulting to 'normal'.)
+#
+# A definition need not be wholly contained in a single input line;
+# blank lines and comments may be inserted freely.
+
+(abstract (string) '' 'Abstract' default 'A brief description of the contents (informational only)' raw light)
+
+(align (string) 'left' 'Alignment' default
+	'Alignment of short datasets' channel cmif)
+
+(alt (string) '' 'Alternate text' default
+	'Alternate text for media object' raw light)
+
+(anchorlist (list (enclosed (tuple (any) (int) (enclosed (list (any))) (enclosed (tuple (float) (float))))))
+	() 'Anchors' hidden 'List of anchors on this node' raw light)
+
+(arm_duration (float) -1.0 'Arm duration' hidden
+	'Time needed to arm this event before displaying' raw light)
+
+(author (string) '' 'Author' default 'Author (informational only)' raw light)
+
+(axis (tuple (float) (float)) (-1.0 -1.0) 'Axis' default
+	'Draw axis if >0, specifies tick-interval' channel cmif)
+
+(bag_index (name) undefined 'Choice index' childnodename
+	'Name of child auto-started when choice node plays' normal cmif)
+
+(base (string) '' 'Base URL' default
+	'Base URL of document, used for resolving relative URLs' raw light)
+
+(base_window (name) 'undefined' 'Channel base window' basechannelname
+	'Name of window in which channelwin is created' raw cmif)
+
+(base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
+	'Position and size' default 'Position and size, usually in pixels' channel light)
+
+(begin (float) 0.0 'Begin time' default
+	'Start delay of node' normal light)
+
+(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
+	'Color used for background of window' channel light)
+#(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
+#	'Color used for background of window. Overriden by "transparent".' channel light)
+
+(bgimg (string) '' 'Background image' file
+	'Background image for window' channel cmif)
+
+(bitrate (int) 14400 'Peak bitrate' default
+	'Peak bitrate reserved for this item, in bits per second' raw light)
+
+(border (int) 1 'Channel border' default
+	'Determines whether channel window has a border (1=yes)' raw cmif)
+
+(bucolor (tuple (int) (int) (int)) (255 0 0) 'Anchor color' color
+	'Color used for anchors in window' channel cmif)
+
+(center (bool) 1 'Center image' default
+	'Determines whether image is centered' channel cmif)
+
+(channel (name) undefined 'Channel' channelname
+	'Name of channel used to render this node' inherited light)
+
+(channellist (list (enclosed (tuple (name) (attrdict)))) ()
+	'Channel List' hidden
+	'Channels used in this document (root node only)' normal light)
+
+(clipbegin (string) '' 'Clip begin' default
+	'Start of range of frames to be played. Simplest form is "npt=3s".' channel smil)
+
+(clipend (string) '' 'Clip end' default
+	'End of range of frames to be played. Simplest form is "npt=3s".' channel smil)
+
+(comment (string) '' 'Comment' default
+	 'A comment (authoring convenience only)' raw cmif)
+
+(copyright (string) '' 'Copyright' default 'Copyright of the item (informational only)' raw light)
+
+(crop (tuple (float) (float) (float) (float)) (0 0 0 0) 'Image crop' default
+    'Crop image.  Values are fractions to crop from top, bottom, left, right.'
+	channel cmif)
+
+(cview_winpos  (tuple (float) (float)) (-1 -1) 'Time chart winpos' hidden
+	 'Window position for Time chart view' raw smil)
+
+(cview_winsize  (tuple (float) (float)) (115.234375 115.234375) 'Time chart winsize' hidden
+	 'Window size for Time chart view' raw smil)
+
+(drawbox (bool) 1 'Draw anchor boxes' default
+	'Draw anchors as boxes' channel cmif)
+
+(duration (float) 0.0 'Duration' default
+	'Duration of a node or subtree, 0 uses natural duration' normal light)
+
+(fgcolor (tuple (int) (int) (int)) (0 0 0) 'Foreground color' color
+	'Color used for text/images in window' channel cmif)
+
+(file (string) '' 'URL' file
+	'URL for the data of this node' normal light)
+
+(fill (string) '' 'Fill' fill
+	'Whether data should be retained on screen after playing' normal cmif)
+
+(font (string) 'Times-Roman' 'Font' font
+	'Font used to display text' channel cmif)
+
+(gtype (string) 'line' 'Graphtype' default
+	'Type of graph: bar, line, hline' channel cmif)
+
+(hicolor (tuple (int) (int) (int)) (255 0 0) 'Highlight color' color
+	'Color used for highlighted anchors in window' channel cmif)
+
+(hview_winpos (tuple (float) (float)) (-1 -1) 'Hierarchy winpos' hidden
+	 'Window position for hierarchy view' raw light)
+
+(hview_winsize (tuple (float) (float)) (115.234375 115.234375) 'Hierarchy winsize' hidden
+	 'Window size for hierarchy view' raw light)
+
+(hyperlinks (list (enclosed (tuple (enclosed (tuple (string) (any)))
+                                   (enclosed (tuple (string) (any)))
+				   (int) (int)))) ()
+	'Hyperlink list' hidden
+	'Hyperlinks within this document (root node only)' raw light)
+
+(layout (name) undefined 'Screen' layoutname
+	'Screen for this node and its descendants. Authoring convenience only, controls channels displayed in menus.' inherited smil)
+
+(layouts (list (enclosed (tuple (name) (list (name))))) () 'List of screens'
+	hidden 'List of layouts within this document (root node only)' raw smil)
+
+(links_winpos  (tuple (float) (float)) (-1 -1) 'Link edit window position' hidden
+	 'Position of link edit window' raw light)
+
+(links_winsize  (tuple (float) (float)) (146.923828125 132.51953125) 'Link edit window size' hidden
+	 'Size of link edit window' raw light)
+
+(longdesc (string) '' 'Long description URL' default
+	'Link (URL) to a long description of the media object' raw light)
+
+(loop (int) 1 'Loop' default
+	'Number of times the node should loop, 0 for indefinite' raw light)
+
+(macprog (string) '' 'Mac program signature' default
+	'4-byte application signature (mac only)' channel cmif)
+
+(mcgroup (string) '' 'Multicast group' default
+	'IP Multicast group address to listen to' raw cmif)
+
+(mcttl (int) 3 'Multicast TTL' default
+	'TTL for outgoing multicast messages' raw cmif)
+
+(mimetype (string) '' 'MIME type' default
+	'MIME type of media object' raw smil)
+
+(name (name) '' 'Node name' default
+	'Name for the node' raw light)
+
+(noanchors (bool) 0 'Ignore anchors' default
+	'Ignore anchors and other HTML tags' channel cmif)
+
+(nonlocal (bool) 0 'Remote only' default
+	'Ignore incoming messages from local machine' raw cmif)
+
+(player_winpos (tuple (float) (float)) (-1 -1) 'Player winpos' hidden
+	 'Window position for player control panel' raw light)
+
+(player_winsize (tuple (float) (float)) (83.544921875 46.09375) 'Player winsize' hidden
+	 'Window size for player control panel' raw light)
+
+(port (int) 7000 'UDP port' default
+	'UDP port for external hyperjumps' raw cmif)
+
+(pointsize (float) 0 'Point size' default
+	'Point size of text displayed in window' channel cmif)
+
+(popup (bool) 1 'Popup on play' default
+	'Determines whether channel pops up upon playing a node' raw cmif)
+
+(project_audiotype (int) 0 'Audio type' audiotype
+	'Audio type, determines quality of audio when converting to RealAudio'
+	raw light)
+
+(project_convert (bool) 1 'Convert data' default
+	'Convert data to RealMedia format' raw smil)
+
+(project_ftp_host (string) '' 'Webserver' default
+	'FTP hostname to use for webpage upload' raw light)
+
+(project_ftp_host_media (string) '' 'Mediaserver' default
+	'FTP hostname to use for media file upload (default: same as webserver)' raw light)
+
+(project_ftp_user (string) '' 'Webserver User' default
+	'FTP username to use for webpage upload' raw light)
+
+(project_ftp_user_media (string) '' 'Mediaserver User' default
+	'FTP username to use for media file upload' raw light)
+
+(project_ftp_dir (string) '' 'Webserver Directory' default
+	'Directory on FTP server webpage will be stored' raw light)
+
+(project_ftp_dir_media (string) '' 'Mediaserver Directory' default
+	'Directory on FTP server where media files will be stored' raw light)
+
+(project_html_page (string) '' 'HTML template' default
+	'Template used to generate web page for this presentation' raw light)
+
+(project_mobile (bool) 0 'Mobile play' default
+	'Allow download' raw smil)
+
+(project_perfect (bool) 1 'Perfect play' default
+	'Buffered playback' raw smil)
+
+(project_quality (int) 75 'Image quality' quality
+	'Quality of image conversion to JPEG' raw light)
+
+(project_smil_url (string) '' 'Mediaserver URL' default
+	'URL of SMIL document on the media server' raw light)
+
+(project_targets (int) 3 'Target audience' targets
+	'One or more bandwidths for which this item should be converted' raw light)
+
+(project_videotype (int) 0 'Video type' videotype
+	'Video type, determines quality of video when converting to RealVideo'
+	raw light)
+
+(queuesize (float) 0 'Queue size' default
+	'Audio playback queue size' channel cmif)
+
+(scale (float) 0.0 'Scale factor' default
+	'Image magnification, 0 gives biggest possible size within channel' channel light)
+
+(scalefilter (name) '' 'Scaling filter' default
+	'Name of filter used after image scaling' channel cmif)
+
+(style (list (name)) () 'Style(s)' default
+	'List of style names that apply to this node/subtree' raw cmif)
+
+(style_winpos (tuple (float) (float)) (-1 -1) 'Style editor winpos' hidden
+	 'Window position for style editor' raw cmif)
+
+(style_winsize (tuple (float) (float)) (86.42578125 92.1875) 'Style editor winsize' hidden
+	 'Window size for style editor' raw cmif)
+
+(styledict (namedict (attrdict)) () 'Style Dictionary' hidden
+	'Styles used in this document (root node only)' normal cmif)
+
+# This is the real sync arc data structure, on the destination!!!
+# The items are (srcnode, srcside, delay, dstside).
+(synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
+	() 'SyncTo list' hidden
+	'List of sync arcs ending at this node' raw light)
+
+(terminator (name) 'LAST' 'Endsync child' termnodename
+	'Name of child that terminates parallel node' normal light)
+
+(textalign (string) 'center' 'Alignment' default
+	'Alignment of text in window' channel cmif)
+
+(title (string) '' 'Title' default
+	 'The title of this object (informational only)' raw light)
+
+(toplevel_winpos (tuple (float) (float)) (-1 -1) 'Top level winpos' hidden
+	 'Window position for top level menu' raw light)
+
+(toplevel_winsize (tuple (float) (float)) (31.689453125 72.021484375) 'Top level winsize' hidden
+	 'Window size for top level menu' raw light)
+
+(transparent (int) 0 'Transparent' transparency
+	'Determines transparency of window, overrides background color' raw smil)
+
+(type (name) null 'Channel type' channeltype
+	'Type of media this channel will be used for' raw light)
+
+(u_group (name) undefined 'User group' usergroup
+	'User group that controls rendering of this node' inherited cmif)
+
+(unixprog (string) '' 'Unix program name' default
+	'Application name (unix only)' channel cmif)
+
+(units (int) 0 'Units' units
+	'What the size/position numbers are measured in' raw smil)
+
+(usergroups (list (enclosed (tuple (name) (tuple (string) (bool) (bool)))))
+	() 'User groups' hidden
+	'Usergroups used in this document (root node only)' normal cmif)
+
+(video (bool) 0 'Video output' default
+	'Do image smoothing for video output' channel cmif)
+
+(visible (bool) 1 'Channel visibility' default
+	'Are nodes played to the channel actually rendered?' raw cmif)
+
+(wanturl (bool) 0 'Pass URL' default
+	'Pass URL to program (otherwise pass filename)' channel cmif)
+	
+(winpos (tuple (float) (float)) (-1 -1) 'Window position' hidden
+	'Initial window position (x, y)' raw light)
+
+(winprog (string) '' 'Windows program name' default
+	'Application name (windows only)' channel cmif)
+
+(winsize (tuple (float) (float)) (0 0) 'Window size' default
+	'Initial window size' raw light)
+
+(z (int) 0 'Z order' default
+	'Stacking order for channels, higher numbers are on top' normal light)
+
+# SMIL system test attributes
+(system_bitrate (int) 0 'System bitrate' bitrate3
+	'Play node only if bitrate >= value here' raw light)
+(system_captions (bool) 0 'System captions' bool3
+	'Play node only if end-user wants captions' raw light)
+(system_language (string) '' 'System language' language3
+	'Play node only if end-user prefers this language' raw light)
+(system_overdub_or_caption (string) '' 'System overdub or caption' captionoverdub3
+	'Play node only depending on end user overdub/caption preference' raw light)
+(system_required (string) '' 'System required' default
+	'Play node only if player supports these features' raw light)
+(system_screen_size (tuple (int) (int)) (0 0) 'System screen size' default
+	'Play node only if screen bigger than this' raw light)
+(system_screen_depth (int) 0 'System screen depth' default
+	'Play node only if screen has more bits-per-pixel than this' raw light)
+
+# RealPix attributes
+(aspect (bool) 1 'Keep aspect ratio' default
+	'Keep aspect ratio of image' inherited light)
+
+(color (tuple (int) (int) (int)) (0 0 0) 'Effect color' color
+       'Color for transition effect, see RealPix documentation' normal light)
+
+(direction (string) 'left' 'Wipe Direction' direction
+	'Direction of wipe' normal light)
+
+(href (string) '' 'Hyperlink destination' default
+	'The destination URL of Web page from the image' inherited light)
+
+(imgcropwh (tuple (int) (int)) (0 0) 'Image crop size' default
+	'Crop image.  Values are width and height of image area to display' normal light)
+
+(imgcropxy (tuple (int) (int)) (0 0) 'Image crop coordinates' default
+	'Crop image.  Values are x,y coordinates of image area to display' normal light)
+
+(imgcropanchor (string) 'top-left' 'Image crop anchor' subregionanchor
+	'Anchor for image crop (x,y) coordinates' normal smil)
+
+(fullimage (bool) 1 'Use whole image' default
+	'Use whole image' normal light)
+
+(maxfps (int) 0 'Max fps' default 'Transition framerate, 0 for as high as possible' inherited smil)
+
+(preroll (float) 0.0 'Preroll time' default
+	'Time for which data should be buffered before presentation starts, see RealPix documentation'
+	raw light)
+
+(size (tuple (int) (int)) (256 256) 'Image size' default
+	'Size of slideshow, in pixels' normal light)
+
+(start (float) 0.0 'Begin time' default
+	'Start time of transition effect, relative to previous transition start' normal light)
+
+(subregionxy (tuple (int) (int)) (0 0) 'Destination region (x,y)' normal
+	'(x,y) coordinates of destination area within channel' normal light)
+
+(subregionwh (tuple (int) (int)) (0 0) 'Destination region (w,h)' normal
+	'width and height of destination area within channel' normal light)
+
+(subregionanchor (string) 'top-left' 'Destination region anchor' subregionanchor
+	'Anchor for subregion (x,y) coordinates' normal smil)
+
+(displayfull (bool) 1 'Fill whole region' default
+	'Use whole region for transition effect' normal light)
+
+(tag (string) 'fill' 'Transition type' transition
+	'Type of transition effect' normal light)
+	
+(caption (string) '' 'Text caption' default
+	'Text caption to show with the image' normal light)
+	
+(captionchannel (name) '' 'Caption channel' captionchannelname
+	'Name of channel used to render captions on this node' inherited light)
+
+(wipetype (string) 'normal' 'Wipe type' wipetype
+	'Type of wipe' normal light)
+
+(fadeout (bool) 0 'Fadeout' default
+	'Fadeout image after specified time' normal light)
+
+(fadeouttime (float) 0.0 'Fadeout begin time' default
+	'Start time for fadeout, relative to transition completion' normal light)
+
+(fadeoutcolor (tuple (int) (int) (int)) (0 0 0) 'Fadeout color' color
+	'Color to fadeout to' normal light)
+
+(fadeoutduration (float) 0.0 'Fadeout duration' default
+	'Duration of fadeout transition' normal light)
+
+(tduration (float) 0.0 'Transition duration' default
+	'Duration of the transition' normal light)
