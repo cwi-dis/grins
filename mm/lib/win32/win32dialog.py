@@ -1083,6 +1083,7 @@ class SimpleSelectDlg(ResDialog):
 		self._list_ctrl.setoptions_cb(self._list)
 		if self._defaultindex:
 			self._list_ctrl.setcursel(self._defaultindex)
+		return ResDialog.OnInitDialog(self)
 
 	def OnOK(self):
 		self._result=win32con.IDOK
@@ -1097,6 +1098,51 @@ class SimpleSelectDlg(ResDialog):
 	def OnCancel(self):
 		self._result=win32con.IDCANCEL
 		# nothing
+		return self._obj_.OnCancel()
+	
+	def hookKeyStroke(self,cb,key):
+		if hasattr(self,'_obj_') and self._obj_:	
+			self.HookKeyStroke(cb,key)
+
+# A general dialog that displays a combo with options for the user to select.
+class MultiSelectDlg(ResDialog):
+	def __init__(self,list, title = '', prompt = None,parent = None,defaultlist=None):
+		ResDialog.__init__(self,grinsRC.IDD_SELECT_MULTI,parent)
+		self._prompt_ctrl= Static(self,grinsRC.IDC_LABEL)
+		self._list_ctrl= ListBox(self,grinsRC.IDC_LIST1)
+		self._list=list
+		self._title=title
+		self._prompt=prompt
+		self._defaultlist=defaultlist
+		self._result=None
+
+	def OnInitDialog(self):
+		DialogBase.OnInitDialog(self)
+
+		self._prompt_ctrl.attach_to_parent()
+		if not self._prompt:self._prompt='Select:'
+		self._prompt_ctrl.settext(self._prompt)
+
+		if not self._title:
+			if self._prompt:self._title=self._prompt
+			else: self._title='Select'
+		self.SetWindowText(self._title)
+		
+		self._list_ctrl.attach_to_parent()
+		self._list_ctrl.delalllistitems()
+		self._list_ctrl.addlistitems(self._list, 0)
+		for i in self._defaultlist:
+			self._list_ctrl.multiselect(i, 1)
+		return ResDialog.OnInitDialog(self)
+
+	def OnOK(self):
+		# xxxx to be done
+		self._result = self._list_ctrl.getselitems()
+		res=self._obj_.OnOK()
+		return res
+
+	def OnCancel(self):
+		self._result = None
 		return self._obj_.OnCancel()
 	
 	def hookKeyStroke(self,cb,key):
@@ -1142,6 +1188,25 @@ def multchoice(prompt, list, defindex, parent = None):
 			return list.index('Cancel')
 		else:
 			return -1
+
+def mmultchoice(prompt, list, deflist, parent = None):
+	defindexlist = []
+	for defvalue in deflist:
+		try:
+			i = list.index(defvalue)
+		except IndexError:
+			print "mmultchoice: unknown default:", defvalue
+			continue
+		defindexlist.append(i)
+	dlg=MultiSelectDlg(list,'',prompt,parent,defindexlist)
+	dlg.DoModal()
+	if dlg._result is None:
+		return None
+	indexlist = dlg._result
+	rv = []
+	for i in indexlist:
+		rv.append(list[i])
+	return rv
 
 # Base class for dialog bars
 class DlgBar(window.Wnd,ControlsDict):
