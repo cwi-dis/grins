@@ -1219,6 +1219,14 @@ def GetYesNoCancel(promp,parent=None):
 	elif res==win32con.IDNO:return 1
 	else: return 2
 	
+# Displays a message and requests from the user to select OK or Cancel
+def GetOKCancel(promp,parent=None):
+	if parent:m=parent
+	else: m=win32ui
+	res=m.MessageBox(promp,'GRiNS Editor',win32con.MB_OKCANCEL|win32con.MB_ICONQUESTION)
+	if res==win32con.IDOK:return 0
+	else: return 1
+	
 # The create box dialog implementation
 class CreateBoxDlg(ResDialog):
 	def __init__(self,text,callback,cancelCallback,parent=None):
@@ -1319,6 +1327,8 @@ class _MultChoice:
 def multchoice(prompt, list, defindex, parent = None):
 	if len(list) == 3 and list == ['Yes', 'No', 'Cancel']:
 		return GetYesNoCancel(prompt, parent)
+	if len(list) == 2 and list == ['OK', 'Cancel']:
+		return GetOKCancel(prompt, parent)
 	mc=_MultChoice(prompt, list, defindex, parent = parent)
 	if mc.dialog._result==win32con.IDOK:
 		return mc.answer
