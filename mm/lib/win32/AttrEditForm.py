@@ -439,6 +439,10 @@ class AnchorlistCtrl(AttrCtrl):
 			return self.__anchorlinks
 		return self._attr.getcurrent() or {}
 
+	def setvalue(self,val):
+		pass
+		#self.__anchorlinks = val
+
 	def fill(self, newlist = 1):
 		if newlist:
 			self.__anchors = self.__anchorlinks.keys()
