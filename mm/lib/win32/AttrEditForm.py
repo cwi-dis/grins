@@ -1430,7 +1430,10 @@ class EventCtrl(AttrCtrl):
 		if 0 <= a < len(self._value):
 			#self._list.deletestring(a)
 			del self._value[a]
-			self._eventstruct = None
+			if 0 <= a < len(self._value):
+				self._eventstruct = self._value[a]
+			else:
+				self._eventstruct = None
 			self.resetlist()
 			self.initevent()
 			self.enableApply()
