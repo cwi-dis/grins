@@ -381,6 +381,12 @@
 
 (tag (string) 'fill' 'Transition type' transition
 	'Type of transition effect.' normal light)
+	
+(caption (string) '' 'Text caption' default
+	'Text caption to show with the image' normal light)
+	
+(captionchannel (name) undefined 'Caption channel' channelname
+	'Name of channel used to render captions on this node' inherited light)
 
 (wipetype (string) 'normal' 'Wipe type' wipetype
 	'Type of wipe' normal light)
