@@ -9,8 +9,7 @@ set INCLUDE_MMEXTENSIONS=no
 
 set main_script=%GRINS_HOME%\fGRiNS.py
 
-rem set PYTHON_EXE=..\..\..\..\python\python.exe
-set PYTHON_EXE=..\..\..\bin\win32\python.exe
+set PYTHON_EXE=..\..\..\..\python\PCbuild\python.exe
 
 set PYTHONHOME=..\..\..\..\python
 
