@@ -26,6 +26,7 @@ class PlayerCore(Selecter):
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
 		self.editmgr.register(self)
+		self.chans_showing = 0
 		Selecter.__init__(self)
 	#
 	# EditMgr interface (as dependent client).
@@ -202,11 +203,27 @@ class PlayerCore(Selecter):
 		cname = MMAttrdefs.getattr(node, 'channel')
 		return self.getchannelbyname(cname)
 	#
+	def before_chan_show(self, chan = None):
+		self.chans_showing = self.chans_showing + 1
+
+	def after_chan_show(self, chan = None):
+		self.chans_showing = self.chans_showing - 1
+		if self.chans_showing == 0:
+			self.after_showchannels()
+
+	def after_showchannels(self):
+		aftershow = self.aftershow
+		self.aftershow = None
+		if aftershow:
+			apply(aftershow[0], aftershow[1])
+
 	def showchannels(self):
+		self.before_chan_show()
 		for name in self.channelnames:
 			ch = self.channels[name]
 			if ch.may_show():
 				ch.show()
+		self.after_chan_show()
 		self.makemenu()
 	#
 	def hidechannels(self):
