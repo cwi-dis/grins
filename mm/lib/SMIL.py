@@ -7,11 +7,13 @@ SMILdtd = 'http://www.w3.org/TR/REC-smil/SMIL10.dtd'
 SMIL1 = 'http://www.w3.org/TR/REC-smil'
 SMILBostonPubid = '-//W3C//DTD SMIL 2.0//EN'
 SMILBostonDtd = 'http://www.w3.org/2001/SMIL20/WD/SMIL20.dtd'
-SMIL2 = 'http://www.w3.org/2001/SMIL20/WD/'
+SMIL2 = 'http://www.w3.org/2001/SMIL20/PR/'
 # namespaces recognized by GRiNS
 # the first one is the required default namespace, but SMIL1
 # doesn't generate a warning
-SMIL2ns = ['http://www.w3.org/2001/SMIL20/WD/Language',
+SMIL2ns = ['http://www.w3.org/2001/SMIL20/PR/Language',
+	   'http://www.w3.org/2001/SMIL20/PR/',
+	   'http://www.w3.org/2001/SMIL20/WD/Language',
 	   'http://www.w3.org/2001/SMIL20/WD/',
 	   'http://www.w3.org/2000/SMIL20/CR/Language',
 	   'http://www.w3.org/2000/SMIL20/CR/',
