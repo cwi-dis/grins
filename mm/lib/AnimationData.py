@@ -1,5 +1,6 @@
 __version__ = "$Id$"
 
+import MMAttrdefs
 
 # AnimationData pattern:
 # <ref ...>
@@ -12,6 +13,7 @@ __version__ = "$Id$"
 class AnimationData:
 	def __init__(self, node):
 		self.node = node # animation target
+		self.root = node.GetRoot()
 		self.data = []   # a list of key frames (rect, color)
 		self.times = []  # key times list
 
@@ -85,13 +87,88 @@ class AnimationData:
 	
 	# create animate nodes from self data
 	def applyData(self, editmgr):
-		pass
+		animateMotionValues, animateWidthValues,\
+		animateHeightValues, animateColorValues = self._dataToValuesAttr()
+		keyTimes = self._timesToKeyTimesAttr()
+		
+		existing = {}
+		children = self._getAnimateChildren()
+		if children:
+			for anim in children:
+				tag = anim.attrdict.get('atag')
+				if tag == 'animateMotion':
+					existing['pos'] = anim
+				elif tag == 'animate':
+					attributeName = MMAttrdefs.getattr(anim, 'attributeName')
+					if attributeName == 'width':
+						existing['width'] = anim
+					elif attributeName == 'height':
+						existing['height'] = anim
+				elif tag == 'animateColor':
+					existing['color'] = anim
+
+		em = editmgr
+		if not em.transaction():
+			return 0
+		
+		anim = 	existing.get('pos')
+		if anim is not None:
+			self._updateNode(anim, keyTimes, animateMotionValues)
+		else:
+			anim = self.root.context.newanimatenode('animateMotion')
+			anim.targetnode = self.node
+			self._updateNode(anim, keyTimes, animateMotionValues)
+			em.addnode(self.node, 0, anim)
+
+		anim = 	existing.get('width')
+		if anim is not None:
+			self._updateNode(anim, keyTimes, animateWidthValues)
+		else:
+			anim = self.root.context.newanimatenode('animate')
+			anim.targetnode = self.node
+			self._updateNode(anim, keyTimes, animateWidthValues)
+			em.addnode(self.node, 1, anim)
+
+		anim = 	existing.get('height')
+		if anim is not None:
+			self._updateNode(anim, keyTimes, animateHeightValues)
+		else:
+			anim = self.root.context.newanimatenode('animate')
+			anim.targetnode = self.node
+			self._updateNode(anim, keyTimes, animateHeightValues)
+			em.addnode(self.node, 2, anim)
+
+		anim = 	existing.get('color')
+		if anim is not None:
+			self._updateNode(anim, keyTimes, animateColorValues)
+		else:
+			anim = self.root.context.newanimatenode('animate')
+			anim.targetnode = self.node
+			self._updateNode(anim, keyTimes, animateColorValues)
+			em.addnode(self.node, 3, anim)
+		
+		em.commit()
+		return 1
+
+	
+	def updateNode(self, node, times, values):
+		node.attrdict['keyTimes'] = times
+		node.attrdict['values'] = values
+
+	def newNode(self, index, em, tag, times, values):
+		newnode = self.root.context.newanimatenode(tag)
+		newnode.targetnode = self.node
+		em.addnode(self.node, index, newnode)
 
 	#
 	#  private
 	#
 	def _initDomValues(self):
 		pass
+
+	def _updateNode(self, node, times, values):
+		node.attrdict['keyTimes'] = times
+		node.attrdict['values'] = values
 
 	def _getAnimateChildren(self):
 		children = []
@@ -142,6 +219,5 @@ class AnimationData:
 
 	def _strToColorList(self, str):
 		return []
-
 
 
