@@ -9,8 +9,11 @@ from sys import platform
 import urlcache
 import string
 
-def get(node, ignoreloop=0, wanterror=0):
-	duration = MMAttrdefs.getattr(node, 'duration')
+def get(node, ignoreloop=0, wanterror=0, ignoredur=0):
+	if ignoredur:
+		duration = 0
+	else:
+		duration = MMAttrdefs.getattr(node, 'duration')
 	if hasattr(node, 'slideshow') and \
 	   node.slideshow.rp.duration == duration:
 		duration = 0
@@ -35,7 +38,7 @@ def get(node, ignoreloop=0, wanterror=0):
 		url = context.findurl(url)
 		cache = urlcache.urlcache[url]
 		dur = cache.get('duration')
-		if dur is not None:
+		if ignoredur and dur is not None:
 			return loop * dur
 		if cache.has_key('mimetype'):
 			maintype, subtype = cache['mimetype']
@@ -53,7 +56,7 @@ def get(node, ignoreloop=0, wanterror=0):
 			cache['mimetype'] = maintype, subtype
 			u.close()
 			del u
-		if string.find(subtype, 'real') >= 0:
+		if string.find(subtype, 'real') >= 0 or string.find(subtype, 'shockwave') >= 0:
 			import realsupport
 			info = realsupport.getinfo(url)
 			dur = info.get('duration', 0)
@@ -76,7 +79,23 @@ def get(node, ignoreloop=0, wanterror=0):
 		elif maintype in ('image', 'text'):
 			# static media doesn't have a duration
 			return 0
-		if dur is not None:
+		if ignoredur and dur is not None:
 			cache['duration'] = dur
-			return loop * dur
+		try:
+			clipbegin = node.GetClip('clipbegin', 'sec')
+		except ValueError:
+			clipbegin = 0
+		try:
+			clipend = node.GetClip('clipend', 'sec')
+		except ValueError:
+			clipend = 0
+		if clipend:
+			if dur is None:
+				dur = clipend
+			else:
+				dur = min(dur, clipend)
+		if dur is None:
+			dur = 100	# XXX we have no clue, but we don't want to crash
+		dur = max(dur - clipbegin, 0)
+		return loop * dur
 	return duration
