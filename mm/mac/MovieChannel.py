@@ -57,11 +57,12 @@ class MovieChannel(ChannelWindow):
 		self.arm_movie = None
 
 		# XXXX Some of these should go to arm...
+		self.window._macsetwin()
 		screenBox = self.window.qdrect()
 		movieBox = self.play_movie.GetMovieBox()
-##		print 'SCREEN', screenBox, 'MOVIE', movieBox
+		print 'SCREEN', screenBox, 'MOVIE', movieBox
 		movieBox = self._scalerect(screenBox, movieBox)
-##		print 'SET', movieBox
+		print 'SET', movieBox
 		self.play_movie.SetMovieBox(movieBox)
 		self.play_movie.GoToBeginningOfMovie()
 		self.play_movie.MoviesTask(0)
