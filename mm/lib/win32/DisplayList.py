@@ -397,60 +397,6 @@ class _DisplayList:
 		self._list.append(('fg', color))
 		self._fgcolor = color
 
-	######################################
-	# Animation experimental methods
-	#
-
-	# Update cmd with name from diff display list
-	# we can get also update region from diff dl
-	def update(self, name, diffdl):
-		newcmd = diffdl.getcmd(name)
-		if newcmd and self.__cmddict.has_key(name):
-			ix = self.__cmddict[name]
-			self._list[ix] = newcmd
-
-	# Update cmd with name
-	def updatecmd(self, name, newcmd):
-		if self.__cmddict.has_key(name):
-			ix = self.__cmddict[name]
-			self._list[ix] = newcmd
-
-	# Update button with name
-	def updatebutton(self, name, coords):
-		if self.__buttondict.has_key(name):
-			ix = self.__butdict[name]
-			self._buttons[ix].setcoordinates(coords)
-	
-	def getcmd(self, name):
-		if self.__cmddict.has_key(name):
-			ix = self.__cmddict[name]
-			return self._list[ix]
-		return None
-
-	def knowcmd(self, name):
-		self.__cmddict[name] = len(self._list)-1
-				
-	def knowbutton(self, name):
-		self.__butdict[name] = len(self._buttons)-1
-
-	# Update background color
-	def updatebgcolor(self, color):
-		self._bgcolor = color
-		entry = self._list[0]
-		cmd = ('clear',self._window.GetClientRect())
-		if entry[0]!='clear':
-			self._list.insert(0, cmd)
-			d = self.__cmddict.copy()
-			# after render insertion, thus exception and so update known commands
-			for name, value in d.items():
-				self.__cmddict[name]= value + 1
-		else:
-			self._list[0]=cmd
-
-	#
-	# End of animation experimental methods
-	##########################################
-
 
 	# Define a new button
 	def newbutton(self, coordinates, z = 0, times = None):
@@ -864,6 +810,51 @@ class _DisplayList:
 		self._update_bbox(l,t,r,b)
 
 
+	######################################
+	# Animation experimental methods
+	#
+
+	# Update cmd with name from diff display list
+	# we can get also update region from diff dl
+	def update(self, name, diffdl):
+		newcmd = diffdl.getcmd(name)
+		if newcmd and self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			self._list[ix] = newcmd
+
+	# Update cmd with name
+	def updatecmd(self, name, newcmd):
+		if self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			self._list[ix] = newcmd
+	
+	def getcmd(self, name):
+		if self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			return self._list[ix]
+		return None
+
+	def knowcmd(self, name):
+		self.__cmddict[name] = len(self._list)-1
+				
+	# Update background color
+	def updatebgcolor(self, color):
+		self._bgcolor = color
+		entry = self._list[0]
+		cmd = ('clear',self._window.GetClientRect())
+		if entry[0]!='clear':
+			self._list.insert(0, cmd)
+			d = self.__cmddict.copy()
+			# after render insertion, thus exception and so update known commands
+			for name, value in d.items():
+				self.__cmddict[name]= value + 1
+		else:
+			self._list[0]=cmd
+
+	#
+	# End of animation experimental methods
+	##########################################
+
 ####################################################
 
 class _Button:
@@ -929,3 +920,12 @@ class _Button:
 				return 0
 			return 1
 		return 0
+
+	######################################
+	# Animation experimental methods
+
+	def updatecoordinates(self, coords):
+		print 'button.updatecoords',coords
+
+	# End of animation experimental methods
+	##########################################
