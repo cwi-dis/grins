@@ -54,6 +54,8 @@ def create_MMNode_widget(node, mother):
 		return MediaWidget(node, mother)
 	elif ntype == 'prefetch':
 		return MediaWidget(node, mother)
+	elif ntype == 'comment':
+		return CommentWidget(node, mother)
 	else:
 		raise "Unknown node type", ntype
 		return None
@@ -131,6 +133,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def destroy(self):
 		# Prevent cyclic dependancies.
 		Widgets.Widget.destroy(self)
+		if self.iconbox:
+			self.iconbox.destroy()
+			self.iconbox = None
 		if self.node:
 			del self.node.views['struct_view']
 			del self.node.set_infoicon
@@ -1298,8 +1303,6 @@ class MediaWidget(MMNodeWidget):
 	def destroy(self):
 		# Remove myself from the MMNode view{} dict.
 		MMNodeWidget.destroy(self)
-		if self.iconbox: self.iconbox.destroy()
-		self.iconbox = None
 		if self.transition_in: self.transition_in.destroy()
 		self.transistion_in = None
 		if self.transition_out: self.transition_out.destroy()
@@ -1462,6 +1465,99 @@ class MediaWidget(MMNodeWidget):
 				return self.iconbox.get_clicked_obj_at(pos)
 			elif self.pushbackbar and self.pushbackbar.is_hit(pos):
 				return self.pushbackbar
+			else:
+				return self
+		else:
+			return None
+
+
+class CommentWidget(MMNodeWidget):
+	# A view of an object which is a comment type.
+	# NOT the structure nodes.
+
+	# TODO: this has some common code with the two functions above - should they
+	# have a common ancester?
+
+	# TODO: This class can be broken down into various different node types (img, video)
+	# if the drawing code is different enough to warrent this.
+	
+	def __init__(self, node, mother):
+		MMNodeWidget.__init__(self, node, mother)
+		self.node.views['struct_view'] = self
+
+	def recalc(self):
+		l,t,r,b = self.pos_abs
+
+		self.iconbox.moveto((l+1, t+2,0,0))
+		MMNodeWidget.recalc(self) # This is probably not necessary.
+
+	def get_minsize(self):
+		# return the minimum size of this node, in pixels.
+		# Calld to work out the size of the canvas.
+		xsize = sizes_notime.MINSIZE + self.iconbox.get_minsize()[0]
+		ysize = sizes_notime.MINSIZE# + sizes_notime.TITLESIZE
+		return (xsize, ysize)
+
+	def get_maxsize(self):
+		return sizes_notime.MAXSIZE, sizes_notime.MAXSIZE
+
+	def draw_selected(self, displist):
+		displist.drawfbox((255,255,255), self.get_box())
+		displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
+		self.__draw(displist)
+
+	def draw_unselected(self, displist):
+		self.draw(displist)
+
+	def draw_box(self, displist):
+		displist.draw3dbox(DROPCOLOR, DROPCOLOR, DROPCOLOR, DROPCOLOR, self.get_box())
+
+	def draw(self, displist):
+		# Only draw unselected.
+		color = COMMENTCOLOR
+		displist.drawfbox(color, self.get_box())
+		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
+		self.__draw(displist)
+
+	def __draw(self, displist):
+		x,y,w,h = self.get_box()	 
+		y = y + sizes_notime.TITLESIZE
+		h = h - sizes_notime.TITLESIZE
+		
+		ntype = self.node.GetType()
+
+		# Draw the image.
+		image_filename = os.path.join(self.mother.datadir, 'comment.tiff')
+		if w > 0 and h > 0:
+			try:
+				box = displist.display_image_from_file(
+					image_filename,
+					center = 1,
+					# The coordinates should all be floating point numbers.
+					coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6)),
+					scale = -2
+					)
+			except windowinterface.error:
+				pass					# Shouldn't I use another icon or something?
+			else:
+				displist.fgcolor(TEXTCOLOR)
+				displist.drawbox(box)
+
+		# Draw the icon box.
+		self.iconbox.draw(displist)
+
+	def get_obj_at(self, pos):
+		# Returns an MMWidget at pos. Compare get_clicked_obj_at()
+		if self.is_hit(pos):
+			return self
+		else:
+			return None
+
+	def get_clicked_obj_at(self, pos):
+		# Returns any object which can be clicked(). 
+		if self.is_hit(pos):
+			if self.iconbox.is_hit(pos):
+				return self.iconbox.get_clicked_obj_at(pos)
 			else:
 				return self
 		else:

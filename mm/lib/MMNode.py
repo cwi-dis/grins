@@ -2825,7 +2825,7 @@ class MMNode(MMTreeElement):
 		self.type = type
 
 	def SetValues(self, values):
-		if self.type <> 'imm':
+		if self.type not in ('imm', 'comment'):
 			raise CheckError, 'SetValues() bad node type'
 		self.values = values
 
@@ -4090,6 +4090,8 @@ class MMNode(MMTreeElement):
 		if self.shouldplay is not None:
 			return self.shouldplay
 		self.shouldplay = 0
+		if self.type == 'comment':
+			return self.shouldplay # i.e. 0
 		# If any of the system test attributes don't match
 		# we should not play
 		all = settings.getsettings()

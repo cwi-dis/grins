@@ -282,6 +282,14 @@ class SMILHtmlTimeWriter(SMIL):
 			self.pop()
 		fp.close()
 
+	def writecomment(self, x):
+		write = self.fp.write
+		if self.__isopen:
+			write('/>\n')
+			self.__isopen = 0
+			del self.__stack[-1]
+		write('<!--%s-->\n' % string.join(x.values, '\n'))
+
 	def writetag(self, tag, attrs = None):
 		if attrs is None:
 			attrs = []
@@ -311,6 +319,10 @@ class SMILHtmlTimeWriter(SMIL):
 
 		if type=='animate':
 			self.writeanimatenode(x, root)
+			return
+
+		if type=='comment':
+			self.writecomment(x)
 			return
 
 		interior = (type in interiortypes)
