@@ -12,6 +12,7 @@ from VcrChannel import VcrChannel
 from SocketChannel import SocketChannel
 from MpegChannel import MpegChannel
 from CmifChannel import CmifChannel
+from LayoutChannel import LayoutChannel
 try:
 	from HtmlChannel import HtmlChannel
 except ImportError:
@@ -33,11 +34,20 @@ channelmap = {
 	'cmif':		CmifChannel,
 	'html':		HtmlChannel,
 	'graph':	GraphChannel,
+	'layout':	LayoutChannel,
 	}
 
 channeltypes = ['null', 'text', 'image']
-commonchanneltypes = ['text', 'image', 'sound', 'movie']
+commonchanneltypes = ['text', 'image', 'sound', 'movie', 'layout']
 otherchanneltypes = []
+channelhierarchy = [
+    ('text', ['text', 'html']),
+    ('image', ['image', 'graph']),
+    ('sound', ['sound']),
+    ('movie', ['movie', 'mpeg', 'vcr']),
+    ('control', ['layout', 'cmif', 'socket', 'shell', 'python', 'null']),
+    ]
+
 ct = channelmap.keys()
 ct.sort()
 for t in ct:
