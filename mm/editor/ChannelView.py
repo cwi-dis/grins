@@ -202,7 +202,7 @@ class ChannelView(ViewDialog, GLDialog):
 		return 1 # It's always OK to start a transaction
 
 	def rollback(self):
-		pass # Nothing changed
+		pass
 
 	def commit(self):
 		if self.future_focus <> None:
@@ -634,6 +634,7 @@ class GO:
 			name = base + `i`
 		editmgr.addchannel(name, self.newchannelindex(), type)
 		self.mother.future_focus = 'c', name
+		self.mother.cleanup()
 		editmgr.commit()
 		# NB: when we get here, this object is nearly dead already!
 		import AttrEdit
@@ -812,6 +813,7 @@ class ChannelBox(GO):
 		if not editmgr.transaction():
 			return # Not possible at this time
 		editmgr.delchannel(self.name)
+		self.mother.cleanup()
 		editmgr.commit()
 
 	def newchannelindex(self):
@@ -1056,6 +1058,7 @@ class NodeBox(GO):
 		snode, sside, delay, dnode, dsize = \
 			self.mother.lockednode.node, 1, 0.0, self.node, 0
 		editmgr.addsyncarc(snode, sside, delay, dnode, dsize)
+		self.mother.cleanup()
 		editmgr.commit()
 		# NB: when we get here, this object is nearly dead already!
 		import ArcInfo
@@ -1161,6 +1164,7 @@ class ArcBox(GO):
 			return # Not possible at this time
 		editmgr.delsyncarc(self.snode, self.sside, \
 			self.delay, self.dnode, self.dside)
+		self.mother.cleanup()
 		editmgr.commit()
 
 	commandlist = c = GO.commandlist[:]
