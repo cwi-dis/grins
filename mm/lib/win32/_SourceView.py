@@ -120,18 +120,18 @@ class _SourceView(GenFormView):
 			if p0 <= endchar:
 				endchar = p1 + (endchar - p0)
 				break
-		startline = len(self.__map1)
+		startline = len(self.__map1) - 1
 		for p0, p1 in self.__map1:
+			startline = startline - 1
 			if p0 <= startchar:
 				startchar = p1 + (startchar - p0)
 				break
-			startline = startline - 1
-		endline = len(self.__map1)
+		endline = len(self.__map1) - 1
 		for p0, p1 in self.__map1:
+			endline = endline - 1
 			if p0 <= endchar:
 				endchar = p1 + (endchar - p0)
 				break
-			endline = endline - 1
 		e.setsel(startchar,endchar)
 		# magic number 23: number of lines in edit control
 		if endline > e.getfirstvisibleline() + 23:
