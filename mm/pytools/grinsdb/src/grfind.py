@@ -42,6 +42,7 @@ def main():
 			print dbase.filename(id)
 		else:
 			print id
+	dbase.close()
 	if not allids:
 		sys.exit(1)
 		

@@ -21,43 +21,47 @@ def main():
 		sys.exit(1)
 	dbase = grinsdb.Database(indexed=0)
 	index = grinsdb.Index(keys=KEYS)
-	allids = dbase.search(None, None)
-	emaildict = {}
-	badids = []
-	print 'Checking email addresses and creating index',
-	count = 0
-	for id in allids:
-		count = count + 1
-		if count % 100 == 0:
-			sys.stdout.write('.')
-			sys.stdout.flush()
-		obj = dbase.open(id)
-		index.update(id, obj)
-		if not obj.has_key('email'):
-			badids.append(id)
-			continue
-		email = obj['email']
-		if emaildict.has_key(email):
-			emaildict[email].append(id)
-		else:
-			emaildict[email] = [id]
-	sys.stdout.write('\n')
-	del index
-	if badids:
-		print 'Bad messages:',
-		for id in badids:
-			print id,
-			obj = dbase.open(id, 'w')
-			dbase.remove(obj)
-		print
-	for email in emaildict.keys():
-		if len(emaildict[email]) > 1:
-			print 'Multiple:', email,
-			for i in emaildict[email]:
-				print i,
+	try:
+		allids = dbase.search(None, None)
+		emaildict = {}
+		badids = []
+		print 'Checking email addresses and creating index',
+		count = 0
+		for id in allids:
+			count = count + 1
+			if count % 100 == 0:
+				sys.stdout.write('.')
+				sys.stdout.flush()
+			obj = dbase.open(id)
+			index.update(id, obj)
+			if not obj.has_key('email'):
+				badids.append(id)
+				continue
+			email = obj['email']
+			if emaildict.has_key(email):
+				emaildict[email].append(id)
+			else:
+				emaildict[email] = [id]
+		sys.stdout.write('\n')
+		index.close()
+		del index
+		if badids:
+			print 'Bad messages:',
+			for id in badids:
+				print id,
+				obj = dbase.open(id, 'w')
+				dbase.remove(obj)
 			print
+		for email in emaildict.keys():
+			if len(emaildict[email]) > 1:
+				print 'Multiple:', email,
+				for i in emaildict[email]:
+					print i,
+				print
 
-	genfiles(dbase)
+		genfiles(dbase)
+	finally:
+		dbase.close()
 
 def myopen(filename):
 	dirname = os.path.join(grinsdb.DATABASE, 'data')
