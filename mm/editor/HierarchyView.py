@@ -1584,7 +1584,7 @@ class HierarchyView(HierarchyViewDialog):
 			# if node has no intrinsic duration, set a default duration
 			cnode.setduration = 1
 
-			if features.H_ASSIGN_NAME in Features.feature_set:
+			if features.H_ASSIGN_NAME in features.feature_set:
 				# figure out a reasonable default name for the new node
 				# the name is the basename of the URL
 				# figure out file name part
@@ -1955,9 +1955,7 @@ class HierarchyView(HierarchyViewDialog):
 			# Compat code for x/y based drag-drop.
 			sx, sy = srcpos
 			srcwidget = self.whichhit(sx, sy)
-			if isinstance(srcwidget, StructureWidgets.MMWidgetDecoration):
-				srcwidget = srcwidget.mmwidget
-			srcnode = srcwidget.node
+			srcnode = srcwidget.get_node()
 		if not srcnode:
 			# shouldn't happen
 			print "Drag-drop from nowhere..."
