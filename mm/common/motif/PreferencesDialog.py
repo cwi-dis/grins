@@ -18,6 +18,7 @@ intitems = {
 boolitems = {
 	'system_captions': 'whether captions are to be shown',
 	'system_overdub_or_caption': 'audible or visible "captions"',
+	'cmif': 'enable CMIF-specific extensions',
 	}
 
 class PreferencesDialog:
@@ -131,7 +132,8 @@ class PreferencesDialog:
 		return self.__items[item].getpos()
 		
 	def getboolnames(self):
-		return ['system_captions', 'system_overdub_or_caption']
+		return ['system_captions', 'system_overdub_or_caption',
+			'cmif']
 
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
