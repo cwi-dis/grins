@@ -116,13 +116,14 @@ def convertaudiofile(u, dstdir, file, node, progress = None):
 
 
 def convertimagefile(u, srcurl, dstdir, file, node):
-	import MMAttrdefs, urllib, sys
+	import MMAttrdefs, MMurl, sys
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.jpg'
 	fullpath = os.path.join(dstdir, file)
 	import imgjpeg, imgconvert
-	u.close()
-	f = urllib.urlretrieve(srcurl)[0]
+	if u is not None:
+		u.close()
+	f = MMurl.urlretrieve(srcurl)[0]
 	wt = imgjpeg.writer(fullpath)
 	if sys.platform == 'win32':
 		import __main__
@@ -147,7 +148,10 @@ def convertimagefile(u, srcurl, dstdir, file, node):
 	wt.height = height
 	wt.restart_interval = 1
 	if node is not None:
-		quality = MMAttrdefs.getattr(node, 'project_quality')
+		if type(node) == type({}):
+			quality = node.get('project_quality')
+		else:
+			quality = MMAttrdefs.getattr(node, 'project_quality')
 		if quality:
 			wt.quality = quality
 	wt.write(data)
@@ -184,10 +188,10 @@ def converttextfile(u, dstdir, file, node):
 
 
 def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
-	import producer, MMAttrdefs, urllib
+	import producer, MMAttrdefs, MMurl
 	global engine
 	u.close()
-	fin = urllib.urlretrieve(srcurl)[0]
+	fin = MMurl.urlretrieve(srcurl)[0]
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.rm'
 	fullpath = os.path.join(dstdir, file)

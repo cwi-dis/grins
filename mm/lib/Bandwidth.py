@@ -12,6 +12,7 @@ from stat import ST_SIZE
 import Duration
 import MMurl
 from urlcache import urlcache
+import string
 
 CONTINUOUS_CHANNELS = ['video', 'mpeg', 'movie', 'sound',  'RealAudio',
 			     'RealVideo']
@@ -56,8 +57,9 @@ def get(node, target=0):
 ##		print "DBG: Bandwidth.get: real:", url, prearm, bandwidth
 		urlcache[url]['bandwidth'] = prearm, bandwidth
 		return prearm, bandwidth
-	
-	filesize = GetSize(url)
+
+	attrs = {'project_quality':MMAttrdefs.getattr(node, 'project_quality')}
+	filesize = GetSize(url, target, attrs)
 
 	if ctype in CONTINUOUS_CHANNELS:
 		duration = Duration.get(node, ignoreloop=1)
@@ -71,7 +73,7 @@ def get(node, target=0):
 		urlcache[url]['bandwidth'] = float(filesize)*8, 0
 		return float(filesize)*8, 0
 
-def GetSize(url, target=0):
+def GetSize(url, target=0, attrs = {}):
 	val = urlcache[url].get('filesize')
 	if val is not None:
 		return val
@@ -80,20 +82,30 @@ def GetSize(url, target=0):
 	type, rest = MMurl.splittype(url)
 	if type and type != 'file':
 ##		print "DBG: Bandwidth.GetSize: skip nonlocal", url
-		return 0
+		return None
 	host, rest = MMurl.splithost(rest)
 	if host and host != 'localhost':
 ##		print "DBG: Bandwidth.GetSize: skip nonlocal", url
-		return 0
+		return None
 
 	# Okay, get the filesize
-	filename = MMurl.url2pathname(rest)
+	filename, hdrs = MMurl.urlretrieve(url)
+	tmp = None
+	if target:
+		if hdrs.maintype == 'image':
+			import tempfile, realconvert
+			tmp = tempfile.mktemp('.jpg')
+			dir, file = os.path.split(tmp)
+			file = realconvert.convertimagefile(None, url, dir, file, attrs)
+			filename = tmp = os.path.join(dir, file)
 	try:
 		# XXXX Incorrect for mac (resource fork size)
 		statb = os.stat(filename)
 	except os.error:
 ##		print "DBG: Bandwidth.get: nonexisting", filename
-		return 0
+		return None
+	if tmp:
+		os.unlink(tmp)
 	filesize = statb[ST_SIZE]
 	urlcache[url]['filesize'] = filesize
 	return filesize
