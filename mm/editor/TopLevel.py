@@ -108,6 +108,8 @@ class TopLevel():
 	def makeviews(self):
 		import BlockView
 		self.blockview = BlockView.BlockView().init(self.root)
+		import ChannelView
+		self.channelview = ChannelView.ChannelView().init(self.root)
 		import Player
 		self.presview = Player.Player().init(self.root)
 		import StyleEdit
@@ -131,9 +133,9 @@ class TopLevel():
 	#
 	def cv_callback(self, (obj, arg)):
 		if obj.get_button():
-			print 'channel view not yet implemented'
+			self.channelview.show()
 		else:
-			pass
+			self.channelview.hide()
 	#
 	def pv_callback(self, (obj, arg)):
 		if obj.get_button():
