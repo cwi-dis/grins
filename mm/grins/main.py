@@ -60,6 +60,7 @@ class Main:
 			# no toplevels made, so exit
 			# error message has already been printed
 			sys.exit(2)
+		self.tops = tops
 		j_arg = None
 		for o, a in opts:
 			if o == '-j':
