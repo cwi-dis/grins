@@ -1,7 +1,7 @@
 Document Type: WSE
 item: Global
   Version=7.01
-  Title=Oratrix GRiNS 0.4 Installation
+  Title=Oratrix GRiNS 0.5 Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
   Japanese Font Name=MS Gothic
@@ -19,20 +19,20 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\GRiNSed_4.0_install.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\GRiNSed_0.5_install.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
   Upload Directory=/ufs/sjoerd/tmp
   Per-User Version ID=1
   Dialogs Version=7
-  Version File=0.4
+  Version File=0.5
   Version Description=Oratrix GRiNS for SMIL
   Version Copyright=Copyright 1999 Oratrix Development BV
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=1903427106
+  File Checksum=1383511556
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -91,12 +91,12 @@ item: End Block
 end
 item: Set Variable
   Variable=APPTITLE
-  Value=Oratrix GRiNS 0.4
+  Value=Oratrix GRiNS 0.5
   Flags=10000000
 end
 item: Set Variable
   Variable=GROUP
-  Value=Oratrix GRiNS 0.4
+  Value=Oratrix GRiNS 0.5
   Flags=10000000
 end
 item: Set Variable
@@ -105,7 +105,7 @@ item: Set Variable
 end
 item: Set Variable
   Variable=MAINDIR
-  Value=Oratrix\GRiNS 0.4
+  Value=Oratrix\GRiNS 0.5
   Flags=10000000
 end
 item: Check Configuration
@@ -1134,6 +1134,11 @@ item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
+  Source=d:\Program Files\Wise InstallMaker\Unwise.exe
+  Destination=%MAINDIR%\Unwise.exe
+  Flags=0000000010000010
+end
+item: Install File
   Source=c:\Winnt\system32\Mfc42.dll
   Destination=%MAINDIR%\Mfc42.dll
   Flags=0001001010010011
@@ -1372,7 +1377,113 @@ item: Create Shortcut
 end
 item: End Block
 end
+item: Create Shortcut
+  Source=%MAINDIR%\Unwise.exe
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS.lnk
+  Icon Number=0
+end
 item: Else Statement
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for SMIL
+  Command Line=%MAINDIR%\GRiNSed.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for SMIL
+  Command Line=%MAINDIR%\GRiNSed.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=Uninstall GRiNS
+  Command Line=%MAINDIR%\Unwise.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=Uninstall GRiNS
+  Command Line=%MAINDIR%\Unwise.exe
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for SMIL
+  Command Line=%MAINDIR%\GRiNSed.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS
@@ -1483,26 +1594,18 @@ item: Edit Registry
   end
 end
 item: Edit Registry
-  Total Keys=9
+  Total Keys=7
   item: Key
     Key=.cmc
     New Value=CMIFCacheFile
   end
   item: Key
     Key=CMIFfile\shell\edit\command
-    New Value=%MAINDIR%\GRiNSed.exe %%1
-  end
-  item: Key
-    Key=CMIFfile\shell\open\command
-    New Value=%MAINDIR%\GRiNS.exe %%1
+    New Value=%MAINDIR%\GRiNSed.exe "%%1"
   end
   item: Key
     Key=SMILfile\shell\edit\command
     New Value=%MAINDIR%\GRiNSed.exe %%1
-  end
-  item: Key
-    Key=SMILfile\shell\open\command
-    New Value=%MAINDIR%\GRiNS.exe %%1
   end
   item: Key
     Key=MIME\Database\Content Type\application/smil
@@ -1525,6 +1628,17 @@ item: Edit Registry
   Total Keys=1
   Key=CMIFCacheFile
   New Value=GRiNS CMIF Cache File
+end
+item: Edit Registry
+  Total Keys=2
+  item: Key
+    Key=CMIFfile\shell\open\command
+    New Value=%MAINDIR%\GRiNS.exe "%%1"
+  end
+  item: Key
+    Key=SMILfile\shell\open\command
+    New Value=%MAINDIR%\GRiNS.exe "%%1"
+  end
 end
 item: Self-Register OCXs/DLLs
   Description=Updating System Configuration, Please Wait...
