@@ -154,16 +154,13 @@ def prep2(node, root):
 	parent = node.GetSchedParent(0)
 	if delay > 0 and parent is not None:
 		if parent.GetType() == 'seq':
-			xnode = None
-			xside = TL
+			xnode = parent
+			xside = HD
 			for n in parent.GetSchedChildren(0):
 				if n is node:
 					break
 				xnode = n
-			if xnode is None:
-				# first child in seq
-				xnode = parent
-				xside = HD
+				xside = TL
 		else:
 			xnode = parent
 			xside = HD
