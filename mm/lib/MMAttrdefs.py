@@ -293,6 +293,17 @@ def parsevalue(name, string, context):
 # Initialize the attrdefs table.
 #
 def initattrdefs():
+	if os.name == 'mac':
+		# Mac-specific: try loading atc file from a resource
+		import Res
+		try:
+			atcres = Res.GetNamedResource('CMat', 'Attrdefs')
+		except Res.Error:
+			pass
+		else:
+			print 'ATTRDEFS', len(atcres.data), `atcres.data[:4]`
+			return marshal.loads(atcres.data)
+			
 	filename = 'Attrdefs'
 	try:
 		fp = open(filename, 'r')
