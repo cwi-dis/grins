@@ -24,8 +24,43 @@ class RegKey:
 			strret = None
 		return strret
 
+def setKeyValue(strkey, valname, strval, rootkey = win32con.HKEY_CURRENT_USER):
+	try:
+		key = win32api.RegOpenKeyEx(rootkey, strkey, 0, win32con.KEY_ALL_ACCESS)
+	except win32api.error, arg:
+		print arg
+		return
+	try:
+		win32api.RegSetValueEx(key, valname, 0, win32con.REG_SZ, strval)
+	except win32api.error, arg:
+		print arg
+	win32api.RegCloseKey(key)
 
-		
+def getKeyValue(strkey, valname, rootkey = win32con.HKEY_CURRENT_USER):
+	retval = None
+	try:
+		key = win32api.RegOpenKeyEx(rootkey, strkey, 0, win32con.KEY_READ)
+	except win32api.error, arg:
+		print arg
+	else:
+		try:
+			valobj, type = win32api.RegQueryValueEx(key, valname)
+		except win32api.error, arg:
+			print arg
+		else:
+			if type == win32con.REG_SZ or type == win32con.REG_EXPAND_SZ:
+				retval = valobj
+		win32api.RegCloseKey(key)
+	return retval
+
+def createKey(strkey, rootkey = win32con.HKEY_CURRENT_USER):
+	try:
+		return win32api.RegCreateKey(rootkey, strkey)
+	except win32api.error, arg:
+		print arg
+	else:
+		win32api.RegCloseKey(key)
+	
 # if the file ext exists in the registry db and has an entry 'Content Type'
 # then this function returns content type registry value as a string 
 # else returns None
@@ -118,3 +153,6 @@ if __name__ == '__main__':
 	print getShellCmd('.smi')
 	print getShellApp('.smi')
 
+	createKey(r'Software\Oratrix\toolbars')
+	setKeyValue(r'Software\Oratrix\toolbars', 'entry1', '1')
+	print getKeyValue(r'Software\Oratrix\toolbars', 'entry1')
