@@ -187,11 +187,11 @@ echo -x _socket >> FreezeOpts
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
 
-%PYTHON_EXE% -O -c "import MMAttrdefs" >> log.txt
+%PYTHON_EXE% -c "import MMAttrdefs" >> log.txt
 
-%PYTHON_EXE% -O %COMPILE% >> log.txt
+%PYTHON_EXE% -OO %COMPILE% >> log.txt
 
-%PYTHON_EXE% -O %FREEZE% -s windows -i FreezeOpts -e %GRINS_HOME%\win32\grins_extensions.ini %main_script% >> log.txt
+%PYTHON_EXE% -OO %FREEZE% -s windows -i FreezeOpts -e %GRINS_HOME%\win32\grins_extensions.ini %main_script% >> log.txt
 
 : Make the target
 rem echo Executing NMAKE
