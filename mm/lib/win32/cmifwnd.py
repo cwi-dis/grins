@@ -47,59 +47,24 @@ from DropTarget import DropTarget
 
 import win32window
 
-class _CmifWnd(win32window.Window, DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
+class _CmifWnd(win32window.Window, DropTarget, rbtk._rbtk, DrawTk.DrawLayer):
 	def __init__(self):
 		win32window.Window.__init__(self)
 		DropTarget.__init__(self)
 		rbtk._rbtk.__init__(self)
 		DrawTk.DrawLayer.__init__(self)
 
-		self._subwindows = []
-		self._displists = []
-		self._active_displist = None
-		self._curpos = None
-		self._callbacks = {}
-		self._accelerators = {}
+		# menu support
 		self._menu = None		# Dynamically created rightmousemenu
 		self._popupmenu = None	# Statically created rightmousemenu (for views)
 		self._popup_point =(0,0)
-		self._transparent = 0
-		self._redrawfunc = None
-		self._title = None
-		self._topwindow = None
-		self.arrowcache = {}
-		self._old_callbacks = {}
 		self._cbld = {}
-		self._align = ' '		
-		self._scale = 0.0
-		self._region = None
-		self._window_type = SINGLE
-		self._resize_flag = 0
-		self._render_flag = 0		
-		self._sizes = None
-		self._canvas=None
+		
+		# window title
+		self._title = None
+
+		# scroll indicator
 		self._canscroll = 0
-
-		self._parent = None
-		self._bgcolor = __main__.toplevel._bgcolor
-		self._fgcolor = __main__.toplevel._fgcolor
-
-		# default cursor for this window
-		self._cursor = ''
-
-		# current cursor
-		self._curcursor = ''
-
-		# frame wnd indicator if not None
-		# contains the color of the frame
-		self._showing = None
-
-		# default z-order
-		self._z=0
-
-		# temp sigs
-		self._wnd = None
-		self._hWnd = 0
 
 	# part of the constructor initialization
 	def _do_init(self,parent):
@@ -302,7 +267,6 @@ class _CmifWnd(win32window.Window, DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		self._parent._subwindows.remove(self)
 		self._parent = None
 		del self._topwindow
-		del self.arrowcache
 		self._obj_ = None
 
 
@@ -332,7 +296,6 @@ class _CmifWnd(win32window.Window, DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 			self._menu.DestroyMenu()
 			del self._menu 
 		self._menu = None
-		self._accelerators = {}
 
 	# appent an entry to popup menu
 	def append_menu_entry(self,entry=None):
@@ -559,8 +522,7 @@ class _CmifWnd(win32window.Window, DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
 			strid='arrow'
 
-		if self._window_type==MPEG:Sdk.SetCursor(cursor)
-		else: self.SetWndCursor(cursor)
+		self.SetWndCursor(cursor)
 		self._curcursor = strid
 
 	# return true if the cursor can change on move
@@ -571,18 +533,6 @@ class _CmifWnd(win32window.Window, DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 	def SetWndCursor(self,cursor):
 		if cursor!=Sdk.GetCursor():
 			Sdk.SetClassLong(self.GetSafeHwnd(),win32con.GCL_HCURSOR,cursor)
-
-
-#====================================== Char
-	# Callback for keyboard input
-	def _char_callback(self, params):
-		#if _in_create_box == None:
-			if hasattr(self,'_accelerators'):
-				key = chr(params)
-				if self._accelerators.has_key(key):
-					func, arg = self._accelerators[key]
-					apply(func,arg)
-
 
 
 #====================================== Paint
@@ -655,6 +605,7 @@ class _CmifWnd(win32window.Window, DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 			print 'You must override _scroll for ',self
 		else:
 			print 'Scroll called for the unscrollable ',self
+
 	# Enable or disable scrolling
 	def setScrollMode(self,f):
 		self._topwindow.setScrollMode(f)

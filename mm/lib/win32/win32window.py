@@ -633,6 +633,7 @@ class Window:
 			return 1
 		return 0
 
+
 	#
 	# Private methods
 	#
@@ -1004,6 +1005,17 @@ class SubWindow(Window):
 				return cont
 
 		return cont
+
+	#
+	# Box creation section
+	#
+	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0, coolmode=0):
+		if self._topwindow!=self:
+			self._topwindow.create_box(msg, callback, box, units, modeless, coolmode)
+
+	def cancel_create_box(self):
+		if self._topwindow!=self:
+			self._topwindow.cancel_create_box()
 
 
 	#
