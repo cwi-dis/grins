@@ -214,24 +214,29 @@ class URLopener:
 	# Use HTTP protocol
 	def open_http(self, url, data=None):
 		import httplib
+		user_passwd = None
 		if type(url) is type(""):
 			host, selector = splithost(url)
-			user_passwd, host = splituser(host)
+			if host:
+				user_passwd, host = splituser(host)
 			realhost = host
 		else:
 			host, selector = url
 			urltype, rest = splittype(selector)
+			url = rest
 			user_passwd = None
 			if string.lower(urltype) != 'http':
 				realhost = None
 			else:
 				realhost, rest = splithost(rest)
-				user_passwd, realhost = splituser(realhost)
+				if realhost:
+					user_passwd, realhost = \
+						     splituser(realhost)
 				if user_passwd:
 					selector = "%s://%s%s" % (urltype,
 								  realhost,
 								  rest)
-			#print "proxy via http:", host, selector
+			print "proxy via http:", host, selector
 		if not host: raise IOError, ('http error', 'no host given')
 		if user_passwd:
 			import base64
@@ -455,8 +460,8 @@ class FancyURLopener(URLopener):
 		user, passwd = self.get_user_passwd(host, realm, i)
 		if not (user or passwd): return None
 		host = user + ':' + passwd + '@' + host
-		newurl = '//' + host + selector
-		return self.open_http(newurl)
+		newurl = 'http://' + host + selector
+		return self.open(newurl)
 
 	def get_user_passwd(self, host, realm, clear_cache = 0):
 		key = realm + '@' + string.lower(host)
@@ -471,30 +476,17 @@ class FancyURLopener(URLopener):
 
 	def prompt_user_passwd(self, host, realm):
 		# Override this in a GUI environment!
+		import getpass
 		try:
 			user = raw_input("Enter username for %s at %s: " %
 					 (realm, host))
-			self.echo_off()
-			try:
-				passwd = raw_input(
-				  "Enter password for %s in %s at %s: " %
-				  (user, realm, host))
-			finally:
-				self.echo_on()
+			passwd = getpass.getpass(
+				"Enter password for %s in %s at %s: " %
+				(user, realm, host))
 			return user, passwd
 		except KeyboardInterrupt:
-			return None, None
-
-	def echo_off(self):
-		# XXX Is this sufficient???
-		if hasattr(os, "system"):
-			os.system("stty -echo")
-
-	def echo_on(self):
-		# XXX Is this sufficient???
-		if hasattr(os, "system"):
 			print
-			os.system("stty echo")
+			return None, None
 
 
 # Utility functions
@@ -862,25 +854,23 @@ def splitgophertype(selector):
 		return selector[1], selector[2:]
 	return None, selector
 
-_quoteprog = None
 def unquote(s):
-	global _quoteprog
-	if _quoteprog is None:
-		import re
-		_quoteprog = re.compile('%[0-9a-fA-F][0-9a-fA-F]')
-
-	i = 0
-	n = len(s)
-	res = []
-	while 0 <= i < n:
-		match = _quoteprog.search(s, i)
-		if not match:
-			res.append(s[i:])
-			break
-		j = match.start(0)
-		res.append(s[i:j] + chr(string.atoi(s[j+1:j+3], 16)))
-		i = j+3
-	return string.joinfields(res, '')
+	mychr = chr
+	myatoi = string.atoi
+	list = string.split(s, '%')
+	res = [list[0]]
+	myappend = res.append
+	del list[0]
+	for item in list:
+		if item[1:2]:
+			try:
+				myappend(mychr(myatoi(item[:2], 16))
+					 + item[2:])
+			except:
+				myappend('%' + item)
+		else:
+			myappend('%' + item)
+	return string.join(res, "")
 
 def unquote_plus(s):
 	if '+' in s:
@@ -891,21 +881,30 @@ def unquote_plus(s):
 always_safe = string.letters + string.digits + '_,.-'
 def quote(s, safe = '/'):
 	safe = always_safe + safe
-	res = []
-	for c in s:
-		if c in safe:
-			res.append(c)
-		else:
-			res.append('%%%02x' % ord(c))
+	res = list(s)
+	for i in range(len(res)):
+		c = res[i]
+		if c not in safe:
+			res[i] = '%%%02x' % ord(c)
 	return string.joinfields(res, '')
 
 def quote_plus(s, safe = '/'):
 	if ' ' in s:
 		# replace ' ' with '+'
-		s = string.join(string.split(s, ' '), '+')
-		return quote(s, safe + '+')
+		l = string.split(s, ' ')
+		for i in range(len(l)):
+			l[i] = quote(l[i], safe)
+		return string.join(l, '+')
 	else:
 		return quote(s, safe)
+
+def urlencode(dict):
+	 l = []
+	 for k, v in dict.items():
+		 k = quote_plus(str(k))
+		 v = quote_plus(str(v))
+		 l.append(k + '=' + v)
+	 return string.join(l, '&')
 
 
 # Proxy handling
@@ -979,9 +978,7 @@ def test1():
 
 
 # Test program
-def test():
-	import sys
-	args = sys.argv[1:]
+def test(args=[]):
 	if not args:
 		args = [
 			'/etc/passwd',
@@ -1012,7 +1009,33 @@ def test():
 	finally:
 		urlcleanup()
 
+def main():
+	import getopt, sys
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "th")
+	except getopt.error, msg:
+		print msg
+		print "Use -h for help"
+		return
+	t = 0
+	for o, a in opts:
+		if o == '-t':
+			t = t + 1
+		if o == '-h':
+			print "Usage: python urllib.py [-t] [url ...]"
+			print "-t runs self-test;",
+			print "otherwise, contents of urls are printed"
+			return
+	if t:
+		if t > 1:
+			test1()
+		test(args)
+	else:
+		if not args:
+			print "Use -h for help"
+		for url in args:
+			print urlopen(url).read(),
+
 # Run test program when run as a script
 if __name__ == '__main__':
-	test1()
-	test()
+	main()
