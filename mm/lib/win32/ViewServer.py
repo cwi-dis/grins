@@ -18,11 +18,11 @@ from _LayoutView import _LayoutView
 from _UsergroupView import _UsergroupView
 from _UsergroupView import _UsergroupView
 from _LinkView import _LinkView
-from _CmifView import _CmifView,_CmifStructView
+from _CmifView import _CmifView,_CmifStructView,_CmifPlayerView
 from _SourceView import _SourceView
 
 # views served
-_PlayerView= _CmifView
+_PlayerView= _CmifPlayerView
 _HierarchyView=_CmifStructView
 _ChannelView=_CmifStructView
 _LinkView=_LinkView
@@ -75,7 +75,7 @@ class ChildFrame(window.MDIChildWnd):
 		style = win32con.WS_CHILD | win32con.WS_OVERLAPPEDWINDOW
 		self.CreateWindow(None, title, style, rect, parent)
 		if maximize and parent:parent.maximize(self)
-		self.HookMessage(self.onMdiActivate,win32con.WM_MDIACTIVATE)
+		#self.HookMessage(self.onMdiActivate,win32con.WM_MDIACTIVATE)
 		self.ShowWindow(win32con.SW_SHOW)
 
 	# Change window style before creation
@@ -86,14 +86,11 @@ class ChildFrame(window.MDIChildWnd):
 			cs.style = win32con.WS_CHILD|win32con.WS_OVERLAPPED |win32con.WS_CAPTION|win32con.WS_BORDER|win32con.WS_SYSMENU|win32con.WS_MINIMIZEBOX
 		return cs.to_csd()
 
-	# Called by the framework when this window is activated or deactivated
-	def onMdiActivate(self,params):
-		return
-		msg=win32mu.Win32Msg(params)
-		if msg._lParam==self._hwnd:
-			self._view.onActivate(1)
-		elif msg._wParam==self._hwnd:
-			self._view.onActivate(0)
+	def GetNormalPosition(self):
+		(flags,showCmd,ptMinPosition,ptMaxPosition,rcNormalPosition)=\
+			self.GetWindowPlacement()
+		return rcNormalPosition
+
 
 	# Creates and activates the view 	
 	# create view (will be created by default if)
@@ -163,14 +160,15 @@ class ViewServer:
 	# Create and initialize a new view object 
 	# Keep instance of player
 	def newview(self,x, y, w, h, title, units = appcon.UNIT_MM, adornments=None,canvassize=None, commandlist=None, strid='cmifview_'):
+		print 'newview',strid
 		if strid=='pview_' and self._player:
 			return self._player
 		viewno=self.getviewno(strid)
 		viewclass=appview[viewno]['class'] 
 		view=viewclass(self.getdoc())
 		self.add_common_interface(view,viewno)
-		x=0#if not x or x<0: x=0
-		y=0#if not y or y<0: y=0
+		if not x or x<0: x=0
+		if not y or y<0: y=0
 		if not w or not h:rc=None
 		else:
 			x,y,w,h=sysmetrics.to_pixels(x,y,w,h,units)
