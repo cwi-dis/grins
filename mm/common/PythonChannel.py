@@ -18,17 +18,12 @@ class PythonChannel(Channel):
 			args = ()
 		self.seekargs = None
 
-		try:
-			alist = node.GetRawAttr('anchorlist')
-		except NoSuchAttrError:
-			alist = []
-			
 		namespace = {
 			"channel": self,
 			"player": self._player,
 			"node": node,
 			"toplevel": self._player.toplevel,
-			"anchors": alist,
+			"anchors": node.GetRawAttrDef('anchorlist', []),
 			"args":args}
 		try:
 			exec cmds in namespace, namespace
