@@ -1,114 +1,162 @@
 #
-# XXXX This is a placeholder for the coming HTML channel. It is just
-# an ordinary text channel, but it's anchors have arguments.
+# XXXX This is an initial stab at a HTML channel.
 #
 from Channel import ChannelWindow
 from AnchorDefs import *
 from debug import debug
 import string
+import HTML
+import MMAttrdefs
+import sys
+import windowinterface
 
 try:
-	from urlopen import urlopen
+	import urlopen
+	URLOPEN = urlopen.urlopen
 except ImportError:
-	def urlopen(file):
+	def URLOPEN(file):
 		return open(file, 'r')
 
+num=1
+
 class HtmlChannel(ChannelWindow):
-	node_attrs = ChannelWindow.node_attrs + ['fgcolor', 'font', \
-		  'pointsize']
+	node_attrs = ChannelWindow.node_attrs + ['fgcolor']
 
 	def init(self, name, attrdict, scheduler, ui):
-		return ChannelWindow.init(self, name, attrdict, scheduler, ui)
+		self = ChannelWindow.init(self, name, attrdict, scheduler, ui)
+		self.htmlw = None
+		return self
+
+	def do_show(self):
+		#
+		# Step 1 - Show the base window. This creates a drawingArea
+		# that we don't use (except as a parent), but it doesn't harm
+		# us either.
+		#
+		print 'DOSHOW'
+		if not ChannelWindow.do_show(self):
+			return 0
+		print 'DOIESHOW'
+		#
+		# Step 2 - Create a values dictionary with width/height/colors
+		# for use when we create the HTML widget.
+		#
+		wd = self.window
+		print 'WINDOW=', wd
+		wh = wd._form.GetValues(['width', 'height'])
+		ad = self._attrdict
+		if ad.has_key('fgcolor'):
+			wh['foreground'] = wd._convert_color(ad['fgcolor'])
+		else:
+			wh['foreground'] = wd._convert_color((0,0,0))
+		if ad.has_key('bgcolor'):
+			wh['background'] = wd._convert_color(ad['bgcolor'])
+		else:
+			wh['background'] = wd._convert_color((255,255,255))
+		if ad.has_key('hicolor'):
+			wh['anchorColor'] = wd._convert_color(ad['hicolor'])
+		else:
+			wh['anchorColor'] = wd._convert_color((255,0,0))
+		wh['visitedAnchorColor'] = wh['anchorColor']
+		wh['activeAnchorFG'] = wh['foreground']
+		wh['activeAnchorBG'] = wh['anchorColor']
+		print 'GO FOR IT'
+		#
+		# Create the widget, and also get a list of it's children
+		# so we can set the color on them too.
+		#
+		self.htmlw = self.window._form.CreateManagedWidget('h', HTML.html, wh)
+		self.htmlw_children = [self.htmlw.NameToWidget('View'),
+			  self.htmlw.NameToWidget('Vbar'),
+			  self.htmlw.NameToWidget('Hbar')]
+		#
+		# Set color (and color only) on the children
+		#
+		del wh['width']
+		del wh['height']
+		for c in self.htmlw_children:
+			c.SetValues(wh)
+		#
+		# Set callbacks.
+		#
+		self.htmlw.AddCallback('anchorCallback', self.cbanchor, None)
+		self.htmlw.AddCallback('submitFormCallback', self.cbform, None)
+		return 1
+
+	def resize(self, arg, window, event, value):
+		# XXXX For reasons unknown, this one does not seem to work...
+		print 'RESIZE'
+		wh = self.window._form.GetValues(['width', 'height'])
+		self.htmlw._form.SetValues(wh)
+		
 
 	def __repr__(self):
 		return '<HtmlChannel instance, name=' + `self._name` + '>'
 
 	def updatefixedanchors(self, node):
-		str = self.getstring(node)
-		parlist = extract_paragraphs(str)
-		taglist = extract_taglist(parlist)
-		fix_anchorlist(node, taglist)
+		if self._armstate != AIDLE:
+			raise error, 'Arm state must be idle when defining an anchor'
+		if self._playstate != PIDLE:
+			raise error, 'Play state must be idle when defining an anchor'
+		windowinterface.setcursor('watch')
+		context = AnchorContext().init()
+		self.startcontext(context)
+		self.syncarm = 1
+		self.arm(node)
+		self.syncplay = 1
+		self.play(node)
+		self._playstate = PLAYED
+		self.syncarm = 0
+		self.syncplay = 0
 		return 1
+
+	def seekanchor(self, node, aid, args):
+		windowinterface.showmessage('JUMP:'+`aid`+`args`)
 		
 	def do_arm(self, node):
-		str = self.getstring(node)
-		parlist = extract_paragraphs(str)
-		taglist = extract_taglist(parlist)
-		fix_anchorlist(node, taglist)
-##			if taglist: print `taglist`
-		fontspec = getfont(node)
-		fontname, pointsize = mapfont(fontspec)
-		ps = getpointsize(node)
-		if ps != 0:
-			pointsize = ps
-		baseline, fontheight, pointsize = \
-			  self.armed_display.setfont(\
-			  fontname, pointsize)
-		margin = self.armed_display.strsize('m')[0] / 2
-		width = 1.0 - 2 * margin
-		curlines, partoline, linetopar = calclines(parlist, \
-			  self.armed_display.strsize, width)
-		self.armed_display.setpos(margin, baseline)
-		buttons = []
-		# write the text on the window.
-		# The loop is executed once for each anchor defined
-		# in the text.  pline and pchar specify how far we got
-		# with printing.
-		pline, pchar = 0, 0
-		for (par0, chr0, par1, chr1, name, type) in taglist:
-			# first convert paragraph # and character #
-			# to line and character.
-			line0, char0 = map_parpos_to_linepos(par0, \
-				  chr0, 0, curlines, partoline)
-			line1, char1 = map_parpos_to_linepos(par1, \
-				  chr1, 1, curlines, partoline)
-			if (line0, char0) > (line1, char1):
-				print 'Anchor without screenspace:', name
-				continue
-			# write everything before the anchor
-			for line in range(pline, line0):
-				dummy = self.armed_display.writestr(curlines[line][pchar:] + '\n')
-				pchar = 0
-			dummy = self.armed_display.writestr(curlines[line0][pchar:char0])
-			pline, pchar = line0, char0
-			# write the anchor text and remember its
-			# position (note: the anchor may span several
-			# lines)
-			for line in range(pline, line1):
-				box = self.armed_display.writestr(curlines[line][pchar:])
-				buttons.append((name, box, type))
-				dummy = self.armed_display.writestr('\n')
-				pchar = 0
-			box = self.armed_display.writestr(curlines[line1][pchar:char1])
-			buttons.append((name, box, type))
-			# update loop invariants
-			pline, pchar = line1, char1
-		# write text after last button
-		for line in range(pline, len(curlines)):
-			dummy = self.armed_display.writestr(curlines[line][pchar:] + '\n')
-			pchar = 0
-##			print 'buttons:',`buttons`
-		self.armed_display.fgcolor(self.gethicolor(node))
-		for (name, box, type) in buttons:
-			button = self.armed_display.newbutton(box)
-			button.hiwidth(3)
-##			button.hicolor(self.getfgcolor(node))
-			if type == ATYPE_PAUSE:
-				type = ATYPE_ARGS
-			self.setanchor(name, type, button)
-##			dummy = self.armed_display.writestr(string.joinfields(curlines, '\n'))
+		print 'DO_ARM'
+		self.armed_str = self.getstring(node)
+		self.getcolors(node)
 		return 1
+		
+	def do_play(self, node):
+		print 'DO_PLAY'
+		self.url = self.armed_url
+		print 'URL=', self.url
+		for c in self.htmlw_children:
+			c.SetValues(self.color_arg)
+		self.color_arg['text'] = self.armed_str
+		self.color_arg['headerText'] = ''
+		self.color_arg['footerText'] = ''
+		self.htmlw.SetValues(self.color_arg)
+		self.fixanchorlist(node)
+		self.play_node = node
+
+	def getcolors(self, n):
+		xfgcolor = self.window._convert_color(self.getfgcolor(n))
+		xbgcolor = self.window._convert_color(self.getbgcolor(n))
+		xhicolor = self.window._convert_color(self.gethicolor(n))
+		self.color_arg = {'foreground':xfgcolor, \
+			  'background':xbgcolor, \
+			  'anchorColor':xhicolor, \
+			  'visitedAnchorColor':xhicolor, \
+			  'activeAnchorFG':xfgcolor, \
+			  'activeAnchorBG':xhicolor}
 
 	def getstring(self, node):
 		if node.type == 'imm':
+			self.armed_url = ''
 			return string.joinfields(node.GetValues(), '\n')
 		elif node.type == 'ext':
 			filename = self.getfilename(node)
+			self.armed_url = filename
 			try:
-				fp = urlopen(filename)
+				fp = URLOPEN(filename)
 			except IOError:
-				print 'Cannot open text file', `filename`
-				return ''
+				return '<H1>Cannot Open</H1><P>'+ \
+					  'Cannot open '+filename+':<P>'+ \
+					  `(sys.exc_type, sys.exc_value)`+ \
+					  '<P>\n'
 			text = fp.read()
 			fp.close()
 			if text[-1:] == '\n':
@@ -118,6 +166,7 @@ class HtmlChannel(ChannelWindow):
 			raise CheckError, \
 				'gettext on wrong node type: ' +`node.type`
 
+
 	def defanchor(self, node, anchor):
 		# Anchors don't get edited in the HtmlChannel.  You
 		# have to edit the text to change the anchor.  We
@@ -125,215 +174,139 @@ class HtmlChannel(ChannelWindow):
 		# defanchor() method.
 		return anchor
 
-# Convert an anchor to a set of boxes.
-def map_parpos_to_linepos(parno, charno, last, curlines, partoline):
-	# This works only if parno and charno are valid
-	sublist = partoline[parno]
-	for lineno, char0, char1 in sublist:
-		if charno <= char1:
-			i = max(0, charno-char0)
-			if last:
-				return lineno, i
-			curline = curlines[lineno]
-			n = len(curline)
-			while i < n and curline[i] == ' ': i = i+1
-			if i < n:
-				return lineno, charno-char0
-			charno = char1
+	def cbanchor(self, widget, userdata, calldata):
+		if widget <> self.htmlw:
+			raise 'kaboo kaboo'
+		rawevent, elid, text, href = HTML.anchor_cbarg(calldata)
+		print 'ANCHORFIRED', (elid, text, href)
+		if href[:5] <> 'cmif:':
+			self.www_jump(href, 'GET', None, None)
+			return
+		self.cbcmifanchor(href, None)
 
-def getfont(node):
-	import MMAttrdefs
-	return MMAttrdefs.getattr(node, 'font')
+	def cbform(self, widget, userdata, calldata):
+		if widget <> self.htmlw:
+			raise 'kaboo kaboo'
+		rawevent, href, method, enctype, list = \
+			  HTML.form_cbarg(calldata)
+		print 'FORMFIRED', (href, method, enctype, list)
+		if not href or href[:5] <> 'cmif:':
+			self.www_jump(href, method, enctype, list)
+			return
+		self.cbcmifanchor(href, list)
 
-def getpointsize(node):
-	import MMAttrdefs
-	return MMAttrdefs.getattr(node, 'pointsize')
-
-# Turn a text string into a list of strings, each representing a paragraph.
-# Tabs are expanded to spaces (since the font mgr doesn't handle tabs),
-# but this only works well at the start of a line or in a monospaced font.
-# Blank lines and lines starting with whitespace separate paragraphs.
-
-def extract_paragraphs(text):
-	lines = string.splitfields(text, '\n')
-	parlist = []
-	par = []
-	for line in lines:
-		if '\t' in line: line = string.expandtabs(line, 8)
-		i = len(line) - 1
-		while i >= 0 and line[i] == ' ': i = i-1
-		line = line[:i+1]
-		if not line or line[0] in ' \t':
-			parlist.append(string.join(par))
-			par = []
-		if line:
-			par.append(line)
-	if par: parlist.append(string.join(par))
-	return parlist
-
-
-# Extract anchor tags from a list of paragraphs.
-#
-# An anchor starts with "<A NAME=...>" and ends with "</A>".
-# These tags are case independent; whitespace is significant.
-# Anchors may span paragraphs but an anchor tag must be contained in
-# one paragraph.  Other occurrences of < are left in the text.
-#
-# The list of paragraps is modified in place (the tags are removed).
-# The return value is a list giving the start and end position
-# of each anchor and its name.  Start and end positions are given as
-# paragraph_number, character_offset.
-
-def extract_taglist(parlist):
-	import regex
-	# (1) Extract the raw tags, removing them from the text
-	pat = regex.compile('<[Aa] +[Nn][Aa][Mm][Ee]=\([a-zA-Z0-9_]+\)>\|</[Aa]>')
-	rawtaglist = []
-	for i in range(len(parlist)):
-		par = parlist[i]
-		j = 0
-		while pat.search(par, j) >= 0:
-			regs = pat.regs
-			a, b = regs[0]
-			tag = par[a:b]
-			par = par[:a] + par[b:]
-			j = a
-			if tag[:2] != '</':
-				a, b = regs[1]
-				name = tag[a-j:b-j]
-			else:
-				name = None
-			rawtaglist.append((i, j, name))
-		parlist[i] = par
-	# (2) Parse the raw taglist, picking up the valid patterns
-	# (a begin tag immediately followed by an end tag)
-	taglist = []
-	last = None
-	for item in rawtaglist:
-		if item[2] is not None:
-			last = item
-		elif last:
-			taglist.append(last[:2] + item[:2] + last[2:3])
-			last = None
-	return taglist
-
-# XXX THIS IS A HACK
-# When we have extracted the anchors from a node's paragraph list,
-# add them to the node's anchor list.
-# This should be done differently, and doesn't even use the edit mgr,
-# but as a compatibility hack it's probably OK...
-
-def fix_anchorlist(node, taglist):
-	if not taglist:
-		return
-	import MMAttrdefs
-	names_in_anchors = []
-	names_in_taglist = []
-	anchor_types = {}
-	for item in taglist:
-		names_in_anchors.append(item[4])
-	oldanchors = MMAttrdefs.getattr(node, 'anchorlist')
-	modanchorlist(oldanchors)
-	anchors = oldanchors[:]
-	i = 0
-	while i < len(anchors):
-		aid, atype, args = a = anchors[i]
-		if atype in [ATYPE_WHOLE, ATYPE_AUTO, ATYPE_COMP]:
-			pass
-		elif aid not in names_in_anchors:
-			print 'Remove html anchor from anchorlist:', a
-			anchors.remove(a)
-			i = i - 1	# compensate for later increment
+	def cbcmifanchor(self, href, list):
+		aname = href[5:]
+		tp = self.findanchortype(aname)
+		if tp == None:
+			windowinterface.showmessage('Unknown CMIF anchor: '+aname)
+			return
+		if tp == ATYPE_PAUSE:
+			f = self.pauseanchor_triggered
 		else:
-			names_in_taglist.append(aid)
-			anchor_types[aid] = atype
-		i = i + 1
-	for i in range(len(taglist)):
-		item = taglist[i]
-		name = item[4]
-		if not anchor_types.has_key(name):
-			print 'Add html anchor to anchorlist:', name
-			anchors.append(name, ATYPE_NORMAL, [])
-			anchor_types[name] = ATYPE_NORMAL
-		taglist[i] = taglist[i] + (anchor_types[name],)
-	if anchors <> oldanchors:
-		print 'New anchors:', anchors
-		node.SetAttr('anchorlist', anchors)
+			f = self.anchor_triggered
+		f(self.play_node, [(aname, tp)], list)
+
+	def findanchortype(self, name):
+		alist = MMAttrdefs.getattr(self.play_node, 'anchorlist')
+		for aid, atype, args in alist:
+			if aid == name:
+				return atype
+		return None
+
+	def fixanchorlist(self, node):
+		print 'FIXANCHORLIST'
+		allanchorlist = HTML.GetHRefs(self.htmlw)
+		print len(allanchorlist), 'anchors'
+		anchorlist = []
+		for a in allanchorlist:
+			if a[:5] == 'cmif:':
+				anchorlist.append(a[5:])
+		print len(anchorlist), 'cmif-anchors'
+		if len(anchorlist) == 0:
+			return
+		nodeanchorlist = MMAttrdefs.getattr(node, 'anchorlist')[:]
+		oldanchorlist = map(lambda x:x[0], nodeanchorlist)
+		newanchorlist = []
+		for a in anchorlist:
+			if a not in oldanchorlist:
+				newanchorlist.append(a)
+		if not newanchorlist:
+			print 'Nothing to fix'
+			return
+		for a in newanchorlist:
+			print 'Add anchor', a
+			nodeanchorlist.append(a, ATYPE_NORMAL, [])
+		node.SetAttr('anchorlist', nodeanchorlist)
 		MMAttrdefs.flushcache(node)
 
-# Calculate a set of lines from a set of paragraphs, given a font and
-# a maximum line width.  Also return mappings between paragraphs and
-# line numbers and back: (1) a list containing for each paragraph a
-# list of triples (lineno, start, end) where start and end are the
-# offset into the paragraph, and (2) a list containing for each line a
-# triple (parno, start, end)
+	#
+	# The stuff below has little to do with CMIF per se, it implements
+	# a general www browser
+	#
+	def www_jump(self, href, method, enctype, list):
+		#
+		# Check that we understand what is happening
+		if enctype <> None:
+			print 'HtmlChannel: unknown enctype:', enctype
+			return
+		if method not in (None, 'GET'):
+			print 'HtmlChannel: unknown method:', method
+			return
+		href = urljoin(self.url, href)
+		if list:
+			href = addquery(href, list)
+		self.url, tag = urlopen.splittag(href)
+		try:
+			newtext = urlget(self.url)
+		except IOError:
+			newtext = '<H1>Cannot Open</H1><P>'+ \
+				  'Cannot open '+self.url+':<P>'+ \
+				  `(sys.exc_type, sys.exc_value)`+ \
+				  '<P>\n'
+		self.htmlw.text = newtext
+		self.htmlw.footerText = '<P>[<A HREF="'+self.armed_url+\
+			  '">BACK</A> to CMIF node]<P>'
 
-def calclines(parlist, sizefunc, limit):
-	partoline = []
-	linetopar = []
-	curlines = []
-	for parno in range(len(parlist)):
-		par = parlist[parno]
-		sublist = []
-		partoline.append(sublist) # It will grow while in there
-		start = 0
-		while 1:
-			i = fitwords(par, sizefunc, limit)
-			n = len(par)
-			while i < n and par[i] == ' ': i = i+1
-			sublist.append(len(curlines), start, start+i)
-			curlines.append(par[:i])
-			linetopar.append((parno, start, start+i))
-			par = par[i:]
-			start = start + i
-			if not par: break
-	return curlines, partoline, linetopar
-
-
-# Find last occurence of space in string such that the size (according
-# to some size calculating function) of the initial substring is
-# smaller than a given number.  If there is no such substrings the
-# first space in the string is returned (if any) otherwise the length
-# of the string. Assume sizefunc() is additive:
-# sizefunc(s + t) == sizefunc(s) + sizefunc(t)
-
-def fitwords(s, sizefunc, limit):
-	words = string.splitfields(s, ' ')
-	spw = sizefunc(' ')[0]
-	okcount = -1
-	totsize = 0
-	totcount = 0
-	for w in words:
-		if w:
-			addsize = sizefunc(w)[0]
-			if totsize > 0 and totsize + addsize > limit:
-				break
-			totsize = totsize + addsize
-			totcount = totcount + len(w)
-			okcount = totcount
-		# The space after the word
-		totsize = totsize + spw
-		totcount = totcount + 1
-	if okcount < 0:
-		return totcount
+#
+# Given a base URL and a HREF return the URL of the new document
+#
+def urljoin(base, href):
+	print 'urljoin', (base, href)
+	type, path = urlopen.splittype(href)
+	if type:
+		print '->', href
+		return href
+	host, path = urlopen.splithost(path)
+	basetype, basepath = urlopen.splittype(base)
+	basehost, basepath = urlopen.splithost(basepath)
+	type = basetype or 'file'
+	if path[:1] != '/':
+		i = string.rfind(basepath, '/')
+		if i < 0: basepath = '/'
+		else: basepath = basepath[:i+1]
+		path = basepath + path
+	if not host: host = basehost
+	if host:
+		print '->',type + '://' + host + path
+		return type + '://' + host + path
 	else:
-		return okcount
+		print '->', type + ':' + path
+		return type + ':' + path
 
-# Map a possibly symbolic font name to a real font name and default point size
-
-fontmap = { \
-	'':		('Times-Roman', 12), \
-	'default':	('Times-Roman', 12), \
-	'plain':	('Times-Roman', 12), \
-	'italic':	('Times-Italic', 12), \
-	'bold':		('Times-Bold', 12), \
-	'courier':	('Courier', 12), \
-	'bigbold':	('Times-Bold', 14), \
-	'title':	('Times-Bold', 24), \
-	  }
-
-def mapfont(fontname):
-	if fontmap.has_key(fontname):
-		return fontmap[fontname]
+def addquery(href, list):
+	if not list: return href
+	if len(list) == 1 and list[0][0] == 'isindex':
+		query = list[0][1]
 	else:
-		return fontname, 12
+		list = map(lambda x:x[0]+'='+x[1], list)
+		query = string.joinfields(list, '&')
+	href = href + '?' + query
+	return href
+
+#
+# Get the data-behind-the-URL
+#
+def urlget(newurl):
+	return urlopen.urlopen(newurl).read()
+	

@@ -12,7 +12,11 @@ from VcrChannel import VcrChannel
 from SocketChannel import SocketChannel
 from MpegChannel import MpegChannel
 from CmifChannel import CmifChannel
-from HtmlChannel import HtmlChannel
+try:
+	from HtmlChannel import HtmlChannel
+except:
+	from PseudoHtmlChannel import HtmlChannel
+	print 'WARNING: cheap plastic imitation of HTML channel loaded'
 from GraphChannel import GraphChannel
 
 channelmap = {
