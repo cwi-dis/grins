@@ -405,7 +405,11 @@ class showmessage:
 		elif cancelCallback and self._res==win32con.IDCANCEL:
 			apply(apply,cancelCallback)
 
-
+class ProgressDialog:
+	def __init__(self, *args):
+		pass
+	def set(self, *args):
+		pass
 
 
 
