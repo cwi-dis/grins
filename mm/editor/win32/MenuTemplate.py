@@ -195,6 +195,7 @@ POPUP_HVIEW_LEAF = (
 			(ENTRY, '&Before', None, PASTE_BEFORE),
 			(ENTRY, '&After', None, PASTE_AFTER),
 			)),
+		(ENTRY, 'Paste file', None, PASTE_FILE),
 		(SEP,),
 		(ENTRY, '&Delete', None, DELETE),
 		(SEP,),
@@ -227,6 +228,7 @@ POPUP_HVIEW_STRUCTURE = (
 			(ENTRY, '&After', None, PASTE_AFTER),
 			(ENTRY, '&Within', None, PASTE_UNDER),
 			)),
+		(ENTRY, 'Paste file', None, PASTE_FILE),
 		(SEP,),
 		(ENTRY, '&Delete', None, DELETE),
 		(SEP,),
@@ -291,7 +293,7 @@ POPUP_CVIEW_SYNCARC = (
 )
 
 MAIN_FRAME_POPUP = (
-		(ENTRY, '&Paste document\tCtrl+Shift+V', None, PASTE_FILE),
+		(ENTRY, '&Paste document', None, PASTE_DOCUMENT),
 		(SEP,),
 		(ENTRY, '&New\tCtrl+N', 'N', NEW_DOCUMENT),
 		(ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
