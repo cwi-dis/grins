@@ -437,13 +437,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.export(compatibility.SMIL10)
 
 	def export_WMP_callback(self):	# mjvdg 11-oct-2000
-		# Actually... this isn't implemented yet!
-		print "DEBUG: WMP not implemented yet.";
 		import wmpsupport
 		wmpsupport.Exporter('output.wmv', self.player)
-##		windowinterface.showmessage("Please purchase the full version of GRiNS today!");
-##		return;		       		    
-##		self.export(compatibility.WMP);
 
 	def export(self, exporttype):
 		self.exporttype = exporttype
@@ -487,7 +482,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.upload(compatibility.SMIL10)
 
 	def upload_WMP_callback(self):
-		print "DEBUG: WMP not implemented yet.";
 		windowinterface.showmessage("Please purchase the full version of GRiNS today!");
 		self.upload(compatibility.WMP);
 		return;
