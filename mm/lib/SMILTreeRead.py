@@ -772,7 +772,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					attrdict['fgcolor'] = fg
 			# sub-positionning attibutes allows to SMIL-Boston layout
-			elif attr in ('left', 'right', 'top', 'bottom'):
+			elif attr in ('left', 'width', 'right', 'top', 'height', 'bottom'):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
 				self.__context.attributes['project_boston'] = 1
@@ -1333,12 +1333,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		t = ch.get('top')
 		h = ch.get('height')
 		b = ch.get('bottom')
-		if l is not None and w is not None and r is not None:
-			del ch['right']
-			r = None
-		if t is not None and h is not None and b is not None:
-			del ch['bottom']
-			b = None
+		# don't resolve the conflict here
+		# we have to keep it (it's not a smil-css rule), but will be transfered to the right module
+		if not settings.activeFullSmilCss:
+			if l is not None and w is not None and r is not None:
+				del ch['right']
+				r = None
+			if t is not None and h is not None and b is not None:
+				del ch['bottom']
+				b = None
+				
 		top = self.__topregion.get(region)
 		# if top doesn't exist (and visible media, we create have to default top window)
 #		import ChannelMap
@@ -1347,105 +1351,108 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__newTopRegion()
 			if region not in self.__childregions[None]:
 				self.__childregions[None].append(region)
-		import ChannelMap
 
-		# we don't need of a min size if
-		# media is not visible or
-		# top region weight and height are already specify in pixels
-		# note: For now, it's optimize enough. If we want more optimization,
-		# we have to look in detail _calcmin1, _calcmin2 methods
-		if (not ChannelMap.isvisiblechannel(mtype)) or \
-			(w is not None and type(w) is type(0) and \
-				h is not None and type(h) is type(0)):
+		# this part is useful to determinate the initial viewport size if not specified
+		# we have to keep it (it's not a smil-css rule), but will be transfered to the right module
+		if not settings.activeFullSmilCss:
+			import ChannelMap
+			# we don't need of a min size if
+			# media is not visible or
+			# top region weight and height are already specify in pixels
+			# note: For now, it's optimize enough. If we want more optimization,
+			# we have to look in detail _calcmin1, _calcmin2 methods
+			if (not ChannelMap.isvisiblechannel(mtype)) or \
+				(w is not None and type(w) is type(0) and \
+					h is not None and type(h) is type(0)):
 
-			needMinSize = 0
-		else:
-			needMinSize = 1
+				needMinSize = 0
+			else:
+				needMinSize = 1
 
-		if needMinSize:
-			mediaWidth = 100
-			mediaHeight = 100
-			if mtype in ('image', 'movie', 'video', 'mpeg',
-				       'RealPix', 'RealText', 'RealVideo'):
-				# if we don't know the region size and
-				# position in pixels, we need to look at the
-				# media objects to figure out the size to use.
-				if node.attrdict.has_key('file'):
-					url = self.__context.findurl(node.attrdict['file'])
-					try:
-						import Sizes
-						mediaWidth, mediaHeight = Sizes.GetSize(url, mediatype, subtype)
-					except:
+			if needMinSize:
+				mediaWidth = 100
+				mediaHeight = 100
+				if mtype in ('image', 'movie', 'video', 'mpeg',
+					       'RealPix', 'RealText', 'RealVideo'):
+					# if we don't know the region size and
+					# position in pixels, we need to look at the
+					# media objects to figure out the size to use.
+					if node.attrdict.has_key('file'):
+						url = self.__context.findurl(node.attrdict['file'])
+						try:
+							import Sizes
+							mediaWidth, mediaHeight = Sizes.GetSize(url, mediatype, subtype)
+						except:
+							# want to make them at least visible...
+							mediaWidth = 100
+							mediaHeight = 100
+						else:
+							# want to make them at least visible...
+							if mediaWidth == 0: mediaWidth = 100
+							if mediaHeight == 0: mediaHeight = 100
+							node.__size = mediaWidth, mediaHeight
+					else:
 						# want to make them at least visible...
 						mediaWidth = 100
 						mediaHeight = 100
-					else:
-						# want to make them at least visible...
-						if mediaWidth == 0: mediaWidth = 100
-						if mediaHeight == 0: mediaHeight = 100
-						node.__size = mediaWidth, mediaHeight
+
+				elif mtype in ('text', 'label', 'html', 'graph', 'brush'):
+					# want to make them at least visible...
+					mediaWidth = 200
+					mediaHeight = 100
 				else:
 					# want to make them at least visible...
-					mediaWidth = 100
-					mediaHeight = 100
+					if mediaWidth == 0: mediaWidth = 100
+					if mediaHeight == 0: mediaHeight = 100
 
-			elif mtype in ('text', 'label', 'html', 'graph', 'brush'):
-				# want to make them at least visible...
-				mediaWidth = 200
-				mediaHeight = 100
-			else:
-				# want to make them at least visible...
-				if mediaWidth == 0: mediaWidth = 100
-				if mediaHeight == 0: mediaHeight = 100
+				width = mediaWidth
+				height = mediaHeight
 
-			width = mediaWidth
-			height = mediaHeight
+				# we take account of registrationpoints
+				regPointId = attributes.get('regPoint')
+				regAlignId = attributes.get('regAlign')
 
-			# we take account of registrationpoints
-			regPointId = attributes.get('regPoint')
-			regAlignId = attributes.get('regAlign')
+				if regPointId is not None or regAlignId is not None:
+					# first get the defined regPoint in context
+					if regPointId is None:
+						regPointId = 'topLeft'
+					regPoint = self.__context.regpoints.get(regPointId)
+					if regPoint is None:
+						# normaly : impossible case, just avoid a crash if bug
+						regPoint = self.__context.regpoints.get('topLeft')
 
-			if regPointId is not None or regAlignId is not None:
-				# first get the defined regPoint in context
-				if regPointId is None:
-					regPointId = 'topLeft'
-				regPoint = self.__context.regpoints.get(regPointId)
-				if regPoint is None:
-					# normaly : impossible case, just avoid a crash if bug
-					regPoint = self.__context.regpoints.get('topLeft')
+					# then get the regAlign specified in regpoint or overide in media node
+					regAlignX, regAlignY = regPoint.getxyAlign(regAlignId)
 
-				# then get the regAlign specified in regpoint or overide in media node
-				regAlignX, regAlignY = regPoint.getxyAlign(regAlignId)
+					# convert value to pixel relative to the media
+					regAlignW1 = int (regAlignX * mediaWidth + 0.5)
+					regAlignW2 = int ((1-regAlignX) * mediaWidth + 0.5)
 
-				# convert value to pixel relative to the media
-				regAlignW1 = int (regAlignX * mediaWidth + 0.5)
-				regAlignW2 = int ((1-regAlignX) * mediaWidth + 0.5)
+					regAlignH1 = int (regAlignY * mediaHeight + 0.5)
+					regAlignH2 = int ((1-regAlignY) * mediaHeight + 0.5)
 
-				regAlignH1 = int (regAlignY * mediaHeight + 0.5)
-				regAlignH2 = int ((1-regAlignY) * mediaHeight + 0.5)
+					width = _minsizeRp(regPoint['left'],
+							 regPoint['right'],
+							 regAlignW1, regAlignW2, width)
 
-				width = _minsizeRp(regPoint['left'],
-						 regPoint['right'],
-						 regAlignW1, regAlignW2, width)
+					height = _minsizeRp(regPoint['top'],
+							regPoint['bottom'],
+							regAlignH1, regAlignH2, height)
 
-				height = _minsizeRp(regPoint['top'],
-						 regPoint['bottom'],
-					         regAlignH1, regAlignH2, height)
+				# we take account of subregion positioning
+				width = _minsize(node.attrdict.get('left'),
+						None,
+						node.attrdict.get('right'),
+						width)
+				height = _minsize(node.attrdict.get('top'),
+						None,
+						node.attrdict.get('bottom'),
+						height)
 
-			# we take account of subregion positioning
-			width = _minsize(node.attrdict.get('left'),
-					 None,
- 					 node.attrdict.get('right'),
-					 width)
-			height = _minsize(node.attrdict.get('top'),
-					 None,
-					 node.attrdict.get('bottom'),
-					 height)
-
-			if ch['minwidth'] < width:
-				ch['minwidth'] = width
-			if ch['minheight'] < height:
-				ch['minheight'] = height
+				if ch['minwidth'] < width:
+					ch['minwidth'] = width
+				if ch['minheight'] < height:
+					ch['minheight'] = height
 
 		# clip-* attributes for video
 		clip_begin = attributes.get('clipBegin')
@@ -2070,11 +2077,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		ch['z'] = attrdict['z-index']
 		del attrdict['z-index']
-		x = attrdict['left']; del attrdict['left']
-		y = attrdict['top']; del attrdict['top']
-		w = attrdict['width']; del attrdict['width']
-		h = attrdict['height']; del attrdict['height']
-		ch['units'] = attrdict['units']; del attrdict['units']
+		if not settings.activeFullSmilCss:
+			x = attrdict['left']; del attrdict['left']
+			y = attrdict['top']; del attrdict['top']
+			w = attrdict['width']; del attrdict['width']
+			h = attrdict['height']; del attrdict['height']
+			
+			ch['units'] = attrdict['units']; del attrdict['units']
+		else:
+			# keep all original constraints
+			# if a value is not specified, it is translated to a None value (=auto in CSS)
+			ch['left'] = attrdict.get('left',None)
+			ch['width'] = attrdict.get('width',None)
+			ch['right'] = attrdict.get('right',None)
+			ch['top'] = attrdict.get('top',None)
+			ch['height'] = attrdict.get('height',None)
+			ch['bottom'] = attrdict.get('bottom',None)
+										
 		fit = attrdict['fit']; del attrdict['fit']
 		if fit == 'hidden':
 			ch['scale'] = 1
@@ -2087,7 +2106,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ch['center'] = 0
 		# other fit options not implemented
 
-		ch['base_winoff'] = x, y, w, h
+		# this attribute will be still useful but not initialized here
+		if not settings.activeFullSmilCss:
+			ch['base_winoff'] = x, y, w, h
 
 		# keep all attributes that we didn't use
 		for attr, val in attrdict.items():
@@ -2247,8 +2268,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__region2channel[region].append(ch)
 
 			# temporarely
-			x, y, w, h = ch['base_winoff']
-			ch['base_winoff'] = 0, 0, w, h
+			if not settings.activeFullSmilCss:
+				x, y, w, h = ch['base_winoff']
+				ch['base_winoff'] = 0, 0, w, h
 
 			# end new
 
@@ -2463,7 +2485,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					     'attrs':attrs}
 			if not self.__childregions.has_key(None):
 				self.__childregions[None] = []
-		self.FixSizes()
+		if not settings.activeFullSmilCss:
+			self.FixSizes()
 		self.__makeLayoutChannels()
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
 		self.Recurse(self.__root, self.CleanChanList)
@@ -2923,10 +2946,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				# catch all
 				attrdict[attr] = val
-		if attrdict.has_key('left') and attrdict.has_key('right') and attrdict.has_key('width'):
-			del attrdict['right']
-		if attrdict.has_key('top') and attrdict.has_key('bottom') and attrdict.has_key('height'):
-			del attrdict['bottom']
+		# don't resolve conflict here
+		if not settings.activeFullSmilCss:
+			if attrdict.has_key('left') and attrdict.has_key('right') and attrdict.has_key('width'):
+				del attrdict['right']
+			if attrdict.has_key('top') and attrdict.has_key('bottom') and attrdict.has_key('height'):
+				del attrdict['bottom']
 		
 		if self.__region is not None:
 ##			if self.__viewport is None:
