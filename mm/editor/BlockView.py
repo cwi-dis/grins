@@ -32,7 +32,7 @@ from FL import *
 #
 XMARG = 10 # margin width
 YMARG = 5 # two time the  margin width
-B=5	# the size og the roundbutton
+B=5	# the size of the roundbutton
 
 class BlockView () :
 	#
@@ -132,6 +132,9 @@ class BlockView () :
 				dx, dy = w, 0
 			x,y,w,h = x+XMARG,y+YMARG,w-2*XMARG,h-2*YMARG
 			num = 1
+			if node.GetType() = 'seq':
+				kids = kids[:]
+				kids.reverse()
 			for child in kids :
 				self.mkBlockview(((x, y, w, h), child))
 				x, y = x + dx, y + dy
