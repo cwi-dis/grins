@@ -82,6 +82,7 @@ def register(file, filename):
 		print "Duplicate not added.", filename
 		if oldobj:
 			print "But password sent."
+			user = oldobj['email']
 			clear = oldobj['password']
 			mail(user, clear, "", dup=1)
 		raise Error
