@@ -309,12 +309,8 @@ PlayerObject::SetPyVideoRenderer(PyObject *self, PyObject *args)
 		return NULL;
 	ExampleClientContext *pCC = ((PlayerObject*)self)->pContext;
 	if (pCC && pCC->m_pSiteSupplier){
-		ExampleSiteSupplier *pSS = pCC->m_pSiteSupplier;
-		if(pSS->GetWindowlessSite()){
-			ExampleVideoSurface* pVS = pSS->GetWindowlessSite()->GetVideoSurface();
-			pVS->SetPyVideoRenderer(obj);
+		pCC->m_pSiteSupplier->SetPyVideoRenderer(obj);
 		}
-	}
 	RETURN_NONE;
 }
 
@@ -423,6 +419,7 @@ static struct PyMethodDef PyRMPlayer_methods[] = {
 	{"SetOsWindow",PlayerObject::SetOsWindow,1}, 
 	{"ShowInNewWindow",PlayerObject::ShowInNewWindow,1}, 
 	{"SetPositionAndSize", PlayerObject::SetPositionAndSize, 1},
+	{"SetPyVideoRenderer", PlayerObject::SetPyVideoRenderer, 1},
 	{NULL, 	NULL}
 	};
 
