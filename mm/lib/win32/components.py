@@ -21,7 +21,7 @@ import features
 import math
 
 [FALSE, TRUE] = range(2)
-error = 'lib.win32.components.error'
+from appcon import error
 
 # Base class for SDK based controls
 class LightWeightControl:
