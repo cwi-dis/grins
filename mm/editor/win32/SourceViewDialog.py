@@ -98,6 +98,12 @@ class SourceViewDialog:
 			return self.__textwindow.getCurrentCharIndex()
 		return -1
 
+	# return the line number
+	def getLineNumber(self):
+		if self.__textwindow:
+			return self.__textwindow.getLineNumber()
+		return 0
+	
 	#
 	# text window listener interface
 	#
