@@ -143,7 +143,6 @@ class VideoChannel(ChannelWindow):
 		if node in self._builders.keys():		
 			return 1
 		fn = self.getfileurl(node)
-		print 'self.getfileurl(node)',fn
 		fn = MMurl.urlretrieve(fn)[0]
 		fn = self.toabs(fn)
 		builder=DirectShowSdk.CreateGraphBuilder()
