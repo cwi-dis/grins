@@ -2,7 +2,7 @@
 <smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/">
   <head>
     <meta name="title" content="Generic SMIL 2.0 Slideshow"/>
-    <meta name="template_name" content="SMIL 2.0 Slideshow with Background Music"/>
+    <meta name="template_name" content="Basic SMIL 2.0 Slideshow"/>
     <meta name="template_description" content="A slideshow with background music and a background image."/>
     <meta name="template_snapshot" content="T-icons/slideshow_1A.bmp"/>
     <meta name="project_html_page" content="external_player.html"/>
@@ -19,8 +19,8 @@
   </head>
   <body GRiNS:hidden="true">
     <par id="GenericSlideshow" GRiNS:thumbnailScale="false" GRiNS:thumbnailIcon="T-icons/slideshow_1A.bmp" GRiNS:project_default_region_image="Images" GRiNS:project_default_region_sound="audio" GRiNS:project_default_region_text="Images" GRiNS:showtime="bwstrip" GRiNS:timezoom="14">
-      <seq id="ImageSet" fillDefault="freeze" GRiNS:emptyIcon="T-icons/DropImage.gif" GRiNS:emptyDur="8s" GRiNS:emptyText="Place Main Images here." GRiNS:emptyColor="#dfdb9f" GRiNS:nonEmptyIcon="T-icons/DropImage.gif"/>
-      <seq id="BkgdClip" GRiNS:emptyText="Place Background Music here." region="audio" GRiNS:emptyIcon="T-icons/DropSound.gif" GRiNS:emptyColor="#dfdb9f"/>
+      <seq id="ImageSet" fillDefault="freeze" GRiNS:emptyIcon="T-icons/dropImage.tif" GRiNS:emptyDur="8s" GRiNS:emptyText="Drop Images on Icon" GRiNS:emptyColor="#f7f388" GRiNS:nonEmptyIcon="T-icons/dropImage.tif"/>
+      <seq id="BkgdClip" GRiNS:emptyText="Drop Background Music on Icon" region="audio" GRiNS:emptyIcon="T-icons/dropSound.tif" GRiNS:emptyColor="#f7f388"/>
       <img id="BkgdImg" fill="freeze" region="bkgd_image" src="media/Back3S.gif"/>
     </par>
   </body>

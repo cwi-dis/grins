@@ -2,6 +2,9 @@
 <smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/" xmlns:rn="http://features.real.com/2001/SMIL20/Extensions">
   <head>
     <meta name="title" content="PocketPC 240x180 Video with background image"/>
+    <meta name="template_name" content="Basic GRiNS/PocketPC Videoshow"/>
+    <meta name="template_description" content="A slideshow with background music, voice/text captions and a background image."/>
+    <meta name="template_snapshot" content="T-icons/video_1_P1A.bmp"/>
     <meta name="generator" content="GRiNS Pro for SMIL 2.0, v2.2 win32 build 134"/>
     <meta name="project_html_page" content="external_player.html"/>
     <layout>
@@ -15,8 +18,8 @@
     <GRiNS:viewinfo view="structure" top="0" left="0" width="800" height="265"/>
   </head>
   <body GRiNS:hidden="true">
-    <par id="BasicVideoshow" GRiNS:project_default_region_image="Images" GRiNS:project_default_region_video="Video" GRiNS:project_default_region_sound="audio_1" GRiNS:project_default_region_text="Images" GRiNS:thumbnailIcon="T-icons/video_1_1A.bmp" GRiNS:thumbnailScale="false" GRiNS:showtime="bwstrip" GRiNS:timezoom="14">
-      <seq id="Videos" fillDefault="freeze" GRiNS:emptyIcon="T-icons/DropVideo.gif" GRiNS:emptyText="Drop 240x180 Video onto Icon" GRiNS:emptyColor="#dfdb9f" GRiNS:emptyDur="8s" GRiNS:nonEmptyIcon="T-icons/DropVideo.gif">
+    <par id="BasicVideoshow" GRiNS:project_default_region_image="Images" GRiNS:project_default_region_video="Video" GRiNS:project_default_region_sound="audio_1" GRiNS:project_default_region_text="Images" GRiNS:thumbnailIcon="T-icons/video_1_P1A.bmp" GRiNS:thumbnailScale="false" GRiNS:showtime="bwstrip" GRiNS:timezoom="14">
+      <seq id="Videos" fillDefault="freeze" GRiNS:emptyIcon="T-icons/dropVideo.tif" GRiNS:emptyText="Drop 240x180 Video onto Icon" GRiNS:emptyColor="#f7f388" GRiNS:emptyDur="8s" GRiNS:nonEmptyIcon="T-icons/dropVideo.tif">
       </seq>
       <img id="BkgdImg" region="bkgd_image" fill="freeze" src="media/Back2P.gif"/>
     </par>
