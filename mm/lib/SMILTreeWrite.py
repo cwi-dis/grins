@@ -1015,6 +1015,7 @@ class SMILWriter(SMIL):
 		self.root = node
 		self.fp = IndentedFile(fp)
 		self.__title = ctx.gettitle()
+		assets = ctx.getassets()
 
 		self.ids_used = {}
 
@@ -1032,17 +1033,32 @@ class SMILWriter(SMIL):
 
 		self.uid2name = {}
 		self.calcnames1(node)
+		if assets:
+			for anode in assets:
+				self.calcnames1(anode)
 
 		# second pass
 		self.calcnames2(node)
+		if assets:
+			for anode in assets:
+				self.calcnames2(anode)
 		self.calcchnames2(node)
+		if assets:
+			for anode in assets:
+				self.calcchnames2(anode)
 
 		# must come after second pass
 		self.aid2name = {}
 		self.anchortype = {}
 		self.calcanames(node)
+		if assets:
+			for anode in assets:
+				self.calcanames(anode)
 
 		self.syncidscheck(node)
+		if assets:
+			for anode in assets:
+				self.calcnames1(anode)
 
 	def push(self):
 		if self.__isopen:
@@ -1943,6 +1959,17 @@ class SMILWriter(SMIL):
 			self.push()
 			for child in x.GetChildren():
 				self.writenode(child)
+			if root:
+				# XXXX This is not really the right place to do this
+				# as "funny" root node types will cause the assets not
+				# to be written.
+				assets = x.context.getassets()
+				if assets:
+					self.writetag(NSGRiNSprefix + ':assets', [('skip-content', 'true')])
+					self.push()
+					for child in assets:
+						self.writenode(child)
+					self.pop()
 			self.pop()
 		elif is_realpix and self.copydir:
 			# If we are exporting handle RealPix specially: we might want

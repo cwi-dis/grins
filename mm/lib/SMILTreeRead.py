@@ -170,6 +170,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'transition': (self.start_transition, self.end_transition),
 			'regPoint': (self.start_regpoint, self.end_regpoint),
 			'prefetch': (self.start_prefetch, self.end_prefetch),
+			GRiNSns + ' ' + 'assets': (self.start_assets, self.end_assets),
 			}
 		for key, val in self.elements.items():
 			if ' ' not in key:
@@ -1845,6 +1846,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				continue
 			apply(self.Recurse, (node,) + funcs)
 
+	def FixAssets(self, root):
+		is_assets = root.type == 'assets'
+		for node in root.GetChildren()[:]:
+			if is_assets:
+				node.Extract()
+				self.__context.addasset(node)
+			else:
+				self.FixAssets(node)
+		if is_assets:
+			# remove and destroy node
+			root.Extract()
+			root.Destroy()
+
 	def FixSizes(self):
 		self.__cssIdTmpList = []
 		self.Recurse(self.__root, self.__fixMediaPos)
@@ -2402,6 +2416,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node.slideshow = SlideShow(node, self.__new_file)
 		del self.__realpixnodes
 		self.FixAnimateTargets()
+		self.FixAssets(self.__root)
 		metadata = ''.join(self.__metadata)
 		self.__context.metadata = metadata
 		MMAttrdefs.flushcache(self.__root)
@@ -3446,6 +3461,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_seq(self):
 		self.EndContainer('seq')
+
+	def start_assets(self, attributes):
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
+		# Note that the "assets" nodetype is not known by the
+		# rest of GRiNS. The assets nodes will be extracted and
+		# destroyed later in FixAssets()
+		self.NewContainer('assets', attributes)
+
+	def end_assets(self):
+		self.EndContainer('assets')
 
 	def start_excl(self, attributes):
 		self.start_parexcl('excl', attributes)

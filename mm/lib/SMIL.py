@@ -409,6 +409,7 @@ class SMIL:
 	__layouts = GRiNSns + ' ' + 'layouts'
 	__layout = GRiNSns + ' ' + 'layout'
 	__null = GRiNSns + ' ' 'null'
+	__assets = GRiNSns + ' ' 'assets'
 
 	# abbreviations for collections of attributes
 	__Core = {'alt':None,
@@ -479,6 +480,8 @@ class SMIL:
 			 'skip-content':None,
 			 },
 		'metadata': {'skip-content':None,
+			     },
+		__assets: {'skip-content':None,
 			     },
 		'layout': {'customTest':None,
 			   'type':None,
@@ -874,7 +877,7 @@ class SMIL:
 	if profileExtensions.get('InlineTransitions'):__Animation.append('transitionFilter')
 
 	__schedule = ['par', 'seq', 'excl'] + __media_object
-	__container_content = __schedule + ['switch', 'a'] + __animate_elements
+	__container_content = __schedule + ['switch', 'a'] + __animate_elements + [__assets]
 	__media_content = ['anchor', 'area', 'param', 'switch'] + __animate_elements
 
 	# Core, Test and I18n attribs are added to all elements in the language
@@ -977,6 +980,7 @@ class SMIL:
 		'brush': __media_content,
 		__null: __media_content,
 		'a': __schedule + ['switch'],
+		__assets: __container_content,
 
 ##		'switch': __Schedule + __MediaContent + __ContentControl + __LinkAnchor + __Animation + ['priorityClass','layout'],
 ##		'customAttributes': ['customTest'],
