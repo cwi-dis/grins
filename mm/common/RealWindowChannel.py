@@ -63,6 +63,9 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 			self.__rc.pauseit(paused)
 
 	def stopplay(self, node):
+		if node and self._played_node is not node:
+			print 'node was not the playing node '+`self,node,self._played_node`
+			return
 		if realwindowchanneldebug:
 			print 'stopplay', self, node
 		if self.__rc is not None:
