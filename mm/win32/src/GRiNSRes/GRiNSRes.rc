@@ -528,25 +528,6 @@ FONT 8, "MS Sans Serif"
 BEGIN
 END
 
-IDD_EDITATTR_2LIST DIALOG DISCARDABLE  0, 0, 300, 164
-STYLE WS_CHILD
-FONT 8, "MS Sans Serif"
-BEGIN
-    LTEXT           "",IDC_ATTR_INFO,6,132,290,18,SS_SUNKEN
-    LISTBOX         IDC_LIST3,6,80,234,40,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
-                    WS_VSCROLL | WS_TABSTOP
-    LTEXT           "End events:",IDC_STATIC2,7,68,39,8
-    PUSHBUTTON      "New",IDC_BUTTON4,244,80,50,11
-    PUSHBUTTON      "Delete",IDC_BUTTON5,244,93,50,11
-    PUSHBUTTON      "Edit",IDC_BUTTON6,244,106,50,11
-    LISTBOX         IDC_LIST4,6,20,234,40,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
-                    WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Begin events:",IDC_STATIC1,7,8,44,8
-    PUSHBUTTON      "New",IDC_BUTTON7,244,20,50,11
-    PUSHBUTTON      "Delete",IDC_BUTTON8,244,33,50,11
-    PUSHBUTTON      "Edit",IDC_BUTTON9,244,46,50,11
-END
-
 IDD_EDITATTR_S7 DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
@@ -1958,13 +1939,13 @@ BEGIN
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "New",IDC_NEWBUTTON,245,22,46,14
     PUSHBUTTON      "Delete",IDC_DELETEBUTTON,245,44,46,14
-    CONTROL         "Delay",IDC_RDELAY,"Button",BS_AUTORADIOBUTTON,13,83,34,
-                    10
+    CONTROL         "Delay",IDC_RDELAY,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,13,83,34,10
     CONTROL         "Node",IDC_RNODE,"Button",BS_AUTORADIOBUTTON,13,93,33,10
     CONTROL         "Top layout",IDC_RLAYOUT,"Button",BS_AUTORADIOBUTTON,13,
                     113,49,10
-    CONTROL         "Indefinite",IDC_RINDEFINITE,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP,67,83,45,10
+    CONTROL         "Indefinite",IDC_RINDEFINITE,"Button",BS_AUTORADIOBUTTON,
+                    67,83,45,10
     CONTROL         "Access key",IDC_RACCESSKEY,"Button",BS_AUTORADIOBUTTON,
                     67,93,53,10
     CONTROL         "Wallclock",IDC_RWALLCLOCK,"Button",BS_AUTORADIOBUTTON,
@@ -2667,76 +2648,6 @@ BEGIN
 END
 
 #endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// English (U.K.) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
-#ifdef _WIN32
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_EVENT DIALOGEX 0, 0, 230, 126
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Edit event"
-FONT 8, "MS Sans Serif"
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,48,105,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,119,105,50,14
-    COMBOBOX        IDC_EVENTCAUSE1,82,13,100,67,CBS_DROPDOWNLIST | 
-                    WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_EVENTTYPE,110,45,106,71,CBS_DROPDOWNLIST | 
-                    WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Thing name:",IDC_THINGNAME,7,34,54,8,0,WS_EX_RIGHT
-    EDITTEXT        IDC_THINGVALUE,15,45,89,14,ES_AUTOHSCROLL
-    LTEXT           "Offset:",IDC_STATIC,72,68,22,8,0,WS_EX_RIGHT
-    EDITTEXT        IDC_EDIT2,98,66,40,14,ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_EDIT3,7,86,216,14,ES_AUTOHSCROLL | ES_READONLY
-    RTEXT           "Cause:",IDC_STATIC,43,15,32,10
-    LTEXT           "Event:",IDC_STATIC,117,33,22,8
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
-BEGIN
-    IDD_EVENT, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 223
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 119
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog Info
-//
-
-IDD_EVENT DLGINIT
-BEGIN
-    IDC_EVENTTYPE, 0x403, 1, 0
-"\000" 
-    0
-END
-
-#endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

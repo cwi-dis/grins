@@ -12,7 +12,6 @@ CAUSES = [				# What causes the event
 	'indefinite',		       
 	'node',				# extrainfo is a pointer to an MMNode or string??
 	'region',			# extrainfo is a pointer or string repr a region.
-	'prev', #TODO: no longer pertinant.
 	'accesskey',			# extrainfo is the key pressed.
 	'marker',			# er.. I admit that I don't understand this.
 	'wallclock',			# extrainfo is the time.
@@ -41,32 +40,6 @@ EVENTS_REGION = [			# no offsets at all!
 	'outOfBoundsEvent',
 	]
 
-class EventEditor(EventEditorDialog.EventEditorDialog):
-	# This isn't a view - it's a modal dialog for an eventstruct
-	# It lives as long as it's dialog box is showing.
-
-	def __init__(self, parent=None):
-		EventEditorDialog.EventEditorDialog.__init__(self, parent)
-		# Map the resource id's. 
-		#self.set_fields()
-
-	def set_eventstruct(self, eventstruct):
-		self._eventstruct = eventstruct
-
-	def get_eventstruct(self):
-		return self._eventstruct
-
-#	def set_fields(self):
-#		# Sets all the fields of this dialog to their values.
-#		self._cause = "region"
-#		self._event = "click"
-
-##	def done(self):
-##		# callback for when the user has finished.
-##		# TODO: put all the instance variables back into the syncarc and return it (?)
-##		print "Done."
-##		return 1		# return 0 if you do not want to close the dialog.
-
 
 class EventStruct:
 	# This encapsulates an event. An event is essentually a syncarc; this is a
@@ -92,30 +65,42 @@ class EventStruct:
 	def get_value(self):
 		# Returns the result of editing this syncarc.
 		s = self._syncarc
-		if self._setcause:
-			# Only causes without parameters (i.e. indefinite and prev)
-			c = self._setcause
-			if c == 'indefinite':
-				s.delay = None
-			elif c == 'prev':
-				s.srcnode = 'prev'
-			else:
-				print "ERROR: unknown event cause."
-		if self._setevent:
-			s.event = self._setevent
-		if self._setoffset:
-			s.delay = int(self._setoffset)
+		# Reset it.
+		if s.isstart:
+			action = "begin"
+		elif s.isdur:
+			action = "dur"
+		elif s.ismin:
+			action = "min"
+		else:
+			action = "end"
+
 		c = self.get_cause()
-		if c == 'node' and self._setnode:
+		if c == 'indefinite':
+			s.__init__(s.dstnode, action, delay=None)
+			return s
+		elif c == 'node' and self._setnode:
 			# The problem here is that I don't know how to map a name of a node to it's instance.
 			print "TODO: don't know how to set node."
+			s.__init__(s.dstnode, action, srcnode = s.srcnode, event=self.get_event(), delay=self.get_offset_number())
 		elif c == 'region' and self._setregion:
 			print "TODO: don't know how to set region."
 		elif c == 'accesskey' and self._setkey:
-			s.accesskey = self._setkey
+			s.__init__(s.dstnode, action, accesskey=self._setkey, event=self.get_event(), delay=self.get_offset_number())
 		elif c == 'marker' and self._setmarker:
-			s.marker = self._setmarker
+			s.__init__(s.dstnode, action, marker=self._setmarker)
+		elif c == 'delay':
+			s.__init__(s.dstnode, action, delay=self.get_offset_number())
+		elif c == 'wallclock':
+			print "TODO: editing wallclock attributes."
+			#s.__init__(s.dstnode, action,
 		return self._syncarc
+
+		if self._setevent:
+			s.event = self._setevent
+		if self._setoffset:
+			s.delay = set.get_offset_number()
+
 
 	def __init__set_vars(self):
 		# Sets all the variables in this class.
@@ -131,9 +116,6 @@ class EventStruct:
 		elif x.accesskey is not None:
 			self.cause = 'accesskey'
 			self.thing = x.accesskey
-		elif x.srcnode == 'prev':
-			self.cause = 'prev'
-			self.thing = None
 		elif x.marker is not None:
 			self.cause = 'marker'
 			self.event = None
@@ -221,13 +203,6 @@ class EventStruct:
 ##				r = s.channel
 ##			else:
 ##				r = 'unknown'
-		elif c == 'prev':
-			if self._setevent:
-				r = 'prev' + "." + self._setevent
-			elif isinstance(s, MMNode.MMSyncArc) and s.event:
-				r = 'prev' + "." + s.event
-			else:
-				r = 'prev'
 		elif c == 'accesskey':
 			if self._setkey:
 				r = 'accesskey(' + self._setkey + ')'
@@ -287,7 +262,7 @@ class EventStruct:
 	def set_event(self, newevent):
 		self._setevent = newevent
 	def get_possible_events(self):
-		if self.get_cause() == 'node' or self.get_cause() == 'prev':
+		if self.get_cause() == 'node':
 			return EVENTS_NODE
 		elif self.get_cause() == 'region':
 			return EVENTS_REGION
@@ -366,10 +341,16 @@ class EventStruct:
 	def get_offset(self):
 		if self._setoffset:
 			return self._setoffset
-		if self._syncarc and self.get_cause() in ['node', 'prev', 'accesskey', 'delay']: # TODO: check these.
+		if self._syncarc and self.get_cause() in ['node', 'accesskey', 'delay']: # TODO: check these.
 			return `self._syncarc.delay`
 		else:
 			return None
+	def get_offset_number(self):
+		a = self.get_offset()
+		if a:
+			return float(a)
+		else:
+			return 0
 	def set_offset(self, newoffset):
 		if newoffset.isdigit():
 			self._setoffset = newoffset
