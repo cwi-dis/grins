@@ -140,7 +140,8 @@ class ChannelCtrl(OptionsCtrl):
 
 	def OnCombo(self,id,code):
 		OptionsCtrl.OnCombo(self,id,code)
-		if hasattr(self._attr, 'optioncb'):
+		if code==win32con.CBN_SELCHANGE and \
+		   hasattr(self._attr, 'optioncb'):
 			self._attr.optioncb()
 
 class OptionsRadioCtrl(AttrCtrl):
