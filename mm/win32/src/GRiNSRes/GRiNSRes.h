@@ -382,6 +382,7 @@
 #define IDC_LAYOUT_MEDIA_SEL            1257
 #define IDC_SUBREG_W                    1258
 #define IDC_SUBREG_H                    1259
+#define IDC_LAYOUT_SHOW_ALLREGIONS      1259
 #define IDC_SUBREG_SHONLYREG            1260
 #define IDC_SUBREG_FIT                  1261
 #define IDC_LAYOUT_REGIONLIST           1262
