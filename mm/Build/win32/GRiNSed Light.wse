@@ -1,7 +1,7 @@
 Document Type: WSE
 item: Global
   Version=7.041
-  Title=Oratrix GRiNS for G2 Lite 1.5 Installation
+  Title=Oratrix GRiNS for G2 Lite 1.5.1 Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
   Japanese Font Name=MS Gothic
@@ -19,14 +19,14 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_L4G2_inst.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_lite_win_1.5.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
   Upload Directory=/ufs/sjoerd/tmp
   Per-User Version ID=1
   Dialogs Version=7
-  Version File=1.5
+  Version File=1.5.1
   Version Description=GRiNS/G2 Lite
   Version Copyright=Copyright 2000 Oratrix Holding B.V.
   Version Company=Oratrix Holding B.V.
@@ -91,7 +91,7 @@ item: End Block
 end
 item: Set Variable
   Variable=APPTITLE
-  Value=Oratrix GRiNS for G2 Lite 1.5
+  Value=Oratrix GRiNS for G2 Lite 1.5.1
   Flags=10000000
 end
 item: Set Variable

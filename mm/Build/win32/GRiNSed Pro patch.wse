@@ -9,7 +9,7 @@ item: Global
   Progress Bar DLL=%_WISE_%\Progress\WIZ%_EXE_OS_TYPE_%.DLL
   Start Gradient=0 0 128
   End Gradient=255 128 64
-  Windows Flags=00000100000000111010110000001000
+  Windows Flags=00000100000000110010110000001000
   Log Pathname=%MAINDIR%\INSTALL.LOG
   Message Font=MS Sans Serif
   Font Size=8
@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000000001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_P4G2_inst_patch.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_pro_win_1.5.1.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -32,12 +32,12 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=3178661486
+  File Checksum=2150207025
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=E:\EXTERN~1\WISEIN~1
+  Variable Default2=C:\PROGRA~1\WISEIN~1
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -1133,7 +1133,7 @@ item: Install File
   Destination=%MAINDIR%\relnotes.html
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\relnotes.html
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\relnotes.html
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\relnotes.html
   Patch Previous=
 end
 item: Install File
@@ -1141,7 +1141,7 @@ item: Install File
   Destination=%MAINDIR%\license.txt
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\license.txt
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\license.txt
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\license.txt
   Patch Previous=
 end
 item: Install File
@@ -1149,7 +1149,7 @@ item: Install File
   Destination=%MAINDIR%\readme.txt
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\readme.txt
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\readme.txt
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\readme.txt
   Patch Previous=
 end
 item: If/While Statement
@@ -1158,11 +1158,241 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\tutorials.pdf
+  Destination=%MAINDIR%\tutorials.pdf
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Walk.grins
+  Destination=%MAINDIR%\Tutorials\Walk.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\EUROs.grins
+  Destination=%MAINDIR%\Tutorials\EUROs.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm20v.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm20v.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm20a.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm20a.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm200v.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm200v.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm200a.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm200a.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm10v.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm10v.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm10a.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm10a.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm100v.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm100v.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm100a.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm100a.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\next1.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\next1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\next1.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\next1.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\info1.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\info1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\info1.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\info1.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\headline1.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\headline1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\headline1.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\headline1.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\gdot.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\gdot.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\gdot.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\gdot.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\euro52x51.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\euro52x51.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\euro-sm.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\euro-sm.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\dot.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\dot.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\dot.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\dot.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\buttons.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\buttons.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\buttons.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\buttons.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\back1.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\back1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\back1.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\back1.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm500a.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm500a.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm500v.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm500v.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm50a.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm50a.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\tune.aiff
+  Destination=%MAINDIR%\Tutorials\Assets\tune.aiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\money.wav
+  Destination=%MAINDIR%\Tutorials\Assets\money.wav
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\mapc.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\mapc.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\map.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\map.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\h218c.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\h218c.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\h218.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\h218.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\h168c.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\h168c.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\h168.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\h168.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\Pwhite.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\Pwhite.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\Pmusic.ra
+  Destination=%MAINDIR%\Tutorials\Assets\Pmusic.ra
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\Pmap.png
+  Destination=%MAINDIR%\Tutorials\Assets\Pmap.png
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\Phouses.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\Phouses.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\Atune.aiff
+  Destination=%MAINDIR%\Tutorials\Assets\Atune.aiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm50v.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm50v.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm5a.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm5a.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm5v.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm5v.jpg
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\Build\products\g2-15\QuickStart.pdf
   Destination=%MAINDIR%\QuickStart.pdf
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\QuickStart.pdf
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\QuickStart.pdf
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\QuickStart.pdf
   Patch Previous=
 end
 item: Install File
@@ -1170,7 +1400,7 @@ item: Install File
   Destination=%MAINDIR%\Tutorials\Assets\h218.gif
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Tutorials\Assets\h218.gif
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Tutorials\Assets\h218.gif
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Tutorials\Assets\h218.gif
   Patch Previous=
 end
 item: Install File
@@ -1178,7 +1408,7 @@ item: Install File
   Destination=%MAINDIR%\Tutorials\Assets\h168.gif
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Tutorials\Assets\h168.gif
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Tutorials\Assets\h168.gif
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Tutorials\Assets\h168.gif
   Patch Previous=
 end
 item: Install File
@@ -1186,17 +1416,17 @@ item: Install File
   Destination=%MAINDIR%\Tutorials\Assets\map.gif
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Tutorials\Assets\map.gif
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Tutorials\Assets\map.gif
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Tutorials\Assets\map.gif
   Patch Previous=
 end
 item: End Block
 end
 item: Install File
-  Source=E:\External Program Files\Wise InstallMaker\Unwise.exe
+  Source=C:\Program Files\Wise InstallMaker\Unwise.exe
   Destination=%MAINDIR%\Unwise.exe
-  Flags=0000000010001010
+  Flags=0000000010000010
   Patch Existing=%MAINDIR%\Unwise.exe
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Unwise.exe
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Unwise.exe
   Patch Previous=
 end
 item: If/While Statement
@@ -1205,11 +1435,238 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Templates\extended-slideshow.bmp
+  Destination=%MAINDIR%\Templates\extended-slideshow.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\A6_extended-slideshow.grins
+  Destination=%MAINDIR%\Templates\A6_extended-slideshow.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\_socket.pyd
+  Destination=%MAINDIR%\_socket.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\PyWinTypes.dll
+  Destination=%MAINDIR%\PyWinTypes.dll
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\python16.dll
+  Destination=%MAINDIR%\python16.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\gear32sd.pyd
+  Destination=%MAINDIR%\gear32sd.pyd
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\pncrt.dll
+  Destination=%MAINDIR%\pncrt.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\pncrt.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\pncrt.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\rmbe3260.dll
+  Destination=%MAINDIR%\rmbe3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\rmbe3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\rmbe3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\rmto3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Tools\rmto3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Tools\rmto3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Tools\rmto3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\rmme3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Tools\rmme3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Tools\rmme3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Tools\rmme3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\enlv3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Tools\enlv3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Tools\enlv3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Tools\enlv3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\auth3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Plugins\auth3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Plugins\auth3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Plugins\auth3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\erv23260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\erv23260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\erv23260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\erv23260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\erv13260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\erv13260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\erv13260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\erv13260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\ednt3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\ednt3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\ednt3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\ednt3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\dnet3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\dnet3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\dnet3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\dnet3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\cook3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\cook3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\cook3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\cook3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\cokr3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\cokr3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\cokr3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\cokr3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\28_83260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\28_83260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\28_83260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\28_83260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\14_43260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\14_43260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\14_43260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\14_43260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\espr3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\espr3260.dll
+  Flags=0000000010000010
+  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\espr3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\espr3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Common\rnco3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Common\rnco3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Common\rnco3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Common\rnco3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\rv203260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\rv203260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\rv203260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\rv203260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\pngu3264.dll
+  Destination=%MAINDIR%\pngu3264.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Common\encn3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Common\encn3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Common\encn3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Common\encn3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Common\pnrs3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Common\pnrs3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Common\pnrs3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Common\pnrs3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\sipr3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\sipr3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\sipr3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\sipr3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\rv103260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\rv103260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\rv103260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\rv103260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\sdpp3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Plugins\sdpp3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Plugins\sdpp3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Plugins\sdpp3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\rn5a3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Plugins\rn5a3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Plugins\rn5a3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Plugins\rn5a3260.dll
+  Patch Previous=
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\basc3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Plugins\basc3260.dll
+  Flags=0000000010000011
+  Patch Existing=%MAINDIR%\Producer-SDK\Plugins\basc3260.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Plugins\basc3260.dll
+  Patch Previous=
+end
+item: Install File
   Source=d:\ufs\mm\cmif\GRiNS-Icons\RealVideo.tiff
   Destination=%MAINDIR%\GRiNS-Icons\RealVideo.tiff
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\GRiNS-Icons\RealVideo.tiff
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\RealVideo.tiff
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\RealVideo.tiff
   Patch Previous=
 end
 item: Install File
@@ -1217,7 +1674,7 @@ item: Install File
   Destination=%MAINDIR%\GRiNS-Icons\RealAudio.tiff
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\GRiNS-Icons\RealAudio.tiff
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\RealAudio.tiff
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\RealAudio.tiff
   Patch Previous=
 end
 item: Install File
@@ -1225,7 +1682,7 @@ item: Install File
   Destination=%MAINDIR%\GRiNS_G2P.exe
   Flags=0000000010000011
   Patch Existing=%MAINDIR%\GRiNS_G2P.exe
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\GRiNS_G2P.exe
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\GRiNS_G2P.exe
   Patch Previous=
 end
 item: Install File
@@ -1233,7 +1690,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\media\realtext-template.rt
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\media\realtext-template.rt
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\media\realtext-template.rt
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\media\realtext-template.rt
   Patch Previous=
 end
 item: Install File
@@ -1251,7 +1708,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\qsg1.bmp
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\qsg1.bmp
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\qsg1.bmp
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\qsg1.bmp
   Patch Previous=
 end
 item: Install File
@@ -1259,7 +1716,7 @@ item: Install File
   Destination=%MAINDIR%\GRiNS-Icons\video.tiff
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\GRiNS-Icons\video.tiff
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\video.tiff
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\video.tiff
   Patch Previous=
 end
 item: Install File
@@ -1267,7 +1724,7 @@ item: Install File
   Destination=%MAINDIR%\GRiNS-Icons\text.tiff
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\GRiNS-Icons\text.tiff
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\text.tiff
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\text.tiff
   Patch Previous=
 end
 item: Install File
@@ -1275,7 +1732,7 @@ item: Install File
   Destination=%MAINDIR%\GRiNS-Icons\sound.tiff
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\GRiNS-Icons\sound.tiff
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\sound.tiff
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\sound.tiff
   Patch Previous=
 end
 item: Install File
@@ -1283,7 +1740,7 @@ item: Install File
   Destination=%MAINDIR%\GRiNS-Icons\html.tiff
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\GRiNS-Icons\html.tiff
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\html.tiff
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\html.tiff
   Patch Previous=
 end
 item: Install File
@@ -1291,7 +1748,7 @@ item: Install File
   Destination=%MAINDIR%\GRiNS-Icons\image.tiff
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\GRiNS-Icons\image.tiff
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\image.tiff
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\image.tiff
   Patch Previous=
 end
 item: Install File
@@ -1299,7 +1756,7 @@ item: Install File
   Destination=%MAINDIR%\GRiNS-Icons\layout.tiff
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\GRiNS-Icons\layout.tiff
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\layout.tiff
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\layout.tiff
   Patch Previous=
 end
 item: Install File
@@ -1307,7 +1764,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\A5_empty.grins
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\A5_empty.grins
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\A5_empty.grins
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\A5_empty.grins
   Patch Previous=
 end
 item: Install File
@@ -1315,7 +1772,7 @@ item: Install File
   Destination=%MAINDIR%\GRiNS-Icons\null.tiff
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\GRiNS-Icons\null.tiff
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\null.tiff
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\null.tiff
   Patch Previous=
 end
 item: Install File
@@ -1323,7 +1780,7 @@ item: Install File
   Destination=%MAINDIR%\GRiNS-Icons\RealPix.tiff
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\GRiNS-Icons\RealPix.tiff
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\RealPix.tiff
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\RealPix.tiff
   Patch Previous=
 end
 item: Install File
@@ -1331,7 +1788,7 @@ item: Install File
   Destination=%MAINDIR%\GRiNS-Icons\RealText.tiff
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\GRiNS-Icons\RealText.tiff
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\RealText.tiff
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\GRiNS-Icons\RealText.tiff
   Patch Previous=
 end
 item: Install File
@@ -1339,7 +1796,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\QSG1-Slideshow.grins
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\QSG1-Slideshow.grins
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\QSG1-Slideshow.grins
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\QSG1-Slideshow.grins
   Patch Previous=
 end
 item: Install File
@@ -1347,7 +1804,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\A4_adaptive_content.grins
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\A4_adaptive_content.grins
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\A4_adaptive_content.grins
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\A4_adaptive_content.grins
   Patch Previous=
 end
 item: Install File
@@ -1355,7 +1812,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\A3_videoshow-bkaudio-img.grins
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\A3_videoshow-bkaudio-img.grins
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\A3_videoshow-bkaudio-img.grins
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\A3_videoshow-bkaudio-img.grins
   Patch Previous=
 end
 item: Install File
@@ -1363,7 +1820,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\A2_rp-slideshow-bgaud-img.grins
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\A2_rp-slideshow-bgaud-img.grins
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\A2_rp-slideshow-bgaud-img.grins
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\A2_rp-slideshow-bgaud-img.grins
   Patch Previous=
 end
 item: Install File
@@ -1371,7 +1828,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\media\hd_bkgd-image.jpg
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\media\hd_bkgd-image.jpg
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\media\hd_bkgd-image.jpg
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\media\hd_bkgd-image.jpg
   Patch Previous=
 end
 item: Install File
@@ -1379,7 +1836,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\A1_simple_slideshow.grins
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\A1_simple_slideshow.grins
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\A1_simple_slideshow.grins
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\A1_simple_slideshow.grins
   Patch Previous=
 end
 item: Install File
@@ -1387,7 +1844,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\video_2x_audio.bmp
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\video_2x_audio.bmp
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\video_2x_audio.bmp
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\video_2x_audio.bmp
   Patch Previous=
 end
 item: Install File
@@ -1395,7 +1852,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\adaptive.bmp
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\adaptive.bmp
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\adaptive.bmp
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\adaptive.bmp
   Patch Previous=
 end
 item: Install File
@@ -1403,7 +1860,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\freeplayer_g2.gif
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\freeplayer_g2.gif
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\freeplayer_g2.gif
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\freeplayer_g2.gif
   Patch Previous=
 end
 item: Install File
@@ -1411,7 +1868,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\GetGRiNS.gif
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\GetGRiNS.gif
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\GetGRiNS.gif
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\GetGRiNS.gif
   Patch Previous=
 end
 item: Install File
@@ -1419,7 +1876,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\media\realpix-template.rp
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\media\realpix-template.rp
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\media\realpix-template.rp
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\media\realpix-template.rp
   Patch Previous=
 end
 item: Install File
@@ -1427,7 +1884,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\embedded_player.html
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\embedded_player.html
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\embedded_player.html
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\embedded_player.html
   Patch Previous=
 end
 item: Install File
@@ -1435,7 +1892,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\external_player.html
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\external_player.html
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\external_player.html
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\external_player.html
   Patch Previous=
 end
 item: Install File
@@ -1443,7 +1900,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\media\rp-slide-3.jpg
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\media\rp-slide-3.jpg
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\media\rp-slide-3.jpg
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\media\rp-slide-3.jpg
   Patch Previous=
 end
 item: Install File
@@ -1451,7 +1908,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\media\rp-slide-2.jpg
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\media\rp-slide-2.jpg
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\media\rp-slide-2.jpg
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\media\rp-slide-2.jpg
   Patch Previous=
 end
 item: Install File
@@ -1459,7 +1916,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\media\rp-slide-1.jpg
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\media\rp-slide-1.jpg
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\media\rp-slide-1.jpg
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\media\rp-slide-1.jpg
   Patch Previous=
 end
 item: Install File
@@ -1467,7 +1924,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\media\slide-3.jpg
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\media\slide-3.jpg
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\media\slide-3.jpg
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\media\slide-3.jpg
   Patch Previous=
 end
 item: Install File
@@ -1475,7 +1932,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\media\slide-2.jpg
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\media\slide-2.jpg
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\media\slide-2.jpg
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\media\slide-2.jpg
   Patch Previous=
 end
 item: Install File
@@ -1483,7 +1940,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\media\slide-1.jpg
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\media\slide-1.jpg
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\media\slide-1.jpg
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\media\slide-1.jpg
   Patch Previous=
 end
 item: Install File
@@ -1491,7 +1948,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\media\simple.rp
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\media\simple.rp
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\media\simple.rp
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\media\simple.rp
   Patch Previous=
 end
 item: Install File
@@ -1499,7 +1956,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\media\hd_slide_1.jpg
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\media\hd_slide_1.jpg
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\media\hd_slide_1.jpg
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\media\hd_slide_1.jpg
   Patch Previous=
 end
 item: Install File
@@ -1507,7 +1964,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\media\bkgd-image.jpg
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\media\bkgd-image.jpg
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\media\bkgd-image.jpg
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\media\bkgd-image.jpg
   Patch Previous=
 end
 item: Install File
@@ -1515,7 +1972,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\slideshow_2x_audio.bmp
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\slideshow_2x_audio.bmp
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\slideshow_2x_audio.bmp
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\slideshow_2x_audio.bmp
   Patch Previous=
 end
 item: Install File
@@ -1523,15 +1980,7 @@ item: Install File
   Destination=%MAINDIR%\Templates\rp_2x_audio.bmp
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\Templates\rp_2x_audio.bmp
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Templates\rp_2x_audio.bmp
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\python15.dll
-  Destination=%MAINDIR%\python15.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\python15.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\python15.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Templates\rp_2x_audio.bmp
   Patch Previous=
 end
 item: Install File
@@ -1539,7 +1988,7 @@ item: Install File
   Destination=%MAINDIR%\win32ui.pyd
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\win32ui.pyd
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\win32ui.pyd
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\win32ui.pyd
   Patch Previous=
 end
 item: Install File
@@ -1547,7 +1996,7 @@ item: Install File
   Destination=%MAINDIR%\GRiNSRes.dll
   Flags=0000000010000011
   Patch Existing=%MAINDIR%\GRiNSRes.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\GRiNSRes.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\GRiNSRes.dll
   Patch Previous=
 end
 item: Install File
@@ -1555,15 +2004,7 @@ item: Install File
   Destination=%MAINDIR%\Gear32sd.dll
   Flags=0000000010000011
   Patch Existing=%MAINDIR%\Gear32sd.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Gear32sd.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\PyWinTypes15.dll
-  Destination=%MAINDIR%\PyWinTypes15.dll
-  Flags=0000000010000010
-  Patch Existing=%MAINDIR%\PyWinTypes15.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\PyWinTypes15.dll
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Gear32sd.dll
   Patch Previous=
 end
 item: Install File
@@ -1571,7 +2012,7 @@ item: Install File
   Destination=%MAINDIR%\rma.pyd
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\rma.pyd
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\rma.pyd
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\rma.pyd
   Patch Previous=
 end
 item: Install File
@@ -1579,7 +2020,7 @@ item: Install File
   Destination=%MAINDIR%\Producer-SDK\aud2rm.ax
   Flags=0001001010000011
   Patch Existing=%MAINDIR%\Producer-SDK\aud2rm.ax
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\aud2rm.ax
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\aud2rm.ax
   Patch Previous=
 end
 item: Install File
@@ -1587,7 +2028,7 @@ item: Install File
   Destination=%MAINDIR%\producer.pyd
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\producer.pyd
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\producer.pyd
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\producer.pyd
   Patch Previous=
 end
 item: Install File
@@ -1600,7 +2041,7 @@ item: Install File
   Destination=%MAINDIR%\imgjpeg.pyd
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\imgjpeg.pyd
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\imgjpeg.pyd
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\imgjpeg.pyd
   Patch Previous=
 end
 item: Install File
@@ -1608,7 +2049,7 @@ item: Install File
   Destination=%MAINDIR%\imgop.pyd
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\imgop.pyd
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\imgop.pyd
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\imgop.pyd
   Patch Previous=
 end
 item: Install File
@@ -1616,7 +2057,7 @@ item: Install File
   Destination=%MAINDIR%\imgformat.pyd
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\imgformat.pyd
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\imgformat.pyd
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\imgformat.pyd
   Patch Previous=
 end
 item: Install File
@@ -1624,7 +2065,7 @@ item: Install File
   Destination=%MAINDIR%\Producer-SDK\vid2rm.ax
   Flags=0001001010000011
   Patch Existing=%MAINDIR%\Producer-SDK\vid2rm.ax
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\vid2rm.ax
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\Producer-SDK\vid2rm.ax
   Patch Previous=
 end
 item: Install File
@@ -1637,7 +2078,7 @@ item: Install File
   Destination=%MAINDIR%\imgcolormap.pyd
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\imgcolormap.pyd
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\imgcolormap.pyd
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\imgcolormap.pyd
   Patch Previous=
 end
 item: Install File
@@ -1645,7 +2086,7 @@ item: Install File
   Destination=%MAINDIR%\dshow.pyd
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\dshow.pyd
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\dshow.pyd
+  Patch Previous=D:\Program Files\Oratrix\GRiNS_G2P\dshow.pyd
   Patch Previous=
 end
 item: Install File
@@ -1662,206 +2103,6 @@ item: Install File
   Source=c:\Winnt\system32\Msvcrt40.dll
   Destination=%SYS32%\Msvcrt40.dll
   Flags=0000001010000011
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\rmto3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Tools\rmto3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Tools\rmto3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Tools\rmto3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\rmme3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Tools\rmme3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Tools\rmme3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Tools\rmme3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\enlv3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Tools\enlv3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Tools\enlv3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Tools\enlv3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\rv103260.dll
-  Destination=%MAINDIR%\Producer-SDK\Codecs\rv103260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\rv103260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\rv103260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Common\encn3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Common\encn3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Common\encn3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Common\encn3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\ednt3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Codecs\ednt3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\ednt3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\ednt3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\28_83260.dll
-  Destination=%MAINDIR%\Producer-SDK\Codecs\28_83260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\28_83260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\28_83260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\rn5a3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Plugins\rn5a3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Plugins\rn5a3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Plugins\rn5a3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\dnet3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Codecs\dnet3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\dnet3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\dnet3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\rv203260.dll
-  Destination=%MAINDIR%\Producer-SDK\Codecs\rv203260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\rv203260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\rv203260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\erv13260.dll
-  Destination=%MAINDIR%\Producer-SDK\Codecs\erv13260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\erv13260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\erv13260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\sdpp3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Plugins\sdpp3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Plugins\sdpp3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Plugins\sdpp3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\sipr3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Codecs\sipr3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\sipr3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\sipr3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\espr3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Codecs\espr3260.dll
-  Flags=0000000010000010
-  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\espr3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\espr3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\cokr3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Codecs\cokr3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\cokr3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\cokr3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Common\pnrs3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Common\pnrs3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Common\pnrs3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Common\pnrs3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Common\rnco3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Common\rnco3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Common\rnco3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Common\rnco3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\auth3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Plugins\auth3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Plugins\auth3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Plugins\auth3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\basc3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Plugins\basc3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Plugins\basc3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Plugins\basc3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\14_43260.dll
-  Destination=%MAINDIR%\Producer-SDK\Codecs\14_43260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\14_43260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\14_43260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\cook3260.dll
-  Destination=%MAINDIR%\Producer-SDK\Codecs\cook3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\cook3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\cook3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\erv23260.dll
-  Destination=%MAINDIR%\Producer-SDK\Codecs\erv23260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\Producer-SDK\Codecs\erv23260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\Producer-SDK\Codecs\erv23260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=e:\External Program Files\RealSDK\Producer\Bin\rmbe3260.dll
-  Destination=%MAINDIR%\rmbe3260.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\rmbe3260.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\rmbe3260.dll
-  Patch Previous=
-end
-item: Install File
-  Source=e:\External Program Files\RealSDK\Producer\Bin\pngu3263.dll
-  Destination=%MAINDIR%\pngu3263.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\pngu3263.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\pngu3263.dll
-  Patch Previous=
-end
-item: Install File
-  Source=e:\External Program Files\RealSDK\Producer\Bin\pncrt.dll
-  Destination=%MAINDIR%\pncrt.dll
-  Flags=0000000010000011
-  Patch Existing=%MAINDIR%\pncrt.dll
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\pncrt.dll
-  Patch Previous=
 end
 item: End Block
 end
@@ -1993,10 +2234,12 @@ item: Edit Registry
   item: Key
     Key=SMILfile\shell\edit
     New Value=Edit with GRiNS Pro for G2
+    Root=32
   end
   item: Key
     Key=SMILfile\shell\edit\command
     New Value=%MAINDIR%\GRiNS_G2P.exe "%%1"
+    Root=32
   end
   item: Key
     Key=SMILfile\shell\open
@@ -2036,8 +2279,9 @@ end
 item: Edit Registry
   Total Keys=4
   item: Key
-    Key=GRiNSProject\shell\open\command
+    Key=SMILfile\shell\open\command
     New Value=%MAINDIR%\GRiNS_G2P.exe "%%1"
+    Root=32
   end
   item: Key
     Key=GRiNSProject\shell\edit
@@ -2048,7 +2292,7 @@ item: Edit Registry
     New Value=%MAINDIR%\GRiNS_G2P.exe "%%1"
   end
   item: Key
-    Key=SMILfile\shell\open\command
+    Key=GRiNSProject\shell\open\command
     New Value=%MAINDIR%\GRiNS_G2P.exe "%%1"
   end
 end
