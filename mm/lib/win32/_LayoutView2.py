@@ -692,6 +692,11 @@ class Viewport(win32window.Window, UserEventMng):
 		z = 0
 		transparent = attrdict.get('transparent')
 		bgcolor = attrdict.get('bgcolor')
+		if transparent == None:
+			if bgcolor != None:
+				transparent = 0
+			else:
+				transparent = 1
 		self.create(None, self._rc, units, z, transparent, bgcolor)
 
 		# adjust some variables
@@ -851,6 +856,11 @@ class Region(win32window.Window, UserEventMng):
 		z = attrdict.get('z')
 		transparent = attrdict.get('transparent')
 		bgcolor = attrdict.get('bgcolor')
+		if transparent == None:
+			if bgcolor != None:
+				transparent = 0
+			else:
+				transparent = 1
 		self.create(parent, self._rc, units, z, transparent, bgcolor)
 		
 		# disp list of this window
