@@ -4098,7 +4098,7 @@ class MediaGroup(FileGroup):
 	def oninitdialog(self,wnd):
 		# disable ctrl which make no sense for static medias.
 		# but even show if specified value from source since it's not an error in SMIL 2
-		if self.isStaticMedia(self._mtypesig):
+		if not self.canpreview() or self.isStaticMedia(self._mtypesig):
 			self.__clipbegin.enable(0)
 			self.__clipend.enable(0)
 		
