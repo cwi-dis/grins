@@ -434,16 +434,16 @@ class MMNode(MMNodeBase.MMNode):
 	#
 	# Check whether a node is the top of a mini-document
 	def IsMiniDocument(self):
-		if self.GetType() == 'bag':
+		if self.type == 'bag':
 			return 0
-		parent = self.GetParent()
-		return parent is None or parent.GetType() == 'bag'
+		parent = self.parent
+		return parent is None or parent.type == 'bag'
 
 	# Find the first mini-document in a tree
 	def FirstMiniDocument(self):
 		if self.IsMiniDocument():
 			return self
-		for child in self.GetChildren():
+		for child in self.children:
 			mini = child.FirstMiniDocument()
 			if mini is not None:
 				return mini
@@ -454,7 +454,7 @@ class MMNode(MMNodeBase.MMNode):
 		if self.IsMiniDocument():
 			return self
 		res = None
-		for child in self.GetChildren():
+		for child in self.children:
 			mini = child.LastMiniDocument()
 			if mini is not None:
 				res = mini
@@ -465,10 +465,10 @@ class MMNode(MMNodeBase.MMNode):
 	def NextMiniDocument(self):
 		node = self
 		while 1:
-			parent = node.GetParent()
+			parent = node.parent
 			if not parent:
 				break
-			siblings = parent.GetChildren()
+			siblings = parent.children
 			index = siblings.index(node) # Cannot fail
 			while index+1 < len(siblings):
 				index = index+1
@@ -483,10 +483,10 @@ class MMNode(MMNodeBase.MMNode):
 	def PrevMiniDocument(self):
 		node = self
 		while 1:
-			parent = node.GetParent()
+			parent = node.parent
 			if not parent:
 				break
-			siblings = parent.GetChildren()
+			siblings = parent.children
 			index = siblings.index(node) # Cannot fail
 			while index > 0:
 				index = index-1
