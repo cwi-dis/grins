@@ -611,6 +611,9 @@ class Scheduler(scheduler):
 		if self.runqueues[PRIO_LO]:
 			import windowinterface
 			windowinterface.lopristarting()
+			# That call may have called callbacks, so we have to check
+			# again
+		if self.runqueues[PRIO_LO]:
 			queue = [self.runqueues[PRIO_LO][0]]
 			del self.runqueues[PRIO_LO][0]
 			return queue
