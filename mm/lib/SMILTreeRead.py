@@ -261,14 +261,14 @@ class SMILParser(xmllib.XMLParser):
 				i = i + 1
 			channel = channel % i
 		node.__channel = channel
-		if mediatype in ('image', 'video'):
-			ch = self.__channels.get(channel)
-			if ch is None:
-				self.__channels[channel] = ch = \
+		ch = self.__channels.get(channel)
+		if ch is None:
+			self.__channels[channel] = ch = \
 					{'minwidth': 0, 'minheight': 0,
 					 'left': 0, 'top': 0,
 					 'width': 0, 'height': 0,
 					 'z-index': 0, 'scale': 'meet'}
+		if mediatype in ('image', 'video'):
 			x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
 			# if we don't know the channel size and
 			# position in pixels, we need to look at the
@@ -300,7 +300,11 @@ class SMILParser(xmllib.XMLParser):
 						height = track.GetImageHeight()
 						del movie, track
 				except:
-					pass
+					# want to make them at least visible...
+					if ch['width'] == 0:
+						ch['minwidth'] = 100
+					if ch['height'] == 0:
+						ch['minheight'] = 100
 				else:
 					node.__size = width, height
 					if ch['minwidth'] < width:
@@ -314,11 +318,12 @@ class SMILParser(xmllib.XMLParser):
 						h = ch['height']
 						if type(h) is type(0) and h < height:
 							ch['height'] = height
-		elif not self.__channels.has_key(channel):
-			self.__channels[channel] = {'left':0, 'top':0,
-						    'z-index':0, 'width':0,
-						    'height':0,
-						    'scale':'meet'}
+		elif mediatype == 'text':
+			# want to make them at least visible...
+			if ch['width'] == 0:
+				ch['minwidth'] = 200
+			if ch['height'] == 0:
+				ch['minheight'] = 100
 
 		# range attribute for video
 		range = attributes.get('range')
@@ -681,11 +686,18 @@ class SMILParser(xmllib.XMLParser):
 			self.syntax_error('layout in meta')
 		if self.__seen_layout and not self.__in_head_switch:
 			self.syntax_error('multiple layouts without switch')
-		self.__seen_layout = 1
 		if attributes['type'] == SMIL_BASIC:
-			self.__in_layout = LAYOUT_SMIL
+			if self.__seen_layout == LAYOUT_SMIL:
+				# if we've seen SMIL_BASIC already,
+				# ignore this one
+				self.__in_layout = LAYOUT_UNKNOWN
+			else:
+				self.__in_layout = LAYOUT_SMIL
+			self.__seen_layout = LAYOUT_SMIL
 		else:
 			self.__in_layout = LAYOUT_UNKNOWN
+			if self.__seen_layout != LAYOUT_SMIL:
+				self.__seen_layout = LAYOUT_UNKNOWN
 
 	def end_layout(self):
 		self.__in_layout = LAYOUT_NONE
@@ -1020,18 +1032,11 @@ class SMILParser(xmllib.XMLParser):
 		
 	__doctype = re.compile('SYSTEM' + xmllib._S + '(?P<dtd>[^ \t\r\n]+)' +
 			       xmllib._opS + '$')
-	def handle_doctype(self, tag, data):
+	def handle_doctype(self, tag, pubid, syslit, data):
 		if tag != 'smil':
 			self.error('not a SMIL document')
-		res = self.__doctype.match(data)
-		if not res:
+		if pubid is not None or syslit != SMILdtd or data:
 			self.syntax_error('invalid DOCTYPE')
-			return
-		dtd = res.group('dtd')
-		if dtd[0] not in '\'"' or dtd[0] != dtd[-1] or \
-		   dtd[1:-1] != SMILdtd:
-			self.syntax_error('invalid DOCTYPE')
-			return
 
 	def handle_proc(self, name, data):
 		self.warning('ignoring processing instruction %s' % name)
@@ -1040,10 +1045,10 @@ class SMILParser(xmllib.XMLParser):
 	def handle_cdata(self, data):
 		self.warning('ignoring CDATA')
 
-	# Example -- handle special instructions, could be overridden
-	def handle_special(self, data):
-		name = string.split(data)[0]
-		self.warning('ignoring <!%s> tag' % name)
+## 	# Example -- handle special instructions, could be overridden
+## 	def handle_special(self, data):
+## 		name = string.split(data)[0]
+## 		self.warning('ignoring <!%s> tag' % name)
 
 	# catch all
 
