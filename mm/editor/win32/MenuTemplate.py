@@ -3,8 +3,6 @@ __version__ = "$Id$"
 #
 # Command/menu mapping for the win32 GRiNS Editor
 #
-# (adapted from mac original)
-#
 
 """ @win32doc|MenuTemplate
 Contains the specification for player menu in the
@@ -49,11 +47,16 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_QT, ENTRY, 'Publish for &QuickTime...', None, EXPORT_QT),
 		(FLAG_QT, ENTRY, 'Pu&blish for QuickTime and upload...', None, UPLOAD_QT),
-		(FLAG_G2, ENTRY, 'Publish for &G2...', None, EXPORT_G2),
-		(FLAG_G2, ENTRY, 'Pu&blish for G2 and upload...', None, UPLOAD_G2),
-		(FLAG_SMIL_1_0, ENTRY, '&Publish...', None, EXPORT_SMIL),
-		(FLAG_SMIL_1_0, ENTRY, 'Pu&blish and upload...', None, UPLOAD_SMIL),
-		(FLAG_SMIL_1_0 | FLAG_QT | FLAG_G2, SEP,),
+		(FLAG_G2|FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for &G2...', None, EXPORT_G2),
+		(FLAG_G2|FLAG_PRO|FLAG_SNAP, ENTRY, 'Pu&blish for G2 and upload...', None, UPLOAD_G2),
+		# TODO: These should not appear on all versions of GRiNS!
+		(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for &Windows Media...', None, EXPORT_WMP), # mjvdg 11-oct-2000
+		(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for Windows Media and upload...', None, UPLOAD_WMP),
+		(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for Internet Explorer HTML+TIME...', None, EXPORT_HTML_TIME),
+		
+		(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, '&Publish for SMIL 2.0...', None, EXPORT_SMIL),
+		(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'Pu&blish for SMIL 2.0 and upload...', None, UPLOAD_SMIL),
+		(FLAG_SMIL_1_0 | FLAG_QT | FLAG_G2 | FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, '&Document Properties...', None, PROPERTIES),
 		(FLAG_DBG, SEP,),
 		(FLAG_DBG, CASCADE, 'D&ebug', (
@@ -62,6 +65,7 @@ MENUBAR=(
 			(FLAG_DBG, ENTRY, 'Enter &debugger', None, DEBUG),
 			(FLAG_DBG, ENTRY, '&Abort', None, CRASH),
 			(FLAG_DBG, TOGGLE, 'Show &log/debug window', None, CONSOLE),
+			(FLAG_DBG, TOGGLE, 'Toggle Scheduler.debugevents', None, SCHEDDEBUG),
 			)),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'C&heck for GRiNS update...', None, CHECKVERSION),
@@ -71,35 +75,53 @@ MENUBAR=(
 
 	('&Edit', (
 		(FLAG_ALL, ENTRY, '&Undo\tCtrl+Z', 'Z', UNDO),
+		(FLAG_ALL, ENTRY, '&Redo\tCtrl+Y', 'Y', REDO),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Cu&t\tCtrl+X', 'X', CUT),
 		(FLAG_ALL, ENTRY, '&Copy\tCtrl+C', 'C', COPY),
-		(FLAG_ALL, ENTRY, '&Paste\tCtrl+V', 'V', PASTE),
-		(FLAG_ALL, CASCADE, 'P&aste special', (
-			(FLAG_ALL, ENTRY, '&Before', None, PASTE_BEFORE),
-##			(FLAG_ALL, ENTRY, '&After', None, PASTE_AFTER),
-			(FLAG_ALL, ENTRY, '&Within', None, PASTE_UNDER),
+		(FLAG_ALL, ENTRY, '&Paste\tCtrl+V', 'V', PASTE_AFTER),
+		(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, CASCADE, 'P&aste special', (
+			(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, ENTRY, '&Before', None, PASTE_BEFORE),
+			(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, ENTRY, '&Within', None, PASTE_UNDER),
+			(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, ENTRY, '&After', None, PASTE_AFTER),
 			)),
 		(FLAG_ALL, ENTRY, '&Delete\tCtrl+Del', None, DELETE),
 		(FLAG_ALL, SEP,),
+		(FLAG_ALL, CASCADE, '&Align', (
+			(FLAG_ALL, ENTRY, '&Left', 'L', ALIGN_LEFT),
+			(FLAG_ALL, ENTRY, '&Center', 'C', ALIGN_CENTER),
+			(FLAG_ALL, ENTRY, '&Right', 'R', ALIGN_RIGHT),
+			(FLAG_ALL, SEP,),
+			(FLAG_ALL, ENTRY, '&Top', 'T', ALIGN_TOP),
+			(FLAG_ALL, ENTRY, '&Middle', 'M', ALIGN_MIDDLE),
+			(FLAG_ALL, ENTRY, '&Bottom', 'B', ALIGN_BOTTOM),
+			)),
+		(FLAG_ALL, CASCADE, '&Distribute', (
+			(FLAG_ALL, ENTRY, '&Horizontally', 'H', DISTRIBUTE_HORIZONTALLY),
+			(FLAG_ALL, ENTRY, '&Vertically', 'V', DISTRIBUTE_VERTICALLY),
+			)),
+		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, '&New node...', None, NEW_AFTER),
-		(FLAG_PRO, ENTRY, 'New c&hannel', None, NEW_CHANNEL),
+		(FLAG_PRO, ENTRY, 'New &Region', None, NEW_REGION),
+		(FLAG_BOSTON, ENTRY, 'New &TopLayout', 'T', NEW_TOPLAYOUT),
 
-## Windows dialogs apparently don't use usercmd commands.
+## Windows dialogs apparently do not use usercmd commands.
 ##		(FLAG_PRO, ENTRY, 'New &layout', None, NEW_LAYOUT),
 		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, '&Move channel', None, MOVE_CHANNEL),
-		(FLAG_PRO, ENTRY, 'C&opy channel', None, COPY_CHANNEL),
+		(FLAG_PRO, ENTRY, '&Move region', None, MOVE_REGION),
+		(FLAG_PRO, ENTRY, 'C&opy region', None, COPY_REGION),
 		(FLAG_CMIF, ENTRY, 'To&ggle channel state', None, TOGGLE_ONOFF),
 ##		(FLAG_PRO, ENTRY, 'Edit Source...', None, EDITSOURCE),
 		(FLAG_PRO, SEP,),
 ##		(FLAG_PRO, ENTRY, '&Info...', 'I', INFO),
 		(FLAG_ALL, ENTRY, 'Propertie&s...', 'A', ATTRIBUTES),
 		(FLAG_ALL, ENTRY, '&Edit Content...', 'E', CONTENT),
+		(FLAG_PRO, ENTRY, 'Con&vert to SMIL 2.0', None, RPCONVERT),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Pre&ferences...', None, PREFERENCES),
 		)),
 
+	# this whole section removed in Snap! below
 	('&Insert', (
 		(FLAG_ALL, CASCADE, '&Image node', (
 			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_IMAGE),
@@ -131,6 +153,16 @@ MENUBAR=(
 			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_VIDEO),
 			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_VIDEO),
 		)),
+		(FLAG_ALL, CASCADE, 'SVG node', (
+			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SVG),
+			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SVG),
+			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_SVG),
+		)),
+		(FLAG_ALL, CASCADE, 'Animation node', (
+			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATION),
+			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATION),
+			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATION),
+		)),
 		(FLAG_ALL, CASCADE, '&Parallel node', (
 			(FLAG_ALL, ENTRY, '&Parent', None, NEW_PAR),
 			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_PAR),
@@ -144,16 +176,10 @@ MENUBAR=(
 			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_SEQ),
 		)),
 		(FLAG_ALL, CASCADE, 'S&witch node', (
-			(FLAG_ALL, ENTRY, '&Parent', None, NEW_ALT),
-			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ALT),
-			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ALT),
-			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ALT),
-		)),
-		(FLAG_CMIF, CASCADE, '&Choice node', (
-			(FLAG_CMIF, ENTRY, '&Parent', None, NEW_CHOICE),
-			(FLAG_CMIF, ENTRY, '&Before', None, NEW_BEFORE_CHOICE),
-			(FLAG_CMIF, ENTRY, '&After', None, NEW_AFTER_CHOICE),
-			(FLAG_CMIF, ENTRY, '&Within', None, NEW_UNDER_CHOICE),
+			(FLAG_ALL, ENTRY, '&Parent', None, NEW_SWITCH),
+			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SWITCH),
+			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SWITCH),
+			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_SWITCH),
 		)),
 		(FLAG_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
 		(FLAG_PRO, ENTRY, '&Within...', None, NEW_UNDER),
@@ -165,8 +191,8 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Play &node', None, PLAYNODE),
 		(FLAG_ALL, ENTRY, 'Play &from node', None, PLAYFROM),
-		(FLAG_CMIF, SEP,),
-		(FLAG_CMIF, DYNAMICCASCADE, 'User &groups', USERGROUPS),
+		(FLAG_BOSTON|FLAG_CMIF|FLAG_SNAP, SEP,),
+		(FLAG_BOSTON|FLAG_SNAP, DYNAMICCASCADE, 'Custom &tests', USERGROUPS),
 		(FLAG_CMIF, DYNAMICCASCADE, 'Visible &channels', CHANNELS),
 		)),
 
@@ -187,8 +213,6 @@ MENUBAR=(
 		(FLAG_PRO, SEP,),
 		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_WIDTH),
 		(FLAG_PRO, ENTRY, '&Fit in Window', None, CANVAS_RESET),
-		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, '&Synchronize selection', None, PUSHFOCUS),
 		(FLAG_ALL, SEP,),
 		(FLAG_PRO, TOGGLE, 'Show/Hide unused c&hannels', None, TOGGLE_UNUSED),
 		(FLAG_PRO, TOGGLE, 'Sync &arcs', None, TOGGLE_ARCS),
@@ -196,22 +220,24 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Check bandwidth &usage', None, COMPUTE_BANDWIDTH),
 		(FLAG_PRO, TOGGLE, '&Bandwidth usage strip', None, TOGGLE_BWSTRIP),
 		(FLAG_PRO, TOGGLE, 'Show &Playable', None, PLAYABLE),
-##		(FLAG_PRO, TOGGLE, 'Show &Durations', None, TIMESCALE),
+		(FLAG_ALL, CASCADE, 'Sho&w Time in Structure', (
+			(FLAG_ALL, TOGGLE, '&Whole Document, Adaptive', None, TIMESCALE),
+			(FLAG_ALL, TOGGLE, '&Selection Only, Adaptive', None, LOCALTIMESCALE),
+			(FLAG_ALL, TOGGLE, 'Selection Only, &Fixed', None, CORRECTLOCALTIMESCALE),
+			)),
 		(FLAG_CMIF, SEP,),
 		(FLAG_CMIF, TOGGLE, '&Timeline view follows player', None, SYNCCV),
-		(FLAG_CMIF, CASCADE, '&Minidoc navigation', (
-			(FLAG_CMIF, ENTRY, '&Next', None, NEXT_MINIDOC),
-			(FLAG_CMIF, ENTRY, '&Previous', None, PREV_MINIDOC),
-			(FLAG_CMIF, DYNAMICCASCADE, '&Ancestors', ANCESTORS),
-			(FLAG_CMIF, DYNAMICCASCADE, '&Descendants', DESCENDANTS),
-			(FLAG_CMIF, DYNAMICCASCADE, '&Siblings', SIBLINGS),
-			)),
 ##		(FLAG_ALL, DYNAMICCASCADE, '&Layout navigation', LAYOUTS),
-		)),
-
-##	('&View', (
-##		)),
-
+		(FLAG_ALL, TOGGLE, 'Show A&ll Properties', None, SHOWALLPROPERTIES),
+		(FLAG_ALL, SEP),
+		(FLAG_ALL, CASCADE, 'T&oolbars', (
+			(FLAG_ALL, ENTRY, '&General', None, TOOLBAR_GENERAL),
+			(FLAG_ALL, ENTRY, '&Player Controls', None, TOOLBAR_PLAYER),
+			(FLAG_ALL, ENTRY, '&Region alignment', None, TOOLBAR_ALIGNMENT),
+			)),
+		)
+	 ),
+ 
 	('&Window', (
 		(FLAG_ALL, ENTRY, 'Cl&ose\tCtrl+W', 'W', CLOSE_ACTIVE_WINDOW),
 		(FLAG_ALL, SEP,),
@@ -222,13 +248,16 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, '&Player\tF5', '1', PLAYERVIEW),
 ##		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Structure view\tF6', '3', HIERARCHYVIEW),
-		(FLAG_PRO, ENTRY, '&Timeline view\tF7', '4', CHANNELVIEW),
-		(FLAG_PRO, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW),
+		(FLAG_ALL, ENTRY, '&Timeline view\tF7', '4', CHANNELVIEW),
+		(FLAG_PRO|FLAG_SNAP, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW2),
+##		(FLAG_PRO, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW),
+#		(FLAG_ALL, ENTRY, 'Temporal view', '8', TEMPORALVIEW),
 ##		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, 'H&yperlinks', '5', LINKVIEW),
-		(FLAG_CMIF, ENTRY, 'User &groups', '6', USERGROUPVIEW),
+		(FLAG_BOSTON, ENTRY, 'C&ustom tests', '6', USERGROUPVIEW),
+		(FLAG_BOSTON, ENTRY, 'T&ransitions', None, TRANSITIONVIEW),
 ##		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Sourc&e', '7', SOURCE),
+		(FLAG_ALL, ENTRY, 'SMIL Sourc&e...', '7', SOURCEVIEW),
 		)),
 
 	('&Help', (
@@ -238,25 +267,33 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Quick Start Guide', None, GRINS_QSG),
-		(FLAG_ALL, ENTRY, '&Tutorial', None, GRINS_TUTORIAL),
+		(FLAG_ALL, ENTRY, '&Tutorial', None, GRINS_TUTORIAL),#		(FLAG_ALL, ENTRY, 'Paste &before', None, PASTE_BEFORE),
+#		(FLAG_ALL, ENTRY, 'Paste &in
+
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 
 NODOC_MENUBAR=(MENUBAR[0],MENUBAR[7])
+if curflags() & FLAG_SNAP:
+	# remove Insert menu in Snap! version
+	MENUBAR = MENUBAR[:2] + MENUBAR[3:]
 
 #
 # Popup menus for various states
 #
+
 POPUP_HVIEW_LEAF = (
 		# XXXX Need to add the "new xxx node" commands for the
 		# light version
 		(FLAG_PRO, ENTRY, '&New node...', None, NEW_AFTER),
 		(FLAG_PRO, ENTRY, 'New node &before...', None, NEW_BEFORE),
+		(FLAG_PRO, ENTRY, 'Con&vert to SMIL 2.0', None, RPCONVERT),
 		(FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
 		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
-		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_AFTER),
+###		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_UNDER),
 		(FLAG_ALL, ENTRY, 'Paste bef&ore', None, PASTE_BEFORE),
+		(FLAG_ALL, ENTRY, 'Paste a&fter', None, PASTE_AFTER),
 		(FLAG_ALL, ENTRY, 'Pa&ste file', None, PASTE_FILE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
@@ -285,6 +322,15 @@ POPUP_HVIEW_LEAF = (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_VIDEO),
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_VIDEO),
 				)),
+			(FLAG_ALL, CASCADE, 'SVG node', (
+				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SVG),
+				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SVG),
+				)),
+			(FLAG_ALL, CASCADE, 'Animation node', (
+				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATION),
+				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATION),
+				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATION),
+				)),
 			(FLAG_ALL, CASCADE, '&Parallel node', (
 				(FLAG_ALL, ENTRY, '&Parent', None, NEW_PAR),
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_PAR),
@@ -296,20 +342,18 @@ POPUP_HVIEW_LEAF = (
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SEQ),
 				)),
 			(FLAG_ALL, CASCADE, 'S&witch node', (
-				(FLAG_ALL, ENTRY, '&Parent', None, NEW_ALT),
-				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ALT),
-				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ALT),
-				)),
-			(FLAG_CMIF, CASCADE, '&Choice node', (
-				(FLAG_CMIF, ENTRY, '&Parent', None, NEW_CHOICE),
-				(FLAG_CMIF, ENTRY, '&Before', None, NEW_BEFORE_CHOICE),
-				(FLAG_CMIF, ENTRY, '&After', None, NEW_AFTER_CHOICE),
+				(FLAG_ALL, ENTRY, '&Parent', None, NEW_SWITCH),
+				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SWITCH),
+				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SWITCH),
 				)),
 			(FLAG_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
 			)),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'P&lay node', None, PLAYNODE),
 		(FLAG_ALL, ENTRY, 'Play &from node', None, PLAYFROM),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Event source', None, CREATE_BEGIN_EVENT_SOURCE),
+		(FLAG_ALL, ENTRY, 'Event destination', None, CREATE_BEGIN_EVENT_DESTINATION),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Create &whole node anchor', None, CREATEANCHOR),
 		(FLAG_ALL, ENTRY, 'Finish &hyperlink to selection', None, FINISH_LINK),
@@ -319,6 +363,14 @@ POPUP_HVIEW_LEAF = (
 ##		(FLAG_PRO, ENTRY, '&Anchors...', None, ANCHORS),
 		(FLAG_ALL, ENTRY, '&Edit content', None, CONTENT),
 )
+
+POPUP_HVIEW_NONE = (
+	(FLAG_ALL, ENTRY, '&New node...', None, NEW_AFTER)
+	)
+
+POPUP_HVIEW_TRANS = (
+		(FLAG_ALL, DYNAMICCASCADE, '&Transition', TRANSITION),
+		)
 
 POPUP_HVIEW_SLIDE = (
 		# XXXX Need to add the "new xxx node" commands for the
@@ -348,13 +400,14 @@ POPUP_HVIEW_STRUCTURE = (
 		(FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
 		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
-		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_AFTER),
-		(FLAG_ALL, CASCADE, 'Paste &special', (
-			(FLAG_ALL, ENTRY, '&Before', None, PASTE_BEFORE),
-			(FLAG_ALL, ENTRY, '&Within', None, PASTE_UNDER),
-			)),
+		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_UNDER),
+#		(FLAG_ALL, CASCADE, 'Paste &special', (
+#			(FLAG_ALL, ENTRY, '&Before', None, PASTE_BEFORE),
+#			(FLAG_ALL, ENTRY, '&Within', None, PASTE_UNDER),
+#			)),
 		(FLAG_ALL, ENTRY, 'Paste &file', None, PASTE_FILE),
 		(FLAG_ALL, SEP,),
+#		(FLAG_PRO, ENTRY, 'Edit in Temporal view', None, EDIT_TVIEW),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
 		(FLAG_ALL, CASCADE, '&Insert', (
 			(FLAG_ALL, CASCADE, '&Image node', (
@@ -387,6 +440,16 @@ POPUP_HVIEW_STRUCTURE = (
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_VIDEO),
 				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_VIDEO),
 				)),
+			(FLAG_ALL, CASCADE, 'Animation node', (
+				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATION),
+				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATION),
+				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATION),
+				)),
+			(FLAG_ALL, CASCADE, 'SVG node', (
+				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SVG),
+				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SVG),
+				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_SVG),
+				)),
 			(FLAG_ALL, CASCADE, '&Parallel node', (
 				(FLAG_ALL, ENTRY, '&Parent', None, NEW_PAR),
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_PAR),
@@ -400,16 +463,10 @@ POPUP_HVIEW_STRUCTURE = (
 				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_SEQ),
 				)),
 			(FLAG_ALL, CASCADE, 'S&witch node', (
-				(FLAG_ALL, ENTRY, '&Parent', None, NEW_ALT),
-				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ALT),
-				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ALT),
-				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ALT),
-				)),
-			(FLAG_CMIF, CASCADE, '&Choice node', (
-				(FLAG_CMIF, ENTRY, '&Parent', None, NEW_CHOICE),
-				(FLAG_CMIF, ENTRY, '&Before', None, NEW_BEFORE_CHOICE),
-				(FLAG_CMIF, ENTRY, '&After', None, NEW_AFTER_CHOICE),
-				(FLAG_CMIF, ENTRY, '&Within', None, NEW_UNDER_CHOICE),
+				(FLAG_ALL, ENTRY, '&Parent', None, NEW_SWITCH),
+				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SWITCH),
+				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SWITCH),
+				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_SWITCH),
 				)),
 			(FLAG_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
 			(FLAG_PRO, ENTRY, '&Within...', None, NEW_UNDER),
@@ -422,6 +479,9 @@ POPUP_HVIEW_STRUCTURE = (
 		(FLAG_ALL, ENTRY, 'E&xpand all', None, EXPANDALL),
 		(FLAG_ALL, ENTRY, 'C&ollapse all', None, COLLAPSEALL),
 		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Event &source', None, CREATE_BEGIN_EVENT_SOURCE),
+		(FLAG_ALL, ENTRY, 'Event destination', None, CREATE_BEGIN_EVENT_DESTINATION),
+		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Finish hyperlin&k to selection', None, FINISH_LINK),
 		(FLAG_ALL, SEP,),
 ##		(FLAG_PRO, ENTRY, '&Info...', None, INFO),
@@ -429,8 +489,19 @@ POPUP_HVIEW_STRUCTURE = (
 ##		(FLAG_PRO, ENTRY, '&Anchors...', None, ANCHORS),
 )
 
+POPUP_MULTI = (
+		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
+		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Event &source', None, CREATE_BEGIN_EVENT_SOURCE),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
+)
+
 POPUP_CVIEW_NONE = (
-		(FLAG_ALL, ENTRY, '&New channel', 'M', NEW_CHANNEL),
+		(FLAG_ALL, ENTRY, '&New region', 'M', NEW_REGION),
 )
 
 POPUP_CVIEW_BWSTRIP = (
@@ -444,10 +515,11 @@ POPUP_CVIEW_BWSTRIP = (
 		)
 
 POPUP_CVIEW_CHANNEL = (
+		(FLAG_PRO, ENTRY, '&New', None, NEW_REGION),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
 		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, '&Move channel', None, MOVE_CHANNEL),
-		(FLAG_ALL, ENTRY, '&Copy channel', None, COPY_CHANNEL),
+		(FLAG_ALL, ENTRY, '&Move region', None, MOVE_REGION),
+		(FLAG_ALL, ENTRY, '&Copy region', None, COPY_REGION),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Properties...', None, ATTRIBUTES),
 
@@ -471,6 +543,50 @@ POPUP_CVIEW_SYNCARC = (
 		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
 		(FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
+)
+
+POPUP_EVENT_DEST = (
+	(FLAG_ALL, ENTRY, 'Find event source', None, FIND_EVENT_SOURCE),
+#	(FLAG_ALL, ENTRY, 'Remove event', None, REMOVE_EVENT), # This points to many events..
+	(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
+	)
+
+POPUP_EVENT_SOURCE = (
+	(FLAG_ALL, ENTRY, 'Find event destination', None, FIND_EVENT_SOURCE),
+#	(FLAG_ALL, ENTRY, 'Remove event', None, CRASH),
+#	(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
+	)
+
+POPUP_REGIONTREE_REGION = (
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+		(FLAG_PRO, SEP,),
+		(FLAG_ALL, ENTRY, 'Set background color...', None, ATTRIBUTES_BACKGROUND),
+		(FLAG_ALL, ENTRY, 'Set z-order...', None, ATTRIBUTES_ZORDER),
+)
+POPUP_REGIONTREE_SUBREGION = (
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+		(FLAG_PRO, SEP,),
+		(FLAG_ALL, ENTRY, 'Create anchor...', None, ATTRIBUTES_ANCHORS),
+		(FLAG_ALL, ENTRY, 'Set background color...', None, ATTRIBUTES_BACKGROUND),
+)
+
+POPUP_REGIONPREVIEW_REGION = (
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+		(FLAG_PRO, SEP,),
+		(FLAG_ALL, ENTRY, 'Set background color...', None, ATTRIBUTES_BACKGROUND),
+		(FLAG_ALL, ENTRY, 'Set z-order...', None, ATTRIBUTES_ZORDER),
+		(FLAG_PRO, SEP,),
+		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_ZOOM_IN),
+		(FLAG_PRO, ENTRY, '&Zoom out', None, CANVAS_ZOOM_OUT),
+)
+POPUP_REGIONPREVIEW_SUBREGION = (
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+		(FLAG_PRO, SEP,),
+		(FLAG_ALL, ENTRY, 'Create anchor...', None, ATTRIBUTES_ANCHORS),
+		(FLAG_ALL, ENTRY, 'Set background color...', None, ATTRIBUTES_BACKGROUND),
+		(FLAG_PRO, SEP,),
+		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_ZOOM_IN),
+		(FLAG_PRO, ENTRY, '&Zoom out', None, CANVAS_ZOOM_OUT),
 )
 
 MAIN_FRAME_POPUP = (

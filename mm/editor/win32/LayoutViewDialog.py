@@ -172,3 +172,4 @@ class LayoutViewDialog:
 		#	before we're out of that mode, so we must schedule a
 		#	callback in the very near future.
 		#	windowinterface.settimer(0.00001, (self.newchannel_callback, (name, type)))
+
