@@ -8,6 +8,8 @@ from MMNode import alltypes, leaftypes, interiortypes
 import MMCache
 import MMAttrdefs
 import Hlinks
+import ChannelMap
+import colors
 from AnchorDefs import *
 import features
 import compatibility
@@ -34,6 +36,7 @@ NSQTprefix = 'qt'
 SMILdecl = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
 EVALcomment = '<!-- Created with an evaluation copy of GRiNS -->\n'
 doctype = '<!DOCTYPE smil PUBLIC "%s"\n%s"%s">\n' % (SMILpubid,' '*22,SMILdtd)
+doctype2 = '<!DOCTYPE smil PUBLIC "%s"\n%s"%s">\n' % (SMILBostonPubid,' '*22,SMILBostonDtd)
 xmlnsGRiNS = 'xmlns:%s' % NSGRiNSprefix
 xmlnsQT = 'xmlns:%s' % NSQTprefix
 
@@ -223,6 +226,8 @@ def getsrc(writer, node):
 			node.DelAttr('file')
 			return 'data:image/vnd.rn-realpix;base64,' + \
 			       string.join(string.split(base64.encodestring(data), '\n'), '')
+##			return 'data:image/vnd.rn-realpix;charset=ISO-8859-1,' + \
+##			       MMurl.quote(data)
 		if not val:
 			val = writer.gen_rpfile()
 			do_write = 1
@@ -356,8 +361,8 @@ def getchname(writer, node):
 		return None
 	return writer.ch2name[ch]
 
-def getduration(writer, node):
-	duration = MMAttrdefs.getattr(node, 'duration')
+def getduration(writer, node, attr = 'duration'):
+	duration = MMAttrdefs.getattr(node, attr)
 	if not duration:		# 0 or None
 		return None
 	if duration < 0:		# infinite duration...
@@ -455,12 +460,12 @@ def getsyncarc(writer, node, isend):
 	index = siblings.index(node)
 	if srcside == 0 and \
 	   (srcuid == parent.GetUID() and
-	    (ptype == 'par' or (ptype == 'seq' and index == 0))) or \
+	    (ptype == 'par' or (ptype == 'seq' and index == 0) or ptype == 'excl')) or \
 	   (srcside and ptype == 'seq' and index > 0 and
 	    srcuid == siblings[index-1].GetUID()):
 		# sync arc from parent/previous node
 		rv = '%.3fs' % delay
-	else:
+	elif srcside == 1:
 		srcname = writer.uid2name[srcuid]
 		rv = 'id(%s)'%srcname
 		if srcside:
@@ -480,9 +485,16 @@ def getsyncarc(writer, node, isend):
 			# out of scope
 			rv = fixsyncarc(writer, node, srcuid, srcside,
 					delay, dstside, rv)
+	else:
+		print '** Unimplemented SMIL-Boston sync arc', \
+		      node.GetRawAttrDef('name', '<unnamed>'),\
+		      node.GetUID()
+		return
 	return rv
 
 def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
+	if writer.smilboston:
+		return rv
 	if dstside != 0 or srcside != 0:
 		print '** Out of scope syncarc to',\
 		      node.GetRawAttrDef('name', '<unnamed>'),\
@@ -494,7 +506,7 @@ def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
 	while x is not a:
 		p = x.GetParent()
 		t = p.GetType()
-		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)):
+		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)) and t != 'excl':
 			print '** Out of scope syncarc to',\
 			      node.GetRawAttrDef('name', '<unnamed>'),\
 			      node.GetUID()
@@ -511,7 +523,7 @@ def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
 	while x is not a:
 		p = x.GetParent()
 		t = p.GetType()
-		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)):
+		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)) and t != 'excl':
 			print '** Out of scope syncarc to',\
 			      node.GetRawAttrDef('name', '<unnamed>'),\
 			      node.GetUID()
@@ -543,10 +555,10 @@ def getterm(writer, node):
 	      node.GetUID()
 
 def getrepeat(writer, node):
-	value = MMAttrdefs.getattr(node, 'loop')
-	if value == 1:
+	value = node.GetAttrDef('loop', None)
+	if value is None:
 		return
-	elif value == 0:
+	if value == 0:
 		return 'indefinite'
 	else:
 		return `value`
@@ -615,16 +627,26 @@ smil_attrs=[
 	("clip-begin", lambda writer, node: getcmifattr(writer, node, 'clipbegin')),
 	("clip-end", lambda writer, node: getcmifattr(writer, node, 'clipend')),
 	("endsync", getterm),
-	("repeat", lambda writer, node:getrepeat(writer, node)),
-	("system-bitrate", lambda writer, node:getrawcmifattr(writer, node, "system_bitrate")),
-	("system-captions", getcaptions),
-	("system-language", lambda writer, node:getrawcmifattr(writer, node, "system_language")),
-	("system-overdub-or-caption", lambda writer, node:getrawcmifattr(writer, node, "system_overdub_or_caption")),
-	("system-required", lambda writer, node:getrawcmifattr(writer, node, "system_required")),
-	("system-screen-size", getscreensize),
-	("system-screen-depth", lambda writer, node:getrawcmifattr(writer, node, "system_screen_depth")),
+	("repeat", lambda writer, node:(not writer.smilboston and getrepeat(writer, node)) or None),
+	("repeatCount", lambda writer, node:(writer.smilboston and getrepeat(writer, node)) or None),
+	("repeatDur", lambda writer, node:getduration(writer, node, "repeatdur")),
+	("system-bitrate", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_bitrate")) or None),
+	("system-captions", lambda writer, node:(not writer.smilboston and getcaptions(writer, node)) or None),
+	("system-language", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_language")) or None),
+	("system-overdub-or-caption", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_overdub_or_caption")) or None),
+	("system-required", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_required")) or None),
+	("system-screen-size", lambda writer, node:(not writer.smilboston and getscreensize(writer, node)) or None),
+	("system-screen-depth", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_screen_depth")) or None),
+	("systemBitrate", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_bitrate")) or None),
+	("systemCaptions", lambda writer, node:(writer.smilboston and getcaptions(writer, node)) or None),
+	("systemLanguage", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_language")) or None),
+	("systemOverdubOrCaption", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_overdub_or_caption")) or None),
+	("systemOverdubOrSubtitle", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_overdub_or_subtitle")) or None),
+	("systemRequired", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_required")) or None),
+	("systemScreenSize", lambda writer, node:(writer.smilboston and getscreensize(writer, node)) or None),
+	("systemScreenDepth", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_screen_depth")) or None),
 	("choice-index", getbagindex),
-	("u-group", getugroup),
+	("uGroup", getugroup),
 	("layout", getlayout),
 ]
 
@@ -634,7 +656,8 @@ cmif_node_attrs_ignore = {
 	'arm_duration':0, 'styledict':0, 'name':0, 'bag_index':0,
 	'anchorlist':0, 'channel':0, 'file':0, 'duration':0,
 	'system_bitrate':0, 'system_captions':0, 'system_language':0,
-	'system_overdub_or_caption':0, 'system_required':0,
+	'system_overdub_or_caption':0, 'system_overdub_or_subtitle':0,
+	'system_required':0,
 	'system_screen_size':0, 'system_screen_depth':0, 'layout':0,
 	'clipbegin':0, 'clipend':0, 'u_group':0, 'loop':0, 'synctolist':0,
 	'author':0, 'copyright':0, 'abstract':0, 'alt':0, 'longdesc':0,
@@ -669,8 +692,8 @@ smil_mediatype={
 	'midi':'audio',
 	'null':'ref',
 	'RealAudio':'audio',
-	'RealPix':'img',
-	'RealText':'text',
+	'RealPix':'animation',
+	'RealText':'textstream',
 	'RealVideo':'video',
 	'unknown': 'ref',
 }
@@ -737,7 +760,7 @@ class SMILWriter(SMIL):
 		self.__cleanSMIL = cleanSMIL
 		self.uses_grins_namespace = not cleanSMIL and grinsExt
 		self.uses_qt_namespace = features.compatibility == features.QT and not cleanSMIL
-
+		self.smilboston = ctx.attributes.get('project_boston', 0)
 		self.root = node
 		self.fp = fp
 		self.__title = ctx.gettitle()
@@ -752,6 +775,7 @@ class SMILWriter(SMIL):
 
 		self.ch2name = {}
 		self.top_levels = []
+		self.__subchans = {}
 		self.calcchnames1(node)
 
 		self.uid2name = {}
@@ -767,8 +791,7 @@ class SMILWriter(SMIL):
 		self.calcanames(node)
 
 		if len(self.top_levels) > 1:
-			print '** Document uses multiple toplevel channels'
-			self.uses_grins_extension = 1
+			self.smilboston = 1
 
 		self.syncidscheck(node)
 
@@ -883,7 +906,10 @@ class SMILWriter(SMIL):
 		if self.evallicense:
 			fp.write(EVALcomment)
 		if self.__cleanSMIL:
-			fp.write(doctype)
+			if self.smilboston:
+				fp.write(doctype2)
+			else:
+				fp.write(doctype)
 		attrlist = []
 		if self.uses_grins_namespace:
 			attrlist.append((xmlnsGRiNS, GRiNSns))
@@ -921,6 +947,11 @@ class SMILWriter(SMIL):
 				continue
 			if self.__cleanSMIL and key[:8] == 'project_':
 				continue
+			if key == 'project_boston':
+				if val:
+					val = 'on'
+				else:
+					val = 'off'
 			self.writetag('meta', [('name', key),
 					       ('content', val)])
 		if not self.__cleanSMIL and ctx.externalanchors:
@@ -944,7 +975,7 @@ class SMILWriter(SMIL):
 		usergroups = node.GetContext().usergroups
 		if not usergroups:
 			return
-		self.uses_grins_namespaces = 1
+		self.smilboston = 1
 		for ugroup in usergroups.keys():
 			name = identify(ugroup)
 			if self.ids_used.has_key(name):
@@ -1023,12 +1054,19 @@ class SMILWriter(SMIL):
 			if not self.ids_used.has_key(name):
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
+			if ch.has_key('base_window'):
+				pch = ch['base_window']
+				if not self.__subchans.has_key(pch):
+					self.__subchans[pch] = []
+				self.__subchans[pch].append(ch)
 			if not ch.has_key('base_window') and \
 			   ch['type'] not in ('sound', 'shell', 'python',
 					      'null', 'vcr', 'socket', 'cmif',
 					      'midi', 'external'):
 				# top-level channel with window
 				self.top_levels.append(ch)
+				if not self.__subchans.has_key(ch.name):
+					self.__subchans[ch.name] = []
 				if not self.__title:
 					self.__title = ch.name
 			# also check if we need to use the CMIF extension
@@ -1044,6 +1082,10 @@ class SMILWriter(SMIL):
 		"""Calculate unique names for channels; second pass"""
 		context = node.GetContext()
 		channels = context.channels
+		if self.top_levels:
+			top0 = self.top_levels[0].name
+		else:
+			top0 = None
 		for ch in channels:
 			if not self.ch2name.has_key(ch):
 				name = identify(ch.name)
@@ -1055,6 +1097,14 @@ class SMILWriter(SMIL):
 				name = nn
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
+			if not ch.has_key('base_window') and \
+			   ch['type'] in ('sound', 'shell', 'python',
+					  'null', 'vcr', 'socket', 'cmif',
+					  'midi', 'external') and top0:
+				self.__subchans[top0].append(ch)
+			if not ch in self.top_levels and \
+			   self.__subchans.get(ch.name):
+				self.smilboston = 1
 
 	def calcanames(self, node):
 		"""Calculate unique names for anchors"""
@@ -1093,13 +1143,14 @@ class SMILWriter(SMIL):
 
 	def writelayout(self):
 		"""Write the layout section"""
-		compatibility = features.compatibility
-		self.writetag('layout') # default: type="text/smil-basic-layout"
+		attrlist = []
+		if self.smilboston:
+			attrlist.append(('type', SMIL_EXTENDED))
+		self.writetag('layout', attrlist)
 		self.push()
 		channels = self.root.GetContext().channels
-		if len(self.top_levels) == 1:
+		for ch in self.top_levels:
 			attrlist = []
-			ch = self.top_levels[0]
 			if ch['type'] == 'layout':
 				attrlist.append(('id', self.ch2name[ch]))
 			title = ch.get('title')
@@ -1107,14 +1158,20 @@ class SMILWriter(SMIL):
 				attrlist.append(('title', title))
 			elif self.ch2name[ch] != ch.name:
 				attrlist.append(('title', ch.name))
-			if ch.get('transparent', 0) == 1:
-				# background-color="transparent" is default
-				pass
-			elif ch.has_key('bgcolor'):
+			if ch.has_key('bgcolor'):
 				bgcolor = ch['bgcolor']
-				if compatibility != features.G2 or \
-				   bgcolor != (0,0,0):
-					attrlist.append(('background-color', '#%02x%02x%02x' % bgcolor))
+			elif features.compatibility == features.G2:
+				bgcolor = 0,0,0
+			else:
+				bgcolor = 255,255,255
+			if colors.rcolors.has_key(bgcolor):
+				bgcolor = colors.rcolors[bgcolor]
+			else:
+				bgcolor = '#%02x%02x%02x' % bgcolor
+			if self.smilboston:
+				attrlist.append(('backgroundColor', bgcolor))
+			else:
+				attrlist.append(('background-color', bgcolor))
 			if ch.has_key('winsize'):
 				units = ch.get('units', 0)
 				w, h = ch['winsize']
@@ -1130,142 +1187,153 @@ class SMILWriter(SMIL):
 				else:
 					attrlist.append(('width', '%d' % int(w + .5)))
 					attrlist.append(('height', '%d' % int(h + .5)))
-			self.writetag('root-layout', attrlist)
-		for ch in channels:
-			mtype, xtype = mediatype(ch['type'], error=1)
-			isvisual = mtype in ('img', 'video', 'text')
-			if len(self.top_levels) == 1 and \
-			   ch['type'] == 'layout' and \
-			   not ch.has_key('base_window'):
-				# top-level layout channel has been handled
-				continue
-			attrlist = [('id', self.ch2name[ch])]
-			title = ch.get('title')
-			if title:
-				attrlist.append(('title', title))
-			elif self.ch2name[ch] != ch.name:
-				attrlist.append(('title', ch.name))
-			# if toplevel window, define a region elt, but
-			# don't define coordinates (i.e., use defaults)
-			if ch.has_key('base_window') and \
-			   ch.has_key('base_winoff'):
-				x, y, w, h = ch['base_winoff']
-				units = ch.get('units', 2)
-				if units == 0:		# UNIT_MM
-					# convert mm to pixels (assuming 100 dpi)
-					x = int(x / 25.4 * 100 + .5)
-					y = int(y / 25.4 * 100 + .5)
-					w = int(w / 25.4 * 100 + .5)
-					h = int(h / 25.4 * 100 + .5)
-				elif units == 1:	# UNIT_SCREEN
-					if x+w >= 1.0: w = 0
-					if y+h >= 1.0: h = 0
-				elif units == 2:	# UNIT_PXL
-					x = int(x)
-					y = int(y)
-					w = int(w)
-					h = int(h)
-				for name, value in [('left', x), ('top', y), ('width', w), ('height', h)]:
-					if not value:
-						continue
-					if type(value) is type(0.0):
-						value = '%d%%' % int(value*100)
-					else:
-						value = '%d' % value
-					attrlist.append((name, value))
-			if isvisual:
-				z = ch.get('z', 0)
-				if z > 0:
-					attrlist.append(('z-index', "%d" % z))
-				scale = ch.get('scale', 0)
-				if scale == 0:
-					fit = 'meet'
-				elif scale == -1:
-					fit = 'slice'
-				elif scale == 1:
-					fit = 'hidden'
-				else:
-					fit = None
-					print '** Channel uses unsupported scale value', name
-				if fit is not None and fit != 'hidden':
-					attrlist.append(('fit', fit))
-
-				# SMIL says: either background-color
-				# or transparent; if different, set
-				# GRiNS attributes
-			# We have the following possibilities:
-			#		no bgcolor	bgcolor set
-			#transp -1	no attr		b-g="bg"
-			#transp  0	GR:tr="0"	GR:tr="0" b-g="bg"
-			#transp  1	b-g="trans"	b-g="trans" (ignore bg)
-				transparent = ch.get('transparent', 0)
-				bgcolor = ch.get('bgcolor')
-				if transparent == 0:
-					if compatibility == features.G2:
-						# in G2, setting a
-						# background-color implies
-						# transparent==never, so set
-						# background-color if not
-						# transparent
-						attrlist.append(('background-color',
-								 "#%02x%02x%02x" % (bgcolor or (0,0,0))))
-						bgcolor = None # skip below
-						
-						# non-SMIL extension:
-						# permanently visible region
-						# transparent attribute is saved only if G2 extension
-						attrlist.append(('%s:transparent' % NSGRiNSprefix,
-								 '0'))
-				#
-				# We write the background color only if it is not None.
-				# We also refrain from writing it if we're in G2 compatability mode and
-				# the color is the default (g2-compatible) color: white for text channels
-				# and black for others.
-				if bgcolor is not None and \
-				   (compatibility != features.G2 or
-				    ((ch['type'] not in ('text', 'RealText') or
-				      bgcolor != (255,255,255)) and
-				     bgcolor != (0,0,0))):
-					# also don't write background color
-					# in RealText regions when writing
-					# a .smil file (since the color is
-					# ignored by the RealPlayer anyway,
-					# except when you don't want it).
-					if not self.__cleanSMIL or \
-					   ch['type'] != 'RealText':
-						attrlist.append(('background-color',
-								 "#%02x%02x%02x" % bgcolor))
-				# Since background-color="transparent" is the
-				# default, we don't need to actually write that
-##				if transparent == 1:
-##					attrlist.append(('background-color',
-##							 'transparent'))
-##					# having a bg color on a transparent
-##					# region is nonsense...
-####					if bgcolor is not None:
-####						attrlist.append(('%s:bgcolor' % NSprefix,
-####								 "#%02x%02x%02x" % bgcolor))
-				if ch.get('center', 1):
-					if compatibility == features.QT:
-						pass
-						# to do : calculate the center position
-						# and fix corrects attributes
-					else:
-						attrlist.append(('%s:center' % NSGRiNSprefix, '1'))
-				if ch.get('drawbox', 1):
-					attrlist.append(('%s:drawbox' % NSGRiNSprefix, '1'))
-
-			for key, val in ch.items():
-				if not cmif_chan_attrs_ignore.has_key(key):
-					attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
-			self.writetag('region', attrlist)
+			if self.smilboston:
+				self.writetag('viewport', attrlist)
+				self.push()
+				self.writeregion(ch)
+				self.pop()
+			else:
+				self.writetag('root-layout', attrlist)
+		if not self.smilboston:	# implies one top-level
+			for ch in self.top_levels:
+				self.writeregion(ch)
 		self.pop()
+
+	def writeregion(self, ch):
+		mtype, xtype = mediatype(ch['type'], error=1)
+		if ch['type'] == 'layout' and \
+		   not ch.has_key('base_window'):
+			# top-level layout channel has been handled
+			for sch in self.__subchans[ch.name]:
+				self.writeregion(sch)
+			return
+		attrlist = [('id', self.ch2name[ch])]
+		title = ch.get('title')
+		if title:
+			attrlist.append(('title', title))
+		elif self.ch2name[ch] != ch.name:
+			attrlist.append(('title', ch.name))
+		# if toplevel window, define a region elt, but
+		# don't define coordinates (i.e., use defaults)
+		if ch.has_key('base_window') and \
+		   ch.has_key('base_winoff'):
+			x, y, w, h = ch['base_winoff']
+			units = ch.get('units', 2)
+			if units == 0:		# UNIT_MM
+				# convert mm to pixels (assuming 100 dpi)
+				x = int(x / 25.4 * 100 + .5)
+				y = int(y / 25.4 * 100 + .5)
+				w = int(w / 25.4 * 100 + .5)
+				h = int(h / 25.4 * 100 + .5)
+			elif units == 1:	# UNIT_SCREEN
+				if x+w >= 1.0: w = 0
+				if y+h >= 1.0: h = 0
+			elif units == 2:	# UNIT_PXL
+				x = int(x)
+				y = int(y)
+				w = int(w)
+				h = int(h)
+			for name, value in [('left', x), ('top', y), ('width', w), ('height', h)]:
+				if not value:
+					continue
+				if type(value) is type(0.0):
+					value = '%d%%' % int(value*100)
+				else:
+					value = '%d' % value
+				attrlist.append((name, value))
+		if ChannelMap.isvisiblechannel(ch['type']):
+			z = ch.get('z', 0)
+			if z > 0:
+				attrlist.append(('z-index', "%d" % z))
+			scale = ch.get('scale', 0)
+			if scale == 0:
+				fit = 'meet'
+			elif scale == -1:
+				fit = 'slice'
+			elif scale == 1:
+				fit = 'hidden'
+			else:
+				fit = None
+				print '** Channel uses unsupported scale value', name
+			if fit is not None and fit != 'hidden':
+				attrlist.append(('fit', fit))
+
+			# SMIL says: either background-color
+			# or transparent; if different, set
+			# GRiNS attributes
+		# We have the following possibilities:
+		#		no bgcolor	bgcolor set
+		#transp -1	no attr		b-g="bg"
+		#transp  0	GR:tr="0"	GR:tr="0" b-g="bg"
+		#transp  1	b-g="trans"	b-g="trans" (ignore bg)
+			transparent = ch.get('transparent', 0)
+			bgcolor = ch.get('bgcolor')
+			if transparent == 0:
+				if features.compatibility == features.G2:
+					# in G2, setting a
+					# background-color implies
+					# transparent==never, so set
+					# background-color if not
+					# transparent
+					if colors.rcolors.has_key(bgcolor or (0,0,0)):
+						bgcolor = colors.rcolors[bgcolor or (0,0,0)]
+					else:
+						bgcolor = '#%02x%02x%02x' % (bgcolor or (0,0,0))
+					if self.smilboston:
+						attrlist.append(('backgroundColor',
+								 bgcolor))
+					else:
+						attrlist.append(('background-color',
+								 bgcolor))
+					bgcolor = None # skip below
+				# non-SMIL extension:
+				# permanently visible region
+				attrlist.append(('%s:transparent' % NSGRiNSprefix,
+						 '0'))
+			#
+			# We write the background color only if it is not None.
+			# We also refrain from writing it if we're in G2 compatability mode and
+			# the color is the default (g2-compatible) color: white for text channels
+			# and black for others.
+			if bgcolor is not None and \
+			   (features.compatibility != features.G2 or
+			    ((ch['type'] not in ('text', 'RealText') or
+			      bgcolor != (255,255,255)) and
+			     bgcolor != (0,0,0))) and \
+			     (not self.__cleanSMIL or ch['type'] != 'RealText'):
+				if colors.rcolors.has_key(bgcolor):
+					bgcolor = colors.rcolors[bgcolor]
+				else:
+					bgcolor = '#%02x%02x%02x' % bgcolor
+				if self.smilboston:
+					attrlist.append(('backgroundColor',
+							 bgcolor))
+				else:
+					attrlist.append(('background-color',
+							 bgcolor))
+			# Since background-color="transparent" is the
+			# default, we don't need to actually write that
+			if ch.get('center', 1):
+				attrlist.append(('%s:center' % NSGRiNSprefix, '1'))
+			if ch.get('drawbox', 1):
+				attrlist.append(('%s:drawbox' % NSGRiNSprefix, '1'))
+
+		for key, val in ch.items():
+			if not cmif_chan_attrs_ignore.has_key(key):
+				attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
+		self.writetag('region', attrlist)
+		subchans = self.__subchans.get(ch.name)
+		if subchans:
+			self.push()
+			for sch in subchans:
+				self.writeregion(sch)
+			self.pop()
 
 	def writeusergroups(self):
 		u_groups = self.root.GetContext().usergroups
 		if not u_groups:
 			return
-		self.writetag('%s:user-attributes' % NSGRiNSprefix)
+		self.writetag('userAttributes')
 		self.push()
 		for key, val in u_groups.items():
 			attrlist = []
@@ -1274,10 +1342,10 @@ class SMILWriter(SMIL):
 			if title:
 				attrlist.append(('title', title))
 			if u_state != 'RENDERED':
-				attrlist.append(('u-state', u_state))
+				attrlist.append(('uState', u_state))
 			if override != 'allowed':
 				attrlist.append(('override', override))
-			self.writetag('%s:u-group' % NSGRiNSprefix, attrlist)
+			self.writetag('uGroup', attrlist)
 		self.pop()
 
 	def writegrinslayout(self):
@@ -1331,7 +1399,7 @@ class SMILWriter(SMIL):
 					self.ids_used[name] = 1
 					break
 
-		attributes = self.attributes[xtype]
+		attributes = self.attributes.get(xtype, {})
 		for name, func in smil_attrs:
 			value = func(self, x)
 			# gname is the attribute name as recorded in attributes
@@ -1404,7 +1472,7 @@ class SMILWriter(SMIL):
 		self.writetag('par', parentattrlist)
 		self.push()
 		self.writemedianode(x, attrlist, mtype)
-		self.writetag('text', [('src', rturl), ('region', region)])
+		self.writetag('textstream', [('src', rturl), ('region', region)])
 		self.pop()
 		
 	def getrealtextcaptions(self, node):
@@ -1543,9 +1611,8 @@ class SMILWriter(SMIL):
 				attrlist.append(('coords', coords))
 			elif args:
 				print '** Unparseable args on', aid, args
-##			else:
-##				attrlist.append(('%s:fragment-id' % NSprefix,
-##						 id))
+			else:
+				attrlist.append(('fragment', id))
 		begin, end = times
 		if begin:
 			attrlist.append(('begin', '%.3fs' % begin))
