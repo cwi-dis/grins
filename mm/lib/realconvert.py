@@ -1,23 +1,31 @@
 __version__ = "$Id$"
 
-import os
+import os, sys
 
-import producer, cmif
-dir = cmif.findfile('Producer-SDK')
-if os.path.exists(dir):
-	producer.SetDllAccessPath(
-		'DT_Plugins=%s\000' % os.path.join(dir, 'Plugins') +
-		'DT_Codecs=%s\000' % os.path.join(dir, 'Codecs') +
-		'DT_EncSDK=%s\000' % os.path.join(dir, 'Tools') +
-		'DT_Common=%s\000' % os.path.join(dir, 'Common'))
+try:
+	import producer
+except ImportError:
+	producer = None
+	if sys.platform == 'win32' or sys.platform == 'mac':
+		# fatal error on Mac and Windows
+		raise ImportError('no RealProducer SDK')
 else:
-	raise ImportError('no G2 codecs')
+	import cmif
+	dir = cmif.findfile('Producer-SDK')
+	if os.path.exists(dir):
+		producer.SetDllAccessPath(
+			'DT_Plugins=%s\000' % os.path.join(dir, 'Plugins') +
+			'DT_Codecs=%s\000' % os.path.join(dir, 'Codecs') +
+			'DT_EncSDK=%s\000' % os.path.join(dir, 'Tools') +
+			'DT_Common=%s\000' % os.path.join(dir, 'Common'))
+	else:
+		raise ImportError('no G2 codecs')
 
 engine = None
 audiopin = None
 
 def convertaudiofile(u, dstdir, file, node, progress = None):
-	import producer, MMAttrdefs, audio, audio.format
+	import MMAttrdefs, audio, audio.format
 	global engine, audiopin
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.ra'
@@ -116,7 +124,7 @@ def convertaudiofile(u, dstdir, file, node, progress = None):
 
 
 def convertimagefile(u, srcurl, dstdir, file, node):
-	import MMAttrdefs, MMurl, sys
+	import MMAttrdefs, MMurl
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.jpg'
 	fullpath = os.path.join(dstdir, file)
@@ -188,7 +196,7 @@ def converttextfile(u, dstdir, file, node):
 
 
 def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
-	import producer, MMAttrdefs, MMurl
+	import MMAttrdefs, MMurl
 	global engine
 	u.close()
 	fin = MMurl.urlretrieve(srcurl)[0]
@@ -336,7 +344,6 @@ def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	dur = int(1000*mp.GetDuration()+0.5) # dur in msec
 	mc.Run()
 	
-	import sys
 	if sys.platform=='win32':
 		# remove messages in queue
 		# dispatch only paint message
@@ -360,3 +367,10 @@ def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	del b
 				
 	return file
+
+if producer is None:
+	# dummies if we can't import producer
+	def convertaudiofile(u, dstdir, file, node, progress = None):
+		return None
+	def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
+		return None
