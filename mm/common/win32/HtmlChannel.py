@@ -259,7 +259,7 @@ class HtmlChannel(Channel.ChannelWindow):
 ##			else:
 ##				newtext = u.read()
 ## New code:
-			print 'DBG: u.headers.type:', u.headers.type
+			if __debug__: print 'DBG: u.headers.type:', u.headers.type
 			if u.headers.type != 'text/html':
 				import Hlinks
 				anchor = self.url
