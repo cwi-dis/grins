@@ -115,6 +115,7 @@ class Main(MainDialog):
 		names = []
 		descriptions = []
 		files = os.listdir(self.templatedir)
+		files.sort()
 		for file in files:
 			if not (file[-4:] == '.smi' or file[-5:] == '.smil'):
 				continue
