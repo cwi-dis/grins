@@ -24,6 +24,7 @@ DEFS =	\
 	-DUSE_IMGFILE \
 	-DUSE_STROP \
 	-DUSE_IMAGEOP \
+	-DUSE_FCNTL \
 	-DMM_DEBUG \
 	-DPYTHONPATH='"$(GUIDO)/lib/python"'
 
@@ -62,3 +63,6 @@ clobber: clean
 	rm -f *.ld python
 
 $(OBJS): mmmodule.h
+
+config.o: Makefile
+

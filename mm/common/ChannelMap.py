@@ -8,6 +8,7 @@ from ImageChannel import ImageChannel
 from MovieChannel import MovieChannel
 from ShellChannel import ShellChannel
 from PythonChannel import PythonChannel
+from VcrChannel import VcrChannel
 
 channelmap = { \
 	'null': 	NullChannel, \
@@ -17,6 +18,7 @@ channelmap = { \
 	'movie': 	MovieChannel, \
 	'python': 	PythonChannel, \
 	'shell': 	ShellChannel, \
+	'vcr':		VcrChannel, \
 	}
 
 channeltypes = ['null', 'text', 'image']
