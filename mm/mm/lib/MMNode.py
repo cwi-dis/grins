@@ -480,7 +480,7 @@ class MMNode(domcore.Element):
 		self.curloopcount = 0
 
 	# XML DOM Core
-	# Node implementation - jst:
+	# Node implementation - jst
 	def _get_nodeName(self) :
 		return self.type 
 					
@@ -541,24 +541,60 @@ class MMNode(domcore.Element):
 				namedNodeMap.setNamedItem(newAttribute)
 		return namedNodeMap     
 
-	def removeChild(self, oldChild):
+
+	def insertBefore(self, newChild, refChild = None) :
+		if newChild in self.children :
+			self._editMgrAddNode(i, newChild) 
+			return self.insertBefore(newChild, refChild)
+		elif refChild==None :
+			i = len(self.children)
+			self._editMgrAddNode(i, newChild) 
+			return newChild
+		elif refChild in self.children:
+			i = self.children.index(refChild)
+			self._editMgrAddNode(i, newChild) 
+			return refChild
+		else:
+			return None
+
+	def _editMgrAddNode(self, index, newChild ):
 		em = self.context.editmgr			
 		if not em.transaction():
-                	return None
+			raise 'not ready'
+		em.addnode(self, index, newChild)
+		em.commit()
+
+	def _editMgrRemoveNode(self, oldChild):
+		em = self.context.editmgr			
+		if not em.transaction():
+			raise 'not ready'
 		em.delnode(oldChild)
 		em.commit()
-		return oldChild
+
+	def replaceChild(self, newChild, oldChild):
+		if oldChild in self.children:
+			i = self.children.index(oldChild)
+			self._editMgrRemoveNode(oldChild)
+			self._editMgrAddNode(i,  newChild)
+			return newChild
+		else:
+			return None
+
+	def removeChild(self, oldChild):
+		if oldChild in self.children:
+			self._editMgrRemoveNode(oldChild)
+			return oldChild
+		else:
+			return None
 
 	def appendChild(self, newChild):
-		# Doesn't check if newChild already exists in self.children as specified by 
-		# the xml-dom
-		em = self.context.editmgr			
-		if not em.transaction():
-                	return None
-		i = len(self.children)
-		em.addnode(self, i, newChild)
-		em.commit()
-		return newChild
+		return self.insertBefore(newChild)
+
+	def hasChildNodes(self):
+		if self.children:
+			return 1
+		else:
+			return 0
 
 	def setAttribute(self, name, value):
 		if name=="duration" :
