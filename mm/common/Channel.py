@@ -910,23 +910,6 @@ class Channel:
 		# self._armed_node = None # XXXX Removed for arm-caching
 		# self._armed_anchors = []
 
-	def terminate(self, node):
-		if debug:
-			print 'Channel.terminate('+`self`+','+`node`+')'
-		if self._armstate != AIDLE and self._armed_node is node:
-			save_syncarm = self.syncarm
-			self.syncarm = 1
-			self.stoparm()
-			self.syncarm = save_syncarm
-			if not self.syncarm:
-				self._armcontext.arm_ready(self)
-		if self._playstate != PIDLE and self._played_node is node:
-			# hack to not generate play_done event
-			save_syncplay = self.syncplay
-			self.syncplay = 1
-			self.stopplay(node)
-			self.syncplay = save_syncplay
-
 	def startcontext(self, ctx):
 		# Called by the scheduler to start a new context.  The
 		# following arm is done in the new context.
@@ -2117,7 +2100,6 @@ class ChannelWindow(Channel):
 			self.updateToInactiveState()
 
 	def playstop(self):
-##		self.cleanup_transitions() # XXXX incorrect!
 		return Channel.playstop(self)
 
 	def schedule_transitions(self, node):
