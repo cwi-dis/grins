@@ -175,7 +175,7 @@ def extract_paragraphs(text):
 def extract_taglist(parlist):
 	import regex
 	# (1) Extract the raw tags, removing them from the text
-	pat = regex.compile('<[Aa] +[Nn][Aa][Mm][Ee]=\([a-zA-Z_]+\)>\|</[Aa]>')
+	pat = regex.compile('<[Aa] +[Nn][Aa][Mm][Ee]=\([a-zA-Z0-9_]+\)>\|</[Aa]>')
 	rawtaglist = []
 	for i in range(len(parlist)):
 		par = parlist[i]
