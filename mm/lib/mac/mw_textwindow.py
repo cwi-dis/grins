@@ -76,16 +76,19 @@ class _common_window:
 		print "Anchor callback from non-html window?"
 
 class textwindow(_common_window):
-	X=20
-	Y=20
-	W=100
-	H=150
-	UNITS=mw_globals.UNIT_MM
+	X=-1
+	Y=-1
+	W=-1
+	H=-1
+	UNITS=mw_globals.UNIT_PXL
 	TITLE="Source"
 
-	def __init__(self, data, readonly=0):
+	def __init__(self, data, readonly=0, geometry=None):
 		import settings
-		if settings.has_key('textwindowpos'):
+		if geometry:
+			self.X, self.Y, self.W, self.H = geometry
+			self.UNITS=mw_globals.UNIT_PXL
+		elif settings.has_key('textwindowpos'):
 			old = self.X, self.Y, self.W, self.H
 			self.X, self.Y, self.W, self.H = settings.get('textwindowpos')
 			settings.set('textwindowpos', old)
@@ -108,10 +111,15 @@ class textwindow(_common_window):
 	def hide(self):
 		if self.window:
 			import settings
-			pos = self.window.getgeometry()
+			pos = self.window.getgeometry(mw_globals.UNIT_PXL)
 			settings.set('textwindowpos', pos)
 			settings.save()
 		_common_window.hide(self)
+		
+	def getgeometry(self, units=mw_globals.UNIT_MM):
+		if self.window:
+			return self.window.getgeometry(units)
+		return None
 		
 	def set_mother(self, mother):
 		self.mother = mother
@@ -138,6 +146,12 @@ class textwindow(_common_window):
 		
 	def select_lines(self, startline, endline):
 		pass
+		
+	def select_chars(self, startchar, endchar):
+		pass
+		
+	def get_select(self):
+		return (0, 0), (0, 0)
 		
 class htmlwindow(_common_window):
 	X=0

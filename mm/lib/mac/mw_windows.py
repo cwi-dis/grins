@@ -2312,6 +2312,8 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 			self._popupmenu.update_menu_enabled(self.has_command)
 
 	def getgeometry(self, units=UNIT_MM):
+		if units != UNIT_PXL:
+			print 'Warning: non-UNIT_PXL getgeometry() call'
 		rect = self._onscreen_wid.GetWindowPort().portRect
 		Qd.SetPort(self._onscreen_wid)
 		x, y = Qd.LocalToGlobal((0,0))
@@ -2343,6 +2345,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 			      float(w)/scrw, float(h)/scrh)
 		else:
 			raise error, 'bad units specified'
+		print 'DBG', self, units, rv
 		return rv
 
 	def pop(self, poptop=1):
@@ -2645,6 +2648,8 @@ class _SubWindow(_CommonWindow):
 		raise error, 'can only settitle at top-level'
 		
 	def getgeometry(self, units=UNIT_MM):
+		if units != self._units:
+			print "getgeometry() with unexpected units:", units
 		return self._sizes
 
 	def _clipchanged(self):
@@ -2762,18 +2767,26 @@ class _SubWindow(_CommonWindow):
 		
 class DialogWindow(_Window):
 	def __init__(self, resid, title='', default=None, cancel=None,
-				cmdbuttons=None):
+				cmdbuttons=None, geometry=None):
 		dlg = Dlg.GetNewDialog(resid, -1)
 		wid = dlg.GetDialogWindow()
-		wid2 = dlg.GetDialogWindow() #DBG
 		self._dlg = dlg
 		if cmdbuttons:
 			self._item_to_cmd = cmdbuttons
 		else:
 			self._item_to_cmd = {}
 		self._itemhandler = None
-		x0, y0, x1, y1 = wid.GetWindowPort().portRect
-		w, h = x1-x0, y1-y0
+		if geometry:
+			x, y, w, h = geometry
+			print 'DialogWindow: move to', geometry, self
+			# Magic mbarheight and titlebarheight. To be done better later.
+			if x < 4: x = 4
+			if y < 26 + 21: y = 26 + 21
+			wid.MoveWindow(x, y, 0)
+			# For dialogs we ignore w, h for now.
+		else:
+			x0, y0, x1, y1 = wid.GetWindowPort().portRect
+			x, y, w, h = 0, 0, x1-x0, y1-y0
 		cmdlist = [
 			usercmd.COPY(callback=(dlg.DialogCopy, ())),
 			usercmd.PASTE(callback=(dlg.DialogPaste, ())),
@@ -2793,7 +2806,7 @@ class DialogWindow(_Window):
 			cmdlist.append(
 				usercmd.CLOSE_WINDOW(callback=(self._do_cancelhit, ())))
 			dlg.SetDialogCancelItem(cancel)
-		_Window.__init__(self, mw_globals.toplevel, wid, 0, 0, w, h, 
+		_Window.__init__(self, mw_globals.toplevel, wid, x, y, w, h, 
 				commandlist=cmdlist, resizable=0)
 		mw_globals.toplevel._register_wid(wid, self)
 		Qd.SetPort(wid)
@@ -2804,9 +2817,16 @@ class DialogWindow(_Window):
 	def __repr__(self):
 		return '<DialogWindow %s>'%self.title
 	
-	def show(self):
+	def show(self, geometry=None):
 		if self.title:
 			self.settitle(self.title)
+		if geometry:
+			x, y, w, h = geometry
+			# Magic mbarheight and titlebarheight. To be done better later.
+			if x < 4: x = 4
+			if y < 26 + 21: y = 26 + 21
+			self._onscreen_wid.MoveWindow(x, y, 0)
+			# Ignore w, h for now
 		self._dlg.AutoSizeDialog()	# Not sure whether this is a good idea for all dialogs...
 		self._onscreen_wid.ShowWindow()
 		self._onscreen_wid.SelectWindow() # test
