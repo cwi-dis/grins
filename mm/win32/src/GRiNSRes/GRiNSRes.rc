@@ -867,15 +867,15 @@ FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "Try",IDOK,7,191,50,14
     PUSHBUTTON      "Quit",IDCANCEL,7,212,50,14
-    CONTROL         226,IDC_STATIC,"Static",SS_BITMAP | WS_DISABLED,7,7,317,
-                    176
-    LTEXT           "Static",IDC_MESSAGE,7,170,199,8
+    LTEXT           "Static",IDC_MESSAGE,7,174,199,8
     PUSHBUTTON      "Buy...",IDUC_BUY,106,191,50,14
     PUSHBUTTON      "Get evaluation license...",IDUC_EVALLICENSE,161,191,107,
                     14
     PUSHBUTTON      "Enter key...",IDUC_ENTERKEY,274,191,50,14
     LTEXT           "Or see http://www.oratrix.com/GRiNS for details",
                     IDC_STATIC,107,215,154,8,0,0,HIDC_STATIC
+    CONTROL         "",IDC_SPLASH,"Button",BS_OWNERDRAW | BS_FLAT | 
+                    WS_DISABLED,7,7,317,160
 END
 
 
