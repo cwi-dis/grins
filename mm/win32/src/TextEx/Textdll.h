@@ -11,3 +11,4 @@
 
 
 TXTAPP char* readtext(char* filename);
+TXTAPP void puttext(HWND hwnd, char* str);
