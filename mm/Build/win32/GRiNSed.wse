@@ -31,8 +31,8 @@ item: Global
   Version Copyright=Copyright 1999 Oratrix Development BV
   Version Company=Oratrix Development BV
   Distribute Type=2
-  Step View=All
-  File Checksum=1383511556
+  Step View=Visual Basic
+  File Checksum=127785037
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1133,6 +1133,308 @@ end
 item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=C
+  Flags=00001010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\common\QuickStart.pdf
+  Destination=%MAINDIR%\QuickStart.pdf
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll6sw.smil
+  Destination=%MAINDIR%\Examples\stroll6sw.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll6c.smil
+  Destination=%MAINDIR%\Examples\stroll6c.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll6.smil
+  Destination=%MAINDIR%\Examples\stroll6.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll5sw.smil
+  Destination=%MAINDIR%\Examples\stroll5sw.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll5c.smil
+  Destination=%MAINDIR%\Examples\stroll5c.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll5.smil
+  Destination=%MAINDIR%\Examples\stroll5.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll4sw.smil
+  Destination=%MAINDIR%\Examples\stroll4sw.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll4c.smil
+  Destination=%MAINDIR%\Examples\stroll4c.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll4.smil
+  Destination=%MAINDIR%\Examples\stroll4.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll3sw.smil
+  Destination=%MAINDIR%\Examples\stroll3sw.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll3c.smil
+  Destination=%MAINDIR%\Examples\stroll3c.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll3.smil
+  Destination=%MAINDIR%\Examples\stroll3.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll2sw.smil
+  Destination=%MAINDIR%\Examples\stroll2sw.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\bigw.jpg
+  Destination=%MAINDIR%\Intro\data\bigw.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\links.html
+  Destination=%MAINDIR%\Intro\data\links.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo1.jpg
+  Destination=%MAINDIR%\Intro\data\logo1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo10.jpg
+  Destination=%MAINDIR%\Intro\data\logo10.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo11.jpg
+  Destination=%MAINDIR%\Intro\data\logo11.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo12.jpg
+  Destination=%MAINDIR%\Intro\data\logo12.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo13.jpg
+  Destination=%MAINDIR%\Intro\data\logo13.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo14.jpg
+  Destination=%MAINDIR%\Intro\data\logo14.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo15.jpg
+  Destination=%MAINDIR%\Intro\data\logo15.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo16.jpg
+  Destination=%MAINDIR%\Intro\data\logo16.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo2.jpg
+  Destination=%MAINDIR%\Intro\data\logo2.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo3.jpg
+  Destination=%MAINDIR%\Intro\data\logo3.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo4.jpg
+  Destination=%MAINDIR%\Intro\data\logo4.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo5.jpg
+  Destination=%MAINDIR%\Intro\data\logo5.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo6.jpg
+  Destination=%MAINDIR%\Intro\data\logo6.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo7.jpg
+  Destination=%MAINDIR%\Intro\data\logo7.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo8.jpg
+  Destination=%MAINDIR%\Intro\data\logo8.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\logo9.jpg
+  Destination=%MAINDIR%\Intro\data\logo9.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\thanks.html
+  Destination=%MAINDIR%\Intro\data\thanks.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\welcome.au
+  Destination=%MAINDIR%\Intro\data\welcome.au
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\data\wgrins.jpg
+  Destination=%MAINDIR%\Intro\data\wgrins.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll2c.smil
+  Destination=%MAINDIR%\Examples\stroll2c.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll2.smil
+  Destination=%MAINDIR%\Examples\stroll2.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll1sw.smil
+  Destination=%MAINDIR%\Examples\stroll1sw.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll1c.smil
+  Destination=%MAINDIR%\Examples\stroll1c.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll1.smil
+  Destination=%MAINDIR%\Examples\stroll1.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\stroll.jpg
+  Destination=%MAINDIR%\Examples\stroll.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\map1.jpg
+  Destination=%MAINDIR%\Examples\map1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\map.jpg
+  Destination=%MAINDIR%\Examples\map.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\index.html
+  Destination=%MAINDIR%\Examples\index.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\168.au
+  Destination=%MAINDIR%\Examples\168.au
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\1h168.jpg
+  Destination=%MAINDIR%\Examples\1h168.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\1h218.jpg
+  Destination=%MAINDIR%\Examples\1h218.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\1h284.jpg
+  Destination=%MAINDIR%\Examples\1h284.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\1map.jpg
+  Destination=%MAINDIR%\Examples\1map.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\1map1.jpg
+  Destination=%MAINDIR%\Examples\1map1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\218.au
+  Destination=%MAINDIR%\Examples\218.au
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\284.au
+  Destination=%MAINDIR%\Examples\284.au
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\h168.jpg
+  Destination=%MAINDIR%\Examples\h168.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\h168bw.jpg
+  Destination=%MAINDIR%\Examples\h168bw.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\h218.jpg
+  Destination=%MAINDIR%\Examples\h218.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\h218bw.jpg
+  Destination=%MAINDIR%\Examples\h218bw.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\h284.jpg
+  Destination=%MAINDIR%\Examples\h284.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\examples\h284bw.jpg
+  Destination=%MAINDIR%\Examples\h284bw.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Intro\intro.smil
+  Destination=%MAINDIR%\Intro\intro.smil
+  Flags=0000000010000010
+end
+item: End Block
+end
 item: Install File
   Source=d:\Program Files\Wise InstallMaker\Unwise.exe
   Destination=%MAINDIR%\Unwise.exe
@@ -1156,16 +1458,6 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\empty.smil
   Destination=%MAINDIR%\Templates\empty.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\empty.cmif
-  Destination=%MAINDIR%\Templates\empty.cmif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\empty.cmc
-  Destination=%MAINDIR%\Templates\empty.cmc
   Flags=0000000010000010
 end
 item: Install File
@@ -1382,7 +1674,55 @@ item: Create Shortcut
   Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS.lnk
   Icon Number=0
 end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=C
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\QuickStart.pdf
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS QuickStart Guide.lnk
+  Icon Number=0
+end
+item: End Block
+end
 item: Else Statement
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for SMIL
+  Command Line=%MAINDIR%\GRiNSed.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=C
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS QuickStart Guide
+  Command Line=%MAINDIR%\QuickStart.pdf
+end
+item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS
