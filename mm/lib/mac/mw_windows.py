@@ -22,7 +22,7 @@ from WMEVENTS import *
 import mw_globals
 from mw_globals import error, Continue
 from mw_globals import UNIT_MM, UNIT_SCREEN, UNIT_PXL
-from mw_globals import RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH, FIT_WINDOW
+from mw_globals import RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH
 from mw_globals import FALSE, TRUE
 from mw_globals import _X, _Y, _WIDTH, _HEIGHT
 from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH
