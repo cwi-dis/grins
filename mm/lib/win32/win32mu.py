@@ -98,11 +98,29 @@ class Rect:
 		self.right=self.right+cx
 		self.top=self.top-cy
 		self.bottom=self.bottom+cy
+
 	def isPtInRect(self,point):
 		if (point.x >= self.left and point.x < self.right and
 			point.y >= self.top and point.y < self.bottom):
 			return 1
-		return 0	
+		return 0
+
+	def getvertices(self):
+		return Point((self.left,self.top)),Point((self.right,self.top)),\
+			Point((self.left,self.bottom)),Point((self.right,self.bottom))
+
+	def isPtInRectEq(self,point):
+		if (point.x >= self.left and point.x <= self.right and
+			point.y >= self.top and point.y <= self.bottom):
+			return 1
+		return 0
+
+	def isRectIn(self,rc):
+		v=rc.getvertices()
+		for p in v:
+			if not self.isPtInRectEq(p):
+				return 0
+		return 1
 
 class SizeRect:
 	def __init__(self,r=(0,0,0,0)):
