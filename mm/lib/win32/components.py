@@ -522,8 +522,8 @@ class BUTTON(WndClass):
 	def __init__(self,style=0,exstyle=0):
 		WndClass.__init__(self,
 			classid='BUTTON',
-			style=win32con.WS_CHILD | win32con.WS_CLIPSIBLINGS | win32con.WS_VISIBLE | WS_TABSTOP |  style,
-			exstyle=WS_EX_CONTROLPARENT| exstyle)
+			style=win32con.WS_CHILD | win32con.WS_CLIPSIBLINGS | win32con.WS_VISIBLE | win32con.WS_TABSTOP |  style,
+			exstyle=win32con.WS_EX_CONTROLPARENT| exstyle)
 
 # PushButton control creation class 
 # for left justification init with style BS_LEFTTEXT
