@@ -559,7 +559,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			ysize = ysize + h
 		self.redge = 0
 		del self.redge
-		if timemapper is not None and self.iscollapsed():
+		if timemapper is not None and (self.iscollapsed() or not self.children):
 			t0, t1, t2, downloadlag, begindelay = self.GetTimes('virtual')
 			if t2 > t0:
 				width = xsize
