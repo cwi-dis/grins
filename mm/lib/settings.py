@@ -6,9 +6,6 @@ import os
 
 # some constants
 
-# settings that cannot be changed when running
-noprearm = 1				# don't prearm
-
 # Defaults:
 default_settings = {
 ##	'lightweight': 0,		# Lightweight version
@@ -17,12 +14,10 @@ default_settings = {
 	'system_captions': 0,		# Don't show captions
 	'system_language': 'en',	# English
 	'system_overdub_or_caption': 'caption', # Captions preferred over overdub
-	'system_overdub_or_subtitle':'subtitle', # Subtitles preferred over overdub
 ## Special case, see get() routine
 ##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
 ##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
 	'system_required': (),		# Needs special handling in match...
-	'system_audiodesc': 0,		# No audio description
 	'license': '',
 	'license_user' : '',
 	'license_organization' : '',
@@ -57,8 +52,6 @@ default_settings = {
 	'structure_darkpar': (91,126,114),
 	'structure_seqcolor': (116,154,189),
 	'structure_darkseq': (108,128,146),
-	'structure_exclcolor': (148,117,166), # for now equal to bag colors
-	'structure_darkexcl': (131,119,137),
 	'structure_textcolor': (0, 0, 0), # Black
 	'structure_ctextcolor': (50, 50, 50),	# Very dark gray
 	'structure_expcolor': (200, 200, 200), # Open disclosure triangle
@@ -103,14 +96,11 @@ default_settings = {
 user_settings = {}
 
 # Which of these should match exactly:
-EXACT=['system_captions', 'system_overdub_or_captions',
-       'system_audiodesc', 'system_overdub_or_subtitle']
+EXACT=['system_captions', 'system_language', 'system_overdub_or_captions']
 ELEMENT=['system_required']
-LANGUAGE=['system_language']
 ALL=['system_bitrate', 'system_captions', 'system_language',
      'system_overdub_or_caption', 'system_screen_size',
-     'system_screen_depth', 'system_required', 'system_audiodesc',
-     'system_overdub_or_subtitle']
+     'system_screen_depth', 'system_required']
 
 NEEDS_RESTART=['cmif', 'vertical_structure', 'no_canvas_resize', 'root_expanded']
 
@@ -120,13 +110,11 @@ if os.name == 'posix':
 elif os.name == 'mac':
 	import macfs, MACFS
 	vrefnum, dirid = macfs.FindFolder(MACFS.kOnSystemDisk, 'pref', 1)
-	import features
-	if features.lightweight:
-		prefname = 'GRiNS-lite-G2-1.5 Prefs'
-	else:
-		prefname = 'GRiNS-pro-G2-1.5 Prefs'
+	import version
+	prefname = version.macpreffilename
 	fss = macfs.FSSpec((vrefnum, dirid, prefname))
 	PREFSFILENAME=fss.as_pathname()
+	default_settings['html_control'] = 0	# set to 1 for MacOS 9 html control.
 else:
 	default_settings['html_control'] = 0	# which HTML control to use
 	import cmif
@@ -176,26 +164,6 @@ def match(name, wanted_value):
 		return (real_value == wanted_value)
 	elif name in ELEMENT:
 		return (wanted_value in real_value)
-	elif name in LANGUAGE:
-		import string
-		# Evaluates to "true" if one of the languages
-		# indicated by user preferences exactly equals one of
-		# the languages given in the value of this parameter,
-		# or if one of the languages indicated by user
-		# preferences exactly equals a prefix of one of the
-		# languages given in the value of this parameter such
-		# that the first tag character following the prefix is
-		# "-".
-		pref_langs = map(string.strip, string.split(real_value, ','))
-		for lang in map(string.strip, string.split(wanted_value, ',')):
-			for pref_lang in pref_langs:
-				if pref_lang == lang:
-					return 1
-				plen = len(pref_lang)
-				if pref_lang == lang[:plen] and \
-				   lang[plen:plen+1] == '-':
-					return 1
-		return 0
 	else:
 		return (real_value >= wanted_value)
 
