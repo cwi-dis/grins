@@ -1109,7 +1109,7 @@ class MMNode:
 		if debug: print 'resetall', `self`
 		self.reset()
 		for c in self.children:
-			c.resetall(sched)f
+			c.resetall(sched)
 		for arc in self.FilterArcList(MMAttrdefs.getattr(self, 'beginlist') + MMAttrdefs.getattr(self, 'endlist')) + self.durarcs:
 			refnode = self.__find_refnode(arc)
 			if arc in refnode.sched_children:
