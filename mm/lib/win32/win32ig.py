@@ -22,7 +22,6 @@ class ImageLib:
 
 	# Delete resources
 	def deltemp(self):
-		global _imglist
 		for img in self._imglist:
 			self.lib.image_delete(img)
 		self._imglist=[]
@@ -56,6 +55,7 @@ class ImageLib:
 			# XXXX this is a quick hack, since the image
 			# shouldn't have been deleted if it was still
 			# being used.
+			print 'warning: win32 image management bug'
 			return
 		rc=(dest_x, dest_y, dest_x+width, dest_y+height)
 		self.lib.ip_crop(img,rcKeep)
