@@ -74,13 +74,10 @@ class PlayerCore(Scheduler):
 		self.softresetchannels()
 		if self.setcurrenttime_callback:
 			self.setcurrenttime_callback(0.0)
-		self.oldrate = 1.0
-		self.timing_changed = 0
 	#
 	# State transitions.
 	#
 	def play(self):
-		self.ff = 0
 		self.seeking = 0
 		if not self.playing:
 			self.playroot = self.userplayroot
@@ -116,21 +113,19 @@ class PlayerCore(Scheduler):
 		return ch.defanchor(node, anchor)
 	#
 	def pause(self):
-		self.ff = 0
 		self.seeking = 0
 		if self.playing:
-			if self.rate == 0.0:	# Paused, continue
-				self.setrate(self.oldrate)
-			else:
-				self.oldrate = self.rate
-				self.setrate(0.0)
+			if self.rate == 0.0:	# Paused: continue
+				self.setrate(1)
+			else:			# Running: pause
+				self.setrate(0)
 				self.setready() # Cancel possible watch cursor
 		else:
 			self.start_playing(0.0)
+			self.setready()
 		self.showstate()
 	#
 	def stop(self):
-		self.ff = 0
 		self.seeking = 0
 		if self.playing:
 			self.stop_playing()

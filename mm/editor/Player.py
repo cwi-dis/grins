@@ -35,8 +35,6 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		self.measure_armtimes = 0
 		self.channels = {}
 		self.channeltypes = {}
-		self.timing_changed = 0
-		self.ff = 0
 		self.seeking = 0
 		self.seek_node = None
 		self.seek_nodelist = []
@@ -77,9 +75,6 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	def make_form(self):
 		ftemplate = flp.parse_form('PlayerForm', 'form')
 		flp.create_full_form(self, ftemplate)
-		self.speedbutton.set_counter_value(1)
-		self.speedbutton.set_counter_bounds(1,128)
-		self.speedbutton.set_counter_step(1,1)
 		
 	#
 	# FORMS callbacks.
@@ -92,12 +87,6 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	#
 	def stop_callback(self, (obj, arg)):
 		self.stop()
-	#
-	def speed_callback(self, (obj, arg)):
-		self.oldrate = obj.get_counter_value()
-		if self.playing:
-			self.setrate(self.oldrate)
-		self.showstate()
 	#
 	def menu_callback(self, (obj, arg)):
 		i = self.menubutton.get_menu() - 1
@@ -117,14 +106,6 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			self.measure_armtimes = 1
 			obj.set_button(1)
 	#
-	def ff_callback(self, (obj, arg)):
-		#print 'Player:', self.queue # DBG
-		if not self.playing:
-			obj.set_button(not obj.get_button())
-			return
-		self.ff = obj.get_button()
-		self.updatetimer()
-	#
 	def dummy_callback(self, dummy):
 		pass
 	#
@@ -135,17 +116,18 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			now = self.timefunc()
 			delay = when - now
 			if delay < -0.1:
-				self.late_ind.lcol = GL.RED
-				self.latecount = self.latecount - delay
-				self.late_ind.label = `int(self.latecount)`
+				self.statebutton.lcol = GL.MAGENTA
 			else:
-				self.late_ind.lcol = self.late_ind.col2
+				self.statebutton.lcol = self.statebutton.col2
 			if delay > 0.0:
 				break
 			del self.queue[0]
 			void = apply(action, argument)
-##		if not self.queue and self.rate > 0.0:
-##			print 'Player: Huh? Nothing in the queue?'
+		if not self.queue:
+			if self.rate:
+				# We were playing, but not anymore.
+				self.setrate(0.0)
+				self.showstate()
 		if not self.queue or self.rate == 0.0:
 			delay = 10000.0		# Infinite
 			now = self.timefunc()
@@ -157,17 +139,14 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		self.showtime()
 	#
 	def showstate(self):
-		self.ffbutton.set_button(self.ff)
 		if not self.playing:
 			self.playbutton.set_button(0)
 			self.pausebutton.set_button(0)
 			self.stopbutton.set_button(1)
-			self.speedbutton.set_counter_value(self.oldrate)
 		else:
 			self.stopbutton.set_button(0)
-			self.playbutton.set_button(self.rate >= 1.0)
-			self.pausebutton.set_button(0.0 == self.rate)
-			self.speedbutton.set_counter_value(self.oldrate)
+			self.playbutton.set_button(self.rate == 1.0)
+			self.pausebutton.set_button(self.rate == 0.0)
 		if self.userplayroot is self.root:
 			self.partbutton.label = ''
 		else:
@@ -175,16 +154,16 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			if name == '':
 				label = 'part play'
 			else:
-				label = 'part play: ' + name
+				label =  name
 			self.partbutton.label = label
-		if self.timing_changed:
-			self.savelabel.lcol = self.savelabel.col2
-		else:
-			self.savelabel.lcol = self.savelabel.col1
 		self.calctimingbutton.set_button(self.measure_armtimes)
 		self.showtime()
 	#
 	def showtime(self):
+		if self.rate:
+			self.statebutton.lcol = self.statebutton.col2
+		else:
+			self.statebutton.lcol = GL.YELLOW
 		if self.msec_origin == 0:
 			self.statebutton.label = '--:--'
 			return
@@ -206,6 +185,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			# XXX for version 2.0 (beta), append a '|'.
 	#
 	def setwaiting(self):
+		self.statebutton.lcol = GL.MAGENTA
 		BasicDialog.setwaiting(self)
 		for cname in self.channelnames:
 			self.channels[cname].setwaiting()

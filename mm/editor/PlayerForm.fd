@@ -7,14 +7,14 @@ Number of forms: 1
 
 =============== FORM ===============
 Name: form
-Width: 290.000000
-Height: 160.000000
-Number of Objects: 16
+Width: 270.000000
+Height: 110.000000
+Number of Objects: 12
 
 --------------------
 class: 1
 type: 1
-box: 0.000000 0.000000 290.000000 160.000000
+box: 0.000000 0.000000 270.000000 110.000000
 boxtype: 1
 colors: 47 47
 alignment: 4
@@ -29,7 +29,7 @@ argument:
 --------------------
 class: 41
 type: 1
-box: 190.000000 100.000000 90.000000 20.000000
+box: 190.000000 10.000000 70.000000 30.000000
 boxtype: 5
 colors: 55 37
 alignment: 4
@@ -44,11 +44,11 @@ argument: 0
 --------------------
 class: 11
 type: 0
-box: 170.000000 60.000000 110.000000 30.000000
+box: 190.000000 40.000000 70.000000 30.000000
 boxtype: 2
-colors: 0 0
+colors: 0 2
 alignment: 4
-style: 4
+style: 10
 size: 11.000000
 lcol: 2
 label: --:--
@@ -74,7 +74,7 @@ argument:
 --------------------
 class: 11
 type: 2
-box: 10.000000 100.000000 50.000000 50.000000
+box: 10.000000 50.000000 50.000000 50.000000
 boxtype: 1
 colors: 47 47
 alignment: 4
@@ -89,7 +89,7 @@ argument: 0
 --------------------
 class: 11
 type: 2
-box: 60.000000 100.000000 70.000000 50.000000
+box: 60.000000 50.000000 70.000000 50.000000
 boxtype: 1
 colors: 47 47
 alignment: 4
@@ -104,7 +104,7 @@ argument: 0
 --------------------
 class: 11
 type: 2
-box: 130.000000 100.000000 50.000000 50.000000
+box: 130.000000 50.000000 50.000000 50.000000
 boxtype: 1
 colors: 47 47
 alignment: 4
@@ -132,24 +132,9 @@ callback:
 argument: 
 
 --------------------
-class: 25
-type: 1
-box: 60.000000 60.000000 90.000000 30.000000
-boxtype: 1
-colors: 47 0
-alignment: 2
-style: 0
-size: 11.000000
-lcol: 0
-label: Speed:
-name: speedbutton
-callback: speed_callback
-argument: 0
-
---------------------
 class: 62
 type: 2
-box: 150.000000 40.000000 20.000000 40.000000
+box: 130.000000 10.000000 20.000000 40.000000
 boxtype: 2
 colors: 47 1
 alignment: 4
@@ -164,7 +149,7 @@ argument: 0
 --------------------
 class: 11
 type: 0
-box: 10.000000 30.000000 150.000000 20.000000
+box: 60.000000 10.000000 120.000000 30.000000
 boxtype: 6
 colors: 47 47
 alignment: 4
@@ -179,28 +164,13 @@ argument: 0
 --------------------
 class: 2
 type: 0
-box: 230.000000 30.000000 50.000000 20.000000
-boxtype: 2
-colors: 0 3
-alignment: 4
-style: 1
-size: 8.000000
-lcol: 3
-label: 0
-name: late_ind
-callback: 
-argument: 
-
---------------------
-class: 2
-type: 0
-box: 170.000000 30.000000 50.000000 20.000000
+box: 190.000000 70.000000 70.000000 30.000000
 boxtype: 2
 colors: 0 0
 alignment: 4
-style: 4
-size: 8.000000
-lcol: 2
+style: 10
+size: 11.000000
+lcol: 6
 label: --:--
 name: duration_ind
 callback: 
@@ -209,46 +179,16 @@ argument:
 --------------------
 class: 11
 type: 1
-box: 190.000000 130.000000 90.000000 20.000000
+box: 10.000000 10.000000 50.000004 30.000000
 boxtype: 1
 colors: 47 47
 alignment: 4
 style: 0
 size: 8.000000
 lcol: 0
-label: Calculate timing
+label: ReTime
 name: calctimingbutton
 callback: calctiming_callback
-argument: 0
-
---------------------
-class: 2
-type: 0
-box: 10.000000 10.000000 210.000000 20.000000
-boxtype: 0
-colors: 47 0
-alignment: 4
-style: 0
-size: 8.000000
-lcol: 47
-label: Timing info changed - use SAVE to save
-name: savelabel
-callback: 
-argument: 
-
---------------------
-class: 11
-type: 1
-box: 230.000000 10.000000 50.000000 20.000000
-boxtype: 1
-colors: 47 47
-alignment: 4
-style: 0
-size: 8.000000
-lcol: 0
-label: @>>
-name: ffbutton
-callback: ff_callback
 argument: 0
 
 ==============================
