@@ -10,6 +10,41 @@ tryvisuals = [(X.TrueColor, 24),
 	      (X.TrueColor, 8),
 	      (X.PseudoColor, 8)]
 
+resources = [
+# fonts
+'*menuBar*fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*menubar*fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmLabel.fontList: -*-helvetica-bold-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmLabelGadget.fontList: -*-helvetica-bold-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmList.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmCascadeButton.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmCascadeButtonGadget.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmLabel.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmLabelGadget.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmPushButton.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmPushButtonGadget.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmToggleButton.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmMenuShell*XmToggleButtonGadget.fontList: -*-helvetica-bold-o-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmPushButton.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmPushButtonGadget.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmScale*fontList: -*-helvetica-bold-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmText.fontList: -*-screen-medium-r-normal--15-*-*-*-*-*-iso8859-1',
+'*XmTextField.fontList: -*-screen-medium-r-normal--15-*-*-*-*-*-iso8859-1',
+'*XmToggleButton.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
+'*XmToggleButtonGadget.fontList: -*-helvetica-medium-r-normal-*-14-*-*-*-*-*-iso8859-1',
+# colors
+## '*XmDrawnButton.background: #999999',
+## '*XmList.background: #999999',
+'*XmMenuShell*XmToggleButton.selectColor: #000000',
+'*XmMenuShell*background: #e0e0e0',
+## '*XmPushButton.background: #999999',
+'*XmScale*foreground: #000000',
+'*XmScale.XmScrollBar.foreground: #999999',
+'*XmText.background: #b98e8e',
+'*XmTextField.background: #b98e8e',
+'*background: #e0e0e0',
+	]
+
 def _roundi(x):
 	if x < 0:
 		return _roundi(x + 1024) - 1024
@@ -104,6 +139,7 @@ class _Splash:
 		import imgformat
 		self.__initialized = 1
 		Xt.ToolkitInitialize()
+		Xt.SetFallbackResources(resources)
 		self.dpy = dpy = Xt.OpenDisplay(None, None, 'Windowinterface',
 						[], sys.argv)
 ## 		dpy.Synchronize(1)
