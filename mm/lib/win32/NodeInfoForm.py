@@ -36,12 +36,13 @@ class DlgBar(window.Wnd,ControlsDict):
 		self.ShowWindow(win32con.SW_SHOW)
 	def hide(self):
 		self.ShowWindow(win32con.SW_HIDE)
-
+	def set_cbd(self,cbd):
+		self._cbd=cbd
 
 class NodeInfoDlgBar(DlgBar):
 	def __init__(self):
 		DlgBar.__init__(self)
-	def create(self,parent,cbd):
+	def create(self,parent,cbd=None):
 		DlgBar.create(self,parent,grinsRC.IDD_NODE_INFO_BAR,afxres.CBRS_ALIGN_TOP)
 		self['Name']=components.Edit(self,grinsRC.IDC_NODE_NAME)
 		self['Type']=components.ComboBox(self,grinsRC.IDC_NODE_TYPE)
@@ -60,7 +61,7 @@ class NodeInfoDlgBar(DlgBar):
 		if code==win32con.CBN_SELCHANGE:self.call('Type')
 	def OnChannel(self,id,code):
 		if code==win32con.CBN_SELCHANGE :self.call('Channel')
-
+			
 
 class StdDlgBar(DlgBar):
 	def __init__(self):
@@ -170,7 +171,7 @@ class IntGroup(DlgBar):
 	def __init__(self):
 		DlgBar.__init__(self)
 		self._list=components.ListBox(self,grinsRC.IDC_INT_LIST)
-		self._open=components.Button(self,grinsRC.IDC_BUTTON1)
+		self._open=components.Button(self,grinsRC.IDC_OPENCHILD)
 		self._support={'setchildren':self.setchildren,'getchild':self.getchild}
 	def create(self, parent,cbd=None):
 		DlgBar.create(self,parent,grinsRC.IDD_INT_GROUP,afxres.CBRS_ALIGN_TOP)
@@ -185,7 +186,7 @@ class IntGroup(DlgBar):
 	# Interface to the interior part.  This part consists of a
 	# list of strings and an interface to select one item in the
 	# list.
-	def setchildren(self, children, initchild):
+	def setchildren(self, children, initchild=None):
 		"""Set the list of children.
 
 		Arguments (no defaults):
@@ -194,9 +195,10 @@ class IntGroup(DlgBar):
 			the initial selection (no selection igf None)
 		"""
 		self._list.resetcontent()
-		self._list.addlistitems(children, -1)
 		if children:
-			self._list.setcursel(initchild)
+			self._list.addlistitems(children, -1)
+			if initchild:
+				self._list.setcursel(initchild)
 
 	def getchild(self):
 		"""Return the index of the current selection or None."""
@@ -213,24 +215,43 @@ class NodeInfoForm(FormViewBase):
 	def __init__(self,doc):
 		FormViewBase.__init__(self,doc,grinsRC.IDD_FORM)
 		self._title='NodeInfo Editor'
-
-	def OnInitialUpdate(self):
 		self._nodeinfo=NodeInfoDlgBar()
 		self._cmdbar=StdDlgBar()
 		self._ext_group=ExtGroup()
 		self._imm_group=ImmGroup()
 		self._int_group=IntGroup()
+		self._cur_group=None
+
+		# predent we own groups methods
+		for entry in self._imm_group._support.keys():
+			self.__dict__[entry]= self._imm_group._support[entry]
+		for entry in self._int_group._support.keys():
+			self.__dict__[entry]= self._int_group._support[entry]
+		for entry in self._ext_group._support.keys():
+			self.__dict__[entry]= self._ext_group._support[entry]		
+
+	def OnInitialUpdate(self):
 		frame=self.GetParent()
-		self._nodeinfo.create(frame,self._cbdict)
-		self._cmdbar.create(frame,self._cbdict)
-		self._ext_group.create(frame,self._cbdict)
-		self._imm_group.create(frame,self._cbdict)
-		self._int_group.create(frame,self._cbdict)
-		self._ext_group.hide()
-		self._imm_group.hide()
-		self._int_group.hide()
-		frame.RecalcLayout()
-		self.setdata()
+		self._nodeinfo.create(frame)
+		self._cmdbar.create(frame)
+		self._ext_group.create(frame)
+		self._imm_group.create(frame)
+		self._int_group.create(frame)
+
+
+	def fitbars(self):
+		if not self._nodeinfo or not self._cmdbar or not self._cur_group: return
+		rc1=win32mu.Rect(self._nodeinfo.GetWindowRect())
+		rc2=win32mu.Rect(self._cmdbar.GetWindowRect())
+		rc3=win32mu.Rect(self._cur_group.GetWindowRect())
+		from sysmetrics import cycaption,cyborder
+		h=rc1.height()+rc2.height()+rc3.height()+cycaption+2*cyborder+ cycaption/2
+		w=rc1.width()
+		if rc2.width()>w:w=rc2.width()
+		if rc3.width()>w:w=rc3.width()
+		flags=win32con.SWP_NOZORDER|win32con.SWP_NOACTIVATE|win32con.SWP_NOMOVE
+		self.GetParent().SetWindowPos(0, (0,0,w,h),flags)
+		#self.GetParent().RecalcLayout()
 
 	# called by mainwnd
 	def onActivate(self,f):
@@ -247,9 +268,11 @@ class NodeInfoForm(FormViewBase):
 				self.GetParent().SetWindowText(title)
 
 	def show(self):
+		self.ShowWindow(win32con.SW_SHOW)
 		self.pop() 
 
 	def pop(self):
+		if not hasattr(self,'GetParent'):return
 		childframe=self.GetParent()
 		childframe.ShowWindow(win32con.SW_SHOW)
 		frame=childframe.GetMDIFrame()
@@ -268,7 +291,6 @@ class NodeInfoForm(FormViewBase):
 		d=self._cbdict
 		if d and k in d.keys() and d[k]:
 			apply(apply,d[k])				
-
 
 	#########################################################
 	# cmif specific interface
@@ -302,7 +324,6 @@ class NodeInfoForm(FormViewBase):
 			in the immediate part
 		"""
 		self._cbdict=adornments['callbacks']
-
 		# gen node info 
 		self._title=title
 		self._channelnames=channelnames
@@ -316,32 +337,25 @@ class NodeInfoForm(FormViewBase):
 		self._children=children
 		self._filename=filename
 
-	def setdata(self):
-		# predent we own groups methods
-		for entry in self._imm_group._support.keys():
-			self.__dict__[entry]= self._imm_group._support[entry]
-		for entry in self._int_group._support.keys():
-			self.__dict__[entry]= self._int_group._support[entry]
-		for entry in self._ext_group._support.keys():
-			self.__dict__[entry]= self._ext_group._support[entry]		
-	
+
+	def setdata(self):	
 		self.settitle(self._title)
 		self.setchannelnames(self._channelnames,self._initchannel)
 		self.settypes(self._types,self._inittype)
-		self.setname(self._name)
-
-		self._cur_group=None
+		if self._name: self.setname(self._name)
 		if self._immtext:
-			self._imm_group.show()
 			self._imm_group.settext(self._immtext)
 		elif self._children:
-			self._int_group.show()
 			self._int_group.setchildren(self._children)
-		else: 
-			self._ext_group.show()
+		elif self._filename:
 			self._ext_group.setfilename(self._filename)
 		
-		self.GetParent().RecalcLayout()
+	def enable_cbs(self):
+		self._nodeinfo.set_cbd(self._cbdict)
+		self._cmdbar.set_cbd(self._cbdict)
+		self._ext_group.set_cbd(self._cbdict)
+		self._imm_group.set_cbd(self._cbdict)
+		self._int_group.set_cbd(self._cbdict)
 
 	# Interface to the list of channel names.  This part consists
 	# of a label and a list of strings of which one is always the
@@ -412,30 +426,46 @@ class NodeInfoForm(FormViewBase):
 	# hidden).
 	# In Motif, this is done by using the same screen area for the
 	# three parts.
+
 	def imm_group_show(self):
 		"""Make the immediate part visible."""
-		if self._cur_group and self._cur_group==self._imm_group:
-			return
-		if self._cur_group: self._cur_group.hide()
-		self._imm_group.show()
+		frame=self.GetParent()
+		frame.LockWindowUpdate()
+		if not self._imm_group.IsWindowVisible():
+			self._imm_group.show()
+		if self._int_group.IsWindowVisible():
+			self._int_group.hide()
+		if self._ext_group.IsWindowVisible():
+			self._ext_group.hide()
 		self._cur_group=self._imm_group
-		self.GetParent().RecalcLayout()
+		self.fitbars()
+		frame.UnlockWindowUpdate()
 
 	def int_group_show(self):
 		"""Make the interior part visible."""
-		if self._cur_group and self._cur_group==self._int_group:
-			return
-		if self._cur_group: self._cur_group.hide()
-		self._int_group.show()
+		frame=self.GetParent()
+		frame.LockWindowUpdate()
+		if not self._int_group.IsWindowVisible():
+			self._int_group.show()
+		if self._ext_group.IsWindowVisible():
+			self._ext_group.hide()
+		if self._imm_group.IsWindowVisible():
+			self._imm_group.hide()
 		self._cur_group=self._int_group
-		self.GetParent().RecalcLayout()
-
+		self.fitbars()
+		frame.UnlockWindowUpdate()
+		
 	def ext_group_show(self):
 		"""Make the external part visible."""
-		if self._cur_group and self._cur_group==self._ext_group:
-			return
-		if self._cur_group:self._cur_group.hide()
-		self._ext_group.show()
+		frame=self.GetParent()
+		frame.LockWindowUpdate()
+		if not self._ext_group.IsWindowVisible():
+			self._ext_group.show()
+		if self._int_group.IsWindowVisible():
+			self._int_group.hide()
+		if self._imm_group.IsWindowVisible():
+			self._imm_group.hide()
 		self._cur_group=self._ext_group
-		self.GetParent().RecalcLayout()
+		self.fitbars()
+		frame.UnlockWindowUpdate()
 
