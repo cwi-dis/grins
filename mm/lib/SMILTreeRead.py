@@ -2407,11 +2407,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.error('multiple body tags', self.lineno)
 		self.__seen_body = 1
 		self.__in_body = 1
+		self.__hidden_body = attributes.get('hidden', 'false') == 'true'
 		self.AddAttrs(self.__root, attributes)
 
 	def end_body(self):
 		self.end_seq()
 		self.__in_body = 0
+		if self.__hidden_body and len(self.__root.children) == 1:
+			root = self.__root
+			self.__root = root.children[0]
+			self.__root.Extract()
+			root.Destroy()
 
 	def start_meta(self, attributes):
 		self.__fix_attributes(attributes)

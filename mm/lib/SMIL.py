@@ -487,6 +487,7 @@ class SMIL:
 			 'copyright':None,
 			 'fill':None,
 			 __layout:None,
+			 GRiNSns+' ' 'hidden':None,
 			 GRiNSns+' ' 'collapsed':None,
 			 GRiNSns+' ' 'showtime':None,
 			 GRiNSns+' ' 'comment':None,
