@@ -31,4 +31,5 @@ descriptions = {
 	'application/smil': 'SMIL presentations',
 	'application/x-grins-cmif': 'CMIF presentations',
 	'application/x-grins-project': 'GRiNS Project files',
+	'image/vnd.rn-realpix': 'RealPix files',
 }
