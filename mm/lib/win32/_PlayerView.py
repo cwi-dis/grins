@@ -6,6 +6,9 @@ import win32con
 # app constants
 from appcon import *
 
+# kick toplevel.serve_events()
+import __main__
+
 # win32 structures helpers
 import win32mu
 
@@ -113,7 +116,12 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 			if DisplayListView.onMouseEvent(self, point, ev):
 				return stop
 
-		return self._viewport.onMouseEvent(point, ev)
+		action =  self._viewport.onMouseEvent(point, ev)
+
+		# kick immediate responses
+		__main__.toplevel.serve_events()
+
+		return action
 
 	def updateMouseCursor(self):
 		self.onMouseMove()
@@ -158,7 +166,10 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		self.paint()
 		rcBack = self._wnd.GetClientRect()
 		rcFront = self._wnd.ClientToScreen(rcBack)
-		self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
+		try:
+			self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
+		except:
+			pass
 
 	def getDrawBuffer(self):
 		return self._backBuffer
@@ -176,8 +187,10 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		rc = self.GetClientRect()
 		if self._convbgcolor == None:
 			self._convbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255, 255, 255) )
-		self._backBuffer.BltFill(rc, self._convbgcolor)
-		
+		try:
+			self._backBuffer.BltFill(rc, self._convbgcolor)
+		except:
+			return
 		if self._viewport:	
 			self._viewport.paint()
 			
