@@ -1,2 +1,1 @@
-set PYTHONPATH=d:\ufs\mm\python\Lib;d:\ufs\mm\python\Lib\plat-win;d:\ufs\mm\python\Extensions\Pythonwin;D:\ufs\mm\python\Extensions\win32\Build;D:\ufs\mm\python\Extensions\win32\Lib
 Pythonwin /run iGRiNS.py
