@@ -25,7 +25,7 @@ __version__ = "$Id$"
 
 """ @win32doc|AttrEditorDialog
 This class represents the interface between the AttrEditor platform independent
-class and its implementation AttrEditorForm in lib/win32/AttrEditorForm.py which 
+class and its implementation AttrEditorForm in lib/win32/AttrEditorForm.py which
 implements the actual dialog.
 
 """
@@ -60,7 +60,7 @@ class AttrEditorDialog:
 			a.attach_ui(w)
 		self.__window=w
 		fs.showform(w,formid)
-		
+
 
 	def close(self):
 		"""Close the dialog and free resources."""
@@ -81,6 +81,9 @@ class AttrEditorDialog:
 		"""
 		if self.__window:
 			self.__window.settitle(title)
+
+	def showmessage(self, *args, **kw):
+		apply(windowinterface.showmessage, args, kw)
 
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
@@ -171,4 +174,3 @@ class AttrEditorDialogField:
 	def help_callback(self):
 		"""Callback called when help is requested."""
 		pass
-
