@@ -29,32 +29,47 @@ class MainDialog:
 		title -- string to be displayed as window title
 		"""
 
-		import windowinterface
+		pass
 
-		self.__window = w = windowinterface.Window(
-			title, resizable = 0,
-			deleteCallback = (self.close_callback, ()))
-		buttons = [('Open\nLocation...', (self.__openURL_callback, ())),
-			 ('Open\nFile...', (self.__openfile_callback, ())),
-			 ('Exit', (self.close_callback, ())),
-			 ]
-		if __debug__:
-			buttons[2:2] = [
-				('Trace', (self.trace_callback, ()), 't'),
-				('Debug', (self.debug_callback, ()))]
-		buttons = w. ButtonRow(buttons, vertical = 0, tight = 1,
-			top = None, bottom = None, left = None, right = None)
+	def open_callback(self):
+		import windowinterface
+		w = windowinterface.Window('Open location', resizable = 1,
+					   grab = 1, horizontalSpacing = 5,
+					   verticalSpacing = 5)
+		l = w.Label('Open location', top = None, left = None,
+			    right = None)
+		f = w.SubWindow(left = None, top = l, right = None,
+				horizontalSpacing = 5, verticalSpacing = 5)
+		b = f.Button('Browse...', (self.__openfile_callback, ()),
+			     top = None, right = None, bottom = None)
+		t = f.TextInput(None, '', None, (self.__tcallback, ()),
+				left = None, right = b, top = None, bottom = None)
+		s = w.Separator(top = f, left = None, right = None)
+		r = w.ButtonRow([('Open', (self.__tcallback, ())),
+				 ('Cancel', (self.__ccallback, ()))],
+				vertical = 0, tight = 1, top = f, left = None,
+				right = None, bottom = None)
+		self.__text = t
+		self.__owindow = w
 		w.show()
 
-	def __openURL_callback(self):
-		import windowinterface
-		windowinterface.InputDialog('Open location', '',
-					    self.open_callback)
+	def __ccallback(self):
+		self.__owindow.close()
+		self.__owindow = None
+		self.__text = None
+
+	def __tcallback(self):
+		text = self.__text.gettext()
+		self.__ccallback()
+		if text:
+			self.openURL_callback(text)
 
 	def __openfile_callback(self):
 		import windowinterface
+		windowinterface.setwaiting()
 		windowinterface.FileDialog('Open file', '.', '*.smil', '',
-					   self.__filecvt, None, 1)
+					   self.__filecvt, None, 1,
+					   parent = self.__owindow)
 
 	def __filecvt(self, filename):
 		import os, MMurl
@@ -70,19 +85,4 @@ class MainDialog:
 				file = os.path.join(f, file)
 			if dir == cwd:
 				filename = file
-		self.open_callback(MMurl.pathname2url(filename))
-
-	# Callback functions.  These functions should be supplied by
-	# the user of this class (i.e., the class that inherits from
-	# this class).
-	def open_callback(self, url):
-		pass
-
-	def close_callback(self):
-		pass
-
-	def trace_callback(self):
-		pass
-
-	def debug_callback(self):
-		pass
+		self.__text.settext(MMurl.pathname2url(filename))
