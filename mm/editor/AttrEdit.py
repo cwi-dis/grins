@@ -868,7 +868,9 @@ class AttrEditor(AttrEditorDialog):
 			elif displayername == 'bitrate':
 				C = BitrateAttrEditorField
 			elif displayername == 'bitrate3':
-				C = Bitrate3AttrEditorField
+				C = BitrateAttrEditorFieldWithDefault
+			elif displayername == 'quality':
+				C = QualityAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -1520,7 +1522,7 @@ class BitrateAttrEditorField(PopupAttrEditorField):
 			return self.getdefault()
 		return self.valuerepr(val)
 
-class Bitrate3AttrEditorField(BitrateAttrEditorField):
+class BitrateAttrEditorFieldWithDefault(BitrateAttrEditorField):
 	def getoptions(self):
 		return [self.default] + BitrateAttrEditorField.getoptions(self)
 
@@ -1529,6 +1531,20 @@ class Bitrate3AttrEditorField(BitrateAttrEditorField):
 		if val is None:
 			return self.default
 		return self.valuerepr(val)
+
+class QualityAttrEditorField(PopupAttrEditorFieldNoDefault):
+	__values = ['low', 'normal', 'high', 'highest']
+	__valuesmap = [20, 50, 75, 90]
+
+	# Choose from a list of unit types
+	def getoptions(self):
+		return self.__values
+
+	def parsevalue(self, str):
+		return self.__valuesmap[self.__values.index(str)]
+
+	def valuerepr(self, value):
+		return self.__values[self.__valuesmap.index(value)]
 
 class TransitionAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['fill', 'fadein', 'fadeout', 'crossfade', 'wipe', 'viewchange']
