@@ -17,7 +17,6 @@ Error="Bandwidth.Error"
 
 # This value has to be determined.
 DEFAULT_STREAMING_MEDIA_PRELOAD=5
-DEFAULT_STATIC_MEDIA_BITRATE=12000
 
 # These rates are derived from the Real Producer SDK documentation.
 # Later we may want to give the user the ability to change the bitrates.
@@ -106,8 +105,9 @@ def getstreamdata(node, target=0):
 
 ##	print 'DBG: Bandwidth.get: discrete',filename, filesize, float(filesize)*8
 	bits = float(filesize)*8
-	prerollbitrate = DEFAULT_STATIC_MEDIA_BITRATE
-	urlcache.urlcache[url]['bandwidth'] = bits, None, prerollbitrate, None
+	prerollbitrate = MMAttrdefs.getattr(node, 'strbitrate')
+## Don't cache: user may change strbitrate property
+##	urlcache.urlcache[url]['bandwidth'] = bits, None, prerollbitrate, None
 	return bits, None, prerollbitrate, None
 
 def GetSize(url, target=0, attrs = {}, convert = 1):
