@@ -1603,7 +1603,8 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			print 'Unknown dragtool:', type
 			return
-		dummy = self.create(0, ntype=ntype, chtype=chtype)
+		i = dstobj.get_nearest_node_index((xd, yd))
+		dummy = self.create(0, index = i, ntype=ntype, chtype=chtype)
 
 	def dropexistingnode(self, cmd, dstpos, srcnode=None, srcpos=None):
 		# cmd can be 'copy' or 'move'. The return value is the
