@@ -358,14 +358,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# the warning comes later from xmllib
 			self.EndNode()
 		url = attributes.get('src')
-		self.__is_ext = url is not None
 		data = None
 		mtype = None
+		nodetype = 'ext'
+		self.__is_ext = 1
 		if url is not None:
 			url, tag = MMurl.splittag(url)
 			url = MMurl.basejoin(self.__base, url)
 			url = self.__context.findurl(url)
-			nodetype = 'ext'
 			res = dataurl.match(url)
 			if res is not None and res.group('base64') is None:
 				mtype = res.group('type') or 'text/plain'
@@ -375,11 +375,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# remove if immediate data allowed
 			self.syntax_error('no src attribute')
 
-			nodetype = 'imm'
-			self.__nodedata = []
-			self.__data = []
-			if not attributes.has_key('type'):
-				self.syntax_error('no type attribute')
+##			nodetype = 'imm'
+##			self.__is_ext = 0
+##			self.__nodedata = []
+##			self.__data = []
+##			if not attributes.has_key('type'):
+##				self.syntax_error('no type attribute')
 
 		# find out type of file
 		subtype = None
@@ -387,7 +388,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if mimetype is not None:
 			mtype = mimetype
 # not allowed to look at extension...
-		if mtype is None and self.__is_ext and settings.get('checkext'):
+		if mtype is None and url is not None and settings.get('checkext'):
  			import mimetypes
  			# guess the type from the file extension
  			mtype = mimetypes.guess_type(url)[0]
