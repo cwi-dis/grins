@@ -1521,6 +1521,11 @@ class LayoutView2(LayoutViewDialog2):
 		self.askname(name, 'Name for viewport', self.__viewportNamedCallback)
 
 	def __viewportNamedCallback(self, name):
+		# check if the viewport already exist
+		for viewportRef in self.getViewportRefList():
+			if viewportRef.name == name:
+				windowinterface.showmessage("A top layout element with the same id already exists", mtype = 'error')
+				return
 		self.applyNewViewport(name)
 		self.setglobalfocus([self.nameToNodeRef(name)])
 		self.updateFocus()
@@ -2646,7 +2651,7 @@ class Viewport(Node):
 				except IOError, arg:
 					if type(arg) is type(self):
 						arg = arg.strerror
-					windowinterface.showmessage('Cannot resolve the trace image URL "%s": %s' % (f, arg))
+					windowinterface.showmessage('Cannot resolve the trace image URL "%s": %s' % (f, arg), mtype = 'error')
 
 		self._graphicCtrl.setListener(self)
 		
