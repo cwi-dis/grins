@@ -121,6 +121,10 @@ SOURCE=.\RES\Nodrop.cur
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\player8bit.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\splashimg.bmp
 # End Source File
 # Begin Source File
