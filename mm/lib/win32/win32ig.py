@@ -1,12 +1,11 @@
 __version__ = "$Id$"
 
-""" @win32doc|win32ig
-The ImageLib class defined in this module
-offers to other modules image decompression
-and display facilities.
-To achive this it loads and uses the ig module
-that exports the Accusoft Image Gear library
-"""
+# @win32doc|win32ig
+# The ImageLib class defined in this module
+# offers to other modules image decompression
+# and display facilities.
+# To achive this it loads and uses the ig module
+# that exports the Accusoft Image Gear library
 
 # import module server
 import win32ui,win32api
