@@ -1088,8 +1088,8 @@ class _Window:
 		x1, y1 = x0 + w, y0 + h
 		x0 = int(float(x0)/_mscreenwidth*_screenwidth+0.5)
 		y0 = int(float(y0)/_mscreenheight*_screenheight+0.5)
-		x1 = int(float(x1)/_mscreenwidth*_screenwidth+0.5)
-		y1 = int(float(y1)/_mscreenheight*_screenheight+0.5)
+		x1 = int(float(x1)/_mscreenwidth*_screenwidth+0.5) - 1
+		y1 = int(float(y1)/_mscreenheight*_screenheight+0.5) - 1
 		gl.prefposition(x0 - wmcorr_x, x1 - wmcorr_x,
 			  _screenheight - y1 - 1 + wmcorr_y,
 			  _screenheight - y0 - 1 + wmcorr_y)
