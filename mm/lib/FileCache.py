@@ -3,16 +3,30 @@ import os
 
 class FileCache:
 
-	def init(self, func):
+	def init(self, *funcs):
+		if len(funcs) == 1:
+			self.func = funcs[0]
+			self.check = self.rm = None
+		elif len(funcs) == 2:
+			self.func, self.rm = funcs
+			self.rm = None
+		elif len(funcs) == 3:
+			self.func, self.rm, self.check = funcs
+		else:
+			raise TypeError, 'FileCache().init() w. wrong #args'
 		self.cache = {}
-		self.func = func
 		return self
 
 	def flushall(self):
+		if self.rm:
+			for file in self.cache.keys():
+				self.rm(file, self.cache[file][2])
 		self.cache = {}
 
 	def flush(self, file):
 		if self.cache.has_key(file):
+			if self.rm:
+				self.rm(file, self.cache[file][2])
 			del self.cache[file]
 
 	def get(self, file):
@@ -25,7 +39,11 @@ class FileCache:
 			entry = self.cache[file]
 			mt, sz, res = entry
 			if mt == mtime and sz == size:
-				return res
+				if self.check == None or \
+					  self.check(file, res):
+					return res
+			if self.rm:
+				self.rm(file, res)
 			del self.cache[file]
 		result = self.func(file)
 		self.cache[file] = mtime, size, result
