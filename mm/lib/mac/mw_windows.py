@@ -1087,7 +1087,7 @@ class _CommonWindow:
 				Qd.DisposeRgn(r2)
 				didsome = 1
 		elif self._redrawguarantee != None:
-			print 'Pickup redraw guarantee', self._redrawguarantee, 'out of', self.qdrect() #DBG
+##			print 'Pickup redraw guarantee', self._redrawguarantee, 'out of', self.qdrect() #DBG
 			r2 = Qd.NewRgn()
 			Qd.RectRgn(r2, self._redrawguarantee)
 			Qd.UnionRgn(r, r2, r)
@@ -1110,7 +1110,7 @@ class _CommonWindow:
 		return r
 		
 	def _mac_setredrawguarantee(self, box):
-		print 'set redrawguarantee', self, box #DBG
+##		print 'set redrawguarantee', self, box #DBG
 		self._redrawguarantee = box
 		self._clipchanged()
 					
@@ -1616,14 +1616,9 @@ class _OffscreenMixin:
 			pixmap = gworld.GetGWorldPixMap()
 			Qdoffs.LockPixels(pixmap)
 			bitmap = Qd.RawBitMap(pixmap.data)
-			# XXXX Set font?
-			#
-			# And store it.
-			#
-			self.__refcounts[which] = 1
-			self.__wids[which] = grafptr
-			self.__gworlds[which] = gworld
-			self.__bitmaps[which] = bitmap
+			Qd.RGBBackColor(self._bgcolor)
+			Qd.EraseRect(cur_rect)
+			created = 1
 		else:
 			#
 			# We have this bitmap already.
@@ -1633,6 +1628,7 @@ class _OffscreenMixin:
 			gworld = self.__gworlds[which]
 			bitmap = self.__bitmaps[which]
 			Qdoffs.SetGWorld(grafptr, None)
+			created = 0
 		#
 		# Finally copy or erase the portion of the bitmap to be used.
 		#
@@ -1641,10 +1637,20 @@ class _OffscreenMixin:
 			Qd.RGBForeColor((0,0,0))			
 			portBits = self._onscreen_wid.GetWindowPort().portBits
 			Qd.CopyBits(portBits, bitmap, area, area, QuickDraw.srcCopy, None)
-		else:
-			Qd.RGBBackColor(self._bgcolor)
-			Qd.EraseRect(area)
+## XXX Not sure whether this is correct: the whole offscreen bitmap has been cleared during
+## creation (above), but should I re-clear here if I reuse it?
+##		else:
+##			Qd.RGBBackColor(self._bgcolor)
+##			Qd.EraseRect(area)
 		Qdoffs.SetGWorld(cur_port, cur_dev)
+		if created:
+			#
+			# And store it.
+			#
+			self.__refcounts[which] = 1
+			self.__wids[which] = grafptr
+			self.__gworlds[which] = gworld
+			self.__bitmaps[which] = bitmap
 		
 	def _mac_dispose_gworld(self, which):
 		if which < 0:
@@ -2080,7 +2086,7 @@ class _AdornmentsMixin:
 					self._add_control(cntl, self._toolbar_callback)
 					self._cmd_to_cntl[cmd] = cntl
 					self._cntl_to_cmd[cntl] = cmd
-				cntl.EmbedControl(toolbar)
+					cntl.EmbedControl(toolbar)
 			#
 			# Adjust window bounds
 			#
@@ -2194,7 +2200,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
 			title="", adornments=None, canvassize = None, commandlist=None,
 			resizable=1, bgcolor=None):
-		print 'DBG: mainwindow, coords=', (x, y, w, h)
+##		print 'DBG: mainwindow, coords=', (x, y, w, h)
 		self._title = title
 		self._istoplevel = 1
 		self._resizable = resizable
@@ -2547,7 +2553,7 @@ class _SubWindow(_CommonWindow):
 		
 		self._istoplevel = 0
 		self._units = units
-		print 'DBG: subwindow, units=', units, 'coords=', coordinates
+##		print 'DBG: subwindow, units=', units, 'coords=', coordinates
 		_CommonWindow.__init__(self, parent, wid, z, bgcolor)
 		
 		x, y, w, h = parent._convert_coordinates(coordinates, units = units)
