@@ -65,6 +65,10 @@ class _Toplevel:
 		self._delete_window = dpy.InternAtom('WM_DELETE_WINDOW', FALSE)
 		self._compound_text = dpy.InternAtom('COMPOUND_TEXT', FALSE)
 		self._netscape_url = dpy.InternAtom('_NETSCAPE_URL', FALSE)
+		dt_netfile = dpy.InternAtom('_DT_NETFILE', TRUE)
+		if dt_netfile:
+			toplevel._dt_netfile = dt_netfile
+		self._string = dpy.InternAtom('STRING', FALSE)
 		self._default_colormap = main.DefaultColormapOfScreen()
 		self._default_visual = main.DefaultVisualOfScreen()
 ## 		self._default_colormap = self._colormap
