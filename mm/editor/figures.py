@@ -18,8 +18,19 @@ ARR_SLANT = float(ARR_WIDTH) / float(ARR_HEAD)
 NORM_ARROW = 0
 FOCUS_ARROW = 1
 
+# Functions to set various colors
+def bgcolor(): RGBcolor(160, 160, 160)
+def nodecolor(): RGBcolor(255, 255, 0)		# YELLOW
+def focuscolor(): RGBcolor(255, 0, 0)		# RED
+def altfocuscolor(): RGBcolor(0, 255, 0)	# GREEN
+def channelcolor(): RGBcolor(0, 255, 0)		# GREEN
+def arrowcolor(): RGBcolor(0, 0, 255)		# BLUE
+def textcolor(): RGBcolor(0, 0, 0)		# BLACK
+def thermocolor(): RGBcolor(255, 255, 0)	# YELLOW
+def altthermocolor(): RGBcolor(0, 0, 255)	# BLUE
+
 def clear_window():
-	color(WHITE)
+	bgcolor()
 	clear()
 
 # define a rectangular box with vertex at (x,y); width w and heigth h.
@@ -38,7 +49,7 @@ class box():
 	def draw(self):
 		if self.hidden <> 0 or self.boxtype = BG_BOX:
 			return
-		color(YELLOW)
+		nodecolor()
 		x = self.x
 		y = self.y
 		w = self.w
@@ -54,11 +65,11 @@ class box():
 		l = getlwidth()
 		linewidth(l * 2)
 		if self.boxtype = FOCUS_BOX:
-			color(RED)
+			focuscolor()
 		elif self.boxtype = LOCK_BOX:
-			color(GREEN)
+			altfocuscolor()
 		else:
-			color(WHITE)
+			bgcolor()
 		bgnclosedline()
 		v2f(0, 0)
 		v2f(w, 0)
@@ -95,7 +106,7 @@ class diamond():
 		w = self.w
 		h = self.h
 		l = self.l
-		color(GREEN)
+		channelcolor()
 		pushmatrix()
 		translate(x+w/2, y, 0)
 		bgnpolygon()
@@ -111,7 +122,7 @@ class diamond():
 		l = getlwidth()
 		linewidth(l * 2)
 		if self.kind = FOCUS_CHAN:
-			color(RED)
+			focuscolor()
 		bgnclosedline()
 		v2f(0, 0)
 		v2f(w/2, h/2)
@@ -124,6 +135,7 @@ class diamond():
 		popmatrix()
 
 	def redraw(self):
+		# XXX Why isn't this unified with redraw()
 		if self.hidden <> 0:
 			return
 		x = self.x
@@ -131,7 +143,7 @@ class diamond():
 		w = self.w
 		h = self.h
 		l = self.l
-		color(GREEN)
+		channelcolor()
 		pushmatrix()
 		translate(x+w/2, y, 0)
 		bgnpolygon()
@@ -143,7 +155,7 @@ class diamond():
 		l = getlwidth()
 		linewidth(l * 2)
 		if self.kind = FOCUS_CHAN:
-			color(RED)
+			focuscolor()
 		bgnclosedline()
 		v2f(0, 0)
 		v2f(w/2, h/2)
@@ -214,9 +226,9 @@ class arrow():
 		l = getlwidth()
 		linewidth(l*2)
 		if self.kind = NORM_ARROW:
-			color(RED)
+			arrowcolor()
 		else:
-			color(BLUE)
+			focuscolor()
 		translate(self.fx, self.fy, 0)
 		rot(- self.angle * 180 / pi, 'z')
 		bgnline()
@@ -251,7 +263,7 @@ def putlabel(label):
 	h = getheight()
 	w = strwidth(label)
 	cmov2(-w/2, -h/2)
-	color(BLACK)
+	textcolor()
 	charstr(label)
 
 # define a thermometer with vertex at (x,y); width w and heigth h.
@@ -265,7 +277,7 @@ class thermo():
 		return self
 
 	def draw(self, val):
-		color(YELLOW)
+		thermocolor()
 		x = self.x
 		y = self.y
 		w = self.w
@@ -278,7 +290,7 @@ class thermo():
 		v2f(w, h - val)
 		v2f(0, h - val)
 		endpolygon()
-		color(BLUE)
+		altthermocolor()
 		bgnpolygon()
 		v2f(0, h - val)
 		v2f(w, h - val)
