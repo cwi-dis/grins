@@ -47,3 +47,10 @@ MLF_NOKICKIDLE     = 0x0002  # don't send WM_KICKIDLE messages
 MLF_SHOWONIDLE     = 0x0004  # show window if not visible at idle time
 
 WM_KICKIDLE        = 0x036A
+
+# DropEffects
+DROPEFFECT_NONE   = 0
+DROPEFFECT_COPY   = 1
+DROPEFFECT_MOVE   = 2
+DROPEFFECT_LINK   = 4
+DROPEFFECT_SCROLL = 0x80000000 
