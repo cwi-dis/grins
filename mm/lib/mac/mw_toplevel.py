@@ -71,6 +71,7 @@ class _Event(AEServer):
 		self._grabbed_wids = []
 		self._active_movies = 0
 		self._mouse_tracker = None
+		self._mouse_timer = None
 		l, t, r, b = Qd.qd.screenBits.bounds
 		self._draglimit = l+4, t+4+_screen_top_offset, r-4, b-4
 		self.removed_splash = 0
@@ -102,6 +103,18 @@ class _Event(AEServer):
 		if tracker and self._mouse_tracker:
 			raise 'Mouse tracker already active'
 		self._mouse_tracker = tracker
+		
+	def setmousetimer(self, timerfunc, args):
+		self.cancelmousetimer()
+		self._mouse_timer = self.settimer(0.3, (timerfunc, args))
+		
+	def cancelmousetimer(self):
+		if self._mouse_timer:
+			self.canceltimer(self._mouse_timer)
+			self._mouse_timer = None
+			
+	def clearmousetimer(self):
+		self._mouse_timer = None
 					
 	def mainloop(self):
 		"""The event mainloop"""
@@ -153,6 +166,8 @@ class _Event(AEServer):
 		
 		if gotone:
 			while gotone:
+				if self._mouse_timer:
+					self.cancelmousetimer()
 				self._handle_event(event)
 				if self._active_movies:
 					Qt.MoviesTask(0)
