@@ -214,7 +214,6 @@ class SMILParser(xmllib.XMLParser):
 			node = self.__context.newnode('ext')
 			self.__container._addchild(node)
 		self.__node = node
-		node.attrdict['transparent'] = -1
 		self.AddAttrs(node, attributes, mediatype)
 		node.__mediatype = mediatype, subtype
 		try:
@@ -424,6 +423,7 @@ class SMILParser(xmllib.XMLParser):
 						self.__width, self.__height
 					layout['units'] = UNIT_PXL
 				ch['base_window'] = self.__title
+				ch['transparent'] = -1
 				ch['z'] = attrdict['z-index']
 				scale = attrdict['scale']
 				if scale == 'meet':
