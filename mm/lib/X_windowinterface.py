@@ -193,6 +193,8 @@ class _Window:
 		self._redraw_func = None
 		self._parent_window._subwindows.append(self)
 		self._toplevel = self._parent_window._toplevel
+		self._menu = None
+		self._accelerators = {}
 		self._gc = self._form.CreateGC({
 			  'background': self._xbgcolor,
 			  'foreground': self._xbgcolor})
@@ -234,7 +236,7 @@ class _Window:
 		# let our parent window inherit events meant for us
 ##		dummy = testevent()	# read all pending events
 ##		q = []
-##		for (win, ev, val) in event._queue:
+##		for win, ev, val in event._queue:
 ##			if win == self:
 ##				if parent in (None, toplevel):
 ##					# delete event if we have no parent:
@@ -270,6 +272,9 @@ class _Window:
 			string = Xlib.LookupString(ev)[0]
 			if toplevel._win_lock:
 				toplevel._win_lock.release()
+			if self._accelerators.has_key(string):
+				apply(self._accelerators[string])
+				return
 			for i in range(len(string)):
 				enterevent(self, KeyboardInput, string[i])
 		elif decoded_event.type == X.KeyRelease:
@@ -281,6 +286,10 @@ class _Window:
 				elif decoded_event.button == X.Button2:
 					ev = Mouse1Press
 				elif decoded_event.button == X.Button3:
+					if self._menu:
+						Xm.MenuPosition(self._menu, ev)
+						self._menu.ManageChild()
+						return
 					ev = Mouse2Press
 				else:
 					return	# unsupported mouse button
@@ -290,6 +299,10 @@ class _Window:
 				elif decoded_event.button == X.Button2:
 					ev = Mouse1Release
 				elif decoded_event.button == X.Button3:
+					if self._menu:
+						# ignore buttonrelease
+						# when we have a menu
+						return
 					ev = Mouse2Release
 				else:
 					return	# unsupported mouse button
@@ -646,6 +659,51 @@ class _Window:
 
 	def unregister(self, ev):
 		event.unregister(self, ev)
+
+	def create_menu(self, title, list):
+		menu = Xm.CreatePopupMenu(self._form, 'menu',
+				{'colormap': toplevel._default_colormap})
+		if title:
+			dummy = menu.CreateManagedWidget(title, Xm.Label, {})
+			dummy = menu.CreateManagedWidget('separator',
+							 Xm.Separator, {})
+		self._accelerators = {}
+		_create_menu(menu, self._accelerators, list)
+		self._menu = menu
+
+# three menu utility functions
+def _menu_callback(widget, func_arg, call_data):
+	apply(func_arg)
+
+def _create_menu(widget, acc, list):
+	for entry in list:
+		if entry is None:
+			dummy = widget.CreateManagedWidget('separator',
+							 Xm.Separator, {})
+			continue
+		accelerator, label, callback = entry
+		if type(callback) is type([]):
+			button = _create_submenu(widget, acc, label, callback)
+		else:
+			if type(callback) is not type(()):
+				callback = (callback, (label,))
+			if accelerator:
+				if type(accelerator) is not type('') or \
+				   len(accelerator) != 1:
+					raise error, 'menu accelerator must be single character'
+				acc[accelerator] = callback
+			button = widget.CreateManagedWidget(label,
+							    Xm.PushButton, {})
+			button.AddCallback('activateCallback', _menu_callback,
+					   callback)
+			if accelerator:
+				button.acceleratorText = accelerator
+
+def _create_submenu(menu, acc, label, list):
+	button = menu.CreateManagedWidget(label, Xm.CascadeButton, {})
+	submenu = Xm.CreatePulldownMenu(menu, 'submenu', {})
+	button.subMenuId = submenu
+	_create_menu(submenu, acc, list)
 
 class _DisplayList:
 	def __init__(self, window, bgcolor):
@@ -1417,7 +1475,7 @@ class _Event:
 
 	def remove_window_callbacks(self, window):
 		# called when window closes
-		for (w, e) in self._windows.keys():
+		for w, e in self._windows.keys():
 			if w == window:
 				self.unregister(w, e)
 
@@ -1425,7 +1483,7 @@ class _Event:
 		self.register(None, event, func, arg)
 
 	def clean_callbacks(self):
-		for (win, event) in self._windows.keys():
+		for win, event in self._windows.keys():
 			if win and win.is_closed():
 				self.register(win, event, None, None)
 
@@ -1451,7 +1509,7 @@ class _Event:
 	def mainloop(self):
 		self._looping = 1
 		t = 0
-		for (time, arg, tid) in self._timers:
+		for time, arg, tid in self._timers:
 			time = time + t
 			t = time
 			id = Xt.AddTimeOut(int(time * 1000),
