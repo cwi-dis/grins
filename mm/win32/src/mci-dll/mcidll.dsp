@@ -41,6 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "..\Build\Temp\mcidl\Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
+F90=df.exe
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /c
 # ADD CPP /nologo /MD /W3 /GX /O2 /D "NDEBUG" /D "_MBCS" /D "WIN32" /D "_WINDOWS" /D "BUILD_MCIDLL" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /win32
@@ -67,6 +68,7 @@ LINK32=link.exe
 # PROP Intermediate_Dir "..\Build\Temp\mcidll\Debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
+F90=df.exe
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /c
 # ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "BUILD_MCIDLL" /YX /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /win32
@@ -92,6 +94,15 @@ LINK32=link.exe
 # Begin Source File
 
 SOURCE=.\mciavi.c
+
+!IF  "$(CFG)" == "mcidll - Win32 Release"
+
+# ADD CPP /O2 /Op
+
+!ELSEIF  "$(CFG)" == "mcidll - Win32 Debug"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
