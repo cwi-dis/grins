@@ -2987,16 +2987,19 @@ BEGIN
     "6",            IDUC_UGROUPS,           VIRTKEY, ALT, NOINVERT
     "7",            IDUC_SOURCE,            VIRTKEY, ALT, NOINVERT
     "C",            IDUC_COPY,              VIRTKEY, CONTROL, NOINVERT
+    "F",            IDUC_FIND,              VIRTKEY, CONTROL, NOINVERT
     "H",            IDUC_STOP,              VIRTKEY, CONTROL, NOINVERT
     "L",            IDUC_OPENURL,           VIRTKEY, CONTROL, NOINVERT
     "N",            IDUC_NEW_DOCUMENT,      VIRTKEY, CONTROL, NOINVERT
     "O",            IDUC_OPEN,              VIRTKEY, CONTROL, NOINVERT
     "P",            IDUC_PLAY,              VIRTKEY, CONTROL, NOINVERT
+    "R",            IDUC_REPLACE,           VIRTKEY, CONTROL, NOINVERT
     "S",            IDUC_SAVE,              VIRTKEY, CONTROL, NOINVERT
     "U",            IDUC_PAUSE,             VIRTKEY, CONTROL, NOINVERT
     "V",            IDUC_PASTE,             VIRTKEY, CONTROL, NOINVERT
     "V",            IDUC_PASTEFILE,         VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
+    VK_F3,          IDUC_FINDNEXT,          VIRTKEY, NOINVERT
     VK_F5,          IDUC_PLAYER,            VIRTKEY, NOINVERT
     VK_F6,          IDUC_HVIEW,             VIRTKEY, NOINVERT
     VK_F7,          IDUC_LAYOUT,            VIRTKEY, NOINVERT
@@ -3025,12 +3028,14 @@ END
 IDR_STRUCT_EDIT ACCELERATORS DISCARDABLE 
 BEGIN
     "C",            IDUC_COPY,              VIRTKEY, CONTROL, NOINVERT
+    "F",            IDUC_FIND,              VIRTKEY, CONTROL, NOINVERT
     "H",            IDUC_STOP,              VIRTKEY, CONTROL, NOINVERT
     "I",            IDUC_EXPAND,            VIRTKEY, CONTROL, NOINVERT
     "L",            IDUC_OPENURL,           VIRTKEY, CONTROL, NOINVERT
     "N",            IDUC_NEW_DOCUMENT,      VIRTKEY, CONTROL, NOINVERT
     "O",            IDUC_OPEN,              VIRTKEY, CONTROL, NOINVERT
     "P",            IDUC_PLAY,              VIRTKEY, CONTROL, NOINVERT
+    "R",            IDUC_REPLACE,           VIRTKEY, CONTROL, NOINVERT
     "S",            IDUC_SAVE,              VIRTKEY, CONTROL, NOINVERT
     "U",            IDUC_PAUSE,             VIRTKEY, CONTROL, NOINVERT
     "V",            IDUC_PASTE,             VIRTKEY, CONTROL, NOINVERT
@@ -3040,6 +3045,7 @@ BEGIN
     VK_DELETE,      IDUC_DELETE,            VIRTKEY, NOINVERT
     VK_DELETE,      IDUC_DELETE,            VIRTKEY, CONTROL, NOINVERT
     VK_DOWN,        IDUC_NEXTSIBLING,       VIRTKEY, NOINVERT
+    VK_F3,          IDUC_FINDNEXT,          VIRTKEY, NOINVERT
     VK_F5,          IDUC_PLAYER,            VIRTKEY, NOINVERT
     VK_F6,          IDUC_HVIEW,             VIRTKEY, NOINVERT
     VK_F7,          IDUC_LAYOUT,            VIRTKEY, NOINVERT
@@ -3082,18 +3088,21 @@ END
 IDR_SOURCE_EDIT ACCELERATORS DISCARDABLE 
 BEGIN
     "C",            IDUC_COPY,              VIRTKEY, CONTROL, NOINVERT
+    "F",            IDUC_FIND,              VIRTKEY, CONTROL, NOINVERT
     "H",            IDUC_STOP,              VIRTKEY, CONTROL, NOINVERT
     "I",            IDUC_EXPAND,            VIRTKEY, CONTROL, NOINVERT
     "L",            IDUC_OPENURL,           VIRTKEY, CONTROL, NOINVERT
     "N",            IDUC_NEW_DOCUMENT,      VIRTKEY, CONTROL, NOINVERT
     "O",            IDUC_OPEN,              VIRTKEY, CONTROL, NOINVERT
     "P",            IDUC_PLAY,              VIRTKEY, CONTROL, NOINVERT
+    "R",            IDUC_REPLACE,           VIRTKEY, CONTROL, NOINVERT
     "S",            IDUC_SAVE,              VIRTKEY, CONTROL, NOINVERT
     "U",            IDUC_PAUSE,             VIRTKEY, CONTROL, NOINVERT
     "V",            IDUC_PASTE,             VIRTKEY, CONTROL, NOINVERT
     "V",            IDUC_PASTEFILE,         VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
     VK_DELETE,      IDUC_DELETE,            VIRTKEY, CONTROL, NOINVERT
+    VK_F3,          IDUC_FINDNEXT,          VIRTKEY, NOINVERT
     VK_F5,          IDUC_PLAYER,            VIRTKEY, NOINVERT
     VK_F6,          IDUC_HVIEW,             VIRTKEY, NOINVERT
     VK_F7,          IDUC_LAYOUT,            VIRTKEY, NOINVERT

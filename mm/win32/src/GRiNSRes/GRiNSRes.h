@@ -748,13 +748,16 @@
 #define IDUC_BEGIN_EVENT                32887
 #define IDUC_END_EVENT                  32888
 #define IDUC_EVENT_SOURCE               32889
+#define IDUC_FIND                       32890
+#define IDUC_REPLACE                    32891
+#define IDUC_FINDNEXT                   32892
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        443
-#define _APS_NEXT_COMMAND_VALUE         32890
+#define _APS_NEXT_COMMAND_VALUE         32893
 #define _APS_NEXT_CONTROL_VALUE         1444
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
