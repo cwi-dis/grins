@@ -65,8 +65,65 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.filename = url
 		self.window = None	# Created in TopLevelDialog.py
 ##		self.source = None
-		self.read_it()
 
+		# we create only one edit manager by toplevel window.		
+		self.editmgr = EditMgr(self)
+		self.editmgr.register(self)
+
+		# read the document		
+		self.read_it()
+		
+		self.__checkInitialErrors()
+		
+		self.set_commandlist()
+
+		TopLevelDialog.__init__(self)
+		self.makeviews()
+
+	def __repr__(self):
+		return '<TopLevel instance, url=' + `self.filename` + '>'
+
+	# check the errors on the first load. And if any error, ask to the user if he wants to leave the editor
+	# to fix automaticly the errors. Note: this test is a bit different as the test in the source view:
+	# if any error, there is no rollback
+	def __checkInitialErrors(self):
+		parseErrors = self.root.GetContext().getParseErrors()
+		if parseErrors != None:
+			ret = windowinterface.GetYesNoCancel('The source document contains some errors\nDo you wish to leave the editor to fix automaticly the errors', self.window)
+			if ret == 0: # yes
+				# accept the errors automaticly fixed by GRiNS
+				self.forgetParseErrors()
+			elif ret == 1: # no
+				# default treatement: accept errors and don't allow to edit another view
+				pass
+			else: # cancel: raise an error: it will be intercepted
+				raise MSyntaxError			
+		
+	# detect the errors/fatal errors
+	# if it's a fatal error, then load an empty document to keep GRiNS in a stable state
+	def __checkParseErrors(self):
+		parseErrors = self.root.GetContext().getParseErrors()
+		if parseErrors != None:
+			if parseErrors.getType() == 'fatal':
+				# XXX for now, if there is any fatal error, we load an empty document. In this case, we
+				# even be able to edit the source view. 
+				import SMILTreeRead
+				self.root = SMILTreeRead.ReadString(EMPTY, self.filename)
+				# check that the 'EMPTY' document don't generate as well a fatal error
+				# note: it shouldn't happen
+				iParseErrors = self.root.GetContext().getParseErrors()
+				if iParseErrors != None and iParseErrors.getType() == 'fatal':
+					# re-raise
+					raise MSyntaxError
+
+				# if we reload the empty document we have to re-set the previous error
+				self.root.GetContext().setParseErrors(parseErrors)
+
+	# forget the parse errors, and accept the document fixed automaticly by the editor
+	def forgetParseErrors(self):
+		self.context.setParseErrors(None)
+		
+	def set_commandlist(self):
 		self.commandlist = [
 			PLAY(callback = (self.play_callback, ())),
 			PLAYERVIEW(callback = (self.view_callback, (0,))),
@@ -78,23 +135,17 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			HIDE_PLAYERVIEW(callback = (self.hide_view_callback, (0,))),
 			HIDE_HIERARCHYVIEW(callback = (self.hide_view_callback, (1,))),
 			]
-		self.undocommandlist = [
-			UNDO(callback = (self.undo_callback, ())),
-			REDO(callback = (self.redo_callback, ())),
-			]
 		if not features.lightweight:
 			self.commandlist = self.commandlist + [
 				CHANNELVIEW(callback = (self.view_callback, (2,))),
 				LINKVIEW(callback = (self.view_callback, (3,))),
 				LAYOUTVIEW(callback = (self.view_callback, (4,))),
 				LAYOUTVIEW2(callback = (self.view_callback, (7, ))),
-				SOURCEVIEW(callback = (self.view_callback, (8, ))),
 				HIDE_LAYOUTVIEW2(callback = (self.hide_view_callback, (7, ))),
 				HIDE_CHANNELVIEW(callback = (self.hide_view_callback, (2,))),
 				HIDE_LINKVIEW(callback = (self.hide_view_callback, (3,))),
 				HIDE_LAYOUTVIEW(callback = (self.hide_view_callback, (4,))),
 				HIDE_USERGROUPVIEW(callback = (self.hide_view_callback, (5,))),
-				HIDE_SOURCEVIEW(callback = (self.hide_view_callback, (8, ))),
 				]
 			self.__ugroup = [
 				USERGROUPVIEW(callback = (self.view_callback, (5,))),
@@ -109,9 +160,21 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			#	
 		else:
 			self.__ugroup = []
+
+		# the source view command is all the time valid
+		self.commandlist.append(SOURCEVIEW(callback = (self.view_callback, (8, ))))
+		self.commandlist.append(HIDE_SOURCEVIEW(callback = (self.hide_view_callback, (8, ))))
+			
+		self.undocommandlist = [
+			UNDO(callback = (self.undo_callback, ())),
+			REDO(callback = (self.redo_callback, ())),
+			]
+
+		self.commandlist_g2 = [] # default, avoid some crashed
+		
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
-		if self.main.cansave():
+		if self.main.cansave() and self.context.isValidDocument():
 			self.commandlist = self.commandlist + [
 				SAVE_AS(callback = (self.saveas_callback, ())),
 				SAVE(callback = (self.save_callback, ())),
@@ -146,12 +209,17 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##				HIDE_SOURCE(callback = (self.hide_source_callback, ())),
 ##				]
 
-		TopLevelDialog.__init__(self)
-		self.makeviews()
-
-	def __repr__(self):
-		return '<TopLevel instance, url=' + `self.filename` + '>'
-
+	def update_undocommandlist(self):
+		undocommandlist = []
+		if self.editmgr.history:
+			undocommandlist = undocommandlist + self.undocommandlist[:1]
+		if self.editmgr.future:
+			undocommandlist = undocommandlist + self.undocommandlist[1:]
+		if self.context.attributes.get('project_boston', 0):
+			self.setcommands(self.commandlist + self.__ugroup + undocommandlist)
+		else:
+			self.setcommands(self.commandlist + self.commandlist_g2 + undocommandlist)
+		
 	def show(self):
 		TopLevelDialog.show(self)
 		if self.context.attributes.get('project_boston', 0):
@@ -159,6 +227,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			self.setcommands(self.commandlist + self.commandlist_g2)
 		self.showdefaultviews()
+		
+		# if the document is not valid (parse error),
+		# show the source view
+		# XXX may change
+		if not self.context.isValidDocument():
+			if self.sourceview != None and not self.sourceview.is_showing():
+				self.sourceview.show()
 
 	def showdefaultviews(self):
 		import settings
@@ -308,6 +383,26 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def checkviews(self):
 		pass
 
+	def reload_views(self):
+		showing = []
+		for i in range(len(self.views)):
+			if self.views[i] is not None and \
+				self.views[i].is_showing():
+				showing.append(i)
+
+		self.destroyviews()
+		self.makeviews()
+		for i in showing:
+			self.views[i].show()
+		self.changed = 1
+
+		# if the document is not valid (parse error),
+		# show the source view
+		# XXX may change
+		if not self.context.isValidDocument():
+			if self.sourceview != None and not self.sourceview.is_showing():
+				self.sourceview.show()
+
 #	def open_node_in_tview(self, node):
 #		# This causes the temporal view to open the particular node as the root.
 #		if self.temporalview:
@@ -389,6 +484,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##			view.hide()
 ##		else:
 ##			view.show()
+
+	def change_source(self, text):
+		self.editmgr.deldocument(self.root)
+		self.do_read_it_from_string(text)		
+		self.editmgr.adddocument(self.root)
 
 	def hide_view_callback(self, viewno):
 		view = self.views[viewno]
@@ -787,6 +887,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		save_new = self.new_file
 		self.new_file = 1
 		self.do_read_it(tmp)	# Reads the file and creates the MMNode heirarchy.
+		self.__checkParseErrors()
+		self.setRoot(self.root)
 		self.new_file = save_new
 		try:
 			os.unlink(self.__edittmp)
@@ -1077,15 +1179,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				self.root = SMILTreeRead.ReadString(EMPTY, self.filename)
 		else:
 			self.do_read_it(self.filename)
-		self.context = self.root.GetContext()
+		self.__checkParseErrors()
+		self.setRoot(self.root)
 		if self.new_file:
 			self.context.baseurl = ''
 			if type(self.new_file) == type(''):
 				self.context.template = self.new_file
-		self.editmgr = EditMgr(self.root)
-		self.context.seteditmgr(self.editmgr)
-		self.context.toplevel = self
-		self.editmgr.register(self)
 
 	def do_read_it(self, filename):
 ##		import time
@@ -1155,12 +1254,39 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##		t1 = time.time()
 ##		print 'done in', round(t1-t0, 3), 'sec.'
 
+	def setRoot(self, root):
+		self.root = root
+		self.context = self.root.GetContext()
+		self.context.seteditmgr(self.editmgr)
+		self.context.toplevel = self
+		self.editmgr.setRoot(root)
+
+	def changeRoot(self, root):
+		# raz the focus
+		self.editmgr.setglobalfocus(None, None)
+
+		# update the document root			
+		self.setRoot(root)			
+			
+		# reload the views
+		self.reload_views()
+
+		# re-build the command list. If the document contains some parse errors,
+		# we some command are disactivate. In addition, the available views may not
+		# be the sames
+		self.set_commandlist()
+		
+		# update the undo/redo 
+		self.update_undocommandlist()
+		
 	def do_read_it_from_string(self, text):
 		import SMILTreeRead
 		progress = windowinterface.ProgressDialog("Reloading")
 		progress.set("Reloading SMIL document from source view...")
 		self.root = SMILTreeRead.ReadString(text, self.filename, self.printfunc)
-
+		self.__checkParseErrors()
+		self.setRoot(self.root)
+		
 	def printfunc(self, msg):
 		windowinterface.showmessage('while reading %s\n\n' % self.filename + msg)
 
@@ -1177,18 +1303,27 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.destroy()
 
 	def close_ok(self):
-		# special case for the source view
+		# special case for the source view: check first if it contains some datas not changed		
 		if not self.closeSourceView():
 			# in this case, there was some changement from the source view not applied,
 			# and the user has cancelled
 			return 0
+
 		if not self.changed:
 			return 1
+
 		reply = self.mayclose()
+
 		if reply == 2:
 			return 0
 		if reply == 1:
 			return 1
+
+		# check if the document is valid (it may contain some errors from the last parse)		
+		if not self.context.isValidDocument():
+			windowinterface.showmessage("You're saving a source document which contains some errors",
+						    mtype = 'warning')
+
 		utype, host, path, params, query, fragment = urlparse(self.filename)
 		if (utype and utype != 'file') or (host and host != 'localhost'):
 			windowinterface.showmessage('Cannot save to URL',
@@ -1238,15 +1373,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##			evallicense= (license < 0)
 ##			import SMILTreeWrite
 ##			self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense), optional=1)
-		undocommandlist = []
-		if self.editmgr.history:
-			undocommandlist = undocommandlist + self.undocommandlist[:1]
-		if self.editmgr.future:
-			undocommandlist = undocommandlist + self.undocommandlist[1:]
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup + undocommandlist)
-		else:
-			self.setcommands(self.commandlist + self.commandlist_g2 + undocommandlist)
+		self.update_undocommandlist()
 
 	def rollback(self):
 		# Nothing has happened.

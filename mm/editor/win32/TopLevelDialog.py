@@ -88,7 +88,7 @@ class TopLevelDialog:
 		# return 1 if the user want to continue (not cancel)
 		if self.sourceview != None:
 			if self.sourceview.is_changed():
-				ret = windowinterface.GetYesNoCancel("Do you wish to keep the changes in the source view?\n(This will not save your document to disk.)", self.window)
+				ret = windowinterface.GetYesNoCancel("Do you wish to keep the changes in the source view?\n", self.window)
 				if ret == 0:		# Which means "YES"
 					self.sourceview.write_text_and_close() # Which will close all windows.
 					return 1

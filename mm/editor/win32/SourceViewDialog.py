@@ -61,7 +61,8 @@ class SourceViewDialog:
 			self.__textwindow = None
 
 	def setcommandlist(self, commandlist):
-		self.__textwindow.set_commandlist(commandlist)
+		if self.__textwindow:
+			self.__textwindow.set_commandlist(commandlist)
 
 	def get_text(self):
 		if self.__textwindow:
@@ -80,7 +81,12 @@ class SourceViewDialog:
 			return self.__textwindow.isChanged()
 
 	def select_chars(self, s, e):
-		self.__textwindow.select_chars(s,e)
+		if self.__textwindow:
+			self.__textwindow.select_chars(s,e)
+
+	def select_line(self, line):
+		if self.__textwindow:
+			self.__textwindow.select_line(line)
 
 	#
 	# text window listener interface
