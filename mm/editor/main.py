@@ -87,12 +87,27 @@ def main():
 			import MMNode
 			MMNode._prstats()
 
+
+cmifpath = None
+
 def findfile(name):
+	global cmifpath
 	import os
-	if os.environ.has_key('CMIF'):
-		CMIF = os.environ['CMIF']
-	else:
-		CMIF = '/ufs/guido/mm/demo' # Traditional default
-	return os.path.join(CMIF, name)
+	if os.path.isabs(name):
+		return name
+	if cmifpath == None:
+		if os.environ.has_key('CMIFPATH'):
+			import string
+			var = os.environ['CMIFPATH']
+			cmifpath = string.splitfields(var, ':')
+		elif os.environ.has_key('CMIF'):
+			cmifpath = [os.environ['CMIF']]
+		else:
+			cmifpath = ['/ufs/guido/mm/demo'] # Traditional default
+	for dir in cmifpath:
+		fullname = os.path.join(dir, name)
+		if os.path.exists(fullname):
+			return fullname
+	return name
 
 main()
