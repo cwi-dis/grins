@@ -57,6 +57,7 @@ class LightWeightControl:
 	def attach_to_parent(self):
 		if not self._parent: raise error, 'attach_to_parent without parent'	
 		hparent = self._parent.GetSafeHwnd()
+		if not hparent: raise error, 'parent is not a window'
 		self.attach(Sdk.GetDlgItem(hparent,self._id))
 	def init(self):
 		"""called when os wnd exists"""
