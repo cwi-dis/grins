@@ -97,6 +97,10 @@ LINKING_TEMPLATE = (
 	('Region alignment', wndusercmd.TOOLBAR_LINKING, IDW_TOOLBAR_LINKING, grinsRC.IDR_TB_EDITOR, 0, (
 		Button(usercmd.CREATEANCHOR, TBICON_CREATE_ANCHOR),
 		Button(usercmd.FINISH_LINK, TBICON_FINISH_LINK),
+		Separator(6),
+		Button(usercmd.CREATE_EVENT_SOURCE, TBICON_EVENT_SOURCE),
+		Button(usercmd.CREATE_BEGIN_EVENT, TBICON_BEGIN_EVENT),
+		Button(usercmd.CREATE_END_EVENT, TBICON_END_EVENT),
 		)
 	)
 )
