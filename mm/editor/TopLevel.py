@@ -507,6 +507,8 @@ class TopLevel(ViewDialog, BasicDialog):
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
 		for top in opentops:
+			if filename[0] <> '/' and self.dirname:
+				filename = os.path.join(self.dirname, filename)
 			if top.is_document(filename):
 				break
 		else:
@@ -526,7 +528,10 @@ class TopLevel(ViewDialog, BasicDialog):
 		import posix
 
 		try:
-			ourdata = posix.stat(self.filename)
+			fn = self.filename
+			if self.dirname:
+				fn = os.path.join(self.dirname, self.filename)
+			ourdata = posix.stat(fn)
 			hisdata = posix.stat(filename)
 		except posix.error:
 			return 0
