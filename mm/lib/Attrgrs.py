@@ -32,6 +32,14 @@ attrgrs=(
 		'project_quality',
 		]},
 
+	{'name':'subregion2',
+	'title':'Destination rendering',
+	'attrs':[
+		'subregionxy',
+		'subregionwh',
+		'displayfull',
+		]},
+
 	{'name':'base_winoff_and_units',
 	'title':'Position and size',
 	'attrs':[
@@ -131,12 +139,29 @@ attrgrs=(
 		'tag',
 		]},
 
+	{'name':'timing4',
+	'title':'Transition',
+	'attrs':[
+		'tag',
+		'start',
+		'tduration',
+		'color',
+		]},
+
 	{'name':'timing3',
 	'title':'Transition',
 	'attrs':[
 		'tag',
 		'start',
 		'tduration',
+		]},
+
+	{'name':'timing3c',
+	'title':'Transition',
+	'attrs':[
+		'tag',
+		'start',
+		'color',
 		]},
 
 	{'name':'timing2',
