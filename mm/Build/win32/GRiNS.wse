@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=3164254104
+  File Checksum=1161946660
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1515,7 +1515,41 @@ item: Create Shortcut
 end
 item: End Block
 end
+item: Create Shortcut
+  Source=%MAINDIR%\readme.txt
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\readme.lnk
+  Icon Number=0
+end
 item: Else Statement
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=readme
+  Command Line=%MAINDIR%\readme.txt
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS
