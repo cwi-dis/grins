@@ -19,15 +19,17 @@ def ITEMrange(fr, to): return range(fr, to+1)
 from mw_resources import ID_DIALOG_PREFERENCES
 ITEM_OVERDUB=3
 ITEM_CAPTIONS=4
-ITEM_BITRATE=5
-ITEM_LANGUAGE=6
+ITEM_CMIF=5
+ITEM_BITRATE=6
+ITEM_LANGUAGE=7
 
-ITEM_CANCEL=7
-ITEM_RESET=8
-ITEM_OK=9
+ITEM_CANCEL=8
+ITEM_RESET=9
+ITEM_OK=10
+ITEM_HELP=11
 
 # These should be toggled upon activation
-ITEMLIST_BOOLEAN=[ITEM_CAPTIONS, ITEM_OVERDUB]
+ITEMLIST_BOOLEAN=[ITEM_CAPTIONS, ITEM_OVERDUB, ITEM_CMIF]
 # Events here can be ignored, the values are obtained when the user presses OK
 ITEMLIST_IGNORE=[ITEM_BITRATE, ITEM_LANGUAGE]
 
@@ -43,9 +45,10 @@ STRING_ITEM_DICT={
 BOOLEAN_ITEM_DICT={
 	"system_captions" : ITEM_CAPTIONS,
 	"system_overdub_or_caption": ITEM_OVERDUB,
+	"cmif" : ITEM_CMIF,
 }
 
-ITEMLIST_ALL=ITEMrange(1, ITEM_OK)
+ITEMLIST_ALL=ITEMrange(1, ITEM_HELP)
 
 class PreferencesDialog(windowinterface.MACDialog):
 
