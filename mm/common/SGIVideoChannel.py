@@ -281,8 +281,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		r.UnionRectWithRegion(0, 0, window._form.width, window._form.height)
 		r.SubtractRegion(window._region)
 		window._topwindow._do_expose(r)
-		if loop == 0 and not repeatdur:
-			self.playdone(0)
+##		if loop == 0 and not repeatdur:
+##			self.playdone(0)
 
 	def __stopplay(self):
 		if self.played_movie:
