@@ -1782,21 +1782,22 @@ class AttrEditForm(GenFormView):
 		self._layoutch=None
 		
 		a=self._attriblist[0]
-		channels = a.wrapper.toplevel.root.context.channels
-		self._baseURL=a.wrapper.context.baseurl
-		for ch in channels:
-			self._channels[ch.name]=ch
-			units=self.getunits(ch)
-			t=ch.attrdict['type']
-			if t=='layout' and ch.attrdict.has_key('winsize'):
-				w,h=ch.attrdict['winsize']
-				self._winsize=(w,h)
-				self._channels_rc[ch.name]=((0,0,w,h),units)
-				self._layoutch=ch
-			elif ch.attrdict.has_key('base_winoff'):
-				self._channels_rc[ch.name]=(ch.attrdict['base_winoff'],units)
-			else:
-				self._channels_rc[ch.name]=((0,0,0,0),0)
+		if hasattr(a.wrapper, 'toplevel') and a.wrapper.toplevel:
+			channels = a.wrapper.toplevel.root.context.channels
+			self._baseURL=a.wrapper.context.baseurl
+			for ch in channels:
+				self._channels[ch.name]=ch
+				units=self.getunits(ch)
+				t=ch.attrdict['type']
+				if t=='layout' and ch.attrdict.has_key('winsize'):
+					w,h=ch.attrdict['winsize']
+					self._winsize=(w,h)
+					self._channels_rc[ch.name]=((0,0,w,h),units)
+					self._layoutch=ch
+				elif ch.attrdict.has_key('base_winoff'):
+					self._channels_rc[ch.name]=(ch.attrdict['base_winoff'],units)
+				else:
+					self._channels_rc[ch.name]=((0,0,0,0),0)
 			
 		if hasattr(a.wrapper,'node'):
 			self._node=a.wrapper.node
