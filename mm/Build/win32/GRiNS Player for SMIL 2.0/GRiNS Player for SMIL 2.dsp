@@ -1281,6 +1281,10 @@ SOURCE=.\M_winlayout.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_winplayerdlg.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_winversion.c
 # End Source File
 # Begin Source File

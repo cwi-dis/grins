@@ -185,10 +185,6 @@ SOURCE=.\M_AnchorDefs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AnchorList.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_AnimateChannel.c
 # End Source File
 # Begin Source File
@@ -1394,6 +1390,10 @@ SOURCE=.\M_winerror.c
 # Begin Source File
 
 SOURCE=.\M_winlayout.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_winplayerdlg.c
 # End Source File
 # Begin Source File
 
