@@ -11,7 +11,7 @@
 # We also support sound files created by our tools on the 4D/25.
 
 
-import posix
+import os
 from stat import ST_SIZE
 import string
 
@@ -240,7 +240,7 @@ def getinfo(filename):
 			# Assume old-fashioned file without header
 			samprate = 8000.0
 			offset = 0
-		st = posix.stat(filename)
+		st = os.stat(filename)
 		size = st[ST_SIZE]
 		nchannels = 1
 		sampwidth = 1
