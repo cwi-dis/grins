@@ -73,6 +73,8 @@ class _Toplevel:
 					 'input': TRUE})
 		self._default_colormap = self._main.DefaultColormapOfScreen()
 		self._default_visual = self._main.DefaultVisualOfScreen()
+## 		self._default_colormap = self._colormap
+## 		self._default_visual = self._visual
 		self._mscreenwidth = self._main.WidthMMOfScreen()
 		self._mscreenheight = self._main.HeightMMOfScreen()
 		self._screenwidth = self._main.WidthOfScreen()
@@ -195,7 +197,7 @@ class _Toplevel:
 		# and for each of the color components red, green, and
 		# blue: _color_shift and _color_mask.
 		visattr = {'class': X.TrueColor}
-##		visattr['depth'] = 8	# DEBUG--force 8-bit visual
+## 		visattr['depth'] = 8	# DEBUG--force 8-bit visual
 		visuals = dpy.GetVisualInfo(visattr)
 		if visuals:
 			# found one, use the deepest
@@ -234,10 +236,11 @@ class _Toplevel:
 			# The colormap is set up so that the colormap
 			# index has the meaning: rrrbbggg (same as
 			# imgformat.xrgb8).
-			xcolors.append((n+pixels[0],
-				  int((float((n >> self._red_shift) & self._red_mask) / float(self._red_mask)) * 255.)<<8,
-				  int((float((n >> self._green_shift) & self._green_mask) / float(self._green_mask)) * 255.)<<8,
-				  int((float((n >> self._blue_shift) & self._blue_mask) / float(self._blue_mask)) * 255.)<<8,
+			xcolors.append(
+				(n+pixels[0],
+				 int(float((n >> self._red_shift) & self._red_mask) / self._red_mask * 65535. + .5),
+				 int(float((n >> self._green_shift) & self._green_mask) / self._green_mask * 65535. + .5),
+				 int(float((n >> self._blue_shift) & self._blue_mask) / self._blue_mask * 65535. + .5),
 				  X.DoRed|X.DoGreen|X.DoBlue))
 		self._colormap.StoreColors(xcolors)
 		self._setupimg()
@@ -654,7 +657,7 @@ class _Window:
 
 	def _convert_color(self, color):
 		return self._parent._convert_color(color,
-			self._colormap is self._parent._default_colormap)
+			self._colormap is not self._parent._colormap)
 
 	def _convert_coordinates(self, coordinates):
 		# convert relative sizes to pixel sizes relative to
@@ -998,7 +1001,7 @@ class _BareSubWindow:
 		x, y, w, h = coordinates
 		if w == 0 or h == 0:
 			showmessage('Creating subwindow with zero dimension',
-				    type = 'warning')
+				    mtype = 'warning')
 		if w == 0:
 			w = float(self._rect[_WIDTH]) / parent._rect[_WIDTH]
 		if h == 0:
@@ -1791,23 +1794,34 @@ class _Font:
 		return self._pointsize
 
 class showmessage:
-	def __init__(self, text, type = 'message', grab = 1, callback = None,
+	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'message',
 		     title = 'message'):
-		if type == 'error':
-			func = toplevel._main.CreateErrorDialog
-		elif type == 'warning':
-			func = toplevel._main.CreateWarningDialog
-		elif type == 'information':
-			func = toplevel._main.CreateInformationDialog
-		elif type == 'question':
-			func = toplevel._main.CreateQuestionDialog
-		else:
-			func = toplevel._main.CreateMessageDialog
 		if grab:
 			dialogStyle = Xmd.DIALOG_FULL_APPLICATION_MODAL
+			w = grab
+			if type(w) is IntType:
+				w = toplevel
+			while 1:
+				if hasattr(w, '_shell'):
+					w = w._shell
+					break
+				if hasattr(w, '_main'):
+					w = w._main
+					break
+				w = w._parent
 		else:
 			dialogStyle = Xmd.DIALOG_MODELESS
+		if mtype == 'error':
+			func = w.CreateErrorDialog
+		elif mtype == 'warning':
+			func = w.CreateWarningDialog
+		elif mtype == 'information':
+			func = w.CreateInformationDialog
+		elif mtype == 'question':
+			func = w.CreateQuestionDialog
+		else:
+			func = w.CreateMessageDialog
 		self._grab = grab
 		w = func(name, {'messageString': text,
 				'title': title,
@@ -1817,7 +1831,7 @@ class showmessage:
 				'depth': toplevel._default_visual.depth,
 				'colormap': toplevel._default_colormap})
 		w.MessageBoxGetChild(Xmd.DIALOG_HELP_BUTTON).UnmanageChild()
-		if type == 'question' or cancelCallback:
+		if mtype == 'question' or cancelCallback:
 			w.AddCallback('cancelCallback',
 				      self._callback, cancelCallback)
 		else:
@@ -2013,7 +2027,7 @@ def _colormask(mask):
 		shift = shift + 1
 		mask = mask >> 1
 	if mask < 0:
-		width = 32 - i	# assume integers are 32 bits
+		width = 32 - shift	# assume integers are 32 bits
 	else:
 		width = 0
 		while mask != 0:

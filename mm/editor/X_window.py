@@ -82,7 +82,7 @@ class _Window(X_windowbase._Window):
 		d.render()
 		self._rb_curdisp = d
 		self._rb_dialog = showmessage(
-			msg, type = 'message', grab = 0,
+			msg, mtype = 'message', grab = 0,
 			callback = (self._rb_done, ()),
 			cancelCallback = (self._rb_cancel, ()))
 		self._rb_callback = callback
@@ -586,7 +586,8 @@ class FileDialog:
 		attrs = {'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
 			 'colormap': toplevel._default_colormap,
 			 'visual': toplevel._default_visual,
-			 'depth': toplevel._default_visual.depth}
+			 'depth': toplevel._default_visual.depth,
+			 'width': 400}
 		if prompt:
 			form = toplevel._main.CreateFormDialog(
 						   'fileSelect', attrs)
@@ -605,7 +606,6 @@ class FileDialog:
 					 'topWidget': label,
 					 'width': 400})
 		else:
-			attrs['width'] = 400
 			dialog = toplevel._main.CreateFileSelectionDialog(
 							  'fileSelect', attrs)
 			self._form = dialog
@@ -726,7 +726,7 @@ class SelectionDialog:
 			return
 		ret = self.NomatchCallback(call_data.value)
 		if ret and type(ret) is StringType:
-			showmessage(ret, type = 'error')
+			showmessage(ret, mtype = 'error')
 
 	def _ok_callback(self, widget, client_data, call_data):
 		if self.is_closed():
@@ -739,7 +739,7 @@ class SelectionDialog:
 			ret = func(call_data.value)
 			if ret:
 				if type(ret) is StringType:
-					showmessage(ret, type = 'error')
+					showmessage(ret, mtype = 'error')
 				return
 		self.close()
 
@@ -754,7 +754,7 @@ class SelectionDialog:
 			ret = func()
 			if ret:
 				if type(ret) is StringType:
-					showmessage(ret, type = 'error')
+					showmessage(ret, mtype = 'error')
 				return
 		self.close()
 
@@ -2221,7 +2221,7 @@ class _Question:
 	def __init__(self, text):
 		self.looping = FALSE
 		self.answer = None
-		showmessage(text, type = 'question',
+		showmessage(text, mtype = 'question',
 			    callback = (self.callback, (TRUE,)),
 			    cancelCallback = (self.callback, (FALSE,)))
 

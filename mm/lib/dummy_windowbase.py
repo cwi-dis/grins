@@ -411,7 +411,7 @@ fonts = [
 	]
 
 class showmessage:
-	def __init__(self, text, type = 'message', grab = 1, callback = None,
+	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'message',
 		     title = 'message'):
 		pass
