@@ -146,7 +146,7 @@ class SoundChannel(Channel):
 	def play(self, node):
 		if debug:print 'SoundChannel.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if not self._is_shown or not node.IsPlayable() \
+		if not self._is_shown or not node.ShouldPlay() \
 		   or self.syncplay:
 			self.play_1()
 			return
