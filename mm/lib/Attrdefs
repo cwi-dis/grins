@@ -150,6 +150,9 @@
 (pointsize (float) 0 'Point size' default
 	'Point size of text displayed in window' channel)
 
+(startupfile (string) '/dev/null' 'Startup file' file
+	'File executed at startup and reset of the channel' raw)
+
 (style (list (name)) () 'Style(s)' default
 	'List of style names that apply to this node/subtree' raw)
 
