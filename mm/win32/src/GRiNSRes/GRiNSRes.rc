@@ -1853,8 +1853,8 @@ BEGIN
                     ES_WANTRETURN | ES_NUMBER
     PUSHBUTTON      "Preview Area",IDC_LAYOUT_PREVIEW,132,18,284,201,BS_FLAT | 
                     NOT WS_VISIBLE | NOT WS_TABSTOP
-    CONTROL         "Show all medias",IDC_LAYOUT_SHOW_ALLMEDIAS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,10,4,67,10
+    CONTROL         "Show all media",IDC_LAYOUT_SHOW_ALLMEDIAS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,4,63,10
     CONTROL         "Tree1",IDC_TREE1,"SysTreeView32",TVS_HASBUTTONS | 
                     TVS_HASLINES | TVS_SHOWSELALWAYS | WS_BORDER | 
                     WS_TABSTOP,10,18,118,221
