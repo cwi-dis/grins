@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
 from audio import Error
-from audioformat import *
+from format import *
 
 _skiplist = ('COMT', 'INST', 'MIDI', 'AESD',
 	     'APPL', 'NAME', 'AUTH', '(c) ', 'ANNO')
