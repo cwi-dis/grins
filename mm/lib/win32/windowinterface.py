@@ -72,7 +72,6 @@ from AppToplevel import beep
 
 # needed directly?
 GetImageSize=toplevel.GetImageSize
-from _PreferencesDialog import PreferencesDialog
 from _UsergroupView import UsergroupEditDialog
 from _LinkView import LinkPropDlg
 
