@@ -101,6 +101,12 @@ class CompositeAnimator:
 		return l
 
 
+# Impl. rem:
+# *attr types map
+# *use f(0) if duration is undefined
+
+
+# Animation semantics parser
 class AnimateElementParser:
 	# args anim and target are MMNode objects
 	# anim  represents the animate element node
@@ -109,6 +115,7 @@ class AnimateElementParser:
 		self.__target = target
 
 		self.__attrname = ''
+		self.__attrtype = 'numeric'
 		self.__domval = None
 		self.__enable = 0
 		self.__grinsext = 0
@@ -120,38 +127,25 @@ class AnimateElementParser:
 		if not self.__hasValidTarget:
 			return None
 
-		v1 = self.getFrom()
-		if not v1:
-			v1 = self.__domval
-
-		v2 = self.getTo()
-
-		dv = self.getBy()
-
-		if not v2 and dv:
-			v2 = v1 + dv
-		elif not dv and not v2:
-			v2 = self.__domval
-
 		dt = self.getDuration()
 
 		# src attribute animation
-		if self.__attrname=='file' and dt and v2:
-			anim = URLPairAnimator(self.__attrname, self.__domval, v1, v2, dt)
-			anim._setCalcMode(self, self.__calcMode)
-			return anim
+		if self.__attrname=='file':
+			vs = self.getAlphaInterpolationValues()
+			if dt and len(vs)>=2:
+				anim = URLPairAnimator(self.__attrname, self.__domval, vs[0], vs[1], dt)
+				anim._setCalcMode(self, self.__calcMode)
+				return anim
 		
 		## Begin temp grins extensions
-		if self.__grinsext and dt and v2:
-			if type(v1) == type(''): v1 = string.atof(v1)
-			if type(v2) == type(''): v2 = string.atof(v2)
-			print type(v1), type(v2), type(dt)			
-			anim = Animator(self.__attrname, self.__domval, v1, v2, dt)
-			anim._setCalcMode(self, self.__calcMode)
-			anim._setprec(0)
-			return anim
+		if self.__grinsext:
+			vs = self.getNumInterpolationValues()
+			if dt and len(vs)>=2:
+				anim = Animator(self.__attrname, self.__domval, vs[0], vs[1], dt)
+				anim._setCalcMode(self, self.__calcMode)
+				anim._setprec(0)
+				return anim
 		## End temp grins extensions
-
 
 		return ConstAnimator(self.__attrname, self.__domval, self.__domval)
 
@@ -191,6 +185,9 @@ class AnimateElementParser:
 	def getBy(self):
 		return MMAttrdefs.getattr(self.__anim, 'by')
 
+	def getValues(self):
+		return MMAttrdefs.getattr(self.__anim, 'values')
+
 	def getLoop(self):
 		return MMAttrdefs.getattr(self.__anim, 'loop')
 
@@ -222,3 +219,56 @@ class AnimateElementParser:
 		for name, value in self.__target.GetChannel().attrdict.items():
 			print name, '=', `value`
 		print '----------------------'
+
+
+	# return list of interpolation values
+	def getNumInterpolationValues(self):	
+		# if 'values' are given ignore 'from/to/by'
+		values =  self.getValues()
+		if values:
+			try:
+				return tuple(map(string.atof, string.split(values,';')))
+			except ValueError:
+				return ()
+		
+		# 'from' is optional
+		# use dom value if missing
+		v1 = self.getFrom()
+		if not v1:
+			v1 = self.__domval
+		if type(v1) == type(''): 
+			v1 = string.atof(v1)
+
+		# we must have a 'to' value (expl or through 'by')
+		v2 = self.getTo()
+		dv = self.getBy()
+		if v2:
+			v2 = string.atof(v1)
+		elif dv:
+			dv = string.atof(dv)
+			v2 = v1 + dv
+		else:
+			return ()
+		return v1, v2
+
+	# return list of interpolation strings
+	def getAlphaInterpolationValues(self):
+		
+		# if values are given ignore from/to/by
+		values =  self.getValues()
+		if values:
+			return string.split(values,';')
+		
+		# 'from' is optional
+		# use dom value if missing
+		v1 = self.getFrom()
+		if not v1:
+			v1 = self.__domval
+
+		# we must have a 'to' value expl
+		v2 = self.getTo()
+		if not v2:
+			return ()
+		return v1, v2
+
+
