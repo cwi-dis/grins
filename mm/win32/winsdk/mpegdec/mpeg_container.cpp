@@ -2,7 +2,11 @@
 
 #include "streams/mpeg2demux.h"
 #include "streams/mpeg2io.h"
+
+#ifdef USE_AUDIO_STREAM
 #include "audio/mpeg2audio.h"
+#endif
+
 //#include "video/mpeg2video.h"
 
 
@@ -140,6 +144,7 @@ bool mpeg_container::open(const TCHAR *path, bool create_streams)
 			}
 		*/
 		// Create audio tracks
+#ifdef USE_AUDIO_STREAM
 		for(int i = 0; i < MPEG2_MAX_STREAMS; i++)
 			{
 			if(m_pmpeg2->demuxer->astream_table[i])
@@ -150,6 +155,7 @@ bool mpeg_container::open(const TCHAR *path, bool create_streams)
 				if(m_pmpeg2->atrack[m_pmpeg2->total_astreams]) m_pmpeg2->total_astreams++;
 				}
 			}
+#endif // USE_AUDIO_STREAM
 		}
 	else if(m_pmpeg2->is_video_stream && create_streams)
 		{
@@ -162,8 +168,10 @@ bool mpeg_container::open(const TCHAR *path, bool create_streams)
 		{
 		//printf("Create audio track\n");
 		// Create audio tracks
+#ifdef USE_AUDIO_STREAM
 		m_pmpeg2->atrack[0] = mpeg2_new_atrack(m_pmpeg2, -1, AUDIO_UNKNOWN, m_pmpeg2->demuxer);
 		if(m_pmpeg2->atrack[0]) m_pmpeg2->total_astreams++;
+#endif // USE_AUDIO_STREAM
 		}
 
 	if(m_pmpeg2->total_vstreams) m_pmpeg2->has_video = 1;
@@ -181,8 +189,10 @@ void mpeg_container::close()
 		//for(int i = 0; i < m_pmpeg2->total_vstreams; i++)
 		//	mpeg2_delete_vtrack(m_pmpeg2, m_pmpeg2->vtrack[i]);
 
+#ifdef USE_AUDIO_STREAM
 		for(int i = 0; i < m_pmpeg2->total_astreams; i++)
 			mpeg2_delete_atrack(m_pmpeg2, m_pmpeg2->atrack[i]);
+#endif
 
 		mpeg2_delete_fs(m_pmpeg2->fs);
 		mpeg2_delete_demuxer(m_pmpeg2->demuxer);
@@ -200,6 +210,8 @@ double mpeg_container::get_duration()
 	{
 	return m_pmpeg2->demuxer->time; 
 	}
+
+#ifdef USE_AUDIO_STREAM
 
 long mpeg_container::read_audio(short *output, long samples, int stream, int channel)
 	{
@@ -261,4 +273,5 @@ long mpeg_container::read_raw_audio_chunk(char **pp, size_t ts, int stream, int 
 	return size;
 	}
 
+#endif // USE_AUDIO_STREAM
 
