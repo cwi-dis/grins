@@ -488,7 +488,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__width > 0 and self.__height > 0:
 			# we don't have to calculate minimum sizes
 			pass
-		elif mediatype in ('image', 'video'):
+		elif mediatype in ('image', 'video') or \
+		     (mediatype == 'text' and subtype == 'vnd.rn-realtext'):
 			x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
 			# if we don't know the region size and
 			# position in pixels, we need to look at the
@@ -503,10 +504,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				try:
 					import Sizes
 					file = MMurl.urlretrieve(url)[0]
-					if mediatype == 'image':
-						width, height = Sizes.GetImageSize(file)
-					else:
-						width, height = Sizes.GetVideoSize(file)
+					width, height = Sizes.GetSize(file, mediatype, subtype)
 				except:
 					# want to make them at least visible...
 					if ch['width'] == 0:
