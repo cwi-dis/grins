@@ -242,7 +242,6 @@ def pixels2mm(h, v):
 def setgeometry(arg):
 	if arg == None:
 		return # Everything default
-	[arg]
 	h, v, width, height = arg
 	if h < 0 and v < 0 and width == 0 and height == 0:
 		return # Everything default
