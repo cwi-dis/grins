@@ -1,4 +1,16 @@
+*******************************************************************
+*** Don't delete entries that have been dealt with -- move them ***
+*** to the "FIXED" section at the end of this file!             ***
+*******************************************************************
+
 ------------------------------ BUGS -------------------------------
+Timing: (opt)calctimes isn't a very meaningful name.
+
+MovieChannel: center the image.
+
+VanGogh demo: move data to subdirectory.
+
+Player: "late" display keeps old value during initialization.
 
 channel view: deleted arc is still drawn
 
@@ -22,10 +34,6 @@ player: crash when putting two events on same channel simultaneously
 (can't seem to reproduce this now?)
 
 ------------------------------ JAMMER MAAR HELAAS -----------------
-
-text channel: after a while the font manager fails with
-"ValidateFont: fmfntread failed."
-(Not much we can do about this -- "fixed in IRIX 4.0.1")
 
 general: sometimes, after a while the entire CMIF editor hangs...
 
@@ -143,3 +151,7 @@ channel view: newly added arcs are drawn twice, once with the wrong
 timing information (before the commit)
 
 channel view: can't create channels once the last channel is deleted...
+
+text channel: after a while the font manager fails with
+"ValidateFont: fmfntread failed."
+(Not much we can do about this -- "fixed in IRIX 4.0.1")
