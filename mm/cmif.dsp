@@ -67,11 +67,11 @@ MTL=midl.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\common\win32\DownloadChannel.py
+SOURCE=.\common\win32\ChannelMime.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\common\win32\Help_.py
+SOURCE=.\common\win32\DownloadChannel.py
 # End Source File
 # Begin Source File
 
@@ -172,6 +172,10 @@ SOURCE=.\common\ChannelMap.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\common\ChannelMime.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\common\ChannelThread.py
 # End Source File
 # Begin Source File
@@ -209,6 +213,10 @@ SOURCE=.\common\ImageChannel.py
 # Begin Source File
 
 SOURCE=.\common\LabelChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\languages.py
 # End Source File
 # Begin Source File
 
@@ -391,6 +399,10 @@ SOURCE=.\editor\win32\usercmdui.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\win32\usercmduiHold.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\win32\UsergroupViewDialog.py
 # End Source File
 # Begin Source File
@@ -443,6 +455,10 @@ SOURCE=.\editor\mac\MenuTemplate.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\mac\NodeEdit.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\mac\NodeInfoDialog.py
 # End Source File
 # Begin Source File
@@ -460,6 +476,10 @@ SOURCE=.\editor\mac\TopLevel.py
 # Begin Source File
 
 SOURCE=.\editor\mac\TopLevelDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\mac\UsergroupViewDialog.py
 # End Source File
 # End Group
 # Begin Group "editor/motif"
@@ -479,7 +499,27 @@ SOURCE=.\editor\motif\AttrEditDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\motif\bandwidthbad.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\motif\bandwidthgood.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\motif\ChannelViewDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\motif\emptyicon.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\motif\folderclosed.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\motif\folderopen.py
 # End Source File
 # Begin Source File
 
@@ -488,6 +528,10 @@ SOURCE=.\editor\motif\HierarchyViewDialog.py
 # Begin Source File
 
 SOURCE=.\editor\motif\LayoutViewDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\motif\LicenseDialog.py
 # End Source File
 # Begin Source File
 
@@ -511,6 +555,10 @@ SOURCE=.\editor\motif\PlayerDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\motif\stopicon.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\motif\TopLevelDialog.py
 # End Source File
 # Begin Source File
@@ -518,10 +566,6 @@ SOURCE=.\editor\motif\TopLevelDialog.py
 SOURCE=.\editor\motif\UsergroupViewDialog.py
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=.\editor\.cmif_editors
-# End Source File
 # Begin Source File
 
 SOURCE=.\editor\AnchorEdit.py
@@ -544,10 +588,6 @@ SOURCE=.\editor\ChannelView.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\editor\cmif_editors.ini
-# End Source File
-# Begin Source File
-
 SOURCE=.\editor\cmifed.py
 # End Source File
 # Begin Source File
@@ -561,6 +601,10 @@ SOURCE=.\editor\LayoutView.py
 # Begin Source File
 
 SOURCE=.\editor\LinkEdit.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\LinkEditLight.py
 # End Source File
 # Begin Source File
 
@@ -584,23 +628,7 @@ SOURCE=.\editor\PlayerCore.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\editor\test_AnchorEditorDialog.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\test_ArcInfoDialog.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\test_NodeInfoDialog.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\test_window.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\test_windowdialogs.py
+SOURCE=.\editor\splashimg.py
 # End Source File
 # Begin Source File
 
@@ -703,11 +731,19 @@ SOURCE=.\lib\win32\FormServer.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\win32\fsm.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\win32\GenFormView.py
 # End Source File
 # Begin Source File
 
 SOURCE=.\lib\win32\GenWnd.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\InputValidator.py
 # End Source File
 # Begin Source File
 
@@ -744,6 +780,10 @@ SOURCE=.\lib\win32\ViewServer.py
 # Begin Source File
 
 SOURCE=.\lib\win32\wc.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\win32dxm.py
 # End Source File
 # Begin Source File
 
@@ -815,6 +855,18 @@ SOURCE=.\lib\motif\XHelpers.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\motif\XHtml.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\XRubber.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\XTemplate.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\motif\XTopLevel.py
 # End Source File
 # Begin Source File
@@ -867,6 +919,10 @@ SOURCE=.\lib\mac\mw_resources.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\mac\mw_textwindow.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\mac\mw_toplevel.py
 # End Source File
 # Begin Source File
@@ -884,6 +940,10 @@ SOURCE=.\lib\mac\quietconsole.py
 # Begin Source File
 
 SOURCE=.\lib\mac\splash.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\mac\videoreader.py
 # End Source File
 # Begin Source File
 
@@ -980,10 +1040,6 @@ SOURCE=.\lib\grins_mimetypes.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\grins_mimetypesPrv.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\lib\Hlinks.py
 # End Source File
 # Begin Source File
@@ -992,11 +1048,19 @@ SOURCE=.\lib\HTMLWrite.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\imgimagesize.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\license.py
 # End Source File
 # Begin Source File
 
 SOURCE=.\lib\licparser.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\links.doc
 # End Source File
 # Begin Source File
 
@@ -1248,6 +1312,10 @@ SOURCE=.\grins\grins.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\grins\mac_window.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\grins\patchlevel.py
 # End Source File
 # Begin Source File
@@ -1257,6 +1325,10 @@ SOURCE=.\grins\Player.py
 # Begin Source File
 
 SOURCE=.\grins\PlayerCore.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\grins\splashimg.py
 # End Source File
 # Begin Source File
 
@@ -1327,6 +1399,10 @@ SOURCE=.\pylib\audio\merge.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\pylib\audio\README
+# End Source File
+# Begin Source File
+
 SOURCE=.\pylib\audio\select.py
 # End Source File
 # Begin Source File
@@ -1341,6 +1417,10 @@ SOURCE=.\pylib\audio\what.py
 # Begin Source File
 
 SOURCE=.\pylib\longpath.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\mimetypes.py
 # End Source File
 # Begin Source File
 
