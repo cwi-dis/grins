@@ -28,6 +28,7 @@ FLAG_QT_PRO = 0x0008
 FLAG_CMIF = 0x0010
 FLAG_SMIL_1_0 = 0x0020
 FLAG_BOSTON = 0x0040
+FLAG_SNAP = 0x0080			# mjvdg 9-oct-2000
 FLAG_DBG = 0x8000
 
 # some abbreviations
