@@ -28,44 +28,44 @@ class ChannelViewDialog(ViewDialog):
 			'b': TOGGLE_BWSTRIP,
 			},
 		'menubar': [
-			(ALL, 'Close', [
-				(ALL, 'Close', CLOSE_WINDOW),
+			(SMIL, 'Close', [
+				(SMIL, 'Close', CLOSE_WINDOW),
 				]),
-			(ALL, 'Edit', [
-				(ALL, 'Delete', DELETE),
-				(ALL, None),
-				(ALL, 'New Channel...', NEW_CHANNEL),
-				(ALL, None),
-				(ALL, 'Move Channel', MOVE_CHANNEL),
-				(ALL, 'Copy Channel', COPY_CHANNEL),
+			(SMIL, 'Edit', [
+				(SMIL, 'Delete', DELETE),
+				(SMIL, None),
+				(SMIL, 'New Channel...', NEW_CHANNEL),
+				(SMIL, None),
+				(SMIL, 'Move Channel', MOVE_CHANNEL),
+				(SMIL, 'Copy Channel', COPY_CHANNEL),
 				(CMIF, 'Toggle Channel State', TOGGLE_ONOFF),
-				(ALL, None),
-				(ALL, 'Info...', INFO),
-				(ALL, 'Properties...', ATTRIBUTES),
-				(ALL, 'Edit Content...', CONTENT),
+				(SMIL, None),
+				(SMIL, 'Info...', INFO),
+				(SMIL, 'Properties...', ATTRIBUTES),
+				(SMIL, 'Edit Content...', CONTENT),
 				]),
-			(ALL, 'Play', [
-				(ALL, 'Play Node', PLAYNODE),
-				(ALL, 'Play from Node', PLAYFROM),
+			(SMIL, 'Play', [
+				(SMIL, 'Play Node', PLAYNODE),
+				(SMIL, 'Play from Node', PLAYFROM),
 				]),
-			(ALL, 'Linking', [
-				(ALL, 'Create Simple Anchor', CREATEANCHOR),
-				(ALL, 'Finish Hyperlink to Selection', FINISH_LINK),
-				(ALL, 'Anchors...', ANCHORS),
-				(ALL, None),
-				(ALL, 'Create Sync Arc from Selection...', FINISH_ARC),
-				(ALL, 'Select Sync Arc', SYNCARCS),
+			(SMIL, 'Linking', [
+				(SMIL, 'Create Simple Anchor', CREATEANCHOR),
+				(SMIL, 'Finish Hyperlink to Selection', FINISH_LINK),
+				(SMIL, 'Anchors...', ANCHORS),
+				(SMIL, None),
+				(SMIL, 'Create Sync Arc from Selection...', FINISH_ARC),
+				(SMIL, 'Select Sync Arc', SYNCARCS),
 				]),
-			(ALL, 'View', [
-				(ALL, 'Zoom In', CANVAS_WIDTH),
-				(ALL, 'Fit in Window', CANVAS_RESET),
-				(ALL, None),
-				(ALL, 'Synchronize Selection', PUSHFOCUS),
-				(ALL, None),
-				(ALL, 'Unused Channels', TOGGLE_UNUSED, 't'),
-				(ALL, 'Sync Arcs', TOGGLE_ARCS, 't'),
-				(ALL, 'Image Thumbnails', THUMBNAIL, 't'),
-				(ALL, 'Bandwidth Usage', TOGGLE_BWSTRIP, 't'),
+			(SMIL, 'View', [
+				(SMIL, 'Zoom In', CANVAS_WIDTH),
+				(SMIL, 'Fit in Window', CANVAS_RESET),
+				(SMIL, None),
+				(SMIL, 'Synchronize Selection', PUSHFOCUS),
+				(SMIL, None),
+				(SMIL, 'Unused Channels', TOGGLE_UNUSED, 't'),
+				(SMIL, 'Sync Arcs', TOGGLE_ARCS, 't'),
+				(SMIL, 'Image Thumbnails', THUMBNAIL, 't'),
+				(SMIL, 'Bandwidth Usage', TOGGLE_BWSTRIP, 't'),
 				(CMIF, None),
 				(CMIF, 'Minidocument Navigation', [
 					(CMIF, 'Next', NEXT_MINIDOC),
@@ -74,10 +74,10 @@ class ChannelViewDialog(ViewDialog):
 					(CMIF, 'Siblings', SIBLINGS),
 					(CMIF, 'Descendants', DESCENDANTS),
 					]),
-##				(ALL, 'Layout navigation', LAYOUTS),
+##				(SMIL, 'Layout navigation', LAYOUTS),
 				]),
-			(ALL, 'Help', [
-				(ALL, 'Help...', HELP),
+			(SMIL, 'Help', [
+				(SMIL, 'Help...', HELP),
 				]),
 			],
 		'toolbar': None, # no images yet...
@@ -127,7 +127,7 @@ class ChannelViewDialog(ViewDialog):
 
 class GOCommand:
 	POPUP_NONE = (
-		(ALL, 'New Channel...', NEW_CHANNEL),
+		(SMIL, 'New Channel...', NEW_CHANNEL),
 		)
 
 	def __init__(self):
@@ -138,13 +138,13 @@ class GOCommand:
 
 class BandwidthStripBoxCommand:
 	POPUP_BWSTRIP = (
-		(ALL, "14k4", BANDWIDTH_14K4),
-		(ALL, "28k8", BANDWIDTH_28K8),
-		(ALL, "ISDN", BANDWIDTH_ISDN),
-		(ALL, "T1 (1 Mbps)", BANDWIDTH_T1),
-		(ALL, "LAN (10 Mbps)", BANDWIDTH_LAN),
-		(ALL, None),
-		(ALL, "Other...", BANDWIDTH_OTHER),
+		(SMIL, "14k4", BANDWIDTH_14K4),
+		(SMIL, "28k8", BANDWIDTH_28K8),
+		(SMIL, "ISDN", BANDWIDTH_ISDN),
+		(SMIL, "T1 (1 Mbps)", BANDWIDTH_T1),
+		(SMIL, "LAN (10 Mbps)", BANDWIDTH_LAN),
+		(SMIL, None),
+		(SMIL, "Other...", BANDWIDTH_OTHER),
 		)
 
 	def __init__(self):
@@ -152,13 +152,13 @@ class BandwidthStripBoxCommand:
 
 class ChannelBoxCommand:
 	POPUP_CHANNEL = (
-##		(ALL, 'Toggle Channel State', TOGGLE_ONOFF),
-		(ALL, 'Properties...', ATTRIBUTES),
-		(ALL, None),
-		(ALL, 'Delete', DELETE),
-		(ALL, None),
-		(ALL, 'Move Channel', MOVE_CHANNEL),
-		(ALL, 'Copy Channel', COPY_CHANNEL),
+##		(SMIL, 'Toggle Channel State', TOGGLE_ONOFF),
+		(SMIL, 'Properties...', ATTRIBUTES),
+		(SMIL, None),
+		(SMIL, 'Delete', DELETE),
+		(SMIL, None),
+		(SMIL, 'Move Channel', MOVE_CHANNEL),
+		(SMIL, 'Copy Channel', COPY_CHANNEL),
 		)
 
 	def __init__(self):
@@ -166,17 +166,17 @@ class ChannelBoxCommand:
 
 class NodeBoxCommand:
 	POPUP_NODE = (
-		(ALL, 'Play Node', PLAYNODE),
-		(ALL, 'Play from Node', PLAYFROM),
-		(ALL, None),
-		(ALL, 'Create Simple Anchor', CREATEANCHOR),
-		(ALL, 'Finish Hyperlink to Selection', FINISH_LINK),
-		(ALL, 'Create Sync Arc from Selection...', FINISH_ARC),
-		(ALL, None),
-		(ALL, 'Info...', INFO),
-		(ALL, 'Properties...', ATTRIBUTES),
-		(ALL, 'Anchors...', ANCHORS),
-		(ALL, 'Edit Content...', CONTENT),
+		(SMIL, 'Play Node', PLAYNODE),
+		(SMIL, 'Play from Node', PLAYFROM),
+		(SMIL, None),
+		(SMIL, 'Create Simple Anchor', CREATEANCHOR),
+		(SMIL, 'Finish Hyperlink to Selection', FINISH_LINK),
+		(SMIL, 'Create Sync Arc from Selection...', FINISH_ARC),
+		(SMIL, None),
+		(SMIL, 'Info...', INFO),
+		(SMIL, 'Properties...', ATTRIBUTES),
+		(SMIL, 'Anchors...', ANCHORS),
+		(SMIL, 'Edit Content...', CONTENT),
 		)
 
 	def __init__(self, mother, node):
@@ -184,9 +184,9 @@ class NodeBoxCommand:
 
 class ArcBoxCommand:
 	POPUP_SYNCARC = (
-		(ALL, 'Info...', INFO),
-		(ALL, None),
-		(ALL, 'Delete', DELETE),
+		(SMIL, 'Info...', INFO),
+		(SMIL, None),
+		(SMIL, 'Delete', DELETE),
 		)
 
 	def __init__(self):
