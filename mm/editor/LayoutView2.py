@@ -1013,8 +1013,7 @@ class LayoutView2(LayoutViewDialog2):
 		if index > 0 and index < len(timeList):
 			# can only insert a key between the first and the end
 			newData = (animationData.getRectAt(tp), animationData.getColorAt(tp))
-			data.insert(index, newData)
-			timeList.insert(index, tp)
+			animationData.insertTimeData(index, tp, newData)
 			self.setKeyTimeIndex(index, nodeRef)
 			self.keyTimeSliderWidget.insertKey(tp)
 			self.timeValueChanged = 1 # force layout to refresh
@@ -1314,7 +1313,8 @@ class LayoutView2(LayoutViewDialog2):
 					width = attrValue
 				elif attrName == 'height':
 					height = attrValue
-				data[keyTimeIndex] = (left, top, width, height), bgcolor
+				newdata = (left, top, width, height), bgcolor
+				animationData.updateData(keyTimeIndex, newdata)
 
 			# for now, we force the node value equal to the first animated value
 			if not animated or keyTimeIndex == 0:
@@ -1699,7 +1699,7 @@ class LayoutView2(LayoutViewDialog2):
 				self.setKeyTimeIndex(0, selectedNode)
 			else:
 				# disable animation: just remove all datas
-				animationData.setTimesData([], [])
+				animationData.clear()
 				self.setKeyTimeIndex(None, selectedNode)
 			selectedNode.applyAnimationData(self.editmgr)
 			self.updateFocus(1)
@@ -2582,8 +2582,7 @@ class KeyTimeSliderWidget(LightWidget):
 					editmgr = self._context.editmgr
 					if not editmgr.transaction():
 						return
-					del data[index]
-					del timeList[index]
+					animationData.eraseTimeData(index)
 					self.sliderCtrl.removeKeyTimeAtIndex(index)
 					self._context.setKeyTimeIndex(index-1, nodeRef)
 					list = self.sliderCtrl.getKeyTimes()
@@ -2613,8 +2612,7 @@ class KeyTimeSliderWidget(LightWidget):
 				return
 			nodeType, nodeRef = self._selected
 			animationData = nodeRef.getAnimationData()
-			timeList = animationData.getTimes()
-			timeList[index] = time
+			animationData.updateTime(index, time)
 			nodeRef.applyAnimationData(editmgr)
 			editmgr.commit()
 				
