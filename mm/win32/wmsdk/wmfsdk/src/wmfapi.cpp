@@ -5394,24 +5394,33 @@ CreateDDWriter(PyObject *self, PyObject *args)
 }
 
 
-static void FillBitmapInfoHeader(BITMAPINFOHEADER& infohdr, int width, int height, int depth)
+static void FillBitmapInfo(BITMAPINFOHEADER *pbmih, int width, int height, int depth, char *pszSubtype)
 	{
-	ZeroMemory(&infohdr,sizeof(infohdr) );
-	infohdr.biSize=sizeof(infohdr);
-	infohdr.biWidth    = width;
-	infohdr.biHeight   = height;
-	infohdr.biPlanes   = 1;
-	infohdr.biBitCount = depth;
-	infohdr.biCompression=BI_RGB;
-	infohdr.biSizeImage = 0;
-	infohdr.biClrUsed = 0;
+	ZeroMemory(pbmih,sizeof(BITMAPINFOHEADER) + 12);
+	pbmih->biSize = sizeof(BITMAPINFOHEADER);
+	pbmih->biWidth    = width;
+	pbmih->biHeight   = height;
+	pbmih->biPlanes   = 1;
+	pbmih->biBitCount = depth;
+	if(depth==16 && lstrcmpi(pszSubtype,"RGB565")==0)
+		{
+		pbmih->biCompression = BI_BITFIELDS;
+		DWORD *p = (DWORD*) (((BYTE*)pbmih) + pbmih->biSize);
+		*p++ = 0x001F; // b
+		*p++ = 0x07E0; // g
+		*p++ = 0xF800; // r
+		}
+	else
+		pbmih->biCompression=BI_RGB;
+	pbmih->biSizeImage = 0;
+	pbmih->biClrUsed = 0;
 	}
 
-static WMVIDEOINFOHEADER* CreateVideoInfo(int width, int height, int depth, DWORD rate, LONGLONG atpf)
+static WMVIDEOINFOHEADER* CreateVideoInfo(int width, int height, int depth, char *pszSubtype, DWORD rate, LONGLONG atpf)
 	{
-	WMVIDEOINFOHEADER* pVideoInfo = new WMVIDEOINFOHEADER;
+	WMVIDEOINFOHEADER* pVideoInfo = (WMVIDEOINFOHEADER*) new BYTE[sizeof(WMVIDEOINFOHEADER)+12];
 	BITMAPINFOHEADER& bmi = pVideoInfo->bmiHeader;
-	FillBitmapInfoHeader(pVideoInfo->bmiHeader, width, height, depth);
+	FillBitmapInfo(&pVideoInfo->bmiHeader, width, height, depth, pszSubtype);
 	pVideoInfo->rcSource.left	= 0;
 	pVideoInfo->rcSource.top	= 0;
 	pVideoInfo->rcSource.right	= width;
@@ -5436,6 +5445,7 @@ CreateVideoWMType(PyObject *self, PyObject *args)
 
 	GUID subtype;
 	int depth;
+	int cbFormat = sizeof(WMVIDEOINFOHEADER);
 	if(lstrcmpi(pszSubtype,"RGB32")==0){
 		subtype = WMMEDIASUBTYPE_RGB32;
 		depth = 32;
@@ -5451,8 +5461,10 @@ CreateVideoWMType(PyObject *self, PyObject *args)
 	else if(lstrcmpi(pszSubtype,"RGB565")==0){
 		subtype = WMMEDIASUBTYPE_RGB565;
 		depth = 16;
+		cbFormat += 12;
 	}
 	else {
+		seterror("unsupported format");
 		return NULL;
 	}
 	
@@ -5464,18 +5476,18 @@ CreateVideoWMType(PyObject *self, PyObject *args)
 	DWORD dwSampleSize=width*height*(depth/8);
 	DWORD rate = 10*dwSampleSize*8;
 	LONGLONG atpf=LONGLONG(100)*10000;
-	WMVIDEOINFOHEADER* pVideoInfo = CreateVideoInfo(width, height, depth, rate, atpf);
-	memcpy(obj->pbBuffer+sizeof(WM_MEDIA_TYPE),pVideoInfo,sizeof(WMVIDEOINFOHEADER));
-	delete pVideoInfo;
+	WMVIDEOINFOHEADER* pVideoInfo = CreateVideoInfo(width, height, depth, pszSubtype, rate, atpf);
+	memcpy(obj->pbBuffer+sizeof(WM_MEDIA_TYPE),pVideoInfo,cbFormat);
+	delete[] (BYTE*)pVideoInfo;
 	
 	mt.majortype = WMMEDIATYPE_Video;
 	mt.subtype = subtype;
-	mt.bFixedSizeSamples = FALSE;
+	mt.bFixedSizeSamples = TRUE;
 	mt.bTemporalCompression = TRUE;
 	mt.lSampleSize = width*height*(depth/8);
 	mt.formattype = WMFORMAT_VideoInfo;
 	mt.pUnk = NULL;
-	mt.cbFormat = sizeof(WMVIDEOINFOHEADER);
+	mt.cbFormat = cbFormat;
 	mt.pbFormat = obj->pbBuffer+sizeof(WM_MEDIA_TYPE);
 	return (PyObject*)obj;
 }
