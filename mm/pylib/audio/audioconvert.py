@@ -195,19 +195,23 @@ class swap(audio_filter):
 
 class cvrate(audio_filter):
 	def __init__(self, rdr, rate):
-		audio_filter.__init__(self, rdr, rdr,getformat())
+		audio_filter.__init__(self, rdr, rdr.getformat())
 		self.__width = (self._srcfmt.getbps() + 7) / 8
 		self.__nchannels = self._srcfmt.getnchannels()
 		self.__inrate = rdr.getframerate()
 		self.__outrate = rate
 		self.__state = None
 
+	def __repr__(self):
+		return '<%s instance, src=%s, format=%s, framerate=%d>' % (self.__class__.__name__, `self._rdr`, `self._srcfmt`, self.__outrate)
+
 	def readframes(self, nframes = -1):
 		import audioop
 		data = self._rdr.readframes(nframes)
-		data, self.__state = audioop.ratecv(date, self.__width,
+		data, self.__state = audioop.ratecv(data, self.__width,
 					self.__nchannels, self.__inrate,
 					self.__outrate, self.__state)
+		return data
 
 	def rewind(self):
 		self._rdr.rewind()
