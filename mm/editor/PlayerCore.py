@@ -36,6 +36,9 @@ class PlayerCore(Selecter, PlayerCommon):
 		# it's used for optimization purpose: the renderers are checked only if this flag has changed
 		self.mustCheckRenderer = 0 
 
+	def destroy(self):
+		self.editmgr.unregister(self)
+
 	#
 	# EditMgr interface (as dependent client).
 	#
