@@ -484,11 +484,11 @@ def deltmpfiles():
 			pass
 	SlideShow.tmpfiles = []
 
-def writenode(node, evallicense = 0, tostring = 0):
+def writenode(node, evallicense = 0, tostring = 0, silent = 0):
 	if not hasattr(node, 'tmpfile') and not tostring:
 		return
 	import realsupport
-	data = realsupport.writeRP(None, node.slideshow.rp, node, savecaptions=1, tostring = 1)
+	data = realsupport.writeRP(None, node.slideshow.rp, node, savecaptions=1, tostring = 1, silent = silent)
 	if tostring:
 		return data
 	url = MMAttrdefs.getattr(node, 'file')

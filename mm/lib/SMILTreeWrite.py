@@ -243,7 +243,9 @@ def getsrc(writer, node):
 	if not val:
 		if writer.copydir:
 			# Exporting without a URL is an error
+			from windowinterface import showmessage
 			node.set_infoicon('error', 'The URL field is empty')
+			showmessage('No URL set for node %s' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>'))
 		else:
 			# If not exporting we insert a placeholder
 			val = '#'
