@@ -10,15 +10,16 @@ class DocumentFrame:
 	def set_commandlist(self, commandlist, context):
 		if not self._activecmds.has_key(context):
 			self._activecmds[context] = {}
-		for cmd in 	commandlist:
-			self._activecmds[context][cmd.__class__] = cmd
+		if commandlist:
+			for cmd in 	commandlist:
+				self._activecmds[context][cmd.__class__] = cmd
 		print 'DocumentFrame.set_commandlist', commandlist, context
 
 	def setcoords(self,coords, units=UNIT_MM):
 		print 'DocumentFrame.setcoords', coords, units
 
 	def set_dynamiclist(self, command, list):
-		print 'DocumentFrame.set_dynamiclist', command, list
+		pass #print 'DocumentFrame.set_dynamiclist', command, list
 
 	def set_toggle(self, cmdcl, onoff):
 		print 'DocumentFrame.set_toggle',  cmdcl, onoff
@@ -50,6 +51,8 @@ import wingeneric
 import usercmd
 
 import winstruct
+
+import win32con
 
 class MainWnd(wingeneric.Wnd, DocumentFrame):
 	def __init__(self):
@@ -86,3 +89,4 @@ class MainWnd(wingeneric.Wnd, DocumentFrame):
 		import __main__
 		return __main__.toplevel
 
+	
