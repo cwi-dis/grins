@@ -145,6 +145,7 @@ class RealChannel:
 		if not self._playargs:
 			return
 		node, window, winpossize, url = self._playargs
+		temp = self.__rmaplayer
 		self.__rmaplayer = None
 		self.prepare_player(node)
 		self.__rmaplayer.SetStatusListener(self)
@@ -155,8 +156,6 @@ class RealChannel:
 			self.__rmaplayer.SetPositionAndSize(pos, size)
 		self.__rmaplayer.OpenURL(url)
 		self.__rmaplayer.Begin()
-		self.__engine.startusing()
-		self.__using_engine = 1
 
 
 	def __stop(self):
