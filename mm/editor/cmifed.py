@@ -35,9 +35,11 @@ def usage(msg):
 	print 'file ...   : one or more CMIF files'
 	sys.exit(2)
 
-class Main:
+from MainDialog import MainDialog
+
+class Main(MainDialog):
 	def __init__(self, opts, files):
-		import TopLevel, windowinterface
+		self._tracing = 0
 		from MMExc import MSyntaxError
 		self.tops = []
 		self._mm_callbacks = {}
@@ -46,57 +48,55 @@ class Main:
 		except ImportError:
 			pass
 		else:
+			import windowinterface
 			pipe_r, pipe_w = posix.pipe()
 			mm.setsyncfd(pipe_w)
 			self._mmfd = pipe_r
 			windowinterface.select_setcallback(pipe_r,
 						self._mmcallback,
 						(posix.read, fcntl.fcntl, FCNTL))
-		new_file = 0
-		if not files:
-			files = ['NEW-DOCUMENT.cmif']
-			new_file = 1
-		for fn in files:
-			try:
-				top = TopLevel.TopLevel(self, fn, new_file)
-			except IOError, msg:
-				print 'reading file %s failed: %s' % (fn, msg[1])
-				continue
-			except MSyntaxError, msg:
-				print 'parsing file %s failed: %s' % (fn, msg)
-				continue
-			top.setwaiting()
-			top.show()
-			for opt, arg in opts:
-				if opt == '-C':
-					top.channelview.show()
-				elif opt == '-H':
-					top.hierarchyview.show()
-				elif opt in ('-P', '-p', '-j'):
-					top.player.show()
-					if opt == '-p':
-						top.player.playsubtree(
-							  top.root)
-					if opt == '-j':
-						top.player.playfromanchor(
-							  top.root, arg)
-##				elif opt == '-S':
-##					top.styleview.show()
-				elif opt == '-L':
-					top.links.show()
-			top.checkviews()
-			self.tops.append(top)
-		if not self.tops:
-			# no toplevels made, so exit
-			# error message has already been printed
-			sys.exit(2)
+		MainDialog.__init__(self, 'CMIFed')
+		for file in files:
+			self.open_callback(file)
 
-		for top in self.tops:
-			top.setready()
+	def new_callback(self):
+		import TopLevel
+		top = TopLevel.TopLevel(self, 'NEW-DOCUMENT.cmif', 1)
+		self.new_top(top)
+
+	def open_callback(self, url):
+		import TopLevel
+		top = TopLevel.TopLevel(self, url, 0)
+		self.new_top(top)
+		
+	def close_callback(self):
+		self.do_exit()
+
+	def debug_callback(self):
+		import pdb
+		pdb.set_trace()
+
+	def trace_callback(self):
+		import trace
+		if self._tracing:
+			trace.unset_trace()
+			self._tracing = 0
+		else:
+			self._tracing = 1
+			trace.set_trace()
+
+	def new_top(self, top):
+		top.setwaiting()
+		top.show()
+		top.checkviews()
+		self.tops.append(top)
+		top.setready()
 
 	def do_exit(self, *args):
-		for top in self.tops:
+		for top in self.tops[:]:
 			top.close()
+		if not self.tops:
+			raise SystemExit, 0
 
 	def run(self):
 		import windowinterface
