@@ -259,15 +259,17 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,afxres.ID_WINDOW_CASCADE)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,afxres.ID_WINDOW_TILE_VERT)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,afxres.ID_WINDOW_TILE_HORZ)
+			self.enable_viewcmdlist(None)
 			return
 
 		if not self._active_child or self._active_child!=f:	
 			if hasattr(f,'_view'):
 				self._active_child=f
 				v=f._view
-				self.set_commandlist(v._commandlist,v._strid)
+				self.enable_viewcmdlist(v._strid)
 			else:
 				self._active_child=None 
+				self.enable_viewcmdlist(None)
 
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,afxres.ID_WINDOW_CASCADE)
@@ -520,17 +522,29 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		client.SendMessage(win32con.WM_MDIMAXIMIZE,child.GetSafeHwnd())
 
 	# Set, save and enable the commandlist for the context
+	# More complex than it should be due to lack in sync between
+	# two independent mechanisms: 'set_commandlist call' and 'OS activate'
 	def set_commandlist(self,commandlist,context='view'):
 		if context not in self._activecmds.keys():
 			self._activecmds[context]={}
+
+		# dissable all commands in context set previously
+		self.dissable_viewscmdlist()
+		if context=='document':
+			self.dissable_cmdlist('document')
+		if context=='frame':
+			self.dissable_cmdlist('document')
+			self.dissable_cmdlist('frame')
+
 		contextcmds=self._activecmds[context]
-		viewsids=self.viewscmdids()
-		menu=self.GetMenu()
-		# dissable all commands set by views previously
-		for id in viewsids.keys():
-			self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
 		contextcmds.clear()
-		if not commandlist: return
+		if not commandlist:
+			# check here due to bad sync between Activate and set_commandlist
+			if self._active_child: 
+				v=self._active_child._view
+				self.enable_viewcmdlist(v._strid)
+			return
+
 		# enable the commands set by the caller view
 		for cmd in commandlist:
 			usercmd_ui = usercmdui.class2ui[cmd.__class__]
@@ -539,14 +553,43 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			contextcmds[id]=cmd
 		self.PostMessage(WM_KICKIDLE)
 
+	def dissable_viewscmdlist(self):
+		viewsids=self.viewscmdids()
+		for id in viewsids:
+			self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
+
+	def dissable_cmdlist(self,context):
+		l=[]
+		if context in self._activecmds.keys():
+			l=self._activecmds[context].keys()
+			for id in l:self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
+
+	def enable_viewcmdlist(self,context):
+		# dissable all commands set by views previously
+		self.dissable_viewscmdlist()
+		if context==None or context not in self._activecmds.keys():
+			return
+		contextcmds=self._activecmds[context]
+		for id in contextcmds.keys():
+			self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
+
+			
+		
 	# Return the command ids of all the views
+	# but only those not included in a higher context (e.g PLAY,?)
 	def viewscmdids(self):
-		d={}
+		l=[];frameids=[];documentids=[]
+		if 'frame' in self._activecmds.keys():
+			frameids=self._activecmds['frame'].keys()
+		if 'document' in self._activecmds.keys():
+			documentids=self._activecmds['document'].keys()
 		for context in self._activecmds.keys():
 			if context=='frame' or context=='document':continue
 			contextcmds=self._activecmds[context]
-			for id in contextcmds.keys():d[id]=1
-		return d
+			for id in contextcmds.keys():
+				if (id not in frameids) and (id not in documentids):
+					l.append(id)
+		return l
 
 	# Return the commandlist for the context
 	def get_commandlist(self,context='view'):
