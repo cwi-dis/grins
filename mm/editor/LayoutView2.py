@@ -452,6 +452,7 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandRegionList = [
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
+				ENABLE_ANIMATION(callback = (self.onEnableAnimation, ())),
 				]
 		else:
 			self.commandRegionList = [
@@ -767,10 +768,15 @@ class LayoutView2(LayoutViewDialog2):
 		if len(localSelList) == 1:
 			nodeRef = localSelList[0]
 			nodeType = self.getNodeType(nodeRef)
-			if nodeType == TYPE_MEDIA and hasattr(nodeRef,'computeAnimationData'):
+			animationData = None
+			if nodeType == TYPE_MEDIA:
 				animationData = nodeRef.computeAnimationData()
-				if not animationData.isEmpty():
-					enabled = 1
+			else:
+				# XXX 
+				if hasattr(nodeRef,'_animparent'):
+					animationData = nodeRef.computeAnimationData(nodeRef._animparent)
+			if animationData is not None and not animationData.isEmpty():
+				enabled = 1
 					
 		if enabled:
 			self.settoggle(ENABLE_ANIMATION, 1)
@@ -1582,11 +1588,29 @@ class LayoutView2(LayoutViewDialog2):
 			if not self.editmgr.transaction():
 				return
 			selectedNode = self.currentSelectedNodeList[0]
+			nodeType = self.getNodeType(selectedNode)
 			animationData = selectedNode.getAnimationData()
+			if animationData is None:
+				if nodeType == TYPE_MEDIA:
+					animationData = selectedNode.computeAnimationData()
+				elif nodeType == TYPE_REGION:
+					animparent = None
+					import win32dialog
+					dlg = win32dialog.SelectElementDlg(self.toplevel.window, self.root, None, filter='node')
+					if dlg.show():
+						animparent = dlg.getmmobject()
+						assert animparent.getClassName() == 'MMNode', ''
+					else:
+						print 'cant create/edit animation'
+					# XXX save parent
+					selectedNode._animparent = animparent
+					
+					animationData = selectedNode.computeAnimationData(animparent)
 			if animationData.isEmpty():
 				geom = selectedNode.getPxGeom()
-				item1 = geom, (0, 0, 0)
-				item2 = geom, (0, 0, 0)
+				bgcolor = selectedNode.GetInherAttrDef('bgcolor', (0,0,0))
+				item1 = geom, bgcolor
+				item2 = geom, bgcolor
 				# enable animation: just initialize the first and the last value with the current value
 				animationData.setTimesData([0.0, 1.0], [item1, item2])
 				self.setKeyTimeIndex(0, selectedNode)
@@ -2308,21 +2332,16 @@ class KeyTimeSliderWidget(LightWidget):
 		self._selected = (nodeType, nodeRef)
 		
 		if nodeType == TYPE_VIEWPORT:
-			self.__updateViewport(nodeRef)
-		elif nodeType == TYPE_REGION:
-			self.__updateRegion(nodeRef)
-		elif nodeType == TYPE_MEDIA:
-			self.__updateMedia(nodeRef)
+			self.__updateUnselected()
+		elif nodeType in (TYPE_MEDIA, TYPE_REGION):
+			self.__updateNode(nodeRef)
 		else:
-			self.__unselect()
+			self.__updateUnselected()
 		
 	#
 	#
 	#
-			
-	def __unselect(self):
-		self.__updateUnselected()						
-	
+				
 	def __updateUnselected(self):
 		self.isEnabled = 0
 		self.sliderCtrl.setKeyTimes([0.0, 1.0])		
@@ -2331,13 +2350,10 @@ class KeyTimeSliderWidget(LightWidget):
 	
 	def __updateViewport(self, nodeRef):
 		self.__updateUnselected()
-	
-	def __updateRegion(self, nodeRef):
-		self.__updateUnselected()
-	
-	def __updateMedia(self, nodeRef):
+			
+	def __updateNode(self, nodeRef):
 		animationData = nodeRef.getAnimationData()
-		if animationData.isEmpty():
+		if animationData is None or animationData.isEmpty():
 			self.__updateUnselected()
 			return
 		times = animationData.getTimes()
@@ -2359,7 +2375,7 @@ class KeyTimeSliderWidget(LightWidget):
 	
 		self.isEnabled = 1
 		self.sliderCtrl.enable(1)
-
+		
 	def insertKey(self, time):
 		if self.isEnabled:
 			self.sliderCtrl.insertKeyTime(time)
