@@ -46,6 +46,7 @@ def create_MMNode_widget(node, mother):
 class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and the base class for a MMNode view.
 	# View of every MMNode within the Hierarchy view
 	def __init__(self, node, mother):
+		#print "DEBUG: MMNodeWidget created:", self
 		Widgets.Widget.__init__(self, mother)
 		self.node = node			   # : MMNode
 		assert isinstance(node, MMNode.MMNode)
@@ -116,11 +117,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	#
 	def select(self):
 		Widgets.Widget.select(self)
-		self.mother.dirty = 1
-		
+
 	def deselect(self):
 		self.unselect()
-		self.mother.dirty = 1
 
 	def ishit(self, pos):
 		return self.is_hit(pos)
@@ -302,8 +301,8 @@ class StructureObjWidget(MMNodeWidget):
 				self.children.append(bob)
 		self.node.views['struct_view'] = self 
 
-	def __repr__(self):
-		return "Abstract class StructureObjWidget, name = " + self.name
+#	def __repr__(self):
+#		return "Abstract class StructureObjWidget, name = " + self.name
 
 	def destroy(self):
 		MMNodeWidget.destroy(self)
@@ -420,8 +419,8 @@ class SeqWidget(StructureObjWidget):
 		else:
 			self.timeline = None
 
-	def __repr__(self):
-		return "Seq, name = " + self.name
+#	def __repr__(self):
+#		return "Seq, name = " + self.name
 
 	def get_obj_at(self, pos):
 		if self.channelbox is not None and self.channelbox.is_hit(pos):

@@ -229,7 +229,7 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Player\tF5', '1', PLAYERVIEW),
 ##		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'P&resentation view\tF6', '3', HIERARCHYVIEW),
+		(FLAG_ALL, ENTRY, '&Structure view\tF6', '3', HIERARCHYVIEW),
 		(FLAG_ALL, ENTRY, '&Timeline view\tF7', '4', CHANNELVIEW),
 		(FLAG_PRO|FLAG_SNAP, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW2),
 ##		(FLAG_PRO, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW),

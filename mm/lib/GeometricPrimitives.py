@@ -24,7 +24,7 @@ class GeoWidget(Widget):
 		Widget.__init__(self, mother)
 		self.canvassize = 800, 200
 		self.change_objects = []
-		self.dirty = 0
+		self.need_redraw = 0
 		self.widgets = []
 		self.displist = None
 
@@ -52,7 +52,7 @@ class GeoWidget(Widget):
 
 		# << This is a hack: 
 		bob = len(self.change_objects)
-		if not self.dirty and self.displist and bob != 0 and bob < 100:
+		if not self.need_redraw and self.displist and bob != 0 and bob < 100:
 			#print "DEBUG: geom using hack."
 			self.displist, displist = self.displist.clone(), self.displist
 			for i in self.change_objects:
@@ -73,7 +73,7 @@ class GeoWidget(Widget):
 			i.displist = self.displist
 			i.redraw()
 		self.displist.render()
-		self.dirty = 0
+		self.need_redraw = 0
 		self.change_objects = []
 
 	def notify_moveto(self, coords):
@@ -86,13 +86,13 @@ class GeoWidget(Widget):
 		if b > y:
 			y = b
 		self.canvassize = x,y
-		self.dirty = 1
+		self.need_redraw = 1
 
 	def getgeometry(self):
 		return self.mother.window.getgeometry()
 
 	def redraw_all(self):
-		self.dirty = 1
+		self.need_redraw = 1
 
 class GeoClientWidget(Widget):
 	# Common routines for all widgets.
