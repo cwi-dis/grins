@@ -385,7 +385,7 @@ torgb['gif'] = t
 
 t = pipes.Template().init()
 t.append('tifftopnm', '--')
-t.append('frompnm $IN $OUT', 'ff')
+t.append('fromppm $IN $OUT', 'ff')
 torgb['tiff'] = t
 
 t = pipes.Template().init()
