@@ -122,6 +122,30 @@ SOURCE=.\wingdi.cpp
 
 SOURCE=.\wingdi.rc
 # End Source File
+# Begin Source File
+
+SOURCE=.\wingdi_dc.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\wingdi_dc.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\wingdi_main.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\wingdi_main.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\wingdi_rgn.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\wingdi_rgn.h
+# End Source File
 # End Group
 # End Target
 # End Project

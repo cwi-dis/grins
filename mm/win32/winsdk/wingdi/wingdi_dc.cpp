@@ -350,6 +350,62 @@ PyDC_SetMiterLimit(PyDC *self, PyObject *args)
 		}
 	return Py_BuildValue("f", eOldLimit);
 }
+
+static PyObject* PyDC_GetTextMetrics(PyDC *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	TEXTMETRIC tm;
+	BOOL res = GetTextMetrics(self->m_hDC, &tm);
+	if(!res)
+		{
+		seterror("GetTextMetrics", GetLastError());
+		return NULL;
+		}
+	PyObject *d = PyDict_New();
+
+	#define DICTADD(D,ST,M,TYPE) PyDict_SetItemString (D, #M, Py_BuildValue (TYPE, ST.M))
+	DICTADD (d, tm, tmHeight, "i"); 
+	DICTADD (d, tm, tmAscent, "i");
+	DICTADD (d, tm, tmDescent, "i");
+	DICTADD (d, tm, tmInternalLeading, "i");
+	DICTADD (d, tm, tmExternalLeading, "i");
+	DICTADD (d, tm, tmAveCharWidth, "i");
+	DICTADD (d, tm, tmMaxCharWidth, "i");
+	DICTADD (d, tm, tmWeight, "i");
+	DICTADD (d, tm, tmItalic, "i");
+	DICTADD (d, tm, tmUnderlined, "i");
+	DICTADD (d, tm, tmStruckOut, "i");
+	DICTADD (d, tm, tmFirstChar, "i");
+	DICTADD (d, tm, tmLastChar, "i");
+	DICTADD (d, tm, tmDefaultChar, "i");
+	DICTADD (d, tm, tmBreakChar, "i");
+	DICTADD (d, tm, tmPitchAndFamily, "i");
+	DICTADD (d, tm, tmCharSet, "i");
+	DICTADD (d, tm, tmOverhang, "i");
+	DICTADD (d, tm, tmDigitizedAspectX, "i");
+	DICTADD (d, tm, tmDigitizedAspectY, "i");
+	#undef DICTADD
+
+	return d;
+}
+
+static PyObject* PyDC_GetTextExtent(PyDC *self, PyObject *args)
+{
+	char *pString;
+	int cbString;
+	if (!PyArg_ParseTuple (args, "s#", &pString, &cbString))
+	  return NULL;
+	SIZE sz;
+	BOOL res = GetTextExtentPoint32(self->m_hDC, pString, cbString, &sz);
+	if(!res)
+		{
+		seterror("GetTextExtentPoint32", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue ("(ii)", sz.cx, sz.cy);
+}
+
 ////////////////////////////////////////
 // Path
 
@@ -820,6 +876,8 @@ PyMethodDef PyDC::methods[] = {
 	{"SetArcDirection", (PyCFunction)PyDC_SetArcDirection, METH_VARARGS, ""},
 	{"GetDeviceCaps", (PyCFunction)PyDC_GetDeviceCaps, METH_VARARGS, ""},
 	{"SetMiterLimit", (PyCFunction)PyDC_SetMiterLimit, METH_VARARGS, ""},
+	{"GetTextMetrics", (PyCFunction)PyDC_GetTextMetrics, METH_VARARGS, ""},
+	{"GetTextExtent", (PyCFunction)PyDC_GetTextExtent, METH_VARARGS, ""},
 
 	{"BeginPath", (PyCFunction)PyDC_BeginPath, METH_VARARGS, ""},
 	{"EndPath", (PyCFunction)PyDC_EndPath, METH_VARARGS, ""},
