@@ -63,7 +63,7 @@ class HtmlChannel(ChannelWindow):
 		# in the text.  pline and pchar specify how far we got
 		# with printing.
 		pline, pchar = 0, 0
-		for (par0, chr0, par1, chr1, name, type) in taglist:
+		for (par0, chr0, par1, chr1, name, type, times) in taglist:
 			# first convert paragraph # and character #
 			# to line and character.
 			line0, char0 = map_parpos_to_linepos(par0, \
@@ -84,11 +84,11 @@ class HtmlChannel(ChannelWindow):
 			# lines)
 			for line in range(pline, line1):
 				box = self.armed_display.writestr(curlines[line][pchar:])
-				buttons.append((name, box, type))
+				buttons.append((name, box, type, times))
 				dummy = self.armed_display.writestr('\n')
 				pchar = 0
 			box = self.armed_display.writestr(curlines[line1][pchar:char1])
-			buttons.append((name, box, type))
+			buttons.append((name, box, type, times))
 			# update loop invariants
 			pline, pchar = line1, char1
 		# write text after last button
@@ -97,11 +97,11 @@ class HtmlChannel(ChannelWindow):
 			pchar = 0
 ##			print 'buttons:',`buttons`
 		self.armed_display.fgcolor(self.gethicolor(node))
-		for (name, box, type) in buttons:
+		for (name, box, type, times) in buttons:
 			button = self.armed_display.newbutton(box)
 			button.hiwidth(3)
 ##			button.hicolor(self.getfgcolor(node))
-			self.setanchor(name, type, button)
+			self.setanchor(name, type, button, times)
 ##			dummy = self.armed_display.writestr(string.joinfields(curlines, '\n'))
 		# Draw a little square if some text did not fit.
 		box = self.armed_display.writestr('')
@@ -238,25 +238,22 @@ def fix_anchorlist(node, taglist):
 		names_in_anchors.append(item[4])
 	oldanchors = MMAttrdefs.getattr(node, 'anchorlist')
 	anchors = oldanchors[:]
-	i = 0
-	while i < len(anchors):
-		aid, atype, args = a = anchors[i]
-		if atype in [ATYPE_DEST, ATYPE_AUTO, ATYPE_COMP]:
+	while a in anchors:
+		if a[A_TYPE] in [ATYPE_DEST, ATYPE_AUTO, ATYPE_COMP]:
 			pass
-		elif aid not in names_in_anchors:
+		elif a[A_ID] not in names_in_anchors:
 			print 'Dont remove html anchor from anchorlist:', a
 		else:
-			names_in_taglist.append(aid)
-			anchor_types[aid] = atype
-		i = i + 1
+			names_in_taglist.append(a[A_ID])
+			anchor_types[a[A_ID]] = a[A_TYPE], a[A_TIMES]
 	for i in range(len(taglist)):
 		item = taglist[i]
 		name = item[4]
 		if not anchor_types.has_key(name):
 			print 'Add html anchor to anchorlist:', name
-			anchors.append(name, ATYPE_NORMAL, [])
-			anchor_types[name] = ATYPE_NORMAL
-		taglist[i] = taglist[i] + (anchor_types[name],)
+			anchors.append((name, ATYPE_NORMAL, [], (0,0)))
+			anchor_types[name] = ATYPE_NORMAL, (0,0)
+		taglist[i] = taglist[i] + anchor_types[name]
 	if anchors <> oldanchors:
 		print 'New anchors:', anchors
 		node.SetAttr('anchorlist', anchors)

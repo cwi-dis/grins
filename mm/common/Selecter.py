@@ -276,9 +276,8 @@ class Selecter:
 	def followcompanchors(self, node, aid):
 		if not aid:
 			return None
-		alist = MMAttrdefs.getattr(node, 'anchorlist')
-		for id, tp, arg in alist:
-			if id == aid and tp == ATYPE_COMP:
+		for a in MMAttrdefs.getattr(node, 'anchorlist'):
+			if a[A_ID] == aid and a[A_TYPE] == ATYPE_COMP:
 				return arg
 		return None
 	#
