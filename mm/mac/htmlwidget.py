@@ -54,6 +54,8 @@ class HTMLWidget:
 		self.rect = rect
 		vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
 		dr = (0, 0, vr[2]-vr[0], 0)
+		if self.name == 'HelpHeader':
+			print 'HELPHEADER vr', vr, 'dr', dr
 		Qd.SetPort(window)
 		Qd.TextFont(4)
 		Qd.TextSize(9)
@@ -114,6 +116,7 @@ class HTMLWidget:
 			self.ted.WESetDestRect(dr)
 			self.ted.WECalText()
 			self.bary = None
+			self.ted.WEScroll(vr[0]-dr[0], vr[1]-dr[1]) # Test....
 		
 	def getybarvalue(self):
 		vr = self.ted.WEGetViewRect()
@@ -242,7 +245,7 @@ class HTMLWidget:
 			off, edge = self.ted.WEGetOffset(local)
 			for i in range(len(self.anchor_offsets)):
 				p0, p1 = self.anchor_offsets[i]
-				if p0 <= off <= p1:
+				if p0 <= off < p1:
 					href = self.anchor_hrefs[i]
 					self._cbanchor(href)
 					return
@@ -283,6 +286,10 @@ class HTMLWidget:
 		Win.InvalRect(self.rect)
 
 		self.createscrollbars(reset=1)
+		if self.name == 'HelpHeader':
+			vr = self.ted.WEGetViewRect()
+			dr = self.ted.WEGetDestRect()
+			print 'HELPHEADER READY vr', vr, 'dr', dr
 		
 	def mysetstyle(self, which, how):
 		self.ted.WESelView()
@@ -451,7 +458,7 @@ def newGIF(obj):
 def drawGIF((l,t,r,b),obj):
 	handle = obj.WEGetObjectDataHandle()
 	width, height, pixmap = _gifkeeper.get(handle.data)
-	srcrect = 0, 0, r-l-2*IMAGEBORDER, b-t-2*IMAGEBORDER
+	srcrect = 0, 0, width, height
 	dstrect = l+IMAGEBORDER, t+IMAGEBORDER, r-IMAGEBORDER, b-IMAGEBORDER
 	port = Qd.GetPort()
 	bg = port.rgbBkColor
