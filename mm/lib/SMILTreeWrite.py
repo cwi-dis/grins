@@ -582,7 +582,12 @@ def getsyncarc(writer, node, isend):
 				date = '%04d-%02d-%02dT' % (yr, mt, dy)
 			else:
 				date = ''
-			time = '%02d:%02d:%05.2f' % (hr, mn, sc)
+			if sc == 0:
+				time = '%02d:%02d' % (hr, mn)
+			elif int(sc) == sc:
+				time = '%02d:%02d:%02d' % (hr, mn, int(sc))
+			else:
+				time = '%02d:%02d:%05.2f' % (hr, mn, sc)
 			if tzhr is not None:
 				tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
 			else:
