@@ -1621,21 +1621,16 @@ class ChannelWindow(Channel):
 
 			# region geometry			
 			self.idCssNode = self.cssResolver.newRegion()
+			self.idCssMedia = self.cssResolver.newMedia()
 			pchan = self._get_parent_channel()
-			self.cssResolver.setRawAttrPos(self.idCssNode,
-										   node.GetAttrDef('left',None), node.GetAttrDef('width',None),
-										   node.GetAttrDef('right',None), node.GetAttrDef('top',None),
-										   node.GetAttrDef('height',None), node.GetAttrDef('bottom',None))
+
+			# copy all possitioning attributes from document source.
+			# because, the animation module haven't to modify the document source
+			self.cssResolver.copyRawAttrs(node.getSubRegCssId(), self.idCssNode)
+			self.cssResolver.copyRawAttrs(node.getMediaCssId(), self.idCssMedia)
+			
 			self.cssResolver.link(self.idCssNode, pchan.idCssNode)
 			self._wingeom = self.cssResolver.getPxGeom(self.idCssNode)
-
-			# space are geometry			
-			self.idCssMedia = self.cssResolver.newMedia()
-			mwidth, mheight = node.GetDefaultMediaSize(None, None)
-			self.cssResolver.setIntrinsicSize(self.idCssMedia, mwidth, mheight)
-			self.cssResolver.setAlignAttr(self.idCssMedia, 'regPoint', node.GetAttrDef('regPoint',None))
-			self.cssResolver.setAlignAttr(self.idCssMedia, 'regAlign', node.GetAttrDef('regAlign',None))
-			self.cssResolver.setAlignAttr(self.idCssMedia, 'scale', node.GetAttrDef('scale',None))
 			self.cssResolver.link(self.idCssMedia, self.idCssNode)
 			self._mediageom = self.cssResolver.getPxGeom(self.idCssMedia)
 			
