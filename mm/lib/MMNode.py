@@ -1604,7 +1604,7 @@ class MMNode:
 		return self._subRegCssId
 
 	def newMediaCssId(self):
-		self._mediaCssId = self.context.cssResolver.newMedia()
+		self._mediaCssId = self.context.cssResolver.newMedia(self.GetDefaultMediaSize)
 		return self._mediaCssId
 
 	def getMediaCssId(self):

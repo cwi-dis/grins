@@ -78,8 +78,8 @@ class SMILCssResolver:
 			return
 		node.unlink()
 		
-	def newMedia(self):
-		node = MediaNode(self)
+	def newMedia(self, defaultSizeHandler):
+		node = MediaNode(self, defaultSizeHandler)
 
 		return node
 
@@ -810,11 +810,12 @@ class RootNode(RegionNode):
 		self.isInit = 1
 		
 class MediaNode(Node):
-	def __init__(self, context):
+	def __init__(self, context, defaultSizeHandler):
 		Node.__init__(self, context)
 		self.alignHandler = None
 		self.intrinsicWidth = None
 		self.intrinsicHeight = None
+		self.defaultSizeHandler = defaultSizeHandler
 
 	def copyRawAttrs(self, srcNode):
 		Node.copyRawAttrs(self,srcNode)
@@ -824,6 +825,10 @@ class MediaNode(Node):
 		self._toUnInitState()		
 
 	def _initialUpdate(self):
+		# get the intrinsic size
+		# note: for optimization, the defaultSizeHandler method has a cache
+		self.intrinsicWidth, self.intrinsicHeight = self.defaultSizeHandler(None, None)
+		
 		self.pxleft, self.pxtop, self.pxwidth, self.pxheight = self._getMediaSpaceArea()
 		if self.pxwidth <= 0: self.pxwidth = 1
 		if self.pxheight <= 0: self.pxheight = 1
@@ -961,14 +966,7 @@ class MediaNode(Node):
 
 	def setRawAttrs(self, attrList):
 		for name, value in attrList:
-			if name == 'width':
-				if value <= 0: value = 1
-				self.intrinsicWidth = value
-			elif name == 'height':
-				if value <= 0: value = 1
-				self.intrinsicHeight = value
-			else:
-				Node._setRawAttr(self, name, value)
+			Node._setRawAttr(self, name, value)
 
 		self._toUnInitState()
 

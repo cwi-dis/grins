@@ -1421,8 +1421,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if node.attrdict.has_key('right'): del node.attrdict['right']
 				if node.attrdict.has_key('bottom'): del node.attrdict['bottom']
 
-				mwidth, mheight = node.GetDefaultMediaSize(None, None)
-				cssResolver.setRawAttrs(mediaCssId, [('width', mwidth), ('height', mheight)])		
 				if node.attrdict.has_key('regPoint'):
 					cssResolver.setRawAttrs(mediaCssId, [('regPoint', node.attrdict.get('regPoint'))])
 					del node.attrdict['regPoint']
