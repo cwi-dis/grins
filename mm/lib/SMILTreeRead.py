@@ -554,8 +554,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				url = self.__context.findurl(node.attrdict['file'])
 				try:
 					import Sizes
-					file = MMurl.urlretrieve(url)[0]
-					width, height = Sizes.GetSize(file, mediatype, subtype)
+					width, height = Sizes.GetSize(url, mediatype, subtype)
 				except:
 					# want to make them at least visible...
 					if ch['width'] == 0:
