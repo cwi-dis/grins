@@ -1937,7 +1937,7 @@ class MMSyncArc:
 				return node.xpath(self.srcnode)
 			except xpath_error:
 				# invalid path
-				self.dstnode.set_infoicon('error', "relative syncarc doesn't point to an existing element")
+				self.dstnode.set_infoicon('error', "Relative syncarc points to an non-existing element.")
 				return None
 		elif self.srcnode is node:
 			refnode = node.looping_body_self or node
@@ -4221,7 +4221,7 @@ class MMNode(MMTreeElement):
 				arc.path = subpath
 			elif not beginlist:
 				if defbegin is None:
-					child.set_infoicon('error', 'node cannot start')
+					child.set_infoicon('error', 'This node can only be started by an external hyperlink.')
 				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin, implicit = 1)
 				self_body.arcs.append((srcnode, arc))
 				srcnode.add_arc(arc, curtime, sctx)

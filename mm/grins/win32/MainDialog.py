@@ -99,7 +99,7 @@ class MainDialog:
 		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
 			self.openURL_callback(url)
 		else:
-			windowinterface.showmessage('Incorrect filetype for drop/paste')
+			windowinterface.showmessage('Only GRiNS or SMIL files can be dropped.')
 
 	def openfile_callback(self):
 		"""Callback for OPENFILE menu command"""

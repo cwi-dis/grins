@@ -179,7 +179,7 @@ class SMILHtmlTimeWriter(SMIL):
 	def showunsupported(self, key):
 		from windowinterface import showmessage
 		if not self.__warnings.has_key(key):
-			msg = '%s: not supported by XHTML+TIME' % key
+			msg = 'Not supported by HTML+TIME: %s' % key
 			showmessage(msg, mtype = 'warning')
 			self.__warnings[key]=1
 

@@ -167,7 +167,7 @@ class EditMgr(Clipboard.Clipboard):
 		# note: this test can't be done from the source view which may be closed
 		if type != 'source' and not self.context.isValidDocument():
 			import windowinterface
-			windowinterface.showmessage('The source document contains some errors\nYou have to fix them before to be able to edit',
+			windowinterface.showmessage('You should first fix the parsing errors in the source view.',
 						    mtype = 'error')
 			return 0
 
