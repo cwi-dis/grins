@@ -459,6 +459,17 @@ class _Window:
 		self._rect = 0, 0, w, h
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
+		self.setcursor(self._cursor)
+		if pixmap:
+			self._pixmap = form.CreatePixmap()
+			gc = self._pixmap.CreateGC({'foreground': bg,
+						    'background': bg})
+			gc.FillRectangle(0, 0, w, h)
+		else:
+			self._pixmap = None
+			gc = form.CreateGC({'background': bg})
+		gc.foreground = fg
+		self._gc = gc
 		w = float(w) / toplevel._hmm2pxl
 		h = float(h) / toplevel._vmm2pxl
 		self._hfactor = parent._hfactor / w
@@ -470,16 +481,6 @@ class _Window:
 		form.AddCallback('inputCallback', self._input_callback, None)
 		form.AddEventHandler(X.PointerMotionMask, FALSE,
 				     self._motion_handler, None)
-		self.setcursor(self._cursor)
-		if pixmap:
-			self._pixmap = form.CreatePixmap()
-			gc = self._pixmap.CreateGC({'foreground': bg,
-						    'background': bg})
-			gc.FillRectangle(0, 0, w, h)
-		else:
-			gc = form.CreateGC({'background': bg})
-		gc.foreground = fg
-		self._gc = gc
 
 	def __repr__(self):
 		try:
@@ -532,10 +533,7 @@ class _Window:
 		del self._clip
 		del self._topwindow
 		del self._gc
-		try:
-			del self._pixmap
-		except AttributeError:
-			pass
+		del self._pixmap
 
 	def is_closed(self):
 		return self._parent is None
@@ -547,7 +545,7 @@ class _Window:
 		gc.foreground = self._convert_color((255,0,0))
 		x, y, w, h = self._rect
 		gc.DrawRectangle(x, y, w-1, h-1)
-		if hasattr(self, '_pixmap'):
+		if self._pixmap is not None:
 			x, y, w, h = self._rect
 			self._pixmap.CopyArea(self._form, gc,
 					      x, y, w, h, x, y)
@@ -563,7 +561,7 @@ class _Window:
 			r1.UnionRectWithRegion(x+1, y+1, w-2, h-2)
 			r.SubtractRegion(r1)
 			self._topwindow._do_expose(r)
-			if hasattr(self, '_pixmap'):
+			if self._pixmap is not None:
 				self._gc.SetRegion(r)
 				self._pixmap.CopyArea(self._form, self._gc,
 						      x, y, w, h, x, y)
@@ -656,7 +654,7 @@ class _Window:
 			self._gc.foreground = self._convert_color(color)
 			x, y, w, h = self._rect
 			self._gc.FillRectangle(x, y, w, h)
-			if hasattr(self, '_pixmap'):
+			if self._pixmap is not None:
 				self._pixmap.CopyArea(self._form, self._gc,
 						      x, y, w, h, x, y)
 
@@ -1041,9 +1039,8 @@ class _Window:
 			# last of a series, do the redraw
 			r = self._exp_reg
 			self._exp_reg = Xlib.CreateRegion()
-			try:
-				pm = self._pixmap
-			except AttributeError:
+			pm = self._pixmap
+			if pm is None:
 				self._do_expose(r)
 			else:
 				self._gc.SetRegion(r)
@@ -1113,9 +1110,7 @@ class _Window:
 		h = float(height) / toplevel._vmm2pxl
 		self._hfactor = parent._hfactor / w
 		self._vfactor = parent._vfactor / h
-		try:
-			del self._pixmap
-		except AttributeError:
+		if self._pixmap is None:
 			pixmap = None
 		else:
 			pixmap = form.CreatePixmap()
@@ -1131,7 +1126,7 @@ class _Window:
 			w._do_resize1()
 		self._mkclip()
 		self._do_expose(self._region)
-		if pixmap:
+		if pixmap is not None:
 			gc.SetRegion(self._region)
 			pixmap.CopyArea(form, gc, 0, 0, width, height, 0, 0)
 		# call resize callbacks
@@ -1200,19 +1195,14 @@ class _BareSubWindow:
 		self._gc = parent._gc
 		self._visual = parent._visual
 		self._colormap = parent._colormap
-		try:
-			self._pixmap = parent._pixmap
-		except AttributeError:
-			have_pixmap = 0
-		else:
-			have_pixmap = 1
+		self._pixmap = parent._pixmap
 
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
 		parent._mkclip()
 		if self._transparent == 0:
 			self._do_expose(self._region)
-			if have_pixmap:
+			if self._pixmap is not None:
 				x, y, w, h = self._rect
 				self._gc.SetRegion(self._region)
 				self._pixmap.CopyArea(self._form, self._gc,
@@ -1233,12 +1223,12 @@ class _BareSubWindow:
 			dl.close()
 		parent._mkclip()
 		parent._do_expose(self._region)
-		if hasattr(self, '_pixmap'):
+		if self._pixmap is not None:
 			x, y, w, h = self._rect
 			self._gc.SetRegion(self._region)
 			self._pixmap.CopyArea(self._form, self._gc,
 					      x, y, w, h, x, y)
-			del self._pixmap
+		del self._pixmap
 		del self._form
 		del self._clip
 		del self._topwindow
@@ -1269,7 +1259,7 @@ class _BareSubWindow:
 			# draw the window's contents
 			if self._transparent == 0 or self._active_displist:
 				self._do_expose(self._region)
-				if hasattr(self, '_pixmap'):
+				if self._pixmap is not None:
 					x, y, w, h = self._rect
 					self._gc.SetRegion(self._region)
 					self._pixmap.CopyArea(self._form,
@@ -1296,7 +1286,7 @@ class _BareSubWindow:
 		for w in self._parent._subwindows:
 			if w is not self:
 				w._do_expose(self._region)
-		if hasattr(self, '_pixmap'):
+		if self._pixmap is not None:
 			x, y, w, h = self._rect
 			self._gc.SetRegion(self._region)
 			self._pixmap.CopyArea(self._form, self._gc,
@@ -1318,12 +1308,7 @@ class _BareSubWindow:
 		# calculate new size of subwindow after resize
 		# close all display lists
 		parent = self._parent
-		try:
-			del self._pixmap
-		except AttributeError:
-			pass
-		else:
-			self._pixmap = parent._pixmap
+		self._pixmap = parent._pixmap
 		self._gc = parent._gc
 		x, y, w, h = parent._convert_coordinates(self._sizes, crop = 1)
 		self._rect = x, y, w, h
@@ -1389,7 +1374,7 @@ class _DisplayList:
 				win._parent._do_expose(r)
 			else:
 				win._do_expose(r)
-			if hasattr(win, '_pixmap'):
+			if win._pixmap is not None:
 				x, y, w, h = win._rect
 				win._gc.SetRegion(win._region)
 				win._pixmap.CopyArea(win._form, win._gc,
@@ -1452,8 +1437,9 @@ class _DisplayList:
 		# finally, re-highlight window
 		if window._showing:
 			window.showwindow()
-		if hasattr(window, '_pixmap'):
+		if window._pixmap is not None:
 			x, y, width, height = window._rect
+			window._gc.SetRegion(window._clip)
 			window._pixmap.CopyArea(window._form, window._gc,
 						x, y, width, height, x, y)
 		window._buttonregion = bregion = Xlib.CreateRegion()
@@ -1477,12 +1463,6 @@ class _DisplayList:
 		   w._transparent and clonestart == 0:
 			w._active_displist = None
 			w._do_expose(region)
-		try:
-			pm = self._pixmap
-		except AttributeError:
-			have_pixmap = 0
-		else:
-			have_pixmap = 1
 		gc = w._gc
 		gc.ChangeGC(self._gcattr)
 		gc.SetRegion(region)
@@ -1774,7 +1754,7 @@ class _Button:
 			return
 		self._highlighted = 1
 		self._do_highlight()
-		if hasattr(window, '_pixmap'):
+		if window._pixmap is not None:
 			x, y, w, h = window._rect
 			window._pixmap.CopyArea(window._form, window._gc,
 						x, y, w, h, x, y)
@@ -1809,7 +1789,7 @@ class _Button:
 				       w - 2*lw - 1, h - 2*lw - 1)
 		r.SubtractRegion(r1)
 		window._do_expose(r)
-		if hasattr(window, '_pixmap'):
+		if window._pixmap is not None:
 			x, y, w, h = window._rect
 			window._pixmap.CopyArea(window._form, window._gc,
 						x, y, w, h, x, y)
