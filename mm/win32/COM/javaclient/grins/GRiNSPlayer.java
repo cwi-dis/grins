@@ -71,18 +71,18 @@ implements SMILDocument, SMILController, SMILRenderer
            uninitializeThreadContext(); 
         }
    
+    
     public void close()
         {
         if(hgrins!=0) 
             {
-            monitor.interrupt();
-            nstop(hgrins);
-            nclose(hgrins);
+            if(monitor!=null) monitor.interrupt();
+            
+            //nstop(hgrins);
+            //nclose(hgrins);
             ndisconnect(hgrins);
             hgrins = 0;
             uninitializeThreadContext();
-            try {Thread.sleep(100);}
-            catch(InterruptedException e){}
             }
          if(canvas!=null && canvas.isDisplayable())
             canvas.repaint();

@@ -19,7 +19,11 @@ class GRiNSPlayerMonitor extends Thread {
             }
             catch(InterruptedException e) {break;}
         }
-        if(hgrins!=0)ndisconnect(hgrins);
+        if(hgrins!=0)
+            {
+            ndisconnect(hgrins);
+            hgrins=0;
+            }
         uninitializeThreadContext();
     }
     
