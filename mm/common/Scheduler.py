@@ -1,6 +1,5 @@
 # Scheduler - The scheduler for playing cmif documents.
 
-
 import time
 from sched import scheduler
 from MMExc import *
@@ -52,7 +51,7 @@ class SchedulerContext():
 		print '------------------------------'
 		print '--------- events:'
 		for ev in self.srevents.keys():
-			print ev,'\t', self.srevents[ev]
+			print SR.ev2string(ev),'\t', self.srevents[ev]
 		print '--------- actions:'
 		for i in range(len(self.sractions)):
 			if self.sractions[i]:
@@ -165,10 +164,10 @@ class SchedulerContext():
 			actionpos = len(self.sractions)
 			self.sractions.append((nevents, actions))
 			for ev in events:
-				if self.srevents.has_key(`ev`):
+				if self.srevents.has_key(ev):
 					raise 'Scheduler: Duplicate event:', \
 						  SR.ev2string(ev)
-				self.srevents[`ev`] = actionpos
+				self.srevents[ev] = actionpos
 	#
 	# Start minidoc starts playing what we've prepared
 	#
@@ -198,8 +197,8 @@ class SchedulerContext():
 	def getsrlist(self, ev):
 		#print 'event:', SR.ev2string(ev)
 		try:
-			actionpos = self.srevents[`ev`]
-			del self.srevents[`ev`]
+			actionpos = self.srevents[ev]
+			del self.srevents[ev]
 		except KeyError:
 			raise 'Scheduler: Unknown event:', SR.ev2string(ev)
 		srlist = self.sractions[actionpos]
