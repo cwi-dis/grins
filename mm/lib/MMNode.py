@@ -1036,6 +1036,15 @@ class MMNode:
 			return child.GetChildByName(name)
 		return None
 
+	def GetChildWithArea(self, name):
+		alist = MMAttrdefs.getattr(self, 'anchorlist')
+		for id, type, args, times in alist:
+			if id==name:
+				return self, id, type, args, times
+		for child in self.children:
+			return child.GetChildWithArea(name)
+		return None
+
 	def GetValues(self):
 		return self.values
 
@@ -1047,26 +1056,26 @@ class MMNode:
 
 	def GetRawAttr(self, name, animated=0):
 		if animated and self.d_attrdict.has_key(name):
-			return self.attrdict[name]
+			return self.d_attrdict[name]
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		raise NoSuchAttrError, 'in GetRawAttr()'
 
 	def GetRawAttrDef(self, name, default, animated=0):
 		if animated and self.d_attrdict.has_key(name):
-			return self.attrdict[name]
+			return self.d_attrdict[name]
 		return self.attrdict.get(name, default)
 
 	def GetAttr(self, name, animated=0):
 		if animated and self.d_attrdict.has_key(name):
-			return self.attrdict[name]
+			return self.d_attrdict[name]
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		raise NoSuchAttrError, 'in GetAttr'
 
 	def GetAttrDef(self, name, default, animated=0):
 		if animated and self.d_attrdict.has_key(name):
-			return self.attrdict[name]
+			return self.d_attrdict[name]
 		return self.attrdict.get(name, default)
 
 	def GetInherAttr(self, name, animated=0):
