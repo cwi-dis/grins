@@ -338,7 +338,11 @@ class SeqWidget(StructureObjWidget):
     # Any sequence node.
     HAS_CHANNEL_BOX = 0
     def __init__(self, node, root):
-        self.dropbox = DropBoxWidget(root)
+        has_drop_box = not MMAttrdefs.getattr(node, 'project_readonly')
+        if has_drop_box:
+            self.dropbox = DropBoxWidget(root)
+        else:
+            self.dropbox = None
         if self.HAS_CHANNEL_BOX:
             self.channelbox = ChannelBoxWidget(node, root)
         else:
@@ -361,7 +365,7 @@ class SeqWidget(StructureObjWidget):
                     i.pushbackbar.draw(display_list)
 
         StructureObjWidget.draw(self, display_list)
-        if self.root.dropbox and not self.iscollapsed():
+        if self.dropbox and not self.iscollapsed():
             self.dropbox.draw(display_list)
 
     def get_nearest_node_index(self, pos):
@@ -413,7 +417,7 @@ class SeqWidget(StructureObjWidget):
         #             current +   gaps between nodes  +  gaps at either end      
         min_width = min_width + xgap*( len(self.children)-1) + 2*self.get_relx(sizes_notime.HEDGSIZE)
 
-        if self.root.dropbox:
+        if self.dropbox:
             min_width = min_width + self.dropbox.get_minsize()[0] + xgap;
 
         min_height = min_height + 2*self.get_rely(sizes_notime.VEDGSIZE)
@@ -444,7 +448,7 @@ class SeqWidget(StructureObjWidget):
 
         mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE
 
-        if self.root.dropbox:
+        if self.dropbox:
             mw = mw + self.dropbox.get_minsize_abs()[0] + sizes_notime.GAPSIZE;
 
         mh = mh + 2*sizes_notime.VEDGSIZE
@@ -472,18 +476,13 @@ class SeqWidget(StructureObjWidget):
 
         t = t + self.get_rely(sizes_notime.TITLESIZE)
         min_height = min_height - self.get_rely(sizes_notime.TITLESIZE)
-        
-        if len(self.children) > 0:
-            overhead_width = 2.0*self.get_relx(sizes_notime.HEDGSIZE) + float(len(self.children)-1)*self.get_relx(sizes_notime.GAPSIZE);
-        else:
-            overhead_width = 0;
 
-        if self.root.dropbox:
-            free_width = free_width-self.dropbox.get_minsize()[0];
 
         if free_width < 0.0:
 #            print "Warning! free_width is less than 0.0!:", free_width
             free_width = 0.0
+
+        freewidth_per_child = free_width / len(self.children)      
 
         l = float(l) + self.get_relx(sizes_notime.HEDGSIZE) #+ self.get_relx(sizes_notime.HANDLESIZE);
         t = float(t) + self.get_rely(sizes_notime.VEDGSIZE)
@@ -505,12 +504,8 @@ class SeqWidget(StructureObjWidget):
 #                print "Error: Node is too tall! h=",h,"(b-t)=",b-t;
 #                #assert 0               # This shouldn't happen because the minimum size of this node
                                         # has already been determined to be bigger than this in minsize()
-            # Take a portion of the free available width, fairly.
-            if free_width < 0.001:
-                thisnode_free_width = 0.0
-            else:
-                thisnode_free_width = (float(w) / (min_width-overhead_width)) * free_width
 
+            thisnode_free_width = freewidth_per_child
 
 ##            print "       Seq thisnode free width = ", thisnode_free_width;
 ##            print "       w = ", w, " min_width=", min_width, "free_width=", free_width;
@@ -534,18 +529,18 @@ class SeqWidget(StructureObjWidget):
             medianode.moveto((l,t,r,b))
             medianode.recalc()
             l = r + self.get_relx(sizes_notime.GAPSIZE)
+        if self.dropbox:
+            # Position the stupid drop-box at the end.
+            w,h = self.dropbox.get_minsize()
+    #        print "DEBUG: dropbox coords are ", w, h
+    #        print "Moving dropbox to", l,t,(float(w)/min_width)*free_width,b
+    
+            # The dropbox takes up the rest of the free width.
+            r = self.pos_rel[2]-self.get_relx(sizes_notime.HEDGSIZE)
+            
+            self.dropbox.moveto((l,t,r,b))
 
-        # Position the stupid drop-box at the end.
-        w,h = self.dropbox.get_minsize();
-#        print "DEBUG: dropbox coords are ", w, h
-#        print "Moving dropbox to", l,t,(float(w)/min_width)*free_width,b
-
-        # The dropbox takes up the rest of the free width.
-        r = self.pos_rel[2]-self.get_relx(sizes_notime.HEDGSIZE);
-        
-        self.dropbox.moveto((l,t,r,b));
-
-        StructureObjWidget.recalc(self);
+        StructureObjWidget.recalc(self)
 
 
 class TimeStripSeqWidget(SeqWidget):
