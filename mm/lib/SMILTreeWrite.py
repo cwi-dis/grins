@@ -1243,7 +1243,7 @@ class SMILWriter(SMIL):
 		u_groups = self.root.GetContext().usergroups
 		if not u_groups:
 			return
-		self.writetag('%s:user-attributes' % NSprefix)
+		self.writetag('%s:user-attributes' % NSGRiNSprefix)
 		self.push()
 		for key, val in u_groups.items():
 			attrlist = []
@@ -1255,20 +1255,20 @@ class SMILWriter(SMIL):
 				attrlist.append(('u-state', u_state))
 			if override != 'allowed':
 				attrlist.append(('override', override))
-			self.writetag('%s:u-group' % NSprefix, attrlist)
+			self.writetag('%s:u-group' % NSGRiNSprefix, attrlist)
 		self.pop()
 
 	def writegrinslayout(self):
 		layouts = self.root.GetContext().layouts
 		if not layouts:
 			return
-		self.writetag('%s:layouts' % NSprefix)
+		self.writetag('%s:layouts' % NSGRiNSprefix)
 		self.push()
 		for name, chans in layouts.items():
 			channames = []
 			for ch in chans:
 				channames.append(self.ch2name[ch])
-			self.writetag('%s:layout' % NSprefix,
+			self.writetag('%s:layout' % NSGRiNSprefix,
 				      [('id', self.layout2name[name]),
 				       ('regions', string.join(channames))])
 		self.pop()
@@ -1284,7 +1284,7 @@ class SMILWriter(SMIL):
 		interior = (type in interiortypes)
 		if interior:
 			if type == 'bag':
-				mtype = '%s:choice' % NSprefix
+				mtype = '%s:choice' % NSGRiNSprefix
 				xtype = '%s choice' % GRiNSns
 			elif type == 'alt':
 				xtype = mtype = 'switch'
