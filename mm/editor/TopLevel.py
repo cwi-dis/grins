@@ -22,14 +22,9 @@ import Timing
 
 # Parametrizations
 BHEIGHT = 30				# Button height
-HELPDIR = None
 
 # List of currently open toplevel windows
 opentops = []
-
-def sethelpdir(helpdir):
-	global HELPDIR
-	HELPDIR = helpdir
 
 class TopLevel(ViewDialog, BasicDialog):
 	#
@@ -131,8 +126,6 @@ class TopLevel(ViewDialog, BasicDialog):
 		# The next four buttons in the menu open/close views.
 		# They show a light which indicates whether the view
 		# is open or closed.
-		# The fifth button opens/closes the Help window,
-		# which is almost, but not quite, completely like a view.
 		#
 		# Their callbacks are set later, in makeviews.
 		#
@@ -162,14 +155,10 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.lvbutton = \
 		    form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Hyperlinks')
 		#
-		y = y - h
-		self.helpbutton = \
-			form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Help')
-		#
 		# The bottom three buttons are document-related commands.
 		# They remain pressed while the command is executing.
 		#
-		y = 5*bheight
+		y = int(6.3*bheight)
 		#
 		y = y - h
 		self.openbutton = \
@@ -196,6 +185,15 @@ class TopLevel(ViewDialog, BasicDialog):
 			form.add_button(INOUT_BUTTON,x,y,w,h, 'Close')
 		self.closebutton.set_call_back(self.close_callback, None)
 		#
+		# The help button is at the very bottom
+		#
+		y = bheight
+		#
+		y = y - h
+		self.helpbutton = \
+			form.add_button(NORMAL_BUTTON,x,y,w,h, 'Help')
+		self.helpbutton.set_call_back(self.help_callback, None)
+		#
 	#
 	# View manipulation.
 	#
@@ -213,19 +211,12 @@ class TopLevel(ViewDialog, BasicDialog):
 		import StyleSheet
 		self.styleview = StyleSheet.StyleSheet().init(self)
 		#
-		import Help
-		helpdir = HELPDIR
-		if helpdir == None:
-			import cmif
-			helpdir = cmif.findfile('help')
-		self.help = Help.HelpWindow().init(helpdir, self)
-		#
 		import LinkEdit
 		self.links = LinkEdit.LinkEdit().init(self)
 		#
 		# Views that are destroyed by restore (currently all)
 		self.views = [self.blockview, self.channelview, self.player, \
-			  self.styleview, self.links, self.help]
+			  self.styleview, self.links]
 		#
 		self.bvbutton.set_call_back(self.view_callback, self.blockview)
 		self.cvbutton.set_call_back(self.view_callback, \
@@ -234,7 +225,6 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.playbutton.set_call_back(self.play_callback, None)
 		self.svbutton.set_call_back(self.view_callback, self.styleview)
 		self.lvbutton.set_call_back(self.view_callback, self.links)
-		self.helpbutton.set_call_back(self.view_callback, self.help)
 	#
 	def hideviews(self):
 		for v in self.views: v.hide()
@@ -246,7 +236,6 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.pvbutton.set_button(self.player.is_showing())
 		self.svbutton.set_button(self.styleview.is_showing())
 		self.lvbutton.set_button(self.links.is_showing())
-		self.helpbutton.set_button(self.help.is_showing())
 	#
 	def destroyviews(self):
 		self.hideviews()
@@ -332,9 +321,6 @@ class TopLevel(ViewDialog, BasicDialog):
 		for v in self.views:
 			v.get_geometry()
 			v.save_geometry()
-		# The help window too!
-		if self.help <> None:
-			self.help.save_geometry()
 		# Make a back-up of the original file...
 		try:
 			os.rename(filename, filename + '~')
@@ -344,9 +330,9 @@ class TopLevel(ViewDialog, BasicDialog):
 		try:
 			MMTree.WriteFile(self.root, filename)
 		except IOError, msg:
-			fl.message('Save operation failed.  File:', \
-				   filename, \
-				   'Error: ' + `msg`)
+			fl.show_message('Save operation failed.  File:', \
+				filename, \
+				'Error: ' + `msg`)
 			return 0
 		print 'done saving.'
 		self.changed = 0
@@ -369,7 +355,6 @@ class TopLevel(ViewDialog, BasicDialog):
 				return
 		self.editmgr.unregister(self)
 		self.editmgr.destroy() # kills subscribed views
-		self.help.destroy() # XXX Needed because help's a view now...
 		self.context.seteditmgr(None)
 		self.root.Destroy()
 		self.read_it()
@@ -407,13 +392,16 @@ class TopLevel(ViewDialog, BasicDialog):
 	def close_callback(self, (obj, arg)):
 		if not obj.pushed:
 			return
+		self.close()
+	#
+	def close(self):
 		ok = self.close_ok()
 		if ok:
 			self.destroy()
 			if len(opentops) == 0:
 				raise SystemExit, 0
 		else:
-			obj.set_button(0)
+			self.closebutton.set_button(0)
 	#
 	def close_ok(self):
 		if not self.changed:
@@ -431,7 +419,12 @@ class TopLevel(ViewDialog, BasicDialog):
 			return 1
 		return self.save_to_file(self.filename)
 	#
+	def help_callback(self, (obj, arg)):
+		import Help
+		Help.showhelpwindow()
+	#
 	# GL event callback for WINSHUT and WINQUIT (called from glwindow)
 	#
 	def winshut(self):
-		self.close_callback(self.closebutton, 0)
+		self.closebutton.set_button(1)
+		self.close()
