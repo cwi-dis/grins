@@ -11,7 +11,7 @@
 
     <p>
       These are the release notes for GRiNS Player beta for SMIL 2.0,
-      Release Notes for Windows, build 35, November 23, 2000. A more
+      Release Notes for Windows, build 36, November 23, 2000. A more
       recent version of these release notes, as well as more recent
       builds of the player, may be available through <a
       href="http://www.oratrix.com/GRiNS/SMIL-2.0/">
@@ -25,17 +25,22 @@
     </p>
 
     <p>
-      This version and some older versions of the Player on Windows
-      have a problem with hanging processes.
-      Before uninstalling the Player, and before installing the Player
-      on top of an existing installation, be sure to kill any
+      <strong>Note:</strong> There has been a problem with hanging
+      processes with Build 35 and some older versions of the Player on
+      Windows.  This problem was fixed in Build 36.  Before
+      uninstalling older versions of the Player, and before installing
+      the Player on top of an older version, be sure to kill any
       processes with the name GRiNSP_SV2.exe (use the Task Manager to
       kill these processes).
-      We are investigating the problem and are trying to come up with
-      a solution.
     </p>
 
-    <h2>Changes Since Build 33</h2><ul>
+    <h2>Changes Since Build 35</h2>
+    <ul>
+      <li>The problem that the Player process didn't actually go away
+	on exit was solved.</li>
+    </ul>
+    <h2>Changes Since Build 33</h2>
+    <ul>
       <li>All attributes that are valid according to the current SMIL
 	2.0 Language Profile are now recognized, although not all
 	attributes are implemented.</li>
