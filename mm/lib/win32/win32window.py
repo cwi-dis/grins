@@ -913,10 +913,12 @@ class SubWindow(Window):
 	#
 
 	def onMouseEvent(self,point, ev):
+		cont, stop = 0, 1
 		for wnd in self._subwindows:
 			if wnd.inside(point):
-				wnd.onMouseEvent(point, ev)
-				return
+				if wnd.onMouseEvent(point, ev):
+					return stop
+		
 		x, y, w, h = self.getwindowpos()
 		xp, yp = point
 		point= xp-x, yp-y
@@ -928,27 +930,39 @@ class SubWindow(Window):
 			for button in disp._buttons:
 				if button._inside(x,y):
 					buttons.append(button)
-		return self.onEvent(ev,(x, y, buttons))
+			self.onEvent(ev,(x, y, buttons))
+			if self._transparent==0:
+				return stop
+			else:
+				return cont
+		return cont
 
 	def setcursor_from_point(self, point):
+		cont, stop = 0, 1
 		for w in self._subwindows:
 			if w.inside(point):
-				w.setcursor_from_point(point)
-				return
+				if w.setcursor_from_point(point):
+					return stop
 
 		if self._active_displist:
 			x, y, w, h = self.getwindowpos()
 			xp, yp = point
-			point= xp-x, yp-y
+			point = xp-x, yp-y
 			x, y = self._pxl2rel(point,self._canvas)
 			for button in self._active_displist._buttons:
 				if button._inside(x,y):
 					if self._cursor != 'hand':
 						self.setcurcursor('hand')
-					return
-		if self._cursor != 'arrow':
-			self.setcurcursor('arrow')
-	
+					return stop
+			if self._cursor != 'arrow':
+				self.setcurcursor('arrow')
+			if self._transparent==0:
+				return stop
+			else:
+				return cont
+
+		return cont
+
 	def setcurcursor(self, strid):
 		self._curcursor = strid
 		self._topwindow.setcursor(strid)
@@ -1017,7 +1031,7 @@ class SubWindow(Window):
 			self._active_displist._render(dc,None)
 			if self._showing:
 				win32mu.FrameRect(dc,self._rect,self._showing)
-			# win32mu.FrameRect(dc,self._rect,(255, 0, 0)) # debug
+			#win32mu.FrameRect(dc,self._rect,(255, 0, 0)) # debug
 		elif self._transparent == 0:
 			dc.FillSolidRect(self.ltrb(dst),RGB(self._bgcolor))
 

@@ -501,8 +501,8 @@ class _CmifPlayerView(_CmifView):
 		
 		for w in self._subwindows:
 			if w.inside(point):
-				w.onMouseEvent(point, ev)
-				return
+				if w.onMouseEvent(point, ev):
+					return
 
 		# not in a subwindow, handle it ourselves
 		disp = self._active_displist
@@ -513,7 +513,7 @@ class _CmifPlayerView(_CmifView):
 			for button in disp._buttons:
 				if button._inside(x,y):
 					buttons.append(button)
-		return self.onEvent(ev,(x, y, buttons))
+		self.onEvent(ev,(x, y, buttons))
 
 	def updateMouseCursor(self):
 		self.onMouseMove()
@@ -532,8 +532,9 @@ class _CmifPlayerView(_CmifView):
 		point = self._DPtoLP(point)
 		for w in self._subwindows:
 			if w.inside(point):
-				w.setcursor_from_point(point)
-				return
+				if w.setcursor_from_point(point):
+					return
+
 		self.setcursor_from_point(point, self)
 
 	def OnEraseBkgnd(self,dc):
