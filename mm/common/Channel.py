@@ -895,17 +895,17 @@ class Channel:
 	def getduration(self, node):
 		return MMAttrdefs.getattr(node, 'duration')
 
-	def getbgcolor(self, node):
-		return MMAttrdefs.getattr(node, 'bgcolor')
+	def getbgcolor(self, node, animated=0):
+		return MMAttrdefs.getattr(node, 'bgcolor', animated)
 
-	def getfgcolor(self, node):
-		return MMAttrdefs.getattr(node, 'fgcolor')
+	def getfgcolor(self, node, animated=0):
+		return MMAttrdefs.getattr(node, 'fgcolor', animated)
 
-	def getbucolor(self, node):
-		return MMAttrdefs.getattr(node, 'bucolor')
+	def getbucolor(self, node, animated=0):
+		return MMAttrdefs.getattr(node, 'bucolor', animated)
 
-	def gethicolor(self, node):
-		return MMAttrdefs.getattr(node, 'hicolor')
+	def gethicolor(self, node, animated=0):
+		return MMAttrdefs.getattr(node, 'hicolor', animated)
 
 	def getloop(self, node):
 		return MMAttrdefs.getattr(node, 'loop')
@@ -1076,6 +1076,7 @@ class ChannelWindow(Channel):
 		self._player.ChannelWinDict[self._name] = self
 		self.window = None
 		self.armed_display = self.played_display = None
+		self.update_display = None
 		self.want_default_colormap = 0
 		self._bgimg = None
 		self.__callback = None
@@ -1093,6 +1094,7 @@ class ChannelWindow(Channel):
 		self.window = None
 		del self.armed_display
 		del self.played_display
+		del self.update_display
 
 	def highlight(self, color = (255,0,0)):
 		if self._is_shown and self.window:
@@ -1421,6 +1423,7 @@ class ChannelWindow(Channel):
 			self.window.close()
 			self.window = None
 			self.armed_display = self.played_display = None
+			self.update_display = None
 
 	def resize(self, arg, window, event, value):
 		if debug:
