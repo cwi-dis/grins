@@ -1,4 +1,4 @@
-from Channel import ChannelWindow
+from Channel import *
 from MMExc import *			# exceptions
 from AnchorDefs import *
 
@@ -13,7 +13,8 @@ class ImageChannel(ChannelWindow):
 
 	def do_arm(self, node):
 		f = self.getfilename(node)
-		imbox = self.armed_display.display_image_from_file(f)
+		# remember coordinates for anchor editing (and only for that!)
+		self._arm_imbox = self.armed_display.display_image_from_file(f)
 		try:
 			alist = node.GetRawAttr('anchorlist')
 		except NoSuchAttrError:
@@ -31,15 +32,52 @@ class ImageChannel(ChannelWindow):
 				continue
 			x, y, w, h = args[0], args[1], args[2], args[3]
 			# convert coordinates from image size to window size
-			x = x * imbox[2] + imbox[0]
-			y = y * imbox[3] + imbox[1]
-			w = w * imbox[2]
-			h = h * imbox[3]
+			x = x * self._arm_imbox[2] + self._arm_imbox[0]
+			y = y * self._arm_imbox[3] + self._arm_imbox[1]
+			w = w * self._arm_imbox[2]
+			h = h * self._arm_imbox[3]
 			b = self.armed_display.newbutton(x, y, w, h)
 			b.hiwidth(3)
 ##			b.hicolor(self.getfgcolor(node))
 			self.setanchor(a[A_ID], a[A_TYPE], b)
 		return 1
+
+	def defanchor(self, node, anchor):
+		import boxes
+		if self._armstate != AIDLE:
+			raise error, 'Arm state must be idle when defining an anchor'
+		if self._playstate != PIDLE:
+			raise error, 'Play state must be idle when defining an anchor'
+		context = AnchorContext().init()
+		self.startcontext(context)
+		self.syncarm = 1
+		self.arm(node)
+		self.syncplay = 1
+		self.play(node)
+		self._armstate = AIDLE
+		self._playstate = PIDLE
+		self.syncarm = 0
+		self.syncplay = 0
+		box = anchor[2]
+		if box == []:
+			box = boxes.create_box(self.window)
+		else:
+			# convert coordinates from image size to window size.
+			x = box[0] * self._arm_imbox[2] + self._arm_imbox[0]
+			y = box[1] * self._arm_imbox[3] + self._arm_imbox[1]
+			w = box[2] * self._arm_imbox[2]
+			h = box[3] * self._arm_imbox[3]
+			box = boxes.create_box(self.window, (x, y, w, h))
+		self.stopcontext(context)
+		if box:
+			# convert coordinates from window size to image size.
+			x = (box[0] - self._arm_imbox[0]) / self._arm_imbox[2]
+			y = (box[1] - self._arm_imbox[1]) / self._arm_imbox[3]
+			w = box[2] / self._arm_imbox[2]
+			h = box[3] / self._arm_imbox[3]
+			[box,self._arm_imbox,(x,y,w,h)]
+			return (anchor[0], anchor[1], [x, y, w, h])
+		return None
 
 	# Hack to convert pixel offsets into relative offsets and to make
 	# the coordinates relative to the upper-left corner instead of

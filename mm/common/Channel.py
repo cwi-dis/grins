@@ -567,14 +567,13 @@ class ChannelWindow(ChannelWindowWM, Channel):
 			if self._attrdict.has_key('winsize'):
 				width, height = self._attrdict['winsize']
 			else:
-				raise error, \
-					  'no size specified for '+`self._name`
+				# provide defaults
+				width, height = 20, 20
 			if self._attrdict.has_key('winpos'):
 				x, y = self._attrdict['winpos']
 			else:
-				raise error, \
-					  'no position specified for '+\
-					  `self._name`
+				# provide defaults
+				x, y = 20, 20
 			import windowinterface
 			self.window = windowinterface.newwindow(x, y, \
 				  width, height, self._name)
@@ -787,3 +786,19 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 
 def dummy_callback(arg):
 	pass
+
+class AnchorContext:
+	def init(self):
+		return self
+
+	def arm_done(self, node):
+		raise error, 'AnchorContext.arm_done() called'
+
+	def arm_ready(self, channel):
+		raise error, 'AnchorContext.arm_ready() called'
+
+	def anchorfired(self, node, anchorlist):
+		raise error, 'AnchorContext.anchorfired() called'
+
+	def play_done(self, node):
+		raise error, 'AnchorContext.play_done() called'
