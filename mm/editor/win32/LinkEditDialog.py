@@ -385,15 +385,14 @@ class LinkBrowserDialog(ViewDialog.ViewDialog):
 		pass
 
 class LinkEditorDialog:
-	def __init__(self, title, dirstr, typestr, dir, type, dirsens):
+	def __init__(self, title, dirstr, dir, dirsens):
 		cbd = {
 				'OK':(self.ok_callback, ()),
 				'Cancel':(self.cancel_callback, ()),
 				'LinkDir':(self.linkdir_callback, ()),
-				'LinkType':(self.linktype_callback, ()),
 		}
 		from _LinkView import LinkPropDlg
-		self.window = LinkPropDlg(cbd, dir, type, dirsens,
+		self.window = LinkPropDlg(cbd, dir, dirsens,
 					  parent = self.parent.window)
 
 	def show(self):
@@ -428,23 +427,3 @@ class LinkEditorDialog:
 	def linkdirgetchoice(self):
 		# Return the current choice in the link dir list.
 		return self.window.linkdirgetchoice()
-
-	def linktypesetsensitive(self, pos, sensitive):
-		# Make an entry in the link type menu (in)sensitive.
-
-		# Arguments (no defaults):
-		# pos -- the index of the entry to be made (in)sensitve
-		# sensitive -- boolean indicating whether to make
-		# 	sensitive or insensitive
-		self.window.linktypesetsensitive(pos, sensitive)
-
-	def linktypesetchoice(self, choice):
-		# Set the current choice of the link type list.
-
-		# Arguments (no defaults):
-		# choice -- index of the new choice
-		self.window.linktypesetchoice(choice)
-
-	def linktypegetchoice(self):
-		# Return the current choice in the link type list.
-		return self.window.linktypegetchoice()
