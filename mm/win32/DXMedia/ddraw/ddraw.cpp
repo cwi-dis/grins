@@ -739,25 +739,54 @@ HRESULT ScanSurface16(IDirectDrawSurface *surf,
 					 IDirectDrawSurface *from, IDirectDrawSurface *to, 
 					 float prop, DWORD w, DWORD h)
 	{
-	DDSURFACEDESC desc;
-	ZeroMemory( &desc, sizeof(desc) );
+	DDSURFACEDESC desc, desc1, desc2;
+	ZeroMemory(&desc, sizeof(desc));
 	desc.dwSize=sizeof(desc);
+	ZeroMemory(&desc1, sizeof(desc1));
+	desc1.dwSize=sizeof(desc1);
+	ZeroMemory(&desc2, sizeof(desc2));
+	desc2.dwSize=sizeof(desc2);
 	HRESULT hr;
 	hr=surf->Lock(0,&desc,DDLOCK_WAIT | DDLOCK_READONLY,0);
 	if(hr!=DD_OK) return hr;
+	hr=from->Lock(0,&desc1,DDLOCK_WAIT | DDLOCK_READONLY,0);
+	if(hr!=DD_OK) return hr;
+	hr=to->Lock(0,&desc2,DDLOCK_WAIT | DDLOCK_READONLY,0);
+	if(hr!=DD_OK) return hr;
+	
 	for(int row=h-1;row>=0;row--)
 		{
 		WORD* surfpixel=(WORD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
+		WORD* surfpixel1=(WORD*)((BYTE*)desc1.lpSurface+row*desc1.lPitch);
+		WORD* surfpixel2=(WORD*)((BYTE*)desc2.lpSurface+row*desc2.lPitch);
 		for (DWORD col=0;col<w;col++)
 			{
 			// apply transform on pixel: *surfpixel
-			WORD r = (*surfpixel & (WORD)desc.ddpfPixelFormat.dwRBitMask) >> loREDbit;
-			WORD g = (*surfpixel & (WORD)desc.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
-			WORD b = (*surfpixel & (WORD)desc.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+			WORD r1 = (*surfpixel1 & (WORD)desc1.ddpfPixelFormat.dwRBitMask) >> loREDbit;
+			WORD g1 = (*surfpixel1 & (WORD)desc1.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
+			WORD b1 = (*surfpixel1 & (WORD)desc1.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+			
+			WORD r2 = (*surfpixel2 & (WORD)desc2.ddpfPixelFormat.dwRBitMask) >> loREDbit;
+			WORD g2 = (*surfpixel2 & (WORD)desc2.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
+			WORD b2 = (*surfpixel2 & (WORD)desc2.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+
+			WORD r = (WORD)blend(prop, r1, r2);
+			WORD g = (WORD)blend(prop, g1, g2);
+			WORD b = (WORD)blend(prop, b1, b2);
+			
+			r = r << loREDbit;
+			g = g << loGREENbit;
+			b = b << loBLUEbit;
+			*surfpixel = (WORD)(r|g|b);
+				
 			surfpixel++;
+			surfpixel1++;
+			surfpixel2++;
 			}
 		}
 	surf->Unlock(0);
+	from->Unlock(0);
+	to->Unlock(0);
 	return hr;
 	}
 
@@ -821,25 +850,53 @@ HRESULT ScanSurface32(IDirectDrawSurface *surf,
 					 IDirectDrawSurface *from, IDirectDrawSurface *to, 
 					 float prop, DWORD w, DWORD h)
 	{
-	DDSURFACEDESC desc;
-	ZeroMemory( &desc, sizeof(desc) );
+	DDSURFACEDESC desc, desc1, desc2;
+	ZeroMemory(&desc, sizeof(desc));
 	desc.dwSize=sizeof(desc);
+	ZeroMemory(&desc1, sizeof(desc1));
+	desc1.dwSize=sizeof(desc1);
+	ZeroMemory(&desc2, sizeof(desc2));
+	desc2.dwSize=sizeof(desc2);
 	HRESULT hr;
 	hr=surf->Lock(0,&desc,DDLOCK_WAIT | DDLOCK_READONLY,0);
+	if(hr!=DD_OK) return hr;
+	hr=from->Lock(0,&desc1,DDLOCK_WAIT | DDLOCK_READONLY,0);
+	if(hr!=DD_OK) return hr;
+	hr=to->Lock(0,&desc2,DDLOCK_WAIT | DDLOCK_READONLY,0);
 	if(hr!=DD_OK) return hr;
 	for(int row=h-1;row>=0;row--)
 		{
 		RGBQUAD* surfpixel=(RGBQUAD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
+		RGBQUAD* surfpixel1=(RGBQUAD*)((BYTE*)desc1.lpSurface+row*desc1.lPitch);
+		RGBQUAD* surfpixel2=(RGBQUAD*)((BYTE*)desc2.lpSurface+row*desc2.lPitch);
 		for (DWORD col=0;col<w;col++)
 			{
-			// apply transform on pixel: *surfpixel
-			DWORD r = (*(DWORD*)surfpixel & desc.ddpfPixelFormat.dwRBitMask) >> loREDbit;
-			DWORD g = (*(DWORD*)surfpixel & desc.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
-			DWORD b = (*(DWORD*)surfpixel & desc.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+			DWORD r1 = (*(DWORD*)surfpixel1 & desc1.ddpfPixelFormat.dwRBitMask) >> loREDbit;
+			DWORD g1 = (*(DWORD*)surfpixel1 & desc1.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
+			DWORD b1 = (*(DWORD*)surfpixel1 & desc1.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+			
+			DWORD r2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwRBitMask) >> loREDbit;
+			DWORD g2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
+			DWORD b2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+
+			DWORD r = blend(prop, r1, r2);
+			DWORD g = blend(prop, g1, g2);
+			DWORD b = blend(prop, b1, b2);
+			
+			r = r << loREDbit;
+			g = g << loGREENbit;
+			b = b << loBLUEbit;
+			DWORD* data = (DWORD*)surfpixel;
+			*data = r|g|b;
+			
 			surfpixel++;
+			surfpixel1++;
+			surfpixel2++;
 			}
 		}
 	surf->Unlock(0);
+	from->Unlock(0);
+	to->Unlock(0);
 	return hr;
 	}
 
