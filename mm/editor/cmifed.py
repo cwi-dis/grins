@@ -38,13 +38,8 @@ class Main(MainDialog):
 		import license
 		self.tmpopts = opts
 		self.tmpfiles = files
-		if features.lightweight:
-			whichversion = 'light'
-		else:
-			whichversion = 'pro'
-		# The old version uses 'editor'
 		self.tmplicensedialog = license.WaitLicense(self.do_init,
-					   (whichversion,))
+					   features.license_features_needed)
 
 	def do_init(self, license):
 		opts, files = self.tmpopts, self.tmpfiles
@@ -187,10 +182,10 @@ class Main(MainDialog):
 			top = TopLevel.TopLevel(self, self.getnewdocumentname(filename), template_url)
 		except IOError:
 			import windowinterface
-			windowinterface.showmessage('error opening document %s' % url)
+			windowinterface.showmessage('error opening document %s' % filename)
 		except MSyntaxError:
 			import windowinterface
-			windowinterface.showmessage('parsing document %s failed' % url)
+			windowinterface.showmessage('parsing document %s failed' % filename)
 		except UserCancel:
 			return
 		except TopLevel.Error:
@@ -397,8 +392,8 @@ class Main(MainDialog):
 ##		except license.Error, arg:
 ##			print "No license:", arg
 ##			return 0
-		if self._license.is_evaluation_license():
-			return -1
+##		if self._license.is_evaluation_license():
+##			return -1
 		return 1
 
 def main():
