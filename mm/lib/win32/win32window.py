@@ -1091,7 +1091,7 @@ class SubWindow(Window):
 	# Transitions interface
 	#		
 	def begintransition(self, outtrans, runit, dict):
-		print 'begintransition', self, outtrans, runit, dict
+		# print 'begintransition', self, outtrans, runit, dict
 		if not self._passive:
 			self._passive = self.createDDS()
 			self.paintOnDDS(self._passive, self)
@@ -1105,11 +1105,12 @@ class SubWindow(Window):
 			self.update()
 
 	def changed(self):
-		print ' window transition interface: changed'
-	
+		#print ' window transition interface: changed'
+		pass
+
 	def jointransition(self, window):
 		# Join the transition already created on "window".
-		print 'jointransition'
+		#print 'jointransition'
 		if not window._transition:
 			print 'Joining without a transition', self, window, window._transition
 			return
@@ -1124,7 +1125,7 @@ class SubWindow(Window):
 		# how='hold' forever,
 		# how=None clears a previous how='hold'. This basically means the next
 		# close() of a display list does not do an erase.
-		print 'freeze_content', how, self
+		# print 'freeze_content', how, self
 		if how:
 			self._passive = self.createDDS()
 			self.paintOnDDS(self._passive, self)
