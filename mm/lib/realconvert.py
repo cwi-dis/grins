@@ -8,6 +8,8 @@ audiopin = None
 def convertaudiofile(u, dstdir, file, node, isaudio = 1):
 	import producer, MMAttrdefs, audio, audio.format
 	global engine, audiopin
+	if os.environ.has_key('REAL_PRODUCER'):
+		producer.SetDllCategoryPaths(os.environ['REAL_PRODUCER'])
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.ra'
 	fullpath = os.path.join(dstdir, file)
