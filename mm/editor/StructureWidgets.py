@@ -356,17 +356,22 @@ class SeqWidget(StructureObjWidget):
 	# Any sequence node.
 	HAS_CHANNEL_BOX = 0
 	def __init__(self, node, root):
+		StructureObjWidget.__init__(self, node, root)
 		has_drop_box = not MMAttrdefs.getattr(node, 'project_readonly')
 		if has_drop_box:
 			self.dropbox = DropBoxWidget(root)
 		else:
 			self.dropbox = None
 		if self.HAS_CHANNEL_BOX:
-			self.channelbox = ChannelBoxWidget(node, root)
+			self.channelbox = ChannelBoxWidget(self, node, root)
 		else:
 			self.channelbox = None
-		StructureObjWidget.__init__(self, node, root)
 	
+	def get_obj_at(self, pos):
+		if self.channelbox is not None and self.channelbox.is_hit(pos):
+			return self.channelbox
+		return StructureObjWidget.get_obj_at(self, pos)
+
 	def draw(self, display_list):
 		if self.selected: 
 			display_list.drawfbox(self.highlight(SEQCOLOR), self.get_box())
@@ -640,10 +645,11 @@ class DropBoxWidget(ImageBoxWidget):
 
 class ChannelBoxWidget(ImageBoxWidget):
 	# This is the box at the start of a Sequence which represents which channel it 'owns'
-	def __init__(self, node, root):
+	def __init__(self, parent, node, root):
+		Widgets.Widget.__init__(self, root) 
 		self.node = node
-		Widgets.Widget.__init__(self, root)
-		
+		self.parent = parent
+
 	def draw(self, displist):
 		ImageBoxWidget.draw(self, displist)
 		x, y, w, h = self.get_box()
@@ -682,6 +688,22 @@ class ChannelBoxWidget(ImageBoxWidget):
 		if not os.path.exists(f):
 			f = os.path.join(self.root.datadir, 'null.tiff')
 		return f
+
+	def select(self):
+		self.parent.select()
+
+	def unselect(self):
+		self.parent.unselect()
+
+	def ishit(self, pos):
+		return self.is_hit(pos)
+
+	def attrcall(self):
+		self.root.toplevel.setwaiting()
+		chname = MMAttrdefs.getattr(self.node, 'project_default_region')
+		channel = self.root.toplevel.context.getchannel(chname)
+		import AttrEdit
+		AttrEdit.showchannelattreditor(self.root.toplevel, channel)
 
 class UnseenVerticalWidget(StructureObjWidget):
 	# The top level par that doesn't get drawn.
@@ -1021,8 +1043,7 @@ class MediaWidget(MMNodeWidget):
 		self.transition_in = TransitionWidget(self, root, 'in')
 		self.transition_out = TransitionWidget(self, root, 'out')
 
-		self.pushbackbar = PushBackBarWidget(root)
-		self.pushbackbar.parent = self # The pushbackbar refers to values from self.
+		self.pushbackbar = PushBackBarWidget(self, root);
 		self.downloadtime = 0.0		# Distance to draw - MEASURED IN PIXELS
 		self.downloadtime_lag = 0.0	# Distance to push this node to the right - MEASURED IN PIXELS.
 		self.downloadtime_lag_errorfraction = 1.0
@@ -1036,7 +1057,7 @@ class MediaWidget(MMNodeWidget):
 		MMNodeWidget.destroy(self)
 
 	def is_hit(self, pos):
-		return self.transition_in.is_hit(pos) or self.transition_out.is_hit(pos) or MMNodeWidget.is_hit(self, pos);
+		return self.transition_in.is_hit(pos) or self.transition_out.is_hit(pos) or self.pushbackbar.is_hit(pos) or MMNodeWidget.is_hit(self, pos)
 
 	def compute_download_time(self):
 		# Compute the download time for this widget.
@@ -1056,6 +1077,8 @@ class MediaWidget(MMNodeWidget):
 		else:
 			prevnode_duration = 0
 		lagtime = prearmtime - prevnode_duration
+		if lagtime < 0:
+			lagtime = 0
 		# Obtaining the begin delay is a bit troublesome:
 		beginlist = MMAttrdefs.getattr(self.node, 'beginlist')
 		if beginlist:
@@ -1215,6 +1238,8 @@ class MediaWidget(MMNodeWidget):
 				return self.transition_out
 			elif self.infoicon.is_hit(pos):
 				return self.infoicon
+			elif self.pushbackbar.is_hit(pos):
+				return self.pushbackbar
 			else:
 				return self
 		else:
@@ -1224,8 +1249,8 @@ class MediaWidget(MMNodeWidget):
 class TransitionWidget(MMNodeWidget):
 	# This is a box at the bottom of a node that represents the in or out transition.
 	def __init__(self, parent, root, inorout):
-		self.in_or_out = inorout
 		MMNodeWidget.__init__(self, parent.node, root)
+		self.in_or_out = inorout
 		self.parent = parent
 
 	def select(self):
@@ -1246,7 +1271,7 @@ class TransitionWidget(MMNodeWidget):
 	def attrcall(self):
 		self.root.toplevel.setwaiting()
 		import AttrEdit
-		if self.in_or_out is 'in':
+		if self.in_or_out == 'in':
 			AttrEdit.showattreditor(self.root.toplevel, self.node, 'transIn')
 		else:
 			AttrEdit.showattreditor(self.root.toplevel, self.node, 'transOut')
@@ -1284,6 +1309,11 @@ class TransitionWidget(MMNodeWidget):
 
 class PushBackBarWidget(Widgets.Widget):
 	# This is a push-back bar between nodes.
+	def __init__(self, parent, root):
+		Widgets.Widget.__init__(self, root)
+		self.node = parent.node
+		self.parent = parent
+
 	def draw(self, displist):
 		# TODO: draw color based on something??
 		redfraction = self.parent.downloadtime_lag_errorfraction
@@ -1303,6 +1333,17 @@ class PushBackBarWidget(Widgets.Widget):
 
 	def select(self):
 		self.parent.select()
+
+	def unselect(self):
+		self.parent.unselect()
+
+	def ishit(self, pos):
+		return self.is_hit(pos)
+
+	def attrcall(self):
+		self.root.toplevel.setwaiting()
+		import AttrEdit
+		AttrEdit.showattreditor(self.root.toplevel, self.node, '.begin1')
 
 
 class CollapseButtonWidget(Widgets.Widget):

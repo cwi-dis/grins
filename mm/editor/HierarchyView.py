@@ -721,7 +721,10 @@ class HierarchyView(HierarchyViewDialog):
 		if self.destroynode:
 			self.destroynode.Destroy()
 		self.destroynode = None
-		self.refresh_scene_graph();
+		self.selected_widget = None
+		self.focusobj = None
+
+		self.refresh_scene_graph()
 
 	def kill(self):
 		self.destroy()
@@ -1149,6 +1152,7 @@ class HierarchyView(HierarchyViewDialog):
 	def cleanup(self):
 		self.scene_graph.destroy()
 		self.focusobj = None
+		self.selected_widget = None
 		return
 	
 ##		for obj in self.objects:
