@@ -1453,7 +1453,7 @@ class AreaTabPage(MultiDictTabPage):
 		preview_image = self.getareaimage()
 		self._area = self.attreditor._window.AreaWidget(item0+self.ITEM_PREVIEW, 
 				callback=self._preview_to_labels, scaleitem=item0+self.ITEM_SCALE)
-		self._area.setinfo(self.getmaxarea())
+		self._area.setinfo(self.getmaxarea(), preview_image)
 		return rv
 		
 	def do_itemhit(self, item, event):
@@ -1512,25 +1512,34 @@ class AreaTabPage(MultiDictTabPage):
 		self._attr_to_field[self._whfield]._savevaluefrompage(w+' '+h)
 		
 	def _labels_to_preview(self):
+		xywh = self._getlabelfields()
+		xywh = self._values_to_pixels(xywh)
+		if xywh == (0, 0, 0, 0):
+			xywh = self.getmaxarea()
+##		print 'area now', xywh
+		self._area.set(xywh)
+
+	def _getlabelfields(self):		
 		x = self._getlabelpixel(self.ITEM_X)
 		y = self._getlabelpixel(self.ITEM_Y)
 		w = self._getlabelpixel(self.ITEM_W)
 		h = self._getlabelpixel(self.ITEM_H)
-		xywh = self._values_to_pixels((x, y, w, h))
-##		print 'area now', xywh
-		self._area.set(xywh)
-		
+		return x, y, w, h
+
 	def _preview_to_labels(self):
 		xywh = self._area.get()
 ##		print 'get returned', xywh
-		x, y, w, h = self._pixels_to_values(xywh)
+		xywh = self._pixels_to_values(xywh)
+		self._setlabelfields(xywh)
+		if self.ITEM_WHOLE:
+			self.attreditor._setbutton(self.item0+self.ITEM_WHOLE, 0)
+		
+	def _setlabelfields(self, (x, y, w, h)):
 		self.attreditor._setlabel(self.item0+self.ITEM_X, `x`)
 		self.attreditor._setlabel(self.item0+self.ITEM_Y, `y`)
 		self.attreditor._setlabel(self.item0+self.ITEM_W, `w`)
 		self.attreditor._setlabel(self.item0+self.ITEM_H, `h`)
-		if self.ITEM_WHOLE:
-			self.attreditor._setbutton(self.item0+self.ITEM_WHOLE, 0)
-		
+
 	def _getlabelpixel(self, item):
 		str = self.attreditor._getlabel(self.item0+item)
 		try:
@@ -1546,23 +1555,23 @@ class AreaTabPage(MultiDictTabPage):
 		return (x, y, w, h)
 
 	def getmaxarea(self):
-		x0, y0, x1, y1 = Qd.qd.screenBits.bounds
-		return x0, y0, (x1-x0), (y1-y0)
+		w, h = toplevel.getscreensize()
+		return 0, 0, w, h
 
 	def getmaxareaforchannel(self):
 		# This is a hack. We have to find the parent channel and get its dimensions.
 		wrapper = self.attreditor.wrapper
 		channel = wrapper.channel
 		if not channel.has_key('base_window'):
-			x0, y0, x1, y1 = Qd.qd.screenBits.bounds
-			return x0, y0, (x1-x0), (y1-y0)
+			w, h = toplevel.getscreensize()
+			return 0, 0, w, h
 		basename = channel['base_window']
 		basechannel = channel.context.channeldict[basename]
 		if basechannel.has_key('winsize'):
 			w, h = basechannel['winsize']
 			return 0, 0, w, h
-		x0, y0, x1, y1 = Qd.qd.screenBits.bounds
-		return x0, y0, (x1-x0), (y1-y0)
+		w, h = toplevel.getscreensize()
+		return 0, 0, w, h
 		
 	def getmaxareaforsubregion(self):
 		# Another hack. Find the dimensions of the RealPix channel.
@@ -1574,24 +1583,33 @@ class AreaTabPage(MultiDictTabPage):
 		return 0, 0, w, h
 
 	def getareaimage(self):
+		return None
+		
+	def getareaimagefromfile(self):
 		# The third hack: get the background image for the area widget.
-		import MMAttrdefs
+		import MMAttrdefs, MMurl
 		import Sizes
+		filename = None
 		w = 1000
 		h = 1000
 		wrapper = self.attreditor.wrapper
 		node = wrapper.node
 		url = MMAttrdefs.getattr(node, 'file')
 		if url:
-			url = wrapper.getcontext.findurl(url)
+			url = wrapper.getcontext().findurl(url)
 		if url:
 			try:
 				w, h = Sizes.GetSize(url)
 			except:
 				pass
+			else:
+				try:
+					filename = MMurl.urlretrieve(url)[0]
+				except:
+					pass
 		self.area_image_w = w
 		self.area_image_h = h
-		return None
+		return filename
 		
 	def getmaxareaforimage(self):
 		return 0, 0, self.area_image_w, self.area_image_h
@@ -1625,9 +1643,18 @@ class SourceAreaTabPage(AreaTabPage):
 		wrapper = self.attreditor.wrapper
 		node = wrapper.node
 		if MMAttrdefs.getattr(node, 'tag') == 'viewchange':
-			return self.getmaxareaforregion()
+			return self.getmaxareaforsubregion()
 		else:
 			return self.getmaxareaforimage()
+			
+	def getareaimage(self):
+		import MMAttrdefs
+		wrapper = self.attreditor.wrapper
+		node = wrapper.node
+		if MMAttrdefs.getattr(node, 'tag') == 'viewchange':
+			return None
+		else:
+			return self.getareaimagefromfile()
 			
 class DestinationAreaTabPage(AreaTabPage):
 	TAB_LABEL='Destination area'
@@ -1655,7 +1682,7 @@ class DestinationAreaTabPage(AreaTabPage):
 	_otherfields = ()
 	
 	def getmaxarea(self):
-		return self.getmaxareaforregion()
+		return self.getmaxareaforsubregion()
 	
 class Destination1AreaTabPage(DestinationAreaTabPage):
 	# Destination area without "keep aspect" checkbox (fadeout)
@@ -1668,7 +1695,7 @@ class Destination1AreaTabPage(DestinationAreaTabPage):
 	helpstring = 'Use these fields to do the transition on a subsection of the RealPix region.'
 	
 	def getmaxarea(self):
-		return self.getmaxareaforregion()
+		return self.getmaxareaforsubregion()
 	
 class ChannelAreaTabPage(AreaTabPage):
 	TAB_LABEL='Position and Size'
@@ -1703,6 +1730,9 @@ class ChannelAreaTabPage(AreaTabPage):
 		
 	def do_itemhit(self, item, event):
 		if item-self.item0 == self.ITEM_UNITS:
+			xywh = self._values_to_pixels(self._getlabelfields())
+			self._curunits = self._unitspopup.getselectvalue()
+			self._setlabelfields(self._pixels_to_values(xywh))
 			self.call_optional_cb(self._attr_to_field['units'])
 			return 1
 		return AreaTabPage.do_itemhit(self, item, event)
@@ -1710,6 +1740,7 @@ class ChannelAreaTabPage(AreaTabPage):
 	def update(self):
 		value = self._attr_to_field['units']._getvalueforpage()
 		list = self._attr_to_field['units'].getoptions()
+		self._curunits = value
 		self._unitspopup.setitems(list, value)
 		for name, item in self._attr_to_string.items():
 			value = self._attr_to_field[name]._getvalueforpage()
@@ -1736,6 +1767,44 @@ class ChannelAreaTabPage(AreaTabPage):
 		
 	def getmaxarea(self):
 		return self.getmaxareaforchannel()
+
+	def _values_to_pixels(self, (x, y, w, h), units=None):
+		if units is None:
+			units = self._curunits
+		if units == 'mm':
+			fx, fy = windowinterface._getmmfactors()
+			vx = float(x)
+			vy = float(y)
+			vw = float(w)
+			vh = float(h)
+			return int(vx*fx), int(vy*fy), int(vw*fx), int(vh*fy)
+		elif units == 'relative':
+			mx, my, mw, mh = self.getmaxarea()
+			vx = float(x)
+			vy = float(y)
+			vw = float(w)
+			vh = float(h)
+			return int(vx*mw), int(vy*mh), int(vw*mw), int(vh*mh)
+		return int(x), int(y), int(w), int(h)
+		
+	def _pixels_to_values(self, (x, y, w, h), units=None):
+		if units is None:
+			units = self._curunits
+		if units == 'mm':
+			fx, fy = windowinterface._getmmfactors()
+			vx = float(x)
+			vy = float(y)
+			vw = float(w)
+			vh = float(h)
+			return vx/fx, vy/fy, vw/fx, vh/fy
+		elif units == 'relative':
+			mx, my, mw, mh = self.getmaxarea()
+			vx = float(x)
+			vy = float(y)
+			vw = float(w)
+			vh = float(h)
+			return vx/mw, vy/mh, vw/mw, vh/mh
+		return x, y, w, h
 
 class ChannelAreaLiteTabPage(AreaTabPage):
 	TAB_LABEL='Position and Size'
