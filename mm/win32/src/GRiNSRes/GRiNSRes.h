@@ -482,12 +482,15 @@
 #define IDC_QTCHAPTERMODE2              1226
 #define IDC_IMMINST                     1227
 #define ID_STATIC                       1229
+#define IDC_BITRATELABEL                1229
 #define IDC_BITRATENECESSARY            1230
 #define ID_STATIC2                      1231
+#define IDC_SYSTEMMIMELABEL             1231
 #define IDC_SYSTEMMIMETYPE              1232
 #define IDC_ATTACHTIMEBASE              1233
 #define IDC_QTCHAPTER                   1234
 #define ID_STATIC3                      1235
+#define IDC_QTCHAPTERLABEL              1235
 #define IDC_IMMINSTMEDIA1               1236
 #define IDC_IMMINSTMEDIA2               1237
 #define IDC_IMMINSTMEDIA3               1238
@@ -495,6 +498,7 @@
 #define IDC_FRAME1                      1240
 #define IDC_FRAME2                      1241
 #define ID_STATIC4                      1242
+#define IDC_QTCOMPOSITELABEL            1242
 #define IDC_LAYOUT_SCALE                1243
 #define IDC_LAYOUT_PREVIEW              1244
 #define IDC_LAYOUT_REGION_X             1246
@@ -697,6 +701,8 @@
 #define IDC_ANIMATE_ENABLE              1458
 #define IDC_PANEFOCUS                   1460
 #define IDC_TREEFOCUS                   1461
+#define IDC_IMMINSTLABEL                1461
+#define IDC_QTNEXTLABEL                 1462
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -804,7 +810,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        463
 #define _APS_NEXT_COMMAND_VALUE         32900
-#define _APS_NEXT_CONTROL_VALUE         1461
+#define _APS_NEXT_CONTROL_VALUE         1463
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -3638,11 +3638,11 @@ class QTPlayerPreferencesGroup(AttrGroup):
 		a = self.getattr('autoplay')
 		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_AUTOPLAY,))
 		a = self.getattr('qtchaptermode')
-		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_GROUP1,grinsRC.IDC_QTCHAPTERMODE1,grinsRC.IDC_QTCHAPTERMODE2))
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_QTCHAPTERLABEL,grinsRC.IDC_QTCHAPTERMODE1,grinsRC.IDC_QTCHAPTERMODE2))
 		a = self.getattr('qttimeslider')
 		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_QTTIMESLIDER,))
 		a = self.getattr('qtnext')
-		cd[a] = FileCtrl(wnd,a,(grinsRC.IDC_GROUP1,grinsRC.IDC_FIELD_QTNEXT,grinsRC.IDC_BUTTON_QTNEXT))
+		cd[a] = FileCtrl(wnd,a,(grinsRC.IDC_QTNEXTLABEL,grinsRC.IDC_FIELD_QTNEXT,grinsRC.IDC_BUTTON_QTNEXT))
 		a = self.getattr('immediateinstantiation')
 		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_IMMINST,))
 		return cd
@@ -3664,17 +3664,17 @@ class QTPlayerMediaPreferencesGroup(AttrGroup):
 	def createctrls(self,wnd):
 		cd={}
 		a = self.getattr('immediateinstantiationmedia')
-		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_GROUP1, grinsRC.IDC_IMMINSTMEDIA1, grinsRC.IDC_IMMINSTMEDIA2, grinsRC.IDC_IMMINSTMEDIA3))
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_IMMINSTLABEL, grinsRC.IDC_IMMINSTMEDIA1, grinsRC.IDC_IMMINSTMEDIA2, grinsRC.IDC_IMMINSTMEDIA3))
 		a = self.getattr('bitratenecessary')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_GROUP1, grinsRC.IDC_BITRATENECESSARY))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_BITRATELABEL, grinsRC.IDC_BITRATENECESSARY))
 		a = self.getattr('systemmimetypesupported')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_GROUP1, grinsRC.IDC_SYSTEMMIMETYPE,))	
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SYSTEMMIMELABEL, grinsRC.IDC_SYSTEMMIMETYPE,))	
 		a = self.getattr('attachtimebase')
 		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_ATTACHTIMEBASE,))
 		a = self.getattr('qtchapter')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_GROUP1, grinsRC.IDC_QTCHAPTER,))	
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_QTCHAPTERLABEL, grinsRC.IDC_QTCHAPTER,))	
 		a = self.getattr('qtcompositemode')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_GROUP1, grinsRC.IDC_QTCOMPOSITEMODE,))	
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_QTCOMPOSITELABEL, grinsRC.IDC_QTCOMPOSITEMODE,))	
 		return cd
 
 	def getpageresid(self):
