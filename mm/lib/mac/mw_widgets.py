@@ -209,7 +209,8 @@ class _AreaWidget(_ControlWidget):
 	def recalc(self):
 		scale = 1
 		x, y, w, h = self.outerrect
-		x0, y0, x1, y1 = self.control.GetControlRect()
+		fullrect = self.control.GetControlRect()
+		x0, y0, x1, y1 = fullrect
 		print 'outer', x, y, w, h
 		print 'ctl', x0, y0, x1, y1
 		if x0 >= x1 or y0 >= y1:
@@ -224,9 +225,14 @@ class _AreaWidget(_ControlWidget):
 		self.scale = scale
 		print 'self.rect', self.rect
 		print 'scale', self.scale
+		Qd.SetPort(self.wid)
+		Win.InvalRect(fullrect)
 		
 	def set(self, rect):
 		self.ourrect = rect
+		fullrect = self.control.GetControlRect()
+		Qd.SetPort(self.wid)
+		Win.InvalRect(fullrect)
 		
 	def get(self):
 		return self.ourrect
