@@ -54,4 +54,24 @@ inline int GetObjHandle(PyObject *obj)
 	return ((WrapperObj*)obj)->m_h;
 	}
 
+#ifndef INC_SURFACE
+#include "../common/surface.h"
+#endif
+
+struct DIBSurfHeader
+	{
+	PyObject_HEAD
+	HBITMAP m_hBmp;
+	surface<color_repr_t> *m_psurf;
+	bool m_is_transparent;
+	BYTE m_rgb[3];
+	};
+
+inline surface<color_repr_t>* GetPyDIBSurfPtr(PyObject *obj)
+	{
+	if(obj==Py_None)
+		return 0;
+	return ((DIBSurfHeader*)obj)->m_psurf;
+	}
+
 #endif  // INC_UTILS
