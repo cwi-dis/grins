@@ -20,6 +20,11 @@ Afx=win32ui.GetAfx()
 # 	def onDSelResize(self, selection): pass
 #	def onDSelProperties(self, shape): pass
 
+# shape factories should implement the interface
+#class ShapeFactory:
+#	def createObjectAt(self, point, strid): return None
+#	def removeObject(self, obj): pass
+
 class DrawContext:
 	def __init__(self):
 		self._moveRefPt = 0, 0
@@ -43,6 +48,9 @@ class DrawContext:
 		# DrawContext does not support multiple selections
 		# use  MultiSelectDrawContext instead 
 		self._muliselect = 0
+
+		# and object responsible to create new shapes
+		self._shapeFactory = None
 
 	def reset(self):
 		self._moveRefPt = 0, 0
@@ -157,16 +165,24 @@ class DrawContext:
 	# Create new objects support
 	# Do not implement if this support is not needed
 	#
-	def createObject(self):
+	def setShapeFactory(self, factory):
+		self._shapeFactory = factory
+
+	def createObject(self, strid=None):
 		# create a new object
 		# at self._downPt with zero dimensions
-		pass
+		newobj = None
+		if self._shapeFactory:
+			newobj = self._shapeFactory.createObjectAt(self._downPt, strid)
+		self._curtool = self._seltool
+		return newobj
 
-	def removeObject(self, shape):
+	def removeObject(self, obj):
 		# remove shape
 		# used by shape tool to remove objects
 		# with zero dimensions
-		self._curtool = self._seltool
+		if self._shapeFactory:
+			self._shapeFactory.removeObject(obj)
 
 
 #########################	
@@ -338,7 +354,8 @@ class MSDrawContext(DrawContext):
 			b = y1
 		return l, t, r-l, b-t
 
-#########################			
+#########################
+# interface of acceptable objects			
 class Shape:
 	def getDragHandle(self, ix):
 		return 3, 3
@@ -372,7 +389,8 @@ class Shape:
 
 	def getAncestors(self):
 		return []
-										
+
+# base class for all drawing tools										
 class DrawTool:
 	def __init__(self, ctx):
 		self._ctx = ctx
@@ -398,6 +416,7 @@ class DrawTool:
 		pass
 
 
+# the selection tool										
 class SelectTool(DrawTool):
 	def __init__(self, ctx):
 		DrawTool.__init__(self, ctx)
@@ -822,4 +841,7 @@ class MSLayoutScrollOsWnd(docview.ScrollView, LayoutWndContext, MSDrawContext):
 
 		MSDrawContext.addListener(self, self) 
 		self._cancroll = 1
- 
+
+
+
+
