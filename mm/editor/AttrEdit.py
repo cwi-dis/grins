@@ -461,7 +461,7 @@ class AttrEditor:
 
 	def restore(self):
 		for b in self.list:
-			b.setvalue(b.getdefault())
+			b.setvalue(None)
 
 	def hide(self):
 		if self.dialog:
@@ -501,7 +501,7 @@ class AttrEditor:
 		windowinterface.setcursor('watch')
 		for name, (value, b) in dict.items():
 			self.wrapper.delattr(name)
-			if value != b.getdefault():
+			if value is not None:
 				self.wrapper.setattr(name, value)
 		self.wrapper.commit()
 		windowinterface.setcursor('')
@@ -550,24 +550,34 @@ class ButtonRow:
 		       self.attrdef[4]
 
 	def createwidget(self, parent, left, right, top, bottom):
+		cur = self.getcurrent()
+		if cur is None:
+			value = ''
+		else:
+			value = self.valuerepr(cur)
 		self.widget = parent.TextInput(
-			None, self.valuerepr(self.getcurrent()), None, None,
+			None, value, None, None,
 			top = top, bottom = bottom, left = left, right = right)
 
 	def getcurrent(self):
-		value = self.wrapper.getvalue(self.name)
-		if value is None:
-			value = self.wrapper.getdefault(self.name)
-		return value
+		return self.wrapper.getvalue(self.name)
 
 	def getdefault(self):
 		return self.wrapper.getdefault(self.name)
 
 	def getvalue(self):
-		return self.parsevalue(self.widget.gettext())
+		value = self.widget.gettext()
+		if value == '':
+			return None
+		else:
+			return self.parsevalue(value)
 
 	def setvalue(self, value):
-		self.widget.settext(self.valuerepr(value))
+		if value is None:
+			text = ''
+		else:
+			text = self.valuerepr(value)
+		self.widget.settext(text)
 
 	def valuerepr(self, value):
 		return self.wrapper.valuerepr(self.name, value)
@@ -602,7 +612,10 @@ class FileButtonRow(ButtonRow):
 	def createwidget(self, parent, left, right, top, bottom):
 		but = parent.Button('Brwsr', (self.browser, ()),
 				    top = top, bottom = bottom, right = right)
-		self.widget = parent.TextInput(None, self.getcurrent(),
+		cur = self.getcurrent()
+		if cur is None:
+			cur = ''
+		self.widget = parent.TextInput(None, cur,
 					       None, None,
 					       top = top, bottom = bottom,
 					       left = left, right = but)
@@ -679,12 +692,16 @@ class PopupButtonRow(ButtonRow):
 		return '<PopupButtonRow instance, name=' + `self.name` + '>'
 
 	def createwidget(self, parent, left, right, top, bottom):
-		choices = self.choices()
+		choices = ['None'] + self.choices()
 		current = self.getcurrent()
-		try:
-			cur = choices.index(self.valuerepr(current))
-		except ValueError:
+		if current is None:
+			current = 'None'
 			cur = 0
+		else:
+			try:
+				cur = choices.index(self.valuerepr(current))
+			except ValueError:
+				cur = 0
 		if len(choices) > 30:
 			but = parent.Button('Choose', (self. choose, ()),
 					    top = top, bottom = bottom,
@@ -705,19 +722,25 @@ class PopupButtonRow(ButtonRow):
 		else:
 			func = self.widget.settext
 		self.choosewin = SelectionDialog(self.widget.gettext(),
-						 self.choices(), func)
+						 ['None'] + self.choices(),
+						 func)
 
 	def getvalue(self):
 		if self.isoption:
 			value = self.widget.getvalue()
 		else:
 			value = self.widget.gettext()
-			if value not in self.choices():
+			if value not in ['None'] + self.choices():
 				raise RuntimeError, '%s not a valid option' % value
+		if value == 'None':
+			return None
 		return self.parsevalue(value)
 
 	def setvalue(self, value):
-		value = self.valuerepr(value)
+		if value is None:
+			value = 'None'
+		else:
+			value = self.valuerepr(value)
 		if self.isoption:
 			self.widget.setvalue(value)
 		else:
@@ -734,27 +757,19 @@ class PopupButtonRow(ButtonRow):
 		return value
 
 class BoolButtonRow(PopupButtonRow):
+	offon = ['off', 'on']
+
 	def __repr__(self):
 		return '<BoolButtonRow instance, name='+`self.name`+'>'
 
 	def parsevalue(self, value):
-		if value == 'on':
-			return 1
-		elif value == 'off':
-			return 0
-		else:
-			return value
+		return self.offon.index(value)
 
 	def valuerepr(self, value):
-		if type(value) is type(''):
-			return value
-		if value:
-			return 'on'
-		else:
-			return 'off'
+		return self.offon[value]
 
 	def choices(self):
-		return ['off', 'on']
+		return self.offon
 
 class ChannelnameButtonRow(PopupButtonRow):
 	# Choose from the current channel names
