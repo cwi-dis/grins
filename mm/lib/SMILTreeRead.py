@@ -1340,17 +1340,24 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for ch in self.__context.channels:
 			if ch in self.__topchans:
 				continue
-			if ch.has_key('base_window'):
-				basewin = ch['base_window']
-				basechans = self.__region2channel.get(basewin)
-				if len(basechans) == 0:
-					raise error, 'no base channels?'
-				elif len(basechans) == 1:
-					ch['base_window'] = basechans[0].name
-				else:
-					raise error, 'not implemented yet'
-			else:
+			# old 03-07-2000
+			#if ch.has_key('base_window'):
+			#	basewin = ch['base_window']
+			#	basechans = self.__region2channel.get(basewin)
+			#	if len(basechans) == 0:
+			#		raise error, 'no base channels?'
+			#	elif len(basechans) == 1:
+			#		ch['base_window'] = basechans[0].name
+			#	else:
+			#		raise error, 'not implemented yet'
+			#else:
+			#	ch['base_window'] = self.__base_win
+			#end old
+
+			# new 03-07-2000
+			if not ch.has_key('base_window'):
 				ch['base_window'] = self.__base_win
+			# end new
 
 	def __fillchannel(self, ch, attrdict, mtype):
 		attrdict = attrdict.copy() # we're going to change this...
@@ -1414,15 +1421,22 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			   not self.attributes['region'].has_key(attr):
 				ch[attr] = parseattrval(attr, val, self.__context)
 
-	def MakeChannels(self):
+	# old 03-07-2000
+	# def MakeChannels(self):
+	# end old
+	# new 03-07-2000
+	def __makeLayoutChannels(self):	
+	# end new
 		ctx = self.__context
 		for top in self.__tops.keys():
 			self.CreateLayout(self.__tops[top]['attrs'], top is None)
 		for region in self.__regionlist:
 			attrdict = self.__regions[region]
-			chtype = attrdict.get('type')
-			if chtype is None or not ChannelMap.channelmap.has_key(chtype):
-				continue
+			# old 03-07-2000 --> now, all region are 'layout channel'
+			#chtype = attrdict.get('type')
+			#if chtype is None or not ChannelMap.channelmap.has_key(chtype):
+			#	continue
+			#end
 			name = attrdict.get('id')
 			if ctx.channeldict.has_key(name):
 				name = name + ' %d'
@@ -1434,11 +1448,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ctx.channeldict[name] = ch
 			ctx.channelnames.append(name)
 			ctx.channels.append(ch)
-			ch['type'] = chtype
-			if not self.__region2channel.has_key(region):
-				self.__region2channel[region] = []
-			self.__region2channel[region].append(ch)
-			self.__fillchannel(ch, attrdict, chtype)
+			# old 03-07-2000
+#			ch['type'] = chtype
+			# end old
+			# new 03-07-2000
+			ch['type'] = 'layout'
+			# end new
+			
+			# old 03-07-2000
+#			if not self.__region2channel.has_key(region):
+#			 	self.__region2channel[region] = []
+#			self.__region2channel[region].append(ch)
+
+			# self.__fillchannel(ch, attrdict, chtype)
+			# end old
+			# new 03-07-2000
+			self.__fillchannel(ch, attrdict, 'layout')
+			# end new
 			
 	def FixChannel(self, node):
 		if node.GetType() not in leaftypes:
@@ -1481,6 +1507,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					par = par.GetParent()
 				if name is not None:
 					break
+			
+		# if 'name' <> None, we can re-use the channel named 'name'
+
 		# either we use name or name is None and we have to
 		# create a new channel
 		if not name:
@@ -1492,19 +1521,24 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					i = i + 1
 				name = name % i
 		ch = ctx.channeldict.get(name)
+		# there is no channel of the right name and type, then we create a new channel
 		if ch is None:
-			# there is no channel of the right name and type
 			ch = MMNode.MMChannel(ctx, name)
-			if region != '<unnamed>':
-				if not self.__region2channel.has_key(region):
-					self.__region2channel[region] = []
-				self.__region2channel[region].append(ch)
+			# old 03-07-2000
+			# actualy the region can be 'unnamed' only after a error (if the region doesn't exist)
+			# if region != '<unnamed>':
+			#	if not self.__region2channel.has_key(region):
+			#		self.__region2channel[region] = []
+			#	self.__region2channel[region].append(ch)
 			ctx.channeldict[name] = ch
 			ctx.channelnames.append(name)
 			ctx.channels.append(ch)
 			ch['type'] = mtype
 			if mtype in ('image', 'movie', 'video', 'mpeg',
 				     'text', 'label', 'html', 'graph', 'RealPix', 'RealText', 'RealVideo'):
+		############################### WARNING ##################################
+		################# to move the test : doesn't work clearly ################
+		##########################################################################
 				if not self.__regions.has_key(region):
 					self.warning('no region %s in layout' %
 						     region, self.lineno)
@@ -1512,14 +1546,34 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.start_region({'id': region})
 					self.end_region()
 					self.__in_layout = LAYOUT_NONE
+		##########################################################################
 				# we're going to change this locally...
 				attrdict = self.__regions[region]
+				
+				# new 03-07-2000
+				# add the new region in channel tree
+				attrdict['base_window'] = region
+				
+				# for instance, we set z-index value to -1 in order to have to folow rule:.
+				# if a LayoutChannel and XXChannel are sibling, LayoutChannel
+				# is always in front of XXChannel
+				attrdict['z-index'] = -1
+
 				self.__fillchannel(ch, attrdict, mtype)
+					
+				if not self.__region2channel.has_key(region):
+					self.__region2channel[region] = []
+				self.__region2channel[region].append(ch)
+				# end new
+				
 		node.attrdict['channel'] = name
+		
+		# complete chanlist
 		par = node.GetParent()
 		while par is not None:
 			par.__chanlist[name] = 0
 			par = par.GetParent()
+		
 		if compatibility.G2 == features.compatibility:
 			if mtype == 'RealPix':
 				self.__realpixnodes.append(node)
@@ -1691,7 +1745,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__childregions[None] = []
 ##		self.FixRoot()
 		self.FixSizes()
-		self.MakeChannels()
+		self.__makeLayoutChannels()
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
 		self.Recurse(self.__root, self.CleanChanList)
 		self.FixLayouts()
@@ -1935,7 +1989,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						val = 'video'
 					elif val == 'html':
 						val = 'text'
-				attrdict[attr] = val
+				attrdict[attr] = val				
 			else:
 				# catch all
 				attrdict[attr] = val
@@ -2427,15 +2481,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		aargs = []
 
 		# coord and shape parsing
-		# Temporarely: for instance the shape type is not saved, only coordinates are keep
 		
 		# shape attribute
 		shape = attributes.get('shape')
-		if shape == None:
-			shape = 'rect'
-		elif shape != 'rect' and shape != 'poly' and shape != 'circle':
+		if shape == None or shape == 'rect':
+			ashapetype = A_SHAPETYPE_RECT
+		elif shape == 'poly':
+			ashapetype = A_SHAPETYPE_POLY
+		elif shape == 'circle':
+			ashapetype = A_SHAPETYPE_CIRCLE
+		else:
+			ashapetype = A_SHAPETYPE_RECT
 			self.syntax_error('Unknow shape type '+shape)
-			shape = 'rect'
 			
 		# coords attribute
 		coords = attributes.get('coords')
@@ -2445,7 +2502,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		
 		if l is not None:
 			atype = ATYPE_NORMAL
-			if shape == 'rect':
+			if ashapetype == A_SHAPETYPE_RECT:
 				error = 0
 				if len(l) != 4:
 					self.syntax_error('Invalid number of coordinate values in anchor')
@@ -2460,8 +2517,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if not error:
 					# x,y,w,h are now floating point if they were
 					# percentages, otherwise they are ints.
+
+					# for instance, keep the compatibility
 					aargs = [x0, y0, x1-x0, y1-y0]
-			elif shape == 'poly':
+#					aargs = [ashapetype, x0, y0, x1-x0, y1-y0]
+			elif ashapetype == A_SHAPETYPE_POLY:
 				error = 0
 				if (len(l) < 4) or (len(l) & 1):
 					self.syntax_error('Invalid number of coordinate values in anchor')
@@ -2474,15 +2534,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							self.syntax_error('Invalid number of coordinate values in anchor')
 							error = 1										
 				if not error:
-					aargs = l
-			elif shape == 'circle':
+					aargs = [ashapetype,]+l
+			elif ashapetype == A_SHAPETYPE_CIRCLE:
 				error = 0
 				if len(l) != 3:
 					self.syntax_error('Invalid number of coordinate values in anchor')
 					error = 1
 				if not error:
 					cx, cy, rd = l[:]					
-					aargs = [cx, cy, rd]
+					aargs = [ashapetype, cx, cy, rd]
 											
 		begin = attributes.get('begin')
 		if begin is not None:

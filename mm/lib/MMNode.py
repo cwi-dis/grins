@@ -428,6 +428,17 @@ class MMChannel:
 	def _getdict(self): # Only called from MMWrite.fixroot()
 		return self.attrdict
 
+	# new 03-07-2000
+	# up in the channel tree until find a layoutchannel.
+	# a layout channel can be translated directly in SMIL region
+	def GetLayoutChannel(self):
+		# actualy the layout channel is directly the parent channel
+		cname = self.attrdict.get('base_window')
+		if not cname:
+			return None
+		return self.context.channeldict.get(cname)
+	# end new	
+
 	#
 	# Emulate the dictionary interface
 	#

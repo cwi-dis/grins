@@ -368,11 +368,11 @@ def getdescr(writer, node, attr):
 	if val:
 		return val
 
-def getchname(writer, node):
+def getregionname(writer, node):
 	ch = node.GetChannel()
 	if not ch:
 		return None
-	return writer.ch2name[ch]
+	return writer.ch2name[ch.GetLayoutChannel()]
 
 def getduration(writer, node, attr = 'duration'):
 	duration = MMAttrdefs.getattr(node, attr)
@@ -645,7 +645,7 @@ def getlayout(writer, node):
 smil_attrs=[
 	("id", getid),
 	("title", lambda writer, node:getcmifattr(writer, node, "title")),
-	("region", getchname),
+	("region", getregionname),
 	("src", lambda writer, node:getsrc(writer, node)),
 	("type", getmimetype),
 	("author", lambda writer, node:getcmifattr(writer, node, "author")),
@@ -709,6 +709,11 @@ cmif_chan_attrs_ignore = {
 	'id':0, 'title':0, 'base_window':0, 'base_winoff':0, 'z':0, 'scale':0,
 	'transparent':0, 'bgcolor':0, 'winpos':0, 'winsize':0, 'rect':0,
 	'center':0, 'drawbox':0, 'units':0,
+	# new 03-07-2000
+	# we can't save the chan type inside a region since a node may be associate to several nodes
+	# the channel type is determinate according to the node type
+	'type':0,
+	# end new
 	}
 
 qt_node_attrs = {
@@ -1366,10 +1371,24 @@ class SMILWriter(SMIL):
 				attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
 		self.writetag('region', attrlist)
 		subchans = self.__subchans.get(ch.name)
+		
+		# new 03-07-2000
+		# cnt sub layoutchannel number --> to allow to close the tag if no element inside
+		lcNumber = 0
 		if subchans:
+			for sch in subchans:
+				if sch['type'] == 'layout':
+					lcNumber = lcNumber + 1
+		# end new
+		
+		if lcNumber > 0:
 			self.push()
 			for sch in subchans:
-				self.writeregion(sch)
+				# new 03-07-2000
+				# save only the layout channels
+				if sch['type'] == 'layout':
+				# end new
+					self.writeregion(sch)
 			self.pop()
 
 	def writeusergroups(self):
