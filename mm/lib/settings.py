@@ -43,6 +43,7 @@ default_settings = {
 	'show_links':1,			# Show hyperlink icons
 	'no_initial_dialog': 0,		# Don't show initial dialog if true
 	'RPthumbnails': 0,		# RealPix thumbnails in timeline view
+	'cascade': 0,			# Cascade regions when no <layout>
 # HierarchyView colors
 	'structure_bgcolor': (150, 150, 150), # Light gray
 	'structure_leafcolor': (255,255,222),

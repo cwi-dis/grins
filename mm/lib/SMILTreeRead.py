@@ -24,7 +24,7 @@ LAYOUT_NONE = 0				# must be 0
 LAYOUT_SMIL = 1
 LAYOUT_UNKNOWN = -1			# must be < 0
  
-CASCADE = 1	# cascade regions for nodes without region attr
+CASCADE = settings.get('cascade')	# cascade regions if no <layout>
 
 layout_name = ' SMIL '			# name of layout channel
 
