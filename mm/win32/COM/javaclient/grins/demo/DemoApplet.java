@@ -29,7 +29,7 @@ implements SMILListener
 		// parse your Java file into its visual environment.
 		//{{INIT_CONTROLS
 		setLayout(null);
-		setSize(480,148);
+		setSize(480,164);
 		buttonOpen.setLabel("Open");
 		add(buttonOpen);
 		buttonOpen.setBackground(java.awt.Color.lightGray);
@@ -62,6 +62,10 @@ implements SMILListener
 		JSlider1.setValue(0);
 		add(JSlider1);
 		JSlider1.setBounds(8,100,464,32);
+		buttonGetInfo.setLabel("Document info");
+		add(buttonGetInfo);
+		buttonGetInfo.setBackground(java.awt.Color.lightGray);
+		buttonGetInfo.setBounds(8,138,102,20);
 		//}}
 	
 		//{{REGISTER_LISTENERS
@@ -75,6 +79,7 @@ implements SMILListener
 		JSlider1.addMouseMotionListener(aSymMouseMotion);
 		SymMouse aSymMouse = new SymMouse();
 		JSlider1.addMouseListener(aSymMouse);
+		buttonGetInfo.addActionListener(lSymAction);
 		//}}
 	}
 	
@@ -87,6 +92,7 @@ implements SMILListener
 	java.awt.Button buttonStop = new java.awt.Button();
 	java.awt.Button buttonClose = new java.awt.Button();
 	javax.swing.JSlider JSlider1 = new javax.swing.JSlider();
+	java.awt.Button buttonGetInfo = new java.awt.Button();
 	//}}
 	
 	private void message(String str) {
@@ -135,7 +141,7 @@ implements SMILListener
 		demoApplet.start();
 		frame.add("Center", demoApplet);
         frame.pack();
-		frame.setSize(480+8,148+24);
+		frame.setSize(480+8,168+24);
 		frame.setLocation(400,300);
 		frame.show();
 		}
@@ -156,6 +162,9 @@ implements SMILListener
 				buttonStop_ActionPerformed(event);
 			else if (object == buttonClose)
 				buttonClose_ActionPerformed(event);
+			else if (object == buttonGetInfo)
+				buttonGetInfo_ActionPerformed(event);
+			
 			
 		}
 	}
@@ -176,7 +185,7 @@ implements SMILListener
     private void open(String filename){
         // create SMIL doc
 	    smil = GRiNSToolkit.createDocument(filename);
-	    
+	    	    
 	    // update create UI
 	    setSliderDur(smil.getDuration());
 	    SMILCanvas canvas = new SMILCanvas();
@@ -277,6 +286,18 @@ implements SMILListener
 		    if(player!=null) player.setTime(JSlider1.getValue());
 	        dragging = false;
 		}
+			 
+	}
+
+	void buttonGetInfo_ActionPerformed(java.awt.event.ActionEvent event)
+	{
+	    if(player!=null) System.out.println("t="+player.getTime());
+	    if(smil!=null)   System.out.println("dur="+smil.getDuration());
+	    if(smil!=null)   System.out.println("frameRate="+smil.getFrameRate());
+	    
+	    try {if(smil!=null)System.out.println("mediaFrameRate="+smil.getMediaFrameRate("../videos/nasa.qt"));} 
+	    catch(Exception e){System.out.println(""+e);}
+	    
 			 
 	}
 }
