@@ -10,7 +10,6 @@ from FL import *
 import glwindow
 from MMExc import *
 import MMAttrdefs
-import AttrEdit
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 
@@ -33,6 +32,9 @@ class StyleSheet(ViewDialog, BasicDialog):
 	#
 	def commit(self):
 		self.load_styles()
+	#
+	def kill(self):
+		self.destroy()
 	#
 	def show(self):
 		if not self.showing:
@@ -138,6 +140,7 @@ class StyleSheet(ViewDialog, BasicDialog):
 		self.editmgr.commit()
 		self.browser.unfreeze_object()
 		# (4) Immediately open a style editor for it
+		import AttrEdit
 		AttrEdit.showstyleattreditor(self.context, newname)
 	#
 	def delete_callback(self, (obj, arg)):
@@ -197,6 +200,7 @@ class StyleSheet(ViewDialog, BasicDialog):
 			fl.show_message( \
 				'No style selected to edit', '', '')
 			return
+		import AttrEdit
 		AttrEdit.showstyleattreditor(self.context, name)
 	#
 	def name_callback(self, (obj, arg)):
