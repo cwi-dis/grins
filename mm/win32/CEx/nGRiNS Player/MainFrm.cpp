@@ -41,16 +41,6 @@ BEGIN_MESSAGE_MAP( CMainWindow, CFrameWnd )
 END_MESSAGE_MAP()
 
 
-BOOL CMainWindow::PreCreateWindow(CREATESTRUCT& cs)
-	{
-	if(!CFrameWnd::PreCreateWindow(cs))
-		return FALSE;
-
-	cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, 
-		NULL, HBRUSH(COLOR_WINDOW+1), NULL);
-	return TRUE;
-	}
-
 int CMainWindow::OnCreate(LPCREATESTRUCT lpCreateStruct) 
 	{
 	if (CFrameWnd ::OnCreate(lpCreateStruct) == -1)
@@ -62,11 +52,12 @@ int CMainWindow::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		AfxMessageBox(TEXT("CommandBar.Create() failed"));
 		return -1;
 		}
+	/*
 	if(!m_wndCommandBar.InsertMenuBar(IDR_MAINFRAME))
 		{
 		AfxMessageBox(TEXT("InsertMenuBar() failed"));
 		return -1;
-		}
+		}*/
 
 	if(!m_wndCommandBar.LoadToolBar(IDR_MAINFRAME))
 		{
@@ -79,7 +70,6 @@ int CMainWindow::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		AfxMessageBox(TEXT("AddAdornments() failed"));
 		return -1;
 		}
-
 	m_ToolTipsTable[0] = MakeString(TEXT("Play"));
 	m_ToolTipsTable[1] = MakeString(TEXT("Pause"));
 	m_ToolTipsTable[2] = MakeString(TEXT("Stop"));
@@ -113,7 +103,7 @@ void CMainWindow::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CMainWindow::OnLButtonUp(UINT nFlags, CPoint point) 
 	{
-	CFrameWnd ::OnLButtonUp(nFlags, point);
+	CFrameWnd::OnLButtonUp(nFlags, point);
 	}
 
 void CMainWindow::OnMouseMove(UINT nFlags, CPoint point) 
@@ -139,7 +129,7 @@ void CMainWindow::OnCmdOpen()
 
 void CMainWindow::OnUpdateCmdOpen(CCmdUI* pCmdUI) 
 	{
-	pCmdUI->Enable(!m_is_open);
+	//pCmdUI->Enable(!m_is_open);
 	}
 
 void CMainWindow::OnCmdClose() 
@@ -153,7 +143,7 @@ void CMainWindow::OnCmdClose()
 
 void CMainWindow::OnUpdateCmdClose(CCmdUI* pCmdUI) 
 	{
-	pCmdUI->Enable(m_is_open);
+	//pCmdUI->Enable(m_is_open);
 	}
 
 void CMainWindow::OnCmdPlay() 
@@ -163,7 +153,7 @@ void CMainWindow::OnCmdPlay()
 
 void CMainWindow::OnUpdateCmdPlay(CCmdUI* pCmdUI) 
 	{
-	pCmdUI->Enable(m_is_open && (m_play_state == STOPPED || m_play_state == PAUSING));
+	//pCmdUI->Enable(m_is_open && (m_play_state == STOPPED || m_play_state == PAUSING));
 	}
 
 void CMainWindow::OnCmdPause()
@@ -176,7 +166,7 @@ void CMainWindow::OnCmdPause()
 
 void CMainWindow::OnUpdateCmdPause(CCmdUI* pCmdUI) 
 	{
-	pCmdUI->Enable(m_is_open && (m_play_state == PLAYING || m_play_state == PAUSING));
+	//pCmdUI->Enable(m_is_open && (m_play_state == PLAYING || m_play_state == PAUSING));
 	}
 
 void CMainWindow::OnCmdStop() 
@@ -186,7 +176,7 @@ void CMainWindow::OnCmdStop()
 
 void CMainWindow::OnUpdateCmdStop(CCmdUI* pCmdUI) 
 	{
-	pCmdUI->Enable(m_is_open && (m_play_state == PLAYING || m_play_state == PAUSING));
+	//pCmdUI->Enable(m_is_open && (m_play_state == PLAYING || m_play_state == PAUSING));
 	}
 
 void CMainWindow::OnPaint() 
@@ -244,13 +234,9 @@ void CMainWindow::PaintSplash(CDC& dc)
 	int y = (rc.Height() - s.cy - MENU_BAR_HEIGHT)/2;
 	CDC dcc;
 	if(!dcc.CreateCompatibleDC(&dc))
-		{
-		AfxMessageBox(TEXT("CreateCompatibleDC() failed"));
 		return;
-		}
 	CBitmap *oldbmp = dcc.SelectObject(&m_splash);
-	if(!dc.BitBlt(x, y, s.cx, s.cy, &dcc, 0, 0, SRCCOPY))
-		AfxMessageBox(TEXT("BitBlt() failed"));
+	dc.BitBlt(x, y, s.cx, s.cy, &dcc, 0, 0, SRCCOPY);
 	dcc.SelectObject(oldbmp);
 	dcc.DeleteDC();
 	}

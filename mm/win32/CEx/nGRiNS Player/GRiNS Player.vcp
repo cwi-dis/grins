@@ -154,7 +154,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "i486" /d "_AFXDLL" /r
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "i486" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "_AFXDLL" /Yu"stdafx.h" /Gz /c
-# ADD CPP /nologo /W3 /Zi /Od /I "." /I "..\common" /I "..\grins" /I "..\..\CE\stl" /D "DEBUG" /D "i486" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "_AFXDLL" /D "COMPILED_FROM_DSP" /Yu"stdafx.h" /Gz /c
+# ADD CPP /nologo /W3 /Zi /Od /I "." /I "..\common" /I "..\grins" /I "..\..\CE\stl" /D "DEBUG" /D "i486" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "_AFXDLL" /D "COMPILED_FROM_DSP" /FR /Yu"stdafx.h" /Gz /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -443,6 +443,10 @@ SOURCE=".\GRiNS Player.ico"
 
 SOURCE=.\player.bmp
 # End Source File
+# Begin Source File
+
+SOURCE=.\tb_player.bmp
+# End Source File
 # End Group
 # End Group
 # Begin Group "common"
@@ -490,21 +494,25 @@ DEP_CPP_SMIL_=\
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Release"
 
 DEP_CPP_SMIL_=\
+	"..\common\charconv.h"\
 	"..\common\extra_types.h"\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
 	"..\common\tree_node.h"\
 	"..\common\xml\sax_handler.h"\
+	".\windowinterface.h"\
 	
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Debug"
 
 DEP_CPP_SMIL_=\
+	"..\common\charconv.h"\
 	"..\common\extra_types.h"\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
 	"..\common\tree_node.h"\
 	"..\common\xml\sax_handler.h"\
+	".\windowinterface.h"\
 	
 # SUBTRACT CPP /YX /Yc /Yu
 
@@ -1019,6 +1027,7 @@ DEP_CPP_GRINS_T=\
 	"..\common\memfile.h"\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
+	"..\common\tree_node.h"\
 	"..\common\xml\sax_handler.h"\
 	"..\common\xml_parsers.h"\
 	"..\grins\grins_main.h"\
@@ -1035,6 +1044,7 @@ DEP_CPP_GRINS_T=\
 	"..\common\memfile.h"\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
+	"..\common\tree_node.h"\
 	"..\common\xml\sax_handler.h"\
 	"..\common\xml_parsers.h"\
 	"..\grins\grins_main.h"\
