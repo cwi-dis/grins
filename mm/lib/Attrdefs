@@ -26,6 +26,12 @@
 ##(bbox (tuple (int) (int) (int) (int)) (0 0 0 0) 'Bounding box' default
 ##	'Bounding box for embedded PostScript image' channel)
 
+(anchorid (int) 1 'Next anchor UID' default
+	'Next anchor UID to use' raw)
+
+(anchorlist (list (enclosed (tuple (int) (enclosed (list (int)))))) () 'Anchors' default
+	'List of anchors on this node' raw)
+
 (arm_duration (float) -1.0 'Arm duration' default
 	'Time needed to arm this event before displaying' raw)
 
@@ -83,6 +89,12 @@
 
 (help_winsize  (tuple (int) (int)) (400 600) 'Help window size' default
 	 'Size of help window' raw)
+
+(hyperlinks (list (enclosed (tuple (enclosed (tuple (string) (int)))
+                                   (enclosed (tuple (string) (int)))
+				   (int) (int)))) ()
+	'Hyperlink list' default
+	'Hyperlinks within this document (root node only)' raw)
 
 ##(indent (float) 0 'Indent' default
 ##	'Extra indentation of left margin (in characters)')
