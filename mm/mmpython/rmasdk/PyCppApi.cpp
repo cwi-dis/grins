@@ -3,15 +3,20 @@
 
 // Cpp framework 
 // for modules that export PyObjects
-// for modules that need a mechanism to call back 
-// methods of cpp objects overridden in Python
 
 // For rapid-dev we borrow win32ui's core mechanisms
 // we 'll revisit this module
 
 // Using Std C++ (not MFC or other lib)
 
+// Associations (a central win32ui mechanism) has been removed
+// If the need arises, reimplement them in a cleaner not intrusive way
+
+
 ////////////////////////////////////////////////
+////////////////////////////////////////////////
+// TypeObject
+
 TypeObject::TypeObject(const char *name,TypeObject *pBase,int typeSize,
 	struct PyMethodDef* methodList, Object *(*thector)())
 	{
@@ -45,6 +50,9 @@ TypeObject::~TypeObject()
 	}
 
 ////////////////////////////////////////////////
+////////////////////////////////////////////////
+// Object
+
 Object::Object()
 	{
 	}
@@ -225,237 +233,268 @@ TypeObject Object::type("Object",
 
 
 ////////////////////////////////////////////////
-
-AssocManager AssocObject::assocMgr;
-
-/*static*/
-void *AssocObject::GetGoodCppObject(PyObject *&self, TypeObject *Type_check)
-	{
-	// first, call is_object, which may modify the "self" pointer.
-	// this is to support a Python class instance being passed in,
-	// and auto-convert it to the classes AttachedObject.
-	if (Type_check && !is_object(self, Type_check)) 
-		{
-		string csRet = "object is not a ";
-		csRet += Type_check->tp_name;
-		TRACE("GetGoodCppObject fails RTTI\n");
-		const char *ret = csRet.c_str();
-		RETURN_TYPE_ERR((char *)ret);
-		}
-	AssocObject *s = (AssocObject *)self;
-	if (s->assoc==NULL)
-		RETURN_ERR("The object has been destroyed.");
-	return s->assoc;
-	}
-
-void *AssocObject::GetGoodCppObject(TypeObject *Type_check) const
-	{
-	// Get a checked association.
-	PyObject *temp = (PyObject *)this;
-	void *ret = GetGoodCppObject(temp, Type_check);
-	if (this!=(AssocObject *)temp)
-		TRACE("GetGoodCpp called with this->, and this needs to be changed!");
-	return (AssocObject *)ret;
-	}
-
-
-// @pymethod |PyAssocObject|AttachObject|Attaches a Python object for lookup of "virtual" functions.
-PyObject *AssocObject::AttachObject(PyObject *self,PyObject *args)
-	{
-	PyObject *ob;
-	AssocObject *pAssoc = (AssocObject*)self;
-	if (pAssoc==NULL) return NULL;
-	if (!PyArg_ParseTuple(args, "O:AttachObject", &ob ))
-		return NULL;
-	XDODECREF(pAssoc->virtualInst);
-	pAssoc->virtualInst = NULL;
-	if (ob!=Py_None) 
-		{
-		pAssoc->virtualInst = ob;
-		DOINCREF(ob);
-		}
-	RETURN_NONE;
-	}
-
-// @object PyAssocObject|An internal class.
-static struct PyMethodDef PyAssocObject_methods[] = {
-	{"AttachObject",AssocObject::AttachObject,1}, // @pymeth AttachObject|Attaches a Python object for lookup of "virtual" functions.
-	{NULL, NULL}
-};
-
-TypeObject AssocObject::type("PyAssocObject", 
-							  &Object::type, 
-							  sizeof(AssocObject), 
-							  PyAssocObject_methods, 
-							  NULL);
-
-AssocObject::AssocObject()
-	{
-	assoc=0;
-	virtualInst=NULL;
-	}
-AssocObject::~AssocObject()
-	{
-	KillAssoc();
-	}
-
-// handle is invalid - therefore release all refs I am holding for it.
-void AssocObject::KillAssoc()
-	{
-	#ifdef TRACE_ASSOC
-	string rep = repr();
-	const char *szRep = rep;
-	TRACE("Destroying association with %p and %s",this,szRep);
-	#endif
-	// note that _any_ of these may cause this to be deleted, as the reference
-	// count may drop to zero.  If any one dies, and later ones will fail.  Therefore
-	// I incref first, and decref at the end.
-	// Note that this _always_ recurses when this happens as the destructor also
-	// calls us to cleanup.  Forcing an INCREF/DODECREF in that situation causes death
-	// by recursion, as each dec back to zero causes a delete.
-	BOOL bDestructing = ob_refcnt==0;
-	if (!bDestructing)
-		Py_INCREF(this);
-	DoKillAssoc(bDestructing);	// kill all map entries, etc.
-	SetAssocInvalid();			// let child do whatever to detect
-	if (!bDestructing)
-		DODECREF(this);
-	}
-
-// the virtual version...
-void AssocObject::DoKillAssoc(BOOL bDestructing/*= FALSE*/)
-	{
-	GET_THREAD_AND_DECREF(virtualInst);
-	virtualInst = NULL;
-	assocMgr.Assoc(0,this,assoc);
-	}
-
-// return an object, given an association, if we have one.
-/* static */ 
-AssocObject *AssocObject::GetPyObject(void *search)
-	{
-	return (AssocObject *)assocMgr.GetAssocObject(search);
-	}
-
-PyObject *AssocObject::GetGoodRet()
-	{
-	if (this==NULL) return NULL;
-	if (virtualInst) 
-		{
-		DODECREF(this);
-		DOINCREF(virtualInst);
-		return virtualInst;
-		} 
-	else
-		return this;
-	}
-
-/*static*/ 
-AssocObject *AssocObject::make(TypeObject &makeType,void *search)
-	{
-	ASSERT(search);
-	AssocObject* ret = (AssocObject*)assocMgr.GetAssocObject(search);
-	if (ret) 
-		{
-		if (!ret->is_object(&makeType))
-			RETURN_ERR("Internal error - existing object is not of same type as requested new object");
-		DOINCREF(ret);
-		return ret;
-		}
-	ret = (AssocObject*)Object::make(makeType);	// may fail if unknown class.
-	if (ret) 
-		{
-		// do NOT keep a reference to the Python object, or it will
-		// remain forever.  The destructor must remove itself from the map.
-		#ifdef TRACE_ASSOC
-		TRACE_ASSOC(" Associating 0x%x with 0x%x", search, ret);
-		#endif
-		// if I have an existing handle, remove it.
-		assocMgr.Assoc(search, ret,NULL);
-		ret->assoc = search;
-		}
-	return ret;
-	}
-
-string AssocObject::repr()
-	{
-	char buf[128];
-	sprintf(buf, " - assoc is %p, vf=%s", assoc, virtualInst ? "True" : "False");
-	return Object::repr() + buf;
-	}
-
 ////////////////////////////////////////////////
+// CallerHelper
 
-AssocManager::AssocManager()
+CallerHelper::CallerHelper(const char *methodname,PyObject *obj)
+:	handler(NULL),
+	py_ob(NULL),
+	retVal(NULL)
 	{
-	lastLookup = NULL;
-	lastObject = NULL;
-	}
-AssocManager::~AssocManager()
-	{
-	}
-// This should never detect objects.
-void AssocManager::cleanup(void)
-	{
-	m_sync.Lock();
-	ObjectMap::iterator i;
-	for(i=objectMap.begin();i!=objectMap.end();i++)
-		(*i).second->cleanup();
-	objectMap.clear();
-	m_sync.Unlock();
-	}
-void AssocManager::Assoc(void *handle, AssocObject *object, void *oldHandle)
-	{
-	m_sync.Lock();
-	if (oldHandle) 
+	if(!methodname || !obj) return;
+	csHandlerName = methodname;
+	CEnterLeavePython elp;
+	PyObject *t, *v, *tb;
+	PyErr_Fetch(&t,&v,&tb);
+	handler = PyObject_GetAttrString(obj,(char*)methodname);
+	if (handler) 
 		{
-		// if window previously closed, this may fail when the Python object
-		// destructs - but this is not a problem.
-		objectMap.erase(oldHandle);
-		if (oldHandle==lastLookup)
-			lastLookup = 0;	// set cache invalid.
+		// explicitely check a method returned, else the classes
+		// delegation may cause a circular call chain.
+		if (!PyMethod_Check(handler)) 
+			{
+			if (!PyCFunction_Check(handler))
+				TRACE("Handler for object is not a method!\n");
+			DODECREF(handler);
+			handler = NULL;
+			}
 		}
-	if (handle)
-		objectMap.insert(ObjectPair(handle,object));
-	if (handle==lastLookup)
-		lastObject = object;
-	m_sync.Unlock();
+	PyErr_Restore(t,v,tb);
+	py_ob = obj;
+	Py_INCREF(py_ob);
+	//Py_XINCREF(handler);
 	}
-
-AssocObject *AssocManager::GetAssocObject(const void *handle)
+CallerHelper::~CallerHelper()
 	{
-	if (handle==NULL) return NULL; // no possible association for NULL!
-	AssocObject *ret;
-	m_sync.Lock();
-	// implement a basic 1 item cache.
-	if (lastLookup==handle) 
+	// XXX - Gross hack for speed.  This is called for eachh window message
+	// so only grabs the Python lock if the objects need Python,
+	if((retVal && retVal->ob_refcnt==1) || 
+		(handler && handler->ob_refcnt==1) || 
+		(py_ob && py_ob->ob_refcnt==1)) 
 		{
-		ret = lastObject;
-		}
+		CEnterLeavePython _celp;
+		XDODECREF(retVal);
+		XDODECREF(handler);
+		XDODECREF(py_ob);
+		} 
 	else 
 		{
-		ObjectMap::const_iterator i=objectMap.find((void*)handle);
-		if(i==objectMap.end())
-			{
-			lastLookup = NULL;
-			ret=lastObject=NULL;
-			}
-		else
-			{
-			lastLookup = (*i).first;
-			ret = lastObject = (*i).second;
-			}
+		XDODECREF(retVal);
+		XDODECREF(handler);
+		XDODECREF(py_ob);
 		}
-	m_sync.Unlock();
-	return ret;
+	}
+PyObject *CallerHelper::GetHandler()
+	{
+	return handler;
+	}
+BOOL CallerHelper::do_call(PyObject *args)
+	{
+	CEnterLeavePython _celp;
+	XDODECREF(retVal);	// our old one.
+	retVal = NULL;
+	ASSERT(handler);	// caller must trap this.
+	ASSERT(args);
+	PyObject *result = PyEval_CallObject(handler,args);
+	DODECREF(args);
+	if (result==NULL) 
+		{
+		char msg[256];
+		TRACE("CallVirtual : callback failed with exception\n");
+		print_error();
+		PyObject *obRepr = PyObject_Repr(handler);
+		char *szRepr = PyString_AsString(obRepr);
+		sprintf(msg, "%s() virtual handler (%s) raised an exception",csHandlerName.c_str(), szRepr);
+		Py_XDECREF(obRepr);
+		PyErr_SetString(module_error, msg);
+		print_error();
+		return FALSE;
+		}
+	retVal = result;
+	return TRUE;
 	}
 
-////////////////////////////////////////////////
-PyObject *call_object(PyObject *themeth, PyObject *thearglst)
+BOOL CallerHelper::call_args(PyObject *arglst)
 	{
-	return PyEval_CallObject(themeth,thearglst);
+	if (!handler) return FALSE;
+	return do_call(arglst);
 	}
-void print_error(void)
+
+BOOL CallerHelper::call()
+	{
+	if (!handler) return FALSE;
+	PyObject *arglst = Py_BuildValue("()");
+	return do_call(arglst);
+	}
+
+BOOL CallerHelper::call(int val)
+	{
+	if (!handler) return FALSE;
+	PyObject *arglst = Py_BuildValue("(i)",val);
+	return do_call(arglst);
+	}
+
+BOOL CallerHelper::call(int val1, int val2)
+	{
+	if (!handler) return FALSE;
+	PyObject *arglst = Py_BuildValue("(ii)",val1, val2);
+	return do_call(arglst);
+	}
+
+BOOL CallerHelper::call(int val1, int val2, int val3)
+	{
+	if (!handler) return FALSE;
+	PyObject *arglst = Py_BuildValue("(iii)",val1, val2, val3);
+	return do_call(arglst);
+	}
+
+BOOL CallerHelper::call(long val)
+	{
+	if (!handler) return FALSE;
+	PyObject *arglst = Py_BuildValue("(l)",val);
+	return do_call(arglst);
+	}
+
+BOOL CallerHelper::call(const char *val)
+	{
+	if (!handler) return FALSE;
+	PyObject *arglst = Py_BuildValue("(z)",val);
+	return do_call(arglst);
+	}
+
+BOOL CallerHelper::call(const char *val, int ival)
+	{
+	if(!handler) return FALSE;
+	PyObject *arglst = Py_BuildValue("(zi)",val,ival);
+	return do_call(arglst);
+	}
+
+BOOL CallerHelper::call(PyObject *ob)
+	{
+	if (!handler) return FALSE;
+	if (!ob) ob=Py_None;
+	PyObject *arglst = Py_BuildValue("(O)",ob);
+	return do_call(arglst);
+	}
+
+BOOL CallerHelper::call(PyObject *ob, PyObject *ob2)
+	{
+	if (!handler) return FALSE;
+	if (!ob)ob=Py_None;
+	if (!ob2)ob2=Py_None;
+	PyObject *arglst = Py_BuildValue("(OO)",ob, ob2);
+	return do_call(arglst);
+	}
+
+BOOL CallerHelper::call(PyObject *ob, PyObject *ob2, int i)
+	{
+	if (!handler) return FALSE;
+	if (!ob)
+		ob=Py_None;
+	if (!ob2)
+		ob2=Py_None;
+	PyObject *arglst = Py_BuildValue("(OOi)",ob, ob2, i);
+	return do_call(arglst);
+	}
+
+BOOL CallerHelper::retnone()
+	{
+	ASSERT(retVal);
+	if (!retVal)
+		return FALSE;	// failed - assume didnt work in non debug
+	return (retVal==Py_None);
+	}
+
+BOOL CallerHelper::retval( int &ret )
+	{
+	ASSERT(retVal);
+	if (!retVal)
+		return FALSE;	// failed - assume didnt work in non debug
+	if (retVal==Py_None) 
+		{
+		ret = 0;
+		return TRUE;
+		}
+	CEnterLeavePython _celp;
+	ret = PyInt_AsLong(retVal);
+	return !PyErr_Occurred();
+	}
+
+BOOL CallerHelper::retval( long &ret )
+	{
+	ASSERT(retVal);
+	if (!retVal)
+		return FALSE;	// failed - assume didnt work in non debug
+	if (retVal==Py_None) 
+		{
+		ret = 0;
+		return TRUE;
+		}
+	CEnterLeavePython _celp;
+	ret = PyInt_AsLong(retVal);
+	if (PyErr_Occurred()) 
+		{
+		PyErr_Clear();
+		return FALSE;
+		}
+	return TRUE;
+	}
+
+BOOL CallerHelper::retval( char *&ret )
+	{
+	ASSERT(retVal);
+	if (!retVal)
+		return FALSE;	// failed - assume didnt work in non debug
+	if (retVal==Py_None) 
+		{
+		ret = NULL;
+		return TRUE;
+		}
+	CEnterLeavePython _celp;
+	ret = PyString_AsString(retVal);
+	if (PyErr_Occurred()) 
+		{
+		PyErr_Clear();
+		return FALSE;
+		}
+	return TRUE;
+	}
+
+BOOL CallerHelper::retval(string &ret)
+	{
+	ASSERT(retVal);
+	if (!retVal)
+		return FALSE;	// failed - assume didnt work in non debug
+	if (retVal==Py_None) 
+		{
+		ret="";
+		return TRUE;
+		}
+	CEnterLeavePython elp;
+	ret = PyString_AsString(retVal);
+	if (PyErr_Occurred()) 
+		{
+		PyErr_Clear();
+		return FALSE;
+		}
+	return TRUE;
+	}
+
+BOOL CallerHelper::retval(_object* &ret)
+	{
+	ASSERT(retVal);
+	if (!retVal)
+		return FALSE;	// failed - assume didnt work in non debug
+	CEnterLeavePython elp;
+	if (!PyArg_Parse(retVal, "O",&ret)) 
+		{
+		PyErr_Clear();
+		return FALSE;
+		}
+	return TRUE;
+	}
+
+void CallerHelper::print_error()
 	{
 	// basic recursion control.
 	static BOOL bInError = FALSE;
@@ -483,268 +522,6 @@ void print_error(void)
 
 	PyErr_Print();
 	bInError=FALSE;
-	}
-
-
-VirtualHelper::VirtualHelper(const char *iname, const void *iassoc)
-	{
-	handler=NULL;
-	py_ob = NULL;
-	retVal=NULL;
-	csHandlerName = iname;
-	AssocObject *py_bob = AssocObject::assocMgr.GetAssocObject( iassoc );
-	if(py_bob==NULL) return;
-	if (!py_bob->is_object(&AssocObject::type)) 
-		{
-		TRACE("VirtualHelper::VirtualHelper Error: Call object is not of required type\n");
-		return;
-		}
-	// ok - have the python data type - now see if it has an override.
-	if (py_bob->virtualInst) 
-		{
-		CEnterLeavePython elp;
-		PyObject *t, *v, *tb;
-		PyErr_Fetch(&t,&v,&tb);
-		handler = PyObject_GetAttrString(py_bob->virtualInst,(char*)iname);
-		if (handler) 
-			{
-			// explicitely check a method returned, else the classes
-			// delegation may cause a circular call chain.
-			if (!PyMethod_Check(handler)) 
-				{
-				if (!PyCFunction_Check(handler))
-					TRACE("Handler for object is not a method!\n");
-				DODECREF(handler);
-				handler = NULL;
-				}
-			}
-		PyErr_Restore(t,v,tb);
-		}
-	py_ob = py_bob;
-	Py_INCREF(py_ob);
-	//Py_XINCREF(handler);
-	}
-VirtualHelper::~VirtualHelper()
-	{
-	// XXX - Gross hack for speed.  This is called for eachh window message
-	// so only grabs the Python lock if the objects need Python,
-	if((retVal && retVal->ob_refcnt==1) || 
-		(handler && handler->ob_refcnt==1) || 
-		(py_ob && py_ob->ob_refcnt==1)) 
-		{
-		CEnterLeavePython _celp;
-		XDODECREF(retVal);
-		XDODECREF(handler);
-		XDODECREF(py_ob);
-		} 
-	else 
-		{
-		XDODECREF(retVal);
-		XDODECREF(handler);
-		XDODECREF(py_ob);
-		}
-	}
-PyObject *VirtualHelper::GetHandler()
-	{
-	return handler;
-	}
-BOOL VirtualHelper::do_call(PyObject *args)
-	{
-	CEnterLeavePython _celp;
-	XDODECREF(retVal);	// our old one.
-	retVal = NULL;
-	ASSERT(handler);	// caller must trap this.
-	ASSERT(args);
-	PyObject *result = call_object(handler,args);
-	DODECREF(args);
-	if (result==NULL) 
-		{
-		char msg[256];
-		TRACE("CallVirtual : callback failed with exception\n");
-		print_error();
-		PyObject *obRepr = PyObject_Repr(handler);
-		char *szRepr = PyString_AsString(obRepr);
-		sprintf(msg, "%s() virtual handler (%s) raised an exception",csHandlerName.c_str(), szRepr);
-		Py_XDECREF(obRepr);
-		PyErr_SetString(module_error, msg);
-		print_error();
-		return FALSE;
-		}
-	retVal = result;
-	return TRUE;
-	}
-
-BOOL VirtualHelper::call_args(PyObject *arglst)
-	{
-	if (!handler) return FALSE;
-	return do_call(arglst);
-	}
-
-BOOL VirtualHelper::call()
-	{
-	if (!handler) return FALSE;
-	PyObject *arglst = Py_BuildValue("()");
-	return do_call(arglst);
-	}
-
-BOOL VirtualHelper::call(int val)
-	{
-	if (!handler) return FALSE;
-	PyObject *arglst = Py_BuildValue("(i)",val);
-	return do_call(arglst);
-	}
-
-BOOL VirtualHelper::call(int val1, int val2, int val3)
-	{
-	if (!handler) return FALSE;
-	PyObject *arglst = Py_BuildValue("(iii)",val1, val2, val3);
-	return do_call(arglst);
-	}
-
-BOOL VirtualHelper::call(long val)
-	{
-	if (!handler) return FALSE;
-	PyObject *arglst = Py_BuildValue("(l)",val);
-	return do_call(arglst);
-	}
-
-BOOL VirtualHelper::call(const char *val)
-	{
-	if (!handler) return FALSE;
-	PyObject *arglst = Py_BuildValue("(z)",val);
-	return do_call(arglst);
-	}
-
-BOOL VirtualHelper::call(const char *val, int ival)
-	{
-	if(!handler) return FALSE;
-	PyObject *arglst = Py_BuildValue("(zi)",val,ival);
-	return do_call(arglst);
-	}
-
-BOOL VirtualHelper::call(PyObject *ob)
-	{
-	if (!handler) return FALSE;
-	if (!ob) ob=Py_None;
-	PyObject *arglst = Py_BuildValue("(O)",ob);
-	return do_call(arglst);
-	}
-
-BOOL VirtualHelper::call(PyObject *ob, PyObject *ob2)
-	{
-	if (!handler) return FALSE;
-	if (!ob)ob=Py_None;
-	if (!ob2)ob2=Py_None;
-	PyObject *arglst = Py_BuildValue("(OO)",ob, ob2);
-	return do_call(arglst);
-	}
-
-BOOL VirtualHelper::call(PyObject *ob, PyObject *ob2, int i)
-	{
-	if (!handler) return FALSE;
-	if (!ob)
-		ob=Py_None;
-	if (!ob2)
-		ob2=Py_None;
-	PyObject *arglst = Py_BuildValue("(OOi)",ob, ob2, i);
-	return do_call(arglst);
-	}
-
-BOOL VirtualHelper::retnone()
-	{
-	ASSERT(retVal);
-	if (!retVal)
-		return FALSE;	// failed - assume didnt work in non debug
-	return (retVal==Py_None);
-	}
-
-BOOL VirtualHelper::retval( int &ret )
-	{
-	ASSERT(retVal);
-	if (!retVal)
-		return FALSE;	// failed - assume didnt work in non debug
-	if (retVal==Py_None) 
-		{
-		ret = 0;
-		return TRUE;
-		}
-	CEnterLeavePython _celp;
-	ret = PyInt_AsLong(retVal);
-	return !PyErr_Occurred();
-	}
-
-BOOL VirtualHelper::retval( long &ret )
-	{
-	ASSERT(retVal);
-	if (!retVal)
-		return FALSE;	// failed - assume didnt work in non debug
-	if (retVal==Py_None) 
-		{
-		ret = 0;
-		return TRUE;
-		}
-	CEnterLeavePython _celp;
-	ret = PyInt_AsLong(retVal);
-	if (PyErr_Occurred()) 
-		{
-		PyErr_Clear();
-		return FALSE;
-		}
-	return TRUE;
-	}
-
-BOOL VirtualHelper::retval( char *&ret )
-	{
-	ASSERT(retVal);
-	if (!retVal)
-		return FALSE;	// failed - assume didnt work in non debug
-	if (retVal==Py_None) 
-		{
-		ret = NULL;
-		return TRUE;
-		}
-	CEnterLeavePython _celp;
-	ret = PyString_AsString(retVal);
-	if (PyErr_Occurred()) 
-		{
-		PyErr_Clear();
-		return FALSE;
-		}
-	return TRUE;
-	}
-
-BOOL VirtualHelper::retval(string &ret)
-	{
-	ASSERT(retVal);
-	if (!retVal)
-		return FALSE;	// failed - assume didnt work in non debug
-	if (retVal==Py_None) 
-		{
-		ret="";
-		return TRUE;
-		}
-	CEnterLeavePython elp;
-	ret = PyString_AsString(retVal);
-	if (PyErr_Occurred()) 
-		{
-		PyErr_Clear();
-		return FALSE;
-		}
-	return TRUE;
-	}
-
-BOOL VirtualHelper::retval(_object* &ret)
-	{
-	ASSERT(retVal);
-	if (!retVal)
-		return FALSE;	// failed - assume didnt work in non debug
-	CEnterLeavePython elp;
-	if (!PyArg_Parse(retVal, "O",&ret)) 
-		{
-		PyErr_Clear();
-		return FALSE;
-		}
-	return TRUE;
 	}
 
 
