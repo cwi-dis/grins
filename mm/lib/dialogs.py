@@ -213,3 +213,16 @@ def showquestion(text):
 		return 1
 	else:
 		return 0
+
+def multchoice(prompt, list, defindex):
+	args = (prompt,)
+	for ai in range(len(list)):
+		answer = list[ai]
+		if type(answer) == type(()):
+			answer = answer[0]
+		if ai == defindex:
+			answer = DEFBUTTON + answer
+		args = args + (answer,)
+	rv = apply(showdialog, args)
+	return rv
+		

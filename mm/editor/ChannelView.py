@@ -575,13 +575,13 @@ class ChannelView(ViewDialog, GLDialog):
 		editmgr = self.editmgr
 		if not editmgr.transaction():
 			return		# Not possible at this time
-		import multchoice
+		import dialogs
 		from ChannelMap import channeltypes
 		prompt = 'Channel type:'
 		list = channeltypes[:]
 		list.append('Cancel')
 		default = list.index('text')
-		i = multchoice.multchoice(prompt, list, default)
+		i = dialogs.multchoice(prompt, list, default)
 		if i+1 >= len(list):
 			editmgr.rollback()
 			return		# User doesn't want to choose a type

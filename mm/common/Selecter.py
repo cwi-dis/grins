@@ -362,8 +362,7 @@ def choosebagitem(node, interactive):
 		return None
 	list.append('Cancel')
 	prompt = 'Please select an item\nfrom the bag:'
-	import multchoice
-	choice = multchoice.multchoice(prompt, list, len(list) - 1)
+	choice = dialogs.multchoice(prompt, list, len(list) - 1)
 	if 0 <= choice < len(children):
 		return children[choice]
 	else:
