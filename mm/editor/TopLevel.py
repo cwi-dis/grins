@@ -301,6 +301,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					   '', self.export_html_okcallback, None)
 
 	def export_html_okcallback(self, filename):
+		smilurl = "test.smil" # XXXX
 		if not filename:
 			return 'no file specified'
 		self.setwaiting()
@@ -308,6 +309,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		attrs = self.context.attributes
 		if attrs.has_key('html_template_type'):
 			ttype = attrs['html_template_type']
+		# XXXX Apparently <meta> attributes are always read back as strings.
+		# This is a bug in SMILTreeRead, but not worth fixing right now.
+		if type(ttype) == type(''):
+			ttype = eval(ttype)
 		mkram = embed = embedlayout = 0
 		if ttype == 2:
 			mkram = 1
@@ -328,7 +333,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			pass
 		try:
 			import HTMLWrite
-			HTMLWrite.WriteFile(self.root, filename,
+			HTMLWrite.WriteFile(self.root, filename, smilurl,
 						embed=embed, embedlayout=embedlayout,
 						evallicense=evallicense)
 		except IOError, msg:
