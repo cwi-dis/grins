@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "comobj.h"
+#include "commod.h"
 
 #include "comlib/comstl.h"
 #include "comlib/comreg.h"
@@ -76,21 +77,22 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 
 
 	// Implemenation
-	GRiNSPlayerAuto(ComModule *pModule);
+	GRiNSPlayerAuto(GRiNSPlayerComModule *pModule);
 	~GRiNSPlayerAuto();
-	HWND getListener() {return *(HWND*)m_pModule->getContext();}
+	HWND getListener() {return m_pModule->getListenerHwnd();}
 	private:
 	long m_cRef;
-	ComModule *m_pModule;
+	GRiNSPlayerComModule *m_pModule;
 	HWND m_hWnd;
 	};
 
-HRESULT GetGRiNSPlayerAutoClassObject(IClassFactory** ppv, ComModule *pModule)
+HRESULT GetGRiNSPlayerAutoClassObject(IClassFactory** ppv, GRiNSPlayerComModule *pModule)
 	{
-	return ComCreator< ClassFactory<GRiNSPlayerAuto> >::CreateInstance(IID_IClassFactory, (void**)ppv, pModule);
+	typedef ClassFactory<GRiNSPlayerAuto, GRiNSPlayerComModule> Factory;
+	return ComCreator<Factory, GRiNSPlayerComModule>::CreateInstance(IID_IClassFactory, (void**)ppv, pModule);
 	}
 
-GRiNSPlayerAuto::GRiNSPlayerAuto(ComModule *pModule)
+GRiNSPlayerAuto::GRiNSPlayerAuto(GRiNSPlayerComModule *pModule)
 :	m_cRef(1), m_pModule(pModule), m_hWnd(0)
 	{
 	m_pModule->lock();
