@@ -10,11 +10,13 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "utils.h"
 
+
 PyObject* Wingdi_DeleteObject(PyObject *self, PyObject *args)
 {
-	HGDIOBJ hgdiobj;
-	if (!PyArg_ParseTuple(args, "i", &hgdiobj))
+	PyObject *obj;
+	if (!PyArg_ParseTuple(args, "O", &obj))
 		return NULL;
+	HGDIOBJ hgdiobj = (HGDIOBJ)GetGdiObjHandle(obj);
 	BOOL res = DeleteObject(hgdiobj);
 	if(!res){
 		seterror("DeleteObject", GetLastError());

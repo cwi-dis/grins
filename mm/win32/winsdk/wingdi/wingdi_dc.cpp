@@ -9,7 +9,9 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include "wingdi_dc.h"
 
 #include "utils.h"
+
 #include "wingdi_rgn.h"
+#include "wingdi_bmp.h"
 
 struct PyDC
 	{
@@ -19,20 +21,12 @@ struct PyDC
 	static PyTypeObject type;
 	static PyMethodDef methods[];
 
-	static PyDC *createInstance()
+	static PyDC *createInstance(HDC hDC=NULL)
 		{
 		PyDC *instance = PyObject_NEW(PyDC, &type);
 		if (instance == NULL) return NULL;
-		instance->m_hDC = NULL;
+		instance->m_hDC = hDC;
 		return instance;
-		}
-
-	static PyDC *createInstance(HDC hDC)
-		{
-		PyDC * p = createInstance();
-		if (p == NULL) return NULL;
-		p->m_hDC = hDC;
-		return p;
 		}
 
 	static void dealloc(PyDC *instance) 
@@ -645,6 +639,64 @@ PyDC_Ellipse(PyDC *self, PyObject *args)
 	return none();
 }
 
+static PyObject*
+PyDC_FillSolidRect(PyDC *self, PyObject *args)
+{
+	RECT rect;
+	COLORREF color;
+	if(!PyArg_ParseTuple(args, "(iiii)i", 
+			&rect.left, &rect.top, &rect.right, &rect.bottom, &color)) 
+		return NULL;
+	SetBkColor(self->m_hDC, color);
+	ExtTextOut(self->m_hDC, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
+	return none();
+}
+
+#ifdef _WIN32_WCE
+int wce_FrameRect(HDC hdc, const RECT* lprc, HBRUSH hbr)
+{
+  // Fill a "line-size" rectangle for each edge of the frame, using hbr
+  // Note that right/bottom borders not painted by FillRect (or FrameRect)
+  RECT rectEdge;	
+  if (SetRect(&rectEdge, lprc->left, lprc->top, lprc->right, 
+    lprc->top + 1) == FALSE) // Top edge of frame
+    return FALSE;
+  if (FillRect(hdc, &rectEdge, hbr) == FALSE)
+    return FALSE;
+  
+  if (SetRect(&rectEdge, lprc->right - 1, lprc->top, lprc->right, 
+    lprc->bottom) == FALSE) // Right edge of frame
+    return FALSE;
+  if (FillRect(hdc, &rectEdge, hbr) == FALSE)
+    return FALSE;
+  if (SetRect(&rectEdge, lprc->left, lprc->bottom - 1, lprc->right, 
+    lprc->bottom) == FALSE) // Bottom edge of frame
+    return FALSE;
+  if (FillRect(hdc, &rectEdge, hbr) == FALSE)
+    return FALSE;
+  if (SetRect(&rectEdge, lprc->left, lprc->top, lprc->left + 1, 
+    lprc->bottom) == FALSE) // Left edge of frame
+    return FALSE;
+  return FillRect(hdc, &rectEdge, hbr);
+}
+#endif
+
+static PyObject*
+PyDC_FrameRect(PyDC *self, PyObject *args)
+{
+	RECT rect;
+	HBRUSH hbr;
+	if(!PyArg_ParseTuple(args, "(iiii)i", 
+			&rect.left, &rect.top, &rect.right, &rect.bottom, &hbr)) 
+		return NULL;
+#ifdef _WIN32_WCE
+	wce_FrameRect(self->m_hDC, &rect, hbr);
+#else
+	FrameRect(self->m_hDC, &rect, hbr);
+#endif
+	return none();
+}
+
 #ifndef _WIN32_WCE
 static PyObject*
 PyDC_ArcTo(PyDC *self, PyObject *args)
@@ -870,9 +922,10 @@ PyDC_DrawText(PyDC *self, PyObject *args)
 static PyObject*
 PyDC_SelectObject(PyDC *self, PyObject *args)
 {
-	HGDIOBJ hgdiobj;
-	if (!PyArg_ParseTuple(args, "i", &hgdiobj))
+	PyObject *obj;;
+	if (!PyArg_ParseTuple(args, "O", &obj))
 		return NULL;
+	HGDIOBJ hgdiobj = (HGDIOBJ)GetGdiObjHandle(obj);
 	HGDIOBJ holdgdiobj = SelectObject(self->m_hDC, hgdiobj);
 	return Py_BuildValue("i", holdgdiobj);
 }
@@ -883,7 +936,7 @@ PyDC_SelectClipRgn(PyDC *self, PyObject *args)
 	PyObject *rgn;
 	if (!PyArg_ParseTuple(args, "O", &rgn))
 		return NULL;
-	int res = SelectClipRgn(self->m_hDC, GetHandleFromPyRgn(rgn));
+	int res = SelectClipRgn(self->m_hDC, (HRGN)GetGdiObjHandle(rgn));
 	return Py_BuildValue("i", res);
 }
 
@@ -894,7 +947,7 @@ PyDC_PaintRgn(PyDC *self, PyObject *args)
 	PyObject *rgn;
 	if (!PyArg_ParseTuple(args, "O", &rgn))
 		return NULL;
-	BOOL res = PaintRgn(self->m_hDC, GetHandleFromPyRgn(rgn));
+	BOOL res = PaintRgn(self->m_hDC, (HRGN)GetGdiObjHandle(rgn));
 	if(!res){
 		seterror("PaintRgn", GetLastError());
 		return NULL;
@@ -919,20 +972,99 @@ PyDC_PathToRegion(PyDC *self, PyObject *args)
 #endif
 
 static PyObject* PyDC_Detach(PyDC *self, PyObject *args)
-	{
+{
 	if(!PyArg_ParseTuple(args, ""))
 		return NULL;
 	HDC hDC = self->m_hDC;
 	self->m_hDC = NULL;
 	return Py_BuildValue("i", hDC);
-	}
+}
 
 static PyObject* PyDC_GetSafeHdc(PyDC *self, PyObject *args)
-	{ 
+{ 
 	if(!PyArg_ParseTuple(args, ""))
 		return NULL;
 	return Py_BuildValue("i", self->m_hDC);
+}
+
+static PyObject* PyDC_CreateCompatibleDC(PyDC *self, PyObject *args)
+{
+	if(!PyArg_ParseTuple(args, ""))
+		return NULL;
+	HDC hDC = CreateCompatibleDC(self->m_hDC);
+	if(hDC==0){
+		seterror("CreateCompatibleDC", GetLastError());
+		return NULL;
+		}
+	return (PyObject*)PyDC::createInstance(hDC);
+}
+
+PyObject* PyDC_CreateCompatibleBitmap(PyDC *self, PyObject *args)
+	{
+	int nWidth, nHeight;
+	if (!PyArg_ParseTuple(args, "ii", &nWidth, &nHeight))
+		return NULL;
+	HBITMAP hBmp = CreateCompatibleBitmap(self->m_hDC, nWidth, nHeight);
+	if(hBmp==NULL)
+		{
+		seterror("CreateCompatibleBitmap", GetLastError());
+		return NULL;
+		}
+	return CreateBitmapFromHandle(hBmp, nWidth, nHeight);
 	}
+
+static PyObject* PyDC_BitBlt(PyDC *self, PyObject *args)
+{
+	int nXDest, nYDest;
+	int nWidth, nHeight;
+	PyObject *obj;
+	int nXSrc = 0, nYSrc = 0;
+	DWORD dwRop = SRCCOPY;
+	if(!PyArg_ParseTuple(args, "(ii)(ii)O|(ii)i", 
+		&nXDest,&nYDest,&nWidth,&nHeight,&obj,&nXSrc,&nYSrc,&dwRop))
+		return NULL;
+	HDC hdcSrc = (HDC)GetGdiObjHandle(obj);
+	BOOL res = BitBlt(self->m_hDC,nXDest,nYDest,nWidth,nHeight,hdcSrc,nXSrc,nYSrc,dwRop);
+	if(!res){
+		seterror("BitBlt", GetLastError());
+		return NULL;
+		}
+	return none();
+}
+
+static PyObject* PyDC_StretchBlt(PyDC *self, PyObject *args)
+{
+	int nXDest, nYDest;
+	int nWidthDest, nHeightDest;
+	PyObject *obj;
+	int nXSrc = 0, nYSrc = 0;
+	int nWidthSrc, nHeightSrc;
+	DWORD dwRop = SRCCOPY;
+	if(!PyArg_ParseTuple(args, "(iiii)O(iiii)|i",
+		&nXDest,&nYDest,&nWidthDest,&nHeightDest,&obj,
+		&nXSrc,&nYSrc,&nWidthSrc,&nHeightSrc,dwRop))
+		return NULL;
+	HDC hdcSrc = (HDC)GetGdiObjHandle(obj);
+	BOOL res = StretchBlt(self->m_hDC,nXDest,nYDest,nWidthDest,nHeightDest,hdcSrc,nXSrc,nYSrc,nWidthSrc,nHeightSrc,dwRop);
+	if(!res){
+		seterror("StretchBlt", GetLastError());
+		return NULL;
+		}
+	return none();
+}
+
+static PyObject* PyDC_DeleteDC(PyDC *self, PyObject *args)
+{
+	if(!PyArg_ParseTuple(args, ""))
+		return NULL;
+	BOOL res = DeleteDC(self->m_hDC);
+	if(!res){
+		seterror("DeleteDC", GetLastError());
+		return NULL;
+		}
+	self->m_hDC = NULL;
+	return none();
+}
 
 PyMethodDef PyDC::methods[] = {
 #ifndef _WIN32_WCE
@@ -944,7 +1076,6 @@ PyMethodDef PyDC::methods[] = {
 	{"GetWindowExtEx", (PyCFunction)PyDC_GetWindowExtEx, METH_VARARGS, ""},
 	{"SetViewportExtEx", (PyCFunction)PyDC_SetViewportExtEx, METH_VARARGS, ""},
 	{"GetViewportExtEx", (PyCFunction)PyDC_GetViewportExtEx, METH_VARARGS, ""},
-	{"SetViewportOrgEx", (PyCFunction)PyDC_SetViewportOrgEx, METH_VARARGS, ""},
 	{"SetWindowOrg", (PyCFunction)PyDC_SetWindowOrg, METH_VARARGS, ""},
 	{"GetWindowOrg", (PyCFunction)PyDC_GetWindowOrg, METH_VARARGS, ""},
 	{"GetROP2", (PyCFunction)PyDC_GetROP2, METH_VARARGS, ""},
@@ -986,6 +1117,7 @@ PyMethodDef PyDC::methods[] = {
 	{"GetTextMetrics", (PyCFunction)PyDC_GetTextMetrics, METH_VARARGS, ""},
 	{"GetTextExtent", (PyCFunction)PyDC_GetTextExtent, METH_VARARGS, ""},
 
+	{"SetViewportOrgEx", (PyCFunction)PyDC_SetViewportOrgEx, METH_VARARGS, ""},
 
 	{"Rectangle", (PyCFunction)PyDC_Rectangle, METH_VARARGS, ""},
 	{"RoundRect", (PyCFunction)PyDC_RoundRect, METH_VARARGS, ""},
@@ -993,6 +1125,8 @@ PyMethodDef PyDC::methods[] = {
 	{"Polyline", (PyCFunction)PyDC_Polyline, METH_VARARGS, ""},
 	{"Polygon", (PyCFunction)PyDC_Polygon, METH_VARARGS, ""},
 	{"DrawText", (PyCFunction)PyDC_DrawText, METH_VARARGS, ""},
+	{"FillSolidRect", (PyCFunction)PyDC_FillSolidRect, METH_VARARGS, ""},
+	{"FrameRect", (PyCFunction)PyDC_FrameRect, METH_VARARGS, ""},
 
 	{"SelectObject", (PyCFunction)PyDC_SelectObject, METH_VARARGS, ""},
 	
@@ -1000,6 +1134,12 @@ PyMethodDef PyDC::methods[] = {
 
 	{"Detach", (PyCFunction)PyDC_Detach, METH_VARARGS, ""},
 	{"GetSafeHdc", (PyCFunction)PyDC_GetSafeHdc, METH_VARARGS, ""},
+
+	{"CreateCompatibleDC", (PyCFunction)PyDC_CreateCompatibleDC, METH_VARARGS, ""},
+	{"CreateCompatibleBitmap", (PyCFunction)PyDC_CreateCompatibleBitmap, METH_VARARGS, ""},
+	{"BitBlt", (PyCFunction)PyDC_BitBlt, METH_VARARGS, ""},
+	{"StretchBlt", (PyCFunction)PyDC_StretchBlt, METH_VARARGS, ""},
+	{"DeleteDC", (PyCFunction)PyDC_DeleteDC, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
 

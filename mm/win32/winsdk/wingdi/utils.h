@@ -9,6 +9,14 @@
 #include <windows.h>
 #endif
 
+inline char* toMB(char *p) {return p;}
+inline char* toMB(WCHAR *p)
+	{
+	static char buf[512];
+	WideCharToMultiByte(CP_ACP, 0, p, -1, buf, 512, NULL, NULL);		
+	return buf;
+	}
+
 extern PyObject *ErrorObject;
 
 inline PyObject* none() { Py_INCREF(Py_None); return Py_None;}
@@ -25,17 +33,17 @@ inline void seterror(const char *funcname, const char *msg)
 
 inline void seterror(const char *funcname, DWORD err)
 	{
-	char* pszmsg;
+	TCHAR *pszmsg;
 	FormatMessage( 
 		 FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 		 NULL,
 		 err,
 		 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-		 (LPTSTR) &pszmsg,
+		 (TCHAR *) &pszmsg,
 		 0,
 		 NULL 
 		);
-	PyErr_Format(ErrorObject, "%s failed, error = %x, %s", funcname, err, pszmsg);
+	PyErr_Format(ErrorObject, "%s failed, error = %x, %s", funcname, err, toMB(pszmsg));
 	LocalFree(pszmsg);
 	}
 
@@ -171,6 +179,14 @@ class PyDictParser
 	PyObject *m_pydict;
 	};
 
+inline HGDIOBJ GetGdiObjHandle(PyObject *obj)
+	{
+	if(PyInt_Check(obj))
+		return (HGDIOBJ)PyInt_AsLong(obj);
+	struct GdiObj { PyObject_HEAD; HGDIOBJ m_hGdiObj;};
+	return ((GdiObj*)obj)->m_hGdiObj;
+	}
+
 // For use from a single thread
 
 #ifdef UNICODE
@@ -203,13 +219,6 @@ inline char* toTEXT(WCHAR *p)
 
 #endif
 
-inline char* toMB(char *p) {return p;}
-inline char* toMB(WCHAR *p)
-	{
-	static char buf[512];
-	WideCharToMultiByte(CP_ACP, 0, p, -1, buf, 512, NULL, NULL);		
-	return buf;
-	}
 
 #endif
 
