@@ -1096,9 +1096,11 @@ class FileDialog:
 			directory = ' '
 		if prompt == None or prompt == '':
 			prompt=' '
-		import nturl2path
-		directory = nturl2path.url2pathname(directory)
-		file = nturl2path.url2pathname(file)
+## XXXX Note by Jack: I assume this code can be removed: file dialogs use local filename
+## XXXX conventions...
+##		import nturl2path
+##		directory = nturl2path.url2pathname(directory)
+##		file = nturl2path.url2pathname(file)
 		if existing == OPEN_FILE:
 			#id, flname, directory, fltr = cmifex2.CreateFileOpenDlg(prompt,file,directory,fltr)
 #			print 'GIVEN TO F DIALOG: ', file, '---', filter
