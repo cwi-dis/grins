@@ -322,6 +322,8 @@ def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 
 	# do encoding
 	mc = b.QueryIMediaControl()
+	mp = b.QueryIMediaPosition()
+	dur = int(1000*mp.GetDuration()+0.5) # dur in msec
 	mc.Run()
 	
 	import sys
@@ -329,16 +331,18 @@ def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		# remove messages in queue
 		# dispatch only paint message
 		import win32ui
-		win32ui.PumpWaitingMessages()
-		i = 0
+		import windowinterface
+		win32ui.PumpWaitingMessages(0,0)
+		windowinterface.setwaiting()
 		while b.WaitForCompletion(0)==0:
-			if progress and (i % 100) == 0:
-				# XXX 30000 is certainly not correct
-				apply(progress[0], progress[1] + (i, 30000))
-			i = i + 1
-			win32ui.PumpWaitingMessages()
+			now=int(1000*mp.GetCurrentPosition()+0.5)
+			if progress:
+				apply(progress[0], progress[1] + (now, dur))
+			win32ui.PumpWaitingMessages(0,0)
+			windowinterface.setwaiting()
 		mc.Stop()
-		win32ui.PumpWaitingMessages()
+		win32ui.PumpWaitingMessages(0,0)
+		windowinterface.setready()
 	else:
 		b.WaitForCompletion()
 		mc.Stop()
