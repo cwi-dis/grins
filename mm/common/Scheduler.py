@@ -497,7 +497,8 @@ class SchedulerContext:
 				pnode = node.GetSchedParent()
 				if pnode is not None and \
 				   pnode.type == 'excl' and \
-				   pnode.pausestack:
+				   pnode.pausestack and \
+				   node not in pnode.pausestack:
 					nnode = pnode.pausestack[0]
 					del pnode.pausestack[0]
 					self.do_terminate(node, timestamp)
@@ -587,8 +588,6 @@ class SchedulerContext:
 						if not parent.playing:
 							return
 					elif action == 'never':
-						print arc
-						print deparcs
 						if arc is not None:
 							self.cancelarc(arc, timestamp)
 							for a in deparcs:
@@ -924,11 +923,12 @@ class SchedulerContext:
 
 	def do_resume(self, node, timestamp):
 		if debugevents: print 'resume',node,timestamp,self.parent.timefunc()
-		for arc in node.durarcs:
-			if arc.qid is None:
-				arc.qid = self.parent.enterabs(timestamp + arc.paused, 0, self.trigger, (arc,))
-				arc.timestamp = timestamp + arc.paused
-				del arc.paused
+		if node.playing != MMStates.FROZEN:
+			for arc in node.durarcs:
+				if arc.qid is None:
+					arc.qid = self.parent.enterabs(timestamp + arc.paused, 0, self.trigger, (arc,))
+					arc.timestamp = timestamp + arc.paused
+					del arc.paused
 		ev = (SR.SCHED, node)
 		if self.srdict.has_key(ev):
 			node.start_time = timestamp
