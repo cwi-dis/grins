@@ -8,29 +8,25 @@ Module msvcrt.dll loaded
 Module msvcrt.dll version: 6.0.8337.0
 
 Module comdlg32.dll loaded
-Module comdlg32.dll version: 4.0.1381.27
+Module comdlg32.dll version: 4.0.1381.4
 
 Module msvcrt40.dll loaded
 Module msvcrt40.dll version: 4.2000.0.6172
 
 Module oleaut32.dll loaded
-Module oleaut32.dll version: 2.40.4275.1
+Module oleaut32.dll version: 2.40.4268.1
 
 Module ole32.dll loaded
-Module ole32.dll version: 4.0.1381.117
+Module ole32.dll version: 4.0.1381.4
 
-Module msdxm.ocx loaded
-Module msdxm.ocx version: 6.2.5.410
-
+Module msdxm.ocx failed to load
 Module shdocvw.dll loaded
-Module shdocvw.dll version: 5.0.2314.1000
+Module shdocvw.dll version: 4.72.3110.3
 
-Registry key SOFTWARE\MICROSOFT\MediaPlayer opened.
-Registry key SOFTWARE\MICROSOFT\MediaPlayer\Setup opened.
-SetupVersion: 6.2
-
+Registry key SOFTWARE\MICROSOFT\MediaPlayer failed to open.
+Registry key SOFTWARE\MICROSOFT\MediaPlayer\Setup failed to open
 Registry key SOFTWARE\MICROSOFT\Internet Explorer opened.
-Version: 5.00.2314.1003
+Version: 4.72.3110.8
 
 Registry key Webster.WebsterPro.1 opened.
 Default: Webster Pro Control
