@@ -1,3 +1,17 @@
+__version__ = "$Id$"
+
+""" @win32doc|DrawTk
+A general and extensible win32 drawing toolkit
+In its current version although it has a general
+and extensible structure the tools and the objects 
+implemeted support only drawing/resizing/selecting rectangles
+needed by the cmif application
+The base classes defined in this module are the DrawTool,and DrawObj.
+The SelectTool and the RectTool are extensions to the DrawTool
+The DrawRect is one extension to the DrawObj
+The DrawTk is a utility class 
+The DrawLayer is a mixin class for windows that want to offer drawing facilities
+"""
 
 # Win32 Drawing Toolkit
 
@@ -13,6 +27,7 @@ from win32mu import Point,Size,Rect # shorcuts
 drawTk = None 
 
 ################################# DrawTool
+# base class for drawing tools
 class DrawTool:
 	def __init__(self,toolType):
 		self._toolType=toolType
@@ -36,9 +51,7 @@ class DrawTool:
 		cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
 		drawTk.SetCursor(view,cursor)
 
-	def onEditProperties(self,view):
-		pass
-
+	# Cancel drawing
 	def onCancel(self):
 		drawTk.currentToolType = TOOL_SELECT
 
@@ -170,10 +183,6 @@ class SelectTool(DrawTool):
 		if drawTk.currentToolType == DrawTk.TOOL_SELECT:
 			DrawTool.onMouseMove(self,view,flags,point)
 
-	def onEditProperties(self,view):
-		if len(view._selection) == 1:
-			view._selection[0].onEditProperties()
-
 
 class RectTool(DrawTool):
 	def __init__(self):
@@ -221,13 +230,15 @@ class DrawObj:
 	def __del__(self):
 		# release resources
 		pass
-
+	# Return the number if handles 
 	def getHandleCount(self):
 		return 8
 
+	# Return the bounding box
 	def getbbox(self):
 		return self._position.tuple()
 
+	# Return the handle at index
 	def getHandle(self,ix):
 		"""returns logical coords of center of handle"""
 	
@@ -263,6 +274,7 @@ class DrawObj:
 			raise error, 'invalid handle'
 		return Point((x, y))
 
+	# Return handle's rectangle
 	def getHandleRect(self,ix,view):
 		"""return rectange of handle in logical coords"""
 		if not view: return
@@ -275,6 +287,7 @@ class DrawObj:
 		rect=Rect((point.x-3, point.y-3, point.x+3, point.y+3))
 		return view.ClientToCanvasRect(rect)
 
+	# Return the appropriate for the handle cursor
 	def getHandleCursor(self,ix):
 		if   ix==1 or ix==5:id = win32con.IDC_SIZENWSE
 		elif ix==2 or ix==6:id = win32con.IDC_SIZENS
@@ -295,6 +308,7 @@ class DrawObj:
 		# will be overwritten
 		pass
 
+	# Draw a small trag rect for each handle
 	def drawTracker(self,dc,trackerState):
 		if trackerState==DrawObj.normal:
 			pass
@@ -317,7 +331,7 @@ class DrawObj:
 			self._position.setToRect(position)
 			view.InvalObj(self)
 
-	
+	# Returns true if the point is within the object
 	def hitTest(self,point,view,is_selected):
 		"""
 		Note: if isselected, hit-codes start at one for the top-left
@@ -338,6 +352,7 @@ class DrawObj:
 			if self._position.isPtInRect(point):return 1
 		return 0
 
+	# Returns true if the rect intersects the object
 	def intersects(self,rect):
 		"""rect must be in logical coordinates"""
 		rect.normalizeRect()
@@ -375,14 +390,6 @@ class DrawObj:
 	def invalidate(self):
 		self.UpdateObj(DrawTk.HINT_UPDATE_DRAWOBJ,self)
 
-	def onOpen(self,view):
-		self.onEditProperties()
-	def onEditProperties(self):
-		# popup property sheed
-		# for editing pen and brush attributes
-		win32ui.MessageBox('Shape Properties dlg not implemented')
-		self.invalidate()
-
 	def clone(self,context=None):
 		clone = DrawObj(self._position)
 		clone._pen = self._pen
@@ -394,6 +401,7 @@ class DrawObj:
 	# class attributes
 	[normal, selected, active]=range(3)
 
+# A rectangle drawing tool
 
 class DrawRect(DrawObj):
 	def __init__(self,pos):
@@ -440,6 +448,8 @@ class DrawRect(DrawObj):
 		rc_client=Rect(self._context._views[0].GetClientRect())
 		x,y,w,h= drawTk.ToRelCoord(self._position,rc_client)
 		return float(x)/100.0,float(y)/100.0,float(w)/100.0,float(h)/100.0
+
+# Context class for draw toolkit
 
 class DrawTk:
 	# supported tools
@@ -505,7 +515,6 @@ class DrawTk:
 				self.currentToolType=DrawTk.TOOL_RECT
 			else:
 				self.currentToolType=DrawTk.TOOL_SELECT
-	
 	def LimitRects(self,num):
 		self._limit_rect=num
 	def OnNewRect(self,view):
@@ -524,6 +533,7 @@ class DrawTk:
 	def SetRelCoordRef(self,wnd):
 		self._rel_coord_ref=wnd
 
+	# Convert to relative coordinates
 	def ToRelCoord(self,rc,rcref):
 		x=int(100.0*float(rc.left)/rcref.width()+0.5)
 		y=int(100.0*float(rc.top)/rcref.height()+0.5)
@@ -567,7 +577,7 @@ class DrawLayer:
 		else:
 			self.InvalidateRect()
 
-	# Draw support
+	# Convert coordinates CanvasToClient
 	def CanvasToClient(self,point):
 		dc=self.GetDC()
 		#self.OnPrepareDC(dc)
@@ -575,6 +585,7 @@ class DrawLayer:
 		self.ReleaseDC(dc)
 		return Point(point)
 
+	# Convert coordinates CanvasToClient Rect
 	def CanvasToClientRect(self,rect):
 		dc=self.GetDC()
 		#self.OnPrepareDC(dc)
@@ -584,6 +595,7 @@ class DrawLayer:
 		return Rect((pos[0],pos[1],rb_pos[0],rb_pos[1]))
 
 
+	# Convert coordinates ClientToCanvas
 	def ClientToCanvas(self,point):
 		dc=self.GetDC()
 		#self.OnPrepareDC(dc)
@@ -591,6 +603,7 @@ class DrawLayer:
 		self.ReleaseDC(dc)
 		return Point(point)
 
+	# Convert coordinates ClientToCanvas rect
 	def ClientToCanvasRect(self,rect):
 		dc=self.GetDC()
 		#self.OnPrepareDC(dc)
@@ -599,6 +612,7 @@ class DrawLayer:
 		self.ReleaseDC(dc)
 		return Rect((pos[0],pos[1],rb_pos[0],rb_pos[1]))
 
+	# Select the object
 	def Select(self,drawObj,add = 0):
 		if not add:
 			self.OnUpdate(None,DrawTk.HINT_UPDATE_SELECTION,None)
@@ -610,6 +624,7 @@ class DrawLayer:
 		#drawObj.select(1)
 		self.InvalObj(drawObj)
 
+	# Select objects within rect
 	def SelectWithinRect(self,rect,add = 0):
 		"""rect is in device coordinates"""
 		if not add:
@@ -718,6 +733,7 @@ class DrawLayer:
 		if drawTool:
 			drawTool.onMouseMove(self,flags,point)
 
+	# Called when the activation changes
 	def OnActivateView(self,activate,activeView,deactiveView):
 		self._obj_.OnActivateView(activate,activeView,deactiveView)
 		if self._active != activate:
@@ -730,6 +746,7 @@ class DrawLayer:
 	def onSize(self,params):
 		pass
 
+	# An optimized Drawing function while using the toolkit
 	def DrawObjLayer(self,dc):
 		# only paint the rect that needs repainting
 		rect=self.CanvasToClientRect(Rect(dc.GetClipBox()))
@@ -741,7 +758,7 @@ class DrawLayer:
 		bmp=win32ui.CreateBitmap()
 		bmp.CreateCompatibleBitmap(dc,rect.width(),rect.height())
 		
-		self.OnPrepareDC(dcc)
+		#self.OnPrepareDC(dcc)
 		
 		# offset origin more because bitmap is just piece of the whole drawing
 		dcc.OffsetViewportOrg((-rect.left, -rect.top))
@@ -750,13 +767,17 @@ class DrawLayer:
 		dcc.IntersectClipRect(rect.tuple())
 
 		# background decoration on dcc
-		dcc.FillSolidRect(rect.tuple(),win32mu.RGB((255,255,255)))
-		# DrawGrid(dcc)
+		#dcc.FillSolidRect(rect.tuple(),win32mu.RGB((228,255,228)))
+		dcc.FillSolidRect(rect.tuple(),win32mu.RGB(self._active_displist._bgcolor))
 
 		# draw objects on dcc
 		if self._active_displist:
-			self._active_displist._render(dcc,rect.tuple(),1)
+			self._active_displist._render(dcc,rect.tuple())
 		self.DrawObjectsOn(dcc)
+
+		# show draw area
+		l,t,w,h=self._canvas
+		win32mu.FrameRect(dcc,(l,t,l+w,t+h),(255,0,0))
 
 		# copy bitmap
 		dc.SetViewportOrg((0, 0))
@@ -771,6 +792,7 @@ class DrawLayer:
 		dcc.SelectObject(oldBitmap)
 		dcc.DeleteDC() # needed?
 		del bmp
+
 
 
 	# Context behaviour

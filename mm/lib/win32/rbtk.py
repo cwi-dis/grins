@@ -1,4 +1,9 @@
+__version__ = "$Id$"
+
 # rbtk: rb toolkit
+
+# This module contains the interface functions 
+# between a window and the draw toolkit
 
 
 _rb_message = """\
@@ -9,7 +14,7 @@ _rb_done = '_rb_done' # exception to stop create_box loop
 import components
 import DrawTk
 from win32mu import Point,Rect
-import win32ui,win32con
+import win32ui,win32con,win32api
 import __main__
 
 
@@ -17,7 +22,10 @@ class _rbtk:
 	def __init__(self):
 		self._next_create_box = []
 
+	# Called by the core system to create or resize a box
 	def create_box(self, msg, callback, box = None):
+		#print "Creating box in:",self._title
+		#print 'active_displist=',self._active_displist
 
 		# if we are in create box mode, queue request
 		if self.in_create_box_mode():
@@ -31,8 +39,9 @@ class _rbtk:
 
 		# set application in create box mode
 		self.set_create_box_mode(self)
-		self.pop()
+		self.pop() # bring to top
 	
+
 		# set rel coord reference
 		DrawTk.drawTk.SetRelCoordRef(self)
 		
@@ -46,8 +55,9 @@ class _rbtk:
 			d = self.newdisplaylist()
 
 		# indicate drawing canvas
-		canvas_color=(228,255,228)
-		d.drawfbox(canvas_color,(0,0,1,1))
+		#canvas_color=(228,255,228)
+		#d.drawfbox(canvas_color,(0,0,1,1))
+		d.drawbox((0.01,0.01,0.99,0.99))
 
 		# frame subwindows (fill them?)
 		sw = self._subwindows[:]
@@ -56,7 +66,7 @@ class _rbtk:
 			b=win.getsizes()
 			#d.drawfbox(win._bgcolor,b)
 			d.drawbox(b)
-			win.ShowWindow(win32con.SW_HIDE)
+		self._topwindow.ShowWindows(win32con.SW_HIDE)
 
 		d.fgcolor((255, 0, 0))
 		if box:
@@ -85,6 +95,9 @@ class _rbtk:
 		components.CreateBoxBar(f,msg,
 			callback = (self.EndModalLoop, (win32con.IDOK,)),
 			cancelCallback = (self.EndModalLoop, (win32con.IDCANCEL,)))	
+	
+		# clip cursor
+		#win32api.ClipCursor(self.GetWindowRect())
 		
 		# loop here dispatching messages until user
 		# selects OK or CANCEL
@@ -97,8 +110,7 @@ class _rbtk:
 		self.set_create_box_mode(None)
 		
 		# 2. restore wnds state
-		for w in self._subwindows:
-			w.ShowWindow(win32con.SW_SHOW)
+		self._topwindow.ShowWindows(win32con.SW_SHOW)
 
 		# 3. restore display list
 		if self._rb_dl and not self._rb_dl.is_closed():
@@ -125,6 +137,7 @@ class _rbtk:
 		for win, msg, cb, box in next_create_box:
 			win.create_box(msg, cb, box)
 
+	# Notify the toolkit about mouse and paint messages
 	def notifyListener(self,key,params):
 		if not self.in_create_box_mode(): return 0
 		if key=='onLButtonDown':DrawTk.DrawLayer.onLButtonDown(self,params)
@@ -133,9 +146,11 @@ class _rbtk:
 		elif key=='OnDraw':DrawTk.DrawLayer.DrawObjLayer(self,params)
 		return 1
 
+	# returns true if we are in create box mode 
 	def in_create_box_mode(self):
 		return __main__.toplevel._in_create_box
 
+	# Set/remove create box mode
 	def set_create_box_mode(self,f):
 		if f:
 			__main__.toplevel._in_create_box=self
@@ -144,14 +159,13 @@ class _rbtk:
 			__main__.toplevel._in_create_box=None
 			self.setScrollMode(0) ## RESIZE ALLOWED
 
+	# returns the modal window while in create box mode
 	def get_box_modal_wnd(self):
 		return __main__.toplevel._in_create_box
 
-	def OnNCHitTest_X(self,params):
-		if not self._create_box_dlg: return
-		msg=win32mu.Win32Msg(params)
-		pt=win32mu.Point(msg.pos())
-		if self._create_box_dlg:
-			rc=win32mu.Rect(self._create_box_dlg.GetWindowRect())
-			if rc.isPtInRect(pt):
-				self.ReleaseCapture()
+	# Hide/Show all windows except self.
+	def ShowWindows(self,f):
+		if self.get_box_modal_wnd()!=self and self._topwindow!=self:
+			self.ShowWindow(f)
+		for w in self._subwindows:
+			w.ShowWindows(f)
