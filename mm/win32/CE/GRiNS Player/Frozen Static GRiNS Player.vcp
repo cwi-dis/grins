@@ -422,8 +422,10 @@ DEP_CPP_GRINS=\
 	".\pfc\app_wndproc.h"\
 	".\pfc\ttl.h"\
 	".\StdAfx.h"\
-	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_GRINS=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
@@ -528,8 +530,10 @@ DEP_CPP_GRINS=\
 	".\pfc\app_wndproc.h"\
 	".\pfc\ttl.h"\
 	".\StdAfx.h"\
-	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_GRINS=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
@@ -1143,8 +1147,10 @@ DEP_CPP_APP_W=\
 	"..\..\winsdk\common\charconv.h"\
 	".\pfc\app_wnd.h"\
 	".\pfc\pyinterface.h"\
-	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_APP_W=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
@@ -1243,8 +1249,10 @@ DEP_CPP_APP_W=\
 	"..\..\winsdk\common\charconv.h"\
 	".\pfc\app_wnd.h"\
 	".\pfc\pyinterface.h"\
-	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_APP_W=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"

@@ -77,6 +77,15 @@ MODULES = {
 	'IntegrationSet': 0,
 }
 
+SMIL_MMS_MODULES = [
+	'BasicInlineTiming',
+	'BasicLayout',
+	'BasicMedia',
+	'BasicTimeContainers',
+	'Structure',
+	'Metainformation',
+	]
+
 # All modules that are part of the SMIL 2.0 Basic Language Profile.
 SMIL_BASIC_MODULES = [
 	# SMIL 2.0 Modules
@@ -166,6 +175,8 @@ def switch_profile(modulelist):
 			name = '3GPP PSS4 Profile'
 		elif modulelist is SMIL_BASIC_MODULES:
 			name = 'SMIL 2.0 Basic Language Profile'
+		elif modulelist is SMIL_MMS_MODULES:
+			name = 'SMIL MMS Profile'
 		else:
 			name = 'Unknown profile'
 		print 'switching profile',name
