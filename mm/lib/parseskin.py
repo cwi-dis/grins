@@ -12,6 +12,8 @@ error = 'parseskin.error'
 #
 # "image"	URL of image file (relative to skin definition file)
 # "display"	4 numbers giving x, y, width, height
+# "components"	URL of file containing recognized systemComponents URIs
+#		(relative to skin definition file)
 # "key"		key shape coordinates
 # command	shape coordinates
 #
@@ -20,7 +22,7 @@ error = 'parseskin.error'
 # quotes, eitherwise quotes are optional.  Use ' to quote " and v.v.
 #
 # The possible commands are:
-# "play", "stop", "open", "exit".
+# "open", "play", "pause", "stop", "exit".
 #
 # The possible shapes and coordinates are:
 # "rect" with 4 numbers giving x, y, width, and height;
@@ -54,48 +56,20 @@ def parsegskin(file):
 		if len(line) == 1:
 			raise error, 'syntax error in skin on line %d' % lineno
 		cmd, rest = line
-		if cmd == 'image':
+		if cmd in ('image', 'components'):
 			dict[cmd] = rest.strip()
-		else:
-			if cmd == 'key':
-				quote = None
-				backslash = 0
-				key = None
-				rest = list(rest) # easier to manipiulate list
-				while rest:
-					c = rest[0]
-					del rest[0]
-					if quote is not None:
-						if c == quote:
-							quote = None
-						elif backslash:
-							if key is None:
-								if c == '\\':
-									key = '\\'
-								elif c == 'r':
-									key = '\r'
-								elif c == 't':
-									key = '\t'
-								elif c == 'n':
-									key = '\n'
-								elif c == 'b':
-									key = '\b'
-								else:
-									key = c
-							else:
-								raise error, 'syntax error in skin on line %d: only single character allowed for key' % lineno
-							backslash = 0
-						elif c == '\\':
-							backslash = 1
-						elif key is None:
-							key = c
-						else:
-							raise error, 'syntax error in skin on line %d: only single character allowed for key' % lineno
-					elif c == '"' or c == "'":
-						quote = c
-					elif c in string.whitespace:
-						if key is not None:
-							break
+			continue
+		if cmd == 'key':
+			quote = None
+			backslash = 0
+			key = None
+			rest = list(rest) # easier to manipiulate list
+			while rest:
+				c = rest[0]
+				del rest[0]
+				if quote is not None:
+					if c == quote:
+						quote = None
 					elif backslash:
 						if key is None:
 							if c == '\\':
@@ -119,30 +93,58 @@ def parsegskin(file):
 						key = c
 					else:
 						raise error, 'syntax error in skin on line %d: only single character allowed for key' % lineno
-				if key is None:
-					raise error, 'syntax error in skin on line %d: no key specified' % lineno
-				rest = ''.join(rest) # reassemble string
-			coords = rest.split()
-			if cmd == 'display':
-				# display area is always rectangular
-				shape = 'rect'
-			else:
-				shape = coords[0]
-				del coords[0]
-			try:
-				coords = map(lambda v: int(v, 0), coords)
-			except ValueError:
-				raise error, 'syntax error in skin on line %d' % lineno
-			if shape == 'poly' and coords[:2] == coords[-2:]:
-				del coords[-2:]
-			if (shape != 'rect' or len(coords) != 4) and \
-			   (shape != 'circle' or len(coords) != 3) and \
-			   (shape != 'poly' or len(coords) < 6 or len(coords) % 2 != 0):
-				raise error, 'syntax error in skin on line %d' % lineno
-			if cmd == 'key':
-				dict[cmd] = shape, coords, key
-			else:
-				dict[cmd] = shape, coords
+				elif c == '"' or c == "'":
+					quote = c
+				elif c in string.whitespace:
+					if key is not None:
+						break
+				elif backslash:
+					if key is None:
+						if c == '\\':
+							key = '\\'
+						elif c == 'r':
+							key = '\r'
+						elif c == 't':
+							key = '\t'
+						elif c == 'n':
+							key = '\n'
+						elif c == 'b':
+							key = '\b'
+						else:
+							key = c
+					else:
+						raise error, 'syntax error in skin on line %d: only single character allowed for key' % lineno
+					backslash = 0
+				elif c == '\\':
+					backslash = 1
+				elif key is None:
+					key = c
+				else:
+					raise error, 'syntax error in skin on line %d: only single character allowed for key' % lineno
+			if key is None:
+				raise error, 'syntax error in skin on line %d: no key specified' % lineno
+			rest = ''.join(rest) # reassemble string
+		coords = rest.split()
+		if cmd == 'display':
+			# display area is always rectangular
+			shape = 'rect'
+		else:
+			shape = coords[0]
+			del coords[0]
+		try:
+			coords = map(lambda v: int(v, 0), coords)
+		except ValueError:
+			raise error, 'syntax error in skin on line %d' % lineno
+		if shape == 'poly' and coords[:2] == coords[-2:]:
+			del coords[-2:]
+		if (shape != 'rect' or len(coords) != 4) and \
+		   (shape != 'circle' or len(coords) != 3) and \
+		   (shape != 'poly' or len(coords) < 6 or len(coords) % 2 != 0):
+			raise error, 'syntax error in skin on line %d' % lineno
+		if cmd == 'key':
+			dict[cmd] = shape, coords, key
+		else:
+			dict[cmd] = shape, coords
 	if not dict.has_key('image'):
 		raise error, 'image missing from skin description file'
 	if not dict.has_key('display'):
