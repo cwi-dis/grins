@@ -1,5 +1,4 @@
 __version__ = "$Id$"
-# XXXX clip_begin and clip_end not yet implemented
 from Channel import ChannelWindowAsync, CMIF_MODE, SourceAnchors, PLAYING
 import windowinterface
 import time
@@ -32,7 +31,6 @@ class VideoChannel(ChannelWindowAsync):
 		if debug: print 'VideoChannel: init', name
 		self.arm_movie = None
 		self.play_movie = None
-		self.arm_loop = -1
 		self.play_loop = -1
 		self.has_callback = 0
 		self.idleprocactive = 0
@@ -41,6 +39,8 @@ class VideoChannel(ChannelWindowAsync):
 			Qt.EnterMovies()
 		self.DBGcolor = (0xffff, 0, 0)
 		self.__rc = None
+		self.__extra_end_delay = 0
+		self.__qid = None
 		
 	def do_show(self, pchan):
 		if not ChannelWindowAsync.do_show(self, pchan):
@@ -105,9 +105,6 @@ class VideoChannel(ChannelWindowAsync):
 				arg = arg[-1]
 			self.errormsg(node, 'QuickTime cannot parse %s: %s'%(fn, arg))
 			return 1
-		self.__begin = self.getclipbegin(node, 'sec')
-		self.__end = self.getclipend(node, 'sec')
-		self.arm_loop = self.getloop(node)
 		self.place_movie(node, self.arm_movie)
 ##		self.make_ready(self.arm_movie)
 		self.__ready = 1
@@ -115,24 +112,37 @@ class VideoChannel(ChannelWindowAsync):
 		
 	def make_ready(self, movie, node):
 		# First convert begin/end to movie times
+		clipbegin = self.getclipbegin(node, 'sec')
+		clipend = self.getclipend(node, 'sec')
+		clipdur = node.GetAttrDef('duration', None)
+		if clipdur is not None:
+			if not clipend or (clipbegin or 0) + clipdur < clipend:
+				clipend = (clipbegin or 0) + clipdur
 		dummy, (value, tbrate, base) = movie.GetMovieTime()
-		if self.__begin:
-			begin = self.__begin*tbrate
+		movie_end = movie.GetMovieDuration()
+		self.__extra_end_delay = 0
+		if clipbegin:
+			begin = clipbegin*tbrate
 		else:
 			begin = 0
+		if clipend:
+			end = clipend*tbrate
+			if end > movie_end:
+				self.__extra_end_delay = (end-movie_end) / tbrate
+				end = movie_end
+			dur = end - begin
+		else:
+			end = movie_end
+			dur = end - begin
 		t0 = self._scheduler.timefunc()
 		if t0 > node.start_time:
 			extra_delay = (t0-node.start_time)*tbrate
 		else:
 			extra_delay = 0
-		if self.__end:
-			end = self.__end*tbrate
-			dur = end - begin
-		else:
-			end = movie.GetMovieDuration()
-			dur = end - begin
-		print "DBG: movie Rate, begin, extradelay, dur, end", tbrate, begin, extra_delay, dur, end
-		print "DBG: t0, start_time", t0, node.start_time
+		if debug: print "DBG: movie Rate, end,", tbrate, movie_end
+		if debug: print "DBG: clip begin, end, dur", clipbegin, clipend, clipdur
+		if debug: print "DBG: result begin, end, dur", begin, end, dur
+		if debug: print "DBG: extra_delay, extra_end_delay", extra_delay, self.__extra_end_delay
 		# Next preroll
 		rate = movie.GetMoviePreferredRate()
 		movie.PrerollMovie(begin, rate)
@@ -140,6 +150,9 @@ class VideoChannel(ChannelWindowAsync):
 		movie.SetMovieActiveSegment(begin, dur)
 		# And go to the beginning of it.
 ##		movie.GoToBeginningOfMovie()
+		if extra_delay >= dur:
+			# XXX Wrong. We should also eat into any subsequent iterations
+			extra_delay = dur-1
 		movie.SetMovieTimeValue(extra_delay)
 ##		movie.MoviesTask(0)  
 	
@@ -160,8 +173,8 @@ class VideoChannel(ChannelWindowAsync):
 		# Compute real scale for scale-to-fit
 		if scale <= 0:
 			sl, st, sr, sb = screenBox
-			print 'movie', l, t, r, b
-			print 'screen', sl, st, sr, sb
+			if debug: print 'movie', l, t, r, b
+			if debug: print 'screen', sl, st, sr, sb
 			if l == r:
 				maxxscale = 1  # Empty window, so don't divide by 0
 			else:
@@ -171,16 +184,16 @@ class VideoChannel(ChannelWindowAsync):
 			else:
 				maxyscale = float(sb-st)/(b-t)
 			scale = min(maxxscale, maxyscale)
-			print 'scale=', scale, maxxscale, maxyscale
+			if debug: print 'scale=', scale, maxxscale, maxyscale
 				
 		movieBox = l, t, int(l+(r-l)*scale), int(t+(b-t)*scale)
 		nMovieBox = self._scalerect(screenBox, movieBox, center)
 		movie.SetMovieBox(nMovieBox)
 		movie.SetMovieDisplayClipRgn(screenClip)
-		print 'placed movie'
+		if debug: print 'placed movie'
 		
 	def oswindowchanged(self, *args):
-		print 'oswindowchanged'
+		if debug: print 'oswindowchanged'
 		self.window._mac_setwin()
 		grafport = self.window._mac_getoswindowport()
 		if self.arm_movie:
@@ -189,7 +202,7 @@ class VideoChannel(ChannelWindowAsync):
 			self.play_movie.SetMovieGWorld(grafport, None)
 			
 	def resize(self, arg, window, event, value):
-		print 'resize'
+		if debug: print 'resize'
 		ChannelWindowAsync.resize(self, arg, window, event, value)
 		if self.arm_movie:
 			self.place_movie(None, self.arm_movie)
@@ -198,7 +211,7 @@ class VideoChannel(ChannelWindowAsync):
 			self.window._mac_setredrawguarantee(self.play_movie.GetMovieBox())
 
 	def redraw(self):
-		print 'redraw'
+		if debug: print 'redraw'
 		if self.play_movie:
 			self.place_movie(None, self.play_movie)
 			self.play_movie.UpdateMovie()
@@ -209,20 +222,33 @@ class VideoChannel(ChannelWindowAsync):
 			return
 		
 		if self.play_movie.IsMovieDone():
+			# XXX Should cater for self.extra_end_delay!
 			if self.play_loop == 0 or self.play_loop > 1:
 				# Either looping infinitely, or more loops to be done
 				if self.play_loop != 0:
 					self.play_loop = self.play_loop - 1
 				self.play_movie.GoToBeginningOfMovie()
 				return
-			self.play_loop = -1	# Truly finished
-			self.play_movie.StopMovie()
-			self.play_movie = None
-			if self.window:
-				self.window.setredrawfunc(None)
-				self.window._mac_setredrawguarantee(None)
-			self.fixidleproc()
-			self.playdone(0)
+			self.__stoplooping()
+			
+	def __stopplay(self):
+		self.__qid = None
+		self.__stoplooping()
+		
+	def __stoplooping(self):
+		if self.__qid is not None:
+			self._scheduler.cancel(self.__qid)
+			self.__qid = None
+		if not self.play_movie:
+			return
+		self.play_loop = -1	# Truly finished
+		self.play_movie.StopMovie()
+##		self.play_movie = None
+##		if self.window:
+##			self.window.setredrawfunc(None)
+##			self.window._mac_setredrawguarantee(None)
+##		self.fixidleproc()
+		self.playdone(0)
 			
 	def do_play(self, node):
 		self.__type = node.__type
@@ -242,15 +268,21 @@ class VideoChannel(ChannelWindowAsync):
 			return
 			
 		if debug: print 'VideoChannel: play', node
+		self.play_loop = self.getloop(node)
+		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
+		if repeatdur and self.play_loop == 1:
+			self.play_loop = 0
+		if debug: print 'DBG: repeatdur, playloop', repeatdur, self.play_loop
+		if repeatdur > 0:
+			self.__qid = self._scheduler.enter(
+				repeatdur, 0, self.__stopplay, ())
 		self.play_movie = self.arm_movie
-		self.play_loop = self.arm_loop
 		self.arm_movie = None
-		self.arm_loop = -1
 
 		self.make_ready(self.play_movie, node)
 		self.event('beginEvent')
 		self.play_movie.SetMovieActive(1)
-		self.play_movie.MoviesTask(0)
+##		self.play_movie.MoviesTask(0)
 		self.play_movie.StartMovie()
 		self.window.setredrawfunc(self.redraw)
 		self.window._mac_setredrawguarantee(self.play_movie.GetMovieBox())
@@ -287,59 +319,19 @@ class VideoChannel(ChannelWindowAsync):
 			self.armed_display.fgcolor(self.getbucolor(node))
 		else:
 			self.armed_display.fgcolor(self.getbgcolor(node))
-#		hicolor = self.gethicolor(node)
-#		for a in node.GetRawAttrDef('anchorlist', []):
-#			atype = a.atype
-#			if atype not in SourceAnchors or atype == ATYPE_AUTO:
-#				continue
-#			anchor = node.GetUID(), a.aid
-#			if not self._player.context.hyperlinks.findsrclinks(anchor):
-#				continue
-#			b = self.armed_display.newbutton((0,0,1,1), times = a.atimes)
-#			b.hiwidth(3)
-#			if drawbox:
-#				b.hicolor(hicolor)
-#			self.setanchor(a.aid, a.atype, b, a.atimes)
 
 		# by default armbox is all the window
 		armbox=(0.0,0.0,1.0,1.0)
 		self.setArmBox(armbox)
 		
-##		if node.__type != 'real':
-##			self.armed_display.drawvideo(self.__mc.update)
-
-##	# We override 'play', since we handle our own duration
-##	def play(self, node):
-##		if debug:
-##			print 'VideoChannel.play('+`self`+','+`node`+')'
-##		if node.__type == 'real':
-##			# no special case here for RealVideo
-##			ChannelWindowAsync.play(self, node)
-##			return
-##		self.play_0(node)
-##		if not self._is_shown or not node.ShouldPlay() or self.syncplay:
-##			self.play_1()
-##			return
-##		if not self.nopop:
-##			self.window.pop()
-##
-##		if self.armed_display.is_closed():
-##			# assume that we are going to get a
-##			# resize event
-##			pass
-##		else:
-##			self.armed_display.render()
-##		if self.played_display:
-##			self.played_display.close()
-##		self.played_display = self.armed_display
-##		self.armed_display = None
-##		self.do_play(node)
-##		self.armdone()
-
 	def do_hide(self):
 		if self.window:
 			self.window.setredrawfunc(None)
 			self.window._mac_setredrawguarantee(None)
+		if self.__qid is not None:
+			# XXXX Is this correct?
+			self._scheduler.cancel(self.__qid)
+			self.__qid = None
 		self.arm_movie = None
 		if self.play_movie:
 			self.play_movie.StopMovie()
@@ -359,14 +351,17 @@ class VideoChannel(ChannelWindowAsync):
 		elif self.play_movie:
 			self.play_movie.StopMovie()
 ##			self.play_movie = None
-			self.fixidleproc()
+##			self.fixidleproc()
 		ChannelWindowAsync.playstop(self)
 		
 	def stopplay(self, node):
 		if self.window:
 			self.window.setredrawfunc(None)
 			self.window._mac_setredrawguarantee(None)
-		self.play_movie = None
+		if self.play_movie:
+			self.play_movie.StopMovie()
+			self.play_movie = None
+		self.fixidleproc()
 		ChannelWindowAsync.stopplay(self, node)
 
 	def fixidleproc(self):
