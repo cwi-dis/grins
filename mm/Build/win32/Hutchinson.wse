@@ -2424,9 +2424,21 @@ item: If/While Statement
 end
 item: Create Shortcut
   Source=%MAINDIR%\GRiNS_MS2.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Editor for SMIL 2.0 Mobile Version.lnk
+  Destination=%CDESKTOPDIR%\GRiNS Editor for SMIL 2.0 Mobile Version.lnk
   Icon Number=0
   Flags=01000000
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\GRiNS_MS2.exe
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Editor for SMIL 2.0 Mobile Version.lnk
+  Icon Number=0
 end
 item: End Block
 end
