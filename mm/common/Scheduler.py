@@ -336,7 +336,8 @@ class SchedulerContext:
 			else:
 				if debugevents: print 'scheduled_children+1',`arc`,`node`,event,self.parent.timefunc()
 				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
-			arc.timestamp = timestamp+arc.delay
+			if arc.refnode() is node:
+				arc.timestamp = timestamp + arc.delay
 			if not arc.isstart and not arc.ismin and arc.srcnode is arc.dstnode:
 				# end arcs have lower priority than begin arcs
 				# this is important to get proper freeze
