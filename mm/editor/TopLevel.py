@@ -16,6 +16,22 @@ import MMmimetypes
 import features
 import compatibility
 
+# Mapping view numbers to view names and the reverse
+VIEWNUM2NAME=[
+	"player",
+	"structure",
+	"timeline",
+	"links",
+	"oldlayout",
+	"customtests",
+	"transitions",
+	"source",
+	"assets",
+	"errors",
+]
+VIEWNAME2NUM={}
+for i in range(len(VIEWNUM2NAME)): VIEWNAME2NUM[VIEWNUM2NAME[i]] = i
+
 # an empty document
 EMPTY = """
 <smil>
@@ -280,26 +296,53 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.showviews()
 		
 	def showdefaultviews(self):
+		viewinfo = self.root.context.getviewinfo()
+		if viewinfo is None:
+			import settings
+			viewinfo = settings.get('openviews')
+		for viewname, geometry in viewinfo:
+			viewnum = VIEWNAME2NUM[viewname]
+			self.views[viewnum].set_geometry(geometry)
+			self.views[viewnum].show()
+##		import settings
+##		defaultviews = settings.get('defaultviews')
+##		if 'hierarchy' in defaultviews and self.hierarchyview is not None:
+##			self.hierarchyview.show()
+##		if 'player' in defaultviews and self.player is not None:
+##			self.player.show()
+##		if 'transition' in defaultviews and self.transitionview is not None:
+##			self.transitionview.show()
+##		if 'layout' in defaultviews and self.layoutview is not None:
+##			self.layoutview.show()
+##		if 'layout2' in defaultviews and self.layoutview2 is not None:
+##			self.layoutview2.show()
+##		if 'ugroup' in defaultviews and self.ugroupview is not None:
+##			self.ugroupview.show()
+##		if 'link' in defaultviews and self.links is not None:
+##			self.links.show()
+##		if 'source' in defaultviews and self.sourceview is not None:
+##			self.sourceview.show()
+##		if 'assets' in defaultviews and self.assetsview is not None:
+##			self.assetsview.show()
+
+	def saveviewgeometries(self):
 		import settings
-		defaultviews = settings.get('defaultviews')
-		if 'hierarchy' in defaultviews and self.hierarchyview is not None:
-			self.hierarchyview.show()
-		if 'player' in defaultviews and self.player is not None:
-			self.player.show()
-		if 'transition' in defaultviews and self.transitionview is not None:
-			self.transitionview.show()
-		if 'layout' in defaultviews and self.layoutview is not None:
-			self.layoutview.show()
-		if 'layout2' in defaultviews and self.layoutview2 is not None:
-			self.layoutview2.show()
-		if 'ugroup' in defaultviews and self.ugroupview is not None:
-			self.ugroupview.show()
-		if 'link' in defaultviews and self.links is not None:
-			self.links.show()
-		if 'source' in defaultviews and self.sourceview is not None:
-			self.sourceview.show()
-		if 'assets' in defaultviews and self.assetsview is not None:
-			self.assetsview.show()
+		viewinfo = self.getviewgeometries()
+		settings.set('openviews', viewinfo)
+		settings.save()
+
+	def getviewgeometries(self):
+		viewinfo = []
+		for viewno in range(len(self.views)):
+			v = self.views[viewno]
+			if not v:
+				continue
+			info = v.get_geometry()
+			if info:
+				viewname = VIEWNUM2NAME[viewno]
+				viewinfo.append((viewname, info))
+		for i in viewinfo: print 'VIEWINFO', i
+		return viewinfo
 
 	def destroy(self):
 		self.set_timer(-1, None)
@@ -411,7 +454,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.assetsview = AssetsView.AssetsView(self)
 
 		# Views that are destroyed by restore (currently all)
-		# Notice that these must follow a certain order.
+		# Notice that these must follow the order of
+		# VIEWNUM2NAME.
 		self.views = [self.player, self.hierarchyview,
 			      self.channelview, self.links, self.layoutview,
 			      self.ugroupview, self.transitionview, self.layoutview2,
@@ -1006,10 +1050,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				roots.append(node)
 		self.context.sanitize_hyperlinks(roots)
 		# Get all windows to save their current geometry.
+		# This is only really needed for TopLayouts now.
 		for v in self.views:
 			if v is not None:
 				v.get_geometry()
 				v.save_geometry()
+		viewinfo = self.getviewgeometries()
+		self.root.context.setviewinfo(viewinfo)
 		
 
 	def save_to_file(self, filename, exporting = 0):
@@ -1505,6 +1552,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def close(self):
 		ok = self.close_ok()
 		if ok:
+			self.saveviewgeometries()
 			self.destroy()
 
 	def close_ok(self):
