@@ -135,7 +135,6 @@ class _DisplayList:
 	# Render the display list on dc within the region	
 	def _render(self, dc, region=None, clear=1):
 		self._rendered = 1
-
 		clonestart = self._clonestart
 		if not self._cloneof or self._cloneof is not self._window._active_displist:
 			clonestart = 0
@@ -148,7 +147,6 @@ class _DisplayList:
 
 		for b in self._buttons:
 			if b._highlighted:b._do_highlight()
-
 	
 	def close(self):
 		wnd = self._window
@@ -184,6 +182,8 @@ class _DisplayList:
 			self._curfg = entry[1]
 		elif cmd == 'image':
 			mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]
+			if not self._overlap(region, (dest_x, dest_y, width, height)):
+				return
 			win32ig.render(dc.GetSafeHdc(),self._bgcolor,
 				mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep, aspect="none" )
 		elif cmd == 'video':
@@ -200,15 +200,23 @@ class _DisplayList:
 				x0, y0 = x, y
 		elif cmd == '3dhline':
 			color1, color2, x0, x1, y = entry[1:]
+			if not self._overlap(region, (x0, y, x1-x0, 1)):
+				return
 			DrawLine(dc, (x0, y, x1, y), color1)
 			DrawLine(dc, (x0, y+1, x1, y+1), color2)
 		elif cmd == 'box':
 			# XXXX should we subtract 1 from right and bottom edges
+			if not self._overlap(region, entry[1]):
+				return
 			DrawRectangle(dc,entry[1],self._curfg)
 		elif cmd == 'anchor':
+			if not self._overlap(region, entry[1]):
+				return
 			DrawRectangle(dc,entry[1],self._curfg)
 			# debug: DrawRectangle(dc,entry[1],(255,0,0))
 		elif cmd == 'fbox':
+			if not self._overlap(region, entry[2]):
+				return
 			dc.FillSolidRect(entry[2],RGB(entry[1]))
 		elif cmd == 'font':
 			#dc.SetFont(entry[1])
@@ -222,6 +230,8 @@ class _DisplayList:
 		elif cmd == '3dbox':
 			cl, ct, cr, cb = entry[1]
 			l, t, w, h = entry[2]
+			if not self._overlap(region, (l, t, w, h)):
+				return
 			r, b = l + w , t + h 
 			# l, r, t, b are the corners
 			l1 = l + SIZE_3DBORDER
@@ -263,6 +273,8 @@ class _DisplayList:
 		elif cmd == 'diamond':
 			fg = self._fgcolor
 			x, y, w, h = entry[1]
+			if not self._overlap(region, (x, y, w, h)):
+				return
 			
 			d, m = divmod(w,2)
 			if m==1:
@@ -278,6 +290,8 @@ class _DisplayList:
 			fg = entry[1] #gc.foreground
 			#gc.foreground = entry[1]
 			x, y, w, h = entry[2]
+			if not self._overlap(region, (x, y, w, h)):
+				return
 
 			d, m = divmod(w,2)
 			if m==1:
@@ -293,6 +307,8 @@ class _DisplayList:
 		elif cmd == '3ddiamond':
 			cl, ct, cr, cb = entry[1]
 			l, t, w, h = entry[2]
+			if not self._overlap(region, (x, y, w, h)):
+				return
 			
 			d, m = divmod(w,2)
 			if m==1:
@@ -326,6 +342,8 @@ class _DisplayList:
 			FillPolygon(dc,ls, fg)
 		elif cmd == 'arrow':
 			fg = entry[1] 
+			if not self._overlap(region, entry[2]):
+				return
 			DrawLine(dc,entry[2],fg)
 			FillPolygon(dc,entry[3], fg)
 		elif cmd == 'text':
@@ -340,8 +358,18 @@ class _DisplayList:
 		elif cmd == 'icon':
 			if entry[2] != None:
 				x, y, w, h = entry[1]
+				if not self._overlap(region, (x, y, w, h)):
+					return
 				dc.DrawIcon((x, y), entry[2])
 
+	# Return true if the ltrb and xywh rectangles have overlap
+	def _overlap(self, (l, t, r, b), (x, y, w, h)):
+		if x>r or x+w < l:
+			return 0
+		if y>b or y+h < t:
+			return 0
+		return 1
+		
 	# Returns true if this is closed
 	def is_closed(self):
 		return self._window is None
@@ -475,9 +503,9 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates, units=units)
 		self._list.append(('fbox', self._convert_color(color),
-				   (x, y, x+w, y+h)))
+				   (x, y, x+w-1, y+h-1)))
 		self._optimize((1,))
-		self._update_bbox(x, y, x+w-1, y+h-1)
+		self._update_bbox(x, y, x+w, y+h)
 ##		return x, y, x+w, y+h
 
 	# Insert a command to clear box
