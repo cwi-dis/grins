@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # experimental layout view
 
 import ViewDialog
