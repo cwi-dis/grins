@@ -43,7 +43,8 @@ class _Toplevel:
 				return self.__dict__[attr]
 			except KeyError:
 				pass
-		raise AttributeError, attr
+		raise AttributeError(attr)
+
 	def __init__(self):
 		self._initialized = 0
 		global toplevel
@@ -110,11 +111,17 @@ class _Toplevel:
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
 
-	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM, menubar = None, canvassize = None):
-		return _Window(self, x, y, w, h, title, 0, pixmap, units, menubar, canvassize)
+	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
+		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
+		      menubar = None, canvassize = None):
+		return _Window(self, x, y, w, h, title, 0, pixmap, units,
+			       menubar, canvassize)
 
-	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM, menubar = None, canvassize = None):
-		return _Window(self, x, y, w, h, title, 1, pixmap, units, menubar, canvassize)
+	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
+			type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
+			menubar = None, canvassize = None):
+		return _Window(self, x, y, w, h, title, 1, pixmap, units,
+			       menubar, canvassize)
 
 	def setcursor(self, cursor):
 		for win in self._subwindows:
@@ -159,11 +166,8 @@ class _Toplevel:
 		import Xtdefs
 		if type(fd) is not IntType:
 			fd = fd.fileno()
-		try:
+		if self._fdiddict.has_key(fd):
 			id = self._fdiddict[fd]
-		except KeyError:
-			pass
-		else:
 			Xt.RemoveInput(id)
 			del self._fdiddict[fd]
 		if func is None:
@@ -487,8 +491,18 @@ class _Window:
 		form.AddCallback('exposeCallback', self._expose_callback, None)
 		form.AddCallback('resizeCallback', self._resize_callback, None)
 		form.AddCallback('inputCallback', self._input_callback, None)
-		form.AddEventHandler(X.PointerMotionMask, FALSE,
-				     self._motion_handler, None)
+		self._motionhandlerset = 0
+
+	def _setmotionhandler(self):
+		set = not self._buttonregion.EmptyRegion()
+		if self._motionhandlerset == set:
+			return
+		if set:
+			func = self._form.AddEventHandler
+		else:
+			func = self._form.RemoveEventHandler
+		func(X.PointerMotionMask, FALSE, self._motion_handler, None)
+		self._motionhandlerset = set
 
 	def __repr__(self):
 		try:
@@ -624,27 +638,6 @@ class _Window:
 
 	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
 		return _SubWindow(self, coordinates, 1, pixmap, transparent, z)
-
-# this works (at least for the menubar), but is it the right interface?
-## 	def menusetsensitive(self, path, sensitive):
-## 		if self._menubar:
-## 			w = self._menubar
-## 		elif self._menu:
-## 			w = self._menu
-## 		else:
-## 			return
-## 		first = 1
-## 		for p in path:
-## 			if not first:
-## 				w = w.subMenuId
-## 			first = 0
-## 			for c in w.children:
-## 				if c.labelString == p:
-## 					w = c
-## 					break
-## 			else:
-## 				return
-## 		w.sensitive = sensitive
 
 	def fgcolor(self, color):
 		r, g, b = color
@@ -810,6 +803,8 @@ class _Window:
 			r.UnionRegion(self._clip)
 			r.IntersectRegion(self._active_displist._buttonregion)
 			bregion.UnionRegion(r)
+		if self._topwindow is self:
+			self._setmotionhandler()
 
 	def _delclip(self, child, region):
 		# delete child's overlapping siblings
@@ -1386,6 +1381,7 @@ class _DisplayList:
 				d._cloneof = None
 		if win._active_displist is self:
 			win._active_displist = None
+			win._buttonregion = Xlib.CreateRegion()
 			r = win._region
 			if win._transparent == -1 and win._parent is not None and \
 			   win._topwindow is not win:
@@ -1398,11 +1394,13 @@ class _DisplayList:
 				win._gc.SetRegion(win._region)
 				win._pixmap.CopyArea(win._form, win._gc,
 						     x, y, w, h, x, y)
-			win._buttonregion = bregion = Xlib.CreateRegion()
-			w = win._parent
-			while w is not None and w is not toplevel:
-				w._buttonregion.SubtractRegion(win._clip)
-				w = w._parent
+			if win._transparent == 0:
+				w = win._parent
+				while w is not None and w is not toplevel:
+					w._buttonregion.SubtractRegion(
+						win._clip)
+					w = w._parent
+			win._topwindow._setmotionhandler()
 		del self._cloneof
 		del self._optimdict
 		del self._list
@@ -1469,6 +1467,7 @@ class _DisplayList:
 			w._buttonregion.SubtractRegion(window._clip)
 			w._buttonregion.UnionRegion(bregion)
 			w = w._parent
+		window._topwindow._setmotionhandler()
 		toplevel._main.UpdateDisplay()
 
 	def _render(self, region):
@@ -2039,33 +2038,32 @@ class _Font:
 class showmessage:
 	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'message',
-		     title = 'message'):
+		     title = 'message', parent = None):
 		if grab:
 			dialogStyle = Xmd.DIALOG_FULL_APPLICATION_MODAL
-			w = grab
-			if type(w) is IntType:
-				w = toplevel
+			if parent is None:
+				parent = toplevel
 			while 1:
-				if hasattr(w, '_shell'):
-					w = w._shell
+				if hasattr(parent, '_shell'):
+					parent = parent._shell
 					break
-				if hasattr(w, '_main'):
-					w = w._main
+				if hasattr(parent, '_main'):
+					parent = parent._main
 					break
-				w = w._parent
+				parent = parent._parent
 		else:
 			dialogStyle = Xmd.DIALOG_MODELESS
-			w = toplevel._main
+			parent = toplevel._main
 		if mtype == 'error':
-			func = w.CreateErrorDialog
+			func = parent.CreateErrorDialog
 		elif mtype == 'warning':
-			func = w.CreateWarningDialog
+			func = parent.CreateWarningDialog
 		elif mtype == 'information':
-			func = w.CreateInformationDialog
+			func = parent.CreateInformationDialog
 		elif mtype == 'question':
-			func = w.CreateQuestionDialog
+			func = parent.CreateQuestionDialog
 		else:
-			func = w.CreateMessageDialog
+			func = parent.CreateMessageDialog
 		self._grab = grab
 		w = func(name, {'messageString': text,
 				'title': title,
@@ -2105,14 +2103,25 @@ class showmessage:
 
 class Dialog:
 	def __init__(self, list, title = '', prompt = None, grab = 1,
-		     vertical = 1):
+		     vertical = 1, parent = None):
 		if not title:
 			title = ''
 		if grab:
 			dialogStyle = Xmd.DIALOG_FULL_APPLICATION_MODAL
+			if parent is None:
+				parent = toplevel
+			while 1:
+				if hasattr(parent, '_shell'):
+					parent = parent._shell
+					break
+				if hasattr(parent, '_main'):
+					parent = parent._main
+					break
+				parent = parent._parent
 		else:
 			dialogStyle = Xmd.DIALOG_MODELESS
-		w = toplevel._main.CreateFormDialog('dialog',
+			parent = toplevel._main
+		w = parent.CreateFormDialog('dialog',
 				{'title': title,
 				 'dialogStyle': dialogStyle,
 				 'resizePolicy': Xmd.RESIZE_NONE,
@@ -2240,7 +2249,7 @@ class MainDialog(Dialog):
 
 _end_loop = '_end_loop'			# exception for ending a loop
 class _MultChoice(Dialog):
-	def __init__(self, prompt, msg_list, defindex):
+	def __init__(self, prompt, msg_list, defindex, parent = None):
 		self.looping = FALSE
 		self.answer = None
 		self.msg_list = msg_list
@@ -2248,7 +2257,7 @@ class _MultChoice(Dialog):
 		for msg in msg_list:
 			list.append(msg, (self.callback, (msg,)))
 		Dialog.__init__(self, list, title = None, prompt = prompt,
-				grab = TRUE, vertical = FALSE)
+				grab = TRUE, vertical = FALSE, parent = parent)
 
 	def run(self):
 		self.looping = TRUE
@@ -2264,8 +2273,8 @@ class _MultChoice(Dialog):
 				self.looping = FALSE
 				return
 
-def multchoice(prompt, list, defindex):
-	return _MultChoice(prompt, list, defindex).run()
+def multchoice(prompt, list, defindex, parent = None):
+	return _MultChoice(prompt, list, defindex, parent).run()
 
 def beep():
 	dpy = toplevel._main.Display()
@@ -2293,6 +2302,9 @@ def _generic_callback(widget, (func, args), call_data):
 	apply(func, args)
 
 def _create_menu(menu, list, visual, colormap, acc = None, widgets = {}):
+	if len(list) > 40:
+		menu.numColumns = (len(list) + 29) / 30
+		menu.packing = Xmd.PACK_COLUMN
 	if _def_useGadget:
 		separator = Xm.SeparatorGadget
 		label = Xm.LabelGadget
@@ -2306,21 +2318,11 @@ def _create_menu(menu, list, visual, colormap, acc = None, widgets = {}):
 		toggle = Xm.ToggleButton
 		pushbutton = Xm.PushButton
 	accelerator = None
-	length = 0
-	i = 0
-	while i < len(list):
-		entry = list[i]
-		i = i + 1
+	for entry in list:
 		if entry is None:
 			dummy = menu.CreateManagedWidget('separator',
 							 separator, {})
 			continue
-		if length == 20 and i < len(list) - 3:
-			entry = ('More', list[i-1:])
-			i = len(list)
-			if acc is not None:
-				entry = ('',) + entry
-		length = length + 1
 		if type(entry) is StringType:
 			dummy = menu.CreateManagedWidget(
 				'menuLabel', label,
@@ -2345,7 +2347,8 @@ def _create_menu(menu, list, visual, colormap, acc = None, widgets = {}):
 			submenu = menu.CreatePulldownMenu('submenu',
 				{'colormap': colormap,
 				 'visual': visual,
-				 'depth': visual.depth})
+				 'depth': visual.depth,
+				 'orientation': Xmd.VERTICAL})
 			button = menu.CreateManagedWidget(
 				'submenuLabel', cascade,
 				{'labelString': labelString, 'subMenuId': submenu})

@@ -627,7 +627,7 @@ from X_windowbase import *
 
 class FileDialog:
 	def __init__(self, prompt, directory, filter, file, cb_ok, cb_cancel,
-		     existing = 0):
+		     existing = 0, parent = None):
 		import os
 		self.cb_ok = cb_ok
 		self.cb_cancel = cb_cancel
@@ -636,10 +636,19 @@ class FileDialog:
 			 'visual': toplevel._default_visual,
 			 'depth': toplevel._default_visual.depth,
 			 'width': 400}
+		if parent is None:
+			parent = toplevel
+		while 1:
+			if hasattr(parent, '_shell'):
+				parent = parent._shell
+				break
+			if hasattr(parent, '_main'):
+				parent = parent._main
+				break
+			parent = parent._parent
 		if prompt:
-			form = toplevel._main.CreateFormDialog(
-						   'fileSelect', attrs)
-			self._form = form
+			form = parent.CreateFormDialog('fileSelect', attrs)
+			self._main = form
 			label = form.CreateManagedWidget('filePrompt',
 					Xm.LabelGadget,
 					{'leftAttachment': Xmd.ATTACH_FORM,
@@ -656,12 +665,12 @@ class FileDialog:
 		else:
 			dialog = toplevel._main.CreateFileSelectionDialog(
 							  'fileSelect', attrs)
-			self._form = dialog
+			self._main = dialog
 		self._dialog = dialog
 		dialog.AddCallback('okCallback', self._ok_callback, existing)
 		dialog.AddCallback('cancelCallback', self._cancel_callback,
 				       None)
-		self._form.Parent().AddWMProtocolCallback(
+		self._main.Parent().AddWMProtocolCallback(
 			toplevel._delete_window, self._cancel_callback, None)
 		helpb = dialog.FileSelectionBoxGetChild(
 						    Xmd.DIALOG_HELP_BUTTON)
@@ -680,22 +689,22 @@ class FileDialog:
 		dialog.FileSelectionDoSearch(filter)
 		text = dialog.FileSelectionBoxGetChild(Xmd.DIALOG_TEXT)
 		text.value = file
-		self._form.ManageChild()
+		self._main.ManageChild()
 		toplevel._subwindows.append(self)
 
 	def close(self):
-		if self._form:
+		if self._main:
 			toplevel._subwindows.remove(self)
-			self._form.UnmanageChild()
-			self._form.DestroyWidget()
+			self._main.UnmanageChild()
+			self._main.DestroyWidget()
 			self._dialog = None
-			self._form = None
+			self._main = None
 
 	def setcursor(self, cursor):
-		X_windowbase._setcursor(self._form, cursor)
+		X_windowbase._setcursor(self._main, cursor)
 
 	def is_closed(self):
-		return self._form is None
+		return self._main is None
 
 	def _cancel_callback(self, *rest):
 		if _in_create_box or self.is_closed():
@@ -755,22 +764,32 @@ class FileDialog:
 		self.close()
 
 class SelectionDialog:
-	def __init__(self, listprompt, selectionprompt, itemlist, default):
+	def __init__(self, listprompt, selectionprompt, itemlist, default,
+		     parent = None):
 		attrs = {'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
 			 'colormap': toplevel._default_colormap,
 			 'visual': toplevel._default_visual,
 			 'depth': toplevel._default_visual.depth,
 			 'textString': default,
 			 'autoUnmanage': FALSE}
+		if parent is None:
+			parent = toplevel
+		while 1:
+			if hasattr(parent, '_shell'):
+				parent = parent._shell
+				break
+			if hasattr(parent, '_main'):
+				parent = parent._main
+				break
+			parent = parent._parent
 		if hasattr(self, 'NomatchCallback'):
 			attrs['mustMatch'] = TRUE
 		if listprompt:
 			attrs['listLabelString'] = listprompt
 		if selectionprompt:
 			attrs['selectionLabelString'] = selectionprompt
-		form = toplevel._main.CreateSelectionDialog('selectDialog',
-							    attrs)
-		self._form = form
+		form = parent.CreateSelectionDialog('selectDialog', attrs)
+		self._main = form
 		form.AddCallback('okCallback', self._ok_callback, None)
 		form.AddCallback('cancelCallback', self._cancel_callback, None)
 		if hasattr(self, 'NomatchCallback'):
@@ -784,17 +803,17 @@ class SelectionDialog:
 		toplevel._subwindows.append(self)
 
 	def setcursor(self, cursor):
-		X_windowbase._setcursor(self._form, cursor)
+		X_windowbase._setcursor(self._main, cursor)
 
 	def is_closed(self):
-		return self._form is None
+		return self._main is None
 
 	def close(self):
-		if self._form:
+		if self._main:
 			toplevel._subwindows.remove(self)
-			self._form.UnmanageChild()
-			self._form.DestroyWidget()
-			self._form = None
+			self._main.UnmanageChild()
+			self._main.DestroyWidget()
+			self._main = None
 
 	def _nomatch_callback(self, widget, client_data, call_data):
 		if _in_create_box or self.is_closed():
@@ -854,18 +873,19 @@ class InputDialog:
 					parent = parent._main
 					break
 				parent = parent._parent
-		self._form = parent.CreatePromptDialog('inputDialog', attrs)
-		self._form.AddCallback('okCallback', self._ok, cb)
-		self._form.AddCallback('cancelCallback', self._cancel,
+		self._main = parent.CreatePromptDialog('inputDialog', attrs)
+		self._main.AddCallback('okCallback', self._ok, cb)
+		self._main.AddCallback('cancelCallback', self._cancel,
 				       cancelCallback)
-		self._form.Parent().AddWMProtocolCallback(
+		self._main.Parent().AddWMProtocolCallback(
 			toplevel._delete_window, self._cancel, cancelCallback)
-		self._form.SelectionBoxGetChild(
+		self._main.SelectionBoxGetChild(
 			Xmd.DIALOG_HELP_BUTTON).UnmanageChild()
-		self._form.ManageChild()
-		self._form.SelectionBoxGetChild(
-			Xmd.DIALOG_TEXT).TextFieldSetSelection(
-				0, len(default or ''), 0)
+		self._main.ManageChild()
+		if default:
+			self._main.SelectionBoxGetChild(
+				Xmd.DIALOG_TEXT).TextFieldSetSelection(
+					0, len(default), 0)
 		toplevel._subwindows.append(self)
 
 	def _ok(self, w, client_data, call_data):
@@ -884,17 +904,17 @@ class InputDialog:
 			apply(apply, client_data)
 
 	def setcursor(self, cursor):
-		X_windowbase._setcursor(self._form, cursor)
+		X_windowbase._setcursor(self._main, cursor)
 
 	def close(self):
-		if self._form:
+		if self._main:
 			toplevel._subwindows.remove(self)
-			self._form.UnmanageChild()
-			self._form.DestroyWidget()
-			self._form = None
+			self._main.UnmanageChild()
+			self._main.DestroyWidget()
+			self._main = None
 
 	def is_closed(self):
-		return self._form is None
+		return self._main is None
 
 [TOP, CENTER, BOTTOM] = range(3)
 
@@ -1069,14 +1089,10 @@ class _Widget(_MenuSupport):
 	def _attachments(self, attrs, options):
 		'''Calculate the attachments for this window.'''
 		for pos in ['left', 'top', 'right', 'bottom']:
-			attachment = pos + 'Attachment'
-			try:
-				widget = options[pos]
-			except:
-				pass
-			else:
+			widget = options.get(pos, ())
+			if widget != ():
 				if type(widget) in (FloatType, IntType):
-					attrs[attachment] = \
+					attrs[pos + 'Attachment'] = \
 						Xmd.ATTACH_POSITION
 					attrs[pos + 'Position'] = \
 						int(widget * 100 + .5)
@@ -1087,6 +1103,11 @@ class _Widget(_MenuSupport):
 				else:
 					attrs[pos + 'Attachment'] = \
 						  Xmd.ATTACH_FORM
+			offset = options.get(pos + 'Offset')
+			if offset is None:
+				offset = options.get('offset')
+			if offset is not None:
+				attrs[pos + 'Offset'] = offset
 
 	def _destroy(self, widget, client_data, call_data):
 		'''Destroy callback.'''
@@ -1287,7 +1308,11 @@ class OptionMenu(_Widget):
 		menu = form.CreatePulldownMenu('windowOption',
 				{'colormap': toplevel._default_colormap,
 				 'visual': toplevel._default_visual,
-				 'depth': toplevel._default_visual.depth})
+				 'depth': toplevel._default_visual.depth,
+				 'orientation': Xmd.VERTICAL})
+		if len(optionlist) > 40:
+			menu.numColumns = (len(optionlist) + 29) / 30
+			menu.packing = Xmd.PACK_COLUMN
 		self._omenu = menu
 		self._optionlist = optionlist[:]
 		self._value = startpos
@@ -1400,9 +1425,6 @@ class PulldownMenu(_Widget):
 		for p in path:
 			w = dict.get(p, (None, None))[0]
 			while w is None:
-				dict = dict.get('More', (None, None))[1]
-				if dict is None:
-					raise error, 'unknown menu entry'
 				w = dict.get(p, (None, None))[0]
 		if onoff is not None:
 			w.set = onoff
@@ -1847,8 +1869,13 @@ class TextEdit(_Widget):
 
 class Separator(_Widget):
 	def __init__(self, parent, useGadget = _def_useGadget,
-		     name = 'windowSeparator', tooltip = None, **options):
+		     name = 'windowSeparator', vertical = 0,
+		     tooltip = None, **options):
 		attrs = {}
+		if vertical:
+			attrs['orientation'] = Xmd.VERTICAL
+		else:
+			attrs['orientation'] = Xmd.HORIZONTAL
 		self._attachments(attrs, options)
 		if useGadget and tooltip is None:
 			separator = Xm.SeparatorGadget
@@ -1878,7 +1905,8 @@ class ButtonRow(_Widget):
 		else:
 			separator = Xm.Separator
 		self._attachments(attrs, options)
-		rowcolumn = parent._form.CreateManagedWidget(name,							Xm.RowColumn, attrs)
+		rowcolumn = parent._form.CreateManagedWidget(name,
+							Xm.RowColumn, attrs)
 		self._buttons = []
 		for entry in buttonlist:
 			if entry is None:
@@ -2153,6 +2181,12 @@ class _WindowHelpers:
 class SubWindow(_Widget, _WindowHelpers):
 	def __init__(self, parent, name = 'windowSubwindow', **options):
 		attrs = {'resizePolicy': parent.resizePolicy}
+		horizontalSpacing = options.get('horizontalSpacing')
+		if horizontalSpacing is not None:
+			attrs['horizontalSpacing'] = horizontalSpacing
+		verticalSpacing = options.get('verticalSpacing')
+		if verticalSpacing is not None:
+			attrs['verticalSpacing'] = verticalSpacing
 		self.resizePolicy = parent.resizePolicy
 		self._attachments(attrs, options)
 		form = parent._form.CreateManagedWidget(name, Xm.Form, attrs)
@@ -2259,13 +2293,28 @@ class Window(_WindowHelpers, _MenuSupport):
 		if not resizable:
 			attrs['noResize'] = TRUE
 			attrs['resizable'] = FALSE
+		horizontalSpacing = options.get('horizontalSpacing')
+		if horizontalSpacing is not None:
+			attrs['horizontalSpacing'] = horizontalSpacing
+		verticalSpacing = options.get('verticalSpacing')
+		if verticalSpacing is not None:
+			attrs['verticalSpacing'] = verticalSpacing
 		if grab:
 			attrs['dialogStyle'] = \
 					     Xmd.DIALOG_FULL_APPLICATION_MODAL
+			parent = options.get('parent', toplevel)
+			while 1:
+				if hasattr(parent, '_shell'):
+					parent = parent._shell
+					break
+				if hasattr(parent, '_main'):
+					parent = parent._main
+					break
+				parent = parent._parent
 			for key, val in wattrs.items():
 				attrs[key] = val
-			self._form = toplevel._main.CreateFormDialog(
-				'grabDialog', attrs)
+			self._form = parent.CreateFormDialog('grabDialog', attrs)
+			self._main = self._form
 		else:
 			wattrs['iconName'] = title
 			self._shell = toplevel._main.CreatePopupShell(Name,
@@ -2428,8 +2477,9 @@ class Window(_WindowHelpers, _MenuSupport):
 		func, args = client_data
 		apply(func, args)
 
-def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1):
-	w = Window(title, grab = grab)
+def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1,
+	   parent = None):
+	w = Window(title, grab = grab, parent = parent)
 	options = {'top': None, 'left': None, 'right': None}
 	if prompt:
 		l = apply(w.Label, (prompt,), options)
@@ -2445,12 +2495,13 @@ def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1):
 _end_loop = '_end_loop'			# exception for ending a loop
 
 class _Question:
-	def __init__(self, text):
+	def __init__(self, text, parent = None):
 		self.looping = FALSE
 		self.answer = None
 		showmessage(text, mtype = 'question',
 			    callback = (self.callback, (TRUE,)),
-			    cancelCallback = (self.callback, (FALSE,)))
+			    cancelCallback = (self.callback, (FALSE,)),
+			    parent = parent)
 
 	def run(self):
 		try:
@@ -2467,11 +2518,11 @@ class _Question:
 		if self.looping:
 			raise _end_loop
 
-def showquestion(text):
-	return _Question(text).run()
+def showquestion(text, parent = None):
+	return _Question(text, parent = parent).run()
 
 class _MultChoice:
-	def __init__(self, prompt, msg_list, defindex):
+	def __init__(self, prompt, msg_list, defindex, parent = None):
 		self.looping = FALSE
 		self.answer = None
 		self.msg_list = msg_list
@@ -2479,7 +2530,8 @@ class _MultChoice:
 		for msg in msg_list:
 			list.append(msg, (self.callback, (msg,)))
 		self.dialog = Dialog(list, title = None, prompt = prompt,
-				     grab = TRUE, vertical = FALSE)
+				     grab = TRUE, vertical = FALSE,
+				     parent = parent)
 
 	def run(self):
 		try:
@@ -2499,8 +2551,8 @@ class _MultChoice:
 					raise _end_loop
 				return
 
-def multchoice(prompt, list, defindex):
-	return _MultChoice(prompt, list, defindex).run()
+def multchoice(prompt, list, defindex, parent = None):
+	return _MultChoice(prompt, list, defindex, parent = parent).run()
 
 def textwindow(text):
 	w = Window('Source', resizable = 1, deleteCallback = 'hide')

@@ -121,7 +121,6 @@ class _Splash:
 				 'rightAttachment': Xmd.ATTACH_FORM,
 				 'topAttachment': Xmd.ATTACH_WIDGET,
 				 'topWidget': w})
-		main.RealizeWidget()
 		shell.Popup(0)
 		gc = w.CreateGC({})
 		image = self.visual.CreateImage(self.visual.depth, X.ZPixmap,
@@ -278,6 +277,7 @@ class _Splash:
 						  'mappedWhenManaged': X.FALSE,
 						  'input': X.TRUE,
 						  'x': 500, 'y': 500})
+		main.RealizeWidget()
 		self.main = main
 		self.watchcursor = dpy.CreateFontCursor(Xcursorfont.watch)
 
