@@ -27,8 +27,6 @@ class PlayerDialog:
 		self.__menu_created = None
 		self.__topcommandlist = []
 		self.__commandlist = []
-		self.__ugroups = []
-		self.__ugroupdict = {}
 		self.__channels = []
 		self.__channeldict = {}
 		self.__strid='player'
@@ -140,30 +138,6 @@ class PlayerDialog:
 		self.__title = title
 		if self.__window is not None:
 			self.__window.settitle(title)
-
-	def setusergroups(self, ugroups = None):
-		if ugroups is None:
-			ugroups = self.__ugroups
-		else:
-			self.__ugroups = ugroups
-		menu = []
-		self.__ugroupdict = {}
-		for i in range(len(ugroups)):
-			name, title, onoff = ugroups[i]
-			self.__ugroupdict[name] = i
-			menu.append((title, (name,), 't', onoff))
-		w = self.__window
-		if w is not None:
-			w.set_dynamiclist(USERGROUPS, menu)
-
-	def setusergroup(self, ugroup, onoff):
-		i = self.__ugroupdict.get(ugroup)
-		if i is None:
-			raise RuntimeError, 'unknown user group'
-		if self.__ugroups[i][2] == onoff:
-			return
-		self.__ugroups[i] = self.__ugroups[i][:2] + (onoff,)
-		self.setusergroups()
 
 	def setchannels(self, channels=None):
 		# Set the list of channels.
