@@ -9,6 +9,7 @@ __version__ = "$Id$"
 
 import windowinterface
 from usercmd import *
+IMPL_AS_FORM=1
 
 class UsergroupViewDialog:
 	def __init__(self):
@@ -48,12 +49,19 @@ class UsergroupViewDialog:
 		w=f.newviewobj('ugview_')
 		w.set_cmddict(self.__callbacks)
 		self.__window = w
+
 	def assertwndcreated(self):
 		if self.__window is None or not hasattr(self.__window,'GetSafeHwnd'):
 			self.createviewobj()
 		if self.__window.GetSafeHwnd()==0:
 			f=self.toplevel.window
-			self.__window.create(f)
+			if IMPL_AS_FORM: # form
+				f.showview(self.__window,'ugview_')
+				self.__window.show()
+			else: # dlgbar
+				f=self.toplevel.window
+				self.__window.create(f)
+
 	def getwindow(self):
 		return self.__window
 
