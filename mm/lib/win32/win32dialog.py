@@ -326,6 +326,7 @@ class SelectElementDlg(ResDialog):
 		'animate': grinsRC.IDI_ANIMATE,
 		'prefetch': grinsRC.IDI_ICON_ASSET_BLANK,
 		'comment': grinsRC.IDI_ICON_ASSET_BLANK,
+		'anchor': grinsRC.IDI_ICON_LINKSRC,
 		}
 	ICON_WIDTH, ICON_HEIGHT = 16, 16
 
@@ -336,17 +337,24 @@ class SelectElementDlg(ResDialog):
 	# wrapper for MMChannel and MMNode (EditableMMNode) objects
 	# each entry in the display tree is associated (1:1) with a wrapper object
 	class MMObjWrapper:
-		def __init__(self, mmobj, tag):
+		def __init__(self, mmobj, tag, xxxparent=None):
 			if tag == 'prio': tag = 'priority'
 			assert tag in SelectElementDlg.tag2imgid.keys(), 'invalid smil element %s' % tag
 			self._mmobj = mmobj
 			self._tag = tag
 			self._display_id = 0
+			# The xxxparent item is a temporary patch for anchors,
+			# which don't currently store a reference to the node
+			# they belong to. When anchors become first class citizens
+			# this should go
+			self.xxxparent = xxxparent
 
 		def getTag(self):
 			return self._tag
 
 		def getMMObj(self):
+			if self.xxxparent:
+				return self.xxxparent, self._mmobj.aid
 			return self._mmobj
 
 		def getDisplayId(self):
@@ -361,14 +369,16 @@ class SelectElementDlg(ResDialog):
 			
 		def getId(self):
 			if self._mmobj is None: return ''
-			if self.isRegion():
+			if self._mmobj.getClassName() in ('MMRegion', 'MMViewport'):
 				return self._mmobj.GetUID()
+			elif self._mmobj.getClassName() == 'MMAnchor':
+				return self._mmobj.aid
 			else:
 				return self._mmobj.GetRawAttrDef('name', '')
 
 		def getSrc(self):
 			if self._mmobj is None: return ''
-			if not self.isRegion():
+			if self._mmobj.getClassName() == 'MMNode':
 				if self._mmobj.GetType()=='ext':
 					return self._mmobj.GetRawAttr('file') or ''
 				elif self._mmobj.GetType()=='imm':
@@ -377,7 +387,7 @@ class SelectElementDlg(ResDialog):
 
 		def getMimetype(self):
 			if self._mmobj is None: return ''
-			if not self.isRegion() and self._mmobj.GetType() == 'ext':
+			if self._mmobj.getClassName() == 'MMNode' and self._mmobj.GetType() == 'ext':
 				return self._mmobj.GetComputedMimeType() or ''
 			return ''
 
@@ -385,7 +395,10 @@ class SelectElementDlg(ResDialog):
 			return SelectElementDlg.tag2imgid.get(self._tag) or grinsRC.IDB_IMAGE
 
 		def getDisplayName(self):
-			return self.getId()
+			name = self.getId()
+			if not name:
+				return "no name"
+			return name
 ##			# 1. no MMObj -> tag 
 ##			dname = self._tag
 ##			if self._mmobj is None: 
@@ -403,13 +416,13 @@ class SelectElementDlg(ResDialog):
 ##
 ##			return dname
 		
-		def getRegName(self):
-			if not self.isRegion():
-				mmchan = self._mmobj.GetChannel()
-				if mmchan:
-					reg = mmchan.GetLayoutChannel()
-					return reg.GetUID()
-			return ''
+##		def getRegName(self):
+##			if not self.isRegion():
+##				mmchan = self._mmobj.GetChannel()
+##				if mmchan:
+##					reg = mmchan.GetLayoutChannel()
+##					return reg.GetUID()
+##			return ''
 
 	def __init__(self, parent, mmnode, selection='', filter = ''):
 		ResDialog.__init__(self,grinsRC.IDD_SELECT_ELEMENT, parent)
@@ -650,6 +663,10 @@ class SelectElementDlg(ResDialog):
 				wrapper = self.MMObjWrapper(node, smiltype)
 				citemid = self.insertMMObjWrapper(wrapper, itemid)
 			self.__appendNodes(node, citemid)
+		alist = parent.GetRawAttrDef('anchorlist', [])
+		for anchor in alist:
+			wrapper = self.MMObjWrapper(anchor, 'anchor', xxxparent=parent)
+			citemid = self.insertMMObjWrapper(wrapper, itemid)
 	
 	# expand item branch helper
 	def __expand(self, item):
