@@ -672,16 +672,17 @@ class ChannelWindow(Channel):
 					' a base-window loop')
 				pchan = None
 		if pchan:
+			pchan._subchannels.append(self)
 			#
 			# Next, check that it is visible already
 			#
 			if not pchan._is_shown:
-				print 'Warning: '+self._name+' not shown (parent hidden)'
 				return 0
 			if not pchan.window:
 				windowinterface.showmessage(
 					'parent window for ' + `self._name`+
 					' not shown (channel order problem?)')
+				pchan._subchannels.remove(self)
 				pchan = None
 		if pchan:
 			#
@@ -695,9 +696,11 @@ class ChannelWindow(Channel):
 				if pgeom:
 					self._attrdict['base_winoff'] = pgeom
 				else:
+					# subwindow was not drawn,
+					# draw top-level window.
+					pchan._subchannels.remove(self)
 					pchan = None
 		if pchan:
-			pchan._subchannels.append(self)
 			self.window = pchan.window.newwindow(pgeom)
 		else:
 			# no basewindow, create a top-level window
