@@ -28,8 +28,8 @@ class MyTransformer(Transformer):
 
 	def _transform_node(self, node):
 		if node.NodeType == ELEMENT:
-                        if hasattr(self, 'tree_' + node.tagName):
-                                func = getattr(self, 'tree_' + node.tagName)
+			if hasattr(self, 'tree_' + node.tagName):
+				func = getattr(self, 'tree_' + node.tagName)
 				return func(node)
 		return Transformer._transform_node(self, node)
 
