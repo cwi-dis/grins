@@ -150,9 +150,6 @@ class HierarchyViewDialog(ViewDialog):
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
 		self.adornments['flags'] = curflags()
-		if settings.get('lightweight') and self.adornments['shortcuts'].has_key('t'):
-			# no ANCHORS command in lightweight version
-			del self.adornments['shortcuts']['t']
 		self.window = windowinterface.newcmwindow(x, y, w, h, title,
 				pixmap = 1, adornments = self.adornments,
 				canvassize = (w, h),

@@ -146,6 +146,7 @@ class HierarchyView(HierarchyViewDialog):
 	#################################################
 
 	def __init__(self, toplevel):
+		lightweight = settings.get('lightweight')
 		self.sizes = sizes_notime
 		self.commands = [
 			CLOSE_WINDOW(callback = (self.hide, ())),
@@ -163,7 +164,7 @@ class HierarchyView(HierarchyViewDialog):
 			
 			TOGGLE_BWSTRIP(callback = (self.bandwidthcall, ())), # XXXX Wrong command name
 			]
-		if not settings.get('lightweight'):
+		if not lightweight:
 			self.commands.append(PUSHFOCUS(callback = (self.focuscall, ())))
 			self.commands.append(TIMESCALE(callback = (self.timescalecall, ())))
 		self.interiorcommands = [
@@ -204,11 +205,12 @@ class HierarchyView(HierarchyViewDialog):
 			]
 		self.noslidecommands = [
 			INFO(callback = (self.infocall, ())),
-			ANCHORS(callback = (self.anchorcall, ())),
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
 			PLAYNODE(callback = (self.playcall, ())),
 			PLAYFROM(callback = (self.playfromcall, ())),
 			]
+		if not lightweight:
+			self.noslidecommands.append(ANCHORS(callback = (self.anchorcall, ())))
 		self.finishlinkcommands = [
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
 			]
