@@ -94,6 +94,14 @@ def GetYesNoCancel(prompt, parent = None):
 def GetOKCancel(prompt, parent = None):
 	return multchoice(prompt, ["OK", "Cancel"], 0)
 
+def RegisterDialog():
+	return multchoice("""\
+You must register this product with Oratrix to be eligible for
+extended technical support, updates and discounts on
+upgrades.
+
+Do you want to register now?""", ["Register", "Don't register", "Remind me later"], 0)
+
 class textwindow:
 	def __init__(self, text, readonly = 1, closeCallback = None):
 		w = Window('Source', resizable = 1, deleteCallback = closeCallback or 'hide')
