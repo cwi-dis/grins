@@ -57,14 +57,6 @@ JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayer_ngetDuration
 
 /*
  * Class:     grins_GRiNSPlayer
- * Method:    ngetPreferredSize
- * Signature: (I)Ljava/awt/Dimension;
- */
-JNIEXPORT jobject JNICALL Java_grins_GRiNSPlayer_ngetPreferredSize
-  (JNIEnv *, jobject, jint);
-
-/*
- * Class:     grins_GRiNSPlayer
  * Method:    ngetSpeed
  * Signature: (I)D
  */
@@ -89,19 +81,51 @@ JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayer_ngetTime
 
 /*
  * Class:     grins_GRiNSPlayer
+ * Method:    ngetTopLayoutCount
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetTopLayoutCount
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    ngetTopLayoutDimensions
+ * Signature: (II)Ljava/awt/Dimension;
+ */
+JNIEXPORT jobject JNICALL Java_grins_GRiNSPlayer_ngetTopLayoutDimensions
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    ngetTopLayoutState
+ * Signature: (II)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetTopLayoutState
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    ngetTopLayoutTitle
+ * Signature: (II)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_grins_GRiNSPlayer_ngetTopLayoutTitle
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     grins_GRiNSPlayer
  * Method:    nmouseClicked
- * Signature: (III)V
+ * Signature: (IIII)V
  */
 JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nmouseClicked
-  (JNIEnv *, jobject, jint, jint, jint);
+  (JNIEnv *, jobject, jint, jint, jint, jint);
 
 /*
  * Class:     grins_GRiNSPlayer
  * Method:    nmouseMoved
- * Signature: (III)Z
+ * Signature: (IIII)Z
  */
 JNIEXPORT jboolean JNICALL Java_grins_GRiNSPlayer_nmouseMoved
-  (JNIEnv *, jobject, jint, jint, jint);
+  (JNIEnv *, jobject, jint, jint, jint, jint);
 
 /*
  * Class:     grins_GRiNSPlayer
@@ -145,11 +169,11 @@ JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetTime
 
 /*
  * Class:     grins_GRiNSPlayer
- * Method:    nsetWindow
- * Signature: (ILjava/awt/Component;)V
+ * Method:    nsetTopLayoutWindow
+ * Signature: (IILjava/awt/Component;)V
  */
-JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetWindow
-  (JNIEnv *, jobject, jint, jobject);
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetTopLayoutWindow
+  (JNIEnv *, jobject, jint, jint, jobject);
 
 /*
  * Class:     grins_GRiNSPlayer

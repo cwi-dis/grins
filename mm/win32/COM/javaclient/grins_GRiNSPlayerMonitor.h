@@ -57,6 +57,22 @@ JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayerMonitor_ngetTime
 
 /*
  * Class:     grins_GRiNSPlayerMonitor
+ * Method:    ngetTopLayoutCount
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayerMonitor_ngetTopLayoutCount
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     grins_GRiNSPlayerMonitor
+ * Method:    ngetTopLayoutState
+ * Signature: (II)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayerMonitor_ngetTopLayoutState
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     grins_GRiNSPlayerMonitor
  * Method:    uninitializeThreadContext
  * Signature: ()V
  */
