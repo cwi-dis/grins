@@ -205,6 +205,7 @@ class HierarchyViewDialog(ViewDialog):
 				commandlist = self.commands)
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
+		self.window.register(WMEVENTS.Mouse0Release, self.mouse0release, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
 		self.window.register(WMEVENTS.DropFile, self.dropfile, None)
 		self.window.register(WMEVENTS.DropURL, self.dropfile, None)
