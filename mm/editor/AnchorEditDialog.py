@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import windowinterface
 
 class AnchorEditorDialog:
