@@ -98,6 +98,8 @@ static type_lock gl_lock;	/* interlock of window system */
 extern type_lock getlocklock PROTO((object *));
 #endif /* USE_GL */
 
+static int nplaying;		/* number of instances playing */
+
 static int
 movie_init(self)
 	mmobject *self;
@@ -809,6 +811,7 @@ movie_play(self)
 	default:
 		abort();
 	}
+	nplaying++;		/* one more instance playing */
 	return 1;
 }
 
@@ -1169,11 +1172,12 @@ static int
 movie_finished(self)
 	mmobject *self;
 {
+	nplaying--;		/* one fewer instance playing */
 	switch (windowsystem) {
 #ifdef USE_GL
 	case WIN_GL:
 		winset(PRIV->m_wid);
-		if (colors_saved) {
+		if (colors_saved && nplaying <= 0) {
 			int i, index;
 
 			for (i = 0, index = first_index; i < 256; i++, index++)
