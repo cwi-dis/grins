@@ -2047,8 +2047,6 @@ class PreviousWidget(Widget):
 		# current state
 		self.currentViewport = None		
 
-		self.localSelect = 0
-		
 		# media list currently showed whichever the node which are the focus
 		self.currentMediaRefListM = []
 
@@ -2096,7 +2094,6 @@ class PreviousWidget(Widget):
 					mediaToRemove.append(nodeRef)
 			for nodeRef in mediaToRemove:
 				self.removeMedia(nodeRef)
-		self.localSelect = 0
 
 		for nodeRef in nodeRefList:			
 			nodeType = self._context.getNodeType(nodeRef)
@@ -2240,7 +2237,6 @@ class PreviousWidget(Widget):
 
 	def onSelect(self, nodeList):
 		if debugPreview: print 'PreviewWidget.onSelect ',nodeList
-		self.localSelect = 1
 		self._context.onSelect(nodeList)
 								
 	def getNode(self, nodeRef):
@@ -2288,8 +2284,6 @@ class PreviousWidget(Widget):
 					applyList.append((nodeRef, obj.getGeom()))
 					break
 				
-		# update only the geom field on dialog box
-		self.localSelect = 1 # temporare			
 		self._context.applyGeomList(applyList)
 						
 class Node:
@@ -2501,7 +2495,6 @@ class Region(Node):
 	#
 
 	def onProperties(self):
-		self._ctx.localSelect = 1 # temporare
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self._ctx._context.editProperties(self.getNodeRef())
 		else:
@@ -2611,7 +2604,6 @@ class MediaRegion(Region):
 		
 	def onProperties(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
-			self._ctx.localSelect = 1 # temporare
 			self._ctx._context.editProperties(self.getNodeRef())
 	
 class Viewport(Node):
@@ -2702,7 +2694,6 @@ class Viewport(Node):
 			self.showAllNodes()
 		
 	def onProperties(self):
-		self._ctx.localSelect = 1 # temporare
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self._ctx._context.editProperties(self.getNodeRef())
 		else:
