@@ -19,7 +19,10 @@ class SyncObject
 	CRITICAL_SECTION m_sect;
 	};
 
-#else
+// CEnterLeavePython class
+#include "PyWinTypes.h"
+
+#else // NOT _WIN32
 
 class SyncObject
 	{
@@ -29,6 +32,14 @@ class SyncObject
 	bool Lock()		{return true;}
 	bool Unlock()	{return true;}
 	};
-#endif
+
+class CEnterLeavePython
+	{
+	public:
+	CEnterLeavePython(){}
+	~CEnterLeavePython(){}
+	};
 
 #endif
+
+#endif // INC_MT
