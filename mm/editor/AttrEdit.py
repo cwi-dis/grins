@@ -1820,6 +1820,28 @@ class StringAttrEditorField(AttrEditorField):
 			return None
 		return str
 
+class KeyTimesAttrEditorField(StringAttrEditorField):
+	def valuerepr(self, value):
+		if value is None:
+			return ''
+		return ';'.join(map(fmtfloat, value))
+
+	def parsevalue(self, str):
+		if str == '':
+			return None
+		values = []
+		for s in str.split(';'):
+			try:
+				v = float(s)
+				if not (0.0 <= v <= 1.0):
+					raise 'x'
+				if values and v <= values[-1]:
+					raise 'x'
+			except:
+				raise MParsingError, 'keyTimes should be a semicolon (;) separated list of monotonically increasing floating point values in the range 0.0 - 1.0'
+			values.append(v)
+		return values
+
 class NameAttrEditorField(StringAttrEditorField):
 	pass
 
@@ -3065,6 +3087,7 @@ DISPLAYERS = {
 	'screensize': ScreenSizeAttrEditorField	,
 	'screendepth': ScreenDepthAttrEditorField,
 	'acoords': AnchorCoordsAttrEditorField,
+	'keyTimes': KeyTimesAttrEditorField,
 }
 
 TYPEDISPLAYERS = {

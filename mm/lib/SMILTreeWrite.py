@@ -808,7 +808,16 @@ def getallowedmimetypes(writer, node):
 	mimetypes = node.GetRawAttrDef('allowedmimetypes', None)
 	if not mimetypes:
 		return None
-	return string.join(mimetypes, ',')
+	return ','.join(mimetypes)
+
+def getKeyTimes(writer, node):
+	keyTimes = node.GetRawAttrDef('keyTimes', [])
+	if not keyTimes:
+		return
+	values = []
+	for val in keyTimes:
+		values.append(fmtfloat(val, prec = 3))
+	return ';'.join(values)
 
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
@@ -908,7 +917,7 @@ smil_attrs=[
 	("accumulate", getaccumulate, "accumulate"),
 	("additive", getadditive, "additive"),
 	("calcMode", getcalcmode, None),
-	("keyTimes", lambda writer, node: node.GetRawAttrDef("keyTimes", None), "keyTimes"),
+	("keyTimes", getKeyTimes, "keyTimes"),
 	("keySplines", lambda writer, node: node.GetRawAttrDef("keySplines", None), "keySplines"),
 	("transIn", lambda writer, node:gettransition(writer, node, "transIn"), "transIn"),
 	("transOut", lambda writer, node:gettransition(writer, node, "transOut"), "transOut"),

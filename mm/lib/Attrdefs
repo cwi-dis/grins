@@ -572,7 +572,7 @@
 (values (string) '' 'Values' default
 	'Interpolation values' normal (g2 qt smil10 smil2 cmif))
 
-(keyTimes (string) '' 'Key times' default
+(keyTimes (list (enclosed (float))) () 'Key times' keyTimes
 	'Interpolation control times' normal (g2 qt smil10 smil2 cmif))
 
 (keySplines (string) '' 'Key splines' default

@@ -186,11 +186,10 @@ class AnimationData:
 		if not animations:
 			return
 
-		str = MMAttrdefs.getattr(animations[0], 'keyTimes')
-		if str:
-			self._times = self._strToFloatList(str)
-		else:
-			self._times = [0.0, 1.0]
+		times = MMAttrdefs.getattr(animations[0], 'keyTimes')
+		if not times:
+			times = [0.0, 1.0]
+		self._times = times
 			
 		animateMotionValues = [] 
 		animateWidthValues = []
@@ -470,7 +469,7 @@ class AnimationData:
 
 	def _timesToKeyTimesAttr(self):
 		if len(self._times) > 2:
-			return self._floatListToStr(self._times, prec = AnimationData.KEY_TIMES_WRITE_PREC)
+			return self._times
 		return None
 
 	def _intListToStr(self, sl):
@@ -479,12 +478,6 @@ class AnimationData:
 			str = str + '%d;' % val
 		return str[:-1]
 
-	def _floatListToStr(self, sl, prec = -1):
-		str = ''
-		for val in sl:
-			str = str + '%s;' % fmtfloat(val, prec = prec)
-		return str[:-1]
-		
 	def _posListToStr(self, sl):
 		str = ''
 		for point in sl:
@@ -509,14 +502,6 @@ class AnimationData:
 				vl.append(string.atoi(s))
 		return vl	
 
-	def _strToFloatList(self, str):
-		sl = string.split(str,';')
-		vl = []
-		for s in sl:
-			if s: 
-				vl.append(string.atof(s))
-		return vl	
-		
 	def _strToPosList(self, str):
 		sl = string.split(str,';')
 		vl = []
