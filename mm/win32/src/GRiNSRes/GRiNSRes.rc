@@ -4147,7 +4147,7 @@ BEGIN
                             "Create a link to the Context subwindow\nCreate a link to the Context subwindow"
     IDUC_CREATE_ANCHOR_BROWSER 
                             "Create a link to the Browser subwindow\nCreate a link to the Browser subwindow"
-    IDUC_ZOOMRESET          "Fit in window\nFit in window"
+    IDUC_ZOOMRESET          "Natural size\nNatural size"
 END
 
 #endif    // English (U.S.) resources
