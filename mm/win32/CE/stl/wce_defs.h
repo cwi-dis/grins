@@ -44,6 +44,9 @@ charT buffer[512];
 	}
 }
 
+#ifdef assert
+#undef assert
+#endif
 #define assert(expr)	wce_assert<TCHAR>((expr), TEXT(__FILE__), __LINE__, L# expr)
 
 #ifndef __PLACEMENT_NEW_INLINE
