@@ -170,8 +170,8 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Play &node', None, PLAYNODE),
 		(FLAG_ALL, ENTRY, 'Play &from node', None, PLAYFROM),
-		(FLAG_CMIF, SEP,),
-		(FLAG_BOSTON, DYNAMICCASCADE, 'User &groups', USERGROUPS),
+		(FLAG_BOSTON|FLAG_CMIF, SEP,),
+		(FLAG_BOSTON, DYNAMICCASCADE, 'Custom &tests', USERGROUPS),
 		(FLAG_CMIF, DYNAMICCASCADE, 'Visible &channels', CHANNELS),
 		)),
 
