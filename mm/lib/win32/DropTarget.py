@@ -8,7 +8,7 @@ win32con.MK_ALT = 0x20
 from appcon import DROPEFFECT_NONE, DROPEFFECT_COPY, \
 	DROPEFFECT_MOVE, DROPEFFECT_LINK, DROPEFFECT_SCROLL
 
-DEBUG=1
+DEBUG=0
 
 # grins registered clipboard formats
 CF_FILE = Sdk.RegisterClipboardFormat('FileName')
