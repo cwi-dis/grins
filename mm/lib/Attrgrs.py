@@ -283,6 +283,14 @@ attrgrs=(
 		'clipbegin',
 		'clipend',
 		]},
+		
+	{'name':'bandwidth',
+	'title':'Bandwidth',
+	'attrs':[
+		'bitrate',
+		'maxfps',
+		'preroll',
+		]},
 
 	)
 
