@@ -281,10 +281,13 @@ class RPParser(xmllib.XMLParser):
 		self.__baseurl = baseurl
 		self.__printdata = []
 		self.__printfunc = printfunc
+		self.__headseen = 0
 		xmllib.XMLParser.__init__(self, accept_utf8 = 1)
 
 	def close(self):
 		xmllib.XMLParser.close(self)
+		if not self.__headseen:
+			raise xmllib.Error, 'Not a .rp file, no <head> tag'
 		if self.__printfunc is not None and self.__printdata:
 			data = string.join(self.__printdata, '\n')
 			# first 30 lines should be enough
@@ -327,6 +330,7 @@ class RPParser(xmllib.XMLParser):
 		return cmp(tag1['start'], tag2['start'])
 
 	def start_head(self, attributes):
+		self.__headseen = 1
 		self.timeformat = attributes['timeformat']
 		duration = attributes.get('duration')
 		if duration is None:
