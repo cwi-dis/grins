@@ -81,7 +81,7 @@ class PlayerCore(Selecter, PlayerCommon):
 		self.reset()
 		self.playroot = self.userplayroot = self.root
 		if hasattr(self, '_animateContext'):
-			del self._animateContext
+			self._animateContext.reset()
 
 	#
 	# play_done - Upcall by scheduler to indicate that all is done.
