@@ -37,13 +37,14 @@ class view () :
 	#	5. set the focus to the root.
 	#
 
-	def new (self, (w, h, root, debug)) :
+	def new (self, (w, h, toplevel, debug)) :
 		self._init(w, h)
 		self.debug = debug
 		#
 		area = box().new(FOCUS_BOX,0,0,w,h,'')
 
-		self.root = root
+		self.toplevel = toplevel
+		self.root = root = toplevel.root
 		self.rootview = root
 		self._initcommanddict()
 		self.channellist = []
@@ -104,6 +105,7 @@ class view () :
 		self.addtocommand('h', helpfunc, 'help message')
 		self.addtocommand('l', lock_focus, 'lock current focus')
 		self.addtocommand('m', modify_arrow, 'modify timing arc')
+		self.addtocommand('p', play_focus, 'play current focus')
 		self.addtocommand('r', redrawfunc, 'redraw')
 		self.addtocommand('t', add_arrow, 'add timing arc')
 		self.addtocommand('u', unlock_focus, 'unfocus locked focus')
@@ -590,6 +592,18 @@ class view () :
 		self.currenttime = curtim
 		self.thermo.draw(curtim * self.unitheight)
 
+	def play_focus(self):
+		if self.focuschan <> None:
+			fl.show_message ('Cannot play a channel', '', '(yet)')
+			return
+		elif self.focusarrow <> None:
+			fl.show_message ('Cannot play an arrow', '', '')
+			return
+		elif self.focus = None:
+			fl.show_message ('No node selected','','')
+			return
+		self.toplevel.player.playsubtree(self.focus)
+
 def helpfunc (bv) :
 	dict = bv.commanddict
 	print 'known commands :'
@@ -643,3 +657,6 @@ def deletearrow(self):
 		fl.show_message ('No arc selected','','')
 		return
 	self.deletearc()
+
+def play_focus(self):
+	self.play_focus()
