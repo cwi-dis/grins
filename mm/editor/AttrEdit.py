@@ -638,18 +638,18 @@ class DocumentWrapper(Wrapper):
 
 class PreferenceWrapper(Wrapper):
 	__strprefs = {
-		'system_language': '2-character name for a language',
+		'system_language': 'Preferred language',
 		}
 	__intprefs = {
-		'system_bitrate': 'bitrate of connection with outside world',
+		'system_bitrate': 'Bitrate of connection with outside world',
 		}
 	__boolprefs = {
-		'system_captions': 'whether captions are to be shown',
-		'cmif': 'enable CMIF-specific extensions',
-		'html_control': 'choose between IE4 and WebsterPro HTML controls',
+		'system_captions': 'Whether captions are to be shown',
+		'cmif': 'Enable CMIF-specific extensions',
+		'html_control': 'Choose between IE4 and WebsterPro HTML controls',
 		}
 	__specprefs = {
-		'system_overdub_or_caption': 'audible or visible "captions"',
+		'system_overdub_or_caption': 'Audible or visible "captions"',
 		}
 
 	def __init__(self, callback):
