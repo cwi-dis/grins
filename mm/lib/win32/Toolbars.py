@@ -16,6 +16,7 @@ import usercmdui
 import wndusercmd
 import grinsRC
 import ToolbarTemplate
+import settings
 
 # temporary:
 SHOW_TOOLBAR_COMBO = 1
@@ -47,13 +48,31 @@ class ToolbarMixin:
 			barid = usercmdui.class2ui[command].id
 			self._bars[barid] = None
 
+	def _restoreToolbarState(self):
+		try:
+			self.LoadBarState("GRiNSToolBars")
+		except:
+			print "_restoreToolbarState: Could not load bar state, setting default"
+			for bar in self._bars.values():
+				self.ShowControlBar(bar,1,0)
+				bar.RedrawWindow()
+
+	def _saveToolbarState(self):
+		pass
+##		self.SaveBarState("GRiNSToolBars")
+
+	def OnClose(self):
+		self.SaveBarState("GRiNSToolBars")
+
 	def CreateToolbars(self):
 		self.EnableDocking(afxres.CBRS_ALIGN_ANY)
 		for template in ToolbarTemplate.TOOLBARS:
 			self._setToolbarFromTemplate(template)
 		self._recalcPulldownEnable()
+		self._restoreToolbarState()
 
 	def DestroyToolbars(self):
+		self._saveToolbarState()
 		for bar in self._bars.values():
 			bar.DestroyWindow()
 		self._bars = {}
@@ -87,6 +106,7 @@ class ToolbarMixin:
 			bar.RedrawWindow()
 		else:
 			self.ShowControlBar(bar,0,0)
+		self._saveToolbarState()
 
 	def OnUpdateToolbarCommand(self, cmdui):
 		barid = cmdui.m_nID
@@ -121,8 +141,8 @@ class ToolbarMixin:
 			else:
 				raise 'Unknown toolbar item type', button.type
 			buttonindex = buttonindex+1
-		self.ShowControlBar(self._bars[barid],1,0)
-		self._bars[barid].RedrawWindow()
+##		self.ShowControlBar(self._bars[barid],1,0)
+##		self._bars[barid].RedrawWindow()
 
 	def setToolbarPulldowns(self, pulldowndict):
 		self._pulldowndict = pulldowndict
@@ -228,6 +248,7 @@ class GRiNSToolbar(window.Wnd):
 		# Values are comboobjects.
 		#
 		self._toolbarCombos = {}
+		self.name = name
 
 	def hookMessages(self):
 		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
