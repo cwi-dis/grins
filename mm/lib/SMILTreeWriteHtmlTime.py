@@ -111,6 +111,7 @@ class XHTML_TIME:
 # 
 from SMILTreeWrite import *
 import math
+import Animators
 
 class SMILHtmlTimeWriter(SMIL):
 	def __init__(self, node, fp, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0,
@@ -120,7 +121,7 @@ class SMILHtmlTimeWriter(SMIL):
 		self.root = node
 		self.fp = fp
 		self.__title = ctx.gettitle()
-
+		self.__animateContext = Animators.AnimateContext(node=node)
 		self.smilboston = ctx.attributes.get('project_boston', 0)
 		self.copydir = self.copydirurl = self.copydirname = None
 		if convertURLs:
@@ -646,7 +647,7 @@ class SMILHtmlTimeWriter(SMIL):
 
 		if tag == 'animateMotion':
 			from Animators import AnimateElementParser
-			aparser = AnimateElementParser(node)
+			aparser = AnimateElementParser(node, self.__animateContext)
 			isAdditive = aparser.isAdditive()
 			fromxy = aparser.toDOMOriginPosAttr('from')
 			toxy = aparser.toDOMOriginPosAttr('to')
