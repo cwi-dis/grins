@@ -22,9 +22,6 @@ class SoundChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 		self.__audio_player = None
 
-	def __repr__(self):
-		return '<SoundChannel instance, name=' + `self._name` + '>'
-	
 	def do_hide(self):
 		if self.__audio_player:
 			self.__audio_player.stop()
@@ -283,7 +280,6 @@ class AudioPlayer:
 		if self._waveout:
 			self._waveout.Reset()
 			self._waveout.Close()
-			self._waveout = None
 		if self._u:
 			self._u.close()
 			self._u = None
