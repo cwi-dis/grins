@@ -432,7 +432,7 @@ def getsyncarc(writer, node, isend):
 	    srcuid == siblings[index-1].GetUID()):
 		# sync arc from parent/previous node
 		rv = '%.3fs' % delay
-	else:
+	elif srcside == 1:
 		srcname = writer.uid2name[srcuid]
 		rv = 'id(%s)'%srcname
 		if srcside:
@@ -452,6 +452,11 @@ def getsyncarc(writer, node, isend):
 			# out of scope
 			rv = fixsyncarc(writer, node, srcuid, srcside,
 					delay, dstside, rv)
+	else:
+		print '** Unimplemented SMIL-Boston sync arc', \
+		      node.GetRawAttrDef('name', '<unnamed>'),\
+		      node.GetUID()
+		return
 	return rv
 
 def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):

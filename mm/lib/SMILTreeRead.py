@@ -26,26 +26,38 @@ layout_name = ' SMIL '			# name of layout channel
 coordre = re.compile(r'^(?P<x0>\d+%?),(?P<y0>\d+%?),'
 		     r'(?P<x1>\d+%?),(?P<y1>\d+%?)$')
 idref = re.compile(r'id\((?P<id>' + xmllib._Name + r')\)')
-clock_val = re.compile(r'(?:(?P<use_clock>' # hours:mins:secs[.fraction]
-		       r'(?:(?P<hours>\d{2}):)?'
-		       r'(?P<minutes>\d{2}):'
-		       r'(?P<seconds>\d{2})'
-		       r'(?P<fraction>\.\d+)?'
-		       r')|(?P<use_timecount>' # timecount[.fraction]unit
-		       r'(?P<timecount>\d+)'
-		       r'(?P<units>\.\d+)?'
-		       r'(?P<scale>h|min|s|ms)?)'
-		       r')$')
-id = re.compile(r'id\((?P<name>' + xmllib._Name + r')\)' # id(name)
-		r'\((?P<event>[^)]+)\)'			# (event)
-## 		r'(?:\+(?P<delay>.*))?'			# +delay (optional)
-		r'$')
-clock = re.compile(r'(?P<name>local|remote):'
-		   r'(?P<hours>\d+):'
-		   r'(?P<minutes>\d{2}):'
-		   r'(?P<seconds>\d{2})'
-		   r'(?P<fraction>\.\d+)?'
-		   r'(?:Z(?P<sign>[-+])(?P<ohours>\d{2}):(?P<omin>\d{2}))?$')
+clock_val = (r'(?:(?P<use_clock>'	# full/partial clock value
+	     r'(?:(?P<hours>\d+):)?'		# hours: (optional)
+	     r'(?P<minutes>[0-5][0-9]):'	# minutes:
+	     r'(?P<seconds>[0-5][0-9])'      	# seconds
+	     r'(?P<fraction>\.\d+)?'		# .fraction (optional)
+	     r')|(?P<use_timecount>' # timecount value
+	     r'(?P<timecount>\d+)'		# timecount
+	     r'(?P<units>\.\d+)?'		# .fraction (optional)
+	     r'(?P<metric>h|min|s|ms)?)'	# metric (optional)
+	     r')')
+syncbase = re.compile(r'id\((?P<name>' + xmllib._Name + r')\)' # id(name)
+		      r'\((?P<event>[^)]+)\)'		# (event)
+##		      r'(?:\+(?P<delay>.*))?'		# +delay (optional)
+		      r'$')
+offsetvalue = re.compile('(?P<sign>[-+])?' + clock_val + '$')
+syncbase2 = re.compile(	# ((id-ref/prev ".")? event-ref/begin/end)? (offset)?
+	r'(?P<event>' + xmllib._Name + r')'			# ID-ref
+	r'(?P<offset>(?:[-+])' + clock_val + r')?$'		# offset
+	)
+mediamarker = re.compile(		# id-ref ".marker(" name ")"
+	r'(?P<id>' + xmllib._Name + r')\.'			# ID-ref "."
+	r'marker\((?P<markername>' + xmllib._Name + r')\)$'	# "marker(...)"
+	)
+wallclock = re.compile(			# "wallclock(" wallclock-value ")"
+	r'wallclock\([^()]+\)$'
+	)
+##clock = re.compile(r'(?P<name>local|remote):'
+##		   r'(?P<hours>\d+):'
+##		   r'(?P<minutes>\d{2}):'
+##		   r'(?P<seconds>\d{2})'
+##		   r'(?P<fraction>\.\d+)?'
+##		   r'(?:Z(?P<sign>[-+])(?P<ohours>\d{2}):(?P<omin>\d{2}))?$')
 screen_size = re.compile(r'(?P<x>\d+)X(?P<y>\d+)$')
 clip = re.compile('^(?:'
 		   '(?:(?P<npt>npt)=(?P<nptclip>[^-]*))|'
@@ -173,47 +185,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		return self.__root
 
 	def SyncArc(self, node, attr, val):
+		boston = None
 		synctolist = node.attrdict.get('synctolist', [])
 		if attr == 'begin':
 			yside = HD
 		else:
 			yside = TL
-		try:
-			name, counter, delay = self.__parsetime(val)
-		except error, msg:
-			self.syntax_error(msg)
-			return
-		if name is None:
-			# relative to parent/previous/start
-			if yside == HD:
-				node.attrdict['begin'] = delay
-				return
-			parent = node.GetParent()
-			if parent is None:
-				self.syntax_error('sync arc to top-level node')
-				return
-			ptype = parent.GetType()
-			if ptype == 'seq':
-				xnode = None
-				for n in parent.GetChildren():
-					if n is node:
-						break
-					xnode = n
-				else:
-					self.error('node not in parent', self.lineno)
-				if xnode is None:
-					# first, relative to parent
-					xside = HD # rel to start of parent
-					xnode = parent
-				else:
-					# not first, relative to previous
-					xside = TL # rel to end of previous
-			else:
-				xside = HD # rel to start of parent
-				xnode = parent
-			synctolist.append((xnode.GetUID(), xside, delay, yside))
-		else:
-			# relative to other node
+		val = string.strip(val)
+		res = syncbase.match(val)
+		if res is not None:
+			name = res.group('name')
+			delay = self.__parsecounter(res.group('event'), 1)
 			xnode = self.__nodemap.get(name)
 			if xnode is None:
 				self.warning('ignoring sync arc from %s to unknown node' % node.attrdict.get('name','<unnamed>'))
@@ -224,13 +206,143 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				self.warning('out of scope sync arc from %s to %s' % (node.attrdict.get('name','<unnamed>'), xnode.attrdict.get('name','<unnamed>')))
 				return
-			if counter == -1:
+			xside = HD
+			if delay == 'end':
 				xside = TL
-				counter = 0
-			else:
-				xside = HD
-			synctolist.append((xnode.GetUID(), xside, delay + counter, yside))
-		node.attrdict['synctolist'] = synctolist
+				delay = 0
+			elif delay == 'begin':
+				delay = 0
+			synctolist.append((xnode.GetUID(), xside, delay, yside))
+			node.attrdict['synctolist'] = synctolist
+			return
+		elif val == 'indefinite':
+			boston = 'indefinite'
+			node.attrdict['begin'] = -1 # XXXX actually a legal value
+		else:
+			vals = string.split(val, ';')
+			if len(vals) > 1:
+				boston = 'multiple %s values' % attr
+			for val in vals:
+				val = string.strip(val)
+				try:
+					offset = self.__parsecounter(val, withsign = 1)
+				except error:
+					pass
+				else:
+					node.attrdict['begin'] = offset
+					continue
+				res = syncbase2.match(val)
+				if res is not None:
+					if not boston:
+						boston = '%s-value' % attr
+					name = res.group('event')
+					if name[:5] == 'prev.':
+						event = name[5:]
+						name = 'prev'
+					elif name[-6:] == '.begin':
+						name = name[:-6]
+						event = 'begin'
+					elif name[-4:] == '.end':
+						name = name[:-4]
+						event = 'end'
+					elif '.' not in name:
+						event = name
+						name = None
+					else:
+						name = string.split(name, '.')
+						if len(name) != 2:
+							self.syntax_error("can't resolve name")
+							continue
+						name, event = name
+					offsetstr = res.group('offset')
+					if offsetstr:
+						offset = self.__parsecounter(offsetstr, withsign = 1)
+					else:
+						offset = 0
+					xnode = self.__nodemap.get(name)
+					if xnode is None:
+						self.warning('ignoring sync arc from %s to unknown node' % node.attrdict.get('name','<unnamed>'))
+						continue
+					if event == 'end':
+						xside = TL
+					elif event == 'begin':
+						xside = HD
+					else:
+						xside = event
+					synctolist.append((xnode.GetUID(), xside, offset, yside))
+					continue
+				res = mediamarker.match(val)
+				if res is not None:
+					if not boston:
+						boston = 'marker'
+					name = res.group('id')
+					marker = res.group('markername')
+					continue
+				res = wallclock.match(val)
+				if res is not None:
+					if not boston:
+						boston = 'wallclock time'
+					wallclock = res.group('wallclock')
+					continue
+				self.syntax_error('unrecognized %s value' % attr)
+		if boston:
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('%s not compatible with SMIL 1.0' % boston)
+			self.__context.attributes['project_boston'] = 1
+##		try:
+##			name, counter, delay = self.__parsetime(val)
+##		except error, msg:
+##			self.syntax_error(msg)
+##			return
+##		if name is None:
+##			# relative to parent/previous/start
+##			if yside == HD:
+##				node.attrdict['begin'] = delay
+##				return
+##			parent = node.GetParent()
+##			if parent is None:
+##				self.syntax_error('sync arc to top-level node')
+##				return
+##			ptype = parent.GetType()
+##			if ptype == 'seq':
+##				xnode = None
+##				for n in parent.GetChildren():
+##					if n is node:
+##						break
+##					xnode = n
+##				else:
+##					self.error('node not in parent', self.lineno)
+##				if xnode is None:
+##					# first, relative to parent
+##					xside = HD # rel to start of parent
+##					xnode = parent
+##				else:
+##					# not first, relative to previous
+##					xside = TL # rel to end of previous
+##			else:
+##				xside = HD # rel to start of parent
+##				xnode = parent
+##			synctolist.append((xnode.GetUID(), xside, delay, yside))
+##		else:
+##			# relative to other node
+##			xnode = self.__nodemap.get(name)
+##			if xnode is None:
+##				self.warning('ignoring sync arc from %s to unknown node' % node.attrdict.get('name','<unnamed>'))
+##				return
+##			for n in GetTemporalSiblings(node):
+##				if n is xnode:
+##					break
+##			else:
+##				self.warning('out of scope sync arc from %s to %s' % (node.attrdict.get('name','<unnamed>'), xnode.attrdict.get('name','<unnamed>')))
+##				return
+##			if counter == -1:
+##				xside = TL
+##				counter = 0
+##			else:
+##				xside = HD
+##			synctolist.append((xnode.GetUID(), xside, delay + counter, yside))
+		if synctolist:
+			node.attrdict['synctolist'] = synctolist
 
 	def AddAttrs(self, node, attributes):
 		node.__syncarcs = []
@@ -249,13 +361,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val != '#':
 					attrdict['file'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'begin' or attr == 'end':
-				node.__syncarcs.append((attr, val))
+				node.__syncarcs.append((attr, val, self.lineno))
 			elif attr == 'dur':
 				if val == 'indefinite':
 					attrdict['duration'] = -1
 				else:
 					try:
-						attrdict['duration'] = self.__parsecounter(val, 0)
+						attrdict['duration'] = self.__parsecounter(val)
 					except error, msg:
 						self.syntax_error(msg)
 			elif attr == 'repeat':
@@ -937,8 +1049,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__calcsize2(top, r, w, h)
 
 	def FixSyncArcs(self, node):
-		for attr, val in node.__syncarcs:
+		save_lineno = self.lineno
+		for attr, val, lineno in node.__syncarcs:
+			self.lineno = lineno
 			self.SyncArc(node, attr, val)
+		self.lineno = save_lineno
 		del node.__syncarcs
 
 	def CreateLayout(self, attrs, isroot = 1):
@@ -1952,14 +2067,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		begin = attributes.get('begin')
 		if begin is not None:
 			try:
-				begin = self.__parsecounter(begin, 0)
+				begin = self.__parsecounter(begin)
 			except error, msg:
 				self.syntax_error(msg)
 				begin = None
 		end = attributes.get('end')
 		if end is not None:
 			try:
-				end = self.__parsecounter(end, 0)
+				end = self.__parsecounter(end)
 			except error, msg:
 				self.syntax_error(msg)
 				end = None
@@ -2108,9 +2223,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			
 	# helper methods
 
-	def __parsecounter(self, value, maybe_relative):
-		res = clock_val.match(value)
+	def __parsecounter(self, value, maybe_relative = 0, withsign = 0):
+		res = offsetvalue.match(value)
 		if res:
+			sign = res.group('sign')
+			if sign and not withsign:
+				self.syntax_error('no sign allowed')
+				sign = None
+			if sign:
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('sign not compatible with SMIL 1.0')
+				self.__context.attributes['project_boston'] = 1
 			if res.group('use_clock'):
 				h, m, s, f = res.group('hours', 'minutes',
 						       'seconds', 'fraction')
@@ -2127,7 +2250,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if f is not None:
 					offset = offset + string.atof(f + '0')
 			elif res.group('use_timecount'):
-				tc, f, sc = res.group('timecount', 'units', 'scale')
+				tc, f, sc = res.group('timecount', 'units', 'metric')
 				offset = string.atoi(tc)
 				if f is not None:
 					offset = offset + string.atof(f)
@@ -2140,38 +2263,40 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				# else already in seconds
 			else:
 				raise error, 'internal error'
+			if sign and sign == '-':
+				offset = -offset
 			return offset
 		if maybe_relative:
 			if value in ('begin', 'end'):
 				return value
 		raise error, 'bogus presentation counter'
 
-	def __parsetime(self, xpointer):
-		offset = 0
-		res = id.match(xpointer)
-		if res is not None:
-			name, event = res.group('name', 'event')
-			delay = None
-		else:
-			res = clock.match(xpointer)
-			if res is not None:
-				# XXXX absolute time not implemented
-				return None, 0, 0
-			else:
-				name, event, delay = None, None, xpointer
-		if event is not None:
-			counter = self.__parsecounter(event, 1)
-			if counter == 'begin':
-				counter = 0
-			elif counter == 'end':
-				counter = -1	# special event
-		else:
-			counter = 0
-		if delay is not None:
-			delay = self.__parsecounter(delay, 0)
-		else:
-			delay = 0
-		return name, counter, delay
+##	def __parsetime(self, xpointer):
+##		offset = 0
+##		res = syncbase.match(xpointer)
+##		if res is not None:
+##			name, event = res.group('name', 'event')
+##			delay = None
+##		else:
+####			res = clock.match(xpointer)
+####			if res is not None:
+####				# XXXX absolute time not implemented
+####				return None, 0, 0
+####			else:
+##			name, event, delay = None, None, xpointer
+##		if event is not None:
+##			counter = self.__parsecounter(event, 1)
+##			if counter == 'begin':
+##				counter = 0
+##			elif counter == 'end':
+##				counter = -1	# special event
+##		else:
+##			counter = 0
+##		if delay is not None:
+##			delay = self.__parsecounter(delay)
+##		else:
+##			delay = 0
+##		return name, counter, delay
 
 	def __parseclip(self, val):
 		res = clip.match(val)
@@ -2180,7 +2305,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if res.group('npt'):
 			val = res.group('nptclip')
 			if val:
-				val = float(self.__parsecounter(val, 0))
+				val = float(self.__parsecounter(val))
 			else:
 				start = None
 		else:
