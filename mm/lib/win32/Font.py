@@ -266,7 +266,7 @@ user_charset=DEFAULT_CHARSET
 # set current windows char set
 def set_win32_charset(strid):
 	global user_charset
-	if strid in win32_charsets.keys():
+	if win32_charsets.has_key(strid):
 		#print 'windows charset:',strid		
 		user_charset=win32_charsets[strid]
 		_fontcache.clear()
