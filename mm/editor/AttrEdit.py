@@ -1489,7 +1489,7 @@ class AttrEditor(AttrEditorDialog):
 	def pagechange_allowed(self):
 		# Optionally save/revert changes made to properties and return 1 if
 		# it is OK to change tabs or change the node the dialog points to.
-		if not self._is_changed():
+		if not self.is_changed():
 			return 1
 		
 		self.pop()
@@ -1502,7 +1502,7 @@ class AttrEditor(AttrEditorDialog):
 			return 1
 		return 0
 
-	def _is_changed(self):
+	def is_changed(self):
 		# Return true if any property value has been edited.
 		for b in self.attrlist:
 			# Special case for empty values:

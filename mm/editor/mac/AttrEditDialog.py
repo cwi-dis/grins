@@ -63,14 +63,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			windowinterface.MACDialog.__init__(self, title, mw_resources.ID_DIALOG_ATTREDIT,
 				default=ITEM_OK, cancel=ITEM_CANCEL)
 			mustshow = 1
-## This doesn't work for (a) tabbing to a field and (b) popup menus
-		self._ok_enabled = 0
-		self._setsensitive([ITEM_APPLY, ITEM_OK], 0)
 
-		self._setbutton(ITEM_SHOWALL, self.show_all_attributes)
-		self._setbutton(ITEM_FOLLOWSELECTION, self.follow_selection)
-		self._setsensitive([ITEM_SHOWALL], self.wrapper.canhideproperties())
-		self._setsensitive([ITEM_FOLLOWSELECTION], self.wrapper.canfollowselection())
 		#
 		# Create the pages with the attributes, and the datastructures linking
 		# attributes and pages together.
@@ -129,6 +122,9 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		except KeyError:
 			initpagenum = 0
 		self._selectpage(initpagenum)
+
+		self.fixbuttonstate()
+		
 		if mustshow:
 			self.show()
 ##		# Should work above...
@@ -162,15 +158,22 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			self._selectpage(num)
 		
 	def valuechanged_callback(self):
-		if self._ok_enabled:
-			return
-		self._ok_enabled = 1
-		self._setsensitive([ITEM_APPLY, ITEM_OK], 1)
+		self.fixbuttonstate()
+##		if self._ok_enabled:
+##			return
+##		self._ok_enabled = 1
+##		self._setsensitive([ITEM_APPLY, ITEM_OK], 1)
 		
 	def fixbuttonstate(self):
 		# Fix the state of the floow selection and show all
 		# buttons, apply/ok sensitivity and possibly labels.
-		pass
+		self._ok_enabled = self.is_changed()
+		self._setsensitive([ITEM_APPLY, ITEM_OK], self._ok_enabled)
+
+		self._setbutton(ITEM_SHOWALL, self.show_all_attributes)
+		self._setbutton(ITEM_FOLLOWSELECTION, self.follow_selection)
+		self._setsensitive([ITEM_SHOWALL], self.wrapper.canhideproperties())
+		self._setsensitive([ITEM_FOLLOWSELECTION], self.wrapper.canfollowselection())
 
 	def do_itemhit(self, item, event):
 		if item == ITEM_SELECT:
