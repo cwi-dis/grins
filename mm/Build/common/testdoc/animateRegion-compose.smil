@@ -6,7 +6,7 @@
 	Version: Aug 23rd, 2000, v2		
 	Module: Animation		
 	Feature: animateMotion composition
-	File Name: animRegion-compose.smil
+	File Name: animateRegion-compose.smil
 	Media Components: 1 JPG
 	Expected Behavior: the picture moves along the composite path
 
@@ -17,7 +17,7 @@
     <meta name="generator" content="GRiNS Pro for SMIL Boston, v2.0 "/>
     <layout type="text/smil-extended-layout">
       <viewport id="SMIL-" backgroundColor="black" width="640" height="480">
-        <region id="unnamed-region-0" title="unnamed region 0" width="320" height="240"/>
+        <region id="unnamed-region-0" title="unnamed region 0" width="256" height="256"/>
       </viewport>
     </layout>
   </head>
