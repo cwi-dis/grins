@@ -622,6 +622,10 @@ class MMSyncArc:
 
 	def resolvedtime(self):
 		refnode = self.refnode()
+		if self.event == 'begin':
+			return refnode.start_time + self.delay
+##		if self.event == 'end':
+##			return refnode.end_time + self.delay
 		if self.event is not None:
 			return refnode.happenings[('event', self.event)] + self.delay
 		if self.marker is not None:

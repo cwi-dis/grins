@@ -72,9 +72,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				d = movie.GetEstMovieDuration(1000)
 			else:
 				d = movie.GetMovieDuration(1000)
-			d = float(d) / 1000
+			d = d / 1000.0
 			if hasattr(movie, 'GetCurrentTime'):
-				t = float(movie.GetCurrentTime(1000)) / 1000
+				t = movie.GetCurrentTime(1000) / 1000.0
 			else:
 				# if no GetCurrentTime, act as if at end
 				t = d
@@ -244,15 +244,17 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			movie.SetPlayLoopLimit(loop)
 		if loop != 1:
 			movie.SetPlayLoopMode(mv.MV_LOOP_CONTINUOUSLY)
+		begin = 0
 		if self.__begin:
 			movie.SetStartFrame(self.__begin)
-			movie.SetCurrentFrame(self.__begin)
-			begin = movie.GetStartTime()
-		else:
-			begin = 0
+		t0 = self._scheduler.timefunc()
+		if t0 > self._played_node.start_time:
+			print 'skipping',t0-self._played_node.start_time
+			movie.SetCurrentFrame(self.__begin + t0 - self._played_node.start_time)
+		begin = movie.GetStartTime(1000) / 1000.0
 		if self.__end:
 			movie.SetEndFrame(self.__end)
-			end = movie.GetEndTime()
+			end = movie.GetEndTime(1000) / 1000.0
 		else:
 			end = 0
 		if duration is not None and duration > 0 and \

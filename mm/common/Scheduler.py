@@ -254,6 +254,15 @@ class SchedulerContext:
 		self.startcontextchannels()
 		if s_node and s_aid:
 			self.seekanchor(s_node, s_aid, s_args)
+		playroot = self.playroot
+		playroot.start_time = self.parent.timefunc()
+		if playroot.looping_body_self:
+			playroot.looping_body_self.start_time = playroot.start_time
+		if playroot.realpix_body:
+			playroot.realpix_body.start_time = playroot.start_time
+		if playroot.caption_body:
+			playroot.caption_body.start_time = playroot.start_time
+		
 		self.parent.event(self, (SR.SCHED, self.playroot))
 ##		self.parent.updatetimer()
 		return 1
@@ -337,6 +346,13 @@ class SchedulerContext:
 		srdict = pnode.gensr_child(node)
 		self.srdict.update(srdict)
 		if debugevents: self.dump()
+		node.start_time = arc.resolvedtime()
+		if node.looping_body_self:
+			node.looping_body_self.start_time = node.start_time
+		if node.realpix_body:
+			node.realpix_body.start_time = node.start_time
+		if node.caption_body:
+			node.caption_body.start_time = node.start_time
 		self.parent.event(self, (SR.SCHED, node))
 
 	def queuesrlist(self, srlist):
@@ -799,6 +815,7 @@ class Scheduler(scheduler):
 		node.set_armedmode(ARM_PLAYING)
 		node.startplay(sctx)
 		self.sched_arcs(sctx, node, 'begin')
+		if debugevents: print 'do_play',`node`,node.start_time
 		chan.play(node)
 
 	#
