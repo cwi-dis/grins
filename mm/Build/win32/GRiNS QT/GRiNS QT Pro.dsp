@@ -54,10 +54,10 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo /o"./GRiNS_QTP.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 python16.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"./GRiNS_G2P.exe" /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
+# ADD LINK32 python16.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"./GRiNS_QTP.exe" /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
 # Begin Custom Build
 OutDir=.\.
-InputPath=.\GRiNS_G2P.exe
+InputPath=.\GRiNS_QTP.exe
 SOURCE="$(InputPath)"
 
 "..\..\..\bin\win32\GRiNS_QTP.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -910,6 +910,10 @@ SOURCE=.\M_SoundDuration.c
 # Begin Source File
 
 SOURCE=.\M_splash.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_splashbmp.c
 # End Source File
 # Begin Source File
 
