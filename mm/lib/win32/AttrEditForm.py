@@ -1991,8 +1991,21 @@ class HtmlTemplateCtrl(StringOptionsCtrl):
 			options=['embedded_player.html']
 		else:
 			options=['external_player.html','embedded_player.html']
+		self._options = options
 		StringOptionsCtrl.__init__(self,wnd,attr,resid,options)
 
+	def setvalue(self, val):
+		if not self._initctrl: return
+		if val not in self._options:
+			ix = -1
+		else:
+			ix=self._options.index(val)
+		self._attrval.setcursel(ix)
+
+	def getvalue(self):
+		if self._initctrl:
+			return self._attrval.getvalue() 
+		return self._attr.getcurrent()
 	
 ##################################
 class AttrSheet(dialog.PropertySheet):
