@@ -85,6 +85,7 @@ class NodeInfo() = Dialog():
 		return self
 	#
 	def transaction(self):
+		self.fixfocus()
 		return 1
 	#
 	def getcontext(self):
@@ -95,12 +96,6 @@ class NodeInfo() = Dialog():
 	def unregister(self, object):
 		if self.editmgr <> None:   # DEBUG
 		    self.editmgr.unregister(object)
-	def commit(self):
-		if self.editmgr <> None:   # DEBUG
-		    self.editmgr.commit()
-	def rollback(self):
-		if self.editmgr <> None:   # DEBUG
-		    self.editmgr.rollback()
 	#
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
@@ -130,6 +125,7 @@ class NodeInfo() = Dialog():
 			self.close()
 		else:
 			self.getvalues(FALSE)
+			self.updateform()
 	#
 	def rollback(self):
 		pass
@@ -221,7 +217,10 @@ class NodeInfo() = Dialog():
 	    self.channel_select.clear_choice()
 	    for i in self.allchannelnames:
 		self.channel_select.addto_choice(i)
-	    self.channel_select.set_choice(self.allchannelnames.index(self.channelname)+1)
+	    try:
+		self.channel_select.set_choice(self.allchannelnames.index(self.channelname)+1)
+	    except RuntimeError:
+		self.channel_select.set_choice(0)
 	    #
 	    self.styles_browser.clear_browser()
 	    for i in self.styles_list:
@@ -292,18 +291,23 @@ class NodeInfo() = Dialog():
 	#
 	def apply_callback(self, (obj, arg)):
 		obj.set_button(1)
+		self.fixfocus()
 		if self.changed:
 			dummy = self.setvalues()
 		obj.set_button(0)
 	#
 	def ok_callback(self, (obj, arg)):
 		obj.set_button(1)
+		self.fixfocus()
 		if not self.changed or self.setvalues():
 			self.close()
 		obj.set_button(0)
 	#
 	def fixfocus(self):
-		pass	# Check focuses XXXX
+		if self.name_field.focus:
+		    self.name_callback(self.name_field,0)
+		if self.text_input.focus:
+		    self.text_input_callback(self.text_input, 0)
 	#
 	#
 	# Callbacks that are valid for all types
@@ -316,7 +320,24 @@ class NodeInfo() = Dialog():
 		self.changed = 1
 		self.name = name
 	def type_callback(self, (obj,dummy)):
-	    self.type = obj.get_choice_text()
+	    newtype = obj.get_choice_text()
+	    if newtype = self.type:
+		return
+	    # Check that the change is allowed.
+	    if (self.type = 'seq' or self.type = 'par') and \
+			newtype = 'seq' or newtype = 'par':
+		pass	# This is ok.
+	    elif ((self.type = 'seq' or self.type = 'par') and \
+			self.children = []) or \
+		 (self.type = 'imm' and len(self.immtext) = 1) or \
+		 (self.type = 'ext' and self.filename = ''):
+		pass
+	    else:
+		fl.show_message('Cannot change type on', 'non-empty node', '')
+		self.type_select.set_choice(alltypes.index(self.type)+1)
+		return
+	    self.ch_type = 1
+	    self.type = newtype
 	    self.show_correct_group()
 	def channel_callback(self, (obj,dummy)):
 	    self.channelname = obj.get_choice_text()
@@ -366,12 +387,7 @@ class NodeInfo() = Dialog():
 		    self.immtext.append('')
 		    self.text_browser.addto_browser('')
 	    else:
-		print 'CANNOT HAPPEN!'
-		self.text_browser.add_browser_line(line)
-		self.immtext.append(line)
-		i = len(self.immtext)
-		self.text_browser.deselect_browser()
-		self.text_browser.select_browser_line(i)
+		print 'HUH? No textline selected?'
 	def text_insert_callback(self, (obj,dummy)):
 	    i = self.text_browser.get_browser()
 	    self.ch_immtext = 1
