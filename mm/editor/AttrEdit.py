@@ -464,7 +464,7 @@ class AttrEditorField(AttrEditorDialogField):
 		       'default: %s\n' \
 		       '%s' % (self.__name, self.getdefault(),
 			       self.__attrdef[4])
-			       
+
 	def gethelpdata(self):
 		return self.__name, self.getdefault(), self.__attrdef[4]
 
