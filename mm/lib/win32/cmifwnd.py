@@ -97,7 +97,35 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		self._bgcolor = parent._bgcolor
 		self._fgcolor = parent._fgcolor
 		self._cursor = parent._cursor
+	
+	# drag and drop files support
+	# enable drop
+	def dragAcceptFiles(self):
+		self.DragAcceptFiles(1)
+		self.HookMessage(self.onDropFiles,win32con.WM_DROPFILES)
 
+	# dissable drop
+	def dragRefuseFiles(self):
+		self.DragAcceptFiles(0)
+
+	# response to drop files
+	def onDropFiles(self,params):
+		msg=win32mu.Win32Msg(params)	
+		hDrop=msg._wParam
+		inclient,point=Sdk.DragQueryPoint(hDrop)
+		# convert from client to canvas pixel coordinates
+		# for the benefit of scrolling views
+		x,y=self._DPtoLP(point)
+		# accept only drops in client area
+		if inclient:
+			numfiles=win32api.DragQueryFile(hDrop,-1)
+			for ix in range(numfiles):
+				filename=win32api.DragQueryFile(hDrop,ix)
+				self.onEvent(DropFile,(x, y, filename))
+				print 'DropFile',x,y,filename
+		win32api.DragFinish(hDrop)
+	
+		
 	# Called by the core system to create a subwindow
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		raise error, 'override newwindow'
@@ -480,7 +508,8 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			raise error, 'invalid function'
 		if event in(ResizeWindow, KeyboardInput, Mouse0Press,
 			     Mouse0Release, Mouse1Press, Mouse1Release,
-			     Mouse2Press, Mouse2Release, WindowExit):
+			     Mouse2Press, Mouse2Release, 
+				 DropFile, PasteFile, WindowExit):
 			self._callbacks[event] = func, arg
 		else:
 			raise error, 'Internal error in Register Callback'
