@@ -695,6 +695,8 @@
 #define IDC_ANIMATE_P0L                 1456
 #define IDC_ANIMATE_P100L               1457
 #define IDC_ANIMATE_ENABLE              1458
+#define IDC_PANEFOCUS                   1460
+#define IDC_TREEFOCUS                   1461
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -802,7 +804,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        463
 #define _APS_NEXT_COMMAND_VALUE         32900
-#define _APS_NEXT_CONTROL_VALUE         1459
+#define _APS_NEXT_CONTROL_VALUE         1461
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
