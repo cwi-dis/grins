@@ -1274,8 +1274,8 @@ class SubWindow(Window):
 	#		
 	def begintransition(self, outtrans, runit, dict):
 		#print 'begintransition', self, outtrans, runit, dict
-		if not self._passive:
-			self._passive = self.getBackDDS()
+		if not self.__prepare_transition():
+			return
 		self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict)
 		self._transition.begintransition()
 
@@ -1286,20 +1286,22 @@ class SubWindow(Window):
 			self._transition = None
 			self.update()
 
-	def changed(self):
-		#print ' window transition interface: changed'
-		pass
-
 	def jointransition(self, window):
 		# Join the transition already created on "window".
-		#print 'jointransition'
 		if not window._transition:
 			print 'Joining without a transition', self, window, window._transition
 			return
+		if not self.__prepare_transition():
+			return
+		ismaster = self._windowlevel() < window._windowlevel()
+		self._transition = window._transition
+		self._transition.join(self, ismaster)
 		
 	def settransitionvalue(self, value):
 		if self._transition:
 			self._transition.settransitionvalue(value)
+		else:
+			print 'settransitionvalue without a transition'
 	
 	def freeze_content(self, how):
 		# Freeze the contents of the window, depending on how:
@@ -1315,7 +1317,28 @@ class SubWindow(Window):
 			self._passive = None
 			self._frozen = None
 			self.update()
-		
+
+	def __prepare_transition(self):
+		"""Check that begintransition() is allowed, create the offscreen bitmap"""
+		if self._transition:
+			print 'Multiple Transitions!'
+			return 0
+		if self._frozen == 'transition':
+			self._frozen = None
+		else:
+			self._topwindow.update()
+			self._passive = self.getBackDDS()
+		return 1
+
+	def _windowlevel(self):
+		"""Returns 0 for toplevel windows, 1 for children of toplevel windows, etc"""
+		prev = self
+		count = 0
+		while not prev==prev._topwindow:
+			count = count + 1
+			prev = prev._parent
+		return count
+
 
 #############################
 
