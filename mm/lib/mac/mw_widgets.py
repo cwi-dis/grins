@@ -21,9 +21,9 @@ import mw_globals
 import mw_menucmd
 
 class _Widget:
-	def __init__(self, wid, item):
-		tp, h, rect = wid.GetDialogItem(item) # XXXX To be fixed
-		wid.SetDialogItem(item, tp,
+	def __init__(self, dlg, item):
+		tp, h, rect = dlg.GetDialogItem(item) # XXXX To be fixed
+		dlg.SetDialogItem(item, tp,
 		      mw_globals.toplevel._dialog_user_item_handler, rect)
 		      
 	def close(self):
@@ -82,8 +82,8 @@ class _ImageMixin:
 		Qd.RGBForeColor(fgcolor)
 
 class _ListWidget(_ControlWidget):
-	def __init__(self, wid, item, content=[], multi=0):
-		self.control = wid.GetDialogItemAsControl(item)
+	def __init__(self, dlg, item, content=[], multi=0):
+		self.control = dlg.GetDialogItemAsControl(item)
 ##		d1, d2, self.rect = wid.GetDialogItem(item)
 		self.rect = (0, 0, 1000, 1000) # DBG
 		h = self.control.GetControlDataHandle(Controls.kControlListBoxPart, 
@@ -94,12 +94,14 @@ class _ListWidget(_ControlWidget):
 			self.list.selFlags = Lists.lOnlyOne
 		self._data = []
 		self._setcontent(0, len(content), content)
-		self.wid = wid
+		self.dlg = dlg
+		self.wid = dlg.GetDialogWindow()
 	
 	def close(self):
 ##		print 'DBG: close', self
 		del self.list  # XXXX Or should we DisposeList it?
 		del self.wid
+		del self.dlg
 		del self._data
 		del self.control
 		pass
@@ -195,10 +197,11 @@ class _ListWidget(_ControlWidget):
 		Ctl.SetKeyboardFocus(self.wid, self.control, Controls.kControlListBoxPart)
 
 class _AreaWidget(_ControlWidget, _ImageMixin):
-	def __init__(self, wid, item, callback=None, scaleitem=None):
-		self.wid = wid
+	def __init__(self, dlg, item, callback=None, scaleitem=None):
+		self.dlg = dlg
+		self.wid = dlg.GetDialogWindow()
 		self.scaleitem = scaleitem
-		self.control = wid.GetDialogItemAsControl(item)
+		self.control = dlg.GetDialogItemAsControl(item)
 		self.rect = self.control.GetControlRect()
 		self.control.SetControlDataCallback(0, Controls.kControlUserPaneDrawProcTag, self.redraw)
 		self.control.SetControlDataCallback(0, Controls.kControlUserPaneHitTestProcTag, self.hittest)
@@ -213,6 +216,7 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 		
 	def close(self):
 		del self.wid
+		del self.dlg
 		del self.control
 		del self.callback
 		del self._background_image
@@ -365,7 +369,7 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 				text = ''
 			else:
 				text = '(scale 1:%d, %dx%d)'%(self.scale, w, h)
-			h = self.wid.GetDialogItemAsControl(self.scaleitem)
+			h = self.dlg.GetDialogItemAsControl(self.scaleitem)
 			Dlg.SetDialogItemText(h, text)
 
 	def recalclurven(self):
@@ -418,20 +422,22 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 		return (rx0-x0)*self.scale, (ry0-y0)*self.scale, w*self.scale, h*self.scale
 					
 class _ImageWidget(_Widget, _ImageMixin):
-	def __init__(self, wid, item, image=None):
-		_Widget.__init__(self, wid, item)
+	def __init__(self, dlg, item, image=None):
+		_Widget.__init__(self, dlg, item)
 		tp, h, rect = wid.GetDialogItem(item)
 		# wid is the window (dialog) where our image is going to be in
 		# rect is it's item rectangle (as in dialog item)
 		self.rect = rect
 		self.image = image
-		self.wid = wid
+		self.dlg = dlg
+		self.wid = dlg.GetDialogWindow()
 		Win.InvalRect(self.rect)
 		
 	def close(self):
 ##		print 'DBG: close', self
 		del self.image
 		del self.wid
+		del self.dlg
 		self.image_data = None
 		del self.image_data
 			
@@ -454,12 +460,13 @@ class _ImageWidget(_Widget, _ImageMixin):
 		pass
 				
 class _SelectWidget(_ControlWidget):
-	def __init__(self, wid, ctlid, items=[], default=None, callback=None):
-		self.wid = wid
+	def __init__(self, dlg, ctlid, items=[], default=None, callback=None):
+		self.dlg = dlg
+		self.wid = dlg.GetDialogWindow()
 		self.itemnum = ctlid
 		self.menu = None
 ##		self.choice = None
-		self.control = self.wid.GetDialogItemAsControl(self.itemnum)
+		self.control = self.dlg.GetDialogItemAsControl(self.itemnum)
 		self.setitems(items, default)
 		if callback:
 			raise 'Menu-callbacks not supported anymore'
@@ -467,6 +474,7 @@ class _SelectWidget(_ControlWidget):
 	def close(self):
 ##		print 'DBG: close', self
 		del self.wid
+		del self.dlg
 ##		self.control.SetControlDataHandle(Controls.kControlMenuPart,
 ##				Controls.kControlPopupButtonMenuHandleTag, self.orig_menu)
 		del self.control
