@@ -64,8 +64,14 @@ class HierarchyViewDialog(ViewDialog):
 		w = self.window
 		w.set_toggle(THUMBNAIL, self.thumbnails)
 		w.set_toggle(PLAYABLE, self.showplayability)
-		w.set_toggle(TIMESCALE, self.timescale == 'global')
-		w.set_toggle(LOCALTIMESCALE, self.timescale == 'focus')
+		w.set_toggle(TIMESCALE, self.root.showtime == 'focus')
+		if self.selected_widget is None:
+			w.set_toggle(LOCALTIMESCALE, 0)
+			w.set_toggle(CORRECTLOCALTIMESCALE, 0)
+		else:
+			n = self.selected_widget.get_node()
+			w.set_toggle(LOCALTIMESCALE, n.showtime == 'focus')
+			w.set_toggle(CORRECTLOCALTIMESCALE, n.showtime == 'cfocus')
 
 	def helpcall(self):
 		import Help
