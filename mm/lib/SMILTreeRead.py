@@ -205,17 +205,32 @@ class SMILParser(xmllib.XMLParser):
 		if self.__node:
 			# the warning comes later from xmllib
 			self.EndNode()
+		if not attributes.has_key('src'):
+			self.syntax_error('node without src attribute')
+			return
 		subtype = None
 		mtype = attributes.get('type')
+		if mtype is None and mediatype is None:
+			# last resort: get file and see what type it is
+			# maybe we should do this always if no type
+			# attr present
+			file = attributes['src']
+			file = self.__context.findurl(file)
+			try:
+				u = MMurl.urlopen(file)
+			except:
+				self.warning('cannot open file %s' % file)
+				# we have no idea what type the file is
+				mtype = 'text/plain'
+			else:
+				mtype = u.headers.type
+				u.close()
 		if mtype is not None:
 			mtype = string.split(mtype, '/')
 			if mediatype is not None and mtype[0] != mediatype:
 				self.warning("type attribute doesn't match element")
 			mediatype = mtype[0]
 			subtype = mtype[1]
-		if mediatype is None:
-			self.syntax_error('node of unknown type')
-			return
 		if not self.__root:
 			node = self.MakeRoot('ext')
 		elif not self.__container:
@@ -240,9 +255,7 @@ class SMILParser(xmllib.XMLParser):
 			if not self.__channels.has_key(channel):
 				self.syntax_error('unknown channel')
 		node.__channel = channel
-		if not attributes.has_key('src'):
-			self.syntax_error('node without src attribute')
-		elif mediatype in ('image', 'video'):
+		if mediatype in ('image', 'video'):
 			ch = self.__channels.get(channel)
 			if ch is None:
 				self.__channels[channel] = ch = \
@@ -372,7 +385,7 @@ class SMILParser(xmllib.XMLParser):
 		if not self.__root:
 			node = self.MakeRoot(type)
 		elif not self.__container:
-			self.syntax_error('%s not in container' % type)
+			self.error('multiple elements in body')
 			return
 		else:
 			node = self.__context.newnode(type)
@@ -746,6 +759,8 @@ class SMILParser(xmllib.XMLParser):
 	def start_par(self, attributes):
 		# XXXX we ignore sync for now
 		self.NewContainer('par', attributes)
+		if not self.__container:
+			return
 		self.__container.__endsync = attributes.get('endsync')
 		if self.__container.__endsync is not None and \
 		   self.__container.attrdict.has_key('duration'):
