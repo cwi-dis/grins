@@ -249,7 +249,6 @@ class VideoStream:
 		self.__fiber_id=None
 		self.__rcMediaWnd = None
 		self.__qid = self.__dqid = None
-		self.__iteration = 0
 
 	def destroy(self):
 		if self.__window:
@@ -285,7 +284,6 @@ class VideoStream:
 		self.__pausedelay = 0
 		self.__pausetime = 0
 		duration = node.GetAttrDef('duration', None)
-		self.__duration = duration
 		clip_begin = self.__channel.getclipbegin(node,'sec')
 		clip_end = self.__channel.getclipend(node,'sec')
 		self.__playBegin = clip_begin
@@ -315,9 +313,6 @@ class VideoStream:
 
 		window.setvideo(self.__mmstream._dds, self.__channel.getMediaWndRect(), self.__mmstream._rect)
 		self.__window = window
-		if self.__duration:
-			self.__node = node
-			self.__dqid = self.__channel._scheduler.enterabs(node.start_time + (self.__iteration + 1) * self.__duration, 0, self.onMediaEnd, ())
 		self.__mmstream.run()
 		self.__mmstream.update()
 		self.__window.update()
@@ -365,8 +360,6 @@ class VideoStream:
 				self.__pausedelay = self.__pausedelay + t0 - self.__pausetime
 				self.__mmstream.run()
 				self.__register_for_timeslices()
-				if self.__duration:
-					self.__dqid = self.__channel._scheduler.enterabs(self.__node.start_time + self.__pausedelay + (self.__iteration + 1) * self.__duration, 0, self.onMediaEnd, ())
 
 	def freezeit(self):
 		if self.__mmstream:
@@ -378,8 +371,6 @@ class VideoStream:
 			return		
 		self.__playdone=1
 		self.__channel.playdone(0, self.__channel._played_node.start_time + self.__playEnd - self.__playBegin)
-		self.__node = None
-		del self.__node
 
 	def onIdle(self):
 		if self.__mmstream and not self.__playdone:
@@ -388,8 +379,7 @@ class VideoStream:
 			if self.__window:
 				self.__window.update(self.__window.getwindowpos())
 			if not running or t_sec >= self.__playEnd:
-				if not self.__duration:
-					self.onMediaEnd()
+				self.onMediaEnd()
 	
 	def __register_for_timeslices(self):
 		if self.__fiber_id is None:
