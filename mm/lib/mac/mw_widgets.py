@@ -3,6 +3,8 @@ import Qd
 import QuickDraw
 import List
 import Lists
+import Controls
+import ControlAccessor
 
 import img
 import imgformat
@@ -220,8 +222,9 @@ class SelectWidget:
 		self.itemnum = ctlid
 		self.menu = None
 		self.choice = None
-		tp, h, self.rect = self.wid.GetDialogItem(self.itemnum)
-		self.control = h.as_Control()
+## 		tp, h, self.rect = self.wid.GetDialogItem(self.itemnum)
+## 		self.control = h.as_Control()
+		self.control = self.wid.GetDialogItemAsControl(self.itemnum)
 		self.setitems(items, default)
 		self.usercallback = callback
 		
@@ -242,7 +245,11 @@ class SelectWidget:
 			del self.menu
 		self.menu = mw_menucmd.SelectPopupMenu(items)
 		mhandle, mid = self.menu.getpopupinfo()
-		self.control.SetPopupData(mhandle, mid)
+##		self.control.SetPopupData(mhandle, mid)
+		ControlAccessor.SetControlData(self.control, Controls.kControlMenuPart,
+				Controls.kControlPopupButtonMenuHandleTag, mhandle)
+##		ControlAccessor.SetControlData(self.control,  Controls.kControlMenuPart,
+##				Controls.kControlPopupButtonMenuIDTag, mid)
 		self.control.SetControlMinimum(1)
 		self.control.SetControlMaximum(len(items)+1)
 		if default != None:
