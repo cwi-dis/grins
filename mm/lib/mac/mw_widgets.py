@@ -1,7 +1,12 @@
 import Win
 import Qd
+import QuickDraw
 import List
 import Lists
+
+import img
+import imgformat
+import mac_image
 
 #
 # Stuff needed from other mw_ modules
@@ -158,16 +163,55 @@ class _ImageWidget(_Widget):
 			
 	def setfromfile(self, image):
 		print "Image file", image
-		self.image = image
 		Win.InvalRect(self.rect)
+		self.image_data = None
+
+		if not image:
+			return
+		format = imgformat.macrgb16
+		try:
+			rdr = img.reader(format, image)
+			bits = rdr.read()
+		except (img.error, IOError):
+			return
+		
+		pixmap = mac_image.mkpixmap(rdr.width, rdr.height, format, bits)
+		self.image_data = (rdr.width, rdr.height, (pixmap, bits))
 				
 	def _redraw(self, rgn=None):
 		if rgn == None:
 			rgn = self.wid.GetWindowPort().visRgn
 		Qd.SetPort(self.wid)
-		Qd.EraseRect(self.rect)
+		if not self.image_data:
+			Qd.EraseRect(self.rect)
+		else:
+			w, h, (pixmap, dataref) = self.image_data
+			dl, dt, dr, db = self.rect
+			#
+			# If there is enough room center the image
+			#
+			if dr-dl > w:
+				dl = dl + ((dr-dl)-w)/2
+				dr = dl + w
+			if db-dt > h:
+				dt = dt + ((db-dt)-h)/2
+				db = dt + h
+				
+			srcrect = 0, 0, w, h
+			dstrect = dl, dt, dr, db
+			print dstrect
+			fgcolor = self.wid.GetWindowPort().rgbFgColor
+			bgcolor = self.wid.GetWindowPort().rgbBkColor
+			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+			Qd.RGBForeColor((0, 0, 0))
+			Qd.CopyBits(pixmap,
+			      self.wid.GetWindowPort().portBits,
+			      srcrect, dstrect,
+			      QuickDraw.srcCopy+QuickDraw.ditherCopy,
+			      None)
+			Qd.RGBBackColor(bgcolor)
+			Qd.RGBForeColor(fgcolor)
 		Qd.FrameRect(self.rect)
-		pass # Draw the image
 
 	def _activate(self, onoff):
 		pass
