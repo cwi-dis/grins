@@ -60,6 +60,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.__rc.stopit()
 			self.__rc.destroy()
 			self.__rc = None
+		self.window.DestroyOSWindow()
 		Channel.ChannelWindowAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):
@@ -108,6 +109,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			# arming failed, so don't even try playing
 			self.playdone(0)
 			return
+		self.window.CreateOSWindow()
 		if node.__type == 'real':
 			if not self.__rc:
 				self.playdone(0)
@@ -181,8 +183,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 #			if drawbox:
 #				b.hicolor(hicolor)
 #			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
-		if node.__type != 'real':
-			self.armed_display.drawvideo(self.__mc.update)
+#		if node.__type != 'real':
+#			self.armed_display.drawvideo(self.__mc.update)
 
 	def _getoswindow(self):
 		return self.window.GetSafeHwnd()
