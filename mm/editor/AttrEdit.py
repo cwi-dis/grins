@@ -1282,7 +1282,7 @@ class AttrEditor(AttrEditorDialog):
 					return 1
 				if name == 'file':
 					ntype = self.wrapper.node.GetType()
-					if value[:5] == 'data:' and ntype == 'ext':
+					if value and value[:5] == 'data:' and ntype == 'ext':
 						import MMmimetypes
 						mtype = MMmimetypes.guess_type(value)[0]
 						if mtype == 'text/plain':
