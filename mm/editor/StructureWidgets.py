@@ -1,4 +1,4 @@
-# $Id:
+# $Id$
 # This file contains a list of standard widgets used in the
 # HierarchyView. I tried to keep them view-independant, but
 # I can't promise anything!!
@@ -85,12 +85,19 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		# Holds little icons..
 		self.iconbox = IconBox(self, self.mother)
 		self.iconbox.setup()
+		self.has_event_icons = 0
 		self.cause_event_icon = None
 
 	def __repr__(self):
 		return '<%s instance, name="%s", id=%X>' % (self.__class__.__name__, self.name, id(self))
 
+	def get_node(self):
+		return self.node
+
 	def add_event_icons(self):
+		if self.has_event_icons: # calls this once only.
+			return
+		self.has_event_icons = 1
 		beginevents = MMAttrdefs.getattr(self.node, 'beginlist')
 ##		endevents = MMAttrdefs.getattr(self.node, 'endlist')
 
@@ -101,12 +108,18 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 		#self.iconbox.add_icon('activateevent')
 
+		icon = None
 		for b in beginevents:
 			othernode = b.refnode()
 			if othernode:
 				# Known bug: TODO: I'm not worrying if the node is collapsed.
 				otherwidget = othernode.views['struct_view'].get_cause_event_icon()
-				self.iconbox.add_icon('beginevent', arrowto = otherwidget).set_properties(arrowable=1).set_contextmenu(self.mother.event_popupmenu)
+				if icon is None:
+					icon = self.iconbox.add_icon('beginevent', arrowto = otherwidget).set_properties(arrowable=1).set_contextmenu(self.mother.event_popupmenu)
+				else:
+					icon.add_arrow(otherwidget)
+				print "DEBUG: icon is: ", icon
+				otherwidget.add_arrow(icon)
 
 	def collapse_levels(self, level):
 		# Place holder for a recursive function.
@@ -204,7 +217,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def get_cause_event_icon(self):
 		# Returns the start position of an event arrow.
 		if not self.cause_event_icon:
-			self.cause_event_icon = self.iconbox.add_icon('causeevent')
+			self.cause_event_icon = self.iconbox.add_icon('happyface').set_properties(arrowable = 1, arrowdirection=1)
 		return self.cause_event_icon
 
 	def getlinkicon(self):
@@ -354,6 +367,9 @@ class MMWidgetDecoration(Widgets.Widget):
 		Widgets.Widget.destroy(self)
 	def get_mmwidget(self):
 		return self.mmwidget
+	def get_node(self):
+		return self.mmwidget.get_node()
+
 
 #
 # The StructureObjWidget represents any node which has children,
@@ -1582,95 +1598,6 @@ class PushBackBarWidget(MMWidgetDecoration):
 		AttrEdit.showattreditor(self.mother.toplevel, self.node, '.begin1')
 
 
-class Icon(MMWidgetDecoration):
-	# Display an icon which can be clicked on. This can be used for
-	# any icon on screen.
-
-	def setup(self):
-		self.callback = None
-		self.arrowto = None	# another MMWidget.
-		self.icon = ""
-		self.contextmenu = None
-		
-		# Enable / disable.
-		self.callbackable = 1
-		self.selectable = 1
-		self.arrowable = 0
-
-
-	def destroy(self):
-		MMWidgetDecoration.destroy(self)
-		self.callback = None
-		self.arrowto = None
-
-	def set_icon(self, iconname):
-		self.icon = iconname
-		return self
-
-	def set_properties(self, selectable=1, callbackable=1, arrowable=0):
-		self.selectable = selectable
-		self.callbackable = callbackable
-		self.arrowable = arrowable
-		return self
-
-	def select(self):
-		if self.selectable:
-			self.mother.need_redraw = 1 # TODO: optimise.
-			MMWidgetDecoration.select(self)
-	def unselect(self):
-		if self.selectable:
-			self.mother.need_redraw = 1
-			MMWidgetDecoration.unselect(self)
-
-	def set_callback(self, callback, args=()):
-##		print "DEBUG: callback set."
-		self.callback = callback, args
-		return self
-
-	def mouse0release(self, coords):
-##		print "DEBUG: doing the callback."
-##		print "DEBUG: ", self.callback, self.icon
-		if self.callback and self.icon:
-			# Freaky code that Sjoerd showed me: -mjvdg
-			apply(apply, self.callback)
-##		else:
-##			print "DEBUG: no callback."
-
-	def moveto(self, pos):
-		l,t,r,b = pos
-		iconsizex = sizes_notime.ERRSIZE
-		iconsizey = sizes_notime.ERRSIZE
-		MMWidgetDecoration.moveto(self, (l, t, l+iconsizex, t+iconsizey))
-		return self
-
-	def draw(self, displist):
-		if self.icon is not None:
-			if self.selected:
-				displist.drawfbox((0,0,0),self.get_box())
-			displist.drawicon(self.get_box(), self.icon)
-
-			if self.arrowable and self.arrowto and self.selected:
-				l,t,r,b = self.arrowto.pos_abs
-				if l == 0:
-					return
-				xd = (l+r)/2
-				yd = (t+b)/2
-				l,t,r,b = self.pos_abs
-				xs = (l+r)/2
-				ys = (t+b)/2
-				self.mother.add_arrow(ARROWCOLOR, (xd,yd),(xs,ys))
-				#displist.drawarrow(ARROWCOLOR,(xd,yd),(xs,ys))
-
-	def set_contextmenu(self, foobar):
-		self.contextmenu = foobar			# TODO.
-	def get_contextmenu(self):
-		return self.contextmenu
-
-	def add_arrow(self, dest):
-		# dest can be any MMWidget.
-		self.arrowto = dest
-		return self
-
 class TimelineWidget(MMWidgetDecoration):
 	# A widget showing the timeline
 ##	def __repr__(self):
@@ -1856,6 +1783,124 @@ class IconBox(MMWidgetDecoration):
 #		self.selected_iconname = None
 
 
+class Icon(MMWidgetDecoration):
+	# Display an icon which can be clicked on. This can be used for
+	# any icon on screen.
+
+	def setup(self):
+		self.callback = None
+		self.arrowto = []	# a list of other MMWidgets.
+		self.icon = ""
+		self.contextmenu = None
+		
+		self.set_properties()
+
+	def destroy(self):
+		MMWidgetDecoration.destroy(self)
+		self.callback = None
+		self.arrowto = None
+
+	def set_icon(self, iconname):
+		self.icon = iconname
+		return self
+
+	def set_properties(self, selectable=1, callbackable=1, arrowable=0, arrowdirection=0):
+		self.selectable = selectable
+		self.callbackable = callbackable
+		self.arrowable = arrowable
+		self.arrowdirection = arrowdirection
+		return self
+
+	def select(self):
+		if self.selectable:
+			self.mother.need_redraw = 1 # TODO: optimise.
+			MMWidgetDecoration.select(self)
+	def unselect(self):
+		if self.selectable:
+			self.mother.need_redraw = 1
+			MMWidgetDecoration.unselect(self)
+
+	def set_callback(self, callback, args=()):
+##		print "DEBUG: callback set."
+		self.callback = callback, args
+		return self
+
+	def mouse0release(self, coords):
+##		print "DEBUG: doing the callback."
+##		print "DEBUG: ", self.callback, self.icon
+		if self.callback and self.icon:
+			# Freaky code that Sjoerd showed me: -mjvdg
+			apply(apply, self.callback)
+##		else:
+##			print "DEBUG: no callback."
+
+	def moveto(self, pos):
+		l,t,r,b = pos
+		iconsizex = sizes_notime.ERRSIZE
+		iconsizey = sizes_notime.ERRSIZE
+		MMWidgetDecoration.moveto(self, (l, t, l+iconsizex, t+iconsizey))
+		return self
+
+	def draw(self, displist):
+		if self.icon is not None:
+			if self.selected:
+				displist.drawfbox((0,0,0),self.get_box())
+			displist.drawicon(self.get_box(), self.icon)
+
+			if self.arrowable and self.selected:
+				for arrow in self.arrowto:
+					l,t,r,b = arrow.pos_abs
+					if l == 0:
+						return
+					xd = (l+r)/2
+					yd = (t+b)/2
+					l,t,r,b = self.pos_abs
+					xs = (l+r)/2
+					ys = (t+b)/2
+					if self.arrowdirection:
+						self.mother.add_arrow(ARROWCOLOR, (xs,ys),(xd,yd))
+					else:
+						self.mother.add_arrow(ARROWCOLOR, (xd,yd),(xs,ys))
+					#displist.drawarrow(ARROWCOLOR,(xd,yd),(xs,ys))
+
+	def set_contextmenu(self, foobar):
+		self.contextmenu = foobar			# TODO.
+		return self
+	def get_contextmenu(self):
+		return self.contextmenu
+
+	def add_arrow(self, dest):
+		# dest can be any MMWidget.
+		if dest and dest not in self.arrowto:
+			self.arrowto.append(dest)
+		return self
+
+class CollapseIcon(Icon):
+	# For collapsing and uncollapsing nodes
+	def setup(self):
+		Icon.setup(self)
+		self.selectable = 0
+		self.callbackable = 1
+		self.arrowable = 0
+		self.contextmenu = None
+
+class EventSourceIcon(Icon):
+	# Is the source of an event
+	def setup(self):
+		Icon.setup(self)
+		self.selectable = 1
+		self.callbackable = 1
+		self.arrowable = 1
+		self.arrowdirection = 1
+		self.contextmenu = None
+
+class EventIcon(Icon):
+	# Is the actual event.
+	pass
+
+
+
+
 ##############################################################################
 			# Crap at the end of the file.
 
@@ -1872,8 +1917,6 @@ class BrushWidget(MMNodeWidget):
 #	HAS_CHANNEL_BOX = 1
 ##	def __repr__(self):
 ##		return "TimeStripSeqWidget"
-
-
 
 class ImageBoxWidget(MMWidgetDecoration):
 	# Common baseclass for dropbox and channelbox
