@@ -302,6 +302,9 @@ class ViewportWnd:
 	def getDirectDraw(self):
 		return self._ctx.getDirectDraw()
 
+	def getRGBBitCount(self):
+		return self._ctx.getRGBBitCount()
+
 	def __metaPaintOnDDS(self):
 		dds = self.getDrawBuffer()
 		if not dds: return

@@ -809,6 +809,9 @@ class DDWndLayer:
 	def getDirectDraw(self):
 		return self._ddraw
 
+	def getRGBBitCount(self):
+		return self._pxlfmt[0]
+
 	def getDrawBuffer(self):
 		if not self._ddraw: return None
 		if self._backBuffer.IsLost():
@@ -1707,6 +1710,9 @@ class Viewport(Region):
 
 	def getDirectDraw(self):
 		return self._ctx.getDirectDraw()
+
+	def getRGBBitCount(self):
+		return self._ctx.getRGBBitCount()
 
 	def paint(self):
 		dds = self.getDrawBuffer()
