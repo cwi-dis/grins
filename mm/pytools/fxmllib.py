@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import re, string
 import sys                              # need for CanonXMLParser
 
