@@ -353,10 +353,6 @@ SOURCE=.\M_colors.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_colorsex.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_colorsys.c
 # End Source File
 # Begin Source File
