@@ -77,6 +77,10 @@ CFG=All cmif extensions - Win32 Debug
 
 # Begin Source File
 
+SOURCE=..\..\lib\win32\IconMixin.py
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\lib\win32\Toolbars.py
 # End Source File
 # Begin Source File
