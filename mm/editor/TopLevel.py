@@ -269,31 +269,22 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		TopLevelDialog.set_commandlist(self)
 			
 	def update_undocommandlist(self):
-		print 'update_undocommandlist'
 		commandlist = self.commandlist
 		if not self.context.disableviews:
-			print 'a'
 			commandlist = commandlist + self.viewcommandlist
 			if self.context.attributes.get('project_boston', 0):
-				print 'b'
 				commandlist = commandlist + self.__ugroup
 		if self.context.isValidDocument():
-			print 'c'
 			if self.changed:
-				print 'd'
 				commandlist = commandlist + self.savecommandlist
 			if not self.context.attributes.get('project_boston', 0):
-				print 'e'
 				commandlist = commandlist + self.publishg2commandlist
 			commandlist = commandlist + self.publishcommandlist
 		else:
-			print 'f'
 			commandlist = commandlist + self.errorscommandlist
 		if self.editmgr.history:
-			print 'g'
 			commandlist = commandlist + self.undocommandlist[:1]
 		if self.editmgr.future:
-			print 'h'
 			commandlist = commandlist + self.undocommandlist[1:]
 
 		self.setcommands(commandlist)
