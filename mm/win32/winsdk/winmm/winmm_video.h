@@ -6,6 +6,7 @@
 #endif
 
 PyObject* Winmm_CreateVideoPlayerFromFile(PyObject *self, PyObject *args);
+PyObject* Winmm_GetVideoDuration(PyObject *self, PyObject *args);
 PyObject* Winmm_GXOpenDisplay(PyObject *self, PyObject *args);
 PyObject* Winmm_GXCloseDisplay(PyObject *self, PyObject *args);
 
