@@ -30,7 +30,7 @@ window returns.
 		Show a dialog box with the given question. Answers is
 		a list of strings with possible answers. Default is
 		the index of the default answer or -1. For backward
-		compatability answers can also be a list of tuples of
+		compatibility answers can also be a list of tuples of
 		which the first member should be the string.
 
 
@@ -93,7 +93,7 @@ are as follows.
 		The default is 'Yes'.
 
 	NOMSG
-		The text of the negative answer in showqueston().  The
+		The text of the negative answer in showquestion().  The
 		default is 'No'.
 
 The class that is defined in the dialogs module is called Dialog.  It
@@ -105,7 +105,7 @@ The following methods are defined.
 
 	draw_window()
 		Draw the window.  This should be called after a
-		ResizeWindow event ws received for the window.
+		ResizeWindow event was received for the window.
 
 	checkevent(window, event, value)
 		This method should be called when an event for the

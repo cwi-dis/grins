@@ -289,6 +289,7 @@ class _Font:
 
 	def close(self):
 		self._closed = 1
+		del self._font
 
 	def is_closed(self):
 		return self._closed
@@ -368,10 +369,6 @@ class _Button:
 			raise TypeError, 'arg count mismatch'
 		self._hicolor = color
 
-# XXXX Jack says:
-# is this code correct? It seems that it only highlights the button once,
-# without altering the display list. Also, in the current incarnation if
-# highlighting is done by changing line thickness the unhighlight doesn't work.
 	def highlight(self):
 		if self.is_closed():
 			raise error, 'button already closed'
@@ -447,7 +444,10 @@ class _DisplayList:
 				window._redraw()
 		self._window = None
 		self._rendered = 0
-		self._displaylist = []
+		del self._displaylist
+		del self._font
+		del self._curfont
+		del self._buttonlist
 
 	def is_closed(self):
 		return self._window == None
@@ -806,11 +806,11 @@ class _Window:
 			win.close()
 		for displist in self._displaylists:
 			displist.close()
-		self._displaylists = []
+		del self._displaylists
 		gl.winclose(self._window_id)
 		del _window_list[self._window_id]
 		parent = self._parent_window
-		self._parent_window = None
+		del self._parent_window
 		if parent:
 			parent._subwindows.remove(self)
 
@@ -1099,17 +1099,18 @@ class _Window:
 				raise error, msg
 			retval = self._prepare_RGB_image_from_file(f, \
 				  top, bottom, left, right)
+			retval = retval[:-1] + (1,)
 			if f != file:
 				import os
 				os.unlink(f)
-		if not _cache_full:
+		if not _cache_full and retval[-1]:
 			import tempfile
 			filename = tempfile.mktemp()
 			try:
 				import imgfile
 				imgfile.write(filename, retval[10], \
 					  retval[6], retval[7], retval[8])
-			except:			# any error...
+			except:		# any error...
 				print 'Warning: caching image failed'
 				import posix
 				try:
@@ -1117,9 +1118,9 @@ class _Window:
 				except posix.error:
 					pass
 				_cache_full = 1
-				return retval
-			_image_cache[cachekey] = retval[:-1] + (filename,)
-		return retval
+				return retval[:-1]
+			_image_cache[cachekey] = retval[:-2] + (filename,)
+		return retval[:-1]
 
 	def _prepare_RGB_image_from_file(self, file, top, bottom, left, right):
 		import imgfile
@@ -1145,8 +1146,13 @@ class _Window:
 			scale = 1.0
 		x, y = (self._width-(width-left-right))/2, \
 			  (self._height-(height-top-bottom))/2
+		if xsize * ysize < width * height:
+			do_cache = 0
+		else:
+			do_cache = 1
 		return x, y, width - left - right, height - top - bottom, \
-			  left, bottom, width, height, zsize, scale, image
+			  left, bottom, width, height, zsize, scale, \
+			  image, do_cache
 
 	def _prepare_JPEG_image_from_filep(self, filep, top, bottom, left, right):
 		import cl, CL
@@ -1199,7 +1205,7 @@ class _Window:
 		x, y = (self._width-(width-left-right))/2, \
 			  (self._height-(height-top-bottom))/2
 		return x, y, width - left - right, height - top - bottom, \
-			  left, bottom, width, height, zsize, scale, image
+			  left, bottom, width, height, zsize, scale, image, 1
 
 	def _convert_coordinates(self, x, y, w, h):
 		x0, y0 = x, y
