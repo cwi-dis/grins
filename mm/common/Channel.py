@@ -29,6 +29,9 @@ PIDLE = 1
 PLAYING = 2
 PLAYED = 3
 
+import settings
+CMIF_MODE = settings.get('cmif')
+
 def isin(elem, list):
 	# faster than "elem in list"
 	for x in list:
@@ -984,7 +987,11 @@ _button = None				# the currently highlighted button
 
 class ChannelWindow(Channel):
 	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup', 'z', 'bgimg']
-	node_attrs = Channel.node_attrs + ['duration', 'drawbox', 'bgcolor']
+	node_attrs = Channel.node_attrs + ['duration', 'drawbox']
+	if CMIF_MODE:
+		node_attrs.append('bgcolor')
+	else:
+		chan_attrs.append('bgcolor')
 	_visible = TRUE
 	_window_type = SINGLE
 
