@@ -26,8 +26,10 @@ class Document(Node):
 		return self.root
 
 	def createElement(self, tagName) :
-		nwElement = Element(tagName)
-		return nwElement
+	# channels, hyperlinks, elements
+		nwnode = self.root.context.newnode(tagName)
+		print 'nwnode ', nwnode
+		return nwnode
 
 	def createAttribute(self, name) :
 		nwAttribute = Attr(name)

@@ -541,8 +541,6 @@ class MMNode(domcore.Element):
 				namedNodeMap.setNamedItem(newAttribute)
 		return namedNodeMap     
 
-
-
 	def removeChild(self, oldChild):
 		em = self.context.editmgr			
 		if not em.transaction():
@@ -550,6 +548,30 @@ class MMNode(domcore.Element):
 		em.delnode(oldChild)
 		em.commit()
 		return oldChild
+
+	def appendChild(self, newChild):
+		# Doesn't check if newChild already exists in self.children as specified by 
+		# the xml-dom
+		em = self.context.editmgr			
+		if not em.transaction():
+                	return None
+		i = len(self.children)
+		em.addnode(self, i, newChild)
+		em.commit()
+		return newChild
+
+	def setAttribute(self, name, value):
+		if name=="duration" :
+			value = float(value)
+		em = self.context.editmgr			
+		if not em.transaction():
+                	return None
+		em.setnodeattr(self, name, value)
+		em.commit()
+		return None
+
+	def setAttributeNode(self, attr):
+		return self.setAttribute(attr._get_name(), attr._get_value())	
 
 	# toxml2 is more efficient, but not using XML-DOM interface.
 	# To get all dom stuff, use toxml() defined in domcore.Element
