@@ -21,6 +21,7 @@ import gl, GL, DEVICE
 import fm
 import string
 from EVENTS import *
+_Accelerator = 1024
 #from debug import debug
 debug = 0
 import time, select
@@ -411,6 +412,14 @@ class _Event:
 				return 1
 		if window and window.is_closed():
 			return 0
+		if event == KeyboardInput:
+			key = (window, _Accelerator)
+			if self._windows.has_key(key):
+				accdict, dummy = self._windows[key]
+				if accdict.has_key(value):
+					del self._queue[0]
+					apply(accdict[value])
+					return 1
 		for w in [window, None]:
 			while 1:
 				for key in [(w, event), (w, None)]:
@@ -1136,8 +1145,10 @@ class _Window:
 ##		s = s + '>'
 ##		return s
 
-##	def __del__(self):
-##		print 'delete',`self`
+	def __del__(self):
+		print 'delete',`self`
+		if not _window_list.has_key(self._window_id):
+			self.close()
 
 	def _init2(self):
 		if debug: print `self`+'.init2()'
@@ -1156,6 +1167,7 @@ class _Window:
 		self._subwindows_closed = 0
 		self._displaylists = []
 		self._active_display_list = None
+		self._menuids = []
 		self._closecallbacks = []
 		_window_list[self._window_id] = self
 		self._redraw_func = None
@@ -1208,6 +1220,11 @@ class _Window:
 		for displist in self._displaylists[:]:
 			displist.close()
 		del self._displaylists
+		self.destroy_menu()
+		del self._menuids
+		del self._menu
+		del self._menuprocs
+		del self._accelerators
 		gl.winclose(self._window_id)
 		del _window_list[self._window_id]
 		parent = self._parent_window
@@ -1813,6 +1830,66 @@ class _Window:
 
 	def unregister(self, ev):
 		event.unregister(self, ev)
+
+	def destroy_menu(self):
+		for menu in self._menuids:
+			gl.freepup(menu)
+		self._menuids = []
+		self._menuprocs = [None]
+		if self._active_display_list:
+			self.unregister(KeybourdInput)
+		self._accelerators = {}
+		self.unregister(Mouse2Press)
+		self.unregister(_Accelerator)
+
+	def _popup_menu(self, *args):
+		i = gl.dopup(self._menu)
+		if 0 < i < len(self._menuprocs):
+			apply(self._menuprocs[i])
+
+	def _keyb_inp(self, arg, win, ev, val):
+		if self._accelerators.has_key(val):
+			apply(self._accelerators[val])
+
+	def create_menu(self, title, list):
+		self.destroy_menu()
+		self._menu = self._create_menu(title, list)
+		self.register(Mouse2Press, self._popup_menu, None)
+		self.register(_Accelerator, self._accelerators, None)
+
+	def _create_menu(self, title, list):
+		menu = self._menu = gl.newpup()
+		self._menuids.append(menu)
+		if title:
+			gl.addtopup(menu, title + '%t', 0)
+		for i in range(len(list)):
+			entry = list[i]
+			if entry is None:
+				# add separator line
+				continue
+			accelerator, label, callback = entry
+			text = label
+			if i < len(list) - 1 and list[i + 1] is None:
+				text = text + '%l'
+			if type(callback) is type([]):
+				text = '   ' + text
+				submenu = self._create_menu(None, callback)
+				gl.addtopup(menu, text + '%m', submenu)
+			else:
+				if type(callback) is not type(()):
+					callback = (callback, (label,))
+				if accelerator:
+					if type(accelerator) is not type('') or \
+					   len(accelerator) != 1:
+						raise error, 'menu accelerator must be single character'
+					self._accelerators[accelerator] = callback
+					text = accelerator + ' ' + text
+				else:
+					text = '   ' + text
+				text = text + '%x' + `len(self._menuprocs)`
+				gl.addtopup(menu, text, 0)
+				self._menuprocs.append(callback)
+		return menu
 
 # Font stuff
 def _findfont(fontname, size):
