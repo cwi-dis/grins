@@ -6,8 +6,8 @@ from MMExc import *
 import MMAttrdefs
 import AttrEdit
 from ViewDialog import ViewDialog
-import windowinterface, WMEVENTS
-from AnchorDefs import A_TYPE, A_ID, ATYPE_WHOLE
+import windowinterface
+from AnchorDefs import A_TYPE, A_ID, ATYPE_WHOLE, DestOnlyAnchors
 
 from MMNode import interiortypes
 
@@ -74,17 +74,14 @@ class LinkEdit(ViewDialog):
 						(self.left, M_BVFOCUS)))]
 			 )],
 			top = None, left = None, right = None)
-		self.left.anchoredit_show = win1.ButtonRow(
-			[('Anchor editor...', (self.anchoredit_callback, (self.left,)))],
+		self.left.buttons = win1.ButtonRow(
+			[('Push focus', (self.show_callback, (self.left,))),
+			 ('Anchor editor...', (self.anchoredit_callback, (self.left,)))],
+			vertical = 1,
 			bottom = None, left = None, right = None)
-		self.left.node_show = win1.ButtonRow(
-			[('Push focus', (self.show_callback, (self.left,)))
-			 ],
-			bottom = self.left.anchoredit_show, left = None,
-			right = None)
 		list = win1.List('None', [],
 				 (self.anchor_browser_callback, (self.left,)),
-				 top = menu, bottom = self.left.node_show,
+				 top = menu, bottom = self.left.buttons,
 				 left = None, right = None)
 		self.left.browser = list
 
@@ -125,17 +122,14 @@ class LinkEdit(ViewDialog):
 					 (self.right, M_KEEP)))]
 			 )],
 			top = None, left = None, right = None)
-		self.right.anchoredit_show = win3.ButtonRow(
-			[('Anchor editor...', (self.anchoredit_callback, (self.right,)))],
+		self.right.buttons = win3.ButtonRow(
+			[('Push focus', (self.show_callback, (self.right,))),
+			 ('Anchor editor...', (self.anchoredit_callback, (self.right,)))],
+			vertical = 1,
 			bottom = None, left = None, right = None)
-		self.right.node_show = win3.ButtonRow(
-			[('Push focus', (self.show_callback, (self.right,)))
-			 ],
-			bottom = self.right.anchoredit_show, left = None,
-			right = None)
 		list = win3.List('None', [],
 				 (self.anchor_browser_callback, (self.right,)),
-				 top = menu, bottom = self.right.node_show,
+				 top = menu, bottom = self.right.buttons,
 				 left = None, right = None)
 		self.right.browser = list
 
@@ -153,15 +147,6 @@ class LinkEdit(ViewDialog):
 
 	def __repr__(self):
 		return '<LinkEdit instance, root=' + `self.root` + '>'
-
-	def transaction(self):
-		return 1
-
-	def rollback(self):
-		pass
-
-	def commit(self):
-		self.updateform()
 
 	def kill(self):
 		self.hide()
@@ -324,9 +309,10 @@ class LinkEdit(ViewDialog):
 	def reloadanchors(self, str, scroll):
 		if str.hidden:
 			str.browser.hide()
-			str.node_show.hide()
+			str.buttons.hide()
 		else:
 			str.browser.show()
+			str.buttons.show()
 		# Try to keep focus correct
 		if str.focus is not None:
 			focusvalue = str.anchors[str.focus]
@@ -424,16 +410,17 @@ class LinkEdit(ViewDialog):
 				str.browser.scrolllist(str.focus,
 						       windowinterface.CENTER)
 			str.browser.show()
-			str.node_show.show()
-			str.anchoredit_show.show()
+			str.buttons.show()
+			str.buttons.setsensitive(0, 1)
+			str.buttons.setsensitive(1, 1)
 		else:
-			str.node_show.hide()
-			str.anchoredit_show.hide()
+			str.buttons.setsensitive(0, 0)
+			str.buttons.setsensitive(1, 0)
 		if str.node:
 			str.browser.setlabel('Node: ' +
 					MMAttrdefs.getattr(str.node, 'name'))
 
-	# This function reloads the link browser or invisibilizes it
+	# This function reloads the link browser or makes it invisible
 	def reloadlinks(self):
 		slf = self.left.focus
 		srf = self.right.focus
@@ -457,8 +444,8 @@ class LinkEdit(ViewDialog):
 		else:
 			fvalue = self.links[self.linkfocus]
 		self.linkfocus = None
-		self.links = self.context.hyperlinks.findalllinks \
-			  (lfocus,rfocus)
+		self.links = self.context.hyperlinks.findalllinks(lfocus,
+								  rfocus)
 		lines = []
 		for i in self.links:
 			line = typestr[i[TYPE]] + ' ' + dirstr[i[DIR]]
@@ -473,25 +460,59 @@ class LinkEdit(ViewDialog):
 		if self.links and self.linkfocus is None and not self.linkedit:
 			self.linkfocus = 0
 		if self.linkfocus is None:
-			self.link_edit.hide()
-			pass
+			self.link_edit.setsensitive(0, 0)
+			self.link_edit.setsensitive(1, 0)
 		else:
 			self.link_browser.selectitem(self.linkfocus)
 			if not self.link_browser.is_visible(self.linkfocus):
 				self.link_browser.scrolllist(self.linkfocus,
 							windowinterface.CENTER)
-			self.link_edit.show()
+			self.link_edit.setsensitive(0, 1)
+			self.link_edit.setsensitive(1, 1)
+		self.link_browser.show()
+		self.link_new.show()
+		self.link_edit.show()
+		if self.right.hidden:
+			self.link_new.setsensitive(0, 0)
+		else:
+			self.link_new.setsensitive(0, 1)
+		if self.linkfocus:
+			link = self.links[self.linkfocus]
+			lfocus = link[ANCHOR1]
+			rfocus = link[ANCHOR2]
+		lnode = rnode = None
+		lanchor = self.__findanchor(lfocus)
+		ranchor = self.__findanchor(rfocus)
+		if lanchor is None or ranchor is None or \
+		   lanchor == ranchor or \
+		   (lanchor[A_TYPE] in DestOnlyAnchors and
+		    ranchor[A_TYPE] in DestOnlyAnchors):
+			# can't add a link between destination-only anchors
+			self.link_new.setsensitive(0, 0)
 		if self.linkedit:
 			self.set_radio_buttons()
 			self.link_dir.show()
+			if lanchor is None or ranchor is None:
+				# shouldn't happen
+				return
+			if lanchor[A_TYPE] in DestOnlyAnchors:
+				# can only be a destination
+				self.link_dir.setsensitive(0, 0)
+				self.link_dir.setsensitive(1, 1)
+				self.link_dir.setsensitive(2, 0)
+			elif ranchor[A_TYPE] in DestOnlyAnchors:
+				# can only be a destination
+				self.link_dir.setsensitive(0, 1)
+				self.link_dir.setsensitive(1, 0)
+				self.link_dir.setsensitive(2, 0)
+			else:
+				# can be both source and destination
+				self.link_dir.setsensitive(0, 1)
+				self.link_dir.setsensitive(1, 1)
+				self.link_dir.setsensitive(2, 1)
 		else:
 			self.link_dir.hide()
 			self.ok_group.hide()
-		self.link_browser.show()
-		if self.right.hidden:
-			self.link_new.hide()
-		else:
-			self.link_new.show()
 
 	# Reload/redisplay all data
 	def updateform(self, str = None):
@@ -506,8 +527,7 @@ class LinkEdit(ViewDialog):
 			return
 		self.linkedit = 1
 		if fromfocus:
-			l = self.links[self.linkfocus]
-			self.editlink = l
+			self.editlink = self.links[self.linkfocus]
 		else:
 			slf = self.left.focus
 			srf = self.right.focus
@@ -521,7 +541,31 @@ class LinkEdit(ViewDialog):
 				windowinterface.beep()
 				self.linkedit = 0
 				return
-			self.editlink = (n1, n2, DIR_1TO2, TYPE_JUMP)
+			a1 = self.__findanchor(n1)
+			a2 = self.__findanchor(n2)
+			if a1 is None or a2 is None:
+				print 'LinkEdit: cannot find anchors!'
+				self.linkedit = 0
+				return
+			if a1[A_TYPE] in DestOnlyAnchors:
+				# left node can only be destination
+				if a2[A_TYPE] in DestOnlyAnchors:
+					print 'LinkEdit: 2 destination achors!'
+					self.linkedit = 0
+					return
+				dir = DIR_2TO1
+			else:
+				dir = DIR_1TO2
+			self.editlink = (n1, n2, dir, TYPE_JUMP)
+
+	def __findanchor(self, anchor):
+		if anchor is not None:
+			node = self.context.mapuid(anchor[0])
+			aid = anchor[1]
+			for a in MMAttrdefs.getattr(node, 'anchorlist'):
+				if a[A_ID] == aid:
+					return a
+		return None
 
 	# Update the link edit radio buttons to reflect the state of
 	# the edited link
@@ -529,15 +573,19 @@ class LinkEdit(ViewDialog):
 		linkdir = self.editlink[DIR]
 		linktype = self.editlink[TYPE]
 		self.link_dir.setpos(linkdir)
+		self.ok_group.show()
 		if self.linkfocus is None:
 			# We seem to be adding
-			self.ok_group.show()
+			self.ok_group.setsensitive(0, 1)
+			self.ok_group.setsensitive(1, 1)
 			return
 		link = self.links[self.linkfocus]
 		if linkdir == link[DIR] and linktype == link[TYPE]:
-			self.ok_group.hide()
+			self.ok_group.setsensitive(0, 0)
+			self.ok_group.setsensitive(1, 1)
 		else:
-			self.ok_group.show()
+			self.ok_group.setsensitive(0, 1)
+			self.ok_group.setsensitive(1, 1)
 
 	# Callback functions
 	def anchor_browser_callback(self, str):
@@ -686,6 +734,16 @@ class LinkEdit(ViewDialog):
 
 	def GetHierarchyViewFocus(self):
 		return self.toplevel.hierarchyview.getfocus()
+
+	# EditMgr interface
+	def transaction(self):
+		return 1
+
+	def rollback(self):
+		pass
+
+	def commit(self):
+		self.updateform()
 
 
 	
