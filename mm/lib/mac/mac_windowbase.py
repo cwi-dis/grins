@@ -1337,7 +1337,7 @@ class _CommonWindow:
 		still_to_do = []
 		for child in self._subwindows:
 			if child._transparent == 0 or \
-					(child._transparent == -1 and child.active_displist):
+					(child._transparent == -1 and child._active_displist):
 				child._redraw(rgn)
 			else:
 				still_to_do.append(child)
@@ -1932,6 +1932,37 @@ class _DisplayList:
 			restorefontinfo(w._wid, old_fontinfo)
 		return oldx, oldy, maxx - oldx, newy - oldy + height - base
 		
+	# Draw a string centered in a box, breaking lines if necessary
+	def centerstring(self, left, top, right, bottom, str):
+		fontheight = self.fontheight()
+		baseline = self.baseline()
+		width = right - left
+		height = bottom - top
+		curlines = [str]
+		if height >= 2*fontheight:
+			import StringStuff
+			curlines = StringStuff.calclines([str], self.strsize, width)[0]
+		nlines = len(curlines)
+		needed = nlines * fontheight
+		if nlines > 1 and needed > height:
+			nlines = max(1, int(height / fontheight))
+			curlines = curlines[:nlines]
+			curlines[-1] = curlines[-1] + '...'
+		x0 = (left + right) * 0.5	# x center of box
+		y0 = (top + bottom) * 0.5	# y center of box
+		y = y0 - nlines * fontheight * 0.5
+		for i in range(nlines):
+			str = string.strip(curlines[i])
+			# Get font parameters:
+			w = self.strsize(str)[0]	# Width of string
+			while str and w > width:
+				str = str[:-1]
+				w = self.strsize(str)[0]
+			x = x0 - 0.5*w
+			y = y + baseline
+			self.setpos(x, y)
+			self.writestr(str)
+
 	def _update_bbox(self, minx, miny, maxx, maxy):
 		assert type(minx) == type(maxx) == type(miny) == type(maxy) == type(1)
 		if minx > maxx:
