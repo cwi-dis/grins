@@ -227,18 +227,20 @@ def rpconvert(node):
 						trdict['subtype'] = 'fromTop'
 			else:
 				trdict['trtype'] = 'fade'
-			for trname, trval in ctx.transitions.items():
-				if trval == trdict:
-					# found an existing transition that'll do
-					break
-			else:
-				j = 0
-				trname = '%s %d' % (transition, j)
-				while ctx.transitions.has_key(trname):
-					j = j + 1
+			# no point in doing zero-duration transitions
+			if trdict['dur'] > 0:
+				for trname, trval in ctx.transitions.items():
+					if trval == trdict:
+						# found an existing transition that'll do
+						break
+				else:
+					j = 0
 					trname = '%s %d' % (transition, j)
-				em.addtransition(trname, trdict)
-			em.setnodeattr(newnode, 'transIn', [trname])
+					while ctx.transitions.has_key(trname):
+						j = j + 1
+						trname = '%s %d' % (transition, j)
+					em.addtransition(trname, trdict)
+				em.setnodeattr(newnode, 'transIn', [trname])
 
 		if tagdict.get('href'):
 			em.setnodeattr(newnode, 'anchorlist', [MMAnchor('0', ATYPE_WHOLE, [], (0, 0), None)])
