@@ -307,7 +307,7 @@
 (size (tuple (int) (int)) (256 256) 'Image size' default
 	'Size of slideshow in pixels (width, height).' normal)
 
-(start (float) 0.0 'Start time' default
+(start (float) 0.0 'Relative start time' default
 	'Start time of transition effect relative to previous transition start (in seconds).' normal)
 
 (subregion (tuple (int) (int) (int) (int)) (0 0 0 0) 'Destination region' normal
