@@ -3,6 +3,7 @@ from FL import *
 import MMAttrdefs
 import glwindow
 from Dialog import BasicDialog
+from ViewDialog import ViewDialog
 
 # the block view class.
 # *** Hacked by --Guido ***
@@ -37,31 +38,17 @@ XMARG = 10 # margin width
 YMARG = 5 # two time the  margin width
 B=5	# the size of the roundbutton
 
-class BlockView () = BasicDialog () :
+class BlockView () = ViewDialog(), BasicDialog () :
 	#
 	# init() method compatible with the other views.
 	#
 	def init(self, root):
+		self = ViewDialog.init(self, 'blockview_')
 		self.root = root
 		width, height = \
 			MMAttrdefs.getattr(root, 'blockview_winsize')
 		self = BasicDialog.init(self, (width, height, 'Hierarchy'))
 		return self.new(width, height, root)
-	#
-	# Extend basic show/hide methods.
-	#
-	def show(self):
-		width, height = \
-			MMAttrdefs.getattr(self.root, 'blockview_winsize')
-		h, v = MMAttrdefs.getattr(self.root, 'blockview_winpos')
-		self.last_geometry = h, v, width, height
-		BasicDialog.show(self)
-	#
-	def hide(self):
-		BasicDialog.hide(self)
-		h, v, width, height = self.last_geometry
-		self.root.SetAttr('blockview_winpos', (h, v))
-		self.root.SetAttr('blockview_winsize', (width, height))
 	#
 	# new makes an object of type 'blockview'
 	#
@@ -202,7 +189,6 @@ class BlockView () = BasicDialog () :
 		import gl
 		gl.winset(self.form.window)
 		mx, my = fl.get_mouse ()
-		print 'mx =', mx, '; my =', my
 
 		node = self._find_node (self.rootview, (mx, my))
 		if node = None :
@@ -222,10 +208,8 @@ class BlockView () = BasicDialog () :
 	#
 	def _init (self, (w, h)) :
 		self.w, self.h = w, h
-		self.focus = 0
+		self.focus = None
 		self.commanddict = {}
-		self.form = 0
-		self.root = 0
 	#
 	# _find_node : given a mouse positioin, find the corresponding node
 	# in the (possibly folded) tree
