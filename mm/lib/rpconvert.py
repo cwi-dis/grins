@@ -189,7 +189,7 @@ def rpconvert(node):
 		em.setnodeattr(newnode, 'transparent', 1)
 #		em.setnodeattr(newnode, 'channel', chname)
 		em.setnodeattr(newnode, 'channel', regionname)
-		em.setnodeattr(newnode, 'beginlist', [MMSyncArc(newnode, 'begin', srcnode='syncbase', delay=start)])
+		em.addsyncarc(newnode, 'beginlist', MMSyncArc(newnode, 'begin', srcnode='syncbase', delay=start))
 		if transition in ('fadein', 'fadeout', 'crossfade', 'wipe'):
 			# the real transtions
 			trdict = {'dur': tagdict.get('tduration', 0),

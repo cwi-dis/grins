@@ -58,6 +58,8 @@ class EditMgr:
 		self.root = self.context = None
 		self.busy = 0
 		self.history = []
+		self.undoptr = -1
+		self.redoptr = None
 		self.future = []
 		self.registry = []
 		self.focus_registry = []
@@ -115,6 +117,7 @@ class EditMgr:
 				return 0
 			done.append(x)
 		self.undostep = []
+		self.undoptr = len(self.history)
 		self.history.append(self.undostep)
 		self.busy = 1
 		return 1
@@ -194,27 +197,30 @@ class EditMgr:
 		
 	def undo(self):
 		if self.busy: raise MMExc.AssertError, 'undo while busy'
-		i = len(self.history) - 1
-		if i < 0: return 0 # Nothing to undo
-		step = self.history[i]
-		if not self.transaction():
+		undoptr = self.undoptr
+		if undoptr < 0 or undoptr >= len(self.history):
 			return 0
+		step = self.history[undoptr]
+		self.redoptr = len(self.history)
+		if not self.transaction():
+			self.redoptr = None
+			return 0
+		self.undoptr = undoptr - 1
 		self.__do_undo(step)
 		self.commit()
-		self.future.insert(0, step)
-		del self.history[i]
 		return 1
 
 	def redo(self):
-		if self.busy: raise MMExc.AssertError, 'undo while busy'
-		if not self.future: return 0 # Nothing to redo
-		step = self.future(0)
+		if self.busy: raise MMExc.AssertError, 'redo while busy'
+		redoptr = self.redoptr
+		if redoptr is None or redoptr < 0 or redoptr >= len(self.history):
+			return 0
+		step = self.history[redoptr]
 		if not self.transaction():
 			return 0
+		self.redoptr = redoptr - 1
 		self.__do_undo(step)
 		self.commit()
-		self.history.append(step)
-		del self.future[0]
 		return 1
 
 	# XXX The undo/redo business is unfinished.

@@ -20,7 +20,10 @@ class _DynamicCascade(_CommandBase):
 #
 class CLOSE_WINDOW(_CommandBase):
 	help = 'Close this window'
-class UNDO(_CommandBase): pass
+class UNDO(_CommandBase):
+	help = 'Undo'
+class REDO(_CommandBase):
+	help = 'Redo'
 class CUT(_CommandBase):
 	help = 'Cut selected object'
 class COPY(_CommandBase):

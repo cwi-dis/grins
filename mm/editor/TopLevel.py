@@ -78,6 +78,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			HIDE_PLAYERVIEW(callback = (self.hide_view_callback, (0,))),
 			HIDE_HIERARCHYVIEW(callback = (self.hide_view_callback, (1,))),
 			]
+		self.undocommandlist = [
+			UNDO(callback = (self.undo_callback, ())),
+			REDO(callback = (self.redo_callback, ())),
+			]
 		if not features.lightweight:
 			self.commandlist = self.commandlist + [
 				CHANNELVIEW(callback = (self.view_callback, (2,))),
@@ -307,6 +311,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	#
 	# Callbacks.
 	#
+	def undo_callback(self):
+		self.editmgr.undo()
+
+	def redo_callback(self):
+		self.editmgr.redo()
+
 	def play_callback(self):
 #		self.player.show((self.player.playsubtree, (self.root,)))
 		self.player.play_callback()
@@ -1180,10 +1190,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			evallicense= (license < 0)
 			import SMILTreeWrite
 			self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense), optional=1)
+		undocommandlist = []
+		if self.editmgr.undoptr >= 0:
+			undocommandlist = undocommandlist + self.undocommandlist[:1]
+		if self.editmgr.redoptr is not None:
+			undocommandlist = undocommandlist + self.undocommandlist[1:]
 		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
+			self.setcommands(self.commandlist + self.__ugroup + undocommandlist)
 		else:
-			self.setcommands(self.commandlist + self.commandlist_g2)
+			self.setcommands(self.commandlist + self.commandlist_g2 + undocommandlist)
 
 	def rollback(self):
 		# Nothing has happened.
