@@ -1001,6 +1001,14 @@ def GetOKCancel(prompt,parent=None):
 	res=m.MessageBox(prompt,'GRiNS Editor',win32con.MB_OKCANCEL|win32con.MB_ICONQUESTION)
 	if res==win32con.IDOK:return 0
 	else: return 1
+
+# Displays a message and requests from the user to select Yes or Cancel
+def GetYesNo(prompt,parent=None):
+	if parent:m=parent
+	else: m=win32ui
+	res=m.MessageBox(prompt,'GRiNS Editor',win32con.MB_YESNO|win32con.MB_ICONQUESTION)
+	if res==win32con.IDYES:return 0
+	else: return 1
 	
 # The create box dialog implementation
 class CreateBoxDlg(ResDialog):

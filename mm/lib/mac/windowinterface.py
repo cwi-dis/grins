@@ -89,6 +89,7 @@ Dialog = mw_dialogs.Dialog
 multchoice = mw_dialogs.multchoice
 GetYesNoCancel = mw_dialogs.GetYesNoCancel
 GetOKCancel = mw_dialogs.GetOKCancel
+GetYesNo = mw_dialogs.GetYesNo
 showmessage = mw_dialogs.showmessage
 showquestion = mw_dialogs.showquestion
 TraceDialog = mw_dialogs.TraceDialog
