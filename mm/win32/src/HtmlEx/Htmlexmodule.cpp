@@ -1,138 +1,32 @@
 
 #include "htmlex.h"
-#include "html.h"
 #include "ContainerWnd.h"
-#include "font.h"
+
 
 static PyObject *HtmlExError;
 static PyObject *CallbackExError;
 PyObject *CallbackMap = NULL;
 
 
-#define ARROW_CURSOR   0
-#define WAIT_CURSOR	   1
+#define ARROW_CURSOR		0
+#define WAIT_CURSOR			1
+#define CROSS_CURSOR		2
+#define NORTH_SOUTH_CURSOR	3
+#define EAST_WEST_CURSOR    4
+#define ALL_CURSOR		    5
 
 
 char cmifClass[100]="";
 
-COleFont ol1, ol2, ol3, ol4, ol5, ol6, olf, olg;
+WNDPROC	orgProc;
+BOOL flag=FALSE;
+
 PyIMPORT CWnd *GetWndPtr(PyObject *);
 PyIMPORT CFrameWnd *GetFramePtr(PyObject *self);
 
 
 
 
-void SetProperties(CContainerWnd* pWnd)
-{
-	
-
-	tagCY sy[7];
-	for (UINT k=0; k<7; k++)
-	{
-		sy[k].Lo = 24 - 2*k;
-		sy[k].Hi = 0;
-	}
-
-
-	olg = pWnd->m_html.GetFont();
-	olg.SetCharset(GREEK_CHARSET);
-	//olg.SetBold(TRUE);
-	//olg.SetItalic(TRUE);
-	olg.SetUnderline(FALSE);
-	olg.SetStrikethrough(FALSE);
-	olg.SetWeight(FW_BOLD);
-	olg.SetSize(sy[0]);
-	//olg.SetName("Hsarl");
-	olg.m_bAutoRelease = FALSE;
-	pWnd->m_html.SetFont((LPDISPATCH)olg.m_lpDispatch);
-	
-	
-	ol1 = pWnd->m_html.GetHeading1Font();
-	ol1.SetCharset(GREEK_CHARSET);
-	//ol1.SetBold(TRUE);
-	//ol1.SetItalic(TRUE);
-	//ol1.SetUnderline(FALSE);
-	//ol1.SetName("Hsarl");
-	//ol1.SetStrikethrough(FALSE);
-	//ol1.SetWeight(FW_BOLD);
-	ol1.SetSize(sy[0]);
-	ol1.m_bAutoRelease = FALSE;
-	pWnd->m_html.SetHeading1Font((LPDISPATCH)ol1.m_lpDispatch);
-
-	ol2 = pWnd->m_html.GetHeading2Font();
-	ol2.SetCharset(GREEK_CHARSET);
-	//ol2.SetBold(TRUE);
-	//ol2.SetItalic(TRUE);
-	//ol2.SetName("Hsarl");
-	//ol2.SetUnderline(TRUE);
-	//ol2.SetStrikethrough(FALSE);
-	//ol2.SetWeight(FW_BOLD);
-	//ol2.SetSize(sy[1]);
-	ol2.m_bAutoRelease = FALSE;
-	pWnd->m_html.SetHeading2Font((LPDISPATCH)ol2.m_lpDispatch);
-
-	ol3 = pWnd->m_html.GetHeading3Font();
-	ol3.SetCharset(GREEK_CHARSET);
-	//ol3.SetBold(TRUE);
-	//ol3.SetItalic(TRUE);
-	//ol3.SetName("Hsarl");
-	//ol3.SetUnderline(FALSE);
-	//ol3.SetStrikethrough(FALSE);
-	//ol3.SetWeight(FW_BOLD);
-	ol3.SetSize(sy[2]);
-	ol3.m_bAutoRelease = FALSE;
-	pWnd->m_html.SetHeading3Font((LPDISPATCH)ol3.m_lpDispatch);
-
-	ol4 = pWnd->m_html.GetHeading4Font();
-	//ol4 = COleFont((LPDISPATCH)ol44.m_lpDispatch);
-	ol4.SetCharset(GREEK_CHARSET);
-	//ol4.SetBold(TRUE);
-	//ol4.SetItalic(TRUE);
-	//ol4.SetName("Hsarl");
-	//ol4.SetUnderline(FALSE);
-	//ol4.SetStrikethrough(FALSE);
-	//ol4.SetWeight(FW_BOLD);
-	ol4.SetSize(sy[3]);
-	ol4.m_bAutoRelease = FALSE;
-	pWnd->m_html.SetHeading4Font((LPDISPATCH)ol4.m_lpDispatch);
-
-	ol5 = pWnd->m_html.GetHeading5Font();
-	ol5.SetCharset(GREEK_CHARSET);
-	ol5.SetSize(sy[4]);
-	//ol5.SetBold(TRUE);
-	//ol5.SetItalic(TRUE);
-	//ol5.SetName("Hsarl");
-	//ol5.SetUnderline(FALSE);
-	//ol5.SetStrikethrough(FALSE);
-	//ol5.SetWeight(FW_BOLD);
-	ol5.m_bAutoRelease = FALSE;
-	pWnd->m_html.SetHeading5Font((LPDISPATCH)ol5.m_lpDispatch);
-
-	ol6 = pWnd->m_html.GetHeading6Font();
-	ol6.SetCharset(GREEK_CHARSET);
-	//ol6.SetBold(TRUE);
-	//ol6.SetItalic(TRUE);
-	//ol6.SetName("Courier New");
-	//ol6.SetName("Hsarl");
-	//ol6.SetUnderline(FALSE);
-	//ol6.SetStrikethrough(FALSE);
-	//ol6.SetWeight(FW_LIGHT);
-	ol6.SetSize(sy[5]);
-	ol6.m_bAutoRelease = FALSE;
-	pWnd->m_html.SetHeading6Font((LPDISPATCH)ol6.m_lpDispatch);
-
-	olf = pWnd->m_html.GetFixedFont();
-	olf.SetCharset(GREEK_CHARSET);
-	//olf.SetBold(TRUE);
-	//olf.SetItalic(TRUE);
-	//olf.SetName("Hsarl");
-	//olf.SetUnderline(FALSE);
-	//olf.SetStrikethrough(FALSE);
-	//olf.SetWeight(FW_BOLD);
-	olf.SetSize(sy[6]);
-	olf.m_bAutoRelease = FALSE;
-	pWnd->m_html.SetFixedFont((LPDISPATCH)olf.m_lpDispatch);
-}
 	
 
 
@@ -140,11 +34,64 @@ void SetProperties(CContainerWnd* pWnd)
 extern "C" {
 #endif
 
+
+
+LRESULT CALLBACK MyWndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+{
+
+	//HWND parent;
+	//HWND grandparent;
+			
+	switch (iMsg)
+	{
+		case WM_CLOSE:
+			if (!flag)
+			{
+				ShowWindow(hwnd, SW_HIDE);
+			}
+			//flag = FALSE;
+			//MessageBox(hwnd, "Window Hidden", "Test", MB_OK);
+			return 0;
+			
+		case WM_DESTROY:
+			if (!flag)
+			{
+				return CallWindowProc(orgProc, hwnd, iMsg, wParam, lParam) ;
+			}
+			//flag = FALSE;
+			//MessageBox(hwnd, "Window Hidden", "Test", MB_OK);
+			return 0;
+	}
+	return CallWindowProc(orgProc, hwnd, iMsg, wParam, lParam) ;
+}
+
+
+
+static PyObject* py_example_SetFlag(PyObject *self, PyObject *args)
+{
+	int x;
+			
+	if(!PyArg_ParseTuple(args, "i", &x))
+	{
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
+	if (x==1)
+		flag = TRUE;
+	else flag = FALSE;
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+
+
 static PyObject* py_Html_CreateHtmlCtrl(PyObject *self, PyObject *Wnd)
 {
-	CRect rc, OcxRect;
-	CRect offset(0, 0, 0, 0);
-	CRect border(0,0, 0, 0);
+	CRect rc;
+	int st_bar_h;
 	PyObject *Ob = Py_None;
 	CContainerWnd *Container; 
 	
@@ -167,66 +114,41 @@ static PyObject* py_Html_CreateHtmlCtrl(PyObject *self, PyObject *Wnd)
 
 	Container->m_ctrl_cr = TRUE;
 
-	if (Parent == AfxGetMainWnd())   
-	// the window has its own status bar
-	// because its parent is the main application window
+	if (Parent == NULL)
 	{
 		GetClientRect(Container->m_hWnd, &rc);
 
-		// to let status bar show itself
-		OcxRect = rc - offset;
-
-		OcxRect = OcxRect - border;
-	
-		//create the Html control
+		
 		CWaitCursor wait;
 
-		BOOL bRet = Container->m_html.Create(NULL, WS_VISIBLE|WS_BORDER|WS_CLIPSIBLINGS,
-						OcxRect, Container, IDC_HTMLCTRL);
+		st_bar_h = GetSystemMetrics(SM_CYCAPTION)+1;
 
-		//SetProperties(Container);
+		rc.DeflateRect(0,0,0,st_bar_h);
 		
+		BOOL bRet = Container->m_html.Create(NULL, WS_VISIBLE|WS_BORDER|WS_CLIPSIBLINGS,
+						rc, Container, IDC_HTMLCTRL);
+
 		Container->m_Status = CreateStatusWindow(WS_CHILD|WS_VISIBLE, "Status Bar", 
 						Container->m_hWnd, 31000); 
 
 		
-		TRACE("Status Handle: %X", Container->m_Status);
-
-
 		SetWindowText(Container->m_Status, "Ready");
 
-	
 		return Py_BuildValue("i", bRet);
 	}
 	else  //the parent Container has the status Bar
 	{
 		GetClientRect(Container->m_hWnd, &rc);
-
 			
-		OcxRect = rc - border;
-
 		CWaitCursor wait;
 		//create the Html control
-		BOOL bRet = Container->m_html.Create(NULL, WS_VISIBLE|WS_BORDER|WS_CLIPSIBLINGS ,
-						OcxRect, Container, IDC_HTMLCTRL);
+		BOOL bRet = Container->m_html.Create(NULL, WS_VISIBLE|WS_CLIPSIBLINGS ,
+						rc, Container, IDC_HTMLCTRL);
+		
+		Container->m_Status = NULL;
 
-	
-		SetProperties(Container);
-
-		/*Parent->m_Status = CreateStatusWindow(WS_CHILD | WS_VISIBLE, "Status Bar", 
-						Parent->m_hWnd, 31000); 
-
-		TRACE("Status Handle: %X", Parent->m_Status);
-
-
-		SetWindowText(Parent->m_Status, "Ready");*/
-
-			
 		return Py_BuildValue("i", bRet);
 	} 
-	 
-	
-
 }
 	
 
@@ -237,6 +159,7 @@ static PyObject* py_Html_OpenUrl(PyObject *self, PyObject *args)
 	CContainerWnd *Container; 
 	char *string;
 	char url[256];
+	CString str;
 	
 	if(!PyArg_ParseTuple(args, "Os", &Ob, &string))
 	{
@@ -244,14 +167,22 @@ static PyObject* py_Html_OpenUrl(PyObject *self, PyObject *args)
 		AfxMessageBox("Cannot parse arguments!");
 		return Py_None;return NULL;
 	}
+
+
+	static char filter[] = "HTM Files (*.HTM)|*.HTM|All Files (*.*)|*.*||";
+	CFileDialog Dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY|OFN_OVERWRITEPROMPT, 
+					filter, NULL);
+	Dlg.m_ofn.lpstrTitle = "Open File URL";
+	
+	strcpy(Dlg.m_ofn.lpstrFile, string);
+	
+	str = Dlg.GetPathName();
+
 	
 	Container = (CContainerWnd*) GetWndPtr(Ob);
 
 	
-	CString str;
-	str.GetBuffer(256);
-	str.Format("%s", string);
-
+	
 	
 	/*CString temp2;
 	temp2.Format("str is %s\n", str);
@@ -267,12 +198,20 @@ static PyObject* py_Html_OpenUrl(PyObject *self, PyObject *args)
 		CString help = CString("\\");
 		char c = help.GetAt(0);     // c is the newline character
 		
-		for (int j=0; j<k; j++)
+		/*for (int j=0; j<k; j++)
 		{
 		
 			if (str.GetAt(j)== (TCHAR)('/')) 
 				str.SetAt(j, (TCHAR)c);
+		}*/
+
+		for (int j=0; j<k; j++)
+		{
+		
+			if (str.GetAt(j)== (TCHAR)c) 
+				str.SetAt(j, (TCHAR)('/'));
 		}
+
 
 		if ( (str.Find("C:") != -1) || (str.Find("c:") != -1)  )				
 		{
@@ -283,26 +222,23 @@ static PyObject* py_Html_OpenUrl(PyObject *self, PyObject *args)
 		{
 			str = "file:///D|" + str.Right(str.GetLength()-2) ;  //append the file protocol beginning
 		}
-		else if ( ((str.GetAt(1) == (TCHAR)(":")) && (str.GetAt(2) == (TCHAR)c) ) )
+		else //if ( ((str.GetAt(1) == (TCHAR)(":")) && (str.GetAt(2) == (TCHAR)c) ) )
 			
 		{
 			str = "file:///" + str.Left(1) + "|" + str.Right(str.GetLength()-2) ;
 		}
-		else
-		{
-			str = "file:///C|" + str;   //C is the default disk for storage
-		}
+		
 			
 	}
 		
 		
 	strcpy(url, str);
 
-	Container->BeginWaitCursor();
+	//Container->BeginWaitCursor();
 
-	Container->m_html.RequestDoc(url);
+	Container->m_html.Navigate(url,NULL,NULL,NULL,NULL);
 
-	Container->EndWaitCursor();
+	//Container->EndWaitCursor();
 
 	
 	return Py_BuildValue("s", url);
@@ -310,12 +246,66 @@ static PyObject* py_Html_OpenUrl(PyObject *self, PyObject *args)
 }
 
 
+
+static PyObject* py_Html_virtual_FileDialog(PyObject *self,PyObject *args)
+{
+		
+	char res[256];
+	CString strPath, strurl;
+	char* FileName;
+	PyObject *Ob = Py_None;
+	CContainerWnd *Container; 
+	
+
+
+	if(!PyArg_ParseTuple(args, "Os", &Ob, &FileName))
+	{
+		Py_INCREF(Py_None);
+		AfxMessageBox("Error Receiving CMIF presentation String", MB_OK);
+		return Py_None;
+		return NULL;
+	
+	}
+
+	Container = (CContainerWnd*) GetWndPtr(Ob);
+
+	static char filter[] = "HTM Files (*.HTM)|*.HTM|All Files (*.*)|*.*||";
+	CFileDialog Dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY|OFN_OVERWRITEPROMPT, 
+					filter, NULL);
+	Dlg.m_ofn.lpstrTitle = "Open File URL";
+	
+	strcpy(Dlg.m_ofn.lpstrFile, FileName);
+	
+	strPath = Dlg.GetPathName();
+
+	char c = strPath.GetAt(2);
+	UINT length = strPath.GetLength();
+	for (UINT i=0; i<length; i++)
+	{
+		if (strPath.GetAt(i) == ((TCHAR)'\\'))
+			strPath.SetAt(i, '/');
+	}
+	strPath.SetAt(1, '|');
+	TRACE("Path variable is now %s\n", strPath);
+	CString temp("file:///");
+	strurl = temp + strPath;
+	TRACE("URL is: %s \n", strurl);
+
+	strcpy(res, strurl);
+
+	Container->m_html.Navigate(res,NULL,NULL,NULL,NULL);
+
+	return Py_BuildValue("s", res);
+}
+
+
+
 static PyObject* py_Html_CancelUrl(PyObject *self, PyObject *args)
 {
 
 	PyObject *Ob = Py_None;
 	CContainerWnd *Container; 
-	VARIANT variant;
+	char res[256];
 	char *url;
 
 	if(!PyArg_ParseTuple(args, "Os", &Ob, &url))
@@ -325,10 +315,15 @@ static PyObject* py_Html_CancelUrl(PyObject *self, PyObject *args)
 	}
 
 	Container = (CContainerWnd*) GetWndPtr(Ob);
+	CString str = url;
+	//COleVariant vr((LPCTSTR)str);
+	Container->m_html.Stop();
 	
-	Container->m_html.Cancel(variant);
+	//Container->m_html.Cancel(variant);
+	strcpy(res, str);
+	//AfxMessageBox(str, MB_OK);
 
-	return Py_BuildValue("i", 1);
+	return Py_BuildValue("s", res);
 
 }
 
@@ -411,7 +406,7 @@ static PyObject* py_CreateWindow(PyObject *self, PyObject *args)
 						ws_flags, 
 						//WS_OVERLAPPEDWINDOW | WS_VISIBLE,
 						left, top, right, bottom,
-						mainWnd->m_hWnd /*NULL*/,
+						/*mainWnd->m_hWnd*/ NULL,
 						NULL))
 		TRACE("CmifEx CreateWindow OK!\n");
 	else
@@ -427,6 +422,8 @@ static PyObject* py_CreateWindow(PyObject *self, PyObject *args)
 								//to serve as an identifier of the owner
 								//of the displayed messages 
 
+
+	orgProc = (WNDPROC)SetWindowLong(newWnd->m_hWnd, GWL_WNDPROC, (LONG)MyWndProc);
 
 	testWnd = testWnd->make(testWnd->type, (CWnd*)(newWnd));
 	testOb = testWnd->GetGoodRet();
@@ -453,11 +450,11 @@ static PyObject* py_CreateChildWindow(PyObject *self, PyObject *args)
 	newWnd = new CContainerWnd;
 	parentWnd = GetWndPtr(ob);
 
-	if(newWnd->CreateEx(WS_EX_CONTROLPARENT|WS_EX_CLIENTEDGE,
+	if(newWnd->CreateEx(WS_EX_CONTROLPARENT,
 						AfxRegisterWndClass(CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS),
 						title,
 						/*WS_CHILD | WS_VISIBLE,*/
-						WS_CHILD|WS_CLIPSIBLINGS|WS_VISIBLE,
+						WS_CHILD|WS_CLIPSIBLINGS|WS_VISIBLE|WS_CLIPCHILDREN,
 						/*WS_CHILD |WS_POPUP| WS_VISIBLE | WS_SYSMENU | WS_CAPTION,*/
 						/*WS_CHILD | WS_VISIBLE,*/
 						left, top, right, bottom,
@@ -570,6 +567,142 @@ static PyObject* py_CreateCallback(PyObject *self, PyObject *args)
 }
 
 
+
+// assistant function used independently of Html channels
+
+static PyObject* py_Html_SetCur(PyObject *self, PyObject *args)
+{
+		
+	PyObject *Ob = Py_None;
+	CWnd *Wind; 
+	int cur_type;
+
+	
+	if(!PyArg_ParseTuple(args, "Oi", &Ob, &cur_type))
+	{
+		Py_INCREF(Py_None);
+		AfxMessageBox("Htmlex.SetCursor(window hwnd, cursor_type)", MB_OK);
+		return Py_None;return NULL;
+	}
+	
+	Wind = (CWnd*) GetWndPtr(Ob);
+
+	switch (cur_type)
+	{
+	  case WAIT_CURSOR:
+	 		SetCursor(LoadCursor(NULL, IDC_WAIT));
+			break;
+	  case ARROW_CURSOR:
+			SetCursor(LoadCursor(NULL, IDC_ARROW));
+			break;
+	  case CROSS_CURSOR:
+			SetCursor(LoadCursor(NULL, IDC_CROSS));
+			break;
+	  case NORTH_SOUTH_CURSOR:
+			SetCursor(LoadCursor(NULL, IDC_SIZENS));	
+			break;
+	  case EAST_WEST_CURSOR:
+			SetCursor(LoadCursor(NULL, IDC_SIZEWE));
+			break;
+	  case ALL_CURSOR:
+			SetCursor(LoadCursor(NULL, IDC_SIZEALL));
+			break;
+	  default:
+			break;
+	}
+		
+	return Py_BuildValue("i", cur_type);
+}
+
+
+static PyObject* py_FDlg(PyObject *self, PyObject *args)
+{
+	PyObject *testOb = Py_None, *ob = Py_None;
+	//PyCWnd *testWnd;
+	char *title, *fname, *fltr;
+	char filename[256];
+	char filter[512];
+	char ext[256];
+	
+	if(!PyArg_ParseTuple(args, "sss", &title, &fname, &fltr))
+	{
+		AfxMessageBox("Cannot parse arguments!", MB_OK);
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
+	strcpy(filename, fname);
+	strcpy(filter, fltr);
+	CFileDialog Dlg(TRUE, NULL, filename, OFN_HIDEREADONLY|OFN_OVERWRITEPROMPT, 
+					filter, NULL);
+	Dlg.m_ofn.lpstrTitle = (LPCTSTR)title;
+	int ret = Dlg.DoModal();
+
+	if (ret == IDOK)
+	{
+		testOb = Py_BuildValue("iss", 1, (LPCTSTR)Dlg.m_ofn.lpstrFile, (LPCTSTR)Dlg.m_ofn.lpstrDefExt);
+		return testOb;	
+	}
+	else
+	{
+		testOb = Py_BuildValue("iss", 0, " ", " ");
+		return testOb;
+	}
+}
+
+
+
+static PyObject* py_Html_SetBkColor(PyObject *self, PyObject *args)
+{
+	PyObject *Ob = Py_None;
+	CContainerWnd *Container;
+	int r,g,b;
+	COLORREF color;
+
+	if(!PyArg_ParseTuple(args, "O(iii)", &Ob, &r, &g, &b))
+	{
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
+	Container = (CContainerWnd*) GetWndPtr(Ob);
+
+	color = RGB(r,g,b);
+
+	//Container->m_html.SetBackColor((unsigned long) color);
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}	
+
+
+
+static PyObject* py_Html_SetFgColor(PyObject *self, PyObject *args)
+{
+	PyObject *Ob = Py_None;
+	CContainerWnd *Container;
+	int r,g,b;
+	COLORREF color;
+
+	if(!PyArg_ParseTuple(args, "O(iii)", &Ob, &r, &g, &b))
+	{
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
+	Container = (CContainerWnd*) GetWndPtr(Ob);
+
+	color = RGB(r,g,b);
+
+	//Container->m_html.SetForeColor((unsigned long) color);
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}	
+
+
+
+
 #ifdef _DEBUG
 static PyObject *
 py_CallbackMap (PyObject * self, PyObject * args)
@@ -588,6 +721,7 @@ static PyMethodDef HtmlExMethods[] =
 {
 	{ "CreateViewer", py_Html_CreateHtmlCtrl, 1},
 	{ "RetrieveUrl", py_Html_OpenUrl, 1},
+	{ "RetrieveFileUrl",py_Html_virtual_FileDialog, 1},
 	{ "Stop", py_Html_CancelUrl, 1},
 	{ "DestroyOcx", py_Html_DestroyOcx, 1},
 	{ "UpdateOcx", py_Html_UpdateOcx, 1},
@@ -596,6 +730,11 @@ static PyMethodDef HtmlExMethods[] =
 	{ "CreateCallback",	py_CreateCallback,	1},
 	{ "BeginWaitCursor", py_Html_BeginWait, 1},
 	{ "EndWaitCursor", py_Html_EndWait, 1},
+	{ "SetCursor", py_Html_SetCur, 1},
+	{ "FDlg", py_FDlg, 1},
+	{ "SetFlag", (PyCFunction)py_example_SetFlag, 1},
+	{ "SetBkColor", (PyCFunction)py_Html_SetBkColor, 1},
+	{ "SetFgColor", (PyCFunction)py_Html_SetFgColor, 1},
 #ifdef _DEBUG
 	{ "_idMap",			py_CallbackMap,	1},
 #endif
@@ -626,22 +765,3 @@ void CallbackExErrorFunc(char *str)
 #ifdef __cplusplus
 }
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

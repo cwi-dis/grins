@@ -311,8 +311,39 @@ SOURCE=.\Htmlexmodule.cpp
 !IF  "$(CFG)" == "HtmlEx - Win32 Release"
 
 DEP_CPP_HTMLE=\
-	"..\..\..\python1.4\Src\Include\config.h"\
-	"..\..\..\python1.4\Src\Include\myproto.h"\
+	"..\..\..\Python1.4\Src\Include\accessobject.h"\
+	"..\..\..\Python1.4\Src\Include\bltinmodule.h"\
+	"..\..\..\Python1.4\Src\Include\ceval.h"\
+	"..\..\..\Python1.4\Src\Include\classobject.h"\
+	"..\..\..\Python1.4\Src\Include\cobject.h"\
+	"..\..\..\Python1.4\Src\Include\complexobject.h"\
+	"..\..\..\Python1.4\Src\Include\config.h"\
+	"..\..\..\Python1.4\Src\Include\fileobject.h"\
+	"..\..\..\Python1.4\Src\Include\floatobject.h"\
+	"..\..\..\Python1.4\Src\Include\funcobject.h"\
+	"..\..\..\Python1.4\Src\Include\import.h"\
+	"..\..\..\Python1.4\Src\Include\intobject.h"\
+	"..\..\..\Python1.4\Src\Include\intrcheck.h"\
+	"..\..\..\Python1.4\Src\Include\listobject.h"\
+	"..\..\..\Python1.4\Src\Include\longobject.h"\
+	"..\..\..\Python1.4\Src\Include\mappingobject.h"\
+	"..\..\..\Python1.4\Src\Include\methodobject.h"\
+	"..\..\..\Python1.4\Src\Include\moduleobject.h"\
+	"..\..\..\Python1.4\Src\Include\mymalloc.h"\
+	"..\..\..\Python1.4\Src\Include\myproto.h"\
+	"..\..\..\Python1.4\Src\Include\object.h"\
+	"..\..\..\Python1.4\Src\Include\objimpl.h"\
+	"..\..\..\Python1.4\Src\Include\pydebug.h"\
+	"..\..\..\Python1.4\Src\Include\pyerrors.h"\
+	"..\..\..\Python1.4\Src\Include\pythonrun.h"\
+	"..\..\..\Python1.4\Src\Include\rangeobject.h"\
+	"..\..\..\Python1.4\Src\Include\rename2.h"\
+	"..\..\..\Python1.4\Src\Include\sliceobject.h"\
+	"..\..\..\Python1.4\Src\Include\stringobject.h"\
+	"..\..\..\Python1.4\Src\Include\sysmodule.h"\
+	"..\..\..\Python1.4\Src\Include\thread.h"\
+	"..\..\..\Python1.4\Src\Include\traceback.h"\
+	"..\..\..\Python1.4\Src\Include\tupleobject.h"\
 	".\ContainerWnd.h"\
 	".\font.h"\
 	".\html.h"\
@@ -321,6 +352,10 @@ DEP_CPP_HTMLE=\
 	{$(INCLUDE)}"\abstract.h"\
 	{$(INCLUDE)}"\allobjects.h"\
 	{$(INCLUDE)}"\modsupport.h"\
+	{$(INCLUDE)}"\win32assoc.h"\
+	{$(INCLUDE)}"\win32cmd.h"\
+	{$(INCLUDE)}"\Win32ui.h"\
+	{$(INCLUDE)}"\win32win.h"\
 	
 
 "$(INTDIR)\Htmlexmodule.obj" : $(SOURCE) $(DEP_CPP_HTMLE) "$(INTDIR)"
@@ -331,39 +366,39 @@ DEP_CPP_HTMLE=\
 !ELSEIF  "$(CFG)" == "HtmlEx - Win32 Debug"
 
 DEP_CPP_HTMLE=\
-	"..\..\..\python1.4\Src\Include\accessobject.h"\
-	"..\..\..\python1.4\Src\Include\bltinmodule.h"\
-	"..\..\..\python1.4\Src\Include\ceval.h"\
-	"..\..\..\python1.4\Src\Include\classobject.h"\
-	"..\..\..\python1.4\Src\Include\cobject.h"\
-	"..\..\..\python1.4\Src\Include\complexobject.h"\
-	"..\..\..\python1.4\Src\Include\config.h"\
-	"..\..\..\python1.4\Src\Include\fileobject.h"\
-	"..\..\..\python1.4\Src\Include\floatobject.h"\
-	"..\..\..\python1.4\Src\Include\funcobject.h"\
-	"..\..\..\python1.4\Src\Include\import.h"\
-	"..\..\..\python1.4\Src\Include\intobject.h"\
-	"..\..\..\python1.4\Src\Include\intrcheck.h"\
-	"..\..\..\python1.4\Src\Include\listobject.h"\
-	"..\..\..\python1.4\Src\Include\longobject.h"\
-	"..\..\..\python1.4\Src\Include\mappingobject.h"\
-	"..\..\..\python1.4\Src\Include\methodobject.h"\
-	"..\..\..\python1.4\Src\Include\moduleobject.h"\
-	"..\..\..\python1.4\Src\Include\mymalloc.h"\
-	"..\..\..\python1.4\Src\Include\myproto.h"\
-	"..\..\..\python1.4\Src\Include\object.h"\
-	"..\..\..\python1.4\Src\Include\objimpl.h"\
-	"..\..\..\python1.4\Src\Include\pydebug.h"\
-	"..\..\..\python1.4\Src\Include\pyerrors.h"\
-	"..\..\..\python1.4\Src\Include\pythonrun.h"\
-	"..\..\..\python1.4\Src\Include\rangeobject.h"\
-	"..\..\..\python1.4\Src\Include\rename2.h"\
-	"..\..\..\python1.4\Src\Include\sliceobject.h"\
-	"..\..\..\python1.4\Src\Include\stringobject.h"\
-	"..\..\..\python1.4\Src\Include\sysmodule.h"\
-	"..\..\..\python1.4\Src\Include\thread.h"\
-	"..\..\..\python1.4\Src\Include\traceback.h"\
-	"..\..\..\python1.4\Src\Include\tupleobject.h"\
+	"..\..\..\Python1.4\Src\Include\accessobject.h"\
+	"..\..\..\Python1.4\Src\Include\bltinmodule.h"\
+	"..\..\..\Python1.4\Src\Include\ceval.h"\
+	"..\..\..\Python1.4\Src\Include\classobject.h"\
+	"..\..\..\Python1.4\Src\Include\cobject.h"\
+	"..\..\..\Python1.4\Src\Include\complexobject.h"\
+	"..\..\..\Python1.4\Src\Include\config.h"\
+	"..\..\..\Python1.4\Src\Include\fileobject.h"\
+	"..\..\..\Python1.4\Src\Include\floatobject.h"\
+	"..\..\..\Python1.4\Src\Include\funcobject.h"\
+	"..\..\..\Python1.4\Src\Include\import.h"\
+	"..\..\..\Python1.4\Src\Include\intobject.h"\
+	"..\..\..\Python1.4\Src\Include\intrcheck.h"\
+	"..\..\..\Python1.4\Src\Include\listobject.h"\
+	"..\..\..\Python1.4\Src\Include\longobject.h"\
+	"..\..\..\Python1.4\Src\Include\mappingobject.h"\
+	"..\..\..\Python1.4\Src\Include\methodobject.h"\
+	"..\..\..\Python1.4\Src\Include\moduleobject.h"\
+	"..\..\..\Python1.4\Src\Include\mymalloc.h"\
+	"..\..\..\Python1.4\Src\Include\myproto.h"\
+	"..\..\..\Python1.4\Src\Include\object.h"\
+	"..\..\..\Python1.4\Src\Include\objimpl.h"\
+	"..\..\..\Python1.4\Src\Include\pydebug.h"\
+	"..\..\..\Python1.4\Src\Include\pyerrors.h"\
+	"..\..\..\Python1.4\Src\Include\pythonrun.h"\
+	"..\..\..\Python1.4\Src\Include\rangeobject.h"\
+	"..\..\..\Python1.4\Src\Include\rename2.h"\
+	"..\..\..\Python1.4\Src\Include\sliceobject.h"\
+	"..\..\..\Python1.4\Src\Include\stringobject.h"\
+	"..\..\..\Python1.4\Src\Include\sysmodule.h"\
+	"..\..\..\Python1.4\Src\Include\thread.h"\
+	"..\..\..\Python1.4\Src\Include\traceback.h"\
+	"..\..\..\Python1.4\Src\Include\tupleobject.h"\
 	".\ContainerWnd.h"\
 	".\font.h"\
 	".\html.h"\
@@ -522,8 +557,39 @@ SOURCE=.\ContainerWnd.cpp
 !IF  "$(CFG)" == "HtmlEx - Win32 Release"
 
 DEP_CPP_CONTA=\
-	"..\..\..\python1.4\Src\Include\config.h"\
-	"..\..\..\python1.4\Src\Include\myproto.h"\
+	"..\..\..\Python1.4\Src\Include\accessobject.h"\
+	"..\..\..\Python1.4\Src\Include\bltinmodule.h"\
+	"..\..\..\Python1.4\Src\Include\ceval.h"\
+	"..\..\..\Python1.4\Src\Include\classobject.h"\
+	"..\..\..\Python1.4\Src\Include\cobject.h"\
+	"..\..\..\Python1.4\Src\Include\complexobject.h"\
+	"..\..\..\Python1.4\Src\Include\config.h"\
+	"..\..\..\Python1.4\Src\Include\fileobject.h"\
+	"..\..\..\Python1.4\Src\Include\floatobject.h"\
+	"..\..\..\Python1.4\Src\Include\funcobject.h"\
+	"..\..\..\Python1.4\Src\Include\import.h"\
+	"..\..\..\Python1.4\Src\Include\intobject.h"\
+	"..\..\..\Python1.4\Src\Include\intrcheck.h"\
+	"..\..\..\Python1.4\Src\Include\listobject.h"\
+	"..\..\..\Python1.4\Src\Include\longobject.h"\
+	"..\..\..\Python1.4\Src\Include\mappingobject.h"\
+	"..\..\..\Python1.4\Src\Include\methodobject.h"\
+	"..\..\..\Python1.4\Src\Include\moduleobject.h"\
+	"..\..\..\Python1.4\Src\Include\mymalloc.h"\
+	"..\..\..\Python1.4\Src\Include\myproto.h"\
+	"..\..\..\Python1.4\Src\Include\object.h"\
+	"..\..\..\Python1.4\Src\Include\objimpl.h"\
+	"..\..\..\Python1.4\Src\Include\pydebug.h"\
+	"..\..\..\Python1.4\Src\Include\pyerrors.h"\
+	"..\..\..\Python1.4\Src\Include\pythonrun.h"\
+	"..\..\..\Python1.4\Src\Include\rangeobject.h"\
+	"..\..\..\Python1.4\Src\Include\rename2.h"\
+	"..\..\..\Python1.4\Src\Include\sliceobject.h"\
+	"..\..\..\Python1.4\Src\Include\stringobject.h"\
+	"..\..\..\Python1.4\Src\Include\sysmodule.h"\
+	"..\..\..\Python1.4\Src\Include\thread.h"\
+	"..\..\..\Python1.4\Src\Include\traceback.h"\
+	"..\..\..\Python1.4\Src\Include\tupleobject.h"\
 	".\ContainerWnd.h"\
 	".\html.h"\
 	".\htmlex.h"\
@@ -533,6 +599,10 @@ DEP_CPP_CONTA=\
 	{$(INCLUDE)}"\abstract.h"\
 	{$(INCLUDE)}"\allobjects.h"\
 	{$(INCLUDE)}"\modsupport.h"\
+	{$(INCLUDE)}"\win32assoc.h"\
+	{$(INCLUDE)}"\win32cmd.h"\
+	{$(INCLUDE)}"\Win32ui.h"\
+	{$(INCLUDE)}"\win32win.h"\
 	
 
 "$(INTDIR)\ContainerWnd.obj" : $(SOURCE) $(DEP_CPP_CONTA) "$(INTDIR)"
@@ -543,39 +613,39 @@ DEP_CPP_CONTA=\
 !ELSEIF  "$(CFG)" == "HtmlEx - Win32 Debug"
 
 DEP_CPP_CONTA=\
-	"..\..\..\python1.4\Src\Include\accessobject.h"\
-	"..\..\..\python1.4\Src\Include\bltinmodule.h"\
-	"..\..\..\python1.4\Src\Include\ceval.h"\
-	"..\..\..\python1.4\Src\Include\classobject.h"\
-	"..\..\..\python1.4\Src\Include\cobject.h"\
-	"..\..\..\python1.4\Src\Include\complexobject.h"\
-	"..\..\..\python1.4\Src\Include\config.h"\
-	"..\..\..\python1.4\Src\Include\fileobject.h"\
-	"..\..\..\python1.4\Src\Include\floatobject.h"\
-	"..\..\..\python1.4\Src\Include\funcobject.h"\
-	"..\..\..\python1.4\Src\Include\import.h"\
-	"..\..\..\python1.4\Src\Include\intobject.h"\
-	"..\..\..\python1.4\Src\Include\intrcheck.h"\
-	"..\..\..\python1.4\Src\Include\listobject.h"\
-	"..\..\..\python1.4\Src\Include\longobject.h"\
-	"..\..\..\python1.4\Src\Include\mappingobject.h"\
-	"..\..\..\python1.4\Src\Include\methodobject.h"\
-	"..\..\..\python1.4\Src\Include\moduleobject.h"\
-	"..\..\..\python1.4\Src\Include\mymalloc.h"\
-	"..\..\..\python1.4\Src\Include\myproto.h"\
-	"..\..\..\python1.4\Src\Include\object.h"\
-	"..\..\..\python1.4\Src\Include\objimpl.h"\
-	"..\..\..\python1.4\Src\Include\pydebug.h"\
-	"..\..\..\python1.4\Src\Include\pyerrors.h"\
-	"..\..\..\python1.4\Src\Include\pythonrun.h"\
-	"..\..\..\python1.4\Src\Include\rangeobject.h"\
-	"..\..\..\python1.4\Src\Include\rename2.h"\
-	"..\..\..\python1.4\Src\Include\sliceobject.h"\
-	"..\..\..\python1.4\Src\Include\stringobject.h"\
-	"..\..\..\python1.4\Src\Include\sysmodule.h"\
-	"..\..\..\python1.4\Src\Include\thread.h"\
-	"..\..\..\python1.4\Src\Include\traceback.h"\
-	"..\..\..\python1.4\Src\Include\tupleobject.h"\
+	"..\..\..\Python1.4\Src\Include\accessobject.h"\
+	"..\..\..\Python1.4\Src\Include\bltinmodule.h"\
+	"..\..\..\Python1.4\Src\Include\ceval.h"\
+	"..\..\..\Python1.4\Src\Include\classobject.h"\
+	"..\..\..\Python1.4\Src\Include\cobject.h"\
+	"..\..\..\Python1.4\Src\Include\complexobject.h"\
+	"..\..\..\Python1.4\Src\Include\config.h"\
+	"..\..\..\Python1.4\Src\Include\fileobject.h"\
+	"..\..\..\Python1.4\Src\Include\floatobject.h"\
+	"..\..\..\Python1.4\Src\Include\funcobject.h"\
+	"..\..\..\Python1.4\Src\Include\import.h"\
+	"..\..\..\Python1.4\Src\Include\intobject.h"\
+	"..\..\..\Python1.4\Src\Include\intrcheck.h"\
+	"..\..\..\Python1.4\Src\Include\listobject.h"\
+	"..\..\..\Python1.4\Src\Include\longobject.h"\
+	"..\..\..\Python1.4\Src\Include\mappingobject.h"\
+	"..\..\..\Python1.4\Src\Include\methodobject.h"\
+	"..\..\..\Python1.4\Src\Include\moduleobject.h"\
+	"..\..\..\Python1.4\Src\Include\mymalloc.h"\
+	"..\..\..\Python1.4\Src\Include\myproto.h"\
+	"..\..\..\Python1.4\Src\Include\object.h"\
+	"..\..\..\Python1.4\Src\Include\objimpl.h"\
+	"..\..\..\Python1.4\Src\Include\pydebug.h"\
+	"..\..\..\Python1.4\Src\Include\pyerrors.h"\
+	"..\..\..\Python1.4\Src\Include\pythonrun.h"\
+	"..\..\..\Python1.4\Src\Include\rangeobject.h"\
+	"..\..\..\Python1.4\Src\Include\rename2.h"\
+	"..\..\..\Python1.4\Src\Include\sliceobject.h"\
+	"..\..\..\Python1.4\Src\Include\stringobject.h"\
+	"..\..\..\Python1.4\Src\Include\sysmodule.h"\
+	"..\..\..\Python1.4\Src\Include\thread.h"\
+	"..\..\..\Python1.4\Src\Include\traceback.h"\
+	"..\..\..\Python1.4\Src\Include\tupleobject.h"\
 	".\ContainerWnd.h"\
 	".\html.h"\
 	".\htmlex.h"\
