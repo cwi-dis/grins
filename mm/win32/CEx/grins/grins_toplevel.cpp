@@ -36,10 +36,14 @@ TopLevel::~TopLevel()
 
 bool TopLevel::read_it()
 	{
+	// do not allow reuse
 	assert(m_root == 0);
 
+	// use expat xml parser
+	// with smil::parser as xml::sax_handler
 	ExpatParser xml_parser(&smil_parser);
 
+	// we currently handle only local files
 	memfile mf;
 	if(!mf.open(m_url.c_str()))
 		{
@@ -48,14 +52,19 @@ bool TopLevel::read_it()
 		}
 	mf.fill();
 
+	// reset smil parser
 	smil_parser.reset();
+
+	// parse source
 	if(!xml_parser.parse((const char*)mf.data(), mf.size(), true))
 		{
 		showmessage(TEXT("parse() failed"));
 		return false;
 		}
 	
+	// get ownership of root
 	m_root = smil_parser.detach();
+
 	return true;
 	}
 
