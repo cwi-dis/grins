@@ -92,6 +92,9 @@
 (cview_winsize  (tuple (float) (float)) (115.234375 115.234375) 'Time chart winsize' hidden
 	 'Window size for Time chart view' raw)
 
+(drawbox (bool) 1 'Draw anchor boxes' default
+	'Draw anchors as boxes' channel)
+
 (duration (float) 0.0 'Duration' default
 	'Duration of a node/subtree (in seconds)' normal)
 
