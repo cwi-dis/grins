@@ -90,7 +90,8 @@ def main():
 		except KeyboardInterrupt:
 			print 'Interrupt.'
 		except SystemExit, sts:
-			print 'Exit', sts
+			if sts:
+				print 'Exit', sts
 			sys.last_traceback = None
 			sys.exc_traceback = None
 			sys.exit(sts)

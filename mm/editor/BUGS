@@ -15,13 +15,6 @@ make text anchors be text selections, not boxes in the window
 
 ------------------------------ CRASHES ----------------------------
 
-ValueError: 'list.index(x): x not in list'
-> .../ChannelView.py(671)reshape:
-	i = self.mother.context.channelnames.index(self.name)
-
-ValueError: 'list.remove(x): x not in list'
-> /ufs/guido/lib/python/sched.py(63)cancel: self.queue.remove(event)
-
 MMExc.AssertError: 'bad delsyncarc call'
 > /ufs/guido/mm/demo/lib/EditMgr.py(162)delsyncarc:
 	raise MMExc.AssertError, 'bad delsyncarc call'
@@ -245,6 +238,32 @@ player: when playing a subtree, should make sure that at least one
     [fixed, sort of, by adding a menu to channel windows --Guido]
 
 ---
+12/10/92
+
+*   Resizing background window
+    - this will become important for cross-platform playing of documents.
+    We need anchors which are bound to the characters (rather than
+    the area of the screen).
+
+    Also see following point re: parts of media items.
+    
+*   Pointing to parts of media items
+    At some point in the future we may want to refer to parts of media
+    items rather than the complete item.
+    At the moment I have used a sort of "patch" where I want to
+    show only a part of a picture (or video) file in a channel.  I scale
+    the picture (video) as 1.0 and have the channel just slightly smaller.
+    What I should be doing (with CMIF as it is) is cutting the picture to
+    the piece I want to use, and having that scale as 0.0 (so it will then
+    fit in the channel assigned to, and scale when the background window is
+    scaled).
+
+    If we were dealing with media items from a database, then I would like
+    to specify the part of the picture (or video, text or sound) to appear in
+    the channel (similar to choosing a picture anchor at the moment) and have
+    that part scaled (0.0) to fit the channel (keeping the appropriate
+    height/width ratio as happens now).  For video non-multiple scaling
+    will (always?) remain intolerably slow.
 
 -------------------------------------------------------------------
 --------------------------- DON'T DO THIS -------------------------
@@ -558,3 +577,9 @@ links leading to nodes not in the tree shouldn't be written to the
 file
 
 hyperjumps often beep when the mouse up event arrives
+
+(when deleting a channel while there's also a hierarchy view; order of
+view creation matters:)
+ValueError: 'list.index(x): x not in list'
+> .../ChannelView.py(671)reshape:
+	i = self.mother.context.channelnames.index(self.name)
