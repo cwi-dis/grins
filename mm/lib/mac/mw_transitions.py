@@ -7,24 +7,90 @@ class TransitionClass:
 	def __init__(self, engine, dict):
 		self.ltrb = (0, 0, 0, 0)
 		self.dict = dict
-##		self.initial_update = 1
 		
 	def move_resize(self, ltrb):
 		self.ltrb = ltrb
-##		self.initial_update = 1
 		
 	def computeparameters(self, value, oldparameters):
 		pass
 		
+class BlitterClass:
 	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
-##		self.initial_update = 0
 		pass
 		
 	def needtmpbitmap(self):
 		return 0
 		
-class NullTransition(TransitionClass):
-	UNIMPLEMENTED=0
+	def _convertrect(self, ltrb):
+		"""Convert an lrtb-style rectangle to the local convention"""
+		return ltrb
+		
+class R1R2BlitterClass(BlitterClass):
+	"""parameter is 2 rects, first copy rect2 from src2, then rect1 from src1"""
+			
+	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
+		rect1, rect2 = parameters
+		rect1 = self._convertrect(rect1)
+		rect2 = self._convertrect(rect2)
+		Qd.CopyBits(src2, dst, rect2, rect2, QuickDraw.srcCopy, dstrgn)
+		Qd.CopyBits(src1, dst, rect1, rect1, QuickDraw.srcCopy, dstrgn)
+		
+class R1R2R3R4BlitterClass(BlitterClass):
+	"""Parameter is 4 rects. Copy src1[rect1] to rect2, src2[rect3] to rect4"""
+
+	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
+		srcrect1, dstrect1, srcrect2, dstrect2 = parameters
+		Qd.CopyBits(src2, dst, srcrect2, dstrect2, QuickDraw.srcCopy, dstrgn)
+		Qd.CopyBits(src1, dst, srcrect1, dstrect1, QuickDraw.srcCopy, dstrgn)
+		
+class R1R2OverlapBlitterClass(BlitterClass):
+	"""Like R1R2BlitterClass but rects may overlap, so copy via the temp bitmap"""
+	
+	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
+		rect1, rect2 = parameters
+		Qd.CopyBits(src2, tmp, rect2, rect2, QuickDraw.srcCopy, dstrgn)
+		Qd.CopyBits(src1, tmp, rect1, rect1, QuickDraw.srcCopy, dstrgn)
+		Qd.CopyBits(tmp, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, dstrgn)
+			
+	def needtmpbitmap(self):
+		return 1
+
+class RlistR2OverlapBlitterClass(BlitterClass):
+	"""Like R1R2OverlapBlitterClass, but first item is a list of rects"""
+		
+	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
+		rectlist, rect2 = parameters
+		Qd.CopyBits(src2, tmp, rect2, rect2, QuickDraw.srcCopy, None)
+		x0, y0, x1, y1 = self.ltrb
+		rgn = Qd.NewRgn()
+		for rect in rectlist:
+			rgn2 = Qd.NewRgn()
+			Qd.RectRgn(rgn2, rect)
+			Qd.UnionRgn(rgn, rgn2, rgn)
+			Qd.DisposeRgn(rgn2)
+		Qd.CopyBits(src1, tmp, self.ltrb, self.ltrb, QuickDraw.srcCopy, rgn)
+		Qd.DisposeRgn(rgn)
+		Qd.CopyBits(tmp, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, dstrgn)
+		
+	def needtmpbitmap(self):
+		return 1
+	
+class FadeBlitterClass(BlitterClass):
+	"""Parameter is float in range 0..1, use this as blend value"""
+	
+	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
+		value = parameters
+		rgb = int(value*0xffff), int(value*0xffff), int(value*0xffff)
+		Qd.OpColor(rgb)
+		Qd.CopyBits(src2, tmp, self.ltrb, self.ltrb, QuickDraw.srcCopy, dstrgn)
+		Qd.CopyBits(src1, tmp, self.ltrb, self.ltrb, QuickDraw.blend, dstrgn)
+		Qd.CopyBits(tmp, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, dstrgn)
+		
+	def needtmpbitmap(self):
+		return 1
+	
+class NullTransition(TransitionClass, BlitterClass):
+	UNIMPLEMENTED=1
 	
 	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
 		Qd.CopyBits(src1, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, dstrgn)
@@ -34,22 +100,20 @@ class NullTransition(TransitionClass):
 			Qd.LineTo(x1, y1)
 			Qd.MoveTo(x0, y1)
 			Qd.LineTo(x1, y0)
+			Qd.MoveTo(x0, (y0+y1)/2)
+			Qd.DrawString("%s %s"%(self.dict.get('trtype', '???'), self.dict.get('subtype', '')))
 		
-class EdgeWipeTransition(TransitionClass):
-	# Wipes. Parameters are two ltrb tuples
+class EdgeWipeTransition(TransitionClass, R1R2BlitterClass):
+
 	def computeparameters(self, value, oldparameters):
 		x0, y0, x1, y1 = self.ltrb
 		# Assume left-to-right
 		xpixels = int(value*(x1-x0)+0.5)
 		xcur = x0+xpixels
 		return ((x0, y0, xcur, y1), (xcur, y0, x1, y1), )
-		
-	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
-		rect1, rect2 = parameters
-		Qd.CopyBits(src2, dst, rect2, rect2, QuickDraw.srcCopy, dstrgn)
-		Qd.CopyBits(src1, dst, rect1, rect1, QuickDraw.srcCopy, dstrgn)
 			
-class IrisWipeTransition(TransitionClass):
+class IrisWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
+
 	def computeparameters(self, value, oldparameters):
 		x0, y0, x1, y1 = self.ltrb
 		xmid = int((x0+x1+0.5)/2)
@@ -59,20 +123,9 @@ class IrisWipeTransition(TransitionClass):
 		xc1 = int((xmid+value*(x1-xmid))+0.5)
 		yc1 = int((ymid+value*(y1-ymid))+0.5)
 		return ((xc0, yc0, xc1, yc1), (x0, y0, x1, y1))
-
-	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
-		rect1, rect2 = parameters
-		Qd.CopyBits(src2, tmp, rect2, rect2, QuickDraw.srcCopy, dstrgn)
-		Qd.CopyBits(src1, tmp, rect1, rect1, QuickDraw.srcCopy, dstrgn)
-		Qd.CopyBits(tmp, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, dstrgn)
-			
-	def needtmpbitmap(self):
-		return 1
-		
-class RadialWipeTransition(NullTransition):
-	UNIMPLEMENTED=1
 	
-class MatrixWipeTransition(TransitionClass):
+class MatrixWipeTransition(TransitionClass, RlistR2OverlapBlitterClass):
+
 	def __init__(self, engine, dict):
 		TransitionClass.__init__(self, engine, dict)
 		x0, y0, x1, y1 = self.ltrb
@@ -101,78 +154,44 @@ class MatrixWipeTransition(TransitionClass):
 		index = int(value*self.hsteps*self.vsteps)
 		hindex = index % self.hsteps
 		vindex = index / self.hsteps
-		return (hindex, vindex)
-		
-	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
-		hindex, vindex = parameters
-		Qd.CopyBits(src2, tmp, self.ltrb, self.ltrb, QuickDraw.srcCopy, None)
 		x0, y0, x1, y1 = self.ltrb
-		rgn = Qd.NewRgn()
+		rectlist = []
 		for i in range(vindex):
-			rgn2 = Qd.NewRgn()
 			rect = (x0, self.vboundaries[i], x1, self.vboundaries[i+1])
-			Qd.RectRgn(rgn2, rect)
-			Qd.UnionRgn(rgn, rgn2, rgn)
-			Qd.DisposeRgn(rgn2)
+			rectlist.append(rect)
 		ylasttop = self.vboundaries[vindex]
 		ylastbottom = self.vboundaries[vindex+1]
 		for i in range(hindex):
-			rgn2 = Qd.NewRgn()
 			rect = (self.hboundaries[i], ylasttop, self.hboundaries[i+1], ylastbottom)
-			Qd.RectRgn(rgn2, rect)
-			Qd.UnionRgn(rgn, rgn2, rgn)
-			Qd.DisposeRgn(rgn2)
-		Qd.CopyBits(src1, tmp, self.ltrb, self.ltrb, QuickDraw.srcCopy, rgn)
-		Qd.DisposeRgn(rgn)
-		Qd.CopyBits(tmp, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, dstrgn)
-		
-	def needtmpbitmap(self):
-		return 1
+			rectlist.append(rect)
+		return rectlist, self.ltrb
 				
-class PushWipeTransition(TransitionClass):
-	# Parameters are src1-ltrb, dst1-ltrb, src2-ltrb, dst2-ltrb
+class PushWipeTransition(TransitionClass, R1R2R3R4BlitterClass):
+
 	def computeparameters(self, value, oldparameters):
 		x0, y0, x1, y1 = self.ltrb
 		# Assume left-to-right
 		xpixels = int(value*(x1-x0)+0.5)
 		return ((x1-xpixels, y0, x1, y1), (x0, y0, x0+xpixels, y1),
 				(x0, y0, x1-xpixels, y1), (x0+xpixels, y0, x1, y1) )
-
-	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
-		srcrect1, dstrect1, srcrect2, dstrect2 = parameters
-		Qd.CopyBits(src2, dst, srcrect2, dstrect2, QuickDraw.srcCopy, dstrgn)
-		Qd.CopyBits(src1, dst, srcrect1, dstrect1, QuickDraw.srcCopy, dstrgn)
 			
-class SlideWipeTransition(TransitionClass):
-	# Parameters are src1-ltrb, dst1-ltrb, 2-ltrb
+class SlideWipeTransition(TransitionClass, R1R2R3R4BlitterClass):
+
 	def computeparameters(self, value, oldparameters):
 		x0, y0, x1, y1 = self.ltrb
 		# Assume left-to-right
 		xpixels = int(value*(x1-x0)+0.5)
-		return ((x1-xpixels, y0, x1, y1), (x0, y0, x0+xpixels, y1), (x0+xpixels, y0, x1, y1), )
+		return ((x1-xpixels, y0, x1, y1), (x0, y0, x0+xpixels, y1), 
+				(x0+xpixels, y0, x1, y1), (x0+xpixels, y0, x1, y1))
+		
+class FadeTransition(TransitionClass, FadeBlitterClass):
 
-	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
-		srcrect1, dstrect1, rect2 = parameters
-		Qd.CopyBits(src2, dst, rect2, rect2, QuickDraw.srcCopy, dstrgn)
-		Qd.CopyBits(src1, dst, srcrect1, dstrect1, QuickDraw.srcCopy, dstrgn)
-		
-class FadeTransition(TransitionClass):
 	def computeparameters(self, value, oldparameters):
-		return int(value*0xffff), int(value*0xffff), int(value*0xffff)
+		return value
 		
-	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
-		Qd.OpColor(parameters)
-		Qd.CopyBits(src2, tmp, self.ltrb, self.ltrb, QuickDraw.srcCopy, dstrgn)
-		Qd.CopyBits(src1, tmp, self.ltrb, self.ltrb, QuickDraw.blend, dstrgn)
-		Qd.CopyBits(tmp, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, dstrgn)
-		
-	def needtmpbitmap(self):
-		return 1
-	
 TRANSITIONDICT = {
 	"edgeWipe" : EdgeWipeTransition,
 	"irisWipe" : IrisWipeTransition,
-	"radialWipe" : RadialWipeTransition,
 	"matrixWipe" : MatrixWipeTransition,
 	"pushWipe" : PushWipeTransition,
 	"slideWipe" : SlideWipeTransition,
