@@ -11,6 +11,8 @@ extern int WinObj_Convert(PyObject *, WindowPtr *);
 }
 #endif
 
+extern void seterror(const char *funcname, PN_RESULT res);
+
 class PlayerObject : public RMAObject {
 public:
 	MAKE_PY_CTOR(PlayerObject)
@@ -168,7 +170,11 @@ PlayerObject::OpenURL(PyObject *self, PyObject *args)
 	Py_BEGIN_ALLOW_THREADS
 	res=obj->pPlayer->OpenURL(psz);
 	Py_END_ALLOW_THREADS
-	return Py_BuildValue("i",res);
+	if(FAILED(res)){
+		seterror("PlayerObject::OpenURL", res);
+		return NULL;
+	}
+	RETURN_NONE;
 }
 
 PyObject *
@@ -179,7 +185,11 @@ PlayerObject::Begin(PyObject *self, PyObject *args)
 	Py_BEGIN_ALLOW_THREADS
 	res=((PlayerObject*)self)->pPlayer->Begin();
 	Py_END_ALLOW_THREADS
-	return Py_BuildValue("i",res);
+	if(FAILED(res)){
+		seterror("PlayerObject::Begin", res);
+		return NULL;
+	}
+	RETURN_NONE;
 }
 
 PyObject *
@@ -194,7 +204,11 @@ PlayerObject::Stop(PyObject *self, PyObject *args)
 #ifdef _WIN32
 	Py_END_ALLOW_THREADS
 #endif
-	return Py_BuildValue("i",res);
+	if(FAILED(res)){
+		seterror("PlayerObject::Stop", res);
+		return NULL;
+	}
+	RETURN_NONE;
 }
 
 PyObject *
@@ -209,7 +223,11 @@ PlayerObject::Pause(PyObject *self, PyObject *args)
 #ifdef _WIN32
 	Py_END_ALLOW_THREADS
 #endif
-	return Py_BuildValue("i",res);
+	if(FAILED(res)){
+		seterror("PlayerObject::Pause", res);
+		return NULL;
+	}
+	RETURN_NONE;
 }
 
 PyObject *
@@ -255,7 +273,11 @@ PlayerObject::Seek(PyObject *self, PyObject *args)
 	Py_BEGIN_ALLOW_THREADS
 	res=((PlayerObject*)self)->pPlayer->Seek(val);
 	Py_END_ALLOW_THREADS
-	return Py_BuildValue("i",res);
+	if(FAILED(res)){
+		seterror("PlayerObject::Seek", res);
+		return NULL;
+	}
+	RETURN_NONE;
 }
 
 PyObject *
