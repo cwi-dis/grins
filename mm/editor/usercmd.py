@@ -389,6 +389,8 @@ class PUSHFOCUS(_CommandBase):
 	help = 'Select the selected node in other views'
 class CREATEANCHOR(_CommandBase):
 	help = 'Create a simple fullnode anchor on the selection'
+class CREATEANCHOREXTENDED(_CommandBase):
+	help = 'Create an anchor on the selection and edit the properties'
 class FINISH_LINK(_CommandBase):
 	help = 'Create hyperlink from recent anchor to selection'
 class CREATE_EVENT_SOURCE(_CommandBase):

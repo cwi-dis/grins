@@ -633,6 +633,7 @@ class LayoutView2(LayoutViewDialog2):
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				ENABLE_ANIMATION(callback = (self.onEnableAnimation, ())),
 				CREATEANCHOR(callback = (self.onNewAnchor, ())),
+				CREATEANCHOREXTENDED(callback = (self.onNewAnchor, (1,))),
 				]
 		else:
 			self.commandMediaList = []
@@ -1876,13 +1877,13 @@ class LayoutView2(LayoutViewDialog2):
 		
 		self.newViewport()
 
-	def onNewAnchor(self):
+	def onNewAnchor(self, extended = 0):
 		# apply some command which are automaticly applied when a control lost the focus
 		# it avoids some recursives transactions and some crashs
 		self.flushChangement()
 		
 		if len(self.currentSelectedNodeList) == 1:
-			self.newAnchor(self.currentSelectedNodeList[0])
+			self.newAnchor(self.currentSelectedNodeList[0], extended)
 
 	# make a list of node that are not relationship
 	def makeListWithoutRelationShip(self, nodeList):
@@ -2088,14 +2089,16 @@ class LayoutView2(LayoutViewDialog2):
 		self.setglobalfocus([self.nameToNodeRef(name)])
 		self.updateFocus()
 
-	def newAnchor(self, parentRef):
+	def newAnchor(self, parentRef, extended = 0):
 		# create the anchor
-		if self.editmgr.transaction():
-			anchor = self.toplevel.links.wholenodeanchor(parentRef, notransaction = 1)
+		anchor = self.toplevel.links.createanchor(parentRef, interesting = 1, extended = extended)
+		if anchor is not None:
 			self.setglobalfocus([anchor])
 			self.updateFocus()
-			self.editmgr.commit()
-			
+			if extended:
+				import AttrEdit
+				AttrEdit.showattreditor(self.toplevel, anchor, '.href')
+
 	# check if moving a source node into a target node is valid
 	def isValidMove(self, sourceNodeRef, targetNodeRef):
 		if sourceNodeRef == None or targetNodeRef == None:

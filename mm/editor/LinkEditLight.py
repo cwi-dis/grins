@@ -85,7 +85,7 @@ class LinkEditLight:
 			return c
 		return None
 
-	def wholenodeanchor(self, node, notransaction = 0, create = 1, interesting = 1):
+	def wholenodeanchor(self, node, extended = 0, notransaction = 0, create = 1, interesting = 1):
 		c = self.findwholenodeanchor(node)
 		if c is not None:
 			if not create:
@@ -96,6 +96,9 @@ class LinkEditLight:
 		if not create:
 			return None
 
+		return self.createanchor(node, notransaction, interesting)
+
+	def createanchor(self, node, notransaction = 0, interesting = 1, extended = 0):
 		em = self.editmgr
 		if not notransaction and not em.transaction():
 			return None
@@ -103,6 +106,12 @@ class LinkEditLight:
 		anchor = node.GetContext().newnode('anchor')
 		# and insert it into the tree
 		em.addnode(node, -1, anchor)
+		if extended:
+			em.setnodeattr(anchor, 'show', 'new')
+			em.setnodeattr(anchor, 'sourcePlaystate', 'play')
+		else:
+			em.setnodeattr(anchor, 'show', 'replace')
+			em.setnodeattr(anchor, 'sourcePlaystate', 'stop')
 		if not notransaction:
 			em.commit()
 		if interesting:

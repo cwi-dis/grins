@@ -192,6 +192,7 @@ MENUBAR=(
 
 	('&Linking', (
 		(FLAG_ALL, ENTRY, 'Create whole object &anchor', None, CREATEANCHOR),
+		(FLAG_ALL, ENTRY, 'Create anchor and edit...', None, CREATEANCHOREXTENDED),
 		(FLAG_ALL, ENTRY, '&Finish hyperlink to selection', None, FINISH_LINK),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Use as event &source', None, CREATE_EVENT_SOURCE),
@@ -291,7 +292,7 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Quick Start Guide', None, GRINS_QSG),
 		(FLAG_ALL, ENTRY, '&Tutorial', None, GRINS_TUTORIAL),
-		(FLAG_ALL, ENTRY, 'Template &Design Guide', None, GRINS_TDG),
+		(FLAG_ALL, ENTRY, 'Template Guide', None, GRINS_TDG),
 		(FLAG_ALL, ENTRY, 'GRiNS Reference Manual', None, GRINS_REFERENCE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'C&heck for GRiNS update...', None, CHECKVERSION),
@@ -382,6 +383,7 @@ POPUP_HVIEW_LEAF = (
 		(FLAG_ALL, ENTRY, 'Create &end event', None, CREATE_END_EVENT),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Create &whole object anchor', None, CREATEANCHOR),
+		(FLAG_ALL, ENTRY, 'Create anchor and edit...', None, CREATEANCHOREXTENDED),
 		(FLAG_ALL, ENTRY, 'Finish &hyperlink to selection', None, FINISH_LINK),
 		(FLAG_PRO, SEP,),
 		(FLAG_BOSTON, ENTRY, 'RealPix to S&MIL 2.0', None, RPCONVERT),
