@@ -274,7 +274,7 @@ class _Toplevel:
 
 	def newwindow(self, x, y, w, h, title, **options):
 		if debug: print 'Toplevel.newwindow'+`x, y, w, h, title`
-		window = apply(_Window, (self, x, y, w, h, title, FALSE), optioons)
+		window = apply(_Window, (self, x, y, w, h, title, FALSE), options)
 		return window
 
 	def newcmwindow(self, x, y, w, h, title, **options):
@@ -413,11 +413,14 @@ class _Window:
 	def close(self):
 		if debug: print `self`+'.close()'
 		try:
+			form = self._form
+		except AttributeError:
+			return		# already closed
+		del self._form
+		try:
 			del self._pixmap
 		except AttributeError:
 			pass
-		if self.is_closed():
-			return
 		for func in self._closecallbacks[:]:
 			func(self)
 		for win in self._subwindows[:]:
@@ -427,9 +430,8 @@ class _Window:
 		del self._displaylists
 		self.destroy_menu()
 		toplevel._win_lock.acquire()
-		if self._form:
-			self._form.DestroyWidget()
-		del self._form
+		if form:
+			form.DestroyWidget()
 		parent = self._parent_window
 		if parent == toplevel:
 			self._shell.DestroyWidget()
@@ -2862,9 +2864,8 @@ class _Widget(_MenuSupport):
 		try:
 			form = self._form
 		except AttributeError:
-			pass
+			pass		# already closed, I guess
 		else:
-			self.hide()
 			del self._form
 			_MenuSupport.close(self)
 			form.DestroyWidget()
@@ -2919,6 +2920,9 @@ class _Widget(_MenuSupport):
 			del self._form
 		except AttributeError:
 			return
+		if self._parent:
+			self._parent._children.remove(self)
+		self._parent = None
 		_MenuSupport._destroy(self)
 
 class Label(_Widget):
@@ -2969,9 +2973,9 @@ class OptionMenu(_Widget):
 			pass
 		else:
 			raise error, 'startpos out of range'
-		menu, initbut = self._do_setoptions(parent._form, optionlist,
-						    startpos)
-		attrs = {'menuHistory': initbut, 'subMenuId': menu}
+		initbut = self._do_setoptions(parent._form, optionlist,
+					      startpos)
+		attrs = {'menuHistory': initbut, 'subMenuId': self._omenu}
 		self._attachments(attrs, options)
 		option = parent._form.CreateOptionMenu('windowOptionMenu',
 						       attrs)
@@ -3006,10 +3010,12 @@ class OptionMenu(_Widget):
 		self.setpos(self._optionlist.index(value))
 
 	def setoptions(self, optionlist, startpos):
-		menu, initbut = self._do_setoptions(self._parent._form,
-						    optionlist, startpos)
-		self._form.subMenuId = menu
+		omenu = self._omenu
+		initbut = self._do_setoptions(self._parent._form, optionlist,
+					      startpos)
+		self._form.subMenuId = self._omenu
 		self._form.menuHistory = initbut
+		omenu.DestroyWidget()
 
 	def _do_setoptions(self, form, optionlist, startpos):
 		if 0 <= startpos < len(optionlist):
@@ -3017,6 +3023,7 @@ class OptionMenu(_Widget):
 		else:
 			raise error, 'startpos out of range'
 		menu = form.CreatePulldownMenu('windowOption', {})
+		self._omenu = menu
 		self._optionlist = optionlist
 		self._value = startpos
 		self._buttons = []
@@ -3029,7 +3036,7 @@ class OptionMenu(_Widget):
 			if startpos == i:
 				initbut = button
 			self._buttons.append(button)
-		return menu, initbut
+		return initbut
 
 	def _cb(self, widget, value, call_data):
 		if self.is_closed():
@@ -3135,7 +3142,16 @@ class _List:
 			pos = len(self._itemlist) - 1
 		self._list.ListSelectPos(pos + 1, TRUE)
 
+	def is_visible(self, pos):
+		if pos < 0:
+			pos = len(self._itemlist) - 1
+		top = self._list.topItemPosition - 1
+		vis = self._list.visibleItemCount
+		return top <= pos < top + vis
+
 	def scrolllist(self, pos, where):
+		if pos < 0:
+			pos = len(self._itemlist) - 1
 		if where == TOP:
 			self._list.ListSetPos(pos + 1)
 		elif where == BOTTOM:
@@ -3819,10 +3835,10 @@ class Window(_WindowHelpers, _MenuSupport):
 		except AttributeError:
 			pass
 		else:
-			if not shell:
-				form.UnmanageChild()
-			else:
-				self.hide()
+##			if not shell:
+##				form.UnmanageChild()
+##			else:
+##				self.hide()
 			del self._form
 			form.DestroyWidget()
 			del form
@@ -3856,6 +3872,8 @@ class Window(_WindowHelpers, _MenuSupport):
 			self._shown.append(w)
 
 	def _hideme(self, w):
+		if self.is_closed():
+			return
 		if self.is_showing():
 			w._form.UnmapWidget()
 		elif w in self._shown:
