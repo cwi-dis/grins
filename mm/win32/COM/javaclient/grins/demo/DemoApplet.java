@@ -173,7 +173,7 @@ implements SMILListener
 		    String absFilename = dir+filename;
 		    textFieldURL.setText(absFilename);
 		}
-		if(smil!=null){
+		if(smil!=null && filename!=null){
 		    smil.open(textFieldURL.getText());
 	    }
 		
@@ -198,16 +198,26 @@ implements SMILListener
         player = smil.getController();
     }
     public void closed(){
-        viewport.setVisible(false);
-        viewport.dispose();
-        viewport = null;
+        if(viewport!=null){
+            viewport.setVisible(false);
+            viewport.dispose();
+            viewport = null;
+        }
     }
         
     public void setDur(double dur){
-        JSlider1.setMaximum((int)(dur+1.0));
+        if(dur<0 || dur==0)
+            JSlider1.setVisible(false);
+        else
+            {
+            JSlider1.setVisible(true);
+            int intdur = (int)dur;
+            if(dur -intdur>0) intdur = (int)(dur+1.0);
+            JSlider1.setMaximum(intdur);
+            }
     }
     public void setPos(double pos){
-        if(!dragging)
+        if(!dragging && JSlider1.isVisible())
             JSlider1.setValue((int)(pos+0.5));
     }
     
