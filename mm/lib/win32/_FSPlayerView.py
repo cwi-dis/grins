@@ -3,6 +3,11 @@ __version__ = "$Id$"
 
 # Full screen player support
 
+# For now:
+# To test fullscreen mode set PlayerDialog.__show = 'fullscreen' and then play as usual.
+# The player will work in full sceen mode untill PlayerDialog.__show  is set again to 'normal'.
+# When in full screen mode press F1 to start playing
+# When in full screen modepress ESC to return to normal mode
 
 
 # direct draw infrastructure module
