@@ -750,8 +750,8 @@ class LayoutView2(LayoutViewDialog2):
 
 		# after a commit, the focus may have changed
 		self.currentFocus = self.editmgr.getglobalfocus()
-		self.updateFocus(1)
 		self.previousWidget.mustBeUpdated()
+		self.updateFocus(1)
 				
 	# make a list of nodes selected in this view
 	def makeSelectedNodeList(self, selList):
@@ -931,7 +931,9 @@ class LayoutView2(LayoutViewDialog2):
 				if visible:
 					listToUpdate.append(nodeRef)
 		self.updateVisibility(listToUpdate, 1)
-													
+
+		self.previousWidget.update()
+		
 		# update widgets
 		for id, widget in self.widgetList.items():
 			widget.selectNodeList(localSelList, keepShowedNodes)
@@ -1340,9 +1342,20 @@ class LayoutView2(LayoutViewDialog2):
 	def applyNewRegion(self, parentRef, id, regionName):
 		if self.editmgr.transaction():
 			channel = self.context.newchannel(id, -1, 'layout')
-#			channel.fillWithDefaultEditorValues()
 			self.editmgr.addchannel(parentRef, -1, channel)
 			self.editmgr.setchannelattr(id, 'regionName', regionName)
+
+			# set automaticly a the highest z-index amoung all sibling nodes
+			# XXX should be probably changed/moved if we want also the same behavior when a node is copied, ...
+			sibling = parentRef.GetChildren()
+			max = None
+			for nodeRef in sibling:
+				z = nodeRef.GetAttrDef('z', 0)
+				if max == None or z > max:
+					max = z
+			if max is not None:
+				self.editmgr.setchannelattr(id, 'z', max+1)
+								
 			self.editmgr.commit('REGION_TREE')
 
 	def applyNewViewport(self, name):
@@ -2127,10 +2140,8 @@ class LayoutView2(LayoutViewDialog2):
 
 		return 'move'
 
-	def getShowEditBackgroundMode(self):
-		# XXX to complete
-#		return 'editBackground'
-		return 'originalBackground'
+	def getShowEditBackgroundMode(self, nodeRef):
+		return nodeRef.GetInherAttrDef('showEditBgMode', 'normal')
 	
 	def getPreviewOption(self, nodeRef, nodeType):
 		# the default value is node type dependent
@@ -3025,7 +3036,6 @@ class PreviousWidget(Widget):
 		self.__selecting = 0
 		
 		self.__mustBeUpdated = 1
-		self.__mustUpdateEditBackground = 1
 
 	#
 	# inherited methods
@@ -3142,7 +3152,6 @@ class PreviousWidget(Widget):
 		regionNode = Region(regionRef, self)
 		pNode.addNode(regionNode)
 		self.__mustBeUpdated = 1
-
 		return regionNode
 #		visible = self._context.getVisibility(regionRef, TYPE_REGION, selected=0)
 #		if visible:
@@ -3356,6 +3365,7 @@ class Node:
 		self._graphicCtrl = None		
 
 		self._computedEditBackground = (200, 200, 200)
+		self._z = self._nodeRef.GetAttrDef('z', 0)
 
 		# default attribute		
 		self.importAttrdict()
@@ -3366,20 +3376,25 @@ class Node:
 		self._selecting = 0
 
 		self._wantToShow = 0
+		self._mustUpdateEditBackground = 1
 		
 	def _cleanup(self):
 		if self.isShowed:
 			self.hide()
-		del self._ctx
-		del self._viewport
-		del self._parent
+		self._ctx = None
+		self._viewport = None
+		self._parent = None
 		
 	def addNode(self, node):
 		self._children.append(node)
 		node._parent = self
 		node._viewport = self._viewport
+		if self._viewport is not None and node._nodeType in (TYPE_REGION, TYPE_VIEWPORT):
+			self._viewport._mustUpdateEditBackground = 1
 
 	def removeNode(self, node):
+		if self._viewport is not None and node._nodeType in (TYPE_REGION, TYPE_VIEWPORT):
+			self._viewport._mustUpdateEditBackground = 1
 		node._cleanup()
 		try:
 			self._children.remove(node)
@@ -3448,26 +3463,21 @@ class Node:
 	def getGeom(self):
 		return self._curattrdict['wingeom']
 
-	def computeEditBackground(self):
-		self.computeLightFactor()
-		self.computeEditBackground()
-
 	def __cmpZ(self, node1, node2):
-		if node1._nodeRef.GetAttrDef('z', 0) > node2._nodeRef.GetAttrDef('z', 0):
+		if node1._z > node2._z:
 			return 1
 		else:
 			return -1
 		
 	def __computeLightFactor(self, factor=0, maxFactor=0):
 		self._lightFactor = factor
-		print 'light factor found = ',self._nodeRef,self._lightFactor
 		children = self._children
 		children.sort(self.__cmpZ)
 		currentZ = 0
 		nextFactor = factor
 		ind = 0
 		for child in children:
-			cz = child._nodeRef.GetAttrDef('z', 0)
+			cz = child._z
 			if cz != currentZ:
 				factor = nextFactor
 			currentZ = cz
@@ -3480,16 +3490,19 @@ class Node:
 			if not visible:
 				continue
 			if child._nodeRef.GetAttrDef('editBackground',None) is not None:
-				child.computeLightFactor()
+				child._computeLightFactor()
 				nextFactor = factor+1
 			else:
 				nextFactor, mFactor = child.__computeLightFactor(factor+1, maxFactor)
 				if mFactor > maxFactor:
 					maxFactor = mFactor
 			ind = ind+1
-		return factor+1, maxFactor
+		factor = factor+1
+		if factor > maxFactor:
+			maxFactor = factor
+		return factor, maxFactor
 			
-	def computeLightFactor(self):
+	def _computeLightFactor(self):
 		dummy, maxFactor = self.__computeLightFactor()
 		self._maxFactor = maxFactor
 
@@ -3497,7 +3510,6 @@ class Node:
 		factor = self._lightFactor
 		# experimental algorithm to determinate the computed color
 		r, g, b = baseColor
-		print 'factor,max found = ',factor,maxFactor
 		if maxFactor < 5:
 			colorNumber = 5
 		else:
@@ -3506,7 +3518,6 @@ class Node:
 		c = float(m)/colorNumber
 		s = int(c*factor)
 		self._computedEditBackground = r-s, g-s, b-s
-		print 'computedEditBg found = ',self._nodeRef,self._computedEditBackground
 		children = self._children
 		for child in children:
 			context = self._ctx._context
@@ -3517,13 +3528,19 @@ class Node:
 			if not visible:
 				continue
 			if child._nodeRef.GetAttrDef('editBackground',None) is not None:
-				child.computeEditBackground()
+				child._computeEditBackground()
 			else:
 				child.__computeEditBackground(maxFactor, baseColor)
 		
-	def computeEditBackground(self):
+	def _computeEditBackground(self):
 		baseColor = self._nodeRef.GetAttrDef('editBackground',(200, 200, 200))
 		self.__computeEditBackground(self._maxFactor, baseColor)
+
+	def computeEditBackground(self):
+		if self._mustUpdateEditBackground:
+			self._computeLightFactor()
+			self._computeEditBackground()
+			self._mustUpdateEditBackground = 0
 		
 #	def isShowEditBackground(self):
 #		showEditBackground = self._nodeRef.GetAttrDef('showEditBackground',None)
@@ -3566,18 +3583,23 @@ class Region(Node):
 	def importAttrdict(self):
 		Node.importAttrdict(self)
 
-		showMode = self._ctx._context.getShowEditBackgroundMode()
+		z = self._nodeRef.GetAttrDef('z', 0)
+		if z != self._z:
+			self._z = z
+			self._viewport._mustUpdateEditBackground = 1
+		self._curattrdict['z'] = self._z
+
+		showMode = self._ctx._context.getShowEditBackgroundMode(self._nodeRef)
 		if showMode == 'editBackground':
 			self._curattrdict['bgcolor'] = self._computedEditBackground
 			self._curattrdict['transparent'] = 0
-		elif showMode == 'outLine':
+		elif showMode == 'outline':
 			self._curattrdict['transparent'] = 1
 		else:								
 			self._curattrdict['bgcolor'] = self._nodeRef.GetInherAttrDef('bgcolor', (0,0,0))
 			self._curattrdict['transparent'] = self._nodeRef.GetInherAttrDef('transparent', 1)
 
 		self._curattrdict['wingeom'] = self._ctx._context.getPxGeomWithContextAnimation(self._nodeRef)
-		self._curattrdict['z'] = self._nodeRef.GetAttrDef('z', 0)
 	
 	def show(self):
 		if debug: print 'Region.show : ',self.getName()
@@ -3642,17 +3664,15 @@ class MediaRegion(Region):
 
 	def importAttrdict(self):
 		Node.importAttrdict(self)
-		showMode = self._ctx._context.getShowEditBackgroundMode()
+		showMode = self._ctx._context.getShowEditBackgroundMode(self._nodeRef)
 		if showMode == 'editBackground':
 			self._curattrdict['transparent'] = 1			
-		elif showMode == 'outLine':
+		elif showMode == 'outline':
 			self._curattrdict['transparent'] = 1
 		else:								
 			self._curattrdict['bgcolor'] = self._nodeRef.GetInherAttrDef('bgcolor', (0,0,0))
 			self._curattrdict['transparent'] = self._nodeRef.GetInherAttrDef('transparent', 1)
 
-		self._curattrdict['transparent'] = 1
-		
 		# get wingeom according to the subregion positionning
 		# note this step is not done during the parsing in order to maintains all constraint information
 		# at some point we'll have to do the same thing for regions		
@@ -3686,7 +3706,8 @@ class MediaRegion(Region):
 #					wingeom = x,y,w,self.media_height
 
 		self._curattrdict['wingeom'] = wingeom
-		self._curattrdict['z'] = 0
+		self._z = self._nodeRef.GetAttrDef('z', 0)
+		self._curattrdict['z'] = self._z
 
 	def updateShowName(self,value):
 		# no name showed
@@ -3905,11 +3926,13 @@ class Viewport(Node):
 		if not self.isShowed():
 			return
 		if debug: print 'LayoutView.updateAllAttrdict:',self.getName()
+		self.computeEditBackground()
 		Node.updateAllAttrdict(self)
-		showMode = self._ctx._context.getShowEditBackgroundMode()
-		if showMode == 'editBackground':
-			self.computeLightFactor()
-			self.computeEditBackground()
+		# XXX if z-order has changed, recompute edit background, and re-import attrs
+		# XXX not really clean !
+		if self._mustUpdateEditBackground:
+			self.updateAllAttrdict()
+			return
 		# for now refresh all
 		if self.isShowed():
 			self.showAllNodes()

@@ -308,6 +308,10 @@
 (showEditBackground (bool) 1 'Show edit background' default
 	'Show edit background color in Layout View' channel (g2 qt smil10 smil2 cmif snap))
 
+(showEditBgMode (enum normal editBackground outline) normal 'Show edit Background mode' default
+	'Type of background color showed in the layout view' channel (g2 qt smil10 smil2 cmif snap))
+
+
 (skip_content (bool) 1 'Skip unknown content' default
 	'Skip unknown content when parsing this document' raw (cmif smil2))
 
