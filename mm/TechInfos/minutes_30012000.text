@@ -83,13 +83,9 @@ There was no chairman.
     - Jack pushes the idea of making nodes smaller and use less
       pixels.
 12. Undo.
-    - Jack jumped on the table and started dancing, praising how
-      important undo's were and how he misses them so much. I think
-      Sjoerd said something.
+    - Agreed that Undo's are an important feature.
 13. Multiple editable selections.
-    - I put forward this idea. Dick looked at me weirdly. Jack 
-      looked a bit like he just stood in something warm and fluid
-      with bare feet and was enjoying it immensly. Conversation
+    - I put forward this idea. Conversation
       drifted eloquently between the advantages of multiple 
       selection; how much Jack misses multiple selection and 
       how Dick concurred that multiple selection is just a 
@@ -97,7 +93,20 @@ There was no chairman.
       good idea - "paste nodes as sequence" or "paste nodes as
       par". Hmm. Cool. Also thought about moving multiple selections
       and changing attributes for multiple selections (difficult).
-14. 
+14. The layout view
+    - Decided that dropping nodes on the layout view is not yet 
+      feasable, namely because the archictecture of GRiNS was not 
+      made with this in mind. What do we do with a dropped node?
+      Insert it at the end of the presentation??!!
+    - Better integration is needed with the rest of the editor.
+      (Note that this has mostly already been done.)
+15. The temporal view.
+    - Undecided? Perhaps it is better to discard this view for the
+      next release of the editor and put more effort into other views.
+
+Meeting concluded with the conclusion that we should have a design
+meeting on Friday.
+	
 	
 
 	
