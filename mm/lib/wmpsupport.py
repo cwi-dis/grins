@@ -4,9 +4,11 @@ import windowinterface
 import wmwriter
 
 class Exporter:
-	def __init__(self, filename, player):
+	def __init__(self, filename, player, profile=20):
 		self.filename = filename
 		self.player = player
+		self.writer = None
+		self.profile = profile
 		self.aborted = 0
 		self.completed = 0
 		self.topwindow = None
@@ -19,6 +21,13 @@ class Exporter:
 		self.player = None
 		self.topwindow = None
 		
+	# we have to locate audio nodes and find their audio format
+	def setcontext(self, context):
+		pass 
+
+	def getWriter(self):
+		return self.writer
+
 	def changed(self, topchannel, window, event, timestamp):
 		"""Callback from the player: the bits in the window have changed"""
 		if self.topwindow:
@@ -30,7 +39,8 @@ class Exporter:
 				self.writer.update(timestamp-self.starttime)
 		elif not self.completed:
 			self.topwindow = window
-			self.writer = wmwriter.WMWriter(window.getDrawBuffer(), profile=20)
+			print 'Begin export', self.filename, 'using profile', self.profile
+			self.writer = wmwriter.WMWriter(self, window.getDrawBuffer(), self.profile)
 			self.writer.setOutputFilename(self.filename)
 			self.writer.beginWriting()
 
@@ -41,6 +51,7 @@ class Exporter:
 	def finished(self, aborted):
 		if self.writer:
 			self.writer.endWriting()
+			print 'End export', self.writer._filename
 			self.writer = None
 			self.topwindow = None
 		self.completed = 1
