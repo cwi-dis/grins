@@ -103,6 +103,8 @@ MENUBAR=(
 		(TOGGLE, 'Display image thumbnails', None, THUMBNAIL),
 		(SEP,),
 		(TOGGLE, 'Timeline view follows player', None, SYNCCV),
+		(ENTRY, 'Highlight channel in player', None, HIGHLIGHT),
+		(ENTRY, 'Unhighlight channel in player', None, UNHIGHLIGHT),
 		(CASCADE, 'Minidoc navigation', (
 			(ENTRY, 'Next', None, NEXT_MINIDOC),
 			(ENTRY, 'Previous', None, PREV_MINIDOC),
@@ -142,10 +144,10 @@ POPUP_HVIEW_LEAF = (
 		(SEP,),
 		(ENTRY, 'Play node', None, PLAYNODE),
 		(ENTRY, 'Play from node', None, PLAYFROM),
-		(SEP,)
+		(SEP,),
 		(ENTRY, 'Zoom in', None, ZOOMIN),
 		(ENTRY, 'Zoom out', None, ZOOMOUT),
-		(SEP,)
+		(SEP,),
 		(ENTRY, 'Show info', 'I', INFO),
 		(ENTRY, 'Show properties', 'A', ATTRIBUTES),
 		(ENTRY, 'Show anchors', 'T', ANCHORS),
@@ -159,7 +161,7 @@ POPUP_HVIEW_STRUCTURE = (
 		(SEP,),
 		(ENTRY, 'Paste Before', None, PASTE_BEFORE),
 		(ENTRY, 'Paste After', None, PASTE_AFTER),
-		(ENTRY, 'Paste As child', None, PASTE_UNDER))),
+		(ENTRY, 'Paste As child', None, PASTE_UNDER),
 		(SEP,),
 		(ENTRY, 'New node Before', None, NEW_BEFORE),
 		(ENTRY, 'New node After', 'K', NEW_AFTER),
@@ -167,11 +169,11 @@ POPUP_HVIEW_STRUCTURE = (
 		(SEP,),
 		(ENTRY, 'Play node', None, PLAYNODE),
 		(ENTRY, 'Play from node', None, PLAYFROM),
-		(SEP,)
+		(SEP,),
 		(ENTRY, 'Zoom in', None, ZOOMIN),
 		(ENTRY, 'Zoom out', None, ZOOMOUT),
 		(ENTRY, 'Zoom to focus', 'Z', ZOOMHERE),
-		(SEP,)
+		(SEP,),
 		(ENTRY, 'Show info', 'I', INFO),
 		(ENTRY, 'Show properties', 'A', ATTRIBUTES),
 		(ENTRY, 'Show anchors', 'T', ANCHORS),
@@ -185,14 +187,14 @@ POPUP_CVIEW_CHANNEL = (
 		(ENTRY, 'Move channel', None, MOVE_CHANNEL),
 		(ENTRY, 'Copy channel', None, COPY_CHANNEL),
 		(ENTRY, 'Toggle channel state', None, TOGGLE_ONOFF),
-		(SEP,)
+		(SEP,),
 		(ENTRY, 'Delete', None, DELETE),
 
 )
 
 POPUP_CVIEW_NODE = (
 		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
-		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC))),
+		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC),
 		(SEP,),
 		(ENTRY, 'Play node', None, PLAYNODE),
 		(ENTRY, 'Play from node', None, PLAYFROM),
@@ -205,7 +207,7 @@ POPUP_CVIEW_NODE = (
 
 POPUP_CVIEW_SYNCARC = (
 		(ENTRY, 'Show info', 'I', INFO),
-		(SEP,)
+		(SEP,),
 		(ENTRY, 'Delete', None, DELETE),
 )
 
