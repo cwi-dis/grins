@@ -43,6 +43,7 @@ def get(node, target=0):
 		return 0, bitrate
 			
 	url = MMAttrdefs.getattr(node, 'file')
+	url, tag = MMurl.splittag(url)
 	url = context.findurl(url)
 	val = urlcache[url].get('bandwidth')
 	if val is not None:
