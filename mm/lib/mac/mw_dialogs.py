@@ -124,6 +124,7 @@ class MACDialog:
 	def show(self):
 		"""Show the dialog."""
 		self._window.show()
+		self._window.pop()
 		self._window.register(WMEVENTS.WindowExit, self.goaway, ())
 		
 	def pop(self):
