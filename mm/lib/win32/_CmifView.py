@@ -330,13 +330,13 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		return not (self._obj_ and self.IsWindow())
 
 	# Bring window in front of peers
-	def pop(self, poptop=1):
+	def pop(self, poptop=0):
 		# ignore calls from core system, they produce undesired visual effects.
 		# it seems that the situation is different for other platforms  
 		# let the user do the activation of top windows
 		# he knows better what he wants to see in front
-#		if poptop:
-#			self.do_activate()
+		if poptop:
+			self.do_activate()
 		pass
 
 	# Bring window in front of peers
