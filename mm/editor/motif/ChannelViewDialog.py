@@ -8,13 +8,13 @@ from flags import *
 class ChannelViewDialog(ViewDialog):
 	adornments = {
 		'shortcuts': {
-			'n': NEW_CHANNEL,
+			'r': NEW_REGION,
 			'T': TOGGLE_UNUSED,
 ##			'i': INFO,
 			'a': ATTRIBUTES,
 			'd': DELETE,
-			'm': MOVE_CHANNEL,
-			'c': COPY_CHANNEL,
+			'm': MOVE_REGION,
+			'c': COPY_REGION,
 			'p': PLAYNODE,
 			'G': PLAYFROM,
 			's': FINISH_ARC,
@@ -31,10 +31,10 @@ class ChannelViewDialog(ViewDialog):
 			(FLAG_PRO, 'Edit', [
 				(FLAG_PRO, 'Delete', DELETE),
 				(FLAG_PRO, None),
-				(FLAG_PRO, 'New Channel...', NEW_CHANNEL),
+				(FLAG_PRO, 'New Region...', NEW_REGION),
 				(FLAG_PRO, None),
-				(FLAG_PRO, 'Move Channel', MOVE_CHANNEL),
-				(FLAG_PRO, 'Copy Channel', COPY_CHANNEL),
+				(FLAG_PRO, 'Move Region', MOVE_REGION),
+				(FLAG_PRO, 'Copy Region', COPY_REGION),
 				(FLAG_CMIF, 'Toggle Channel State', TOGGLE_ONOFF),
 				(FLAG_PRO, None),
 ##				(FLAG_PRO, 'Info...', INFO),
@@ -112,7 +112,7 @@ class ChannelViewDialog(ViewDialog):
 
 class GOCommand:
 	POPUP_NONE = (
-		(FLAG_PRO, 'New Channel...', NEW_CHANNEL),
+		(FLAG_PRO, 'New Region...', NEW_REGION),
 		)
 
 	def __init__(self):
@@ -142,8 +142,8 @@ class ChannelBoxCommand:
 		(FLAG_PRO, None),
 		(FLAG_PRO, 'Delete', DELETE),
 		(FLAG_PRO, None),
-		(FLAG_PRO, 'Move Channel', MOVE_CHANNEL),
-		(FLAG_PRO, 'Copy Channel', COPY_CHANNEL),
+		(FLAG_PRO, 'Move Region', MOVE_REGION),
+		(FLAG_PRO, 'Copy Region', COPY_REGION),
 		)
 
 	def __init__(self):

@@ -88,13 +88,13 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, '&Delete\tCtrl+Del', None, DELETE),
 		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, '&New node...', None, NEW_AFTER),
-		(FLAG_PRO, ENTRY, 'New c&hannel', None, NEW_CHANNEL),
+		(FLAG_PRO, ENTRY, 'New &Region', None, NEW_REGION),
 
 ## Windows dialogs apparently do not use usercmd commands.
 ##		(FLAG_PRO, ENTRY, 'New &layout', None, NEW_LAYOUT),
 		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, '&Move channel', None, MOVE_CHANNEL),
-		(FLAG_PRO, ENTRY, 'C&opy channel', None, COPY_CHANNEL),
+		(FLAG_PRO, ENTRY, '&Move region', None, MOVE_REGION),
+		(FLAG_PRO, ENTRY, 'C&opy region', None, COPY_REGION),
 		(FLAG_CMIF, ENTRY, 'To&ggle channel state', None, TOGGLE_ONOFF),
 ##		(FLAG_PRO, ENTRY, 'Edit Source...', None, EDITSOURCE),
 		(FLAG_PRO, SEP,),
@@ -451,7 +451,7 @@ POPUP_HVIEW_STRUCTURE = (
 )
 
 POPUP_CVIEW_NONE = (
-		(FLAG_ALL, ENTRY, '&New channel', 'M', NEW_CHANNEL),
+		(FLAG_ALL, ENTRY, '&New region', 'M', NEW_REGION),
 )
 
 POPUP_CVIEW_BWSTRIP = (
@@ -465,11 +465,11 @@ POPUP_CVIEW_BWSTRIP = (
 		)
 
 POPUP_CVIEW_CHANNEL = (
-		(FLAG_PRO, ENTRY, '&New', None, NEW_CHANNEL),
+		(FLAG_PRO, ENTRY, '&New', None, NEW_REGION),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
 		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, '&Move channel', None, MOVE_CHANNEL),
-		(FLAG_ALL, ENTRY, '&Copy channel', None, COPY_CHANNEL),
+		(FLAG_ALL, ENTRY, '&Move region', None, MOVE_REGION),
+		(FLAG_ALL, ENTRY, '&Copy region', None, COPY_REGION),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Properties...', None, ATTRIBUTES),
 

@@ -48,10 +48,10 @@ class _LayoutView(GenFormView):
 		self[NEW_LAYOUT]=components.Button(self,grinsRC.IDCMD_NEW_LAYOUT)
 		self[RENAME]=components.Button(self,grinsRC.IDCMD_RENAME)
 		self[DELETE]=components.Button(self,grinsRC.IDCMD_DELETE)
-		self[NEW_CHANNEL]=components.Button(self,grinsRC.IDCMD_NEW_CHANNEL)
-		self[REMOVE_CHANNEL]=components.Button(self,grinsRC.IDCMD_REMOVE_CHANNEL)
+		self[NEW_REGION]=components.Button(self,grinsRC.IDCMD_NEW_CHANNEL)
+		self[REMOVE_REGION]=components.Button(self,grinsRC.IDCMD_REMOVE_CHANNEL)
 		self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
-		self[ADD_CHANNEL]=components.Button(self,grinsRC.IDCMD_ADD_CHANNEL)
+		self[ADD_REGION]=components.Button(self,grinsRC.IDCMD_ADD_CHANNEL)
 		
 		self._activecmds={}
 

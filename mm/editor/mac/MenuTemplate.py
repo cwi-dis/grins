@@ -72,11 +72,11 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Delete', (kMenuNoCommandModifier, '\177', 0x0a), DELETE),
 		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, 'New node...', 'K', NEW_AFTER),
-		(FLAG_PRO, ENTRY, 'New Channel', 'M', NEW_CHANNEL),
+		(FLAG_PRO, ENTRY, 'New Region', 'M', NEW_REGION),
 		(FLAG_PRO, ENTRY, 'New Screen', None, NEW_LAYOUT),
 		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, 'Move Channel', None, MOVE_CHANNEL),
-		(FLAG_PRO, ENTRY, 'Copy Channel', None, COPY_CHANNEL),
+		(FLAG_PRO, ENTRY, 'Move Region', None, MOVE_REGION),
+		(FLAG_PRO, ENTRY, 'Copy Region', None, COPY_REGION),
 		(FLAG_CMIF, ENTRY, 'Toggle Channel State', None, TOGGLE_ONOFF),
 		(FLAG_PRO, SEP, ),
 		(FLAG_ALL, ENTRY, 'Properties...', 'A', ATTRIBUTES),
@@ -364,7 +364,7 @@ POPUP_HVIEW_STRUCTURE = (
 )
 
 POPUP_CVIEW_NONE = (
-		(FLAG_ALL, ENTRY, 'New Channel...', 'M', NEW_CHANNEL),
+		(FLAG_ALL, ENTRY, 'New Region...', 'M', NEW_REGION),
 )
 
 POPUP_CVIEW_BWSTRIP = (
@@ -382,8 +382,8 @@ POPUP_CVIEW_CHANNEL = (
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Delete', None, DELETE),
 		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Move Channel', None, MOVE_CHANNEL),
-		(FLAG_ALL, ENTRY, 'Copy Channel', None, COPY_CHANNEL),
+		(FLAG_ALL, ENTRY, 'Move Region', None, MOVE_REGION),
+		(FLAG_ALL, ENTRY, 'Copy Region', None, COPY_REGION),
 
 )
 

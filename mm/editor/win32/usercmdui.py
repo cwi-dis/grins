@@ -210,12 +210,12 @@ CommandUI(TIMESCALE)
 #
 # Channel view commands
 #
-CommandUI(NEW_CHANNEL)
+CommandUI(NEW_REGION)
 CommandUI(TOGGLE_UNUSED)
 CommandUI(TOGGLE_ARCS)
 CommandUI(TOGGLE_BWSTRIP)
-CommandUI(MOVE_CHANNEL) 
-CommandUI(COPY_CHANNEL) 
+CommandUI(MOVE_REGION) 
+CommandUI(COPY_REGION) 
 CommandUI(TOGGLE_ONOFF) 
 CommandUI(HIGHLIGHT) 
 CommandUI(UNHIGHLIGHT) 
@@ -232,8 +232,8 @@ CommandUI(BANDWIDTH_OTHER)
 # Layout view commands
 #
 CommandUI(NEW_LAYOUT)
-CommandUI(REMOVE_CHANNEL)
-CommandUI(ADD_CHANNEL)
+CommandUI(REMOVE_REGION)
+CommandUI(ADD_REGION)
 CommandUI(RENAME)
 
 # The temporal view specific commands..
