@@ -867,6 +867,8 @@ class LayoutView2(LayoutViewDialog2):
 			regionNode = self.getRegion(regionName)
 			if regionNode != None:
 				if regionNode.isExclude():
+					if self.lastRegionNameSelected == regionName:
+						self.lastRegionNameSelected = None
 					self.dialogCtrl.setMultiSelecterCtrl('RegionList', ind, 1)
 					excludeList.append(regionName)
 				else:
@@ -931,10 +933,10 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.setFieldCtrl('RegionH',"%d"%geom[1])
 		
 	def updateRegionOnDialogBox(self, region):
-		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
-
 		self.fillRegionListOnDialogBox()
 		self.fillMediaListOnDialogBox()
+
+		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
 
 		self.lastRegionNameSelected = region.getName()
 								
@@ -1048,8 +1050,8 @@ class LayoutView2(LayoutViewDialog2):
 		# update the region selecter
 		region = media.getParent()
 		regionName = region.getName()
-		if self.currentRegionNameList != None:
-			index = self.currentRegionNameList.index(regionName)
+		if self.currentRegionNameListSel != None:
+			index = self.currentRegionNameListSel.index(regionName)
 			if index >= 0:
 				self.dialogCtrl.setSelecterCtrl('RegionSel',index)
 		
@@ -1095,7 +1097,7 @@ class LayoutView2(LayoutViewDialog2):
 				value = 1
 				regionName = item
 				break
-			
+
 		if regionName == None:
 			# not found yet
 			for item in self.currentExcludeRegionNameList:
