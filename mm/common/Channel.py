@@ -710,13 +710,13 @@ class Channel:
 			self.armed_url = ''
 			return string.joinfields(node.GetValues(), '\n')
 		elif node.type == 'ext':
-			filename = self.getfileurl(node)
-			self.armed_url = filename
+			url = self.getfileurl(node)
+			self.armed_url = url
 			try:
-				fp = urlopen(filename)
+				fp = urlopen(url)
 			except IOError:
 				import sys
-				raise error, 'Cannot open %s: %s, %s'%(filename, sys.exc_type, sys.exc_value)
+				raise error, 'Cannot open %s: %s, %s'%(url, sys.exc_type, sys.exc_value)
 			self.armed_url = fp.geturl()
 			text = fp.read()
 			fp.close()
