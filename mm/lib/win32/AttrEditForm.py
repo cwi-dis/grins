@@ -156,6 +156,9 @@ class OptionsCtrl(AttrCtrl):
 		self.setoptions(list,val)
 		self._wnd.HookCommand(self.OnCombo,self._resid[1])
 	
+	def enable(self, enable):
+		self._options.enable(enable)
+
 	def setoptions(self,list,val):
 		if val not in list:
 			val = list[0]
@@ -256,6 +259,10 @@ class OptionsRadioCtrl(AttrCtrl):
 		val = self._attr.getcurrent()
 		self.setoptions(list,val)
 	
+	def enable(self, enable):
+		for ctrl in self._radio:
+			ctrl.enable(enable)
+
 	def setoptions(self,list,val):
 		if val not in list:
 			val = list[0]
@@ -321,6 +328,9 @@ class OptionsCheckCtrl(AttrCtrl):
 		val = self._attr.getcurrent()
 		self._check.setcheck(val=='on')
 	
+	def enable(self, enable):
+		self._check.enable(enable)
+
 	def setvalue(self, val):
 		if not self._initctrl: return
 		self._check.setcheck(val=='on')
@@ -365,6 +375,10 @@ class OptionsCheckMultipleCtrl(AttrCtrl):
 		val = self._attr.getcurrent()
 		self.setoptions(list,val)
 	
+	def enable(self, enable):
+		for ctrl in self._check:
+			ctrl.enable(enable)
+
 	def setoptions(self,list,val):
 		vals = string.split(val, ',')
 		if self._initctrl:
@@ -470,6 +484,25 @@ class AnchorlistCtrl(AttrCtrl):
 		self.setstate('stop')
 		self.fill()
 
+	def enable(self, enable):
+		if enable:
+			self._list.enable(1)
+			self.fill()	# enables the rest
+		else:
+			self._list.enable(0)
+			self._new.enable(0)
+			self._rename.enable(0)
+			self._delete.enable(0)
+			self._link.enable(0)
+			self._type.enable(0)
+			for c in self._xywh:
+				c.enable(0)
+			for c in self._se:
+				c.enable(0)
+			self._bplay.enable(0)
+			self._bpause.enable(0)
+			self._bstop.enable(0)
+		
 	def getvalue(self):
 		if self._initctrl:
 			return self.__anchorlinks
@@ -769,6 +802,9 @@ class FileCtrl(AttrCtrl):
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
 
+	def enable(self, enable):
+		self._attrval.enable(enable)
+
 	def setvalue(self, val):
 		if self._initctrl:
 			self._attrval.settext(val)
@@ -816,6 +852,16 @@ class FileMediaCtrl(FileCtrl):
 		self._wnd.HookCommand(self.OnPause,self._resid[4])
 		self._wnd.HookCommand(self.OnStop,self._resid[5])
 		self.setstate('stop')
+
+	def enable(self, enable):
+		FileCtrl.enable(self, enable)
+		if enable:
+			self.setstate('stop')
+		else:
+			self.OnStop()
+			self._bplay.enable(0)
+			self._bpause.enable(0)
+			self._bstop.enable(0)
 
 	def OnPlay(self,id,code):
 		if hasattr(self._wnd,'OnPlay'):
@@ -877,6 +923,9 @@ class ColorCtrl(AttrCtrl):
 		self.calcIndicatorRC()
 		if self._validator:
 			self._attrval.hookmessage(self.OnKeyDown,win32con.WM_KEYDOWN)
+
+	def enable(self, enable):
+		self._attrval.enable(enable)
 
 	def calcIndicatorRC(self):
 		place='edit'
@@ -988,6 +1037,9 @@ class StringCtrl(AttrCtrl):
 		self.setvalue(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 
+	def enable(self, enable):
+		self._attrval.enable(enable)
+
 	def setvalue(self, val):
 		if self._initctrl:
 			val = string.join(string.split(val, '\n'), '\r\n')
@@ -1031,6 +1083,10 @@ class TupleCtrl(AttrCtrl):
 		self.setvalue(strxy)
 		for i in range(self._nedit):
 			self._attrval[i].hookcommand(self._wnd,self.OnEdit)
+
+	def enable(self, enable):
+		for c in self._attrval:
+			c.enable(enable)
 
 	def setvalue(self, val):
 		if self._initctrl:
@@ -1117,6 +1173,9 @@ class StringOptionsCtrl(AttrCtrl):
 			self._attrval.initoptions(self._options)
 		self.setvalue(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnCombo,self._resid[1])
+
+	def enable(self, enable):
+		self._attrval.enable(enable)
 
 	def setvalue(self, val):
 		if self._initctrl:
@@ -2927,12 +2986,26 @@ class Imgregion1Group(AttrGroup):
 		if 'project_convert' in self._data['attrs']:
 			a=self.getattr('project_convert')
 			cd[a]=OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_61,))
+			self.__convert = cd[a]
+			self.__cd = cd
+		else:
+			self.__convert = None
 		return cd
 
 	def oninitdialog(self,wnd):
 		ctrl=components.Control(wnd,grinsRC.IDC_11)
 		ctrl.attach_to_parent()
 		ctrl.settext(self._data['title'])
+		if self.__convert is not None:
+			self.__convert._check.hookcommand(wnd, self.__onconvert)
+
+	def __onconvert(self, id, code):
+		if code == win32con.BN_CLICKED:
+			check = self.__convert._check.getcheck()
+			a = self.getattr('project_quality')
+			if a is not None:
+				self.__cd[a].enable(check)
+			self.__convert.enableApply()
 
 	def getpageclass(self):
 		return SubImgLayoutPage
@@ -3243,6 +3316,37 @@ class WipeGroup(AttrGroup):
 		cd[a] = OptionsRadioNocolonCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24,grinsRC.IDC_25))
 		return cd
 
+class Convert1Group(AttrGroup):
+	data = attrgrsdict['convert1']
+
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_CONV1
+
+	def createctrls(self, wnd):
+		cd = {}
+		a = self.getattr('project_convert')
+		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_11,))
+		self.__convert = cd[a]
+		a = self.getattr('project_quality')
+		cd[a]=OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_22))
+		self.__cd = cd
+		return cd
+	
+	def oninitdialog(self, wnd):
+		AttrGroup.oninitdialog(self, wnd)
+		self.__convert._check.hookcommand(wnd, self.__onconvert)
+
+	def __onconvert(self, id, code):
+		if code == win32con.BN_CLICKED:
+			check = self.__convert._check.getcheck()
+			for ctrl in self.__cd.values():
+				if ctrl is not self.__convert:
+					ctrl.enable(check)
+			self.__convert.enableApply()
+
 class Convert2Group(AttrGroup):
 	data = attrgrsdict['convert2']
 
@@ -3284,7 +3388,23 @@ class Convert4Group(Convert2Group):
 		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_41,))
 		a = self.getattr('project_mobile')
 		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_51,))
+		a = self.getattr('project_convert')
+		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_61,))
+		self.__convert = cd[a]
+		self.__cd = cd
 		return cd
+
+	def oninitdialog(self, wnd):
+		Convert2Group.oninitdialog(self, wnd)
+		self.__convert._check.hookcommand(wnd, self.__onconvert)
+
+	def __onconvert(self, id, code):
+		if code == win32con.BN_CLICKED:
+			check = self.__convert._check.getcheck()
+			for ctrl in self.__cd.values():
+				if ctrl is not self.__convert:
+					ctrl.enable(check)
+			self.__convert.enableApply()
 
 class Convert5Group(Convert4Group):
 	data = attrgrsdict['convert5']
@@ -3315,6 +3435,7 @@ groupsui={
 	'subregion4':Subregion4Group,
 	'anchorlist':AnchorlistGroup,
 
+	'convert1':Convert1Group,
 	'convert2':Convert2Group,
 	'convert3':Convert3Group,
 	'convert4':Convert4Group,
