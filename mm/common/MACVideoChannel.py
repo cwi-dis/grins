@@ -9,7 +9,7 @@ import os
 import Qt
 import QuickTime
 
-QT_AVAILABLE=Qt.available()
+QT_AVAILABLE = windowinterface._qtavailable()
 if not QT_AVAILABLE:
 	Qt = None
 
