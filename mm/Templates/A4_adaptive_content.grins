@@ -15,6 +15,7 @@
       <region id="videoRegion" left="5" top="5" width="400" height="180" z-index="1" GRiNS:type="video"/>
       <region id="realpixRegion" left="5" top="5" width="400" height="225" z-index="1" GRiNS:type="RealPix"/>
       <region id="realtextRegion" width="280" height="211" z-index="1" GRiNS:type="RealText"/>
+      <region id="captionRegion" left="5" top="230" width="400" height="20" z-index="2" GRiNS:type="RealText"/>
     </layout>
   </head>
   <body>
