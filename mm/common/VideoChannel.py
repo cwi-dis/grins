@@ -199,7 +199,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def stopped(self):
 		if not self.__stopped:
 			if self.__qid:
-				self._scheduler.cancel(self.__qid)
+				return
 			self.__qid = None
 			self.played_movie = None
 			self.playdone(0)
