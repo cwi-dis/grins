@@ -967,18 +967,6 @@ SOURCE=.\Editor.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\ico00001.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\ico1.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\ico2.ico
-# End Source File
-# Begin Source File
-
 SOURCE=.\smildoc.ico
 # End Source File
 # End Group
