@@ -35,11 +35,12 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 
 		self._viewport = None
 		self._writer = None	
+		self.__timer_id = 0
 
 	def init(self, rc, title='View', units= UNIT_MM, adornments=None, canvassize=None, commandlist=None, bgcolor=None):
 		DisplayListView.init(self, rc, title=title, units=units, adornments=adornments, canvassize=canvassize,
 			commandlist=commandlist, bgcolor=bgcolor)
-		x, y, w, h = rc
+		w, h = rc[2:]
 		self.createDDLayer(w, h)
 		self._viewport = win32window.Viewport(self, 0, 0, w, h, bgcolor)
 
@@ -212,29 +213,28 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 
 		if self._viewport:
 			self._viewport.paint(rc)
-	
+		
 	def beginWriting(self):
+		dds = self._backBuffer
+		w, h = self._viewport._rect[2:]
+		filename = 'output.wmv'
+		print 'beginWriting', filename, w, h
+		self._writer = wmwriter.WMWriter(dds, profile=20)
+		self._writer.setOutputFilename(filename)
+		self._start = time.time()
+		self._writer.beginWriting()
 		self.HookMessage(self.onTimer,win32con.WM_TIMER)
-		self.__timer_id = self.SetTimer(1,200)
+		self.__timer_id = self.SetTimer(1,100)
 	
-	def onTimer(self, params):
-		if not self._writer:
-			self._writer = wmwriter.WMWriter(self._backBuffer, profile=20)
-			self._writer.setOutputFilename('output.wmv')
-			self._start = time.time()
-			self._writer.beginWriting()
-			print 'beginWriting'
-		else:
-			dt = time.time() - self._start
-			self._writer.update(dt)
+	def onTimer(self, params):	
+		self._writer.update(time.time()-self._start)
 
 	def endWriting(self):
-		self.KillTimer(self.__timer_id)
+		if self.__timer_id:
+			self.KillTimer(self.__timer_id)
 		if self._writer:
 			self._writer.endWriting()
+			print 'endWriting', self._writer._filename
 			self._writer = None	
-			print 'endWriting'
-
-
 
 
