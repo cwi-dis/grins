@@ -104,14 +104,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.commandlist = self.commandlist + [
 				SAVE_AS(callback = (self.saveas_callback, ())),
 				SAVE(callback = (self.save_callback, ())),
-				]
-			if compatibility.G2 == features.compatibility:
-				self.commandlist = self.commandlist + [
+##				]
+##			if compatibility.G2 == features.compatibility:
+##				self.commandlist = self.commandlist + [
 					EXPORT_G2(callback = (self.bandwidth_callback, (self.export_G2_callback, ))),
 					UPLOAD_G2(callback = (self.bandwidth_callback, (self.upload_G2_callback, ))),
-				]
-			if compatibility.QT == features.compatibility:
-				self.commandlist = self.commandlist + [
+##				]
+##			if compatibility.QT == features.compatibility:
+##				self.commandlist = self.commandlist + [
 					EXPORT_QT(callback = (self.bandwidth_callback, (self.export_QT_callback,))),
 					UPLOAD_QT(callback = (self.bandwidth_callback, (self.upload_QT_callback,))),
 				]
@@ -121,8 +121,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.commandlist.append(EXPORT_WMP(callback = (self.export_WMP_callback,())))
 			self.commandlist.append(UPLOAD_WMP(callback = (self.bandwidth_callback, (self.upload_WMP_callback,))));
 			
-			if compatibility.SMIL10 == features.compatibility:
-				self.commandlist = self.commandlist + [
+##			if compatibility.SMIL10 == features.compatibility:
+			self.commandlist = self.commandlist + [
 					EXPORT_SMIL(callback = (self.bandwidth_callback, (self.export_SMIL_callback,))),
 					UPLOAD_SMIL(callback = (self.bandwidth_callback, (self.upload_SMIL_callback,))),
 				]								
@@ -353,7 +353,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					   dftfilename, self.saveas_okcallback, None)
 
 	def export_okcallback(self, filename):
-		exporttype = features.compatibility
+		exporttype = self.exporttype
 			
 		if not filename:
 			return 'no file specified'
@@ -427,9 +427,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##		self.export(compatibility.WMP);
 
 	def export(self, exporttype):
-		if exporttype != features.compatibility:
-			# For now...
-			raise 'Incompatible export type'
+		self.exporttype = exporttype
 		ask = self.new_file
 
 		# TODO: this also has to handle WMP -mjvdg.
@@ -476,11 +474,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		return;
 
 	def upload(self, exporttype):
+		self.exporttype = exporttype
 		# TODO: this also has to handle WMP.
 		
-		if exporttype != features.compatibility:
-			# For now...
-			raise 'Incompatible export type'
 		# XXXX The filename business confuses project file name and resulting SMIL file
 		# XXXX name. To be fixed.
 		#
@@ -560,7 +556,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 	def get_upload_info(self, w_passwd='', m_passwd=''):
 		attrs = self.context.attributes
-		have_web_page = (features.compatibility in (compatibility.G2, compatibility.QT))
+		have_web_page = (self.exporttype in (compatibility.G2, compatibility.QT))
 
 		# Website FTP parameters
 		w_hostname = ''
@@ -790,7 +786,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return 0
 		evallicense= (license < 0)
 		self.pre_save()
-		have_web_page = (features.compatibility in (compatibility.G2, compatibility.QT))
+		have_web_page = (self.exporttype in (compatibility.G2, compatibility.QT))
 		#
 		# Progress dialog
 		#
@@ -831,7 +827,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			try:
 				import HTMLWrite
 				HTMLWrite.WriteFTP(self.root, htmlfilename, smilurl, w_ftpparams, oldhtmlfilename,
-							evallicense=evallicense)
+							evallicense=evallicense, exporttype = self.exporttype)
 			except IOError, msg:
 				windowinterface.showmessage('Webpage upload failed:\n%s'%(msg,))
 				return 0
