@@ -300,8 +300,8 @@ def GetVisible(rct):
 def ScreenToBitmap(rct):
 	hdcscr=Sdk.CreateDC('DISPLAY')
 	dcscr=win32ui.CreateDCFromHandle(hdcscr)
-	dcmem=win32ui.CreateDC()
-	dcmem.CreateCompatibleDC(dcscr)
+	#dcmem=win32ui.CreateDC()
+	dcmem=dcsrc.CreateCompatibleDC()
 	rc=GetVisible(rct)
 	bmp=win32ui.CreateBitmap()
 	bmp.CreateCompatibleBitmap(dcscr,rc.width(),rc.height())
@@ -313,8 +313,8 @@ def ScreenToBitmap(rct):
 	return bmp
 
 def BitBltBmp(dc,bmp,rc_dst):
-	dcmem=win32ui.CreateDC()
-	dcmem.CreateCompatibleDC(dc)
+	#dcmem=win32ui.CreateDC()
+	dcmem=dc.CreateCompatibleDC()
 	old=dcmem.SelectObject(bmp)
 	pt_dst=(rc_dst[0],rc_dst[1])
 	sz_dst=(rc_dst[2]-rc_dst[0],rc_dst[3]-rc_dst[1])
@@ -323,8 +323,8 @@ def BitBltBmp(dc,bmp,rc_dst):
 	dcmem.DeleteDC()
 
 def StretchBltBmp(dc,bmp,rc_dst):
-	dcmem=win32ui.CreateDC()
-	dcmem.CreateCompatibleDC(dc)
+	#dcmem=win32ui.CreateDC()
+	dcmem=dc.CreateCompatibleDC()
 	old=dcmem.SelectObject(bmp)
 	pt_dst=(rc_dst[0],rc_dst[1])
 	sz_dst=(rc_dst[2]-rc_dst[0],rc_dst[3]-rc_dst[1])

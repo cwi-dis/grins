@@ -387,8 +387,8 @@ class _CmifStructView(_CmifView):
 		rect=win32mu.Rect(dc.GetClipBox())
 
 		# draw to offscreen bitmap for fast looking repaints
-		dcc=win32ui.CreateDC()
-		dcc.CreateCompatibleDC(dc)
+		#dcc=win32ui.CreateDC()
+		dcc=dc.CreateCompatibleDC()
 
 		bmp=win32ui.CreateBitmap()
 		bmp.CreateCompatibleBitmap(dc,rect.width(),rect.height())
