@@ -21,7 +21,7 @@ class SVGChannel(Channel.ChannelWindow):
 		self.svgorgsize = None
 		self.svgdds = None
 		self.svgplayer = None
-		self.svgbgcolor = 255, 255, 255
+		self.svgddcolor = 0
 		 
 	def __repr__(self):
 		return '<SVGChannel instance, name=' + `self._name` + '>'
@@ -59,15 +59,18 @@ class SVGChannel(Channel.ChannelWindow):
 			svgdoc = svgdom.SvgDocument(source)
 			svgdom.doccache.cache(url, svgdoc)
 		
-		self.svgbgcolor = self.getbgcolor(node)
+		# default to white
+		bgcolor = self.getbgcolor(node) or (255,255,255)
+		r, g, b = bgcolor
+		if r+g+b == 0: bgcolor = 255, 255, 255 
+
 		if self.window and svgdoc:
 			coordinates = self.getmediageom(node)
 			self.svgdstrect = left, top, width, height = self.window._convert_coordinates(coordinates)
 			self.svgorgsize = svgdom.GetSvgDocSize(svgdoc)
 			self.svgsrcrect = 0, 0, width, height # promise for svg scaling
 			self.svgdds = self.window.createDDS(width, height)
-			ddcolor = self.svgdds.GetColorMatch(self.svgbgcolor or (255,255,255))
-			self.svgdds.BltFill((0, 0, width, height), ddcolor)
+			self.svgddcolor = self.svgdds.GetColorMatch(bgcolor)
 			self.renderOn(self.svgdds, svgdoc, update=0)
 			if svgdoc.hasTiming():
 				rendercb = (self.renderOn, (self.svgdds, svgdoc))
@@ -109,6 +112,7 @@ class SVGChannel(Channel.ChannelWindow):
 			dw, dh = self.svgdstrect[2:]
 			sx, sy = dw/float(sw), dh/float(sh)
 			svggraphics.applyTfList([('scale',[sx, sy]),])
+		self.svgdds.BltFill(self.svgsrcrect, self.svgddcolor)
 		ddshdc = dds.GetDC()
 		svggraphics.tkStartup(ddshdc)
 		renderer = svgrender.SVGRenderer(svgdoc, svggraphics)
