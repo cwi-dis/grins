@@ -1569,7 +1569,7 @@ class EventCtrl(AttrCtrl):
 			self.update()
 
 	def _thingbuttoncallback(self, id, code):
-		if code == win32con.BN_CLICKED:
+		if code == win32con.BN_CLICKED and self._eventstruct:
 			self.enableApply()
 			c = self._eventstruct.get_cause()
 			if c == 'wallclock':
@@ -1585,8 +1585,8 @@ class EventCtrl(AttrCtrl):
 				for i in viewports:
 					l.append((i, (self._thingbuttondialogcallback, (i,))))
 				d = win32dialog.Dialog(list=l, title="Select viewport", prompt="Viewport:", parent=self._wnd._form)
-			else:
-				print "TODO: More than just editing the wallclock."
+			#else:
+				#print "TODO: More than just editing the wallclock."
 			self.update()
 
 	def _thingbuttondialogcallback(self, region):
