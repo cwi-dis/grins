@@ -924,11 +924,11 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 
 		if state == Player.PLAYING:
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_pause)
-			self.HookCommandUpdate(self.OnUpdateCmdEnableAndCheck,id_play)
+			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_stop)
 
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,tb_id_pause)
-			self.HookCommandUpdate(self.OnUpdateCmdEnableAndCheck,tb_id_play)
+			self.HookCommandUpdate(self.OnUpdateCmdDissable,tb_id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,tb_id_stop)
 		
 		if state == Player.PAUSING:
