@@ -11,6 +11,7 @@ if os.environ.has_key('GRINS_DATABASE'):
 	DATABASE=os.environ['GRINS_DATABASE']
 else:
 	DATABASE="/ufs/mm/clients"
+UNIQUEDIR=os.path.join(DATABASE, ".uniqdir")
 
 try:
         USER=os.environ['USER']
@@ -40,7 +41,7 @@ def Index(dir=DATABASE, keys=[]):
 def uniqueid():
 	"""This function assumses everything is correct: the id file
 	exists, contains an integer and isn't locked"""
-	fname = os.path.join(DATABASE, ".uniqueid")
+	fname = os.path.join(UNIQUEDIR, ".uniqueid")
 	lname = fname + ".LCK"
 	os.link(fname, lname)
 	oldid = open(fname).read()
