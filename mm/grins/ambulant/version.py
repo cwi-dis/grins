@@ -7,3 +7,4 @@ macpreffilename = 'Ambulant-play-1.0 Prefs'
 title = 'Ambulant/G Player'
 registrykey = 'Ambulant/G Player'
 registryname = 'Player 1.0'
+dllname = 'AmbulantRes.dll'             # Windows DLL with GRiNS resources

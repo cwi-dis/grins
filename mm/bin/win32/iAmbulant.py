@@ -88,7 +88,7 @@ from win32con import *
 import win32ui
 import traceback
 
-from version import registryname, registrykey
+from version import registryname, registrykey, dllname
 win32ui.SetAppName(registryname)
 win32ui.SetRegistryKey(registrykey)
 
@@ -125,10 +125,10 @@ def Boot(what = 0):
 	dllPath = os.path.split(win32ui.__file__)[0]
 	try:
 		global resdll
-		resdll = win32ui.LoadLibrary(os.path.join(dllPath, "GRiNSRes.dll"))
+		resdll = win32ui.LoadLibrary(os.path.join(dllPath, dllname))
 		resdll.AttachToMFC()
 	except win32ui.error:
-		win32ui.MessageBox("The application resource DLL 'GRiNSRes.dll' can not be located\r\n\r\nPlease correct this problem, and restart the application")
+		win32ui.MessageBox("The application resource DLL '%s' can not be located\r\n\r\nPlease correct this problem, and restart the application" % dllname)
 		# For now just continue!?!?!
 	# run the given cmif file
 	try:

@@ -80,11 +80,26 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name grinsproxy
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name AmbulantRes
+    End Project Dependency
 }}}
 
 ###############################################################################
 
 Project: "Ambulant Player"="..\..\Build\win32\AmbulantPlayer\AmbulantPlayer.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "AmbulantRes"=".\AmbulantRes\AmbulantRes.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
