@@ -1,34 +1,52 @@
 #
 # AdefDialog - A more-or-less modal dialog that does keep gl events
-# coming in, though, so we can define anchors.
+# coming in, though, so we can define anchors or other squares
 
 import fl
 import FL
 import flp
 
 class Struct(): pass
-data = Struct()
-data.initialized = 0
+adata = Struct()
+wdata = Struct()
+adata.initialized = 0
+wdata.initialized = 0
 
 cancel = 'AdefDialog.cancel'
 
-def run(str):
-	if not data.initialized:
-		form = flp.parse_form('AdefDialogForm', 'form')
-		flp.create_full_form(data, form)
-		data.initialized = 1
-	data.label.label = str + '\nor click "whole node" button'
+def anchor(str):
+	if not adata.initialized:
+		form = flp.parse_form('AdefDialogForm', 'aform')
+		flp.create_full_form(adata, form)
+		adata.initialized = 1
+	adata.label.label = str + '\nor click "whole node" button'
 	fl.deactivate_all_forms()
-	data.form.show_form(FL.PLACE_MOUSE, 1, '')
+	adata.aform.show_form(FL.PLACE_MOUSE, 1, '')
 	obj = fl.do_forms()
-	data.form.hide_form()
+	adata.aform.hide_form()
 	fl.activate_all_forms()
-	if obj == data.cancel_button:
+	if obj == adata.cancel_button:
 		raise cancel
-	elif obj == data.ok_button:
+	elif obj == adata.ok_button:
 		return 1
-	elif obj == data.whole_button:
+	elif obj == adata.whole_button:
 		return 0
 	else:
 		print 'AdefDialog: funny object returned: ', obj
 		return 0
+
+def window(str):
+	if not wdata.initialized:
+		form = flp.parse_form('AdefDialogForm', 'wform')
+		flp.create_full_form(wdata, form)
+		wdata.initialized = 1
+	wdata.label.label = 'Select position for channel\n'+str
+	fl.deactivate_all_forms()
+	wdata.wform.show_form(FL.PLACE_MOUSE, 1, '')
+	obj = fl.do_forms()
+	wdata.wform.hide_form()
+	fl.activate_all_forms()
+	if obj <> wdata.ok_button:
+		print 'AdefDialog: funny object returned: ', obj
+	return
+

@@ -178,6 +178,7 @@ def writeany(value, dummy, fp):
 		writelist(value, (writeany, None), fp)
 		fp.write(')')
 	else:
+		print 'Cannot write value:', value
 		raise AssertError, 'writing unexpected value'
 
 
