@@ -81,6 +81,8 @@ class AttrEditorDialog:
 			]
 			w.set_commandlist(commandlist)
 			w.set_toggle(usercmd.SHOWALLPROPERTIES, self.show_all_attributes)
+		w._has_followSelection = self.wrapper.canfollowselection()
+		w._followSelection_initial = self.follow_selection
 		toplevel_window.showform(w,formid)
 
 
