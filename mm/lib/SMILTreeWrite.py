@@ -390,16 +390,16 @@ class BaseSMILWriter:
 			self.__ignoring = 1
 			return
 		hasGRiNSprefix = (self.__stack or 0) and self.__stack[-1][2]
-		if not hasGRiNSprefix and self.grinsExt:
+		if not hasGRiNSprefix and (self.grinsExt or self.addattrs):
 			for attr, val in attrs:
 				if attr == xmlnsGRiNS:
 					hasGRiNSprefix = 1
 					break
-				if attr[:len(NSGRiNSprefix)] == NSGRiNSprefix:
+				if attr[:len(NSGRiNSprefix)] == NSGRiNSprefix and (self.grinsExt or attr[len(NSGRiNSprefix)+1:] in addattrs):
 					attrs.insert(0, (xmlnsGRiNS, GRiNSns))
 					hasGRiNSprefix = 1
 					break
-		if not hasGRiNSprefix and tag[:len(NSGRiNSprefix)] == NSGRiNSprefix:
+		if (not hasGRiNSprefix or not self.grinsExt) and tag[:len(NSGRiNSprefix)] == NSGRiNSprefix:
 			# ignore this tag
 			self.__ignoring = 1
 			return
@@ -408,7 +408,7 @@ class BaseSMILWriter:
 			x.char_positions = start, None
 			x.tag_positions = ((end-len(tag), end), )
 		for attr, val in attrs:
-			if attr[:len(NSGRiNSprefix)] == NSGRiNSprefix and not hasGRiNSprefix:
+			if attr[:len(NSGRiNSprefix)] == NSGRiNSprefix and (not hasGRiNSprefix or (not self.grinsExt and attr[len(NSGRiNSprefix)+1:] not in addattrs)):
 				continue
 			if attr[:len(NSRP9prefix)] == NSRP9prefix and not hasRP9prefix:
 				continue
