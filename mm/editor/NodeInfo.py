@@ -586,33 +586,3 @@ def hidenode(node):
 	hidenodeinfo(node)
 	for child in node.GetChildren():
 		hidenode(child)
-
-
-# Test program -- edit the attributes of the root node.
-
-def test():
-	import sys, MMTree
-	if sys.argv[1:]:
-		filename = sys.argv[1]
-	else:
-		filename = 'demo.cmif'
-	#
-	print 'parsing', filename, '...'
-	root = MMTree.ReadFile(filename)
-	#
-	print 'quit button ...'
-	quitform = fl.make_form(FLAT_BOX, 50, 50)
-	quitbutton = quitform.add_button(NORMAL_BUTTON, 0, 0, 50, 50, 'Quit')
-	quitform.set_form_position(600, 10)
-	quitform.show_form(PLACE_POSITION, FALSE, 'QUIT')
-	#
-	print 'shownodeinfo ...'
-	shownodeinfo(root)
-	#
-	print 'go ...'
-	while 1:
-		obj = fl.do_forms()
-		if obj == quitbutton:
-			hidenodeinfo(root)
-			break
-		print 'This object should have a callback!', `obj.label`
