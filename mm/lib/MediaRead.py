@@ -11,7 +11,6 @@ mediaWrapper = """\
 
 def MediaRead(filename, mtype, printfunc):
 	import SMILTreeRead
-	print 'media item', mtype
 	if mtype is None or \
 		(mtype[:6] != 'audio/' and
 		mtype[:6] != 'video/'):
