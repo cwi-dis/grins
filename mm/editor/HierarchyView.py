@@ -1574,12 +1574,16 @@ class HierarchyView(HierarchyViewDialog):
 		if self.selected_widget: self.selected_widget.helpcall()
 
 	def expandcall(self):
-		if self.selected_widget: self.selected_widget.expandcall()
-		self.draw()
+		if self.selected_widget:
+			self.toplevel.setwaiting()
+			self.selected_widget.expandcall()
+			self.draw()
 
 	def expandallcall(self, expand):
-		if self.selected_widget: self.selected_widget.expandallcall(expand)
-		self.draw()
+		if self.selected_widget:
+			self.toplevel.setwaiting()
+			self.selected_widget.expandallcall(expand)
+			self.draw()
 
 	def thumbnailcall(self):
 		self.toplevel.setwaiting()
