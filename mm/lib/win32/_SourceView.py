@@ -291,7 +291,7 @@ class _SourceView(GenView, docview.RichEditView):
 		# set text and readonly flag
 		self.SetReadOnly(self.__readonly)
 		
-		# enable/dissable dialog bar components according to MFC convention 
+		# enable/disable dialog bar components according to MFC convention 
 		self.enableDlgBarComponent(self.__ok, 1)
 		self.enableDlgBarComponent(self.__apply, 0)
 		self.enableDlgBarComponent(self.__revert, 0)

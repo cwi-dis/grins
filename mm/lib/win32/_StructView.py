@@ -33,7 +33,7 @@ class _StructView(DisplayListView):
 		self.CF_NODE = self.getClipboardFormat('Node')
 		self.CF_TOOL = self.getClipboardFormat('Tool')
 
-		# enable or dissable node drag and drop
+		# enable or disable node drag and drop
 		self._enableNodeDragDrop = 1
 			
 		if self._enableNodeDragDrop:

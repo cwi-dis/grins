@@ -309,7 +309,7 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 					
 		return self
 	
-	# Sets the scroll mode. Enables or dissables scrolling
+	# Sets the scroll mode. Enables or disables scrolling
 	def setScrollMode(self,f):
 		l,t,r,b=self.GetClientRect()
 		self._rect=self._canvas=(l,t,r-l,b-t)
@@ -412,7 +412,7 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 		self.DragAcceptFiles(1)
 		self.HookMessage(self.onDropFiles,win32con.WM_DROPFILES)
 
-	# dissable drop
+	# disable drop
 	def dragRefuseFiles(self):
 		self.DragAcceptFiles(0)
 
