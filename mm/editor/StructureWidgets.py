@@ -243,6 +243,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				ledge = ledge + w
 			else:
 				timemapper.addcollision(t0, w+2*edge, self)
+		elif t0 == t1:
+			ledge = 4*sizes_notime.HEDGSIZE
+			timemapper.addcollision(t0, ledge, self)
 		if t0 != mastert0:
 			timemapper.addcollision(t0, ledge, self)
 			ledge = 0
@@ -953,6 +956,8 @@ class HorizontalWidget(StructureObjWidget):
 				if l < lmin:
 					l = lmin
 				r = tm.time2pixel(tend) + neededpixel1
+				if t0 == tend:
+					r = min(r + neededpixel0 + neededpixel1, tm.time2pixel(tend, 'right'))
 				max_r = r
 			else:
 				r = l + w + thisnode_free_width
@@ -1513,10 +1518,12 @@ class MediaWidget(MMNodeWidget):
 		self.downloadtime = 0.0		# not used??
 		self.downloadtime_lag = 0.0	# Distance to push this node to the right - relative coords. Not pixels.
 		self.downloadtime_lag_errorfraction = 1.0
+		self.__timemapper = None
 
 	def destroy(self):
 		# Remove myself from the MMNode view{} dict.
 		MMNodeWidget.destroy(self)
+		self.__timemapper = None
 		if self.transition_in is not None:
 			self.transition_in.destroy()
 			self.transition_in = None
@@ -1544,6 +1551,7 @@ class MediaWidget(MMNodeWidget):
 		if self.timemapper is not None:
 			timemapper = self.timemapper
 			timemapper.setoffset(self.pos_abs[0], self.pos_abs[2] - self.pos_abs[0])
+		self.__timemapper = timemapper
 		l,t,r,b = self.pos_abs
 		w = 0
 		if self.playicon is not None:
@@ -1555,17 +1563,15 @@ class MediaWidget(MMNodeWidget):
 		if self.pushbackbar is not None:
 			self.pushbackbar.destroy()
 			self.pushbackbar = None
-		self.durwidth = r-l
 		if timemapper is not None:
 			t0, t1, t2, download, begindelay = self.node.GetTimes('virtual')
+			self.__times = t0,t1,t2
 			if download > 0:
 				self.downloadtime_lag_errorfraction = 1 ## download / (download + begindelay)
 				if self.pushbackbar is None:
 					self.pushbackbar = PushBackBarWidget(self, self.mother)
 				pbb_left = timemapper.time2pixel(t0-download, align='right')
 				self.pushbackbar.moveto((pbb_left, t, l, t+12))
-			if t2 != t0:
-				self.durwidth = int((t1-t0)*float(r-l)/(t2-t0) +.5)
 
 		t = t + sizes_notime.TITLESIZE
 
@@ -1589,18 +1595,53 @@ class MediaWidget(MMNodeWidget):
 	def get_maxsize(self):
 		return sizes_notime.MAXSIZE, sizes_notime.MAXSIZE
 
-	def draw_selected(self, displist):
+	def __draw_box(self, displist, color):
 		x,y,w,h = self.get_box()
-		if self.durwidth != w:
-			if self.durwidth == w:
-				displist.drawfbox((255,255,255), (x,y,w,h))
+		timemapper = self.__timemapper
+		if timemapper is None:
+			self.__dragpos = x+w
+			displist.drawfbox(color, (x,y,w,h))
+			return
+
+		import Duration
+
+		node = self.node
+		t0, t1, t2 = self.__times
+		dur = Duration.get(node, ignoreloop = 1, wanterror = 0)	# what gets repeated
+		ad = Duration.get(node, wanterror = 0)
+		if dur > ad:
+			dur = ad
+		if dur > t2 - t0:
+			dur = t2 - t0
+		if ad > t2 - t0:
+			ad = t2 - t0
+
+		displist.drawfbox(color, (x,y,w,16)) # top bar
+		if dur >= 0 and t2 > t0:
+##			dw = min(int(w*float(dur)/(t2-t0) + .5), w)
+			if dur == 0:
+				align = 'right'
 			else:
-				displist.drawfbox((255,255,255), (x,y,w,16))
-				displist.drawfbox(COLCOLOR, (x+self.durwidth,y+16,w-self.durwidth,h-16))
-			if self.durwidth != 0:
-				displist.drawfbox((255,255,255), (x,y,self.durwidth,h))
+				align = 'left'
+			dw = timemapper.interptime2pixel(t0+dur, align) - x
 		else:
-			displist.drawfbox((255,255,255), (x,y,w,h))
+			dw = w
+		self.__dragpos = x + dw
+		if dw > 0:
+			displist.drawfbox(color, (x, y+16, dw, h-16))
+		if dw < w:
+			if ad > dur:
+##				adw = min(int(w*float(ad-dur)/(t2-t0) + .5), w-dw)
+				adw = timemapper.interptime2pixel(t0+ad) - x - dw
+			else:
+				adw = 0
+			if adw > 0:
+				displist.drawfbox(REPEATCOLOR, (x+dw, y+16, adw, h-16))
+			if dw+adw < w:
+				displist.drawfbox(FREEZECOLOR, (x+dw+adw, y+16, w-dw-adw, h-16))
+
+	def draw_selected(self, displist):
+		self.__draw_box(displist, (255,255,255))
 		self.__draw(displist)
 		displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 
@@ -1617,17 +1658,7 @@ class MediaWidget(MMNodeWidget):
 			color = LEAFCOLOR
 		else:
 			color = LEAFCOLOR_NOPLAY
-		x,y,w,h = self.get_box()
-		if self.durwidth != w:
-			if self.durwidth == w:
-				displist.drawfbox(color, (x,y,w,h))
-			else:
-				displist.drawfbox(color, (x,y,w,16))
-				displist.drawfbox(COLCOLOR, (x+self.durwidth,y+16,w-self.durwidth,h-16))
-			if self.durwidth != 0:
-				displist.drawfbox(color, (x,y,self.durwidth,h))
-		else:
-			displist.drawfbox(color, (x,y,w,h))
+		self.__draw_box(displist, color)
 		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 		self.__draw(displist)
 		if self.pushbackbar is not None:
@@ -1706,6 +1737,7 @@ class MediaWidget(MMNodeWidget):
 				timeline = self.timeline
 			if l - EPSILON < x < l + EPSILON:
 				return self, 'left', timemapper, timeline
+			r = self.__dragpos
 			if r - EPSILON < x < r + EPSILON:
 				return self, 'right', timemapper, timeline
 
@@ -1975,6 +2007,7 @@ class TimelineWidget(MMWidgetDecoration):
 	def __init__(self, mmwidget, mother):
 		MMWidgetDecoration.__init__(self, mmwidget, mother)
 		self.minwidth = 0
+		mmwidget.node.GetTimes('virtual')
 
 	def recalc_minsize(self):
 		minheight = 2*sizes_notime.TITLESIZE

@@ -29,6 +29,8 @@ TEXTCOLOR = settings.get('structure_textcolor')
 CTEXTCOLOR = settings.get('structure_ctextcolor')
 EXPCOLOR = settings.get('structure_expcolor')
 COLCOLOR = settings.get('structure_colcolor')
+FREEZECOLOR = settings.get('structure_freezecolor')
+REPEATCOLOR = settings.get('structure_repeatcolor')
 ECBORDERCOLOR = settings.get('structure_ecbordercolor')
 FOREIGNCOLOR = settings.get('structure_foreigncolor')
 

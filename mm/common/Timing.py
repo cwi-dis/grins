@@ -47,6 +47,8 @@ def computetimes(node, which):
 ##		_do_times_work(node)
 		print 'No endtime for', node
 		node.t1 = node.t0 + 10.0
+	if node.t1 == node.t0:
+		node.t1 = node.t0 + 10
 	propdown(node, node.t1, node.t0)
 
 def _do_times_work(node):
@@ -87,25 +89,13 @@ def cleanup(node):
 # Return a node's nominal duration, in seconds, as a floating point value.
 # Should only be applied to leaf nodes.
 #
-##from AnchorDefs import ATYPE_PAUSE, ATYPE_ARGS
-#
 is_warned = 0
 
 def getduration(node):
-##	global is_warned
-##	if not node.IsWanted():
-##		return 0
 	import Duration
 	d = Duration.get(node)
 	if d > 0:
 		return d
-	# Check for pausing anchor
-##	for a in node.GetRawAttrDef('anchorlist', []):
-##		if a.atype in (ATYPE_PAUSE, ATYPE_ARGS):
-##			if not is_warned:
-##				print 'Warning: document contains (obsolete) pausing anchors'
-##				is_warned = 1
-##			break
 	if d < 0:
 		print 'Duration < 0 for', node
 		return 0
