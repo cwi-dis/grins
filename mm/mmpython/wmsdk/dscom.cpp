@@ -269,8 +269,8 @@ MediaType_GetType(MediaTypeObject *self, PyObject *args)
 		return Py_BuildValue("s", "auxline21data");
 	else if(*pMajorType == MEDIATYPE_Timecode)
 		return Py_BuildValue("s", "timecode");
-	else if(*pMajorType == MEDIATYPE_URL_STREAM)
-		return Py_BuildValue("s", "url_stream");
+	//else if(*pMajorType == MEDIATYPE_URL_STREAM)
+	//	return Py_BuildValue("s", "url_stream");
 	return Py_BuildValue("s", "unknown");
 }     
 
