@@ -10,7 +10,7 @@ import MMNode
 from MMTypes import *
 from ArmStates import *
 from HDTL import HD, TL
-# Not needed? from AnchorDefs import *
+from AnchorDefs import *
 import SR
 import settings
 import MMStates
@@ -400,12 +400,12 @@ class SchedulerContext:
 				continue
 			atime = 0
 			if arc.srcanchor is not None:
-				for id, atype, args, times in node.attrdict.get('anchorlist', []):
-					if id == arc.srcanchor:
+				for a in node.attrdict.get('anchorlist', []):
+					if a[A_ID] == arc.srcanchor:
 						if event == 'end':
-							atime = times[1]
+							atime = a[A_TIMES][1]
 						else:
-							atime = times[0]
+							atime = a[A_TIMES][0]
 						break
 			self.sched_arc(node, arc, event, marker, deparc, timestamp+atime)
 		if debugevents: print 'sched_arcs return',`node`,event,marker,timestamp,self.parent.timefunc()

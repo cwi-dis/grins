@@ -11,7 +11,7 @@ from AnchorDefs import *
 from MMTypes import *
 from MMExc import *			# exceptions
 import MMStates
-from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
+from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK, ANCHOR2, TYPE, STYPE, DTYPE
 import windowinterface
 import SR
 
@@ -219,10 +219,12 @@ class Selecter:
 ## 			windowinterface.showmessage('Args:'+`arg`)
 		return 1
 
-	def gotoanchor(self, (anchor1, anchor2, dir, ltype, stype, dtype), arg):
+	def gotoanchor(self, link, arg):
+		anchor2 = link[ANCHOR2]
+		ltype = link[TYPE]
 		if ltype != TYPE_JUMP or type(anchor2) is not type(()) or \
 		   '/' in anchor2[0]:	# cmif compatibility
-			return self.toplevel.jumptoexternal(anchor2, ltype, stype, dtype)
+			return self.toplevel.jumptoexternal(anchor2, ltype, link[STYPE], link[DTYPE])
 		dest_uid, dest_aid = anchor2
 		try:
 			seek_node = self.context.mapuid(dest_uid)

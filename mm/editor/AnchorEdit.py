@@ -243,9 +243,9 @@ class AnchorEditor(AnchorEditorDialog):
 		if type is None:
 			type = new[A_TYPE]
 		if type in WholeAnchors:
-			new = (new[0], type, [A_SHAPETYPE_ALLREGION], (0,0))
+			new = (new[0], type, [A_SHAPETYPE_ALLREGION], (0,0), None)
 		else:
-			new = (new[0], type, new[2], new[3])
+			new = (new[0], type, new[2], new[3], new[4])
 			if self.editable:
 				self.toplevel.player.defanchor(
 					self.node, new, self._anchor_cb)
@@ -304,7 +304,8 @@ class AnchorEditor(AnchorEditorDialog):
 	def add_callback(self):
 		self.changed = 1
 		maxid = 0
-		for id, atype, args, times in self.anchorlist:
+		for a in self.anchorlist:
+			id = a[A_ID]
 			try:
 				id = eval('0+'+id)
 			except:
@@ -314,7 +315,7 @@ class AnchorEditor(AnchorEditorDialog):
 		id = `maxid + 1`
 		#name = '#' + self.name + '.' + id
 		name = id
-		self.anchorlist.append((id, ATYPE_WHOLE, [A_SHAPETYPE_ALLREGION], (0,0)))
+		self.anchorlist.append((id, ATYPE_WHOLE, [A_SHAPETYPE_ALLREGION], (0,0), None))
 		self.selection_append(name)
 		self.focus = len(self.anchorlist)-1
 		self.show_focus()
@@ -325,7 +326,7 @@ class AnchorEditor(AnchorEditorDialog):
 			return
 		anchor = self.anchorlist[self.focus]
 		id = self.selection_gettext()
-		anchor = id, anchor[1], anchor[2], anchor[3]
+		anchor = (id,) + anchor[1:]
 		if self.anchorlist[self.focus] == anchor:
 			return
 		self.changed = 1
@@ -342,7 +343,6 @@ class AnchorEditor(AnchorEditorDialog):
 		if self.focus is None:
 			print 'AnchorEdit: no focus in delete!'
 			return
-		id, atype, arg, times = self.anchorlist[self.focus]
 		self.changed = 1
 		del self.anchorlist[self.focus]
 		self.selection_deleteitem(self.focus)
@@ -381,7 +381,7 @@ class AnchorEditor(AnchorEditorDialog):
 				windowinterface.showmessage('Already exists')
 				return
 		aid = self.anchorlist[self.focus][A_ID]
-		a = name, ATYPE_COMP, [(self.uid, aid)], (0,0)
+		a = name, ATYPE_COMP, [(self.uid, aid)], (0,0), None
 		rootanchors.append(a)
 		em = self.editmgr
 		if not em.transaction(): return 0
