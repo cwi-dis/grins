@@ -530,7 +530,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			self._activecmds[context]={}
 
 		# dissable all commands in context set previously
-		self.dissable_viewscmdlist()
+		self.dissable_viewscmdlist(context)
 		if context=='document':
 			self.dissable_cmdlist('document')
 		if context=='frame':
@@ -554,8 +554,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			contextcmds[id]=cmd			
 		self.PostMessage(WM_KICKIDLE)
 
-	def dissable_viewscmdlist(self):
-		viewsids=self.viewscmdids()
+	def dissable_viewscmdlist(self,context):
+		viewsids=self.viewscmdids(context)
 		for id in viewsids:
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
 
@@ -567,7 +567,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	def enable_viewcmdlist(self,context):
 		# dissable all commands set by views previously
-		self.dissable_viewscmdlist()
+		self.dissable_viewscmdlist(context)
 		if context==None or context not in self._activecmds.keys():
 			return
 		contextcmds=self._activecmds[context]
@@ -577,7 +577,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		
 	# Return the command ids of all the views
 	# but only those not included in a higher context (e.g PLAY,?)
-	def viewscmdids(self):
+	def viewscmdids(self,vcontext):
 		l=[];frameids=[];documentids=[]
 		if 'frame' in self._activecmds.keys():
 			frameids=self._activecmds['frame'].keys()
@@ -585,7 +585,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			documentids=self._activecmds['document'].keys()
 		for context in self._activecmds.keys():
 			if context=='frame' or context=='document':continue
-			if context=='pview_':continue
+			if context=='pview_' and vcontext!='pview_':continue
 			contextcmds=self._activecmds[context]
 			for id in contextcmds.keys():
 				if (id not in frameids) and (id not in documentids):
