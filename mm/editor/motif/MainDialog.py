@@ -59,13 +59,13 @@ class MainDialog:
 		import windowinterface
 		w = windowinterface.Window('Open location', resizable = 1,
 					   grab = 1, parent = self.__window, horizontalSpacing = 5, verticalSpacing = 5)
-		l = w.Label('Open location', top = None, left = None, right = None)
+		l = w.Label('Enter the Internet location (URL) or browse to the local file you would like to open', top = None, left = None, right = None)
 		f = w.SubWindow(left = None, top = l, right = None, horizontalSpacing = 5, verticalSpacing = 5)
-		t = f.TextInput(None, '', None, (self.__tcallback, ()),
-				modifyCB = self.__modifyCB,
-				left = None, top = None, bottom = None)
-		f.Button('Browse...', (self.__openfile_callback, ()),
-			 top = None, left = t, right = None, bottom = None)
+		b = f.Button('Browse...', (self.__openfile_callback, ()),
+			     top = None, right = None, bottom = None)
+		t = f.TextInput('Open:', '', None, (self.__tcallback, ()),
+				modifyCB = self.__modifyCB, left = None,
+				right = b, top = None, bottom = None)
 		s = w.Separator(top = f, left = None, right = None)
 		r = w.ButtonRow([('Open', (self.__tcallback, ())),
 				 ('Cancel', (self.__ccallback, ()))],
