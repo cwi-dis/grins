@@ -1579,6 +1579,23 @@ BEGIN
                     WS_DISABLED | WS_BORDER,7,22,172,11
 END
 
+IDD_INIT_DIALOG DIALOG DISCARDABLE  0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Initial action"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,74,50,14
+    ICON            IDR_GRINSED,IDC_STATIC,7,7,20,20
+    CONTROL         "Create a new presentation",IDC_INIT_NEW,"Button",
+                    BS_AUTORADIOBUTTON,39,15,130,10
+    CONTROL         "Open existing presentation",IDC_INIT_OPEN,"Button",
+                    BS_AUTORADIOBUTTON,39,29,99,10
+    CONTROL         "Do nothing",IDC_INIT_NOTHING,"Button",
+                    BS_AUTORADIOBUTTON,39,42,110,10
+    CONTROL         "Don't show this dialog again",IDC_INIT_NEVER_AGAIN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,78,107,10
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1602,6 +1619,14 @@ BEGIN
         RIGHTMARGIN, 179
         TOPMARGIN, 7
         BOTTOMMARGIN, 55
+    END
+
+    IDD_INIT_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
     END
 END
 #endif    // APSTUDIO_INVOKED
