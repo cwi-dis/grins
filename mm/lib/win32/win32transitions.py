@@ -9,16 +9,13 @@ class TransitionEngine:
 	def __init__(self, window, inout, runit, dict):
 		self.window = window
 		self.duration = dict.get('dur', 1)
+		self.inout = inout
 
 		trtype = dict['trtype']
 		subtype = dict.get('subtype')
 		klass = Transitions.TransitionFactory(trtype, subtype)
 		self.transitiontype = klass(self, dict)
-		#print klass, inout, runit, dict
 
-		# implementation artifact vars
-		self._passive = window._passive
-		self._tmp = self.window.createDDS()
 		self.__fiber_id = 0
 
 		x, y, w, h = self.window._rect
@@ -28,6 +25,12 @@ class TransitionEngine:
 		self.endtransition()
 
 	def begintransition(self):
+		# create surfaces
+		self._passive = self.window._passive
+		self.window._drawsurf = self.window.createDDS()
+		self._active = self.window.createDDS()
+		self._tmp = self.window.createDDS()
+
 		self.__start = time.time()
 		self.settransitionvalue(0.0)
 		if self.duration<=0.0:
@@ -36,6 +39,7 @@ class TransitionEngine:
 			self.__register_for_timeslices()
 
 	def endtransition(self):
+		self.window._drawsurf = None
 		self.__unregister_for_timeslices()
 		self.__transition = None
 	
@@ -44,12 +48,16 @@ class TransitionEngine:
 			raise AssertionError
 
 		parameters = self.transitiontype.computeparameters(value)
-		src_active = self.window.createDDS()
-		src_passive = self._passive
+		self.window.paintOnDDS(self._active)
+		src_active = self._active
+		src_passive = self.window._passive
 		tmp  = self._tmp
-		dst  = self.window._active
+		dst  = self.window._drawsurf
 		dstrgn = None
-		self.transitiontype.updatebitmap(parameters, src_active, src_passive, tmp, dst, dstrgn)
+		if not self.inout:
+			self.transitiontype.updatebitmap(parameters, src_active, src_passive, tmp, dst, dstrgn)
+		else:
+			self.transitiontype.updatebitmap(parameters, src_passive, src_active, tmp, dst, dstrgn)
 		
 		self.window.update()
 
