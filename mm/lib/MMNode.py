@@ -2829,8 +2829,6 @@ class MMNode(MMTreeElement):
 	def GetFile(self, orig = 0):
 		global nonascii
 		file = self.attrdict.get('file', '')
-		if not file or file == '#':
-			return file
 		if not orig and self.type == 'ext' and hasattr(self, 'slideshow'):
 			chtype = self.GetChannelType()
 			if chtype == 'RealPix':
@@ -2854,6 +2852,9 @@ class MMNode(MMTreeElement):
 			if nonascii.search(data):
 				mime = mime + ';charset=ISO-8859-1'
 			return 'data:%s,%s' % (mime, MMurl.quote(data))
+		if not file:
+			# don't join empty file name to baseurl
+			return file
 		return self.context.findurl(file)
 
 	def GetMarkerVal(self, url):
