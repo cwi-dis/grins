@@ -957,12 +957,11 @@ class _Window(_AdornmentSupport, _RubberBand):
 			toplevel._image_size_cache[file] = xsize, ysize
 		return xsize, ysize
 
-	def _prepare_image(self, file, crop, scale, center, coordinates, units = UNIT_SCREEN):
+	def _prepare_image(self, file, crop, fit, center, coordinates, units = UNIT_SCREEN):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
 		# depth: depth of window (and image) in bytes
-		oscale = scale
 		tw = self._topwindow
 		format = toplevel._imgformat
 		depth = format.descr['align'] / 8
@@ -993,18 +992,18 @@ class _Window(_AdornmentSupport, _RubberBand):
 			x, y, width, height = self._rect
 		else:
 			x, y, width, height = self._convert_coordinates(coordinates, units = units)
-		if scale == 0:
+		if fit == 'meet':
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
-		elif scale == -1:
+		elif fit == 'slice':
 			scale = max(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
-		elif scale == -2:
+		elif fit == 'icon':
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
 			if scale > 1:
 				scale = 1
-		elif scale < 0:
+		else:
 			# value not reconized. Set scale to 1
 			scale = 1
 				
@@ -1027,7 +1026,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 			if not reader:
 				# we got the size from the cache, don't believe it
 				del toplevel._image_size_cache[file]
-				return self._prepare_image(file, crop, oscale, center, coordinates, units = units)
+				return self._prepare_image(file, crop, fit, center, coordinates, units = units)
 			if hasattr(reader, 'transparent'):
 				if type(file) is type(''):
 					r = img.reader(imgformat.xrgb8, file)
@@ -1553,7 +1552,7 @@ class _SubWindow(_Window):
 			w._do_resize1()
 
 	# Experimental animation interface
-	def updatecoordinates(self, coordinates, units=UNIT_SCREEN, scale=None, mediacoords=None):
+	def updatecoordinates(self, coordinates, units=UNIT_SCREEN, fit=None, mediacoords=None):
 		parent = self._parent
 
 		# first convert any coordinates to pixel

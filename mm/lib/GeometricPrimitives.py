@@ -110,7 +110,7 @@ class Image(GeoClientWidget):
 				self.filename,
 				center = 1,
 				coordinates = self.get_box(),
-				scale = -2
+				fit = 'icon'
 				)
 		else:
 			self.displist.drawfbox((128,128,128), self.get_box())

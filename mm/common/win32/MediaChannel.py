@@ -204,7 +204,7 @@ class MediaChannel:
 		# apply sound level
 		print 'updatesoundlevel', lev, maxlevel
 
-	# Set Window Media window size from scale and center, and coordinates attributes
+	# Set Window Media window size from fit and center, and coordinates attributes
 	def adjustMediaWnd(self,node,window,builder):
 		if not window: return
 		builder.SetWindowPosition(self.__channel.getMediaWndRect())

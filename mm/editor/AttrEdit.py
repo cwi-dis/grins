@@ -523,7 +523,7 @@ class NodeWrapper(Wrapper):
 			('sensitivity',),
 			('top',), ('height',), ('bottom',),
 			('left',), ('width',), ('right',),
-			('scale',),
+			('fit',),
 			('fill',), ('fillDefault',), ('erase',),
 			('syncBehavior',), ('syncBehaviorDefault',),
 			'title', ('abstract',), ('alt',), ('longdesc',), ('readIndex',), 'author',
@@ -595,7 +595,7 @@ class NodeWrapper(Wrapper):
 					namelist.append('top')
 					namelist.append('height')
 					namelist.append('bottom')
-					namelist.append('scale')
+					namelist.append('fit')
 					namelist.append('sensitivity')
 					namelist.append('regPoint')
 					namelist.append('regAlign')
@@ -994,11 +994,11 @@ class ChannelWrapper(Wrapper):
 		else:
 			# region
 			if 'traceImage' in rv: rv.remove('traceImage')
-			if 'scale' not in rv: rv.append('scale')
+			if 'fit' not in rv: rv.append('fit')
 			if 'showBackground' not in rv: rv.append('showBackground')
 ##		if not cmifmode():
 ##			if 'file' in rv: rv.remove('file')
-##			if 'scale' in rv: rv.remove('scale')
+##			if 'fit' in rv: rv.remove('fit')
 		if ctype == 'layout' and not cmifmode():
 			rv.remove('type')
 			if 'bgcolor' in rv: rv.remove('bgcolor')
@@ -1471,8 +1471,6 @@ class AttrEditor(AttrEditorDialog):
 				C = ChanPosAttrEditorField
 			elif displayername == '.anchorlist':
 				C = AnchorlistAttrEditorField
-			elif displayername == 'scale':
-				C = ScaleAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -2176,20 +2174,6 @@ class UnitsAttrEditorField(PopupAttrEditorFieldNoDefault):
 #		       windowinterface.UNIT_PXL]
 	__values = ['relative', 'pixels']
 	__valuesmap = [windowinterface.UNIT_SCREEN, windowinterface.UNIT_PXL]
-
-	# Choose from a list of unit types
-	def getoptions(self):
-		return self.__values
-
-	def parsevalue(self, str):
-		return self.__valuesmap[self.__values.index(str)]
-
-	def valuerepr(self, value):
-		return self.__values[self.__valuesmap.index(value)]
-
-class ScaleAttrEditorField(PopupAttrEditorFieldNoDefault):
-	__values = ['actual size', 'show whole image', 'fill whole region', 'show whole image in whole region', 'scroll image if necessary']
-	__valuesmap = [1, 0, -1, -3, -4]
 
 	# Choose from a list of unit types
 	def getoptions(self):

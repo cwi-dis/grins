@@ -447,7 +447,7 @@ class _DisplayList:
 			print 'Internal error: invalid shape type'			
 			return _ButtonRect(self, [A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z, times, sensitive)
 
-	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
+	def display_image_from_file(self, file, crop = (0,0,0,0), fit = 'meet',
 				    center = 1, coordinates = None,
 				    clip = None, units = None):
 		if self._rendered:
@@ -456,7 +456,7 @@ class _DisplayList:
 			units = self.__units
 		w = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       w._prepare_image(file, crop, scale, center, coordinates, units)
+		       w._prepare_image(file, crop, fit, center, coordinates, units)
 		if mask:
 			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
 		else:

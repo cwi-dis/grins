@@ -1286,19 +1286,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if val not in ('meet', 'slice', 'fill',
 				       'hidden', 'scroll'):
 				self.syntax_error('illegal fit attribute')
-#			elif val == 'scroll':
-#				self.warning('fit="%s" value not implemented' % val, self.lineno)
 			else:
-				if val == 'hidden':
-					attributes['scale'] = "1"
-				elif val == 'meet':
-					attributes['scale'] = "0"
-				elif val == 'slice':
-					attributes['scale'] = "-1"
-				elif val == 'fill':
-					attributes['scale'] = "-3"
-				elif val == 'scroll':
-					attributes['scale'] = "-4"
+				attributes['fit'] = val
 
 		# create the node
 		if not self.__root:
@@ -1529,9 +1518,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if node.attrdict.has_key('regAlign'):
 				cssResolver.setRawAttrs(mediaCssId, [('regAlign', node.attrdict.get('regAlign'))])
 				del node.attrdict['regAlign']
-			if node.attrdict.has_key('scale'):
-				cssResolver.setRawAttrs(mediaCssId, [('scale', node.attrdict.get('scale'))])
-				del node.attrdict['scale']
+			if node.attrdict.has_key('fit'):
+				cssResolver.setRawAttrs(mediaCssId, [('fit', node.attrdict.get('fit'))])
+				del node.attrdict['fit']
 				
 		clip_begin = attributes.get('clipBegin')
 		if clip_begin:
@@ -1965,20 +1954,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 			if attrdict.has_key('fit'):
 				fit = attrdict['fit']; del attrdict['fit']
-				if fit == 'hidden':
-					scale = 1
-				elif fit == 'meet':
-					scale = 0
-				elif fit == 'slice':
-					scale = -1
-				elif fit == 'fill':
-					scale = -3
-				elif fit == 'scroll':
-					scale = -4
-				else:
-					# default value : hidden
-					scale = 1
-				cssResolver.setRawAttrs(cssId, [('scale', scale)])
+				cssResolver.setRawAttrs(cssId, [('fit', fit)])
 
 			# don't take into account the regAlign and regPoint on region since it's not allow anymore
 			# it allows to have an unexpected behavior if user specified a value

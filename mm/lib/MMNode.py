@@ -22,7 +22,7 @@ import re
 debuggensr = 0
 debug = 0
 
-_CssAttrs = ['top', 'left', 'right', 'width', 'height', 'bottom', 'regPoint', 'regAlign', 'scale']
+_CssAttrs = ['top', 'left', 'right', 'width', 'height', 'bottom', 'regPoint', 'regAlign', 'fit']
 
 class MMNodeContext:
 	"Adds context information about each MMNode" # -mjvdg. TODO: elaborate.
@@ -1035,13 +1035,13 @@ class MMChannel(MMTreeElement):
 		if not settings.get('cmif'):
 			self.attrdict['units'] = UNIT_PXL
 			self.attrdict['transparent'] = 1
-			self.attrdict['scale'] = 1
+			self.attrdict['fit'] = 'hidden'
 		if features.compatibility == features.G2:
 			# specialized settings for G2-compatibility
 			self.attrdict['units'] = UNIT_PXL
 			self.attrdict['transparent'] = -1
 			if type in ('image', 'video'):
-				self.attrdict['scale'] = 1
+				self.attrdict['fit'] = 'hidden'
 			if type in ('text', 'RealText'):
 				self.attrdict['bgcolor'] = 255,255,255
 			else:
@@ -1972,13 +1972,13 @@ class MMNode(MMTreeElement):
 		return self._mediaCssId
 
 	def setCssAttr(self, name, value):
-		if name in ['regPoint', 'regAlign', 'scale']:
+		if name in ['regPoint', 'regAlign', 'fit']:
 			self.context.cssResolver.setRawAttrs(self._mediaCssId, [(name, value)])
 		else:
 			self.context.cssResolver.setRawAttrs(self._subRegCssId, [(name, value)])
 
 	def getCssRawAttr(self, name, defaultValue = None):
-		if name in ['regPoint', 'regAlign', 'scale']:
+		if name in ['regPoint', 'regAlign', 'fit']:
 			if self._mediaCssId is None:
 				return defaultValue
 			value = self.context.cssResolver.getRawAttr(self._mediaCssId, name)
@@ -1991,7 +1991,7 @@ class MMNode(MMTreeElement):
 		return value
 
 	def getCssAttr(self, name, defaultValue = None):
-		if name in ['regPoint', 'regAlign', 'scale']:
+		if name in ['regPoint', 'regAlign', 'fit']:
 			if self._mediaCssId is None:
 				return defaultValue
 

@@ -189,7 +189,7 @@ class _DisplayList:
 	
 	# Optimized rendering for simple display lists on a direct draw surface	
 	# we should and we can implement here what we need for player rendering  
-	def _ddsrender(self, dds, dst, rgn, clear=1, mediadisplayrect=None, fit=1):
+	def _ddsrender(self, dds, dst, rgn, clear=1, mediadisplayrect=None, fit='hidden'):
 		self._rendered = 1
 		clonestart = self._clonestart
 		if not self._cloneof or self._cloneof is not self._window._active_displist:
@@ -512,14 +512,14 @@ class _DisplayList:
 		return _Button(self, shape, coordinates, z, times, sensitive)
 
 	# display image from file
-	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
+	def display_image_from_file(self, file, crop = (0,0,0,0), fit = 'meet',
 				    center = 1, coordinates = None, clip = None, units = None):
 		if units is None:
 			units = self.__units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
-		       self._window._prepare_image(file, crop, scale, center, coordinates, clip, units)
+		       self._window._prepare_image(file, crop, fit, center, coordinates, clip, units)
 		
 		flags = ddraw.DDBLT_WAIT
 		if self._directdraw:
@@ -536,7 +536,7 @@ class _DisplayList:
 		if self._directdraw: # XXX: i.e. player, revisit this
 			# preset media display rect and scale for animation
 			self._window.setmediadisplayrect( (dest_x, dest_y, width, height) )
-			self._window.setmediafit(int(scale))
+			self._window.setmediafit(fit)
 			self.setMediaBox(mediaBox)
 
 		if units == UNIT_PXL:

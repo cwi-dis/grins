@@ -26,7 +26,7 @@ import rma
 import ddraw
 	
 class VideoChannel(Channel.ChannelWindowAsync):
-	_our_attrs = ['scale']
+	_our_attrs = ['fit']
 	node_attrs = Channel.ChannelWindow.node_attrs + [
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
@@ -344,7 +344,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		
 		# preset for animation
 		window.setmediadisplayrect(self.__rcMediaWnd)
-		window.setmediafit(MMAttrdefs.getattr(node, 'scale'))
+		window.setmediafit(MMAttrdefs.getattr(node, 'fit'))
 
 		return (left/float(w_width), top/float(w_height), width/float(w_width), height/float(w_height))
 

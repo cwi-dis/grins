@@ -880,40 +880,40 @@ class EffectiveAnimator:
 			cssregion.move(value)
 			cssregion.updateTree()
 			coords = cssregion.getPxGeom()
-			scale = cssregion.getScale()
+			fit = cssregion.getFit()
 			if self.__layout.window:
-				self.__layout.window.updatecoordinates(coords, UNIT_PXL, scale, None)
+				self.__layout.window.updatecoordinates(coords, UNIT_PXL, fit, None)
 			for subch in self.__subChannels:
 				if subch._attrdict.get('type') == 'layout':
 					cssreg = self.getCssObj(subch._attrdict)
 					if subch.window:
-						subch.window.updatecoordinates(cssreg.getPxGeom(), UNIT_PXL, cssreg.getScale(), None)
+						subch.window.updatecoordinates(cssreg.getPxGeom(), UNIT_PXL, cssreg.getFit(), None)
 				elif subch._armed_node:
 					node = subch._armed_node
 					csssubreg = self.getCssObj(node)
 					cssmedia = csssubreg.media
 					if subch.window:
-						subch.window.updatecoordinates(csssubreg.getPxGeom(), UNIT_PXL, csssubreg.getScale(), cssmedia.getPxGeom())
+						subch.window.updatecoordinates(csssubreg.getPxGeom(), UNIT_PXL, csssubreg.getFit(), cssmedia.getPxGeom())
 
 		elif attr in ('left','top','width','height','right','bottom'):
 			cssregion = self.getCssObj(region)
 			cssregion.changeRawAttr(attr, value)
 			cssregion.updateTree()
 			coords = cssregion.getPxGeom()
-			scale = cssregion.getScale()
+			fit = cssregion.getFit()
 			if self.__layout.window:
-				self.__layout.window.updatecoordinates(coords, UNIT_PXL, scale, None)
+				self.__layout.window.updatecoordinates(coords, UNIT_PXL, fit, None)
 			for subch in self.__subChannels:
 				if subch._attrdict.get('type') == 'layout':
 					cssreg = self.getCssObj(subch._attrdict)
 					if subch.window:
-						subch.window.updatecoordinates(cssreg.getPxGeom(), UNIT_PXL, cssreg.getScale(), None)
+						subch.window.updatecoordinates(cssreg.getPxGeom(), UNIT_PXL, cssreg.getFit(), None)
 				elif subch._armed_node:
 					node = subch._armed_node
 					csssubreg = self.getCssObj(node)
 					cssmedia = csssubreg.media
 					if subch.window:
-						subch.window.updatecoordinates(csssubreg.getPxGeom(), UNIT_PXL, csssubreg.getScale(), cssmedia.getPxGeom())
+						subch.window.updatecoordinates(csssubreg.getPxGeom(), UNIT_PXL, csssubreg.getFit(), cssmedia.getPxGeom())
 
 		elif attr=='z':
 			if self.__layout.window:
@@ -972,26 +972,26 @@ class EffectiveAnimator:
 			csssubregion.move(value)
 			csssubregion.updateTree()
 			coords = csssubregion.getPxGeom()
-			scale = csssubregion.getScale()
+			fit = csssubregion.getFit()
 			mediacoords = None
 			if csssubregion.media:
 				csssubregion.media.update()
 				mediacoords = csssubregion.media.getPxGeom()
 			if chan.window:
-				chan.window.updatecoordinates(coords, UNIT_PXL, scale, mediacoords)
+				chan.window.updatecoordinates(coords, UNIT_PXL, fit, mediacoords)
 
 		elif self.__attr in ('left','top','width','height','right','bottom'):
 			csssubregion = self.getCssObj(self.__node)
 			csssubregion.changeRawAttr(self.__attr, value)
 			csssubregion.updateTree()
 			coords = csssubregion.getPxGeom()
-			scale = csssubregion.getScale()
+			fit = csssubregion.getFit()
 			mediacoords = None
 			if csssubregion.media:
 				csssubregion.media.update()
 				mediacoords = csssubregion.media.getPxGeom()
 			if chan.window:
-				chan.window.updatecoordinates(coords, UNIT_PXL, scale, mediacoords)
+				chan.window.updatecoordinates(coords, UNIT_PXL, fit, mediacoords)
 		
 		elif self.__attr=='bgcolor':
 			if chan.window:

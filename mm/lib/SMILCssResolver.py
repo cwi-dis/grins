@@ -146,17 +146,17 @@ class Node:
 		# common attributes for media and region
 		self.regAlign = None
 		self.regPoint = None
-		self.scale = None
+		self.fit = None
 
 	def copyRawAttrs(self, srcNode):
 		self.regAlign = srcNode.regAlign
 		self.regPoint = srcNode.regPoint
-		self.scale = srcNode.scale
+		self.fit = srcNode.fit
 
 	def changeRawAttr(self, name, value):
 		if name in ['left', 'width', 'right', 'top', 'height', 'bottom']:
 			self.changeRawValues(name, value)
-		elif name in ['regAlign', 'regPoint', 'scale']:
+		elif name in ['regAlign', 'regPoint', 'fit']:
 			self.changeAlignAttr(name, value)
 	
 	def move(self, pos):
@@ -225,16 +225,16 @@ class Node:
 			self.regPoint = value
 		elif name == 'regAlign':
 			self.regAlign = value
-		elif name == 'scale':
-			self.scale = value
+		elif name == 'fit':
+			self.fit = value
 
 	def _getRawAttr(self, name):
 		if name == 'regPoint':
 			return self.regPoint
 		elif name == 'regAlign':
 			return self.regAlign
-		elif name == 'scale':
-			return self.scale
+		elif name == 'fit':
+			return self.fit
 
 		return None
 
@@ -244,8 +244,8 @@ class Node:
 			return self.getRegPoint()
 		elif name == 'regAlign':
 			return self.getRegAlign()
-		elif name == 'scale':
-			return self.getScale()
+		elif name == 'fit':
+			return self.getFit()
 
 		return None
 	
@@ -269,7 +269,7 @@ class Node:
 		return node
 				
 	def __dump(self):
-		print self.__class__.__name__, self.mmobj, self.getPxGeom(), 'scale=',self.scale, 'media=',self.media
+		print self.__class__.__name__, self.mmobj, self.getPxGeom(), 'fit=',self.fit, 'media=',self.media
 		for child in self.children:
 			child.__dump()
 	
@@ -491,8 +491,8 @@ class RegionNode(Node):
 			self.regPoint = value
 		elif name == 'regAlign':
 			self.regAlign = value
-		elif name == 'scale':
-			self.scale = value
+		elif name == 'fit':
+			self.fit = value
 
 		# for now, in this case update all children			
 		for child in self.children:
@@ -656,9 +656,9 @@ class RegionNode(Node):
 	def _getPxGeom(self):
 		return self.pxleft, self.pxtop, self.pxwidth, self.pxheight
 		
-	def getScale(self):
-		if self.scale != None:
-			return self.scale
+	def getFit(self):
+		if self.fit != None:
+			return self.fit
 		else:
 			# default value: hidden
 			# todo: get value from mmattrdef
@@ -1081,7 +1081,7 @@ class MediaNode(Node):
 			return 0, 0, self.container.pxwidth, self.container.pxheight
 		
 		# get fit attribute
-		scale = self.getScale()
+		fit = self.getFit()
 
 		# get regpoint
 		# for now, regpoint come from directly MMContext.
@@ -1097,11 +1097,11 @@ class MediaNode(Node):
 		regalign = self._getRegAlign(regPointObject)
 
 		# this algorithm depends of fit attribute
-		if scale == 1:  #hidden
+		if fit is None or fit == 'hidden':
 			area_height = self.intrinsicHeight
 			area_width = self.intrinsicWidth
 
-		elif scale == 0: # meet
+		elif fit == 'meet':
 			if regalign in ('topLeft', 'topMid', 'topRight'):
 				area_height = self.container.pxheight-regpoint_y
 			if regalign in ('topLeft', 'midLeft', 'bottomLeft'):
@@ -1128,7 +1128,7 @@ class MediaNode(Node):
 			else:
 				area_width = int(area_height*media_ratio)
 
-		elif scale == -1: # slice
+		elif fit == 'slice':
 			if regalign in ('topLeft', 'topMid', 'topRight'):
 				area_height = self.container.pxheight-regpoint_y
 			if regalign in ('topLeft', 'midLeft', 'bottomLeft'):
@@ -1155,7 +1155,7 @@ class MediaNode(Node):
 			else:
 				area_width = area_height*media_ratio
 
-		elif scale == -3: # fill
+		elif fit == 'fill':
 			if regalign in ('topLeft', 'topMid', 'topRight'):
 				area_height = self.container.pxheight-regpoint_y
 			if regalign in ('topLeft', 'midLeft', 'bottomLeft'):
@@ -1171,7 +1171,7 @@ class MediaNode(Node):
 			if regalign in ('bottomLeft', 'bottomMid', 'bottomRight'):
 				area_height = regpoint_y
 
-		elif scale == -4:  #scroll
+		elif fit == 'scroll':
 			area_height = self.intrinsicHeight
 			area_width = self.intrinsicWidth
 
@@ -1199,13 +1199,13 @@ class MediaNode(Node):
 		
 		return int(area_left), int(area_top), int(area_width), int(area_height)
 
-	def getScale(self):
-		if self.scale != None:
-			return self.scale
+	def getFit(self):
+		if self.fit != None:
+			return self.fit
 		else:
 			region = self.__getRegion()
 			if region != None:
-				return region.getScale()
+				return region.getFit()
 			
 	def __getRegion(self):
 		subreg = self.container

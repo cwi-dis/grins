@@ -7,7 +7,7 @@ from AnchorDefs import *
 
 
 class VideoChannel(ChannelWindowThread):
-	attrs = ['scale', 'project_videotype', 'project_targets']
+	attrs = ['fit', 'project_videotype', 'project_targets']
 	node_attrs = ChannelWindowThread.node_attrs + [
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
@@ -39,7 +39,12 @@ class VideoChannel(ChannelWindowThread):
 			return 1
 		try:
 			import MMAttrdefs, GLLock
-			arminfo = {'scale': float(MMAttrdefs.getattr(node, 'scale')),
+			fit = MMAttrdefs.getattr(node, 'fit')
+			if fit == 'hidden':
+				scale = 1.0
+			else:
+				scale = 0.0
+			arminfo = {'scale': scale,
 				   'bgcolor': self.getbgcolor(node),
 				   }
 			self.threads.arm(fp, 0, 0, arminfo, None,

@@ -257,6 +257,9 @@
 (scale (float) 1.0 'Scale factor' scale
 	'Aspect ratio is maintained for all options' channel (g2 qt smil10 smil2 cmif snap))
 
+(fit (enum meet hidden slice scroll fill) hidden 'Fit' default
+	'Fit value' channel (g2 qt smil10 smil2 cmif snap))
+
 (sensitivity (int) 0 'Event sensitivity' sensitivity
 	'Event sensitivity of media (percentage in range 0 - 100)' raw (cmif smil2))
 

@@ -603,14 +603,14 @@ class _DisplayList:
 		coordinates = coordinates[1:]
 		return _Button(self, shape, coordinates, z, times, sensitive)
 
-	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
+	def display_image_from_file(self, file, crop = (0,0,0,0), fit = 'meet',
 				    center = 1, coordinates = None,
 				    clip = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		win = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       win._prepare_image(file, crop, scale, center, coordinates, self.__units)
+		       win._prepare_image(file, crop, fit, center, coordinates, self.__units)
 		self._list.append(('image', mask, image, src_x, src_y,
 				   dest_x, dest_y, width, height))
 		self._optimize(2)
