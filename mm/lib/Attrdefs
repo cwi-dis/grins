@@ -360,8 +360,6 @@
 	'Play node only if end-user prefers this language' raw (all))
 (system_overdub_or_caption (string) '' 'System overdub or caption' captionoverdub3
 	'Play node only depending on end user overdub/caption preference' raw (all))
-(system_overdub_or_subtitle (string) '' 'System overdub or subtitle' subtitleoverdub3
-	'Play node only depending on end user overdub/subtitle preference' raw (smil2))
 (system_required (string) '' 'System required' default
 	'Play node only if player supports these features' raw (all))
 (system_screen_size (tuple (int) (int)) (0 0) 'System screen size' default

@@ -529,28 +529,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						attrdict['system_overdub_or_caption'] = val
 				else:
 					self.syntax_error('bad system-overdub-or-caption attribute')
-			elif attr == 'systemOverdubOrCaption':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-				self.__context.attributes['project_boston'] = 1
-				if val in ('caption', 'overdub'):
-					attrdict['system_overdub_or_caption'] = val
-				else:
-					self.syntax_error('bad system-overdub-or-caption attribute')
-			elif attr == 'system-overdub-or-subtitle':
-				if val in ('subtitle', 'overdub'):
-					if not attrdict.has_key('system_overdub_or_subtitle'):
-						attrdict['system_overdub_or_subtitle'] = val
-				else:
-					self.syntax_error('bad system-overdub-or-subtitle attribute')
 			elif attr == 'systemOverdubOrSubtitle':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
 				if val in ('subtitle', 'overdub'):
-					attrdict['system_overdub_or_subtitle'] = val
+					if val == 'subtitle':
+						val = 'overdub'
+					attrdict['system_overdub_or_caption'] = val
 				else:
-					self.syntax_error('bad system-overdub-or-subtitle attribute')
+					self.syntax_error('bad systemOverdubOrSubtitle attribute')
 			elif attr == 'system-required':
 				if not attrdict.has_key('system_required'):
 					attrdict['system_required'] = val
