@@ -110,6 +110,7 @@ ExampleErrorSink::ErrorOccurred(const UINT8	unSeverity,
 
  	// ulRMACode is returned and its meaning can be found RMASDK::pnresult.h
     char msg[512];
+#if 0
     sprintf(msg, "RMA error report:\n(%d, 0x%x, \"%s\", %ld, \"%s\", \"%s\")\nCategory: %s (E%d.%d)\n",
 		    unSeverity,
 		    ulRMACode,
@@ -119,7 +120,17 @@ ExampleErrorSink::ErrorOccurred(const UINT8	unSeverity,
             RMADefine,
 			ConvertErrorTypeToString(type),type,subtype
 			);
-	
+#else
+	msg[0] = '\0';
+	if ( pUserString && *pUserString )
+		strcpy(msg, pUserString);
+	else
+		sprintf(msg, "RMA error %d 0x%x", unSeverity, ulRMACode);
+	if ( pMoreInfoURL && *pMoreInfoURL ) {
+		strcat(msg, " See ");
+		strcat(msg, pMoreInfoURL);
+	}
+#endif
 	if(m_pyErrorSink)
 		{
 		CallerHelper helper("ErrorOccurred",m_pyErrorSink);
