@@ -3,3 +3,7 @@ TODO for Michael :-)
 
 * Subclass the icons.
 * Multiple node operations - undo doesn't always work.
+
+
+Inserting new node
+select extra nodes should give global focus requests.
