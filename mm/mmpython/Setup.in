@@ -1,0 +1,6 @@
+mm mmmodule.o
+moviechannel moviechannelmodule.o
+mpegchannel mpegchannelmodule.o
+nullchannel nullchannelmodule.o
+soundchannel soundchannelmodule.o
+#imagechannel imagechannelmodule.o
