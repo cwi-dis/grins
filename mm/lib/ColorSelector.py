@@ -23,10 +23,9 @@ form_template = None
 
 class ColorSelector(glwindow.glwindow):
 
-	def init(self):
+	def __init__(self):
 		self.placed = 0
 		self.make_form()
-		return self
 
 	def __repr__(self):
 		return '<ColorSelector instance, form=' + `self.form` + '>'
@@ -54,9 +53,9 @@ class ColorSelector(glwindow.glwindow):
 		glwindow.register(self, self.form.window)
 		#
 		wd = self.wheel_dummy
-		self.wheel = Wheel().init(self, wd.x, wd.y, wd.w, wd.h)
+		self.wheel = Wheel(self, wd.x, wd.y, wd.w, wd.h)
 		bd = self.box_dummy
-		self.box = Box().init(self, bd.x, bd.y, bd.w, bd.h)
+		self.box = Box(self, bd.x, bd.y, bd.w, bd.h)
 		#
 		self.from_rgb(rgb, 1)
 		try:
@@ -163,10 +162,10 @@ class ColorSelector(glwindow.glwindow):
 
 class Wheel(glwindow.glwindow):
 
-	def init(self, parent, x, y, w, h):
+	def __init__(self, parent, x, y, w, h):
 		self.parent = parent
 		wid = gl.swinopen(parent.form.window)
-		self = glwindow.glwindow.init(self, wid)
+		glwindow.glwindow.__init__(self, wid)
 		x, y, w, h = int(x), int(y), int(w), int(h)
 		gl.winposition(x, x+w-1, y, y+h-1)
 		gl.doublebuffer()
@@ -179,7 +178,6 @@ class Wheel(glwindow.glwindow):
 				fl.qdevice(e)
 		#
 		glwindow.register(self, wid)
-		return self
 
 	def __repr__(self):
 		return '<Wheel instance, wid=' + `self.wid` + '>'
@@ -265,10 +263,10 @@ class Wheel(glwindow.glwindow):
 
 class Box(glwindow.glwindow):
 
-	def init(self, parent, x, y, w, h):
+	def __init__(self, parent, x, y, w, h):
 		self.parent = parent
 		wid = gl.swinopen(parent.form.window)
-		self = glwindow.glwindow.init(self, wid)
+		glwindow.glwindow.__init__(self, wid)
 		x, y, w, h = int(x), int(y), int(w), int(h)
 		##gl.winposition(x+5, x+w-6, y+5, y+h-6)
 		gl.winposition(x, x+w-1, y, y+h-1)
@@ -277,7 +275,6 @@ class Box(glwindow.glwindow):
 		gl.ortho2(-1.0, 1.0, -1.0, 1.0)
 		#
 		glwindow.register(self, wid)
-		return self
 
 	def __repr__(self):
 		return '<Box instance, wid=' + `self.wid` + '>'
@@ -391,7 +388,7 @@ a_selector = None
 def run(rgb):
 	global a_selector
 	if a_selector == None:
-		a_selector = ColorSelector().init()
+		a_selector = ColorSelector()
 	return a_selector.run(rgb)
 
 def test():
