@@ -99,6 +99,7 @@ class XMLParser:
     # Interface -- initialize and reset this instance
     def __init__(self, **kw):
         self.__fixed = 0
+        self.__encoding = None
         if kw.has_key('accept_unquoted_attributes'):
             self.__accept_unquoted_attributes = kw['accept_unquoted_attributes']
         if kw.has_key('accept_missing_endtag_name'):
@@ -198,12 +199,23 @@ class XMLParser:
             rescan = 0
             if str[0] == '#':
                 if str[1] == 'x':
-                    str = chr(string.atoi(str[2:], 16))
+                    n = string.atoi(str[2:], 16)
                 else:
-                    str = chr(string.atoi(str[1:]))
+                    n = string.atoi(str[1:])
                 if data[i - 1] != ';':
                     self.syntax_error("`;' missing after char reference")
                     i = i-1
+                try:
+                    ustr = unichr(n)
+                except UnicodeError:
+                    self.syntax_error("bad encoding for attribute value")
+                    str = '&#x%x;' % n
+                else:
+                    try:
+                        str = ustr.encode(self.__encoding)
+                    except UnicodeError:
+                        self.syntax_error("character not in %s character range" % self.__encoding)
+                        str = '&#x%x;' % n
             elif all:
                 if self.entitydefs.has_key(str):
                     str = self.entitydefs[str]
@@ -241,6 +253,22 @@ class XMLParser:
     def goahead(self, end):
         rawdata = self.rawdata
         i = 0
+        if rawdata[:2] == '\376\377':
+            # UTF-16, big-endian
+            enc = 'utf-16-be'
+            i = 2
+        elif rawdata[:2] == '\377\376':
+            # UTF-16, little-endian
+            enc = 'utf-16-le'
+            i = 2
+        elif rawdata[:4] == '\x00\x3C\x00\x3F':
+            # UTF-16, big-endian
+            enc = 'utf-16-be'
+        elif rawdata[:4] == '\x3C\x00\x3F\x00':
+            # UTF-16, little-endian
+            enc = 'utf-16-le'
+        else:
+            enc = None                  # unknowns as yet
         n = len(rawdata)
         while i < n:
             if i > 0:
@@ -316,9 +344,14 @@ class XMLParser:
                                                               'standalone')
                     if version[1:-1] != '1.0':
                         raise Error('only XML version 1.0 supported')
-                    if encoding: encoding = encoding[1:-1]
+                    if encoding:
+                        encoding = encoding[1:-1]
+                        if enc and enc != encoding.lower() and enc[:6] != encoding.lower():
+                            self.error("declared encoding doesn't match actual encoding", self.lineno)
+                        enc = encoding.lower()
+                    self.__encoding = enc or 'utf-8'
                     if standalone: standalone = standalone[1:-1]
-                    self.handle_xml(encoding, standalone)
+                    self.handle_xml(enc, standalone)
                     i = res.end(0)
                     continue
                 res = procopen.match(rawdata, i)
