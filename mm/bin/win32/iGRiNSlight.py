@@ -36,8 +36,8 @@ else:
 CMIFPATH = [
 	os.path.join(CMIFDIR, 'bin\\win32'),
 	os.path.join(CMIFDIR, '%s\\win32' % specificPath),
-	os.path.join(CMIFDIR, '%s\\smilboston' % specificPath),
-	os.path.join(CMIFDIR, '%s\\smilboston\\win32' % specificPath),
+	os.path.join(CMIFDIR, '%s\\g2lite' % specificPath),
+	os.path.join(CMIFDIR, '%s\\g2lite\\win32' % specificPath),
 	os.path.join(CMIFDIR, 'mmextensions\\real\\win32'),
 	os.path.join(CMIFDIR, 'common\\win32'),
 	os.path.join(CMIFDIR, 'lib\\win32'),
@@ -127,5 +127,8 @@ def GuessCMIFRoot():
 		dir=dir+'\\'
 	if found:return dir
 	return r'd:\ufs\mm\cmif'
+
+#import settings
+#settings.default_settings['lightweight'] = 1
 
 Boot(WHAT)
