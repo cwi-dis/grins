@@ -945,12 +945,14 @@ class MMChannelTree:
 		if type(chan) != type(''):
 			chan = chan.name
 		return_me = []
-		print "DEBUG: subchans is: ", self.subchans
-		kids = self.subchans[chan]
-		for i in kids:
-			if i.get('type') =='layout':
-				return_me.append(i)
-		return return_me
+		if self.subchans.has_key(chan):
+			kids = self.subchans[chan]
+			for i in kids:
+				if i.get('type') =='layout':
+					return_me.append(i)
+			return return_me
+		else:
+			return []
 
 	def getviewports(self):
 		return self.top_levels
