@@ -34,7 +34,7 @@ All other callbacks are called without arguments.
 
 """
 
-__version__ = "$Id"
+__version__ = "$Id$"
 
 import windowinterface
 
