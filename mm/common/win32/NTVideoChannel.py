@@ -127,13 +127,15 @@ class VideoChannel(Channel.ChannelWindowAsync):
 						self.__mc.prepare_player(node, self.window)
 						self.__ready = 1
 					except MediaChannel.error, msg:
-						self.__windowless_wm_rendering = 0
-						self.__mc = MediaChannel.MediaChannel(self)
-						try:
-							self.__mc.prepare_player(node, self.window)
-							self.__ready = 1
-						except MediaChannel.error, msg:
-							self.errormsg(node, msg)
+						self.errormsg(node, msg)
+
+#						self.__windowless_wm_rendering = 0
+#						self.__mc = MediaChannel.MediaChannel(self)
+#						try:
+#							self.__mc.prepare_player(node, self.window)
+#							self.__ready = 1
+#						except MediaChannel.error, msg:
+#							self.errormsg(node, msg)
 		self.prepare_armed_display(node)
 		return 1
 
