@@ -356,7 +356,7 @@ def initattrdefs():
 
 	if __debug__:
 		import cmif
-		filename = os.path.join(os.path.dirname(cmif.__file__), 'AttrDefs')
+		filename = os.path.join(os.path.dirname(cmif.__file__), 'Attrdefs')
 ##		filename = cmif.findfile(os.path.join('lib', 'Attrdefs'))
 		print filename
 		try:
