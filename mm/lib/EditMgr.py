@@ -6,6 +6,7 @@ __version__ = "$Id$"
 
 import MMExc
 from HDTL import HD, TL
+import features
 
 class EditMgr:
 	#
@@ -25,6 +26,9 @@ class EditMgr:
 		self.history = []
 		self.future = []
 		self.registry = []
+		self.focus_registry = []
+		self.focus = None, None
+		self.focus_busy = 0
 	#
 	def destroy(self):
 		for x in self.registry[:]:
@@ -33,14 +37,20 @@ class EditMgr:
 	#
 	# Dependent client interface.
 	#
-	def register(self, x):
+	def register(self, x, want_focus=0):
 		self.registry.append(x)
+		if want_focus:
+			self.focus_registry.append(x)
 
-	def registerfirst(self, x):
+	def registerfirst(self, x, want_focus=0):
 		self.registry.insert(0, x)
+		if want_focus:
+			self.focus_registry.insert(0, x)
 
 	def unregister(self, x):
 		self.registry.remove(x)
+		if x in self.focus_registry:
+			self.focus_registry.remove(x)
 	#
 	def is_registered(self, x):
 		return x in self.registry
@@ -81,6 +91,24 @@ class EditMgr:
 			x.rollback()
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
+	#
+	# Focus interface
+	#
+	def setglobalfocus(self, focustype, focusobject):
+		# Quick return if this product does not have a shared focus
+		if not features.UNIFIED_FOCUS in features.feature_set:
+			return
+		if (focustype, focusobject) == self.focus:
+			return
+		if self.focus_busy: raise MMExc.AssertError, 'recursive focus'
+		self.focus_busy = 1
+		self.focus = (focustype, focusobject)
+		for client in self.focus_registry:
+			client.globalfocuschanged(focustype, focusobject)
+		self.focus_busy = 0
+		
+	def getglobalfocus(self):
+		return self.focus
 	#
 	# UNDO interface -- this code isn't ready yet.
 	#
