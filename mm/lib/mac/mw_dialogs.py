@@ -500,7 +500,7 @@ class TemplateDialog(DialogWindow):
 		# descriptions: list of (text, image, ...) parallel to names
 		#
 		# First create dialogwindow and set static items
-		DialogWindow.__init__(self, self.DIALOG_ID, 
+		DialogWindow.__init__(self, self.DIALOG_ID, title="New Document",
 				default=ITEM_TEMPLATE_OK, cancel=ITEM_TEMPLATE_CANCEL)
 
 		self.type_select=mw_widgets.SelectWidget(self._wid, ITEM_TEMPLATE_POPUP, names)
