@@ -1130,7 +1130,6 @@ class AnimateElementParser:
 		# verify
 		if debugParser:
 			print 'animation type: ', self.__animtype
-
 		
 		########################################
 		# Read enumeration attributes
@@ -1140,6 +1139,10 @@ class AnimateElementParser:
 		if self.__additive == 'sum' and not self.__isadditive:
 			print 'Warning: additive attribute will be ignored. The target attribute does not support additive animation.'
 			self.__additive = 'replace'
+
+		# for 'by-only animation' force: additive = 'sum' 
+		if self.__animtype == 'by' and self.__isadditive:
+			additive = 'sum'
 
 		# accumulate has the default value 'none' see SMIL.py
 		self.__accumulate = MMAttrdefs.getattr(anim, 'accumulate')
@@ -1181,25 +1184,28 @@ class AnimateElementParser:
 	def getAnimator(self):
 		if not self.__hasValidTarget:
 			return None
-
-		attr = self.__grinsattrname
-		domval = self.__domval
+		
+		if self.__animtype == 'invalid':
+			return None
 
 		# set elements
 		if self.__elementTag=='set':
 			return self.__getSetAnimator()
 
+		attr = self.__grinsattrname
+		domval = self.__domval
+		dur = self.getDuration()
+
 		# to-only animation for additive attributes
-		if self.__isToOnly() and self.__canBeAdditive() and self.__calcMode!='discrete':
+		if self.__animtype == 'to' and self.__isadditive and self.__calcMode!='discrete':
 			v = self.getTo()
 			v = string.atof(v)
-			anim = EffValueAnimator(attr, domval, v, self.getDuration())
+			anim = EffValueAnimator(attr, domval, v, dur)
 			if self.__attrtype=='int':
 				anim.setRetunedValuesConverter(_round)
 			return anim
 
 		# 1. Read animation attributes
-		dur = self.getDuration()
 		mode = self.__calcMode
 		if mode == 'paced':
 			# ignore times and splines for 'paced' animation
@@ -1207,11 +1213,9 @@ class AnimateElementParser:
 		else:
 			times = self.__getInterpolationKeyTimes() 
 			splines = self.__getInterpolationKeySplines()
+
 		accumulate = self.__accumulate
 		additive = self.__additive
-
-		# 1+: force first value display (fulfil: use f(0) if duration is undefined)
-		if not dur or dur<0 or (type(dur)==type('') and dur=='indefinite'): dur=0
 
 		# 2. return None on syntax or logic error
 
@@ -1224,7 +1228,8 @@ class AnimateElementParser:
 		# 3. Return explicitly animators for special attributes
 
 		# for 'by-only animation' force: additive = 'sum' 
-		if self.__isByOnly(): additive = 'sum'
+		if self.__animtype == 'by' and self.__isadditive:
+			additive = 'sum'
 
 		if self.__elementTag == 'animateColor' or self.__attrtype=='color':
 			values = self.__getColorValues()
@@ -1291,30 +1296,46 @@ class AnimateElementParser:
 	def __getSetAnimator(self):
 		if not self.__hasValidTarget:
 			return None
+
 		attr = self.__attrname
 		domval = self.__domval
-		dur = self.getDuration()
-		if not dur or dur<0 or (type(dur)==type('') and dur=='indefinite'): dur=0
+
 		value = self.getTo()
 		if value==None or value=='':
 			print 'set element without attribute to'
 			return None
 
+		dur = self.getDuration()
+		if not dur or dur<0 or (type(dur)==type('') and dur=='indefinite'): dur=0
+
 		if self.__attrtype == 'int':
 			value = string.atoi(value)
 			anim = SetAnimator(attr, domval, value, dur)
 			anim.setRetunedValuesConverter(_round)
+
 		elif self.__attrtype == 'float':
 			value = string.atof(value)
 			anim = SetAnimator(attr, domval, value, dur)
+
 		elif self.__attrtype == 'string' or self.__attrtype == 'enum' or self.__attrtype == 'bool':
 			anim = SetAnimator(attr, domval, value, dur)
+
 		elif self.__attrtype == 'inttuple':
 			value = self.__split(value)
 			value = map(string.atoi, value)
-			anim = SetAnimator(attr, domval, value, dur)	
+			anim = SetAnimator(attr, domval, value, dur)
+
+		elif self.__attrtype == 'color':
+			value = self.__convert_color(value)
+			anim = SetAnimator(attr, domval, value, dur)
+
+		elif self.__attrtype == 'floattuple':
+			value = self.__splitf(value)
+			anim = SetAnimator(attr, domval, value, dur)
+
 		else:
 			anim = SetAnimator(attr, domval, domval, dur)
+
 		self.__setTimeManipulators(anim)
 		return anim
 
@@ -1328,8 +1349,11 @@ class AnimateElementParser:
 		return self.__domval
 							
 	def getDuration(self):
-		return MMAttrdefs.getattr(self.__anim, 'duration')
-
+		dur = MMAttrdefs.getattr(self.__anim, 'duration')
+		# force first value display (fulfil: use f(0) if duration is undefined)
+		if not dur or dur<0 or (type(dur)==type('') and dur=='indefinite'): dur=0
+		return dur
+	
 	def getFrom(self):
 		return MMAttrdefs.getattr(self.__anim, 'from')
 
@@ -1467,28 +1491,6 @@ class AnimateElementParser:
 			return 0
 		return 1
 
-	def __isByOnly(self):
-		values =  self.getValues()
-		if values: return 0
-		v1 = self.getFrom()
-		if v1!='': return 0
-		v2 = self.getTo()
-		if v2!='': return 0
-		return 1
-
-	def __isToOnly(self):
-		values =  self.getValues()
-		if values: return 0
-		v1 = self.getFrom()
-		if v1!=None and v1!='': return 0
-		v2 = self.getTo()
-		if v2!=None and v2!='': return 1
-		return 0
-
-	def __canBeAdditive(self):
-		return self.__attrtype == 'int' or self.__attrtype == 'float'
-
-
 	def getAnimationType(self):
 		if self.getValues()!=None or self.getPath()!=None:
 			return 'values'
@@ -1511,12 +1513,6 @@ class AnimateElementParser:
 				return 'to'
 			else:
 				return 'by'
-
-	def safeatof(self, s):
-		if s[-1]=='%':
-			return 0.01*string.atof(s[:-1])
-		else:
-			return string.atof(s)
 				
 	# return list of interpolation values
 	def __getNumInterpolationValues(self):	
@@ -1864,6 +1860,12 @@ class AnimateElementParser:
 					parent.__dict__[vnodename] = newnode
 				anim.targetnode = newnode
 	
+	def safeatof(self, s):
+		if s[-1]=='%':
+			return 0.01*string.atof(s[:-1])
+		else:
+			return string.atof(s)
+
 	def __splitf(self, arg, f=None):
 		if not f: f = self.safeatof
 		if type(arg)==type(''):
