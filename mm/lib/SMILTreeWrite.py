@@ -2020,12 +2020,30 @@ class SMILWriter(SMIL):
 					attrlist.append((name, value))
 		self.writetag(tag, attrlist)
 
-	def linkattrs(self, a2, ltype):
+	def linkattrs(self, a2, ltype, stype, dtype):
 		attrs = []
-		if ltype == Hlinks.TYPE_CALL:
-			attrs.append(('show', "pause"))
+		# deprecated
+#		if ltype == Hlinks.TYPE_CALL:
+#			attrs.append(('show', "pause"))
+		if ltype == Hlinks.TYPE_JUMP:
+			# default value, so we don't need to write it
+			pass
 		elif ltype == Hlinks.TYPE_FORK:
-			attrs.append(('show', "new"))
+			attrs.append(('show', 'new'))
+			if stype == Hlinks.A_SRC_PLAY:
+				# default sourcePlaystate value
+				pass
+			elif stype == Hlinks.A_SRC_PAUSE:
+				attrs.append(('sourcePlaystate', 'pause'))			
+			elif stype == Hlinks.A_SRC_STOP:
+				attrs.append(('sourcePlaystate', 'stop'))
+		
+		if dtype == Hlinks.A_DEST_PLAY:
+			# default value, so we don't need to write it
+			pass
+		elif dtype == Hlinks.A_DEST_PAUSE:
+				attrs.append(('destinationPlaystate', 'pause'))
+							
 		# else show="replace" (default)
 		if type(a2) is type(()):
 			uid2, aid2 = a2
@@ -2062,8 +2080,8 @@ class SMILWriter(SMIL):
 				print '** Multiple links on anchor', \
 				      x.GetRawAttrDef('name', '<unnamed>'), \
 				      x.GetUID()
-			a1, a2, dir, ltype = links[0]
-			attrlist[len(attrlist):] = self.linkattrs(a2, ltype)
+			a1, a2, dir, ltype, stype, dtype = links[0]
+			attrlist[len(attrlist):] = self.linkattrs(a2, ltype, stype, dtype)
 		if atype == ATYPE_NORMAL:
 			ok = 0
 			# WARNING HACK HACK HACK : How know if it's a shape or a fragment ?

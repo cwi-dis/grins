@@ -8,7 +8,8 @@ import MMurl
 from HDTL import HD, TL
 import string
 from AnchorDefs import *
-from Hlinks import DIR_1TO2, TYPE_JUMP, TYPE_CALL, TYPE_FORK
+#from Hlinks import DIR_1TO2, TYPE_JUMP, TYPE_CALL, TYPE_FORK
+from Hlinks import *
 import re
 import os, sys
 from SMIL import *
@@ -1875,7 +1876,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def FixLinks(self):
 		hlinks = self.__context.hyperlinks
-		for node, aid, url, ltype in self.__links:
+		for node, aid, url, ltype, stype, dtype in self.__links:
 			# node is either a node UID (int in string
 			# form) or a node id (anything else)
 			try:
@@ -1890,23 +1891,35 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			src = node, aid
 			href, tag = MMurl.splittag(url)
 			if not href:
+				# link intra document
+				
 				if self.__anchormap.has_key(tag):
+					# link directly to an anchor
 					dst = self.__anchormap[tag]
 				else:
+					# link to a normal node.
+					# If there isn't dest anchor yet on this node, 
+					# create an anchor with type value equal to ATYPE_DEST 
+					# and store it in node.__anchorlist.
+					# Otherwise, if the anchor already exists, assume it's the dest anchor
 					if self.__nodemap.has_key(tag):
 						dst = self.__nodemap[tag]
 						dst = self.__destanchor(dst)
 					else:
 						self.warning("unknown node id `%s'" % tag)
 						continue
-				hlinks.addlink((src, dst, DIR_1TO2, ltype))
+				hlinks.addlink((src, dst, DIR_1TO2, ltype, stype, dtype))
 			else:
-				hlinks.addlink((src, url, DIR_1TO2, ltype))
+				# external link
+				hlinks.addlink((src, url, DIR_1TO2, ltype, stype, dtype))
 
 	def CleanChanList(self, node):
 		if node.GetType() not in leaftypes:
 			del node.__chanlist
 
+	# Assume that an anchor list is a node attribute
+	# For each anchor, throw away the two fist arguments ( z-order and index)
+	# So each final anchor is composed of: (aid, atype, aargs, (begin,end))
 	def FixAnchors(self, node):
 		anchorlist = node.__anchorlist
 		if anchorlist:
@@ -2919,17 +2932,54 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if href not in self.__context.externalanchors:
 				self.__context.externalanchors.append(href)
 		uid = self.__node.GetUID()
+		
 		nname = self.__node.GetRawAttrDef('name', None)
+		
+		# show, sourcePlaystate and destinationPlaystate parsing
+				
 		show = attributes['show']
+		if not show in ('replace', 'pause', 'new'):
+			self.syntax_error('unknown show attribute value')
+			show = 'replace'
+		
+		sourcePlaystate = attributes.get('sourcePlaystate')
+		if not sourcePlaystate in ('play', 'pause', 'stop', None):
+			self.syntax_error('unknown sourcePlaystate attribute value')
+			sourcePlaystate = None
+			
+		# the default sourcePlaystate value depend of show value
+		if sourcePlaystate == None:
+			if show == 'new':
+				sourcePlaystate = 'play'
+			else:
+				sourcePlaystate = 'pause'
+		
+		if sourcePlaystate == 'play':
+			stype = A_SRC_PLAY
+		elif sourcePlaystate == 'pause':
+			stype = A_SRC_PAUSE
+		elif sourcePlaystate == 'stop':
+			stype = A_SRC_STOP
+		
 		if show == 'replace':
 			ltype = TYPE_JUMP
 		elif show == 'pause':
-			ltype = TYPE_CALL
+			ltype = TYPE_FORK
+			# this value override the sourcePlaystate value (in pause)
+			sourcePlaystate = 'pause'
 		elif show == 'new':
 			ltype = TYPE_FORK
+				
+		destinationPlaystate = attributes['destinationPlaystate']
+				
+		if destinationPlaystate == 'play':
+			dtype = A_DEST_PLAY
+		elif destinationPlaystate == 'pause':
+			dtype = A_DEST_PAUSE
 		else:
-			self.syntax_error('unknown show attribute value')
-			ltype = TYPE_JUMP
+			self.syntax_error('unknown destinationPlaystate attribute value')
+			dtype = A_DEST_PLAY
+			
 		atype = ATYPE_WHOLE
 		aargs = [A_SHAPETYPE_ALLREGION]
 
@@ -3023,7 +3073,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error('anchor with negative z-index')
 			z = 0
 		anchorlist = self.__node.__anchorlist
-		aid = _uniqname(map(lambda a: a[2], anchorlist), None)
+		
+		# compute an unique aid
+		# an aid is either:
+		#	- the fragment id
+		#	- the id specified in tag (string)
+		#	- an arbitrary id (integer)
+		#	- ?? from CMIF encoding
+		
+		# a[2] if the aid of anchor
+		aid = _uniqname(map(lambda a: a[2], anchorlist), None)		
+		
 		if attributes.has_key('fragment'):
 			aid = attributes['fragment']
 			atype = ATYPE_NORMAL
@@ -3033,12 +3093,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			aid = id[len(nname)+1:]
 		elif id is not None:
 			aid = id
+			
 		if id is not None:
 			self.__anchormap[id] = (uid, aid)
 		anchorlist.append((z, len(anchorlist), aid, atype, aargs, (begin or 0, end or 0)))
 		if href is not None:
 			self.__links.append((uid, (aid, atype, aargs),
-					     href, ltype))
+					     href, ltype, stype, dtype))
 
 	def end_anchor(self):
 		pass

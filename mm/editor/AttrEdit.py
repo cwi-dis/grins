@@ -8,7 +8,7 @@ from MMExc import *			# exceptions
 import MMNode
 from MMTypes import *
 from AnchorDefs import *		# ATYPE_*
-from Hlinks import DIR_1TO2, TYPE_JUMP
+from Hlinks import DIR_1TO2, TYPE_JUMP, A_SRC_STOP, A_DEST_PLAY
 import features
 import string
 import os
@@ -231,7 +231,7 @@ class NodeWrapper(Wrapper):
 						break
 				self.editmgr.setnodeattr(self.node, 'anchorlist', alist)
 				return None
-			link = srcanchor, new, DIR_1TO2, TYPE_JUMP
+			link = srcanchor, new, DIR_1TO2, TYPE_JUMP, A_SRC_STOP, A_DEST_PLAY
 			self.editmgr.addlink(link)
 		else:
 			link = links[0]
@@ -251,8 +251,8 @@ class NodeWrapper(Wrapper):
 			if atype == ATYPE_DEST:
 				# don't show destination-only anchors
 				continue
-			for a1, a2, ldir, ltype in hlinks.findsrclinks((uid, aid)):
-				links.append((a2, ldir, ltype))
+			for a1, a2, ldir, ltype, stype, dtype in hlinks.findsrclinks((uid, aid)):
+				links.append((a2, ldir, ltype, stype, dtype))
 			links.sort()
 			times = times[0], times[1] - times[0]
 			anchors[aid] = atype, aargs, times, links

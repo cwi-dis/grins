@@ -218,10 +218,10 @@ class Selecter:
 ## 			windowinterface.showmessage('Args:'+`arg`)
 		return 1
 
-	def gotoanchor(self, (anchor1, anchor2, dir, ltype), arg):
+	def gotoanchor(self, (anchor1, anchor2, dir, ltype, stype, dtype), arg):
 		if ltype != TYPE_JUMP or type(anchor2) is not type(()) or \
-		   '/' in anchor2[0]:
-			return self.toplevel.jumptoexternal(anchor2, ltype)
+		   '/' in anchor2[0]:	# cmif compatibility
+			return self.toplevel.jumptoexternal(anchor2, ltype, stype, dtype)
 		dest_uid, dest_aid = anchor2
 		try:
 			seek_node = self.context.mapuid(dest_uid)
