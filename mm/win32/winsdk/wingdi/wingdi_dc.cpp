@@ -436,7 +436,7 @@ static PyObject* PyDC_GetTextExtent(PyDC *self, PyObject *args)
 	if (!PyArg_ParseTuple (args, "s#", &pString, &cbString))
 	  return NULL;
 	SIZE sz;
-	BOOL res = GetTextExtentPoint32(self->m_hDC, toTEXT(pString), cbString, &sz);
+	BOOL res = GetTextExtentPoint32(self->m_hDC, TextPtr(pString), cbString, &sz);
 	if(!res)
 		{
 		seterror("GetTextExtentPoint32", GetLastError());
@@ -892,7 +892,7 @@ PyDC_TextOut(PyDC *self, PyObject *args)
 		return NULL;
 	int cbstr = PyString_GET_SIZE(pystr);
 	char *pstr = PyString_AS_STRING(pystr);
-	BOOL res = TextOut(self->m_hDC, x, y, toTEXT(pstr), cbstr);
+	BOOL res = TextOut(self->m_hDC, x, y, TextPtr(pstr), cbstr);
 	if(!res){
 		seterror("TextOut", GetLastError());
 		return NULL;
@@ -910,7 +910,7 @@ PyDC_DrawText(PyDC *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s(iiii)|i", &str,
 		&rc.left, &rc.top, &rc.right, &rc.bottom, &uFormat))
 		return NULL;
-	BOOL res = DrawText(self->m_hDC, toTEXT(str), -1, &rc, uFormat);
+	BOOL res = DrawText(self->m_hDC, TextPtr(str), -1, &rc, uFormat);
 	if(!res){
 		seterror("DrawText", GetLastError());
 		return NULL;
@@ -1066,6 +1066,34 @@ static PyObject* PyDC_DeleteDC(PyDC *self, PyObject *args)
 	return none();
 }
 
+static PyObject* PyDC_SetBrushOrgEx(PyDC *self, PyObject *args)
+{
+	int nXOrg, nYOrg;
+	if(!PyArg_ParseTuple (args, "(ii)", &nXOrg, &nYOrg))
+		return NULL;
+	POINT pt;
+	BOOL res = SetBrushOrgEx(self->m_hDC, nXOrg, nYOrg, &pt);
+	if(!res){
+		seterror("SetBrushOrgEx", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue ("(ii)", pt.x, pt.y);
+}
+
+static PyObject* PyDC_GetClipBox(PyDC *self, PyObject *args)
+{
+	if(!PyArg_ParseTuple (args, ""))
+		return NULL;
+	RECT rc;
+	int res = GetClipBox(self->m_hDC, &rc);
+	if(res == ERROR){
+		seterror("GetClipBox", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue ("(iiii)", rc.left, rc.top, rc.right, rc.bottom);
+}
+
+
 PyMethodDef PyDC::methods[] = {
 #ifndef _WIN32_WCE
 	{"SetWorldTransform", (PyCFunction)PyDC_SetWorldTransform, METH_VARARGS, ""},
@@ -1118,6 +1146,7 @@ PyMethodDef PyDC::methods[] = {
 	{"GetTextExtent", (PyCFunction)PyDC_GetTextExtent, METH_VARARGS, ""},
 
 	{"SetViewportOrgEx", (PyCFunction)PyDC_SetViewportOrgEx, METH_VARARGS, ""},
+	{"SetViewportOrg", (PyCFunction)PyDC_SetViewportOrgEx, METH_VARARGS, ""},
 
 	{"Rectangle", (PyCFunction)PyDC_Rectangle, METH_VARARGS, ""},
 	{"RoundRect", (PyCFunction)PyDC_RoundRect, METH_VARARGS, ""},
@@ -1140,6 +1169,9 @@ PyMethodDef PyDC::methods[] = {
 	{"BitBlt", (PyCFunction)PyDC_BitBlt, METH_VARARGS, ""},
 	{"StretchBlt", (PyCFunction)PyDC_StretchBlt, METH_VARARGS, ""},
 	{"DeleteDC", (PyCFunction)PyDC_DeleteDC, METH_VARARGS, ""},
+	{"SetBrushOrgEx", (PyCFunction)PyDC_SetBrushOrgEx, METH_VARARGS, ""},
+	{"SetBrushOrg", (PyCFunction)PyDC_SetBrushOrgEx, METH_VARARGS, ""},
+	{"GetClipBox", (PyCFunction)PyDC_GetClipBox, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
 
