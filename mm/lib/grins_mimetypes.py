@@ -19,3 +19,9 @@ mimetypes = {
 
 	'.mp3': 'audio/mpeg',
 	}
+
+descriptions = {
+	'application/smil': 'SMIL presentations',
+	'application/x-grins-cmif': 'CMIF presentations',
+	'application/x-grins-project': 'GRiNS Project files',
+}
