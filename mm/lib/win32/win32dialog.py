@@ -623,7 +623,11 @@ class _ProgressDialog(ResDialog):
 		self.SetWindowText(self._title)
 		self.attach_handles_to_subwindows()
 		self.init_subwindows()
-		# XXXX Grey out cancel if no cancelcallback
+		# Grey out cancel if no cancelcallback
+		if self.cancelcallback == None:
+			button = self.GetDlgItem(win32con.IDCANCEL)
+			Sdk.EnableWindow(button.GetSafeHwnd(),0)
+			
 		return ResDialog.OnInitDialog(self)
 
 	def close(self):
