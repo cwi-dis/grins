@@ -2384,6 +2384,7 @@ class PreviewPage(AttrPage):
 		self._armed=0
 		self._playing=0
 		self._tid=0
+		self._renderer = None
 		if renderersig=='video':
 			self._renderer=VideoRenderer(self,self._prevrc,self._form._baseURL)
 		elif renderersig=='audio':
@@ -2427,7 +2428,6 @@ class PreviewPage(AttrPage):
 
 	def OnDestroy(self,params):
 		self.OnStop()
-		del self._renderer
 
 	def OnSetActive(self):
 		if self._initdialog and not self._armed:
