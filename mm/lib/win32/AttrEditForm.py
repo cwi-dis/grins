@@ -1096,10 +1096,13 @@ import sysmetrics
 
 # Layout context class (helper)
 class ScreenLayoutContext:
-	def __init__(self):
+	def __init__(self,winsize=None):
 		self._units=appcon.UNIT_PXL
 
-		sw,sh=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
+		if winsize:
+			sw,sh=winsize
+		else:
+			sw,sh=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
 		self._aspect=sw/float(sh)
 
 		self._ymax=190
@@ -1151,9 +1154,22 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			self._layoutcontext=ScreenLayoutContext()
 		else:
 			self._layoutcontext=layoutcontext
+
+		DrawTk.drawTk.SetLayoutMode(0)
 		lc=self._layoutcontext
 		DrawTk.drawTk.SetScale(lc.getxscale(),lc.getyscale())
-		
+		#w,h=self._form._winsize
+		# rc=(0,0,w,h)
+		x,y,w,h=self._form.GetBBox()
+		rc=(x,y,x+w,y+h)
+		rc=self._layoutcontext.tolayout(rc)
+		DrawTk.drawTk.SetBRect(rc)
+
+		x,y,w,h=self._form.GetCBox()
+		rc=(x,y,x+w,y+h)
+		rc=self._layoutcontext.tolayout(rc)
+		DrawTk.drawTk.SetCRect(rc)
+
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
 		self._layoutctrl=self.createLayoutCtrl()
@@ -1635,23 +1651,58 @@ class AttrEditFormNew(GenFormView):
 		return grattrl
 
 	def buildcontext(self):
-		return
 		a=self._attriblist[0]
-		w=a.wrapper
-		self.root=w.toplevel.root
-		print dir(self.root)
-		print dir(self.root.context)
-		channels = self.root.context.channels
+		channels = a.wrapper.toplevel.root.context.channels
+
+		# channels sizes 
+		self._channels={}
+		self._channels_rc={}
 		for ch in channels:
-			print ch.name,ch.attrdict
+			self._channels[ch.name]=ch
+#			print ch.attrdict
+			units=ch.attrdict['units']
+			if ch.attrdict.has_key('winsize'):
+				w,h=ch.attrdict['winsize']
+				self._winsize=(w,h)
+				self._channels_rc[ch.name]=((0,0,w,h),units)
+			elif ch.attrdict.has_key('base_winoff'):
+				self._channels_rc[ch.name]=(ch.attrdict['base_winoff'],units)
+#		print 'channel sizes:'
+#		for chname in self._channels_rc.keys():
+#			print '\t',chname,self._channels_rc[chname]
 
-		if hasattr(w,'node'):
-			self._node=w.node
-			
-		#print w,dir(w)
-		if hasattr(w,'channel'):
-			self._channel=w.channel
+		if hasattr(a.wrapper,'node'):
+			self._node=a.wrapper.node
+			if self._node.attrdict.has_key('channel'):
+				chname=self._node.attrdict['channel']
+				self._channel=self._channels[chname]
+			else:
+				chname='Default'
+				self._channel=None
+		else:
+			self._node=None		
 
+		if hasattr(a.wrapper,'channel'):
+			self._channel=a.wrapper.channel
+
+		#print self._node,self._channel
+	
+	def GetBBox(self):
+		if not self._channel:
+			w,h=self._winsize
+			return (0,0,w,h)
+		else:
+			if self._node:
+				return self._channels_rc[self._channel.name][0]
+			else:
+				return self._channels_rc[self._channel.attrdict['base_window']][0]
+	def GetCBox(self):
+		if not self._channel:
+			w,h=self._winsize
+			return (0,0,w,h)
+		else:
+			return self._channels_rc[self._channel.attrdict['base_window']][0]
+					
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
 		
