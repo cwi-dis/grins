@@ -929,18 +929,20 @@ class StringCtrl(AttrCtrl):
 		self._attrname.attach_to_parent()
 		self._attrval.attach_to_parent()
 		self._attrname.settext(self._attr.getlabel())
-		self._attrval.settext(self._attr.getcurrent())
+		self.setvalue(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnReset,self._resid[2])
 
 	def setvalue(self, val):
 		if self._initctrl:
+			val = string.join(string.split(val, '\n'), '\r\n')
 			self._attrval.settext(val)
 
 	def getvalue(self):
 		if not self._initctrl:
 			return self._attr.getcurrent()
-		return self._attrval.gettext()
+		val = self._attrval.gettext()
+		return string.join(string.split(val, '\r\n'), '\n')
 
 	def OnReset(self,id,code):
 		if self._attr:
@@ -1175,7 +1177,11 @@ class SingleAttrPage(AttrPage):
 		'string':		# Default: a simple string field
 			(grinsRC.IDD_EDITATTR_S1,
 			 StringCtrl,
-			 (grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13))
+			 (grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13)),
+		'text':
+			(grinsRC.IDD_EDITATTR_E1,
+			 StringCtrl,
+			 (grinsRC.IDC_GROUP1,grinsRC.IDC_12,grinsRC.IDC_13)),
 		}
 
 	def __init__(self,form,attr):

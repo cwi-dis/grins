@@ -193,6 +193,8 @@ class NodeWrapper(Wrapper):
 			return self.__findlink() or ''
 		if name == '.type':
 			return self.node.GetType()
+		if name == '.values':
+			return self.node.GetValues()
 		return MMAttrdefs.getattr(self.node, name)
 
 	def getvalue(self, name): # Return the raw attribute or None
@@ -200,12 +202,16 @@ class NodeWrapper(Wrapper):
 			return self.__findlink()
 		if name == '.type':
 			return self.node.GetType()
+		if name == '.values':
+			return self.node.GetValues() or None
 		return self.node.GetRawAttrDef(name, None)
 
 	def getdefault(self, name): # Return the default or None
 		if name == '.hyperlink':
 			return None
 		if name == '.type':
+			return None
+		if name == '.values':
 			return None
 		return MMAttrdefs.getdefattr(self.node, name)
 
@@ -218,11 +224,17 @@ class NodeWrapper(Wrapper):
 				self.editmgr.setnodevalues(self.node, [])
 			self.editmgr.setnodetype(self.node, value)
 			return
+		if name == '.values':
+			self.editmgr.setnodevalues(self.node, value)
+			return
 		self.editmgr.setnodeattr(self.node, name, value)
 
 	def delattr(self, name):
 		if name == '.hyperlink':
 			self.__findlink('')
+			return
+		if name == '.values':
+			self.editmgr.setnodevalues(self.node, [])
 			return
 		self.editmgr.setnodeattr(self.node, name, None)
 
@@ -271,6 +283,8 @@ class NodeWrapper(Wrapper):
 			namelist.append('longdesc')
 			if ChannelMap.isvisiblechannel(ctype):
 				namelist.append('.hyperlink')
+		if ntype == 'imm':
+			namelist.append('.values')
 		# Get the channel class (should be a subroutine!)
 		if ChannelMap.channelmap.has_key(ctype):
 			cclass = ChannelMap.channelmap[ctype]
@@ -315,6 +329,10 @@ class NodeWrapper(Wrapper):
 			return (('string', None), '',
 				'Node type', 'nodetype',
 				'Node type', 'raw', 'light')
+		if name == '.values':
+			return (('string', None), '',
+				'Content', 'text',
+				'Data for node', 'raw', 'light')
 		return MMAttrdefs.getdef(name)
 
 class SlideWrapper(NodeWrapper):
@@ -674,6 +692,8 @@ class AttrEditor(AttrEditorDialog):
 				C = RMVideoAttrEditorField
 			elif displayername == 'nodetype':
 				C = NodeTypeAttrEditorField
+			elif displayername == 'text':
+				C = TextAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -963,6 +983,21 @@ class FileAttrEditorField(StringAttrEditorField):
 					if minstart - start > value:
 						b.setvalue(b.valuerepr(minstart-start))
 					break
+
+class TextAttrEditorField(AttrEditorField):
+	type = 'text'
+
+	def valuerepr(self, value):
+		"""Return string representation of value."""
+		if value is None:
+			return ''
+		return string.join(value, '\n')
+
+	def parsevalue(self, str):
+		"""Return internal representation of string."""
+		if str == '':
+			return None
+		return string.split(str, '\n')
 
 class TupleAttrEditorField(AttrEditorField):
 	type = 'tuple'
