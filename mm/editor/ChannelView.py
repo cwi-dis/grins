@@ -3,17 +3,13 @@
 # positive Y coordinates point down from the top of the window.
 # Also the convention for box coordinates is (left, top, right, bottom)
 
-# XXX Bugs:
-# - sometimes (after part play, commit?) nodes get the wrong start time
-
 # XXX To do:
 # - remember 'locked' over commit
 # - remember sync arc focus over commit
 # - redraw all sync arcs whenever a node is redrawn
 # - what about group nodes?  (I'd say draw a box to display them?)
 # - store focus and locked node as attributes
-# - improve color scheme
-# - draw 3D-look border for focused boxes
+# - improve arm colors
 # - accept middle button as shortcut for lock/unlock?
 
 
@@ -31,19 +27,34 @@ from MMExc import *
 from AnchorEdit import A_TYPE, ATYPE_PAUSE
 
 
+# Round an 8-bit RGB color triple to 4-bit (as used by doublebuffer)
+# Currently disabled
+
+def fix(r, g, b):
+	return r, g, b
+##	return r/16*17, g/16*17, b/16*17
+
 # Color assignments (RGB)
 
-BGCOLOR = 200, 200, 200			# Light gray
-BORDERCOLOR = 75, 75, 75		# Dark gray
-BORDERLIGHT = 255, 255, 255		# White
-CHANNELCOLOR = 240, 240, 240		# Very light gray
-NODECOLOR = 208, 182, 160		# Pale pinkish, match block view nodes
-ALTNODECOLOR = 255, 224, 200		# Same but brighter
-ARROWCOLOR = 0, 0, 255			# Blue
-TEXTCOLOR = 0, 0, 0			# Black
-FOCUSCOLOR = 255, 0, 0			# Red
-LOCKEDCOLOR = 0, 255, 0			# Green
-ANCHORCOLOR = 255, 127, 0		# Orange/pinkish
+BGCOLOR = fix(200, 200, 200)		# Light gray
+BORDERCOLOR = fix(75, 75, 75)		# Dark gray
+BORDERLIGHT = fix(255, 255, 255)	# White
+CHANNELCOLOR = fix(240, 240, 240)	# Very light gray
+NODECOLOR = fix(208, 182, 160)		# Pale pinkish, match block view nodes
+ALTNODECOLOR = fix(255, 224, 200)	# Same but brighter
+ARROWCOLOR = fix(0, 0, 255)		# Blue
+TEXTCOLOR = fix(0, 0, 0)		# Black
+FOCUSCOLOR = fix(255, 0, 0)		# Red
+LOCKEDCOLOR = fix(200, 255, 0)		# Yellowish green
+ANCHORCOLOR = fix(255, 127, 0)		# Orange/pinkish
+
+# Focus color assignments (from light to dark gray)
+
+FOCUSBORDER = fix(0, 0, 0)
+FOCUSLEFT   = fix(244, 244, 244)
+FOCUSTOP    = fix(204, 204, 204)
+FOCUSRIGHT  = fix(40, 40, 40)
+FOCUSBOTTOM = fix(91, 91, 91)
 
 # Anchor indicator box size
 ABOXSIZE = 6
@@ -61,7 +72,7 @@ armcolors = { \
 
 ARR_LENGTH = 18
 ARR_HALFWIDTH = 5
-ARR_SLANT = ARR_HALFWIDTH / ARR_LENGTH
+ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
 
 # Channel view class
@@ -372,7 +383,7 @@ class ChannelView(ViewDialog, GLDialog):
 				hits.append(obj)
 		if not hits:
 			return
-		obj = hits[-1] # Last object (usually drawn on top)
+		obj = hits[-1] # Last object (the one drawn on top)
 		obj.select()
 
 	# Global focus stuff
@@ -659,35 +670,86 @@ class ChannelBox(GO):
 		self.drawfocus()
 
 	def drawfocus(self):
+
+		l = self.left
+		t = self.top
+		r = self.right
+		b = self.bottom
+		x = self.xcenter
+		y = self.ycenter
+
 		# Draw a diamond
 		gl.RGBcolor(CHANNELCOLOR)
 		gl.bgnpolygon()
-		gl.v2i(self.left, self.ycenter)
-		gl.v2i(self.xcenter, self.top)
-		gl.v2i(self.right, self.ycenter)
-		gl.v2i(self.xcenter, self.bottom)
+		gl.v2i(l, y)
+		gl.v2i(x, t)
+		gl.v2i(r, y)
+		gl.v2i(x, b)
 		gl.endpolygon()
 
-		# Outline the diamond; in a different color if selected
+		# Outline the diamond; 'engraved' normally,
+		# 'sticking out' if selected
 		if self.selected:
-			gl.RGBcolor(FOCUSCOLOR)
+			factor = float(r-l) / float(b-t)
+			n = int(3 * factor + 0.5)
+			ll = l + n
+			tt = t + 3
+			rr = r - n
+			bb = b - 3
+			gl.RGBcolor(FOCUSLEFT)
+			gl.bgnpolygon()
+			gl.v2i(l, y)
+			gl.v2i(x, t)
+			gl.v2i(x, tt)
+			gl.v2i(ll, y)
+			gl.endpolygon()
+			gl.RGBcolor(FOCUSTOP)
+			gl.bgnpolygon()
+			gl.v2i(x, t)
+			gl.v2i(r, y)
+			gl.v2i(rr, y)
+			gl.v2i(x, tt)
+			gl.endpolygon()
+			gl.RGBcolor(FOCUSRIGHT)
+			gl.bgnpolygon()
+			gl.v2i(r, y)
+			gl.v2i(x, b)
+			gl.v2i(x, bb)
+			gl.v2i(rr, y)
+			gl.endpolygon()
+			gl.RGBcolor(FOCUSBOTTOM)
+			gl.bgnpolygon()
+			gl.v2i(l, y)
+			gl.v2i(ll, y)
+			gl.v2i(x, bb)
+			gl.v2i(x, b)
+			gl.endpolygon()
+			gl.linewidth(1)
+			gl.RGBcolor(FOCUSBORDER)
+			gl.linewidth(1)
+			gl.bgnclosedline()
+			gl.v2i(l, y)
+			gl.v2i(x, t)
+			gl.v2i(r, y)
+			gl.v2i(x, b)
+			gl.endclosedline()
 		else:
+			gl.linewidth(1)
 			gl.RGBcolor(BORDERCOLOR)
-		gl.linewidth(1)
-		gl.bgnclosedline()
-		gl.v2i(self.left, self.ycenter)
-		gl.v2i(self.xcenter, self.top)
-		gl.v2i(self.right, self.ycenter)
-		gl.v2i(self.xcenter, self.bottom)
-		gl.endclosedline()
-		# And another one to make it look engraved
-		gl.RGBcolor(BORDERLIGHT)
-		gl.bgnclosedline()
-		gl.v2i(self.left+1, self.ycenter+1)
-		gl.v2i(self.xcenter+1, self.top+1)
-		gl.v2i(self.right+1, self.ycenter+1)
-		gl.v2i(self.xcenter+1, self.bottom+1)
-		gl.endclosedline()
+			gl.bgnclosedline()
+			gl.v2i(l, y)
+			gl.v2i(x, t)
+			gl.v2i(r, y)
+			gl.v2i(x, b)
+			gl.endclosedline()
+			# And another one to make it look engraved
+			gl.RGBcolor(BORDERLIGHT)
+			gl.bgnclosedline()
+			gl.v2i(l+1, y+1)
+			gl.v2i(x+1, t+1)
+			gl.v2i(r+1, y+1)
+			gl.v2i(x+1, b+1)
+			gl.endclosedline()
 
 		# Draw the name
 		gl.RGBcolor(TEXTCOLOR)
@@ -801,7 +863,9 @@ class NodeBox(GO):
 		l, t, r, b = self.left, self.top, self.right, self.bottom
 
 		# Draw a box
-		if armcolors.has_key(self.armedmode):
+		if self.locked:
+			gl.RGBcolor(LOCKEDCOLOR)
+		elif armcolors.has_key(self.armedmode):
 			gl.RGBcolor(armcolors[self.armedmode])
 		else:
 			gl.RGBcolor(NODECOLOR)
@@ -844,30 +908,69 @@ class NodeBox(GO):
 			gl.v2i(l, b-ABOXSIZE)
 			gl.endpolygon()
 
-		# Outline the box; in a different color if selected
-		if self.locked:
-			gl.RGBcolor(LOCKEDCOLOR)
-		elif self.selected:
-			gl.RGBcolor(FOCUSCOLOR)
+		# Draw a "3D" border if selected, else an "engraved" outline
+		if self.selected:
+			l1 = l
+			t1 = t
+			r1 = r
+			b1 = b
+			ll = l + 3
+			tt = t + 3
+			rr = r - 3
+			bb = b - 3
+			gl.RGBcolor(FOCUSLEFT)
+			gl.bgnpolygon()
+			gl.v2i(l1, t1)
+			gl.v2i(ll, tt)
+			gl.v2i(ll, bb)
+			gl.v2i(l1, b1)
+			gl.endpolygon()
+			gl.RGBcolor(FOCUSTOP)
+			gl.bgnpolygon()
+			gl.v2i(l1, t1)
+			gl.v2i(r1, t1)
+			gl.v2i(rr, tt)
+			gl.v2i(ll, tt)
+			gl.endpolygon()
+			gl.RGBcolor(FOCUSRIGHT)
+			gl.bgnpolygon()
+			gl.v2i(r1, t1)
+			gl.v2i(r1, b1)
+			gl.v2i(rr, bb)
+			gl.v2i(rr, tt)
+			gl.endpolygon()
+			gl.RGBcolor(FOCUSBOTTOM)
+			gl.bgnpolygon()
+			gl.v2i(l1, b1)
+			gl.v2i(ll, bb)
+			gl.v2i(rr, bb)
+			gl.v2i(r1, b1)
+			gl.endpolygon()
+			gl.RGBcolor(FOCUSBORDER)
+			gl.linewidth(1)
+			gl.bgnclosedline()
+			gl.v2i(l, t)
+			gl.v2i(r, t)
+			gl.v2i(r, b)
+			gl.v2i(l, b)
+			gl.endclosedline()
 		else:
+			# Outline the box in 'engraved' look
 			gl.RGBcolor(BORDERCOLOR)
-		gl.linewidth(1)
-		gl.bgnclosedline()
-		gl.v2i(l-1, t)
-		gl.v2i(r, t)
-		gl.v2i(r, b-1)
-		gl.v2i(l-1, b-1)
-		gl.endclosedline()
-
-		# Draw a second, light, outline to emulate the 'engraved'
-		# look of FORMS
-		gl.RGBcolor(BORDERLIGHT)
-		gl.bgnclosedline()
-		gl.v2i(l, t+1)
-		gl.v2i(r+1, t+1)
-		gl.v2i(r+1, b)
-		gl.v2i(l, b)
-		gl.endclosedline()
+			gl.linewidth(1)
+			gl.bgnclosedline()
+			gl.v2i(l-1, t)
+			gl.v2i(r, t)
+			gl.v2i(r, b-1)
+			gl.v2i(l-1, b-1)
+			gl.endclosedline()
+			gl.RGBcolor(BORDERLIGHT)
+			gl.bgnclosedline()
+			gl.v2i(l, t+1)
+			gl.v2i(r+1, t+1)
+			gl.v2i(r+1, b)
+			gl.v2i(l, b)
+			gl.endclosedline()
 
 		# Draw the name, centered in the box
 		gl.RGBcolor(TEXTCOLOR)
