@@ -527,7 +527,7 @@ static mmobject *
 newmmobject(ev, attrdict, armsema, playsema, flagsema, exitsema, armwaitsema, chanobj)
 	int ev;
 	PyObject *attrdict;
-	type_sema armsema, playsema, flagsema, exitsema, armwaitsema;
+	PyThread_type_sema armsema, playsema, flagsema, exitsema, armwaitsema;
 	channelobject *chanobj;
 {
 	mmobject *mmp;
@@ -583,8 +583,8 @@ mm_init(self, args)
 	PyObject *attrdict;
 	mmobject *mmp = NULL;
 	channelobject *chanobj;
-	type_sema armsema = NULL, playsema = NULL;
-	type_sema flagsema = NULL, exitsema = NULL, armwaitsema = NULL;
+	PyThread_type_sema armsema = NULL, playsema = NULL;
+	PyThread_type_sema flagsema = NULL, exitsema = NULL, armwaitsema = NULL;
 	int i;
 
 	dprintf(("mm_init\n"));
