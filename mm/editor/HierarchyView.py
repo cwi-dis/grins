@@ -59,13 +59,16 @@ class HierarchyView(HierarchyViewDialog):
 		self.need_redraw = 1	# Whether the scene graph needs redrawing.
 
 		self.base_display_list = None # A display list that may be cloned and appended to.
+		self.extra_displist = None
 
 		# Selections
 		self.selected_widget = None # Is a MMWidget, which could resemble a node or a widget.
 		self.old_selected_widget = None	# This is the node that used to have the focus but needs redrawing.
 		self.selected_icon = None
+		self.old_selected_icon = None
 		self.begin_event_source = None
 		self.droppable_widget = None
+		self.old_droppable_widget = None
 
 		# Remove sometime.
 		self.focusnode = self.prevfocusnode = self.root	# : MMNode - remove when no longer used.
@@ -523,24 +526,59 @@ class HierarchyView(HierarchyViewDialog):
 
 ##		import time
 
-		if self.need_redraw or not self.base_display_list:
+		if self.need_redraw or self.base_display_list is None:
 			# Make a new display list.
-			self.base_display_list = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
-			self.scene_graph.draw(self.base_display_list) # Keep it for later!
+			d = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
+			self.scene_graph.draw(d) # Keep it for later!
 			self.need_redraw = 0
 			self.droppable_widget = None
+			self.old_droppable_widget = None
+			self.old_selected_widget = None
+			self.old_selected_icon = None
+		elif self.selected_widget is self.old_selected_widget and \
+		     self.selected_icon is self.old_selected_icon and \
+		     self.droppable_widget is self.old_droppable_widget:
+			# nothing to do
+			self.redrawing = 0
+			return
+		else:
+			d = self.base_display_list.clone()
 
-		d = self.base_display_list.clone()
-		if self.selected_widget is not None:
+		if self.old_droppable_widget is not None:
+			if self.old_droppable_widget is self.selected_widget:
+				pass
+			elif self.old_droppable_widget is self.old_selected_widget:
+				pass
+			else:
+				self.old_droppable_widget.draw_unselected(d)
+			self.old_droppable_widget = None
+		if self.selected_widget is not self.old_selected_widget:
+			if self.old_selected_widget is not None:
+				self.old_selected_widget.draw_unselected(d)
 			self.selected_widget.draw_selected(d)
-		if self.selected_icon is not None:
+			self.old_selected_widget = self.selected_widget
+		if self.selected_icon is not self.old_selected_icon:
+			if self.old_selected_icon is not None:
+				self.old_selected_icon.draw_unselected(d)
 			self.selected_icon.draw_selected(d)
 		if self.droppable_widget is not None:
 			self.droppable_widget.draw_box(d)
+			self.old_droppable_widget = self.droppable_widget
 
 		# Draw the arrows on top.
-		self.draw_arrows(d)
+		newdl = d
+		if self.arrow_list:
+			newdl = d.clone()
+			self.draw_arrows(d)
 		d.render()
+		if self.extra_displist is not None:
+			self.extra_displist.close()
+			self.extra_displist = None
+		if self.base_display_list is not None:
+			self.base_display_list.close()
+		self.base_display_list = newdl
+		if d is not newdl:
+			self.extra_displist = d	# remember so that we can close later
 		self.redrawing = 0
 
 	def add_arrow(self, color, source, dest):

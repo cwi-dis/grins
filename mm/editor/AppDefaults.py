@@ -46,6 +46,8 @@ FOCUSTOP = settings.get('structure_focustop')
 FOCUSRIGHT = settings.get('structure_focusright')
 FOCUSBOTTOM = settings.get('structure_focusbottom')
 
+DROPCOLOR = settings.get('structure_dropcolor')
+
 class sizes_time:
 	SIZEUNIT = windowinterface.UNIT_PXL # units for the following
 	MINSIZE = 48 
