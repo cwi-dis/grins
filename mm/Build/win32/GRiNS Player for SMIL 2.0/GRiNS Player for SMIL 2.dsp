@@ -265,10 +265,6 @@ SOURCE=.\M_AppToplevel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ArcInfoForm.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_ArmStates.c
 # End Source File
 # Begin Source File
