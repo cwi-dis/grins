@@ -12,6 +12,7 @@ import sys
 # set() and friends will call them for you.
 _registry=[]
 _in_transaction = 0
+Error = 'Error'
 
 # some constants
 
@@ -543,7 +544,7 @@ def transaction(auto=0):
 		return 1
 	if not auto:
 		if _in_transaction:
-			raise 'recursive preference transaction'
+			raise Error, 'recursive preference transaction'
 		_in_transaction = 1
 	for listener in _registry:
 		if not listener.transaction('preference'):
@@ -555,7 +556,7 @@ def commit(auto=0):
 	if auto and _in_transaction:
 		return
 	if not auto and not _in_transaction:
-		raise 'Not in preference transaction'
+		raise Error, 'Not in preference transaction'
 	_in_transaction = 0
 	save()
 	for listener in _registry:

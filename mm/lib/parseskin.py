@@ -274,9 +274,15 @@ def parsegskin(file):
 		raise error, 'display region missing from skin description file'
 	settings.switch_profile(profile + modules)
 	if prefs:
-		settings.transaction()
+		try:
+			settings.transaction()
+		except settings.Error:
+			skipcommit = 1
+		else:
+			skipcommit = 0
 		for key, val in prefs.items():
 			if key[:1] != '_':
 				settings.set(key, val)
-		settings.commit()
+		if not skipcommit:
+			settings.commit()
 	return dict
