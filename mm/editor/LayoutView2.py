@@ -1953,7 +1953,10 @@ class LayoutView2(LayoutViewDialog2):
 														(1.0, {'top':top, 'left':left, 'width':width, 'height':height, 'bgcolor':bgcolor})])
 					editmgr.addnode(selectedNode, -1, animateNode)
 					
-				editmgr.commit()				
+				editmgr.commit()
+				if animateNode is not None:
+					self.setCurrentTimeValue(0, selectedNode)
+					self.updateFocus()
 				return
 			
 			animationData = selectedNode.getAnimationData()
