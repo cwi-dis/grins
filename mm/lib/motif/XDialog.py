@@ -448,3 +448,21 @@ class InputDialog:
 
 	def is_closed(self):
 		return self._main is None
+
+class BandwidthComputeDialog:
+	def __init__(self, title):
+		self.title = title
+
+	def setinfo(self, prerolltime, errorseconds, errorcount):
+		self.msg = "%s\nPreroll time: %d\nStall time: %d\nStalling node count: %d\n" % \
+			(self.title, prerolltime, errorseconds, errorcount)
+
+	def done(self, callback=None, cancancel=0):
+		if cancancel:
+			from windowinterface import showquestion
+			rv = showquestion(self.msg+'\nDo you want to continue?')
+		else:
+			showmessage(self.msg)
+			rv = 1
+		if rv and callback:
+			callback()
