@@ -160,10 +160,12 @@ class Node:
 			self.changeAlignAttr(name, value)
 	
 	def move(self, pos):
-		x = convertToPx(pos[0], self.container.pxwidth)
-		y = convertToPx(pos[1], self.container.pxheight)
-		self.changeRawAttr('left', x)
-		self.changeRawAttr('top', y)
+		self.left, self.top, self.width, self.height = int(pos[0]), int(pos[1]), self.pxwidth, self.pxheight
+		#x, y, w, h = int(pos[0]), int(pos[1]), self.pxwidth, self.pxheight
+		#self.changeRawAttr('left', x)
+		#self.changeRawAttr('top', y)
+		#self.changeRawAttr('width', w)
+		#self.changeRawAttr('height', h)
 			
 	def link(self, container):
 		# if already link, unlink before
@@ -889,8 +891,8 @@ class MediaNode(Node):
 		return self.context.getDocumentContext().GetRegPoint(regPoint)
 	
 	def move(self, pos):
-		self.dx = convertToPx(pos[0], self.container.pxwidth)
-		self.dy = convertToPx(pos[1], self.container.pxheight)
+		self.dx = int(pos[0])
+		self.dy = int(pos[1])
 
 	def isDOMRegPoint(self):
 		return self.dx==0 and self.dy==0
