@@ -107,6 +107,7 @@ class ImageWindow(ChannelWindow):
 	#
 	def mouse(self, (dev, val)):
 		if dev == DEVICE.RIGHTMOUSE or self.newanchor:
+			self.node = self.ninfo.node # ChannelWindow needs it
 			ChannelWindow.mouse(self, (dev, val))
 			return
 		if not self.ninfo.node:
