@@ -51,7 +51,7 @@ class _AdornmentSupport(_CommandSupport, _ButtonSupport):
 			menu.packing = Xmd.PACK_COLUMN
 		for entry in list:
 			flag = entry[0]
-			if not (flag & flags):
+			if (flag & flags) != flag:
 				continue
 			label = entry[1]
 			if label is None:
@@ -85,7 +85,7 @@ class _AdornmentSupport(_CommandSupport, _ButtonSupport):
 	def _create_toolbar(self, tb, list, vertical, flags):
 		for entry in list:
 			flag = entry[0]
-			if not (flag & flags):
+			if (flag & flags) != flag:
 				continue
 			if entry[1] is None:
 				if vertical:
