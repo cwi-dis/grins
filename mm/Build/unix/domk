@@ -23,12 +23,19 @@ IRIX\ 5.*) ARCH=irix5;;
 IRIX\ 6.2) ARCH=irix62;;
 IRIX\ 6.5) ARCH=irix65;;
 IRIX\ 6.*) ARCH=irix6;;
+Linux\ *) ARCH=linux;;
 *) echo 'unknown architecture' >&2; exit 1;;
 esac
 
 case $ARCH in
-irix*) make=smake;;
+irix*) make='smake -J 1';;
 sunos5) make=gmake;;
+*) make=make;;
+esac
+
+case $ARCH in
+linux)	exflag=;;
+*)	exflag=-;;
 esac
 
 unset LANG # sort order in various programs is affected differently by LANG
@@ -63,7 +70,7 @@ cd() {
 	done
 	case $dir in
 	.)	;;
-	*)	depth=`echo $dir | sed 's;[^/]*;..;g'`/$depth;;
+	*)	depth=`echo $dir | sed 's;[^/][^/]*;..;g'`/$depth;;
 	esac
 	set -$x
 }
@@ -202,15 +209,10 @@ case $INCLUDECL in
 yes)	NOCL=;;
 no)	NOCL=yes INCLUDECL=;;
 esac
-OPT=-O; export OPT
+: ${OPT=-O}; export OPT
 [ "$nomake" ] || (
 set -x
-if [ ! -d python/build.$ARCH ]
-then
-	mkdir python/build.$ARCH
-else
-	:
-fi &&
+{ [ -d python/build.$ARCH ] || mkdir python/build.$ARCH; } &&
 cd python/build.$ARCH &&
 if [ ! -f Makefile ]
 then
@@ -226,7 +228,7 @@ fi &&
 if [ ! -f Modules/Setup ]
 then
 	$make Makefiles &&
-	ex - Modules/Setup <<\EOF &&
+	ex $exflag Modules/Setup <<\EOF &&
 /^#audioop/s/#//
 /^#imageop/s/#//
 w
@@ -234,7 +236,7 @@ q
 EOF
 	case $ARCH in
 	irix*)
-		ex - Modules/Setup <<EOF
+		ex $exflag Modules/Setup <<EOF
 /^#al/s/#//
 ${INCLUDECL:+/^#cl/s/#//
 }w
@@ -242,7 +244,7 @@ q
 EOF
 		;;
 	sunos*)
-		ex - Modules/Setup <<\EOF
+		ex $exflag Modules/Setup <<\EOF
 /^sunaudio/s/#//
 w
 q
@@ -255,31 +257,33 @@ fi &&
 $make ${1+"$@"} Makefiles &&
 $make ${1+"$@"} all &&
 VERSION=`./python -c "import sys; print sys.version[:3]"` &&
-if [ ! -d install ]
-then
-	mkdir install &&
-	mkdir install/include &&
-	mkdir install/include/python$VERSION &&
-	cd install/include/python$VERSION &&
-	ln -s ../../../../Include/*.h . &&
-	ln -s ../../../config.h . &&
-	cd ../.. &&
-	mkdir lib &&
-	mkdir lib/python$VERSION &&
-	mkdir lib/python$VERSION/config &&
-	cd lib/python$VERSION/config &&
-	H=../../../.. &&
-	ln -s $H/Modules/Makefile $H/Modules/Setup $H/Modules/Setup.local $H/Modules/Setup.thread $H/Modules/config.c $H/../Modules/config.c.in $H/config.h $H/libpython$VERSION.a $H/../Modules/makesetup $H/Modules/python.o . &&
-	cd $H
-else
-	:
-fi &&
-if [ ! -d ../Extensions/X11/build.$ARCH ]
-then
-	mkdir ../Extensions/X11/build.$ARCH
-else
-	:
-fi &&
+{ [ -d install ] || mkdir install; } &&
+{ [ -d install/include ] || mkdir install/include; } &&
+{ [ -d install/include/python$VERSION ] || mkdir install/include/python$VERSION; } &&
+{ [ -d install/lib ] || mkdir install/lib; } &&
+{ [ -d install/lib/python$VERSION ] || mkdir install/lib/python$VERSION; } &&
+{ [ -d install/lib/python$VERSION/config ] || mkdir install/lib/python$VERSION/config; } &&
+cd install/include/python$VERSION &&
+for f in *
+do
+	[ ! -h $f -o -f $f ] || rm $f
+done &&
+for f in ../../../../Include/*.h ../../../config.h
+do
+	[ -h ${f##*/} ] || ln -s $f .
+done &&
+cd ../../lib/python$VERSION/config &&
+for f in *
+do
+	[ ! -h $f -o -f $f ] || rm $f
+done &&
+H=../../../.. &&
+for f in $H/Modules/Makefile $H/Modules/Setup $H/Modules/Setup.local $H/Modules/Setup.thread $H/Modules/config.c $H/../Modules/config.c.in $H/config.h $H/libpython$VERSION.a $H/../Modules/makesetup $H/Modules/python.o
+do
+	[ -h ${f##*/} ] || ln -s $f .
+done &&
+cd $H &&
+{ [ -d ../Extensions/X11/build.$ARCH ] || mkdir ../Extensions/X11/build.$ARCH; } &&
 cd ../Extensions/X11/build.$ARCH &&
 if [ ! -f Setup ]
 then
@@ -335,12 +339,7 @@ else
 	$make ${1+"$@"} Makefile
 fi &&
 $make ${1+"$@"} lib.a &&
-if [ ! -d ../../img/build.$ARCH ]
-then
-	mkdir ../../img/build.$ARCH
-else
-	:
-fi &&
+{ [ -d ../../img/build.$ARCH ] || mkdir ../../img/build.$ARCH; } &&
 cd ../../img/build.$ARCH  &&
 if [ ! -f Setup ]
 then
@@ -390,12 +389,7 @@ fi &&
 $make ${1+"$@"} lib.a &&
 if [ -f /usr/include/midi.h -a $ARCH =~ 'irix*' ]
 then
-	if [ ! -d ../../midi/build.$ARCH ]
-	then
-		mkdir ../../midi/build.$ARCH
-	else
-		:
-	fi &&
+	{ [ -d ../../midi/build.$ARCH ] || mkdir ../../midi/build.$ARCH; } &&
 	cd ../../midi/build.$ARCH &&
 	if [ ! -f Setup ]
 	then
@@ -422,12 +416,7 @@ EOF
 else
 	:
 fi &&
-if [ ! -d ../../../../mm/mmpython/$ARCH ]
-then
-	mkdir ../../../../mm/mmpython/$ARCH
-else
-	:
-fi &&
+{ [ -d ../../../../mm/mmpython/$ARCH ] || mkdir ../../../../mm/mmpython/$ARCH; } &&
 if [ ! -f /usr/include/dmedia/moviefile.h ]
 then
 	cd ../../../../mm/mmpython/$ARCH &&
