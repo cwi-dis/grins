@@ -1979,12 +1979,22 @@ def _generic_callback(widget, (func, args), call_data):
 
 def _create_menu(menu, list, acc = None):
 	accelerator = None
-	for entry in list:
+	length = 0
+	i = 0
+	while i < len(list):
+		entry = list[i]
+		i = i + 1
 		if entry is None:
 			dummy = menu.CreateManagedWidget('separator',
 							 Xm.SeparatorGadget,
 							 {})
 			continue
+		if length == 20 and i < len(list) - 3:
+			entry = ('More', list[i-1:])
+			i = len(list)
+			if acc is not None:
+				entry = ('',) + entry
+		length = length + 1
 		if type(entry) is StringType:
 			dummy = menu.CreateManagedWidget(
 				'menuLabel', Xm.LabelGadget,

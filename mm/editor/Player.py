@@ -395,18 +395,13 @@ class Player(ViewDialog, PlayerCore):
 		if not self.is_showing():
 			return
 		menu = []
-		m = menu
 		for name in self.channelnames:
 			if self.channels[name].is_showing():
 				onoff = ''
 			else:
 				onoff = ' (off)'
-			if len(m) == 20:
-				n = []
-				m.append('', 'More', n)
-				m = n
-			m.append('', name + onoff,
-				 (self.cmenu_callback, (name,)))
+			menu.append('', name + onoff,
+				    (self.cmenu_callback, (name,)))
 		self.subwin[0].create_menu(menu, title = 'Channels')
 	#
 	def setwaiting(self):

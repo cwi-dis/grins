@@ -1603,11 +1603,17 @@ class _Window:
 		self._menuids.append(menu)
 		if title:
 			gl.addtopup(menu, title + '%t', 0)
-		for i in range(len(list)):
+		i = length = 0
+		while i < len(list):
 			entry = list[i]
 			if entry is None:
 				# add separator line
+				i = i + 1
 				continue
+			if length == 20 and i < len(list) - 3:
+				entry = '', 'More', list[i:]
+				i = len(list)
+			length = length + 1
 			accelerator, label, callback = entry
 			text = label
 			if i < len(list) - 1 and list[i + 1] is None:
@@ -1630,6 +1636,7 @@ class _Window:
 				text = text + '%x' + `len(self._menuprocs)`
 				gl.addtopup(menu, text, 0)
 				self._menuprocs.append(callback)
+			i = i + 1
 		return menu
 
 # Font stuff
