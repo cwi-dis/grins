@@ -14,8 +14,6 @@ debug = 0
 EVENT_SRC_LButtonDown, EVENT_SRC_Expanded, EVENT_SRC_KeyDown = range(3)
 
 import MenuTemplate
-import usercmd
-import grinsRC
 
 class TreeCtrl(window.Wnd):
 	def __init__ (self, dlg=None, resId=None, ctrl=None):
@@ -438,9 +436,9 @@ class TreeCtrl(window.Wnd):
 
 	# which in ('topLayout', 'region', 'subregion')
  	def setpopup(self, menutemplate, which):
-		import win32menu
+		import win32menu, usercmdui
 		popup = win32menu.Menu('popup')
-		popup.create_popup_from_menubar_spec_list(menutemplate, self.usercmd2id)
+		popup.create_popup_from_menubar_spec_list(menutemplate, usercmdui.usercmd2id)
 		if which == 'region':
 			if self._regionpopup:
 				self._regionpopup.DestroyMenu()
@@ -452,13 +450,6 @@ class TreeCtrl(window.Wnd):
 		else:
 			popup.DestroyMenu()
 	
-	# menu callback which maps usercmds to ids			
-	def usercmd2id(self, cmdcl):
-		import usercmdui
-		if usercmdui.class2ui.has_key(cmdcl):
-			return usercmdui.class2ui[cmdcl].id
-		else: return -1
-
 	# return what GRiNS thinks as the Layout view for command delegation
 	def getLayoutView(self):
 		return self.parent
