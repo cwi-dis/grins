@@ -7,11 +7,15 @@
 #include "charconv.h"
 #include "strutil.h"
 
+#ifdef WITH_THREAD
 PyThreadState* PyInterface::s_tstate = NULL;
+#endif
 char PyInterface::s_python_home[MAX_PATH] = "";
 PyObject* PyInterface::s_errorObject = NULL;
 
+#ifdef WITH_THREAD
 PyInterpreterState* PyCallbackBlock::s_interpreterState = NULL;
+#endif
 
 void PyInterface::setPythonHome(const TCHAR *python_home)
 	{
@@ -43,8 +47,10 @@ bool PyInterface::initialize(const TCHAR *progname, const TCHAR *cmdline)
 
 bool PyInterface::initialize(int argc, char **argv)
 	{
+#ifdef WITH_THREAD
 	if (s_tstate != NULL) 
 		return true;
+#endif
 	
 #ifndef _WIN32_WCE
 	if(getPythonHome().empty())
@@ -69,13 +75,16 @@ bool PyInterface::initialize(int argc, char **argv)
 	// Set argc, argv
 	PySys_SetArgv(argc, argv);
 
+#ifdef WITH_THREAD
 	// Create and acquire the interpreter lock
 	PyEval_InitThreads();
+#endif
 
 	
 	//
 	s_errorObject = PyString_FromString("pyinterface.error");
 
+#ifdef WITH_THREAD
 	// Release the thread state
 	s_tstate = PyEval_SaveThread();
 	
@@ -92,14 +101,21 @@ bool PyInterface::initialize(int argc, char **argv)
 	delete[] pathbuf;
 	*/
 	return s_tstate!=NULL;
+#else
+	return true;
+#endif
 	}
 
 void PyInterface::finalize()
 	{
+#ifdef WITH_THREAD
 	if (s_tstate) 
+#endif
 		{
+#ifdef WITH_THREAD
 		PyEval_AcquireThread(s_tstate);
 		s_tstate = NULL;
+#endif
 		Py_Finalize();
 		}
 	}
@@ -116,7 +132,9 @@ std::basic_string<TCHAR> PyInterface::get_copyright()
 
 bool PyInterface::get_sys_path(std::list< std::basic_string<TCHAR> >& path)
 	{
+#ifdef WITH_THREAD
 	AcquireThread at(s_tstate);
+#endif
 	PyObject *p = PySys_GetObject("path");
 	if (!PyList_Check(p))
 		return false;
@@ -135,7 +153,9 @@ bool PyInterface::addto_sys_path_dir(const TCHAR *dir)
 	if(!get_sys_path(existing))
 		return false;
 
+#ifdef WITH_THREAD
 	AcquireThread at(s_tstate);
+#endif
 	PyObject *p = PySys_GetObject("path");
 	if (!PyList_Check(p))
 		return false;
@@ -155,7 +175,9 @@ bool PyInterface::addto_sys_path(const std::list< std::basic_string<TCHAR> >& pa
 	if(!get_sys_path(existing))
 		return false;
 
+#ifdef WITH_THREAD
 	AcquireThread at(s_tstate);
+#endif
 	PyObject *p = PySys_GetObject("path");
 	if (!PyList_Check(p))
 		return false;
@@ -184,13 +206,17 @@ bool PyInterface::addto_sys_path(const TCHAR *pszpath)
 
 PyObject* PyInterface::import(const TCHAR *psztmodule)
 	{
+#ifdef WITH_THREAD
 	AcquireThread at(PyInterface::getPyThreadState());
+#endif
 	return PyImport_ImportModule(TextPtr(psztmodule).str());
 	}
 
 bool PyInterface::run_command(const TCHAR *command)
 	{
+#ifdef WITH_THREAD
 	AcquireThread at(s_tstate);
+#endif
 	PyObject *m = PyImport_AddModule("__main__");
 	if (m == NULL)
 		{
