@@ -675,6 +675,10 @@ SOURCE=.\lib\win32\DrawTk.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\win32\DropTarget.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\win32\Font.py
 # End Source File
 # Begin Source File
@@ -732,6 +736,66 @@ SOURCE=.\lib\win32\win32mu.py
 # Begin Source File
 
 SOURCE=.\lib\win32\windowinterface.py
+# End Source File
+# End Group
+# Begin Group "lib/motif"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\lib\motif\splash.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\windowinterface.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\XAdornment.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\XButton.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\XButtonSupport.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\XCommand.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\XConstants.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\XDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\XDisplist.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\XFont.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\XFormWindow.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\XHelpers.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\XTopLevel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\motif\XWindow.py
 # End Source File
 # End Group
 # Begin Group "lib/mac"
@@ -800,66 +864,6 @@ SOURCE=.\lib\mac\splash.py
 # Begin Source File
 
 SOURCE=.\lib\mac\windowinterface.py
-# End Source File
-# End Group
-# Begin Group "lib/motif"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\lib\motif\splash.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\motif\windowinterface.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\motif\XAdornment.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\motif\XButton.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\motif\XButtonSupport.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\motif\XCommand.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\motif\XConstants.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\motif\XDialog.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\motif\XDisplist.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\motif\XFont.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\motif\XFormWindow.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\motif\XHelpers.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\motif\XTopLevel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\motif\XWindow.py
 # End Source File
 # End Group
 # Begin Source File
