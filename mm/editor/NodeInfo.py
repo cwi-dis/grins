@@ -535,7 +535,10 @@ class NodeInfo(NodeInfoDialog):
 
 	def conteditor_callback(self):
 		import NodeEdit
-		NodeEdit.showeditor(self.node)
+		if self.ch_url:
+			NodeEdit.showeditor(self.node, self.url)
+		else:
+			NodeEdit.showeditor(self.node)
 	#
 	# Callbacks for interior type nodes
 	#
