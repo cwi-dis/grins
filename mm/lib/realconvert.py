@@ -2,14 +2,23 @@ __version__ = "$Id$"
 
 import os
 
+import producer, cmif
+dir = cmif.findfile('Producer-SDK')
+if os.path.exists(dir):
+	producer.SetDllAccessPath(
+		'DT_Plugins=%s\000' % os.path.join(dir, 'Plugins') +
+		'DT_Codecs=%s\000' % os.path.join(dir, 'Codecs') +
+		'DT_EncSDK=%s\000' % os.path.join(dir, 'Tools') +
+		'DT_Common=%s\000' % os.path.join(dir, 'Common'))
+else:
+	raise ImportError('no G2 codecs')
+
 engine = None
 audiopin = None
 
 def convertaudiofile(u, dstdir, file, node):
 	import producer, MMAttrdefs, audio, audio.format
 	global engine, audiopin
-	if os.environ.has_key('REAL_PRODUCER'):
-		producer.SetDllCategoryPaths(os.environ['REAL_PRODUCER'])
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.ra'
 	fullpath = os.path.join(dstdir, file)
@@ -176,8 +185,6 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 	global engine
 	u.close()
 	fin = urllib.urlretrieve(srcurl)[0]
-	if os.environ.has_key('REAL_PRODUCER'):
-		producer.SetDllCategoryPaths(os.environ['REAL_PRODUCER'])
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.rm'
 	fullpath = os.path.join(dstdir, file)
