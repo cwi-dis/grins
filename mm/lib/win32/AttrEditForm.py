@@ -1841,6 +1841,12 @@ class HrefCtrl(AttrCtrl):
 			self.__OnRadioIgnore = 1
 			if settext:
 				if type(val) is type(''):
+					url = self._attr.wrapper.context.findurl(val)
+					import urlparse
+					scheme, netloc, url, params, query, fragment = urlparse.urlparse(url)
+					if not scheme or scheme == 'file':
+						import MMurl
+						val = MMurl.url2pathname(url)
 					self.__url.settext(val)
 				else:
 					self.__url.settext('')
