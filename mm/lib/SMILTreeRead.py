@@ -4600,9 +4600,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def __updateProgressHandler(self):
 		if self.__progressCallback is not None:
 			callback, intervalTime = self.__progressCallback
-			if time.time() > self.__progressTimeToUpdate:
+			if intervalTime <= 0 or time.time() > self.__progressTimeToUpdate:
 				# determine the next time to update
-				self.__progressTimeToUpdate = time.time()+intervalTime
+				if intervalTime > 0:
+					self.__progressTimeToUpdate = time.time()+intervalTime
 				if self.__nlines:
 					# update the handler. 
 					callback(float(self.lineno)/self.__nlines)
