@@ -15,6 +15,9 @@
 #include "rmaclsnk.h"
 #include "exadvsnk.h"
 
+#include "std.h"
+#include "PyCppApi.h"
+
 
 /****************************************************************************
  * Globals
@@ -31,26 +34,25 @@ ExampleClientAdviceSink::ExampleClientAdviceSink(IUnknown* pUnknown)
     : m_lRefCount (0)
     , m_pUnknown (NULL)
     , m_pRegistry (NULL)
-{
+	, m_pyAdviceSink(NULL)
+	{
     if (pUnknown)
-    {
-	m_pUnknown = pUnknown;
-	m_pUnknown->AddRef();
+		{
+		m_pUnknown = pUnknown;
+		m_pUnknown->AddRef();
 
-	if (PNR_OK != m_pUnknown->QueryInterface(IID_IRMAPNRegistry, (void**)&m_pRegistry))
-	{
-	    m_pRegistry = NULL;
-	}
+		if (PNR_OK != m_pUnknown->QueryInterface(IID_IRMAPNRegistry, (void**)&m_pRegistry))
+			m_pRegistry = NULL;
 
-	IRMAPlayer* pPlayer;
-	if(PNR_OK == m_pUnknown->QueryInterface(IID_IRMAPlayer,
+		IRMAPlayer* pPlayer;
+		if(PNR_OK == m_pUnknown->QueryInterface(IID_IRMAPlayer,
 						(void**)&pPlayer))
-	{
-	    pPlayer->AddAdviseSink(this);
-	    pPlayer->Release();
+			{
+			pPlayer->AddAdviseSink(this);
+			pPlayer->Release();
+			}
+		}
 	}
-    }
-}
 
 
 /****************************************************************************
@@ -59,20 +61,34 @@ ExampleClientAdviceSink::ExampleClientAdviceSink(IUnknown* pUnknown)
  *  Destructor
  */
 ExampleClientAdviceSink::~ExampleClientAdviceSink(void)
-{
+	{
+	Py_XDECREF(m_pyAdviceSink);
+	m_pyAdviceSink=NULL;
+
     if (m_pRegistry)
-    {
-	m_pRegistry->Release();
-	m_pRegistry = NULL;
-    }
+		{
+		m_pRegistry->Release();
+		m_pRegistry = NULL;
+		}
 
     if (m_pUnknown)
-    {
-	m_pUnknown->Release();
-	m_pUnknown = NULL;
-    }
-}
+		{
+		m_pUnknown->Release();
+		m_pUnknown = NULL;
+		}
+	}
 
+void ExampleClientAdviceSink::SetPyAdviceSink(PyObject *obj)
+	{
+	Py_XDECREF(m_pyAdviceSink);
+	if(obj==Py_None)m_pyAdviceSink=NULL;
+	else m_pyAdviceSink=obj;
+	Py_XINCREF(m_pyAdviceSink);
+	}
+PyObject* ExampleClientAdviceSink::GetPyAdviceSink()
+	{
+	return m_pyAdviceSink;
+	}
 
 /****************************************************************************
  *  ExampleClientAdviceSink::ShowMeTheStatistics             ref:  exadvsnk.h
@@ -140,10 +156,15 @@ void ExampleClientAdviceSink::ShowMeTheStatistics (char* pszRegistryKey)
 STDMETHODIMP
 ExampleClientAdviceSink::OnPosLength(UINT32	  ulPosition,
 				   UINT32	  ulLength)
-{
-    fprintf(stdout, "OnPosLength(%ld, %ld)\n", ulPosition, ulLength);  
+	{
+    //fprintf(stdout, "OnPosLength(%ld, %ld)\n", ulPosition, ulLength);  
+	if(m_pyAdviceSink)
+		{
+		CallerHelper helper("OnPosLength",m_pyAdviceSink);
+		if(helper.HaveHandler())helper.call(ulPosition,ulLength);
+		}
     return PNR_OK;
-}
+	}
 
 
 /****************************************************************************
@@ -154,7 +175,12 @@ ExampleClientAdviceSink::OnPosLength(UINT32	  ulPosition,
 STDMETHODIMP
 ExampleClientAdviceSink::OnPresentationOpened()
 {
-    fprintf(stdout, "OnPresentationOpened()\n");
+    //fprintf(stdout, "OnPresentationOpened()\n");
+	if(m_pyAdviceSink)
+		{
+		CallerHelper helper("OnPresentationOpened",m_pyAdviceSink);
+		if(helper.HaveHandler())helper.call();
+		}
     return PNR_OK;
 }
 
@@ -166,10 +192,15 @@ ExampleClientAdviceSink::OnPresentationOpened()
  */
 STDMETHODIMP
 ExampleClientAdviceSink::OnPresentationClosed()
-{
-    fprintf(stdout, "OnPresentationClosed()\n");
+	{
+    //fprintf(stdout, "OnPresentationClosed()\n");
+	if(m_pyAdviceSink)
+		{
+		CallerHelper helper("OnPresentationClosed",m_pyAdviceSink);
+		if(helper.HaveHandler())helper.call();
+		}
     return PNR_OK;
-}
+	}
 
 
 /****************************************************************************
@@ -247,10 +278,15 @@ ExampleClientAdviceSink::OnStatisticsChanged(void)
 STDMETHODIMP
 ExampleClientAdviceSink::OnPreSeek(	UINT32	ulOldTime,
 						UINT32	ulNewTime)
-{
-    fprintf(stdout, "OnPreSeek(%ld, %ld)\n", ulOldTime, ulNewTime);
+	{
+	//fprintf(stdout, "OnPreSeek(%ld, %ld)\n", ulOldTime, ulNewTime);
+	if(m_pyAdviceSink)
+		{
+		CallerHelper helper("OnPreSeek",m_pyAdviceSink);
+		if(helper.HaveHandler())helper.call(ulOldTime,ulNewTime);
+		}
     return PNR_OK;
-}
+	}
 
 
 /****************************************************************************
@@ -264,10 +300,15 @@ ExampleClientAdviceSink::OnPreSeek(	UINT32	ulOldTime,
 STDMETHODIMP
 ExampleClientAdviceSink::OnPostSeek(	UINT32	ulOldTime,
 						UINT32	ulNewTime)
-{
-    fprintf(stdout, "OnPostSeek(%ld, %ld)\n", ulOldTime, ulNewTime);
-    return PNR_OK;
-}
+	{
+    //fprintf(stdout, "OnPostSeek(%ld, %ld)\n", ulOldTime, ulNewTime);
+ 	if(m_pyAdviceSink)
+		{
+		CallerHelper helper("OnPostSeek",m_pyAdviceSink);
+		if(helper.HaveHandler())helper.call(ulOldTime,ulNewTime);
+		}
+   return PNR_OK;
+	}
 
 
 /****************************************************************************
@@ -278,10 +319,15 @@ ExampleClientAdviceSink::OnPostSeek(	UINT32	ulOldTime,
  */
 STDMETHODIMP
 ExampleClientAdviceSink::OnStop(void)
-{
-    fprintf(stdout, "OnStop()\n");
+	{
+    //fprintf(stdout, "OnStop()\n");
+	if(m_pyAdviceSink)
+		{
+		CallerHelper helper("OnStop",m_pyAdviceSink);
+		if(helper.HaveHandler())helper.call();
+		}
     return PNR_OK;
-}
+	}
 
 
 /****************************************************************************
@@ -293,10 +339,15 @@ ExampleClientAdviceSink::OnStop(void)
  */
 STDMETHODIMP
 ExampleClientAdviceSink::OnPause(UINT32 ulTime)
-{
-    fprintf(stdout, "OnPause(%ld)\n", ulTime);
+	{
+    //fprintf(stdout, "OnPause(%ld)\n", ulTime);
+	if(m_pyAdviceSink)
+		{
+		CallerHelper helper("OnPause",m_pyAdviceSink);
+		if(helper.HaveHandler())helper.call((int)ulTime);
+		}
     return PNR_OK;
-}
+	}
 
 
 /****************************************************************************
@@ -308,10 +359,15 @@ ExampleClientAdviceSink::OnPause(UINT32 ulTime)
  */
 STDMETHODIMP
 ExampleClientAdviceSink::OnBegin(UINT32 ulTime)
-{
-    fprintf(stdout, "OnBegin(%ld)\n", ulTime);
+	{
+    //fprintf(stdout, "OnBegin(%ld)\n", ulTime);
+	if(m_pyAdviceSink)
+		{
+		CallerHelper helper("OnBegin",m_pyAdviceSink);
+		if(helper.HaveHandler())helper.call((int)ulTime);
+		}
     return PNR_OK;
-}
+	}
 
 
 /****************************************************************************
@@ -329,10 +385,15 @@ ExampleClientAdviceSink::OnBuffering
     UINT32 ulFlags,
     UINT16 unPercentComplete
 )
-{
-    fprintf(stdout, "OnBuffering(%ld, %d)\n", ulFlags, unPercentComplete);
+	{
+    //fprintf(stdout, "OnBuffering(%ld, %d)\n", ulFlags, unPercentComplete);
+	if(m_pyAdviceSink)
+		{
+		CallerHelper helper("OnBuffering",m_pyAdviceSink);
+		if(helper.HaveHandler())helper.call(ulFlags,unPercentComplete);
+		}
     return PNR_OK;
-}
+	}
 
 
 /****************************************************************************
@@ -342,10 +403,15 @@ ExampleClientAdviceSink::OnBuffering
  */
 STDMETHODIMP
 ExampleClientAdviceSink::OnContacting(const char* pHostName)
-{
-    fprintf(stdout, "OnContacting(\"%s\")\n", pHostName);
+	{
+    //fprintf(stdout, "OnContacting(\"%s\")\n", pHostName);
+	if(m_pyAdviceSink)
+		{
+		CallerHelper helper("OnContacting",m_pyAdviceSink);
+		if(helper.HaveHandler())helper.call(pHostName);
+		}
     return PNR_OK;
-}
+	}
 
 
 // IUnknown COM Interface Methods
@@ -360,6 +426,7 @@ ExampleClientAdviceSink::OnContacting(const char* pHostName)
  */
 STDMETHODIMP_(UINT32) ExampleClientAdviceSink::AddRef()
 {
+	Py_XINCREF(m_pyAdviceSink);
     return InterlockedIncrement(&m_lRefCount);
 }
 
@@ -373,11 +440,16 @@ STDMETHODIMP_(UINT32) ExampleClientAdviceSink::AddRef()
  */
 STDMETHODIMP_(UINT32) ExampleClientAdviceSink::Release()
 {
+	if(m_pyAdviceSink && m_pyAdviceSink->ob_refcnt==1)
+		{
+		Py_XDECREF(m_pyAdviceSink);
+		m_pyAdviceSink=NULL;
+		}
+	else Py_XDECREF(m_pyAdviceSink);
     if (InterlockedDecrement(&m_lRefCount) > 0)
     {
         return m_lRefCount;
     }
-
     delete this;
     return 0;
 }
