@@ -52,15 +52,14 @@ class AssetsView(AssetsViewDialog):
 		if self.is_showing():
 			AssetsViewDialog.show(self)
 			return
-##		self.commit()
 		AssetsViewDialog.show(self)
-##		self.editmgr.register(self)
+		self.editmgr.register(self, want_clipboard=1)
 		self.setview(self.whichview)
 
 	def hide(self):
 		if not self.is_showing():
 			return
-##		self.editmgr.unregister(self)
+		self.editmgr.unregister(self)
 		AssetsViewDialog.hide(self)
 
 	def transaction(self,type):
@@ -69,17 +68,12 @@ class AssetsView(AssetsViewDialog):
 	def rollback(self):
 		pass
 
-##	def commit(self, type=None):
-##		transitions = self.context.transitions
-##		trnames = transitions.keys()
-##		trnames.sort()
-##		selection = self.getgroup()
-##		if selection is not None:
-##			if transitions.has_key(selection):
-##				selection = trnames.index(selection)
-##			else:
-##				selection = None
-##		self.setgroups(trnames, selection)
+	def commit(self, type=None):
+		# This isn't really needed always, but who cares.
+		self.setview(self.whichview)
+
+	def clipboardchanged(self):
+		self.setview(self.whichview)
 
 	def kill(self):
 		self.destroy()
