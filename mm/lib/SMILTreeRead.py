@@ -522,11 +522,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if not self.__regions.has_key(region):
 				self.syntax_error('unknown region')
 		else:
-			region = '<unnamed %d>'
-			i = 0
-			while self.__regions.has_key(region % i):
-				i = i + 1
-			region = region % i
+			region = 'unnamed region'
 		node.__region = region
 		ch = self.__regions.get(region)
 		if ch is None:
@@ -536,6 +532,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					 'width': 0, 'height': 0,
 					 'z-index': 0, 'fit': 'hidden',
 					 'background-color': 'transparent'}
+		width = height = 0
 		if self.__width > 0 and self.__height > 0:
 			# we don't have to calculate minimum sizes
 			pass
@@ -557,22 +554,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					width, height = Sizes.GetSize(url, mediatype, subtype)
 				except:
 					# want to make them at least visible...
-					if ch['width'] == 0:
-						ch['minwidth'] = 100
-					if ch['height'] == 0:
-						ch['minheight'] = 100
+					width = 100
+					height = 100
 				else:
 					node.__size = width, height
-					if ch['minwidth'] < width:
-						ch['minwidth'] = width
-					if ch['minheight'] < height:
-						ch['minheight'] = height
 		elif mtype in ('text', 'label', 'html', 'graph'):
 			# want to make them at least visible...
-			if ch['width'] == 0:
-				ch['minwidth'] = 200
-			if ch['height'] == 0:
-				ch['minheight'] = 100
+			width = 200
+			height = 100
+		if ch['minwidth'] < width:
+			ch['minwidth'] = width
+		if ch['minheight'] < height:
+			ch['minheight'] = height
 
 		# clip-* attributes for video
 		clip_begin = attributes.get('clip-begin')
