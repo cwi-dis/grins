@@ -771,12 +771,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			del attrdict['background-color']
 			if settings.get('compatibility') == settings.G2:
 				ch['transparent'] = -1
-				if mtype in ('text', 'RealText'):
-					# stupid G2 player...
-					ch['bgcolor'] = 255,255,255
-				elif bg != 'transparent':
+				if bg != 'transparent':
 					ch['bgcolor'] = bg
 					ch['transparent'] = 0
+				elif mtype in ('text', 'RealText'):
+					ch['bgcolor'] = 255,255,255
 				else:
 					ch['bgcolor'] = 0,0,0
 			elif bg == 'transparent':
