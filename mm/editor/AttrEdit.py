@@ -374,7 +374,7 @@ class SlideWrapper(NodeWrapper):
 				    'imgcropwh', 'imgcropanchor', 'aspect',
 				    'displayfull', 'subregionxy',
 				    'subregionwh', 'subregionanchor', 'start',
-				    'duration', 'maxfps', 'href',
+				    'tduration', 'maxfps', 'href',
 				    'project_quality']
 			if tag == 'wipe':
 				namelist.append('direction')
@@ -386,12 +386,12 @@ class SlideWrapper(NodeWrapper):
 		elif tag == 'fadeout':
 			namelist = ['color', 'subregionxy', 'displayfull',
 				    'subregionwh', 'subregionanchor', 'start',
-				    'duration', 'maxfps']
+				    'tduration', 'maxfps']
 		elif tag == 'viewchange':
 			namelist = ['fullimage', 'imgcropxy', 'imgcropwh',
 				    'imgcropanchor', 'displayfull',
 				    'subregionxy', 'subregionwh',
-				    'subregionanchor', 'start', 'duration',
+				    'subregionanchor', 'start', 'tduration',
 				    'maxfps']
 		else:
 			namelist = []
@@ -1067,28 +1067,29 @@ class AttrEditor(AttrEditorDialog):
 		import mimetypes
 		mtype = mimetypes.guess_type(url)[0]
 		if mtype is None:
-			import settings
 			# just guessing now...
+			# Most often, this is because there was no file name.
+			# Webservers will then generally return an HTML page.
+			import settings
 			if settings.get('compatibility') == settings.G2:
 				# G2 player doesn't do HTML
 				return 'text'
 			return 'html'
-		mtype, subtype = string.split(mtype, '/')
-		if mtype == 'audio':
-			return 'sound'
-		if mtype == 'image':
-			if subtype == 'vnd.rn-realpix':
-				return 'RealPix'
-			return 'image'
-		if mtype == 'video':
+		chtypes = ChannelMime.MimeChannel.get(mtype)
+		if not chtypes:
+			# fallback
+			return 'text'
+		if len(chtypes) == 1:
+			return chtypes[0]
+		# Currently the only reason why there might be more than one
+		# channel type is because we have a RealMedia file.  We will
+		# therefore now check whether the file has video in it or not.
+		info = realsupport.getinfo(url)
+		if not info:
 			return 'video'
-		if mtype == 'text':
-			if subtype == 'html':
-				return 'html'
-			if subtype == 'vnd.rn-realtext':
-				return 'RealText'
-		# fallback
-		return 'text'
+		if info.has_key('width'):
+			return 'video'
+		return 'sound'
 
 	#
 	# EditMgr interface

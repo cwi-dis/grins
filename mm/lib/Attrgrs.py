@@ -110,7 +110,7 @@ attrgrs=(
 	{'name':'timing2',
 	'title':'Timing',
 	'attrs':[
-		'duration',
+		'tduration',
 		'start',
 		]},
 
