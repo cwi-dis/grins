@@ -239,6 +239,9 @@ class MMNodeContext:
 
 # The Channel class
 #
+# XXX This isn't perfect: the link between node and channel is still
+# XXX through the channel name rather than through the channel object...
+#
 class MMChannel:
 	#
 	def init(self, context, name):
@@ -282,6 +285,8 @@ class MMChannel:
 
 # The Sync Arc class
 #
+# XXX This isn't used yet
+#
 class MMSyncArc:
 	#
 	def init(self, context):
@@ -293,7 +298,8 @@ class MMSyncArc:
 	#
 	def __repr__(self):
 		return '<MMSyncArc instance, from ' + \
-			  `self.src` + ' to ' + `self.dst` + '>'
+			  `self.src` + ' to ' + `self.dst` + \
+			  ', delay ' + `self.delay` + '>'
 	#
 	def setsrc(self, srcnode, srcend):
 		self.src = (srcnode, srcend)
@@ -321,7 +327,6 @@ class MMNode:
 		self.children = []
 		self.values = []
 		self.summaries = {}
-		self.widget = None # Used to display traversal XXX temporary!
 		self.armedmode = None
 		return self
 	#
@@ -682,7 +687,6 @@ class MMNode:
 		self.children = None
 		self.values = None
 		self.summaries = None
-		self.widget = None
 	#
 	def Extract(self):
 		##_stat('Extract')
