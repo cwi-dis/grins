@@ -914,6 +914,10 @@ class MMTreeElement:
 		child.parent = self
 		self.children.append(child)
 
+	def GetType(self):
+		# to be overridden
+		return 'unknown'
+
 	def GetContext(self):
 		return self.context
 
@@ -976,6 +980,13 @@ class MMTreeElement:
 	def GetChildren(self):
 		return self.children
 
+	def GetChildrenNoComment(self):
+		children = []
+		for c in self.children:
+			if c.GetType() != 'comment':
+				children.append(c)
+		return children
+
 	def GetChild(self, i):
 		return self.children[i]
 
@@ -1008,29 +1019,21 @@ class MMTreeElement:
 			pnode = self.GetParent()
 			if pnode is None:
 				raise xpath_error, 'no parent'
-			nodes = pnode.GetChildren()
+			nodes = pnode.GetChildrenNoComment()
 			self_index = nodes.index(self)
 			xhead = xhead[19:]
 		elif xhead[:19] == 'preceding-sibling::':
 			pnode = self.GetParent()
 			if pnode is None:
 				raise xpath_error, 'no parent'
-			nodes = pnode.GetChildren()
+			nodes = pnode.GetChildrenNoComment()
 			self_index = nodes.index(self)
 			index = -index
 			step = -1
 			xhead = xhead[19:]
 		else:
-			nodes = self.GetChildren()
+			nodes = self.GetChildrenNoComment()
 			self_index = -1
-		# ignore comment nodes
-		newnodes = []
-		for n in nodes:
-			if n.GetType() != 'comment':
-				newnodes.append(n)
-		nodes = newnodes
-		if self_index >= 0:
-			self_index = nodes.index(self)
 		if xhead == '*':
 			if 0 <= self_index + index < len(nodes):
 				return nodes[self_index + index].xpath(xtail)
@@ -1443,6 +1446,9 @@ class MMChannel(MMTreeElement):
 #				return pchan.get(key, default)
 		return default
 
+	def GetType(self):
+		return self.attrdict.get('type', 'unknown')
+
 	def getPxGeom(self):
 		if self.attrdict.get('type') == 'layout':
 			return self.context.cssResolver.getPxGeom(self._cssId)
@@ -1772,12 +1778,56 @@ class MMSyncArc:
 				return node.xpath(self.srcnode)
 			except xpath_error:
 				# invalid path
+# doesn't work: can be called during buildup of scene graph
+##				self.dstnode.set_infoicon('error', "relative syncarc doesn't point to an existing element")
 				return None
 		elif self.srcnode is node:
 			refnode = node.looping_body_self or node
 		else:
 			refnode = self.srcnode
 		return refnode
+
+	def xpath(self):
+		# return relative XPath version of self
+		if self.wallclock is not None or self.channel is not None or self.accesskey is not None:
+			raise xpath_error, 'not convertible to XPath'
+		srcnode = self.srcnode
+		if srcnode is None:
+			# indefinite
+			raise xpath_error, 'not convertible to XPath'
+		if srcnode == 'syncbase':
+			raise xpath_error, 'not convertible to XPath'
+		if srcnode == 'prev':
+			return 'preceding-sibling::*[1]'
+		if type(srcnode) is type(''):
+			# already an XPath
+			return srcnode
+		# srcnode is a MMNode instance
+		dstnode = self.dstnode
+		if dstnode is srcnode:
+			return '.'
+		dstpath, srcpath = dstnode.GetPathsToCommonAncestor(srcnode)
+		if len(srcpath) == 1:
+			# dstnode is a descendant of srcnode
+			return '/'.join(['..'] * (len(dstpath) - 1))
+		if len(dstpath) == 1:
+			# dstnode is an ancestor of srcnode
+			path = []
+			i = 1
+		else:
+			path = ['..'] * (len(dstpath) - 2)
+			index1 = srcpath[0].GetChildrenNoComment().index(srcpath[1])
+			index2 = dstpath[0].GetChildrenNoComment().index(dstpath[1])
+			if index1 < index2:
+				path.append('preceding-sibling::*[%d]' % (index2 - index1))
+			else:
+				path.append('following-sibling::*[%d]' % (index1 - index2))
+			i = 2
+		while i < len(srcpath):
+			index = srcpath[i-1].GetChildrenNoComment().index(srcpath[i])
+			path.append('*[%d]' % (index + 1))
+			i = i + 1
+		return '/'.join(path)
 
 	def getevent(self):
 		if self.srcnode == 'syncbase':
