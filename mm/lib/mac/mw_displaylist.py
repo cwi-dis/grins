@@ -40,7 +40,7 @@ class _DisplayList:
 		self._rendered = FALSE
 		self._font = None
 		self._old_fontinfo = None
-		self._clonebboxes = []
+##		self._clonebboxes = []
 		self._really_rendered = FALSE	# Set to true after the first real redraw
 		
 	def close(self):
@@ -359,7 +359,7 @@ class _DisplayList:
 		self._list.append('image', mask, image, src_x, src_y,
 				  dest_x, dest_y, width, height)
 		self._optimize(2)
-		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
+##		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
 		x, y, w, h = w._rect # XXXXSCROLL
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
@@ -378,8 +378,8 @@ class _DisplayList:
 			xvalues.append(x)
 			yvalues.append(y)
 		self._list.append('line', color, p)
-		self._update_bbox(min(xvalues), min(yvalues),
-				  max(xvalues), max(yvalues))
+##		self._update_bbox(min(xvalues), min(yvalues),
+##				  max(xvalues), max(yvalues))
 
 	def drawbox(self, coordinates):
 		if self._rendered:
@@ -387,7 +387,7 @@ class _DisplayList:
 		x, y, w, h = self._window._convert_coordinates(coordinates)
 		self._list.append('box', (x, y, w, h))
 		self._optimize()
-		self._update_bbox(x, y, x+w, y+h)
+##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawfbox(self, color, coordinates):
 		if self._rendered:
@@ -396,7 +396,7 @@ class _DisplayList:
 		self._list.append('fbox', self._window._convert_color(color),
 				(x, y, w, h))
 		self._optimize(1)
-		self._update_bbox(x, y, x+w, y+h)
+##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawmarker(self, color, coordinates):
 		pass # XXXX To be implemented
@@ -416,7 +416,7 @@ class _DisplayList:
 			yvalues.append(y)
 		self._list.append('fpolygon', color, p)
 		self._optimize(1)
-		self._update_bbox(min(xvalues), min(yvalues), max(xvalues), max(yvalues))
+##		self._update_bbox(min(xvalues), min(yvalues), max(xvalues), max(yvalues))
 
 	def draw3dbox(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
@@ -430,7 +430,7 @@ class _DisplayList:
 		self._list.append('3dbox', (cl, ct, cr, cb), coordinates)
 		self._optimize(1)
 		x, y, w, h = coordinates
-		self._update_bbox(x, y, x+w, y+h)
+##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawdiamond(self, coordinates):
 		if self._rendered:
@@ -439,7 +439,7 @@ class _DisplayList:
 		self._list.append('diamond', coordinates)
 		self._optimize()
 		x, y, w, h = coordinates
-		self._update_bbox(x, y, x+w, y+h)
+##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawfdiamond(self, color, coordinates):
 		if self._rendered:
@@ -455,7 +455,7 @@ class _DisplayList:
 		self._list.append('fdiamond', color, coordinates)
 		self._optimize(1)
 		x, y, w, h = coordinates
-		self._update_bbox(x, y, x+w, y+h)
+##		self._update_bbox(x, y, x+w, y+h)
 
 
 	def draw3ddiamond(self, cl, ct, cr, cb, coordinates):
@@ -470,7 +470,7 @@ class _DisplayList:
 		self._list.append('3ddiamond', (cl, ct, cr, cb), coordinates)
 		self._optimize(1)
 		x, y, w, h = coordinates
-		self._update_bbox(x, y, x+w, y+h)
+##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawarrow(self, color, src, dst):
 		if self._rendered:
@@ -511,7 +511,7 @@ class _DisplayList:
 			window.arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
 		self._list.append('arrow', color, (nsx, nsy, ndx, ndy), points)
 		self._optimize(1)
-		self._update_bbox(nsx, nsy, ndx, ndy)
+##		self._update_bbox(nsx, nsy, ndx, ndy)
 		
 	def _polyhandle(self, pointlist):
 		"""Return poligon structure"""
@@ -530,7 +530,7 @@ class _DisplayList:
 		size = len(pointlist)*4 + 10
 		data = struct.pack("hhhhh", size, miny+yscrolloffset, minx+xscrolloffset, 
 				maxy+yscrolloffset, maxx+xscrolloffset)
-		self._update_bbox(minx, miny, maxx, maxy)
+##		self._update_bbox(minx, miny, maxx, maxy)
 		for x, y in pointlist:
 			data = data + struct.pack("hh", y+yscrolloffset, x+xscrolloffset)
 		return Res.Resource(data)
@@ -587,8 +587,8 @@ class _DisplayList:
 			list.append('text', x0, y0, str)
 			twidth = Qd.TextWidth(str, 0, len(str))
 			self._curpos = x + float(twidth) / w._rect[_WIDTH], y
-			self._update_bbox(x0, y0, x0+twidth,
-					  y0+int(height/self._window._vfactor))
+##			self._update_bbox(x0, y0, x0+twidth,
+##					  y0+int(height/self._window._vfactor))
 			x = self._xpos
 			y = y + height
 			if self._curpos[0] > maxx:
@@ -630,14 +630,14 @@ class _DisplayList:
 			self.setpos(x, y)
 			self.writestr(str)
 
-	def _update_bbox(self, minx, miny, maxx, maxy):
-		assert type(minx) == type(maxx) == \
-		       type(miny) == type(maxy) == type(1)
-		if minx > maxx:
-			minx, maxx = maxx, minx
-		if miny > maxy:
-			miny, maxy = maxy, miny
-		self._clonebboxes.append(minx, miny, maxx, maxy)
+##	def _update_bbox(self, minx, miny, maxx, maxy):
+##		assert type(minx) == type(maxx) == \
+##		       type(miny) == type(maxy) == type(1)
+##		if minx > maxx:
+##			minx, maxx = maxx, minx
+##		if miny > maxy:
+##			miny, maxy = maxy, miny
+##		self._clonebboxes.append(minx, miny, maxx, maxy)
 		
 	def _optimize(self, ignore = []):
 		if type(ignore) is IntType:
