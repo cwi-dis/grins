@@ -10,11 +10,13 @@ __version__ = "$Id$"
 # anchor id which is unique for that node.  (Uids are strings, while
 # aids are numbers.)
 
-# The collection of hyperlinks is stored as a list of 4-tuples
-# (anchor1, anchor2, direction, type), where:
+# The collection of hyperlinks is stored as a list of 6-tuples
+# (anchor1, anchor2, direction, type, src_type, dest_type), where:
 # anchor1 and anchor2 are anchors (see above);
 # direction  is ->, <- or <->, using the DIR_* constants;
-# type is jump, call or fork, using the TYPE_* constants.
+# type is jump, call(deprecated) or fork, using the TYPE_* constants.
+# src_type control the source behavior when link is activated, using the A_SRC_* constants.
+# dest_type control the destination behavior when link is activated, using the A_DEST_* constants.
 
 # XXX It might be better to store ANCHOR1 and ANCHOR2 in a canonical order,
 # this would make the search routines a lot easier (and we're doing more
@@ -25,6 +27,8 @@ ANCHOR1 = 0
 ANCHOR2 = 1
 DIR     = 2
 TYPE    = 3
+STYPE   = 4
+DTYPE   = 5
 
 # Link directions
 DIR_1TO2 = 0
@@ -32,9 +36,18 @@ DIR_2TO1 = 1
 DIR_2WAY = 2
 
 # Types
-TYPE_JUMP = 0
-TYPE_CALL = 1
-TYPE_FORK = 2
+TYPE_JUMP = 0		# Jump to the destination and close the source context
+TYPE_CALL = 1		# This value is deprecated in favor of TYPE_FORK with A_SRC_PAUSE 
+TYPE_FORK = 2		# Jump to the destination and keep the source context
+
+# State of source document when the link is activated
+A_SRC_PLAY = 0		# The source continues to play
+A_SRC_PAUSE = 1		# The source pauses
+A_SRC_STOP = 2		# The source stop
+
+# State of destination document when the link is activated
+A_DEST_PLAY = 0		# The destination target start to play when the link is activated
+A_DEST_PAUSE = 1	# The destination target is paused when the link is activated
 
 # The class
 class Hlinks:
@@ -115,16 +128,16 @@ class Hlinks:
 
 	# Reverse representation of a link
 	def revlink(self, link):
-		a1, a2, dir, type = link
+		a1, a2, dir, type, stype, dtype = link
 		if dir == DIR_1TO2:
 			dir = DIR_2TO1
 		elif dir == DIR_2TO1:
 			dir = DIR_1TO2
-		return (a2, a1, dir, type)
+		return (a2, a1, dir, type, stype, dtype)
 
 	def findnondanglinganchordict(self):
 		dict = {}
-		for a1, a2, dir, type in self.links:
+		for a1, a2, dir, type, stype, dtype in self.links:
 			dict[a1] = 1
 			dict[a2] = 1
 		return dict
@@ -132,14 +145,14 @@ class Hlinks:
 	def findnodelinks(self, node):
 		interesting = []
 		uid = node.GetUID()
-		for a1, a2, dir, tp in self.links:
+		for a1, a2, dir, tp, stp, dtp in self.links:
 			if type(a1) == type(()) and a1[0] == uid:
-				interesting.append((a1, a2, dir, tp))
+				interesting.append((a1, a2, dir, tp, stp, dtp))
 			if type(a2) == type(()) and a2[0] == uid:
-				interesting.append(self.revlink((a1, a2, dir, tp)))
+				interesting.append(self.revlink((a1, a2, dir, tp, stp, dtp)))
 		is_src = 0
 		is_dst = 0
-		for a1, a2, dir, tp in interesting:
+		for a1, a2, dir, tp, stp, dtp in interesting:
 			if dir in (DIR_1TO2, DIR_2WAY):
 				is_src = 1
 			if dir in (DIR_2TO1, DIR_2WAY):

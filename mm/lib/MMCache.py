@@ -73,9 +73,9 @@ def load(f, context):
 	type, uid, attrdict, extra = marshal.load(f)
 	node = context.newnodeuid(type, uid)
 	for k in attrdict.keys():
-	    if not MMAttrdefs.exists(k):
-		print 'Warning: deleted unknown attribute', k
-		del attrdict[k]
+		if not MMAttrdefs.exists(k):
+			print 'Warning: deleted unknown attribute', k
+			del attrdict[k]
 	node.attrdict = attrdict
 	if type in interiortypes:
 		for i in range(extra):

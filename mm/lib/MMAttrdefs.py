@@ -74,20 +74,15 @@ def readattrdefs(fp, filename):
 			displayername = parser.getnamevalue(None)
 			helptext = parser.getstringvalue(None)
 			inheritance = parser.getenumvalue(
-				['raw', 'normal', 'inherited', 'channel'])
-			xtypedef = 'enclosed', ('list', ('enum', ['g2_light', 'g2_pro','qt_light','qt_pro', 'g2', 'qt', 'smil10','cmif', 'all']))
+				['raw', 'normal', 'inherited', 'channel', 'region'])
+			xtypedef = 'enclosed', ('list', ('enum', ['g2_light', 'g2_pro','qt_light','qt_pro', 'g2', 'qt', 'smil10', 'smil2', 'cmif', 'snap', 'all']))
 			flags = parser.getgenericvalue(
 				usetypedef(xtypedef,
 				        MMParser.MMParser.basicparsers))
-#			flags = parser.getgenericvalue(
-#			usetypedef(xtypedef,
-#					   MMParser.MMParser.basicparsers))
-#				['g2_light', 'g2_pro','qt_light','qt_pro', 'g2', 'smil10','cmif', 'all'])
-#			print flags
 			parser.close()
 			if dict.has_key(attrname):
-			    if verbose:
-				print 'Warning: duplicate attr def', attrname
+				if verbose:
+					print 'Warning: duplicate attr def', attrname
 		  
 			# WARNING: HACK
 			# for instance, the conversion is turn off for QuickTime docucment.
@@ -109,12 +104,16 @@ def readattrdefs(fp, filename):
 					binary_flags = binary_flags | FLAG_QT_PRO
 				elif fl == 'smil10':
 					binary_flags = binary_flags | FLAG_SMIL_1_0
+				elif fl == 'smil2':
+					binary_flags = binary_flags | FLAG_BOSTON
 				elif fl == 'cmif':
 					binary_flags = binary_flags | FLAG_CMIF
 				elif fl == 'g2':
 					binary_flags = binary_flags | FLAG_G2
 				elif fl == 'qt':
 					binary_flags = binary_flags | FLAG_QT
+				elif fl == 'snap':
+					binary_flags = binary_flags | FLAG_SNAP
 				elif fl == 'all':
 					binary_flags = binary_flags | FLAG_ALL
 
@@ -142,7 +141,7 @@ def readattrdefs(fp, filename):
 		fpc = open(filename_py, 'w')
 		import pprint
 		if verbose:
-		    print 'Writing compiled attributes to', filename_py
+			print 'Writing compiled attributes to', filename_py
 		fpc.write('mtime = %s\nAttrdefs = ' % sf[ST_MTIME])
 		fpc.write(pprint.pformat(dict))
 		fpc.write('\n')
@@ -151,7 +150,7 @@ def readattrdefs(fp, filename):
 		print 'Can\'t write compiled attributes to', filename_py
 		print msg[1]
 	if verbose:
-	    print 'Done.'
+		print 'Done.'
 	return dict
 
 
@@ -193,7 +192,7 @@ def getnames():
 	return names
 
 def exists(attrname):
-        return attrdefs.has_key(attrname)
+	return attrdefs.has_key(attrname)
 
 
 # Hooks to gather statistics about attribute use via getattr()
@@ -220,7 +219,15 @@ def showstats(a):
 
 # Get an attribute of a node according to the rules.
 #
-def getattr(node, attrname):
+def getattr(node, attrname, animated=0):
+	if animated:
+		return getdirattr(node, attrname, animated)
+
+	import settings
+	if node != None:
+		if node.isCssAttr(attrname):
+			return node.getCssAttr(attrname)
+				
 	if attrstats is not None:
 		if attrstats.has_key(attrname):
 			attrstats[attrname] = attrstats[attrname] + 1
@@ -236,14 +243,6 @@ def getattr(node, attrname):
 	attrdef = getdef(attrname)
 	inheritance = attrdef[5]
 	defaultvalue = attrdef[1]
-
-	# WARNING: HACK
-	# for instance, the conversion is turn off for QuickTime and SMIL docucment.
-	# In order to supress this hack, we should extend the default value management 
-	import features, compatibility
-	if attrname == 'project_convert' and (not (features.compatibility in (compatibility.G2, ))):
-		defaultvalue = 0
-				
 	if inheritance == 'raw':
 		attrvalue = node.GetRawAttrDef(attrname, defaultvalue)
 	elif inheritance == 'normal':
@@ -252,11 +251,24 @@ def getattr(node, attrname):
 		attrvalue = node.GetInherAttrDef(attrname, defaultvalue)
 	elif inheritance == 'channel':
 		try:
-			attrvalue = node.GetInherAttr(attrname)
+			attrvalue = node.GetAttr(attrname)
 		except NoSuchAttrError:
 			ch = node.GetChannel()
 			if ch is not None:
 				attrvalue = ch.get(attrname, defaultvalue)
+			else:
+				attrvalue = defaultvalue
+	elif inheritance == 'region':
+		try:
+			attrvalue = node.GetAttr(attrname)
+		except NoSuchAttrError:
+			ch = node.GetChannel()
+			if ch is not None:
+				region = ch.GetLayoutChannel()
+				if region is not None:
+					attrvalue = region.GetInherAttrDef(attrname, defaultvalue)
+				else:
+					attrvalue = defaultvalue
 			else:
 				attrvalue = defaultvalue
 	else:
@@ -268,10 +280,51 @@ def getattr(node, attrname):
 	return attrvalue
 
 
+# Get an attribute of a node according to the rules but not using attrcache.
+#
+def getdirattr(node, attrname, animated=0):
+	attrdef = getdef(attrname)
+	inheritance = attrdef[5]
+	defaultvalue = attrdef[1]
+	if inheritance == 'raw':
+		attrvalue = node.GetRawAttrDef(attrname, defaultvalue, animated)
+	elif inheritance == 'normal':
+		attrvalue = node.GetAttrDef(attrname, defaultvalue, animated)
+	elif inheritance == 'inherited':
+		attrvalue = node.GetInherAttrDef(attrname, defaultvalue, animated)
+	elif inheritance == 'channel':
+		try:
+			attrvalue = node.GetAttr(attrname, animated)
+		except NoSuchAttrError:
+			ch = node.GetChannel()
+			if ch is not None:
+				attrvalue = ch.get(attrname, defaultvalue)
+			else:
+				attrvalue = defaultvalue
+	elif inheritance == 'region':
+		try:
+			attrvalue = node.GetAttr(attrname, animated)
+		except NoSuchAttrError:
+			ch = node.GetChannel()
+			if ch is not None:
+				region = ch.GetLayoutChannel()
+				if region is not None:
+					attrvalue = region.GetInherAttrDef(attrname, defaultvalue)
+				else:
+					attrvalue = defaultvalue
+			else:
+				attrvalue = defaultvalue
+	else:
+		raise CheckError, 'bad inheritance ' +`inheritance` + \
+				' for attr ' + `attrname`
+	return attrvalue
+
+
 # Clear the attribute caches for an entire tree
 #
 def flushcache(node):
 	node.attrcache = {}
+	node.fullduration = None
 	for c in node.GetChildren():
 		flushcache(c)
 
@@ -282,14 +335,6 @@ def getdefattr(node, attrname):
 	attrdef = getdef(attrname)
 	inheritance = attrdef[5]
 	defaultvalue = attrdef[1]
-
-	# WARNING: HACK
-	# for instance, the conversion is turn off for QuickTime and SMIL docucment.
-	# In order to supress this hack, we should extend the default value management 
-	import features, compatibility
-	if attrname == 'project_convert' and (not (features.compatibility in (compatibility.G2, ))):
-		defaultvalue = 0
-	
 	if inheritance == 'raw':
 		return defaultvalue
 	elif inheritance == 'normal':
@@ -303,14 +348,22 @@ def getdefattr(node, attrname):
 		except NoSuchAttrError:
 			return defaultvalue
 	elif inheritance == 'channel':
-		try:
-			return node.GetDefInherAttr(attrname)
-		except NoSuchAttrError:
-			ch = node.GetChannel()
-			if ch is not None:
-				return ch.get(attrname, defaultvalue)
+		ch = node.GetChannel()
+		if ch is not None:
+			return ch.get(attrname, defaultvalue)
+		else:
+			return defaultvalue
+	elif inheritance == 'region':
+		ch = node.GetChannel()
+		if ch is not None:
+			region = ch.GetLayoutChannel()
+			if region is not None:
+				attrvalue = region.GetInherAttrDef(attrname, defaultvalue)
 			else:
-				return defaultvalue
+				attrvalue = defaultvalue
+		else:
+			attrvalue = defaultvalue					
+		return defaultvalue
 	else:
 		raise CheckError, 'bad inheritance ' +`inheritance` + \
 				' for attr ' + `attrname`
@@ -325,6 +378,8 @@ def parsevalue(name, string, context):
 	typedef = ('enclosed', getdef(name)[0])
 	return MMParser.parsevalue('('+string+')', typedef, context)
 
+def getattrtype(attrname):
+	return getdef(attrname)[0][0]
 
 # Initialize the attrdefs table.
 #

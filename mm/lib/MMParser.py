@@ -1,7 +1,9 @@
 __version__ = "$Id$"
 
 # Parser for CWI Multimedia Interchange Files (CMIF, extension .cmif)
-
+# TODO: If you're using anything in here which creates an MMNode,
+# please create instead, an EditableMMNode from either editor/EditableObjects.py
+# or grins/EditableObjects.py.
 
 from MMExc import *		# Exceptions
 from MMTypes import *
@@ -145,8 +147,8 @@ class MMParser:
 	#
 	def getboolvalue(self, dummy):
 		t = self.getobject()
-		false = '0', 'n', 'no',  'f', 'off'
-		true  = '1', 'y', 'yes', 't', 'on'
+		false = '0', 'n', 'no',  'f', 'off', 'false'
+		true  = '1', 'y', 'yes', 't', 'on', 'true'
 		if t in false: return 0
 		if t in true: return 1
 		raise MTypeError, (t, 'bool')

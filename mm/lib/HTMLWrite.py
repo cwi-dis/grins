@@ -12,7 +12,6 @@ from AnchorDefs import *
 import string
 import os
 import MMurl
-import regsub
 import re
 from cmif import findfile
 import windowinterface
@@ -27,14 +26,6 @@ def nameencode(value):
 	value = string.join(string.split(value,'>'),'&gt;')
 	value = string.join(string.split(value,'<'),'&lt;')
 	value = string.join(string.split(value,'"'),'&quot;')
-##	if '&' in value:
-##		value = regsub.gsub('&', '&amp;', value)
-##	if '>' in value:
-##		value = regsub.gsub('>', '&gt;', value)
-##	if '<' in value:
-##		value = regsub.gsub('<', '&lt;', value)
-##	if '"' in value:
-##		value = regsub.gsub('"', '&quot;', value)
 	return '"' + value + '"'
 
 # CMIF channel types that have a visible representation
@@ -42,10 +33,7 @@ visible_channel_types={
 	'text':1,
 	'image':1,
 	'video': 1,
-	'movie':1,
-	'mpeg':1,
 	'html':1,
-	'label':1,
 	'RealPix':1,
 	'RealText':1,
 	'RealVideo':1,
@@ -67,8 +55,7 @@ def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0, exportty
 	elif exporttype == compatibility.QT:
 		__WriteFileQT(root, filename, smilurl, oldfilename, evallicense)
 	else:
-		windowinterface.showmessage('don''t support export type %s'%exporttype)
-	        return
+		windowinterface.showmessage('don\'t support export type %s'%exporttype)
 	
 def __WriteFileG2(root, filename, smilurl, oldfilename='', evallicense = 0):
 	# XXXX If oldfilename set we should use that as a template
@@ -99,7 +86,7 @@ def __WriteFileG2(root, filename, smilurl, oldfilename='', evallicense = 0):
 	ramurl = MMurl.pathname2url(ramfile)
 	ramurl = MMurl.unquote(ramurl)
 	try:
-		writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense, templatedir)
+		writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense, templatedir, compatibility.G2)
 		writer.write()
 		fp.close()
 	except Error, msg:
@@ -123,7 +110,7 @@ def __WriteFileQT(root, filename, smilurl, oldfilename='', evallicense = 0):
 	fp = open(filename, 'w')
 	
 	try:
-		writer = HTMLWriter(root, fp, filename, smilurl, oldfilename, evallicense, templatedir)
+		writer = HTMLWriter(root, fp, filename, smilurl, oldfilename, evallicense, templatedir, compatibility.QT)
 		writer.write()
 		fp.close()
 	except Error, msg:
@@ -132,7 +119,7 @@ def __WriteFileQT(root, filename, smilurl, oldfilename='', evallicense = 0):
 
 
 import FtpWriter
-def WriteFTP(root, filename, smilurl, ftpparams, oldfilename='', evallicense = 0):
+def WriteFTP(root, filename, smilurl, ftpparams, oldfilename='', evallicense = 0, exporttype = None):
 	host, user, passwd, dir = ftpparams
 	import settings
 	templatedir = settings.get('templatedir_url')
@@ -155,7 +142,7 @@ def WriteFTP(root, filename, smilurl, ftpparams, oldfilename='', evallicense = 0
 	try:
 		ftp = FtpWriter.FtpWriter(host, filename, user=user, passwd=passwd, dir=dir, ascii=1)
 		try:
-			writer = HTMLWriter(root, ftp, filename, ramurl, oldfilename, evallicense, templatedir)
+			writer = HTMLWriter(root, ftp, filename, ramurl, oldfilename, evallicense, templatedir, exporttype)
 			writer.write()
 			ftp.close()
 		except Error, msg:
@@ -175,7 +162,7 @@ def ramfilename(htmlfilename):
 	return ramfilename
 	
 class HTMLWriter:
-	def __init__(self, node, fp, filename, ramurl, oldfilename='', evallicense = 0, templatedir_url=''):
+	def __init__(self, node, fp, filename, ramurl, oldfilename='', evallicense = 0, templatedir_url='', exporttype = None):
 		self.evallicense = evallicense
 		self.ramurl = ramurl
 		self.templatedir_url = templatedir_url
@@ -190,10 +177,12 @@ class HTMLWriter:
 		self.top_levels = []
 		self.calcchnames1(node)
 
-		self.objectgenerator = {
-			compatibility.G2: self.outobjectG2,
-			compatibility.QT: self.outobjectQT,
-		}
+		if exporttype == compatibility.G2:
+			self.objectgenerator = self.outobjectG2
+		elif exporttype == compatibility.QT:
+			self.objectgenerator = self.outobjectQT
+		else:
+			raise 'unknown export type'
 
 		if len(self.top_levels) > 1:
 			print '** Document uses multiple toplevel channels'
@@ -259,7 +248,7 @@ class HTMLWriter:
 			out = out + '<div layout="position:absolute; %s">\n'%tmp2
 			
 			# we have to take account of slider's width and height in dimension calculation
-			out = out + self.objectgenerator[features.compatibility](w+20, h+20, [
+			out = out + self.objectgenerator(w+20, h+20, [
 				('controls', 'ImageWindow'),
 				('console', playername),
 				('autostart', 'false'),
@@ -282,7 +271,7 @@ class HTMLWriter:
 			out = out + '<div>\n'
 			
 			# we have to take account of slider's width and height in dimension calculation
-			out = out + self.objectgenerator[features.compatibility](w+20, h+20, [
+			out = out + self.objectgenerator(w+20, h+20, [
 				('controls', 'ImageWindow'),
 				('console', playername),
 				('autostart', 'false'),
@@ -293,19 +282,6 @@ class HTMLWriter:
 		out = out + '<!-- END-GRINS-GENERATED-CODE singleregion -->\n'
 		outdict['singleregion'] = out
 		
-		if features.compatibility == compatibility.QT:
-			out = '<!-- START-GRINS-GENERATED-CODE external -->\n'
-	
-			out = out + '<div>\n'
-			
-			# we have to take account of slider's width and height in dimension calculation
-			out = out + self.outobjectQText([
-				('src', MMurl.unquote(self.ramurl))])
-				
-			out = out + '</div>\n'
-				
-			out = out + '<!-- END-GRINS-GENERATED-CODE external -->\n'
-			outdict['external'] = out
 		#
 		# Step three - generate the output
 		#
@@ -363,14 +339,6 @@ class HTMLWriter:
 		out = self.outtag('embed', arglist)
 		return out
 		
-	def outobjectQText(self, arglist):
-		arglist = arglist[:]
-		arglist.append(('type', 'video/quicktime'))
-		arglist.append(('nojava', 'true'))
-		arglist.append(('target', 'quicktimeplayer'))
-		out = self.outtag('embed', arglist)
-		return out
-		
 	def calcchnames1(self, node):
 		"""Calculate unique names for channels; first pass"""
 		context = node.GetContext()
@@ -383,9 +351,7 @@ class HTMLWriter:
 			else:
 				raise Error, "Duplicate region name"
 			if not ch.has_key('base_window') and \
-			   ch['type'] not in ('sound', 'shell', 'python',
-					      'null', 'vcr', 'socket', 'cmif',
-					      'midi', 'external'):
+			   ch['type'] not in ('sound', 'null'):
 				# top-level channel with window
 				self.top_levels.append(ch)
 				if not self.__title:
