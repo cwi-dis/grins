@@ -9,6 +9,10 @@
 #include <windows.h>
 #endif
 
+#ifndef _INC_COMMDLG
+#include <commdlg.h>
+#endif
+
 extern HINSTANCE GetAppHinstance();
 
 PyObject* Winuser_CreateFileDialog(PyObject *self, PyObject *args);
