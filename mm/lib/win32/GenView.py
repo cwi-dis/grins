@@ -112,3 +112,13 @@ class GenView:
 		frame=childframe.GetMDIFrame()
 		frame.MDIActivate(childframe)
 
+	def getgeometry(self, units = None):
+		# Ignore units.
+		placement = self.GetParent().GetWindowPlacement()
+		outerrect = placement[4]
+		out_l, out_t, out_r, out_b = outerrect
+		out_w = out_r - out_l
+		out_h = out_b - out_t
+		in_w = out_w - 16
+		in_h = out_h - 35
+		return (out_l, out_t, in_w, in_h)
