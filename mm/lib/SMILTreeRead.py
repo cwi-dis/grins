@@ -5,7 +5,6 @@ import MMNode, MMAttrdefs
 from MMExc import *
 from MMTypes import *
 import MMurl
-from HDTL import HD, TL
 import string
 #from Hlinks import DIR_1TO2, TYPE_JUMP, TYPE_CALL, TYPE_FORK
 from Hlinks import *
@@ -1466,7 +1465,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		data = None
 		mtype = None
 		nodetype = 'ext'
-		self.__is_ext = 1
 		if not url:
 			url = None
 		if url == '#':
@@ -1487,15 +1485,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					nodetype = 'imm'
 					del attributes['src']
 		elif tagname != 'brush':
-			# remove if immediate data allowed
 			self.syntax_error('no src attribute')
-
-##			nodetype = 'imm'
-##			self.__is_ext = 0
-##			self.__nodedata = []
-##			self.__data = []
-##			if not attributes.has_key('type'):
-##				self.syntax_error('no type attribute')
 
 		if tagname == 'brush':
 			nodetype = 'brush'
@@ -1750,30 +1740,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		mediatype, subtype = node.__mediatype
 		mtype = node.__chantype
 		self.__fixendsync(node)
-
-		if not self.__is_ext:
-			# don't warn since error message already printed
-			data = ''.join(self.__nodedata).split('\n')
-			for i in range(len(data)-1, -1, -1):
-				tmp = ' '.join(data[i].split())
-				if tmp:
-					data[i] = tmp
-				else:
-					del data[i]
-			self.__data.append('\n'.join(data))
-			nodedata = ''.join(self.__data)
-			res = self.__whitespace.match(nodedata)
-			if res is not None:
-				self.syntax_error('no src attribute and no content data')
-			if mediatype != 'text' and mediatype[:5] != 'cmif_':
-				# create data URL for base64 encoded data
-				url = 'data:%s/%s;base64,%s' % (mediatype, subtype, nodedata)
-				node.type = 'ext'
-				node.attrdict['file'] = url
-			else:
-				# other data is immediate
-				nodedata = nodedata.split('\n')
-				node.values = nodedata
 
 		# connect to region
 		if attributes.has_key('region'):
@@ -4433,13 +4399,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_metadata:
 			self.__metadata.append(data)
 			return
-		if self.__node is None or self.__is_ext:
-			if self.__in_layout != LAYOUT_UNKNOWN:
-				res = self.__whitespace.match(data)
-				if not res:
-					self.syntax_error("non-white space content `%s'" % data)
-			return
-		self.__nodedata.append(data)
+		if self.__in_layout != LAYOUT_UNKNOWN:
+			res = self.__whitespace.match(data)
+			if not res:
+				self.syntax_error("non-white space content `%s'" % data)
 
 	__doctype = re.compile('SYSTEM' + xmllib._S + '(?P<dtd>[^ \t\r\n]+)' +
 			       _opS + '$')
@@ -4471,20 +4434,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# Example -- handle cdata, could be overridden
 	def handle_cdata(self, cdata):
-		if self.__node is None or self.__is_ext:
-			if self.__in_layout != LAYOUT_UNKNOWN:
-				self.warning('ignoring CDATA', self.lineno)
-			return
-		data = ''.join(self.__nodedata).split('\n')
-		for i in range(len(data)-1, -1, -1):
-			tmp = ' '.join(data[i].split())
-			if tmp:
-				data[i] = tmp
-			else:
-				del data[i]
-		self.__data.append('\n'.join(data))
-		self.__nodedata = []
-		self.__data.append(cdata)
+		if self.__in_layout != LAYOUT_UNKNOWN:
+			self.warning('ignoring CDATA', self.lineno)
 
 	# catch all
 
