@@ -324,7 +324,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		# Enable "paste" commands depending on what is in the clipboard.
 		t, n = Clipboard.getclip()
-		if t == 'node' and n is not None:
+		if t == 'node' or t == 'multinode' and n is not None:
 			if fntype in MMNode.interiortypes:
 				# can only paste inside interior nodes
 				commands = commands + self.pasteinteriorcommands
@@ -337,7 +337,11 @@ class HierarchyView(HierarchyViewDialog):
 	
 	def aftersetfocus(self):
 		# Called after the focus has been set to a specific node.
+		# This:
+		# 1) Determines the commands for the node (requires: node, view?)
+		# 2) Determines a pop-up menu for the node (requires: node, view if there is view spec info.)
 		fnode = self.selected_widget.get_node()
+		#commands = []
 
 		if isinstance(self.selected_widget, StructureWidgets.TransitionWidget):
 			which, transitionnames = self.selected_widget.posttransitionmenu()
@@ -349,7 +353,9 @@ class HierarchyView(HierarchyViewDialog):
 		fntype = self.focusnode.GetType()
 		
 		# Choose the pop-up menu.
-		if fntype in MMNode.interiortypes: # for all internal nodes.
+		if len(self.multi_selected_widgets) > 0:
+			popupmenu = self.multi_popupmenu
+		elif fntype in MMNode.interiortypes: # for all internal nodes.
 			popupmenu = self.interior_popupmenu
 			# if node has children enable
 			# the TOCHILD command
@@ -362,6 +368,7 @@ class HierarchyView(HierarchyViewDialog):
 			popupmenu = self.leaf_popupmenu	# for all leaf nodes.
 
 		commands = self.__compute_commands(commands) # Adds to the commands for the current focus node.		
+		#commands = fnode.GetCommands() # The preferred way of doing things.
 		self.setcommands(commands)
 
 		# Forcidably change the pop-up menu if we have selected an Icon.
@@ -760,10 +767,35 @@ class HierarchyView(HierarchyViewDialog):
 	######################################################################
 	# Adding a node.
 	# This code is near the end of this class under various createbefore.. createafter.. callbacks.
+	# At some stage they need to be moved here; there is no need to yet.
 	
-	# Delete a node
+	######################################################################
+	# Delete the selected node.
 	def deletecall(self):
-		if self.selected_widget: self.selected_widget.deletecall()
+		if len(self.multi_selected_widgets) > 0:
+			# Delete multiple nodes.
+			if not self.editmgr.transaction():
+				return
+			self.toplevel.setwaiting()
+			for n in self.get_multi_nodes():
+				r = n.GetParent().GetRoot()
+				self.editmgr.delnode(n)
+				self.fixsyncarcs(r,n)
+			self.editmgr.commit()
+		else:
+			node = self.selected_widget.get_node()
+			if not node or node is self.root:
+				windowinterface.beep()
+				return
+
+			# Do it.
+			if not self.editmgr.transaction():
+				return
+			self.toplevel.setwaiting()
+			r = node.GetParent().GetRoot()
+			self.editmgr.delnode(node)
+			self.fixsyncarcs(r, node) #  TODO: shouldn't this be done in the editmanager? -mjvdg
+			self.editmgr.commit()
 
 	######################################################################
 	# Edit a node
@@ -785,15 +817,53 @@ class HierarchyView(HierarchyViewDialog):
 	######################################################################
 	# Copy a node.
 	def copycall(self):
-		if self.selected_widget: self.selected_widget.copycall()
+		windowinterface.setwaiting()
+		t,n = Clipboard.getclip()
+		if t == 'node' and n is not None:
+			n.Destroy()	# Wha ha ha ha. <evil grin>
+
+		if len(self.multi_selected_widgets) > 0:
+			copyme = []
+			for i in self.get_multi_nodes():
+				copyme.append(i.DeepCopy())
+			Clipboard.setclip('multinode', copyme)
+		else:
+			copyme = self.focusnode.DeepCopy()
+			Clipboard.setclip('node', copyme)
 
 	######################################################################
 	# Cut a node.
 	def cutcall(self):
-		if self.selected_widget: self.selected_widget.cutcall()
+		if len(self.multi_selected_widgets) > 0:
+			# Delete multiple nodes.
+			if not self.editmgr.transaction():
+				return
+			self.toplevel.setwaiting()
+			m = self.get_multi_nodes()
+			for n in m:
+				r = n.GetParent().GetRoot()
+				self.editmgr.delnode(n)
+				self.fixsyncarcs(r,n)
+			Clipboard.setclip('multinode', m)
+		else:
+			node = self.selected_widget.get_node()
+			if not node or node is self.root:
+				windowinterface.beep()
+				return
 
+			# Do it.
+			if not self.editmgr.transaction():
+				return
+			self.toplevel.setwaiting()
+			r = node.GetParent().GetRoot()
+			self.editmgr.delnode(node)
+			self.fixsyncarcs(r, node) #  TODO: shouldn't this be done in the editmanager? -mjvdg
+			Clipboard.setclip('node', node)
+       		self.editmgr.commit()
+		
+		
 	######################################################################
-	# Paste a node.
+	# Paste a node. (TODO: multiple selected nodes).
 	def pastebeforecall(self):
 		if self.selected_widget: self.selected_widget.pastebeforecall()
 
@@ -899,6 +969,24 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.setdragcursor('dragadd')
 		else:
 			windowinterface.setdragcursor('dragset')
+
+	def get_multi_nodes(self):
+		# Returns a list of currently selected nodes.
+		# Actually, returns a list of the common parents of the nodes.
+		if self.selected_widget is None:
+			return []
+		r = [self.selected_widget.get_node()]
+		for i in self.multi_selected_widgets:
+			r.append(i.get_node())
+		r2 = []
+		for i in r:
+			a = 0
+			for j in r:
+				if j is not i and j.IsAncestorOf(i):
+					a = 1
+			if a == 0:
+				r2.append(i)
+		return r2
 
 	#################################################
 	# Edit manager interface (as dependent client)  #
@@ -1155,7 +1243,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def paste(self, where):
 		type, node = Clipboard.getclip()
-		if type <> 'node' or node is None:
+		if node is None:
 			windowinterface.showmessage(
 			    'The clipboard does not contain a node to paste',
 			    mtype = 'error', parent = self.window)
@@ -1166,11 +1254,21 @@ class HierarchyView(HierarchyViewDialog):
 				mtype = 'error', parent = self.window)
 			return
 		self.toplevel.setwaiting()
-		if node.context is not self.root.context:
-			node = node.CopyIntoContext(self.root.context)
-		else:
-			Clipboard.setclip(type, node.DeepCopy())
-		dummy = self.insertnode(node, where)
+
+		if type == 'node':
+			if node.context is not self.root.context:
+				node = node.CopyIntoContext(self.root.context)
+			else:
+				Clipboard.setclip(type, node.DeepCopy())
+			self.insertnode(node, where)
+		elif type == 'multinode':
+			if not self.editmgr.transaction():
+				return
+			for i in node:	# I can't use insertnode because I need to access the editmanager.
+				if i.context is not self.root.context:
+					i = i.CopyIntoContext(self.root.context)
+				self.editmgr.addnode(self.focusnode, -1, i)
+			self.editmgr.commit()
 
 	def insertnode(self, node, where, index = -1, start_transaction = 1, end_transaction = 1):
 		# 'where' is coded as follows: -1: before 0: under 1: after
@@ -1409,6 +1507,11 @@ class HierarchyView(HierarchyViewDialog):
 
 	def also_select_widget(self, widget):
 		# Select another widget without losing the selection (ctrl-click).
+
+		if self.selected_widget is None:
+			self.select_widget(widget)
+			return
+		
 		if isinstance(widget, StructureWidgets.MMWidgetDecoration):
 			widget = widget.get_mmwidget()
 			self.multi_selected_widgets.append(widget)
@@ -1422,6 +1525,8 @@ class HierarchyView(HierarchyViewDialog):
 		elif isinstance(widget, StructureWidgets.MMNodeWidget):
 			self.multi_selected_widgets.append(widget)
 			widget.select()
+
+		self.aftersetfocus()
 		self.need_redraw_selection = 1
 
 	def select_node(self, node, external = 0):

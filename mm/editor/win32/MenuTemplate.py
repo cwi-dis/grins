@@ -465,14 +465,25 @@ POPUP_HVIEW_STRUCTURE = (
 		(FLAG_ALL, ENTRY, 'E&xpand all', None, EXPANDALL),
 		(FLAG_ALL, ENTRY, 'C&ollapse all', None, COLLAPSEALL),
 		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Set this node as current begin event &source', None, CREATE_BEGIN_EVENT_SOURCE),
-		(FLAG_ALL, ENTRY, 'Create begin event on this node', None, CREATE_BEGIN_EVENT_DESTINATION),
+		(FLAG_ALL, ENTRY, 'Event &source', None, CREATE_BEGIN_EVENT_SOURCE),
+		(FLAG_ALL, ENTRY, 'Event destination', None, CREATE_BEGIN_EVENT_DESTINATION),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Finish hyperlin&k to selection', None, FINISH_LINK),
 		(FLAG_ALL, SEP,),
 ##		(FLAG_PRO, ENTRY, '&Info...', None, INFO),
 		(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
 ##		(FLAG_PRO, ENTRY, '&Anchors...', None, ANCHORS),
+)
+
+POPUP_MULTI = (
+		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
+		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Event &source', None, CREATE_BEGIN_EVENT_SOURCE),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
 )
 
 POPUP_CVIEW_NONE = (
