@@ -38,7 +38,7 @@ def dumpcache(root, filename):
 		stf = os.stat(filename)
 	except os.error:
 		print 'Can\'t stat', filename
-		return 
+		return
 	base = os.path.basename(filename)
 	cache = cachename(filename)
 	print 'Writing CMIF cache', cache
