@@ -2,6 +2,7 @@ __version__ = "$Id$"
 
 import xmllib
 import MMNode, MMAttrdefs
+from MMExc import *
 from windowinterface import UNIT_PXL
 from HDTL import HD, TL
 import string
@@ -20,29 +21,29 @@ LAYOUT_UNKNOWN = -1
 layout_name = 'SMIL'			# name of layout channel
 SMIL_BASIC = 'text/smil-basic'
 
-coordre = re.compile('^(?P<x>\\d+%?),(?P<y>\\d+%?),'
-		      '(?P<w>\\d+%?),(?P<h>\\d+%?)$')
-idref = re.compile('id\((?P<id>' + xmllib._Name + ')\)')
-counter_val = re.compile('(?:(?P<use_clock>' # hours:minutes:seconds[.fraction]
-				'(?:(?P<hours>\\d{2}):)?'
-				'(?P<minutes>\\d{2}):'
-				'(?P<seconds>\\d{2})'
-				'(?P<fraction>\.\\d+)?'
-			 ')|(?P<use_timecount>'	# timecount[.fraction]unit
-				'(?P<timecount>\\d+)'
-				'(?P<units>\.\\d+)?'
-				'(?P<scale>h|min|s|ms)?)'
-			 ')$')
-id = re.compile('id\((?P<name>' + xmllib._Name + ')\)'	# id(name)
-		'\((?P<event>[^)]+)\)'			# (event)
-		'(?:\+(?P<delay>.*))?$')		# +delay (optional)
-clock = re.compile('(?P<name>local|remote):'
-		   '(?P<hours>\\d+):'
-		   '(?P<minutes>\\d{2}):'
-		   '(?P<seconds>\\d{2})'
-		   '(?P<fraction>\\.\\d+)?'
-		   '(?:Z(?P<sign>[-+])(?P<ohours>\\d{2}):(?P<omin>\\d{2}))?$')
-screen_size = re.compile('\\d+X\\d+$')
+coordre = re.compile(r'^(?P<x>\d+%?),(?P<y>\d+%?),'
+		     r'(?P<w>\d+%?),(?P<h>\d+%?)$')
+idref = re.compile(r'id\((?P<id>' + xmllib._Name + r')\)')
+counter_val = re.compile(r'(?:(?P<use_clock>' # hours:mins:secs[.fraction]
+			 r'(?:(?P<hours>\d{2}):)?'
+			 r'(?P<minutes>\d{2}):'
+			 r'(?P<seconds>\d{2})'
+			 r'(?P<fraction>\.\d+)?'
+			 r')|(?P<use_timecount>' # timecount[.fraction]unit
+			 r'(?P<timecount>\d+)'
+			 r'(?P<units>\.\d+)?'
+			 r'(?P<scale>h|min|s|ms)?)'
+			 r')$')
+id = re.compile(r'id\((?P<name>' + xmllib._Name + r')\)' # id(name)
+		r'\((?P<event>[^)]+)\)'			# (event)
+		r'(?:\+(?P<delay>.*))?$')		# +delay (optional)
+clock = re.compile(r'(?P<name>local|remote):'
+		   r'(?P<hours>\d+):'
+		   r'(?P<minutes>\d{2}):'
+		   r'(?P<seconds>\d{2})'
+		   r'(?P<fraction>\.\d+)?'
+		   r'(?:Z(?P<sign>[-+])(?P<ohours>\d{2}):(?P<omin>\d{2}))?$')
+screen_size = re.compile(r'\d+X\d+$')
 
 class SMILParser(xmllib.XMLParser):
 	def __init__(self, context, verbose = 0):
@@ -280,7 +281,7 @@ class SMILParser(xmllib.XMLParser):
 			# XXXX range is currently ignored
 		if self.__in_a:
 			# deal with hyperlink
-			href, ltype, id = self.__in_a
+			href, ltype, id = self.__in_a[:3]
 			try:
 				anchorlist = node.attrdict['anchorlist']
 			except KeyError:
@@ -792,8 +793,11 @@ class SMILParser(xmllib.XMLParser):
 
 	# linking
 
-	a_attributes = {'id':None, 'href':None, 'show':'replace'}
+	a_attributes = {'id':None, 'href':None, 'show':'replace',
+			'xml-link':'simple', 'inline':'true'}
 	def start_a(self, attributes):
+		if self.__in_a:
+			self.syntax_error('nested a elements')
 		try:
 			href = attributes['href']
 		except KeyError:
@@ -813,10 +817,10 @@ class SMILParser(xmllib.XMLParser):
 			id = attributes['id']
 		except KeyError:
 			id = None
-		self.__in_a = href, ltype, id
+		self.__in_a = href, ltype, id, self.__in_a
 
 	def end_a(self):
-		self.__in_a = None
+		self.__in_a = self.__in_a[3]
 
 	anchor_attributes = {'id':None, 'href':None, 'show':'replace',
 			     'xml-link':'simple', 'inline':'true',
@@ -900,6 +904,12 @@ class SMILParser(xmllib.XMLParser):
 
 	# other callbacks
 
+	__whitespace = re.compile(xmllib._opS + '$')
+	def handle_data(self, data):
+		res = self.__whitespace.match(data)
+		if not res:
+			self.syntax_error('non-white space content')
+		
 	__doctype = re.compile('SYSTEM' + xmllib._S + '(?P<dtd>[^ \t\r\n]+)' +
 			       xmllib._opS + '$')
 	def handle_doctype(self, tag, data):
@@ -941,7 +951,7 @@ class SMILParser(xmllib.XMLParser):
 		print 'warning: %s on line %d' % (message, self.lineno)
 
 	def error(self, message):
-		raise error, 'error, line %d: %s' % (self.lineno, message)
+		raise MSyntaxError, 'error, line %d: %s' % (self.lineno, message)
 
 	# helper methods
 
@@ -981,7 +991,7 @@ class SMILParser(xmllib.XMLParser):
 		if maybe_relative:
 			if value in ('begin', 'end'):
 				return value
-		raise error, 'bogus presentation counter'
+		raise MSyntaxError, 'bogus presentation counter'
 
 	def __parsetime(self, xpointer):
 		offset = 0
@@ -1002,7 +1012,7 @@ class SMILParser(xmllib.XMLParser):
 			elif counter == 'end':
 				counter = -1	# special event
 			else:
-				raise error, 'bogus presentation counter'
+				raise MSyntaxError, 'bogus presentation counter'
 		else:
 			counter = 0
 		if delay is not None:
@@ -1091,9 +1101,9 @@ def _wholenodeanchor(node):
 		anchorlist.append(a)
 	return node.GetUID(), a[A_ID]
 
-npt_time = '(?:now|\\d+(?:\.\\d*)?|\\d+:\\d{2}:\\d{2}(?:\.\\d*)?)?'
-utc_time = '(?:\\d{8}T\\d{6}(?:\.\\d*)?Z)?'
-smpte_time = '(?:\\d{1,2}:\\d{1,2}:\\d{1,2}(?::\\d{1,2})?(?:\.\\d*)?)?'
+npt_time = r'(?:now|\d+(?:\.\d*)?|\d+:\d{2}:\d{2}(?:\.\d*)?)?'
+utc_time = r'(?:\d{8}T\d{6}(?:\.\d*)?Z)?'
+smpte_time = r'(?:\d{1,2}:\d{1,2}:\d{1,2}(?::\d{1,2})?(?:\.\d*)?)?'
 range = re.compile('^(?:'
 		   '(?:npt='+npt_time+'-'+npt_time+')|'
 		   '(?:clock='+utc_time+'-'+utc_time+')|'
