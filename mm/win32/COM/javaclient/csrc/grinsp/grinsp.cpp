@@ -79,11 +79,11 @@ JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_nconnect(JNIEnv *env, jobject play
 	}
 
 /*
- * Class:     GRiNSPlayer
- * Method:    nsetWindow
- * Signature: (ILjava/awt/Component;)V
+ * Class:     grins_GRiNSPlayer
+ * Method:    nsetTopLayoutWindow
+ * Signature: (IILjava/awt/Component;)V
  */
-JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetWindow(JNIEnv *env, jobject player, jint hgrins, jobject component)
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetTopLayoutWindow(JNIEnv *env, jobject player, jint hgrins, jint index, jobject component)
 	{
 	// Get the AWT
 	JAWT awt;
@@ -123,11 +123,11 @@ JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetWindow(JNIEnv *env, jobject pl
 	
 	//////////////////////////////
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
-	if(pIGRiNSPlayer)
+	if(pIGRiNSPlayer && IsWindow(hwnd))
 		{
-		HRESULT hr = pIGRiNSPlayer->setWindow(hwnd);
+		HRESULT hr = pIGRiNSPlayer->setTopLayoutWindow(int(index), hwnd);
 		if(FAILED(hr))
-			ThrowCOMException(env, "setWindow", hr);
+			ThrowCOMException(env, "setTopLayoutWindow", hr);
 		}
 	
 	}
@@ -179,17 +179,17 @@ JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nclose(JNIEnv *env, jobject player
 	}
 
 /*
- * Class:     GRiNSPlayer
- * Method:    getSizeAdvice
- * Signature: (I)Ljava/awt/Dimension;
+ * Class:     grins_GRiNSPlayer
+ * Method:    ngetTopLayoutDimensions
+ * Signature: (II)Ljava/awt/Dimension;
  */
-JNIEXPORT jobject JNICALL Java_grins_GRiNSPlayer_ngetPreferredSize(JNIEnv *env, jobject player, jint hgrins)
+JNIEXPORT jobject JNICALL Java_grins_GRiNSPlayer_ngetTopLayoutDimensions(JNIEnv *env, jobject player, jint hgrins, jint index)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	jint w=0, h=0;
 	if(pIGRiNSPlayer)
 		{
-		HRESULT hr = pIGRiNSPlayer->getSize((int*)&w, (int*)&h);
+		HRESULT hr = pIGRiNSPlayer->getTopLayoutDimensions(int(index), (int*)&w, (int*)&h);
 		if(FAILED(hr))
 			ThrowCOMException(env, "getSize", hr);
 		}
@@ -364,33 +364,94 @@ JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetTime(JNIEnv *env, jobject play
 	}
 
 /*
- * Class:     GRiNSPlayer
- * Method:    nmouseClicked
- * Signature: (III)V
+ * Class:     grins_GRiNSPlayer
+ * Method:    ngetTopLayoutCount
+ * Signature: (I)I
  */
-JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nmouseClicked(JNIEnv *env, jobject player, jint hgrins, jint x, jint y)
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetTopLayoutCount(JNIEnv *env, jobject player, jint hgrins)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	int nl = 1;
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->getTopLayoutCount(&nl);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "getTopLayoutCount", hr);
+		}
+	return jint(nl);
+	}
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    ngetTopLayoutState
+ * Signature: (II)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetTopLayoutState(JNIEnv *env, jobject player, jint hgrins, jint index)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	int wndstate = 1;
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->getTopLayoutState(int(index), &wndstate);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "getTopLayoutState", hr);
+		}
+	return jint(wndstate);
+	}
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    ngetTopLayoutTitle
+ * Signature: (II)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_grins_GRiNSPlayer_ngetTopLayoutTitle(JNIEnv *env, jobject player, jint hgrins, jint index)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	char szTitle[256] = "";
+	if(pIGRiNSPlayer)
+		{
+		wchar_t* wszTitle = NULL;
+		HRESULT hr = pIGRiNSPlayer->getTopLayoutTitle(int(index), &wszTitle);
+		if(FAILED(hr))
+			ThrowCOMException(env, "getTopLayoutTitle", hr);
+		else 
+			{
+			WideCharToMultiByte(CP_ACP, 0, wszTitle, -1, szTitle, 256, NULL, NULL);
+			::CoTaskMemFree(wszTitle);
+			}
+		}
+	jstring  jstr = env->NewStringUTF(szTitle);
+	return jstr;
+	}
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    nmouseClicked
+ * Signature: (IIII)V
+ */
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nmouseClicked(JNIEnv *env, jobject player, jint hgrins, jint index, jint x, jint y)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	if(pIGRiNSPlayer)
 		{
-		HRESULT hr = pIGRiNSPlayer->mouseClicked(int(x), int(y));	
+		HRESULT hr = pIGRiNSPlayer->mouseClicked(int(index), int(x), int(y));	
 		if(FAILED(hr))
 			ThrowCOMException(env, "mouseClicked", hr);
 		}
 	}
 
 /*
- * Class:     GRiNSPlayer
+ * Class:     grins_GRiNSPlayer
  * Method:    nmouseMoved
- * Signature: (III)Z
+ * Signature: (IIII)Z
  */
-JNIEXPORT jboolean JNICALL Java_grins_GRiNSPlayer_nmouseMoved(JNIEnv *env, jobject player, jint hgrins, jint x, jint y)
+JNIEXPORT jboolean JNICALL Java_grins_GRiNSPlayer_nmouseMoved(JNIEnv *env, jobject player, jint hgrins, jint index, jint x, jint y)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	BOOL bIsHot = FALSE;
 	if(pIGRiNSPlayer)
 		{
-		HRESULT hr = pIGRiNSPlayer->mouseMoved(int(x), int(y), &bIsHot);	
+		HRESULT hr = pIGRiNSPlayer->mouseMoved(int(index), int(x), int(y), &bIsHot);	
 		if(FAILED(hr))
 			ThrowCOMException(env, "mouseMoved", hr);
 		}
@@ -517,6 +578,41 @@ JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayerMonitor_ngetTime(JNIEnv *env, jo
 	return jdouble(t);	
 	}
 
+/*
+ * Class:     grins_GRiNSPlayerMonitor
+ * Method:    ngetTopLayoutCount
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayerMonitor_ngetTopLayoutCount(JNIEnv *env, jobject player, jint hgrins)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	int nl = 1;
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->getTopLayoutCount(&nl);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "getTopLayoutCount", hr);
+		}
+	return jint(nl);
+	}
+
+/*
+ * Class:     grins_GRiNSPlayerMonitor
+ * Method:    ngetTopLayoutState
+ * Signature: (II)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayerMonitor_ngetTopLayoutState(JNIEnv *env, jobject player, jint hgrins, jint index)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	int wndstate = 1;
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->getTopLayoutState(int(index), &wndstate);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "getTopLayoutState", hr);
+		}
+	return jint(wndstate);
+	}
 
 
 
