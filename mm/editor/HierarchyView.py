@@ -87,7 +87,7 @@ class sizes_time:
 	MINSIZE = 48 
 	MAXSIZE = 128
 	TITLESIZE = f_title.fontheightPXL()*1.2
-	CHNAMESIZE = 0
+	CHNAMESIZE = f_channel.fontheightPXL()*1.2 #0
 	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
 	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
 	ARRSIZE = f_title.strsizePXL('xx')[0]	# width of collapse/expand arrow
@@ -813,7 +813,6 @@ class HierarchyView(HierarchyViewDialog):
 			else:
 				left = t0 / cw
 				right = left + w / cw
-##		print 'NODE', node, box, node.boxsize
 		if not hasattr(node, 'expanded') or \
 		   not node.GetChildren():
 			if hierarchy_minimum_sizes:
@@ -977,8 +976,8 @@ class HierarchyView(HierarchyViewDialog):
 		linecolor = TEXTCOLOR
 		f_width = displist.strsize('x')[0]
 		# Draw rectangle around boxes
-		hmargin = f_width / 9
-		vmargin = displist.fontheight() / 4
+##		hmargin = f_width / 9
+##		vmargin = displist.fontheight() / 4
 		displist.drawline(linecolor, [(l, m), (r, m)])
 		# Compute the number of ticks. Don't put them too close
 		# together.
@@ -1042,6 +1041,7 @@ class HierarchyView(HierarchyViewDialog):
 		if self.focusobj: self.focusobj.expandallcall(expand)
 
 	def thumbnailcall(self):
+		self.toplevel.setwaiting()
 		self.thumbnails = not self.thumbnails
 		self.settoggle(THUMBNAIL, self.thumbnails)
 		if self.new_displist:
@@ -1050,6 +1050,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.draw()
 
 	def playablecall(self):
+		self.toplevel.setwaiting()
 		self.showplayability = not self.showplayability
 		self.settoggle(PLAYABLE, self.showplayability)
 		if self.new_displist:
@@ -1058,6 +1059,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.draw()
 
 	def timescalecall(self):
+		self.toplevel.setwaiting()
 		self.timescale = not self.timescale
 		if self.timescale:
 			self.sizes = sizes_time
@@ -1386,14 +1388,19 @@ class Object:
 					pass
 			##ih = min(b1-t1, titleheight+chnameheight)
 			ih = b1-t1
-			if node.__class__ is SlideMMNode and \
+			iw = r-l-2*hmargin
+			# XXXX The "0" values below need to be thought about
+			if iw <= 0 or ih <= 0:
+				# The box is too small, ignore the preview
+				pass
+			elif node.__class__ is SlideMMNode and \
 			   MMAttrdefs.getattr(node, 'tag') in ('fill','fadeout'):
 				d.drawfbox(MMAttrdefs.getattr(node, 'color'), (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
 				d.fgcolor(TEXTCOLOR)
-				d.drawbox((l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
+				d.drawbox((l+hmargin, (t1+b1-ih)/2, iw, ih))
 			elif f is not None:
 				try:
-					box = d.display_image_from_file(f, center = 1, coordinates = (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih), scale=-2)
+					box = d.display_image_from_file(f, center = 1, coordinates = (l+hmargin, (t1+b1-ih)/2, iw, ih), scale=-2)
 				except windowinterface.error:
 					pass
 				else:
