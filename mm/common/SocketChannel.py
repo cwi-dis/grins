@@ -69,9 +69,9 @@ class SocketChannel(Channel):
 				name = fields[1]
 				for nm, tp, bt, tm in self._played_anchors:
 					if nm == name:
-						self._playcontext.anchorfired(\
-						    self._played_node, \
-						    [(nm,tp)], None)
+						self.anchor_triggered(
+							self._played_node,
+							[(nm,tp)], None)
 						return
 			windowinterface.showmessage('SocketChannel: no such anchor\n'+
 				  rv)
