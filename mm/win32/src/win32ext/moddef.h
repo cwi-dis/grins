@@ -135,9 +135,36 @@ void init##module()\
   Py_XDECREF(copyright);\
 }
 
-
 #include <fstream.h>
 #define AfxMessageLog(str){ofstream ofs("log.txt",ios::app);if(ofs) ofs << str << endl;ofs.close();}
+
+inline bool IsFile(LPCTSTR pstrName,CString& strNewName)
+	{
+	CFileFind finder;
+    BOOL bWorking = finder.FindFile(pstrName);
+	if(bWorking)
+		{
+		finder.FindNextFile();
+		strNewName = finder.GetFilePath();
+		}
+	return (bWorking==TRUE);
+	}
+
+// Parse some std file references
+//1. file:///D|/<filepath>
+//2. file:/D|/<filepath>
+inline CString GetWindowsMediaUrl(LPCTSTR strUrl)
+	{
+	CString str(strUrl);	
+	CString strp,strl;
+	if(str.Left(8)=="file:///" && str[9]=='|')
+		strp=CString(str[8]) + ":" + str.Mid(10);
+	else if(str.Left(6)=="file:/" && str[7]=='|')
+		strp=CString(str[6]) + ":" + str.Mid(8);
+	if(IsFile(strp,strl))str=strl;
+	return str;
+	}
+
 
 typedef ui_base_class CPyObject;
 typedef	ui_type CPyTypeObject;
