@@ -579,6 +579,7 @@ class LayoutView2(LayoutViewDialog2):
 		# define the valid command according to the node selected
 		self.mkmediacommandlist()
 		self.mkregioncommandlist()
+		self.mkdefaultregioncommandlist()
 		self.mkviewportcommandlist()
 		self.mknositemcommandlist()
 		self.mkmultisitemcommandlist()
@@ -621,6 +622,11 @@ class LayoutView2(LayoutViewDialog2):
 			self.commandRegionList = [
 				]
 		self.__appendCommonCommands(self.commandRegionList)
+
+	def mkdefaultregioncommandlist(self):
+		self.commandDefaultRegionList = [
+				]
+		##self.__appendCommonCommands(self.commandRegionList)
 
 	def mkanchorcommandlist(self):
 		self.commandAnchorList = [
@@ -935,7 +941,10 @@ class LayoutView2(LayoutViewDialog2):
 			self.updateCommandList(self.commandNoSItemList)
 		elif len(localSelList) == 1:
 			if nodeType == TYPE_REGION:
-				self.updateCommandList(self.commandRegionList)
+				if localSelList[0].isDefault():
+					self.updateCommandList(self.commandDefaultRegionList)
+				else:
+					self.updateCommandList(self.commandRegionList)
 			elif nodeType == TYPE_VIEWPORT:
 				self.updateCommandList(self.commandViewportList)
 			elif nodeType == TYPE_ANCHOR:
