@@ -381,6 +381,7 @@ class TextChannel(Channel):
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, name, attrdict, player)
 		self.window = TextWindow().init(name, attrdict, self)
+		self.arm_node = None
 		return self
 	#
 	def __repr__(self):
