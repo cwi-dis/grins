@@ -26,23 +26,23 @@ public interface SMILDocument {
     SMILRenderer getRenderer();
     
     /**
-    *   Get the number of viewports of this SMIL document.
-    *   Viewports are asigned an index
+    *   Get the number of top level windows of this SMIL document.
+    *   Top level windows are asigned an index.
     */
     int getViewportCount();
     
     /**
-    *   Get viewport size having the zero based index
+    *   Get the top level window size associated with the zero based index
     */
     Dimension getViewportSize(int index);
     
     /**
-    *   Get viewport title having the zero based index
+    *   Get the top level window title associated with the zero based index
     */
     String getViewportTitle(int index);
     
     /**
-    *   Returns true if the viewport with the zero based index is open.
+    *   Returns true if the the top level window associated with the zero based index is open.
     */
     boolean isViewportOpen(int index);
     
