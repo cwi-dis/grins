@@ -2491,6 +2491,20 @@ class QualityAttrEditorField(PopupAttrEditorFieldNoDefault):
 	def valuerepr(self, value):
 		return self.__values[self.__valuesmap.index(value)]
 
+class FitAttrEditorField(PopupAttrEditorFieldNoDefault):
+	__values = ['show whole image', 'actual size', 'fill whole region', 'scroll image if necessary', 'show whole image in whole region']
+	__valuesmap = ['meet', 'hidden', 'slice', 'scroll', 'fill']
+
+	# Choose from a list of unit types
+	def getoptions(self):
+		return self.__values
+
+	def parsevalue(self, str):
+		return self.__valuesmap[self.__values.index(str)]
+
+	def valuerepr(self, value):
+		return self.__values[self.__valuesmap.index(value)]
+
 class TransitionAttrEditorField(PopupAttrEditorField):
 	default = 'No transition'
 
@@ -3118,6 +3132,7 @@ DISPLAYERS = {
 	'screendepth': ScreenDepthAttrEditorField,
 	'acoords': AnchorCoordsAttrEditorField,
 	'keyTimes': KeyTimesAttrEditorField,
+	'fit': FitAttrEditorField,
 }
 
 TYPEDISPLAYERS = {
