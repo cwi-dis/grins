@@ -16,6 +16,7 @@ from TopLevelDialog import TopLevelDialog
 
 class TopLevel(TopLevelDialog):
 	def __init__(self, main, url):
+		self.window = None
 		self.__immediate = 0
 		self.__intimer = 0
 		self.select_fdlist = []
