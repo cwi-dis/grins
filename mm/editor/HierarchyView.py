@@ -792,7 +792,7 @@ def makeboxes(list, node, left, top, right, bottom,
 
 	# the two branches here are basically identical--the
 	# horizontal and vertical directions have been exchanged
-	if t == 'par':
+	if t in ('par', 'alt'):
 		# children laid out horizontally
 		# needed is the minimum space needed to draw all children
 		needed = nchildren * (minwidth + hmargin) - hmargin
