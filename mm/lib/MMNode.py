@@ -15,6 +15,7 @@ from HDTL import HD, TL
 import string, os
 import MMStates
 import Bandwidth
+import Duration
 
 debuggensr = 0
 debug = 0
@@ -51,7 +52,7 @@ class MMNodeContext:
 			from SMILCssResolver import SMILCssResolver
 			self.cssResolver = SMILCssResolver(self)
 
-	def __repr__(self):		
+	def __repr__(self):
 		return '<MMNodeContext instance, channelnames=' \
 			+ `self.channelnames` + '>'
 
@@ -142,7 +143,7 @@ class MMNodeContext:
 		Timing.computetimes(self.root, which)
 		# XXX Temp
 		self._movetimestoobj(self.root, which)
-		
+
 	def _movetimestoobj(self, node, which):
 		timeobj = node.GetTimesObject(which)
 		timeobj.t0 = node.t0
@@ -153,11 +154,11 @@ class MMNodeContext:
 		del node.t2
 		for child in node.children:
 			self._movetimestoobj(child, which)
-		
+
 	def changedtimes(self):
 		for node in self.uidmap.values():
 			node.ClearTimesObjects()
-			
+
 	#
 	# Channel administration
 	#
@@ -202,9 +203,9 @@ class MMNodeContext:
 ##			if ch['type'] == 'layout':
 ##				chlist.append(ch.name)
 ##		chlist.sort()
-##		return chlist		
+##		return chlist
 ##		# end experimental
-		
+
 		# return a list of channels compatible with the given URL
 		if url:
 			# ignore chtype if url is set
@@ -330,29 +331,29 @@ class MMNodeContext:
 			self._ichanneldict[name] = c
 			self._ichannelnames.append(name)
 			self._ichannels.append(c)
-			
+
 	#
 	# registration points administration
 	#
-	
+
 	def addRegpoint(self, name, dict, isdefault=0):
 		regpoint = MMRegPoint(self,name)
-		
+
 		for attr, val in dict.items():
 			if attr == 'top' or attr == 'bottom' or \
 				attr == 'left' or attr == 'right' or attr == 'regAlign':
 				regpoint[attr] = val
-		
+
 		regpoint['isdefault'] = isdefault
 		self.regpoints[name] = regpoint
 
 	def GetRegPoint(self, name):
 		return self.regpoints.get(name)
-	
+
 	#
 	# Hyperlink administration
 	#
-	
+
 	def addhyperlinks(self, list):
 		self.hyperlinks.addlinks(list)
 
@@ -563,10 +564,10 @@ class MMRegPoint:
 		self.name = name
 		self.isdef = 0
 		self.attrdict = {}
-		
+
 	def __repr__(self):
 		return '<MMRegPoint instance, name=' + `self.name` + '>'
-		
+
 	#
 	# Emulate the dictionary interface
 	#
@@ -576,18 +577,18 @@ class MMRegPoint:
 			self.isdef = value
 		else:
 			self.attrdict[key] = value
-		
+
 	def __getitem__(self, key):
 		val = self.attrdict.get(key)
 		return val
-	
+
 	def isdefault(self):
 		return self.isdef
-		
+
 	def getregalign(self):
 		if self.attrdict.has_key('regAlign'):
 			return self.attrdict['regAlign']
-		
+
 		return MMAttrdefs.getdefattr(self, 'regAlign')
 
 	# return the point in pixel
@@ -603,9 +604,9 @@ class MMRegPoint:
 			x = boxwidth-right
 		else:
 			x = 0
-		
+
 		return x
-		
+
 	# return the point in pixel
 	def gety(self, boxheight):
 		if self.attrdict.has_key('top'):
@@ -619,9 +620,9 @@ class MMRegPoint:
 			y = boxheight-bottom
 		else:
 			y = 0
-		
+
 		return y
-	
+
 	# return the tuple x,y alignment in pourcent value
 	# alignOveride is an optional overide id
 	def getxyAlign(self, alignOveride=None):
@@ -630,17 +631,17 @@ class MMRegPoint:
 			alignId = self.getregalign()
 		else:
 			alignId = alignOveride
-			
+
 		from RegpointDefs import alignDef
 		xy = alignDef.get(alignId)
-		if xy == None:		
+		if xy == None:
 			# impossible value, avoid a crash if bug
 			xy = (0.0, 0,0)
 		return xy
-			
+
 	def items(self):
 		return self.attrdict.items()
-		
+
 class MMChannel:
 	def __init__(self, context, name, type='undefined', isRoot=0):
 		self.context = context
@@ -654,7 +655,7 @@ class MMChannel:
 				# allow to maintains the compatibility with old version
 				# this flag shouldn't be accessible in the future
 				self.attrdict['base_winoff'] = (0, 0, 100, 100)
-				
+
 	def __repr__(self):
 		return '<MMChannel instance, name=' + `self.name` + '>'
 
@@ -679,7 +680,7 @@ class MMChannel:
 
 	def _getdict(self): # Only called from MMWrite.fixroot()
 		return self.attrdict
-	
+
 	# new 03-07-2000
 	# up in the channel tree until find a layoutchannel.
 	# a layout channel can be translated directly in SMIL region
@@ -689,14 +690,14 @@ class MMChannel:
 		if not cname:
 			return None
 		return self.context.channeldict.get(cname)
-	# end new	
+	# end new
 
 	def getCssId(self):
 		return self._cssId
 
 	def setCssAttr(self, name, value):
 		self.context.cssResolver.setRawAttr(self._cssId, name, value)
-											
+
 	def getCssAttr(self, name, defaultValue=None):
 		value = self.context.cssResolver.getAttr(self._cssId, name)
 		if value == None:
@@ -714,8 +715,8 @@ class MMChannel:
 		if name in ['top', 'left', 'right', 'top', 'height', 'bottom', 'regPoint', 'regAlign', 'scale']:
 			return 1
 
-		return 0		
-		
+		return 0
+
 	#
 	# Set animated attribute
 	#
@@ -726,10 +727,10 @@ class MMChannel:
 			self.attrdict.has_key('base_winoff'):
 			d = self.d_attrdict
 			n = 'base_winoff'
-			if self.d_attrdict.has_key(n):	
+			if self.d_attrdict.has_key(n):
 				x, y, w, h = self.d_attrdict[n]
 			else:
-				x, y, w, h = self.attrdict[n]	
+				x, y, w, h = self.attrdict[n]
 			if name == 'left':    d[n] = value, y, w, h
 			elif name == 'top':	  d[n] = x, value, w, h
 			elif name == 'width': d[n] = x, y, value, h
@@ -796,7 +797,7 @@ class MMChannel:
 				elif self.isCssAttr(key):
 					# keep the compatibility with old version
 					return self.getCssAttr(key)
-			
+
 			raise KeyError, key
 
 	def __setitem__(self, key, value):
@@ -820,7 +821,7 @@ class MMChannel:
 				print 'Warning: base_winoff deprecated attribute.Instead, modify directly the raw attributes positioning, or use setPxGeom (if absolutly required for last case)'
 				self.setPxGeom(value)
 				return
-			
+
 		self.attrdict[key] = value
 
 	def __delitem__(self, key):
@@ -886,7 +887,7 @@ class MMChannel:
 
 	def getCssId(self):
 		return self._cssId
-	
+
 # representation of anchors
 class MMAnchor:
 	def __init__(self, aid, atype, aargs, atimes, aaccess):
@@ -1208,7 +1209,7 @@ class MMSyncArc:
 class MMNode_body:
 	"""Helper for looping nodes"""
 	helpertype = "looping"
-	
+
 	def __init__(self, parent):
 		self.fullduration = None
 		self.scheduled_children = 0
@@ -1236,7 +1237,7 @@ class MMNode_body:
 
 	def stoplooping(self):
 		pass
-	
+
 	def cleanup_sched(self, sched):
 		self.parent.cleanup_sched(sched, self)
 
@@ -1259,6 +1260,9 @@ class MMNode_body:
 
 	def stopplay(self, timestamp):
 		if debug: print 'stopplay',`self`,timestamp
+		if self.playing in (MMStates.IDLE, MMStates.PLAYED):
+			if debug: print 'stopplay: already stopped'
+			return
 		self.playing = MMStates.PLAYED
 		self.time_list[-1] = self.time_list[-1][0], timestamp
 		if self.parent and self.parent.type == 'alt':
@@ -1269,11 +1273,11 @@ class MMNode_pseudopar_body(MMNode_body):
 
 	def _is_realpix_with_captions(self):
 		return 0
-	
+
 class MMNode_realpix_body(MMNode_pseudopar_body):
 	"""Helper for RealPix nodes with captions, realpix part"""
 	helpertype = "realpix"
-	
+
 class MMNode_caption_body(MMNode_pseudopar_body):
 	"""Helper for RealPix nodes with captions, caption part"""
 	helpertype = "caption"
@@ -1308,28 +1312,28 @@ class MMNode_caption_body(MMNode_pseudopar_body):
 	def GetInherAttrDef(self, name, default):
 		if name == 'channel': name = 'captionchannel'
 		return self.parent.GetInherAttrDef(name, default)
-		
+
 class _TimingInfo:
 	def __init__(self):
 		self.t0 = 'error'
 		self.t1 = 'error'
 		self.t2 = 'error'
 		self.downloadlag = 0
-		
+
 	def GetTimes(self):
 		return self.t0, self.t1, self.t2, self.downloadlag
-	
+
 class MMNode:
 	# MMNode is the base class from which other Node classes are implemented.
 	# Each Node forms a doubly-linked n-tree - MMNode.children[] stores the
 	# children below the current node and MMNode.parent has a link back up to
-	# the parent. 
+	# the parent.
 
 	# Nodes are used for representing the structure of the GRiNS production
 	# in a hierarchical manner. Playing the GRiNS production involves recursing
 	# through the leaf-nodes of the MMNode structure by calling MMNode.startplay(..).
 	# -mjvdg
-	
+
 	def __init__(self, type, context, uid):
 		# ASSERT type in alltypes
 		self.type = type	# see MMTypes.py
@@ -1396,7 +1400,7 @@ class MMNode:
 		if debug: print 'MMNode.reset', `self`
 		if self.parent and self.parent.type == 'alt':
 			self.parent.reset()
-			
+
 
 	def resetall(self, sched):
 		if debug: print 'resetall', `self`
@@ -1434,7 +1438,7 @@ class MMNode:
 		if self._subRegCssId == None or self._mediaCssId == None:
 			print 'Error: MMNode, linkCssId: subregcssid or mediacssid equal None'
 			return
-		
+
 		# for sub region
 		channel = self.GetChannel()
 		if channel == None:
@@ -1445,14 +1449,14 @@ class MMNode:
 			print 'Error: MMNode, linkCssId: no layout channel'
 			return
 		cssResolver.link(self._subRegCssId, region._cssId)
-		
+
 		# for media
-		cssResolver.link(self._mediaCssId, self._subRegCssId)	
+		cssResolver.link(self._mediaCssId, self._subRegCssId)
 
 	def __unlinkCssId(self):
 		if self._subRegCssId == None or self._mediaCssId == None:
 			return
-		
+
 		cssResolver = self.context.cssResolver
 		cssResolver.unlink(self._mediaCssId)
 		cssResolver.unlink(self._subRegCssId)
@@ -1463,7 +1467,7 @@ class MMNode:
 
 	def getSubRegCssId(self):
 		return self._subRegCssId
-	
+
 	def newMediaCssId(self):
 		self._mediaCssId = self.context.cssResolver.newMedia()
 		return self._mediaCssId
@@ -1476,7 +1480,7 @@ class MMNode:
 			self.context.cssResolver.setRawAttr(self._mediaCssId, name, value)
 		else:
 			self.context.cssResolver.setRawAttr(self._subRegCssId, name, value)
-											
+
 	def getCssRawAttr(self, name, defaultValue = None):
 		if name in ['regPoint', 'regAlign', 'scale']:
 			if self._mediaCssId == None:
@@ -1489,12 +1493,12 @@ class MMNode:
 		if value == None:
 			return defaultValue
 		return value
-	
+
 	def getCssAttr(self, name, defaultValue = None):
 		if name in ['regPoint', 'regAlign', 'scale']:
 			if self._mediaCssId == None:
 				return defaultValue
-			
+
 			self.__linkCssId()
 			value = self.context.cssResolver.getAttr(self._mediaCssId, name)
 			self.__unlinkCssId()
@@ -1507,22 +1511,22 @@ class MMNode:
 		if value == None:
 			return defaultValue
 		return value
-	
+
 	def isCssAttr(self, name):
 		if name in ['top', 'left', 'right', 'top', 'height', 'bottom', 'regPoint', 'regAlign', 'scale']:
 			return 1
 
 		return 0
-	
+
 	# this method return the media positioning (subregiongeom+mediageom) in pixel values.
 	# All values are relative to the parent region/subregion
-	# it should be use only in some rare cases 
+	# it should be use only in some rare cases
 	# if we need to use often this method, we should optimize it
 	def getPxGeomMedia(self):
 		if self._subRegCssId == None or self._mediaCssId == None:
 			print 'no geometry on media:',self
 			return ((0,0,100,100), (0,0,100,100))
-		
+
 		# a dynamic link should be enough for this method
 		# it avoid to keep a synchonization with the css resolver
 		self.__linkCssId()
@@ -1530,7 +1534,7 @@ class MMNode:
 		subRegGeom = cssResolver.getPxGeom(self._subRegCssId)
 		mediaGeom = cssResolver.getPxGeom(self._mediaCssId)
 		self.__unlinkCssId()
-		
+
 		return subRegGeom, mediaGeom
 
 	def getPxGeom(self):
@@ -1550,7 +1554,7 @@ class MMNode:
 		if self._subRegCssId == None or self._mediaCssId == None:
 			print 'no geometry on media:',self
 			return ((0,0,100,100), (0,0,100,100))
-		
+
 		# a dynamic link should be enough for this method
 		# it avoid to keep a synchonization with the css resolver
 		self.__linkCssId()
@@ -1558,7 +1562,7 @@ class MMNode:
 		subRegGeom = cssResolver.getPxAbsGeom(self._subRegCssId)
 		mediaGeom = cssResolver.getPxAbsGeom(self._mediaCssId)
 		self.__unlinkCssId()
-		
+
 		return subRegGeom, mediaGeom
 
 	def startplay(self, sctx, timestamp):
@@ -1577,6 +1581,9 @@ class MMNode:
 
 	def stopplay(self, timestamp):
 		if debug: print 'stopplay',`self`,timestamp
+		if self.playing in (MMStates.IDLE, MMStates.PLAYED):
+			if debug: print 'stopplay: already stopped'
+			return
 		self.playing = MMStates.PLAYED
 		self.time_list[-1] = self.time_list[-1][0], timestamp
 		if self.parent and self.parent.type == 'alt':
@@ -1697,6 +1704,36 @@ class MMNode:
 			return 'always'
 		return restart
 
+	def GetMinMax(self):
+		mintime = self.attrdict.get('min')
+		maxtime = self.attrdict.get('max')
+		if mintime == -2:
+			if self.type in leaftypes:
+				mintime = Duration.get(self, ignoreloop=1, ignoredur=1)
+			else:
+				mintime = None
+		if maxtime == -2:
+			if self.type in leaftypes:
+				maxtime = Duration.get(self, ignoreloop=1, ignoredur=1)
+			else:
+				maxtime = None
+		if mintime is not None and maxtime is not None:
+			# if min and max are both specified, and max <
+			# min, then ignore both
+			if 0 <= maxtime < mintime:
+				mintime = maxtime = None
+		if mintime is None:
+			mintime = 0
+		if maxtime is None:
+			maxtime = -1
+		return mintime, maxtime
+
+	def GetMin(self):
+		return self.GetMinMax()[0]
+
+	def GetMax(self):
+		return self.GetMinMax()[1]
+
 	def GetType(self):
 		return self.type
 
@@ -1783,7 +1820,7 @@ class MMNode:
 			return cmp(i1, i2), p1, p2
 		# nodes are in the same priority class
 		return 0, p1, p2
-		
+
 	def GetChildren(self):
 		return self.children
 
@@ -1812,7 +1849,7 @@ class MMNode:
 			elif c is x:
 				return 1
 		return 0
-				
+
 	def GetChild(self, i):
 		return self.children[i]
 
@@ -1887,7 +1924,7 @@ class MMNode:
 			while x is not None:
 				if x.d_attrdict and x.d_attrdict.has_key(name):
 					return x.d_attrdict[name]
-				x = x.parent	
+				x = x.parent
 		x = self
 		while x is not None:
 			if x.attrdict and x.attrdict.has_key(name):
@@ -1901,7 +1938,7 @@ class MMNode:
 			while x is not None:
 				if x.d_attrdict and x.d_attrdict.has_key(name):
 					return x.d_attrdict[name]
-				x = x.parent	
+				x = x.parent
 		x = self.parent
 		while x is not None:
 			if x.attrdict and x.attrdict.has_key(name):
@@ -1915,7 +1952,7 @@ class MMNode:
 			while x is not None:
 				if x.d_attrdict and x.d_attrdict.has_key(name):
 					return x.d_attrdict[name]
-				x = x.parent	
+				x = x.parent
 ##		try:
 ##			return self.GetInherAttr(name)
 ##		except NoSuchAttrError:
@@ -1950,7 +1987,7 @@ class MMNode:
 	def GetRegAlign(self, regpoint):
 		# first looking for in node
 		regAlign = self.attrdict.get('regAlign')
-		
+
 		# if not found looking for in channel
 		if regAlign == None:
 			ch = self.GetChannel()
@@ -1959,11 +1996,11 @@ class MMNode:
 				regAlign = lch.get('regAlign', None)
 
 		# at last, if not found get regAlign defined in regPoint element
-		if regAlign == None:		
+		if regAlign == None:
 			regAlign = regpoint.getregalign()
-		
+
 		return regAlign
-		
+
 	# get default media size in pixel
 	# if not defined, return width and height
 	def GetDefaultMediaSize(self, defWidth, defHeight):
@@ -1973,7 +2010,7 @@ class MMNode:
 			import Sizes
 			media_width, media_height = Sizes.GetSize(url)
 		except:
-			media_width = defWidth 
+			media_width = defWidth
 			media_height = defHeight
 
 		return media_width, media_height
@@ -2017,15 +2054,15 @@ class MMNode:
 				if arc.srcnode == 'syncbase' and arc.getevent() is None and arc.marker is None and arc.channel is None:
 					begindelay = arc.delay
 		return t0, t1, t2, downloadlag, begindelay
-		
+
 	def GetTimesObject(self, which='virtual'):
 		if not self.timing_info_dict.has_key(which):
 			self.timing_info_dict[which] = _TimingInfo()
 		return self.timing_info_dict[which]
-		
+
 	def ClearTimesObjects(self):
 		self.timing_info_dict = {}
-		
+
 	def GetDelays(self, which):
 		# Returns begin delay and download lag delay for timing of type 'which'. Does
 		# not recompute anything; in fact this method is there only for the t0/t1 recomputation
@@ -2068,8 +2105,8 @@ class MMNode:
 			elif name == 'size':
 				w, h = value
 				d[n] = x, y, w, h
-	
-			
+
+
 	#
 	# Channel management
 	#
@@ -2454,7 +2491,7 @@ class MMNode:
 		elif type == 'prio':
 			self.gensr = None # should never be called
 		else:
-			raise CheckError, 'MMNode: unknown type %s' % self.type		 
+			raise CheckError, 'MMNode: unknown type %s' % self.type
 	#
 	# Methods for building scheduler records. The interface is as follows:
 	# - PruneTree() is called first, with a parameter that specifies the
@@ -2629,7 +2666,7 @@ class MMNode:
 			self.realpix_body = MMNode_realpix_body(self)
 			self.caption_body = MMNode_caption_body(self)
 			return self.gensr_interior(looping, curtime=curtime)
-			
+
 		# Clean up realpix stuff: the node may have been a realpix node in the past
 		self.realpix_body = None
 		self.caption_body = None
@@ -2653,34 +2690,34 @@ class MMNode:
 		srlist.append(([(SCHED_STOPPING,self)], sched_done))
 		srlist.append(([(SCHED_STOP, self)], sched_stop))
 
-		# XXX: ignoring animate elements timing for now, 
-		# just kick animate childs in a parallel envelope	
+		# XXX: ignoring animate elements timing for now,
+		# just kick animate childs in a parallel envelope
 		for child in self.GetSchedChildren():
 			if MMAttrdefs.getattr(child, 'type')!='animate':
 				continue
-			srlist.append(( [(SCHED, self),], 
+			srlist.append(( [(SCHED, self),],
 				[(SCHED,child),(PLAY,self)]  ))
 
-			srlist.append((  [(SCHED_STOPPING,self),], 
+			srlist.append((  [(SCHED_STOPPING,self),],
 				[(SCHED_DONE,self), (PLAY_STOP, self), ]  ))
 
-			srlist.append((  [(SCHED,child),], 
+			srlist.append((  [(SCHED,child),],
 				[(PLAY,child)]  ))
 
 			if settings.noprearm:
-				srlist.append((  [(SCHED,child),], 
+				srlist.append((  [(SCHED,child),],
 					[(PLAY,child)]  ))
 			else:
-				srlist.append((  [(SCHED,child),(ARM_DONE, child),], 
+				srlist.append((  [(SCHED,child),(ARM_DONE, child),],
 					[(PLAY,child)]  ))
 
-			srlist.append((  [(SCHED_STOP,self),], 
+			srlist.append((  [(SCHED_STOP,self),],
 				[(PLAY_STOP,self),(PLAY_STOP,child)]  ))
 
-			srlist.append((  [(SCHED_DONE,child),], 
+			srlist.append((  [(SCHED_DONE,child),],
 				[]  ))
 
-			srlist.append((  [(PLAY_DONE,child),], 
+			srlist.append((  [(PLAY_DONE,child),],
 				[(PLAY_STOP,child),]  ))
 
 		srdict = {}
@@ -2703,7 +2740,7 @@ class MMNode:
 	# - actions to be taken upon node starting (SCHED)
 	# - actions to be taken upon SCHED_STOP
 	# - a list of all (event, action) tuples to be generated
-	# 
+	#
 	def gensr_interior(self, looping=0, path=None, curtime=None):
 		#
 		# If the node is empty there is very little to do.
@@ -2803,7 +2840,7 @@ class MMNode:
 
 		sched_actions, schedstop_actions, srdict = \
 			       gensr_body(sched_actions, scheddone_actions, path=path, curtime=curtime)
-		if debuggensr: 
+		if debuggensr:
 			self.__dump_srdict('gensr_envelope_nonloop', srdict)
 		return sched_actions, schedstop_actions, srdict
 
@@ -2870,7 +2907,7 @@ class MMNode:
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
-		if debuggensr: 
+		if debuggensr:
 			self.__dump_srdict('gensr_envelope_firstloop', srdict)
 		return sched_actions, terminate_actions, srdict
 
@@ -2906,7 +2943,7 @@ class MMNode:
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
-		if debuggensr: 
+		if debuggensr:
 			self.__dump_srdict('gensr_envelope_laterloop', srdict)
 		return [], [], srdict
 
@@ -3022,7 +3059,10 @@ class MMNode:
 
 		duration = self.GetAttrDef('duration', None)
 		if duration is not None and self_body is not self:
-			if duration < 0:
+			if duration == -1:
+				delay = None
+			elif duration == -2:
+				# dur="media" not allowed on interior nodes
 				delay = None
 			else:
 				delay = duration
@@ -3038,7 +3078,7 @@ class MMNode:
 ##				   wtd_children[i].start_time < curtime:
 ##					wtd_children = wtd_children[i:]
 ##					break
-			
+
 		for child in wtd_children:
 			chname = MMAttrdefs.getattr(child, 'name')
 			beginlist = MMAttrdefs.getattr(child, 'beginlist')
@@ -3086,7 +3126,7 @@ class MMNode:
 			for arc in self.FilterArcList(MMAttrdefs.getattr(child, 'endlist')):
 				refnode = arc.refnode()
 				refnode.add_arc(arc)
-			cdur = child.calcfullduration()
+			cdur = child.calcfullduration(ignoremin = 1)
 			if cdur is not None and child.fullduration is not None:
 				if cdur < 0:
 					delay = None
@@ -3096,7 +3136,7 @@ class MMNode:
 				child.durarcs.append(arc)
 ##				self_body.arcs.append((child, arc))
 				child.add_arc(arc)
-			min = child.GetAttrDef('min', 0)
+			min, max = child.GetMinMax()
 			if min > 0:
 				arc = MMSyncArc(child, 'min', srcnode=child, event='begin', delay=min)
 				child.has_min = 1
@@ -3104,8 +3144,7 @@ class MMNode:
 				child.add_arc(arc)
 			else:
 				child.has_min = 0
-			max = child.GetAttrDef('max', None)
-			if max is not None:
+			if max >= 0:
 				arc = MMSyncArc(child, 'end', srcnode=child, event='begin', delay=max)
 				child.durarcs.append(arc)
 				child.add_arc(arc)
@@ -3140,7 +3179,7 @@ class MMNode:
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
-		if debuggensr: 
+		if debuggensr:
 			self.__dump_srdict('gensr_body_interior', srdict)
 		return sched_actions, schedstop_actions, srdict
 
@@ -3180,10 +3219,10 @@ class MMNode:
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
-		if debuggensr: 
+		if debuggensr:
 			self.__dump_srdict('gensr_body_realpix', srdict)
 		return sched_actions, schedstop_actions, srdict
-			
+
 	def gensr_child(self, child, runchild = 1, path = None, curtime = None):
 		if debug: print 'gensr_child',`self`,`child`,runchild
 		if runchild:
@@ -3227,7 +3266,7 @@ class MMNode:
 			numsrlist = self.srdict[(SCHED_STOP, body)]
 			srlist = numsrlist[1]
 			srlist.append((SCHED_STOP, child))
-		if debuggensr: 
+		if debuggensr:
 			self.__dump_srdict('gensr_child', srdict)
 		return srdict
 
@@ -3333,7 +3372,6 @@ class MMNode:
 		# not taking into account the duration/end/repeat* attrs
 		maybecached = 1
 		if self.type in leaftypes:
-			import Duration
 			return Duration.get(self, ignoreloop=1), maybecached
 		elif self.type == 'excl':
 			# XXX it's too hard to calculate this properly with all
@@ -3397,50 +3435,72 @@ class MMNode:
 					return 0, maybecached
 				return c.__calcduration()
 
-	def calcfullduration(self):
+	def calcfullduration(self, ignoremin = 0):
 		if self.fullduration is not None:
-			return self.fullduration
-		maybecached = 1
-		duration = self.attrdict.get('duration')
-		repeatDur = self.attrdict.get('repeatdur')
-		repeatCount = self.attrdict.get('loop')
-		endlist = self.attrdict.get('endlist', [])
-		endlist = self.FilterArcList(endlist)
-		if endlist and duration is None and \
-		   repeatCount is None and repeatDur is None:
-			# "If an end attribute is specified but none
-			# of dur, repeatCount and repeatDur are
-			# specified, the simple duration is defined to
-			# be indefinite"
-			duration = -1
-		if repeatDur is not None and \
-		   repeatCount is not None:
-			if duration is None:
-				duration, maybecached = self.__calcduration()
-			if duration is not None and duration > 0 and \
-			   repeatCount > 0 and repeatDur >= 0:
-				duration = min(repeatCount * duration, repeatDur)
-			elif duration is not None and duration > 0 and \
-			     repeatCount > 0 and repeatDur < 0:
-				duration = repeatCount * duration
-			# else repeatCount=indefinite or to be ignored
-			elif repeatDur >= 0:
-				duration = repeatDur
-			else:
+			duration = self.fullduration
+		else:
+			maybecached = 1
+			duration = self.attrdict.get('duration')
+			if duration == -2:
+				if self.type in interiortypes:
+					duration = -1
+				else:
+					duration = Duration.get(self, ignoreloop=1)
+				print 'dur media',self,duration
+			repeatDur = self.attrdict.get('repeatdur')
+			repeatCount = self.attrdict.get('loop')
+			endlist = self.attrdict.get('endlist', [])
+			endlist = self.FilterArcList(endlist)
+			beginlist = self.attrdict.get('beginlist', [])
+			beginlist = self.FilterArcList(beginlist)
+			if len(beginlist) > 1 and self.GetRestart() == 'always':
+				maybecached = 0
+			if endlist and duration is None and \
+			   repeatCount is None and repeatDur is None:
+				# "If an end attribute is specified but none
+				# of dur, repeatCount and repeatDur are
+				# specified, the simple duration is defined to
+				# be indefinite"
 				duration = -1
-		elif repeatDur is not None: # repeatCount is None
-			duration = repeatDur
-		elif repeatCount is not None: # repeatDur is None
-			if duration is None:
-				duration, maybecached = self.__calcduration()
-			if duration is not None and duration > 0:
-				if repeatCount > 0:
+			if repeatDur is not None and \
+			   repeatCount is not None:
+				if duration is None:
+					duration, mb = self.__calcduration()
+					if not mb:
+						maybecached = 0
+				if duration is not None and duration > 0 and \
+				   repeatCount > 0 and repeatDur >= 0:
+					duration = min(repeatCount * duration, repeatDur)
+				elif duration is not None and duration > 0 and \
+				     repeatCount > 0 and repeatDur < 0:
 					duration = repeatCount * duration
+				# else repeatCount=indefinite or to be ignored
+				elif repeatDur >= 0:
+					duration = repeatDur
 				else:
 					duration = -1
-		elif duration is None:
-			duration, maybecached = self.__calcduration()
-		
+			elif repeatDur is not None: # repeatCount is None
+				duration = repeatDur
+			elif repeatCount is not None: # repeatDur is None
+				if duration is None:
+					duration, mb = self.__calcduration()
+					if not mb:
+						maybecached = 0
+				if duration is not None and duration > 0:
+					if repeatCount > 0:
+						duration = repeatCount * duration
+					else:
+						duration = -1
+			elif duration is None:
+				duration, mb = self.__calcduration()
+				if not mb:
+					maybecached = 0
+
+			if maybecached:
+				self.fullduration = duration
+			else:
+				self.fullduration = None
+
 		# adjust duration when we have time manipulations
 		if duration is not None and duration > 0:
 			speed = self.attrdict.get('speed')
@@ -3448,14 +3508,16 @@ class MMNode:
 				duration = duration / speed
 			if MMAttrdefs.getattr(self, 'autoReverse'):
 				duration = 2.0 * duration
-		
-		mintime = self.attrdict.get('min', 0)
-		if mintime > 0 and duration  is not None and duration >= 0 and duration < mintime:
-			maybecached = 0
-		if maybecached:
-			self.fullduration = duration
-		else:
-			self.fullduration = None
+
+		if not ignoremin:
+			mintime, maxtime = self.GetMinMax()
+			if mintime > 0 and duration is not None and 0 <= duration < mintime:
+				if debug: print 'calcfullduration: min',duration,mintime
+				duration = mintime
+			if maxtime > 0 and duration > maxtime or duration < 0:
+				if debug: print 'calcfullduration: max',duration,maxtime
+				duration = maxtime
+
 		if debug: print 'calcfullduration:',`self`,`duration`,`maybecached`
 		return duration
 
@@ -3505,7 +3567,7 @@ class MMNode:
 		# First generate arcs
 		#
 		self.PruneTree(seeknode)
-				
+
 		#
 		# Now run through the tree
 		#
@@ -3516,7 +3578,7 @@ class MMNode:
 		if debuggensr: self.__dump_srdict('GenAllSR', srdict)
 		return srdict
 
-	
+
 	# srdict is a map:  event -> [num, action_list]
 	# num: is the number of events associated with the same action_list
 	#	==the number of the events that must occure before action_list gets exec
@@ -3621,7 +3683,7 @@ class MMNode:
 	#
 	def set_armedmode(self, mode):
 		self.armedmode = mode
-		
+
 	#
 	# method for maintaining node's info-icon state when the HierarchyView is
 	# not active
@@ -3629,7 +3691,7 @@ class MMNode:
 	def set_infoicon(self, icon, msg=None):
 		self.infoicon = icon
 		self.errormessage = msg
-		
+
 	def clear_infoicon(self):
 		self.infoicon = ''
 		self.errormessage = None
