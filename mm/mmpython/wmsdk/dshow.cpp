@@ -35,8 +35,7 @@ static PyObject *ErrorObject;
 PyInterpreterState*
 PyCallbackBlock::s_interpreterState = NULL;
 
-static void
-seterror(const char *funcname, HRESULT hr)
+void seterror(const char *funcname, HRESULT hr)
 {
 	char* pszmsg;
 	::FormatMessage( 
@@ -283,20 +282,20 @@ newRealConverterObject()
 typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
-	IWMConverter* pWMConverter;
-} WMConverterObject;
+	IPipe* pPipe;
+} PipeObject;
 
-staticforward PyTypeObject WMConverterType;
+staticforward PyTypeObject PipeType;
 
-static WMConverterObject *
-newWMConverterObject()
+static PipeObject *
+newPipeObject()
 {
-	WMConverterObject *self;
+	PipeObject *self;
 
-	self = PyObject_NEW(WMConverterObject, &WMConverterType);
+	self = PyObject_NEW(PipeObject, &PipeType);
 	if (self == NULL)
 		return NULL;
-	self->pWMConverter = NULL;
+	self->pPipe = NULL;
 	/* XXXX Add your own initializers here */
 	return self;
 }
@@ -1082,6 +1081,7 @@ BaseFilter_QueryFilterName(BaseFilterObject *self, PyObject *args)
 	return Py_BuildValue("s",buf);
 }
 
+
 static char BaseFilter_QueryIRealConverter__doc__[] =
 ""
 ;
@@ -1106,25 +1106,25 @@ BaseFilter_QueryIRealConverter(BaseFilterObject *self, PyObject *args)
 	return (PyObject *) obj;
 }
 
-static char BaseFilter_QueryIWMConverter__doc__[] =
+static char BaseFilter_QueryIPipe__doc__[] =
 ""
 ;
 
 static PyObject *
-BaseFilter_QueryIWMConverter(BaseFilterObject *self, PyObject *args)
+BaseFilter_QueryIPipe(BaseFilterObject *self, PyObject *args)
 {
 	HRESULT res;
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 
-	WMConverterObject *obj = newWMConverterObject();
+	PipeObject *obj = newPipeObject();
 	Py_BEGIN_ALLOW_THREADS
-	res = self->pFilter->QueryInterface(IID_IWMConverter,(void**)&obj->pWMConverter);
+	res = self->pFilter->QueryInterface(IID_IPipe,(void**)&obj->pPipe);
 	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
-		seterror("BaseFilter_QueryIWMConverter", res);
+		seterror("BaseFilter_QueryIPipe", res);
 		Py_DECREF(obj);
-		obj->pWMConverter=NULL;
+		obj->pPipe=NULL;
 		return NULL;
 	}
 	return (PyObject *) obj;
@@ -1157,7 +1157,8 @@ static struct PyMethodDef BaseFilter_methods[] = {
 	{"FindPin", (PyCFunction)BaseFilter_FindPin, METH_VARARGS, BaseFilter_FindPin__doc__},
 	{"QueryIFileSinkFilter", (PyCFunction)BaseFilter_QueryIFileSinkFilter, METH_VARARGS, BaseFilter_QueryIFileSinkFilter__doc__},
 	{"QueryIRealConverter", (PyCFunction)BaseFilter_QueryIRealConverter, METH_VARARGS, BaseFilter_QueryIRealConverter__doc__},
-	{"QueryIWMConverter", (PyCFunction)BaseFilter_QueryIWMConverter, METH_VARARGS, BaseFilter_QueryIWMConverter__doc__},
+	{"QueryIPipe", (PyCFunction)BaseFilter_QueryIPipe, METH_VARARGS, BaseFilter_QueryIPipe__doc__},
+	{"QueryIPipe", (PyCFunction)BaseFilter_QueryIPipe, METH_VARARGS, BaseFilter_QueryIPipe__doc__},
 	{"QueryFilterName", (PyCFunction)BaseFilter_QueryFilterName, METH_VARARGS, BaseFilter_QueryFilterName__doc__},
 	{"EnumPins", (PyCFunction)BaseFilter_EnumPins, METH_VARARGS, BaseFilter_EnumPins__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
@@ -1493,7 +1494,7 @@ static PyTypeObject BasicVideoType = {
 ////////////////////////////////////////////
 
 /////////////////////////////////////////////
-// MediaControl
+// MediaControl (IMediaControl)
 
 
 static char MediaControl_Run__doc__[] =
@@ -1559,10 +1560,32 @@ MediaControl_Pause(MediaControlObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char MediaControl_GetState__doc__[] =
+""
+;
+static PyObject *
+MediaControl_GetState(MediaControlObject *self, PyObject *args)
+{
+	HRESULT res;
+	long msTimeout = 0;
+	if (!PyArg_ParseTuple(args, "|i", &msTimeout))
+		return NULL;
+	OAFilterState fs;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pCtrl->GetState(msTimeout, &fs);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res))
+		fs = -1; // unknown
+	// Stopped   = 0, Paused = 1, Running = 2
+	return Py_BuildValue("i", int(fs));
+}
+
+
 static struct PyMethodDef MediaControl_methods[] = {
 	{"Run", (PyCFunction)MediaControl_Run, METH_VARARGS, MediaControl_Run__doc__},
 	{"Stop", (PyCFunction)MediaControl_Stop, METH_VARARGS, MediaControl_Stop__doc__},
 	{"Pause", (PyCFunction)MediaControl_Pause, METH_VARARGS, MediaControl_Pause__doc__},
+	{"GetState", (PyCFunction)MediaControl_GetState, METH_VARARGS, MediaControl_GetState__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -2098,13 +2121,13 @@ static PyTypeObject RealConverterType = {
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
-// WMConverter object 
+// Pipe object 
 
-static char WMConverter_SetAdviceSink__doc__[] =
+static char Pipe_SetAdviceSink__doc__[] =
 ""
 ;
 static PyObject *
-WMConverter_SetAdviceSink(WMConverterObject *self, PyObject *args)
+Pipe_SetAdviceSink(PipeObject *self, PyObject *args)
 {
 	PyRenderingListenerObject *obj;
 	if (!PyArg_ParseTuple(args, "O!",&PyRenderingListenerType,&obj))
@@ -2112,49 +2135,49 @@ WMConverter_SetAdviceSink(WMConverterObject *self, PyObject *args)
 	IRendererAdviceSink *pI=NULL;
 	HRESULT hr = obj->pI->QueryInterface(IID_IRendererAdviceSink,(void**)&pI);
 	if (FAILED(hr)) {
-		seterror("WMConverter_SetAdviceSink", hr);
+		seterror("Pipe_SetAdviceSink", hr);
 		return NULL;
 	}	
-	self->pWMConverter->SetRendererAdviceSink(pI);
+	self->pPipe->SetRendererAdviceSink(pI);
 	pI->Release();
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
-static struct PyMethodDef WMConverter_methods[] = {
-	{"SetAdviceSink", (PyCFunction)WMConverter_SetAdviceSink, METH_VARARGS, WMConverter_SetAdviceSink__doc__},
+static struct PyMethodDef Pipe_methods[] = {
+	{"SetAdviceSink", (PyCFunction)Pipe_SetAdviceSink, METH_VARARGS, Pipe_SetAdviceSink__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
 static void
-WMConverter_dealloc(WMConverterObject *self)
+Pipe_dealloc(PipeObject *self)
 {
 	/* XXXX Add your own cleanup code here */
-	RELEASE(self->pWMConverter);
+	RELEASE(self->pPipe);
 	PyMem_DEL(self);
 }
 
 static PyObject *
-WMConverter_getattr(WMConverterObject *self, char *name)
+Pipe_getattr(PipeObject *self, char *name)
 {
 	/* XXXX Add your own getattr code here */
-	return Py_FindMethod(WMConverter_methods, (PyObject *)self, name);
+	return Py_FindMethod(Pipe_methods, (PyObject *)self, name);
 }
 
-static char WMConverterType__doc__[] =
+static char PipeType__doc__[] =
 ""
 ;
 
-static PyTypeObject WMConverterType = {
+static PyTypeObject PipeType = {
 	PyObject_HEAD_INIT(&PyType_Type)
 	0,				/*ob_size*/
-	"WMConverter",			/*tp_name*/
-	sizeof(WMConverterObject),		/*tp_basicsize*/
+	"Pipe",			/*tp_name*/
+	sizeof(PipeObject),		/*tp_basicsize*/
 	0,				/*tp_itemsize*/
 	/* methods */
-	(destructor)WMConverter_dealloc,	/*tp_dealloc*/
+	(destructor)Pipe_dealloc,	/*tp_dealloc*/
 	(printfunc)0,		/*tp_print*/
-	(getattrfunc)WMConverter_getattr,	/*tp_getattr*/
+	(getattrfunc)Pipe_getattr,	/*tp_getattr*/
 	(setattrfunc)0,	/*tp_setattr*/
 	(cmpfunc)0,		/*tp_compare*/
 	(reprfunc)0,		/*tp_repr*/
@@ -2167,10 +2190,10 @@ static PyTypeObject WMConverterType = {
 
 	/* Space for future expansion */
 	0L,0L,0L,0L,
-	WMConverterType__doc__ /* Documentation string */
+	PipeType__doc__ /* Documentation string */
 };
 
-// End of code for WMConverter object 
+// End of code for Pipe object 
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
@@ -2256,7 +2279,6 @@ MediaPosition_GetDuration(MediaPositionObject *self, PyObject *args)
 static char MediaPosition_GetCurrentPosition__doc__[] =
 ""
 ;
-
 static PyObject *
 MediaPosition_GetCurrentPosition(MediaPositionObject *self, PyObject *args)
 {
@@ -2278,7 +2300,6 @@ MediaPosition_GetCurrentPosition(MediaPositionObject *self, PyObject *args)
 static char MediaPosition_SetCurrentPosition__doc__[] =
 ""
 ;
-
 static PyObject *
 MediaPosition_SetCurrentPosition(MediaPositionObject *self, PyObject *args)
 {
@@ -2300,7 +2321,6 @@ MediaPosition_SetCurrentPosition(MediaPositionObject *self, PyObject *args)
 static char MediaPosition_GetStopTime__doc__[] =
 ""
 ;
-
 static PyObject *
 MediaPosition_GetStopTime(MediaPositionObject *self, PyObject *args)
 {
@@ -2322,7 +2342,6 @@ MediaPosition_GetStopTime(MediaPositionObject *self, PyObject *args)
 static char MediaPosition_SetStopTime__doc__[] =
 ""
 ;
-
 static PyObject *
 MediaPosition_SetStopTime(MediaPositionObject *self, PyObject *args)
 {
