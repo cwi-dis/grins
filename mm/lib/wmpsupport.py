@@ -70,6 +70,13 @@ class Exporter:
 		self.player.stop()
 		windowinterface.showmessage('Export interrupted.')
 
+	def fail_callback(self):
+		if self.progress:
+			del self.progress
+			self.progress = None
+		self.player.stop()
+		windowinterface.showmessage('Export failed.')
+
 	def _getNodesOfType(self, ntype, node, urls):
 		if node.GetType()=='ext':
 			chan = self.player.getchannelbynode(node)
