@@ -9,12 +9,14 @@ import java.io.*;
 import grins.*;
 
 public class PluginDemo extends Applet
-implements SMILListener, TimerListener
+implements SMILListener
 
 {
     private SMILDocument smil;
     private SMILController player;
     private String smilSrc;
+    
+    private Rectangle canvasrc = new Rectangle(10,12,580,400);
     
 	public void init()
 	{
@@ -25,33 +27,35 @@ implements SMILListener, TimerListener
 		// parse your Java file into its visual environment.
 		//{{INIT_CONTROLS
 		setLayout(null);
-		setBackground(new java.awt.Color(228,228,228));
-		setSize(600,470);
+		setBackground(java.awt.Color.white);
+		setSize(600,480);
 		add(canvas);
-		canvas.setBackground(java.awt.Color.black);
+		canvas.setBackground(new java.awt.Color(236,236,236));
 		canvas.setBounds(10,12,580,400);
 		buttonPlay.setLabel("Play");
 		add(buttonPlay);
 		buttonPlay.setBackground(java.awt.Color.lightGray);
-		buttonPlay.setBounds(10,442,60,24);
+		buttonPlay.setBounds(10,452,60,24);
 		buttonPause.setLabel("Pause");
 		add(buttonPause);
 		buttonPause.setBackground(java.awt.Color.lightGray);
-		buttonPause.setBounds(88,442,60,24);
+		buttonPause.setBounds(88,452,60,24);
 		buttonStop.setLabel("Stop");
 		add(buttonStop);
 		buttonStop.setBackground(java.awt.Color.lightGray);
-		buttonStop.setBounds(168,442,60,24);
+		buttonStop.setBounds(168,452,60,24);
 		add(textFieldFileOpen);
-		textFieldFileOpen.setBounds(10,416,432,22);
+		textFieldFileOpen.setBounds(10,426,432,22);
 		buttonOpen.setLabel("Open");
 		add(buttonOpen);
 		buttonOpen.setBackground(java.awt.Color.lightGray);
-		buttonOpen.setBounds(442,416,64,24);
+		buttonOpen.setBounds(442,426,64,24);
 		buttonClose.setLabel("Close");
 		add(buttonClose);
 		buttonClose.setBackground(java.awt.Color.lightGray);
-		buttonClose.setBounds(526,416,64,24);
+		buttonClose.setBounds(526,426,64,24);
+		add(labelStatus);
+		labelStatus.setBounds(256,458,334,18);
 		//}}
 		getParameters();
 	
@@ -75,6 +79,7 @@ implements SMILListener, TimerListener
 	java.awt.TextField textFieldFileOpen = new java.awt.TextField();
 	java.awt.Button buttonOpen = new java.awt.Button();
 	java.awt.Button buttonClose = new java.awt.Button();
+	java.awt.Label labelStatus = new java.awt.Label();
 	//}}
 	
 	private void getParameters()
@@ -132,33 +137,17 @@ implements SMILListener, TimerListener
             }
         }
 	
-	public void timeElapsed(TimerEvent evt){
-	    if(evt.getName().equals("open"))
-	        {
-	        open(smilSrc);	    	        
-		    if(player!=null) player.play();
-		
-	        buttonPlay.setEnabled(false);
-	        buttonPause.setEnabled(true);
-	        buttonStop.setEnabled(true);
-	        }
-	    else if(evt.getName().equals("close"))
-	        {
-            if(player!=null) player.stop();	
-            player = null;
-        
-	        if(smil!=null) smil.close();
-            smil=null;
-            }
-	}
-	
     private void open(String filename){
         // create SMIL doc
 	    smil = GRiNSToolkit.createDocument(filename);
 	    
 	    // update create UI
-	    //setSliderDur(smil.getDuration());
-	    //SMILCanvas canvas = new SMILCanvas();
+	    double dur = smil.getDuration();
+	    String str = "Documement duration: ";
+	    if(dur<0 || dur==0)
+	        labelStatus.setText(str + "indefinite");
+	    else
+	        labelStatus.setText(str + (int)(dur+0.5) + " secs");
 	    
 	    Dimension d = smil.getViewportSize();
 	    Rectangle rc  = canvas.getBounds();
@@ -176,9 +165,6 @@ implements SMILListener, TimerListener
 	        }
 	    canvas.setBounds(x,y,w,h);
 	    
-	    //viewport = new Viewport(canvas);
-	    //viewport.update(smil.getViewportSize());
-	   
 	    // set SMIL canvas
 	    try {smil.getRenderer().setCanvas(canvas);}
 	    catch(Exception e){System.out.println(""+e);}
@@ -227,6 +213,8 @@ implements SMILListener, TimerListener
         
 	    if(smil!=null) smil.close();
         smil=null;
+        
+        canvas.setBounds(canvasrc);
         
 	    buttonOpen.setEnabled(true);
 	    buttonClose.setEnabled(false);
