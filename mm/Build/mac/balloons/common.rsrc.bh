@@ -28,10 +28,12 @@ DIALOG 528 Settings
 3.3 Turn this item off if you would rather have overdub than closed-captions, in presentations which have both
 4.1 Turn this item on if you would like to see optional closed-caption subtitles, if the presentation has them
 4.3 Turn this item off if you don't need optional closed-caption subtitles
-5.1 The approximate speed of your internet connection. This is used by presentations to decided whether or not to show high-bandwidth video, etc.
-6.1 The two-letter code of your preferred language: en, de, fr, etc. This is used to select items in multi-lingual presentations
-7.1 Press here to close the dialog and ignore your changes
-8.1 Press here to restore all items to their factory settings and close the dialog
-9.1 Press here to save your preference changes and close the dialog
+5.1 Turn this item on to enable non-SMIL-compatible channeltypes, nodetypes, etc
+5.3 Turn this item off to enable only SMIL-compatible items in menus and such
+6.1 The approximate speed of your internet connection. This is used by presentations to decided whether or not to show high-bandwidth video, etc.
+7.1 The two-letter code of your preferred language: en, de, fr, etc. This is used to select items in multi-lingual presentations
+8.1 Press here to close the dialog and ignore your changes
+9.1 Press here to restore all items to their factory settings and close the dialog
+10.1 Press here to save your preference changes and close the dialog
 END-DIALOG
 END
