@@ -4252,9 +4252,13 @@ class MediaRegion(Region):
 															offsetY+yShift*indY, iconWidth, iconHeight))
 
 	def fastUpdateAttrdict(self):
-		# for now, just recreat the media
+		# XXX for now, just recreat the media. Should be optimized
+		if self._graphicCtrl is not None:
+			isSelected = self._graphicCtrl.isSelected
 		self.hide()
 		self.show()
+		if isSelected and self._graphicCtrl:
+			self._ctx.previousCtrl.appendSelection([self._graphicCtrl])
 			
 	def hide(self):
 		if self.isShowed():
