@@ -1676,7 +1676,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.setglobalfocus([self.nameToNodeRef(id)])
 		self.updateFocus()
 
-		self.editProperties(self.context.getchannel(id))
+#		self.editProperties(self.context.getchannel(id))
 
 #	def __regionNamedCallback(self, name):
 #		id = name
@@ -1707,7 +1707,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.setglobalfocus([self.nameToNodeRef(name)])
 		self.updateFocus()
 
-		self.editProperties(self.context.getchannel(name))
+#		self.editProperties(self.context.getchannel(name))
 
 	def __viewportNamedCallback(self, name):
 		# check if the viewport already exist
@@ -2305,6 +2305,7 @@ class TreeWidget(Widget):
 		self.treeCtrl.beginDrag(type, objectId)
 
 	def __dragObjectIdToNodeRef(self, type, objectId):
+		nodeRef = None
 		if type == 'Media': 
 			# retrieve the reference of the source node
 			try:
