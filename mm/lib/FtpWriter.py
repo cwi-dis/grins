@@ -76,37 +76,38 @@ class _FtpWriter:
 		else:
 			self.ftpdata.send(data)
 					
-def _test():
-	import getopt
-	import sys
-	try:
-		options, args = getopt.getopt(sys.argv[1:], 'u:p:d:a')
-		if len(args) != 2:
-			raise getopt.error
-	except getopt.error:
-		print 'Usage: %s [-u user] [-p passwd] [-d dir] [-a] host file < inputfile'%sys.argv[0]
-		sys.exit(1)
-	host = args[0]
-	file = args[1]
-	user = ''
-	passwd = ''
-	dir = ''
-	ascii = 0
-	for o, a in options:
-		if o == '-u':
-			user = a
-		if o == '-p':
-			passwd = a
-		if o == '-d':
-			dir = a
-		if o == '-a':
-			ascii = 1
-	ofp = FtpWriter(host, file, user=user, passwd=passwd, dir=dir, ascii=ascii, debuglevel=1)
-	while 1:
-		data = sys.stdin.read()
-		if not data:
-			break
-		ofp.write(data)
+if __debug__:
+	def _test():
+		import getopt
+		import sys
+		try:
+			options, args = getopt.getopt(sys.argv[1:], 'u:p:d:a')
+			if len(args) != 2:
+				raise getopt.error
+		except getopt.error:
+			print 'Usage: %s [-u user] [-p passwd] [-d dir] [-a] host file < inputfile'%sys.argv[0]
+			sys.exit(1)
+		host = args[0]
+		file = args[1]
+		user = ''
+		passwd = ''
+		dir = ''
+		ascii = 0
+		for o, a in options:
+			if o == '-u':
+				user = a
+			if o == '-p':
+				passwd = a
+			if o == '-d':
+				dir = a
+			if o == '-a':
+				ascii = 1
+		ofp = FtpWriter(host, file, user=user, passwd=passwd, dir=dir, ascii=ascii, debuglevel=1)
+		while 1:
+			data = sys.stdin.read()
+			if not data:
+				break
+			ofp.write(data)
 
-if __name__ == '__main__':
-	_test()
+	if __name__ == '__main__':
+		_test()
