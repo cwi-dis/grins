@@ -95,6 +95,15 @@ LINK32=link.exe
 # Begin Source File
 
 SOURCE=.\grinsp.cpp
+
+!IF  "$(CFG)" == "grinsp - Win32 Release"
+
+# SUBTRACT CPP /YX /Yc /Yu
+
+!ELSEIF  "$(CFG)" == "grinsp - Win32 Debug"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
