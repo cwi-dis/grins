@@ -5,22 +5,30 @@
 
 ------------------------------ BUGS -------------------------------
 
-when the root is a leaf, modifying it (e.g. clicking OK after a change
-in node info or node attr window) while the block view is showing it
-crashes in BlockView.py line 83:
-    self.mkBlockview(modnode.bv_xywh, modnode)
+block view calculates geometry wrong after sequence of zoom in -
+enlarge window - zoom out
+
+hyperjumps often beep when the mouse up event arrives
+
+Line 449 in ImageChannel refs 'os' which isn't imported
+
+When starting a document with the pause button: (a) no images or texts
+appear; and (b) the cursor stays a watch.
 
 Player: playing multiple nodes in parallel on the same channel causes
 crashes or generally weird behaviour (each channel should protect
 itself against this!)
 
-Do garbage collection of windows, esp. forms (or DGL runs out eventually...)
+Timing: sometimes the cached timings are bogus and save + restore is
+needed to fix them.  E.g. after changing a bag node to a seq node...
 
 --------------------- UNSOLVED MISTERIES --------------------------
 
 block view: sometimes the outermost box size is calculated wrong and
 part of the window remains unused.  (Hard to reproduce; usually after
-heavy inserting / deleting of nodes and/or zooming in/out?)
+heavy inserting / deleting of nodes and/or zooming in/out?)  [maybe
+fixed by the fix that fixes crash on modifying the root node?]  [maybe
+replaced by zoom in - resize - zoom out problem, above]
 
 player: *sometimes* crash in opt_prearm at self.rtpool.enter(...) when
 playing node w/o channel [hard to reproduce?]
@@ -30,12 +38,13 @@ queued, but not acted upon, so the program hangs.  Is this a standard
 FORMS bug or do I do something wrong with handling GL events?  (Not
 reproducible in very simple prog?)
 
-FORMS: events for subwindows get lost.
+FORMS: events for subwindows get lost.  [does this still happen?]
 
 edit mgr: doesn't fix channel dictionary  [not confirmed]
 
 still occasional problems with the font manager?  (should slowly be
-fixed in 4.0.2+).  [maybe connected with malloc() crash?]
+fixed in 4.0.2+).  [maybe connected with malloc() crash?]  [maybe
+connected with imgfile bugs (now fixed)?]
 
 toplevel: sometimes complaint about unknown command when clicking in
 toplevel menu while things are busy?
@@ -46,13 +55,17 @@ block view: resize behavior is weird (menu bar height changes)
 
 ------------------------------ PERFORMANCE ------------------------
 
+Do garbage collection of windows, esp. forms (or DGL runs out eventually...)
+[Partly done]
+
 Timing: takes ages -- why?  [sped up ~30% by caching getduration in
 sound & movie channel]
 
 sound channel: arm seems slow?
 
 movie channel: loading colormap (& other things done at arm time)
-takes ages
+takes ages  [somewhat solved by not loading it when a clear() is
+sufficient]
 
 ------------------------------ FEATURES ---------------------------
 
@@ -65,17 +78,18 @@ screen after its time is up
 
 ------------------------------ NITS -------------------------------
 
-attribute editor: the font menu is too big.  should split it in a font
-family and a font style menu...
+sync arcs whose source is lost are kept around for no good reason
 
-node info: want a menu of commands just like those in other windows
+if a channel is off, display it in a different color in the channel view
 
 block & channel view: use channel colors instead of default (gray)?
 
 hyperjumps are confusing because of the long wait between the clearing
-of the windows and the appearance of new data
+of the windows and the appearance of new data [half fixed by adding a
+watch cursor]
 
 node info: could use a 'convert to ext' button for imm text nodes.
+(in general more operations should be available everywhere)
 
 block & channel views: show only 'info' in menu, but support shortcuts
 for attributes and anchors (?)
@@ -127,26 +141,30 @@ VanGogh demo: move data to subdirectory.
      involved with each node and to divide the width accordingly.
 
 *    I was unable to use the input text box for Immediate text without
-     further (human) help. The interface is very strange.
+     further (human) help. The interface is very strange.  [Should use
+     multiline input objects that are now available in FORMS]
 
 ---
 21/4/92
 
 *    When waiting for next pieces of data to load ('cos done a hyperjump), then
      leave the current ones in the Channel showing until the new ones are
-     ready.  Show a wait cursor while waiting.
+     ready.  Show a wait cursor while waiting.  [fixed (at least for
+     windows managed by the player) 1-Sep-92]
 
 ---
 22/4/92
 
 *    Channels need a "Z" position, so that when channels overlap the author
-     can define which should be on top.
+     can define which should be on top.  [Or an activated channel
+     should pop up, like they do now.]
 
 *    Background colour for a Channel could be transparent.  [no -- too
      difficult in GL/X --Guido]
 
 *    Give feedback when choosing/activating an anchor (or linked node), so
      the reader knows that the anchor has, or has not, been selected.
+     [partly solved by watch cursor.]
 
 ---
 13/5/92
@@ -430,3 +448,17 @@ image channel: scale isn't always done right for anchors.
 attr edit: choose different ways of presenting/editing different types
 [fixed for types bool, string, name, and for displayer types file, font,
 channelname, channeltype]
+
+--- 1 Sep 1992 ---
+
+when the root is a leaf, modifying it (e.g. clicking OK after a change
+in node info or node attr window) while the block view is showing it
+crashes in BlockView.py line 83:
+    self.mkBlockview(modnode.bv_xywh, modnode)
+
+attribute editor: the font menu is too big.  should split it in a font
+family and a font style menu...
+
+improved performance (see cvs log messages).
+
+node info: want a menu of commands just like those in other windows
