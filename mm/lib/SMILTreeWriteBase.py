@@ -237,7 +237,7 @@ class SMILWriterBase:
 		self.grinsExt = 0
 		self.qtExt = 0
 		self.rpExt = 0
-		self.pss4Ext = 0
+		self.pssExt = None
 		self.uses_qt_namespace = 0
 		self.prune = 0
 		self.force_smil_1 = 0
