@@ -100,7 +100,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		# Remove sometime.
 		self.focusnode = self.prevfocusnode = self.root	# : MMNode - remove when no longer used.
-		self.destroynode = None	# node to be destroyed later
+##		self.destroynode = None	# node to be destroyed later
 
 		self.arrow_list = []	# A list of arrows to be drawn after everything else.
 
@@ -811,7 +811,16 @@ class HierarchyView(HierarchyViewDialog):
 			if not self.editmgr.transaction():
 				return
 			self.toplevel.setwaiting()
-			r = node.GetParent().GetRoot()
+			parent = node.GetParent()
+			siblings = parent.GetChildren()
+			nf = siblings.index(node)
+			if nf < len(siblings)-1:
+				self.select_node(siblings[nf+1])
+			elif nf > 0:
+				self.select_node(siblings[nf-1])
+			else:
+				self.select_node(parent)
+			r = parent.GetRoot()
 			self.editmgr.delnode(node)
 			self.fixsyncarcs(r, node) #  TODO: shouldn't this be done in the editmanager? -mjvdg
 			self.editmgr.commit()
@@ -1023,12 +1032,13 @@ class HierarchyView(HierarchyViewDialog):
 		return 1 # It's always OK to start a transaction
 
 	def rollback(self):
-		self.destroynode = None
+		pass
+##		self.destroynode = None
 
 	def commit(self, type):
-		if self.destroynode:
-			self.destroynode.Destroy()
-		self.destroynode = None
+##		if self.destroynode:
+##			self.destroynode.Destroy()
+##		self.destroynode = None
 		self.selected_widget = None
 		self.selected_widget = None
 		self.focusnode = None
