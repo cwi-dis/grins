@@ -5,10 +5,9 @@ THIS AGREEMENT IS A LEGAL DOCUMENT. READ IT CAREFULLY BEFORE COMPLETING THE INST
 
 1. Definitions
 (a) "Authoring Product" means Software, such as Oratrix Development's GRiNS Editor for QuickTime.
-(b) "Player Product" means Software, such as Oratrix Development's GRiNS Player for QuickTime.
-(c) "Evaluation Version" means a version of the Authoring or Player Product only to be used for review and evaluation purposes.
-(d) "Evaluation Period" means the period of validity of a license key that will be distributed with the Evaluation Version of our products.
-(e) "Software" means the programs supplied by Oratrix Development herewith, and any and all updates thereto.
+(b) "Evaluation Version" means a version of the Authoring Product only to be used for review and evaluation purposes.
+(c) "Evaluation Period" means the period of validity of a license key that will be distributed with the Evaluation Version of our products.
+(d) "Software" means the programs supplied by Oratrix Development herewith, and any and all updates thereto.
 
 2. License
 This Agreement allows you to:
@@ -28,7 +27,7 @@ Other than as set forth in Section 2:
 (b) All rights not specifically granted in this Agreement, including National and International Copyrights, are reserved by Oratrix Development.
 
 5. Limited Warranties
-Oratrix Development provides the following warranties for an Evaluation Version of its Authoring and Player products:
+Oratrix Development provides the following warranties for an Evaluation Version of its Authoring products:
 (a) In recognition that the Evaluation Version is for evaluation purposes, Oratrix Development warrants only that the distribution created by us is complete and consistent with the delivered documentation for the period of the evaluation.
 (b) Upon your request, a new Evalutation Version will be issued during the Evaluation Period containing any updates or upgrades to our Software.
 (c) Except as set forth in the foregoing limited warranty, Oratrix Development disclaims all other warranties or conditions, either expressed or implied, including merchantability, fitness for any purpose, or non-infringement.
