@@ -217,8 +217,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.do_play(node)
 			if self.need_armdone and node.__type != 'real':
 				self.need_armdone = 0
-				if not self.syncarm:
-					self.armdone()
+				self.armdone()
 		else:
 			self.need_armdone = 0 # play_1 calls armdone()
 			self.play_1()
@@ -226,8 +225,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def playdone(self, outside_induced):
 		if self.need_armdone:
 			self.need_armdone = 0
-			if not self.syncarm:
-				self.armdone()
+			self.armdone()
 		Channel.ChannelWindowAsync.playdone(self, outside_induced)
 		if not outside_induced:
 			self.__playing = None
