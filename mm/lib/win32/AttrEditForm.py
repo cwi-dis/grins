@@ -1582,7 +1582,7 @@ class EventCtrl(AttrCtrl):
 
 	def set_repeatwidget(self):
 		# Only for event widgets or markers.
-		if not self._eventstruct:
+		if not self._eventstruct or self._eventstruct.get_cause() != 'node':
 			self.__setrepeatwidget_clear()
 		else:
 			event = self._eventstruct.get_event()
