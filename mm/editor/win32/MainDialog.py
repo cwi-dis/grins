@@ -44,11 +44,10 @@ class MainDialog:
 		title -- string to be displayed as window title
 		"""
 		if __debug__:
-			import usercmd
 			self.commandlist.append(
-				usercmd.CONSOLE(callback=(self.console_callback, ())))
+				CONSOLE(callback=(self.console_callback, ())))
 			self.commandlist.append(
-				usercmd.SCHEDDEBUG(callback=(self.scheddebug_callback, ())))
+				SCHEDDEBUG(callback=(self.scheddebug_callback, ())))
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			import cmif, MMurl
@@ -122,7 +121,7 @@ class MainDialog:
 		url=self.__path2url(filename)
 		import MMmimetypes, windowinterface
 		mimetype = MMmimetypes.guess_type(url)[0]
-		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
+		if mimetype in ('application/x-grins-project', 'application/smil'):
 			self.openURL_callback(url)
 		else:
 			windowinterface.showmessage('Incorrect filetype for drop/paste')
@@ -190,7 +189,8 @@ class MainDialog:
 		# this method is called also from the drop stuff
 		# so check for UNC names before calling pathname2url
 		# otherwise it will fail.
-		import longpath, MMurl, os
+		import longpath, MMurl
+##		import os
 		filename = longpath.short2longpath(filename)
 ##		if os.path.isabs(filename):
 ##			cwd = os.getcwd()

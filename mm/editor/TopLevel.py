@@ -467,7 +467,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def save_source_callback(self, text):
 		# This is a function that is called from the source view when the user decides to save.
 		# Compare to edit_finished_callback, which is when a temporary file is used for the sourceview.
-		import EditMgr
 		if self.editmgr.busy:
 			print "Warning! Source view trying to save during an editmgr transaction."
 		showing = []
@@ -484,7 +483,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.do_read_it_from_string(text)
 
 		self.context = self.root.GetContext()
-		self.editmgr = EditMgr.EditMgr(self.root)
+		self.editmgr = EditMgr(self.root)
 		self.context.seteditmgr(self.editmgr)
 		self.editmgr.register(self)
 		self.makeviews()
@@ -912,7 +911,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.do_edit(tmp)
 
 	def edit_finished_callback(self, tmp = None):
-		import EditMgr, os
 		self.editmgr.rollback()
 		if tmp is None:
 			try:
@@ -942,7 +940,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			pass
 		del self.__edittmp
 #		self.context = self.root.GetContext()
-#		self.editmgr = EditMgr.EditMgr(self.root)
+#		self.editmgr = EditMgr(self.root)
 #		self.context.seteditmgr(self.editmgr)
 #		self.editmgr.register(self)
 		self.makeviews()
@@ -1579,7 +1577,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# XXXX Should check that document isn't active already,
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
-		import MMurl
 		url, aid = MMurl.splittag(anchor)
 			
 		# by default, the document target will be handled by GRiNS
@@ -1595,7 +1592,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			try:
 				# if the destination document is not a smil/grins document,
 				# it's handle by an external application
-				import MMmimetypes, MMurl
 				utype, url2 = MMurl.splittype(url)
 				mtype = MMmimetypes.guess_type(url)[0]
 				if mtype in ('application/smil', 'application/x-grins-project', \

@@ -41,7 +41,6 @@ class ErrorsViewDialog:
 		if self.__window is not None:
 			self.__window.close()
 			self.__window = None
-			f=self.toplevel.window
 
 	def setErrorList(self, errorList):
 		if self.__window != None:

@@ -95,7 +95,6 @@ class BandwidthAccumulator:
 		# First pass: see whether we can do it. For each "slot"
 		# we check the available bandwidth and see whether there
 		# is enough before t1 passes
-		overflow = 0
 		size = float(size)
 		sizeremain = size
 		tcur = tnext = t0

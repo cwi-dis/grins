@@ -22,8 +22,6 @@ from usercmd import *
 ######################################################################
 # Editing MMNodes.
 
-_nodes = {}
-
 class EditableMMNode(MMNode.MMNode):
 	# Editable version of an MMNode.
 	def __init__(self, type, context, uid):

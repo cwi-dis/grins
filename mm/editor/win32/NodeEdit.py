@@ -14,7 +14,6 @@ the actual os call differs.
 
 # XXXX This is incorrect: it looks in the current directory, not the document dir
 def _inventname(ch):		# Invent file name from channel name
-	import os
 	for i in range(1,99):
 		fn = ch + '.' + `i`
 		if not os.path.exists(fn):
@@ -51,7 +50,6 @@ class _Convert:
 			self.ok, None)
 
 	def ok(self, file):
-		import os
 		if os.path.exists(file):
 			windowinterface.showmessage(
 				'File already exists. Overwrite?',
@@ -83,7 +81,7 @@ def _merge(f, filename):	# Merge editors file into data structures
 			channeleditors[fields[0]][fields[1]] = fields[2]
 
 def _do_edit_win32(cmd, filename):
-	import os,string
+	import string
 	app=string.split(cmd,'$file')[0]
 	cmd = '%s %s' % (app, filename)
 	import win32api
@@ -100,7 +98,6 @@ def _do_edit(cmd, filename):
 		_do_edit_win32(cmd, filename)
 	else: 
 		cmd = 'file=%s; %s &' % (filename, cmd)
-		import os
 		void = os.system(cmd)
 
 def _showmenu(menu, filename):	# Show (modal) editor choice dialog
@@ -118,8 +115,6 @@ def _showmenu(menu, filename):	# Show (modal) editor choice dialog
 # InitEditors - Initialize the module.
 def InitEditors():
 	pass
-
-_LocalError = '_LocalError'
 
 # showeditor - Show the editor (or selector) for a given node
 def showeditor(node, url=None):
