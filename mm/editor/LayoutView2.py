@@ -3809,7 +3809,7 @@ class PreviousWidget(Widget):
 		self.currentViewport = self.getNode(viewportRef)
 		if self.currentViewport == None:
 			# shouldn't pass here
-			if debugPreview: print 'can''t show viewport ',viewportRef
+			if debugPreview: print 'can\'t show viewport ',viewportRef
 			return
 		self.currentViewport.updateNodes()
 		self.previousCtrl.update()

@@ -224,6 +224,9 @@
 (popup (bool) 1 'Popup on play' default
 	'Determines whether channel pops up upon playing an object' raw (cmif))
 
+(previewShowOption (enum default always onSelected) default 'Preview show' hidden
+	'When should the preview be shown' raw (smil2 cmif))
+
 (project_audiotype (int) 0 'Audio type' audiotype
 	'Audio type, determines quality of audio when converting to RealAudio'
 	raw (advanced g2 snap cmif))
