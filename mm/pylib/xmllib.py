@@ -276,7 +276,7 @@ class XMLParser:
                 if cdataopen.match(rawdata, i):
                     k = self.parse_cdata(i)
                     if k < 0: break
-                    self.lineno = self.lineno + string.count(rawdata[i:i], '\n')
+                    self.lineno = self.lineno + string.count(rawdata[i:k], '\n')
                     i = k
                     continue
                 res = xmldecl.match(rawdata, i)
