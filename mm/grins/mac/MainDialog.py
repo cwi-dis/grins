@@ -17,6 +17,7 @@ self.close_callback is also called.
 
 """
 import UserCmd
+import os
 
 class MainDialog:
 	def __init__(self, title):
@@ -47,7 +48,7 @@ class MainDialog:
 
 	def __openfile_callback(self):
 		import windowinterface
-		windowinterface.FileDialog('Open file', '.', '*.smil', '',
+		windowinterface.FileDialog('Open file', os.curdir, '*.smil', '',
 					   self.__filecvt, None, 1)
 
 	def __filecvt(self, filename):
