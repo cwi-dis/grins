@@ -109,7 +109,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if node.__type == 'real':
 			if not self.__rc:
 				self.playdone(0)
-			elif not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
+			elif not self.__rc.playit(node, self._getoswindow(), self._getoswinpos(), coordinates=self._mediageom):
 				import windowinterface, MMAttrdefs
 				name = MMAttrdefs.getattr(node, 'name')
 				if not name:
@@ -118,7 +118,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				windowinterface.showmessage('No playback support for %s on this system\n'
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
 				self.playdone(0)
-		elif not self.__mc.playit(node, self.window):
+		elif not self.__mc.playit(node, self.window, coordinates=self.getmediageom(node)):
 			self.errormsg(node,'Can not play')
 			self.playdone(0)
 

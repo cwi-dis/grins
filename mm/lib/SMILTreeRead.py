@@ -878,7 +878,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		# connect to the register point
 		if attributes.has_key('regPoint'):
-			if not self.__regpoints.has_key(attributes['regPoint']):
+			if not self.__regpoints.has_key(attributes['regPoint']) and \
+				not attributes['regPoint'] in ('topLeft', 'topMid',
+				'topRight','midLeft','center','midRight',
+				'bottomLeft','bottomMid','bottomRight'):
 				self.syntax_error('the registration point '+attributes['regPoint']+" doesn't exist")
 				del attributes['regPoint']				
 		if attributes.has_key('regAlign'):
@@ -886,7 +889,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if ival == None:
 				self.syntax_error('invalid regAlign attribute value')
 				del attributes['regAlign']
-				
+
+		if attributes.has_key('fit'):
+			val = attributes['fit']
+			del attributes['fit']
+			if val not in ('meet', 'slice', 'fill',
+				       'hidden', 'scroll'):
+				self.syntax_error('illegal fit attribute')
+			elif val in ('fill', 'scroll'):
+				self.warning('fit="%s" value not implemented' % val, self.lineno)
+			else:
+				if val == 'hidden':
+					attributes['scale'] = "1"
+				elif val == 'meet':
+					attributes['scale'] = "0"
+				elif val == 'slice':
+					attributes['scale'] = "-1"
+								
 		# create the node
 		if not self.__root:
 			# "can't happen"
@@ -1618,8 +1637,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif bg == 'transparent':
 				ch['transparent'] = 1
 			else:
-				ch['transparent'] = -1
+				if self.__context.attributes.get('project_boston'):
+					ch['transparent'] = 0
+				else:
+					ch['transparent'] = -1
 				ch['bgcolor'] = bg
+				
 			ch['z'] = attrdict['z-index']
 			del attrdict['z-index']
 			x = attrdict['left']; del attrdict['left']
@@ -2029,6 +2052,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__seen_body = 1
 		self.__in_body = 1
 		self.AddAttrs(self.__root, attributes)
+		self.__set_defaultregpoints()
 
 	def end_body(self):
 		self.end_seq()
@@ -2106,6 +2130,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_metadata = 0
 
 	# layout section
+	def __set_defaultregpoints(self):
+		self.__context.addRegpoint('topLeft', {'top':0,'left':0}, 1)
+		self.__context.addRegpoint('topMid', {'top':0.0,'left':0.5}, 1)
+		self.__context.addRegpoint('topRight', {'top':0.0,'left':1.0}, 1)
+		self.__context.addRegpoint('midLeft', {'top':0.5,'left':0.0}, 1)
+		self.__context.addRegpoint('center', {'top':0.5,'left':0.5}, 1)
+		self.__context.addRegpoint('midRight', {'top':0.5,'left':1.0}, 1)
+		self.__context.addRegpoint('bottomLeft', {'top':1.0,'left':0.0}, 1)
+		self.__context.addRegpoint('bottomMid', {'top':1.0,'left':0.5}, 1)
+		self.__context.addRegpoint('bottomRight', {'top':1.0,'left':1.0}, 1)
 
 	def start_layout(self, attributes):
 		self.__fix_attributes(attributes)

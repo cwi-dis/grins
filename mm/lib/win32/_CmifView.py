@@ -620,7 +620,6 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 				break
 		else:parent._subwindows.append(self)
 			
-
 		# if a parent is transparent all of its childs must be transparent	
 		if parent._transparent in (1,-1):
 			self._transparent = parent._transparent
@@ -659,7 +658,7 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		self._dxmax = 0 # max x-coord in pixels of wndorg
 		self._dymax = 0 # max y-coord in pixels of wndorg
 		self._dragging = 0 # are we dragging?
-
+				
 	# call this method to set content canvas and enable dragging
 	def setcontentcanvas(self, w, h, units = UNIT_SCREEN):
 		x, y, w, h = self._convert_coordinates((0,0,w,h),
@@ -678,11 +677,15 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 			
 	# Called by the core system to create a child window to the subwindow
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		return _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z, units)
+		win = _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z, units)
+		win.AllowResize(1)
+		return win
 
 	# Called by the core system to create a child window to the subwindow
 	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		return _SubWindow(self, coordinates, transparent, type_channel, 1, pixmap, z, units)
+		win = _SubWindow(self, coordinates, transparent, type_channel, 1, pixmap, z, units)
+		win.AllowResize(1)
+		return win
 	
 	# Report string for this class
 	def __repr__(self):
@@ -837,7 +840,7 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		##### REM: REVISIT THIS PART!!!!!
 		if n==1 and self._active_displist:
 			# we are the only subwindow
-			dc.FillSolidRect(rc,win32mu.RGB(self._active_displist._bgcolor))
+#			dc.FillSolidRect(rc,win32mu.RGB(self._active_displist._bgcolor))
 			return 1
 
 		ix=ws.index(self)
@@ -1026,7 +1029,8 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 	def onSize(self,params):
 		if self._can_change_size: return
 		msg=win32mu.Win32Msg(params)
-		l,t,r,b=self._rect
+		l,t,r,b=self._rect		
+		
 		self.SetWindowPos(self.GetSafeHwnd(),(0,0,r,b),
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
 

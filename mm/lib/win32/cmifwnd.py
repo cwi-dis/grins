@@ -827,7 +827,7 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		#print 'window.updatecoordinates',coordinates
 		
 		x, y = coordinates[:2]
-
+		
 		# move or/and resize window
 		flags = win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER
 		if len(coordinates)==2:
@@ -835,12 +835,25 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 			w, h = 0, 0
 		elif len(coordinates)==4:
 			w, h = coordinates[2:]
+			# HACK : allow to update the "_canvas" variable as well
+			# otherwise, the image scale is wrong
+			#self.setcanvassize((UNIT_PXL,w,h))
+			self._canvas = 0,0,w,h
+			# end HACK
 		else:
 			raise AssertionError
 
 		self.SetWindowPos(self.GetSafeHwnd(),(x,y,w,h),
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
-
+	
+	# HACK : allow to update all windows
+	# not automaticly performed !!!
+	def updateall(self):
+		top = self._topwindow
+		top.update( )   # work fir image, doesn't work for video
+		top.UpdateWindow() # work for video, doesn't work for image
+	# end HACK
+			
 	def updatezindex(self, z):
 		# XXX: keep in sync with grins regions implementation
 		self._z = z
@@ -1115,10 +1128,9 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
 		# depth: depth of window (and image) in bytes
-
+		
 		# get image size. If it can't be found in the cash read it.
 		xsize, ysize = self._image_size(file)
-
 		# check for valid crop proportions
 		top, bottom, left, right = crop
 		if top + bottom >= 1.0 or left + right >= 1.0 or \
@@ -1137,7 +1149,6 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 			x, y, width, height = self._canvas
 		else:
 			x, y, width, height = self._convert_coordinates(coordinates,self._canvas)
-
 		# compute scale taking into account the hint (0,-1)
 		if scale == 0:
 			scale = min(float(width)/(xsize - left - right),

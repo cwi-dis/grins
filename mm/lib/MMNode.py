@@ -266,7 +266,7 @@ class MMNodeContext:
 	# registration points administration
 	#
 	
-	def addRegpoint(self, name, dict):
+	def addRegpoint(self, name, dict, isdefault=0):
 		regpoint = MMRegPoint(self,name)
 		
 		for attr, val in dict.items():
@@ -274,6 +274,7 @@ class MMNodeContext:
 				attr == 'left' or attr == 'right' or attr == 'regAlign':
 				regpoint[attr] = val
 		
+		regpoint['isdefault'] = isdefault
 		self.regpoints[name] = regpoint
 
 	#
@@ -474,6 +475,7 @@ class MMRegPoint:
 	def __init__(self, context, name):
 		self.context = context
 		self.name = name
+		self.isdef = 0
 		self.attrdict = {}
 		
 	def __repr__(self):
@@ -484,10 +486,54 @@ class MMRegPoint:
 	#
 
 	def __setitem__(self, key, value):
-		self.attrdict[key] = value
+		if key == 'isdefault':
+			self.isdef = value
+		else:
+			self.attrdict[key] = value
 		
 	def __getitem__(self, key):
-		return self.attrdict.get(key)
+		regpoint = self.attrdict.get(key)
+	
+	def isdefault(self):
+		return self.isdef
+		
+	def getregalign(self):
+		if self.attrdict.has_key('regAlign'):
+			return self.attrdict['regAlign']
+		
+		return MMAttrdefs.getdefattr(self, 'regAlign')
+
+	# return the point in pixel
+	def getx(self, boxwidth):
+		if self.attrdict.has_key('left'):
+			x = self.attrdict['left']
+			if type(x) == type(1.0):
+				x = x*boxwidth
+		elif self.attrdict.has_key('right'):
+			right = self.attrdict['right']
+			if type(right) == type(1.0):
+				right = right*boxwidth
+			x = boxwidth-right
+		else:
+			x = 0
+		
+		return x
+		
+	# return the point in pixel
+	def gety(self, boxheight):
+		if self.attrdict.has_key('top'):
+			y = self.attrdict['top']
+			if type(y) == type(1.0):
+				y = y*boxheight
+		elif self.attrdict.has_key('bottom'):
+			bottom = self.attrdict['bottom']
+			if type(bottom) == type(1.0):
+				bottom = bottom*boxheight
+			y = boxheight-bottom
+		else:
+			y = 0
+		
+		return y
 	
 	def items(self):
 		return self.attrdict.items()
@@ -1257,6 +1303,16 @@ class MMNode:
 			v = v * x.GetAttrDef(name, default)
 			x = x.parent
 		return v
+
+	def GetRegPoint(self):
+		regpointname = MMAttrdefs.getattr(self,'regPoint')
+		return self.context.regpoints.get(regpointname)
+
+	def GetRegAlign(self, regpoint):
+		if self.attrdict.has_key('regAlign'):
+			return self.attrdict['regAlign']
+		
+		return regpoint.getregalign()
 
 ##	def GetSummary(self, name):
 ##		if not self.summaries.has_key(name):

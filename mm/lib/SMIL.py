@@ -327,6 +327,7 @@ class SMIL:
 			'left':None,
 			'right':None,
 			'top':None,
+			'fit':None,
 			# registration point
 			'regPoint':None,
 			'regAlign':None,
@@ -392,6 +393,7 @@ class SMIL:
 			  'left':None,
 			  'right':None,
 			  'top':None,
+			  'fit':None,
 			  # registration point
 			  'regPoint':None,
 			  'regAlign':None,

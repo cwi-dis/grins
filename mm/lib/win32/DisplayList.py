@@ -159,7 +159,6 @@ class _DisplayList:
 		wnd.pop()
 		wnd.update()
 
-
 	# Render the display list on dc within the region	
 	def _render(self, dc, region):
 		self._rendered = 1
@@ -191,7 +190,7 @@ class _DisplayList:
 			win._active_displist = None
 			if win._transparent in (1,-1):
 				win.setWndTransparent()
-			win.update()
+			# win.update()
 			win.push()
 		self._window = None
 		if self._win32rgn:
@@ -207,7 +206,11 @@ class _DisplayList:
 		del self._list
 		del self._buttons
 		del self._font
-
+		
+		# HACK : allow to update all windows
+		win.updateall()
+		#end HACK
+		
 	# Render the entry draw command
 	def _do_render(self, entry, dc, region):
 		cmd = entry[0]

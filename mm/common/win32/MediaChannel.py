@@ -111,7 +111,7 @@ class MediaChannel:
 		return 1
 
 
-	def playit(self, node, window = None):
+	def playit(self, node, window = None, coordinates = None):
 		if not self.__armBuilder:
 			return 0
 
@@ -145,7 +145,7 @@ class MediaChannel:
 			self.__playEnd = self.__playBuilder.GetDuration()
 
 		if window:
-			self.adjustMediaWnd(node,window,self.__playBuilder)
+			self.adjustMediaWnd(node,window,self.__playBuilder, coordinates)
 			self.__playBuilder.SetWindow(window,WM_GRPAPHNOTIFY)
 			window.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)			
 		elif not self.__notifyWindow:
@@ -183,13 +183,15 @@ class MediaChannel:
 		if hasattr(self.__channel,'window') and self.__channel.window and self.__playFileHasBeenRendered:
 			self.__channel.window.UpdateWindow()
 
-	# Set Window Media window size from scale and center attributes
-	def adjustMediaWnd(self,node,window,builder):
+	# Set Window Media window size from scale and center, and coordinates attributes
+	def adjustMediaWnd(self,node,window,builder, coordinates):
 		if not window: return
 		left,top,width,height=builder.GetWindowPosition()
 		left,top,right,bottom = window.GetClientRect()
 		x,y,w,h=left,top,right-left,bottom-top
-
+		if coordinates is not None:
+			left,top,width,height = window._convert_coordinates(coordinates)
+			x,y,w,h = left,top,width,height
 		# node attributes
 		import MMAttrdefs
 		scale = MMAttrdefs.getattr(node, 'scale')

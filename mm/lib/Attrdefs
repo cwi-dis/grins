@@ -263,7 +263,7 @@
 (restart (enum always whenNotActive never) always 'Restart node' restart
 	'When can the node be restart' raw (smil2))
 
-(scale (float) 0.0 'Scale factor' scale
+(scale (float) 1.0 'Scale factor' scale
 	'Aspect ratio is maintained for all options' channel (all))
 
 (scalefilter (name) '' 'Scaling filter' default
@@ -608,5 +608,8 @@
 
 # registration points
 
-(regalign (enum topLeft topMid topRight midLeft center midRight bottomLeft bottomMid bottomRight) topLeft 'Alignment' default
+(regAlign (enum topLeft topMid topRight midLeft center midRight bottomLeft bottomMid bottomRight) topLeft 'Alignment' default
 	'Alignment point associate to the media' raw (smil2))
+
+(regPoint (string) 'topLeft' 'Registration point' default
+	'Registration point associate to the channel' raw (smil2))

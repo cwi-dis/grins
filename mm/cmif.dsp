@@ -996,6 +996,10 @@ SOURCE=.\lib\mac\windowinterface.py
 # End Group
 # Begin Source File
 
+SOURCE=.\lib\Animators.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\ASXParser.py
 # End Source File
 # Begin Source File
@@ -1240,6 +1244,10 @@ SOURCE=.\lib\StringStuff.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\svgpath.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\trace.py
 # End Source File
 # Begin Source File
@@ -1476,6 +1484,10 @@ SOURCE=.\pylib\xmllib.py
 # Begin Source File
 
 SOURCE=.\bin\win32\iGRiNS.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\iGRiNS_Boston.py
 # End Source File
 # Begin Source File
 
