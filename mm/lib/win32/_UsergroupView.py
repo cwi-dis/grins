@@ -25,7 +25,7 @@ import win32ui,win32con,win32api
 import win32mu, components, win32dialog
 
 # std mfc windows stuf
-from pywin.mfc import window,object,docview,dialog
+from pywinlib.mfc import window,object,docview,dialog
 import afxres,commctrl
 
 # UserCmds
@@ -38,7 +38,7 @@ import grinsRC
 from GenFormView import GenFormView
 
 class _UsergroupView(GenFormView):
-	def __init__(self,doc):
+	def __init__(self,doc,bgcolor=None):
 		GenFormView.__init__(self,doc,grinsRC.IDD_USERGROUP)	
 		self['Groups']=components.ListBox(self,grinsRC.IDC_GROUPS)
 		self['New']=components.Button(self,grinsRC.IDCMD_NEW_GROUP)
@@ -130,6 +130,7 @@ class UsergroupEditDialog(win32dialog.ResDialog,components.ControlsDict):
 		self['Title']=components.Edit(self,grinsRC.IDC_EDIT2)
 		self['State']=components.ComboBox(self,grinsRC.IDC_COMBO1)
 		self['Override']=components.ComboBox(self,grinsRC.IDC_COMBO2)
+		self['UID']=components.Edit(self,grinsRC.IDC_EDIT3)
 		self['Cancel']=components.Button(self,win32con.IDCANCEL)
 		self['Restore']=components.Button(self,grinsRC.IDC_RESTORE)
 		self['Apply']=components.Button(self,grinsRC.IDC_APPLY)
@@ -140,12 +141,12 @@ class UsergroupEditDialog(win32dialog.ResDialog,components.ControlsDict):
 		self.HookCommand(self.OnRestore,self['Restore']._id)
 		self.HookCommand(self.OnApply,self['Apply']._id)
 
-	def do_init(self, ugroup, title, ustate, override, cbdict):
-		ls=['NOT RENDERED', 'RENDERED']	
+	def do_init(self, ugroup, title, ustate, override, cbdict, uid):
+		ls=['NOT RENDERED', 'RENDERED']
 		self['State'].initoptions(ls)
-		lo=['not allowed', 'allowed']
+		lo=['hidden', 'visible']
 		self['Override'].initoptions(lo)
-		self.setstate(ugroup, title, ustate, override)
+		self.setstate(ugroup, title, ustate, override, uid)
 		self._cbdict=cbdict
 
 	def OnOK(self):
@@ -167,23 +168,34 @@ class UsergroupEditDialog(win32dialog.ResDialog,components.ControlsDict):
 		"""Close the dialog."""
 		self.DestroyWindow()
 
-	def setstate(self, ugroup, title, ustate, override):
+	def setstate(self, ugroup, title, ustate, override, uid):
 		"""Set the values in the dialog.
 
 		Arguments (no defaults):
 		ugroup -- string name of the user group
 		title -- string title of the user group
 		ustate -- string 'RENDERED' or 'NOT RENDERED'
-		override -- string 'allowed' or 'not allowed'
+		override -- string 'visible' or 'hidden'
+		uid -- string URI
 		"""
 		self['Name'].settext(ugroup)
 		self['Title'].settext(title)
-		self['State'].setpos(ustate == 'RENDERED')
-		self['Override'].setpos(override == 'allowed')
+		self['UID'].settext(uid)
+		if ustate == 'RENDERED':
+			upos = 1
+		else:
+			upos = 0
+		self['State'].setpos(upos)
+		if override == 'visible':
+			opos = 1
+		else:
+			opos = 0
+		self['Override'].setpos(opos)
 
 	def getstate(self):
 		"""Return the current values in the dialog."""
 		return self['Name'].gettext(), \
 		       self['Title'].gettext(), \
 		       self['State'].getvalue(), \
-		       self['Override'].getvalue()
+		       self['Override'].getvalue(), \
+		       self['UID'].gettext()

@@ -11,10 +11,11 @@ Sdk=win32ui.GetWin32Sdk()
 import grinsRC
 import win32mu
 import string
+import math
 import features
 import compatibility
 
-from pywin.mfc import window
+from pywinlib.mfc import window
 from components import *
 
 ##############################
@@ -117,7 +118,6 @@ class ResDialog(DialogBase):
 			apply(func,arg)
 
 # A special class that it is both an MFC window and A LightWeightControl
-# from pywin.mfc import window
 class WndCtrl(LightWeightControl,window.Wnd):
 	def create_wnd_from_handle(self):
 		window.Wnd.__init__(self,win32ui.CreateWindowFromHandle(self._hwnd))
@@ -140,6 +140,7 @@ class SplashDlg(ResDialog):
 #		elif features.compatibility == compatibility.QT:
 #			self._splashbmp = grinsRC.IDB_SPLASHSMIL
 			
+		self.loadbmp()
 		self.CreateWindow()
 		self.CenterWindow()
 		self.ShowWindow(win32con.SW_SHOW)
@@ -149,8 +150,7 @@ class SplashDlg(ResDialog):
 		self.attach_handles_to_subwindows()	
 		self._versionc.settext(self._version)
 		self._splash.create_wnd_from_handle()
-		self.HookMessage(self.OnDrawItem,win32con.WM_DRAWITEM)
-		self.loadbmp()
+		self.HookMessage(self.OnDrawItem, win32con.WM_DRAWITEM)
 		return ResDialog.OnInitDialog(self)
 
 	def close(self):
@@ -165,21 +165,23 @@ class SplashDlg(ResDialog):
 		lParam=params[3]
 		hdc=Sdk.ParseDrawItemStruct(lParam)
 		dc=win32ui.CreateDCFromHandle(hdc)
-		rct=self._splash.GetClientRect()
-		win32mu.BitBltBmp(dc,self._bmp,rct)
-		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
-		dc.FrameRectFromHandle(rct,br)
-		Sdk.DeleteObject(br)
-		dc.DeleteDC()
+		if self._bmp:
+			w, h = self._bmp.GetSize()
+			rct = 0, 0, w, h
+			dcmem = dc.CreateCompatibleDC()
+			old = dcmem.SelectObject(self._bmp)
+			dc.BitBlt((0,0),(w,h),dcmem,(0,0),win32con.SRCCOPY)
+			dcmem.SelectObject(old)
+			dcmem.DeleteDC()
+			br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
+			dc.FrameRectFromHandle(rct,br)
+			Sdk.DeleteObject(br)
+		dc.Detach()
 
 	# load splash
 	def loadbmp(self):
-#		import __main__
 		import splashbmp
-#		resdll=__main__.resdll
 		self._bmp = loadBitmapFromResId(splashbmp.getResId())
-#		self._bmp=win32ui.CreateBitmap()
-#		self._bmp.LoadBitmap(self._splashbmp,resdll)
 
 # Implementation of the about dialog
 class AboutDlg(ResDialog):
@@ -219,21 +221,23 @@ class AboutDlg(ResDialog):
 		lParam=params[3]
 		hdc=Sdk.ParseDrawItemStruct(lParam)
 		dc=win32ui.CreateDCFromHandle(hdc)
-		rct=self._splash.GetClientRect()
-		win32mu.BitBltBmp(dc,self._bmp,rct)
-		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
-		dc.FrameRectFromHandle(rct,br)
-		Sdk.DeleteObject(br)
-		dc.DeleteDC()
+		if self._bmp:
+			w, h = self._bmp.GetSize()
+			rct = 0, 0, w, h
+			dcmem = dc.CreateCompatibleDC()
+			old = dcmem.SelectObject(self._bmp)
+			dc.BitBlt((0,0),(w,h),dcmem,(0,0),win32con.SRCCOPY)
+			dcmem.SelectObject(old)
+			dcmem.DeleteDC()
+			br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
+			dc.FrameRectFromHandle(rct,br)
+			Sdk.DeleteObject(br)
+		dc.Detach()
 
 	# load splash bmp
 	def loadbmp(self):
-#		import __main__
 		import splashbmp
-#		resdll=__main__.resdll
 		self._bmp = loadBitmapFromResId(splashbmp.getResId())
-#		self._bmp=win32ui.CreateBitmap()
-#		self._bmp.LoadBitmap(self._splashbmp,resdll)
 
 # Implementation of the open loaction dialog
 class OpenLocationDlg(ResDialog):
@@ -495,7 +499,7 @@ class BandwidthComputeDialog(ResDialog):
 		self._help = Button(self, win32con.IDHELP)
 		self.mustwait = 0
 		if not grab:
-			self.CreateWindow()
+			self.CreateWindow(parent)
 			self.ShowWindow(win32con.SW_SHOW)
 			self.UpdateWindow()
 		self._grab=grab
@@ -596,11 +600,11 @@ class ProgressDialog:
 		del self._dialog
 
 class _ProgressDialog(ResDialog):
-	# Placeholder
-	
-	def __init__(self, title, cancelcallback=None, parent=None):
+	def __init__(self, title, cancelcallback=None, parent=None, delaycancel=1, percent=0):
 		self.cancelcallback = cancelcallback
 		self._title = title
+		self.delaycancel = delaycancel
+		self._percent = percent
 		ResDialog.__init__(self,grinsRC.IDD_PROGRESS,parent)
 		self._parent=parent
 		self._progress = ProgressControl(self,grinsRC.IDC_PROGRESS1)
@@ -608,7 +612,7 @@ class _ProgressDialog(ResDialog):
 		self._curcur = None
 		self._curmax = None
 		self._cancel_pressed = 0
-		self.CreateWindow()
+		self.CreateWindow(parent)
 		self.ShowWindow(win32con.SW_SHOW)
 		self.UpdateWindow()
 	
@@ -629,12 +633,17 @@ class _ProgressDialog(ResDialog):
 		# Don't call callback now, we are probably not in the
 		# right thread. Remember for the next set call
 		self._cancel_pressed = 1
-
+		if not self.delaycancel and self.cancelcallback:
+			self.cancelcallback()
+			
 	def set(self, label, cur1=None, max1=None, cur2=None, max2=None):
 		if self._cancel_pressed and self.cancelcallback:
 			self.cancelcallback()
 		if cur1 != None:
-			label = label + " (%d of %d)"%(cur1, max1)
+			if self._percent:
+				label = label + "    %.0f%s" % (cur1, '%')
+			else:
+				label = label + " (%d of %d)" % (cur1, max1)
 		self._message.settext(label)
 		if max2 == None:
 			cur2 = None
@@ -648,6 +657,91 @@ class _ProgressDialog(ResDialog):
 			if cur2 == None:
 				cur2 = 0
 			self._progress.set(cur2)
+
+class SeekDialog(ResDialog):
+	def __init__(self, title, parent):
+		self._title = title
+		ResDialog.__init__(self,grinsRC.IDD_SEEK, parent)
+		self._parent=parent
+		self.IDC_SLIDER = grinsRC.IDC_SLIDER_POS+1
+
+		self.updateposcallback = None
+		self.timefunction = None
+		self.canusetimefunction = None
+
+		self.__curpos = 0
+		self.__timerid = 0
+		self.__enableExternalUpdate = 1
+
+		self._minind = Static(self, grinsRC.IDC_MIN)
+		self._maxind = Static(self, grinsRC.IDC_MAX)
+
+		self.CreateWindow(parent)
+		self.ShowWindow(win32con.SW_SHOW)
+		self.UpdateWindow()
+
+	def OnInitDialog(self):
+		self.SetWindowText(self._title)
+		self.attach_handles_to_subwindows()
+
+		l,t,r,b = self.GetWindowRect()
+		placeholder = Control(self, grinsRC.IDC_SLIDER_POS)
+		placeholder.attach_to_parent()
+		rc = self.ScreenToClient(placeholder.getwindowrect())
+		self.slider = win32ui.CreateSliderCtrl()
+		style = win32con.WS_VISIBLE|win32con.WS_CHILD|commctrl.TBS_HORZ|commctrl.TBS_BOTH|commctrl.TBS_AUTOTICKS
+		self.slider.CreateWindow(style, rc, self, self.IDC_SLIDER)
+
+		self.slider.SetTicFreq(5)
+		self.slider.SetLineSize(5)
+		self.slider.SetPageSize(20)
+		self.slider.SetRange(0, 100)
+
+		self.HookNotify(self.OnNotify, commctrl.NM_RELEASEDCAPTURE)
+		self.slider.HookMessage(self.OnSliderLButtonDown, win32con.WM_LBUTTONDOWN)
+		
+		self.HookMessage(self.OnTimer, win32con.WM_TIMER)
+		self.__timerid = self.SetTimer(1,200)
+
+		return ResDialog.OnInitDialog(self)
+
+	def close(self):
+		if self.__timerid:
+			self.KillTimer(self.__timerid)
+		if self.updateposcallback:
+			self.updateposcallback(0, 0)
+		self.EndDialog(win32con.IDCANCEL)
+
+	def OnCancel(self):
+		self.close()
+	
+	def setRange(self, min, max):
+		imin = int(math.floor(min))
+		imax = int(math.ceil(max))
+		self._minind.settext('%d' % imin)
+		self._maxind.settext('%d' % imax)
+		self.slider.SetRange(imin, imax)
+		
+	def setPos(self, pos):
+		self.slider.SetPos(int(pos+0.5))
+
+	def OnNotify(self, std, extra):
+		pos = self.slider.GetPos()
+		if pos != self.__curpos:
+			self.__curpos = pos
+			if self.updateposcallback:
+				self.updateposcallback(pos)
+		self.__enableExternalUpdate = 1
+
+	def OnSliderLButtonDown(self, params):
+		self.__enableExternalUpdate = 0
+		return 1 # continue normal processing
+
+	def OnTimer(self, params):
+		if self.__enableExternalUpdate and self.canusetimefunction and\
+			self.canusetimefunction() and self.timefunction:
+			self.setPos(self.timefunction())
+
 		
 # Implementation of the channel undefined dialog
 class ChannelUndefDlg(ResDialog):
@@ -710,7 +804,7 @@ class ChannelUndefDlg(ResDialog):
 
 # Implementation of the channel undefined dialog
 class EnterKeyDlg(ResDialog):
-	def __init__(self,cb_ok,parent=None):
+	def __init__(self,cb_ok,parent=None,user='',org='',license=''):
 		ResDialog.__init__(self,grinsRC.IDD_ENTER_KEY,parent)
 		self._cb_ok = cb_ok
 		self._bok = Button(self,win32con.IDOK)
@@ -718,6 +812,7 @@ class EnterKeyDlg(ResDialog):
 		self._tuser = Edit(self,grinsRC.IDC_NAME)
 		self._torg = Edit(self,grinsRC.IDC_ORGANIZATION)
 		self._tkey = Edit(self,grinsRC.IDC_KEY)
+		self.params = user, org, license
 		self.show()
 
 	def OnInitDialog(self):
@@ -725,7 +820,14 @@ class EnterKeyDlg(ResDialog):
 		self._tuser.hookcommand(self,self.OnEditChange)
 		self._torg.hookcommand(self,self.OnEditChange)
 		self._tkey.hookcommand(self,self.OnEditChange)
-		self._bok.enable(0)
+		user, org, license = self.params
+		self._tuser.settext(user)
+		self._torg.settext(org)
+		self._tkey.settext(license)
+		if license:
+			self._bok.enable(1)
+		else:
+			self._bok.enable(0)
 		return ResDialog.OnInitDialog(self)
 
 	def show(self):
@@ -737,8 +839,7 @@ class EnterKeyDlg(ResDialog):
 	def OnEditChange(self, id, code):
 		if code != win32con.EN_CHANGE:
 			return
-		ok = (self._tuser.gettext() or self._torg.gettext()) and \
-				self._tkey.gettext()
+		ok = self._tkey.gettext()
 		self._bok.enable(not not ok)
 
 	def OnOK(self):
@@ -757,7 +858,7 @@ class ModelessMessageBox(ResDialog):
 	def __init__(self,text,title,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_MESSAGE_BOX,parent)
 		self._text= Static(self,grinsRC.IDC_STATIC1)
-		self.CreateWindow()
+		self.CreateWindow(parent)
 		self._text.attach_to_parent()
 		self.SetWindowText(title)
 		self._text.settext(text)
@@ -902,7 +1003,7 @@ class CreateBoxDlg(ResDialog):
 	def __init__(self,text,callback,cancelCallback,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_CREATE_BOX1,parent)
 		self._text= Static(self,grinsRC.IDC_STATIC1)
-		self.CreateWindow()
+		self.CreateWindow(parent)
 		self._text.attach_to_parent()
 		self._text.settext(text)
 		self._callback=callback
@@ -973,7 +1074,7 @@ def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1,
 	   parent = None,defaultindex=None):
 	dlg=SimpleSelectDlg(list,title,prompt,parent,defaultindex)
 	if grab==1:dlg.DoModal()
-	else:dlg.CreateWindow()
+	else:dlg.CreateWindow(parent)
 	return dlg
 
 
@@ -1057,6 +1158,4 @@ class CreateBoxBar(DlgBar):
 		self._frame.RecalcLayout()
 		if self._cancelCallback:
 			apply(apply,self._cancelCallback)
-
-
 

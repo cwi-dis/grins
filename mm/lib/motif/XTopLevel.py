@@ -109,18 +109,20 @@ class _Toplevel:
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
-		      commandlist = None, resizable = 1):
+		      commandlist = None, resizable = 1, bgcolor = None):
 		from XWindow import _Window
 		return _Window(self, x, y, w, h, title, 0, pixmap, units,
-			       adornments, canvassize, commandlist, resizable)
+			       adornments, canvassize, commandlist, resizable,
+			       bgcolor)
 
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
 			type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
 			adornments = None, canvassize = None,
-			commandlist = None, resizable = 1):
+			commandlist = None, resizable = 1, bgcolor = None):
 		from XWindow import _Window
 		return _Window(self, x, y, w, h, title, 1, pixmap, units,
-			       adornments, canvassize, commandlist, resizable)
+			       adornments, canvassize, commandlist, resizable,
+			       bgcolor)
 
 	_waiting = 0
 	def setwaiting(self):

@@ -24,10 +24,13 @@ from win32ig import win32ig
 import string
 import MMmimetypes
 import grins_mimetypes
+import GenWnd
 
 def beep():
 	win32api.MessageBeep()
 
+################
+		 
 # The _Toplevel class represents the root of all windows.  It is never
 # accessed directly by any user code.
 class _Toplevel:
@@ -58,9 +61,9 @@ class _Toplevel:
 		self._pixel_per_mm_y = sysmetrics.pixel_per_mm_y
 	
 		self._waiting=0
-		
+		self._idles = {}
+
 		# generic wnd class
-		import GenWnd
 		self.genericwnd=GenWnd.GenWnd
 		
 		self._in_create_box=None
@@ -72,7 +75,7 @@ class _Toplevel:
 			raise error, 'can only initialize once'
 		self._initialized = 1	
 		self._closecallbacks = []
-		self._subwindows = []
+		self._subwindows = []	# A list of child windows, each are of type
 		self._bgcolor = 255, 255, 255 # white
 		self._fgcolor =   0,   0,   0 # black
 		self._running = 0
@@ -86,10 +89,9 @@ class _Toplevel:
 		# timer handling
 		self._timers = []
 		self._timer_id = 0
-		self._idles = []
+		self._idles = {}
+		self.__idleid = 0
 		self._time = float(Sdk.GetTickCount())/TICKS_PER_SECOND
-
-		# fibers serving
 
 		self._apptitle=None
 		self._appadornments=None
@@ -97,6 +99,11 @@ class _Toplevel:
 
 		self._activeDocFrame=None
 		self._register_entries=[]
+
+		# embedding support state
+		self._peerdocid = 0
+		self._embeddedcallbacks = {}
+		self._most_recent_docframe = None
 
 	# set/get active doc frame (MDIFrameWnd)
 	def setActiveDocFrame(self,frame):
@@ -124,12 +131,7 @@ class _Toplevel:
 
 		import Font
 		Font.delfonts()
-
-		try:
-			win32ui.GetMainFrame().PostMessage(win32con.WM_CLOSE)
-		except:
-			# main frame already gone
-			pass
+		
 
 	# Registration function for close callbacks
 	def addclosecallback(self, func, args):
@@ -142,22 +144,22 @@ class _Toplevel:
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
-		      commandlist = None, resizable = 1):
+		      commandlist = None, resizable = 1, bgcolor = None):
 		frame = adornments.get('frame')
 		if frame is None:
 			raise 'error', 'newwindow without frame specification'
-		return frame.newwindow(x, y, w, h, title, visible_channel,
+		wnd = frame.newwindow(x, y, w, h, title, visible_channel,
 		      type_channel, pixmap, units,
 		      adornments, canvassize,
-		      commandlist, resizable)
+		      commandlist, resizable, bgcolor)
+		if hasattr(wnd, '_viewport'):
+			return wnd._viewport
+		return wnd
 
 
 	############ SDI/MDI Model Support
 	# Called by win32 modules to create the main frame
 	def createmainwnd(self,title = None, adornments = None, commandlist = None):
-#		if title:
-#			self._apptitle=title
-		# ignore title from core under Martin sugestion
 		self._apptitle=AppDisplayName
 		if adornments:
 			self._appadornments=adornments
@@ -165,7 +167,7 @@ class _Toplevel:
 			self._appcommandlist=commandlist
 		if len(self._subwindows)==0:
 			frame = MainFrame.MDIFrameWnd()
-			frame.create(self._apptitle)
+			frame.createOsWnd(self._apptitle)
 			frame.init_cmif(None, None, 0, 0, self._apptitle,
 				UNIT_MM, self._appadornments,self._appcommandlist)
 			self.setActiveDocFrame(frame)
@@ -174,17 +176,21 @@ class _Toplevel:
 				frame.register(ev,cb,arg)
 		return self._subwindows[0]
 
-	# Called by win32 modules for every open document
-	def newdocument(self,cmifdoc,adornments=None,commandlist=None):
+	# associate the document (TopLevel) with a wnd
+	# return the wnd
+	# argument cmifdoc is an instance of TopLevel
+	def newdocument(self, cmifdoc, adornments=None, commandlist=None):
 		for frame in self._subwindows:
 			if not frame._cmifdoc:
-				frame.setdocument(cmifdoc,adornments,commandlist)
+				frame.setdocument(cmifdoc,adornments,commandlist, self._peerdocid)
+				self._most_recent_docframe = frame
 				return frame
 		frame = MainFrame.MDIFrameWnd()
-		frame.create(self._apptitle)
+		frame.createOsWnd(self._apptitle)
 		frame.init_cmif(None, None, 0, 0,self._apptitle,
 			UNIT_MM,self._appadornments,self._appcommandlist)
-		frame.setdocument(cmifdoc,adornments,commandlist)
+		frame.setdocument(cmifdoc, adornments, commandlist, self._peerdocid)
+		self._most_recent_docframe = frame
 		for r in self._register_entries:
 			ev,cb,arg=r
 			frame.register(ev,cb,arg)
@@ -195,14 +201,50 @@ class _Toplevel:
 		if len(self._subwindows)==0:
 			self.createmainwnd()
 		return self.getActiveDocFrame() # return the active
-	
+
+	def get_most_recent_docframe(self):
+		return self._most_recent_docframe # of type MainFrame.MDIFrameWnd
+
 	# register events for all main frames (top level wnds)
 	def register_event(self,ev,cb,arg):
 		self._register_entries.append((ev,cb,arg))
-		
+	
 	############ /SDI-MDI Model Support	
 
+	#
+	# Embedding Support	
+	#
+	def register_embedded(self, event, func, arg):
+		self._embeddedcallbacks[event] = func, arg
+
+	def unregister_embedded(self, event):
+		try:
+			del self._embeddedcallbacks[event]
+		except KeyError:
+			pass
+
+	def get_embedded(self, event):
+		return self._embeddedcallbacks.get(event)
+
+	def is_embedded(self):
+		import __main__
+		return hasattr(__main__,'embedded') and __main__.embedded
+	
+	def enableCOMAutomation(self):
+		import __main__
+		if hasattr(__main__,'commodule'):
+			import embedding
+			listenerWnd = embedding.ListenerWnd(self)
+			self.addclosecallback(listenerWnd.DestroyWindow, ())
+			commodule = __main__.commodule
+			commodule.SetListener(listenerWnd.GetSafeHwnd())
+			commodule.RegisterClassObjects()
+	
+	#
+	# Std interface
+	#
 	# Displays a text viewer
+	# Not used.
 	def textwindow(self,text):
 		print 'you must request textwindow from a frame'
 		sv=self.newviewobj('sview_')
@@ -229,26 +271,12 @@ class _Toplevel:
 
 	# Set the application cursor to the cursor with string id
 	def setcursor(self, strid):
+		if strid == self._cursor:
+			return
 		App=win32ui.GetApp()
-		import grinsRC
-		if strid=='hand':
-			cursor = App.LoadCursor(grinsRC.IDC_POINT_HAND)
-		elif strid=='stop':
-			cursor = App.LoadCursor(grinsRC.IDC_STOP)
-		elif strid=='channel':
-			cursor = App.LoadCursor(grinsRC.IDC_DRAGMOVE)
-		elif strid=='link':
-			cursor = App.LoadCursor(grinsRC.IDC_DRAGLINK)
-		elif strid=='' or strid=='arrow':
-			cursor = App.LoadStandardCursor(win32con.IDC_ARROW)
-			strid='arrow'
-		elif strid=='draghand':
-			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAG_HAND)
-		else:
-			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
-			strid='arrow'
-
-		(win32ui.GetWin32Sdk()).SetCursor(cursor);
+		import win32window
+		cursor = win32window.getcursorhandle(strid)
+		win32ui.GetWin32Sdk().SetCursor(cursor)
 		self._cursor = strid
 
 	# To support the same interface as windows
@@ -294,30 +322,30 @@ class _Toplevel:
 	def usewindowlock(self, lock):
 		pass
 
+
 	#########################################
 	# Main message loop of the application
 	def mainloop(self):
 		if len(self._subwindows) == 1:self.show()
 		self.serve_events(())
-#		win32ui.GetApp().AddIdleHandler(self.monitor)
-
 		wnd=self.genericwnd()
 		wnd.create()
-		wnd.HookMessage(self.OnTimer,win32con.WM_TIMER)
-		id=wnd.SetTimer(1,100)
-		wnd.HookMessage(self.serve_events,win32con.WM_USER)
-		win32ui.GetApp().RunLoop(wnd)
-		wnd.KillTimer(id)
+		wnd.HookMessage(self.OnTimer, win32con.WM_TIMER)
+		id=wnd.SetTimer(1,10)
 		
+		# com automation support
+		self.enableCOMAutomation()
+
+		# enter application loop
+		win32ui.GetApp().RunLoop()
+		
+		# cleanup
+		wnd.KillTimer(id)
 		wnd.DestroyWindow()
 		
 	def OnTimer(self, params):
 		self.serve_events()
 		
-#	def monitor(self,handler,count):
-#		self.serve_events()
-#		return 0 # no more, next time
-
 	# It is actualy part of the main loop and part of a delta timer 
 	def serve_events(self,params=None):	
 		if self._waiting:self.setready()				
@@ -388,23 +416,28 @@ class _Toplevel:
 					self._timers[i] = (tt + t, cb, tid)
 				return
 		raise 'unknown timer', id
+	
+	def getcurtime(self):
+		return float(Sdk.GetTickCount())/TICKS_PER_SECOND
+		
+	def settimevirtual(self, virtual):
+		pass
 
-	# Monitoring Fibers	registration
-	_registry={}
-	_fiber_id=0
 	# Register for receiving timeslices
-	def register(self,check,cb):
-		self._fiber_id = self._fiber_id + 1
-		self._registry[self._fiber_id]=(check,cb)
-		return self._fiber_id
+	def setidleproc(self, cb):
+		id = self.__idleid
+		self.__idleid = self.__idleid + 1
+		self._idles[id] = cb
+		return id
+
 	# Register for receiving timeslices
-	def unregister(self,id):
-		if self._registry.has_key(id):
-			del self._registry[id]
+	def cancelidleproc(self, id):
+		del self._idles[id]
+
 	# Dispatch timeslices
 	def serve_timeslices(self):
-		for check,call in self._registry.values():
-			if apply(apply,check):apply(apply,call)
+		for onIdle in self._idles.values():
+			onIdle()
 
 	################################
 		
@@ -414,9 +447,18 @@ class _Toplevel:
 
 
 	################################
-	
 	#utility functions
-	def cleardocmap(self,doc):
+	
+	def cacheimage(self, doc, file, img, size):
+		self._image_size_cache[file] = size
+		self._image_cache[file] = img
+		if self._image_docmap.has_key(doc):
+			if file not in self._image_docmap[doc]:
+				self._image_docmap[doc].append(file)
+		else:
+			self._image_docmap[doc]=[file,]
+
+	def cleardoccache(self, doc):
 		if not self._image_docmap.has_key(doc): return
 		imglist=self._image_docmap[doc]
 		otherimglist=[]
@@ -434,13 +476,13 @@ class _Toplevel:
 
 			
 	# Returns the size of an image	
-	def GetImageSize(self,file):
-		f=self.getActiveDocFrame()
+	def GetImageSize(self, file):
+		f = self.getActiveDocFrame()
 		return f._image_size(file)
 	
 	# Returns the length of a string in pixels	
 	def GetStringLength(wnd,str):
-		dc = wnd.GetDC();
+		dc = wnd.GetDC()
 		cx,cy=dc.GetTextExtent(str)
 		wnd.ReleaseDC(dc)
 		return cx
@@ -481,7 +523,10 @@ class FileDialog:
 			flags=win32con.OFN_HIDEREADONLY|win32con.OFN_OVERWRITEPROMPT
 		if not parent:
 			import __main__
-			parent=__main__.toplevel._subwindows[0]
+			try:
+				parent=__main__.toplevel._subwindows[0]
+			except IndexError:
+				pass
 		if not filter or type(filter) == type('') and not '/' in filter:
 			# Old style (pattern) filter
 			if not filter or filter == '*':
@@ -605,6 +650,3 @@ class htmlwindow:
 		shell_execute(url,'open')	
 	def close(self):pass
 	def is_closed(self):return 1
-		
-
-

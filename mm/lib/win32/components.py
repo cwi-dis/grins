@@ -10,7 +10,7 @@ This is in contrast to all the objects exported by the
 win32ui pyd which exports inherited objects from MFC objects
 """
 
-import win32ui,win32con
+import win32ui, win32con, win32api
 import commctrl
 import afxres
 Sdk=win32ui.GetWin32Sdk()
@@ -32,6 +32,10 @@ class LightWeightControl:
 			parent._subwndlist.append(self)
 		self._hwnd=hwnd
 		self._cb=None
+		self._hfont = 0
+	def __del__(self):
+		if self._hfont:
+			Sdk.DeleteObject(self._hfont)
 	def sendmessage(self,msg,wparam=0,lparam=0):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessage(self._hwnd,msg,wparam,lparam)
@@ -47,6 +51,18 @@ class LightWeightControl:
 	def sendmessage_gl(self,msg,wparam,lparam=0):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessageGL(self._hwnd,msg,wparam,lparam)
+	def sendmessage_gt(self,msg,wparam,lparam=0):
+		if not self._hwnd: raise error, 'os control has not been created'
+		return Sdk.SendMessageGT(self._hwnd,msg,wparam,lparam)	
+	def sendmessage_getrect(self,msg,wparam,lparam=0):
+		if not self._hwnd: raise error, 'os control has not been created'
+		return Sdk.SendMessageGetRect(self._hwnd,msg,wparam,lparam)	
+	def sendmessage_setrect(self, msg, wparam, rect):
+		if not self._hwnd: raise error, 'os control has not been created'
+		return Sdk.SendMessageGetRect(self._hwnd,msg,wparam,rect)	
+	def sendmessage_ms(self, msg, wparam, lparam):
+		if not self._hwnd: raise error, 'os control has not been created'
+		return Sdk.SendMessageMS(self._hwnd, msg, wparam, lparam)
 	def enable(self,f):
 		if not self._hwnd: raise error, 'os control %d has not been created'
 		if f==None:f=0
@@ -81,20 +97,29 @@ class LightWeightControl:
 		wnd.HookMessage(cb,msgid)
 	def hasid(self,id):
 		return id==self._id
-	def create(self,wc,name,pos,size,parent,id):
-		if hasattr(parent,'GetSafeHwnd'):
-			hwnd=parent.GetSafeHwnd()
+	def create(self, wc, rc, name=''):
+		if hasattr(self._parent,'GetSafeHwnd'):
+			hwnd=self._parent.GetSafeHwnd()
 		else:
-			hwnd=parent
-		pl=(pos[0],pos[1],size[0],size[1])
-		self._hwnd=Sdk.CreateWindowEx(wc.exstyle,wc.classid,name,wc.style,
-				pl,hwnd,id)
+			hwnd=self._parent
+		self._hwnd = Sdk.CreateWindowEx(wc.exstyle,wc.classid,name,wc.style,rc,hwnd,self._id)
+	def destroy(self):
+		if self._hwnd:
+			return Sdk.DestroyWindow(self._hwnd)
+		return 1
 	def setwindowpos(self,hInsertAfter,rc,flags):
 		if not self._hwnd: raise error, 'os control has not been created'
 		Sdk.SetWindowPos(self._hwnd,hInsertAfter,rc,flags)
 	def getwindowrect(self):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.GetWindowRect(self._hwnd)
+	def getclientrect(self):
+		if not self._hwnd: raise error, 'os control has not been created'
+		l, t, r, b = Sdk.GetWindowRect(self._hwnd)
+		return 0, 0, r-l, b-t 
+	def movewindow(self, rc, repaint = 1):
+		if not self._hwnd: raise error, 'os control has not been created'
+		Sdk.MoveWindow(self._hwnd, rc, repaint)
 	def setstyleflag(self,flag):
 		if not self._hwnd: raise error, 'os control has not been created'
 		style = Sdk.GetWindowLong(self._hwnd,win32con.GWL_STYLE)
@@ -112,6 +137,15 @@ class LightWeightControl:
 	def callcb(self):
 		if self._cb: 
 			apply(apply,self._cb)
+	def setfont(self, lf=None):
+		if self._hfont:
+			Sdk.DeleteObject(self._hfont)
+		if lf is None:
+			lf = {'name':'MS San Serif', 'height': 11, 'weight': win32con.FW_NORMAL}
+		self._hfont = Sdk.CreateFontIndirect(lf)
+		if self._hfont:
+			self.sendmessage(win32con.WM_SETFONT, self._hfont, 1)
+
 
 # shortcut
 Control = LightWeightControl
@@ -120,6 +154,12 @@ Control = LightWeightControl
 class Button(Control):
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
+	def setstate(self, f):
+		self.sendmessage(win32con.BM_SETSTATE,f)
+	def getstate(self):
+		return self.sendmessage(win32con.BM_GETSTATE)
+	def ispushed(self):
+		return win32con.BST_PUSHED & self.getstate()
 
 # RadioButton control class
 class RadioButton(Control):
@@ -135,6 +175,30 @@ class RadioButton(Control):
 		if f==win32con.BST_CHECKED:return 1
 		elif f==win32con.BST_UNCHECKED:return 0
 		return -1
+
+# RadioButtons aren't very useful on their own..
+# This makes them look like a ComboBox, except this looks like a dictionary.
+# Hmm.. this could take some time to write and get working. I'll just do a quick
+# hack for the meanwhile -mjvdg.
+##class RadioButtonGroup:
+##	def __init__(self, buttons = None):
+##		self.set(buttons)
+##	def setcursel(self, key):	# sets the current selection
+##		print "TODO: RadioButtonGroup.setcursel"
+##	def getcursel(self, key):	# returns the currently selected key
+		
+##	def resetcontent(self):		# sets the first radio button
+##		return
+##	def set(self, buttons):		# sets the buttons in this control (hard-wired)
+##		# Buttons is a dicitonary of {grinsRC.xx : 'Name'}
+##		self.buttons = buttons
+##		self.selected = None
+##		for k, v in buttons.items():
+##			if not self.selected:
+##				self.selected = k
+##			working here.
+##	def getselected(self):		# returns the selected key
+##		return self.getcursel()
 
 # CheckButton control class
 class CheckButton(Control):
@@ -183,8 +247,19 @@ class Edit(Control):
 		return self.sendmessage_gl(win32con.EM_GETLINE,ix)
 	def getmodify(self):
 		return self.sendmessage(win32con.EM_GETMODIFY)
+	def setmodify(self, flag):
+		return self.sendmessage(win32con.EM_SETMODIFY, flag)
 	def getsel(self):
 		return self.sendmessage_ra(win32con.EM_GETSEL)[:2]
+	def setsel(self, start, end):
+		return self.sendmessage(win32con.EM_SETSEL, start, end)
+	def setreadonly(self, readonly):
+		return self.sendmessage(win32con.EM_SETREADONLY, readonly)
+	def linescroll(self, nlines, nchars = 0):
+		# note reversal of arguments
+		return self.sendmessage(win32con.EM_LINESCROLL, nchars, nlines)
+	def getfirstvisibleline(self):
+		return self.sendmessage(win32con.EM_GETFIRSTVISIBLELINE)
 	def getinspos(self):
 		return self.sendmessage_ra(win32con.EM_GETSEL)[2]
 
@@ -238,7 +313,15 @@ class ListBox(Control):
 		self.sendmessage(win32con.LB_RESETCONTENT)
 	def sethorizontalextent(self,npixels):
 		self.sendmessage(win32con.LB_SETHORIZONTALEXTENT,npixels)
-	 
+	def getitemrect(self, index):
+		return self.sendmessage_getrect(win32con.LB_GETITEMRECT ,index)
+
+	# Multi-select list support
+	def getselcount(self):
+		return self.sendmessage(win32con.LB_GETSELCOUNT)
+	def getselitems(self, itemNumber):
+		return self.sendmessage_gt(win32con.LB_GETSELITEMS, itemNumber)
+	
 	# cmif interface
 	# initialize cmif related part
 	def __icmif(self):
@@ -356,44 +439,29 @@ class DnDListBox(ListBox):
 # ComboBox control class
 class ComboBox(Control):
 	def __init__(self,owner=None,id=-1):
-		self.__cancelindex = -1
 		Control.__init__(self,owner,id)
 		self.__icmif() 
 	def setcursel(self,index):
 		if index==None: index=-1
-		if self.__cancelindex >= 0 and index > self.__cancelindex:
-			index = index - 1
 		self.sendmessage(win32con.CB_SETCURSEL,index)
 	def getcursel(self):
-		index = self.sendmessage(win32con.CB_GETCURSEL)
-		if self.__cancelindex >= 0 and index >= self.__cancelindex:
-			index = index + 1
-		return index
+		return self.sendmessage(win32con.CB_GETCURSEL)
 	def getcount(self):
 		return self.sendmessage(win32con.CB_GETCOUNT)
 	def insertstring(self,ix,str):
 		if not str: str='---'
-		if self.__cancelindex >= 0 and ix > self.__cancelindex:
-			ix = ix - 1
 		self.sendmessage_ls(win32con.CB_INSERTSTRING,ix,str)
 	def addstring(self,str):
 		if not str: str='---'
 		return self.sendmessage_ls(win32con.CB_ADDSTRING,0,str)
 	def gettextlen(self,ix):
-		if self.__cancelindex >= 0 and ix > self.__cancelindex:
-			ix = ix - 1
 		return self.sendmessage(win32con.CB_GETLBTEXTLEN,ix)
 	def gettext(self,ix):
 		n = self.gettextlen(ix) + 1
-		if self.__cancelindex >= 0 and ix > self.__cancelindex:
-			ix = ix - 1
 		return self.sendmessage_rs(win32con.CB_GETLBTEXT,ix,n)
 	def resetcontent(self):
 		self.sendmessage(win32con.CB_RESETCONTENT)
-		self.__cancelindex = -1
 	def deletestring(self,index):
-		if self.__cancelindex >= 0 and index > self.__cancelindex:
-			index = index - 1
 		self.sendmessage(win32con.CB_DELETESTRING,index)
 	# edit box like interface
 	def setedittext(self,str):
@@ -428,36 +496,24 @@ class ComboBox(Control):
 
 	def setoptions(self, optionlist, startpos=0):
 		if not optionlist: return
-		n = 0
-		if self.__cancelindex >= 0 and startpos > self.__cancelindex:
-			startpos = startpos - 1
-			n = 1
 		for pos in range(startpos,len(optionlist)):
-			self.insertstring(startpos+n+pos,optionlist[pos])
-			self._optionlist.insert(startpos+pos, optionlist[pos])
+			self.insertstring(pos,optionlist[pos])
+			self._optionlist.append(optionlist[pos])
 	def initoptions(self, optionlist,seloption=None):
 		self.resetcontent()
 		if not optionlist: return
 		self.setoptions(optionlist)
 		self.setcursel(seloption)	
 	def setoptions_cb(self, optionlist):
-		for i in range(len(optionlist)):
-			item = optionlist[i]
+		for item in optionlist:
 			if type(item)==type(()):
-				if item[0]=='Cancel':
-					self.__cancelindex = i
-					continue
+				if item[0]=='Cancel':continue
 				self.addstring(item[0])
 				self._optionlist.append(item[0])
-		if self.__cancelindex == 0:
-			self.setcursel(1)
-		else:
-			self.setcursel(0)
+		self.setcursel(0)
 	def setsensitive(self,pos,f):
-		if self.__cancelindex >= 0 and pos > self.__cancelindex:
-			opos = pos - 1
 		seloption=self.getcursel()
-		str=self._optionlist[opos]
+		str=self._optionlist[pos]
 		if f:
 			self.deletestring(pos)
 			self.insertstring(pos,str) # add it
@@ -470,9 +526,8 @@ class ComboBox(Control):
 
 ##################
 # A special class that it is both an MFC window and A LightWeightControl
-# from pywin.mfc import window
 
-from pywin.mfc import window
+from pywinlib.mfc import window
 
 class WndCtrl(LightWeightControl,window.Wnd):
 	def create_wnd_from_handle(self):
@@ -501,6 +556,205 @@ class TabCtrl(Control):
 	def getcursel(self):
 		return self.sendmessage(commctrl.TCM_GETCURSEL)
 
+####################################################
+# Tooltip control
+class Tooltip(Control):
+	def __init__(self, parent=None, id=-1):
+		Control.__init__(self, parent, id)
+		self._toolscounter = 0
+		self._cptext = {}
+		self._lbuttondown = 0
+
+	def createWindow(self, rc=(0,0,0,0), title=''):
+		#Sdk.InitCommonControlsEx()
+		hwnd = self._parent.GetSafeHwnd()
+		rcd = win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT
+		self._hwnd = Sdk.CreateWindowEx(win32con.WS_EX_TOPMOST, 'tooltips_class32', title, win32con.WS_POPUP 
+			 # | commctrl.TTS_ALWAYSTIP
+			,rcd, hwnd, self._id)
+		Sdk.SetWindowPos(self._hwnd, win32con.HWND_TOPMOST, (0,0,0,0),
+			win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
+
+	def destroy(self):
+		Control.destroy(self)
+		for cp in self._cptext.values():
+			Sdk.GetWMString(cp)
+		del self._cptext
+
+	def __releasetoolres(self, toolid):
+		cp = self._cptext.get(toolid)
+		if cp: 
+			Sdk.GetWMString(cp)
+			del self._cptext[toolid]
+		
+	def addTool(self, toolid, rc, text):
+		assert not self._cptext.has_key(toolid), 'tool already exists'
+		hwnd = self._parent.GetSafeHwnd()
+		cp = Sdk.AddTool(self._hwnd, hwnd, toolid, rc, text)
+		self._cptext[toolid] = cp
+		self._toolscounter = self._toolscounter + 1
+	
+	def delTool(self, toolid):
+		assert self._cptext.has_key(toolid), 'tool does not exist'
+		hwnd = self._parent.GetSafeHwnd()
+		Sdk.DelTool(self._hwnd, hwnd, toolid)
+		self._toolscounter = self._toolscounter - 1
+		self.__releasetoolres(toolid)
+		
+	def relayEvent(self, params):
+		assert self._hwnd>0, 'Tooltip control has not been created'
+		if self._toolscounter == 0: 
+			return
+		hwnd, message, wParam, lParam, time, pt = params
+		params = hwnd, message, wParam, lParam, 0, lParam
+		self.sendmessage_ms(commctrl.TTM_RELAYEVENT, 0, params)
+
+	def onLButtonDown(self, params):
+		self.sendmessage(commctrl.TTM_ACTIVATE, 0, 0)
+		self._lbuttondown = 1
+		self.relayEvent(params)
+
+	def onLButtonUp(self, params):
+		if not self._lbuttondown:
+			return
+		self._lbuttondown = 0
+		self.relayEvent(params)
+
+	def onMouseMove(self, params):
+		if self._lbuttondown:
+			hwnd, message, wParam, lParam, time, pt = params
+			newparams = hwnd, win32con.WM_LBUTTONUP, wParam, lParam, time, lParam
+			self.onLButtonUp(params)
+		self.relayEvent(params)
+
+	def activate(self, flag):
+		if flag: 
+			flag = 1
+		else: 
+			flag = 0
+		self.sendmessage(commctrl.TTM_ACTIVATE, flag, 0)
+
+	def settoolrect(self, toolid, rc):
+		hwnd = self._parent.GetSafeHwnd()
+		Sdk.NewToolRect(self._hwnd, hwnd, toolid, rc)
+
+	def updatetiptext(self, toolid, text):
+		assert self._cptext.has_key(toolid), 'tool does not exist'
+		cp = self._cptext[toolid]
+		hwnd = self._parent.GetSafeHwnd()
+		Sdk.UpdateTipText(self._hwnd, hwnd, toolid, text, cp)
+
+	# removes a displayed tooltip window from view. 
+	def pop(self):
+		self.sendmessage(commctrl.TTM_POP, 0, 0)
+
+	# forces the current tool to be redrawn. 
+	def update(self):
+		self.sendmessage(commctrl.TTM_UPDATE, 0, 0)
+
+	# sets the top, left, bottom, and right margins for a tooltip window. 
+	# a margin is the distance, in pixels, between the tooltip window border 
+	# and the text contained within the tooltip window. 
+	def setmargin(self, rc):
+		self.sendmessage_setrect(commctrl.TTM_SETMARGIN, 0, rc)
+
+	# set the maximum width for a tooltip window. 
+	def setmaxtipwidth(self, w):
+		self.sendmessage(commctrl.TTM_SETMAXTIPWIDTH, 0, w)
+
+	def setdelay(self, which, msecs):
+		whichid = None
+		if which == 'autopop':
+			whichid = commctrl.TTDT_AUTOPOP
+		elif which == 'initial':
+			whichid = commctrl.TTDT_INITIAL
+		elif which == 'reshow':
+			whichid = commctrl.TTDT_RESHOW
+		if whichid is not None:
+			self.sendmessage(commctrl.TTM_SETDELAYTIME, whichid, msecs)
+	
+	def settiptextcolor(self, color):
+		r, g, b = color
+		self.sendmessage(commctrl.TTM_SETTIPTEXTCOLOR, win32api.RGB(r, g, b), 0)
+
+	def settipbgcolor(self, color):
+		r, g, b = color
+		self.sendmessage(commctrl.TTM_SETTIPBKCOLOR, win32api.RGB(r, g, b), 0)
+	
+
+##############################
+# TipWindow (not lightweight)
+# A window similar to the tip-popup the tooltip control uses
+# The purpose is to have a comletely customizable tip window 
+ 
+class TipWindow(window.Wnd):
+	def __init__(self, parent):
+		window.Wnd.__init__(self,win32ui.CreateWnd())
+		self._parent = parent
+		self._text = None
+		self._bgcolor = 0xFF, 0xFF, 0xE0 # LightYellow
+		self._rect = 20, 20, 112, 38
+		self._margins = 2, 0, 2, 0
+		self._dxoffset = 16
+		self._blackbrush = Sdk.CreateBrush(win32con.BS_SOLID,0,0)
+		fd = {'name':'Arial','height':10,'weight':500}
+		self._hsmallfont = Sdk.CreateFontIndirect(fd)		
+
+	def create(self):
+		brush = Sdk.CreateBrush(win32con.BS_SOLID, win32mu.RGB(self._bgcolor), 0)
+		strclass = win32ui.GetAfx().RegisterWndClass(0, 0, brush, 0)
+		style = win32con.WS_POPUP
+		self.CreateWindowEx(win32con.WS_EX_TOPMOST, strclass, '', style,
+			self._rect, self._parent, 0)
+	
+	def OnDestroy(self, params):
+		Sdk.DeleteObject(self._blackbrush)
+		Sdk.DeleteObject(self._hsmallfont)
+
+	def OnPaint(self):
+		dc, paintStruct = self.BeginPaint()
+		dc.SetBkMode(win32con.TRANSPARENT)
+		l, t, r, b = self.GetClientRect()
+		dc.FillSolidRect((l, t, r, b), win32mu.RGB(self._bgcolor or (255,255,255)))
+		if self._text is not None:
+			dl, dt, dr, db = self._margins
+			hf = dc.SelectObjectFromHandle(self._hsmallfont)
+			dc.DrawText(self._text, (l+dl, t+dt, r-dr, b-db))
+			dc.SelectObjectFromHandle(hf)
+		dc.FrameRectFromHandle(self.GetClientRect(), self._blackbrush)
+		self.EndPaint(paintStruct)
+	
+	def OnEraseBkgnd(self,dc):
+		return 1 # promise: we will paint our background
+
+	def settext(self, text):
+		self._text = text
+		if Sdk.IsWindow(self.GetSafeHwnd()):
+			self.InvalidateRect(self.GeClientRect())
+
+	def moveTo(self, pos, text, show=1):
+		self._text = text
+		x, y = pos
+		x =  x + self._dxoffset
+		rc = self.GetWindowRect()
+		Sdk.SetWindowPos(self.GetSafeHwnd(), win32con.HWND_TOPMOST, (x,y,0,0),
+			win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE |  win32con.SWP_NOZORDER | win32con.SWP_NOREDRAW)
+		if show and not self.IsWindowVisible():
+			self.ShowWindow(win32con.SW_SHOW)
+		self.__updatewnd(self._parent, rc)
+		self.__updatewnd(self._parent.GetParent(), rc)
+		self.InvalidateRect()
+
+	def show(self):
+		self.ShowWindow(win32con.SW_SHOW)
+						
+	def hide(self):
+		self.ShowWindow(win32con.SW_HIDE)
+			
+	def __updatewnd(self, wnd, rc):
+		rc = wnd.ScreenToClient(rc)
+		wnd.InvalidateRect(rc)
+		wnd.UpdateWindow()
 
 ##############################
 # Base class for controls creation classes
@@ -525,8 +779,8 @@ class BUTTON(WndClass):
 	def __init__(self,style=0,exstyle=0):
 		WndClass.__init__(self,
 			classid='BUTTON',
-			style=win32con.WS_CHILD | win32con.WS_CLIPSIBLINGS | win32con.WS_VISIBLE | WS_TABSTOP |  style,
-			exstyle=WS_EX_CONTROLPARENT| exstyle)
+			style=win32con.WS_CHILD | win32con.WS_CLIPSIBLINGS | win32con.WS_VISIBLE | win32con.WS_TABSTOP |  style,
+			exstyle=win32con.WS_EX_CONTROLPARENT| exstyle)
 
 # PushButton control creation class 
 # for left justification init with style BS_LEFTTEXT
@@ -545,6 +799,13 @@ class AUTOCHECKBOX(BUTTON):
 		BUTTON.__init__(self,win32con.BS_AUTOCHECKBOX | style,exstyle)
 CHECKBOX=AUTOCHECKBOX		
 
+class COMBOBOX(WndClass):
+	def __init__(self,style=0,exstyle=0):
+		WndClass.__init__(self,
+			classid='COMBOBOX',
+			style=win32con.WS_CHILD | win32con.WS_VISIBLE | win32con.CBS_DROPDOWNLIST | win32con.WS_VSCROLL | style,
+			exstyle=exstyle)
+	
 # Create a window from its control class
 def createwnd(wc,name,pos,size,parent,id):
 	if hasattr(parent,'GetSafeHwnd'):

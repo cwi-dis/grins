@@ -35,12 +35,14 @@ getscreensize = toplevel.getscreensize
 getscreendepth = toplevel.getscreendepth
 
 canceltimer = toplevel.canceltimer
+getcurtime = toplevel.getcurtime
+settimevirtual = toplevel.settimevirtual
 
 setready=toplevel.setready
 setwaiting=toplevel.setwaiting
 
-register=toplevel.register
-unregister=toplevel.unregister
+setidleproc=toplevel.setidleproc
+cancelidleproc=toplevel.cancelidleproc
 register_event=toplevel.register_event
 
 genericwnd=toplevel.genericwnd
@@ -56,6 +58,9 @@ getmainwnd=toplevel.getmainwnd
 getactivedocframe=toplevel.getActiveDocFrame
 # /SDI-MDI Model Support
 
+#
+register_embedded = toplevel.register_embedded
+unregister_embedded = toplevel.unregister_embedded
 
 # constants
 from appcon import *
@@ -67,17 +72,39 @@ from Font import findfont,fonts
 from AppToplevel import FileDialog
 from win32dialog import *
 
+# override some dialogs when embedded
+import __main__
+if hasattr(__main__,'embedded') and __main__.embedded:
+	import embedding
+	showmessage = embedding.showmessage
+
 # Auxiliary functions
 from AppToplevel import beep
 
 # needed directly?
 GetImageSize=toplevel.GetImageSize
-from win32dxm import GetVideoSize
+from _PreferencesDialog import PreferencesDialog
 from _UsergroupView import UsergroupEditDialog
 from _LinkView import LinkPropDlg
+from win32dxm import GetVideoSize
 
 def lopristarting():
 	pass
 
 import win32api
 def RGB(c):return win32api.RGB(c[0],c[1],c[2])
+
+def serve_events():
+	import win32ui, win32con
+	win32ui.PumpWaitingMessages(win32con.WM_MOUSEFIRST,win32con.WM_MOUSELAST)
+	from __main__ import toplevel
+	toplevel.serve_events()
+
+def sleep(t):
+	win32api.Sleep(int(t*1000.0+0.5))
+
+def HasSvgSupport():
+	import win32ui
+	return win32ui.HasSvgSupport()
+
+

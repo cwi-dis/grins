@@ -281,13 +281,11 @@ def _create_menu(self, list, menuid, cbdict, acc = None):
 		else:
 			if type(callback) is not TupleType:
 				callback = (callback, (labelString,))
-			attrs = {'labelString': labelString}
 			if accelerator:
 				if type(accelerator) is not StringType or \
 				   len(accelerator) != 1:
 					raise error, 'menu accelerator must be single character'
 				acc[accelerator] = callback
-				attrs['acceleratorText'] = accelerator
 				labelString = labelString + '\t' + accelerator
 			self.AppendMenuEx(labelString, id)
 			dict[id] = callback
