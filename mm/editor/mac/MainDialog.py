@@ -156,7 +156,7 @@ class OpenAppDialog(windowinterface.MACDialog):
 		self.cb_open = cb_open
 		self.cb_never_again = cb_never_again
 		self.cb = None
-		self.setradio(ITEM_NOTHING)
+		self.setradio(ITEM_NEW)
 		self.never_again = 0
 		self.show()
 		
