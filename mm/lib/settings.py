@@ -6,7 +6,7 @@ import os
 
 # some constants
 
-# enable or dissable language extensions
+# enable or disable language extensions
 profileExtensions = {
 	'AccessKeyTiming': 0,
 	'InlineTransitions': 1,
