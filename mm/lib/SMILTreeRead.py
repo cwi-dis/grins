@@ -4059,7 +4059,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if pubid == SMILpubid and syslit == SMILdtd:
 			# SMIL version 1.0
 			self.__context.attributes['project_boston'] = 0
-		elif pubid == SMILBostonPubid and syslit == SMILBostonDtd:
+		elif pubid == SMILBostonPubid and syslit in SMIL2DTDs:
 			# SMIL Boston
 			self.__context.attributes['project_boston'] = 1
 
