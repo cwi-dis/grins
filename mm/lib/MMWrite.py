@@ -221,6 +221,8 @@ class StringOutputNoNL:
 	def init(self):
 		self.buf = ''
 		return self
+	def __repr__(self):
+		return '<StringOutputNoNL instance, buf=' + `self.buf` + '>'
 	def write(self, str):
 		if str[-1:] == '\n': str = str[:-1]
 		self.buf = self.buf + str

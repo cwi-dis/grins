@@ -47,6 +47,7 @@ import sys
 #
 def readattrdefs(filename):
 	fp = open(filename, 'r')
+	print 'Reading attributes from', filename, '...'
 	parser = MMParser.MMParser().init(fp, None)	# Note -- no context!
 	dict = {}
 	#
@@ -92,6 +93,7 @@ def readattrdefs(filename):
 		parser.reporterror(filename, 'Type error: ' + msg, sys.stderr)
 		raise TypeError, msg
 	#
+	print 'Done.'
 	return dict
 
 
