@@ -25,11 +25,11 @@ run macgrins.py once.
 
 Next, running the macbuild.py script should do the complete build.
 In case it doesn't work, here are the steps it does:
-1. Freeze macgrins.py into the build.macgrins folder. To do this by
+1. Freeze macplayer.py into the build.player folder. To do this by
    hand run Python:mac:Tools:macfreeze:macfreeze.py, select
    macgrins.py as source, and select "CW project and source".
-2. Build grins, by opening macgrins.prj (in build.macgrins) and
+2. Build player, by opening player.prj (in build.player) and
    building the GRiNS FAT target.
-3. Freeze maccmifed.py into build.maccmif.
-4. Build maccmifed.
+3. Freeze maceditor.py into build.editor.
+4. Build editor.
 
