@@ -524,7 +524,7 @@ class NodeWrapper(Wrapper):
 				namelist.append('longdesc')
 		if ntype == 'bag':
 			namelist.append('bag_index')
-		if ntype == 'par':
+		if ntype in ('par', 'excl'):
 			namelist.append('terminator')
 		if ntype in ('par', 'seq', 'excl'):
 			namelist.append('duration')
@@ -2140,7 +2140,7 @@ class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
 ##		return [self.default] + self.__values
 
 class LanguageAttrEditorField(PopupAttrEditorField):
-	from languages import *
+	from languages import a2l, l2a
 	default = 'Not set'
 	nodefault = 1
 
