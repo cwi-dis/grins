@@ -14,6 +14,8 @@ the following interface:
 interface IHtmlWnd:
 	def RetrieveUrl(self,url):pass
 	def DestroyHtmlCtrl(self):pass
+	def SetBackColor(self,clr):pass
+	def SetImmHtml(self,str):pass
 	def setanchorcallback(self,cbanchor):pass
 
 The window or an agent of the window is supposed
@@ -58,7 +60,6 @@ class HtmlChannel(Channel.ChannelWindow):
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.played_str = ()
 		self.__errors=[]
-		self._tempmap={}
 		
 		# release any resources on exit
 		windowinterface.addclosecallback(self.release_res,())
@@ -77,7 +78,6 @@ class HtmlChannel(Channel.ChannelWindow):
 		if self.window and hasattr(self.window,'DestroyHtmlCtrl'):
 			self.window.DestroyHtmlCtrl()
 			self.window.setredrawfunc(None)
-		self.cleartemp()
 		Channel.ChannelWindow.destroy(self)
 
 	def release_res(self):
@@ -94,25 +94,23 @@ class HtmlChannel(Channel.ChannelWindow):
 		return 1
 
 	def do_play(self, node):
-		if node.type == 'ext':
-			href=self.getfileurl(node)
-			url, tag = MMurl.splittag(href)
-			url=self.toabs(url)
-			if tag:url=url+'#'+tag
-		else: 
-			url=self.totemp(node,self.armed_str)
-
-		if node in self.__errors:
-			url='about:'+ self.armed_str
 
 		# set play state information
 		# for functions related to cmif anchors
 		self.played_url = self.url = self.armed_url
 		self.played_str = self.armed_str
-		self.play_node=node
-		
+		self.play_node=node		
 		self.window.setanchorcallback(self.cbanchor)
-		self.window.RetrieveUrl(url)	
+
+		# set colors
+		bg = self.played_display._bgcolor
+		self.window.SetBackColor(windowinterface.RGB(bg))
+
+		if node.type == 'imm':
+			self.window.SetImmHtml(self.armed_str)
+		else:
+			url=self.getfileurl(node)
+			self.window.RetrieveUrl(url)	
 		self.window.setredrawfunc(self.redraw)
 
 	def redraw(self):
@@ -125,40 +123,7 @@ class HtmlChannel(Channel.ChannelWindow):
 			self.window.setredrawfunc(None)
 		Channel.ChannelWindow.stopplay(self, node)
 
-#################################
-	# helpers			
-	def islocal(self,url):
-		utype, url = MMurl.splittype(url)
-		host, url = MMurl.splithost(url)
-		return not utype and not host
-
-	def toabs(self,url):
-		if not self.islocal(url):
-			return url
-		filename=MMurl.url2pathname(MMurl.splithost(url)[1])
-		if os.path.isfile(filename):
-			if not os.path.isabs(filename):
-				filename=os.path.join(os.getcwd(),filename)
-				filename=ntpath.normpath(filename)	
-		return filename
 	
-################################# imm node support with temp files
-	def totemp(self,node,str):
-		if node in self._tempmap.keys():
-			filename=self._tempmap[node]
-		else:
-			import tempfile
-			filename = tempfile.mktemp('.html')
-			fp=open(filename,'wb')
-			fp.write(str)
-			fp.close()
-			self._tempmap[node]=filename
-		return filename
-
-	def cleartemp(self):
-		import win32api
-		for f in self._tempmap.values():
-			win32api.DeleteFile(f)
 
 #################################
 	def updatefixedanchors(self, node):
