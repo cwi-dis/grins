@@ -563,7 +563,7 @@ class EffectiveAnimator:
 
 		# set some flags for grins dom exceptions
 		self.__isgrinsnode = 1
-		tag = MMAttrdefs.getattr(targnode, 'tag')
+		self.__tag = tag = MMAttrdefs.getattr(targnode, 'tag')
 		if tag in ('region', 'transition'):
 			self.__isgrinsnode = 0
 		
@@ -641,6 +641,13 @@ class EffectiveAnimator:
 			displayValue = a.clamp(displayValue)
 
 		# update presentation value
+
+		# handle regions separately
+		if self.__tag=='region':
+			self.__updateregion(displayValue)
+			return
+
+		# normal proccessing
 		self.__node.SetPresentationAttr(self.__attr, displayValue)
 
 		# notify/update display value if we have a channel
@@ -659,6 +666,32 @@ class EffectiveAnimator:
 		
 		self.__currvalue = cv
 	
+	# update region attributes display value
+	def __updateregion(self, value):
+		attr = self.__attr
+		ch = self.__node.GetChannel()
+		ch.SetPresentationAttr(attr, value)
+		if attr=='position':
+			if debug: print 'set position of region',ch.name,'to',value 
+		elif attr=='left':
+			if debug: print 'set left of region',ch.name,'to',value 
+		elif attr=='top':
+			if debug: print 'set top of region',ch.name,'to',value 
+		elif attr=='width':
+			if debug: print 'set width of region',ch.name,'to',value 
+		elif attr=='height':
+			if debug: print 'set height of region',ch.name,'to',value 
+		elif attr=='right':
+			if debug: print 'set right of region',ch.name,'to',value 
+		elif attr=='bottom':
+			if debug: print 'set bottom of region',ch.name,'to',value 
+		elif attr=='z':
+			if debug: print 'set z-index of region',ch.name,'to',value 
+		elif attr=='bgcolor':
+			if debug: print 'set backgroundColor of region',ch.name,'to',value 
+		elif attr=='soundLevel':
+			if debug: print 'set soundLevel of region',ch.name,'to',value 
+
 	def getcurrentbasevalue(self, animator=None):
 		cv = self.__domval
 		for a in self.__animators:
@@ -709,6 +742,7 @@ def getregionattr(node, attr):
 		d = node.GetChannel().attrdict
 	else:
 		d = node.attrdict
+
 	if attr in ('position', 'size', 'left', 'top', 'width', 'height','right','bottom'):
 		if d.has_key('base_winoff'):
 			r = d['base_winoff']
@@ -729,10 +763,19 @@ def getregionattr(node, attr):
 			elif attr == 'height':
 				v = r[3]
 		return v, attr, 'int'
-	elif attr == 'bgcolor' and d.has_key('bgcolor'):
-		return d['bgcolor'], attr, 'color'
-	elif attr == 'z' and d.has_key('z'):
-		return d['z'], attr, 'int'
+		
+	elif attr == 'bgcolor':
+		if d.has_key('bgcolor'):
+			return d['bgcolor'], attr, 'color'
+		else:
+			return (0, 0, 0), attr, 'color'
+
+	elif attr == 'z':
+		if d.has_key('z'):
+			return d['z'], attr, 'int'
+		else:
+			return 0, attr, 'int'
+
 	return None, attr, ''
 
 def gettransitionattr(node, attr):
@@ -858,7 +901,7 @@ class AnimateElementParser:
 
 		# 2. return None on syntax or logic error
 
-		if self.__elementTag!='animateMotion':
+		if self.__elementTag != 'animateMotion':
 			nvalues = self.__countInterpolationValues()
 			if nvalues==0 or (nvalues==1 and mode!='discrete'):
 				print 'values syntax error'
@@ -869,7 +912,7 @@ class AnimateElementParser:
 		# 'by-only animation' implies sum 
 		if self.__isByOnly(): additive = 'sum'
 
-		if self.__elementTag=='animateColor':
+		if self.__elementTag == 'animateColor':
 			values = self.__getColorValues()
 			anim = ColorAnimator(attr, domval, values, dur, mode, times, splines,
 				accumulate, additive)
@@ -936,7 +979,7 @@ class AnimateElementParser:
 		attr = self.__attrname
 		domval = self.__domval
 		dur = self.getDuration()
-		if not dur or (type(dur)==type('') and dur=='indefinite'): dur=0
+		if not dur or dur<0 or (type(dur)==type('') and dur=='indefinite'): dur=0
 		value = self.getTo()
 		if value==None or value=='':
 			print 'set element without attribute to'
@@ -1005,7 +1048,7 @@ class AnimateElementParser:
 			d = self.__target.GetChannel().attrdict
 			if d.has_key('base_winoff'):
 				base_winoff = d['base_winoff']
-				self.__attrname = 'region.position'
+				self.__attrname = 'position'
 				self.__grinsattrname = self.__attrname
 				self.__domval = complex(base_winoff[0], base_winoff[1])
 				return 1
@@ -1025,10 +1068,10 @@ class AnimateElementParser:
 			self.__attrtype = MMAttrdefs.getattrtype(self.__attrname)
 
 		# check extensions
-		if not self.__domval:
+		if self.__domval == None:
 			self.__checkExtensions()
 			
-		if not self.__domval:
+		if self.__domval==None:
 			print 'Failed to get original DOM value for attr',self.__attrname,'from node',self.__target
 			print '\t',self
 			return 0
@@ -1162,11 +1205,11 @@ class AnimateElementParser:
 		if colors.has_key(val):
 			return colors[val]
 		if val in ('transparent', 'inherit'):
-			return val
+			return 0, 0, 0 # XXX: val
 		res = color.match(val)
 		if res is None:
-			self.syntax_error('bad color specification')
-			return 'transparent'
+			print 'syntax error: bad color specification'
+			return  0, 0, 0 #XXX: 'transparent'
 		else:
 			hex = res.group('hex')
 			if hex is not None:
