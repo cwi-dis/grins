@@ -336,7 +336,20 @@ class SchedulerContext:
 				if debugevents: print 'scheduled_children+1',`arc`,`node`,event,self.parent.timefunc()
 				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
 			arc.timestamp = timestamp+arc.delay
-			arc.qid = self.parent.enterabs(arc.timestamp, 0, self.trigger, (arc,))
+			if not arc.isstart and not arc.ismin and arc.srcnode is arc.dstnode:
+				# end arcs have lower priority than begin arcs
+				# this is important to get proper freeze
+				# behavior in constructs such as
+				# <par>
+				#   <par>
+				#     <img .../>
+				#   </par>
+				#   <video .../>
+				# </par>
+				prio = 1
+			else:
+				prio = 0
+			arc.qid = self.parent.enterabs(arc.timestamp, prio, self.trigger, (arc,))
 			if arc.depends is not None:
 				try:
 					arc.deparcs.remove(arc)
@@ -397,6 +410,13 @@ class SchedulerContext:
 		if arc is not None:
 			if arc.qid is None:
 				if debugevents: print 'trigger: ignore arc',`arc`
+				parent.updatetimer()
+				return
+			if parent.queue and parent.queue[0][:2] < arc.qid[:2]:
+				# a higher priority element has cropped up in
+				# the queue: reinsert this one so that the
+				# other one can be handled first
+				arc.qid = parent.enterabs(arc.qid[0], arc.qid[1], self.trigger, (arc,))
 				parent.updatetimer()
 				return
 			if arc.depends is not None:
