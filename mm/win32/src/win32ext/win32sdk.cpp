@@ -923,6 +923,15 @@ sdk_co_uninitialize(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
+static PyObject*
+sdk_map_virtual_key(PyObject *self, PyObject *args) 
+	{
+	UINT uCode,uMapType;
+	if(!PyArg_ParseTuple (args, "ii",&uCode,&uMapType))
+		return NULL;
+	UINT ret=MapVirtualKey(uCode,uMapType);
+	return Py_BuildValue("i",ret);
+	}
 
  // @object PyWin32Sdk|A module wrapper object.  It is a general utility object, and is not associated with an MFC object.
 BEGIN_PYMETHODDEF(Win32Sdk)
@@ -976,7 +985,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"GetFocus",sdk_get_focus,1}, 
 	{"CoInitialize",sdk_co_initialize,1}, 
 	{"CoUninitialize",sdk_co_uninitialize,1}, 
-
+	{"MapVirtualKey",sdk_map_virtual_key,1},
 	///////////////////////////////////////////////////// Temporary
 	{"ParseDrawItemStruct",sdk_parse_drawitemstruct,1},// undocumented!
 	{"CrackNMHDR",sdk_crack_nmhdr,1}, // undocumented!
