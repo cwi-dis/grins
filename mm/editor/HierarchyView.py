@@ -1085,7 +1085,7 @@ class HierarchyView(HierarchyViewDialog):
 			widget.select()
 			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 		self.aftersetfocus()
-		self.editmgr.setglobalfocus("MMNode", widget.node) 
+		#self.editmgr.setglobalfocus("MMNode", widget.node) 
 
 	def select_node(self, node):
 		# Set the focus to a specfic MMNode (obviously the focus did not come from the UI)
@@ -1112,6 +1112,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.aftersetfocus()
 			self.dirty = 1
 		assert isinstance(widget.node, MMNode.MMNode)
+#		print "DEBUG: Hierarchyview recieved select(x,y)"
 		self.editmgr.setglobalfocus("MMNode", widget.node)
 
 
