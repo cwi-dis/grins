@@ -142,7 +142,7 @@ static PyObject* PyMenu_GetSubMenu(PyMenu *self, PyObject *args)
 
 static PyObject* PyMenu_DestroyMenu(PyMenu *self, PyObject *args)
 {
-	if (!PyArg_ParseTuple(args,""))
+	if(!PyArg_ParseTuple(args,""))
 		return NULL;
 	if(self->m_hMenu != NULL)
 		{
@@ -154,13 +154,19 @@ static PyObject* PyMenu_DestroyMenu(PyMenu *self, PyObject *args)
 
 static PyObject* PyMenu_Detach(PyMenu *self, PyObject *args)
 	{
+	if(!PyArg_ParseTuple(args,""))
+		return NULL;
 	HMENU hMenu = self->m_hMenu;
 	self->m_hMenu = NULL;
 	return Py_BuildValue("i", hMenu);
 	}
 
 static PyObject* PyMenu_GetHandle(PyMenu *self, PyObject *args)
-	{ return Py_BuildValue("i", self->m_hMenu);}
+	{ 
+	if(!PyArg_ParseTuple(args,""))
+		return NULL;
+	return Py_BuildValue("i", self->m_hMenu);
+	}
 
 
 
