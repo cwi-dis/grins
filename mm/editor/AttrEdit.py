@@ -323,6 +323,8 @@ class AttrEditor(AttrEditorDialog):
 				C = ChanneltypeAttrEditorField
 			elif displayername == 'units':
 				C = UnitsAttrEditorField
+			elif displayername == 'transparency':
+				C = TransparencyAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -636,23 +638,41 @@ class BoolAttrEditorField(PopupAttrEditorField):
 		return ['Default'] + self.__offon
 
 class UnitsAttrEditorField(PopupAttrEditorField):
-	__units = ['mm', 'relative', 'pixels']
-	__unitsmap = [windowinterface.UNIT_MM, windowinterface.UNIT_SCREEN,
-		      windowinterface.UNIT_PXL]
+	__values = ['mm', 'relative', 'pixels']
+	__valuesmap = [windowinterface.UNIT_MM, windowinterface.UNIT_SCREEN,
+		       windowinterface.UNIT_PXL]
 
 	# Choose from a list of unit types
 	def getoptions(self):
-		return ['Default'] + self.__units
+		return ['Default'] + self.__values
 
 	def parsevalue(self, str):
 		if str == 'Default':
 			return None
-		return self.__unitsmap[self.__units.index(str)]
+		return self.__valuesmap[self.__values.index(str)]
 
 	def valuerepr(self, value):
 		if value is None:
 			return 'Default'
-		return self.__units[self.__unitsmap.index(value)]
+		return self.__values[self.__valuesmap.index(value)]
+
+class TransparencyAttrEditorField(PopupAttrEditorField):
+	__values = ['never', 'when empty', 'always']
+	__valuesmap = [0, -1, 1]
+
+	# Choose from a list of unit types
+	def getoptions(self):
+		return ['Default'] + self.__values
+
+	def parsevalue(self, str):
+		if str == 'Default':
+			return None
+		return self.__valuesmap[self.__values.index(str)]
+
+	def valuerepr(self, value):
+		if value is None:
+			return 'Default'
+		return self.__values[self.__valuesmap.index(value)]
 
 class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current channel names

@@ -268,7 +268,8 @@ class _Window:
 	# _fgcolor: foreground color of the window
 	# _transparent: 1 if window has a transparent background (if a
 	#	window is transparent, all its subwindows should also
-	#	be transparent)
+	#	be transparent) -1 if window should be transparent if
+	#	there is no active display list
 	# _sizes: the position and size of the window in fractions of
 	#	the parent window (subwindows only)
 	# _rect: the position and size of the window in pixels
@@ -292,6 +293,7 @@ class _Window:
 	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0,
 		     units = UNIT_MM):
 		self._title = title
+		parent._subwindows.insert(0, self)
 		self._do_init(parent)
 		self._topwindow = self
 		self._exp_reg = Xlib.CreateRegion()
@@ -403,7 +405,6 @@ class _Window:
 					(id(self), title, closed)
 
 	def _do_init(self, parent):
-		parent._subwindows.insert(0, self)
 		self._parent = parent
 		self._subwindows = []
 		self._displists = []
@@ -488,11 +489,11 @@ class _Window:
 		else:
 			raise error, 'bad units specified'
 
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, type_channel = SINGLE):
-		return _SubWindow(self, coordinates, 0, pixmap, transparent)
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
+		return _SubWindow(self, coordinates, 0, pixmap, transparent, z)
 
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, type_channel = SINGLE):
-		return _SubWindow(self, coordinates, 1, pixmap, transparent)
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
+		return _SubWindow(self, coordinates, 1, pixmap, transparent, z)
 
 	def fgcolor(self, color):
 		r, g, b = color
@@ -505,7 +506,7 @@ class _Window:
 		if self._topwindow is self and not self._active_displist and \
 		   not self._subwindows:
 			self._form.background = self._convert_color(color)
-		if not self._active_displist and not self._transparent:
+		if not self._active_displist and self._transparent == 0:
 			self._gc.SetRegion(self._clip)
 			self._gc.foreground = self._convert_color(color)
 			x, y, w, h = self._rect
@@ -640,7 +641,8 @@ class _Window:
 		apply(region.UnionRectWithRegion, self._rect)
 		# subtract all subwindows
 		for w in self._subwindows:
-			if not w._transparent:
+			if w._transparent == 0 or \
+			   (w._transparent == -1 and w._active_displist):
 				r = Xlib.CreateRegion()
 				apply(r.UnionRectWithRegion, w._rect)
 				region.SubtractRegion(r)
@@ -651,7 +653,8 @@ class _Window:
 		for w in self._subwindows:
 			if w is child:
 				break
-			if not w._transparent:
+			if w._transparent == 0 or \
+			   (w._transparent == -1 and w._active_displist):
 				r = Xlib.CreateRegion()
 				apply(r.UnionRectWithRegion, w._rect)
 				region.SubtractRegion(r)
@@ -892,7 +895,8 @@ class _Window:
 			return
 		# first redraw opaque subwindow, top-most first
 		for w in self._subwindows:
-			if not w._transparent:
+			if w._transparent == 0 or \
+			   (w._transparent == -1 and w._active_displist):
 				w._do_expose(region, 1)
 		# then draw background window
 		r = Xlib.CreateRegion()
@@ -903,7 +907,7 @@ class _Window:
 				self._parent._do_expose(r)
 			elif self._active_displist:
 				self._active_displist._render(r)
-			elif not self._transparent:
+			elif self._transparent == 0 or self._topwindow is self:
 				gc = self._gc
 				gc.SetRegion(r)
 				gc.foreground = self._convert_color(self._bgcolor)
@@ -915,7 +919,8 @@ class _Window:
 		sw = self._subwindows[:]
 		sw.reverse()
 		for w in sw:
-			if w._transparent:
+			if w._transparent == 0 or \
+			   (w._transparent == -1 and w._active_displist):
 				w._do_expose(region, 1)
 		if self._showing:
 			self.showwindow()
@@ -968,7 +973,10 @@ class _Window:
 			func(arg, self, ResizeWindow, None)
 
 class _BareSubWindow:
-	def __init__(self, parent, coordinates, defcmap, pixmap, transparent):
+	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z):
+		if z < 0:
+			raise error, 'invalid z argument'
+		self._z = z
 		x, y, w, h = parent._convert_coordinates(coordinates, crop = 1)
 		self._rect = x, y, w, h
 		self._sizes = coordinates
@@ -987,10 +995,18 @@ class _BareSubWindow:
 		self._vfactor = parent._vfactor / h
 
 		self._convert_color = parent._convert_color
+		for i in range(len(parent._subwindows)):
+			if self._z >= parent._subwindows[i]._z:
+				parent._subwindows.insert(i, self)
+				break
+		else:
+			parent._subwindows.insert(0, self)
 		self._do_init(parent)
 		if parent._transparent:
 			self._transparent = parent._transparent
 		else:
+			if transparent not in (-1, 0, 1):
+				raise error, 'invalid value for transparent arg'
 			self._transparent = transparent
 		self._topwindow = parent._topwindow
 
@@ -1008,7 +1024,7 @@ class _BareSubWindow:
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
 		parent._mkclip()
-		if not self._transparent:
+		if self._transparent == 0:
 			self._do_expose(self._region)
 			if have_pixmap:
 				x, y, w, h = self._rect
@@ -1052,14 +1068,19 @@ class _BareSubWindow:
 
 	def pop(self):
 		parent = self._parent
-		# move self to front of _subwindows
+		# put self in front of all siblings with equal or lower z
 		if self is not parent._subwindows[0]:
 			parent._subwindows.remove(self)
-			parent._subwindows.insert(0, self)
+			for i in range(len(parent._subwindows)):
+				if self._z >= parent._subwindows[i]._z:
+					parent._subwindows.insert(i, self)
+					break
+			else:
+				parent._subwindows.insert(0, self)
 			# recalculate clipping regions
 			parent._mkclip()
 			# draw the window's contents
-			if not self._transparent or self._active_displist:
+			if self._transparent == 0 or self._active_displist:
 				self._do_expose(self._region)
 				if hasattr(self, '_pixmap'):
 					x, y, w, h = self._rect
@@ -1071,11 +1092,17 @@ class _BareSubWindow:
 
 	def push(self):
 		parent = self._parent
-		# move self to end of _subwindows
+		# put self behind all siblings with equal or higher z
 		if self is parent._subwindows[-1]:
-			return		# no-op
+			# already at the end
+			return
 		parent._subwindows.remove(self)
-		parent._subwindows.append(self)
+		for i in range(len(parent._subwindows)-1,-1,-1):
+			if self._z <= parent._subwindows[i]._z:
+				parent._subwindows.insert(i+1, self)
+				break
+		else:
+			parent._subwindows.append(self)
 		# recalculate clipping regions
 		parent._mkclip()
 		# draw exposed windows
@@ -1144,7 +1171,7 @@ class _DisplayList:
 				'background': window._convert_color(bgcolor),
 				'line_width': 1}
 		self._list = []
-		if not window._transparent:
+		if window._transparent <= 0:
 			self._list.append(('clear',))
 		self._optimdict = {}
 		self._cloneof = None
@@ -1166,7 +1193,13 @@ class _DisplayList:
 				d._cloneof = None
 		if win._active_displist is self:
 			win._active_displist = None
-			win._do_expose(win._region)
+			r = win._region
+			if win._transparent == -1 and win._parent is not None and \
+			   win._topwindow is not win:
+				win._parent._mkclip()
+				win._parent._do_expose(r)
+			else:
+				win._do_expose(r)
 			if hasattr(win, '_pixmap'):
 				x, y, w, h = win._rect
 				win._gc.SetRegion(win._region)
@@ -1203,6 +1236,10 @@ class _DisplayList:
 
 	def render(self):
 		window = self._window
+		if window._transparent == -1 and window._active_displist is None:
+			window._active_displist = self
+			window._parent._mkclip()
+			window._active_displist = None
 		for b in self._buttons:
 			b._highlighted = 0
 		region = window._clip
@@ -1212,7 +1249,7 @@ class _DisplayList:
 		windows = window._subwindows[:]
 		windows.reverse()
 		for w in windows:
-			if w._transparent:
+			if w._transparent and w._active_displist:
 				w._do_expose(region, 1)
 		# now draw transparent windows that lie on top of us
 		if window._topwindow is not window:
@@ -1220,7 +1257,7 @@ class _DisplayList:
 			windows = window._parent._subwindows[:i]
 			windows.reverse()
 			for w in windows:
-				if w._transparent:
+				if w._transparent and w._active_displist:
 					w._do_expose(region, 1)
 		# finally, re-highlight window
 		if window._showing:
