@@ -64,6 +64,7 @@ class LinkBrowserDialog:
 		"""
 		self._adornments={'form_id':'leview_',
 			'callbacks':{
+				'close':(self.close_callback, ()),
 				'LeftPushFocus':(self.show_callback, (cbarg1,)),
 				'LeftAnchorEd':(self.anchoredit_callback, (cbarg1,)),
 				'LeftList':(self.anchor_browser_callback, (cbarg1,)),
@@ -78,38 +79,41 @@ class LinkBrowserDialog:
 		}
 		# hold args so that we can create wnd later
 		self._init_args=(title, menu1, cbarg1, menu2, cbarg2,self._adornments)
-		self.__window=None
+		self.window=None
 								
 	def is_showing(self):
-		if not self.__window: return 0
-		return self.__window.is_showing()
+		if not self.window: return 0
+		return self.window.is_showing()
 
 	def show(self):
 		self.assertcreated()
-		self.__window.show()
+		self.window.show()
 
 	# needed because core-code supposes that wnd has been created
 	# as an os object but it isn't before self.show
 	def assertcreated(self):
 		toplevel_window=self.toplevel.window
-		if not self.__window or not self.__window.is_oswindow():
+		if not self.window or not self.window.is_oswindow():
 			w=toplevel_window.newviewobj(self._adornments['form_id'])
 			apply(w.do_init,self._init_args)
-			self.__window=w	
-			toplevel_window.showview(self.__window,'leview_')
-			self.__window.show()
+			self.window=w	
+			toplevel_window.showview(self.window,'leview_')
+			self.window.show()
 
 	def hide(self):
-		if not self.__window: return
+		if not self.window: return
 		if self.is_showing():
-			self.__window.close()
-		self.__window=None
+			self.window.close()
+		self.window=None
 
 	def close(self):
-		if not self.__window: return
+		if not self.window: return
 		if self.is_showing():
-			self.__window.close()
-		self.__window=None
+			self.window.close()
+		self.window=None
+
+	def close_callback(self):
+		self.hide()
 
 	def settitle(self,title):
 		pass
@@ -117,12 +121,12 @@ class LinkBrowserDialog:
 	# Interface to the left list and associated buttons.
 	def lefthide(self):
 		"""Hide the left list with associated buttons."""
-		self.__window.lefthide()
+		self.window.lefthide()
 		
 	def leftshow(self):
 		"""Show the left list with associated buttons."""
 		self.assertcreated()
-		self.__window.leftshow()
+		self.window.leftshow()
 
 	def leftsetlabel(self, label):
 		"""Set the label for the left list.
@@ -131,7 +135,7 @@ class LinkBrowserDialog:
 		label -- string -- the label to be displayed
 		"""
 		self.assertcreated()
-		self.__window.leftsetlabel(label)
+		self.window.leftsetlabel(label)
 
 	def leftdellistitems(self, poslist):
 		"""Delete items from left list.
@@ -140,11 +144,11 @@ class LinkBrowserDialog:
 		poslist -- list of integers -- the indices of the
 			items to be deleted
 		"""
-		self.__window.leftdellistitems(poslist)
+		self.window.leftdellistitems(poslist)
 
 	def leftdelalllistitems(self):
 		"""Delete all items from the left list."""
-		self.__window.leftdelalllistitems()
+		self.window.leftdelalllistitems()
 
 	def leftaddlistitems(self, items, pos):
 		"""Add items to the left list.
@@ -154,7 +158,7 @@ class LinkBrowserDialog:
 		pos -- integer -- the index of the item before which
 			the items are to be added (-1: add at end)
 		"""
-		self.__window.leftaddlistitems(items, pos)
+		self.window.leftaddlistitems(items, pos)
 
 	def leftreplacelistitem(self, pos, newitem):
 		"""Replace an item in the left list.
@@ -163,7 +167,7 @@ class LinkBrowserDialog:
 		pos -- the index of the item to be replaced
 		newitem -- string -- the new item
 		"""
-		self.__window.leftreplacelistitem(pos, newitem)
+		self.window.leftreplacelistitem(pos, newitem)
 		
 	def leftselectitem(self, pos):
 		"""Select an item in the left list.
@@ -171,15 +175,15 @@ class LinkBrowserDialog:
 		Arguments (no defaults):
 		pos -- integer -- the index of the item to be selected
 		"""
-		self.__window.leftselectitem(pos)
+		self.window.leftselectitem(pos)
 
 	def leftgetselected(self):
 		"""Return the index of the currently selected item or None."""
-		return self.__window.leftgetselected()
+		return self.window.leftgetselected()
 
 	def leftgetlist(self):
 		"""Return the left list as a list of strings."""
-		return self.__window.leftgetlist()
+		return self.window.leftgetlist()
 
 	def leftmakevisible(self, pos):
 		"""Maybe scroll list to make an item visible.
@@ -187,7 +191,7 @@ class LinkBrowserDialog:
 		Arguments (no defaults):
 		pos -- index of item to be made visible.
 		"""
-		self.__window.leftmakevisible(pos)
+		self.window.leftmakevisible(pos)
 		
 	def leftbuttonssetsensitive(self, sensitive):
 		"""Make the left buttons (in)sensitive.
@@ -196,16 +200,16 @@ class LinkBrowserDialog:
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		self.__window.leftbuttonssetsensitive(sensitive)
+		self.window.leftbuttonssetsensitive(sensitive)
 
 	# Interface to the right list and associated buttons.
 	def righthide(self):
 		"""Hide the right list with associated buttons."""
-		self.__window.righthide()
+		self.window.righthide()
 
 	def rightshow(self):
 		"""Show the right list with associated buttons."""
-		self.__window.rightshow()
+		self.window.rightshow()
 
 	def rightsetlabel(self, label):
 		"""Set the label for the right list.
@@ -213,7 +217,7 @@ class LinkBrowserDialog:
 		Arguments (no defaults):
 		label -- string -- the label to be displayed
 		"""
-		self.__window.rightsetlabel(label)
+		self.window.rightsetlabel(label)
 
 	def rightdellistitems(self, poslist):
 		"""Delete items from right list.
@@ -222,11 +226,11 @@ class LinkBrowserDialog:
 		poslist -- list of integers -- the indices of the
 			items to be deleted
 		"""
-		self.__window.rightdellistitems(poslist)
+		self.window.rightdellistitems(poslist)
 
 	def rightdelalllistitems(self):
 		"""Delete all items from the right list."""
-		self.__window.rightdelalllistitems()
+		self.window.rightdelalllistitems()
 
 	def rightaddlistitems(self, items, pos):
 		"""Add items to the right list.
@@ -236,7 +240,7 @@ class LinkBrowserDialog:
 		pos -- integer -- the index of the item before which
 			the items are to be added (-1: add at end)
 		"""
-		self.__window.rightaddlistitems(items, pos)
+		self.window.rightaddlistitems(items, pos)
 
 	def rightreplacelistitem(self, pos, newitem):
 		"""Replace an item in the right list.
@@ -245,7 +249,7 @@ class LinkBrowserDialog:
 		pos -- the index of the item to be replaced
 		newitem -- string -- the new item
 		"""
-		self.__window.rightreplacelistitem(pos, newitem)
+		self.window.rightreplacelistitem(pos, newitem)
 		
 	def rightselectitem(self, pos):
 		"""Select an item in the right list.
@@ -253,15 +257,15 @@ class LinkBrowserDialog:
 		Arguments (no defaults):
 		pos -- integer -- the index of the item to be selected
 		"""
-		self.__window.rightselectitem(pos)
+		self.window.rightselectitem(pos)
 
 	def rightgetselected(self):
 		"""Return the index of the currently selected item or None."""
-		return self.__window.rightgetselected()
+		return self.window.rightgetselected()
 
 	def rightgetlist(self):
 		"""Return the right list as a list of strings."""
-		return self.__window.rightgetlist()
+		return self.window.rightgetlist()
 
 	def rightmakevisible(self, pos):
 		"""Maybe scroll list to make an item visible.
@@ -269,7 +273,7 @@ class LinkBrowserDialog:
 		Arguments (no defaults):
 		pos -- index of item to be made visible.
 		"""
-		self.__window.rightmakevisible(pos)
+		self.window.rightmakevisible(pos)
 
 	def rightbuttonssetsensitive(self, sensitive):
 		"""Make the right buttons (in)sensitive.
@@ -278,21 +282,21 @@ class LinkBrowserDialog:
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		self.__window.rightbuttonssetsensitive(sensitive)
+		self.window.rightbuttonssetsensitive(sensitive)
 
 	# Interface to the middle list and associated buttons.
 	def middlehide(self):
 		"""Hide the middle list with associated buttons."""
 		self.assertcreated()
-		self.__window.middlehide()
+		self.window.middlehide()
 		
 	def middleshow(self):
 		"""Show the middle list with associated buttons."""
-		self.__window.middleshow()
+		self.window.middleshow()
 
 	def middledelalllistitems(self):
 		"""Delete all items from the middle list."""
-		self.__window.middledelalllistitems()
+		self.window.middledelalllistitems()
 
 	def middleaddlistitems(self, items, pos):
 		"""Add items to the middle list.
@@ -302,7 +306,7 @@ class LinkBrowserDialog:
 		pos -- integer -- the index of the item before which
 			the items are to be added (-1: add at end)
 		"""
-		self.__window.middleaddlistitems(items, pos)
+		self.window.middleaddlistitems(items, pos)
 
 	def middleselectitem(self, pos):
 		"""Select an item in the middle list.
@@ -310,11 +314,11 @@ class LinkBrowserDialog:
 		Arguments (no defaults):
 		pos -- integer -- the index of the item to be selected
 		"""
-		self.__window.middleselectitem(pos)
+		self.window.middleselectitem(pos)
 
 	def middlegetselected(self):
 		"""Return the index of the currently selected item or None."""
-		return self.__window.middlegetselected()
+		return self.window.middlegetselected()
 
 	def middlemakevisible(self, pos):
 		"""Maybe scroll list to make an item visible.
@@ -322,7 +326,7 @@ class LinkBrowserDialog:
 		Arguments (no defaults):
 		pos -- index of item to be made visible.
 		"""
-		self.__window.middlemakevisible(pos)
+		self.window.middlemakevisible(pos)
 
 	def addsetsensitive(self, sensitive):
 		"""Make the Add button (in)sensitive.
@@ -331,7 +335,7 @@ class LinkBrowserDialog:
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		self.__window.addsetsensitive(sensitive)
+		self.window.addsetsensitive(sensitive)
 
 	def editsetsensitive(self, sensitive):
 		"""Make the Edit button (in)sensitive.
@@ -340,7 +344,7 @@ class LinkBrowserDialog:
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		self.__window.editsetsensitive(sensitive)
+		self.window.editsetsensitive(sensitive)
 
 	def deletesetsensitive(self, sensitive):
 		"""Make the Delete button (in)sensitive.
@@ -349,16 +353,16 @@ class LinkBrowserDialog:
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		self.__window.deletesetsensitive(sensitive)
+		self.window.deletesetsensitive(sensitive)
 
 	# Interface to the edit group.
 	def editgrouphide(self):
 		"""Hide the edit group."""
-		self.__window.editgrouphide()
+		self.window.editgrouphide()
 
 	def editgroupshow(self):
 		"""Show the edit group."""
-		self.__window.editgroupshow()
+		self.window.editgroupshow()
 
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
@@ -403,10 +407,11 @@ class LinkEditorDialog:
 				'LinkDir':(self.linkdir_callback, ()),
 				'LinkType':(self.linktype_callback, ()),
 		}
-		self.__window = windowinterface.LinkPropDlg(cbd, dir, type)
+		self.window = windowinterface.LinkPropDlg(cbd, dir, type,
+							  parent = self.parent.window)
 
 	def show(self):
-		self.__window.show()
+		self.window.show()
 
 	def close(self):
 		pass
@@ -445,11 +450,11 @@ class LinkEditorDialog:
 		Arguments (no defaults):
 		choice -- index of the new choice
 		"""
-		self.__window.linkdirsetchoice(choice)
+		self.window.linkdirsetchoice(choice)
 
 	def linkdirgetchoice(self):
 		"""Return the current choice in the link dir list."""
-		return self.__window.linkdirgetchoice()
+		return self.window.linkdirgetchoice()
 
 	def linktypesetsensitive(self, pos, sensitive):
 		"""Make an entry in the link type menu (in)sensitive.
@@ -459,7 +464,7 @@ class LinkEditorDialog:
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		self.__window.linktypesetsensitive(pos, sensitive)
+		self.window.linktypesetsensitive(pos, sensitive)
 
 	def linktypesetchoice(self, choice):
 		"""Set the current choice of the link type list.
@@ -467,9 +472,9 @@ class LinkEditorDialog:
 		Arguments (no defaults):
 		choice -- index of the new choice
 		"""
-		self.__window.linktypesetchoice(choice)
+		self.window.linktypesetchoice(choice)
 
 	def linktypegetchoice(self):
 		"""Return the current choice in the link type list."""
-		return self.__window.linktypegetchoice()
+		return self.window.linktypegetchoice()
 

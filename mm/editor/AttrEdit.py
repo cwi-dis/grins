@@ -11,6 +11,7 @@ from AnchorDefs import *		# ATYPE_*
 from Hlinks import DIR_1TO2, TYPE_JUMP
 import string
 import os
+import sys
 
 DEFAULT = 'Default'
 UNDEFINED = 'undefined'
@@ -222,6 +223,38 @@ class NodeWrapper(Wrapper):
 			return dstanchor
 		return '<Hyperlink within document>'	# place holder for internal link
 
+	def __findanchors(self):
+		alist = MMAttrdefs.getattr(self.node, 'anchorlist')
+		anchors = {}
+		uid = self.node.GetUID()
+		hlinks = self.context.hyperlinks
+		for aid, atype, aargs in alist:
+			links = []
+			for a1, a2, ldir, ltype in hlinks.findsrclinks((uid, aid)):
+				links.append((a2, ldir, ltype))
+			links.sort()
+			anchors[aid] = atype, aargs, links
+		return anchors
+
+	def __setanchors(self, newanchors):
+		node = self.node
+		uid = node.GetUID()
+		hlinks = self.context.hyperlinks
+		editmgr = self.editmgr
+		anchorlist = []
+		newlinks = []
+		oldanchors = self.__findanchors()
+		oldanchonames = oldanchors.keys()
+		for aid in oldanchors.keys():
+			for link in hlinks.findsrclinks((uid, aid)):
+				editmgr.dellink(link)
+		for aid in newanchors.keys():
+			atype, aargs, links = newanchors[aid]
+			anchorlist.append((aid, atype, aargs))
+			for link in links:
+				editmgr.addlink(((uid, aid),) + link)
+		editmgr.setnodeattr(node, 'anchorlist', anchorlist or None)
+
 	def getattr(self, name): # Return the attribute or a default
 		if name == '.hyperlink':
 			return self.__findlink() or ''
@@ -229,6 +262,8 @@ class NodeWrapper(Wrapper):
 			return self.node.GetType()
 		if name == '.values':
 			return self.node.GetValues()
+		if name == '.anchorlist':
+			return self.__findanchors()
 		return MMAttrdefs.getattr(self.node, name)
 
 	def getvalue(self, name): # Return the raw attribute or None
@@ -238,6 +273,8 @@ class NodeWrapper(Wrapper):
 			return self.node.GetType()
 		if name == '.values':
 			return self.node.GetValues() or None
+		if name == '.anchorlist':
+			return self.__findanchors() or None
 		return self.node.GetRawAttrDef(name, None)
 
 	def getdefault(self, name): # Return the default or None
@@ -246,6 +283,8 @@ class NodeWrapper(Wrapper):
 		if name == '.type':
 			return None
 		if name == '.values':
+			return None
+		if name == '.anchorlist':
 			return None
 		return MMAttrdefs.getdefattr(self.node, name)
 
@@ -261,6 +300,9 @@ class NodeWrapper(Wrapper):
 		if name == '.values':
 			self.editmgr.setnodevalues(self.node, value)
 			return
+		if name == '.anchorlist':
+			self.__setanchors(value)
+			return
 		self.editmgr.setnodeattr(self.node, name, value)
 
 	def delattr(self, name):
@@ -269,6 +311,9 @@ class NodeWrapper(Wrapper):
 			return
 		if name == '.values':
 			self.editmgr.setnodevalues(self.node, [])
+			return
+		if name == '.anchorlist':
+			self.__setanchors([])
 			return
 		self.editmgr.setnodeattr(self.node, name, None)
 
@@ -285,6 +330,7 @@ class NodeWrapper(Wrapper):
 	#
 	def attrnames(self):
 		import settings
+		lightweight = settings.get('lightweight')
 		# Tuples are optional names and will be removed if they
 		# aren't set
 		namelist = [
@@ -304,7 +350,7 @@ class NodeWrapper(Wrapper):
 			]
 		ntype = self.node.GetType()
 		ctype = self.node.GetChannelType()
-		if ntype in ('ext', 'imm'):	# or not settings.get('lightweight')
+		if ntype in ('ext', 'imm') or not settings.get('lightweight'):
 			namelist[1:1] = ['channel']
 		if ntype == 'bag':
 			namelist.append('bag_index')
@@ -315,7 +361,7 @@ class NodeWrapper(Wrapper):
 		if ntype in ('ext', 'imm'):
 			namelist.append('alt')
 			namelist.append('longdesc')
-			if ChannelMap.isvisiblechannel(ctype):
+			if lightweight and ChannelMap.isvisiblechannel(ctype):
 				namelist.append('.hyperlink')
 		if ntype == 'imm':
 			namelist.append('.values')
@@ -351,6 +397,8 @@ class NodeWrapper(Wrapper):
 					pass
 			else:
 				retlist.append(name)
+		if not lightweight and sys.platform == 'win32':	# XXX until implemented on other platforms
+			retlist.append('.anchorlist')
 		return retlist
 
 	def getdef(self, name):
@@ -366,6 +414,16 @@ class NodeWrapper(Wrapper):
 			return (('string', None), '',
 				'Content', 'text',
 				'Data for node', 'raw', 'light')
+		if name == '.anchorlist':
+			# our own version of the anchorlist:
+			# [(AnchorID, AnchorType, AnchorArgs, LinkList) ... ]
+			# the LinkList is a list of hyperlinks, each a tuple:
+			# (Anchor, Dir, Type)
+			# where Anchor is either a (NodeID,AnchorID) tuple or
+			# a string giving the external destination
+			return (('list', ('enclosed', ('tuple', [('any', None), ('int', None), ('enclosed', ('list', ('any', None))), ('enclosed', ('list', ('any', None)))]))), [],
+				'Anchors', '.anchorlist',
+				'List of anchors on this node', 'raw', 'light')
 		return MMAttrdefs.getdef(name)
 
 class SlideWrapper(NodeWrapper):
@@ -877,6 +935,8 @@ class AttrEditor(AttrEditorDialog):
 				C = BitrateAttrEditorFieldWithDefault
 			elif displayername == 'quality':
 				C = QualityAttrEditorField
+			elif displayername == '.anchorlist':
+				C = AnchorlistAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -1280,10 +1340,10 @@ class FileAttrEditorField(StringAttrEditorField):
 		if chtype:
 			mtypes = ['/%s file' % string.capitalize(chtype)] + mtypes
 		windowinterface.FileDialog('Choose File for ' + self.label,
-					   dir, mtypes, file, self.__ok_cb, None,
+					   dir, mtypes, file, self.setpathname, None,
 					   existing=1)
 
-	def __ok_cb(self, pathname):
+	def setpathname(self, pathname):
 		import MMurl
 		if not pathname:
 			url = ''
@@ -1308,9 +1368,6 @@ class FileAttrEditorField(StringAttrEditorField):
 					value = 0
 				if minstart - start > value:
 					b.setvalue(b.valuerepr(minstart-start))
-
-	def setpathname(self, pathname):
-		self.__ok_cb(pathname)
 
 class TextAttrEditorField(AttrEditorField):
 	type = 'text'
@@ -1746,6 +1803,16 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			all = all + [NEW_CHANNEL]
 		return all
 
+	def parsevalue(self, str):
+		if str == UNDEFINED:
+			return None
+		return str
+
+	def valuerepr(self, value):
+		if value is None:
+			return UNDEFINED
+		return value
+
 	def channelprops(self):
 		ch = self.wrapper.context.getchannel(self.getvalue())
 		if ch is not None:
@@ -1917,3 +1984,11 @@ class NodeTypeAttrEditorField(PopupAttrEditorField):
 		if value is 'alt':
 			return 'switch'
 		return value
+
+class AnchorlistAttrEditorField(AttrEditorField):
+	def parsevalue(self, str):
+		return str
+
+	def valuerepr(self, value):
+		return value
+

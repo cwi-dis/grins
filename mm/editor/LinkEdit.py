@@ -114,7 +114,7 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 	def __repr__(self):
 		return '<LinkEdit instance, root=' + `self.root` + '>'
 
-	def show(self):
+	def show(self, node = None, aid = None):
 		if self.is_showing():
 			LinkBrowserDialog.show(self)
 		else:
@@ -122,12 +122,28 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			LinkBrowserDialog.show(self)
 			self.toplevel.checkviews()
 			self.editmgr.register(self)
+		if node is not None:
+			self.left.node = node
+			self.left.fillfunc = self.fill_node
+			self.left.focus = None
+			self.reloadanchors(self.left, 0)
+			if aid is not None:
+				for i in range(len(self.left.anchors)):
+					if self.left.anchors[i][1] == aid:
+						self.left.focus = i
+						break
+				self.right.node = None
+				self.right.fillfunc = self.fill_relation
+			self.updateform(self.left)
 
 	def hide(self):
 		if self.is_showing():
 			self.editmgr.unregister(self)
 			LinkBrowserDialog.hide(self)
 			self.toplevel.checkviews()
+
+	def is_showing(self):
+		return LinkBrowserDialog.is_showing(self)
 
 	def delete_callback(self):
 		self.hide()
@@ -590,8 +606,10 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		except NoSuchUIDError:
 			print 'LinkEdit: anchor with unknown node UID!'
 			return
-		import AnchorEdit
-		AnchorEdit.showanchoreditor(self.toplevel, node)
+		import AttrEdit
+		AttrEdit.showattreditor(self.toplevel, node, '.anchorlist')
+##		import AnchorEdit
+##		AnchorEdit.showanchoreditor(self.toplevel, node)
 
 	def GetChannelViewFocus(self):
 		if self.toplevel.channelview is None:
@@ -631,12 +649,12 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 
 class LinkEditEditor(LinkEditorDialog):
 	def __init__(self, parent, title, editlink, isnew):
-		LinkEditorDialog.__init__(self, title, dirstr, typestr,
-					  editlink[DIR], editlink[TYPE])
 		self.parent = parent
 		self.editlink = editlink
 		self.changed = isnew
 		self.oksetsensitive(self.changed)
+		LinkEditorDialog.__init__(self, title, dirstr, typestr,
+					  editlink[DIR], editlink[TYPE])
 
 	def run(self):
 		self.show()
