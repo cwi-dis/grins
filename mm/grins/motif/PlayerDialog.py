@@ -30,7 +30,7 @@ class PlayerDialog(PlayerDialogBase):
 				(FLAG_ALL, 'Quit', EXIT),
 				]),
 			(FLAG_ALL, 'View', [
-				(FLAG_ALL, 'View Source...', SOURCE),
+				(FLAG_ALL, 'View Source...', SOURCEVIEW),
 				]),
 			(FLAG_ALL, 'Play', [
 				(FLAG_ALL, 'Play', PLAY, 't'),

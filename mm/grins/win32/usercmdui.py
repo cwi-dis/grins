@@ -90,7 +90,7 @@ CommandUI(OPEN_RECENT,casc2ui[OPEN_RECENT])
 CommandUI(TRACE)
 CommandUI(DEBUG)
 CommandUI(CONSOLE)
-CommandUI(SOURCE)
+CommandUI(SOURCEVIEW)
 CommandUI(CLOSE,IDUC_CLOSE)
 CommandUI(EXIT)
 
