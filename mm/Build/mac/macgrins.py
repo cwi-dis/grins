@@ -27,6 +27,7 @@ try:
 except:
 	Res.OpenResFile(':macgrins.rsrc')
 	Res.OpenResFile(':playercontrols.rsrc')
+	Res.OpenResFile(':common.rsrc')
 Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 	
 # Now time for real work.
