@@ -924,7 +924,7 @@ class Object:
 						d.fgcolor(TEXTCOLOR)
 						d.drawbox(box)
 		d.fgcolor(TEXTCOLOR)
-		d.centerstring(l, t, r, t1, self.name)
+		d.centerstring(l+hmargin/2, t+vmargin/2, r-hmargin/2, t1, self.name)
 		# If this is a node with suppressed detail,
 		# draw some lines
 		if self.boxtype == LEAFBOX and \
