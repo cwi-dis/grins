@@ -33,19 +33,29 @@ Overview
 <H1> Overview&nbsp; </H1>
 <P>The process to create an applet or an application using grins package is as 
 follows: </P>
-<P><STRONG><FONT size=4>1. SMIL 2 documents </FONT></STRONG></P>
-<P>You create a SMIL 2&nbsp;document using the factory method of a GRiNSToolkit: 
-</P>
+<P><STRONG><FONT size=4> 1. SMIL documents </FONT></STRONG></P>
+<P><FONT size=3>To start using the 
+grins package&nbsp;you have to supply the license&nbsp;given to you. You do this 
+by&nbsp;calling the setLicense static method&nbsp;of GRiNSToolkit</FONT></P>
 <BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
-  <P><EM><STRONG>SMILDocument smil = 
-  grins.GRiNSToolkit.createDocument(filenameOrUrl); 
-</STRONG></EM></P></BLOCKQUOTE>
+  <P><STRONG><EM>grins.GRiNSToolkit.</EM>setLicense<EM>(licenseStr); </EM></STRONG></P></BLOCKQUOTE>
+<P>After you set the license you create a SMIL document 
+using <STRONG><EM>createDocument </EM></STRONG>            factory method of a GRiNSToolkit: 
+</P>
+<P><STRONG><EM>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+SMILDocument smil = null</EM></STRONG></P>
+<P>&nbsp;&nbsp;<STRONG><EM>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+try&nbsp;&nbsp;&nbsp; { smil = grins.GRiNSToolkit.createDocument(filenameOrUrl); 
+}</EM></STRONG></P>
+<BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
+  <P><STRONG><EM>catch(GRiNSException e) {smil = null; 
+  System.out.println(""+e);}</EM></STRONG></P></BLOCKQUOTE>
 <P>From the document object you can get all the necessary info to prepare things 
 for playback.</P>
 <P>You request document duration with the call</P>
 <BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
   <P><EM><STRONG>double dur = smil.getDuration(); </STRONG></EM></P></BLOCKQUOTE>
-<P>A dur = 0 means indefinite and dur&lt;0 means its unresolved.</P>
+<P>A dur = 0 means indefinite and dur&lt;0 means its  unresolved. Otherwise you will get a positive number.</P>
 <P>You&nbsp;request &nbsp;the number of top-level windows of the document with 
 the call </P>
 <BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
@@ -88,6 +98,7 @@ the SMILListener interface </P>
   <P><EM><STRONG>player.play(); </STRONG></EM></P>
   <P><EM><STRONG>... </STRONG></EM></P>
   <P><EM><STRONG>player.pause(); </STRONG></EM></P>
+  <P><EM><STRONG>player.play(); </STRONG></EM></P>
   <P><EM><STRONG>... </STRONG></EM></P>
   <P><EM><STRONG>player.stop() </STRONG></EM></P></BLOCKQUOTE>
 <P><STRONG><FONT size=4></FONT></STRONG>&nbsp;</P>
