@@ -55,8 +55,10 @@ LEAFBOX = 2
 f_title = windowinterface.findfont('Helvetica', 10)
 f_channel = windowinterface.findfont('Helvetica', 8)
 
-MINSIZE = 10.0				# minimum size for a node
-LABSIZE = f_title.fontheight() * 1.5	# height of label
+MINSIZE = settings.get('thumbnail_size')		# minimum size for a node
+TITLESIZE = f_title.fontheight()*1.2
+CHNAMESIZE = f_channel.fontheight()*1.2
+LABSIZE = TITLESIZE+CHNAMESIZE	# height of labels
 GAPSIZE = 1.0				# size of gap between nodes
 EDGSIZE = 1.0				# size of edges
 
@@ -705,7 +707,8 @@ class HierarchyView(HierarchyViewDialog):
 		rootobj = None
 		rw, rh = self.window.getcanvassize(windowinterface.UNIT_MM)
 		self.canvassize = rw, rh
-		self.titleheight = float(LABSIZE) / rh
+		self.titleheight = float(TITLESIZE) / rh
+		self.chnameheight = float(CHNAMESIZE) / rh
 		self.horedge = float(EDGSIZE) / rw
 		self.veredge = float(EDGSIZE) / rh
 		self.horgap = float(GAPSIZE) / rw
@@ -955,8 +958,12 @@ class Object:
 		dummy = d.usefont(f_title)
 		rw, rh = self.mother.canvassize
 		titleheight = self.mother.titleheight
-		hmargin = d.strsize('x')[0] / 1.5
-		vmargin = titleheight / 5
+		chnameheight = self.mother.chnameheight
+		##hmargin = d.strsize('x')[0] / 1.5
+		##vmargin = titleheight / 5
+		hmargin, vmargin = d.get3dbordersize()
+		hmargin = hmargin*1.5
+		vmargin = vmargin*1.5
 		l, t, r, b = self.box
 		node = self.node
 		nt = node.GetType()
@@ -979,8 +986,8 @@ class Object:
 		t1 = min(b, t + titleheight + vmargin)
 		if node.GetType() not in MMNode.interiortypes and \
 		   not hasattr(node, 'expanded') and \
-		   b-t-vmargin >= 2*titleheight:
-			b1 = b - titleheight
+		   b-t-vmargin >= titleheight+chnameheight:
+			b1 = b - chnameheight
 			# draw channel name along bottom of box
 			if node.__class__ is not SlideMMNode:
 				self.drawchannelname(l+hmargin/2, b1,
@@ -1001,7 +1008,7 @@ class Object:
 				except IOError:
 					# f not reassigned!
 					pass
-			ih = min(b1-t1, 2*titleheight)
+			ih = min(b1-t1, titleheight+chnameheight)
 			if self.mother.thumbnails and \
 			   node.__class__ is SlideMMNode and \
 			   MMAttrdefs.getattr(node, 'tag') in ('fill','fadeout'):
@@ -1017,10 +1024,13 @@ class Object:
 					d.fgcolor(TEXTCOLOR)
 					d.drawbox(box)
 		# draw a little triangle to indicate expanded/collapsed state
+		title_left = l+hmargin
 		if node.GetType() in MMNode.interiortypes or \
 		   (node.GetType() == 'ext' and
 		    node.GetChannelType() == 'RealPix'):
 			awidth = LABSIZE/rw - 2*hmargin
+			awidth = d.strsize('xx')[0]
+			title_left = title_left + awidth
 			aheight = titleheight - 2*vmargin
 			node.abox = l+hmargin, t+vmargin, l+hmargin+awidth, t+vmargin+aheight
 			if hasattr(node, 'expanded'):
@@ -1041,7 +1051,7 @@ class Object:
 
 		# draw the name
 		d.fgcolor(TEXTCOLOR)
-		d.centerstring(l+hmargin/2, t+vmargin/2, r-hmargin/2, t1, self.name)
+		d.centerstring(title_left, t+vmargin/2, r-hmargin/2, t1, self.name)
 		# If this is a node with suppressed detail,
 		# draw some lines
 		if self.boxtype == LEAFBOX and \
