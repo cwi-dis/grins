@@ -11,6 +11,9 @@
 
 // WEBSTER_CONTROL (1)
 #include "websterpro.h"
+// leave it as text?
+static CString strLicKey("Webster Pro - Copyright (c) 1995-1998 Home Page Software Inc. - A Webster CodeBase Product"); 
+static BSTR bstrLicKey=strLicKey.AllocSysString(); 
 
 // the c++/mfc class 
 class CHtmlWnd: public CWnd
@@ -38,6 +41,7 @@ class CHtmlWnd: public CWnd
 	// Control creation
 	BOOL CreateHtmlCtrl();
 	void DestroyHtmlCtrl();
+	bool HasHtmlCtrl(){return m_bCtrlCreated;}
 
 	// Operations
 	public:
@@ -159,7 +163,6 @@ BOOL CHtmlWnd::Create(LPCTSTR lpszClassName, LPCTSTR lpszWindowName,
 	return TRUE;
 	}
 
-
 BOOL CHtmlWnd::CreateHtmlCtrl()
 	{
 	if(m_bCtrlCreated) return TRUE;
@@ -172,9 +175,10 @@ BOOL CHtmlWnd::CreateHtmlCtrl()
 	// create the control
 	if(m_selHtmlCtrl==WEBSTER_CONTROL)
 		{
-		if (!m_wndWebsterBrowser.Create(NULL, "untitled",
-				WS_CHILD, rectClient, this, AFX_IDW_PANE_FIRST))
-			{
+		if (!m_wndWebsterBrowser.Create("untitled",
+				WS_CHILD, rectClient, this, AFX_IDW_PANE_FIRST,
+				NULL,FALSE,bstrLicKey))
+			{ 
 			//DestroyWindow();
 			return FALSE;
 			}
@@ -252,11 +256,9 @@ void CHtmlWnd::Navigate(LPCTSTR lpszURL)
 	if(!m_bCtrlCreated){if(!CreateHtmlCtrl()) return;}
 
 	if(m_selHtmlCtrl==WEBSTER_CONTROL)
-		m_wndWebsterBrowser.Navigate(lpszURL,NULL, NULL, "", "", "");
+		m_wndWebsterBrowser.Navigate(lpszURL,0,0,NULL,NULL,NULL);
 	else
-		{
 		m_wndWebBrowser.Navigate(lpszURL,NULL,NULL,NULL,NULL);
-		}
 	}
 
 void CHtmlWnd::SetImmHtml(LPCTSTR str)
@@ -539,7 +541,17 @@ py_fit_html_ctrl(PyObject *self, PyObject *args)
 
 	RETURN_NONE;
 	}
-
+static PyObject *
+py_has_html_ctrl(PyObject *self, PyObject *args)
+	{
+	CHECK_NO_ARGS(args);
+	CHtmlWnd *pHtmlWnd=PyCHtmlWnd::GetHtmlWndPtr(self);
+	if(pHtmlWnd==NULL) return NULL;
+	GUI_BGN_SAVE;
+	int res=pHtmlWnd->HasHtmlCtrl()?1:0;
+	GUI_END_SAVE;
+	return Py_BuildValue("i",res);
+	}
 
 //////////////////////////////////////////////////////
 // @object PyCHtmlWnd|
@@ -554,6 +566,7 @@ static struct PyMethodDef PyCHtmlWnd_methods[] = {
 	{"CreateHtmlCtrl",py_create_html_ctrl,1},
 	{"DestroyHtmlCtrl",py_destroy_html_ctrl,1},
 	{"FitHtmlCtrl",py_fit_html_ctrl,1},
+	{"HasHtmlCtrl",py_has_html_ctrl,1},
 	{NULL,NULL,1}		
 };
 
