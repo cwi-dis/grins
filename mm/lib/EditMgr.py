@@ -177,44 +177,47 @@ class EditMgr:
 	# Channel operations
 	#
 	def addchannel(self, name, i, type):
-		if name in self.context.channelnames:
+		c = self.context.getchannel(name)
+		if c is not None:
 			raise MMExc.AssertError, \
 				'duplicate channel name in addchannel'
 		self.addstep('addchannel', name, i, type)
-		self.context.channeldict[name] = {'type':type}
-		self.context.channelnames.insert(i, name)
+		self.context.addchannel(name, i, type)
 	#
 	def delchannel(self, name):
-		i = self.context.channelnames.index(name)
-		attrdict = self.context.channeldict[name]
+		c = self.context.getchannel(name)
+		if c is None:
+			raise MMExc.AssertError, \
+				  'unknown channel name in delchannel'
 		self.addstep('delchannel', name, i, attrdict)
-		del self.context.channelnames[i]
-		del self.context.channeldict[name]
+		self.context.delchannel(name)
 	#
 	def setchannelname(self, name, newname):
-		if newname in self.context.channelnames:
+		if newname == name:
+			return # No change
+		c = self.context.getchannel(name)
+		if c is None:
 			raise MMExc.AssertError, \
-				'duplicate channel name in setchannelname'
-		i = self.context.channelnames.index(name)
-		attrdict = self.context.channeldict[name]
+				  'unknown channel name in setchannelname'
 		self.addstep('setchannelname', name, newname)
-		self.context.channeldict[newname] = attrdict
-		self.context.channelnames[i] = newname
-		del self.context.channeldict[name]
+		self.context.setchannelname(name, newname)
 	#
 	def setchannelattr(self, name, attrname, value):
-		attrdict = self.context.channeldict[name]
-		if attrdict.has_key(attrname):
-			oldvalue = attrdict[attrname]
+		c = self.context.getchannel(name)
+		if c is None:
+			raise MMExc.AssertError, \
+				  'unknown channel name in setchannelattr'
+		if c.has_key(attrname):
+			oldvalue = c[attrname]
 		else:
 			oldvalue = None
-		if value == None == oldvalue:
+		if value == oldvalue:
 			return
 		self.addstep('setchannelattr', name, attrname, oldvalue, value)
-		if value == None:
-			del attrdict[attrname]
+		if value is None:
+			del c[attrname]
 		else:
-			attrdict[attrname] = value
+			c[attrname] = value
 	#
 	# Style operations
 	#
