@@ -630,10 +630,9 @@ class SMILXhtmlSmilWriter(SMIL):
 			syncid = regionid or nodeid
 			if transIn and not transOut:
 				self.writeTransition(transIn, None, targetid, syncid)
-			elif transOut and not transIn:
-				self.writeTransition(None, transOut, targetid, syncid)
-			else:
-				self.writeTransition(transIn, None, targetid, syncid)
+			elif transOut:
+				if transIn:
+					self.writeTransition(transIn, None, targetid, syncid)
 				freezeSync = None
 				if fill == 'freeze':
 					freezeSync = self.locateFreezeSyncNode(node)
@@ -1052,9 +1051,6 @@ class SMILXhtmlSmilWriter(SMIL):
 					break
 
 	def locateFreezeSyncNode(self, node):
-		fill = MMAttrdefs.getattr(node, 'fill')
-		if fill != 'freeze':
-			return None
 		# XXX: find freeze sync
 		parent = node.GetParent()
 		if parent.GetType() == 'seq':
