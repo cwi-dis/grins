@@ -125,15 +125,33 @@ def getsyncarc(writer, node, isend):
 	if not arc:
 		return
 	srcuid, srcside, delay, dstside = arc
-	srcname = writer.uid2name[srcuid]
-	rv = 'id(%s)'%srcname
-	if srcside:
-		rv = rv+'(end)'
-	else:
-		rv = rv+'(begin)'
 	sign, delay = encodeduration(delay)
-	if delay:
-		rv = rv + sign + delay
+	parent = node.GetParent()
+	ptype = parent.GetType()
+	siblings = parent.GetChildren()
+	index = siblings.index(node)
+	if not srcside and \
+	   (srcuid == parent.GetUID() and
+	    (ptype == 'par' or (ptype == 'seq' and index == 0))) or \
+	   (ptype == 'seq' and index > 0 and
+	    srcuid == siblings[index-1].GetUID()):
+		# sync arc from parent/previous node
+		if sign == '+':
+			rv = delay
+		else:
+			print '** Negative delay for', \
+			      node.GetRawAttrDef('name', '<unnamed>'),\
+			      node.GetUID()
+			rv = sign + delay
+	else:
+		srcname = writer.uid2name[srcuid]
+		rv = 'id(%s)'%srcname
+		if srcside:
+			rv = rv+'(end)'
+		else:
+			rv = rv+'(begin)'
+		if delay:
+			rv = rv + sign + delay
 	return rv
 
 def getterm(writer, node):
@@ -310,14 +328,14 @@ class SMILWriter:
 			mtype = mediatype(chtype)
 
 		attrlist = ['<%s'%mtype]
+		if not interior and chtype in ('label', 'text'):
+			attrlist.append('type="text/plain"')
 		imm_href = None
 		if type == 'imm':
 			if chtype == 'html':
 				suff = '.html'
 			else:
 				suff = '.txt'
-				if chtype in ('label', 'text'):
-					attrlist.append('type="text/plain"')
 			fname = self.smiltempfile(x, suff)
 			fp = open(fname, 'w')
 			data = string.join(x.GetValues(), '\n')
