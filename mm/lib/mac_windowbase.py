@@ -19,6 +19,8 @@ import img
 import imageop
 import sys
 
+UNIT_MM, UNIT_SCREEN, UNIT_PXL = 0, 1, 2
+
 # XXXX Or is it better to copy these?
 from FrameWork import Menu, MenuBar, AppleMenu, MenuItem, SubMenu
 class MyMenu(Menu):
@@ -200,11 +202,13 @@ class _Event:
 			MacOS.HandleEvent(event)
 			return
 		if partcode == Windows.inGrow:
-			if modifiers & Events.shiftKey:
+			if modifiers & Events.controlKey:
 				# Shift-click allows growing
-				##wid.DrawGrowIcon()
-				##wid.GrowWindow(where, XXXX)
-				pass # XXXX pass on to higher layers
+				#wid.DrawGrowIcon()
+				rv = wid.GrowWindow(where, (32, 32, 0x3fff, 0x3fff))
+				neww, newh = (rv>>16) & 0xffff, rv & 0xffff
+				print 'GROW RETURNED', neww, newh
+				pass # XXXX find window, call resize, possibly send update?
 			else:
 				partcode = Windows.inContent
 		if partcode == Windows.inContent:
@@ -370,29 +374,46 @@ class _Toplevel(_Event):
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
 
-	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, transparent = 0):
-		wid, w, h = self._openwindow(x, y, w, h, title)
+	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
+				pixmap = 0, transparent = 0, units=UNIT_MM):
+		wid, w, h = self._openwindow(x, y, w, h, title, units)
 		rv = _Window(self, wid, 0, 0, w, h, 0, pixmap, transparent)
 		self._wid_to_window[wid] = rv
 		self._wid_to_title[wid] = title
 		return rv
 
-	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, transparent = 0):
-		wid, w, h = self._openwindow(x, y, w, h, title)
+	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
+				pixmap = 0, transparent = 0, units=UNIT_MM):
+		wid, w, h = self._openwindow(x, y, w, h, title, units)
 		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, transparent)
 		self._wid_to_window[wid] = rv
 		self._wid_to_title[wid] = title
 		return rv
 		
-	def _openwindow(self, x, y, w, h, title):
+	def _openwindow(self, x, y, w, h, title, units):
 		"""Internal - Open window given xywh, title. Returns window-id"""
 ##		print 'TOPLEVEL WINDOW', x, y, w, h, title
 		if w <= 0 or h <= 0:
 			raise 'Illegal window size'
-		x = int(x*_x_pixel_per_mm)
-		y = int(y*_y_pixel_per_mm) + _screen_top_offset
-		w = int(w*_x_pixel_per_mm)
-		h = int(h*_y_pixel_per_mm)
+		if units == UNIT_MM:
+			x = int(x*_x_pixel_per_mm)
+			y = int(y*_y_pixel_per_mm) + _screen_top_offset
+			w = int(w*_x_pixel_per_mm)
+			h = int(h*_y_pixel_per_mm)
+		elif units == UNIT_PXL:
+			y = y + _screen_top_offset		# Keep room for the menubar
+		elif units == UNIT_SCREEN:
+			l, t, r, b = Qd.qd.screenBits.bounds
+			t = t + _screen_top_offset
+			scrw = r-l
+			scrh = b-t
+			x = int(x*scrw+0.5)
+			y = int(y*scrh+0.5)+_screen_top_offset
+			w = int(w*scrw)
+			h = int(h*scrh)
+		else:
+			raise error, 'bad units specified'
+			
 		x1, y1 = x+w, y+h
 		#
 		# Check that it all fits
@@ -831,13 +852,24 @@ class _Window(_CommonWindow):
 			return  # Or raise error?
 		self._wid.SetWTitle(title)
 		
-	def getgeometry(self):
+	def getgeometry(self, units=UNIT_MM):
 		rect = self._wid.GetWindowPort().portRect
 		Qd.SetPort(self._wid)
 		x, y = Qd.LocalToGlobal((0,0))
 		w, h = rect[2]-rect[0], rect[3]-rect[1]
-		rv = (float(x)/_x_pixel_per_mm, float(y)/_y_pixel_per_mm,
-			float(w)/_x_pixel_per_mm, float(h)/_y_pixel_per_mm)
+		if units == UNIT_MM:
+			rv = (float(x)/_x_pixel_per_mm, float(y-_screen_top_offset)/_y_pixel_per_mm,
+				float(w)/_x_pixel_per_mm, float(h)/_y_pixel_per_mm)
+		elif units == UNIT_PXL:
+			rv = x, y-_screen_top_offset, w, h
+		elif units == UNIT_SCREEN:
+			l, t, r, b = Qd.qd.screenBits.bounds
+			scrw = r-l
+			scrh = b-t-_screen_top_offset
+			rv = (float(x)/scrw, float(y-_screen_top_offset)/scrh,
+				float(w)/scrw, float(h)/scrh)
+		else:
+			raise error, 'bad units specified'
 		return rv
 
 	def pop(self):
@@ -913,7 +945,7 @@ class _SubWindow(_CommonWindow):
 		"""Set window title"""
 		raise error, 'can only settitle at top-level'
 		
-	def getgeometry(self):
+	def getgeometry(self, units=UNIT_MM):
 		return self._sizes
 
 	def pop(self):
