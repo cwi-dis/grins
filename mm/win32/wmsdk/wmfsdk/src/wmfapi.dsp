@@ -112,6 +112,10 @@ SOURCE="$(InputPath)"
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\pycbapi.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\wmfapi.cpp
 # End Source File
 # Begin Source File
@@ -132,7 +136,15 @@ SOURCE=.\wmpyrcb.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\wma2ra.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\wmreader.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\wmreaderAdvanced.py
 # End Source File
 # Begin Source File
 
