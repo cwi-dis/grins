@@ -166,7 +166,7 @@ MENUBAR=(
 		(FULL, TOGGLE, 'Sync Arcs', None, TOGGLE_ARCS),
 		(FULL, TOGGLE, 'Image Thumbnails', None, THUMBNAIL),
 		(FULL, TOGGLE, 'Bandwidth Usage Strip', None, TOGGLE_BWSTRIP),
-		(ALL, TOGGLE, 'Check Bandwidth', None, COMPUTE_BANDWIDTH),
+		(ALL, ENTRY, 'Check Bandwidth', None, COMPUTE_BANDWIDTH),
 		(FULL, TOGGLE, 'Show Playable', None, PLAYABLE),
 		(FULL, TOGGLE, 'Show Durations', None, TIMESCALE),
 		(CMIF, SEP,),
