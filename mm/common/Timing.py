@@ -32,7 +32,6 @@ def calctimes(root):
 	root.counter[HD] = 1
 	decrement(q, (0, root, HD))
 	q.run()
-	cleanup(root)
 
 
 # Interface to the prep1() and prep2() functions; these are also used
@@ -48,7 +47,11 @@ def prepare(root):
 
 
 # Interface to clean up the mess left behind by prepare().
-# Calling this can never hurt.
+#
+# Calling this can never really hurt,
+# ***however***, if you repeatedly call calctimes(),
+# it is faster not to call cleanup() in between!
+#
 # It does *not* remove t0 and t1, by the way...
 #
 def cleanup(node):
@@ -103,6 +106,7 @@ def prep1(node):
 
 
 def prep2(node):
+	if not node.GetSummary('synctolist'): return
 	arcs = MMAttrdefs.getattr(node, 'synctolist')
 	for arc in arcs:
 		xuid, xside, delay, yside = arc
