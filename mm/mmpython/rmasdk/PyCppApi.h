@@ -46,10 +46,6 @@ inline void Trace(const char*, ...){}
 	{RMAObject* ret = new classname;return ret;}
 #define GET_PY_CTOR(classname) classname::PyObConstruct
 
-#define BGN_SAVE PyThreadState *_save = PyEval_SaveThread()
-#define END_SAVE PyEval_RestoreThread(_save)
-#define BLOCK_THREADS Py_BLOCK_THREADS
-
 #define GET_THREAD_AND_DECREF(object) \
 	if ((object) && (object)->ob_refcnt==1) { \
 		CEnterLeavePython elp;Py_XDECREF((object)); \

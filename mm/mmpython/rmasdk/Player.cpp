@@ -116,71 +116,78 @@ PlayerObject::OpenURL(PyObject *self, PyObject *args)
 {
 	PlayerObject* obj = (PlayerObject*)self;
 	char *psz;
+	PN_RESULT res;
 	if (!PyArg_ParseTuple(args, "s", &psz))
 		return NULL;
-	BGN_SAVE;
-	PN_RESULT res=obj->pPlayer->OpenURL(psz);
-	END_SAVE;
+	Py_BEGIN_ALLOW_THREADS
+	res=obj->pPlayer->OpenURL(psz);
+	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i",res);
 }
 
 PyObject *
 PlayerObject::Begin(PyObject *self, PyObject *args)
 {
+	PN_RESULT res;
 	CHECK_NO_ARGS(args);
-	BGN_SAVE;
-	PN_RESULT res=((PlayerObject*)self)->pPlayer->Begin();
-	END_SAVE;
+	Py_BEGIN_ALLOW_THREADS
+	res=((PlayerObject*)self)->pPlayer->Begin();
+	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i",res);
 }
 
 PyObject *
 PlayerObject::Stop(PyObject *self, PyObject *args)
 {
+	PN_RESULT res;
 	CHECK_NO_ARGS(args);
-	BGN_SAVE;
-	PN_RESULT res=((PlayerObject*)self)->pPlayer->Stop();
-	END_SAVE;
+	Py_BEGIN_ALLOW_THREADS
+	res=((PlayerObject*)self)->pPlayer->Stop();
+	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i",res);
 }
 
 PyObject *
 PlayerObject::Pause(PyObject *self, PyObject *args)
 {
+	PN_RESULT res;
 	CHECK_NO_ARGS(args);
-	BGN_SAVE;
-	PN_RESULT res=((PlayerObject*)self)->pPlayer->Pause();
-	END_SAVE;
+	Py_BEGIN_ALLOW_THREADS
+	res=((PlayerObject*)self)->pPlayer->Pause();
+	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i",res);
 }
 
 PyObject *
 PlayerObject::IsDone(PyObject *self, PyObject *args)
 {
+	BOOL res;
 	CHECK_NO_ARGS(args);
-	BGN_SAVE;
-	BOOL res=((PlayerObject*)self)->pPlayer->IsDone();
-	END_SAVE;
+	Py_BEGIN_ALLOW_THREADS
+	res=((PlayerObject*)self)->pPlayer->IsDone();
+	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i",res);
 }
 
 PyObject *
 PlayerObject::IsLive(PyObject *self, PyObject *args)
 {
+	BOOL res;
 	CHECK_NO_ARGS(args);
-	BGN_SAVE;
-	BOOL res=((PlayerObject*)self)->pPlayer->IsLive();
-	END_SAVE;
+	Py_BEGIN_ALLOW_THREADS
+	res=((PlayerObject*)self)->pPlayer->IsLive();
+	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i",res);
 }
 
 PyObject *
 PlayerObject::GetCurrentPlayTime(PyObject *self, PyObject *args)
 {
+	ULONG32 res;
 	CHECK_NO_ARGS(args);
-	BGN_SAVE;
-	ULONG32 res=((PlayerObject*)self)->pPlayer->GetCurrentPlayTime();
-	END_SAVE;
+	Py_BEGIN_ALLOW_THREADS
+	res=((PlayerObject*)self)->pPlayer->GetCurrentPlayTime();
+	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i",res);
 }
 
@@ -188,11 +195,12 @@ PyObject *
 PlayerObject::Seek(PyObject *self, PyObject *args)
 {
 	ULONG32 val;
+	PN_RESULT res;
 	if (!PyArg_ParseTuple(args, "i", &val))
 		return NULL;
-	BGN_SAVE;
-	PN_RESULT res=((PlayerObject*)self)->pPlayer->Seek(val);
-	END_SAVE;
+	Py_BEGIN_ALLOW_THREADS
+	res=((PlayerObject*)self)->pPlayer->Seek(val);
+	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i",res);
 }
 
