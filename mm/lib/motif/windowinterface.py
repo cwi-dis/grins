@@ -17,6 +17,9 @@ def beep():
 	dpy.Bell(100)
 	dpy.Flush()
 
+def sleep(sec):
+	pass				# for now
+
 def lopristarting():
 	pass
 
