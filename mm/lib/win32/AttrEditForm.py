@@ -492,52 +492,6 @@ class OptionsCheckMultipleCtrl(AttrCtrl):
 		for ix in range(min(n,len(self._resid)-1)):
 			tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[ix+1]),self.gethelp(),None,0)
 
-class _TupleCtrlIntermediate:
-	def __init__(self, controls, isint):
-		self.__controls = controls
-		self.__isint = isint
-
-	def enable(self, enable):
-		for c in self.__controls:
-			c.enable(enable)
-
-	def attach_to_parent(self):
-		for c in self.__controls:
-			c.attach_to_parent()
-
-	def hookcommand(self, wnd, cbfunc):
-		for c in self.__controls:
-			c.hookcommand(wnd, cbfunc)
-
-	def clear(self):
-		for c in self.__controls:
-			c.settext('')
-
-	def setval(self, val):
-		if len(val) != len(self.__controls):
-			raise error, 'internal error'
-		for i in range(len(val)):
-			self.__controls[i].settext(`val[i]`)
-
-	def getval(self):
-		result = [0] * len(self.__controls)
-		if self.__isint:
-			atox = string.atoi
-		else:
-			atox = string.atof
-		for i in range(len(self.__controls)):
-			val = self.__controls[i].gettext()
-			try:
-				val = atox(val)
-			except ValueError:
-				pass
-			else:
-				result[i] = val
-		return result
-
-	def __getitem__(self, i):
-		return self.__controls[i]
-
 ##################################
 class FileCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -1111,6 +1065,48 @@ class StringCtrl(AttrCtrl):
 	def settooltips(self,tooltipctrl):
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
 
+class SimpleFileCtrl(StringCtrl):
+	def OnInitCtrl(self):
+		StringCtrl.OnInitCtrl(self)
+		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
+		self._browse = components.Button(self._wnd,self._resid[2])
+		self._browse.attach_to_parent()
+		if not self._attr.mustshow():
+			self._browse.hide()
+
+	def OnBrowse(self,id,code):
+		# XXX
+		if self._attr:
+			self._attr.browser_callback()
+	
+	def settooltips(self,tooltipctrl):
+		StringCtrl.settooltips(self,tooltipctrl)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Browse for file',None,0)
+
+	def enable(self, enable):
+		StringCtrl.enable(self, enable)
+		self._browse.enable(enable)
+
+	def setvalue(self, val):
+		if self._initctrl:
+			url = self._attr.wrapper.context.findurl(val)
+			import urlparse
+			scheme, netloc, url, params, query, fragment = urlparse.urlparse(url)
+			if not scheme or scheme == 'file':
+				import MMurl
+				val = MMurl.url2pathname(url)
+			self._attrval.settext(val)
+
+	def getvalue(self):
+		if not self._initctrl:
+			return self._attr.getcurrent()
+		val = self._attrval.gettext()
+		if '\\' in val:
+			import MMurl
+			url = MMurl.pathname2url(val)
+			val = self._attr.wrapper.context.relativeurl(url)
+		return val
+
 class TupleCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
@@ -1183,11 +1179,25 @@ class IntTupleCtrl(TupleCtrl):
 				s = '%d' % string.atoi(st[i])
 				self._attrval[i].settext(s)
 
-class SystemScreenSizeCtrl(IntTupleCtrl):
+class IntTupleNolabelCtrl(IntTupleCtrl):
 	want_label = 0
+
+class SystemScreenSizeCtrl(IntTupleNolabelCtrl):
+	def __init__(self,wnd,attr,resid):
+		IntTupleCtrl.__init__(self,wnd,attr,resid)
+		self.__wlabel = components.Edit(wnd, grinsRC.IDC_WIDTHL)
+		self.__hlabel = components.Edit(wnd, grinsRC.IDC_HEIGHTL)
 
 	# in this case, the help doesn't depend only of data, but also of this control.
 	# to not affect any other plateform the help is set here
+	def OnInitCtrl(self):
+		IntTupleCtrl.OnInitCtrl(self)
+		self.__wlabel.attach_to_parent()
+		self.__hlabel.attach_to_parent()
+		if not self._attr.mustshow():
+			self.__wlabel.hide()
+			self.__hlabel.hide()
+
 	def sethelp(self):
 		if not self._initctrl: return
 		self._wnd._attrinfo.settext(self.gethelp())
@@ -3647,6 +3657,24 @@ class StringGroupNoTitle(StringGroup):
 class InfoGroup(StringGroup):
 	data=attrgrsdict['infogroup']
 
+class DocInfoGroup(StringGroup):
+	data=attrgrsdict['docinfo']
+
+class InfoFileGroup(StringGroup):
+	data=attrgrsdict['infofilegroup']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S7F
+
+	def createctrls(self,wnd):
+		cd={}
+		for ix in range(len(self._al)-1):
+			a=self._al[ix]
+			cd[a]=StringCtrl(wnd,a,self.getctrlids(ix+1))
+		a = self.getattr('file')
+		cd[a] = SimpleFileCtrl(wnd, a, (grinsRC.IDC_81, grinsRC.IDC_82, grinsRC.IDC_83,))
+		return cd
+
 class QTPlayerPreferencesGroup(AttrGroup):
 	data=attrgrsdict['qtpreferences']
 
@@ -3699,6 +3727,49 @@ class QTPlayerMediaPreferencesGroup(AttrGroup):
 
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_QTMEDIAPREF
+
+class RealExtensionGroup(AttrGroup):
+	data=attrgrsdict['realExtensions']
+	def __init__(self,data = None):
+		AttrGroup.__init__(self, self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_REALEXTENSION
+
+	def createctrls(self, wnd):
+		cd = {}
+		a = self.getattr('backgroundOpacity')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_BGOL, grinsRC.IDC_BGOV,))
+		a = self.getattr('mediaOpacity')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_MDOL, grinsRC.IDC_MDOV,))
+		a = self.getattr('chromaKey')
+		cd[a] = ColorNolabelCtrl(wnd,a,(grinsRC.IDC_CKEYL,grinsRC.IDC_CKEYV,grinsRC.IDC_CKEYB))
+		a = self.getattr('chromaKeyOpacity')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_CKOL, grinsRC.IDC_CKOV,))
+		a = self.getattr('chromaKeyTolerance')
+		cd[a] = IntTupleNolabelCtrl(wnd,a,(grinsRC.IDC_CKTL, grinsRC.IDC_CKTV1, grinsRC.IDC_CKTV2, grinsRC.IDC_CKTV3,))
+		a = self.getattr('reliable')
+		cd[a] = OptionsCheckCtrl(wnd,a,(grinsRC.IDC_RELIABLE,))
+		a = self.getattr('strbitrate')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_BITRL, grinsRC.IDC_BITRV,))
+		return cd
+
+class ServerGroup(StringGroup):
+	data=attrgrsdict['server']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_SERVER
+
+	# override these two to not change any labels
+	def createctrls(self,wnd):
+		cd={}
+		for ix in range(len(self._al)):
+			a=self._al[ix]
+			cd[a]=StringNolabelCtrl(wnd,a,self.getctrlids(ix+1))
+		return cd
+
+	def oninitdialog(self,wnd):
+		pass
 
 class WebserverGroup(StringGroup):
 	data=attrgrsdict['webserver']
@@ -3953,29 +4024,6 @@ class SubregionGroup(Subregion1Group):
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LS1O3
 
-##class Subregion3Group(ImgregionGroup):
-##	data=attrgrsdict['subregion3']
-
-##	def getpageresid(self):
-##		return grinsRC.IDD_EDITATTR_SUBREGION
-
-##	def createctrls(self,wnd):
-##		cd={}
-##		a=self.getattr('left')
-##		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
-##		a=self.getattr('top')
-##		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_13))
-##		a=self.getattr('width')
-##		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14))
-##		a=self.getattr('height')
-##		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_15))
-##		a=self.getattr('scale')
-##		cd[a]=OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_22,))
-##		return cd
-
-##	def getpageclass(self):
-##		return PosSizeLayoutPage
-
 class TransitionGroup(AttrGroup):
 	data=attrgrsdict['transition']
 	def __init__(self):
@@ -4069,16 +4117,22 @@ class SystemGroup(PreferencesGroup):
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
 		return cd
 
-class SystemGroup2(SystemGroup):
+class SystemGroup2(SnapSystemGroup):
 	data=attrgrsdict['system2']
 	nodefault = 0
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_S1R3S6
 
 	def createctrls(self,wnd):
-		cd = SystemGroup.createctrls(self,wnd)
+		cd = SnapSystemGroup.createctrls(self,wnd)
+		a = self.getattr('system_captions')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33,grinsRC.IDC_34x))
+		a = self.getattr('system_required')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
+		a = self.getattr('system_screen_depth')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62))
+		# different system screen crtl than SystemGroup
 		a = self.getattr('system_screen_size')
-		# override the default system screen crtl
 		cd[a] = SystemScreenSizeCtrl(wnd,a,(grinsRC.IDC_GROUP8, grinsRC.IDC_WIDTHV,grinsRC.IDC_HEIGHTV))
 		a = self.getattr('system_operating_system')
 		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_SOPERATINGSYSTEML,grinsRC.IDC_SOPERATINGSYSTEMV))
@@ -4088,6 +4142,8 @@ class SystemGroup2(SystemGroup):
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SCOMPONENTL,grinsRC.IDC_SCOMPONENTV))
 		a = self.getattr('system_audiodesc')
 		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_SAUDIODESCL,grinsRC.IDC_SAUDIODESCV1, grinsRC.IDC_SAUDIODESCV2, grinsRC.IDC_SAUDIODESCV3))
+		a = self.getattr('system_overdub_or_caption')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_DUBSUBL,grinsRC.IDC_42,grinsRC.IDC_43,grinsRC.IDC_44))
 		a = self.getattr('u_group')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SCUSTOMTESTSL,grinsRC.IDC_SCUSTOMTESTSV))
 		return cd
@@ -4704,7 +4760,7 @@ class GeomGroup(AttrGroup):
 		a = self.getattr('bottom')
 		cd[a] = CssPosCtrl(wnd,a,(grinsRC.IDC_BOTTOML, grinsRC.IDC_BOTTOMV, grinsRC.IDC_BOTTOMU))
 
-class Layout2Group(GeomGroup):
+class Layout2Group(AttrGroup):
 	data = attrgrsdict['Layout2']
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
@@ -4739,7 +4795,7 @@ class LayoutRealGroup(Layout2Group):
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_OL, grinsRC.IDC_OV))
 		return cd
 	
-class Layout1Group(GeomGroup):
+class Layout1Group(AttrGroup):
 	data=attrgrsdict['Layout1']
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
@@ -4749,7 +4805,6 @@ class Layout1Group(GeomGroup):
 
 	def createctrls(self,wnd):
 		cd = {}
-		self.creategeomctrls(wnd, cd)
 		a = self.getattr('cssbgcolor')
 		cd[a] = CssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
 									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
@@ -4873,7 +4928,9 @@ class MachineGroup(StringGroupNoTitle):
 # what we have implemented, anything else goes as singleton
 groupsui={
 	'infogroup':InfoGroup,
+	'infofilegroup':InfoFileGroup,
 	'general':GeneralGroup,
+	'docinfo':DocInfoGroup,
 
 	'base_winoff':LayoutGroup,
 	'base_winoff_and_units':LayoutGroupWithUnits,
@@ -4890,7 +4947,6 @@ groupsui={
 	'imgregion':ImgregionGroup,
 	'subregion1':Subregion1Group,
 	'subregion2':Subregion2Group,
-##	'subregion3':Subregion3Group,
 
 	'convert1':Convert1Group,
 	'convert2':Convert2Group,
@@ -4919,6 +4975,7 @@ groupsui={
 	'synchronization':SynchronizationGroup,
 	'timingfadeout':TimingFadeoutGroup,
 	'timingpar':DurationParGroup,
+	'server':ServerGroup,
 	'webserver':WebserverGroup,
 	'mediaserver':MediaserverGroup,
 	'file':FileGroup,
@@ -4929,6 +4986,7 @@ groupsui={
 	'bandwidth':BandwidthGroup,
 	'activeduration1':ActiveDuration1Group,
 	'activeduration2':ActiveDuration2Group,
+	'realExtensions':RealExtensionGroup,
 	
 	'qtpreferences':QTPlayerPreferencesGroup,
 	'qtmediapreferences':QTPlayerMediaPreferencesGroup,

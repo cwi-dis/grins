@@ -3217,9 +3217,9 @@ class MMNode(MMTreeElement):
 	def SetChannelType(self, channelType):
 		self.channelType = channelType
 
-	def GetChannelType(self):
+	def GetChannelType(self, url = None):
 		if self.channelType == None:
-			self.channelType = self.guessChannelType()
+			self.channelType = self.guessChannelType(url = url)
 		return self.channelType
 	
 	# this method return the channel type according to the node type and mime type
@@ -3227,7 +3227,7 @@ class MMNode(MMTreeElement):
 	# Note: for now, the channel type is useful to determinate either:
 	# - the renderer class (ChannelXXX classes)
 	# - select the properties to edit from the dialog box
-	def guessChannelType(self, type=None, computedMimeType = None):
+	def guessChannelType(self, type=None, computedMimeType = None, url = None):
 		if type == None:
 			type = self.type
 		if type in ('brush', 'animate', 'prefetch'):
@@ -3236,7 +3236,7 @@ class MMNode(MMTreeElement):
 		if type in interiortypes:
 			return None
 		if computedMimeType == None:
-			computedMimeType = self.GetComputedMimeType()
+			computedMimeType = self.GetComputedMimeType(url = url)
 		# find the channel type according to the computed mime type
 		if computedMimeType == None:
 			return 'null'
@@ -3310,9 +3310,11 @@ class MMNode(MMTreeElement):
 	# - the guessed mime type according to the url
 	#
 	
-	def GetComputedMimeType(self):
+	def GetComputedMimeType(self, url = None):
 		if self.computedMimeType == None and self.type in ('imm', 'ext'):
-			self.computedMimeType = self.context.computeMimeType(self.type, self.attrdict.get('file'), self.attrdict.get('mimetype'))
+			if url is None:
+				url = self.attrdict.get('file')
+			self.computedMimeType = self.context.computeMimeType(self.type, url, self.attrdict.get('mimetype'))
 		return self.computedMimeType
 
 	def SetComputedMimeType(self, computedMimeType):

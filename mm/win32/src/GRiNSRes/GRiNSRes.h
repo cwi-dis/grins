@@ -262,12 +262,17 @@
 #define IDD_REGISTER                    463
 #define IDD_EDITATTR_GEOMETRY           464
 #define IDD_EDITATTR_LAYOUT2REAL        465
+#define IDD_EDITATTR_REALEXTENSION      466
+#define IDD_EDITATTR_S7F                467
+#define IDD_EDITATTR_SERVER             468
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
 #define IDC_EDIT2                       1004
 #define IDC_COMBO1                      1005
+#define IDC_CKTV2                       1005
 #define IDC_82                          1006
+#define IDC_CKTV3                       1006
 #define IDC_LAYOUT_BRINGFRONT           1007
 #define IDC_OTHER_CHANNELS              1008
 #define IDUC_RESET2                     1009
@@ -277,6 +282,7 @@
 #define IDUC_RESET6                     1013
 #define IDUC_RESET7                     1014
 #define IDC_EDIT5                       1015
+#define IDC_BITRV                       1015
 #define IDC_LAYOUT_NEWREGION            1016
 #define IDC_COMBO2                      1017
 #define IDC_LIST2                       1018
@@ -440,6 +446,7 @@
 #define IDC_SCUSTOMTESTSV               1177
 #define IDC_15                          1178
 #define IDC_SOPERATINGSYSTEML2          1178
+#define IDC_DUBSUBL                     1178
 #define IDC_17                          1179
 #define IDC_SCALE1                      1180
 #define IDC_TEMPLATECOMBO               1181
@@ -712,6 +719,21 @@
 #define IDC_REGISTER                    1465
 #define IDC_OL                          1466
 #define IDC_OV                          1467
+#define IDC_BGOL                        1468
+#define IDC_MDOL                        1469
+#define IDC_BGOV                        1470
+#define IDC_MDOV                        1471
+#define IDC_CKEYL                       1472
+#define IDC_CKEYV                       1473
+#define IDC_CKEYB                       1474
+#define IDC_CKOV                        1475
+#define IDC_CKOL                        1476
+#define IDC_CKTL                        1477
+#define IDC_RELIABLE                    1478
+#define IDC_CKTV1                       1479
+#define IDC_BITRL                       1480
+#define IDC_NOTE                        1481
+#define IDC_83                          1482
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -821,7 +843,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        464
 #define _APS_NEXT_COMMAND_VALUE         32902
-#define _APS_NEXT_CONTROL_VALUE         1468
+#define _APS_NEXT_CONTROL_VALUE         1483
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

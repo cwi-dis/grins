@@ -902,6 +902,17 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		attrs = self.context.attributes
 		have_web_page = attrs.has_key('project_html_page')
 
+		# Mediasite FTP params
+		m_hostname = ''
+		m_username = ''
+		m_dirname = ''
+		if attrs.has_key('project_ftp_host_media'):
+			m_hostname = attrs['project_ftp_host_media']
+		if attrs.has_key('project_ftp_user_media'):
+			m_username = attrs['project_ftp_user_media']
+		if attrs.has_key('project_ftp_dir_media'):
+			m_dirname = attrs['project_ftp_dir_media']
+
 		# Website FTP parameters
 		w_hostname = ''
 		w_username = ''
@@ -914,22 +925,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if attrs.has_key('project_ftp_dir'):
 				w_dirname = attrs['project_ftp_dir']
 
-		# Mediasite FTP params (default to same as website)
-		m_hostname = ''
-		m_username = ''
-		m_dirname = ''
-		if attrs.has_key('project_ftp_host_media'):
-			m_hostname = attrs['project_ftp_host_media']
-		if attrs.has_key('project_ftp_user_media'):
-			m_username = attrs['project_ftp_user_media']
-		if attrs.has_key('project_ftp_dir_media'):
-			m_dirname = attrs['project_ftp_dir_media']
-		if not m_hostname:
-			m_hostname = w_hostname
-		if not m_username:
-			m_username = w_username
-		if not m_dirname:
-			m_dirname = w_dirname
+			# Website FTP params default to Mediasite FTP parameters
+			if not w_hostname:
+				w_hostname = m_hostname
+			if not w_username:
+				w_username = m_username
+			if not w_dirname:
+				w_dirname = m_dirname
 			
 		# Filename for SMIL file on media site
 		# XXXX This may be wrong, because it uses the "project" filename

@@ -37,14 +37,16 @@ ChannelMime = {
 		'video/mpeg',
 		'video/quicktime',
 		'video/vnd.rn-realvideo',
+		'image/vnd.rn-realpix',
+		'text/vnd.rn-realtext',
 		'video/x-msvideo', ## ++
 		'video/x-ms-wmv', ## ++
 ##		'video/x-sgi-movie',
 		],
 	'html': ['text/html',],
 	'text': ['text/plain',],
-	'RealPix': ['image/vnd.rn-realpix',],
-	'RealText': ['text/vnd.rn-realtext',],
+##	'RealPix': ['image/vnd.rn-realpix',],
+##	'RealText': ['text/vnd.rn-realtext',],
 	}
 
 # reverse mapping: from MIME type to channel type

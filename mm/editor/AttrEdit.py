@@ -388,7 +388,7 @@ class NodeWrapper(Wrapper):
 		if ntype == 'prio':
 			# special case for prio nodes
 			list = ['name', 'title', 'abstract', 'author',
-				'copyright', 'comment',
+				'copyright',
 				'higher', 'peers', 'lower', 'pauseDisplay']
 			if features.EDIT_TYPE in features.feature_set:
 				list.insert(1, '.type')
@@ -416,7 +416,7 @@ class NodeWrapper(Wrapper):
 			('fill',), ('fillDefault',), ('erase',),
 			('syncBehavior',), ('syncBehaviorDefault',),
 			'title', ('abstract',), ('alt',), ('longdesc',), ('readIndex',), 'author',
-			'copyright', 'comment',
+			'copyright',
 			'layout', 'u_group',
 			('fgcolor',),
 			('mimetype',),	# XXXX Or should this be with file?
@@ -905,7 +905,9 @@ class ChannelWrapper(Wrapper):
 			namelist.extend(['traceImage', 'open', 'close', 'showEditBgMode', 'resizeBehavior'])
 		else:
 			# region
-			namelist.extend(['regionName', 'fit', 'showBackground', 'top', 'bottom', 'left', 'right', 'z', 'soundLevel', 'opacity'])
+			namelist.extend(['regionName', 'fit', 'showBackground', 'top', 'bottom', 'left', 'right', 'z', 'soundLevel'])
+			if features.EXPORT_REAL in features.feature_set:
+				namelist.append('opacity')
 		return namelist
 	#
 	# Override three methods from Wrapper to fake channel name attribute
@@ -1888,12 +1890,10 @@ class FileAttrEditorField(StringAttrEditorField):
 		if self.wrapper.__class__ is SlideWrapper:
 			chtype = 'image'
 		else:
-			chtype = None
-			b = self.attreditor._findattr('channel')
-			if b is not None:
-				ch = self.wrapper.context.getchannel(b.getvalue())
-				if ch:
-					chtype = ch['type']
+			if hasattr(self.wrapper, 'node'):
+				chtype = self.wrapper.node.GetChannelType(url = url or None)
+			else:
+				chtype = None
 		mtypes = ChannelMime.ChannelMime.get(chtype, [])
 		if chtype:
 			mtypes = ['/%s file' % string.capitalize(chtype)] + mtypes
@@ -2471,7 +2471,7 @@ class QualityAttrEditorField(PopupAttrEditorFieldNoDefault):
 		return self.__values[self.__valuesmap.index(value)]
 
 class FitAttrEditorField(PopupAttrEditorField):
-	__values = ['show whole media', 'actual size', 'fill whole region', 'scroll media if necessary', 'show whole media in whole region']
+	__values = ['meet: whole media', 'hidden: actual size', 'slice: fill whole region', 'scroll: scroll if necessary', 'fill: whole media in whole region']
 	__valuesmap = ['meet', 'hidden', 'slice', 'scroll', 'fill']
 
 	# Choose from a list of unit types
