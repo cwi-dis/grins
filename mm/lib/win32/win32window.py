@@ -135,6 +135,10 @@ class Window:
 		if self._showing:
 			self._showing = None
 
+	# Return true if this window highlighted
+	def is_showing(self):
+		return self._showing
+
 	def show(self):
 		pass
 
@@ -342,16 +346,11 @@ class Window:
 
 	# Returns the size of the image
 	def _image_size(self, file):
-		toplevel=__main__.toplevel
-		try:
-			xsize, ysize = toplevel._image_size_cache[file]
-		except KeyError:
-			img = win32ig.load(file)
-			xsize,ysize,depth=win32ig.size(img)
-			toplevel._image_size_cache[file] = xsize, ysize
-			toplevel._image_cache[file] = img
-		self.imgAddDocRef(file)
-		return xsize, ysize
+		return 0, 0
+
+	# Returns the handle of the image
+	def _image_handle(self, file):
+		return  -1
 
 	# Prepare an image for display (load,crop,scale, etc)
 	def _prepare_image(self, file, crop, scale, center, coordinates, clip):
@@ -399,7 +398,7 @@ class Window:
 		left = int(left * scale + .5)
 		right = int(right * scale + .5)
 
-		image = __main__.toplevel._image_cache[file]
+		image = self._image_handle(file)
 		mask=None
 		w=xsize
 		h=ysize
@@ -518,18 +517,6 @@ class Window:
 		return image, mask, left, top, x, y,\
 			w - left - right, h - top - bottom,rcKeep
 
-	# XXX: to be removed
-	def imgAddDocRef(self,file):
-		toplevel=__main__.toplevel
-		w=self._topwindow
-		frame=(w.GetParent()).GetMDIFrame()		
-		doc = frame._cmifdoc
-		if doc==None: doc="__Unknown"
-		if toplevel._image_docmap.has_key(doc):
-			if file not in toplevel._image_docmap[doc]:
-				toplevel._image_docmap[doc].append(file)
-		else:
-			toplevel._image_docmap[doc]=[file,]
 
 	# return true if an arrow has been hit
 	def hitarrow(self, point, src, dst):
@@ -572,7 +559,7 @@ class Window:
 		x,y,w,h=self.getwindowpos()
 		return x, y, x+w, y+h
 
-	def IsClientPoint(self, point):
+	def inside(self, point):
 		x, y, w, h = self.getwindowpos()
 		l, t, r, b = x, y, x+w, y+h
 		xp, yp = point
@@ -805,11 +792,47 @@ class SubWindow(Window):
 
 
 	#
+	# Inage management
+	#
+
+	# Returns the size of the image
+	def _image_size(self, file):
+		toplevel=__main__.toplevel
+		try:
+			xsize, ysize = toplevel._image_size_cache[file]
+		except KeyError:
+			img = win32ig.load(file)
+			xsize,ysize,depth=win32ig.size(img)
+			toplevel._image_size_cache[file] = xsize, ysize
+			toplevel._image_cache[file] = img
+		self.imgAddDocRef(file)
+		return xsize, ysize
+
+	# Returns handle of the image
+	def _image_handle(self, file):
+		return  __main__.toplevel._image_cache[file]
+
+	# XXX: to be removed
+	def imgAddDocRef(self,file):
+		toplevel=__main__.toplevel
+		w=self._topwindow
+		frame=(w.GetParent()).GetMDIFrame()		
+		doc = frame._cmifdoc
+		if doc==None: doc="__Unknown"
+		if toplevel._image_docmap.has_key(doc):
+			if file not in toplevel._image_docmap[doc]:
+				toplevel._image_docmap[doc].append(file)
+		else:
+			toplevel._image_docmap[doc]=[file,]
+
+
+	#
 	# Mouse and cursor related support
 	#
+
 	def onMouseEvent(self,point, ev):
 		for wnd in self._subwindows:
-			if wnd.IsClientPoint(point):
+			if wnd.inside(point):
 				wnd.onMouseEvent(point, ev)
 				return
 		x, y, w, h = self.getwindowpos()
@@ -827,7 +850,7 @@ class SubWindow(Window):
 
 	def setcursor_from_point(self, point):
 		for w in self._subwindows:
-			if w.IsClientPoint(point):
+			if w.inside(point):
 				w.setcursor_from_point(point)
 				return
 
@@ -853,6 +876,7 @@ class SubWindow(Window):
 	#
 	# Rendering section
 	#
+
 	def __paintOnDDS(self, dds, rel=None):
 		x, y, w, h = self.getwindowpos(rel)
 		if self._active_displist:
@@ -914,9 +938,61 @@ class SubWindow(Window):
 		dds = self._topwindow.CreateSurface(w,h)
 		return dds
 
+
+	#
+	# Animations interface
+	#
+
+	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
+		# first convert any coordinates to pixel
+		coordinates = self._convert_coordinates(coordinates,units=units)
+		
+		# keep old pos
+		x0, y0, w0, h0 = self._rectb
+		x1, y1, w1, h1 = self.getwindowpos()
+		
+		# move or/and resize window
+		if len(coordinates)==2:
+			x, y = coordinates[:2]
+			w, h = w0, h0
+		elif len(coordinates)==4:
+			x, y, w, h = coordinates
+		else:
+			raise AssertionError
+
+		# create new
+		self._rect = 0, 0, w, h # client area in pixels
+		self._canvas = 0, 0, w, h # client canvas in pixels
+		self._rectb = x, y, w, h  # rect with respect to parent in pixels
+		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
+		x2, y2, w2, h2 = self.getwindowpos()
+		
+		self._topwindow.update()
+
+	def updatezindex(self, z):
+		self._z = z
+		parent = self._parent
+		parent._subwindows.remove(self)
+		for i in range(len(parent._subwindows)):
+			if self._z >= parent._subwindows[i]._z:
+				parent._subwindows.insert(i, self)
+				break
+		else:
+			parent._subwindows.append(self)
+		self.update()
+	
+	def updatebgcolor(self, color):
+		r, g, b = color
+		self._bgcolor = r, g, b
+		if self._active_displist:
+			self._active_displist.updatebgcolor(color)
+			self._parent.update()
+
+
 	#
 	# Transitions interface
 	#
+
 	def __init_transitions(self):
 		self._transition = None
 		self._passive = None
