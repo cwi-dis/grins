@@ -1,5 +1,7 @@
 import fxmllib, urllib
 
+toc = 0				# produce Table of Contents in HTML table
+
 class FancyURLopener(urllib.FancyURLopener):
 	def prompt_user_passwd(self, host, realm):
 		"""Override this in a GUI environment!"""
@@ -43,12 +45,22 @@ def prdtdtable(x, dtd):
 	else:
 		title = 'Unknown DTD'
 	print '<html><head><title>%s</title></head><body>' % title
+	if toc:
+		print '<h1>%s</h1>' % title
+		print '<h2>%s</h2>' % dtd
+		print '<p>Last modified: %s</p>' % time.strftime('%a, %e %b %Y, %T %Z', time.localtime(time.time()))
+		print '<h3>Table of Contents</h3>'
+		print '<ul>'
+		for elem in elems:
+			print '<li><a href="#%s">%s</a></li>' % (elem, elem)
+		print '</ul>'
 	print '<table border="1" width="100%">'
-	print '<caption>'
-	print '%s<br>' % title
-	print '%s<br>' % dtd
-	print 'Last modified: %s' % time.strftime('%a, %e %b %Y, %T %Z', time.localtime(time.time()))
-	print '</caption>'
+	if not toc:
+		print '<caption>'
+		print '%s<br>' % title
+		print '%s<br>' % dtd
+		print 'Last modified: %s' % time.strftime('%a, %e %b %Y, %T %Z', time.localtime(time.time()))
+		print '</caption>'
 	for elem in elems:
 		dfa, attrs, start, end, content = x.elems[elem]
 		if type(elem) is type(unicode('a')):
@@ -115,11 +127,13 @@ def main(dtd = "http://www.w3.org/AudioVideo/Group/DTD/SMIL20.dtd", func = prdtd
 if __name__ == '__main__':
 	import sys, getopt
 
-	opts, args = getopt.getopt(sys.argv[1:], 'dt')
+	opts, args = getopt.getopt(sys.argv[1:], 'dtc')
 	if ('-d','') in opts:
 		func = prdtd
 	else:
 		func = prdtdtable
+	if ('-c', '') in opts:
+		toc = 1
 	if len(args) > 0:
 		main(args[0], func = func)
 	else:
