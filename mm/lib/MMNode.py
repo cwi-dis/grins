@@ -4,6 +4,11 @@
 from MMExc import *		# Exceptions
 
 
+leaftypes = ['imm', 'ext']
+interiortypes = ['seq', 'par']
+alltypes = leaftypes + interiortypes
+
+
 # The MMNodeContext class
 #
 class MMNodeContext():
@@ -103,7 +108,7 @@ class MMNode():
 	# Create a new node.
 	#
 	def Init(self, (type, context, uid)):
-		# ASSERT type in ('seq', 'par', 'ext', 'imm')
+		# ASSERT type in alltypes
 		self.type = type
 		self.context = context
 		self.uid = uid
@@ -118,7 +123,7 @@ class MMNode():
 	# Private methods to build a tree
 	#
 	def _addchild(self, child):
-		# ASSERT self.type in ('seq', 'par')
+		# ASSERT self.type in interiortypes
 		child.parent = self
 		self.children.append(child)
 	#
@@ -293,7 +298,7 @@ class MMNode():
 			print 'Values:',
 			for value in self.values: print value,
 			print
-		if self.type in ('seq', 'par') or self.children:
+		if self.type in interiortypes or self.children:
 			print 'Children:',
 			for child in self.children: print child.GetType(),
 			print
@@ -328,11 +333,11 @@ class MMNode():
 	# Public methods for modifying a tree
 	#
 	def SetType(self, type):
-		if type not in ('seq', 'par', 'imm', 'ext'):
+		if type not in alltypes:
 			raise CheckError, 'SetType() bad type'
 		if type = self.type:
 			return
-		if self.type in ('seq', 'par') and type in ('seq', 'par'):
+		if self.type in interiortypes and type in interiortypes:
 			self.type = type
 			return
 		if self.children <> []: # TEMP! or self.values <> []:
