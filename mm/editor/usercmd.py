@@ -65,11 +65,11 @@ class CLOSE(_CommandBase):
 class PLAYERVIEW(_CommandBase):
 	help = 'Show/hide Player View'
 class HIERARCHYVIEW(_CommandBase):
-	help = 'Show/hide Hierarchy View'
+	help = 'Show/hide Structure View'
 class CHANNELVIEW(_CommandBase):
 	help = 'Show/hide Channel View'
 class LINKVIEW(_CommandBase):
-	help = 'Show/hide Hyperlink View'
+	help = 'Show/hide Hyperlink Editor'
 class LAYOUTVIEW(_CommandBase):
 	help = 'Show/hide Layout View'
 class USERGROUPVIEW(_CommandBase):

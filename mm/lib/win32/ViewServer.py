@@ -47,11 +47,11 @@ if appcon.IsPlayer:
 
 appview={
 	0:{'cmd':PLAYERVIEW,'hosted':0,'title':'Player','id':'pview_','class':_PlayerView,'maximize':1},
-	1:{'cmd':HIERARCHYVIEW,'hosted':0,'title':'Hierarchy view','id':'hview_','class':_HierarchyView,'maximize':1},
-	2:{'cmd':CHANNELVIEW,'hosted':0,'title':'Channel view','id':'cview_','class':_ChannelView,'maximize':1},
-	3:{'cmd':LINKVIEW,'hosted':0,'title':'Link view','id':'leview_','class':_LinkView,'maximize':1},
+	1:{'cmd':HIERARCHYVIEW,'hosted':0,'title':'Structure view','id':'hview_','class':_HierarchyView,'maximize':1},
+	2:{'cmd':CHANNELVIEW,'hosted':0,'title':'Timeline view','id':'cview_','class':_ChannelView,'maximize':1},
+	3:{'cmd':LINKVIEW,'hosted':0,'title':'Hyperlinks','id':'leview_','class':_LinkView,'maximize':1},
 	4:{'cmd':LAYOUTVIEW,'hosted':1,'title':'Layout view','id':'lview_','class':_LayoutView},
-	5:{'cmd':USERGROUPVIEW,'hosted':1,'title':'User group view','id':'ugview_','class':_UsergroupView},
+	5:{'cmd':USERGROUPVIEW,'hosted':1,'title':'User groups','id':'ugview_','class':_UsergroupView},
 	6:{'cmd':SOURCE,'hosted':0,'title':'Source','id':'sview_','class':_SourceView,'maximize':1},
 	7:{'cmd':-1,'hosted':0,'title':'','id':'cmifview_','class':_CmifView},
 }

@@ -29,7 +29,7 @@ class HierarchyViewDialog(ViewDialog):
 		if self.is_showing():
 			return
 		self.toplevel.showstate(self, 1)
-		title = 'Hierarchy View (%s)' % self.toplevel.basename
+		title = 'Structure View (%s)' % self.toplevel.basename
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
 		toplevel_window=self.toplevel.window
@@ -51,7 +51,7 @@ class HierarchyViewDialog(ViewDialog):
 
 	def fixtitle(self):
 		if self.is_showing():
-			title = 'Hierarchy View (' + self.toplevel.basename + ')'
+			title = 'Structure View (' + self.toplevel.basename + ')'
 			self.window.settitle(title)
 
 	def settoggle(self, command, onoff):
