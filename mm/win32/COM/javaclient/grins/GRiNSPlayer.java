@@ -5,26 +5,29 @@ import java.awt.*;
 import java.util.Vector;
 
 class GRiNSPlayer 
-implements SMILDocument, SMILController, SMILRenderer, Runnable
+implements SMILDocument, SMILController, SMILRenderer
     {
-    GRiNSPlayer(SMILListener listener){
+    GRiNSPlayer(SMILListener listener)
+        {
         this.listener = listener;
         }
     
-    public SMILController getController() {
+    public SMILController getController() 
+        {
         return this;
-    }
+        }
     
-    public SMILRenderer getRenderer() {
+    public SMILRenderer getRenderer() 
+        {
         return this;
-    }
+        }
     
     public Dimension getViewportSize() throws Exception
-    {
+        {
         if(viewportSize==null || viewportSize.width==0)
             throw new Exception("Not ready"); 
         return viewportSize;
-    }
+        }
     
     public void setCanvas(PlayerCanvas c) throws Exception
         {
@@ -38,31 +41,85 @@ implements SMILDocument, SMILController, SMILRenderer, Runnable
             nupdate(hgrins);
             }
         }
-            
-    public void update() {push(new Cmd("update"));}
-    
-    public void mouseClicked(int x, int y){push(new Cmd("mouseClicked", x, y));}
-    
-    public boolean mouseMoved(int x, int y){
-        push(new Cmd("mouseMoved", x, y));
-        return ishot;
+      
+    public void open(String fn)
+        {
+        if(hgrins!=0) return;
+        
+        listener.setWaiting();
+        initializeThreadContext();
+        hgrins = nconnect();
+        if(hgrins!=0) 
+            {
+            nopen(hgrins, fn);
+            if(canvas!=null && canvas.isDisplayable())
+                {
+                nsetWindow(hgrins, canvas);   
+                nupdate(hgrins);
+                }
+            viewportSize = ngetPreferredSize(hgrins);
+            listener.setReady();
+            listener.opened();
+            dur = ngetDuration(hgrins);
+            listener.setDur(dur);
+            monitor = new GRiNSPlayerMonitor(ngetCookie(hgrins), 100);
+            monitor.addListener(listener);
+            monitor.start();
+            }
+        else
+           uninitializeThreadContext(); 
+        }
+   
+    public void close()
+        {
+        if(hgrins!=0) 
+            {
+            monitor.interrupt();
+            nstop(hgrins);
+            nclose(hgrins);
+            ndisconnect(hgrins);
+            hgrins = 0;
+            uninitializeThreadContext();
+            try {Thread.sleep(100);}
+            catch(InterruptedException e){}
+            }
+         if(canvas!=null && canvas.isDisplayable())
+            canvas.repaint();
+        if(listener!=null) listener.closed();
         }
         
-    public void open(String fn) {   
-        push(new Cmd("open", fn));
-        if(isRunning) return;
-        new Thread(this).start();
+    public void update()
+        {
+        if(hgrins!=0) nupdate(hgrins);
+        }
+    
+    public void mouseClicked(int x, int y)
+        {
+        if(hgrins!=0) nmouseClicked(hgrins, x, y);
+        }
+    
+    public boolean mouseMoved(int x, int y)
+        {
+        if(hgrins!=0) nmouseMoved(hgrins, x, y);
+        return false;
         }
         
-    public void close(){push(new Cmd("close"));}
-    
-    public void play(){push(new Cmd("play"));}
-    
-    public void stop(){push(new Cmd("stop"));}
-    
-    public void pause(){push(new Cmd("pause"));}
-       
-    public int getState() throws GRiNSInterfaceException
+    public void play()
+        {
+        if(hgrins!=0) nplay(hgrins);
+        }    
+        
+    public void stop()
+        {
+        if(hgrins!=0) nstop(hgrins);
+        }  
+        
+    public void pause()
+        {
+        if(hgrins!=0) npause(hgrins);
+        } 
+               
+    public int getState()
     {
         if(hgrins!=0) return ngetState(hgrins);
         return -1;
@@ -70,164 +127,30 @@ implements SMILDocument, SMILController, SMILRenderer, Runnable
              
     public double getDuration() {return dur;}
     
-    public void setTime(double t) {pos=t;push(new Cmd("setTime", t));}
+    public void setTime(double t)
+        {
+        if(hgrins!=0) nsetTime(hgrins, t);   
+        }
     
-    public double getTime() {return pos;}
+    public double getTime() 
+        {
+        if(hgrins!=0) return ngetTime(hgrins);
+        return 0;
+        }
     
     public void setSpeed(double v) {}
     
     public double getSpeed() {return 1.0;}
        
-    class Cmd {
-        Cmd(String fname){
-            this.fname = fname;
-        }
-        Cmd(String fname, String strarg){
-            this.fname = fname;
-            this.strarg = strarg;
-        }
     
-        Cmd(String fname, int xarg, int yarg){
-            this.fname = fname;
-            this.xarg = xarg;
-            this.yarg = yarg;
-        }
-        Cmd(String fname, double darg){
-            this.fname = fname;
-            this.darg = darg;
-        }
     
-        String fname;
-        int xarg, yarg;
-        String strarg;
-        double darg;
-    }
-    
-    public void run(){
-        initializeThreadContext();
-        isRunning = true;
-        try {
-            while(!Thread.currentThread().interrupted()){
-                Cmd cmd = peek();
-                if(cmd==null){
-                    if(updatepos)
-                        {
-                        pos = ngetTime(hgrins);
-                        listener.setPos(pos);
-                        }
-                    Thread.sleep(interval);
-                    continue;
-                }
-                try {
-                if(cmd.fname.equals("open")){
-                    listener.setWaiting();
-                    hopen(cmd.strarg);
-                    push(new Cmd("getPreferredSize"));
-                    }
-                else if(cmd.fname.equals("close"))
-                    {hclose();listener.closed(); updatepos = false;break;}
-                else if(cmd.fname.equals("play"))
-                    {
-                    nplay(hgrins);
-                    updatepos = true;
-                    }
-                else if(cmd.fname.equals("stop"))
-                    {
-                    nstop(hgrins);
-                    updatepos = false;
-                    }
-                else if(cmd.fname.equals("pause"))
-                    {
-                    npause(hgrins);
-                    updatepos = false;
-                    }
-                else if(cmd.fname.equals("update"))
-                    nupdate(hgrins);
-                else if(cmd.fname.equals("setTime"))
-                    nsetTime(hgrins, cmd.darg);
-                else if(cmd.fname.equals("mouseClicked"))
-                    nmouseClicked(hgrins, cmd.xarg, cmd.yarg);
-                else if(cmd.fname.equals("mouseMoved"))
-                    ishot = nmouseMoved(hgrins, cmd.xarg, cmd.yarg);
-                else if(cmd.fname.equals("getPreferredSize")){
-                     viewportSize = ngetPreferredSize(hgrins);
-                     if(viewportSize.width!=0){
-                        listener.opened();
-                        dur = ngetDuration(hgrins);
-                        listener.setDur(dur);
-                        listener.setReady();
-                        }
-                     else 
-                        {
-                        push(new Cmd("getPreferredSize"));
-                        Thread.sleep(interval);
-                        }
-                    }
-                }
-                catch(GRiNSInterfaceException e){System.out.println(""+e);}
-                }
-            }
-        catch(InterruptedException e){System.out.println(""+e);}
-        isRunning = false;
-        uninitializeThreadContext();
-    }
-
-    private synchronized void push(Cmd cmd){
-        cmds.add(cmd);
-        notifyAll();
-    }
-    
-    private synchronized Cmd peek() {
-	    int	len = cmds.size();
-	    if (len == 0)
-	        return null;
-	    Cmd cmd = (Cmd)cmds.elementAt(0);
-	    cmds.removeElementAt(0);
-	    return cmd;
-     }
-    
-    private void hopen(String fn) throws GRiNSInterfaceException
-    {
-        hgrins = nconnect();
-        if(hgrins!=0) {
-            nopen(hgrins, fn);
-            if(canvas!=null && canvas.isDisplayable())
-                {
-                nsetWindow(hgrins, canvas);   
-                nupdate(hgrins);
-                }
-        }
-    }
-    
-    private void hclose() throws GRiNSInterfaceException
-        {
-        if(hgrins!=0) {
-            nstop(hgrins);
-            nclose(hgrins);
-            ndisconnect(hgrins);
-            hgrins = 0;
-            }
-         try {
-            Thread.sleep(500);
-         }
-         catch(InterruptedException e){}
-         if(canvas!=null && canvas.isDisplayable())
-            canvas.repaint();
-    }
-    
-    private boolean ishot = false;
-    private boolean isRunning = false;
-    private Vector cmds = new Vector(10);
-    private int interval = 50;
     private Dimension viewportSize;
     private double dur;
-    private double pos;
-    private boolean updatepos = false;
     private SMILListener listener;
-    
+    private GRiNSPlayerMonitor monitor;
 	private Canvas canvas; 
 	
-	private int hgrins;
+	private int hgrins=0;
 	
     private native void initializeThreadContext();
     private native void uninitializeThreadContext();
@@ -250,9 +173,13 @@ implements SMILDocument, SMILController, SMILRenderer, Runnable
     private native double ngetSpeed(int hgrins);
     private native void nmouseClicked(int hgrins, int x, int y);
     private native boolean nmouseMoved(int hgrins, int x, int y);
+    private native int ngetCookie(int hgrins);
     static {
          System.loadLibrary("grinsp");
      }
     
 }
 
+
+    
+    

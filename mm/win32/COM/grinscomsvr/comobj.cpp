@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#include "Python.h"
+
 #include "comobj.h"
 #include "commod.h"
 
@@ -7,6 +9,8 @@
 #include "comlib/comreg.h"
 
 #include "idl/IGRiNSPlayerAuto.h"
+
+#include "mtpycall.h"
 
 static COMSERVER_INFO csi = 
 	{
@@ -17,19 +21,38 @@ static COMSERVER_INFO csi =
 	false
 	};
 
+static COMSERVER_INFO csim = 
+	{
+	&CLSID_GRiNSPlayerMoniker, 
+	"GRiNSPlayerMoniker Component", 
+	"GRiNSPlayerMoniker", 
+	"GRiNSPlayerMoniker.1", 
+	false
+	};
+
 bool RegisterGRiNSPlayerAutoServer()
 	{
-	return RegisterServer(GetModuleHandle(NULL), &csi);
+	return 
+		RegisterServer(GetModuleHandle(NULL), &csi) &&
+		RegisterServer(GetModuleHandle(NULL), &csim);
 	}
 
 bool UnregisterGRiNSPlayerAutoServer()
 	{
-	return UnregisterServer(&csi);
+	return 
+		UnregisterServer(&csi) &&
+		UnregisterServer(&csim);
 	}
 
 HRESULT CoRegisterGRiNSPlayerAutoClassObject(IClassFactory* pIFactory, LPDWORD  pdwRegister)
 	{
 	return CoRegisterClassObject(CLSID_GRiNSPlayerAuto, pIFactory, 
+			CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, pdwRegister);
+	}
+
+HRESULT CoRegisterGRiNSPlayerMonikerClassObject(IClassFactory* pIFactory, LPDWORD  pdwRegister)
+	{
+	return CoRegisterClassObject(CLSID_GRiNSPlayerMoniker, pIFactory, 
 			CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, pdwRegister);
 	}
 
@@ -86,18 +109,17 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 	
     virtual HRESULT __stdcall mouseClicked(/* [in] */ int x, /* [in] */ int y);
     virtual HRESULT __stdcall mouseMoved(/* [in] */ int x, /* [in] */ int y, /* [out] */ BOOL __RPC_FAR *phot);	
+    virtual HRESULT __stdcall getCookie(/* [out] */ long __RPC_FAR *cookie);
 
 	// Implemenation
 	GRiNSPlayerAuto(GRiNSPlayerComModule *pModule);
 	~GRiNSPlayerAuto();
 	HWND getListener() {return m_pModule->getListenerHwnd();}
+	PyObject *getPyListener() {return m_pModule->getPyListener();}
 
 	void adviceSetSize(int w, int h){m_width=w;m_height=h;}
 	void adviceSetCursor(char *cursor){memcpy(m_cursor, cursor, strlen(cursor)+1);}
 	void adviceSetDur(double dur){m_dur=dur;}
-	void adviceSetPos(double pos){m_curpos=pos;}
-	void adviceSetSpeed(double speed){m_speed=speed;}
-	void adviceSetState(int st){m_state=st;}
 	
 	private:
 	long m_cRef;
@@ -107,10 +129,44 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 	
 	HWND m_hWnd;
 	int m_width, m_height;
-	double m_dur, m_curpos; // in secs
-	double m_speed; 
-	int m_state;
+	double m_dur; // in secs
 	char m_cursor[32];
+	};
+
+class GRiNSPlayerMoniker : public IGRiNSPlayerMoniker
+	{
+	public:
+	// IUnknown
+	virtual HRESULT __stdcall QueryInterface(const IID& iid, void** ppv)
+		{
+		if(!ppv) return E_POINTER;
+		if(IsEqualGUID(iid, IID_IUnknown))
+			return InterfaceCaster<IUnknown,GRiNSPlayerMoniker>::Cast(ppv,this);
+		else if(IsEqualGUID(iid, IID_IGRiNSPlayerMoniker))
+			return InterfaceCaster<IGRiNSPlayerMoniker,GRiNSPlayerMoniker>::Cast(ppv,this);
+		*ppv = NULL;
+		return E_NOINTERFACE;
+		}
+	virtual ULONG __stdcall AddRef() {return InterlockedIncrement(&m_cRef);}
+	virtual ULONG __stdcall Release() 
+		{
+		LONG res = InterlockedDecrement(&m_cRef);
+		if(res == 0) delete this;
+		return res;
+		}
+
+	// IGRiNSPlayerMoniker
+    virtual HRESULT __stdcall getGRiNSPlayerAuto( 
+            /* [in] */ long cookie,
+            /* [out] */ IGRiNSPlayerAuto __RPC_FAR *__RPC_FAR *pI);
+
+	// Implemenation
+	GRiNSPlayerMoniker(GRiNSPlayerComModule *pModule);
+	~GRiNSPlayerMoniker();
+			
+	private:
+	long m_cRef;
+	GRiNSPlayerComModule *m_pModule;
 	};
 
 HRESULT GetGRiNSPlayerAutoClassObject(IClassFactory** ppv, GRiNSPlayerComModule *pModule)
@@ -119,8 +175,15 @@ HRESULT GetGRiNSPlayerAutoClassObject(IClassFactory** ppv, GRiNSPlayerComModule 
 	return ComCreator<Factory, GRiNSPlayerComModule>::CreateInstance(IID_IClassFactory, (void**)ppv, pModule);
 	}
 
+HRESULT GetGRiNSPlayerMonikerClassObject(IClassFactory** ppv, GRiNSPlayerComModule *pModule)
+	{
+	typedef ClassFactory<GRiNSPlayerMoniker, GRiNSPlayerComModule> Factory;
+	return ComCreator<Factory, GRiNSPlayerComModule>::CreateInstance(IID_IClassFactory, (void**)ppv, pModule);
+	}
+
 void GRiNSPlayerAutoAdviceSetSize(int id, int w, int h)
 	{
+	// temp: use com module map
 	if(id!=0)
 		{
 		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
@@ -129,6 +192,7 @@ void GRiNSPlayerAutoAdviceSetSize(int id, int w, int h)
 	}
 void GRiNSPlayerAutoAdviceSetCursor(int id, char *cursor)
 	{
+	// temp: use com module map
 	if(id!=0)
 		{
 		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
@@ -137,42 +201,17 @@ void GRiNSPlayerAutoAdviceSetCursor(int id, char *cursor)
 	}
 void GRiNSPlayerAutoAdviceSetDur(int id, double dur)
 	{
+	// temp: use com module map
 	if(id!=0)
 		{
 		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
 		p->adviceSetDur(dur);
 		}
 	}
-void GRiNSPlayerAutoAdviceSetPos(int id, double pos)
-	{
-	if(id!=0)
-		{
-		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
-		p->adviceSetPos(pos);
-		}
-	}
-
-void GRiNSPlayerAutoAdviceSetSpeed(int id, double speed)
-	{
-	if(id!=0)
-		{
-		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
-		p->adviceSetSpeed(speed);
-		}
-	}
-
-void GRiNSPlayerAutoAdviceSetState(int id, int st)
-	{
-	if(id!=0)
-		{
-		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
-		p->adviceSetState(st);
-		}
-	}
 
 GRiNSPlayerAuto::GRiNSPlayerAuto(GRiNSPlayerComModule *pModule)
 :	m_cRef(1), m_pModule(pModule), m_hWnd(0), m_width(0), m_height(0),
-	m_dur(0), m_curpos(0), m_speed(1), m_state(STOPPED)
+	m_dur(0)
 	{
 	adviceSetCursor("arrow");
 	m_pModule->lock();
@@ -185,7 +224,7 @@ GRiNSPlayerAuto::~GRiNSPlayerAuto()
 
 HRESULT __stdcall GRiNSPlayerAuto::setWindow(/* [in] */ HWND hwnd)
 	{
-	PostMessage(getListener(), WM_USER_SETHWND, WPARAM(this), LPARAM(hwnd));
+	SendMessage(getListener(), WM_USER_SETHWND, WPARAM(this), LPARAM(hwnd));
 	return S_OK;
 	}
 
@@ -194,44 +233,55 @@ HRESULT __stdcall GRiNSPlayerAuto::open(wchar_t *wszFileOrUrl)
 	char *buf = new char[MAX_PATH];
     if(WideCharToMultiByte(CP_ACP, 0, wszFileOrUrl, -1, buf, MAX_PATH, NULL, NULL))
 		{
-		PostMessage(getListener(), WM_USER_OPEN, WPARAM(this), LPARAM(buf));
+		SendMessage(getListener(), WM_USER_OPEN, WPARAM(this), LPARAM(buf));
 		}
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::close()
 	{
-	PostMessage(getListener(), WM_USER_CLOSE, WPARAM(this), 0);
+	SendMessage(getListener(), WM_USER_CLOSE, WPARAM(this), 0);
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::play()
 	{
-	PostMessage(getListener(), WM_USER_PLAY, WPARAM(this), 0);
+	SendMessage(getListener(), WM_USER_PLAY, WPARAM(this), 0);
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::stop()
 	{
-	PostMessage(getListener(), WM_USER_STOP, WPARAM(this), 0);
+	SendMessage(getListener(), WM_USER_STOP, WPARAM(this), 0);
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::pause()
 	{
-	PostMessage(getListener(), WM_USER_PAUSE, WPARAM(this), 0);
+	SendMessage(getListener(), WM_USER_PAUSE, WPARAM(this), 0);
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::update()
 	{
-	PostMessage(getListener(), WM_USER_UPDATE, WPARAM(this), 0);
+	SendMessage(getListener(), WM_USER_UPDATE, WPARAM(this), 0);
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::getState(/* [out] */ int __RPC_FAR *pstate)
 	{
-	*pstate = m_state;
+	*pstate = 0;
+	if(getPyListener())
+		{
+		CallbackHelper helper("GetState",getPyListener());
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("(i)",int(this));
+			int st=0;
+			if(helper.call(arg) && helper.retval(st))
+				*pstate = st;
+			}
+		}
 	return S_OK;
 	}
 
@@ -249,21 +299,31 @@ HRESULT __stdcall GRiNSPlayerAuto::getDuration(/* [out] */ double __RPC_FAR *pdu
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::getTime(/* [out] */ double __RPC_FAR *pt)
-	{
-	*pt = m_curpos;
+	{	
+	*pt = 0.0;
+	if(getPyListener())
+		{
+		CallbackHelper helper("GetPos",getPyListener());
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("(i)",int(this));
+			int tmsec=0;
+			if(helper.call(arg) && helper.retval(tmsec))
+				*pt = 0.001*tmsec;
+			}
+		}
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::setTime(/* [in] */ double t)
 	{
-	m_curpos = t;
-	PostMessage(getListener(), WM_USER_SETPOS, WPARAM(this), LPARAM(floor(1000.0*t+0.5)));	
+	SendMessage(getListener(), WM_USER_SETPOS, WPARAM(this), LPARAM(floor(1000.0*t+0.5)));	
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::getSpeed(/* [out] */ double __RPC_FAR *ps)
 	{
-	*ps = m_speed;
+	*ps = 1.0;
 	return S_OK;
 	}
 
@@ -275,17 +335,47 @@ HRESULT __stdcall GRiNSPlayerAuto::setSpeed(/* [in] */ double s)
 
 HRESULT __stdcall GRiNSPlayerAuto::mouseClicked(/* [in] */ int x, /* [in] */ int y)
 	{
-	PostMessage(getListener(), WM_USER_MOUSE_CLICKED, WPARAM(this), MAKELPARAM(x,y));	
+	SendMessage(getListener(), WM_USER_MOUSE_CLICKED, WPARAM(this), MAKELPARAM(x,y));	
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::mouseMoved(/* [in] */ int x, /* [in] */ int y, /* [out] */ BOOL __RPC_FAR *phot)
 	{
-	PostMessage(getListener(), WM_USER_MOUSE_MOVED, WPARAM(this), MAKELPARAM(x,y));	
+	SendMessage(getListener(), WM_USER_MOUSE_MOVED, WPARAM(this), MAKELPARAM(x,y));	
 	*phot=FALSE;
 	if(strcmpi(m_cursor,"hand")==0)
 		*phot=TRUE;
 	return S_OK;
 	}
 
-            
+HRESULT __stdcall GRiNSPlayerAuto::getCookie(/* [out] */ long __RPC_FAR *cookie)
+	{
+	*cookie = int(this);
+	return S_OK;
+	}
+
+////////////////////////
+GRiNSPlayerMoniker::GRiNSPlayerMoniker(GRiNSPlayerComModule *pModule)
+:	m_cRef(1), m_pModule(pModule)
+	{
+	m_pModule->lock();
+	}
+
+GRiNSPlayerMoniker::~GRiNSPlayerMoniker()
+	{
+	m_pModule->unlock();
+	}
+
+HRESULT __stdcall GRiNSPlayerMoniker::getGRiNSPlayerAuto( 
+            /* [in] */ long cookie,
+            /* [out] */ IGRiNSPlayerAuto __RPC_FAR *__RPC_FAR *pI)
+	{
+	// temp: use com module map
+	if(cookie!=0)
+		{
+		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*) cookie;
+		return p->QueryInterface(IID_IGRiNSPlayerAuto, (void**)pI);
+		}
+	return E_NOINTERFACE;
+	}
+

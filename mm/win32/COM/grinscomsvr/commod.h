@@ -5,6 +5,10 @@
 #include "comobj.h"
 #endif
 
+#ifndef Py_PYTHON_H
+#include "Python.h"
+#endif
+
 class GRiNSPlayerComModule
 	{
 	public:	
@@ -12,13 +16,17 @@ class GRiNSPlayerComModule
 	:	m_dwThreadID(dwThreadID), 
 		m_hListenerWnd(0),
 		m_pIFactory(NULL),
-		m_dwRegID(0)
+		m_dwRegID(0),
+		m_pyobj(NULL)
 		{
 		}
 	~GRiNSPlayerComModule()
 		{
 		if(m_dwRegID) CoRevokeClassObject(m_dwRegID);
 		if(m_pIFactory) m_pIFactory->Release();
+		if(m_dwRegIDMon) CoRevokeClassObject(m_dwRegIDMon);
+		if(m_pIFactoryMon) m_pIFactoryMon->Release();
+		Py_XINCREF(m_pyobj);
 		}
 
 	void lock() {CoAddRefServerProcess();}
@@ -33,6 +41,11 @@ class GRiNSPlayerComModule
 		HRESULT hr = GetGRiNSPlayerAutoClassObject(&m_pIFactory, this);
 		if (SUCCEEDED(hr))
 			hr = CoRegisterGRiNSPlayerAutoClassObject(m_pIFactory, &m_dwRegID);
+		
+		if (SUCCEEDED(hr))
+			hr = GetGRiNSPlayerMonikerClassObject(&m_pIFactoryMon, this);
+		if (SUCCEEDED(hr))
+			hr = CoRegisterGRiNSPlayerMonikerClassObject(m_pIFactoryMon, &m_dwRegIDMon);
 		return hr;
 		}
 		
@@ -41,19 +54,24 @@ class GRiNSPlayerComModule
 	
 	void setListenerHwnd(HWND hwnd) {m_hListenerWnd=hwnd;}
 	HWND getListenerHwnd() const {return m_hListenerWnd;}
+	
+	void setPyListener(PyObject *obj) {m_pyobj=obj;Py_XINCREF(m_pyobj);}
+	PyObject *getPyListener() {return m_pyobj;}
 
 	void adviceSetSize(int id, int w, int h){GRiNSPlayerAutoAdviceSetSize(id, w, h);}
 	void adviceSetCursor(int id, char *cursor){GRiNSPlayerAutoAdviceSetCursor(id, cursor);}
 	void adviceSetDur(int id, double dur){GRiNSPlayerAutoAdviceSetDur(id, dur);}
-	void adviceSetPos(int id, double pos){GRiNSPlayerAutoAdviceSetPos(id, pos);}
-	void adviceSetSpeed(int id, double speed){GRiNSPlayerAutoAdviceSetSpeed(id, speed);}
-	void adviceSetState(int id, int st){GRiNSPlayerAutoAdviceSetState(id, st);}
 	
 	private:
 	IClassFactory *m_pIFactory;
-	DWORD m_dwRegID;		
+	DWORD m_dwRegID;	
+	
+	IClassFactory *m_pIFactoryMon;
+	DWORD m_dwRegIDMon;	
+	
 	DWORD m_dwThreadID;
 	HWND m_hListenerWnd;
+	PyObject *m_pyobj;
 	};
 
 #endif

@@ -8,6 +8,9 @@ bool UnregisterGRiNSPlayerAutoServer();
 HRESULT GetGRiNSPlayerAutoClassObject(IClassFactory** ppv, GRiNSPlayerComModule *pModule);
 HRESULT CoRegisterGRiNSPlayerAutoClassObject(IClassFactory* pIFactory, LPDWORD  lpdwRegister);
 
+HRESULT GetGRiNSPlayerMonikerClassObject(IClassFactory** ppv, GRiNSPlayerComModule *pModule);
+HRESULT CoRegisterGRiNSPlayerMonikerClassObject(IClassFactory* pIFactory, LPDWORD  pdwRegister);
+
 void GRiNSPlayerAutoAdviceSetSize(int id, int w, int h);
 void GRiNSPlayerAutoAdviceSetCursor(int id, char *cursor);
 void GRiNSPlayerAutoAdviceSetDur(int id, double dur);
