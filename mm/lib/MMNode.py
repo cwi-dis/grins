@@ -648,7 +648,7 @@ class MMRegPoint:
 		return self.attrdict.items()
 
 class MMChannel:
-	def __init__(self, context, name, type='undefined', isRoot=0):
+	def __init__(self, context, name, type='undefined'):
 		self.context = context
 		self.name = name
 		self.attrdict = {'type':type}
@@ -656,7 +656,8 @@ class MMChannel:
 		if settings.activeFullSmilCss:
 			self._cssId = None
 			if type == 'layout':
-				self._cssId = self.newCssId(isRoot)
+				# by default it's a viewport
+				self._cssId = self.newCssId(1)
 				# allow to maintains the compatibility with old version
 				# this flag shouldn't be accessible in the future
 				self.attrdict['base_winoff'] = (0, 0, 100, 100)
@@ -801,6 +802,10 @@ class MMChannel:
 				if self.attrdict.get('type') == 'layout':
 					if self.attrdict.has_key('base_window'):
 						del self['base_window']
+					# Base_window is set. So, it's not a viewport
+					# reset css node with the right type
+					self.newCssId(0)
+					
 					pchan = self.context.channeldict.get(value)
 					if pchan == None:
 						print 'Error: The parent channel '+self.name+' have to be created before to set base_window'
