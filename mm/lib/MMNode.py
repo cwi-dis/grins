@@ -3682,7 +3682,12 @@ class MMNode:
 			for a in beginlist:
 				t = None
 				aevent = a.getevent()
-				if aevent is not None or a.marker is not None or a.wallclock is not None or a.accesskey is not None:
+				refnode = a.refnode()
+				if aevent == 'begin' and refnode.isresolved(sctx) is not None:
+					pass
+				elif aevent == 'end' and refnode.isresolved(sctx) is not None and refnode.calcfullduration(sctx) is not None and refnode.fullduration is not None:
+					pass
+				elif aevent is not None or a.marker is not None or a.wallclock is not None or a.accesskey is not None:
 					maybecached = 0
 				if a.isresolved(sctx) and syncbase is not None:
 					t = a.resolvedtime(sctx) - syncbase
@@ -3883,7 +3888,7 @@ class MMNode:
 				if debug: print 'calcfullduration: max',duration,maxtime
 				duration = maxtime
 
-		if debug: print 'calcfullduration:',`self`,`duration`
+		if debug: print 'calcfullduration:',`self`,`duration`,self.fullduration
 		return duration
 
 	def compute_download_time(self):
