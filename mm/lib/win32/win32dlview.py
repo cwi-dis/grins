@@ -59,6 +59,9 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 		# scroll indicator
 		self._canscroll = 0
 
+		# tooltip control
+		self._tooltip = None
+
 	#
 	# Creation attributes
 	#
@@ -588,6 +591,8 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 
 	# Response to left button down
 	def onLButtonDown(self, params):
+		if self._tooltip:
+			self._tooltip.onLButtonDown(params)
 		msg=win32mu.Win32Msg(params) # translate the message to a useful Python list.
 		# Find modifier keys. Code gleaned from the way Michael did this in the
 		# HierarchyView, I'm pretty sure there must be a better way to do this.
@@ -597,11 +602,12 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 			params = 'add'
 		else:
 			params = None
-		
 		self.onMouseEvent(msg.pos(),Mouse0Press, params=params)
 
 	# Response to left button up
 	def onLButtonUp(self, params):
+		if self._tooltip:
+			self._tooltip.onLButtonUp(params)
 		msg=win32mu.Win32Msg(params)
 		self.onMouseEvent(msg.pos(),Mouse0Release)
 
@@ -636,6 +642,8 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 
 	# Response to mouse move
 	def onMouseMove(self, params):
+		if self._tooltip:
+			self._tooltip.onMouseMove(params)
 		msg=win32mu.Win32Msg(params)
 		point=msg.pos()
 		if not self.setcursor_from_point(point):
