@@ -135,6 +135,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'customTest': (self.start_custom_test, self.end_custom_test),
 			'region': (self.start_region, self.end_region),
 			'root-layout': (self.start_root_layout, self.end_root_layout),
+			'topLayout': (self.start_viewport, self.end_viewport),
 			'viewport': (self.start_viewport, self.end_viewport),
 			GRiNSns+' '+'layouts': (self.start_layouts, self.end_layouts),
 			GRiNSns+' '+'layout': (self.start_Glayout, self.end_Glayout),
@@ -426,6 +427,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							if xchan is None:
 								self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
 								continue
+							if event[:8] == 'viewport':
+								event = 'topLayout' + event[8:]
 						else:
 							xnode, xanchor = xanchor
 				list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,srcanchor=xanchor,channel=xchan,event=event,delay=offset or 0))
@@ -4532,6 +4535,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			attrdict = d
 		else:
 			ns = ''
+		if limited.has_key(tagname) and ns not in limited[tagname]:
+			self.syntax_error("element `%s' not allowed in namespace `%s'" % (tagname, ns))
 		if len(self.stack) > 1:
 			ptag = self.stack[-2][2]
 			nstag = string.split(ptag, ' ')
