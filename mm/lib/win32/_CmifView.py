@@ -431,7 +431,9 @@ class _CmifStructView(_CmifView):
 		dcc.IntersectClipRect(rect.tuple())
 
 		# background decoration on dcc
-		dcc.FillSolidRect(rect.tuple(),win32mu.RGB(self._active_displist._bgcolor))
+		if self._active_displist:color=self._active_displist._bgcolor
+		else: color=self._bgcolor
+		dcc.FillSolidRect(rect.tuple(),win32mu.RGB(color))
 
 		# draw objects on dcc
 		if self._active_displist:
