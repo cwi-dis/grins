@@ -3,10 +3,10 @@ Magic: 12321
 Internal Form Definition File
     (do not change)
 
-Number of forms: 1
+Number of forms: 2
 
 =============== FORM ===============
-Name: form
+Name: aform
 Width: 330.000000
 Height: 158.000000
 Number of Objects: 5
@@ -83,6 +83,57 @@ size: 11.000000
 lcol: 0
 label: Whole node
 name: whole_button
+callback: 
+argument: 
+
+=============== FORM ===============
+Name: wform
+Width: 330.000000
+Height: 160.000000
+Number of Objects: 3
+
+--------------------
+class: 1
+type: 1
+box: 0.000000 0.000000 330.000000 160.000000
+boxtype: 1
+colors: 47 47
+alignment: 4
+style: 0
+size: 11.000000
+lcol: 0
+label: 
+name: 
+callback: 
+argument: 
+
+--------------------
+class: 11
+type: 6
+box: 130.000000 10.000000 90.000000 30.000000
+boxtype: 1
+colors: 47 47
+alignment: 4
+style: 0
+size: 11.000000
+lcol: 0
+label: Done
+name: ok_button
+callback: 
+argument: 
+
+--------------------
+class: 2
+type: 0
+box: 10.000000 50.000000 310.000000 100.000000
+boxtype: 0
+colors: 47 47
+alignment: 4
+style: 0
+size: 11.000000
+lcol: 0
+label: Text
+name: label
 callback: 
 argument: 
 
