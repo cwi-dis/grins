@@ -240,7 +240,9 @@ inline PyDIBSurf* CreateDIBSurface(HDC hDC, int width, int height)
 	BITMAPINFO *pbmpi = GetBmpInfo(width, height, color_repr_t::get_bits_size());
 	HBITMAP hBmp = CreateDIBSection(hDC, pbmpi, DIB_RGB_COLORS, (void**)&pBits, NULL, 0);
 	if(hBmp==NULL || pBits==NULL)
+		{
 		return NULL;
+		}
 	surface<color_repr_t> *psurf = new surface<color_repr_t>(width, height, color_repr_t::get_bits_size(), pBits);
 	return PyDIBSurf::createInstance(hBmp, psurf);
 	}
@@ -299,14 +301,26 @@ PyObject* Wingdi_StretchBltTransparent(PyObject *self, PyObject *args)
 		&nXSrc,&nYSrc,&nWidthSrc,&nHeightSrc))
 		return NULL;
 
+	if(nWidthDest<=0 || nHeightDest<=0 || nWidthSrc<=0 || nHeightSrc<=0)
+		{
+		seterror("StretchBltTransparent", "invalid parameters (a dimension was zero or negative)");
+		return NULL;
+		}
+
 	HDC hDC = (HDC)GetGdiObjHandle(dcobj);
+	bool delDC = false;
+	if(hDC == 0)
+		{
+		hDC = GetDC(NULL);
+		delDC = true;
+		}
 
 	// 1. preserve bg step
 	// make a copy of dest (surf1)
 	PyDIBSurf *surf1 = CreateDIBSurface(hDC, nWidthDest, nHeightDest);
 	if(surf1 == NULL)
 		{
-		seterror("StretchBltTransparent", GetLastError());
+		seterror("StretchBltTransparent:CreateDIBSurface", GetLastError());
 		return NULL;
 		}
 	if(!CopyDCToSurf(hDC, nXDest, nYDest, nWidthDest, nHeightDest, surf1))
@@ -321,7 +335,7 @@ PyObject* Wingdi_StretchBltTransparent(PyObject *self, PyObject *args)
 	if(surf2 == NULL)
 		{
 		Py_XDECREF(surf1);
-		seterror("StretchBltTransparent", GetLastError());
+		seterror("StretchBltTransparent:CreateDIBSurface", GetLastError());
 		return NULL;
 		}
 	if(!StretchBltSurf(hDC, surf2, 0, 0, nWidthDest, nHeightDest, surfobj, nXSrc, nYSrc, nWidthSrc, nHeightSrc))
@@ -347,6 +361,7 @@ PyObject* Wingdi_StretchBltTransparent(PyObject *self, PyObject *args)
 	// 5. cleanup temporaries
 	Py_XDECREF(surf1);
 	Py_XDECREF(surf2);
+	if(delDC) DeleteDC(hDC);
 	return none();
 
 	/*
