@@ -3,7 +3,7 @@
 
 import MMExc
 
-class EditMgr():
+class EditMgr:
 	#
 	# Initialization.
 	#
