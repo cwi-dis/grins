@@ -17,11 +17,11 @@ JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_initializeThreadContext
 
 /*
  * Class:     grins_GRiNSPlayer
- * Method:    nclose
- * Signature: (I)V
+ * Method:    uninitializeThreadContext
+ * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nclose
-  (JNIEnv *, jobject, jint);
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_uninitializeThreadContext
+  (JNIEnv *, jobject);
 
 /*
  * Class:     grins_GRiNSPlayer
@@ -41,38 +41,6 @@ JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_ndisconnect
 
 /*
  * Class:     grins_GRiNSPlayer
- * Method:    ngetCookie
- * Signature: (I)I
- */
-JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetCookie
-  (JNIEnv *, jobject, jint);
-
-/*
- * Class:     grins_GRiNSPlayer
- * Method:    ngetDuration
- * Signature: (I)D
- */
-JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayer_ngetDuration
-  (JNIEnv *, jobject, jint);
-
-/*
- * Class:     grins_GRiNSPlayer
- * Method:    ngetFrameRate
- * Signature: (I)I
- */
-JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetFrameRate
-  (JNIEnv *, jobject, jint);
-
-/*
- * Class:     grins_GRiNSPlayer
- * Method:    ngetMediaFrameRate
- * Signature: (ILjava/lang/String;)I
- */
-JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetMediaFrameRate
-  (JNIEnv *, jobject, jint, jstring);
-
-/*
- * Class:     grins_GRiNSPlayer
  * Method:    ngetPermission
  * Signature: (ILjava/lang/String;)I
  */
@@ -81,10 +49,50 @@ JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetPermission
 
 /*
  * Class:     grins_GRiNSPlayer
- * Method:    ngetSpeed
- * Signature: (I)D
+ * Method:    nopen
+ * Signature: (ILjava/lang/String;)V
  */
-JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayer_ngetSpeed
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nopen
+  (JNIEnv *, jobject, jint, jstring);
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    nclose
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nclose
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    nplay
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nplay
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    nstop
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nstop
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    npause
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_npause
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    nupdate
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nupdate
   (JNIEnv *, jobject, jint);
 
 /*
@@ -97,19 +105,19 @@ JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetState
 
 /*
  * Class:     grins_GRiNSPlayer
- * Method:    ngetTime
- * Signature: (I)D
- */
-JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayer_ngetTime
-  (JNIEnv *, jobject, jint);
-
-/*
- * Class:     grins_GRiNSPlayer
  * Method:    ngetTopLayoutCount
  * Signature: (I)I
  */
 JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetTopLayoutCount
   (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    nsetTopLayoutWindow
+ * Signature: (IILjava/awt/Component;)V
+ */
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetTopLayoutWindow
+  (JNIEnv *, jobject, jint, jint, jobject);
 
 /*
  * Class:     grins_GRiNSPlayer
@@ -121,18 +129,18 @@ JNIEXPORT jobject JNICALL Java_grins_GRiNSPlayer_ngetTopLayoutDimensions
 
 /*
  * Class:     grins_GRiNSPlayer
- * Method:    ngetTopLayoutState
- * Signature: (II)I
- */
-JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetTopLayoutState
-  (JNIEnv *, jobject, jint, jint);
-
-/*
- * Class:     grins_GRiNSPlayer
  * Method:    ngetTopLayoutTitle
  * Signature: (II)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_grins_GRiNSPlayer_ngetTopLayoutTitle
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    ngetTopLayoutState
+ * Signature: (II)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetTopLayoutState
   (JNIEnv *, jobject, jint, jint);
 
 /*
@@ -153,26 +161,26 @@ JNIEXPORT jboolean JNICALL Java_grins_GRiNSPlayer_nmouseMoved
 
 /*
  * Class:     grins_GRiNSPlayer
- * Method:    nopen
- * Signature: (ILjava/lang/String;)V
+ * Method:    ngetDuration
+ * Signature: (I)D
  */
-JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nopen
-  (JNIEnv *, jobject, jint, jstring);
-
-/*
- * Class:     grins_GRiNSPlayer
- * Method:    npause
- * Signature: (I)V
- */
-JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_npause
+JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayer_ngetDuration
   (JNIEnv *, jobject, jint);
 
 /*
  * Class:     grins_GRiNSPlayer
- * Method:    nplay
- * Signature: (I)V
+ * Method:    nsetTime
+ * Signature: (ID)V
  */
-JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nplay
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetTime
+  (JNIEnv *, jobject, jint, jdouble);
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    ngetTime
+ * Signature: (I)D
+ */
+JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayer_ngetTime
   (JNIEnv *, jobject, jint);
 
 /*
@@ -185,43 +193,35 @@ JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetSpeed
 
 /*
  * Class:     grins_GRiNSPlayer
- * Method:    nsetTime
- * Signature: (ID)V
+ * Method:    ngetSpeed
+ * Signature: (I)D
  */
-JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetTime
-  (JNIEnv *, jobject, jint, jdouble);
-
-/*
- * Class:     grins_GRiNSPlayer
- * Method:    nsetTopLayoutWindow
- * Signature: (IILjava/awt/Component;)V
- */
-JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetTopLayoutWindow
-  (JNIEnv *, jobject, jint, jint, jobject);
-
-/*
- * Class:     grins_GRiNSPlayer
- * Method:    nstop
- * Signature: (I)V
- */
-JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nstop
+JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayer_ngetSpeed
   (JNIEnv *, jobject, jint);
 
 /*
  * Class:     grins_GRiNSPlayer
- * Method:    nupdate
- * Signature: (I)V
+ * Method:    ngetCookie
+ * Signature: (I)I
  */
-JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nupdate
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetCookie
   (JNIEnv *, jobject, jint);
 
 /*
  * Class:     grins_GRiNSPlayer
- * Method:    uninitializeThreadContext
- * Signature: ()V
+ * Method:    ngetFrameRate
+ * Signature: (I)I
  */
-JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_uninitializeThreadContext
-  (JNIEnv *, jobject);
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetFrameRate
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    ngetMediaFrameRate
+ * Signature: (ILjava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetMediaFrameRate
+  (JNIEnv *, jobject, jint, jstring);
 
 #ifdef __cplusplus
 }
