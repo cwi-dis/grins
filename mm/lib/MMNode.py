@@ -2303,6 +2303,7 @@ class MMNode(MMTreeElement):
 		self.canplay = None
 		self.infoicon = ''	# An alert icon
 		self.errormessage = None # An error message to accompany the alert icon
+		self.bwboxes = None # Used-bandwidth boxes
 		self.force_switch_choice = 0
 		self.views = {}		# Used from the structure view to find the structureWidget for this node.
 		self.char_positions= None # The character positions that this node corresponds to in the source.
@@ -4769,6 +4770,13 @@ class MMNode(MMTreeElement):
 		self.errormessage = None
 		for ch in self.children:
 			ch.clear_infoicon()
+			
+	# Methods for setting and getting the bandwidth usage information
+	def set_bandwidthboxes(self, boxes):
+		self.bwboxes = boxes
+		
+	def get_bandwidthboxes(self):
+		return self.bwboxes
 
 	#
 	# Playability depending on system/environment parameters
