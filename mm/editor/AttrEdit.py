@@ -1509,6 +1509,8 @@ class AttrEditor(AttrEditorDialog):
 				C = OperatingSystemAttrEditorField
 			elif displayername == 'cpu':
 				C = CpuAttrEditorField
+			elif displayername == 'screensize':
+				C = ScreenSizeAttrEditorField				
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -2035,6 +2037,25 @@ class TupleAttrEditorField(AttrEditorField):
 			return value
 		return AttrEditorField.valuerepr(self, value)
 
+class ScreenSizeAttrEditorField(TupleAttrEditorField):
+	def valuerepr(self, tuplevalue):
+		if tuplevalue == None:
+			return ''
+		if tuplevalue[0] <= 0 or tuplevalue[1] <= 0:
+			return ''
+		if type(tuplevalue) is type(''):
+			return tuplevalue
+		return AttrEditorField.valuerepr(self, tuplevalue)
+
+	def parsevalue(self, str):
+		"""Return internal representation of string."""
+		if str == '':
+			return None
+		tuplevalue = TupleAttrEditorField.parsevalue(self, str)
+		if tuplevalue[0] <= 0 or tuplevalue[1] <= 0:
+			return None
+		return tuplevalue
+			
 import EventEditor
 
 class TimelistAttrEditorField(AttrEditorField):
