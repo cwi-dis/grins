@@ -413,8 +413,11 @@ class EventStruct:
 			name = "Wallclock:"
 			if self._setwallclock:
 				thing = SMILTreeWrite.wallclock2string(self._setwallclock)
-			elif isinstance(self._syncarc, MMNode.MMSyncArc) and self._syncarc.wallclock:
-				thing = SMILTreeWrite.wallclock2string(self._syncarc.wallclock)
+			elif isinstance(self._syncarc, MMNode.MMSyncArc):
+				if self._syncarc.wallclock:
+					thing = SMILTreeWrite.wallclock2string(self._syncarc.wallclock)
+				else:
+					thing = SMILTreeWrite.wallclock2string(self.get_wallclock())
 			else:
 				thing = ""
 			#return ("Clock time:", self._syncarc.wallclock, 0, 0)
