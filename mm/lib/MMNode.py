@@ -3281,6 +3281,11 @@ class MMNode(MMTreeElement):
 	def SetComputedMimeType(self, computedMimeType):
 		self.computedMimeType = computedMimeType
 
+	def getAllowedMimeTypes(self):
+		# For now simply return the attribute value. Later this
+		# will change for structure nodes.
+		return self.GetAttrDef('allowedmimetypes', None)
+
 	#
 	# Make a "deep copy" of a subtree
 	#
