@@ -9,6 +9,7 @@ import MMAttrdefs
 import sys
 import windowinterface
 import urllib
+from TextChannel import getfont, mapfont
 
 if windowinterface.Version <> 'X':
 	print 'HtmlChannel: Cannot work without X (use CMIF_USE_X=1)'
@@ -17,12 +18,7 @@ if windowinterface.Version <> 'X':
 error = 'HtmlChannel.error'
 
 class HtmlChannel(Channel.ChannelWindow):
-
-        # HTML Channels get colorized thru X resources.
-	# XXXX Hope this doesn't break any Channel.py code...
-        node_attrs = Channel.ChannelWindow.node_attrs[:]
-	node_attrs.remove('bgcolor')
-	node_attrs.remove('hicolor')
+	node_attrs = Channel.ChannelWindow.node_attrs + ['fgcolor', 'font']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
@@ -139,13 +135,57 @@ class HtmlChannel(Channel.ChannelWindow):
 		if self._is_shown and not self.htmlw:
 			self._after_creation()
 		return 1
-		
+
+	_boldfonts = [('boldFont', 9.0),
+		      ('header1Font', 15.5),
+		      ('header2Font', 11.7),
+		      ('header3Font', 11.0),
+		      ('header4Font', 9.0),
+		      ('header5Font', 7.8),
+		      ('header6Font', 6.5)]
+	
 	def do_play(self, node):
+		import Xm
+		htmlw = self.htmlw
 		self.url = self.armed_url
 		self.played_str = self.armed_str
-		self.htmlw.SetText(self.armed_str, '', '')
-		self.htmlw.MapWidget()
-		self.htmlw.UpdateDisplay()
+		attrs = {}
+		fontspec = getfont(node)
+		fontname, pointsize = mapfont(fontspec)
+		fontobj = windowinterface.findfont(fontname, 9)
+		attrs['font'] = fontobj._font
+		i = string.find(fontname, '-')
+		if i > 0: fontname = fontname[:i]
+		basefontname = fontname
+		fontname = fontname + '-Bold'
+		for attr, pointsize in self._boldfonts:
+			fontobj = windowinterface.findfont(fontname, pointsize)
+			attrs[attr] = fontobj._font
+		fontname = basefontname + '-Italic'
+		try:
+			fontobj = windowinterface.findfont(fontname, 9)
+		except windowinterface.error:
+			fontname = basefontname + '-Oblique'
+			fontobj = windowinterface.findfont(fontname, 9)
+		attrs['italicFont'] = fontobj._font
+		bg = self.played_display._gcattr['background']
+		fg = self.played_display._gcattr['foreground']
+		htmlw.ChangeColor(bg)
+		attrs['background'] = bg
+		attrs['foreground'] = fg
+		attrs['anchorColor'] = self.window._convert_color(self.getbucolor(node))
+		attrs['activeAnchorFG'] = self.window._convert_color(self.gethicolor(node))
+		attrs['activeAnchorBG'] = bg
+		htmlw.SetValues(attrs)
+		for w in htmlw.children:
+			w.background = bg
+			w.ChangeColor(bg)
+			w.foreground = fg
+			if w.Class() == Xm.ScrollBar:
+				w.troughColor = bg
+		htmlw.SetText(self.armed_str, '', '')
+		htmlw.MapWidget()
+		htmlw.UpdateDisplay()
 		self.fixanchorlist(node)
 		self.play_node = node
 
