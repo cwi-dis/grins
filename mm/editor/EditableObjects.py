@@ -47,6 +47,12 @@ class EditableMMNode(MMNode.MMNode):
 			+ self.__get_notatrootcommands() \
 			+ self.__get_structurecommands()
 
+	def IsLeafNode(self):
+		if self.type in MMNode.interiortypes:
+			return 0
+		else:
+			return 1
+
 	def __get_commands(self):
 		# Non-specific standard commands.
 		return [
@@ -286,7 +292,7 @@ class EditableMMNode(MMNode.MMNode):
 		if t == 'node' and n is not None:
 			pasteme = n
 		else:
-			windowinterface.showmessage("There is nothing on the clipboard!")
+			windowinterface.showmessage("There is not a node on the clipboard!")
 			return
 
 		em = self.context.editmgr
@@ -295,11 +301,24 @@ class EditableMMNode(MMNode.MMNode):
 		self.parent._insertnode(pasteme, i)
 		em.commit()
 		
-	#def pasteundercall(self):
-	#	print "TODO: paste under me, 
-	# Can't paste under - I need an index, which depends on the position that I was pasted at.
-	
-
+	def pasteundercall(self, index):
+		# Index is the index of this node.
+		print "DEBUG: pasting under."
+		if self.IsLeafNode():
+			windowinteface.beep()
+			return
+		else:
+			t,n = Clipboard.getclip()
+			if t == 'node' and n is not None:
+				pasteme = n
+			else:
+				windowinterface.showmessage("There is not a node on the clipboard!")
+				return
+			em = self.context.editmgr
+			if not em.transaction():
+				return
+			self._insertnode(pasteme, index)
+			em.commit()
 
 ######################################################################
 # Editing regions.
