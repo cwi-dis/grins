@@ -9,7 +9,7 @@ import os
 debug = os.environ.has_key('CHANNELDEBUG')
 import MMAttrdefs
 from MMExc import NoSuchAttrError
-import windowinterface, WMEVENTS 
+import windowinterface, WMEVENTS
 from windowinterface import SINGLE, TEXT, HTM, MPEG
 from windowinterface import TRUE, FALSE
 import string
@@ -220,16 +220,16 @@ class Channel:
 		if debug:
 			print 'Channel.show('+`self`+') force=',force
 
-		# force equal 1 is used only in internal. By default the channel is shown 
+		# force equal 1 is used only in internal. By default the channel is shown
 		# only when showBackground attribute equal to always
-		if not force: 
+		if not force:
 			if self._get_parent_channel() != None:
 				# for now, we have to create a media channel only when it's active
 				# it's important for sub-region positioning as long as that
 				# the dynamic resizing won't be possible on all plateform
 				if not self.is_layout_channel:
 					return
-					
+
 				elif self._attrdict.has_key('showBackground'):
 					if self._attrdict['showBackground'] == 'whenActive':
 						return
@@ -238,7 +238,7 @@ class Channel:
 				if self._attrdict.has_key('open'):
 					if self._attrdict['open'] == 'whenActive':
 						return
-				
+
 		# Indicate that the channel must enter the SHOWN state.
 		self._want_shown = 1
 		if self._is_shown:
@@ -266,7 +266,7 @@ class Channel:
 			if self._is_shown == 0:
 				self._player.after_chan_show(self)
 			return
-			
+
 		self.after_show(force)
 
 	def _get_parent_channel(self, creating=0):
@@ -319,11 +319,11 @@ class Channel:
 	def hide(self, force=1):
 		# Indicate that the channel must enter the HIDDEN state.
 		if debug:
-	 		print 'Channel.hide('+`self`+')'
-	
-		# force equal 0 is used only in internal. By default the channel is hide 
+			print 'Channel.hide('+`self`+')'
+
+		# force equal 0 is used only in internal. By default the channel is hide
 		# only when showBackground attribute equal whenActive
-		if not force: 
+		if not force:
 			if self._get_parent_channel() != None:
 				if self._attrdict.has_key('showBackground'):
 					if self._attrdict['showBackground'] == 'always':
@@ -334,7 +334,7 @@ class Channel:
 					if self._attrdict['close'] == 'never':
 						return
 
-		self._want_shown = 0		
+		self._want_shown = 0
 		self._highlighted = None
 		self.cancel_modeless_resize()
 		self.sensitive()
@@ -741,16 +741,16 @@ class Channel:
 		if not self._armcontext:
 			# The player has aborted
 			return
-		
+
 		self._prepareAnchors(node)
-		
-		self.arm_1()	
-		
+
+		self.arm_1()
+
 	# this method have to be override by visible channels
 	# Warning: it can't be called by the arm_1 because arm_1 may called from others locations
 	def _prepareAnchors(self, node):
 		pass
-		
+
 	# Called by the scheduler when it is not sure whether this
 	# node is armed or not.
 	def optional_arm(self, node):
@@ -916,7 +916,7 @@ class Channel:
 	def resume(self, node):
 		if node is self._played_node:
 			self.setpaused(None)
-		
+
 	#
 	# Methods used by derived classes.
 	#
@@ -1004,7 +1004,7 @@ class Channel:
 
 	def getloop(self, node):
 		return MMAttrdefs.getattr(node, 'loop')
-		
+
 	def gettransition(self, node, which, animated=0):
 		trclass = MMAttrdefs.getattr(node, which, animated)
 		if not trclass:
@@ -1190,9 +1190,9 @@ class ChannelWindow(Channel):
 		self.__callback = None
 		self.__out_trans_qid = None
 		self._active_multiregion_transition = None
-		self._wingeom = None		
+		self._wingeom = None
 		self.__transparent = 1
-		self.__bgcolor = None		
+		self.__bgcolor = None
 
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
@@ -1339,11 +1339,11 @@ class ChannelWindow(Channel):
 	# this method is called by descendant
 	def setArmBox(self, armBox):
 		self.armBox = armBox
-		
+
 	# return the display size of media after arming according to the size of media, fit attribute, ...
 	def getArmBox(self):
 		return self.armBox
-	
+
 	def create_window(self, pchan, pgeom, units = None):
 ##		menu = []
 		if pchan:
@@ -1378,7 +1378,7 @@ class ChannelWindow(Channel):
 						z = z,
 						type_channel = self._window_type,
 						units = units)
-		
+
 			# fix the background color
 			if self.__transparent == 0 and self.__bgcolor != None:
 				self.window.bgcolor(self.__bgcolor)
@@ -1386,7 +1386,7 @@ class ChannelWindow(Channel):
 			# case not possible in internal channel
 			# only possible in LayoutChannel (look at LayoutChannel.py)
 			pass
-			
+
 		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
 		self.window.register(WMEVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(WMEVENTS.Mouse0Release, self.mouserelease,
@@ -1448,7 +1448,7 @@ class ChannelWindow(Channel):
 			self.hide()
 			self.show()
 			self._player.editmgr.commit()
-##		self.highlight()				
+##		self.highlight()
 
 	def do_show(self, pchan):
 		if debug:
@@ -1469,12 +1469,12 @@ class ChannelWindow(Channel):
 
 				# when it'll be possible to resizing on all plateform a channel
 				# we'll be able to change this
-				
-				# by default channel area is the same as LayoutChannel area		
+
+				# by default channel area is the same as LayoutChannel area
 				left, top, width, height = pchan._attrdict['base_winoff']
 				self._wingeom = 0, 0, width, height
 				#############################################################
-			
+
 			pgeom = self._wingeom
 #			if pchan._attrdict.has_key('base_winoff'):
 #				self._wingeom = pgeom = pchan._attrdict['base_winoff']
@@ -1502,11 +1502,11 @@ class ChannelWindow(Channel):
 #				self._attrdict['base_winoff'] = pgeom
 #				self._attrdict['units'] = units
 			self._curvals['base_winoff'] = pgeom, None
-			
+
 		units = self._attrdict.get('units',
 					   windowinterface.UNIT_SCREEN)
 		self.create_window(self._get_parent_channel(), self._wingeom, units)
-		
+
 		return 1
 
 	# Updates channels to visible if according to the showBackground/open and close attributes.
@@ -1514,39 +1514,39 @@ class ChannelWindow(Channel):
 	# for now, we set the window bg color equal to the displylist bg color in to order
 	# to avoid "flashing" if window is not transparent
 	def updateToActiveState(self, node):
-	
+
 		# determine the transparent and background color attributes
 		transparent = node.GetAttrDef('transparent', None)
-			
+
 		bgcolor = self.getbgcolor(node)
-				
+
 		if transparent == None:
 			if bgcolor != None:
 				transparent = 0
 			else:
 				transparent = 1
-				
+
 		self.__transparent = transparent
 		self.__bgcolor = bgcolor
 
-		# force show of channel. 
+		# force show of channel.
 		self.show(1)
-		
+
 		pchan = self._get_parent_channel()
 		pchan.childToActiveState()
-						
+
 	# Updates channels to unvisible if according to the showBackground/open and close attributes
 	def updateToInactiveState(self):
-		
-		# force hide the channel. 
+
+		# force hide the channel.
 		self.hide(1)
 
 		self.__transparent = 1
 		self.__bgcolor = None
-		
+
 		pchan = self._get_parent_channel()
 		pchan.childToInactiveState()
-			
+
 ##	def _box_callback(self, *pgeom):
 ##		if not pgeom:
 ##			# subwindow was not drawn, so hide it
@@ -1594,8 +1594,8 @@ class ChannelWindow(Channel):
 		# For now, it allows to avoid a dynamic resize window (updatecoordinates)
 		wingeom = self.getwingeom(node)
 		self._wingeom = wingeom
- 		# experimental subregion and regpoint code
-		
+		# experimental subregion and regpoint code
+
 		self.updateToActiveState(node)
 		same = Channel.arm_0(self, node)
 		if same and self.armed_display and \
@@ -1608,7 +1608,7 @@ class ChannelWindow(Channel):
 
 		if self.armed_display:
 			self.armed_display.close()
-		
+
 		# experimental subregion and regpoint code
 		# we have to resize the window before the do_arm() method call, because
 		# do_arm use the real window size to determinate the real scale of an image
@@ -1621,14 +1621,14 @@ class ChannelWindow(Channel):
 #			units = self._attrdict.get('units',
 #				   windowinterface.UNIT_SCREEN)
 #			self.window.updatecoordinates(wingeom, units)
- 		# experimental subregion and regpoint code
+		# experimental subregion and regpoint code
 
 		if MMAttrdefs.getattr(node, 'transparent'):
 			bgcolor = None
 		else:
 			bgcolor = self.getbgcolor(node)
 		self.armed_display = self.window.newdisplaylist(bgcolor)
-			
+
 		for arc in node.sched_children:
 			if arc.event == 'click':
 				self.armed_display.fgcolor(bgcolor)
@@ -1639,18 +1639,18 @@ class ChannelWindow(Channel):
 
 		# by default all window area
 		self.armBox = (0.0, 0.0, 1.0, 1.0)
-		
+
 		# set foreground color
 		fgcolor = self.getfgcolor(node)
 		self.armed_display.fgcolor(fgcolor)
-		
-		# WARNING: Can't be done here: we don't know at this point the real display area size of 
-		# media. So we can't create the sensitive button here. Otherwise we have to select all region, and 
+
+		# WARNING: Can't be done here: we don't know at this point the real display area size of
+		# media. So we can't create the sensitive button here. Otherwise we have to select all region, and
 		# not just the media area !. Instead, this code is done is _prepareAnchors method
-		
+
 #		alist = node.GetRawAttrDef('anchorlist', [])
 #		armed_anchor = None
-		
+
 #		for i in range(len(alist)-1,-1,-1):
 #			a = alist[i]
 #			atype = a[A_TYPE]
@@ -1673,13 +1673,13 @@ class ChannelWindow(Channel):
 #			self.setanchor(armed_anchor[A_ID],
 #				       armed_anchor[A_TYPE], b,
 #				       armed_anchor[A_TIMES])
-				       
+
 		return 0
 
 	# Active an sensitive area in display list according to the anchors.
 	# Warning: this method have to be called after do_arm
 	def _prepareAnchors(self, node):
-		drawbox = MMAttrdefs.getattr(node, 'drawbox')			
+		drawbox = MMAttrdefs.getattr(node, 'drawbox')
 		if drawbox:
 			self.armed_display.fgcolor(self.getbucolor(node))
 		else:
@@ -1697,17 +1697,17 @@ class ChannelWindow(Channel):
 			anchor = node.GetUID(), a[A_ID]
 			if not self._player.context.hyperlinks.findsrclinks(anchor):
 				continue
-				
+
 			# convert coordinates to relative image size
 			relativeCoordinates = self.convertShapeToRelImage(node, coordinates)
 			# convert coordinates from relative image to relative window size
 			windowCoordinates = self.convertShapeRelImageToRelWindow(relativeCoordinates)
-			
+
 			b = self.armed_display.newbutton(windowCoordinates, times = a[A_TIMES])
 			b.hiwidth(3)
 			if drawbox:
 				b.hicolor(hicolor)
-			self.setanchor(a[A_ID], atype, b, a[A_TIMES])		
+			self.setanchor(a[A_ID], atype, b, a[A_TIMES])
 
 	def add_arc(self, node, arc):
 		if node is self._played_node and arc.event == 'click':
@@ -1736,16 +1736,16 @@ class ChannelWindow(Channel):
 		# print 'media width =',media_width
 		# print 'media height =',media_height
 
-		# get fit attribute 
+		# get fit attribute
 		scale = MMAttrdefs.getattr(node,'scale')
 		# print 'scale =',scale
-			
+
 		# get regpoint
 		regpoint = node.GetRegPoint()
 		# print 'regpoint =',regpoint
 		regpoint_x = regpoint.getx(subreg_width)
 		regpoint_y = regpoint.gety(subreg_height)
-		
+
 		# get regalign
 		regalign = node.GetRegAlign(regpoint)
 		# print 'regalign =',regalign
@@ -1754,12 +1754,12 @@ class ChannelWindow(Channel):
 		#
 
 		# at first, calculation of geom for fill attribute
-				
+
 		# according to the scale (fit), compute the values
 		if scale == 1:  #hidden
 			area_height = media_height
 			area_width = media_width
-			 
+
 		elif scale == 0: # meet
 			if regalign in ('topLeft', 'topMid', 'topRight'):
 				area_height = subreg_height-regpoint_y
@@ -1806,7 +1806,7 @@ class ChannelWindow(Channel):
 				area_height = area_height*2
 			if regalign in ('bottomLeft', 'bottomMid', 'bottomRight'):
 				area_height = regpoint_y
-			
+
 		if regalign in ('topLeft', 'topMid', 'topRight'):
 			area_top = regpoint_y
 		if regalign in ('topLeft', 'midLeft', 'bottomLeft'):
@@ -1824,13 +1824,13 @@ class ChannelWindow(Channel):
 		# end of positioning algorithm
 
 		# print 'area geom = ',area_left, area_top, area_width, area_height
-		
+
 		return float(area_left)/subreg_width, float(area_top)/subreg_height, \
 					 float(area_width)/subreg_width, float(area_height)/subreg_height
-		
+
 	# get the sub channel geom according to registration sub-regions
 	# return in pixel value
-	def getwingeom(self, node):	
+	def getwingeom(self, node):
 		subreg_left = node.GetAttrDef('left', 0)
 		subreg_right = node.GetAttrDef('right', 0)
 		subreg_top = node.GetAttrDef('top', 0)
@@ -1839,7 +1839,7 @@ class ChannelWindow(Channel):
 		reg_left, reg_top, reg_width, reg_height =  \
 			self._get_parent_channel()._attrdict['base_winoff']
 
-		# translate in pixel 
+		# translate in pixel
 		if type(subreg_left) == type(0.0):
 			subreg_left = int(reg_width*subreg_left)
 		if type(subreg_top) == type(0.0):
@@ -1854,7 +1854,7 @@ class ChannelWindow(Channel):
 		subreg_width = reg_width-subreg_left-subreg_right
 		# print 'sub region height =',subreg_height
 		# print 'sub region width = ',subreg_width
-		
+
 		# allow only no null value
 		if subreg_height == 0:
 			subreg_height = 1
@@ -1868,10 +1868,10 @@ class ChannelWindow(Channel):
 
 		# print subreg_left, subreg_top, subreg_width, subreg_height
 		return subreg_left, subreg_top, subreg_width, subreg_height
-		
+
 	def play(self, node):
 		if debug:
-	 		print 'ChannelWindow.play('+`self`+','+`node`+')'
+			print 'ChannelWindow.play('+`self`+','+`node`+')'
 		self.play_0(node)
 		if not self._armcontext:
 			return
@@ -1891,7 +1891,7 @@ class ChannelWindow(Channel):
 			self.armed_display = None
 			self.do_play(node)
 		self.play_1()
-	
+
 	def stopplay(self, node):
 		if debug:
 			print 'ChannelWindow.stopplay('+`self`+','+`node`+')'
@@ -1906,7 +1906,7 @@ class ChannelWindow(Channel):
 			self.played_display = None
 
 		self.updateToInactiveState()
-		
+
 	def setpaused(self, paused):
 		if debug:
 			print 'ChannelWindow.setpaused('+`self`+','+`paused`+')'
@@ -1925,7 +1925,7 @@ class ChannelWindow(Channel):
 		if self.window and fill == 'transition':
 			# XXX For now we only do transition, fill=hold is somewhat similar
 			self.window.freeze_content('transition')
-			
+
 	def playstop(self):
 		self.cleanup_transitions() # XXXX incorrect!
 		return Channel.playstop(self)
@@ -1944,7 +1944,7 @@ class ChannelWindow(Channel):
 				self.window.jointransition(otherwindow)
 			else:
 				self.window.begintransition(0, 1, in_trans)
-	
+
 	def schedule_out_trans(self, out_trans, outtranstime):
 		self.__out_trans_qid = None
 		if not self.window:
@@ -1955,7 +1955,7 @@ class ChannelWindow(Channel):
 			self.window.jointransition(otherwindow)
 		else:
 			self.window.begintransition(0, 1, out_trans)
-		
+
 	def cleanup_transitions(self):
 		if self.__out_trans_qid:
 			self._scheduler.cancel(self.__out_trans_qid)
@@ -1964,11 +1964,11 @@ class ChannelWindow(Channel):
 			self.window.endtransition()
 		lchan = self.find_layout_channel()
 		lchan._active_multiregion_transition = None
-			
+
 	def _find_multiregion_transition(self, trans, transtime):
 		if not trans.get('multiElement', 0):
 			return None
-		# Unfortunately the transition name isn't in the dictionary. 
+		# Unfortunately the transition name isn't in the dictionary.
 		# We use the id of the dictionary as its unique value
 		trid = id(trans)
 		#
@@ -1988,7 +1988,7 @@ class ChannelWindow(Channel):
 		rv = top_lchan._has_multiregion_transition(trid, transtime, recursive=1)
 		our_lchan._active_multiregion_transition = (trid, transtime, self.window)
 		return rv
-		
+
 	def _has_multiregion_transition(self, trid, transtime, recursive=0):
 		if self._active_multiregion_transition and \
 				(trid, transtime) == self._active_multiregion_transition[:2]:
@@ -1999,12 +1999,12 @@ class ChannelWindow(Channel):
 				if rv:
 					return rv
 		return None
-			
+
 	def find_layout_channel(self):
 		if self.is_layout_channel or not self.pchan:
 			return self
 		return self.pchan.find_layout_channel()
-		
+
 	# use this code to get the error message in the window instead
 	# of in a popup window
 ##	def errormsg(self, node, msg):
@@ -2052,24 +2052,24 @@ class ChannelWindow(Channel):
 
 
 	# convert relative image offsets to relative window offsets
-	# For this, we need to know the real size of media which fit inside the region 
+	# For this, we need to know the real size of media which fit inside the region
 	# --> method getArmBox (channel dependent)
 	# This box is known only after the call of do_arm method
 	def convertShapeRelImageToRelWindow(self, args):
 		shapeType = args[0]
-		
+
 		armBox = self.getArmBox()
 		if shapeType == A_SHAPETYPE_POLY or shapeType == A_SHAPETYPE_RECT or \
 						shapeType == A_SHAPETYPE_ELIPSE:
-			rArgs = [shapeType,]
+			rArgs = [shapeType]
 			n=0
 			for a in args[1:]:
 				# test if xCoordinates or yCoordinates
 				if n%2 == 0:
 					# convert coordinates from image to window size
-					rArgs = rArgs + [a*armBox[2] + armBox[0]]
+					rArgs.append(a*armBox[2] + armBox[0])
 				else:
-					rArgs = rArgs + [a*armBox[3] + armBox[1]]
+					rArgs.append(a*armBox[3] + armBox[1])
 				n = n+1
 
 		# in this case the circle may be translate to an elipse
@@ -2079,13 +2079,13 @@ class ChannelWindow(Channel):
 						yCenter*armBox[3] + armBox[1],
 						radius*armBox[2] + armBox[0],
 						radius*armBox[3] + armBox[1]]
-												
+
 		return rArgs
-	
+
 	# Convert relative window offsets to relative image offsets
 	def convertShapeRelWindowToRelImage(self, args):
 		shapeType = arg[0]
-		
+
 		if shapeType == A_SHAPETYPE_ALLREGION:
 			return args
 
@@ -2099,7 +2099,7 @@ class ChannelWindow(Channel):
 					# convert coordinates from image to window size
 					rArgs = rArgs + [(a - self._arm_imbox[0]) / self._arm_imbox[2]]
 				else:
-					rArgs = rArgs + [(a - self._arm_imbox[1]) / self._arm_imbox[3]]	
+					rArgs = rArgs + [(a - self._arm_imbox[1]) / self._arm_imbox[3]]
 				n = n+1
 
 		# in this case the circle may be translate to an elipse
@@ -2109,23 +2109,23 @@ class ChannelWindow(Channel):
 					(yCenter - self._arm_imbox[1]) / self._arm_imbox[3],
 					(radius - self._arm_imbox[0]) / self._arm_imbox[2],
 					(radius - self._arm_imbox[1]) / self._arm_imbox[3]]
-												
+
 		return rArgs
-		
-	# Convert pixel offsets/relative image offset to relative image offset 
-	# according to the image size 
+
+	# Convert pixel offsets/relative image offset to relative image offset
+	# according to the image size
 	def convertShapeToRelImage(self, node, args):
 		# in this case we assume it's a rectangle area
 		if not args or args[0] == A_SHAPETYPE_ALLREGION:
 			args =  [A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0]
 
 		shapeType = args[0]
-		
-		rArgs = [shapeType,]
+
+		rArgs = [shapeType]
 		n=0
 		xsize = -1
 		for a in args[1:]:
-			# if integer, it's a pixel value, we need to convert in pourcent 
+			# if integer, it's a pixel value, we need to convert in pourcent
 			if type(a) == type(0):	# any floating point number
 				# for optimization
 				if xsize == -1:
@@ -2133,19 +2133,19 @@ class ChannelWindow(Channel):
 				if shapeType == A_SHAPETYPE_POLY or shapeType == A_SHAPETYPE_RECT:
 					# test if xCoordinates or yCoordinates
 					if n%2 == 0:
-						rArgs = rArgs+[float(a)/xsize]
+						rArgs.append(float(a)/xsize)
 					else:
-						rArgs = rArgs+[float(a)/ysize]
+						rArgs.append(float(a)/ysize)
 				elif shapeType == A_SHAPETYPE_CIRCLE:
 					if xSize > ySize:
-						rArgs = rArgs+[float(a)/ysize]
+						rArgs.append(float(a)/ysize)
 					else:
-						rArgs = rArgs+[float(a)/xsize]
+						rArgs.append(float(a)/xsize)
 			else:
-				rArgs = rArgs+[a]
-				
+				rArgs.append(a)
+
 			n = n+1
-		return rArgs			
+		return rArgs
 
 class ChannelAsync(Channel):
 
