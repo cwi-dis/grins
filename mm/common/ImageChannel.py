@@ -21,12 +21,44 @@ import pipes
 def between(v, x0, x1):
 	return ((x0 <= v and v <= x1) or (x1 <= v and v <= x0))
 
+class ImageNodeInfo():
+	def init(self):
+		self.node = None
+		self.parray = None
+		self.error = None
+		self.xsize = self.ysize = 0
+		self.xcorner = self.ycorner = 0
+		self.effscale = 1.0
+		self.mousescale = 1.0
+		return self
+
+	def setcolors(self):
+		if not self.node:
+			raise 'setcolors without node'
+		self.bgcolor = MMAttrdefs.getattr(self.node, 'bgcolor')
+		self.hicolor = MMAttrdefs.getattr(self.node, 'hicolor')
+		
+	def setdefcolors(self, attrdict):
+		if attrdict.has_key('bgcolor'):
+			self.bgcolor = attrdict['bgcolor']
+		else:
+			self.bgcolor = 255, 255, 255
+
+		if attrdict.has_key('hicolor'):
+			self.hicolor = attrdict['hicolor']
+		else:
+			self.hicolor = 255, 0, 0
+
+		self.fgcolor = self.hicolor
+		
 class ImageWindow(ChannelWindow):
 	#
 	# Initialization function.
 	#
 	def init(self, (name, attrdict, channel)):
 		self = ChannelWindow.init(self, name, attrdict, channel)
+		self.nonode_ninfo = ImageNodeInfo().init()
+		self.nonode_ninfo.setdefcolors(attrdict)
 		self.clear()
 		self.player = channel.player
 		return self
@@ -47,61 +79,34 @@ class ImageWindow(ChannelWindow):
 			return
 		gl.reshapeviewport()
 		winwidth, winheight = gl.getsize()
-		self.xcorner = int(winwidth - self.xsize*self.effscale) / 2
-		self.ycorner = int(winheight - self.ysize*self.effscale) / 2
+		self.ninfo.xcorner = int(winwidth - self.ninfo.xsize*self.ninfo.effscale) / 2
+		self.ninfo.ycorner = int(winheight - self.ninfo.ysize*self.ninfo.effscale) / 2
 		gl.ortho2(-0.5, winwidth-0.5, -0.5, winheight-0.5)
 		self.render()
 	#
 	def clear(self):
-		self.node = None
-		self.parray = None
-		self.error = None
 		self.anchors = []
 		self.newanchor = None
-		self.xsize = self.ysize = 0
-		self.xcorner = self.ycorner = 0
-		self.effscale = 1.0
-		self.mousescale = 1.0
-		self.setcolors()
+		self.ninfo = self.nonode_ninfo
 		if self.is_showing():
 			self.setwin()
-			gl.RGBcolor(self.bgcolor)
+			gl.RGBcolor(self.ninfo.bgcolor)
 			gl.clear()
-	#
-	def setcolors(self):
-		if self.node:
-			self.bgcolor = MMAttrdefs.getattr(self.node, 'bgcolor')
-##			self.fgcolor = MMAttrdefs.getattr(self.node, 'fgcolor')
-			self.hicolor = MMAttrdefs.getattr(self.node, 'hicolor')
-			return
-		if self.attrdict.has_key('bgcolor'):
-			self.bgcolor = self.attrdict['bgcolor']
-		else:
-			self.bgcolor = 255, 255, 255
-##		if self.attrdict.has_key('fgcolor'):
-##			self.fgcolor = self.attrdict['fgcolor']
-##		else:
-##			self.fgcolor = 0, 0, 0
-		if self.attrdict.has_key('hicolor'):
-			self.hicolor = self.attrdict['hicolor']
-		else:
-			self.hicolor = 255, 0, 0
-		self.fgcolor = self.hicolor
 	#
 	def getmouse(self):
 		mx, my = fl.get_mouse()
 		return self.convmouse(mx, my)
 
 	def convmouse(self, (mx, my)):
-		mx = int((mx - self.xcorner) / self.mousescale)
-		my = int((my - self.ycorner) / self.mousescale)
+		mx = int((mx - self.ninfo.xcorner) / self.ninfo.mousescale)
+		my = int((my - self.ninfo.ycorner) / self.ninfo.mousescale)
 		return mx, my
 	#
 	def mouse(self, (dev, val)):
 		if dev == DEVICE.RIGHTMOUSE or self.newanchor:
 			ChannelWindow.mouse(self, (dev, val))
 			return
-		if not self.node:
+		if not self.ninfo.node:
 			gl.ringbell()
 			return
 		if (dev, val) <> (DEVICE.LEFTMOUSE, 1):
@@ -123,7 +128,7 @@ class ImageWindow(ChannelWindow):
 			print 'Mouse: No anchor selected'
 			gl.ringbell()
 			return
-		rv = self.player.anchorfired(self.node, al2)
+		rv = self.player.anchorfired(self.ninfo.node, al2)
 		# If this was a paused anchor and it didn't fire
 		# stop showing the node
 		if rv == 0 and len(al2) == 1 and al2[0][A_TYPE] == ATYPE_PAUSE:
@@ -131,59 +136,62 @@ class ImageWindow(ChannelWindow):
 			self.channel.done(0)
 	#
 	def armimage(self, (filename_arg, node)):
+		self.arm_ninfo = ImageNodeInfo().init()
 		# (Import imgfile here so if it doesn't exist we can
 		# still play documents that don't contain images...)
 		import imgfile
 		filename = rgbcache.get(filename_arg)
-		self.node = node
-		self.setcolors()
-		self.parray = None
-		self.effscale = 1.0 # Scale for lrectwrite
-		self.mousescale = 1.0 # Scale for mouse and anchors
-		self.xcorner = 0
-		self.ycorner = 0
-		self.error = None
+		self.arm_ninfo.node = node
+		self.arm_ninfo.setcolors()
+		self.arm_ninfo.parray = None
+		self.arm_ninfo.effscale = 1.0 # Scale for lrectwrite
+		self.arm_ninfo.mousescale = 1.0 # Scale for mouse and anchors
+		self.arm_ninfo.xcorner = 0
+		self.arm_ninfo.ycorner = 0
+		self.arm_ninfo.error = None
 		try:
-			self.xsize, self.ysize, dummy = \
+			self.arm_ninfo.xsize, self.arm_ninfo.ysize, dummy = \
 				imgfile.getsizes(filename)
 		except imgfile.error, msg:
 			print 'Cannot get size of image file', filename_arg, \
 				  ':', msg
-			self.error = 'Bad or missing file ' + `filename_arg`
+			self.arm_ninfo.error = 'Bad or missing file ' + `filename_arg`
 			return
 		if self.is_showing():
 			self.setwin()
 			winwidth, winheight = gl.getsize()
 		else:
 			winwidth, winheight = 0, 0
-		self.effscale = MMAttrdefs.getattr(node, 'scale')
-		if self.effscale <= 0.0:
+		self.arm_ninfo.effscale = MMAttrdefs.getattr(node, 'scale')
+		if self.arm_ninfo.effscale <= 0.0:
 			if not self.is_showing():
-				self.effscale = 1.0
+				self.arm_ninfo.effscale = 1.0
 			else:
-				self.effscale = \
-					min(float(winwidth)/self.xsize, \
-					    float(winheight)/self.ysize)
-		self.mousescale = self.effscale
+				self.arm_ninfo.effscale = \
+					min(float(winwidth)/self.arm_ninfo.xsize, \
+					    float(winheight)/self.arm_ninfo.ysize)
+		self.arm_ninfo.mousescale = self.arm_ninfo.effscale
 		try:
-			print 'Reading image from', filename, '...'
-			if self.effscale == int(self.effscale):
-				self.parray = imgfile.read(filename)
+			if self.arm_ninfo.effscale == int(self.arm_ninfo.effscale):
+				self.arm_ninfo.parray = imgfile.read(filename)
 			else:
-				width = int(self.xsize * self.effscale)
-				height = int(self.ysize * self.effscale)
-				self.parray = imgfile.readscaled(filename, \
+				width = int(self.arm_ninfo.xsize * self.arm_ninfo.effscale)
+				height = int(self.arm_ninfo.ysize * self.arm_ninfo.effscale)
+				self.arm_ninfo.parray = imgfile.readscaled(filename, \
 					                         width, height)
-				self.effscale = 1.0
-				self.xsize, self.ysize = width, height
-			print 'Done'
+				self.arm_ninfo.effscale = 1.0
+				self.arm_ninfo.xsize, self.arm_ninfo.ysize = width, height
 		except imgfile.error, msg:
 			print 'Cannot read image file', filename_arg, ':', msg
-			self.error = 'Cannot read file ' + `filename_arg`
-		self.xcorner = int(winwidth - self.xsize*self.effscale) / 2
-		self.ycorner = int(winheight - self.ysize*self.effscale) / 2
+			self.arm_ninfo.error = 'Cannot read file ' + `filename_arg`
+		self.arm_ninfo.xcorner = int(winwidth - self.arm_ninfo.xsize*self.arm_ninfo.effscale) / 2
+		self.arm_ninfo.ycorner = int(winheight - self.arm_ninfo.ysize*self.arm_ninfo.effscale) / 2
 	#
-	def showimage(self):
+	def showimage(self, node):
+		if node != self.arm_ninfo.node:
+			raise 'Not the armed node'
+		self.ninfo = self.arm_ninfo
+		self.arm_ninfo = None
 		if self.is_showing():
 			self.pop() # Implies gl.winset()
 			self.render()
@@ -225,29 +233,29 @@ class ImageWindow(ChannelWindow):
 		self.redraw()
 	#
 	def render(self):
-		gl.RGBcolor(self.bgcolor)
+		gl.RGBcolor(self.ninfo.bgcolor)
 		gl.clear()
 		width, height = gl.getsize()
-		if self.parray:
-			gl.rectzoom(self.effscale, self.effscale)
-			gl.lrectwrite(self.xcorner, self.ycorner, \
-				self.xcorner+self.xsize-1, \
-				self.ycorner+self.ysize-1, \
-				self.parray)
+		if self.ninfo.parray:
+			gl.rectzoom(self.ninfo.effscale, self.ninfo.effscale)
+			gl.lrectwrite(self.ninfo.xcorner, self.ninfo.ycorner, \
+				self.ninfo.xcorner+self.ninfo.xsize-1, \
+				self.ninfo.ycorner+self.ninfo.ysize-1, \
+				self.ninfo.parray)
 		else:
-			if self.error:
-				gl.RGBcolor(self.fgcolor)
+			if self.ninfo.error:
+				gl.RGBcolor(self.ninfo.fgcolor)
 				width, height = gl.getsize()
 				x, y = width/2, height/2
-				sw = gl.strwidth(self.error)
+				sw = gl.strwidth(self.ninfo.error)
 				sh = gl.getheight()
 				x = max(0, x - sw/2)
 				y = y + sh/2
 				gl.cmov2(x, y)
-				gl.charstr(self.error)
+				gl.charstr(self.ninfo.error)
 		# Draw anchors even if the image can't be drawn
 		if self.anchors:
-			gl.RGBcolor(self.hicolor)
+			gl.RGBcolor(self.ninfo.hicolor)
 			for dummy, tp, a in self.anchors:
 				self.drawanchor(a)
 		# And redraw current defining anchor, if needed
@@ -261,10 +269,10 @@ class ImageWindow(ChannelWindow):
 		if len(a) <> 4:
 			return
 		x0, y0, x1, y1 = a[0], a[1], a[2], a[3]
-		x0 = int(x0 * self.mousescale + self.xcorner)
-		x1 = int(x1 * self.mousescale + self.xcorner)
-		y0 = int(y0 * self.mousescale + self.ycorner)
-		y1 = int(y1 * self.mousescale + self.ycorner)
+		x0 = int(x0 * self.ninfo.mousescale + self.ninfo.xcorner)
+		x1 = int(x1 * self.ninfo.mousescale + self.ninfo.xcorner)
+		y0 = int(y0 * self.ninfo.mousescale + self.ninfo.ycorner)
+		y1 = int(y1 * self.ninfo.mousescale + self.ninfo.ycorner)
 		gl.bgnclosedline()
 		gl.v2i(x0, y0)
 		gl.v2i(x0, y1)
@@ -327,14 +335,14 @@ class ImageChannel(Channel):
 		    self.arm(node)
 		self.armed_node = None
 		self.showanchors(node)
-		self.window.showimage()
+		self.window.showimage(node)
 		Channel.play(self, node, callback, arg)
 	#
 	def defanchor(self, node, anchor):
 		self.arm(node)
 		self.showanchors(node)
 		self.window.setdefanchor(anchor)
-		self.window.showimage()
+		self.window.showimage(node)
 
 		import AdefDialog
 		try:
