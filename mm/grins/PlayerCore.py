@@ -26,7 +26,8 @@ class PlayerCore(Selecter):
 		self.context = self.root.GetContext()
 		self.chans_showing = 0
 		Selecter.__init__(self)
-	#
+		self.context.registergetchannelbynode(self.getchannelbynode)
+
 	# Internal reset.
 	#
 	def fullreset(self):
@@ -172,7 +173,5 @@ class PlayerCore(Selecter):
 		ch = chclass(name, attrdict, self.scheduler, self)
 		if self.pausing:
 			ch.setpaused(self.pausing)
-		if not self.waiting:
-			ch.setready()
 		self.channels[name] = ch
 		self.channeltypes[name] = type
