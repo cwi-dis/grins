@@ -6,6 +6,7 @@ from compatibility import *
 import sys
 
 #
+version = 'pro'
 compatibility = G2
 compatibility_short = 'G2'
 cmif = 0
