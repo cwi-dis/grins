@@ -1470,7 +1470,7 @@ class Region(Window):
 	#
 	# Foreign renderers support
 	#
-	def CreateOSWindow(self, rect=None, html=0):
+	def CreateOSWindow(self, rect=None, html=0, svg=0):
 		if self._oswnd:
 			return self._oswnd
 		from pywinlib.mfc import window
@@ -1482,11 +1482,12 @@ class Region(Window):
 			xp, yp, wp, hp = rect
 			x, y, w, h = x+xp, y+yp, wp, hp
 		if html: obj = win32ui.CreateHtmlWnd()
+		elif svg: obj = win32ui.CreateSvgWnd()
 		else: obj = win32ui.CreateWnd()
 		wnd = window.Wnd(obj)
 		color = self._bgcolor
-		if not color:
-			color = 0, 0, 0
+		if not color or svg:
+			color = 255, 255, 255
 		brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(color),0)
 		cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
 		icon=0
@@ -1526,17 +1527,20 @@ class Region(Window):
 	def onOsWndLButtonDown(self, params):
 		xr, yr = win32mu.Win32Msg(params).pos()
 		x, y, w, h = self.getwindowpos()
-		self._topwindow.onMouseEvent((x+xr, y+yr), Mouse0Press)
+		if self._topwindow:
+			self._topwindow.onMouseEvent((x+xr, y+yr), Mouse0Press)
 
 	def onOsWndLButtonUp(self, params):
 		xr, yr = win32mu.Win32Msg(params).pos()
 		x, y, w, h = self.getwindowpos()
-		self._topwindow.onMouseEvent((x+xr, y+yr), Mouse0Release)
+		if self._topwindow:
+			self._topwindow.onMouseEvent((x+xr, y+yr), Mouse0Release)
 
 	def onOsWndMouseMove(self, params):
 		xr, yr = win32mu.Win32Msg(params).pos()
 		x, y, w, h = self.getwindowpos()
-		self._topwindow.onMouseMove(0, (x+xr, y+yr))
+		if self._topwindow:
+			self._topwindow.onMouseMove(0, (x+xr, y+yr))
 
 	def DestroyOSWindow(self):
 		if self._oswnd:
@@ -1544,7 +1548,9 @@ class Region(Window):
 			self._oswnd = None
 			if not self.is_closed():
 				self.update()
-
+	#
+	# HTML control support
+	#
 	def RetrieveUrl(self,fileOrUrl):
 		if not self._oswnd:
 			self.CreateOSWindow(self, html=1)	
@@ -1566,7 +1572,35 @@ class Region(Window):
 	def SetImmHtml(self, text):
 		if self._oswnd:
 			self._oswnd.SetImmHtml(text)
-					
+	#
+	# SVG control support
+	#
+	# detect SVG support
+	def HasSvgSupport(self):
+		return win32ui.HasSvgSupport()
+
+	# set SVG source URL
+	def SetSvgSrc(self, fileOrUrl):
+		if not self._oswnd:
+			self.CreateOSWindow(self, svg=1)	
+		self._oswnd.SetSrc(fileOrUrl)
+
+	# has the SVG control been created?
+	def HasSvgCtrl(self):
+		if not self._oswnd: 
+			return 0
+		return self._oswnd.HasSvgCtrl()
+	
+	# create SVG control
+	def CreateSvgCtrl(self, which = 0):
+		if self._oswnd:
+			self._oswnd.CreateSvgCtrl()
+	
+	# destroy SVG control
+	def DestroySvgCtrl(self):
+		if self._oswnd:
+			self._oswnd.DestroySvgCtrl()
+				
 	# Called by the Html channel to set the callback to be called on cmif links
 	# Part of WebBrowsing support
 	def setanchorcallback(self,cb):
