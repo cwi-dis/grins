@@ -29,6 +29,8 @@ def shownodeinfo(toplevel, node, new = 0):
 		nodeinfo.pop()
 
 
+import settings
+
 from NodeInfoDialog import NodeInfoDialog
 
 class NodeInfo(NodeInfoDialog):
@@ -49,8 +51,16 @@ class NodeInfo(NodeInfoDialog):
 			i = self.allchannelnames.index(self.channelname)
 		except ValueError:
 			i = 0		# 'undefined'
+		if not settings.get('cmif') and self.type != 'bag':
+			self.Alltypes = Alltypes[:]
+			self.alltypes = alltypes[:]
+			self.Alltypes.remove('choice')
+			self.alltypes.remove('bag')
+		else:
+			self.Alltypes = Alltypes
+			self.alltypes = alltypes
 		NodeInfoDialog.__init__(self, title, self.allchannelnames, i,
-					Alltypes, alltypes.index(self.type),
+					self.Alltypes, self.alltypes.index(self.type),
 					self.name, self.url,
 					self.children, self.immtext)
 		self.show_correct_group()
@@ -302,7 +312,7 @@ class NodeInfo(NodeInfoDialog):
 	def updateform(self):
 		self.setname(self.name)
 
-		self.settypes(Alltypes, alltypes.index(self.type))
+		self.settypes(self.Alltypes, self.alltypes.index(self.type))
 
 		try:
 			i = self.allchannelnames.index(self.channelname)
@@ -401,7 +411,7 @@ class NodeInfo(NodeInfoDialog):
 		else:
 			windowinterface.showmessage(
 				'Cannot change type on non-empty node')
-			self.settype(alltypes.index(self.type))
+			self.settype(self.alltypes.index(self.type))
 			return
 		self.ch_type = 1
 		self.changed = 1
