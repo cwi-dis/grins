@@ -283,10 +283,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if xnode is None:
 				self.warning('ignoring sync arc from %s to unknown node' % node.attrdict.get('name','<unnamed>'))
 				return
-			for n in GetTemporalSiblings(node):
-				if n is xnode:
-					break
-			else:
+			if not node.GetSchedParent().IsTimeChild(xnode):
 				self.warning('out of scope sync arc from %s to %s' % (node.attrdict.get('name','<unnamed>'), xnode.attrdict.get('name','<unnamed>')))
 ##				return
 			if delay == 'begin' or delay == 'end':
@@ -2407,7 +2404,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				# check whether channel can be used
 				# we can only use a channel if it isn't used
 				# by another node parallel to this one
-				par = node.GetParent()
+				par = node.GetSchedParent()
 				while par is not None:
 					if par.__chanlist.has_key(name):
 						ptype = par.GetType()
@@ -2422,7 +2419,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						else:
 							# no conflict
 							break
-					par = par.GetParent()
+					par = par.GetSchedParent()
 				if name is not None:
 					break
 
@@ -2489,10 +2486,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		node.attrdict['channel'] = name
 
 		# complete chanlist
-		par = node.GetParent()
+		par = node.GetSchedParent()
 		while par is not None:
 			par.__chanlist[name] = 0
-			par = par.GetParent()
+			par = par.GetSchedParent()
 
 		if compatibility.G2 == features.compatibility:
 			if mtype == 'RealPix':
@@ -4860,21 +4857,6 @@ def _uniqname(namelist, defname):
 	while ('%s_%d' % (defname, id)) in namelist:
 		id = id + 1
 	return '%s_%d' % (defname, id)
-
-def GetTemporalSiblings(node):
-	"""Get siblings of a node, ignoring <switch> nodes"""
-	parent = node.GetParent()
-	while parent and parent.GetType() == 'alt':
-		parent = parent.parent
-	siblings = []
-	possible = parent.GetChildren()[:]
-	while possible:
-		this = possible[0]
-		del possible[0]
-		if this.GetType() == 'alt':
-			possible = possible + this.GetChildren()
-		siblings.append(this)
-	return siblings
 
 def parseattrval(name, string, context):
 	if MMAttrdefs.getdef(name)[0][0] == 'string':
