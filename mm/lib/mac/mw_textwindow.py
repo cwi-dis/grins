@@ -85,6 +85,10 @@ class textwindow(_common_window):
 		]
 		self.adornments = None
 		self.show()
+
+	def settext(self, data):
+		self.data = data
+		self.widget.insert_plaintext(data)
 	
 class htmlwindow(_common_window):
 	X=0

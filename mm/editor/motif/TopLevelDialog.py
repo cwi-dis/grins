@@ -15,6 +15,7 @@ class TopLevelDialog:
 			('User groups', USERGROUPVIEW, 't'),
 			('Properties...', PROPERTIES),
 			('Source...', SOURCE),
+			('Edit Source...', EDITSOURCE),
 			('Save', SAVE),
 			('Save as...', SAVE_AS),
 			('Export...', EXPORT_SMIL),
@@ -47,9 +48,10 @@ class TopLevelDialog:
 
 	def showsource(self, source):
 		if self.source is not None and not self.source.is_closed():
+			self.source._children[1].settext(source)
 			self.source.show()
 			return
-		self.source = windowinterface.textwindow(self.root.source)
+		self.source = windowinterface.textwindow(source)
 
 	def mayclose(self):
 		prompt = 'You haven\'t saved your changes yet;\n' + \
@@ -61,3 +63,27 @@ class TopLevelDialog:
 
 	def setcommands(self, commandlist):
 		self.window.set_commandlist(commandlist)
+
+	editors = ['XEDITOR', 'WINEDITOR', 'VISUAL', 'EDITOR']
+	def do_edit(self, tmp):
+		import os
+		for e in self.editors:
+			editor = os.environ.get(e)
+			if editor:
+				break
+		else:
+			# no editor found
+			self.edit_finished_callback()
+			return
+		stat1 = os.stat(tmp)
+		os.system('%s %s' % (editor, tmp))
+		stat2 = os.stat(tmp)
+		from stat import ST_INO, ST_DEV, ST_MTIME, ST_SIZE
+		if stat1[ST_INO] == stat2[ST_INO] and \
+		   stat1[ST_DEV] == stat2[ST_DEV] and \
+		   stat1[ST_MTIME] == stat2[ST_MTIME] and \
+		   stat1[ST_SIZE] == stat2[ST_SIZE]:
+			# nothing changed
+			self.edit_finished_callback()
+			return
+		self.edit_finished_callback(tmp)

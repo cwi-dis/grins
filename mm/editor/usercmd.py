@@ -60,6 +60,8 @@ class PROPERTIES(_CommandBase):
 	help = 'Edit document properties'
 class SOURCE(_CommandBase):
 	help = 'Show source'
+class EDITSOURCE(_CommandBase):
+	help = 'Edit source'
 class CLOSE(_CommandBase):
 	help = 'Close current document'
 
