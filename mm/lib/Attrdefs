@@ -379,6 +379,8 @@
 	'Play node only if running on the specified operating system' raw (smil2))
 (system_cpu (string) '' 'System CPU' cpu
 	'Play node only if running on the specified CPU' raw (smil2))
+(system_component (list (string)) () 'System component' default
+	'Play node only if the components are supported' raw (smil2))
 
 # RealPix attributes
 (aspect (bool) 1 'Keep aspect ratio' default

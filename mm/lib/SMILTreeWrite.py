@@ -688,6 +688,12 @@ def getsysreq(writer, node, attr):
 		return string.join(map(lambda i: 'ext%d' % i, range(len(sysreq))), ' + ')
 	return None
 
+def getsyscomp(writer, node, attr):
+	syscomp = node.GetRawAttrDef('system_component', [])
+	if syscomp:
+		return string.join(syscomp)
+	return None
+
 def getscreensize(writer, node):
 	value = node.GetRawAttrDef('system_screen_size', None)
 	if value is not None:
@@ -846,6 +852,7 @@ smil_attrs=[
 	("systemAudioDesc", lambda writer, node:(writer.smilboston and getboolean(writer, node, 'system_audiodesc')) or None),
 	("systemBitrate", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_bitrate")) or None),
 	("systemCaptions", lambda writer, node:(writer.smilboston and getboolean(writer, node, 'system_captions')) or None),
+	("systemComponent", lambda writer, node:(writer.smilboston and getsyscomp(writer, node, 'system_component')) or None),
 	("systemCPU", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_cpu")) or None),
 	("systemLanguage", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_language")) or None),
 	("systemOperatingSystem", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_operating_system")) or None),

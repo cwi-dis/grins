@@ -33,6 +33,7 @@ default_settings = {
 ##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
 ##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
 	'system_required': [],		# Needs special handling in match...
+	'system_component': [],		# Needs special handling in match...
 	'system_audiodesc': 0,		# No audio description
 	'system_operating_system': 'UNKNOWN',
 	'system_cpu': 'UNKNOWN',
@@ -153,7 +154,7 @@ LANGUAGE=['system_language']
 ALL=['system_bitrate', 'system_captions', 'system_language',
      'system_overdub_or_caption', 'system_screen_size',
      'system_screen_depth', 'system_required', 'system_audiodesc',
-     'system_operating_system', 'system_cpu']
+     'system_operating_system', 'system_cpu', 'system_component']
 
 NEEDS_RESTART=['cmif', 'vertical_structure', 'no_canvas_resize', 'root_expanded']
 
@@ -232,6 +233,11 @@ def match(name, wanted_value):
 		for v in wanted_value:
 			if not extensions.get(v, 0):
 				return 0
+		return 1
+	if name == 'system_component':
+		if wanted_value:
+			# we don't support any special components
+			return 0
 		return 1
 	real_value = get(name)
 	if name in EXACT:
