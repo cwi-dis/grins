@@ -43,17 +43,15 @@ class Scheduler(scheduler):
 	def timefunc(self):
 	        if self.frozen: return self.frozen_value
 		t = (time.millitimer() - self.msec_origin) / 1000.0
-		now = self.origin + t * self.rate
+		now = self.origin + t*self.rate
 		return now
 	#
 	def resettimer(self):
 		self.origin = 0.0	# Current time
 		self.rate = 0.0		# Initially the clock is frozen
-		self.oldrate = 0.0
 		self.msec_origin = 0	# Arbitrary since rate is 0.0
 		self.frozen = 0
 		self.frozen_value = 0
-		self.latecount = 0.0
 	#
 	def skiptimer(self, amount):
 		self.origin = self.origin + amount
@@ -69,6 +67,7 @@ class Scheduler(scheduler):
 			if self.frozen < 0:
 				print 'Player: self.frozen < 0!'
 	#
+	# XXXX Can be a lot simpler, because rate can only be 1 or 0
 	def setrate(self, rate):
 		if rate < 0.0:
 			raise CheckError, 'setrate with negative rate'
@@ -91,7 +90,7 @@ class Scheduler(scheduler):
 		else:
 			when = now + 1.0
 		delay = when - now
-		if (self.ff or self.seeking) and delay > 0:
+		if self.seeking and delay > 0:
 			self.skiptimer(delay)
 			self.timerobject.set_timer(0.001)
 ##			print 'Player: updatetimer: skipped ', delay
@@ -243,9 +242,6 @@ class Scheduler(scheduler):
 				    dummy = self.enter(d, 0, self.decrement, \
 					      (0, node, TL))
 			elif doit:
-			    if self.ff:
-				self.ff = 0
-				self.ffbutton.set_button(0)
 			    #
 			    # Begin tricky code section. First we have to find
 			    # out wether the event has already been armed or
@@ -352,6 +348,10 @@ class Scheduler(scheduler):
 	def anchorfired(self, node, anchorlist):
 		destlist = []
 		pause_anchor = 0
+		# Firing an anchor continues the player if it was paused.
+		if self.rate == 0.0:
+			self.setrate(1.0)
+			self.showstate()
 		for i in anchorlist:
 			if i[A_TYPE] == ATYPE_PAUSE:
 				pause_anchor = 1

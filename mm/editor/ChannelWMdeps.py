@@ -131,7 +131,6 @@ class Channel:
 		node.setarmedmode(ARM_ARMED)
 		duration = (time.millitimer() - now)/1000.0
 		node.SetAttr('arm_duration', duration)
-		self.player.timing_changed = 1
 		print 'Arm-time now', duration
 
 	def arm_only(self, node):
