@@ -655,7 +655,7 @@ class Window:
 	# 5. clip specifies the src rect
 	def _prepare_image(self, file, crop, fit, center, coordinates, clip, align, units):
 		
-		# get image size. If it can't be found in the cash read it.
+		# get image size. If it can't be found in the cache, read it.
 		if type(file) == type(''):
 			image = mediainterface.get_image(file)
 		else:
