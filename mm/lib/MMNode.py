@@ -1569,8 +1569,8 @@ class MMAnchor:
 	def copy(self):
 		return MMAnchor(self.aid, self.atype, self.aargs, self.atimes, self.aaccess)
 
-import re
-_repeat_regexp = re.compile(r"repeat\(([0-9]*)\)")
+# used below in get_repeat()
+_repeat_regexp = None
 
 # The Sync Arc class
 # Sjoerd: if you have free time, could you describe (better than I can) what this is at some stage
@@ -1844,18 +1844,16 @@ class MMSyncArc:
 
 	def get_repeat(self):
 		# Parse my own event string and return the repeats.
-		# I'm not very good with regular expressions, so excuse the roughness here:
+		global _repeat_regexp
 		e = self.getevent()
 		if not e:
 			return None
-		repeatnum = _repeat_regexp.findall(e)
-		if isinstance(repeatnum, type([])) and len(repeatnum) > 0:
-			try:
-				return int(repeatnum[0])
-			except ValueError:
-				return None
-		else:
+		if _repeat_regexp is None:
+			_repeat_regexp = re.compile(r"repeat\((?P<value>[0-9]+)\)")
+		res = _repeat_regexp.match(e)
+		if res is None:
 			return None
+		return int(res.group('value'))
 
 	def set_repeat(self, value):
 		if __debug__: assert isinstance(value, type(1))
