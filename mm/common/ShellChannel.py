@@ -71,6 +71,9 @@ def startprog(prog, argv):
 	except os.error, msg:
 		print 'fork:', msg
 		return None
+	except AttributeError:
+		print 'ShellChannel cannot work on this system'
+		return None
 	if pid == 0: # Child
 		os.execv(prog, argv)
 		# Not reached
