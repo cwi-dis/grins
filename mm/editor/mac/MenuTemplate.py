@@ -30,6 +30,7 @@ MENUBAR=(
 		(ENTRY, 'Restore', None, RESTORE),
 		(SEP,),
 		(ENTRY, 'Preferences...', None, PREFERENCES),
+		(ENTRY, 'Document properties...', None, PROPERTIES),
 		(SEP,),
 		(CASCADE, 'Debug', (
 			(ENTRY, 'Dump scheduler data', None, SCHEDDUMP),
@@ -227,7 +228,7 @@ POPUP_CVIEW_SYNCARC = (
 		(ENTRY, 'Delete', None, DELETE),
 )
 
-POPUP_CVIEUW_BWSTRIP = (
+POPUP_CVIEW_BWSTRIP = (
 		(ENTRY, "14k4", None, BANDWIDTH_14K4),
 		(ENTRY, "28k8", None, BANDWIDTH_28K8),
 		(ENTRY, "ISDN", None, BANDWIDTH_ISDN),
