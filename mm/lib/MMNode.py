@@ -829,6 +829,10 @@ class MMSyncArc:
 			print 'MMSyncArc.__del__',`self`
 
 	def __repr__(self):
+		if self.path:
+			path = ', path=%s' % `path`
+		else:
+			path = ''
 		if self.wallclock is not None:
 			yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = self.wallclock
 			if yr is not None:
@@ -840,7 +844,7 @@ class MMSyncArc:
 				tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
 			else:
 				tz = ''
-			return '<MMSyncArc instance, wallclock=%s%s%s>' % (date, time, tz)
+			return '<MMSyncArc instance, wallclock=%s%s%s%s>' % (date, time, tz, path)
 		if self.delay is None:
 			src = 'indefinite'
 		elif self.channel is not None:
@@ -876,7 +880,7 @@ class MMSyncArc:
 			ts = ', timestamp = %g' % self.timestamp
 		else:
 			ts = ''
-		return '<MMSyncArc instance %x, from %s to %s%s>' % (id(self), src, dst, ts)
+		return '<MMSyncArc instance %x, from %s to %s%s%s>' % (id(self), src, dst, ts, path)
 
 	def refnode(self):
 		node = self.dstnode
@@ -1883,8 +1887,9 @@ class MMNode:
 				if uidremap.has_key(uid):
 					srcnode = self.context.mapuid(uidremap[uid])
 			arc = MMSyncArc(dstnode, action, srcnode,
-					 arc.srcanchor, arc.channel, arc.event,
-					 arc.marker, arc.wallclock, arc.delay)
+					arc.srcanchor, arc.channel, arc.event,
+					arc.marker, arc.wallclock,
+					arc.accesskey, arc.delay)
 			newarcs.append(arc)
 		self.SetAttr(attr, newarcs)
 
