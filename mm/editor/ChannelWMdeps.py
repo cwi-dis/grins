@@ -6,6 +6,16 @@ from MMExc import *
 import MMAttrdefs
 import time
 
+prearm_disabled = 0
+
+#
+# Calling this routine disables the prearm facility. It is mainly
+# meant to be able to demonstrate the effect of prearms on timing.
+#
+def disable_prearm():
+	global prearm_disabled
+	prearm_disabled = 1
+
 class Channel:
 	#
 	# Declaration of attributes that are relevant to this channel,
@@ -102,6 +112,7 @@ class Channel:
 	# This method calls the (probably overridden) arm method and times it.
 	#
 	def arm_and_measure(self, node):
+		if prearm_disabled: return
 		now = time.millitimer()
 		try:
 			oldduration = node.GetRawAttr('arm_duration')
@@ -116,8 +127,13 @@ class Channel:
 			self.player.timing_changed = 1
 			print 'Arm-time now', duration, ', was', oldduration
 	def arm_only(self, node):
+		if prearm_disabled:
+			del node.prearm_event
+			return
+		self.player.setarmedmode(node, 1)
 		node.prearm_event = None
 		self.arm(node)
+		self.player.setarmedmode(node, 2)
 	#
 	# Start playing a node.
 	#
