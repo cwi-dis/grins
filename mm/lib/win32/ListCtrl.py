@@ -77,17 +77,23 @@ class ListCtrl(window.Wnd):
 
 	def OnLButtonUp(self, params):
 		self._down = 0
-		self._dragging = 0
-		self.ReleaseCapture()
+##		self._dragging = 0
+		if self._dragging:
+			self.ReleaseCapture()
 		return 1
 
 	def OnMouseMove(self, params):
 		if self._down and not self._dragging:
-			sel = self.getSelected()
-			if sel	>=	0:
-				print self.GetItemText(sel,3)
-				self.DoDragDrop(self.CF_FILE, self.GetItemText(sel,3))
-				self._dragging = 1
+			if hasattr(self.parent, 'startDrag'):
+				if self.parent.startDrag():
+					self._dragging = 1
+					return 1
+			self.ReleaseCapture()
+##			sel = self.getSelected()
+##			if sel	>=	0:
+##				print self.GetItemText(sel,3)
+##				self.DoDragDrop(self.CF_FILE, self.GetItemText(sel,3))
+##				self._dragging = 1
 		return 1
 
 	def OnRButtonDown(self, params):		
