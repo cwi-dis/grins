@@ -3,9 +3,20 @@
 
 #include <string.h>
 #include <math.h>
-#include "cmifex.h"
-#include "ezfont.h"
+// #include "cmifex.h"
+#include "Python.h"
+#include "afx.h"
+#include "afxwin.h"
+
+//PythonWin Header Files
+#include "win32ui.h"
+#include "win32assoc.h"
+#include "win32cmd.h"
+#include "win32win.h"
+
 #include "winclass.h"
+
+#include <GRiNSRes.h> // Resources defines in the GRiNS resource DLL.
 
 void GetAnchorList(myWin* hwnd, CString str, char* facename,
 				   int sz,int id,CString align);
