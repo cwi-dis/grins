@@ -484,6 +484,9 @@ class Channel:
 		# callbacks.
 		if debug:
 			print 'Channel.play_0('+`self`+','+`node`+')'
+		if self._played_node is not None:
+			print 'stopping playing node first',`self._played_node`
+			self.stopplay(self._played_node)
 		if self._armed_node is not node:
 			if settings.noprearm:
 				self.arm(node)
@@ -614,6 +617,11 @@ class Channel:
 				self._playcontext.play_done(node)
 			self._playstate = PLAYED
 		return didfire
+
+	def freeze(self, node):
+		if self._played_node is not node or self._playstate != PLAYING:
+			return
+		self.playstop()
 
 	def playstop(self):
 		# Internal method to stop playing.
