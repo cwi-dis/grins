@@ -1076,6 +1076,10 @@ SOURCE=.\lib\README
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\realconvert.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\realsupport.py
 # End Source File
 # Begin Source File
