@@ -431,6 +431,8 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 
 	# return the coordinates of this subwindow
 	def getgeometry(self, units = UNIT_SCREEN):
+		import __main__
+		toplevel=__main__.toplevel
 		if units == UNIT_PXL:
 			return self._rectb
 		elif units == UNIT_SCREEN:
