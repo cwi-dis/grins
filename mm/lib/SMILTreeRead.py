@@ -3717,6 +3717,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		vtype = attributes.get('valuetype', 'data')
 		if vtype not in ('data', 'ref', 'object'):
 			self.syntax_error('illegal value for valuetype attribute')
+			return
+		value = attributes.get('value')
+		name = attributes.get('name')
+		if not name:
+			return
+		if vtype != 'data':
+			return
+		if name == 'fgcolor':
+			self.__node.attrdict[name] = self.__convert_color(value)
 		pass			# XXX needs to be implemented
 
 	def end_param(self):
