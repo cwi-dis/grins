@@ -564,9 +564,8 @@ def getsyncarc(writer, node, isend):
 			elif arc.srcanchor:
 				aid = (arc.srcnode.GetUID(), arc.srcanchor)
 				name = writer.aid2name[aid]
-			elif arc.srcnode is None:
-				# huh?
-				pass
+			elif arc.srcnode == 'syncbase':
+				name = ''
 			elif arc.srcnode == 'prev':
 				name = 'prev'
 			elif arc.srcnode is node:
@@ -578,7 +577,10 @@ def getsyncarc(writer, node, isend):
 					name = name + '.'
 				name = name + escape_name(arc.event, 0)
 			if arc.delay:
-				name = name + fmtfloat(arc.delay, withsign = 1)
+				if name:
+					name = name + fmtfloat(arc.delay, withsign = 1)
+				else:
+					name = fmtfloat(arc.delay, withsign = 0)
 			list.append(name)
 		else:
 			list.append('%s.marker(%s)' % (escape_name(writer.uid2name[arc.srcnode.GetUID()]), arc.marker))
