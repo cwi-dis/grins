@@ -81,10 +81,13 @@ class Player(ViewDialog, PlayerCore):
 	def is_showing(self):
 		return self.showing
 
-	def show(self):
+	def show(self, afterfunc = None):
 		if self.is_showing():
 			self.window.pop()
+			if afterfunc is not None:
+				apply(afterfunc[0], afterfunc[1])
 			return
+		self.aftershow = afterfunc
 		self.toplevel.showstate(self, 1)
 		title = 'Player (' + self.toplevel.basename + ')'
 		self.makechannels()
