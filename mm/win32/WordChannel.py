@@ -6,7 +6,7 @@ debug = os.environ.has_key('CHANNELDEBUG')
 from Channel import Channel
 import string
 import os, sys
-import urllib
+import MMurl
 import wordC
 
 from windowinterface import *
@@ -29,7 +29,7 @@ class WordChannel(Channel):
 		else:
 			prog = self.getfileurl(node)
 			print "Prog: ", prog
-			prog = urllib.url2pathname(prog)
+			prog = MMurl.url2pathname(prog)
 		print "Program: ", prog
 		self.word = wordC.Word(1, prog)
 				

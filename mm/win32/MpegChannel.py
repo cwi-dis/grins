@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
 from Channel import ChannelWindow, MPEG
-import urllib
+import MMurl
 import mpegex, win32con
 import win32ui, mmsystem
 
@@ -52,7 +52,7 @@ class MpegChannel(ChannelWindow):
 			self.errormsg(node, 'Node must be external')
 			return 1
 		filename = self.getfileurl(node)
-		filename = urllib.url2pathname(filename)
+		filename = MMurl.url2pathname(filename)
 		print filename
 		if (self._armed_movieIndex <> None) : 
 			#the previously armed node was not played
