@@ -5,12 +5,10 @@ import MMAttrdefs
 import string
 import math
 
-# An Animator entity implements the interpolation part
-# of animate elements taking into account the calc mode.
-# It also implements the semantics of the 'accumulate' attr
-# and time manipulations:
-#      speed, accelerate-decelerate and autoReverse
-# speed and autoReverse must be taken into account also at a higher level
+# An Animator represents an animate element at run time.
+# An Animator entity implements interpolation taking into 
+# account the calc mode, the 'accumulate' attr and 
+# the time manipulations: speed, accelerate-decelerate and autoReverse
 class Animator:
 	def __init__(self, attr, domval, values, dur, mode='linear', 
 			times=None, splines=None, accumulate='none', additive='replace'): 
@@ -261,24 +259,20 @@ def _round(val):
 	return int(val+0.5)
 
 ###########################
-# a constant value animator specialization
-class ConstAnimator(Animator):
-	def __init__(self, attr, domval, val, dur):
-		Animator.__init__(self, attr, domval, (val,), dur, mode='discrete')
-
 # A special animator to manage to-only additive animate elements
 class EffValueAnimator(Animator):
 	pass
 
-# set element animator specialization
+# 'set' element animator
 class SetAnimator(Animator):
-	pass
+	def __init__(self, attr, domval, value, dur):
+		Animator.__init__(self, attr, domval, (value, ), dur, mode ='discrete') 
 
-# animateColor animator specialization
+# 'animateColor'  element animator
 class ColorAnimator(Animator):
 	pass
 
-# animateMotion animator specialization
+# 'animateMotion' animator
 class MotionAnimator(Animator):
 	pass
 
@@ -377,6 +371,7 @@ class AnimateContext:
 			self._effAnimators[key] = ea
 			return ea
 
+# rem: should be defined at doc level
 animateContext = AnimateContext()
 
 
@@ -420,6 +415,10 @@ class AnimateElementParser:
 		self.__enable = 0
 		self.__grinsext = 0
 
+		# get animate element type ('animate', 'set', 'animateMotion', 'animateColor')
+		# use current convention for this
+		self.__elementTag = string.split(anim.attrdict['mimetype'],'/')[1]
+
 		self.__hasValidTarget = self.__checkTarget()
 		if self.__hasValidTarget:
 			self.__attrtype = MMAttrdefs.getattrtype(self.__attrname)
@@ -446,6 +445,8 @@ class AnimateElementParser:
 
 
 	def getAnimator(self):
+		if self.__elementTag=='set':
+			return self.__getSetAnimator()
 
 		# 1. Read animation attributes
 		attr = self.__attrname
@@ -456,6 +457,9 @@ class AnimateElementParser:
 		splines = self.__getInterpolationKeySplines()
 		accumulate = self.__accumulate
 		additive = self.__additive
+
+		# for animateMotion we need also 'path' and 'origin'
+		#...
 
 		# 1+: force first value display (fulfil: use f(0) if duration is undefined)
 		# xxx: fix condition
@@ -488,13 +492,13 @@ class AnimateElementParser:
 			anim = Animator(attr, domval, values, dur, mode, times, splines, 
 				accumulate, additive)
 			anim.setRetunedValuesConvert(_round)
-			self.__setTimeManupulators(anim)
+			self.__setTimeManipulators(anim)
 			return anim
 		## End temp grins extensions
 
 		
 		# 4. Return an animator based on the attr type
-		print 'Guessing animator for',self.__attrname, self.__attrtype
+		print 'Guessing animator for attribute',`self.__attrname`,'(', self.__attrtype,')'
 		anim = None
 		if self.__attrtype == 'int':
 			values = self.__getNumInterpolationValues()
@@ -514,9 +518,36 @@ class AnimateElementParser:
 		# 5. Return a default if anything else failed
 		if not anim:
 			print 'Dont know how to animate attribute.',self.__attrname,self.__attrtype
-			anim = ConstAnimator(attr, domval, domval, dur)
+			anim = SetAnimator(attr, domval, domval, dur)
 
-		self.__setTimeManupulators(anim)
+		self.__setTimeManipulators(anim)
+		return anim
+
+	# return an animator for the 'set' animate element
+	def __getSetAnimator(self):
+		if not self.__hasValidTarget:
+			print 'invalid target syntax error'
+			return None
+		attr = self.__attrname
+		domval = self.__domval
+		dur = self.getDuration()
+		value = self.getTo()
+		if value==None or value=='':
+			print 'set element without attribute to'
+			return None
+
+		if self.__attrtype == 'int':
+			value = string.atoi(value)
+			anim = SetAnimator(attr, domval, value, dur)
+			anim.setRetunedValuesConvert(_round)
+		elif self.__attrtype == 'float':
+			value = string.atof(value)
+			anim = SetAnimator(attr, domval, value, dur)
+		elif self.__attrtype == 'string' or self.__attrtype == 'enum' or self.__attrtype == 'bool':
+			anim = SetAnimator(attr, domval, value, dur)
+		else:
+			anim = SetAnimator(attr, domval, domval, dur)
+		self.__setTimeManipulators(anim)
 		return anim
 
 	def getAttrName(self):
@@ -544,7 +575,7 @@ class AnimateElementParser:
 		return MMAttrdefs.getattr(self.__anim, 'keySplines')
 
 	# set time manipulators to the animator
-	def __setTimeManupulators(self, anim):
+	def __setTimeManipulators(self, anim):
 		if self.__autoReverse=='true':
 			anim._setAutoReverse(1)
 		if (self.__accelerate+self.__decelerate)>0.0:
