@@ -141,7 +141,7 @@ static PyObject* ig_load_gif(PyObject *self, PyObject *args)
 	GifConverter gc;
 	if(!gc.LoadGif(filename))
 		{
-		seterror("LoadGif", "unknown");
+		seterror("LoadGif", (char*)(const char*)gc.m_errorMsg);
 		return NULL;
 		}
 
