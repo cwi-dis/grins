@@ -170,6 +170,8 @@ def extract_paragraphs(text):
 # Extract anchor tags from a list of paragraphs.
 #
 # An anchor starts with "<A NAME=...>" and ends with "</A>".
+# Alternatively, for compatability with the HTML channel, anchors can
+# be formatted as <A HREF="cmif:...">.
 # These tags are case independent; whitespace is significant.
 # Anchors may span paragraphs but an anchor tag must be contained in
 # one paragraph.  Other occurrences of < are left in the text.
@@ -182,7 +184,8 @@ def extract_paragraphs(text):
 def extract_taglist(parlist):
 	import regex
 	# (1) Extract the raw tags, removing them from the text
-	pat = regex.compile('<[Aa] +[Nn][Aa][Mm][Ee]=\([a-zA-Z0-9_]+\)>\|</[Aa]>')
+	pat = regex.compile('<[Aa] +[Nn][Aa][Mm][Ee]=\([a-zA-Z0-9_]+\)>\|'+
+		  '<[Aa] +[Hh][Rr][Ee][Ff]="[Cc][Mm][Ii][Ff]:\([a-zA-Z0-9_]+\)">\|</[Aa]>')
 	rawtaglist = []
 	for i in range(len(parlist)):
 		par = parlist[i]
@@ -195,6 +198,8 @@ def extract_taglist(parlist):
 			j = a
 			if tag[:2] != '</':
 				a, b = regs[1]
+				if a == b:
+					a, b = regs[2]
 				name = tag[a-j:b-j]
 			else:
 				name = None
