@@ -39,6 +39,10 @@ class TopLevelDialog:
 		else:
 			self.source = self.window.textwindow(source, readonly = 1, close_callback = (self.__close_source, ()))
 			self.window.set_toggle(SOURCEVIEW,1)
+
+	def setplayerstate(self, state):
+		if self.window:
+			self.window.setplayerstate(state)
 			
 	def __close_source(self):
 		if self.source is not None:
