@@ -8,6 +8,7 @@
 ##################### Settings
 
 WHAT=EDITOR  # <-- What to run
+what=WHAT
 
 # if WHAT is SUBSYSTEM specify subsystemModuleName
 subsystemModuleName='dslab'
@@ -19,6 +20,43 @@ toplevel=None
 ##################### Main Script
 import os
 import sys
+print 'Running CMIF Multimedia presentation'
+#if len(sys.argv)>1:
+#	print sys.argv[1]
+	
+CMIFDIR=r'd:\ufs\mm\cmif'
+
+# TEMP TEST FOLDER
+print "Main GRiNS directory is", CMIFDIR
+
+if what==PLAYER:
+	specificPath = "grins"
+	os.environ['GRiNSApp']='GRiNS'
+else:
+	specificPath = "editor"
+	os.environ['GRiNSApp']='GRiNSed'
+
+
+CMIFPATH = [
+	os.path.join(CMIFDIR, '%s\\win32' % specificPath),
+	os.path.join(CMIFDIR, 'common\\win32'),
+	os.path.join(CMIFDIR, 'lib\\win32'),
+	os.path.join(CMIFDIR, '%s' % specificPath),
+	os.path.join(CMIFDIR, 'common'),
+	os.path.join(CMIFDIR, 'lib'),
+	os.path.join(CMIFDIR, 'pylib'),
+	os.path.join(CMIFDIR, 'pylib\\audio'),
+	os.path.join(CMIFDIR, 'win32\\src\\Build'),
+	os.path.join(os.path.split(CMIFDIR)[0], 'python\\Lib')
+]
+sys.path[0:0] = CMIFPATH
+
+os.environ["CMIF"] = CMIFDIR
+os.environ["CMIF_USE_WIN32"] = "ON"
+if not os.environ.has_key('HOME'):
+	os.environ['HOME']=CMIFDIR
+
+
 import string
 import win32api
 from win32con import *
@@ -50,42 +88,6 @@ def SafeCallbackCaller(fn, args):
 win32ui.InstallCallbackCaller(SafeCallbackCaller)
 
 def Boot(what = 0):
-	print 'Running CMIF Multimedia presentation'
-	#if len(sys.argv)>1:
-	#	print sys.argv[1]
-	
-	CMIFDIR=GuessCMIFRoot()
-
-	# TEMP TEST FOLDER
-	print "Main GRiNS directory is", CMIFDIR
-
-	if what==PLAYER:
-		specificPath = "grins"
-		os.environ['GRiNSApp']='GRiNS'
-	else:
-		specificPath = "editor"
-		os.environ['GRiNSApp']='GRiNSed'
-
-
-	CMIFPATH = [
-		os.path.join(CMIFDIR, '%s\\win32' % specificPath),
-		os.path.join(CMIFDIR, 'common\\win32'),
-		os.path.join(CMIFDIR, 'lib\\win32'),
-		os.path.join(CMIFDIR, '%s' % specificPath),
-		os.path.join(CMIFDIR, 'common'),
-		os.path.join(CMIFDIR, 'lib'),
-		os.path.join(CMIFDIR, 'pylib'),
-		os.path.join(CMIFDIR, 'pylib\\audio'),
-		os.path.join(CMIFDIR, 'win32\\src\\Build'),
-	]
-	sys.path[0:0] = CMIFPATH
-
-	os.environ["CMIF"] = CMIFDIR
-	os.environ["CMIF_USE_WIN32"] = "ON"
-	if not os.environ.has_key('HOME'):
-		os.environ['HOME']=CMIFDIR
-	
-
 	# Locate the GRiNSRes.dll file.  This is presumably in the same directory as
 	# the extensionmodules, or if frozen, in the main directory
 	# This call allows Pythonwin to automatically find resources in it.
