@@ -2898,8 +2898,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		u_state = attributes['defaultState']
 		if u_state not in ('true', 'false'):
 			self.syntax_error('invalid defaultState attribute value')
-		override = attributes.get('override', 'not-allowed')
-		if override not in ('allowed', 'not-allowed', 'uid-only'):
+		override = attributes.get('override', 'hidden')
+		if override not in ('visible', 'hidden'):
 			self.syntax_error('invalid override attribute value')
 		uid = attributes.get('uid', '')
 		self.__custom_tests[id] = title, u_state == 'true', override, uid

@@ -362,7 +362,7 @@ class SMIL:
 		'customAttributes': {'skip-content':'true',
 				     },
 		'customTest': {'defaultState':'false',
-			       'override':'not-allowed',
+			       'override':'hidden',
 			       'skip-content':'true',
 			       'uid':None,
 			       },

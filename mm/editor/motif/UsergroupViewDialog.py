@@ -74,7 +74,7 @@ class UsergroupViewDialog:
 		self.__window = None
 
 class UsergroupEditDialog:
-	__overrideindex = {'not-allowed':0,'allowed':1,'uid-only':2}
+	__overrideindex = {'hidden':0,'visible':1}
 	def __init__(self, ugroup, title, ustate, override, uid):
 		"""Create the UsergroupEdit dialog.
 
@@ -95,7 +95,7 @@ class UsergroupEditDialog:
 					    top = self.__title, left = None,
 					    right = None)
 		self.__override = w.OptionMenu('User override',
-					       ['not allowed', 'allowed', 'uid only'],
+					       ['hidden', 'visible'],
 					       self.__overrideindex[override], None,
 					       top = self.__state,
 					       left = None, right = None)
@@ -131,7 +131,7 @@ class UsergroupEditDialog:
 		ugroup -- string name of the user group
 		title -- string title of the user group
 		ustate -- string 'RENDERED' or 'NOT RENDERED'
-		override -- string 'allowed', 'not-allowed', or 'uid-only'
+		override -- string 'visible' or 'hidden'
 		"""
 		self.__ugroup.settext(ugroup)
 		self.__title.settext(title)
@@ -147,7 +147,7 @@ class UsergroupEditDialog:
 				override = k
 				break
 		else:
-			override = 'not-allowed'
+			override = 'hidden'
 		return self.__ugroup.gettext(), \
 		       self.__title.gettext(), \
 		       self.__state.getvalue(), \

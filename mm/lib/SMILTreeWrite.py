@@ -1857,10 +1857,8 @@ class SMILWriter(SMIL):
 				attrlist.append(('title', title))
 			if u_state == 'RENDERED':
 				attrlist.append(('defaultState', 'true'))
-			if override == 'allowed':
-				attrlist.append(('override', 'allowed'))
-			elif override == 'uid-only':
-				attrlist.append(('override', 'uid-only'))
+			if override == 'visible':
+				attrlist.append(('override', 'visible'))
 			if uid:
 				attrlist.append(('uid', uid))
 			self.writetag('customTest', attrlist)
