@@ -51,7 +51,6 @@ setcursor = toplevel.setcursor
 setdragcursor = toplevel.setdragcursor
 setwaiting = toplevel.setwaiting
 getsize = toplevel.getsize
-usewindowlock = toplevel.usewindowlock
 settimer = toplevel.settimer
 select_setcallback = toplevel.select_setcallback
 mainloop = toplevel.mainloop

@@ -320,10 +320,6 @@ class _Toplevel:
 	def getsizes(self):
 		return (0,0,1,1)
 
-	# Part of the interface. Does nothing on win32. 
-	def usewindowlock(self, lock):
-		pass
-
 
 	#########################################
 	# Main message loop of the application

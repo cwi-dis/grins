@@ -1251,9 +1251,6 @@ class _Toplevel(_Event):
 	def push(self):
 		pass
 
-	def usewindowlock(self, lock):
-		pass
-		
 	def getscreensize(self):
 		l, t, r, b = Qd.qd.screenBits.bounds
 		return (r-l), (b-t)

@@ -56,9 +56,6 @@ class _Toplevel:
 	def push(self):
 		pass
 
-	def usewindowlock(self, lock):
-		pass
-
 	def mainloop(self):
 		import time, select
 		while 1:

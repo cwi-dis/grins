@@ -228,9 +228,11 @@ movie_init(self)
 #ifndef sun_xyzzy
 		v = PyDict_GetItemString(self->mm_attrdict, "gl_lock");
 		if (v == NULL || (gl_lock = getlocklock(v)) == NULL) {
+#if 0
 			ERROR(movie_init, PyExc_RuntimeError,
 			      "no graphics lock specified\n");
 			return 0;
+#endif
 		}
 		dprintf(("movie_init(%lx): gl_lock = %lx\n",
 			 (long) self, (long) gl_lock));

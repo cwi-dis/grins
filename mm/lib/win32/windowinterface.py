@@ -22,8 +22,6 @@ setcursor = toplevel.setcursor
 
 getsize = toplevel.getsize
 
-usewindowlock = toplevel.usewindowlock
-
 settimer = toplevel.settimer
 
 select_setcallback = toplevel.select_setcallback

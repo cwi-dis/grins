@@ -146,9 +146,6 @@ class _Toplevel:
 	def push(self):
 		pass
 
-	def usewindowlock(self, lock):
-		pass
-
 	def mainloop(self):
 		self.setready()
 		Xt.MainLoop()
@@ -260,7 +257,6 @@ addclosecallback = toplevel.addclosecallback
 setcursor = toplevel.setcursor
 setwaiting = toplevel.setwaiting
 getsize = toplevel.getsize
-usewindowlock = toplevel.usewindowlock
 settimer = toplevel.settimer
 select_setcallback = toplevel.select_setcallback
 mainloop = toplevel.mainloop
