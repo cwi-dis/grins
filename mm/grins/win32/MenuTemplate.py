@@ -18,7 +18,7 @@ following Grammar:
 # menu_exec_list: (MENU,menu_spec_list)
 where ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE are type constants.
 LABEL and and SHORTCUT are strings
-ID is either an integer or an object that can be maped to an integer 
+ID is either an integer or an object that can be maped to an integer
 """
 
 from usercmd import *
@@ -32,7 +32,7 @@ from wndusercmd import *
 # Some commands are optional, depending on preference settings:
 ALL=''
 CMIF='cmif'
-DEBUG='debug'
+DBG='debug'
 
 MENUBAR=(
 	('&File', (
@@ -42,8 +42,8 @@ MENUBAR=(
 		(ALL, ENTRY, '&Close Document', None, CLOSE),
 		(ALL, SEP,),
 		(ALL, ENTRY, '&Preferences...', None, PREFERENCES),
-		(DEBUG, SEP,),
-		(DEBUG, CASCADE, '&Debug', (
+		(DBG, SEP,),
+		(DBG, CASCADE, '&Debug', (
 			(ALL, ENTRY, 'Dump &scheduler data', None, SCHEDDUMP),
 			(ALL, TOGGLE, 'Enable call &tracing', None, TRACE),
 			(ALL, ENTRY, 'Enter &debugger', None, DEBUG),
@@ -56,7 +56,7 @@ MENUBAR=(
 
 	('&View', (
 		(ALL, TOGGLE, '&Source', None, SOURCE),)),
-		
+
 	('&Play', (
 		(ALL, ENTRY, '&Play\tCtrl+P', 'P', PLAY),
 		(ALL, ENTRY, 'Pa&use\tCtrl+U', 'U', PAUSE),
@@ -68,7 +68,7 @@ MENUBAR=(
 
 	('&Window', (
 		(ALL, ENTRY, 'Cl&ose', None, CLOSE_ACTIVE_WINDOW),)),
-		
+
 	('&Help', (
 		(ALL, ENTRY, '&Contents', None, HELP_CONTENTS),
 		(ALL, ENTRY, 'Context &Help', None, HELP),
@@ -76,7 +76,7 @@ MENUBAR=(
 		(ALL, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
 		(ALL, SEP,),
 		(ALL, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
-		
+
 MAIN_FRAME_POPUP = (
 		(ENTRY, '&Paste document', None, PASTE_DOCUMENT),
 		(SEP,),

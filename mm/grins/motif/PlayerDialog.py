@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
 from usercmd import *
+from flags import *
 
 from PlayerDialogBase import PlayerDialogBase, STOPPED, PAUSING, PLAYING
 
@@ -13,26 +14,34 @@ class PlayerDialog(PlayerDialogBase):
 			' ': MAGIC_PLAY,
 			},
 		'menubar': [
-			('File', [
-				('Open...', OPEN),
-				('View source...', SOURCE),
-				None,
-				('Close', CLOSE),
-				('Exit', EXIT),
+			(ALL, 'File', [
+				(ALL, 'Open...', OPEN),
+				(ALL, 'Close Document', CLOSE),
+				(ALL, None),
+				(ALL, 'Preferences...', PREFERENCES),
+				(DBG, None),
+				(DBG, 'Debug', [
+					(DBG, 'Trace', TRACE, 't'),
+					(DBG, 'Debug', DEBUG),
+					(DBG, 'Crash CMIF', CRASH),
+					(DBG, 'Dump Scheduler Data', SCHEDDUMP),
+					]),
+				(ALL, None),
+				(ALL, 'Quit', EXIT),
 				]),
-			('Play', [
-				('Play', PLAY, 't'),
-				('Pause', PAUSE, 't'),
-				('Stop', STOP, 't'),
+			(ALL, 'View', [
+				(ALL, 'View Source...', SOURCE),
 				]),
-			('User groups', USERGROUPS),
-			('Channels', CHANNELS),
-			('Options', [
-				('Preferences...', PREFERENCES),
-				('Dump scheduler data', SCHEDDUMP),
+			(ALL, 'Play', [
+				(ALL, 'Play', PLAY, 't'),
+				(ALL, 'Pause', PAUSE, 't'),
+				(ALL, 'Stop', STOP, 't'),
+				(CMIF, None),
+				(CMIF, 'User Groups', USERGROUPS),
+				(CMIF, 'Channels', CHANNELS),
 				]),
-			('Help', [
-				('Help', HELP),
+			(ALL, 'Help', [
+				(ALL, 'Help', HELP),
 				]),
 			],
 		'toolbar': PlayerDialogBase.adornments['toolbar'],
@@ -48,18 +57,11 @@ class PlayerDialog(PlayerDialogBase):
 		'close': [ CLOSE_WINDOW, ],
 		}
 
-	if __debug__:
-		adornments['menubar'][0][1][1:1] = [
-			('Trace', TRACE, 't'),
-			('Debug', DEBUG),
-			('Crash CMIF', CRASH),
-			]
-
 	def __init__(self, coords, title):
 		PlayerDialogBase.__init__(self, coords, title)
 		self.__topcommandlist = []
 		self.__has_window = 0
-		
+
 	def topcommandlist(self, list):
 		if list != self.__topcommandlist:
 			self.__topcommandlist = list
@@ -96,6 +98,8 @@ class PlayerDialog(PlayerDialogBase):
 	def get_adornments(self, channel):
 		if self.menu_created is not None or \
 		   self.__has_window:
+			self.adornments2['flags'] = curflags()
 			return self.adornments2
 		self.menu_created = channel
+		self.adornments['flags'] = curflags()
 		return self.adornments

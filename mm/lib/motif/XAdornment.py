@@ -45,21 +45,20 @@ class _AdornmentSupport(_CommandSupport, _ButtonSupport):
 				     toplevel._default_colormap)
 			self.__dynamicmenu[widget] = menu
 
-	def _create_menu(self, menu, list):
+	def _create_menu(self, menu, list, flags):
 		if len(list) > 30:
 			menu.numColumns = (len(list) + 29) / 30
 			menu.packing = Xmd.PACK_COLUMN
 		for entry in list:
-			if entry is None:
+			flag = entry[0]
+			if not (flag & flags):
+				continue
+			label = entry[1]
+			if label is None:
 				dummy = menu.CreateManagedWidget('separator',
 						 Xm.SeparatorGadget, {})
 				continue
-## 			if type(entry) is StringType:
-## 				dummy = menu.CreateManagedWidget(
-## 					'menuLabel', Xm.Label,
-## 					{'labelString': entry})
-## 				continue
-			label, callback = entry[:2]
+			callback = entry[2]
 			if type(callback) is ListType or \
 			   callback.dynamiccascade:
 				submenu = menu.CreatePulldownMenu('submenu',
@@ -75,17 +74,20 @@ class _AdornmentSupport(_CommandSupport, _ButtonSupport):
 				if label == 'Help':
 					menu.menuHelpWidget = button
 				if type(callback) is ListType:
-					self._create_menu(submenu, callback)
+					self._create_menu(submenu, callback, flags)
 				else:
 					button.SetSensitive(0)
 					self._set_callback(button, None, callback)
 			else:
 				button = self._create_button(menu,
-					self._visual, self._colormap, entry)
+					self._visual, self._colormap, entry[1:])
 
-	def _create_toolbar(self, tb, list, vertical):
+	def _create_toolbar(self, tb, list, vertical, flags):
 		for entry in list:
-			if entry is None:
+			flag = entry[0]
+			if not (flag & flags):
+				continue
+			if entry[1] is None:
 				if vertical:
 					orientation = Xmd.HORIZONTAL
 				else:
@@ -96,9 +98,9 @@ class _AdornmentSupport(_CommandSupport, _ButtonSupport):
 					{'orientation': orientation})
 				continue
 			button = self._create_button(tb, self._visual,
-						     self._colormap, entry)
+						     self._colormap, entry[1:])
 
-	def setpopupmenu(self, menutemplate):
+	def setpopupmenu(self, menutemplate, flags):
 		# Menutemplate is a MenuTemplate-style menu template.
 		# It should be turned into an menu and put
 		# into self._popupmenu.
@@ -120,9 +122,9 @@ class _AdornmentSupport(_CommandSupport, _ButtonSupport):
 			# make sure menu is readable, even on Suns
 			menu.foreground = self._convert_color((0,0,0))
 			menu.background = self._convert_color((255,255,255))
-		self._create_menu(menu, menutemplate)
+		self._create_menu(menu, menutemplate, flags)
 		self._popupmenu = menu
-		
+
 	def _destroy_popupmenu(self):
 		# Free resources held by self._popupmenu and set it to None
 		if self._popupmenu is not None:
