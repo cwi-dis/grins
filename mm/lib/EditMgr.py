@@ -561,6 +561,7 @@ class EditMgr(Clipboard.Clipboard):
 		
 		if parent != None:
 			self.setchannelattr(channel.name, 'base_window', parent.name)
+			channel.Move(i)
 		self.next_focus = [channel]
 
 	def undo_addchannel(self, channel):

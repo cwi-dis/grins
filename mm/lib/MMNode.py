@@ -1163,6 +1163,21 @@ class MMTreeElement(Owner):
 			parent.children.insert(i, self)
 		self.parent = parent
 
+	def Move(self, pos):
+		if self.parent is not None:
+			sibling = self.parent.children
+			slen = len(sibling)
+			i = 0
+			for n in sibling:
+				if self is n:
+					del sibling[i]
+					break
+				i = i+1
+			if pos >= 0 and pos < slen:
+				sibling.insert(pos, self)
+			else:
+				sibling.append(self)
+	
 	def getattrnames(self):
 		if not hasattr(self, 'attrdict'):
 			# Have to test for that since the attrdict attribute is declared
@@ -1291,7 +1306,7 @@ class MMChannel(MMTreeElement):
 			self.attrdict['transparent'] = 1
 			self.attrdict['z'] = 0
 #			self.attrdict['editBackground'] = 100,100,100
-			
+		
 	def newCssId(self, isRoot = 0):
 		if not isRoot:
 			self._cssId = self.context.cssResolver.newRegion(self)
