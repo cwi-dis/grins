@@ -82,7 +82,8 @@ SOURCE="$(InputPath)"
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "rma_EXPORTS" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I ".\include" /I "..\..\..\python\Include" /I "..\..\..\python\PC" /I "..\..\win32\DXMedia\include" /I "..\..\win32\DXMedia\classes\base" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PY_EXPORTS" /FR /Yu"std.h" /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I ".\include" /I "..\..\..\python\Include" /I "..\..\..\python\PC" /I "..\..\win32\DXMedia\include" /I "..\..\win32\DXMedia\classes\base" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PY_EXPORTS" /FR /FD /GZ /c
+# SUBTRACT CPP /YX /Yc /Yu
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x408 /d "_DEBUG"
