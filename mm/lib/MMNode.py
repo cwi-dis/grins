@@ -102,12 +102,14 @@ class MMNodeContext:
 			mtype = mimetypes.guess_type(url)[0]
 			if not mtype:
 				return []
-			if mtype == 'video/vnd.rn-realvideo':
-				# for RealVideo look inside the file
+			if mtype == 'application/vnd.rn-realmedia':
+				# for RealMedia look inside the file
 				import realsupport
 				info = realsupport.getinfo(self.findurl(url))
 				if info and not info.has_key('width'):
 					mtype = 'audio/vnd.rn-realaudio'
+				else:
+					mtype = 'video/vnd.rn-realvideo'
 			chtypes = ChannelMime.MimeChannel.get(mtype, [])
 		elif chtype:
 			chtypes = [chtype]
