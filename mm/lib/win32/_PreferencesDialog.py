@@ -1,6 +1,3 @@
-__version__ = "$Id$"
-
-
 """ @win32doc|_PreferencesDialog
 This module contains the ui implementation of the PreferencesDialog
 The _LayoutView is created using the resource dialog template 
@@ -188,4 +185,3 @@ class PreferencesDialog(win32dialog.ResDialog,ControlsDict):
 		else:
 			cb=(Font.set_win32_charset, ('DEFAULT',))			
 		apply(apply,cb)
-			
