@@ -132,7 +132,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.recalc(focus)
 		self.getshape()
 		self.reshape()
-		self.draw()
+		# don't draw because we'll get a redraw event in a nanosecond
 
 	def initwindow(self):
 		# Use RGB mode
