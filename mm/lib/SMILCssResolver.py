@@ -528,7 +528,7 @@ class RegionNode(Node):
 				self._onChangeRawValue('width',self.width)
 				if value <= 0: value = 1
 				self.pxwidth = value
-			elif type(self.left) is not None and type(self.right) is not None:
+			elif type(self.left) != type(None) and type(self.right) != type(None):
 				if type(self.right) is type(0.0):
 					offset = value-self.pxwidth
 					self.right = float(self.right-offset)/self.container.pxwidth
@@ -585,7 +585,7 @@ class RegionNode(Node):
 				self._onChangeRawValue('height',self.height)
 				if value <= 0: value = 1
 				self.pxheight = value
-			elif type(self.top) is not None and type(self.bottom) is not None:
+			elif type(self.top) != type(None) and type(self.bottom) != type(None):
 				if type(self.bottom) is type(0.0):
 					offset = value-self.pxheight
 					self.bottom = float(self.bottom-offset)/self.container.pxheight
@@ -981,7 +981,8 @@ class MediaNode(Node):
 
 	def _updateRawOnContainerWidthChanged(self):
 		self._updateOnContainerWidthChanged()
-			
+
+
 	# get the space display area of media according to registration points /alignement and fit attribute
 	# return pixel values
 	def _getMediaSpaceArea(self):
