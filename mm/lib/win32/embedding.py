@@ -62,17 +62,19 @@ class ListenerWnd(GenWnd.GenWnd):
 	def GetPermission(self, licensestr):
 		import features
 		if hasattr(features, 'license_features_needed') and features.license_features_needed:
-			import license
 			user = ''
 			organization = 'WGBH Educational Foundation'
-			self.license = License(features.license_features_needed, licensestr, user, organization)
+			license_features_needed = list(features.license_features_needed)
+			if 'smil2player' in license_features_needed:
+				license_features_needed.remove('smil2player')
+			if 'embeddedplayer' not in license_features_needed:
+				license_features_needed.append('embeddedplayer')
+			self.license = License(license_features_needed, licensestr, user, organization)
 			if not self.license.msg:
 				self._haslicense = 1
-				return 1
-			return 0
 		else:
 			self._haslicense = 1
-			return 1
+		return self._haslicense
 
 	def OnOpen(self, params):
 		if not self._haslicense:

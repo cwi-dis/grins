@@ -12,7 +12,8 @@ FEATURES={
 	"smil2player": 0x100,
 	"smil2light": 0x200,
 	"smil2pro": 0x400,
-	"ALLPRODUCTS": 0x707,
+	"embeddedplayer": 0x800,
+	"ALLPRODUCTS": 0xf07,
 
 	# platform bits. The names are sys.platform values.
 	# Multiple names mapping to 1 bit is ok.

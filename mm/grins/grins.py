@@ -10,10 +10,6 @@ try:
 except:
 	pass
 
-## if os.name == 'posix' and __file__ != '<frozen>':
-## 	import fastimp
-## 	fastimp.install()
-
 import getopt
 
 NUM_RECENT_FILES = 10
@@ -49,7 +45,7 @@ class Main(MainDialog):
 		self.tmpopts = opts
 		self.tmpfiles = files
 
-		flag = sys.platform == 'win32' and windowinterface.is_embedded()
+		flag = hasattr(windowinterface, 'is_embedded') and windowinterface.is_embedded()
 		if hasattr(features, 'license_features_needed') and features.license_features_needed and not flag:
 			import license
 			self.tmplicensedialog = license.WaitLicense(self.do_init,
@@ -91,6 +87,8 @@ class Main(MainDialog):
 			EXIT(callback = (self.close_callback, ())),
 			]
 		import settings
+		if hasattr(windowinterface, 'is_embedded') and windowinterface.is_embedded():
+			settings.factory_defaults()
 		if settings.get('debug'):
 			self.commandlist = self.commandlist + [
 				TRACE(callback = (self.trace_callback, ())),
@@ -129,33 +127,6 @@ class Main(MainDialog):
 	def open_recent_callback(self, url):
 		self.openURL_callback(url)
 		
-##	def _update_recent(self, url):
-##		if not hasattr(self, 'set_recent_list'):
-##			return
-##		import settings
-##		import posixpath
-##		recent = settings.get('recent_documents')
-##		if url:
-##			if url in recent:
-##				recent.remove(url)
-##			recent.insert(0, url)
-##			if len(recent) > NUM_RECENT_FILES:
-##				recent = recent[:NUM_RECENT_FILES]
-##			settings.set('recent_documents', recent)
-##			settings.save()
-##		doclist = []
-##		for url in recent:
-##			base = posixpath.basename(url)
-##			doclist.append( (base, (url,)))
-##		self.set_recent_list(doclist)
-
-#	def reload_callback(self):
-#		# er.. on which toplevel?
-#		print "DEBUG: grins.py: reload_callback called."
-#		print "DEBUG: self.tops is: ", self.tops
-#		for i in self.tops:
-#			i.reload_callback()
-
 	def _update_recent(self, url):
 		if url:
 			self.add_recent_file(url)
@@ -176,6 +147,7 @@ class Main(MainDialog):
 
 	def add_recent_file(self, url):
 		# Add url to the top of the recent file list.
+		import windowinterface
 		assert url
 		import settings
 		recent = settings.get('recent_documents')
@@ -324,28 +296,6 @@ def main():
 			signal.signal(signal.SIGINT,
 				      lambda s, f, pdb=pdb: pdb.set_trace())
 			kbd_int = 'dummy value to prevent interrupts to be caught'
-
-## 	for fn in files:
-## 		try:
-## 			# Make sure the files exist first...
-## 			f = open(fn, 'r')
-## 			f.close()
-## 		except IOError, msg:
-## 			import types
-## 			if type(msg) is types.InstanceType:
-## 				msg = msg.strerror
-## 			else:
-## 				msg = msg[1]
-## 			sys.stderr.write('%s: cannot open: %s\n' % (fn, msg))
-## 			sys.exit(2)
-
-## 	# patch the module search path
-## 	# so we are less dependent on where we are called
-## 	sys.path.append(findfile('lib'))
-## 	sys.path.append(findfile('video'))
-
-##	import mimetypes, grins_mimetypes
-##	mimetypes.types_map.update(grins_mimetypes.mimetypes)
 
 	import Channel
 

@@ -308,6 +308,10 @@ def delete(setting):
 		commit(auto=1)
 
 def save():
+	import windowinterface
+	if hasattr(windowinterface, 'is_embedded') and windowinterface.is_embedded():
+		# don't save when embedded
+		return
 	try:
 		fp = open(PREFSFILENAME, 'w')
 	except IOError:
