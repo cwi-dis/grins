@@ -5,6 +5,9 @@ import win32ui, win32con, win32api
 Sdk = win32ui.GetWin32Sdk()
 Afx=win32ui.GetAfx()
 
+# atoi
+import string
+
 # win32 lib modules
 import win32mu, components
 
@@ -18,10 +21,6 @@ from usercmdui import *
 
 # GRiNS resource ids
 import grinsRC
-
-
-# draw toolkit
-import DrawTk
 
 # we need win32window.Window 
 # for coordinates transformations
@@ -62,6 +61,9 @@ class _LayoutView2(GenFormView):
 
 		# region name : list index
 		self._region2ix = {}
+
+		# set to true while updating controls due to darwing
+		self._mouse_update = 0
 
 	def setContext(self, ctx):
 		self._context = ctx
@@ -109,8 +111,13 @@ class _LayoutView2(GenFormView):
 			self.EnableCmd(cmd.__class__,1)
 			contextcmds[id]=cmd
 
-	# Reponse to message WM_COMMAND
+	#
+	# User input dispatch method 
+	# i.e response to WM_COMMAND
+	# 
 	def OnCmd(self, params):
+		if self._mouse_update: return
+
 		# crack message
 		msg=win32mu.Win32Msg(params)
 		id=msg.cmdid()
@@ -129,6 +136,16 @@ class _LayoutView2(GenFormView):
 				self.onShowRegionNames()
 			return 
 
+		for name in ('RegionX','RegionY','RegionW','RegionH'):
+			if id==self[name]._id:
+				if nmsg==win32con.EN_CHANGE:
+					self.onEditCoordinates()
+				return
+		if id==self['RegionZ']._id:
+			if nmsg==win32con.EN_CHANGE:
+				self.onEditZorder()
+			return
+
 		# process rest
 		cmd=None
 		contextcmds=self._activecmds
@@ -138,6 +155,9 @@ class _LayoutView2(GenFormView):
 			apply(apply,cmd.callback)
 
 
+	#
+	# User input response from dialog controls
+	# 
 	def onViewportSelChange(self):
 		vpname = self['ViewportSel'].getvalue()
 		self.selectViewport(vpname)
@@ -151,6 +171,38 @@ class _LayoutView2(GenFormView):
 		self._layout._viewport.showNames(self._showRegionNames)
 		self._layout.update()
 
+	def onEditCoordinates(self):
+		name = self['RegionSel'].getvalue()
+		region = self._layout.getRegion(name)
+		if not region: return
+		rc = self['RegionX'].gettext(),self['RegionY'].gettext(), self['RegionW'].gettext(), self['RegionH'].gettext()
+		try:
+			coordinates = tuple(map(string.atoi,rc))
+		except ValueError:
+			return
+		else:
+			if len(coordinates)==4 and coordinates[2]!=0 and coordinates[3]!=0:
+				region.updatecoordinates(coordinates, units=UNIT_PXL)
+				self._layout.update()
+
+	def onEditZorder(self):
+		name = self['RegionSel'].getvalue()
+		region = self._layout.getRegion(name)
+		if not region: return
+		strz = self['RegionZ'].gettext()
+		try:
+			z = string.atoi(strz)
+		except string.atoi_error:
+			return
+		else:
+			if z>=0:
+				region.updatezindex(z)
+				self._layout.update()
+
+
+	#
+	# Helpers for user input responses
+	# 
 	def selectViewport(self, name):
 		self._layout.setViewport(name)
 		rgnList = self._layout.getRegions(name)
@@ -170,20 +222,27 @@ class _LayoutView2(GenFormView):
 			self._layout.selectRegion(name)
 			self.onShapeChange(region)
 			
+	#
+	# win32window.DrawContext listener interface
+	# 
 	def onShapeChange(self, shape):
 		if shape is None or id(shape)==id(self._layout._viewport):
 			for name in ('RegionX','RegionY','RegionW','RegionH'):
 				self[name].settext('')
+			self._mouse_update = 1
 			self['RegionZ'].settext('')
 			self['RegionSel'].setcursel(-1)
+			self._mouse_update = 0
 			return
 		rc = shape._rectb
 		i = 0
+		self._mouse_update = 1
 		for name in ('RegionX','RegionY','RegionW','RegionH'):
 			self[name].settext('%d' % rc[i])
 			i = i +1
 		self['RegionZ'].settext('%d' % shape._z)
 		self['RegionSel'].setcursel(self._region2ix[shape._name])
+		self._mouse_update = 0
 
 ###########################
 
