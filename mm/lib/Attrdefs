@@ -150,6 +150,9 @@
 (pointsize (float) 0 'Point size' default
 	'Point size of text displayed in window' channel)
 
+(popup (bool) 1 'Popup on play' default
+	'Determines whether channel pops up upon playing a node' raw)
+
 (queuesize (float) 0 'Queue size' default
 	'Audio playback queue size' channel)
 
