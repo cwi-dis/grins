@@ -57,6 +57,9 @@ class LinkEdit(ViewDialog, BasicDialog):
 		self.right.node_menu.set_menu(RIGHT_MENU)
 		return self
 	#
+	def __repr__(self):
+		return '<LinkEdit instance, root=' + `self.root` + '>'
+	#
 	def transaction(self):
 		return 1
 	#
@@ -83,6 +86,10 @@ class LinkEdit(ViewDialog, BasicDialog):
 			self.editmgr.unregister(self)
 			BasicDialog.hide(self)
 			self.toplevel.checkviews()
+	#
+	def destroy(self):
+		self.left = self.right = None
+		BasicDialog.destroy(self)
 	#
 	# The fill functions. These are set in the left and right structures
 	# and used to fill the browsers.

@@ -59,6 +59,9 @@ class Channel:
 		channel_device = channel_device + 1
 		return self
 
+	def __repr__(self):
+		return '<Channel instance, name=' + `self.name` + '>'
+
 	def show(self):
 		if self.may_show():
 			self.showing = 1

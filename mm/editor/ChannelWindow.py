@@ -21,6 +21,9 @@ class ChannelWindow(GLDialog):
 		ChannelWinDict[name] = self
 		return GLDialog.init(self, name)
 
+	def __repr__(self):
+		return '<ChannelWindow instance, name=' + `self.name` + '>'
+
 	def show(self):
 		if self.is_showing():
 			self.pop()

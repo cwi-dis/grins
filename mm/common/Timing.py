@@ -295,6 +295,8 @@ class pseudotime:
 	def init(self, t):
 		self.t = t
 		return self
+	def __repr__(self):
+		return '<pseudotime instance, t=' + `self.t` + '>'
 	def timefunc(self):
 		return self.t
 	def delayfunc(self, delay):

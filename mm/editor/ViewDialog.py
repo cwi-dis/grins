@@ -10,6 +10,10 @@ class ViewDialog:
 		self.geom_name = geom_name
 		return self
 	#
+	def __repr__(self):
+		return '<ViewDialog instance, geom_name=' \
+			+ `self.geom_name` + '>'
+	#
 	def load_geometry(self):
 		name = self.geom_name
 		h, v = MMAttrdefs.getattr(self.root, name + 'winpos')

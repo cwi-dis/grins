@@ -156,6 +156,8 @@ def hasstyleattreditor(context, name):
 class Wrapper: # Base class -- common operations
 	def init(self):
 		return self
+	def __repr__(self):
+		return '<Wrapper instance>'
 	def getcontext(self):
 		return self.context
 	def register(self, object):
@@ -184,6 +186,9 @@ class NodeWrapper(Wrapper):
 		self.editmgr = self.context.geteditmgr()
 		self.root = node.GetRoot()
 		return Wrapper.init(self)
+	#
+	def __repr__(self):
+		return '<NodeWrapper instance, node=' + `self.node` + '>'
 	#
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
@@ -250,6 +255,9 @@ class ChannelWrapper(Wrapper):
 		self.name = name
 		self.attrdict = self.context.channeldict[name]
 		return Wrapper.init(self)
+	#
+	def __repr__(self):
+		return '<ChannelWrapper, name=' + `self.name` + '>'
 	#
 	def stillvalid(self):
 		return self.context.channeldict.has_key(self.name) and \
@@ -355,6 +363,9 @@ class StyleWrapper(Wrapper):
 		self.attrdict = self.context.styledict[name]
 		return Wrapper.init(self)
 	#
+	def __repr__(self):
+		return '<StyleWrapper, name=' + `self.name` + '>'
+	#
 	def stillvalid(self):
 		return self.context.styledict.has_key(self.name) and \
 			self.context.styledict[self.name] == self.attrdict
@@ -430,6 +441,9 @@ class AttrEditor(Dialog):
 		hint = '[Click on labels for help]'
 		#
 		return Dialog.init(self, formwidth, formheight, title, hint)
+	#
+	def __repr__(self):
+		return '<AttrEditor instance, wrapper=' + `self.wrapper` + '>'
 	#
 	def make_form(self):
 		#
@@ -611,6 +625,9 @@ class ButtonRow:
 		b.form = attreditor.form
 		return b
 	#
+	def __repr__(self):
+		return '<ButtonRow instance, name=' + `self.name` + '>'
+	#
 	def makelabeltext(b, (x, y, w, h)):
 		attrdef = b.wrapper.getdef(b.name)
 		labeltext = attrdef[2]
@@ -731,6 +748,9 @@ class BoolButtonRow(ButtonRow):
 		b.value = b.form.add_button(PUSH_BUTTON, x, y, w-1, h, '')
 		b.value.set_call_back(b.valuecallback, None)
 	#
+	def __repr__(self):
+		return '<BoolButtonRow instance, name=' + `self.name` + '>'
+	#
 	def valuecallback(b, dummy):
 		value = b.value.get_button()
 		if value <> b.currentvalue:
@@ -757,6 +777,9 @@ class IntButtonRow(ButtonRow):
 		b.value.lstyle = FIXED_STYLE
 		b.value.set_call_back(b.valuecallback, None)
 	#
+	def __repr__(self):
+		return '<IntButtonRow instance, name=' + `self.name` + '>'
+	#
 	def valuerepr(self, value):
 		return `value`
 	#
@@ -777,6 +800,9 @@ class FloatButtonRow(ButtonRow):
 		b.value.lstyle = FIXED_STYLE
 		b.value.set_call_back(b.valuecallback, None)
 	#
+	def __repr__(self):
+		return '<FloatButtonRow instance, name=' + `self.name` + '>'
+	#
 	def valuerepr(self, value):
 		return `value`
 	#
@@ -792,6 +818,9 @@ class FloatButtonRow(ButtonRow):
 
 class NameButtonRow(ButtonRow):
 	#
+	def __repr__(self):
+		return '<NameButtonRow instance, name=' + `self.name` + '>'
+	#
 	def valuerepr(self, value):
 		return value
 	#
@@ -806,6 +835,9 @@ StringButtonRow = NameButtonRow # Happens to have the same semantics
 class FileButtonRow(StringButtonRow):
 	# A string input field with a button next to it
 	# that pops up a file selector window.
+	#
+	def __repr__(self):
+		return '<FileButtonRow instance, name=' + `self.name` + '>'
 	#
 	def makevalueinput(b, (x, y, w, h)):
 		bw = 2*h
@@ -829,6 +861,9 @@ class FileButtonRow(StringButtonRow):
 class ColorButtonRow(ButtonRow):
 	# A text field plus a button that pops up a color selector
 	#
+	def __repr__(self):
+		return '<ColorButtonRow instance, name=' + `self.name` + '>'
+	#
 	def makevalueinput(b, (x, y, w, h)):
 		bw = 2*h
 		StringButtonRow.makevalueinput(b, (x, y, w-bw, h))
@@ -850,6 +885,9 @@ class ColorButtonRow(ButtonRow):
 
 class PopupButtonRow(ButtonRow):
 	# A choice menu choosing from a list -- base class only
+	#
+	def __repr__(self):
+		return '<PopupButtonRow instance, name=' + `self.name` + '>'
 	#
 	def choices(b):
 		# derived class overrides this to defince the choices
@@ -896,6 +934,10 @@ class PopupButtonRow(ButtonRow):
 class ChannelnameButtonRow(PopupButtonRow):
 	# Choose from the current channel names
 	#
+	def __repr__(self):
+		return '<ChannelnameButtonRow instance, name=' \
+			+ `self.name` + '>'
+	#
 	def choices(b):
 		return ['undefined'] + b.wrapper.context.channelnames
 	#
@@ -903,6 +945,10 @@ class ChannelnameButtonRow(PopupButtonRow):
 
 class ChanneltypeButtonRow(PopupButtonRow):
 	# Choose from the standard channel types
+	#
+	def __repr__(self):
+		return '<ChanneltypeButtonRow instance, name=' \
+			+ `self.name` + '>'
 	#
 	def choices(b):
 		from ChannelMap import channeltypes
@@ -912,6 +958,9 @@ class ChanneltypeButtonRow(PopupButtonRow):
 
 class FontButtonRow(ButtonRow):
 	# Choose from all possible font names
+	#
+	def __repr__(self):
+		return '<FontButtonRow instance, name=' + `self.name` + '>'
 	#
 	def makevalueinput(b, (x, y, w, h)):
 		b.value = b.form.add_button(INOUT_BUTTON, x, y, w-3, h-2, '')

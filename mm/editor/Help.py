@@ -18,6 +18,8 @@ class HelpWindow(ViewDialog, BasicDialog):
 	self.topics = None
 	self.return_stack = []
 	return self
+    def __repr__(self):
+	return '<HelpWindow instance, dirname=' + `self.dirname` + '>'
     def inittopics(self):
 	if self.topics <> None: return
 	self.topics = []

@@ -51,6 +51,10 @@ class ArcInfo(Dialog):
 		flp.merge_full_form(self, self.form, form_template)
 		return self
 
+	def __repr__(self):
+		return '<ArcInfo instance for ' + \
+	`(self.snode, self.sside, self.delay, self.dnode, self.dside)` + '>'
+
 	def maketitle(self):
 		sname = MMAttrdefs.getattr(self.snode, 'name')
 		dname = MMAttrdefs.getattr(self.dnode, 'name')

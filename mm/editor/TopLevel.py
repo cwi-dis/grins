@@ -44,6 +44,9 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.makeviews()	# References the form just made
 		return self
 	#
+	def __repr__(self):
+		return '<TopLevel instance, filename=' + `self.filename` + '>'
+	#
 	# Interface to prefix relative filenames with the CMIF file's
 	# directory, if the resulting filename exists.
 	#
@@ -69,6 +72,7 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.hideviews()
 	#
 	def destroy(self):
+		self.hide()
 		self.destroyviews()
 		self.root.Destroy()
 		import Clipboard
@@ -76,6 +80,8 @@ class TopLevel(ViewDialog, BasicDialog):
 		if type == 'node' and data <> None:
 			Clipboard.setclip('', None)
 			data.Destroy()
+		for v in self.views: v.toplevel = None
+		self.views = []
 		BasicDialog.destroy(self)
 	#
 	# Main interface.

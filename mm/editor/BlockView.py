@@ -58,6 +58,9 @@ class BlockView(ViewDialog, BasicDialog):
 	self = BasicDialog.init(self, width, height, 'Hierarchy')
 	self.changing_node = None
 	return self.new(width, height, self.root)
+	#
+	def __repr__(self):
+		return '<BlockView instance, root=' + `self.root` + '>'
 
     def show(self):
 	if self.is_showing():

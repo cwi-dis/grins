@@ -32,6 +32,9 @@ class csfile():
 		self.f = open(fname, mode)
 		return self
 
+	def __repr__(self):
+		return '<csfile instance, f=' + `self.f` + '>'
+
 	def seek(self, arg):
 		self.cached = ''
 		return self.f.seek(arg)
@@ -74,6 +77,9 @@ class SoundChannel(Channel):
 		self.armed_node = None
 		self.armed_info = None
 		return self
+	#
+	def __repr__(self):
+		return '<SoundChannel instance, name=' + `self.name` + '>'
 	#
 	def getduration(self, node):
 		# NB This never uses the 'duration' attribute!
