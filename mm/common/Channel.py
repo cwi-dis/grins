@@ -771,6 +771,7 @@ class ChannelWindow(Channel):
 			except KeyError:
 				pass
 			else:
+				a = self.setanchorargs(a, button, value)
 				self._player.toplevel.setwaiting()
 				dummy = apply(f, a)
 				self._player.toplevel.setready()
@@ -787,6 +788,12 @@ class ChannelWindow(Channel):
 			if transparent:
 				raise windowinterface.Continue
 			self.unhighlight()
+
+	def setanchorargs(self, (node, nametypelist, args), button, value):
+		# Return the (node, nametypelist, args) tuple.
+		# Channels can override this to modify the args passed
+		# through the hyperjump (default: None)
+		return (node, nametypelist, args)
 
 	def create_window(self, pchan, pgeom):
 		menu = []
