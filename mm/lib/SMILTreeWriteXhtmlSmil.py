@@ -117,6 +117,10 @@ from SMILTreeWrite import *
 from fmtfloat import round
 import math
 import Animators
+import Duration
+
+# debug flags
+debug = 1
 
 class SMILXhtmlSmilWriter(SMIL):
 	def __init__(self, node, fp, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0,
@@ -543,7 +547,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		pushed, inpar, pardur, regionid  = \
 			self.writeMediaNodeLayout(node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill)
 
-		# apply subregion's style
+		# apply media style
 		self.applyMediaStyle(node, nodeid, attrlist, mtype)
 
 		# write anchors
@@ -682,31 +686,44 @@ class SMILXhtmlSmilWriter(SMIL):
 		# transfer timing from media to div
 		# the composite is the item for xhtml+smil
 		timing_spec = 0 				
+		has_end = 0 				
 		i = 0
 		while i < len(attrlist):
 			attr, val = attrlist[i]
-			if attr in ('begin', 'dur', 'end'): 
+			if attr in ('begin', 'dur', 'end', 'repeatDur'): 
 				timing_spec = timing_spec + 1
 				divlist.append((attr, val))
 				del attrlist[i]
-				if attr == 'dur':
+				if attr == 'dur' or  attr == 'repeatDur':
 					pardur = val
-			elif attr in ('repeatCount', 'repeatDur'): 
+				if attr == 'end':
+					has_end = 1
+			elif attr == 'repeatCount': 
 				divlist.append((attr, val))
 				del attrlist[i]
 			else:
 				i = i + 1
 
-		# Duration hint for IE scheduler when dur attr has 
-		# not been given and not both begin and end.
-		# Possibly temporary until we find a way to make it needless			
-		if pardur is None and timing_spec < 2 and not (timing_spec == 0 and mtype == 'img'):
-			val = self.getDurHint(node)
-			if val > 0:
-				pardur = fmtfloat(val, prec = 2)
+		# IE scheduler hints 
+		# Plus transfer intrinsic media duration to div/par container 
+		parent = node.GetParent()
+		if pardur is None and timing_spec < 2:
+			parentDur = getduration(self, parent)
+			if parent.GetType() == 'par' and parentDur is not None and parentDur>0 and fill is None and mtype!='audio':
+				# force smil default behavior in such cases
+				divlist.append(('fill', 'freeze'))
+			elif parent.GetType() == 'par' and has_end:
+				# equivalent to timing_spec == 2
+				pass
+			elif mtype in ('audio', 'video'):
+				try:
+					dur = Duration.getintrinsicduration(node, 1)
+				except:
+					dur = 2.0
+				pardur = fmtfloat(dur, prec = 2)
 				divlist.append(('dur', pardur))
 				timing_spec = timing_spec + 1
-		
+
 		# when div has timing extent it to a time container
 		if timing_spec > 0 or self.hasTimeChildren(node):
 			divlist.append( ('timeContainer', 'par'))
@@ -759,7 +776,10 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.writetag('div', divlist)
 			self.push()
 			pushed = pushed + 1
-
+			#attrlist.insert(0, ('id', nodeid+'_m'))
+		else:
+			attrlist.insert(0, ('id', nodeid))
+			
 		# save current layout and return
 		self.currLayout = path
 		return pushed, inpar, pardur, regionid
@@ -907,16 +927,6 @@ class SMILXhtmlSmilWriter(SMIL):
 		parent = node.GetParent()
 		if parent.GetType() == 'seq':
 			return parent.GetParent()
-
-	# XXX: needs to be implemented correctly
-	# or find a way to make needless
-	def getDurHint(self, node):
-		try:
-			t0, t1, t2, downloadlag, begindelay = node.GetTimes()
-			val = t1 - t0
-		except: 
-			val = 2.0
-		return val
 
 	def fixBeginList(self, node, attrlist):
 		srcid = self.links_target2src.get(node)
