@@ -49,6 +49,8 @@ class Channel:
 		self.player = player
 		self.qid = None
 		self.showing = 0
+		self.autoanchor = None
+		self.haspauseanchor = 0
 		return self
 
 	def show(self):
@@ -135,14 +137,22 @@ class Channel:
 
 	def play(self, (node, callback, arg)):
 		secs = self.getduration(node)
-		self.qid = self.player.enter(secs, 0, self.done, \
-							(callback, arg))
+		self.cb = (callback, arg)
+		self.node = node
+		self.qid = self.player.enter(secs, 0, self.done, 0)
 
 	# Function called when an even't time is up.
 
-	def done(self, (callback, arg)):
+	def done(self, dummy):
 		self.qid = None
-		callback(arg)
+		callback, arg = self.cb
+		if not self.haspauseanchor:
+			callback(arg)
+		if self.autoanchor:
+			self.player.anchorfired(self.node, [self.autoanchor])
+		self.haspauseanchor = None
+		self.autoanchor = None
+		self.node = None
 
 	# Setting the playback rate to 0.0 freezes the channel.
 	# Ignored by null channels -- the timer queue already
