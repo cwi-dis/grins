@@ -1861,7 +1861,13 @@ DirectDrawSurface_dealloc(DirectDrawSurfaceObject *self)
 {
 	/* XXXX Add your own cleanup code here */
 	Py_BEGIN_ALLOW_THREADS
-	if(self->releaseI && self->pI) self->pI->Release();
+	if(self->releaseI && self->pI)
+		{
+		try {
+			self->pI->Release();
+			}
+		catch(...){}
+		}
 	Py_END_ALLOW_THREADS
 	PyMem_DEL(self);
 }
