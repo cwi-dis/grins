@@ -274,7 +274,13 @@ def getsrc(writer, node):
 		writer.files_generated[file] = ''
 		rp.tags = otags
 	else:
-		file = writer.copyfile(url, node)
+		try:
+			file = writer.copyfile(url, node)
+		except IOError, msg:
+			import windowinterface
+			windowinterface.showmessage('Cannot copy %s: %s'%(val, msg))
+			node.set_infoicon('error', msg)
+			return val
 	writer.copycache[url] = file
 	val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
 	return val
