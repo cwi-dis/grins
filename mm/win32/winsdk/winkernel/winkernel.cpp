@@ -59,10 +59,10 @@ static PyObject* LoadLibrary(PyObject *self, PyObject *args)
 	int flags = 0;
 	if (!PyArg_ParseTuple(args, "s|i", &filename, &flags))
 		return NULL;
-	HMODULE hModule = GetModuleHandle(toTEXT(filename));
+	HMODULE hModule = GetModuleHandle(TextPtr(filename));
 	if(hModule == NULL) 
 		{
-		hModule = LoadLibraryEx(toTEXT(filename), NULL, flags);
+		hModule = LoadLibraryEx(TextPtr(filename), NULL, flags);
 		if(hModule == NULL) 
 			{
 			seterror("LoadLibrary", GetLastError());

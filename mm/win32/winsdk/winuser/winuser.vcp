@@ -556,6 +556,7 @@ DEP_CPP_WINUSE=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\common\charconv.h"\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_app.h"\
@@ -751,6 +752,7 @@ DEP_CPP_WINUSER=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\common\charconv.h"\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_main.h"\
@@ -946,6 +948,7 @@ DEP_CPP_WINUSER_=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\common\charconv.h"\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_menu.h"\
@@ -1143,6 +1146,7 @@ DEP_CPP_WINUSER_O=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\common\charconv.h"\
 	".\utils.h"\
 	".\wce_support.h"\
 	".\winuser_ofn.h"\
@@ -1350,6 +1354,7 @@ DEP_CPP_WINUSER_W=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\common\charconv.h"\
 	".\mtpycall.h"\
 	".\utils.h"\
 	".\wce_support.h"\
@@ -1417,6 +1422,10 @@ NODEP_CPP_WINUSER_W=\
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=..\common\charconv.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\utils.h
