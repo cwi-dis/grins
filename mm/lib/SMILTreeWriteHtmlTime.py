@@ -449,23 +449,24 @@ class SMILHtmlTimeWriter(SMIL):
 				break
 			parents.insert(0, lch)
 			lch = lch.__parent
-
-		lch = parents[0]
-		name = self.ch2name[lch]
-		divlist = []
-		divlist.append(('id', scriptid(name)))
-		divlist.append(('class', 'reg'+scriptid(regionName)))
-		self.writetag('div', divlist)
-		self.push()
-		self.ids_written[name] = 1
-		pushed = pushed + 1
+	
+		if parents:
+			lch = parents[0]
+			name = self.ch2name[lch]
+			divlist = []
+			divlist.append(('id', scriptid(name)))
+			divlist.append(('class', 'reg'+scriptid(regionName)))
+			self.writetag('div', divlist)
+			self.push()
+			self.ids_written[name] = 1
+			pushed = pushed + 1
 
 					
 		transitions = self.root.GetContext().transitions
 		if transIn or transOut:
 			if not nodeid:
 				nodeid = 'm' + x.GetUID()
-			subregid = nodeid + 'd1'
+			subregid = nodeid + '_subReg'
 
 		subRegGeom, mediaGeom = None, None
 		geoms = x.getPxGeomMedia()
@@ -580,15 +581,16 @@ class SMILHtmlTimeWriter(SMIL):
 			lch = lch.__parent
 		
 		pushed = 0
-		lch = parents[0]
-		name = self.ch2name[lch]
-		divlist = []
-		divlist.append(('id', scriptid(name) ))
-		divlist.append(('class', 'reg'+scriptid(regionName)))
-		self.writetag('div', divlist)
-		self.push()
-		self.ids_written[name] = 1
-		pushed = pushed + 1
+		if parents:
+			lch = parents[0]
+			name = self.ch2name[lch]
+			divlist = []
+			divlist.append(('id', scriptid(name) ))
+			divlist.append(('class', 'reg'+scriptid(regionName)))
+			self.writetag('div', divlist)
+			self.push()
+			self.ids_written[name] = 1
+			pushed = pushed + 1
 
 		for i in range(pushed):
 			self.pop()
@@ -614,10 +616,11 @@ class SMILHtmlTimeWriter(SMIL):
 				if name == 'targetElement':
 					targetElement = value
 					value = scriptid(value)
-				if name == 'from':value = fromxy
-				elif name == 'to':value = toxy
-				elif name == 'values':value = values
-				elif name == 'path': value = path
+				if tag == 'animateMotion':
+					if name == 'from':value = fromxy
+					elif name == 'to':value = toxy
+					elif name == 'values':value = values
+					elif name == 'path': value = path
 				if value and value != attributes[name]:
 					attrlist.append((name, value))
 
