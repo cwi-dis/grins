@@ -57,7 +57,6 @@ class _Toplevel:
 		self._pixel_per_mm_x = sysmetrics.pixel_per_mm_x
 		self._pixel_per_mm_y = sysmetrics.pixel_per_mm_y
 	
-		self._id_systemtimer = 0;
 		self._waiting=0
 		
 		# generic wnd class
@@ -300,29 +299,24 @@ class _Toplevel:
 	def mainloop(self):
 		if len(self._subwindows) == 1:self.show()
 		self.serve_events(())
-		win32ui.GetApp().AddIdleHandler(self.monitor)
+#		win32ui.GetApp().AddIdleHandler(self.monitor)
 
 		wnd=self.genericwnd()
 		wnd.create()
+		wnd.HookMessage(self.OnTimer,win32con.WM_TIMER)
+		id=wnd.SetTimer(1,100)
 		wnd.HookMessage(self.serve_events,win32con.WM_USER)
 		win32ui.GetApp().RunLoop(wnd)
+		wnd.KillTimer(id)
 		
 		wnd.DestroyWindow()
 		
-
-	# Set un event system timer
-	def setsystemtimer(self, sec):
-		self._id_systemtimer = self._subwindows[0].SetTimer(1,sec*1000)
+	def OnTimer(self, params):
+		self.serve_events()
 		
-	# callback of system timer
-	def systemtimer_callback(self):
-		if self._id_systemtimer > 0:
-			Afx.GetMainWnd().KillTimer(self._id_systemtimer)
-		self.serve_events()
-
-	def monitor(self,handler,count):
-		self.serve_events()
-		return 0 # no more, next time
+#	def monitor(self,handler,count):
+#		self.serve_events()
+#		return 0 # no more, next time
 
 	# It is actualy part of the main loop and part of a delta timer 
 	def serve_events(self,params=None):	
@@ -355,7 +349,6 @@ class _Toplevel:
 			win32ui.GetApp().EndWaitCursor()
 			win32ui.GetApp().EndWaitCursor()
 			self._waiting = 0
-			self.setsystemtimer(0.1)
 
 	#
 	# delta timer interface
@@ -375,15 +368,11 @@ class _Toplevel:
 			if t + time0 > sec:
 				self._timers[i] = (time0 - sec + t, dummy, tid)
 				self._timers.insert(i, (sec - t, cb, self._timer_id))
-				if self._timers:
-					self.setsystemtimer(self._timers[0][0])
 				return self._timer_id
 			t = t + time0
 		self._timers.append((sec - t, cb, self._timer_id))
 		#print 'new event:',self._timer_id,sec - t,cb
 		Afx.GetMainWnd().PostMessage(WM_KICKIDLE)
-		if self._timers:
-			self.setsystemtimer(self._timers[0][0])
 		return self._timer_id
 
 
