@@ -312,7 +312,7 @@ POPUP_HVIEW_LEAF = (
 #		(FLAG_PRO, ENTRY, 'New object &before...', None, NEW_BEFORE),
 		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
 		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
-###		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_UNDER),
+		(FLAG_ALL, ENTRY, '&Paste within', None, PASTE_UNDER),
 		(FLAG_ALL, ENTRY, 'Paste bef&ore', None, PASTE_BEFORE),
 		(FLAG_ALL, ENTRY, 'Paste a&fter', None, PASTE_AFTER),
 		(FLAG_ALL, ENTRY, 'Pa&ste file', None, PASTE_FILE),

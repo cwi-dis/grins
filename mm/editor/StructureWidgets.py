@@ -67,6 +67,10 @@ def create_MMNode_widget(node, mother, parent = None):
 		return MediaWidget(node, mother, parent)
 	elif ntype == 'prefetch':
 		return MediaWidget(node, mother, parent)
+	elif ntype == 'anchor':
+		return MediaWidget(node, mother, parent)
+	elif ntype == 'animpar':
+		return MediaWidget(node, mother, parent)
 	elif ntype == 'comment':
 		return CommentWidget(node, mother, parent)
 	elif ntype == 'foreign':
@@ -277,13 +281,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		return
 
 	def iscollapsed(self):
-		return 1
-
-	def isvisible(self):
-		# a node is visible if none of its ancestors is collapsed
-		for node in self.node.GetPath()[:-1]:
-			if node.collapsed:
-				return 0
 		return 1
 
 	def makevisible(self):
@@ -508,7 +505,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			xsize = ibxsize + imxsize + 2*HEDGSIZE
 			if text:
 				xsize = xsize + 2 + txxsize
-			if icon and self.name and isinstance(self, StructureObjWidget):
+			if icon and self.name and isinstance(self, StructureObjWidget) and (not isinstance(self, MediaWidget) or not self.iscollapsed()):
 				imysize = imysize + TITLESIZE
 			ysize = max(ibysize, imysize, txysize) + 2*VEDGSIZE
 			xsize = max(xsize, MINSIZE)
@@ -599,7 +596,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			l = l + iw
 ##			if l <= r:
 			self.iconbox.draw(displist)
-		if l < r and self.name and (self.iconbox is None or not self.iconbox.vertical or isinstance(self, StructureObjWidget)):
+		if l < r and self.name and (self.iconbox is None or not self.iconbox.vertical or (isinstance(self, StructureObjWidget) and (not isinstance(self, MediaWidget) or not self.iscollapsed()))):
 			x, y = l, t+displist.baselinePXL()
 			displist.setpos(x, y)
 			namewidth = displist.strsizePXL(self.name)[0]
@@ -1009,14 +1006,19 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 class StructureObjWidget(MMNodeWidget):
 	# A view of a seq, par, excl or any internal structure node.
 	HAS_COLLAPSE_BUTTON = 1
-	DRAWCOLLAPSEDMEDIACHILD = 0
 
 	def __init__(self, node, mother, parent):
 		MMNodeWidget.__init__(self, node, mother, parent)
 		# Create more nodes under me if there are any.
 		self.children = []
-		if self.HAS_COLLAPSE_BUTTON and not self.mother.usetimestripview:
-			if self.node.collapsed:
+		for i in self.node.GetChildren():
+			if i.GetAttrDef('internal', 0) or i.GetType() == 'animpar':
+				continue
+			bob = create_MMNode_widget(i, mother, self)
+			if bob is not None:
+				self.children.append(bob)
+		if self.HAS_COLLAPSE_BUTTON and (not isinstance(self, MediaWidget) or self.children) and not self.mother.usetimestripview:
+			if self.iscollapsed():
 				icon = 'closed'
 			else:
 				icon = 'open'
@@ -1027,11 +1029,6 @@ class StructureObjWidget(MMNodeWidget):
 			self.collapsebutton = self.iconbox.add_icon('collapse', self.toggle_collapsed)
 			self.collapsebutton.set_icon(icon)
 			self.collapsebutton.set_properties(callbackable=1, selectable=0)
-		self.parent_widget = parent # This is the parent node. Used for recalcing optimisations.
-		for i in self.node.children:
-			bob = create_MMNode_widget(i, mother, self)
-			if bob is not None:
-				self.children.append(bob)
 		self.dont_draw_children = 0
 		if parent is None:
 			self.add_event_icons()
@@ -1043,8 +1040,9 @@ class StructureObjWidget(MMNodeWidget):
 			self._setpreviewandsubicons()
 		if self.node.GetAttrDef('dropicon', None):
 			self.dropbox = DropIconWidget(self, mother)
-		elif self.node.children and (self.node.GetAttrDef('non_empty_icon', None) or self.node.GetAttrDef('non_empty_text', None)):
+		elif self.children and (self.node.GetAttrDef('non_empty_icon', None) or self.node.GetAttrDef('non_empty_text', None)):
 			self.dropbox = NonEmptyWidget(self, mother)
+		self.__timemapper = None
 
 	def destroy(self):
 		if self.children:
@@ -1052,14 +1050,14 @@ class StructureObjWidget(MMNodeWidget):
 				i.destroy()
 		self.children = None
 		self.collapsebutton = None
-		self.parent_widget = None
 		self.previewchild = None
+		self.__timemapper = None
 		MMNodeWidget.destroy(self)
 
 	def _setpreviewandsubicons(self):
 		# Set preview node and icons for other children iff
 		# this is an autorouting node.
-		for ch in self.node.children:
+		for ch in self.node.GetChildren():
 			tp = ch.GetType()
 			# Skip all non-media types
 			if tp not in MMTypes.mediatypes:
@@ -1126,7 +1124,6 @@ class StructureObjWidget(MMNodeWidget):
 			self.collapsebutton.icon = ntype + 'closed'
 		self.mother.need_redraw = 1
 		self.mother.need_resize = 1
-		self.set_need_resize()
 
 	def remove_set_armedmode(self):
 		self.node.set_armedmode = None
@@ -1147,7 +1144,6 @@ class StructureObjWidget(MMNodeWidget):
 			self.collapsebutton.icon = ntype + 'open'
 		self.mother.need_redraw = 1
 		self.mother.need_resize = 1
-		self.set_need_resize()
 		for c in self.children:
 			c.add_set_armedmode()
 
@@ -1247,8 +1243,7 @@ class StructureObjWidget(MMNodeWidget):
 		# Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
 		# Apportion free space equally, based on the size of self.
 		# TODO: This does not test for maxheight()
-		self.need_resize = 0
-
+		self.__timemapper = timemapper
 		my_l, my_t, my_r, my_b = self.pos_abs
 
 		# account for edges
@@ -1385,7 +1380,6 @@ class StructureObjWidget(MMNodeWidget):
 			if not self.HORIZONTAL:
 				this_b = this_t + this_h + freeheight_per_child
 
-			# First compute pushback bar position
 			if tm is not None and medianode.node.WillPlay():
 				t0, t1, t2, download, begindelay, neededpixel0, neededpixel1 = self.childrentimes[chindex]
 				tend = t2
@@ -1426,13 +1420,6 @@ class StructureObjWidget(MMNodeWidget):
 				this_l = my_l
 				this_t = this_b + GAPSIZE
 
-	def set_need_resize(self):
-		# Sets the need_resize attribute.
-		p = self
-		while p is not None:
-			p.need_resize = 1
-			p = p.parent_widget
-
 	def draw_selected(self, displist):
 		# Called from self.draw or from the mother when selection is changed.
 		displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
@@ -1446,21 +1433,55 @@ class StructureObjWidget(MMNodeWidget):
 	def draw_box(self, displist):
 		displist.draw3dbox(DROPCOLOR, DROPCOLOR, DROPCOLOR, DROPCOLOR, self.get_box())
 
+	def __draw_box(self, displist, color):
+		x,y,w,h = self.get_box()
+		timemapper = self.__timemapper
+		if timemapper is None or not isinstance(self, MediaWidget):
+			displist.drawfbox(color, (x,y,w,h))
+			return
+
+		node = self.node
+		t0, t1, t2 = self.GetTimes('virtual')[:3]
+		dur = Duration.get(node, ignoreloop = 1, wanterror = 0)	# what gets repeated
+		ad = Duration.get(node, wanterror = 0)
+		if dur > ad:
+			dur = ad
+
+		if dur >= 0 and t2 > t0:
+			dw = timemapper.interptime2pixel(t0+min(dur, t2-t0), 'right') - x
+			if dw < 0: dw = 0
+			if dw > w: dw = w
+		else:
+			dw = w
+		self.need_draghandles = x,x+dw,y+h-8
+		if dw < w:
+			if ad > dur:
+				adw = timemapper.interptime2pixel(t0+min(ad, t2-t0)) - x - dw
+				if adw < 0: adw = 0
+				if adw > w-dw: adw = w-dw
+			else:
+				adw = 0
+			if adw > 0:
+				displist.drawfbox(REPEATCOLOR, (x+dw, y, adw, h))
+			if dw+adw < w:
+				displist.drawfbox(FREEZECOLOR, (x+dw+adw, y, w-dw-adw, h))
+		if dur > t2-t0:
+			# duration truncated
+			displist.drawfbox(TRUNCCOLOR, (x+w-TRUNCSIZE,y,TRUNCSIZE,h))
+		if dw > 0:
+			displist.drawfbox(color, (x, y, dw, h))
+		displist.drawfbox(color, (x,y+h/3,w,h/3)) # fill bar
+
 	def draw(self, displist):
 		willplay = not self.mother.showplayability or self.node.WillPlay()
 		if willplay:
 			color = self.PLAYCOLOR
 		else:
 			color = self.NOPLAYCOLOR
-		displist.drawfbox(color, self.get_box())
+		self.__draw_box(displist, color)
 
 		if self.channelbox is not None and not self.iscollapsed():
 			self.channelbox.draw(displist)
-
-		# Uncomment to redraw pushback bars.
-		#for i in self.children:
-		#	if isinstance(i, MediaWidget) and i.pushbackbar:
-		#		i.pushbackbar.draw(displist)
 
 		if self.dropbox is not None and not self.iscollapsed():
 			self.dropbox.draw(displist)
@@ -1472,7 +1493,7 @@ class StructureObjWidget(MMNodeWidget):
 		b = b - VEDGSIZE
 		if self.iconbox is not None and self.iconbox.vertical:
 			l = l + self.iconbox.get_minsize()[0]
-			if self.name:
+			if self.name and (not isinstance(self, MediaWidget) or not self.iscollapsed()):
 				 t = t + TITLESIZE
 		else:
 			t = t + TITLESIZE
@@ -1489,15 +1510,18 @@ class StructureObjWidget(MMNodeWidget):
 		if self.iscollapsed():
 			children = self.node.GetChildren()
 			icon = self.node.GetAttrDef('thumbnail_icon', None)
-			if icon is not None:
+			if isinstance(self, MediaWidget):
+				if self.need_draghandles is not None:
+					# leave space for draghandles
+					b = b - 6
+				self.drawnodecontent(displist, (l,t,r-l,b-t), self.node)
+			elif icon is not None:
 				icon = self.node.context.findurl(icon)
 				try:
 					icon = MMurl.urlretrieve(icon)[0]
 				except:
 					icon = None
 				self.do_draw_image(icon, self.name, (l,t,r-l,b-t), displist)
-##			elif self.DRAWCOLLAPSEDMEDIACHILD and children and children[0].GetType() in MMTypes.mediatypes:
-##				self.drawnodecontent(displist, (l,t,r-l,b-t), children[0])
 			elif self.previewchild:
 				self.drawnodecontent(displist, (l,t,r-l,b-t), self.previewchild)
 			elif self.HORIZONTAL:
@@ -2011,10 +2035,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 		StructureObjWidget.recalc(self, timemapper, bwstrip)
 
 	def draw(self, displist):
-		# We want to draw this even if pushback bars are disabled.
 		for i in self.children:
-			#if isinstance(i, MediaWidget):
-			#	i.pushbackbar.draw(displist)
 			i.draw(displist)
 
 	def addcollisions(self, mastert0, mastertend, timemapper, mytimes = None):
@@ -2032,7 +2053,6 @@ class ParWidget(VerticalWidget):
 	# Parallel node
 	PLAYCOLOR = PARCOLOR
 	NOPLAYCOLOR = PARCOLOR_NOPLAY
-	DRAWCOLLAPSEDMEDIACHILD = 1
 
 # and so forth..
 class ExclWidget(SeqWidget):
@@ -2060,7 +2080,10 @@ class SwitchWidget(VerticalWidget):
 # This should really be an abstract base class, but that isn't necessary until
 # the implementation changes.
 #
-class MediaWidget(MMNodeWidget):
+class MediaWidget(VerticalWidget):
+	PLAYCOLOR = LEAFCOLOR
+	NOPLAYCOLOR = LEAFCOLOR_NOPLAY
+
 	# A view of an object which is a playable media type.
 	# NOT the structure nodes.
 
@@ -2071,248 +2094,35 @@ class MediaWidget(MMNodeWidget):
 	# if the drawing code is different enough to warrent this.
 
 	def __init__(self, node, mother, parent):
-		MMNodeWidget.__init__(self, node, mother, parent)
+		VerticalWidget.__init__(self, node, mother, parent)
 		if mother.transboxes:
 			self.transition_in = TransitionWidget(self, mother, 'in')
 			self.transition_out = TransitionWidget(self, mother, 'out')
 
-		self.pushbackbar = None
-		self.downloadtime = 0.0		# not used??
-		self.downloadtime_lag = 0.0	# Distance to push this node to the right - relative coords. Not pixels.
-		self.downloadtime_lag_errorfraction = 1.0
-		self.__timemapper = None
-
 	def destroy(self):
 		# Remove myself from the MMNode view{} dict.
-		self.__timemapper = None
 		if self.transition_in is not None:
 			self.transition_in.destroy()
 			self.transition_in = None
 		if self.transition_out is not None:
 			self.transition_out.destroy()
 			self.transition_out = None
-		if self.pushbackbar is not None:
-			self.pushbackbar.destroy()
-			self.pushbackbar = None
-		MMNodeWidget.destroy(self)
+		VerticalWidget.destroy(self)
 
 	def init_timemapper(self, timemapper, ignore_time = 0):
 		if not self.node.WillPlay():
 			return None
 		return timemapper
 
-	def remove_set_armedmode(self):
-		self.node.set_armedmode = None
-		del self.node.set_armedmode
-		self.node.set_infoicon = None
-		del self.node.set_infoicon
-		self.node.set_infoicon = self.set_infoicon_invisible
-
-	def add_set_armedmode(self):
-		if self.playicon is not None:
-			self.node.set_armedmode = self.set_armedmode
-			self.set_armedmode(self.node.armedmode, redraw = 0)
-			self.node.set_infoicon = self.set_infoicon
+	def iscollapsed(self):
+		# if no children, behave as if collapsed
+		return not self.children or self.node.collapsed
 
 	def is_hit(self, pos):
 		hit = (self.transition_in is not None and self.transition_in.is_hit(pos)) or \
 		      (self.transition_out is not None and self.transition_out.is_hit(pos)) or \
-		      (self.pushbackbar is not None and self.pushbackbar.is_hit(pos)) or \
-		      MMNodeWidget.is_hit(self, pos)
+		      VerticalWidget.is_hit(self, pos)
 		return hit
-
-
-	def recalc(self, timemapper = None, bwstrip = None):
-		self.need_draghandles = None
-		if self.timemapper is not None:
-			timemapper = self.timemapper
-			timemapper.setoffset(self.pos_abs[0], self.pos_abs[2] - self.pos_abs[0])
-		if self.bwstrip:
-			bwstrip = self.bwstrip
-			
-##		if bwstrip:
-##			bwstrip.addbandwidthinfo(self.node, self.node.get_bandwidthboxes(), self.selected, timemapper)
-			
-		if not self.node.WillPlay():
-			timemapper = None
-		self.__timemapper = timemapper
-		l,t,r,b = self.pos_abs
-
-		self.iconbox.moveto((l+HEDGSIZE, t+VEDGSIZE, 0, 0))
-		# First compute pushback bar position
-		if self.pushbackbar is not None:
-			self.pushbackbar.destroy()
-			self.pushbackbar = None
-		if timemapper is not None:
-			t0, t1, t2, download, begindelay = self.GetTimes('virtual')
-			self.__times = t0,t1,t2
-			if download > 0:
-				self.downloadtime_lag_errorfraction = 1 ## download / (download + begindelay)
-				if self.pushbackbar is None:
-					self.pushbackbar = PushBackBarWidget(self, self.mother)
-				pbb_left = timemapper.time2pixel(t0-download, align='right')
-				self.pushbackbar.moveto((pbb_left, t, l, t+12))
-
-		if self.iconbox.vertical:
-			l = l + self.iconbox.get_minsize()[0]
-		else:
-			t = t + TITLESIZE
-
-		# Add the timeline and the bandwidth strip
-		if self.timeline is not None:
-			tl_w, tl_h = self.timeline.get_minsize()
-			if TIMELINE_AT_TOP:
-				self.timeline.moveto((l, t, r, t+tl_h), timemapper)
-				t = t + tl_h
-			else:
-				self.timeline.moveto((l, b-tl_h, r, b), timemapper)
-				b = b - tl_h
-		if self.bwstrip is not None:
-			bw_w, bw_h = self.timeline.get_minsize()
-			if TIMELINE_AT_TOP:
-				self.bwstrip.moveto((l, t, r, t+bw_h), self.node, timemapper)
-				t = t + bw_h
-			else:
-				self.bwstrip.moveto((l, b-bw_h, r, b), self.node, timemapper)
-				b = b - bw_h
-		# XXXX Support for greyout widget not added, because timelines
-		# on media nodes isn't used anyway nowadays.
-		pix16x = 16
-		pix16y = 16
-		if self.transition_in is not None:
-			self.transition_in.moveto((l,b-pix16y,l+pix16x, b))
-		if self.transition_out is not None:
-			self.transition_out.moveto((r-pix16x,b-pix16y,r, b))
-
-	def get_maxsize(self):
-		return MAXSIZE, MAXSIZE
-
-	def __draw_box(self, displist, color):
-		x,y,w,h = self.get_box()
-		timemapper = self.__timemapper
-		if timemapper is None:
-			displist.drawfbox(color, (x,y,w,h))
-			return
-
-		node = self.node
-		t0, t1, t2 = self.__times
-		dur = Duration.get(node, ignoreloop = 1, wanterror = 0)	# what gets repeated
-		ad = Duration.get(node, wanterror = 0)
-		if dur > ad:
-			dur = ad
-
-		if dur >= 0 and t2 > t0:
-			dw = timemapper.interptime2pixel(t0+min(dur, t2-t0), 'right') - x
-			if dw < 0: dw = 0
-			if dw > w: dw = w
-		else:
-			dw = w
-##		self.need_draghandles = x,x+dw,y+h/2
-		self.need_draghandles = x,x+dw,y+h-8
-		if dw < w:
-			if ad > dur:
-##				adw = min(int(w*float(ad-dur)/(t2-t0) + .5), w-dw)
-				adw = timemapper.interptime2pixel(t0+min(ad, t2-t0)) - x - dw
-				if adw < 0: adw = 0
-				if adw > w-dw: adw = w-dw
-			else:
-				adw = 0
-			if adw > 0:
-				displist.drawfbox(REPEATCOLOR, (x+dw, y, adw, h))
-			if dw+adw < w:
-				displist.drawfbox(FREEZECOLOR, (x+dw+adw, y, w-dw-adw, h))
-		if dur > t2-t0:
-			# duration truncated
-			displist.drawfbox(TRUNCCOLOR, (x+w-TRUNCSIZE,y,TRUNCSIZE,h))
-		if dw > 0:
-			displist.drawfbox(color, (x, y, dw, h))
-		displist.drawfbox(FILLCOLOR, (x,y+h/3,w,h/3)) # fill bar
-
-	def draw_selected(self, displist):
-		self.__draw_box(displist, (255,255,255))
-		self.__draw(displist)
-		displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
-		self.draw_draghandles(displist)
-
-	def draw_unselected(self, displist):
-		self.draw(displist)
-
-	def draw_box(self, displist):
-		displist.draw3dbox(DROPCOLOR, DROPCOLOR, DROPCOLOR, DROPCOLOR, self.get_box())
-
-	def draw(self, displist):
-		# Only draw unselected.
-		willplay = not self.mother.showplayability or self.node.WillPlay()
-		if willplay:
-			color = LEAFCOLOR
-		else:
-			color = LEAFCOLOR_NOPLAY
-		self.__draw_box(displist, color)
-		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
-		self.__draw(displist)
-		if self.pushbackbar is not None:
-			self.pushbackbar.draw(displist)
-		self.draw_draghandles(displist)
-
-	def __draw(self, displist):
-		l,t,r,b = self.pos_abs
-		if self.iconbox is not None and self.iconbox.vertical:
-			l = l + self.iconbox.get_minsize()[0]
-			t = t + VEDGSIZE
-		else:
-			t = t + TITLESIZE
-		l = l + HEDGSIZE
-		b = b - VEDGSIZE
-		r = r - HEDGSIZE
-
-		# Add the timeline
-		if self.timeline is not None:
-			if TIMELINE_AT_TOP:
-				t = self.timeline.pos_abs[3]
-			else:
-				b = self.timeline.pos_abs[1]
-		# XXXX Should we cater for a bandwidth strip here too?
-		if self.need_draghandles is not None:
-			b = b - 6	# leave space for draghandles
-		# Draw the image.
-		self.drawnodecontent(displist, (l,t,r-l,b-t), self.node)
-		MMNodeWidget.draw(self, displist)
-
-	def get_obj_near(self, (x, y), timemapper = None, timeline = None):
-		if self.need_draghandles is not None:
-			l,r,t = self.need_draghandles
-			if t <= y <= t+DRAGHANDLESIZE:
-				if self.timemapper is not None:
-					timemapper = self.timemapper
-				if self.timeline is not None:
-					timeline = self.timeline
-				if l <= x < l + DRAGHANDLESIZE:
-					return self, 'left', timemapper, timeline
-				if r - DRAGHANDLESIZE <= x < r:
-					return self, 'right', timemapper, timeline
-
-	def get_obj_at(self, pos):
-		# Returns an MMWidget at pos. Compare get_clicked_obj_at()
-		if self.is_hit(pos):
-			return self
-		else:
-			return None
-
-	def get_clicked_obj_at(self, pos):
-		# Returns any object which can be clicked().
-		if self.is_hit(pos):
-			if self.transition_in is not None and self.transition_in.is_hit(pos):
-				return self.transition_in
-			elif self.transition_out is not None and self.transition_out.is_hit(pos):
-				return self.transition_out
-			elif self.iconbox is not None and self.iconbox.is_hit(pos):
-				return self.iconbox.get_clicked_obj_at(pos)
-			elif self.pushbackbar is not None and self.pushbackbar.is_hit(pos):
-				return self.pushbackbar
-			else:
-				return self
-		else:
-			return None
 
 	def get_popupmenu(self):
 		return self.mother.leaf_popupmenu
@@ -2325,9 +2135,6 @@ class CommentWidget(MMNodeWidget):
 		l,t,r,b = self.pos_abs
 ##		if self.iconbox is not None:
 ##			self.iconbox.moveto((l+HEDGSIZE, t+VEDGSIZE, 0, 0))
-
-	def get_maxsize(self):
-		return MAXSIZE, MAXSIZE
 
 	def draw_selected(self, displist):
 		displist.drawfbox((255,255,255), self.get_box())
@@ -2485,47 +2292,6 @@ class TransitionWidget(MMWidgetDecoration):
 ######################################################################
 # Widget decorations.
 ######################################################################
-
-class PushBackBarWidget(MMWidgetDecoration):
-	# This is a push-back bar between nodes.
-	def __init__(self, parent, mother):
-		MMWidgetDecoration.__init__(self, parent, mother)
-		self.node = parent.node
-		self.parent = parent
-
-	def draw(self, displist):
-		# TODO: draw color based on something??
-		redfraction = self.parent.downloadtime_lag_errorfraction
-		x, y, w, h = self.get_box()
-		displist.fgcolor(TEXTCOLOR)
-		displist.drawfbox(COLCOLOR, (x, y, w*redfraction, h))
-		displist.drawfbox(LEAFCOLOR, (x+w*redfraction, y, w*(1-redfraction), h))
-		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, COLCOLOR, FOCUSBOTTOM, self.get_box())
-
-	def draw_selected(self, displist):
-		redfraction = self.parent.downloadtime_lag_errorfraction
-		x, y, w, h = self.get_box()
-		displist.fgcolor(TEXTCOLOR)
-		displist.drawfbox(COLCOLOR, (x, y, w*redfraction, h))
-		displist.drawfbox(LEAFCOLOR, (x+redfraction, y, w*(1-redfraction), h))
-		displist.drawbox(self.get_box())
-
-	def draw_unselected(self, displist):
-		self.draw(displist)
-
-	def draw_box(self, displist):
-		self.parent.draw_box(displist)
-
-	def select(self):
-		self.parent.select()
-
-	def unselect(self):
-		self.parent.unselect()
-
-	def attrcall(self, initattr=None):
-		self.mother.toplevel.setwaiting()
-		import AttrEdit
-		AttrEdit.showattreditor(self.mother.toplevel, self.node, '.begin1')
 
 class GreyoutWidget(MMWidgetDecoration):
 	# A widget greying out timeline/bandwidth areas that

@@ -94,7 +94,7 @@ default_settings = {
 	'structure_expcolor': (200, 200, 200), # Open disclosure triangle (not used?)
 	'structure_colcolor': (200, 200, 200), # Collision color (not used?)
 	'structure_fillcolor': (255,255,222), # Fill bar color in media node
-	'structure_freezecolor': (200, 200, 200), # Freeze color in media node
+	'structure_freezecolor': (150, 150, 150), # Freeze color in media node
 	'structure_repeatcolor': (100, 100, 100), # Repeat color in media node
 	'structure_trunccolor': (255,0,0), # Indication that node is truncated
 	'structure_ecbordercolor': (40, 40, 40), # triangle border (not used?)

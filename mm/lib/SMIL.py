@@ -770,6 +770,7 @@ class SMIL:
 			'backgroundColor':None,
 			__layout:None,
 			GRiNSns+' ' 'bgcolor':None,
+			GRiNSns+' ' 'collapsed':None,
 			GRiNSns+' ' 'comment':None,
 			GRiNSns+' ' 'captionchannel':None,
 			GRiNSns+' ' 'thumbnailScale':None,
@@ -826,6 +827,7 @@ class SMIL:
 
 			  'backgroundColor':None,
 			  __layout:None,
+			  GRiNSns+' ' 'collapsed':None,
 			  GRiNSns+' ' 'thumbnailScale':None,
 			  GRiNSns+' ' 'thumbnailIcon':None,
 			  GRiNSns+' ' 'bgcolor':None,
