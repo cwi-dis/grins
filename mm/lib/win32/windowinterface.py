@@ -72,7 +72,7 @@ from win32dialog import *
 
 # override some dialogs when embedded
 import __main__
-if 0 and hasattr(__main__,'embedded') and __main__.embedded:
+if hasattr(__main__,'embedded') and __main__.embedded:
 	import embedding
 	showmessage = embedding.showmessage
 	ProgressDialog = embedding.ProgressDialog
