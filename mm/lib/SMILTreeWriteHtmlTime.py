@@ -719,7 +719,7 @@ class SMILHtmlTimeWriter(SMIL):
 			path = aparser.toDOMOriginPath()
 
 		attributes = self.attributes.get(tag, {})
-		for name, func in smil_attrs:
+		for name, func, gname in smil_attrs:
 			if attributes.has_key(name):
 				if name == 'type':
 					value = node.GetRawAttrDef("trtype", None)
