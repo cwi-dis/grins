@@ -68,11 +68,17 @@ class PlayerDlgBar(window.Wnd):
 			afxres.CBRS_SIZE_DYNAMIC | CBRS_GRIPPER | afxres.CBRS_FLOAT_MULTI, IDW_TOOLBAR_PLAYER_PANEL)
 		self.EnableDocking(afxres.CBRS_ALIGN_ANY);
 		parent.EnableDocking(afxres.CBRS_ALIGN_ANY);
-		l, t, r, b = parent.GetWindowRect()
-		parent.FloatControlBar(self, (l+100, (t+b)/2) )
+		#l, t, r, b = parent.GetWindowRect()
+		#parent.FloatControlBar(self, (l+100, (t+b)/2) )
 		self.setButtonIcons()
 		self.createComponents()
 		self.hookCommands()
+		self.ShowWindow(win32con.SW_HIDE)
+
+	def show(self):
+		self.ShowWindow(win32con.SW_SHOW)
+		l, t, r, b = self._parent.GetWindowRect()
+		self._parent.FloatControlBar(self, (l+100, (t+b)/2) )
 
 	def createResourceItems(self, attributes):
 		id = 1
