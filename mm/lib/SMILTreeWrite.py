@@ -245,7 +245,7 @@ def getsrc(writer, node):
 			# Exporting without a URL is an error
 			from windowinterface import showmessage
 			node.set_infoicon('error', 'The URL field is empty')
-			showmessage('No URL set for node %s' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>'))
+			showmessage('No URL set for node %s\nThe document may not be playable.' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>'))
 		else:
 			# If not exporting we insert a placeholder
 			val = '#'
@@ -284,7 +284,7 @@ def getsrc(writer, node):
 				# XXX URL missing for transition
 				import windowinterface
 				msg = 'No URL specified in transition'
-				windowinterface.showmessage(msg)
+				windowinterface.showmessage(msg + '\nThe document will not be playable.')
 				if node.children:
 					node.children[i].set_infoicon('error', msg)
 				else:
@@ -314,7 +314,7 @@ def getsrc(writer, node):
 			file = writer.copyfile(url, node)
 		except IOError, msg:
 			import windowinterface
-			windowinterface.showmessage('Cannot copy %s: %s'%(val, msg))
+			windowinterface.showmessage('Cannot copy %s: %s\n'%(val, msg)+'The URL is left unchanged; the document may not be playable.')
 			node.set_infoicon('error', msg)
 			return val
 	writer.copycache[url] = file
