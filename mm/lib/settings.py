@@ -2,7 +2,7 @@ __version__ = "$Id$"
 
 # Module to handle various system attributes
 import os
-import windowinterface
+##import windowinterface
 
 
 # Defaults:
@@ -11,10 +11,13 @@ default_settings = {
 	'system_captions': 0,		# Don't show captions
 	'system_language': '',		# No language preference
 	'system_overdub_or_caption': 'caption', # Captions preferred over overdub
-	'system_screen_size': windowinterface.getscreensize(), # Size of screen
-	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
+## Special case, see get() routine
+##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
+##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
 	'system_required': (),		# Needs special handling in match...
 	'license': '',
+	'license_user' : '',
+	'license_organization' : '',
 	'cmif': 0,			# Show cmif-only attributes
 	'debug': 0,			# Show debug commands
 	'checkext': 1,			# Guess Mime type based on extension
@@ -116,6 +119,13 @@ def factory_defaults():
 def get(name):
 	real_value = user_settings.get(name)
 	if real_value is None:
+		if name == 'system_screen_size':
+			import windowinterface
+			return windowinterface.getscreensize() # Size of screen
+		if name == 'system_screen_depth':
+			import windowinterface
+			return windowinterface.getscreendepth() # Depth of screen
+
 		real_value = default_settings.get(name)
 		if real_value is None:
 			print 'Warning: unknown system attribute', name
@@ -137,6 +147,7 @@ def getsettings():
 _warned_already = 0
 def set(setting, value):
 	global _warned_already
+	import windowinterface
 	if setting in NEEDS_RESTART and value != get(setting) and not _warned_already:
 		_warned_already = 1
 		windowinterface.showmessage('You have to restart GRiNS for some of these changes to take effect')

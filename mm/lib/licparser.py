@@ -28,7 +28,7 @@ class Features:
 		del self.args
 	
 class License:
-	def __init__(self, features, newlicense=None):
+	def __init__(self, features, newlicense=None, user="", organization=""):
 		"""Obtain a license, and state that we need at least one
 		of the features given"""
 		if newlicense:
@@ -52,10 +52,21 @@ class License:
 		if newlicense:
 			import settings
 			settings.set('license', newlicense)
+			if self.__moredays:
+				user = user + ' (evaluation copy)'
+			settings.set('license_user', user)
+			settings.set('license_organization', organization)
 			if not settings.save():
 				import windowinterface
 				windowinterface.showmessage(
 					'Cannot save license! (File permission problems?)')
+			if not self.__licensee:
+				if user and organization:
+					self.__licensee = user + ', ' + organization
+				elif user:
+					self.__licensee = user
+				else:
+					self.__licensee = organization
 
 	def have(self, *features):
 		"""Check whether we have the given features"""
