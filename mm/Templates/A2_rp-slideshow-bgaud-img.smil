@@ -12,6 +12,7 @@
       <region id="audioRegion_2" GRiNS:type="sound"/>
       <region id="bkgd_imageRegion" width="415" height="245" GRiNS:type="image"/>
       <region id="realpixRegion" left="5" top="5" width="400" height="180" z-index="1" GRiNS:type="RealPix"/>
+      <region id="captionRegion" left="5" top="190" width="400" height="40" z-index="1" GRiNS:type="RealText"/>
     </layout>
   </head>
   <body>
