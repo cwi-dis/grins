@@ -89,12 +89,6 @@ inline bool JpgDecoder::can_decode()
 	}
 inline DIBSurf* JpgDecoder::decode()
 	{
-	if(m_mf.get_handle() == INVALID_HANDLE_VALUE)
-		{
-		(*m_ef)("JpgDecoder::decode", "invalid file handle");
-		return NULL;
-		}
-
 	jpeg_decompress_struct cinfo;
 	jpeg_error_mgr jerr;
 
@@ -103,8 +97,8 @@ inline DIBSurf* JpgDecoder::decode()
 	jpeg_create_decompress(&cinfo);
 
 	// Specify data source for decompression
-	m_mf.reset_file_pointer();
-	jpeg_stdio_src(&cinfo, m_mf.get_handle());
+	file_reader fr(m_mf);
+	jpeg_stdio_src(&cinfo, &fr);
 
 	// Read file header, set default decompression parameters
 	int res = jpeg_read_header(&cinfo, TRUE);
