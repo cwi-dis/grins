@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="GRiNSRes" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 5.00
+# Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
@@ -17,11 +17,11 @@ CFG=GRiNSRes - Win32 Release
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "GRiNSRes - Win32 Release" (based on\
- "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "GRiNSRes - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
 
 # Begin Project
+# PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
 CPP=cl.exe
@@ -41,8 +41,8 @@ RSC=rc.exe
 F90=df.exe
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
 # ADD CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
-# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0xc09 /d "NDEBUG"
 # ADD RSC /l 0xc09 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -53,13 +53,14 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /noentry
 # Begin Custom Build - Generating grinsRC.py
 OutDir=.\..\Build
-InputPath=\new_grins\win32\src\Build\GRiNSRes.dll
-SOURCE=$(InputPath)
+InputPath=\cmif\win32\src\Build\GRiNSRes.dll
+SOURCE="$(InputPath)"
 
 "$(OutDir)\grinsRC.py" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	%PYTHONHOME%\Tools\scripts\h2py.py GRiNSRes.h 
+	e:\cmif\bin\python e:\python\tools\scripts\h2py.py  GRiNSRes.h 
 	copy GRiNSRes.py $(OutDir)\grinsRC.py 
 	del GRiNSRes.py 
+	copy $(OutDir)\GRiNSRes.dll e:\cmif\bin 
 	
 # End Custom Build
 # Begin Target
@@ -91,6 +92,10 @@ SOURCE=.\Res\cursor2.cur
 # Begin Source File
 
 SOURCE=.\Res\grab_han.cur
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\grins_ed.ico
 # End Source File
 # Begin Source File
 
@@ -151,11 +156,35 @@ SOURCE=.\Res\ul_strec.cur
 # End Group
 # Begin Source File
 
+SOURCE=.\RES\GRiNSed.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\grinsed1.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\grinsed2.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Build\grinsRC.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\GRiNSRes.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\GRiNSRes.rc
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\ico00001.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Toolbar.bmp
 # End Source File
 # End Target
 # End Project

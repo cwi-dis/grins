@@ -3,7 +3,124 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
+Project: "All cmif extensions"=".\All cmif extensions.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name python15
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name PyWinTypes
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name win32api
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name win32trace
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name win32ui
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name pythonwin
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name GRiNSRes
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "GRiNS"=..\..\Build\win32\GRiNS\GRiNS.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "GRiNSRes"=.\GRiNSRes\GRiNSRes.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name puthon15
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name win32ui
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "GRiNSed"=..\..\Build\win32\Editor\GRiNSed.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "PyWinTypes"=..\..\..\python\Extensions\win32\PyWinTypes.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name puthon15
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name python15
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "cmif"=..\..\cmif.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "python"=..\..\..\python\PCbuild\python.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "python15"=..\..\..\python\PCbuild\python15.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -23,6 +140,72 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name puthon15
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name PyWinTypes
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name win32api
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name win32ui
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "smil"=..\..\..\SMIL\smil\smil.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "win32api"=..\..\..\python\Extensions\win32\win32api.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name puthon15
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name PyWinTypes
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name python15
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "win32trace"=..\..\..\python\Extensions\win32\win32trace.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name puthon15
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name PyWinTypes
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name python15
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -35,6 +218,21 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name puthon15
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name PyWinTypes
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name win32api
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name python15
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name win32trace
+    End Project Dependency
 }}}
 
 ###############################################################################
