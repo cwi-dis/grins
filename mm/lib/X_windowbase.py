@@ -1994,6 +1994,9 @@ def beep():
 	dpy.Bell(100)
 	dpy.Flush()
 
+def lopristarting():
+	pass
+
 def _colormask(mask):
 	shift = 0
 	while (mask & 1) == 0:
