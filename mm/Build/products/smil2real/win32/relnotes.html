@@ -1,319 +1,69 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
   <head>
-    <title>GRiNS Editor for RealONE, Release Notes for Windows</title>
+    <title>GRiNS Editor 2.2 for RealONE, Release Notes for Windows</title>
   </head>
 
   <body>
-    <h1>GRiNS Editor for RealONE, Release Notes for Windows</h1>
+    <h1>GRiNS Editor 2.2 for RealONE, Release Notes for Windows</h1>
 
     <p>
-      These are the release notes for GRiNS Editor for RealONE,
-      Release Notes for Windows, build 118, December 3, 2001. A more
+      These are the release notes for GRiNS Editor 2.2 for RealONE,
+      Release Notes for Windows, build 138, March 2002. A more
       recent version of these release notes, as well as more recent
       builds of the editor, may be available through <a href="http://www.oratrix.com/">http://www.oratrix.com/</a>.
     </p>
-    <p>
-      IMPORTANT NOTE: As of the release of this version of
-      GRiNS/RealONE, the RealONE player architecture is in an
-      "evolving" state. As a result, the preview experience in the
-      GRiNS editor may be different from what you see in RealONE. We
-      expect that these differences will become minimal by the time
-      RealONE is in final product release.  Users may expect a
-      maintenance release of GR<em>i</em>NS shortly after the final
-      release of RealONE.
-    </p>
-
     <h2>
-      RealONE Comaptibility
+      Changes since 2.0 release
     </h2>
-    <p>
-      The following features may not work the same in GRiNS Editor for
-      RealONE and the RealONE player.
-    </p>
-    <ul>
-      <li>backgroundColor attribute on media objects (it does work the
-	same on regions);</li>
-      <li>backgroundColor="inherit" value;</li>
-      <li>when a subregion is smaller than the intrinsic media size,
-	and fit="hidden", the media is not cropped to the size of the
-	subregion.</li>
-    </ul>
-
-    <h2>
-      SMIL 2.0 Compatibility
-    </h2>
-
-    This player supports the SMIL 2.0 Language Profile, with the
-    following notes:
-    <UL>
-      <LI>
-	Structure functionality
-	<UL>
-	  <LI>
-	    Structure Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  </LI>
-	</UL>
-      <LI>
-	Metainformation functionality
-	<UL>
-	  <LI>
-	    Metainformation Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  </LI>
-	</UL>
-      <LI>
-	Timing functionality
-	<UL>
-	  <LI>
-	    BasicInlineTiming Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    SyncbaseTiming Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    EventTiming Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    MinMaxTiming Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    WallclockTiming Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    MultiArcTiming Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    BasicTimeContainers Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    ExclTimeContainers Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    PrevTiming Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    RestartTiming Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    SyncBehavior Module
-	    <UL>
-	      <LI>
-		Only syncBehavior="independent" is supported
-	    </UL>
-	  <LI>
-	    SyncBehaviorDefault Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    RestartDefault Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    FillDefault Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	</UL>
-      <LI>
-	Animation functionality
-	<UL>
-	  <LI>
-	    BasicAnimation Module
-	    <UL>
-	      <LI>
-		The attribute attributeType is recognized but ignored
-		(attributeType is always XML).
-	    </UL>
-	</UL>
-      <LI>
-	Content Control functionality
-	<UL>
-	  <LI>
-	    BasicContentControl Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    CustomTestAttributes Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    PrefetchControl Module
-	    <UL>
-	      <LI>
-		Recognized
-	    </UL>
-	  <LI>
-	    SkipContentControl Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	</UL>
-      <LI>Layout functionality
-	<UL>
-	  <LI>
-	    BasicLayout Module
-	    <UL>
-	      <LI>
-		 Fully supported
-	    </UL>
-	  <LI>
-	    AudioLayout Module
-	    <UL>
-	      <LI>
-		 Fully supported
-	    </UL>
-	  <LI>
-	    MultiWindowLayout Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    HierarchicalLayout Module
-	    <UL>
-	      <LI>
-		 For media with no intrinsic sizes (html, text, ...), the registration point attributes are recognized but ignored
-	    </UL>
-	</UL>
-      <LI>
-	Linking functionality
-	<UL>
-	  <LI>
-	    BasicLinking Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    LinkingAttributes Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    ObjectLinking Module
-	    <UL>
-	      <LI>
-		Fully supported, but only links in HTML documents can
-		be overridden using the fragment attribute.
-	    </UL>
-	</UL>
-      <LI>
-	Transition Effects functionality
-	<UL>
-	  <LI>
-	    BasicTransitions Module
-	    <UL>
-	      <LI>
-		Subtypes are recognized but only some are implemented,
-		the default subtype for the transition type is used in
-		all other cases.
-	      <LI>
-		Type miscShapeWipe is recognized but not implemented.
-	      <LI>
-		Timing for most of the iris wipes is incorrect.
-	      <LI>
-		The direction attribute is recognized but ignored
-		(direction is always forward).
-	      <LI>
-		Specifying multiple transitions in the transIn and
-		transOut attributes is not supported.
-	      <LI>
-		When both the from and the to source of a transition
-		are videos the from source will usually be frozen.
-	    </UL>
-	  <LI>
-	    TransitionModifiers Module
-	    <UL>
-	      <LI>
-		The TransitionModifiers attributes are recognized but
-		ignored. 
-	    </UL>
-	</UL>
-      <LI>
-	Media functionality
-	<UL>
-	  <LI>
-	    BasicMedia Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    MediaClipping Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    MediaParam Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    BrushMedia Module
-	    <UL>
-	      <LI>
-		Fully supported
-	    </UL>
-	  <LI>
-	    MediaAccessibility Module
-	    <UL>
-	      <LI>
-		Fully supported in that the readIndex attribute is
-		parsed correctly.  There is no support for actually
-		reading out the alt, title, and longdesc attributes.
-	    </UL>
-	</UL>
-    </UL>
+    Numerous bugs have been fixed and features have been added. Here are the highlights:
+    
+	<ul>
+	  <li>
+	    Support for targetting the RealOne media browser and related info panes has
+	    been added, and anchor and link editing in general has improved.
+	  </li>
+	  <li>
+	    Editing begin and end times of media items now conforms more to what people
+	    are used to from video editors and such. Visual feedback indicates when
+	    the current time coincides with another media item begin or end, and a
+	    mark command has been added to allow you to interactively remember "interesting"
+	    times while playing back a sound or video file.
+	  </li>
+	  <li>
+	    Animation editing has improved and conforms more to users' expectations
+	    based on using other software with similar functionality.
+	  </li>
+	  <li>
+	    The event editor has been rationalized, enhanced and made more robust.
+	  </li>
+	  <li>
+	    The bandwidth usage feedback now conforms more to reality, and offers
+	    an automatic fix for some common problems.
+	  </li>
+	  <li>
+	    Synchronous playback is now an option. It makes the preview player behave more
+	    like the RealOne player, so fine-tuning media synchronisation is easier. As the
+	    performance penalty of this is rather large it is mainly useful if you have a fast
+	    machine.
+	  </li>
+	  <li>
+	    The documentation has been greatly enhanced and updated: a reference manual
+	    has been added, the introductory manuals (Quickstart Guide, tutorial guide)
+	    have been rationalized and "How To" documents were added. The collection of How To
+	    documents is expected to grow over time, check the oratrix website.
+	  </li>
+	  <li>
+	    Many aspects of the user interface have been improved: dialog layout, help
+	    strings, command structure, source view color coding, keyboard shortcuts, etc.
+	  </li>
+	  <li>
+	    Memory usage has been optimized. Memory-related crashes, especially on Windows 98,
+	    have been fixed.
+	  </li>
+	  <li>
+	    Compatibility with Windows XP has been improved.
+	  </li>
+	  
   </body>
 </html>
