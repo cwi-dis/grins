@@ -1197,7 +1197,8 @@ class HierarchyView(HierarchyViewDialog):
 		size = 0
 		horizontal = (ntype not in ('par', 'alt', 'excl', 'prio'))
 		# animate++
-		if ntype in MMNode.leaftypes and node.GetChildren():
+		if ntype in MMNode.leaftypes and node.GetChildren() and \
+		   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
 			horizontal = 0
 		for child in children:
 			size = size + child.boxsize[not horizontal]
@@ -1663,7 +1664,8 @@ def do_expand(node, expand, nlevels=None, expleaftypes=0):
 	ntype = node.GetType()
 
 	# animate++
-	if expleaftypes and ntype in MMNode.leaftypes and node.GetChildren():
+	if expleaftypes and ntype in MMNode.leaftypes and node.GetChildren() and \
+		   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
 		pass
 	elif ntype not in MMNode.interiortypes and\
 	   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
@@ -1930,7 +1932,8 @@ class Object:
 				    (dec_left+hmargin, dec_top+vmargin, dec_right-dec_left-2*hmargin, dec_bottom-dec_top-2*vmargin) );
 
 		# animate++
-		if node.GetType() in MMNode.leaftypes and node.GetChildren():
+		if node.GetType() in MMNode.leaftypes and node.GetChildren() and \
+		   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
 			left_pos = title_left
 			title_left = title_left + awidth
 			# Check whether it fits
