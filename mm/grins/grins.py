@@ -165,6 +165,7 @@ def main():
 	mimetypes.types_map['.smi'] = mimetypes.types_map['.smil'] = \
 				      'application/smil'
 	mimetypes.types_map['.cmif'] = 'application/x-cmif'
+	mimetypes.types_map['.cmi'] = 'application/x-cmif'
 
 	import Channel
 	import GLLock
