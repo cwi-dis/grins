@@ -9,7 +9,7 @@ _dialog_widget = None
 
 class LicenseDialog:
 	def __init__(self):
-		import splash, splashimg, imgconvert
+		import splashimg, imgconvert
 		global _dialog_widget
 		fg = windowinterface.toplevel._convert_color((0,0,0), 0)
 		bg = windowinterface.toplevel._convert_color((0x99,0x99,0x99), 0)
