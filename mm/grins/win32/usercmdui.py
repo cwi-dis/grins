@@ -67,59 +67,62 @@ class CommandUI:
 # Global commands
 #
 
-CLOSE_WINDOW_UI=CommandUI(CLOSE_WINDOW)
-HELP_UI=CommandUI(HELP,IDUC_HELP)
-PREFERENCES_UI=CommandUI(PREFERENCES)
+CommandUI(CLOSE_WINDOW)
+CommandUI(HELP,IDUC_HELP)
+CommandUI(PREFERENCES)
 
 # win32++
-HELP_CONTENTS_UI=CommandUI(HELP_CONTENTS)
-GRINS_WEB_UI=CommandUI(GRINS_WEB)
-PASTE_DOCUMENT_UI=CommandUI(PASTE_DOCUMENT,IDUC_PASTEFILE)
+CommandUI(HELP_CONTENTS)
+CommandUI(GRINS_WEB)
+CommandUI(PASTE_DOCUMENT,IDUC_PASTEFILE)
 
-ABOUT_GRINS_UI=CommandUI(ABOUT_GRINS)
-CLOSE_ACTIVE_WINDOW_UI=CommandUI(CLOSE_ACTIVE_WINDOW,IDUC_CLOSE_WINDOW)
-SELECT_CHARSET_UI=CommandUI(SELECT_CHARSET)
+CommandUI(ABOUT_GRINS)
+CommandUI(CLOSE_ACTIVE_WINDOW,IDUC_CLOSE_WINDOW)
+CommandUI(SELECT_CHARSET)
 
 
 #
 # MainDialog commands
 #
-OPEN_UI=CommandUI(OPEN,IDUC_OPENURL)
-OPENFILE_UI=CommandUI(OPENFILE, IDUC_OPEN)
-OPEN_RECENT_UI=CommandUI(OPEN_RECENT,casc2ui[OPEN_RECENT])
-TRACE_UI=CommandUI(TRACE)
-DEBUG_UI=CommandUI(DEBUG)
-CONSOLE_UI=CommandUI(CONSOLE)
-SOURCE_UI=CommandUI(SOURCE)
-CLOSE_UI=CommandUI(CLOSE,IDUC_CLOSE)
-EXIT_UI=CommandUI(EXIT)
+CommandUI(OPEN,IDUC_OPENURL)
+CommandUI(OPENFILE, IDUC_OPEN)
+CommandUI(OPEN_RECENT,casc2ui[OPEN_RECENT])
+CommandUI(TRACE)
+CommandUI(DEBUG)
+CommandUI(CONSOLE)
+CommandUI(SOURCE)
+CommandUI(CLOSE,IDUC_CLOSE)
+CommandUI(EXIT)
 
 
 
 #
 # Player view commands
 #
-PLAY_UI=CommandUI(PLAY,IDUC_PLAY)
-PAUSE_UI=CommandUI(PAUSE,IDUC_PAUSE)
-STOP_UI=CommandUI(STOP,IDUC_STOP)
-MAGIC_PLAY_UI=CommandUI(MAGIC_PLAY,IDUC_MAGIC_PLAY)
-USERGROUPS_UI=CommandUI(USERGROUPS,casc2ui[USERGROUPS])
-CHANNELS_UI=CommandUI(CHANNELS,casc2ui[CHANNELS])
-#CALCTIMING_UI=CommandUI(CALCTIMING)
-CRASH_UI=CommandUI(CRASH)
-SCHEDDUMP_UI=CommandUI(SCHEDDUMP)
+CommandUI(PLAY,IDUC_PLAY)
+CommandUI(PAUSE,IDUC_PAUSE)
+CommandUI(STOP,IDUC_STOP)
+CommandUI(MAGIC_PLAY,IDUC_MAGIC_PLAY)
+CommandUI(USERGROUPS,casc2ui[USERGROUPS])
+CommandUI(CHANNELS,casc2ui[CHANNELS])
+#CommandUI(CALCTIMING)
+CommandUI(CRASH)
+CommandUI(SCHEDDUMP)
 
 
 #
-# Add the rest without a ui name
+# Add the rest without a predefined id
 # 
 #
-import usercmd
-for s in dir(usercmd):
-	a=getattr(usercmd,s)
-	if type(a) == type(usercmd._CommandBase):
-		if a.__name__ != '_CommandBase' and a.__name__ != '_DynamicCascade':
-			if not class2ui.has_key(a):
-				CommandUI(a)
-				# print 'no ui name assigned to usercmd',a.__name__
+def addui(cmdmod):
+	for s in dir(cmdmod):
+		a=getattr(cmdmod,s)
+		if type(a) == type(cmdmod._CommandBase):
+			if a.__name__ != '_CommandBase' and a.__name__ != '_DynamicCascade':
+				if not class2ui.has_key(a):
+					CommandUI(a)
+
+import usercmd, wndusercmd
+addui(usercmd)
+addui(wndusercmd)
 
