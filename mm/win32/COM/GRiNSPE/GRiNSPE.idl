@@ -1,0 +1,45 @@
+// GRiNSPE.idl : IDL source for GRiNSPE.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (GRiNSPE.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+#include "olectl.h"
+	
+
+	[
+		object,
+		uuid(DCAB2A67-BF5F-45B4-A006-B810653C9586),
+		dual,
+		helpstring("IGRiNSPlayer Interface"),
+		pointer_default(unique)
+	]
+	interface IGRiNSPlayer : IDispatch
+	{
+		[id(1), helpstring("method Open")] HRESULT Open([in] BSTR fileOrUrl);
+		[id(2), helpstring("method Play")] HRESULT Play();
+		[id(3), helpstring("method Stop")] HRESULT Stop();
+		[id(4), helpstring("method Pause")] HRESULT Pause();
+	};
+
+[
+	uuid(48EDCA77-451F-4CEB-9031-37A008FB5958),
+	version(1.0),
+	helpstring("GRiNSPE 1.0 Type Library")
+]
+library GRINSPELib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	[
+		uuid(6D2A3400-DFE3-473B-97F8-967FABE83AD7),
+		helpstring("GRiNSPlayer Class")
+	]
+	coclass GRiNSPlayer
+	{
+		[default] interface IGRiNSPlayer;
+	};
+};

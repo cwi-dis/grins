@@ -1,0 +1,34 @@
+HKCR
+{
+	GRiNS.GRiNSPlayer.1 = s 'GRiNSPlayer Class'
+	{
+		CLSID = s '{6D2A3400-DFE3-473B-97F8-967FABE83AD7}'
+	}
+	GRiNS.GRiNSPlayer = s 'GRiNSPlayer Class'
+	{
+		CLSID = s '{6D2A3400-DFE3-473B-97F8-967FABE83AD7}'
+		CurVer = s 'GRiNS.GRiNSPlayer.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {6D2A3400-DFE3-473B-97F8-967FABE83AD7} = s 'GRiNSPlayer Class'
+		{
+			ProgID = s 'GRiNS.GRiNSPlayer.1'
+			VersionIndependentProgID = s 'GRiNS.GRiNSPlayer'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			ForceRemove 'Control'
+			ForceRemove 'Insertable'
+			ForceRemove 'ToolboxBitmap32' = s '%MODULE%, 101'
+			'MiscStatus' = s '0'
+			{
+			    '1' = s '131473'
+			}
+			'TypeLib' = s '{48EDCA77-451F-4CEB-9031-37A008FB5958}'
+			'Version' = s '1.0'
+		}
+	}
+}
