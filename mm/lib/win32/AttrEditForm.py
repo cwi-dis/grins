@@ -3984,6 +3984,7 @@ class FileGroup(AttrGroup):
 		self._preview=0 # init to no preview
 		a=self.getattr('file')
 		f=a.getcurrent()
+		from winversion import osversion
 		import MMmimetypes
 		mtype = MMmimetypes.guess_type(f)[0]
 		if mtype is None: 
@@ -3992,10 +3993,12 @@ class FileGroup(AttrGroup):
 		# create media type sig for renderer
 		if mtype=='image':
 			if subtype == 'svg-xml':
-				mtype='svg'
-			elif string.find(subtype,'realpix')>=0:
-				mtype='realwnd'
-			self._preview=1
+				mtype='svg'	
+				self._preview = osversion.isNT()
+			else:				
+				if string.find(subtype,'realpix')>=0:
+					mtype='realwnd'
+				self._preview=1
 		elif mtype=='video':
 			if string.find(subtype,'realvideo')>=0:
 				mtype='realwnd'
