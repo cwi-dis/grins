@@ -160,6 +160,7 @@ class _CommonWindow:
 		self._popupmenu = None
 		self._outline_color = None
 		self._rb_dialog = None
+		self._wtd_cursor = ''
 		
 	def close(self):
 		"""Close window and all subwindows"""
@@ -220,13 +221,23 @@ class _CommonWindow:
 			ch._clipchanged()
 			
 	def _buttonschanged(self):
+		"""Buttons have changed, zap the mouse region cache. This escalates upwards"""
 		if not self._parent or not self._wid:
 			return
 		if self._button_region:
 			Qd.DisposeRgn(self._button_region)
+			self._button_region = None
 		# And inform our parent...
 		self._parent._buttonschanged()
-			
+		
+	def _zapregions(self):
+		"""Invalidate button regions because of mousemove. Escalates downwards"""
+		if self._button_region:
+			Qd.DisposeRgn(self._button_region)
+			self._button_region = None
+		for win in self._subwindows:
+			win._zapregions()
+		
 	def is_closed(self):
 		"""Return true if window is closed"""
 		return self._parent is None
@@ -268,7 +279,10 @@ class _CommonWindow:
 		pass
 
 	def setcursor(self, cursor):
-		self._parent.setcursor(cursor)
+		if cursor == 'watch':
+			cursor = ''
+		self._wtd_cursor = cursor
+		## Warn parent? self._parent.setcursor(cursor)
 
 	def newdisplaylist(self, *bgcolor):
 		"""Return new, empty display list"""
@@ -458,27 +472,6 @@ class _CommonWindow:
 			return
 		func(arg, self, (0, 0, 0))
 		
-##	def _mouse_over_button(self, where):
-##		for ch in self._subwindows:
-##			if Qd.PtInRect(where, ch.qdrect()):
-##				try:
-##					return ch._mouse_over_button(where)
-##				except Continue:
-##					pass
-##		
-##		# XXXX Need to cater for html windows and such
-##		
-##		wx, wy, ww, wh = self._rect
-##		x, y = where
-##		x = float(x-wx)/ww
-##		y = float(y-wy)/wh
-##
-##		if self._active_displist:
-##			for b in self._active_displist._buttons:
-##				if b._inside(x, y):
-##					return 1
-##		return 0
-
 	def _get_button_region(self):
 		"""Return the region that contains all buttons, in global coordinates"""
 		if not self._button_region:
@@ -981,23 +974,33 @@ class _ScrollMixin:
 		self._canvaspos = (0, 0)
 		self._barx = None
 		self._bary = None
-##		self.bary = Ctl.NewControl(self.wid, rect, "", 1, vy, 0, dr[3]-dr[1]-(vr[3]-vr[1]), 16, 0)
+		#
 		if not canvassize:
 			return
+		#
 		# Get measurements
+		#
 		horleft, verttop, vertright, horbot, vertleft, hortop = self._initscrollbarposition()
+		#
 		# Create vertical scrollbar
+		#
 		rect = vertleft, verttop, vertright, hortop+1
 		self._bary = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
 		self._bary.HiliteControl(255)
+		#
 		# Create horizontal scrollbar
+		#
 		rect = horleft, hortop, vertleft+1, horbot
 		self._barx = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
 		self._barx.HiliteControl(255)
-		# And set useable canvas size
 		
 	def close(self):
 		pass
+		
+	def _needs_grow_cursor(self):
+		if self._barx:
+			return 0
+		return 1
 		
 	def _redraw(self):
 		if self._barx:
@@ -1251,7 +1254,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		if not self._wid or not self._parent:
 			return
 		self._wid.SelectWindow()
-		self._parent._buttonschanged()
+		mw_globals.toplevel._mouseregionschanged()
 
 	def push(self):
 		"""Push window to bottom of window stack"""
@@ -1594,6 +1597,9 @@ class DialogWindow(_Window):
 		del self._item_to_cmd
 		del self._itemhandler
 		_Window.close(self)
+		
+	def _needs_grow_cursor(self):
+		return 0
 		
 	def addwidget(self, num, widget):
 		self._widgetdict[num] = widget

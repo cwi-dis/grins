@@ -45,6 +45,7 @@ windowgroup = toplevel.windowgroup
 close = toplevel.close
 addclosecallback = toplevel.addclosecallback
 setcursor = toplevel.setcursor
+setwaiting = toplevel.setwaiting
 getsize = toplevel.getsize
 usewindowlock = toplevel.usewindowlock
 settimer = toplevel.settimer
