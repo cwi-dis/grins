@@ -355,7 +355,7 @@
 	'Crop image.  Values are x,y coordinates of image area to display' normal light)
 
 (imgcropanchor (string) 'top-left' 'Image crop anchor' subregionanchor
-	'Anchor for image crop (x,y) coordinates' normal light)
+	'Anchor for image crop (x,y) coordinates' normal smil)
 
 (fullimage (bool) 1 'Use whole image' default
 	'Use whole image' normal light)
@@ -379,7 +379,7 @@
 	'width and height of destination area within channel' normal light)
 
 (subregionanchor (string) 'top-left' 'Destination region anchor' subregionanchor
-	'Anchor for subregion (x,y) coordinates' normal light)
+	'Anchor for subregion (x,y) coordinates' normal smil)
 
 (displayfull (bool) 1 'Fill whole region' default
 	'Use whole region for transition effect' normal light)
