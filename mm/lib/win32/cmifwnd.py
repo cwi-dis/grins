@@ -762,9 +762,6 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 				hdwp=w._resize_wnds_tree(hdwp,xf,yf)
 			Sdk.EndDeferWindowPos(hdwp)
 		
-		# call create_displists_tree only for childs
-		for w in self._subwindows:
-			w._create_displists_tree()
 
 	# destroy all display lists for this wnd and iteratively 
 	# for its childs, for the childs of its childs, etc	
