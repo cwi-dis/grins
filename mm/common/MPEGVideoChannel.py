@@ -61,7 +61,7 @@ class VideoChannel(ChannelWindowThread):
 			b.hiwidth(3)
 			if drawbox:
 				b.hicolor(hicolor)
-			self.setanchor(a[A_ID], a[A_TYPE], b)
+			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
 		return self.syncarm
 
 	#
@@ -120,4 +120,4 @@ class VideoChannel(ChannelWindowThread):
 	def defanchor(self, node, anchor, cb):
 		import windowinterface
 		windowinterface.showmessage('The whole window will be hot.')
-		cb((anchor[0], anchor[1], [0,0,1,1]))
+		cb((anchor[0], anchor[1], [0,0,1,1], anchor[3]))

@@ -184,7 +184,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			b.hiwidth(3)
 			if drawbox:
 				b.hicolor(hicolor)
-			self.setanchor(a[A_ID], a[A_TYPE], b)
+			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
 		return 1
 
 	def do_play(self, node):
