@@ -293,7 +293,7 @@ sound_player(self)
 	denter(sound_player);
 
 	/* check for multiple active sound channels */
-	down_sema(device_sema);
+	(void) down_sema(device_sema, WAIT_SEMA);
 #ifdef __sgi
 	if (device_used++ == 0) {
 		/* first one to open the device */
@@ -321,7 +321,7 @@ sound_player(self)
 	up_sema(device_sema);
 
 	/* open an audio port */
-	down_sema(PRIV->s_sema);
+	(void) down_sema(PRIV->s_sema, WAIT_SEMA);
 #ifdef __sgi
 	config = ALnewconfig();
 	ALsetwidth(config, PRIV->s_play.sampwidth);
@@ -336,7 +336,7 @@ sound_player(self)
 	if (PRIV->s_port < 0) {
 		printf("Warning: cannot open audio device\n");
 		up_sema(PRIV->s_sema);
-		down_sema(device_sema);
+		(void) down_sema(device_sema, WAIT_SEMA);
 		device_used--;
 		up_sema(device_sema);
 		return;
@@ -375,7 +375,7 @@ sound_player(self)
 	default:		/* all other errors */
 		printf("Warning: error setting audio configuration\n");
 		up_sema(PRIV->s_sema);
-		down_sema(device_sema);
+		(void) down_sema(device_sema, WAIT_SEMA);
 		device_used--;
 		up_sema(device_sema);
 		return;
@@ -466,7 +466,7 @@ sound_player(self)
 			dprintf(("sound_player(%lx): reading from pipe\n", (long) self));
 			(void) read(PRIV->s_pipefd[0], &c, 1);
 			dprintf(("sound_player(%lx): read %c\n", (long) self, c));
-			down_sema(PRIV->s_sema);
+			(void) down_sema(PRIV->s_sema, WAIT_SEMA);
 			if (c == 'p' || c == 'r') {
 #ifdef __sgi
 				filled = ALgetfilled(PRIV->s_port);
@@ -488,7 +488,7 @@ sound_player(self)
 				up_sema(PRIV->s_sema);
 				(void) read(PRIV->s_pipefd[0], &c, 1);
 				dprintf(("sound_player(%lx): continue playing, read %c\n", (long) self, c));
-				down_sema(PRIV->s_sema);
+				(void) down_sema(PRIV->s_sema, WAIT_SEMA);
 			}
 			if (c == 'r') {
 #ifdef __sgi
@@ -550,7 +550,7 @@ sound_player(self)
 #endif
 		}
 	}
-	down_sema(PRIV->s_sema);
+	(void) down_sema(PRIV->s_sema, WAIT_SEMA);
 #ifdef __sgi
 	ALcloseport(PRIV->s_port);
 #endif
@@ -561,7 +561,7 @@ sound_player(self)
 	PRIV->s_port = NULL;
 	PRIV->s_flag &= ~PORT_OPEN;
 	up_sema(PRIV->s_sema);
-	down_sema(device_sema);
+	(void) down_sema(device_sema, WAIT_SEMA);
 #ifdef __sgi
 	if (--device_used == 0) {
 		/* last one to close the audio port */
@@ -598,7 +598,7 @@ sound_playstop(self)
 	mmobject *self;
 {
 	denter(sound_stop);
-	down_sema(PRIV->s_sema);
+	(void) down_sema(PRIV->s_sema, WAIT_SEMA);
 	if (PRIV->s_flag & PORT_OPEN) {
 		PRIV->s_flag |= STOP;
 		(void) write(PRIV->s_pipefd[1], "s", 1);
@@ -623,7 +623,7 @@ sound_setrate(self, rate)
 	char msg;
 
 	dprintf(("sound_setrate(%lx,%g)\n", (long) self, rate));
-	down_sema(PRIV->s_sema);
+	(void) down_sema(PRIV->s_sema, WAIT_SEMA);
 	if (rate == 0) {
 		PRIV->s_flag |= PAUSE;
 		msg = 'p';
