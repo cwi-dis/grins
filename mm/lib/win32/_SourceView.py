@@ -389,7 +389,8 @@ class _SourceView(GenView, docview.RichEditView):
 		self.__closecallback = callback
 
 	def gettext(self):
-		return self.GetWindowText()
+		text = self.GetWindowText()
+		return self.__convert2un(text)
 
 	# Set the text to be shown
 	def settext(self, text):
@@ -439,6 +440,17 @@ class _SourceView(GenView, docview.RichEditView):
 		self.__map1.reverse()
 		return text
 
+	# Convert the text from windows to unix or mac
+	def __convert2un(self, text):
+		import string
+		# first map \r\n to \n (Windows to Unix)
+		rn = string.split(text, '\r\n')
+		text = string.join(rn, '\n')
+		# then map left over \r to \n (Mac to Unix)
+		r = string.split(text, '\r')
+		text = string.join(r, '\n')
+		return text
+		
 	# Called by the framework to close the view		
 	def close(self):
 		# 1. clean self contents
