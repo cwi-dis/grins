@@ -10,8 +10,8 @@ class LayoutChannel(ChannelWindow):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 		self.is_layout_channel = 1
 		self._activeMediaNumber = 0
-                self._wingeomInPixel = None
-                
+		self._wingeomInPixel = None
+
 	# for now
 	# get the parent window geometry in pixel
 	# need for sub-region, registration point,...
@@ -19,13 +19,13 @@ class LayoutChannel(ChannelWindow):
 	# we have to invalidate the current value in self._wingeomInPixel
 	def _getWingeomInPixel(self):
 	        parentChannel = self._get_parent_channel()
-	        
-	        if parentChannel == None:
-		        # top window 
-	                size = self._attrdict.get('winsize', (50, 50))
-	                w,h = size
-	                return 0,0,w,h
-	                
+
+		if parentChannel == None:
+			# top window 
+			size = self._attrdict.get('winsize', (50, 50))
+			w,h = size
+			return 0,0,w,h
+
 		units = self._attrdict['units']
 		if units == windowinterface.UNIT_PXL:
 			# The size in smil source is specified in pixel, we don't need to 
@@ -70,6 +70,8 @@ class LayoutChannel(ChannelWindow):
 ##				menu.append(('', 'unhighlight',
 ##					     (self.unhighlight, ())))
 			transparent = self._attrdict.get('transparent', 0)
+			# print 'layout channel transparent : ',self,':',transparent
+			# print 'layout channel bgcolor : ',self,':',bgcolor
 			self._curvals['transparent'] = (transparent, 0)
 			z = self._attrdict.get('z', 0)
 			self._curvals['z'] = (z, 0)
@@ -78,13 +80,15 @@ class LayoutChannel(ChannelWindow):
 						transparent = transparent,
 						z = z,
 						type_channel = self._window_type,
-						units = units)
+						units = units,
+						bgcolor = bgcolor)
 			else:
 				self.window = pchan.window.newwindow(pgeom,
 						transparent = transparent,
 						z = z,
 						type_channel = self._window_type,
-						units = units)
+						units = units,
+						bgcolor = bgcolor)
 ##			if hasattr(self._player, 'editmgr'):
 ##				menu.append(None)
 ##				menu.append(('', 'resize',
