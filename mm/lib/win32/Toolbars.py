@@ -90,7 +90,7 @@ class PanelMixin:
 			self._pbar.eraseClose() 
 
 	def updatePanelCmdUI(self):
-		if self._pbar:
+		if self._pbar and self._pbar.IsWindowVisible():
 			self._pbar.UpdateCmdUI()
 
 # null player panel mixin
