@@ -911,8 +911,10 @@ class _DisplayList:
 			srcrect = srcx, srcy, srcx+w, srcy+h
 			dstrect = dstx, dsty, dstx+w, dsty+h
 ##			print 'IMAGE', image[0], srcrect, dstrect
+			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 			Qd.CopyBits(image[0], wid.GetWindowPort().portBits, srcrect, dstrect,
 				QuickDraw.srcCopy+QuickDraw.ditherCopy, None)
+			Qd.RGBBackColor(self._bgcolor)
 		elif cmd == 'line':
 			color = entry[1]
 			points = entry[2]
