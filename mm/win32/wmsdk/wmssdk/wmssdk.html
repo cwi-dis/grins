@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+<TITLE>Windows Media Services SDK</TITLE>
+<link rel="stylesheet" type="text/css" href="../SDK_Coua.css"><!-- Document last modified on  Friday, November 19, 1999 at 11:54 AM-->
+
+</HEAD>
+<BODY>
+
+
+
+<STYLE>
+body {
+		margin-left: 1em;
+		margin-top: 0em}
+table.main{									
+	font-family: Verdana, Arial, Helvetica, MS Sans Serif;			
+	background-color: #FFFFFF;						
+	margin-top: -.1em; 							
+	margin-bottom: 0em;
+	margin-left: -1em;					
+	padding-left: 0em;							
+	padding-right: 0em; 
+	}
+</STYLE>
+
+
+<!--HEADGRAPH_START-->
+<TABLE CLASS="main" BORDER=0 CELLSPACING="0" CELLPADDING="0" WIDTH="*">
+<TR>
+<TD ROWSPAN="1" ALIGN="LEFT" VALIGN="TOP" WIDTH="*">
+<IMG SRC="../wmedia.gif" width="486" height="65" border="0" ALT="Windows Media Services SDK banner art"></TD></TR></TABLE>
+<!--HEADGRAPH_END-->
+
+<TABLE>
+<TR><TD class="main"></TD><TD class="main" Width=263></TD><TD class="main"><a STYLE="color:black" href="windowsmediaunicastcontrols.htm"><B>Next</B></a></TD></TR>
+</TABLE>
+
+<H1><A NAME="aboutwindowsmediasdk"></A><SUP></SUP>Windows Media Services SDK</H1>
+
+<P>The Microsoft® Windows Media™ Services Software Development Kit (SDK) encompasses a wide variety of technologies. Some sections are structured to meet the needs of Web authors who want to add streaming media to their Web sites. Other sections are geared toward Internet service vendors (ISVs) who are developing Web-based software solutions. </P>
+
+<P>This documentation is based on the corresponding system components. The Windows Media Services SDK contains the following components. </P>
+
+<TABLE border=0 cellpadding=5 cols=2 frame=below rules=rows>
+
+<TR VALIGN="top">
+<TD class=blue width=38%><B>Component</B></TD>
+<TD class=blue width=62%><B>Description</B></TD>
+</TR>
+
+<TR VALIGN="top">
+<TD width=38%><A HREF="windowsmediaunicastcontrols.htm">Windows Media Unicast Controls</A></TD>
+<TD width=62%>A set of Microsoft® ActiveX® controls that expose attributes for configuring, monitoring, and managing Windows Media <I>unicasting</I> services.</TD>
+</TR>
+
+<TR VALIGN="top">
+<TD width=38%><A HREF="windowsmediastationmanagercontrol.htm">Windows Media Station Control</A></TD>
+<TD width=62%>A Microsoft® ActiveX® control that exposes attributes for configuring, monitoring, and managing Windows Media <I>multicasting</I> services.</TD>
+</TR>
+
+<TR VALIGN="top">
+<TD width=38%><A HREF="windowsmediaauthenticationapi.htm">Windows Media Services Authentication API</A></TD>
+<TD width=62%>A COM-compliant API used for developing packages that authenticate users before allowing them to access ASF content.</TD>
+</TR>
+
+<TR VALIGN="top">
+<TD width=38%><A HREF="windowsmediaeventnotificationauthorizationapi.htm">Windows Media Services Event Notification and Authorization API</A></TD>
+<TD width=62%>A COM-compliant API used for developing packages that require the server to obtain authorization before performing tasks, and to send notification when the task is completed.</TD>
+</TR>
+
+<TR VALIGN="top">
+<TD width=38%><A HREF="windowsmediaftscontrol.htm">Windows Media Services File Transfer Control</A></TD>
+<TD width=62%>An ActiveX control used to receive multicast file transfers.</TD>
+</TR>
+</TABLE><BR>
+
+<P>The documentation for each component is divided into two sections:
+
+<UL type=disc>
+	<LI>The Programming Guide describes the architecture of the control or API, ways to implement the control or API, and sample code and/or scripts that demonstrate uses of the control or API.<BR><BR></LI>
+
+	<LI>The Programming Reference describes each interface, method, property, event, or structure exposed by the control or API.</LI>
+</UL>
+
+
+
+<H3><A NAME="thewindowsmediaprogrammingmodel"></A>The Windows Media Services Programming Model</H3>
+
+<P>Microsoft® Windows Media™ Services enables development with a variety of languages and methodologies. These include:
+
+<UL type=disc>
+	<LI><B>Component Object Model (COM). </B>The standard for building reliable, interoperable software components. COM is programming-language independent; however, this SDK concentrates on COM components (objects) implemented through Microsoft® Visual C++® base classes.<BR><BR></LI>
+
+	<LI><B>Automation (formerly called OLE Automation). </B>A software technology that implements its features primarily through the COM <B>IDispatch</B> interface. Automation enables access to the methods, properties, and events of the supported interfaces from languages including Microsoft® Visual Basic® and Java.<BR><BR></LI>
+
+	<LI><B>ActiveX controls. </B>Compiled, self-contained software components that are ideal for Web development. ActiveX controls can be used to develop Visual Basic, Visual C++, and Java applications, or they can be inserted into Hypertext Markup Language (HTML) pages for Web-based applications. ActiveX controls are easy to manipulate using scripting languages such as Microsoft® Visual Basic® Scripting Edition (VBScript) or Microsoft® JScript®.</LI>
+</UL>
+
+<P>The following table shows the relationship between the underlying technology and the features of Windows Media Services.</P>
+
+<TABLE border=0 cellpadding=5 cols=2 frame=below rules=rows>
+
+<TR VALIGN="top">
+<TD class=blue width=56%><B>Windows Media Services component</B></TD>
+<TD class=blue width=44%><B>Programming technology</B></TD>
+</TR>
+
+<TR VALIGN="top">
+<TD width=56%>Windows Media Unicast controls<BR>
+<B>Windows Media</B> <B>Station </B>control<BR>
+Windows Media <B>File Transfer</B> control</TD>
+<TD width=44%>ActiveX</TD>
+</TR>
+
+<TR VALIGN="top">
+<TD width=56%>Event Notification and Authorization API<BR>
+Authentication API</TD>
+<TD width=44%>COM</TD>
+</TR>
+</TABLE><BR>
+<TABLE>
+<TR><TD class="main"></TD><TD class="main" Width=263></TD><TD class="main"><a STYLE="color:black" href="windowsmediaunicastcontrols.htm"><B>Next</B></a></TD></TR>
+</TABLE>
+<hr size=1><br>
+<font size=-1><A HREF="../legal.htm">
+&copy; 1996-1999 Microsoft Corporation. All rights reserved.</a><br>
+</font><br><br>
+</BODY>
+</HTML>
