@@ -57,8 +57,14 @@ class Main:
 		for top in self.tops:
 			top.setready()
 
+	def do_exit(self, *args):
+		for top in self.tops:
+			top.close()
+
 	def run(self):
-		import select, gl, fl, posix, GLLock
+		import select, gl, fl, posix, GLLock, windowinterface, EVENTS
+		windowinterface.setcallback(EVENTS.WindowExit, self.do_exit,
+					    None)
 		glfd = gl.qgetfd()
 		while 1:
 			locked = None
