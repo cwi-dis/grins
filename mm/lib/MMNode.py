@@ -1109,13 +1109,13 @@ class MMNode:
 	# SetArcSrc sets the source of a sync arc.
 	#
 	def SetArcSrc(self, side, delay, aid):
-		self.sync_to[side].append((SYNC_DONE, (delay, aid)))
+		self.sync_to[side].append((SYNC, (delay, aid)))
 
 	#
 	# SetArcDst sets the destination of a sync arc.
 	#
 	def SetArcDst(self, side, aid):
-		self.sync_from[side].append((SYNC, aid))
+		self.sync_from[side].append((SYNC_DONE, aid))
 			
 		
 
