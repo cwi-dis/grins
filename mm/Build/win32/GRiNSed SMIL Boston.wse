@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-65.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-66.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -1453,6 +1453,103 @@ item: If/While Statement
   Value=A
   Flags=00001010
 end
+item: Set Variable
+  Variable=INSTALLDLLS
+  Value=no
+end
+item: Check Configuration
+  Flags=10100000
+end
+item: Set Variable
+  Variable=INSTALLDLLS
+  Value=yes
+end
+item: End Block
+end
+item: Check Configuration
+  Flags=10111001
+end
+item: Set Variable
+  Variable=INSTALLDLLS
+  Value=yes
+end
+item: End Block
+end
+item: Check Configuration
+  Flags=11110010
+end
+item: Set Variable
+  Variable=INSTALLDLLS
+  Value=no
+end
+item: End Block
+end
+item: Check Configuration
+  Flags=11110110
+end
+item: Set Variable
+  Variable=INSTALLDLLS
+  Value=no
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=INSTALLDLLS
+  Value=yes
+end
+item: Remark
+  Text=don't make backups of system dlls
+end
+item: Set Variable
+  Variable=BACKUPDIR
+end
+item: Install File
+  Source=c:\Winnt\system32\Oleaut32.dll
+  Destination=%SYS32%\Oleaut32.dll
+  Flags=0000001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\mfc42.dll
+  Destination=%SYS32%\mfc42.dll
+  Flags=0001001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\Msvcp60.dll
+  Destination=%SYS32%\Msvcp60.dll
+  Flags=0000001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\Msvcirt.dll
+  Destination=%SYS32%\Msvcirt.dll
+  Flags=0000001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\Olepro32.dll
+  Destination=%SYS32%\Olepro32.dll
+  Flags=0001001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\Msvcrt.dll
+  Destination=%SYS32%\Msvcrt.dll
+  Flags=0000001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\Msvcrt40.dll
+  Destination=%SYS32%\Msvcrt40.dll
+  Flags=0000001010000011
+end
+item: If/While Statement
+  Variable=DOBACKUP
+  Value=A
+end
+item: Set Variable
+  Variable=BACKUPDIR
+  Value=%BACKUP%
+end
+item: End Block
+end
+item: End Block
+end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\empty_S2.grins
   Destination=%MAINDIR%\Templates\empty_S2.grins
@@ -1471,7 +1568,7 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\wingdi.pyd
   Destination=%MAINDIR%\wingdi.pyd
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\GRiNS-Icons\comment.tiff
@@ -1481,17 +1578,17 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\dsound.pyd
   Destination=%MAINDIR%\dsound.pyd
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\win32\DXMedia\bin\vid2rm.ax
   Destination=%MAINDIR%\Producer-SDK\vid2rm.ax
-  Flags=0001000010000011
+  Flags=0001000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\win32\DXMedia\bin\aud2rm.ax
   Destination=%MAINDIR%\Producer-SDK\aud2rm.ax
-  Flags=0001000010000011
+  Flags=0001000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\GRiNS_SV2.exe
@@ -1754,16 +1851,6 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Winnt\system32\Oleaut32.dll
-  Destination=%SYS32%\Oleaut32.dll
-  Flags=0000001010001010
-end
-item: Install File
-  Source=c:\Winnt\system32\mfc42.dll
-  Destination=%SYS32%\mfc42.dll
-  Flags=0001001010001010
-end
-item: Install File
   Source=d:\ufs\mm\cmif\Templates\qsg1.bmp
   Destination=%MAINDIR%\Templates\qsg1.bmp
   Flags=0000000010000010
@@ -1954,34 +2041,9 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Winnt\system32\Msvcp60.dll
-  Destination=%SYS32%\Msvcp60.dll
-  Flags=0000001010001010
-end
-item: Install File
-  Source=c:\Winnt\system32\Msvcirt.dll
-  Destination=%SYS32%\Msvcirt.dll
-  Flags=0000001010001010
-end
-item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\dshow.pyd
   Destination=%MAINDIR%\dshow.pyd
   Flags=0000000010000010
-end
-item: Install File
-  Source=c:\Winnt\system32\Olepro32.dll
-  Destination=%SYS32%\Olepro32.dll
-  Flags=0001001010001010
-end
-item: Install File
-  Source=c:\Winnt\system32\Msvcrt.dll
-  Destination=%SYS32%\Msvcrt.dll
-  Flags=0000001010001010
-end
-item: Install File
-  Source=c:\Winnt\system32\Msvcrt40.dll
-  Destination=%SYS32%\Msvcrt40.dll
-  Flags=0000001010001010
 end
 item: End Block
 end
