@@ -8,6 +8,8 @@ ALL_LAYOUTS = '(All Channels)'
 ###########################
 # helper class to build tree from list
 
+TYPE_ABSTRACT, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT = range(4)
+
 class Node:
 	def __init__(self, name, dict, ctx):
 		self._name = name
@@ -15,11 +17,36 @@ class Node:
 		self._parent = None
 		self._children = []
 		self._ctx = ctx
-		self._isviewport = 0
+		self._viewport = None
+		
+		# graphic control (implementation: system dependant)
+		self._graphicCtrl = None		
 
 		# default attribute		
 		self.importAttrdict()
+		self._nodeType = TYPE_ABSTRACT
 
+	def addNode(self, node):
+		self._children.append(node)
+		node._parent = self
+		node._viewport = self._viewport
+
+	def _do_init(self, parent):
+		self._parent = parent
+		parent._children.append(self)
+		self._viewport = parent._viewport
+			
+#	def removeNode(self, name)
+
+	def isShowed(self):
+		return self._graphicCtrl != None
+
+	def getNodeType(self):
+		return self._nodeType
+	
+	def getViewport(self):
+		return self._viewport
+	
 	def importAttrdict(self):
 		self._curattrdict = {}
 		# no share attributes
@@ -40,17 +67,13 @@ class Node:
 	def getParent(self):
 		return self._parent
 	
-	def _do_init(self, parent):
-		self._parent = parent
-		parent._children.append(self)
-			
 	def applyOnAllNode(self, fnc, params):
 		apply(fnc, params)
 		for child in self._children:
 			child.applyOnAllNode(fnc, params)
 
 	def select(self):
-		if self._graphicCtrl != None:
+		if self.isShowed():
 			self._graphicCtrl.select()
 
 	def hide(self):
@@ -63,7 +86,7 @@ class Node:
 
 	def updateAttrdict(self):
 		self.importAttrdict()
-		if self._graphicCtrl != None:
+		if self.isShowed():
 			self._graphicCtrl.setAttrdict(self._curattrdict)
 
 	def updateAllAttrdict(self):
@@ -74,9 +97,7 @@ class Node:
 class Region(Node):
 	def __init__(self, name, dict, ctx):
 		Node.__init__(self, name, dict, ctx)
-
-		# graphic control (implementation: system dependant)
-		self._graphicCtrl = None		
+		self._nodeType = TYPE_REGION
 
 	def importAttrdict(self):
 		Node.importAttrdict(self)		
@@ -139,6 +160,64 @@ class Region(Node):
 
 	def onProperties(self):
 		self._ctx.selectBgColor(self)
+
+class MediaRegion(Region):
+	def __init__(self, name, node, wingeom, ctx):
+		self.mmnode = node
+		dict = node.attrdict
+		self.wingeom = wingeom
+		Region.__init__(self, name, dict, ctx)
+		self._nodeType = TYPE_MEDIA
+
+	def importAttrdict(self):
+		Node.importAttrdict(self)		
+		Node.importAttrdict(self)		
+		self._curattrdict['bgcolor'] = self._defattrdict.get('bgcolor')
+		self._curattrdict['transparent'] = 1
+		
+		self._curattrdict['wingeom'] = self.wingeom
+		self._curattrdict['z'] = 0
+
+	def onSelected(self):
+		self._ctx.onPreviousSelectMedia(self)
+
+	def show(self):
+		Region.show(self)
+
+		# copy from old hierarchical view to determinate the image
+		node = self.mmnode
+		ntype = node.GetType()
+		ctype = node.GetChannelType()
+		
+		from cmif import findfile
+		self.datadir = findfile('GRiNS-Icons')
+
+		import os
+		f = os.path.join(self.datadir, '%s.tiff' % ctype)
+		url = node.GetAttrDef('file', None)		
+		if ctype == 'image':
+			url = node.context.findurl(url)
+			try:
+				import MMurl
+				f = MMurl.urlretrieve(url)[0]
+			except IOError, arg:
+				print "Cannot load image: %s"%arg
+		if f is not None:
+			self._graphicCtrl.setImage(f, 1)
+		
+	def onUnselected(self):
+		print 'media unselected : ',self._name
+		
+	def onGeomChanging(self, geom):
+		# update only the geom field on dialog box
+		self._ctx.updateMediaGeomOnDialogBox(geom)
+		
+	def onGeomChanged(self, geom):
+		# apply the new value
+		self._ctx.applyGeomOnMedia(self, geom)
+
+	def onProperties(self):
+		self._ctx.selectBgColor(self)
 		
 class Viewport(Node):
 	def __init__(self, name, dict, ctx):
@@ -146,10 +225,8 @@ class Viewport(Node):
 		self.currentY = 8
 		
 		Node.__init__(self, name, dict, ctx)
-		self._isviewport = 1
-
-		# graphic control (implementation: system dependant)
-		self._graphicCtrl = None
+		self._nodeType = TYPE_VIEWPORT
+		self._viewport = self
 
 	def importAttrdict(self):
 		Node.importAttrdict(self)
@@ -193,7 +270,7 @@ class Viewport(Node):
 		Node.updateAllAttrdict(self)
 		
 		# for now refresh all
-		if self._graphicCtrl != None:
+		if self.isShowed():
 			self.showAllNodes()
 		
 	def onSelected(self):
@@ -258,8 +335,19 @@ class LayoutView2(LayoutViewDialog2):
 		self.buildRegionTree(self.context)
 		self.initDialogBox()		
 		self.displayViewport(self._first)
-		self.editmgr.register(self)
+		self.editmgr.register(self, 1)
 
+		#		
+		# simulate the focus for test
+		#
+		focustype = 1
+		self.nodelist = []
+		for key,node in self.context.uidmap.items():
+			if node.type in ('imm','ext'):
+				self.nodelist.append(node)
+		self.globalfocuschanged(focustype, self.nodelist[0])
+		# ###
+		
 	def hide(self):
 		if not self.is_showing():
 			return
@@ -276,6 +364,12 @@ class LayoutView2(LayoutViewDialog2):
 		# for now, we assume here that no region has been added or supressed
 		self.updateRegionTree()
 
+	def globalfocuschanged(self, focustype, focusobject):
+#		print "LayoutView 2: focus received : ",focustype, focusobject
+		from MMNode import MMNode
+#		if focusobject is MMNode:
+		self.setMediaNode(focusobject)
+		
 	def kill(self):
 		self.destroy()
 
@@ -326,12 +420,49 @@ class LayoutView2(LayoutViewDialog2):
 			self.currentNodeSelected.select()
 
 			# update dialog box as well
-			if self.currentNodeSelected._isviewport:
+			nodeType = self.currentNodeSelected.getNodeType()
+			if nodeType == TYPE_VIEWPORT:
 				self.updateViewportOnDialogBox(self.currentNodeSelected)
-			else:
+			elif nodeType == TYPE_REGION:
 				self.updateRegionOnDialogBox(self.currentNodeSelected)
+			elif nodeType == TYPE_MEDIA:
+				self.updateMediaOnDialogBox(self.currentNodeSelected)
 			
-			
+	def setMediaNode(self, node):
+		channel = node.GetChannel()
+		if channel == None: return
+		layoutChannel = channel.GetLayoutChannel()
+		if layoutChannel == Node: return
+		layoutChannelName = layoutChannel.name
+		regionNode = self.getRegion(layoutChannelName)
+		if regionNode == None: return
+		newname = channel.name
+		# for now don't modify the original attrdict
+		newattrdict = channel.attrdict.copy()
+
+		# get wingeom according to the subregion positionning
+		# note this step is not done during the parsing in order to maintains all constraint information
+		# at some point we'll have to do the same thing for regions
+		wingeom = self._getwingeom(channel, node)
+		newattrdict['base_winoff'] = wingeom
+		
+		newRegionNode = MediaRegion(newname, node, wingeom, self)
+
+		# display the right viewport
+		if self.currentViewport != regionNode.getViewport():
+			self.displayViewport(regionNode.getViewport().getName())
+
+		self.currentMediaRegionList = []
+		# add the new media region
+		if self.currentViewport	!= None:
+			self.currentMediaRegionList.append((newRegionNode, regionNode))
+
+		# add the list of new media regions
+		for mediaRegion, parentRegion in self.currentMediaRegionList:
+			parentRegion.addNode(mediaRegion)
+			mediaRegion.show()
+			mediaRegion.select()
+						
 	# extra pass to initialize map the region name list to the node object
 	def __initRegionList(self, node, isRoot=1):
 		if not isRoot:
@@ -358,19 +489,6 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentViewport.select()
 		self.updateViewportOnDialogBox(self.currentViewport)
 		self.currentNodeSelected = self.currentViewport
-
-	def selectRegion(self, name):
-		if self.currentViewport != None:
-			vpName = self.currentViewport.getName()
-			regionNameList = self.getRegionNameList(vpName)
-			for regionName in regionNameList:
-				if regionName == name:
-					region = self.getRegion(regionName)
-					if region != None:
-						region.select()
-						self.currentNodeSelected = region												
-						self.updateRegionOnDialogBox(region)
-						break
 
 	def selectBgColor(self, node):
 		dict = node.getDocDict()
@@ -483,6 +601,9 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.setchannelattr(region.getName(), 'base_winoff', geom)
 			self.editmgr.commit()
 
+	def applyGeomOnMedia(self, media, value):
+		print 'apply geom on media not implemented yet'
+		
 	def applyBgColor(self, node, bgcolor, transparent):
 		# test if possible 
 		if self.editmgr.transaction():
@@ -503,9 +624,8 @@ class LayoutView2(LayoutViewDialog2):
 			for region, z in list:
 				self.editmgr.setchannelattr(region.getName(), 'z', z)
 			self.editmgr.commit()
-							
-	def updateViewportOnDialogBox(self, viewport):
 
+	def updateViewportOnDialogBox(self, viewport):
 		# update region list
 		self.currentRegionNameList = self.getRegionNameList(viewport.getName())		
 		self.dialogCtrl.fillSelecterCtrl('RegionSel', self.currentRegionNameList)
@@ -569,6 +689,12 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.setFieldCtrl('RegionW',"%d"%geom[2])		
 		self.dialogCtrl.setFieldCtrl('RegionH',"%d"%geom[3])
 
+	def updateMediaOnDialogBox(self, media):
+		print 'update on media on dialog box not implemented yet'
+
+	def updateMediaGeomOnDialogBox(self, geom):
+		print 'update media geom on dialog box not implemented yet'
+
 	#
 	# internal methods
 	#
@@ -600,7 +726,7 @@ class LayoutView2(LayoutViewDialog2):
 		
 	def __updateGeom(self, ctrlName, value):
 		if self.currentNodeSelected != None:
-			if self.currentNodeSelected._isviewport:
+			if self.currentNodeSelected.getNodeType() == TYPE_VIEWPORT:
 				self.__updateGeomOnViewport(ctrlName, value)
 			else:
 				self.__updateGeomOnRegion(ctrlName, value)
@@ -617,18 +743,30 @@ class LayoutView2(LayoutViewDialog2):
 	def __bringFront(self):
 		if self.currentNodeSelected != None:
 			self.bringFront(self.currentNodeSelected)
+
+	def __selectRegion(self, name):
+		region = self.getRegion(name)
+		if region != None:
+			region.select()
+			self.currentNodeSelected = region												
+			self.updateRegionOnDialogBox(region)
 		
 	#
 	# interface implementation of 'previous tree node' 
 	#
 	
-	def onPreviousSelectRegion(self, region):
-		self.selectRegion(region.getName())				
-
 	def onPreviousSelectViewport(self, viewport):
 		self.currentNodeSelected = viewport	
 		self.updateViewportOnDialogBox(viewport)
 		
+	def onPreviousSelectRegion(self, region):
+		self.currentNodeSelected = region												
+		self.updateRegionOnDialogBox(region)
+		
+	def onPreviousSelectMedia(self, media):
+		self.currentNodeSelected = media				
+		self.updateMediaOnDialogBox(media)
+
 	#
 	# interface implementation of 'dialog controls callback' 
 	#
@@ -637,7 +775,7 @@ class LayoutView2(LayoutViewDialog2):
 		if ctrlName == 'ViewportSel':
 			self.displayViewport(value)
 		elif ctrlName == 'RegionSel':
-			self.selectRegion(value)	
+			self.__selectRegion(value)	
 
 	def onMultiSelCtrl(self, ctrlName, itemList):
 		if ctrlName == 'RegionList':
@@ -671,4 +809,96 @@ class LayoutView2(LayoutViewDialog2):
 			self.__bringFront()
 		elif ctrlName == 'ShowRbg':
 			print 'ShowRbg pressed'
+
+
+# ################################################################################################
+# for now, copied from channel
+# to do: when all mix constraints will be managed fully, we'll can (move / suppress) this code
+# ################################################################################################
+
+	def _getParentChannel(self, channel):
+		# actualy the layout channel is directly the parent channel
+		cname = channel.attrdict.get('base_window')
+		if not cname:
+			return None
+		return self.context.channeldict.get(cname)
+
+	# get the parent window geometry in pixel
+	def _getWingeomInPixel(self, layoutchannel):
+		parentChannel = self._getParentChannel(layoutchannel)
+	        
+		if parentChannel == None:
+			# top window
+			size = layoutchannel._attrdict.get('winsize', (50, 50))
+			w,h = size
+			return 0,0,w,h
+		
+		units = layoutchannel.attrdict['units']
+		import windowinterface
+		if units == windowinterface.UNIT_PXL:
+			# The size in smil source is specified in pixel, we don't need to 
+			# convert it and return directly it
+			return layoutchannel.attrdict['base_winoff']
+		if layoutchannel._wingeomInPixel != None:
+			# The size is expressed in pourcent in smil source document, but
+			# the size in pixel is already pre-calculate.
+			return layoutchannel._wingeomInPixel
+
+		# The size is expressed in pourcent in smil source document, we don't determinate 
+		# yet its size in pixel. For this, we need to know the parent size in pixel
+		
+		parentChannel = self._getParentChannel(layoutchannel)
+		parentGeomInPixel = parentChannel._getWingeomInPixel()
+		
+		x,y,w,h = layoutchannel._attrdict['base_winoff']
+		px,py,pw,ph = parentGeomInPixel
+		
+		# we save the current size in pixel for the next request
+		layoutchannel._wingeomInPixel = x*pw, y*ph, w*pw, h*ph
+		
+		return layoutchannel._wingeomInPixel
+
+	# get the sub channel geom according to sub-regions
+	# return in pixel value
+	def _getwingeom(self, channel, node):
+		subreg_left = node.GetAttrDef('left', 0)
+		subreg_right = node.GetAttrDef('right', 0)
+		subreg_top = node.GetAttrDef('top', 0)
+		subreg_bottom = node.GetAttrDef('bottom', 0)
+
+		layoutchannel = self._getParentChannel(channel)
+		reg_left, reg_top, reg_width, reg_height = self._getWingeomInPixel(layoutchannel)
+
+		# translate in pixel
+		if type(subreg_left) == type(0.0):
+			subreg_left = int(reg_width*subreg_left)
+		if type(subreg_top) == type(0.0):
+			subreg_top = int(reg_height*subreg_top)
+		if type(subreg_right) == type(0.0):
+			subreg_right = int(reg_width*subreg_right)
+		if type(subreg_bottom) == type(0.0):
+			subreg_bottom = int(reg_height*subreg_bottom)
+
+		# determinate subregion height and width
+		subreg_height = reg_height-subreg_top-subreg_bottom
+		subreg_width = reg_width-subreg_left-subreg_right
+		# print 'sub region height =',subreg_height
+		# print 'sub region width = ',subreg_width
+
+		# allow only no null or negative value
+		if subreg_height <= 0:
+			subreg_height = 1
+		if subreg_width <= 0:
+			subreg_width = 1
+
+		node.__subreg_height = subreg_height
+		node.__subreg_width = subreg_width
+		node.__subreg_top = subreg_top
+		node.__subreg_left = subreg_left
+
+		# print subreg_left, subreg_top, subreg_width, subreg_height
+		return subreg_left, subreg_top, subreg_width, subreg_height
+
+# ################################################################################################
+			
 					 
