@@ -1624,7 +1624,6 @@ class Region(Window):
 					self._active_displist._ddsrender(dds, dst, rgn, clear=0)
 				except:
 					pass
-
 			else:
 				# draw display list but after clear
 				try:
@@ -1891,10 +1890,6 @@ class Region(Window):
 		if not self._isvisible or exclwnd==self:
 			return
 
-		if self._resizing and self._scale and self._scalesurf:
-			self._paint_5(rc, exclwnd)
-			return
-
 		if self._transition and self._transition._isrunning():
 			if self._transition._ismaster(self):
 				if self._multiElement:
@@ -1904,6 +1899,10 @@ class Region(Window):
 						self._paint_2(rc, exclwnd)
 				else:
 					self._paint_1(rc, exclwnd)
+			return
+
+		if self._resizing and self._scale and self._scalesurf:
+			self._paint_5(rc, exclwnd)
 			return
 
 		self._paint_0(rc, exclwnd)
