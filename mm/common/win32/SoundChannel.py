@@ -1,10 +1,10 @@
 from Channel import ChannelWindow, FALSE
 import urllib, MMurl
-import midiex, win32con
+import win32con
 import win32ui, mmsystem
 import string
 import MMAttrdefs
-import dsoundex
+from win32modules import midiex, soundex
 
 error = 'Channel.error'
 
