@@ -2,10 +2,9 @@ __version__ = "$Id$"
 
 # Cache durations of video files
 
-import FileCache
 import MMurl
 
-def getduration(filename):
+def _get(filename):
 	import mv
 	try:
 		filename = MMurl.urlretrieve(filename)[0]
@@ -27,7 +26,6 @@ def getduration(filename):
 try:
 	import mv
 except ImportError:
-	from MpegDuration import *
+	from MpegVideoDuration import *
 else:
-	duration_cache = FileCache.FileCache(getduration)
-	get = duration_cache.get
+	get = _get

@@ -1,10 +1,10 @@
 import mimetypes
 guess_type = mimetypes.guess_type
 guess_extension = mimetypes.guess_extension
-get_extensions = mimetypes.get_extensions
 
 import grins_mimetypes
 mimetypes.types_map.update(grins_mimetypes.mimetypes)
+
 
 # Platform-specific extensions.
 # XXXX This should also be implemented for Windows: we should lookup
@@ -90,11 +90,39 @@ if sys.platform == 'mac':
 		return mimetype, None
 
 _guess_type = guess_type
-import urlcache
 def guess_type(url):
-	cache = urlcache.urlcache[url]
-	if cache.has_key('mimetype'):
-		# returned cached value
-		return '%s/%s' % cache['mimetype'], None
-	# don't cache guessed value
+	import urlparse
+	scheme, netloc, url, params, query, fragment = urlparse.urlparse(url)
+	if not scheme or scheme == 'file':
+		import string
+		i = string.find(url, '?')
+		if i > 0:
+			url = url[:i]
+	url = urlparse.urlunparse((scheme, netloc, url, '', '', ''))
 	return _guess_type(url)
+
+def _longestfirst(s1, s2):
+	ret = len(s2) - len(s1)
+	if ret == 0:
+		return cmp(s1, s2)
+	return ret
+
+def get_extensions(type):
+	"""Get all extensions mapping to this mimetype"""
+	global inited
+	import string
+	if not mimetypes.inited:
+		mimetypes.init()
+	type = string.lower(type)
+	if not '/' in type:
+		majortype = type
+	else:
+		majortype = None
+	extlist = []
+	for ext, stype in mimetypes.types_map.items():
+		if type == stype:
+			extlist.append(ext)
+		elif majortype and string.split(stype, '/')[0] == majortype:
+			extlist.append(ext)
+	extlist.sort(_longestfirst)
+	return extlist

@@ -5,10 +5,7 @@ __version__ = "$Id$"
 import MMurl
 import string
 
-VidRateNum = [30., 24., 24., 25., 30., 30., 50., 60.,
-	      60., 15., 30., 30., 30., 30., 30., 30.]
-
-def get(filename, bufsiz = 10240):
+def getsize(filename, bufsiz = 10240):
 	# sanity check
 	if bufsiz < 1024:
 		bufsiz = 1024
@@ -38,11 +35,15 @@ def get(filename, bufsiz = 10240):
 		elif w == '\263':
 			# SEQ_START_CODE
 			try:
-				rate = ord(data[i+4]) & 0x0F
+				wh = data[i+1:i+4]
 			except IndexError:
 				data = data[i:] + read(bufsiz)
 				i = 0
-				rate = ord(data[i+4]) & 0x0F
+				wh = data[i+1:i+4]
+			width = (ord(wh[0]) << 4) + (ord(wh[1]) >> 4)
+			height = ((ord(wh[1]) & 0xF) << 8) + ord(wh[2])
+			fp.close()
+			return width, height
 		elif w == '\267':
 			# SEQ_END_CODE
 			break
@@ -53,10 +54,4 @@ def get(filename, bufsiz = 10240):
 				break
 			i = find(data, '\000\000\001')
 	fp.close()
-	try:
-		rate = VidRateNum[rate]
-	except IndexError:
-		# unknown frame rate, assume 30
-		rate = 30.0
-	if nframes == 0: nframes = rate
-	return nframes / rate
+	return 0, 0
