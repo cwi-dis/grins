@@ -4,14 +4,11 @@ static PyObject *MovieObj_NewMovieControllerWin(MovieObject *_self, PyObject *_a
 	PyObject *_res = NULL;
 	MovieController _rv;
 	Rect movieRect;
-	int l, t, r, b;
 	long someFlags = mcTopLeftMovie | mcWithFrame;
-	if (!PyArg_ParseTuple(_args, "(iiii)|l",
-	                      &l, &t, &r, &b,
+	if (!PyArg_ParseTuple(_args, "O&|l",
+	                      ToRect, &movieRect,
 	                      &someFlags))
 		return NULL;
-	movieRect.left = short(l); movieRect.top = short(t); 
-	movieRect.right = short(r); movieRect.bottom = short(b); 
 	_rv = NewMovieController(_self->ob_itself,
 	                         &movieRect,
 	                         someFlags);
