@@ -19,8 +19,9 @@ import Duration
 import re
 import parseutil
 
-debuggensr = 0
-debug = 0
+if __debug__:
+	debuggensr = 0
+	debug = 0
 
 _CssAttrs = ['top', 'left', 'right', 'width', 'height', 'bottom', 'regPoint', 'regAlign', 'fit']
 
@@ -1752,11 +1753,13 @@ class MMSyncArc:
 		self.delay = delay
 		self.implicit = implicit
 		self.reinit()
-		if debug: print 'MMSyncArc.__init__', `self`
+		if __debug__:
+			if debug: print 'MMSyncArc.__init__', `self`
 
-	if debug:
-		def __del__(self):
-			print 'MMSyncArc.__del__',`self`
+	if __debug__:
+		if debug:
+			def __del__(self):
+				print 'MMSyncArc.__del__',`self`
 
 	def reinit(self):
 		self.__isresolvedcalled = 0
@@ -1991,7 +1994,8 @@ class MMSyncArc:
 			else:
 				return 0
 		if self.__isresolvedcalled:
-			if debug: print 'MMSyncArc.isresolved called recursively'
+			if __debug__:
+				if debug: print 'MMSyncArc.isresolved called recursively'
 			return 0
 		self.__isresolvedcalled = 1
 		refnode = self.refnode()
@@ -2134,7 +2138,8 @@ class MMNode_body:
 ##		self.delayed_arcs = []
 		self.delayed_end = 0
 		self.delayed_play_done = 0
-		if debug: print 'MMNode_body.__init__', `self`
+		if __debug__:
+			if debug: print 'MMNode_body.__init__', `self`
 
 	def __repr__(self):
 		return "<%s body of %s; id=%x>"%(self.helpertype, self.parent.__repr__(), id(self))
@@ -2163,7 +2168,8 @@ class MMNode_body:
 		return self.parent.isresolved(sctx, self)
 		
 	def startplay(self, timestamp):
-		if debug: print 'startplay',`self`,timestamp,self.fullduration
+		if __debug__:
+			if debug: print 'startplay',`self`,timestamp,self.fullduration
 		self.playing = MMStates.PLAYING
 		self.set_armedmode(ARM_PLAYING)
 		if self.GetFill() == 'remove' and \
@@ -2177,9 +2183,11 @@ class MMNode_body:
 			self.parent.startplay(timestamp)
 
 	def stopplay(self, timestamp):
-		if debug: print 'stopplay',`self`,timestamp
+		if __debug__:
+			if debug: print 'stopplay',`self`,timestamp
 		if self.playing in (MMStates.IDLE, MMStates.PLAYED):
-			if debug: print 'stopplay: already stopped'
+			if __debug__:
+				if debug: print 'stopplay: already stopped'
 			return
 		start, end1, end2 = self.time_list[-1]
 		if self.playing != MMStates.FROZEN:
@@ -2383,13 +2391,15 @@ class MMNode(MMTreeElement):
 			self.starting_children = 0
 			self.set_armedmode(ARM_NONE)
 		self.start_time = None
-		if debug: print 'MMNode.reset', `self`
+		if __debug__:
+			if debug: print 'MMNode.reset', `self`
 		if self.parent and self.parent.type in ('switch', 'foreign', 'prio'):
 			self.parent.reset(full_reset)
 
 
 	def resetall(self, sched):
-		if debug: print 'resetall', `self`
+		if __debug__:
+			if debug: print 'resetall', `self`
 		self.reset()
 		for c in self.children:
 			c.resetall(sched)
@@ -2600,7 +2610,8 @@ class MMNode(MMTreeElement):
 		return self.start_time
 
 	def startplay(self, timestamp):
-		if debug: print 'startplay',`self`,timestamp,self.fullduration
+		if __debug__:
+			if debug: print 'startplay',`self`,timestamp,self.fullduration
 		self.playing = MMStates.PLAYING
 		self.set_armedmode(ARM_PLAYING)
 		if self.GetFill() == 'remove' and \
@@ -2614,9 +2625,11 @@ class MMNode(MMTreeElement):
 			self.parent.startplay(timestamp)
 
 	def stopplay(self, timestamp):
-		if debug: print 'stopplay',`self`,timestamp
+		if __debug__:
+			if debug: print 'stopplay',`self`,timestamp
 		if self.playing in (MMStates.IDLE, MMStates.PLAYED):
-			if debug: print 'stopplay: already stopped'
+			if __debug__:
+				if debug: print 'stopplay: already stopped'
 			return
 		start, end1, end2 = self.time_list[-1]
 		if self.playing != MMStates.FROZEN:
@@ -2636,7 +2649,8 @@ class MMNode(MMTreeElement):
 ##			c.resetall(self.sctx.parent)
 
 	def add_arc(self, arc, curtime, sctx, body = None):
-		if debug: print 'add_arc', `self`, `body`, `arc`
+		if __debug__:
+			if debug: print 'add_arc', `self`, `body`, `arc`
 		if body is None:
 			body = self
 		if arc in body.sched_children:
@@ -2681,7 +2695,8 @@ class MMNode(MMTreeElement):
 				# self is first child of seq, or child
 				# of par/excl, so event is begin
 				key = 'event', 'begin'
-			if debug: print 'add_arc: key =',`key`,self.happenings.get(key)
+			if __debug__:
+				if debug: print 'add_arc: key =',`key`,self.happenings.get(key)
 ##			if self.happenings.has_key(key):
 ##				sctx.sched_arc(self, arc, curtime, event=event, marker=arc.marker, timestamp=self.happenings[key])
 
@@ -3855,7 +3870,8 @@ class MMNode(MMTreeElement):
 			self.srdict[ev] = [1, sched_done]
 			srdict[ev] = self.srdict
 
-		if debuggensr: self.__dump_srdict('gensr', srdict)
+		if __debug__:
+			if debuggensr: self.__dump_srdict('gensr', srdict)
 		return srdict
 
 	def gensr_envelope_nonloop(self, curtime, gensr_body, repeatCount, sched_actions,
@@ -3866,8 +3882,8 @@ class MMNode(MMTreeElement):
 
 		sched_actions, schedstop_actions, srdict = \
 			       gensr_body(curtime, sched_actions, scheddone_actions, path=path, sctx=sctx)
-		if debuggensr:
-			self.__dump_srdict('gensr_envelope_nonloop', srdict)
+		if __debug__:
+			if debuggensr: self.__dump_srdict('gensr_envelope_nonloop', srdict)
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_envelope_firstloop(self, curtime, gensr_body, repeatCount,
@@ -3934,8 +3950,8 @@ class MMNode(MMTreeElement):
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
-		if debuggensr:
-			self.__dump_srdict('gensr_envelope_firstloop', srdict)
+		if __debug__:
+			if debuggensr: self.__dump_srdict('gensr_envelope_firstloop', srdict)
 		return sched_actions, terminate_actions, srdict
 
 
@@ -3971,18 +3987,20 @@ class MMNode(MMTreeElement):
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
-		if debuggensr:
-			self.__dump_srdict('gensr_envelope_laterloop', srdict)
+		if __debug__:
+			if debuggensr: self.__dump_srdict('gensr_envelope_laterloop', srdict)
 		return [], [], srdict
 
 	def cleanup(self):
-		if debug: print 'cleanup', `self`
+		if __debug__:
+			if debug: print 'cleanup', `self`
 		self.sched_children = []
 		for child in self.children:
 			child.cleanup()
 
 	def cleanup_sched(self, sched, body = None):
-		if debug: print 'cleanup_sched', `self`, `body`
+		if __debug__:
+			if debug: print 'cleanup_sched', `self`, `body`
 		if self.type in playabletypes: # XXX is this correct?
 			return
 		if body is None:
@@ -4044,7 +4062,8 @@ class MMNode(MMTreeElement):
 
 	def gensr_body_interior(self, curtime, sched_actions, scheddone_actions,
 				self_body=None, path=None, sctx=None):
-		if debug: print 'gensr_body_interior',self,curtime,path
+		if __debug__:
+			if debug: print 'gensr_body_interior',self,curtime,path
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -4122,7 +4141,8 @@ class MMNode(MMTreeElement):
 				if t is not None and t < curtime:
 					d = child.calcfullduration(sctx)
 					if d is not None and d >= 0 and t + d <= curtime:
-						if debug: print 'removing',child,'from wtd_children'
+						if __debug__:
+							if debug: print 'removing',child,'from wtd_children'
 						self.wtd_children.remove(child)
 						defbegin = t - starttime + d
 						continue
@@ -4228,8 +4248,8 @@ class MMNode(MMTreeElement):
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
-		if debuggensr:
-			self.__dump_srdict('gensr_body_interior', srdict)
+		if __debug__:
+			if debuggensr: self.__dump_srdict('gensr_body_interior', srdict)
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_body_realpix(self, curtime, sched_actions, scheddone_actions,
@@ -4268,12 +4288,13 @@ class MMNode(MMTreeElement):
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
-		if debuggensr:
-			self.__dump_srdict('gensr_body_realpix', srdict)
+		if __debug__:
+			if debuggensr: self.__dump_srdict('gensr_body_realpix', srdict)
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_child(self, curtime, child, runchild = 1, path = None, sctx = None):
-		if debug: print 'gensr_child',`self`,`child`,runchild
+		if __debug__:
+			if debug: print 'gensr_child',`self`,`child`,runchild
 		if runchild:
 			srdict = child.gensr(curtime, path=path, sctx=sctx)
 		else:
@@ -4315,8 +4336,8 @@ class MMNode(MMTreeElement):
 			numsrlist = self.srdict[(SCHED_STOP, body)]
 			srlist = numsrlist[1]
 			srlist.append((SCHED_STOP, child))
-		if debuggensr:
-			self.__dump_srdict('gensr_child', srdict)
+		if __debug__:
+			if debuggensr: self.__dump_srdict('gensr_child', srdict)
 		return srdict
 
 	def calcendfreezetime(self, sctx, fill = None):
@@ -4591,10 +4612,12 @@ class MMNode(MMTreeElement):
 		if not ignoremin:
 			mintime, maxtime = self.GetMinMax()
 			if mintime > 0 and duration is not None and 0 <= duration < mintime:
-				if debug: print 'calcfullduration: min',duration,mintime
+				if __debug__:
+					if debug: print 'calcfullduration: min',duration,mintime
 				duration = mintime
 			if maxtime > 0 and duration > maxtime or duration < 0:
-				if debug: print 'calcfullduration: max',duration,maxtime
+				if __debug__:
+					if debug: print 'calcfullduration: max',duration,maxtime
 				duration = maxtime
 
 		if useend and endlist:
@@ -4607,13 +4630,16 @@ class MMNode(MMTreeElement):
 						end = a.resolvedtime(sctx)
 						if end >= start:
 							if end - start < duration or duration < 0:
-								if debug: print 'calcfullduration: adjusting duration',start,end
+								if __debug__:
+									if debug: print 'calcfullduration: adjusting duration',start,end
 								found = 1
 								duration = end - start
 				if hasresolved and not found:
-					if debug: print 'calcfullduration: end too early'
+					if __debug__:
+						if debug: print 'calcfullduration: end too early'
 					duration = 0
-		if debug: print 'calcfullduration:',`self`,`duration`,self.fullduration
+		if __debug__:
+			if debug: print 'calcfullduration:',`self`,`duration`,self.fullduration
 		return duration
 
 ##	def compute_download_time(self):
@@ -4670,7 +4696,8 @@ class MMNode(MMTreeElement):
 		event, actions = (SCHED_DONE, self), [(SCHED_STOP, self)]
 		self.srdict[event] = [1, actions]
 		srdict[event] = self.srdict # or just self?
-		if debuggensr: self.__dump_srdict('GenAllSR', srdict)
+		if __debug__:
+			if debuggensr: self.__dump_srdict('GenAllSR', srdict)
 		return srdict
 
 
