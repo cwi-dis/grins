@@ -552,8 +552,8 @@ class Channel:
 			if not self.armed_duration:
 				self.playdone(0)
 			elif self.armed_duration > 0:
-				self._qid = self._scheduler.enter(
-					  self.armed_duration, 0,
+				self._qid = self._scheduler.enterabs(
+					  self._played_node.start_time+self.armed_duration, 0,
 					  self.playdone, (0,))
 		else:
 			self.playdone(0)
