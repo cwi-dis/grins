@@ -12,7 +12,7 @@ __version__ = "$Id$"
 
 
 import win32ui, win32con, win32api 
-from win32modules import imageex, cmifex2, grinsRC
+from win32modules import grinsRC
 Afx=win32ui.GetAfx()
 Sdk=win32ui.GetWin32Sdk()
 import os
@@ -49,12 +49,10 @@ class _CmifScrollView(cmifwnd._CmifWnd,_rbtk,docview.ScrollView):
 		cmifwnd._CmifWnd.__init__(self,parent)
 		_rbtk.__init__(self)
 		self._is_active = 0
-		self._showing=0
 		self._canscroll = 0
-
 		# init dims
 		l,t,r,b=self._parent.GetClientRect()
-		self._rect=self._canvas=self._canvas_reset=(0,0,r-l,b-t)
+		self._rect=self._canvas=(0,0,r-l,b-t)
 
 		# create view
 		self._doc=docview.Document(docview.DocTemplate())
@@ -89,7 +87,7 @@ class _CmifScrollView(cmifwnd._CmifWnd,_rbtk,docview.ScrollView):
 	def OnCreate(self,params):
 		print 'OnCreate',params
 		l,t,r,b=self.GetClientRect()
-		self._rect=self._canvas=self._canvas_reset=(0,0,r-l,b-t)
+		self._rect=self._canvas=(0,0,r-l,b-t)
 		self.SetScrollSizes(win32con.MM_TEXT,(r-l,b-t))
 		self.ResizeParentToFit()
 		
@@ -135,13 +133,6 @@ class _CmifScrollView(cmifwnd._CmifWnd,_rbtk,docview.ScrollView):
 		self.ReleaseDC(dc)
 		return pt
 
-	def newwindow_X(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
-		win= _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z)
-		return win
-	def newcmwindow_X(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
-		win= _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z)
-		return win
-
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
 		if type_channel==HTM:
 			win= _BrowserSubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z)
@@ -168,12 +159,16 @@ class _CmifScrollView(cmifwnd._CmifWnd,_rbtk,docview.ScrollView):
 
 
 	# recycling of views
-	def new(self,title='View',units= UNIT_MM,adornments=None,canvassize=None,commandlist=None):
+	def new(self,rc,title='View',units= UNIT_MM,adornments=None,canvassize=None,commandlist=None):
 		if self._is_active==1:
 			print 'Closing active view in order to create new'
 			self.close()
+			# we must notify editor.view or
+			# or use a different policy
 
-		print 'creating view',title
+		print 'creating view',title,rc
+		print 'canvassize',canvassize
+
 		self.settitle(title)
 		self.set_commandlist(commandlist)
 				
@@ -185,44 +180,57 @@ class _CmifScrollView(cmifwnd._CmifWnd,_rbtk,docview.ScrollView):
 		if canvassize!=None:
 			pass # self._canvas= set_from(canvassize)
 
-		self.SetScrollSizes(win32con.MM_TEXT,(self._canvas[2],self._canvas[3]))
-		self.SetScrollSizes(win32con.MM_TEXT,(r-l,b-t))
+		if self._canscroll:
+			self.SetScrollSizes(win32con.MM_TEXT,(self._canvas[2],self._canvas[3]))
+			self.SetScrollSizes(win32con.MM_TEXT,(r-l,b-t))
+		else:
+			self.SetScaleToFitSize((r-l,b-t))
 		if canvassize==None:
 			self.ResizeParentToFit()		
 		self._is_active=1
-		self._showing=1
 		return self
+	
 		
 	def close(self):
-		if self._is_active==0:
-			return
+		if self._is_active==0:return
 		else: print 'closing active view'
+
+		# old stuff remaining since we are recycling
 		self.arrowcache = {}
-		#self.hide()
-		if self._parent is None:
-			return		# already closed
-		#self._parent._subwindows.remove(self)
-		#self._parent = None
 		for win in self._subwindows[:]:
 			win.close()
+		self._subwindows=[]
 		for dl in self._displists[:]:
 			dl.close()
-		if self._obj_ and self.IsWindow():
-			self.destroy_menu()
-		#	self.DestroyWindow()
-		#del self._topwindow
-		#self._obj_ = None
+		self._displists=[]
+		self.destroy_menu()
+	
+		# assert
+		self._callbacks = {}
+		self._accelerators = {}
+		self.arrowcache = {}
+		self._old_callbacks = {}
+		self._cbld = {}
 
+		# not highligted (misleading name!)
+		self._showing=0
+
+		# remove view title and 
+		# disable view-context commands 
 		self.settitle(None)
 		self.set_commandlist(None)
 
+		# Fit view in client rect
 		self._canscroll=0
-		self._is_active=0
-		self._showing=0
-		self.InvalidateRect()
+		l,t,r,b=self.GetClientRect()
+		self._rect=self._canvas=(0,0,r-l,b-t)
+		self.SetScrollSizes(win32con.MM_TEXT,(r-l,b-t))
+		self._parent.RecalcLayout()
+		self.ResizeParentToFit()
 
-	def is_showing(self):
-		return _showing
+		# reset flag, i.e. the view is void
+		self._is_active=0
+
 	def is_closed(self):
 		return self._is_active==0
 	def pop(self):
@@ -231,33 +239,6 @@ class _CmifScrollView(cmifwnd._CmifWnd,_rbtk,docview.ScrollView):
 		pass
 
 ##########
-"""
-adornments=
-{
-'toolbar': 
-	[
-	('New', <class usercmd.NEW_DOCUMENT at 15f2520>), 
-	('Open...', <class usercmd.OPEN at 15f2460>), 
-	('Trace', <class usercmd.TRACE at 15f23a0>, 't'), 
-	('Debug', <class usercmd.DEBUG at 15f22e0>), 
-	('Crash', <class usercmd.CRASH at 15f3300>), 
-	('Exit', <class usercmd.EXIT at 15f2160>)
-	], 
-'close': 
-	[
-	<class usercmd.EXIT at 15f2160>
-	]
-}
-
-commandlist=[
-<usercmd.NEW_DOCUMENT instance at 1673610>, 
-<usercmd.OPEN instance at 1673650>, 
-<usercmd.EXIT instance at 1674fb0>, 
-<usercmd.TRACE instance at 1674df0>, 
-<usercmd.DEBUG instance at 1674d40>, 
-<usercmd.CRASH instance at 1674cd0>]
-
-"""
 class GRiNSToolbar(window.Wnd):
 	def __init__(self, parent):
 		style = win32con.WS_CHILD |\
@@ -286,7 +267,6 @@ class _FrameWnd(cmifwnd._CmifWnd,window.FrameWnd):
 			h=(3*scr_height_mm/4)
 		if not x: x=scr_width_mm/8
 		if not y: y=scr_height_mm/8
-		print x, y, w, h
 		
 		cmifwnd._CmifWnd.__init__(self,parent)
 		self.newcmwindow=self.newwindow #alias
@@ -315,7 +295,10 @@ class _FrameWnd(cmifwnd._CmifWnd,window.FrameWnd):
 		self._style=win32con.WS_OVERLAPPEDWINDOW
 		rc=(xp,yp,xp+wp,yp+hp)
 		self._obj_.Create(self._strclass,self._title,self._style,rc)
-		self._wnd=self._obj_ # historic alias but useful to markup externals
+		
+		# all, are historic alias but useful to markup externals
+		# the symbol self._obj_ reresents the os-mfc window object
+		self._wnd=self._obj_ 
 		self._hWnd=self.GetSafeHwnd()
 
 		l,t,r,b=self.GetClientRect()
@@ -364,7 +347,8 @@ class _FrameWnd(cmifwnd._CmifWnd,window.FrameWnd):
 		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
 		      commandlist = None, resizable = 1):
-		return self._view.new(title,units,adornments,canvassize,commandlist)
+		rc=(x, y, w, h)
+		return self._view.new(rc,title,units,adornments,canvassize,commandlist)
 	
 	def newdocument(self,title,adornments,commandlist):
 		self._view.close()
@@ -406,7 +390,6 @@ class _FrameWnd(cmifwnd._CmifWnd,window.FrameWnd):
 			contextcmds[id]=cmd
 
 	def set_toggle(self, cmdcl, onoff):
-		print 'set_toggle',cmdcl,onoff
 		id=usercmdui.class2ui[cmdcl].id
 		flags = win32con.MF_BYCOMMAND
 		if onoff==0:flags = flags | win32con.MF_UNCHECKED
@@ -415,6 +398,7 @@ class _FrameWnd(cmifwnd._CmifWnd,window.FrameWnd):
 
 	# placeholder for 
 	def set_dynamiclist(self, cmd, list):
+		return
 		self._dynamiclists[cmd]=list
 		print '=========dynamic list for',cmd
 		for item in list:
@@ -483,7 +467,7 @@ class _FrameWnd(cmifwnd._CmifWnd,window.FrameWnd):
 		self.OnUserCmd(usercmdui.EXIT_UI.id,0)
 		self.onEvent(WindowExit)
 
-	# should be set from from adornments
+	# should be set from adornments
 	# but for now...
 	def setEditorFrameToolbar(self):
 		self._wndToolBar.AllocateButtons(4)
