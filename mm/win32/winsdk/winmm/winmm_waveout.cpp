@@ -1,3 +1,11 @@
+
+/*************************************************************************
+Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
+
+                        All Rights Reserved
+
+/*************************************************************************/
+
 #include <windows.h>
 #include <mmsystem.h>
 
