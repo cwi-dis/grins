@@ -567,7 +567,7 @@ class FileAttrEditorField(StringAttrEditorField):
 	type = 'file'
 
 	def browser_callback(self):
-		import os, MMurl
+		import os, MMurl, urlparse
 		cwd = self.wrapper.toplevel.dirname
 		if cwd:
 			cwd = MMurl.url2pathname(cwd)
@@ -579,11 +579,12 @@ class FileAttrEditorField(StringAttrEditorField):
 		if url == '' or url == '/dev/null':
 			dir, file = cwd, ''
 		else:
-			utype, url = MMurl.splittype(url)
-			if utype:
+			utype, host, path, params, query, fragment = urlparse.urlparse(url)
+			if (utype and utype != 'file') or \
+			   (host and host != 'localhost'):
 				windowinterface.showmessage('Cannot browse URLs')
 				return
-			file = MMurl.url2pathname(url)
+			file = MMurl.url2pathname(path)
 			file = os.path.join(cwd, file)
 			if os.path.isdir(file):
 				dir, file = file, ''
