@@ -209,9 +209,16 @@ class _Toplevel:
 			cursor = App.LoadCursor(grinsRC.IDC_STOP)
 		elif strid=='channel':
 			cursor = App.LoadCursor(grinsRC.IDC_DRAGMOVE)
-		else:
+		elif strid=='link':
+			cursor = App.LoadCursor(grinsRC.IDC_DRAGLINK)
+		elif strid=='' or strid=='arrow':
 			cursor = App.LoadStandardCursor(win32con.IDC_ARROW)
 			strid='arrow'
+		else:
+			print 'AppTopLevel:: missing cursor ',strid
+			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
+			strid='arrow'
+
 		(win32ui.GetWin32Sdk()).SetCursor(cursor);
 		self._cursor = strid
 

@@ -962,6 +962,7 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 //
 
 IDC_DRAGMOVE            CURSOR  DISCARDABLE     "RES\\Dragmove.cur"
+IDC_DRAGLINK            CURSOR  DISCARDABLE     "RES\\Draglink.cur"
 
 /////////////////////////////////////////////////////////////////////////////
 //
