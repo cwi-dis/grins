@@ -424,7 +424,7 @@ class _Window:
 		if title:
 			attrs['iconName'] = title
 		shell = parent._main.CreatePopupShell(
-			'toplevelShell', Xt.ApplicationShell, attrs)
+			'toplevelShell', Xt.TopLevelShell, attrs)
 		shell.AddCallback('destroyCallback', self._destroy_callback, None)
 		self._shell = shell
 		fg = self._convert_color(self._fgcolor)
