@@ -75,17 +75,5 @@ CFG=All cmif extensions - Win32 Debug
 
 !ENDIF 
 
-# Begin Source File
-
-SOURCE=..\..\lib\win32\IconMixin.py
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\lib\win32\Toolbars.py
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\editor\win32\ToolbarTemplate.py
-# End Source File
 # End Target
 # End Project
