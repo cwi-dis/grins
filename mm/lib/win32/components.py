@@ -140,6 +140,16 @@ class CheckButton(Control):
 		elif i==win32con.BST_UNCHECKED:return 0
 		return -1
 
+# Progress bar control
+class ProgressControl(Control):
+	def __init__(self,owner=None,id=-1):
+		Control.__init__(self,owner,id)
+	def set(self,i):
+		self.sendmessage(commctrl.PBM_SETPOS,i)
+	def setrange(self, min, max):
+		i=self.sendmessage(commctrl.PBM_SETRANGE, min, max)
+	# The others like step and setstep and getrange, aren't needed at the moment
+
 # Static control class
 class Static(Control):
 	def __init__(self,owner=None,id=-1):
@@ -776,17 +786,70 @@ class TemplateDialog(ResDialog):
 		self.InvalidateRect()
 
 class ProgressDialog:
+	# Workaround to make the dialog disappear when deleted
+	def __init__(self, *args):
+		self._dialog = apply(_ProgressDialog, args)
+
+	def set(self, *args):
+		apply(self._dialog.set, args)
+
+	def __del__(self):
+		self._dialog.close()
+		del self._dialog
+
+class _ProgressDialog(ResDialog):
 	# Placeholder
 	
-	def __init__(self, title, cancelcallback=None):
+	def __init__(self, title, cancelcallback=None, parent=None):
 		self.cancelcallback = cancelcallback
-		
+		self._title = title
+		ResDialog.__init__(self,grinsRC.IDD_PROGRESS,parent)
+		self._parent=parent
+		self._progress = ProgressControl(self,grinsRC.IDC_PROGRESS1)
+		self._message = Static(self, grinsRC.IDC_MESSAGE)
+		self._curcur = None
+		self._curmax = None
+		self._cancel_pressed = 0
+		self.CreateWindow()
+		self.ShowWindow(win32con.SW_SHOW)
+		self.UpdateWindow()
+	
+	def __del__(self):
+		self.close()
+
+	def OnInitDialog(self):
+		self.SetWindowText(self._title)
+		self.attach_handles_to_subwindows()
+		self.init_subwindows()
+		# XXXX Grey out cancel if no cancelcallback
+		return ResDialog.OnInitDialog(self)
+
+	def close(self):
+		self.EndDialog(win32con.IDCANCEL)
+
+	def OnCancel(self):
+		# Don't call callback now, we are probably not in the
+		# right thread. Remember for the next set call
+		self._cancel_pressed = 1
+
 	def set(self, label, cur1=None, max1=None, cur2=None, max2=None):
+		if self._cancel_pressed and self.cancelcallback:
+			self.cancelcallback()
 		if cur1 != None:
 			label = label + " (%d of %d)"%(cur1, max1)
-		if cur2 != None:
-			label = label + ": %d%%"%(cur2*100/max2)
-		print label
+		self._message.settext(label)
+		if max2 == None:
+			cur2 = None
+		if max2 != self._curmax:
+			self._curmax = max2
+			if max2 == None:
+				max2 = 0
+			self._progress.setrange(0, max2)
+		if cur2 != self._curcur:
+			self._curcur = cur2
+			if cur2 == None:
+				cur2 = 0
+			self._progress.set(cur2)
 		
 # Implementation of the channel undefined dialog
 class ChannelUndefDlg(ResDialog):
@@ -962,7 +1025,8 @@ class InputDialog(DialogBase):
 				parent=None, passwd=0):
 		self.title=prompt
 		dll=None
-		if passwd:
+##		if passwd:
+		if 0:
 			id = grinsRC.IDD_PASSWD_DIALOG
 			idedit=grinsRC.IDC_EDIT1
 			idprompt=grinsRC.IDC_PROMPT1
