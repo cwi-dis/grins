@@ -1310,10 +1310,20 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		import components
 		ctrl = components.ComboBox(self._wndToolBar,ctrlid)
 		ctrl.create(components.COMBOBOX(), rc)
-		# logfont = {'name':'Tahoma', 'height': 11, 'weight': win32con.FW_MEDIUM,}
-		# ctrl.setfont(logfont)
 		if responseCb:
 			self.HookCommand(responseCb,ctrlid)
+		
+		# set combo box font
+		lf = {'name':'', 'pitch and family':win32con.FF_SWISS,'charset':win32con.ANSI_CHARSET}
+		d = Sdk.EnumFontFamiliesEx(lf)
+		logfont = None
+		if d.has_key('Tahoma'): # win2k
+			logfont = {'name':'Tahoma', 'height': 11, 'weight': win32con.FW_MEDIUM, 'charset':win32con.ANSI_CHARSET}
+		elif d.has_key('Microsoft Sans Serif'): # not win2k
+			logfont = {'name':'Microsoft Sans Serif', 'height': 11, 'weight': win32con.FW_MEDIUM, 'charset':win32con.ANSI_CHARSET}
+		if logfont:
+			ctrl.setfont(logfont)
+
 		return ctrl
 
 	def onToolbarCombo(self, id, code):
