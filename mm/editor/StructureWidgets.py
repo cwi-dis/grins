@@ -531,7 +531,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			xsize = max(xsize, MINSIZE)
 			ysize = max(ysize, MINSIZE)
 			if not text:
-				xsize = min(xsize, MAXSIZE)
+				xsize = min(xsize, max(MAXSIZE, xsize))
 		else:
 			# icons at the top with text next to it
 			xsize1 = ibxsize
@@ -545,7 +545,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			xsize = max(xsize, MINSIZE)
 			ysize = max(ysize, MINSIZE)
 			if not text:
-				xsize = min(xsize, MAXSIZE)
+				xsize = min(xsize, max(MAXSIZE, imxsize, ibxsize))
 
 		# add ons
 		if self.dropbox is not None:
