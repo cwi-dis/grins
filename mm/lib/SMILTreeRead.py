@@ -114,9 +114,6 @@ class SMILParser(xmllib.XMLParser):
 				self.__nodemap[val] = node
 			elif attr == 'href':
 				node.attrdict['file'] = val
-			elif attr == 'loc':
-				# deal with channel later
-				node.__channel = val
 			elif attr == 'begin' or attr == 'end':
 				node.__syncarcs.append(attr, val)
 			elif attr == 'dur':
@@ -158,21 +155,37 @@ class SMILParser(xmllib.XMLParser):
 			channel = attributes['loc']
 		except KeyError:
 			self.warning('node without loc attribute')
-			channel = '<unnamed>'
+			channel = '<unnamed %d>'
+			i = 0
+			while self.__channels.has_key(channel % i):
+				i = i + 1
+			channel = channel % i
 		else:
 			if not self.__channels.has_key(channel):
 				self.syntax_error(self.lineno, 'unknown loc')
+		node.__channel = channel
 		if not attributes.has_key('href'):
 			self.syntax_error(self.lineno, 'node without href attribute')
-		elif mediatype == 'image':
-			import img, MMurl
+		elif mediatype in ('image', 'video'):
+			import MMurl
 			file = attributes['href']
 			try:
-				file = MMurl.urlretrieve(file)[0]
-				rdr = img.reader(None, file)
-				width = rdr.width
-				height = rdr.height
-				del rdr
+				if mediatype == 'image':
+					import img
+					file = MMurl.urlretrieve(file)[0]
+					rdr = img.reader(None, file)
+					width = rdr.width
+					height = rdr.height
+					del rdr
+				else:
+					import mv
+					file = MMurl.urlretrieve(file)[0]
+					movie = mv.OpenFile(file,
+							    mv.MV_MPEG1_PRESCAN_OFF)
+					track = movie.FindTrackByMedium(mv.DM_IMAGE)
+					width = track.GetImageWidth()
+					height = track.GetImageHeight()
+					del movie, track
 			except:
 				pass
 			else:
@@ -189,33 +202,8 @@ class SMILParser(xmllib.XMLParser):
 					ch['minwidth'] = width
 				if ch['minheight'] < height:
 					ch['minheight'] = height
-		elif mediatype == 'video':
-			import MMurl
-			file = attributes['href']
-			try:
-				import mv
-				file = MMurl.urlretrieve(file)[0]
-				movie = mv.OpenFile(file,
-						    mv.MV_MPEG1_PRESCAN_OFF)
-				track = movie.FindTrackByMedium(mv.DM_IMAGE)
-				width = track.GetImageWidth()
-				height = track.GetImageHeight()
-				del movie, track
-			except:
-				pass
-			else:
-				node.__size = width, height
-				if self.__channels.has_key(channel):
-					ch = self.__channels[channel]
-				else:
-					self.__channels[channel] = ch = \
-						{'minwidth': 0, 'minheight': 0,
-						 'left': 0, 'top': 0,
-						 'width': 0, 'height': 0}
-				if ch['minwidth'] < width:
-					ch['minwidth'] = width
-				if ch['minheight'] < height:
-					ch['minheight'] = height
+		elif not self.__channels.has_key(channel):
+			self.__channels[channel] = {}
 		if self.__in_a:
 			# deal with hyperlink
 			href, ltype, id = self.__in_a
@@ -258,6 +246,8 @@ class SMILParser(xmllib.XMLParser):
 				width = _minsize(attrdict['left'],
 						 attrdict['width'],
 						 attrdict['minwidth'])
+			except KeyError:
+				continue
 			except error, msg:
 				self.syntax_error(self.lineno, msg)
 			else:
@@ -268,6 +258,8 @@ class SMILParser(xmllib.XMLParser):
 				height = _minsize(attrdict['top'],
 						  attrdict['height'],
 						  attrdict['minheight'])
+			except KeyError:
+				continue
 			except error, msg:
 				self.syntax_error(self.lineno, msg)
 			else:
