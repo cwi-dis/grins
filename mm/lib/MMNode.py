@@ -47,6 +47,9 @@ class MMNodeContext:
 		self.comment = ''
 		self.metadata = ''
 		self.root = None
+		if settings.activeFullSmilCss:
+			from SMILCssResolver import SMILCssResolver
+			self.cssResolver = SMILCssResolver(self)
 
 	def __repr__(self):		
 		return '<MMNodeContext instance, channelnames=' \
@@ -623,6 +626,8 @@ class MMChannel:
 		self.name = name
 		self.attrdict = {}
 		self.d_attrdict = {}
+		if settings.activeFullSmilCss:
+			self.cssId = context.cssResolver.newRegion()
 
 	def __repr__(self):
 		return '<MMChannel instance, name=' + `self.name` + '>'
@@ -715,6 +720,13 @@ class MMChannel:
 		if self.attrdict.has_key(key):
 			return self.attrdict[key]
 		else:
+			if settings.activeFullSmilCss:
+				if key == 'base_winoff':
+					if self.attrdict.get('type') == 'layout':
+						print 'Warning: base_winoff deprecated attribute. Instead, use getPxGeom'
+						return self.context.cssResolver.getPxGeom(self.cssId)
+					else:
+						print "Error: base_winoff not supported if not layout type. Instead, call getPxGeomSubReg on MMNode"
 			# special case for background color
 			if key == 'bgcolor' and \
 			   self.attrdict.has_key('base_window') and \
@@ -729,10 +741,22 @@ class MMChannel:
 			import ChannelMap
 			if ChannelMap.isvisiblechannel(value) and (not self.attrdict.has_key(key) or not ChannelMap.isvisiblechannel(self.attrdict[key])):
 				self.setvisiblechannelattrs(value)
+		elif key == 'base_window':
+			if settings.activeFullSmilCss:
+				if self.attrdict.get('type') == 'layout':
+					if self.attrdict.has_key('base_window'):
+						del self['base_window']
+					pchan = self.context.channeldict.get(value)
+					self.cssId = self.context.cssResolver.link(self.cssId, pchan.cssId)
+				
 		self.attrdict[key] = value
 
 	def __delitem__(self, key):
 		del self.attrdict[key]
+		if settings.activeFullSmilCss:
+			if key == 'base_window':
+				if self.attrdict.get('type') == 'layout':
+						self.context.cssResolver.unlink(self.cssId)
 
 	def has_key(self, key):
 		return self.attrdict.has_key(key)
@@ -760,8 +784,17 @@ class MMChannel:
 			pchan = self.context.channeldict.get(pname)
 			if pchan:
 				return pchan.get(key, default)
+		elif key == 'base_winoff':
+			if settings.activeFullSmilCss:
+				if self.attrdict['type'] == 'layout':
+					return self.context.cssResolver.getPxGeom(self.cssId)
+				else:
+					print "Error: base_winoff not supported if not layout type. Instead, call getPxGeom on MMNode"
 		return default
 
+	def getPxGeom(self):
+		return self.context.cssResolver.getPxGeom(self.cssId)
+	
 # The Sync Arc class
 #
 class MMSyncArc:
@@ -1284,6 +1317,57 @@ class MMNode:
 		self.arcs = []
 		self.durarcs = []
 		self.time_list = []
+
+	# this method return the sub region positioning in pixel values.
+	# it should be use only in some rare cases (HTML+TIME export), ...
+	# if we need to use often this method, we should optimize it
+	def getPxGeomSubReg(self):
+		cssResolver = self.context.cssResolver
+		# a dynamic link should be enough for this method
+		# it avoid to keep a synchonization with the css resolver
+		cssRegId = cssResolver.newRegion()
+		cssResolver.setRawAttrPos(cssRegId,
+			child.GetAttrDef('left',None), child.GetAttrDef('width',None),
+			child.GetAttrDef('right',None), child.GetAttrDef('top',None),
+			child.GetAttrDef('height',None), child.GetAttrDef('bottom',None))
+
+		channel = self.GetChannel()
+		region = channel.getLayoutChannel()
+		cssResolver.link(cssRegId, region.cssId)				
+		geom = cssResolver.getPxGeom(cssRegId)
+		cssResolver.unlink(cssRegId)
+		
+		return geom
+
+	# this method return the media positioning in pixel values.
+	# it should be use only in some rare cases (HTML+TIME export), ...
+	# if we need to use often this method, we should optimize it
+	def getPxGeomMedia(self):
+		cssResolver = self.context.cssResolver
+		# a dynamic link should be enough for this method
+		# it avoid to keep a synchonization with the css resolver
+		cssRegId = cssResolver.newRegion()
+		cssResolver.setRawAttrPos(cssRegId,
+			child.GetAttrDef('left',None), child.GetAttrDef('width',None),
+			child.GetAttrDef('right',None), child.GetAttrDef('top',None),
+			child.GetAttrDef('height',None), child.GetAttrDef('bottom',None))
+
+		channel = self.GetChannel()
+		region = channel.getLayoutChannel()
+		resolver.link(cssRegId, region.cssId)
+		
+		# for media
+		cssMediaId = cssResolver.newMedia()
+		cssResolver.setAlignAttr(cssMediaId, 'regPoint', child.GetAttrDef('regPoint',None))
+		cssResolver.setAlignAttr(cssMediaId, 'regAlign', child.GetAttrDef('regAlign',None))
+		cssResolver.setAlignAttr(cssMediaId, 'scale', child.GetAttrDef('scale',None))
+		cssResolver.link(cssMediaId, cssRegId)	
+		
+		geom = cssResolver.getPxGeom(cssMediaId)
+		cssResolver.unlink(cssMediaId)
+		cssResolver.unlink(cssRegId)
+		
+		return geom
 
 	def startplay(self, sctx, timestamp):
 		if debug: print 'startplay',`self`,timestamp,self.fullduration
