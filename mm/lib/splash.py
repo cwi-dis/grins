@@ -35,37 +35,14 @@ class _Splash:
 		self.wininit()
 		if self.visual.depth != 24:
 			return 0
-		if 1:
-			try:
-				f = open(file + '.raw', 'rb')
-			except IOError:
-				return 0
-			width = 0
-			for i in range(2):
-				width = width * 256 + ord(f.read(1))
-			height = 0
-			for i in range(2):
-				height = height * 256 + ord(f.read(1))
-			data = f.read()
-			f.close()
-		else:
-			if 0:
-				import imgsgi
-				try:
-					rdr = imgsgi.reader(file + '.rgb')
-				except IOError:
-					return 0
-			else:
-				import imgppm
-				try:
-					rdr = imgppm.reader(file + '.ppm')
-				except IOError:
-					return 0
-			import imgformat
-			rdr.format = imgformat.rgb
-			data = rdr.read()
-			width = rdr.width
-			height = rdr.height
+		import img
+		try:
+			rdr = img.reader(self.imgformat, file)
+		except IOError:
+			return 0
+		data = rdr.read()
+		width = rdr.width
+		height = rdr.height
 		shell = self.main.CreatePopupShell('splash', Xt.TopLevelShell,
 						   {'visual': self.visual,
 						   'depth': self.visual.depth,
@@ -83,7 +60,9 @@ class _Splash:
 						0, data, width, height, 32, 0)
 		w.AddCallback('exposeCallback', self.expose,
 			      (gc.PutImage, (image, 0, 0, 0, 0, width, height)))
-##		gc.PutImage(image, 0, 0, 0, 0, width, height)
+		self.dpy.Synchronize(1)
+		gc.PutImage(image, 0, 0, 0, 0, width, height)
+		self.dpy.Synchronize(0)
 		import Xtdefs, time
 		while Xt.Pending():
 			Xt.ProcessEvent(Xtdefs.XtIMAll)
@@ -95,6 +74,7 @@ class _Splash:
 	def wininit(self):
 		if self.__initialized:
 			return
+		import imgformat
 		self.__initialized = 1
 		Xt.ToolkitInitialize()
 		self.dpy = dpy = Xt.OpenDisplay(None, None, 'Windowinterface',
@@ -122,7 +102,6 @@ class _Splash:
 		self.visual = visual = visuals[0]
 		self.colormap = cmap = visual.CreateColormap(X.AllocNone)
 		if visual.c_class == X.PseudoColor:
-			import imgformat
 			r, g, b = imgformat.xrgb8.descr['comp'][:3]
 			red_shift,   red_mask   = r[0], (1 << r[1]) - 1
 			green_shift, green_mask = g[0], (1 << g[1]) - 1
@@ -145,7 +124,7 @@ class _Splash:
 			green_shift, green_mask = _colormask(visual.green_mask)
 			blue_shift, blue_mask = _colormask(visual.blue_mask)
 		if visual.depth == 8:
-			import imgcolormap, imgconvert, imgformat
+			import imgcolormap, imgconvert
 			imgconvert.setquality(0)
 			r, g, b = imgformat.xrgb8.descr['comp'][:3]
 			xrs, xrm = r[0], (1 << r[1]) - 1
@@ -199,7 +178,26 @@ class _Splash:
 					imgformat.myxrgb8,
 					lambda d, r, src, dst, m=cm: m.map8(d),
 					lossy)
-			self.myxrgb8 = myxrgb8
+			self.imgformat = myxrgb8
+		else:
+			# find an imgformat that corresponds with our visual
+			for name, format in imgformat.__dict__.items():
+				if type(format) is not type(imgformat.rgb):
+					continue
+				descr = format.descr
+				if descr['type'] != 'rgb' or \
+				   descr['size'] != 32 or \
+				   descr['align'] != 32 or \
+				   descr['b2t'] != 0:
+					continue
+				r, g, b = descr['comp'][:3]
+				if visual.red_mask   == ((1<<r[1])-1) << r[0] and \
+				   visual.green_mask == ((1<<g[1])-1) << g[0] and \
+				   visual.blue_mask  == ((1<<b[1])-1) << b[0]:
+					break
+			else:
+				format = imgformat.rgb
+			self.imgformat = format
 		self.red_shift = red_shift
 		self.red_mask = red_mask
 		self.green_shift = green_shift
@@ -238,12 +236,5 @@ def init():
 		_splash.shell = shell
 	return items
 	
-def splash(file):
-	import string
-	i = string.rfind(file, '.')
-	if i > 0:
-		file = file[:i]
-	_splash.splash(file)
-
-def unsplash():
-	_splash.close()
+splash = _splash.splash
+unsplash = _splash.close
