@@ -404,60 +404,18 @@ class ImageChannel(Channel):
 	#
 
 
-torgb = {}
-
-t = pipes.Template().init()
-t.append('fromppm $IN $OUT', 'ff')
-torgb['pnm'] = t
-
-t = pipes.Template().init()
-t.append('fromgif $IN $OUT', 'ff')
-torgb['gif'] = t
-
-t = pipes.Template().init()
-t.append('tifftopnm', '--')
-t.append('fromppm $IN $OUT', 'ff')
-torgb['tiff'] = t
-
-t = pipes.Template().init()
-t.append('fromsun $IN $OUT', 'ff')
-torgb['rast'] = t
-
-uncompress = pipes.Template().init()
-uncompress.append('uncompress', '--')
-
 temps = []
 
 def makergbfile(filename):
-	import imghdr
-	import tempfile
-	import os
-	compressed = 0
-	if filename[-2:] == '.Z':
-		temp = tempfile.mktemp()
-		temps.append(temp)
-		sts = uncompress.copy(filename, temp)
-		if sts:
-			print 'uncompress of', filename, 'failed.'
-			return filename
-		filename = temp
-		compressed = 1
+	import torgb
 	try:
-		type = imghdr.what(filename)
-	except IOError:
-		type = None
-	if type and torgb.has_key(type):
-		temp = tempfile.mktemp()
-		temps.append(temp)
-		sts = torgb[type].copy(filename, temp)
-		if sts:
-			print 'conversion of', filename, 'failed.'
-			return filename
-		if compressed:
-			os.unlink(filename)
-			temps.remove(filename)
-		filename = temp
-	return filename
+		result = torgb.torgb(filename)
+	except torgb.error, msg:
+		print torgb.error, msg
+		return filename
+	if result <> filename:
+		temps.append(result)
+	return result
 
 def rmcache(original, cached):
 	import os
