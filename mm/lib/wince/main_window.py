@@ -71,12 +71,14 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 			self.KillTimer(self._timer)
 			self._timer = 0
 		self.execute_cmd(usercmd.EXIT)
+			
+	def destroy(self):
 		app = winuser.GetApplication()
 		app.SetMainWnd(None)
 		wnd = self.__dict__['_obj_']
 		self.__dict__['_obj_'] = None
 		wnd.DestroyWindow()
-			
+
 	def OnTimer(self, params):
 		self._toplevel.serve_events(params)
 	
@@ -371,6 +373,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self.redraw()
 
 	def loadSplash(self):
+		import settings
 		skin = settings.get('skin')
 		if skin:
 			import parseskin, MMurl
