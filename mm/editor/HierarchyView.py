@@ -91,11 +91,12 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.multi_selected_widgets = [] # When there are multiple selected widgets.
 					# For the meanwhile, you can only multi-select MMWidgets which have nodes.
+					# These extra selected widgets are added on top of the currently selected widget.
 		self.old_multi_selected_widgets = [] # The old list of widgets that need to all be unselected.
 		self.need_redraw_select = 0
 		
-		self.begin_event_source = None # This is the specially selected "I am the node from which a new begin event will be made to"
-		self.old_begin_event_source = None
+		self.event_sources = [] # This is the specially selected "I am the node from which a new begin event will be made to"
+		self.old_event_sources = []
 		self.droppable_widget = None # ahh.. something that sjoerd added. Assume that it's used for the fancy drop-notification.
 		self.old_droppable_widget = None
 
@@ -124,7 +125,7 @@ class HierarchyView(HierarchyViewDialog):
 			COLLAPSEALL(callback = (self.expandallcall, (0,))),
 			
 			COMPUTE_BANDWIDTH(callback = (self.bandwidthcall, ())),
-			CREATE_EVENT_SOURCE(callback = (self.create_begin_event_source, ())),
+			CREATE_EVENT_SOURCE(callback = (self.set_event_source, ())),
 			FIND_EVENT_SOURCE(callback = (self.find_event_source, ())),
 			DRAG_PAR(),
 			DRAG_SEQ(),
@@ -319,7 +320,7 @@ class HierarchyView(HierarchyViewDialog):
 		commands = commands + self.noslidecommands
 		if self.toplevel.links and self.toplevel.links.has_interesting(): # ??!! -mjvdg
 			commands = commands + self.finishlinkcommands
-		if self.begin_event_source:
+		if len(self.event_sources) > 0:
 			commands = commands + self.finisheventcommands
 		if fntype in MMNode.interiortypes:
 			commands = commands + self.interiorcommands # Add interior structure modifying commands.
@@ -530,10 +531,11 @@ class HierarchyView(HierarchyViewDialog):
 		if self.need_redraw or self.base_display_list is None:
 			# Make a new display list.
 			d = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
-			if self.begin_event_source:
+			if len(self.event_sources) > 0:
 				# Set the dangling icon
-				widget = self.begin_event_source.views['struct_view']
-				widget.set_dangling_event()
+				for b in self.event_sources:
+					widget = b.views['struct_view']
+					widget.set_dangling_event()
 			self.scene_graph.draw(d) # Keep it for later!
 			self.need_redraw = 0
 			self.droppable_widget = None
@@ -541,12 +543,12 @@ class HierarchyView(HierarchyViewDialog):
 			self.old_selected_widget = None
 			self.old_selected_icon = None
 			self.old_multi_selected_widgets = []
-			self.old_begin_event_source = None
+			self.old_event_sources = []
 		elif self.selected_widget is self.old_selected_widget and \
 		     self.selected_icon is self.old_selected_icon and \
 		     self.droppable_widget is self.old_droppable_widget and \
 		     len(self.old_multi_selected_widgets)==0 and \
-		     self.begin_event_source is self.old_begin_event_source and \
+		     self.event_sources is self.old_event_sources and \
 		     not self.need_redraw_selection:
 			# nothing to do
 			self.redrawing = 0
@@ -555,10 +557,12 @@ class HierarchyView(HierarchyViewDialog):
 			d = self.base_display_list.clone()
 			
 		# 2. Undraw stuff.
-		if self.old_begin_event_source:
-			self.old_begin_event_source.views['struct_view'].draw_unselected(d)
-		if self.begin_event_source:
-			self.begin_event_source.views['struct_view'].draw_unselected(d)
+		if len(self.old_event_sources) > 0:
+			for b in self.old_event_sources:
+				b.views['struct_view'].draw_unselected(d)
+		if len(self.event_sources) > 0:
+			for b in self.event_sources:
+				b.views['struct_view'].draw_unselected(d)
 		for i in self.old_multi_selected_widgets:
 			i.draw_unselected(d)
 		self.old_multi_selected_widgets = []
@@ -868,11 +872,12 @@ class HierarchyView(HierarchyViewDialog):
 		return 1		# succeeded
 
 	def deletecall(self, cut = 0):
+		# Called for both delete /and/ cut.. maybe it's a bad name? -mjvdg.
 		if len(self.multi_selected_widgets) > 0:
 			# Delete multiple nodes.
 			self.toplevel.setwaiting()
 			nodes = self.get_multi_nodes()
-			if self.fixselection(nodes):
+			if self.fixselection(nodes): # selects another node, and starts a transation.
 				for n in nodes:
 					self.editmgr.delnode(n)
 				self.fixsyncarcs(self.root, nodes)
@@ -1589,7 +1594,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.aftersetfocus()
 		if not external:
 			# avoid recursive setglobalfocus
-			if len(self.multi_selected_widgets) > 0:
+			if len(self.multi_selected_widgets) > 0: # This will never happen. The code here is unreachable.
+					# see 6 lines back.
 				a = []
 				for i in self.multi_selected_widgets:
 					a.append(i.get_node())
@@ -1606,7 +1612,6 @@ class HierarchyView(HierarchyViewDialog):
 		
 		if isinstance(widget, StructureWidgets.MMWidgetDecoration):
 			widget = widget.get_mmwidget()
-			self.multi_selected_widgets.append(widget)
 
 		if widget is self.selected_widget:
 			return
@@ -1806,36 +1811,45 @@ class HierarchyView(HierarchyViewDialog):
 	def createaltcall(self):
 		if self.selected_widget: self.selected_widget.createaltcall()
 
-	def create_begin_event_source(self):
-		if self.selected_widget:
-			if self.begin_event_source:
-				# Clear the old dangling icon
-				widget = self.begin_event_source.views['struct_view']
-				widget.clear_dangling_event()
-				self.old_begin_event_source = self.begin_event_source
-			self.begin_event_source = self.selected_widget.get_node() # which works even if it's an icon.
-			# XXXX Is this good enough? Will the event be redrawn if a global redraw is done?
+	def set_event_source(self):
+		if len(self.multi_selected_widgets) > 0:
+			self.__clear_event_source()
+			for w in self.multi_selected_widgets + [self.selected_widget]:
+				self.event_sources.append(w.get_node())
+				w.set_dangling_event()
+		elif self.selected_widget:
+			self.__clear_event_source()
+			self.event_sources = self.selected_widget.get_node() # which works even if it's an icon.
 			self.selected_widget.set_dangling_event()
-			self.draw()
 		else:
 			windowinterface.beep() # Should not happen
+		self.draw()
+			
+	def __clear_event_source(self):
+		# Resets the event source list.
+		# called only from set_event_source
+		self.old_event_sources = self.event_sources
+		for b in self.event_sources:
+			widget = b.views['struct_view']
+			widget.clear_dangling_event()
+		self.event_sources = []
 			
 	def create_begin_event_dest(self):
-		if self.selected_widget and self.begin_event_source:
-			src = self.begin_event_source
-			self.begin_event_source = None
-			self.old_begin_event_source = None
-			self.selected_widget.get_node().NewBeginEvent(src, 'activateEvent')
-			# I assume a draw is not needed (due to NewBeginEvent)...
+		if self.selected_widget and len(self.event_sources) > 0:
+			for src in self.event_sources:
+				self.selected_widget.get_node().NewBeginEvent(src, 'activateEvent')
+				# I assume a draw is not needed (due to NewBeginEvent)...
+			self.event_sources = []
+			self.old_event_sources = []
 		else:
 			windowinterface.beep() # Should not happen
 
 	def create_end_event_dest(self):
-		if self.selected_widget and self.begin_event_source:
-			src = self.begin_event_source
-			self.begin_event_source = None
-			self.old_begin_event_source = None
-			self.selected_widget.get_node().NewEndEvent(src, 'activateEvent')
+		if self.selected_widget and self.event_sources:
+			for src in self.event_sources:
+				self.selected_widget.get_node().NewEndEvent(src, 'activateEvent')
+			self.event_sources = []
+			self.old_event_sources = []
 			# I assume a draw is not needed (due to NewEndEvent)...
 		else:
 			windowinterface.beep() # Should not happen
