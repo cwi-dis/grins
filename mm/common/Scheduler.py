@@ -468,16 +468,21 @@ class SchedulerContext:
 					node.endtime = (timestamp, arc.getevent())
 					parent.updatetimer()
 					return
-				if arc.isdur and node.GetTerminator() == 'LAST':
-					if node.starting_children > 0:
-						if debugevents: print 'not stopping (scheduled children)'
-						parent.updatetimer()
-						return
-					for c in node.GetSchedChildren():
-						if c.playing == MMStates.PLAYING:
-							if debugevents: print 'not stopping (playing children)'
+				if arc.isdur:
+					dur = node.GetAttrDef('duration', None)
+					if dur is not None and dur != -1 and arc.srcnode is arc.dstnode:
+						# arc is for explicit duration, so node should terminate
+						pass
+					elif node.GetTerminator() == 'LAST':
+						if node.starting_children > 0:
+							if debugevents: print 'not stopping (scheduled children)'
 							parent.updatetimer()
 							return
+						for c in node.GetSchedChildren():
+							if c.playing == MMStates.PLAYING:
+								if debugevents: print 'not stopping (playing children)'
+								parent.updatetimer()
+								return
 				if debugevents: print 'terminating node',parent.timefunc()
 				if pnode is not None and \
 				   pnode.type == 'excl' and \
