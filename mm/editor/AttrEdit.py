@@ -1637,6 +1637,7 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current channel names
 	def __init__(self, attreditor, name, label):
 		self.newchannels = []
+		self.__current = None
 		PopupAttrEditorFieldWithUndefined.__init__(self, attreditor, name, label)
 
 	def getoptions(self):
@@ -1740,14 +1741,21 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			name = base + `i`
 		return name
 
+	def getcurrent(self):
+		if self.__current:
+			return self.__current
+		return PopupAttrEditorFieldWithUndefined.getcurrent(self)
+
 	def newchan_callback(self, name = None):
 		if not name:
 			self.setvalue(self.getcurrent())
 			return
 		if name != UNDEFINED and name not in self.wrapper.context.channelnames:
 			self.newchannels.append(name)
+		self.__current = name
 		self.recalcoptions()
 		self.setvalue(name)
+		self.__current = None
 			
 	def optioncb(self):
 		if self.getvalue() == NEW_CHANNEL:
