@@ -1,6 +1,39 @@
--------------- NEW ---------------
+general: sometimes, after a while the entire CMIF editor hangs...
 
-channel view: node focus not redrawn on commit
+channel view: help is printed on stdout
+
+channel view: uninformative dialog box for unknown keyboard input
+(should beep)
+
+block view: should beep instead of pop up a dialog offering help for
+wrong keyboard entry (a static help button in the menu bar is a better
+way to offer help)
+
+channel view: many double redraws
+
+toplevel: sometimes complaint about unknown command when clicking in
+toplevel menu while things are busy?
+
+channel view: draws sync arcs even when an end is not on any channel
+
+movie channel: takes too much priority that sound doesn't play and
+buttons don't react
+
+movie channel: loading colormap takes ages
+
+form loader: parsing .fd files takes ages
+
+channel view: when an existing node that had no channel re-appears, it
+isn't drawn
+
+channel view: when selecting multiple nodes, goes up one level too much
+
+channel view: should display no dialogs when transactions fail
+
+channel view: doesn't draw thermo on show()
+
+channel view: newly added arcs are drawn twice, once with the wrong
+timing information (before the commit)
 
 text channel: after a while the font manager fails with
 "ValidateFont: fmfntread failed."
@@ -9,17 +42,6 @@ text channel: after a while the font manager fails with
 block view: open/close must be done different; opening something that
 had a red button before zooming should open all of it, not keep it
 closed... 
-
--------------- old ---------------
-
-channel view: crashes if a leaf node has no valid channel
-
-channel view: if root is selected, focus isn't shown
-
-channel view: open it, then close; open in the block view a node that
-was closed; and then 'add' there.  This crashes the channel view...
-
-channel view: doesn't notice when a node has moved to another channel
 
 player: crash when putting two events on same channel simultaneously
 
@@ -36,6 +58,8 @@ channel view: needs command structure like block view
 channel view: need commands to add/delete channels
 
 block & channel view: want to show other view's focus
+
+block & channel view: use channel colors instead of default gray / yellow
 
 ------------------------------ NITS -------------------------------
 
@@ -81,3 +105,18 @@ need quit dialog if there are unsaved changes (also for restore)
 
 channel info: if you change the channel name, all nodes are disinherited!
 (NB: can fix the tree, but not the clipboard...)
+
+channel view: curtim bug
+
+channel view: node focus not redrawn on commit
+
+channel view: 'bad setsyncarcdelay call' when editing a sync arc
+
+channel view: crashes if a leaf node has no valid channel
+
+channel view: if root is selected, focus isn't shown
+
+channel view: open it, then close; open in the block view a node that
+was closed; and then 'add' there.  This crashes the channel view...
+
+channel view: doesn't notice when a node has moved to another channel
