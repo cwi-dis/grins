@@ -307,7 +307,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad system-overdub-or-caption attribute')
 			elif attr == 'system-required':
 				attrdict['system_required'] = val
-			elif attr == 'u-group':
+			elif attr == 'uGroup':
 				if self.__u_groups.has_key(val):
 					attrdict['u_group'] = val
 				else:
@@ -369,7 +369,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__is_ext = 1
 		if not url:
 			url = None
-		if url is not None:
+		if url == '#':
+			url = None	# no source, but don't complain
+		elif url is not None:
 			url, tag = MMurl.splittag(url)
 			url = MMurl.basejoin(self.__base, url)
 			url = self.__context.findurl(url)
