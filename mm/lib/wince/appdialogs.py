@@ -62,24 +62,24 @@ class ProgressDialog:
 		self._title = title
 		self.cancelcallback = cancelcallback
 		self._percent = percent
-		self._parent=parent
+		self._parent = parent
 		self._curcur = None
 		self._curmax = None
+		self._msg = title
 		
 		# create progress bar within toplevel window
 		from __main__ import toplevel
 		self._wnd = toplevel.getmainwnd() 
-		self._progress = self._wnd.CreateProgressBar()
 		self._wnd.setStatusMsg(title)
-		
-	def cleanup(self):
+		self._progress = self._wnd.CreateProgressBar()
+
+	def close(self):
 		if self._progress:
 			self._wnd.DestroyProgressBar()
-			self._wnd.setStatusMsg('')
 			self._progress = None
 
 	def __del__(self):
-		self.cleanup()
+		self.close()
 
 	def set(self, label, cur1=None, max1=None, cur2=None, max2=None):
 		if cur1 != None:
@@ -87,7 +87,8 @@ class ProgressDialog:
 				label = label + "    %.0f%s" % (cur1, '%')
 			else:
 				label = label + " (%d of %d)" % (cur1, max1)
-		if self._progress:
+		if self._progress and label != self._msg:
+			self._msg = label
 			self._wnd.setStatusMsg(label)
 		if max2 == None:
 			cur2 = None
@@ -104,8 +105,6 @@ class ProgressDialog:
 				cur2 = 0
 			if self._progress:
 				self._progress.SendMessage(wincon.PBM_SETPOS, cur2, 0)
-				if cur2 == max2:
-					self.cleanup()
 
 class FileDialog:
 	# Remember last location when the program does not request a specific
