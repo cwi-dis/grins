@@ -348,7 +348,6 @@ class SMILHtmlTimeWriter(SMIL):
 			mtype, xtype = mediatype(x)
 		
 		regionName = None
-		src = None
 		nodeid = None
 		transIn = None
 		transOut = None
@@ -414,8 +413,6 @@ class SMILHtmlTimeWriter(SMIL):
 				else:	
 					if name == 'region': 
 						regionName = value
-					elif name == 'src': 
-						src = value
 					elif name == 'id':
 						self.ids_written[value] = 1
 						nodeid = value
@@ -452,12 +449,12 @@ class SMILHtmlTimeWriter(SMIL):
 		elif type in ('imm', 'ext', 'brush'):
 			if mtype in not_xhtml_time_elements:
 				self.showunsupported(mtype)
-			self.writemedianode(x, nodeid, attrlist, mtype, regionName, src, transIn, transOut)
+			self.writemedianode(x, nodeid, attrlist, mtype, regionName, transIn, transOut)
 		else:
 			raise CheckError, 'bad node type in writenode'
 
 
-	def writemedianode(self, node, nodeid, attrlist, mtype, regionName, src, transIn, transOut):
+	def writemedianode(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut):
 		moveAnimationOutside = 0
 		
 		if not animateInsideMediaSupportted:
@@ -489,13 +486,6 @@ class SMILHtmlTimeWriter(SMIL):
 		if mtype=='video':
 			mtype = 'media'
 
-		if src:
-			if self.convertURLs:
-				src = MMurl.canonURL(node.GetContext().findurl(src))
-				if src[:len(self.convertURLs)] == self.convertURLs:
-					src = src[len(self.convertURLs):]
-			attrlist.append(('src', src))
-					
 		parents = []
 		viewport = None
 		pushed = 0
