@@ -20,6 +20,8 @@ typedef struct {
     WORD wAVIDeviceID;
     int iSeekThere;
 	long lAVIduration;
+	long playstart;
+	long playend;
 	float scale;
 	BOOL center;
 } MCI_AVI_STRUCT;
@@ -34,6 +36,8 @@ typedef struct {
     HWND hWndParent;
     WORD wMIDIDeviceID;
     int iSeekThere;
+	long playstart;
+	long playend;
 	long lMIDIduration;
 } MCI_MIDI_STRUCT;
 
@@ -63,6 +67,7 @@ MCIAPI BOOL AviStop(MCI_AVI_STRUCT *mciAviInfo);
 MCIAPI BOOL AviClose(MCI_AVI_STRUCT *mciAviInfo);
 MCIAPI BOOL AviSeek(MCI_AVI_STRUCT *mciAviInfo);
 MCIAPI long AviFrame(MCI_AVI_STRUCT *mciAviInfo);
+MCIAPI long AviClip( MCI_AVI_STRUCT *mciAviInfo ,long clip); 
 MCIAPI DWORD AviDuration(MCI_AVI_STRUCT *mciAviInfo);
 MCIAPI void AviSize(MCI_AVI_STRUCT *mciAviInfo, RECT* rec);
 MCIAPI BOOL AviUpdate(MCI_AVI_STRUCT *mciAviInfo);
