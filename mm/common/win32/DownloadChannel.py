@@ -39,27 +39,23 @@ class DownloadChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.destroy(self)
 
 	def do_arm(self, node, same=0):
+		if same: return
+		self.release_res()
 		amf=win32ui.CreateAsyncMonikerFile()
 		amf.SetStatusListener(self)
 		url = MMurl.canonURL(self.getfileurl(node))
-		import urllib
-		url=urllib.unquote(url)
-		amf.Open(url)
 		self._asyncMonikerFile=amf
+		self._asyncMonikerFile.Open(url)
 		return 0
 
 	def do_play(self, node):
 		windowinterface.shell_execute(self._tmpfile)
 		self.playdone(0)
 
-	# part of stop sequence
 	def stopplay(self, node):
-		if self._asyncMonikerFile:
-			self._asyncMonikerFile.Abort()
-		self._asyncMonikerFile=None	
+		self.release_res()
 		Channel.ChannelAsync.stopplay(self, node)
 
-	# toggles between pause and run
 	def setpaused(self, paused):
 		if self._asyncMonikerFile:
 			if paused:
