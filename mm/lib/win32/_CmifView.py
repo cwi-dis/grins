@@ -96,6 +96,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 	
 	# called by the framework before the window is closed
 	def OnClose(self):
+		if self.in_create_box_mode():return
 		if self._closecmdid>0:
 			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
 		else:
@@ -253,7 +254,8 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 	# Bring window in front of peers
 	def pop(self):
 		self._parent.ActivateFrame()
-		self.InvalidateRect()
+		self._parent.BringWindowToTop()
+		#self.InvalidateRect()
 
 	# Send window back of the peers
 	def push(self):
