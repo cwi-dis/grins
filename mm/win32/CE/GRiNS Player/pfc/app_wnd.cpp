@@ -505,6 +505,16 @@ static PyObject* PyWnd_SHCreateMenuBar(PyWnd *self, PyObject *args)
 		}
  	return Py_BuildValue("i", mbi.hwndMB);
 	}
+
+extern HWND	hwndCB;	// The command bar handle
+static PyObject* PyWnd_GetMenuHandle(PyWnd *self, PyObject *args)
+	{
+	if(!PyArg_ParseTuple(args,""))
+		return NULL;
+	HMENU hMenu = (HMENU)SendMessage(hwndCB, SHCMBM_GETMENU, (WPARAM)0, (LPARAM)0);
+ 	return Py_BuildValue("i", hMenu);
+	}
+
 #endif
 
 PyMethodDef PyWnd::methods[] = {
@@ -538,6 +548,7 @@ PyMethodDef PyWnd::methods[] = {
 
 #ifdef _WIN32_WCE
 	{"SHCreateMenuBar", (PyCFunction)PyWnd_SHCreateMenuBar, METH_VARARGS, ""},
+	{"GetMenuHandle", (PyCFunction)PyWnd_GetMenuHandle, METH_VARARGS, ""},
 #endif
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
