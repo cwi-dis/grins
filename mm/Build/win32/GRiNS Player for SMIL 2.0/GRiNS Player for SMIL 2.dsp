@@ -261,6 +261,10 @@ SOURCE=.\M_AnimateChannel.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_AnimationData.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_Animators.c
 # End Source File
 # Begin Source File
@@ -601,6 +605,10 @@ SOURCE=.\M_MediaChannel.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_MediaRead.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_MenuTemplate.c
 # End Source File
 # Begin Source File
@@ -933,6 +941,10 @@ SOURCE=.\M_realconvert.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_RealDuration.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_realnode.c
 # End Source File
 # Begin Source File
@@ -1138,6 +1150,10 @@ SOURCE=.\M_token.c
 # Begin Source File
 
 SOURCE=.\M_tokenize.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_tokenizer.c
 # End Source File
 # Begin Source File
 
