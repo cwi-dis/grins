@@ -2254,7 +2254,7 @@ class AnimateElementParser:
 
 	def __splitf(self, arg, f=None):
 		if not f: f = self.safeatof
-		if type(arg)==type(''):
+		if type(arg) == type(''):
 			arg = self.__split(arg)
 		try:
 			return map(f, arg)
@@ -2263,5 +2263,5 @@ class AnimateElementParser:
 		
 	def __split(self, str):
 		if type(str) == type(''):
-			return tokenizer.splitlist(str, delims = '\t\r\n,')
+			return tokenizer.splitlist(str, delims = ' \t\r\n,')
 		return str
