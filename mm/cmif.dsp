@@ -244,10 +244,6 @@ SOURCE=.\common\NullChannel.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\common\Preferences.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\common\PseudoHtmlChannel.py
 # End Source File
 # Begin Source File
@@ -1295,6 +1291,10 @@ SOURCE=.\grins\win32\PlayerDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\grins\win32\PreferencesDialog.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\grins\win32\TopLevelDialog.py
 # End Source File
 # Begin Source File
@@ -1327,6 +1327,10 @@ SOURCE=.\grins\mac\PlayerDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\grins\mac\PreferencesDialog.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\grins\mac\TopLevelDialog.py
 # End Source File
 # End Group
@@ -1344,6 +1348,10 @@ SOURCE=.\grins\motif\patchlevel.py
 # Begin Source File
 
 SOURCE=.\grins\motif\PlayerDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\grins\motif\PreferencesDialog.py
 # End Source File
 # Begin Source File
 
@@ -1373,6 +1381,10 @@ SOURCE=.\grins\Player.py
 # Begin Source File
 
 SOURCE=.\grins\PlayerCore.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\grins\Preferences.py
 # End Source File
 # Begin Source File
 
