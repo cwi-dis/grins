@@ -799,6 +799,4 @@ class EditMgr(Clipboard.Clipboard):
 		pass		
 
 	def clean_addparsestatus(self, parsestatus):
-		if parsestatus != None:
-			# just get rid of the source. 
-			parsestatus.setSource(None)
+		pass
