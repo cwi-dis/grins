@@ -29,8 +29,6 @@ def usage(msg):
 	print 'file ...   : one or more CMIF files'
 	sys.exit(2)
 
-from version import version
-
 from MainDialog import MainDialog
 
 class Main(MainDialog):
@@ -403,6 +401,7 @@ def main():
 	except ImportError:
 		splash = None
 	else:
+		from version import version
 		splash.splash(version = 'GRiNS ' + version)
 
 	import settings
