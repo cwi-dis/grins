@@ -232,6 +232,7 @@
 #define IDD_EDITATTR_ID3                424
 #define IDD_EDITATTR_REGIONNAME         425
 #define IDD_EDITATTR_VIEWPORTNAME       426
+#define IDD_SELECT_MULTI                427
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -733,7 +734,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        415
+#define _APS_NEXT_RESOURCE_VALUE        428
 #define _APS_NEXT_COMMAND_VALUE         32886
 #define _APS_NEXT_CONTROL_VALUE         1437
 #define _APS_NEXT_SYMED_VALUE           104
