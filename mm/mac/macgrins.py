@@ -98,7 +98,9 @@ else:
 # macfreeze: exclude audiosndr
 # macfreeze: exclude audiovoc
 # macfreeze: exclude imgpng
-
+# macfreeze: exclude msvcrt
+# macfreeze: exclude termios
+# macfreeze: exclude TERMIOS
 
 #
 # And here's the code for non-standalone version of the editor:
