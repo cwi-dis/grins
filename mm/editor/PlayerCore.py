@@ -240,7 +240,8 @@ class PlayerCore(Selecter, PlayerCommon):
 			channel = self.channels[name]
 			if channel._attrdict.get('type') != 'layout':
 				continue
-			if name not in self.context.channelnames:
+			if name not in self.context.channelnames or \
+				not self.context.getchannel(name).isInDocument():
 				self.killchannel(name)
 
 		# (2) Add new channels that have appeared
@@ -248,7 +249,8 @@ class PlayerCore(Selecter, PlayerCommon):
 			if name not in self.channelnames:
 ## 				print 'Detected new channel'
 				attrdict = self.context.channeldict[name]
-				if attrdict.get('type') != 'layout':
+				if attrdict.get('type') != 'layout' or \
+					not self.context.getchannel(name).isInDocument():
 					continue
 				self.newchannel(name, attrdict)
 				i = self.context.channelnames.index(name)

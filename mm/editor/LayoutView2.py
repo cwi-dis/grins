@@ -15,7 +15,7 @@ debugAlign = 0
 debug2 = 0
 debugPreview = 0
 
-COPY_PASTE_MEDIAS = 1
+COPY_PASTE_MEDIAS = 0
 
 TYPE_ABSTRACT, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT = range(4)
 
@@ -125,6 +125,8 @@ class TreeHelper:
 
 	# check the region/viewport node references and update the internal structure
 	def __checkRegionNodeList(self, parentRef, nodeRef, isFakePart = 0):
+		if not nodeRef.isInDocument():
+			return
 		if debug2: print 'treeHelper.__checkRegionNodeList : start ',nodeRef
 		tNode =  self.__nodeList.get(nodeRef)
 		if parentRef != None:
@@ -870,6 +872,13 @@ class LayoutView2(LayoutViewDialog2):
 			return region
 		return None
 
+	# Test whether x is ancestor of node
+	def IsAncestorOf(self, node, x):
+		while x is not None:
+			if node is x: return 1
+			x = self.getParentNodeRef(x)
+		return 0
+
 	# return the name showed to the user according to the node 
 	def getShowedName(self, nodeRef, nodeType=None):
 		if nodeType == None:
@@ -1075,50 +1084,73 @@ class LayoutView2(LayoutViewDialog2):
 
 	def applyNewRegion(self, parentRef, id, regionName):
 		if self.editmgr.transaction():
-			self.editmgr.addchannel(id, 0, 'layout')
-			self.editmgr.setchannelattr(id, 'base_window', parentRef.name)
+			channel = self.context.newchannel(id, -1, 'layout')
+			self.editmgr.addchannel(parentRef, -1, channel)
 			self.editmgr.setchannelattr(id, 'regionName', regionName)
 			self.editmgr.commit('REGION_TREE')
 
 	def applyNewViewport(self, name):
 		if self.editmgr.transaction():
-			self.editmgr.addchannel(name, 0, 'layout')
+			channel = self.context.newchannel(name, -1, 'layout')
+			self.editmgr.addchannel(None, -1, channel)
 			self.editmgr.setchannelattr(name, 'transparent', 0)
 			self.editmgr.setchannelattr(name, 'showEditBackground', 1)
 			self.editmgr.setchannelattr(name, 'width', 400)
 			self.editmgr.setchannelattr(name, 'height', 400)
 			self.editmgr.commit('REGION_TREE')
 
-	def __recurDelNode(self, nodeRef):
-		nodeType = self.getNodeType(nodeRef)
-		# if the node is a media, we just remove the link with the region
-		if nodeType == TYPE_MEDIA:
-			# we do nothing.
-			# XXX we can't remove the region link, because a media may be associated to more than one channel
-			# XXX (region name). need to think about
-			pass
-		elif nodeType in (TYPE_VIEWPORT, TYPE_REGION):
-			# remove the children before to remove the node
-			children = self.getChildren(nodeRef)
-			for child in children:
-				self.__recurDelNode(child)
-
-#			self.treeHelper.delNode(nodeRef)
-			if nodeRef.getClassName() != 'FakeMMChannel':
-				self.editmgr.delchannel(nodeRef.name)
+	# remove from the document this region and all subregions
+	# if removeRef = 1, remove all nodes (MMNode, ...) which refer to those
+	# deleted region
+	# Note: those method have to be called winthin a transaction
+	def __delRegion(self, nodeRef, removeRef = 1):
+		regionNameToDel = []
+		self.__makeRegionListToDel(nodeRef, regionNameToDel)
+		for name in regionNameToDel:
+			nodeRef = self.nameToNodeRef(name)
+			self.treeHelper.delNode(nodeRef) 
+			self.editmgr.delchannel(nodeRef)
 			
+		# remove all references which refer to those region
+		# XXX to do this in mmnode
+#		if removeRef:
+#			self.__recurUnrefMMNodes(self.root, regionNameToDel)
+
+	def __makeRegionListToDel(self, nodeRef, list):
+		# remove the children before removing the node
+		children = self.getChildren(nodeRef)
+		for child in children:
+			self.__makeRegionListToDel(child, list)
+		nodeType = self.getNodeType(nodeRef)
+		if nodeType in (TYPE_REGION, TYPE_VIEWPORT):
+			list.append(nodeRef.name)
+
+	def __recurUnrefMMNodes(self, nodeRef, regionNameList):
+		for child in nodeRef.GetChildren():
+			self.__recurUnrefMMNodes(child, regionNameList)
+			
+		# check the channel attribute
+		if nodeRef.GetChannel() in regionNameList:
+			# this channel has been removed, remove the reference
+			self.editmgr.setnodeattr(nodeRef, 'channel', None)
+
+		# check the project_default_region_xxx
+		for attrName in ('project_default_region_image', 'project_default_region_video',
+						 'project_default_region_sound', 'project_default_region_text'):
+			attrValue = nodeRef.GetAttrDef(attrName, None)
+			if attrValue != None and attrValue in regionNameList:
+				self.editmgr.setnodeattr(nodeRef, attrName, None)
+
+		# XXX to do: event
+		
 	def applyDelRegion(self, regionRef):
 		if self.editmgr.transaction():
-			# update directly (more efficient. No need to compare all nodes)
-			self.__recurDelNode(regionRef)
-#			self.commitAlreadyUpdated = 1 
+			self.__delRegion(regionRef)
 			self.editmgr.commit('REGION_TREE')
 			
 	def applyDelViewport(self, viewportRef):
 		if self.editmgr.transaction():
-			# update directly (more efficient. No need to compare all nodes)
-			self.__recurDelNode(viewportRef)
-#			self.commitAlreadyUpdated = 1 
+			self.__delRegion(viewportRef)
 			self.editmgr.commit('REGION_TREE')
 
 	def applyAttrList(self, nodeRefAndValueList):
@@ -1552,76 +1584,154 @@ class LayoutView2(LayoutViewDialog2):
 		
 		self.newViewport()
 
-	def onCopy(self):
-		self.__cleanClipboard()
-		
-		# for now, support only single selection
-		if len(self.currentSelectedNodeList) == 1:
-			selectedNode = self.currentSelectedNodeList[0]
-			self.__copyIntoClipboard(selectedNode)
-			# XXX just useful to update command list
-			self.updateFocus()
+	# make a list of objects to copy into the clipboard:
+	# exclude nodes which are not a part of this view or which
+	# are a child-parent relationship. In the last case, return only the parent node
+	def makeClipboardList(self, checkDel = 1):
+		nodeRefList=[]
+		# make a list of recognized node that are not relationship
+		for i in self.currentSelectedNodeList:
+			for j in self.currentSelectedNodeList:
+				if j is not i and j.IsAncestorOf(i):
+					break
+			else:
+				nodeRefList.append(i)
 
-	def onCut(self):
-		self.__cleanClipboard()
+		clipList = []
+		currentViewportList = self.getViewportRefList()
+		# make a list compatible with the clipboard
+		for nodeRef in nodeRefList:
+			nodeType = self.getNodeType(nodeRef)
+			if nodeType == TYPE_MEDIA:
+				import MMNode
+				node = MMNode.MMRegionAssociation(None, None)
+				clipList.append(node)
+			elif nodeType in (TYPE_REGION, TYPE_VIEWPORT):
+				clipList.append(nodeRef)
+
+				if checkDel and len(currentViewportList) == 1 and nodeRef is currentViewportList[0]:
+					msg = "you can't delete or cut the last viewport"
+					windowinterface.showmessage(msg, mtype = 'error')
+					return []
 		
+		return clipList
+
+	def onCopy(self):		
 		# apply some command which are automaticly applied when a control lost the focus
 		# it avoids some recursives transactions and some crashs
 		self.flushChangement()
+
+		nodeList = self.makeClipboardList(checkDel = 0)
+		if len(nodeList) == 0 or not self.editmgr.transaction():
+			return
 		
-		# for now, support only simple selection
-		if len(self.currentSelectedNodeList) == 1:
-			selectedNode = self.currentSelectedNodeList[0]
-			self.__copyIntoClipboard(selectedNode)
-			
-			# call del region without check if there is some medias inside
-			nodeType = self.getNodeType(selectedNode)
-			if nodeType == TYPE_REGION:
-				self.delRegion(selectedNode, 0)
-			elif nodeType == TYPE_VIEWPORT:
-				self.delViewport(selectedNode, 0)
-			elif nodeType == TYPE_MEDIA:
-				if COPY_PASTE_MEDIAS and self.editmgr.transaction():
-					parentRef = self.getParentNodeRef(selectedNode, TYPE_MEDIA)
-					self.setglobalfocus([parentRef])
-					self.updateFocus()
-					self.editmgr.setnodeattr(selectedNode, 'channel', None)
-					self.editmgr.commit()
+		# copy all nodes before to put them into the clipboard
+		cNodeList = []
+		for node in nodeList:
+			cNodeList.append(node.DeepCopy())
+
+		# XXX for now, support only single selection
+		node = cNodeList[-1]
+		className = node.getClassName()
+		if className == 'Region':
+			type = 'region'
+		elif className == 'Viewport':
+			type = 'viewport'
+		# XXX for now, set owned to 0, channel are not destroyed correctly !			
+		self.editmgr.setclip(type, node, owned = 0)
+		
+		self.editmgr.commit()
+		
+	def onCut(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+
+		nodeList = self.makeClipboardList(checkDel = 1)
+		
+		if len(nodeList) == 0 or not self.editmgr.transaction():
+			return
+		
+		pnode = None
+		for node in nodeList:
+			className = node.getClassName()
+			if className in ('Region', 'Viewport', 'MMNode'):
+				pnode = self.getParentNodeRef(node)
+			if className in ('Region', 'Viewport'):
+				self.editmgr.delchannel(node)
+
+		if pnode:
+			self.setglobalfocus([pnode])
+		else:
+			self.setglobalfocus([])
+
+		# XXX for now only single cut is supported
+		type = None
+		node = nodeList[-1]
+		nodeType = self.getNodeType(node)
+		if nodeType == TYPE_VIEWPORT:
+			type = 'viewport'
+		elif nodeType == TYPE_REGION:
+			type = 'region'
+		if type != None:
+			self.editmgr.setclip(type, node)
+
+		self.editmgr.commit()
 				
 	def	onPaste(self):
 		# apply some command which are automaticly applied when a control lost the focus
 		# it avoids some recursives transactions and some crashes
 		self.flushChangement()
 
-		# for now, support only simple selection
-		if len(self.currentSelectedNodeList) == 1:
-			selectedNode = self.currentSelectedNodeList[0]
-			type, node = self.editmgr.getclip()
-			# XXXX Note by Jack: we may have to call getclipcopy() here in some cases
-			# to make sure we don't get multiple references to the same MMChannel object
-			# or something.
-			cNode = None
-			if self.editmgr.transaction():
-				if type == 'region':
-					cNode = node.CopyIntoContext(self.context, selectedNode)
-				elif type == 'viewport':
-					cNode = node.CopyIntoContext(self.context, None)
-				elif type == 'media' and COPY_PASTE_MEDIAS:
-					doPaste = 0
-					if self.existRef(node):
-						ret = windowinterface.GetOKCancel("Do you really want to move the media to the selected region ?", self.toplevel.window)
-						if ret == 0:
-							# ok
-							doPaste = 1
-					else:
-						doPaste = 1
-					if doPaste and self.getNodeType(selectedNode) == TYPE_REGION:
-						cNode = node
-						self.editmgr.setnodeattr(node, 'channel', selectedNode.name)
-				self.editmgr.commit()
-				if cNode != None:
-					self.setglobalfocus([cNode])
-				self.updateFocus()
+		# for now, only single selection make senses
+		if len(self.currentSelectedNodeList) != 1:
+			return
+		
+		selectedNode = self.currentSelectedNodeList[0]
+		selectedNodeType = self.getNodeType(selectedNode)
+		
+		if not self.editmgr.transaction():
+			return
+
+		# XXX temporare, node should be all the time a list
+		type, node = self.editmgr.getclipcopy()
+		if type in ('region', 'viewport', 'MMNode', 'RegionAssociation'):
+			nodeList = [node]
+		else:
+			nodeList = node
+			
+		for node in nodeList:
+			className = node.getClassName()
+			if className not in ('Region', 'Viewport','RegionAssociation'):
+				continue
+#			cNode = node.CopyIntoContext(self.context)
+
+			if className == 'Region':
+				if selectedNodeType in (TYPE_REGION, TYPE_VIEWPORT):
+					self.editmgr.addchannel(selectedNode, -1, node)
+			elif className == 'RegionAssociation':
+				if selectedNodeType in (TYPE_REGION, TYPE_VIEWPORT):
+					self.editmgr.setnodeattr(node, 'channel', selectedNode.name)					
+			elif className == 'Viewport':
+				self.editmgr.addchannel(None, -1, node)
+			
+#			if type == 'region':
+#				cNode = node.CopyIntoContext(self.context, selectedNode)
+#			elif type == 'viewport':
+#				cNode = node.CopyIntoContext(self.context, None)
+#			elif type == 'media' and COPY_PASTE_MEDIAS:
+#				doPaste = 0
+#				if self.existRef(node):
+#					ret = windowinterface.GetOKCancel("Do you really want to move the media to the selected region ?", self.toplevel.window)
+#					if ret == 0:
+#						# ok
+#						doPaste = 1
+#				else:
+#					doPaste = 1
+#				if doPaste and self.getNodeType(selectedNode) == TYPE_REGION:
+#					cNode = node
+#					self.editmgr.setnodeattr(node, 'channel', selectedNode.name)
+		self.editmgr.commit()
 
 	def __copyIntoClipboard(self, selectedNode):
 		if self.getNodeType(selectedNode) == TYPE_REGION:
@@ -1634,10 +1744,6 @@ class LayoutView2(LayoutViewDialog2):
 			# XXX special case, put for now just the node itself
 			self.editmgr.setclip('media', selectedNode)
 				
-	def __cleanClipboard(self):
-		# XXX to do something
-		pass
-
 	def newRegion(self, parentRef):
 		# choice a default name which doesn't exist		
 		channeldict = self.context.channeldict
@@ -1699,7 +1805,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.setglobalfocus([self.nameToNodeRef(name)])
 		self.updateFocus()
 
-	def delRegion(self, regionRef, check=1):
+	def delRegion(self, regionRef, check=1, removeLink = 0):
 		# if this region or any sub region contain a media, show a warning message, and ask confirmation
 		if check and self.doesContainMedias(regionRef):
 			ret = windowinterface.GetOKCancel("The region that you want to remove contains some medias. Do you want to continue ?", self.toplevel.window)
@@ -1711,7 +1817,6 @@ class LayoutView2(LayoutViewDialog2):
 		self.setglobalfocus([parentRef])
 		self.updateFocus()
 		self.applyDelRegion(regionRef)
-
 
 	# check if moving a source node into a target node is valid
 	def isValidMove(self, sourceNodeRef, targetNodeRef):

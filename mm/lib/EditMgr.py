@@ -556,20 +556,20 @@ class EditMgr(Clipboard.Clipboard):
 	#
 	# Channel operations
 	#
-	def addchannel(self, name, i, type):
-		self.attrs_changed = 1
-		c = self.context.getchannel(name)
-		if c is not None:
-			raise MMExc.AssertError, \
-				'duplicate channel name in addchannel'
-		self.addstep('addchannel', name)
-		self.context.addchannel(name, i, type)
-		self.next_focus = [self.context.getchannel(name)]
+	def addchannel(self, parent, i, channel):
+		self.addstep('addchannel', channel)
+		
+		# XXX allow to know if the node is part of the current document or clipboard
+		channel.inDocument = 1
+		
+		if parent != None:
+			self.setchannelattr(channel.name, 'base_window', parent.name)
+		self.next_focus = [channel]
 
-	def undo_addchannel(self, name):
-		self.delchannel(name)
+	def undo_addchannel(self, channel):
+		self.delchannel(channel)
 
-	def clean_addchannel(self, name):
+	def clean_addchannel(self, channel):
 		pass
 
 	def copychannel(self, name, i, orig):
@@ -605,41 +605,37 @@ class EditMgr(Clipboard.Clipboard):
 	def clean_movechannel(self, name, old_i):
 		pass
 
-	def delchannel(self, name):
-		self.attrs_changed = 1
-		c = self.context.getchannel(name)
-		if c is None:
-			raise MMExc.AssertError, \
-				  'unknown channel name in delchannel'
-		i = self.context.channels.index(c)
-		pchan = c.GetParent()
-		# copy the attributes.
-		# note: don't use copy because it doen't copy all items returned by c.items()
-		attrdict = {}
-		for key,value in c.items():
-			attrdict[key] = value
-		if pchan is not None:
-			attrdict['base_window'] = pchan.name
-		# keep the 'collapse' information for the undo
-		attrdict['collapsed'] = c.collapsed
-		self.addstep('delchannel', name, i, attrdict)
-		self.context.delchannel(name)
-		self.next_focus = []	# XXXX To be done (can be either region or toplayout)
+	def delchannel(self, channel):
+		i = self.context.channels.index(channel)
+		parent = channel.GetParent()
+		self.addstep('delchannel', parent, i, channel)
 
-	def undo_delchannel(self, name, i, attrdict):
-		self.attrs_changed = 1
-		self.addchannel(name, i, attrdict['type'])
-		base_window = attrdict.get('base_window')
-		# IMPORTANT: base_window have to be created in first
-		if base_window != None:
-			self.setchannelattr(name, 'base_window', base_window)
-		for key, val in attrdict.items():
-			if key in ('type', 'base_window'):
-				continue
-			self.setchannelattr(name, key, val)
+		# XXX allow to know if the node is part of the current document or clipboard
+		channel.inDocument = 0
+		
+		if parent != None:
+			channel.Extract()
+		
+		if parent:
+			sibs = parent.GetChildren()
+			if i < len(sibs):
+				# select next sibling
+				self.next_focus = [sibs[i]]
+			elif len(sibs) > 0:
+				# select previous sibling
+				self.next_focus = [sibs[-1]]
+			else:
+				# select parent
+				self.next_focus = [parent]
+		else:
+			# a top layout has been removed
+			self.next_focus = []	
 
-	def clean_delchannel(self, name, i, attrdict):
-		pass
+	def undo_delchannel(self, parent, i, channel):
+		self.addchannel(parent, i, channel)
+
+	def clean_delchannel(self, parent, i, channel):
+		self.context.delchannel(channel.name)
 
 	def setchannelname(self, name, newname):
 		self.attrs_changed = 1
