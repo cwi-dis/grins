@@ -253,6 +253,8 @@ class HierarchyView(HierarchyViewDialog):
 		rv.append(NEW_UNDER_SWITCH(callback = (self.createunderintcall, ('switch',))))
 		if ctx.attributes.get('project_boston', 0):
 			rv.append(NEW_UNDER_EXCL(callback = (self.createunderintcall, ('excl',))))
+		if heavy:
+			rv.append(NEW_UNDER_MEDIA(callback = (self.createundercall, ('null',))))
 		if heavy or ctx.compatchannels(chtype='image'):
 			rv.append(NEW_UNDER_IMAGE(callback = (self.createundercall, ('image',))))
 		if  heavy or ctx.compatchannels(chtype='sound'):
@@ -277,6 +279,8 @@ class HierarchyView(HierarchyViewDialog):
 		heavy = not features.lightweight
 
 		rv = []
+		if heavy:
+			rv.append(NEW_BEFORE_MEDIA(callback = (self.createbeforecall, ('null',))))
 		if heavy or ctx.compatchannels(chtype='image'):
 			rv.append(NEW_BEFORE_IMAGE(callback = (self.createbeforecall, ('image',))))
 		if heavy or ctx.compatchannels(chtype='sound'):
@@ -291,6 +295,8 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_BEFORE_HTML(callback = (self.createbeforecall, ('html',))))
 		if heavy or ctx.compatchannels(chtype='svg'):
 			rv.append(NEW_BEFORE_SVG(callback = (self.createbeforecall, ('svg',))))
+		if heavy:
+			rv.append(NEW_AFTER_MEDIA(callback = (self.createaftercall, ('null',))))
 		if heavy or ctx.compatchannels(chtype='image'):
 			rv.append(NEW_AFTER_IMAGE(callback = (self.createaftercall, ('image',))))
 		if heavy or ctx.compatchannels(chtype='sound'):
@@ -1240,25 +1246,6 @@ class HierarchyView(HierarchyViewDialog):
 			type = 'imm'
 		else:
 			type = 'ext'
-
-		dftchannel = None
-		# try to find out the default channel following two rules (evaluated in the right order):
-		# 1) according to the GRiNS project_default_region_xxx attributes
-		# 2) if at this stage, no default channel found, XXX (to do)
-
-		# find the project_default_region_xxx attribute to look at according to the channel type
-		if chtype in ('video', 'RealPix'):
-			attributeName = 'project_default_region_video'
-		elif chtype in ('text', 'RealText'):
-			attributeName = 'project_default_region_text'
-		elif chtype == 'sound':
-			attributeName = 'project_default_region_sound'
-		else:
-			# default
-			attributeName = 'project_default_region_image'
-		# the default channel is stored in the container nodes
-		if pnode != None:
-			dftchannel = pnode.GetInherAttrDef(attributeName, None)
 					
 		self.toplevel.setwaiting()
 		if where <> 0:
@@ -1285,8 +1272,31 @@ class HierarchyView(HierarchyViewDialog):
 						base = MMurl.unquote(base)
 						# and assign
 						node.SetAttr('name', base)
+
+		dftchannel = None
+		# try to find out the default channel following two rules (evaluated in the right order):
+		# 1) according to the GRiNS project_default_region_xxx attributes
+		# 2) if at this stage, no default channel found, XXX (to do)
+		computedType = node.GetChannelType()
+
+		# find the project_default_region_xxx attribute to look at according to the channel type
+		attributeName = None
+		if computedType in ('video', 'RealPix'):
+			attributeName = 'project_default_region_video'
+		elif computedType in ('text', 'RealText'):
+			attributeName = 'project_default_region_text'
+		elif computedType == 'sound':
+			attributeName = 'project_default_region_sound'
+		elif computedType in ('image','svg','html','brush'):
+			attributeName = 'project_default_region_image'
+			
+		# the default channel is stored in the container nodes
+		if attributeName and pnode:
+			dftchannel = pnode.GetInherAttrDef(attributeName, None)
+						
 		if dftchannel:
 			node.SetAttr('channel', dftchannel)
+			
 		if layout == 'undefined' and \
 		   self.toplevel.layoutview is not None and \
 		   self.toplevel.layoutview.curlayout is not None:
@@ -1298,7 +1308,8 @@ class HierarchyView(HierarchyViewDialog):
 ##				self.editmgr.addsyncarc(node, 'beginlist', arc)
 			self.editmgr.commit()
 			if not lightweight:
-				AttrEdit.showattreditor(self.toplevel, node, 'channel')
+				if not dftchannel:
+					AttrEdit.showattreditor(self.toplevel, node, 'channel')
 
 	def insertparent(self, type):
 		# Inserts a parent node before this one.
