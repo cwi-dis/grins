@@ -424,46 +424,44 @@ class _Toplevel:
 		return f._image_size(file)
 
 	# Returns the size of a video	
-	def GetVideoSize(self,file):
-		DirectShowSdk=win32ui.GetDS()
-		builder=DirectShowSdk.CreateGraphBuilder()
-
-		if not builder:
+	def GetVideoSize(self,url):
+		import dshow
+		try:
+			builder = dshow.CreateGraphBuilder()
+		except:
 			print 'Missing DirectShow infrasrucrure'
 			return (0, 0)
-
-		if not builder.RenderFile(file):
-			print 'failed to render',file
-			builder.Release()
-			del builder
-			return (0, 0)
-
-		width, height=builder.GetWindowPosition()[2:]
-		builder.Release()
-		del builder
+		try:
+			builder.RenderFile(url)
+		except:
+			print 'failed to render',url
+			return(0, 0)
+		vw = builder.QueryIVideoWindow()
+		try:
+			width, height = vw.GetWindowPosition()[2:]
+		except:
+			print 'failed to get size',url
+			width, height = 0, 0
 		return (width, height)
 
 	# Returns the duration of the media file in secs	
-	def GetMediaDuration(self,file):
-		DirectShowSdk=win32ui.GetDS()
-		builder=DirectShowSdk.CreateGraphBuilder()
-
-		if not builder:
+	def GetMediaDuration(self,url):
+		import dshow
+		try:
+			builder = dshow.CreateGraphBuilder()
+		except:
 			print 'Missing DirectShow infrasrucrure'
 			return 1.0
-
-		if not builder.RenderFile(file):
-			print 'failed to render',file
-			builder.Release()
-			del builder
+		try:
+			builder.RenderFile(url)
+		except:
+			print 'failed to render',url
 			return 1.0
-
-		duration=builder.GetDuration()
+		mp = builder.QueryIMediaPosition()
+		duration = mp.GetDuration()
 		if duration<0:
-			print 'failed to get duration for',file
+			print 'failed to get duration for',url
 			duration=1.0
-		builder.Release()
-		del builder
 		return duration
 	
 	# Returns the length of a string in pixels	
