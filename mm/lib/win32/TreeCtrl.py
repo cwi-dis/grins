@@ -63,7 +63,7 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 		style = win32con.WS_VISIBLE | win32con.WS_CHILD | commctrl.TVS_HASBUTTONS |\
 				commctrl.TVS_HASLINES | commctrl.TVS_SHOWSELALWAYS |\
 				win32con.WS_BORDER | win32con.WS_TABSTOP\
-				 | commctrl.TVS_LINESATROOT | commctrl.LVS_SHAREIMAGELISTS
+				 | commctrl.TVS_LINESATROOT
 		return style
 
 	# create a new instance of the tree ctrl.
