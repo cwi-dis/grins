@@ -2238,6 +2238,11 @@ class DialogWindow(_Window):
 		self.addwidget(item, widget)
 		return widget
 
+	def ImageWidget(self, item, image=None):
+		widget = mw_widgets._ImageWidget(self._wid, item, image)
+		self.addwidget(item, widget)
+		return widget
+
 	def set_commandlist(self, cmdlist):
 		# First build the cmd->item mapping from the item->cmd mapping
 		cmd_to_item = {}

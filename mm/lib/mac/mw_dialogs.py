@@ -504,6 +504,7 @@ class TemplateDialog(DialogWindow):
 				default=ITEM_TEMPLATE_OK, cancel=ITEM_TEMPLATE_CANCEL)
 
 		self.type_select=mw_widgets.SelectWidget(self._wid, ITEM_TEMPLATE_POPUP, names)
+		self.snapshot = self.ImageWidget(ITEM_TEMPLATE_IMAGE)
 		self._cb = cb
 		self._cancel = cancelCallback
 		self.descriptions = descriptions
@@ -544,15 +545,14 @@ class TemplateDialog(DialogWindow):
 		
 	def _setdialoginfo(self, idx):
 		tp, htext, rect = self._wid.GetDialogItem(ITEM_TEMPLATE_DESCRIPTION)
-##		tp, himage, rect = self._wid.GetDialogItem(ITEM_TEMPLATE_IMAGE)
 		if 0 <= idx < len(self.descriptions):
 			text = self.descriptions[idx][0]
-##			image = self.descriptions[idx][1]
+			image = self.descriptions[idx][1]
 		else:
 			text = ''
-##			image = None
+			image = None
 		Dlg.SetDialogItemText(htext, text)
-##		XXXX Set the image
+		self.snapshot.setfromfile(image)
 
 [TOP, CENTER, BOTTOM] = range(3)
 

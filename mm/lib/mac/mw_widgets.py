@@ -145,6 +145,33 @@ class _ListWidget(_Widget):
 ##		print 'ACTIVATE', self, onoff
 		self.list.LActivate(onoff)
 		
+class _ImageWidget(_Widget):
+	def __init__(self, wid, item, image=None):
+		_Widget.__init__(self, wid, item)
+		tp, h, rect = wid.GetDialogItem(item)
+		# wid is the window (dialog) where our image is going to be in
+		# rect is it's item rectangle (as in dialog item)
+		self.rect = rect
+		self.image = image
+		self.wid = wid
+		Win.InvalRect(self.rect)
+			
+	def setfromfile(self, image):
+		print "Image file", image
+		self.image = image
+		Win.InvalRect(self.rect)
+				
+	def _redraw(self, rgn=None):
+		if rgn == None:
+			rgn = self.wid.GetWindowPort().visRgn
+		Qd.SetPort(self.wid)
+		Qd.EraseRect(self.rect)
+		Qd.FrameRect(self.rect)
+		pass # Draw the image
+
+	def _activate(self, onoff):
+		pass
+				
 class SelectWidget:
 	def __init__(self, wid, ctlid, items=[], default=None, callback=None):
 		self.wid = wid
