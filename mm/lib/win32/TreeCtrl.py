@@ -27,9 +27,10 @@ class TreeCtrl(window.Wnd):
 		self._multiSelListeners = []
 		self._selEventSource = None
 
+		self.__selecting = 0
 		if resId != None:		
 			self._setEvents()
-
+		
 	# create a new instance of the tree ctrl.
 	# Note: don't call this method, if the tree widget come from a dialog box
 	def create(self, parent, rc, id):
@@ -117,9 +118,9 @@ class TreeCtrl(window.Wnd):
 			self.appendSelection(hititem)
 		
 		# restore selection of previously selected item once not the hit item
-		if selitem and selitem!=hititem and (selstate & commctrl.TVIS_SELECTED):
-			self.SetItemState(selitem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)	
-			self.appendSelection(selitem)
+		if nsel > 0:
+			if selitem and selitem!=hititem and (selstate & commctrl.TVIS_SELECTED):
+				self.SetItemState(selitem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
 
 #		# keep always at least one selection
 #		if not self._selections:
@@ -175,6 +176,21 @@ class TreeCtrl(window.Wnd):
 		
 	def OnSelChanged(self, std, extra):
 		nsel = len(self._selections)
+
+		# Important note: these line allow to detect, if there is an auto select (by the system) due to an initial focus
+		# in this case, we reset the selection
+		if nsel == 0:
+			try: 
+				selitem = self.GetSelectedItem()
+				if selitem:
+					selstate = self.GetItemState(selitem, commctrl.TVIS_SELECTED)
+			except: 
+				selitem = None
+
+			if selitem and (selstate & commctrl.TVIS_SELECTED):
+				self.SetItemState(selitem, 0, commctrl.TVIS_SELECTED)
+			return
+		
 		action, itemOld, itemNew, ptDrag = extra
 		# XXX the field number doesn't correspond with API documention ???
 		item, field2, field3, field4, field5, field6, field7, field8 = itemNew
@@ -196,6 +212,7 @@ class TreeCtrl(window.Wnd):
 		return 1
 
 	def OnSetFocus(self, params):
+			
 		# update the selected items.
 		# Note: the look is not the same when a item is selected or unselected
 		self.__updateSelectedItems()
@@ -207,19 +224,49 @@ class TreeCtrl(window.Wnd):
 	# 
 	#
 
-	# clear the initial selection
-	def _clearInitialSelectedItem(self):
-		try: 
-			selitem = self.GetSelectedItem()
-			if selitem:
-				selstate = self.GetItemState(selitem, commctrl.TVIS_SELECTED)
-		except: 
-			selitem = None
-	
-		if selitem and (selstate & commctrl.TVIS_SELECTED):
-			self.SetItemState(selitem, 0, commctrl.TVIS_SELECTED)
-			
+	def SelectItemList(self, list):
+		# don't update the listener when selecting
+		self.__selecting = 1
+
+		# remove items not selected anymore
+		itemToRemove = []
+		for cItem in self._selections:
+			if cItem not in list:
+				itemToRemove.append(cItem)
+		for cItem in itemToRemove:				
+			self.SetItemState(cItem, 0, commctrl.TVIS_SELECTED)
+			self.removeSelection(cItem)
+
+		if len(list) > 0:				
+			firstItemList = list[:-1]
+			lastItem = list[-1]
+			# for all items except the last, select/deselect with SetItemState
+			for item in firstItemList:
+				state = self.GetItemState(item, commctrl.TVIS_SELECTED)
+				if not state & commctrl.TVIS_SELECTED:
+					self.SetItemState(item, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
+					self.appendSelection(item)
+
+			# remind the current item selected
+			try: 
+				selitem = self.GetSelectedItem()
+				if selitem:
+					selstate = self.GetItemState(selitem, commctrl.TVIS_SELECTED)
+			except: 
+				selitem = None
+
+			# for the last item, select normally item the same way base would do
+			self.SelectItem(lastItem)
+			self.SetItemState(lastItem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
+			self.appendSelection(lastItem)
 		
+			# restore selection of previously selected item once not the hit item
+			if selitem and selitem!=lastItem and (selstate & commctrl.TVIS_SELECTED):
+				self.SetItemState(selitem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)	
+				self.appendSelection(selitem)
+			
+		self.__selecting = 0
+				
 	# unselect all children of the item
 	def __unselectChildren(self, item):
 		try:
@@ -245,10 +292,13 @@ class TreeCtrl(window.Wnd):
 
 	# update the listener				
 	def OnMultiSelChanged(self):
-		for listener in self._multiSelListeners:
-			listener.OnMultiSelChanged()
-		if debug:
-			self.scheduleDump()
+		# don't update the listener when selecting
+		# avoid some recursive problems
+		if not self.__selecting:
+			for listener in self._multiSelListeners:
+				listener.OnMultiSelChanged()
+			if debug:
+				self.scheduleDump()
 
 	# add a listener 
 	def addMultiSelListener(self, listener):

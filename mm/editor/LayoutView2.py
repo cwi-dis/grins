@@ -1327,11 +1327,12 @@ class TreeWidget(Widget):
 		
 
 	def selectNodeList(self, nodeRefList):
-		if len(nodeRefList) == 0:
-			self.__unselect()
-			return
-		nodeRef = nodeRefList[0]
-		self.selectNode(nodeRef)
+		list = []
+		for nodeRef in nodeRefList:
+			nodeTreeCtrlId = self.nodeRefToNodeTreeCtrlId.get(nodeRef)
+			if nodeTreeCtrlId != None:
+				list.append(nodeTreeCtrlId)
+		self.treeCtrl.selectNodeList(list)
 
 	#
 	#
@@ -1389,12 +1390,6 @@ class TreeWidget(Widget):
 			nodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
 			nodeRefList.append(nodeRef)
 		self._context.onSelect(nodeRefList)
-
-	# select a node in the tree control
-	def selectNode(self, nodeRef):
-		nodeTreeCtrlId = self.nodeRefToNodeTreeCtrlId.get(nodeRef)
-		if nodeTreeCtrlId != None:
-			self.treeCtrl.selectNode(nodeTreeCtrlId)
 
 	def expandNodes(self, nodeRef, expandMediaNode):
 		hasNotOnlyMedia = 0
