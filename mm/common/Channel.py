@@ -347,7 +347,7 @@ class Channel:
 	def hideimg(self):
 		pass
 
-	def popup(self):
+	def popup(self, poptop = 0):
 		# raise the window to the front (dummy for channels
 		# without windows)
 		pass
@@ -1075,9 +1075,9 @@ class ChannelWindow(Channel):
 			self._bgimg.close()
 			self._bgimg = None
 
-	def popup(self):
+	def popup(self, poptop = 0):
 		if self._is_shown and self.window:
-			self.window.pop()
+			self.window.pop(poptop = poptop)
 
 	def check_popup(self):
 		if self.nopop or not self._is_shown or not self.window:
@@ -1101,13 +1101,13 @@ class ChannelWindow(Channel):
 		else:
 			windowinterface.showmessage('No node currently playing on %s'%self._name, mtype = 'warning', grab = 1, parent = self.window)
 
-	def save_geometry(self):
-		if self._is_shown and self.window:
-			units = self._attrdict.get('units',
-						   windowinterface.UNIT_MM)
-			x, y, w, h = self.window.getgeometry(units = units)
-			self._attrdict['winpos'] = x, y
-			self._attrdict['winsize'] = w, h
+##	def save_geometry(self):
+##		if self._is_shown and self.window:
+##			units = self._attrdict.get('units',
+##						   windowinterface.UNIT_MM)
+##			x, y, w, h = self.window.getgeometry(units = units)
+##			self._attrdict['winpos'] = x, y
+##			self._attrdict['winsize'] = w, h
 
 	def mousepress(self, arg, window, event, value):
 		global _button
@@ -1365,18 +1365,18 @@ class ChannelWindow(Channel):
 	def resize(self, arg, window, event, value):
 		if debug:
 			print 'ChannelWindow.resize'+`self,arg,window,event,value`
-		self._player.toplevel.setwaiting()
-		self.replaynode()
-		if not self._player.playing and \
-		   self._attrdict.get('base_window','undefined') == 'undefined' and \
-		   hasattr(self, 'editmgr'):
-			units = self._attrdict.get('units',
-						   windowinterface.UNIT_MM)
-			x, y, w, h = self.window.getgeometry(units = units)
-			if self._attrdict.get('winsize') != (w, h) and \
-			   self.editmgr.transaction():
-				self.save_geometry()
-				self.editmgr.commit()
+##		self._player.toplevel.setwaiting()
+##		self.replaynode()
+##		if not self._player.playing and \
+##		   self._attrdict.get('base_window','undefined') == 'undefined' and \
+##		   hasattr(self, 'editmgr'):
+##			units = self._attrdict.get('units',
+##						   windowinterface.UNIT_MM)
+##			x, y, w, h = self.window.getgeometry(units = units)
+##			if self._attrdict.get('winsize') != (w, h) and \
+##			   self.editmgr.transaction():
+##				self.save_geometry()
+##				self.editmgr.commit()
 
 	def arm_0(self, node):
 		same = Channel.arm_0(self, node)
