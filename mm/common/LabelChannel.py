@@ -10,8 +10,9 @@ import os
 
 class LabelChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + \
-		     ['bucolor', 'hicolor', 'fgcolor', 'font', 'pointsize',
-		      'textalign', 'bgimg', 'scale', 'center', 'crop', 'noanchors']
+		     ['bucolor', 'hicolor', 'fgcolor',
+		      'font', 'pointsize', 'textalign',
+		      'bgimg', 'scale', 'center', 'crop', 'noanchors']
 
 	def updatefixedanchors(self, node):
 		try:
@@ -27,6 +28,9 @@ class LabelChannel(ChannelWindow):
 	def do_arm(self, node, same = 0):
 		if same and self.armed_display:
 			return 1
+		fgcolor = self.getfgcolor(node)
+		bucolor = self.getbucolor(node)
+		drawbox = MMAttrdefs.getattr(node, 'drawbox')
 		img = MMAttrdefs.getattr(node, 'bgimg')
 		if img:
 			try:
@@ -64,6 +68,8 @@ class LabelChannel(ChannelWindow):
 			   char1 == len(parlist[-1]):
 				taglist = []
 				buttons.append(name, (0.0,0.0,1.0,1.0), type)
+				if not drawbox:
+					self.armed_display.fgcolor(bucolor)
 		fontspec = MMAttrdefs.getattr(node, 'font')
 		fontname, pointsize = mapfont(fontspec)
 		ps = MMAttrdefs.getattr(node, 'pointsize')
@@ -120,6 +126,8 @@ class LabelChannel(ChannelWindow):
 				parlist[line0][pchar:char0])
 			# display text in the anchor (if on multiple lines)
 			pline, pchar = line0, char0
+			if not drawbox:
+				self.armed_display.fgcolor(bucolor)
 			for line in range(pline, line1):
 				if not block and pchar == 0:
 					self.position(y, parlist[line], right)
@@ -134,6 +142,7 @@ class LabelChannel(ChannelWindow):
 			box = self.armed_display.writestr(parlist[line1][pchar:char1])
 			buttons.append(name, box, type)
 			pline, pchar = line1, char1
+			self.armed_display.fgcolor(fgcolor)
 		# display text after last anchor
 		for line in range(pline, len(parlist)):
 			if not block and pchar == 0:
@@ -143,7 +152,10 @@ class LabelChannel(ChannelWindow):
 			pchar = 0
 			y = y + fontheight
 		# draw boxes for the anchors
-		self.armed_display.fgcolor(self.getbucolor(node))
+		if drawbox:
+			self.armed_display.fgcolor(bucolor)
+		else:
+			self.armed_display.fgcolor(self.getbgcolor(node))
 		hicolor = self.gethicolor(node)
 		for name, box, type in buttons:
 			button = self.armed_display.newbutton(box)
