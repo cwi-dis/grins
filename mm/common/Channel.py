@@ -588,7 +588,7 @@ class Channel:
 		durationattr = node.GetAttrDef('duration', None)
 		for (name, type, button, times) in self._played_anchors:
 			self._anchors[button] = self.onclick, (node, [(name, type)], None)
-  		self._qid = None
+		self._qid = None
 
 	def onclick(self, node, anchorlist, arg):
 		if debug: print 'Channel.onclick'+`self,node,anchorlist,arg`
