@@ -37,13 +37,18 @@ class GraphChannel(ChannelWindow):
 		# XXXX For lines
 		maxx = maxy = 0.0
 		miny = 999999999.0
-		length = 0
+		length = 1
 		for d in self.datapoints:
+			if not d:
+				continue
 			if len(d) > length:
 				length = len(d)
 			mind, maxd = min(d), max(d)
 			miny = min(miny, mind)
 			maxy = max(maxy, maxd)
+		if miny == maxy:
+			miny = miny - 0.5
+			maxy = maxy + 0.5
 		leftalign = (MMAttrdefs.getattr(node, 'align') == 'left')
 		for d in self.datapoints:
 			if len(d) < length:
