@@ -337,7 +337,7 @@ def decodelicense(lic):
 	except license.Error, arg:
 		status = 'Invalid: %s'%arg
 	fnames = string.join(fnames, ',')
-	if date[0] >= 3000:
+	if date == None or date[0] >= 3000:
 		date = 'indefinite'
 	else:
 		date = "%04.4d/%02.2d/%02.2d"%date
