@@ -675,13 +675,14 @@ def _calcdur(tags):
 			endtime = start + duration
 	return endtime
 
-def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0):
+def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None):
 	from SMILTreeWrite import nameencode
 	import MMAttrdefs
 
 	bgcolor = MMAttrdefs.getattr(node, 'bgcolor')
 	ctx = node.GetContext()
-	baseurl = MMurl.canonURL(ctx.findurl(MMAttrdefs.getattr(node, 'file')))
+	if baseurl is None:
+		baseurl = MMurl.canonURL(ctx.findurl(MMAttrdefs.getattr(node, 'file')))
 	i = string.rfind(baseurl, '/')
 	if i >= 0:
 		baseurl = baseurl[:i+1]	# everything up to and including last /
