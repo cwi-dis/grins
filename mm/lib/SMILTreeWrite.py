@@ -799,7 +799,14 @@ def getterm(writer, node):
 		return 'all'
 	for child in node.children:
 		if child.GetRawAttrDef('name', '') == terminator:
-			return 'id(%s)' % writer.uid2name[child.GetUID()]
+			id = writer.uid2name[child.GetUID()]
+			if writer.smilboston:
+				if id in ('all', 'first', 'last', 'media'):
+					return '\\' + id
+				else:
+					return id
+			else:
+				return 'id(%s)' % id
 	print '** Terminator attribute refers to unknown child in', \
 	      node.GetRawAttrDef('name', '<unnamed>'),\
 	      node.GetUID()
