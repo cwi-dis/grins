@@ -214,7 +214,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			movie.SetCurrentFrame(self.__begin)
 		if self.__end:
 			movie.SetEndFrame(self.__end)
-		if self.armed_duration:
+		if self.armed_duration > 0:
 			self.__qid = self._scheduler.enter(
 				self.armed_duration, 0, self.__stopplay, ())
 		movie.Play()
