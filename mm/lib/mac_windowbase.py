@@ -655,7 +655,7 @@ class _CommonWindow:
 		_size_cache[file] = width, height
 		return width, height
 
-	def _prepare_image(self, file, crop, scale):
+	def _prepare_image(self, file, crop, scale, center):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
@@ -719,8 +719,9 @@ class _CommonWindow:
 			image = imageop.scale(image, depth,
 					      xsize, ysize, w, h)
 
-		x, y = x + (width - (w - left - right)) / 2, \
-		       y + (height - (h - top - bottom)) / 2
+		if center:
+			x, y = x + (width - (w - left - right)) / 2, \
+			       y + (height - (h - top - bottom)) / 2
 		xim = mac_image.mkpixmap(w, h, format, image)
 		return (xim, image), mask, left, top, x, y, w - left - right, h - top - bottom
 
@@ -1170,12 +1171,13 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		return _Button(self, coordinates)
 
-	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0):
+	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
+				    center = 1):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       w._prepare_image(file, crop, scale)
+		       w._prepare_image(file, crop, scale, center)
 		if mask:
 			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
 		else:
