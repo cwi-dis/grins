@@ -667,7 +667,6 @@ class MediaWidget(MMNodeWidget):
                 availbw = availbw * bwfraction
             bwfraction = MMAttrdefs.getattr(ancestor, 'project_bandwidth_fraction')
             ancestor = ancestor.parent
-        print 'DBG nodebw', self.node, availbw
         
         # Get amount of data we need to load
         try:
@@ -686,8 +685,6 @@ class MediaWidget(MMNodeWidget):
         else:
             prevnode_duration = 0
         lagtime = prearmtime - prevnode_duration
-        
-        print 'DEBUG:', self.node, prearmtime, lagtime
         
         # Now convert this from time to distance. 
         node_duration = (self.node.t1-self.node.t0)
