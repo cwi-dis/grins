@@ -3,7 +3,7 @@
 // File:   sha.h
 //
 // Microsoft Digital Rights Management
-// Copyright (C) Microsoft Corporation, 1998 - 2001.  All Rights Reserved.
+// Copyright (C) Microsoft Corporation, 1999-2001. All Rights Reserved
 //
 // Description:
 //

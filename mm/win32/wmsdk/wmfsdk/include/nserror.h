@@ -311,7 +311,7 @@ Notes:
 //
 // MessageText:
 //
-//  The server, a computer setup to offer multimedia content to other computers, is too busy to handle your request for multimedia content.  Please try again later.%0
+//  The server, a computer setup to offer multimedia content to other computers, could not handle your request for multimedia content in a timely manner.  Please try again later.%0
 //
 #define NS_E_TIMEOUT                     0xC00D0013L
 
@@ -1831,6 +1831,15 @@ Notes:
 #define NS_E_MIXER_UNKNOWN_MMRESULT      0xC00D0FA8L
 
 //
+// MessageId: NS_E_USER_STOP
+//
+// MessageText:
+//
+//  User has stopped the operation.%0
+//
+#define NS_E_USER_STOP                   0xC00D0FA9L
+
+//
 // WMP IWMPXMLParser Error codes
 //
 //
@@ -1916,6 +1925,15 @@ Notes:
 //  The device is not ready, please check the drive and try again.%0
 //
 #define NS_E_DEVICE_NOT_READY            0xC00D0FCAL
+
+//
+// MessageId: NS_E_DAMAGED_FILE
+//
+// MessageText:
+//
+//  Windows Media Player cannot play the selected file because it is either damaged or corrupt. Please select a different file.%0
+//
+#define NS_E_DAMAGED_FILE                0xC00D0FCBL
 
 //
 // Generic Media PlayerUI error codes
@@ -2653,42 +2671,6 @@ Notes:
 #define NS_E_WMPCORE_INVALIDPLAYLISTMODE 0xC00D1081L
 
 //
-// MessageId: NS_E_WMPCORE_PLAYLISTNOLISTENER
-//
-// MessageText:
-//
-//  No error description has been defined for this WMP error.%0
-//
-#define NS_E_WMPCORE_PLAYLISTNOLISTENER  0xC00D1082L
-
-//
-// MessageId: NS_E_WMPCORE_CYCLICPLAYLISTFOUND
-//
-// MessageText:
-//
-//  No error description has been defined for this WMP error.%0
-//
-#define NS_E_WMPCORE_CYCLICPLAYLISTFOUND 0xC00D1083L
-
-//
-// MessageId: NS_E_WMPCORE_INVALIDPLAYLISTITEMID
-//
-// MessageText:
-//
-//  No error description has been defined for this WMP error.%0
-//
-#define NS_E_WMPCORE_INVALIDPLAYLISTITEMID 0xC00D1084L
-
-//
-// MessageId: NS_E_WMPCORE_NESTEDPLAYLISTNOTALLOWED
-//
-// MessageText:
-//
-//  No error description has been defined for this WMP error.%0
-//
-#define NS_E_WMPCORE_NESTEDPLAYLISTNOTALLOWED 0xC00D1085L
-
-//
 // MessageId: NS_E_WMPCORE_ITEMNOTINPLAYLIST
 //
 // MessageText:
@@ -2860,20 +2842,11 @@ Notes:
 #define NS_E_WMPCORE_LIST_ENTRY_NO_REF   0xC00D1098L
 
 //
-// MessageId: NS_E_WMPCORE_NONETWORKINTERFACEONGRAPH
-//
-// MessageText:
-//
-//  No error description has been defined for this WMP error.%0
-//
-#define NS_E_WMPCORE_NONETWORKINTERFACEONGRAPH 0xC00D1099L
-
-//
 // MessageId: NS_E_WMPCORE_CODEC_NOT_TRUSTED
 //
 // MessageText:
 //
-//  No error description has been defined for this WMP error.%0
+//  The codec downloaded for this media does not appear to be properly signed. Installation is not possible.%0
 //
 #define NS_E_WMPCORE_CODEC_NOT_TRUSTED   0xC00D109AL
 
@@ -2882,7 +2855,7 @@ Notes:
 //
 // MessageText:
 //
-//  No error description has been defined for this WMP error.%0
+//  One or more codecs required to play this media could not be found on the codec server.%0
 //
 #define NS_E_WMPCORE_CODEC_NOT_FOUND     0xC00D109BL
 
@@ -2891,7 +2864,7 @@ Notes:
 //
 // MessageText:
 //
-//  No error description has been defined for this WMP error.%0
+//  Some of the codecs required by this media are not installed on your system. Since the option for automatic codec acquisition is disabled, no codecs will be downloaded.%0
 //
 #define NS_E_WMPCORE_CODEC_DOWNLOAD_NOT_ALLOWED 0xC00D109CL
 
@@ -3013,15 +2986,6 @@ Notes:
 #define NS_E_WMPCORE_CURRENT_MEDIA_NOT_ACTIVE 0xC00D10A9L
 
 //
-// MessageId: NS_E_WMPCORE_CURRENT_MEDIA_SKIP_NOT_ALLOWED
-//
-// MessageText:
-//
-//  No error description has been defined for this WMP error.%0
-//
-#define NS_E_WMPCORE_CURRENT_MEDIA_SKIP_NOT_ALLOWED 0xC00D10AAL
-
-//
 // MessageId: NS_E_WMPCORE_USER_CANCEL
 //
 // MessageText:
@@ -3121,6 +3085,24 @@ Notes:
 #define NS_E_WMPCORE_NO_PLAYABLE_MEDIA_IN_PLAYLIST 0xC00D10B5L
 
 //
+// MessageId: NS_E_WMPCORE_PLAYLIST_EMPTY_NESTED_PLAYLIST_SKIPPED_ITEMS
+//
+// MessageText:
+//
+//  Failed to open the nested playlist because it has no items after player has ignored entries which are pointing to other playlists.%0
+//
+#define NS_E_WMPCORE_PLAYLIST_EMPTY_NESTED_PLAYLIST_SKIPPED_ITEMS 0xC00D10B6L
+
+//
+// MessageId: NS_E_WMPCORE_BUSY
+//
+// MessageText:
+//
+//  The player could not handle your request for multimedia content in a timely manner. Please try again later.%0
+//
+#define NS_E_WMPCORE_BUSY                0xC00D10B7L
+
+//
 // WMP Core  Success codes
 //
 //
@@ -3140,24 +3122,6 @@ Notes:
 //  Failed to remove item in the playlist since it was aborted by user.%0
 //
 #define NS_S_WMPCORE_PLAYLISTREMOVEITEMABORT 0x000D10FFL
-
-//
-// MessageId: NS_S_WMPCORE_DISCONTINUEEVENTPROCESSING
-//
-// MessageText:
-//
-//  No error description has been defined for this WMP error.%0
-//
-#define NS_S_WMPCORE_DISCONTINUEEVENTPROCESSING 0x000D1100L
-
-//
-// MessageId: NS_S_WMPCORE_SUPRESSEXTERNALEVENT
-//
-// MessageText:
-//
-//  No error description has been defined for this WMP error.%0
-//
-#define NS_S_WMPCORE_SUPRESSEXTERNALEVENT 0x000D1101L
 
 //
 // MessageId: NS_S_WMPCORE_PLAYLIST_CREATION_PENDING
@@ -3212,6 +3176,15 @@ Notes:
 //  The imported playlist does not contain all items from the original.%0
 //
 #define NS_S_WMPCORE_PLAYLIST_IMPORT_MISSING_ITEMS 0x000D1107L
+
+//
+// MessageId: NS_S_WMPCORE_PLAYLIST_COLLAPSED_TO_SINGLE_MEDIA
+//
+// MessageText:
+//
+//  The playlist has been collapsed into a single media.%0
+//
+#define NS_S_WMPCORE_PLAYLIST_COLLAPSED_TO_SINGLE_MEDIA 0x000D1108L
 
 //
 // WMP Internet Manager error codes
@@ -3942,7 +3915,7 @@ Notes:
 //
 // MessageText:
 //
-//  The inverse telecine optimization requires the input source to have a framerate of 30 frames per second. Adjust the settings on the source group to use this option.%0
+//  Because this source group does not have a frame rate of 30 frames per second, you cannot use the inverse telecine feature.%0
 //
 #define NS_E_INVALIDINPUTFPS             0xC00D1B81L
 
@@ -3954,6 +3927,60 @@ Notes:
 //  Internal problems are preventing the preview or postview of your content.%0
 //
 #define NS_E_NO_DATAVIEW_SUPPORT         0xC00D1B82L
+
+//
+// MessageId: NS_E_CODEC_UNAVAILABLE
+//
+// MessageText:
+//
+//  One or more codecs required to open this media could not be found.%0
+//
+#define NS_E_CODEC_UNAVAILABLE           0xC00D1B83L
+
+//
+// MessageId: NS_E_ARCHIVE_SAME_AS_INPUT
+//
+// MessageText:
+//
+//  The output archive file specified is the same as an input source in one of the source groups.%0
+//
+#define NS_E_ARCHIVE_SAME_AS_INPUT       0xC00D1B84L
+
+//
+// MessageId: NS_E_SOURCE_NOTSPECIFIED
+//
+// MessageText:
+//
+//  The input source has not been setup completely.%0
+//
+#define NS_E_SOURCE_NOTSPECIFIED         0xC00D1B85L
+
+//
+// MessageId: NS_E_NO_REALTIME_TIMECOMPRESSION
+//
+// MessageText:
+//
+//  Cannot apply time compression transform plug-in to a real time broadcast session.%0
+//
+#define NS_E_NO_REALTIME_TIMECOMPRESSION 0xC00D1B86L
+
+//
+// MessageId: NS_E_UNSUPPORTED_ENCODER_DEVICE
+//
+// MessageText:
+//
+//  The Encoder was unable to open this device. Please see the system requirements for more information.%0
+//
+#define NS_E_UNSUPPORTED_ENCODER_DEVICE  0xC00D1B87L
+
+//
+// MessageId: NS_E_UNEXPECTED_DISPLAY_SETTINGS
+//
+// MessageText:
+//
+//  Encoding cannot start because the display size or color setting has changed since the current session was defined. Restore the previous settings or create a new session.%0
+//
+#define NS_E_UNEXPECTED_DISPLAY_SETTINGS 0xC00D1B88L
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -4786,6 +4813,15 @@ Notes:
 //  Unable to locate the proxy server. The operation timed out.%0
 //
 #define NS_E_PROXY_DNS_TIMEOUT           0xC00D2EF0L
+
+//
+// MessageId: NS_E_CLOSED_ON_SUSPEND
+//
+// MessageText:
+//
+//  Media closed because Windows was shut down.%0
+//
+#define NS_E_CLOSED_ON_SUSPEND           0xC00D2EF1L
 
 
 #endif _NSERROR_H
