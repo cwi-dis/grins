@@ -1246,7 +1246,7 @@ class DOMParamIterator:
 		self.root = root
 		self.navigator = navigator
 		self.startnodecb = startnodecb
-		self.endnodecb = startnodecb
+		self.endnodecb = endnodecb
 		self.filter = filter
 		self.trace = trace
 
