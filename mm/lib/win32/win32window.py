@@ -59,7 +59,7 @@ class Window:
 		self.__settransparent(transparent)
 		if bgcolor:
 			self._bgcolor = bgcolor
-		else:
+		elif parent:
 			self._bgcolor = parent._bgcolor
 
 	def __repr__(self):
@@ -642,24 +642,33 @@ class Window:
 	#
 	def __setparent(self, parent):
 		self._parent = parent
-		self._bgcolor = parent._bgcolor
-		self._fgcolor = parent._fgcolor
-		self._cursor = parent._cursor
-		self._topwindow = parent._topwindow
-		self._convert_color = parent._convert_color
+		if parent:
+			self._bgcolor = parent._bgcolor
+			self._fgcolor = parent._fgcolor
+			self._cursor = parent._cursor
+			self._topwindow = parent._topwindow
+			self._convert_color = parent._convert_color
 
 	# update related coordinates members in a consistent way
 	def __setcoordinates(self, coordinates, units):
-		x, y, w, h = self._parent._convert_coordinates(coordinates, units = units)
+		if self._parent:
+			x, y, w, h = self._parent._convert_coordinates(coordinates, units = units)
+		else:
+			x, y, w, h = coordinates
+			units = UNIT_PXL
 		self._rect = 0, 0, w, h # client area in pixels
 		self._canvas = 0, 0, w, h # client canvas in pixels
 		self._rectb = x, y, w, h  # rect with respect to parent in pixels
-		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
+		if self._parent:
+			self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
+		else:
+			self._sizes = 0, 0, 1, 1
 		self._units = units
 
 	# insert this window in parent._subwindows list at the correct z-order
 	def __set_z_order(self, z):
 		self._z = z
+		if not self._parent: return
 		parent = self._parent
 		for i in range(len(parent._subwindows)):
 			if self._z > parent._subwindows[i]._z:
@@ -669,7 +678,6 @@ class Window:
 			parent._subwindows.append(self)
 
 	def __settransparent(self, transparent):
-		parent = self._parent
 		if transparent not in (0, 1):
 			raise error, 'invalid value for transparent arg'
 		self._transparent = transparent
@@ -746,6 +754,94 @@ class Window:
 
 
 
+#################################################
+class DDWndLayer:
+	def __init__(self, wnd):
+		self._wnd = wnd
+		self._ddraw = None
+		self._frontBuffer = None
+		self._backBuffer = None
+		self._clipper = None
+
+	def	createDDLayer(self):
+		self._ddraw = ddraw.CreateDirectDraw()
+		self._ddraw.SetCooperativeLevel(self._wnd.GetSafeHwnd(), ddraw.DDSCL_NORMAL)
+
+		# create front buffer (shared with GDI)
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_PRIMARYSURFACE)
+		self._frontBuffer = self._ddraw.CreateSurface(ddsd)
+
+		# size of back buffer
+		# for now we create it at the size of the screen
+		# to avoid resize manipulations
+		from __main__ import toplevel
+		w = toplevel._scr_width_pxl
+		h = toplevel._scr_height_pxl
+
+		# create back buffer 
+		# we draw everything on this surface and 
+		# then blit it to the front surface
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
+		ddsd.SetSize(w,h)
+		self._backBuffer = self._ddraw.CreateSurface(ddsd)
+
+		self._clipper = self._ddraw.CreateClipper(self.GetSafeHwnd())
+		self._frontBuffer.SetClipper(self._clipper)
+		self._pxlfmt = self._frontBuffer.GetPixelFormat()
+
+	def destroyDDLayer(self):
+		if self._ddraw:
+			del self._frontBuffer
+			del self._backBuffer
+			del self._clipper
+			del self._ddraw
+			self._ddraw = None
+
+	def getDirectDraw(self):
+		return self._ddraw
+
+	def getDrawBuffer(self):
+		if not self._ddraw: return None
+		if self._backBuffer.IsLost():
+			if not self._backBuffer.Restore():
+				return None
+		return self._backBuffer
+
+	def CreateSurface(self, w, h):
+		if not self._ddraw: return None
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
+		ddsd.SetSize(w,h)
+		dds = self._ddraw.CreateSurface(ddsd)
+		dds.BltFill((0, 0, w, h), 0)
+		return dds
+
+	def flip(self):
+		if not self._ddraw:
+			return
+		rcBack = self._wnd.GetClientRect()
+		rcFront = self._wnd.ClientToScreen(rcBack)
+		if self._frontBuffer.IsLost():
+			if not self._frontBuffer.Restore():
+				# we can't do anything for this
+				# system is busy with video memory
+				return 
+		if self._backBuffer.IsLost():
+			if not self._backBuffer.Restore():
+				# and for this either
+				# system should be out of memory
+				return 
+			else:
+				# OK, backBuffer resored, paint it
+				self.paint()
+		self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
+
+
 ########################################
 
 # regions, RGB 
@@ -753,12 +849,16 @@ import win32ui, win32con, win32api
 
 import win32transitions
 
-class SubWindow(Window):
+class Region(Window):
 	def __init__(self, parent, coordinates, transparent, z, units, bgcolor):
 		Window.__init__(self)
 		
 		# create the window
 		self.create(parent, coordinates, units, z, transparent, bgcolor)
+
+		# context os window
+		if parent:
+			self._ctxoswnd = self._topwindow.getContextOsWnd()
 
 		# implementation specific
 		self._oswnd = None
@@ -770,10 +870,10 @@ class SubWindow(Window):
 		self._orgrect = self._rect
 						
 	def __repr__(self):
-		return '<_SubWindow instance at %x>' % id(self)
+		return '<Region instance at %x>' % id(self)
 		
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
-		return SubWindow(self, coordinates, transparent, z, units, bgcolor)
+		return Region(self, coordinates, transparent, z, units, bgcolor)
 
 	def close(self):
 		if self._parent is None:
@@ -841,11 +941,11 @@ class SubWindow(Window):
 			exstyle=win32con.WS_EX_TRANSPARENT
 		strclass=Afx.RegisterWndClass(clstyle,cursor,brush,icon)
 		wnd.CreateWindowEx(exstyle,strclass,title,style,
-			(x,y,x+w,y+h),self._topwindow,0)
+			(x,y,x+w,y+h),self._ctxoswnd,0)
 		
 		# put ddwnd below childwnd
 		flags=win32con.SWP_NOMOVE|win32con.SWP_NOSIZE|win32con.SWP_NOACTIVATE|win32con.SWP_ASYNCWINDOWPOS		
-		self._topwindow.SetWindowPos(wnd.GetSafeHwnd(), (0,0,0,0), flags)
+		self._ctxoswnd.SetWindowPos(wnd.GetSafeHwnd(), (0,0,0,0), flags)
 		
 		wnd.ShowWindow(win32con.SW_SHOW)
 
@@ -1193,7 +1293,8 @@ class SubWindow(Window):
 	# get a copy of the screen area of this window
 	def getBackDDS(self):
 		self._topwindow.update()
-		bf = self._topwindow._backBuffer
+		bf = self._topwindow.getDrawBuffer()
+		if not bf: return
 		x, y, w, h = self.getwindowpos()
 		dds = self.createDDS()
 		dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
@@ -1203,7 +1304,8 @@ class SubWindow(Window):
 		rc_dst = self.getwindowpos()
 		src_w, src_h = srfc.GetSurfaceDesc().GetSize()
 		rc_src = (0, 0, src_w, src_h)
-		buf = self._topwindow._backBuffer
+		buf = self._topwindow.getDrawBuffer()
+		if not buf: return
 		if rc_dst[2]!=0 and rc_dst[3]!=0:
 			buf.Blt(self.ltrb(rc_dst), srfc, rc_src, ddraw.DDBLT_WAIT)
 
@@ -1222,7 +1324,9 @@ class SubWindow(Window):
 		# first paint self
 		dst = self.getwindowpos(self._topwindow)
 		rgn = self.getClipRgn(self._topwindow)
-		self._paintOnDDS(self._topwindow._backBuffer, dst, rgn)
+		buf = self._topwindow.getDrawBuffer()
+		if not buf: return
+		self._paintOnDDS(buf, dst, rgn)
 		rgn.DeleteObject()
 
 		# then paint children bottom up
@@ -1485,6 +1589,129 @@ class SubWindow(Window):
 			count = count + 1
 			prev = prev._parent
 		return count
+
+
+#############################
+
+class Viewport(Region):
+	def __init__(self, context, x, y, width, height, bgcolor):
+		Region.__init__(self, None, (x,y,width, height), 0, 0, UNIT_PXL, bgcolor)
+		
+		# adjust some variables
+		self._topwindow = self
+		
+		# cache for easy access
+		self._width = width
+		self._height = height
+		
+		self._ctx = context
+		self.__drawBuffer = dds = context.CreateSurface(self._width, self._height)
+
+	def __repr__(self):
+		return '<Viewport instance at %x>' % id(self)
+
+	def _convert_color(self, color):
+		return color 
+
+	def getwindowpos(self, rel=None):
+		return self._rect
+
+	def CreateSurface(self, w, h):
+		return self._ctx.CreateSurface(w, h)
+
+	def pop(self, poptop=1):
+		self._ctx.pop(poptop)
+
+	def getContextOsWnd(self):
+		return self._ctx.getContextOsWnd()
+
+	def setcursor(self, strid):
+		self._ctx.setcursor(strid)
+
+	def close(self):
+		if self._ctx is None:
+			return
+		self.updateMouseCursor()
+		self._ctx.update()
+		self._ctx.closeViewport(self)
+		self._ctx = None
+		for win in self._subwindows[:]:
+			win.close()
+		for dl in self._displists[:]:
+			dl.close()
+		del self._topwindow
+
+	def is_closed(self):
+		return self._ctx is None
+
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
+		return Region(self, coordinates, transparent, z, units, bgcolor)
+	
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
+		return newwindow(coordinates, pixmap, transparent, z, type_channel, units, bgcolor)	
+
+	def getClipRgn(self, rel=None):
+		x, y, w, h = self._canvas
+		rgn = win32ui.CreateRgn()
+		rgn.CreateRectRgn((x,y,x+w,y+h))
+		return rgn
+
+	def update(self):
+		self.paint()
+		self.flip()
+		self._ctx.flip()
+
+	def getDrawBuffer(self):
+		if self.__drawBuffer.IsLost():
+			if not self.__drawBuffer.Restore():
+				return None
+		return self.__drawBuffer
+
+	def paint(self):
+		dds = self.getDrawBuffer()
+		if not dds: return
+			
+		# first paint self
+		self._paintOnDDS(dds, self._rect)
+
+		# then paint children bottom up
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
+			w.paint()
+
+	def flip(self):
+		ctxDrawBuffer = self._ctx.getDrawBuffer()
+		if not ctxDrawBuffer: return
+
+		dds = self.getDrawBuffer()
+		if not dds: return
+
+		ctxDrawBuffer.Blt(self.ltrb(self._rectb), dds, self.ltrb(self._rect))
+
+	def updateMouseCursor(self):
+		self._ctx.updateMouseCursor()
+
+	def imgAddDocRef(self, file):
+		self._ctx.imgAddDocRef(file)
+
+	def onMouseMove(self, flags, point):		
+		# check subwindows first
+		for w in self._subwindows:
+			if w.inside(point):
+				if w.setcursor_from_point(point):
+					return
+
+		# not in a subwindow, handle it ourselves
+		if self._active_displist:
+			x, y, w, h = self.getwindowpos()
+			xp, yp = point
+			point = xp-x, yp-y
+			x, y = self._pxl2rel(point,self._canvas)
+			for button in self._active_displist._buttons:
+				if button._inside(x,y):
+					self.setcurcursor('hand')
+		self.setcurcursor('arrow')
 
 
 #############################
