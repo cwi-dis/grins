@@ -4,8 +4,8 @@
 
 #include "Connection.h"
 
-SocketServer::SocketServer(u_short port)
-:	m_connStatusChanged(false), m_port(port)
+SocketServer::SocketServer(u_short port, void *pContext)
+:	m_connStatusChanged(false), m_port(port), m_pContext(pContext)
 	{
 	}
 
@@ -201,9 +201,9 @@ void SocketServer::processConnections()
 
 void SocketServer::printStatistics()
 	{
-	if(m_connStatusChanged)
-		cout << m_connections.size() << " connections" << endl;
-	m_connStatusChanged = false;
+	//if(m_connStatusChanged)
+		//cout << m_connections.size() << " connections" << endl;
+	//m_connStatusChanged = false;
 	}
 
 int	SocketServer::newListeningSocket(LPCTSTR server, u_short port)
