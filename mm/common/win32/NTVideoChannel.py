@@ -299,8 +299,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.__rmdds = self.window._topwindow.CreateSurface(w, h)
 		self.__RGB_On_RGB = {
 			'32-32': self.__rmdds.Blt_RGB32_On_RGB32,
+			'32-24': self.__rmdds.Blt_RGB32_On_RGB24,
 			'32-16': self.__rmdds.Blt_RGB32_On_RGB16,
+
 			'24-32': self.__rmdds.Blt_RGB24_On_RGB32,
+			'24-24': self.__rmdds.Blt_RGB24_On_RGB24,
 			'24-16': self.__rmdds.Blt_RGB24_On_RGB16,
 			}
 
