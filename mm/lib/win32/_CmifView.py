@@ -58,7 +58,9 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 	# and the messages that interest us us are hooked
 	def OnInitialUpdate(self):
 		if not self._parent:
-			self._parent=(self.GetParent()).GetMDIFrame()
+			self._parent=self.GetParent()
+			if hasattr(self._parent,'GetMDIFrame'):
+				self._parent=self._parent.GetMDIFrame()
 		self._do_init(self._parent)
 
 		self._is_active = 0
