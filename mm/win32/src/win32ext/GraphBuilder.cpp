@@ -345,11 +345,12 @@ static PyObject* py_is_complete_event(PyObject *self, PyObject *args)
         while (SUCCEEDED(pimex->GetEvent(&evCode, &evParam1, &evParam2, 0)))
 			{
             hr = pimex->FreeEventParams(evCode, evParam1, evParam2);
-            if(evCode==EC_COMPLETE){completed=1;break;}
+            if(evCode==EC_COMPLETE){completed=1;}
 			}
 		}
 	return Py_BuildValue("i",completed);
 	}
+
 
 
 // @object PyGraphBuilder|A class which encapsulates DirectShow SDK.

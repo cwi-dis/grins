@@ -79,7 +79,6 @@ IMPLEMENT_PYMODULECLASS(Gifex,GetGifex,"Gifex Module Wrapper Object");
 
 #define BFT_BITMAP 0x4d42   /* 'BM' */
 
-static PyObject *gifexError;
 
 //***************************
 //Things to do:
@@ -544,7 +543,7 @@ GIFreadimage(FILE *filep, unsigned char *datap, int width, int height, int rowle
 //					End of Gif Section
 //***************************************************
 
-static PyObject* py_gifex_ReadGIF(PyObject *self, PyObject *args)
+static PyObject* py_gif2bmp(PyObject *self, PyObject *args)
 {
 	char *filename, *tofile;
 	PyObject *tmp = Py_None,*rv = Py_None;
@@ -641,38 +640,38 @@ static PyObject* py_gifex_ReadGIF(PyObject *self, PyObject *args)
 	lpbhdr = &bhdr;
 	
 	FILE* fil;
-	if ((fil = fopen(tofile, "wb")) != NULL)
-	{
-		fwrite(lphdr, sizeof(BITMAPFILEHEADER),1,fil);
-		fwrite(lpbhdr, sizeof(BITMAPINFOHEADER),1,fil);
-		if (lmap != NULL)
-			fwrite(lmap, sizeof(RGBQUAD), ncolors, fil);
-		else 
+	if ((fil = fopen(tofile, "wb")) == NULL)
+	    RETURN_ERR("Cannot open file to write bmp.");
+
+	fwrite(lphdr, sizeof(BITMAPFILEHEADER),1,fil);
+	fwrite(lpbhdr, sizeof(BITMAPINFOHEADER),1,fil);
+	if (lmap != NULL)
+		fwrite(lmap, sizeof(RGBQUAD), ncolors, fil);
+	else 
 		{
-			fclose(fil);
-			Py_INCREF(Py_None);
-			return Py_None;
-		}
-		if (datap != NULL)
-			fwrite((LPSTR)datap, sizeof(char),rowlen*height,fil);
-		else 
-		{
-			fclose(fil);
-			Py_INCREF(Py_None);
-			return Py_None;
-		}
 		fclose(fil);
-	}
+		Py_INCREF(Py_None);
+		return Py_None;
+		}
+	if (datap != NULL)
+			fwrite((LPSTR)datap, sizeof(char),rowlen*height,fil);
+	else 
+		{
+		fclose(fil);
+		Py_INCREF(Py_None);
+		return Py_None;
+		}
+	fclose(fil);
 		
 	if ( lmap != NULL )
 		free(lmap);
 	
 	return Py_BuildValue("i", 1);
-}
+	}
 
 
 
-static PyObject* py_gifex_TestGIF(PyObject *self, PyObject *args)
+static PyObject* py_isgif(PyObject *self, PyObject *args)
 {
 	char *filename;
 	PyObject *tmp = Py_None;
@@ -711,10 +710,11 @@ static PyObject* py_gifex_TestGIF(PyObject *self, PyObject *args)
 }
 
 
-BEGIN_PYMETHODDEF(Gifex)
-	{ "ReadGIF",	py_gifex_ReadGIF,	1},
-	{ "TestGIF",	py_gifex_TestGIF,	1},
+BEGIN_PYMETHODDEF(Soundex)
+	{ "Gif2Bmp",py_gif2bmp,	1},
+	{ "IsGif",	py_isgif,	1},
 END_PYMETHODDEF()
 
 
 DEFINE_PYMODULETYPE("PyGifex",Gifex);
+

@@ -1,4 +1,7 @@
-
+// CMIF_ADD
+//
+// kk@epsilon.com.gr
+//
 #include <objbase.h>
 #include <strmif.h>
 #include <control.h>
