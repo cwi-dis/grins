@@ -1,7 +1,6 @@
 # These are the standard views for a structure.
 
 import Widgets
-import Bandwidth
 import MMurl, MMAttrdefs, MMmimetypes, MMNode
 import features
 import os, windowinterface
