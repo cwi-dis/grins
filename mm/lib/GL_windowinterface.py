@@ -48,6 +48,7 @@ except ImportError:
 # Cursors
 _ARROW = 0				# predefined
 _WATCH = 1
+_CHANNEL = 2
 
 # Colors
 _DEF_BGCOLOR = 255,255,255		# white
@@ -78,9 +79,18 @@ _watch = [0x0ff0, 0x1ff8, 0x381c, 0x718e,
 	  0xc1f3, 0xc003, 0xc003, 0xe007,
 	  0x700e, 0x381c, 0x1ff8, 0x0ff0,
 	 ]
+
+_channel = [0x0000, 0x0000, 0x0000, 0x0180,
+	    0x0660, 0x1818, 0x6006, 0x8181,
+	    0x8181, 0x6006, 0x1818, 0x0660,
+	    0x0180, 0x0000, 0x0000, 0x0000
+	 ]
 _watch.reverse()			# Turn it upside-down
 gl.defcursor(_WATCH, _watch*8)
 gl.curorigin(_WATCH, 8, 8)
+_channel.reverse()			# Turn it upside-down
+gl.defcursor(_CHANNEL, _channel*8)
+gl.curorigin(_CHANNEL, 8, 8)
 
 class _DummyLock:
 	def acquire(self):
@@ -1649,6 +1659,8 @@ class _Window:
 				gl.winset(self._window_id)
 				if cursor == 'watch':
 					gl.setcursor(_WATCH, 0, 0)
+				elif cursor == 'channel':
+				        gl.setcursor(_CHANNEL, 0, 0)
 				elif cursor == '':# default is arrow cursor
 					gl.setcursor(_ARROW, 0, 0)
 				else:
