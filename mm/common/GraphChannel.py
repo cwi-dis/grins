@@ -78,7 +78,7 @@ class GraphChannel(ChannelWindow):
 		for a in node.GetRawAttrDef('anchorlist', []):
 			b = self.armed_display.newbutton((0,0,1,1))
 			self.setanchor(a[A_ID], a[A_TYPE], b)
-			
+
 		return 1
 
 	def findminmax(self):
@@ -111,7 +111,7 @@ class GraphChannel(ChannelWindow):
 				maxy = max(maxy, max(d))
 				maxx = max(maxx, len(d))
 		return minx, maxx, miny, maxy
-				
+
 
 	def do_xaxis(self, step, isbar):
 		minx, maxx, miny, maxy = self.ranges
@@ -198,7 +198,7 @@ class GraphChannel(ChannelWindow):
 					self.armed_display.drawfbox(c,
 						  (x, ytop, xsmallstep, ysize))
 				x = x + xstepsize
-			
+
 	def do_hline(self):
 		minx, maxx, miny, maxy = self.ranges
 		minx = 0.0
@@ -233,7 +233,7 @@ class GraphChannel(ChannelWindow):
 		x = (x - XOFF)/xstepsize+minx
 		y = -((y - YOFF)/ystepsize-maxy)
 		return (node, nametypelist, (('x', x), ('y', y)))
-		
+
 	def tokenizestring(self, str):
 		items = string.split(str)
 		for i in range(len(items)):
