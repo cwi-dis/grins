@@ -941,8 +941,6 @@ class TreeStepper:
 		self.__node = self.__root = root
 		self.__iter = self.__itForward
 		self.__endNode = None
-
-		self.__tab = '  '
 		self.__depth = -1
 
 	def __nextIt(self):
@@ -976,34 +974,63 @@ class TreeStepper:
 			node = self.__node.getParentNode()
 			if node:
 				self.__node = node
-				self.__depth = self.__depth -1
+				self.__depth = self.__depth - 1
 				return node.getParentNode() != None
 			else:
 				return 0
 
-	def printTree(self):
-		print ''
+	def getTreeRepr(self):
+		tab = '  '
+		s = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
 		while self.__nextIt():
+			if self.__depth>0: sp = tab*self.__depth
+			else: sp =''
 			if self.__iter == self.__itForward:
 				if self.__endNode and self.__endNode.hasChildNodes():
-					print '%s </%s>' % (self.__tab * self.__depth,self.__endNode.getNodeName())
-				print '%s %s' % (self.__tab * self.__depth, repr(self.__node))
+					s = s + '%s</%s>\n' % (sp, self.__endNode.getNodeName())
+				s = s + '%s%s\n' % (sp, repr(self.__node))
 			else:
 				if self.__node.hasChildNodes():
-					print '%s </%s>' % (self.__tab * self.__depth,self.__node.getNodeName())
+					s = s + '%s</%s>\n' % (sp, self.__node.getNodeName())
+		return s
+
+	def printTreeRepr(self):
+		tab = '  '
+		print '<?xml version="1.0" encoding="ISO-8859-1"?>'
+		while self.__nextIt():
+			if self.__depth>0: sp = tab*self.__depth
+			else: sp =''
+			if self.__iter == self.__itForward:
+				if self.__endNode and self.__endNode.hasChildNodes():
+					print '%s</%s>' % (sp, self.__endNode.getNodeName())
+				print '%s%s' % (sp, repr(self.__node))
+			else:
+				if self.__node.hasChildNodes():
+					print '%s</%s>' % (sp, self.__node.getNodeName())
+
 ##################
 import xmllib
+
+# XXX: hard code grins namespace for now
+GRiNSns = "http://www.oratrix.com/"
 
 class TreeBuilder(xmllib.XMLParser):
 	def __init__(self):
 		xmllib.XMLParser.__init__(self)
 		self.__reset()
 
-	def buildTree(self, url):
+	def read(self, url):
 		self.__startDocument()
 		u = open(url)
 		data = u.read()
 		self.feed(data)
+		self.close()
+		return self.__doc
+
+	def readString(self, data):
+		self.__startDocument()
+		self.feed(data)
+		self.close()
 		return self.__doc
 	
 	def getDocument(self):
@@ -1024,9 +1051,17 @@ class TreeBuilder(xmllib.XMLParser):
 		self.__stack = []
 	
 	def unknown_starttag(self, tag, attrs):
+		# XXX: hard code grins namespace for now
+		for name, value in attrs.items():
+			if name[:len(GRiNSns)+1] == GRiNSns + ' ':
+				del attrs[name]
+				attrs['GRiNS:' + name[len(GRiNSns)+1:]] = value
 		elem = self.__doc.createElement(tag)
 		for name, value in attrs.items():
 			elem.setAttribute(name, value)
+		# XXX: hard code grins namespace for now
+		if tag=='smil':
+			elem.setAttribute('xmlns:GRiNS', 'http://www.oratrix.com/')
 		self.__currentParent.appendChild(elem)
 		self.__push(self.__currentParent)
 		self.__currentParent = elem
@@ -1046,7 +1081,6 @@ class TreeBuilder(xmllib.XMLParser):
 		return  self.__stack.pop()
 	def __isempty(self):
 		return len(self.__stack) == 0
-
 
 
 
