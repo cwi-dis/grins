@@ -295,9 +295,3 @@ def encodequery(query):
 
 def encodestring(s):
 	return MMurl.quote(s or '')	# Catches None as well!
-
-#
-# Get the data-behind-the-URL
-#
-def urlget(newurl):
-	return MMurl.urlopen(newurl).read()
