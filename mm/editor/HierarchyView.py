@@ -1628,6 +1628,34 @@ class HierarchyView(HierarchyViewDialog):
 		if not dftchannel:
 			dftchannel = self.__searchRegion1(pnode, node)
 
+		# stage 3: create a channel of the correct type
+		if not dftchannel:
+			context = self.root.context
+			# Create unique name
+			chbasename = 'region'
+			i = 1
+			chid = chbasename + `i`
+			while context.channeldict.has_key(id):
+				i = i+1
+				chid = chbasename + `i`
+			# Find a viewport
+			chparent = ''
+			for key, val in context.channeldict.items():
+				if val.get('base_window') is None:
+					chparent = key
+					break
+			if chparent:
+				chparentRef = context.getchannel(chparent)
+				# Create the region
+				channel = context.newchannel(chid, -1, 'layout')
+				if start_transaction:
+					if not self.editmgr.transaction():
+						# XXXX Should free channel?
+						return
+					start_transaction = 0
+				self.editmgr.addchannel(chparentRef, -1, channel)
+				dftchannel = chid
+
 		if dftchannel:
 			node.SetAttr('channel', dftchannel)
 
@@ -1652,9 +1680,11 @@ class HierarchyView(HierarchyViewDialog):
 ##			if prearmtime:
 ##				arc = MMNode.MMSyncArc(node, 'begin', srcnode='syncbase', delay=prearmtime)
 ##				self.editmgr.addsyncarc(node, 'beginlist', arc)
+###
 			self.editmgr.commit()
 			if not dftchannel:
 				AttrEdit.showattreditor(self.toplevel, node, 'channel')
+
 
 	# search a default region in looking at the children of the parent,
 	# and recursivly until the root element
