@@ -326,8 +326,8 @@ PlayerObject::SetPositionAndSize(PyObject *self, PyObject *args)
 		return NULL;
 	pos.x = x;
 	pos.y = y;
-	size.cx = h;
-	size.cy = w;
+	size.cx = w;
+	size.cy = h;
 	
 	ExampleClientContext *pCC = ((PlayerObject*)self)->pContext;
 	if(pCC) {
