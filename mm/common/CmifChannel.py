@@ -24,12 +24,12 @@ class CmifChannel(Channel):
 			if not cmd:
 				continue
 			fields = string.split(cmd)
+			arg = cmd[len(fields[0]):]
+			arg = string.strip(arg)
 			if fields[0] == 'show':
-				for ch in fields[1:]:
-					self._player.cc_enable_ch(ch, 1)
+			        self._player.cc_enable_ch(arg, 1)
 			elif fields[0] == 'hide':
-				for ch in fields[1:]:
-					self._player.cc_enable_ch(ch, 0)
+			        self._player.cc_enable_ch(arg, 0)
 			elif fields[0] == 'stop':
 				self._player.cc_stop()
 				self.stopped = 1
