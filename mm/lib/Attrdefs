@@ -26,6 +26,9 @@
 ##(bbox (tuple (int) (int) (int) (int)) (0 0 0 0) 'Bounding box' default
 ##	'Bounding box for embedded PostScript image' channel)
 
+(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' default
+	'Color used for text/images in window' channel)
+
 (blockview_winpos (tuple (int) (int)) (-1 -1) 'Block view winpos' default
 	 'Window position for block view' raw)
 
@@ -48,14 +51,14 @@
 	'Channel List' default
 	'Channels used in this document (root node only)')
 
-(color (tuple (int) (int) (int)) (255 255 255) 'Channel color' default
-	'Color used for channel objects' channel)
-
 (duration (float) 2.0 'Duration' default
 	'Duration of a node/subtree (in seconds)' channel)
 
 ##(extraspaceafter (float) 0.0 'Extra space after' default
 ##	'Extra space following last word (in characters)')
+
+(fgcolor (tuple (int) (int) (int)) (0 0 0) 'Foreground color' default
+	'Color used for background of window' channel)
 
 (file (string) '/dev/null' 'File' default
 	'File name for external node' channel)
