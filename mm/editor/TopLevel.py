@@ -100,6 +100,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.hierarchyview.show()
 
 	def destroy(self):
+		self.set_timer(0)
 		self.editmgr.unregister(self)
 		self.editmgr.destroy()
 		self.destroyviews()
