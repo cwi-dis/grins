@@ -109,6 +109,17 @@ attrgrs=(
 		'begin',
 		]},
 
+	{'name':'timingfadeout',
+	'title':'Timing',
+	'attrs':[
+		'tduration',
+		'start',
+		'fadeout',
+		'fadeoutcolor',
+		'fadeouttime',
+		'fadeoutduration',
+		]},
+
 	{'name':'timing2',
 	'title':'Timing',
 	'attrs':[
