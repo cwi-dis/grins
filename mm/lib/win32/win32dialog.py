@@ -730,13 +730,18 @@ class NewChannelDlg(ResDialog):
 
 # Implementation of the select template dialog
 class OpenAppDialog(ResDialog):
-	def __init__(self,cb_new, cb_open, cb_never_again,parent=None):
+	def __init__(self,cb_new, cb_open, cb_never_again, 
+				recentlist, cb_recent, parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_INIT_DIALOG,parent)
 		self._cb_open = cb_open
 		self._cb_new = cb_new
 		self._cb_never_again = cb_never_again
+		self._cb_recent = cb_recent
+		self._recentlist = recentlist
 		self._r_open = RadioButton(self, grinsRC.IDC_INIT_OPEN)
 		self._r_new = RadioButton(self, grinsRC.IDC_INIT_NEW)
+		self._r_recent = RadioButton(self, grinsRC.IDC_INIT_RECENT)
+		self._c_recent = ComboBox(self, grinsRC.IDC_INIT_RECENT_COMBO)
 		self._r_nothing = RadioButton(self, grinsRC.IDC_INIT_NOTHING)
 		self._b_never_again = CheckButton(self, grinsRC.IDC_INIT_NEVER_AGAIN)
 
@@ -747,12 +752,24 @@ class OpenAppDialog(ResDialog):
 		self.init_subwindows()
 		self._r_new.setcheck(1)
 		self._r_open.setcheck(0)
+		self._r_recent.setcheck(0)
 		self._r_nothing.setcheck(0)
+		self._c_recent.hookcommand(self, self.OnChangeRecent)
+		for i in range(len(self._recentlist)):
+			self._c_recent.insertstring(i, self._recentlist[i][0])
 		self._b_never_again.setcheck(0)
 		return ResDialog.OnInitDialog(self)
 
 	def show(self):
 		self.DoModal()
+
+	def OnChangeRecent(self, id, code):
+		# If the user changes the "recent file" we select the
+		# radiobutton automatically.
+		self._r_new.setcheck(0)
+		self._r_open.setcheck(0)
+		self._r_nothing.setcheck(0)
+		self._r_recent.setcheck(1)
 
 	def close(self):
 		self.EndDialog(win32con.IDCANCEL)
@@ -766,6 +783,10 @@ class OpenAppDialog(ResDialog):
 			self._cb_open()
 		elif self._r_new.getcheck():
 			self._cb_new()
+		elif self._r_recent.getcheck():
+			which = self._c_recent.getcursel()
+			if 0 <= which <= len(self._recentlist):
+				self._cb_recent(self._recentlist[which][1][0])
 
 	def OnCancel(self):
 		self.close()

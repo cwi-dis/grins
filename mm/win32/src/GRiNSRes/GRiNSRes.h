@@ -442,8 +442,10 @@
 #define IDC_INIT_NEW                    1188
 #define IDC_INIT_OPEN                   1189
 #define IDC_INIT_NOTHING                1190
+#define IDC_INIT_RECENT                 1190
 #define IDC_INIT_NEVER_AGAIN            1191
 #define IDC_8                           1192
+#define IDC_INIT_NOTHING2               1192
 #define IDC_CHECK5                      1193
 #define IDC_CHECK6                      1194
 #define IDC_PREROLL                     1196
@@ -676,6 +678,7 @@
 #define IDC_STATIC_MSG                  1447
 #define IDC_STATIC_MSG2                 1448
 #define IDC_54                          1450
+#define IDC_INIT_RECENT_COMBO           1451
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -783,7 +786,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        453
 #define _APS_NEXT_COMMAND_VALUE         32900
-#define _APS_NEXT_CONTROL_VALUE         1451
+#define _APS_NEXT_CONTROL_VALUE         1452
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
