@@ -843,6 +843,22 @@ sdk_get_clipboard_file_data(PyObject *self, PyObject *args)
 	return Py_BuildValue("s",(LPCTSTR)str);
 	}
 
+static PyObject *
+sdk_register_clipboard_format(PyObject *self, PyObject *args)
+{
+	char *pszFmt=NULL; // private clipboard string format 
+	if (!PyArg_ParseTuple(args,"s:RegisterClipboardFormat",&pszFmt))
+		return NULL;
+
+	CLIPFORMAT cfPrivate=CF_TEXT;
+	if(pszFmt && lstrlen(pszFmt))
+		{
+		cfPrivate = ::RegisterClipboardFormat(_T(pszFmt));
+		if(!cfPrivate) RETURN_ERR("RegisterClipboardFormat failed");
+		}
+	return Py_BuildValue("i", cfPrivate);
+}
+
  // @object PyWin32Sdk|A module wrapper object.  It is a general utility object, and is not associated with an MFC object.
 BEGIN_PYMETHODDEF(Win32Sdk)
 	{"CreatePen",sdk_create_pen,	1},		// @pymeth CreatePen|Creates a pen and returns its handle
@@ -887,6 +903,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"GetClipboardTextData",sdk_get_clipboard_text_data,1}, // @pymeth GetClipboardTextData|GetClipboardData in CF_TEXT format
 	{"IsClipboardFileDataAvailable",sdk_is_clipboard_file_data_available,1}, 
 	{"GetClipboardFileData",sdk_get_clipboard_file_data,1}, 
+	{"RegisterClipboardFormat",sdk_register_clipboard_format,1}, 
 
 	///////////////////////////////////////////////////// Temporary
 	{"ParseDrawItemStruct",sdk_parse_drawitemstruct,1},// undocumented!
