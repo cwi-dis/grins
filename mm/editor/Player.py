@@ -258,8 +258,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		
 	def play_entry(self):
 		self.toplevel.setwaiting()
-		if not self.showing:
-			self.show()
+		self.show()
 		if self.playing and self.pausing:
 			# Case 1: user pressed play to cancel pause
 			self.pause(0)

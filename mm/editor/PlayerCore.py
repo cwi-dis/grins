@@ -78,8 +78,7 @@ class PlayerCore(Selecter):
 		self.stopped()
 	#
 	def playsubtree(self, node):
-		if not self.showing:
-			self.show()
+		self.show()
 		if self.playing:
 			self.stop()
 		if node.GetRoot() is not self.root:
