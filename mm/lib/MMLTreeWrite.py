@@ -160,6 +160,7 @@ mml_attrs=[
 	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
 	("endsync", getterm),
+	("repeat", lambda writer, node:getcmifattr(writer, node, "loop")),
 ]
 
 # Mapping from CMIF channel types to mml media types
@@ -262,25 +263,25 @@ class MMLWriter:
 		self.channels_defined = {}
 		for ch in channels:
 			dummy = mediatype(ch['type'], error=1)
-			attrlist = ['<tuner loc=%s' %
+			attrlist = ['<tuner id=%s' %
 				    nameencode(self.ch2name[ch])]
-			if not ch.has_key('base_window'):
-				continue	# Skip toplevel windows
-			if not ch.has_key('base_winoff'):
-				continue
-			x, y, w, h = ch['base_winoff']
-			data = ('x', x), ('y', y), ('width', w), ('height', h)
-			for name, value in data:
-				value = int(value*100)
-				if value:
-					attrlist.append('%s="%d%%"'%
-							(name, value))
+			# if toplevel window, define a tuner elt, but
+			# don't define coordinates (i.e., use defaults)
+			if ch.has_key('base_window') and \
+			   ch.has_key('base_winoff'):
+				x, y, w, h = ch['base_winoff']
+				data = ('x', x), ('y', y), ('width', w), ('height', h)
+				for name, value in data:
+					value = int(value*100)
+					if value:
+						attrlist.append('%s="%d%%"'%
+								(name, value))
 			if ch.has_key('z'):
 				# CMIF default is 0, MML default is 1
 				attrlist.append('z="%d"' % (ch['z'] + 1))
-			if len(attrlist) == 1:
-				# Nothing to define
-				continue
+## 			if len(attrlist) == 1:
+## 				# Nothing to define
+## 				continue
 			self.channels_defined[ch] = 1
 			attrs = string.join(attrlist, ' ')
 			attrs = attrs + '/>\n'
@@ -417,6 +418,7 @@ class MMLWriter:
 					ok = 1
 			if ok:
 				if (x, y, w, h) != (0,0,100,100):
+					print "** Document uses coords attribute in anchor"
 					items.append('shape="rect"')
 					items.append('coords="%d%%,%d%% %d%%,%d%%"'%
 						     (x,y,w,h))
