@@ -234,7 +234,7 @@ class LayoutChannel(ChannelWindow):
 	#
 	#
 	
-	def	addActiveVisibleChannel(self, channel, node):
+	def addActiveVisibleChannel(self, channel, node):
 		self.__activeVisibleChannelDict[channel] = node
 
 	def removeActiveVisibleChannel(self, channel):
@@ -243,36 +243,23 @@ class LayoutChannel(ChannelWindow):
 	def getOverlapChannelList(self, channelToCheck, nodeToCheck):
 		overLapList = []
 		if settings.activeFullSmilCss:
-			geomRef =  channelToCheck.cssResolver.getPxAbsGeom(channelToCheck.idCssNode)
+			xR, yR, wR, hR = channelToCheck.cssResolver.getPxAbsGeom(channelToCheck.idCssNode)
 		else:
-			print 'not implemented '
+			print 'getOverlapChannelList not implemented when not settings.activeFullSmilCss'
+			return []	# XXX
 			
-		xR, yR, wR, hR = geomRef
 		for channel,node in self.__activeVisibleChannelDict.items():
 			# determinate absolute pixel positioning relative to the viewport
 			if settings.activeFullSmilCss:
-				geom = channel.cssResolver.getPxAbsGeom(channel.idCssNode)
+				x, y, w, h = channel.cssResolver.getPxAbsGeom(channel.idCssNode)
 			else:
 				# not optimized code
 				print 'not implemented '
-
-			x, y, w, h = geom
+				continue # XXX
 
 			# to do: optimized
-			overlap = 0
-			import CheckInsideArea
-			for xP,yP in (xR, yR), (xR+wR, yR), (xR+wR, yR+hR), (xR, yR+hR):
-				if CheckInsideArea.insideRect(xP, yP, x, y, x+w, y+h):
-					overlap = 1
-					break
-
-			if not overlap:
-				for xP,yP in (x, y), (x+w, y), (x+w, y+h), (x, y+h):
-					if CheckInsideArea.insideRect(xP, yP, xR, yR, xR+wR, yR+hR):
-						overlap = 1
-						break
-
-			if overlap:					
+			if x < xR+wR and xR < x+w and y < yR+hR and yR < y+h:
+				# overlap
 				overLapList.append((channel, node))
 
 		return overLapList				
