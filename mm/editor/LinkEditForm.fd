@@ -96,7 +96,7 @@ alignment: 4
 style: 0
 size: 11.000000
 lcol: 0
-label: Show node
+label: Push focus
 name: left.node_show
 callback: show_callback
 argument: left
@@ -111,7 +111,7 @@ alignment: 4
 style: 0
 size: 11.000000
 lcol: 0
-label: Show node
+label: Push focus
 name: right.node_show
 callback: show_callback
 argument: right
