@@ -1989,14 +1989,7 @@ class MMNode:
 		if self.playing != MMStates.IDLE and arc.delay is not None:
 			# if arc's event has already occurred, trigger it
 			if arc.wallclock is not None:
-				if arc.resolvedtime(sctx) <= sctx.parent.timefunc():
-					if arc.dstnode is not None:
-						pdstnode = arc.dstnode.GetSchedParent()
-						if pdstnode is not None and pdstnode.playing != MMStates.PLAYING:
-							pdstnode.sched_children.append(arc)
-							return
-					arc.qid = 0
-					sctx.trigger(arc)
+				sctx.sched_arc(self, arc, event = 'begin', timestamp = arc.resolvedtime(sctx))
 				return
 			event = arc.getevent()
 			if event in ('begin', 'end'):
