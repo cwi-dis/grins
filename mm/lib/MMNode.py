@@ -4386,8 +4386,7 @@ class MMNode(MMTreeElement):
 		return self in parent.wtd_children and parent.IsWanted()
 
 	#
-	# method for maintaining armed status when the ChannelView is
-	# not active
+	# method for maintaining armed status
 	#
 	def set_armedmode(self, mode):
 		self.armedmode = mode

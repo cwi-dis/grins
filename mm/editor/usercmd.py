@@ -124,8 +124,6 @@ class PLAYERVIEW(_CommandBase):
 	help = 'Show Player View'
 class HIERARCHYVIEW(_CommandBase):
 	help = 'Show Structure View'
-class CHANNELVIEW(_CommandBase):
-	help = 'Show Timeline View'
 class LINKVIEW(_CommandBase):
 	help = 'Show Hyperlink Editor'
 class LAYOUTVIEW(_CommandBase):
@@ -151,7 +149,6 @@ class ASSETSVIEW(_CommandBase):
 # the TopLevel.
 class HIDE_PLAYERVIEW(_CommandBase): pass
 class HIDE_HIERARCHYVIEW(_CommandBase): pass
-class HIDE_CHANNELVIEW(_CommandBase): pass
 class HIDE_LINKVIEW(_CommandBase): pass
 class HIDE_LAYOUTVIEW(_CommandBase): pass
 class HIDE_USERGROUPVIEW(_CommandBase): pass
@@ -177,8 +174,6 @@ class USERGROUPS(_DynamicCascade):
 	help = 'Custom tests'
 class CHANNELS(_DynamicCascade):
 	help = 'Toggle channels on/off'
-class SYNCCV(_CommandBase):
-	help = 'Keep Channel view synchronized with player'
 class CRASH(_CommandBase):
 	help = 'DEBUG: Force a crash'
 class SCHEDDUMP(_CommandBase):

@@ -63,21 +63,18 @@ if features.editor:
 	
 	# editor document views
 	_HierarchyView =_StructView
-	_ChannelView =_StructView
 	# This is a list of classes that are instantiated for each particular view.
 	# Not the simplest way of coding it, but it seems to work -mjvdg.
 	##### THIS IS ONLY ACCESSED WITHIN THIS FILE #####
 	appview={
 		'pview_':{'cmd':usercmd.HIDE_PLAYERVIEW,'title':'Player','class':_PlayerView,},
 		'hview_':{'cmd':usercmd.HIDE_HIERARCHYVIEW,'title':'Structure view','class':_HierarchyView,},
-		'cview_':{'cmd':usercmd.HIDE_CHANNELVIEW,'title':'Timeline view','class':_ChannelView,},
 		'leview_':{'cmd':usercmd.HIDE_LINKVIEW,'title':'Hyperlinks', 'class':_LinkView},
 		'lview_':{'cmd':usercmd.HIDE_LAYOUTVIEW,'title':'Layout view', 'class':_LayoutView},
 		'ugview_':{'cmd':usercmd.HIDE_USERGROUPVIEW,'title':'Custom tests','class':_UsergroupView},
 		'trview_':{'cmd':usercmd.HIDE_TRANSITIONVIEW,'title':'Transitions','class':_TransitionView},
 		'sview_':{'cmd':usercmd.HIDE_SOURCEVIEW,'title':'Source','class':_SourceView},
 		'lview2_':{'cmd':usercmd.HIDE_LAYOUTVIEW2,'title':'Layout view','class':_LayoutView2},
-		#'tview_':{'cmd':usercmd.HIDE_TEMPORALVIEW,'title':'Temporal view','class':_ChannelView,},
 		'attr_edit':{'cmd':-1,'title':'Property Editor','class':AttrEditForm},
 		'aview_':{'cmd':usercmd.HIDE_ASSETSVIEW,'title':'Assets view','class':_AssetsView,},
 		'erview_':{'cmd':usercmd.HIDE_ERRORSVIEW,'title':'Error messages','class':_ErrorsView},

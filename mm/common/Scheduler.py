@@ -1217,8 +1217,6 @@ class Scheduler(scheduler):
 	# Playing algorithm.
 	#
 	def play(self, node, seek_node, anchor_id, anchor_arg, timestamp=None):
-		if self.ui.sync_cv and self.toplevel.channelview is not None:
-			self.toplevel.channelview.globalsetfocus(node)
 		sctx = SchedulerContext(self, node, seek_node)
 		self.sctx_list.append(sctx)
 		self.playing = self.playing + 1
