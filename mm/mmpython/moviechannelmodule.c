@@ -423,6 +423,7 @@ movie_player(self)
 	long xorig, yorig;
 	struct pollfd pollfd;
 	int i;
+	double scale;
 
 	denter(movie_player);
 	dprintf(("movie_player(%lx): width = %d, height = %d\n", (long) self, PRIV->m_play.m_width, PRIV->m_play.m_height));
@@ -438,9 +439,17 @@ movie_player(self)
 		pixmode(PM_SIZE, 8);
 		if (PRIV->m_play.m_bgindex >= 0)
 			writemask(0xff);
-		xorig = (PRIV->m_width - PRIV->m_play.m_width * PRIV->m_play.m_scale) / 2;
-		yorig = (PRIV->m_height - PRIV->m_play.m_height * PRIV->m_play.m_scale) / 2;
-		rectzoom(PRIV->m_play.m_scale, PRIV->m_play.m_scale);
+		scale = PRIV->m_play.m_scale;
+		if (scale == 0) {
+			scale = PRIV->m_width / PRIV->m_play.m_width;
+			if (scale < PRIV->m_height / PRIV->m_play.m_height)
+				scale = PRIV->m_height / PRIV->m_play.m_height;
+			if (scale < 1)
+				scale = 1;
+		}
+		xorig = (PRIV->m_width - PRIV->m_play.m_width * scale) / 2;
+		yorig = (PRIV->m_height - PRIV->m_play.m_height * scale) / 2;
+		rectzoom(scale, scale);
 		lrectwrite(xorig, yorig, xorig + PRIV->m_play.m_width - 1,
 			   yorig + PRIV->m_play.m_height - 1,
 			   PRIV->m_play.m_frame);
@@ -517,6 +526,7 @@ movie_resized(self)
 	mmobject *self;
 {
 	long xorig, yorig;
+	double scale;
 
 	denter(movie_resized);
 	getsize(&PRIV->m_width, &PRIV->m_height);
@@ -533,9 +543,17 @@ movie_resized(self)
 				 (PRIV->m_play.m_bgcolor      ) & 0xff);
 			clear();
 		}
-		xorig = (PRIV->m_width - PRIV->m_play.m_width * PRIV->m_play.m_scale) / 2;
-		yorig = (PRIV->m_height - PRIV->m_play.m_height * PRIV->m_play.m_scale) / 2;
-		rectzoom(PRIV->m_play.m_scale, PRIV->m_play.m_scale);
+		scale = PRIV->m_play.m_scale;
+		if (scale == 0) {
+			scale = PRIV->m_width / PRIV->m_play.m_width;
+			if (scale < PRIV->m_height / PRIV->m_play.m_height)
+				scale = PRIV->m_height / PRIV->m_play.m_height;
+			if (scale < 1)
+				scale = 1;
+		}
+		xorig = (PRIV->m_width - PRIV->m_play.m_width * scale) / 2;
+		yorig = (PRIV->m_height - PRIV->m_play.m_height * scale) / 2;
+		rectzoom(scale, scale);
 		lrectwrite(xorig, yorig, xorig + PRIV->m_play.m_width - 1,
 			   yorig + PRIV->m_play.m_height - 1,
 			   PRIV->m_play.m_frame);
