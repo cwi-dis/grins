@@ -8,7 +8,8 @@ def getduration(filename):
 	import os
 	VerrorList = VFile.Error, os.error, IOError, RuntimeError, EOFError
 	try:
-		vfile = VFile.RandomVinFile().initfp(fp, filename)
+		vfile = VFile.RandomVinFile(fp)
+		vfile.filename = filename
 	except VerrorList, msg:
 		raise IOError, (0, 'bad movie file: ' + str(msg))
 	vfile.readcache()
