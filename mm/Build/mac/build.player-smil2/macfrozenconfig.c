@@ -119,6 +119,9 @@ extern void initimgpgm();
 #ifndef initstrop
 extern void initstrop();
 #endif
+#ifndef initmac
+extern void initmac();
+#endif
 #ifndef init_TE
 extern void init_TE();
 #endif
@@ -152,9 +155,6 @@ extern void initimgppm();
 #ifndef initmath
 extern void initmath();
 #endif
-#ifndef initmac
-extern void initmac();
-#endif
 #ifndef initerrno
 extern void initerrno();
 #endif
@@ -179,11 +179,11 @@ extern void init_Qdoffs();
 #ifndef init_socket
 extern void init_socket();
 #endif
-#ifndef inittime
-extern void inittime();
-#endif
 #ifndef initicglue
 extern void initicglue();
+#endif
+#ifndef init_codecs
+extern void init_codecs();
 #endif
 #ifndef initgestalt
 extern void initgestalt();
@@ -194,11 +194,14 @@ extern void init_Scrap();
 #ifndef initimggif
 extern void initimggif();
 #endif
-#ifndef init_Win
-extern void init_Win();
+#ifndef inittime
+extern void inittime();
 #endif
 #ifndef init_Drag
 extern void init_Drag();
+#endif
+#ifndef init_Win
+extern void init_Win();
 #endif
 
 extern void PyMarshal_Init();
@@ -233,6 +236,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"_Qt", init_Qt},
 	{"imgpgm", initimgpgm},
 	{"strop", initstrop},
+	{"mac", initmac},
 	{"_TE", init_TE},
 	{"imgcolormap", initimgcolormap},
 	{"imgsgi", initimgsgi},
@@ -244,7 +248,6 @@ struct _inittab _PyImport_Inittab[] = {
 	{"imageop", initimageop},
 	{"imgppm", initimgppm},
 	{"math", initmath},
-	{"mac", initmac},
 	{"errno", initerrno},
 	{"_App", init_App},
 	{"imgpbm", initimgpbm},
@@ -253,13 +256,14 @@ struct _inittab _PyImport_Inittab[] = {
 	{"pcre", initpcre},
 	{"_Qdoffs", init_Qdoffs},
 	{"_socket", init_socket},
-	{"time", inittime},
 	{"icglue", initicglue},
+	{"_codecs", init_codecs},
 	{"gestalt", initgestalt},
 	{"_Scrap", init_Scrap},
 	{"imggif", initimggif},
-	{"_Win", init_Win},
+	{"time", inittime},
 	{"_Drag", init_Drag},
+	{"_Win", init_Win},
 
 	/* This module "lives in" with marshal.c */
 	{"marshal", PyMarshal_Init},
