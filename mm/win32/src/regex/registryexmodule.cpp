@@ -46,11 +46,6 @@ LPOPENFILENAME po;
 
 static PyObject *RegistryExError;
 
-
-PyIMPORT CWnd *GetWndPtr(PyObject *);
-
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
