@@ -345,6 +345,8 @@ class _Event(AEServer):
 	def _activate_ours(self, ourwin, activate):
 		if activate:
 			self._install_window_commands(ourwin)
+##		else:
+##			self._install_window_commands(None)
 		ourwin._activate(activate)
 
 	def _handle_mousedown(self, event):
@@ -873,6 +875,8 @@ class _Toplevel(_Event):
 		
 	def _close_wid(self, wid):
 		"""Close a MacOS window and remove references to it"""
+		if wid == Win.FrontWindow():
+			self._install_window_commands(None)
 		window = self._wid_to_window[wid]
 		window.window_group = None
 		self.needmenubarrecalc = 1
@@ -885,12 +889,15 @@ class _Toplevel(_Event):
 		window = self._wid_to_window[wid]
 		group = window.window_group
 		if not group:
+##			print 'DBG: no group', window
 			return 0	# Can't be last if no group
 		for w in self._wid_to_window.values():
 			if w == window:
 				continue	# Skip the parameter window
 			if w.window_group == group and w.is_showing():
+##				print 'DBG: same group', window, w
 				return 0	# Someone else
+##		print 'DBG: last', window
 		return 1
 		
 	def _call_optional_command(self, cmd):
