@@ -468,6 +468,8 @@ class Scheduler(scheduler):
 		if queue:
 			self.toplevel.setwaiting()
 		for action in queue:
+			if not self.playing:
+				break
 			self.runone(action)
 		self.updatetimer()
 	#
