@@ -260,15 +260,20 @@ class HtmlChannel(Channel.ChannelWindow):
 		href = calldata.href
 		if href[:5] <> 'cmif:':
 			self.www_jump(href, 'GET', None, None)
-			return
-		i = string.find(href, '?')
-		if i > 0:
-			list = map(lambda x:tuple(string.splitfields(x,'=',1)),
-				   string.splitfields(href[i+1:], '&'))
-			href = href[:i]
 		else:
-			list = None
-		self.cbcmifanchor(href, list)
+			i = string.find(href, '?')
+			if i > 0:
+				list = map(lambda x:tuple(string.splitfields(x,'=',1)),
+					   string.splitfields(href[i+1:], '&'))
+				href = href[:i]
+			else:
+				list = None
+			self.cbcmifanchor(href, list)
+		try:
+			# if this exists, we need it
+			widget.SetAppSensitive()
+		except TypeError:
+			pass
 
 	def cbform(self, widget, userdata, calldata):
 		if widget is not self.htmlw:
@@ -302,7 +307,12 @@ class HtmlChannel(Channel.ChannelWindow):
 		return None
 
 	def fixanchorlist(self, node):
-		allanchorlist = self.htmlw.GetHRefs() + self.htmlw.GetActions()
+		allanchorlist = self.htmlw.GetHRefs()
+		try:
+			allanchorlist = allanchorlist + self.htmlw.GetActions()
+		except TypeError:
+			# GetActions apparently does not exist
+			pass
 		anchorlist = []
 		for a in allanchorlist:
 			if a[:5] == 'cmif:':
@@ -349,7 +359,10 @@ class HtmlChannel(Channel.ChannelWindow):
 			reader = img.reader(format, filename)
 		except:
 			return
-		if hasattr(reader, 'transparent') and hasattr(reader, 'colormap'):
+		is_transparent = 0
+		if hasattr(reader, 'transparent') and \
+		   hasattr(reader, 'colormap'):
+			is_transparent = 1
 			reader.colormap[reader.transparent] = windowinterface.toplevel._colormap.QueryColor(widget.background)[1:4]
 		if format is imgformat.xcolormap:
 			colors = map(None, reader.colormap)
@@ -358,7 +371,11 @@ class HtmlChannel(Channel.ChannelWindow):
 			colors = map(None, colors, colors, colors)
 		dict = {'width': reader.width, 'height': reader.height,
 			'image_data': reader.read(), 'colors': colors}
-		image_cache[src] = dict
+		if not is_transparent:
+			# only cache non-transparent images since the
+			# background can be different next time we use
+			# the image
+			image_cache[src] = dict
 		return dict
 
 	#
@@ -411,6 +428,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.url, tag = urllib.splittag(href)
 		try:
 			u = urlopen(self.url, data)
+			self.url = u.geturl()
 			if u.headers.maintype == 'image':
 				newtext = '<IMG SRC="%s">\n' % self.url
 			else:
@@ -550,14 +568,18 @@ def urlopen(url, data = None):
 		_urlopener = HtmlUrlOpener()
 	return _urlopener.open(url, data)
 
-def urlretrieve(url, filename = None):
+_urlretrievecache = {}
+def urlretrieve(url):
+	try:
+		return _urlretrievecache[url]
+	except KeyError:
+		pass
 	global _urlopener
 	if not _urlopener:
 		_urlopener = HtmlUrlOpener()
-	if filename:
-		return _urlopener.retrieve(url, filename)
-	else:
-		return _urlopener.retrieve(url)
+	info = _urlopener.retrieve(url)
+	_urlretrievecache[url] = info
+	return info
 
 def urlcleanup():
 	if _urlopener:
