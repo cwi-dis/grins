@@ -499,8 +499,6 @@ class RPParser(xmllib.XMLParser):
 			self.syntax_error('outermost element must be "%s"' % self.topelement)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 
-from SMILTreeWrite import nameencode
-
 coordnames = 'x','y','w','h'
 def writecoords(f, str, coords):
 	if not coords:
@@ -511,6 +509,8 @@ def writecoords(f, str, coords):
 			f.write(' %s%s="%d"' % (str, coordnames[i], c))
 
 def writeRP(file, rp):
+	from SMILTreeWrite import nameencode
+
 	f = open(file, 'w')
 	f.write('<imfl>\n')
 	f.write('  <head')
