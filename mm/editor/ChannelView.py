@@ -1206,7 +1206,7 @@ class TimeScaleBox(GO):
 			i = i + 1
 			#
 			it0 = t0 + i*tickstep
-			it1 = it0 + (tickstep/2)
+			it1 = it0 + (tickstep*0.5)
 			l, r = self.mother.maptimes(it0, it1)
 			l = max(l, self.left)
 			r = min(r, self.right)
