@@ -40,14 +40,24 @@ PyObject* Winuser_PostQuitMessage(PyObject *self, PyObject *args)
 PyObject* Winuser_MessageBox(PyObject *self, PyObject *args)
 {
 	char *text;
-	char *caption;
+	char *caption = "GRiNS Player";
 	UINT type = MB_OK;
-	if (!PyArg_ParseTuple(args, "ss|i", &text, &caption, &type))
+	if (!PyArg_ParseTuple(args, "s|si", &text, &caption, &type))
 		return NULL;
 	int res;
+#ifdef UNICODE
+	TCHAR *ttext = newTEXT(text);
+	TCHAR *tcaption = newTEXT(caption);
 	Py_BEGIN_ALLOW_THREADS
-	res = MessageBox(NULL, toTEXT(text), toTEXT(caption), type);
+	res = MessageBox(NULL, ttext, tcaption, type);
 	Py_END_ALLOW_THREADS
+	delete[] tcaption;
+	delete[] ttext;
+#else
+	Py_BEGIN_ALLOW_THREADS
+	res = MessageBox(NULL, text, caption, type);
+	Py_END_ALLOW_THREADS
+#endif
 	return Py_BuildValue("i", res);
 }
 
