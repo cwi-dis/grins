@@ -1282,6 +1282,12 @@ class MMNode(MMNodeBase.MMNode):
 		if self.GetType() in ('seq', 'par'):
 			for c in self.wtd_children:
 				synctolist = synctolist + c.GetArcList()
+		elif self.GetType() == 'alt':
+			for c in self.wtd_children:
+				if c.IsPlayable():
+					synctolist = synctolist + \
+						     c.GetArcList()
+					break
 		return synctolist
 	#
 	# FilterArcList removes all arcs if they are not part of the
