@@ -4,6 +4,7 @@ import Fm
 import Dlg
 import Evt
 import Events
+import Ctl
 import Windows
 import Menu
 MenuMODULE=Menu  # Silly name clash with FrameWork.Menu
@@ -163,6 +164,16 @@ class _Event:
 					# XXXX region to redraw
 					ourwin._redraw()
 					wid.EndUpdate()
+		elif what == Events.activateEvt:
+			wid = Win.WhichWindow(message)
+			if not wid:
+				MacOS.HandleEvent(event)
+			else:
+				ourwin = self._find_wid(wid)
+				if not ourwin:
+					MacOS.HandleEvent(event)
+				else:
+					ourwin._activate(modifiers & 1)
 		else:
 			MacOS.HandleEvent(event)
 
@@ -180,6 +191,14 @@ class _Event:
 			# It is not ours.
 			MacOS.HandleEvent(event)
 			return
+		if partcode == Windows.inGrow:
+			if modifiers & Events.shiftKey:
+				# Shift-click allows growing
+				##wid.DrawGrowIcon()
+				##wid.GrowWindow(where, XXXX)
+				pass # XXXX pass on to higher layers
+			else:
+				partcode = Windows.inContent
 		if partcode == Windows.inContent:
 			if wid == Win.FrontWindow():
 				# Frontmost. Handle click.
@@ -287,10 +306,10 @@ class _Toplevel(_Event):
 		self._closecallbacks = []
 		self._subwindows = []
 		self._wid_to_window = {}
+		self._wid_to_title = {}
 		self._bgcolor = 0xffff, 0xffff, 0xffff # white
 		self._fgcolor =      0,      0,      0 # black
 		self._hfactor = self._vfactor = 1.0
-		self._titles = []
 
 		self._initmenu()		
 		MacOS.EnableAppswitch(0)
@@ -337,12 +356,14 @@ class _Toplevel(_Event):
 		wid, w, h = self._openwindow(x, y, w, h, title)
 		rv = _Window(self, wid, 0, 0, w, h, 0, pixmap, transparent)
 		self._wid_to_window[wid] = rv
+		self._wid_to_title[wid] = title
 		return rv
 
 	def newcmwindow(self, x, y, w, h, title, pixmap = 0, transparent = 0):
 		wid, w, h = self._openwindow(x, y, w, h, title)
 		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, transparent)
 		self._wid_to_window[wid] = rv
+		self._wid_to_title[wid] = title
 		return rv
 		
 	def _openwindow(self, x, y, w, h, title):
@@ -386,13 +407,12 @@ class _Toplevel(_Event):
 		print 'WIN GOT', x, y, x1, y1
 		wid = Win.NewCWindow((x, y, x1, y1), title, 1, 0, -1, 1, 0 )
 		
-		# Remember title, for Window menu
-		self._titles.append(title)
 		return wid, w, h
 		
 	def _close_wid(self, wid):
 		"""Close a MacOS window and remove references to it"""
 		del self._wid_to_window[wid]
+		del self._wid_to_title[wid]
 		
 	def _find_wid(self, wid):
 		"""Map a MacOS window to our window object, or None"""
@@ -444,6 +464,8 @@ class _CommonWindow:
 		self._clip = None
 		self._active_displist = None
 		self._eventhandlers = {}
+		self._redrawfunc = None
+		self._clickfunc = None
 
 	def close(self):
 		"""Close window and all subwindows"""
@@ -484,7 +506,7 @@ class _CommonWindow:
 		self._clipchanged()
 		return rv
 
-	def necmwwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
+	def newcmwindow(self, (x, y, w, h), pixmap = 0, transparent = 0):
 		"""Create a new subwindow"""
 		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap, transparent)
 		self._clipchanged()
@@ -521,7 +543,14 @@ class _CommonWindow:
 
 	def setredrawfunc(self, func):
 		if func is None or callable(func):
-			pass
+			self._redrawfunc = func
+		else:
+			raise error, 'invalid function'
+
+	def setclickfunc(self, func):
+		"""Intercept low-level mouse clicks (mac-specific)"""
+		if func is None or callable(func):
+			self._clickfunc = func
 		else:
 			raise error, 'invalid function'
 
@@ -659,6 +688,19 @@ class _CommonWindow:
 			return
 		func(arg, self, WindowExit, (0, 0, 0))
 		
+	def _activate(self, active):
+		for ch in self._subwindows:
+			ch._activate(active)
+		if active:
+			evt = WindowActivate
+		else:
+			evt = WindowDeactivate
+		try:
+			func, arg = self._eventhandlers[evt]
+		except KeyError:
+			return
+		func(arg, self, (0, 0, 0))
+		
 	def _contentclick(self, down, where, event):
 		"""A click in our content-region. Note: this method is extended
 		for top-level windows (to do global-to-local coordinate transforms)"""
@@ -670,7 +712,12 @@ class _CommonWindow:
 				ch._contentclick(down, where, event)
 				return
 		#
-		# It is really in our canvas. 
+		# It is really in our canvas. Do we have a low-level click handler?
+		#
+		if self._clickfunc:
+			self._clickfunc(down, where, event)
+			return
+		#
 		# Convert to our type of event and call the appropriate handler.
 		#
 		if down:
@@ -705,7 +752,10 @@ class _CommonWindow:
 		Qd.SetClip(self._clip)
 		Qd.RGBBackColor(self._bgcolor)
 		Qd.RGBForeColor(self._fgcolor)
-		self._do_redraw()
+		if self._redrawfunc:
+			self._redrawfunc()
+		else:
+			self._do_redraw()
 		Qd.SetClip(saveclip)
 		Qd.DisposeRgn(saveclip)
 		for child in self._subwindows:
@@ -808,6 +858,10 @@ class _Window(_CommonWindow):
 				Qd.DiffRgn(self._clip, r, self._clip)
 				Qd.DisposeRgn(r)
 ##			w._mkclip()
+
+	def _redraw(self):
+		_CommonWindow._redraw(self)
+		Ctl.DrawControls(self._wid)
 
 class _SubWindow(_CommonWindow):
 	"""Window "living in" with a toplevel window"""
@@ -992,7 +1046,8 @@ class _DisplayList:
 	def fgcolor(self, color):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		self._list.append('fg', self._window._convert_color(color))
+		color = self._window._convert_color(color)
+		self._list.append('fg', color)
 		self._fgcolor = color
 
 
@@ -1115,6 +1170,11 @@ class _Button:
 		self._dispobj = dispobj
 		dispobj._buttons.append(self)
 		self._hicolor = self._color = dispobj._fgcolor
+		self._width = self._hiwidth = dispobj._linewidth
+		if self._color == dispobj._bgcolor:
+##			print 'not drawing button'
+			return
+##		print 'drawing button', self._color, dispobj._bgcolor
 		self._dispobj.drawbox(coordinates)
 
 	def close(self):
@@ -1148,15 +1208,27 @@ _fontmap = {
 	  'Times-Roman': ('Times', 0),
 	  'Times-Italic': ('Times', _qd_italic),
 	  'Times-Bold': ('Times', _qd_bold),
+
+	  'Utopia': ('New York', 0),
+	  'Utopia-Italic': ('New York', _qd_italic),
 	  'Utopia-Bold': ('New York', _qd_bold),
+
+	  'Palatino': ('Palatino', 0),
+	  'Palatino-Italic': ('Palatino', _qd_italic),
 	  'Palatino-Bold': ('Palatino', _qd_bold),
+
 	  'Helvetica': ('Helvetica', 0),
 	  'Helvetica-Bold': ('Helvetica', _qd_bold),
 	  'Helvetica-Oblique': ('Helvetica', _qd_italic),
+
 	  'Courier': ('Courier', 0),
 	  'Courier-Bold': ('Courier', _qd_bold),
 	  'Courier-Oblique': ('Courier', _qd_italic),
-	  'Courier-Bold-Oblique': ('Courier', _qd_italic+_qd_bold)
+	  'Courier-Bold-Oblique': ('Courier', _qd_italic+_qd_bold),
+	  
+	  'Greek': ('GrHelvetica', 0),
+	  'Greek-Bold': ('GrHelvetica', _qd_bold),
+	  'Greek-Italic': ('GrHelvetica', _qd_italic),
 	  }
 	  
 fonts = _fontmap.keys()
@@ -1170,6 +1242,10 @@ class findfont:
 		self._pointsize = pointsize
 ##DBG:		self._fontnum = 1; self._fontface = 0; self._pointsize = 0
 		self._inited = 0
+		
+	def _getinfo(self):
+		"""Get details of font (mac-only)"""
+		return self._fontnum, self._fontface, self._pointsize
 		
 	def _setfont(self, wid):
 		"""Set our font, saving the old one for later"""
@@ -1303,11 +1379,12 @@ class MainDialog:
 			
 		channellist = self._flatten_menu(list)
 		windowlist = []
+		titles = toplevel._wid_to_title.values()
 		for item in channellist:
 			name = item[0]
 			if name[-6:] == ' (off)':
 				name = name[:-6]
-			if name in toplevel._titles:
+			if name in titles:
 				windowlist.append(item)
 				
 
