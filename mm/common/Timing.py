@@ -47,8 +47,8 @@ def computetimes(node, which):
 ##		_do_times_work(node)
 		print 'No endtime for', node
 		node.t1 = node.t0 + 10.0
-	if node.t1 == node.t0:
-		node.t1 = node.t0 + 10
+##	if node.t1 == node.t0:
+##		node.t1 = node.t0 + 10
 	propdown(node, node.t1, node.t0)
 
 def _do_times_work(node):
@@ -114,13 +114,13 @@ def prep1(node):
 	type = node.GetType()
 	if type == 'seq': # XXX not right!
 		xnode, xside = node, HD
-		for c in node.GetSchedChildren(0):
+		for c in node.GetSchedChildren(1):
 			prep1(c)
 			adddep(xnode, xside, 0, c, HD)
 			xnode, xside = c, TL
 		adddep(xnode, xside, 0, node, TL)
-	elif type in ('par', 'switch', 'excl') or (type in leaftypes and node.GetSchedChildren(0)):
-		for c in node.GetSchedChildren(0):
+	elif type in ('par', 'switch', 'excl') or (type in leaftypes and node.GetSchedChildren(1)):
+		for c in node.GetSchedChildren(1):
 			prep1(c)
 			adddep(node, HD, 0, c, HD)
 			adddep(c, TL, 0, node, TL)
@@ -146,7 +146,7 @@ def prep2(node, root):
 		if parent.GetType() == 'seq':
 			xnode = parent
 			xside = HD
-			for n in parent.GetSchedChildren(0):
+			for n in parent.GetSchedChildren(1):
 				if n is node:
 					break
 				xnode = n
@@ -155,7 +155,7 @@ def prep2(node, root):
 			xnode = parent
 			xside = HD
 		adddep(xnode, xside, delay, node, HD)
-	for c in node.GetSchedChildren(0):
+	for c in node.GetSchedChildren(1):
 		prep2(c, root)
 
 
@@ -174,10 +174,10 @@ def propdown(node, stoptime, dftstarttime=0):
 	node.t2 = stoptime
 
 	if tp in ('par', 'switch', 'excl', 'prio') or tp in leaftypes:
-		for c in node.GetSchedChildren(0):
+		for c in node.GetSchedChildren(1):
 			propdown(c, stoptime, node.t0)
 	elif tp == 'seq': # XXX not right!
-		children = node.GetSchedChildren(0)
+		children = node.GetSchedChildren(1)
 		if not children:
 			return
 		nextstart = node.t0
@@ -220,7 +220,7 @@ def decrement(q, delay, node, side):
 		node.t1 = q.timefunc()
 	node.node_to_arm = None
 	node.t0t1_inherited = node.GetFill() != 'remove'
-	if node.GetType() not in interiortypes and side == HD and not node.GetSchedChildren(0):
+	if node.GetType() not in interiortypes and side == HD and not node.GetSchedChildren(1):
 		dt = getduration(node)
 		id = q.enter(dt, 0, decrement, (q, 0, node, TL))
 	for d, n, s in node.deps[side]:
