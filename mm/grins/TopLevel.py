@@ -2,7 +2,8 @@ __version__ = "$Id$"
 
 import os, sys, posixpath
 import windowinterface
-import MMExc, MMAttrdefs, MMTree, MMurl
+import MMAttrdefs, MMurl
+from MMExc import *
 import Timing
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 
@@ -181,7 +182,8 @@ class TopLevel:
 		elif mtype == 'application/smil':
 			import SMILTree
 			self.root = SMILTree.ReadFile(self.filename)
-		elif mtype == 'applicatin/x-cmif':
+		elif mtype == 'application/x-cmif':
+			import MMTree
 			self.root = MMTree.ReadFile(self.filename)
 		else:
 			raise MSyntaxError, 'unknown file type'
