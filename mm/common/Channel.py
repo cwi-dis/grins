@@ -433,8 +433,12 @@ class Channel(ChannelWM):
 			self.playstop()
 		if self._playstate != PLAYED:
 			raise error, 'not played'
-
 		self._playstate = PIDLE
+		# delete any anchors that may still exist
+		for (name, type, button) in self._played_anchors:
+			self._player.del_anchor(button)
+		self._played_anchors = []
+		self._played_node = None
 
 	def stoparm(self):
 		# Indicate that the channel can revert from the
@@ -446,6 +450,8 @@ class Channel(ChannelWM):
 		if self._armstate != ARMED:
 			raise error, 'not armed'
 		self._armstate = AIDLE
+		self._armed_anchors = []
+		self._armed_node = None
 
 	def startcontext(self, ctx):
 		# Called by the scheduler to start a new context.  The
