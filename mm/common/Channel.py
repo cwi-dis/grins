@@ -876,7 +876,7 @@ class Channel:
 			self.do_play(node)
 		self.play_1()
 
-	def stopplay(self, node, no_extend = 0):
+	def stopplay(self, node):
 		# Indicate that the channel can revert from the
 		# PLAYING or PLAYED state to PIDLE.
 		# Node is only passed to do consistency checking.
@@ -943,8 +943,6 @@ class Channel:
 		if self._playcontext is ctx:
 			if self._playstate in (PLAYING, PLAYED):
 				self.stopplay(self._played_node)
-			if hasattr(self, 'window') and self.window:
-				self.window.freeze_content(None)
 			self._playcontext = None
 		if self._armcontext is ctx:
 			if self._armstate in (ARMING, ARMED):
@@ -1649,15 +1647,13 @@ class ChannelWindow(Channel):
 			
 			# force show of channel.
 			self.show(1)			
-#			self.getViewportChannel().addActiveVisibleChannel(self, node)
-#			print self.getViewportChannel().getOverlapChannelList(self,node)
 		else:
 			# force show of channel.
 			self.show(1)
 
 			pchan = self._get_parent_channel()
 			pchan.childToActiveState()
-#			self.getViewportChannel().addActiveVisibleChannel(self, node)
+		self.getViewportChannel().addActiveVisibleChannel(self, node)
 
 
 	# Updates channels to unvisible if according to the showBackground/open and close attributes
@@ -1674,7 +1670,7 @@ class ChannelWindow(Channel):
 
 		pchan = self._get_parent_channel()
 		pchan.childToInactiveState()
-#		self.getViewportChannel().removeActiveVisibleChannel(self)
+		self.getViewportChannel().removeActiveVisibleChannel(self)
 
 ##	def _box_callback(self, *pgeom):
 ##		if not pgeom:
@@ -2055,29 +2051,19 @@ class ChannelWindow(Channel):
 			self.do_play(node)
 		self.play_1()
 
-	def stopplay(self, node, no_extend = 0):
+	def stopplay(self, node):
 		if debug:
 			print 'ChannelWindow.stopplay('+`self`+','+`node`+')'
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
-		Channel.stopplay(self, node, no_extend)
-		if no_extend:
-			in_extended_fill = 0
-		else:
-##			self.cleanup_transitions()
-			in_extended_fill = self.extended_fill(node)
-		# above four lines are equivalent to this:
-		# in_extended_fill = not no_extend and self.extended_fill(node)
+		Channel.stopplay(self, node)
+		self.cleanup_transitions()
+		self.updateToInactiveState()
 		if self.played_display:
-			self.played_display.close()
+##			self.played_display.close()
 			self.played_display = None
 
-		if in_extended_fill:
-			self._hide_pending = 1
-		else:
-			self.updateToInactiveState()
-			self.cleanup_transitions()
 
 	def setpaused(self, paused):
 		if debug:
@@ -2090,31 +2076,6 @@ class ChannelWindow(Channel):
 		elif not paused and self._paused == 'hide' and self.played_display:
 			self.played_display.render()
 		Channel.setpaused(self, paused)
-
-	def extended_fill(self, node):
-		# Handle fill=transition and (in the future) fill=hold
-		if not self.window:
-			return
-		fill = node.GetFill()
-		erase = MMAttrdefs.getattr(node, 'erase')
-		if fill == 'transition':
-			self.window.freeze_content('transition')
-			return 1
-## Scheduler doesn't support this yet
-##		elif erase == 'never':
-##			self.window.freeze_content('erase')
-##			return 1
-##		elif fill == 'hold':
-##			self.window.freeze_content('hold')
-##			return 1
-		return 0
-		
-## Scheduler doesn't support this yet	
-	def end_extended_fill(self):
-		# End a fill=hold
-		self.window.freeze_content(None)
-		if self._hide_pending:
-			self.updateToInactiveState()
 
 	def playstop(self):
 		return Channel.playstop(self)
@@ -2129,15 +2090,15 @@ class ChannelWindow(Channel):
 			if outtranstime is not None and outtranstime >= 0:
 				outtranstime = outtranstime-outtransdur
 				self.__out_trans_qid = self._scheduler.enterabs(outtranstime, 0,
-					self.schedule_out_trans, (out_trans, outtranstime))
+					self.schedule_out_trans, (out_trans, outtranstime, node))
 		if in_trans <> None and self.window:
 			otherwindow = self._find_multiregion_transition(in_trans, node.start_time)
 			if otherwindow:
 				self.window.jointransition(otherwindow)
 			else:
-				self.window.begintransition(0, 1, in_trans)
+				self.window.begintransition(0, 1, in_trans, (self.endtransition, (node,)))
 
-	def schedule_out_trans(self, out_trans, outtranstime):
+	def schedule_out_trans(self, out_trans, outtranstime, node):
 		self.__out_trans_qid = None
 		if not self.window:
 			return
@@ -2146,7 +2107,13 @@ class ChannelWindow(Channel):
 		if otherwindow:
 			self.window.jointransition(otherwindow)
 		else:
-			self.window.begintransition(1, 1, out_trans)
+			self.window.begintransition(1, 1, out_trans, (self.endtransition, (node,)))
+
+	def endtransition(self, node):
+		# callback, called at end of transition
+		chlist = self.getViewportChannel().getOverlapChannelList(self, node)
+		for ch, nd in chlist:
+			self._playcontext.transitiondone(nd)
 
 	def cleanup_transitions(self):
 		if self.__out_trans_qid:
