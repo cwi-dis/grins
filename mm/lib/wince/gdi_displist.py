@@ -119,14 +119,20 @@ class DisplayList:
 			rc_dest = ldc, tdc, rdc - ldc, bdc - tdc
 			rc_src = lsc, tsc, rsc - lsc, bsc - tsc
 
-			dcc = dc.CreateCompatibleDC()
-			bmp = dcc.SelectObject(image)
-			try:
-				dc.StretchBlt(rc_dest, dcc, rc_src, wincon.SRCCOPY)
-			except wingdi.error, arg:
-				print arg
-			dcc.SelectObject(bmp)
-			dcc.DeleteDC()
+			if image.IsTransparent():
+				try:
+					wingdi.StretchBltTransparent(dc, rc_dest, image, rc_src)
+				except wingdi.error, arg:
+					print arg
+			else:
+				dcc = dc.CreateCompatibleDC()
+				bmp = dcc.SelectObject(image)
+				try:
+					dc.StretchBlt(rc_dest, dcc, rc_src, wincon.SRCCOPY)
+				except wingdi.error, arg:
+					print arg
+				dcc.SelectObject(bmp)
+				dcc.DeleteDC()
 
 		elif cmd == 'fbox':
 			dest_x, dest_y, width, height = entry[2]
