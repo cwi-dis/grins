@@ -119,7 +119,7 @@ appview={
 	4:{'cmd':usercmd.HIDE_LAYOUTVIEW,'title':'Layout view','id':'lview_','class':_LayoutView,'freezesize':1},
 	5:{'cmd':usercmd.HIDE_USERGROUPVIEW,'title':'Custom tests','id':'ugview_','class':_UsergroupView,'freezesize':1},
 	6:{'cmd':usercmd.HIDE_TRANSITIONVIEW,'title':'Transitions','id':'trview_','class':_TransitionView,'freezesize':1},
-	7:{'cmd':usercmd.HIDE_SOURCEVIEW,'title':'Source','id':'sview_','class':_SourceView,'freezesize':1},
+	7:{'cmd':usercmd.HIDE_SOURCEVIEW,'title':'Source','id':'sview_','class':_SourceView,'freezesize':0},
 	8:{'cmd':usercmd.HIDE_LAYOUTVIEW2,'title':'Layout view','id':'lview2_','class':_LayoutView2,'hosted':0},
 #	9:{'cmd':usercmd.HIDE_TEMPORALVIEW,'title':'Temporal view','id':'tview_','class':_ChannelView,},
 }
