@@ -1649,7 +1649,7 @@ class LayoutView2(LayoutViewDialog2):
 			i = i+1
 			name = baseName + `i`
 			
-		self.askname(name, 'Name for viewport', self.__viewportNamedCallback)
+		self.askname(name, 'Name for TopLayout', self.__viewportNamedCallback)
 
 	def __viewportNamedCallback(self, name):
 		# check if the viewport already exist
