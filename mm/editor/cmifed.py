@@ -510,7 +510,7 @@ def findfile(name):
 			import sys
 			cmifpath = [os.path.dirname(sys.executable)]
 			try:
-				link = os.readline(sys.executable)
+				link = os.readlink(sys.executable)
 			except (os.error, AttributeError):
 				pass
 			else:
