@@ -52,6 +52,7 @@ MENUBAR=(
 		# TODO: These should not appear on all versions of GRiNS!
 		(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for &Windows Media...', None, EXPORT_WMP), # mjvdg 11-oct-2000
 		(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for Windows Media and upload...', None, UPLOAD_WMP),
+		(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for Internet Explorer HTML+TIME...', None, EXPORT_HTML_TIME),
 		
 		(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, '&Publish for SMIL 2.0...', None, EXPORT_SMIL),
 		(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'Pu&blish for SMIL 2.0 and upload...', None, UPLOAD_SMIL),
