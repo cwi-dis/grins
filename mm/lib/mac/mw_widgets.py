@@ -259,7 +259,8 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 		try:
 ##			print "hittest", ctl, x, y
 			if self.ourrect is None:
-				self.set((x, y, 0, 0))
+				self.ourrect = (x, y, x, y)
+				self.recalclurven()
 			for i in range(len(self.lurven)-1, -1, -1):
 				lx0, ly0, lx1, ly1 = self.lurven[i]
 				if lx0 <= x <= lx1 and ly0 <= y <= ly1:
@@ -283,13 +284,18 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 		x0, y0, x1, y1 = self.rect
 		if lurf == 4:
 			# Adapt pinning rectangle for middle lurf
+			# XXXX This is wrong
 			rx0, ry0, rx1, ry1 = self.ourrect
-			w = (rx1-rx0)/2
-			h = (ry1-ry0)/2
-			x0 = x0 + w
-			x1 = x1 - w
-			y0 = y0 + h
-			y1 = y1 - h
+##			w = (rx1-rx0)/2
+##			h = (ry1-ry0)/2
+##			x0 = x0 + w
+##			x1 = x1 - w
+##			y0 = y0 + h
+##			y1 = y1 - h
+			x0 = x - (rx0-x0)
+			x1 = x + (x1-rx1)
+			y0 = y - (ry0-y0)
+			y1 = y + (y1-ry1)
 		while Evt.WaitMouseUp():
 			newx, newy = Evt.GetMouse()
 			# Pin the mouse to our rectangle
@@ -369,6 +375,19 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 		self.lurven = []
 		if self.ourrect is None:
 			return
+		#
+		# First pin ourrect
+		#
+		x0, y0, x1, y1 = self.ourrect
+		mx0, my0, mx1, my1 = self.rect
+		if x0 < mx0: x0 = mx0
+		if y0 < my0: y0 = my0
+		if x1 > mx1: x1 = mx1
+		if y1 > my1: y1 = my1
+		self.ourrect = x0, y0, x1, y1
+		#
+		# Now calculate the 9 handles
+		#
 		x0, y0, x1, y1 = self.ourrect
 		for y in (y0, (y0+y1)/2, y1):
 			for x in (x0, (x0+x1)/2, x1):
