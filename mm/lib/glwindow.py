@@ -273,7 +273,7 @@ def pixels2mm(h, v):
 # XXX from right/top end!
 
 def setgeometry(arg):
-	if arg == None:
+	if arg is None:
 		return # Everything default
 	h, v, width, height = arg
 	if h < 0 and v < 0 and width == 0 and height == 0:
@@ -317,7 +317,7 @@ def getgeometry():
 # Change the geometry of a window
 
 def relocate(arg):
-	if arg == None: return
+	if arg is None: return
 	h, v, width, height = arg
 	h, v = mm2pixels(h, v)
 	width, height = mm2pixels(width, height)
