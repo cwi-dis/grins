@@ -19,6 +19,16 @@ else:
 	import quietconsole
 	quietconsole.install()
 
+if len(sys.path) == 2:
+	del sys.path[0]
+	print 'sys.path', sys.path
+	print 'sys.argv[0]', sys.argv[0]
+	
+# Workaround for a strange KeyboardInterrupt bug under Carbon
+import MacOS
+if MacOS.runtimemodel == 'carbon':
+	MacOS.SchedParams(0)
+	
 ID_SPLASH_DIALOG=513
 # XXXX Debugging code: assure the resource file is available
 import Res
@@ -196,6 +206,7 @@ try:
 		no_exception=1
 finally:
 	if not no_exception:
+		splash.splash()
 		if quietconsole:
 			quietconsole.revert()
 		print 'Type return to exit-',
