@@ -685,6 +685,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def __fillchannel(self, ch, attrdict, mtype):
 		from windowinterface import UNIT_PXL, UNIT_SCREEN
 		attrdict = attrdict.copy() # we're going to change this...
+		if attrdict.has_key('type'): del attrdict['type']
 		if mtype in ('text', 'image', 'movie', 'video', 'mpeg',
 			     'html', 'label', 'graph', 'layout', 'RealPix',
 			     'RealText', 'RealVideo'):
@@ -808,7 +809,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ctx = self.__context
 		if self.__layout is None:
 			self.CreateLayout()
-		for name, attrdict in self.__regions.items():
+		for region, attrdict in self.__regions.items():
 			chtype = attrdict.get('type')
 			if chtype is None or not channelmap.has_key(chtype):
 				continue
@@ -826,6 +827,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ctx.channelnames.append(name)
 			ctx.channels.append(ch)
 			ch['type'] = chtype
+			if not self.__region2channel.has_key(region):
+				self.__region2channel[region] = []
+			self.__region2channel[region].append(ch)
 			self.__fillchannel(ch, attrdict, chtype)
 			
 	def FixChannel(self, node):
@@ -871,7 +875,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			mtype = mediatype
 			self.warning('unrecognized media type %s' % mtype)
 		ctx = self.__context
-		name = attrdict.get('title')
+		for ch in self.__region2channel.get(region, []):
+			if ch['type'] == mtype:
+				name = ch.name
+				break
+		else:
+			name = attrdict.get('title')
 		if not name or \
 		   (ctx.channeldict.has_key(name) and
 		    ctx.channeldict[name]['type'] != mtype):
