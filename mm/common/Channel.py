@@ -696,6 +696,7 @@ class Channel:
 			try:
 				fp = urlopen(filename)
 			except IOError:
+				import sys
 				raise error, 'Cannot open %s: %s, %s'%(filename, sys.exc_type, sys.exc_value)
 			self.armed_url = fp.geturl()
 			text = fp.read()
