@@ -18,6 +18,8 @@
 #ifndef _RMACOMM_H_
 #define _RMACOMM_H_
 
+#include "rmaengin.h" // For RMATimeval
+
 /*
  * Forward declarations of some interfaces defined here-in.
  */
@@ -29,6 +31,10 @@ typedef _INTERFACE	IRMAServerFork			IRMAServerFork;
 typedef _INTERFACE	IRMAServerControl		IRMAServerControl;
 typedef _INTERFACE	IRMAReconfigServerResponse	IRMAReconfigServerResponse;
 typedef _INTERFACE	IRMABuffer			IRMABuffer;
+typedef _INTERFACE	IRMAWantServerReconfigNotification
+						IRMAWantServerReconfigNotification;  
+typedef _INTERFACE	IRMAFastAlloc			IRMAFastAlloc;
+
 
 
 /****************************************************************************
@@ -445,4 +451,118 @@ DECLARE_INTERFACE_(IRMAReconfigServerResponse, IUnknown)
 				    IRMABuffer** pInfo,
 				    UINT32 ulNumInfo) PURE;
 };
+
+/*
+ * 
+ *  Interface:
+ *
+ *	IRMAServerReconfigNotification
+ *
+ *  Purpose:
+ *
+ *	Register with the server that you want notification when a reconfig
+ *  request comes in and want/need to take part in the reconfiguration.  This
+ *  is used when you have configuration info outside the server config file
+ *  which needs to be re-initialized.
+ *
+ *
+ *  IID_IRMAServerReconfigNotification:
+ *
+ *	{00000007-0901-11d1-8B06-00A024406D59}
+ *
+ */
+DEFINE_GUID(IID_IRMAServerReconfigNotification, 0x00000007, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 
+            0xa0, 0x24, 0x40, 0x6d, 0x59);
+
+
+#undef  INTERFACE
+#define INTERFACE   IRMAServerReconfigNotification
+
+DECLARE_INTERFACE_(IRMAServerReconfigNotification, IUnknown)
+{
+    /*
+     *	IUnknown methods
+     */
+    STDMETHOD(QueryInterface)	(THIS_
+				REFIID riid,
+				void** ppvObj) PURE;
+
+    STDMETHOD_(ULONG32,AddRef)	(THIS) PURE;
+
+    STDMETHOD_(ULONG32,Release)	(THIS) PURE;
+
+    /************************************************************************
+     * IRMAServerReconfigNotification::WantReconfigNotification
+     *
+     * Purpose:
+     *
+     *	    Tell the server that you want reconfig notification.
+     */
+    STDMETHOD(WantReconfigNotification)	(THIS_
+		IRMAWantServerReconfigNotification* pResponse) PURE;
+    
+    /************************************************************************
+     * IRMAServerReconfigNotification::CancelReconfigNotification
+     *
+     * Purpose:
+     *
+     *	    Tell the server that you no longer want reconfig notification.
+     */
+    STDMETHOD(CancelReconfigNotification)   (THIS_
+		IRMAWantServerReconfigNotification* pResponse) PURE;
+
+};
+
+/*
+ * 
+ *  Interface:
+ *
+ *	IRMAWantServerReconfigNotification
+ *
+ *  Purpose:
+ *
+ *	Tell user that the server got a reconfig request and it is time to
+ *  do your reconfiguration.  NOTE: You should not need this if all of your
+ *  configuration is stored in the config file; that is taken care of through
+ *  IRMAActiveRegistry.
+ *
+ *  IID_IRMAWantServerReconfigNotification:
+ *
+ *	{00000008-0901-11d1-8B06-00A024406D59}
+ *
+ */
+DEFINE_GUID(IID_IRMAWantServerReconfigNotification, 0x00000008, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 
+            0xa0, 0x24, 0x40, 0x6d, 0x59);
+
+
+#undef  INTERFACE
+#define INTERFACE   IRMAWantServerReconfigNotification
+
+DECLARE_INTERFACE_(IRMAWantServerReconfigNotification, IUnknown)
+{
+    /*
+     *	IUnknown methods
+     */
+    STDMETHOD(QueryInterface)	(THIS_
+				REFIID riid,
+				void** ppvObj) PURE;
+
+    STDMETHOD_(ULONG32,AddRef)	(THIS) PURE;
+
+    STDMETHOD_(ULONG32,Release)	(THIS) PURE;
+
+    /************************************************************************
+     * IRMAWantServerReconfigNotification::ServerReconfig
+     *
+     * Purpose:
+     *
+     *	    Notify user that a server reconfig request had come in and it
+     * is now your turn to do external (not server config) reconfiguration.*
+     */
+    STDMETHOD(ServerReconfig)	(THIS_
+	IRMAReconfigServerResponse* pResponse) PURE;
+
+};
+
+
 #endif /*_RMACOMM_H_*/

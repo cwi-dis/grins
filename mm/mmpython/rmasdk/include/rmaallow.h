@@ -27,6 +27,7 @@ typedef _INTERFACE  IRMAPlayerConnectionAdviseSinkManager  IRMAPlayerConnectionA
 typedef _INTERFACE  IRMAPlayerConnectionAdviseSink  IRMAPlayerConnectionAdviseSink;
 typedef _INTERFACE  IRMAPlayerConnectionResponse    IRMAPlayerConnectionResponse;
 typedef _INTERFACE  IRMAPlayerController            IRMAPlayerController;
+typedef _INTERFACE  IRMAPlayerControllerProxyRedirect IRMAPlayerControllerProxyRedirect;
 
 /****************************************************************************
  * 
@@ -223,6 +224,49 @@ DECLARE_INTERFACE_(IRMAPlayerConnectionAdviseSinkManager, IUnknown)
     STDMETHOD(CreatePlayerConnectionAdviseSink)
 		(THIS_
 		REF(IRMAPlayerConnectionAdviseSink*) pPCAdviseSink) PURE;
+};
+
+/****************************************************************************
+ * 
+ *  Interface:
+ * 
+ *      IRMAPlayerControllerProxyRedirect
+ * 
+ *  Purpose:
+ *
+ *      QueryInterfaced from IRMAPlayerController.  Allows 305 proxy redirect
+ *      to be issued (as per RTSP spec).
+ * 
+ *  IID_IRMAPlayerControllerProxyRedirect:
+ * 
+ *      {00002607-0901-11d1-8B06-00A024406D59}
+ * 
+ */
+
+DEFINE_GUID(IID_IRMAPlayerControllerProxyRedirect, 0x00002607, 0x901, 0x11d1, 
+	    0x8b, 0x6, 0x0, 0xa0, 0x24, 0x40, 0x6d, 0x59);
+
+#undef  INTERFACE
+#define INTERFACE IRMAPlayerControllerProxyRedirect
+
+DECLARE_INTERFACE_(IRMAPlayerControllerProxyRedirect, IUnknown)
+{
+    STDMETHOD(QueryInterface)           (THIS_
+					REFIID riid,
+					void** ppvObj) PURE;
+
+    STDMETHOD_(ULONG32,AddRef)          (THIS) PURE;
+
+    STDMETHOD_(ULONG32,Release)         (THIS) PURE;
+
+    /*
+     * This URL is just a hostname / port.  It must be formatted like this:
+     * "rtsp://audio.real.com:554/".
+     *
+     * NOTE:  You can *only* call this method between OnURL() and OnURLDone().
+     * NOTE:  This method only works on RTSP connections.
+     */
+    STDMETHOD(NetworkProxyRedirect)          (THIS_ IRMABuffer* pURL) PURE;
 };
 
 #endif /* _RMAALLOW_H_ */

@@ -21,8 +21,9 @@
 /*
  * Forward declarations of some interfaces defined or used here-in.
  */
-typedef _INTERFACE   IUnknown			IUnknown;
-typedef _INTERFACE   IRMAHyperNavigate		IRMAHyperNavigate;
+typedef _INTERFACE   IUnknown				IUnknown;
+typedef _INTERFACE   IRMAValues				IRMAValues;
+typedef _INTERFACE   IRMAHyperNavigate			IRMAHyperNavigate;
 
 
 /****************************************************************************
@@ -78,5 +79,7 @@ DECLARE_INTERFACE_(IRMAHyperNavigate, IUnknown)
 			    const char* pTarget) PURE;
 
 };
+
+
 
 #endif /* _RMAHYPER_H_ */

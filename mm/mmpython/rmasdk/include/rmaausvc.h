@@ -1199,4 +1199,63 @@ DECLARE_INTERFACE_(IRMAAudioPushdown, IUnknown)
 			     	  ) PURE;
 };
 
+
+/****************************************************************************
+ * 
+ *  Interface:
+ * 
+ *      IRMAAudioHookManager
+ * 
+ *  Purpose:
+ *
+ *  This interface can be used to add a hook at the audio device layer.
+ * 
+ *  IID_IRMAAudioHookManager:
+ * 
+ *  {0000070E-0901-11d1-8B06-00A024406D59}
+ * 
+ */
+DEFINE_GUID(IID_IRMAAudioHookManager, 0x0000070E, 0x901, 0x11d1, 0x8b, 0x6, 0x0,
+            0xa0, 0x24, 0x40, 0x6d, 0x59);
+
+#undef  INTERFACE
+#define INTERFACE   IRMAAudioHookManager
+
+DECLARE_INTERFACE_(IRMAAudioHookManager, IUnknown)
+{
+    /*
+     *  IUnknown methods
+     */
+    STDMETHOD(QueryInterface)		(THIS_
+					REFIID riid,
+					void** ppvObj) PURE;
+
+    STDMETHOD_(ULONG32,AddRef)		(THIS) PURE;
+
+    STDMETHOD_(ULONG32,Release)		(THIS) PURE;
+    
+   /*
+    *  IRMAAudioHookManager methods
+    */
+   /************************************************************************
+    *  Method:
+    *      IRMAAudioHookManager::AddHook
+    *  Purpose:
+    *	    Use this to add a hook 
+    */
+    STDMETHOD(AddHook)   (THIS_
+			  IRMAAudioHook* /*IN*/ pHook
+			  ) PURE;
+
+   /************************************************************************
+    *  Method:
+    *      IRMAAudioHookManager::RemoveHook
+    *  Purpose:
+    *	    Use this to remove a hook 
+    */
+    STDMETHOD(RemoveHook) (THIS_
+			  IRMAAudioHook* /*IN*/ pHook
+			  ) PURE;
+};
+
 #endif  /* _RMAAUSVC_H_ */

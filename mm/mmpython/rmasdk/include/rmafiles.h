@@ -1578,4 +1578,6 @@ DECLARE_INTERFACE_(IRMAFileRemove, IUnknown)
 
 
 
+
+
 #endif  /* _RMAFILES_H_ */

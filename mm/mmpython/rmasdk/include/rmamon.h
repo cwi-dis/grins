@@ -27,6 +27,7 @@ typedef _INTERFACE	IRMAPropWatchResponse		IRMAPropWatchResponse;
 typedef _INTERFACE	IRMAActiveRegistry		IRMAActiveRegistry;
 typedef _INTERFACE	IRMAActivePropUser		IRMAActivePropUser;
 typedef _INTERFACE	IRMAActivePropUserResponse	IRMAActivePropUserResponse;
+typedef _INTERFACE	IRMAPNRegistryAltStringHandling	IRMAPNRegistryAltStringHandling;
 
 /*
  * Types of the values stored in the registry.
@@ -95,6 +96,8 @@ DECLARE_INTERFACE_(IRMAPNRegistry, IUnknown)
      *  Purpose:
      *      Create a new IRMAPropWatch object which can then be queried for 
      *  the right kind of IRMAPropWatch object.
+     *
+     *  pPropWatch - OUT - returns a new addref'ed IRMAPropWatch object 
      */
     STDMETHOD(CreatePropWatch)		(THIS_
 					REF(IRMAPropWatch*) pPropWatch) PURE;
@@ -106,6 +109,9 @@ DECLARE_INTERFACE_(IRMAPNRegistry, IUnknown)
      *      Add a COMPOSITE property to the registry and return its ID
      *  if successful. It returns ZERO (0) if an error occurred
      *  during the operation.
+     *
+     *  pName - IN - name of the Property that is going to be added to 
+     *               the registry
      */
     STDMETHOD_(UINT32, AddComp)		(THIS_
 					const char*	pName) PURE;
@@ -117,42 +123,77 @@ DECLARE_INTERFACE_(IRMAPNRegistry, IUnknown)
      *      Add an INTEGER property with name in "pName" and value in 
      *  "iValue" to the registry. The return value is the id to
      *  the newly added Property or ZERO if there was an error.
+     *
+     *  pName - IN - name of the Property that is going to be added to 
+     *               the registry
+     *  nValue - IN - integer value of the Property that is going to be 
+     *                added to the registry
      */
     STDMETHOD_(UINT32, AddInt)		(THIS_
 					const char*	pName, 
-					const INT32	iValue) PURE;
+					const INT32	nValue) PURE;
 
     /************************************************************************
      *  Method:
-     *      IRMAPNRegistry::GetIntByXYZ
+     *      IRMAPNRegistry::GetIntByName
      *  Purpose:
      *      Retreive an INTEGER value from the registry given its Property
-     *  name "pName" or by its id "id". If the Property 
-     *  is found, it will return PNR_OK, otherwise it returns PNR_FAIL.
+     *  name "pName". If the Property is found, it will return PNR_OK, 
+     *  otherwise it returns PNR_FAIL.
+     *
+     *  pName - IN - name of the Property whose value is to be retreived
+     *  nValue - OUT - parameter into which the value of the Property is 
+     *                 going to be returned
      */
     STDMETHOD(GetIntByName)		(THIS_
 					const char*	pName,
 					REF(INT32)	nValue) const PURE;
 
+    /************************************************************************
+     *  Method:
+     *      IRMAPNRegistry::GetIntById
+     *  Purpose:
+     *      Retreive an INTEGER value from the registry given its id "ulId". 
+     *  If the Property is found, it will return PNR_OK, otherwise it 
+     *  returns PNR_FAIL.
+     *
+     *  ulId - IN - unique id of the Property whose value is to be retreived
+     *  nValue - OUT - parameter into which the value of the Property is 
+     *                 going to be returned
+     */
     STDMETHOD(GetIntById)		(THIS_
 					const UINT32	ulId,
 					REF(INT32)	nValue) const PURE;
 
     /************************************************************************
      *  Method:
-     *      IRMAPNRegistry::SetIntByXYZ
+     *      IRMAPNRegistry::SetIntByName
      *  Purpose:
      *      Modify a Property's INTEGER value in the registry given the
-     *  Property's name "pName" or its id "id". If the value 
-     *  was set, it will return PNR_OK, otherwise it returns PNR_FAIL.
+     *  Property's name "pName". If the value was set, it will return PNR_OK, 
+     *  otherwise it returns PNR_FAIL.
+     *
+     *  pName - IN - name of the Property whose value is to be set
+     *  nValue - IN - the new value of the Property which is going to be set
      */
     STDMETHOD(SetIntByName)		(THIS_
 					const char*	pName, 
-					const INT32	iValue) PURE;
+					const INT32	nValue) PURE;
 
+    /************************************************************************
+     *  Method:
+     *      IRMAPNRegistry::SetIntById
+     *  Purpose:
+     *      Modify a Property's INTEGER value in the registry given the
+     *  its id "id". If the value was set, it will return PNR_OK, otherwise 
+     *  it returns PNR_FAIL.
+     *
+     *  ulId - IN - unique id of the Property whose value is to be set
+     *  nValue - IN - the new value of the Property which is going to be set
+     */
     STDMETHOD(SetIntById)		(THIS_
 					const UINT32	id,
-					const INT32	iValue) PURE;
+					const INT32	nValue) PURE;
 
     /************************************************************************
      *  Method:
@@ -160,6 +201,11 @@ DECLARE_INTERFACE_(IRMAPNRegistry, IUnknown)
      *  Purpose:
      *      Add an STRING property with name in "pName" and value in 
      *  "pValue" to the registry.
+     *
+     *  pName - IN - name of the Property that is going to be added to 
+     *               the registry
+     *  pValue - IN - buffer value of the Property that is going to be 
+     *                added to the registry
      */
     STDMETHOD_(UINT32, AddStr)		(THIS_
 					const char*	pName, 
@@ -167,34 +213,64 @@ DECLARE_INTERFACE_(IRMAPNRegistry, IUnknown)
 
     /************************************************************************
      *  Method:
-     *      IRMAPNRegistry::GetStrByXYZ
+     *      IRMAPNRegistry::GetStrByName
      *  Purpose:
      *      Retreive an STRING value from the registry given its Property
-     *  name "pName" or by its id "id". If the Property 
-     *  is found, it will return PNR_OK, otherwise it returns PNR_FAIL.
+     *  name "pName". If the Property is found, it will return PNR_OK, 
+     *  otherwise it returns PNR_FAIL.
+     *
+     *  pName - IN - name of the Property whose value is to be retreived
+     *  pValue - OUT - parameter into which the value of the Property is 
+     *                 going to be returned
      */
     STDMETHOD(GetStrByName)		(THIS_
 					const char*	 pName,
 					REF(IRMABuffer*) pValue) const PURE;
 
+    /************************************************************************
+     *  Method:
+     *      IRMAPNRegistry::GetStrById
+     *  Purpose:
+     *      Retreive an STRING value from the registry given its id "ulId". 
+     *  If the Property is found, it will return PNR_OK, otherwise it 
+     *  returns PNR_FAIL.
+     *
+     *  ulId - IN - unique id of the Property whose value is to be retreived
+     *  pValue - OUT - parameter into which the value of the Property is 
+     *                 going to be returned
+     */
     STDMETHOD(GetStrById)		(THIS_
-					const UINT32	 id,
+					const UINT32	 ulId,
 					REF(IRMABuffer*) pValue) const PURE;
 
     /************************************************************************
      *  Method:
-     *      IRMAPNRegistry::SetStrByXYZ
+     *      IRMAPNRegistry::SetStrByName
      *  Purpose:
      *      Modify a Property's STRING value in the registry given the
-     *  Property's name "pName" or its id "id". If the value 
-     *  was set, it will return PNR_OK, otherwise it returns PNR_FAIL.
+     *  Property's name "pName". If the value was set, it will return 
+     *  PNR_OK, otherwise it returns PNR_FAIL.
+     *
+     *  pName - IN - name of the Property whose value is to be set
+     *  pValue - IN - the new value of the Property which is going to be set
      */
     STDMETHOD(SetStrByName)		(THIS_
 					const char*	pName, 
 					IRMABuffer*	pValue) PURE;
 
+    /************************************************************************
+     *  Method:
+     *      IRMAPNRegistry::SetStrById
+     *  Purpose:
+     *      Modify a Property's STRING value in the registry given the
+     *  its id "ulId". If the value was set, it will return PNR_OK, 
+     *  otherwise it returns PNR_FAIL.
+     *
+     *  ulId - IN - unique id of the Property whose value is to be set
+     *  pValue - IN - the new value of the Property which is going to be set
+     */
     STDMETHOD(SetStrById)		(THIS_
-					const UINT32	id,
+					const UINT32	ulId,
 					IRMABuffer*	pValue) PURE;
 
     /************************************************************************
@@ -203,6 +279,11 @@ DECLARE_INTERFACE_(IRMAPNRegistry, IUnknown)
      *  Purpose:
      *      Add an BUFFER property with name in "pName" and value in 
      *  "pValue" to the registry.
+     *
+     *  pName - IN - name of the Property that is going to be added to 
+     *               the registry
+     *  pValue - IN - buffer value of the Property that is going to be 
+     *                added to the registry
      */
     STDMETHOD_(UINT32, AddBuf)		(THIS_
 					const char*	pName, 
@@ -210,34 +291,64 @@ DECLARE_INTERFACE_(IRMAPNRegistry, IUnknown)
 
     /************************************************************************
      *  Method:
-     *      IRMAPNRegistry::GetBufByXYZ
+     *      IRMAPNRegistry::GetBufByName
      *  Purpose:
-     *      Retreive the BUFFER from the registry given its Property
-     *  name "pName" or its id "id". If the Property 
-     *  is found, it will return PNR_OK, otherwise it returns PNR_FAIL.
+     *      Retreive the BUFFER from the registry given its Property name 
+     *  "pName". If the Property is found, it will return PNR_OK, otherwise 
+     *  it returns PNR_FAIL.
+     *
+     *  pName - IN - name of the Property whose value is to be retreived
+     *  pValue - OUT - parameter into which the value of the Property is 
+     *                 going to be returned
      */
     STDMETHOD(GetBufByName)		(THIS_
 					const char*	 pName,
-					REF(IRMABuffer*) ppValue) const PURE;
-
-    STDMETHOD(GetBufById)		(THIS_
-					const UINT32	 id,
-					REF(IRMABuffer*) ppValue) const PURE;
+					REF(IRMABuffer*) pValue) const PURE;
 
     /************************************************************************
      *  Method:
-     *      IRMAPNRegistry::SetBufByXYZ
+     *      IRMAPNRegistry::GetBufById
+     *  Purpose:
+     *      Retreive the BUFFER from the registry given its id "ulId". If the 
+     *  Property is found, it will return PNR_OK, otherwise it returns 
+     *  PNR_FAIL.
+     *
+     *  ulId - IN - unique id of the Property whose value is to be retreived
+     *  pValue - OUT - parameter into which the value of the Property is 
+     *                 going to be returned
+     */
+    STDMETHOD(GetBufById)		(THIS_
+					const UINT32	 ulId,
+					REF(IRMABuffer*) pValue) const PURE;
+
+    /************************************************************************
+     *  Method:
+     *      IRMAPNRegistry::SetBufByName
      *  Purpose:
      *      Modify a Property's BUFFER in the registry given the
-     *  Property's name "pName" or its id "id". If the value 
-     *  was set, it will return PNR_OK, otherwise it returns PNR_FAIL.
+     *  Property's name "pName". If the value was set, it will return 
+     *  PNR_OK, otherwise it returns PNR_FAIL.
+     *
+     *  pName - IN - name of the Property whose value is to be set
+     *  pValue - IN - the new value of the Property which is going to be set
      */
     STDMETHOD(SetBufByName)		(THIS_
 					const char*	pName, 
 					IRMABuffer*	pValue) PURE;
 
+    /************************************************************************
+     *  Method:
+     *      IRMAPNRegistry::SetBufById
+     *  Purpose:
+     *      Modify a Property's BUFFER in the registry given its id "ulId". 
+     *  If the value was set, it will return PNR_OK, otherwise it returns 
+     *  PNR_FAIL.
+     *
+     *  ulId - IN - unique id of the Property whose value is to be set
+     *  pValue - IN - the new value of the Property which is going to be set
+     */
     STDMETHOD(SetBufById)		(THIS_
-					const UINT32	id,
+					const UINT32	ulId,
 					IRMABuffer*	pValue) PURE;
 
     /************************************************************************
@@ -248,6 +359,12 @@ DECLARE_INTERFACE_(IRMAPNRegistry, IUnknown)
      *  value in "iValue" to the registry. This property allows the user
      *  to modify its contents directly, without having to go through the
      *  registry.
+     *
+     *  pName - IN - name of the Property that is going to be added to 
+     *               the registry
+     *  pValue - IN - the pointer of the integer value is what gets stored
+     *                in the registry as the Interger Reference Property's 
+     *                value
      */
     STDMETHOD_(UINT32, AddIntRef)	(THIS_
 					const char*	pName, 
@@ -255,43 +372,74 @@ DECLARE_INTERFACE_(IRMAPNRegistry, IUnknown)
 
     /************************************************************************
      *  Method:
-     *      IRMAPNRegistry::DeleteByXYZ
+     *      IRMAPNRegistry::DeleteByName
      *  Purpose:
-     *      Delete a Property from the registry using its name "pName"
-     *  or id "id".
+     *      Delete a Property from the registry using its name "pName".
+     *
+     *  pName - IN - name of the Property that is going to be deleted
      */
     STDMETHOD_(UINT32, DeleteByName)	(THIS_
-					const char*	pcPropName) PURE;
-
-    STDMETHOD_(UINT32, DeleteById)	(THIS_
-					const UINT32	ulID) PURE;
+					const char*	pName) PURE;
 
     /************************************************************************
      *  Method:
-     *      IRMAPNRegistry::GetType
+     *      IRMAPNRegistry::DeleteById
      *  Purpose:
-     *      Returns the datatype of the Property given its name "pName"
-     *  or its id "id".
+     *      Delete a Property from the registry using its id "ulId".
+     *
+     *  ulId - IN - unique id of the Property that is going to be deleted
+     */
+    STDMETHOD_(UINT32, DeleteById)	(THIS_
+					const UINT32	ulId) PURE;
+
+    /************************************************************************
+     *  Method:
+     *      IRMAPNRegistry::GetTypeByName
+     *  Purpose:
+     *      Returns the datatype of the Property given its name "pName".
+     *
+     *  pName - IN - name of the Property whose type is to be retreived
      */
     STDMETHOD_(RMAPropType, GetTypeByName)	(THIS_
 						const char* pName) const PURE;
 
+    /************************************************************************
+     *  Method:
+     *      IRMAPNRegistry::GetTypeById
+     *  Purpose:
+     *      Returns the datatype of the Property given its its id "ulId".
+     *
+     *  ulId - IN - unique id of the Property whose type is to be retreived
+     */
     STDMETHOD_(RMAPropType, GetTypeById)	(THIS_
-						const UINT32 id) const PURE;
+						const UINT32 ulId) const PURE;
 
     /************************************************************************
      *  Method:
-     *      IRMAPNRegistry::FindParentIdByXYZ
+     *      IRMAPNRegistry::FindParentIdByName
      *  Purpose:
-     *      Returns the id value of the parent node of the Property
-     *  whose name (prop_name) or id (id) has been specified.
-     *  If it fails, a ZERO value is returned.
+     *      Returns the id value of the parent node of the Property whose 
+     *  name "pName" has been passed in. If it fails, a ZERO value is 
+     *  returned.
+     *
+     *  pName - IN - name of the Property whose parent's unique id is to be
+     *               retreived
      */
     STDMETHOD_(UINT32, FindParentIdByName)	(THIS_
 						const char* pName) const PURE;
 
+    /************************************************************************
+     *  Method:
+     *      IRMAPNRegistry::FindParentIdById
+     *  Purpose:
+     *      Returns the id value of the parent node of the Property whose 
+     *  id "ulId" has been passed in. If it fails, a ZERO value is returned.
+     *
+     *  ulId - IN - unique id of the Property whose parent's id is to be
+     *              retreived
+     */
     STDMETHOD_(UINT32, FindParentIdById)	(THIS_
-						const UINT32 id) const PURE;
+						const UINT32 ulId) const PURE;
 
     /************************************************************************
      *  Method:
@@ -299,6 +447,10 @@ DECLARE_INTERFACE_(IRMAPNRegistry, IUnknown)
      *  Purpose:
      *      Returns the Property name in the pName char buffer passed
      *  as a parameter, given the Property's id "ulId".
+     *
+     *  ulId - IN - unique id of the Property whose name is to be retreived
+     *  pName - OUT - parameter into which the Property name is going to be
+     *                returned
      */
     STDMETHOD(GetPropName)		(THIS_
 					const UINT32 ulId,
@@ -309,6 +461,9 @@ DECLARE_INTERFACE_(IRMAPNRegistry, IUnknown)
      *      PNRegistry::GetId
      *  Purpose:
      *      Returns the Property's id given the Property name.
+     *
+     *  pName - IN - name of the Property whose unique id is to be 
+     *               retreived
      */
     STDMETHOD_(UINT32, GetId)		(THIS_
 					const char* pName) const PURE;
@@ -319,22 +474,43 @@ DECLARE_INTERFACE_(IRMAPNRegistry, IUnknown)
      *  Purpose:
      *      Returns an array of a Properties under the root level of the 
      *  registry's hierarchy.
+     *
+     *  pValues - OUT - list of property name and unique id at the 
+     *                  highest level (root) in the registry
      */
     STDMETHOD(GetPropListOfRoot) 	(THIS_
 					REF(IRMAValues*) pValues) const PURE;
 
     /************************************************************************
      *  Method:
-     *      IRMAPNRegistry::GetPropListByXYZ
+     *      IRMAPNRegistry::GetPropListByName
      *  Purpose:
-     *      Returns an array of Properties immediately under the one with
-     *  name "pName" or id "id".
+     *      Returns an array of Properties immediately under the one whose
+     *  name is passed in "pName".
+     *
+     *  pName - IN - name of the Property whose child property list is to be
+     *               retreived
+     *  pValues - OUT - list of property name and unique id under the 
+     *                  Property whose name is in "pName"
      */
     STDMETHOD(GetPropListByName) 	(THIS_
 					 const char* pName,
 					 REF(IRMAValues*) pValues) const PURE;
+
+    /************************************************************************
+     *  Method:
+     *      IRMAPNRegistry::GetPropListById
+     *  Purpose:
+     *      Returns an array of Properties immediately under the one whose
+     *  id is passed in "ulId".
+     *
+     *  ulId - IN - unique id of the Property whose child property list is 
+     *              to be retreived
+     *  pValues - OUT - list of property name and unique id under the 
+     *                  Property whose is is in "ulId"
+     */
     STDMETHOD(GetPropListById) 	 	(THIS_
-					 const UINT32 id,
+					 const UINT32 ulId,
 					 REF(IRMAValues*) pValues) const PURE;
 
     /************************************************************************
@@ -347,17 +523,29 @@ DECLARE_INTERFACE_(IRMAPNRegistry, IUnknown)
 
     /************************************************************************
      *  Method:
-     *      IRMAPNRegistry::GetNumPropsByXYZ
+     *      IRMAPNRegistry::GetNumPropsByName
      *  Purpose:
-     *      Returns the count of the number of Properties within the
-     *  registry. If a property name of id is specified, then it
-     *  returns the number of Properties under it.
+     *      Returns the count of the number of Properties under the one 
+     *  whose name is specified in "pName".
+     *
+     *  pName - IN - name of the Property whose number of children is to be
+     *               retreived
      */
     STDMETHOD_(INT32, GetNumPropsByName)	(THIS_
 						const char* pName) const PURE;
 
+    /************************************************************************
+     *  Method:
+     *      IRMAPNRegistry::GetNumPropsById
+     *  Purpose:
+     *      Returns the count of the number of Properties under the one 
+     *  whose unique id is specified in "ulId".
+     *
+     *  ulId - IN - unique id of the Property whose number of children is 
+     *              to be retreived
+     */
     STDMETHOD_(INT32, GetNumPropsById)		(THIS_
-						const UINT32 id) const PURE;
+						const UINT32 ulId) const PURE;
 };
 
 
@@ -405,8 +593,12 @@ DECLARE_INTERFACE_(IRMAPropWatch, IUnknown)
      *  Method:
      *      IRMAPropWatch::Init
      *  Purpose:
-     *      Initialize with the response object so that the
-     *  Watch notifications can be sent back to the respective plugins.
+     *      Initialize with the response object so that the Watch
+     *  notifications can be sent back to the respective plugins.
+     *
+     *  pResponse - IN - pointer to the response object which gets used to
+     *                   initialize the IRMAPropWatch object. the response
+     *                   object gets AddRef'd in the Init method.
      */
     STDMETHOD(Init)		(THIS_
 				IRMAPropWatchResponse*	pResponse) PURE;
@@ -423,18 +615,32 @@ DECLARE_INTERFACE_(IRMAPropWatch, IUnknown)
 
     /************************************************************************
      *  Method:
-     *      IRMAPropWatch::SetWatchByXYZ
+     *      IRMAPropWatch::SetWatchByName
      *  Purpose:
-     *      Sets a watch-point on the Property whose name or id is
-     *  specified. In case the mentioned Property gets modified or deleted
-     *  a notification of that will be sent to the object which set the
+     *      Sets a watch-point on the Property whose name is passed in.
+     *  In case the mentioned Property gets modified or deleted a
+     *  notification of that will be sent to the object which set the
      *  watch-point.
+     *
+     *  pName - IN - name of Property on which a watch point is to be added
      */
     STDMETHOD_(UINT32, SetWatchByName)	(THIS_
 					const char*	pName) PURE;
 
+    /************************************************************************
+     *  Method:
+     *      IRMAPropWatch::SetWatchById
+     *  Purpose:
+     *      Sets a watch-point on the Property whose name is passed in.
+     *  In case the mentioned Property gets modified or deleted a
+     *  notification of that will be sent to the object which set the
+     *  watch-point.
+     *
+     *  ulId - IN - unique id of Property on which a watch point is to be 
+     *              added
+     */
     STDMETHOD_(UINT32, SetWatchById)	(THIS_
-					const UINT32	id) PURE;
+					const UINT32	ulId) PURE;
 
     /************************************************************************
      *  Method:
@@ -446,15 +652,25 @@ DECLARE_INTERFACE_(IRMAPropWatch, IUnknown)
 
     /************************************************************************
      *  Method:
-     *      IRMAPropWatch::ClearWatchByXYZ
+     *      IRMAPropWatch::ClearWatchByName
      *  Purpose:
-     *      Clears a watch-point based on the Property's name or id.
+     *      Clears a watch-point based on the Property's name.
+     *
+     *  pName - IN - name of Property whose watch point is to be cleared
      */
     STDMETHOD(ClearWatchByName)		(THIS_
 					const char*	pName) PURE;
 
+    /************************************************************************
+     *  Method:
+     *      IRMAPropWatch::ClearWatchById
+     *  Purpose:
+     *      Clears a watch-point based on the Property's id.
+     *
+     *  ulId - IN - unique id of Property whose watch point is to be cleared
+     */
     STDMETHOD(ClearWatchById)		(THIS_
-					const UINT32	id) PURE;
+					const UINT32	ulId) PURE;
 };
 
 
@@ -466,8 +682,8 @@ DECLARE_INTERFACE_(IRMAPropWatch, IUnknown)
  *
  *  Purpose:
  *
- *	Interface for notification of additions/modifications/deletions
- *  of properties in the registry which are being watched.
+ *	Interface for notification of additions/modifications/deletions of
+ *  properties in the registry which are being watched.
  *
  *  IID_IRMAPropWatchResponse:
  *
@@ -501,12 +717,13 @@ DECLARE_INTERFACE_(IRMAPropWatchResponse, IUnknown)
      *  Method:
      *      IRMAPropWatchResponse::AddedProp
      *  Purpose:
-     *      Gets called when a watched Property gets modified. It passes
-     *  the id of the Property just modified, its datatype and the
-     *  id of its immediate parent COMPOSITE property.
+     *      Gets called when a new Property gets added under the Property 
+     *  on which the Watch was set. It passes the id of the Property just 
+     *  added, its datatype and the id of its immediate parent COMPOSITE 
+     *  property.
      */
     STDMETHOD(AddedProp)	(THIS_
-				const UINT32		id,
+				const UINT32		ulId,
 				const RMAPropType   	propType,
 				const UINT32		ulParentID) PURE;
 
@@ -519,7 +736,7 @@ DECLARE_INTERFACE_(IRMAPropWatchResponse, IUnknown)
      *  id of its immediate parent COMPOSITE property.
      */
     STDMETHOD(ModifiedProp)	(THIS_
-				const UINT32		id,
+				const UINT32		ulId,
 				const RMAPropType   	propType,
 				const UINT32		ulParentID) PURE;
 
@@ -532,7 +749,7 @@ DECLARE_INTERFACE_(IRMAPropWatchResponse, IUnknown)
      *  its immediate parent COMPOSITE property.
      */
     STDMETHOD(DeletedProp)	(THIS_
-				const UINT32		id,
+				const UINT32		ulId,
 				const UINT32		ulParentID) PURE;
 };
 
@@ -544,8 +761,8 @@ DECLARE_INTERFACE_(IRMAPropWatchResponse, IUnknown)
  *
  *  Purpose:
  *
- *	Interface to get IRMAActiveUser responsible for a particular property from
- *  the registry.
+ *	Interface to get IRMAActiveUser responsible for a particular property 
+ *  from the registry.
  *
  *  IID_IRMAActiveRegistry:
  *
@@ -650,12 +867,13 @@ DECLARE_INTERFACE_(IRMAActiveRegistry, IUnknown)
  *
  *  Purpose:
  *
- *	An IRMAActivePropUser can be set as the active user of a property in an 
- *  IRMAActiveRegistry.  This causes the IRMAActivePropUser to be consulted everytime
- *  someone wants to change a property.  The difference between this and a prop watch
- *  is that this is async, and can call a done method with failure to cause the prop
- *  to not be set, and this get called instead of calling into the IRMAPNReg.
-
+ *	An IRMAActivePropUser can be set as the active user of a property in 
+ *  an IRMAActiveRegistry. This causes the IRMAActivePropUser to be consulted 
+ *  everytime someone wants to change a property. The difference between this 
+ *  and a prop watch is that this is async, and can call a done method with 
+ *  failure to cause the prop to not be set, and this get called instead of 
+ *  calling into the IRMAPNReg.
+ *
  *  IID_IRMAActivePropUser:
  *
  *	{00000604-0901-11d1-8B06-00A024406D59}
@@ -729,8 +947,8 @@ DECLARE_INTERFACE_(IRMAActivePropUser, IUnknown)
  *
  *  Purpose:
  *
- *	Gets responses from IRMAActivePropUser for queries to set properties in
- *  the IRMAActiveRegistry.
+ *	Gets responses from IRMAActivePropUser for queries to set properties
+ *  in the IRMAActiveRegistry.
  *
  *
  *  IID_IRMAActivePropUserResponse:
@@ -833,4 +1051,55 @@ DECLARE_INTERFACE_(IRMACopyRegistry, IUnknown)
 			    const char* pFrom,
 			    const char* pTo) PURE;
 };
+
+
+/*
+ * 
+ *  Interface:
+ *
+ *	IRMAPNRegistryAltStringHandling
+ *
+ *  Purpose:
+ *
+ *	Tells the registry about alternate handling of PT_STRING types.
+ *
+ *
+ *  IID_IRMAPNRegistryAltStringHandling
+ *
+ *	{00000607-0901-11d1-8B06-00A024406D59}
+ *
+ */
+DEFINE_GUID(IID_IRMAPNRegistryAltStringHandling, 0x00000607, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 
+			0xa0, 0x24, 0x40, 0x6d, 0x59);
+
+#undef  INTERFACE
+#define INTERFACE   IRMAPNRegistryAltStringHandling
+
+DECLARE_INTERFACE_(IRMAPNRegistryAltStringHandling, IUnknown)
+{
+    /*
+     *	IUnknown methods
+     */
+    STDMETHOD(QueryInterface)	(THIS_
+				REFIID riid,
+				void** ppvObj) PURE;
+
+    STDMETHOD_(ULONG32,AddRef)	(THIS) PURE;
+
+    STDMETHOD_(ULONG32,Release)	(THIS) PURE;
+
+    /************************************************************************
+    * IRMAPNRegistryAltStringHandling::SetStringAccessAsBufferById
+    *
+    *   For those times when you added a property as a buffer, but wish it
+    *   were a string (and of course, people now rely on the fact that it's
+    *   a buffer)...  Create the property as a string and then pass this
+    *   method it's ID.  The property will now be accessible/setable as a,
+    *   but it will still be a string!
+    */
+    STDMETHOD (SetStringAccessAsBufferById)  (THIS_
+					      UINT32 ulId) PURE;
+};
+
+
 #endif /* _RMAMON_H_ */

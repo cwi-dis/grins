@@ -27,6 +27,7 @@ typedef _INTERFACE   IRMAGroupManager		    IRMAGroupManager;
 typedef _INTERFACE   IRMAGroupSink		    IRMAGroupSink;
 typedef _INTERFACE   IRMAValues			    IRMAValues;
 
+
 /****************************************************************************
  * 
  *  Interface:
