@@ -42,7 +42,6 @@ def convertaudiofile(u, dstdir, file, node, progress = None):
 	engine.SetDoOutputMimeType(producer.MIME_REALIMAGEMAP, 0)
 	engine.SetDoOutputMimeType(producer.MIME_REALPIX, 0)
 	engine.SetRealTimeEncoding(0)
-	engine.SetDoMultiRateEncoding(1)
 	cp = engine.GetClipProperties()
 	ts = engine.GetTargetSettings()
 	ts.RemoveAllTargetAudiences()
@@ -52,11 +51,14 @@ def convertaudiofile(u, dstdir, file, node, progress = None):
 		cp.SetCopyright(MMAttrdefs.getattr(node, 'copyright'))
 		ts.SetAudioContent(MMAttrdefs.getattr(node, 'project_audiotype'))
 		target = MMAttrdefs.getattr(node, 'project_targets')
+		ntargets = 0
 		for i in range(6):
 			if (1 << i) & target:
 				ts.AddTargetAudience(i)
-		if not target:
+				ntargets = ntargets + 1
+		if ntargets == 0:
 			ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
+			ntargets = ntargets + 1
 	else:
 		# we don't know nothin' about the node so use some defaults
 		cp.SetTitle('')
@@ -65,6 +67,8 @@ def convertaudiofile(u, dstdir, file, node, progress = None):
 		ts.SetAudioContent(producer.ENC_AUDIO_CONTENT_VOICE)
 		ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
 		ts.SetVideoQuality(producer.ENC_VIDEO_QUALITY_NORMAL)
+		ntargets = 1
+	engine.SetDoMultiRateEncoding(ntargets != 1)
 	cp.SetPerfectPlay(1)
 	cp.SetMobilePlay(0)
 	cp.SetSelectiveRecord(0)
@@ -242,7 +246,6 @@ def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	engine.SetDoOutputMimeType(producer.MIME_REALIMAGEMAP, 0)
 	engine.SetDoOutputMimeType(producer.MIME_REALPIX, 0)
 	engine.SetRealTimeEncoding(0)
-	engine.SetDoMultiRateEncoding(1)
 	cp = engine.GetClipProperties()
 	ts = engine.GetTargetSettings()
 	ts.RemoveAllTargetAudiences()
@@ -252,18 +255,23 @@ def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		cp.SetCopyright(MMAttrdefs.getattr(node, 'copyright'))
 		ts.SetVideoQuality(MMAttrdefs.getattr(node, 'project_videotype'))
 		target = MMAttrdefs.getattr(node, 'project_targets')
+		ntargets = 0
 		for i in range(6):
 			if (1 << i) & target:
 				ts.AddTargetAudience(i)
-		if not target:
+				ntargets = ntargets + 1
+		if ntargets == 0:
 			ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
+			ntargets = ntargets + 1
 	else:
 		# we don't know nothin' about the node so use some defaults
 		cp.SetTitle('')
 		cp.SetAuthor('')
 		cp.SetCopyright('')
 		ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
+		ntargets = 1
 		ts.SetVideoQuality(producer.ENC_VIDEO_QUALITY_NORMAL)
+	engine.SetDoMultiRateEncoding(ntargets != 1)
 	cp.SetPerfectPlay(1)
 	cp.SetMobilePlay(0)
 	cp.SetSelectiveRecord(0)
