@@ -1868,6 +1868,12 @@ class AnimateElementParser:
 				self.__domval = 0, 0, 0, 0	
 			return 1
 
+		if self.__attrname == 'color':
+			self.__grinsattrname = 'fgcolor'
+			self.__attrtype = 'color'
+			self.__domval = MMAttrdefs.getattr(self.__target, 'fgcolor')
+			return 1
+
 		self.__domval = MMAttrdefs.getattr(self.__target, self.__attrname)
 		self.__grinsattrname = self.__attrname # low probability to be true
 		self.__attrtype = MMAttrdefs.getattrtype(self.__attrname)
