@@ -234,12 +234,24 @@ class HierarchyView(HierarchyViewDialog):
 		self.select(x, y)
 
 	def dropfile(self, dummy, window, event, params):
-		print 'HVIEW DROP', window, event, params
+		import MMurl
 		x, y, filename = params
-		self.select(x, y)
-		if self.focusobj:
-			self.focusobj.select()
-			self.focusobj.changefile(filename)
+		obj = self.whichhit(x, y)
+		if not obj:
+			windowinterface.beep()
+			return
+		self.init_display()
+		self.setfocusobj(obj)
+		url = MMurl.pathname2url(filename)
+		if obj.node.GetType() in MMNode.leaftypes:
+			em = self.editmgr
+			if not em.transaction():
+				self.render()
+				return
+			obj.node.SetAttr('file', url)
+			em.commit()
+		else:
+			self.create(0, url)
 
 
 	#################################################
@@ -309,7 +321,7 @@ class HierarchyView(HierarchyViewDialog):
 		Clipboard.setclip('node', node.DeepCopy())
 		self.aftersetfocus()
 
-	def create(self, where):
+	def create(self, where, url = None):
 		node = self.focusnode
 		if node is None:
 			windowinterface.showmessage(
@@ -323,17 +335,23 @@ class HierarchyView(HierarchyViewDialog):
 				mtype = 'error')
 			return
 		self.toplevel.setwaiting()
-		type = node.GetType()
-		if where == 0:
-			children = node.GetChildren()
-			if children:
-				type = children[0].GetType()
+		if url is None:
+			type = node.GetType()
+			if where == 0:
+				children = node.GetChildren()
+				if children:
+					type = children[0].GetType()
+		else:
+			type = 'ext'
 		if where <> 0:
 			layout = MMAttrdefs.getattr(parent, 'layout')
 		else:
 			layout = MMAttrdefs.getattr(node, 'layout')
 		node = self.root.context.newnode(type)
-		if layout == 'undefined' and self.toplevel.layoutview.curlayout is not None:
+		if url is not None:
+			node.SetAttr('file', url)
+		if layout == 'undefined' and \
+		   self.toplevel.layoutview.curlayout is not None:
 			node.SetAttr('layout', self.toplevel.layoutview.curlayout)
 		if self.insertnode(node, where):
 			import NodeInfo
