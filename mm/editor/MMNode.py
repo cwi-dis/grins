@@ -903,7 +903,10 @@ class MMNode(MMNodeBase.MMNode):
 			# and we must catch the timeout to terminate
 			# the node
 			alist.append((SYNC, (duration, self)))
-			if not added_entry:
+			if self.undef_dur:
+				plist.append((SYNC_DONE, self))
+				self.undef_dur = 0
+			elif not added_entry:
 				result.append(([(SYNC_DONE, self)],
 					       [(SCHED_DONE, self)] + out1))
 			else:
