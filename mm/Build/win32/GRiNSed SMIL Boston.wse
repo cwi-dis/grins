@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-73.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-74x.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -1453,6 +1453,236 @@ item: If/While Statement
   Value=A
   Flags=00001010
 end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\RealPix.tiff
+  Destination=%MAINDIR%\Templates\icons\RealPix.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\RealAudio.tiff
+  Destination=%MAINDIR%\Templates\icons\RealAudio.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\prefetch.tiff
+  Destination=%MAINDIR%\Templates\icons\prefetch.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\null.tiff
+  Destination=%MAINDIR%\Templates\icons\null.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\layout.tiff
+  Destination=%MAINDIR%\Templates\icons\layout.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\image.tiff
+  Destination=%MAINDIR%\Templates\icons\image.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\html.tiff
+  Destination=%MAINDIR%\Templates\icons\html.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\dropbox.tiff
+  Destination=%MAINDIR%\Templates\icons\dropbox.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\comment.tiff
+  Destination=%MAINDIR%\Templates\icons\comment.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\animate.tiff
+  Destination=%MAINDIR%\Templates\icons\animate.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\RealVideo.tiff
+  Destination=%MAINDIR%\Templates\icons\RealVideo.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\S2_21_adapt1A.grins
+  Destination=%MAINDIR%\Templates\S2_21_adapt1A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\S2_99_empty.grins
+  Destination=%MAINDIR%\Templates\S2_99_empty.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\empty_S2.bmp
+  Destination=%MAINDIR%\Templates\icons\empty_S2.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\adapt_1_1A.bmp
+  Destination=%MAINDIR%\Templates\icons\adapt_1_1A.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\slideshow_1A.bmp
+  Destination=%MAINDIR%\Templates\icons\slideshow_1A.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\video_3_1A.bmp
+  Destination=%MAINDIR%\Templates\icons\video_3_1A.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\video_2_1A.bmp
+  Destination=%MAINDIR%\Templates\icons\video_2_1A.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\video_1_1A.bmp
+  Destination=%MAINDIR%\Templates\icons\video_1_1A.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\slideshow_2AC.bmp
+  Destination=%MAINDIR%\Templates\icons\slideshow_2AC.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\slideshow_2A.bmp
+  Destination=%MAINDIR%\Templates\icons\slideshow_2A.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\video_4_1A.bmp
+  Destination=%MAINDIR%\Templates\icons\video_4_1A.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\slideshow_2Ax.bmp
+  Destination=%MAINDIR%\Templates\icons\slideshow_2Ax.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\slideshow_2ACx.bmp
+  Destination=%MAINDIR%\Templates\icons\slideshow_2ACx.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\adapt_1_1Ax.bmp
+  Destination=%MAINDIR%\Templates\icons\adapt_1_1Ax.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\adapt_3_1Ax.bmp
+  Destination=%MAINDIR%\Templates\icons\adapt_3_1Ax.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\adapt_2_1Ax.bmp
+  Destination=%MAINDIR%\Templates\icons\adapt_2_1Ax.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\adapt_4_1Ax.bmp
+  Destination=%MAINDIR%\Templates\icons\adapt_4_1Ax.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\ring.rt
+  Destination=%MAINDIR%\Templates\media\ring.rt
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\text.tiff
+  Destination=%MAINDIR%\Templates\icons\text.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\svg.tiff
+  Destination=%MAINDIR%\Templates\icons\svg.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\Back3.gif
+  Destination=%MAINDIR%\Templates\media\Back3.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\Back2.gif
+  Destination=%MAINDIR%\Templates\media\Back2.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\external_player.html
+  Destination=%MAINDIR%\Templates\external_player.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\video.tiff
+  Destination=%MAINDIR%\Templates\icons\video.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\embedded_player.html
+  Destination=%MAINDIR%\Templates\embedded_player.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\S2_14_video1A.grins
+  Destination=%MAINDIR%\Templates\S2_14_video1A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\GetGRiNS.gif
+  Destination=%MAINDIR%\Templates\GetGRiNS.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\S2_01_slideshow1A.grins
+  Destination=%MAINDIR%\Templates\S2_01_slideshow1A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\S2_03_slideshow2AC.grins
+  Destination=%MAINDIR%\Templates\S2_03_slideshow2AC.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\sound.tiff
+  Destination=%MAINDIR%\Templates\icons\sound.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\S2_11_video1A.grins
+  Destination=%MAINDIR%\Templates\S2_11_video1A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\S2_12_video1A.grins
+  Destination=%MAINDIR%\Templates\S2_12_video1A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\S2_13_video1A.grins
+  Destination=%MAINDIR%\Templates\S2_13_video1A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\S2_02_slideshow2A.grins
+  Destination=%MAINDIR%\Templates\S2_02_slideshow2A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\RealText.tiff
+  Destination=%MAINDIR%\Templates\icons\RealText.tiff
+  Flags=0000000010000010
+end
 item: Set Variable
   Variable=INSTALLDLLS
   Value=no
@@ -1549,16 +1779,6 @@ end
 item: End Block
 end
 item: End Block
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\empty_S2.grins
-  Destination=%MAINDIR%\Templates\empty_S2.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\empty_S2.bmp
-  Destination=%MAINDIR%\Templates\empty_S2.bmp
-  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\GRiNS-Icons\svg.tiff
@@ -1781,11 +2001,6 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\SNAP1_empty_slideshow.grins
-  Destination=%MAINDIR%\Templates\SNAP1_empty_slideshow.grins
-  Flags=0000000010000010
-end
-item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\tokr3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\tokr3260.dll
   Flags=0000000010000011
@@ -1804,16 +2019,6 @@ item: Install File
   Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
   Destination=%MAINDIR%\WebPro32.ocx
   Flags=0001001010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\extended-slideshow.bmp
-  Destination=%MAINDIR%\Templates\extended-slideshow.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A6_extended-slideshow.grins
-  Destination=%MAINDIR%\Templates\A6_extended-slideshow.grins
-  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\_socket.pyd
@@ -1843,16 +2048,6 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\GRiNS-Icons\RealAudio.tiff
   Destination=%MAINDIR%\GRiNS-Icons\RealAudio.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\realtext-template.rt
-  Destination=%MAINDIR%\Templates\media\realtext-template.rt
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\qsg1.bmp
-  Destination=%MAINDIR%\Templates\qsg1.bmp
   Flags=0000000010000010
 end
 item: Install File
@@ -1886,11 +2081,6 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A5_empty.grins
-  Destination=%MAINDIR%\Templates\A5_empty.grins
-  Flags=0000000010000010
-end
-item: Install File
   Source=d:\ufs\mm\cmif\GRiNS-Icons\null.tiff
   Destination=%MAINDIR%\GRiNS-Icons\null.tiff
   Flags=0000000010000010
@@ -1903,116 +2093,6 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\GRiNS-Icons\RealText.tiff
   Destination=%MAINDIR%\GRiNS-Icons\RealText.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\QSG1-Slideshow.grins
-  Destination=%MAINDIR%\Templates\QSG1-Slideshow.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A4_adaptive_content.grins
-  Destination=%MAINDIR%\Templates\A4_adaptive_content.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A3_videoshow-bkaudio-img.grins
-  Destination=%MAINDIR%\Templates\A3_videoshow-bkaudio-img.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\hd_bkgd-image.jpg
-  Destination=%MAINDIR%\Templates\media\hd_bkgd-image.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A1_simple_slideshow.grins
-  Destination=%MAINDIR%\Templates\A1_simple_slideshow.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\video_2x_audio.bmp
-  Destination=%MAINDIR%\Templates\video_2x_audio.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\adaptive.bmp
-  Destination=%MAINDIR%\Templates\adaptive.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\freeplayer_g2.gif
-  Destination=%MAINDIR%\Templates\freeplayer_g2.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\GetGRiNS.gif
-  Destination=%MAINDIR%\Templates\GetGRiNS.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\realpix-template.rp
-  Destination=%MAINDIR%\Templates\media\realpix-template.rp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\embedded_player.html
-  Destination=%MAINDIR%\Templates\embedded_player.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\external_player.html
-  Destination=%MAINDIR%\Templates\external_player.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\rp-slide-3.jpg
-  Destination=%MAINDIR%\Templates\media\rp-slide-3.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\rp-slide-2.jpg
-  Destination=%MAINDIR%\Templates\media\rp-slide-2.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\rp-slide-1.jpg
-  Destination=%MAINDIR%\Templates\media\rp-slide-1.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\slide-3.jpg
-  Destination=%MAINDIR%\Templates\media\slide-3.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\slide-2.jpg
-  Destination=%MAINDIR%\Templates\media\slide-2.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\slide-1.jpg
-  Destination=%MAINDIR%\Templates\media\slide-1.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\simple.rp
-  Destination=%MAINDIR%\Templates\media\simple.rp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\hd_slide_1.jpg
-  Destination=%MAINDIR%\Templates\media\hd_slide_1.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\bkgd-image.jpg
-  Destination=%MAINDIR%\Templates\media\bkgd-image.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\slideshow_2x_audio.bmp
-  Destination=%MAINDIR%\Templates\slideshow_2x_audio.bmp
   Flags=0000000010000010
 end
 item: Install File
