@@ -117,6 +117,7 @@ class MovieChannel(ChannelWindow):
 
 	def do_hide(self):
 		self.arm_movie = None
+		self.playstop() # XXXX Is this correct?
 		
 	def playstop(self):
 		if debug: print 'MovieChannel: playstop'
@@ -125,6 +126,7 @@ class MovieChannel(ChannelWindow):
 		self.play_movie.StopMovie()
 		self.playdone(1)
 		windowinterface.cancelidleproc(self._playsome)
+		self.play_movie = None
 
 	def setpaused(self, paused):
 		pass # XXXX pause!
