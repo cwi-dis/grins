@@ -22,12 +22,10 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 	def tkStartup(self, params):
 		hdc = params
 		self.hdc = hdc
-		self.tkstartupdcid = 0
-		self.tkstartupdcid = wingdi.SaveDC(hdc)
 
 		# context vars
 		self.tk = Tk()
-		self.tk.setDefaults()
+		self.tk.saveid = wingdi.SaveDC(hdc)
 		self._tkstack = []
 
 		wingdi.SetGraphicsMode(hdc, win32con.GM_ADVANCED)
@@ -38,7 +36,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 	def tkShutdown(self):
 		wingdi.SetGraphicsMode(self.hdc, win32con.GM_COMPATIBLE)
 		wingdi.SetMapMode(self.hdc, win32con.MM_TEXT) 
-		wingdi.RestoreDC(self.hdc, self.tkstartupdcid)
+		wingdi.RestoreDC(self.hdc, self.tk.saveid)
 
 	# we start rendering
 	def tkOnBeginRendering(self, size, viewbox):
@@ -66,32 +64,29 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 	def tkOnBeginContext(self):
 		# push current tkctx
 		self.saveTk()
+
+		# save dc and hold its id for restore
+		self.tk.saveid = wingdi.SaveDC(self.hdc)
 		
 		# establish tk pen
 		stroke = self.getStyleAttr('stroke')
 		strokeWidth = self.getStyleAttr('stroke-width')
 		if stroke is not None and stroke!='none':
 			self.tk.pen = wingdi.ExtCreatePen(strokeWidth, stroke)
-		else:
-			self.tk.pen = wingdi.GetStockObject(win32con.BLACK_PEN)
-		wingdi.SelectObject(self.hdc, self.tk.pen)
+			wingdi.SelectObject(self.hdc, self.tk.pen)
 
 		# establish tk brush
 		fill = self.getStyleAttr('fill')
 		if fill is not None and fill != 'none':
 			self.tk.brush = wingdi.CreateSolidBrush(fill)
-		else:
-			self.tk.brush = wingdi.GetStockObject(win32con.WHITE_BRUSH)
-		wingdi.SelectObject(self.hdc, self.tk.brush)
+			wingdi.SelectObject(self.hdc, self.tk.brush)
 
 		# establish tk font
 		fontFamily = self.getStyleAttr('font-family')
 		fontSize = self.getStyleAttr('font-size')
 		if fontFamily is not None:
 			self.tk.font = wingdi.CreateFontIndirect({'name': fontFamily, 'height':fontSize,  'outprecision':win32con.OUT_OUTLINE_PRECIS, })
-		else:
-			self.tk.font = wingdi.GetStockObject(win32con.SYSTEM_FONT)
-		wingdi.SelectObject(self.hdc, self.tk.font)
+			wingdi.SelectObject(self.hdc, self.tk.font)
 
 		# establish tk transform
 		wingdi.SetWorldTransform(self.hdc, self.ctm.getElements())
@@ -99,20 +94,20 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 	# end of context
 	# self state reflects the restored context
 	def tkOnEndContext(self):
-		pen, brush, font = self.tk.getHandles()
-		self.restoreTk()
+		# restore dc to its previous state before deleting objects
+		wingdi.RestoreDC(self.hdc, self.tk.saveid)
 
 		if self.tk.pen:
-			wingdi.SelectObject(self.hdc, self.tk.pen)
-			wingdi.DeleteObject(pen)
+			wingdi.DeleteObject(self.tk.pen)
 	
 		if self.tk.brush:
-			wingdi.SelectObject(self.hdc, self.tk.brush)
-			wingdi.DeleteObject(brush)
+			wingdi.DeleteObject(self.tk.brush)
 
 		if self.tk.font:
-			wingdi.SelectObject(self.hdc, self.tk.font)
-			wingdi.DeleteObject(font)
+			wingdi.DeleteObject(self.tk.font)
+
+		# restore previous tk
+		self.restoreTk()
 
 		# establish tk transform
 		wingdi.SetWorldTransform(self.hdc, self.ctm.getElements())
@@ -298,7 +293,9 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		return int(cx+0.5), int(cy+0.5)
 		
 	def saveTk(self):
+		assert self.tk.saveid != 0, 'invalid tk'
 		self._tkstack.append(self.tk.getHandles())
+		self.tk.reset()
 
 	def restoreTk(self):
 		assert len(self._tkstack)>0, 'unpaired save/restore tk'
@@ -307,7 +304,6 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 	# XXX: use PolyDraw to speed up
 	def drawPathSegList(self, pathSegList):
 		PathSeg = svgtypes.PathSeg
-		points = []
 		lastX = 0
 		lastY = 0
 		lastC = None
@@ -327,19 +323,16 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					if seg._type == PathSeg.SVG_PATHSEG_MOVETO_REL:
 						lastX, lastY = lastX + seg._x, lastY + seg._y
 						startP = lastX, lastY
-						points.append(startP)
 						wingdi.MoveToEx(self.hdc, startP)
 					else:
 						lastX, lastY = seg._x, seg._y
 						startP = (lastX, lastY)
-						points.append(startP)
 						wingdi.MoveToEx(self.hdc, startP)
 				isstart = 0
 			else:
 				if seg._type == PathSeg.SVG_PATHSEG_CLOSEPATH:
 					if startP:
 						lastX, lastY = startP
-						points.append(startP)
 						wingdi.CloseFigure(self.hdc)
 						startP = None
 					lastC = None
@@ -347,14 +340,12 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 
 				elif seg._type == PathSeg.SVG_PATHSEG_MOVETO_ABS:
 					lastX, lastY = seg._x, seg._y
-					points.append((lastX, lastY))
 					lastC = None
 					wingdi.MoveToEx(self.hdc, (lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_MOVETO_REL:
 					if seg._x != 0 or seg._y != 0:
 						lastX, lastY = lastX + seg._x, lastY + seg._y
-						points.append((lastX, lastY))
 						lastC = None
 						wingdi.MoveToEx(self.hdc, (lastX, lastY))
 
@@ -362,36 +353,30 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					if seg._x != lastX or seg._y != lastY:
 						lastX, lastY = seg._x, seg._y
 						lastC = None
-						points.append((lastX, lastY))
 						wingdi.LineTo(self.hdc, (seg._x, seg._y))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_REL:
 					lastX, lastY = lastX + seg._x, lastY + seg._y
 					lastC = None
-					points.append((lastX, lastY))
 					wingdi.LineTo(self.hdc, (lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_ABS:
 					lastX = seg._x
-					points.append((lastX, lastY))
 					lastC = None
 					wingdi.LineTo(self.hdc, (lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_REL:
 					lastX = lastX + seg._x
-					points.append((lastX, lastY))
 					lastC = None
 					wingdi.LineTo(self.hdc, (lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_ABS:
 					lastY = seg._y
-					points.append((lastX, lastY))
 					lastC = None
 					wingdi.LineTo(self.hdc, (lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_REL:
 					lastY = lastY + seg._y
-					points.append((lastX, lastY))
 					lastC = None
 					wingdi.LineTo(self.hdc, (lastX, lastY))
 
@@ -401,7 +386,6 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = seg._x2,seg._y2
 					lastX, lastY = seg._x, seg._y
-					points.append((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_REL:
 					x1, y1, x2, y2, x, y = lastX + seg._x1, lastY + seg._y1, lastX + seg._x2, lastY + seg._y2, lastX + seg._x, lastY + seg._y
@@ -409,7 +393,6 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = lastX + seg._x2,lastY + seg._y2
 					lastX, lastY = lastX + seg._x,lastY + seg._y
-					points.append((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_SMOOTH_ABS:
 					if lastC is None:
@@ -419,7 +402,6 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = seg._x2, seg._y2
 					lastX, lastY = seg._x, seg._y
-					points.append((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_SMOOTH_REL:
 					if lastC is None:
@@ -429,21 +411,18 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = lastX + seg._x2, lastY + seg._y2
 					lastX, lastY = lastX + seg._x, lastY + seg._y
-					points.append((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_ABS:
 					bl = [(lastX, lastY),(seg._x1, seg._y1),(seg._x, seg._y)]
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = seg._x1, seg._y1
 					lastX, lastY = seg._x, seg._y
-					points.append((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_REL:
 					bl = [(lastX, lastY),(lastX + seg._x1, lastY + seg._y1),(lastX + seg._x, lastY + seg._y)]
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = lastX + seg._x1, lastY + seg._y1
 					lastX, lastY = lastX + seg._x, lastY + seg._y
-					points.append((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS:
 					if lastC is None:
@@ -453,7 +432,6 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = nextC
 					lastX, lastY = seg._x, seg._y
-					points.append((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL:
 					if lastC is None:
@@ -463,7 +441,6 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = nextC
 					lastX, lastY = lastX+seg._x, lastY+seg._y
-					points.append((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_ARC_ABS:
 					angle = int(seg._angle)/360
@@ -505,7 +482,6 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 						wingdi.SetArcDirection(self.hdc, olddir)	
 					lastC = None
 					lastX, lastY = seg._x, seg._y
-					points.append((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_ARC_REL:
 					angle = int(seg._angle)%360
@@ -547,7 +523,6 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 						wingdi.SetArcDirection(self.hdc, olddir)
 					lastC = None
 					lastX, lastY = lastX + seg._x, lastY + seg._y
-					points.append((lastX, lastY))
 		
 
 ######################
@@ -556,16 +531,19 @@ class Tk:
 		self.pen = 0
 		self.brush = 0
 		self.font = 0
-	
+		self.saveid = 0 # previous SaveDC id
+
 	def setDefaults(self):
 		self.pen = wingdi.GetStockObject(win32con.BLACK_PEN)
 		self.brush = wingdi.GetStockObject(win32con.WHITE_BRUSH)
 		self.font = wingdi.GetStockObject(win32con.SYSTEM_FONT)
-
+	
+	def reset(self):
+		self.pen, self.brush, self.font, self.saveid = 0, 0, 0, 0
+		
 	def getHandles(self):
-		return self.pen, self.brush, self.font
+		return self.pen, self.brush, self.font, self.saveid
 
 	def setHandles(self, ht):
-		self.pen, self.brush, self.font = ht
-
+		self.pen, self.brush, self.font, self.saveid = ht
 
