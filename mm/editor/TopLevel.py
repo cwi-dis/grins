@@ -8,6 +8,7 @@ import fl
 from FL import *
 
 import glwindow
+import GLLock
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 
@@ -247,20 +248,39 @@ class TopLevel(ViewDialog, BasicDialog):
 	#
 	# Callbacks.
 	#
+	def before_call(self):
+##		print 'callback start'
+		self.locked = 0
+		if GLLock.gl_lock:
+##			print 'try acquire'
+			if not GLLock.gl_lock.acquire(0):
+##				print 'acquire failed'
+				self.locked = 1
+##			print 'release'
+			GLLock.gl_lock.release()
+	def after_call(self):
+##		print 'callback end'
+		if self.locked:
+##			print 're-acquire'
+			GLLock.gl_lock.acquire()
 	def play_callback(self, obj, arg):
+		self.before_call()
 		if obj.get_button():
 			self.setwaiting()
 			self.player.show()
 			self.player.playsubtree(self.root)
 			self.setready()
+		self.after_call()
 	#
 	def view_callback(self, obj, view):
+		self.before_call()
 		if obj.get_button():
 			self.setwaiting()
 			view.show()
 			self.setready()
 		else:
 			view.hide()
+		self.after_call()
 	#
 	def open_callback(self, obj, arg):
 		if not obj.pushed: return
@@ -286,7 +306,9 @@ class TopLevel(ViewDialog, BasicDialog):
 	#
 	def save_callback(self, obj, arg):
 		if not obj.pushed: return
+		self.before_call()
 		ok = self.save_to_file(self.filename)
+		self.after_call()
 		obj.set_button(0)
 	#
 	def saveas_callback(self, obj, arg):
@@ -300,9 +322,11 @@ class TopLevel(ViewDialog, BasicDialog):
 		if not filename:
 			obj.set_button(0)
 			return
+		self.before_call()
 		if self.save_to_file(filename):
 			self.filename = filename
 			self.fixtitle()
+		self.after_call()
 		obj.set_button(0)
 	#
 	def fixtitle(self):
@@ -400,7 +424,9 @@ class TopLevel(ViewDialog, BasicDialog):
 	def close_callback(self, obj, arg):
 		if not obj.pushed:
 			return
+		self.before_call()
 		self.close()
+		self.after_call()
 	#
 	def close(self):
 		ok = self.close_ok()
@@ -448,3 +474,9 @@ class TopLevel(ViewDialog, BasicDialog):
 		BasicDialog.setready(self)
 		for v in self.views:
 			v.setready()
+
+	def add_anchor(self, button, func, arg):
+		glwindow.add_anchor(button, func, arg)
+
+	def del_anchor(self, button):
+		glwindow.del_anchor(button)

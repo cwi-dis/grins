@@ -12,7 +12,7 @@ from HDTL import HD, TL
 from AnchorDefs import *
 import SR
 
-import fl	# For fl.show_message only
+import dialogs
 
 # Priorities for the various events:
 N_PRIO = 5
@@ -58,7 +58,7 @@ class SchedulerContext():
 				ac, list = self.sractions[i]
 				print i,'\t',ac, '\t', SR.evlist2string(list)
 		print '------------ #prearms outstanding:'
-		for i in self.channelnames:
+		for i in self.channels:
 			print i, '\t', len(self.prearmlists[i])
 		print '----------------------------------'
 
@@ -77,8 +77,8 @@ class SchedulerContext():
 		if err:
 			enode, echan = err
 			ename = MMAttrdefs.getattr(enode, 'name')
-			fl.show_message('Warning: overlap in channels', \
-				  'channels:'+(`echan`[1:-1]), \
+			dialogs.showmessage('Warning: overlap in channels\n'+\
+				  'channels:'+(`echan`[1:-1])+'\n'+\
 				  'parent node:'+ename)
 			#XXXX
 			return 0
@@ -86,21 +86,21 @@ class SchedulerContext():
 		# Create per-channel list of prearms
 		#
 		self.prearmlists = {}
-		for ch in self.channelnames:
+		for ch in self.channels:
 			self.prearmlists[ch] = []
-		GenAllPrearms(self.playroot, self.prearmlists)
+		self.parent.GenAllPrearms(self.playroot, self.prearmlists)
 		self.playroot.EndPruneTree()
 		return 1
 	#
-	def stopchannels(self):
+	def startcontextchannels(self):
 		for ch in self.channels:
-			ch.stop()
-	def softresetchannels(self):
+			ch.startcontext(self)
+	def stopcontextchannels(self):
 		for ch in self.channels:
-			ch.softreset()
-	def setrate(self, rate):
+			ch.stopcontext(self)
+	def setpaused(self, paused):
 		for ch in self.channels:
-			ch.setrate(rate)
+			ch.setpaused(paused)
 	#
 	# getnextprearm returns next prearm event due for given channel
 	#
@@ -125,7 +125,7 @@ class SchedulerContext():
 		prearmnowlist = []
 		prearmlaterlist = []
 		now = self.playroot.t0
-		for ch in self.channelnames:
+		for ch in self.channels:
 			ev = self.getnextprearm(ch)
 			if not ev:
 				continue
@@ -181,8 +181,10 @@ class SchedulerContext():
 	#
 	def start_minidoc(self):
 		if not self.gen_prearms():
+			print 'start_minidoc returns 0'
 			return 0
 		self.run_initial_prearms()
+		self.startcontextchannels()
 		self.parent.event((self, (SR.SCHED, self.playroot)))
 		return 1
 
@@ -200,11 +202,19 @@ class SchedulerContext():
 				prio = PRIO_INTERN
 			self.parent.add_runqueue(self, prio, sr)
 
-	def arm_ready(self, cname):
-		if cname == 'Scottish': print 'Scottish ready' #DBG
-		pev = self.getnextprearm(cname)
+	def arm_ready(self, chan):
+		pev = self.getnextprearm(chan)
 		if pev:
 			self.parent.add_lopriqueue(self, pev[1].t0, pev)
+
+	def play_done(self, node):
+		self.parent.event(self, (SR.PLAY_DONE, node))
+
+	def arm_done(self, node):
+		self.parent.event(self, (SR.ARM_DONE, node))
+
+	def anchorfired(self, node, anchorlist):
+		return self.parent.anchorfired(self, node, anchorlist)
 	#
 	# Partially handle an event, updating the internal queues and
 	# returning executable SRs, if any.
@@ -238,12 +248,13 @@ class Scheduler(scheduler):
 		self.context = self.ui.context
 		self.sctx_list = []
 		self.starting_to_play = 0
+		self.resettimer()
 		return self
 
 	#
 	# Playing algorithm.
 	#
-	def start_playing(self, rate):
+	def start_playing(self, paused):
 		if not self.ui.maystart():
 			return 0
 		#if self.ui.play_all_bags:
@@ -277,14 +288,14 @@ class Scheduler(scheduler):
 		if not sctx.start_minidoc():
 			self.suspend_sctx(sctx)
 			return 0
-		self.setrate(rate)
+		self.setpaused(paused)
 		self.ui.showstate() # Give the anxious user a clue...
 		self.starting_to_play = 1
 		return 1
 	#
 	def suspend_sctx(self, sctx):
 		unarmallnodes(sctx.playroot)
-		sctx.stopchannels()
+		sctx.stopcontextchannels()
 		sctx.done()
 		self.purge_sctx_queues(sctx)
 		self.sctx_list.remove(sctx)
@@ -319,7 +330,7 @@ class Scheduler(scheduler):
 		self.measure_armtimes = 0
 		for sctx in self.sctx_list:
 			self.suspend_sctx(sctx)
-		self.setrate(0.0) # Stop the clock
+		self.setpaused(1)	# Stop the clock
 		self.ui.showstate()
 		if self.starting_to_play:
 			self.toplevel.setready()
@@ -328,16 +339,16 @@ class Scheduler(scheduler):
 	# Callback for anchor activations, called by channels.
 	# Return 1 if the anchor fired, 0 if nothing happened.
 	#
-	def anchorfired(self, node, anchorlist):
+	def anchorfired(self, old_sctx, node, anchorlist):
 		if not self.ui.playing:
-			fl.show_message('The document is not playing!','','')
+			dialogs.showmessage('The document is not playing!')
 			return 0
 		self.toplevel.setwaiting()
 		destlist = []
 		pause_anchor = 0
 		# Firing an anchor continues the player if it was paused.
-		if self.rate == 0.0:
-			self.setrate(1.0)
+		if self.paused:
+			self.setpaused(0)
 			self.ui.showstate()
 		for i in anchorlist:
 			if i[A_TYPE] == ATYPE_PAUSE:
@@ -347,24 +358,24 @@ class Scheduler(scheduler):
 			destlist = destlist + rv
 		if not destlist:
 			if not pause_anchor:
-				fl.show_message( \
-				'No hyperlink source at this anchor', '', '')
+				dialogs.showmessage( \
+					  'No hyperlink source at this anchor')
 			self.toplevel.setready()
 			return 0
 		if len(destlist) > 1:
-			fl.show_message( \
-				'Sorry, multiple links not supported', '', '')
+			dialogs.showmessage( \
+				  'Sorry, multiple links not supported')
 			self.toplevel.setready()
 			return 0
 		# XXX This assumes all links have this lay-out!
 		anchor1, anchor2, dir, type = destlist[0]
 		if type <> 0:
-			fl.show_message('Sorry, will JUMP anyway', '', '')
+			dialogs.showmessage('Sorry, will JUMP anyway')
 		dest_uid, dest_aid = anchor2
 		try:
 			seek_node = self.context.mapuid(dest_uid)
 		except NoSuchUIDError:
-			fl.show_message('Dangling hyperlink selected', '', '')
+			dialogs.showmessage('Dangling hyperlink selected')
 			self.toplevel.setready()
 			return 0
 		#if self.ui.play_all_bags:
@@ -376,9 +387,9 @@ class Scheduler(scheduler):
 				if seek_node == None:
 					self.toplevel.setready()
 					return 0
-		if len(self.sctx_list) <> 1:
-			raise 'Uh-oh, not yet implemented (multi-sctx)'
-		old_sctx = self.sctx_list[0]
+##		if len(self.sctx_list) <> 1:
+##			raise 'Uh-oh, not yet implemented (multi-sctx)'
+##		old_sctx = self.sctx_list[0]
 		playroot = findminidocument(seek_node)
 		if playroot == self.ui.root or not self.ui.pause_minidoc:
 			end_action = END_STOP
@@ -394,7 +405,6 @@ class Scheduler(scheduler):
 		self.purge_sctx_queues(old_sctx)
 		if self.ui.sync_cv:
 			self.toplevel.channelview.globalsetfocus(playroot)
-		old_sctx.softresetchannels()
 		self.suspend_sctx(old_sctx)
 		self.ui.playroot = playroot
 		self.updatetimer()
@@ -446,7 +456,7 @@ class Scheduler(scheduler):
 		if not self.ui.playing:
 			delay = 0
 			#print 'updatetimer: not playing' #DBG
-		elif self.rate and work:
+		elif self.paused and work:
 			#
 			# We have SR actions to execute. Make the callback
 			# happen as soon as possible.
@@ -455,7 +465,7 @@ class Scheduler(scheduler):
 			#print 'updatetimer: runnable events' #DBG
 		elif self.runqueues[PRIO_LO]:
 			#
-			# We are not running (rate==0), but we can do some
+			# We are not running (paused!=0), but we can do some
 			# prearms
 			#
 			delay = 0.001
@@ -504,26 +514,37 @@ class Scheduler(scheduler):
 		if len(ev) == 1:
 			ev = ev[0]
 		sctx, ev = ev
+##		print 'event:',SR.ev2string(ev)
 		
 		if ev[0] == SR.PLAY_DONE:
 			ev[1].set_armedmode(ARM_WAITSTOP)
+		elif ev[0] == SR.ARM_DONE:
+			ev[1].set_armedmode(ARM_ARMED)
 		if sctx.active:
 			sctx.event(ev)
 		self.updatetimer()
 	#
 	# opt_prearm should be turned into a normal event at some point.
 	# It signals that the channel is ready for the next arm
-	def arm_ready(self, cname):
+	def arm_ready(self, chan):
 		#XXXX Wrong for multi-context (have to find correct sctx)
+##		print 'arm_ready:',chan._name	# XXXX shouldn't use this
 		if len(self.sctx_list) > 1:
 			raise 'Uh-oh, arm_ready multi-sctx'
 		elif len(self.sctx_list) == 1:
 			sctx = self.sctx_list[0]
-			sctx.arm_ready(cname)
+			sctx.arm_ready(chan)
+
+	def play_done(self, sctx, node):
+		self.event(sctx, (SR.PLAY_DONE, node))
+
+	def arm_done(self, sctx, node):
+		self.event(sctx, (SR.ARM_DONE, node))
 	#
 	# Concatenate the given list of SR's to the runqueue.
 	#
 	def add_runqueue(self, sctx, prio, sr):
+##		print 'add_queue:',SR.ev2string(sr)
 		self.runqueues[prio].append(sctx, sr, 0)
 	def add_lopriqueue(self, sctx, time, sr):
 		runq = self.runqueues[PRIO_LO]
@@ -541,7 +562,7 @@ class Scheduler(scheduler):
 		# First look in the high priority queues. We always run all
 		# the events here.
 		#
-		if self.rate:
+		if not self.paused:
 			for i in range(N_PRIO-1):
 				if self.runqueues[i]:
 					queue = self.runqueues[i]
@@ -584,17 +605,16 @@ class Scheduler(scheduler):
 			self.toplevel.setready()
 			self.starting_to_play = 0
 		chan = self.ui.getchannelbynode(node)
-		#chan.arm_only(node)
-		ready_ev = (sctx, (SR.PLAY_DONE, node))
+		#chan.arm(node)
 		node.set_armedmode(ARM_PLAYING)
-		chan.play(node, self.event, ready_ev)
+		chan.play(node)
 	#
 	# Execute a PLAY_STOP SR.
 	#
 	def do_play_stop(self, sctx, node):
 		chan = self.ui.getchannelbynode(node)
 		node.set_armedmode(ARM_DONE)
-		chan.clearnode(node)
+		chan.stopplay(node)
 	#
 	# Execute a SYNC SR
 	#
@@ -607,9 +627,7 @@ class Scheduler(scheduler):
 	def do_play_arm(self, sctx, node):
 		chan = self.ui.getchannelbynode(node)
 		node.set_armedmode(ARM_ARMING)
-		chan.arm_only(node)
-		node.set_armedmode(ARM_ARMED)
-		self.event(sctx, (SR.ARM_DONE, node))
+		chan.arm(node)
 	#
 	# Queue interface, based upon sched.scheduler.
 	# This queue has variable time, to implement pause,
@@ -630,12 +648,12 @@ class Scheduler(scheduler):
 	#
 	def timefunc(self):
 	        #if self.frozen: return self.frozen_value
-		if not self.rate:
+		if self.paused:
 			return self.time_pause - self.time_origin
 		return time.time() - self.time_origin
 	#
 	def resettimer(self):
-		self.rate = 0.0		# Initially the clock is frozen
+		self.paused = 1		# Initially the clock is frozen
 		#self.frozen = 0
 		#self.frozen_value = 0
 		self.time_origin = time.time()
@@ -644,26 +662,35 @@ class Scheduler(scheduler):
 	def skiptimer(self, amount):
 		self.time_origin = self.time_origin - amount
 	#
-	def setrate(self, rate):
-		if rate < 0.0:
-			raise CheckError, 'setrate with negative rate'
-		if self.rate == rate:
+	def setpaused(self, paused):
+		if self.paused == paused:
 			return
 
 		# Subtract time paused
-		if rate:
+		if paused:
+			self.time_pause = time.time()
+		else:
 			self.time_origin = self.time_origin - \
 				  (time.time()-self.time_pause)
-		else:
-			self.time_pause = time.time()
-		self.rate = rate
+		self.paused = paused
 		for sctx in self.sctx_list:
-			sctx.setrate(self.rate)
+			sctx.setpaused(self.paused)
 		self.updatetimer()
 	#
-	def getrate(self):
-		return self.rate
+	def getpaused(self):
+		return self.paused
 	#
+	#
+	# GenAllPrearms fills the prearmlists dictionary with all arms needed.
+	#
+	def GenAllPrearms(self, node, prearmlists):
+		if node.GetType() in leaftypes:
+			chan = MMAttrdefs.getattr(node, 'channel')
+			chan = self.ui.getchannelbyname(chan)
+			prearmlists[chan].append((SR.PLAY_ARM, node))
+			return
+		for child in node.GetWtdChildren():
+			self.GenAllPrearms(child, prearmlists)
 #
 # GenAllSR - Return all (evlist, actionlist) pairs.
 #
@@ -722,16 +749,6 @@ def GetAllChannels(node):
 	if overlap and node.GetType() == 'par':
 		errnode = (node, overlap)
 	return list, errnode
-#
-# GenAllPrearms fills the prearmlists dictionary with all arms needed.
-#
-def GenAllPrearms(node, prearmlists):
-	if node.GetType() in leaftypes:
-		chan = MMAttrdefs.getattr(node, 'channel')
-		prearmlists[chan].append((SR.PLAY_ARM, node))
-		return
-	for child in node.GetWtdChildren():
-		GenAllPrearms(child, prearmlists)
 		
 # Choose an item from a bag, or None if the bag is empty
 # This is a modal dialog!
