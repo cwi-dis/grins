@@ -36,7 +36,7 @@ class PlayerCommon:
 				renderer = self.getRenderer(node)
 	
 	def checkRendererChannels(self):
-		#self.clearRendererChannels()
+		self.clearRendererChannels()
 		self.makeRendererChannels()
 				
 	def getRenderer(self, node):
