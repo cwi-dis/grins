@@ -97,8 +97,9 @@ class PlayerCore(Selecter):
 		self.toplevel.setwaiting()
 		if not self.showing:
 			self.show()
-		if not self.playing:
-			self.reset()
+		if self.playing:
+			self.stop()
+		self.reset()
 		if not self.gotonode(node, anchor):
 			return
 		self.playing = 1
