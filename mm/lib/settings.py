@@ -16,123 +16,153 @@ _in_transaction = 0
 # some constants
 
 # enable or disable language extensions
+# see also switch_profile() below
 MODULES = {
 	# SMIL 2.0 Modules
-	'AccessKeyTiming': 1,
-	'AudioLayout': 1,
-	'BasicAnimation': 1,
-	'BasicContentControl': 1,
-	'BasicInlineTiming': 1,
-	'BasicLayout': 1,
-	'BasicLinking': 1,
-	'BasicMedia': 1,
-	'BasicTimeContainers': 1,
-	'BasicTransitions': 1,
-	'BrushMedia': 1,
-##	'CoordinatedTransitions': 1,
-	'CustomTestAttributes': 1,
-	'EventTiming': 1,
-	'ExclTimeContainers': 1,
-	'FillDefault': 1,
-	'HierarchicalLayout': 1,
-	'InlineTransitions': 1,
-	'LinkingAttributes': 1,
-	'MediaAccessibility': 1,
-	'MediaClipMarkers': 1,
-	'MediaClipping': 1,
-	'MediaDescription': 1,
-	'MediaMarkerTiming': 1,
-	'MediaParam': 1,
-	'Metainformation': 1,
-	'MinMaxTiming': 1,
-	'MultiArcTiming': 1,
-	'MultiWindowLayout': 1,
-	'ObjectLinking': 1,
-	'PrefetchControl': 1,
-##	'PrevTiming': 1,
-	'RepeatTiming': 1,
-	'RepeatValueTiming': 1,
-	'RestartDefault': 1,
-	'RestartTiming': 1,
-	'SkipContentControl': 1,
-	'SplineAnimation': 1,
-	'Structure': 1,
-	'SyncbaseTiming': 1,
-	'SyncBehavior': 1,
-	'SyncBehaviorDefault': 1,
+	'AccessKeyTiming': 0,
+	'AudioLayout': 0,
+	'BasicAnimation': 0,
+	'BasicContentControl': 0,
+	'BasicInlineTiming': 0,
+	'BasicLayout': 0,
+	'BasicLinking': 0,
+	'BasicMedia': 0,
+	'BasicTimeContainers': 0,
+	'BasicTransitions': 0,
+	'BrushMedia': 0,
+##	'CoordinatedTransitions': 0,
+	'CustomTestAttributes': 0,
+	'EventTiming': 0,
+	'ExclTimeContainers': 0,
+	'FillDefault': 0,
+	'HierarchicalLayout': 0,
+	'InlineTransitions': 0,
+	'LinkingAttributes': 0,
+	'MediaAccessibility': 0,
+	'MediaClipMarkers': 0,
+	'MediaClipping': 0,
+	'MediaDescription': 0,
+	'MediaMarkerTiming': 0,
+	'MediaParam': 0,
+	'Metainformation': 0,
+	'MinMaxTiming': 0,
+	'MultiArcTiming': 0,
+	'MultiWindowLayout': 0,
+	'ObjectLinking': 0,
+	'PrefetchControl': 0,
+##	'PrevTiming': 0,
+	'RepeatTiming': 0,
+	'RepeatValueTiming': 0,
+	'RestartDefault': 0,
+	'RestartTiming': 0,
+	'SkipContentControl': 0,
+	'SplineAnimation': 0,
+	'Structure': 0,
+	'SyncbaseTiming': 0,
+	'SyncBehavior': 0,
+	'SyncBehaviorDefault': 0,
 	'SyncMaster': 0,
 	'TimeContainerAttributes': 0,
-	'TimeManipulations': 1,
-	'TransitionModifiers': 1,
-	'WallclockTiming': 1,
+	'TimeManipulations': 0,
+	'TransitionModifiers': 0,
+	'WallclockTiming': 0,
 
 	# SMIL 2.0 Pseudo Modules
-	'NestedTimeContainers': 1,
-	'DeprecatedFeatures': 1,
+	'NestedTimeContainers': 0,
+	'DeprecatedFeatures': 0,
 
 	# SMIL 2.0 Module Collections
-	'Language': 1,
-	'HostLanguage': 1,
-	'IntegrationSet': 1,
+	'Language': 0,
+	'HostLanguage': 0,
+	'IntegrationSet': 0,
 }
-# MODULES dictionary for SMIL Basic
-##MODULES = {
-##	# SMIL 2.0 Modules
-##	'AccessKeyTiming': 0,
-##	'AudioLayout': 0,
-##	'BasicAnimation': 0,
-##	'BasicContentControl': 1,
-##	'BasicInlineTiming': 1,
-##	'BasicLayout': 1,
-##	'BasicLinking': 1,
-##	'BasicMedia': 1,
-##	'BasicTimeContainers': 1,
-##	'BasicTransitions': 0,
-##	'BrushMedia': 0,
-##	'CustomTestAttributes': 0,
-##	'EventTiming': 0,
-##	'ExclTimeContainers': 0,
-##	'FillDefault': 0,
-##	'HierarchicalLayout': 0,
-##	'InlineTransitions': 0,
-##	'LinkingAttributes': 0,
-##	'MediaAccessibility': 0,
-##	'MediaClipMarkers': 0,
-##	'MediaClipping': 0,
-##	'MediaDescription': 0,
-##	'MediaMarkerTiming': 0,
-##	'MediaParam': 0,
-##	'Metainformation': 0,
-##	'MinMaxTiming': 1,
-##	'MultiArcTiming': 0,
-##	'MultiWindowLayout': 0,
-##	'ObjectLinking': 0,
-##	'PrefetchControl': 0,
-##	'RepeatTiming': 1,
-##	'RepeatValueTiming': 0,
-##	'RestartDefault': 0,
-##	'RestartTiming': 0,
-##	'SkipContentControl': 1,
-##	'SplineAnimation': 0,
-##	'Structure': 1,
-##	'SyncbaseTiming': 0,
-##	'SyncBehavior': 0,
-##	'SyncBehaviorDefault': 0,
-##	'SyncMaster': 0,
-##	'TimeContainerAttributes': 0,
-##	'TimeManipulations': 0,
-##	'TransitionModifiers': 0,
-##	'WallclockTiming': 0,
 
-##	# SMIL 2.0 Pseudo Modules
-##	'NestedTimeContainers': 0,
-##	'DeprecatedFeatures': 1,
+# All modules that are part of the SMIL 2.0 Basic Language Profile.
+SMIL_BASIC_MODULES = [
+	# SMIL 2.0 Modules
+	'BasicContentControl',
+	'BasicInlineTiming',
+	'BasicLayout',
+	'BasicLinking',
+	'BasicMedia',
+	'BasicTimeContainers',
+	'MinMaxTiming',
+	'RepeatTiming',
+	'SkipContentControl',
+	'Structure',
 
-##	# SMIL 2.0 Module Collections
-##	'Language': 1,
-##	'HostLanguage': 1,
-##	'IntegrationSet': 1,
-##}
+	# SMIL 2.0 Pseudo Modules
+	'DeprecatedFeatures',
+
+	# SMIL 2.0 Module Collections
+	'Language',
+	'HostLanguage',
+	'IntegrationSet',
+]
+
+# All modules that are part of the 3GPP PSS4 SMIL 2.0 Language Profile.
+# This contains everything from the SMIL 2.0 Basic Language Profile,
+# and then some.
+SMIL_PSS4_MODULES = SMIL_BASIC_MODULES + [
+	'PrefetchControl',
+	'MediaAccessibility',
+	'MediaDescription',
+	'MediaClipping',
+	'Metainformation',
+	'EventTiming',
+	]
+
+# All modules that are part of the 3GPP PSS5 SMIL 2.0 Language Profile.
+# This contains everything from the 3GPP PSS5 Profile, and then some.
+SMIL_PSS5_MODULES = SMIL_PSS4_MODULES + [
+	'BasicTransitions',
+	]
+
+# All modules that are part of the SMIL 2.0 Language Profile.
+# This contains everything from the 3GPP PSS4 Profile, and then some
+SMIL_20_MODULES = SMIL_PSS4_MODULES + [
+	'AccessKeyTiming',
+	'AudioLayout',
+	'BasicAnimation',
+	'BrushMedia',
+##	'CoordinatedTransitions',	# Removed from spec.
+	'CustomTestAttributes',
+	'ExclTimeContainers',
+	'FillDefault',
+	'HierarchicalLayout',
+	'InlineTransitions',
+	'LinkingAttributes',
+	'MediaClipMarkers',
+	'MediaMarkerTiming',
+	'MediaParam',
+	'MultiArcTiming',
+	'MultiWindowLayout',
+	'ObjectLinking',
+##	'PrevTiming',			# Removed from spec.
+	'RepeatValueTiming',
+	'RestartDefault',
+	'RestartTiming',
+	'SplineAnimation',
+	'SyncbaseTiming',
+	'SyncBehavior',
+	'SyncBehaviorDefault',
+	'TimeManipulations',
+	'TransitionModifiers',
+	'WallclockTiming',
+
+	# SMIL 2.0 Pseudo Modules
+	'NestedTimeContainers',
+
+	# SMIL 2.0 Module Collections
+]
+
+def switch_profile(modulelist):
+	for mod in MODULES.keys():
+		MODULES[mod] = 0
+	for mod in modulelist:
+		MODULES[mod] = 1
+
+switch_profile(SMIL_20_MODULES)
 
 # settings that cannot be changed when running
 noprearm = 1				# don't prearm
