@@ -17,31 +17,31 @@ import sys
 def hashelp():
 	return 1
 
-helpdir = None				# Directory where the help files live
+helpdir = None				# directory where the help files live
+helpfile = None				# the help file itself
 
 def sethelpdir(dirname):
-	global helpdir
+	global helpdir, helpfile
 	helpdir = dirname
-
+	helpfile = None
 
 def fixhelpdir():
-	global helpdir
+	global helpdir, helpfile
 	if helpdir is None:
 		import cmif
-		helpdir = cmif.findfile('help')
-	strs = string.splitfields(helpdir, '\\')
-	if not 'Cmifed.hlp' in strs:
-		helpdir = helpdir + "\\Cmifed.hlp"
+		helpdir = os.path.join(cmif.findfile('Help'), 'win32')
+	if helpfile is None:
+		helpfile = os.path.join(helpdir, 'Cmifed.hlp')
 
 def givehelp(topic):
 	import win32api, win32con, win32ui
 	fixhelpdir()
-	win32api.WinHelp(win32ui.GetActiveWindow().GetSafeHwnd(), helpdir,
+	win32api.WinHelp(win32ui.GetActiveWindow().GetSafeHwnd(), helpfile,
 			 win32con.HELP_KEY, topic)
 
 
 def showhelpwindow():
 	import win32api, win32con, win32ui
 	fixhelpdir()
-	win32api.WinHelp(win32ui.GetActiveWindow().GetSafeHwnd(), helpdir,
+	win32api.WinHelp(win32ui.GetActiveWindow().GetSafeHwnd(), helpfile,
 			 win32con.HELP_CONTENTS, 0)
