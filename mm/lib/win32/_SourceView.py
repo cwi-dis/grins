@@ -9,7 +9,7 @@ import win32ui,win32con
 Sdk=win32ui.GetWin32Sdk()
 Afx=win32ui.GetAfx()
 import win32mu
-
+from win32api import RGB
 import usercmd
 
 from pywinlib.mfc import window, object, docview
@@ -60,6 +60,7 @@ class _SourceView(GenView, docview.RichEditView):
 		self.__autoWrapCtrl = components.CheckButton(self._dlgBar,grinsRC.IDC_AUTOWRAP)
 
 		self.__text=''
+		self.__colors = []
 		self.__mother = None
 		self.__readonly = 0
 		self.__hasdlgbar = 0
@@ -104,7 +105,7 @@ class _SourceView(GenView, docview.RichEditView):
 		# we are now showing of course
 		self.__showing = 1
 
-		self.settext(self.__text)
+		self.settext(self.__text, self.__colors)
 
 		# set text and readonly flag
 		self.SetReadOnly(self.__readonly)
@@ -200,6 +201,7 @@ class _SourceView(GenView, docview.RichEditView):
 
 	def __revert_callback(self):
 		self.SetWindowText(self.__text)
+		self._setcolors()
 		self.enableDlgBarComponent(self.__apply, 0)
 		self.enableDlgBarComponent(self.__revert, 0)
 		self.SetModify(0)
@@ -232,13 +234,15 @@ class _SourceView(GenView, docview.RichEditView):
 		return self.__convert2un(text)
 
 	# Set the text to be shown
-	def settext(self, text):
+	def settext(self, text, colors=[]):
 		self.__text = self.__convert2ws(text)
+		self.__colors = colors
 		# if already visible, update text in window
 		if self.__showing:
 			# during the setting, the EN_CHANGE event is ignore
 			self.__setting = 1
 			self.SetWindowText(self.__text)
+			self._setcolors()
 			self.SetModify(0)
 			self.__setting = 0
 			# raz apply and revert
@@ -248,6 +252,15 @@ class _SourceView(GenView, docview.RichEditView):
 	def set_mother(self, mother):
 		self.__mother = mother
 		
+	# Set color of some text fragment
+	def _setcolors(self):
+		dftcharformat = self.GetDefaultCharFormat()
+		for startchar, endchar, color in self.__colors:
+			startchar, endchar = self._mapcharrange(startchar, endchar)
+			color = apply(RGB, color)
+			charformat = win32con.CFM_COLOR, 0, 0, 0, color
+			self.SetSelAndCharFormat(startchar, endchar, charformat)
+
 	# Convert the text from unix or mac to windows
 	def __convert2ws(self, text):
 		import string
@@ -389,6 +402,11 @@ class _SourceView(GenView, docview.RichEditView):
 	# select a part of the text
 	def select_chars(self, startchar, endchar, scroll = 1, pop = 0):
 		# the text between startchar and endchar will be selected.
+		startchar, endchar = self._mapcharrange(startchar, endchar)
+		self.SetSel((startchar, endchar))
+		if pop: self.pop()
+
+	def _mapcharrange(self, startchar, endchar):
 		for p0, p1 in self.__map0:
 			if p0 <= startchar:
 				startchar = p1 + (startchar - p0)
@@ -409,8 +427,7 @@ class _SourceView(GenView, docview.RichEditView):
 			if p0 <= endchar:
 				endchar = p1 + (endchar - p0)
 				break
-		self.SetSel((startchar, endchar))
-		if pop: self.pop()
+		return startchar, endchar
 
 	def isChanged(self):
 		# Return true if the text has been changed.
