@@ -234,8 +234,6 @@ class HierarchyView(HierarchyViewDialog):
 		import settings
 		heavy = not settings.get('lightweight')
 		rv = []
-		for x in ('image', 'sound', 'video', 'text', 'RealPix'):
-			print 'DBG:', (x, ctx.compatchannels(chtype=x))
 		if under:
 			rv.append(NEW_UNDER(callback = (self.createundercall, ())))
 			if heavy or ctx.compatchannels(chtype='image'):
