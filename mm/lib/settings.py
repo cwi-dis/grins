@@ -85,6 +85,7 @@ default_settings = {
 	'structure_focustop': (200, 200, 200),
 	'structure_focusright': (40, 40, 40),
 	'structure_focusbottom': (40, 40, 40),
+	'structure_dropcolor': (0, 0, 0),
 # ChannelView colors
 	'timeline_bgcolor': (150, 150, 150), # Light gray
 	'timeline_guttertop': (80, 80, 80),

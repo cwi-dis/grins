@@ -539,9 +539,12 @@ class StructureObjWidget(MMNodeWidget):
 		# Called from self.draw or from the mother when selection is changed.
 		displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 
+	def draw_unselected(self, displist):
+		# Called from self.draw or from the mother when selection is changed.
+		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
+
 	def draw_box(self, displist):
-		displist.fgcolor((0,0,0))
-		displist.drawbox(self.get_box())
+		displist.draw3dbox(DROPCOLOR, DROPCOLOR, DROPCOLOR, DROPCOLOR, self.get_box())
 
 	def draw(self, displist):
 		# This is a base class for other classes.. this code only gets
@@ -1349,9 +1352,11 @@ class MediaWidget(MMNodeWidget):
 		displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 		self.__draw(displist)
 
+	def draw_unselected(self, displist):
+		self.draw(displist)
+
 	def draw_box(self, displist):
-		displist.fgcolor((0,0,0))
-		displist.drawbox(self.get_box())
+		displist.draw3dbox(DROPCOLOR, DROPCOLOR, DROPCOLOR, DROPCOLOR, self.get_box())
 
 	def draw(self, displist):
 		# Only draw unselected.
@@ -1554,6 +1559,9 @@ class PushBackBarWidget(MMWidgetDecoration):
 		displist.drawfbox(COLCOLOR, (x, y, w*redfraction, h))
 		displist.drawfbox(LEAFCOLOR, (x+redfraction, y, w*(1-redfraction), h))
 		displist.drawbox(self.get_box())
+
+	def draw_unselected(self, displist):
+		self.draw(displist)
 
 	def draw_box(self, displist):
 		self.parent.draw_box(displist)
@@ -1806,6 +1814,9 @@ class Icon(MMWidgetDecoration):
 					self.mother.add_arrow(ARROWCOLOR, (xs,ys),(xd,yd))
 				else:
 					self.mother.add_arrow(ARROWCOLOR, (xd,yd),(xs,ys))
+
+	def draw_unselected(self, displist):
+		self.draw(displist)
 
 	def draw(self, displist):
 		if self.icon is not None:
