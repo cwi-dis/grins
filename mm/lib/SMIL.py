@@ -482,6 +482,7 @@ class SMIL:
 	del __animate_attrs['calcMode'], __animate_attrs['values'],
 	del	__animate_attrs['keyTimes'], __animate_attrs['keySplines']
 	del	__animate_attrs['from'], __animate_attrs['by'],
+	del	__animate_attrs['additive'], __animate_attrs['accumulate'],
 	attributes['set'] = __animate_attrs.copy()
 	del __animate_attrs
 
