@@ -2,14 +2,6 @@
  * 
  *  $Id$
  *  
- *  Copyright (C) 1995,1996,1997 RealNetworks.
- *  All rights reserved.
- *  
- *  This program contains proprietary information of RealNetworks, Inc.,
- *  and is licensed subject to restrictions on use and distribution.
- *
- *  exsitsup.cpp
- *
  */
 
 
@@ -49,6 +41,7 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer)
     , m_pCCF(NULL)
     , m_pUnkPlayer(pUnkPlayer)
     , m_pWindowlessSite(NULL)
+	, m_pyVideoSurface(NULL)
 {
     if (m_pUnkPlayer)
     {
@@ -70,11 +63,19 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer)
  */
 ExampleSiteSupplier::~ExampleSiteSupplier()
 {
+	Py_XDECREF(m_pyVideoSurface);
     PN_RELEASE(m_pSiteManager);
     PN_RELEASE(m_pCCF);
     PN_RELEASE(m_pUnkPlayer);
 }
 
+void ExampleSiteSupplier::SetPyVideoSurface(PyObject *obj)
+	{
+	Py_XDECREF(m_pyVideoSurface);
+	if(obj==Py_None)m_pyVideoSurface=NULL;
+	else m_pyVideoSurface=obj;
+	Py_XINCREF(m_pyVideoSurface);
+	}
 
 // IRMASiteSupplier Interface Methods
 
@@ -113,7 +114,7 @@ ExampleSiteSupplier::SitesNeeded
 	goto exit;
     }
     m_pWindowlessSite->AddRef();
-
+	m_pWindowlessSite->m_pVideoSurface->SetPyVideoSurface(m_pyVideoSurface);
     hres = m_pWindowlessSite->QueryInterface(IID_IRMASite,(void**)&pSite);
     if (PNR_OK != hres)
     {
@@ -235,6 +236,7 @@ ExampleSiteSupplier::DoneChangeLayout()
 STDMETHODIMP_(ULONG32) 
 ExampleSiteSupplier::AddRef()
 {
+	Py_XINCREF(m_pyVideoSurface);
     return InterlockedIncrement(&m_lRefCount);
 }
 
@@ -249,6 +251,13 @@ ExampleSiteSupplier::AddRef()
 STDMETHODIMP_(ULONG32) 
 ExampleSiteSupplier::Release()
 {
+	if(m_pyVideoSurface && m_pyVideoSurface->ob_refcnt==1)
+		{
+		Py_XDECREF(m_pyVideoSurface);
+		m_pyVideoSurface=NULL;
+		}
+	else Py_XDECREF(m_pyVideoSurface);
+
     if (InterlockedDecrement(&m_lRefCount) > 0)
     {
         return m_lRefCount;
