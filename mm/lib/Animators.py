@@ -657,6 +657,24 @@ class EffMotionAnimator(Animator):
 		dx = x2 - x1;dy=y2-y1
 		return math.sqrt(dx*dx+dy*dy)
 
+class DiscreteMotionAnimator(Animator):
+	def __init__(self, attr, domval, value, dur, mode='paced',
+			times=None, splines=None, accumulate='none', additive='replace'):
+		x, y = value
+		value = complex(x,y)
+		Animator.__init__(self, attr, domval, (value,), dur, mode,
+			times, splines, accumulate, additive) 
+
+	def convert(self, v):
+		x, y = v.real, v.imag
+		return _round(x), _round(y)
+
+	def distValues(self, v1, v2):
+		x1, y1 = v1.real, v1.imag
+		x2, y2 = v2.real, v2.imag
+		dx = x2 - x1;dy=y2-y1
+		return math.sqrt(dx*dx+dy*dy)
+
 class SetMotionAnimator(Animator):
 	def __init__(self, attr, domval, value, dur):
 		Animator.__init__(self, attr, domval, (value, ), dur, mode ='discrete') 
@@ -1194,11 +1212,11 @@ class AnimateElementParser:
 		self.__speed = MMAttrdefs.getattr(anim, 'speed')
 		if self.__speed==0.0: # not allowed
 			self.__speed=1.0
-		self.__accelerate = MMAttrdefs.getattr(anim, 'accelerate')
-		self.__decelerate = MMAttrdefs.getattr(anim, 'decelerate')
+		self.__accelerate = max(0, MMAttrdefs.getattr(anim, 'accelerate'))
+		self.__decelerate = max(0, MMAttrdefs.getattr(anim, 'decelerate'))
 		dt =  self.__accelerate + self.__decelerate
 		if dt>1.0:
-			# *the timing module draft says accelerate is clamped to 1 and decelerate=1-accelerate
+			# accelerate is clamped to 1 and decelerate=1-accelerate
 			self.__accelerate = min(self.__accelerate, 1.0)
 			self.__decelerate = 1.0 - self.__accelerate
 		self.__autoReverse = MMAttrdefs.getattr(anim, 'autoReverse')
@@ -1258,22 +1276,40 @@ class AnimateElementParser:
 		# needs always special handling
 		if self.__animtype == 'to' and self.__isadditive:
 			anim = None
-			if self.__attrtype == 'int':
-				v = string.atoi(self.getTo())
-				anim = EffValueAnimator(attr, domval, v, dur, mode, times, splines, accumulate, additive)
-				anim.setRetunedValuesConverter(_round)
-			elif self.__attrtype == 'float':
-				v = string.atof(self.getTo())
-				anim = EffValueAnimator(attr, domval, v, dur, mode, times, splines, accumulate, additive)
-			elif self.__attrtype == 'color':
-				values = self.__getColorValues()
-				anim = EffColorAnimator(attr, domval, values, dur, mode, times, splines, accumulate, additive)
-			elif self.__attrtype == 'position':
-				coords = self.__getNumPairInterpolationValues()
-				anim = EffMotionAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)
-			elif self.__attrtype == 'inttuple':
-				coords = self.__getNumTupleInterpolationValues()
-				anim = EffIntTupleAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)
+			if mode == 'discrete':
+				if self.__attrtype == 'int':
+					v = string.atoi(self.getTo())
+					anim = Animator(attr, domval, (v,), dur, mode, times, splines, accumulate, additive)
+					anim.setRetunedValuesConverter(_round)
+				elif self.__attrtype == 'float':
+					v = string.atof(self.getTo())
+					anim = Animator(attr, domval, (v,), dur, mode, times, splines, accumulate, additive)
+				elif self.__attrtype == 'color':
+					values = self.__getColorValues()
+					anim = ColorAnimator(attr, domval, (values,), dur, mode, times, splines, accumulate, additive)
+				elif self.__attrtype == 'position':
+					coords = self.__getNumPairInterpolationValues()
+					anim = DiscreteMotionAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)
+				elif self.__attrtype == 'inttuple':
+					coords = self.__getNumTupleInterpolationValues()
+					anim = IntTupleAnimator(attr, domval, (coords,), dur, mode, times, splines, accumulate, additive)
+			else:
+				if self.__attrtype == 'int':
+					v = string.atoi(self.getTo())
+					anim = EffValueAnimator(attr, domval, v, dur, mode, times, splines, accumulate, additive)
+					anim.setRetunedValuesConverter(_round)
+				elif self.__attrtype == 'float':
+					v = string.atof(self.getTo())
+					anim = EffValueAnimator(attr, domval, v, dur, mode, times, splines, accumulate, additive)
+				elif self.__attrtype == 'color':
+					values = self.__getColorValues()
+					anim = EffColorAnimator(attr, domval, values, dur, mode, times, splines, accumulate, additive)
+				elif self.__attrtype == 'position':
+					coords = self.__getNumPairInterpolationValues()
+					anim = EffMotionAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)
+				elif self.__attrtype == 'inttuple':
+					coords = self.__getNumTupleInterpolationValues()
+					anim = EffIntTupleAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)				
 			if anim:
 				self.__setTimeManipulators(anim)
 			return anim
@@ -1287,21 +1323,30 @@ class AnimateElementParser:
 			anim = None
 			if self.__attrtype == 'int':
 				values = self.__getNumInterpolationValues()
+				if mode == 'discrete': values = values[1:]
 				anim = Animator(attr, domval, values, dur, mode, times, splines, accumulate, additive='sum')
 				anim.setRetunedValuesConverter(_round)
 			elif self.__attrtype == 'float':
 				values = self.__getNumInterpolationValues()
+				if mode == 'discrete': values = values[1:]
 				anim = Animator(attr, domval, values, dur, mode, times, splines, accumulate, additive='sum')
 			elif self.__attrtype == 'color':
 				values = self.__getColorValues()
+				if mode == 'discrete': values = values[1:]
 				anim = ColorAnimator(attr, domval, values, dur, mode, times, splines, accumulate, additive='sum')
 			elif self.__attrtype == 'position':
-				path = svgpath.Path()
-				coords = self.__getNumPairInterpolationValues()
-				if not self.isAdditive():
-					coords = self.translateToDefault(coords=coords)
-				path.constructFromPoints(coords)
-				anim = MotionAnimator(attr, domval, path, dur, mode, times, splines, accumulate, additive='sum')
+				if mode == 'discrete':
+					coords = self.__getNumPairInterpolationValues()
+					if not self.isAdditive():
+						coords = self.translateToDefault(coords=coords)
+					anim = DiscreteMotionAnimator(attr, domval, coords[1], dur, mode, times, splines, accumulate, additive)
+				else:
+					path = svgpath.Path()
+					coords = self.__getNumPairInterpolationValues()
+					if not self.isAdditive():
+						coords = self.translateToDefault(coords=coords)
+					path.constructFromPoints(coords)
+					anim = MotionAnimator(attr, domval, path, dur, mode, times, splines, accumulate, additive='sum')
 			if anim: 
 				self.__setTimeManipulators(anim)			
 			return anim
