@@ -495,14 +495,16 @@ class _CmifPlayerView(_CmifView):
 			self.paintOn(dc)
 
 	def onMouseEvent(self, point, ev):
+		cont, stop = 0, 1	
+		
 		if not self._usesLightSubWindows:
-			_CmifView.onMouseEvent(self, point, ev)
-			return
+			if _CmifView.onMouseEvent(self, point, ev):
+				return stop
 		
 		for w in self._subwindows:
 			if w.inside(point):
 				if w.onMouseEvent(point, ev):
-					return
+					return stop
 
 		# not in a subwindow, handle it ourselves
 		disp = self._active_displist
@@ -513,7 +515,13 @@ class _CmifPlayerView(_CmifView):
 			for button in disp._buttons:
 				if button._inside(x,y):
 					buttons.append(button)
-		self.onEvent(ev,(x, y, buttons))
+			self.onEvent(ev,(x, y, buttons))
+			if self._transparent==0:
+				return stop
+			else:
+				return cont
+		return cont
+
 
 	def updateMouseCursor(self):
 		self.onMouseMove()
