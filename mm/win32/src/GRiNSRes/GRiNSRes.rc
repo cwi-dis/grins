@@ -2453,10 +2453,9 @@ FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,103,132,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,7,132,50,14
-    CONTROL         "List1",IDC_LIST1,"SysListView32",LVS_LIST | 
-                    LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | 
-                    WS_TABSTOP,7,21,146,102
     LTEXT           "Select items:",IDC_LABEL,7,7,146,8,WS_TABSTOP
+    LISTBOX         IDC_LIST1,7,21,146,108,LBS_MULTIPLESEL | WS_VSCROLL | 
+                    WS_TABSTOP
 END
 
 
