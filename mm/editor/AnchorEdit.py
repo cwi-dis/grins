@@ -151,7 +151,7 @@ class AnchorEditor:
 
 	def open(self):
 		if self.is_showing():
-			self.window.pop()
+			self.window.show()
 			return
 		self.close()
 		self.settitle(self.maketitle())

@@ -204,7 +204,7 @@ class NodeInfo:
 
 	def open(self):
 		if self.is_showing():
-			self.window.pop()
+			self.window.show()
 		else:
 			self.close()
 			self.title = self.maketitle()

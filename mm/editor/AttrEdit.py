@@ -364,7 +364,8 @@ class AttrEditor:
 
 	def show(self):
 		if self.dialog:
-			return		# already showing
+			self.dialog.show()
+			return
 		self.wrapper.register(self)
 		list = []
 		self.namelist = self.wrapper.attrnames()
