@@ -119,7 +119,9 @@ MENUBAR=(
 		(TOGGLE, ('Show Layout view', 'Hide Layout view'), '2', LAYOUTVIEW),
 		(TOGGLE, ('Show Hierarchy view', 'Hide Hierarchy view'), '3', HIERARCHYVIEW),
 		(TOGGLE, ('Show Timeline view', 'Hide Timeline view'), '4', CHANNELVIEW),
-		(TOGGLE, ('Show Hyperlink view', 'Hide Hyperlink view'), '5', LINKVIEW))),
+		(TOGGLE, ('Show Hyperlink view', 'Hide Hyperlink view'), '5', LINKVIEW),
+		(SEP,),
+		(ENTRY, 'View source', None, SOURCE))),
 )
 
 #
