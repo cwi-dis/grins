@@ -19,10 +19,9 @@ def GetFrameRate(url, maintype, subtype):
 	elif maintype == 'video':
 		if subtype.find('quicktime') >= 0 and winqt.HasQtSupport():
 			player = winqt.QtPlayer()
-			player.open(url)
-			fr = player.getFrameRate()
-		else:
-			fr = win32dxm.GetFrameRate(url)
+			if player.open(url):
+				return player.getFrameRate()
+		fr = win32dxm.GetFrameRate(url)
 	elif maintype == 'audio':
 		try:
 			import audio
