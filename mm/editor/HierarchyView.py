@@ -611,12 +611,6 @@ class HierarchyView(HierarchyViewDialog):
 	def opt_init_display(self):
 		self.draw()
 
-	def render(self):
-		self.draw()
-
-	def opt_render(self):
-		self.draw() # Is this needed?
-
 	#################################################
 	# Outside interface (inherited from ViewDialog) #
 	#################################################
@@ -960,6 +954,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Convert to pixels.
 		if not (0 <= x < 1 and 0 <= y < 1):
 			windowinterface.beep()
+			self.draw()
 			return
 		
 		x = x * self.mcanvassize[0]
@@ -974,6 +969,7 @@ class HierarchyView(HierarchyViewDialog):
 			#obj = self.whichhit(x, y)
 			if not obj:
 				windowinterface.beep()
+				self.draw()
 				return
 			self.select_widget(obj)
 			#self.setfocusobj(obj) # give the focus to the object which was dropped on.
@@ -987,7 +983,7 @@ class HierarchyView(HierarchyViewDialog):
 		t = obj.node.GetType()	# t is the type of node (String)
 		# Test for invalid targets.
 		if t == ('imm','brush','animate','prefetch'):
-			self.render()
+			self.draw()
 			windowinterface.showmessage('destination node is an immediate node, change to external?', mtype = 'question', callback = (self.cvdrop, (obj.node, window, event, params)), parent = self.window)
 			return
 		else:
@@ -1010,12 +1006,12 @@ class HierarchyView(HierarchyViewDialog):
 			# check that URL compatible with node's channel
 			if features.lightweight and \
 			   obj.node.GetChannelName() not in ctx.compatchannels(url):
-					self.render()
-					windowinterface.showmessage("file not compatible with channel type `%s'" % obj.node.GetChannelType(), mtype = 'error', parent = self.window)
-					return
+				self.draw()
+				windowinterface.showmessage("file not compatible with channel type `%s'" % obj.node.GetChannelType(), mtype = 'error', parent = self.window)
+				return
 			em = self.editmgr
 			if not em.transaction():
-				self.render()
+				self.draw()
 				return
 			obj.node.SetAttr('file', url)
 			em.commit()
@@ -1119,7 +1115,7 @@ class HierarchyView(HierarchyViewDialog):
 		lightweight = features.lightweight
 		node = self.focusnode
 		if node is None:
-			self.opt_render()
+			self.draw()
 			windowinterface.showmessage(
 				'There is no selection to insert into',
 				mtype = 'error', parent = self.window)
@@ -1132,7 +1128,7 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			pnode = node
 		if parent is None and where <> 0:
-			self.opt_render()
+			self.draw()
 			windowinterface.showmessage(
 				"Can't insert before/after the root",
 				mtype = 'error', parent = self.window)
@@ -1339,6 +1335,7 @@ class HierarchyView(HierarchyViewDialog):
 		dstobj = self.whichhit(xd, yd)
 
 		if srcobj is dstobj:
+			self.draw()
 			return
 
 		# We need to keep the nodes, because the objects get purged during each commit.
@@ -1349,10 +1346,12 @@ class HierarchyView(HierarchyViewDialog):
 		# the node will be removed from it's position and appended to one of it's children.
 		# and then, garbage collected.
 		if srcnode.IsAncestorOf(destnode):
+			self.draw()
 			windowinterface.showmessage("You can't move a node into one of it's children.", mtype='error', parent = self.window)
 			return
 
 		if not srcnode or srcnode is self.root:
+			self.draw()
 			windowinterface.beep()
 			return
 
@@ -1363,18 +1362,22 @@ class HierarchyView(HierarchyViewDialog):
 				assert nodeindex < len(destnode.children)
 				self.focusnode = destnode.children[nodeindex] # I hope that works!
 				if self.focusnode is srcnode: # The same node.
+					self.draw()
 					return
 			else:
 				if len(destnode.children)>0 and destnode.children[-1] is srcnode:
 					# The same node.
+					self.draw()
 					return
 		else:
 			# can't move to leaf node
+			self.draw()
 			windowinterface.beep()
 			return
 
 		em = self.editmgr
 		if not em.transaction():
+			self.draw()
 			return
 		self.toplevel.setwaiting()
 		em.delnode(srcnode)
@@ -1659,7 +1662,9 @@ class HierarchyView(HierarchyViewDialog):
 		if self.selected_widget: self.selected_widget.hyperlinkcall()
 
 	def rpconvertcall(self):
-		if self.selected_widget: self.selected_widget.rpconvertcall()
+		if self.selected_widget:
+			self.toplevel.setwaiting()
+			self.selected_widget.rpconvertcall()
 
 	def createbeforecall(self, chtype=None):
 		if self.selected_widget: self.selected_widget.createbeforecall(chtype)
