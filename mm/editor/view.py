@@ -3,6 +3,7 @@ import fl
 #from gl import *
 from figures import *
 #import DEVICE
+from ArcEdit import *
 
 # the view class.
 #
@@ -325,13 +326,18 @@ class view () :
 		if fy2 < ly1:
 			ly, fy = fy2, ly1
 			lx, fx = fx, lx
+			dst = lo
 		else:
 			ly, fy = ly2, fy1
+			dst = fo
 		arr = arrow().new(fx, fy, lx, ly)
+		arr.frompos = 1
+		arr.delay = 0.0
+		arr.topos = 0
 		arr.draw()
 		self.arrowlist.append(arr)
 	def arrowhit(self, arrow):
-		fl.show_message('Editing timing arc','','')
+		showarceditor(arrow)
 	def diamhit(self, diam):
 		i = self.chanboxes.index(diam)
 		name = self.channellist[i]
