@@ -65,6 +65,10 @@ class FontObject:
 	def setfont(self):
 		self.font.setfont()
 
+	# Calculate the width of a string using our font
+	def getstrwidth(self, str):
+		return self.font.getstrwidth(str)
+
 	# Draw a string centered in a box, breaking lines if necessary
 	def centerstring(self, left, top, right, bottom, str):
 		# This assumes self.setfont() has been called already
