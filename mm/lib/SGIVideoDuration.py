@@ -4,10 +4,10 @@ __version__ = "$Id$"
 
 import MMurl
 
-def _get(filename):
+def _get(url):
 	import mv
 	try:
-		filename = MMurl.urlretrieve(filename)[0]
+		filename = MMurl.urlretrieve(url)[0]
 		f = mv.OpenFile(filename, mv.MV_MPEG1_PRESCAN_OFF)
 		if hasattr(f, 'GetEstMovieDuration'):
 			# faster but not omnipresent
