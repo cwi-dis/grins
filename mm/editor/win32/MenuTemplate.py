@@ -216,9 +216,9 @@ MENUBAR=(
 		(FLAG_PRO, TOGGLE, '&Bandwidth usage strip', None, TOGGLE_BWSTRIP),
 		(FLAG_PRO, TOGGLE, 'Show &Playable', None, PLAYABLE),
 		(FLAG_ALL, CASCADE, 'Sho&w Time in Structure', (
-			(FLAG_ALL, ENTRY, '&Whole Document, Adaptive', None, TIMESCALE),
-			(FLAG_ALL, ENTRY, '&Selection Only, Adaptive', None, LOCALTIMESCALE),
-			(FLAG_ALL, ENTRY, 'Selection Only, &Fixed', None, CORRECTLOCALTIMESCALE),
+			(FLAG_ALL, TOGGLE, '&Whole Document, Adaptive', None, TIMESCALE),
+			(FLAG_ALL, TOGGLE, '&Selection Only, Adaptive', None, LOCALTIMESCALE),
+			(FLAG_ALL, TOGGLE, 'Selection Only, &Fixed', None, CORRECTLOCALTIMESCALE),
 			)),
 		(FLAG_CMIF, SEP,),
 		(FLAG_CMIF, TOGGLE, '&Timeline view follows player', None, SYNCCV),

@@ -167,13 +167,20 @@ class MMNodeContext:
 
 	def _movetimestoobj(self, node, which):
 		timeobj = node.GetTimesObject(which)
-		timeobj.t0 = node.t0
-		timeobj.t1 = node.t1
-		timeobj.t2 = node.t2
-		del node.t0
-		del node.t1
-		del node.t2
-		for child in node.GetSchedChildren():
+		if not hasattr(node, 't0'):
+			# time-transparent node, just use parent's times
+			x = node.GetParent().GetTimesObject(which)
+			timeobj.t0 = x.t0
+			timeobj.t1 = x.t1
+			timeobj.t2 = x.t2
+		else:
+			timeobj.t0 = node.t0
+			timeobj.t1 = node.t1
+			timeobj.t2 = node.t2
+			del node.t0
+			del node.t1
+			del node.t2
+		for child in node.GetChildren():
 			self._movetimestoobj(child, which)
 
 	def changedtimes(self):

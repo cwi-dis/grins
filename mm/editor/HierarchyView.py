@@ -459,6 +459,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.draw_scene()
 			#print "DEBUG: finished drawing the scene", time.time()
 		self.drawing = 0
+		self.setstate()
 
 	def resize_scene(self):
 		# Set the size of the first widget.
@@ -468,44 +469,6 @@ class HierarchyView(HierarchyViewDialog):
 
 		if x < 1.0 or y < 1.0:
 			print "Error: unconverted relative coordinates found. HierarchyView:497"
-##		if self.timescale:
-##			if self.timescale == 'global':
-##				timeroot = self.scene_graph
-##			elif self.focusnode is not None:
-##				timeroot = self.focusnode.views['struct_view']
-##			else:
-##				timeroot = None
-##			# Remove old timing info
-##			self.scene_graph.removedependencies()
-##			if timeroot is not None:
-##				# Collect the minimal pixel distance for pairs of time values,
-##				# and the minimum number of pixels needed to represent single time
-##				# values
-##				timemapper = TimeMapper.TimeMapper()
-
-##				timeroot.adddependencies(timemapper)
-##				timeroot.addcollisions(None, None, timemapper)
-##				# Now put in an extra dependency so the node for which we are going to
-##				# display time has enough room to the left of it to cater for the non-timed
-##				# nodes to be displayed there
-##				timeroot_minpos = timeroot.get_minpos()
-##				t0, t1, t2, dummy, dummy = timeroot.node.GetTimes('bandwidth')
-##				if t0 == 0:
-##					timemapper.addcollision(0, timeroot_minpos)
-##				else:
-##					timemapper.adddependency(0, t0, timeroot_minpos)
-##				print 'Minpos', t0, timeroot_minpos
-##				# Work out the equations
-##				timemapper.calculate(self.timescale == 'cfocus')
-##				# Calculate how many extra pixels this has cost us
-##				tr_width = timemapper.time2pixel(t2, align='right') - \
-##						timemapper.time2pixel(t0)
-##				tr_extrawidth = tr_width - timeroot.get_minsize()[0]
-##				print 'Normal', timeroot.get_minsize()[0], 'Timed', tr_width, "Extra", tr_extrawidth
-##				if tr_extrawidth > 0:
-##					x = x + tr_extrawidth
-##				#x = tr_width #DBG
-
 		self.scene_graph.moveto((0,0,x,y))
 		self.scene_graph.recalc()
 		self.mcanvassize = x,y
@@ -533,6 +496,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.old_droppable_widget = None
 			self.old_selected_widget = None
 			self.old_selected_icon = None
+			self.old_multi_selected_widgets = []
 		elif self.selected_widget is self.old_selected_widget and \
 		     self.selected_icon is self.old_selected_icon and \
 		     self.droppable_widget is self.old_droppable_widget and \
@@ -1452,12 +1416,12 @@ class HierarchyView(HierarchyViewDialog):
 		# Make the widget the current selection.
 		# If external is enabled, don't call the editmanager.
 
-		if self.selected_widget == widget:
+		if self.selected_widget is widget:
 			# don't do anything if the focus is already set to the requested widget.
 			# this is important because of the setglobalfocus call below.
 
 			# If we select an icon, then we also select it's widget when we have really selected it's icon.
-			if not (self.selected_icon and isinstance(self.selected_widget, StructureWidgets.MMNodeWidget)):
+			if self.selected_icon is None or not isinstance(self.selected_widget, StructureWidgets.MMNodeWidget):
 				return
 
 		# First, unselect the old widget.
@@ -1608,7 +1572,7 @@ class HierarchyView(HierarchyViewDialog):
 			node.showtime = 0
 		else:
 			node.showtime = which
-		self.refresh_scene_graph()
+##		self.refresh_scene_graph()
 		self.need_resize = 1
 		self.need_redraw = 1
 ##		import trace; trace.set_trace('StructureWidgets')
