@@ -99,8 +99,10 @@ class Timer:
 		self._localTime = 0
 		self._lastTime = None
 
-	def reset(self):
+	def resetTimer(self):
 		self._ticking = 0
+		self._localTime = 0
+		self._lastTime = None
 
 	def isTicking(self):
 		return self._ticking
@@ -209,35 +211,83 @@ class TimeElement(TimeNode, Timer):
 		self._ad = 'indefinite'
 		self._active = 0
 		self._frozen = 0
+		self._repeat = 0
+		self._syncnotify = 1
+
 		self.beginSyncArcs = []
 		self.endSyncArcs = []
+		self.repeatSyncArcs = []
+		self.eventSyncArcs = []
 
 	def addSyncArc(self, arc):
 		if arc.srcevent == 'begin':
 			self.beginSyncArcs.append(arc)
 		elif arc.srcevent == 'end':
 			self.endSyncArcs.append(arc)
+		elif arc.srcevent == 'repeat':
+			self.repeatSyncArcs.append(arc)
+		elif arc.srcevent == 'event':
+			self.eventSyncArcs.append(arc)
 
-	def calcTiming(self):
+	def calcBasicTiming(self):
 		self._dur = self.calcDur()
 		self._ad = self.calcActiveDur()
 		
-	def reset(self):
-		Timer.reset(self)
+	def resetInstance(self):
+		self.resetTimer()
+		self._dur = 'indefinite'
+		self._ad = 'indefinite'
 		self._active = 0
 		self._frozen = 0
+		self._repeat = 0
+		self._syncnotify = 1
 
-	def freeze(self):
-		self._frozen = 1
-
-	def begin(self):
+	#
+	#  DOM interface implementation
+	#
+	def beginElement(self):
+		if self.isActive():
+			return 0
 		self._active = 1
-		self.tdocument.getTimeRoot().onBeginEvent(self)
+		timeroot = self.tdocument.getTimeRoot()
+		if timeroot != self and self._syncnotify:
+			timeroot.onBeginEvent(self)
+		return 1
 
-	def end(self):
-		self._active = 0
-		self.tdocument.getTimeRoot().onEndEvent(self)
+	def endElement(self):
+		if not self.isActive():
+			return 0
+		timeroot = self.tdocument.getTimeRoot()
+		if timeroot != self and self._syncnotify:
+			timeroot.onEndEvent(self)
+		self.resetInstance()
+		return 1
 
+	def pauseElement(self):
+		if self.isTicking():
+			self.stopTimer()
+
+	def resumeElement(self):
+		if not self.isTicking():
+			self.startTimer()
+
+	def seekElement(self, seekTo):
+		self.setTime(seekTo)
+
+	def repeatElement(self, iter):
+		self._repeat = iter
+		timeroot = self.tdocument.getTimeRoot()
+		if timeroot != self and self._syncnotify:
+			timeroot.onRepeatEvent(self, iter)
+
+	def freezeElement(self):
+		self._frozen = 1
+	
+	def enableSyncNotify(self, f):
+		self._syncnotify = f
+	#
+	# basic queries
+	#
 	def isActive(self):
 		return self._active
 
@@ -255,6 +305,13 @@ class TimeElement(TimeNode, Timer):
 			return dursub(self._ad, 0.001)	 
 		return t
 
+	def clipToDur(self, t):
+		if not durlt(t, self._dur):
+			return dursub(self._dur, 0.001)	 
+		if not durlt(t, 0):
+			return 0	 
+		return t
+
 	def getDurInstanceTime(self):
 		assert self._dur!=0, 'invalid time element call'
 		repdur = self.clipToAD(self.getTime())
@@ -265,6 +322,9 @@ class TimeElement(TimeNode, Timer):
 		durinst = repdur - iter*self._dur
 		if iter>0 and durinst==0.0 and self._frozen:
 			return iter-1, self._dur
+		if iter != self._repeat:
+			self._repeat = iter
+			self.repeatElement(iter)
 		return iter, durinst
 	
 	# always resolved
@@ -423,8 +483,8 @@ class SvgSyncArc:
 		self.dstevent = dstevent
 		self.attrobj = attrobj
 
-	def updateDependant(self, tval):
-		self.attrobj.setSyncBaseValue(tval)
+	def updateDependant(self, tval, params=None):
+		self.attrobj.setSyncBaseValue(tval, params)
 
 class SvgActionArc:
 	def __init__(self, src, dst, delay, action):
@@ -459,19 +519,19 @@ class SvgActionArc:
 		else:
 			advance = dursub(seek, self.delay)
 		self.dst.startTimer(advance)
-		self.dst.begin()
+		self.dst.beginElement()
 
 	def freeze(self):
 		self.dst.stopTimer(self.dst.getActiveDur())
-		self.dst.freeze()
+		self.dst.freezeElement()
 
 	def end(self):
 		self.dst.stopTimer()
-		self.dst.end()
+		self.dst.endElement()
 
 	def dur(self):
 		self.dst.stopTimer()
-		self.dst.end()
+		self.dst.endElement()
 
 	def reread(self):
 		self.delay = self.dst.get('begin') or 0
@@ -509,7 +569,7 @@ class SvgTimeRoot(TimeElement):
 		while iter.advance(): pass
 
 	def buildTimeGraphCallback(self, node):
-		node.calcTiming()
+		node.calcBasicTiming()
 		node.createSyncArcs()
 		if node.__class__.__name__ in  self.animations:
 			node.createAnimator()
@@ -545,8 +605,8 @@ class SvgTimeRoot(TimeElement):
 		if self.isActive():
 			return 0
 		assert self._ostimer is not None, 'SVG TimeRoot needs a timer'
-		self.reset()
-		TimeElement.begin(self)
+		TimeElement.beginElement(self)
+		self.calculateTiming()
 		self.scheduleActionArcs()
 		self.startTimer()
 		self.evaluate()
@@ -555,32 +615,34 @@ class SvgTimeRoot(TimeElement):
 	def endElement(self):
 		if not self.isActive():
 			return 0
+		for el in self._children:
+			if el.isActive() or el.isFrozen():
+				el.enableSyncNotify(0)
+				el.endElement()
+		TimeElement.endElement(self)
 		self.cancelOsTimer()
 		self._ostimer = None
-		TimeElement.end(self)
-		self.stopTimer(0)
-		for el in self._children:
-			el.stopTimer(0)
-			if el.isActive() or el.isFrozen():
-				el.end()
+		self._queue.clear()
+		self._timerid = None
+		self._pauselist = []
 		return 1
 
 	def pauseElement(self):
 		if not self.isTicking():
 			return
-		self.stopTimer()
 		self.cancelOsTimer()
+		TimeElement.pauseElement(self)
 		for el in self._children:
 			if el.isTicking():
-				el.stopTimer()
+				el.pauseElement()
 				self._pauselist.append(el)
 
 	def resumeElement(self):
 		if self.isTicking():
 			return
-		self.startTimer()
+		TimeElement.resumeElement(self)
 		for el in self._pauselist:
-			el.startTimer()
+			el.resumeElement()
 		self._pauselist = []
 		self.evaluate()
 
@@ -601,6 +663,10 @@ class SvgTimeRoot(TimeElement):
 		for arc in node.endSyncArcs:
 			arc.updateDependant(self.getTime())
 
+	def onRepeatEvent(self, node, index):
+		for arc in node.repeatSyncArcs:
+			arc.updateDependant(self.getTime(), index)
+		
 	#
 	#  navigator interface
 	#
@@ -616,20 +682,20 @@ class SvgTimeRoot(TimeElement):
 	#
 	#  implementation specific interface
 	#
+	def calculateTiming(self):
+		doc = self.getTimeDocument()
+		iter = doc.createDOMNavigator(self, self, self.calculateTimingCallback)
+		while iter.advance(): pass
+
+	def calculateTimingCallback(self, node):
+		node.calcBasicTiming()
+
 	def scheduleActionArcs(self):
 		for arc in self._arcs:
 			delay = arc.getDelay()
 			if delay != 'unresolved':
 				self._queue.schedule(delay, arc)
 		
-	def reset(self):
-		TimeElement.reset(self)
-		for el in self._children:
-			el.reset()
-		self._queue.clear()
-		self._timerid = None
-		self._pauselist = []
-
 	def get(self, attr):
 		return None
 

@@ -207,6 +207,7 @@ class SVGSynchronizeable:
 	def __init__(self):
 		self.arcs = []
 		self.syncbaseval = None
+		self.syncbaseparams = None
 
 	def addSyncArc(self, a):
 		self.arcs.append(a)
@@ -219,8 +220,9 @@ class SVGSynchronizeable:
 		pass
 
 	# set base value
-	def setSyncBaseValue(self, val):
+	def setSyncBaseValue(self, val, params=None):
 		self.syncbaseval = val
+		self.syncbaseparams = params
 
 ################
 # svg types
@@ -691,6 +693,7 @@ class SVGSyncTime(SVGSynchronizeable):
 		self._units = None
 		self._syncbase = None
 		self._syncevent = None
+		self._syncparams = None
 		self._default = default
 		if str:
 			str = string.strip(str)
@@ -709,8 +712,8 @@ class SVGSyncTime(SVGSynchronizeable):
 					self._units = units
 
 	def duradd(self, v1, v2):
-		if v1 is None or v2 is None:
-			return None
+		if v1 is 'unresolved' or v2 is 'unresolved':
+			return 'unresolved'
 		elif v1=='indefinite' or v2=='indefinite':
 			return 'indefinite'
 		else:
@@ -740,6 +743,12 @@ class SVGSyncTime(SVGSynchronizeable):
 	
 	def hasSyncBaseTiming(self):
 		return 	self.syncbaseval is None
+	
+	def setSyncBaseValue(self, val, params=None):
+		if self._syncevent in ('begin', 'end'):
+			self.syncbaseval = val
+		elif self._syncevent == 'repeat' and params == self._syncparams:
+			self.syncbaseval = val
 			
 # fill:none; stroke:blue; stroke-width: 20
 class SVGStyle:

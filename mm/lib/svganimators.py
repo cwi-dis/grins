@@ -133,6 +133,7 @@ class Animator:
 		# i.e. assert end-point exclusive model
 		if self._dur>0: 
 			if t<0 or t>self._dur or (t==self._dur and not self._autoReverse):
+				print 't=',t, 'dur=', self._dur
 				raise AssertionError
 			
 		# compute interpolated value according to calcMode

@@ -362,13 +362,6 @@ class AnimateElement(SvgElement, svgtime.TimeElement):
 
 		self.checkValues()
 
-	def onDocLoadXXX(self):
-		if self._targetElement is None:
-			self._targetElement = self.findTargetElement()
-		assert self._targetElement != None, 'invalid target element'
-		self._dur = self.calcDur() # animators need dur attr
-		self.animator = self.createAnimator()
-
 	def createAnimator(self):
 		assert self._targetElement != None, 'invalid target element'
 		return None
@@ -470,20 +463,16 @@ class AnimateElement(SvgElement, svgtime.TimeElement):
 			return 0, ValueClass(self, self.attrdict.get('by')).getValue()
 		return None
 
-	def reset(self):
-		svgtime.TimeElement.reset(self)
-		if self.animator and self._targetAttr:
-			self.animator.reset()
-		
-	def begin(self):
-		svgtime.TimeElement.begin(self)
+	def beginElement(self):
+		svgtime.TimeElement.beginElement(self)
 		if self.animator and self._targetAttr:
 			self._targetAttr.appendAnimator(self.animator)	
 
-	def end(self):
-		svgtime.TimeElement.end(self)
+	def endElement(self):
+		svgtime.TimeElement.endElement(self)
 		if self.animator and self._targetAttr:
 			self._targetAttr.removeAnimator(self.animator)
+			self.animator.reset()
 
 	def createSyncArcs(self):
 		attr = self.getXMLAttr('begin', create = 0)
