@@ -81,7 +81,7 @@ class SoundChannel(Channel):
 		# NB This never uses the 'duration' attribute!
 		filename = self.getfilename(node)
 		try:
-			return getduration(filename)
+			return duration_cache.get(filename)
 		except IOError:
 			print 'cannot get duration for sound file ' + filename
 			return MMAttrdefs.getattr(node, 'duration')
@@ -297,3 +297,9 @@ def restore():
 	if sound_params[1] <> 0:
 		import al
 		al.setparams(AL.DEFAULT_DEVICE, sound_params)
+
+
+# Cache durations
+
+import FileCache
+duration_cache = FileCache.FileCache().init(getduration)
