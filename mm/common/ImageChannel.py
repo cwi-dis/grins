@@ -42,27 +42,30 @@ class ImageChannel(ChannelWindow):
 		hicolor = self.gethicolor(node)
 		for a in alist:
 			args = a[A_ARGS]
-			if len(args) == 0:
-				args = [0,0,1,1]
-			elif len(args) == 4:
-				args = self.convert_args(f, args)
-			if len(args) != 4:
-				print 'ImageChannel: funny-sized anchor'
+			atype = a[A_TYPE]
+			if atype in DestOnlyAnchors or atype == ATYPE_AUTO:
 				continue
-			if a[A_TYPE] in WholeAnchors:
-				continue
-## 			if args == [0, 0, 1, 1]:
-## 			    continue
-			x, y, w, h = args[0], args[1], args[2], args[3]
-			# convert coordinates from image size to window size
-			x = x * self._arm_imbox[2] + self._arm_imbox[0]
-			y = y * self._arm_imbox[3] + self._arm_imbox[1]
-			w = w * self._arm_imbox[2]
-			h = h * self._arm_imbox[3]
+			if atype == ATYPE_WHOLE:
+				# whole node means whole node...
+				x, y, w, h = 0, 0, 1, 1
+			else:
+				if len(args) == 0:
+					args = [0,0,1,1]
+				elif len(args) == 4:
+					args = self.convert_args(f, args)
+				if len(args) != 4:
+					print 'ImageChannel: funny-sized anchor'
+					continue
+				x, y, w, h = args[0], args[1], args[2], args[3]
+				# convert coordinates from image to window size
+				x = x * self._arm_imbox[2] + self._arm_imbox[0]
+				y = y * self._arm_imbox[3] + self._arm_imbox[1]
+				w = w * self._arm_imbox[2]
+				h = h * self._arm_imbox[3]
 			b = self.armed_display.newbutton((x, y, w, h))
 			b.hiwidth(3)
 			b.hicolor(hicolor)
-			self.setanchor(a[A_ID], a[A_TYPE], b)
+			self.setanchor(a[A_ID], atype, b)
 		return 1
 
 	def defanchor(self, node, anchor, cb):
