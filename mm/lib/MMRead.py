@@ -23,7 +23,10 @@ def ReadFileContext(filename, context):
 	if root:
 		_fixcontext(root)
 		return root
-	return ReadOpenFileContext(open(filename, 'r'), filename, context)
+	# no cache file, parse the file and create the cache (if possible)
+	root = ReadOpenFileContext(open(filename, 'r'), filename, context)
+	MMCache.dumpcache(root, filename)
+	return root
 
 
 # Read a CMF file that is already open (for reading)
