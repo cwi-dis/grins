@@ -3,6 +3,7 @@ import WMEVENTS
 import win32ui, win32con
 import longpath
 import string
+import usercmd
 
 Sdk=win32ui.GetWin32Sdk()
 
