@@ -111,6 +111,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		self.addtocommand('s', addSequential, 'add sequential node')
 		self.addtocommand('u', unzoomfunc, 'unzoom node')
 		self.addtocommand('z', zoomfunc, 'zoom node')
+		self.addtocommand('i', infofunc, 'open node info window')
 	#
 
 	# blockview gets a region in the form where it recursively
@@ -537,3 +538,9 @@ def zoomfunc (bv) :
 	bv.setfocus(bv.focus)
 	bv.form.unfreeze_form ()
 	bv.rootview = node
+
+import NodeInfo
+
+def infofunc(bv):
+	node = bv.focus
+	NodeInfo.shownodeinfo(node)
