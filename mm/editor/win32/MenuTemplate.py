@@ -51,7 +51,7 @@ MENUBAR=(
 		(FLAG_QT_PRO, ENTRY, 'Pu&blish for QuickTime and upload...', None, UPLOAD_QT),
 		(FLAG_G2_PRO, ENTRY, 'Publish for &G2...', None, EXPORT_G2),
 		(FLAG_G2_PRO, ENTRY, 'Pu&blish for G2 and upload...', None, UPLOAD_G2),
-		(FLAG_ALL, SEP,),
+		(FLAG_QT_PRO | FLAG_G2_PRO, SEP,),
 		(FLAG_ALL, ENTRY, '&Document Properties...', None, PROPERTIES),
 		(FLAG_DBG, SEP,),
 		(FLAG_DBG, CASCADE, 'D&ebug', (
@@ -80,18 +80,18 @@ MENUBAR=(
 			)),
 		(FLAG_ALL, ENTRY, '&Delete\tCtrl+Del', None, DELETE),
 		(FLAG_ALL, SEP,),
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&New node...', None, NEW_AFTER),
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, 'New c&hannel', None, NEW_CHANNEL),
+		(FLAG_PRO, ENTRY, '&New node...', None, NEW_AFTER),
+		(FLAG_PRO, ENTRY, 'New c&hannel', None, NEW_CHANNEL),
 
 ## Windows dialogs apparently don't use usercmd commands.
-##		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, 'New &layout', None, NEW_LAYOUT),
-		(FLAG_G2_PRO | FLAG_QT_PRO, SEP,),
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Move channel', None, MOVE_CHANNEL),
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, 'C&opy channel', None, COPY_CHANNEL),
+##		(FLAG_PRO, ENTRY, 'New &layout', None, NEW_LAYOUT),
+		(FLAG_PRO, SEP,),
+		(FLAG_PRO, ENTRY, '&Move channel', None, MOVE_CHANNEL),
+		(FLAG_PRO, ENTRY, 'C&opy channel', None, COPY_CHANNEL),
 		(FLAG_CMIF, ENTRY, 'To&ggle channel state', None, TOGGLE_ONOFF),
-##		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, 'Edit Source...', None, EDITSOURCE),
-		(FLAG_G2_PRO | FLAG_QT_PRO, SEP,),
-##		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Info...', 'I', INFO),
+##		(FLAG_PRO, ENTRY, 'Edit Source...', None, EDITSOURCE),
+		(FLAG_PRO, SEP,),
+##		(FLAG_PRO, ENTRY, '&Info...', 'I', INFO),
 		(FLAG_ALL, ENTRY, 'Propertie&s...', 'A', ATTRIBUTES),
 		(FLAG_ALL, ENTRY, '&Edit Content...', 'E', CONTENT),
 		(FLAG_ALL, SEP,),
@@ -114,6 +114,11 @@ MENUBAR=(
 			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_TEXT),
 			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_TEXT),
 		)),
+		(FLAG_SMIL_1_0, CASCADE, '&HTML node', (
+			(FLAG_SMIL_1_0, ENTRY, '&Before', None, NEW_BEFORE_HTML),
+			(FLAG_SMIL_1_0, ENTRY, '&After', None, NEW_AFTER_HTML),
+			(FLAG_SMIL_1_0, ENTRY, '&Within', None, NEW_UNDER_HTML),
+			)),
 		(FLAG_ALL, CASCADE, 'S&ound node', (
 			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SOUND),
 			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SOUND),
@@ -148,8 +153,8 @@ MENUBAR=(
 			(FLAG_CMIF, ENTRY, '&After', None, NEW_AFTER_CHOICE),
 			(FLAG_CMIF, ENTRY, '&Within', None, NEW_UNDER_CHOICE),
 		)),
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Within...', None, NEW_UNDER),
+		(FLAG_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
+		(FLAG_PRO, ENTRY, '&Within...', None, NEW_UNDER),
 		)),
 	('&Play', (
 		(FLAG_ALL, ENTRY, '&Play\tCtrl+P', 'P', PLAY),
@@ -167,29 +172,29 @@ MENUBAR=(
 	('&Linking', (
 		(FLAG_ALL, ENTRY, 'C&reate whole node anchor', None, CREATEANCHOR),
 		(FLAG_ALL, ENTRY, '&Finish hyperlink to selection', None, FINISH_LINK),
-##		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Anchors...', 'T', ANCHORS),
-		(FLAG_G2_PRO | FLAG_QT_PRO, SEP,),
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, 'Create s&ync arc from selection...', None, FINISH_ARC),
-		(FLAG_G2_PRO | FLAG_QT_PRO, DYNAMICCASCADE, 'Select &sync arc', SYNCARCS),
+##		(FLAG_PRO, ENTRY, '&Anchors...', 'T', ANCHORS),
+		(FLAG_PRO, SEP,),
+		(FLAG_PRO, ENTRY, 'Create s&ync arc from selection...', None, FINISH_ARC),
+		(FLAG_PRO, DYNAMICCASCADE, 'Select &sync arc', SYNCARCS),
 		)),
 
 	('&View', (
 		(FLAG_ALL, ENTRY, '&Expand/Collapse\tCtrl+I', None, EXPAND),
 		(FLAG_ALL, ENTRY, 'E&xpand all', None, EXPANDALL),
 		(FLAG_ALL, ENTRY, '&Collapse all', None, COLLAPSEALL),
-		(FLAG_G2_PRO | FLAG_QT_PRO, SEP,),
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Zoom in', None, CANVAS_WIDTH),
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Fit in Window', None, CANVAS_RESET),
-		(FLAG_G2_PRO | FLAG_QT_PRO, SEP,),
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Synchronize selection', None, PUSHFOCUS),
+		(FLAG_PRO, SEP,),
+		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_WIDTH),
+		(FLAG_PRO, ENTRY, '&Fit in Window', None, CANVAS_RESET),
+		(FLAG_PRO, SEP,),
+		(FLAG_PRO, ENTRY, '&Synchronize selection', None, PUSHFOCUS),
 		(FLAG_ALL, SEP,),
-		(FLAG_G2_PRO | FLAG_QT_PRO, TOGGLE, 'Show/Hide unused c&hannels', None, TOGGLE_UNUSED),
-		(FLAG_G2_PRO | FLAG_QT_PRO, TOGGLE, 'Sync &arcs', None, TOGGLE_ARCS),
-		(FLAG_G2_PRO | FLAG_QT_PRO, TOGGLE, '&Image thumbnails', None, THUMBNAIL),
+		(FLAG_PRO, TOGGLE, 'Show/Hide unused c&hannels', None, TOGGLE_UNUSED),
+		(FLAG_PRO, TOGGLE, 'Sync &arcs', None, TOGGLE_ARCS),
+		(FLAG_PRO, TOGGLE, '&Image thumbnails', None, THUMBNAIL),
 		(FLAG_ALL, ENTRY, 'Check bandwidth &usage', None, COMPUTE_BANDWIDTH),
-		(FLAG_G2_PRO | FLAG_QT_PRO, TOGGLE, '&Bandwidth usage strip', None, TOGGLE_BWSTRIP),
-		(FLAG_G2_PRO | FLAG_QT_PRO, TOGGLE, 'Show &Playable', None, PLAYABLE),
-		(FLAG_G2_PRO | FLAG_QT_PRO, TOGGLE, 'Show &Durations', None, TIMESCALE),
+		(FLAG_PRO, TOGGLE, '&Bandwidth usage strip', None, TOGGLE_BWSTRIP),
+		(FLAG_PRO, TOGGLE, 'Show &Playable', None, PLAYABLE),
+		(FLAG_PRO, TOGGLE, 'Show &Durations', None, TIMESCALE),
 		(FLAG_CMIF, SEP,),
 		(FLAG_CMIF, TOGGLE, '&Timeline view follows player', None, SYNCCV),
 		(FLAG_CMIF, CASCADE, '&Minidoc navigation', (
@@ -215,10 +220,10 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, '&Player\tF5', '1', PLAYERVIEW),
 ##		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Structure view\tF6', '3', HIERARCHYVIEW),
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Timeline view\tF7', '4', CHANNELVIEW),
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW),
+		(FLAG_PRO, ENTRY, '&Timeline view\tF7', '4', CHANNELVIEW),
+		(FLAG_PRO, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW),
 ##		(FLAG_ALL, SEP,),
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, 'H&yperlinks', '5', LINKVIEW),
+		(FLAG_PRO, ENTRY, 'H&yperlinks', '5', LINKVIEW),
 		(FLAG_CMIF, ENTRY, 'User &groups', '6', USERGROUPVIEW),
 ##		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Sourc&e', '7', SOURCE),
@@ -243,9 +248,9 @@ NODOC_MENUBAR=(MENUBAR[0],MENUBAR[7])
 POPUP_HVIEW_LEAF = (
 		# XXXX Need to add the "new xxx node" commands for the
 		# light version
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&New node...', None, NEW_AFTER),
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, 'New node &before...', None, NEW_BEFORE),
-		(FLAG_G2_PRO | FLAG_QT_PRO, SEP,),
+		(FLAG_PRO, ENTRY, '&New node...', None, NEW_AFTER),
+		(FLAG_PRO, ENTRY, 'New node &before...', None, NEW_BEFORE),
+		(FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
 		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
 		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_AFTER),
@@ -265,6 +270,10 @@ POPUP_HVIEW_LEAF = (
 			(FLAG_ALL, CASCADE, '&Text node', (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_TEXT),
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_TEXT),
+				)),
+			(FLAG_SMIL_1_0, CASCADE, '&HTML node', (
+				(FLAG_SMIL_1_0, ENTRY, '&Before', None, NEW_BEFORE_HTML),
+				(FLAG_SMIL_1_0, ENTRY, '&After', None, NEW_AFTER_HTML),
 				)),
 			(FLAG_ALL, CASCADE, 'S&ound node', (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SOUND),
@@ -294,7 +303,7 @@ POPUP_HVIEW_LEAF = (
 				(FLAG_CMIF, ENTRY, '&Before', None, NEW_BEFORE_CHOICE),
 				(FLAG_CMIF, ENTRY, '&After', None, NEW_AFTER_CHOICE),
 				)),
-			(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
+			(FLAG_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
 			)),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'P&lay node', None, PLAYNODE),
@@ -303,9 +312,9 @@ POPUP_HVIEW_LEAF = (
 		(FLAG_ALL, ENTRY, 'Create &whole node anchor', None, CREATEANCHOR),
 		(FLAG_ALL, ENTRY, 'Finish &hyperlink to selection', None, FINISH_LINK),
 		(FLAG_ALL, SEP,),
-##		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Info...', None, INFO),
+##		(FLAG_PRO, ENTRY, '&Info...', None, INFO),
 		(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
-##		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Anchors...', None, ANCHORS),
+##		(FLAG_PRO, ENTRY, '&Anchors...', None, ANCHORS),
 		(FLAG_ALL, ENTRY, '&Edit content', None, CONTENT),
 )
 
@@ -329,12 +338,12 @@ POPUP_HVIEW_SLIDE = (
 )
 
 POPUP_HVIEW_STRUCTURE = (
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&New node...', None, NEW_AFTER),
-		(FLAG_G2_PRO | FLAG_QT_PRO, CASCADE, 'Ne&w node special', (
-			(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
-			(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Within...', None, NEW_UNDER),
+		(FLAG_PRO, ENTRY, '&New node...', None, NEW_AFTER),
+		(FLAG_PRO, CASCADE, 'Ne&w node special', (
+			(FLAG_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
+			(FLAG_PRO, ENTRY, '&Within...', None, NEW_UNDER),
 			)),
-		(FLAG_G2_PRO | FLAG_QT_PRO, SEP,),
+		(FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
 		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
 		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_AFTER),
@@ -360,6 +369,11 @@ POPUP_HVIEW_STRUCTURE = (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_TEXT),
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_TEXT),
 				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_TEXT),
+				)),
+			(FLAG_SMIL_1_0, CASCADE, '&HTML node', (
+				(FLAG_SMIL_1_0, ENTRY, '&Before', None, NEW_BEFORE_HTML),
+				(FLAG_SMIL_1_0, ENTRY, '&After', None, NEW_AFTER_HTML),
+				(FLAG_SMIL_1_0, ENTRY, '&Within', None, NEW_UNDER_HTML),
 				)),
 			(FLAG_ALL, CASCADE, 'S&ound node', (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SOUND),
@@ -395,8 +409,8 @@ POPUP_HVIEW_STRUCTURE = (
 				(FLAG_CMIF, ENTRY, '&After', None, NEW_AFTER_CHOICE),
 				(FLAG_CMIF, ENTRY, '&Within', None, NEW_UNDER_CHOICE),
 				)),
-			(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
-			(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Within...', None, NEW_UNDER),
+			(FLAG_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
+			(FLAG_PRO, ENTRY, '&Within...', None, NEW_UNDER),
 			)),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'P&lay node', None, PLAYNODE),
@@ -408,9 +422,9 @@ POPUP_HVIEW_STRUCTURE = (
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Finish hyperlin&k to selection', None, FINISH_LINK),
 		(FLAG_ALL, SEP,),
-##		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Info...', None, INFO),
+##		(FLAG_PRO, ENTRY, '&Info...', None, INFO),
 		(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
-##		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Anchors...', None, ANCHORS),
+##		(FLAG_PRO, ENTRY, '&Anchors...', None, ANCHORS),
 )
 
 POPUP_CVIEW_NONE = (
@@ -445,15 +459,15 @@ POPUP_CVIEW_NODE = (
 		(FLAG_ALL, ENTRY, 'Finish hyperlin&k to selection...', None, FINISH_LINK),
 		(FLAG_ALL, ENTRY, 'Create &syncarc from selection...', None, FINISH_ARC),
 		(FLAG_ALL, SEP,),
-##		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Info...', None, INFO),
+##		(FLAG_PRO, ENTRY, '&Info...', None, INFO),
 		(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
-##		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Anchors...', None, ANCHORS),
+##		(FLAG_PRO, ENTRY, '&Anchors...', None, ANCHORS),
 		(FLAG_ALL, ENTRY, '&Edit content', None, CONTENT),
 )
 
 POPUP_CVIEW_SYNCARC = (
-		(FLAG_G2_PRO | FLAG_QT_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
-		(FLAG_G2_PRO | FLAG_QT_PRO, SEP,),
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+		(FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
 )
 
@@ -473,7 +487,7 @@ MAIN_FRAME_POPUP = (
 		(FLAG_QT_PRO, ENTRY, 'Pu&blish for QuickTime and upload...', None, UPLOAD_QT),
 		(FLAG_G2_PRO, ENTRY, 'Publish for &G2...', None, EXPORT_G2),
 		(FLAG_G2_PRO, ENTRY, 'Pu&blish for G2 and upload...', None, UPLOAD_G2),
-		(FLAG_ALL, SEP,),
+		(FLAG_QT_PRO | FLAG_G2_PRO, SEP,),
 		(FLAG_ALL, ENTRY, '&Document Properties...', None, PROPERTIES),
 		(FLAG_DBG, SEP,),
 		(FLAG_DBG, CASCADE, 'D&ebug', (

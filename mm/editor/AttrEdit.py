@@ -683,11 +683,12 @@ class ChannelWrapper(Wrapper):
 
 
 class DocumentWrapper(Wrapper):
-	__stdnames = ['title', 'author', 'copyright', 'base', 
+	__stdnames = ['title', 'author', 'copyright', 'base']
+	__publishnames = [
 			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
 			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
-			'project_smil_url', 'autoplay', 'qttimeslider', 'qtnext',
-			'qtchaptermode', 'immediateinstantiation']
+			'project_smil_url']
+	__qtnames = ['autoplay', 'qttimeslider', 'qtnext', 'qtchaptermode', 'immediateinstantiation']
 
 	def __init__(self, toplevel):
  		Wrapper.__init__(self, toplevel, toplevel.context)
@@ -746,16 +747,22 @@ class DocumentWrapper(Wrapper):
 	def attrnames(self):
 		attrs = self.context.attributes
 		names = attrs.keys()
-		for name in self.__stdnames:
+		for name in self.__stdnames + self.__publishnames + self.__qtnames:
 			if attrs.has_key(name):
 				names.remove(name)
 		if not features.lightweight and \
+		   features.compatibility != features.SMIL10 and \
 		   not attrs.has_key('project_html_page'):
 			names.append('project_html_page')
-		elif features.lightweight and \
+		elif (features.lightweight or
+		      features.compatibility == features.SMIL10) and \
 		     attrs.has_key('project_html_page'):
 			names.remove('project_html_page')
 		names.sort()
+		if features.compatibility in (features.G2, features.QT):
+			if features.compatibility == features.QT:
+				names = self.__qtnames + names
+			names = self.__publishnames + names
 		return self.__stdnames + names
 		
 	def valuerepr(self, name, value):
@@ -873,10 +880,11 @@ class PreferenceWrapper(Wrapper):
 
 	def attrnames(self):
 		attrs = self.__strprefs.keys() + self.__intprefs.keys() + self.__boolprefs.keys() + self.__specprefs.keys()
-		if features.compatibility == features.G2:
+		if features.compatibility != features.CMIF:
 			attrs.remove('cmif')
-			attrs.remove('html_control')
-		elif os.name in ('posix', 'mac'):
+			if features.compatibility != features.SMIL10:
+				attrs.remove('html_control')
+		if os.name in ('posix', 'mac') and 'html_control' in attrs:
 			attrs.remove('html_control')
 		attrs.sort()
 		return attrs
@@ -1216,8 +1224,8 @@ class AttrEditor(AttrEditorDialog):
 			# Most often, this is because there was no file name.
 			# Webservers will then generally return an HTML page.
 			import settings
-			if features.compatibility == features.G2:
-				# G2 player doesn't do HTML
+			if features.compatibility == features.G2 or features.compatibility == features.QT:
+				# G2 and QuickTime players don't do HTML
 				return 'text'
 			return 'html'
 		chtypes = ChannelMime.MimeChannel.get(mtype)

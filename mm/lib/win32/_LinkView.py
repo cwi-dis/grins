@@ -244,7 +244,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 				else:
 					self.call(key)
 				break
-	# Response to the user selection to diaplay a popup menu
+	# Response to the user selection to display a popup menu
 	def on_menu(self,menu,str):
 		lc,tc,rc,bc=self[str].getwindowrect()
 		try:

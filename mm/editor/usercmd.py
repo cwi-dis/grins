@@ -146,6 +146,8 @@ class NEW_BEFORE_IMAGE(_CommandBase):
 	help = 'Create new image node before selected node'
 class NEW_BEFORE_TEXT(_CommandBase):
 	help = 'Create new text node before selected node'
+class NEW_BEFORE_HTML(_CommandBase):
+	help = 'Create new HTML node before selected node'
 class NEW_BEFORE_SOUND(_CommandBase):
 	help = 'Create new sound node before selected node'
 class NEW_BEFORE_VIDEO(_CommandBase):
@@ -166,6 +168,8 @@ class NEW_AFTER_IMAGE(_CommandBase):
 	help = 'Create new image node after selected node'
 class NEW_AFTER_TEXT(_CommandBase):
 	help = 'Create new text node after selected node'
+class NEW_AFTER_HTML(_CommandBase):
+	help = 'Create new HTML node after selected node'
 class NEW_AFTER_SOUND(_CommandBase):
 	help = 'Create new sound node after selected node'
 class NEW_AFTER_VIDEO(_CommandBase):
@@ -186,6 +190,8 @@ class NEW_UNDER_IMAGE(_CommandBase):
 	help = 'Create new image under selected node'
 class NEW_UNDER_TEXT(_CommandBase):
 	help = 'Create new text node under selected node'
+class NEW_UNDER_HTML(_CommandBase):
+	help = 'Create new HTML node under selected node'
 class NEW_UNDER_SOUND(_CommandBase):
 	help = 'Create new sound node under selected node'
 class NEW_UNDER_VIDEO(_CommandBase):
