@@ -52,11 +52,12 @@ class Window:
 		self._drawsurf = None
 		self._frozen = 0
 
-	def create(self, parent, coordinates, units, z=0, transparent=0):
+	def create(self, parent, coordinates, units, z=0, transparent=0, bgcolor=None):
 		self.__setparent(parent)
 		self.__setcoordinates(coordinates, units)
 		self.__set_z_order(z)
 		self.__settransparent(transparent)
+		self._bgcolor = bgcolor
 
 	def __repr__(self):
 		return '<Window instance at %x>' % id(self)
@@ -746,11 +747,11 @@ import win32ui, win32con, win32api
 import win32transitions
 
 class SubWindow(Window):
-	def __init__(self, parent, coordinates, transparent, z, units):
+	def __init__(self, parent, coordinates, transparent, z, units, bgcolor):
 		Window.__init__(self)
 		
 		# create the window
-		self.create(parent, coordinates, units, z, transparent)
+		self.create(parent, coordinates, units, z, transparent, bgcolor)
 
 		# implementation specific
 		self._oswnd = None
@@ -764,8 +765,8 @@ class SubWindow(Window):
 	def __repr__(self):
 		return '<_SubWindow instance at %x>' % id(self)
 		
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		return SubWindow(self, coordinates, transparent, z, units)
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
+		return SubWindow(self, coordinates, transparent, z, units, bgcolor)
 
 	def close(self):
 		if self._parent is None:
@@ -1110,6 +1111,13 @@ class SubWindow(Window):
 		for w in L:
 			w.paintOnDDS(dds, rel)
 
+	def getBackDDS(self):
+		bf = self._topwindow._backBuffer
+		x, y, w, h = self.getwindowpos()
+		dds = self.createDDS()
+		dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
+		return dds
+
 	def bltDDS(self, srfc):
 		rc_dst = self.getwindowpos()
 		src_w, src_h = srfc.GetSurfaceDesc().GetSize()
@@ -1265,13 +1273,14 @@ class SubWindow(Window):
 	# Transitions interface
 	#		
 	def begintransition(self, outtrans, runit, dict):
-		# print 'begintransition', self, outtrans, runit, dict
+		#print 'begintransition', self, outtrans, runit, dict
 		if not self._passive:
-			self._passive = self.createDDS(erase=1)
+			self._passive = self.getBackDDS()
 		self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict)
 		self._transition.begintransition()
 
 	def endtransition(self):
+		#print 'endtransition'
 		if self._transition:
 			self._transition.endtransition()
 			self._transition = None
@@ -1298,10 +1307,9 @@ class SubWindow(Window):
 		# how='hold' forever,
 		# how=None clears a previous how='hold'. This basically means the next
 		# close() of a display list does not do an erase.
-		# print 'freeze_content', how, self
+		#print 'freeze_content', how, self
 		if how:
-			self._passive = self.createDDS()
-			self.paintOnDDS(self._passive, self)
+			self._passive = self.getBackDDS()
 			self._frozen = how
 		elif self._frozen:
 			self._passive = None
