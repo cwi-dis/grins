@@ -325,44 +325,42 @@ class ChannelView(ChannelViewDialog):
 	def mapchannel(self, channel, line = 0):
 		# Map channel to left and right coordinates
 		if channel.chview_map is not None:
-			x, y, height = channel.chview_map
+			x, y, height = channel.chview_map[:3]
 			return x + line*height, y + line*height
 		list = self.visiblechannels()
 		channellines = self.channellines
 		nchannels = len(list)
-		x = 0
 		nlines = 0
-		i = None
+		found = 0
 		for ch in list:
-			if channel is ch:
-				i = nlines
-				chx = x
 			n = channellines.get(ch.name, 0) or 1
-			x = x + n * CHANHEIGHT + CHANGAP
+			if channel is ch:
+				found = 1
 			nlines = nlines + n
-		if i is None:
+		if not found:
 			# channel not visible
 			return 0, 0
+		# store the hard-won information
 		totheight = nlines * CHANHEIGHT + nchannels * CHANGAP
 		factor = float(self.bandwidthstripborder) / totheight
-		chy = (chx + CHANHEIGHT) * factor
-		chx = chx * factor
 		chh = CHANHEIGHT*factor
-		channel.chview_map = chx, chy, chh
-		return chx + line * chh, chy + line * chh
+		x = 0
+		for ch in list:
+			n = channellines.get(ch.name, 0) or 1
+			chy = (x + CHANHEIGHT) * factor
+			chx = x * factor
+			x = x + n * CHANHEIGHT + CHANGAP
+			ch.chview_map = chx, chy, chh, n
+		x, y, height = channel.chview_map[:3]
+		return x + line*height, y + line*height
 
 	def channelgapindex(self, y):
 		list = self.visiblechannels()
-		nchannels = len(list)
-		if nchannels == 0:
-		    return 0
-		height = float(self.bandwidthstripborder) / nchannels
-		rv = int((y+height/2)/height)
-		if rv < 0:
-		    rv = 0
-		elif rv > nchannels:
-		    rv = nchannels
-		return rv
+		for i in range(len(list)):
+			y0, y1, h, n = list[i].chview_map
+			if y0 <= y <= y1 + (n-1) * h:
+				return i
+		return len(list)
 
 	# Clear the list of objects we know
 
@@ -624,7 +622,7 @@ class ChannelView(ChannelViewDialog):
 			if c.used:
 				self.usedchannels.append(c)
 			elif not self.showall:
-				c.chview_map = 0, 0, 0
+				c.chview_map = 0, 0, 0, 0
 		self.addancestors()
 		self.addsiblings()
 
@@ -1737,8 +1735,15 @@ class ChannelBox(GO, ChannelBoxCommand):
 		# Draw a gray and a white vertical line
 		d = self.mother.new_displist
 		d.fgcolor(BORDERCOLOR)
-		d.drawline(BORDERCOLOR, [(self.right, self.ycenter),
-					 (self.farright, self.ycenter)])
+##		d.drawline(BORDERCOLOR, [(self.right, self.ycenter),
+##					 (self.farright, self.ycenter)])
+		x, y, h, n = self.channel.chview_map
+		top = self.mother.mapchannel(self.channel)[0]
+		bottom = self.mother.mapchannel(self.channel, (self.mother.channellines.get(self.channel.name, 0) or 1) - 1)[1]
+		d.drawline(BORDERCOLOR, [(0.0, top),
+					 (1.0, top)])
+		d.drawline(BORDERCOLOR, [(0.0, bottom),
+					 (1.0, bottom)])
 
 	# Menu stuff beyond what GO offers
 
