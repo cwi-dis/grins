@@ -2539,11 +2539,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def end_body(self):
 		self.end_seq()
 		self.__in_body = 0
-		if self.__hidden_body and len(self.__root.children) == 1:
-			root = self.__root
-			self.__root = root.children[0]
-			self.__root.Extract()
-			root.Destroy()
+		if self.__hidden_body:
+			assets = []
+			for c in self.__root.children:
+				if c.type == 'assets':
+					assets.append(c)
+			if len(self.__root.children) == len(assets) + 1:
+				for c in assets:
+					c.Extract()
+				root = self.__root
+				self.__root = root.children[0] # only remaining child
+				self.__root.Extract()
+				root.Destroy()
+				for c in assets:
+					c.AddToTree(self.__root, -1)
 
 	def start_meta(self, attributes):
 		self.__fix_attributes(attributes)

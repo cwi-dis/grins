@@ -2072,11 +2072,10 @@ class SMILWriter(SMIL):
 			for child in x.GetChildren():
 				self.writenode(child)
 			if root:
-				# XXXX This is not really the right place to do this
-				# as "funny" root node types will cause the assets not
-				# to be written.
 				assets = x.context.getassets()
 				if assets:
+					if type != 'seq' or (not self.smilboston and attrlist):
+						self.pop()
 					self.writetag(NSGRiNSprefix + ':assets', [('skip-content', 'true')])
 					self.push()
 					for child in assets:
