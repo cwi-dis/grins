@@ -811,23 +811,18 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,130,32,40,14
 END
 
-IDD_TEMPLATE_DIALOG DIALOGEX 0, 0, 330, 177
+IDD_TEMPLATE_DIALOG DIALOGEX 0, 0, 330, 149
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Choose Template"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     COMBOBOX        IDC_TEMPLATECOMBO,15,18,150,100,CBS_DROPDOWNLIST | 
                     CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "External G2 player",IDC_TARGET_EXTERN,"Button",
-                    BS_AUTORADIOBUTTON | WS_TABSTOP,13,134,81,10
-    CONTROL         "G2 plugin in webpage",IDC_TARGET_EMBEDDED,"Button",
-                    BS_AUTORADIOBUTTON | WS_TABSTOP,173,134,81,10
-    DEFPUSHBUTTON   "OK",IDOK,273,157,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,217,157,50,14
+    DEFPUSHBUTTON   "OK",IDOK,273,129,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,217,129,50,14
     LTEXT           "",IDC_EXPLANATION,15,41,148,72,SS_SUNKEN
     CONTROL         "",IDC_PICTURE,"Button",BS_OWNERDRAW | BS_FLAT | 
                     WS_DISABLED,168,18,153,95,WS_EX_STATICEDGE
-    GROUPBOX        "Select a target:",IDC_STATIC,7,121,316,29
     GROUPBOX        "Select a template:",IDC_STATIC,7,6,316,111
 END
 
@@ -1439,57 +1434,61 @@ IDD_EDITATTR_CONV4 DIALOG DISCARDABLE  0, 0, 300, 172
 STYLE DS_ABSALIGN | WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Target audience",IDC_11,5,10,287,57
+    GROUPBOX        "Target audience",IDC_11,5,26,287,57
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
     CONTROL         "28k8 modem",IDC_12,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,36,22,66,10
+                    WS_TABSTOP,36,38,66,10
     CONTROL         "56k modem",IDC_13,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
-                    36,37,66,10
+                    36,53,66,10
     CONTROL         "Singe ISDN",IDC_14,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,36,52,66,10
+                    WS_TABSTOP,36,68,66,10
     CONTROL         "Double ISDN",IDC_15,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,177,22,66,10
+                    WS_TABSTOP,177,38,66,10
     CONTROL         "Cable modem",IDC_16,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,178,37,66,10
+                    WS_TABSTOP,178,53,66,10
     CONTROL         "LAN",IDC_17,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,178,
-                    52,66,10
-    LTEXT           "Audio type:",IDC_31,6,79,35,8
-    COMBOBOX        IDC_32,50,77,100,95,CBS_DROPDOWNLIST | CBS_SORT | 
+                    68,66,10
+    LTEXT           "Audio type:",IDC_31,6,95,35,8
+    COMBOBOX        IDC_32,50,93,100,95,CBS_DROPDOWNLIST | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "Perfect play",IDC_41,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,6,97,52,10
+                    WS_TABSTOP,6,113,52,10
     CONTROL         "Mobile play",IDC_51,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,6,114,51,10
+                    WS_TABSTOP,154,113,51,10
+    CONTROL         "Convert data",IDC_61,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,6,8,57,10
 END
 
 IDD_EDITATTR_CONV5 DIALOG DISCARDABLE  0, 0, 300, 172
 STYLE DS_ABSALIGN | WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Target audience",IDC_11,5,10,287,57
+    GROUPBOX        "Target audience",IDC_11,5,21,287,57
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
     CONTROL         "28k8 modem",IDC_12,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,36,22,66,10
+                    WS_TABSTOP,36,33,66,10
     CONTROL         "56k modem",IDC_13,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
-                    36,37,66,10
+                    36,48,66,10
     CONTROL         "Singe ISDN",IDC_14,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,36,52,66,10
+                    WS_TABSTOP,36,63,66,10
     CONTROL         "Double ISDN",IDC_15,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,177,22,66,10
+                    WS_TABSTOP,177,33,66,10
     CONTROL         "Cable modem",IDC_16,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,178,37,66,10
+                    WS_TABSTOP,178,48,66,10
     CONTROL         "LAN",IDC_17,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,178,
-                    52,66,10
-    COMBOBOX        IDC_22,50,71,100,95,CBS_DROPDOWNLIST | CBS_SORT | 
+                    63,66,10
+    COMBOBOX        IDC_22,50,82,100,95,CBS_DROPDOWNLIST | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Video type:",IDC_21,6,73,35,8
-    LTEXT           "Audio type:",IDC_31,6,89,35,8
-    COMBOBOX        IDC_32,50,87,100,95,CBS_DROPDOWNLIST | CBS_SORT | 
+    LTEXT           "Video type:",IDC_21,6,84,35,8
+    LTEXT           "Audio type:",IDC_31,6,100,35,8
+    COMBOBOX        IDC_32,50,98,100,95,CBS_DROPDOWNLIST | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "Perfect play",IDC_41,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,6,104,52,10
+                    WS_TABSTOP,6,115,52,10
     CONTROL         "Mobile play",IDC_51,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,6,118,51,10
+                    WS_TABSTOP,152,115,51,10
+    CONTROL         "Convert data",IDC_61,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,6,7,57,10
 END
 
 IDD_EDITATTR_S2a DIALOG DISCARDABLE  0, 0, 300, 164
@@ -1502,6 +1501,19 @@ BEGIN
     LTEXT           "Clip end:",IDC_21,137,27,38,8
     EDITTEXT        IDC_22,179,25,65,12,ES_AUTOHSCROLL
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+END
+
+IDD_EDITATTR_CONV1 DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_GROUP1,6,10,287,64
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    CONTROL         "Convert data",IDC_11,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,21,24,169,10
+    COMBOBOX        IDC_22,74,48,134,61,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Image quality:",IDC_21,20,50,44,8
 END
 
 
@@ -1690,7 +1702,7 @@ BEGIN
         VERTGUIDE, 7
         VERTGUIDE, 160
         TOPMARGIN, 7
-        BOTTOMMARGIN, 171
+        BOTTOMMARGIN, 143
         HORZGUIDE, 29
         HORZGUIDE, 128
     END
@@ -1786,6 +1798,11 @@ BEGIN
     END
 
     IDD_EDITATTR_CK1, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_EDITATTR_CONV1, DIALOG
     BEGIN
         BOTTOMMARGIN, 163
     END
