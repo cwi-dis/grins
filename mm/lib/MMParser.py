@@ -7,13 +7,7 @@ from MMExc import *		# Exceptions
 from MMTypes import *
 
 
-from tokenize import tokenprog
-
 from string import letters, digits
-
-import re
-lf = re.compile('^[\r\n]*$')
-
 
 # Parser for CMIF files.
 # Conceivably subclassing from this class might make sense.
@@ -26,6 +20,10 @@ lf = re.compile('^[\r\n]*$')
 class MMParser:
 	#
 	def __init__(self, input, context):
+		from tokenize import tokenprog
+		self.tokenprog = tokenprog
+		import re
+		self.lf = re.compile('^[\r\n]*$')
 		#
 		# 'input' should have a parameterless method readline()
 		# which returns the next line, including trailing '\n',
@@ -387,11 +385,8 @@ class MMParser:
 	def getnexttoken(self):
 		while 1:
 			while 1:
-				res = tokenprog.match(self.nextline, self.pos)
-				if type(res) is type(0):
-					if res >= 0:
-						break
-				elif res is not None:
+				res = self.tokenprog.match(self.nextline, self.pos)
+				if res is not None:
 					break
 				#
 				# End of line hit
@@ -422,12 +417,9 @@ class MMParser:
 			#
 			# Found a token
 			#
-			if type(res) is type(0):
-				self.tokstart, self.pos = tokenprog.regs[3]
-			else:
-				self.tokstart, self.pos = res.regs[3]
+			self.tokstart, self.pos = res.regs[3]
 			token = self.nextline[self.tokstart:self.pos]
-			if not lf.match(token): return token
+			if not self.lf.match(token): return token
 	#
 	# Default error handlers.
 	#
