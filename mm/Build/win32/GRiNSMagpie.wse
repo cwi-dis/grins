@@ -74,6 +74,34 @@ end
 item: Set Variable
   Variable=FIND_DIRECTORY
 end
+item: Check Configuration
+  Flags=10111011
+end
+item: Get Registry Key Value
+  Variable=JAVAVERSION
+  Key=SOFTWARE\JavaSoft\Java Runtime Environment
+  Value Name=CurrentVersion
+  Flags=00000100
+end
+item: Get Registry Key Value
+  Variable=JAVA
+  Key=SOFTWARE\JavaSoft\Java Runtime Environment\%JAVAVERSION%
+  Value Name=JavaHome
+  Flags=00000100
+end
+item: If/While Statement
+  Variable=JAVA
+  Flags=00000001
+end
+item: Set Variable
+  Variable=JAVA
+  Value=\lib\ext
+  Flags=00000001
+end
+item: End Block
+end
+item: Else Statement
+end
 item: Search for File
   Variable=JAVA
   Pathname List=jaws.jar
@@ -88,6 +116,8 @@ item: Set Variable
   Variable=JAVA
   Value=\ext
   Flags=00000001
+end
+item: End Block
 end
 item: End Block
 end
