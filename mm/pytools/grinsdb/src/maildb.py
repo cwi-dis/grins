@@ -229,12 +229,12 @@ class MdbDatabase:
 		if not id:
 			id = self.getnewlockedid()
 		self._dosave(id, obj)
-		self.unlock(id, tempname)
 
 	def _dosave(self, id, obj):
 		tempname = self.id2filename(id, 'NEW')
 		fp = open(tempname, "w")
 		obj.saveto(fp)
+		self.unlock(id, tempname)
 
 	def remove(self, obj):
 		if not obj.is_locked():
@@ -313,9 +313,9 @@ class IndexedMdbDatabase(MdbDatabase):
 			return self.__index.get(field, value)
 		return MdbDatabase.search(self, field, value)
 
-	def _saveto(self, id, obj):
+	def _dosave(self, id, obj):
 		self.__index.update(id, obj)
-		MdbDatabase._saveto(self, id, obj)
+		MdbDatabase._dosave(self, id, obj)
 		
 def _test():
 	dbase = MdbDatabase('.', DmdbObject)
