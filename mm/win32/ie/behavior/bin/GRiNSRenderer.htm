@@ -1,0 +1,49 @@
+<!--TOOLBAR_START--><!--TOOLBAR_EXEMPT--><!--TOOLBAR_END-->
+<HTML>
+<HEAD>
+<TITLE>Rendering Behavior Test Page</TITLE>
+<OBJECT
+ ID=behave1
+ CLASSID="clsid:B12F3290-AF2D-4090-97BC-7CA5A4596497">
+</OBJECT>
+<STYLE>
+  A:link { color:#003399; text-decoration:none; }
+  A:visited { color:#6699CC; text-decoration:none; }
+  A:hover { text-decoration:underline; }
+</STYLE>
+</HEAD>
+
+<BODY>
+
+<H2>Rendering Behavior Test Page</H2>
+<FONT FACE="verdana,arial,helvetica" SIZE=1>
+<A href="#" onclick='self.close()'><IMG ALIGN="middle" SRC="demo.gif" WIDTH="16" HEIGHT="16" BORDER="0" ALT="Click to Close Sample"></A>
+&nbsp;<A href="#" onclick='self.close()'>Close This Sample</A> 
+</FONT>
+<HR>
+<P><b>Click and drag any of the four black handles below.</b></P>
+
+<P ID="target" STYLE="behavior: url(#behave1); position:absolute; top:150; left:20; font-size: small; 
+   width: 65%; background-color: #cccccc; padding: 10;">
+   
+   A rendering behavior is attached to this paragraph element. The behavior initially creates a rectangular 
+   polygon that hides the text in this paragraph. The polygon has round handles at each corner that can be 
+   dragged to reshape the polygon and reveal the paragraph contents. Note that the handles' center points are 
+   located at the corners of the element; the handles actually extend outside the element's boundaries into an 
+   extended drawing region. For this reason, event handling for this element must rely on the 
+   <A HREF="http://msdn.microsoft.com/workshop/browser/mshtml/reference/IFaces/Painter/HitTestPoint.asp">
+   IHTMLPainter::HitTestPoint</A> method to test for mouse clicks on the handles in this extended region. Note 
+   also that while you drag a handle, the mouse cursor's movement is restricted to the extended region of the 
+   element using the Win32 API function 
+   <A HREF="http://msdn.microsoft.com/isapi/msdnlib2.idc?theURL=/library/psdk/winui/cursors_3rci.htm">ClipCursor</A>.
+</P>
+
+<P>&nbsp;</P><P>&nbsp;</P>
+<P>&nbsp;</P><P>&nbsp;</P>
+<P>&nbsp;</P><P>&nbsp;</P>
+<P>&nbsp;</P><P>&nbsp;</P>
+<P>&nbsp;</P>
+
+<HR><font color="black" face="ms sans serif" size="1">&copy;<a href="http://msdn.microsoft.com/isapi/gomscom.asp?TARGET=/misc/cpyright.htm" target="_top"> 2000 Microsoft Corporation.  All rights reserved.  Terms of use.</a></font>
+</body>
+</html>
