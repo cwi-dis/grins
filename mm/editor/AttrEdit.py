@@ -690,7 +690,7 @@ class PreferenceWrapper(Wrapper):
 				self.__strprefs[name], 'raw', 'light')
 		elif self.__intprefs.has_key(name):
 			return (('int', None), self.getdefault(name),
-				defs[2] or name, 'default',
+				defs[2] or name, 'bitrate',
 				self.__intprefs[name], 'raw', 'light')
 		elif self.__boolprefs.has_key(name):
 			return (('bool', None), self.getdefault(name),
@@ -852,6 +852,10 @@ class AttrEditor(AttrEditorDialog):
 				C = LanguageAttrEditorField
 			elif displayername == 'language3':
 				C = Language3AttrEditorField
+			elif displayername == 'bitrate':
+				C = BitrateAttrEditorField
+			elif displayername == 'bitrate3':
+				C = Bitrate3AttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -1241,9 +1245,13 @@ class BoolAttrEditorField(PopupAttrEditorField):
 	__offon = ['off', 'on']
 
 	def parsevalue(self, str):
+		if str == 'Not set':
+			return None
 		return self.__offon.index(str)
 
 	def valuerepr(self, value):
+		if value is None:
+			return 'Not set'
 		return self.__offon[value]
 
 	def getoptions(self):
@@ -1255,21 +1263,9 @@ class BoolAttrEditorField(PopupAttrEditorField):
 			return self.getdefault()
 		return self.valuerepr(val)
 
-class Bool3AttrEditorField(PopupAttrEditorField):
-	__offon = ['off', 'on']
-
-	def parsevalue(self, str):
-		if str == 'Not set':
-			return None
-		return self.__offon.index(str)
-
-	def valuerepr(self, value):
-		if value is None:
-			return 'Not set'
-		return self.__offon[value]
-
+class Bool3AttrEditorField(BoolAttrEditorField):
 	def getoptions(self):
-		return ['Not set'] + self.__offon
+		return ['Not set'] + BoolAttrEditorField.getoptions(self)
 
 class UnitsAttrEditorField(PopupAttrEditorField):
 	__values = ['mm', 'relative', 'pixels']
@@ -1336,6 +1332,50 @@ class Language3AttrEditorField(LanguageAttrEditorField):
 	def getoptions(self):
 		options = LanguageAttrEditorField.getoptions(self)
 		return [self.default] + options
+
+class BitrateAttrEditorField(PopupAttrEditorField):
+	__values = [14400, 19200, 28800, 33600, 56000, 56*1024, 112*1024, 256*1024, 300*1024, 512*1024, 2*1024*1024, 10*1024*1024]
+	__strings = ['14.4K Modem', '19.2K Connection', '28.8K Modem', '33.6K Modem', '56K Modem', '56K Single ISDN', '112K Dual ISDN', '256Kbps DSL/Cable', '300Kbps DSL/Cable', '512Kbps DSL/Cable', 'T1 / LAN', '10Mbps LAN']
+	default = 'Not set'
+
+	def parsevalue(self, str):
+		if str == self.default:
+			return None
+		return self.__values[self.__strings.index(str)]
+
+	def valuerepr(self, value):
+		if value is None:
+			return self.default
+		return self.__strings[self.__values.index(value)]
+
+	def getoptions(self):
+		return self.__strings
+
+	def getcurrent(self):
+		val = self.wrapper.getvalue(self.getname())
+		if val is None:
+			return self.getdefault()
+		nval = self.__values[0]
+		if val not in self.__values:
+			for v in self.__values:
+				if v <= val:
+					nval = v
+		return self.valuerepr(nval)
+
+class Bitrate3AttrEditorField(BitrateAttrEditorField):
+	def getoptions(self):
+		return ['Not set'] + BitrateAttrEditorField.getoptions(self)
+
+	def getcurrent(self):
+		val = self.wrapper.getvalue(self.getname())
+		if val is None:
+			return self.default
+		nval = self.__values[0]
+		if val not in self.__values:
+			for v in self.__values:
+				if v <= val:
+					nval = v
+		return self.valuerepr(nval)
 
 class TransitionAttrEditorField(PopupAttrEditorField):
 	__values = ['fill', 'fadein', 'fadeout', 'crossfade', 'wipe', 'viewchange']
