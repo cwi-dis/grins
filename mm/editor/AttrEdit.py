@@ -457,6 +457,17 @@ class NodeWrapper(Wrapper):
 				namelist.append('longdesc')
 		if ntype in ('par', 'excl') or (ntype in termtypes and boston):
 			namelist.append('terminator')
+		if ntype in interiortypes:
+			namelist.append('thumbnail_icon')
+			namelist.append('dropicon')
+			namelist.append('empty_icon')
+			namelist.append('empty_text')
+			namelist.append('empty_color')
+			namelist.append('empty_duration')
+			namelist.append('nonempty_icon')
+			namelist.append('nonempty_text')
+			namelist.append('nonempty_color')
+			namelist.append('thumbnail_scale')
 		if ntype in ('par', 'seq', 'excl'):
 			namelist.append('duration')
 			namelist.append('project_default_region_video')
@@ -558,7 +569,7 @@ class NodeWrapper(Wrapper):
 		if name == '.type':
 			return (('enum', alltypes), '',
 				'Node type', 'nodetype',
-				'Node type', 'raw', flags.FLAG_ALL)
+				'Node type', 'raw', flags.FLAG_ALL|flags.FLAG_ADVANCED)
 		if name == '.begin1':
 			return (('float', None), 0.0,
 				'Begin delay', 'default',
