@@ -869,7 +869,7 @@ class SMILXhtmlSmilWriter(SMIL):
 						if x.GetType() not in interiortypes:
 							dur = 1.0
 					if dur and dur > 0.0:
-		 				dur = fmtfloat(dur, prec = 2)
+						dur = fmtfloat(dur, prec = 2)
 						attrlist.append(('dur', dur))
 						self.seqtimingfixes[x] = dur
 			previous =  self.getPreviousSibling(x)
