@@ -35,6 +35,7 @@ SMIL2DTDs = [SMILBostonDtd,
 GRiNSns = 'http://www.oratrix.com/'
 RP9ns = 'http://features.real.com/2001/SMIL20/Extensions'
 QTns = 'http://www.apple.com/quicktime/resources/smilextensions'
+PSS4ns = 'http://www.3gpp.org/SMIL20/PSS4/'
 
 # list elements here that are not valid in all namespaces with the
 # namespaces they are valid in
