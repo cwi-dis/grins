@@ -38,10 +38,10 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		SourceViewDialog.SourceViewDialog.hide(self)
 
 	def transaction(self,type):
-		# check for changes. then return 1.
-		# There are changes
-		q = windowinterface.GetOKCancel("You have unsaved changes in the source view.\nIs it OK to discard these?", self.toplevel.window)
-		return not q
+		if self.is_changed():
+			q = windowinterface.GetOKCancel("You have unsaved changes in the source view.\nIs it OK to discard these?", self.toplevel.window)
+			return not q
+		return 1
 
 	def rollback(self):
 		pass
