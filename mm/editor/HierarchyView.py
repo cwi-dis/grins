@@ -943,12 +943,13 @@ class HierarchyView(HierarchyViewDialog):
 		xs, ys = src
 		dstobj = self.whichhit(xd, yd)
 		srcobj = self.whichhit(xs, ys)
-		tmp = self.focusnode
-		self.focusnode = srcobj.node
-		self.copyfocus()
+
+		srcnode = srcobj.node.DeepCopy()
+		self.toplevel.setwaiting()
+		if srcnode.context is not self.root.context:
+			srcnode = srcnode.CopyIntoContext(self.root.context)
 		self.focusnode = dstobj.node
-		self.paste(0)
-		self.focusnode = tmp
+		dummy = self.insertnode(srcnode, 0)
 
 	# Move node at position src to position dst
 	def movenode(self, dst, src):
@@ -956,12 +957,24 @@ class HierarchyView(HierarchyViewDialog):
 		xs, ys = src
 		srcobj = self.whichhit(xs, ys)
 		dstobj = self.whichhit(xd, yd)
-		tmp = self.focusnode
-		self.focusnode = srcobj.node
-		self.deletefocus(1)
+
+		srcnode = srcobj.node
+		if not srcnode or srcnode is self.root:
+			windowinterface.beep()
+			return
+		em = self.editmgr
+		if not em.transaction():
+			return
+		self.toplevel.setwaiting()
+		em.delnode(srcnode)
+		em.commit()
+
+		srcnode = srcnode.DeepCopy()
+		self.toplevel.setwaiting()
+		if srcnode.context is not self.root.context:
+			srcnode = srcnode.CopyIntoContext(self.root.context)
 		self.focusnode = dstobj.node
-		self.paste(0)
-		self.focusnode = tmp
+		dummy = self.insertnode(srcnode, 0)
 
 	#################################################
 	# Internal subroutines                          #
