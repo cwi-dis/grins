@@ -52,7 +52,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /d "_AFXDLL" /r
 CPP=clarm.exe
 # ADD BASE CPP /nologo /W3 /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "_AFXDLL" /Yu"stdafx.h" /Oxs /M$(CECrtMT) /c
-# ADD CPP /nologo /Zp8 /W3 /Ob2 /I "." /I "..\common" /I "..\grins" /I "..\..\CE\stl" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "_AFXDLL" /D "COMPILED_FROM_DSP" /Oxs /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /Ob2 /I "." /I "..\common" /I "..\grins" /I "..\..\CE\stl" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "_AFXDLL" /D "COMPILED_FROM_DSP" /FR /Oxs /M$(CECrtMT) /c
 # SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -225,6 +225,8 @@ SOURCE=".\GRiNS Player.cpp"
 !IF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Release"
 
 DEP_CPP_GRINS=\
+	"..\grins\grins_iplayer.h"\
+	"..\grins\grins_itoplevel.h"\
 	"..\grins\grins_main.h"\
 	".\AboutDlg.h"\
 	".\GRiNS Player.h"\
@@ -246,6 +248,8 @@ DEP_CPP_GRINS=\
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Release"
 
 DEP_CPP_GRINS=\
+	"..\grins\grins_iplayer.h"\
+	"..\grins\grins_itoplevel.h"\
 	"..\grins\grins_main.h"\
 	".\AboutDlg.h"\
 	".\GRiNS Player.h"\
@@ -289,6 +293,8 @@ SOURCE=.\MainFrm.cpp
 !IF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Release"
 
 DEP_CPP_MAINF=\
+	"..\grins\grins_iplayer.h"\
+	"..\grins\grins_itoplevel.h"\
 	"..\grins\grins_main.h"\
 	".\MainFrm.h"\
 	".\StdAfx.h"\
@@ -306,6 +312,8 @@ DEP_CPP_MAINF=\
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Release"
 
 DEP_CPP_MAINF=\
+	"..\grins\grins_iplayer.h"\
+	"..\grins\grins_itoplevel.h"\
 	"..\grins\grins_main.h"\
 	".\MainFrm.h"\
 	".\StdAfx.h"\
@@ -365,6 +373,7 @@ SOURCE=.\windowinterface.cpp
 !IF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Release"
 
 DEP_CPP_WINDO=\
+	"..\..\CE\stl\wce_defs.h"\
 	"..\common\extra_types.h"\
 	"..\common\stdenv.h"\
 	".\StdAfx.h"\
@@ -477,8 +486,11 @@ SOURCE=..\common\smil\smil_attr_read.cpp
 !IF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Release"
 
 DEP_CPP_SMIL_=\
+	"..\..\CE\stl\wce_defs.h"\
 	"..\common\any.h"\
 	"..\common\extra_types.h"\
+	"..\common\re.h"\
+	"..\common\regex\hsregex.h"\
 	"..\common\smil\smil_attr_read.h"\
 	"..\common\stdenv.h"\
 	
@@ -497,6 +509,8 @@ DEP_CPP_SMIL_=\
 DEP_CPP_SMIL_=\
 	"..\common\any.h"\
 	"..\common\extra_types.h"\
+	"..\common\re.h"\
+	"..\common\regex\hsregex.h"\
 	"..\common\smil\smil_attr_read.h"\
 	"..\common\stdenv.h"\
 	
@@ -524,9 +538,9 @@ SOURCE=..\common\smil\smil_node.cpp
 !IF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Release"
 
 DEP_CPP_SMIL_N=\
+	"..\..\CE\stl\wce_defs.h"\
 	"..\common\any.h"\
 	"..\common\extra_types.h"\
-	"..\common\smil\smil_attr_read.h"\
 	"..\common\smil\smil_node.h"\
 	"..\common\stdenv.h"\
 	"..\common\tree_node.h"\
@@ -548,7 +562,6 @@ DEP_CPP_SMIL_N=\
 DEP_CPP_SMIL_N=\
 	"..\common\any.h"\
 	"..\common\extra_types.h"\
-	"..\common\smil\smil_attr_read.h"\
 	"..\common\smil\smil_node.h"\
 	"..\common\stdenv.h"\
 	"..\common\tree_node.h"\
@@ -579,9 +592,11 @@ SOURCE=..\common\smil\smil_parser.cpp
 !IF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Release"
 
 DEP_CPP_SMIL_P=\
+	"..\..\CE\stl\wce_defs.h"\
 	"..\common\any.h"\
 	"..\common\charconv.h"\
 	"..\common\extra_types.h"\
+	"..\common\smil\smil_attr_read.h"\
 	"..\common\smil\smil_node.h"\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
@@ -602,10 +617,11 @@ DEP_CPP_SMIL_P=\
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Release"
 
 DEP_CPP_SMIL_P=\
+	"..\common\any.h"\
 	"..\common\charconv.h"\
 	"..\common\extra_types.h"\
 	"..\common\smil\smil_attr_read.h"\
-	"..\common\smil\smil_elements.h"\
+	"..\common\smil\smil_node.h"\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
 	"..\common\tree_node.h"\
@@ -619,12 +635,14 @@ DEP_CPP_SMIL_P=\
 	"..\common\charconv.h"\
 	"..\common\extra_types.h"\
 	"..\common\smil\smil_attr_read.h"\
-	"..\common\smil\smil_elements.h"\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
 	"..\common\tree_node.h"\
 	"..\common\xml\sax_handler.h"\
 	".\windowinterface.h"\
+	
+NODEP_CPP_SMIL_P=\
+	"..\common\smil\smil_elements.h"\
 	
 # SUBTRACT CPP /YX /Yc /Yu
 
@@ -1069,12 +1087,23 @@ SOURCE=..\common\xml_parsers.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\grins\grins_iplayer.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\grins\grins_itoplevel.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\grins\grins_main.cpp
 
 !IF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Release"
 
 DEP_CPP_GRINS_=\
+	"..\..\CE\stl\wce_defs.h"\
 	"..\common\stdenv.h"\
+	"..\grins\grins_iplayer.h"\
+	"..\grins\grins_itoplevel.h"\
 	"..\grins\grins_main.h"\
 	"..\grins\grins_toplevel.h"\
 	
@@ -1091,6 +1120,8 @@ DEP_CPP_GRINS_=\
 
 DEP_CPP_GRINS_=\
 	"..\common\stdenv.h"\
+	"..\grins\grins_iplayer.h"\
+	"..\grins\grins_itoplevel.h"\
 	"..\grins\grins_main.h"\
 	"..\grins\grins_toplevel.h"\
 	
@@ -1113,21 +1144,98 @@ SOURCE=..\grins\grins_main.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\grins\grins_player.cpp
+
+!IF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Release"
+
+DEP_CPP_GRINS_P=\
+	"..\..\CE\stl\wce_defs.h"\
+	"..\common\charconv.h"\
+	"..\common\extra_types.h"\
+	"..\common\smil\smil_node.h"\
+	"..\common\stdenv.h"\
+	"..\common\tree_node.h"\
+	"..\grins\grins_iplayer.h"\
+	"..\grins\grins_itoplevel.h"\
+	"..\grins\grins_player.h"\
+	"..\grins\grins_toplevel.h"\
+	".\windowinterface.h"\
+	
+
+!ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
+
+DEP_CPP_GRINS_P=\
+	"..\common\charconv.h"\
+	"..\common\extra_types.h"\
+	"..\common\smil\smil_node.h"\
+	"..\common\stdenv.h"\
+	"..\common\tree_node.h"\
+	"..\grins\grins_iplayer.h"\
+	"..\grins\grins_itoplevel.h"\
+	"..\grins\grins_player.h"\
+	"..\grins\grins_toplevel.h"\
+	".\windowinterface.h"\
+	
+
+!ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Release"
+
+DEP_CPP_GRINS_P=\
+	"..\common\charconv.h"\
+	"..\common\extra_types.h"\
+	"..\common\smil\smil_node.h"\
+	"..\common\stdenv.h"\
+	"..\common\tree_node.h"\
+	"..\grins\grins_iplayer.h"\
+	"..\grins\grins_itoplevel.h"\
+	"..\grins\grins_player.h"\
+	"..\grins\grins_toplevel.h"\
+	".\windowinterface.h"\
+	
+
+!ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Debug"
+
+DEP_CPP_GRINS_P=\
+	"..\common\charconv.h"\
+	"..\common\extra_types.h"\
+	"..\common\smil\smil_node.h"\
+	"..\common\stdenv.h"\
+	"..\common\tree_node.h"\
+	"..\grins\grins_iplayer.h"\
+	"..\grins\grins_itoplevel.h"\
+	"..\grins\grins_player.h"\
+	"..\grins\grins_toplevel.h"\
+	".\windowinterface.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\grins\grins_player.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\grins\grins_toplevel.cpp
 
 !IF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Release"
 
 DEP_CPP_GRINS_T=\
+	"..\..\CE\stl\wce_defs.h"\
 	"..\common\charconv.h"\
 	"..\common\expat\expat.h"\
 	"..\common\extra_types.h"\
 	"..\common\memfile.h"\
+	"..\common\smil\smil_node.h"\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
 	"..\common\tree_node.h"\
 	"..\common\xml\sax_handler.h"\
 	"..\common\xml_parsers.h"\
+	"..\grins\grins_iplayer.h"\
+	"..\grins\grins_itoplevel.h"\
 	"..\grins\grins_main.h"\
+	"..\grins\grins_player.h"\
 	"..\grins\grins_toplevel.h"\
 	".\windowinterface.h"\
 	
@@ -1156,12 +1264,16 @@ DEP_CPP_GRINS_T=\
 	"..\common\expat\expat.h"\
 	"..\common\extra_types.h"\
 	"..\common\memfile.h"\
+	"..\common\smil\smil_node.h"\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
 	"..\common\tree_node.h"\
 	"..\common\xml\sax_handler.h"\
 	"..\common\xml_parsers.h"\
+	"..\grins\grins_iplayer.h"\
+	"..\grins\grins_itoplevel.h"\
 	"..\grins\grins_main.h"\
+	"..\grins\grins_player.h"\
 	"..\grins\grins_toplevel.h"\
 	".\windowinterface.h"\
 	

@@ -20,7 +20,7 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 namespace smil {
 
 
-any* read_clock_value(const char* raw);
+any* read_clock_value(const std::string& raw);
 	
 
 } // namespace smil

@@ -17,9 +17,12 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include "extra_types.h"
 #endif
 
+template <class Node>
 class tree_node;
 
 namespace smil {
+
+class node;
 
 class parser : public xml::sax_handler
 	{
@@ -35,7 +38,7 @@ class parser : public xml::sax_handler
 	~parser();
 
 	void reset();
-	tree_node* detach();
+	node* detach();
 
 	//
 	void start_smil(handler_arg_type attrs);
@@ -198,8 +201,8 @@ class parser : public xml::sax_handler
 	handler_map_t m_handlers;
 	std::stack<std::string> m_stack;
 
-	tree_node *m_rootnode;
-	tree_node *m_curnode;
+	node *m_rootnode;
+	node *m_curnode;
 	};
 
 

@@ -10,7 +10,7 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "smil_parser.h"
 
-#include "tree_node.h"
+#include "smil_node.h"
 
 #include "charconv.h"
 
@@ -63,7 +63,7 @@ parser::parser()
 	set_handler("regPoint", &parser::start_regPoint, &parser::end_regPoint);
 	set_handler("prefetch", &parser::start_prefetch, &parser::end_prefetch);
 
-	m_rootnode = new tree_node("#document");
+	m_rootnode = new node("#document");
 	m_curnode = m_rootnode;
 	}
 
@@ -78,14 +78,14 @@ void parser::reset()
 	{
 	if(m_rootnode != 0)
 		delete m_rootnode;
-	m_rootnode = new tree_node("#document");
+	m_rootnode = new node("#document");
 	m_curnode = m_rootnode;
 	}
 
 // get ownership of root node
-tree_node* parser::detach()
+node* parser::detach()
 	{
-	tree_node *temp = m_rootnode;
+	node *temp = m_rootnode;
 	m_rootnode = 0;
 	m_curnode = 0;
 	return temp;
@@ -473,52 +473,46 @@ void parser::unknown_endtag()
 //
 void parser::new_node(const std::string& tag, handler_arg_type attrs)
 	{
-	assert(m_curnode != NULL);
-	tree_node *p = new tree_node(tag, attrs);
-	m_curnode->appendChild(p);
+	assert(m_curnode != 0);
+	node *p = new node(tag, attrs);
+	m_curnode->append_child(p);
 	m_curnode = p;
 	}
 
 void parser::end_node()
 	{
-	if(m_curnode == m_rootnode)
-		{
-		// end of document
-		m_curnode = NULL;
-		return;
-		}
+	assert(m_curnode != 0);
 	m_curnode = m_curnode->up();
 	}
 
 void  parser::new_media_node(const std::string& tag, handler_arg_type attrs)
 	{
-	assert(m_curnode != NULL);
-	
+	assert(m_curnode != 0);
 	node *p = new node(tag, attrs);
+	m_curnode->append_child(p);
+	m_curnode = p;
 
+	if(!p->has_row_attrs())
+		return;
+
+	node::raw_attrs_t::iterator it;
+	node::raw_attrs_t& raw_attrs = p->get_raw_attrs();
+	
 	// begin, dur, end, max, min, repeatCount, repeatDur
-	const char *raw_val = p->get_raw_attribute("dur");
-	if(raw_val != 0)
+	it = raw_attrs.find("dur");
+	if(it != raw_attrs.end())
 		{
-		any *pv = read_clock_value(raw_val);
+		any *pv = read_clock_value((*it).second);
 		if(pv == 0) 
 			windowinterface::showmessage(TEXT("invalid dur attribute"));
 		else
 			p->set_parsed_attr("dur", pv);
 		}
-
-	m_curnode->appendChild(p);
-	m_curnode = p;
 	}
 
 void  parser::end_media_node()
 	{
-	if(m_curnode == m_rootnode)
-		{
-		// end of document
-		m_curnode = NULL;
-		return;
-		}
+	assert(m_curnode != 0);
 	m_curnode = m_curnode->up();
 	}
 
@@ -526,5 +520,6 @@ void parser::show_error(const std::string& msg)
 	{
 	windowinterface::showmessage(TextPtr(msg.c_str()));
 	}
+
 
 } // namespace smil
