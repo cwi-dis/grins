@@ -1128,7 +1128,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		AttrPage.__init__(self,form)
 		cmifwnd._CmifWnd.__init__(self)
 		self.createLayoutContext(self._form._winsize)
-		self._units=self._form._units
+		self._units=self._form.getunits()
 
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
@@ -1149,22 +1149,21 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		self.init_tk(v)
 		return v
 	
-	def init_tk(self,v):
+	def init_tk(self, v):
 		v.drawTk.SetLayoutMode(0)
-
-		if self._units==appcon.UNIT_SCREEN:
-			return
 
 		v.drawTk.SetScale(self._xscale,self._yscale)
 
-		(x,y,w,h),units=self._form.GetBBox()
+		(x,y,w,h),bunits=self._form.GetBBox()
 		rc=(x,y,x+w,y+h)
 		rc=self.tolayout(rc)
+		rc = v._convert_coordinates(rc, units = bunits)
 		v.drawTk.SetBRect(rc)
 
-		(x,y,w,h),units=self._form.GetCBox()
+		(x,y,w,h),bunits=self._form.GetCBox()
 		rc=(x,y,x+w,y+h)
 		rc=self.tolayout(rc)
+		rc = v._convert_coordinates(rc, units = bunits)
 		v.drawTk.SetCRect(rc)
 	
 	def createLayoutContext(self,winsize=None,units=appcon.UNIT_PXL):
@@ -1196,7 +1195,10 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		else:
 			x=self._xscale
 			y=self._yscale
-			return int(box[0]/x+0.5),int(box[1]/y+0.5),int(box[2]/x+0.5),int(box[3]/y+0.5)
+			if self._units==appcon.UNIT_PXL:
+				return int(box[0]/x+0.5),int(box[1]/y+0.5),int(box[2]/x+0.5),int(box[3]/y+0.5)
+			else:
+				return (box[0]/x,box[1]/y,box[2]/x,box[3]/y)
 
 	def tolayout(self,box):
 		if not box: return box
@@ -1205,13 +1207,21 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		else:
 			x=self._xscale
 			y=self._yscale
-			return (int(0.5+box[0]*x),int(0.5+box[1]*y),int(0.5+box[2]*x),int(0.5+box[3]*y))
+			if self._units==appcon.UNIT_PXL:
+				return (int(0.5+box[0]*x),int(0.5+box[1]*y),int(0.5+box[2]*x),int(0.5+box[3]*y))
+			else:
+				return (box[0]*x,box[1]*y,box[2]*x,box[3]*y)
 
 	def create_box(self,box):
-		# call create box against layout control but be modeless and cool!
 		self._layoutctrl.assert_not_in_create_box()
-		if box and (box[2]==0 or box[3]==0):box=None	
-		modeless=1;cool=1
+		if box and (box[2]==0 or box[3]==0):box=None
+		units=self._form.getunits()
+		if self._units!=units:
+			box=None
+			self._units=units
+			self.getctrl('base_winoff').setvalue('')
+		# call create box against layout control but be modeless and cool!
+		modeless=1;cool=1;
 		self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
 			
 	def setvalue(self, attr, val):
@@ -1219,7 +1229,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		self._cd[attr].setvalue(val)
 		if self.islayoutattr(attr):
 			self.setvalue2layout(val)
-
+			
 
 	######################
 	# subclass overrides
@@ -1228,7 +1238,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		lc=self.getctrl('base_winoff')
 		val=lc.getcurrent()
 		if not val:
-			box=None
+			box=()
 		else:
 			box=lc.atoft(val)
 			box=self.tolayout(box)		
@@ -1236,7 +1246,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	
 	def setvalue2layout(self,val):
 		if not val:
-			box=()
+			box=None
 		else:
 			lc=self.getctrl('base_winoff')
 			box=lc.atoft(val)
@@ -1563,6 +1573,7 @@ groupsui={
 	'duration_and_loop':DurationGroup,
 	}
 
+
 ###########################
 from  GenFormView import GenFormView
 
@@ -1578,6 +1589,7 @@ class AttrEditFormNew(GenFormView):
 		self._prsht=None;
 		self._a2p={}
 		self._pages=[]
+		self._tid=None
 
 	# Creates the actual OS window
 	def createWindow(self,parent):
@@ -1653,19 +1665,28 @@ class AttrEditFormNew(GenFormView):
 					l.remove(a)
 		return grattrl
 
+	# XXX: either the help string (default value for units) must be corrected 
+	#      or the attrdict.get calls in Channel.py and LayoutView.py and here
+	def getunits(self,ch=None):
+		if not ch:
+			return self._channel.attrdict.get('units',appcon.UNIT_SCREEN)
+		else:
+			return ch.attrdict.get('units',appcon.UNIT_SCREEN)
+			
 	def buildcontext(self):
 		self._channels={}
 		self._channels_rc={}
 
 		self._winsize=None
 		self._layoutch=None
-		self._units=0
-
+		
 		a=self._attriblist[0]
 		channels = a.wrapper.toplevel.root.context.channels
 		for ch in channels:
 			self._channels[ch.name]=ch
-			units=ch.attrdict.get('units',0)
+			# use the same convention as in Channel.py and LayoutView.py 
+			# correct either the help string or attrdict.get calls
+			units=self.getunits(ch)
 			t=ch.attrdict['type']
 			if t=='layout' and ch.attrdict.has_key('winsize'):
 				w,h=ch.attrdict['winsize']
@@ -1675,7 +1696,7 @@ class AttrEditFormNew(GenFormView):
 			elif ch.attrdict.has_key('base_winoff'):
 				self._channels_rc[ch.name]=(ch.attrdict['base_winoff'],units)
 			else:
-				self._channels_rc[ch.name]=((0,0,0,0),appcon.UNIT_SCREEN)
+				self._channels_rc[ch.name]=((0,0,0,0),0)
 			
 		if hasattr(a.wrapper,'node'):
 			self._node=a.wrapper.node
@@ -1687,7 +1708,6 @@ class AttrEditFormNew(GenFormView):
 		if hasattr(a.wrapper,'channel'):
 			self._channel=a.wrapper.channel
 
-		self._units=self._channel.attrdict.get('units',0)
 	
 	def getchannel(self,node):
 		if node.attrdict.has_key('channel'):
@@ -1787,6 +1807,11 @@ class AttrEditFormNew(GenFormView):
 			raise error, 'item not in list'
 		self._a2p[attrobj].setvalue(attrobj,newval)
 
+		# patch core's draw back
+		if not self._tid:
+			import __main__
+			self._tid=__main__.toplevel.settimer(0.5,(self.onDirty,()))
+
 	# Called by the core system to set attribute options
 	def setoptions(self,attrobj,list,val):
 		if not self._obj_:
@@ -1798,7 +1823,15 @@ class AttrEditFormNew(GenFormView):
 			raise error, 'item not an option'
 		self._a2p[attrobj].setoptions(attrobj,list,val)
 
+	def onDirty(self):
+		self._tid=None
+		self.buildcontext()
 
+	def OnDestroy(self,params):
+		if self._tid:
+			import __main__
+			__main__.toplevel.canceltimer(self._tid)
+		
 import settings
 if settings.get('use_tab_attr_editor'):
 	AttrEditForm=AttrEditFormNew
