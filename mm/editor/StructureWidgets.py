@@ -476,7 +476,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 		# thumbnail
 		icon = None
-		if not node.GetChildren():
+		if not node.GetChildren() and not self.iscollapsed():
 			# use empty_icon if no children and it exists
 			icon = node.GetAttrDef('empty_icon', None)
 		if icon is None:
@@ -519,6 +519,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			xsize = ibxsize + imxsize + 2*HEDGSIZE
 			if text:
 				xsize = xsize + 2 + txxsize
+			if icon and self.name and isinstance(self, StructureObjWidget):
+				imysize = imysize + TITLESIZE
 			ysize = max(ibysize, imysize, txysize) + 2*VEDGSIZE
 			xsize = max(xsize, MINSIZE)
 			ysize = max(ysize, MINSIZE)
@@ -2231,6 +2233,8 @@ class MediaWidget(MMNodeWidget):
 			else:
 				b = self.timeline.pos_abs[1]
 		# XXXX Should we cater for a bandwidth strip here too?
+		if self.need_draghandles is not None:
+			b = b - 8	# leave space for draghandles
 		# Draw the image.
 		self.drawnodecontent(displist, (l,t,r-l,b-t), self.node)
 		MMNodeWidget.draw(self, displist)
