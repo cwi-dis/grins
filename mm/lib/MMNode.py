@@ -1380,7 +1380,7 @@ class MMSyncArc:
 
 	def __repr__(self):
 		if self.path:
-			path = ', path=%s' % `path`
+			path = ', path=%s' % `self.path`
 		else:
 			path = ''
 		if self.wallclock is not None:
