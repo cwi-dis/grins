@@ -20,14 +20,10 @@ class HierarchyViewDialog(ViewDialog):
 	adornments = {}
 	interior_popupmenu = POPUP_HVIEW_STRUCTURE
 	leaf_popupmenu = POPUP_HVIEW_LEAF
-	
-	def __init__(self):
-		self.commands = self.commands + [
-			CONTENT_EDIT_REG(callback = (self._editcall, ())),
-			CONTENT_OPEN_REG(callback = (self._opencall, ())),
-			]
-		ViewDialog.__init__(self, 'hview_')
 
+	def __init__(self):
+		ViewDialog.__init__(self, 'hview_')
+	
 	def show(self):
 		if self.is_showing():
 			return

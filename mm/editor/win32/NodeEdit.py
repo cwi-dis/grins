@@ -110,22 +110,7 @@ def _showmenu(menu, filename):	# Show (modal) editor choice dialog
 
 # InitEditors - Initialize the module.
 def InitEditors():
-	# XXX Should add the directory where the .cmif file resides...
-	# XXX (toplevel.dirname)
-	import cmif, os
-
-	import sys
-	if sys.platform == 'win32':ini='cmif_editors.ini'
-	else: ini='.cmif_editors'
-	dirs = [os.curdir, os.environ['HOME'], cmif.findfile('editor')]
-	for dirname in dirs:
-		filename = os.path.join(dirname, ini)
-		try:
-			f = open(filename, 'r')
-		except IOError:
-			continue
-		_merge(f, filename)
-		f.close()
+	pass
 
 _LocalError = '_LocalError'
 
@@ -144,49 +129,11 @@ def showeditor(node):
 	import MMAttrdefs, MMurl, urlparse
 	url = MMAttrdefs.getattr(node,'file')
 	url = node.context.findurl(url)
-	utype, host, path, params, query, fragment = urlparse.urlparse(url)
-	if (utype and utype != 'file') or (host and host != 'localhost'):
-		windowinterface.showmessage(
-			'Only local files can be edited',
-			mtype = 'warning')
-		return
-	filename = MMurl.url2pathname(path)
-	chtype = node.GetChannelType()
-	import os
-	if chtype == 'html' and not channeleditors.has_key('html'):
-		chtype = 'text'
-	if not channeleditors.has_key(chtype):
-		windowinterface.showmessage(
-			'No editors for %s nodes ' % chtype,
-			mtype = 'warning')
-		return
-	editor = channeleditors[chtype]
-	if type(editor) is type(''):
-		_do_edit(editor, filename)
-	else:
-		cmd = _showmenu(editor, filename)
+	xx = windowinterface.shell_execute(url, 'edit', showmsg=0)
+	if xx != 0:
+		windowinterface.shell_execute(url, 'open')
 
 # Simple test program. Only tests editor file parsing.
 def test():
 	InitEditors()
 	print channeleditors
-
-
-def _shell_call(node,verb):
-	if node.GetType() == 'imm':
-		dummy = _Convert(node)
-		return
-	if node.GetType() <> 'ext':
-		windowinterface.showmessage(
-			'NodeEdit: Only extern nodes can be opened',
-			mtype = 'error')
-		return
-	import MMAttrdefs, MMurl
-	url = MMAttrdefs.getattr(node,'file')
-	url = node.context.findurl(url)
-	windowinterface.shell_execute(url,verb)
-
-def _showeditor(node):
-	_shell_call(node,'edit')
-def _showviewer(node):
-	_shell_call(node,'open')
