@@ -678,6 +678,23 @@ class ChannelWindow(Channel):
 	def mouserelease(self, arg, window, event, value):
 		self.unhighlight()
 
+	def resize_window(self, pchan):
+		import boxes
+		if self._player.playing:
+			windowinterface.showmessage(
+				'Cannot resize while playing')
+			return
+		pgeom = boxes.create_box(pchan.window,
+					 'Resize window for channel ' + self._name,
+					 self._attrdict['base_winoff'])
+		if pgeom:
+			self._attrdict['base_winoff'] = pgeom
+			self.window.close()
+			if self.want_default_colormap:
+				self.window = pchan.window.newcmwindow(pgeom)
+			else:
+				self.window = pchan.window.newwindow(pgeom)
+
 	def do_show(self):
 		if debug:
 			print 'ChannelWindow.do_show('+`self`+')'
@@ -687,6 +704,10 @@ class ChannelWindow(Channel):
 				chan._subchannels.remove(self)
 		pgeom = None
 		pchan = None
+		menu = [
+			('', 'highlight', (self.highlight, ())),
+			('', 'unhighlight', (self.unhighlight, ()))
+			]
 		#
 		# First, check that there is a base_window attribute and
 		# that it isn't "undefined".
@@ -746,6 +767,8 @@ class ChannelWindow(Channel):
 				self.window = pchan.window.newcmwindow(pgeom)
 			else:
 				self.window = pchan.window.newwindow(pgeom)
+			menu.append(None)
+			menu.append('', 'resize', (self.resize_window, (pchan,)))
 		else:
 			# no basewindow, create a top-level window
 			if self._attrdict.has_key('winsize'):
@@ -774,6 +797,7 @@ class ChannelWindow(Channel):
 		self.window.register(EVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(EVENTS.Mouse0Release, self.mouserelease,
 				     None)
+		self.window.create_menu('', menu)
 		return 1
 
 	def do_hide(self):
