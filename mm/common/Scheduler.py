@@ -25,8 +25,7 @@ class SchedulerContext:
 	def __init__(self, parent, node, seeknode):
 		self.active = 1
 		self.parent = parent
-		self.sractions = []
-		self.srevents = {}
+		self.srdict = {}
 		self.unexpected_armdone = {}
 		self.prearmlists = {}
 		self.playroot = node
@@ -44,9 +43,8 @@ class SchedulerContext:
 		self.active = 0
 		unarmallnodes(self.playroot)
 		self.stopcontextchannels()
-		self.srevents = {}
+		self.srdict = {}
 		self.parent._remove_sctx(self)
-		del self.sractions
 		del self.parent
 		del self.playroot
 		for v in self.prearmlists.values():
@@ -58,23 +56,24 @@ class SchedulerContext:
 	# Dump - Dump a scheduler context
 	#
 	def dump(self, events=None, actions=None):
-		if not events:
-			events = self.srevents
-		if not actions:
-			actions = self.sractions
-		print '------------------------------'
-		print '--------- events:'
-		for ev in events.keys():
-			print SR.ev2string(ev),'\t', events[ev]
-		print '--------- actions:'
-		for i in range(len(actions)):
-			if actions[i]:
-				ac, list = actions[i]
-				print '%d\t%d\t%s' % (i, ac, SR.evlist2string(list))
-##		print '------------ #prearms outstanding:'
-##		for i in self.channels:
-##			print i, '\t', len(self.prearmlists[i])
-		print '----------------------------------'
+		pass			# XXX needs to be redone
+##		if not events:
+##			events = self.srevents
+##		if not actions:
+##			actions = self.sractions
+##		print '------------------------------'
+##		print '--------- events:'
+##		for ev in events.keys():
+##			print SR.ev2string(ev),'\t', events[ev]
+##		print '--------- actions:'
+##		for i in range(len(actions)):
+##			if actions[i]:
+##				ac, list = actions[i]
+##				print '%d\t%d\t%s' % (i, ac, SR.evlist2string(list))
+####		print '------------ #prearms outstanding:'
+####		for i in self.channels:
+####			print i, '\t', len(self.prearmlists[i])
+##		print '----------------------------------'
 
 	#
 	# genprearms generates the list of channels and a list of
@@ -207,7 +206,7 @@ class SchedulerContext:
 	# time in the future (i.e. if we're not done yet)
 	#
 	def FutureWork(self):
-		if self.srevents:
+		if self.srdict:
 			return 1
 		self.parent.ui.sctx_empty(self) # XXXX
 		return 0
@@ -215,8 +214,7 @@ class SchedulerContext:
 	# Initialize SR actions and events before playing
 	#
 	def prepare_minidoc(self, seeknode):
-		self.sractions, self.srevents = \
-			self.playroot.GenAllSR(seeknode)
+		self.srdict = self.playroot.GenAllSR(seeknode)
 	#
 	# Re-initialize SR actions and events for a looping node, preparing
 	# for the next time through the loop
@@ -224,12 +222,11 @@ class SchedulerContext:
 	def restartloop(self, node):
 		# XXXX Not a good idea, this algorithm: a looping node
 		# will cause actions to grow without bound.
-		actions, events = node.GenLoopSR(len(self.sractions))
-		self.sractions[len(self.sractions):] = actions
-		for key, value in events.items():
-			if self.srevents.has_key(key):
+		srdict = node.GenLoopSR()
+		for key, value in srdict.items():
+			if self.srdict.has_key(key):
 				raise 'Duplicate event', SR.ev2string(key)
-			self.srevents[key] = value
+			self.srdict[key] = value
 			#
 			# ARMDONE events may have arrived too early.
 			# Re-schedule them.
@@ -312,8 +309,8 @@ class SchedulerContext:
 	def getsrlist(self, ev):
 		#print 'event:', SR.ev2string(ev)
 		try:
-			actionpos = self.srevents[ev]
-			del self.srevents[ev]
+			srdict = self.srdict[ev]
+			del self.srdict[ev]
 		except KeyError:
 			if ev[0] == SR.TERMINATE:
 				return []
@@ -327,18 +324,18 @@ class SchedulerContext:
 				print 'Warning: unexpected', SR.ev2string(ev)
 				return []
 			raise error, 'Scheduler: Unknown event: %s' % SR.ev2string(ev)
-		srlist = self.sractions[actionpos]
-		if srlist is None:
+		numsrlist = srdict.get(ev)
+		if not numsrlist:
 			raise error, 'Scheduler: actions already sched for ev: %s' % ev
-		num, srlist = srlist
+		num, srlist = numsrlist
 		num = num - 1
 		if num < 0:
 			raise error, 'Scheduler: waitcount<0: %s' % (num, srlist)
 		elif num == 0:
-			self.sractions[actionpos] = None
+			numsrlist[:] = []
 			return srlist
 		else:
-			self.sractions[actionpos] = (num, srlist)
+			numsrlist[0] = num
 		return []
 
 	# search_unexpected_prearm checks whether any expected ARM_DONE's were
@@ -646,18 +643,20 @@ class Scheduler(scheduler):
 		ev = SR.TERMINATE, node
 ##		for ev in [(SR.TERMINATE, node), (SR.TERMINATE, node.looping_body_self)]:
 		if 1: # Simple test
-			if sctx.srevents.has_key(ev):
-				pos = sctx.srevents[ev]
-				del sctx.srevents[ev]
-				num, srlist = sctx.sractions[pos]
+			if sctx.srdict.has_key(ev):
+				srdict = sctx.srdict[ev]
+				del sctx.srdict[ev]
+				numsrlist = srdict[ev]
+				num = numsrlist[0]
 				num = num - 1
 				if num == 0:
-					sctx.sractions[pos] = None
+					numsrlist[:] = []
 				else:
-					sctx.sractions[pos] = num, srlist
+					numsrlist[0] = num
 		if not node.moreloops():
-			for ac in sctx.sractions:
-				if ac is None:
+			for ev, srdict in sctx.srdict.items():
+				ac = srdict[ev]
+				if not ac:
 					continue
 				num, srlist = ac
 				for i in range(len(srlist)-1,-1,-1):
@@ -691,25 +690,27 @@ class Scheduler(scheduler):
 			self.event(sctx, (SR.TERMINATE, node))
 		else:
 			# terminate node
-			for ev in sctx.srevents.keys():
+			for ev in sctx.srdict.keys():
 				if ev[1] == node:
-					pos = sctx.srevents[ev]
-					del sctx.srevents[ev]
-					num, srlist = sctx.sractions[pos]
+					srdict = sctx.srdict[ev]
+					del sctx.srdict[ev]
+					numsrlist = srdict[ev]
+					num = numsrlist[0]
 					num = num - 1
 					if num == 0:
 						if ev[0] == SR.SCHED_DONE:
 							sctx.queuesrlist(srlist)
-						sctx.sractions[pos] = None
+						numsrlist[:] = []
 					else:
-						sctx.sractions[pos] = num, srlist
-			for action in sctx.sractions:
-				if action is None:
+						numsrlist[0] = num
+			for ev, srdict in sctx.srdict.items():
+				action = srdict[ev]
+				if not action:
 					continue
-				num, events = action
-				for i in range(len(events)-1,-1,-1):
-					if events[i][1] == node:
-						del events[i]
+				actions = action[1]
+				for i in range(len(actions)-1,-1,-1):
+					if actions[i][1] == node:
+						del actions[i]
 			chan = self.ui.getchannelbynode(node)
 ##			prearmlist = sctx.prearmlists[chan]
 ##			for i in range(len(prearmlist)-1,-1,-1):
