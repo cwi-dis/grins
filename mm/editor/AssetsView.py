@@ -178,7 +178,7 @@ class AssetsView(AssetsViewDialog, ViewDialog):
 			iteminfo = self.listdata[index][0]
 			if type(iteminfo) == type(''):
 				# String means it's a url
-				value = self.listdata[index][3]
+				value = self.listdata[index][4]
 				tp = 'URL'
 			elif hasattr(iteminfo, 'getClassName') and iteminfo.getClassName() == 'MMNode':
 				value = iteminfo
@@ -230,6 +230,7 @@ class AssetsView(AssetsViewDialog, ViewDialog):
 			if tp == 'ext' and url and not name:
 				pathname = urlparse.urlparse(url)[2]
 				name = posixpath.split(pathname)[1]
+				name = MMurl.unquote(name)
 				node = icon # XXXX dirty trick: string first elt flags url.
 			else:
 				pathname = ''
