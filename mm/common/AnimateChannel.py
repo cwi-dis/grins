@@ -63,7 +63,6 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.play_loop = self.getloop(node)
 
 		# get duration in secs (float)
-		#self.__duration = node.GetAttrDef('duration', None)
 		self.__duration = self.__animator.getTimeManipulatedDur()
 
 		self.__repeatDur = node.GetAttrDef('repeatdur', None)
@@ -99,7 +98,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		self._pausedt = 0
 
 		if not hasattr(self._player,'_animateContext'):
-			self._player._animateContext = Animators.AnimateContext()
+			self._player._animateContext = Animators.AnimateContext(self._player)
 		ctx = self._player._animateContext
 		
 		parser = Animators.AnimateElementParser(node)
