@@ -1323,8 +1323,8 @@ class DummyRP:
 	# used when parsing the RealPix file failed for some reason
 	aspect = 'true'
 	author = None
-	bitrate = 0
-	width = height = 0
+	bitrate = 14400
+	width = height = 256
 	duration = 0
 	copyright = None
 	maxfps = None
@@ -1492,9 +1492,10 @@ class SlideShow:
 				changed = 1
 			else:
 				attrdict['bitrate'] = rp.bitrate
-		if attrdict.get('size') != (rp.width, rp.height):
+		size = attrdict.get('size', (256, 256))
+		if size != (rp.width, rp.height):
 			if rp is oldrp:
-				rp.width, rp.height = attrdict['size']
+				rp.width, rp.height = size
 				changed = 1
 			else:
 				attrdict['size'] = rp.width, rp.height
