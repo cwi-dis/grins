@@ -2787,6 +2787,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if width == 0 or height == 0:
 			self.warning('error getting skin image dimensions')
 			return
+		if dict.has_key('components'):
+			settings.read_components(MMurl.basejoin(skin, dict['components']))
 		ctx = self.__context
 		vp = ctx.getviewports()[0] # we already know there's exactly one
 		top = ctx.newviewport('The Skin', -1, 'layout')
