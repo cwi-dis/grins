@@ -16,12 +16,16 @@
 #pragma warning(disable: 4251) // dll-interface
 #endif
 
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 #include <string>
 using namespace std;
-#else
+#endif
+
+#if defined(_ABIO32) && _ABIO32 != 0
 typedef int bool;
 enum { false, true, };
 #endif
 
 #endif
+
+
