@@ -2,7 +2,7 @@
  * 
  *  $Id$
  *
- *  Copyright (C) 1998 RealNetworks.
+ *  Copyright (C) 1998-2000 RealNetworks.
  *  All rights reserved.
  *  
  *  http://www.real.com/devzone
@@ -16,6 +16,7 @@
 
 #ifndef _RMBLDENG_H_
 #define _RMBLDENG_H_
+
 
 /*
  * Forward declarations of some interfaces defined here-in.
@@ -42,6 +43,8 @@ typedef _INTERFACE IRMABroadcastServerProperties IRMABroadcastServerProperties;
 typedef _INTERFACE IRMAPinProperties		IRMAPinProperties;
 typedef _INTERFACE IRMAAudioPinProperties	IRMAAudioPinProperties;
 typedef _INTERFACE IRMAVideoPinProperties	IRMAVideoPinProperties;	
+typedef _INTERFACE IRMAVideoFilters			IRMAVideoFilters;
+typedef _INTERFACE IRMAVideoAnalysis		IRMAVideoAnalysis;
 
 /****************************************************************************
  *  Function:
@@ -799,7 +802,140 @@ DECLARE_INTERFACE_(IRMAVideoInputPinFeedback, IUnknown)
 
 };
 
+/****************************************************************************
+ * 
+ *  Interface:
+ *
+ *	IRMAVideoFilters
+ *
+ *  Purpose:
+ *
+ *	Used to setup filters for pre-processing the video frames prior 
+ *	to encoding.
+ *
+ *  IID_IRMAVideoFilters:
+ *
+ *
+ */
+// {4E61EBC1-96BA-11d3-B37B-0050E49EFF27}
+DEFINE_GUID(IID_IRMAVideoFilters, 
+0x4e61ebc1, 0x96ba, 0x11d3, 0xb3, 0x7b, 0x0, 0x50, 0xe4, 0x9e, 0xff, 0x27);
 
+#undef INTERFACE
+#define INTERFACE IRMAVideoFilters
+
+DECLARE_INTERFACE_(IRMAVideoFilters, IUnknown)
+{
+    /***********************************************************************/
+    /*
+     *	IUnknown methods
+     */
+    STDMETHOD(QueryInterface)		(THIS_
+					 REFIID riid,
+					 void** ppvObj) PURE;
+
+    STDMETHOD_(UINT32,AddRef)		(THIS) PURE;
+
+    STDMETHOD_(UINT32,Release)		(THIS) PURE;
+
+
+    /***********************************************************************/
+    /*
+     * IRMAVideoFilters methods
+     */
+
+    /************************************************************************
+     *	Method:
+     *	    IRMAVideoFilters::GetInverseTelecine()
+     *	Purpose:
+     *	    Used to determine if Inverse-Telecine filter will be used.
+     *	Parameters:
+     *	    pbInvTel - [out] TRUE if filter is on, FALSE if filter is off
+     */
+    STDMETHOD(GetInverseTelecine)	(THIS_
+		BOOL* pbInvTel) PURE;
+    
+    /************************************************************************
+     *	Method:
+     *	    IRMAVideoFilters::SetInverseTelecine()
+     *	Purpose:
+     *	    Turn on/off use of Inverse-Telecine video filter.
+     *	Parameters:
+     *	    bInvTel - [in] TRUE to turn on filter, FALSE to turn off filter.
+     */
+    STDMETHOD(SetInverseTelecine)	(THIS_
+		BOOL bInvTel) PURE;
+
+    /************************************************************************
+     *	Method:
+     *	    IRMAVideoFilters::GetDeinterlace()
+     *	Purpose:
+     *	    Used to determine if de-interlacing video filter will be used.
+     *	Parameters:
+     *	    pbDeInterlace - [out] TRUE if filter is on, FALSE if filter is off
+     */
+    STDMETHOD(GetDeinterlace)	(THIS_
+		BOOL* pbDeInt) PURE;
+    
+    /************************************************************************
+     *	Method:
+     *	    IRMAVideoFilters::SetDeinterlace()
+     *	Purpose:
+     *	    Turn on/off use of de-interlacing video filter.
+     *	Parameters:
+     *	    bDeInterlace - [in] TRUE to turn on filter, FALSE to turn off filter.
+     */
+    STDMETHOD(SetDeinterlace)	(THIS_
+		BOOL bDeInt) PURE;
+
+    /************************************************************************
+     *	Method:
+     *	    IRMAVideoFilters::GetHQResize()
+     *	Purpose:
+     *	    Used to determine if High Quality Resize filter will be used.
+     *	Parameters:
+     *	    pbHQResize - [out] TRUE if filter is on, FALSE if filter is off
+     */
+    STDMETHOD(GetHQResize)	(THIS_
+		BOOL* pbHQResize) PURE;
+   
+    /************************************************************************
+     *	Method:
+     *	    IRMAVideoFilters::SetHQResize()
+     *	Purpose:
+     *	    Turn on/off use of High Quality Resize video filter.
+     *	Parameters:
+     *	    bHQResize - [in] TRUE to turn on filter, FALSE to turn off filter.
+     */
+    STDMETHOD(SetHQResize)	(THIS_
+		BOOL pHQResize) PURE;
+
+    /************************************************************************
+     *	Method:
+     *	    IRMAVideoFilters::GetNoiseFilter()
+     *	Purpose:
+     *	    Used to determine if what type of noise filter will be used.
+     *	Parameters:
+     *	    pulNoiseFilter - [out]   ENC_VIDEO_NOISE_FILTER_OFF, 
+     *				    ENC_VIDEO_NOISE_FILTER_LOW,
+     *				    ENC_VIDEO_NOISE_FILTER_HIGH,
+     */
+    STDMETHOD(GetNoiseFilter)	(THIS_
+		UINT32* pulNoiseFilter) PURE;
+    
+    /************************************************************************
+     *	Method:
+     *	    IRMAVideoFilters::SetNoiseFilter()
+     *	Purpose:
+     *	    Turn on/off use of a particular type of noise filter.
+     *	Parameters:
+     *	    ulNoiseFilter - [in]   ENC_VIDEO_NOISE_FILTER_OFF, 
+     *			          ENC_VIDEO_NOISE_FILTER_LOW,
+     *			          ENC_VIDEO_NOISE_FILTER_HIGH,
+     */
+    STDMETHOD(SetNoiseFilter)	(THIS_
+		UINT32 ulNoiseFilter) PURE;
+};
 /****************************************************************************
  * 
  *  Interface:
@@ -1778,5 +1914,80 @@ DECLARE_INTERFACE_(IRMAImageMapMediaSample, IUnknown)
 			UINT32 nHandle) PURE;
 };
 
+typedef enum
+{
+    ENCODE_NO_ANALYSIS = 0,
+    DO_ANALYZE,
+    ENCODE_WITH_ANALYSIS
+} ENCODE_ANALYSIS_MODE;
+
+/****************************************************************************
+ * 
+ *  Interface:
+ *
+ *	IRMAVideoAnalysis
+ *
+ *  Purpose:
+ *
+ *	Manages state for setting the video analysis modes
+ *
+ *  IID_IRMAVideoAnalysis:
+ *
+ *  {F67F1261-3C8A-11d3-87F4-00C0F031938B}
+ *	
+ *
+ */
+DEFINE_GUID(IID_IRMAVideoAnalysis, 
+    0xf67f1261, 0x3c8a, 0x11d3, 0x87, 0xf4, 0x0, 0xc0, 0xf0, 0x31, 0x93, 0x8b);
+
+
+#undef INTERFACE
+#define INTERFACE IRMAVideoAnalysis
+
+DECLARE_INTERFACE_(IRMAVideoAnalysis, IUnknown)
+{
+    /***********************************************************************/
+    /*
+     *	IUnknown methods
+     */
+    STDMETHOD(QueryInterface)		(THIS_
+					 REFIID riid,
+					 void** ppvObj) PURE;
+
+    STDMETHOD_(UINT32,AddRef)		(THIS) PURE;
+
+    STDMETHOD_(UINT32,Release)		(THIS) PURE;
+
+    /************************************************************************
+     *
+     * IRMAVideoAnalysis methods
+     */
+
+    /************************************************************************
+     *	Method:
+     *	    IRMAVideoAnalysis::GetAnalysisMode/SetAnalysisMode
+     *	Purpose:
+     *	    Get/Set the analysis mode for 2-pass video encoding.
+     *	Parameters:
+     *	    nAnalysisMode - [in/out] encode analysis mode
+     *			    ENCODE_NO_ANALYSIS - regular encoding mode
+     *			    DO_ANALYZE - perform analysis of video (1st pass)
+     *			    ENCODE_WITH_ANALYSIS - encode using results of analysis (2nd pass)
+     *	Notes:
+     *	    For 2-pass encoding, you must set the analysis mode before 
+     *	    each PrepareToEncode() call. For the first pass, in which 
+     *	    the video is analyzed, use the DO_ANALYZE mode. For the second pass,
+     *	    in which the video is encoded using the results of the analysis,
+     *	    use the ENCODE_WITH_ANALYSIS mode. For regular encoding use the 
+     *	    ENCODE_NO_ANALYSIS mode to turn off 2-pass encoding.
+     *
+     *	    2-pass encoding is not supported for real-time encoding. During real-time 
+     *	    encoding, this mode will be ignored and ENCODE_NO_ANALYZE will be used.
+     */
+    STDMETHOD(GetAnalysisMode)	(THIS_
+	ENCODE_ANALYSIS_MODE* pnAnalysisMode) PURE;
+    STDMETHOD(SetAnalysisMode)	(THIS_
+	ENCODE_ANALYSIS_MODE nAnalysisMode) PURE;   
+};
 
 #endif //_RMBLDENG_H_
