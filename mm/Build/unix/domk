@@ -123,10 +123,12 @@ do
 	freeze)
 		freeze=grins
 		main=grins
+		help=player
+		dist=grins
 		shift
 		case ${1-undefined} in
-		cmifed|editor)	freeze=editor; main=cmifed; shift;;
-		grins)	freeze=grins; main=grins; shift;;
+		cmifed|editor)	freeze=editor; main=cmifed; help=editor; dist=grinsed; shift;;
+		grins)	freeze=grins; main=grins; help=player; dist=grins; shift;;
 		esac
 		;;
 	nomake)
@@ -477,10 +479,10 @@ done
 case $freeze in
 no)	;;
 *)
-	macexcl='-x aetools -x mac -x mac_window -x macfs -x MACFS -x MacOS -x macostools -x macpath -x macurl2path -x MACVideoChannel -x MACVideoDuration -x Required_Suite -x audio.devmac -x devmac -x greekconv -x ic'
+	macexcl='-x aetools -x EasyDialogs -x mac -x mac_window -x macfs -x MACFS -x MacOS -x macostools -x macpath -x macurl2path -x MACVideoChannel -x MACVideoDuration -x Required_Suite -x audio.devmac -x devmac -x greekconv -x ic'
 	ntexcl='-x nt -x ntpath -x nturl2path -x dos -x dospath -x NTVideoChannel -x NTVideoDuration -x devwin -x audio.devwin -x SOCKS -x msvcrt'
 	GLexcl='-x GL_window -x gl -x fm -x GL -x GET'
-	allexcl='-x pdb -x trace -x os2 -x audio.svx8'
+	allexcl='-x pdb -x trace -x os2 -x audio.svx8 -x CORBA.services -x sitecustomize'
 	case $ARCH in
 	irix*)	if [ -d $CHAMELEON/python/Extensions/midi/build.$ARCH ]
 		then	extend="-e $CHAMELEON/python/Extensions/midi/build.$ARCH"
@@ -529,7 +531,49 @@ no)	;;
 \2/p' Makefile | sort -u > /usr/tmp/domk.$$.1 &&
 	ls -1 M_* | comm -13 /usr/tmp/domk.$$.1 - | xargs rm -f &&
 	rm -f /usr/tmp/domk.$$.1 &&
-	make CHAMELEON=$CHAMELEON
-	;;
+	make CHAMELEON=$CHAMELEON &&
+	cd .. &&
+	case $ARCH in
+	irix*)
+		PATH=/sbin:$PATH &&
+		RAWIDB=$CHAMELEON/$dist.rawidb && export RAWIDB &&
+		rm -f $dist.rawidb &&
+		install -m 0555 -idb $dist.sw.base -src frozen.$freeze.$ARCH/$main -F /usr/grins -O $dist &&
+		install -m 0644 -idb $dist.help.base -src mm/Help/unix/index.html -F /usr/grins/Help -O index.html &&
+		for f in mm/Help/unix/$help/*
+		do
+			case "${f##*/}" in
+			CVS|\*)	;;
+			*)
+				install -m 0444 -idb $dist.help.base -src $f -F /usr/grins/Help/unix/$help ${f##*/}
+				;;
+			esac
+		done &&
+		install -m 0444 -idb $dist.help.intro -src mm/Intro/intro.smil -F /usr/grins/Intro -O intro.smil &&
+		for f in mm/Intro/data/*
+		do
+			case "${f##*/}" in
+			CVS|\*)	;;
+			*)
+				install -m 0444 -idb $dist.help.intro -src $f -F /usr/grins/Intro/data ${f##*/}
+				;;
+			esac
+		done &&
+		install -m 0444 -idb $dist.man.relnotes -src www-GRiNS/$help/IRIX6.3/relnotes.html -F /usr/grins -O relnotes.html &&
+		case $dist in
+		grinsed)
+			for f in mm/Templates/*
+			do
+				case "${f##*/}" in
+				*.smil)
+					install -m 0444 -idb $dist.sw.templates -src $f -F /usr/grins/Templates ${f##*/}
+					;;
+				esac
+			done
+			;;
+		esac &&
+		sort -o $RAWIDB +4u -6 $RAWIDB &&
+		gendist -sbase $CHAMELEON -idb $RAWIDB -spec $CHAMELEON/$dist.spec -dist $CHAMELEON/dist -all -creator 'ORATRiX Development B.V.'
+		;;
+	esac
 esac
-
