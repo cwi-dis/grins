@@ -186,14 +186,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def SyncArc(self, node, attr, val):
 		boston = None
-		synctolist = node.attrdict.get('synctolist', [])
+		beginlist = node.attrdict.get('beginlist', [])
+		endlist = node.attrdict.get('endlist', [])
 		if attr == 'begin':
-			yside = HD
+			list = beginlist
 		else:
-			yside = TL
+			list = endlist
 		val = string.strip(val)
 		res = syncbase.match(val)
 		if res is not None:
+			# SMIL 1.0 begin value
 			name = res.group('name')
 			delay = self.__parsecounter(res.group('event'), 1)
 			xnode = self.__nodemap.get(name)
@@ -205,19 +207,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					break
 			else:
 				self.warning('out of scope sync arc from %s to %s' % (node.attrdict.get('name','<unnamed>'), xnode.attrdict.get('name','<unnamed>')))
-				return
-			xside = HD
-			if delay == 'end':
-				xside = TL
-				delay = 0
-			elif delay == 'begin':
-				delay = 0
-			synctolist.append((xnode.GetUID(), xside, delay, yside))
-			node.attrdict['synctolist'] = synctolist
-			return
+##				return
+			if delay == 'begin' or delay == 'end':
+				event = delay
+				delay = 0.0
+			else:
+				event = 'begin'
+			list.append(MMNode.MMSyncArc(srcnode=xnode,event=event,delay=delay))
 		elif val == 'indefinite':
 			boston = 'indefinite'
-			node.attrdict['begin'] = -1 # XXXX actually a legal value
+			list.append(MMNode.MMSyncArc())
 		else:
 			vals = string.split(val, ';')
 			if len(vals) > 1:
@@ -259,17 +258,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						offset = self.__parsecounter(offsetstr, withsign = 1)
 					else:
 						offset = 0
-					xnode = self.__nodemap.get(name)
-					if xnode is None:
-						self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
-						continue
-					if event == 'end':
-						xside = TL
-					elif event == 'begin':
-						xside = HD
+					if name == 'prev':
+						xnode = None
 					else:
-						xside = event
-					synctolist.append((xnode.GetUID(), xside, offset, yside))
+						xnode = self.__nodemap.get(name)
+						if xnode is None:
+							self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
+							continue
+					list.append(MMNode.MMSyncArc(srcnode=xnode,event=event,delay=offset))
 					continue
 				res = mediamarker.match(val)
 				if res is not None:
@@ -281,7 +277,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
 						continue
 					marker = res.group('markername')
-					synctolist.append((xnode.GetUID(), marker, 0.0, yside))
+					list.append(MMNode.MMSyncArc(srcnode=xnode, marker=marker, delay=0.0))
 					continue
 				res = wallclock.match(val)
 				if res is not None:
@@ -294,60 +290,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if self.__context.attributes.get('project_boston') == 0:
 				self.syntax_error('%s not compatible with SMIL 1.0' % boston)
 			self.__context.attributes['project_boston'] = 1
-##		try:
-##			name, counter, delay = self.__parsetime(val)
-##		except error, msg:
-##			self.syntax_error(msg)
-##			return
-##		if name is None:
-##			# relative to parent/previous/start
-##			if yside == HD:
-##				node.attrdict['begin'] = delay
-##				return
-##			parent = node.GetParent()
-##			if parent is None:
-##				self.syntax_error('sync arc to top-level node')
-##				return
-##			ptype = parent.GetType()
-##			if ptype == 'seq':
-##				xnode = None
-##				for n in parent.GetChildren():
-##					if n is node:
-##						break
-##					xnode = n
-##				else:
-##					self.error('node not in parent', self.lineno)
-##				if xnode is None:
-##					# first, relative to parent
-##					xside = HD # rel to start of parent
-##					xnode = parent
-##				else:
-##					# not first, relative to previous
-##					xside = TL # rel to end of previous
-##			else:
-##				xside = HD # rel to start of parent
-##				xnode = parent
-##			synctolist.append((xnode.GetUID(), xside, delay, yside))
-##		else:
-##			# relative to other node
-##			xnode = self.__nodemap.get(name)
-##			if xnode is None:
-##				self.warning('ignoring sync arc from %s to unknown node' % node.attrdict.get('name','<unnamed>'))
-##				return
-##			for n in GetTemporalSiblings(node):
-##				if n is xnode:
-##					break
-##			else:
-##				self.warning('out of scope sync arc from %s to %s' % (node.attrdict.get('name','<unnamed>'), xnode.attrdict.get('name','<unnamed>')))
-##				return
-##			if counter == -1:
-##				xside = TL
-##				counter = 0
-##			else:
-##				xside = HD
-##			synctolist.append((xnode.GetUID(), xside, delay + counter, yside))
-		if synctolist:
-			node.attrdict['synctolist'] = synctolist
+		if beginlist:
+			node.attrdict['beginlist'] = beginlist
+		if endlist:
+			node.attrdict['endlist'] = endlist
 
 	def AddAttrs(self, node, attributes):
 		node.__syncarcs = []
