@@ -21,6 +21,12 @@ bool Main::open_file(const TCHAR *pfilename)
 	{
 	if(m_toplevel != NULL) close();
 	m_toplevel = new TopLevel(this, pfilename);
+	if(!m_toplevel->read_it())
+		{
+		delete m_toplevel;
+		m_toplevel = NULL;
+		return false;
+		}
 	return true;
 	}
 
