@@ -415,6 +415,7 @@ class SMILXhtmlSmilWriter(SMIL):
 					# convert event refs
 					if value: 
 						value = event2xhtml(value)
+						value = replacePrevShortcut(value, x)
 
 				if interior:
 					if name == 'fillDefault':
@@ -504,29 +505,31 @@ class SMILXhtmlSmilWriter(SMIL):
 			attrlist.append(('usemap', '#'+nodeid+'map'))
 
 		# extent conditionally the node to a time container
-		if self.hasTimeChildren(node):
-			if not inpar:
-				attrlist.append(('timeContainer', 'par'))
+		if self.hasTimeChildren(node) and not inpar:
+			attrlist.append(('timeContainer', 'par'))
 
 		# write media node
+		sensitive = self.issensitive(node)
 		if mtype == 'brush':
-			sensitive = self.issensitive(node)
 			if sensitive:
 				self.writetag('a', [('href', '#')])
 				self.push()
+				self.writetag('div', attrlist)
+				self.closehtmltag()
+				self.pop()
 			else:
 				attrlist.append( ('class','time') )
-			self.writetag('div', attrlist)
-			self.closehtmltag()
-			if sensitive:
-				self.pop()
+				self.writetag('div', attrlist)
+				self.closehtmltag()
 
-		elif mtype == 'img' and self.issensitive(node):
-			# interactivity enabler hack
-			self.writetag('a', [('href', '#')])
-			self.push()
-			self.writetag(mtype, attrlist)
-			self.pop()
+		elif mtype == 'img':
+			if sensitive:
+				self.writetag('a', [('href', '#')])
+				self.push()
+				self.writetag(mtype, attrlist)
+				self.pop()
+			else:
+				self.writetag('t:'+mtype, attrlist)
 
 		elif mtype == 'text' and node.GetType() == 'imm':
 			self.removeAttr(attrlist, 'src')
@@ -539,7 +542,6 @@ class SMILXhtmlSmilWriter(SMIL):
 				self.fp.write(text[1:-1])
 			self.fp.write('</p>')
 			self.pop()
-
 
 		else:
 			self.writetag('t:'+mtype, attrlist)
@@ -869,6 +871,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			values = aparser.toDOMOriginPosValues()
 			path = aparser.toDOMOriginPath()
 
+		hasid = 0
 		attributes = self.attributes.get(tag, {})
 		for name, func, gname in smil_attrs:
 			if attributes.has_key(name):
@@ -884,11 +887,16 @@ class SMILXhtmlSmilWriter(SMIL):
 					elif name == 'to':value = toxy
 					elif name == 'values':value = values
 					elif name == 'path': value = path
+				if name == 'id':
+					hasid = 1
 				if value and value != attributes[name]:
 					if name in ('begin', 'end'):
 						value = event2xhtml(value)
+						value = replacePrevShortcut(value, node)
 					attrlist.append((name, value))
-
+		if not hasid:
+			id = 'm' + node.GetUID()
+			attrlist.append( ('id', id))
 		if not self.ids_written.has_key(targetElement):
 			self.writeTargetElement(targetElement)
 		self.writetag('t:'+tag, attrlist)
@@ -1190,12 +1198,26 @@ class SMILXhtmlSmilWriter(SMIL):
 #
 smil20event2xhtml = {'.activateEvent':'.click', '.beginEvent':'.begin', '.endEvent':'.end'}
 def event2xhtml(value):
-	if not value: return value
+	if not value: 
+		return value
 	for ev in smil20event2xhtml.keys():	
 		l = string.split(value, ev)
 		if len(l)==2:
 			return l[0]+smil20event2xhtml[ev] + l[1]
 	return value
 
-
+def replacePrevShortcut(value, node):
+	if value.find('prev.') != 0:
+		return value
+	parent = node.GetParent()
+	prev = parent
+	for child in parent.GetChildren():
+		if child == node:
+			break
+		prev = child
+	id = prev.GetRawAttrDef('name', None)
+	if not id:
+		id = 'm' + prev.GetUID()
+	return id + value[4:]
+	
 
