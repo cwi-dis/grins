@@ -6,6 +6,7 @@ from usercmd import *
 import MMNode
 from MMTypes import *
 import MMAttrdefs
+import MMurl
 import urlparse
 import posixpath
 import string
@@ -327,10 +328,10 @@ class AssetsView(AssetsViewDialog, ViewDialog):
 		if self.whichview != 'template':
 			return None
 		if flavor == 'FileName':
-			object = MMurl.filename2url(object)
+			object = MMurl.pathname2url(object)
 			flavor = 'URL'
 		if flavor == 'URL':
-			url = self.context.relativeurl(url)
+			url = self.context.relativeurl(object)
 			node = self.context.newnode('ext')
 			node.SetAttr('file', url)
 		if flavor == 'NodeUID':
