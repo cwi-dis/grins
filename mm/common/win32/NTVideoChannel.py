@@ -435,6 +435,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.__rmrender = None
 
 def _deltmpfiles():
+	import os
 	for f in VideoChannel.tmpfiles:
 		try:
 			os.unlink(f)
