@@ -825,6 +825,7 @@ class EffectiveAnimator:
 		chan = self.__chan
 		mmchan = self.__node.GetChannel()
 		mmlchan = mmchan.GetLayoutChannel()
+		scale = mmlchan.getCssRawAttr('scale',1)
 
 		if self.__attr == 'position':
 			resolver = self.__context.getCssResolver()
@@ -832,13 +833,9 @@ class EffectiveAnimator:
 			resolver.link(region, mmlchan.getCssId())
 			region.move(value)
 			coords = region.getPxGeom()
-			media = self.__node.getMediaCssId()
-			resolver.link(media, region)
-			mediacoords = media.getPxGeom()
-			resolver.unlink(media)
 			resolver.unlink(region)
 			if chan.window:
-				chan.window.updatecoordinates(coords, UNIT_PXL, mediacoords)
+				chan.window.updatecoordinates(coords, UNIT_PXL, scale)
 
 		elif self.__attr in ('left','top','width','height','right','bottom'):
 			resolver = self.__context.getCssResolver()
@@ -846,13 +843,9 @@ class EffectiveAnimator:
 			resolver.link(region, mmlchan.getCssId())
 			region.changeRawAttr(self.__attr, value)
 			coords = region.getPxGeom()
-			media = self.__node.getMediaCssId()
-			resolver.link(media, region)
-			mediacoords = media.getPxGeom()
-			resolver.unlink(media)
 			resolver.unlink(region)
 			if chan.window:
-				chan.window.updatecoordinates(coords, UNIT_PXL, mediacoords)
+				chan.window.updatecoordinates(coords, UNIT_PXL, scale)
 		
 		elif attr=='bgcolor':
 			if chan.window:
