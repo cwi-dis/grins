@@ -18,7 +18,7 @@ Sdk=win32ui.GetWin32Sdk()
 import grinsRC
 import win32mu
 import string
-
+import features
 
 [FALSE, TRUE] = range(2)
 error = 'lib.win32.components.error'
@@ -514,7 +514,6 @@ class WndCtrl(LightWeightControl,window.Wnd):
 # Implementation of the splash screen
 class SplashDlg(ResDialog):
 	def __init__(self,arg,version):
-		import settings
 		ResDialog.__init__(self,grinsRC.IDD_SPLASH)
 		self._splash = WndCtrl(self,grinsRC.IDC_SPLASH)
 		self._versionc = Static(self,grinsRC.IDC_VERSION_MSG)
@@ -522,7 +521,7 @@ class SplashDlg(ResDialog):
 		self._version=version
 		if string.find(version, 'player') >= 0:
 			self._splashbmp = grinsRC.IDB_SPLASHPLAY
-		elif settings.get('lightweight'):
+		elif features.lightweight:
 			self._splashbmp = grinsRC.IDB_SPLASHLITE
 		else:
 			self._splashbmp = grinsRC.IDB_SPLASHPRO
@@ -569,14 +568,13 @@ class SplashDlg(ResDialog):
 # Implementation of the about dialog
 class AboutDlg(ResDialog):
 	def __init__(self,arg,version,parent=None):
-		import settings
 		ResDialog.__init__(self,grinsRC.IDD_ABOUT,parent)
 		self._splash = WndCtrl(self,grinsRC.IDC_SPLASH)
 		self._versionc = Static(self,grinsRC.IDC_VERSION_MSG)
 		self._version=version
 		if string.find(version, 'player') >= 0:
 			self._splashbmp = grinsRC.IDB_SPLASHPLAY
-		elif settings.get('lightweight'):
+		elif features.lightweight:
 			self._splashbmp = grinsRC.IDB_SPLASHLITE
 		else:
 			self._splashbmp = grinsRC.IDB_SPLASHPRO
