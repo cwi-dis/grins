@@ -1578,8 +1578,6 @@ class SMILWriter(SMIL):
 	def writelayout(self):
 		"""Write the layout section"""
 		attrlist = []
-		if self.smilboston:
-			attrlist.append(('type', SMIL_EXTENDED))
 		self.writetag('layout', attrlist)
 		self.push()
 		if self.smilboston:
