@@ -309,7 +309,7 @@ class _Toplevel:
 		wnd.HookMessage(self.OnTimer, win32con.WM_TIMER)
 		id=wnd.SetTimer(1,50)
 		
-		wnd.RunModalLoop(0)
+		win32ui.GetApp().RunLoop(wnd)
 
 		wnd.KillTimer(id)
 		wnd.DestroyWindow()
