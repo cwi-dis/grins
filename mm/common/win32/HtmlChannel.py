@@ -99,6 +99,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		else:
 			self.armed_str=''		
 		self.armed_url=self.getfileurl(node)
+		# XXXX Should we check that the URL is non-empty?
 		self.__armed=0
 		if not self.window.HasHtmlCtrl():
 			import settings

@@ -63,13 +63,16 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def do_arm(self, node, same=0):
 		if same and self.armed_display:
 			return 1
+		node.__type = ''
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
 		url = self.getfileurl(node)
+		if not url:
+			self.errormsg(node, 'No URL set on node')
+			return 1
 		import mimetypes, string
 		mtype = mimetypes.guess_type(url)[0]
-		node.__type = ''
 		if string.find(mtype, 'real') >= 0:
 			node.__type = 'real'
 		self.prepare_armed_display(node)

@@ -49,13 +49,16 @@ class SoundChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):
+		node.__type = ''
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
 		url = self.getfileurl(node)
+		if not url:
+			self.errormsg(node, 'No URL set on node')
+			return 1
 		import mimetypes, string
 		mtype = mimetypes.guess_type(url)[0]
-		node.__type = ''
 		if mtype and string.find(mtype, 'real') >= 0:
 			node.__type = 'real'
 			if self.__rc is None:
