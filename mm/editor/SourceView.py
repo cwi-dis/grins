@@ -158,3 +158,55 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 
 	def kill(self):
 		self.destroy()
+
+	def __appendNodeList(self, node, list):
+		list.append(node)
+		for child in node.GetChildren():
+			self.__appendNodeList(child, list)
+
+	def onRetrieveNode(self):
+		if self.is_changed():
+			windowinterface.showmessage("You must apply or revert the last modifications before to be able to use this function.", mtype = 'error')
+			return
+			
+		parseErrors = self.context.getParseErrors()
+		if parseErrors != None:
+			windowinterface.showmessage("The source document contains some errors. \n You must fix them before to be able to use this function.", mtype = 'error')
+			return
+		
+		charIndex = self.getCurrentCharIndex()
+		objectListToInspect = []
+		
+		# make a list of objects to inspect
+		# 1) mmnode
+		self.__appendNodeList(self.root, objectListToInspect)
+		# 2) viewport/regions
+		viewportList = self.context.getviewports()
+		for viewport in viewportList:
+			self.__appendNodeList(viewport, objectListToInspect)
+		# ... XXX to complete the list (regpoint, anchor, ...) for selectable objects
+		
+		# find all objects which surround the current pointed char
+		objectFoundList = []
+		for object in objectListToInspect:
+			if hasattr(object, 'char_positions') and object.char_positions:
+				begin, end = object.char_positions
+				if charIndex >= begin and charIndex < end:
+					objectFoundList.append(object)
+
+		# figure out the most interior object
+		objectToSelect = None
+		maxInd = -1
+		for object in objectFoundList:
+			if object.char_positions > maxInd:
+				objectToSelect = object
+				maxInd = object.char_positions
+
+		# at last select object
+		if objectToSelect != None:
+			className = objectToSelect.getClassName()
+			self.editmgr.setglobalfocus(className, objectToSelect)
+		else:
+			# if no object, show a warning
+			windowinterface.showmessage("Node not found", mtype = 'error')
+			

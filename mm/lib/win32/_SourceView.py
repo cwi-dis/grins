@@ -299,7 +299,7 @@ class _SourceView(GenView, docview.RichEditView):
 		# disable the default wrap behavior
 		self.SetWordWrap(win32ui.CRichEditView_WrapNone)
 		self.WrapChanged()
-				
+		
 	def Paste(self):
 		if not self.isClipboardEmpty():
 			# call the ancestor's method
@@ -404,7 +404,7 @@ class _SourceView(GenView, docview.RichEditView):
 				
 	def set_mother(self, mother):
 		self.__mother = mother
-
+		
 	# Convert the text from unix or mac to windows
 	def __convert2ws(self, text):
 		import string
@@ -548,5 +548,19 @@ class _SourceView(GenView, docview.RichEditView):
 	# return true if the undo is possible	
 	def canUndo(self):
 		return Sdk.SendMessage(self.GetSafeHwnd(),win32con.EM_CANUNDO,0,0)
+
+	# should return the line pointed by the carret
+	# XXX for now, return the first caractere of the line pointed by the carret
+	def getCurrentCharIndex(self):
+		# get the current char index (pointed by the carret)
+		charIndex  = self.LineIndex(-1)
+		# get the current line
+		lineNumber = self.LineFromChar(charIndex)
 		
-		
+		# the internal GRiNS representation has 1 caracteres for the end of line
+		# windows needs 2 caracteres (CR and LF) for the end of line
+		# substract the line number to map with the internal representation
+		# XXX should use the current map table
+		charIndex = charIndex - lineNumber
+
+		return charIndex		
