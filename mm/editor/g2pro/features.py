@@ -10,7 +10,6 @@ from FeatureSet import *
 feature_set = [EXPORT_CMIF, EXPORT_SMIL2, EXPORT_QT, EXPORT_WMP,
                PLAYER_VIEW, STRUCTURE_VIEW, TIMELINE_VIEW, LAYOUT_VIEW, HYPERLINKS_VIEW, CHANNEL_VIEW,
                USER_GROUPS, TRANSITION_VIEW,
-               #H_NIPPLES, H_VBANDWIDTH,
                H_MODIFY_STRUCTURE
                ];
 

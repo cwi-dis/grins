@@ -43,9 +43,8 @@ __version__ = "$Id$";
 
 	# Different capabilities within the hierarchy view
 	H_TRANSITIONS,
-	H_VBANDWIDTH,						# Shows the download time, variable.
 	H_MODIFY_STRUCTURE,					# This is the biggy - decides between templates or not.
 	H_DROPBOX,							# Show an empty drop box at the end of a sequence.
 	H_COLLAPSE,							# Enable internal node collapsing.
 	H_TIMESTRIP,						# Show snap!-like documents with correct toplevel par/seq
-] = range(29)							# don't forget to update this range!
+] = range(28)							# don't forget to update this range!
