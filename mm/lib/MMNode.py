@@ -873,12 +873,12 @@ class MMChannel:
 	def setPxGeom(self, geom):
 		if self.attrdict.get('type') == 'layout':
 			left, top, width, height = geom
-			self.context.cssResolver.changeRawValue(self._cssId, 'left', left)
-			self.context.cssResolver.changeRawValue(self._cssId, 'top', top)
-			self.context.cssResolver.changeRawValue(self._cssId, 'width', width)
-			self.context.cssResolver.changeRawValue(self._cssId, 'height', height)
-			self.context.cssResolver.changeRawValue(self._cssId, 'right', None)
-			self.context.cssResolver.changeRawValue(self._cssId, 'bottom', None)
+			self.context.cssResolver.changePxValue(self._cssId, 'left', left)
+			self.context.cssResolver.changePxValue(self._cssId, 'width', width)
+			self.context.cssResolver.changePxValue(self._cssId, 'right', None)
+			self.context.cssResolver.changePxValue(self._cssId, 'top', left)
+			self.context.cssResolver.changePxValue(self._cssId, 'height', height)
+			self.context.cssResolver.changePxValue(self._cssId, 'bottom', None)
 		else:
 			print 'setPxGeom unsupported on no layout channel'
 
