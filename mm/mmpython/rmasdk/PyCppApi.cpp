@@ -166,22 +166,43 @@ int RMAObject::setattr(char *name, PyObject *v)
 PyObject* RMAObject::so_repr(PyObject *op)
 	{
 	RMAObject* w = (RMAObject *)op;
+#if !defined(_ABIO32) || _ABIO32 == 0
 	string ret = w->repr();
 	return Py_BuildValue("s",ret.c_str());
+#else
+	char *str = w->repr();
+	PyObject *ret = Py_BuildValue("s", str);
+	free(str);
+	return ret;
+#endif
 	}
 
-string RMAObject::repr()
+#if !defined(_ABIO32) || _ABIO32 == 0
+string
+#else
+char *
+#endif
+RMAObject::repr()
 	{
-	string csRet;
 	char buf[50];
 	sprintf(buf, "object '%s'", ob_type->tp_name);
+#if !defined(_ABIO32) || _ABIO32 == 0
 	return string(buf);
+#else
+	return strdup(buf);
+#endif
 	}
 
 void RMAObject::cleanup()
 	{
+#if !defined(_ABIO32) || _ABIO32 == 0
 	string rep = repr();
 	TRACE("cleanup detected %s, refcount = %d\n",rep.c_str(),ob_refcnt);
+#else
+	char *rep = repr();
+	TRACE("cleanup detected %s, refcount = %d\n",rep,ob_refcnt);
+	free(rep);
+#endif
 	}
 
 /*static*/ 
@@ -236,7 +257,9 @@ CallerHelper::CallerHelper(const char *methodname,PyObject *obj)
 	retVal(NULL)
 	{
 	if(!methodname || !obj) return;
+#if !defined(_ABIO32) || _ABIO32 == 0
 	csHandlerName = methodname;
+#endif
 	CEnterLeavePython elp;
 	PyObject *t, *v, *tb;
 	PyErr_Fetch(&t,&v,&tb);
@@ -298,7 +321,11 @@ BOOL CallerHelper::do_call(PyObject *args)
 		print_error();
 		PyObject *obRepr = PyObject_Repr(handler);
 		char *szRepr = PyString_AsString(obRepr);
+#if !defined(_ABIO32) || _ABIO32 == 0
 		sprintf(msg, "%s() virtual handler (%s) raised an exception",csHandlerName.c_str(), szRepr);
+#else
+		sprintf(msg, "<unknown>() virtual handler (%s) raised an exception",szRepr);
+#endif
 		Py_XDECREF(obRepr);
 		PyErr_SetString(module_error, msg);
 		print_error();
@@ -475,6 +502,7 @@ BOOL CallerHelper::retval( char *&ret )
 	return TRUE;
 	}
 
+#if !defined(_ABIO32) || _ABIO32 == 0
 BOOL CallerHelper::retval(string &ret)
 	{
 	ASSERT(retVal);
@@ -494,6 +522,7 @@ BOOL CallerHelper::retval(string &ret)
 		}
 	return TRUE;
 	}
+#endif
 
 BOOL CallerHelper::retval(_object* &ret)
 	{
