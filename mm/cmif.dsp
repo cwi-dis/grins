@@ -87,6 +87,30 @@ SOURCE=.\common\win32\PreferencesDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\common\win32\RealAudioChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\win32\RealChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\win32\RealPixChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\win32\RealTextChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\win32\RealVideoChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\win32\RealWindowChannel.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\common\win32\SoundChannel.py
 # End Source File
 # End Group
@@ -1209,42 +1233,6 @@ SOURCE=.\pylib\xmllib.py
 
 SOURCE=.\bin\win32\iGRiNS.py
 # End Source File
-# End Group
-# End Group
-# Begin Group "mmextensions"
-
-# PROP Default_Filter ""
-# Begin Group "real"
-
-# PROP Default_Filter ""
-# Begin Group "real/win32"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\mmextensions\real\win32\RealAudioChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\mmextensions\real\win32\RealChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\mmextensions\real\win32\RealPixChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\mmextensions\real\win32\RealTextChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\mmextensions\real\win32\RealVideoChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\mmextensions\real\win32\RealWindowChannel.py
-# End Source File
-# End Group
 # End Group
 # End Group
 # End Target
