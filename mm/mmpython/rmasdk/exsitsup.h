@@ -35,14 +35,25 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 
     public:
     /****** Public Class Methods ******************************************/
-    ExampleSiteSupplier(IUnknown* pUnkPlayer);
+    ExampleSiteSupplier(IUnknown* pUnkPlayer, void *hwnd,
+#ifdef _UNIX
+			void *dpy,
+#endif
+			int x, int y, int w, int h);
     
 
     /************************************************************************
      *  Custom Interface Methods                     
 	 */
-	void SetOsWindow(void* p, PyObject *pw) {
-		m_PNxWindow.window = p;
+	void SetOsWindow(void* hwnd,
+#ifdef _UNIX
+			 void *dpy,
+#endif
+			 PyObject *pw) {
+		m_PNxWindow.window = hwnd;
+#ifdef _UNIX
+		m_PNxWindow.display = dpy;
+#endif
 		Py_XDECREF(pPythonWindow);
 		pPythonWindow = pw;
 		Py_XINCREF(pPythonWindow);
