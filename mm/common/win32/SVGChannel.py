@@ -20,6 +20,7 @@ class SVGChannel(Channel.ChannelWindow):
 		self.svgsrcrect = None
 		self.svgorgsize = None
 		self.svgdds = None
+		self.svgrenderer = None
 		self.svgplayer = None
 		self.svgddcolor = 0
 		 
@@ -82,6 +83,7 @@ class SVGChannel(Channel.ChannelWindow):
 
 	def do_play(self, node):
 		if self.window and self.svgdds:
+			self.registerEvents(self.window, 1)
 			self.window.setredrawdds(self.svgdds, self.svgdstrect, self.svgsrcrect)
 			self.window.update(self.window.getwindowpos())
 			if self.svgplayer:
@@ -94,6 +96,8 @@ class SVGChannel(Channel.ChannelWindow):
 				self.svgplayer.stop()
 				self.svgplayer = None
 			self.svgdds = None
+			self.svgrenderer = None
+			self.registerEvents(self.window, 0)
 		Channel.ChannelWindow.stopplay(self, node)
 	
 	def setpaused(self, paused):
@@ -115,12 +119,40 @@ class SVGChannel(Channel.ChannelWindow):
 		self.svgdds.BltFill(self.svgsrcrect, self.svgddcolor)
 		ddshdc = dds.GetDC()
 		svggraphics.tkStartup(ddshdc)
-		renderer = svgrender.SVGRenderer(svgdoc, svggraphics)
-		renderer.render()
+		if self.svgrenderer is None:
+			self.svgrenderer = svgrender.SVGRenderer(svgdoc, svggraphics)
+		self.svgrenderer.render()
 		svggraphics.tkShutdown()
 		dds.ReleaseDC(ddshdc)
 		if update:
 			self.window.update(self.window.getwindowpos())
+
+	def registerEvents(self, window, f):
+		import WMEVENTS
+		if f:
+			window.register(WMEVENTS.Mouse0Press, self._mousepress, 'foreignObject')
+			window.register(WMEVENTS.MouseMove, self._mousemove, 'foreignObject')
+		else:
+			window.unregister(WMEVENTS.Mouse0Press)
+			window.unregister(WMEVENTS.MouseMove)
+
+	def _mousepress(self, arg, window, event, value):
+		if self.svgrenderer:
+			pt = value[:2]
+			node = self.svgrenderer.getElementAt(pt)
+			if node and node.isMouseSensitive():
+				node.onClick()
+
+	def _mousemove(self, arg, window, event, value):
+		if self.svgrenderer:
+			pt = value[:2]
+			node = self.svgrenderer.getElementAt(pt)
+			if node and node.isMouseSensitive():
+				window.setdefaultcursor('hand')
+				return
+		window.setdefaultcursor('arrow')
+
+
 
 ###################################
 # SVG channel alt using an OS window and Adobe's SVG viewer
