@@ -20,82 +20,86 @@ call for channel-specific tasks.
 Functions and Methods of MM.
 ============================
 
-init() is the function which creates a new mm object.
+setsyncfd(fd)
+	Set a file descriptor on which a byte is written to indicate
+	that an event has happened.  The byte that is written consists
+	of two parts.  The upper six bits are the event as specified
+	in the init() function, the lower two bits are the value.  See
+	init() for more details.
 
-obj = init(chanobj, wid, ev, attrlist)
+obj = init(chanobj, ev, attrdict)
 	Initialization routine.  Chanobj is a channel object which
-	identifies the channel.   Wid is the window-id of the GL
-	window 	to render in.  It is ignored in channels that don't
-	have a GL window (such as the sound channel).  Ev is an event
-	number.  Whenever something 'interesting' happens the raw
-	channel deposits an event of this type into the gl event queue
-	to signal this fact to the main thread.  The value of the event
-	will be one of the following:
+	identifies the channel.  Ev is an event number.  Whenever
+	something 'interesting' happens the raw channel writes a byte
+	to the file descriptor specified with setsyncfd to signal this
+	fact to the main thread.  The value of the event will be one
+	of the following:
 	ARMDONE - when the current arm is done
 	PLAYDONE - when the current file has finished playing
-	STOPPED - A stop command has been processed. This is needed to
-		synchronize on the stop command (because there might still be
-		old events in the event queue).
-	[ The window-id may not be known at the time this function is
-	  called.  In the MovieChannel, the window-id is specified at
-	  arm time.  Maybe this interface should change. ]	  
 
-	Attrlist is a list of (attributename, value) pairs specifying
-	things like background color, etc.
-	[ In the existing channels, this is not used. ]
-
-	The reason for letting the main program specify the event
-	number is that this allows the main program to use a different
-	event number for each instantiation of a raw channel.
+	Attrdict is a dictionary object specifying things like
+	background color, window id, etc.  Exactly what attributes are
+	needed depends on the channel.
 
 
 The following functions are methods of the object returned by init().
 
-done()
-	Stops the channel, closes the window.
-	Note 1: disabling a channel is done through this mechanism as
+close()
+	Stops the channel, closes the window (if there is one).
+	Note: disabling a channel is done through this mechanism as
 	  well. The python wrapper will have to take care of timing
 	  dependencies.
-	[ This methid isn't currently used in the exisiting channels.
-	  Maybe it isn't really needed. ]
 
-resized()
+resized(x, y, w, h)
 	Called when the main loop notices that the window has changed
-	size.
+	size or has to be redrawn.  The arguments are the x and y
+	coordinates of the top-left corner and the width and height of
+	the window.
 
-arm(file, delay, duration, attrlist, anchorlist, synchronous)
+arm(file, delay, duration, attrdict, anchorlist, synchronous)
 	Prepare to play file 'file' next, and try to have it done
-	within 'delay seconds. 'duration' is an estimate of how long
-	the arm operation will take. These parameters are only used to
-	influence scheduling decisions. An arm may be scheduled before
-	the previous play is finished. Attrlist is again a list of
-	(name, value) pairs like in the init call. Anchorlist is a
-	list of tuples where each tuple describes (in a channel
+	within 'delay seconds.  'duration' is an estimate of how long
+	the arm operation will take.  These parameters are only used
+	to influence scheduling decisions.  An arm may be scheduled
+	before the previous play is finished.  Attrdict is again a
+	dictionary of attributes like in the init call.  Anchorlist is
+	a list of tuples where each tuple describes (in a channel
 	dependent way) how and where to show an anchor.  Synchronous
 	indicates whether arming should be synchronous or not.  If
 	arming is done synchronously, no event will be generated to
-	indicate that the arm finished.
-	[ In the existing channels, attrlist is actually a dictionary.
-	  In it, all sorts of parameters are passed, such as
-	  window-id and audio parameters. ]
+	indicate that the arm finished.  The synchronous parameter is
+	optional and defaults to 0.  [ Note: the current channels do
+	not use delay, duration, or anchorlist. ]
 
-armtime = play()
-	Start playing the armed node. The actual time needed for the
-	arm is returned. Calling play before the ARMDONE event is
-	received is an error, to help in detecting programming errors.
+armstop()
+	Stop arming.  This method should be called to stop an arm that
+	is in progress when the main thread decides that the node will
+	not be played after all.  When the arm is stopped an ARMDONE
+	will be generated.  It is not an error to call this method
+	when no arm is in progress.
 
-pause()
-	Pause playing, resume by calling play().
-	[ Not implemented.  Pausing is implemented by setting the
-	  playing rate to 0. ]
+play()
+	Start playing the armed node.  Calling play before the ARMDONE
+	event is received is an error, to help in detecting
+	programming errors.
 
-stop()
-	Stop playing and arming. A STOPPED event is generated to help
-	resynchronising.
+playstop()
+	Stop playing.  A PLAYDONE event is generated when the node
+	stops playing.
 
 setrate(rate)
 	Set the playing rate to the given value.  Takes effect
-	immedeately.
+	immedeately.  If the rate is 0, playing of the node is paused.
+
+finished()
+	Called when the node is finished and any node-related data may
+	be released.  This will also clear the window, if there is
+	one.  This can only be called when not playing anymore.
+
+do_display()
+	Draw the new frame.  This is used when the player thread
+	cannot draw because the underlying window system library can't
+	handle multiple threads drawing to the same window.
 
 Functions and Methods of the Channel Module.
 ============================================
@@ -141,46 +145,51 @@ released when arming or playing must take place, thus enabling the arm
 or play threads to acquire the lock.
 
 The interface between the mm module and the channel-specific module is
-through a structure containg pointers to functions.  The interface
+through a structure containing pointers to functions.  The interface
 functions correspond to the list of functions mentioned above.
 
 The mmobject structure.
 
 The mmobject structure consists of the following fields.
 
-mm_wid		The window ID for channels that have a GL window.
-mm_ev		The event number which is used to enter certain events
-		into the GL event queue.  This value is not
+mm_ev		The event number which is used to signal certain
+		events to the main thread through the file descriptor
+		that was set with setsyncfd.  This value is not
 		interpreted by the mm module.
 mm_flags	Flag values for the mm module.  The following flags
 		are defined.
 		ARMING		The arm thread is running.
 		PLAYING		The play thread is running.
 		PAUSING		The play thread is pausing (not
-				implemented yet).
+				implemented this way).
 		EXIT		The arm and play threads should exit.
 				This is used when the object is being
 				deallocated.
-mm_flaglock	This is a lock that is used to serialize access to
+		STOPPLAY	The channel must stop playing.
+		STOPARM		The channel must stop arming.
+		ARMED		The channel has finished arming.
+		SYNCARM		The arm is synchronous.
+		ARMTHREAD	An arm thread exists.
+		PLAYTHREAD	A play thread exists.
+mm_flagsema	This is a semaphore that is used to serialize access to
 		mm_flags.  Since the arm and play threads must look at
 		mm_flags, and may even have to change mm_flags, a
 		mechanism is needed to prevent race conditions.
-mm_attrlist	A python list which contains channel-specific
+mm_attrdict	A python dictionary which contains channel-specific
 		attributes.  This is used by the channel-specific
 		code.
-mm_armlock	This lock is acquired by the main thread before the
+mm_armsema	The main thread does a down on this semaphore  before the
 		arm thread is started.  When the arm thread is
-		started, it tries to acquire the lock, but since it is
-		already held, the arm thread will hang waiting for the
-		lock to be released.  When mm_arm() is called to arm
-		the channel, it releases the lock after the
-		channel-specific arm routine has finished.  The arm
-		thread can then acquire it.  When the arm thread is
-		done, it tries again to acquire the lock without first
-		releasing it.  Since the lock is already held, the arm
-		thread will hang until some other thread releases the
-		lock.
-mm_playlock	This lock does for the play thread what mm_armlock
+		started, it tries to do a down on the semaphore and
+		will block in the process.  When mm_arm() is called to
+		arm the channel, it does an up on the semaphore after
+		the channel-specific arm routine has finished.  The
+		arm thread can then complete the down.  When the arm
+		thread is done, it tries again to do a down on the
+		semaphore without first doing an up.  This will block
+		the thread until the main thread does the next up in
+		the next call to mm_arm.
+mm_playsema	This semaphore does for the play thread what mm_armsema
 		does for the arm thread.
 mm_exitsema	When the mm object is being deallocated, the main
 		thread signals the other threads that they have to
@@ -223,22 +232,30 @@ player(mmobject *)
 		Player is supposed to do the real work, play should
 		only do some initialization.  When playing is
 		finished, player should return.
-done(mmobject *)
-		In the current implementation, this function is never
-		called.
-resized(mmobject *)
-		This function will be called when a resize event for
-		this channel's window is received.  It should interact
-		properly with the player function, but the specifics
-		of the interaction is up to the implementor of the
-		module.
+resized(mmobject *, int, int, int, int)
+		This function does the channel-specific work for the
+		resized method.
 arm(mmobject *, object *, int, int, object *, object *)
 		This function is called to pass the arm parameters to
 		the channel module.  After it finishes, the armer
 		function will be called.
+armstop(mmobject *)
+		This function is called to signal the arm thread that
+		it should stop arming.  In the current modules this
+		function does not do anything.
 play(mmobject *)
 		This function is called when the channel should start
 		playing.  After this function returns, the player
 		function will be called to do the real work.
-stop(mmobject *)
+playstop(mmobject *)
 		This function is called when playing has to stop.
+finished(mmobject *)
+setrate(mmobject *, double)
+init(mmobject *)
+		Initialize the channel-specific data.  This function
+		is called, once, before any of the other functions.
+dealloc(mmobject *)
+		Called to deallocate the channel-specific data.  After
+		this function was called, no other function will be
+		called anymore.
+do_display(mmobject *)
