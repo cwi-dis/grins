@@ -40,12 +40,12 @@ from GenFormView import GenFormView
 
 class _LayoutView2(GenFormView):
 	def __init__(self,doc,bgcolor=None):
-		GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT_T1)
+		GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT_T2)
 		
 		self._layout = None
 		self._mmcontext = None
 
-		self.__ctrlNames=n=('RegionX','RegionY','RegionW','RegionH','RegionZ','ShowAllMedias')
+		self.__ctrlNames=n=('RegionX','RegionY','RegionW','RegionH','RegionZ')
 		self.__listeners = {}
 		
 		# save the current value.
@@ -64,7 +64,6 @@ class _LayoutView2(GenFormView):
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_W); i=i+1
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_H); i=i+1
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
-		self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_ALLMEDIAS); i=i+1
 			
 		# Initialize control objects whose command are activable as well from menu bar
 		self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
@@ -116,13 +115,27 @@ class _LayoutView2(GenFormView):
 	def getTreeComponent(self):
 		return self._treeComponent
 
-	def OnInitialUpdate(self):
-		GenFormView.OnInitialUpdate(self)
+	# override due to splitter
+	def OnClose(self):
+		childframe = self.GetParent().GetParent()
+		if self._closecmdid>0:
+			childframe.GetMDIFrame().PostMessage(win32con.WM_COMMAND, self._closecmdid)
+		else:
+			childframe.DestroyWindow()
 
-		# set normal size from frame to be 680x480
+	def OnInitialUpdate(self):
+		# we use a splitter so don't call GenFormView version
+		#GenFormView.OnInitialUpdate(self)
+		for ck in self.keys():
+			self[ck].attach_to_parent()
+			self.EnableCmd(ck,0)
+		self.HookMessage(self.OnCmd,win32con.WM_COMMAND)
+
+		# set normal size from frame to be 640x480
 		flags, sw, minpos, maxpos, rcnorm = self.GetParent().GetWindowPlacement()
 		l, t = rcnorm[:2]
-		self.GetParent().SetWindowPlacement(flags, sw, minpos, maxpos, (l,t,680,480))
+		splitter = self.GetParent()
+		splitter.GetParent().SetWindowPlacement(flags, sw, minpos, maxpos, (l,t,640,480))
 
 		# enable all lists
 		for name in self.__ctrlNames:	
@@ -204,7 +217,8 @@ class _LayoutView2(GenFormView):
 		
 	def close(self):
 		self.deactivate()
-		GenFormView.close(self)
+		# pypass splitter
+		self.GetParent().GetParent().DestroyWindow()
 		
 	# Sets the acceptable commands. 
 	def set_localcommandlist(self,commandlist):
@@ -268,10 +282,7 @@ class _LayoutView2(GenFormView):
 		
 		if nmsg==win32con.BN_CLICKED:
 			ctrlName = None
-			
-#			if id == self['ShowAllMedias']._id:
-#				ctrlName = 'ShowAllMedias'
-						
+									
 			if ctrlName != None:
 				value = self[ctrlName].getcheck()
 				listener = self.__listeners.get(self.lastModifyCtrlField)
@@ -383,15 +394,6 @@ class _LayoutView2(GenFormView):
 			newrc = self.__orgctrlpos[id], tl-tf+hp+dh, r1-l1, b1-t1
 			ctrl.setwindowpos(ctrl._hwnd, newrc, flags)
 
-		# resize tree (temp: will be replaced by a tree view pane)
-		tree = self.GetDlgItem(grinsRC.IDC_TREE1)
-		lt, tt, rt, bt = tree.GetWindowRect()
-		wt = rt - lt
-		ht = bf - tf - (tt-tf) - 14
-		newrc = lt-lf, tl-tf, wt, ht
-		tree.SetWindowPos(tree.GetSafeHwnd(), newrc,
-				win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
-
 	def saveOrgCtrlPos(self):
 		lf, tf, rf, bf = self.GetWindowRect()
 		ctrlIDs = self.getCtrlIds()
@@ -436,7 +438,11 @@ class TreeManager:
 
 	def onInitialUpdate(self, parent):
 		import TreeCtrl
-		self.treeCtrl = TreeCtrl.TreeCtrl(parent, grinsRC.IDC_TREE1)
+		ctrl = None
+		if 1:
+			treeView = parent.GetParent().GetPane(0,0)
+			ctrl = treeView.GetTreeCtrl()
+		self.treeCtrl = TreeCtrl.TreeCtrl(parent, grinsRC.IDC_TREE1, ctrl)
 		self.treeCtrl.addMultiSelListener(self)
 		self.treeCtrl.addExpandListener(self)
 
