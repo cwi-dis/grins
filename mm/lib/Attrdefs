@@ -27,6 +27,8 @@
 # A definition need not be wholly contained in a single input line;
 # blank lines and comments may be inserted freely.
 
+(abstract (string) '' 'Abstract' default 'Abstract' raw)
+
 (align (string) 'left' 'Alignment' CMIFdefault
 	'Alignment of short datasets' channel)
 
@@ -35,6 +37,8 @@
 
 (arm_duration (float) -1.0 'Arm duration' hidden
 	'Time needed to arm this event before displaying' raw)
+
+(author (string) '' 'Author' default 'Author' raw)
 
 (axis (tuple (float) (float)) (-1.0 -1.0) 'Axis' CMIFdefault
 	'Draw axis if >0, specifies tick-interval' channel)
@@ -81,6 +85,8 @@
 
 (comment (string) '' 'Comment' default
 	 'A comment, for your convenience only' raw)
+
+(copyright (string) '' 'Copyright' default 'Copyright' raw)
 
 (crop (tuple (float) (float) (float) (float)) (0 0 0 0) 'Image crop' CMIFdefault
     'Crop image.  Values are fractions to crop from top, bottom, left, right.'
@@ -225,6 +231,10 @@
 
 (units (int) 0 'Units' units
 	'What the size/position numbers are measured in' raw)
+
+(usergroups (list (enclosed (tuple (name) (tuple (string) (bool) (bool)))))
+	() 'User groups' hidden
+	'Usergroups used in this document (root node only)')
 
 (video (bool) 0 'Video output' CMIFdefault
 	'Do image smoothing for video output' channel)

@@ -309,6 +309,7 @@ def getlayout(writer, node):
 	if layout == 'undefined':
 		return
 	return writer.layout2name[layout]
+
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
@@ -320,6 +321,8 @@ smil_attrs=[
 	("dur", lambda writer, node: getduration(writer, node, 'duration')),
 	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
+	("clip-begin", lambda writer, node: getcmifattr(writer, node, 'clipbegin')),
+	("clip-end", lambda writer, node: getcmifattr(writer, node, 'clipend')),
 	("endsync", getterm),
 	("repeat", lambda writer, node:getrepeat(writer, node)),
 	("system-bitrate", lambda writer, node:getcmifattr(writer, node, "system_bitrate")),
@@ -330,9 +333,20 @@ smil_attrs=[
 	("system-screen-size", getscreensize),
 	("system-screen-depth", lambda writer, node:getcmifattr(writer, node, "system_screen_depth")),
 	("%s:bag-index" % NSprefix, getbagindex),
-	("%s:u_group" % NSprefix, getugroup),
+	("%s:u-group" % NSprefix, getugroup),
 	("%s:layout" % NSprefix, getlayout),
 ]
+cmif_node_attrs_ignore = [
+	'arm_duration', 'styledict', 'name', 'bag_index', 'anchorlist',
+	'channel', 'file', 'duration', 'system_bitrate', 'system_captions',
+	'system_language', 'system_overdub_or_captions', 'system_required',
+	'system_screen_size', 'system_screen_depth', 'layout',
+	'clipbegin', 'clipend', 'u_group', 'loop', 'synctolist',
+	]
+cmif_chan_attrs_ignore = [
+	'type', 'id', 'title', 'base_window', 'base_winoff', 'z', 'scale',
+	'transparent', 'bgcolor', 'winpos', 'winsize', 'rect',
+	]
 
 # Mapping from CMIF channel types to smil media types
 smil_mediatype={
@@ -667,14 +681,21 @@ class SMILWriter(SMIL):
 			# don't define coordinates (i.e., use defaults)
 			if ch.has_key('base_window') and \
 			   ch.has_key('base_winoff'):
-				x, y, w, h = ch['base_winoff']
-				if x+w >= 1.0: w = 0
-				if y+h >= 1.0: h = 0
+				rect = ch.get('rect')
+				if rect is None:
+					x, y, w, h = ch['base_winoff']
+					if x+w >= 1.0: w = 0
+					if y+h >= 1.0: h = 0
+				else:
+					x, y, w, h = rect
 				data = ('left', x), ('top', y), ('width', w), ('height', h)
 				for name, value in data:
-					value = int(value*100)
+					if type(value) is type(0.0):
+						value = '%d%%' % int(value*100)
+					else:
+						value = '%d' % value
 					if value:
-						attrlist.append((name, '%d%%'%value))
+						attrlist.append((name, value))
 			if ch.has_key('z') and ch['z'] > 0:
 				attrlist.append(('z-index', "%d" % ch['z']))
 			scale = ch.get('scale', 0)
@@ -698,6 +719,9 @@ class SMILWriter(SMIL):
 				attrlist.append(('background-color', "#%02x%02x%02x" % ch['bgcolor']))
 
 			self.regions_defined[ch] = 1
+			for key, val in ch.items():
+				if key not in cmif_chan_attrs_ignore:
+					attrlist.append(('%s:%s' % (NSprefix, key), str(val)))
 			self.writetag('region', attrlist)
 		self.pop()
 
@@ -705,7 +729,7 @@ class SMILWriter(SMIL):
 		u_groups = self.root.GetContext().usergroups
 		if not u_groups:
 			return
-		self.writetag('%s:user_attributes' % NSprefix)
+		self.writetag('%s:user-attributes' % NSprefix)
 		self.push()
 		for key, val in u_groups.items():
 			attrlist = []
@@ -714,10 +738,10 @@ class SMILWriter(SMIL):
 			if title:
 				attrlist.append(('title', title))
 			if u_state != 'RENDERED':
-				attrlist.append(('u_state', u_state))
+				attrlist.append(('u-state', u_state))
 			if override != 'allowed':
 				attrlist.append(('override', override))
-			self.writetag('%s:u_group' % NSprefix, attrlist)
+			self.writetag('%s:u-group' % NSprefix, attrlist)
 		self.pop()
 
 	def writegrinslayout(self):
@@ -790,6 +814,12 @@ class SMILWriter(SMIL):
 				value = func(self, x)
 			if value:
 				attrlist.append((name, value))
+		for key, val in x.GetAttrDict().items():
+			if key[-7:] != '_winpos' and \
+			   key[-8:] != '_winsize' and \
+			   key not in cmif_node_attrs_ignore:
+				attrlist.append(('%s:%s' % (NSprefix, key),
+						 str(val)))
 		if interior:
 			if root and (attrlist or type != 'seq'):
 				root = 0
