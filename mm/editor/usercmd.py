@@ -360,10 +360,12 @@ class CREATEANCHOR(_CommandBase):
 	help = 'Create a simple fullnode anchor on the selection'
 class FINISH_LINK(_CommandBase):
 	help = 'Create hyperlink from recent anchor to selection'
-class CREATE_BEGIN_EVENT_SOURCE(_CommandBase):
+class CREATE_EVENT_SOURCE(_CommandBase):
 	help = 'Set the source of any created events to this node.'
-class CREATE_BEGIN_EVENT_DESTINATION(_CommandBase):
+class CREATE_BEGIN_EVENT(_CommandBase):
 	help = 'Create a begin event for this node.'
+class CREATE_END_EVENT(_CommandBase):
+	help = 'Create an end event for this node.'
 class THUMBNAIL(_CommandBase):
 	help = 'Toggle between showing and not showing thumbnails'
 class PLAYABLE(_CommandBase):
