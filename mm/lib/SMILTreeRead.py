@@ -459,9 +459,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif mediatype == 'cmif_shell':
 			chtype = 'shell'
 		else:
-			chtype = mediatype
-			self.warning('unrecognized media type %s' % chtype)
-			import pdb ; pdb.set_trace()
+			chtype = 'null'
+			prtype = mediatype
+			if subtype:
+				prtype = prtype+'/'+subtype
+			self.warning('unrecognized media type %s' % prtype)
 ## 		if attributes['encoding'] not in ('base64', 'UTF'):
 ## 			self.syntax_error('bad encoding parameter')
 
