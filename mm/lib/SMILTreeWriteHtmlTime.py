@@ -325,10 +325,20 @@ class SMILHtmlTimeWriter(SMIL):
 			self.writecomment(x)
 			return
 
+		attrlist = []
 		interior = (type in interiortypes)
 		if interior:
 			if type == 'prio':
 				xtype = mtype = 'priorityClass'
+			elif type == 'foreign':
+				tag = MMAttrdefs.getattr(x, 'tag')
+				if ' ' in tag:
+					ns, tag = string.split(tag, ' ', 1)
+					xtype = mtype = 'foreign:%s' % tag
+					attrlist.append(('xmlns:foreign', ns))
+				else:
+					ns = ''
+					xtype = mtype = tag
 			else:
 				xtype = mtype = type
 		else:
@@ -337,7 +347,6 @@ class SMILHtmlTimeWriter(SMIL):
 				chtype = 'unknown'
 			mtype, xtype = mediatype(chtype)
 		
-		attrlist = []
 		regionName = None
 		src = None
 		nodeid = None
@@ -358,6 +367,19 @@ class SMILHtmlTimeWriter(SMIL):
 		attributes = self.attributes.get(xtype, {})
 		if type == 'prio':
 			attrs = prio_attrs
+		elif type == 'foreign':
+			attrs = []
+			extensions = {ns: 'foreign'}
+			for attr, val in x.attrdict.items():
+				if attr == 'tag':
+					continue
+				if ' ' in attr:
+					ans, attr = string.split(attr, ' ', 1)
+					if not extensions.has_key(ans):
+						extensions[ans] = 'x%s' % len(extensions)
+						attrlist.append(('xmlns:%s' % extensions[ans], ans))
+					attr = '%s:%s' % (extensions[ans], attr)
+				attrlist.append((attr, val))
 		else:
 			attrs = smil_attrs
 			# special case for systemRequired
@@ -419,7 +441,10 @@ class SMILHtmlTimeWriter(SMIL):
 				pass # self.showunsupported(mtype)
 
 			if not root:
-				self.writetag('t:'+mtype, attrlist)
+				if ':' in mtype:
+					self.writetag(mtype, attrlist)
+				else:
+					self.writetag('t:'+mtype, attrlist)
 				self.push()
 			for child in x.GetChildren():
 				self.writenode(child)

@@ -328,6 +328,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					sc, tzsg = res.group('sec', 'tzsign')
 					if sc is not None:
 						sc = string.atof(sc)
+					else:
+						sc = 0
 					if res.group('Z') is not None:
 						tzhr = tzmn = 0
 						tzsg = '+'
@@ -1606,8 +1608,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__container = self.__container.GetParent()
 
 	def Recurse(self, root, *funcs):
-		for func in funcs:
-			func(root)
+		if root.type != 'foreign':
+			for func in funcs:
+				func(root)
 		for node in root.GetChildren():
 			if node.type == 'comment':
 				continue
@@ -3640,7 +3643,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if self.__in_layout != LAYOUT_UNKNOWN:
 				res = self.__whitespace.match(data)
 				if not res:
-					self.syntax_error('non-white space content')
+					self.syntax_error("non-white space content `%s'" % data)
 			return
 		self.__nodedata.append(data)
 
@@ -3691,11 +3694,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# catch all
 
-##	def unknown_starttag(self, tag, attrs):
-##		self.warning('ignoring unknown start tag %s' % tag, self.lineno)
+	def unknown_starttag(self, tag, attrs):
+		if self.__container is not None:
+			node = self.__context.newnode('foreign')
+			self.__container._addchild(node)
+			node.attrdict.update(attrs)
+			node.attrdict['tag'] = tag
+			self.__container = node
 
-##	def unknown_endtag(self, tag):
-##		self.warning('ignoring unknown end tag %s' % (tag or ''), self.lineno)
+	def unknown_endtag(self, tag):
+		if self.__container is not None and self.__container.GetType() == 'foreign':
+			self.__container = self.__container.GetParent()
 
 	def unknown_charref(self, ref):
 		self.warning('ignoring unknown char ref %s' % ref, self.lineno)
@@ -3938,17 +3947,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				pass
 			else:
 				self.syntax_error('%s element not allowed inside %s' % (self.stack[-1][0], self.stack[-2][0]))
-				for key, val in attrdict.items():
-					if string.split(key, ' ')[-1] == 'skip-content':
-						self.__skipping = val == 'true'
-						break
-				else:
-					for key, val in self.__saved_attrdict.items():
-						if string.split(key, ' ')[-1] == 'skip-content':
-							self.__skipping = val == 'true'
-							break
-				if self.__skipping:
-					method = None
+##				for key, val in attrdict.items():
+##					if string.split(key, ' ')[-1] == 'skip-content':
+##						self.__skipping = val == 'true'
+##						break
+##				else:
+##					for key, val in self.__saved_attrdict.items():
+##						if string.split(key, ' ')[-1] == 'skip-content':
+##							self.__skipping = val == 'true'
+##							break
+##				if self.__skipping:
+##					method = None
 		elif tagname != 'smil':
 			self.error('outermost element must be "smil"', self.lineno)
 		elif ns and self.getnamespace().get('', '') != ns:
@@ -3959,8 +3968,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.warning('default namespace should be "%s"' % SMIL2ns[0], self.lineno)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 		self.__saved_attrdict = attrdict
-		if self.__skipping:
-			self.setliteral()
+##		if self.__skipping:
+##			self.setliteral()
 
 	def handle_endtag(self, tag, method):
 		if self.__skipping:

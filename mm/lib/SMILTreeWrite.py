@@ -20,6 +20,8 @@ import re
 
 from SMIL import *
 
+interiortypes = interiortypes + ['foreign']
+
 def nameencode(value):
 	"""Quote a value"""
 	value = string.join(string.split(value,'&'),'&amp;')
@@ -1976,12 +1978,23 @@ class SMILWriter(SMIL):
 			self.writecomment(x)
 			return
 
+		attrlist = []
+
 		interior = (type in interiortypes)
 		if interior:
 			if type == 'prio':
 				xtype = mtype = 'priorityClass'
 			elif type == 'seq' and root and self.smilboston:
 				xtype = mtype = 'body'
+			elif type == 'foreign':
+				tag = MMAttrdefs.getattr(x, 'tag')
+				if ' ' in tag:
+					ns, tag = string.split(tag, ' ', 1)
+					xtype = mtype = 'foreign:%s' % tag
+					attrlist.append(('xmlns:foreign', ns))
+				else:
+					ns = ''
+					xtype = mtype = tag
 			else:
 				xtype = mtype = type
 		else:
@@ -1989,8 +2002,6 @@ class SMILWriter(SMIL):
 			if not chtype:
 				chtype = 'unknown'
 			mtype, xtype = mediatype(chtype)
-
-		attrlist = []
 
 		# if node used as destination, make sure it's id is written
 		uid = x.GetUID()
@@ -2006,6 +2017,19 @@ class SMILWriter(SMIL):
 		attributes = self.attributes.get(xtype, {})
 		if type == 'prio':
 			attrs = prio_attrs
+		elif type == 'foreign':
+			attrs = []
+			extensions = {ns: 'foreign'}
+			for attr, val in x.attrdict.items():
+				if attr == 'tag':
+					continue
+				if ' ' in attr:
+					ans, attr = string.split(attr, ' ', 1)
+					if not extensions.has_key(ans):
+						extensions[ans] = 'x%s' % len(extensions)
+						attrlist.append(('xmlns:%s' % extensions[ans], ans))
+					attr = '%s:%s' % (extensions[ans], attr)
+				attrlist.append((attr, val))
 		else:
 			attrs = smil_attrs
 			if xtype != 'body':

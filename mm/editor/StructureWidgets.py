@@ -56,6 +56,8 @@ def create_MMNode_widget(node, mother):
 		return MediaWidget(node, mother)
 	elif ntype == 'comment':
 		return CommentWidget(node, mother)
+	elif ntype == 'foreign':
+		return ForeignWidget(node, mother)
 	else:
 		raise "Unknown node type", ntype
 		return None
@@ -1563,6 +1565,76 @@ class CommentWidget(MMNodeWidget):
 				return self
 		else:
 			return None
+
+
+class ForeignWidget(HorizontalWidget):
+	# Any foreign node.
+	HAS_CHANNEL_BOX = 0
+	def __init__(self, node, mother):
+		HorizontalWidget.__init__(self, node, mother)
+		self.dropbox = None
+		self.channelbox = None
+
+	def draw(self, displist):
+		willplay = not self.mother.showplayability or self.node.WillPlay()
+		if willplay:
+			color = FOREIGNCOLOR
+		else:
+			color = FOREIGNCOLOR_NOPLAY
+		displist.drawfbox(color, self.get_box())
+		HorizontalWidget.draw(self, displist)
+
+	def adddependencies(self):
+		# Sequence widgets need a special adddependencies, because we want to calculate the
+		# time->pixel mapping without the channelbox and dropbox
+		self.is_timed = 1
+		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
+		w, h = self.get_minsize(ignoreboxes=1)
+		if t0 != t1:
+			self.mother.timemapper.adddependency(t0, t1, w)
+		if t2 != t1 and t0 != t2:
+			self.mother.timemapper.adddependency(t0, t2, w)
+		for ch in self.children:
+			ch.adddependencies()
+		
+	def addcollisions(self, mastert0, mastertend):
+		self.is_timed = 1
+		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
+		tend = t1
+		maxneededpixel0 = sizes_notime.HEDGSIZE
+		maxneededpixel1 = sizes_notime.HEDGSIZE
+		if self.channelbox:
+			mw, mh = self.channelbox.get_minsize()
+			maxneededpixel0 = maxneededpixel0 + mw + sizes_notime.GAPSIZE
+		if self.dropbox:
+			mw, mw =self.dropbox.get_minsize()
+			maxneededpixel1 = maxneededpixel1 + mw + sizes_notime.GAPSIZE
+		time_to_collision = {t0: maxneededpixel0}
+		time_to_collision[tend] = time_to_collision.get(tend, 0) + maxneededpixel1
+		prevneededpixel = 0
+		for ch in self.children:
+			thist0, thist1, thist2, dummy, dummy = self.node.GetTimes('bandwidth')
+			thistend = thist1
+			neededpixel0, neededpixel1 = ch.addcollisions(thist0, thistend)
+			time_to_collision[thist0] = time_to_collision.get(thist0, 0) + neededpixel0
+			time_to_collision[thistend] = time_to_collision.get(thistend, 0) + neededpixel1
+		maxneededpixel0 = time_to_collision[t0]
+		del time_to_collision[t0]
+		if time_to_collision.has_key(tend):
+			maxneededpixel1 = time_to_collision[tend]
+			del time_to_collision[tend]
+		else:
+			maxneededpixel1 = 0
+		for time, pixel in time_to_collision.items():
+			if pixel:
+				self.mother.timemapper.addcollision(time, pixel)
+		if t0 != mastert0:
+			self.mother.timemapper.addcollision(t0, maxneededpixel0)
+			maxneededpixel0 = 0
+		if tend != mastertend:
+			self.mother.timemapper.addcollision(tend, maxneededpixel1)
+			maxneededpixel1 = 0
+		return maxneededpixel0, maxneededpixel1
 
 
 class TransitionWidget(MMWidgetDecoration):

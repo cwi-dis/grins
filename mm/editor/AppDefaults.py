@@ -30,6 +30,7 @@ CTEXTCOLOR = settings.get('structure_ctextcolor')
 EXPCOLOR = settings.get('structure_expcolor')
 COLCOLOR = settings.get('structure_colcolor')
 ECBORDERCOLOR = settings.get('structure_ecbordercolor')
+FOREIGNCOLOR = settings.get('structure_foreigncolor')
 
 LEAFCOLOR_NOPLAY = settings.get('structure_darkleaf')
 RPCOLOR_NOPLAY = settings.get('structure_darkrp')
@@ -39,6 +40,7 @@ PARCOLOR_NOPLAY = settings.get('structure_darkpar')
 SEQCOLOR_NOPLAY = settings.get('structure_darkseq')
 EXCLCOLOR_NOPLAY = settings.get('structure_darkexcl')
 PRIOCOLOR_NOPLAY = settings.get('structure_darkprio')
+FOREIGNCOLOR_NOPLAY = settings.get('structure_darkforeign')
 
 # Focus color assignments (from light to dark gray)
 
