@@ -110,7 +110,7 @@ class LayoutChannel(ChannelWindow):
 			width, height = self._attrdict.get('winsize', (50, 50))
 			
 			if settings.activeFullSmilCss:
-				self.cssResolver.setRootSize(self.idCssNode, width,height)
+				self.cssResolver.copyRawAttrs(self._attrdict['cssId'], self.idCssNode)
 				units = windowinterface.UNIT_PXL
 				
 			self._curvals['winsize'] = ((width, height), (50,50))
@@ -160,11 +160,9 @@ class LayoutChannel(ChannelWindow):
 		if pchan:
 			# parent is not None, so it's not the main window
 			if settings.activeFullSmilCss:
-				# we create dynamicly a new css node instance
-				self.cssResolver.setRawAttrPos(self.idCssNode,
-									   self._attrdict.get('left'), self._attrdict.get('width'),
-									   self._attrdict.get('right'), self._attrdict.get('top'),
-									   self._attrdict.get('height'), self._attrdict.get('bottom'))
+				# copy all possitioning attributes from document source.
+				# because, the animation module haven't to modify the document source
+				self.cssResolver.copyRawAttrs(self._attrdict['cssId'], self.idCssNode)
 				self.cssResolver.link(self.idCssNode, pchan.idCssNode)
 				self._wingeom = pgeom = self.cssResolver.getPxGeom(self.idCssNode)
 			else:
