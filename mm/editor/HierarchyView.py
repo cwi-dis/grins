@@ -1715,6 +1715,7 @@ class HierarchyView(HierarchyViewDialog):
 		if not child.parent:
 			self.popup_error("The root node has no parent to merge with!")
 			return
+		child_type=child.type
 		parent = child.parent
 		# Now, check that this node is an only child.
 		if len(parent.children) <> 1:
@@ -1725,30 +1726,6 @@ class HierarchyView(HierarchyViewDialog):
 		if not em.transaction():
 			return -1
 		
-		# Hyperlinks..
-		#--------------
-		# 1. Find all hyperlinks pointing to child.
-		hlinks = parent.context.hyperlinks # of type "HLinks"
-		childanchors = MMAttrdefs.getattr(child, 'anchorlist')
-		parentanchors = MMAttrdefs.getattr(parent, 'anchorlist')
-		print "DEBUG: childanchors are: ", childanchors
-		print "DEBUG: parentanchors are: ", parentanchors 
-		print "DEBUG: hlinks are: ", hlinks
-		addtoparentlinks = []
-##		# 2. Change them to parent.
-		for i in childanchors:
-			# If the anchor is a source, the parent should have it.
-			if len(hlinks.findsrclinks(i)) > 0:
-				addtoparentlinks.append(i)
-			else:
-				for j in hlinks.finddstlinks(i):
-					# We have an anchor pointing to the child node.
-					# it needs to point to the parent.
-					# j is an anchor.
-					print "DEBUG: looking at: ", j
-			# else, the anchor is a destination. The other end of the anchor needs to be redirected.
-			
-
 
 		# Events..
 		#-------------
@@ -1827,18 +1804,78 @@ class HierarchyView(HierarchyViewDialog):
 		conflicts = []		# A list of conflicting keys.
 
 		# Or maybe it would be better to simply replace self with the child.
+
+		# Work through all the attributes; add them all to the parent.
+		# Note that this includes the events ('beginlist', 'endlist') and the anchors.
+		# The anchors have no problem; they reference the node in no way.
 		for ck, cv in childattrs.items():
-			if myattrs.has_key(ck) and ck not in ['name', 'beginlist', 'endlist']:
+			if myattrs.has_key(ck) and ck not in ['name']:
 				conflicts.append(ck)
 			else:
 				em.setnodeattr(parent, ck, cv)
 		# TODO: work through all the attributes.
 		print "DEBUG: conflicts are: ", conflicts
 
+		print 'TODO: what about the childs children?'
+		# Hyperlinks..
+		#--------------
+		# 1. Find all hyperlinks pointing to child.
+
+		# Hyperlinks are:
+		# for the source:
+		# A MMAnchor in source MMNode  - stored in the attrdicts dict under 'anchorlist'
+		# A link which is a tuple ( src(uid, aid), dst(uid, aid), a, b, c, d, e)
+		#    stored in context.hyperlinks; which is an HLink
+		# Another MMAnchor in the target MMNode, just like the source.
+
+		# Just to make things simple, this has to go through the editmgr and
+		# there aren't direct object references between anything.
+
+		# The child anchors are migrated to the parent later.
+		# however, first, their uid's need to be updated.
+
+
+##		# 2. Change them to parent.
+##		for i in childanchors:
+##			# If the anchor is a source, the parent should have it.
+##			if len(hlinks.findsrclinks(i)) > 0:
+##				addtoparentlinks.append(i)
+##			else:
+##				for j in hlinks.finddstlinks(i):
+##					# We have an anchor pointing to the child node.
+##					# it needs to point to the parent.
+##					# j is an anchor.
+##					print "DEBUG: looking at: ", j
+##			# else, the anchor is a destination. The other end of the anchor needs to be redirected.
+			
+
+		# Find all the hyperlinks going to the child node.
+		childanchors = MMAttrdefs.getattr(child, 'anchorlist')
+		childlinks = []
+		for a in childanchors:
+			childlinks.append(self.root.context.hyperlinks.finddstlinks(a))
+		print "DEBUG: childlinks are:", childlinks
+
+		# Re-align them to the parent node
+		parent_uid = parent.GetUID()
+		child_uid = child.GetUID() # only used for the assert.
+		for l in childlinks:
+			# l is a tuple that points to my anchors.
+			if isinstance(l, type(())) and len(l) == 5:
+				((suid, said), (duid, daid), d, t, s, p) = l
+				assert duid == child_uid
+				em.dellink(l)
+				em.addlink(((suid, said), (parent_uid, daid), d, t, s, p))
+			else:
+				print "DEBUG: l is:", l
+
+
 		# Lastly, delete the child node.
 		em.delnode(child)
 
-		em.setnodetype(parent, type) # This cannot be done until the child has been deleted.
+		assert len(parent.children) == 0
+		print "DEBUG: node type is: ", type
+		em.setnodetype(parent, child_type) # This cannot be done until the child has been deleted.
 		print "DEBUG: committing now (after merge)."
 
 		self.need_resize = 1
