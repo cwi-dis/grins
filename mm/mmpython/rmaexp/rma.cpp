@@ -35,9 +35,6 @@ enum { false, true, };
 
 static PyObject *ErrorObject;
 
-//PyInterpreterState*
-//PyCallbackBlock::s_pPyThreadState = NULL;
-
 void seterror(const char *msg){PyErr_SetString(ErrorObject, msg);}
 
 #define RELEASE(x) if(x) x->Release();x=NULL;
@@ -817,6 +814,37 @@ RMAPlayer_SetClientContext(RMAPlayerObject *self, PyObject *args)
 	return Py_None;	
 }
 
+
+static char RMAPlayer_AddAdviseSink__doc__[] =
+""
+;
+static PyObject *
+RMAPlayer_AddAdviseSink(RMAPlayerObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	ClientAdviseSinkObject *obj;
+	if (!PyArg_ParseTuple(args, "O!",&ClientAdviseSinkType,&obj))
+		return NULL;
+
+	IRMAClientAdviseSink* pI=NULL;
+	res=self->pI->QueryInterface(IID_IRMAErrorSinkControl,(void**)&pI);
+	if (FAILED(res)){
+		seterror("RMAPlayer_QueryIRMAErrorSinkControl", res);
+		return NULL;
+	}	
+
+	Py_BEGIN_ALLOW_THREADS
+	res= self->pI->AddAdviseSink(pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)){
+		seterror("RMAPlayer_AddAdviseSink", res);
+		return NULL;
+	}	
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
+
 static char RMAPlayer_QueryIRMAErrorSinkControl__doc__[] =
 ""
 ;
@@ -850,6 +878,7 @@ static struct PyMethodDef RMAPlayer_methods[] = {
 	{"GetCurrentPlayTime", (PyCFunction)RMAPlayer_GetCurrentPlayTime, METH_VARARGS, RMAPlayer_GetCurrentPlayTime__doc__},
 	{"Seek", (PyCFunction)RMAPlayer_Seek, METH_VARARGS, RMAPlayer_Seek__doc__},
 	{"SetClientContext", (PyCFunction)RMAPlayer_SetClientContext, METH_VARARGS, RMAPlayer_SetClientContext__doc__},
+	{"AddAdviseSink", (PyCFunction)RMAPlayer_AddAdviseSink, METH_VARARGS, RMAPlayer_AddAdviseSink__doc__},
 	{"QueryIRMAErrorSinkControl", (PyCFunction)RMAPlayer_QueryIRMAErrorSinkControl, METH_VARARGS, RMAPlayer_QueryIRMAErrorSinkControl__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
@@ -1112,8 +1141,23 @@ ClientAdviseSink_QueryIUnknown(ClientAdviseSinkObject *self, PyObject *args)
 	return (PyObject*)obj;
 }
 
+static char ClientAdviseSink_SetPyListener__doc__[] =
+""
+;
+static PyObject *
+ClientAdviseSink_SetPyListener(ClientAdviseSinkObject *self, PyObject *args)
+{
+	PyObject *obj;	
+	if (!PyArg_ParseTuple(args, "O",&obj))
+		return NULL;	
+	self->pI->SetPyAdviceSink(obj);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 static struct PyMethodDef ClientAdviseSink_methods[] = {
 	{"QueryIUnknown", (PyCFunction)ClientAdviseSink_QueryIUnknown, METH_VARARGS, ClientAdviseSink_QueryIUnknown__doc__},
+	{"SetPyListener", (PyCFunction)ClientAdviseSink_SetPyListener, METH_VARARGS, ClientAdviseSink_SetPyListener__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1595,6 +1639,7 @@ RMA_CreateRMAClientEngine(PyObject *self, PyObject *args)
 		seterror("CreateRMAClientEngine");
 		return NULL;
 	}
+		
 	return (PyObject *) obj;
 }
 
@@ -1748,7 +1793,6 @@ initrma()
 	d = PyModule_GetDict(m);
 	ErrorObject = PyString_FromString("rma.error");
 	PyDict_SetItemString(d, "error", ErrorObject);
-
 
 	/* Check for errors */
 	if (PyErr_Occurred()) {

@@ -73,7 +73,8 @@ HRESULT STDMETHODCALLTYPE CreateClientAdviseSink(
 
 
 ClientAdviseSink::ClientAdviseSink()
-:	m_cRef(1)
+:	m_cRef(1),
+	m_pyAdviceSink(NULL)
 	{
 	}
 
@@ -86,13 +87,26 @@ ClientAdviseSink::QueryInterface(
     REFIID riid,
     void **ppvObject)
 	{
-	return E_NOINTERFACE;
+    if (IsEqualIID(riid,IID_IUnknown))
+		{
+		AddRef();
+		*ppvObject = this;
+		return PNR_OK;
+		}
+	else if(IsEqualIID(riid,IID_IRMAClientAdviseSink))
+		{
+		AddRef();
+		*ppvObject = (IRMAClientAdviseSink*)this;
+		return PNR_OK;
+		}
+    *ppvObject = NULL;	
+	return PNR_NOINTERFACE;
 	}
 
 STDMETHODIMP_(UINT32)
 ClientAdviseSink::AddRef()
 	{
-    return  InterlockedIncrement(&m_cRef);
+    return InterlockedIncrement(&m_cRef);
 	}
 
 STDMETHODIMP_(UINT32)
