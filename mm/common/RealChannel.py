@@ -49,8 +49,8 @@ class RealEngine:
 		if HAS_PRECONFIGURED_PLAYER:
 			return self.engine.CreatePlayer(window, winpossize)
 		else:
-			return RealPlayer(self.engine)
-
+			return RealPlayer(self.engine, window, winpossize)
+				
 	def startusing(self):
 		if NEEDTICKER and self.usagecount == 0:
 			self._startticker()
@@ -86,7 +86,7 @@ class RealPlayer:
 	# The new rma pyd has not a preconfigured player. 
 	# An object of this class exposes to clients
 	# the same interface as the previous rma buildin player
-	def __init__(self, rmengine):
+	def __init__(self, rmengine, window=None, winpossize=None):
 		p=rmengine.CreatePlayer()
 		self.__dict__['_obj_'] = p
 
@@ -113,13 +113,20 @@ class RealPlayer:
 		p.SetClientContext(clientContext)
 		del clientContext # now belongs to player
 
+
+		if window:
+			siteSupplier.SetOsWindow(window)
+		if winpossize:
+			pos, size = winpossize
+			siteSupplier.SetPositionAndSize(pos, size)
+
 		# keep refs to our client context objects
 		# so that we can configure them later
 		self._adviseSink = adviseSink
 		self._errorSink = errorSink
 		self._authManager = authManager
 		self._siteSupplier = siteSupplier
-
+		
 	def __del__(self):
 		self._obj_.Stop()
 		del self._obj_
