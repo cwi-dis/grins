@@ -1,0 +1,9 @@
+<asx
+    version = "3.0"
+    previewmode = "no"
+>
+    <Entry>
+        <Ref href = "file://D:/ufs/mm/cmif/mmpython/wmsdk/testdata/kstr100.asf" />
+    </Entry>
+</asx>
+
