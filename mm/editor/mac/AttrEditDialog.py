@@ -1068,7 +1068,7 @@ class ChGeneralTabPage(MultiTabPage):
 		'title': ITEM_TITLE,
 	}
 	attrs_on_page = ['.cname', 'type', 'title']
-	helpstring = 'General information on this channel/region.'
+	helpstring = 'General information on this region.'
 	
 	def init_controls(self, item0):
 		rv = MultiTabPage.init_controls(self, item0)
@@ -1713,7 +1713,7 @@ class ChannelAreaTabPage(AreaTabPage):
 	_checkboxes = ()
 	_xywhfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
 	_otherfields = (ITEM_UNITS, ITEM_Z)
-	helpstring = 'Coordinates of this channel. Higher Z values are on top.'
+	helpstring = 'Coordinates of this region. Higher Z values are on top.'
 
 	def init_controls(self, item0):
 		rv = AreaTabPage.init_controls(self, item0)
@@ -1821,7 +1821,7 @@ class ChannelAreaLiteTabPage(AreaTabPage):
 	_checkboxes = ()
 	_xywhfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
 	_otherfields = (ITEM_Z,)
-	helpstring = 'Coordinates of this channel. Higher Z values are on top.'
+	helpstring = 'Coordinates of this region. Higher Z values are on top.'
 
 	def init_controls(self, item0):
 		rv = AreaTabPage.init_controls(self, item0)
@@ -2263,7 +2263,7 @@ class AttrEditorDialogField:
 			self.attreditor._updatepagevalues()
 
 	def askchannelname(self, default):
-		windowinterface.InputDialog('Name for new channel',
+		windowinterface.InputDialog('Name for new region',
 					    default,
 					    self.newchan_callback,
 					    cancelCallback = (self.newchan_callback, ()))
