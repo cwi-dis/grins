@@ -2782,6 +2782,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			f.close()
 		except parseskin.error, msg:
 			self.warning('error parsing skin description file')
+			settings.nonsaved_user_settings['skin'] = ''
 			return
 		if dict.has_key('image'):
 			image = MMurl.basejoin(skin, dict['image'])

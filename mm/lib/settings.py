@@ -352,6 +352,7 @@ else:
 	default_settings['savedir'] = os.getenv('HOME')
 # Don't set for other platforms (yet)
 
+nonsaved_user_settings = {}
 user_settings = {}
 
 # Which of these should match exactly:
@@ -381,8 +382,9 @@ else:
 	PREFSFILENAME=cmif.findfile('grprefs.txt')
 
 def restore():
-	global user_settings
+	global user_settings, nonsaved_user_settings
 	user_settings = {}
+	nonsaved_user_settings = {}
 	if os.path.exists(PREFSFILENAME):
 		execfile(PREFSFILENAME, user_settings)
 	# Remove __globals__ and such from the user_settings dict
@@ -392,13 +394,14 @@ def restore():
 	read_components_from_skin()
 
 def factory_defaults():
-	global user_settings
-	if not user_settings:
+	global user_settings, nonsaved_user_settings
+	if not user_settings and not nonsaved_user_settings:
 		# no change
 		return
 	if not transaction(auto=1):
 		return
 	user_settings = {}
+	nonsaved_user_settings = {}
 	commit(auto=1)
 
 _screensize = None
@@ -408,7 +411,9 @@ def setScreenSize(width, height):
 	_screensize = width, height
 
 def get(name):
-	real_value = user_settings.get(name)
+	real_value = nonsaved_user_settings.get(name)
+	if real_value is None:
+		real_value = user_settings.get(name)
 	if real_value is None:
 		if name == 'system_screen_size':
 			if _screensize is None:
@@ -433,6 +438,8 @@ def get(name):
 	return real_value
 	
 def has_key(name):
+	if nonsaved_user_settings.has_key(name):
+		return 1
 	if user_settings.has_key(name):
 		return 1
 	if default_settings.has_key(name):
@@ -490,10 +497,10 @@ def getsettings():
 	return ALL
 
 _warned_already = 0
-def set(setting, value):
+def set(setting, value, dontsave = 0):
 	global _warned_already
 	import windowinterface
-	if user_settings.get(setting) == value:
+	if get(setting) == value:
 		# no change
 		return
 	if not transaction(auto=1):
@@ -501,7 +508,12 @@ def set(setting, value):
 	if setting in NEEDS_RESTART and value != get(setting) and not _warned_already:
 		_warned_already = 1
 		windowinterface.showmessage('You have to restart GRiNS for some of these changes to take effect.')
-	user_settings[setting] = value
+	if dontsave:
+		nonsaved_user_settings[setting] = value
+	else:
+		user_settings[setting] = value
+		if nonsaved_user_settings.has_key(setting):
+			del nonsaved_user_settings[setting]
 	if setting == 'skin':
 		global _screensize
 		_screensize = None
@@ -583,6 +595,7 @@ def read_components_from_skin(skindict = None):
 		except parseskin.error, msg:
 			import windowinterface
 			windowinterface.showmessage("Error parsing skin/components file %s: %s"% (url, msg))
+			nonsaved_user_settings['skin'] = ''
 			skindict = {}
 	if skindict.has_key('component'):
 		components = skindict['component']
