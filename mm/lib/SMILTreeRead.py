@@ -30,10 +30,13 @@ layout_name = ' SMIL '			# name of layout channel
 
 _opS = xmllib._opS
 
-coordre = re.compile(_opS + r'(?P<x0>\d+%?)' + _opS + r',' +
-		     _opS + r'(?P<y0>\d+%?)' + _opS + r',' +
-		     _opS + r'(?P<x1>\d+%?)' + _opS + r',' +
-		     _opS + r'(?P<y1>\d+%?)' + _opS + r'$')
+#coordre = re.compile(_opS + r'(?P<x0>\d+%?)' + _opS + r',' +
+#		     _opS + r'(?P<y0>\d+%?)' + _opS + r',' +
+#		     _opS + r'(?P<x1>\d+%?)' + _opS + r',' +
+#		     _opS + r'(?P<y1>\d+%?)' + _opS + r'$')
+coordre = re.compile(_opS + r'(?P<x>\d+%?)' + _opS )
+coordrewithsep = re.compile(_opS + r',' + _opS + r'(?P<x>\d+%?)' + _opS )
+
 idref = re.compile(r'id\(' + _opS + r'(?P<id>' + xmllib._Name + r')' + _opS + r'\)')
 clock_val = (_opS +
 	     r'(?:(?P<use_clock>'	# full/partial clock value
@@ -2327,6 +2330,56 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		self.__in_a = self.__in_a[3]
 
+	# parse coordonnees of a shape
+	# all string can't be specify in only one regular expression, because we don't know the number of points
+	# Instead, there is a first regular expression which parse the first number, then a second which parse
+	# the separateur caractere and the next number
+	# return value: list of numbers (values expressed in pourcent or pixel)
+	# or None if error
+	
+	def __parseCoords(self, data):
+		l = []
+		res = coordre.match(data)
+		if not res:
+			self.syntax_error('syntax error in coords attribute')
+			return
+		endParse = res.end()
+		x = res.group('x')
+		
+		inPourcent = x[-1]=='%'
+		
+		if x[-1] == '%':
+			value = string.atoi(x[:-1]) / 100.0
+		else:
+			value = string.atoi(x)
+		l.append(value)	
+	
+		while (endParse < len(data)):
+			res = coordrewithsep.match(data[endParse:])
+			if not res:
+				self.syntax_error('syntax error in coords attribute')
+				return
+			startParse = endParse+res.start()
+			endParse = endParse+res.end()
+			# test in order to avoid an infinite loop
+			if startParse == endParse:
+				self.syntax_error('internal error !')
+				return
+					
+			x = res.group('x')
+			
+			if (x[-1] == '%') != inPourcent:
+				self.warning('Cannot mix pixels and percentages in anchor',
+					self.lineno)
+
+			if x[-1] == '%':
+				value = string.atoi(x[:-1]) / 100.0
+			else:
+				value = string.atoi(x)
+			l.append(value)	
+
+		return l
+		
 	def start_anchor(self, attributes):
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
@@ -2358,45 +2411,65 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ltype = TYPE_JUMP
 		atype = ATYPE_WHOLE
 		aargs = []
+
+		# coord and shape parsing
+		# Temporarely: for instance the shape type is not saved, only coordinates are keep
+		
+		# shape attribute
+		shape = attributes.get('shape')
+		if shape == None:
+			shape = 'rect'
+		elif shape != 'rect' and shape != 'poly' and shape != 'circle':
+			self.syntax_error('Unknow shape type '+shape)
+			shape = 'rect'
+			
+		# coords attribute
 		coords = attributes.get('coords')
+		l = None
 		if coords is not None:
-## 			if attributes.has_key('shape') and attributes['shape'] != 'rect':
-## 				self.syntax_error('unrecognized shape attribute')
-## 				return
+			l = self.__parseCoords(coords)
+		
+		if l is not None:
 			atype = ATYPE_NORMAL
-			res = coordre.match(coords)
-			if not res:
-				self.syntax_error('syntax error in coords attribute')
-				return
-			x0, y0, x1, y1 = res.group('x0', 'y0', 'x1', 'y1')
-			if (x0[-1]=='%') != (x1[-1]=='%') or\
-			   (y0[-1]=='%') != (y1[-1]=='%'):
-				self.warning('Cannot mix pixels and percentages in anchor',
-					self.lineno)
-			if x0[-1] == '%':
-				x0 = string.atoi(x0[:-1]) / 100.0
-			else:
-				x0 = string.atoi(x0)
-			if y0[-1] == '%':
-				y0 = string.atoi(y0[:-1]) / 100.0
-			else:
-				y0 = string.atoi(y0)
-			if x1[-1] == '%':
-				x1 = string.atoi(x1[:-1]) / 100.0
-			else:
-				x1 = string.atoi(x1)
-			if y1[-1] == '%':
-				y1 = string.atoi(y1[:-1]) / 100.0
-			else:
-				y1 = string.atoi(y1)
-			if x1 <= x0 or y1 <= y0:
-				self.warning('Anchor coordinates incorrect. XYWH-style?.',
-					self.lineno)
-##					x1 = x1 + x0
-##					y1 = y1 + y0
-			# x,y,w,h are now floating point if they were
-			# percentages, otherwise they are ints.
-			aargs = [x0, y0, x1-x0, y1-y0]
+			if shape == 'rect':
+				error = 0
+				if len(l) != 4:
+					self.syntax_error('Invalid number of coordinate values in anchor')
+					error = 1
+				if not error:
+					x0, y0, x1, y1 = l[:]					
+					if x1 <= x0 or y1 <= y0:
+						self.warning('Anchor coordinates incorrect. XYWH-style?.',
+							self.lineno)
+						error = 1
+				
+				if not error:
+					# x,y,w,h are now floating point if they were
+					# percentages, otherwise they are ints.
+					aargs = [x0, y0, x1-x0, y1-y0]
+			elif shape == 'poly':
+				error = 0
+				if (len(l) < 4) or (len(l) & 1):
+					self.syntax_error('Invalid number of coordinate values in anchor')
+					error = 1				
+				if not error:	
+					# if the last coordinate is equal than first coordinate, we supress the last						
+					if l[-2] == l[0] and l[-1] == l[1]:
+						l = l[:-2]
+						if len(l) < 4:
+							self.syntax_error('Invalid number of coordinate values in anchor')
+							error = 1										
+				if not error:
+					aargs = l
+			elif shape == 'circle':
+				error = 0
+				if len(l) != 3:
+					self.syntax_error('Invalid number of coordinate values in anchor')
+					error = 1
+				if not error:
+					cx, cy, rd = l[:]					
+					aargs = [cx, cy, rd]
+											
 		begin = attributes.get('begin')
 		if begin is not None:
 			try:
