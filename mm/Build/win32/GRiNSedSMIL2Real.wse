@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_200R-94.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_200R-95.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -2232,13 +2232,18 @@ item: Create Shortcut
 end
 item: Create Shortcut
   Source=%MAINDIR%\Unwise.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS for Real 2.0.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS Editor for Real 2.0.lnk
   Icon Number=0
 end
 item: If/While Statement
   Variable=COMPONENTS
   Value=B
   Flags=00001010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil2real\QuickStart.pdf
+  Destination=%MAINDIR%\QuickStart.pdf
+  Flags=0000000010000010
 end
 item: Create Shortcut
   Source=%MAINDIR%\QuickStart.pdf
@@ -2252,7 +2257,55 @@ item: Create Shortcut
   Destination=%CGROUPDIR%\%CGROUP_SAVE%\Release Notes.lnk
   Icon Number=0
 end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\GRiNS_RV2.exe
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Editor for Real 2.0.lnk
+  Icon Number=0
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\GRiNS_RV2.exe
+  Destination=%CDESKTOPDIR%\GRiNS Editor for Real 2.0.lnk
+  Icon Number=0
+end
+item: End Block
+end
 item: Else Statement
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for Real 2.0
+  Command Line=%MAINDIR%\GRiNS_RV2.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for Real 2.0
+  Command Line=%MAINDIR%\GRiNS_RV2.exe
+end
+item: End Block
 end
 item: Add ProgMan Icon
   Group=%GROUP%
@@ -2266,7 +2319,7 @@ item: Add ProgMan Icon
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=Uninstall GRiNS for Real 2.0
+  Icon Name=Uninstall GRiNS Editor for Real 2.0
   Command Line=%MAINDIR%\Unwise.exe
 end
 item: If/While Statement

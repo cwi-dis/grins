@@ -5092,7 +5092,7 @@ class MMNode(MMTreeElement):
 						 'qtcompositemode'])
 			if features.EXPORT_REAL in features.feature_set:
 				mime = self.GetComputedMimeType()
-				if mime and mime.find('real') < 0 and mime not in ('image/jpeg', 'text/html'):
+				if mime and mime.find('real') < 0 and mime != 'image/jpeg' and ctype not in ('text', 'html'):
 					namelist.append('project_convert')
 					if ctype in ('sound', 'video'):
 						namelist.extend(['project_audiotype',

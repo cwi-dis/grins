@@ -43,6 +43,7 @@ PRODUCT_TO_FEATURE = {
 	
 	"smil2lite": ["smil2lite"],
 	"smil2real": ["smil2real"],
+	"smil2pro": ["smil2pro"],
 
 	"ALLPRODUCTS": ["ALLPRODUCTS"]
 	}

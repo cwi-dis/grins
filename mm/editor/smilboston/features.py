@@ -7,20 +7,20 @@ from FeatureSet import *
 import sys
 
 feature_set = [
-##	EXPORT_SMIL2,
+	EXPORT_SMIL2,
 	EXPORT_REAL,
 ##	EXPORT_QT, EXPORT_WMP,
 	EXPORT_HTML_TIME,
 ##	EXPORT_XMT,			# unimplemented anyway
 	PLAYER_VIEW, STRUCTURE_VIEW, LAYOUT_VIEW, HYPERLINKS_VIEW, CHANNEL_VIEW,
 	SOURCE_VIEW, ASSETS_VIEW,
-##	SOURCE_VIEW_EDIT,
-##	ERRORS_VIEW,
-##	USER_GROUPS,
+	SOURCE_VIEW_EDIT,
+	ERRORS_VIEW,
+	USER_GROUPS,
 	TRANSITION_VIEW,
 	UNIFIED_FOCUS,
 	H_MODIFY_STRUCTURE, CUSTOM_REGIONS,
-##	CREATE_TEMPLATES,
+	CREATE_TEMPLATES,
 	ADVANCED_PROPERTIES,
 	]
 
@@ -31,4 +31,4 @@ cmif = 0
 lightweight = 0
 editor = 1
 # XXX do we require sys.platform?
-license_features_needed = ('smil2real', sys.platform)
+license_features_needed = ('smil2pro', sys.platform)
