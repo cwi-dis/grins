@@ -512,7 +512,7 @@ class _Window:
 				  top, bottom, left, right)
 			f.close()
 			f = None
-		if retval == None:
+		if retval is None:
 			if f:
 				f.close()
 			import torgb
@@ -1246,7 +1246,7 @@ class _Event:
 				  Xtdefs.XtInputReadMask, self._input_callback,
 				  None)
 		self._savefds = []
-		if timeout != None and timeout > 0.001:
+		if timeout is not None and timeout > 0.001:
 			if debug: print '_getevent: timeout:',`timeout`
 			self._timeout_called = 0
 			id = Xt.AddTimeOut(int(timeout * 1000),
@@ -1272,7 +1272,7 @@ class _Event:
 					toplevel._win_lock.release()
 				return 1
 			# if we shouldn't block, return
-			if timeout != None:
+			if timeout is not None:
 				if self._timeout_called:
 					if toplevel._win_lock:
 						toplevel._win_lock.release()
@@ -1432,7 +1432,7 @@ class _Event:
 	def select_setcallback(self, fd, cb, arg):
 		if type(fd) <> type(1):
 			fd = fd.fileno()
-		if cb == None:
+		if cb is None:
 			self._select_fdlist.remove(fd)
 			del self._select_dict[fd]
 			self.rmfd(fd)
@@ -1700,7 +1700,7 @@ class _Dialogs:
 	def _run(self):
 		event.startmodal()
 		self.dialog.ManageChild()
-		while self.answer == None:
+		while self.answer is None:
 			dummy = event.readevent()
 		return self.answer
 
@@ -1756,7 +1756,7 @@ class _MultChoice:
 	def multchoice(self):
 		event.startmodal()
 		self.form.ManageChild()
-		while self.answer == None:
+		while self.answer is None:
 			dummy = event.readevent()
 		return self.answer
 
