@@ -88,7 +88,6 @@ def convertaudiofile(u, dstdir, file, node, progress = None):
 	cp.SetSelectiveRecord(0)
 	cp.SetDoOutputServer(0)
 	cp.SetDoOutputFile(1)
-	cp.SetOutputFilename(fullpath)
 
 	if u.headers.subtype == 'basic':
 		atype = 'au'
@@ -101,13 +100,18 @@ def convertaudiofile(u, dstdir, file, node, progress = None):
 		return None
 	else:
 		atype = 'au'		# XXX not correct
-	rdr = audio.reader(u, [audio.format.linear_16_mono, audio.format.linear_16_stereo], [8000, 11025, 16000, 22050, 32000, 44100], filetype = atype)
-	fmt = rdr.getformat()
-	bytesperframe = fmt.getblocksize() / fmt.getfpb()
-	nchan = fmt.getnchannels()
-	frate = rdr.getframerate()
-	totframes = rdr.getnframes()
+	try:
+		rdr = audio.reader(u, [audio.format.linear_16_mono, audio.format.linear_16_stereo], [8000, 11025, 16000, 22050, 32000, 44100], filetype = atype)
+		fmt = rdr.getformat()
+		bytesperframe = fmt.getblocksize() / fmt.getfpb()
+		nchan = fmt.getnchannels()
+		frate = rdr.getframerate()
+		totframes = rdr.getnframes()
+	except (audio.Error, IOError, EOFError), msg:
+		print 'error in sound file:', msg
+		return
 
+	cp.SetOutputFilename(fullpath)
 	pp = audiopin.GetPinProperties()
 	pp.SetNumChannels(fmt.getnchannels())
 	pp.SetSampleRate(frate)
@@ -128,7 +132,13 @@ def convertaudiofile(u, dstdir, file, node, progress = None):
 		if progress:
 			apply(progress[0], progress[1] + (fread, totframes))
 		while nframes < nframestoread:
-			d, n = rdr.readframes(nframestoread - nframes)
+			try:
+				d, n = rdr.readframes(nframestoread - nframes)
+			except (audio.Error, IOError, EOFError), msg:
+				print 'error in sound file:', msg
+				d = ''
+				n = 0
+				file = None
 			if not d:
 				flags = flags | producer.MEDIA_SAMPLE_END_OF_STREAM
 				data = data + '\0' * (inputsize - len(data))
@@ -141,6 +151,12 @@ def convertaudiofile(u, dstdir, file, node, progress = None):
 
 	engine.DoneEncoding()
 	u.close()
+
+	if not file:
+		try:
+			os.unlink(fullpath)
+		except:
+			pass
 
 	return file
 
