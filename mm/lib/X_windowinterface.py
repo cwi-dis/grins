@@ -29,6 +29,7 @@ _dpi_y = 0
 _watchcursor = 0
 _channelcursor = 0
 _linkcursor = 0
+_delete_window = 0
 
 _image_cache = {}		# cache of prepared images
 _cache_full = FALSE		# TRUE if we shouldn't cache more images
@@ -168,12 +169,14 @@ class _Toplevel:
 		global _watchcursor
 		global _channelcursor
 		global _linkcursor
+		global _delete_window
 		if debug: print '_TopLevel.__init__() --> '+`self`
 		self._win_lock = _DummyLock()
 		self._toplevel = self
 		import sys
 		Xt.ToolkitInitialize()
 		dpy = Xt.OpenDisplay(None, None, 'Windowinterface', [], sys.argv)
+		_delete_window = dpy.InternAtom('WM_DELETE_WINDOW', FALSE)
 		self._setupcolormap(dpy)
 		self._main = Xt.CreateApplicationShell('shell',
 					Xt.ApplicationShell,
@@ -345,6 +348,8 @@ class _Window:
 			 'visual': self._visual,
 			 'depth': self._depth,
 			 'title': title}
+		if title:
+			attrs['iconName'] = title
 		toplevel._win_lock.acquire()
 		self._shell = parent._toplevel._main.CreatePopupShell(
 			'toplevelShell', Xt.ApplicationShell, attrs)
@@ -357,6 +362,8 @@ class _Window:
 		self._width = w
 		self._height = h
 		self._shell.Popup(0)
+		self._shell.AddWMProtocolCallback(_delete_window,
+						  self._delete_callback, None)
 		toplevel._win_lock.release()
 		self._init2()
  
@@ -640,6 +647,9 @@ class _Window:
 			self._rb_cancel()
 		enterevent(self, ResizeWindow, None)
 
+	def _delete_callback(self, widget, client_data, call_data):
+		enterevent(self, WindowExit, None)
+
 	def newwindow(self, *coordinates):
 		return self._new_window(coordinates, FALSE)
 
@@ -703,7 +713,7 @@ class _Window:
 		if self._parent_window != toplevel:
 			raise error, 'can only settitle at top-level'
 		toplevel._win_lock.acquire()
-		self._shell.SetValues({'title': title})
+		self._shell.SetValues({'title': title, 'iconName': title})
 		self._title = title
 		toplevel._win_lock.release()
 
@@ -2173,6 +2183,11 @@ class _Event:
 		return -1		# for now...
 
 	def register(self, win, event, func, arg):
+		if event == WindowExit:
+			if win and hasattr(win, '_shell'):
+				win._shell.deleteResponse = Xmd.DO_NOTHING
+			else:
+				toplevel._main.deleteResponse = Xmd.DO_NOTHING
 		key = (win, event)
 		if func:
 			self._windows[key] = (func, arg)
@@ -3130,11 +3145,16 @@ class _MenuSupport:
 			self._menu.MenuPosition(event)
 			self._menu.ManageChild()
 
+	def _destroy(self):
+		self._menu = None
+
 class _Widget(_MenuSupport):
-	def __init__(self, widget):
-		self._showing = FALSE
+	def __init__(self, parent, widget):
+		self._parent = parent
+		parent._children.append(self)
+		self._showing = TRUE
 		self._form = widget
-		self.show()
+		widget.ManageChild()
 		_MenuSupport.__init__(self)
 		self._form.AddCallback('destroyCallback', self._destroy, None)
 
@@ -3151,16 +3171,25 @@ class _Widget(_MenuSupport):
 			del self._form
 			_MenuSupport.close(self)
 			form.DestroyWidget()
+		if self._parent:
+			self._parent._children.remove(self)
+		self._parent = None
 
 	def is_closed(self):
 		return not hasattr(self, '_form')
 
+	def _showme(self, w):
+		self._parent._showme(w)
+
 	def show(self):
-		self._form.ManageChild()
+		self._parent._showme(self)
 		self._showing = TRUE
 
+	def _hideme(self, w):
+		self._parent._hideme(w)
+
 	def hide(self):
-		self._form.UnmanageChild()
+		self._parent._hideme(self)
 		self._showing = FALSE
 
 	def is_showing(self):
@@ -3183,19 +3212,21 @@ class _Widget(_MenuSupport):
 						  Xmd.ATTACH_FORM
 
 	def _destroy(self, widget, client_data, call_data):
-		if self.is_closed():
+		try:
+			del self._form
+		except AttributeError:
 			return
-		self.close()
+		_MenuSupport._destroy(self)
 
 class Label(_Widget):
 	def __init__(self, parent, text, options = {}):
 		attrs = {}
 		self._attachments(attrs, options)
 		label = parent._form.CreateManagedWidget('windowLabel',
-							 Xm.LabelGadget, attrs)
+							 Xm.Label, attrs)
 		label.labelString = text
 		self._text = text
-		_Widget.__init__(self, label)
+		_Widget.__init__(self, parent, label)
 
 	def __repr__(self):
 		return '<Label instance at %x, text=%s>' % (id(self), self._text)
@@ -3223,16 +3254,15 @@ class OptionMenu(_Widget):
 			option.labelString = label
 			self._text = label
 		self._callback = cb
-		self._parentform = parent._form
-		_Widget.__init__(self, option)
+		_Widget.__init__(self, parent, option)
 
 	def __repr__(self):
 		return '<OptionMenu instance at %x, label=%s>' % (id(self), self._text)
 
 	def close(self):
 		_Widget.close(self)
-		self._callback = self._parentform = self._value = \
-				 self._optionlist = self._buttons = None
+		self._callback = self._value = self._optionlist = \
+				 self._buttons = None
 
 	def getpos(self):
 		return self._value
@@ -3245,7 +3275,7 @@ class OptionMenu(_Widget):
 		self._value = pos
 
 	def setoptions(self, optionlist, startpos):
-		menu, initbut = self._do_setoptions(self._parentform,
+		menu, initbut = self._do_setoptions(self._parent._form,
 						    optionlist, startpos)
 		self._form.subMenuId = menu
 		self._form.menuHistory = initbut
@@ -3292,7 +3322,7 @@ class PulldownMenu(_Widget):
 			button.subMenuId = menu
 			_create_menu(menu, list)
 			buttons.append(button)
-		_Widget.__init__(self, menubar)
+		_Widget.__init__(self, parent, menubar)
 		self._buttons = buttons
 
 	def __repr__(self):
@@ -3436,7 +3466,7 @@ class Selection(_Widget, _List):
 		list.selectionPolicy = Xmd.SINGLE_SELECT
 		list.listSizePolicy = Xmd.CONSTANT
 		_List.__init__(self, list, itemlist, sel_cb)
-		_Widget.__init__(self, selection)
+		_Widget.__init__(self, parent, selection)
 
 	def __repr__(self):
 		return '<Selection instance at %x; label=%s>' % (id(self), self._text)
@@ -3505,7 +3535,7 @@ class List(_Widget, _List):
 			widget = list
 			self._text = '<None>'
 		_List.__init__(self, list, itemlist, sel_cb)
-		_Widget.__init__(self, widget)
+		_Widget.__init__(self, parent, widget)
 
 	def __repr__(self):
 		return '<List instance at %x; label=%s>' % (id(self), self._text)
@@ -3561,7 +3591,7 @@ class TextInput(_Widget):
 			text.AddCallback('activateCallback',
 					 self._callback, accb)
 		self._text = text
-		_Widget.__init__(self, widget)
+		_Widget.__init__(self, parent, widget)
 
 	def __repr__(self):
 		return '<TextInput instance at %x>' % id(self)
@@ -3603,7 +3633,7 @@ class TextEdit(_Widget):
 		if cb:
 			text.AddCallback('activateCallback', self._callback,
 					 cb)
-		_Widget.__init__(self, text)
+		_Widget.__init__(self, parent, text)
 		self.settext(inittext)
 
 	def __repr__(self):
@@ -3636,8 +3666,8 @@ class Separator(_Widget):
 		attrs = {}
 		self._attachments(attrs, options)
 		separator = parent._form.CreateManagedWidget('windowSeparator',
-						Xm.SeparatorGadget, attrs)
-		_Widget.__init__(self, separator)
+						Xm.Separator, attrs)
+		_Widget.__init__(self, parent, separator)
 
 	def __repr__(self):
 		return '<Separator instance at %x>' % id(self)
@@ -3715,7 +3745,7 @@ class ButtonRow(_Widget):
 				button.AddCallback(callbackname,
 						   self._callback, callback)
 			self._buttons.append(button)
-		_Widget.__init__(self, rowcolumn)
+		_Widget.__init__(self, parent, rowcolumn)
 
 	def __repr__(self):
 		return '<ButtonRow instance at %x>' % id(self)
@@ -3791,7 +3821,7 @@ class Slider(_Widget):
 		if prompt is None:
 			prompt = ''
 		scale.titleString = prompt
-		_Widget.__init__(self, scale)
+		_Widget.__init__(self, parent, scale)
 
 	def __repr__(self):
 		return '<Slider instance at %x>' % id(self)
@@ -3852,9 +3882,12 @@ class _WindowHelpers:
 	def __init__(self):
 		self._fixkids = []
 		self._fixed = FALSE
+		self._children = []
 
 	def close(self):
 		self._fixkids = None
+		for w in self._children[:]:
+			w.close()
 
 	# items with which a window can be filled in
 	def Label(self, text, options = {}):
@@ -3894,15 +3927,15 @@ class SubWindow(_Widget, _WindowHelpers):
 		form = parent._form.CreateManagedWidget('windowSubwindow',
 							Xm.Form, attrs)
 		_WindowHelpers.__init__(self)
-		_Widget.__init__(self, form)
+		_Widget.__init__(self, parent, form)
 		parent._fixkids.append(self)
 
 	def __repr__(self):
 		return '<SubWindow instance at %x>' % id(self)
 
 	def close(self):
-		_Widget.close(self)
 		_WindowHelpers.close(self)
+		_Widget.close(self)
 
 	def fix(self):
 		for w in self._fixkids:
@@ -3922,7 +3955,6 @@ class SubWindow(_Widget, _WindowHelpers):
 
 class _SubWindow(SubWindow):
 	def __init__(self, parent):
-		self._parent = parent
 		SubWindow.__init__(self, parent, {'left': None, 'right': None,
 						  'top': None, 'bottom': None})
 
@@ -3940,9 +3972,10 @@ class AlternateSubWindow(_Widget):
 		form = parent._form.CreateManagedWidget(
 			'windowAlternateSubwindow', Xm.Form, attrs)
 		self._windows = []
-		_Widget.__init__(self, form)
+		_Widget.__init__(self, parent, form)
 		parent._fixkids.append(self)
 		self._fixkids = []
+		self._children = []
 
 	def __repr__(self):
 		return '<AlternateSubWindow instance at %x>' % id(self)
@@ -3982,7 +4015,12 @@ class Window(_WindowHelpers, _MenuSupport):
 		if not title:
 			title = ''
 		self._title = title
+		try:
+			iconName = options['iconName']
+		except KeyError:
+			iconName = title
 		wattrs = {'title': title,
+			  'iconName': iconName,
 			  'colormap': toplevel._default_colormap,
 			  'visual': toplevel._default_visual,
 			  'depth': toplevel._default_visual.depth}
@@ -3992,6 +4030,8 @@ class Window(_WindowHelpers, _MenuSupport):
 			attrs['noResize'] = TRUE
 			attrs['resizable'] = FALSE
 		if grab:
+			attrs['dialogTitle'] = wattrs['title']
+			del wattrs['title']
 			attrs['dialogStyle'] = \
 					     Xmd.DIALOG_FULL_APPLICATION_MODAL
 			for key, val in wattrs.items():
@@ -4003,7 +4043,18 @@ class Window(_WindowHelpers, _MenuSupport):
 				'windowShell', Xt.ApplicationShell, wattrs)
 			self._form = self._shell.CreateManagedWidget(
 				'windowForm', Xm.Form, attrs)
+			try:
+				deleteCallback = options['deleteCallback']
+			except KeyError:
+				pass
+			else:
+				self._shell.AddWMProtocolCallback(
+					_delete_window, self._delete_callback,
+					deleteCallback)
+				self._shell.deleteResponse = Xmd.DO_NOTHING
 		self._showing = FALSE
+		self._not_shown = []
+		self._shown = []
 		_WindowHelpers.__init__(self)
 		_MenuSupport.__init__(self)
 
@@ -4019,8 +4070,12 @@ class Window(_WindowHelpers, _MenuSupport):
 		return s
 
 	def __del__(self):
-		if not self.is_showing():
+		if not self.is_showing() and not self.is_closed():
 			self.close()
+
+	def _delete_callback(self, widget, client_data, call_data):
+		func, args = client_data
+		apply(func, args)
 
 	def close(self):
 		try:
@@ -4060,6 +4115,22 @@ class Window(_WindowHelpers, _MenuSupport):
 			pass
 		self._fixed = TRUE
 
+	def _showme(self, w):
+		if self.is_showing():
+			w._form.MapWidget()
+		elif w in self._not_shown:
+			self._not_shown.remove(w)
+		elif w not in self._shown:
+			self._shown.append(w)
+
+	def _hideme(self, w):
+		if self.is_showing():
+			w._form.UnmapWidget()
+		elif w in self._shown:
+			self._show.remove(w)
+		elif w not in self._not_shown:
+			self._not_shown.append(w)
+			
 	def show(self):
 		if not self._fixed:
 			self.fix()
@@ -4068,6 +4139,14 @@ class Window(_WindowHelpers, _MenuSupport):
 		except AttributeError:
 			pass
 		self._showing = TRUE
+		for w in self._not_shown:
+			if not w.is_closed():
+				w._form.UnmapWidget()
+		for w in self._shown:
+			if not w.is_closed():
+				w._form.MapWidget()
+		self._not_shown = []
+		self._shown = []
 		for w in self._fixkids:
 			if w.is_showing():
 				w.show()
@@ -4097,9 +4176,12 @@ class Window(_WindowHelpers, _MenuSupport):
 		return x * sw, y * sh, w * sw, h * sh
 
 	def settitle(self, title):
-		if self._title != title:
+		if hasattr(self, '_shell'):
+			self._shell.SetValues({'title': title,
+					       'iconName': title})
+		else:
 			self._form.dialogTitle = title
-			self._title = title
+		self._title = title
 
 	def pop(self):
 		pass
