@@ -160,7 +160,7 @@ class HtmlChannel(Channel.ChannelWindow):
 	def cbanchor(self, widget, userdata, calldata):
 		if widget <> self.htmlw:
 			raise 'kaboo kaboo'
-		rawevent, elid, text, href = HTML.anchor_cbarg(calldata)
+		href = calldata.href
 		if href[:5] <> 'cmif:':
 			self.www_jump(href, 'GET', None, None)
 			return
@@ -169,10 +169,12 @@ class HtmlChannel(Channel.ChannelWindow):
 	def cbform(self, widget, userdata, calldata):
 		if widget <> self.htmlw:
 			raise 'kaboo kaboo'
-		rawevent, href, method, enctype, list = \
-			  HTML.form_cbarg(calldata)
+		href = calldata.href
+		list = map(lambda a,b: (a,b),
+			   calldata.attribute_names, calldata.attribute_values)
 		if not href or href[:5] <> 'cmif:':
-			self.www_jump(href, method, enctype, list)
+			self.www_jump(href, calldata.method,
+				      calldata.enctype, list)
 			return
 		self.cbcmifanchor(href, list)
 
