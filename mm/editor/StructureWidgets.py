@@ -7,6 +7,7 @@ import Bandwidth
 import MMurl, MMAttrdefs, MMmimetypes
 import features
 import os
+import settings
 from AppDefaults import *
 
 # remove this. TODO
@@ -55,9 +56,9 @@ class MMNodeWidget(Widgets.Widget):
     # Menu handling functions, aka callbacks.
     #
 
-##	def helpcall(self):
-##		import Help
-##		Help.givehelp('Hierarchy_view')
+##  def helpcall(self):
+##      import Help
+##      Help.givehelp('Hierarchy_view')
 
     def select(self):
         Widgets.Widget.select(self)
@@ -646,30 +647,49 @@ class MediaWidget(MMNodeWidget):
     def compute_download_time(self):
         # Compute the download time for this widget.
         # Values are in distances (self.downloadtime is a distance).
-        # Jack will have to provide me with values here.
-
-#        prearm, bw = Bandwidth.get(self.node, target=1)
-
+         
+        # First get available bandwidth. Silly algorithm to be replaced soon: in each par we evenly
+        # divide the available bandwidth, for other structure nodes each child has the whole bandwidth
+        # available.
+        totalbw  = settings.get('system_bitrate')
+        division = 1
+        ancestor = self.node.parent
+        while ancestor:
+            if ancestor.type == 'par':
+                # Divide bandwidth evenly among children
+                division = division * len(ancestor.children)
+            ancestor = ancestor.parent
+        availbw = totalbw / division
         
-            
-#
-#        print "prearm is:", prearm, "bw is: ", bw
+        # Get amount of data we need to load
+        try:
+            prearm, bw = Bandwidth.get(self.node, target=1)
+        except Bandwidth.Error:
+            prearm = 0
+        if not prearm:
+            prearm = 0
+        prearmtime = prearm / availbw
         
-#        if prearm: 
-#            prearm_t = prearm / (get the global bandwidth)
-            
-        
-        
-        random = 2.0 * whrandom.random()
-        if random > 1.0:
-            downloadtime_lag = random - 1.0
-            downloadtime = 1.0
+        # Now subtract the duration of the previous node: this fraction of
+        # the downloadtime is no problem.
+        prevnode = self.node.GetPrevious()
+        if prevnode:
+            prevnode_duration = prevnode.t1-prevnode.t0
         else:
-            downloadtime_lag = 0.0
-            downloadtime = random
-
-        self.downloadtime = downloadtime * self.get_minsize_abs()[0]
-        self.downloadtime_lag = downloadtime_lag * self.get_minsize_abs()[0]
+            prevnode_duration = 0
+        lagtime = prearmtime - prevnode_duration
+        
+        print 'DBG:', self.node, prearmtime, lagtime
+        
+        # Now convert this from time to distance. 
+        node_duration = (self.node.t1-self.node.t0)
+        if node_duration <= 0: node_duration = 1
+        l,t,r,b = self.pos_rel
+        node_width = r-l
+        lagwidth = lagtime * node_width / node_duration
+ 
+        self.downloadtime = 0
+        self.downloadtime_lag = lagwidth
 
     def recalc(self):
         l,t,r,b = self.pos_rel
@@ -788,7 +808,6 @@ class MediaWidget(MMNodeWidget):
                 return self
         else:
             return None
-
 class TransitionWidget(MMNodeWidget):
     # This is a box at the bottom of a node that represents the in or out transition.
     def __init__(self, parent, root, inorout):
