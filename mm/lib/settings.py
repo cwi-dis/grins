@@ -138,6 +138,9 @@ default_settings = {
 	'temporal_switchcolor': (148,117,166),
 	'temporal_timescale': 5,	# pixels per second.
 	'temporal_fillcolor': (150,150,150), # The color a node is for it's fill segment.
+	
+	# Attribute editor prefs
+	'show_all_attributes' : 0,
 }
 
 user_settings = {}
