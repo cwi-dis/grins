@@ -15,10 +15,12 @@ esac
 
 case `uname -sr` in
 IRIX\ 6.2)	ARCH=irix62;;
+IRIX\ 6.5)	ARCH=irix65;;
 IRIX\ 6.*)	ARCH=irix6;;
 IRIX64\ 6.*)	ARCH=irix6;;
 IRIX\ 5.*)	ARCH=irix5;;
 SunOS\ 5.*)	ARCH=sunos5;;
+Linux\ *)	ARCH=linux;;
 *)		echo "$0: unknown architecture" >&2; exit 1;;
 esac
 
@@ -92,6 +94,12 @@ then
 		[ -f $dir/__init__.py ] ||
 		PYTHONPATH=$PYTHONPATH:$dir
 	done
+fi
+if [ -d $CMIF/mmpython/rmasdk/build.$ARCH -a -d $HOME/Real -a -d /usr/lib/RealPlayer7 ]
+then
+	PYTHONPATH=$PYTHONPATH:$CMIF/mmpython/rmasdk/build.$ARCH
+	LD_LIBRARY_PATH=/usr/lib/RealPlayer7/Common${LD_LIBRARY_PATH+:$LD_LIBRARY_PATH}
+	export LD_LIBRARY_PATH
 fi
 
 PYTHONPATH=$PYTHONPATH:$pythonlib
