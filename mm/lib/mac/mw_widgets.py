@@ -3,6 +3,7 @@ import Qd
 import QuickDraw
 import List
 import Lists
+import Ctl
 import Controls
 import ControlAccessor
 
@@ -124,6 +125,10 @@ class _ListWidget:
 		if num is None:
 			return None
 		return self._data[num]
+		
+	def setkeyboardfocus(self):
+		Ctl.SetKeyboardFocus(self.wid, self.control, Controls.kControlListBoxPart)
+
 					
 class _ImageWidget(_Widget):
 	def __init__(self, wid, item, image=None):
@@ -243,3 +248,6 @@ class SelectWidget:
 		
 	def getselect(self):
 		return self.control.GetControlValue()-1
+
+	def setkeyboardfocus(self):
+		pass		# Not useful for menus
