@@ -32,6 +32,7 @@ class HierarchyViewDialog(ViewDialog):
 			(FLAG_ALL, 'Edit', [
 				(FLAG_ALL, 'Cut', CUT),
 				(FLAG_ALL, 'Copy', COPY),
+				(FLAG_PRO, 'Convert to SMIL 2.0', RPCONVERT),
 				(FLAG_ALL, 'Paste', [
 					(FLAG_ALL, 'Before', PASTE_BEFORE),
 					(FLAG_ALL, 'After', PASTE_AFTER),
@@ -114,6 +115,8 @@ class HierarchyViewDialog(ViewDialog):
 	leaf_popupmenu = (
 		(FLAG_ALL, 'New Node Before', NEW_BEFORE),
 		(FLAG_ALL, 'New Node After', NEW_AFTER),
+		(FLAG_PRO, None),
+		(FLAG_PRO, 'Convert to SMIL 2.0', RPCONVERT),
 		(FLAG_ALL, None),
 		(FLAG_ALL, 'Cut', CUT),
 		(FLAG_ALL, 'Copy', COPY),
