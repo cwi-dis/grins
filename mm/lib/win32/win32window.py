@@ -1789,7 +1789,11 @@ class Region(Window):
 		if self._active_displist:
 			entry = self._active_displist._list[0]
 			if entry[0] == 'clear' and entry[1]:
-				r, g, b = entry[1]
+				bgcolor = entry[1]
+			else:
+				bgcolor = self._bgcolor
+			if bgcolor:
+				r, g, b = bgcolor
 				convbgcolor = dds.GetColorMatch((r,g,b))
 				dds.BltFill((xc, yc, xc+wc, yc+hc), convbgcolor)
 			if self._redrawdds:
@@ -1913,14 +1917,15 @@ class Region(Window):
 				wnd.paintOnDDS(dds, rel, exclwnd)
 
 	# get a copy of the screen area of this window
-	def getBackDDS(self, exclwnd=None):
+	def getBackDDS(self, exclwnd = None, dopaint = 1):
 		dds = self.createDDS()
 		bf = self._topwindow.getDrawBuffer()
 		while bf and bf.IsLost():
 			win32api.Sleep(50)
 			bf.Restore()
 		x, y, w, h = self.getwindowpos()
-		self._topwindow.paint(rc=(x, y, w, h), exclwnd=exclwnd)
+		if dopaint:
+			self._topwindow.paint(rc=(x, y, w, h), exclwnd=exclwnd)
 		try:
 			dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
 		except ddraw.error, arg:
@@ -1933,7 +1938,7 @@ class Region(Window):
 			win32api.Sleep(50)
 			bf.Restore()
 		rc = x, y, w, h = self.getwindowpos()
-		self._topwindow.paint(rc=rc, exclwnd=exclwnd)
+		self._topwindow.paint(rc, exclwnd=exclwnd)
 		try:
 			dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
 		except ddraw.error, arg:
