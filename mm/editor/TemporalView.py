@@ -356,17 +356,20 @@ class TemporalView(TemporalViewDialog):
 		return windowinterface.DROPEFFECT_MOVE
 
 	def ev_dragnode(self, dummy, window, event, params):
-		print "DEBUG: ev_dragnode called."
+		print '*',
 		return windowinterface.DROPEFFECT_MOVE
-		x,y,mode, xf, yf= params[0:5]
-		x,y = self.rel2abs((x,y))
-		xf, yf = self.rel2abs((xf, yf))
-		return self.scene.dragging_node((x,y), (xf, yf), mode)
+		#x,y,mode, xf, yf= params[0:5]
+		#x,y = self.rel2abs((x,y))
+		#xf, yf = self.rel2abs((xf, yf))
+		#return self.scene.dragging_node((xf,yf), (x, y), mode)
 		
 
 	def ev_dropnode(self, dummy, window, event, params):
-		print "Dropped a node!"
-		return windowinterface.DROPEFFECT_MOVE
+		print "DEBUG: Splash!"
+		x,y,mode,xf,yf = params[0:5]
+		x,y = self.rel2abs((x,y))
+		xf,yf = self.rel2abs((xf,yf))
+		self.scene.dropnode((xf,yf), (x, y))
 
 ######################################################################
 	# Commands from the menus.

@@ -266,6 +266,36 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		print "DEBUG: dragging node; ", tgtcoords, srccoords, mode
 		return windowinterface.DROPEFFECT_NONE
 
+	def dropnode(self, srccoords, tgtcoords):
+		sx,sy = srccoords
+		tx, ty = tgtcoords
+		print "DEBUG: srccoords:", srccoords, "tgt: " , tgtcoords
+
+		# Find the source.
+		if sx < CHANNELWIDTH:	# The source is a channel.
+			source = self.channeltree.get_obj_at(srccoords)
+		else:
+			source = self.get_node_at(srccoords)
+
+		if source is None:
+			# Stupid user at console.
+			print "DEBUG: Er.. nothing was dragged."
+			return 0
+
+		# Find the target.
+		if tx < CHANNELWIDTH:
+			target = self.channeltree.get_obj_at(tgtcoords)
+		else:
+			target = self.get_node_at(tgtcoords)
+
+		if target:
+			target.happily_receive_dropped_object(source)
+		else:
+			self.happily_receive_dropped_object(source)
+
+	def happily_receive_dropped_object(self, obj):
+		print "DEBUG: O.k, smart alec. Exactly what is a TimeCanvas going to do with a ", obj
+
 
 ######################################################################
 # A factory to create new widgets in this file.
@@ -648,6 +678,9 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		else:
 			return max
 
+	def happily_receive_dropped_object(self, obj):
+		print "DEBUG: Channel recieved an object: ", obj
+
 
 class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 	# Abstract base class for any widget that has a start and end time.
@@ -697,6 +730,9 @@ class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 			self.node.parent.views['tempview'].unselect_parents()
 		if self.selected:
 			self.unselect()
+
+	def happily_receive_dropped_object(self, obj):
+		print "DEBUG: TimeWidget received a dropped object.", obj
 
 
 class MMWidget(TimeWidget, GeoDisplayWidget):
