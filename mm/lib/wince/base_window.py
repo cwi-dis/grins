@@ -951,6 +951,9 @@ class Window:
 	def update(self, rc = None):
 		pass
 
+	def updateNow(self, rc = None):
+		pass
+
 	# return all ancestors of self including topwindow
 	def getAncestors(self):
 		if self == self._topwindow:

@@ -209,6 +209,11 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		ps = self.BeginPaint()
 		hdc, eraceBg, rcPaint  = ps[:3]
 		dc = wingdi.CreateDCFromHandle(hdc)
+		self.paintOn(dc)
+		dc.Detach()
+		self.EndPaint(ps)
+
+	def paintOn(self, dc):
 		if self._viewport is None:
 			# show splash when no document is open
 			self.paintSplash(dc)
@@ -238,8 +243,6 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 					dcc.DeleteDC()
 				dc.SetViewportOrg((0, 0))
 
-		dc.Detach()
-		self.EndPaint(ps)
 
 	def update(self, rc = None):
 		if self._viewport:
