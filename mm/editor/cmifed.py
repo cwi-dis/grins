@@ -90,6 +90,7 @@ class Main(MainDialog):
 			OPENFILE(callback = (self.openfile_callback, ())),
 			OPEN_RECENT(callback = self.open_recent_callback),	# Dynamic cascade
 			PREFERENCES(callback=(self.preferences_callback, ())),
+			CHECKVERSION(callback=(self.checkversion_callback, ())),
 			]
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
@@ -288,6 +289,32 @@ class Main(MainDialog):
 		for top in self.tops:
 			top.prefschanged()
 		settings.save()
+		
+	def checkversion_callback(self):
+		import MMurl
+		import version
+		import windowinterface
+		import settings
+		import string
+		url = 'http://www.oratrix.com/updatecheck/%s.txt'%version.shortversion
+		try:
+			fp = MMurl.urlopen(url)
+			data = fp.read()
+			fp.close()
+		except:
+			windowinterface.showmessage('Unable to check for upgrade. You can try again later, or visit www.oratrix.com with your webbrowser.')
+			return
+		if not data:
+			windowinterface.showmessage('You are running the latest version of the software')
+			return
+		ok = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to hear more?')
+		if not ok:
+			return
+		data = string.strip(data)
+		# Pass the version and the second item of the license along.
+		id = string.split(settings.get('license'), '-')[1]
+		url = '%s?version=%s&id=%s'%(data, version.shortversion, id)
+		windowinterface.htmlwindow(url)
 
 	def new_top(self, top):
 		top.show()
