@@ -24,7 +24,9 @@ namespace smil {
 class parser : public xml::sax_handler
 	{
 	public:
-	typedef void (parser::*start_handler_t)(std::list<raw_attr_t> *pattrs);
+	typedef raw_attr_map_t* handler_arg_type;
+
+	typedef void (parser::*start_handler_t)(handler_arg_type attrs);
 	typedef void (parser::*end_handler_t)();
 	typedef std::pair<start_handler_t, end_handler_t> element_handler_t;
 	typedef std::map<std::string, element_handler_t> handler_map_t;
@@ -36,137 +38,140 @@ class parser : public xml::sax_handler
 	tree_node* detach();
 
 	//
-	void start_smil(raw_attr_list_t *pattrs);
+	void start_smil(handler_arg_type attrs);
 	void end_smil();
 
-	void start_head(raw_attr_list_t *pattrs);
+	void start_head(handler_arg_type attrs);
 	void end_head();
 
-	void start_meta(raw_attr_list_t *pattrs);
+	void start_meta(handler_arg_type attrs);
 	void end_meta();
 
-	void start_metadata(raw_attr_list_t *pattrs);
+	void start_metadata(handler_arg_type attrs);
 	void end_metadata();
 
-	void start_layout(raw_attr_list_t *pattrs);
+	void start_layout(handler_arg_type attrs);
 	void end_layout();
 
-	void start_customAttributes(raw_attr_list_t *pattrs);
+	void start_customAttributes(handler_arg_type attrs);
 	void end_customAttributes();
 
-	void start_customTest(raw_attr_list_t *pattrs);
+	void start_customTest(handler_arg_type attrs);
 	void end_customTest();
 
-	void start_region(raw_attr_list_t *pattrs);
+	void start_region(handler_arg_type attrs);
 	void end_region();
 
-	void start_root_layout(raw_attr_list_t *pattrs);
+	void start_root_layout(handler_arg_type attrs);
 	void end_root_layout();
 
-	void start_viewport(raw_attr_list_t *pattrs);
+	void start_viewport(handler_arg_type attrs);
 	void end_viewport();
 
-	void start_body(raw_attr_list_t *pattrs);
+	void start_body(handler_arg_type attrs);
 	void end_body();
 
-	void start_par(raw_attr_list_t *pattrs);
+	void start_par(handler_arg_type attrs);
 	void end_par();
 
-	void start_seq(raw_attr_list_t *pattrs);
+	void start_seq(handler_arg_type attrs);
 	void end_seq();
 
-	void start_switch(raw_attr_list_t *pattrs);
+	void start_switch(handler_arg_type attrs);
 	void end_switch();
 
-	void start_excl(raw_attr_list_t *pattrs);
+	void start_excl(handler_arg_type attrs);
 	void end_excl();
 
-	void start_priorityClass(raw_attr_list_t *pattrs);
+	void start_priorityClass(handler_arg_type attrs);
 	void end_priorityClass();
 
-	void start_ref(raw_attr_list_t *pattrs);
+	void start_ref(handler_arg_type attrs);
 	void end_ref();
 
-	void start_text(raw_attr_list_t *pattrs);
+	void start_text(handler_arg_type attrs);
 	void end_text();
 
-	void start_audio(raw_attr_list_t *pattrs);
+	void start_audio(handler_arg_type attrs);
 	void end_audio();
 
-	void start_img(raw_attr_list_t *pattrs);
+	void start_img(handler_arg_type attrs);
 	void end_img();
 
-	void start_video(raw_attr_list_t *pattrs);
+	void start_video(handler_arg_type attrs);
 	void end_video();
 
-	void start_animation(raw_attr_list_t *pattrs);
+	void start_animation(handler_arg_type attrs);
 	void end_animation();
 
-	void start_textstream(raw_attr_list_t *pattrs);
+	void start_textstream(handler_arg_type attrs);
 	void end_textstream();
 
-	void start_brush(raw_attr_list_t *pattrs);
+	void start_brush(handler_arg_type attrs);
 	void end_brush();
 
-	void start_a(raw_attr_list_t *pattrs);
+	void start_a(handler_arg_type attrs);
 	void end_a();
 
-	void start_anchor(raw_attr_list_t *pattrs);
+	void start_anchor(handler_arg_type attrs);
 	void end_anchor();
 
-	void start_area(raw_attr_list_t *pattrs);
+	void start_area(handler_arg_type attrs);
 	void end_area();
 
-	void start_animate(raw_attr_list_t *pattrs);
+	void start_animate(handler_arg_type attrs);
 	void end_animate();
 
-	void start_set(raw_attr_list_t *pattrs);
+	void start_set(handler_arg_type attrs);
 	void end_set();
 
-	void start_animateMotion(raw_attr_list_t *pattrs);
+	void start_animateMotion(handler_arg_type attrs);
 	void end_animateMotion();
 
-	void start_animateColor(raw_attr_list_t *pattrs);
+	void start_animateColor(handler_arg_type attrs);
 	void end_animateColor();
 
-	void start_transitionFilter(raw_attr_list_t *pattrs);
+	void start_transitionFilter(handler_arg_type attrs);
 	void end_transitionFilter();
 
-	void start_param(raw_attr_list_t *pattrs);
+	void start_param(handler_arg_type attrs);
 	void end_param();
 
-	void start_transition(raw_attr_list_t *pattrs);
+	void start_transition(handler_arg_type attrs);
 	void end_transition();
 
-	void start_regPoint(raw_attr_list_t *pattrs);
+	void start_regPoint(handler_arg_type attrs);
 	void end_regPoint();
 
-	void start_prefetch(raw_attr_list_t *pattrs);
+	void start_prefetch(handler_arg_type attrs);
 	void end_prefetch();
 
 	//
-	void unknown_starttag(const char *tag, raw_attr_list_t *pattrs);
+	void unknown_starttag(const std::string& tag, handler_arg_type attrs);
 	void unknown_endtag();
 
-	//
-	void new_node(const char *name, raw_attr_list_t *pattrs);
+	void new_node(const std::string& tag, handler_arg_type attrs);
 	void end_node();
 
+	void  new_media_node(const std::string& tag, handler_arg_type attrs);
+	void  end_media_node();
+
 	// <<xml::sax_handler interface>>
-	virtual void start_element(const char *name, const char **attrs)
+	virtual void start_element(const char *name, const char **sattrs)
 		{
 		m_stack.push(name);
-		raw_attr_list_t *pattrs = NULL;
-		if(attrs) {
-			pattrs = new raw_attr_list_t();
-			for(int i=0;attrs[i];i+=2)
-				pattrs->push_back(raw_attr_t(attrs[i], attrs[i+1]));
+		handler_arg_type attrs = 0;
+		if(sattrs != 0) 
+			{
+			attrs = new raw_attr_map_t();
+			for(int i=0;sattrs[i];i+=2)
+				(*attrs)[sattrs[i]] = sattrs[i+1];
 			}
 		handler_map_t::iterator it = m_handlers.find(name);
 		if(it != m_handlers.end())
-			(this->*(*it).second.first)(pattrs);
+			(this->*(*it).second.first)(attrs);
 		else
-			unknown_starttag(name, pattrs);
+			unknown_starttag(name, attrs);
 		}
 
 	virtual void end_element()
@@ -184,7 +189,7 @@ class parser : public xml::sax_handler
 		{
 		}
 
-	virtual void show_error(std::string& report);
+	virtual void show_error(const std::string& report);
 
 	//
 	private:
