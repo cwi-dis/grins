@@ -34,7 +34,7 @@ error = 'parseskin.error'
 # for ENTER, \b for BACKSPACE, and \n for LINEFEED.
 #
 # The possible commands are:
-# "open", "play", "pause", "stop", "exit", "tab".
+# "skin", "open", "play", "pause", "stop", "exit", "tab".
 #
 # The possible shapes and coordinates are:
 # "rect" with 4 numbers giving x, y, width, and height;
