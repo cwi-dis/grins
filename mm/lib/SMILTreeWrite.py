@@ -92,9 +92,16 @@ class IndentedFile:
 
 # Write a node to a CMF file, given by filename
 
-def WriteFile(root, filename, cleanSMIL = 0, evallicense = 0):
+Error = 'Error'
+
+def WriteFile(root, filename, cleanSMIL = 0, copyFiles = 0, evallicense = 0):
 	fp = IndentedFile(open(filename, 'w'))
-	writer = SMILWriter(root, fp, filename, cleanSMIL, evallicense)
+	try:
+		writer = SMILWriter(root, fp, filename, cleanSMIL, copyFiles, evallicense)
+	except Error, msg:
+		from windowinterface import showmessage
+		showmessage(msg, mtype = 'error')
+		return
 	writer.write()
 	if os.name == 'mac':
 		import macfs
@@ -114,6 +121,30 @@ def WriteString(root, cleanSMIL = 0):
 	writer.write()
 	return fp.fp.getvalue()
 
+def newfile(srcurl, dstdir):
+	import posixpath, urlparse
+	utype, host, path, params, query, fragment = urlparse.urlparse(srcurl)
+	file = MMurl.url2pathname(posixpath.basename(path))
+	i = 0
+	base, ext = os.path.splitext(file)
+	while os.path.exists(os.path.join(dstdir, file)):
+		file = base + `i` + ext
+		i = i + 1
+	return file
+
+def copyfile(srcurl, dstdir):
+	file = newfile(srcurl, dstdir)
+	u = MMurl.urlopen(srcurl)
+	f = open(os.path.join(dstdir, file), 'wb')
+	while 1:
+		data = u.read(10240)
+		if not data:
+			break
+		f.write(data)
+	f.close()
+	u.close()
+	return file
+
 #
 # Functions to encode data items
 #
@@ -122,6 +153,50 @@ def getid(writer, node):
 	name = writer.uid2name[uid]
 	if writer.ids_used[name]:
 		return name
+
+def getsrc(writer, node):
+	val = MMAttrdefs.getattr(node, 'file')
+	if not val or not writer.copydir:
+		return val
+	if writer.copycache.has_key(val):
+		# already seen and copied
+		return MMurl.basejoin(writer.copydirurl, writer.copycache[val])
+	ctx = node.GetContext()
+	if node.GetChannelType() == 'RealPix':
+		# special case code for RealPix file
+		if not hasattr(node, 'slideshow'):
+			import HierarchyView
+			node.slideshow = HierarchyView.SlideShow(node)
+		import realsupport
+		rp = node.slideshow.rp
+		otags = rp.tags
+		ntags = []
+		for attrs in otags:
+			attrs = attrs.copy()
+			ntags.append(attrs)
+			if attrs.get('tag','fill') not in ('fadein', 'crossfade', 'wipe'):
+				continue
+			url = attrs.get('file')
+			if not url:
+				continue
+			url = MMurl.basejoin(val, url)
+			if writer.copycache.has_key(url):
+				file = writer.copycache[url]
+			else:
+				nurl = ctx.findurl(url)
+				file = copyfile(nurl, writer.copydir)
+				writer.copycache[url] = file
+			attrs['file'] = MMurl.pathname2url(file)
+		rp.tags = ntags
+		file = newfile(ctx.findurl(val), writer.copydir)
+		realsupport.writeRP(os.path.join(writer.copydir, file), rp, node)
+		rp.tags = otags
+		writer.copycache[val] = file
+		return MMurl.basejoin(writer.copydirurl, file)
+	url = ctx.findurl(val)
+	file = copyfile(url, writer.copydir)
+	writer.copycache[val] = file
+	return MMurl.basejoin(writer.copydirurl, file)
 
 def getcmifattr(writer, node, attr):
 	val = MMAttrdefs.getattr(node, attr)
@@ -346,7 +421,7 @@ smil_attrs=[
 	("id", getid),
 	("title", lambda writer, node:getcmifattr(writer, node, "title")),
 	("region", getchname),
-	("src", lambda writer, node:getcmifattr(writer, node, "file")),
+	("src", lambda writer, node:getsrc(writer, node)),
 	("type", getmimetype),
 	("author", lambda writer, node:getcmifattr(writer, node, "author")),
 	("copyright", lambda writer, node:getcmifattr(writer, node, "copyright")),
@@ -416,9 +491,24 @@ def mediatype(chtype, error=0):
 	return '%s:%s' % (NSprefix, chtype), '%s %s' % (GRiNSns, chtype)
 
 class SMILWriter(SMIL):
-	def __init__(self, node, fp, filename, cleanSMIL = 0, evallicense = 0):
+	def __init__(self, node, fp, filename, cleanSMIL = 0, copyFiles = 0, evallicense = 0):
 		self.__cleanSMIL = cleanSMIL	# if set, no GRiNS namespace
 		self.evallicense = evallicense
+		if copyFiles:
+			dir, base = os.path.split(filename)
+			base, ext = os.path.splitext(base)
+			if not ext:
+				base = base + '.dir'
+			newdir = newfile(base, dir)
+			self.copydir = os.path.join(dir, newdir)
+			self.copydirurl = newdir + '/'
+			self.copycache = {}
+			try:
+				os.mkdir(self.copydir)
+			except:
+				raise Error, 'Cannot create subdirectory for assets; document not saved'
+		else:
+			self.copydir = self.copydirurl = None
 
 		self.__isopen = 0
 		self.__stack = []
@@ -456,12 +546,6 @@ class SMILWriter(SMIL):
 			self.uses_cmif_extension = 1
 
 		self.syncidscheck(node)
-
-		dir, file = os.path.split(filename) # get parent dir
-		file, ext = os.path.splitext(file) # and base name
-		rel = file + '.dir'	# relative name of data directory
-		abs = os.path.join(dir, rel) # possibly absolute name of same
-		self.tmpdirname = abs, rel # record both names
 
 	def push(self):
 		if self.__isopen:
@@ -1074,14 +1158,6 @@ class SMILWriter(SMIL):
 				attrlist.append(('%s:fragment-id' % NSprefix,
 						 id))
 		self.writetag('anchor', attrlist)
-
-	def smiltempfile(self, node, suffix = '.html'):
-		"""Return temporary file name for node"""
-		nodename = self.uid2name[node.GetUID()]
-		if not os.path.exists(self.tmpdirname[0]):
-			os.mkdir(self.tmpdirname[0])
-		filename = nodename + suffix
-		return os.path.join(self.tmpdirname[1], filename)
 
 
 namechars = string.letters + string.digits + '_-.'
