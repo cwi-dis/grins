@@ -517,8 +517,8 @@ class XMLParser:
                 self.syntax_error('start tag using undeclared namespace prefix')
         else:
             prefix = None
-        if hasattr(self, tag + '_attributes'):
-            attributes = getattr(self, tag + '_attributes')
+        if hasattr(self, 'attributes') and self.attributes.has_key(tag):
+            attributes = self.attributes[tag]
         else:
             attributes = None
         attrdict, k = self.parse_attributes(tag, k, j, attributes, prefix)
