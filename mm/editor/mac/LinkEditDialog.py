@@ -115,7 +115,7 @@ class LinkBrowserDialog(windowinterface.MACDialog):
 			callbacks related to the right list
 		"""
 		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_LINKBROWSE,
-				ITEMLIST_BROWSER_ALL)
+				ITEMLIST_BROWSER_ALL, cancel=self._close_window)
 		self._window.register(WMEVENTS.WindowExit, self._close_window, ())
 		
 		self._left_client_data = cbarg1
