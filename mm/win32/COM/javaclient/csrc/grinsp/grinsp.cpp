@@ -129,43 +129,7 @@ JNIEXPORT void JNICALL Java_GRiNSCanvas_play(JNIEnv *env, jobject canvas)
  */
 JNIEXPORT void JNICALL Java_GRiNSCanvas_paint(JNIEnv *env, jobject canvas, jobject graphics)
 	{
-	// Get the AWT
-	JAWT awt;
- 	awt.version = JAWT_VERSION_1_3;
- 	jboolean result = JAWT_GetAWT(env, &awt);
- 	assert(result != JNI_FALSE);
- 
- 	// Get the drawing surface
- 	JAWT_DrawingSurface* ds = awt.GetDrawingSurface(env, canvas);
- 	assert(ds != NULL);
- 
- 	// Lock the drawing surface
- 	jint lock = ds->Lock(ds);
- 	assert((lock & JAWT_LOCK_ERROR) == 0);
- 
- 	// Get the drawing surface info
- 	JAWT_DrawingSurfaceInfo* dsi = ds->GetDrawingSurfaceInfo(ds);
- 
- 	// Get the platform-specific drawing info
- 	JAWT_Win32DrawingSurfaceInfo *dsi_win = (JAWT_Win32DrawingSurfaceInfo*)dsi->platformInfo;
-
- 	//////////////////////////////
-	HDC hdc = dsi_win->hdc;
-	HWND hwnd = dsi_win->hwnd;
-	RECT rc;
-	GetClientRect(hwnd, &rc); 
-	HBRUSH oldBrush = (HBRUSH)SelectObject(hdc,CreateSolidBrush(RGB(0,255,0)));
-	Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
- 	//////////////////////////////
-	
- 	// Free the drawing surface info
- 	ds->FreeDrawingSurfaceInfo(dsi);
- 
- 	// Unlock the drawing surface
- 	ds->Unlock(ds);
- 
- 	// Free the drawing surface
- 	awt.FreeDrawingSurface(ds);	
+	if(pIGRiNSPlayer)pIGRiNSPlayer->update();		
 	}
 
 /*

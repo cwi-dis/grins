@@ -103,6 +103,7 @@ class _Toplevel:
 		self._embedded = 0
 		self._embeddedcallbacks = {}
 		self._embeddedHwnd = 0
+		self._embeddedwnd = None
 
 	# set/get active doc frame (MDIFrameWnd)
 	def setActiveDocFrame(self,frame):
@@ -238,6 +239,11 @@ class _Toplevel:
 	def get_embedded_hwnd(self):
 		return self._embeddedHwnd
 
+	def set_embedded_wnd(self, wnd):
+		self._embeddedwnd = wnd
+
+	def get_embedded_wnd(self):
+		return self._embeddedwnd
 			
 	#
 	# Std interface
