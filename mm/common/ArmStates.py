@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Symbolic constants for arm states
 
 ARM_NONE      = ''
