@@ -1239,7 +1239,7 @@ class DDWndLayer:
 		# then blit it to the front surface
 		ddsd = ddraw.CreateDDSURFACEDESC()
 		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
-		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
+		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN | ddraw.DDSCAPS_SYSTEMMEMORY)
 		ddsd.SetSize(w,h)
 		try:
 			self._backBuffer = self._ddraw.CreateSurface(ddsd)
@@ -1279,7 +1279,7 @@ class DDWndLayer:
 		# then blit it to the front surface
 		ddsd = ddraw.CreateDDSURFACEDESC()
 		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
-		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
+		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN | ddraw.DDSCAPS_SYSTEMMEMORY)
 		ddsd.SetSize(w,h)
 		try:
 			self._backBuffer = self._ddraw.CreateSurface(ddsd)
@@ -1353,10 +1353,11 @@ class DDWndLayer:
 		return self._pxlfmt
 
 	def getDrawBuffer(self):
-		if not self._ddraw: return None
+		if not self._ddraw: 
+			return None
 		if self._backBuffer.IsLost():
-			if not self._backBuffer.Restore():
-				return None
+			self._backBuffer.Restore()
+			self.InvalidateRect(self.GetClientRect())
 		return self._backBuffer
 
 	def fixDimensions(self, w, h, ddsd):
@@ -1372,14 +1373,14 @@ class DDWndLayer:
 
 	def CreateSurface(self, w, h):
 		if not self._ddraw: return None
-		if not w or not h or w<0 or h<0:
+		if not w or not h or w<=0 or h<=0:
 			w = 100; h=100
 		if w>1600: w = 1600
 		if h>1200: h = 1200
 		
 		ddsd = ddraw.CreateDDSURFACEDESC()
 		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
-		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
+		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN | ddraw.DDSCAPS_SYSTEMMEMORY)
 		ddsd.SetSize(w,h)
 		dds = None
 		while dds is None:
@@ -1395,6 +1396,7 @@ class DDWndLayer:
 		while 1:
 			if dds.IsLost():
 				win32api.Sleep(50)
+				dds.Restore()
 			else:
 				try:
 					dds.BltFill((0, 0, w, h), ddcolor)
@@ -1921,39 +1923,41 @@ class Region(Window):
 	def getBackDDS(self, exclwnd = None, dopaint = 1):
 		dds = self.createDDS()
 		bf = self._topwindow.getDrawBuffer()
-		while bf and bf.IsLost():
-			win32api.Sleep(50)
-			bf.Restore()
+		if bf.IsLost() and not bf.Restore():
+			return dds
 		x, y, w, h = self.getwindowpos()
 		if dopaint:
 			self._topwindow.paint(rc=(x, y, w, h), exclwnd=exclwnd)
+			if bf.IsLost() and not bf.Restore():
+				return dds
 		try:
 			dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
 		except ddraw.error, arg:
-			print arg
+			print 'getBackDDS', arg
 		return dds
 
 	def updateBackDDS(self, dds, exclwnd=None):
-		bf = self._topwindow.getDrawBuffer()
-		while bf.IsLost():
-			win32api.Sleep(50)
-			bf.Restore()
 		rc = x, y, w, h = self.getwindowpos()
 		self._topwindow.paint(rc, exclwnd=exclwnd)
+		bf = self._topwindow.getDrawBuffer()
+		if bf.IsLost() and not bf.Restore():
+			return dds
 		try:
 			dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
 		except ddraw.error, arg:
-			print arg
+			print 'updateBackDDS', arg
 		return dds
 
 	def bltDDS(self, srfc):
 		rc_dst = self.getwindowpos()
 		src_w, src_h = srfc.GetSurfaceDesc().GetSize()
 		rc_src = (0, 0, src_w, src_h)
-		buf = self._topwindow.getDrawBuffer()
+		bf = self._topwindow.getDrawBuffer()
+		if bf.IsLost() and not bf.Restore():
+			return
 		if rc_dst[2]!=0 and rc_dst[3]!=0:
 			try:
-				buf.Blt(self.ltrb(rc_dst), srfc, rc_src, ddraw.DDBLT_WAIT)
+				bf.Blt(self.ltrb(rc_dst), srfc, rc_src, ddraw.DDBLT_WAIT)
 			except ddraw.error, arg:
 				print arg			
 
