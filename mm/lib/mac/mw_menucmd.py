@@ -98,7 +98,10 @@ class SelectPopupMenu(PopupMenu):
 
 	def additemlist(self, list):
 		for item in list:
-			self.additem(item)
+			if item is None:
+				self.addseparator()
+			else:
+				self.additem(item)
 			
 	def getpopupinfo(self):
 		return self.menu, self.id
