@@ -12,6 +12,8 @@ MAGIC=13
 
 Error="license.error"
 
+NOTYET="Not licensed yet"
+
 class Features:
 	def __init__(self, license, args):
 		self.license = license
@@ -61,6 +63,7 @@ class WaitLicense:
 	def __init__(self, callback, features):
 		self.callback = callback
 		self.features = features
+		self.secondtime = 0
 		self.dialog = None
 		if self.get_or_ask():
 			self.do_callback()
@@ -70,8 +73,11 @@ class WaitLicense:
 			self.license = License(self.features)
 		except Error, arg:
 			import windowinterface
+			if self.secondtime or arg != NOTYET:
+				windowinterface.showmessage("%s\nSee www.oratrix.com for details."%arg)
+			self.secondtime = 1
 			self.dialog = windowinterface.InputDialog(
-				'%s\nEnter license:'%arg,
+				'Enter license key:',
 				'',
 				self.ok_callback,
 				(self.cancel_callback, ()))
@@ -167,12 +173,13 @@ def _getlicense():
 	except ImportError:
 		pass
 	else:
-		str = staticlicense.staticlicense
+		if 'staticlicense' in dir(staticlicense):
+			str = staticlicense.staticlicense
 	if not str:
 		import settings
 		str = settings.get('license')
 	if not str:
-		raise Error, "Not licensed yet"
+		raise Error, NOTYET
 	uniqid, date, features, user = _decodelicense(str)
 	if date:
 		import time
@@ -180,12 +187,14 @@ def _getlicense():
 		values = time.localtime(t)
 		if values[:3] > date:
 			raise Error, "License expired %d/%02.2d/%02.2d"%date
-		import windowinterface
-		msg = 'Temporary license, valid until %d/%02.2d/%02.2d.\n'%date
-		msg = msg + 'Do you want to replace it with a full license?'
-		ok = windowinterface.showquestion(msg)
-		if ok:
-			raise Error, ""
+		if not user:
+			user = "Temporary license until %d/%02.2d/%02.2d"%date
+## 		import windowinterface
+## 		msg = 'Temporary license, valid until %d/%02.2d/%02.2d.\n'%date
+## 		msg = msg + 'Do you want to replace it with a full license?'
+## 		ok = windowinterface.showquestion(msg)
+## 		if ok:
+## 			raise Error, ""
 	fnames = []
 	for name, value in FEATURES.items():
 		if (features & value) == value:
