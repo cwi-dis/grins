@@ -825,22 +825,23 @@ def PrintDOMAttrs():
 		print entry
 	print '\t}',
 
-def PrintSelDOMAttrs():
-	elements = ['svg',]
-	attrdict = {}
-	for tag in elements:
-		attrs = SVG.attributes[tag]
-		for name, defval in attrs.items():
-			attrdict[name] = defval
-	print '# svg attribute defs'
-	print 'SVGAttrdefs = {',
-	keys = attrdict.keys()
-	keys.sort()
-	for name in keys:
-		defval = attrdict[name]
-		entry = '\t%s: (stringtype, %s),' % (`name`, `defval`)
-		print entry
-	print '\t}',
+if __debug__:
+	def PrintSelDOMAttrs():
+		elements = ['svg',]
+		attrdict = {}
+		for tag in elements:
+			attrs = SVG.attributes[tag]
+			for name, defval in attrs.items():
+				attrdict[name] = defval
+		print '# svg attribute defs'
+		print 'SVGAttrdefs = {',
+		keys = attrdict.keys()
+		keys.sort()
+		for name in keys:
+			defval = attrdict[name]
+			entry = '\t%s: (stringtype, %s),' % (`name`, `defval`)
+			print entry
+		print '\t}',
 
-if __name__ == '__main__':
-	PrintSelDOMAttrs()
+	if __name__ == '__main__':
+		PrintSelDOMAttrs()

@@ -278,65 +278,66 @@ class SVGRenderer:
 ####################################
 # test
 
-import wingdi
-import win32con
+if __debug__:
+	import wingdi
+	import win32con
 
-def createDDSurface():
-	# create a ddraw surface with this size
-	import ddraw, winuser
-	ddrawobj = ddraw.CreateDirectDraw()
-	ddrawobj.SetCooperativeLevel(winuser.GetDesktopWindow(), ddraw.DDSCL_NORMAL)
-	ddsd = ddraw.CreateDDSURFACEDESC()
-	ddsd.SetFlags(ddraw.DDSD_CAPS)
-	ddsd.SetCaps(ddraw.DDSCAPS_PRIMARYSURFACE)
-	frontBuffer = ddrawobj.CreateSurface(ddsd)
-	frontBuffer.GetPixelFormat()
-	return ddrawobj, frontBuffer
+	def createDDSurface():
+		# create a ddraw surface with this size
+		import ddraw, winuser
+		ddrawobj = ddraw.CreateDirectDraw()
+		ddrawobj.SetCooperativeLevel(winuser.GetDesktopWindow(), ddraw.DDSCL_NORMAL)
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_PRIMARYSURFACE)
+		frontBuffer = ddrawobj.CreateSurface(ddsd)
+		frontBuffer.GetPixelFormat()
+		return ddrawobj, frontBuffer
 
-def Render(source, msecwait=3000):
-	import svgwin, winuser, winkernel
-	svgdoc = svgdom.SvgDocument(source)
-	svggraphics = svgwin.SVGWinGraphics()
-	ddrawobj, dds = createDDSurface()
-	ddshdc = dds.GetDC()
-	svggraphics.tkStartup(ddshdc)
-	renderer = SVGRenderer(svgdoc, svggraphics)
-	renderer.render()
-	svggraphics.tkShutdown()
-	dds.ReleaseDC(ddshdc)
-	winkernel.Sleep(msecwait)
-	winuser.RedrawWindow(0, None, 0, win32con.RDW_INVALIDATE | win32con.RDW_ERASE | win32con.RDW_ALLCHILDREN)
-	del dds
-	del ddrawobj
+	def Render(source, msecwait=3000):
+		import svgwin, winuser, winkernel
+		svgdoc = svgdom.SvgDocument(source)
+		svggraphics = svgwin.SVGWinGraphics()
+		ddrawobj, dds = createDDSurface()
+		ddshdc = dds.GetDC()
+		svggraphics.tkStartup(ddshdc)
+		renderer = SVGRenderer(svgdoc, svggraphics)
+		renderer.render()
+		svggraphics.tkShutdown()
+		dds.ReleaseDC(ddshdc)
+		winkernel.Sleep(msecwait)
+		winuser.RedrawWindow(0, None, 0, win32con.RDW_INVALIDATE | win32con.RDW_ERASE | win32con.RDW_ALLCHILDREN)
+		del dds
+		del ddrawobj
 
 
-svgSource = """<?xml version="1.0" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20001102//EN" 
-  "http://www.w3.org/TR/2000/CR-SVG-20001102/DTD/svg-20001102.dtd">
-<svg width="12cm" height="5.25cm" viewBox="0 0 1200 400">
-  <title>Example arcs01 - arc commands in path data</title>
-  <desc>Picture of a pie chart with two pie wedges and
-        a picture of a line with arc blips</desc>
-  <rect x="1" y="1" width="1198" height="398"
-        style="fill:none; stroke:blue; stroke-width:1"/>
+	svgSource = """<?xml version="1.0" standalone="no"?>
+	<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20001102//EN" 
+	  "http://www.w3.org/TR/2000/CR-SVG-20001102/DTD/svg-20001102.dtd">
+	<svg width="12cm" height="5.25cm" viewBox="0 0 1200 400">
+	  <title>Example arcs01 - arc commands in path data</title>
+	  <desc>Picture of a pie chart with two pie wedges and
+		a picture of a line with arc blips</desc>
+	  <rect x="1" y="1" width="1198" height="398"
+		style="fill:none; stroke:blue; stroke-width:1"/>
 
-  <path d="M300,200 h-150 a150,150 0 1,0 150,-150 z"
-        style="fill:red; stroke:blue; stroke-width:5"/>
-  <path d="M275,175 v-150 a150,150 0 0,0 -150,150 z"
-        style="fill:yellow; stroke:blue; stroke-width:5"/>
+	  <path d="M300,200 h-150 a150,150 0 1,0 150,-150 z"
+		style="fill:red; stroke:blue; stroke-width:5"/>
+	  <path d="M275,175 v-150 a150,150 0 0,0 -150,150 z"
+		style="fill:yellow; stroke:blue; stroke-width:5"/>
 
-  <path d="M600,350 l 50,-25 
-           a25,25 -30 0,1 50,-25 l 50,-25 
-           a25,50 -30 0,1 50,-25 l 50,-25 
-           a25,75 -30 0,1 50,-25 l 50,-25 
-           a25,100 -30 0,1 50,-25 l 50,-25"
-        style="fill:none; stroke:red; stroke-width:5" />
-</svg>
-"""
+	  <path d="M600,350 l 50,-25 
+		   a25,25 -30 0,1 50,-25 l 50,-25 
+		   a25,50 -30 0,1 50,-25 l 50,-25 
+		   a25,75 -30 0,1 50,-25 l 50,-25 
+		   a25,100 -30 0,1 50,-25 l 50,-25"
+		style="fill:none; stroke:red; stroke-width:5" />
+	</svg>
+	"""
 
-#################
+	#################
 
-if __name__ == '__main__':
-    Render(svgSource, 5000)
-	#svg = svgdom.SvgDocument(svgSource)
-	#svg.write()
+	if __name__ == '__main__':
+	    Render(svgSource, 5000)
+		#svg = svgdom.SvgDocument(svgSource)
+		#svg.write()
