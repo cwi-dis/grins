@@ -1364,8 +1364,9 @@ class SMILWriter(SMIL):
 				progress = None
 			file = convertaudiofile(u, dstdir, file, node,
 						progress = progress)
-			self.files_generated[file] = 'b'
-			return file
+			if file:
+				self.files_generated[file] = 'b'
+				return file
 		if u.headers.maintype == 'video' and \
 		   string.find(u.headers.subtype, 'real') < 0:
 			from realconvert import convertvideofile
@@ -1380,7 +1381,6 @@ class SMILWriter(SMIL):
 			if file:
 				self.files_generated[file] = 'b'
 				return file
-			print 'convertvideofile returned',file
 		if u.headers.maintype == 'image':
 			from realconvert import convertimagefile
 			# XXXX This is a hack. convertimagefile may change the filename (and
