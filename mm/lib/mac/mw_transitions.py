@@ -37,7 +37,8 @@ class TransitionEngine:
 			self.startprogress = 1.0 - dict['endProgress']
 			self.endprogress = 1.0 - dict['startProgress']
 		# Now recompute starttime and "duration" based on these values
-		self.duration = self.duration / (self.endprogress-self.startprogress)
+		if self.endprogress != self.startprogress:
+			self.duration = self.duration / (self.endprogress-self.startprogress)
 		self.starttime = self.starttime - (self.startprogress*self.duration)
 
 		
