@@ -581,7 +581,7 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandRegionList = [
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
-				ENABLE_ANIMATION(callback = (self.onEnableAnimation, ())),
+#				ENABLE_ANIMATION(callback = (self.onEnableAnimation, ())),
 				]
 		else:
 			self.commandRegionList = [
@@ -1789,20 +1789,22 @@ class LayoutView2(LayoutViewDialog2):
 			if animationData is None:
 				if nodeType == TYPE_MEDIA:
 					animationData = selectedNode.computeAnimationData()
-				elif nodeType == TYPE_REGION:
-					animparent = None
-					import win32dialog
-					dlg = win32dialog.SelectElementDlg(self.toplevel.window, self.root, None, filter='node')
-					if dlg.show():
-						animparent = dlg.getmmobject()
-						assert animparent.getClassName() == 'MMNode', ''
-					else:
-						# do not create animation
-						return
-					# XXX save parent
-					selectedNode._animparent = animparent
-					
-					animationData = selectedNode.computeAnimationData(animparent)
+#				elif nodeType == TYPE_REGION:
+#					animparent = None
+#					import win32dialog
+#					dlg = win32dialog.SelectElementDlg(self.toplevel.window, self.root, None, filter='node')
+#					if dlg.show():
+#						animparent = dlg.getmmobject()
+#						self.updateFocus(1)
+#						return
+#					else:
+#						# do not create animation
+#						self.updateFocus(1)
+#						return
+#					# XXX save parent
+#					selectedNode._animparent = animparent
+#					
+#					animationData = selectedNode.computeAnimationData(animparent)
 
 			if not self.editmgr.transaction():
 				return
@@ -2635,10 +2637,7 @@ class AnimateControlWidget(LightWidget):
 		nodeType, nodeRef = self.getSingleSelection(nodeRefList)
 		self._selected = (nodeType, nodeRef)
 		
-		if nodeType == TYPE_VIEWPORT:
-			self.dialogCtrl.enable('AnimateEnable',0)
-			self.__updateUnselected()
-		elif nodeType in (TYPE_MEDIA, TYPE_REGION):
+		if nodeType == TYPE_MEDIA:
 			self.dialogCtrl.enable('AnimateEnable',1)
 			self.__updateNode(nodeRef)
 		else:
