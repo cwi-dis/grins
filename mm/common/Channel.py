@@ -986,6 +986,14 @@ class Channel:
 		if node is self._played_node:
 			self.setpaused(None)
 
+	def uipaused(self, wantpause):
+		if wantpause:
+			if not self._paused:
+				self.setpaused('uipause')
+		else:
+			if self._paused == 'uipause':
+				self.setpaused(None)
+
 	#
 	# Methods used by derived classes.
 	#

@@ -156,7 +156,7 @@ class SchedulerContext:
 	#
 	def setpaused(self, paused):
 		for ch in self.channels:
-			ch.setpaused(paused)
+			ch.uipaused(paused)
 
 	#
 	# getnextprearm returns next prearm event due for given channel
