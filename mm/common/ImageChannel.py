@@ -47,7 +47,7 @@ class ImageChannel(ChannelWindow):
 		for a in alist:
 			args = a[A_ARGS]
 			atype = a[A_TYPE]
-			if atype in DestOnlyAnchors or atype == ATYPE_AUTO:
+			if atype not in SourceAnchors or atype == ATYPE_AUTO:
 				continue
 			if atype == ATYPE_WHOLE:
 				# whole node means whole node...

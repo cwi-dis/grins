@@ -7,7 +7,7 @@ import MMAttrdefs
 import AttrEdit
 from ViewDialog import ViewDialog
 import windowinterface
-from AnchorDefs import A_TYPE, A_ID, ATYPE_DEST, DestOnlyAnchors
+from AnchorDefs import *
 
 from MMNode import interiortypes
 
@@ -454,31 +454,37 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 		lanchor = self.__findanchor(lfocus)
 		ranchor = self.__findanchor(rfocus)
 		if lanchor is None or ranchor is None or \
-		   lanchor == ranchor or \
-		   (lanchor[A_TYPE] in DestOnlyAnchors and
-		    ranchor[A_TYPE] in DestOnlyAnchors):
-			# can't add a link between destination-only anchors
+		   ((lanchor[A_TYPE] not in SourceAnchors or
+		     ranchor[A_TYPE] not in DestinationAnchors) and \
+		    (lanchor[A_TYPE] not in DestinationAnchors or
+		     ranchor[A_TYPE] not in SourceAnchors)):
+			# can only add links between a source and a
+			# destionation anchor
 			self.addsetsensitive(0)
 		if self.linkedit:
 			self.set_radio_buttons()
 			if lanchor is None or ranchor is None:
 				# shouldn't happen
 				return
-			if lanchor[A_TYPE] in DestOnlyAnchors:
-				# can only be a destination
-				self.linkdirsetsensitive(0, 0)
-				self.linkdirsetsensitive(1, 1)
-				self.linkdirsetsensitive(2, 0)
-			elif ranchor[A_TYPE] in DestOnlyAnchors:
-				# can only be a destination
+			ltype = lanchor[A_TYPE]
+			rtype = ranchor[A_TYPE]
+			if ltype in SourceAnchors and \
+			   rtype in DestinationAnchors:
 				self.linkdirsetsensitive(0, 1)
-				self.linkdirsetsensitive(1, 0)
-				self.linkdirsetsensitive(2, 0)
 			else:
-				# can be both source and destination
-				self.linkdirsetsensitive(0, 1)
+				self.linkdirsetsensitive(0, 0)
+			if ltype in DestinationAnchors and \
+			   rtype in SourceAnchors:
 				self.linkdirsetsensitive(1, 1)
+			else:
+				self.linkdirsetsensitive(1, 0)
+			if ltype in SourceAnchors and \
+			   ltype in DestinationAnchors and \
+			   rtype in SourceAnchors and \
+			   rtype in DestinationAnchors:
 				self.linkdirsetsensitive(2, 1)
+			else:
+				self.linkdirsetsensitive(2, 0)
 		else:
 			self.editgrouphide()
 
@@ -515,9 +521,9 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 				print 'LinkEdit: cannot find anchors!'
 				self.linkedit = 0
 				return
-			if a1[A_TYPE] in DestOnlyAnchors:
+			if a1[A_TYPE] not in SourceAnchors:
 				# left node can only be destination
-				if a2[A_TYPE] in DestOnlyAnchors:
+				if a2[A_TYPE] not in SourceAnchors:
 					print 'LinkEdit: 2 destination achors!'
 					self.linkedit = 0
 					return

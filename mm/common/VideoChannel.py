@@ -96,7 +96,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.armed_display.fgcolor(self.getbucolor(node))
 		hicolor = self.gethicolor(node)
 		for a in alist:
-			if a[A_TYPE] in DestOnlyAnchors:
+			atype = a[A_TYPE]
+			if atype not in SourceAnchors or atype == ATYPE_AUTO:
 				continue
 			b = self.armed_display.newbutton((0,0,1,1))
 			b.hiwidth(3)
