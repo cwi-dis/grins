@@ -489,16 +489,28 @@ static PyObject* PyWnd_MessageBox(PyWnd *self, PyObject *args)
 
 static PyObject* PyWnd_SetMenu(PyWnd *self, PyObject *args)
 {
-	HMENU hMenu;
-	if (!PyArg_ParseTuple(args, "i", &hMenu))
+	PyObject *obj;
+	if (!PyArg_ParseTuple(args, "O", &obj))
 		return NULL;
 	ASSERT_ISWINDOW(self->m_hWnd)
+	extern HMENU GetHandleFromPyMenu(PyObject *);
+	HMENU hMenu = GetHandleFromPyMenu(obj);
 	BOOL res = SetMenu(self->m_hWnd, hMenu);
 	if(!res){
 		seterror("SetMenu", GetLastError());
 		return NULL;
 		}
 	return none();
+}
+
+static PyObject* PyWnd_GetMenu(PyWnd *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	ASSERT_ISWINDOW(self->m_hWnd)
+	HMENU hMemu = GetMenu(self->m_hWnd);
+	extern PyObject* CreatePyMenuFromHandle(HMENU );
+	return CreatePyMenuFromHandle(hMemu);
 }
 
 static PyObject* PyWnd_DrawMenuBar(PyWnd *self, PyObject *args)
@@ -654,6 +666,7 @@ PyMethodDef PyWnd::methods[] = {
 	{"HookMessage", (PyCFunction)PyWnd_HookMessage, METH_VARARGS, ""},
 	{"MessageBox", (PyCFunction)PyWnd_MessageBox, METH_VARARGS, ""},
 	{"SetMenu", (PyCFunction)PyWnd_SetMenu, METH_VARARGS, ""},
+	{"GetMenu", (PyCFunction)PyWnd_GetMenu, METH_VARARGS, ""},
 	{"DrawMenuBar", (PyCFunction)PyWnd_DrawMenuBar, METH_VARARGS, ""},
 	{"SetClassLong", (PyCFunction)PyWnd_SetClassLong, METH_VARARGS, ""},
 	{"SetWindowLong", (PyCFunction)PyWnd_SetWindowLong, METH_VARARGS, ""},
