@@ -9,9 +9,11 @@ when you want the duration of a media file (audio and video).
 
 import FileCache
 import MMurl
+import urllib
 
 def getduration(url):
 	url = MMurl.canonURL(url)
+	url = urllib.unquote(url)
 	import windowinterface
 	return windowinterface.GetMediaDuration(url)
 
