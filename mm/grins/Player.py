@@ -3,7 +3,6 @@ __version__ = "$Id$"
 # Player module -- mostly defines the Player class.
 
 
-from Scheduler import del_timing
 from PlayerCore import PlayerCore
 from MMExc import *
 import MMAttrdefs
@@ -34,6 +33,7 @@ class Player(PlayerCore, PlayerDialog):
 		self.toplevel = toplevel
 		self.set_timer = toplevel.set_timer
 		self.timer_callback = self.scheduler.timer_callback
+		self.userstarttime = 0
 		self.commandlist = [
 			CHANNELS(callback = self.channel_callback),
 			USERGROUPS(callback = self.usergroup_callback),
@@ -61,7 +61,9 @@ class Player(PlayerCore, PlayerDialog):
 			stop,
 			]
 		self.alllist = self.pauselist
-
+		self.cssResolver = self.context.cssResolver
+		self._exporter = None # Bad, bad hack.
+	
 	def destroy(self):
 		if not hasattr(self, 'toplevel'):
 			# already destroyed
@@ -103,7 +105,7 @@ class Player(PlayerCore, PlayerDialog):
 		self.showchannels()
 		PlayerDialog.show(self)
 		self.showstate()
-
+		
 	def hide(self):
 		if not self.showing: return
 		self.showing = 0
@@ -116,6 +118,10 @@ class Player(PlayerCore, PlayerDialog):
 		h, v = self.root.GetRawAttrDef('player_winpos', (None, None))
 		width, height = MMAttrdefs.getattr(self.root, 'player_winsize')
 		return h, v, width, height
+		
+	def after_chan_show(self, chan = None):
+		PlayerDialog.after_chan_show(self, chan)
+		PlayerCore.after_chan_show(self, chan)
 
 	#
 	# FORMS callbacks.
@@ -127,7 +133,8 @@ class Player(PlayerCore, PlayerDialog):
 			self.pause(0)
 		elif not self.playing:
 			# Case 2: starting to play from stopped mode
-			self.play()
+			self.play(self.userstarttime)
+			self.userstarttime = 0
 		else:
 			# nothing, restore state.
 			self.showstate()
@@ -159,13 +166,12 @@ class Player(PlayerCore, PlayerDialog):
 
 	def usergroup_callback(self, name):
 		self.toplevel.setwaiting()
-		title, u_state, override = self.context.usergroups[name]
-		if override == 'allowed':
-			if u_state == 'RENDERED':
-				u_state = 'NOT_RENDERED'
-			else:
-				u_state = 'RENDERED'
-			self.context.usergroups[name] = title, u_state, override
+		title, u_state, override, uid = self.context.usergroups[name]
+		if u_state == 'RENDERED':
+			u_state = 'NOT_RENDERED'
+		else:
+			u_state = 'RENDERED'
+		self.context.usergroups[name] = title, u_state, override, uid
 		self.setusergroup(name, u_state == 'RENDERED')
 		self.root.ResetPlayability()
 
@@ -213,8 +219,28 @@ class Player(PlayerCore, PlayerDialog):
 			state = PLAYING
 		self.setstate(state)
 
-	def updateuibaglist(self):
-		pass
+	def isplaying(self):
+		return self.playing
+
+	def setstarttime(self, starttime, apply=1):
+		self.userstarttime = starttime
+		if self.playing and apply:
+			# XXX: not correct 
+			gototime = starttime
+			seek_node = self.userplayroot # XXX: improve by building doc timing context
+			self.scheduler.setpaused(1)
+			timestamp = self.scheduler.timefunc()
+			sctx = self.scheduler.sctx_list[0]
+			self.scheduler.settime(gototime)
+			x = seek_node
+			path = []
+			while x is not None:
+				path.append(x)
+				x = x.GetSchedParent()
+			path.reverse()
+			sctx.gototime(path[0], gototime, timestamp, path)
+			self.scheduler.setpaused(0)
+			self.userstarttime = 0
 
 	def makemenu(self):
 		channels = []
@@ -224,9 +250,11 @@ class Player(PlayerCore, PlayerDialog):
 		self.setchannels(channels)
 
 	def makeugroups(self):
+		import settings
 		ugroups = []
-		for name, (title, u_state, override) in self.context.usergroups.items():
-			if override != 'allowed':
+		showhidden = settings.get('showhidden')
+		for name, (title, u_state, override, uid) in self.context.usergroups.items():
+			if not showhidden and override != 'visible':
 				continue
 			if not title:
 				title = name

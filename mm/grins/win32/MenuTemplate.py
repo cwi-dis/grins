@@ -35,8 +35,9 @@ from flags import *
 MENUBAR=(
 	('&File', (
 		(FLAG_ALL, ENTRY, '&Open...\tCtrl+O', 'O', OPENFILE),
-		(FLAG_ALL, ENTRY, '&Open URL...\tCtrl+L', 'O', OPEN),
-		(FLAG_ALL, DYNAMICCASCADE, 'Open recent', OPEN_RECENT),
+		(FLAG_ALL, ENTRY, 'Open &URL...\tCtrl+L', 'O', OPEN),
+		(FLAG_ALL, DYNAMICCASCADE, 'Open &recent', OPEN_RECENT),
+		(FLAG_ALL, ENTRY, 'R&eload', 'R', RELOAD),
 		(FLAG_ALL, ENTRY, '&Close Document', None, CLOSE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Preferences...', None, PREFERENCES),
@@ -48,19 +49,25 @@ MENUBAR=(
 			(FLAG_DBG, ENTRY, '&Abort', None, CRASH),
 			(FLAG_DBG, TOGGLE, 'Show &log/debug window', None, CONSOLE),
 			)),
+		(FLAG_DBG, SEP,),
+		(FLAG_ALL, ENTRY, 'C&heck for GRiNS update...', None, CHECKVERSION),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'E&xit', None, EXIT))),
 
 
 	('&View', (
-		(FLAG_ALL, TOGGLE, '&Source', None, SOURCE),)),
+		(FLAG_ALL, CASCADE, 'T&oolbars', (
+			(FLAG_ALL, ENTRY, '&General', None, TOOLBAR_GENERAL),
+			(FLAG_ALL, ENTRY, '&Player Controls', None, TOOLBAR_PLAYER),
+			)),
+		(FLAG_ALL, TOGGLE, '&Source', None, SOURCEVIEW))),
 
 	('&Play', (
 		(FLAG_ALL, ENTRY, '&Play\tCtrl+P', 'P', PLAY),
 		(FLAG_ALL, ENTRY, 'Pa&use\tCtrl+U', 'U', PAUSE),
 		(FLAG_ALL, ENTRY, '&Stop\tCtrl+H', 'H', STOP),
-		(FLAG_CMIF, SEP,),
-		(FLAG_CMIF, DYNAMICCASCADE, 'User &groups', USERGROUPS),
+		(FLAG_BOSTON|FLAG_CMIF, SEP,),
+		(FLAG_BOSTON, DYNAMICCASCADE, 'Custom &tests', USERGROUPS),
 		(FLAG_CMIF, DYNAMICCASCADE, 'Visible &channels', CHANNELS),
 		)),
 
@@ -69,8 +76,8 @@ MENUBAR=(
 
 	('&Help', (
 		(FLAG_ALL, ENTRY, '&Contents', None, HELP_CONTENTS),
-		(FLAG_ALL, ENTRY, 'Context &Help', None, HELP),
-		(FLAG_ALL, SEP,),
+##		(FLAG_ALL, ENTRY, 'Context &Help', None, HELP),
+##		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))

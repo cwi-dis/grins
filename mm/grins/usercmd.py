@@ -47,11 +47,13 @@ class OPENFILE(_CommandBase):
 	help = 'Open existing local file'
 class OPEN_RECENT(_DynamicCascade):
 	help = 'Open a recently used document'
+class RELOAD(_CommandBase):
+	help = 'Reloads the current document'
 class TRACE(_CommandBase):
 	help = 'DEBUG: toggle trace flag'
 class DEBUG(_CommandBase):
 	help = 'DEBUG: enter Python debugger'
-class SOURCE(_CommandBase):
+class SOURCEVIEW(_CommandBase):
 	help = 'Show source'
 class EXIT(_CommandBase):
 	help = 'Exit GRiNS'
@@ -59,6 +61,8 @@ class CLOSE(_CommandBase):
 	help = 'Close current document'
 class CONSOLE(_CommandBase):
 	help = "DEBUG: Show debug/log output window"
+class CHECKVERSION(_CommandBase):
+	help = 'Check for newer versions of the software'
 
 #
 # Player view commands
@@ -72,7 +76,7 @@ class STOP(_CommandBase):
 class MAGIC_PLAY(_CommandBase):
 	help = 'Continue when paused, pause when playing, play when stopped'
 class USERGROUPS(_DynamicCascade):
-	help = 'User groups'
+	help = 'Custom tests'
 class CHANNELS(_DynamicCascade):
 	help = 'Toggle channels on/off'
 class CRASH(_CommandBase):

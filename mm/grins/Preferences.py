@@ -7,7 +7,7 @@ from PreferencesDialog import PreferencesDialog, PreferencesDialogError
 import settings
 
 SPECIAL_NAMES={
-	"system_overdub_or_caption": ["overdub", "caption"],
+	"system_overdub_or_caption": ["overdub", "subtitle"],
 }
 
 class Preferences(PreferencesDialog):

@@ -26,7 +26,7 @@ class PlayerDialog:
 		self.__window = None
 		self.__title = title
 		self.__coords = coords
-		self.__state = -1
+		self.__state = 0
 		self.__menu_created = None
 		self.__topcommandlist = []
 		self.__commandlist = []
@@ -36,10 +36,75 @@ class PlayerDialog:
 		self.__channeldict = {}
 		self.__strid='player'
 		self.__cmdtgt='pview_'
+
+		# show comtrols whether the presentation
+		# will be played in normal or fullscreen mode
+		# show in ('normal',  'fullscreen')
+		self.__show = 'normal'
 		
+	# experimental code for viewport dimentioning
+	#
+	
+	def __getViewportList(self):
+		viewportList = []
+		for chan in self.context.channels:
+			if chan.get('base_window') == None:
+				viewportList.append(chan)
+		return viewportList
+		
+	# set the main window size according to its content (viewports)
+	def __fixMainWindowSize(self):
+		viewportList = self.__getViewportList()
+			
+		minWidth = 100
+		minHeight = 100
+		
+		# w size
+		# get the max(som Width of two viewports)
+		if len(viewportList) > 1:
+			for viewport1 in viewportList:
+				for viewport2 in viewportList:
+					if viewport1 != viewport2:
+						w1, h1 = viewport1.getPxGeom()
+						w2, h2 = viewport2.getPxGeom()
+						if w1+w2 > minWidth:
+							minWidth = w1+w2
+		elif len(viewportList) == 1:	
+			viewport = viewportList[0]
+			w, h = viewport.getPxGeom()
+			if w>minWidth:
+				minWidth=w
+				
+		# h size				
+		currentDefaultY = 0
+		for viewport in viewportList:
+			w, h = viewport.getPxGeom()
+			l, t = viewport.get('winpos', (100, currentDefaultY))
+			currentDefaultY = currentDefaultY + 10
+			h=h+t
+			if h>minHeight:
+				minHeight=h
+				
+		# add a little bit more for border, head, ... of windows
+		minWidth = minWidth+50
+		minHeight = minHeight+150
+		
+		# insure that the real window size if smaller than sreen size
+		screenWidth, screenHeight = windowinterface.getscreensize()
+		if minWidth > screenWidth-100:
+			minWidth = screenWidth-100
+		if minHeight > screenHeight-50:
+			minHeight = screenHeight-50
+		
+		self.__window.setcoords((None, None, minWidth, minHeight), units=windowinterface.UNIT_PXL)
+
+	#		
+	# end experimental code for viewport dimentioning
+
 	def preshow(self):
 		# If anything has to be done before showing the channels do it here.		
 		self.__create()
+		self.__fixMainWindowSize()
 
 	def topcommandlist(self, list):
 		if list != self.__topcommandlist:
@@ -142,7 +207,11 @@ class PlayerDialog:
 		self.__channels[i] = channel, onoff
 		self.setchannels(self.__channels)
 
+	def after_chan_show(self, channel=None):
+		pass
+
 	def setstate(self, state):
+		self.toplevel.setplayerstate(state)
 		ostate = self.__state
 		self.__state = state
 		w = self.__window
@@ -163,6 +232,8 @@ class PlayerDialog:
 				w.set_toggle(PLAY, state != STOPPED)
 				w.set_toggle(PAUSE, state == PAUSING)
 				w.set_toggle(STOP, state == STOPPED)
+	def getstate(self):
+		return self.__state
 
 	def getgeometry(self):
 		pass
@@ -172,6 +243,7 @@ class PlayerDialog:
 			'close': [ CLOSE_WINDOW, ],
 			'frame':self.toplevel.window,
 			'view':self.__cmdtgt,
+			'show':self.__show,
 			}
 		return self.inst_adornments
 

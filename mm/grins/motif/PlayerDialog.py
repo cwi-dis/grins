@@ -14,34 +14,34 @@ class PlayerDialog(PlayerDialogBase):
 			' ': MAGIC_PLAY,
 			},
 		'menubar': [
-			(LIGHT, 'File', [
-				(LIGHT, 'Open...', OPEN),
-				(LIGHT, 'Close Document', CLOSE),
-				(LIGHT, None),
-				(LIGHT, 'Preferences...', PREFERENCES),
-				(LIGHT|DBG, None),
-				(LIGHT|DBG, 'Debug', [
-					(LIGHT|DBG, 'Trace', TRACE, 't'),
-					(LIGHT|DBG, 'Debug', DEBUG),
-					(LIGHT|DBG, 'Crash CMIF', CRASH),
-					(LIGHT|DBG, 'Dump Scheduler Data', SCHEDDUMP),
+			(FLAG_ALL, 'File', [
+				(FLAG_ALL, 'Open...', OPEN),
+				(FLAG_ALL, 'Close Document', CLOSE),
+				(FLAG_ALL, None),
+				(FLAG_ALL, 'Preferences...', PREFERENCES),
+				(FLAG_ALL|FLAG_DBG, None),
+				(FLAG_ALL|FLAG_DBG, 'Debug', [
+					(FLAG_ALL|FLAG_DBG, 'Trace', TRACE, 't'),
+					(FLAG_ALL|FLAG_DBG, 'Debug', DEBUG),
+					(FLAG_ALL|FLAG_DBG, 'Crash CMIF', CRASH),
+					(FLAG_ALL|FLAG_DBG, 'Dump Scheduler Data', SCHEDDUMP),
 					]),
-				(LIGHT, None),
-				(LIGHT, 'Quit', EXIT),
+				(FLAG_ALL, None),
+				(FLAG_ALL, 'Quit', EXIT),
 				]),
-			(LIGHT, 'View', [
-				(LIGHT, 'View Source...', SOURCE),
+			(FLAG_ALL, 'View', [
+				(FLAG_ALL, 'View Source...', SOURCEVIEW),
 				]),
-			(LIGHT, 'Play', [
-				(LIGHT, 'Play', PLAY, 't'),
-				(LIGHT, 'Pause', PAUSE, 't'),
-				(LIGHT, 'Stop', STOP, 't'),
-				(CMIF, None),
-				(CMIF, 'User Groups', USERGROUPS),
-				(CMIF, 'Channels', CHANNELS),
+			(FLAG_ALL, 'Play', [
+				(FLAG_ALL, 'Play', PLAY, 't'),
+				(FLAG_ALL, 'Pause', PAUSE, 't'),
+				(FLAG_ALL, 'Stop', STOP, 't'),
+				(FLAG_BOSTON, None),
+				(FLAG_BOSTON, 'Custom Tests', USERGROUPS),
+				(FLAG_CMIF, 'Channels', CHANNELS),
 				]),
-			(LIGHT, 'Help', [
-				(LIGHT, 'Help', HELP),
+			(FLAG_ALL, 'Help', [
+				(FLAG_ALL, 'Help', HELP),
 				]),
 			],
 		'toolbar': PlayerDialogBase.adornments['toolbar'],
@@ -78,6 +78,9 @@ class PlayerDialog(PlayerDialogBase):
 		else:
 			self.setchannels()
 			self.setusergroups()
+
+	def after_chan_show(self, channel=None):
+		pass
 
 	def setstate(self, state = None):
 		commandlist = self.__topcommandlist + \

@@ -22,6 +22,7 @@ import macfs
 import MMurl
 import windowinterface
 import features
+from compatibility import Boston
 
 class MainDialog:
 	def __init__(self, title):
@@ -59,7 +60,10 @@ class MainDialog:
 	def openfile_callback(self):
 		"""Callback for OPENFILE menu command"""
 		import windowinterface
-		filetypes = ['application/x-grins-project', 'application/smil']
+		if features.compatibility == Boston:
+			filetypes = ['application/smil', 'application/x-grins-project']
+		else:
+			filetypes = ['application/x-grins-project', 'application/smil']
 		if not features.lightweight:
 			filetypes.append('application/x-grins-cmif')
 		windowinterface.FileDialog('', '', filetypes, '',

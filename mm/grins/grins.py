@@ -24,13 +24,41 @@ def usage(msg):
 	sys.exit(2)
 
 from MainDialog import MainDialog
+from usercmd import *
 
 from version import version
-from usercmd import *
 
 class Main(MainDialog):
 	def __init__(self, opts, files):
+		import windowinterface, features
+		if hasattr(features, 'expiry_date') and features.expiry_date:
+			import time
+			import version
+			tm = time.localtime(time.time())
+			yymmdd = tm[:3]
+			if yymmdd > features.expiry_date:
+				rv = windowinterface.GetOKCancel(
+				   "This beta copy of GRiNS has expired.\n\n"
+				   "Do you want to check www.oratrix.com for a newer version?")
+				if rv == 0:
+					url = 'http://www.oratrix.com/indir/%s/update.html'%version.shortversion
+					windowinterface.htmlwindow(url)
+				sys.exit(0)
+		self.tmpopts = opts
+		self.tmpfiles = files
+		if hasattr(features, 'license_features_needed') and features.license_features_needed:
+			import license
+			self.tmplicensedialog = license.WaitLicense(self.do_init,
+					   features.license_features_needed)
+		else:
+			self.do_init()
+				
+	def do_init(self, license=None):
+		# We ignore the license, not needed in the player
 		import MMurl, TopLevel, windowinterface
+		opts, files = self.tmpopts, self.tmpfiles
+		del self.tmpopts
+		del self.tmpfiles
 		self._tracing = 0
 		self.nocontrol = 0	# For player compatability
 		self._closing = 0
@@ -52,7 +80,9 @@ class Main(MainDialog):
 			OPEN(callback = (self.open_callback, ())),
 			OPENFILE(callback = (self.openfile_callback, ())),
 			OPEN_RECENT(callback = self.open_recent_callback),	# Dynamic cascade
+			RELOAD(callback = (self.reload_callback, ())), 
 			PREFERENCES(callback = (self.preferences_callback, ())),
+			CHECKVERSION(callback=(self.checkversion_callback, ())),
 			EXIT(callback = (self.close_callback, ())),
 			]
 		import settings
@@ -99,14 +129,14 @@ class Main(MainDialog):
 			return
 		import settings
 		import posixpath
-		recent = settings.get('recent_player_documents')
+		recent = settings.get('recent_documents')
 		if url:
 			if url in recent:
 				recent.remove(url)
 			recent.insert(0, url)
 			if len(recent) > 5:
 				recent = recent[:5]
-			settings.set('recent_player_documents', recent)
+			settings.set('recent_documents', recent)
 			settings.save()
 		doclist = []
 		for url in recent:
@@ -114,9 +144,19 @@ class Main(MainDialog):
 			doclist.append( (base, (url,)))
 		self.set_recent_list(doclist)
 
+	def reload_callback(self):
+		# er.. on which toplevel?
+		print "DEBUG: grins.py: reload_callback called."
+		print "DEBUG: self.tops is: ", self.tops
+		for i in self.tops:
+			i.reload_callback()
+
 	def close_callback(self, exitcallback=None):
 		for top in self.tops[:]:
 			top.destroy()
+		if sys.platform == 'mac':
+			import MacOS
+			MacOS.OutputSeen()
 		if exitcallback:
 			rtn, arg = exitcallback
 			apply(rtn, arg)
@@ -146,6 +186,34 @@ class Main(MainDialog):
 	def prefschanged(self):
 		for top in self.tops:
 			top.prefschanged()
+
+	def checkversion_callback(self):
+		import MMurl
+		import version
+		import windowinterface
+		import settings
+		import string
+## For this verion we send the user to the web and let them check for themselves
+		url = 'http://www.oratrix.com/indir/%s/update.html'%version.shortversion
+##		url = 'http://www.oratrix.com/indir/%s/updatecheck.txt'%version.shortversion
+##		try:
+##			fp = MMurl.urlopen(url)
+##			data = fp.read()
+##			fp.close()
+##		except:
+##			windowinterface.showmessage('Unable to check for upgrade. You can try again later, or visit www.oratrix.com with your webbrowser.')
+##			return
+##		if not data:
+##			windowinterface.showmessage('You are running the latest version of the software')
+##			return
+##		cancel = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to hear more?')
+##		if cancel:
+##			return
+##		data = string.strip(data)
+##		# Pass the version and the second item of the license along.
+##		id = string.split(settings.get('license'), '-')[1]
+##		url = '%s?version=%s&id=%s'%(data, version.shortversion, id)
+		windowinterface.htmlwindow(url)
 
 	def closetop(self, top):
 		if self._closing:

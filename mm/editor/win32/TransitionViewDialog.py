@@ -1,7 +1,7 @@
-"""Dialog for the Usergroup View.
+"""Dialog for the Transition View.
 
-The Usergroup View is a window that displays a list of user groups and
-gives the ability to edit these user groups.
+The Transition View is a window that displays a list of transitions and
+gives the ability to edit these.
 
 """
 
@@ -11,7 +11,7 @@ import windowinterface
 from usercmd import *
 IMPL_AS_FORM=1
 
-class UsergroupViewDialog:
+class TransitionViewDialog:
 	def __init__(self):
 		self.__window = None
 		self.__callbacks={
@@ -46,7 +46,7 @@ class UsergroupViewDialog:
 	def createviewobj(self):
 		if self.__window: return
 		f=self.toplevel.window
-		w=f.newviewobj('ugview_')
+		w=f.newviewobj('trview_')
 		w.set_cmddict(self.__callbacks)
 		self.__window = w
 
@@ -56,7 +56,7 @@ class UsergroupViewDialog:
 		if self.__window.GetSafeHwnd()==0:
 			f=self.toplevel.window
 			if IMPL_AS_FORM: # form
-				f.showview(self.__window,'ugview_')
+				f.showview(self.__window,'trview_')
 				self.__window.show()
 			else: # dlgbar
 				f=self.toplevel.window
@@ -72,7 +72,7 @@ class UsergroupViewDialog:
 		return self.__window.getgroup()
 
 	def setgroups(self, ugroups, pos):
-		"""Set the list of user groups.
+		"""Set the list of transitions .
 
 		Arguments (no defaults):
 		ugroups -- list of strings giving the names of the user groups
@@ -82,49 +82,3 @@ class UsergroupViewDialog:
 		if not self.__window:self.createviewobj()
 		self.__window.setgroups(ugroups, pos)
 
-
-class UsergroupEditDialog:
-	def __init__(self, ugroup, title, ustate, override, uid):
-		"""Create the UsergroupEdit dialog.
-
-		Create the dialog window (non-modal, so does not grab
-		the cursor) and pop it up.
-		"""
-		cbdict = {
-			'Cancel':(self.cancel_callback, ()),
-			'Restore':(self.restore_callback, ()),
-			'Apply':(self.apply_callback, ()),
-			'OK':(self.ok_callback, ()),
-			}
-		w=self.getparent().getwindow()
-		self.__window=w=windowinterface.UsergroupEditDialog(w)
-		w.do_init(ugroup, title, ustate, override, cbdict, uid)
-		w.show()
-
-	def showmessage(self, text):
-		windowinterface.showmessage(text, parent = self.__window)
-
-	def show(self):
-		"""Show the dialog (pop it up again)."""
-		self.__window.show()
-
-	def close(self):
-		"""Close the dialog."""
-		self.__window.close()
-		self.__window = None
-
-	def setstate(self, ugroup, title, ustate, override, uid):
-		"""Set the values in the dialog.
-
-		Arguments (no defaults):
-		ugroup -- string name of the user group
-		title -- string title of the user group
-		ustate -- string 'RENDERED' or 'NOT RENDERED'
-		override -- string 'visible' or 'hidden'
-		uid -- string UID of the user group
-		"""
-		self.__window.setstate(ugroup, title, ustate, override, uid)
-
-	def getstate(self):
-		"""Return the current values in the dialog."""
-		return self.__window.getstate()
