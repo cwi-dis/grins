@@ -46,7 +46,8 @@ class EditAnchorDlgBar(DlgBar):
 		self._composite=components.Static(self,grinsRC.IDC_STATIC1)
 		self._composite.attach_to_parent()
 		self._idedit_cb=1
-	
+		self._prevsel=0;
+
 	# Response to a chenge in the text of the edit box	
 	def OnEdit(self,id,code):
 		if not self._idedit_cb:return
@@ -55,8 +56,13 @@ class EditAnchorDlgBar(DlgBar):
 
 	# Response to combo box change
 	def OnChangeOption(self,id,code):
+		if code==win32con.CBN_DROPDOWN:
+			self._prevsel=self._options.getcursel()
 		if code==win32con.CBN_SELCHANGE and self._opt_cb:
-			apply(self._opt_cb,(self._options.getvalue(),))
+			strsel=self._options.getvalue()
+			if strsel[0]!='[' and strsel!='---':
+				apply(self._opt_cb,(strsel,))
+			else:self._options.setcursel(self._prevsel)
 
 	def setid(self,id):
 		self._idedit_cb=None
@@ -75,10 +81,10 @@ class AnchorDlgBar(DlgBar):
 			'Delete':components.Button(self,grinsRC.IDUC_DELETE),
 			'Export':components.Button(self,grinsRC.IDUC_EXPORT),
 			}
-		for i in self._buttons.keys():
-			parent.HookCommand(self.onCmd,b[i]._id)
-			b[i].attach_to_parent()
-			parent.HookCommandUpdate(parent.OnUpdateCmdEnable,b[i]._id)
+		for strid in self._buttons.keys():
+			parent.HookCommand(self.onCmd,b[strid]._id)
+			b[strid].attach_to_parent()
+			parent.HookCommandUpdate(parent.OnUpdateCmdEnable,b[strid]._id)
 		
 	# helper function that given a string id calls the command
 	def call(self,k):
@@ -277,6 +283,10 @@ class AnchorEditForm(docview.ListView):
 	# Called by the core to close this window
 	def close(self):
 		if hasattr(self,'GetParent'):
+			self.GetParent().ShowWindow(win32con.SW_HIDE)
+			self._stdDlgBar.DestroyWindow()
+			self._editBar.DestroyWindow()
+			self._itemBar.DestroyWindow()
 			self.GetParent().DestroyWindow()
 
 	# Called by the core to set the title of this view
