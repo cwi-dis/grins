@@ -17,7 +17,7 @@ import flags
 
 DEFAULT = 'Default'
 UNDEFINED = 'undefined'
-NEW_CHANNEL = 'New channel...'
+NEW_REGION = 'New region...'
 
 # There are two basic calls into this module (but see below for more):
 # showattreditor(node) creates an attribute editor form for a node
@@ -794,7 +794,7 @@ class ChannelWrapper(Wrapper):
 		return self.channel.stillvalid()
 
 	def maketitle(self):
-		return 'Properties of channel ' + self.channel.name
+		return 'Properties of region ' + self.channel.name
 
 	def getattr(self, name):
 		if name == '.cname': return self.channel.name
@@ -912,8 +912,8 @@ class ChannelWrapper(Wrapper):
 		if name == '.cname':
 			# Channelname -- special case
 			return (('name', ''), 'none',
-				'Channel name', 'default',
-				'Channel name', 'raw', flags.FLAG_ALL)
+				'Region name', 'default',
+				'Region name', 'raw', flags.FLAG_ALL)
 		return MMAttrdefs.getdef(name)
 
 	def valuerepr(self, name, value):
@@ -2363,7 +2363,7 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			regionList = regionList + self.newchannels
 
 			# add the special key which allow to add a new regions
-			regionList.append(NEW_CHANNEL)
+			regionList.append(NEW_REGION)
 					
 		return regionList
 		# end experimental code
@@ -2456,7 +2456,7 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		if hasattr(self, 'newchannels') and not self.newchannels:
 			if all:
 				all.append(None)
-			all = all + [NEW_CHANNEL]
+			all = all + [NEW_REGION]
 		return all
 
 	def parsevalue(self, str):
@@ -2530,7 +2530,7 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		self.__current = None
 			
 	def optioncb(self):
-		if self.getvalue() == NEW_CHANNEL:
+		if self.getvalue() == NEW_REGION:
 			windowinterface.settimer(0.01, (self.askchannelname, (self.newchannelname(),)))
 
 class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
