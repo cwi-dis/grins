@@ -73,6 +73,18 @@ SOURCE="$(InputPath)"
 # End Group
 # Begin Source File
 
+SOURCE=.\RES\Drag.cur
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Draglink.cur
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\DragMove.cur
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\grins_ed.ico
 # End Source File
 # Begin Source File
@@ -105,7 +117,15 @@ SOURCE=.\RES\ico00001.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\Nodrop.cur
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\splashimg.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Stop.cur
 # End Source File
 # End Target
 # End Project
