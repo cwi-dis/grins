@@ -1152,9 +1152,15 @@ class TupleCtrl(AttrCtrl):
 		if not self._initctrl:
 			return self._attr.getcurrent()
 		default = string.split(self._attr.getdefault())
+		is_default = 1		# all values are empty
 		st=[]
 		for i in range(self._nedit):
-			st.append(self._attrval[i].gettext() or default[i])
+			v = self._attrval[i].gettext()
+			if v:
+				is_default = 0
+			st.append(v or default[i])
+		if is_default:
+			return ''
 		return string.join(st)
 
 	def OnEdit(self,id,code):
@@ -1172,11 +1178,13 @@ class IntTupleCtrl(TupleCtrl):
 	def setvalue(self, val):
 		if self._initctrl:
 			st = string.split(val)
-			if len(st) != self._nedit:
-				st = string.split(self._attr.getdefault())
+			is_default = len(st) != self._nedit
 			for i in range(self._nedit):
 				# this checks that the strings are all ints
-				s = '%d' % string.atoi(st[i])
+				if is_default:
+					s = ''
+				else:
+					s = '%d' % string.atoi(st[i])
 				self._attrval[i].settext(s)
 
 class IntTupleNolabelCtrl(IntTupleCtrl):
@@ -3728,8 +3736,8 @@ class QTPlayerMediaPreferencesGroup(AttrGroup):
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_QTMEDIAPREF
 
-class RealExtensionGroup(AttrGroup):
-	data=attrgrsdict['realExtensions']
+class RealExtension2Group(AttrGroup):
+	data=attrgrsdict['realExtensions2']
 	def __init__(self,data = None):
 		AttrGroup.__init__(self, self.data)
 
@@ -3750,6 +3758,16 @@ class RealExtensionGroup(AttrGroup):
 		cd[a] = IntTupleNolabelCtrl(wnd,a,(grinsRC.IDC_CKTL, grinsRC.IDC_CKTV1, grinsRC.IDC_CKTV2, grinsRC.IDC_CKTV3,))
 		a = self.getattr('reliable')
 		cd[a] = OptionsCheckCtrl(wnd,a,(grinsRC.IDC_RELIABLE,))
+		return cd
+
+class RealExtensionGroup(RealExtension2Group):
+	data=attrgrsdict['realExtensions']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_REALEXTENSION2
+
+	def createctrls(self, wnd):
+		cd = RealExtension2Group.createctrls(self, wnd)
 		a = self.getattr('strbitrate')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_BITRL, grinsRC.IDC_BITRV,))
 		return cd
@@ -4117,11 +4135,11 @@ class SystemGroup(PreferencesGroup):
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
 		return cd
 
-class SystemGroup2(SnapSystemGroup):
-	data=attrgrsdict['system2']
+class SystemGroup3(SnapSystemGroup):
+	data=attrgrsdict['system3']
 	nodefault = 0
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_S1R3S6
+		return grinsRC.IDD_EDITATTR_S1R3S8
 
 	def createctrls(self,wnd):
 		cd = SnapSystemGroup.createctrls(self,wnd)
@@ -4144,6 +4162,15 @@ class SystemGroup2(SnapSystemGroup):
 		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_SAUDIODESCL,grinsRC.IDC_SAUDIODESCV1, grinsRC.IDC_SAUDIODESCV2, grinsRC.IDC_SAUDIODESCV3))
 		a = self.getattr('system_overdub_or_caption')
 		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_DUBSUBL,grinsRC.IDC_42,grinsRC.IDC_43,grinsRC.IDC_44))
+		return cd
+
+class SystemGroup2(SystemGroup3):
+	data=attrgrsdict['system2']
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S1R3S6
+
+	def createctrls(self,wnd):
+		cd = SystemGroup3.createctrls(self,wnd)
 		a = self.getattr('u_group')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SCUSTOMTESTSL,grinsRC.IDC_SCUSTOMTESTSV))
 		return cd
@@ -4958,6 +4985,7 @@ groupsui={
 	'snapsystem':SnapSystemGroup,
 	'system':SystemGroup,
 	'system2':SystemGroup2,
+	'system3':SystemGroup3,
 	'preferences':PreferencesGroup,
 	'preferences2':Preferences2Group,
 	'name':NameGroup,
@@ -4987,6 +5015,7 @@ groupsui={
 	'activeduration1':ActiveDuration1Group,
 	'activeduration2':ActiveDuration2Group,
 	'realExtensions':RealExtensionGroup,
+	'realExtensions2':RealExtension2Group,
 	
 	'qtpreferences':QTPlayerPreferencesGroup,
 	'qtmediapreferences':QTPlayerMediaPreferencesGroup,

@@ -85,6 +85,22 @@ attrgrs=(
 		'system_component',
 		]},
 
+	{'name':'system3',
+	'title':'System properties',
+	'attrs':[
+		'system_bitrate',
+		'system_captions',
+		'system_language',
+		'system_overdub_or_caption',
+		'system_required',
+		'system_screen_depth',
+		'system_screen_size',
+		'system_operating_system',
+		'system_cpu',
+		'system_audiodesc',
+		'system_component',
+		]},
+
 	{'name':'system',
 	'title': 'System properties',
 	'attrs':[
@@ -582,7 +598,7 @@ attrgrs=(
 	{'name':'beginlist2',
 	'title':'Begin',
 	'attrs':['beginlist',
-			'restart', 'restartDefault',
+		 'restart', 'restartDefault',
 		]},
 
 	{'name':'beginlist',
@@ -618,6 +634,17 @@ attrgrs=(
 		  'mediaOpacity',
 		  'reliable',
 		  'strbitrate',
+		  ],
+	 },
+
+	{'name':'realExtensions2',
+	 'title':'Real extensions',
+	 'attrs':['backgroundOpacity',
+		  'chromaKey',
+		  'chromaKeyOpacity',
+		  'chromaKeyTolerance',
+		  'mediaOpacity',
+		  'reliable',
 		  ],
 	 },
 

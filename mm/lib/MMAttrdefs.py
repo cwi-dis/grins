@@ -117,8 +117,6 @@ if __debug__:
 						binary_flags = binary_flags | FLAG_G2
 					elif fl == 'qt':
 						binary_flags = binary_flags | FLAG_QT
-					elif fl == 'snap':
-						binary_flags = binary_flags | FLAG_SNAP
 					elif fl == 'all':
 						binary_flags = binary_flags | FLAG_ALL
 

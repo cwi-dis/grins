@@ -908,13 +908,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 				break
 		return cmd
 
-#  	def set_grins_snap_features(self):
-# 		# Assert features.version == 'grins snap!'
-#		id_openrecent = usercmdui.usercmd2id(OPEN_RECENT)
-# 		self.HookCommandUpdate(self.OnUpdateCmdDissable, id_openrecent);
-
-# 		print "DEBUG: I think it worked..";
-
 	# END CMD LIST SECTION
 	###############################################
 
