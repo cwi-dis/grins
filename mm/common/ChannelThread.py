@@ -64,7 +64,7 @@ class _ChannelThread:
 		if debug:
 			print 'ChannelThread.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if not self._is_shown or not node.IsPlayable() \
+		if not self._is_shown or not node.ShouldPlay() \
 		   or self.syncplay:
 			self.play_1()
 			return
@@ -218,7 +218,7 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		if debug:
 			print 'ChannelWindowThread.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if not self._is_shown or not node.IsPlayable() \
+		if not self._is_shown or not node.ShouldPlay() \
 		   or self.syncplay:
 			self.play_1()
 			return
