@@ -797,7 +797,7 @@ class MMNode(MMNodeBase.MMNode):
 		srlist.append((prereqs, actions))
 		srlist.append(([(SCHED_STOP, self)],
 			       last_actions + out1))
-		tlist.append((SCHED_DONE, self))
+##		tlist.append((SCHED_DONE, self))
 		srlist.append(([(TERMINATE, self)], tlist))
 		for ev in in1:
 			srlist.append(([ev], [(TERMINATE, self)]))
