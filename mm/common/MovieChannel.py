@@ -18,14 +18,15 @@ class MovieChannel(ChannelWindowThread):
 		try:
 			vfile = VFile.RandomVinFile(filename)
 		except (EOFError, IOError, VFile.Error), msg:
-			if type(msg) is type(()):
+			if type(msg) is type(self):
+				if hasattr(msg, 'strerror'):
+					msg = msg.strerror
+				else:
+					msg = msg.args[0]
+			elif type(msg) is type(()):
 				msg = msg[1]
 			self.errormsg(node, filename + ':\n' + msg)
-			print 'Error: ' + filename + ': ' + msg
 			return 1
-##		except IOError, msg:
-##			print 'IO Error: ' + `msg`
-##			return 1
 		try:
 			vfile.readcache()
 		except VFile.Error:
@@ -46,6 +47,8 @@ class MovieChannel(ChannelWindowThread):
 			self.threads.arm(vfile.fp, 0, 0, arminfo, None,
 				  self.syncarm)
 		except RuntimeError, msg:
+			if type(msg) is type(self):
+				msg = msg.args[0]
 			print 'Bad movie file', `vfile.filename`, msg
 			return 1
 		return self.syncarm

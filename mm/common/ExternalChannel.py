@@ -49,7 +49,7 @@ if os.name == 'posix':
 		try:
 			pid = os.fork()
 		except os.error, msg:
-			print 'fork:', msg
+			print 'fork:', msg[1]
 			return None
 		if pid == 0: # Child
 			os.execvp(arglist[0], arglist)

@@ -147,7 +147,12 @@ def main():
 			f = open(fn, 'r')
 			f.close()
 		except IOError, msg:
-			sys.stderr.write(fn + ': cannot open ' + `msg` + '\n')
+			import types
+			if type(msg) is types.InstanceType:
+				msg = msg.strerror
+			else:
+				msg = msg[1]
+			sys.stderr.write('%s: cannot open: %s\n' % (fn, msg))
 			sys.exit(2)
 
 	# patch the module search path

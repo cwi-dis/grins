@@ -169,6 +169,11 @@ class TopLevel(ViewDialog):
 		try:
 			top = TopLevel(self.main, filename, 0)
 		except (IOError, MMExc.MTypeError, MMExc.MSyntaxError), msg:
+			if type(msg) is type(self):
+				if hasattr(msg, 'strerror'):
+					msg = msg.strerror
+				else:
+					msg = msg.args[0]
 			windowinterface.showmessage('Open operation failed.\n'+
 						    'File: '+filename+'\n'+
 						    'Error: '+`msg`)
@@ -267,7 +272,7 @@ class TopLevel(ViewDialog):
 		except IOError, msg:
 			windowinterface.showmessage('Save operation failed.\n'+
 						    'File: '+filename+'\n'+
-						    'Error: '+`msg`)
+						    'Error: '+msg[1])
 			return 0
 		print 'done saving.'
 		self.changed = 0
@@ -431,6 +436,11 @@ class TopLevel(ViewDialog):
 			try:
 				top = TopLevel(self.main, filename, 0)
 			except (IOError, MMExc.MTypeError, MMExc.MSyntaxError), msg:
+				if type(msg) is type(self):
+					if hasattr(msg, 'strerror'):
+						msg = msg.strerror
+					else:
+						msg = msg.args[0]
 				windowinterface.showmessage(
 					'Open operation failed.\n'+
 					'File: '+filename+'\n'+

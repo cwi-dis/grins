@@ -25,9 +25,7 @@ class MpegChannel(ChannelWindowThread):
 			filename = urllib.urlretrieve(filename)[0]
 			fp = open(filename, 'rb')
 		except IOError, msg:
-			if type(msg) is type(()):
-				msg = msg[1]
-			self.errormsg(node, filename + ':\n' + msg)
+			self.errormsg(node, filename + ':\n' + msg[1])
 			return 1
 		try:
 			import MMAttrdefs, GLLock
@@ -36,6 +34,8 @@ class MpegChannel(ChannelWindowThread):
 			self.threads.arm(fp, 0, 0, arminfo, None,
 				  self.syncarm)
 		except RuntimeError, msg:
+			if type(msg) is type(self):
+				msg = msg.args[0]
 			print 'Bad mpeg file', `filename`, msg
 			return 1
 

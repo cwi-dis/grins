@@ -1161,7 +1161,7 @@ class ChannelWindow(Channel):
 		else:
 			nmsg = ''
 		windowinterface.showmessage(
-			'While arming %s on channel %s:\n%s' %
+			'While arming%s on channel %s:\n%s' %
 				(nmsg, self._name, msg),
 			mtype = 'warning', grab = self.window)
 

@@ -85,7 +85,7 @@ class ArcInfo(ArcInfoDialog):
 		try:
 			duration = SoundDuration.get(filename)
 			markers = SoundDuration.getmarkers(filename)
-		except IOError, msg:
+		except IOError:
 			pass
 		options = ['*Begin* (0.0)']
 		for id, pos, name in markers:

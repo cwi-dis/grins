@@ -33,7 +33,7 @@ class ShellChannel(Channel):
 			try:
 				pid, sts = os.waitpid(self.pid, 0100)
 			except os.error, msg:
-				print 'waitpid:', msg
+				print 'waitpid:', msg[1]
 				pid, sts = 0, 0
 			if pid == 0:
 				# Try again in a second
@@ -61,7 +61,7 @@ class ShellChannel(Channel):
 					os.kill(self.pid, 9)
 					pid, sts = os.waitpid(self.pid, 0)
 			except os.error, msg:
-				print 'kill:', msg
+				print 'kill:', msg[1]
 		self.pid = None
 		Channel.playstop(self)
 
@@ -69,7 +69,7 @@ def startprog(prog, argv):
 	try:
 		pid = os.fork()
 	except os.error, msg:
-		print 'fork:', msg
+		print 'fork:', msg[1]
 		return None
 	except AttributeError:
 		print 'ShellChannel cannot work on this system'
