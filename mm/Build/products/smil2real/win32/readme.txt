@@ -1,8 +1,8 @@
-GRiNS Editor for Real, Version 2.0
+GRiNS Editor for RealONE
 ==================================
 
-GRiNS Editor for Real, Version 2.0 is a SMIL 2.0 editor and player for
-the Macintosh and Windows platforms.  The editor allows the creation
+GRiNS Editor for RealONE is a SMIL 2.0 editor and previewer for
+Wndows-98/2000/XP.  The editor allows the creation
 of SMIL 2.0 documents for the RealNetworks' RealONE player.
 
 System Requirements
@@ -27,5 +27,5 @@ system.  This player is used to play back RealMedia files.
 For more information see:
     http://www.oratrix.com/
 or send e-mail to
-    grins-smil2.0@oratrix.com (technical support)
+    grins-support@oratrix.com (technical support)
     info@oratrix.com (non-technical questions)
