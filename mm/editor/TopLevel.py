@@ -1247,8 +1247,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			progress = windowinterface.ProgressDialog("Publishing", self.cancel_upload)
 			progress.set('Publishing document...')
 			progress = progress.set
-			import SMILTreeWriteHtmlTime
-			SMILTreeWriteHtmlTime.WriteFileAsHtmlTime(self.root, filename,
+			import SMILTreeWriteXhtmlSmil
+			SMILTreeWriteXhtmlSmil.WriteFileAsXhtmlSmil(self.root, filename,
 						cleanSMIL = 1,
 						grinsExt = 0,
 						copyFiles = 0,
