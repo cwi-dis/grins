@@ -631,12 +631,15 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			# draw line between copies
 			displist.drawline((150,150,150), [(box[0]+box[2],box[1]+box[3]-1),(x,box[1]+box[3]-1)])
 			coordinates = (x, y, imw, imh)
-			box = displist.display_image_from_file(
-				image_filename,
-				center = 0,
-				coordinates = coordinates,
-				fit = 'icon')
-			displist.drawbox(box)
+			if image_filename:
+				box = displist.display_image_from_file(
+					image_filename,
+					center = 0,
+					coordinates = coordinates,
+					fit = 'icon')
+				displist.drawbox(box)
+			else:
+				box = (x, y, 0, imh)
 			if forcetext or (self.iconbox is not None and self.iconbox.vertical):
 				displist.setpos(box[0] + box[2] + 2, box[1] + box[3] - 2)
 				displist.writestr(name)
