@@ -17,7 +17,7 @@ def getduration(filename):
 	except (ValueError, Qt.Error), arg:
 		print 'Cannot open QT movie:',filename, arg
 		return 0
-	movie, dummy = Qt.NewMovieFromFile(movieResRef,
+	movie, d1, d2 = Qt.NewMovieFromFile(movieResRef, 0,
 		QuickTime.newMovieDontResolveDataRefs)
 	duration = movie.GetMovieDuration()
 	scale = movie.GetMovieTimeScale()
