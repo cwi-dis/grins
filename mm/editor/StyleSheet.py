@@ -23,7 +23,7 @@ class StyleEditor() = ViewDialog(), BasicDialog():
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
 		width, height = MMAttrdefs.getattr(self.root, 'style_winsize')
-		return BasicDialog.init(self, (width, height, 'Style editor'))
+		return BasicDialog.init(self, (width, height, 'Style sheet'))
 	#
 	def transaction(self):
 		return 1
