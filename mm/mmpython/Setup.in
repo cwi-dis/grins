@@ -4,13 +4,17 @@ IMGDIR=		$(EXTDIR)/img
 BASELIB=	$(X11DIR)/lib.a $(IMGDIR)/lib.a
 BASESETUP=	$(X11DIR)/Setup $(IMGDIR)/Setup
 PYTHONPATH=	$(COREPYTHONPATH)$(XPATH)$(IMGPATH)
+MPEGDIR=	/ufs/sjoerd/ansjovis/src/ooMPEG/$(MACHDEP)
 
 # Irix 5.X version, with support both for GL and X.
 
 mm mmmodule.o -DMM_DEBUG
 
 moviechannel moviechannelmodule.o -DMM_DEBUG -DUSE_CL -DUSE_XM -DUSE_GL -I$(X11DIR) -lcl
-mpegchannel mpegchannelmodule.o -DMM_DEBUG -DUSE_CL -DUSE_XM -DUSE_GL -I$(X11DIR) -lcl
+# new version:
+mpegchannel mpegchannelmodule.o -DMM_DEBUG -DUSE_XM -I$(X11DIR) -I$(MPEGDIR) -L$(MPEGDIR) -lmpeg
+# old version:
+#mpegchannel mpegchannelmodule.o -DMM_DEBUG -DUSE_CL -DUSE_XM -DUSE_GL -I$(X11DIR) -lcl
 soundchannel soundchannelmodule.o -DMM_DEBUG -laudio -lawareaudio
 #nullchannel nullchannelmodule.o -DMM_DEBUG
 #imagechannel imagechannelmodule.o -DMM_DEBUG
@@ -20,4 +24,5 @@ soundchannel soundchannelmodule.o -DMM_DEBUG -laudio -lawareaudio
 # mm mmmodule.o -DMM_DEBUG -DSOLARIS -lposix4
 # 
 # moviechannel moviechannelmodule.o -DMM_DEBUG -DUSE_XM -I$(X11DIR) -I/usr/dt/include -I/usr/openwin/include -DSOLARIS
+# mpegchannel mpegchannelmodule.o -DMM_DEBUG -DUSE_XM -I$(X11DIR) -I$(MPEGDIR) -L$(MPEGDIR) -lmpeg
 # soundchannel soundchannelmodule.o -DMM_DEBUG -I/usr/demo/SOUND/include -L/usr/demo/SOUND/lib -laudio
