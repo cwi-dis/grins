@@ -508,8 +508,12 @@ class EditMgr(Clipboard.Clipboard):
 
 	def undo_delchannel(self, name, i, attrdict):
 		self.addchannel(name, i, attrdict['type'])
+		base_window = attrdict.get('base_window')
+		# IMPORTANT: base_window have to be created in first
+		if base_window != None:
+			self.setchannelattr(name, 'base_window', base_window)			
 		for key, val in attrdict.items():
-			if key == 'type':
+			if key in ('type', 'base_window'):
 				continue
 			self.setchannelattr(name, key, val)
 
