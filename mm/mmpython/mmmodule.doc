@@ -63,7 +63,7 @@ resized()
 	Called when the main loop notices that the window has changed
 	size.
 
-arm(file, delay, duration, attrlist, anchorlist)
+arm(file, delay, duration, attrlist, anchorlist, synchronous)
 	Prepare to play file 'file' next, and try to have it done
 	within 'delay seconds. 'duration' is an estimate of how long
 	the arm operation will take. These parameters are only used to
@@ -71,7 +71,10 @@ arm(file, delay, duration, attrlist, anchorlist)
 	the previous play is finished. Attrlist is again a list of
 	(name, value) pairs like in the init call. Anchorlist is a
 	list of tuples where each tuple describes (in a channel
-	dependent way) how and where to show an anchor.
+	dependent way) how and where to show an anchor.  Synchronous
+	indicates whether arming should be synchronous or not.  If
+	arming is done synchronously, no event will be generated to
+	indicate that the arm finished.
 	[ In the existing channels, attrlist is actually a dictionary.
 	  In it, all sorts of parameters are passed, such as
 	  window-id and audio parameters. ]
