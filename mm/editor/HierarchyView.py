@@ -69,6 +69,7 @@ class HierarchyView(HierarchyViewDialog):
 			ATTRIBUTES(callback = (self.attrcall, ())),
 			CONTENT(callback = (self.editcall, ())),
 			ANCHORS(callback = (self.anchorcall, ())),
+			CREATEANCHOR(callback = (self.createanchorcall, ())),
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
 
 			PUSHFOCUS(callback = (self.focuscall, ())),
@@ -693,6 +694,9 @@ class HierarchyView(HierarchyViewDialog):
 	def anchorcall(self):
 		if self.focusobj: self.focusobj.anchorcall()
 
+	def createanchorcall(self):
+		if self.focusobj: self.focusobj.createanchorcall()
+
 	def hyperlinkcall(self):
 		if self.focusobj: self.focusobj.hyperlinkcall()
 
@@ -1008,6 +1012,9 @@ class Object:
 		self.mother.toplevel.setwaiting()
 		import AnchorEdit
 		AnchorEdit.showanchoreditor(self.mother.toplevel, self.node)
+
+	def createanchorcall(self):
+		self.mother.toplevel.links.wholenodeanchor(self.node)
 
 	def hyperlinkcall(self):
 		self.mother.toplevel.links.finish_link(self.node)
