@@ -4,6 +4,7 @@ __version__ = "$Id$"
 
 
 import os
+import string
 import windowinterface
 
 import MMAttrdefs
@@ -301,7 +302,7 @@ class NodeInfo(NodeInfoDialog):
 		if self.type != 'ext':
 			# interior node, doesn't make much sense
 			return 'null'
-		import mimetypes, string
+		import mimetypes
 		mtype = mimetypes.guess_type(self.url)[0]
 		if mtype is None:
 			# just guessing now...
@@ -504,34 +505,43 @@ class NodeInfo(NodeInfoDialog):
 	# dir from the resulting pathname.
 	#
 	def browser_callback(self):
+		node = self.node
 		import MMurl, urlparse
 		cwd = self.toplevel.dirname
 		if cwd:
-			utype, host, path, params, query, fragment = urlparse.urlparse(cwd)
-			if (not utype or utype == 'file') and \
-			   (not host or host == 'localhost'):
-				cwd = MMurl.url2pathname(path)
-				if not os.path.isabs(cwd):
-					cwd = os.path.join(os.getcwd(), cwd)
-			else:
-				cwd = os.getcwd()
+			cwd = MMurl.url2pathname(cwd)
+			if not os.path.isabs(cwd):
+				cwd = os.path.join(os.getcwd(), cwd)
 		else:
 			cwd = os.getcwd()
 		url = self.url
 		if url == '' or url == '/dev/null':
 			dir, file = cwd, ''
 		else:
+			url = node.GetContext().findurl(url)
 			utype, host, path, params, query, fragment = urlparse.urlparse(url)
-			if (utype and utype != 'file') or (host and host != 'localhost'):
-				windowinterface.showmessage('Cannot browse URLs')
-				return
-			file = MMurl.url2pathname(path)
-			file = os.path.join(cwd, file)
-			if os.path.isdir(file):
-				dir, file = file, ''
+			if (utype and utype != 'file') or \
+			   (host and host != 'localhost'):
+				dir, file = cwd, ''
 			else:
-				dir, file = os.path.split(file)
-		windowinterface.FileDialog('Select file', dir, '*', file,
+				file = MMurl.url2pathname(path)
+				file = os.path.join(cwd, file)
+				if os.path.isdir(file):
+					dir, file = file, ''
+				else:
+					dir, file = os.path.split(file)
+		if node.GetType() == 'slide':
+			chtype = 'image'
+		else:
+			ch = node.GetContext().getchannel(self.channelname)
+			if ch:
+				chtype = ch['type']
+			else:
+				chtype = None
+		mtypes = ChannelMime.ChannelMime.get(chtype, [])
+		if chtype:
+			mtypes = ['/%s file' % string.capitalize(chtype)] + mtypes
+		windowinterface.FileDialog('Select file', dir, mtypes, file,
 					   self.browserfile_callback, None,
 					   existing=1)
 
