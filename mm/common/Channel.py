@@ -20,6 +20,13 @@ PIDLE = 1
 PLAYING = 2
 PLAYED = 3
 
+def isin(elem, list):
+	# faster than "elem in list"
+	for x in list:
+		if elem is x:
+			return 1
+	return 0
+
 class Channel:
 	#
 	# The following methods can be called by higher levels.
@@ -199,8 +206,14 @@ class Channel:
 			chan._want_shown = want_shown
 		self.do_hide()
 		for chan in channels:
-			if self in chan._subchannels:
+			if isin(self, chan._subchannels):
+##			if self in chan._subchannels:
 				chan._subchannels.remove(self)
+			# XXX--is this faster?
+##			try:
+##				chan._subchannels.remove(self)
+##			except ValueError:
+##				pass
 		self._subchannels = subchannels
 		if self._armstate == ARMING:
 			self.arm_1()
@@ -266,7 +279,7 @@ class Channel:
 		if not self._armcontext:
 			raise error, 'no context to arm in'
 		self._armstate = ARMING
-		if self._armed_node == node:
+		if self._armed_node is node:
 		        # Same as last time, apparently
 			print 'Same node on', self # DBG
 			return 1
@@ -425,7 +438,7 @@ class Channel:
 			return 0
 		didfire = self._playcontext.anchorfired(node, list, None)
 		if didfire and self._playstate == PLAYING and \
-		   self._played_node == node:
+		   self._played_node is node:
 		    if not self.syncplay:
 			self._playcontext.play_done(node)
 		    self._playstate = PLAYED
@@ -587,13 +600,15 @@ class Channel:
 		# complete idle state.
 		if debug:
 			print 'Channel.stopcontext'+`(self, ctx)`
-		if not ctx in (self._playcontext, self._armcontext):
+		if ctx is not self._playcontext and \
+		   ctx is not self._armcontext:
+##		if not ctx in (self._playcontext, self._armcontext):
 			raise error, 'stopcontext with unknown context'
-		if self._playcontext == ctx:
+		if self._playcontext is ctx:
 			if self._playstate in (PLAYING, PLAYED):
 				self.stopplay(None)
 			self._playcontext = None
-		if self._armcontext == ctx:
+		if self._armcontext is ctx:
 			if self._armstate in (ARMING, ARMED):
 				self.stoparm()
 			self._armcontext = None
@@ -842,8 +857,14 @@ class ChannelWindow(Channel):
 			pass
 		# create a window for this channel
 		for chan in channels:
-			if self in chan._subchannels:
+			if isin(self, chan._subchannels):
+##			if self in chan._subchannels:
 				chan._subchannels.remove(self)
+			# XXX--is this faster?
+##			try:
+##				chan._subchannels.remove(self)
+##			except ValueError:
+##				pass
 		pgeom = None
 		pchan = None
 		#
@@ -871,7 +892,8 @@ class ChannelWindow(Channel):
 					`self._name`+' not found',
 					type = 'error')
 				
-			if pchan and self in pchan._subchannels:
+			if isin(pchan, pchan._subchannels):
+##			if pchan and self in pchan._subchannels:
 				windowinterface.showmessage(
 					'Channel '+`self._name`+' is part of'+
 					' a base-window loop',

@@ -1675,7 +1675,7 @@ def findfont(fontname, pointsize):
 		fontnames = _fontmap[fontname]
 	except KeyError:
 		raise error, 'Unknown font ' + `fontname`
-	if type(fontnames) == type(''):
+	if type(fontnames) is StringType:
 		fontnames = [fontnames]
 	fontlist = []
 	for fontname in fontnames:
@@ -1976,7 +1976,7 @@ class _MultChoice(Dialog):
 
 	def callback(self, msg):
 		for i in range(len(self.msg_list)):
-			if msg == self.msg_list[i]:
+			if msg is self.msg_list[i]:
 				self.answer = i
 				if self.looping:
 					raise _end_loop
