@@ -45,7 +45,7 @@ default_settings = {
 	'showhidden': 0,		# Show override="hidden" custom tests
 	'hierarchy_minimum_sizes': 0,	# Leaf nodes drawn using min. size
 	'structure_name_size': 1,
-	'structure_label_center': 1,	# Center labels and thumbnails
+	'structure_label_center': 0,	# Center labels and thumbnails
 	'structure_thumbnails': 1,	# Display image thumbnails by default
 	'root_expanded': 0,		# Root node always expanded
 	'recent_documents':[],		# Recently used documents
