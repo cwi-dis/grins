@@ -149,27 +149,28 @@ class HtmlChannel(Channel.ChannelWindow):
 
 #################################
 	def updatefixedanchors(self, node):
-		if self._armstate != Channel.AIDLE or \
-		   self._playstate != Channel.PIDLE:
-			if self._played_node == node:
-				# Ok, all is well, we've played it.
-				return 1
-			windowinterface.showmessage('Cannot recompute anchorlist (channel busy)')
-			return 1
-		windowinterface.setwaiting()
-		context = Channel.AnchorContext()
-		self.startcontext(context)
-		save_syncarm = self.syncarm
-		self.syncarm = 1
-		self.arm(node)
-		save_synplay = self.syncplay
-		self.syncplay = 1
-		self.play(node)
-		self.stopplay(node)
-		self.syncarm = save_syncarm
-		self.syncplay = save_synplay
-		windowinterface.setready()
 		return 1
+##		if self._armstate != Channel.AIDLE or \
+##		   self._playstate != Channel.PIDLE:
+##			if self._played_node == node:
+##				# Ok, all is well, we've played it.
+##				return 1
+##			windowinterface.showmessage('Cannot recompute anchorlist (channel busy)')
+##			return 1
+##		windowinterface.setwaiting()
+##		context = Channel.AnchorContext()
+##		self.startcontext(context)
+##		save_syncarm = self.syncarm
+##		self.syncarm = 1
+##		self.arm(node)
+##		save_synplay = self.syncplay
+##		self.syncplay = 1
+##		self.play(node)
+##		self.stopplay(node)
+##		self.syncarm = save_syncarm
+##		self.syncplay = save_synplay
+##		windowinterface.setready()
+##		return 1
 			
 	def defanchor(self, node, anchor, cb):
 		# Anchors don't get edited in the HtmlChannel.  You
