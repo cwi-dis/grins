@@ -11,6 +11,13 @@ def haswmpruntimecomponents():
 		return 0
 	return 1
 
+msgUnresolvedDur =\
+"""Warning: Document duration is unresolved.
+Only an initial part of the document will be exported.
+The progress dialog may not be dismissed automatically.
+When you don't see any progress activity, please press Cancel to stop."""
+
+
 class Exporter:
 	def __init__(self, filename, player, profile=19):
 		self.filename = filename
@@ -33,8 +40,13 @@ class Exporter:
 		del self.topwindow
 	
 	def createWriter(self, window):
+		if self.topwindow:
+			print "Cannot export multiple topwindows"
+			return
 		self.topwindow = window
 		self.fulldur = self.player.userplayroot.calcfullduration()
+		if self.fulldur is None or self.fulldur<0:
+			windowinterface.showmessage(msgUnresolvedDur, mtype = 'warning', parent=self.parent)
 		self.writer = wmwriter.WMWriter(self, window.getDrawBuffer(), self.profile)
 		self._setAudioFormat()
 		self.writer.setOutputFilename(self.filename)
@@ -47,7 +59,7 @@ class Exporter:
 		"""Callback from the player: the bits in the window have changed"""
 		if self.topwindow:
 			if self.topwindow != window:
-				print "Cannot export multiple topwindows"
+				return
 			elif self.writer and self.progress:
 				dt = self.timefunc()
 				self.writer.update(dt)
