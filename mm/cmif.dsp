@@ -1296,6 +1296,10 @@ SOURCE=.\lib\SMIL.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\SMILCssResolver.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\SMILTreeRead.py
 # End Source File
 # Begin Source File
@@ -1333,6 +1337,10 @@ SOURCE=.\lib\svgpath.py
 # Begin Source File
 
 SOURCE=.\lib\trace.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\Transitions.py
 # End Source File
 # Begin Source File
 
