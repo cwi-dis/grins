@@ -702,7 +702,7 @@ class _CommonWindow:
 		right = int(right * scale + .5)
 
 		
-		if 0 and hasattr(reader, 'transparent'):	# XXXX To be done
+		if hasattr(reader, 'transparent'):
 			r = img.reader(imgformat.xrgb8, file)
 			for i in range(len(r.colormap)):
 				r.colormap[i] = 255, 255, 255
@@ -718,8 +718,7 @@ class _CommonWindow:
 				# grey2mono doesn't pad lines :-(
 				bitmap = bitmap + imageop.grey2mono(
 					image[i*w:(i+1)*w], w, 1, 128)
-			mask = tw._visual.CreateImage(1, X.XYPixmap, 0,
-						bitmap, w, h, 8, 0)
+			mask = mac_image.mkbitmap(w, h, imgformat.xbmpacked, bitmap)
 		else:
 			mask = None
 		try:
@@ -850,6 +849,17 @@ class _CommonWindow:
 			return
 		if not self._clip:
 			self._mkclip()
+			
+		# First do opaque subwindows, topmost first
+		still_to_do = []
+		for child in self._subwindows:
+			if child._transparent == 0 or \
+					(child._transparent == -1 and child.active_displist):
+				child._redraw()
+			else:
+				still_to_do.append(child)
+		
+		# Next do ourselves
 		saveclip = Qd.NewRgn()
 		Qd.GetClip(saveclip)
 		Qd.SetClip(self._clip)
@@ -861,14 +871,17 @@ class _CommonWindow:
 			self._do_redraw()
 		Qd.SetClip(saveclip)
 		Qd.DisposeRgn(saveclip)
-		for child in self._subwindows:
+		
+		# Finally do transparent children bottom-to-top
+		still_to_do.reverse()
+		for child in still_to_do:
 					child._redraw()
 					
 	def _do_redraw(self):
 		"""Do actual redraw"""
 		if self._active_displist:
 			self._active_displist._render()
-		else:
+		elif self._transparent == 0 or self._istoplevel:
 			Qd.EraseRect(self.qdrect())
 			
 	def _macsetwin(self):
@@ -1076,7 +1089,7 @@ class _DisplayList:
 		self._buttons = []
 		self._list = []
 		self._rendered = 0
-		if not self._window._transparent <= 0:
+		if self._window._transparent <= 0:
 			self._list.append(('clear',))
 		self._font = None
 		self._old_fontinfo = None
@@ -1146,8 +1159,12 @@ class _DisplayList:
 			dstrect = dstx, dsty, dstx+w, dsty+h
 ##			print 'IMAGE', image[0], srcrect, dstrect
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
-			Qd.CopyBits(image[0], wid.GetWindowPort().portBits, srcrect, dstrect,
-				QuickDraw.srcCopy+QuickDraw.ditherCopy, None)
+			if mask:
+				Qd.CopyMask(image[0], mask, wid.GetWindowPort().portBits,
+					srcrect, srcrect, dstrect)
+			else:
+				Qd.CopyBits(image[0], wid.GetWindowPort().portBits, srcrect, dstrect,
+					QuickDraw.srcCopy+QuickDraw.ditherCopy, None)
 			Qd.RGBBackColor(self._bgcolor)
 		elif cmd == 'line':
 			color = entry[1]
