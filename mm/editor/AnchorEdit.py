@@ -26,8 +26,8 @@ from AnchorDefs import *
 
 form_template = None	# result of flp.parse_form is stored here
 
-TypeValues = [ ATYPE_WHOLE, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO]
-TypeLabels = [ 'dest only', 'normal', 'pausing', 'auto-firing']
+TypeValues = [ ATYPE_WHOLE, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO, ATYPE_COMP]
+TypeLabels = [ 'dest only', 'normal', 'pausing', 'auto-firing', 'composite']
 
 # Top-level interface to show/hide a node's anchor editor
 
@@ -191,7 +191,8 @@ class AnchorEditor(Dialog):
 		for i in self.anchorlist:
 			id = i[A_ID]
 			if type(id) <> type(''): id = `id`
-			name = '#' + self.name + '.' + id
+			#name = '#' + self.name + '.' + id
+			name = id
 			self.anchor_browser.add_browser_line(name)
 		self.show_focus()
 		self.form.unfreeze_form()
@@ -204,11 +205,12 @@ class AnchorEditor(Dialog):
 			self.edit_button.hide_object()
 		if self.focus == None:
 			self.group.hide_object()
+			self.comp_group.hide_object()
 			self.id_input.hide_object()
 		else:
 			self.anchor_browser.select_browser_line(self.focus+1)
-			self.show_type()
 			self.group.show_object()
+			self.show_type()
 			id = self.anchorlist[self.focus]
 			self.id_input.set_input(id[0])
 			self.id_input.show_object()
@@ -220,6 +222,16 @@ class AnchorEditor(Dialog):
 		a = self.anchorlist[self.focus]
 		loc = a[A_ARGS]
 		type = a[A_TYPE]
+		self.form.freeze_form()
+		if type == ATYPE_COMP:
+			self.comp_group.show_object()
+			self.type_choice.hide_object()
+			self.edit_button.hide_object()
+			self.comp_name.label = `loc`
+			self.form.unfreeze_form()
+			return
+		self.type_choice.show_object()
+		self.comp_group.hide_object()
 		for i in range(len(TypeValues)):
 			if type == TypeValues[i]:
 				self.type_choice.set_choice(i+1)
@@ -227,6 +239,7 @@ class AnchorEditor(Dialog):
 			self.edit_button.show_object()
 		else:
 			self.edit_button.hide_object()
+		self.form.unfreeze_form()
 
 	def set_type(self, type):
 		if self.focus == None:
@@ -294,7 +307,8 @@ class AnchorEditor(Dialog):
 			if type(id) == type(0) and id > maxid:
 				maxid = id
 		id = `maxid + 1`
-		name = '#' + self.name + '.' + id
+		#name = '#' + self.name + '.' + id
+		name = id
 		self.anchorlist.append((id, ATYPE_WHOLE, []))
 		self.anchor_browser.add_browser_line(name)
 		self.focus = len(self.anchorlist)-1
@@ -348,6 +362,27 @@ class AnchorEditor(Dialog):
 		if self.focus == None:
 			print 'AnchorEdit: no focus in edit_callback'
 		self.set_type(None)
+
+	def export_callback(self, *dummy):
+		if self.focus == None:
+			print 'AnchorEdit: no focus in export_callback'
+			return
+		name = fl.show_input('External name for anchor:', '')
+		if not name:
+			return
+		rootanchors = MMAttrdefs.getattr(self.root, 'anchorlist')
+		for a in rootanchors:
+			if a[A_ID] == name:
+				fl.show_message('Already exists', '', '')
+				return
+		aid = self.anchorlist[self.focus][A_ID]
+		a = (name, ATYPE_COMP, [(self.uid, aid)])
+		rootanchors.append(a)
+		em = self.editmgr
+		if not em.transaction(): return 0
+		em.setnodeattr(self.root, 'anchorlist', rootanchors[:])
+		em.commit()
+		return 1
 
 
 # Routine to close all attribute editors in a node and its context.
