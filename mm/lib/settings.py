@@ -6,6 +6,9 @@ import os
 
 # some constants
 
+# settings that cannot be changed when running
+noprearm = 1				# don't prearm
+
 # Defaults:
 default_settings = {
 ##	'lightweight': 0,		# Lightweight version
@@ -14,10 +17,12 @@ default_settings = {
 	'system_captions': 0,		# Don't show captions
 	'system_language': 'en',	# English
 	'system_overdub_or_caption': 'caption', # Captions preferred over overdub
+	'system_overdub_or_subtitle':'subtitle', # Subtitles preferred over overdub
 ## Special case, see get() routine
 ##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
 ##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
 	'system_required': (),		# Needs special handling in match...
+	'system_audiodesc': 0,		# No audio description
 	'license': '',
 	'license_user' : '',
 	'license_organization' : '',
@@ -52,6 +57,8 @@ default_settings = {
 	'structure_darkpar': (91,126,114),
 	'structure_seqcolor': (116,154,189),
 	'structure_darkseq': (108,128,146),
+	'structure_exclcolor': (148,117,166), # for now equal to bag colors
+	'structure_darkexcl': (131,119,137),
 	'structure_textcolor': (0, 0, 0), # Black
 	'structure_ctextcolor': (50, 50, 50),	# Very dark gray
 	'structure_expcolor': (200, 200, 200), # Open disclosure triangle
@@ -96,11 +103,13 @@ default_settings = {
 user_settings = {}
 
 # Which of these should match exactly:
-EXACT=['system_captions', 'system_language', 'system_overdub_or_captions']
+EXACT=['system_captions', 'system_language', 'system_overdub_or_captions',
+       'system_audiodesc', 'system_overdub_or_subtitle']
 ELEMENT=['system_required']
 ALL=['system_bitrate', 'system_captions', 'system_language',
      'system_overdub_or_caption', 'system_screen_size',
-     'system_screen_depth', 'system_required']
+     'system_screen_depth', 'system_required', 'system_audiodesc',
+     'system_overdub_or_subtitle']
 
 NEEDS_RESTART=['cmif', 'vertical_structure', 'no_canvas_resize', 'root_expanded']
 

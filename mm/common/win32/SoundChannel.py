@@ -106,7 +106,7 @@ class SoundChannel(Channel.ChannelAsync):
 
 	# part of stop sequence
 	def stopplay(self, node):
-		if self.__playing is node:
+		if self.__playing is node and node is not None:
 			if self.__type == 'real':
 				if self.__rc:
 					self.__rc.stopit()

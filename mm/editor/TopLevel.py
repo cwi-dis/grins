@@ -79,12 +79,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				CHANNELVIEW(callback = (self.view_callback, (2,))),
 				LINKVIEW(callback = (self.view_callback, (3,))),
 				LAYOUTVIEW(callback = (self.view_callback, (4,))),
-				USERGROUPVIEW(callback = (self.view_callback, (5,))),
 				HIDE_CHANNELVIEW(callback = (self.hide_view_callback, (2,))),
 				HIDE_LINKVIEW(callback = (self.hide_view_callback, (3,))),
 				HIDE_LAYOUTVIEW(callback = (self.hide_view_callback, (4,))),
 				HIDE_USERGROUPVIEW(callback = (self.hide_view_callback, (5,))),
 				]
+			self.__ugroup = [USERGROUPVIEW(callback = (self.view_callback, (5,)))]
+		else:
+			self.__ugroup = []
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
 		#self.__save = None
@@ -115,6 +117,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def show(self):
 		TopLevelDialog.show(self)
+		if self.context.attributes.get('project_boston', 0):
+			self.setcommands(self.commandlist + self.__ugroup)
 		if self.hierarchyview is not None:
 			self.hierarchyview.show()
 
@@ -627,7 +631,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.main._update_recent(MMurl.pathname2url(filename))
 			self.changed = 0
 			self.new_file = 0
-		self.setcommands(self.commandlist)
+		if self.context.attributes.get('project_boston', 0):
+			self.setcommands(self.commandlist + self.__ugroup)
+		else:
+			self.setcommands(self.commandlist)
 		return 1
 		
 	def save_to_ftp(self, filename, smilurl, w_ftpparams, m_ftpparams):
@@ -683,7 +690,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		except KeyboardInterrupt:
 			windowinterface.showmessage('Upload interrupted.')
 			return 0
-		self.setcommands(self.commandlist) # Is this needed?? (Jack)
+		# Is this needed?? (Jack)
+		if self.context.attributes.get('project_boston', 0):
+			self.setcommands(self.commandlist + self.__ugroup)
+		else:
+			self.setcommands(self.commandlist)
 		return 1
 		
 	def cancel_upload(self):
@@ -846,7 +857,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self._in_prefschanged = 1
 		if not self.editmgr.transaction():
 			return
-		self.root.ResetPlayability()
 		self.editmgr.commit()
 		self._in_prefschanged = 0
 	#
@@ -867,6 +877,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# reshow source
 			import SMILTreeWrite
 			self.showsource(SMILTreeWrite.WriteString(self.root), optional=1)
+		if self.context.attributes.get('project_boston', 0):
+			self.setcommands(self.commandlist + self.__ugroup)
+		else:
+			self.setcommands(self.commandlist)
 		#if self.__save is not None:
 		#	self.setcommands(self.commandlist + [self.__save])
 
