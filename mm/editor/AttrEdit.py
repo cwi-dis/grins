@@ -584,12 +584,12 @@ class ChannelWrapper(Wrapper):
 		if name == '.cname':
 			if self.channel.name != value and \
 			   self.editmgr.context.getchannel(value):
-			    self.channel.attreditor.showmessage('Duplicate channel name (not changed)')
-			    return
+				self.channel.attreditor.showmessage('Duplicate channel name (not changed)')
+				return
 			self.editmgr.setchannelname(self.channel.name, value)
 		else:
-			self.editmgr.setchannelattr( \
-				  self.channel.name, name, value)
+			self.editmgr.setchannelattr(
+				self.channel.name, name, value)
 
 	def delattr(self, name):
 		if name == '.cname':
@@ -2070,9 +2070,9 @@ class NodeTypeAttrEditorField(PopupAttrEditorField):
 		return str
 
 	def valuerepr(self, value):
-		if value is 'bag':
+		if value == 'bag':
 			return 'choice'
-		if value is 'alt':
+		if value == 'alt':
 			return 'switch'
 		return value
 
