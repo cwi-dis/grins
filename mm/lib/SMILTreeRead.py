@@ -353,6 +353,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		mtype = None
 		nodetype = 'ext'
 		self.__is_ext = 1
+		if not url:
+			url = None
 		if url is not None:
 			url, tag = MMurl.splittag(url)
 			url = MMurl.basejoin(self.__base, url)
@@ -448,7 +450,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			chtype = mediatype
 			self.warning('unrecognized media type %s' % chtype)
-
+			import pdb ; pdb.set_trace()
 ## 		if attributes['encoding'] not in ('base64', 'UTF'):
 ## 			self.syntax_error('bad encoding parameter')
 
