@@ -896,7 +896,7 @@ class HierarchyView(HierarchyViewDialog):
 				msg = obj.node.errormessage
 				if not msg:
 					msg = 'No message for this item'
-				windowinterface.showmessage(msg, parent = self.window)
+				windowinterface.showmessage('%s'%msg, parent = self.window)
 			# Don't return but fall through
 
 	# Find the smallest object containing (x, y)
