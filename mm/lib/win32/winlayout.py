@@ -752,6 +752,7 @@ class LayoutWnd:
 			self.ShowWindow(win32con.SW_SHOW)
 			self.UpdateWindow()		
 	
+	def createTipWindow(self):
 		from components import TipWindow
 		self._tipwnd = TipWindow(self)
 		self._tipwnd.create()
@@ -800,7 +801,7 @@ class LayoutWnd:
 				self._tipwnd.moveTo((xs+8, ys), '%d, %d, %d, %d' % (x, y, w, h))
 			
 	def onDSelResize(self, selection):
-		if self._lbuttondown is not None:
+		if self._lbuttondown is not None and self._tipwnd:
 			x, y, w, h = selection._rectb
 			xs, ys = self.ClientToScreen(self._lbuttondown)
 			self._tipwnd.moveTo((xs+8, ys), '%d, %d, %d, %d' % (x, y, w, h))
