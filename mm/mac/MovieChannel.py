@@ -28,6 +28,9 @@ class MovieChannel(ChannelWindow):
 		self.has_callback = 0
 		self.idleprocactive = 0
 		Qt.EnterMovies()
+		
+	def __del__(self):
+		pass ## Don't do this: Qt.ExitMovies()
 
 	def redraw(self):
 		if self.play_movie:
@@ -51,8 +54,10 @@ class MovieChannel(ChannelWindow):
 			self.arm_movie, d1, d2 = Qt.NewMovieFromFile(movieResRef, 0,
 					QuickTime.newMovieActive)
 		except (ValueError, Qt.Error), arg:
+			Qt.CloseMovieFile(movieResRef)
 			self.errormsg(node, 'Not a valid movie file: '+`arg`)
 			return 1
+		Qt.CloseMovieFile(movieResRef)
 		rate = self.arm_movie.GetMoviePreferredRate()
 		self.arm_movie.PrerollMovie(0, rate)
 		return 1
@@ -65,6 +70,7 @@ class MovieChannel(ChannelWindow):
 		self.play_movie.MoviesTask(0)
 		
 		if self.play_movie.IsMovieDone():
+			self.play_movie.StopMovie()
 			self.play_movie = None
 			if self.window:
 				self.window.setredrawfunc(None)
@@ -73,6 +79,8 @@ class MovieChannel(ChannelWindow):
 			
 	def do_play(self, node):
 		if not self.arm_movie:
+			if self.play_movie:
+				self.play_movie.StopMovie()
 			self.play_movie = None
 			self.playdone(0)
 			return
