@@ -123,6 +123,7 @@ class VideoChannel(ChannelWindowThread):
 				w._gc.foreground = w._convert_color(self.getbgcolor(node))
 			except AttributeError:
 				pass
+			print 'should skip',self._scheduler.timefunc()-node.start_time
 			self.threads.play()
 			thread_play_called = 1
 		if self._is_shown:
