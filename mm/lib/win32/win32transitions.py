@@ -14,7 +14,7 @@ import win32api
 class TransitionEngine:
 	def __init__(self, window, outtrans, runit, dict, cb):
 		self.windows = [window,]
-		self.__outtrans = outtrans
+		self.outtrans = outtrans
 		
 		self.__duration = dict.get('dur', 1)
 		self.__multiElement = dict.get('coordinated')
@@ -65,7 +65,7 @@ class TransitionEngine:
 			return
 		else:
 			# XXX: patch
-			if self.__outtrans and wnd._active_displist:
+			if self.outtrans and wnd._active_displist:
 				wnd._active_displist.close()
 		for win in self.windows:
 			win._transition = None
@@ -97,13 +97,11 @@ class TransitionEngine:
 				# do a normal painting on active surface
 				wnd.paintOnDDS(self._tosurf, wnd)
 		else:
-			# just paint what wnd is responsible for
-			# i.e. do not paint children
-			if self.__outtrans:
-				wnd.updateBackDDS(self._tosurf, exclwnd=wnd) 
+			if self.outtrans:
 				wnd._paintOnDDS(wnd._fromsurf, wnd._rect)
+				wnd.updateBackDDS(self._tosurf, exclwnd=wnd) 
 			else:
-				#wnd.updateBackDDS(wnd._fromsurf, exclwnd=wnd) 
+				wnd.updateBackDDS(wnd._fromsurf, exclwnd=wnd) 
 				wnd._paintOnDDS(self._tosurf, wnd._rect)
 	
 		fromsurf = 	wnd._fromsurf
@@ -229,9 +227,11 @@ class InlineTransitionEngine:
 		
 		if self.outtrans:
 			wnd._paintOnDDS(wnd._fromsurf, wnd._rect)
+			wnd.updateBackDDS(self._tosurf, exclwnd=wnd) 
 		else:
+			wnd.updateBackDDS(wnd._fromsurf, exclwnd=wnd) 
 			wnd._paintOnDDS(self._tosurf, wnd._rect)
-		
+
 		fromsurf = 	wnd._fromsurf
 		tosurf = self._tosurf	
 		tmpsurf  = self._tmp
@@ -254,7 +254,7 @@ class InlineTransitionEngine:
 		wnd = self.window
 		while 1:
 			try:
-				wnd._fromsurf = wnd.getBackDDS(exclwnd=wnd)
+				wnd._fromsurf = wnd.createDDS()
 				wnd._drawsurf = wnd.createDDS()
 				self._tosurf = wnd.createDDS()
 				self._tmp = wnd.createDDS()
