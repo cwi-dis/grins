@@ -98,6 +98,8 @@ null_dealloc(self)
 	mmobject *self;
 {
 	denter(null_dealloc);
+	if (self->mm_private == NULL)
+		return;
 }
 
 static struct mmfuncs null_channel_funcs = {

@@ -240,7 +240,9 @@ movie_free_old(p)
 	struct movie_data *p;
 {
 	XDECREF(p->m_index);
+	p->m_index = NULL;
 	XDECREF(p->m_f);
+	p->m_f = NULL;
 #ifdef USE_XM
 	if (p->m_image) {
 		XDestroyImage(p->m_image);
@@ -270,7 +272,8 @@ movie_dealloc(self)
 	int i;
 
 	denter(movie_dealloc);
-	(void) movie_finished(self);
+	if (self->mm_private == NULL)	/* apparantly not initialized yet */
+		return;
 	movie_free_old(&PRIV->m_play);
 	movie_free_old(&PRIV->m_arm);
 	(void) close(PRIV->m_pipefd[0]);
