@@ -31,7 +31,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		PlayerCore.__init__(self, toplevel)
 		self.load_geometry()
 		
-		import settings
 		from SMILCssResolver import SMILCssResolver
 		self.cssResolver = self.context.cssResolver
 			
@@ -308,17 +307,16 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	def usergroup_callback(self, name):
 		self.toplevel.setwaiting()
 		title, u_state, override, uid = self.context.usergroups[name]
-		if override == 'visible':
-			em = self.context.editmgr
-			if not em.transaction():
-				return
-			if u_state == 'RENDERED':
-				u_state = 'NOT_RENDERED'
-			else:
-				u_state = 'RENDERED'
-			em.delusergroup(name)
-			em.addusergroup(name, (title, u_state, override, uid))
-			em.commit()
+		em = self.context.editmgr
+		if not em.transaction():
+			return
+		if u_state == 'RENDERED':
+			u_state = 'NOT_RENDERED'
+		else:
+			u_state = 'RENDERED'
+		em.delusergroup(name)
+		em.addusergroup(name, (title, u_state, override, uid))
+		em.commit()
 		self.setusergroup(name, u_state == 'RENDERED')
 
 	def channel_callback(self, name):
@@ -378,9 +376,11 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.setchannels(channels)
 
 	def makeugroups(self):
+		import settings
 		ugroups = []
+		showhidden = settings.get('showhidden')
 		for name, (title, u_state, override, uid) in self.context.usergroups.items():
-			if override != 'visible':
+			if not showhidden and override != 'visible':
 				continue
 			if not title:
 				title = name

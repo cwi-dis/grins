@@ -1111,6 +1111,7 @@ class PreferenceWrapper(Wrapper):
 		'system_audiodesc': 'Whether to "show" audio descriptions',
 		'cmif': 'Enable CMIF-specific extensions',
 		'html_control': 'Choose between IE4 and WebsterPro HTML controls',
+		'showhidden': 'Show hidden custom tests',
 		}
 	__specprefs = {
 		'system_overdub_or_caption': 'Text captions (subtitles) or overdub',
