@@ -472,9 +472,10 @@ class SelectElementDlg(ResDialog):
 				itemid = self.insertMMObj(top, name, self.ET_TOPLAYOUT, self.ET_TOPLAYOUT)
 			self.__appendRegions(top, itemid)
 		self.__appendNodes(root)
-		for top in top_levels:
-			item = self._element2item.get(top)
-			if item: self.__expand(item)
+		if self._filter != 'topLayout':
+			for top in top_levels:
+				item = self._element2item.get(top)
+				if item: self.__expand(item)
 					
 	def __appendRegions(self, parent, itemid):
 		for reg in parent.GetChildren():
