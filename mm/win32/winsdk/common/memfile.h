@@ -74,18 +74,9 @@ class memfile
 
 	HANDLE get_handle() const { return m_hf;}
 	void reset_file_pointer() 
-		{ SetFilePointer(m_hf, 0, NULL, FILE_BEGIN);}
-
-	FILE* get_as_cfile()
-		{
-		if(m_hf != INVALID_HANDLE_VALUE)
-			CloseHandle(m_hf);
-		m_hf = INVALID_HANDLE_VALUE;
-		#ifdef UNICODE
-		return _wfopen(m_pfname, L"rb");
-		#else
-		return fopen(m_pfname, "rb");
-		#endif
+		{ 
+		//assert(m_hf != INVALID_HANDLE_VALUE); 
+		SetFilePointer(m_hf, 0, NULL, FILE_BEGIN);
 		}
 
 	private:
@@ -140,11 +131,7 @@ inline void memfile::reserve(DWORD dwBytes)
 	if(m_begin==NULL)
 		{
 		m_begin= (BYTE*)::HeapAlloc(GetProcessHeap(), 0, dwBytes);
-		if(m_begin==NULL)
-			{
-			//AfxMessageBox("Memory allocation failure");
-			return;
-			}
+		//assert(m_begin != NULL);
 		m_capacity= ::HeapSize(GetProcessHeap(), 0, m_begin);
 		}
 	else
@@ -178,6 +165,7 @@ inline bool memfile::open(LPCTSTR szFileName)
 	if (dwSize == 0xFFFFFFFF)
 		{
 		CloseHandle(hf);
+		hf = INVALID_HANDLE_VALUE;
 		return false;
 		}
 	m_hf = hf;
