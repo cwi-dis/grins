@@ -521,7 +521,7 @@ class FileCtrl(AttrCtrl):
 			if self.want_colon_after_label:
 				label = label + ':'
 			self._attrname.settext(label)
-		self._attrval.settext(self._attr.getcurrent())
+		self.setvalue(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
 		if not self._attr.mustshow():
@@ -567,6 +567,9 @@ class FileCtrl(AttrCtrl):
 	def settooltips(self,tooltipctrl):
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Choose File for URL',None,0)
+
+class FileNolabelCtrl(FileCtrl):
+	want_label = 0
 
 # a file ctrl with icon buttons play, pause and stop
 # indented for continous media preview
@@ -5316,6 +5319,86 @@ class GeneralAnchorGroup(AttrGroup):
 		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC5,grinsRC.IDC_COMBO4))
 		return cd
 
+class NonEmptyGroup(AttrGroup):
+	data = attrgrsdict['nonempty']
+	_attrnames = ('non_empty_icon',
+		      'non_empty_text',
+		      'non_empty_color',)
+	_pageresid = grinsRC.IDD_EDITATTR_NONEMPTYGROUP
+
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+		
+	def getpageresid(self):
+		return self._pageresid
+	
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr(self._attrnames[0])
+		cd[a] = FileNolabelCtrl(wnd, a, (grinsRC.IDC_STATIC1, grinsRC.IDC_EDIT2, grinsRC.IDC_BUTTON2,))
+		a = self.getattr(self._attrnames[1])
+		cd[a] = StringNolabelCtrl(wnd, a, (grinsRC.IDC_STATIC2, grinsRC.IDC_EDIT3,))
+		a = self.getattr(self._attrnames[2])
+		cd[a] = ColorNolabelCtrl(wnd, a, (grinsRC.IDC_STATIC3, grinsRC.IDC_EDIT4, grinsRC.IDC_BUTTON3,))
+		if len(self._attrnames) > 3:
+			a = self.getattr(self._attrnames[3])
+			cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC4,grinsRC.IDC_EDIT5))
+		return cd
+
+class EmptyGroup(NonEmptyGroup):
+	data = attrgrsdict['empty']
+	_attrnames = ('empty_icon',
+		      'empty_text',
+		      'empty_color',
+		      'empty_duration')
+	_pageresid = grinsRC.IDD_EDITATTR_EMPTYGROUP
+
+class TemplateGroup(AttrGroup):
+	data = attrgrsdict['template']
+	_pageresid = grinsRC.IDD_EDITATTR_TEMPLATE0
+
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+		
+	def getpageresid(self):
+		return self._pageresid
+	
+	def createctrlscommon(self,wnd,dur):
+		cd = {}
+		a = self.getattr('thumbnail_icon')
+		cd[a] = FileNolabelCtrl(wnd, a, (grinsRC.IDC_STATIC1, grinsRC.IDC_EDIT1, grinsRC.IDC_BUTTON1,))
+		a = self.getattr('thumbnail_scale')
+		cd[a] = OptionsCheckNolabelCtrl(wnd, a, (grinsRC.IDC_CHECK1,))
+		a = self.getattr('dropicon')
+		cd[a] = FileNolabelCtrl(wnd, a, (grinsRC.IDC_STATIC2, grinsRC.IDC_EDIT2, grinsRC.IDC_BUTTON2,))
+		if dur:
+			a = self.getattr('project_default_duration')
+			cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC4,grinsRC.IDC_EDIT3))
+		return cd
+
+	def createctrls(self,wnd):
+		return self.createctrlscommon(wnd,0)
+
+class Template1Group(TemplateGroup):
+	data = attrgrsdict['template1']
+	_pageresid = grinsRC.IDD_EDITATTR_TEMPLATE1
+
+	def createctrls(self,wnd):
+		cd = self.createctrlscommon(wnd,1)
+		a = self.getattr('project_forcechild')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_STATIC3, grinsRC.IDC_COMBO1))
+		return cd
+
+class Template2Group(TemplateGroup):
+	data = attrgrsdict['template2']
+	_pageresid = grinsRC.IDD_EDITATTR_TEMPLATE2
+
+	def createctrls(self,wnd):
+		cd = self.createctrlscommon(wnd,1)
+		a = self.getattr('project_autoroute')
+		cd[a] = OptionsCheckNolabelCtrl(wnd, a, (grinsRC.IDC_CHECK2,))
+		return cd
+
 ############################
 # platform dependent association
 # what we have implemented, anything else goes as singleton
@@ -5411,6 +5494,12 @@ groupsui={
 
 	'genanchor':GeneralAnchorGroup,
 	'specanchor':MiscAnchorGroup,
+
+	'empty':EmptyGroup,
+	'nonempty':NonEmptyGroup,
+	'template1':Template1Group,
+	'template2':Template2Group,
+	'template':TemplateGroup,
 	}
 
 ###########################

@@ -222,6 +222,16 @@ def getid(writer, node):
 	if writer.ids_used[name]:
 		return name
 
+def getforcechild(writer, node):
+	uid = getcmifattr(writer, node, "project_forcechild")
+	if not uid:
+		return
+	id = writer.uid2name.get(uid)
+	if not id:
+		return
+	writer.ids_used[id] = 1
+	return id
+
 def geturl(writer, node, attr):
 	val = node.GetAttrDef(attr, None)
 	if not val:
@@ -850,7 +860,7 @@ smil_attrs=[
 	("project_default_region_video", lambda writer, node:getcmifattr(writer, node, "project_default_region_video"), "project_default_region_video"),
 	("project_default_region_sound", lambda writer, node:getcmifattr(writer, node, "project_default_region_sound"), "project_default_region_sound"),
 	("project_default_region_text", lambda writer, node:getcmifattr(writer, node, "project_default_region_text"), "project_default_region_text"),
-	("project_forcechild", lambda writer, node:getcmifattr(writer, node, "project_forcechild"), "project_forcechild"),
+	("project_forcechild", getforcechild, "project_forcechild"),
 	("project_default_type", lambda writer, node:getcmifattr(writer, node, 'project_default_type'), "project_default_type"),
 	("project_bandwidth_fraction", lambda writer, node:getpercentage(writer, node, 'project_bandwidth_fraction'), "project_bandwidth_fraction"),
 	("type", getmimetype, "mimetype"),
