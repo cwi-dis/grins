@@ -6,7 +6,7 @@ import winstruct
 
 from appcon import *
 
-import usercmdui
+import usercmd, usercmdui
 import usercmdinterface
 
 class MainWnd(usercmdinterface.UserCmdInterface):
@@ -45,10 +45,12 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		if self._timer:
 			self.KillTimer(self._timer)
 			self._timer = 0
+		self.execute_cmd(usercmd.EXIT)
 		app = winuser.GetApplication()
 		app.SetMainWnd(None)
-		self.DestroyWindow()
+		wnd = self.__dict__['_obj_']
 		self.__dict__['_obj_'] = None
+		wnd.DestroyWindow()
 			
 	def OnTimer(self, params):
 		self._toplevel.serve_events(params)
@@ -58,7 +60,10 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		cmd = usercmdui.id2usercmd(cmdid)
 		print 'Cmd: id=%d usercmd=%s' % (cmdid, repr(cmd))
 		if cmd:
-			self.execute_cmd(cmd)
+			if cmd == usercmd.EXIT:
+				self.OnClose(params)
+			else:
+				self.execute_cmd(cmd)
 			return 
 		for cbd in self._dyncmds.values():
 			if cbd.has_key(cmdid):
