@@ -2,7 +2,7 @@
 #
 import sys, os
 import win32ui, win32con, win32api
-from pywin.framework import app, intpyapp
+from pywinlib.framework import app, intpyapp
 import traceback
 import longpath
 
@@ -11,15 +11,6 @@ def fix_argv():
 	for i in range(1, len(sys.argv)):
 		if os.path.exists(sys.argv[i]):
 			sys.argv[i] = longpath.short2longpath(sys.argv[i])
-
-try:
-	os.environ['GRINS_REMOTE_TRACE']
-	bRemoteTracing = 1
-except KeyError:
-	bRemoteTracing = 0
-
-if bRemoteTracing:
-	import win32traceutil
 
 def SafeCallbackCaller(fn, args):
 	try:
@@ -73,11 +64,10 @@ class GrinsApp(app.CApp):
 		afx.EnableControlContainer()
 		win32ui.SetAppName("GRiNS")
 		self.LoadMainFrame()
-		if not bRemoteTracing:
-			from pywin.framework import interact
-			interact.CreateInteractiveWindow()
-			# Maximize the interactive window.
-			interact.edit.currentView.GetParent().ShowWindow(win32con.SW_MAXIMIZE)
+		from pywinlib.framework import interact
+		interact.CreateInteractiveWindow()
+		# Maximize the interactive window.
+		interact.edit.currentView.GetParent().ShowWindow(win32con.SW_MAXIMIZE)
 
 	def Run(self):
 		self.BootGrins()
