@@ -96,9 +96,14 @@ class SoundChannel(ChannelAsync):
 			return 1
 		if player is None:
 			return 1
-		self.arm_loop = loopcount = self.getloop(node)
+		loopcount = self.getloop(node)
+		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
+		if repeatdur and loopcount == 1:
+			loopcount = 0
+		self.arm_loop = loopcount
 		if loopcount == 0:
 			loopcount = None
+		print 'DBG: repeatdur, loopcount', repeatdur, loopcount
 		try:
 			fn = MMurl.urlretrieve(fn)[0]
 			self.arm_fp = audio.reader(fn, loop=loopcount)
@@ -162,10 +167,6 @@ class SoundChannel(ChannelAsync):
 		self.play_loop = self.arm_loop
 		self.play_markers = self.armed_markers
 		self.arm_fp = None
-		duration = node.GetAttrDef('duration', None)
-		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
-		if repeatdur and self.play_loop == 1:
-			self.play_loop = 0
 		self.armed_markers = {}
 		rate = self.play_fp.getframerate()
 		for arc in node.sched_children:
@@ -182,6 +183,7 @@ class SoundChannel(ChannelAsync):
 		for marker, t in self.play_markers.items():
 			qid = self._scheduler.enter(t, 0, self.__marker, (node, marker))
 			self.__evid.append(qid)
+		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
 		if repeatdur > 0:
 			self.__qid = self._scheduler.enter(
 				repeatdur, 0, self.__stopplay, ())
@@ -261,7 +263,7 @@ class SoundChannel(ChannelAsync):
 			self.play_fp = None
 			if self.__qid is not None or self.play_loop == 0:
 				return
-			self._qid = self._scheduler.enter(
+			self.__qid = self._scheduler.enter(
 				float(nframes) / rate, 0,
 				self.playdone, (0,))
 		if self.__rc:
