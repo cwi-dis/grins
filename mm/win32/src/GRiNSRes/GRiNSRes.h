@@ -204,6 +204,7 @@
 #define IDD_EDITATTR_EVENTLIST          407
 #define IDD_ASSETSBAR                   408
 #define IDD_WALLCLOCKPOPUP              409
+#define IDD_EDITATTR_ACTIVEDUR1         410
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -511,6 +512,22 @@
 #define IDC_CBTZ                        1354
 #define IDC_TZSG                        1355
 #define IDC_MT                          1356
+#define IDC_FILLL                       1357
+#define IDC_FILLV                       1358
+#define IDC_DURL                        1359
+#define IDC_DURV                        1360
+#define IDC_FILLDEFL                    1361
+#define IDC_FILLDEFV                    1362
+#define IDC_MINV                        1363
+#define IDC_MINL                        1364
+#define IDC_MAXV                        1365
+#define IDC_MAXL                        1366
+#define IDC_LOOPV                       1367
+#define IDC_LOOPL                       1368
+#define IDC_REPDURV                     1369
+#define IDC_REPDURL                     1370
+#define IDC_ENDSYNCV                    1371
+#define IDC_ENDSYNCL                    1372
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -599,7 +616,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        411
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1357
+#define _APS_NEXT_CONTROL_VALUE         1361
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
