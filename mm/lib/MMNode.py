@@ -2809,7 +2809,7 @@ def _valuedeepcopy(value):
 def _copyinternalhyperlinks(src_hyperlinks, dst_hyperlinks, uidremap):
 	links = src_hyperlinks.getall()
 	newlinks = []
-	for a1, a2, dir, ltype in links:
+	for a1, a2, dir, ltype, stype, dtype in links:
 		if type(a1) is not type(()) or type(a2) is not type(()):
 			continue
 		uid1, aid1 = a1
@@ -2819,7 +2819,7 @@ def _copyinternalhyperlinks(src_hyperlinks, dst_hyperlinks, uidremap):
 			uid2 = uidremap[uid2]
 			a1 = uid1, aid1
 			a2 = uid2, aid2
-			link = a1, a2, dir, ltype
+			link = a1, a2, dir, ltype, stype, dtype
 			newlinks.append(link)
 	if newlinks:
 		dst_hyperlinks.addlinks(newlinks)
@@ -2828,7 +2828,7 @@ def _copyoutgoinghyperlinks(hyperlinks, uidremap):
 	from Hlinks import DIR_1TO2, DIR_2TO1, DIR_2WAY
 	links = hyperlinks.getall()
 	newlinks = []
-	for a1, a2, dir, ltype in links:
+	for a1, a2, dir, ltype, stype, dtype in links:
 		changed = 0
 		if type(a1) is type(()):
 			uid1, aid1 = a1
@@ -2845,7 +2845,7 @@ def _copyoutgoinghyperlinks(hyperlinks, uidremap):
 				a2 = uid2, aid2
 				changed = 1
 		if changed:
-			link = a1, a2, dir, ltype
+			link = a1, a2, dir, ltype, stype, dtype
 			newlinks.append(link)
 ##		uid1, aid1 = a1
 ##		uid2, aid2 = a2

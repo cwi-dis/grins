@@ -11,7 +11,7 @@ from AnchorDefs import *
 from EditMgr import EditMgr
 import Timing
 from ViewDialog import ViewDialog
-from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
+from Hlinks import *
 from usercmd import *
 import MMmimetypes
 import features
@@ -991,7 +991,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	#
 	# Global hyperjump interface
 	#
-	def jumptoexternal(self, anchor, atype):
+	def jumptoexternal(self, anchor, atype, stype=A_SRC_PLAY, dtype=A_DEST_PLAY):
 		# XXXX Should check that document isn't active already,
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
@@ -1034,11 +1034,26 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				print 'uid not found in document'
 		elif hasattr(node, 'SMILidmap') and node.SMILidmap.has_key(aid):
 			node = node.context.mapuid(node.SMILidmap[aid])
-		top.player.show((top.player.playfromanchor, (node, aid)))
-		if atype == TYPE_CALL:
-			self.player.pause(1)
-		elif atype == TYPE_JUMP:
+		if dtype == A_DEST_PLAY:
+			top.player.show((top.player.playfromanchor, (node, aid)))
+		elif dtype == A_DEST_PAUSE:
+			top.player.show((top.player.playfromanchor, (node, aid)))
+			top.player.pause(1)
+		else:
+			print 'jump to external: invalid destination state'
+			
+		if atype == TYPE_JUMP:
 			self.close()
+		elif atype == TYPE_FORK:
+			if stype == A_SRC_PLAY:
+				pass
+			elif stype == A_SRC_PAUSE:
+				self.player.pause(1)
+			elif stype == A_SRC_STOP:
+				self.player.stop()
+			else:
+				print 'jump to external: invalid source state'
+			
 		return 1
 
 	def is_document(self, url):
