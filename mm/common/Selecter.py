@@ -251,6 +251,7 @@ class Selecter:
 		# It is not a composite anchor. Continue
 		self.scheduler.setpaused(1)
 		timestamp = self.scheduler.timefunc()
+		sctx = self.scheduler.sctx_list[0]
 		if seek_node.playing != MMStates.IDLE:
 			# case 1, the target element is or has been active
 			if seek_node.playing == MMStates.PLAYED: # XXX or FROZEN?
@@ -262,7 +263,7 @@ class Selecter:
 			x = seek_node
 			path = []
 			while x is not None:
-				resolved = x.isresolved()
+				resolved = x.isresolved(sctx)
 				path.append((x, resolved))
 				if resolved is not None:
 					break
@@ -284,7 +285,7 @@ class Selecter:
 			path.append(x)
 			x = x.GetSchedParent()
 		path.reverse()
-		self.scheduler.sctx_list[0].gototime(path[0], gototime, timestamp, path)
+		sctx.gototime(path[0], gototime, timestamp, path)
 		self.scheduler.setpaused(0)
 		return 0
 
