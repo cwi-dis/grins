@@ -192,8 +192,7 @@ class _Event:
 				else:
 					Qd.SetPort(wid)
 					wid.BeginUpdate()
-					# XXXX region to redraw
-					ourwin._redraw()
+					ourwin._redraw(wid.GetWindowPort().visRgn)
 					wid.EndUpdate()
 		elif what == Events.activateEvt:
 			wid = Win.WhichWindow(message)
@@ -410,16 +409,14 @@ class _Toplevel(_Event):
 				pixmap = 0, transparent = 0, units=UNIT_MM):
 		wid, w, h = self._openwindow(x, y, w, h, title, units)
 		rv = _Window(self, wid, 0, 0, w, h, 0, pixmap, transparent)
-		self._wid_to_window[wid] = rv
-		self._wid_to_title[wid] = title
+		self._register_wid(wid, rv, title)
 		return rv
 
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
 				pixmap = 0, transparent = 0, units=UNIT_MM):
 		wid, w, h = self._openwindow(x, y, w, h, title, units)
 		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, transparent)
-		self._wid_to_window[wid] = rv
-		self._wid_to_title[wid] = title
+		self._register_wid(wid, rv, title)
 		return rv
 		
 	def _openwindow(self, x, y, w, h, title, units):
@@ -480,6 +477,10 @@ class _Toplevel(_Event):
 		wid = Win.NewCWindow((x, y, x1, y1), title, 1, 0, -1, 1, 0 )
 		
 		return wid, w, h
+		
+	def _register_wid(self, wid, window, title):
+		self._wid_to_window[wid] = window
+		self._wid_to_title[wid] = title
 		
 	def _close_wid(self, wid):
 		"""Close a MacOS window and remove references to it"""
@@ -853,7 +854,7 @@ class _CommonWindow:
 				
 		func(arg, self, evttype, (x, y, buttons))
 		
-	def _redraw(self):
+	def _redraw(self, rgn):
 		"""Set clipping and color, redraw, redraw children"""
 		if self._parent is None:
 			return
