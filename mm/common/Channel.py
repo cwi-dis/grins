@@ -1551,10 +1551,15 @@ class ChannelWindow(Channel):
 	def stopplay(self, node):
 		if debug:
 			print 'ChannelWindow.stopplay('+`self`+','+`node`+')'
+		self.cleanup_transitions()
 		Channel.stopplay(self, node)
 		if self.played_display:
 			self.played_display.close()
 			self.played_display = None
+			
+	def playstop(self):
+		self.cleanup_transitions()
+		return Channel.playstop(self)
 
 	def schedule_transitions(self, node):
 		in_trans = self.gettransition(node, 'transIn')
