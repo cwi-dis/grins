@@ -223,6 +223,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__deftop = 0
 		self.__in_metadata = 0
 		self.__metadata = []
+		self.__errorList = []
+		
 		# experimental code for switch layout
 		self.__alreadymatch = 0
 		self.__switchstack = []
@@ -255,6 +257,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.error('empty document', self.lineno)
 		return self.__root
 
+	def GetErrorList(self):
+		return self.__errorList
+	
 	def MakeRoot(self, type):
 		self.__root = self.__context.newnodeuid(type, '1')
 		self.__root.SMILidmap = self.__idmap
@@ -3852,15 +3857,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def unknown_entityref(self, ref):
 		self.warning('ignoring unknown entity ref %s' % ref, self.lineno)
 
-	# non-fatal syntax errors
+	# non-fatal errors
 
 	def syntax_error(self, msg, lineno = None):
-		msg = 'warning: syntax error on line %d: %s' % (lineno or self.lineno, msg)
+		line = lineno or self.lineno
+		msg = 'syntax error on line %d: %s' % (line, msg)
 		if self.__printfunc is not None:
 			self.__printdata.append(msg)
 		else:
 			print msg
-
+		if line != None:
+			line = line-1
+		self.__errorList.append((msg, line))
+		
 	def warning(self, message, lineno = None):
 		if lineno is None:
 			msg = 'warning: %s' % message
@@ -3870,16 +3879,26 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__printdata.append(msg)
 		else:
 			print msg
+		line = lineno
+		if line != None:
+			line = lineno-1
+		self.__errorList.append((msg, line))
 
+	# fatal errors
+	
 	def error(self, message, lineno = None):
 		if self.__printfunc is None and self.__printdata:
 			msg = string.join(self.__printdata, '\n') + '\n'
 		else:
 			msg = ''
 		if lineno is None:
-			message = 'error: %s' % message
+			message = 'fatal error: %s' % message
 		else:
-			message = 'error, line %d: %s' % (lineno, message)
+			message = 'fatal error, line %d: %s' % (lineno, message)
+		line = lineno
+		if line != None:
+			line = lineno-1
+		self.__errorList.append((msg+message, line))
 		raise MSyntaxError, msg + message
 
 	def fatalerror(self):
@@ -4142,14 +4161,50 @@ def ReadFileContext(url, context, printfunc = None, new_file = 0, check_compatib
 	data = string.join(string.split(data, '\r\n'), '\n')
 	# then convert Macintosh CR to LF
 	data = string.join(string.split(data, '\r'), '\n')
-	p.feed(data)
-	p.close()
-	t1 = time()
-##	print 'parsed in %g' % (t1-t0)
-	root = p.GetRoot()
+	root = __doParse(p, data)
+	# XXX keep the original source for the player
+	# note: for the editor, save all the time the source on the root is not pertinent (
+	# it doesn't reflect the real status of the document). Therefor, to the editor
+	# the only source to keep is: the source which has generated an error (see MMErrors)
+	# XXX: to improve
 	root.source = data
 	return root
 
+def __doParse(parser, data):
+	try:
+		parser.feed(data)
+		parser.close()
+		## t1 = time()
+		##	print 'parsed in %g' % (t1-t0)
+		root = parser.GetRoot()
+		context = root.GetContext()			
+	except MSyntaxError:
+		# a fatal errors has been occured
+		# in this, case the root node is not valid, and we create a fake node just to have
+		# the minimum requiered by TopLevel
+		root = parser.MakeRoot(MMNode.FakeRootNode)
+		context = root.GetContext()
+		errors = MMNode.MMErrors('fatal')
+		errors.setSource(data)
+		errorList = parser.GetErrorList()
+		errors.setErrorList(errorList)
+		context.setParseErrors(errors)
+	else:
+		# no fatal error, check if normal errors
+		context = root.GetContext()
+		errorList = parser.GetErrorList()
+		if len(errorList) > 0:
+			# there are at least one normal error
+			errors = MMNode.MMErrors('normal')
+			errors.setSource(data)
+			errors.setErrorList(errorList)
+			context.setParseErrors(errors)
+		else:
+			# no error, so raz error variable
+			context.setParseErrors(None)
+
+	return root		
+	
 def ReadString(string, name, printfunc = None, check_compatibility = 0):
 	return ReadStringContext(string, name,
 				 MMNode.MMNodeContext(EditableObjects.EditableMMNode),
@@ -4157,10 +4212,7 @@ def ReadString(string, name, printfunc = None, check_compatibility = 0):
 
 def ReadStringContext(string, name, context, printfunc = None, check_compatibility = 0):
 	p = SMILParser(context, printfunc, check_compatibility)
-	p.feed(string)
-	p.close()
-	root = p.GetRoot()
-	root.source = string
+	root = __doParse(p, string)
 	return root
 
 def _uniqname(namelist, defname):
