@@ -430,7 +430,9 @@ class MMNode:
 		self.uid = uid
 		self.attrdict = {}
 		self.values = []
-		self.playable = None
+		self.willplay = None
+		self.shouldplay = None
+		self.canplay = None
 		self.parent = None
 		self.children = []
 ##		self.summaries = {}
@@ -1091,11 +1093,7 @@ class MMNode:
 		if not self.wtd_children:
 			return self.gensr_empty()
 		selected_child = None
-##		import pdb ; pdb.set_trace() # DBG
-		for child in self.wtd_children:
-			if child.IsPlayable():
-				selected_child = child
-				break
+		selected_child = self.ChosenSwitchChild(self.wtd_children)
 		if selected_child:
 			self.wtd_children = [selected_child]
 		else:
@@ -1613,7 +1611,7 @@ class MMNode:
 				synctolist = synctolist + c.GetArcList()
 		elif self.GetType() == 'alt':
 			for c in self.wtd_children:
-				if c.IsPlayable():
+				if c.WillPlay():
 					synctolist = synctolist + \
 						     c.GetArcList()
 					break
@@ -1678,37 +1676,35 @@ class MMNode:
 
 	#
 	# Playability depending on system/environment parameters
+	# and various other things. There are three concepts:
+	# ShouldPlay() - A decision based only on node attributes
+	#                and preference settings.
+	# _CanPlay()   - Depends on ShouldPlay() and whether the channel
+	#                actually can play the node.
+	# WillPlay()   - Based on ShouldPlay() and switch items.
 	#
-	def SetPlayability(self, playable=1):
-		if playable:
-			playable = self.__compute_playable()
+	def _CanPlay(self):
+		if not self.canplay is None:
+			return self.canplay
+		self.canplay = self.ShouldPlay()
+		if not self.canplay:
+			return 0
+		# Check that we really can
 		getchannelfunc = self.context.getchannelbynode
-		if playable and self.type in leaftypes and getchannelfunc:
+		if self.type in leaftypes and getchannelfunc:
 			# For media nodes check that the channel likes
 			# the node
 			chan = getchannelfunc(self)
 			if not chan or not chan.getaltvalue(self):
-				playable = 0
-		if playable:
-			u_group = self.GetAttrDef('u_group', 'undefined')
-			if u_group != 'undefined':
-				val = self.context.usergroups.get(u_group)
-				if val is not None and val[1] != 'RENDERED':
-					playable = 0
-		self.playable = playable
-## 		for child in self.children:
-## 			child.SetPlayability(playable)
+				self.canplay = 0
+		return self.canplay
 
-	def IsPlayable(self):
-		if self.playable is None:
-			if self.parent is None:
-				parent_playable = 1
-			else:
-				parent_playable = self.parent.IsPlayable()
-			self.SetPlayability(parent_playable)
-		return self.playable
-
-	def __compute_playable(self):
+	def ShouldPlay(self):
+		if not self.shouldplay is None:
+			return self.shouldplay
+		self.shouldplay = 0
+		# If any of the system test attributes don't match
+		# we should not play
 		all = settings.getsettings()
 		for setting in all:
 			if self.attrdict.has_key(setting):
@@ -1716,12 +1712,49 @@ class MMNode:
 						    self.attrdict[setting])
 				if not ok:
 					return 0
+		# And if our user group doesn't match we shouldn't
+		# play either
+		u_group = self.GetAttrDef('u_group', 'undefined')
+		if u_group != 'undefined':
+			val = self.context.usergroups.get(u_group)
+			if val is not None and val[1] != 'RENDERED':
+				return 0
+		# Else we should
+		self.shouldplay = 1
 		return 1
 
+	def WillPlay(self):
+		if not self.willplay is None:
+			return self.willplay
+		parent = self.parent
+		# If our parent won't play we won't play
+		if parent and not parent.WillPlay():
+			self.willplay = 0
+			return 0
+		# And if we shouldn't play we won't play either
+		if not self.ShouldPlay():
+			self.willplay = 0
+			return 0
+		# And if our parent is a switch we have to check whether
+		# we're the Chosen One
+		if parent and parent.type == 'alt' and \
+		   not parent.ChosenSwitchChild() is self:
+			self.willplay = 0
+			return 0
+		self.willplay = 1
+		return 1
+
+	def ChosenSwitchChild(self, childrentopickfrom=None):
+		"""For alt nodes, return the child that will be played"""
+		if childrentopickfrom is None:
+			childrentopickfrom = self.children
+		for ch in childrentopickfrom:
+			if ch._CanPlay():
+				return ch
+		return None
+				 
 	def ResetPlayability(self):
-		if self.playable is None:
-			return
-		self.playable = None
+		self.canplay = self.willplay = self.shouldplay = None
 		for child in self.children:
 			child.ResetPlayability()
 
