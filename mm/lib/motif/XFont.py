@@ -166,7 +166,7 @@ class _Font:
 	def is_closed(self):
 		return self._font is None
 
-	def strsize(self, str):
+	def strsizePXL(self, str):
 		strlist = string.splitfields(str, '\n')
 		maxwidth = 0
 		f = self._font
@@ -175,15 +175,25 @@ class _Font:
 			width = f.TextWidth(str)
 			if width > maxwidth:
 				maxwidth = width
+
+		return maxwidth, maxheight
+
+	def strsize(self, str):
+		maxwidth, maxheight = self.strsizePXL(str)
 		return float(maxwidth) / toplevel._hmm2pxl, \
 		       float(maxheight) / toplevel._vmm2pxl
 
-	def baseline(self):
-		return float(self._font.ascent) / toplevel._vmm2pxl
+	def baselinePXL(self):
+		return self._font.ascent
 
-	def fontheight(self):
+	def baseline(self):
+		return float(self.baselinePXL()) / toplevel._vmm2pxl
+
+	def fontheightPXL(self):
 		f = self._font
-		return float(f.ascent + f.descent) / toplevel._vmm2pxl
+		return f.ascent + f.descent
+	def fontheight(self):
+		return float(self.fontheightPXL()) / toplevel._vmm2pxl
 
 	def pointsize(self):
 		return self._pointsize
