@@ -40,7 +40,7 @@
 (base (string) '' 'Base URL' default
 	'Base URL of document, used for resolving relative URLs' raw (g2 qt smil10 smil2 cmif snap))
 
-(base_window (name) 'undefined' 'Channel base window' basechannelname
+(base_window (name) 'undefined' 'Region base window' basechannelname
 	'Name of window in which channelwin is created' raw (cmif))
 
 (base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
@@ -61,8 +61,8 @@
 (bitrate (int) 14400 'Peak bitrate' default
 	'Peak bitrate reserved for this item, in bits per second' raw (g2 qt smil10 smil2 cmif snap))
 
-(channel (name) undefined 'Channel' channelname
-	'Name of channel used to render this node' inherited (g2 qt smil10 smil2 cmif))
+(channel (name) undefined 'Region' channelname
+	'Name of region used to render this node' inherited (g2 qt smil10 smil2 cmif))
 
 (clipbegin (string) '' 'Clip begin' default
 	'Start of range of frames to be played. Simplest form is "npt=3s".' raw (g2_pro qt_pro smil10 smil2 cmif))
@@ -350,7 +350,7 @@
 	'Initial window size' raw (g2 qt smil10 cmif))
 
 (z (int) 0 'Z order' default
-	'Stacking order for channels, higher numbers are on top' normal (g2 qt smil10 smil2 cmif snap))
+	'Stacking order for regions, higher numbers are on top' normal (g2 qt smil10 smil2 cmif snap))
 
 # SMIL system test attributes
 (system_audiodesc (bool) 0 'System audio descriptions' bool3
@@ -609,7 +609,7 @@
 	'Alignment point associate to the media' raw (smil2))
 
 (regPoint (string) 'topLeft' 'Registration point' default
-	'Registration point associate to the channel' channel (smil2))
+	'Registration point associate to the region' region (smil2))
 
 # prefetch
 
