@@ -2,7 +2,7 @@
 #include <fcntl.h>
 #include <stropts.h>
 #include <poll.h>
-#include "allobjects.h"
+#include "Python.h"
 #include "modsupport.h"
 #include "thread.h"
 #include "mmmodule.h"
@@ -36,7 +36,7 @@ static int moviechannel_debug = 0;
 #define denter(func)	dprintf(( # func "(%lx)\n", (long) self))
 #define ERROR(func, errortype, msg)	{				\
 		dprintf((# func "(%lx): " msg "\n", (long) self));	\
-		err_setstr(errortype, msg);				\
+		PyErr_SetString(errortype, msg);			\
 		}
 
 
@@ -60,8 +60,8 @@ struct movie_data {
 	int m_c0bits, m_c1bits, m_c2bits; /* # of bits for rgb colors */
 	int m_moffset;		/* offset in colormap */
 	double m_scale;		/* movie scale (magnification) factor */
-	object *m_index;	/* cached movie index */
-	object *m_f;		/* file where movie comes from */
+	PyObject *m_index;	/* cached movie index */
+	PyObject *m_f;		/* file where movie comes from */
 	long m_offset;		/* offset in file before we go seeking */
 	void *m_frame;		/* one frame */
 	void *m_bframe;		/* one frame, converted to big format */
@@ -72,7 +72,7 @@ struct movie_data {
 #endif
 #ifdef USE_CL
 	CL_Handle m_decomp;	/* decompressor for compressed movie */
-	object *m_comphdr;	/* header info for compressed movie */
+	PyObject *m_comphdr;	/* header info for compressed movie */
 #endif
 	int m_planes;		/* depth of the window in bits per pixel */
 	int m_depth;		/* depth of the window in bytes per pixel */
@@ -102,7 +102,7 @@ static short colors[256][3];	/* saved color map entries */
 static int colors_saved;	/* whether we've already saved the colors */
 static int first_index;		/* used for restoring the colormap */
 static type_lock gl_lock;	/* interlock of window system */
-extern type_lock getlocklock PROTO((object *));
+extern type_lock getlocklock Py_PROTO((PyObject *));
 #endif /* USE_GL */
 
 static unsigned long cv_8_to_32[256];
@@ -113,17 +113,17 @@ static int
 movie_init(self)
 	mmobject *self;
 {
-	object *v;
+	PyObject *v;
 
 	denter(movie_init);
 	self->mm_private = malloc(sizeof(struct movie));
 	if (self->mm_private == NULL) {
 		dprintf(("movie_init(%lx): malloc failed\n", (long) self));
-		(void) err_nomem();
+		(void) PyErr_NoMemory();
 		return 0;
 	}
 	if (pipe(PRIV->m_pipefd) < 0) {
-		ERROR(movie_init, RuntimeError, "cannot create pipe");
+		ERROR(movie_init, PyExc_RuntimeError, "cannot create pipe");
 		goto error_return_no_close;
 	}
 	PRIV->m_play.m_index = NULL;
@@ -143,10 +143,10 @@ movie_init(self)
 #endif
 #ifdef USE_GL
 	PRIV->m_wid = -1;
-	v = dictlookup(self->mm_attrdict, "wid");
-	if (v && is_intobject(v)) {
+	v = PyDict_GetItemString(self->mm_attrdict, "wid");
+	if (v && PyInt_Check(v)) {
 		if (windowsystem != 0 && windowsystem != WIN_GL) {
-			ERROR(movie_init, RuntimeError,
+			ERROR(movie_init, PyExc_RuntimeError,
 			      "cannot use two window systems simultaneously");
 			goto error_return;
 		}
@@ -163,11 +163,11 @@ movie_init(self)
 				maxbits = 11;
 		}
 		windowsystem = WIN_GL;
-		PRIV->m_wid = getintvalue(v);
+		PRIV->m_wid = PyInt_AsLong(v);
 #ifndef sun_xyzzy
-		v = dictlookup(self->mm_attrdict, "gl_lock");
+		v = PyDict_GetItemString(self->mm_attrdict, "gl_lock");
 		if (v == NULL || (gl_lock = getlocklock(v)) == NULL) {
-			ERROR(movie_init, RuntimeError,
+			ERROR(movie_init, PyExc_RuntimeError,
 			      "no graphics lock specified\n");
 			return 0;
 		}
@@ -184,29 +184,29 @@ movie_init(self)
 	}
 #endif /* USE_GL */
 #ifdef USE_XM
-	v = dictlookup(self->mm_attrdict, "widget");
+	v = PyDict_GetItemString(self->mm_attrdict, "widget");
 	if (v && is_widgetobject(v)) {
 		if (windowsystem != 0 && windowsystem != WIN_X) {
-			ERROR(movie_init, RuntimeError,
+			ERROR(movie_init, PyExc_RuntimeError,
 			      "cannot use two window systems simultaneously");
 			goto error_return;
 		}
 		windowsystem = WIN_X;
 		PRIV->m_widget = getwidgetvalue(v);
-		v = dictlookup(self->mm_attrdict, "gc");
+		v = PyDict_GetItemString(self->mm_attrdict, "gc");
 		if (v && is_gcobject(v))
 			PRIV->m_gc = PyGC_GetGC(v);
 		else {
-			ERROR(movie_init, RuntimeError, "no gc specified");
+			ERROR(movie_init, PyExc_RuntimeError, "no gc specified");
 			goto error_return;
 		}
-		v = dictlookup(self->mm_attrdict, "visual");
+		v = PyDict_GetItemString(self->mm_attrdict, "visual");
 		if (v && is_visualobject(v)) {
 			XVisualInfo *vptr = getvisualinfovalue(v);
 			PRIV->m_visual = vptr->visual;
 			PRIV->m_arm.m_planes = vptr->depth;
 		} else {
-			ERROR(movie_init, RuntimeError, "no visual specified");
+			ERROR(movie_init, PyExc_RuntimeError, "no visual specified");
 			goto error_return;
 		}
 		switch (PRIV->m_arm.m_planes) {
@@ -217,7 +217,7 @@ movie_init(self)
 			PRIV->m_arm.m_depth = 4;
 			break;
 		default:
-			ERROR(movie_init, RuntimeError,
+			ERROR(movie_init, PyExc_RuntimeError,
 			      "unsupported visual depth");
 			goto error_return;
 		}
@@ -231,7 +231,7 @@ movie_init(self)
 	    && PRIV->m_widget == NULL
 #endif
 	    ) {
-		ERROR(movie_init, RuntimeError, "no window specified");
+		ERROR(movie_init, PyExc_RuntimeError, "no window specified");
 		goto error_return;
 	}
 #ifdef USE_CL
@@ -253,15 +253,15 @@ movie_init(self)
 	return 0;
 }
 
-static int movie_finished PROTO((mmobject *));
+static int movie_finished Py_PROTO((mmobject *));
 
 static void
 movie_free_old(p)
 	struct movie_data *p;
 {
-	XDECREF(p->m_index);
+	Py_XDECREF(p->m_index);
 	p->m_index = NULL;
-	XDECREF(p->m_f);
+	Py_XDECREF(p->m_f);
 	p->m_f = NULL;
 #ifdef USE_XM
 	if (p->m_image) {
@@ -280,7 +280,7 @@ movie_free_old(p)
 	if (p->m_decomp)
 		clCloseDecompressor(p->m_decomp);
 	p->m_decomp = NULL;
-	XDECREF(p->m_comphdr);
+	Py_XDECREF(p->m_comphdr);
 	p->m_comphdr = NULL;
 #endif /* USE_CL */
 }
@@ -400,59 +400,59 @@ init_colormap(self)
 static int
 movie_arm(self, file, delay, duration, attrdict, anchorlist)
 	mmobject *self;
-	object *file;
+	PyObject *file;
 	int delay, duration;
-	object *attrdict, *anchorlist;
+	PyObject *attrdict, *anchorlist;
 {
-	object *v;
+	PyObject *v;
 	char *format;
 
 	denter(movie_arm);
-	XDECREF(PRIV->m_arm.m_index);
+	Py_XDECREF(PRIV->m_arm.m_index);
 	PRIV->m_arm.m_index = NULL;
 #ifdef USE_CL
-	XDECREF(PRIV->m_arm.m_comphdr);
+	Py_XDECREF(PRIV->m_arm.m_comphdr);
 	PRIV->m_arm.m_comphdr = NULL;
 #endif
-	v = dictlookup(attrdict, "width");
-	if (v && is_intobject(v))
-		PRIV->m_arm.m_width = getintvalue(v);
+	v = PyDict_GetItemString(attrdict, "width");
+	if (v && PyInt_Check(v))
+		PRIV->m_arm.m_width = PyInt_AsLong(v);
 	else {
-		ERROR(movie_arm, RuntimeError, "no width specified");
+		ERROR(movie_arm, PyExc_RuntimeError, "no width specified");
 		return 0;
 	}
-	v = dictlookup(attrdict, "height");
-	if (v && is_intobject(v))
-		PRIV->m_arm.m_height = getintvalue(v);
+	v = PyDict_GetItemString(attrdict, "height");
+	if (v && PyInt_Check(v))
+		PRIV->m_arm.m_height = PyInt_AsLong(v);
 	else {
-		ERROR(movie_arm, RuntimeError, "no height specified");
+		ERROR(movie_arm, PyExc_RuntimeError, "no height specified");
 		return 0;
 	}
-	v = dictlookup(attrdict, "format");
-	if (v && is_stringobject(v)) {
-		format = getstringvalue(v);
+	v = PyDict_GetItemString(attrdict, "format");
+	if (v && PyString_Check(v)) {
+		format = PyString_AsString(v);
 		if (strcmp(format, "rgb8") == 0)
 			PRIV->m_arm.m_format = FORMAT_RGB8;
 #ifdef USE_CL
 		else if (strcmp(format, "compress") == 0) {
 			PRIV->m_arm.m_format = FORMAT_CL;
-			v = dictlookup(attrdict, "compressheader");
-			if (v && is_stringobject(v)) {
+			v = PyDict_GetItemString(attrdict, "compressheader");
+			if (v && PyString_Check(v)) {
 				PRIV->m_arm.m_comphdr = v;
-				INCREF(v);
+				Py_INCREF(v);
 			} else {
-				ERROR(movie_arm, RuntimeError,
+				ERROR(movie_arm, PyExc_RuntimeError,
 				      "no compressheader specified");
 				return 0;
 			}
 		}
 #endif /* USE_CL */
 		else {
-			ERROR(movie_arm, RuntimeError, "unrecognized format");
+			ERROR(movie_arm, PyExc_RuntimeError, "unrecognized format");
 			return 0;
 		}
 	} else {
-		ERROR(movie_arm, RuntimeError, "no format specified");
+		ERROR(movie_arm, PyExc_RuntimeError, "no format specified");
 		return 0;
 	}
 #ifdef USE_XM
@@ -473,7 +473,7 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 		PRIV->m_arm.m_size = PRIV->m_arm.m_width * PRIV->m_arm.m_height;
 		PRIV->m_arm.m_bframe = malloc(PRIV->m_arm.m_size * PRIV->m_arm.m_depth);
 		if (PRIV->m_arm.m_bframe == NULL) {
-			ERROR(movie_arm, RuntimeError, "malloc failed");
+			ERROR(movie_arm, PyExc_RuntimeError, "malloc failed");
 			return 0;
 		}
 		PRIV->m_arm.m_image = XCreateImage(XtDisplay(PRIV->m_widget),
@@ -487,72 +487,72 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 						   PRIV->m_arm.m_width * PRIV->m_arm.m_depth);
 	}
 #endif /* USE_XM */
-	v = dictlookup(attrdict, "index");
-	if (v && is_listobject(v)) {
+	v = PyDict_GetItemString(attrdict, "index");
+	if (v && PyList_Check(v)) {
 		PRIV->m_arm.m_index = v;
-		INCREF(v);
+		Py_INCREF(v);
 	} else {
-		ERROR(movie_arm, RuntimeError, "no index specified");
+		ERROR(movie_arm, PyExc_RuntimeError, "no index specified");
 		return 0;
 	}
-	v = dictlookup(attrdict, "c0bits");
-	if (v && is_intobject(v))
-		PRIV->m_arm.m_c0bits = getintvalue(v);
+	v = PyDict_GetItemString(attrdict, "c0bits");
+	if (v && PyInt_Check(v))
+		PRIV->m_arm.m_c0bits = PyInt_AsLong(v);
 	else {
-		ERROR(movie_arm, RuntimeError, "c0bits not specified");
+		ERROR(movie_arm, PyExc_RuntimeError, "c0bits not specified");
 		return 0;
 	}
-	v = dictlookup(attrdict, "c1bits");
-	if (v && is_intobject(v))
-		PRIV->m_arm.m_c1bits = getintvalue(v);
+	v = PyDict_GetItemString(attrdict, "c1bits");
+	if (v && PyInt_Check(v))
+		PRIV->m_arm.m_c1bits = PyInt_AsLong(v);
 	else {
-		ERROR(movie_arm, RuntimeError, "c1bits not specified");
+		ERROR(movie_arm, PyExc_RuntimeError, "c1bits not specified");
 		return 0;
 	}
-	v = dictlookup(attrdict, "c2bits");
-	if (v && is_intobject(v))
-		PRIV->m_arm.m_c2bits = getintvalue(v);
+	v = PyDict_GetItemString(attrdict, "c2bits");
+	if (v && PyInt_Check(v))
+		PRIV->m_arm.m_c2bits = PyInt_AsLong(v);
 	else {
-		ERROR(movie_arm, RuntimeError, "c2bits not specified");
+		ERROR(movie_arm, PyExc_RuntimeError, "c2bits not specified");
 		return 0;
 	}
-	v = dictlookup(attrdict, "offset");
-	if (v && is_intobject(v))
-		PRIV->m_arm.m_moffset = getintvalue(v);
+	v = PyDict_GetItemString(attrdict, "offset");
+	if (v && PyInt_Check(v))
+		PRIV->m_arm.m_moffset = PyInt_AsLong(v);
 	else {
-		ERROR(movie_arm, RuntimeError, "offset not specified");
+		ERROR(movie_arm, PyExc_RuntimeError, "offset not specified");
 		return 0;
 	}
-	v = dictlookup(attrdict, "scale");
-	if (v && is_floatobject(v))
-		PRIV->m_arm.m_scale = getfloatvalue(v);
+	v = PyDict_GetItemString(attrdict, "scale");
+	if (v && PyFloat_Check(v))
+		PRIV->m_arm.m_scale = PyFloat_AsDouble(v);
 	else {
-		ERROR(movie_arm, RuntimeError, "scale not specified");
+		ERROR(movie_arm, PyExc_RuntimeError, "scale not specified");
 		return 0;
 	}
-	v = dictlookup(attrdict, "bgcolor");
-	if (v && is_tupleobject(v) && gettuplesize(v) == 3) {
+	v = PyDict_GetItemString(attrdict, "bgcolor");
+	if (v && PyTuple_Check(v) && PyTuple_Size(v) == 3) {
 		int i, c;
-		object *t;
+		PyObject *t;
 
 		PRIV->m_arm.m_bgcolor = 0;
 		for (i = 0; i < 3; i++) {
-			t = gettupleitem(v, i);
-			if (!is_intobject(t)) {
-				ERROR(movie_arm, RuntimeError,
+			t = PyTuple_GetItem(v, i);
+			if (!PyInt_Check(t)) {
+				ERROR(movie_arm, PyExc_RuntimeError,
 				      "bad color specification");
 				return 0;
 			}
-			c = getintvalue(t);
+			c = PyInt_AsLong(t);
 			if (c < 0 || c > 255) {
-				ERROR(movie_arm, RuntimeError,
+				ERROR(movie_arm, PyExc_RuntimeError,
 				      "bad color specification");
 				return 0;
 			}
 			PRIV->m_arm.m_bgcolor = (PRIV->m_arm.m_bgcolor << 8) | c;
 		}
 	} else {
-		ERROR(movie_arm, RuntimeError,
+		ERROR(movie_arm, PyExc_RuntimeError,
 		      "no background color specified");
 		return 0;
 	}
@@ -562,14 +562,14 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 #ifdef MM_DEBUG
 	if (PRIV->m_arm.m_index) {
 		dprintf(("movie_arm(%lx): indexsize: %d\n",
-			 (long) self, getlistsize(PRIV->m_arm.m_index)));
+			 (long) self, PyList_Size(PRIV->m_arm.m_index)));
 	}
 #endif
-	XDECREF(PRIV->m_arm.m_f);
-	XINCREF(file);
+	Py_XDECREF(PRIV->m_arm.m_f);
+	Py_XINCREF(file);
 	PRIV->m_arm.m_f = file;
 	dprintf(("movie_arm(%lx): fd: %d\n",
-		 (long) self, fileno(getfilefile(PRIV->m_arm.m_f))));
+		 (long) self, fileno(PyFile_AsFile(PRIV->m_arm.m_f))));
 	return 1;
 }
 
@@ -654,7 +654,7 @@ static void
 movie_armer(self)
 	mmobject *self;
 {
-	object *v, *t;
+	PyObject *v, *t;
 	long offset;
 	int fd;
 
@@ -675,32 +675,32 @@ movie_armer(self)
 		PRIV->m_arm.m_decomp = NULL;
 	}
 #endif /* USE_CL */
-	v = getlistitem(PRIV->m_arm.m_index, 0);
-	if (v == NULL || !is_tupleobject(v) || gettuplesize(v) < 2) {
+	v = PyList_GetItem(PRIV->m_arm.m_index, 0);
+	if (v == NULL || !PyTuple_Check(v) || PyTuple_Size(v) < 2) {
 		dprintf(("movie_armer(%lx): index[0] not a proper tuple\n",
 			 (long) self));
 		return;
 	}
-	t = gettupleitem(v, 0);
-	if (t == NULL || !is_tupleobject(t) || gettuplesize(t) < 1) {
+	t = PyTuple_GetItem(v, 0);
+	if (t == NULL || !PyTuple_Check(t) || PyTuple_Size(t) < 1) {
 		dprintf(("movie_armer(%lx): index[0][0] not a proper tuple\n",
 			 (long) self));
 		return;
 	}
-	t = gettupleitem(t, 1);
-	if (t == NULL || !is_intobject(t)) {
+	t = PyTuple_GetItem(t, 1);
+	if (t == NULL || !PyInt_Check(t)) {
 		dprintf(("movie_armer(%lx): index[0][0][1] not an int\n",
 			 (long) self));
 		return;
 	}
-	PRIV->m_arm.m_size = getintvalue(t);
-	t = gettupleitem(v, 1);
-	if (t == NULL || !is_intobject(t)) {
+	PRIV->m_arm.m_size = PyInt_AsLong(t);
+	t = PyTuple_GetItem(v, 1);
+	if (t == NULL || !PyInt_Check(t)) {
 		dprintf(("movie_armer(%lx): index[0][1] not an int\n",
 			 (long) self));
 		return;
 	}
-	offset = getintvalue(t);
+	offset = PyInt_AsLong(t);
 
 #ifdef USE_CL
 	if (PRIV->m_arm.m_format == FORMAT_CL) {
@@ -709,8 +709,8 @@ movie_armer(self)
 		int length;
 		int params[6];
 
-		length = getstringsize(PRIV->m_arm.m_comphdr);
-		comphdr = getstringvalue(PRIV->m_arm.m_comphdr);
+		length = PyString_Size(PRIV->m_arm.m_comphdr);
+		comphdr = PyString_AsString(PRIV->m_arm.m_comphdr);
 		scheme = clQueryScheme(comphdr);
 		if (scheme < 0) {
 			dprintf(("movie_armer: unknown compression scheme"));
@@ -770,7 +770,7 @@ movie_armer(self)
 		}
 	}
 #endif
-	fd = fileno(getfilefile(PRIV->m_arm.m_f));
+	fd = fileno(PyFile_AsFile(PRIV->m_arm.m_f));
 	PRIV->m_arm.m_offset = lseek(fd, 0L, SEEK_CUR);
 	(void) lseek(fd, offset, SEEK_SET);
 	movie_readframe(self, &PRIV->m_arm, fd);
@@ -784,8 +784,8 @@ movie_play(self)
 	int i;
 
 	denter(movie_play);
-	XDECREF(PRIV->m_play.m_index);
-	XDECREF(PRIV->m_play.m_f);
+	Py_XDECREF(PRIV->m_play.m_index);
+	Py_XDECREF(PRIV->m_play.m_f);
 #ifdef USE_XM
 	if (PRIV->m_play.m_image) {
 		XDestroyImage(PRIV->m_play.m_image);
@@ -797,7 +797,7 @@ movie_play(self)
 	if (PRIV->m_play.m_bframe)
 		free(PRIV->m_play.m_bframe);
 #ifdef USE_CL
-	XDECREF(PRIV->m_play.m_comphdr);
+	Py_XDECREF(PRIV->m_play.m_comphdr);
 	if (PRIV->m_play.m_decomp)
 		clCloseDecompressor(PRIV->m_play.m_decomp);
 #endif
@@ -815,7 +815,7 @@ movie_play(self)
 #endif
 	if (PRIV->m_play.m_frame == NULL && PRIV->m_play.m_bframe == NULL) {
 		/* apparently the arm failed */
-		ERROR(movie_play, RuntimeError, "asynchronous arm failed");
+		ERROR(movie_play, PyExc_RuntimeError, "asynchronous arm failed");
 		return 0;
 	}
 	/* empty the pipe */
@@ -969,7 +969,7 @@ movie_player(self)
 	long newtime;
 	long offset;
 	int fd;
-	object *v, *t0, *t;
+	PyObject *v, *t0, *t;
 	struct pollfd pollfd;
 	int i;
 	int size;
@@ -979,9 +979,9 @@ movie_player(self)
 	dprintf(("movie_player(%lx): width = %d, height = %d\n",
 		 (long) self, PRIV->m_play.m_width, PRIV->m_play.m_height));
 	gettimeofday(&tm0, NULL);
-	fd = fileno(getfilefile(PRIV->m_play.m_f));
+	fd = fileno(PyFile_AsFile(PRIV->m_play.m_f));
 	index = 0;
-	lastindex = getlistsize(PRIV->m_play.m_index) - 1;
+	lastindex = PyList_Size(PRIV->m_play.m_index) - 1;
 	nplayed = 0;
 	while (index <= lastindex) {
 		/*dprintf(("movie_player(%lx): writing image %d\n",
@@ -1026,48 +1026,48 @@ movie_player(self)
 			(tm.tv_usec - tm0.tv_usec) / 1000 - timediff;
 		do {
 			index++;
-			v = getlistitem(PRIV->m_play.m_index, index);
-			if (v == NULL || !is_tupleobject(v) || gettuplesize(v) < 2) {
+			v = PyList_GetItem(PRIV->m_play.m_index, index);
+			if (v == NULL || !PyTuple_Check(v) || PyTuple_Size(v) < 2) {
 				dprintf((
 			"movie_player(%lx): index[%d] not a proper tuple\n",
 					 (long) self, index));
 				goto loop_exit;
 			}
-			t0 = gettupleitem(v, 0);
-			if (t0 == NULL || !is_tupleobject(t0) || gettuplesize(t0) < 1) {
+			t0 = PyTuple_GetItem(v, 0);
+			if (t0 == NULL || !PyTuple_Check(t0) || PyTuple_Size(t0) < 1) {
 				dprintf((
 			"movie_player(%lx): index[%d][0] not a proper tuple\n",
 					 (long) self, index));
 				goto loop_exit;
 			}
-			t = gettupleitem(t0, 0);
-			if (t == NULL || !is_intobject(t)) {
+			t = PyTuple_GetItem(t0, 0);
+			if (t == NULL || !PyInt_Check(t)) {
 				dprintf((
 			"movie_player(%lx): index[%d][0][0] not an int\n",
 					 (long) self, index));
 				goto loop_exit;
 			}
-			newtime = getintvalue(t);
+			newtime = PyInt_AsLong(t);
 			/*dprintf(("movie_player(%lx): td = %d, newtime = %d\n",
 				 (long) self, td, newtime));*/
 		} while (index < lastindex && newtime <= td);
-		t = gettupleitem(v, 1);
-		if (t == NULL || !is_intobject(t)) {
+		t = PyTuple_GetItem(v, 1);
+		if (t == NULL || !PyInt_Check(t)) {
 			dprintf((
 				"movie_player(%lx): index[%d][1] not an int\n",
 				 (long) self, index));
 			break;
 		}
-		offset = getintvalue(t);
+		offset = PyInt_AsLong(t);
 		lseek(fd, offset, SEEK_SET);
-		t = gettupleitem(t0, 1);
-		if (t == NULL || !is_intobject(t)) {
+		t = PyTuple_GetItem(t0, 1);
+		if (t == NULL || !PyInt_Check(t)) {
 			dprintf((
 			"movie_player(%lx): index[%d][0][1] not an int\n",
 				 (long) self, index));
 			break;
 		}
-		size = getintvalue(t);
+		size = PyInt_AsLong(t);
 		if (PRIV->m_play.m_frame && size > PRIV->m_play.m_size) {
 			PRIV->m_play.m_frame = realloc(PRIV->m_play.m_frame,
 						       size);
@@ -1270,9 +1270,9 @@ movie_finished(self)
 		/* let it pass--initialization may have failed */
 		break;
 	}
-	XDECREF(PRIV->m_play.m_index);
+	Py_XDECREF(PRIV->m_play.m_index);
 	PRIV->m_play.m_index = NULL;
-	XDECREF(PRIV->m_play.m_f);
+	Py_XDECREF(PRIV->m_play.m_f);
 	PRIV->m_play.m_f = NULL;
 	if (PRIV->m_play.m_frame) {
 		free(PRIV->m_play.m_frame);
@@ -1283,7 +1283,7 @@ movie_finished(self)
 		PRIV->m_play.m_bframe = NULL;
 	}
 #ifdef USE_CL
-	XDECREF(PRIV->m_play.m_comphdr);
+	Py_XDECREF(PRIV->m_play.m_comphdr);
 	PRIV->m_play.m_comphdr = NULL;
 	if (PRIV->m_play.m_decomp) {
 		clCloseDecompressor(PRIV->m_play.m_decomp);
@@ -1341,21 +1341,21 @@ moviechannel_dealloc(self)
 	if (self != movie_chan_obj) {
 		dprintf(("moviechannel_dealloc: arg != movie_chan_obj\n"));
 	}
-	DEL(self);
+	PyMem_DEL(self);
 	movie_chan_obj = NULL;
 }
 
-static object *
+static PyObject *
 moviechannel_getattr(self, name)
 	channelobject *self;
 	char *name;
 {
-	err_setstr(AttributeError, name);
+	PyErr_SetString(PyExc_AttributeError, name);
 	return NULL;
 }
 
-static typeobject Moviechanneltype = {
-	OB_HEAD_INIT(&Typetype)
+static PyTypeObject Moviechanneltype = {
+	PyObject_HEAD_INIT(&PyType_Type)
 	0,			/*ob_size*/
 	"channel:movie",	/*tp_name*/
 	sizeof(channelobject),	/*tp_size*/
@@ -1369,28 +1369,28 @@ static typeobject Moviechanneltype = {
 	0,			/*tp_repr*/
 };
 
-static object *
+static PyObject *
 moviechannel_init(self, args)
 	channelobject *self;
-	object *args;
+	PyObject *args;
 {
 	channelobject *p;
 
-	if (!getnoarg(args))
+	if (!PyArg_NoArgs(args))
 		return NULL;
 	if (movie_chan_obj == NULL) {
-		movie_chan_obj = NEWOBJ(channelobject, &Moviechanneltype);
+		movie_chan_obj = PyObject_NEW(channelobject, &Moviechanneltype);
 		if (movie_chan_obj == NULL)
 			return NULL;
 		movie_chan_obj->chan_funcs = &movie_channel_funcs;
 	} else {
-		INCREF(movie_chan_obj);
+		Py_INCREF(movie_chan_obj);
 	}
-	return (object *) movie_chan_obj;
+	return (PyObject *) movie_chan_obj;
 }
 
-static struct methodlist moviechannel_methods[] = {
-	{"init",		(method)moviechannel_init},
+static PyMethodDef moviechannel_methods[] = {
+	{"init",		(PyCFunction)moviechannel_init},
 	{NULL,			NULL}
 };
 
@@ -1403,7 +1403,7 @@ initmoviechannel()
 	moviechannel_debug = getenv("MOVIEDEBUG") != 0;
 #endif
 	dprintf(("initmoviechannel\n"));
-	(void) initmodule("moviechannel", moviechannel_methods);
+	(void) Py_InitModule("moviechannel", moviechannel_methods);
 	for (r = 0; r < 8; r++) {
 		int R = (int) ((double) r / 7.0 * 255.0);
 		for (g = 0; g < 8; g++) {

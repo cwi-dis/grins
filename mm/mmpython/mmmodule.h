@@ -14,12 +14,12 @@
 #define PLAYTHREAD	0x0200	/* a play thread exists */
 
 typedef struct {
-	OB_HEAD
+	PyObject_HEAD
 	int mm_wid;		/* window id */
 	int mm_ev;		/* event number */
 	int mm_flags;		/* flags */
 	type_sema mm_flagsema;	/* semaphore to protect mm_flags */
-	object *mm_attrdict;	/* channel attribute dictionary */
+	PyObject *mm_attrdict;	/* channel attribute dictionary */
 	type_sema mm_armsema;	/* semaphore for starting arm thread */
 	type_sema mm_playsema;	/* semaphore for starting play thread */
 	type_sema mm_exitsema;	/* semaphore used for exiting */
@@ -29,25 +29,25 @@ typedef struct {
 } mmobject;
 
 struct mmfuncs {
-	void (*armer) PROTO((mmobject *));
-	void (*player) PROTO((mmobject *));
-	int (*resized) PROTO((mmobject *));
-	int (*arm) PROTO((mmobject *, object *, int, int, object *, object *));
-	int (*armstop) PROTO((mmobject *));
-	int (*play) PROTO((mmobject *));
-	int (*playstop) PROTO((mmobject *));
-	int (*finished) PROTO((mmobject *));
-	int (*setrate) PROTO((mmobject *, double));
-	int (*init) PROTO((mmobject *));
-	void (*dealloc) PROTO((mmobject *));
-	void (*do_display) PROTO((mmobject *));
+	void (*armer) Py_PROTO((mmobject *));
+	void (*player) Py_PROTO((mmobject *));
+	int (*resized) Py_PROTO((mmobject *));
+	int (*arm) Py_PROTO((mmobject *, PyObject *, int, int, PyObject *, PyObject *));
+	int (*armstop) Py_PROTO((mmobject *));
+	int (*play) Py_PROTO((mmobject *));
+	int (*playstop) Py_PROTO((mmobject *));
+	int (*finished) Py_PROTO((mmobject *));
+	int (*setrate) Py_PROTO((mmobject *, double));
+	int (*init) Py_PROTO((mmobject *));
+	void (*dealloc) Py_PROTO((mmobject *));
+	void (*do_display) Py_PROTO((mmobject *));
 };
 
 typedef struct channelobject {
-	OB_HEAD
+	PyObject_HEAD
 	struct mmfuncs *chan_funcs;
 } channelobject;
 
 #define is_channelobject(op)	(strncmp((op)->ob_type->tp_name, "channel:", 8) == 0)
 
-extern void my_qenter PROTO((long, long));
+extern void my_qenter Py_PROTO((long, long));

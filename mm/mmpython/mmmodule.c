@@ -29,7 +29,7 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  * For extensive comments on this code, see the file mmmodule.doc.
  */
 
-#include "allobjects.h"
+#include "Python.h"
 #include "modsupport.h"
 #include "thread.h"
 #include "mmmodule.h"
@@ -45,10 +45,10 @@ static int mm_debug = 0;
 #endif
 #define denter(func)		dprintf(( # func "(%lx)\n", (long) self))
 
-static object *MmError;		/* exception mm.error */
+static PyObject *MmError;		/* exception mm.error */
 
 #define CheckMmObject(v)	if ((v)->mm_chanobj == NULL) { \
-					err_setstr(MmError, "object already closed"); \
+					PyErr_SetString(MmError, "object already closed"); \
 					return NULL; \
 				}
 int qenter_sync_fd = -1;
@@ -158,19 +158,19 @@ mm_player(arg)
  *	Called when the main loop notices that the window has changed
  *	size or has to be redrawn.
  */
-static object *
+static PyObject *
 mm_resized(self, args)
 	mmobject *self;
-	object *args;
+	PyObject *args;
 {
 	CheckMmObject(self);
 	denter(mm_resized);
-	if (!getnoarg(args))
+	if (!PyArg_NoArgs(args))
 		return NULL;
 	if (!(*self->mm_chanobj->chan_funcs->resized)(self))
 		return NULL;
-	INCREF(None);
-	return None;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 /*
@@ -188,28 +188,28 @@ mm_resized(self, args)
  *	ARMDONE event is generated when the arm finishes.
  *	('delay', 'duration', and 'anchorlist' are not yet implemented.)
  */
-static object *
+static PyObject *
 mm_arm(self, args)
 	mmobject *self;
-	object *args;
+	PyObject *args;
 {
 	int delay, duration, syncarm;
-	object *file, *attrdict, *anchorlist;
+	PyObject *file, *attrdict, *anchorlist;
 
 	CheckMmObject(self);
 	denter(mm_arm);
-	if (!getargs(args, "(OiiOOi)", &file, &delay, &duration, &attrdict,
+	if (!PyArg_Parse(args, "(OiiOOi)", &file, &delay, &duration, &attrdict,
 		     &anchorlist, &syncarm)) {
-		err_clear();
+		PyErr_Clear();
 		syncarm = 0;
-		if (!getargs(args, "(OiiOO)", &file, &delay, &duration,
+		if (!PyArg_Parse(args, "(OiiOO)", &file, &delay, &duration,
 			     &attrdict, &anchorlist))
 			return NULL;
 	}
 	down_sema(self->mm_flagsema);
 	if (self->mm_flags & ARMING) {
 		up_sema(self->mm_flagsema);
-		err_setstr(MmError, "already arming");
+		PyErr_SetString(MmError, "already arming");
 		return NULL;
 	}
 	self->mm_flags |= ARMING;
@@ -229,8 +229,8 @@ mm_arm(self, args)
 	up_sema(self->mm_armsema);
 	if (syncarm)
 		down_sema(self->mm_armwaitsema);
-	INCREF(None);
-	return None;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 /*
@@ -240,25 +240,25 @@ mm_arm(self, args)
  *	received is an error, to help in detecting programming errors.
  *	(The return value is not implemented.)
  */
-static object *
+static PyObject *
 mm_play(self, args)
 	mmobject *self;
-	object *args;
+	PyObject *args;
 {
 	CheckMmObject(self);
 	denter(mm_play);
-	if (!getnoarg(args))
+	if (!PyArg_NoArgs(args))
 		return NULL;
 	down_sema(self->mm_flagsema);
 	if (self->mm_flags & PLAYING) {
 		up_sema(self->mm_flagsema);
-		err_setstr(MmError, "already playing");
+		PyErr_SetString(MmError, "already playing");
 		return NULL;
 	}
 	if (!(self->mm_flags & ARMED)) {
 		up_sema(self->mm_flagsema);
 		dprintf(("mm_play(%lx): node not armed\n", (long) self));
-		err_setstr(MmError, "not armed");
+		PyErr_SetString(MmError, "not armed");
 		return NULL;
 	}
 	self->mm_flags |= PLAYING;
@@ -271,23 +271,23 @@ mm_play(self, args)
 		return NULL;
 	}
 	up_sema(self->mm_playsema);
-	INCREF(None);
-	return None;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 /*
  * do_stop()
  *	Stop playing or arming depending on args.
  */
-static object *
+static PyObject *
 do_stop(self, args, busyflag, stopflag, func)
 	mmobject *self;
-	object *args;
+	PyObject *args;
 	int busyflag, stopflag;
-	int (*func) PROTO((mmobject *));
+	int (*func) Py_PROTO((mmobject *));
 {
 	CheckMmObject(self);
-	if (args && !getnoarg(args))
+	if (args && !PyArg_NoArgs(args))
 		return NULL;
 
 	down_sema(self->mm_flagsema);
@@ -321,18 +321,18 @@ do_stop(self, args, busyflag, stopflag, func)
 		/* printf("mmmodule: mm_stop: already stopped\n"); */
 		up_sema(self->mm_flagsema);
 	}
-	INCREF(None);
-	return None;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 /*
  * playstop()
  *	Stop playing.
  */
-static object *
+static PyObject *
 mm_playstop(self, args)
 	mmobject *self;
-	object *args;
+	PyObject *args;
 {
 	denter(mm_playstop);
 	return do_stop(self, args, PLAYING, STOPPLAY,
@@ -343,10 +343,10 @@ mm_playstop(self, args)
  * armstop()
  *	Stop arming.
  */
-static object *
+static PyObject *
 mm_armstop(self, args)
 	mmobject *self;
-	object *args;
+	PyObject *args;
 {
 	denter(mm_armstop);
 	return do_stop(self, args, ARMING, STOPARM,
@@ -359,25 +359,25 @@ mm_armstop(self, args)
  *	be released.  This will also clear the window, if there is one.
  *	This can only be called when not playing anymore.
  */
-static object *
+static PyObject *
 mm_finished(self, args)
 	mmobject *self;
-	object *args;
+	PyObject *args;
 {
 	denter(mm_finished);
 	down_sema(self->mm_flagsema);
 	if (self->mm_flags & PLAYING) {
 		up_sema(self->mm_flagsema);
-		err_setstr(MmError, "still playing");
+		PyErr_SetString(MmError, "still playing");
 		return NULL;
 	}
 	up_sema(self->mm_flagsema);
-	if (!getnoarg(args))
+	if (!PyArg_NoArgs(args))
 		return NULL;
 	if (!(*self->mm_chanobj->chan_funcs->finished)(self))
 		return NULL;
-	INCREF(None);
-	return None;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 /*
@@ -385,21 +385,21 @@ mm_finished(self, args)
  *	Set the playing rate to the given value. Takes effect
  *	immediately.
  */
-static object *
+static PyObject *
 mm_setrate(self, args)
 	mmobject *self;
-	object *args;
+	PyObject *args;
 {
 	double rate;
 
 	CheckMmObject(self);
 	denter(mm_setrate);
-	if (!getargs(args, "d", &rate))
+	if (!PyArg_Parse(args, "d", &rate))
 		return NULL;
 	if (!(*self->mm_chanobj->chan_funcs->setrate)(self, rate))
 		return NULL;
-	INCREF(None);
-	return None;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 static void
@@ -434,7 +434,7 @@ do_close(self)
 	(*self->mm_chanobj->chan_funcs->dealloc)(self);
 
 	/* now cleanup our own mess */
-	XDECREF(self->mm_attrdict);
+	Py_XDECREF(self->mm_attrdict);
 	self->mm_attrdict = NULL;
 	free_sema(self->mm_armsema);
 	self->mm_armsema = NULL;
@@ -446,7 +446,7 @@ do_close(self)
 	self->mm_exitsema = NULL;
 	free_sema(self->mm_armwaitsema);
 	self->mm_armwaitsema = NULL;
-	DECREF(self->mm_chanobj);
+	Py_DECREF(self->mm_chanobj);
 	self->mm_chanobj = NULL;
 }
 
@@ -455,44 +455,44 @@ do_close(self)
  *	Stop arming and playing and free all resources.  After this
  *	call, the instance cannot be used anymore.
  */
-static object *
+static PyObject *
 mm_close(self)
 	mmobject *self;
 {
 	CheckMmObject(self);
 	denter(mm_close);
 	do_close(self);
-	INCREF(None);
-	return None;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
-static object *
+static PyObject *
 mm_do_display(self, args)
 	mmobject *self;
-	object *args;
+	PyObject *args;
 {
 	CheckMmObject(self);
 	denter(mm_do_display);
 	if (self->mm_chanobj->chan_funcs->do_display)
 		(*self->mm_chanobj->chan_funcs->do_display)(self);
 	else {
-		err_setstr(AttributeError, "do_display");
+		PyErr_SetString(PyExc_AttributeError, "do_display");
 		return NULL;
 	}
-	INCREF(None);
-	return None;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
-static struct methodlist channel_methods[] = {
-	{"arm",			(method)mm_arm},
-	{"armstop",		(method)mm_armstop},
-	{"close",		(method)mm_close},
-	{"play",		(method)mm_play},
-	{"playstop",		(method)mm_playstop},
-	{"resized",		(method)mm_resized},
-	{"setrate",		(method)mm_setrate},
-	{"finished",		(method)mm_finished},
-	{"do_display",		(method)mm_do_display},
+static PyMethodDef channel_methods[] = {
+	{"arm",			(PyCFunction)mm_arm},
+	{"armstop",		(PyCFunction)mm_armstop},
+	{"close",		(PyCFunction)mm_close},
+	{"play",		(PyCFunction)mm_play},
+	{"playstop",		(PyCFunction)mm_playstop},
+	{"resized",		(PyCFunction)mm_resized},
+	{"setrate",		(PyCFunction)mm_setrate},
+	{"finished",		(PyCFunction)mm_finished},
+	{"do_display",		(PyCFunction)mm_do_display},
 	{NULL,			NULL}		/* sentinel */
 };
 
@@ -505,21 +505,21 @@ mm_dealloc(self)
 	denter(mm_dealloc);
 	if (self->mm_chanobj)
 		do_close(self);
-	DEL(self);
+	PyMem_DEL(self);
 }
 
-static object *
+static PyObject *
 mm_getattr(self, name)
 	mmobject *self;
 	char *name;
 {
 	if (strcmp(name, "armed") == 0)
-		return newintobject((self->mm_flags & ARMED) != 0);
-	return findmethod(channel_methods, (object *)self, name);
+		return PyInt_FromLong((self->mm_flags & ARMED) != 0);
+	return Py_FindMethod(channel_methods, (PyObject *)self, name);
 }
 
-static typeobject Mmtype = {
-	OB_HEAD_INIT(&Typetype)
+static PyTypeObject Mmtype = {
+	PyObject_HEAD_INIT(&PyType_Type)
 	0,			/*ob_size*/
 	"mm",			/*tp_name*/
 	sizeof(mmobject),	/*tp_size*/
@@ -537,12 +537,12 @@ static mmobject *
 newmmobject(wid, ev, attrdict, armsema, playsema, flagsema, exitsema, armwaitsema, chanobj)
 	int wid;
 	int ev;
-	object *attrdict;
+	PyObject *attrdict;
 	type_sema armsema, playsema, flagsema, exitsema, armwaitsema;
 	channelobject *chanobj;
 {
 	mmobject *mmp;
-	mmp = NEWOBJ(mmobject, &Mmtype);
+	mmp = PyObject_NEW(mmobject, &Mmtype);
 	if (mmp == NULL) {
 		free_sema(armsema);
 		free_sema(playsema);
@@ -554,14 +554,14 @@ newmmobject(wid, ev, attrdict, armsema, playsema, flagsema, exitsema, armwaitsem
 	mmp->mm_wid = wid;
 	mmp->mm_ev = ev;
 	mmp->mm_flags = 0;
-	XINCREF(attrdict);
+	Py_XINCREF(attrdict);
 	mmp->mm_attrdict = attrdict;
 	mmp->mm_armsema = armsema;
 	mmp->mm_playsema = playsema;
 	mmp->mm_flagsema = flagsema;
 	mmp->mm_exitsema = exitsema;
 	mmp->mm_armwaitsema = armwaitsema;
-	INCREF(chanobj);
+	Py_INCREF(chanobj);
 	mmp->mm_chanobj = chanobj;
 	mmp->mm_private = NULL;
 	return mmp;
@@ -587,13 +587,13 @@ newmmobject(wid, ev, attrdict, armsema, playsema, flagsema, exitsema, armwaitsem
  *	number is that this allows the main program to use a different
  *	event number for each instantiation of a raw channel.
  */
-static object *
+static PyObject *
 mm_init(self, args)
-	object *self;
-	object *args;
+	PyObject *self;
+	PyObject *args;
 {
 	int wid, ev;
-	object *attrdict;
+	PyObject *attrdict;
 	mmobject *mmp = NULL;
 	channelobject *chanobj;
 	type_sema armsema = NULL, playsema = NULL;
@@ -601,10 +601,10 @@ mm_init(self, args)
 	int i;
 
 	dprintf(("mm_init\n"));
-	if (!getargs(args, "(OiiO)", &chanobj, &wid, &ev, &attrdict))
+	if (!PyArg_Parse(args, "(OiiO)", &chanobj, &wid, &ev, &attrdict))
 		return NULL;
 	if (!is_channelobject(chanobj)) {
-		err_setstr(RuntimeError, "first arg must be channel object");
+		PyErr_SetString(PyExc_RuntimeError, "first arg must be channel object");
 		return NULL;
 	}
 	dprintf(("mm_init: chanobj = %lx (%s)\n", (long) chanobj,
@@ -616,7 +616,7 @@ mm_init(self, args)
 	    (flagsema = allocate_sema(1)) == NULL ||
 	    (exitsema = allocate_sema(0)) == NULL ||
 	    (armwaitsema = allocate_sema(0)) == NULL) {
-		err_setstr(IOError, "could not allocate all semaphores");
+		PyErr_SetString(PyExc_IOError, "could not allocate all semaphores");
 		if (armsema) free_sema(armsema);
 		if (playsema) free_sema(playsema);
 		if (flagsema) free_sema(flagsema);
@@ -633,23 +633,23 @@ mm_init(self, args)
 	if (!(*chanobj->chan_funcs->init)(mmp))
 		goto error_return;
 	if (!start_new_thread(mm_armer, (void *) mmp)) {
-		err_setstr(IOError, "could not start arm thread");
+		PyErr_SetString(PyExc_IOError, "could not start arm thread");
 		goto error_return;
 	}
 	down_sema(mmp->mm_flagsema);
 	mmp->mm_flags |= ARMTHREAD;
 	up_sema(mmp->mm_flagsema);
 	if (!start_new_thread(mm_player, (void *) mmp)) {
-		err_setstr(IOError, "could not start play thread");
+		PyErr_SetString(PyExc_IOError, "could not start play thread");
 		goto error_return;
 	}
 	down_sema(mmp->mm_flagsema);
 	mmp->mm_flags |= PLAYTHREAD;
 	up_sema(mmp->mm_flagsema);
-	return (object *) mmp;
+	return (PyObject *) mmp;
 
  error_return:
-	DECREF(mmp);
+	Py_DECREF(mmp);
 	return NULL;
 }
 
@@ -661,30 +661,30 @@ mm_init(self, args)
  *	qenter() (which does not wake the select, unlike external
  *	events).
  */
-static object *
+static PyObject *
 mm_setsyncfd(self, args)
-	object *self;
-	object *args;
+	PyObject *self;
+	PyObject *args;
 {
 	int fd;
     
-	if (!getargs(args, "i", &fd))
+	if (!PyArg_Parse(args, "i", &fd))
 		return NULL;
 	qenter_sync_fd = fd;
-	INCREF(None);
-	return None;
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
-static struct methodlist mm_methods[] = {
-	{"init",		(method)mm_init},
-	{"setsyncfd",		(method)mm_setsyncfd},
+static PyMethodDef mm_methods[] = {
+	{"init",		(PyCFunction)mm_init},
+	{"setsyncfd",		(PyCFunction)mm_setsyncfd},
 	{NULL,		NULL}		/* sentinel */
 };
 
 void
 initmm()
 {
-	object *m, *d, *v;
+	PyObject *m, *d, *v;
 
 #ifdef MM_DEBUG
 	mm_debug = getenv("MMDEBUG") != 0;
@@ -692,18 +692,18 @@ initmm()
 
 	dprintf(("initmm\n"));
 
-	m = initmodule("mm", mm_methods);
-	d = getmoduledict(m);
+	m = Py_InitModule("mm", mm_methods);
+	d = PyModule_GetDict(m);
 
-	v = newintobject((long) ARMDONE);
-	if (v == NULL || dictinsert(d, "armdone", v) != 0)
-		fatal("can't define mm.armdone");
+	v = PyInt_FromLong((long) ARMDONE);
+	if (v == NULL || PyDict_SetItemString(d, "armdone", v) != 0)
+		Py_FatalError("can't define mm.armdone");
 
-	v = newintobject((long) PLAYDONE);
-	if (v == NULL || dictinsert(d, "playdone", v) != 0)
-		fatal("can't define mm.playdone");
+	v = PyInt_FromLong((long) PLAYDONE);
+	if (v == NULL || PyDict_SetItemString(d, "playdone", v) != 0)
+		Py_FatalError("can't define mm.playdone");
 
-	MmError = newstringobject("mm.error");
-	if (MmError == NULL || dictinsert(d, "error", MmError) != 0)
-		fatal("can't define mm.error");
+	MmError = PyString_FromString("mm.error");
+	if (MmError == NULL || PyDict_SetItemString(d, "error", MmError) != 0)
+		Py_FatalError("can't define mm.error");
 }
