@@ -163,18 +163,26 @@ class RealChannel:
 #		self.__rmaplayer.Begin()
 		self.__engine.startusing()
 		self.__using_engine = 1
+		self.__spark = 1
 		return 1
 
 	def OnPresentationOpened(self):
-		windowinterface.settimer(0.1,(self.playit2,()))
-
-	def playit2(self):
 		node = self._playargs[0]
 		t0 = self.__channel._scheduler.timefunc()
 		if t0 > node.start_time:
-##			print 'skipping',node.start_time,t0,t0-node.start_time
-			self.__rmaplayer.Seek(int((t0-node.start_time)*1000))
-		self.__rmaplayer.Begin()
+			print 'skipping',node.start_time,t0,t0-node.start_time
+			try:
+				self.__rmaplayer.Seek(int((t0-node.start_time)*1000))
+			except rma.error, arg:
+				print arg
+		else:
+			windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
+			self.__spark = 0
+
+	def OnPostSeek(self, oldTime, newTime):
+		if self.__spark:
+			windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
+			self.__spark = 0
 
 	def replay(self):
 		if not self._playargs:
