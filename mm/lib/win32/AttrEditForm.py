@@ -164,8 +164,8 @@ class AttrEditForm(docview.ListView):
 		self._attr_type=None
 		self.SetStdDlgBar()
 		self.GetParent().HookNotify(self.OnNotifyItemChanged,commctrl.LVN_ITEMCHANGED)
+		self.GetParent().HookNotify(self.setFocusToDlg,commctrl.NM_CLICK)
 		self.SelectItem(0)
-
 		return 0
 
 	# Response to a list control selection change
@@ -255,8 +255,10 @@ class AttrEditForm(docview.ListView):
 		else: # all other types
 			d._attrname.settext(attrname)
 			d._attrval.settext(attrval)
-		self.SetFocus()
 	
+	def setFocusToDlg(self, nm=None, nmrest=None):
+		self._dlgBar.SetFocus();
+
 	# Updates a list item text			
 	def UpdateValue(self,str):
 		self.SetItemText(self.selecteditem, 1, str)
