@@ -140,6 +140,8 @@ class _Event:
 		else:
 			if self._active_movies:
 				Qt.MoviesTask(0)
+			if Dlg.IsDialogEvent(event):
+				self._handle_dialogevent(event)
 			if self.needmenubarrecalc and self._command_handler:
 				self._command_handler.update_menus()
 				self.needmenubarrecalc = 0
