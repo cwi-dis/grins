@@ -2531,7 +2531,14 @@ static PyObject *MediaObj_GetMediaNextInterestingTimeOnly(MediaObject *_self, Py
 	return _res;
 }
 
+#ifdef _WIN32
+#include "MediaObj.inc"
+#endif
+
 static PyMethodDef MediaObj_methods[] = {
+#ifdef _WIN32
+	APPEND_WIN_MediaObj_methods
+#endif
 	{"LoadMediaIntoRam", (PyCFunction)MediaObj_LoadMediaIntoRam, 1,
 	 "(TimeValue time, TimeValue duration, long flags) -> None"},
 	{"GetMediaTrack", (PyCFunction)MediaObj_GetMediaTrack, 1,

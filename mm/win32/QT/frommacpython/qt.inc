@@ -74,6 +74,15 @@ static PyObject* Qt_SetGWorld(PyObject *self, PyObject *args)
 	return Py_None;
 	}
 
+static PyObject *Qt_GetGWorld(MovieObject *self, PyObject *args)
+{
+	CGrafPtr port;
+	GDHandle gdh;
+	if (!PyArg_ParseTuple(args, "")) return NULL;
+	GetGWorld(&port, &gdh);
+	return Py_BuildValue("O&O&", GrafObj_New, port, OptResObj_New, gdh);
+}
+
 static PyObject* Qt_CreatePortAssociation(PyObject *self, PyObject *args) 
 	{
 	HWND hwnd;
@@ -170,6 +179,8 @@ static PyObject* Qt_BuildOSType(PyObject *self, PyObject *args)
 	"(FSSpec fileSpec, SInt8 permission) -> (short resRefNum)"},\
 	{"SetGWorld", (PyCFunction)Qt_SetGWorld, 1,\
 	"(HWND hwnd) -> ()"},\
+	{"GetGWorld", (PyCFunction)Qt_GetGWorld, 1,\
+	"() -> (GrafPtr gp, GDHandle gdh)"},\
 	{"CreatePortAssociation", (PyCFunction)Qt_CreatePortAssociation, 1,\
 	"(HWND hwnd) -> (GrafPtr ptr)"},\
 	{"DestroyPortAssociation", (PyCFunction)Qt_DestroyPortAssociation, 1,\

@@ -197,7 +197,8 @@ extern int MenuObj_Convert(PyObject *, MenuHandle *) {return 0;}
 /* QTWINPORT XXXX - These we probably need. They'll need to convert from/to some
 ** sort of a drawing surface (can be onscreen and offscreen on the mac) */
 
-extern PyObject *GrafObj_New(GrafPtr) {return 0;}
+PyObject *GrafObj_New(GrafPtr ptr) 
+	{return Py_BuildValue("i", int(ptr));}			
 
 int GrafObj_Convert(PyObject *obj, GrafPtr *gp) 
 	{
@@ -218,16 +219,24 @@ extern int QdRGB_Convert(PyObject *, RGBColor *) {return 0;}
 /* Qdoffs exports */
 //extern PyObject *GWorldObj_New(GWorldPtr) {return 0;}
 /* QTWINPORT XXXX - This could be a tricky one. A GWorld is an offscreen drawing context */
-extern int GWorldObj_Convert(PyObject *, GWorldPtr *) {return 0;}
+int GWorldObj_Convert(PyObject *obj, GWorldPtr *ptr)
+	{
+	if (!PyArg_ParseTuple(obj, "i", ptr))
+		return 0;
+	return 1;
+	}
 
 
 /* Res exports */
 /* QTWINPORT XXXX - These have to be checked. MacPython code is a bit sloppy, and it uses
 ** ResObj_xxxxx() for any type of handle. So some will be region Handles, some will be
 ** completely different types. */
-extern PyObject *ResObj_New(Handle) {return 0;}
-extern int ResObj_Convert(PyObject *, Handle *) {return 0;}
-extern PyObject *OptResObj_New(Handle) {return 0;}
+PyObject *ResObj_New(Handle h)
+	{return Py_BuildValue("i", int(h));}
+			
+extern int ResObj_Convert(PyObject *obj, Handle *ph) {ph=NULL; return 1;}
+PyObject *OptResObj_New(Handle h)
+	{return Py_BuildValue("i", int(h));}
 extern int OptResObj_Convert(PyObject *, Handle *ph) {ph=NULL;return 1;}
 
 /* TE exports */
