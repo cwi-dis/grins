@@ -106,8 +106,8 @@ class GrinsApp(thread.WinApp):
 		self.frame.LoadFrame(win32ui.IDR_MAINFRAME, win32con.WS_OVERLAPPEDWINDOW)
 		self.frame.DragAcceptFiles()	# we can accept these.
 
-		self.frame.ShowWindow(win32ui.GetInitialStateRequest());
-		self.frame.UpdateWindow();
+#		self.frame.ShowWindow(win32ui.GetInitialStateRequest());
+#		self.frame.UpdateWindow();
 
 		self.frame.SetWindowText("GRiNS Debugging Terminal")
 		self.HookCommands()
