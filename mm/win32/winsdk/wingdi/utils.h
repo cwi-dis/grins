@@ -178,6 +178,8 @@ class PyDictParser
 
 inline HGDIOBJ GetGdiObjHandle(PyObject *obj)
 	{
+	if(obj == Py_None)
+		return 0;
 	if(PyInt_Check(obj))
 		return (HGDIOBJ)PyInt_AsLong(obj);
 	struct GdiObj { PyObject_HEAD; HGDIOBJ m_hGdiObj;};
@@ -186,6 +188,8 @@ inline HGDIOBJ GetGdiObjHandle(PyObject *obj)
 
 inline int GetObjHandle(PyObject *obj)
 	{
+	if(obj == Py_None)
+		return 0;
 	if(PyInt_Check(obj))
 		return PyInt_AsLong(obj);
 	struct WrapperObj { PyObject_HEAD; int m_h;};
