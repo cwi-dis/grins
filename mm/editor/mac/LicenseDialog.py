@@ -91,3 +91,6 @@ class EnterkeyDialog(windowinterface.MACDialog):
 			self.close()
 		elif n in (ITEM_NAME, ITEM_ORGANIZATION, ITEM_KEY):
 			self.setdialoginfo()
+		else:
+			print "Unknown EnterkeyItem", n
+		return 1
