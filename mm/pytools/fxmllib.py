@@ -103,6 +103,14 @@ _Digit = u'\u0030-\u0039\u0660-\u0669\u06F0-\u06F9\u0966-\u096F\u09E6-\u09EF' \
          u'\u0ED0-\u0ED9\u0F20-\u0F29'
 _Extender = u'\u00B7\u02D0\u02D1\u0387\u0640\u0E46\u0EC6\u3005\u3031-\u3035' \
             u'\u309D-\u309E\u30FC-\u30FE'
+
+if 0:
+    _BaseChar = 'A-Za-z'
+    _Ideographic = ''
+    _Digit = '0-9'
+    _CombiningChar = ''
+    _Extender = ''
+
 _Letter = _BaseChar + _Ideographic
 _NameChar = '-' + _Letter + _Digit + '._:' + _CombiningChar + _Extender
 
@@ -225,7 +233,7 @@ class XMLParser:
 
            End of data, finish up parsing."""
         # Actually, this is where we start parsing.
-        data = string.join(self.rawdata, '')
+        data = ''.join(self.rawdata)
         self.rawdata = []
         self.parse(data)
 
@@ -322,7 +330,7 @@ class XMLParser:
             docname, publit, syslit, docdata = res.group('docname', 'publit',
                                                         'syslit', 'data')
             self.docname = docname
-            if publit: publit = string.join(string.split(publit[1:-1]))
+            if publit: publit = ' '.join(publit[1:-1].split(None))
             if syslit: syslit = syslit[1:-1]
             self.handle_doctype(docname, publit, syslit, docdata)
             i = res.end(0)
@@ -555,7 +563,7 @@ class XMLParser:
                             self.__error("unknown entity reference `&%s;' in element `%s'" % (name, ptagname), data, i, self.baseurl, fatal = 0)
                         self.data = data
                         self.offset = res.start('name')
-                        self.lineno = string.count(data, '\n', 0, self.offset)
+                        self.lineno = data.count('\n', 0, self.offset)
                         self.unknown_entityref(name)
                 else:
                     str = self.__parse_charref(res.group('char'), data, res.start(0))
@@ -706,7 +714,7 @@ class XMLParser:
                 s = 's'
             else:
                 s = ''
-            reqattrs = string.join(reqattrs, "', `")
+            reqattrs = "', `".join(reqattrs)
             self.__error("required attribute%s `%s' of element `%s' missing" % (s, reqattrs, tagname), data, dataend, self.baseurl, fatal =  0)
         if attributes is not None:
             # fill in missing attributes that have a default value
@@ -815,9 +823,9 @@ class XMLParser:
                     newval.append('&#%s;' % res.group('char'))
                     continue
                 newval.append(val)
-        str = string.join(newval, '')
+        str = ''.join(newval)
         if attype is not None and attype != 'CDATA':
-            str = string.join(string.split(str))
+            str = ' '.join(str.split(None))
         return str
 
     def __parse_charref(self, name, data, i):
@@ -919,19 +927,19 @@ class XMLParser:
                 while ares is not None:
                     atname, attype, atvalue, atstring = ares.group('atname', 'attype', 'atvalue', 'atstring')
                     if attype[0] == '(':
-                        attype = map(string.strip, string.split(attype[1:-1], '|'))
+                        attype = map(string.strip, attype[1:-1].split('|'))
                     elif attype[:8] == 'NOTATION':
                         if self.elems[elname][0] == 'EMPTY':
                             self.__error("NOTATION not allowed on EMPTY element", data, ares.start('attype'), self.baseurl)
-                        atnot = map(string.strip, string.split(ares.group('notation'), '|'))
+                        atnot = map(string.strip, ares.group('notation').split('|'))
                         attype = ('NOTATION', atnot)
                     if atstring:
                         atstring = atstring[1:-1] # remove quotes
                         atstring = self.__parse_attrval(atstring, attype)
                         if attype != 'CDATA':
-                            atstring = string.join(string.split(atstring))
+                            atstring = ' '.join(atstring.split(None))
                         else:
-                            atstring = string.join(string.split(atstring, '\t'), ' ')
+                            atstring = ' '.join(atstring.split('\t'))
                     if type(attype) is type([]):
                         if atstring is not None and atstring not in attype:
                             self.__error("default value for attribute `%s' on element `%s' not listed as possible value" % (atname, elname), data, i, self.baseurl)
@@ -980,7 +988,7 @@ class XMLParser:
                     else:
                         r = externalid.match(pvalue)
                         publit, syslit = r.group('publit', 'syslit')
-                        if publit: publit = string.join(string.split(publit[1:-1]))
+                        if publit: publit = ' '.join(publit[1:-1].split(None))
                         if syslit: syslit = syslit[1:-1]
                         self.pentitydefs[pname] = publit, syslit
                 else:
@@ -1016,7 +1024,7 @@ class XMLParser:
                     else:
                         r = externalid.match(value)
                         publit, syslit = r.group('publit', 'syslit')
-                        if publit: publit = string.join(string.split(publit[1:-1]))
+                        if publit: publit = ' '.join(publit[1:-1].split(None))
                         if syslit: syslit = syslit[1:-1]
                         r1 = ndata.match(value, r.end(0))
                         if r1 is not None:
@@ -1095,7 +1103,7 @@ class XMLParser:
         if res is not None:
             mixed = res.group(0)
             if mixed[-1] == '*':
-                mixed = map(string.strip, string.split(mixed[1:-2], '|'))
+                mixed = map(string.strip, mixed[1:-2].split('|'))
             else:
                 mixed = '#PCDATA'
             return res.end(0), mixed, 0, 0
@@ -1208,7 +1216,7 @@ class XMLParser:
         # this either raises an exception (Error) or calls
         # self.syntax_error which may be overridden
         if data is not None and i is not None:
-            self.lineno = lineno = string.count(data, '\n', 0, i) + 1
+            self.lineno = lineno = data.count('\n', 0, i) + 1
         else:
             self.lineno = None
         self.data = data
@@ -1488,8 +1496,8 @@ def test(args = None):
             do_time = 0                 # can't print times now
             print str(info)
             if info.text is not None and info.offset is not None:
-                i = string.rfind(info.text, '\n', 0, info.offset) + 1
-                j = string.find(info.text, '\n', info.offset)
+                i = info.text.rfind('\n', 0, info.offset) + 1
+                j = info.text.find('\n', info.offset)
                 if j == -1: j = len(info.text)
                 try:
                     print info.text[i:j]
