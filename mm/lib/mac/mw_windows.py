@@ -1746,9 +1746,6 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 			for d in self._displists[:]:
 				d.close()
 			self._do_resize0()
-		if mycreatebox:
-			mycreatebox._rb_end()
-			raise _rb_done
 		
 	def _do_resize0(self):
 		"""Common code for resize and double width/height"""
