@@ -128,7 +128,7 @@ class Animator:
 
 class ConstAnimator(Animator):
 	def __init__(self, attr, domval, val, dur):
-		Animator.__init__(self, attr, domval, (val,), dur, mode=='discrete')
+		Animator.__init__(self, attr, domval, (val,), dur, mode='discrete')
 
 
 # SequenceAnimator can be used for example for 2D or 3D positions
@@ -153,8 +153,6 @@ class SequenceAnimator(Animator):
 
 # Impl. rem:
 # * on syntax error: we must ignore animation
-# *	for discrete 'to' animation set the "to" value for the simple duration
-#	but for 'from-to' set the "from" value for the first half and the 'to' for the second
 # * attr types map
 # * use f(0) if duration is undefined
 # * ignore keyTimes if dur indefinite
@@ -169,13 +167,15 @@ class AnimateElementParser:
 		self.__target = target
 
 		self.__attrname = ''
-		self.__attrtype = 'numeric'
 		self.__domval = None
 		self.__enable = 0
 		self.__grinsext = 0
 
 		self.__hasValidTarget = self.__checkTarget()
-		self.__getEnumAttrs()
+
+		self.__additive = MMAttrdefs.getattr(self.__anim, 'additive')
+		self.__calcMode = MMAttrdefs.getattr(self.__anim, 'calcMode')
+		self.__accumulate = MMAttrdefs.getattr(self.__anim, 'accumulate')
 
 	def getAnimator(self):
 		if not self.__hasValidTarget:
@@ -185,18 +185,19 @@ class AnimateElementParser:
 		domval = self.__domval
 		dur = self.getDuration()
 		mode = self.__calcMode 
-		times = self.getInterpolationKeyTimes() 
-		splines = self.getInterpolationKeySplines()
+		times = self.__getInterpolationKeyTimes() 
+		splines = self.__getInterpolationKeySplines()
 
 		# src attribute animation
 		if self.__attrname=='file':
-			values = self.getAlphaInterpolationValues()
+			values = self.__getAlphaInterpolationValues()
 			mode = 'discrete' # override calc mode
 			return Animator(attr, domval, values, dur, mode, times, splines)
 		
 		## Begin temp grins extensions
+		# position animation
 		if self.__grinsext:
-			values = self.getNumInterpolationValues()
+			values = self.__getNumInterpolationValues()
 			anim = Animator(attr, domval, values, dur, mode, times, splines)
 			anim._transf = anim._round
 			return anim
@@ -206,28 +207,7 @@ class AnimateElementParser:
 
 	def getAttrName(self):
 		return self.__attrname
-
-	def __checkTarget(self):
-		self.__attrname = MMAttrdefs.getattr(self.__anim, 'attributeName')
-		if not self.__attrname:
-			print 'failed to get attributeName', self.__anim
-			return 0
-
-		self.__domval = MMAttrdefs.getattr(self.__target, self.__attrname)
-
-		if not self.__domval:
-			self.__checkExtensions()
-
-		if not self.__domval:
-			print 'Failed to get original DOM value for attr',self.__attrname,'from node',self.__target
-			return 0
-		return 1
 							
-	def __getEnumAttrs(self):
-		self.__additive = MMAttrdefs.getattr(self.__anim, 'additive')
-		self.__calcMode = MMAttrdefs.getattr(self.__anim, 'calcMode')
-		self.__accumulate = MMAttrdefs.getattr(self.__anim, 'accumulate')
-
 	def getDuration(self):
 		return MMAttrdefs.getattr(self.__anim, 'duration')
 
@@ -249,11 +229,25 @@ class AnimateElementParser:
 	def getKeySplines(self):
 		return MMAttrdefs.getattr(self.__anim, 'keySplines')
 
-	def getLoop(self):
-		return MMAttrdefs.getattr(self.__anim, 'loop')
+	# check that we have a valid target
+	def __checkTarget(self):
+		self.__attrname = MMAttrdefs.getattr(self.__anim, 'attributeName')
+		if not self.__attrname:
+			print 'failed to get attributeName', self.__anim
+			return 0
+
+		self.__domval = MMAttrdefs.getattr(self.__target, self.__attrname)
+
+		if not self.__domval:
+			self.__checkExtensions()
+
+		if not self.__domval:
+			print 'Failed to get original DOM value for attr',self.__attrname,'from node',self.__target
+			return 0
+		return 1
 
 	# return list of interpolation values
-	def getNumInterpolationValues(self):	
+	def __getNumInterpolationValues(self):	
 		# if 'values' are given ignore 'from/to/by'
 		values =  self.getValues()
 		if values:
@@ -274,7 +268,7 @@ class AnimateElementParser:
 		v2 = self.getTo()
 		dv = self.getBy()
 		if v2:
-			v2 = string.atof(v1)
+			v2 = string.atof(v2)
 		elif dv:
 			dv = string.atof(dv)
 			v2 = v1 + dv
@@ -283,7 +277,7 @@ class AnimateElementParser:
 		return v1, v2
 
 	# return list of interpolation strings
-	def getAlphaInterpolationValues(self):
+	def __getAlphaInterpolationValues(self):
 		
 		# if values are given ignore from/to/by
 		values =  self.getValues()
@@ -303,7 +297,7 @@ class AnimateElementParser:
 		return v1, v2
 
 
-	def getInterpolationKeyTimes(self):
+	def __getInterpolationKeyTimes(self):
 		values =  self.getValues()
 		if not values: return ()
 		vl = string.split(values,';')
@@ -334,7 +328,7 @@ class AnimateElementParser:
 				return ()
 		return tt
 
-	def getInterpolationKeySplines(self):
+	def __getInterpolationKeySplines(self):
 		if self.__calcMode != 'spline':
 			return []
 		keySplines = self.getKeySplines()
