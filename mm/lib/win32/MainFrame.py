@@ -132,7 +132,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 		# Set sizes (balance forces)
 		if not MDIFrameWnd.wndsize or MDIFrameWnd.wndismax:
-			MDIFrameWnd.wndsize=win32mu.Point(((3*sysmetrics.scr_width_pxl/4),(3*sysmetrics.scr_height_pxl/4)))
+			MDIFrameWnd.wndsize=win32mu.Point(((3*sysmetrics.scr_width_pxl/4),100))
 		cs.cx,cs.cy=MDIFrameWnd.wndsize.tuple()
 		cxmax=3*sysmetrics.scr_width_pxl/4
 		cymax=3*sysmetrics.scr_height_pxl/4
