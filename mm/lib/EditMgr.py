@@ -1,8 +1,42 @@
 __version__ = "$Id$"
 
 # Edit Manager.
-# TODO: What does the EditMgr do, specifically -mjvdg
 # Amazing as it may seem, this module is not dependent on window software!
+
+# Edit manager interface -
+
+##The edit manager is responsible for taking and recording changes made
+##by different parts of the system in a fashion that allows undo's,
+##redo's and safe changes to the MMNode (and other) structures.
+
+##It works (currently) as follows:
+##	* A specific view wants to make a change to the structure. ed
+##	is an instance of the editmanager.
+##	* That view calls em.register() to tell everybody in
+##	em.registry that it wants an exclusive lock on making changes.
+##	* The view does it's stuff to the data structures.
+##	* the view calls ed.commit(). commit will record the changes
+##	and let all other views know that the document has changed.
+
+##A better scheme would be as follows:
+##        - The edit manager solely records changes to models.
+##	- When undoing, the edit manager blindly interprets the
+##	transaction list to undo the changes made to objects.
+##	- Each model has an interface for calls from the edit
+##	manager, views and controllers.
+
+##	When a view wants to make a change:
+##        1) A controller calls a change() method on a certain Model.
+##	2) The model sets a lock on itself or it's container (if multitasking)
+##	3) The model records the change with the edit manager.
+##	4) The model makes the change to itself or it's parent.
+##	5) The model tells all of it's views that it has changed.
+##	6) The model releases the lock and returns.
+
+##	In this case, the Edit manager would be more of a transaction
+##	manager, that records a list of undoable transactions to the
+##	document.	
+
 
 import MMExc
 from HDTL import HD, TL
@@ -84,6 +118,8 @@ class EditMgr:
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
 		print "DEBUG: Editmanager committed.";
+		import traceback;
+		traceback.print_stack();
 	#
 	def rollback(self):
 		if not self.busy: raise MMExc.AssertError, 'invalid rollback'
