@@ -333,28 +333,29 @@ static PyTypeObject DirectDrawType = {
 ////////////////////////////////////////////
 // DirectDrawSurface object 
 
-static char DirectDrawSurface_Empty__doc__[] =
+static char DirectDrawSurface_GetSurfaceDesc__doc__[] =
 ""
 ;
 static PyObject *
-DirectDrawSurface_Empty(DirectDrawSurfaceObject *self, PyObject *args)
+DirectDrawSurface_GetSurfaceDesc(DirectDrawSurfaceObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;	
-	HRESULT hr = S_OK;
-	//hr = self->pI->Empty();
+	HRESULT hr;
+	DDSURFACEDESCObject *obj = newDDSURFACEDESCObject();	
+	hr = self->pI->GetSurfaceDesc(&obj->sd);
 	if (FAILED(hr)){
-		seterror("DirectDrawSurface_Empty", hr);
+		Py_DECREF(obj);
+		seterror("DirectDrawSurface_GetSurfaceDesc", hr);
 		return NULL;
 	}
-	Py_INCREF(Py_None);
-	return Py_None;
+	return (PyObject *)obj;
 }
 
 
 
 static struct PyMethodDef DirectDrawSurface_methods[] = {
-	{"Empty", (PyCFunction)DirectDrawSurface_Empty, METH_VARARGS, DirectDrawSurface_Empty__doc__},
+	{"GetSurfaceDesc", (PyCFunction)DirectDrawSurface_GetSurfaceDesc, METH_VARARGS, DirectDrawSurface_GetSurfaceDesc__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -537,28 +538,68 @@ static PyTypeObject DirectDrawPaletteType = {
 ////////////////////////////////////////////
 // DDSURFACEDESC object 
 
-static char DDSURFACEDESC_Empty__doc__[] =
-""
+static char DDSURFACEDESC_Clear__doc__[] =
+"Clear DDSURFACEDESC for reuse"
 ;
 static PyObject *
-DDSURFACEDESC_Empty(DDSURFACEDESCObject *self, PyObject *args)
+DDSURFACEDESC_Clear(DDSURFACEDESCObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;	
-	HRESULT hr = S_OK;
-	//hr = self->pI->Empty();
-	if (FAILED(hr)){
-		seterror("DDSURFACEDESC_Empty", hr);
-		return NULL;
-	}
+	memset(&self->sd, 0, sizeof(self->sd));
+	self->sd.dwSize = sizeof(self->sd);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
+static char DDSURFACEDESC_SetFlags__doc__[] =
+""
+;
+static PyObject*
+DDSURFACEDESC_SetFlags(DDSURFACEDESCObject *self, PyObject *args)
+{
+	DWORD dwFlags;
+	if (!PyArg_ParseTuple(args, "i",&dwFlags))
+		return NULL;
+	self->sd.dwFlags = dwFlags;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
 
+static char DDSURFACEDESC_SetCaps__doc__[] =
+""
+;
+static PyObject*
+DDSURFACEDESC_SetCaps(DDSURFACEDESCObject *self, PyObject *args)
+{
+	DWORD dwCaps;
+	if (!PyArg_ParseTuple(args, "i",&dwCaps))
+		return NULL;
+	self->sd.ddsCaps.dwCaps = dwCaps;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char DDSURFACEDESC_SetSize__doc__[] =
+""
+;
+static PyObject*
+DDSURFACEDESC_SetSize(DDSURFACEDESCObject *self, PyObject *args)
+{
+	DWORD cx, cy;
+	if (!PyArg_ParseTuple(args, "ii",&cx,&cy))
+		return NULL;
+	self->sd.dwWidth = cx;
+	self->sd.dwHeight = cy;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
 
 static struct PyMethodDef DDSURFACEDESC_methods[] = {
-	{"Empty", (PyCFunction)DDSURFACEDESC_Empty, METH_VARARGS, DDSURFACEDESC_Empty__doc__},
+	{"Clear", (PyCFunction)DDSURFACEDESC_Clear, METH_VARARGS, DDSURFACEDESC_Clear__doc__},
+	{"SetFlags", (PyCFunction)DDSURFACEDESC_SetFlags, METH_VARARGS, DDSURFACEDESC_SetFlags__doc__},
+	{"SetCaps", (PyCFunction)DDSURFACEDESC_SetCaps, METH_VARARGS, DDSURFACEDESC_SetCaps__doc__},
+	{"SetSize", (PyCFunction)DDSURFACEDESC_SetSize, METH_VARARGS, DDSURFACEDESC_SetSize__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -690,6 +731,156 @@ static struct PyMethodDef ddraw_methods[] = {
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
+
+struct constentry {char* s;int n;};
+
+static struct constentry _ddscl[] ={
+	{"DDSCL_FULLSCREEN",DDSCL_FULLSCREEN},
+	{"DDSCL_ALLOWREBOOT",DDSCL_ALLOWREBOOT},
+	{"DDSCL_NOWINDOWCHANGES",DDSCL_NOWINDOWCHANGES},
+	{"DDSCL_NORMAL",DDSCL_NORMAL},
+	{"DDSCL_EXCLUSIVE",DDSCL_EXCLUSIVE},
+	{"DDSCL_ALLOWMODEX",DDSCL_ALLOWMODEX},
+	{"DDSCL_SETFOCUSWINDOW",DDSCL_SETFOCUSWINDOW},
+	{"DDSCL_SETDEVICEWINDOW",DDSCL_SETDEVICEWINDOW},
+	{"DDSCL_CREATEDEVICEWINDOW",DDSCL_CREATEDEVICEWINDOW},
+	{NULL,0}
+	};
+
+static struct constentry _ddsd[] ={
+	{"DDSD_CAPS",DDSD_CAPS},
+	{"DDSD_HEIGHT",DDSD_HEIGHT},
+	{"DDSD_WIDTH",DDSD_WIDTH},
+	{"DDSD_PITCH",DDSD_PITCH},
+	{"DDSD_BACKBUFFERCOUNT",DDSD_BACKBUFFERCOUNT},
+	{"DDSD_ZBUFFERBITDEPTH",DDSD_ZBUFFERBITDEPTH},
+	{"DDSD_ALPHABITDEPTH",DDSD_ALPHABITDEPTH},
+	{"DDSD_LPSURFACE",DDSD_LPSURFACE},
+	{"DDSD_PIXELFORMAT",DDSD_PIXELFORMAT},
+	{"DDSD_CKDESTOVERLAY",DDSD_CKDESTOVERLAY},
+	{"DDSD_CKDESTBLT",DDSD_CKDESTBLT},
+	{"DDSD_CKSRCOVERLAY",DDSD_CKSRCOVERLAY},
+	{"DDSD_CKSRCBLT",DDSD_CKSRCBLT},
+	{"DDSD_MIPMAPCOUNT",DDSD_MIPMAPCOUNT},
+	{"DDSD_REFRESHRATE",DDSD_REFRESHRATE},
+	{"DDSD_LINEARSIZE",DDSD_LINEARSIZE},
+	{"DDSD_ALL",DDSD_ALL},
+	{NULL,0}
+	};
+
+static struct constentry _ddscaps[] ={
+	{"DDSCAPS_RESERVED1",DDSCAPS_RESERVED1},
+	{"DDSCAPS_ALPHA",DDSCAPS_ALPHA},
+	{"DDSCAPS_BACKBUFFER",DDSCAPS_BACKBUFFER},
+	{"DDSCAPS_COMPLEX",DDSCAPS_COMPLEX},
+	{"DDSCAPS_FLIP",DDSCAPS_FLIP},
+	{"DDSCAPS_FRONTBUFFER",DDSCAPS_FRONTBUFFER},
+	{"DDSCAPS_OFFSCREENPLAIN",DDSCAPS_OFFSCREENPLAIN},
+	{"DDSCAPS_OVERLAY",DDSCAPS_OVERLAY},
+	{"DDSCAPS_PALETTE",DDSCAPS_PALETTE},
+	{"DDSCAPS_PRIMARYSURFACE",DDSCAPS_PRIMARYSURFACE},
+	{"DDSCAPS_PRIMARYSURFACELEFT",DDSCAPS_PRIMARYSURFACELEFT},
+	{"DDSCAPS_SYSTEMMEMORY",DDSCAPS_SYSTEMMEMORY},
+	{"DDSCAPS_TEXTURE",DDSCAPS_TEXTURE},
+	{"DDSCAPS_3DDEVICE",DDSCAPS_3DDEVICE},
+	{"DDSCAPS_VIDEOMEMORY",DDSCAPS_VIDEOMEMORY},
+	{"DDSCAPS_VISIBLE",DDSCAPS_VISIBLE},
+	{"DDSCAPS_WRITEONLY",DDSCAPS_WRITEONLY},
+	{"DDSCAPS_ZBUFFER",DDSCAPS_ZBUFFER},
+	{"DDSCAPS_OWNDC",DDSCAPS_OWNDC},
+	{"DDSCAPS_LIVEVIDEO",DDSCAPS_LIVEVIDEO},
+	{"DDSCAPS_HWCODEC",DDSCAPS_HWCODEC},
+	{"DDSCAPS_MODEX",DDSCAPS_MODEX},
+	{"DDSCAPS_MIPMAP",DDSCAPS_MIPMAP},
+	{"DDSCAPS_RESERVED2",DDSCAPS_RESERVED2},
+	{"DDSCAPS_ALLOCONLOAD",DDSCAPS_ALLOCONLOAD},
+	{"DDSCAPS_VIDEOPORT",DDSCAPS_VIDEOPORT},
+	{"DDSCAPS_LOCALVIDMEM",DDSCAPS_LOCALVIDMEM},
+	{"DDSCAPS_NONLOCALVIDMEM",DDSCAPS_NONLOCALVIDMEM},
+	{"DDSCAPS_STANDARDVGAMODE",DDSCAPS_STANDARDVGAMODE},
+	{"DDSCAPS_OPTIMIZED",DDSCAPS_OPTIMIZED},
+	{NULL,0}
+	};
+
+static struct constentry _ddblt[] ={
+	{"DDBLT_ALPHADEST",DDBLT_ALPHADEST},
+	{"DDBLT_ALPHADESTCONSTOVERRIDE",DDBLT_ALPHADESTCONSTOVERRIDE},
+	{"DDBLT_ALPHADESTNEG",DDBLT_ALPHADESTNEG},
+	{"DDBLT_ALPHADESTSURFACEOVERRIDE",DDBLT_ALPHADESTSURFACEOVERRIDE},
+	{"DDBLT_ALPHAEDGEBLEND",DDBLT_ALPHAEDGEBLEND},
+	{"DDBLT_ALPHASRC",DDBLT_ALPHASRC},
+	{"DDBLT_ALPHASRCCONSTOVERRIDE",DDBLT_ALPHASRCCONSTOVERRIDE},
+	{"DDBLT_ALPHASRCNEG",DDBLT_ALPHASRCNEG},
+	{"DDBLT_ALPHASRCSURFACEOVERRIDE",DDBLT_ALPHASRCSURFACEOVERRIDE},
+	{"DDBLT_ASYNC",DDBLT_ASYNC},
+	{"DDBLT_COLORFILL",DDBLT_COLORFILL},
+	{"DDBLT_DDFX",DDBLT_DDFX},
+	{"DDBLT_DDROPS",DDBLT_DDROPS},
+	{"DDBLT_KEYDEST",DDBLT_KEYDEST},
+	{"DDBLT_KEYDESTOVERRIDE",DDBLT_KEYDESTOVERRIDE},
+	{"DDBLT_KEYSRC",DDBLT_KEYSRC},
+	{"DDBLT_KEYSRCOVERRIDE",DDBLT_KEYSRCOVERRIDE},
+	{"DDBLT_ROP",DDBLT_ROP},
+	{"DDBLT_ROTATIONANGLE",DDBLT_ROTATIONANGLE},
+	{"DDBLT_ZBUFFER",DDBLT_ZBUFFER},
+	{"DDBLT_ZBUFFERDESTCONSTOVERRIDE",DDBLT_ZBUFFERDESTCONSTOVERRIDE},
+	{"DDBLT_ZBUFFERDESTOVERRIDE",DDBLT_ZBUFFERDESTOVERRIDE},
+	{"DDBLT_ZBUFFERSRCCONSTOVERRIDE",DDBLT_ZBUFFERSRCCONSTOVERRIDE},
+	{"DDBLT_ZBUFFERSRCOVERRIDE",DDBLT_ZBUFFERSRCOVERRIDE},
+	{"DDBLT_WAIT",DDBLT_WAIT},
+	{"DDBLT_DEPTHFILL",DDBLT_DEPTHFILL},
+	{NULL,0}
+	};
+
+static struct constentry _ddbltfast[] ={
+	{"DDBLTFAST_NOCOLORKEY",DDBLTFAST_NOCOLORKEY},
+	{"DDBLTFAST_SRCCOLORKEY",DDBLTFAST_SRCCOLORKEY},
+	{"DDBLTFAST_DESTCOLORKEY",DDBLTFAST_DESTCOLORKEY},
+	{"DDBLTFAST_WAIT",DDBLTFAST_WAIT},
+	{NULL,0}
+	};
+
+static struct constentry _ddflip[] ={
+	{"DDFLIP_WAIT",DDFLIP_WAIT},
+	{"DDFLIP_EVEN",DDFLIP_EVEN},
+	{"DDFLIP_ODD",DDFLIP_ODD},
+	{NULL,0}
+	};
+
+static struct constentry _ddlock[] ={
+	{"DDLOCK_SURFACEMEMORYPTR",DDLOCK_SURFACEMEMORYPTR},
+	{"DDLOCK_WAIT",DDLOCK_WAIT},
+	{"DDLOCK_EVENT",DDLOCK_EVENT},
+	{"DDLOCK_READONLY",DDLOCK_READONLY},
+	{"DDLOCK_WRITEONLY",DDLOCK_WRITEONLY},
+	{"DDLOCK_NOSYSLOCK",DDLOCK_NOSYSLOCK},
+	{NULL,0}
+	};
+
+static struct constentry _ddgbs[] ={
+	{"DDGBS_CANBLT",DDGBS_CANBLT},
+	{"DDGBS_ISBLTDONE",DDGBS_ISBLTDONE},
+	{NULL,0}
+	};
+
+
+// add symbolic constants of enum
+static int 
+SetItemEnum(PyObject *d,constentry e[])
+	{
+	PyObject *x;
+	for(int i=0;e[i].s;i++)
+		{
+		x = PyInt_FromLong((long) e[i].n);
+		if (x == NULL || PyDict_SetItemString(d, e[i].s, x) < 0)
+			return -1;
+		Py_DECREF(x);
+		}
+	return 0;
+	}
+#define FATAL_ERROR_IF(exp) if(exp){Py_FatalError("can't initialize module ddraw");return;}	
+
+
 static char ddraw_module_documentation[] =
 "DirectDraw module"
 ;
@@ -709,6 +900,16 @@ void initddraw()
 	d = PyModule_GetDict(m);
 	ErrorObject = PyString_FromString("ddraw.error");
 	PyDict_SetItemString(d, "error", ErrorObject);
+
+	// add symbolic constants of enum
+	FATAL_ERROR_IF(SetItemEnum(d,_ddscl)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_ddsd)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_ddscaps)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_ddblt)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_ddbltfast)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_ddflip)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_ddlock)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_ddgbs)<0)
 
 	/* Check for errors */
 	if (PyErr_Occurred())
