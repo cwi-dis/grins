@@ -63,7 +63,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "cmif"="C:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\cmif.vcp" - Package Owner=<4>
+Project: "cmif"=..\..\..\..\..\cmif.vcp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -76,6 +76,18 @@ Package=<4>
 ###############################################################################
 
 Project: "libjpeg"="..\..\..\..\LIB-SRC\JPEG\WINCE\libjpeg.vcp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "mp3lib"=..\mp3lib\mp3lib.vcp - Package Owner=<4>
 
 Package=<5>
 {{{
