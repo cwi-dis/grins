@@ -21,10 +21,8 @@ import MMAttrdefs
 from Channel import Channel
 		
 
-def armdone(arg):
-	pass
-def stopped(arg):
-	pass
+##def armdone(arg):
+##	pass
 
 class SoundChannel(Channel):
 	#
@@ -70,10 +68,8 @@ class SoundChannel(Channel):
 		filename = self.getfilename(node)
 		try:
 			import glwindow, mm
-			glwindow.devregister(`self.deviceno`+':'+`mm.armdone`,\
-				  armdone, 0)
-			glwindow.devregister(`self.deviceno`+':'+`mm.stopped`,\
-				  stopped, 0)
+##			glwindow.devregister(`self.deviceno`+':'+`mm.armdone`,\
+##				  armdone, 0)
 			self.armed_info = SoundDuration.getinfo(filename)
 			prepare(self.armed_info)	# Do a bit of readahead
 			f, nchannels, nsampframes, sampwidth, samprate, format = self.armed_info
@@ -85,7 +81,7 @@ class SoundChannel(Channel):
 				   'samprate': int(samprate), \
 				   'format': format, \
 				   'offset': int(f.tell())}, \
-				  None)
+				  None, 1)
 		except IOError:
 			self.armed_info = None
 			print 'cannot open sound file ' + filename
@@ -130,8 +126,6 @@ class SoundChannel(Channel):
 		import glwindow, mm
 		glwindow.devregister(`self.deviceno`+':'+`mm.playdone`, \
 			  self.done, None)
-		glwindow.devregister(`self.deviceno`+':'+`mm.stopped`, \
-			  stopped, 0)
 		self.threads.play()
 		self.scheduler.arm_ready(self.name)
 	#
@@ -152,7 +146,7 @@ class SoundChannel(Channel):
 ##		print 'SoundChannel.stop: self.threads = ' + `self.threads`
 		if self.node:
 			self.node = None
-			self.threads.stop()
+			self.threads.playstop()
 	#
 	def reset(self):
 		pass

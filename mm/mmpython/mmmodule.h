@@ -1,14 +1,15 @@
 #define ARMDONE		1
 #define PLAYDONE	2
-#define STOPPED		3
 
 /* flags for mm_flags */
-#define ARMING		0x0001
-#define PLAYING		0x0002
-#define EXIT		0x0004
-#define PAUSING		0x0008
-#define STOPPING	0x0010
-#define ARMED		0x0020
+#define ARMING		0x0001	/* channel is arming */
+#define PLAYING		0x0002	/* channel is playing */
+#define EXIT		0x0004	/* channel must exit */
+#define PAUSING		0x0008	/* channel is pausing */
+#define STOPPLAY	0x0010	/* channel must stop playing */
+#define STOPARM		0x0020	/* channel must stop arming */
+#define ARMED		0x0040	/* channel finished arming */
+#define SYNCARM		0x0080	/* arm synchronously */
 
 typedef struct {
 	OB_HEAD
@@ -20,19 +21,19 @@ typedef struct {
 	type_sema mm_armsema;	/* semaphore for starting arm thread */
 	type_sema mm_playsema;	/* semaphore for starting play thread */
 	type_sema mm_exitsema;	/* semaphore used for exiting */
+	type_sema mm_armwaitsema; /* semaphore to wait for synchronous arm */
 	struct channelobject *mm_chanobj; /* pointers to the channel's functions */
 	void *mm_private;	/* private pointer */
-	/*DEBUG*/type_sema mm_waitarm;
 } mmobject;
 
 struct mmfuncs {
 	void (*armer) PROTO((mmobject *));
 	void (*player) PROTO((mmobject *));
-	int (*done) PROTO((mmobject *));
 	int (*resized) PROTO((mmobject *));
 	int (*arm) PROTO((mmobject *, object *, int, int, object *, object *));
+	int (*armstop) PROTO((mmobject *));
 	int (*play) PROTO((mmobject *));
-	int (*stop) PROTO((mmobject *));
+	int (*playstop) PROTO((mmobject *));
 	int (*setrate) PROTO((mmobject *, double));
 	int (*init) PROTO((mmobject *));
 	void (*dealloc) PROTO((mmobject *));
