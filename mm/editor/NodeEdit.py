@@ -109,6 +109,8 @@ def showeditor(node):
 	chtype = node.GetChannelType()
 	try:
 		import os
+		if chtype == 'html' and not channeleditors.has_key('html'):
+		    chtype = 'text'
 		if not channeleditors.has_key(chtype):
 			print 'NodeEdit.showeditor: no editors for chtype', chtype
 			raise _LocalError
