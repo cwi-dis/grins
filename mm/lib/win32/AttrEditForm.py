@@ -43,6 +43,7 @@ error = 'lib.win32.AttrEditForm.error'
 # AttrEditor as a tab-dialog
 
 class AttrCtrl:
+	want_label = 1
 	want_colon_after_label = 1
 	want_default_help = 1
 
@@ -119,10 +120,11 @@ class OptionsCtrl(AttrCtrl):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
 		self._options.attach_to_parent()
-		label = self._attr.getlabel()
-		if self.want_colon_after_label:
-			label = label + ':'
-		self._attrname.settext(label)
+		if self.want_label:
+			label = self._attr.getlabel()
+			if self.want_colon_after_label:
+				label = label + ':'
+			self._attrname.settext(label)
 		list = self._attr.getoptions()
 		val = self._attr.getcurrent()
 		self.setoptions(list,val)
@@ -217,10 +219,11 @@ class OptionsRadioCtrl(AttrCtrl):
 	def OnInitCtrl(self):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
-		label = self._attr.getlabel()
-		if self.want_colon_after_label:
-			label = label + ':'
-		self._attrname.settext(label)
+		if self.want_label:
+			label = self._attr.getlabel()
+			if self.want_colon_after_label:
+				label = label + ':'
+			self._attrname.settext(label)
 		list = self._attr.getoptions()
 		n = len(list)
 		n = min(n,len(self._resid)-1)
@@ -294,10 +297,11 @@ class OptionsCheckCtrl(AttrCtrl):
 	def OnInitCtrl(self):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
-		label = self._attr.getlabel()
-		if self.want_colon_after_label:
-			label = label + ':'
-		self._attrname.settext(label)
+		if self.want_label:
+			label = self._attr.getlabel()
+			if self.want_colon_after_label:
+				label = label + ':'
+			self._attrname.settext(label)
 		list = self._attr.getoptions()
 		n = len(list)
 		for ix in range(n):
@@ -365,10 +369,11 @@ class FileCtrl(AttrCtrl):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
 		self._attrval.attach_to_parent()
-		label = self._attr.getlabel()
-		if self.want_colon_after_label:
-			label = label + ':'
-		self._attrname.settext(label)
+		if self.want_label:
+			label = self._attr.getlabel()
+			if self.want_colon_after_label:
+				label = label + ':'
+			self._attrname.settext(label)
 		self._attrval.settext(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
@@ -473,10 +478,11 @@ class ColorCtrl(AttrCtrl):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
 		self._attrval.attach_to_parent()
-		label = self._attr.getlabel()
-		if self.want_colon_after_label:
-			label = label + ':'
-		self._attrname.settext(label)
+		if self.want_label:
+			label = self._attr.getlabel()
+			if self.want_colon_after_label:
+				label = label + ':'
+			self._attrname.settext(label)
 		self._attrval.settext(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
@@ -589,10 +595,11 @@ class StringCtrl(AttrCtrl):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
 		self._attrval.attach_to_parent()
-		label = self._attr.getlabel()
-		if self.want_colon_after_label:
-			label = label + ':'
-		self._attrname.settext(label)
+		if self.want_label:
+			label = self._attr.getlabel()
+			if self.want_colon_after_label:
+				label = label + ':'
+			self._attrname.settext(label)
 		self.setvalue(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 
@@ -632,10 +639,11 @@ class TupleCtrl(AttrCtrl):
 	def OnInitCtrl(self):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
-		label = self._attr.getlabel()
-		if self.want_colon_after_label:
-			label = label + ':'
-		self._attrname.settext(label)
+		if self.want_label:
+			label = self._attr.getlabel()
+			if self.want_colon_after_label:
+				label = label + ':'
+			self._attrname.settext(label)
 		for i in range(self._nedit):		
 			self._attrval[i].attach_to_parent()
 		strxy=self._attr.getcurrent()
@@ -722,10 +730,11 @@ class StringOptionsCtrl(AttrCtrl):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
 		self._attrval.attach_to_parent()
-		label = self._attr.getlabel()
-		if self.want_colon_after_label:
-			label = label + ':'
-		self._attrname.settext(label)
+		if self.want_label:
+			label = self._attr.getlabel()
+			if self.want_colon_after_label:
+				label = label + ':'
+			self._attrname.settext(label)
 		if len(self._options):
 			self._attrval.initoptions(self._options)
 		self.setvalue(self._attr.getcurrent())
@@ -905,6 +914,26 @@ class OptionsCheckNocolonCtrl(OptionsCheckCtrl):
 
 class StringNocolonCtrl(StringCtrl):
 	want_colon_after_label = 0
+
+# On some pages we don't want to change the label, since the pages were
+# designed with labels
+class FloatTupleNolabelCtrl(FloatTupleCtrl):
+	want_label = 0
+
+class OptionsNolabelCtrl(OptionsCtrl):
+	want_label = 0
+
+class OptionsRadioNolabelCtrl(OptionsRadioCtrl):
+	want_label = 0
+
+class OptionsCheckNolabelCtrl(OptionsCheckCtrl):
+	want_label = 0
+
+class StringNolabelCtrl(StringCtrl):
+	want_label = 0
+
+class ColorNolabelCtrl(ColorCtrl):
+	want_label = 0
 
 ###############################	
 class SingleAttrPage(AttrPage):
@@ -2170,8 +2199,34 @@ class MediaserverGroup(StringGroup):
 class DurationGroup(StringGroup):
 	data=attrgrsdict['timing1']
 
-class Duration2Group(StringGroup):
+class Duration2Group(AttrGroup):
 	data=attrgrsdict['timing2']
+
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_T2
+
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('tag')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+		a = self.getattr('start')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		return cd
+
+class Duration3Group(Duration2Group):
+	data=attrgrsdict['timing3']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_T3
+
+	def createctrls(self,wnd):
+		cd = Duration2Group.createctrls(self,wnd)
+		a = self.getattr('tduration')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
+		return cd
 
 class DurationParGroup(AttrGroup):
 	data=attrgrsdict['timingpar']
@@ -2238,32 +2293,30 @@ class LayoutGroupWithUnits(LayoutGroup):
 		cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
 		return cd
 
-class ImgregionGroup(AttrGroup):
-	data=attrgrsdict['imgregion']
+class Imgregion1Group(AttrGroup):
+	data=attrgrsdict['imgregion1']
 	_attrnames = {'xy':'imgcropxy',
 		      'wh':'imgcropwh',
 		      'full':'fullimage',
-		      'anchor':'imgcropanchor'}
+		      }
 
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
 
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_LS1O2
+		return grinsRC.IDD_EDITATTR_LS1O2a
 
 	def createctrls(self,wnd):
 		cd={}
 		a=self.getattr(self._attrnames['xy'])
-		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13))
+		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13))
 		a=self.getattr(self._attrnames['wh'])
-		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14,grinsRC.IDC_15))
+		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14,grinsRC.IDC_15))
 		a=self.getattr(self._attrnames['full'])
-		if len(self._attrnames) == 4:
-			cd[a]=OptionsRadioNocolonCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))		
-		else:
-			cd[a]=OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))		
-		a=self.getattr(self._attrnames['anchor'])
-		cd[a]=OptionsNocolonCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
+		cd[a]=OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))		
+		if self._attrnames.has_key('anchor'):
+			a=self.getattr(self._attrnames['anchor'])
+			cd[a]=OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
 		return cd
 
 	def oninitdialog(self,wnd):
@@ -2277,7 +2330,38 @@ class ImgregionGroup(AttrGroup):
 	def islayoutattr(self,attr):
 		return (attr.getname()==self._attrnames['xy']) or (attr.getname()==self._attrnames['wh'])
 
-class SubregionGroup(ImgregionGroup):
+class ImgregionGroup(Imgregion1Group):
+	data=attrgrsdict['imgregion']
+	_attrnames = {'xy':'imgcropxy',
+		      'wh':'imgcropwh',
+		      'full':'fullimage',
+		      'anchor':'imgcropanchor'}
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_LS1O2
+
+class Subregion1Group(ImgregionGroup):
+	data=attrgrsdict['subregion1']
+	_attrnames = {'xy':'subregionxy',
+		      'wh':'subregionwh',
+		      'full':'displayfull',
+		      }
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_LS1O3a
+
+	def createctrls(self,wnd):
+		cd = ImgregionGroup.createctrls(self,wnd)
+		a = self.getattr('aspect')
+		cd[a]=OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
+		a = self.getattr('project_quality')
+		cd[a]=OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
+		return cd
+
+	def getpageclass(self):
+		return PosSizeLayoutPage
+
+class SubregionGroup(Subregion1Group):
 	data=attrgrsdict['subregion']
 	_attrnames = {'xy':'subregionxy',
 		      'wh':'subregionwh',
@@ -2287,17 +2371,6 @@ class SubregionGroup(ImgregionGroup):
 
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LS1O3
-
-	def createctrls(self,wnd):
-		cd = ImgregionGroup.createctrls(self,wnd)
-		a = self.getattr('aspect')
-		cd[a]=OptionsRadioCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
-		a = self.getattr('project_quality')
-		cd[a]=OptionsNocolonCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
-		return cd
-
-	def getpageclass(self):
-		return PosSizeLayoutPage
 
 class SystemGroup(AttrGroup):
 	data=attrgrsdict['system']
@@ -2468,17 +2541,19 @@ class TimingFadeoutGroup(AttrGroup):
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('tduration')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
 		a = self.getattr('start')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
 		a = self.getattr('fadeout')
-		cd[a] = OptionsRadioNocolonCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33))
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33))
 		a = self.getattr('fadeouttime')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42))
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42))
 		a = self.getattr('fadeoutduration')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
 		a = self.getattr('fadeoutcolor')
-		cd[a] = ColorCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62,grinsRC.IDC_63))
+		cd[a] = ColorNolabelCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62,grinsRC.IDC_63))
+		a = self.getattr('tag')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
 		return cd
 
 ##	def oninitdialog(self,wnd):
@@ -2513,6 +2588,8 @@ groupsui={
 	'base_winoff_and_units':LayoutGroupWithUnits,
 	'subregion':SubregionGroup,
 	'imgregion':ImgregionGroup,
+	'subregion1':Subregion1Group,
+	'imgregion1':Imgregion1Group,
 
 	'system':SystemGroup,
 	'preferences':PreferencesGroup,
@@ -2522,6 +2599,7 @@ groupsui={
 
 	'timing1':DurationGroup,
 	'timing2':Duration2Group,
+	'timing3':Duration3Group,
 	'timingfadeout':TimingFadeoutGroup,
 	'timingpar':DurationParGroup,
 	'webserver':WebserverGroup,
@@ -2721,8 +2799,8 @@ class AttrEditForm(GenFormView):
 		prsht.SetActivePage(self._pages[initindex])
 		prsht.RedrawWindow()
 
-		# remove the next line to dissable tabs shortcuts
-		self._tabshortcut = TabShortcut(self)
+		# remove the next line to disable tabs shortcuts
+##		self._tabshortcut = TabShortcut(self)
 
 	def getcurattr(self):
 		page = self._prsht.GetActivePage()
