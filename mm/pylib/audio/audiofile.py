@@ -37,9 +37,12 @@ class _FileDict:
 _filedict = _FileDict()
 
 def reader(filename):
-	filetype = audiowhat.what(filename)
+	file = open(filename, 'rb')
+	filetype = audiowhat.what(file)
 	if not filetype:
+		file.close()
 		raise Error, 'Unknown audio file type (bad magic number)'
 	if not _filedict.has_key(filetype):
+		file.close()
 		raise Error, 'No support for audio file type: '+filetype[0]
-	return _filedict[filetype].reader(filename)
+	return _filedict[filetype].reader(file)
