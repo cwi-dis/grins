@@ -1,46 +1,61 @@
-1. Open 'cmif extensions.dsw' in \cmif\win32\src
-(no other project needs to be opened)
+In the following, replace CVSROOT with the actual value.  At Oratrix,
+the value is
+	oratrix.oratrix.nl:/ufs/mm/CVSPRIVATE
+Other possibilities are values of the type
+	:pserver:USERNAME@oratrix.oratrix.nl:/ufs/mm/CVSPRIVATE
+where USERNAME has to be replaced by the actual value.
 
-2 Assert that 
-   python\Include
-   python\PC
-   python\Extensions\win32\src
-are in your include files directories 
-(set them using tools|options|directories + combo choice:Include files)
+Getting the Sources
 
-and that 
- 	python\PCBuild
-	python\Extensions\win32\Build
-	cmif\win32\ACCUSOFT\Gear
-are in your library files
-(set them using tools|options|directories + combo choice:Library files)
+Create a directory where you're going to put the sources.  When using
+WinCVS, change the browser location to this directory.  Then execute
+the following commands (in WinCVS, use Admin -> CommandLine...):
 
-Note: there are other ways to have the same effect.
+cvs -d CVSROOT checkout -d cmif mm/demo
+cvs -d :pserver:pythoncvs@cvs.python.org:/projects/cvsroot checkout -d python python/dist/src
+cvs -d CVSROOT checkout lib-src/jpeg
+cvs -d CVSROOT checkout python/Extensions/img python/Extensions/Pythonwin python/Extensions/win32
 
-3. Check that the absolute directories for GRiNSRes anw win32ui projects
-Project Setting|Custom Build (tab)
-are the correct for your configuration. 
-(the absolute folders shouldn't be there but they are)
+Compiling
 
-3. Build all
-set active configuration to: 'All cmif extensions-Win32 Release'
-and then select Rebuild All
+Open the Visual C++ workspace
+	cmif\win32\src\cmif extensions.dsw
+Make sure the Active Configuration is "All cmif extensions/Win32
+Release" and then build everything.
 
-4. To test, transfer to cmif/bin (the testing folder)
-	Python15.dll
-	Python.exe
-	PyWinTypes15.dll
-	Pythonwin.exe
-	win32ui.pyd
-and also the Accusoft dll: Gear32sd.dll
+This will compile a lot of files and copy a number of files to
+cmif\bin\win32.
 
-Transfer also to cmif/bin/DLLs
-	win32api.pyd
-	win32trace.pyd
-Run Pythonwin.exe 
-and the application: Pythonwin /run iGRiNS.py
-(check absolute folders in iGRiNS.py before running the app,
-the absolute folders shouldn't be there but they are)
+Configuring and Testing
+
+If you didn't install things into D:\ufs\mm you need to make a few
+changes to various files.
+
+Edit cmif\bin\pythonwin.ini and replace all occurences of the string
+"d:\ufs\mm" (or "D:\ufs\mm") to the absolute path name of the folder
+you created above.
+
+You should now be able to double click cmif\bin\win32\pythonwin.exe
+which should start a Python interpreter in a window.  If this works,
+you should test that when you type "Exception" in the Pythonwin
+window, you get something like
+	<class exceptions.Exception at 419c20>
+(the hexadecimal value may be different than this).  If you get
+something else, you should try setting the environment variable
+PYTHONHOME to the absolute path name of the python folder inside the
+directory you created at the beginning and try again.
+
+If this works, you should be able to run the batch file
+cmif\bin\win32\runit.bat to start the GRiNS editor.  This is a version 
+that runs from the Python source, so when you make a change to any of
+the Python source files, the effect should be noticeable without any
+further steps.  (Of course, if you make a change to any of the C or
+C++ sources you need to rebuild.)
+
+
+Freezing
+
+This section is not finished and is here only to remind the author.
 
 5. Freeze (read also the readme.txt in cmif\Build\win32\Editor)
 a) Set the absolute folders in cmif\Build\win32\Editor\domkp.bat
