@@ -74,6 +74,9 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name dsound
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wingdi
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -524,6 +527,18 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name win32trace
     End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "wingdi"=..\winsdk\wingdi\wingdi.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
 }}}
 
 ###############################################################################
