@@ -98,6 +98,11 @@ class FancyURLopener(_OriginalFancyURLopener):
 	def do_return(self):
 		raise _end_loop
 
+	def open_local_file(self, url):
+		import urlparse
+		scheme, netloc, url, params, query, fragment = urlparse.urlparse(url)
+		url = urlparse.urlunparse((scheme, netloc, url, '', '', ''))
+		return _OriginalFancyURLopener.open_local_file(self, url)
 	#
 	# Prefetch section
 	#
@@ -106,6 +111,13 @@ class FancyURLopener(_OriginalFancyURLopener):
 		"""retrieve(url) returns (filename, None) for a local object
 		or (tempfilename, headers) for a remote object."""
 		url = unwrap(url)
+		import urlparse
+		scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
+		if not scheme or scheme == 'file':
+			i = string.find(path, '?')
+			if i > 0:
+				path = path[:i]
+			url = urlparse.urlunparse((scheme, netloc, path, '', '', ''))
 		if self.__prefetchcache.has_key(url):
 			# complete prefetch first
 			#print 'completing prefetch'
