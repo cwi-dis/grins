@@ -93,7 +93,6 @@ exit:
  */
 void FiveMinuteMap::RemoveKey(void* Key)
 {
-    BOOL bFound = FALSE;
     int nIndex = 0;
 
     // If Key is alrady in the list, replace value
@@ -112,7 +111,7 @@ void FiveMinuteMap::RemoveKey(void* Key)
     }
 
 exit:
-    (NULL); // We're done!
+    ; // We're done!
 }
 
 
@@ -122,7 +121,6 @@ exit:
  */
 void FiveMinuteMap::RemoveValue(void* Value)
 {
-    BOOL bFound = FALSE;
     int nIndex = 0;
 
     // If Value is alrady in the list, replace value
@@ -141,7 +139,7 @@ void FiveMinuteMap::RemoveValue(void* Value)
     }
 
 exit:
-    (NULL); // We're done!
+    ; // We're done!
 }
 
 
@@ -185,6 +183,6 @@ void FiveMinuteMap::SetAt(void* Key, void* Value)
     m_nMapSize++;
 
 exit:
-    (NULL); // We're done!
+    ; // We're done!
 }
 
