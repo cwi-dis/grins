@@ -19,6 +19,21 @@ class GraphBuilder:
 			print arg
 			self._builder = None
 
+	def __repr__(self):
+		s = '<%s instance' % self.__class__.__name__
+		filters = self.GetFiltersNames()
+		n = len(filters)
+		if n: 
+			s = s + ', filters = '
+			s = s + "\'" + filters[0] + "\'"
+		else:
+			s = s + ', not rendered'
+			
+		for i in range(1,n):
+			s = s + ", \'" + filters[i] + "\'"
+		s = s + '>'
+		return s
+
 	def Release(self):
 		pass
 
@@ -100,4 +115,29 @@ class GraphBuilder:
 		vw = self.GetVideoWindow()
 		if vw: vw.SetWindowPosition(rc)
 
+	# get all filter names of GraphBuilder graph
+	# note: The file reader filter gets its name from the file
+	def GetFiltersNames(self):
+		if not self._builder: return
+		enumobj = self._builder.EnumFilters()
+		f = enumobj.Next()
+		filters = []
+		while f:		
+			fname = f.QueryFilterName()
+			filters.insert(0,fname)
+			f = enumobj.Next()
+		return filters
 
+	def HasVideo(self):
+		if not self._builder: return
+		try:
+			return self._builder.FindFilterByName('Video Renderer')
+		except:
+			return None
+		
+# a shortcut usefull when we want to know
+# the type of an asf stream (video or audio)
+def hasvideo(self,url):
+	b = GraphBuilder()
+	b.RenderFile(url)
+	return b.HasVideo()!=None
