@@ -218,6 +218,13 @@ def get(name):
 		elif rtype is type({}):
 			real_value = real_value.copy()
 	return real_value
+	
+def has_key(name):
+	if user_settings.has_key(name):
+		return 1
+	if default_settings.has_key(name):
+		return 1
+	return name == 'system_screen_size' or name == 'system_screen_depth'
 
 def match(name, wanted_value):
 	if name == 'system_operating_system':
