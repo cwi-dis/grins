@@ -287,6 +287,18 @@ class MMNode():
 	#
 	# Public methods for modifying a tree
 	#
+	def SetType(self, type):
+		if type not in ('seq', 'par', 'grp', 'imm', 'ext'):
+			raise CheckError, 'SetType() bad type'
+		if type = self.type:
+			return
+		if self.type in ('seq', 'par') and type in ('seq', 'par'):
+			self.type = type
+			return
+		if self.children <> [] or self.values <> []:
+			raise CheckError, 'SetType() on non-empty node'
+		self.type = type
+	#
 	def SetAttr(self, (name, value)):
 		_stat('SetAttr')
 		self.attrdict[name] = value
