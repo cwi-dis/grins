@@ -152,9 +152,7 @@ class FileDialog:
 				       None)
 		self._main.Parent().AddWMProtocolCallback(
 			toplevel._delete_window, self._cancel_callback, None)
-		helpb = dialog.FileSelectionBoxGetChild(
-						    Xmd.DIALOG_HELP_BUTTON)
-		helpb.UnmanageChild()
+		dialog.FileSelectionBoxGetChild(Xmd.DIALOG_HELP_BUTTON).UnmanageChild()
 		if not directory:
 			directory = '.'
 		try:
@@ -164,7 +162,49 @@ class FileDialog:
 			pass
 		# For motif we only support simple filters, for now, and replace all else
 		# by '*'.
-		if not filter or type(filter) != type('') or '/' in filter:
+		if not filter:
+			filter = '*'
+		if type(filter) != type('') or '/' in filter:
+			import mimetypes, grins_mimetypes
+			descr = None
+			if type(filter) == type(''):
+				filter = [filter]
+			elif filter[0][:1] == '/':
+				descr = filter[0][1:]
+				filter = filter[1:]
+			dialog.FileSelectionBoxGetChild(Xmd.DIALOG_FILTER_LABEL).UnmanageChild()
+			dialog.FileSelectionBoxGetChild(Xmd.DIALOG_FILTER_TEXT).UnmanageChild()
+			menu = dialog.CreatePulldownMenu('menu', {'orientation': Xmd.VERTICAL})
+			option = dialog.CreateOptionMenu('option', {'subMenuId': menu, 'labelString': 'File Type:'})
+			b1 = None
+			if descr:
+				b1 = menu.CreatePushButtonGadget('button', {'labelString': descr})
+				b1.ManageChild()
+			allext = []
+			for f in filter:
+				extlist = mimetypes.get_extensions(f)
+				if not extlist:
+					extlist = ['*']
+				else:
+					extlist = map(lambda x:"*"+x, extlist)
+					allext = allext + extlist
+				description = grins_mimetypes.descriptions.get(f, f)
+				b = menu.CreatePushButtonGadget('button', {'labelString': description})
+				b.AddCallback('activateCallback', self.__option, extlist)
+				b.ManageChild()
+				if not b1:
+					b1 = b
+					self.__patterns = extlist
+			b = menu.CreatePushButtonGadget('button', {'labelString': 'All files'})
+			b.AddCallback('activateCallback', self.__option, ['*'])
+			b.ManageChild()
+			if  descr:
+				b1.AddCallback('activateCallback', self.__option, allext)
+				self.__patterns = allext
+			option.menuHistory = b1
+			option.ManageChild()
+##			dialog.dirSearchProc = self.__dirsearch
+			dialog.fileSearchProc = self.__filesearch
 			filter = '*'
 		self.filter = filter
 		filter = os.path.join(directory, filter)
@@ -182,6 +222,58 @@ class FileDialog:
 			self._main.DestroyWidget()
 			self._dialog = None
 			self._main = None
+
+	def __option(self, widget, patterns, call_data):
+		self.__patterns = patterns
+		self._dialog.FileSelectionDoSearch(self._dialog.directory)
+
+##	def __dirsearch(self, widget, cbs):
+##		import stat
+##		dir = cbs.dir
+##		try:
+##			list = os.listdir(dir)
+##		except:
+##			widget.directoryValid = 0
+##			return
+##		self.__filelist = list
+##		dirs = []
+##		for f in list:
+##			full = os.path.join(dir, f)
+##			statb = os.stat(full)
+##			if stat.S_ISDIR(statb[stat.ST_MODE]):
+##				dirs.append(full)
+##		dirs.sort()
+##		dirs.insert(0, os.path.join(cbs.dir, '..'))
+##		dirs.insert(0, os.path.join(cbs.dir, '.'))
+##		widget.SetValues({'directoryValid': 1,
+##				  'listUpdated': 1,
+##				  'dirListItems': dirs})
+##		dl = widget.FileSelectionBoxGetChild(Xmd.DIALOG_DIR_LIST)
+##		dl.ListDeleteAllItems()
+##		dl.ListAddItems(dirs, 0)
+
+	def __filesearch(self, widget, cbs):
+		import stat, fnmatch
+		dir = cbs.dir
+		try:
+			list = os.listdir(dir)
+		except:
+			# XXXX I don't really know what to do here...
+			return
+		files = []
+		for f in list:
+			full = os.path.join(dir, f)
+			statb = os.stat(full)
+			if not stat.S_ISDIR(statb[stat.ST_MODE]):
+				for p in self.__patterns:
+					if fnmatch.fnmatch(f, p):
+						files.append(f)
+						break
+		files.sort()
+		widget.SetValues({'listUpdated': 1, 'fileListItems': files})
+		fl = widget.FileSelectionBoxGetChild(Xmd.DIALOG_FILE_LIST)
+		fl.ListDeleteAllItems()
+		fl.ListAddItems(files, 0)
 
 	def setcursor(self, cursor):
 		if cursor == _WAITING_CURSOR:
