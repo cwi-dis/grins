@@ -18,42 +18,57 @@ import colors
 
 # XXX: the implementation is currently limited to media nodes animations 
 
-# AnimationTarget intents to make MMNode and MMRegion animations 
-# look the same for AnimationData
-# i.e. common interface needed by AnimationData
+# abstraction of animation target 
+# represents MMNode and MMRegion targets 
+# makes explicit what is needed by AnimationData
 class AnimationTarget:
-	def __init__(self, mmobj):
-		self.mmobj = mmobj
-
+	def __init__(self, root, node, animparent):
+		self._root = root
+		self._mmobj = node
+		self._animparent = animparent
+		
 	# return the underlying MMObj
 	def getMMObj(self):
-		return self.mmobj
+		return self._mmobj
 
-	# return the root of this document
 	def getRoot(self):
-		return self.mmobj.GetRoot()
+		return self._root
+
+	def getContext(self):
+		return self._root.GetContext()
 
 	# return animationNode.targetnode or None
 	def getTargetNode(self):
-		return self.mmobj
+		if self._isRegion():
+			return None
+		return self._mmobj
 
 	# return dom values
 	def getDomValues(self):
-		try:
-			rc = self.mmobj.getPxGeom()
-		except:
-			rc = None
-		color = self.mmobj.attrdict.get('bgcolor')
+		if self._isRegion():
+			try:
+				rc = self._mmobj.getPxGeom()
+			except:
+				rc = None
+			color = self._mmobj.get('bgcolor')
+		else:
+			try:
+				rc = self._mmobj.getPxGeom()
+			except:
+				rc = None
+			color = self._mmobj.attrdict.get('bgcolor')
 		return rc, color
 	
 	# return targetElement attribute
 	def getUID(self):
-		return self.mmobj.GetRawAttrDef('name', None)
+		if self._isRegion():
+			return self._mmobj.GetUID()
+		return self._mmobj.GetRawAttrDef('name', None)
 
 	# return the animations targeting self.mmobj
 	def getAnimations(self):
 		children = []
-		for c in self.mmobj.children:
+		for c in self._animparent.GetChildren():
 			if c.GetType() == 'animate':
 				children.append(c)
 		return children
@@ -61,54 +76,60 @@ class AnimationTarget:
 	# write animation nodes under
 	# should be the same getAnimations got them
 	def getAnimationsParent(self):
-		return self.mmobj
+		return self._animparent
 
+	def _isRegion(self):
+		return self._mmobj.getClassName() in ('Region', 'Viewport')
+
+
+
+# AnimationData arguments:
+# root: document root (MMNode)
+# target: animation target element (MMNode or MMRegion)
+# animparent: animations will be read and written under this node (MMNode)
+# animparent can be target
 
 class AnimationData:
-	def __init__(self, node):
-		self.node = AnimationTarget(node) # animation target
-		self.root = self.node.getRoot()
-		self.data = []   # a list of key frames (rect, color)
-		self.times = []  # key times list
+	def __init__(self, root, target, animparent):
+		self._target = AnimationTarget(root, target, animparent) # animation target
+		self._data = []   # a list of key frames (rect, color)
+		self._times = []  # key times list
+		self._domrect, self._domcolor = self._target.getDomValues()
 
-		# dom values for animated node
-		# used for missing user values 
-		self.domrect, self.domcolor = self.node.getDomValues()
-	
 	#
 	#  public
 	#
 	def isEmpty(self):
-		return len(self.times)==0
+		return len(self._times)==0
 
 	# animation editor call
 	# set key times and data explicitly
 	def setTimesData(self, times, data):
 		assert len(times) == len(data), ''
-		self.times = times
-		self.data = data
+		self._times = times
+		self._data = data
 
 	# animation editor call
 	def getTimes(self):
-		return self.times
+		return self._times
 
 	# animation editor call
 	def getData(self):
-		return self.data
+		return self._data
 
 	def initData(self):
-		entry = self.domrect, self.domcolor
-		self.data = [entry, entry]
-		self.times = [0.0, 1.0]
+		entry = self._domrect, self._domcolor
+		self._data = [entry, entry]
+		self._times = [0.0, 1.0]
 
 	# read animate nodes and set self data
 	def readData(self):
-		animations = self.node.getAnimations()
+		animations = self._target.getAnimations()
 		if not animations:
 			return
 
 		str = MMAttrdefs.getattr(animations[0], 'keyTimes')
-		self.times = self._strToFloatList(str)
+		self._times = self._strToFloatList(str)
 
 		animateMotionValues = [] 
 		animateWidthValues = []
@@ -129,22 +150,22 @@ class AnimationData:
 				elif tag == 'animateColor':
 					animateColorValues = self._strToColorList(str)
 		
-		n = len(self.times)
+		n = len(self._times)
 
-		dompos = self.domrect[:2]
+		dompos = self._domrect[:2]
 		while len(animateMotionValues)<n:
 			animateMotionValues.append(dompos)
 				
-		domwidth = self.domrect[2]
+		domwidth = self._domrect[2]
 		while len(animateWidthValues)<n:
 			animateWidthValues.append(domwidth)
 
-		domheight = self.domrect[3]
+		domheight = self._domrect[3]
 		while len(animateHeightValues)<n:
 			animateHeightValues.append(domheight)
 
 		while len(animateColorValues)<n:
-			animateColorValues.append(self.domcolor)
+			animateColorValues.append(self._domcolor)
 
 		for i in range(n):
 			x, y = animateMotionValues[i]
@@ -152,7 +173,7 @@ class AnimationData:
 			h = animateHeightValues[i]
 			rect = x, y, w, h
 			color = animateColorValues[i]
-			self.data.append((rect, color))
+			self._data.append((rect, color))
 		
 	# create animate nodes from self data
 	def applyData(self, editmgr):
@@ -161,7 +182,7 @@ class AnimationData:
 		keyTimes = self._timesToKeyTimesAttr()
 		
 		existing = {}
-		animations = self.node.getAnimations()
+		animations = self._target.getAnimations()
 		if animations:
 			for anim in animations:
 				tag = anim.attrdict.get('atag')
@@ -176,21 +197,22 @@ class AnimationData:
 				elif tag == 'animateColor':
 					existing['color'] = anim
 		
-		parent = self.node.getAnimationsParent()
+		parent = self._target.getAnimationsParent()
 		targname = None
-		if parent != self.node.getMMObj():
-			targname = self.node.getUID()
+		if parent != self._target.getMMObj():
+			targname = self._target.getUID()
+		context = self._target.getContext()
 
 		em = editmgr
 		if not em.transaction():
 			return 0
-		
+
 		anim = 	existing.get('pos')
 		if anim is not None:
 			self._updateNode(anim, keyTimes, animateMotionValues)
 		else:
-			anim = self.root.context.newanimatenode('animateMotion')
-			anim.targetnode = self.node.getTargetNode()
+			anim = context.newanimatenode('animateMotion')
+			anim.targetnode = self._target.getTargetNode()
 			self._updateNode(anim, keyTimes, animateMotionValues, None, targname)
 			em.addnode(parent, 0, anim)
 
@@ -198,8 +220,8 @@ class AnimationData:
 		if anim is not None:
 			self._updateNode(anim, keyTimes, animateWidthValues)
 		else:
-			anim = self.root.context.newanimatenode('animate')
-			anim.targetnode = self.node.getTargetNode()
+			anim = context.newanimatenode('animate')
+			anim.targetnode = self._target.getTargetNode()
 			self._updateNode(anim, keyTimes, animateWidthValues, 'width', targname)
 			em.addnode(parent, 1, anim)
 
@@ -207,8 +229,8 @@ class AnimationData:
 		if anim is not None:
 			self._updateNode(anim, keyTimes, animateHeightValues)
 		else:
-			anim = self.root.context.newanimatenode('animate')
-			anim.targetnode = self.node.getTargetNode()
+			anim = context.newanimatenode('animate')
+			anim.targetnode = self._target.getTargetNode()
 			self._updateNode(anim, keyTimes, animateHeightValues, 'height', targname)
 			em.addnode(parent, 2, anim)
 
@@ -216,8 +238,8 @@ class AnimationData:
 		if anim is not None:
 			self._updateNode(anim, keyTimes, animateColorValues)
 		else:
-			anim = self.root.context.newanimatenode('animateColor')
-			anim.targetnode = self.node.getTargetNode()
+			anim = context.newanimatenode('animateColor')
+			anim.targetnode = self._target.getTargetNode()
 			self._updateNode(anim, keyTimes, animateColorValues, 'backgroundColor', targname)
 			em.addnode(parent, 3, anim)
 		
@@ -240,7 +262,7 @@ class AnimationData:
 		animateWidthValues = []
 		animateHeightValues = [] 
 		animateColorValues = []
-		for rect, color in self.data:
+		for rect, color in self._data:
 			animateMotionValues.append(rect[:2])						
 			animateWidthValues.append(rect[2])
 			animateHeightValues.append(rect[3])
@@ -252,7 +274,7 @@ class AnimationData:
 		return animateMotionValues, animateWidthValues, animateHeightValues, animateColorValues
 
 	def _timesToKeyTimesAttr(self):
-		return self._floatListToStr(self.times)
+		return self._floatListToStr(self._times)
 
 	def _intListToStr(self, sl):
 		str = ''
