@@ -154,6 +154,7 @@ class PlayerCore(Scheduler):
 			if name not in self.context.channelnames:
 				print 'Detected deleted channel'
 				self.killchannel(name)
+				flushchannelcache(self.root)
 			else:
 				oldtype = self.channeltypes[name]
 				newtype = \
@@ -161,6 +162,7 @@ class PlayerCore(Scheduler):
 				if oldtype <> newtype:
 					print 'Detected retyped channel'
 					self.killchannel(name)
+					flushchannelcache(self.root)
 		# (2) Add new channels that have appeared
 		for name in self.context.channelnames:
 			if name not in self.channelnames:
@@ -187,6 +189,7 @@ class PlayerCore(Scheduler):
 		self.makemenu()
 	#
 	def destroychannels(self):
+		flushchannelcache(self.root)
 		for name in self.channelnames[:]:
 			self.killchannel(name)
 		self.makemenu()
