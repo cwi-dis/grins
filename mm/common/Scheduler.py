@@ -290,7 +290,7 @@ class SchedulerContext:
 		self.queuesrlist(srlist, timestamp)
 
 	def sched_arc(self, node, arc, event = None, marker = None, deparc = None, timestamp = None):
-		if debugevents: print 'sched_arc',`node`,`arc`,event,marker,timestamp,self.parent.timefunc()
+		if debugevents: print 'sched_arc',`node`,`arc`,event,marker,`deparc`,timestamp,self.parent.timefunc()
 		if arc.wallclock is not None:
 			timestamp = arc.resolvedtime(self.parent.timefunc)-arc.delay
 		if arc.ismin:
@@ -306,7 +306,7 @@ class SchedulerContext:
 		if arc.timestamp is not None and arc.timestamp != timestamp+arc.delay:
 			if arc.qid is not None:
 				if debugevents: print 'sched_arcs: cancel',`arc`,self.parent.timefunc()
-				arc.cancel(self.parent)
+				self.cancelarc(arc, timestamp)
 		for a in list:
 			if a.qid is None:
 				continue
@@ -314,7 +314,7 @@ class SchedulerContext:
 				continue
 			if a.timestamp > timestamp + arc.delay:
 				if debugevents: print 'sched_arcs: cancel',`a`,self.parent.timefunc()
-				a.cancel(self.parent)
+				self.cancelarc(a, timestamp)
 				if a.isstart:
 					if a.dstnode.GetSchedParent():
 						srdict = a.dstnode.GetSchedParent().gensr_child(a.dstnode, runchild = 0, curtime = self.parent.timefunc())
@@ -408,6 +408,7 @@ class SchedulerContext:
 			return
 		parent.paused = paused
 
+		deparcs = []
 		if arc is not None:
 			if arc.qid is None:
 				if debugevents: print 'trigger: ignore arc',`arc`
@@ -426,6 +427,7 @@ class SchedulerContext:
 				except ValueError:
 					pass
 				arc.depends = None
+			deparcs = arc.deparcs
 			for a in arc.deparcs:
 				a.depends = None
 			arc.deparcs = []
@@ -522,6 +524,9 @@ class SchedulerContext:
 		     node.GetRestart() == 'never')):
 			# ignore event when node doesn't want to play
 			if debugevents: print "node won't restart",parent.timefunc()
+			self.cancelarc(arc, timestamp)
+			for a in deparcs:
+				self.cancelarc(a, timestamp)
 			parent.updatetimer()
 			return
 		endlist = MMAttrdefs.getattr(node, 'endlist')
@@ -582,6 +587,12 @@ class SchedulerContext:
 						if not parent.playing:
 							return
 					elif action == 'never':
+						print arc
+						print deparcs
+						if arc is not None:
+							self.cancelarc(arc, timestamp)
+							for a in deparcs:
+								self.cancelarc(a, timestamp)
 						parent.updatetimer()
 						return
 					elif action == 'defer':
@@ -677,6 +688,23 @@ class SchedulerContext:
 			parent.event(self, ev, timestamp)
 		parent.updatetimer()
 
+	def cancelarc(self, arc, timestamp):
+		if debugevents: print 'cancelarc',`arc`,timestamp
+		try:
+			self.parent.cancel(arc.qid)
+		except ValueError:
+			pass
+		arc.qid = None
+		deparcs = arc.deparcs
+		arc.deparcs = []
+		if arc.isstart:
+			ev = (SR.SCHED_DONE, arc.dstnode)
+			if self.srdict.has_key(ev):
+				self.parent.event(self, ev, timestamp)
+		for a in deparcs:
+			self.cancelarc(arc, timestamp)
+			a.depends = None
+
 	def gototime(self, node, gototime, timestamp, path = None):
 		# XXX trigger syncarcs that should go off after gototime?
 		parent = self.parent
@@ -753,7 +781,7 @@ class SchedulerContext:
 		for arc in node.durarcs + MMAttrdefs.getattr(node, 'endlist'):
 			if arc.qid is not None:
 				if debugevents: print 'cancel',`arc`,parent.timefunc()
-				arc.cancel(parent)
+				self.cancelarc(arc, timestamp)
 				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
 		if fill == 'remove' and node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 			for arc in node.delayed_arcs:
@@ -819,7 +847,7 @@ class SchedulerContext:
 			arc = argument[0]
 			if arc.srcnode is node and arc.event == 'end':
 				if debugevents: print 'do_terminate: cancel',`arc`,parent.timefunc()
-				arc.cancel(parent)
+				self.cancelarc(arc, timestamp)
 
 	def flushqueue(self):
 		parent = self.parent
@@ -861,7 +889,7 @@ class SchedulerContext:
 		for arc in node.durarcs:
 			if arc.qid is not None:
 				arc.paused = arc.qid[0] - timestamp
-				arc.cancel(self.parent)
+				self.cancelarc(arc, timestamp)
 				if debugevents: print 'pause_play',`arc`,arc.paused,self.parent.timefunc()
 		if node.playing in (MMStates.IDLE, MMStates.PLAYED):
 			for i in range(len(pnode.pausestack)):
