@@ -42,7 +42,7 @@ class ArcInfoTest(ArcInfoDialog):
 		self.src_setpos(0)
 		self.dst_setpos(1)
 		self.delay_setvalue(2.5)
-			
+
 import windowinterface
 print 'Creating ArcInfoDialog...'
 dialog = ArcInfoTest()
