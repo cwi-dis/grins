@@ -677,6 +677,63 @@ class NewChannelDlg(ResDialog):
 		if self._cbd_cancel:
 			apply(apply,self._cbd_cancel)
 
+# Implementation of the select template dialog
+class TemplateDialog(ResDialog):
+	def __init__(self,names, descriptions, cb,parent=None):
+		ResDialog.__init__(self,grinsRC.IDD_TEMPLATE_DIALOG,parent)
+		self._parent=parent
+		self._names = names
+		self._descriptions = descriptions
+		self._cb = cb
+		self._select=ComboBox(self,grinsRC.IDC_TEMPLATECOMBO)
+		self._explanation = Static(self, grinsRC.IDC_EXPLANATION)
+		self._picture = Static(self, grinsRC.IDC_PICTURE)
+
+		self.show()
+
+	def OnInitDialog(self):
+		self.attach_handles_to_subwindows()
+		self.init_subwindows()
+		for i in range(len(self._names)):
+			self._select.insertstring(i, self._names[i])
+		self._select.setcursel(0)
+		self._select.hookcommand(self, self.OnChangeTemplate)
+		self._setdialoginfo()
+		return ResDialog.OnInitDialog(self)
+
+	# Response to combo selection change
+	def OnChangeTemplate(self,id,code):
+		if code==win32con.CBN_SELCHANGE:
+			self._setdialoginfo()
+
+	def show(self):
+		self.DoModal()
+
+## XXXX Redraw hook
+
+	def close(self):
+		self.EndDialog(win32con.IDCANCEL)
+
+	def OnOK(self):
+		which = self._select.getcursel()
+		if 0 <= which <= len(self._descriptions):
+			self._cb(self._descriptions[which])
+		self.close()
+
+	def OnCancel(self):
+		self.close()
+
+	def _setdialoginfo(self):
+		which = self._select.getcursel()
+		if 0 <= which <= len(self._descriptions):
+			description = self._descriptions[which][0]
+			picture = self._descriptions[which][1]
+		else:
+			description = ''
+			picture = None
+		self._explanation.settext(description)
+		# XXXX Fill picture
+
 # Implementation of the channel undefined dialog
 class ChannelUndefDlg(ResDialog):
 	def __init__(self,title,default,grab=1,parent=None):
