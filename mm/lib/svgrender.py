@@ -195,6 +195,8 @@ class SVGRenderer:
 		self.graphics.drawText(node.data, pos, node.getStyle(), node.getTransform())
 
 	def use(self, node):
+		if node.what is None:
+			what = node.locateDef()
 		if node.what is not None:
 			self.begingroup(node)
 			what = node.what
