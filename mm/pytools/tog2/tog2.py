@@ -178,7 +178,7 @@ class G2SwitchTransformer(G2CommonTransformer):
 		for attr, value in attrs:
 			if attr == 'id':
 				value = 'g2_' + value
-			newattrs.append(attr, value)
+			newattrs.append((attr, value))
 		return newattrs
 
 	def do_ref(self, node):
