@@ -88,7 +88,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.old_selected_widget = None	# This is the node that used to have the focus but needs redrawing.
 		self.selected_icon = None
 		self.old_selected_icon = None
-		self.which_attribute = None # which attribute is shown when the attribute editor is popped up.
 
 		self.multi_selected_widgets = [] # When there are multiple selected widgets.
 					# For the meanwhile, you can only multi-select MMWidgets which have nodes.
@@ -837,13 +836,10 @@ class HierarchyView(HierarchyViewDialog):
 	######################################################################
 	# Edit a node
 	def attrcall(self):
-		if self.selected_widget:
+		if self.selected_icon:
+			self.selected_icon.attrcall()
+		elif self.selected_widget:
 			self.selected_widget.attrcall()
-			#node = self.selected_widget.get_node()
-			#self.toplevel.setwaiting()
-			#import AttrEdit
-			#AttrEdit.showattreditor(self.toplevel, node, initattr = self.which_attribute)
-		self.which_attribute = None
 
 	def infocall(self):
 		if self.selected_widget: self.selected_widget.infocall()
@@ -1540,14 +1536,19 @@ class HierarchyView(HierarchyViewDialog):
 			widget = node.views['struct_view']
 			self.select_widget(widget, external)
 
+	def select_arrow(self, arrow):
+		caller, colour, src, dest = arrow
+		# caller is an MMNodewidget, src and dest are coordinates.
+		caller.attrcall(initattr='beginlist')
+
 	# TODO: Jack: I know that this is going to mess the mac stuff up.
 	# I'm not quite sure how to do right-clicks on a mac. Sorry. -mjvdg.
 	def click(self, x, y):
 		# Called only from self.mouse, which is the event handler.
-		#for i in self.__select_arrow_list:
-		#	caller, colour, src, dest = i
-		#	if self.window.hitarrow((x,y), src, dest):
-		#		self.select_arrow(
+		for i in self.__select_arrow_list:
+			caller, colour, src, dest = i
+			if self.window.hitarrow((x,y), src, dest):
+				self.select_arrow(i)
 		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
 		clicked_widget.mouse0press((x,y))
 		self.select_widget(clicked_widget, scroll=0)
