@@ -458,7 +458,7 @@ class RPParser(xmllib.XMLParser):
 		start = self.__time('start', attributes)
 		target = attributes.get('target')
 		if target is None:
-			self.syntax_error("require attribute `target' missing")
+			self.syntax_error("required attribute `target' missing")
 		elif not self.__images.has_key(target):
 			self.syntax_error("unknown `target' attribute")
 		url = attributes.get('url')
