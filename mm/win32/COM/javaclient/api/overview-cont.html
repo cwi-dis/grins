@@ -35,45 +35,56 @@ Overview
 follows: </P>
 <P><STRONG><FONT size=4> 1. SMIL documents </FONT></STRONG></P>
 <P><FONT size=3>To start using the 
-grins package&nbsp;you have to supply the license&nbsp;given to you. You do this 
-by&nbsp;calling the setLicense static method&nbsp;of GRiNSToolkit</FONT></P>
+grins package&nbsp;you have to supply the 
+license&nbsp;given to you. You do this by&nbsp;calling the setLicense() static method&nbsp;of GRiNSToolkit 
+passing as argument the license string.</FONT></P>
 <BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
   <P><STRONG><EM>grins.GRiNSToolkit.</EM>setLicense<EM>(licenseStr); </EM></STRONG></P></BLOCKQUOTE>
-<P>After you set the license you create a SMIL document 
-using <STRONG><EM>createDocument </EM></STRONG>            factory method of a GRiNSToolkit: 
+<P>After you have set the license you are ready to create a SMIL document using 
+the <STRONG><EM>createDocument() </EM></STRONG>            factory method of a GRiNSToolkit: 
 </P>
 <P><STRONG><EM>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-SMILDocument smil = null</EM></STRONG></P>
+SMILDocument smil = null;</EM></STRONG></P>
 <P>&nbsp;&nbsp;<STRONG><EM>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 try&nbsp;&nbsp;&nbsp; { smil = grins.GRiNSToolkit.createDocument(filenameOrUrl); 
 }</EM></STRONG></P>
 <BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
   <P><STRONG><EM>catch(GRiNSException e) {smil = null; 
   System.out.println(""+e);}</EM></STRONG></P></BLOCKQUOTE>
-<P>From the document object you can get all the necessary info to prepare things 
-for playback.</P>
-<P>You request document duration with the call</P>
+<P>From an instance of a SMILDocument object you can get all the necessary info to prepare things for 
+document playback.</P>
+<P>For example you can request document's duration with the call</P>
 <BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
   <P><EM><STRONG>double dur = smil.getDuration(); </STRONG></EM></P></BLOCKQUOTE>
-<P>A dur = 0 means indefinite and dur&lt;0 means its  unresolved. Otherwise you will get a positive number.</P>
+<P>But be careful.&nbsp;Check for a negative or zero return value. 
+A dur =    0 means that&nbsp;document's duration  its indefinite and a dur&lt;0 means its unresolved.</P>
 <P>You&nbsp;request &nbsp;the number of top-level windows of the document with 
 the call </P>
 <BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
   <P><EM><STRONG>int viewportsCount = smil.getViewportCount(); 
 </STRONG></EM></P></BLOCKQUOTE>
-<P>You can omit this call if you are working with 1-toplevel window 
-documents.</P>
+<P>You can omit this call if you are working with SMIL documents having one toplevel 
+window.</P>
 <P>&nbsp;Top-level windows are assigned an index. </P>
-<P>You get top-level window size&nbsp;associated with index 0 with the call</P>
+<P>You get top-level window's size&nbsp;associated with index 0 with the call</P>
 <BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
   <P><EM><STRONG>Dimension d = smil.getViewportSize(0); 
 </STRONG></EM></P></BLOCKQUOTE>
-<P>To playback, for each SMIL top-level window you have to create a 
-SMILCanavas.&nbsp; </P>
+<P>        and its&nbsp;title with the 
+call </P>
+<BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
+  <P><STRONG><EM>String title = 
+  smil.getViewportTitle(0)</EM></STRONG></P></BLOCKQUOTE>
+<P>For&nbsp;document playback you have to create a SMILCanvas object for each 
+SMIL top-level window .&nbsp; </P>
 <BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
   <P><EM><STRONG>SMILCanvas canvas = new grins.SMILCanvas(); 
 </STRONG></EM></P></BLOCKQUOTE>
-<P>and set its dimensions to the value returned by smil.getViewportSize </P>
+<P>and set its dimensions to the&nbsp;that returned by 
+smil.getViewportSize(). A SMILCanvas is a java.awt.Canvas implementing&nbsp; 
+java.awt.event.MouseListener and&nbsp;java.awt.event.MouseMotionListener 
+interfaces. It further overrides the paint() method. But 
+its still a&nbsp; java.awt.Canvas and you can use it as such in your application.&nbsp; </P>
 <P>SMIL canvases&nbsp;are&nbsp;associated to SMIL top-level windows with the 
 following code fragment</P>
 <BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
@@ -93,7 +104,9 @@ the SMILListener interface </P>
 <BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
   <P><EM><STRONG>player.addListener(listenerObject); 
 </STRONG></EM></P></BLOCKQUOTE>
-<P>You can then call play/pause/stop against the SMILController </P>
+<P>See the api documentation for the interface&nbsp;a SMILListener object should implement. </P>
+<P>You can then call play/pause/stop against the instance of a SMILController 
+</P>
 <BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
   <P><EM><STRONG>player.play(); </STRONG></EM></P>
   <P><EM><STRONG>... </STRONG></EM></P>
@@ -107,12 +120,14 @@ the SMILListener interface </P>
 <BLOCKQUOTE dir=ltr style="MARGIN-RIGHT: 0px">
   <P><STRONG><EM>smil.close(); 
   </EM> </STRONG></P></BLOCKQUOTE>
-<P dir=ltr>Please see the demos for more details.</P>
+<P dir=ltr>Please see the demos for more details. 
 <P>
 
 
 
 <HR>
+
+<P></P>
 
 <P></P>
 <TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0">
