@@ -49,14 +49,15 @@ class TransitionEngine:
 		if not self.__transitiontype: return
 		self.__unregister_for_timeslices()
 		self.__transitiontype = None
-		wlist = self.__windows[:]
 		for w in self.__windows:
 			w._transition = None
 			w._drawsurf = None
 			if w._frozen  == 'transition':
 				w._passive = None
 				w._frozen = None
-	
+		w = self.__windows[0]
+		w._topwindow.update()
+
 	def settransitionvalue(self, value):
 		if value<0.0 or value>1.0:
 			raise AssertionError
