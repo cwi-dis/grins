@@ -515,7 +515,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.setcommandlist(self.commandMultiSItemList)
 
 		list = []
-		for type, object in focusobject.items():
+		for type, object in focusobject:
 			list.append(object)
 			
 		# update widgets
@@ -632,21 +632,24 @@ class LayoutView2(LayoutViewDialog2):
 			focusobject = nodeRef = list[0]
 			nodeType = self.getNodeType(nodeRef)
 			if nodeType in (TYPE_VIEWPORT, TYPE_REGION):
+				self.myfocus = nodeRef
 				self.editmgr.setglobalfocus('MMChannel', nodeRef)
 			elif nodeType  == TYPE_MEDIA:
+				self.myfocus = nodeRef
 				self.editmgr.setglobalfocus('MMNode', nodeRef)
 		else:
 			# multi-selection, make a list compatible with the global focus
 			focusobject = []
-			for nodeRef in list.items():
+			for nodeRef in list:
 				nodeType = self.getNodeType(nodeRef)
 				if nodeType in (TYPE_VIEWPORT, TYPE_REGION):
 					focusobject.append(('MMChannel', nodeRef))
 				elif nodeType  == TYPE_MEDIA:
 					focusobject.append(('MMNode', nodeRef))
+			self.myfocus = focusobject
 			self.editmgr.setglobalfocus('List', focusobject)
 			
-		self.myfocus = focusobject
+		self.currentNodeRefSelected = focusobject
 		
 	def playerstatechanged(self, type, parameters):
 		pass
@@ -1055,19 +1058,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.geomFieldWidget.updateMediaGeom(geom)
 	
 	def onSelect(self, nodeRefList):
-		if len(nodeRefList) == 0:
-			self.setglobalfocus([])
-		else:		
-			nodeRef = nodeRefList[0]
-			self.currentNodeRefSelected = nodeRef
-			nodeType = self.getNodeType(nodeRef)
-
-			if nodeType == TYPE_VIEWPORT:
-				self.setglobalfocus([nodeRef])
-			elif nodeType == TYPE_REGION:
-				self.setglobalfocus([nodeRef])
-			else:
-				self.setglobalfocus([nodeRef])
+		self.setglobalfocus(nodeRefList)
 
 		self.updateFocus()	
 #
@@ -1116,7 +1107,8 @@ class ZFieldWidget(LightWidget):
 		self.dialogCtrl.setListener('RegionZ', self)
 		
 	def selectNodeList(self, nodeRefList):
-		if len(nodeRefList) == 0:
+		if len(nodeRefList) != 1:
+			# if no node selected or several nodes are selected in the same time, disable the fields
 			self.__unselect()
 			return
 		nodeRef = nodeRefList[0]
@@ -1178,7 +1170,8 @@ class GeomFieldWidget(LightWidget):
 		self.dialogCtrl.setListener('RegionH', self)
 	
 	def selectNodeList(self, nodeRefList):
-		if len(nodeRefList) == 0:
+		# if no node selected or several nodes are selected in the same time, disable the fields
+		if len(nodeRefList) != 1:
 			self.__unselect()
 			return
 		nodeRef = nodeRefList[0]
@@ -1390,9 +1383,12 @@ class TreeWidget(Widget):
 			del self.nodeTreeCtrlIdToNodeRef[nodeTreeCtrlId]
 				
 	# selected node handler method
-	def onSelectTreeNodeCtrl(self, nodeTreeCtrlId):
-		nodeRefSelected = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
-		self._context.onSelect([nodeRefSelected])
+	def onSelectTreeNodeCtrl(self, nodeTreeCtrlIdList):
+		nodeRefList = []
+		for nodeTreeCtrlId in nodeTreeCtrlIdList:
+			nodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
+			nodeRefList.append(nodeRef)
+		self._context.onSelect(nodeRefList)
 
 	# select a node in the tree control
 	def selectNode(self, nodeRef):
