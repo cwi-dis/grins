@@ -40,10 +40,10 @@ class ArcInfoForm(DlgBar):
 		self['From']=components.ComboBox(self,grinsRC.IDC_COMBO1)
 		self['To']=components.ComboBox(self,grinsRC.IDC_COMBO2)
 		self['Delay']=components.Edit(self,grinsRC.IDC_EDIT1)
-		self['Cancel']=components.Button(self,win32con.IDCANCEL)
+		self['Cancel']=components.Button(self,grinsRC.IDC_CANCEL)
 		self['Restore']=components.Button(self,grinsRC.IDUC_RESTORE)
 		self['Apply']=components.Button(self,grinsRC.IDUC_APPLY)
-		self['OK']=components.Button(self,win32con.IDOK)
+		self['OK']=components.Button(self,grinsRC.IDC_OK)
 
 	def create(self,frame):
 		DlgBar.create(self,frame,grinsRC.IDD_ARC_INFO_BAR,afxres.CBRS_ALIGN_TOP)
@@ -115,7 +115,7 @@ class ArcInfoForm(DlgBar):
 
 	# Interface to the delay value.
 	def delay_setvalue(self, delay):
-		self['Delay'].settext('%d' % self._delay)
+		self['Delay'].settext('%d' % delay)
 
 	def delay_getvalue(self):
 		return float(self['Delay'].gettext())
