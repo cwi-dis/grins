@@ -20,7 +20,6 @@
 #include "mcidll.h"
 
 //MpegEx Header Files
-#define PyIMPORT  __declspec(dllimport)
 #define PyEXPORT  __declspec(dllexport)
 
 #endif
