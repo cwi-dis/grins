@@ -179,10 +179,6 @@ class MediaChannel:
 		if self.__playBuilder: 
 			self.__playBuilder.SetVisible(1)
 
-	def paint(self):
-		if hasattr(self.__channel,'window') and self.__channel.window and self.__playFileHasBeenRendered:
-			self.__channel.window.UpdateWindow()
-
 	# Set Window Media window size from scale and center, and coordinates attributes
 	def adjustMediaWnd(self,node,window,builder, coordinates):
 		if not window: return
@@ -223,7 +219,15 @@ class MediaChannel:
 		rcMediaWnd=(x, y, width,height)
 		builder.SetWindowPosition(rcMediaWnd)
 
+	# XXX: Is it needed?
+	def paint(self):
+		return 
+		if hasattr(self.__channel,'window') and self.__channel.window and self.__playFileHasBeenRendered:
+			self.__channel.window.UpdateWindow()
+
+	# XXX: Is it needed?
 	def update(self,dc=None):
+		return
 		if self.__playBuilder and self.__playFileHasBeenRendered and (self.__playdone or self.__paused):
 			self.__channel.window.RedrawWindow()
 	
