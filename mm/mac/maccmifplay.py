@@ -25,6 +25,7 @@ addpack.addpack('snd')
 addpack.addpack('evt')
 addpack.addpack('win')
 addpack.addpack('qd')
+addpack.addpack('qt')
 
 os.environ["CMIF"] = CMIFDIR
 #os.environ["CHANNELDEBUG"] = "1"

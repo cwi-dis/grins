@@ -13,7 +13,7 @@ def mkpixmap(w, h, fmt, data):
 	fmtinfo = _fmt_to_mac[fmt]
 	
 	rv = struct.pack("lhhhhhhhlllhhhhlll",
-		id(data),
+		id(data)+12,
 		w*2 + 0x8000,
 		0, 0, h, w,
 		0,
@@ -48,4 +48,8 @@ def dumppixmap(data):
 	print 'planeBytes: %d (0x%x)'%(planeBytes, planeBytes)
 	print 'pmTable:    0x%x'%pmTable
 	print 'pmReserved: 0x%x'%pmReserved
-	time.sleep(5)
+	for i in range(0, len(data), 16):
+		for j in range(16):
+			if i + j < len(data):
+				print '%02.2x'%ord(data[i+j]),
+		print
