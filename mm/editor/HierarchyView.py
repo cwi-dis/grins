@@ -380,6 +380,7 @@ class HierarchyView(ViewDialog):
 		for obj in self.objects:
 			obj.cleanup()
 		self.objects = []
+		self.focusobj = None
 
 	# Navigation functions
 
@@ -730,6 +731,7 @@ class Object:
 		return l <= x <= r and t <= y <= b
 
 	def cleanup(self):
+		self.menu = []
 		self.mother = None
 
 	def draw(self):
