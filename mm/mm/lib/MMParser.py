@@ -211,20 +211,25 @@ class MMParser():
 		if self.attrparsers.has_key(name):
 			func, arg = self.attrparsers[name]
 			value = func(self, arg)
-		elif name[-4:] = 'dict':
-			# Default syntax for dictionaries
-			value = \
-			    self.getnamedictvalue(MMParser.getanyvalue, None)
-		elif name[-4:] = 'list':
-			# Default syntax for lists
-			value = self.getlistvalue(MMParser.getanyvalue, None)
 		else:
-			# Default syntax for other things
-			# (returned as lists if more than one item,
-			# else as single value)
-			value = self.getlistvalue(MMParser.getanyvalue, None)
-			if len(value) = 1:
-				value = value[0]
+			print 'Warning: unrecognized attr', name
+			if name[-4:] = 'dict':
+				# Default syntax for dictionaries
+				value = \
+				    self.getnamedictvalue( \
+				    	MMParser.getanyvalue, None)
+			elif name[-4:] = 'list':
+				# Default syntax for lists
+				value = self.getlistvalue( \
+					MMParser.getanyvalue, None)
+			else:
+				# Default syntax for other things
+				# (returned as lists if more than one item,
+				# else as single value)
+				value = self.getlistvalue( \
+					MMParser.getanyvalue, None)
+				if len(value) = 1:
+					value = value[0]
 		self.close()
 		return name, value
 	#
