@@ -39,6 +39,9 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "Python.h"
 
+#ifdef TARGET_API_MAC_CARBON_NOTYET
+#define initicglue 0
+#endif
 
 /* -- ADDMODULE MARKER 1 -- */
 #ifndef initQdoffs
