@@ -70,7 +70,8 @@ class ToolbarMixin:
 
 	def DestroyToolbars(self):
 		for bar in self._bars.values():
-			bar.DestroyWindow()
+			if bar.IsWindow():
+				bar.DestroyWindow()
 		self._bars = {}
 		self._pulldowndict = {}
 		self._pulldowncallbackdict = {}
