@@ -541,9 +541,9 @@ def getpercentage(writer, node, attr, default=100):
 	else:
 		return fmtfloat(prop, suffix = '%')
 
-def getfill(writer, node, attr):
+def getfill(writer, node, attr, default):
 	fill = getcmifattr(writer, node, attr)
-	if fill != 'default':
+	if fill != default:
 		return fill
 	return None
 
@@ -925,16 +925,16 @@ smil_attrs=[
 	("min", getmin),
 	("max", getmax),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
-	("fill", lambda writer, node: getfill(writer, node, 'fill')),
-	("fillDefault", lambda writer, node: getfill(writer, node, 'fillDefault')),
-	("syncBehavior", lambda writer, node: getfill(writer, node, 'syncBehavior')),
-	("syncBehaviorDefault", lambda writer, node: getfill(writer, node, 'syncBehaviorDefault')),
+	("fill", lambda writer, node: getfill(writer, node, 'fill', 'default')),
+	("fillDefault", lambda writer, node: getfill(writer, node, 'fillDefault', 'inherit')),
+	("syncBehavior", lambda writer, node: getfill(writer, node, 'syncBehavior', 'default')),
+	("syncBehaviorDefault", lambda writer, node: getfill(writer, node, 'syncBehaviorDefault', 'inherit')),
 	("endsync", getterm),
 	("repeat", lambda writer, node:(not writer.smilboston and getrepeat(writer, node)) or None),
 	("repeatCount", lambda writer, node:(writer.smilboston and getrepeat(writer, node)) or None),
 	("repeatDur", lambda writer, node:getduration(writer, node, "repeatdur")),
-	("restart", lambda writer, node: getfill(writer, node, 'restart')),
-	("restartDefault", lambda writer, node: getfill(writer, node, 'restartDefault')),
+	("restart", lambda writer, node: getfill(writer, node, 'restart', 'default')),
+	("restartDefault", lambda writer, node: getfill(writer, node, 'restartDefault', 'inherit')),
 	("src", lambda writer, node:getsrc(writer, node)),
 	("clip-begin", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipbegin')) or None),
 	("clip-end", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipend')) or None),
