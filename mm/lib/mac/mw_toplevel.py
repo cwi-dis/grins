@@ -1127,17 +1127,18 @@ class _Toplevel(_Event):
 			self._installcursor('_watch')
 			return None
 
-		keys = Evt.GetKeys()
-		option_pressed = (ord(keys[7]) & 4)
-		lwhere = Evt.GetMouse()
-		where = Qd.LocalToGlobal(lwhere)
 		frontwid = Win.FrontWindow()
-		if self._wid_to_window.has_key(frontwid):
+		if frontwid and self._wid_to_window.has_key(frontwid):
 			frontwindow = self._wid_to_window[frontwid]
 		else:
 			# The front window isn't ours. Use the arrow
 			self._installcursor('_arrow')
 			return None
+		Qd.SetPort(frontwid)
+		keys = Evt.GetKeys()
+		option_pressed = (ord(keys[7]) & 4)
+		lwhere = Evt.GetMouse()
+		where = Qd.LocalToGlobal(lwhere)
 		partcode, cursorwid = Win.FindWindow(where)
 		#
 		# First check whether we need the resize cursor
