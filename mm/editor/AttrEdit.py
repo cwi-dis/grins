@@ -565,6 +565,7 @@ class AnimationWrapper(NodeWrapper):
 		tag = self.node.GetAttrDict()['tag']
 		if tag == 'animateMotion':
 			namelist.remove('attributeName')
+			namelist.remove('attributeType')
 		elif tag == 'animate':
 			namelist.remove('path')
 			namelist.remove('origin')
