@@ -140,6 +140,9 @@ class SoundChannel(Channel):
 		if not self.is_showing():
 			# Don't play it, but still let the duration pass
 			import Duration
+
+			self.armed_node = None
+			self.armed_info = None
 			duration = Duration.get(node)
 			dummy = self.player.enter(duration, 0, \
 				self.done, None)
