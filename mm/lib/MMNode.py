@@ -3543,7 +3543,7 @@ class MMNode:
 				refnode = arc.refnode()
 				refnode.add_arc(arc)
 			cdur = child.calcfullduration(ignoremin = 1)
-			if cdur is not None and child.fullduration is not None:
+			if cdur is not None: # and child.fullduration is not None:
 				if cdur < 0:
 					delay = None
 				else:
