@@ -422,47 +422,6 @@ class _Toplevel:
 	def GetImageSize(self,file):
 		f=self.getActiveDocFrame()
 		return f._image_size(file)
-
-	# Returns the size of a video	
-	def GetVideoSize(self,url):
-		import dshow
-		try:
-			builder = dshow.CreateGraphBuilder()
-		except:
-			print 'Missing DirectShow infrasrucrure'
-			return (0, 0)
-		try:
-			builder.RenderFile(url)
-		except:
-			print 'failed to render',url
-			return(0, 0)
-		vw = builder.QueryIVideoWindow()
-		try:
-			width, height = vw.GetWindowPosition()[2:]
-		except:
-			print 'failed to get size',url
-			width, height = 0, 0
-		return (width, height)
-
-	# Returns the duration of the media file in secs	
-	def GetMediaDuration(self,url):
-		import dshow
-		try:
-			builder = dshow.CreateGraphBuilder()
-		except:
-			print 'Missing DirectShow infrasrucrure'
-			return 1.0
-		try:
-			builder.RenderFile(url)
-		except:
-			print 'failed to render',url
-			return 1.0
-		mp = builder.QueryIMediaPosition()
-		duration = mp.GetDuration()
-		if duration<0:
-			print 'failed to get duration for',url
-			duration=1.0
-		return duration
 	
 	# Returns the length of a string in pixels	
 	def GetStringLength(wnd,str):
