@@ -176,6 +176,10 @@ SOURCE=.\common\ArmStates.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\common\bitrates.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\common\Channel.py
 # End Source File
 # Begin Source File
