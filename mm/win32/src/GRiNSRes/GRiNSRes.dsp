@@ -70,7 +70,6 @@ SOURCE="$(InputPath)"
 # Begin Group "Resources"
 
 # PROP Default_Filter ""
-# End Group
 # Begin Source File
 
 SOURCE=.\RES\animatio.ico
@@ -126,10 +125,6 @@ SOURCE=.\RES\GRiNSed.ico
 # Begin Source File
 
 SOURCE=..\Build\grinsRC.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\GRiNSRes.h
 # End Source File
 # Begin Source File
 
@@ -350,6 +345,11 @@ SOURCE=.\RES\waitstop.ico
 # Begin Source File
 
 SOURCE=.\RES\wallcloc.ico
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=.\GRiNSRes.h
 # End Source File
 # End Target
 # End Project
