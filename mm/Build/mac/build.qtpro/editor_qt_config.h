@@ -31,18 +31,5 @@
 #include <ansi_prefix.mac.h>
 #endif
 
-#if __POWERPC__
-#define WITH_RMA_SUPPORT	/* Support for real media types */
-#define WITH_REALPRODUCER_SUPPORT /* Support for realmedia conversion */
-#endif
-
-#ifndef WITH_RMA_SUPPORT
 #define initrma	0
-#endif
-
-#ifdef WITH_REALPRODUCER_SUPPORT
-#define _MACINTOSH 1
-#define _MACPPC
-#else
 #define initproducer 0
-#endif /* WITH_REALPRODUCER_SUPPORT */
