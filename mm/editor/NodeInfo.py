@@ -408,6 +408,7 @@ class NodeInfo(Dialog):
 	else:
 	    line = self.text_browser.get_browser_line(i)
 	    self.text_input.set_input(line)
+	    self.form.set_object_focus(self.text_input)
 	    if self.immtext[i-1] <> line:
 		self.ch_immtext = self.changed = 1
 		self.immtext[i-1] = line

@@ -416,19 +416,20 @@ class TopLevel(ViewDialog, BasicDialog):
 			obj.set_button(0)
 	#
 	def close_ok(self):
-		if self.changed:
-			l1 = 'You haven\'t saved your changes yet;'
-			l2 = 'do you want to save them before closing?'
-			l3 = ''
-			b1 = 'Save'
-			b2 = 'Don\'t save'
-			b3 = 'Cancel'
-			reply = fl.show_choice(l1, l2, l3, b1, b2, b3)
-			if reply == 3:
-				return 0
-			if reply == 1:
-				self.save_callback(obj, arg)
-		return 1
+		if not self.changed:
+			return 1
+		l1 = 'You haven\'t saved your changes yet;'
+		l2 = 'do you want to save them before closing?'
+		l3 = ''
+		b1 = 'Save'
+		b2 = 'Don\'t save'
+		b3 = 'Cancel'
+		reply = fl.show_choice(l1, l2, l3, b1, b2, b3)
+		if reply == 3:
+			return 0
+		if reply == 2:
+			return 1
+		return self.save_to_file(self.filename)
 	#
 	# GL event callback for WINSHUT and WINQUIT (called from glwindow)
 	#
