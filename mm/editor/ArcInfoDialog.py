@@ -25,7 +25,7 @@ class ArcInfoDialog:
 					top = self.__src_choice, left = None)
 		self.__range_choice = self.__window.OptionMenu(None,
 					self.__rangelist,
-					0, (self.__range_callback, ()),
+					rangeinit, (self.__range_callback, ()),
 					top = self.__dst_choice,
 					left = self.__delay_slider, right = None)
 		buttons = self.__window.ButtonRow(
@@ -40,6 +40,7 @@ class ArcInfoDialog:
 		i = self.__range_choice.getpos()
 		range = float(10 ** i)
 		delay = min(range, self.__delay_slider.getvalue())
+		self.__delay_slider.setvalue(0)
 		self.__delay_slider.setrange(0, range)
 		self.__delay_slider.setvalue(delay)
 
@@ -79,6 +80,7 @@ class ArcInfoDialog:
 			rangeinit = 0
 		range = float(10 ** rangeinit)
 		self.__range_choice.setpos(rangeinit)
+		self.__delay_slider.setvalue(0)
 		self.__delay_slider.setrange(0, range)
 		self.__delay_slider.setvalue(delay)
 
