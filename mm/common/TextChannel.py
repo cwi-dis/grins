@@ -90,6 +90,9 @@ class TextWindow(ChannelWindow):
 		gl.clear()
 	#
 	def mouse(self, (dev, val)):
+		if self.node == None:
+			gl.ringbell()
+			return
 		mx, my = fl.get_mouse()
 		mx, my = gl.mapw2(self.vobj, int(mx), int(my))
 		mx, my = int(mx), int(my)
@@ -108,10 +111,6 @@ class TextWindow(ChannelWindow):
 			return
 		if (dev, val) <> (DEVICE.MOUSE3, 1):
 			return
-		if not self.node:
-			print 'mouse: no current node'
-			gl.ringbell()
-			return
 		if not self.anchors:
 			print 'mouse: no anchors on this node'
 		al2 = []
@@ -128,6 +127,7 @@ class TextWindow(ChannelWindow):
 		# If this was a paused anchor and it didn't fire
 		# stop showing the node
 		if rv == 0 and len(al2) == 1 and al2[0][A_TYPE] == ATYPE_PAUSE:
+			self.channel.haspauseanchor = 0
 			self.channel.done(0)
 	#
 	def resetfont(self):
@@ -171,7 +171,6 @@ class TextWindow(ChannelWindow):
 		self.text = preptext(text)
 		self.node = node
 		self.resetfont()
-		self.anchors = []
 		if text <> '':
 			self.pop()
 		self.redraw()
@@ -199,7 +198,10 @@ class TextWindow(ChannelWindow):
 	#
 	def setanchors(self, anchors):
 		self.anchors = anchors
-		self.redraw()
+
+	def clear(self):
+		self.anchors = []
+		self.settext('', None)
 	#
 	# Start defining an anchor
 	def setdefanchor(self, anchor):
@@ -333,9 +335,13 @@ class TextChannel(Channel):
 	def getduration(self, node):
 		return Channel.getduration(self, node)
 	#
+	# Called by Channel.clearnode to clear previous node
+	def clear(self):
+		self.window.clear()
+	#
 	def play(self, (node, callback, arg)):
-		self.showtext(node)
 		self.showanchors(node)
+		self.showtext(node)
 		Channel.play(self, node, callback, arg)
 	#
 	def defanchor(self, node, anchor):
@@ -372,14 +378,14 @@ class TextChannel(Channel):
 		self.window.setanchors(al2)
 	#
 	def reset(self):
-		self.window.settext('', None)
+		self.window.clear()
 	#
 	def showtext(self, node):
 		self.window.settext(self.getstring(node), node)
 	#
 	def getstring(self, node):
 		if node.type == 'imm':
-			return string.join(node.GetValues())
+			return string.joinfields(node.GetValues(), '\n')
 		elif node.type == 'ext':
 			filename = MMAttrdefs.getattr(node, 'file')
 			try:
