@@ -14,7 +14,6 @@
 __version__ = "$Id$";
 
 [
-	EXPORT_CMIF,
 	EXPORT_SMIL1,
 	EXPORT_SMIL2,
 	EXPORT_REAL,
@@ -28,13 +27,10 @@ __version__ = "$Id$";
 	PLAYER_VIEW,
 	TRANSITION_VIEW,
 	STRUCTURE_VIEW,
-	TIMELINE_VIEW,
 	LAYOUT_VIEW,
 	HYPERLINKS_VIEW,
 	ASSETS_VIEW,
-	LINKEDIT_LIGHT,			# I'm not sure about this.. see TopLevel.py
 	CHANNEL_VIEW,
-	TEMPORAL_VIEW,
 	SOURCE_VIEW,			# show the source view for editing smil source.
 	USER_GROUPS,
 	SOURCE,
@@ -51,4 +47,4 @@ __version__ = "$Id$";
 	H_DROPBOX,			# Show an empty drop box at the end of a sequence.
 	H_COLLAPSE,			# Enable internal node collapsing.
 	H_TIMESTRIP,			# Show snap!-like documents with correct toplevel par/seq
-] = range(31)				# don't forget to update this range!
+] = range(27)				# don't forget to update this range!

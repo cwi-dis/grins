@@ -419,20 +419,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if features.HYPERLINKS_VIEW in features.feature_set:
 			import LinkEdit
 			self.links = LinkEdit.LinkEdit(self)
-
-			# Alain's view is used instead of this.
-			#import LayoutView
-			#self.layoutview = LayoutView.LayoutView(self)
+		else:
+			import LinkEditLight
+			self.links = LinkEditLight.LinkEditLight(self)
 
 		if features.USER_GROUPS in features.feature_set:
 			import UsergroupView
 			self.ugroupview = UsergroupView.UsergroupView(self)
 			
-		if features.LINKEDIT_LIGHT in features.feature_set:
-			#I'm not sure what this does.. -mjvdg.
-			import LinkEditLight
-			self.links = LinkEditLight.LinkEditLight(self)
-
 		if features.SOURCE_VIEW in features.feature_set:
 			import SourceView
 			self.sourceview = SourceView.SourceView(self)

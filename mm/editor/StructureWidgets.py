@@ -2732,8 +2732,12 @@ class TimelineWidget(MMWidgetDecoration):
 				cur_tick_bot = longtick_bot
 				if time < 60:
 					label = fmtfloat(time)
+				elif time < 60*60:
+					label = '%02d:%02.2d'%divmod(int(time), 60)
 				else:
-					label = '%02d:%02.2d'%(int(time)/60, int(time)%60)
+					hours, time = divmod(int(time), 60*60)
+					mins, secs = divmod(time, 60)
+					label = '%d:%02.2d:%02.2d'%(hours, mins, secs)
 				lw = displist.strsizePXL(label)[0]
 				if tick_x_mid-lw/2 < x:
 					# label at the left end of the timeline
