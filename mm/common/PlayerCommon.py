@@ -34,6 +34,10 @@ class PlayerCommon:
 			nodeList = self.root.GetAllMediaNodes()
 			for node in nodeList:
 				renderer = self.getRenderer(node)
+	
+	def checkRendererChannels(self):
+		#self.clearRendererChannels()
+		self.makeRendererChannels()
 				
 	def getRenderer(self, node):
 		chan = self.nodeToRenderer.get(node)
