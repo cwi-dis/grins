@@ -397,7 +397,10 @@ class MMNode:
 		if self.context is not parent.context:
 			# XXX Decide how to handle this later
 			raise CheckError, 'AddToTree() requires same context'
-		parent.children.insert(i, self)
+		if i == -1:
+			parent.children.append(self)
+		else:
+			parent.children.insert(i, self)
 		self.parent = parent
 		parent._fixsummaries(self.summaries)
 		parent._rmsummaries(self.summaries.keys())
