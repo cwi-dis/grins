@@ -58,6 +58,10 @@ class LayoutViewDialog2:
 			f=self.toplevel.window
 			f.set_toggle(LAYOUTVIEW,0)
 
+	def setcommands(self, commandlist, title):
+		self.__window.set_commandlist(commandlist)
+#		self.window.set_dynamiclist(ANCESTORS, self.baseobject.ancestors)
+#		self.window.set_dynamiclist(SIBLINGS, self.baseobject.siblings)
 
 	def assertwndcreated(self):
 		if self.__window is None or not hasattr(self.__window,'GetSafeHwnd'):
@@ -93,3 +97,10 @@ class LayoutViewDialog2:
 		
 		return None
 
+	def askname(self, default, title, applyCallback,  cancelCallBack = None):
+		w=windowinterface.LayoutNameDlg('Name for region',
+					    default,
+					    applyCallback,
+					    cancelCallback = cancelCallBack,
+					    parent = self.__window)
+		w.show()

@@ -226,7 +226,10 @@ class Region(Node):
 		self._ctx.applyGeomOnRegion(self, geom)
 
 	def onProperties(self):
-		self._ctx.selectBgColor(self)
+		if features.CUSTOM_REGIONS in features.feature_set:
+			self._ctx.editProperties(self)
+		else:
+			self._ctx.selectBgColor(self)
 
 	def isExclude(self):
 		isExclude = self._defattrdict.get('isExclude')
@@ -446,7 +449,10 @@ class Viewport(Node):
 		self._ctx.applyGeomOnViewport(self, geom[2:])
 
 	def onProperties(self):
-		self._ctx.selectBgColor(self)
+		if features.CUSTOM_REGIONS in features.feature_set:
+			self._ctx.editProperties(self)
+		else:
+			self._ctx.selectBgColor(self)
 
 ###########################
 
@@ -631,7 +637,7 @@ class LayoutView2(LayoutViewDialog2):
 
 		# update data struture
 		viewportNode = regionNode.getViewport()
-		
+		del self._nameToRegionNode[regionId]
 		list = self._viewportsRegions[viewportNode.getName()]
 		ind = list.index(regionId)
 		del list[ind]
@@ -957,7 +963,13 @@ class LayoutView2(LayoutViewDialog2):
 					self.applyEditorPreference(node, list)
 				else:
 					self.applyBgColor(node, newbg, transparent)
-		
+
+	def editProperties(self, node):		
+		if node.getNodeType() != TYPE_MEDIA:
+			# allow to choise attributes
+			import AttrEdit		
+			AttrEdit.showchannelattreditor(self.toplevel,
+						self.context.channeldict[node.getName()])
 
 	def sendBack(self, region):
 		dict = region.getDocDict()
@@ -1135,10 +1147,10 @@ class LayoutView2(LayoutViewDialog2):
 					self.editmgr.setchannelattr(node.getName(), name, value)
 				self.editmgr.commit()
 
-	def applyNewRegion(self, parentId):
+	def applyNewRegion(self, parentId, name):
 		if self.editmgr.transaction():
-			self.editmgr.addchannel('unamed0', 0, 'layout')
-			self.editmgr.setchannelattr('unamed0', 'base_window', parentId)
+			self.editmgr.addchannel(name, 0, 'layout')
+			self.editmgr.setchannelattr(name, 'base_window', parentId)
 			self.editmgr.commit('REGION_TREE')
 
 	def applyDelRegion(self, regionId):
@@ -1204,7 +1216,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.enable('BringFront',0)
 		self.dialogCtrl.enable('RegionZ',0)
 
-		self.dialogCtrl.enable('BgColor', 1)
+#		self.dialogCtrl.enable('BgColor', 1)
 		
 		self.dialogCtrl.enable('RegionX',0)
 		self.dialogCtrl.enable('RegionY',0)
@@ -1225,6 +1237,21 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.dialogCtrl.enable('NewRegion',1)
 			self.dialogCtrl.enable('DelRegion',1)
+
+		commandList = self.mkcommandlist()	
+		self.setcommands(commandList, '')
+
+	def mkcommandlist(self):
+		if features.CUSTOM_REGIONS in features.feature_set:
+			commandList = [
+				ATTRIBUTES(callback = (self.__editProperties, ())),
+				]
+		else:
+			commandList = [
+				ATTRIBUTES(callback = (self.__selectBgColor, ())),
+				]
+
+		return commandList			
 		
 	def updateViewportGeomOnDialogBox(self, geom):
 		# update the fields dialog box
@@ -1245,7 +1272,7 @@ class LayoutView2(LayoutViewDialog2):
 		
 		self.dialogCtrl.enable('RegionZ',1)
 
-		self.dialogCtrl.enable('BgColor', 1)
+#		self.dialogCtrl.enable('BgColor', 1)
 
 		self.dialogCtrl.enable('RegionX',1)
 		self.dialogCtrl.enable('RegionY',1)
@@ -1278,6 +1305,9 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.dialogCtrl.enable('NewRegion',1)
 			self.dialogCtrl.enable('DelRegion',1)
+
+		commandList = self.mkcommandlist()	
+		self.setcommands(commandList, '')
 
 	def updateRegionGeomOnDialogBox(self, geom):
 		self.dialogCtrl.setFieldCtrl('RegionX',"%d"%geom[0])		
@@ -1370,7 +1400,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.setCheckCtrl('ShowRbg', 1)
 		self.dialogCtrl.enable('RegionZ',0)
 
-		self.dialogCtrl.enable('BgColor', 0)
+#		self.dialogCtrl.enable('BgColor', 0)
 							   
 		self.dialogCtrl.enable('RegionX',1)
 		self.dialogCtrl.enable('RegionY',1)
@@ -1391,6 +1421,9 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.dialogCtrl.enable('NewRegion',0)
 			self.dialogCtrl.enable('DelRegion',0)
+
+		commandList = []	
+		self.setcommands(commandList, '')
 				
 	def updateMediaGeomOnDialogBox(self, geom):
 		self.updateRegionGeomOnDialogBox(geom)
@@ -1476,7 +1509,11 @@ class LayoutView2(LayoutViewDialog2):
 				self.__updateGeomOnRegion(ctrlName, value)
 			elif self.currentNodeSelected.getNodeType() == TYPE_MEDIA:
 				self.__updateGeomOnMedia(ctrlName, value)
-				
+
+	def __editProperties(self):
+		if self.currentNodeSelected != None:
+			self.editProperties(self.currentNodeSelected)
+						
 	def __selectBgColor(self):
 		if self.currentNodeSelected != None:
 			self.selectBgColor(self.currentNodeSelected)
@@ -1539,15 +1576,31 @@ class LayoutView2(LayoutViewDialog2):
 					list.append(('showEditBackground',None))
 			self.applyEditorPreference(node, list)
 
+	def newRegion(self, parentId):
+		# choice a default name which doesn't exist		
+		channeldict = self.context.channeldict
+		baseName = 'NEW'
+		i = 1
+		name = baseName + `i`
+		while channeldict.has_key(name):
+			i = i+1
+			name = baseName + `i`
+			
+		self.__parentId = parentId
+		self.askname(name, 'Name for region', self.__regionNamedCallback)
+
+	def __regionNamedCallback(self, name):
+		self.applyNewRegion(self.__parentId, name)
+		self.select(self.getNode(name))
+
 	def __newNode(self):
 		if self.currentNodeSelected != None:
 			nodeSelected = self.currentNodeSelected
 			if nodeSelected.getNodeType() == TYPE_VIEWPORT:
-				self.applyNewRegion(nodeSelected.getName())
+				self.newRegion(nodeSelected.getName())
 			elif nodeSelected.getNodeType() == TYPE_REGION:
-				self.applyNewRegion(nodeSelected.getName())
-			self.select(self.getNode('unamed0'))
-				
+				self.newRegion(nodeSelected.getName())
+								
 	def __delNode(self):
 		if self.currentNodeSelected != None:
 			nodeSelected = self.currentNodeSelected
@@ -1621,9 +1674,11 @@ class LayoutView2(LayoutViewDialog2):
 			self.__updateZOrder(value)
 
 	def onButtonClickCtrl(self, ctrlName):
-		if ctrlName == 'BgColor':
-			self.__selectBgColor()
-		elif ctrlName == 'SendBack':
+#		if ctrlName == 'BgColor':
+#			self.__selectBgColor()
+#		elif ctrlName == 'Properties':
+#			self.__editProperties()			
+		if ctrlName == 'SendBack':
 			self.__sendBack()
 		elif ctrlName == 'BringFront':
 			self.__bringFront()

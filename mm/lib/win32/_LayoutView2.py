@@ -51,7 +51,7 @@ class _LayoutView2(GenFormView):
 		# save them in directory: accessible directly from LayoutViewDialog class
 		# note: if you modify the key names, you also have to modify them in LayoutViewDialog
 		self.__ctrlNames=n=('ViewportSel','RegionSel','RegionX','RegionY',
-							'RegionW','RegionH','RegionZ', 'BgColor', 'ShowNames',
+							'RegionW','RegionH','RegionZ', 'ShowNames',
 							'AsOutLine',
 #							'RegionList',
 							'ShowRbg', 'SendBack', 'BringFront', 'MediaSel',
@@ -67,7 +67,6 @@ class _LayoutView2(GenFormView):
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_W); i=i+1
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_H); i=i+1
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
-		self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_BACKGROUND); i=i+1
 		self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_NAMES); i=i+1
 		self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_AS_OUTLINE); i=i+1
 #		self[n[i]]=components.ListBox(self,grinsRC.IDC_LAYOUT_REGIONLIST); i=i+1
@@ -260,16 +259,16 @@ class _LayoutView2(GenFormView):
 				self._dialogHandler.onCheckCtrl(ctrlName, value)
 				return 
 
-			if id == self['BgColor']._id:
-				ctrlName = 'BgColor'
-			elif id == self['SendBack']._id:
+			if id == self['SendBack']._id:
 				ctrlName = 'SendBack'
 			elif id == self['BringFront']._id:
 				ctrlName = 'BringFront'
-			elif id == self['NewRegion']._id:
-				ctrlName = 'NewRegion'
-			elif id == self['DelRegion']._id:
-				ctrlName = 'DelRegion'
+			if ctrlName == None:
+				if features.CUSTOM_REGIONS in features.feature_set:
+					if id == self['NewRegion']._id:
+						ctrlName = 'NewRegion'
+					elif id == self['DelRegion']._id:
+						ctrlName = 'DelRegion'
 		
 			if ctrlName != None:
 				self._dialogHandler.onButtonClickCtrl(ctrlName)
