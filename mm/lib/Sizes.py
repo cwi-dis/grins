@@ -22,12 +22,16 @@ def GetSize(url, maintype = None, subtype = None):
 		width = info.get('width', 200)
 		height = info.get('height', 200)
 	elif maintype == 'image':
+		u.close()
+		del u
 		try:
 			file = MMurl.urlretrieve(url)[0]
 		except IOError:
 			return 0, 0
 		width, height = GetImageSize(file)
 	elif maintype == 'video':
+		u.close()
+		del u
 		try:
 			file = MMurl.urlretrieve(url)[0]
 		except IOError:
@@ -45,7 +49,10 @@ def GetImageSize(file):
 		import img
 	except ImportError:
 		import windowinterface
-		width, height = windowinterface.GetImageSize(file)
+		try:
+			width, height = windowinterface.GetImageSize(file)
+		except '':
+			width = height = 0
 	else:
 		try:
 			rdr = img.reader(None, file)
@@ -60,7 +67,10 @@ def GetVideoSize(file):
 		import mv
 	except ImportError:
 		import windowinterface
-		width, height = windowinterface.GetVideoSize(file)
+		try:
+			width, height = windowinterface.GetVideoSize(file)
+		except:
+			width = height = 0
 	else:
 		try:
 			movie = mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
