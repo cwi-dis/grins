@@ -625,7 +625,11 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 	def rpconvertcall(self):
 		import rpconvert
-		rpconvert.rpconvert(self.node)
+		rpconvert.rpconvert(self.node, self.show_mesg)
+
+	def convertrpcall(self):
+		import rpconvert
+		rpconvert.convertrp(self.node, self.show_mesg)
 
 # not called anymore.
 #	def deletecall(self):
@@ -675,9 +679,11 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def pasteundercall(self):
 		self.mother.paste(0)
 
-	def show_mesg(self):
-		if self.node.errormessage:
-			windowinterface.showmessage(self.node.errormessage, parent=self.mother.window)
+	def show_mesg(self, msg = None):
+		if msg is None:
+			msg = self.node.errormessage
+		if msg:
+			windowinterface.showmessage(msg, parent=self.mother.window)
 
 
 #

@@ -17,7 +17,6 @@ class HierarchyViewDialog(ViewDialog):
 			      'c': COPY,
 			      'p': PLAYNODE,
 			      'G': PLAYFROM,
-##			      'i': INFO,
 			      'a': ATTRIBUTES,
 			      'e': CONTENT,
 			      't': ANCHORS,
@@ -31,7 +30,8 @@ class HierarchyViewDialog(ViewDialog):
 			(FLAG_ALL, 'Edit', [
 				(FLAG_ALL, 'Cut', CUT),
 				(FLAG_ALL, 'Copy', COPY),
-				(FLAG_PRO, 'Convert to SMIL 2.0', RPCONVERT),
+				(FLAG_BOSTON, 'Convert to SMIL 2.0', RPCONVERT),
+				(FLAG_PRO, 'Convert to RealPix', CONVERTRP),
 				(FLAG_ALL, 'Paste', [
 					(FLAG_ALL, 'Before', PASTE_BEFORE),
 					(FLAG_ALL, 'After', PASTE_AFTER),
@@ -49,7 +49,6 @@ class HierarchyViewDialog(ViewDialog):
 					(FLAG_ALL, 'Switch Parent', NEW_SWITCH),
 					]),
 				(FLAG_ALL, None),
-##				(FLAG_PRO, 'Info...', INFO),
 				(FLAG_ALL, 'Properties...', ATTRIBUTES),
 				(FLAG_ALL, 'Edit Content...', CONTENT),
 				]),
@@ -89,6 +88,8 @@ class HierarchyViewDialog(ViewDialog):
 		(FLAG_ALL, 'New Node After', NEW_AFTER),
 		(FLAG_ALL, 'New Node Within', NEW_UNDER),
 		(FLAG_ALL, None),
+		(FLAG_PRO, 'Convert to RealPix', CONVERTRP),
+		(FLAG_PRO, None),
 		(FLAG_ALL, 'Cut', CUT),
 		(FLAG_ALL, 'Copy', COPY),
 		(FLAG_ALL, 'Delete', DELETE),
@@ -107,7 +108,6 @@ class HierarchyViewDialog(ViewDialog):
 		(FLAG_ALL, 'Create Simple Anchor', CREATEANCHOR),
 		(FLAG_ALL, 'Finish Hyperlink', FINISH_LINK),
 		(FLAG_ALL, None),
-##		(FLAG_PRO, 'Info...', INFO),
 		(FLAG_ALL, 'Properties...', ATTRIBUTES),
 		(FLAG_PRO, 'Anchors...', ANCHORS),
 		)
@@ -115,8 +115,8 @@ class HierarchyViewDialog(ViewDialog):
 	leaf_popupmenu = (
 		(FLAG_ALL, 'New Node Before', NEW_BEFORE),
 		(FLAG_ALL, 'New Node After', NEW_AFTER),
-		(FLAG_PRO, None),
-		(FLAG_PRO, 'Convert to SMIL 2.0', RPCONVERT),
+		(FLAG_BOSTON, None),
+		(FLAG_BOSTON, 'Convert to SMIL 2.0', RPCONVERT),
 		(FLAG_ALL, None),
 		(FLAG_ALL, 'Cut', CUT),
 		(FLAG_ALL, 'Copy', COPY),
@@ -131,7 +131,6 @@ class HierarchyViewDialog(ViewDialog):
 		(FLAG_ALL, 'Create Simple Anchor', CREATEANCHOR),
 		(FLAG_ALL, 'Finish Hyperlink', FINISH_LINK),
 		(FLAG_ALL, None),
-##		(FLAG_PRO, 'Info...', INFO),
 		(FLAG_ALL, 'Properties...', ATTRIBUTES),
 		(FLAG_PRO, 'Anchors...', ANCHORS),
 		(FLAG_ALL, 'Edit Content...', CONTENT),
@@ -233,7 +232,6 @@ class HierarchyViewDialog(ViewDialog):
 	def getparentwindow(self):
 		# Used by machine-independent code to pass as parent
 		# parameter to dialogs
-		##return self.window
 		return self.window
 
 	# this method is called when the mouse is dragged

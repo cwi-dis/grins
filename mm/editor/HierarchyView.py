@@ -177,6 +177,9 @@ class HierarchyView(HierarchyViewDialog):
 		self.rpconvertcommands = [
 			RPCONVERT(callback = (self.rpconvertcall, ())),
 			]
+		self.convertrpcommands = [
+			CONVERTRP(callback = (self.convertrpcall, ())),
+			]
 		self.mediacommands = self.mediacommands + self.structure_commands
 		if self.toplevel.root.context.attributes.get('project_boston', 0):
 			self.structure_commands.append(NEW_AFTER_EXCL(callback = (self.createafterintcall, ('excl',))))
@@ -340,6 +343,12 @@ class HierarchyView(HierarchyViewDialog):
 		if fntype == 'ext':
 			if fnode.GetComputedMimeType() == 'image/vnd.rn-realpix':
 				commands = commands + self.rpconvertcommands
+		if fntype == 'seq':
+			for c in fnode.GetChildren():
+				if c.GetType() != 'ext' or c.GetChannelType() != 'image':
+					break
+			else:
+				commands = commands + self.convertrpcommands
 
 		# Enable "paste" commands depending on what is in the clipboard.
 		t, n = self.editmgr.getclip()
@@ -1742,6 +1751,11 @@ class HierarchyView(HierarchyViewDialog):
 		if self.selected_widget:
 			self.toplevel.setwaiting()
 			self.selected_widget.rpconvertcall()
+
+	def convertrpcall(self):
+		if self.selected_widget:
+			self.toplevel.setwaiting()
+			self.selected_widget.convertrpcall()
 
 	def createbeforecall(self, chtype=None):
 		if self.selected_widget: self.selected_widget.createbeforecall(chtype)

@@ -319,6 +319,8 @@ class TRANSITION(_DynamicCascade):
 	help = 'Selection of available transitions'
 class RPCONVERT(_CommandBase):
 	help = 'Convert RealPix node to SMIL 2.0'
+class CONVERTRP(_CommandBase):
+	help = 'Convert seq node to RealPix file'
 class FIND_EVENT_SOURCE(_CommandBase):
 	help = 'Find the source of this event'
 
