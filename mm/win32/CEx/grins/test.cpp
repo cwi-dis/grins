@@ -3,14 +3,17 @@
 #include <windows.h>
 
 #include "charconv.h"
+#include "memfile.h"
 
 void test_attr_def();
 void test_re();
+void test_xml_parser();
 
 void main_test()
 	{
-	test_re();
+	test_xml_parser();
 	}
+
 
 //////////////////////////////////////////
 // test1
@@ -35,15 +38,6 @@ void test_attr_def()
 // test2
 
 #include "RE.h"
-
-template <class T> std::string& operator<<(std::string& s, T c) 
-	{ s+=c; return s;}
-
-inline std::string& operator<<(std::string& s, int c) 
-	{char sz[16];sprintf(sz,"%d",c); s+=sz; return s;}	
-
-inline std::string& operator<<(std::string& s, double c) 
-	{char sz[16];sprintf(sz,"%f",c); s+=sz; return s;}	
 
 std::string space = "[ \t\r\n]+";
 std::string opspace = "[ \t\r\n]*";
@@ -113,4 +107,63 @@ void test_re()
 	Length l1("-34.2 mm"); 
 	std::string str = l1.str();
 	MessageBox(NULL, TextPtr(str.c_str()), TEXT("GRiNS Player"), MB_OK);
+	}
+
+//////////////////////////////////////////
+// test3
+
+#include "tree_node.h"
+#include "xml_parsers.h"
+
+template <class Node>
+class XMLDocument: public Node {
+	public:
+	XMLDocument()
+	:	Node("#document")
+		, xmlversion("1.0")
+		, xmlencoding("ISO-8859-1")
+		, xmlstandalone("yes")
+		, doctypetag("xml")
+		, doctypepubid("")
+		, doctypesyslit("")
+		{	
+		}
+
+	bool buildFromSrc(const std::string& src, const XMLParser<Node>& parser)
+		{
+		return parser.parse(src.c_str(), src.length(), true));
+		}
+
+	bool buildFromFile(const TCHAR *pszFilename, const XMLParser<Node>& parser)
+		{
+		memfile mf;
+		if(!mf.open(pszFilename))
+			{
+			MessageBox(NULL, TEXT("memfile::open() failed"), TEXT("GRiNS Player"), MB_OK);
+			return false;
+			}
+		mf.fill();
+
+		if(!parser.parse((const char*)mf.data(), mf.size(), true))
+			return false;
+		return true;
+		}
+
+	std::string xmlversion;
+	std::string xmlencoding;
+	std::string xmlstandalone;
+	std::string doctypetag;
+	std::string doctypepubid;
+	std::string doctypesyslit;
+	};
+
+void test_xml_parser()
+	{
+	std::basic_string<TCHAR> filename(TEXT("\\My Documents\\Presentations\\slideshow-1.smil"));
+	XMLDocument<TreeNode> doc;
+	ExpatParser<TreeNode> parser(&doc);
+	if(!doc.buildFromFile(filename.c_str(), parser))
+		MessageBox(NULL, TEXT("buildFromFile() failed"), TEXT("GRiNS Player"), MB_OK);
+	else
+		MessageBox(NULL, TEXT("build DOM"), TEXT("GRiNS Player"), MB_OK);
 	}
