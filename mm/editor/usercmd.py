@@ -72,6 +72,8 @@ class EDITSOURCE(_CommandBase):
 	help = 'Edit source'
 class CLOSE(_CommandBase):
 	help = 'Close current document'
+class CHECKVERSION(_CommandBase):
+	help = 'Check for newer versions of the software'
 
 #
 # TopLevel commands
