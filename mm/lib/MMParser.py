@@ -125,19 +125,19 @@ class MMParser:
 	#
 	def getstringvalue(self, dummy):
 		t = self.getobject()
-		if t[0] == '\'': return eval(t)
+		if t[0] in ('\'', '"'): return eval(t)
 		raise TypeError, (t, 'string')
 	#
 	def getnamevalue(self, dummy):
 		t = self.getobject()
 		if t[0] in letters: return t
-		if t[0] == '\'': return eval(t)
+		if t[0] in ('\'', '"'): return eval(t)
 		raise TypeError, (t, 'name')
 	#
 	def getuidvalue(self, dummy):
 		t = self.getobject()
 		if t[0] in letters or t[0] in digits: return t
-		if t[0] == '\'': return eval(t)
+		if t[0] in ('\'', '"'): return eval(t)
 		raise TypeError, (t, 'uid')
 	#
 	def getboolvalue(self, dummy):
@@ -297,6 +297,8 @@ class MMParser:
 				raise SyntaxError, ('-'+t, 'value')
 			return -eval(t)
 		if t[0] == '\'':
+			return eval(t)
+		if t[0] == '"':
 			return eval(t)
 		if t[0] == '(':
 			value = self.getlistvalue((MMParser.getanyvalue, None))
