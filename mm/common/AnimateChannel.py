@@ -121,6 +121,9 @@ class AnimateChannel(Channel.ChannelAsync):
 		
 	def __startAnimate(self, repeat=0):
 		self.__start = self.__animating.start_time
+		if self.__start is None:
+			print 'Warning: None start_time for node',self.__animating
+			self.__start = 0
 		if not repeat:		
 			self.__effAnimator.onAnimateBegin(self.__getTargetChannel(), self.__animator)
 		self.__animate()
@@ -140,7 +143,12 @@ class AnimateChannel(Channel.ChannelAsync):
 				self.__register_for_timeslices()
 
 	def __animate(self):
-		dt = self._scheduler.timefunc() - self.__start
+		try:
+			dt = self._scheduler.timefunc() - self.__start
+		except TypeError, arg:
+			print arg
+			self.playdone(0)
+			return
 		dt = dt - self.__duration * int(float(dt) / self.__duration)
 		val = self.__animator.getValue(dt)
 		if self.__effAnimator:
