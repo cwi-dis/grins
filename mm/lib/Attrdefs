@@ -80,7 +80,7 @@
 	'End of range of frames to be played' channel)
 
 (comment (string) '' 'Comment' default
-	 'An arbitrary comment string, not interpreted' raw)
+	 'A comment, for your convenience only' raw)
 
 (crop (tuple (float) (float) (float) (float)) (0 0 0 0) 'Image crop' CMIFdefault
     'Crop image.  Values are fractions to crop from top, bottom, left, right.'
@@ -102,7 +102,7 @@
 	'Color used for text/images in window' channel)
 
 (file (string) '/dev/null' 'File' file
-	'File name for external node' channel)
+	'URL for the data of this node' channel)
 
 (font (string) 'Times-Roman' 'Font' CMIFfont
 	'Font used to display text' channel)
@@ -215,28 +215,28 @@
 	 'Window size for top level menu' raw)
 
 (type (name) null 'Channel type' channeltype
-	'Channel type (channel dictionary only)' raw)
+	'Type of media this channel will be used for' raw)
 
 (u_group (name) undefined 'User group' usergroup
-	'Name of user group' inherited)
+	'User group that controls rendering of this node' inherited)
 
 (unixprog (string) '' 'Unix program name' CMIFdefault
 	'Application name (unix only)' channel)
 
 (units (int) 0 'Units' units
-	'Units for top-level windows' raw)
+	'What the size/position numbers are measured in' raw)
 
 (video (bool) 0 'Video output' CMIFdefault
 	'Do image smoothing for video output' channel)
 
 (visible (bool) 1 'Channel visibility' default
-	'Determines visibility of channel' raw)
+	'Are nodes played to the channel actually rendered?' raw)
 
 (wanturl (bool) 0 'Pass URL' CMIFdefault
 	'Pass URL to program (otherwise pass filename)' channel)
 	
 (winpos (tuple (float) (float)) (-1 -1) 'Window position' hidden
-	'Initial window position (x, y) (x axis pointing down!)' raw)
+	'Initial window position (x, y)' raw)
 
 (winprog (string) '' 'Windows program name' CMIFdefault
 	'Application name (windows only)' channel)
@@ -249,16 +249,16 @@
 
 # SMIL system test attributes
 (system_bitrate (int) 0 'System bitrate' default
-	'System bitrate' raw)
+	'Play node only if bitrate >= value here' raw)
 (system_captions (bool) 0 'System captions' default
-	'System captions' raw)
+	'Play node only if end-user wants captions' raw)
 (system_language (string) '' 'System language' default
-	'System language' raw)
+	'Play node only if end-user prefers this language' raw)
 (system_overdub_or_caption (string) '' 'System overdub or caption' default
-	'System overdub or caption' raw)
+	'Play node only depending on end user overdub/caption preference' raw)
 (system_required (string) '' 'System required' default
-	'System required' raw)
+	'Play node only if player supports these features' raw)
 (system_screen_size (tuple (int) (int)) (0 0) 'System screen size' default
-	'System screen size' raw)
+	'Play node only if screen bigger than this' raw)
 (system_screen_depth (int) 0 'System screen depth' default
-	'System screen depth' raw)
+	'Play node only if screen has more bits than this' raw)
