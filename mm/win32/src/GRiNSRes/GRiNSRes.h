@@ -571,24 +571,6 @@
 #define IDC_REGPOINTL                   1393
 #define IDC_FITL                        1394
 #define IDC_ZL                          1395
-#define IDC_SBITRATEL                   1396
-#define IDC_SBITRATEV                   1397
-#define IDC_SLANGUAGEV                  1398
-#define IDC_SLANGUAGEL                  1399
-#define IDC_SCAPTIONSL                  1400
-#define IDC_SCAPTIONSV1                 1401
-#define IDC_SCAPTIONSV2                 1402
-#define IDC_SCAPTIONSV3                 1403
-#define IDC_SSCREENSIZEL                1404
-#define IDC_SSCREENSIZEV                1405
-#define IDC_SOVERDUBL                   1406
-#define IDC_SOVERDUBV1                  1407
-#define IDC_SOVERDUBV2                  1408
-#define IDC_SOVERDUBV3                  1409
-#define IDC_SSCREENDEPTHL               1410
-#define IDC_SCREENDEPTHV                1411
-#define IDC_SREQUIEREDL                 1412
-#define IDC_SREQUIEREDV                 1413
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -677,7 +659,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        411
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1414
+#define _APS_NEXT_CONTROL_VALUE         1415
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
