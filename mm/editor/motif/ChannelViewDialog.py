@@ -32,49 +32,43 @@ class ChannelViewDialog(ViewDialog):
 				]),
 			('Edit', [
 				('Delete', DELETE),
-				('New channel...', NEW_CHANNEL),
-				('Move channel', MOVE_CHANNEL),
-				('Copy channel', COPY_CHANNEL),
 				None,
-				('Toggle channel state', TOGGLE_ONOFF),
-				]),
-			('Play', [
-				('Play node', PLAYNODE),
-				('Play from node', PLAYFROM),
-				]),
-			('Tools', [
+				('New Channel...', NEW_CHANNEL),
+				None,
+				('Move Channel', MOVE_CHANNEL),
+				('Copy Channel', COPY_CHANNEL),
+				('Toggle Channel State', TOGGLE_ONOFF),
+				None,
 				('Info...', INFO),
 				('Properties...', ATTRIBUTES),
-				('Anchors...', ANCHORS),
-				('Edit content...', CONTENT),
-				None,
-				('Create simple anchor', CREATEANCHOR),
-				('Finish hyperlink to selection', FINISH_LINK),
-				('Create sync arc from selection...', FINISH_ARC),
+				('Edit Content...', CONTENT),
 				]),
-			('Navigate', [
-				('Level of detail', [
-					('More horizontal detail', CANVAS_WIDTH),
-##					('More vertical detail', CANVAS_HEIGHT),
-					('Fit in window', CANVAS_RESET),
-					]),
+			('Play', [
+				('Play Node', PLAYNODE),
+				('Play from Node', PLAYFROM),
+				]),
+			('Linking', [
+				('Create Simple Anchor', CREATEANCHOR),
+				('Finish Hyperlink to Selection', FINISH_LINK),
+				('Anchors...', ANCHORS),
 				None,
-				('Synchronize selection', PUSHFOCUS),
-				('Select sync arc', SYNCARCS),
+				('Create Sync Arc from Selection...', FINISH_ARC),
+				('Select Sync Arc', SYNCARCS),
+				]),
+			('View', [
+				('Zoom In', CANVAS_WIDTH),
+				('Fit in Window', CANVAS_RESET),
 				None,
-				(('Show unused channels',
-				  'Hide unused channels'),
-				 TOGGLE_UNUSED, 't'),
-				(('Show sync arcs', 'Hide sync arcs'),
-				 TOGGLE_ARCS, 't'),
-				(('Show thumbnails', 'Hide thumbnails'),
-				 THUMBNAIL, 't'),
-				(('Show bandwidth strip', 'Hide bandwidth strip'),
-				 TOGGLE_BWSTRIP, 't'),
+				('Synchronize Selection', PUSHFOCUS),
 				None,
-				('Highlight in player', HIGHLIGHT),
-				('Unhighlight in player', UNHIGHLIGHT),
-				('Minidocument navigation', [
+				('Unused Channels', TOGGLE_UNUSED, 't'),
+				('Sync Arcs', TOGGLE_ARCS, 't'),
+				('Image Thumbnails', THUMBNAIL, 't'),
+				('Bandwidth Usage', TOGGLE_BWSTRIP, 't'),
+				None,
+				('Highlight in Player', HIGHLIGHT),
+				('Unhighlight in Player', UNHIGHLIGHT),
+				('Minidocument Navigation', [
 					('Next', NEXT_MINIDOC),
 					('Previous', PREV_MINIDOC),
 					('Ancestors', ANCESTORS),
@@ -128,7 +122,7 @@ class ChannelViewDialog(ViewDialog):
 
 class GOCommand:
 	POPUP_NONE = (
-		('Create new channel', NEW_CHANNEL),
+		('New Channel...', NEW_CHANNEL),
 		)
 
 	def __init__(self):
@@ -153,13 +147,13 @@ class BandwidthStripBoxCommand:
 
 class ChannelBoxCommand:
 	POPUP_CHANNEL = (
-		('Toggle channel state', TOGGLE_ONOFF),
+##		('Toggle Channel State', TOGGLE_ONOFF),
 		('Properties...', ATTRIBUTES),
 		None,
 		('Delete', DELETE),
 		None,
-		('Move channel', MOVE_CHANNEL),
-		('Copy channel', COPY_CHANNEL),
+		('Move Channel', MOVE_CHANNEL),
+		('Copy Channel', COPY_CHANNEL),
 		)
 
 	def __init__(self):
@@ -167,17 +161,17 @@ class ChannelBoxCommand:
 
 class NodeBoxCommand:
 	POPUP_NODE = (
-		('Play node', PLAYNODE),
-		('Play from node', PLAYFROM),
+		('Play Node', PLAYNODE),
+		('Play from Node', PLAYFROM),
 		None,
-		('Create simple anchor', CREATEANCHOR),
-		('Finish hyperlink to selection', FINISH_LINK),
-		('Create sync arc from selection...', FINISH_ARC),
+		('Create Simple Anchor', CREATEANCHOR),
+		('Finish Hyperlink to Selection', FINISH_LINK),
+		('Create Sync Arc from Selection...', FINISH_ARC),
 		None,
 		('Info...', INFO),
 		('Properties...', ATTRIBUTES),
 		('Anchors...', ANCHORS),
-		('Edit content...', CONTENT),
+		('Edit Content...', CONTENT),
 		)
 
 	def __init__(self, mother, node):
