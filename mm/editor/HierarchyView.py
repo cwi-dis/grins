@@ -803,40 +803,61 @@ class HierarchyView(HierarchyViewDialog):
 	
 	######################################################################
 	# Delete the selected node.
-	def deletecall(self):
-		if len(self.multi_selected_widgets) > 0:
-			# Delete multiple nodes.
-			if not self.editmgr.transaction():
-				return
-			self.toplevel.setwaiting()
-			for n in self.get_multi_nodes():
-				r = n.GetParent().GetRoot()
-				self.editmgr.delnode(n)
-				self.fixsyncarcs(r,n)
-			self.editmgr.commit()
-		else:
-			node = self.selected_widget.get_node()
-			if not node or node is self.root:
+	def fixselection(self, nodes):
+		# fix the structure view selection nodes is a list of
+		# nodes that are going to be deleted we select the
+		# common ancestor of these nodes, and if that is also
+		# to be deleted, we select a node near by.
+		# this also starts a transaction
+		# returns true if successful and deletion can proceed
+		if not nodes:
+			return 0	# failed
+		anc = nodes[0]
+		for n in nodes:
+			if n is self.root:
+				# can't delete root node
 				windowinterface.beep()
-				return
-
-			# Do it.
-			if not self.editmgr.transaction():
-				return
-			self.toplevel.setwaiting()
-			parent = node.GetParent()
+				return 0 # failed
+			anc = n.CommonAncestor(anc)
+		if not self.editmgr.transaction():
+			return 0	# failed
+		if anc in nodes:
+			parent = anc.GetParent()
 			siblings = parent.GetChildren()
-			nf = siblings.index(node)
+			nf = siblings.index(anc)
 			if nf < len(siblings)-1:
 				self.select_node(siblings[nf+1])
 			elif nf > 0:
 				self.select_node(siblings[nf-1])
 			else:
 				self.select_node(parent)
-			r = parent.GetRoot()
-			self.editmgr.delnode(node)
-			self.fixsyncarcs(r, node) #  TODO: shouldn't this be done in the editmanager? -mjvdg
-			self.editmgr.commit()
+		else:
+			self.select_node(anc)
+		return 1		# succeeded
+
+	def deletecall(self, cut = 0):
+		if cut:
+			self.__clean_clipboard()
+		if len(self.multi_selected_widgets) > 0:
+			# Delete multiple nodes.
+			self.toplevel.setwaiting()
+			nodes = self.get_multi_nodes()
+			if self.fixselection(nodes):
+				for n in nodes:
+					self.editmgr.delnode(n)
+					self.fixsyncarcs(self.root, n)
+				self.editmgr.commit()
+				if cut:
+					Clipboard.setclip('multinode', nodes)
+		else:
+			node = self.selected_widget.get_node()
+			self.toplevel.setwaiting()
+			if self.fixselection([node]):
+				self.editmgr.delnode(node)
+				self.fixsyncarcs(self.root, node) #  TODO: shouldn't this be done in the editmanager? -mjvdg
+				self.editmgr.commit()
+				if cut:
+					Clipboard.setclip('node', node)
 
 	######################################################################
 	# Edit a node
@@ -883,43 +904,7 @@ class HierarchyView(HierarchyViewDialog):
 	######################################################################
 	# Cut a node.
 	def cutcall(self):
-		windowinterface.setwaiting()
-		self.__clean_clipboard()
-		if len(self.multi_selected_widgets) > 0:
-			# Delete multiple nodes.
-			if not self.editmgr.transaction():
-				return
-			self.toplevel.setwaiting()
-			m = self.get_multi_nodes()
-			for n in m:
-				r = n.GetParent().GetRoot()
-				self.editmgr.delnode(n)
-				self.fixsyncarcs(r,n)
-			Clipboard.setclip('multinode', m)
-		else:
-			node = self.selected_widget.get_node()
-			if not node or node is self.root:
-				windowinterface.beep()
-				return
-
-			# Do it.
-			if not self.editmgr.transaction():
-				return
-			self.toplevel.setwaiting()
-			parent = node.GetParent()
-			siblings = parent.GetChildren()
-			nf = siblings.index(node)
-			if nf < len(siblings)-1:
-				self.select_node(siblings[nf+1])
-			elif nf > 0:
-				self.select_node(siblings[nf-1])
-			else:
-				self.select_node(parent)
-			r = parent.GetRoot()
-			self.editmgr.delnode(node)
-			self.fixsyncarcs(r, node) #  TODO: shouldn't this be done in the editmanager? -mjvdg
-			Clipboard.setclip('node', node)
-       		self.editmgr.commit()
+		self.deletecall(cut = 1)
 		
 		
 	######################################################################
@@ -1043,11 +1028,10 @@ class HierarchyView(HierarchyViewDialog):
 			r.append(i.get_node())
 		r2 = []
 		for i in r:
-			a = 0
 			for j in r:
 				if j is not i and j.IsAncestorOf(i):
-					a = 1
-			if a == 0:
+					break
+			else:
 				r2.append(i)
 		return r2
 
