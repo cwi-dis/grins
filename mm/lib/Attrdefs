@@ -470,8 +470,8 @@
 	'If set, play object only if running on the specified operating system' raw (template smil2))
 (system_cpu (enum alpha arm arm32 'hppa1.1' m68k mips ppc rs6000 vax x86 unknown) unknown 'System CPU' cpu
 	'If set, play object only if running on the specified CPU' raw (template smil2))
-(system_component (list (string)) () 'System component' default
-	'If set, play object only if these components are supported' raw (template smil2))
+(system_component (list (string)) () 'System component' complist
+	'Space-separated list of URIs that all need to be supported for this object to play' raw (template smil2))
 
 # RealPix attributes
 (aspect (bool) 1 'Keep aspect ratio' default

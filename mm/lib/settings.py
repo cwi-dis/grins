@@ -200,6 +200,7 @@ default_settings = {
 	'license_organization' : '',
 	'baselicense': '',
 	'skin': '',			# URL for skin definition file (player only)
+	'components': '',		# URL for components URLs
 
 	'default_sync_behavior_locked' : 0,
 	'default_sync_tolerance' : 0.1,
@@ -380,6 +381,7 @@ def restore():
 	if hasattr(features, 'RTIPA') and features.RTIPA:
 		read_RTIPA()
 	# end RTIPA
+	read_components()
 
 def factory_defaults():
 	global user_settings
@@ -420,7 +422,7 @@ def has_key(name):
 		return 1
 	return name == 'system_screen_size' or name == 'system_screen_depth'
 
-components = ['http://www.oratrix.com/GRiNS/smil2.0']
+components = []
 
 def match(name, wanted_value):
 	if name == 'system_operating_system':
@@ -438,10 +440,9 @@ def match(name, wanted_value):
 				return 0
 		return 1
 	if name == 'system_component':
-		if wanted_value:
-			for val in wanted_value.split():
-				if val not in components:
-					return 0
+		for val in wanted_value:
+			if val not in components:
+				return 0
 		return 1
 	real_value = get(name)
 	if name in EXACT:
@@ -485,6 +486,8 @@ def set(setting, value):
 		_warned_already = 1
 		windowinterface.showmessage('You have to restart GRiNS for some of these changes to take effect.')
 	user_settings[setting] = value
+	if setting == 'components':
+		read_components()
 	commit(auto=1)
 
 def delete(setting):
@@ -609,5 +612,31 @@ def read_RTIPA():
 #
 # RTIPA end
 #
+
+def read_components():
+	import MMurl
+	del components[:]
+	url = get('components')
+	if not url:
+		components.append('http://www.oratrix.com/GRiNS/smil2.0')
+		return
+	try:
+		u = MMurl.urlopen(url)
+	except:
+		import windowinterface
+		windowinterface.showmessage("Failed opening components config file `%s'" % url)
+		return
+	while 1:
+		line = u.readline()
+		if not line:
+			u.close()
+			break
+		i = line.find('#')
+		if i >= 0:
+			line = line[:i]
+		line = line.strip()
+		if not line:
+			continue
+		components.append(line)
 
 restore()
