@@ -214,10 +214,13 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			self._obj_.Create(strclass, title, win32con.WS_VISIBLE | win32con.WS_OVERLAPPEDWINDOW)
 
 		# toolbar
+		self.CreateToolbars()
+		# Accellerators
 		if IsPlayer:
-			self.CreateToolbars('player')
+			self.LoadAccelTable(grinsRC.IDR_GRINS)
 		else:
-			self.CreateToolbars('editor')
+			self.LoadAccelTable(grinsRC.IDR_GRINSED)
+
 
 	# Register the window class
 	def registerwndclass(self):
