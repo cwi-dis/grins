@@ -888,13 +888,24 @@ smil_attrs = {'left':(lambda node:getregionattr(node,'left')),
 	'src': (lambda node:getrenamed(node,'file')),
 	}
 
+additivetypes = ['int','float','color','position','inttuple','floattuple']
+alltypes = ['string',] + additivetypes
+
+# implNote
+# main decision attrs:
+# valuesType, attrType, additivity
+# elementTag
+# syntaxError:	invalidTarget, invalidValues, invalidKeyTimes, invalidKeySplines,
+#				invalidEnumAttr, invalidTimeManipAttr,
+# notSMILBostonAnimTarget
+
 # Animation semantics parser
 class AnimateElementParser:
 	def __init__(self, anim):
 		self.__anim = anim			# the animate element node
 		self.__elementTag = anim.attrdict['tag']
 		self.__attrname = ''		# target attribute name
-		self.__attrtype = ''		# in ('string','int','float','color','position','inttuple','floattuple')
+		self.__attrtype = ''		# in ('string','int','float','color','position','inttuple','floattuple', 'stringtuple')
 		self.__domval = None		# document attribute value
 		self.__target = None		# target node
 		self.__hasValidTarget = 0	# valid target node and attribute
@@ -1116,6 +1127,9 @@ class AnimateElementParser:
 	def getValues(self):
 		return MMAttrdefs.getattr(self.__anim, 'values')
 
+	def getPath(self):
+		return MMAttrdefs.getattr(self.__anim, 'path')
+
 	def getKeyTimes(self):
 		return MMAttrdefs.getattr(self.__anim, 'keyTimes')
 
@@ -1187,7 +1201,32 @@ class AnimateElementParser:
 	def __canBeAdditive(self):
 		 return self.__attrtype == 'int' or self.__attrtype == 'float'
 
-	
+	# animation (value) types
+	VALUES_ERROR, VALUES, FROM_TO, FROM_BY, NONE_TO, NONE_BY = range(6)
+	def getAnimationType(self):
+		if self.getValues()!=None or self.getPath()!=None:
+			return AnimateElementParser.VALUES
+
+		v1 = self.getFrom()
+		v2 = self.getTo()
+		dv = self.getBy()
+		
+		# if we don't have 'values' then 'to' or 'by' must be given
+		if v2==None and dv==None:
+			return AnimateElementParser.VALUES_ERROR
+
+		if v1!=None:
+			if v2!=None:			
+				return AnimateElementParser.FROM_TO
+			else:
+				return AnimateElementParser.FROM_BY
+		else:
+			if v2!=None:			
+				return AnimateElementParser.NONE_TO
+			else:
+				return AnimateElementParser.NONE_BY
+
+			
 	# return list of interpolation values
 	def __getNumInterpolationValues(self):	
 		# if 'values' are given ignore 'from/to/by'
@@ -1197,12 +1236,12 @@ class AnimateElementParser:
 				return tuple(map(string.atof, string.split(values,';')))
 			except ValueError:
 				return ()
-		
+							
 		# 'from' is optional
-		# use dom value if missing
+		# use 'zero' value if missing
 		v1 = self.getFrom()
 		if not v1:
-			v1 = self.__domval
+			v1 = 0
 		if type(v1) == type(''): 
 			v1 = string.atof(v1)
 
@@ -1244,10 +1283,10 @@ class AnimateElementParser:
 			return tuple(coords)
 
 		# 'from' is optional
-		# use dom value if missing
+		# use 'zero' value if missing
 		v1 = self.getFrom()
 		if not v1:
-			v1 = self.__domval
+			v1 = complex(0,0)
 		pt1 = self.__getNumPair(v1)
 		if pt1==None: return ()
 
@@ -1279,11 +1318,16 @@ class AnimateElementParser:
 			return tuple(L)
 
 		# 'from' is optional
-		# use dom value if missing
+		# use 'zero' value if missing
 		v1 = self.getFrom()
 		if not v1:
 			v1 = self.__domval
-		t1 = self.__splitf(v1)
+			L = []
+			for i in range(len(self.__domval)):
+				L.append(0)
+			t1 = tuple(L)
+		else:
+			t1 = self.__splitf(v1)
 		if t1==None: return ()
 
 		v2 = self.getTo()
@@ -1310,17 +1354,17 @@ class AnimateElementParser:
 		if values:
 			return string.split(values,';')
 		
-		# 'from' is optional
-		# use dom value if missing
 		v1 = self.getFrom()
-		if not v1:
-			v1 = self.__domval
-
-		# we must have an expl 'to' value
 		v2 = self.getTo()
-		if not v2:
+
+		# a 'to' value must exist for string attributes
+		if v2:
+			if v1:
+				return v1, v2
+			else:
+				return v2
+		else:
 			return ()
-		return v1, v2
 
 
 	# copy from SMILTreeRead
