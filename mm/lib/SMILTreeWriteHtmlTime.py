@@ -195,7 +195,7 @@ class SMILHtmlTimeWriter(SMIL):
 			alist = x.GetAttrDef('anchorlist', [])
 			hlinks = x.GetContext().hyperlinks
 			for a in alist:
-				if hlinks.finddstlinks((uid, a[A_ID])):
+				if hlinks.finddstlinks((uid, a.aid)):
 					self.ids_used[name] = 1
 					break
 

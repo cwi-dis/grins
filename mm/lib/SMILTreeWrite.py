@@ -1565,16 +1565,16 @@ class SMILWriter(SMIL):
 		"""Calculate unique names for anchors"""
 		uid = node.GetUID()
 		alist = MMAttrdefs.getattr(node, 'anchorlist')
-		for id, type, args, times, access in alist:
-			aid = (uid, id)
-			self.anchortype[aid] = type
-			if type in SourceAnchors:
-				if isidre.match(id) is None or \
-				   self.ids_used.has_key(id):
-					aname = '%s-%s' % (self.uid2name[uid], id)
+		for a in alist:
+			aid = (uid, a.aid)
+			self.anchortype[aid] = a.atype
+			if a.atype in SourceAnchors:
+				if isidre.match(a.aid) is None or \
+				   self.ids_used.has_key(a.aid):
+					aname = '%s-%s' % (self.uid2name[uid], a.aid)
 					aname = identify(aname)
 				else:
-					aname = id
+					aname = a.aid
 				if self.ids_used.has_key(aname):
 					i = 0
 					nn = '%s-%d' % (aname, i)
@@ -2002,7 +2002,7 @@ class SMILWriter(SMIL):
 			alist = x.GetAttrDef('anchorlist', [])
 			hlinks = x.GetContext().hyperlinks
 			for a in alist:
-				if hlinks.finddstlinks((uid, a[A_ID])):
+				if hlinks.finddstlinks((uid, a.aid)):
 					self.ids_used[name] = 1
 					break
 
@@ -2150,14 +2150,14 @@ class SMILWriter(SMIL):
 		self.writetag(mtype, attrlist)
 		hassrc = 0		# 1 if has source anchors
 		for a in alist:
-			if a[A_TYPE] in SourceAnchors:
+			if a.atype in SourceAnchors:
 				hassrc = 1
 				break
 		if hassrc:
 			self.push()
-			for id, type, args, times, access in alist:
-				if type in SourceAnchors:
-					self.writelink(x, id, type, args, times, access)
+			for a in alist:
+				if a.atype in SourceAnchors:
+					self.writelink(x, a)
 			self.pop()
 		for i in range(pushed):
 			self.pop()
@@ -2238,9 +2238,9 @@ class SMILWriter(SMIL):
 
 		return attrs
 
-	def writelink(self, x, id, atype, args, times, access):
+	def writelink(self, x, a):
 		attrlist = []
-		aid = (x.GetUID(), id)
+		aid = (x.GetUID(), a.aid)
 		attrlist.append(('id', self.aid2name[aid]))
 
 		links = x.GetContext().hyperlinks.findsrclinks(aid)
@@ -2250,16 +2250,16 @@ class SMILWriter(SMIL):
 				      x.GetRawAttrDef('name', '<unnamed>'), \
 				      x.GetUID()
 			a1, a2, dir, ltype, stype, dtype = links[0]
-			attrlist[len(attrlist):] = self.linkattrs(a2, ltype, stype, dtype, access)
-		if atype == ATYPE_NORMAL:
+			attrlist[len(attrlist):] = self.linkattrs(a2, ltype, stype, dtype, a.aaccess)
+		if a.atype == ATYPE_NORMAL:
 			ok = 0
 			# WARNING HACK HACK HACK : How know if it's a shape or a fragment ?
 			try:
-				shapeType = args[0]
+				shapeType = a.aargs[0]
 				if shapeType == A_SHAPETYPE_RECT or shapeType == A_SHAPETYPE_POLY or \
 						shapeType == A_SHAPETYPE_CIRCLE:
 					coords = []
-					for c in args[1:]:
+					for c in a.aargs[1:]:
 						if type(c) == type(0):
 							# pixel coordinates
 							coords.append('%d' % c)
@@ -2284,10 +2284,10 @@ class SMILWriter(SMIL):
 					attrlist.append(('coords', coords))
 			else:
 				attrlist.append(('fragment', id))						
-		elif atype == ATYPE_AUTO:
+		elif a.atype == ATYPE_AUTO:
 			attrlist.append(('actuate', 'onLoad'));
 			
-		begin, end = times
+		begin, end = a.atimes
 		if begin:
 			attrlist.append(('begin', fmtfloat(begin, 's')))
 		if end:

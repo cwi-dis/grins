@@ -885,6 +885,18 @@ class MMChannel:
 	def getCssId(self):
 		return self._cssId
 	
+# representation of anchors
+class MMAnchor:
+	def __init__(self, aid, atype, aargs, atimes, aaccess):
+		self.aid = aid
+		self.atype = atype
+		self.aargs = aargs
+		self.atimes = atimes
+		self.aaccess = aaccess
+
+	def copy(self):
+		return MMAnchor(self.aid, self.atype, self.aargs, self.atimes, self.aaccess)
+
 # The Sync Arc class
 #
 class MMSyncArc:
@@ -1153,8 +1165,8 @@ class MMSyncArc:
 		atimes = (0, 0)
 		if self.srcanchor is not None:
 			for a in refnode.attrdict.get('anchorlist', []):
-				if a[A_ID] == self.srcanchor:
-					atimes = a[A_TIMES]
+				if a.aid == self.srcanchor:
+					atimes = a.atimes
 					break
 		event = self.getevent()
 		if event is None and self.marker is None:
@@ -1793,8 +1805,8 @@ class MMNode:
 	def GetChildWithArea(self, name):
 		alist = MMAttrdefs.getattr(self, 'anchorlist')
 		for a in alist:
-			if a[A_ID] == name:
-				return (self,) + a
+			if a.aid == name:
+				return self, a
 		for child in self.children:
 			return child.GetChildWithArea(name)
 		return None
@@ -2217,7 +2229,7 @@ class MMNode:
 		alist = MMAttrdefs.getattr(self, 'anchorlist')
 		hlinks = self.context.hyperlinks
 		for a in alist:
-			aid = (self.uid, a[A_ID])
+			aid = (self.uid, a.aid)
 			for link in hlinks.findalllinks(aid, None):
 				hlinks.dellink(link)
 
