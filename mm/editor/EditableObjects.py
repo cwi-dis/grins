@@ -212,6 +212,43 @@ class EditableMMNode(MMNode.MMNode):
 				i = i.parent
 		return None
 
+	def merge_with_child(self):
+		# Merge this node with it's single child.
+		# Maybe this is the wrong way of diong this. The hierarchyview should call
+		# the editmanager, and then the editmanager calls me.
+
+		# XXX TODO Michael is working here so go away.
+		# TODO: need an editmanager interface.
+
+		em = self.context.editmgr
+		if not em.transaction():
+			return -1
+		
+		if len(self.children) <> 1:
+			print "ERROR: cannot merge - wrong number of children."
+			return -1
+		child = self.children[0]
+		childattrs = child.attrdict
+		myattrs = self.attrdict
+		conflicts = []		# A list of conflicting keys.
+
+		# Or maybe it would be better to simply replace self with the child.
+		for ck, cv in childattrs.items():
+			if myattrs.has_key(ck):
+				conflicts.append(ck)
+			else:
+				em.setnodeattr(self, ck, cv)
+		# TODO: work through all the attributes.
+		print "DEBUG: conflicts are: ", conflicts
+
+		
+
+		# Also:
+		# * Events to and from
+		# * Hyperlinks to and from
+		em.commit()
+		
+
 ######################################################################
 	# Commands from the menus.
 	# Note that the commands should control the EditMgr - they
@@ -387,15 +424,3 @@ class EditableMMNode(MMNode.MMNode):
 			em.addnode(self, index, othernode)
 			em.commit()
 			
-######################################################################
-# Editing regions.
-# TODO.
-##def create_MMChannel_editable(chan):
-##	# Create a editable representation of chan.
-##	pass
-
-##class EditableRegion:
-##	pass
-
-##class EditableViewport(EditableRegion):
-##	pass
