@@ -96,9 +96,6 @@ class Animator:
 			for p in times:
 				self._efftimes.append(p*dur)	
 
-		# accumulate attribute
-		self._accumulate = 'none'
-
 		# repeat counter
 		self._repeatCounter = 0
 
@@ -152,7 +149,7 @@ class Animator:
 		v = self._inrepol(t)
 
 		# accumulate
-		if self._accumulate=='sum' and self.__accValue:
+		if self._accumulate=='sum' and self._accValue:
 			v = self._accValue + v
 		
 		self._curvalue = v
