@@ -708,7 +708,7 @@ class SchedulerContext:
 ##			if self.srdict.has_key(ev):
 ##				self.parent.event(self, ev, timestamp)
 		for a in deparcs:
-			self.cancelarc(arc, timestamp)
+			self.cancelarc(a, timestamp)
 			a.depends = None
 
 	def gototime(self, node, gototime, timestamp, path = None):
