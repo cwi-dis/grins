@@ -41,9 +41,8 @@ def get(node, target=0):
 		# Get information from the attributes
 		bitrate = MMAttrdefs.getattr(node, 'bitrate')
 		return 0, bitrate
-			
+
 	url = MMAttrdefs.getattr(node, 'file')
-	url, tag = MMurl.splittag(url)
 	url = context.findurl(url)
 	val = urlcache[url].get('bandwidth')
 	if val is not None:
@@ -143,7 +142,10 @@ def GetSize(url, target=0, attrs = {}, convert = 1):
 ##		print "DBG: Bandwidth.get: nonexisting", filename
 		raise Error, 'Media item does not exist'
 	if tmp:
-		os.unlink(tmp)
+		try:
+			os.unlink(tmp)
+		except:
+			pass
 	filesize = statb[ST_SIZE]
 	urlcache[url]['filesize'] = filesize
 	return filesize

@@ -50,6 +50,7 @@ class ASXNode:
 		return root
 
 	def GetPath(self):
+		# return inclusive path from root to self (in that order)
 		path = []
 		x = self
 		while x is not None:

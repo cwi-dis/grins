@@ -11,6 +11,19 @@ __version__ = "$Id$"
 # unless we specify a different match condition ('part', 'first' default is: 'all')
 
 attrgrs=(
+	{'name':'general',
+	'title': 'General',
+	'attrs':[
+		'name',
+##		'.type',
+		'title',
+		'alt',
+		'author',
+		'copyright',
+		'.begin1',
+		'duration',
+		]},
+
 	{'name':'subregion',
 	'title':'Destination rendering',
 	'attrs':[
@@ -40,6 +53,16 @@ attrgrs=(
 		'displayfull',
 		]},
 
+##	{'name':'subregion3',
+##	'title':'Destination rendering',
+##	'attrs':[
+##		'left',
+##		'width',
+##		'top',
+##		'height',
+##		'scale',
+##		]},
+
 	{'name':'base_winoff_and_units',
 	'title':'Position and size',
 	'attrs':[
@@ -67,16 +90,6 @@ attrgrs=(
 		'system_screen_size',
 		]},
 
-	{'name':'preferences1',
-	'title': 'GRiNS preferences',
-	'attrs':[
-		'system_bitrate',
-		'system_captions',
-		'system_language',
-		'system_overdub_or_caption',
-		'html_control',
-		]},
-
 	{'name':'preferences',
 	'title': 'GRiNS preferences',
 	'attrs':[
@@ -84,6 +97,20 @@ attrgrs=(
 		'system_captions',
 		'system_language',
 		'system_overdub_or_caption',
+		]},
+
+	{'name':'snapsystem',
+	'title': 'System',
+	'attrs':[
+		'system_bitrate',
+		'system_language',
+		]},
+
+	{'name':'transition',
+	'title': 'Transition',
+	'attrs':[
+		'transIn',
+		'transOut',
 		]},
 
 	{'name':'.cname',
@@ -120,6 +147,15 @@ attrgrs=(
 		'author',
 		'copyright',
 		'comment'
+		]},
+
+	{'name':'timingsb',
+	'title':'Timing',
+	'attrs':[
+		'duration',
+		'loop',
+		'repeatdur',
+		'begin',
 		]},
 
 	{'name':'timingpar',
@@ -200,14 +236,6 @@ attrgrs=(
 		'project_smil_url',
 		]},
 
-  	{'name':'mediaserver2',
-	'title':'Mediaserver',
-	'attrs':[
-		'project_ftp_host_media',
-		'project_ftp_dir_media',
-		'project_ftp_user_media',
-		]},
-
 	{'name':'file',
 	'title':'URL',
 	'attrs':[
@@ -215,14 +243,6 @@ attrgrs=(
 		]},
 
 	{'name':'imgregion',
-	'title':'Source area',
-	'attrs':[
-		'imgcropxy',
-		'imgcropwh',
-		'fullimage',
-		]},
-
-	{'name':'imgregion1',
 	'title':'Source area',
 	'attrs':[
 		'imgcropxy',
@@ -328,7 +348,89 @@ attrgrs=(
 		'qtchapter',
 		'qtcompositemode',
 		]},
+
+	{'name':'animateAttribute',
+	'title':'Target attribute',
+	'attrs':[
+		'attributeName',
+		'attributeType',
+		]},
+
+	{'name':'animateValues',
+	'title':'Values',
+	'match': 'first',
+	'attrs':[
+		'from',
+		'to',
+		'by',
+		'values',
+		'path',
+		'origin',
+		]},
+
+	{'name':'timeManipulation',
+	'title':'Time manipulations',
+	'attrs':[
+		'speed',
+		'accelerate',
+		'decelerate',
+		'autoReverse',
+		]},
 	
+	{'name':'calcMode',
+	'title':'Calculation mode',
+	'attrs':[
+		'calcMode',
+		'keyTimes',
+		'keySplines',
+		]},
+	
+	{'name':'transitionType',
+	'title':'Transition type',
+	'attrs':[
+		'trname',
+		'trtype',
+		'subtype',
+		]},
+
+	{'name':'transitionRepeat',
+	'title':'Repeat',
+	'attrs':[
+		'horzRepeat',
+		'vertRepeat',
+		]},
+
+	{'name':'transitionTiming',
+	'title':'Transition timing',
+	'attrs':[
+		'startProgress',
+		'endProgress',
+		'dur',
+		]},
+
+	{'name':'machine',
+	'title':'Machine properties',
+	'attrs':[
+		'system_operating_system',
+		'system_cpu',
+		]},
+
+	{'name':'CssBackgroundColor',
+	'title':'Background color',
+	'attrs':[
+		'cssbgcolor',
+		]},
+
+	{'name':'beginlist',
+	 'title':'Begin',
+	 'attrs':['beginlist',],
+	 },
+
+	{'name':'endlist',
+	 'title':'End',
+	 'attrs':['endlist',],
+	 },
+
 	)
 
 
