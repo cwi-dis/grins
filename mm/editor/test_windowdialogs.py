@@ -65,6 +65,24 @@ except done:
 	sd.close()
 	del sd
 
+print 'Modal and modeless messages and questions'
+def answer(arg):
+	print 'You answered', arg
+	
+window.showmessage('A modeless message. Stop mainloop with cmd.', grab=0)
+window.showmessage('A modeless question', mtype='question', grab=0,
+	callback=(answer, ('ok',)), cancelCallback=(answer, ('cancel',)))
+	
+	
+try:
+	window.mainloop()
+except KeyboardInterrupt:
+	pass
+window.showmessage('A modal message', grab=1)
+window.showmessage('A modal question', mtype='question', grab=1,
+	callback=(answer, ('ok',)), cancelCallback=(answer, ('cancel',)))
+	
+
 print "Now you should say something to me"
 id = window.InputDialog("Say something", "I have nothing to say", cb_ok)
 try:
@@ -72,3 +90,4 @@ try:
 except done:
 	id.close()
 	del id
+	
