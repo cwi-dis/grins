@@ -1749,6 +1749,23 @@ class FadeoutGroup(AttrGroup):
 ##		ctrl.attach_to_parent()
 ##		ctrl.settext(self._data['title'])
 
+class WipeGroup(AttrGroup):
+	data=attrgrsdict['wipe']
+
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_R24
+
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('wipetype')
+		cd[a] = OptionsRadioNocolonCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13))
+		a = self.getattr('direction')
+		cd[a] = OptionsRadioNocolonCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24,grinsRC.IDC_25))
+		return cd
+
 ############################
 # platform dependent association
 # what we have implemented, anything else goes as singleton
@@ -1773,6 +1790,7 @@ groupsui={
 	'mediaserver':MediaserverGroup,
 	'file':FileGroup,
 	'fadeout':FadeoutGroup,
+	'wipe':WipeGroup,
 	}
 
 
