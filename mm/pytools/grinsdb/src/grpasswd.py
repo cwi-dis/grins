@@ -2,6 +2,7 @@
 
 import maildb
 import grinsdb
+from graddfield import addfield, getfield
 import sys
 import whrandom
 
@@ -14,41 +15,20 @@ def main():
 	if len(sys.argv) > 2:
 		passwd = sys.argv[2]
 	dbase = grinsdb.Database()
-	idlist = dbase.search('email', user)
-	if not idlist:
-		print 'No such user:', user
-		sys.exit(1)
-	if len(idlist) > 1:
-		print 'Multiple matches:',
-		for id in idlist:
-			print id,
-		sys.exit(1)
 	if not passwd:
-		record = dbase.open(idlist[0])
-		if record.has_key('password'):
+		passwd = getfield(dbase, user, 'Password')
+		if passwd:
 			print 'User: %s'%user
-			print 'Password: %s'%record['password']
+			print 'Password: %s'%passwd
 		else:
 			print 'User %s has no password'%user
 	else:
-		record = dbase.open(idlist[0], 'w')
-		if record.has_key('password'):
-			if record['password'] == passwd:
-				print 'Already set for user %s'%user
-				dbase.save(record)
-				return
-			print 'Warning: changing password!'
-			print 'User: %s'%user
-			print 'Old Password: %s'%record['password']
-		addpasswd(record, passwd)
-		dbase.save(record)
-		if record.has_key('password'):
-			print 'User: %s'%user
-			print 'Password: %s'%record['password']
-		else:
-			print 'User %s has no password'%user
+		if passwd == '-':
+			passwd = invent_passwd()
+		addfield(dbase, user, 'Password', passwd, override=1)
 
 def addpasswd(obj, passwd='-'):
+	"""Helper for register: add password to a record"""
 	if passwd == '-':
 		passwd = invent_passwd()
 	obj['password'] = passwd
