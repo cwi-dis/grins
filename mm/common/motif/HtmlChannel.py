@@ -15,6 +15,7 @@ import XHtml
 import MMurl
 import urlparse
 from TextChannel import getfont, mapfont
+import parsehtml
 try:
 	import Xrm
 	has_xrm = 1
@@ -38,8 +39,7 @@ import Xt, Xm
 Xt.AddActionHook(actionhook, None)
 
 class HtmlChannel(Channel.ChannelWindow):
-	_our_attrs = ['bucolor', 'hicolor',
-							 'fgcolor', 'font']
+	_our_attrs = ['fgcolor']
 	if Channel.CMIF_MODE:
 		node_attrs = Channel.ChannelWindow.node_attrs + _our_attrs
 	else:
@@ -119,9 +119,9 @@ class HtmlChannel(Channel.ChannelWindow):
 				self.time = None
 				return
 			a = self.played_anchor
-			self._playcontext.anchorfired(self.play_node,
-						      [(a[A_ID], a[A_TYPE])],
-						      None)
+			self.anchor_triggered(self.play_node,
+					      [(a.aid, a.atype)],
+					      None)
 		if action == 'extend-adjust':
 			self.time = None
 			return
@@ -156,8 +156,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.htmlw.SetValues(wh)
 
 	def do_arm(self, node, same=0):
-	        if not same:
-	        	try:
+		if not same:
+			try:
 				self.armed_str = self.getstring(node)
 			except Channel.error, arg:
 				self.armed_str = '<H1>Cannot Open</H1>\n'+arg+'\n<P>\n'
@@ -167,17 +167,19 @@ class HtmlChannel(Channel.ChannelWindow):
 		alist = node.GetRawAttrDef('anchorlist', [])
 		for i in range(len(alist)-1,-1,-1):
 			a = alist[i]
-			atype = a[A_TYPE]
-			if atype == ATYPE_WHOLE:
+			if a.atype == ATYPE_WHOLE:
 				if self.armed_anchor:
 					print 'multiple whole-node anchors on node'
 				self.armed_anchor = a
 		anchors = []
 		for a in alist:
-			atype = a[A_TYPE]
+			atype = a.atype
 			if atype in SourceAnchors and \
 			   atype not in WholeAnchors:
-				anchors.append(a[A_ID])
+				anchors.append(a.aid)
+		parser = parsehtml.Parser(anchors)
+		parser.feed(self.armed_str)
+		self.armed_str = parser.close()
 		return 1
 
 	_boldfonts = [('boldFont', 9.0),
@@ -200,7 +202,6 @@ class HtmlChannel(Channel.ChannelWindow):
 		fontspec = getfont(node)
 		fontname, pointsize = mapfont(fontspec)
 		fontobj = windowinterface.findfont(fontname, 9)
-		attrs['font'] = fontobj._font
 		i = string.find(fontname, '-')
 		if i > 0: fontname = fontname[:i]
 		basefontname = fontname
@@ -220,7 +221,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		htmlw.ChangeColor(bg)
 		attrs['background'] = bg
 		attrs['foreground'] = fg
-		attrs['anchorColor'] = self.window._convert_color(self.getbucolor(node))
+		attrs['anchorColor'] = self.window._convert_color(self.gethicolor(node))
 		attrs['activeAnchorFG'] = self.window._convert_color(self.gethicolor(node))
 		attrs['activeAnchorBG'] = bg
 		htmlw.SetValues(attrs)
@@ -312,8 +313,8 @@ class HtmlChannel(Channel.ChannelWindow):
 
 	def findanchortype(self, name):
 		for a in MMAttrdefs.getattr(self.play_node, 'anchorlist'):
-			if a[A_ID] == name:
-				return a[A_TYPE]
+			if a.aid == name:
+				return a.atype
 		return None
 
 	def fixanchorlist(self, node):
@@ -334,15 +335,16 @@ class HtmlChannel(Channel.ChannelWindow):
 		if len(anchorlist) == 0:
 			return
 		nodeanchorlist = MMAttrdefs.getattr(node, 'anchorlist')[:]
-		oldanchorlist = map(lambda x:x[A_ID], nodeanchorlist)
+		oldanchorlist = map(lambda x: x.aid, nodeanchorlist)
 		newanchorlist = []
 		for a in anchorlist:
 			if a not in oldanchorlist:
 				newanchorlist.append(a)
 		if not newanchorlist:
 			return
+		from MMNode import MMAnchor
 		for a in newanchorlist:
-			nodeanchorlist.append((a, ATYPE_NORMAL, [], (0,0)))
+			nodeanchorlist.append(MMAnchor(a, ATYPE_NORMAL, [], (0,0), None))
 		node.SetAttr('anchorlist', nodeanchorlist)
 		MMAttrdefs.flushcache(node)
 
