@@ -210,13 +210,24 @@ def getsrc(writer, node):
 		val = 'data:%s,%s' % (mime, MMurl.quote(data))
 	else:
 		return None
-	if not val and chtype == 'RealPix':
-		# special case for RealPix nodes
-		import realnode
-		val = writer.gen_rpfile()
-		node.SetAttr('file', val)
-		realnode.writenode(node)
-		node.DelAttr('file')
+	if chtype == 'RealPix':
+		# special case for RealPix nodes, which we should write
+		# sometimes, but don't want to write always
+		do_write = 0
+		tmp_file_name = 0
+		if not val:
+			val = writer.gen_rpfile()
+			do_write = 1
+			tmp_file_name = 1
+			node.SetAttr('file', val)
+		if hasattr(node, 'tmpfile') and not writer.copydir:
+			# Also save if the node has changed and we're saving (not exporting)
+			do_write = 1
+		if do_write:
+			import realnode
+			realnode.writenode(node)
+		if tmp_file_name:
+			node.DelAttr('file')
 	if not val or not writer.copydir:
 		return val
 	ctx = node.GetContext()
@@ -1169,11 +1180,52 @@ class SMILWriter(SMIL):
 				self.writenode(child)
 			if not root:
 				self.pop()
+		elif is_realpix and self.copydir:
+			# If we are exporting handle RealPix specially: we might want
+			# to convert it into a <par> containing a realpix node and a
+			# realtext caption node
+			self.writerealpixnode(x, attrlist, mtype)
 		elif type in ('imm', 'ext'):
 			self.writemedianode(x, attrlist, mtype)
 		else:
 			raise CheckError, 'bad node type in writenode'
 
+	def writerealpixnode(self, x, attrlist, mtype):
+		# Special case for realpix, so we get a chance to write the RealText captions
+		# if needed
+		rturl, channel = self.getrealtextcaptions(x)
+		if not rturl:
+			self.writemedianode(x, attrlist, mtype)
+			return
+		region = self.ch2name[channel]
+		parentattrlist = []
+		for attr, val in attrlist:
+			if attr in ('id', 'begin'):
+				parentattrlist.append(attr, val)
+		for item in parentattrlist:
+			attrlist.remove(item)
+		self.writetag('par', parentattrlist)
+		self.push()
+		self.writemedianode(x, attrlist, mtype)
+		self.writetag('textstream', [('href', rturl), ('region', region)])
+		self.pop()
+		
+	def getrealtextcaptions(self, node):
+		"""Return None or, only for RealPix nodes with captions, the source
+		for the realtext caption file and the channel to play it on"""
+		ntype = node.GetType()
+		chtype = node.GetChannelType()
+		if ntype != 'ext' or chtype != 'RealPix':
+			return None, None
+		rtchannel = node.GetChannel(attrname='captionchannel')
+		if not rtchannel or rtchannel == 'undefined':
+			return None, None
+		file = self.gen_rtfile()
+		import realsupport
+		realsupport.writeRT(os.path.join(self.copydir, file), node.slideshow.rp, node)
+		val = MMurl.basejoin(self.copydirurl, MMurl.pathname2url(file))
+		return val, rtchannel
+	
 	def writemedianode(self, x, attrlist, mtype):
 		# XXXX Not correct for imm
 		pushed = 0		# 1 if has whole-node source anchor
@@ -1353,6 +1405,11 @@ class SMILWriter(SMIL):
 		i = self.__generate_number
 		self.__generate_number = self.__generate_number + 1
 		return self.__generate_basename + `i` + '.rp'
+
+	def gen_rtfile(self):
+		i = self.__generate_number
+		self.__generate_number = self.__generate_number + 1
+		return self.__generate_basename + `i` + '.rt'
 
 namechars = string.letters + string.digits + '_-.'
 

@@ -175,12 +175,14 @@ class RPParser(xmllib.XMLParser):
 		'image': {'handle':None,
 			  'name':None,},
 		'fill': {'color':None,
+			 'grins_image_caption':'',
 			 'dsth':'0',
 			 'dstw':'0',
 			 'dstx':'0',
 			 'dsty':'0',
 			 'start':None,},
 		'fadein': {'aspect':None,
+			   'grins_image_caption':'',
 			   'dsth':'0',
 			   'dstw':'0',
 			   'dstx':'0',
@@ -195,6 +197,7 @@ class RPParser(xmllib.XMLParser):
 			   'target':None,
 			   'url':None,},
 		'fadeout': {'color':None,
+			    'grins_image_caption':'',
 			    'dsth':'0',
 			    'dstw':'0',
 			    'dstx':'0',
@@ -203,6 +206,7 @@ class RPParser(xmllib.XMLParser):
 			    'maxfps':None,
 			    'start':None,},
 		'crossfade': {'aspect':None,
+				  'grins_image_caption':'',
 			      'dsth':'0',
 			      'dstw':'0',
 			      'dstx':'0',
@@ -217,6 +221,7 @@ class RPParser(xmllib.XMLParser):
 			      'target':None,
 			      'url':None,},
 		'wipe': {'aspect':None,
+			 'grins_image_caption':'',
 			 'direction':None,
 			 'dsth':'0',
 			 'dstw':'0',
@@ -233,6 +238,7 @@ class RPParser(xmllib.XMLParser):
 			 'type':None,
 			 'url':None,},
 		'viewchange': {'dsth':'0',
+				   'grins_image_caption':'',
 			       'dstw':'0',
 			       'dstx':'0',
 			       'dsty':'0',
@@ -405,6 +411,7 @@ class RPParser(xmllib.XMLParser):
 		color = self.__color(attributes)
 		start = self.__time('start', attributes)
 		self.tags.append({'tag': 'fill',
+				  'caption': attributes.get('grins_image_caption', ''),
 				  'color': color,
 				  'subregionxy': destrect[:2],
 				  'subregionwh': destrect[2:],
@@ -422,6 +429,7 @@ class RPParser(xmllib.XMLParser):
 		duration = self.__time('duration', attributes)
 		maxfps = attributes.get('maxfps', self.maxfps)
 		self.tags.append({'tag': 'fadeout',
+				  'caption': attributes.get('grins_image_caption', ''),
 				  'color': color,
 				  'subregionxy': destrect[:2],
 				  'subregionwh': destrect[2:],
@@ -444,6 +452,7 @@ class RPParser(xmllib.XMLParser):
 		srcrect = self.__rect('src', attributes)
 		start = self.__time('start', attributes)
 		self.tags.append({'tag': 'viewchange',
+				  'caption': attributes.get('grins_image_caption', ''),
 				  'imgcropxy': srcrect[:2],
 				  'imgcropwh': srcrect[2:],
 				  'imgcropanchor': 'top-left',
@@ -470,6 +479,7 @@ class RPParser(xmllib.XMLParser):
 			self.syntax_error("unknown `target' attribute")
 		url = attributes.get('url')
 		attrs = {'tag': tag,
+			 'caption': attributes.get('grins_image_caption', ''),
 			 'file': self.__images.get(target),
 			 'imgcropxy': srcrect[:2],
 			 'imgcropwh': srcrect[2:],
@@ -657,7 +667,7 @@ def _calcdur(tags):
 			endtime = start + duration
 	return endtime
 
-def writeRP(file, rp, node):
+def writeRP(file, rp, node, savecaptions=0):
 	from SMILTreeWrite import nameencode
 	import MMAttrdefs
 
@@ -778,6 +788,10 @@ def writeRP(file, rp, node):
 			maxfps = attrs.get('maxfps')
 			if maxfps is not None:
 				f.write(' maxfps="%d"' % maxfps)
+		if savecaptions:
+			caption = attrs.get('caption', '')
+			if caption:
+				f.write(' grins_image_caption=%s'%nameencode(caption))
 		f.write('/>\n')
 		if tag == 'fadein' and attrs.get('fadeout',0):
 			t = start+duration+attrs.get('fadeouttime',0)
@@ -791,6 +805,39 @@ def writeRP(file, rp, node):
 		_writeFadeout(f, start, a, bgcolor)
 	f.write('</imfl>\n')
 	f.close()
+
+def writeRT(file, rp, node):
+	from SMILTreeWrite import nameencode
+	import MMAttrdefs
+
+	bgcolor = MMAttrdefs.getattr(node, 'bgcolor')
+	ctx = node.GetContext()
+	f = open(file, 'w')
+	f.write('<window')
+	dur = MMAttrdefs.getattr(node, 'duration')
+	if dur:
+		f.write(' duration="%g"' % dur)
+	ch = node.GetChannel(attrname='captionchannel')
+	color = ch.get('bgcolor', (0,0,0))
+	if color != (255,255,255):
+		for name, val in colors.items():
+			if color == val:
+				color = name
+				break
+		else:
+			color = '#%02x%02x%02x' % color
+		f.write(' bgcolor="%s"' % color)
+	f.write('>\n')
+	curtime = 0
+	for rpslide in rp.tags:
+		curtime = curtime + rpslide.get('start', 0)
+		caption = rpslide.get('caption', '')
+		if caption:
+			f.write('<time begin="%d">\n'%curtime)
+			f.write(caption)
+			if caption[-1] != '\n':
+				f.write('\n')
+	f.write('</window>\n')
 
 import re
 durre = re.compile(r'\s*(?:(?P<days>\d+):(?:(?P<hours>\d+):(?:(?P<minutes>\d+):)?)?)?(?P<seconds>\d+(\.\d+)?)\s*')

@@ -164,6 +164,7 @@ class SMIL:
 			GRiNSns+' ' 'hicolor':None,
 			GRiNSns+' ' 'pointsize':None,
 			GRiNSns+' ' 'scale':None,
+			GRiNSns+' ' 'captionchannel':None,
 			},
 		'a': {'href':None,
 		      'id':None,
