@@ -566,7 +566,7 @@ class TemplateDialog(DialogWindow):
 		
 		self.type_select.select(0)
 		self._setdialoginfo(0)
-		self.settarget(ITEM_TEMPLATE_PLAYER)
+##		self.settarget(ITEM_TEMPLATE_PLAYER)
 		
 		self.show()
 		
@@ -585,15 +585,15 @@ class TemplateDialog(DialogWindow):
 			self.done()
 		elif item == ITEM_TEMPLATE_POPUP:
 			self._setdialoginfo(self.type_select.getselect())
-		elif item in (ITEM_TEMPLATE_PLAYER, ITEM_TEMPLATE_PLUGIN):
-			self.settarget(item)
+##		elif item in (ITEM_TEMPLATE_PLAYER, ITEM_TEMPLATE_PLUGIN):
+##			self.settarget(item)
 		else:
 			print 'Unknown item', self, item, event
 		return 1
 	
-	def settarget(self, item):
-		self._setbutton(ITEM_TEMPLATE_PLAYER, (item==ITEM_TEMPLATE_PLAYER))
-		self._setbutton(ITEM_TEMPLATE_PLUGIN, (item==ITEM_TEMPLATE_PLUGIN))
+##	def settarget(self, item):
+##		self._setbutton(ITEM_TEMPLATE_PLAYER, (item==ITEM_TEMPLATE_PLAYER))
+##		self._setbutton(ITEM_TEMPLATE_PLUGIN, (item==ITEM_TEMPLATE_PLUGIN))
 		
 	def _setbutton(self, item, value):
 		# Silly: this duplicates a method in MACDialog
@@ -608,10 +608,6 @@ class TemplateDialog(DialogWindow):
 		which = self.type_select.getselect()
 		if 0 <= which < len(self.descriptions):
 			cbarg = self.descriptions[which]
-			if self._getbutton(ITEM_TEMPLATE_PLAYER):
-				cbarg = cbarg + ('external_player.html',)
-			else:
-				cbarg = cbarg + ('embedded_player.html',)
 			ctl = self._wid.GetDialogItemAsControl(ITEM_INPUT_OK)
 			ctl.HiliteControl(10)
 			self._cb(cbarg)
