@@ -124,21 +124,29 @@ class Channel:
 	def commit(self):
 		self._armed_node = None
 		if self._is_shown:
+			reshow = 0
 			for key, (val, default) in self._curvals.items():
 				if self._attrdict.get(key, default) != val:
-					highlighted = self._highlighted
-					self.cancel_modeless_resize()
-					self.hide()
-					self.show()
-					if highlighted:
-						self.highlight(highlighted)
+					reshow = 1
 					break
+			if self.mustreshow() or reshow:
+				highlighted = self._highlighted
+				self.cancel_modeless_resize()
+				self.hide()
+				self.show()
+				if highlighted:
+					self.highlight(highlighted)
 
 	def transaction(self):
 		return 1
 
 	def rollback(self):
 		pass
+
+	def mustreshow(self):
+		"""Return true if channel needs to be redisplayed after
+		a commit"""
+		return 0
 
 	def kill(self):
 		if hasattr(self, '_player'):
