@@ -21,8 +21,7 @@ from Dialog import Dialog
 # and hideattreditor(node) hides it again.  Since the editor may also
 # hide itself, spurious hide calls are ignored; also, only one attribute
 # editor is allowed per node, and extra show calls are also ignored
-# (actually, this closes and re-opens the window, to draw the user's
-# attention...).
+# (actually, this pops up the window, to draw the user's attention...).
 
 def showattreditor(node):
 	try:
@@ -468,7 +467,9 @@ class AttrEditor(Dialog):
 		else:
 			namelist = self.wrapper.attrnames()
 			if namelist <> self.namelist:
-				self.open() # Causes re-open
+				# re-open with possibly different size
+				self.hide()
+				self.open()
 			else:
 				self.fixvalues()
 				self.settitle(self.wrapper.maketitle())
@@ -480,7 +481,6 @@ class AttrEditor(Dialog):
 		self.destroy()
 	#
 	def open(self):
-		self.hide()
 		self.show()
 	#
 	def show(self):
