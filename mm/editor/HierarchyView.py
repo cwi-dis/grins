@@ -336,7 +336,7 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			layout = MMAttrdefs.getattr(node, 'layout')
 		node = self.root.context.newnode(type)
-		if not layout and self.toplevel.layoutview.curlayout is not None:
+		if layout == 'undefined' and self.toplevel.layoutview.curlayout is not None:
 			node.SetAttr('layout', self.toplevel.layoutview.curlayout)
 		if self.insertnode(node, where):
 			import NodeInfo

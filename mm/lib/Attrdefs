@@ -134,7 +134,7 @@
 	'Hyperlink list' hidden
 	'Hyperlinks within this document (root node only)' raw)
 
-(layout (name) '' 'Layout' layoutname
+(layout (name) undefined 'Layout' layoutname
 	'Layout for this node and its descendants' inherited)
 
 (layouts (list (enclosed (tuple (name) (list (name))))) () 'Layouts list'
