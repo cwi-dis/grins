@@ -115,6 +115,7 @@ class _Toplevel:
 		for win in self._subwindows:
 			win.setcursor(cursor)
 		self._cursor = cursor
+		self._main.Display().Flush()
 
 	def pop(self):
 		pass
@@ -126,7 +127,6 @@ class _Toplevel:
 		pass
 
 	def mainloop(self):
-		self._setcursor()
 		Xt.MainLoop()
 
 	# timer interface
@@ -136,26 +136,30 @@ class _Toplevel:
 		if not callable(func):
 			raise error, 'callback function not callable'
 		id = Xt.AddTimeOut(int(sec * 1000), self._timer_callback, cb)
-		if sec <= 0.001:
-			self._immediate.append(id, cb)
+## 		if sec <= 0.001:
+## 			self._immediate.append(id, cb)
 		return id
 
 	def canceltimer(self, id):
 		if id is not None:
 			Xt.RemoveTimeOut(id)
+## 			for i in range(len(self._immediate)):
+## 				if self._immediate[i][0] == id:
+## 					del self._immediate[i]
+## 					break
 
 	def _timer_callback(self, client_data, id):
-		self._setcursor('watch')
 		func, args = client_data
-		if (id, client_data) in self._immediate:
-			self._immediate.remove(id, client_data)
+## 		try:
+## 			self._immediate.remove(id, client_data)
+## 		except ValueError:
+## 			pass
 		apply(func, args)
-		while self._immediate:
-			id, (func, args) = self._immediate[0]
-			del self._immediate[0]
-			Xt.RemoveTimeOut(id)
-			apply(func, args)
-		self._setcursor()
+## 		while self._immediate:
+## 			id, (func, args) = self._immediate[0]
+## 			del self._immediate[0]
+## 			Xt.RemoveTimeOut(id)
+## 			apply(func, args)
 
 	# file descriptor interface
 	def select_setcallback(self, fd, func, args, mask = ReadMask):
@@ -210,7 +214,7 @@ class _Toplevel:
 			self._colormap = v_best.CreateColormap(X.AllocNone)
 			if self._depth == 8:
 				self._setupimg()
-			print 'Using TrueColor visual of depth',self._depth
+##			print 'Using TrueColor visual of depth',self._depth
 			return
 		# no TrueColor visuals available, use a PseudoColor visual
 		visuals = dpy.GetVisualInfo({'depth': 8,
@@ -237,7 +241,7 @@ class _Toplevel:
 				  X.DoRed|X.DoGreen|X.DoBlue))
 		self._colormap.StoreColors(xcolors)
 		self._setupimg()
-		print 'Using PseudoColor visual of depth',self._depth
+##		print 'Using PseudoColor visual of depth',self._depth
 
 	def _setupimg(self):
 		import imgcolormap, imgconvert
@@ -326,11 +330,6 @@ class _Toplevel:
 		    (g << self._green_shift) | \
 		    (b << self._blue_shift)
 		return c
-
-	def _setcursor(self, cursor = ''):
-		for win in self._subwindows:
-			win._setcursor(cursor)
-		self._main.Display().Flush()
 
 class _Window:
 	# Instances of this clas represent top-level windows.  This
@@ -442,7 +441,6 @@ class _Window:
 						 Xm.DrawingArea, attrs)
 		self._form = form
 		shell.Popup(0)
-		self._setcursor('watch')
 		shell.AddWMProtocolCallback(parent._delete_window,
 					    self._delete_callback, None)
 
@@ -587,9 +585,8 @@ class _Window:
 						      x, y, w, h, x, y)
 
 	def setcursor(self, cursor):
-##		for win in self._subwindows:
-##			win.setcursor(cursor)
 		self._cursor = cursor
+		_setcursor(self._form, cursor)
 
 	def newdisplaylist(self, *bgcolor):
 		if bgcolor != ():
@@ -678,7 +675,7 @@ class _Window:
 		return px, py, pw, ph
 
 	def _mkclip(self):
-		if not self._parent:
+		if self._parent is None:
 			return
 		# create region for whole window
 		self._clip = region = Xlib.CreateRegion()
@@ -800,10 +797,8 @@ class _Window:
 		return xim, mask, left, top, x, y, w - left - right, h - top - bottom
 
 	def _destroy_callback(self, form, client_data, call_data):
-		toplevel._setcursor('watch')
 		self._shell = None
 		self.close()
-		toplevel._setcursor()
 
 	def _delete_callback(self, form, client_data, call_data):
 		try:
@@ -811,16 +806,12 @@ class _Window:
 		except KeyError:
 			pass
 		else:
-			toplevel._setcursor('watch')
 			func(arg, self, WindowExit, None)
-			toplevel._setcursor()
 
 	def _input_callback(self, form, client_data, call_data):
-		if not self._parent:
+		if self._parent is None:
 			return		# already closed
-		toplevel._setcursor('watch')
 		self._do_input_callback(form, client_data, call_data)
-		toplevel._setcursor()
 
 	def _do_input_callback(self, form, client_data, call_data):
 		event = call_data.event
@@ -894,7 +885,7 @@ class _Window:
 
 	def _expose_callback(self, form, client_data, call_data):
 		# no _setcursor during expose!
-		if not self._parent:
+		if self._parent is None:
 			return		# already closed
 		e = call_data.event
 		# collect redraw regions
@@ -913,7 +904,7 @@ class _Window:
 				pm.CopyArea(form, self._gc, x, y, w, h, x, y)
 
 	def _do_expose(self, region, recursive = 0):
-		if not self._parent:
+		if self._parent is None:
 			return
 		# check if there is any overlap of our window with the
 		# area to be drawn
@@ -951,7 +942,6 @@ class _Window:
 			self.showwindow()
 
 	def _resize_callback(self, form, client_data, call_data):
-		toplevel._setcursor('watch')
 		val = self._form.GetValues(['width', 'height'])
 		x, y = self._rect[:2]
 		width, height = val['width'], val['height']
@@ -987,7 +977,6 @@ class _Window:
 			pixmap.CopyArea(form, gc, 0, 0, width, height, 0, 0)
 		# call resize callbacks
 		self._do_resize2()
-		toplevel._setcursor()
 
 	def _do_resize2(self):
 		for w in self._subwindows:
@@ -998,11 +987,6 @@ class _Window:
 			pass
 		else:
 			func(arg, self, ResizeWindow, None)
-
-	def _setcursor(self, cursor = ''):
-		if cursor == '':
-			cursor = self._cursor
-		_setcursor(self._form, cursor)
 
 class _BareSubWindow:
 	def __init__(self, parent, coordinates, defcmap, pixmap, transparent):
@@ -1126,7 +1110,7 @@ class _BareSubWindow:
 					      x, y, w, h, x, y)
 
 	def _mkclip(self):
-		if not self._parent:
+		if self._parent is None:
 			return
 		_Window._mkclip(self)
 		region = self._clip
@@ -1735,7 +1719,7 @@ class _Font:
 		self._font = toplevel._main.LoadQueryFont(fontname)
 		self._pointsize = pointsize
 		self._fontname = fontname
-		print 'Using', fontname
+##		print 'Using', fontname
 
 	def close(self):
 		self._font = None
@@ -1812,12 +1796,10 @@ class showmessage:
 	def _callback(self, widget, callback, call_data):
 		if not self._widget:
 			return
-		toplevel._setcursor('watch')
 		if callback:
 			apply(callback[0], callback[1])
 		if self._grab:
 			self.close()
-		toplevel._setcursor()
 
 	def _destroy(self, widget, client_data, call_data):
 		self._widget = None
@@ -1935,9 +1917,7 @@ class Dialog:
 	# buttons
 	def _callback(self, widget, callback, call_data):
 		if callback:
-			toplevel._setcursor('watch')
 			apply(callback[0], callback[1])
-			toplevel._setcursor()
 
 	def getbutton(self, button):
 		if not 0 <= button < len(self._buttons):
@@ -1967,11 +1947,9 @@ class _MultChoice(Dialog):
 	def run(self):
 		try:
 			self.looping = TRUE
-			toplevel._setcursor()
 			Xt.MainLoop()
 		except _end_loop:
 			pass
-		toplevel._setcursor('watch')
 		return self.answer
 
 	def callback(self, msg):
@@ -2005,9 +1983,7 @@ def _colormask(mask):
 	return shift, (1 << width) - 1
 
 def _generic_callback(widget, (func, args), call_data):
-	toplevel._setcursor('watch')
 	apply(func, args)
-	toplevel._setcursor()
 
 def _create_menu(menu, list, acc = None):
 	accelerator = None
