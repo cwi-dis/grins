@@ -455,6 +455,7 @@ class SMILHtmlTimeWriter(SMIL):
 			if not nodeid:
 				nodeid = 'm' + x.GetUID()
 			subregid = nodeid + 'd1'
+			subregid = string.join(string.split(subregid, '-_'), '')
 
 
 		subRegGeom, mediaGeom = None, None
@@ -501,7 +502,7 @@ class SMILHtmlTimeWriter(SMIL):
 
 			if transIn:
 				style = style + 'visibility=hidden;'
-				trans = 'transIn(\'%s\', \'%s\')' % (subregid, transInName)
+				trans = 'transIn(%s, \'%s\')' % (subregid, transInName)
 				attrlist.append( ('onbegin', trans) )
 
 			divlist.append(('style', style))
@@ -527,7 +528,7 @@ class SMILHtmlTimeWriter(SMIL):
 		self.writetag('t:'+mtype, attrlist)
 
 		if transOut:
-			trans = 'transOut(\'%s\', \'%s\')' % (subregid, transOutName)
+			trans = 'transOut(%s, \'%s\')' % (subregid, transOutName)
 			self.writetag('t:set', [ ('begin','%s.end-%.1f' % (nodeid,transOutDur)), ('dur', '%.1f' % transOutDur), ('onbegin', trans), ])
 			self.pop()
 			pushed = pushed - 1
