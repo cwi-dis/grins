@@ -36,7 +36,7 @@ def hideattreditor(node):
 		attreditor = node.attreditor
 	except NameError:
 		return # No attribute editor active
-	attreditor.close()
+	attreditor.hide()
 
 
 # An additional call to check whether the attribute editor is currently
@@ -72,7 +72,7 @@ def hidechannelattreditor(context, name):
 		return
 	if not dict.has_key(name):
 		return
-	dict[name].close()
+	dict[name].hide()
 
 def haschannelattreditor(context, name):
 	try:
@@ -105,7 +105,7 @@ def hidestyleattreditor(context, name):
 		return
 	if not dict.has_key(name):
 		return
-	dict[name].close()
+	dict[name].hide()
 
 def hasstyleattreditor(context, name):
 	try:
@@ -343,7 +343,19 @@ class AttrEditor() = Dialog():
 		#
 		title = self.wrapper.maketitle()
 		hint = '[Click on labels for help]'
-		self = Dialog.init(self, (formwidth, formheight, title, hint))
+		#
+		return Dialog.init(self, (formwidth, formheight, title, hint))
+	#
+	def make_form(self):
+		#
+		itemwidth = 450
+		itemheight = 25
+		#
+		formwidth = itemwidth
+		formheight = len(self.namelist) * itemheight + 30
+		#
+		self.width, self.height = formwidth, formheight
+		Dialog.make_form(self)
 		#
 		itemw3 = 50
 		itemw2 = itemwidth/2
@@ -366,27 +378,46 @@ class AttrEditor() = Dialog():
 			b.makevalueinput(itemx2, itemy, itemw2, itemheight)
 			b.makeresetbutton(itemx3, itemy, itemw3, itemheight)
 			self.blist.append(b)
-		#
-		return self
 	#
 	def transaction(self):
 		return 1
 	#
 	def commit(self):
 		if not self.wrapper.stillvalid():
-			self.close()
+			self.hide()
 		else:
-			self.fixvalues()
+			namelist = self.wrapper.attrnames()
+			if namelist <> self.namelist:
+				self.open() # Causes re-open
+			else:
+				self.fixvalues()
 	#
 	def rollback(self):
 		pass
 	#
 	def open(self):
-		self.close()
-		self.title = self.wrapper.maketitle()
-		self.getvalues()
-		self.wrapper.register(self)
+		self.hide()
 		self.show()
+	#
+	def show(self):
+		if not self.showing:
+			namelist = self.wrapper.attrnames()
+			if namelist <> self.namelist:
+				del self.form
+				self.namelist = namelist
+				self.make_form()
+				if self.last_geometry <> None:
+					x, y, w, h = self.last_geometry
+					self.last_geometry = x, y, 0, 0
+			self.title = self.wrapper.maketitle()
+			self.getvalues()
+			self.wrapper.register(self)
+			Dialog.show(self)
+	#
+	def hide(self):
+		if self.showing:
+			self.wrapper.unregister(self)
+			Dialog.hide(self)
 	#
 	def getvalues(self):
 		self.form.freeze_form()
@@ -416,11 +447,6 @@ class AttrEditor() = Dialog():
 		self.fixbuttons()
 		self.form.unfreeze_form()
 	#
-	def close(self):
-		if self.showing:
-			self.wrapper.unregister(self)
-			self.hide()
-	#
 	def fixbuttons(self):
 		if self.changed:
 			boxtype = UP_BOX
@@ -430,7 +456,7 @@ class AttrEditor() = Dialog():
 			b.boxtype = boxtype
 	#
 	def cancel_callback(self, dummy):
-		self.close()
+		self.hide()
 	#
 	def restore_callback(self, (obj, arg)):
 		obj.set_button(1)
@@ -448,7 +474,8 @@ class AttrEditor() = Dialog():
 		obj.set_button(1)
 		self.fixfocus()
 		if not self.changed or self.setvalues():
-			self.close()
+			self.hide()
+			return
 		obj.set_button(0)
 	#
 	def fixfocus(self):
@@ -459,6 +486,11 @@ class AttrEditor() = Dialog():
 
 
 # Class for one attribute definitition.
+
+# XXX Still to do: use type-specific objects for common cases,
+# e.g.: on/off buttons for booleans, sliders for numbers (?),
+# and input fields without quotes for strings.
+# XXX The class has the wrong type of interface to do that!
 
 class ButtonRow():
 	#
@@ -580,10 +612,10 @@ class ButtonRow():
 	#
 
 
-# Routine to close all attribute editors in a node and its context.
+# Routine to hide all attribute editors in a tree and its context.
 
-def closeall(root):
-	closenode(root)
+def hideall(root):
+	hidenode(root)
 	context = root.GetContext()
 	for cname in root.GetContext().channeldict.keys():
 		hidechannelattreditor(context, cname)
@@ -591,13 +623,13 @@ def closeall(root):
 		hidestyleattreditor(context, cname)
 
 
-# Recursively close the attribute editor for this node and its subtree.
+# Recursively hide the attribute editors for this node and its subtree.
 
-def closenode(node):
+def hidenode(node):
 	hideattreditor(node)
 	if node.GetType() in ('seq', 'par'):
 		for child in node.GetChildren():
-			closenode(child)
+			hidenode(child)
 
 
 # Test program -- edit the attributes of the root node.
