@@ -360,8 +360,8 @@ class HierarchyView(HierarchyViewDialog):
 			commands = commands + self.finisheventcommands
 		if fntype in MMNode.interiortypes:
 			commands = commands + self.interiorcommands # Add interior structure modifying commands.
-			if fnode.showtime:
-				commands = commands + self.timelinezoomcommands
+		if self.root.showtime:
+			commands = commands + self.timelinezoomcommands
 		if fntype not in MMNode.interiortypes and \
 		   fnode.GetChannelType() != 'sound' and \
 		   not (self.toplevel.links and self.toplevel.links.islinksrc(fnode)):
@@ -583,11 +583,10 @@ class HierarchyView(HierarchyViewDialog):
 		if self.need_redraw or self.base_display_list is None:
 			# Make a new display list.
 			d = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
-			if len(self.event_sources) > 0:
-				# Set the dangling icon
-				for b in self.event_sources:
-					widget = b.views['struct_view']
-					widget.set_dangling_event()
+			# Set the dangling icon
+			for b in self.event_sources:
+				widget = b.views['struct_view']
+				widget.set_dangling_event()
 			self.scene_graph.draw(d) # Keep it for later!
 			self.need_redraw = 0
 			self.droppable_widget = None
@@ -610,12 +609,10 @@ class HierarchyView(HierarchyViewDialog):
 			d = self.base_display_list.clone()
 
 		# 2. Undraw stuff.
-		if len(self.old_event_sources) > 0:
-			for b in self.old_event_sources:
-				b.views['struct_view'].draw_unselected(d)
-		if len(self.event_sources) > 0:
-			for b in self.event_sources:
-				b.views['struct_view'].draw_unselected(d)
+		for b in self.old_event_sources:
+			b.views['struct_view'].draw_unselected(d)
+		for b in self.event_sources:
+			b.views['struct_view'].draw_unselected(d)
 		for i in self.old_multi_selected_widgets:
 			i.draw_unselected(d)
 		self.old_multi_selected_widgets = []
