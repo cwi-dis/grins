@@ -406,6 +406,7 @@ class _Window:
 		for displist in self._displaylists[:]:
 			displist.close()
 		del self._displaylists
+		self.destroy_menu()
 		toplevel._win_lock.acquire()
 		if self._form:
 			self._form.DestroyWidget()
@@ -1128,7 +1129,9 @@ class _Window:
 
 	def destroy_menu(self):
 		if self._menu:
+			toplevel._win_lock.acquire()
 			self._menu.DestroyWidget()
+			toplevel._win_lock.release()
 		self._menu = None
 		self._menu_title = None
 		self._menu_list = None
@@ -1138,6 +1141,7 @@ class _Window:
 		self.destroy_menu()
 		self._menu_title = title
 		self._menu_list = list
+		toplevel._win_lock.acquire()
 		menu = self._form.CreatePopupMenu('menu',
 				{'colormap': toplevel._default_colormap,
 				 'visual': toplevel._default_visual,
@@ -1151,6 +1155,7 @@ class _Window:
 							 {})
 		self._accelerators = {}
 		_create_menu(menu, list, self._accelerators)
+		toplevel._win_lock.release()
 		self._menu = menu
 
 class _DisplayList:
@@ -3023,6 +3028,7 @@ class _MenuSupport:
 
 	def create_menu(self, title, list):
 		self.destroy_menu()
+		toplevel._win_lock.acquire()
 		menu = self._form.CreatePopupMenu('dialogMenu', {})
 		if title:
 			dummy = menu.CreateManagedWidget('menuTitle',
@@ -3034,11 +3040,13 @@ class _MenuSupport:
 		self._menu = menu
 		self._form.AddEventHandler(X.ButtonPressMask, FALSE,
 					   self._post_menu, None)
+		toplevel._win_lock.release()
 
 	def destroy_menu(self):
 		menu = self._menu
 		self._menu = None
 		if menu:
+			toplevel._win_lock.acquire()
 			menu.DestroyWidget()
 			try:
 				self._form.RemoveEventHandler(
@@ -3046,6 +3054,7 @@ class _MenuSupport:
 					self._post_menu, None)
 			except AttributeError:
 				pass
+			toplevel._win_lock.release()
 
 	# support methods, only used by derived classes
 	def _post_menu(self, w, client_data, event):
