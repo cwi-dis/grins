@@ -22,8 +22,7 @@ import Timing
 
 # Parametrizations
 BHEIGHT = 30				# Button height
-HELPDIR = '/ufs/guido/mm/demo/help'	# Where to find the help files
-					# XXX Need to use $CMIF
+HELPDIR = None
 
 def sethelpdir(helpdir):
 	global HELPDIR
@@ -177,7 +176,11 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.styleview = StyleSheet.StyleSheet().init(self)
 		#
 		import Help
-		self.help = Help.HelpWindow().init(HELPDIR, self)
+		helpdir = HELPDIR
+		if helpdir == None:
+			import cmif
+			helpdir = cmif.findfile('help')
+		self.help = Help.HelpWindow().init(helpdir, self)
 		#
 		import LinkEdit
 		self.links = LinkEdit.LinkEdit().init(self)

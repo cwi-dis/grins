@@ -24,22 +24,24 @@ import MMAttrdefs
 import Timing
 from ArmStates import *
 from MMExc import *
+from AnchorEdit import A_TYPE, ATYPE_PAUSE
 
 
 # Color assignments (RGB)
 
 BGCOLOR = 200, 200, 200			# Light gray
-BORDER1COLOR = 75, 75, 75		# Dark gray
-BORDER2COLOR = 50, 50, 150		# Dark blueish gray
+BORDERCOLOR = 75, 75, 75		# Dark gray
+BORDERLIGHT = 255, 255, 255		# White
 CHANNELCOLOR = 240, 240, 240		# Very light gray
-NODECOLOR = 220, 220, 220		# Rather light gray
+NODECOLOR = 208, 182, 160		# Pale pinkish, match block view nodes
+ALTNODECOLOR = 255, 224, 200		# Same but brighter
 ARROWCOLOR = 0, 0, 255			# Blue
 TEXTCOLOR = 0, 0, 0			# Black
 FOCUSCOLOR = 255, 0, 0			# Red
 LOCKEDCOLOR = 0, 255, 0			# Green
-LINECOLOR = 255, 255, 255		# White
-ANCHORCOLOR = 255, 127, 0		# Orange
+ANCHORCOLOR = 255, 127, 0		# Orange/pinkish
 
+# Anchor indicator box size
 ABOXSIZE = 6
 
 # Arm colors
@@ -53,8 +55,8 @@ armcolors = { \
 
 # Arrowhead dimensions
 
-ARR_LENGTH = 18.0
-ARR_HALFWIDTH = 5.0
+ARR_LENGTH = 18
+ARR_HALFWIDTH = 5
 ARR_SLANT = ARR_HALFWIDTH / ARR_LENGTH
 
 
@@ -105,7 +107,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.editmgr.register(self)
 		self.toplevel.checkviews()
 		# Compute objects to draw and where to draw them, then draw
-		self.setviewroot()
+		self.fixviewroot()
 		self.recalc(('b', None))
 		self.getshape()
 		self.reshape()
@@ -151,7 +153,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.cleanup()
 		if self.is_showing():
 			self.setwin()
-			self.setviewroot()
+			self.fixviewroot()
 			self.recalc(focus)
 			self.reshape()
 			self.draw()
@@ -274,7 +276,20 @@ class ChannelView(ViewDialog, GLDialog):
 
 	# View root stuff
 
-	def setviewroot(self):
+	def nextviewroot(self):
+		node = nextminidocument(self.viewroot)
+		if node == None:
+			node = firstminidocument(self.root)
+		self.setviewroot(node)
+
+	def prevviewroot(self):
+		node = prevminidocument(self.viewroot)
+		if node == None:
+			node = lastminidocument(self.root)
+		self.setviewroot(node)
+
+	# Make sure the view root is set to *something*, and fix the title
+	def fixviewroot(self):
 		node = self.viewroot
 		if node <> None and node.GetRoot() <> self.root:
 			node = None
@@ -287,22 +302,12 @@ class ChannelView(ViewDialog, GLDialog):
 		self.viewroot = node
 		self.fixtitle()
 
-	def nextviewroot(self):
+	# Change the view root
+	def setviewroot(self, node):
+		if node == None or node == self.viewroot:
+			return
 		self.cleanup()
-		self.viewroot = nextminidocument(self.viewroot)
-		if self.viewroot == None:
-			self.viewroot = firstminidocument(self.root)
-		self.fixtitle()
-		self.recalc(('b', None))
-		self.setwin()
-		self.reshape()
-		self.draw()
-
-	def prevviewroot(self):
-		self.cleanup()
-		self.viewroot = prevminidocument(self.viewroot)
-		if self.viewroot == None:
-			self.viewroot = lastminidocument(self.root)
+		self.viewroot = node
 		self.fixtitle()
 		self.recalc(('b', None))
 		self.setwin()
@@ -310,8 +315,11 @@ class ChannelView(ViewDialog, GLDialog):
 		self.draw()
 
 	def fixtitle(self):
-		name = MMAttrdefs.getattr(self.viewroot, 'name')
-		self.settitle('Channel view: ' + name)
+		title = 'Time chart'
+		if self.viewroot <> self.root:
+			name = MMAttrdefs.getattr(self.viewroot, 'name')
+			title = title + ': ' + name
+		self.settitle(title)
 
 	# Node stuff
 
@@ -371,14 +379,22 @@ class ChannelView(ViewDialog, GLDialog):
 			return None
 
 	def globalsetfocus(self, node):
-		if self.is_showing():
-			try:
-				obj = node.cv_obj
-			except:
+		if not self.is_showing():
+			return
+		# May have to switch view root
+		mini = node
+		while not isminidocument(mini):
+			mini = mini.GetParent()
+			if mini == None:
 				return
-			self.setwin()
-			self.deselect()
-			obj.select()
+		self.setviewroot(mini) # No-op if already there
+		try:
+			obj = node.cv_obj
+		except:
+			return
+		self.setwin()
+		self.deselect()
+		obj.select()
 
 
 # Check whether a node is the top of a mini-document
@@ -538,7 +554,7 @@ class GO:
 		#print top, ':', bottom, '(', margin, ')', top, ':', bottom,
 		#print MMAttrdefs.getattr(node, 'name')
 
-		return left, top, right, bottom
+		return int(left), int(top), int(right), int(bottom)
 
 	# Subroutine to make the menu, the list of menuprocs, and the keymap.
 	# Don't use it as a method!
@@ -621,8 +637,8 @@ class ChannelBox(GO):
 		height = self.mother.channelbottom
 		width = self.mother.width / nchannels
 		space = gl.strwidth(' ')
-		self.left = i * width + space*0.5
-		self.right = (i+1) * width - space
+		self.left = int(i * width + space*0.5)
+		self.right = int((i+1) * width - space)
 		self.top = 0
 		self.bottom = height
 		self.xcenter = (self.left + self.right) / 2
@@ -642,23 +658,31 @@ class ChannelBox(GO):
 		# Draw a diamond
 		gl.RGBcolor(CHANNELCOLOR)
 		gl.bgnpolygon()
-		gl.v2f(self.left, self.ycenter)
-		gl.v2f(self.xcenter, self.top)
-		gl.v2f(self.right, self.ycenter)
-		gl.v2f(self.xcenter, self.bottom)
+		gl.v2i(self.left, self.ycenter)
+		gl.v2i(self.xcenter, self.top)
+		gl.v2i(self.right, self.ycenter)
+		gl.v2i(self.xcenter, self.bottom)
 		gl.endpolygon()
 
-		# Outline the diamond; in a different color if we are selected
+		# Outline the diamond; in a different color if selected
 		if self.selected:
 			gl.RGBcolor(FOCUSCOLOR)
 		else:
-			gl.RGBcolor(BORDER1COLOR)
-		gl.linewidth(2)
+			gl.RGBcolor(BORDERCOLOR)
+		gl.linewidth(1)
 		gl.bgnclosedline()
-		gl.v2f(self.left, self.ycenter)
-		gl.v2f(self.xcenter, self.top)
-		gl.v2f(self.right, self.ycenter)
-		gl.v2f(self.xcenter, self.bottom)
+		gl.v2i(self.left, self.ycenter)
+		gl.v2i(self.xcenter, self.top)
+		gl.v2i(self.right, self.ycenter)
+		gl.v2i(self.xcenter, self.bottom)
+		gl.endclosedline()
+		# And another one to make it look engraved
+		gl.RGBcolor(BORDERLIGHT)
+		gl.bgnclosedline()
+		gl.v2i(self.left+1, self.ycenter+1)
+		gl.v2i(self.xcenter+1, self.top+1)
+		gl.v2i(self.right+1, self.ycenter+1)
+		gl.v2i(self.xcenter+1, self.bottom+1)
 		gl.endclosedline()
 
 		# Draw the name
@@ -667,12 +691,17 @@ class ChannelBox(GO):
 			     self.name)
 
 	def drawline(self):
-		# Draw a vertical line
-		gl.RGBcolor(LINECOLOR)
-		gl.linewidth(2)
+		# Draw a gray and a white vertical line
+		gl.RGBcolor(BORDERCOLOR)
+		gl.linewidth(1)
 		gl.bgnline()
-		gl.v2f(self.xcenter, self.bottom)
-		gl.v2f(self.xcenter, self.farbottom)
+		gl.v2i(self.xcenter, self.bottom)
+		gl.v2i(self.xcenter, self.farbottom)
+		gl.endline()
+		gl.RGBcolor(BORDERLIGHT)
+		gl.bgnline()
+		gl.v2i(self.xcenter+1, self.bottom)
+		gl.v2i(self.xcenter+1 , self.farbottom)
 		gl.endline()
 
 	# Menu stuff beyond what GO offers
@@ -705,11 +734,17 @@ class NodeBox(GO):
 
 	def init(self, mother, node, cname):
 		self.node = node
+		self.hasanchors = self.haspause = 0
 		try:
 			alist = self.node.GetRawAttr('anchorlist')
-			self.hasanchors = (alist <> [])
 		except NoSuchAttrError:
-			self.hasanchors = 0
+			alist = None
+		if alist: # Not None and not []
+			self.hasanchors = 1
+			for a in alist:
+				if a[A_TYPE] == ATYPE_PAUSE:
+					self.haspause = 1
+					break
 		node.cv_obj = self
 		self.cname = cname # Channel name
 		name = MMAttrdefs.getattr(node, 'name')
@@ -759,50 +794,80 @@ class NodeBox(GO):
 		       self.top <= y <= self.bottom
 
 	def drawfocus(self):
+		l, t, r, b = self.left, self.top, self.right, self.bottom
+
 		# Draw a box
 		if armcolors.has_key(self.armedmode):
 			gl.RGBcolor(armcolors[self.armedmode])
 		else:
 			gl.RGBcolor(NODECOLOR)
 		gl.bgnpolygon()
-		gl.v2f(self.left, self.top)
-		gl.v2f(self.right, self.top)
-		gl.v2f(self.right, self.bottom)
-		gl.v2f(self.left, self.bottom)
+		gl.v2i(l, t)
+		gl.v2i(r, t)
+		gl.v2i(r, b)
+		gl.v2i(l, b)
 		gl.endpolygon()
 
+		# If the end time was inherited, make the bottom-right
+		# triangle of the box a lighter color
+		if self.node.t0t1_inherited:
+			gl.RGBcolor(ALTNODECOLOR)
+			gl.bgnpolygon()
+			gl.v2i(r, t)
+			gl.v2i(r, b)
+			gl.v2i(l, b)
+			gl.endpolygon()
+
+		# If there are anchors on this node,
+		# draw a small orange box in the bottom left corner
 		if self.hasanchors:
 			gl.RGBcolor(ANCHORCOLOR)
 			gl.bgnpolygon()
-			l, t = self.left, self.top
-			gl.v2f(l, t)
-			gl.v2f(l+ABOXSIZE, t)
-			gl.v2f(l+ABOXSIZE, t+ABOXSIZE)
-			gl.v2f(l, t+ABOXSIZE)
+			gl.v2i(l, b)
+			gl.v2i(l+ABOXSIZE, b)
+			gl.v2i(l+ABOXSIZE, b-ABOXSIZE)
+			gl.v2i(l, b-ABOXSIZE)
 			gl.endpolygon()
-				
 
-		# Outline the box; in a different color if we are selected
+		# If there is a pausing anchor,
+		# draw an orange line at the bottom
+		if self.haspause:
+			gl.RGBcolor(ANCHORCOLOR)
+			gl.bgnpolygon()
+			gl.v2i(l, b)
+			gl.v2i(r, b)
+			gl.v2i(r, b-ABOXSIZE)
+			gl.v2i(l, b-ABOXSIZE)
+			gl.endpolygon()
+
+		# Outline the box; in a different color if selected
 		if self.locked:
 			gl.RGBcolor(LOCKEDCOLOR)
 		elif self.selected:
 			gl.RGBcolor(FOCUSCOLOR)
-		elif self.node.t0t1_inherited:
-			gl.RGBcolor(BORDER2COLOR)
 		else:
-			gl.RGBcolor(BORDER1COLOR)
-		gl.linewidth(2)
+			gl.RGBcolor(BORDERCOLOR)
+		gl.linewidth(1)
 		gl.bgnclosedline()
-		gl.v2f(self.left, self.top)
-		gl.v2f(self.right, self.top)
-		gl.v2f(self.right, self.bottom)
-		gl.v2f(self.left, self.bottom)
+		gl.v2i(l-1, t)
+		gl.v2i(r, t)
+		gl.v2i(r, b-1)
+		gl.v2i(l-1, b-1)
 		gl.endclosedline()
 
-		# Draw the name
+		# Draw a second, light, outline to emulate the 'engraved'
+		# look of FORMS
+		gl.RGBcolor(BORDERLIGHT)
+		gl.bgnclosedline()
+		gl.v2i(l, t+1)
+		gl.v2i(r+1, t+1)
+		gl.v2i(r+1, b)
+		gl.v2i(l, b)
+		gl.endclosedline()
+
+		# Draw the name, centered in the box
 		gl.RGBcolor(TEXTCOLOR)
-		centerstring(self.left, self.top, self.right, self.bottom, \
-			     self.name)
+		centerstring(l, t, r, b, self.name)
 
 	# Menu stuff beyond what GO offers
 
@@ -850,6 +915,9 @@ class NodeBox(GO):
 		import ArcInfo
 		ArcInfo.showarcinfo(root, snode, sside, delay, dnode, dsize)
 
+	def focuscall(self):
+		self.mother.toplevel.blockview.globalsetfocus(self.node)
+
 	commandlist = c = GO.commandlist[:]
 	char, text, proc = c[-1]
 	c[-1] = char, text + '%l', proc
@@ -858,6 +926,7 @@ class NodeBox(GO):
 	c.append('a', 'Node attr...', attrcall)
 	c.append('e', 'Edit contents...', editcall)
 	c.append('t', 'Edit anchors...%l', anchorcall)
+	c.append('f', 'Push focus', focuscall)
 	c.append('l', 'Lock node', lockcall)
 	c.append('u', 'Unlock node', unlockcall)
 	c.append('s', 'New sync arc...', newsyncarccall)
@@ -913,8 +982,8 @@ class ArcBox(GO):
 		# Draw the line from src to dst
 		gl.linewidth(2)
 		gl.bgnline()
-		gl.v2f(self.sx, self.sy)
-		gl.v2f(self.dx, self.dy)
+		gl.v2i(self.sx, self.sy)
+		gl.v2i(self.dx, self.dy)
 		gl.endline()
 		# Draw the arrowhead
 		# Translate so that the point of the arrowhead is (0, 0)
@@ -923,9 +992,9 @@ class ArcBox(GO):
 		gl.translate(self.dx, self.dy, 0)
 		gl.rot(self.rotation, 'z')
 		gl.bgnpolygon()
-		gl.v2f(0, 0)
-		gl.v2f(ARR_LENGTH, ARR_HALFWIDTH)
-		gl.v2f(ARR_LENGTH, -ARR_HALFWIDTH)
+		gl.v2i(0, 0)
+		gl.v2i(ARR_LENGTH, ARR_HALFWIDTH)
+		gl.v2i(ARR_LENGTH, -ARR_HALFWIDTH)
 		gl.endpolygon()
 		gl.popmatrix()
 

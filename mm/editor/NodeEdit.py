@@ -142,8 +142,8 @@ def _showmenu(menu):	# Show (modal) editor choice dialog
     keys = menu.keys()
     keys.sort()
     for i in keys:
-	void = form.add_button(NORMAL_BUTTON,5,pos,120,30,i)
-	void.boxtype = FRAME_BOX
+	obj = form.add_button(NORMAL_BUTTON,5,pos,120,30,i)
+	obj.boxtype = FRAME_BOX
 	pos = pos + 30
     form.show_form(PLACE_MOUSE,0,'')
     obj = fl.do_forms()
@@ -158,7 +158,8 @@ def _showmenu(menu):	# Show (modal) editor choice dialog
 def InitEditors():
     # XXX Should add the directory where the .cmif file resides...
     # XXX (toplevel.dirname)
-    dirs = ['.', os.environ['HOME'], '/ufs/guido/mm/demo/mm4']
+    import cmif
+    dirs = ['.', os.environ['HOME'], cmif.findfile('mm4')]
     for dirname in dirs:
     	filename = os.path.join(dirname, '.cmif_editors')
     	try:

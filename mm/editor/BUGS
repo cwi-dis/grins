@@ -5,22 +5,18 @@
 
 ------------------------------ BUGS -------------------------------
 
-blockview: "paste before" als de focus de viewing root is (maar niet
-de echte root) crasht
+player: when reaching a bag node through a hyperjump, should call
+choosebagitem().
+
+block view: sometimes the outermost box size is calculated wrong and
+part of the window remains unused.  Usually after heavy inserting /
+deleting of nodes and/or zooming in/out?
 
 node/channel attrs: when clicking OK, if the window size changes
 (because the list of defined attributes changes), the new window pops
 up for a nanosecond and then disappears again
 
 soundchannel: crashes if openport fails (if there are too many ports open)
-
-player: on commit, all channels pop up
-
-player prints "Huh? Nothing in the queue?"
-
-channel view: "delete channel" is mapped to "channel attrs"
-
-all: preparing a node pops its window (should be done on real play only)
 
 Player: playing multiple nodes in parallel on the same channel causes
 crashes or generally weird behaviour
@@ -29,15 +25,10 @@ Player: crash if playing node with undefined channel
 
 FORMS: When one FORM is iconified, all events are queued but not acted
 upon hang.  Is this a standard FORMS bug or do I do something wrong
-with handling GL events?
-
-all: When a view FORM is closed using 4DWm's close menu item, it takes
-a while before events get handled again.
+with handling GL events?  (Not reproducible in very simple prog.)
 
 Timing: sometimes calctimes for partial tree is affects lay-out in
-channel view.  [unreproducible at the moment -- fixed?]
-
-Timing: (opt)calctimes isn't a very meaningful name.
+channel view.  (May be a channel view bug?)
 
 edit mgr: doesn't fix channel dictionary  [not confirmed]
 
@@ -295,3 +286,22 @@ movie channel: takes so much priority that sound doesn't play and
 buttons don't react
 
 form loader: parsing .fd files takes ages [mostly fixed by caching]
+
+blockview: "paste before" als de focus de viewing root is (maar niet
+de echte root) crasht
+
+player: on commit, all channels pop up
+
+player prints "Huh? Nothing in the queue?"
+
+all channels: preparing a node pops its window (should be done on real
+play only)
+
+all: When a view FORM is closed using 4DWm's close menu item, it takes
+a while before events get handled again.
+[this went away without action.]
+
+channel view: "delete channel" is mapped to "channel attrs"
+[can't reproduce this?  seems to happen spuriously...]
+
+Timing: (opt)calctimes isn't a very meaningful name.
