@@ -48,18 +48,32 @@ class MainDialog:
 			self.commandlist.append(
 				SCHEDDEBUG(callback=(self.scheddebug_callback, ())))
 		import Help
+		import cmif, MMurl, os
 		if hasattr(Help, 'hashelp') and Help.hashelp():
-			import cmif, MMurl
 			self.commandlist.append(
 				HELP_CONTENTS(callback = (self.help_contents_callback, ())))
-			self.commandlist.append(
-				GRINS_WEB(callback = (self.grins_web_callback, ('http://www.oratrix.com/GRiNS/index.html',))))
-			qsg = MMurl.pathname2url(cmif.findfile('QuickStart.pdf'))
+		self.commandlist.append(
+			GRINS_WEB(callback = (self.grins_web_callback, ('http://www.oratrix.com/GRiNS/',))))
+		qsg = cmif.findfile('QuickStart.pdf')
+		if os.path.exists(qsg):
+			qsg = MMurl.pathname2url(qsg)
 			self.commandlist.append(
 				GRINS_QSG(callback = (self.grins_web_callback, (qsg,))))
-			tutorial = MMurl.pathname2url(cmif.findfile('tutorials.pdf'))
+		tutorial = cmif.findfile('tutorials.pdf')
+		if os.path.exists(tutorial):
+			tutorial = MMurl.pathname2url(tutorial)
 			self.commandlist.append(
 				GRINS_TUTORIAL(callback = (self.grins_web_callback, (tutorial,))))
+		tdg = cmif.findfile('TDG.html')
+		if os.path.exists(tdg):
+			tdg = MMurl.pathname2url(tdg)
+			self.commandlist.append(
+				GRINS_TDG(callback = (self.grins_web_callback, (tdg,))))
+		refm = cmif.findfile('REFM.html')
+		if os.path.exists(refm):
+			refm = MMurl.pathname2url(refm)
+			self.commandlist.append(
+				GRINS_REFERENCE(callback = (self.grins_web_callback, (refm,))))
 		import windowinterface
 		# register events for all frame wnds
 		windowinterface.register_event(WMEVENTS.PasteFile, self.pastefile, None)
