@@ -115,8 +115,8 @@ class MainDialog:
 			return
 		x,y,filename=value
 		url=self.__path2url(filename)
-		import mimetypes, windowinterface
-		mimetype = mimetypes.guess_type(url)[0]
+		import MMmimetypes, windowinterface
+		mimetype = MMmimetypes.guess_type(url)[0]
 		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
 			self.openURL_callback(url)
 		else:
@@ -132,8 +132,8 @@ class MainDialog:
 	def dropeffect(self, dummy, window, event, params):
 		x,y,filename=params
 		url=self.__path2url(filename)
-		import mimetypes, windowinterface
-		mimetype = mimetypes.guess_type(url)[0]
+		import MMmimetypes, windowinterface
+		mimetype = MMmimetypes.guess_type(url)[0]
 		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
 			return windowinterface.DROPEFFECT_COPY
 		else:
