@@ -117,7 +117,11 @@ class _DisplayList:
 		return '<' + str +'>'
 
 
-#====================================== Rendering
+##====================================== Rendering
+	def isrendered(self):
+		# returns true if currently rendered
+		return self._window and self._window._active_displist is self
+
 	def render(self):
 		import time
 		self.starttime = time.time()
@@ -935,6 +939,10 @@ class _Button:
 
 	def setsensitive(self, sensitive):
 		self._sensitive = sensitive
+
+	def issensitive(self):
+		# returns whether the button is currently sensitive
+		return self._dispobj is not None and self._dispobj.isrendered() and self._sensitive and self._insidetemporal()
 
 	# Increment height
 	def hiwidth(self, width):

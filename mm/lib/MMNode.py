@@ -523,7 +523,7 @@ class MMNodeContext:
 		return not self._isgoodlink(link)
 
 	def _isgoodlink(self, link):
-		a1, a2, dir, ltype, stype, dtype = link
+		a1, a2 = link[:2]
 		if type(a1) is type(()):
 			uid1, aid1 = a1
 			srcok = (self.uidmap.has_key(uid1) and
@@ -1152,9 +1152,9 @@ class MMSyncArc:
 		refnode = self.refnode()
 		atimes = (0, 0)
 		if self.srcanchor is not None:
-			for id, type, args, times in refnode.attrdict.get('anchorlist', []):
-				if id == self.srcanchor:
-					atimes = times
+			for a in refnode.attrdict.get('anchorlist', []):
+				if a[A_ID] == self.srcanchor:
+					atimes = a[A_TIMES]
 					break
 		event = self.getevent()
 		if event is None and self.marker is None:
@@ -1799,9 +1799,9 @@ class MMNode:
 
 	def GetChildWithArea(self, name):
 		alist = MMAttrdefs.getattr(self, 'anchorlist')
-		for id, type, args, times in alist:
-			if id==name:
-				return self, id, type, args, times
+		for a in alist:
+			if a[A_ID] == name:
+				return (self,) + a
 		for child in self.children:
 			return child.GetChildWithArea(name)
 		return None
