@@ -171,8 +171,6 @@ class PASTE_UNDER(_CommandBase):
 	help = 'Paste copied/cut node under selected node'
 ##class EDIT_TVIEW(_CommandBase):
 ##	help = 'Edit this node in the temporal view.'
-class EDIT_IN_SOURCEVIEW(_CommandBase):
-	help = 'Edit this node in the source view.'
 class NEW_BEFORE(_CommandBase):
 	help = 'Create new node before selected node'
 class NEW_BEFORE_IMAGE(_CommandBase):
