@@ -2060,8 +2060,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__tops[top]['height'] = None
 
 		# default values
-		open = 'always'
-		close = 'never'
+		open = 'onStart'
+		close = 'onRequest'
 		width = 640
 		height = 480
 		for attr,val in self.__tops[top].items():
@@ -3285,22 +3285,22 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# define some default values,
 		# and keep the original attributes for background value !!!. These two attributes are
 		# used in CreateLayout method
-		attrdict = {'close':'never',
-					'open':'always',
-					'attrs':attributes}
+		attrdict = {'close':'onRequest',
+			    'open':'onStart',
+			    'attrs':attributes}
 
 		for attr,val in attributes.items():
 			if attr == 'id':
 				self.__tops[val] = attrdict
 			elif attr == 'open':
-				if val not in ('always', 'whenActive'):
+				if val not in ('onStart', 'whenActive'):
 					self.syntax_error('illegal open attribute value')
-					val = 'always'
+					val = 'onStart'
 				attrdict[attr] = val
 			elif attr == 'close':
-				if val not in ('never', 'whenNotActive'):
+				if val not in ('onRequest', 'whenNotActive'):
 					self.syntax_error('illegal close attribute value')
-					val = 'never'					
+					val = 'onRequest'					
 				attrdict[attr] = val
 			elif attr in ('height', 'width'):
 				if val[-2:] == 'px':

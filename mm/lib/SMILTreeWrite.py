@@ -1677,11 +1677,11 @@ class SMILWriter(SMIL):
 				# write only not default value
 				if ch.has_key('open'):
 					val = ch['open']
-					if val != 'always':
+					if val != 'onStart':
 						attrlist.append(('open', val))
 				if ch.has_key('close'):
 					val = ch['close']
-					if val != 'never':
+					if val != 'onRequest':
 						attrlist.append(('close', val))
 
 			if not settings.activeFullSmilCss:		

@@ -365,7 +365,7 @@ class Channel:
 			else:
 				# case for the top window
 				if self._attrdict.has_key('close'):
-					if self._attrdict['close'] == 'never':
+					if self._attrdict['close'] == 'onRequest':
 						return
 
 		self._want_shown = 0
