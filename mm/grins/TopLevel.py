@@ -198,7 +198,7 @@ class TopLevel:
     </layout>
   </head>
   <body>
-    <text src="%s" region="html"/>
+    <text dur="indefinite" src="%s" region="html"/>
   </body>
 </smil>
 ''' % self.filename, self.filename)
