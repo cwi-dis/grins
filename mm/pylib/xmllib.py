@@ -1,13 +1,5 @@
 # A parser for XML, using the derived class as static DTD.
 
-# XXX This only supports those XML features used by HTML.
-
-# XXX There should be a way to distinguish between PCDATA (parsed
-# character data -- the normal case), RCDATA (replaceable character
-# data -- only char and entity references and end tags are special)
-# and CDATA (character data -- only end tags are special).
-
-
 import regex
 import string
 
@@ -326,9 +318,9 @@ class XMLParser:
 	    attrs.append((attrname, attrvalue))
 	    if attrdict.has_key(attrname):
 		self.syntax_error(self.lineno, 'attribute specified twice')
-	    attrdict[attrname] = attrvalue
+	    attrdict[attrname] = self.translate_references(attrvalue)
 	    k = k + l
-	self.finish_starttag(tag, attrs)
+	self.finish_starttag(tag, attrdict)
 	if starttagend.match(rawdata, k) > 0 and starttagend.group(1) == '/':
 	    self.finish_endtag(tag)
 	return j+1
