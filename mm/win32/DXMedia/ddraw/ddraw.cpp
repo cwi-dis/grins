@@ -838,26 +838,23 @@ HRESULT BltBlend8(IDirectDrawSurface *surf,
 		for(DWORD col=0;col<w;col++)
 			{
 			if(usingtable)
-				*surfpixel = blendTable[*surfpixel1][*surfpixel2];
+				*surfpixel++ = blendTable[*surfpixel1++][*surfpixel2++];
 			else
 				{
 				BYTE r1 = paletteEntry[*surfpixel1].peRed;
 				BYTE g1 = paletteEntry[*surfpixel1].peGreen;
-				BYTE b1 = paletteEntry[*surfpixel1].peBlue;
+				BYTE b1 = paletteEntry[*surfpixel1++].peBlue;
 
 				BYTE r2 = paletteEntry[*surfpixel2].peRed;
 				BYTE g2 = paletteEntry[*surfpixel2].peGreen;
-				BYTE b2 = paletteEntry[*surfpixel2].peBlue;
+				BYTE b2 = paletteEntry[*surfpixel2++].peBlue;
 
 				int r = blend(weight, r1, r2);
 				int g = blend(weight, g1, g2);
 				int b = blend(weight, b1, b2);
 			
-				*surfpixel = FindColour(r,g,b);
+				*surfpixel++ = FindColour(r,g,b);
 				}
-			surfpixel++;
-			surfpixel1++;
-			surfpixel2++;
 			}
 		}
 	surf->Unlock(0);
@@ -895,21 +892,17 @@ HRESULT BltBlend16(IDirectDrawSurface *surf,
 			// apply transform on pixel: *surfpixel
 			WORD r1 = (*surfpixel1 & (WORD)desc1.ddpfPixelFormat.dwRBitMask) >> loREDbit;
 			WORD g1 = (*surfpixel1 & (WORD)desc1.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
-			WORD b1 = (*surfpixel1 & (WORD)desc1.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+			WORD b1 = (*surfpixel1++ & (WORD)desc1.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
 			
 			WORD r2 = (*surfpixel2 & (WORD)desc2.ddpfPixelFormat.dwRBitMask) >> loREDbit;
 			WORD g2 = (*surfpixel2 & (WORD)desc2.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
-			WORD b2 = (*surfpixel2 & (WORD)desc2.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+			WORD b2 = (*surfpixel2++ & (WORD)desc2.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
 
 			WORD r = (WORD)blend(weight, r1, r2);
 			WORD g = (WORD)blend(weight, g1, g2);
 			WORD b = (WORD)blend(weight, b1, b2);
 			
-			*surfpixel = (WORD)(WORD (r << loREDbit) | WORD(g << loGREENbit) | WORD(b << loBLUEbit)) ;
-				
-			surfpixel++;
-			surfpixel1++;
-			surfpixel2++;
+			*surfpixel++ = WORD((r << loREDbit) | (g << loGREENbit) | (b << loBLUEbit)) ;
 			}
 		}
 	surf->Unlock(0);
@@ -948,25 +941,17 @@ HRESULT BltBlend24(IDirectDrawSurface *surf,
 			// apply transform on pixel: *surfpixel
 			DWORD r1 = (*(DWORD*)surfpixel1 & desc1.ddpfPixelFormat.dwRBitMask) >> loREDbit;
 			DWORD g1 = (*(DWORD*)surfpixel1 & desc1.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
-			DWORD b1 = (*(DWORD*)surfpixel1 & desc1.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+			DWORD b1 = (*(DWORD*)surfpixel1++ & desc1.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
 			
 			DWORD r2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwRBitMask) >> loREDbit;
 			DWORD g2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
-			DWORD b2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+			DWORD b2 = (*(DWORD*)surfpixel2++ & desc2.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
 
 			DWORD r = (DWORD)blend(weight, r1, r2);
 			DWORD g = (DWORD)blend(weight, g1, g2);
 			DWORD b = (DWORD)blend(weight, b1, b2);
-			
-			r = r << loREDbit;
-			g = g << loGREENbit;
-			b = b << loBLUEbit;
-			DWORD* data=(DWORD*)surfpixel;
-			*data = r|g|b;
-			
-			surfpixel++;
-			surfpixel1++;
-			surfpixel2++;
+
+			*(DWORD*)surfpixel++ = (r << loREDbit) | (g << loGREENbit) | (b << loBLUEbit);
 			}
 		}
 	surf->Unlock(0);
@@ -1003,25 +988,17 @@ HRESULT BltBlend32(IDirectDrawSurface *surf,
 			{
 			DWORD r1 = (*(DWORD*)surfpixel1 & desc1.ddpfPixelFormat.dwRBitMask) >> loREDbit;
 			DWORD g1 = (*(DWORD*)surfpixel1 & desc1.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
-			DWORD b1 = (*(DWORD*)surfpixel1 & desc1.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+			DWORD b1 = (*(DWORD*)surfpixel1++ & desc1.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
 			
 			DWORD r2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwRBitMask) >> loREDbit;
 			DWORD g2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
-			DWORD b2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+			DWORD b2 = (*(DWORD*)surfpixel2++ & desc2.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
 
 			DWORD r = (DWORD)blend(weight, r1, r2);
 			DWORD g = (DWORD)blend(weight, g1, g2);
 			DWORD b = (DWORD)blend(weight, b1, b2);
-			
-			r = r << loREDbit;
-			g = g << loGREENbit;
-			b = b << loBLUEbit;
-			DWORD* data = (DWORD*)surfpixel;
-			*data = r|g|b;
-			
-			surfpixel++;
-			surfpixel1++;
-			surfpixel2++;
+
+			*(DWORD*)surfpixel++ = (r << loREDbit) | (g << loGREENbit) | (b << loBLUEbit);
 			}
 		}
 	surf->Unlock(0);
@@ -1509,18 +1486,11 @@ DirectDrawSurface_Blt_RGB24_On_RGB8(DirectDrawSurfaceObject *self, PyObject *arg
 	return Py_None;	
 	}
 
-__inline void YCrCb2RGB1(int Y, int Cr, int Cb, BYTE& r, BYTE& g, BYTE& b){
-	int yf = 1164*(Y - 16);
-	int rf = yf + 1596*(Cr - 128);
-	int gf = yf - 813*(Cr - 128) - 391*(Cb - 128);
-	int bf = yf + 2018*(Cb - 128);
-	r = BYTE( ((rf<=0)?0:(rf>=255000?255000:rf))/1000 );
-	g = BYTE( ((gf<=0)?0:(gf>=255000?255000:gf))/1000 );
-	b = BYTE( ((bf<=0)?0:(bf>=255000?255000:bf))/1000 );
-}
-
 
 // optimized implementation of YCrCb2RGB
+const int yuvScaleBits = 10;
+const int yuvScale = (int)pow(2,yuvScaleBits);
+const int yuvScaledMax = yuvScale*255;
 static int y1164[256];
 static int cr1596[256];
 static int cr813[256];
@@ -1528,15 +1498,14 @@ static int cb391[256];
 static int cb2018[256];
 
 static void buildYUV420Tables(){
-	double sf = 1024.0;
-	double f1164 = 1.164*sf;
-	double f1596 = 1.596*sf;
-	double f813 =  0.813*sf;
-	double f391 =  0.391*sf;
-	double f2018 = 2.018*sf;
+	double f1164 = 1.164*yuvScale;
+	double f1596 = 1.596*yuvScale;
+	double f813 =  0.813*yuvScale;
+	double f391 =  0.391*yuvScale;
+	double f2018 = 2.018*yuvScale;
 	for(int i=0;i<256;i++){
 		y1164[i] = int(f1164*(i - 16)+0.5); 
-		cr1596[i] =int(f1596*(i - 128+0.5));
+		cr1596[i] =int(f1596*(i - 128)+0.5);
 		cr813[i] = int(f813*(i - 128)+0.5);
 		cb391[i] = int(f391*(i - 128)+0.5);
 		cb2018[i] = int(f2018*(i - 128)+0.5);
@@ -1549,9 +1518,9 @@ __inline void YCrCb2RGB(int Y, int Cr, int Cb, BYTE& r, BYTE& g, BYTE& b){
 	rf += cr1596[Cr];
 	gf -= cr813[Cr] + cb391[Cb];
 	bf += cb2018[Cb];
-	r = BYTE( ((rf<=0)?0:(rf>=261120?261120:rf)) >> 10 );
-	g = BYTE( ((gf<=0)?0:(gf>=261120?261120:gf)) >> 10 );
-	b = BYTE( ((bf<=0)?0:(bf>=261120?261120:bf)) >> 10 );
+	r = BYTE( ((rf<=0)?0:(rf>=yuvScaledMax?yuvScaledMax:rf)) >> yuvScaleBits );
+	g = BYTE( ((gf<=0)?0:(gf>=yuvScaledMax?yuvScaledMax:gf)) >> yuvScaleBits );
+	b = BYTE( ((bf<=0)?0:(bf>=yuvScaledMax?yuvScaledMax:bf)) >> yuvScaleBits );
 }
 
 static char DirectDrawSurface_Blt_YUV420_On_RGB32__doc__[] =
