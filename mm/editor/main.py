@@ -141,6 +141,8 @@ def main():
 ##		SoundChannel.restore()
 ##		ImageChannel.cleanup()
 		#
+		import windowinterface
+		windowinterface.close()
 		if stats:
 			import MMNode
 			MMNode._prstats()
