@@ -1706,8 +1706,8 @@ class RealWndCtrl(components.WndCtrl):
 
 
 #################################
-
 class PreviewPage(AttrPage):
+	dragaccept = 0
 	def __init__(self,form,renderersig='null',aname='file'):
 		AttrPage.__init__(self,form)
 		self._prevrc=(20,20,100,100)
@@ -1734,6 +1734,9 @@ class PreviewPage(AttrPage):
 
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
+		if PreviewPage.dragaccept:
+			self.DragAcceptFiles(1)
+			self.HookMessage(self.onDropFiles,win32con.WM_DROPFILES)
 		if self._renderer.isstatic():
 			if self._renderer.needswindow():
 				self.setRendererRc()
@@ -1741,6 +1744,7 @@ class PreviewPage(AttrPage):
 			rurl=string.strip(c.getvalue())
 			self._renderer.load(rurl)
 			self._armed=1
+		
 
 	def setRendererRc(self):
 		preview=RealWndCtrl(self,grinsRC.IDC_PREVIEW)
@@ -1827,6 +1831,22 @@ class PreviewPage(AttrPage):
 				c.setstate('stop')
 			else:
 				self.settimer()
+
+	# response to drop files
+	def onDropFiles(self,params):
+		ctrl=self.getctrl(self._aname)
+		if not self._renderer.isstatic():
+			self.canceltimer()
+			self.OnStop()
+			ctrl.setstate('stop')
+		msg=win32mu.Win32Msg(params)	
+		hDrop=msg._wParam
+		inclient,point=Sdk.DragQueryPoint(hDrop)
+		if inclient and hasattr(ctrl._attr,'setpathname'):
+			filename=win32api.DragQueryFile(hDrop,0)
+			ctrl._attr.setpathname(filename)
+		win32api.DragFinish(hDrop)
+
 
 class ImagePreviewPage(PreviewPage):
 	def __init__(self,form):
