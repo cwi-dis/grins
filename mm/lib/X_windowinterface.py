@@ -1,5 +1,6 @@
 import Xlib, Xt, Xm, X, Xmd, XEvent, Xtdefs, Xcursorfont
 from EVENTS import *
+from types import *
 import time
 
 error = 'windowinterface.error'
@@ -26,8 +27,8 @@ _watchcursor = 0
 _channelcursor = 0
 _linkcursor = 0
 
-_image_cache = {}			# cache of prepared images
-_cache_full = 0				# 1 if we shouldn't cache more images
+_image_cache = {}		# cache of prepared images
+_cache_full = FALSE		# TRUE if we shouldn't cache more images
 _image_size_cache = {}
 _cm_cache = {}
 
@@ -85,7 +86,7 @@ def _create_menu(menu, list, acc = None):
 			label, callback = entry
 		else:
 			accelerator, label, callback = entry
-		if type(callback) is type([]):
+		if type(callback) is ListType:
 			button = menu.CreateManagedWidget(
 				'submenuLabel', Xm.CascadeButtonGadget, {})
 			button.labelString = label
@@ -93,11 +94,11 @@ def _create_menu(menu, list, acc = None):
 			button.subMenuId = submenu
 			_create_menu(submenu, callback, acc)
 		else:
-			if type(callback) is not type(()):
+			if type(callback) is not TupleType:
 				callback = (callback, (label,))
 			attrs = {'labelString': label}
 			if accelerator:
-				if type(accelerator) is not type('') or \
+				if type(accelerator) is not StringType or \
 				   len(accelerator) != 1:
 					raise error, 'menu accelerator must be single character'
 				acc[accelerator] = callback
@@ -230,12 +231,12 @@ class _Toplevel:
 
 	def newwindow(self, x, y, w, h, title):
 		if debug: print 'Toplevel.newwindow'+`x, y, w, h, title`
-		window = _Window(self, x, y, w, h, title, 0)
+		window = _Window(self, x, y, w, h, title, FALSE)
 		return window
 
 	def newcmwindow(self, x, y, w, h, title):
 		if debug: print 'Toplevel.newcmwindow'+`x, y, w, h, title`
-		window = _Window(self, x, y, w, h, title, 1)
+		window = _Window(self, x, y, w, h, title, TRUE)
 		return window
 
 	def setcursor(self, cursor):
@@ -268,7 +269,7 @@ class _Window:
 		self._parent_window = parent
 		self._origpos = x, y
 		if toplevel._visual.c_class == X.TrueColor:
-			defcmap = 0
+			defcmap = FALSE
 		if defcmap:
 			self._colormap = toplevel._default_colormap
 			self._visual = toplevel._default_visual
@@ -341,7 +342,7 @@ class _Window:
 		self._xbgcolor = self._convert_color(self._bgcolor)
 		self._xfgcolor = self._convert_color(self._fgcolor)
 		self._subwindows = []
-		self._subwindows_closed = 0
+		self._subwindows_closed = FALSE
 		self._displaylists = []
 		self._active_display_list = None
 		self._redraw_func = None
@@ -466,7 +467,7 @@ class _Window:
 	def _close_subwins(self):
 		for win in self._subwindows:
 			win._close_win()
-		self._subwindows_closed = 1
+		self._subwindows_closed = TRUE
 
 	def _open_subwins(self):
 		if self.is_closed():
@@ -474,7 +475,7 @@ class _Window:
 		for win in self._subwindows:
 			if not win.is_closed():
 				win._open_win()
-		self._subwindows_closed = 0
+		self._subwindows_closed = FALSE
 
 	def _call_on_close(self, func):
 		if not func in self._closecallbacks:
@@ -595,14 +596,14 @@ class _Window:
 		enterevent(self, ResizeWindow, None)
 
 	def newwindow(self, *coordinates):
-		return self._new_window(coordinates, 0)
+		return self._new_window(coordinates, FALSE)
 
 	def newcmwindow(self, *coordinates):
-		return self._new_window(coordinates, 1)
+		return self._new_window(coordinates, TRUE)
 		
 	def _new_window(self, coordinates, defcmap):
 		if debug: print `self`+'._new_window'+`coordinates`
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, ('arg count mismatch', `coordinates`)
@@ -613,7 +614,7 @@ class _Window:
 
 	def fgcolor(self, *color):
 		if debug: print `self`+'.fgcolor()'
-		if len(color) == 1 and type(color[0]) == type(()):
+		if len(color) == 1 and type(color[0]) is TupleType:
 			color = color[0]
 		if len(color) != 3:
 			raise TypeError, 'arg count mismatch'
@@ -622,7 +623,7 @@ class _Window:
 
 	def bgcolor(self, *color):
 		if debug: print `self`+'.bgcolor()'
-		if len(color) == 1 and type(color[0]) == type(()):
+		if len(color) == 1 and type(color[0]) is TupleType:
 			color = color[0]
 		if len(color) != 3:
 			raise TypeError, 'arg count mismatch'
@@ -642,7 +643,7 @@ class _Window:
 		self._cursor = cursor
 
 	def newdisplaylist(self, *bgcolor):
-		if len(bgcolor) == 1 and type(bgcolor[0]) == type(()):
+		if len(bgcolor) == 1 and type(bgcolor[0]) is TupleType:
 			bgcolor = bgcolor[0]
 		if len(bgcolor) == 3:
 			pass
@@ -896,7 +897,7 @@ class _Window:
 			box = None
 		elif len(box) == 1:
 			box = box[0]
-			if type(box) != type(()) or len(box) != 4:
+			if type(box) is not TupleType or len(box) != 4:
 				raise TypeError, 'bad arguments'
 		elif len(box) != 4:
 			raise TypeError, 'bad arguments'
@@ -1068,10 +1069,10 @@ class _Window:
 		ny = x * sin + y * cos
 		# test
 		if ny > 0 or ny < -ARR_LENGTH:
-			return 0
+			return FALSE
 		if nx > -ARR_SLANT * ny or nx < ARR_SLANT * ny:
-			return 0
-		return 1
+			return FALSE
+		return TRUE
 
 	def destroy_menu(self):
 		if self._menu:
@@ -1104,7 +1105,7 @@ class _DisplayList:
 	def __init__(self, window, bgcolor):
 		if debug: print '_DisplayList.init('+`window`+') --> '+`self`
 		self._window = window
-		self._rendered = 0
+		self._rendered = FALSE
 		# color support
 		self._bgcolor = bgcolor
 		self._xbgcolor = window._convert_color(bgcolor)
@@ -1161,11 +1162,11 @@ class _DisplayList:
 		if debug: print `self`+'.render()'
 		if self.is_closed():
 			raise error, 'displaylist already closed'
-		self._rendered = 1
+		self._rendered = TRUE
 		w = self._window
 		if w._active_display_list:
 			for but in w._active_display_list._buttonlist:
-				but._highlighted = 0
+				but._highlighted = FALSE
 		w._active_display_list = self
 		toplevel._win_lock.acquire()
 		self._pixmap.CopyArea(w._form, self._gc, 0, 0, w._width, w._height, 0, 0)
@@ -1207,7 +1208,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(color) == 1 and type(color[0]) == type(()):
+		if len(color) == 1 and type(color[0]) is TupleType:
 			color = color[0]
 		if len(color) != 3:
 			raise TypeError, 'arg count mismatch'
@@ -1225,7 +1226,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1324,7 +1325,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1341,7 +1342,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1365,7 +1366,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1411,7 +1412,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1433,7 +1434,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1462,7 +1463,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1576,10 +1577,10 @@ class _DisplayList:
 		strlist = string.splitfields(str, '\n')
 		nlines = len(strlist)
 		fontobj = findfont(fontname, 100)
-		firsttime = 1
+		firsttime = TRUE
 		height = fontobj.fontheight() * _screenheight / _mscreenheight
 		while firsttime or height > window._height*mfac:
-			firsttime = 0
+			firsttime = FALSE
 			ps = float(window._height*mfac*_mscreenheight*fontobj.pointsize())/\
 				  float(nlines*fontobj.fontheight()*_screenheight)
 			fontobj.close()
@@ -1714,7 +1715,7 @@ class _Button:
 		self._xhicolor = dispobj._xfgcolor
 		self._linewidth = dispobj._linewidth
 		self._hiwidth = self._linewidth
-		self._highlighted = 0
+		self._highlighted = FALSE
 		dispobj._buttonlist.append(self)
 		# if button color and highlight color are all equal to
 		# the background color then don't draw the box (and
@@ -1740,9 +1741,9 @@ class _Button:
 		# return 1 iff the given coordinates fall within the button
 		if (self._corners[0] <= x <= self._corners[2]) and \
 			  (self._corners[1] <= y <= self._corners[3]):
-			return 1
+			return TRUE
 		else:
-			return 0
+			return FALSE
 
 	def getwindow(self):
 		if self.is_closed():
@@ -1755,7 +1756,7 @@ class _Button:
 	def hicolor(self, *color):
 		if self.is_closed():
 			raise error, 'button already closed'
-		if len(color) == 1 and type(color[0]) == type(()):
+		if len(color) == 1 and type(color[0]) is TupleType:
 			color = color[0]
 		if len(color) != 3:
 			raise TypeError, 'arg count mismatch'
@@ -1784,7 +1785,7 @@ class _Button:
 		gc.background = window._xbgcolor
 		gc.foreground = window._xbgcolor
 		toplevel._win_lock.release()
-		self._highlighted = 1
+		self._highlighted = TRUE
 
 	def unhighlight(self):
 		if self.is_closed():
@@ -1793,13 +1794,13 @@ class _Button:
 		if dispobj._window._active_display_list != dispobj:
 			raise error, 'can only unhighlight rendered button'
 		if self._highlighted:
-			self._highlighted = 0
+			self._highlighted = FALSE
 			self._dispobj.render()
 
 class _Event:
 	def __init__(self):
 		self._queue = []
-		self._timeout_called = 0
+		self._timeout_called = FALSE
 		self._fdlist = {}
 		self._savefds = []
 		self._timers = []
@@ -1809,8 +1810,8 @@ class _Event:
 		self._select_dict = {}
 		self._timenow = time.time()
 		self._timerid = 0
-		self._modal = 0
-		self._looping = 0
+		self._modal = FALSE
+		self._looping = FALSE
 
 	def _checktime(self):
 		if self._modal:
@@ -1879,7 +1880,7 @@ class _Event:
 
 	def _timeout_callback(self, client_data, id):
 		if debug: print 'event._timeout_callback'
-		self._timeout_called = 1
+		self._timeout_called = TRUE
 
 	def _input_callback(self, client_data, fd, id):
 		if debug: print 'event._input_callback'
@@ -1898,14 +1899,14 @@ class _Event:
 		self._savefds = []
 		if timeout is not None and timeout > 0.001:
 			if debug: print '_getevent: timeout:',`timeout`
-			self._timeout_called = 0
+			self._timeout_called = FALSE
 			id = Xt.AddTimeOut(int(timeout * 1000),
 				  self._timeout_callback, None)
 		else:
 			if debug: print '_getevent: no timeout'
-			self._timeout_called = 1
+			self._timeout_called = TRUE
 		qtest = Xt.Pending()
-		while 1:
+		while TRUE:
 			# get all pending events
 			while qtest:
 				toplevel._win_lock.release()
@@ -1917,14 +1918,14 @@ class _Event:
 				if not self._timeout_called:
 					Xt.RemoveTimeOut(id)
 				toplevel._win_lock.release()
-				return 1
+				return TRUE
 			# if we shouldn't block, return
 			if timeout is not None:
 				if self._timeout_called:
 					toplevel._win_lock.release()
-					return 0
+					return FALSE
 			# block on next iteration
-			qtest = 1
+			qtest = TRUE
 
 	def _trycallback(self):
 		if not self._queue:
@@ -1933,32 +1934,32 @@ class _Event:
 		if self._modal:
 			if event != ResizeWindow:
 				if debug: print 'event._trycallback: modal, no resize'
-				return 0
+				return FALSE
 		if event == FileEvent:
 			if self._select_dict.has_key(value):
 				if debug: print 'event._trycallback: FileEvent: callback'
 				del self._queue[0]
 				func, arg = self._select_dict[value]
 				apply(func, arg)
-				return 1
+				return TRUE
 			if debug: print 'event._trycallback: FileEvent: no callback'
 		if window and window.is_closed():
-			return 0
+			return FALSE
 		for w in [window, None]:
-			while 1:
+			while TRUE:
 				for key in [(w, event), (w, None)]:
 					if self._windows.has_key(key):
 						del self._queue[0]
 						func, arg = self._windows[key]
 						apply(func, (arg, window,
 							  event, value))
-						return 1
+						return TRUE
 				if not w:
 					break
 				w = w._parent_window
 				if w == toplevel:
 					break
-		return 0
+		return FALSE
 
 	def _loop(self):
 		while self._queue:
@@ -1966,17 +1967,17 @@ class _Event:
 				del self._queue[0]
 
 	def testevent(self):
-		while 1:
+		while TRUE:
 			self._checktime()
 			if self._getevent(0):
 				if not self._trycallback():
 					# get here if the first event
 					# in the queue does not cause
 					# a callback
-					return 1
+					return TRUE
 				continue
 			# get here only when there are no pending events
-			return 0
+			return FALSE
 
 	def peekevent(self):
 		if self.testevent():
@@ -1999,7 +2000,7 @@ class _Event:
 		self.waitevent_timeout(None)
 
 	def readevent(self):
-		while 1:
+		while TRUE:
 			if self.testevent():
 				return self.readevent_timeout(None)
 			modal = self._modal
@@ -2022,7 +2023,7 @@ class _Event:
 
 	def setfd(self, fd):
 		if debug: print 'setfd',`fd`
-		if type(fd) <> type(1):
+		if type(fd) is not IntType:
 			fd = fd.fileno()
 		self._fdlist[fd] = Xt.AddInput(fd, Xtdefs.XtInputReadMask,
 			  self._input_callback, None)
@@ -2076,7 +2077,7 @@ class _Event:
 				self.register(win, event, None, None)
 
 	def select_setcallback(self, fd, cb, arg):
-		if type(fd) <> type(1):
+		if type(fd) is not IntType:
 			fd = fd.fileno()
 		if cb is None:
 			self._select_fdlist.remove(fd)
@@ -2089,13 +2090,13 @@ class _Event:
 		self.setfd(fd)
 
 	def startmodal(self, window):
-		self._modal = 1
+		self._modal = TRUE
 
 	def endmodal(self):
-		self._modal = 0
+		self._modal = FALSE
 
 	def mainloop(self):
-		self._looping = 1
+		self._looping = TRUE
 		t = 0
 		for time, arg, tid in self._timers:
 			time = time + t
@@ -2325,23 +2326,23 @@ def canceltimer(id):
 	event.canceltimer(id)
 
 def showmessage(text):
-	dummy = Dialog(None, text, 1, 0, ['Done'])
+	dummy = Dialog(None, text, TRUE, FALSE, ['Done'])
 
 _dialog_end = '_dialog_end'		# used for breaking out of a loop
 
 class _Question:
 	def __init__(self, text):
-		self.looping = 0
+		self.looping = FALSE
 		self.answer = None
-		self.dialog = Dialog(None, text, 1, 0,
-				[('Yes', (self.callback, (1,))),
-				 ('No', (self.callback, (0,)))])
+		self.dialog = Dialog(None, text, TRUE, FALSE,
+				[('Yes', (self.callback, (TRUE,))),
+				 ('No', (self.callback, (FALSE,)))])
 
 	def run(self):
 		try:
 			event.startmodal(None)
 			try:
-				self.looping = 1
+				self.looping = TRUE
 				while self.answer is None:
 					dummy = event.readevent()
 			except _dialog_end:
@@ -2361,19 +2362,19 @@ def showquestion(text):
 
 class _MultChoice:
 	def __init__(self, prompt, msg_list, defindex):
-		self.looping = 0
+		self.looping = FALSE
 		self.answer = None
 		self.msg_list = msg_list
 		list = []
 		for msg in msg_list:
 			list.append(msg, (self.callback, (msg,)))
-		self.dialog = Dialog(None, prompt, 1, 0, list)
+		self.dialog = Dialog(None, prompt, TRUE, FALSE, list)
 
 	def run(self):
 		try:
 			event.startmodal(None)
 			try:
-				self.looping = 1
+				self.looping = TRUE
 				while self.answer is None:
 					dummy = event.readevent()
 			except _dialog_end:
@@ -2458,14 +2459,14 @@ class FileDialog:
 		return self._form is None
 
 	def _cancel_callback(self, *rest):
-		must_close = 1
+		must_close = TRUE
 		try:
 			if self.cb_cancel:
 				ret = self.cb_cancel()
 				if ret:
-					if type(ret) == type(''):
+					if type(ret) is StringType:
 						showmessage(ret)
-					must_close = 0
+					must_close = FALSE
 					return
 		finally:
 			if must_close:
@@ -2495,7 +2496,7 @@ class FileDialog:
 		if self.cb_ok:
 			ret = self.cb_ok(filename)
 			if ret:
-				if type(ret) == type(''):
+				if type(ret) is StringType:
 					showmessage(ret)
 				return
 		self.close()
@@ -2564,7 +2565,7 @@ class AttrDialog:
 				 'visual': toplevel._default_visual,
 				 'depth': toplevel._default_visual.depth})
 		self._form = self._shell.CreateManagedWidget('attrForm',
-						Xm.Form, {'allowOverlap': 0})
+					Xm.Form, {'allowOverlap': FALSE})
 		attrs = {'leftAttachment': Xmd.ATTACH_FORM,
 			 'rightAttachment': Xmd.ATTACH_FORM,
 			 'numColumns': len(list),
@@ -2672,17 +2673,17 @@ class AttrDialog:
 			try:
 				value = w.getvalue()
 			except _apply_error:
-				return 0
+				return FALSE
 			# only return changed values
 			if value != w.item.getcurrent():
 				try:
 					dict[name] = w.item.parsevalue(value)
 				except:
 					showmessage('%s: parsing value failed' % name)
-					return 0
+					return FALSE
 		if self._cb_apply:
 			self._cb_apply(dict)
-		return 1		# success
+		return TRUE		# success
 
 	def _buttonhelp(self, widget, client_data, call_data):
 		showmessage(client_data)
@@ -2704,7 +2705,8 @@ class _C:
 		self.label = label
 		self.parent = parent
 		self.item = item
-		self.form = parent.CreateForm('attrForm', {'allowOverlap': 0})
+		self.form = parent.CreateForm('attrForm',
+					      {'allowOverlap': FALSE})
 		self.form.ManageChild()
 		self.button = self.form.CreateManagedWidget('attrResetButton',
 					Xm.PushButtonGadget,
@@ -2767,14 +2769,14 @@ class AttrOption(_C):
 		self.new_value = value
 
 	def _newmenu(self):
-		different = 0
+		different = FALSE
 		list = self.item.choices()
 		if len(list) != len(self._list):
-			different = 1
+			different = TRUE
 		else:
 			for i in range(len(list)):
 				if list[i] != self._list[i]:
-					different = 1
+					different = TRUE
 					break
 		if not different:
 			return
@@ -2906,8 +2908,6 @@ class AttrFile(_C):
 				filename = '.'
 		self.widget.value = filename
 
-from types import *
-
 [TOP, CENTER, BOTTOM] = range(3)
 
 class _MenuSupport:
@@ -2948,7 +2948,7 @@ class _MenuSupport:
 
 class _Widget(_MenuSupport):
 	def __init__(self, widget):
-		self._showing = 0
+		self._showing = FALSE
 		self._form = widget
 		self.show()
 		_MenuSupport.__init__(self)
@@ -2973,11 +2973,11 @@ class _Widget(_MenuSupport):
 
 	def show(self):
 		self._form.ManageChild()
-		self._showing = 1
+		self._showing = TRUE
 
 	def hide(self):
 		self._form.UnmanageChild()
-		self._showing = 0
+		self._showing = FALSE
 
 	def is_showing(self):
 		return self._showing
@@ -3130,7 +3130,14 @@ class _List:
 		for i in range(len(itemlist)):
 			list.ListAddItem(itemlist[i], i + 1)
 		self._itemlist = itemlist
-		if sel_cb:
+		if type(sel_cb) is ListType:
+			if len(sel_cb) >= 1 and sel_cb[0]:
+				list.AddCallback('singleSelectionCallback',
+						 self._callback, sel_cb[0])
+			if len(sel_cb) >= 2 and sel_cb[1]:
+				list.AddCallback('defaultActionCallback',
+						 self._callback2, sel_cb[1])
+		elif sel_cb:
 			list.AddCallback('singleSelectionCallback',
 					 self._callback, sel_cb)
 
@@ -3190,12 +3197,22 @@ class _List:
 			toppos = pos - vis / 2 + 1
 			if toppos + vis > len(self._itemlist):
 				toppos = len(self._itemlist) - vis + 1
+			if toppos <= 0:
+				toppos = 1
 			self._list.ListSetPos(toppos)
 		else:
 			raise error, 'bad argument for scrolllist'
 			
 
 	def _callback(self, w, (func, arg), call_data):
+		apply(func, arg)
+
+	def _callback2(self, w, (func, arg), call_data):
+		pos = self.getselected()
+		if pos is None:
+			pos = self._list.ListGetKbdItemPos()
+			if pos:
+				self._list.ListSelectPos(pos, FALSE)
 		apply(func, arg)
 
 class Selection(_Widget, _List):
@@ -3251,6 +3268,10 @@ class List(_Widget, _List):
 	def __init__(self, parent, listprompt, itemlist, sel_cb, options = {}):
 		attrs = {'resizePolicy': parent.resizePolicy}
 		self._attachments(attrs, options)
+		try:
+			rows = options['rows']
+		except KeyError:
+			rows = 10
 		if listprompt is not None:
 			form = parent._form.CreateManagedWidget(
 				'windowListForm', Xm.Form, attrs)
@@ -3261,24 +3282,32 @@ class List(_Widget, _List):
 					 'rightAttachment': Xmd.ATTACH_FORM})
 			self._label = label
 			label.labelString = listprompt
-			list = form.CreateScrolledList('windowList',
-					{'topAttachment': Xmd.ATTACH_WIDGET,
-					 'topWidget': label,
-					 'leftAttachment': Xmd.ATTACH_FORM,
-					 'rightAttachment': Xmd.ATTACH_FORM,
-					 'bottomAttachment': Xmd.ATTACH_FORM,
-					 'visibleItemCount': 10,
-					 'width': 200,
-					 'selectionPolicy': Xmd.SINGLE_SELECT,
-					 'listSizePolicy': Xmd.CONSTANT})
+			attrs = {'topAttachment': Xmd.ATTACH_WIDGET,
+				 'topWidget': label,
+				 'leftAttachment': Xmd.ATTACH_FORM,
+				 'rightAttachment': Xmd.ATTACH_FORM,
+				 'bottomAttachment': Xmd.ATTACH_FORM,
+				 'visibleItemCount': rows,
+				 'width': 200,
+				 'selectionPolicy': Xmd.SINGLE_SELECT}
+			if parent.resizePolicy == Xmd.RESIZE_ANY:
+				attrs['listSizePolicy'] = \
+							Xmd.RESIZE_IF_POSSIBLE
+			else:
+				attrs['listSizePolicy'] = Xmd.CONSTANT
+			list = form.CreateScrolledList('windowList', attrs)
 			list.ManageChild()
 			widget = form
 			self._text = listprompt
 		else:
-			attrs['visibleItemCount'] = 10
-			attrs['width'] = 200
+			attrs['visibleItemCount'] = rows
 			attrs['selectionPolicy'] = Xmd.SINGLE_SELECT
-			attrs['listSizePolicy'] = Xmd.CONSTANT
+			if parent.resizePolicy == Xmd.RESIZE_ANY:
+				attrs['listSizePolicy'] = \
+							Xmd.RESIZE_IF_POSSIBLE
+			else:
+				attrs['listSizePolicy'] = Xmd.CONSTANT
+			attrs['width'] = 200
 			list = parent._form.CreateScrolledList('windowList',
 						     attrs)
 			widget = list
@@ -3294,12 +3323,15 @@ class List(_Widget, _List):
 		_Widget.close(self)
 
 	def setlabel(self, label):
-		if not hasattr(self, '_label'):
+		try:
+			self._label.labelString = label
+		except AttributeError:
 			raise error, 'List created without label'
-		self._label.labelString = label
+		else:
+			self._text = label
 
 class TextInput(_Widget):
-	def __init__(self, parent, prompt, inittext, cb, options = {}):
+	def __init__(self, parent, prompt, inittext, chcb, accb, options = {}):
 		attrs = {}
 		self._attachments(attrs, options)
 		if prompt is not None:
@@ -3330,9 +3362,12 @@ class TextInput(_Widget):
 		text.ManageChild()
 		if not widget:
 			widget = text
-		if cb:
+		if chcb:
 			text.AddCallback('valueChangedCallback',
-					 self._callback, cb)
+					 self._callback, chcb)
+		if accb:
+			text.AddCallback('activateCallback',
+					 self._callback, accb)
 		self._text = text
 		_Widget.__init__(self, widget)
 
@@ -3371,11 +3406,11 @@ class TextEdit(_Widget):
 			attrs['cursorPositionVisible'] = FALSE
 		self._attachments(attrs, options)
 		text = parent._form.CreateScrolledText('windowText', attrs)
-		text.value = inittext
 		if cb:
 			text.AddCallback('activateCallback', self._callback,
 					 cb)
 		_Widget.__init__(self, text)
+		self.settext(inittext)
 
 	def __repr__(self):
 		return '<TextEdit instance at %x>' % id(self)
@@ -3413,12 +3448,12 @@ class Separator(_Widget):
 
 class ButtonRow(_Widget):
 	def __init__(self, parent, buttonlist, options = {}):
+		attrs = {'entryAlignment': Xmd.ALIGNMENT_CENTER,
+			 'traversalOn': FALSE}
 		try:
 			vertical = options['vertical']
 		except KeyError:
-			vertical = 1
-		attrs = {'entryAlignment': Xmd.ALIGNMENT_CENTER,
-			 'traversalOn': FALSE}
+			vertical = TRUE
 		if not vertical:
 			attrs['orientation'] = Xmd.HORIZONTAL
 			attrs['packing'] = Xmd.PACK_COLUMN
@@ -3503,7 +3538,7 @@ class Slider(_Widget):
 		try:
 			vertical = options['vertical']
 		except KeyError:
-			vertical = 0
+			vertical = FALSE
 		if vertical:
 			orientation = Xmd.VERTICAL
 		else:
@@ -3584,7 +3619,7 @@ class Slider(_Widget):
 class _WindowHelpers:
 	def __init__(self):
 		self._fixkids = []
-		self._fixed = 0
+		self._fixed = FALSE
 
 	def close(self):
 		self._fixkids = None
@@ -3603,8 +3638,8 @@ class _WindowHelpers:
 				 sel_cb, options)
 	def List(self, listprompt, itemlist, sel_cb, options = {}):
 		return List(self, listprompt, itemlist, sel_cb, options)
-	def TextInput(self, prompt, inittext, cb, options = {}):
-		return TextInput(self, prompt, inittext, cb, options)
+	def TextInput(self, prompt, inittext, chcb, accb, options = {}):
+		return TextInput(self, prompt, inittext, chcb, accb, options)
 	def TextEdit(self, inittext, cb, options = {}):
 		return TextEdit(self, inittext, cb, options)
 	def Separator(self, options = {}):
@@ -3612,7 +3647,8 @@ class _WindowHelpers:
 	def ButtonRow(self, buttonlist, options = {}):
 		return ButtonRow(self, buttonlist, options)
 	def Slider(self, prompt, minimum, initial, maximum, cb, options = {}):
-		return Slider(self, prompt, minimum, initial, maximum, cb, options)
+		return Slider(self, prompt, minimum, initial, maximum, cb,
+			      options)
 	def SubWindow(self, options = {}):
 		return SubWindow(self, options)
 	def AlternateSubWindow(self, options = {}):
@@ -3640,7 +3676,7 @@ class SubWindow(_Widget, _WindowHelpers):
 		for w in self._fixkids:
 			w.fix()
 		self._form.ManageChild()
-		self._fixed = 1
+		self._fixed = TRUE
 
 	def show(self):
 		_Widget.show(self)
@@ -3702,7 +3738,7 @@ class Window(_WindowHelpers, _MenuSupport):
 		try:
 			resizable = options['resizable']
 		except KeyError:
-			resizable = 0
+			resizable = FALSE
 		if not resizable:
 			self.resizePolicy = Xmd.RESIZE_NONE
 		else:
@@ -3710,7 +3746,7 @@ class Window(_WindowHelpers, _MenuSupport):
 		try:
 			grab = options['grab']
 		except KeyError:
-			grab = 0
+			grab = FALSE
 		if not title:
 			title = ''
 		self._title = title
@@ -3718,7 +3754,7 @@ class Window(_WindowHelpers, _MenuSupport):
 			  'colormap': toplevel._default_colormap,
 			  'visual': toplevel._default_visual,
 			  'depth': toplevel._default_visual.depth}
-		attrs = {'allowOverlap': 0,
+		attrs = {'allowOverlap': FALSE,
 			 'resizePolicy': self.resizePolicy}
 		if not resizable:
 			attrs['noResize'] = TRUE
@@ -3735,7 +3771,7 @@ class Window(_WindowHelpers, _MenuSupport):
 				'windowShell', Xt.ApplicationShell, wattrs)
 			self._form = self._shell.CreateManagedWidget(
 				'windowForm', Xm.Form, attrs)
-		self._showing = 0
+		self._showing = FALSE
 		_WindowHelpers.__init__(self)
 		_MenuSupport.__init__(self)
 
@@ -3781,7 +3817,7 @@ class Window(_WindowHelpers, _MenuSupport):
 			self._shell.RealizeWidget()
 		except AttributeError:
 			pass
-		self._fixed = 1
+		self._fixed = TRUE
 
 	def show(self):
 		if not self._fixed:
@@ -3790,7 +3826,7 @@ class Window(_WindowHelpers, _MenuSupport):
 			self._shell.Popup(0)
 		except AttributeError:
 			pass
-		self._showing = 1
+		self._showing = TRUE
 		for w in self._fixkids:
 			if w.is_showing():
 				w.show()
@@ -3803,7 +3839,7 @@ class Window(_WindowHelpers, _MenuSupport):
 			self._shell.Popdown()
 		except AttributeError:
 			pass
-		self._showing = 0
+		self._showing = FALSE
 
 	def is_showing(self):
 		return self._showing
@@ -3828,8 +3864,7 @@ class Window(_WindowHelpers, _MenuSupport):
 		pass
 
 def Dialog(title, prompt, grab, vertical, list):
-	options = {'grab': grab}
-	w = Window(title, options)
+	w = Window(title, {'grab': grab})
 	options = {'top': None, 'left': None, 'right': None}
 	if prompt:
 		l = w.Label(prompt, options)
