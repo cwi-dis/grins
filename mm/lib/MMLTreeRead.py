@@ -773,8 +773,8 @@ def _parsecounter(value, maybe_relative):
 			raise error, 'internal error'
 		return offset
 	if maybe_relative:
-		if value == 'start':
-			return 'start'
+		if value == 'begin':
+			return 'begin'
 		if value == 'end':
 			return 'end'
 	raise error, 'bogus presentation counter'
@@ -792,7 +792,7 @@ def _parsetime(xpointer):
 		name, value, delay = None, None, xpointer
 	if value is not None:
 		counter = _parsecounter(value, 1)
-		if counter == 'start':
+		if counter == 'begin':
 			counter = 0
 		elif counter == 'end':
 			counter = -1		# special value
