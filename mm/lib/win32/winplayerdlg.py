@@ -83,20 +83,42 @@ class PlayerDlgBar(window.Wnd):
 		self.hookCommands()
 		self.hide()
 	
+	def setAttributes(self, attributes):
+		parent = self._parent
+		visible = self.IsWindowVisible()
+		miniframe = None
+		try:
+			frame = self.GetParent().GetParent()
+		except:
+			return
+		if type(frame) == self._miniframetype:
+			miniframe = frame
+		if miniframe:
+			l, t, r, b = self.GetWindowRect()	
+		self.destroy()
+		window.Wnd.__init__(self, win32ui.CreateDialogBar())
+		self.createWindow(parent, attributes)
+		if visible:
+			self.ShowWindow(win32con.SW_SHOW)
+		if miniframe:
+			self.show((l,t))
+				
 	def OnFloatStatus(self, params):
 		self.eraseClose()
 			
 	def destroy(self):
 		self.DestroyWindow()
-		del self._parent
-		del self._resitems
-		del self._ctrls
+		self._parent = None
+		self._resitems = []
+		self._ctrls = {}
 
-	def show(self):
+	def show(self, pt=None):
 		self.ShowWindow(win32con.SW_SHOW)
 		self._parent.DockControlBar(self)
-		l, t, r, b = self._parent.GetMDIClient().GetWindowRect()
-		self._parent.FloatControlBar(self, (r-Preferences.FRAME_WIDTH+1, t+2) )
+		if pt is None:
+			l, t, r, b = self._parent.GetMDIClient().GetWindowRect()
+			pt = r-Preferences.FRAME_WIDTH+1, t+2
+		self._parent.FloatControlBar(self, pt)
 		self.eraseClose()
 
 	def hide(self):
@@ -106,7 +128,7 @@ class PlayerDlgBar(window.Wnd):
 	def eraseClose(self):
 		if not Preferences.ERASE_CLOSE: 
 			return
-		if not self.IsWindowVisible(): 
+		if not self._obj_ or not self.IsWindowVisible(): 
 			return
 		try:
 			miniframe = self.GetParent().GetParent()
@@ -212,4 +234,6 @@ class PlayerDlgBar(window.Wnd):
 				if ctrl._id == id:
 					if ctrl._cb:
 						ctrl._cb(ctrl.getcheck())
+					ATTRIBUTES = [ ('option','Bitrate'),('option', 'Language'),]
+					self.setAttributes(ATTRIBUTES)
 					break
