@@ -1796,9 +1796,9 @@ class AnimateElementParser:
 				elif attr=='top':
 					v = rc[1]
 				elif attr == 'right':
-					v = rc[0] + r[2]
+					v = rc[0] + rc[2]
 				elif attr == 'bottom':
-					v = rc[1] + r[3]
+					v = rc[1] + rc[3]
 				elif attr == 'width':
 					v = rc[2]
 				elif attr == 'height':
