@@ -63,6 +63,11 @@ class EditMgr:
 		self.focus_registry = []
 		self.focus = None, None
 		self.focus_busy = 0
+
+		self.playerstate_registry = []
+		self.playerstate = None, None
+		self.playerstate_busy = 0
+		
 	#
 	def destroy(self):
 		for x in self.registry[:]:
@@ -71,16 +76,20 @@ class EditMgr:
 	#
 	# Dependent client interface.
 	#
-	def register(self, x, want_focus=0):
+	def register(self, x, want_focus=0, want_playerstate=0):
 		self.registry.append(x)
 		if want_focus:
 			self.focus_registry.append(x)
-
-	def registerfirst(self, x, want_focus=0):
+		if want_playerstate:
+			self.playerstate_registry.append(x)
+			
+	def registerfirst(self, x, want_focus=0, want_playerstate=0):
 		self.registry.insert(0, x)
 		if want_focus:
 			self.focus_registry.insert(0, x)
-
+		if want_playerstate:
+			self.playerstate_registry.insert(0, x)
+	
 	def unregister(self, x):
 		self.registry.remove(x)
 		if x in self.focus_registry:
@@ -92,11 +101,12 @@ class EditMgr:
 	# Mutator client interface -- transactions.
 	# This calls the dependent clients' callbacks.
 	#
-	def transaction(self):
+	def transaction(self, type=None):
 		if self.busy: raise MMExc.AssertError, 'recursive transaction'
 		done = []
 		for x in self.registry[:]:
-			if not x.transaction():
+			method = x.transaction
+			if not x.transaction(type):
 				for x in done:
 					x.rollback()
 				return 0
@@ -106,7 +116,7 @@ class EditMgr:
 		self.busy = 1
 		return 1
 	#
-	def commit(self):
+	def commit(self, type=None):
 		if not self.busy: raise MMExc.AssertError, 'invalid commit'
 		import MMAttrdefs, Timing
 		MMAttrdefs.flushcache(self.root)
@@ -114,7 +124,7 @@ class EditMgr:
 		self.root.clear_infoicon()
 		self.root.ResetPlayability()
 		for x in self.registry[:]:
-			x.commit()
+			x.commit(type)
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
 	#
@@ -125,6 +135,25 @@ class EditMgr:
 			x.rollback()
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
+
+	#
+	# player state interface
+	#
+	def setplayerstate(self, nodetype, nodeobject):
+		if not features.SYNCHRONIZE_PLAYERSTATE in features.feature_set:
+			return		
+		if (nodetype, nodeobject) == self.playerstate:
+			return
+		if self.playerstate_busy: raise MMExc.AssertError, 'recursive playerstate'
+		self.playerstate_busy = 1
+		self.playerstate = (nodetype, nodeobject)
+		for client in self.playerstate_registry:
+			client.playerstatechanged(nodetype, nodeobject)
+		self.playerstate_busy = 0
+
+	def getplayerstate(self):
+		return self.playerstate
+		
 	#
 	# Focus interface
 	#
