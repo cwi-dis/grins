@@ -1153,19 +1153,19 @@ class ChannelWindow(Channel):
 		return (node, nametypelist, args)
 
 	def create_window(self, pchan, pgeom, units = None):
-		menu = []
+##		menu = []
 		if pchan:
-			if hasattr(self._player, 'editmgr'):
-				menu.append('', 'raise', (self.popup, ()))
-				menu.append('', 'lower', (self.popdown, ()))
-				menu.append(None)
-				menu.append('', 'select in timeline view',
-					    (self.focuscall, ()))
-				menu.append(None)
-				menu.append('', 'highlight',
-					    (self.highlight, ()))
-				menu.append('', 'unhighlight',
-					    (self.unhighlight, ()))
+##			if hasattr(self._player, 'editmgr'):
+##				menu.append('', 'raise', (self.popup, ()))
+##				menu.append('', 'lower', (self.popdown, ()))
+##				menu.append(None)
+##				menu.append('', 'select in timeline view',
+##					    (self.focuscall, ()))
+##				menu.append(None)
+##				menu.append('', 'highlight',
+##					    (self.highlight, ()))
+##				menu.append('', 'unhighlight',
+##					    (self.unhighlight, ()))
 			transparent = self._attrdict.get('transparent', 0)
 			self._curvals['transparent'] = (transparent, 0)
 			z = self._attrdict.get('z', 0)
@@ -1182,10 +1182,10 @@ class ChannelWindow(Channel):
 						z = z,
 						type_channel = self._window_type,
 						units = units)
-			if hasattr(self._player, 'editmgr'):
-				menu.append(None)
-				menu.append('', 'resize',
-					    (self.resize_window, (pchan,)))
+##			if hasattr(self._player, 'editmgr'):
+##				menu.append(None)
+##				menu.append('', 'resize',
+##					    (self.resize_window, (pchan,)))
 		else:
 			# no basewindow, create a top-level window
 			adornments = self._player.get_adornments(self)
@@ -1208,9 +1208,9 @@ class ChannelWindow(Channel):
 					type_channel = self._window_type,
 					units = units, adornments = adornments,
 					commandlist = self.commandlist)
-			if hasattr(self._player, 'editmgr'):
-				menu.append('', 'select in timeline view',
-					    (self.focuscall, ()))
+##			if hasattr(self._player, 'editmgr'):
+##				menu.append('', 'select in timeline view',
+##					    (self.focuscall, ()))
 		if self._attrdict.has_key('bgcolor'):
 			self.window.bgcolor(self._attrdict['bgcolor'])
 		if self._attrdict.has_key('fgcolor'):
@@ -1221,8 +1221,8 @@ class ChannelWindow(Channel):
 		self.window.register(WMEVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(WMEVENTS.Mouse0Release, self.mouserelease,
 				     None)
-		if menu:
-			self.window.create_menu(menu, title = self._name)
+##		if menu:
+##			self.window.create_menu(menu, title = self._name)
 
 	def resize_window(self, pchan):
 		if not self._player.editmgr.transaction():
