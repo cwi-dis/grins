@@ -167,7 +167,7 @@ def showeditor(node):
     filename = MMAttrdefs.getattr(node,'file')
     chtype = node.GetChannelType()
     try:
-	if not channeleditors.has_type(chtype): raise _LocalError
+	if not channeleditors.has_key(chtype): raise _LocalError
 	editor = channeleditors[chtype]
 	if type(editor) == type(''):
 	    cmd = editor
