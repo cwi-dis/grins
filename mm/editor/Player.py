@@ -231,6 +231,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			self.pause(0)
 		elif not self.playing:
 			# Case 2: starting to play from stopped mode
+			self.fullreset()
 			self.play()
 		else:
 			# nothing, restore state.
