@@ -34,7 +34,6 @@ NSQTprefix = 'qt'
 
 # This string is written at the start of a SMIL file.
 SMILdecl = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
-EVALcomment = '<!-- Created with an evaluation copy of GRiNS -->\n'
 doctype = '<!DOCTYPE smil PUBLIC "%s"\n%s"%s">\n' % (SMILpubid,' '*22,SMILdtd)
 doctype2 = '<!DOCTYPE smil PUBLIC "%s"\n%s"%s">\n' % (SMILBostonPubid,' '*22,SMILBostonDtd)
 xmlnsGRiNS = 'xmlns:%s' % NSGRiNSprefix
@@ -177,9 +176,9 @@ class MyStringIO(StringIO.StringIO):
 	def close(self):
 		pass
 
-def WriteString(root, cleanSMIL = 0):
+def WriteString(root, cleanSMIL = 0, evallicense = 0):
 	fp = IndentedFile(MyStringIO())
-	writer = SMILWriter(root, fp, '<string>', cleanSMIL)
+	writer = SMILWriter(root, fp, '<string>', cleanSMIL, evallicense=evallicense)
 	writer.write()
 	return fp.fp.getvalue()
 
@@ -1020,14 +1019,16 @@ class SMILWriter(SMIL):
 		import version
 		ctx = self.root.GetContext()
 		fp = self.fp
-		fp.write(SMILdecl)
+		fp.write(SMILdecl)	# MUST come first
 		if self.evallicense:
-			fp.write(EVALcomment)
+			fp.write('<!--%s-->\n' % EVALcomment)
 		if self.__cleanSMIL:
 			if self.smilboston:
 				fp.write(doctype2)
 			else:
 				fp.write(doctype)
+		if ctx.comment:
+			fp.write('<!--%s-->\n' % ctx.comment)
 		attrlist = []
 		if self.uses_grins_namespace:
 			attrlist.append((xmlnsGRiNS, GRiNSns))

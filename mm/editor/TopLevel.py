@@ -229,8 +229,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.player.stop_entry()
 
 	def source_callback(self):
+		license = self.main.wanttosave()
+		if not license:
+			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+			return
+		evallicense= (license < 0)
 		import SMILTreeWrite
-		self.showsource(SMILTreeWrite.WriteString(self.root))
+		self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense))
 
 	def hide_source_callback(self):
 		if self.source:
@@ -950,8 +955,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.changed = 1
 		if self.source:
 			# reshow source
+			license = self.main.wanttosave()
+			if not license:
+				windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+				return
+			evallicense= (license < 0)
 			import SMILTreeWrite
-			self.showsource(SMILTreeWrite.WriteString(self.root), optional=1)
+			self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense), optional=1)
 		if self.context.attributes.get('project_boston', 0):
 			self.setcommands(self.commandlist + self.__ugroup)
 		else:
