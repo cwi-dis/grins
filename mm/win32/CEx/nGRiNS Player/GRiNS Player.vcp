@@ -472,13 +472,117 @@ SOURCE=..\common\xml\sax_handler.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\common\smil\smil_parser.cpp
+SOURCE=..\common\smil\smil_attr_read.cpp
 
 !IF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Release"
 
 DEP_CPP_SMIL_=\
+	"..\common\any.h"\
+	"..\common\extra_types.h"\
+	"..\common\smil\smil_attr_read.h"\
+	"..\common\stdenv.h"\
+	
+
+!ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
+
+DEP_CPP_SMIL_=\
+	"..\common\any.h"\
+	"..\common\extra_types.h"\
+	"..\common\smil\smil_attr_read.h"\
+	"..\common\stdenv.h"\
+	
+
+!ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Release"
+
+DEP_CPP_SMIL_=\
+	"..\common\any.h"\
+	"..\common\extra_types.h"\
+	"..\common\smil\smil_attr_read.h"\
+	"..\common\stdenv.h"\
+	
+
+!ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Debug"
+
+DEP_CPP_SMIL_=\
+	"..\common\any.h"\
+	"..\common\extra_types.h"\
+	"..\common\smil\smil_attr_read.h"\
+	"..\common\stdenv.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\smil\smil_attr_read.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\smil\smil_node.cpp
+
+!IF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Release"
+
+DEP_CPP_SMIL_N=\
+	"..\common\any.h"\
+	"..\common\extra_types.h"\
+	"..\common\smil\smil_attr_read.h"\
+	"..\common\smil\smil_node.h"\
+	"..\common\stdenv.h"\
+	"..\common\tree_node.h"\
+	
+
+!ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
+
+DEP_CPP_SMIL_N=\
+	"..\common\any.h"\
+	"..\common\extra_types.h"\
+	"..\common\smil\smil_attr_read.h"\
+	"..\common\smil\smil_node.h"\
+	"..\common\stdenv.h"\
+	"..\common\tree_node.h"\
+	
+
+!ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Release"
+
+DEP_CPP_SMIL_N=\
+	"..\common\any.h"\
+	"..\common\extra_types.h"\
+	"..\common\smil\smil_attr_read.h"\
+	"..\common\smil\smil_node.h"\
+	"..\common\stdenv.h"\
+	"..\common\tree_node.h"\
+	
+
+!ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Debug"
+
+DEP_CPP_SMIL_N=\
+	"..\common\any.h"\
+	"..\common\extra_types.h"\
+	"..\common\smil\smil_attr_read.h"\
+	"..\common\smil\smil_node.h"\
+	"..\common\stdenv.h"\
+	"..\common\tree_node.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\smil\smil_node.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\smil\smil_parser.cpp
+
+!IF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Release"
+
+DEP_CPP_SMIL_P=\
+	"..\common\any.h"\
 	"..\common\charconv.h"\
 	"..\common\extra_types.h"\
+	"..\common\smil\smil_node.h"\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
 	"..\common\tree_node.h"\
@@ -489,7 +593,7 @@ DEP_CPP_SMIL_=\
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
 
-DEP_CPP_SMIL_=\
+DEP_CPP_SMIL_P=\
 	"..\common\smil\smil_parser.h"\
 	"..\common\stdenv.h"\
 	"..\common\xml\sax_handler.h"\
@@ -497,7 +601,7 @@ DEP_CPP_SMIL_=\
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Release"
 
-DEP_CPP_SMIL_=\
+DEP_CPP_SMIL_P=\
 	"..\common\charconv.h"\
 	"..\common\extra_types.h"\
 	"..\common\smil\smil_attr_read.h"\
@@ -511,7 +615,7 @@ DEP_CPP_SMIL_=\
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Debug"
 
-DEP_CPP_SMIL_=\
+DEP_CPP_SMIL_P=\
 	"..\common\charconv.h"\
 	"..\common\extra_types.h"\
 	"..\common\smil\smil_attr_read.h"\
@@ -923,6 +1027,10 @@ SOURCE=..\common\img\decode_png.h
 SOURCE=..\common\img\surface.h
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=..\common\any.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\common\charconv.h
