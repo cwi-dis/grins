@@ -65,17 +65,42 @@ LEAFBOX = 2
 f_title = windowinterface.findfont('Helvetica', 10)
 f_channel = windowinterface.findfont('Helvetica', 8)
 
+##class oldsizes:
+##	SIZEUNIT = windowinterface.UNIT_MM # units for the following
+##	MINSIZE = settings.get('thumbnail_size') # minimum size for a node
+##	MAXSIZE = 2 * MINSIZE
+##	TITLESIZE = f_title.fontheight()*1.2
+##	CHNAMESIZE = f_channel.fontheight()*1.2
+##	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
+##	HOREXTRASIZE = f_title.strsize('XX')[0]
+##	ARRSIZE = f_title.strsize('xx')[0]	# width of collapse/expand arrow
+##	GAPSIZE = 1.0						# size of gap between nodes
+##	EDGSIZE = 1.0						# size of edges
+
 class sizes:
-	SIZEUNIT = windowinterface.UNIT_MM # units for the following (don't change)
-	MINSIZE = settings.get('thumbnail_size') # minimum size for a node
-	MAXSIZE = 2 * MINSIZE
-	TITLESIZE = f_title.fontheight()*1.2
-	CHNAMESIZE = f_channel.fontheight()*1.2
+	SIZEUNIT = windowinterface.UNIT_PXL # units for the following
+	MINSIZE = 48 
+	MAXSIZE = 128
+	TITLESIZE = f_title.fontheightPXL()*1.2
+	CHNAMESIZE = 0
 	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
-	HOREXTRASIZE = f_title.strsize('XX')[0]
-	ARRSIZE = f_title.strsize('xx')[0]	# width of collapse/expand arrow
-	GAPSIZE = 1.0						# size of gap between nodes
-	EDGSIZE = 1.0						# size of edges
+	HOREXTRASIZE = f_title.strsizePXL(None, 'XX')[0]
+	ARRSIZE = f_title.strsizePXL(None, 'xx')[0]	# width of collapse/expand arrow
+	GAPSIZE = 2						# size of gap between nodes
+	EDGSIZE = 2						# size of edges
+
+##class othersizes:
+##	SIZEUNIT = windowinterface.UNIT_MM # units for the following
+##	MINSIZE = settings.get('thumbnail_size') # minimum size for a node
+##	MAXSIZE = 2 * MINSIZE
+##	TITLESIZE = f_title.fontheight()*1.2
+##	CHNAMESIZE = 0
+##	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
+##	HOREXTRASIZE = f_title.strsize('XX')[0]
+##	ARRSIZE = f_title.strsize('xx')[0]	# width of collapse/expand arrow
+##	GAPSIZE = 1.0						# size of gap between nodes
+##	EDGSIZE = 1.0						# size of edges
+
 
 #
 # We expand a number of hierarchy levels on first open. The number
@@ -1037,7 +1062,10 @@ class HierarchyView(HierarchyViewDialog):
 			minheight = self.sizes.MINSIZE
 		if structure_name_size:
 			name = MMAttrdefs.getattr(node, 'name')
-			namewidth = (name and f_title.strsize(name)[0]) or 0
+			if self.sizes.SIZEUNIT == windowinterface.UNIT_MM:
+				namewidth = (name and f_title.strsize(name)[0]) or 0
+			else:
+				namewidth = (name and f_title.strsizePXL(None, name)[0]) or 0
 			if ntype in MMNode.interiortypes or \
 			   (ntype == 'ext' and node.GetChannelType() == 'RealPix'):
 				namewidth = namewidth + self.sizes.ARRSIZE
@@ -1219,11 +1247,14 @@ class Object:
 		if node.GetType() not in MMNode.interiortypes and \
 		   not hasattr(node, 'expanded') and \
 		   b-t-vmargin >= titleheight+chnameheight:
-			b1 = b - chnameheight
-			# draw channel name along bottom of box
-			if node.__class__ is not SlideMMNode:
-				self.drawchannelname(l+hmargin/2, b1,
-						     r-hmargin/2, b-vmargin/2)
+			if chnameheight:
+				b1 = b - chnameheight
+				# draw channel name along bottom of box
+				if node.__class__ is not SlideMMNode:
+					self.drawchannelname(l+hmargin/2, b1,
+							     r-hmargin/2, b-vmargin/2)
+			else:
+				b1 = b - 1.5*vmargin
 			# draw thumbnail/icon if enough space
 ##			if b1-t1 >= titleheight and \
 ##			   r-l >= hmargin * 2.5:
@@ -1242,7 +1273,8 @@ class Object:
 				except IOError:
 					# f not reassigned!
 					pass
-			ih = min(b1-t1, titleheight+chnameheight)
+			##ih = min(b1-t1, titleheight+chnameheight)
+			ih = b1-t1
 			if node.__class__ is SlideMMNode and \
 			   MMAttrdefs.getattr(node, 'tag') in ('fill','fadeout'):
 				d.drawfbox(MMAttrdefs.getattr(node, 'color'), (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
@@ -1250,7 +1282,7 @@ class Object:
 				d.drawbox((l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
 			elif f is not None:
 				try:
-					box = d.display_image_from_file(f, center = 1, coordinates = (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
+					box = d.display_image_from_file(f, center = 1, coordinates = (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih), scale=-2)
 				except windowinterface.error:
 					pass
 				else:
