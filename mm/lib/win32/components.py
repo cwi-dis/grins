@@ -860,12 +860,18 @@ class BandwidthComputeDialog(ResDialog):
 		return ResDialog.OnInitDialog(self)
 
 	def setinfo(self, prerolltime, errorseconds, delaycount, errorcount):
-		msg = ''
+		msg = 'Everything appears to be fine.'
 		if prerolltime or errorseconds or errorcount or delaycount:
 			self.mustwait = 1
 			msg = 'This is a minor problem.'
 		if errorcount:
 			msg = 'You should probably fix this.'
+		if prerolltime == 0:
+			prerolltime = '0 seconds'
+		elif prerolltime < 1:
+			prerolltime = 'less than a second'
+		else:
+			prerolltime = '%d seconds'%prerolltime
 		if errorseconds == 0:
 			errorseconds = '0 seconds'
 		elif errorseconds < 1:
