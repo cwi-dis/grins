@@ -56,6 +56,7 @@ else:
 # macfreeze: path :::lib:mac
 # macfreeze: path :::lib
 # macfreeze: path :::pylib
+# macfreeze: path :::mmpython:producer:mac:bin
 #
 # and some modules we don't want:
 # macfreeze: exclude X_window
@@ -113,6 +114,7 @@ else:
 # macfreeze: exclude cmifex
 # macfreeze: exclude readline
 # macfreeze: exclude CORBA.services
+# macfreeze: exclude win32ig
 # macfreeze: optional rma
 # macfreeze: exclude NodeInfoHelper
 
@@ -135,6 +137,8 @@ if not STANDALONE:
 		CMIFDIR+":lib",
 	# Overrides for Python distribution
 		CMIFDIR+":pylib",
+	# XXXX Testing purposes only
+		CMIFDIR+":mmpython:producer:mac:bin",
 	]
 	sys.path[0:0] = CMIFPATH
 	
