@@ -2204,6 +2204,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def start_transition(self, attributes):
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
+		if attributes.has_key('id'):
+			del attributes['id']
 ## This is unneeded?
 ##		new = {}
 ##		for k, v in attributes.items():
