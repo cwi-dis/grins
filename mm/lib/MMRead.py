@@ -28,6 +28,12 @@ def ReadFile(url):
 def ReadFileContext(url, context):
 	import MMurl
 	context.setbaseurl(url)
+	utype, rest = MMurl.splittype(url)
+	if not utype or utype == 'file':
+		utype = None
+		host, path = MMurl.splithost(rest)
+		if host == 'localhost':
+			host = None
 	if not utype and not host:
 		root = MMCache.loadcache(MMurl.url2pathname(url), context)
 	else:
