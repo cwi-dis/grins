@@ -17,7 +17,7 @@ import string
 # editor is allowed per node, and extra show calls are also ignored
 # (actually, this pops up the window, to draw the user's attention...).
 
-def showattreditor(toplevel, node):
+def showattreditor(toplevel, node, initattr = None):
 	try:
 		attreditor = node.attreditor
 	except AttributeError:
@@ -30,7 +30,7 @@ def showattreditor(toplevel, node):
 				node.slideshow = realnode.SlideShow(node)
 		else:
 			wrapperclass = SlideWrapper
-		attreditor = AttrEditor(wrapperclass(toplevel, node))
+		attreditor = AttrEditor(wrapperclass(toplevel, node), initattr=initattr)
 		node.attreditor = attreditor
 	else:
 		attreditor.pop()
@@ -51,11 +51,11 @@ def hasattreditor(node):
 # The administration is kept in channel.attreditor,
 # which is created here if necessary.
 
-def showchannelattreditor(toplevel, channel, new = 0):
+def showchannelattreditor(toplevel, channel, new = 0, initattr = None):
 	try:
 		attreditor = channel.attreditor
 	except AttributeError:
-		attreditor = AttrEditor(ChannelWrapper(toplevel, channel), new)
+		attreditor = AttrEditor(ChannelWrapper(toplevel, channel), new=new, initattr = initattr)
 		channel.attreditor = attreditor
 	else:
 		attreditor.pop()
@@ -71,11 +71,11 @@ def haschannelattreditor(channel):
 # The administration is kept in toplevel.attreditor,
 # which is created here if necessary.
 
-def showdocumentattreditor(toplevel):
+def showdocumentattreditor(toplevel, initattr = None):
 	try:
 		attreditor = toplevel.attreditor
 	except AttributeError:
-		attreditor = AttrEditor(DocumentWrapper(toplevel))
+		attreditor = AttrEditor(DocumentWrapper(toplevel), initattr = initattr)
 		toplevel.attreditor = attreditor
 	else:
 		attreditor.pop()
@@ -90,10 +90,10 @@ def hasdocumentattreditor(toplevel):
 # A similar interface for program preferences (note different arguments!).
 
 prefseditor = None
-def showpreferenceattreditor(callback):
+def showpreferenceattreditor(callback, initattr = None):
 	global prefseditor
 	if prefseditor is None:
-		prefseditor = AttrEditor(PreferenceWrapper(callback))
+		prefseditor = AttrEditor(PreferenceWrapper(callback), initattr = initattr)
 	else:
 		prefseditor.pop()
 
@@ -767,13 +767,13 @@ class PreferenceWrapper(Wrapper):
 from AttrEditDialog import AttrEditorDialog, AttrEditorDialogField
 
 class AttrEditor(AttrEditorDialog):
-	def __init__(self, wrapper, new = 0):
+	def __init__(self, wrapper, new = 0, initattr = None):
 		self.__new = new
 		self.wrapper = wrapper
 		wrapper.register(self)
-		self.__open_dialog()
+		self.__open_dialog(initattr)
 
-	def __open_dialog(self):
+	def __open_dialog(self, initattr):
 		import settings
 		wrapper = self.wrapper
 		list = []
@@ -873,7 +873,7 @@ class AttrEditor(AttrEditorDialog):
 			b = C(self, name, labeltext or name)
 			list.append(b)
 		self.attrlist = list
-		AttrEditorDialog.__init__(self, wrapper.maketitle(), list, wrapper.toplevel)
+		AttrEditorDialog.__init__(self, wrapper.maketitle(), list, wrapper.toplevel, initattr)
 
 	def resetall(self):
 		for b in self.attrlist:

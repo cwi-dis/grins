@@ -32,7 +32,7 @@ implements the actual dialog.
 import windowinterface
 
 class AttrEditorDialog:
-	def __init__(self, title, attriblist, toplevel=None):
+	def __init__(self, title, attriblist, toplevel=None, initattr = None):
 		"""Create the AttrEditor dialog.
 
 		Create the dialog window (non-modal, so does not grab
@@ -60,6 +60,7 @@ class AttrEditorDialog:
 			'Apply':(self.apply_callback, ()),
 			'OK':(self.ok_callback, ()),
 			}
+		w._initattr = initattr
 		for a in attriblist:
 			a.attach_ui(w)
 		self.__window=w
