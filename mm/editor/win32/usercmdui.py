@@ -155,7 +155,9 @@ SCHEDDUMP_UI=CommandUI(SCHEDDUMP)
 PASTE_BEFORE_UI=CommandUI(PASTE_BEFORE)
 ##PASTE_AFTER_UI=CommandUI(PASTE_AFTER)
 PASTE_AFTER_UI=PASTE_UI
+
 PASTE_UNDER_UI=CommandUI(PASTE_UNDER)
+
 NEW_BEFORE_UI=CommandUI(NEW_BEFORE)
 NEW_AFTER_UI=CommandUI(NEW_AFTER)
 NEW_UNDER_UI=CommandUI(NEW_UNDER)
@@ -229,4 +231,15 @@ ADD_CHANNEL_UI=CommandUI(ADD_CHANNEL)
 RENAME_UI=CommandUI(RENAME)
 
 
-
+#
+# Add the rest without a ui name
+# 
+#
+import usercmd
+for s in dir(usercmd):
+	a=getattr(usercmd,s)
+	if type(a) == type(usercmd._CommandBase):
+		if a.__name__ != '_CommandBase' and a.__name__ != '_DynamicCascade':
+			if not class2ui.has_key(a):
+				CommandUI(a)
+				# print 'no ui name assigned to usercmd',a.__name__
