@@ -32,7 +32,7 @@ Compiling
 [patching getpathp.c and import_nt.c plus adding IGNORE_REGISTRY define]
 
 Open the Visual C++ workspace
-	cmif\win32\src\cmif extensions.dsw
+	"cmif\win32\src\cmif extensions.dsw"
 Make sure the Active Configuration is "All cmif extensions/Win32
 Release" and then build everything.
 
