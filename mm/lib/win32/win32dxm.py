@@ -51,7 +51,8 @@ class GraphBuilder:
 			self._rendered = 1
 			if exporter:
 				writer = exporter.getWriter()
-				writer.redirectAudioFilter(self._builder)
+				if writer:
+					writer.redirectAudioFilter(self._builder)
 		return self._rendered
 
 	def Run(self):
@@ -213,6 +214,33 @@ class MMStream:
 		self._rect = None
 		self._parsed = 0
 
+	def __repr__(self):
+		s = '<%s instance' % self.__class__.__name__
+		filters = self.getFiltersNames()
+		n = len(filters)
+		if n: 
+			s = s + ', filters = '
+			s = s + "\'" + filters[0] + "\'"
+		else:
+			s = s + ', not rendered'
+			
+		for i in range(1,n):
+			s = s + ", \'" + filters[i] + "\'"
+		s = s + '>'
+		return s
+
+	def getFiltersNames(self):
+		if not self._parsed: return []
+		fg = self._mmstream.GetFilterGraph()
+		enumobj = fg.EnumFilters()
+		f = enumobj.Next()
+		filters = []
+		while f:		
+			fname = f.QueryFilterName()
+			filters.insert(0,fname)
+			f = enumobj.Next()
+		return filters
+
 	def open(self, url, exporter=None):
 		mmstream = 	self._mmstream
 		try:
@@ -222,6 +250,11 @@ class MMStream:
 			self._parsed = 0
 			return 0
 		self._parsed = 1
+		if exporter:
+			fg = self._mmstream.GetFilterGraph()
+			writer = exporter.getWriter()
+			if writer:
+				writer.redirectAudioFilter(fg, hint='0001')
 		self._mstream = self._mmstream.GetPrimaryVideoMediaStream()
 		self._ddstream = self._mstream.QueryIDirectDrawMediaStream()
 		self._sample = self._ddstream.CreateSample()
