@@ -2158,6 +2158,20 @@ BEGIN
     EDITTEXT        IDC_SCUSTOMTESTSV,205,110,83,12,ES_AUTOHSCROLL
 END
 
+IDD_EDITATTR_SYNCHRONIZATION DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        IDC_12,91,24,192,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_22,92,47,192,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "Synchronization",IDC_GROUP1,5,10,287,60
+    LTEXT           "Sync behavior:",IDC_11,11,26,73,8
+    LTEXT           "Sync behavior default:",IDC_21,12,48,73,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
