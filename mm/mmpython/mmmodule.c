@@ -260,6 +260,18 @@ mm_stop(self, args)
 		release_lock(self->mm_flaglock);
 		if (!(*self->mm_chanobj->chan_funcs->stop)(self))
 			return NULL;
+		/*DEBUG: wait until armer and player have actually stopped */
+		for (;;) {
+			(void) acquire_lock(self->mm_flaglock, WAIT_LOCK);
+			dprintf(("looping %x\n", self->mm_flags));
+			if ((self->mm_flags & (ARMING|PLAYING)) == 0) {
+				release_lock(self->mm_flaglock);
+				break;
+			}
+			release_lock(self->mm_flaglock);
+			sginap(5); /* release CPU for a bit */
+		}
+		dprintf(("exit loop\n"));
 	} else {
 		/* printf("mmmodule: mm_stop: already stopped\n"); */
 		release_lock(self->mm_flaglock);

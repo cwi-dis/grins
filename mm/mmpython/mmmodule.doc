@@ -195,6 +195,11 @@ The mmfuncs structure.
 
 The mmfuncs structure contains pointers to functions that do the
 channel-specific work.  The following functions are defined.
+Apart from armer, player, and dealloc, all functions should return 1
+when they are successful and 0 when they fail.  When they fail, they
+must already have called one of the err_* functions before they
+return, so that the proper exception can be raised.
+Armer, player, and dealloc don't return a value.
 
 armer(mmobject *)
 		Together with the function arm, this function does the

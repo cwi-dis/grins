@@ -18,7 +18,7 @@ struct sound_data {
 	FILE *f;		/* file from which to read samples */
 	int nchannels;		/* # of channels (mono or stereo) */
 	int sampwidth;		/* size of samples in bytes */
-	int nsamples;	/* # of samples to play */
+	int nsamples;		/* # of samples to play */
 	int samprate;		/* sampling frequency */
 	long offset;		/* offset in file of first sample */
 	int bufsize;		/* size of sampbuf in samples */
