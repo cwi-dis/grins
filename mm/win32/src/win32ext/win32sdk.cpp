@@ -144,10 +144,13 @@ sdk_delete_object(PyObject *self, PyObject *args)
 	HGDIOBJ hobj;  
 	if (!PyArg_ParseTuple (args, "i",&hobj))
 		return NULL;
-  
-	GUI_BGN_SAVE;
-	::DeleteObject(hobj);
-	GUI_END_SAVE;
+	
+	if(hobj)
+		{
+		GUI_BGN_SAVE;
+		::DeleteObject(hobj);
+		GUI_END_SAVE;
+		}
 
 	RETURN_NONE;
 	}
