@@ -140,6 +140,7 @@ class SplashDlg(ResDialog):
 #		elif features.compatibility == compatibility.QT:
 #			self._splashbmp = grinsRC.IDB_SPLASHSMIL
 			
+		self.loadbmp()
 		self.CreateWindow()
 		self.CenterWindow()
 		self.ShowWindow(win32con.SW_SHOW)
@@ -149,8 +150,7 @@ class SplashDlg(ResDialog):
 		self.attach_handles_to_subwindows()	
 		self._versionc.settext(self._version)
 		self._splash.create_wnd_from_handle()
-		self.HookMessage(self.OnDrawItem,win32con.WM_DRAWITEM)
-		self.loadbmp()
+		self.HookMessage(self.OnDrawItem, win32con.WM_DRAWITEM)
 		return ResDialog.OnInitDialog(self)
 
 	def close(self):
@@ -165,21 +165,23 @@ class SplashDlg(ResDialog):
 		lParam=params[3]
 		hdc=Sdk.ParseDrawItemStruct(lParam)
 		dc=win32ui.CreateDCFromHandle(hdc)
-		rct=self._splash.GetClientRect()
-		win32mu.BitBltBmp(dc,self._bmp,rct)
-		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
-		dc.FrameRectFromHandle(rct,br)
-		Sdk.DeleteObject(br)
-		dc.DeleteDC()
+		if self._bmp:
+			w, h = self._bmp.GetSize()
+			rct = 0, 0, w, h
+			dcmem = dc.CreateCompatibleDC()
+			old = dcmem.SelectObject(self._bmp)
+			dc.BitBlt((0,0),(w,h),dcmem,(0,0),win32con.SRCCOPY)
+			dcmem.SelectObject(old)
+			dcmem.DeleteDC()
+			br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
+			dc.FrameRectFromHandle(rct,br)
+			Sdk.DeleteObject(br)
+		dc.Detach()
 
 	# load splash
 	def loadbmp(self):
-#		import __main__
 		import splashbmp
-#		resdll=__main__.resdll
 		self._bmp = loadBitmapFromResId(splashbmp.getResId())
-#		self._bmp=win32ui.CreateBitmap()
-#		self._bmp.LoadBitmap(self._splashbmp,resdll)
 
 # Implementation of the about dialog
 class AboutDlg(ResDialog):
@@ -219,21 +221,23 @@ class AboutDlg(ResDialog):
 		lParam=params[3]
 		hdc=Sdk.ParseDrawItemStruct(lParam)
 		dc=win32ui.CreateDCFromHandle(hdc)
-		rct=self._splash.GetClientRect()
-		win32mu.BitBltBmp(dc,self._bmp,rct)
-		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
-		dc.FrameRectFromHandle(rct,br)
-		Sdk.DeleteObject(br)
-		dc.DeleteDC()
+		if self._bmp:
+			w, h = self._bmp.GetSize()
+			rct = 0, 0, w, h
+			dcmem = dc.CreateCompatibleDC()
+			old = dcmem.SelectObject(self._bmp)
+			dc.BitBlt((0,0),(w,h),dcmem,(0,0),win32con.SRCCOPY)
+			dcmem.SelectObject(old)
+			dcmem.DeleteDC()
+			br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
+			dc.FrameRectFromHandle(rct,br)
+			Sdk.DeleteObject(br)
+		dc.Detach()
 
 	# load splash bmp
 	def loadbmp(self):
-#		import __main__
 		import splashbmp
-#		resdll=__main__.resdll
 		self._bmp = loadBitmapFromResId(splashbmp.getResId())
-#		self._bmp=win32ui.CreateBitmap()
-#		self._bmp.LoadBitmap(self._splashbmp,resdll)
 
 # Implementation of the open loaction dialog
 class OpenLocationDlg(ResDialog):
