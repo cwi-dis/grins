@@ -494,6 +494,28 @@ attrgrs=(
 		'showBackground',
 		]},
 
+	{'name':'Layout3',
+	'title':'Layout',
+	'attrs':[
+		'cssbgcolor',
+		'width', 'height',
+		'open', 'close',
+		'traceImage',
+		]},
+
+	{'name':'regionname',
+	'title':'General',
+	'attrs':[
+		'.cname',
+		'regionName', 
+		]},
+
+	{'name':'viewportname',
+	'title':'General',
+	'attrs':[
+		'.cname',
+		]},
+
 	{'name':'CssBackgroundColor',
 	'title':'Background color',
 	'attrs':[
