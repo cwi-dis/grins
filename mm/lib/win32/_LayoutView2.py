@@ -1,5 +1,8 @@
 # Experimental layout view for light region view
 
+# editor features
+import features
+
 # std win32 modules
 import win32ui, win32con, win32api
 Sdk = win32ui.GetWin32Sdk()
@@ -37,7 +40,10 @@ from GenFormView import GenFormView
 
 class _LayoutView2(GenFormView):
 	def __init__(self,doc,bgcolor=None):
-		GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT2)
+		if features.CUSTOM_REGIONS in features.feature_set:
+			GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT3)
+		else:
+			GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT2)
 		self._layout = None
 		self._mmcontext = None
 
@@ -46,26 +52,35 @@ class _LayoutView2(GenFormView):
 		# note: if you modify the key names, you also have to modify them in LayoutViewDialog
 		self.__ctrlNames=n=('ViewportSel','RegionSel','RegionX','RegionY',
 							'RegionW','RegionH','RegionZ', 'BgColor', 'ShowNames',
-							'AsOutLine', 'RegionList', 'ShowRbg', 'SendBack', 'BringFront', 'MediaSel',
+							'AsOutLine',
+#							'RegionList',
+							'ShowRbg', 'SendBack', 'BringFront', 'MediaSel',
 							'ViewportCheck','RegionCheck','MediaCheck')
-		self[n[0]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_VIEWPORT_SEL)
-		self[n[1]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_REGION_SEL)
-		self[n[2]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X)
-		self[n[3]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Y)
-		self[n[4]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_W)
-		self[n[5]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_H)
-		self[n[6]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z)
-		self[n[7]]=components.Button(self,grinsRC.IDC_LAYOUT_BACKGROUND)
-		self[n[8]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_NAMES)
-		self[n[9]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_AS_OUTLINE)
-		self[n[10]]=components.ListBox(self,grinsRC.IDC_LAYOUT_REGIONLIST)
-		self[n[11]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_RBG)
-		self[n[12]]=components.Button(self,grinsRC.IDC_LAYOUT_SENDBACK)
-		self[n[13]]=components.Button(self,grinsRC.IDC_LAYOUT_BRINGFRONT)
-		self[n[14]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_MEDIA_SEL)
-		self[n[15]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_VIEWPORT_RADIO)
-		self[n[16]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_REGION_RADIO)
-		self[n[17]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_MEDIA_RADIO)
+		if features.CUSTOM_REGIONS in features.feature_set:
+			n = n + ('NewRegion', 'DelRegion')
+			
+		i = 0
+		self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_VIEWPORT_SEL); i=i+1
+		self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_REGION_SEL); i=i+1
+		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X); i=i+1
+		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Y); i=i+1
+		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_W); i=i+1
+		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_H); i=i+1
+		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
+		self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_BACKGROUND); i=i+1
+		self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_NAMES); i=i+1
+		self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_AS_OUTLINE); i=i+1
+#		self[n[i]]=components.ListBox(self,grinsRC.IDC_LAYOUT_REGIONLIST); i=i+1
+		self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_RBG); i=i+1
+		self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_SENDBACK); i=i+1
+		self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_BRINGFRONT); i=i+1
+		self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_MEDIA_SEL); i=i+1
+		self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_VIEWPORT_RADIO); i=i+1
+		self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_REGION_RADIO); i=i+1
+		self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_MEDIA_RADIO); i=i+1
+		if features.CUSTOM_REGIONS in features.feature_set:
+			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_NEWREGION); i=i+1
+			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_DELREGION); i=i+1
 		
 		# Initialize control objects whose command are activable as well from menu bar
 		self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
@@ -251,6 +266,10 @@ class _LayoutView2(GenFormView):
 				ctrlName = 'SendBack'
 			elif id == self['BringFront']._id:
 				ctrlName = 'BringFront'
+			elif id == self['NewRegion']._id:
+				ctrlName = 'NewRegion'
+			elif id == self['DelRegion']._id:
+				ctrlName = 'DelRegion'
 		
 			if ctrlName != None:
 				self._dialogHandler.onButtonClickCtrl(ctrlName)
