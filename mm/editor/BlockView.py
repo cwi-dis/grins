@@ -75,7 +75,6 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		return self.new(width, height, self.root)
 	def show(self):
 		if self.showing: return
-		print 'self.show'
 		try:
 			self.form.doublebuf = 1
 		except:
@@ -84,24 +83,22 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		BasicDialog.show(self)
 	def hide(self):
 		if not self.showing: return
-		print 'self.hide'
 		self.editmgr.unregister(self)
 		BasicDialog.hide(self)
 		self.toplevel.checkviews()
 	def transaction(self):
-		print 'self.transaction'
 		return 1
 	def commit(self):
-		print 'self.commit'
 		modnode = self.rootview
 		self.form.freeze_form ()
 		self.rmBlockview (modnode)
 		self.mkBlockview(modnode.bv_xywh, modnode)
+		self.fixfocus()
 		self.presentlabels (modnode)
 		self.setfocus(self.focus)
 		self.form.unfreeze_form ()
 	def rollback(self):
-		print 'self.rollback'
+		pass
 	#
 	# new makes an object of type 'blockview'
 	#
@@ -267,6 +264,20 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		for child in node.GetChildren () :
 		    self.rmBlockview (child)
 	#
+	# fixfocus: called to move focus up if it becomes invisible.
+	#
+	def fixfocus(self):
+		focus = self.focus
+		if focus = self.root:
+		    return
+		parent = focus.GetParent()
+		while parent.bv_OC = 0:
+		    focus = parent
+		    if focus = self.root:
+			break
+		    parent = focus.GetParent()
+		self.setfocus(focus)
+	#
 	# presentlabels : sets the appropiate labels in the FORMS object.
 	#
 	def presentlabels (self, node) :
@@ -350,6 +361,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		self.rmBlockview(node)
 		node.bv_OC = (not node.bv_OC)		# toggle open/close
 		self.mkBlockview(node.bv_xywh,node)
+		self.fixfocus()
 		node.bv_obj.show_object ()		# show this node
 		node.bv_openclose.show_object ()	# show roundbutton
 		node.bv_labeltext.show_object()
@@ -492,7 +504,7 @@ def _InsertChildNode (bv,cb) :
 	parent = bv.focus
 	em = bv.editmgr
 
-	if not parent.GetType() in interiortypes:
+	if (not parent.GetType() in interiortypes) or parent.bv_OC = 0:
 	    gl.ringbell()
 	    return
 	if not em.transaction(): return
@@ -526,6 +538,7 @@ def unzoomfunc (bv) :
 	bv.rmBlockview (bv.rootview)		# get rid of all FORMS objects
 	#
 	bv.mkBlockview((0, 0, bv.w, bv.h), bv.rootview.GetParent())
+	bv.fixfocus()
 	bv.presentlabels (bv.rootview.GetParent())
 	bv.setfocus(bv.focus)
 	bv.form.unfreeze_form ()
@@ -547,6 +560,7 @@ def zoomfunc (bv) :
 	bv.rmBlockview (bv.rootview)		# get rid of all FORMS objects
 	#
 	bv.mkBlockview((x, y, w, h), node)
+	bv.fixfocus()
 	bv.presentlabels (node)
 	bv.setfocus(bv.focus)
 	bv.form.unfreeze_form ()
