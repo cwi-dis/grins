@@ -349,7 +349,6 @@ class _Toplevel(_Event):
 		MacOS.EnableAppswitch(1)
 
 	def addclosecallback(self, func, args):
-		print 'ADDCLOSECALLBACK', self, func, args
 		self._closecallbacks.append(func, args)
 
 	def newwindow(self, x, y, w, h, title, pixmap = 0, transparent = 0):
@@ -368,7 +367,7 @@ class _Toplevel(_Event):
 		
 	def _openwindow(self, x, y, w, h, title):
 		"""Internal - Open window given xywh, title. Returns window-id"""
-		print 'TOPLEVEL WINDOW', x, y, w, h, title
+##		print 'TOPLEVEL WINDOW', x, y, w, h, title
 		if w <= 0 or h <= 0:
 			raise 'Illegal window size'
 		x = int(x*_x_pixel_per_mm)
@@ -379,7 +378,6 @@ class _Toplevel(_Event):
 		#
 		# Check that it all fits
 		#
-		print 'WIN WANTED', x, y, x1, y1
 		l, t, r, b = Qd.qd.screenBits.bounds
 		if w >= (r-l)-8:
 			w = (r-l)-8
@@ -404,7 +402,6 @@ class _Toplevel(_Event):
 			diff = (b-4)-y1
 			y, y1 = y+diff, y1+diff
 			
-		print 'WIN GOT', x, y, x1, y1
 		wid = Win.NewCWindow((x, y, x1, y1), title, 1, 0, -1, 1, 0 )
 		
 		return wid, w, h
@@ -685,6 +682,7 @@ class _CommonWindow:
 		try:
 			func, arg = self._eventhandlers[WindowExit]
 		except KeyError:
+			sys.exc_traceback = None
 			return
 		func(arg, self, WindowExit, (0, 0, 0))
 		
@@ -698,6 +696,7 @@ class _CommonWindow:
 		try:
 			func, arg = self._eventhandlers[evt]
 		except KeyError:
+			sys.exc_traceback = None
 			return
 		func(arg, self, (0, 0, 0))
 		
@@ -728,6 +727,7 @@ class _CommonWindow:
 		try:
 			func, arg = self._eventhandlers[evttype]
 		except KeyError:
+			sys.exc_traceback = None
 			return # Not wanted
 			
 		wx, wy, ww, wh = self._rect
@@ -770,20 +770,6 @@ class _CommonWindow:
 			Qd.EraseRect(self.qdrect())
 ##			print 'Erased', self.qdrect(),'to', self._wid.GetWindowPort().rgbBkColor
 			
-	def _testclip(self, color):
-		"""Test clipping region"""
-		Qd.SetPort(self._wid)
-		if not self._clip:
-			self._mkclip()
-		saveclip = Qd.NewRgn()
-		Qd.GetClip(saveclip)
-		Qd.SetClip(self._clip)
-		Qd.RGBBackColor(color)
-		Qd.RGBForeColor(self._fgcolor)
-		Qd.EraseRect(self.qdrect())
-		Qd.SetClip(saveclip)
-		Qd.DisposeRgn(saveclip)
-		
 	def _macsetwin(self):
 		"""Start drawing (by upper layer) in this window"""
 		Qd.SetPort(self._wid)
@@ -820,7 +806,6 @@ class _Window(_CommonWindow):
 		w, h = rect[2]-rect[0], rect[3]-rect[1]
 		rv = (float(x)/_x_pixel_per_mm, float(y)/_y_pixel_per_mm,
 			float(w)/_x_pixel_per_mm, float(h)/_y_pixel_per_mm)
-		print 'GETGEOM', rv
 		return rv
 
 	def pop(self):
@@ -861,7 +846,7 @@ class _Window(_CommonWindow):
 
 	def _redraw(self):
 		_CommonWindow._redraw(self)
-		Ctl.DrawControls(self._wid)
+		Ctl.UpdateControls(self._wid, self._wid.GetWindowPort().visRgn)
 
 class _SubWindow(_CommonWindow):
 	"""Window "living in" with a toplevel window"""
@@ -984,6 +969,13 @@ class _DisplayList:
 		# XXXX buttons?
 		self._render()
 		# XXXX render transparent sub/sibling windows?
+		
+	def render_now(self):
+		#
+		# On the mac, we can only render after a full setup.
+		# Hence, we schedule a redraw only
+		#
+		Win.InvalRect(self._window.qdrect())
 		
 	def _render(self):
 		self._window._active_displist = self
@@ -1111,7 +1103,6 @@ class _DisplayList:
 		return self.usefont(findfont(font, size))
 
 	def fitfont(self, fontname, str, margin = 0):
-		print 'FITFONT', fontname, str, margin
 		return self.usefont(findfont(fontname, 10))
 
 	def baseline(self):
@@ -1125,8 +1116,6 @@ class _DisplayList:
 
 	def strsize(self, str):
 		width, height = self._font.strsize(self._window._wid, str)
-##		print 'RELATIVE', float(width) * self._window._hfactor, \
-##		       float(height) * self._window._vfactor
 		return float(width) * self._window._hfactor, \
 		       float(height) * self._window._vfactor
 
@@ -1288,7 +1277,6 @@ class findfont:
 				maxwidth = width
 		if old_fontinfo:
 			restorefontinfo(wid, old_fontinfo)
-##		print 'WIDTH OF', strlist, 'IS', maxwidth, maxheight
 		return float(maxwidth) / _x_pixel_per_mm, \
 		       float(maxheight) / _y_pixel_per_mm
 
@@ -1323,7 +1311,6 @@ class Dialog:
 class MainDialog:
 	def __init__(self, list, title = None, prompt = None, grab = 1,
 		     vertical = 1):
-##		print 'DIALOG', self, list, title, prompt, grab, vertical
 		self.items = []
 		self._channelmenu = None
 		self._windowmenu = None
@@ -1352,7 +1339,6 @@ class MainDialog:
 				self.items.append(m)
 
 	def close(self):
-##		print 'CLOSE DIALOG', self
 		pass
 
 	def destroy_menu(self):
@@ -1374,7 +1360,6 @@ class MainDialog:
 		return nlist
 		
 	def create_menu(self, list, title = None):
-##		print 'CREATE MENU', self, list, title
 		self.destroy_menu()
 			
 		channellist = self._flatten_menu(list)
