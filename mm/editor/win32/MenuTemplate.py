@@ -504,9 +504,16 @@ POPUP_CVIEW_SYNCARC = (
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
 )
 
-POPUP_EVENT = (
+POPUP_EVENT_DEST = (
 	(FLAG_ALL, ENTRY, 'Find event source', None, FIND_EVENT_SOURCE),
-	(FLAG_ALL, ENTRY, 'Properties...', None, ATTRIBUTES),
+	(FLAG_ALL, ENTRY, 'Remove event', None, CRASH),
+	(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
+	)
+
+POPUP_EVENT_SOURCE = (
+	(FLAG_ALL, ENTRY, 'Find event destination', None, FIND_EVENT_SOURCE),
+	(FLAG_ALL, ENTRY, 'Remove event', None, CRASH),
+	(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
 	)
 
 MAIN_FRAME_POPUP = (
