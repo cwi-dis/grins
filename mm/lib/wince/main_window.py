@@ -96,6 +96,9 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 				self.execute_cmd(cmd)
 				self.set_commandlist(None, 'document')
 				self.set_commandlist(None, 'pview_')
+			elif cmd == usercmd.CHOOSESKIN:
+				self.execute_cmd(cmd)
+				self.loadSplash()
 			else:
 				self.execute_cmd(cmd)
 			return 

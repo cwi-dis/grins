@@ -129,6 +129,15 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /stack:0x10000,0x1000 /subsystem:windows /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
 # ADD LINK32 $(CEx86Corelibc) winsock.lib commctrl.lib coredll.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
+# Begin Custom Build
+InputPath=.\X86EMRelFS\Frozen Static GRiNS Player.exe
+SOURCE="$(InputPath)"
+
+"..\..\..\bin\wince\grinsRC.py" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	..\..\..\..\python\PCbuild\python.exe ..\..\..\..\python\Tools\scripts\h2py.py  resource.h 
+	copy resource.py "..\..\..\bin\wince\grinsRC.py" 
+	
+# End Custom Build
 
 !ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
 
@@ -1945,21 +1954,6 @@ SOURCE=.\freeze\M_base64.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\freeze\M_base_displist.c
-
-!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\freeze\M_base_transitions.c
 
 !IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
@@ -1976,6 +1970,21 @@ SOURCE=.\freeze\M_base_transitions.c
 # Begin Source File
 
 SOURCE=.\freeze\M_base_window.c
+
+!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\freeze\M_bisect.c
 
 !IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
 

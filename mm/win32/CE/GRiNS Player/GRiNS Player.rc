@@ -84,6 +84,9 @@ BEGIN
     BEGIN
         MENUITEM "Open",                        IDM_OPEN
         MENUITEM "Close",                       IDM_CLOSE
+        MENUITEM SEPARATOR
+        MENUITEM "Choose skin...",              IDM_SKIN
+        MENUITEM SEPARATOR
         MENUITEM "Exit",                        IDM_EXIT
     END
     POPUP "Play"
@@ -104,7 +107,7 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOGEX 0, 0, 140, 57
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 140, 57
 STYLE WS_POPUP | WS_CAPTION
 EXSTYLE 0x80000000L
 CAPTION "About GRiNS Player"
@@ -125,7 +128,7 @@ BEGIN
                     WS_HSCROLL
 END
 
-IDD_PROFILE DIALOGEX 0, 0, 137, 103
+IDD_PROFILE DIALOG DISCARDABLE  0, 0, 137, 103
 STYLE WS_POPUP | WS_CAPTION
 EXSTYLE 0x80000000L
 CAPTION "Language Profile Selection"
