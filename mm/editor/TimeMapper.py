@@ -42,11 +42,11 @@ class TimeMapper:
 		if DEBUG:
 			print 'DEPENDENCIES'
 			for item in self.dependencies:
-				print '\t%f\t%f\t%d'%item
+				print item
 			print 'COLLISIONS'
 			self.collisions.sort()
 			for item in self.collisions:
-				print '\t%f\t%d'%item
+				print item
 		for time, pixels in self.collisions:
 			oldpixels = self.collisiondict[time]
 			if pixels > oldpixels:
@@ -65,7 +65,7 @@ class TimeMapper:
 		for t in self.times:
 			if t != prev_t: # for times[0] don't add the dependency
 				if realtime:
-					self.dependencies.append((t, prev_t, (t-prev_t)*min_pixels_per_second))
+					self.dependencies.append((t, prev_t, int((t-prev_t)*min_pixels_per_second + 0.5)))
 				else:
 					self.dependencies.append((t, prev_t, min_pixels_per_second))
 ##			minpos = minpos + (t-prev_t) * min_pixels_per_second
@@ -76,10 +76,10 @@ class TimeMapper:
 		if DEBUG:
 			print 'MINPOS'
 			for t in self.times:
-				print '\t%f\t%f'%(t, self.minpos[t])
+				print (t, self.minpos[t])
 			print 'DEPENDENCIES NOW'
 			for item in self.dependencies:
-				print '\t%f\t%f\t%d'%item
+				print item
 ##		pushover = {}
 		for t1, t0, pixels in self.dependencies:
 			t0maxpos = self.minpos[t0] + self.collisiondict[t0]
@@ -95,7 +95,7 @@ class TimeMapper:
 		if DEBUG:
 			print 'MINPOS'
 			for t in self.times:
-				print '\t%f\t%f'%(t, self.minpos[t])
+				print (t, self.minpos[t])
 			print 'RANGES'
 			for t in self.times:
 				print t, self.minpos[t], self.minpos[t] + self.collisiondict[t]
@@ -141,7 +141,7 @@ class TimeMapper:
 	def __pixel2pixel(self, pos):
 		if self.width == 0:
 			return pos
-		return int(pos * self.width / float(self.range[1] - self.range[0]) + self.offset)
+		return int(pos * self.width / float(self.range[1] - self.range[0]) + self.offset + .5)
 
 	def time2pixel(self, time, align='left'):
 		# Return either the leftmost or rightmost pixel for a given

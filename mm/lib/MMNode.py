@@ -187,13 +187,53 @@ class MMNodeContext:
 			del node.fakeparent
 
 	def _movetimestoobj(self, node, which):
+		if not node.WillPlay():
+			return
 		timeobj = node.GetTimesObject(which)
 		if not hasattr(node, 't0'):
-			# time-transparent node, just use parent's times
-			x = node.GetParent().GetTimesObject(which)
-			timeobj.t0 = x.t0
-			timeobj.t1 = x.t1
-			timeobj.t2 = x.t2
+			# time-transparent node
+			parent = node.GetSchedParent()
+			ptype = parent.GetType()
+			if ptype == 'seq':
+				# parent is a seq
+				tsibs = parent.GetSchedChildren()
+				for c in tsibs:
+					if node.IsAncestorOf(c):
+						# node is a time-transparent parent of a timed child.
+						# use the timed child's time
+						timeobj.t0 = c.t0
+						timeobj.t1 = c.t2
+						timeobj.t2 = c.t2
+						break
+				else:
+					# node has no time children
+					# use next time sibling's time
+					# or else parent's end time
+					x = None
+					sibs = parent.GetChildren()
+					for i in range(len(sibs)):
+						if sibs[i].IsAncestorOf(node):
+							for j in range(i+1,len(sibs)):
+								for c in tsibs:
+									if sibs[j].IsAncestorOf(c):
+										x = c
+										break
+								if x is not None:
+									break
+						if x is not None:
+							# we found the next time sibling, use it's start
+							timeobj.t0 = timeobj.t1 = timeobj.t2 = x.t0
+							break
+					else:
+						# no time children after node, so use parent's end
+						x = parent.GetTimesObject(which)
+						timeobj.t0 = timeobj.t1 = timeobj.t2 = x.t2
+			else:
+				# the simple case: use parent's times
+				x = parent.GetTimesObject(which)
+				timeobj.t0 = x.t0
+				timeobj.t1 = x.t1
+				timeobj.t2 = x.t2
 		else:
 			timeobj.t0 = node.t0
 			timeobj.t1 = node.t1

@@ -78,9 +78,10 @@ def prepare(node):
 # It does *not* remove t0 and t1, by the way...
 #
 def cleanup(node):
-	node.counter = node.deps = None
+	node.counter = node.deps = node.hasterm = None
 	del node.counter
 	del node.deps
+	del node.hasterm
 	for c in node.GetChildren():
 		cleanup(c)
 
@@ -110,6 +111,7 @@ def getduration(node):
 def prep1(node):
 	node.counter = [0, 0]
 	node.deps = [], []
+	node.hasterm = 0
 	type = node.GetType()
 	if type == 'seq': # XXX not right!
 		xnode, xside = node, HD
@@ -119,10 +121,17 @@ def prep1(node):
 			xnode, xside = c, TL
 		adddep(xnode, xside, 0, node, TL)
 	elif type in ('par', 'switch', 'excl') or (type in leaftypes and node.GetSchedChildren(1)):
+		term = node.GetTerminator()
 		for c in node.GetSchedChildren(1):
 			prep1(c)
 			adddep(node, HD, 0, c, HD)
-			adddep(c, TL, 0, node, TL)
+			if term == 'FIRST':
+				adddep(c, TL, 0, node, TL, 'FIRST')
+			elif term == MMAttrdefs.getattr(c, 'name'):
+				node.hasterm = 1
+				adddep(c, TL, 0, node, TL, 'TERM')
+			else:
+				adddep(c, TL, 0, node, TL)
 		# Make sure there is *some* path from head to tail
 		dur = MMAttrdefs.getattr(node, 'duration')
 		if dur >= 0:
@@ -280,32 +289,43 @@ def propdown2(root, node, stoptime, dftstarttime=0):
 			propdown2(root, c, endtime, nextstart)
 			nextstart = c.t1
 
-def adddep(xnode, xside, delay, ynode, yside):
+def adddep(xnode, xside, delay, ynode, yside, terminating = None):
 	ynode.counter[yside] = ynode.counter[yside] + 1
 	if delay >= 0 and xside in (HD, TL):
-		xnode.deps[xside].append((delay, ynode, yside))
+		xnode.deps[xside].append((delay, ynode, yside, terminating))
 
 
-def decrement(q, delay, node, side):
+def decrement(q, delay, node, side, term = None):
 	if delay > 0:
-		id = q.enter(delay, 0, decrement, (q, 0, node, side))
+		id = q.enter(delay, 0, decrement, (q, 0, node, side, term))
 		return
 	x = node.counter[side] - 1
 	node.counter[side] = x
-	if x > 0:
-		return
 	if x < 0:
 		raise CheckError, 'counter below zero!?!?'
-	if side == HD:
+	if x == 0 and side == HD:
 		node.t0 = q.timefunc()
 	elif side == TL:
-		node.t1 = q.timefunc()
-	node.node_to_arm = None
+		if term == 'FIRST':
+			t = q.timefunc()
+			if not hasattr(node, 't1') or t < node.t1:
+				node.t1 = t
+				x = 0
+			else:
+				x = 1
+		elif not node.hasterm or term == 'TERM':
+			node.t1 = q.timefunc()
+			if node.hasterm:
+				x = 0
+		elif node.hasterm:
+			x = 1
+	if x > 0:
+		return
 	if node.GetType() not in interiortypes and side == HD and not node.GetSchedChildren(1):
 		dt = getduration(node)
 		id = q.enter(dt, 0, decrement, (q, 0, node, TL))
-	for d, n, s in node.deps[side]:
-		decrement(q, d, n, s)
+	for d, n, s, t in node.deps[side]:
+		decrement(q, d, n, s, t)
 
 
 class pseudotime:

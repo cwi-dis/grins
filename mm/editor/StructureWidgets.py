@@ -899,7 +899,7 @@ class HorizontalWidget(StructureObjWidget):
 			if timemapper is not None:
 				if is_excl:
 					i.showtime = showtime
-				else:
+				elif i.node.WillPlay():
 					t0, t1, t2, download, begindelay = i.GetTimes('virtual')
 					delays = delays + download + begindelay
 					tottime = tottime + t2 - t0
@@ -951,6 +951,8 @@ class HorizontalWidget(StructureObjWidget):
 		if self.timemapper is not None:
 			timemapper = self.timemapper
 			timemapper.setoffset(l, r - l)
+		if not self.node.WillPlay():
+			timemapper = None
 
 		if self.iscollapsed():
 			StructureObjWidget.recalc(self, timemapper)
@@ -1048,7 +1050,7 @@ class HorizontalWidget(StructureObjWidget):
 		StructureObjWidget.recalc(self, timemapper)
 
 	def addcollisions(self, mastert0, mastertend, timemapper, mytimes = None):
-		if not self.children or self.iscollapsed():
+		if not self.children or self.iscollapsed() or not self.node.WillPlay():
 			return MMNodeWidget.addcollisions(self, mastert0, mastertend, timemapper, mytimes)
 
 		self.childrentimes = []
@@ -1066,13 +1068,27 @@ class HorizontalWidget(StructureObjWidget):
 		if self.dropbox is not None:
 			mw, mw =self.dropbox.get_minsize()
 			maxneededpixel1 = maxneededpixel1 + mw + GAPSIZE
-		nextt0, nextt1, nextt2, nextdownload, nextbegindelay = self.children[0].GetTimes('virtual')
 		for i in range(len(self.children)):
-			thist0, thist1, thist2, thisdownload, thisbegindelay = nextt0, nextt1, nextt2, nextdownload, nextbegindelay
-			if i < len(self.children) - 1:
-				nextt0, nextt1, nextt2, nextdownload, nextbegindelay = self.children[i+1].GetTimes('virtual')
+			if self.children[i].node.WillPlay():
+				nextt0, nextt1, nextt2, nextdownload, nextbegindelay = self.children[i].GetTimes('virtual')
+				break
+		else:
+			# no playable children
+			nextt0 = t0
+		thist0 = myt0
+		for i in range(len(self.children)):
+			if not self.children[i].node.WillPlay():
+				thist0 = thist1 = thist2 = nextt0
+				thisdownload = thisbegindelay = 0
 			else:
-				nextt0 = tend
+				thist0, thist1, thist2, thisdownload, thisbegindelay = nextt0, nextt1, nextt2, nextdownload, nextbegindelay
+				for j in range(i+1, len(self.children)):
+					if self.children[j].node.WillPlay():
+						nextt0, nextt1, nextt2, nextdownload, nextbegindelay = self.children[j].GetTimes('virtual')
+						break
+				else:
+					# no more playable children
+					nextt0 = tend
 			thistend = min(thist2, nextt0)
 			neededpixel0, neededpixel1 = self.children[i].addcollisions(t0, nextt0, timemapper, (thist0, thist1, thist2, thisdownload, thisbegindelay))
 			self.childrentimes.append((thist0, thist1, thist2, thisdownload, thisbegindelay, neededpixel0, neededpixel1))
@@ -1131,12 +1147,11 @@ class VerticalWidget(StructureObjWidget):
 			if timemapper is not None:
 				if is_excl:
 					i.showtime = showtime
-				else:
-					t0, t1, t2, download, begindelay = i.GetTimes('virtual')
 			elif hasattr(i, 'showtime'):
 				del i.showtime
 			w,h = i.recalc_minsize(tm)
-			if timemapper is not None and not is_excl:
+			if timemapper is not None and not is_excl and i.node.WillPlay():
+				t0, t1, t2, download, begindelay = i.GetTimes('virtual')
 				# reserve space for begin delay
 				if download + begindelay > 0:
 					if t2 - t0 > 0:
@@ -1183,6 +1198,8 @@ class VerticalWidget(StructureObjWidget):
 		if self.timemapper is not None:
 			timemapper = self.timemapper
 			timemapper.setoffset(self.pos_abs[0], self.pos_abs[2] - self.pos_abs[0])
+		if not self.node.WillPlay():
+			timemapper = None
 
 		if self.iscollapsed():
 			StructureObjWidget.recalc(self, timemapper)
@@ -1229,7 +1246,7 @@ class VerticalWidget(StructureObjWidget):
 			b = t + h + thisnode_free_height
 			this_l = l
 			this_r = r
-			if tm is not None:
+			if tm is not None and medianode.node.WillPlay():
 				t0, t1, t2, download, begindelay = medianode.GetTimes('virtual')
 				tend = t2
 				lmin = tm.time2pixel(t0)
@@ -1268,7 +1285,7 @@ class VerticalWidget(StructureObjWidget):
 		StructureObjWidget.draw(self, displist)
 
 	def addcollisions(self, mastert0, mastertend, timemapper, mytimes = None):
-		if not self.children or self.iscollapsed():
+		if not self.children or self.iscollapsed() or not self.node.WillPlay():
 			return MMNodeWidget.addcollisions(self, mastert0, mastertend, timemapper, mytimes)
 
 		if mytimes is not None:
@@ -1279,7 +1296,11 @@ class VerticalWidget(StructureObjWidget):
 		maxneededpixel0 = 0
 		maxneededpixel1 = 0
 		for ch in self.children:
-			neededpixel0, neededpixel1 = ch.addcollisions(t0, tend, timemapper)
+			if ch.node.WillPlay():
+				chtimes = ch.GetTimes('virtual')
+			else:
+				chtimes = t0, t2, t2, 0, 0
+			neededpixel0, neededpixel1 = ch.addcollisions(t0, tend, timemapper, chtimes)
 			if neededpixel0 > maxneededpixel0:
 				maxneededpixel0 = neededpixel0
 			if neededpixel1 > maxneededpixel1:
@@ -1418,6 +1439,8 @@ class UnseenVerticalWidget(StructureObjWidget):
 		if self.timemapper is not None:
 			timemapper = self.timemapper
 			timemapper.setoffset(self.pos_abs[0], self.pos_abs[2] - self.pos_abs[0])
+		if not self.node.WillPlay():
+			timemapper = None
 
 		if self.iscollapsed():
 			StructureObjWidget.recalc(self, timemapper)
@@ -1453,7 +1476,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 			# r = l + w # Wrap the node to it's minimum size.
 			this_l = l
 			this_r = r
-			if timemapper is not None:
+			if timemapper is not None and medianode.node.WillPlay():
 				t0, t1, t2, download, begindelay = medianode.GetTimes('virtual')
 				tend = t2
 				lmin = timemapper.time2pixel(t0)
@@ -1609,6 +1632,8 @@ class MediaWidget(MMNodeWidget):
 		if self.timemapper is not None:
 			timemapper = self.timemapper
 			timemapper.setoffset(self.pos_abs[0], self.pos_abs[2] - self.pos_abs[0])
+		if not self.node.WillPlay():
+			timemapper = None
 		self.__timemapper = timemapper
 		l,t,r,b = self.pos_abs
 		w = 0
@@ -1835,15 +1860,15 @@ class CommentWidget(MMNodeWidget):
 		l,t,r,b = self.pos_abs
 		self.iconbox.moveto((l+1, t+2,0,0))
 
-	def recalc_minsize(self, timemapper = None):
-		# return the minimum size of this node, in pixels.
-		# Called to work out the size of the canvas.
-		timemapper = self.init_timemapper(timemapper)
-		xsize = MINSIZE + self.iconbox.recalc_minsize()[0]
-		ysize = MINSIZE# + TITLESIZE
-		self.boxsize = xsize, ysize
-		self.fix_timemapper(timemapper)
-		return self.boxsize
+##	def recalc_minsize(self, timemapper = None):
+##		# return the minimum size of this node, in pixels.
+##		# Called to work out the size of the canvas.
+##		timemapper = self.init_timemapper(timemapper)
+##		xsize = MINSIZE + self.iconbox.recalc_minsize()[0]
+##		ysize = MINSIZE# + TITLESIZE
+##		self.boxsize = xsize, ysize
+##		self.fix_timemapper(timemapper)
+##		return self.boxsize
 
 	def get_maxsize(self):
 		return MAXSIZE, MAXSIZE
