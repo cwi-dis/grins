@@ -2232,7 +2232,7 @@ static PyTypeObject MediaPositionType = {
 ////////////////////////////////////////////
 
 /////////////////////////////////////////////
-// MultiMediaStream object
+// MultiMediaStream object (IAMMultiMediaStream)
 
 static char MultiMediaStream_Initialize__doc__[] =
 ""
@@ -2458,6 +2458,28 @@ MultiMediaStream_Seek(MultiMediaStreamObject *self, PyObject *args)
 	return Py_None;
 }
 
+
+static char MultiMediaStream_GetFilterGraph__doc__[] =
+""
+;
+static PyObject *
+MultiMediaStream_GetFilterGraph(MultiMediaStreamObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,""))
+		return NULL;
+	
+	GraphBuilderObject *obj = newGraphBuilderObject();
+	if (obj == NULL) return NULL;
+	HRESULT hr = self->pI->GetFilterGraph(&obj->pGraphBuilder);
+	if(FAILED(hr))
+		{
+		Py_DECREF(obj);
+		seterror("MultiMediaStream_GetFilterGraph", hr);
+		return NULL;
+		}
+	return (PyObject*)obj;
+}
+
 static struct PyMethodDef MultiMediaStream_methods[] = {
 	{"Initialize", (PyCFunction)MultiMediaStream_Initialize, METH_VARARGS, MultiMediaStream_Initialize__doc__},
 	{"AddPrimaryVideoMediaStream", (PyCFunction)MultiMediaStream_AddPrimaryVideoMediaStream, METH_VARARGS, MultiMediaStream_AddPrimaryVideoMediaStream__doc__},
@@ -2470,6 +2492,7 @@ static struct PyMethodDef MultiMediaStream_methods[] = {
 	{"GetDuration", (PyCFunction)MultiMediaStream_GetDuration, METH_VARARGS, MultiMediaStream_GetDuration__doc__},
 	{"GetTime", (PyCFunction)MultiMediaStream_GetTime, METH_VARARGS, MultiMediaStream_GetTime__doc__},
 	{"Seek", (PyCFunction)MultiMediaStream_Seek, METH_VARARGS, MultiMediaStream_Seek__doc__},
+	{"GetFilterGraph", (PyCFunction)MultiMediaStream_GetFilterGraph, METH_VARARGS, MultiMediaStream_GetFilterGraph__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}
 };
 
@@ -3161,7 +3184,6 @@ static PyTypeObject LargeIntType = {
 static char CreateGraphBuilder__doc__[] =
 ""
 ;
-
 static PyObject *
 CreateGraphBuilder(PyObject *self, PyObject *args)
 {
