@@ -1,7 +1,7 @@
 import sys, os
 
 if os.environ.has_key('CMIF_USE_X'):
-	from X_windowinterface import *
+	from X_window import *
 else:
 	try:
 		import gl, fm
@@ -12,6 +12,6 @@ else:
 			import Xlib, Xt, Xm
 		except ImportError:
 			raise ImportError, 'No module named windowinterface'
-		from X_windowinterface import *
+		from X_window import *
 	else:
-		from GL_windowinterface import *
+		from GL_window import *
