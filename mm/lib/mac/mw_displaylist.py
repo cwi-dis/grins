@@ -804,14 +804,23 @@ class _DisplayList:
 	def __pointsize(self):
 		return self._font.pointsize()
 		
+	def baselinePXL(self):
+		return self._font.baselinePXL()
+
 	def baseline(self):
 		return self.__font_size_cache[0]
+
+	def fontheightPXL(self):
+		return self._font.fontheightPXL()
 
 	def fontheight(self):
 		return self.__font_size_cache[1]
 
 	def pointsize(self):
 		return self.__font_size_cache[2]
+
+	def strsizePXL(self, str):
+		return self._font.strsizePXL(str)
 
 	def strsize(self, str):
 		# XXXX Or on the _onscreen_wid??
