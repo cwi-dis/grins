@@ -14,6 +14,8 @@ import MMurl
 from urlcache import urlcache
 import string
 
+Error="Bandwidth.Error"
+
 CONTINUOUS_CHANNELS = ['video', 'mpeg', 'movie', 'sound',  'RealAudio',
 			     'RealVideo']
 REAL_CHANNELS = ['RealAudio', 'RealVideo', 'RealText', 'RealPix', 'RealFlash']
@@ -24,7 +26,7 @@ def get(node, target=0):
 		# Nodes that are not external consume no bandwidth
 		return 0, 0
 	if ntype == 'slide':
-		raise 'Cannot compute bandwidth for slide'
+		raise Error, 'Cannot compute bandwidth for slide'
 	
 	context = node.GetContext()
 	ctype = node.GetChannelType()
@@ -38,11 +40,11 @@ def get(node, target=0):
 	type, rest = MMurl.splittype(url)
 	if type and type != 'file':
 ##		print "DBG: Bandwidth.get: skip nonlocal", url
-		return 0, 0
+		return None, None
 	host, rest = MMurl.splithost(rest)
 	if host and host != 'localhost':
 ##		print "DBG: Bandwidth.get: skip nonlocal", url
-		return 0, 0
+		return None, None
 
 	if ctype in REAL_CHANNELS:
 		# For real channels we parse the header and such
@@ -62,13 +64,20 @@ def get(node, target=0):
 	filesize = GetSize(url, target, attrs)
 
 	if ctype in CONTINUOUS_CHANNELS:
-		duration = Duration.get(node, ignoreloop=1)
-		if duration <= 0:
+		if filesize == None:
+			return 0, None
+		try:
+			duration = Duration.get(node, ignoreloop=1, wanterror=1)
+		except IOError:
+			raise Error, 'Media item does not exist'
+		if duration == 0:
 			return 0, 0
 ##		print 'DBG: Bandwidth.get: continuous',filename, filesize, float(filesize)*8/duration
 		urlcache[url]['bandwidth'] = 0, float(filesize)*8/duration
 		return 0, float(filesize)*8/duration
 	else:
+		if filesize == None:
+			return None, 0
 ##		print 'DBG: Bandwidth.get: discrete',filename, filesize, float(filesize)*8
 		urlcache[url]['bandwidth'] = float(filesize)*8, 0
 		return float(filesize)*8, 0
@@ -89,7 +98,10 @@ def GetSize(url, target=0, attrs = {}):
 		return None
 
 	# Okay, get the filesize
-	filename, hdrs = MMurl.urlretrieve(url)
+	try:
+		filename, hdrs = MMurl.urlretrieve(url)
+	except IOError:
+		raise Error, 'Media item does not exist'
 	tmp = None
 	if target:
 		if hdrs.maintype == 'image':
@@ -103,7 +115,7 @@ def GetSize(url, target=0, attrs = {}):
 		statb = os.stat(filename)
 	except os.error:
 ##		print "DBG: Bandwidth.get: nonexisting", filename
-		return None
+		raise Error, 'Media item does not exist'
 	if tmp:
 		os.unlink(tmp)
 	filesize = statb[ST_SIZE]
