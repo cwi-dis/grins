@@ -3995,12 +3995,13 @@ class MMNode(MMTreeElement):
 			self.__dump_srdict('gensr_child', srdict)
 		return srdict
 
-	def calcendfreezetime(self, sctx):
+	def calcendfreezetime(self, sctx, fill = None):
 		# calculate end of freeze period
 		# can only be called when start time is resolved
 		# XXX should we do something special for fill="transition"?
 		# currently it is handled like fill="freeze"
-		fill = self.GetFill()
+		if fill is None:
+			fill = self.GetFill()
 		pnode = self.GetSchedParent()
 		if fill == 'remove' or not pnode:
 			resolved = self.isresolved(sctx)
