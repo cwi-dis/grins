@@ -64,6 +64,8 @@ class PlayerDialog:
 		self.__commandlist = []
 		self.__channels = []
 		self.__channeldict = {}
+		self.__strid='player'
+		self.__cmdtgt='pview_'
 		
 	def preshow(self):
 		# If anything has to be done before showing the channels do it here.		
@@ -76,7 +78,7 @@ class PlayerDialog:
 
 	def close(self):
 		if self.__window is not None:
-			self.__window.close()
+			#self.__window.close()
 			self.__window = None
 		del self.__menu_created
 		del self.__topcommandlist
@@ -86,11 +88,7 @@ class PlayerDialog:
 
 	def __create(self):
 		x, y, w, h = self.__coords
-	
-		self.__window = windowinterface.newview(
-			x, y, w, h, self.__title,
-			adornments = self.adornments,
-			commandlist = None,context='pview_')
+		self.__window = self.toplevel.window
 		if self.__channels:
 			self.setchannels(self.__channels)
 
@@ -101,7 +99,7 @@ class PlayerDialog:
 
 	def hide(self):
 		if self.__window is not None:
-			self.__window.close()
+			#self.__window.close()
 			self.__window = None
 
 	def settitle(self, title):
@@ -147,11 +145,11 @@ class PlayerDialog:
 		self.__commandlist = commandlist
 		if w is not None:
 			if state == STOPPED:
-				w.set_commandlist(commandlist + self.stoplist)
+				w.set_commandlist(commandlist + self.stoplist,self.__cmdtgt)
 			if state == PLAYING:
-				w.set_commandlist(commandlist + self.playlist)
+				w.set_commandlist(commandlist + self.playlist,self.__cmdtgt)
 			if state == PAUSING:
-				w.set_commandlist(commandlist + self.pauselist)
+				w.set_commandlist(commandlist + self.pauselist,self.__cmdtgt)
 			self.setchannels(self.__channels)
 			if state != ostate:
 				w.set_toggle(PLAY, state != STOPPED)
@@ -162,8 +160,10 @@ class PlayerDialog:
 		pass
 
 	def get_adornments(self, channel):
-		if self.__menu_created is not None or \
-		   self.__window is not None:
-			return self.adornments2
-		self.__menu_created = channel
-		return self.adornments
+		self.inst_adornments = {
+			'close': [ CLOSE_WINDOW, ],
+			'frame':self.toplevel.window,
+			'view':self.__cmdtgt,
+			}
+		return self.inst_adornments
+
