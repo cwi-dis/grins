@@ -74,10 +74,20 @@ MM_WOM_CLOSE = 0x3BC
 MM_WOM_DONE = 0x3BD
 
 class AudioPlayer:
+	buffers_start = 50
+	buffers_low = 25
+	buffers_hi = 30
+	wavehdr_size = 4800
+	decode_buf_size = 8192
+
 	def __init__(self, srcurl):
-		self._data = None
 		self._waveout = None
+		self._wavhdrs = []
 		self._wfx = None
+
+		self._rdr = None
+		self._u = None
+		self._rest = ''
 
 		u = MMurl.urlopen(srcurl)
 		if u.headers.maintype != 'audio':
@@ -96,12 +106,27 @@ class AudioPlayer:
 
 		if atype == 'mp3':
 			self.read_mp3_audio(u, atype)
+			self.read_more = self.read_more_mp3_audio
 		else:
 			self.read_basic_audio(u, atype)
+			self.read_more = self.read_more_basic_audio
 
 		cbwnd = windowinterface.getmainwnd()
 		self.hook_callbacks(cbwnd)
 		self._waveout = winmm.WaveOutOpen(self._wfx, cbwnd.GetSafeHwnd())
+		
+		self._waveout.Pause()
+		for hdr in self._wavhdrs:
+			hdr.PrepareHeader(self._waveout)
+			self._waveout.Write(hdr)
+		
+	def __del__(self):
+		if self._u is not None:
+			self._u.close()
+		if self._waveout is not None:
+			for hdr in self._wavhdrs:
+				hdr.UnprepareHeader(self._waveout)
+		del self._wavhdrs
 
 	def read_basic_audio(self, u, atype):
 		try:
@@ -114,32 +139,53 @@ class AudioPlayer:
 		except (audio.Error, IOError, EOFError), msg:
 			u.close()
 			raise error, msg
-		self._data, dummy = rdr.readframes(totframes)
-		u.close()
 
 		# nChannels, nSamplesPerSec, nAvgBytesPerSecond, BlockAlign, wBitsPerSample
 		wfx = nchan, frate, frate*bytesperframe, bytesperframe, bytesperframe*8
 		can_play = winmm.WaveOutQuery(wfx)
 		if not can_play:
+			u.close()
 			raise error, 'The device cant play audio format.'
-
+		
 		# device can play data with format
 		self._wfx = wfx
+		self._u = u
+		self._rdr = rdr
+
+		frames = AudioPlayer.wavehdr_size/bytesperframe
+		while len(self._wavhdrs) < AudioPlayer.buffers_start:
+			data, dummy = self._rdr.readframes(frames)
+			if not data:
+				self._u.close()
+				self._u = None 
+				break
+			hdr = winmm.CreateWaveHdr(data)
+			self._wavhdrs.append(hdr)
+
+	def read_more_basic_audio(self):
+		fmt = self._rdr.getformat()
+		bytesperframe = fmt.getblocksize() / fmt.getfpb()
+		frames = AudioPlayer.wavehdr_size/bytesperframe
+		while len(self._wavhdrs) < AudioPlayer.buffers_hi:
+			data, dummy = self._rdr.readframes(frames)
+			if not data: 
+				self._u.close()
+				self._u = None
+				break
+			hdr = winmm.CreateWaveHdr(data)
+			self._wavhdrs.append(hdr)
+			hdr.PrepareHeader(self._waveout)
+			self._waveout.Write(hdr)
 
 	def read_mp3_audio(self, u, atype):
 		# create mp3 decoder
 		try:
 			decoder = winmm.CreateMp3Decoder()
 		except winmm.error, msg:
-			u.close()
 			raise error, 'CreateMp3Decoder() failed'
 
 		# size of buffer holding encoded data
-		decode_buf_size = 8192	
-
-		# limit decode size so that we don't break audio subsystem
-		# decode/add more when some have been played
-		max_data_buf_size = 500000 # upper bound size of decoded data
+		decode_buf_size = AudioPlayer.decode_buf_size	
 
 		# read first chunk to read header
 		data = u.read(decode_buf_size)
@@ -155,36 +201,75 @@ class AudioPlayer:
 			wfx = decoder.GetWaveFormat(data, nSamplesPerSec)
 			can_play = winmm.WaveOutQuery(wfx)
 			if not can_play:
-				u.close()
 				raise error, 'The device cant play audio format.'
-		
+			
 		# device can play data with format
 		self._wfx = wfx
+		self._u = u
 
 		# decode some
-		self._data = ''
+		decbuf = ''
 		status = len(data)
-		while status > 0 and len(self._data) < max_data_buf_size:
+		while status > 0 and len(self._wavhdrs) < AudioPlayer.buffers_start:
 			decdata, done, inputpos, status = decoder.DecodeBuffer(data)
 			if done>0:
-				self._data = self._data + decdata[:done]
+				decbuf = decbuf + decdata[:done]
 			while not status:
 				decdata, done, status, status = decoder.DecodeBuffer()
 				if done>0:
-					self._data = self._data + decdata[:done]
+					decbuf = decbuf + decdata[:done]
 			if status > 0:
 				status = status - 1
 			data = data[decode_buf_size - status:]
 			newdata =  u.read(decode_buf_size - status)
 			if not newdata:
+				self._u.close()
+				self._u = None
 				break
 			data = data + newdata
 			status = len(data)
-		u.close()
+			if len(decbuf) >= AudioPlayer.wavehdr_size:
+				wavhdr = winmm.CreateWaveHdr(decbuf)
+				self._wavhdrs.append(wavhdr)
+				decbuf = ''
+		self._rest = data		
+
+	def read_more_mp3_audio(self):
+		# size of buffer holding encoded data
+		decode_buf_size = AudioPlayer.decode_buf_size	
+
+		decbuf = ''
+		data = self._rest
+		status = len(data)
+		while status > 0 and len(self._wavhdrs) < AudioPlayer.buffers_hi:
+			decdata, done, inputpos, status = decoder.DecodeBuffer(data)
+			if done>0:
+				decbuf = decbuf + decdata[:done]
+			while not status:
+				decdata, done, status, status = decoder.DecodeBuffer()
+				if done>0:
+					decbuf = decbuf + decdata[:done]
+			if status > 0:
+				status = status - 1
+			data = data[decode_buf_size - status:]
+			newdata =  self._u.read(decode_buf_size - status)
+			if not newdata:
+				self._u.close()
+				self._u = None
+				break
+			data = data + newdata
+			status = len(data)
+			if len(decbuf) >= AudioPlayer.wavehdr_size:
+				hdr = winmm.CreateWaveHdr(decbuf)
+				self._wavhdrs.append(hdr)
+				hdr.PrepareHeader(self._waveout)
+				self._waveout.Write(hdr)
+				decbuf = ''
+		self._rest = data		
 
 	def play(self):
 		if self._waveout:
-			self._waveout.PlayChunk(self._data)
+			self._waveout.Restart()
 		
 	def pause(self):
 		if self._waveout:
@@ -211,7 +296,13 @@ class AudioPlayer:
 		pass #print 'OnClose', params
 
 	def OnDone(self, params):
-		pass #print 'OnDone', params
+		hwnd, message, wParam, lParam, time, pt = params
+		if len(self._wavhdrs):
+			hdr = self._wavhdrs[0]
+			del self._wavhdrs[0]
+			hdr.UnprepareHeader(wParam)
+		if len(self._wavhdrs) < AudioPlayer.buffers_low and self._u is not None:
+			self.read_more()
 
 
 #########################################
