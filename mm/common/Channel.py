@@ -42,9 +42,6 @@ def isin(elem, list):
 			return 1
 	return 0
 
-clipre = None
-clock_val = None
-
 class Channel:
 	#
 	# The following methods can be called by higher levels.
@@ -1092,111 +1089,12 @@ class Channel:
 ##				self.errormsg(node, 'Unknown transition name: %s\n'%trclass)
 		return None
 
-	def parsecount(self, val, node, attr):
-		global clock_val
-		if clock_val is None:
-			import re
-			clock_val = re.compile(
-				r'(?:(?P<use_clock>' # hours:mins:secs[.fraction]
-				r'(?:(?P<hours>\d{2}):)?'
-				r'(?P<minutes>\d{2}):'
-				r'(?P<seconds>\d{2})'
-				r'(?P<fraction>\.\d+)?'
-				r')|(?P<use_timecount>' # timecount[.fraction]unit
-				r'(?P<timecount>\d+)'
-				r'(?P<units>\.\d+)?'
-				r'(?P<scale>h|min|s|ms)?)'
-				r')$')
-		res = clock_val.match(val)
-		if res is None:
-			self.errormsg(node, 'bad clock value in %s' % attr)
-			return 0
-		if res.group('use_clock'):
-			h, m, s, f = res.group('hours', 'minutes',
-					       'seconds', 'fraction')
-			offset = 0
-			if h is not None:
-				offset = offset + string.atoi(h) * 3600
-			m = string.atoi(m)
-			if m >= 60:
-				self.syntax_error('minutes out of range')
-			s = string.atoi(s)
-			if s >= 60:
-				self.syntax_error('seconds out of range')
-			offset = offset + m * 60 + s
-			if f is not None:
-				offset = offset + string.atof(f + '0')
-		elif res.group('use_timecount'):
-			tc, f, sc = res.group('timecount', 'units', 'scale')
-			offset = string.atoi(tc)
-			if f is not None:
-				offset = offset + string.atof(f)
-			if sc == 'h':
-				offset = offset * 3600
-			elif sc == 'min':
-				offset = offset * 60
-			elif sc == 'ms':
-				offset = offset / 1000.0
-			# else already in seconds
-		else:
-			raise error, 'internal error'
-		return offset
-
 	def getclipval(self, node, attr, units):
-		import smpte
-		global clipre
-		val = MMAttrdefs.getattr(node, attr)
-		if not val:
+		try:
+			return node.GetClip(attr, units)
+		except ValueError, msg:
+			self.errormsg(node, str(msg))
 			return 0
-		if clipre is None:
-			import re
-			clipre = re.compile(
-				'^(?:'
-				'(?:(?P<npt>npt)=(?P<nptclip>.+))|'
-				'(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smpteclip>.+))|'
-				'(?P<clock>[0-9].*)'
-				')$')
-		res = clipre.match(val)
-		if res is None:
-			self.errormsg(node, 'invalid %s attribute' % attr)
-			return 0
-		if res.group('npt'):
-			val = res.group('nptclip')
-			val = float(self.parsecount(val, node, attr))
-		elif res.group('clock'):
-##			self.errormsg(node, 'invalid %s attribute; should be "npt=<time>"' % attr)
-			val = res.group('clock')
-			val = float(self.parsecount(val, node, attr))
-		else:
-			smpteval = res.group('smpte')
-			if smpteval == 'smpte':
-				cl = smpte.Smpte30
-			elif smpteval == 'smpte-25':
-				cl = smpte.Smpte25
-			elif smpteval == 'smpte-30-drop':
-				cl = smpte.Smpte30Drop
-			else:
-				raise error, 'internal error'
-			val = res.group('smpteclip')
-			try:
-				val = cl(val)
-			except ValueError:
-				self.errormsg(node, 'invalid %s attribute' % attr)
-				return 0
-		if units == 'smpte-25':
-			return smpte.Smpte25(val).GetFrame()
-		elif units == 'smpte-30':
-			return smpte.Smpte30(val).GetFrame()
-		elif units == 'smpte-24':
-			return smpte.Smpte24(val).GetFrame()
-		elif units == 'smpte-30-drop':
-			return smpte.Smpte30Drop(val).GetFrame()
-		elif units == 'sec':
-			if type(val) is not type(0.0):
-				val = val.GetTime()
-			return val
-		else:
-			raise error, 'internal error'
 
 	def getclipbegin(self, node, units):
 		return self.getclipval(node, 'clipbegin', units)
