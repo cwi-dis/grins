@@ -89,6 +89,26 @@ LINK32=link.exe
 # Name "vid2rm - Win32 Debug"
 # Begin Source File
 
+SOURCE=.\rprod.cpp
+DEP_CPP_RPROD=\
+	{$(INCLUDE)}"engcodec.h"\
+	{$(INCLUDE)}"engtargs.h"\
+	{$(INCLUDE)}"engtypes.h"\
+	{$(INCLUDE)}"pnbastsd.h"\
+	{$(INCLUDE)}"pncom.h"\
+	{$(INCLUDE)}"pnresult.h"\
+	{$(INCLUDE)}"pntypes.h"\
+	{$(INCLUDE)}"pnwintyp.h"\
+	{$(INCLUDE)}"progsink.h"\
+	{$(INCLUDE)}"rmaenum.h"\
+	{$(INCLUDE)}"rmapckts.h"\
+	{$(INCLUDE)}"rmavalue.h"\
+	{$(INCLUDE)}"rmbldeng.h"\
+	{$(INCLUDE)}"rmmetain.h"\
+	
+# End Source File
+# Begin Source File
+
 SOURCE=.\vid2rm.cpp
 DEP_CPP_VID2R=\
 	".\vid2rm.h"\
@@ -135,11 +155,19 @@ SOURCE=.\vid2rm.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\mmpython\wmsdk\vid2rm.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\vid2rm.rc
 # End Source File
 # Begin Source File
 
 SOURCE=.\vid2rmuids.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\mmpython\producer\lib\enceng.lib
 # End Source File
 # End Target
 # End Project

@@ -7,22 +7,29 @@ Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 // vid2rm.ax - A filter for converting video to real media through the real producer
 
-#include <windows.h>
-#include <commdlg.h>
 #include <streams.h>
 #include <initguid.h>
+#include <limits.h>
+
 #include "vid2rmuids.h"
 #include "vid2rm.h"
 
-
-// debug
 #include <stdio.h>
-FILE *logFile;
-static void Log(const char *psz)
-	{if(logFile) fwrite(psz,1,lstrlen(psz),logFile);}
+
+namespace RProducer {
+void SetDllCategoryPaths();
+bool Init();
+void SetOutputFilename(const char* szOutputFile);
+void Cleanup();
+bool Prepare();
+void SetVideoInfo(int w,int h,float rate);
+void EncodeSample(BYTE *p,int frame,bool isLast);
+void EncodeSample(BITMAPINFOHEADER* pbi, BYTE *p,int frame,bool isLast);
+void DoneEncoding();
+bool CreateRMBuildEngine();
+}
 
 // Setup data
-
 
 const AMOVIESETUP_MEDIATYPE sudPinTypes =
 {
@@ -30,429 +37,134 @@ const AMOVIESETUP_MEDIATYPE sudPinTypes =
     &MEDIASUBTYPE_NULL          // Minor type
 };
 
-
-const AMOVIESETUP_PIN sudPins[] =
-{	
-	{
-    L"Input",                   // Pin string name
-    FALSE,                      // Is it rendered
-    FALSE,                      // Is it an output
-    FALSE,                      // Allowed none
-    FALSE,                      // Likewise many
+const AMOVIESETUP_PIN sudPins =
+{
+    L"Input",                   // Name of the pin
+    FALSE,                      // Is pin rendered
+    FALSE,                      // Is an output pin
+    FALSE,                      // Ok for no pins
+    FALSE,                      // Allowed many
     &CLSID_NULL,                // Connects to filter
     L"Output",                  // Connects to pin
-    1,                          // Number of types
-    &sudPinTypes                // Pin information
-	}
+    1,                          // Number of pin types
+    &sudPinTypes                // Details for pins
 };
 
-const AMOVIESETUP_FILTER sudVid2rm =
+const AMOVIESETUP_FILTER sudSampVid =
 {
-    &CLSID_Vid2rm,                // Filter CLSID
-    L"Video Real Media Converter", // String name
+    &CLSID_Vid2rm,				// Filter CLSID
+    L"Video Real Media Converter",// Filter name
     MERIT_DO_NOT_USE,           // Filter merit
-    2,                          // Number pins
-    sudPins                     // Pin details
+    1,                          // Number pins
+    &sudPins                    // Pin details
 };
 
+// List of class IDs and creator functions for the class factory. This
+// provides the link between the OLE entry point in the DLL and an object
+// being created. The class factory will call the static CreateInstance
 
-//
-//  Object creation stuff
-//
-CFactoryTemplate g_Templates[]= {
-    L"vid2rm", &CLSID_Vid2rm, CVid2rm::CreateInstance, NULL, &sudVid2rm
+CFactoryTemplate g_Templates[] = {
+    { L"Video Real Media Converter"
+    , &CLSID_Vid2rm
+    , CVideoRenderer::CreateInstance
+    , NULL
+    , &sudSampVid }
 };
+
 int g_cTemplates = 1;
 
-
-// Constructor
-
-CVid2rmFilter::CVid2rmFilter(CVid2rm *pVid2rm,
-                         LPUNKNOWN pUnk,
-                         CCritSec *pLock,
-                         HRESULT *phr) :
-    CBaseFilter(NAME("vid2rm filter"), pUnk, pLock, CLSID_Vid2rm),
-    m_pVid2rm(pVid2rm)
-{
-	logFile=fopen("vid2rm.log","w");
-	Log("Filter created\n");
-
-}
-
-CVid2rmFilter::~CVid2rmFilter()
+// Debug log
+FILE *logFile;
+void Log(const char *psz)
 	{
+	if(logFile)fwrite(psz,1,lstrlen(psz),logFile);
+	}
+
+// This goes in the factory template table to create new filter instances
+//
+CUnknown * WINAPI CVideoRenderer::CreateInstance(LPUNKNOWN pUnk, HRESULT *phr)
+{
+    return  new CVideoRenderer(NAME("Video Real Media Converter"),pUnk,phr);
+} 
+
+
+#pragma warning(disable:4355)
+
+
+CVideoRenderer::CVideoRenderer(TCHAR *pName,
+                               LPUNKNOWN pUnk,
+                               HRESULT *phr) :
+
+    CBaseVideoRenderer(CLSID_Vid2rm,pName,pUnk,phr),
+    m_InputPin(NAME("Video Pin"),this,&m_InterfaceLock,phr,L"Input"),
+    m_ImageAllocator(this,NAME("Video allocator"),phr)
+{
+    // Store the video input pin
+    m_pInputPin = &m_InputPin;
+	logFile=fopen("log.txt","w");
+    m_VideoSize.cx = 0;
+    m_VideoSize.cy = 0;
+	m_ixframe=0;
+
+	RProducer::SetDllCategoryPaths();
+	if(!RProducer::Init())
+		Log("Failed to ceate engine\n");
+	else 
+		Log("engine created\n");
+
+} 
+
+
+CVideoRenderer::~CVideoRenderer()
+{
+	RProducer::Cleanup();
+    m_pInputPin = NULL;
 	if(logFile) fclose(logFile);
-	}
-//
-// GetPin
-//
-CBasePin * CVid2rmFilter::GetPin(int n)
+} 
+
+
+HRESULT CVideoRenderer::CheckMediaType(const CMediaType *pmtIn)
 {
-    if (n == 0 || n==1) {
-        return m_pVid2rm->m_pPin;
-    } else {
-        return NULL;
+    // Does this have a VIDEOINFOHEADER format block
+    const GUID *pFormatType = pmtIn->FormatType();
+    if (*pFormatType != FORMAT_VideoInfo) {
+        NOTE("Format GUID not a VIDEOINFOHEADER");
+        return E_INVALIDARG;
     }
-}
+    ASSERT(pmtIn->Format());
 
+    // Check the format looks reasonably ok
 
-//
-// GetPinCount
-//
-int CVid2rmFilter::GetPinCount()
-{
-    return 1;
-}
-
-
-//
-// Stop
-//
-// Overriden to close the Vid2rm file
-//
-STDMETHODIMP CVid2rmFilter::Stop()
-{
-    CAutoLock cObjectLock(m_pLock);
-    m_pVid2rm->CloseFile();
-    return CBaseFilter::Stop();
-}
-
-
-//
-// Pause
-//
-// Overriden to open the Vid2rm file
-//
-STDMETHODIMP CVid2rmFilter::Pause()
-{
-    CAutoLock cObjectLock(m_pLock);
-    m_pVid2rm->OpenFile();
-    return CBaseFilter::Pause();
-}
-
-
-//
-// Run
-//
-// Overriden to open the Vid2rm file
-//
-STDMETHODIMP CVid2rmFilter::Run(REFERENCE_TIME tStart)
-{
-    CAutoLock cObjectLock(m_pLock);
-    m_pVid2rm->OpenFile();
-    return CBaseFilter::Run(tStart);
-}
-
-
-//
-//  Definition of CVid2rmInputPin
-//
-CVid2rmInputPin::CVid2rmInputPin(CVid2rm *pVid2rm,
-                             LPUNKNOWN pUnk,
-                             CBaseFilter *pFilter,
-                             CCritSec *pLock,
-                             CCritSec *pReceiveLock,
-                             HRESULT *phr) :
-
-    CRenderedInputPin(NAME("CVid2rmInputPin"),
-                  pFilter,                   // Filter
-                  pLock,                     // Locking
-                  phr,                       // Return code
-                  L"Input"),                 // Pin name
-    m_pReceiveLock(pReceiveLock),
-    m_pVid2rm(pVid2rm),
-    m_tLast(0)
-{
-}
-
-
-//
-// CheckMediaType
-//
-// Check if the pin can support this specific proposed type and format
-//
-HRESULT CVid2rmInputPin::CheckMediaType(const CMediaType *)
-{
-    return S_OK;
-}
-
-
-HRESULT CVid2rmInputPin::SetMediaType(const CMediaType *pmt)
-{
-    CAutoLock cObjectLock(m_pLock);
-	
-    VIDEOINFO *pVideoInfo = (VIDEOINFO *) pmt->Format();
-	if(!pVideoInfo) return NOERROR; // needed!
-
-    m_mtIn = *pmt;
-    BITMAPINFOHEADER *pbmi;     // Image format data
-	pbmi = HEADER(pmt->Format());
-	if(pbmi->biSize!=sizeof(BITMAPINFOHEADER))
-		Log("NOT NORMAL\n");
-	char sz[128]="";
-	CRefTime rt(pVideoInfo->AvgTimePerFrame);
-	//sprintf(sz,"Size: %ld %ld fps:%ld\n",pbmi->biWidth,pbmi->biHeight,1000/rt.Millisecs());
-	sprintf(sz,"Size: %ld %ld fps:%ld\n",pVideoInfo->rcSource.right,pVideoInfo->rcSource.bottom,1000/rt.Millisecs());
-	Log(sz);
-
-	return NOERROR;
-}
-
-//
-// BreakConnect
-//
-// Break a connection
-//
-HRESULT CVid2rmInputPin::BreakConnect()
-{
-    if (m_pVid2rm->m_pPosition != NULL) {
-        m_pVid2rm->m_pPosition->ForceRefresh();
-    }
-    return CRenderedInputPin::BreakConnect();
-}
-
-
-//
-// ReceiveCanBlock
-//
-// We don't hold up source threads on Receive
-//
-STDMETHODIMP CVid2rmInputPin::ReceiveCanBlock()
-{
-    return S_OK;//S_FALSE;
-}
-
-
-//
-// Receive
-//
-// Do something with this media sample
-//
-STDMETHODIMP CVid2rmInputPin::Receive(IMediaSample *pSample)
-{
-    CAutoLock lock(m_pReceiveLock);
-    PBYTE pbData;
-
-    // Has the filter been stopped yet
-    if (m_pVid2rm->m_hFile == INVALID_HANDLE_VALUE) {
-        return NOERROR;
+    ULONG Length = pmtIn->FormatLength();
+    if (Length < SIZE_VIDEOHEADER) {
+        NOTE("Format smaller than a VIDEOHEADER");
+        return E_FAIL;
     }
 
-    REFERENCE_TIME tStart, tStop;
-    pSample->GetTime(&tStart, &tStop);
-    DbgLog((LOG_TRACE, 1, TEXT("tStart(%s), tStop(%s), Diff(%d ms), Bytes(%d)"),
-           (LPCTSTR) CDisp(tStart),
-           (LPCTSTR) CDisp(tStop),
-           (LONG)((tStart - m_tLast) / 10000),
-           pSample->GetActualDataLength()));
+    VIDEOINFO *pInput = (VIDEOINFO *) pmtIn->Format();
 
-    m_tLast = tStart;
+    // Check the major type is MEDIATYPE_Video
 
-    // Copy the data to the file
-
-    HRESULT hr = pSample->GetPointer(&pbData);
-    if (FAILED(hr)) {
-        return hr;
+    const GUID *pMajorType = pmtIn->Type();
+    if (*pMajorType != MEDIATYPE_Video) {
+        NOTE("Major type not MEDIATYPE_Video");
+        return E_INVALIDARG;
     }
-	if(true){
-		FILE *bmpFile=fopen("frame.bmp","wb");
-		if(bmpFile){
-		VIDEOINFO *pVideoInfo = (VIDEOINFO *) m_mtIn.Format();
-		BITMAPFILEHEADER filehdr;
-		BITMAPINFOHEADER infohdr;
-		ZeroMemory(&filehdr,sizeof(filehdr));
-		*((char*)&filehdr.bfType)='B';
-		*(((char*)&filehdr.bfType)+1)='M';
-		filehdr.bfSize=sizeof(BITMAPFILEHEADER)+sizeof(BITMAPINFOHEADER)+pSample->GetActualDataLength(); 
-		ZeroMemory(&infohdr,sizeof(infohdr));
-		infohdr.biSize=sizeof(infohdr);
-		infohdr.biWidth    = pVideoInfo->rcSource.right-pVideoInfo->rcSource.left;
-		infohdr.biHeight   = pVideoInfo->rcSource.bottom-pVideoInfo->rcSource.top;
-		infohdr.biPlanes   = 1;
-		infohdr.biBitCount = 24;
-		infohdr.biCompression=BI_RGB;
-		infohdr.biSizeImage = 0;
-		infohdr.biClrUsed = 0;
 
-		filehdr.bfOffBits=sizeof(BITMAPFILEHEADER)+sizeof(BITMAPINFOHEADER);
-		fwrite(&filehdr,1,sizeof(BITMAPFILEHEADER),bmpFile);
-		fwrite(&infohdr,1,sizeof(BITMAPINFOHEADER),bmpFile);
-		fwrite(pbData,1,pSample->GetActualDataLength(),bmpFile);
-		fclose(bmpFile);
-		}
-	}
-	WriteStringInfo(pSample);
-	return NOERROR;
-    //return m_pVid2rm->Write(pbData,pSample->GetActualDataLength());
+    // Check we can identify the media subtype
+
+    const GUID *pSubType = pmtIn->Subtype();
+    if (GetBitCount(pSubType) == USHRT_MAX) {
+        NOTE("Invalid video media subtype");
+        return E_INVALIDARG;
+    }
+     if (m_Display.CheckHeaderValidity(pInput) == FALSE) {
+        return E_INVALIDARG;
+    }
+   return NOERROR;
 }
 
-
-
-//
-// Vid2rmStringInfo
-//
-// Write to the file as text form
-//
-HRESULT CVid2rmInputPin::WriteStringInfo(IMediaSample *pSample)
-{
-    TCHAR FileString[256];
-    PBYTE pbData;
-
-    // Retrieve the time stamps from this sample
-
-    REFERENCE_TIME tStart, tStop;
-    pSample->GetTime(&tStart, &tStop);
-    m_tLast = tStart;
-
-    // Write the sample time stamps out
-
-    wsprintf(FileString,"\r\nRenderer received sample (%dms)",timeGetTime());
-    m_pVid2rm->WriteString(FileString);
-    wsprintf(FileString,"   Start time (%s)",CDisp(tStart));
-    m_pVid2rm->WriteString(FileString);
-    wsprintf(FileString,"   End time (%s)",CDisp(tStop));
-    m_pVid2rm->WriteString(FileString);
-
-    // Display the media times for this sample
-
-    HRESULT hr = pSample->GetMediaTime(&tStart, &tStop);
-    if (hr == NOERROR) {
-        wsprintf(FileString,"   Start media time (%s)",CDisp(tStart));
-        m_pVid2rm->WriteString(FileString);
-        wsprintf(FileString,"   End media time (%s)",CDisp(tStop));
-        m_pVid2rm->WriteString(FileString);
-    }
-
-    // Is this a sync point sample
-
-    hr = pSample->IsSyncPoint();
-    wsprintf(FileString,"   Sync point (%d)",(hr == S_OK));
-    m_pVid2rm->WriteString(FileString);
-
-    // Is this a preroll sample
-
-    hr = pSample->IsPreroll();
-    wsprintf(FileString,"   Preroll (%d)",(hr == S_OK));
-    m_pVid2rm->WriteString(FileString);
-
-    // Is this a discontinuity sample
-
-    hr = pSample->IsDiscontinuity();
-    wsprintf(FileString,"   Discontinuity (%d)",(hr == S_OK));
-    m_pVid2rm->WriteString(FileString);
-
-    // Write the actual data length
-
-    LONG DataLength = pSample->GetActualDataLength();
-    wsprintf(FileString,"   Actual data length (%d)",DataLength);
-    m_pVid2rm->WriteString(FileString);
-
-    // Does the sample have a type change aboard
-
-    AM_MEDIA_TYPE *pMediaType;
-    pSample->GetMediaType(&pMediaType);
-    wsprintf(FileString,"   Type changed (%d)",
-        (pMediaType ? TRUE : FALSE));
-    m_pVid2rm->WriteString(FileString);
-    DeleteMediaType(pMediaType);
-
-    // Copy the data to the file
-
-    hr = pSample->GetPointer(&pbData);
-    if (FAILED(hr)) {
-        return hr;
-    }
-
-    // Write each complete line out in BYTES_PER_LINES groups
-	/*
-	TCHAR TempString[256];
-    for (int Loop = 0;Loop < (DataLength / BYTES_PER_LINE);Loop++) {
-        wsprintf(FileString,FIRST_HALF_LINE,pbData[0],pbData[1],pbData[2],
-                 pbData[3],pbData[4],pbData[5],pbData[6],
-                    pbData[7],pbData[8],pbData[9]);
-        wsprintf(TempString,SECOND_HALF_LINE,pbData[10],pbData[11],pbData[12],
-                 pbData[13],pbData[14],pbData[15],pbData[16],
-                    pbData[17],pbData[18],pbData[19]);
-        lstrcat(FileString,TempString);
-        m_pVid2rm->WriteString(FileString);
-        pbData += BYTES_PER_LINE;
-    }
-
-    // Write the last few bytes out afterwards
-
-    wsprintf(FileString,"   ");
-    for (Loop = 0;Loop < (DataLength % BYTES_PER_LINE);Loop++) {
-        wsprintf(TempString,"%x ",pbData[Loop]);
-        lstrcat(FileString,TempString);
-    }
-    m_pVid2rm->WriteString(FileString);
-	*/
-    return NOERROR;
-}
-
-
-//
-// EndOfStream
-//
-STDMETHODIMP CVid2rmInputPin::EndOfStream(void)
-{
-	Log("EndOfStream\n");
-    CAutoLock lock(m_pReceiveLock);
-    return CRenderedInputPin::EndOfStream();
-
-} // EndOfStream
-
-
-//
-// NewSegment
-//
-// Called when we are seeked
-//
-STDMETHODIMP CVid2rmInputPin::NewSegment(REFERENCE_TIME tStart,
-                                       REFERENCE_TIME tStop,
-                                       double dRate)
-{
-    m_tLast = 0;
-    return S_OK;
-
-} // NewSegment
-
-
-//
-//  CVid2rm class
-//
-CVid2rm::CVid2rm(LPUNKNOWN pUnk, HRESULT *phr) :
-    CUnknown(NAME("CVid2rm"), pUnk),
-    m_pFilter(NULL),
-    m_pPin(NULL),
-    m_pPosition(NULL),
-    m_hFile(INVALID_HANDLE_VALUE),
-    m_pFileName(0)
-{
-    m_pFilter = new CVid2rmFilter(this, GetOwner(), &m_Lock, phr);
-    if (m_pFilter == NULL) {
-        *phr = E_OUTOFMEMORY;
-        return;
-    }
-
-    m_pPin = new CVid2rmInputPin(this,GetOwner(),
-                               m_pFilter,
-                               &m_Lock,
-                               &m_ReceiveLock,
-                               phr);
-    if (m_pPin == NULL) {
-        *phr = E_OUTOFMEMORY;
-        return;
-    }
-}
-
-
-//
-// SetFileName
-//
-// Implemented for IFileSinkFilter support
-//
-STDMETHODIMP CVid2rm::SetFileName(LPCOLESTR pszFileName,const AM_MEDIA_TYPE *pmt)
+STDMETHODIMP CVideoRenderer::SetFileName(LPCOLESTR pszFileName,const AM_MEDIA_TYPE *pmt)
 {
     // Is this a valid filename supplied
 
@@ -467,21 +179,12 @@ STDMETHODIMP CVid2rm::SetFileName(LPCOLESTR pszFileName,const AM_MEDIA_TYPE *pmt
         return E_OUTOFMEMORY;
     lstrcpyW(m_pFileName,pszFileName);
 
-    // Create the file then close it
+    return NOERROR;
 
-    HRESULT hr = OpenFile();
-    CloseFile();
-    return hr;
-
-} // SetFileName
+} 
 
 
-//
-// GetCurFile
-//
-// Implemented for IFileSinkFilter support
-//
-STDMETHODIMP CVid2rm::GetCurFile(LPOLESTR * ppszFileName,AM_MEDIA_TYPE *pmt)
+STDMETHODIMP CVideoRenderer::GetCurFile(LPOLESTR * ppszFileName,AM_MEDIA_TYPE *pmt)
 {
     CheckPointer(ppszFileName, E_POINTER);
     *ppszFileName = NULL;
@@ -500,203 +203,334 @@ STDMETHODIMP CVid2rm::GetCurFile(LPOLESTR * ppszFileName,AM_MEDIA_TYPE *pmt)
     }
     return S_OK;
 
-} // GetCurFile
+} 
 
-
-// Destructor
-
-CVid2rm::~CVid2rm()
+CBasePin *CVideoRenderer::GetPin(int n)
 {
-    CloseFile();
-    delete m_pPin;
-    delete m_pFilter;
-    delete m_pPosition;
-    delete m_pFileName;
-}
-
-
-//
-// CreateInstance
-//
-// Provide the way for COM to create a Vid2rm filter
-//
-CUnknown * WINAPI CVid2rm::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
-{
-    CVid2rm *pNewObject = new CVid2rm(punk, phr);
-    if (pNewObject == NULL) {
-        *phr = E_OUTOFMEMORY;
+    ASSERT(n == 0);
+    if (n != 0) {
+        return NULL;
     }
-    return pNewObject;
 
-} // CreateInstance
+    // Assign the input pin if not already done so
+
+    if (m_pInputPin == NULL) {
+        m_pInputPin = &m_InputPin;
+    }
+    return m_pInputPin;
+
+} 
 
 
-//
-// NonDelegatingQueryInterface
-//
-// Override this to say what interfaces we support where
-//
-STDMETHODIMP CVid2rm::NonDelegatingQueryInterface(REFIID riid, void ** ppv)
+STDMETHODIMP CVideoRenderer::NonDelegatingQueryInterface(REFIID riid,void **ppv)
 {
     CheckPointer(ppv,E_POINTER);
-    CAutoLock lock(&m_Lock);
-
-    // Do we have this interface
-
     if (riid == IID_IFileSinkFilter) {
         return GetInterface((IFileSinkFilter *) this, ppv);
-    } else if (riid == IID_IBaseFilter || riid == IID_IMediaFilter || riid == IID_IPersist) {
-	return m_pFilter->NonDelegatingQueryInterface(riid, ppv);
-    } else if (riid == IID_IMediaPosition || riid == IID_IMediaSeeking) {
-        if (m_pPosition == NULL) {
+		}
+    return CBaseVideoRenderer::NonDelegatingQueryInterface(riid,ppv);
 
-            HRESULT hr = S_OK;
-            m_pPosition = new CPosPassThru(NAME("Vid2rm Pass Through"),
-                                           (IUnknown *) GetOwner(),
-                                           (HRESULT *) &hr, m_pPin);
-            if (m_pPosition == NULL) {
-                return E_OUTOFMEMORY;
-            }
+} 
 
-            if (FAILED(hr)) {
-                delete m_pPosition;
-                m_pPosition = NULL;
-                return hr;
-            }
-        }
-        return m_pPosition->NonDelegatingQueryInterface(riid, ppv);
-    } else {
-	return CUnknown::NonDelegatingQueryInterface(riid, ppv);
-    }
-
-} // NonDelegatingQueryInterface
+HRESULT CVideoRenderer::DoRenderSample(IMediaSample *pMediaSample)
+{	
+    CRefTime m_StartSample;         // Start time for the current sample
+    CRefTime m_EndSample;           // And likewise it's end sample time
+    pMediaSample->GetMediaTime((REFERENCE_TIME*)&m_StartSample, (REFERENCE_TIME*)&m_EndSample);
+    // Format the sample time stamps
+	char szTimes[256];
+    sprintf(szTimes,TEXT("%08d : %08d"),
+             m_StartSample.Millisecs(),
+             m_EndSample.Millisecs());
 
 
-//
-// OpenFile
-//
-// Opens the file ready for Vid2rming
-//
-HRESULT CVid2rm::OpenFile()
+	if(logFile)
+		{
+		char sz[256];
+		int n=sprintf(sz,"frame %d size=%d\n",++m_ixframe,pMediaSample->GetActualDataLength());
+		fwrite(sz,1,n,logFile);
+		//n=sprintf(sz,"%s\n",m_DrawImage.IsUsingImageAllocator()? "IsUsingImageAllocator":"NOT UsingImageAllocator");
+		//fwrite(sz,1,n,logFile);
+		}
+	 SlowRender(pMediaSample);
+    return NOERROR; //m_DrawImage.DrawImage(pMediaSample);
+
+} // DoRenderSample
+
+
+
+void CVideoRenderer::PrepareRender()
 {
-    TCHAR *pFileName = NULL;
-
-    // Is the file already opened
-    if (m_hFile != INVALID_HANDLE_VALUE) {
-        return NOERROR;
-    }
-
-    // Has a filename been set yet
-    if (m_pFileName == NULL) {
-        return ERROR_INVALID_NAME;
-    }
-
-    // Convert the UNICODE filename if necessary
-
-#if defined(WIN32) && !defined(UNICODE)
-    char convert[MAX_PATH];
-    if(!WideCharToMultiByte(CP_ACP,0,m_pFileName,-1,convert,MAX_PATH,0,0))
-        return ERROR_INVALID_NAME;
-    pFileName = convert;
-#else
-    pFileName = m_pFileName;
-#endif
-
-    // Try to open the file
-
-    m_hFile = CreateFile((LPCTSTR) pFileName,   // The filename
-                         GENERIC_WRITE,         // File access
-                         (DWORD) 0,             // Share access
-                         NULL,                  // Security
-                         CREATE_ALWAYS,         // Open flags
-                         (DWORD) 0,             // More flags
-                         NULL);                 // Template
-
-    if (m_hFile == INVALID_HANDLE_VALUE) {
-        DWORD dwErr = GetLastError();
-        return HRESULT_FROM_WIN32(dwErr);
-    }
-    return S_OK;
-
-} // Open
+    // Realise the palette on this thread
+    // m_VideoText.DoRealisePalette();
+	
+} 
 
 
-//
-// CloseFile
-//
-// Closes any Vid2rm file we have opened
-//
-HRESULT CVid2rm::CloseFile()
+
+
+HRESULT CVideoRenderer::SetMediaType(const CMediaType *pmt)
 {
-    if (m_hFile == INVALID_HANDLE_VALUE) {
-        return NOERROR;
-    }
+    CAutoLock cInterfaceLock(&m_InterfaceLock);
+    CMediaType StoreFormat(m_mtIn);
+    HRESULT hr = NOERROR;
 
-    CloseHandle(m_hFile);
-    m_hFile = INVALID_HANDLE_VALUE;
+    m_mtIn = *pmt;
+    VIDEOINFO *pVideoInfo = (VIDEOINFO *) m_mtIn.Format();
+	if(!pVideoInfo) return hr;
+    m_ImageAllocator.NotifyMediaType(&m_mtIn);
     return NOERROR;
 
-} // Open
+} // SetMediaType
 
 
-//
-// Write
-//
-// Write stuff to the file
-//
-HRESULT CVid2rm::Write(PBYTE pbData,LONG lData)
+
+HRESULT CVideoRenderer::BreakConnect()
 {
-    DWORD dwWritten;
+    CAutoLock cInterfaceLock(&m_InterfaceLock);
 
-    if (!WriteFile(m_hFile,(PVOID)pbData,(DWORD)lData,&dwWritten,NULL)) {
-        DWORD dwErr = GetLastError();
-        return HRESULT_FROM_WIN32(dwErr);
+    // Check we are in a valid state
+    HRESULT hr = CBaseVideoRenderer::BreakConnect();
+    if (FAILED(hr)) {
+        return hr;
     }
-    return S_OK;
+    // The window is not used when disconnected
+    IPin *pPin = m_InputPin.GetConnected();
+    m_mtIn.ResetFormatBuffer();
+    return NOERROR;
+
+} 
+
+
+HRESULT CVideoRenderer::CompleteConnect(IPin *pReceivePin)
+{
+    CAutoLock cInterfaceLock(&m_InterfaceLock);
+    CBaseVideoRenderer::CompleteConnect(pReceivePin);
+
+    // Has the video size changed between connections
+
+    VIDEOINFOHEADER *pVideoInfo = (VIDEOINFOHEADER *) m_mtIn.Format();
+    if (pVideoInfo->bmiHeader.biWidth == m_VideoSize.cx) {
+        if (pVideoInfo->bmiHeader.biHeight == m_VideoSize.cy) {
+            return NOERROR;
+        }
+    }
+
+    m_VideoSize.cx = pVideoInfo->bmiHeader.biWidth;
+    m_VideoSize.cy = pVideoInfo->bmiHeader.biHeight;
+    return NOERROR;
+
+} 
+
+
+void CVideoRenderer::OnReceiveFirstSample(IMediaSample *pMediaSample)
+{
+    ASSERT(m_pMediaType);
+    DoRenderSample(pMediaSample);
+
+} 
+
+void CVideoRenderer::SlowRender(IMediaSample *pMediaSample)
+{
+    // Get the BITMAPINFOHEADER for the connection
+    ASSERT(m_pMediaType);
+	VIDEOINFOHEADER *pVideoInfo = (VIDEOINFOHEADER *)m_mtIn.Format();
+    BITMAPINFOHEADER *pbmi = HEADER(pVideoInfo);
+
+    // Get the image data buffer
+    BYTE *pImage;
+    HRESULT hr = pMediaSample->GetPointer(&pImage);
+    if (FAILED(hr)) {
+        return;
+    }
+
+	// EncodeSample
+	static int ix=0;
+	LONG bufferSize=0;
+	BYTE *pVideoImage=NULL;
+	int w=pVideoInfo->rcSource.right;
+	int h=pVideoInfo->rcSource.bottom;
+	RECT rcSource={0,0,w,h};
+    hr=CopyImage(pMediaSample,pVideoInfo,&bufferSize,&pVideoImage,&rcSource);
+	RProducer::EncodeSample(pVideoImage,ix++,false);
+	delete[] pVideoImage;
+
+#ifdef PREVIEW
+	// Preview video
+	HDC hdc=GetDC(NULL);
+    SetDIBitsToDevice(
+            (HDC) hdc,                            // Target device HDC
+            0,                      // X sink position
+            0,                       // Y sink position
+            w, // Destination width
+            h, // Destination height
+            0,                     // X source position
+            0,                     // Adjusted Y source position
+            (UINT) 0,                               // Start scan line
+            h,         // Scan lines present
+            pImage,                                 // Image data
+            (BITMAPINFO *) pbmi,                    // DIB header
+            DIB_RGB_COLORS);                        // Type of palette
+	ReleaseDC(NULL,hdc);
+#endif
+
+
+	/* TEST: SAVE BMP FILE
+	char szBmp[256];
+	sprintf(szBmp,"frame%d.bmp",ix);
+	FILE *bmpFile=fopen(szBmp,"wb");
+	if(bmpFile){
+	BITMAPFILEHEADER filehdr;
+	BITMAPINFOHEADER& infohdr=*pbmi;
+	
+	ZeroMemory(&filehdr,sizeof(filehdr));
+	*((char*)&filehdr.bfType)='B';
+	*(((char*)&filehdr.bfType)+1)='M';
+	filehdr.bfOffBits =sizeof(BITMAPFILEHEADER)+infohdr.biSize; 
+	filehdr.bfSize=filehdr.bfOffBits+pMediaSample->GetActualDataLength();
+
+	fwrite(&filehdr,1,sizeof(BITMAPFILEHEADER),bmpFile);
+	LONG bufferSize=256000;//pMediaSample->GetActualDataLength()+256*3+sizeof(BITMAPINFOHEADER);
+	BYTE *pVideoImage=new BYTE[bufferSize];
+	int w=pVideoInfo->rcSource.right;//m_VideoSize.cx;//pVideoInfo->bmiHeader.biWidth
+	int h=pVideoInfo->rcSource.bottom; //m_VideoSize.cy;//pVideoInfo->bmiHeader.biHeight
+	RECT rcSource={0,0,w,h};
+    hr=CopyImage(pMediaSample,pVideoInfo,&bufferSize,pVideoImage,&rcSource);
+	if(hr==NOERROR)
+		fwrite(pVideoImage,1,bufferSize,bmpFile);
+	delete [] pVideoImage;
+	fclose(bmpFile);
+	}
+	*/
 }
 
-
-//
-// WriteString
-//
-// Writes the given string into the file
-//
-void CVid2rm::WriteString(TCHAR *pString)
+HRESULT CVideoRenderer::Active()
 {
-    DWORD dwWritten = lstrlen(pString);
-    const TCHAR *pEndOfLine = "\r\n";
+	Log("Active\n");
+	RProducer::Prepare();
+    char szFile[MAX_PATH];
+    if(!WideCharToMultiByte(CP_ACP,0,m_pFileName,-1,szFile,MAX_PATH,0,0))
+        return ERROR_INVALID_NAME;
+	RProducer::SetOutputFilename(szFile);
+	VIDEOINFOHEADER *pVideoInfo = (VIDEOINFOHEADER *)m_mtIn.Format();
+	CRefTime rt(pVideoInfo->AvgTimePerFrame);
+	float rate=1000/float(rt.Millisecs());
+	RProducer::SetVideoInfo(pVideoInfo->rcSource.right,
+			pVideoInfo->rcSource.bottom,rate);
+    return CBaseVideoRenderer::Active();
 
-    WriteFile((HANDLE) m_hFile,
-              (PVOID) pString,
-              (DWORD) dwWritten,
-              &dwWritten, NULL);
+} 
 
-    dwWritten = lstrlen(pEndOfLine);
-    WriteFile((HANDLE) m_hFile,
-              (PVOID) pEndOfLine,
-              (DWORD) dwWritten,
-              &dwWritten, NULL);
+HRESULT CVideoRenderer::Inactive()
+{
+	RProducer::DoneEncoding();
+	RProducer::Cleanup();
 
-} // WriteString
+	Log("Inactive\n");
+	return CBaseVideoRenderer::Inactive();
+}
+
+HRESULT CVideoRenderer::CopyImage(IMediaSample *pMediaSample,
+                                     VIDEOINFOHEADER *pVideoInfo,
+                                     LONG *pBufferSize,
+                                     BYTE **ppVideoImage,
+                                     RECT *pSourceRect)
+{
+	
+    NOTE("Entering CopyImage");
+    ASSERT(pSourceRect);
+    BYTE *pCurrentImage;
+
+    // Check we have an image to copy
+
+    if (pMediaSample == NULL || pSourceRect == NULL ||
+            pVideoInfo == NULL) {
+
+        return E_UNEXPECTED;
+    }
+
+    // Is the data format compatible
+
+    if (pVideoInfo->bmiHeader.biCompression != BI_RGB) {
+        if (pVideoInfo->bmiHeader.biCompression != BI_BITFIELDS) {
+            return E_INVALIDARG;
+        }
+    }
+
+    ASSERT(IsRectEmpty(pSourceRect) == FALSE);
+
+    BITMAPINFOHEADER bih;
+    bih.biWidth = WIDTH(pSourceRect);
+    bih.biHeight = HEIGHT(pSourceRect);
+    bih.biBitCount = pVideoInfo->bmiHeader.biBitCount;
+    LONG Size = GetBitmapFormatSize(HEADER(pVideoInfo)) - SIZE_PREHEADER;
+    LONG Total = Size + DIBSIZE(bih);
+
+    // Make sure we have a large enough buffer
+	*ppVideoImage = new BYTE[Total];
+	*pBufferSize=Total;
+	BYTE *pVideoImage=*ppVideoImage;
+
+    // Copy the BITMAPINFO
+
+    CopyMemory((PVOID)pVideoImage, (PVOID)&pVideoInfo->bmiHeader, Size);
+    ((BITMAPINFOHEADER *)pVideoImage)->biWidth = WIDTH(pSourceRect);
+    ((BITMAPINFOHEADER *)pVideoImage)->biHeight = HEIGHT(pSourceRect);
+    ((BITMAPINFOHEADER *)pVideoImage)->biSizeImage = DIBSIZE(bih);
+    BYTE *pImageData = pVideoImage + Size;
+
+    // Get the pointer to it's image data
+
+    HRESULT hr = pMediaSample->GetPointer(&pCurrentImage);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    // Now we are ready to start copying the source scan lines
+
+    LONG ScanLine = (pVideoInfo->bmiHeader.biBitCount / 8) * WIDTH(pSourceRect);
+    LONG LinesToSkip = pVideoInfo->bmiHeader.biHeight;
+    LinesToSkip -= pSourceRect->top + HEIGHT(pSourceRect);
+    pCurrentImage += LinesToSkip * DIBWIDTHBYTES(pVideoInfo->bmiHeader);
+    pCurrentImage += pSourceRect->left * (pVideoInfo->bmiHeader.biBitCount / 8);
+
+    // Even money on this GP faulting sometime...
+    for (LONG Line = 0;Line < HEIGHT(pSourceRect);Line++) {
+        CopyMemory((PVOID)pImageData, (PVOID)pCurrentImage, ScanLine);
+        pImageData += DIBWIDTHBYTES(*(BITMAPINFOHEADER *)pVideoImage);
+        pCurrentImage += DIBWIDTHBYTES(pVideoInfo->bmiHeader);
+    }
+    return NOERROR;
+}
+
+////////////////////////////////////////////////
+// CVideoInputPin
+
+CVideoInputPin::CVideoInputPin(TCHAR *pObjectName,
+                               CVideoRenderer *pRenderer,
+                               CCritSec *pInterfaceLock,
+                               HRESULT *phr,
+                               LPCWSTR pPinName) :
+
+    CRendererInputPin(pRenderer,phr,pPinName),
+    m_pRenderer(pRenderer),
+    m_pInterfaceLock(pInterfaceLock)
+{
+    ASSERT(m_pRenderer);
+    ASSERT(pInterfaceLock);
+
+} 
 
 
-//
-// DllRegisterSever
-//
-// Handle the registration of this filter
-//
+////////////////////////////////////////////////
+// Filter registration
+
 STDAPI DllRegisterServer()
 {
     return AMovieDllRegisterServer2( TRUE );
+} 
 
-} // DllRegisterServer
-
-
-//
-// DllUnregisterServer
-//
 STDAPI DllUnregisterServer()
 {
     return AMovieDllRegisterServer2( FALSE );
-
-} // DllUnregisterServer
+} 
