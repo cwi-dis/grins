@@ -1666,14 +1666,23 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# XXXX Should check that document isn't active already,
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
-		url, aid = MMurl.splittag(anchor)
-			
+		if type(anchor) is type(''):
+			url, aid = MMurl.splittag(anchor)
+			url = MMurl.basejoin(self.filename, url)
+		else:
+			url = self.filename
+			for aid, uid in self.root.SMILidmap.items():
+				if uid == anchor.GetUID():
+					break
+			else:
+				# XXX can't find the SMIL name, guess...
+				aid = MMAttrdefs.getattr(anchor, 'name')
+
 		# by default, the document target will be handled by GRiNS
 		# note: this varib allow to manage correctly the sourcePlaystate attribute
 		# as well, even if the target document is not handled by GRiNS
 		grinsTarget = 1
-		
-		url = MMurl.basejoin(self.filename, url)
+
 		for top in self.main.tops:
 			if top is not self and top.is_document(url):
 				break
@@ -1683,7 +1692,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				# it's handle by an external application
 				utype, url2 = MMurl.splittype(url)
 				mtype = MMmimetypes.guess_type(url)[0]
-				if mtype in ('application/smil', 'application/x-grins-project', \
+				if mtype in ('application/smil',
+					     'application/x-grins-project',
 ##					     'application/x-grins-cmif',
 					     ):
 					# in this case, the document is handle by grins
@@ -1703,33 +1713,29 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					'File: '+url+'\n'+
 					'Error: '+`msg`)
 				return 0
-				
+
 		if grinsTarget:
 			top.show()
 			# update the recent list.
 			if self.main != None:
 				self.main._update_recent(None)
-				
+
 			node = top.root
 			if hasattr(node, 'SMILidmap') and node.SMILidmap.has_key(aid):
-				val = node.SMILidmap[aid]
-				if type(val) is type(()):
-					uid, aid = val
-				else:
-					uid, aid = val, None
+				uid = node.SMILidmap[aid]
 				node = node.context.mapuid(uid)
 			if dtype == A_DEST_PLAY:
 				top.player.show()
-				top.player.playfromanchor(node, aid)
+				top.player.playfromanchor(node)
 			elif dtype == A_DEST_PAUSE:
 				top.player.show()
-				top.player.playfromanchor(node, aid)
+				top.player.playfromanchor(node)
 				top.player.pause(1)
 			else:
 				print 'jump to external: invalid destination state'
 			
 		if atype == TYPE_JUMP:
-			if grinsTarget:		
+			if grinsTarget:
 				self.close()
 			else:
 				self.player.hide()
