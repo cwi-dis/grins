@@ -80,6 +80,7 @@ class Region(base_window.Window):
 		return xywh
 
 	# get intersection of self with parents tree
+	# return xywh
 	def getclippedwindowpos(self):
 		if not self._parent:
 			return self.getwindowpos()
@@ -91,8 +92,7 @@ class Region(base_window.Window):
 		ltrb1 = dc.GetClipBox()
 
 		# clip to parent
-		ltrb2 = self.ltrb(self.getclippedwindowpos())
-		ltrb2 = self._topwindow.LRtoDR(ltrb2, round = 1)
+		ltrb2 = self.ltrb(self._topwindow.LRtoDR(self.getclippedwindowpos(), round = 1))
 
 		# common box
 		return winstruct.rectAnd(ltrb1, ltrb2)
@@ -148,7 +148,7 @@ class Region(base_window.Window):
 
 		# clip self to ancestors and dc, in device coordinates
 		ltrb = self.getClipDR(dc)
-		if ltrb is None:
+		if ltrb is None or ltrb[0] == ltrb[2] or ltrb[1] == ltrb[3]:
 			return
 		
 		# clip self to parent, device coordinates
