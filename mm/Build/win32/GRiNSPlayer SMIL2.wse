@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.84.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.85.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -1199,37 +1199,37 @@ end
 item: Install File
   Source=c:\Winnt\System32\Msvcirt.dll
   Destination=%SYS32%\Msvcirt.dll
-  Flags=0000011010010011
+  Flags=0000001010001010
 end
 item: Install File
   Source=c:\Winnt\System32\Oleaut32.dll
   Destination=%SYS32%\Oleaut32.dll
-  Flags=0000011010010011
+  Flags=0000001010001010
 end
 item: Install File
   Source=c:\Winnt\System32\Olepro32.dll
   Destination=%SYS32%\Olepro32.dll
-  Flags=0001011010010011
+  Flags=0001001010001010
 end
 item: Install File
   Source=c:\Winnt\System32\Msvcp60.dll
   Destination=%SYS32%\Msvcp60.dll
-  Flags=0000011010010011
+  Flags=0000001010001010
 end
 item: Install File
   Source=c:\Winnt\System32\Msvcrt.dll
   Destination=%SYS32%\Msvcrt.dll
-  Flags=0000011010010011
+  Flags=0000001010001010
 end
 item: Install File
   Source=c:\Winnt\System32\msvcrt40.dll
   Destination=%SYS32%\msvcrt40.dll
-  Flags=0000011010010011
+  Flags=0000001010001010
 end
 item: Install File
   Source=c:\Winnt\System32\Mfc42.dll
   Destination=%SYS32%\Mfc42.dll
-  Flags=0001011010010011
+  Flags=0001001010001010
 end
 item: Install File
   Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
