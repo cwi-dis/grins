@@ -1933,7 +1933,7 @@ END
 
 IDD_EDITATTR_EVENTLIST DIALOGEX 0, 0, 300, 164
 STYLE WS_CHILD
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LISTBOX         IDC_EVENTLIST,6,8,234,52,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
@@ -1965,6 +1965,17 @@ BEGIN
     LTEXT           "",IDC_THINGNAME,118,75,54,8,0,WS_EX_RIGHT
     LTEXT           "Cause:",IDC_STATIC,43,72,64,7
     LTEXT           "Repeat:",IDC_STATIC,217,111,26,8
+END
+
+IDD_ASSETSBAR DIALOG DISCARDABLE  0, 0, 188, 36
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Show all assets",IDC_RADIO_ALL,"Button",
+                    BS_AUTORADIOBUTTON,12,12,69,10
+    CONTROL         "Show unused assets",IDC_RADIO_UNUSED,"Button",
+                    BS_AUTORADIOBUTTON,93,12,81,10
+    GROUPBOX        "",IDC_STATIC,8,4,172,22
 END
 
 
