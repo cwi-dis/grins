@@ -3,10 +3,16 @@ __version__ = "$Id$"
 #
 # Mac CMIF Player wrapper
 #
-# This new comment line tests MacCVS in remote mode
-print
+
+# First, immedeately disable the console window
+import quietconsole
+quietconsole.install()
+
+# Next, show the splash screen
 import MacOS
-MacOS.splash(512)
+MacOS.splash(513)
+
+# Now time for real work.
 import os
 import sys
 import string
