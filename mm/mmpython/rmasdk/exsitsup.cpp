@@ -48,18 +48,24 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer, void *hwnd,
 		m_pUnkPlayer->AddRef();
 		}
     memset(&m_PNxWindow,0,sizeof(PNxWindow));
-    m_PNxWindow.window = hwnd;
+	if (hwnd != 0 &&
 #ifdef _UNIX
-    m_PNxWindow.display = dpy;
+		dpy != 0 &&
 #endif
-    m_PNxWindow.x = x;
-    m_PNxWindow.y = y;
-    m_PNxWindow.width = w;
-    m_PNxWindow.height = h;
-    m_PNxWindow.clipRect.left = x;
-    m_PNxWindow.clipRect.top = y;
-    m_PNxWindow.clipRect.right = x + w;
-    m_PNxWindow.clipRect.bottom = y + h;
+		x != -1 && y != -1 && w != -1 && h != -1) {
+	    m_PNxWindow.window = hwnd;
+#ifdef _UNIX
+		m_PNxWindow.display = dpy;
+#endif
+	    m_PNxWindow.x = x;
+	    m_PNxWindow.y = y;
+	    m_PNxWindow.width = w;
+	    m_PNxWindow.height = h;
+	    m_PNxWindow.clipRect.left = x;
+	    m_PNxWindow.clipRect.top = y;
+	    m_PNxWindow.clipRect.right = x + w;
+	    m_PNxWindow.clipRect.bottom = y + h;
+	}
 }
 
 

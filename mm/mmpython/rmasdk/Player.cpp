@@ -95,22 +95,22 @@ PlayerObject::~PlayerObject()
 
 PyObject *PlayerObject::CreateInstance(PyObject *engine, PyObject *args)
 {
-	int x, y, w, h;
+	int x = -1, y = -1, w = -1, h = -1;
 #ifdef _MACINTOSH
-	WindowPtr hwnd;
+	WindowPtr hwnd = 0;
 	
-	if (!PyArg_ParseTuple(args, "O&((ii)(ii))", WinObj_Convert, &hwnd, &x, &y, &w, &h))
+	if (!PyArg_ParseTuple(args, "|O&((ii)(ii))", WinObj_Convert, &hwnd, &x, &y, &w, &h))
 		return NULL;
 #else
 #ifdef _UNIX
-	int hwnd, dpy;
+	int hwnd = 0, dpy = 0;
 	
-	if (!PyArg_ParseTuple(args, "(ii)((ii)(ii))", &hwnd, &dpy, &x, &y, &w, &h))
+	if (!PyArg_ParseTuple(args, "|(ii)((ii)(ii))", &hwnd, &dpy, &x, &y, &w, &h))
 		return NULL;
 #else
-	int hwnd;
+	int hwnd = 0;
 	
-	if (!PyArg_ParseTuple(args, "i((ii)(ii))", &hwnd, &x, &y, &w, &h))
+	if (!PyArg_ParseTuple(args, "|i((ii)(ii))", &hwnd, &x, &y, &w, &h))
 		return NULL;
 #endif
 #endif
