@@ -928,6 +928,16 @@ class Channel:
 
 	def getloop(self, node):
 		return MMAttrdefs.getattr(node, 'loop')
+		
+	def gettransition(self, node, which, animated=0):
+		trclass = MMAttrdefs.getattr(node, which, animated)
+		if not trclass:
+			return None
+		transitions = node.context.transitions
+		if not transitions.has_key(trclass):
+			self.errormsg(node, 'Unknown transition name: %s\n'%trclass)
+			return None
+		return transitions[trclass]
 
 	def parsecount(self, val, node, attr):
 		global clock_val
@@ -1085,6 +1095,9 @@ class ChannelWindow(Channel):
 		node_attrs.append('bgcolor')
 	else:
 		chan_attrs.append('bgcolor')
+	if 1: # XXX Should depend on SMIL-Boston. Can I test for that here??
+		node_attrs.append('transIn')
+		node_attrs.append('transOut')
 	_visible = TRUE
 	_window_type = SINGLE
 
@@ -1099,6 +1112,7 @@ class ChannelWindow(Channel):
 		self.want_default_colormap = 0
 		self._bgimg = None
 		self.__callback = None
+		self.__out_trans_qid = None
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
 			PLAY(callback = (ui.play_callback, ())),
@@ -1524,6 +1538,7 @@ class ChannelWindow(Channel):
 					self.hide()
 					self.show()
 			self.check_popup()
+			self.schedule_transitions(node)
 			if self.armed_display.is_closed():
 				# assume that we are going to get a
 				# resize event
@@ -1545,6 +1560,29 @@ class ChannelWindow(Channel):
 			self.played_display.close()
 			self.played_display = None
 
+	def schedule_transitions(self, node):
+		in_trans = self.gettransition(node, 'transIn')
+		out_trans = self.gettransition(node, 'transOut')
+		if out_trans <> None:
+			outtransdur = out_trans['dur']
+			self.__out_trans_qid = self._scheduler.enterabs(
+					  node.start_time+self.armed_duration-outtransdur, 0,
+					  self.schedule_out_trans, (out_trans,))
+		if in_trans <> None and self.window:
+			self.window.begintransition(0, 1, in_trans)
+	
+	def schedule_out_trans(self, out_trans):
+		self.__out_trans_qid = None
+		if self.window:
+			self.window.begintransition(0, 1, out_trans)
+		
+	def cleanup_transitions(self):
+		if self.__out_trans_qid:
+			self._scheduler.cancel(self.__out_trans_qid)
+			self.__out_trans_qid = None
+		if self.window:
+			self.window.endtransition()
+			
 	# use this code to get the error message in the window instead
 	# of in a popup window
 ##	def errormsg(self, node, msg):
