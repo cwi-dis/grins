@@ -1352,7 +1352,7 @@ class SMILParser(xmllib.XMLParser):
 		self.warning('ignoring unknown start tag %s' % tag)
 
 	def unknown_endtag(self, tag):
-		self.warning('ignoring unknown end tag %s' % tag or '')
+		self.warning('ignoring unknown end tag %s' % (tag or ''))
 
 	def unknown_charref(self, ref):
 		self.warning('ignoring unknown char ref %s' % ref)
