@@ -260,12 +260,16 @@ static PyObject *
 DirectDraw_CreatePalette(DirectDrawObject *self, PyObject *args)
 {
 	DWORD dwFlags = DDPCAPS_8BIT | DDPCAPS_INITIALIZE;
-	if (!PyArg_ParseTuple(args, "|i",&dwFlags))
+	if (!PyArg_ParseTuple(args, "|i", &dwFlags))
 		return NULL;	
 	HRESULT hr;
-	PALETTEENTRY colorTable[256]; // XXX: arg or create
+	PALETTEENTRY colorTable[256];
+	HDC hdc = ::GetDC(NULL);
+	GetSystemPaletteEntries(hdc, 0, 256, colorTable);
+	ReleaseDC(NULL, hdc);
+	for(int i=0;i<256;i++) colorTable[i].peFlags = PC_RESERVED;
 	DirectDrawPaletteObject *obj = newDirectDrawPaletteObject();	
-	hr = self->pI->CreatePalette(dwFlags, (PALETTEENTRY*)&colorTable, &obj->pI, NULL);
+	hr = self->pI->CreatePalette(dwFlags, (PALETTEENTRY*)colorTable, &obj->pI, NULL);
 	if (FAILED(hr)){
 		Py_DECREF(obj);
 		seterror("DirectDraw_CreatePalette", hr);
@@ -896,12 +900,12 @@ void initddraw()
 		ddraw_module_documentation,
 		(PyObject*)NULL,PYTHON_API_VERSION);
 
-	/// add 'error'
+	// add 'error'
 	d = PyModule_GetDict(m);
 	ErrorObject = PyString_FromString("ddraw.error");
 	PyDict_SetItemString(d, "error", ErrorObject);
 
-	// add symbolic constants of enum
+	// add symbolic constants
 	FATAL_ERROR_IF(SetItemEnum(d,_ddscl)<0)
 	FATAL_ERROR_IF(SetItemEnum(d,_ddsd)<0)
 	FATAL_ERROR_IF(SetItemEnum(d,_ddscaps)<0)
@@ -911,7 +915,7 @@ void initddraw()
 	FATAL_ERROR_IF(SetItemEnum(d,_ddlock)<0)
 	FATAL_ERROR_IF(SetItemEnum(d,_ddgbs)<0)
 
-	/* Check for errors */
+	// Check for errors
 	if (PyErr_Occurred())
 		Py_FatalError("can't initialize module ddraw");
 }
