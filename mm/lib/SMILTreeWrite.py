@@ -974,6 +974,7 @@ smil_attrs=[
 	("allowedmimetypes", getallowedmimetypes, None),
 	("project_autoroute", lambda writer, node:getboolean(writer, node, "project_autoroute", 1, 0), "project_autoroute"),
 	("project_readonly", lambda writer, node:getboolean(writer, node, "project_readonly", 1, 0), "project_readonly"),
+	("showAnimationPath", lambda writer, node:getboolean(writer, node, "showAnimationPath", 1, 1), "showAnimationPath"),
 	("RTIPA-server", lambda writer, node:getcmifattr(writer, node, "RTIPA_server"), "RTIPA_server"),
 ]
 prio_attrs = [

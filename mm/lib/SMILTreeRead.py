@@ -151,6 +151,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'sendTo': {'_rpcontextwin':'rpcontextwin', '_rpbrowser':'rpbrowser', 'osdefaultbrowser':'osdefaultbrowser', 'rpengine':'rpengine'},
 		'shape': ['rect', 'poly', 'circle'],
 		'show': ['replace', 'pause', 'new'],
+		'showAnimationPath': __truefalse,
 		'sourcePlaystate': ['play', 'pause', 'stop'],
 		'syncMaster': __truefalse,
 		'system-captions': __onoff,
@@ -1352,6 +1353,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attrdict['thumbnail_icon'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'thumbnailScale':
 				attrdict['thumbnail_scale'] = val == 'true'
+			elif attr == 'showAnimationPath':
+				showAP = self.parseEnumValue(attr, val)
+				if showAP is not None:
+					attrdict['showAnimationPath'] = showAP
 			elif attr == 'emptyIcon':
 				attrdict['empty_icon'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'emptyText':
