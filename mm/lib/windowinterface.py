@@ -46,7 +46,7 @@ gl.curorigin(_WATCH, 8, 8)
 
 class _Toplevel:
 	def init(self):
-		if debug: print 'TopLevel.init()'
+		if debug: print 'TopLevel.init('+`self`+')'
 		self._parent_window = None
 		self._subwindows = []
 		self._fgcolor = _DEF_FGCOLOR
@@ -56,7 +56,7 @@ class _Toplevel:
 		return self
 
 	def close(self):
-		if debug: print 'TopLevel.close()'
+		if debug: print `self`+'.close()'
 		import posix
 		global _image_cache
 		for win in self._subwindows[:]:
@@ -69,32 +69,31 @@ class _Toplevel:
 		_image_cache = {}
 
 	def setcursor(self, cursor):
-		if debug: print 'TopLevel.setcursor('+`cursor`+')'
+		if debug: print `self`+'.setcursor('+`cursor`+')'
 		for win in self._subwindows:
 			win._setcursor(cursor)
 		self._cursor = cursor
 
 	def newwindow(self, x, y, w, h, title):
-		if debug: print 'TopLevel.newwindow'+`x, y, w, h, title`
+		if debug: print `self`+'.newwindow'+`x, y, w, h, title`
 		window = _Window().init(self, x, y, w, h, title)
 		_event._qdevice()
-		self._subwindows.append(window)
 		window._parent_window = self
 		window._toplevel = window
 		dummy = testevent()
 		return window
 
 	def getsize(self):
-		if debug: print 'TopLevel.getsize()'
+		if debug: print `self`+'.getsize()'
 		return _mscreenwidth, _mscreenheight
 
 	def usewindowlock(self, lock):
-		if debug: print 'TopLevel.usewindowlock()'
+		if debug: print `self`+'.usewindowlock()'
 		self._win_lock = lock
 
 class _Event:
 	def init(self):
-		if debug: print 'Event.init()'
+		if debug: print 'Event.init('+`self`+')'
 		self._queue = []
 		self._curwin = None
 		self._savemouse = None
@@ -102,7 +101,7 @@ class _Event:
 		return self
 
 	def _qdevice(self):
-		if debug: print 'Event.qdevice()'
+		if debug: print `self`+'.qdevice()'
 ##		if _toplevel._win_lock:
 ##			_toplevel._win_lock.acquire()
 		fl_or_gl.qdevice(DEVICE.REDRAW)
@@ -120,12 +119,12 @@ class _Event:
 ##			_toplevel._win_lock.release()
 
 	def _readevent(self):
-		if debug: print 'Event._readevent()'
+		if debug: print `self`+'._readevent()'
 		dev, val = gl.qread()
 		return self._dispatch(dev, val)
 
 	def _dispatch(self, dev, val):
-		if debug: print 'Event._dispatch'+`dev,val`
+		if debug: print `self`+'._dispatch'+`dev,val`
 		if dev == DEVICE.REDRAW:
 			self._savemouse = None
 			if _window_list.has_key(val):
@@ -210,7 +209,7 @@ class _Event:
 		return self._curwin, dev, val
 
 	def _getevent(self, block):
-		if debug > 1: print 'Event._getevent('+`block`+')'
+		if debug > 1: print `self`+'._getevent('+`block`+')'
 		qtest = gl.qtest()
 		while 1:
 			while qtest:
@@ -229,7 +228,7 @@ class _Event:
 			qtest = 1	# block on next round
 
 	def _doevent(self, dev, val):
-		if debug: print 'Event._doevent'+`dev,val`
+		if debug: print `self`+'._doevent'+`dev,val`
 		event = self._dispatch(dev, val)
 		for winkey in _window_list.keys():
 			win = _window_list[winkey]
@@ -239,22 +238,22 @@ class _Event:
 			self._queue.append(event)
 		
 	def enterevent(self, win, event, arg):
-		if debug: print 'Event.enterevent'+`win,event,arg`
+		if debug: print `self`+'.enterevent'+`win,event,arg`
 		self._queue.append((win, event, arg))
 
 	def readevent(self):
-		if debug: print 'Event.readevent()'
+		if debug: print `self`+'.readevent()'
 		dummy = self._getevent(1)
 		event = self._queue[0]
 		del self._queue[0]
 		return event
 
 	def testevent(self):
-		if debug > 1: print 'Event.testevent()'
+		if debug > 1: print `self`+'.testevent()'
 		return self._getevent(0)
 
 	def pollevent(self):
-		if debug > 1: print 'Event.pollevent()'
+		if debug > 1: print `self`+'.pollevent()'
 		# Return the first event in the queue if there is one.
 		if self.testevent():
 			return self.readevent()
@@ -262,7 +261,7 @@ class _Event:
 			return None
 
 	def peekevent(self):
-		if debug > 1: print 'Event.peekevent()'
+		if debug > 1: print `self`+'.peekevent()'
 		# Return the first event in the queue if there is one,
 		# but don't remove it.
 		if self.testevent():
@@ -271,7 +270,7 @@ class _Event:
 			return None
 
 	def waitevent(self):
-		if debug: print 'Event.waitevent()'
+		if debug: print `self`+'.waitevent()'
 		# Wait for an event to occur, but don't return it.
 		dummy = self._getevent(1)
 
@@ -282,11 +281,16 @@ class _Font:
 	def init(self, fontname, size):
 		self._font = _findfont(fontname, size)
 		self._baseline, self._fontheight, = self._fontparams()
+		self._fontname = fontname
 		self._pointsize = size
 		self._closed = 0
 ##		self._pointsize = float(self.fontheight()) * 72.0 / 25.4
 ##		print '_Font().init() pointsize:',size,self._pointsize
 		return self
+
+	def __repr__(self):
+		return '<_Font instance, font=' + self._fontname + ', ps=' + \
+			  `self._pointsize` + '>'
 
 	def close(self):
 		self._closed = 1
@@ -347,6 +351,7 @@ class _Button:
 			dispobj._curcolor = self._color
 		d.append(gl.linewidth, self._linewidth)
 		d.append(gl.recti, self._coordinates)
+		dispobj._buttonlist.append(self)
 		return self
 
 	def close(self):
@@ -417,8 +422,8 @@ class _Button:
 # list is rendered, it becomes the active display list.
 class _DisplayList:
 	def init(self, window):
-		if debug: print 'DisplayList.init('+`window`+')'
 		self._window = window	# window to which this belongs
+		if debug: print 'DisplayList.init'+`self,window`
 		self._rendered = 0	# 1 iff rendered at some point
 		self._bgcolor = window._bgcolor
 		self._fgcolor = window._fgcolor
@@ -432,13 +437,20 @@ class _DisplayList:
 		self._linewidth = 1
 		self._curpos = 0, 0
 		self._xpos = 0
+		window._displaylists.append(self)
 		return self
 
+	def __repr__(self):
+		return '<_DisplayList instance, window='+`self._window`+'>'
+
 	def close(self):
+		if debug: print `self`+'.close()'
 		if self.is_closed():
 			return
 		for button in self._buttonlist[:]:
 			button.close()
+		if self._font:
+			self._font.close()
 		window = self._window
 		window._displaylists.remove(self)
 		if window._active_display_list == self:
@@ -455,7 +467,7 @@ class _DisplayList:
 		return self._window == None
 
 	def render(self):
-		if debug: print 'DisplayList.render()'
+		if debug: print `self`+'.render()'
 		window = self._window
 		if self.is_closed():
 			raise error, 'displaylist already closed'
@@ -480,7 +492,7 @@ class _DisplayList:
 		self._rendered = 1
 
 	def clone(self):
-		if debug: print 'DisplayList.clone()'
+		if debug: print `self`+'.clone()'
 		if self.is_closed():
 			raise error, 'displaylist already closed'
 		new = _DisplayList().init(self._window)
@@ -492,7 +504,6 @@ class _DisplayList:
 		new._fontheight = self._fontheight
 		new._baseline = self._baseline
 		new._curfont = self._curfont
-		self._window._displaylists.append(new)
 		return new
 
 	def fgcolor(self, *color):
@@ -520,7 +531,6 @@ class _DisplayList:
 			raise TypeError, 'arg count mismatch'
 		x, y, w, h = coordinates
 		button = _Button().init(self, x, y, w, h)
-		self._buttonlist.append(button)
 		return button
 
 	def drawbox(self, *coordinates):
@@ -533,7 +543,7 @@ class _DisplayList:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
-		if debug: print 'DisplayList.drawbox'+`coordinates`
+		if debug: print `self`+'.drawbox'+`coordinates`
 		x, y, w, h = coordinates
 		d = self._displaylist
 		x0, y0, x1, y1 = window._convert_coordinates(x, y, w, h)
@@ -726,7 +736,6 @@ class _DisplayList:
 
 class _Window:
 	def init(self, parent, x, y, w, h, title):
-		if debug: print 'Window.init'+`parent, x, y, w, h, title`
 		if _toplevel._win_lock:
 			_toplevel._win_lock.acquire()
 		try:
@@ -747,12 +756,24 @@ class _Window:
 			gl.noborder()
 			title = ''
 		self._window_id = gl.winopen(title)
+		if debug: print 'Window.init'+`self, parent, x, y, w, h, title`
 		gl.winconstraints()
 		self._parent_window = parent
 		return self._init2()
 
+	def __repr__(self):
+		s = '<_Window instance, window-id=' + `self._window_id`
+		if self._parent_window == None:
+			s = s + ' (no parent)'
+		else:
+			s = s + ', parent=' + `self._parent_window`
+		if self.is_closed():
+			s = s + ' (closed)'
+		s = s + '>'
+		return s
+
 	def _init2(self):
-		if debug: print 'Window.init2()'
+		if debug: print `self`+'.init2()'
 		# we are already locked on entry, we are unlocked on return
 		gl.RGBmode()
 		gl.gconfig()
@@ -769,10 +790,11 @@ class _Window:
 		_window_list[self._window_id] = self
 		self._redraw()
 		self._setcursor(self._parent_window._cursor)
+		self._parent_window._subwindows.append(self)
 		return self
 
 	def newwindow(self, *coordinates):
-		if debug: print 'Window.newwindow'+`coordinates`
+		if debug: print `self`+'.newwindow'+`coordinates`
 		if len(coordinates) == 1 and type(coordinates) == type(()):
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
@@ -791,7 +813,6 @@ class _Window:
 		new_window = _Window()
 		new_window._window_id = gl.swinopen(self._window_id)
 		gl.winposition(x0, x1, y0, y1)
-		self._subwindows.append(new_window)
 		new_window._parent_window = self
 		new_window._sizes = x, y, w, h
 		new_window._toplevel = self._toplevel
@@ -800,27 +821,37 @@ class _Window:
 		return new_window
 
 	def close(self):
-		if debug: print 'Window.close()'
+		if debug: print `self`+'.close()'
 		if not _window_list.has_key(self._window_id):
 			# apparently already closed
 			return
 		for win in self._subwindows[:]:
 			win.close()
-		for displist in self._displaylists:
+		for displist in self._displaylists[:]:
 			displist.close()
 		del self._displaylists
 		gl.winclose(self._window_id)
 		del _window_list[self._window_id]
 		parent = self._parent_window
-		del self._parent_window
-		if parent:
-			parent._subwindows.remove(self)
+		parent._subwindows.remove(self)
+		self._parent_window = None
+		# let our parent window inherit events meant for us
+		dummy = testevent()	# read all pending events
+		q = []
+		for (win, ev, val) in _event._queue:
+			if win == self:
+				if parent in (None, _toplevel):
+					# delete event if we have no parent:
+					continue
+				win = parent
+			q.append((win, ev, val))
+		_event._queue = q
 
 	def is_closed(self):
 		return not _window_list.has_key(self._window_id)
 
 	def fgcolor(self, *color):
-		if debug: print 'Window.fgcolor()'
+		if debug: print `self`+'.fgcolor()'
 		if len(color) == 1 and type(color[0]) == type(()):
 			color = color[0]
 		if len(color) != 3:
@@ -828,7 +859,7 @@ class _Window:
 		self._fgcolor = color
 
 	def bgcolor(self, *color):
-		if debug: print 'Window.bgcolor()'
+		if debug: print `self`+'.bgcolor()'
 		if len(color) == 1 and type(color[0]) == type(()):
 			color = color[0]
 		if len(color) != 3:
@@ -855,7 +886,6 @@ class _Window:
 
 	def newdisplaylist(self, *bgcolor):
 		list = _DisplayList().init(self)
-		self._displaylists.append(list)
 		if len(bgcolor) == 1 and type(bgcolor[0]) == type(()):
 			bgcolor = bgcolor[0]
 		if len(bgcolor) == 3:
@@ -1028,7 +1058,7 @@ class _Window:
 		enterevent(self, ResizeWindow, None)
 
 	def _redraw(self):
-		if debug: print 'Window._redraw()'
+		if debug: print `self`+'._redraw()'
 		if self._active_display_list:
 			buttons = []
 			for but in self._active_display_list._buttonlist:
