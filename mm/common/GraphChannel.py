@@ -38,7 +38,7 @@ class GraphChannel(ChannelWindow):
 		# XXXX For lines
 		maxy = 0.0
 		miny = 999999999.0
-		length = 1
+		length = 2
 		for d in self.datapoints:
 			if not d:
 				continue
