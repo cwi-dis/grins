@@ -13,7 +13,6 @@ from windowinterface import SINGLE, TEXT, HTM, MPEG
 from windowinterface import TRUE, FALSE
 import string
 import MMurl
-import regsub
 error = 'Channel.error'
 
 channel_device = 1
@@ -750,7 +749,7 @@ class Channel:
 	def getstring(self, node):
 		if node.type == 'imm':
 			self.armed_url = ''
-			return string.joinfields(node.GetValues(), '\n')
+			return string.join(node.GetValues(), '\n')
 		elif node.type == 'ext':
 			url = self.getfileurl(node)
 			self.armed_url = url
@@ -772,8 +771,8 @@ class Channel:
 			#
 			# Convert dos/mac newlines to ours
 			#
-			text = regsub.gsub('\r\n', '\n', text)
-			text = regsub.gsub('\r', '\n', text)
+			text = string.join(string.split(text, '\r\n'), '\n')
+			text = string.join(string.split(text, '\r'), '\n')
 			#
 			# For the mac convert ISO encoding to Mac encoding.
 			# This *ONLY* works for Greek (and, hence, is a hack)
