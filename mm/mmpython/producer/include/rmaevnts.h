@@ -14,6 +14,8 @@
 #ifndef _RMAEVNTS_H_
 #define _RMAEVNTS_H_
 
+struct IRMAProgressSink;
+
 
 // Prototype to create instance of RMEvents object and 
 // typedef to get a pointer to this function from the dll
@@ -250,5 +252,45 @@ DECLARE_INTERFACE_(IRMARMEvents, IUnknown)
 
 };
 
+/****************************************************************************
+ * 
+ *  Interface:
+ *
+ *	IRMARMEvents2
+ *
+ *  Purpose:
+ *
+ *	Interface to rmevents module
+ *
+ *  {2AF82001-ADC6-11d3-8660-42525E000000}
+ *
+ */
+
+DEFINE_GUID(IID_IRMARMEvents2, 
+0x2af82001, 0xadc6, 0x11d3, 0x86, 0x60, 0x42, 0x52, 0x5e, 0x0, 0x0, 0x0);
+
+#define CLSID_IRMARMEvents2 IID_IRMARMEvents2
+
+#undef  INTERFACE
+#define INTERFACE   IRMARMEvents2
+
+DECLARE_INTERFACE_(IRMARMEvents2, IRMARMEvents)
+{
+	/************************************************************************
+     *	Method:
+     *	    IRMARMEvents2::AddSaveProgressSink
+     *	Purpose:
+     *		Add sink which receives callbacks with save progress
+	 */	
+    STDMETHOD(AddSaveProgressSink)(IRMAProgressSink* pProgressSink) PURE;
+    
+	/************************************************************************
+     *	Method:
+     *	    IRMARMEvents2::RemoveSaveProgressSink
+     *	Purpose:
+     *		Remove progress-during-save sink
+	 */	
+    STDMETHOD(RemoveSaveProgressSink)(IRMAProgressSink* pProgressSink) PURE;
+};
 
 #endif //_RMAEVNTS_H_

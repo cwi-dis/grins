@@ -16,6 +16,7 @@
 
 struct IRMARMFileSink;
 struct IRMAValues;
+struct IRMAProgressSink;
 
 // Prototype to create instance of RMFFCopy object and 
 // typedef to get a pointer to this function from the dll
@@ -107,6 +108,47 @@ DECLARE_INTERFACE_(IRMARMFFCopy, IUnknown)
 };
 
 
+/****************************************************************************
+ * 
+ *  Interface:
+ *
+ *	IRMARMFFCopy2
+ *
+ *  Purpose:
+ *
+ *	Interface to rmff copy module
+ *
+ *  IRMARMFFCopy2
+ *
+ *  {4AFA6991-ADC0-11d3-8660-42525E000000}
+ *
+ */
 
+DEFINE_GUID(IID_IRMARMFFCopy2, 
+0x4afa6991, 0xadc0, 0x11d3, 0x86, 0x60, 0x42, 0x52, 0x5e, 0x0, 0x0, 0x0);
+
+#define CLSID_IRMARMFFCopy2 IID_IRMARMFFCopy2
+
+#undef  INTERFACE
+#define INTERFACE   IRMARMFFCopy2
+
+DECLARE_INTERFACE_(IRMARMFFCopy2, IRMARMFFCopy)
+{
+	/************************************************************************
+     *	Method:
+     *	    IRMARMFFCopy2::AddSaveProgressSink
+     *	Purpose:
+     *		Add sink which receives callbacks with save progress
+	 */	
+    STDMETHOD(AddSaveProgressSink)(IRMAProgressSink* pProgressSink) PURE;
+    
+	/************************************************************************
+     *	Method:
+     *	    IRMARMFFCopy2::RemoveSaveProgressSink
+     *	Purpose:
+     *		Remove progress-during-save sink
+	 */	
+    STDMETHOD(RemoveSaveProgressSink)(IRMAProgressSink* pProgressSink) PURE;
+};
 
 #endif //_RMAFCOPY_H_
