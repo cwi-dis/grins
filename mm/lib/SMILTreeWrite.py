@@ -213,6 +213,7 @@ def getsrc(writer, node):
 		val = 'data:%s,%s' % (mime, MMurl.quote(data))
 	else:
 		return None
+
 	if chtype == 'RealPix':
 		# special case for RealPix nodes, which we should write
 		# sometimes, but don't want to write always
@@ -372,6 +373,26 @@ def getduration(writer, node, attr = 'duration'):
 		if duration[-4:] == '.000':
 			duration = duration[:-4]
 		return duration + 's'
+
+def getspeed(writer, node, attr = 'speed'):
+	speed = MMAttrdefs.getattr(node, attr)
+	if not speed:
+		return '1'
+	else:
+		speed = '%.3f' % speed
+		if speed[-4:] == '.000':
+			speed = speed[:-4]
+		return speed
+
+def getproportion(writer, node, attr, defstr='0'):
+	prop = MMAttrdefs.getattr(node, attr)
+	if not prop:
+		return defstr
+	else:
+		prop = '%.3f' % prop
+		if prop[-4:] == '.000':
+			prop = prop[:-4]
+		return prop
 
 def getfill(writer, node):
 	if node.GetType() not in leaftypes:
@@ -630,6 +651,9 @@ smil_attrs=[
 	("repeat", lambda writer, node:(not writer.smilboston and getrepeat(writer, node)) or None),
 	("repeatCount", lambda writer, node:(writer.smilboston and getrepeat(writer, node)) or None),
 	("repeatDur", lambda writer, node:getduration(writer, node, "repeatdur")),
+	("speed", lambda writer, node:getspeed(writer, node, "speed")),
+	("accelerate", lambda writer, node:getproportion(writer, node, "accelerate")),
+	("decelerate", lambda writer, node:getproportion(writer, node, "decelerate")),
 	("system-bitrate", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_bitrate")) or None),
 	("system-captions", lambda writer, node:(not writer.smilboston and getcaptions(writer, node)) or None),
 	("system-language", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_language")) or None),
@@ -696,6 +720,7 @@ smil_mediatype={
 	'RealText':'textstream',
 	'RealVideo':'video',
 	'unknown': 'ref',
+	'animate':'animate',
 }
 
 def mediatype(chtype, error=0):
@@ -1019,6 +1044,8 @@ class SMILWriter(SMIL):
 		if ntype in interiortypes:
 			for child in node.children:
 				self.calcnames1(child)
+				for c in child.children:
+					self.calcnames1(c)
 		if ntype == 'bag':
 			self.uses_grins_namespaces = 1
 
@@ -1044,6 +1071,8 @@ class SMILWriter(SMIL):
 		if node.GetType() in interiortypes:
 			for child in node.children:
 				self.calcnames2(child)
+				for c in child.children:
+					self.calcnames2(c)
 
 	def calcchnames1(self, node):
 		"""Calculate unique names for channels; first pass"""
@@ -1366,6 +1395,10 @@ class SMILWriter(SMIL):
 	def writenode(self, x, root = 0):
 		"""Write a node (possibly recursively)"""
 		type = x.GetType()
+		if type=='imm' and x.GetChannelType()=='animate':
+			self.writeanimatenode(x, root)
+			return
+
 		if type == 'bag':
 			print '** Choice node', \
 			      x.GetRawAttrDef('name', '<unnamed>'),\
@@ -1451,7 +1484,15 @@ class SMILWriter(SMIL):
 			# realtext caption node
 			self.writerealpixnode(x, attrlist, mtype)
 		elif type in ('imm', 'ext'):
-			self.writemedianode(x, attrlist, mtype)
+			children = x.GetChildren()
+			if not children:				
+				self.writemedianode(x, attrlist, mtype)
+			else:
+				self.writetag(mtype, attrlist)
+				self.push()
+				for child in x.GetChildren():
+					self.writenode(child)
+				self.pop()
 		else:
 			raise CheckError, 'bad node type in writenode'
 
@@ -1517,7 +1558,7 @@ class SMILWriter(SMIL):
 
 		if self.uses_qt_namespace:
 			self.writeQTAttributeOnMediaElement(x,attrlist)
-		
+
 		self.writetag(mtype, attrlist)
 		hassrc = 0		# 1 if has source anchors
 		for id, type, args, times in alist:
@@ -1532,6 +1573,27 @@ class SMILWriter(SMIL):
 			self.pop()
 		for i in range(pushed):
 			self.pop()
+
+	def writeanimatenode(self, node, root):
+		attrlist = []
+		attributes = self.attributes.get('animate', {})
+		for name, func in smil_attrs:
+			value = func(self, node)
+			if value and attributes.has_key(name) and \
+			   value != attributes[name]:
+				attrlist.append((name, value))
+		for name, value in node.GetAttrDict().items():
+			if type(value) == type(1.0):
+				value = '%.3f' % value
+				if value[-4:] == '.000':
+					value = value[:-4]
+			elif type(value) == type(1):
+				value = '%d' % value
+			if value and attributes.has_key(name) and \
+			   value != attributes[name]:
+				attrlist.append((name, value))
+		tag = node.GetAttrDict().get('tag')
+		self.writetag(tag, attrlist)
 
 	def linkattrs(self, a2, ltype):
 		attrs = []
