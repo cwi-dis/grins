@@ -15,6 +15,7 @@ default_settings = {
 	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
 	'system_required': (),		# Needs special handling in match...
 	'license': 'A-BAAA-O4BLB-HA-TPL0',
+	'cmif': 0,			# Show cmif-only attributes
 }
 
 user_settings = {}
