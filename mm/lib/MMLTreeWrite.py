@@ -142,7 +142,7 @@ def getsyncarc(writer, node, isend):
 #
 mml_attrs=[
 	("id", lambda writer, node:getid(writer, node)),
-	("channel", lambda writer, node:getchname(writer, node)),
+	("loc", lambda writer, node:getchname(writer, node)),
 	("href", lambda writer, node:getcmifattr(writer, node, "file")),
 	("dur", lambda writer, node: getduration(writer, node, 'duration')),
 	("begin",  lambda writer, node: getsyncarc(writer, node, 0)),
@@ -188,9 +188,13 @@ class MMLWriter:
 
 	def write(self):
 		self.fp.write('<!doctype mml system>\n')
-		self.fp.write('<mml>\n')
+		self.fp.write('<mml lipsync="false">\n')
+		self.fp.push()
+		self.fp.write('<head>\n')
 		self.fp.push()
 		self.writelayout()
+		self.fp.pop()
+		self.fp.write('</head>\n')
 		self.writenode(self.root)
 		self.writelinks()
 		self.fp.pop()
@@ -235,25 +239,28 @@ class MMLWriter:
 
 	def writelayout(self):
 		"""Write the layout section"""
-		self.fp.write('<layout type="text/mml-basic-layout">\n')
+		self.fp.write('<layout type="text/mml-basic">\n')
 		self.fp.push()
 		channels = self.root.GetContext().channels
 		self.channels_defined = {}
 		for ch in channels:
 			dummy = mediatype(ch['type'], error=1)
-			attrlist = ['<channel name=%s' %
+			attrlist = ['<tuner loc=%s' %
 				    nameencode(self.ch2name[ch])]
 			if not ch.has_key('base_window'):
 				continue	# Skip toplevel windows
 			if not ch.has_key('base_winoff'):
 				continue
 			x, y, w, h = ch['base_winoff']
-			data = ('x', x), ('y', y), ('w', w), ('h', h)
+			data = ('x', x), ('y', y), ('width', w), ('height', h)
 			for name, value in data:
 				value = int(value*100)
 				if value:
 					attrlist.append('%s="%d%%"'%
 							(name, value))
+			if ch.has_key('z'):
+				# CMIF default is 0, MML default is 1
+				attrlist.append('z="%d"' % (ch['z'] + 1))
 			if len(attrlist) == 1:
 				# Nothing to define
 				continue

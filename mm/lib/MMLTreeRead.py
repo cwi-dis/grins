@@ -15,14 +15,16 @@ LAYOUT_NONE = 0				# must be 0
 LAYOUT_MML = 1
 LAYOUT_UNKNOWN = -1
 
-coordre = regex.compile('^\([0-9.]+%?\),\([0-9.]+%?\) +'
-			'\([0-9.]+%?\),\([0-9.]+%?\)$')
+coordre = regex.compile('^ *\([0-9.]+%?\)[ ,]+\([0-9.]+%?\)[ ,]+'
+			'\([0-9.]+%?\)[ ,]+\([0-9.]+%?\) *$')
 
 class MMLParser(xmllib.XMLParser):
 	def __init__(self, context, verbose = 0):
 		xmllib.XMLParser.__init__(self, verbose)
 		self.__seen_mml = 0
 		self.__in_mml = 0
+		self.__in_head = 0
+		self.__seen_body = 0
 		self.__in_layout = LAYOUT_NONE
 		self.__in_a = None
 		self.__context = context
@@ -38,7 +40,7 @@ class MMLParser(xmllib.XMLParser):
 
 	def GetRoot(self):
 		if not self.__root:
-			raise error, 'empty document'
+			self.error('empty document')
 		return self.__root
 
 	def MakeRoot(self, type):
@@ -66,7 +68,7 @@ class MMLParser(xmllib.XMLParser):
 						break
 					xnode = n
 				else:
-					raise error, 'node not in parent'
+					self.error('node not in parent')
 				if xnode is None:
 					# first, relative to parent
 					xside = HD # rel to start of parent
@@ -109,7 +111,7 @@ class MMLParser(xmllib.XMLParser):
 				self.__nodemap[val] = node
 			elif attr == 'href':
 				node.attrdict['file'] = val
-			elif attr == 'channel':
+			elif attr == 'loc':
 				# deal with channel later
 				node.__channel = val
 			elif attr == 'begin' or attr == 'end':
@@ -119,7 +121,7 @@ class MMLParser(xmllib.XMLParser):
 
 	def NewNode(self, mediatype, attributes):
 		if not self.__container:
-			raise error, 'node not in container'
+			self.error('node not in container')
 		node = self.__context.newnode('ext')
 		node.attrdict['transparent'] = -1
 		self.AddAttrs(node, attributes)
@@ -138,13 +140,13 @@ class MMLParser(xmllib.XMLParser):
 
 	def NewContainer(self, type, attributes):
 		if not self.__in_mml:
-			raise error, '%s not in mml' % type
+			self.error('%s not in mml' % type)
 		if self.__in_layout:
-			raise error, '%s in layout' % type
+			self.error('%s in layout' % type)
 		if not self.__root:
 			node = self.MakeRoot(type)
 		elif not self.__container:
-			raise error, '%s not in container' % type
+			self.error('%s not in container' % type)
 		else:
 			node = self.__context.newnode(type)
 			self.__container._addchild(node)
@@ -213,7 +215,7 @@ class MMLParser(xmllib.XMLParser):
 				# deal with channel with window
 				if not self.__channels.has_key(channel):
 					self.__in_layout = LAYOUT_MML
-					self.start_channel({'name': channel})
+					self.start_tuner({'loc': channel})
 					self.__in_layout = LAYOUT_NONE
 				attrdict = self.__channels[channel]
 				if self.__layout is None:
@@ -236,8 +238,8 @@ class MMLParser(xmllib.XMLParser):
 				ch['base_window'] = 'layout'
 				x = attrdict['x']
 				y = attrdict['y']
-				w = attrdict['w']
-				h = attrdict['h']
+				w = attrdict['width']
+				h = attrdict['height']
 				if type(x) is type(0):
 					x = float(x) / self.__width
 				if type(w) is type(0):
@@ -299,74 +301,102 @@ class MMLParser(xmllib.XMLParser):
 	# mml contains everything
 	def start_mml(self, attributes):
 		if self.__seen_mml:
-			raise error, 'more than 1 mml tag'
+			self.error('more than 1 mml tag')
 		self.__seen_mml = 1
 		self.__in_mml = 1
 
 	def end_mml(self):
 		self.__in_mml = 0
 		if not self.__root:
-			raise error, 'empty document'
+			self.error('empty document')
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
 		self.FixLinks()
+
+	# head/body sections
+
+	def start_head(self, attributes):
+		self.__in_head = 1
+
+	def end_head(self):
+		self.__in_head = 0
+
+	def start_body(self, attributes):
+		if not self.__in_mml:
+			self.error('body not in mml')
+		if self.__seen_body:
+			self.error('multiple body tags')
+		self.__seen_body = 1
+
+	def end_body(self):
+		pass
 
 	# layout section
 
 	def start_layout(self, attributes):
 		if not self.__in_mml:
-			raise error, 'layout not in mml'
+			self.error('layout not in mml')
+		if not self.__in_head:
+			self.warning('layout not in head')
 		self.__in_layout = LAYOUT_UNKNOWN
 		if attributes.has_key('type') and \
-		   attributes['type'] == 'text/mml-basic-layout':
+		   attributes['type'] == 'text/mml-basic':
 			self.__in_layout = LAYOUT_MML
 
 	def end_layout(self):
 		self.__in_layout = LAYOUT_NONE
 
-	def start_channel(self, attributes):
+	def start_tuner(self, attributes):
 		if not self.__in_layout:
-			raise error, 'channel not in layout'
+			self.error('tuner not in layout')
 		if self.__in_layout != LAYOUT_MML:
 			# ignore outside of mml-basic-layout
 			return
 		attrdict = {'x': 0,
 			    'y': 0,
 			    'z': 0,
-			    'w': 0,
-			    'h': 0}
+			    'width': 0,
+			    'height': 0}
 		for attr, val in attributes.items():
-			if attr in ('x', 'y', 'w', 'h'):
+			if attr in ('x', 'y', 'width', 'height'):
 				try:
 					if val[-1] == '%':
 						val = string.atof(val[:-1]) / 100.0
 						if val < 0 or val > 1:
-							raise error, 'channel with impossible size'
+							self.error('tuner with impossible size')
 					else:
 						val = string.atoi(val)
 						if val < 0:
-							raise error, 'channel with impossible size'
+							self.error('tuner with impossible size')
 				except (string.atoi_error, string.atof_error):
-					self.syntax_error(self.lineno, 'invalid channel attribute value')
+					self.syntax_error(self.lineno, 'invalid tuner attribute value')
 					val = 0
 			elif attr == 'z':
 				try:
 					val = string.atoi(val)
 				except string.atoi_error:
-					self.syntax_error(self.lineno, 'invalid channel attribute value')
-					val = 0
-				if val < 0:
-					raise error, 'channel with negative z'
+					self.syntax_error(self.lineno, 'invalid tuner attribute value')
+					val = 1
+				if val <= 0:
+					self.error('tuner with negative z')
+				val = val - 1 # MML def is 1, CMIF def is 0
+			elif attr == 'loc':
+				pass
+			else:
+				self.warning('unknown attribute in tuner tag')
 			attrdict[attr] = val
-		if attrdict.has_key('name'):
-			self.__channels[attrdict['name']] = attrdict
+		if attrdict.has_key('loc'):
+			loc = attrdict['loc']
+			if self.__channels.has_key(loc):
+				self.warning('multiple tuner tags for loc=%s' % loc)
+			self.__channels[attrdict['loc']] = attrdict
 		else:
-			raise error, 'channel without name attribute'
+			self.error('tuner without loc attribute')
 
 		# calculate minimum required size of top-level window
 		x = attrdict['x']
 		y = attrdict['y']
-		w = attrdict['w']
-		h = attrdict['h']
+		w = attrdict['width']
+		h = attrdict['height']
 		width = _minsize(x, w)
 		if width > self.__width:
 			self.__width = width
@@ -374,7 +404,7 @@ class MMLParser(xmllib.XMLParser):
 		if height > self.__height:
 			self.__height = height
 
-	def end_channel(self):
+	def end_tuner(self):
 		pass
 
 	# container nodes
@@ -395,9 +425,12 @@ class MMLParser(xmllib.XMLParser):
 	end_bag = EndContainer
 
 	def start_switch(self, attributes):
-		self.NewContainer('alt', attributes)
+		if not self.__in_head:
+			self.NewContainer('alt', attributes)
 
-	end_switch = EndContainer
+	def end_switch(self):
+		if not self.__in_head:
+			self.EndContainer(self)
 
 	# media items
 
@@ -542,7 +575,7 @@ class MMLParser(xmllib.XMLParser):
 
 	def start_anchor(self, attributes):
 		if not self.__in_hlink:
-			raise error, 'anchor not in hlink'
+			self.error('anchor not in hlink')
 		try:
 			role = string.lower(attributes['role'])
 		except KeyError:
@@ -594,6 +627,9 @@ class MMLParser(xmllib.XMLParser):
 	def warning(self, message):
 		print 'warning: %s on line %d' % (message, self.lineno)
 
+	def error(self, message):
+		raise error, 'error, line %d: %s' % (self.lineno, message)
+
 def ReadFile(filename):
 	return ReadFileContext(filename, MMNode.MMNodeContext(MMNode.MMNode))
 
@@ -616,7 +652,7 @@ def _minsize(start, extent):
 		if type(extent) is type(0.0):
 			# extent is fraction
 			if extent == 0 or (extent == 1 and start > 0):
-				raise error, 'channel with impossible size'
+				raise error, 'tuner with impossible size'
 			if extent == 1:
 				return 0
 			return int(start / (1 - extent) + 0.5)
@@ -629,7 +665,7 @@ def _minsize(start, extent):
 	else:
 		# start is fraction
 		if start == 1:
-			raise error, 'channel with impossible size'
+			raise error, 'tuner with impossible size'
 		if type(extent) is type(0):
 			# extent is pixel value
 			return int(extent / (1 - start) + 0.5)
