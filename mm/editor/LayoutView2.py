@@ -2553,6 +2553,24 @@ class Viewport(Node):
 	def show(self):
 		if debug: print 'Viewport.show : ',self.getName()
 		self._graphicCtrl = self._ctx.previousCtrl.newViewport(self._curattrdict, self._name)
+
+		# show a the trace image if specified		
+		traceImage = self._nodeRef.GetAttrDef('traceImage', '')
+		if traceImage != '':
+			import MMurl
+			f = self._ctx._context.context.findurl(traceImage)
+			if not f:
+				# no file specified. do nothing
+				pass
+			else:
+				try:
+					f = MMurl.urlretrieve(f)[0]
+					self._graphicCtrl.setImage(f,fit='fill')
+				except IOError, arg:
+					if type(arg) is type(self):
+						arg = arg.strerror
+					windowinterface.showmessage('Cannot resolve the trace image URL "%s": %s' % (f, arg))
+
 		self._graphicCtrl.setListener(self)
 		
 	def showAllNodes(self):
