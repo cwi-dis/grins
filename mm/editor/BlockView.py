@@ -10,6 +10,7 @@ from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 from MMNode import alltypes, leaftypes, interiortypes
 import Clipboard
+import string
 
 
 # XXX Test for forms 1.5 compat:
@@ -301,7 +302,11 @@ class BlockView(ViewDialog, BasicDialog):
     def presentlabels(self, node):
 	type = node.GetType()
 	if type in leaftypes:
-	    node.bv_obj.label = MMAttrdefs.getattr(node, 'name')
+	    name = MMAttrdefs.getattr(node, 'name')
+	    if node.bv_obj.w <= node.bv_obj.h:
+		words = string.split(name)
+		name = string.joinfields(words, '\n')
+	    node.bv_obj.label = name
 	    return
 	label = MMAttrdefs.getattr(node, 'name')
 	node.bv_labeltext.label = label
