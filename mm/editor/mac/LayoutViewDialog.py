@@ -122,7 +122,7 @@ class LayoutViewDialog(windowinterface.MACDialog):
 		w.rungrabbed()
 
 	def __okchannel(self, name=None, type=None):
-		print 'OKCHANNEL', name, type
+##		print 'OKCHANNEL', name, type
 ##		self.__chanwin.close()
 ##		del self.__chanwin
 ##		# We can't call this directly since we're still in
