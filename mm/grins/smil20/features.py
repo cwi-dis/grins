@@ -17,7 +17,3 @@ license_features_needed = ('smil2player', sys.platform)
 # On Windows in the frozen version, we get a crash when the player
 # tries to exit because it expired.
 #expiry_date = (2001, 1, 15)
-
-# RTIPA start
-RTIPA = 0
-# RTIPA end
