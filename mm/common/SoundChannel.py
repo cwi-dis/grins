@@ -54,18 +54,22 @@ class SoundChannel(ChannelAsync):
 			return
 			
 		if debug: print 'SoundChannel: play', node
-		player.play(self.arm_fp, (self.playdone, (0,)))
+		player.play(self.arm_fp, (self.my_playdone, (0,)))
 		self.play_fp = self.arm_fp
 		self.arm_fp = None
 		
-	def playdone(self, outside_induces):
+	def my_playdone(self, outside_induces):
 		if debug: print 'SoundChannel: playdone',`self`
 		if self.play_fp:
 			player.stop(self.play_fp)
-		ChannelAsync.playdone(self, outside_induces)
+			self.play_fp = None
+			self.playdone(outside_induces)
 
 	def playstop(self):
 		if debug: print 'SoundChannel: playstop'
+		if self.play_fp:
+			player.stop(self.play_fp)
+			self.play_fp = None
 		self.playdone(1)
 
 	def setpaused(self, paused):
@@ -113,6 +117,10 @@ class Player:
 	def stop(self, rdr):
 		if self.__merger:
 			self.__merger.delete(rdr)
+			self.__converter.setpos(self.__oldpos)
+			self.__data = self.__converter.readframes(self.__readsize)
+			if not self.__data:
+				self.__is_playing = 0
 
 	def __playsome(self, first = 0):
 		if not self.__is_playing:
@@ -121,14 +129,16 @@ class Player:
 				if cb:
 					apply(cb[0], cb[1])
 			self.__callbacks = []
-			self.__merger = None
-			self.__converter = None
-			return
+			if not self.__is_playing:
+				self.__merger = None
+				self.__converter = None
+				return
 		self.__port.writeframes(self.__data)
 		for cb in self.__callbacks:
 			if cb:
 				apply(cb[0], cb[1])
 		self.__callbacks = []
+		self.__oldpos = self.__converter.getpos()
 		self.__data = self.__converter.readframes(self.__readsize)
 		if not self.__data:
 			self.__is_playing = 0
