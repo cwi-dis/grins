@@ -2,6 +2,7 @@
 # Read the file and create a menu that accesses the basic functions.
 
 import posix
+import path
 
 import MMExc
 import MMAttrdefs
@@ -28,13 +29,15 @@ BHEIGHT = 30				# Button height
 HELPDIR = '/ufs/guido/mm/demo/help'	# Where to find the help files
 
 
-class TopLevel() = ViewDialog(), BasicDialog():
+class TopLevel(ViewDialog, BasicDialog):
 	#
 	# Initialization.
 	#
 	def init(self, filename):
 		self = ViewDialog.init(self, 'toplevel_')
 		self.filename = filename
+		self.dirname, self.basename = path.split(self.filename)
+		MMAttrdefs.toplevel = self # For hack in MMAttrdefs.getattr()
 		self.read_it()
 		width, height = \
 			MMAttrdefs.getattr(self.root, 'toplevel_winsize')
@@ -42,6 +45,17 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		Timing.calctimes(self.root)
 		self.makeviews()	# References the form just made
 		return self
+	#
+	# Interface to prefix relative filenames with the CMIF file's
+	# directory, if the resulting filename exists.
+	#
+	def findfile(self, filename):
+		if path.isabs(filename):
+			return filename
+		altfilename = path.join(self.dirname, filename)
+		if path.exists(altfilename):
+			return altfilename
+		return filename # Let the caller find out it doesn't exist
 	#
 	# Extend inherited show/hide/destroy interface.
 	#
