@@ -9,6 +9,8 @@ import commctrl
 # Default list of iconnames.
 ICONNAME_TO_RESID={
 	None: grinsRC.IDI_ICON_ASSET_BLANK,
+
+	# Media types:
 	'ref': grinsRC.IDI_ICON_ASSET_BLANK,
 	'text': grinsRC.IDI_ICON_ASSET_TEXT,
 	'image': grinsRC.IDI_ICON_ASSET_IMAGE,
@@ -19,23 +21,60 @@ ICONNAME_TO_RESID={
 	'animation': grinsRC.IDI_ANIMATION,
 	'svg': grinsRC.IDI_ANIMATION,
 
+	# Node types:
 	'node': grinsRC.IDI_ICON_NODE,
 	'imm': grinsRC.IDI_ICON_NODE,
 	'ext': grinsRC.IDI_ICON_NODE,
 	'animate': grinsRC.IDI_ANIMATE,
 	'brush': grinsRC.IDI_BRUSH,
 	'par': grinsRC.IDI_ICON_PAROPEN,
+	'paropen': grinsRC.IDI_ICON_PAROPEN,
+	'parclosed': grinsRC.IDI_ICON_PARCLOSED,
 	'seq': grinsRC.IDI_ICON_SEQOPEN,
+	'seqopen': grinsRC.IDI_ICON_SEQOPEN,
+	'seqclosed': grinsRC.IDI_ICON_SEQCLOSED,
 	'excl': grinsRC.IDI_ICON_EXCLOPEN,
+	'exclopen': grinsRC.IDI_ICON_EXCLOPEN,
+	'exclclosed': grinsRC.IDI_ICON_EXCLCLOSED,
 	'switch': grinsRC.IDI_ICON_SWITCHOPEN,
+	'switchopen': grinsRC.IDI_ICON_SWITCHOPEN,
+	'switchclosed': grinsRC.IDI_ICON_SWITCHCLOSED,
 	'prio': grinsRC.IDI_ICON_PRIOOPEN,
+	'prioopen': grinsRC.IDI_ICON_PRIOOPEN,
+	'prioclosed': grinsRC.IDI_ICON_PRIOCLOSED,
 
+	# Region types:
 	'viewport': grinsRC.IDI_VIEWPORT,
 	'region': grinsRC.IDI_REGION,
 
-	'properties': grinsRC.IDI_PROPERTIES,
-
+	# These were block-copied from win32displaylist.
+	# We need to check whether they're all still used.
+	'closed': grinsRC.IDI_ICON_CLOSED,
+	'open': grinsRC.IDI_ICON_OPEN,
+	'bandwidthgood': grinsRC.IDI_ICON_BANDWIDTHGOOD,
+	'bandwidthbad': grinsRC.IDI_ICON_BANDWIDTHBAD,
+	'error': grinsRC.IDI_ICON_ERROR,
 	'linksrc': grinsRC.IDI_ICON_LINKSRC,
+	'linkdst': grinsRC.IDI_ICON_LINKDST,
+	'danglingevent': grinsRC.IDI_DANGLINGEVENT,
+	'danglinganchor': grinsRC.IDI_DANGLINGANCHOR,
+##	'linksrcdst': grinsRC.IDI_ICON_LINKSRCDST,
+	'transin': grinsRC.IDI_ICON_TRANSIN,
+	'transout': grinsRC.IDI_ICON_TRANSOUT,
+	'beginevent' : grinsRC.IDI_EVENTIN,
+	'endevent' : grinsRC.IDI_EVENTOUT,
+	'activateevent' : grinsRC.IDI_ACTIVATEEVENT,
+	'causeevent' : grinsRC.IDI_CAUSEEVENT,
+	'duration' : grinsRC.IDI_DURATION,
+	'focusin' : grinsRC.IDI_FOCUSIN,
+	'happyface' : grinsRC.IDI_HAPPYFACE,
+	'repeat' : grinsRC.IDI_REPEAT,
+	'spaceman': grinsRC.IDI_SPACEMAN,
+	'wallclock': grinsRC.IDI_WALLCLOCK,
+	'playing': grinsRC.IDI_PLAYING,
+	'waitstop': grinsRC.IDI_WAITSTOP,
+	'idle': grinsRC.IDI_IDLE,
+	'properties': grinsRC.IDI_PROPERTIES,
 	'unknown': grinsRC.IDI_UNKNOWN,
 }
 
