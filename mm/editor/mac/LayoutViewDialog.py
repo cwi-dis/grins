@@ -2,6 +2,7 @@ __version__ = "$Id$"
 
 import windowinterface
 from usercmd import *
+import Qd
 
 def ITEMrange(fr, to): return range(fr, to+1)
 
@@ -80,64 +81,75 @@ class LayoutViewDialog(windowinterface.MACDialog):
 		del self.__layoutlist
 		del self.__channellist
 		del self.__otherlist
-
-	def hide(self):
-		if self.__window is not None:
-			self.__window.hide()
 			
 	def do_itemhit(self, item, event):
-		pass
+		print 'itemhit', item, event
+		if item == ITEM_LAYOUT_LIST:
+			self._listclick(event, self.__layoutlist, self.__layoutcb, ())
+		elif item == ITEM_CHANNEL_LIST:
+			self._listclick(event, self.__channellist, self.__channelcb, ())
+		elif item == ITEM_OCHANNEL_LIST:
+			self._listclick(event, self.__otherlist, self.__othercb, ())
+		else:
+			if not windowinterface.MACDialog.do_itemhit(self, item, event):
+				print 'LayoutViewDialog: unexpected item/event:', item, event
+
+	def _listclick(self, event, list, cbfunc, cbarg):
+		(what, message, when, where, modifiers) = event
+		Qd.SetPort(self._window._wid)
+		where = Qd.GlobalToLocal(where)
+		old_select = list.getselect()
+		item, is_double = list.click(where, modifiers)
+		print 'click', old_select, '->', item, is_double
+		if old_select != item:
+			apply(cbfunc, cbarg)
 
 	def setlayoutlist(self, layouts, cur):
-		if layouts != self.__layoutlist.getlist():
-			self.__layoutlist.delalllistitems()
-			self.__layoutlist.addlistitems(layouts, 0)
+		if layouts != self.__layoutlist.get():
+			self.__layoutlist.set(layouts)
 		if cur is not None:
-			self.__layoutlist.selectitem(layouts.index(cur))
+			self.__layoutlist.select(layouts.index(cur))
 		else:
-			self.__layoutlist.selectitem(None)
+			self.__layoutlist.select(None)
 
 	def setchannellist(self, channels, cur):
-		if channels != self.__channellist.getlist():
-			self.__channellist.delalllistitems()
-			self.__channellist.addlistitems(channels, 0)
+		if channels != self.__channellist.get():
+			self.__channellist.set(channels)
 		if cur is not None:
-			self.__channellist.selectitem(channels.index(cur))
+			self.__channellist.select(channels.index(cur))
 		else:
-			self.__channellist.selectitem(None)
+			self.__channellist.select(None)
 
 	def setotherlist(self, channels, cur):
-		if channels != self.__otherlist.getlist():
-			self.__otherlist.delalllistitems()
-			self.__otherlist.addlistitems(channels, 0)
+		if channels != self.__otherlist.get():
+			self.__otherlist.set(channels)
 		if cur is not None:
-			self.__otherlist.selectitem(channels.index(cur))
-
-	def layoutname(self):
-		return self.__layoutlist.getselection()
+			self.__otherlist.select(channels.index(cur))
+		else:
+			self.__channellist.select(None)
 
 	def __layoutcb(self):
-		sel = self.__layoutlist.getselected()
+		sel = self.__layoutlist.getselect()
 		if sel is None:
 			self.curlayout = None
 		else:
-			self.curlayout = self.__layoutlist.getlistitem(sel)
+			self.curlayout = self.__layoutlist.getitem(sel)
 		self.fill()
 
 	def __channelcb(self):
-		sel = self.__channellist.getselected()
+		sel = self.__channellist.getselect()
 		if sel is None:
 			self.curchannel = None
 		else:
-			self.curchannel = self.__channellist.getlistitem(sel)
+			self.curchannel = self.__channellist.getitem(sel)
 		self.fill()
 
 	def __othercb(self):
-		sel = self.__otherlist.getselected()
+		sel = self.__otherlist.getselect()
 		if sel is None:
 			self.curother = None
 		else:
-			self.curother = self.__otherlist.getlistitem(sel)
+			self.curother = self.__otherlist.getitem(sel)
 		self.fill()
 
 	def setwaiting(self):
@@ -147,14 +159,14 @@ class LayoutViewDialog(windowinterface.MACDialog):
 		pass
 
 	def setcommandlist(self, commandlist):
-		self.__window.set_commandlist(commandlist)
+		print 'CMDS', commandlist
+		self._window.set_commandlist(commandlist)
 
 	def asklayoutname(self, default):
 		windowinterface.InputDialog('Name for layout',
 					    default,
 					    self.newlayout_callback,
-					    cancelCallback = (self.newlayout_callback, ()),
-					    parent = self.__window)
+					    cancelCallback = (self.newlayout_callback, ()))
 
 	def askchannelnameandtype(self, default, types):
 		w = windowinterface.Window('newchanneldialog', grab = 1,
