@@ -22,6 +22,8 @@ LAYOUT_SMIL = 1
 LAYOUT_EXTENDED = 2
 LAYOUT_UNKNOWN = -1			# must be < 0
 
+CASCADE = 1	# cascade regions for nodes without region attr
+
 layout_name = ' SMIL '			# name of layout channel
 
 _opS = xmllib._opS
@@ -119,7 +121,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'uGroup': (self.start_u_group, self.end_u_group),
 			'region': (self.start_region, self.end_region),
 			'root-layout': (self.start_root_layout, self.end_root_layout),
-			'top-layout': (self.start_top_layout, self.end_top_layout),
+			'topLayout': (self.start_top_layout, self.end_top_layout),
 			GRiNSns+' '+'layouts': (self.start_layouts, self.end_layouts),
 			GRiNSns+' '+'layout': (self.start_Glayout, self.end_Glayout),
 			'body': (self.start_body, self.end_body),
@@ -179,6 +181,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__layouts = {}
 		self.__realpixnodes = []
 		self.__new_file = new_file
+		self.__regionno = 0
+		self.__defleft = 0
+		self.__deftop = 0
 		if new_file and type(new_file) == type(''):
 			self.__base = new_file
 
@@ -604,9 +609,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			res = dataurl.match(url)
 			if res is not None and res.group('base64') is None:
 				mtype = res.group('type') or 'text/plain'
-				data = string.split(MMurl.unquote(res.group('data')), '\n')
-				nodetype = 'imm'
-				del attributes['src']
+				if mtype == 'text/plain':
+					data = string.split(MMurl.unquote(res.group('data')), '\n')
+					nodetype = 'imm'
+					del attributes['src']
 		else:
 			# remove if immediate data allowed
 			self.syntax_error('no src attribute')
@@ -769,7 +775,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if not self.__regions.has_key(region):
 				self.syntax_error('unknown region')
 		else:
-			region = 'unnamed region'
+			if CASCADE:
+				region = 'unnamed region %d' % self.__regionno
+				self.__regionno = self.__regionno + 1
+			else:
+				region = 'unnamed region'
 		node.__region = region
 		ch = self.__regions.get(region)
 		if ch is None:
@@ -780,6 +790,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val is not None:
 					ch[key] = val
 			ch['id'] = region
+			ch['left'] = '%dpx' % self.__defleft
+			ch['top'] = '%dpx' % self.__deftop
+			self.__defleft = self.__defleft + 20
+			self.__deftop = self.__deftop + 10
 			self.start_region(ch, checkid = 0)
 			self.end_region()
 			self.__in_layout = LAYOUT_NONE
@@ -1729,7 +1743,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__region = id, self.__region
 		self.__regionlist.append(id)
 		self.__childregions[id] = []
-		self.__topregion[id] = self.__top_layout # None if not in top-layout
+		self.__topregion[id] = self.__top_layout # None if not in topLayout
 
 	def end_region(self):
 		if self.__region is None:
@@ -1787,14 +1801,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
 		if self.__in_layout != LAYOUT_EXTENDED:
-			self.syntax_error('top-layout not allowed in layout type %s' % SMIL_BASIC)
+			self.syntax_error('topLayout not allowed in layout type %s' % SMIL_BASIC)
 		if self.__context.attributes.get('project_boston') == 0:
-			self.syntax_error('top-layout not compatible with SMIL 1.0')
+			self.syntax_error('topLayout not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		if id is None:
-			id = self.__mkid('top-layout')
+			id = self.__mkid('topLayout')
 			attributes['id'] = id
 		self.__top_layout = id
 		self.__childregions[id] = []
