@@ -133,9 +133,7 @@ class Main(MainDialog):
 			
 		if settings.get('registered') == 'notyet' and \
 				not self._license.is_evaluation_license():
-			answer = windowinterface.GetYesNoCancel("""
-You have not registered your copy of GRiNS yet.
-Do you want to register now?""")
+			answer = windowinterface.RegisterDialog()
 			astr = ['yes', 'no', 'notyet'][answer]
 			settings.set('registered', astr)
 			settings.save()
