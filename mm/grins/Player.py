@@ -51,8 +51,20 @@ class Player(PlayerCore, PlayerDialog):
 		self.timer_callback = self.scheduler.timer_callback
 
 	def destroy(self):
+		if not hasattr(self, 'toplevel'):
+			# already destroyed
+			return
 		self.hide()
 		self.close()
+		del self.channelnames
+		del self.channels
+		del self.channeltypes
+		del self.toplevel
+		del self.set_timer
+		del self.timer_callback
+		if self.source is not None:
+			self.source.close()
+		del self.source
 
 	def __repr__(self):
 		return '<Player instance, root=' + `self.root` + '>'
