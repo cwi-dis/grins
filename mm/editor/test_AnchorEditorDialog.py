@@ -113,7 +113,7 @@ class AnchorEditorTest(AnchorEditorDialog):
 		print 'Edit button pressed'
 	def export_callback(self):
 		print 'Export button pressed'
-			
+
 import windowinterface
 print 'Creating AnchorEditorDialog...'
 dialog = AnchorEditorTest()
