@@ -9,7 +9,6 @@ from sched import scheduler
 import glwindow
 from MMExc import *
 import MMAttrdefs
-import AttrEdit
 
 
 # The player algorithm treats the head and tail (begin and end) sides
@@ -20,18 +19,9 @@ import AttrEdit
 HD, TL = 0, 1
 
 
-# Table mapping channel types to channel classes.
-# XXX This should be more readily extensible.
+# The channel map is in a separate module for easy editing.
 
-from NullChannel import NullChannel
-from TextChannel import TextChannel
-from SoundChannel import SoundChannel
-
-channelmap = { \
-	'sound':	SoundChannel, \
-	'text': 	TextChannel, \
-	'null': 	NullChannel, \
-	}
+from ChannelMap import channelmap
 
 
 # The Player class has only a single instance.
@@ -77,6 +67,19 @@ class Player() = scheduler():
 		# Return self, as any class initializer
 		return self
 	#
+	def show(self):
+		self.showchannels()
+		self.showcpanel()
+	#
+	def hide(self):
+		self.hidecpanel()
+		self.hidechannels()
+	#
+	def destroy(self):
+		self.destroycpanel()
+		self.destroychannels()
+	#
+	#
 	# Queue interface, based upon sched.scheduler.
 	# This queue has variable time, to implement pause and slow/fast,
 	# but the interface to its callers is the same, except init().
@@ -114,25 +117,23 @@ class Player() = scheduler():
 	def run(self):
 		while 1:
 			obj = glwindow.check()
-			if obj = None:
-				self.showtime()
-			else:
+			if obj <> None:
 				raise RuntimeError, 'object without callback!'
+			idle = 1
 			if self.queue:
-				time, prio, action, argument = self.queue[0]
+				when, prio, action, argument = self.queue[0]
 				now = self.timefunc()
-				if now >= time:
+				if now >= when:
 					del self.queue[0]
 					void = action(argument)
+					idle = 0
+			if idle:
+				self.showtime()
+				time.millisleep(25)
 	#
 	# User interface.
 	#
 	def makecpanel(self):
-		#
-		# Use the winpos attribute of the root to place the panel
-		h, v = MMAttrdefs.getattr(self.root, 'winpos')
-		width, height = 300, 100
-		glwindow.setgeometry(h, v, width, height)
 		#
 		cpanel = fl.make_form(FLAT_BOX, 300, 100)
 		#
@@ -159,11 +160,6 @@ class Player() = scheduler():
 			cpanel.add_button(INOUT_BUTTON,x,y,w,h, 'Stop')
 		self.stopbutton.set_call_back(self.stop_callback, None)
 		#
-		x, y, w, h = 0, 0, 50, 50
-		self.quitbutton = \
-			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, 'Quit')
-		self.quitbutton.set_call_back(self.quit_callback, None)
-		#
 		x, y, w, h = 50, 0, 150, 50
 		self.statebutton = \
 			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, '')
@@ -181,13 +177,24 @@ class Player() = scheduler():
 		self.speedbutton.boxtype = FLAT_BOX
 		self.speedbutton.set_call_back(self.speed_callback, None)
 		#
-		x, y, w, h = 200, 0, 100, 50
-		self.editbutton = \
-			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, 'Edit')
-		self.editbutton.set_call_back(self.edit_callback, None)
-		#
-		cpanel.show_form(PLACE_SIZE, TRUE, 'Control Panel')
 		self.cpanel = cpanel
+	#
+	def showcpanel(self):
+		#
+		# Use the winpos attribute of the root to place the panel
+		#
+		h, v = MMAttrdefs.getattr(self.root, 'player_winpos')
+		width, height = 300, 100
+		glwindow.setgeometry(h, v, width, height)
+		#
+		self.cpanel.show_form(PLACE_SIZE, TRUE, 'Control Panel')
+	#
+	def hidecpanel(self):
+		self.cpanel.hide_form()
+	#
+	def destroycpanel(self):
+		self.hide()
+		# XXX Ougt to garbage-collect everything now...
 	#
 	# FORMS callbacks.
 	#
@@ -211,11 +218,6 @@ class Player() = scheduler():
 		else:
 			self.stop()
 	#
-	def quit_callback(self, (obj, arg)):
-		if self.state <> 'stopped':
-			self.stop()
-		raise ExitException, 0
-	#
 	def state_callback(self, (obj, arg)):
 		self.showtime()
 	#
@@ -225,16 +227,6 @@ class Player() = scheduler():
 	#
 	def speed_callback(self, (obj, arg)):
 		self.showtime()
-	#
-	def edit_callback(self, (obj, arg)):
-		if self.state <> 'stopped':
-			if self.state = 'frozen':
-				fl.show_message( '', \
-				 'You can only edit a stopped document!', '')
-			else:
-				gl.ringbell()
-		else:
-			AttrEdit.showattreditor(self.root)
 	#
 	# State transitions.
 	# There are three states: 'stopped', 'frozen' and 'playing'.
@@ -306,12 +298,7 @@ class Player() = scheduler():
 		self.setstate('playing')
 	#
 	def maystart(self):
-		if AttrEdit.hasattreditor(self.root):
-			fl.show_message('', \
-				'Please close the attribute editor first!', '')
-			return 0
-		else:
-			return 1
+		return 1
 	#
 	def setstate(self, state):
 		self.state = state
@@ -326,10 +313,14 @@ class Player() = scheduler():
 	#
 	def showtime(self):
 		now = int(self.timefunc() * 10) * 0.1
-		self.statebutton.label = 'T = ' + `now`
+		label = 'T = ' + `now`
+		if self.statebutton.label <> label:
+			self.statebutton.label = label
 		rate = self.rate
 		if int(rate) = rate: rate = int(rate)
-		self.speedbutton.label = `rate`
+		label = `rate`
+		if self.speedbutton.label <> label:
+			self.speedbutton.label = label
 	#
 	# Channels.
 	#
@@ -340,6 +331,18 @@ class Player() = scheduler():
 			self.channelnames.append(name)
 			self.channels[name] = self.newchannel(name, attrdict)
 	#
+	def showchannels(self):
+		for name in self.channelnames:
+			self.channels[name].show()
+	#
+	def hidechannels(self):
+		for name in self.channelnames:
+			self.channels[name].hide()
+	#
+	def destroychannels(self):
+		for name in self.channelnames:
+			self.channels[name].destroy()
+	#
 	def newchannel(self, (name, attrdict)):
 		if not attrdict.has_key('type'):
 			raise TypeError, \
@@ -349,7 +352,8 @@ class Player() = scheduler():
 			raise TypeError, \
 				'channel ' +`name`+ ' has bad type ' +`type`
 		chclass = channelmap[type]
-		return chclass().init(name, attrdict, self)
+		ch = chclass().init(name, attrdict, self)
+		return ch
 	#
 	def resetchannels(self):
 		for cname in self.channelnames:
