@@ -843,6 +843,14 @@ def GetYesNoCancel(prompt, parent = None):
 	if rv > 0: return 0
 	return 1
 
+# XXX to show or inactivate the cancel button
+def GetYesNo(prompt, parent = None):
+	import EasyDialogs
+	rv = EasyDialogs.AskYesNoCancel(prompt, 1)
+	if rv < 0: return 1
+	if rv > 0: return 0
+	return 1
+
 def GetOKCancel(prompt, parent = None):
 	import EasyDialogs
 	rv = EasyDialogs.AskYesNoCancel(prompt, 1, yes='OK', no='')
