@@ -4,6 +4,12 @@
 #include "Engine.h"
 #include "os.h"
 #include "StdApp.h"
+#ifdef _MACINTOSH
+#include <Windows.h>
+extern "C" {
+extern int WinObj_Convert(PyObject *, WindowPtr *);
+}
+#endif
 
 class PlayerObject : public RMAObject {
 public:
@@ -234,9 +240,16 @@ PlayerObject::SetPyVideoSurface(PyObject *self, PyObject *args)
 PyObject *
 PlayerObject::SetOsWindow(PyObject *self, PyObject *args)
 {
+#ifdef _MACINTOSH
+	WindowPtr hwnd;
+	if (!PyArg_ParseTuple(args, "O&", WinObj_Convert, &hwnd))
+		return NULL;
+#else
+	/* Windows */
 	int hwnd;
 	if (!PyArg_ParseTuple(args, "i", &hwnd))
 		return NULL;
+#endif
 	ExampleClientContext *pCC = ((PlayerObject*)self)->pContext;
 	if(pCC) {
 		ExampleSiteSupplier *ss=pCC->m_pSiteSupplier;
