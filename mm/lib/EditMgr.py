@@ -111,11 +111,10 @@ class EditMgr():
 			raise MMExc.AssertError, 'cannot set synctolist attr'
 		oldvalue = node.GetRawAttrDef(name, None)
 		self.addstep('setnodeattr', node, name, oldvalue, value)
-		if value = None:
-			if oldvalue <> None:
-				node.DelAttr(name)
-		else:
+		if value <> None:
 			node.SetAttr(name, value)
+		elif oldvalue <> None:
+			node.DelAttr(name)
 	#
 	def setnodevalues(self, (node, values)):
 		self.addstep('setnodevalues', node, node.GetValues(), values)
