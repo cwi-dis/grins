@@ -1653,11 +1653,16 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			node = self.selected_widget.node
 		if node.showtime == which:
-			node.showtime = 0
+			self.clear_showtime(node)
 		else:
 			node.showtime = which
 		self.need_resize = 1
 		self.draw()
+
+	def clear_showtime(self, node):
+		node.showtime = 0
+		for c in node.children:
+			self.clear_showtime(c)
 
 	def bandwidthcall(self):
 		self.toplevel.setwaiting()

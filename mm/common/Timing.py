@@ -48,7 +48,8 @@ def computetimes(node, which):
 		print 'No endtime for', node
 		node.t1 = node.t0 + 10.0
 	propdown(node, node, node.t1, node.t0)
-	propdown2(node, node, node.t1, node.t0)
+	node.t2 = node.t1
+	propdown2(node, node, node.t2, node.t0)
 
 def _do_times_work(node):
 	pt = pseudotime(0.0)
@@ -113,6 +114,9 @@ def prep1(node):
 	node.deps = [], []
 	node.hasterm = 0
 	type = node.GetType()
+	dur = node.GetAttrDef('duration', None)
+	if dur is not None and dur >= 0:
+		adddep(node, HD, dur, node, TL, 'TERM')
 	if type == 'seq': # XXX not right!
 		xnode, xside = node, HD
 		for c in node.GetSchedChildren(1):
@@ -132,10 +136,6 @@ def prep1(node):
 				adddep(c, TL, 0, node, TL, 'TERM')
 			else:
 				adddep(c, TL, 0, node, TL)
-		# Make sure there is *some* path from head to tail
-		dur = MMAttrdefs.getattr(node, 'duration')
-		if dur >= 0:
-			adddep(node, HD, dur, node, TL)
 	else:
 		adddep(node, HD, -1, node, TL)
 
@@ -194,13 +194,12 @@ def propdown(root, node, stoptime, dftstarttime=0):
 	# Assure we have a start time and stop time
 	if not hasattr(node, 't0'):
 		node.t0 = dftstarttime
-	if not hasattr(node, 't1'):
+	if not hasattr(node, 't1') or node.t1 > stoptime:
 		node.t1 = stoptime
 
-	if node.GetFill() == 'remove':
-		stoptime = min(node.t1, stoptime)
-
-	node.t2 = stoptime
+	dur = node.GetAttrDef('duration', None)
+	if dur is not None and dur >= 0 and node.t0 + dur < stoptime:
+		stoptime = node.t1 = node.t0 + dur
 
 	children = node.GetSchedChildren(1)
 
@@ -227,9 +226,9 @@ def propdown(root, node, stoptime, dftstarttime=0):
 				stoptime = c.t1
 				children.remove(c) # propagated this one already
 				break
+		if dur is not None and dur >= 0 and node.t0 + dur < stoptime:
+			stoptime = node.t0 + dur
 		node.t1 = stoptime
-		if node is root:
-			node.t2 = stoptime
 		for c in children:
 			propdown(root, c, stoptime, node.t0)
 	elif tp == 'seq': # XXX not right!
@@ -238,23 +237,16 @@ def propdown(root, node, stoptime, dftstarttime=0):
 		nextstart = node.t0
 		for i in range(len(children)):
 			c = children[i]
-			fill = c.GetFill()
-			if fill in ('freeze', 'transition'):
-				# not correct for transition
-				if i == len(children)-1:
-					endtime = node.t2
-				elif hasattr(children[i+1], 't0'):
-					endtime = children[i+1].t0
-				else:
-					endtime = node.t2
-			elif fill == 'hold':
-				endtime = node.t2
-			else:		# fill == 'remove'
-				endtime = c.t1
+			if i == len(children)-1:
+				endtime = node.t1
+			elif hasattr(children[i+1], 't0'):
+				endtime = children[i+1].t0
+			else:
+				endtime = node.t1
+			if dur is not None and dur >= 0 and node.t0 + dur < endtime:
+				endtime = node.t0 + dur
 			propdown(root, c, endtime, nextstart)
 			nextstart = c.t1
-	if node is root:
-		node.t2 = node.t1
 
 def propdown2(root, node, stoptime, dftstarttime=0):
 	tp = node.GetType()
