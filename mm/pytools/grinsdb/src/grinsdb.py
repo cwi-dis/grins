@@ -18,7 +18,7 @@ try:
 except KeyError:
 	try:
 		USER=os.environ['LOGNAME']
-        except KeyError:
+	except KeyError:
 		USER='unknown'
 
 class GrinsDmdbObject(maildb.DmdbObject):
