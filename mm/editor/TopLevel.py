@@ -157,8 +157,8 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		import StyleSheet
 		self.styleview = StyleSheet.StyleSheet().init(self)
 		#
-		import help
-		self.help = help.HelpWindow().init(HELPDIR, self)
+		import Help
+		self.help = Help.HelpWindow().init(HELPDIR, self)
 		#
 		# Views that are destroyed by restore
 		self.views = [self.blockview, self.channelview, \
