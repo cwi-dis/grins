@@ -141,3 +141,7 @@ def hasvideo(self,url):
 	b = GraphBuilder()
 	b.RenderFile(url)
 	return b.HasVideo()!=None
+
+
+
+
