@@ -43,7 +43,7 @@ class BlockView () :
 		return self
 	#
 	def show(self):
-		self.form.show_form(PLACE_SIZE, TRUE, 'Structure View')
+		self.form.show_form(PLACE_SIZE, TRUE, 'Block View')
 	#
 	def hide(self):
 		self.form.hide_form()
