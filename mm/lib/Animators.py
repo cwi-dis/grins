@@ -125,6 +125,9 @@ class Animator:
 		self._autoReverse = 0
 		self._direction = 1
 
+		# path origin
+		self._origin = ""
+
 		# composition context of this animator
 		self._effectiveAnimator = None
 
@@ -290,6 +293,9 @@ class Animator:
 			self._accumulate = 'none'
 		else:
 			self._accumulate = acc
+
+	def setOrigin(self, origin):
+		self._origin = origin
 
 	def setRetunedValuesConverter(self, cvt):
 		self._convert = cvt
@@ -797,6 +803,7 @@ class EffectiveAnimator:
 		region = self.__layout._attrdict
 
 		if attr == 'position':
+			# origin is 'parent'
 			cssregion = self.getCssObj(region)
 			cssregion.move(value)
 			cssregion.updateTree()
@@ -886,6 +893,8 @@ class EffectiveAnimator:
 		chan = self.__chan
 
 		if self.__attr == 'position':
+			# origin is 'parent' for subregion
+			# thus for media is its layout origin
 			csssubregion = self.getCssObj(self.__node)
 			csssubregion.move(value)
 			csssubregion.updateTree()
@@ -1185,6 +1194,7 @@ class AnimateElementParser:
 			elif self.__attrtype == 'position':
 				coords = self.__getNumPairInterpolationValues()
 				anim = EffMotionAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)
+				anim.setOrigin(self.getOrigin())
 			elif self.__attrtype == 'inttuple':
 				coords = self.__getNumTupleInterpolationValues()
 				anim = EffIntTupleAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)
@@ -1214,6 +1224,7 @@ class AnimateElementParser:
 				coords = self.__getNumPairInterpolationValues()
 				path.constructFromPoints(coords)
 				anim = MotionAnimator(attr, domval, path, dur, mode, times, splines, accumulate, additive='sum')
+				anim.setOrigin(self.getOrigin())
 			if anim: 
 				self.__setTimeManipulators(anim)			
 			return anim
@@ -1244,6 +1255,7 @@ class AnimateElementParser:
 				anim = MotionAnimator(attr, domval, path, dur, mode, times, splines,
 					accumulate, additive)
 				self.__setTimeManipulators(anim)
+				anim.setOrigin(self.getOrigin())
 				return anim
 			return None
 
@@ -1372,6 +1384,9 @@ class AnimateElementParser:
 
 	def getPath(self):
 		return MMAttrdefs.getattr(self.__anim, 'path')
+
+	def getOrigin(self):
+		return MMAttrdefs.getattr(self.__anim, 'origin')
 
 	def getKeyTimes(self):
 		return MMAttrdefs.getattr(self.__anim, 'keyTimes')
