@@ -229,7 +229,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, '&Timeline view\tF7', '4', CHANNELVIEW),
 		(FLAG_PRO|FLAG_SNAP, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW2),
 ##		(FLAG_PRO, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW),
-		(FLAG_ALL, ENTRY, 'Temporal view', '8', TEMPORALVIEW),
+#		(FLAG_ALL, ENTRY, 'Temporal view', '8', TEMPORALVIEW),
 ##		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, 'H&yperlinks', '5', LINKVIEW),
 		(FLAG_BOSTON, ENTRY, 'User &groups', '6', USERGROUPVIEW),
@@ -383,7 +383,7 @@ POPUP_HVIEW_STRUCTURE = (
 #			)),
 		(FLAG_ALL, ENTRY, 'Paste &file', None, PASTE_FILE),
 		(FLAG_ALL, SEP,),
-		(FLAG_PRO, ENTRY, 'Edit in Temporal view', None, EDIT_TVIEW),
+#		(FLAG_PRO, ENTRY, 'Edit in Temporal view', None, EDIT_TVIEW),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
 		(FLAG_ALL, CASCADE, '&Insert', (
 			(FLAG_ALL, CASCADE, '&Image node', (

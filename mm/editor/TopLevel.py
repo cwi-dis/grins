@@ -221,7 +221,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.links = None
 		self.layoutview2 = None
 		self.transitionview = None
-		self.temporalview = None
+#		self.temporalview = None
 
 		if features.STRUCTURE_VIEW in features.feature_set:
 			import HierarchyView
@@ -270,16 +270,17 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			import LinkEditLight
 			self.links = LinkEditLight.LinkEditLight(self)
 
-		if features.TEMPORAL_VIEW in features.feature_set:
-			import TemporalView
-			self.temporalview = TemporalView.TemporalView(self)
+#		if features.TEMPORAL_VIEW in features.feature_set:
+#			import TemporalView
+#			self.temporalview = TemporalView.TemporalView(self)
 
 		# Views that are destroyed by restore (currently all)
 		# Notice that these must follow a certain order.
 		self.views = [self.player, self.hierarchyview,
 			      self.channelview, self.links, self.layoutview,
 			      self.ugroupview, self.transitionview, self.layoutview2,
-			      self.temporalview]
+			      ]
+#			      self.temporalview]
 
 	def hideviews(self):
 		for v in self.views:
@@ -295,13 +296,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def checkviews(self):
 		pass
 
-	def open_node_in_tview(self, node):
-		# This causes the temporal view to open the particular node as the root.
-		if self.temporalview:
-			self.temporalview.show()
-			self.temporalview.goto_node(node)
-		else:
-			windowinterface.showmessage('Sorry, but there is no temporal view here.')
+#	def open_node_in_tview(self, node):
+#		# This causes the temporal view to open the particular node as the root.
+#		if self.temporalview:
+#			self.temporalview.show()
+#			self.temporalview.goto_node(node)
+#		else:
+#			windowinterface.showmessage('Sorry, but there is no temporal view here.')
 	
 	#
 	# Callbacks.

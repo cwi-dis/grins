@@ -9,6 +9,8 @@ from GeometricPrimitives import *
 import Clipboard
 import EditableObjects
 
+print "DEBUG: Temporal view loaded. This view is not complete and not used."
+
 class TemporalView(TemporalViewDialog):
 	def __init__(self, toplevel):
 		TemporalViewDialog.__init__(self)
