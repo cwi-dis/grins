@@ -3,28 +3,28 @@ __version__ = "$Id$"
 from audiodev import Error
 from audioformat import *
 
-import al, AL
+import al
 
 class AudioDevSGI:
 	__frameratedict = {
-		48000: AL.RATE_48000,
-		44100: AL.RATE_44100,
-		32000: AL.RATE_32000,
-		22050: AL.RATE_22050,
-		16000: AL.RATE_16000,
-		11025: AL.RATE_11025,
-		 8000: AL.RATE_8000,
+		48000: al.RATE_48000,
+		44100: al.RATE_44100,
+		32000: al.RATE_32000,
+		22050: al.RATE_22050,
+		16000: al.RATE_16000,
+		11025: al.RATE_11025,
+		 8000: al.RATE_8000,
 		}
 
 	__nchannelsdict = {
-		1: AL.MONO,
-		2: AL.STEREO,
+		1: al.MONO,
+		2: al.STEREO,
 		}
 
 	__sampwidthdict = {
-		1: AL.SAMPLE_8,
-		2: AL.SAMPLE_16,
-		3: AL.SAMPLE_24,
+		1: al.SAMPLE_8,
+		2: al.SAMPLE_16,
+		3: al.SAMPLE_24,
 		}
 
 	__formats = (linear_8_mono_signed,
@@ -35,7 +35,7 @@ class AudioDevSGI:
 	def __init__(self, fmt = None, qsize = None):
 		self.__format = None
 		self.__framerate = 0
-		self.__params = [AL.OUTPUT_RATE, 0]
+		self.__params = [al.OUTPUT_RATE, 0]
 		self.__oldparams = []
 		self.__port = None
 		self.__config = al.newconfig()
@@ -88,8 +88,8 @@ class AudioDevSGI:
 		if not self.__port:
 			self.__port = al.openport('Python', 'w', self.__config)
 			self.__oldparams = self.__params[:]
-			al.getparams(AL.DEFAULT_DEVICE, self.__oldparams)
-			al.setparams(AL.DEFAULT_DEVICE, self.__params)
+			al.getparams(al.DEFAULT_DEVICE, self.__oldparams)
+			al.setparams(al.DEFAULT_DEVICE, self.__params)
 		self.__port.writesamps(data)
 
 	def wait(self):
@@ -105,7 +105,7 @@ class AudioDevSGI:
 			self.__port.closeport()
 			self.__port = None
 		if self.__oldparams:
-			al.setparams(AL.DEFAULT_DEVICE, self.__oldparams)
+			al.setparams(al.DEFAULT_DEVICE, self.__oldparams)
 			self.__oldparams = []
 
 	def getfilled(self):
