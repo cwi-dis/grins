@@ -68,13 +68,19 @@ def cleanup(node):
 # Should only be applied to leaf nodes.
 #
 def getduration(node):
-	if node.GetType() not in ('imm', 'ext', 'grp'):
+	if node.GetType() in ('par', 'seq'):
 		raise RuntimeError, 'Timing.getduration() on non-leaf'
-	cname = MMAttrdefs.getattr(node, 'channel')
-	cattrs = node.context.channeldict[cname]
-	ctype = cattrs['type']
-	cclass = channelmap[ctype]
-	instance = cclass() # XXX Not initialized!  Walking on thin ice here...
+	try:
+		cname = MMAttrdefs.getattr(node, 'channel')
+		cattrs = node.context.channeldict[cname]
+		ctype = cattrs['type']
+		cclass = channelmap[ctype]
+	except:
+		# Fallback if the channel doesn't exists, etc.
+		return MMAttrdefs.getattr(node, 'duration')
+	# Get here only if the 'try' succeeded
+	instance = cclass()		# XXX Not initialized!
+					# Walking on thin ice here...
 	return instance.getduration(node)
 
 
