@@ -49,16 +49,16 @@ ITEM_ID=7
 ITEM_ID_CHANGE=8
 
 ITEM_TYPE_TITLE=9
-ITEM_DEST_ONLY=10
-ITEM_NORMAL=11
-ITEM_PAUSING=12
-ITEM_AUTO=13
-ITEM_COMPOSITE=14
-ITEM_ARGUMENT=15
-ITEM_WHOLE=16
-ITEMLIST_TYPE=ITEMrange(ITEM_TYPE_TITLE, ITEM_WHOLE)
-ITEMFIRST_TYPE=ITEM_DEST_ONLY
-ITEMNUM_TYPE=(ITEM_WHOLE-ITEM_DEST_ONLY)+1
+ITEM_WHOLE=10
+ITEM_DEST_ONLY=11
+ITEM_NORMAL=12
+ITEM_PAUSING=13
+ITEM_AUTO=14
+ITEM_COMPOSITE=15
+ITEM_ARGUMENT=16
+ITEMLIST_TYPE=ITEMrange(ITEM_TYPE_TITLE, ITEM_ARGUMENT)
+ITEMFIRST_TYPE=ITEM_WHOLE
+ITEMNUM_TYPE=(ITEM_ARGUMENT-ITEM_WHOLE)+1
 
 ITEM_COMPDATA_LABEL=17
 ITEM_COMPDATA=18
@@ -94,40 +94,13 @@ class AnchorEditorDialog(windowinterface.MACDialog):
 
 		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_ANCHOR,
 				ITEMLIST_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
+				
+		# Enable correct set of type labels
+		self.__numtypes = len(typelabels)
 
 		self.__anchor_browser = self._window.ListWidget(ITEM_BROWSER)
 		self.selection_setlist(list, initial)
 
-##		XXXX
-##		self.__window = w = windowinterface.Window(
-##			title, resizable = 1,
-##			deleteCallback = (self.cancel_callback, ()))
-##
-##		buttons = w.ButtonRow(
-##			[('Cancel', (self.cancel_callback, ())),
-##			 ('Restore', (self.restore_callback, ())),
-##			 ('Apply', (self.apply_callback, ())),
-##			 ('OK', (self.ok_callback, ()))],
-##			bottom = None, left = None, right = None, vertical = 0)
-##		self.__composite = w.Label('Composite:', useGadget = 0,
-##					   bottom = buttons, left = None,
-##					   right = None)
-##		self.__type_choice = w.OptionMenu('Type:', typelabels, 0,
-##						  (self.type_callback, ()),
-##						  bottom = self.__composite,
-##						  left = None, right = None)
-##		self.__buttons = w.ButtonRow(
-##			[('New', (self.add_callback, ())),
-##			 ('Edit...', (self.edit_callback, ())),
-##			 ('Delete', (self.delete_callback, ())),
-##			 ('Export...', (self.export_callback, ()))],
-##			top = None, right = None)
-##		self.__anchor_browser = w.Selection(
-##			None, 'Id:', list, initial, (self.anchor_callback, ()),
-##			top = None, left = None, right = self.__buttons,
-##			bottom = self.__type_choice,
-##			enterCallback = (self.id_callback, ()))
-##		w.show()
 		self.show()
 
 	def do_itemhit(self, item, event):
@@ -207,7 +180,7 @@ class AnchorEditorDialog(windowinterface.MACDialog):
 
 	def type_choice_show(self):
 		"""Show the type choice part of the dialog."""
-		self._showitemlist(ITEMLIST_TYPE)
+		self._showitemlist(ITEMLIST_TYPE[:self.__numtypes+1])
 
 	def type_choice_setchoice(self, choice):
 		"""Set the current choice.
