@@ -262,7 +262,11 @@ class MMStream:
 			writer.redirectAudioFilter(fg, hint='0001')
 		self._mstream = self._mmstream.GetPrimaryVideoMediaStream()
 		self._ddstream = self._mstream.QueryIDirectDrawMediaStream()
-		self._sample = self._ddstream.CreateSample()
+		try:
+			self._sample = self._ddstream.CreateSample()
+		except dshow.error, arg:
+			print arg
+			return 0
 		self._dds = ddraw.CreateSurfaceObject()
 		self._rect = self._sample.GetSurface(self._dds)
 		return 1
