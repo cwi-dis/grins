@@ -72,7 +72,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			return 1
 		import mimetypes, string
 		mtype = mimetypes.guess_type(url)[0]
-		if string.find(mtype, 'real') >= 0:
+		if string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0:
 			node.__type = 'real'
 		self.prepare_armed_display(node)
 		if node.__type == 'real':
