@@ -9,7 +9,7 @@ import fsm
 
 class InputValidator:
 	def __init__(self):
-		pass
+		self._silent=0
 
 	# Return 1 to allow the char to be appended to the edit box 
 	# Return 0 to refuse it
@@ -43,7 +43,10 @@ class InputValidator:
 			return 1
 		return 0
 
-
+	def beep(self):
+		if not self._silent:
+			win32api.MessageBeep(win32con.MB_ICONEXCLAMATION)
+		
 class IntTupleValidator(InputValidator):
 	def __init__(self, limit=0, sep='' , sm=None):
 		InputValidator.__init__(self)
@@ -91,7 +94,7 @@ class IntTupleValidator(InputValidator):
 		if self.isIntTuple(nval):
 			return 1
 		else:
-			win32api.MessageBeep(win32con.MB_ICONEXCLAMATION)
+			self.beep()
 			return 0
 
 class FloatTupleValidator(InputValidator):
@@ -144,7 +147,7 @@ class FloatTupleValidator(InputValidator):
 		if self.isFloatTuple(nval):
 			return 1
 		else:
-			win32api.MessageBeep(win32con.MB_ICONEXCLAMATION)
+			self.beep()
 			return 0
 
 class ColorValidator(IntTupleValidator):
@@ -156,6 +159,10 @@ class ColorValidator(IntTupleValidator):
 		sm=fsm.FSM(tl,1)
 		IntTupleValidator.__init__(self,3,sep,sm)
 
+		from colors import colors
+		self._dv=DictValidator(colors.keys())
+		self._dv._silent=1
+
 	def onKey(self, vk, val, pos):
 		charcode = Sdk.MapVirtualKey(vk,2)
 		# accept control chars
@@ -165,11 +172,11 @@ class ColorValidator(IntTupleValidator):
 		if pos!=len(val): return 1
 		
 		nval=val+chr(charcode)
-		if self.isalpha_en(val) and self.isvk_alpha_en(vk):
+		if self._dv.onKey(vk, val, pos):
 			return 1
 		elif self.isIntTuple(nval):
 			return 1
-		win32api.MessageBeep(win32con.MB_ICONEXCLAMATION)
+		self.beep()
 		return 0
 	
 	def checkcolor(self,str):
@@ -181,3 +188,42 @@ class ColorValidator(IntTupleValidator):
 		self._fsm._input=''
 		return 1
 
+
+class DictValidator(InputValidator):
+	def __init__(self, names):
+		InputValidator.__init__(self)
+		# names should be lower
+		self._names=names
+
+	# brude force search
+	# should be a tree of letters or something like that
+	def isdictprefix(self,str):
+		str=string.lower(str)
+		for n in self._names:
+			if string.find(n,str)==0:
+				return 1
+		return 0
+	# brute force again...
+	def autofill(self,str):
+		l=[]
+		str=string.lower(str)
+		for n in self._names:
+			if string.find(n,str)==0:
+				l.append(n)
+		if len(l)==1:
+			return l[0]
+
+	def onKey(self, vk, val, pos):
+		charcode = Sdk.MapVirtualKey(vk,2)
+		# accept control chars
+		if charcode<32:return 1
+		
+		# accept anything if not at the end for now
+		if pos!=len(val): return 1
+		
+		nval=val+chr(charcode)
+		if self.isdictprefix(nval):
+			return 1
+		self.beep()
+		return 0
+	
