@@ -3782,13 +3782,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = self.__checkid(attributes)
 		title = attributes.get('title', '')
 		u_state = None
-		if attributes.has_key('defaultstate'):
-			u_state = self.parseenumvalue('defaultstate', attributes['defaultstate'])
+		if attributes.has_key('defaultState'):
+			u_state = self.parseEnumValue('defaultState', attributes['defaultState'])
 		override = None
 		if attributes.has_key('override'):
 			override = self.parseEnumValue('override', attributes['override'])
 		uid = attributes.get('uid', '')
-		self.__custom_tests[id] = title, u_state is not None and u_state == 'true', override or 'hidden', uid
+		self.__custom_tests[id] = title, not not u_state, override or 'hidden', uid
 
 	def end_custom_test(self):
 		if __debug__:
