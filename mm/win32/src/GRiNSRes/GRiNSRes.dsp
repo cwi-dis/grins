@@ -201,6 +201,10 @@ SOURCE="..\..\..\Build\products\g2-15\lite\splashpr.bmp"
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\..\Build\products\g2-15\pro\splashqt.bmp"
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\Build\products\g2-15\pro\splashsm.bmp"
 # End Source File
 # Begin Source File
