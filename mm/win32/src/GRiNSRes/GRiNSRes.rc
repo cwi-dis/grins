@@ -1242,7 +1242,7 @@ BEGIN
     LTEXT           "Computing...",IDC_PREROLL,107,25,72,8
     LTEXT           "Computing...",IDC_STALLTIME,107,40,72,8
     LTEXT           "Computing...",IDC_STALLCOUNT,107,54,72,8
-    PUSHBUTTON      "Help",IDHELP,133,104,50,14
+    PUSHBUTTON      "Help",IDHELP,133,104,50,14,NOT WS_VISIBLE | WS_DISABLED
     LTEXT           "Number of items with errors:",IDC_STATIC,8,68,97,8
     LTEXT           "Computing...",IDC_ERRORCOUNT,107,68,72,8
     LTEXT           "",IDC_MESSAGE2,7,86,176,8
