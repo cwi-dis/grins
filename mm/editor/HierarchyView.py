@@ -755,6 +755,7 @@ class HierarchyView(HierarchyViewDialog):
 				'There is no selection to insert into',
 				mtype = 'error', parent = self.window)
 			return
+			
 		parent = node.GetParent()
 		# pnode -- prospective parent of new node
 		if where:
@@ -779,7 +780,6 @@ class HierarchyView(HierarchyViewDialog):
 					AttrEdit.showattreditor(self.toplevel, newnode, chtype = chtype)
 			return 
 
-		ctx = node.GetContext()
 		type = node.GetType()
 		if ntype is not None:
 			type = ntype
@@ -791,6 +791,11 @@ class HierarchyView(HierarchyViewDialog):
 					type = children[0].GetType()
 		else:
 			type = 'ext'
+
+		ctx = node.GetContext()
+		mimetype = ctx.computeMimeType(type, url)
+		if chtype == None:
+			chtype = pnode.guessChannelType(type, mimetype)
 
 		chname = None
 		if type == 'ext' or type == 'imm':
@@ -819,19 +824,19 @@ class HierarchyView(HierarchyViewDialog):
 				if not em.transaction():
 					return
 				start_transaction = 0
-				em.addchannel(chname, len(ctx.channelnames), dftchtype)
+#				em.addchannel(chname, len(ctx.channelnames), dftchtype)
 				chlist = [chname]
 				bch = ctx.getchannel(dftchannel)
-				if not settings.activeFullSmilCss:
-					if bch.has_key('base_window'):
-						w, h = bch['base_winoff'][2:]
-					else:
-						w, h = bch['winsize']
-					em.setchannelattr(chname, 'units', windowinterface.UNIT_PXL)
-					em.setchannelattr(chname, 'base_window', dftchannel)
-					em.setchannelattr(chname, 'base_winoff', (0,0,w,h))
-				else:
-					em.setchannelattr(chname, 'base_window', dftchannel)					
+#				if not settings.activeFullSmilCss:
+#					if bch.has_key('base_window'):
+#						w, h = bch['base_winoff'][2:]
+#					else:
+#						w, h = bch['winsize']
+#					em.setchannelattr(chname, 'units', windowinterface.UNIT_PXL)
+#					em.setchannelattr(chname, 'base_window', dftchannel)
+#					em.setchannelattr(chname, 'base_winoff', (0,0,w,h))
+#				else:
+#					em.setchannelattr(chname, 'base_window', dftchannel)					
 			else:
 				chlist = ctx.compatchannels(url, chtype)
 				if dftchannel:
@@ -866,11 +871,12 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			layout = MMAttrdefs.getattr(node, 'layout')
 		node = ctx.newnode(type) # Create a new node
-			
+
+		# XXXX Pass by edit mng			
 		if url is not None:
 			node.SetAttr('file', url)
 		if chname:
-			node.SetAttr('channel', chname)
+			node.SetAttr('channel', dftchannel)
 		if layout == 'undefined' and \
 		   self.toplevel.layoutview is not None and \
 		   self.toplevel.layoutview.curlayout is not None:
