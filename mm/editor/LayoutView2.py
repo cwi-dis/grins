@@ -1221,25 +1221,30 @@ class LayoutView2(LayoutViewDialog2):
 					
 		for nodeRef, attrName, attrValue in nodeRefAndValueList:
 			nodeType = self.getNodeType(nodeRef)
-		
+			animated = 0
 			if animationEnabled and nodeRef is animatedNode and attrName in ('left', 'top', 'width', 'height') and \
 				not keyTimeIndex is None and keyTimeIndex >= 0:
-					# animation value
-					(left, top, width, height), bgcolor = data[keyTimeIndex]
-					if attrName == 'left':
-						left = attrValue
-					elif attrName == 'top':
-						top = attrValue
-					elif attrName == 'width':
-						width = attrValue
-					elif attrName == 'height':
-						height = attrValue
-					data[keyTimeIndex] = (left, top, width, height), bgcolor
-			else:		
+					animated = 1
+			if animated:
+				# animation value
+				(left, top, width, height), bgcolor = data[keyTimeIndex]
+				if attrName == 'left':
+					left = attrValue
+				elif attrName == 'top':
+					top = attrValue
+				elif attrName == 'width':
+					width = attrValue
+				elif attrName == 'height':
+					height = attrValue
+				data[keyTimeIndex] = (left, top, width, height), bgcolor
+
+			# for now, we force the node value equal to the first animated value
+			if not animated or keyTimeIndex == 0:
 				if nodeType in (TYPE_VIEWPORT, TYPE_REGION):					
 					self.editmgr.setchannelattr(nodeRef.name, attrName, attrValue)
 				elif nodeType == TYPE_MEDIA:
 					self.editmgr.setnodeattr(nodeRef, attrName, attrValue)
+				
 		if animationEnabled:
 			nodeRef.applyAnimationData(self.editmgr)
 				
