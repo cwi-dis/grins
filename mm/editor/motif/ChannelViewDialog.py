@@ -17,7 +17,6 @@ class ChannelViewDialog(ViewDialog):
 			'c': COPY_CHANNEL,
 			'p': PLAYNODE,
 			'G': PLAYFROM,
-			'f': PUSHFOCUS,
 			's': FINISH_ARC,
 			'T': CREATEANCHOR,
 			'L': FINISH_LINK,
@@ -57,8 +56,6 @@ class ChannelViewDialog(ViewDialog):
 			(FLAG_PRO, 'View', [
 				(FLAG_PRO, 'Zoom In', CANVAS_WIDTH),
 				(FLAG_PRO, 'Fit in Window', CANVAS_RESET),
-				(FLAG_PRO, None),
-				(FLAG_PRO, 'Synchronize Selection', PUSHFOCUS),
 				(FLAG_PRO, None),
 				(FLAG_PRO, 'Unused Channels', TOGGLE_UNUSED, 't'),
 				(FLAG_PRO, 'Sync Arcs', TOGGLE_ARCS, 't'),

@@ -198,8 +198,6 @@ MENUBAR=(
 		(FLAG_PRO, SEP,),
 		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_WIDTH),
 		(FLAG_PRO, ENTRY, '&Fit in Window', None, CANVAS_RESET),
-		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, '&Synchronize selection', None, PUSHFOCUS),
 		(FLAG_ALL, SEP,),
 		(FLAG_PRO, TOGGLE, 'Show/Hide unused c&hannels', None, TOGGLE_UNUSED),
 		(FLAG_PRO, TOGGLE, 'Sync &arcs', None, TOGGLE_ARCS),

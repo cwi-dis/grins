@@ -235,12 +235,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def hyperlinkcall(self):
 		self.mother.toplevel.links.finish_link(self.node)
 
-	def focuscall(self):
-		top = self.mother.toplevel
-		top.setwaiting()
-		if top.channelview is not None:
-			top.channelview.globalsetfocus(self.node)
-
 	def rpconvertcall(self):
 		import rpconvert
 		rpconvert.rpconvert(self.node)
