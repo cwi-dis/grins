@@ -134,6 +134,85 @@ PyObject* Wingdi_CreateDIBSurfaceFromFile(PyObject *self, PyObject *args)
 	return (PyObject*)PyDIBSurf::createInstance(hBmp, psurf);
 	}
 
+PyObject* Wingdi_BitBltDIBSurface(PyObject *self, PyObject *args)
+	{
+	PyDIBSurf *srcobj, *dstobj;
+	PyObject *srcrcobj, *dstrcobj;
+	PyObject *rgnobj = NULL;
+	if(!PyArg_ParseTuple(args, "O!O!OO|O", &PyDIBSurf::type, &srcobj, 
+		&PyDIBSurf::type, &dstobj,
+		&srcrcobj, &dstrcobj, &rgnobj))
+		return NULL;
+	
+	int ls, ts, rs, bs;
+	if(!PyArg_ParseTuple(srcrcobj, "iiii", &ls,  &ts,  &rs, &bs)) 
+		{
+		PyErr_Clear();
+		seterror("BitBltDIBSurface", "Argument not a rectangle");
+		return NULL;
+		}
+	int swidth = srcobj->m_psurf->get_width();
+	int sheight = srcobj->m_psurf->get_height();
+	ls = ls<0?0:ls;
+	ts = ts<0?0:ts;
+	rs = rs<0?0:(rs>swidth?swidth:rs);
+	bs = bs<0?0:(bs>sheight?sheight:bs);
+
+	int ld, td, rd, bd;
+	if(!PyArg_ParseTuple(dstrcobj, "iiii", &ld,  &td,  &rd, &bd)) 
+		{
+		PyErr_Clear();
+		seterror("BitBltDIBSurface", "Argument not a rectangle");
+		return NULL;
+		}
+	int dwidth = dstobj->m_psurf->get_width();
+	int dheight = dstobj->m_psurf->get_height();
+	ld = ld<0?0:ld;
+	td = td<0?0:td;
+	rd = rd<0?0:(rd>dwidth?dwidth:rd);
+	bd = bd<0?0:(bd>dheight?dheight:bd);
+
+	HDC hdc = GetDC(NULL);
+
+	HDC hdst = CreateCompatibleDC(hdc);
+	HBITMAP hdstold = (HBITMAP)SelectObject(hdst, dstobj->m_hBmp);
+	if(rgnobj != NULL)
+		SelectClipRgn(hdst, (HRGN)GetGdiObjHandle(rgnobj));
+
+	HDC hsrc = CreateCompatibleDC(hdst);
+	HBITMAP hsrcold = (HBITMAP)SelectObject(hsrc, srcobj->m_hBmp);
+
+	BitBlt(hdst, ld, td, rd-ld, bd-td, hsrc, ls, ts, SRCCOPY);
+
+	SelectObject(hdst, hsrcold);
+	DeleteDC(hdst);
+
+	SelectObject(hsrc, hdstold);
+	DeleteDC(hsrc);
+
+	DeleteDC(hdc);
+	return none();
+	}
+
+PyObject* Wingdi_BltBlendDIBSurface(PyObject *self, PyObject *args)
+	{
+	PyDIBSurf *srcobj1, *srcobj2, *dstobj;
+	double value;
+	if(!PyArg_ParseTuple(args, "O!O!O!d", &PyDIBSurf::type, &srcobj1, 
+		&PyDIBSurf::type, &srcobj2,
+		&PyDIBSurf::type, &dstobj,
+		&value))
+		return NULL;
+	
+	// do BltBlend manipulating pixels
+	// see ddraw.pyd for one way to do it
+	// expected to be very slow
+
+	// postpone implementation till we find a better way
+	// for example manipulate a palette instead of pixels
+
+	return none();
+	}
 
 ////////////////////////////
 // module
