@@ -2603,6 +2603,22 @@ BEGIN
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
 END
 
+IDD_EDITATTR_ANIMATETARGET DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_GROUP1,6,8,287,85
+    LTEXT           "Target attribute:",IDC_21,12,47,73,8
+    EDITTEXT        IDC_22,86,44,201,12,ES_AUTOHSCROLL
+    LTEXT           "Attribute type:",IDC_31,12,71,73,8
+    COMBOBOX        IDC_32,86,69,201,126,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    LTEXT           "Target element:",IDC_11,12,22,73,8
+    EDITTEXT        IDC_12,86,19,159,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse...",IDC_13,246,19,41,12
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
