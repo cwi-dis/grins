@@ -182,7 +182,11 @@ class _LayoutView2(GenFormView):
 	def onEditCoordinates(self):
 		name = self['RegionSel'].getvalue()
 		region = self._layout.getRegion(name)
-		if not region: return
+		if not region:
+			if self._layout._selected == self._layout._viewport:
+				region = self._layout._viewport
+			else:
+				return
 		rc = self['RegionX'].gettext(),self['RegionY'].gettext(), self['RegionW'].gettext(), self['RegionH'].gettext()
 		try:
 			coordinates = tuple(map(string.atoi,rc))
@@ -196,7 +200,11 @@ class _LayoutView2(GenFormView):
 	def onEditZorder(self):
 		name = self['RegionSel'].getvalue()
 		region = self._layout.getRegion(name)
-		if not region: return
+		if not region:
+			if self._layout.selected == self._layout._viewport:
+				region = self._layout._viewport
+			else:
+				return
 		strz = self['RegionZ'].gettext()
 		try:
 			z = string.atoi(strz)
@@ -246,7 +254,7 @@ class _LayoutView2(GenFormView):
 	# win32window.DrawContext listener interface
 	# 
 	def onShapeChange(self, shape):
-		if shape is None or id(shape)==id(self._layout._viewport):
+		if shape is None:
 			for name in ('RegionX','RegionY','RegionW','RegionH'):
 				self[name].settext('')
 			self._mouse_update = 1
@@ -262,9 +270,22 @@ class _LayoutView2(GenFormView):
 			self[name].settext('%d' % rc[i])
 			i = i +1
 		self['RegionZ'].settext('%d' % shape._z)
-		self['RegionSel'].setcursel(self._region2ix[shape._name])
+		if id(shape)!=id(self._layout._viewport):
+			self['RegionSel'].setcursel(self._region2ix[shape._name])
+		else:
+			self['RegionSel'].setcursel(-1)
 		self['BgColor'].enable(1)
 		self._mouse_update = 0
+
+	def onProperties(self, shape):
+		if not shape: return
+		r, g, b = shape._bgcolor or (255, 255, 255)
+		dlg = win32ui.CreateColorDialog(win32api.RGB(r,g,b),win32con.CC_ANYCOLOR,self)
+		if dlg.DoModal() == win32con.IDOK:
+			newcol = dlg.GetColor()
+			rgb = win32ui.GetWin32Sdk().GetRGBValues(newcol)
+			shape.updatebgcolor(rgb)
+			self._layout.update()
 
 ###########################
 
@@ -303,6 +324,7 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
+		self.HookMessage(self.onLButtonDblClk,win32con.WM_LBUTTONDBLCLK)
 
 	def OnDestroy(self, params):
 		if self.__hsmallfont:
@@ -322,6 +344,11 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
 		win32window.DrawContext.onMouseMove(self, flags, point)
+
+	def onLButtonDblClk(self, params):
+		msg=win32mu.Win32Msg(params)
+		point, flags = msg.pos(), msg._wParam
+		win32window.DrawContext.onLButtonDblClk(self, flags, point)
 
 	def OnPaint(self):
 		dc, paintStruct = self.BeginPaint()
