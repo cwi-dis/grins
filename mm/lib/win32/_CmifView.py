@@ -119,6 +119,16 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 			self._do_resize(msg.width(),msg.height())
 		# after _do_resize because it uses old self._rect
 		self._rect=0,0,msg.width(),msg.height()
+		self.fitCanvas(msg.width(),msg.height())
+
+	def fitCanvas(self,width,height):		
+		x,y,w,h=self._canvas
+		if width>w:w=width
+		if height>h:h=height	
+		self._canvas = (x,y,w,h)
+		self._scroll(-1)
+		self._destroy_displists_tree()
+		self._create_displists_tree()
 
 	# The response of the view on completion of move or resize
 	def onExitSizeMove(self,params):
@@ -133,7 +143,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		if self._canscroll==0: return
 		w,h=self._canvas[2:]
 		self.SetScrollSizes(win32con.MM_TEXT,(w,h))
-		if how==RESET_CANVAS or FIT_WINDOW:
+		if how==RESET_CANVAS:
 			self.ResizeParentToFit()
 		self.InvalidateRect()
 			
