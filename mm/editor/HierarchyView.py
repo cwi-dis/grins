@@ -2621,11 +2621,15 @@ class HierarchyView(HierarchyViewDialog):
 
 		child_type=child.type
 		child_children = child.children[:]
+		if child_type == 'imm':
+			child_values = child.GetValues()
 
 		# Lastly, delete the child node.
 		em.delnode(child)
 
 		em.setnodetype(parent, child_type) # This cannot be done until the child has been deleted.
+		if child_type == 'imm':
+			em.setnodevalues(parent, child_values)
 		for c in child_children:
 			c.Extract()
 			em.addnode(parent, -1, c)
