@@ -181,7 +181,7 @@ class EditMgr():
 			raise MMExc.AssertError, \
 				'duplicate channel name in setchannelname'
 		i = self.context.channelnames.index(name)
-		attrdict = self.context.channelnames[name]
+		attrdict = self.context.channeldict[name]
 		self.addstep('setchannelname', name, newname)
 		self.context.channeldict[newname] = attrdict
 		self.context.channelnames[i] = newname
