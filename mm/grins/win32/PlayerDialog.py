@@ -69,6 +69,7 @@ class PlayerDialog:
 
 	def hide(self):
 		if self.__window is not None:
+			self.__window.set_commandlist(None,self.__cmdtgt)
 			self.__window = None
 
 	def settitle(self, title):
