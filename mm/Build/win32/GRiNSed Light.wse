@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=3521849387
+  File Checksum=4153129501
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1985,7 +1985,43 @@ item: Create Shortcut
   Destination=%CGROUPDIR%\%CGROUP_SAVE%\Release Notes.lnk
   Icon Number=0
 end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\tutorials.pdf
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Tutorial.lnk
+  Icon Number=0
+end
+item: End Block
+end
 item: Else Statement
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS for G2 Lite 1.5
+  Command Line=%MAINDIR%\GRiNS_G2L.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=Tutorial
+  Command Line=%MAINDIR%\tutorials.pdf
+end
+item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS
