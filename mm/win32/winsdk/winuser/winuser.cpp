@@ -52,6 +52,7 @@ static struct PyMethodDef winuser_methods[] = {
 	{"CreatePopupMenu", (PyCFunction)Winuser_CreatePopupMenu, METH_VARARGS, ""},
 	{"CreateMenuFromHandle", (PyCFunction)Winuser_CreateMenuFromHandle, METH_VARARGS, ""},
 	{"CreateFileDialog", (PyCFunction)Winuser_CreateFileDialog, METH_VARARGS, ""},
+	{"GetFileSize", (PyCFunction)Winuser_GetFileSize, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 	};
 
