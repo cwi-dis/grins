@@ -7,7 +7,7 @@ The choices are labeled `New', `Open Location...', `Open File...', and
 `Exit'.  If either of the Open choices is selected, a dialog window
 asks for a URL or a file name respectively, and if one is selected,
 the callback self.open_callback is called with the selected location
-(always passed in the form of a URL).
+ (always passed in the form of a URL).
 
 If the New choice is selected, the callback self.new_callback is
 called without arguments.  If the Exit choice is selected, the
@@ -162,14 +162,22 @@ class MainDialog:
 			self.openURL_callback(text)
 
 	def __openfile_callback(self):
-		"""Callback used by "browse" button in open url"""
+		# Callback used by "browse" button in open url
 		import windowinterface
+		text = self.__text.gettext()
+		dir, file = ',', ''
+		if text:
+			import urlparse
+			utype, host, path, params, query, fragment = urlparse.urlparse(text)
+			if (not utype or utype == 'file') and \
+			   (not host or host == 'localhost') and \
+			   path:
+				import MMurl, os
+				file = MMurl.url2pathname(path)
+				dir, file = os.path.split(file)
 		f=windowinterface.getmainwnd()
-		filetypes = ['/SMIL presentation', 'application/x-grins-project', 'application/smil']
-##		import features
-##		if not features.lightweight:
-##			filetypes.append('application/x-grins-cmif')
-		windowinterface.FileDialog('Open file', '.', filetypes, '',
+		filetypes = ['/SMIL presentations', 'application/x-grins-project', 'application/smil']
+		windowinterface.FileDialog('Open file', dir, filetypes, file,
 					   self.__filecvt, None, 1,
 					   parent = f)
 
