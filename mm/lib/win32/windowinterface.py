@@ -14,6 +14,7 @@ newwindow = toplevel.newwindow
 newcmwindow = toplevel.newwindow
 
 close = toplevel.close
+forceclose=toplevel.forceclose
 
 addclosecallback = toplevel.addclosecallback
 
