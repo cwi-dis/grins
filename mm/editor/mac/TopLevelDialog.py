@@ -33,7 +33,7 @@ class TopLevelDialog:
 				self.source = None
 			return
 		if self.source is not None:
-			self.source._children[1].settext(source)
+			self.source.settext(source)
 			self.source.show()
 			return
 		self.source = windowinterface.textwindow(source)
