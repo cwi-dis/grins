@@ -229,6 +229,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 
 	#
 	def stop_callback(self, (obj, arg)):
+		print 'stop callback'
 		self.stop()
 
 	#
@@ -317,6 +318,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.showstate()
 	#
 	def stop(self):
+		print 'self.stop, playing=', self.playing
 		if self.playing:
 			self.stop_playing()
 		else:
@@ -477,14 +479,21 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		return 1
 	#
 	def stop_playing(self):
+		print 'Stop playuing'
 		self.playing = 0
 		self.stopchannels() # Tell the channels to quit it
 		self.queue[:] = [] # Erase all events with brute force!
+		print 'Flush rtpool'
+		self.rtpool.flush()
 		self.setrate(0.0) # Stop the clock
 		self.showstate()
+		print 'unarm chview'
+		chv = self.toplevel.channelview
+		chv.unarm_all()
 		if self.timing_changed:
 			Timing.calctimes(self.playroot)
 			Timing.optcalctimes(self.playroot)
+		print 'all done'
 	#
 	def decrement(self, (delay, node, side)):
 	        self.freeze()
@@ -536,6 +545,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 					    MMAttrdefs.getattr(node, 'channel')
 				    dummy = self.enter(0.0, -1, \
 					      chan.arm_and_measure, node)
+			    self.setarmedmode(node, 3)
 			    dummy = self.enter(0.0, 0, chan.play, \
 				      (node, self.decrement, (0, node, TL)))
 			    if self.setcurrenttime_callback:
@@ -544,6 +554,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			    dummy = self.enter(0.0, 0, \
 						self.decrement, (0, node, TL))
 		    else:	# Side is Tail, so...
+			self.setarmedmode(node, 0)
 			self.opt_prearm(node)
 		for arg in node.deps[side]:
 			self.decrement(arg)
@@ -583,6 +594,11 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		else:
 			return None
 	#
+	# Routine to do prearm feedback
+	#
+	def setarmedmode(self, node, mode):
+		chv = self.toplevel.channelview
+		chv.setarmedmode(node, mode)
 
 #
 # del_timing removes all arm_duration attributes (so they will be recalculated)
