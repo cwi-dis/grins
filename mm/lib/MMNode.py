@@ -847,7 +847,6 @@ class MMChannel:
 			return self.d_attrdict[key]
 		if key == 'base_winoff':
 			if settings.activeFullSmilCss:
-				print 'Warning: base_winoff deprecated attribute. Instead, use getPxGeom'
 				return self.getPxGeom()
 		if self.attrdict.has_key(key):
 			return self.attrdict[key]
