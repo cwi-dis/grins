@@ -46,12 +46,12 @@ _init_8859_7 = [
 ]
 
 def _mktranslations(inittable):
-    """Given an initialization table create the two maps"""
-    t1 = [chr(255)]*256
-    t2 = [chr(255)]*256
-    for i, j in inittable:
-	t1[i] = chr(j)
-	t2[j] = chr(i)
-    return string.join(t1, ""), string.join(t2, "")
+        """Given an initialization table create the two maps"""
+        t1 = [chr(255)]*256
+        t2 = [chr(255)]*256
+        for i, j in inittable:
+                t1[i] = chr(j)
+                t2[j] = chr(i)
+        return string.join(t1, ""), string.join(t2, "")
 
 iso_8859_7_to_mac, mac_to_iso_8859_7 = _mktranslations(_init_8859_7)
