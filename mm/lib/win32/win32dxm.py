@@ -266,7 +266,7 @@ class MMStream:
 		else:
 			msecs = dshow.large_int(int(secs*1000+0.5))
 			f = dshow.large_int('10000')
-			v = v * f
+			v = msecs * f
 		self._mmstream.Seek(v)
 
 	def getDuration(self):
