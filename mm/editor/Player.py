@@ -181,6 +181,14 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.cc_stop()
 		self.toplevel.setready()
 
+	def magic_play(self):
+		if self.playing:
+			# toggle pause if playing
+			self.pause_callback()
+		else:
+			# start playing if stopped
+			self.play_callback()
+
 	def close_callback(self):
 		self.hide()
 
