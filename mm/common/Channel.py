@@ -756,6 +756,12 @@ class ChannelWindow(Channel):
 		# a mouse button was pressed
 		buttons = value[2]
 		if len(buttons) == 0:
+			try:
+				transparent = self._attrdict['transparent']
+			except KeyError:
+				transparent = 0
+			if transparent:
+				raise windowinterface.Continue
 			self.highlight()
 		elif len(buttons) == 1:
 			button = buttons[0]
@@ -772,7 +778,15 @@ class ChannelWindow(Channel):
 				button.unhighlight()
 
 	def mouserelease(self, arg, window, event, value):
-		self.unhighlight()
+		buttons = value[2]
+		if len(buttons) == 0:
+			try:
+				transparent = self._attrdict['transparent']
+			except KeyError:
+				transparent = 0
+			if transparent:
+				raise windowinterface.Continue
+			self.unhighlight()
 
 	def create_window(self, pchan, pgeom):
 		menu = []
