@@ -34,8 +34,9 @@ default_settings = {
 	'structure_seqcolor': (150, 150, 150), # Gray
 	'structure_textcolor': (0, 0, 0), # Black
 	'structure_ctextcolor': (50, 50, 50),	# Very dark gray
-	'structure_expcolor': (255, 0, 0), # Red
-	'structure_colcolor': (0, 255, 0), # Green
+	'structure_expcolor': (200, 200, 200), # Open disclosure triangle
+	'structure_colcolor': (200, 200, 200), # Closed disclosure triangle
+	'structure_ecbordercolor': (80, 80, 80), # triangle border
 	'structure_focusleft': (200, 200, 200),
 	'structure_focustop': (200, 200, 200),
 	'structure_focusright': (40, 40, 40),
