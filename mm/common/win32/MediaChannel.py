@@ -40,7 +40,7 @@ interface IGraphBuilder:
 import MMAttrdefs
 
 # URL module
-import MMurl
+import MMurl, urllib
 
 # std win32 libs 
 import win32ui, win32con
@@ -116,6 +116,7 @@ class MediaChannel:
 			return 0
 
 		url = MMurl.canonURL(self.getfileurl(node))
+		url=urllib.unquote(url)
 		if not self._armBuilder.RenderFile(url):
 			print 'Failed to render',url
 			return -1
@@ -177,7 +178,7 @@ class MediaChannel:
 			self._playBuilder.SetVisible(1)
 
 	def paint(self):
-		if self.window:
+		if hasattr(self,'window') and self.window:
 			self.window.UpdateWindow()
 
 	# Set Window Media window size from scale and center attributes
