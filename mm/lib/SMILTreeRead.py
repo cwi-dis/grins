@@ -701,19 +701,24 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		from windowinterface import UNIT_PXL
 		bg = None
 		attrs = self.__root_layout
+		name = None
 		if attrs is not None:
 			bg = attrs['background-color']
 			bg = self.__convert_color(bg)
 			if not self.__title:
-				self.__title = attrs.get('title', None)
+				self.__title = attrs.get('title')
 			if not self.__title:
-				self.__title = attrs.get('id', None)
+				self.__title = attrs.get('id')
+			name = attrs.get('id')
 		if not self.__title:
 			self.__title = layout_name
+		if not name:
+			name = self.__title
+		self.__base_win = name
 		ctx = self.__context
-		layout = MMNode.MMChannel(ctx, self.__title)
-		ctx.channeldict[self.__title] = layout
-		ctx.channelnames.insert(0, self.__title)
+		layout = MMNode.MMChannel(ctx, name)
+		ctx.channeldict[name] = layout
+		ctx.channelnames.insert(0, name)
 		ctx.channels.insert(0, layout)
 		self.__layout = layout
 		layout['type'] = 'layout'
@@ -735,7 +740,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for ch in self.__context.channels:
 			if ch is self.__layout:
 				continue
-			ch['base_window'] = self.__title
+			ch['base_window'] = self.__base_win
 
 	def __fillchannel(self, ch, attrdict, mtype):
 		from windowinterface import UNIT_PXL, UNIT_SCREEN
@@ -868,15 +873,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			chtype = attrdict.get('type')
 			if chtype is None or not channelmap.has_key(chtype):
 				continue
-			name = attrdict.get('title')
-			if name is None or \
-			   (ctx.channeldict.has_key(name) and
-			    ctx.channeldict[name]['type'] != chtype):
-				name = attrdict.get('id')
-			if name is None or \
-			   (ctx.channeldict.has_key(name) and
-			    ctx.channeldict[name]['type'] != chtype):
-				name = attrdict.get('id')+' '+chtype
+			name = attrdict.get('id')
+			if ctx.channeldict.has_key(name):
+				name = name + ' %d'
+				i = 0
+				while ctx.channeldict.has_key(name % i):
+					i = i + 1
+				name = name % i
 			ch = MMNode.MMChannel(ctx, name)
 			ctx.channeldict[name] = ch
 			ctx.channelnames.append(name)
