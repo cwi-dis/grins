@@ -129,6 +129,7 @@ class Window:
 
 	def showwindow(self, color = (255,0,0)):
 		self._showing = color
+		self.update()
 
 	def dontshowwindow(self):
 		if self._showing:
@@ -560,14 +561,24 @@ class Window:
 	def setcontentcanvas(self, w, h, units = UNIT_SCREEN):
 		pass
 
-	def getwindowpos(self):
-		X, Y, W, H = self._parent.getwindowpos()
+	def getwindowpos(self, rel=None):
+		if rel==self:
+			return self._rect
+		X, Y, W, H = self._parent.getwindowpos(rel)
 		x, y, w, h = self._rectb
 		return X+x, Y+y, w, h
 
 	def getwindowrect(self):
 		x,y,w,h=self.getwindowpos()
 		return x, y, x+w, y+h
+
+	def IsClientPoint(self, point):
+		x, y, w, h = self.getwindowpos()
+		l, t, r, b = x, y, x+w, y+h
+		xp, yp = point
+		if xp>=l and xp<r and yp>=t and yp<b:
+			return 1
+		return 0
 
 	#
 	# Private methods
@@ -610,18 +621,57 @@ class Window:
 				raise error, 'invalid value for transparent arg'
 			self._transparent = transparent
 
+	# redraw this window and its childs
+	def update(self):
+		pass
 
 	#
 	# Animations interface
 	#
 	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
-		pass
+		# first convert any coordinates to pixel
+		coordinates = self._convert_coordinates(coordinates,units=units)
+		
+		# keep old pos
+		x0, y0, w0, h0 = self._rectb
+		x1, y1, w1, h1 = self.getwindowpos()
+		
+		# move or/and resize window
+		if len(coordinates)==2:
+			x, y = coordinates[:2]
+			w, h = w0, h0
+		elif len(coordinates)==4:
+			x, y, w, h = coordinates
+		else:
+			raise AssertionError
+
+		# create new
+		self._rect = 0, 0, w, h # client area in pixels
+		self._canvas = 0, 0, w, h # client canvas in pixels
+		self._rectb = x, y, w, h  # rect with respect to parent in pixels
+		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
+		x2, y2, w2, h2 = self.getwindowpos()
+		
+		self._topwindow.update()
 
 	def updatezindex(self, z):
-		pass
-
+		self._z = z
+		parent = self._parent
+		parent._subwindows.remove(self)
+		for i in range(len(parent._subwindows)):
+			if self._z >= parent._subwindows[i]._z:
+				parent._subwindows.insert(i, self)
+				break
+		else:
+			parent._subwindows.append(self)
+		self.update()
+	
 	def updatebgcolor(self, color):
-		pass
+		r, g, b = color
+		self._bgcolor = r, g, b
+		if self._active_displist:
+			self._active_displist.updatebgcolor(color)
+			self._parent.update()
 
 	#
 	# Transitions interface
@@ -662,64 +712,34 @@ class SubWindow(Window):
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		return SubWindow(self, coordinates, transparent, z, units)
 
-	# draw everything bottom up for now
-	# we don't use clipping yet
-	def paintOn(self, dc, offsetOrg=1):
-		# first paint self
-		x, y, w, h = self.getwindowpos()
-		if offsetOrg:
-			x0, y0 = dc.SetWindowOrg((-x,-y))
-		if self._active_displist:
-			self._active_displist._render(dc,None)
-		if self._redrawfunc:
-			self._redrawfunc()
-		if offsetOrg:
-			dc.SetWindowOrg((x0,y0))
+	def close(self):
+		Window.close(self)
+		self.DestroyOSWindow()
 
-		# then paint children bottom up
-		L = self._subwindows[:]
-		L.reverse()
-		for w in L:
-			w.paintOn(dc)
+	#
+	# OS windows simulation support
+	#
+	def GetSafeHwnd(self):
+		if self._oswnd: wnd = self._oswnd
+		else: wnd = self._topwindow
+		return wnd.GetSafeHwnd()
+	
+	def GetClientRect(self):
+		x, y, w, h = self._rect
+		return x, y, x+w, y+h
 
-		if self._showing:
-			self.__showwindowOn(dc, self._showing)
+	def update(self):
+		self._topwindow.update()
 
-	def paintOnDDS(self, dds):
-		# first paint self
-		if self._active_displist:
-			hdc = dds.GetDC()
-			dc = win32ui.CreateDCFromHandle(hdc)
-			self._active_displist._render(dc,None)
-			if self._redrawfunc:
-				self._redrawfunc()
-			dc.Detach()
-			dds.ReleaseDC(hdc)
+	def HookMessage(self, f, m):
+		if self._oswnd: wnd = self._oswnd
+		else: wnd = self._topwindow
+		wnd.HookMessage(f,m)
 
-		# then paint children bottom up
-		L = self._subwindows[:]
-		L.reverse()
-		for w in L:
-			w.paintOnDDS(dds)
 
-		if self._showing:
-			hdc = dds.GetDC()
-			dc = win32ui.CreateDCFromHandle(hdc)
-			self.__showwindowOn(dc, self._showing)
-			dc.Detach()
-			dds.ReleaseDC(hdc)
-
-	def showwindow(self, color = (255,0,0)):
-		dc=self._topwindow.GetDC()
-		self.__showwindowOn(dc, color)
-		self._topwindow.ReleaseDC(dc)
-
-	def __showwindowOn(self, dc, color):
-		self._showing = color
-		x, y, w, h = self.getwindowpos()
-		rc = (x, y, x+w, y+h)
-		win32mu.FrameRect(dc,rc,self._showing)
-
+	#
+	# Foreign renderers support
+	#
 	def CreateOSWindow(self, html=0):
 		if self._oswnd:
 			return self._oswnd
@@ -783,62 +803,10 @@ class SubWindow(Window):
 		if hasattr(self,'_anchorcallback') and self._anchorcallback:
 			self._anchorcallback(url)
 
-	def GetSafeHwnd(self):
-		if self._oswnd: wnd = self._oswnd
-		else: wnd = self._topwindow
-		return wnd.GetSafeHwnd()
-	
-	def GetClientRect(self):
-		x, y, w, h = self._rect
-		return x, y, x+w, y+h
 
-	def HookMessage(self, f, m):
-		if self._oswnd: wnd = self._oswnd
-		else: wnd = self._topwindow
-		wnd.HookMessage(f,m)
-	
-	def GetDC(self):
-		return self._topwindow.GetDC()
-
-	def GetDCEx(self, rgn, flags):
-		return self._topwindow.GetDCEx(rgn, flags)
-
-	def ReleaseDC(self, dc):
-		self._topwindow.ReleaseDC(dc)
-			
-	def update(self):
-		#x, y, w, h = self.getwindowpos()
-		#self._topwindow.InvalidateRect((x, y, x+w, y+h))			
-		self._topwindow.update()
-
-	def ValidateRgn(self):
-		x, y, w, h = self.getwindowpos()
-		rgn = win32ui.CreateRgn()
-		rgn.CreateRectRgn((x, y, x+w, y+h))
-		self._topwindow.ValidateRgn(rgn)
-		rgn.DeleteObject()
-
-	def ValidateRect(self):
-		self._topwindow.ValidateRect(self.getwindowrect())
-
-	def Redraw(self):
-		x, y, w, h = self.getwindowpos()
-		rgn=win32ui.CreateRgn()
-		rgn.CreateRectRgn((x, y, x+w, y+h))
-		dcx=self.GetDCEx(rgn,win32con.DCX_CACHE|win32con.DCX_CLIPSIBLINGS)
-		self.paintOn(dcx)
-		self.ReleaseDC(dcx)
-		rgn.DeleteObject()
-		del rgn
-
-	def IsClientPoint(self, point):
-		x, y, w, h = self.getwindowpos()
-		l, t, r, b = x, y, x+w, y+h
-		xp, yp = point
-		if xp>=l and xp<r and yp>=t and yp<b:
-			return 1
-		return 0
-
+	#
+	# Mouse and cursor related support
+	#
 	def onMouseEvent(self,point, ev):
 		for wnd in self._subwindows:
 			if wnd.IsClientPoint(point):
@@ -881,83 +849,70 @@ class SubWindow(Window):
 		self._curcursor = strid
 		self._topwindow.setcursor(strid)
 
+
 	#
-	# Animations interface
+	# Rendering section
 	#
-	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
-		# first convert any coordinates to pixel
-		coordinates = self._convert_coordinates(coordinates,units=units)
-		
-		# keep old pos
-		x0, y0, w0, h0 = self._rectb
-		x1, y1, w1, h1 = self.getwindowpos()
-		
-		# move or/and resize window
-		if len(coordinates)==2:
-			x, y = coordinates[:2]
-			w, h = w0, h0
-		elif len(coordinates)==4:
-			x, y, w, h = coordinates
-		else:
-			raise AssertionError
-
-		# create new
-		self._rect = 0, 0, w, h # client area in pixels
-		self._canvas = 0, 0, w, h # client canvas in pixels
-		self._rectb = x, y, w, h  # rect with respect to parent in pixels
-		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
-		x2, y2, w2, h2 = self.getwindowpos()
-		
-
-		self._topwindow.update()
-		return
-
-		# update
-		rgn1 = win32ui.CreateRgn()
-		rgn1.CreateRectRgn((x1, y1, x1+w1, y1+h1))
-		rgn2 = win32ui.CreateRgn()
-		rgn2.CreateRectRgn((x2, y2, x2+w2, y2+h2))				
-		rgn = win32ui.CreateRgn()
-		rgn.CreateRectRgn((0, 0, 0, 0))
-		rgn.CombineRgn(rgn1,rgn2,win32con.RGN_OR)		
-
-
-		flags = win32con.RDW_INVALIDATE | win32con.RDW_UPDATENOW | win32con.RDW_ERASE
-		self._topwindow.RedrawWindow(None, rgn, flags)
-
-		rgn1.DeleteObject()
-		rgn2.DeleteObject()
-		rgn.DeleteObject()
-
-	def updatezindex(self, z):
-		self._z = z
-		parent = self._parent
-		parent._subwindows.remove(self)
-		for i in range(len(parent._subwindows)):
-			if self._z >= parent._subwindows[i]._z:
-				parent._subwindows.insert(i, self)
-				break
-		else:
-			parent._subwindows.append(self)
-		self.update()
-	
-	def updatebgcolor(self, color):
-		r, g, b = color
-		self._bgcolor = r, g, b
+	def __paintOnDDS(self, dds, rel=None):
+		x, y, w, h = self.getwindowpos(rel)
 		if self._active_displist:
-			self._active_displist.updatebgcolor(color)
-			rgn1 = win32ui.CreateRgn()
-			rgn1.CreateRectRgn(self.GetClientRect())			
-			rgn2 = self._active_displist._win32rgn
-			rgn  = win32ui.CreateRgn()
-			rgn.CreateRectRgn((0,0,0,0))
-			rgn.CombineRgn(rgn1,rgn2,win32con.RGN_DIFF)
-			x, y, w, h = self.getwindowpos()
-			rgn.OffsetRgn((x, y))
-			flags = win32con.RDW_INVALIDATE | win32con.RDW_UPDATENOW # | RDW_ERASE
-			self._topwindow.RedrawWindow(None, rgn, flags)			
-			rgn1.DeleteObject()
-			rgn.DeleteObject()
+			hdc = dds.GetDC()
+			dc = win32ui.CreateDCFromHandle(hdc)
+			x0, y0 = dc.SetWindowOrg((-x,-y))
+			self._active_displist._render(dc,None)
+			if self._redrawfunc:
+				self._redrawfunc()
+			if self._showing:
+				win32mu.FrameRect(dc,self._rect,self._showing)
+			dc.SetWindowOrg((x0,y0))
+			dc.Detach()
+			dds.ReleaseDC(hdc)
+
+	def paintOnDDS(self, dds, rel=None):
+		x, y, w, h = self.getwindowpos(rel)
+
+		# first paint self
+		self.__paintOnDDS(dds, rel)
+
+		# then paint children bottom up
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
+			w.paintOnDDS(dds, rel)
+
+	def bltDDS(self, srfc):
+		x, y, w, h = self.getwindowpos()
+		rc_dst = x, y, x+w, y+h
+		rc_src = (0, 0, w, h)
+		buf = self._topwindow._backBuffer
+		buf.Blt(rc_dst, srfc, rc_src, ddraw.DDBLT_WAIT)
+
+	def paint(self):
+		if self._oswnd:
+			self._oswnd.RedrawWindow()
+			return
+
+		# avoid painting while frozen
+		if self._drawsurf:
+			self.bltDDS(self._drawsurf)
+			return
+		elif self._freeze and self._passive:
+			self.bltDDS(self._passive)
+			return
+					
+		# first paint self
+		self.__paintOnDDS(self._topwindow._backBuffer)
+
+		# then paint children bottom up
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
+			w.paint()
+
+	def createDDS(self):
+		x, y, w, h = self._rect
+		dds = self._topwindow.CreateSurface(w,h)
+		return dds
 
 	#
 	# Transitions interface
@@ -983,7 +938,6 @@ class SubWindow(Window):
 			self._transition = None
 			self._passive = None
 			self._freeze = 0
-		self.Redraw()
 
 	def changed(self):
 		pass
@@ -997,71 +951,15 @@ class SubWindow(Window):
 		# (unless how=None, which unfreezes them) and use for updates and as passive
 		# source for next transition.
 		if how:
-			self._passive = self.createWndDDS()
+			self._passive = self.createDDS()
+			self.paintOnDDS(self._passive, self)
 			self._freeze = 1
 		else:
 			self._passive = None
 			self._freeze = 0
 
-	def close(self):
-		Window.close(self)
-		self.DestroyOSWindow()
+#############################
 
-	def createDDS(self):
-		x, y, w, h = self._rect
-		dds = self._topwindow.CreateSurface(w,h)
-		return dds
 
-	def createWndDDS(self):
-		x, y, w, h = self._rect
-		dds = self._topwindow.CreateSurface(w,h)
-		self.paintOnDDS(dds)
-		return dds
-
-	def flip(self, srfc):
-		x, y, w, h = self.getwindowpos()
-		flags = ddraw.DDBLT_WAIT
-		bb = self._topwindow._backBuffer
-		rc = x, y, x+w, y+h
-		bb.Blt(rc, srfc, (0, 0, w, h), flags)
-
-	def GetDDDC(self):
-		return self._topwindow.GetDDDC()
-
-	def ReleaseDDDC(self,dc):
-		self._topwindow.ReleaseDDDC(dc)
-
-	def paint(self):
-		if self._oswnd:
-			self._oswnd.RedrawWindow()
-			return
-
-		# avoid painting while frozen
-		if self._drawsurf:
-			self.flip(self._drawsurf)
-			return
-		elif self._freeze and self._passive:
-			self.flip(self._passive)
-			return
-			
-		# first paint self
-		dc = self.GetDDDC()
-		if not dc: return
-		x, y, w, h = self.getwindowpos()
-		x0, y0 = dc.SetWindowOrg((-x,-y))
-		if self._active_displist:
-			self._active_displist._render(dc,None)
-		if self._redrawfunc:
-			self._redrawfunc()
-		if self._showing:
-			self.__showwindowOn(dc, self._showing)
-		dc.SetWindowOrg((x0,y0))
-		self.ReleaseDDDC(dc)
-
-		# then paint children bottom up
-		L = self._subwindows[:]
-		L.reverse()
-		for w in L:
-			w.paint()
 
 
