@@ -76,6 +76,8 @@ class MovieWindow(ChannelWindow):
 		if self.rgbmode:
 			gl.RGBcolor(r, g, b)
 		else:
+			# XXXX Not nice. Should ask VFile for nearest
+			#      color.
 			INDEX = 255
 			gl.mapcolor(INDEX, r, g, b)
 			gl.color(INDEX)
@@ -85,14 +87,15 @@ class MovieWindow(ChannelWindow):
 		if self.vfile <> None:
 			self.centerimage()
 	#
-	def setfile(self, (filename, node)):
+	def setfile(self, (filename, node, do_warm)):
 		self.clear()
 		self.vfile = None
 		try:
 			self.vfile = VFile.VinFile().init(filename)
-##			print 'Warming the cache...'
-##			self.vfile.warmcache()
-##			print 'Done.'
+			if do_warm:
+				print 'Warming the cache...'
+				self.vfile.warmcache()
+				print 'Done.'
 		except EOFError:
 			print 'Empty movie file', `filename`
 			return
@@ -190,7 +193,12 @@ class MovieChannel(Channel):
 		if not self.is_showing():
 			return
 		filename = self.getfilename(node)
-		self.window.setfile(filename, node)
+		self.window.setfile(filename, node, 1)
+		self.armed_node = node
+	#
+	def late_arm(self, node):
+		filename = self.getfilename(node)
+		self.window.setfile(filename, node, 0)
 		self.armed_node = node
 	#
 	def play(self, (node, callback, arg)):
@@ -201,7 +209,7 @@ class MovieChannel(Channel):
 	        if node <> self.armed_node:
 			print 'MovieChannel: node not armed'
 			self.window.pop()
-			self.arm(node)
+			self.late_arm(node)
 		else:
 			self.window.popup()
 		self.armed_node = None

@@ -82,6 +82,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 				self.userplayroot = self.root
 		self.locked = 0
 		self.measure_armtimes = 1
+		flushchannelcache(self.root)
 		self.showstate()
 	#
 	def rollback(self):
@@ -104,14 +105,18 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.toplevel.checkviews()
 		self.showchannels()
 		self.showstate()
+		self.init_timer_prof()
 	#
 	def hide(self):
 		if not self.showing: return
+		self.done_timer_prof()
 		self.stop()
 		self.fullreset()
 		BasicDialog.hide(self)
 		self.toplevel.checkviews()
 		self.destroychannels()
+##		MMAttrdefs.showstats() # XXX Timing
+##		MMAttrdefs.stopstats() # XXX Timing
 	#
 	def destroy(self):
 		self.rtpool = None
@@ -242,6 +247,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	# FORMS callbacks.
 	#
 	def play_callback(self, (obj, arg)):
+##		MMAttrdefs.startstats() # XXX Timing
 		self.play()
 	#
 	def pause_callback(self, (obj, arg)):
@@ -285,7 +291,23 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def dummy_callback(self, dummy):
 		pass
 	#
+	def init_timer_prof(self):
+		print 'INIT_TIMER_PROF'
+		import profile
+		self.prof = profile.Profile().init()
+		self.profenv = {'dotcb':self.do_timer_callback}
+
+	def done_timer_prof(self):
+		print 'DONE_TIMER_PROF'
+		self.prof.print_stats()
+		del self.prof
+		del self.profenv
+		
 	def timer_callback(self, (obj, arg)):
+		self.prof.runctx('dotcb()\n', self.profenv, self.profenv)
+		#self.do_timer_callback()
+
+	def do_timer_callback(self):
 		gap = None
 		while self.queue:
 			when, prio, action, argument = self.queue[0]
@@ -748,12 +770,22 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	#
 	# Channel access utilities.
 	#
+	# The 'node.channel' cache might not be as helpful as it seems. It
+	# does cut down on the number of calls to getattr() (1 per node played
+	# in stead of 3), but the getattr cache also helped before. The saving
+	# is about .1 second per node played.
+	#
 	def getchannel(self, node):
+		try:
+			return node.channel
+		except AttributeError:
+			pass
 		cname = MMAttrdefs.getattr(node, 'channel')
 		if self.channels.has_key(cname):
-			return self.channels[cname]
+			node.channel = self.channels[cname]
 		else:
-			return None
+			node.channel = None
+		return node.channel
 	#
 	# Routine to do prearm feedback
 	#
@@ -863,3 +895,16 @@ def del_timing(node):
 	children = node.GetChildren()
 	for child in children:
 		del_timing(child)
+
+# Flush per-node channel cache
+#
+# See comments for getchannel on the usefulness of the routine.
+#
+def flushchannelcache(node):
+	try:
+		del node.channel
+	except AttributeError:
+		pass
+	children = node.GetChildren()
+	for child in children:
+		flushchannelcache(child)
