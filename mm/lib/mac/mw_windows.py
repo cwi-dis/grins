@@ -2903,8 +2903,8 @@ class DialogWindow(_Window):
 		for w in self._widgetdict.values():
 			w._activate(onoff)
 			
-	def ListWidget(self, item, content=[]):
-		widget = mw_widgets._ListWidget(self._dlg, item, content)
+	def ListWidget(self, item, content=[], multi=0):
+		widget = mw_widgets._ListWidget(self._dlg, item, content, multi)
 ##		self.addwidget(item, widget)
 		return widget
 

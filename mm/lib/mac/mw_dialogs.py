@@ -380,7 +380,7 @@ class ProgressDialog:
 		
 class _SelectionDialog(DialogWindow):
 	DIALOG_ID = ID_SELECT_DIALOG
-	def __init__(self, listprompt, itemlist, default=None, hascancel=1):
+	def __init__(self, listprompt, itemlist, default=None, hascancel=1, show=1, multi=0):
 		# First create dialogwindow and set static items
 		if hascancel:
 			DialogWindow.__init__(self, self.DIALOG_ID, 
@@ -394,7 +394,7 @@ class _SelectionDialog(DialogWindow):
 		
 		# Now setup the scrolled list
 		self._itemlist = itemlist
-		self._listwidget = self.ListWidget(ITEM_SELECT_ITEMLIST, itemlist)
+		self._listwidget = self.ListWidget(ITEM_SELECT_ITEMLIST, itemlist, multi=multi)
 		self._listwidget.setkeyboardfocus()
 		
 		# And the default value and ok button
@@ -406,7 +406,8 @@ class _SelectionDialog(DialogWindow):
 			self._listwidget.select(default)
 			
 		# And show it
-		self.show()
+		if show:
+			self.show()
 	
 	def do_itemhit(self, item, event):
 		is_ok = 0
@@ -480,22 +481,35 @@ class _CallbackSelectionDialog(_SelectionDialog):
 			
 	def CancelCallback(self):
 		self.grabdone()
-			
+		
 class _ModalSelectionDialog(_SelectionDialog):
 	def __init__(self, list, title, prompt, default):
-		self.__value = None
+		self._value = None
 		_SelectionDialog.__init__(self, prompt, list, default=default)
 
 	def OkCallback(self, index):
-		self.__value = index
+		self._value = index
 		self.grabdone()
 			
 	def CancelCallback(self):
 		self.grabdone()
 		
 	def getvalue(self):
-		return self.__value
+		return self._value
 			
+class _ModalMultiSelectionDialog(_ModalSelectionDialog):
+	def __init__(self, list, title, prompt, deflist):
+		self._value = None
+		_SelectionDialog.__init__(self, prompt, list, hascancel=1, show=0, multi=1)
+		for item in deflist:
+			self._listwidget.select(item)
+		self.show()
+		
+	def OkCallback(self, item):
+		# Ignore item: we want them all
+		self._value = self._listwidget.getallselectvalues()
+		self.grabdone()
+				
 class InputDialog(DialogWindow):
 	DIALOG_ID=ID_INPUT_DIALOG
 	
@@ -835,6 +849,11 @@ def multchoice(prompt, list, defindex, parent = None):
 	if rv is None:
 		return -1
 	return rv
+	
+def mmultchoice(prompt, list, deflist, parent=None):
+	w = _ModalMultiSelectionDialog(list, '', prompt, deflist)
+	w.rungrabbed()
+	return w.getvalue()
 
 def GetYesNoCancel(prompt, parent = None):
 	import EasyDialogs
