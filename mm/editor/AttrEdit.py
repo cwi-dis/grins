@@ -906,6 +906,7 @@ class ChannelWrapper(Wrapper):
 			if 'traceImage' not in rv: rv.append('traceImage')			
 			if 'open' not in rv: rv.append('open')
 			if 'close' not in rv: rv.append('close')
+			if 'showEditBgMode' not in rv: rv.append('showEditBgMode')
 		else:
 			# region
 			if 'regionName' not in rv: rv.append('regionName')
