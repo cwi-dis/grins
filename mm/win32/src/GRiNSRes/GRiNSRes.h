@@ -255,6 +255,7 @@
 #define IDI_UNKNOWN                     453
 #define IDD_TEST1                       454
 #define IDD_TEST2                       455
+#define IDD_ANIMATE                     456
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -682,6 +683,7 @@
 #define IDC_STATIC_MSG2                 1448
 #define IDC_54                          1450
 #define IDC_INIT_RECENT_COMBO           1451
+#define IDC_SLIDER1                     1452
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -787,9 +789,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        456
+#define _APS_NEXT_RESOURCE_VALUE        457
 #define _APS_NEXT_COMMAND_VALUE         32900
-#define _APS_NEXT_CONTROL_VALUE         1452
+#define _APS_NEXT_CONTROL_VALUE         1453
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
