@@ -295,7 +295,6 @@ class Main(MainDialog):
 		import windowinterface
 		import settings
 		import string
-		print version.shortversion
 		url = 'http://www.oratrix.com/indir/%s/updatecheck.txt'%version.shortversion
 		try:
 			fp = MMurl.urlopen(url)
