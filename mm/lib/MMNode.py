@@ -107,7 +107,7 @@ class MMNodeContext:
 			raise CheckError, 'addchannel: invalid position'
 		c = MMChannel(self, name)
 		c['type'] = type
-		if not settings.set('cmif', 1):
+		if not settings.get('cmif'):
 			# some defaults for SMIL mode differ from CMIF defaults
 			from windowinterface import UNIT_PXL
 			c['units'] = UNIT_PXL
