@@ -105,6 +105,7 @@ class _Event:
 	
 	def __init__(self):
 		# timer handling
+		self.needmenubarredraw = 0
 		self._timers = []
 		self._timer_id = 0
 		self._timerfunc = None
@@ -133,6 +134,9 @@ class _Event:
 				timeout = int(self._timers[0][0]*TICKS_PER_SECOND)
 			else:
 				timeout = 100000
+			if self.needmenubarredraw:
+				MenuMODULE.DrawMenuBar()
+				self.needmenubarredraw = 0
 			gotone, event = Evt.WaitNextEvent(EVENTMASK, timeout)
 			if gotone:
 				self._handle_event(event)
@@ -158,7 +162,6 @@ class _Event:
 				if not ourwin:
 					MacOS.HandleEvent(event)
 				else:
-					print 'Update for', ourwin
 					Qd.SetPort(wid)
 					wid.BeginUpdate()
 					# XXXX region to redraw
@@ -315,7 +318,7 @@ class _Toplevel(_Event):
 		MacOS.EnableAppswitch(0)
 		
 	def _initmenu(self):
-		self._menubar = MenuBar()
+		self._menubar = MenuBar(self)
 		AppleMenu(self._menubar, "About CMIF...", self._mselect_about)
 		self._menu_file = MyMenu(self._menubar, "File")
 		self._mitem_quit = MenuItem(self._menu_file, "Quit", "Q", (self._mselect_quit, ()))
@@ -466,7 +469,6 @@ class _CommonWindow:
 
 	def close(self):
 		"""Close window and all subwindows"""
-		print 'Closing', self
 		if self._parent is None:
 			return		# already closed
 		Qd.SetPort(self._wid)
@@ -480,7 +482,6 @@ class _CommonWindow:
 			win.close()
 		for dl in self._displists[:]:
 			dl.close()
-		print 'Closed', self
 			
 	def _close_wid(self, wid):
 		"""Called by children to close wid. Only implements real close
