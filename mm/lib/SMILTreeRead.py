@@ -259,6 +259,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__progressTimeToUpdate = 0	# next time to update the progress bar (if progresscallback is not none
 		self.__nlines = 0		# number of lines. Useful to determine the progress value
 		self.__animateParSet = {}
+		self.__have_accesskey = 0
 
 		if new_file and type(new_file) is type(''):
 			self.__base = new_file
@@ -473,6 +474,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							self.syntax_error('accesskey not available in old namespace')
 					if settings.MODULES['AccessKeyTiming']:
 						list.append(MMNode.MMSyncArc(node, attr, accesskey=char, delay=offset or 0))
+						self.__have_accesskey = self.__have_accesskey + 1
 					continue
 
 				if '.' not in tokens:
@@ -2749,6 +2751,27 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.NewContainer('seq', attributes)
 		self.__set_defaultregpoints()
 		
+	def __check_accesskey(self, node, keys, attr, event):
+		newarcs = []
+		list = node.attrdict.get(attr, [])
+		for arc in list:
+			if arc.accesskey is not None:
+				self.__have_accesskey = self.__have_accesskey - 1
+				for k, a in keys:
+					if arc.accesskey == k:
+						newarc = MMNode.MMSyncArc(node, event, srcnode = a, event = 'activateEvent', delay = arc.delay)
+						newarcs.append(newarc)
+		if newarcs:
+			node.attrdict[attr] = list + newarcs
+
+	def __fix_accesskey(self, node, keys):
+		if self.__have_accesskey <= 0:
+			return
+		self.__check_accesskey(node, keys, 'beginlist', 'begin')
+		self.__check_accesskey(node, keys, 'endlist', 'end')
+		for c in node.GetChildren():
+			self.__fix_accesskey(c, keys)
+
 	def __parseskin(self):
 		from parseskin import parsegskin
 		import Sizes
@@ -2785,6 +2808,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		img.attrdict['channel'] = 'Skin Image'
 		beginlist = []
 		endlist = []
+		keys = []		# list of accesskey keys
 		for key, val in dict.items():
 			if key == 'image':
 				continue
@@ -2802,7 +2826,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				a = ctx.newnode('anchor')
 				a.attrdict['ashape'] = val[0]
 				coords = val[1]
-				a.attrdict['acoords'] = [coords[0],coords[1],coords[0]+coords[2],coords[1]+coords[3]]
+				if val[0] == 'rect':
+					a.attrdict['acoords'] = [coords[0],coords[1],coords[0]+coords[2],coords[1]+coords[3]]
+				else:
+					a.attrdict['acoords'] = coords
 				img._addchild(a)
 				if key in ('play', 'toggle'):
 					arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = a, event = 'activateEvent', delay = 0)
@@ -2812,6 +2839,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					endlist.append(arc)
 				elif key in ('pause', 'open', 'exit'):
 					self.__links.append((a, 'grins:%s()' % key))
+				elif key == 'key':
+					keys.append((val[2], a))
+		if keys:
+			self.__fix_accesskey(self.__root, keys)
 		arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = 'syncbase', delay = 0)
 		beginlist.append(arc)
 		self.__root.attrdict['beginlist'] = beginlist
