@@ -279,7 +279,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			contextFontSize = self.getStyleAttr('font-size')
 			if contextFontFamily != fontFamily or contextFontSize != fontSize:
 				fontSizeObj = self.getStyleAttrObj('font-size', style)
-				dsize = fontSizeObj.getDeviceValue(self.ctm, 'h')				
+				dsize =  fontSize # fontSizeObj.getDeviceValue(self.ctm, 'h')				
 				font = wingdi.CreateFontIndirect({'name': fontFamily, 'height':dsize, 'outprecision':win32con.OUT_OUTLINE_PRECIS})
 				wingdi.SelectObject(self.hdc, font)
 
