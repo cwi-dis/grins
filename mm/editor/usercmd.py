@@ -152,6 +152,8 @@ class NEW_CHANNEL(_CommandBase):
 	help = 'Create a new channel'
 class TOGGLE_UNUSED(_CommandBase):
 	help = 'Toggle showing unused channels'
+class TOGGLE_ARCS(_CommandBase):
+	help = 'Toggle showing synchronization arcs'
 class NEXT_MINIDOC(_CommandBase):
 	help = 'Display next mini document'
 class PREV_MINIDOC(_CommandBase): pass
