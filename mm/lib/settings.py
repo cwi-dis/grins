@@ -121,7 +121,7 @@ default_settings = {
 	'showsource' : 0,	# Hidden preference to show source window in the player
 
 	# The temporal view
-	'temporal_barwidth': 4,		# width of the sync bars
+	'temporal_barwidth': 5,		# width of the sync bars
 	'temporal_channelwidth':100,	# Width of the channels. If channels are made Hierarchical, this may change.
 	'temporal_nodestart': 102,	# Where the first bar is
 	'temporal_nodeend' : 1000,	# Where the last bar is.
