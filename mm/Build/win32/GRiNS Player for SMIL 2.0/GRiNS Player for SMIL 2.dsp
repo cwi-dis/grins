@@ -129,11 +129,19 @@ SOURCE=.\M__CmifView.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M__FSPlayerView.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M__LayoutView.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\M__LinkView.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M__PlayerView.c
 # End Source File
 # Begin Source File
 
