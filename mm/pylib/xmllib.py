@@ -94,6 +94,7 @@ class XMLParser:
     __map_case = 0
     __accept_utf8 = 0
     __translate_attribute_references = 1
+    __complain_foreign_namespace = 1
 
     # Interface -- initialize and reset this instance
     def __init__(self, **kw):
@@ -108,6 +109,8 @@ class XMLParser:
             self.__accept_utf8 = kw['accept_utf8']
         if kw.has_key('translate_attribute_references'):
             self.__translate_attribute_references = kw['translate_attribute_references']
+        if kw.has_key('complain_foreign_namespace'):
+            self.__complain_foreign_namespace = kw['complain_foreign_namespace']
         self.reset()
 
     def __fixelements(self):
@@ -659,7 +662,8 @@ class XMLParser:
         if attributes is not None:
             for key in attrdict.keys():
                 if not attributes.has_key(key):
-                    self.syntax_error("unknown attribute `%s' in tag `%s'" % (attrnamemap[key], tagname))
+                    if self.__complain_foreign_namespace or ':' not in attrnamemap[key]:
+                        self.syntax_error("unknown attribute `%s' in tag `%s'" % (attrnamemap[key], tagname))
             for key, val in attributes.items():
                 if val is not None and not attrdict.has_key(key):
                     attrdict[key] = val
