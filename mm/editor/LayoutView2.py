@@ -16,6 +16,8 @@ debugAlign = 0
 debug2 = 0
 debugPreview = 0
 
+COPY_PASTE_MEDIAS = 1
+
 TYPE_ABSTRACT, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT = range(4)
 
 ###########################
@@ -410,6 +412,9 @@ class LayoutView2(LayoutViewDialog2):
 				ATTRIBUTES(callback = (self.onEditProperties, ())),
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				]
+			if COPY_PASTE_MEDIAS:
+				self.commandMediaList.append(COPY(callback = (self.onCopy, ())))
+				self.commandMediaList.append(CUT(callback = (self.onCut, ())))
 		else:
 			self.commandMediaList = []
 
@@ -594,27 +599,25 @@ class LayoutView2(LayoutViewDialog2):
 		if nodeType == None:
 			return
 
-		# update previous area and command list
-		if nodeType == TYPE_REGION:
-			self.updateCommandList(self.commandRegionList, nodeType)
-		elif nodeType == TYPE_VIEWPORT:
-			self.updateCommandList(self.commandViewportList, nodeType)
-
 		self.currentSelectedNodeList = [focusobject]
 		
 		# update widgets
 		for id, widget in self.widgetList.items():
 			widget.selectNodeList([focusobject], keepShowedNodes)
+
+		if nodeType == TYPE_REGION:
+			self.updateCommandList(self.commandRegionList)
+		elif nodeType == TYPE_VIEWPORT:
+			self.updateCommandList(self.commandViewportList)
 						
 	def focusOnMMNode(self, focusobject, keepShowedNodes=0):
-		# update command list
-		self.updateCommandList(self.commandMediaList, TYPE_MEDIA)
-					
 		self.currentSelectedNodeList = [focusobject]
 		
 		# update widgets
 		for id, widget in self.widgetList.items():
 			widget.selectNodeList([focusobject], keepShowedNodes)
+
+		self.updateCommandList(self.commandMediaList)
 
 	def focusOnList(self, focusobject, keepShowedNodes=0):
 		# update command list
@@ -632,24 +635,26 @@ class LayoutView2(LayoutViewDialog2):
 					areSibling = 0
 			previousObject = object
 
-		if areSibling:
-			self.updateCommandList(self.commandMultiSiblingSItemList, None)
-		else:
-			self.updateCommandList(self.commandMultiSItemList, None)
-
 		self.currentSelectedNodeList = list
 		
 		# update widgets
 		for id, widget in self.widgetList.items():
 			widget.selectNodeList(list, keepShowedNodes)
+
+		if areSibling:
+			self.updateCommandList(self.commandMultiSiblingSItemList)
+		else:
+			self.updateCommandList(self.commandMultiSItemList)
 		
 	def focusOnUnknown(self, focusobject, keepShowedNodes=0):
-		# update command list
-		self.updateCommandList(self.commandNoSItemList, None)
+		self.currentSelectedNodeList = []
 		
 		# update widgets
 		for id, widget in self.widgetList.items():
 			widget.selectNodeList([], keepShowedNodes)
+
+		# update command list
+		self.updateCommandList(self.commandNoSItemList)
 							
 		# XXX to implement
 #	def toStopState(self):
@@ -693,17 +698,28 @@ class LayoutView2(LayoutViewDialog2):
 #		self.displayViewport(saveCurrentViewport.getNodeRef())
 #		self.updateFocus()
 
-	def updateCommandList(self, basecommandlist, selectedType):
+	def updateCommandList(self, basecommandlist):
 		commandlist = []+basecommandlist
 
-		# Enable "paste" commands depending on what is in the clipboard.
+		# determinate is paste is valid		
+		activePaste = 0
 		t, n = Clipboard.getclip()
-		if selectedType in (TYPE_VIEWPORT, TYPE_REGION):
-			if t in ('region', 'viewport') and n is not None:
-				commandlist.append(PASTE(callback = (self.onPaste, ())))
-		else:
-			if t == 'viewport' and n is not None:
-				commandlist.append(PASTE(callback = (self.onPaste, ())))
+		if t == 'viewport' and n is not None:
+			activePaste = 1
+		elif len(self.currentSelectedNodeList) == 1: # only simple selection
+			selectedNode = self.currentSelectedNodeList[0]
+			selectedType = self.getNodeType(selectedNode)
+			# Enable "paste" commands depending on what is in the clipboard.
+			if selectedType in (TYPE_VIEWPORT, TYPE_REGION) and \
+				t in ('region', 'viewport') and n is not None:
+				activePaste = 1
+			elif t == 'media' and selectedType == TYPE_REGION and COPY_PASTE_MEDIAS:
+				# check that the media is valid and still in the 'body' part
+				if self.existRef(selectedNode):
+					activePaste = 1
+
+		if activePaste:
+			commandlist.append(PASTE(callback = (self.onPaste, ())))
 			
 		self.setcommandlist(commandlist)
 		
@@ -1536,6 +1552,14 @@ class LayoutView2(LayoutViewDialog2):
 				self.delRegion(selectedNode, 0)
 			elif nodeType == TYPE_VIEWPORT:
 				self.delViewport(selectedNode, 0)
+			elif nodeType == TYPE_MEDIA:
+				if COPY_PASTE_MEDIAS and self.editmgr.transaction():
+					parentRef = self.getParentNodeRef(selectedNode, TYPE_MEDIA)
+					self.setglobalfocus([parentRef])
+					self.updateFocus()
+					self.editmgr.setnodeattr(selectedNode, 'channel', None)
+					self.editmgr.commit()
+				
 				
 	def	onPaste(self):
 		# apply some command which are automaticly applied when a control lost the focus
@@ -1545,22 +1569,39 @@ class LayoutView2(LayoutViewDialog2):
 		if self.currentSelectedNodeList != None:
 			selectedNode = self.currentSelectedNodeList[0]
 			type, node = Clipboard.getclip()
-			if type in ('region', 'viewport'):
-				if self.editmgr.transaction():
-					if type == 'region':
-						cNode = node.CopyIntoContext(self.context, selectedNode)
+			cNode = None
+			if self.editmgr.transaction():
+				if type == 'region':
+					cNode = node.CopyIntoContext(self.context, selectedNode)
+				elif type == 'viewport':
+					cNode = node.CopyIntoContext(self.context, None)
+				elif type == 'media' and COPY_PASTE_MEDIAS:
+					doPaste = 0
+					if self.existRef(node):
+						ret = windowinterface.GetOKCancel("Do you really want to move the media inside the selected region ?", self.toplevel.window)
+						if ret == 0:
+							# ok
+							doPaste = 1
 					else:
-						cNode = node.CopyIntoContext(self.context, None)
-					self.editmgr.commit()
+						doPaste = 1
+					if doPaste and self.getNodeType(selectedNode) == TYPE_REGION:
+						cNode = node
+						self.editmgr.setnodeattr(node, 'channel', selectedNode.name)
+				self.editmgr.commit()
+				if cNode != None:
 					self.setglobalfocus([cNode])
-					self.updateFocus()
+				self.updateFocus()
 
 	def __copyIntoClipboard(self, selectedNode):
-		exportedNode = selectedNode.deepExport()
 		if self.getNodeType(selectedNode) == TYPE_REGION:
+			exportedNode = selectedNode.deepExport()
 			Clipboard.setclip('region', exportedNode)
 		elif self.getNodeType(selectedNode) == TYPE_VIEWPORT:
+			exportedNode = selectedNode.deepExport()
 			Clipboard.setclip('viewport', exportedNode)
+		elif self.getNodeType(selectedNode) == TYPE_MEDIA:
+			# XXX special case, put for now just the node itself
+			Clipboard.setclip('media', selectedNode)
 				
 	def __cleanClipboard(self):
 		# XXX to do something
