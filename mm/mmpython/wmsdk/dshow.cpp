@@ -2291,15 +2291,15 @@ MultiMediaStream_OpenFile(MultiMediaStreamObject *self, PyObject *args)
 	strcpy(buf,psz);
 	ConvToWindowsMediaUrl(buf);
 	WCHAR wsz[MAX_PATH];
-	MultiByteToWideChar(CP_ACP,0,buf,-1,wsz,MAX_PATH);
+	MultiByteToWideChar(CP_ACP, 0, buf, -1, wsz, MAX_PATH);
 	HRESULT hr;
-	Py_BEGIN_ALLOW_THREADS		
-	hr = self->pI->OpenFile(wsz,0);
-	Py_END_ALLOW_THREADS		
+	Py_BEGIN_ALLOW_THREADS	
+	hr = self->pI->OpenFile(wsz, 0);
+	Py_END_ALLOW_THREADS	
 	if (FAILED(hr)) {
 		char sz[MAX_PATH+80]="MultiMediaStream_OpenFile ";
 		strcat(sz,psz);
-		seterror(sz, hr);
+		seterror("MultiMediaStream_OpenFile", hr);
 		return NULL;
 	}
 	Py_INCREF(Py_None);
@@ -2466,7 +2466,9 @@ static void
 MultiMediaStream_dealloc(MultiMediaStreamObject *self)
 {
 	/* XXXX Add your own cleanup code here */
+	Py_BEGIN_ALLOW_THREADS	
 	RELEASE(self->pI);
+	Py_END_ALLOW_THREADS	
 	PyMem_DEL(self);
 }
 
