@@ -159,7 +159,7 @@ def _parselicense(str):
 	uniqid, date, features, user = _decodelicense(str)
 	if user:
 		user = "Licensed to: " + user
-	if date:
+	if date and date[0] < 3000:
 		import time
 		t = time.time()
 		values = time.localtime(t)
@@ -168,6 +168,8 @@ def _parselicense(str):
 		moredays = expiry - today
 		if moredays == 0:
 			moredays = 1	# Don't want to return zero
+	else:
+		moredays = None
 	fnames = []
 	for name, value in FEATURES.items():
 		if (features & value) == value:

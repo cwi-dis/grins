@@ -66,8 +66,11 @@ class WaitLicense(LicenseDialog):
 		EnterkeyDialog(self.ok_callback)
 
 	def ok_callback(self, str, name=None, organization=None):
-		self.accept_license(str, name, organization)
-		self.setdialoginfo()
+		if self.accept_license(str, name, organization):
+			self.close()
+			self.do_callback()
+		else:
+			self.setdialoginfo()
 
 	def do_callback(self):
 		license = self.license
