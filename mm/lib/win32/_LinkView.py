@@ -169,13 +169,16 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		# temp patch
 		#closecmd=usercmd.CLOSE_WINDOW(callback = (self.close_window_callback,()))
 		#self._close_cmd_list.append(closecmd)
-		self.onActivate(1)
+		#self.onActivate(1)
 
-	# Called by the framework when this view is activated
-	def onActivate(self,f):
-		return
-		if f:self._mdiframe.set_commandlist(self._close_cmd_list)
-		else:self._mdiframe.set_commandlist(None)
+
+	# Called when the view is activated 
+	def activate(self):
+		pass
+
+	# Called when the view is deactivated 
+	def deactivate(self):
+		pass
 
 	# Called by the frame work before closing this View
 	def OnClose(self):
