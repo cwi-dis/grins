@@ -1,13 +1,20 @@
 
 static PyObject *Qt_InitializeQTML(PyObject *self, PyObject *args) 
 	{
+	OSErr _err;
 	long flag = kInitializeQTMLUseGDIFlag;
 	if (!PyArg_ParseTuple(args, "|i", &flag))
 		return NULL;
-    InitializeQTML(flag);
+    _err = InitializeQTML(flag);
+	if (_err != noErr)
+		{
+		PyErr_SetString(PyMac_GetOSErrException(), "InitializeQTML failed");
+		return NULL;
+		}
 	Py_INCREF(Py_None);
 	return Py_None;
 	}
+
 static PyObject *Qt_TerminateQTML(PyObject *self, PyObject *args) 
 	{
 	if (!PyArg_ParseTuple(args, ""))
@@ -16,6 +23,7 @@ static PyObject *Qt_TerminateQTML(PyObject *self, PyObject *args)
 	Py_INCREF(Py_None);
 	return Py_None;
 	}
+
 static PyObject *Qt_FSMakeFSSpec(PyObject *self, PyObject *args) 
 	{
 	short theFile = 0;
@@ -32,7 +40,6 @@ static PyObject *Qt_FSMakeFSSpec(PyObject *self, PyObject *args)
 /* temporary until the above is complete*/
 static PyObject *Qt_OpenMovieFileWin(PyObject *_self, PyObject *_args)
 {
-	PyObject *_res = NULL;
 	OSErr _err;
 	FSSpec fileSpec;
 	short resRefNum;
@@ -42,14 +49,18 @@ static PyObject *Qt_OpenMovieFileWin(PyObject *_self, PyObject *_args)
 	                      &psz,
 	                      &permission))
 		return NULL;
-	FSMakeFSSpec (0, 0L, c2pstr(psz), &fileSpec);
+	char sz[256];
+	strcpy(sz, psz);
+	FSMakeFSSpec(0, 0L, c2pstr(sz), &fileSpec);
 	_err = OpenMovieFile(&fileSpec,
 	                     &resRefNum,
 	                     permission);
-	if (_err != noErr) return PyMac_Error(_err);
-	_res = Py_BuildValue("h",
-	                     resRefNum);
-	return _res;
+	if (_err != noErr)
+		{
+		PyErr_SetString(PyMac_GetOSErrException(), "OpenMovieFile failed");
+		return NULL;
+		}
+	return Py_BuildValue("h", resRefNum);
 }
 
 static PyObject* Qt_SetGWorld(PyObject *self, PyObject *args) 
@@ -61,6 +72,7 @@ static PyObject* Qt_SetGWorld(PyObject *self, PyObject *args)
 	Py_INCREF(Py_None);
 	return Py_None;
 	}
+
 static PyObject* Qt_CreatePortAssociation(PyObject *self, PyObject *args) 
 	{
 	HWND hwnd;
@@ -69,6 +81,7 @@ static PyObject* Qt_CreatePortAssociation(PyObject *self, PyObject *args)
 	GrafPtr grafPtr = CreatePortAssociation((void*)hwnd, NULL, kQTMLHandlePortEvents);
 	return Py_BuildValue("i", int(grafPtr));
 	}
+
 static PyObject* Qt_DestroyPortAssociation(PyObject *self, PyObject *args) 
 	{
 	int grafPtr;
@@ -79,6 +92,47 @@ static PyObject* Qt_DestroyPortAssociation(PyObject *self, PyObject *args)
 	return Py_None;
 	}
 
+static PyObject* Qt_GetHWNDPort(PyObject *self, PyObject *args) 
+	{
+	HWND hwnd;
+	if (!PyArg_ParseTuple(args, "i", &hwnd))
+		return NULL;
+	GrafPtr grafPtr = GetHWNDPort((void*)hwnd);
+	return Py_BuildValue("i", int(grafPtr));
+	}
+
+static PyObject* Qt_SetDDObject(PyObject *self, PyObject *args) 
+	{
+	OSErr _err;
+	DirectDrawObject *pNewDDObject;
+	if (!PyArg_ParseTuple(args, "O", &pNewDDObject))
+		return NULL;
+	_err = QTSetDDObject(pNewDDObject->pI);
+	if (_err != noErr)
+		{
+		PyErr_SetString(PyMac_GetOSErrException(), "QTSetDDObject failed");
+		return NULL;
+		}
+	Py_INCREF(Py_None);
+	return Py_None;
+	}
+
+static PyObject* Qt_SetDDPrimarySurface(PyObject *self, PyObject *args) 
+	{
+	OSErr _err;
+	DirectDrawSurfaceObject *pNewDDSObject;
+	unsigned long flags = 0;
+	if (!PyArg_ParseTuple(args, "O|i", &pNewDDSObject, &flags))
+		return NULL;
+	_err = QTSetDDPrimarySurface(pNewDDSObject->pI, flags);
+	if (_err != noErr)
+		{
+		PyErr_SetString(PyMac_GetOSErrException(), "SetDDPrimarySurface failed");
+		return NULL;
+		}
+	Py_INCREF(Py_None);
+	return Py_None;
+	}
 
 #define APPEND_WIN_Qt_methods \
 	{"InitializeQTML", (PyCFunction)Qt_InitializeQTML, 1,\
@@ -94,4 +148,10 @@ static PyObject* Qt_DestroyPortAssociation(PyObject *self, PyObject *args)
 	{"CreatePortAssociation", (PyCFunction)Qt_CreatePortAssociation, 1,\
 	"(HWND hwnd) -> (GrafPtr ptr)"},\
 	{"DestroyPortAssociation", (PyCFunction)Qt_DestroyPortAssociation, 1,\
-	"(GrafPtr ptr) -> ()"},
+	"(GrafPtr ptr) -> ()"},\
+	{"GetHWNDPort", (PyCFunction)Qt_GetHWNDPort, 1,\
+	"(HWND hwnd) -> (GrafPtr ptr)"},\
+	{"SetDDObject", (PyCFunction)Qt_SetDDObject, 1,\
+	"(DirectDrawObject obj) -> ()"},\
+	{"SetDDPrimarySurface", (PyCFunction)Qt_SetDDPrimarySurface, 1,\
+	"(DirectDrawSurfaceObject obj) -> ()"},
