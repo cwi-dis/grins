@@ -286,19 +286,19 @@ done
 case $freeze in
 no)	;;
 *)
-	macexcl='-x mac_window -x macpath -x macurl2path -x MACVideoChannel -x MACVideoDuration -x audio.devmac'
+	macexcl='-x aetools -x mac -x mac_window -x macfs -x MACFS -x MacOS -x macostools -x macpath -x macurl2path -x MACVideoChannel -x MACVideoDuration -x Required_Suite -x audio.devmac -x devmac'
 	ntexcl='-x ntpath -x nturl2path -x dospath -x NTVideoChannel -x NTVideoDuration -x audio.devwin'
+	GLexcl='-x GL_window -x gl -x fm -x GL -x GET'
 	allexcl='-x pdb -x trace'
 	case $ARCH in
 	irix*)	extend="-e $CHAMELEON/python/Extensions/midi/build.$ARCH"
 		extpath=":$CHAMELEON/python/Extensions/midi/build.$ARCH"
-		exclGL='-x GL_window -x gl -x fm -x GL -x GET'
 		exclthread='-x mm -x thread -x MPEGVideoChannel
 			-x MPEGVideoDuration -x MovieChannel -x MpegDuration'
-		exclude="$exclGL $exclthread -x FCNTL
+		exclude="$GLexcl $exclthread -x FCNTL
 			-x PseudoHtmlChannel -x audio.devsun"
 		;;
-	sunos*)	exclude='-x audio.devsgi'
+	sunos*)	exclude="$GLexcl -x glXconst -x glX -x audio.devsgi -x devsgi"
 		extend="-e $CHAMELEON/mm/mmpython/$ARCH"
 		extpath=''
 		;;
