@@ -1296,14 +1296,93 @@ class LayoutView2(LayoutViewDialog2):
 			self.__makeAttrListToApplyFromGeom(nodeRef, geom, list)
 		self.applyAttrList(list)
 
+	def __makeNewGeomAttrValues(self, start, end, size, pxStart, pxSize, pxParentSize):
+		nPxStart = nPxEnd = nPxSize = None
+		if start is None:
+			if end is None:
+				nPxStart = pxStart
+				nPxSize = pxSize
+			else:
+				if size is None:
+					nPxStart = pxStart
+					nPxEnd = pxParentSize-pxStart-pxSize
+				else:
+					nPxEnd = pxParentSize-pxStart-pxSize
+					nPxSize = pxSize
+		elif end is None or size is not None:
+			nPxStart = pxStart
+			nPxSize = pxSize
+		else:
+			nPxStart = pxStart
+			nPxEnd = pxParentSize-pxStart-pxSize
+
+		nStart = self.__fixUnit(start, nPxStart, pxParentSize)
+		nEnd = self.__fixUnit(end, nPxEnd, pxParentSize)
+		nSize = self.__fixUnit(size, nPxSize, pxParentSize)
+
+		return nStart, nEnd, nSize
+
+	def __fixUnit(self, oValue, nPxValue, pxParentSize):
+		PIXELUNIT_DEFAULT = 1
+		if nPxValue is None:
+			return None	
+		if (oValue is None and not PIXELUNIT_DEFAULT) or type(oValue) is type(1.0):
+			if nPxValue > 0:
+				val = float(nPxValue)+0.0001
+			elif nPxValue < 0:
+				val = float(nPxValue)-0.0001
+			else:
+				val = 0.0
+			return val/pxParentSize
+		return nPxValue
+	
 	def __makeAttrListToApplyFromGeom(self, nodeRef, geom, list):
 		nodeType = self.getNodeType(nodeRef)
 		if nodeType == TYPE_VIEWPORT:
 			x,y,w,h = geom
 			list.append((nodeRef, 'width', w))
 			list.append((nodeRef, 'height', h))
-		elif nodeType in (TYPE_REGION, TYPE_MEDIA, TYPE_ANIMATE):
+		elif nodeType in (TYPE_REGION, TYPE_MEDIA):
 			x,y,w,h = geom
+			animateNode = self.getAnimateNode(nodeRef)
+			editWrapper = None
+			if animateNode is not None:
+				editWrapper = animateNode._animateEditWrapper
+				
+			if editWrapper and editWrapper.isAnimatedAttribute('left'):
+				oLeft = x
+			else:
+				oLeft = nodeRef.GetAttrDef('left', None)
+			if editWrapper and editWrapper.isAnimatedAttribute('top'):
+				oTop = y
+			else:
+				oTop = nodeRef.GetAttrDef('top', None)
+			if editWrapper and editWrapper.isAnimatedAttribute('width'):
+				oWidth = w
+			else:
+				oWidth = nodeRef.GetAttrDef('width', None)
+			if editWrapper and editWrapper.isAnimatedAttribute('height'):
+				oHeight = h
+			else:
+				oHeight = nodeRef.GetAttrDef('height', None)
+					
+			oRight = nodeRef.GetAttrDef('right', None)
+			oBottom = nodeRef.GetAttrDef('bottom', None)
+			parentNodeRef = self.getParentNodeRef(nodeRef)
+			pgeom = self.getPxGeom(parentNodeRef)
+			if self.getNodeType(parentNodeRef) == TYPE_VIEWPORT:
+				pw, ph = pgeom
+			else:
+				px, py, pw, ph = pgeom
+			nLeft, nRight, nWidth = self.__makeNewGeomAttrValues(oLeft, oRight, oWidth, x, w, pw)
+			nTop, nBottom, nHeight = self.__makeNewGeomAttrValues(oTop, oBottom, oHeight, y, h, ph)
+			list.append((nodeRef, 'left', nLeft))
+			list.append((nodeRef, 'top', nTop))
+			list.append((nodeRef, 'width', nWidth))
+			list.append((nodeRef, 'height', nHeight))
+			list.append((nodeRef, 'right', nRight))
+			list.append((nodeRef, 'bottom', nBottom))
+		elif nodeType == TYPE_ANIMATE:
 			list.append((nodeRef, 'left', x))
 			list.append((nodeRef, 'top', y))
 			list.append((nodeRef, 'width', w))
