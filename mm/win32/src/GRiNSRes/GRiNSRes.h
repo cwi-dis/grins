@@ -236,6 +236,7 @@
 #define IDC_27                          1172
 #define IDC_24                          1173
 #define IDC_25                          1174
+#define IDC_44                          1174
 #define IDC_16                          1176
 #define IDC_14                          1177
 #define IDC_15                          1178

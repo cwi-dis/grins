@@ -1429,6 +1429,7 @@ class AttrGroup:
 
 	special_attrcl={
 		'system_captions':OptionsRadioCtrl,
+		'system_overdub_or_caption':OptionsRadioCtrl,
 		'layout':OptionsRadioCtrl,
 		'visible':OptionsRadioCtrl,
 		'drawbox':OptionsRadioCtrl,
@@ -1585,7 +1586,7 @@ class SystemGroup(AttrGroup):
 		return grinsRC.IDD_EDITATTR_S1R3S5
 
 	def getctrlids(self,ix):
-		if ix == 2:
+		if ix == 2 or ix == 4:
 			ids = getattr(grinsRC, 'IDC_%d' % (ix*10+1)),\
 				getattr(grinsRC, 'IDC_%d' % (ix*10+2)),\
 				getattr(grinsRC, 'IDC_%d' % (ix*10+3)),\
