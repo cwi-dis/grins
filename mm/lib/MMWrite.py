@@ -103,7 +103,7 @@ def writeint(value, dummy, fp):
 	fp.write(`int(value)`)
 #
 def writefloat(value, dummy, fp):
-	fp.write(`float(value)`)
+	fp.write('%g' % value)
 #
 def writestring(value, dummy, fp):
 	fp.write(`value`)
