@@ -6,11 +6,21 @@
 gl_rawlock = None
 gl_lock = None
 
+class _DummyLock:
+	def acquire(self):
+		pass
+	def release(self):
+		pass
+
 def init():
 	global gl_lock, gl_rawlock
 	if gl_rawlock is None:
-		import thread
-		gl_rawlock = thread.allocate_lock()
+		try:
+			import thread
+		except ImportError:
+			gl_rawlock = _DummyLock()
+		else:
+			gl_rawlock = thread.allocate_lock()
 		gl_lock = LockWrapper(gl_rawlock)
 
 class LockWrapper:
