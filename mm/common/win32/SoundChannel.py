@@ -85,7 +85,7 @@ class SoundChannel(Channel):
 		self._fiber_id=0
 		self.__playdone=1
 
-		# until we clarify why destroy is not called
+		# release any resources on exit
 		import windowinterface
 		windowinterface.addclosecallback(self.release_res,())
 
@@ -152,6 +152,8 @@ class SoundChannel(Channel):
 			return
 
 		self.play_loop = self.getloop(node)
+
+		# documentation correction
 		# get duration in secs (float)
 		duration = MMAttrdefs.getattr(node, 'duration')
 		if duration > 0:
@@ -172,9 +174,9 @@ class SoundChannel(Channel):
 		self.register_for_timeslices()
 		self.__playdone=0
 
-		if self.play_loop == 0 and duration == 0:
-			self.__playdone=1
-			self.playdone(0)
+#		if self.play_loop == 0 and duration == 0:
+#			self.__playdone=1
+#			self.playdone(0)
 
 	# scheduler callback, at end of duration
 	def _stopplay(self):
