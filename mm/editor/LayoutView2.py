@@ -4368,12 +4368,25 @@ class MediaRegion(Region):
 		self._graphicCtrl.showName(0)		
 		self._graphicCtrl.setListener(self)
 		
-		# copy from old hierarchical view to determinate the image to showed
 		node = self._nodeRef
-		chtype = node.GetChannelType()
+		
+		# XXX copy from StructureWidgets to determinate the image to showed
+		# XXX should be merged at some point
+		mime = node.GetComputedMimeType()
+		if mime == 'image/vnd.rn-realpix':
+			chtype = 'RealPix'
+		elif mime == 'text/vnd.rn-realtext':
+			chtype = 'RealText'
+		elif mime == 'video/vnd.rn-realvideo':
+			chtype = 'RealVideo'
+		elif mime in ('audio/vnd.rn-realaudio', 'audio/x-pn-realaudio', 'audio/x-realaudio'):
+			chtype = 'RealAudio'
+		else:
+			chtype = node.GetChannelType()
 
 		if chtype == 'brush':
 			# special case for brush elements: no image to show and no scaling.
+			self.drawPath()
 			return
 		
 		canBeScaled = 1
