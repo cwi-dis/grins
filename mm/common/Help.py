@@ -16,6 +16,7 @@ import os
 import string
 import sys
 import MMurl
+import version
 
 def hashelp():
 	import windowinterface
@@ -23,16 +24,9 @@ def hashelp():
 
 helpbase = None				# directory where the help files live
 helpwindow = None
-helpprogram = "player"
-
-if os.name == 'posix':
-	platform = 'unix'
-else:
-	platform = sys.platform
 
 def sethelpprogram(program):
-	global helpprogram
-	helpprogram = program
+	pass
 	
 def sethelpdir(dirname):
 	global helpbase
@@ -42,16 +36,12 @@ def fixhelpdir():
 	global helpbase
 	if helpbase is None:
 		import cmif
-		helpdir = os.path.join(cmif.findfile('Help'), platform)
-		helpdir = os.path.join(helpdir, helpprogram)
+		helpdir = cmif.findfile('Help')
 		if os.path.exists(helpdir):
 			basefile = os.path.join(helpdir, 'index.html')
 			helpbase = MMurl.pathname2url(basefile)
 		else:
-			import settings
-			helpdir = settings.get('helpdir_url')
-			helpbase = '%s/%s/%s/index.html'%(helpdir, helpprogram, platform)
-		
+			helpbase = 'http://www.oratrix.com/indir/%s/help/index.html'%version.shortversion
 
 def givehelp(topic):
 	global helpwindow
