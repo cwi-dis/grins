@@ -154,6 +154,12 @@ def get(name):
 		if real_value is None:
 			print 'Warning: unknown system attribute', name
 			return 0
+		# return copy of mutable values if from default_settings
+		rtype = type(real_value)
+		if rtype is type([]):
+			real_value = real_value[:]
+		elif rtype is type({}):
+			real_value = real_value.copy()
 	return real_value
 
 def match(name, wanted_value):
