@@ -32,7 +32,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 //
 
 IDB_SPLASHPLAY          BITMAP  DISCARDABLE     "RES\\player8bit.bmp"
-IDB_SPLASH              BITMAP  DISCARDABLE     "res\\splashimg.bmp"
+IDB_SPLASHLITE          BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\g2-15\\lite\\splash8bit.bmp"
+IDB_SPLASHPRO           BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\g2-15\\lite\\splashpr.bmp"
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
