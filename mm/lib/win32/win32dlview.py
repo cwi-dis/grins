@@ -682,6 +682,7 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 	# Called by the core to set canvas size
 	def setcanvassize(self, how):
 		x,y,w,h=self._canvas
+		problem_before = (w > 0x7fff) or (h > 0x7fff)
 		if type(how) is type(()):
 			import sysmetrics, settings
 			no_canvas_resize = settings.get('no_canvas_resize')
@@ -704,6 +705,9 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 			if hasattr(self,'_doc_rect'):
 				w,h=self._doc_rect[2:4]
 
+		if (w > 0x7fff) or (h > 0x7fff) and not problem_before:
+			win32dialog.showmessage(
+				"Warning: the window has grown too big (%dx%d).\nThis may cause problems."%(w, h), mtype="warning")
 		self._canvas = (x,y,w,h)
 
 		self._scroll(how)
