@@ -114,25 +114,6 @@ class _DisplayList:
 
 
 #====================================== Rendering
-	# Called by any client that wants to activate the display list
-	def renderXXX(self):
-		import time
-		self.starttime = time.time()
-		wnd = self._window
-		if not wnd or not hasattr(wnd,'_obj_') or not hasattr(wnd,'RedrawWindow'):
-			return
-		for b in self._buttons:
-			b._highlighted = 0 
-		wnd._active_displist = self
-
-		# we set to not transparent in order to 
-		# accomodate win32 bug
-		# and preserve z-order
-		if wnd._transparent in (1,-1):
-			wnd.setWndNotTransparent()
-		wnd.pop()
-		wnd.update()
-
 	def render(self):
 		import time
 		self.starttime = time.time()
@@ -140,8 +121,7 @@ class _DisplayList:
 		for b in self._buttons:
 			b._highlighted = 0 
 		wnd._active_displist = self
-		x, y, w, h = wnd.getwindowpos()
-		wnd._topwindow.InvalidateRect((x,y,x+w,y+h))
+		wnd.Invalidate()
 
 	# Render the display list on dc within the region	
 	def _render(self, dc, region):
@@ -170,47 +150,12 @@ class _DisplayList:
 				d._cloneof = None
 		if wnd._active_displist is self:
 			wnd._active_displist = None
-			x, y, w, h = wnd.getwindowpos()
-			wnd._topwindow.InvalidateRect((x,y,x+w,y+h))
+			wnd.Invalidate()
 		del self._optimdict
 		del self._list
 		del self._buttons
 		del self._font
-		
-	# Close this display list and destroy its resources
-	def closeXXX(self):
-		#print 'closing dl',self
-		if self._window is None:
-			return
-		win = self._window
-		for b in self._buttons[:]:
-			b.close()
-		if self in win._displists:
-			win._displists.remove(self)
-		for d in win._displists:
-			if d._cloneof is self:
-				d._cloneof = None
-		if win._active_displist is self:
-			win._active_displist = None
-	#		if win._transparent in (1,-1):
-	#			win.setWndTransparent()
-			# win.update()
-			win.push()
-		self._window = None
-		if self._win32rgn:
-			self._win32rgn.DeleteObject()
-			del self._win32rgn
-			self._win32rgn=None
-		del self._cloneof
-		try:
-			del self._clonedata
-		except AttributeError:
-			pass
-		del self._optimdict
-		del self._list
-		del self._buttons
-		del self._font
-		
+				
 	# Render the entry draw command
 	def _do_render(self, entry, dc, region):
 		cmd = entry[0]
