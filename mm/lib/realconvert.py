@@ -263,6 +263,21 @@ def convertvideofile(u, dstdir, file, node):
 		return
 	rconv.SetInterface(uk,'IRMAInputPin')
 
+	# find default audio renderer filter
+	try:
+		aurenderer=b.FindFilterByName('Default DirectSound Device')
+	except:
+		aurenderer=None
+	if not aurenderer:
+		try:
+			aurenderer=b.FindFilterByName('Default WaveOut Device')
+		except:
+			aurenderer=None
+	# remove audio renderer filter for now
+	# should be replaced by our audio real converter filter
+	if aurenderer:
+		b.RemoveFilter(aurenderer)
+
 	# PinProperties,MediaSample,PrepareToEncode,Encode, DoneEncoding
 	# are all managed by our dshow filter
 
@@ -272,3 +287,4 @@ def convertvideofile(u, dstdir, file, node):
 	b.WaitForCompletion()
 	mc.Stop()
 
+	return file
