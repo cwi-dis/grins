@@ -204,18 +204,24 @@ class MACDialog:
 		"""
 		self._window.setcursor(cursor)
 		
-			
+_dont_show_again_identities = {}
+
 class _ModelessDialog(MACDialog):
-	def __init__(self, title, dialogid, text, okcallback, cancelcallback=None):
+	def __init__(self, title, dialogid, text, okcallback, cancelcallback=None, identity=None):
 		MACDialog.__init__(self, title, dialogid, [], ITEM_QUESTION_OK, ITEM_QUESTION_CANCEL)
 		self.okcallback = okcallback
 		self.cancelcallback = cancelcallback
 		self._setlabel(ITEM_QUESTION_TEXT, text)
+		self.identity = identity
+		if not identity:
+			self._hideitemcontrols([ITEM_QUESTION_NOTAGAIN])
 		self.show()
 		
 	def do_itemhit(self, item, event):
 		if item == ITEM_QUESTION_OK:
 ##			self.close()
+			if self.identity and self._getbutton(ITEM_QUESTION_NOTAGAIN):
+				_dont_show_again_identities[self.identity] = 1
 			if self.okcallback:
 				func, arglist = self.okcallback
 				apply(func, arglist)
@@ -224,16 +230,20 @@ class _ModelessDialog(MACDialog):
 			if self.cancelcallback:
 				func, arglist = self.cancelcallback
 				apply(func, arglist)
+		elif item == ITEM_QUESTION_NOTAGAIN:
+			self._togglebutton(item)
 		else:
 			print 'Unknown modeless dialog event', item, event
 		return 1
 			
-def _ModalDialog(title, dialogid, text, okcallback, cancelcallback=None):
+def _ModalDialog(title, dialogid, text, okcallback, cancelcallback=None, identity=None):
 	d = Dlg.GetNewDialog(dialogid, -1)
 	d.SetDialogDefaultItem(ITEM_QUESTION_OK)
 	if cancelcallback:
 		d.SetDialogCancelItem(ITEM_QUESTION_CANCEL)
 	h = d.GetDialogItemAsControl(ITEM_QUESTION_TEXT)
+	if not identity:
+		d.HideDialogItem(ITEM_QUESTION_NOTAGAIN)
 	text = _string2dialog(text)
 	Dlg.SetDialogItemText(h, text)
 	d.AutoSizeDialog()
@@ -242,6 +252,10 @@ def _ModalDialog(title, dialogid, text, okcallback, cancelcallback=None):
 	while 1:
 		n = Dlg.ModalDialog(None)
 		if n == ITEM_QUESTION_OK:
+			if identity:
+				ctl = d.GetDialogItemAsControl(ITEM_QUESTION_NOTAGAIN)
+				if ctl.GetControlValue():
+					_dont_show_again_identities[identity] = 1
 			del d
 			del w
 			if okcallback:
@@ -255,12 +269,20 @@ def _ModalDialog(title, dialogid, text, okcallback, cancelcallback=None):
 				func, arglist = cancelcallback
 				apply(func, arglist)
 			return
+		elif n == ITEM_QUESTION_NOTAGAIN:
+				ctl = d.GetDialogItemAsControl(ITEM_QUESTION_NOTAGAIN)
+				ctl.SetControlValue(not ctl.GetControlValue())
 		else:
 			print 'Unknown modal dialog item', n
 			
 def showmessage(text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'message',
-		     title = 'message', parent = None):
+		     title = 'message', parent = None, identity=None):
+	if identity and _dont_show_again_identities.has_key(identity):
+		if callback:
+			func, arg = callback
+			apply(func, arg)
+		return
 	if '\n' in text:
 		text = string.join(string.split(text, '\n'), '\r')
 	if mtype == 'question' or cancelCallback:
@@ -268,9 +290,9 @@ def showmessage(text, mtype = 'message', grab = 1, callback = None,
 	else:
 		dlgid = ID_MESSAGE_DIALOG
 	if grab:
-		_ModalDialog(title, dlgid, text, callback, cancelCallback)
+		_ModalDialog(title, dlgid, text, callback, cancelCallback, identity)
 	else:
-		return _ModelessDialog(title, dlgid, text, callback, cancelCallback)
+		return _ModelessDialog(title, dlgid, text, callback, cancelCallback, identity)
 
 # XXXX Do we need a control-window too?
 
