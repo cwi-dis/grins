@@ -1221,8 +1221,12 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	# Create the child frame that will host this view
 	def frameview(self, view, strid):
 		if not appview.has_key(strid): return
-		f = ChildFrame(view, not view.isResizeable())
-		f.Create(appview[strid]['title'],None,self,0)
+		if strid == 'lview2_':
+			f = SplitterBrowserChildFrame(view, not view.isResizeable())
+			f.Create(appview[strid]['title'],None,self,0)
+		else:
+			f = ChildFrame(view, not view.isResizeable())
+			f.Create(appview[strid]['title'],None,self,0)
 		self.MDIActivate(f)
 	
 	# Adds to the view interface some common attributes
@@ -1333,10 +1337,50 @@ class ChildFrame(window.MDIChildWnd):
 		cmdui.Enable(0)
 
 
-	# Called by the framework before destroying the window
-	# Used to keep instance counting for player
-	def OnDestroyXXX(self, msg):
-		if self._view._strid=='pview_':
-			self.GetMDIFrame()._player=None
+#########################
+from GenView import GenView
 
- 
+class BrowserPane(GenView, docview.TreeView):
+	def __init__(self, doc, bgcolor=None):
+		# base init
+		GenView.__init__(self, bgcolor)
+		docview.TreeView.__init__(self, doc)
+
+	def OnCreate(self, params):
+		l,t,r,b = self.GetClientRect()
+		self._rect= self._canvas = (0,0,r-l,b-t)
+
+	def OnClose(self):
+		self.GetParent().GetParent().DestroyWindow()
+
+class SplitterBrowserChildFrame(ChildFrame):
+	def __init__(self, view, freezesize=0):
+		ChildFrame.__init__(self, view, freezesize)
+		self._splitter = win32ui.CreateSplitter()
+	
+	def OnCreateClient(self, cp, context):
+		self._splitter.CreateStatic(self, 1, 2)
+		doc = docview.Document(docview.DocTemplate())
+
+		v1 = BrowserPane(doc)
+		v1._parent = self
+		v1._strid = 'test1'
+
+		v2 = self._view
+		v2._parent = self
+
+		self._splitter.CreateView(v1, 0, 0, (150, 400))
+		self._splitter.CreateView(v2, 0, 1, (300, 400))
+		
+		v1.OnInitialUpdate()
+		v2.OnInitialUpdate()
+
+	def OnClose(self):
+		# we must let the view to decide:
+		if hasattr(self._view,'OnClose'):
+			self._view.OnClose()
+		else:
+			self.DestroyWindow()
+
+
+
