@@ -77,6 +77,7 @@ MODULES = {
 	'IntegrationSet': 0,
 }
 
+# All modules that are part of the Multimedia Messaging Service (MMS).
 SMIL_MMS_MODULES = [
 	'BasicInlineTiming',
 	'BasicLayout',
@@ -122,13 +123,16 @@ SMIL_PSS4_MODULES = SMIL_BASIC_MODULES + [
 	]
 
 # All modules that are part of the 3GPP PSS5 SMIL 2.0 Language Profile.
-# This contains everything from the 3GPP PSS5 Profile, and then some.
+# This contains everything from the 3GPP PSS4 Profile, and then some.
 SMIL_PSS5_MODULES = SMIL_PSS4_MODULES + [
 	'BasicTransitions',
+
+	# SMIL 2.0 Pseudo Modules
+	'NestedTimeContainers',
 	]
 
 # All modules that are part of the SMIL 2.0 Language Profile.
-# This contains everything from the 3GPP PSS4 Profile, and then some
+# This contains everything from the 3GPP PSS5 Profile, and then some
 SMIL_20_MODULES = SMIL_PSS5_MODULES + [
 	'AccessKeyTiming',
 	'AudioLayout',
@@ -158,11 +162,6 @@ SMIL_20_MODULES = SMIL_PSS5_MODULES + [
 	'TimeManipulations',
 	'TransitionModifiers',
 	'WallclockTiming',
-
-	# SMIL 2.0 Pseudo Modules
-	'NestedTimeContainers',
-
-	# SMIL 2.0 Module Collections
 ]
 
 extensions = {}				# filled in by switch_profile()
