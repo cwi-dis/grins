@@ -2,6 +2,7 @@ __version__ = "$Id$"
 
 import windowinterface, WMEVENTS
 from usercmd import *
+import EasyDialogs
 
 class TopLevelDialog:
 	def __init__(self):
@@ -33,4 +34,8 @@ class TopLevelDialog:
 		b1 = 'Save'
 		b2 = "Don't save"
 		b3 = 'Cancel'
-		return windowinterface.multchoice(prompt, [b1, b2, b3], -1)
+		##return windowinterface.multchoice(prompt, [b1, b2, b3], -1)
+		rv = EasyDialogs.AskYesNoCancel(prompt)
+		if rv < 0: return 2
+		if rv > 0: return 1
+		return 0
