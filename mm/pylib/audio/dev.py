@@ -16,7 +16,7 @@ elif sys.platform[:5] == 'linux':
 	from audio.devlinux import AudioDevLINUX
 	writer = AudioDevLINUX
 	del AudioDevLINUX
-elif sys.platform == 'mac':
+elif sys.platform in ('mac', 'darwin'):
 	from audio.devmac import AudioDevMAC
 	writer = AudioDevMAC
 	del AudioDevMAC

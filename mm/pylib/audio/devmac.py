@@ -65,23 +65,24 @@ class AudioDevMAC:
 		while self.__gc and \
 			  self.getfilled() + nframes > self.__qsize:
 			time.sleep(0.1)
-		h1 = struct.pack('llHhllBbl',
+		h1 = struct.pack('llHhllBb',
 			id(data)+MacOS.string_id_to_buffer,	# ARGH!!!  HACK, HACK!
 			self.__nchannels,
 			self.__outrate, 0,
 			0,
 			0,
 			extSH,
-			60,
+			60)
+		h2 = struct.pack('l', 
 			nframes)
-		h2 = 22*'\0'
-		h3 = struct.pack('hhlll',
+		h3 = 22*'\0'
+		h4 = struct.pack('hhlll',
 			self.__sampwidth*8,
 			0,
 			0,
 			0,
 			0)
-		header = h1+h2+h3
+		header = h1+h2+h3+h4
 		self.__gc.append((header, data))
 		self.__chan.SndDoCommand((bufferCmd, 0, header), 0)
 		self.__chan.SndDoCommand((callBackCmd, 0, 0), 0)
