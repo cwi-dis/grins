@@ -281,10 +281,6 @@ def openport(f, nchannels, nsampframes, sampwidth, samprate, format):
 	config.setqueuesize(queuesize)
 	# Create a port object
 	port = al.openport('SoundChannel', 'w', config)
-	# XXXX Comment by Guido, unintellegible by Jack (and not true in the
-	# XXXX source code):
-	# The file is positioned at the start of the sample,
-	# but the first 'offset' bytes must be skipped.
 	return port, config
 
 
