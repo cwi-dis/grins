@@ -1443,7 +1443,7 @@ class _CommonWindow:
 		self._transition = mw_transitions.TransitionEngine(self, isouttransition, runit, dict, cb)
 		self._transition_setup_after()
 		
-	def jointransition(self, window):
+	def jointransition(self, window, cb):
 		# Join the transition already created on "window".
 		if not window._transition:
 			print 'Joining without a transition', self, window, window._transition
@@ -1453,7 +1453,7 @@ class _CommonWindow:
 			return
 		ismaster = self._windowlevel() < window._windowlevel()
 		self._transition = window._transition
-		self._transition.join(self, ismaster)
+		self._transition.join(self, ismaster, cb)
 		self._transition_setup_after()
 
 	def endtransition(self):
