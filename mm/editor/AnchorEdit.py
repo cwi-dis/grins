@@ -207,13 +207,14 @@ class AnchorEditor:
 	# Fill form from local data.  Clear the form beforehand.
 	#
 	def updateform(self):
-		self.anchor_browser.delalllistitems()
+		names = []
 		for i in self.anchorlist:
 			id = i[A_ID]
 			if type(id) <> type(''): id = `id`
 			#name = '#' + self.name + '.' + id
-			name = id
-			self.anchor_browser.addlistitem(name, -1)
+			names.append(id)
+		self.anchor_browser.delalllistitems()
+		self.anchor_browser.addlistitems(names, -1)
 		self.show_focus()
 
 	def show_focus(self):

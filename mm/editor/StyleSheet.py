@@ -92,8 +92,7 @@ class StyleSheet(ViewDialog):
 
 		stylenames = self.context.styledict.keys()
 		stylenames.sort()
-		for name in stylenames:
-			self.browser.addlistitem(name, -1)
+		self.browser.addlistitems(stylenames, -1)
 
 		i = 0
 		while i < len(stylenames):
