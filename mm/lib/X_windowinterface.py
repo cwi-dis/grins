@@ -3591,6 +3591,10 @@ class ButtonRow(_Widget):
 			self._cb = options['callback']
 		except KeyError:
 			self._cb = None
+		try:
+			buttontype = options['buttontype']
+		except KeyError:
+			buttontype = 'pushbutton'
 		self._attachments(attrs, options)
 		rowcolumn = parent._form.CreateManagedWidget('windowRowcolumn',
 							Xm.RowColumn, attrs)
@@ -3604,8 +3608,11 @@ class ButtonRow(_Widget):
 						'buttonSeparator',
 						Xm.SeparatorGadget, {})
 				continue
+			btype = buttontype
 			if type(entry) is TupleType:
-				label, callback = entry
+				label, callback = entry[:2]
+				if len(entry) > 2:
+					btype = entry[2]
 			else:
 				label, callback = entry, None
 			if type(callback) is ListType:
@@ -3621,11 +3628,25 @@ class ButtonRow(_Widget):
 				continue
 			if callback and type(callback) is not TupleType:
 				callback = (callback, (label,))
+			if btype[0] in ('b', 'p'): # push button
+				gadget = Xm.PushButtonGadget
+				battrs = {}
+				callbackname = 'activateCallback'
+			elif btype[0] == 't': # toggle button
+				gadget = Xm.ToggleButtonGadget
+				battrs = {'indicatorType': Xmd.N_OF_MANY}
+				callbackname = 'valueChangedCallback'
+			elif btype[0] == 'r': # radio button
+				gadget = Xm.ToggleButtonGadget
+				battrs = {'indicatorType': Xmd.ONE_OF_MANY}
+				callbackname = 'valueChangedCallback'
+			else:
+				raise error, 'bad button type'
+			battrs['labelString'] = label
 			button = rowcolumn.CreateManagedWidget('windowButton',
-					Xm.PushButtonGadget,
-					{'labelString': label})
+					gadget, battrs)
 			if callback or self._cb:
-				button.AddCallback('activateCallback',
+				button.AddCallback(callbackname,
 						   self._callback, callback)
 			self._buttons.append(button)
 		_Widget.__init__(self, rowcolumn)
@@ -3653,6 +3674,17 @@ class ButtonRow(_Widget):
 		if not 0 <= button < len(self._buttons):
 			raise error, 'button number out of range'
 		self._buttons[button].ManageChild()
+
+	def getbutton(self, button):
+		if not 0 <= button < len(self._buttons):
+			raise error, 'button number out of range'
+		return self._buttons[button].set
+
+	def setbutton(self, button, onoff = 1):
+		if not 0 <= button < len(self._buttons):
+			raise error, 'button number out of range'
+		button = self._buttons[button]
+		button.set = onoff
 
 	def _callback(self, widget, callback, call_data):
 		if self.is_closed():
@@ -4016,5 +4048,6 @@ def Dialog(title, prompt, grab, vertical, list):
 	if grab:
 		options['callback'] = (lambda w: w.close(), (w,))
 	b = w.ButtonRow(list, options)
+	w.buttons = b
 	w.show()
 	return w
