@@ -134,6 +134,7 @@ class PlayerCore(Selecter, PlayerCommon):
 		if self.mustCheckRenderer:
 			self.checkRendererChannels()
 			self.mustCheckRenderer = 0
+			self.setlayout(self.curlayout, self.curchannel)
 		Selecter.play(self)
 		
 	#
