@@ -109,6 +109,11 @@ smil_node_attrs = [
 class SMILParser(SMIL, xmllib.XMLParser):
 	__warnmeta = 0		# whether to warn for unknown meta properties
 
+	__alignvals = {'topLeft':0, 'topMid':0, 'topRight':0,
+		       'midLeft':0, 'center':0, 'midRight':0,
+		       'bottomLeft':0, 'bottomMid':0, 'bottomRight':0,
+		       }
+
 	def __init__(self, context, printfunc = None, new_file = 0, check_compatibility = 0):
 		self.elements = {
 			'smil': (self.start_smil, self.end_smil),
@@ -669,6 +674,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				try:
 					attrdict[attr] = parseattrval(attr, val, self.__context)
 				except:
+					self.syntax_error("couldn't parse `%s' value" % attr)
 					pass
 ##		# We added fill="freeze" for G2 player.  Now remove it.
 ##		if attrdict.has_key('fill') and \
@@ -885,8 +891,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.syntax_error('the registration point '+attributes['regPoint']+" doesn't exist")
 				del attributes['regPoint']				
 		if attributes.has_key('regAlign'):
-			ival = self.__parseRegAlignValue(attributes['regAlign'])
-			if ival == None:
+			if not self.__alignvals.has_key(attributes['regAlign']):
 				self.syntax_error('invalid regAlign attribute value')
 				del attributes['regAlign']
 
@@ -1666,7 +1671,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if attr not in ('minwidth', 'minheight', 'units',
 					'skip-content') and \
 			   not self.attributes['region'].has_key(attr):
-				ch[attr] = parseattrval(attr, val, self.__context)
+				try:
+					ch[attr] = parseattrval(attr, val, self.__context)
+				except:
+					self.syntax_error("couldn't parse `%s' value" % attr)
+					pass
 
 	# old 03-07-2000
 	# def MakeChannels(self):
@@ -2479,20 +2488,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
  					except (string.atoi_error, string.atof_error):
 						self.syntax_error('invalid region attribute value')
 			elif attr == 'regAlign':
-				# this function doesn't test the enum value !
-				#value = parseattrval(attr, val, self.__context)
-				ival = self.__parseRegAlignValue(val)
-				if ival != None:
-					attrdict[attr] = ival
+				if self.__alignvals.has_key(val):
+					attrdict[attr] = val
 				else:
 					self.syntax_error('invalid regAlign attribute value')						
-				
-	def __parseRegAlignValue(self, val):
-		if val == 'topLeft' or val == 'topMid' or val == 'topRight' or \
-			val == 'midLeft' or val == 'center' or val == 'midRight' or \
-			val == 'bottomLeft' or val == 'bottomMid' or val == 'bottomRight':
-			return val
-		return None		
+
 		
 	def end_regpoint(self):
 		pass
@@ -2541,7 +2541,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				# XXXX Need support for blend
 				value = self.__convert_color(value)
 			else:
-				value = parseattrval(name, value, self.__context)
+				try:
+					value = parseattrval(name, value, self.__context)
+				except:
+					self.syntax_error("error parsing value of `%s' attribute" % name)
+					continue
 			dict[name] = value
 		self.__transitions[id] = dict
 
