@@ -8,7 +8,6 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#define USE_DL_EXPORT
 #include "Python.h"
 
 PyObject *ErrorObject;
