@@ -733,7 +733,6 @@ class MMSyncArc:
 				elif srcnode == 'prev':
 					assert marker is None
 					assert srcanchor is None
-				assert event is not None or marker is not None
 			else:
 				# wallclock is None and channel is None
 				# and srcnode is None:
