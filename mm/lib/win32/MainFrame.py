@@ -960,6 +960,13 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 				break
 		return cmd
 
+#  	def set_grins_snap_features(self):
+# 		# Assert features.version == 'grins snap!'
+# 		id_openrecent = usercmdui.class2ui[usercmd.OPEN_RECENT].id
+# 		self.HookCommandUpdate(self.OnUpdateCmdDissable, id_openrecent);
+
+# 		print "DEBUG: I think it worked..";
+
 	# END CMD LIST SECTION
 	###############################################
 

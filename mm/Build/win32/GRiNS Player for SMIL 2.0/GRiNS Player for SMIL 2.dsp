@@ -125,15 +125,15 @@ SOURCE=.\M___main__.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M__CmifView.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M__FSPlayerView.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\M__LayoutView.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M__LayoutView2.c
 # End Source File
 # Begin Source File
 
@@ -150,6 +150,10 @@ SOURCE=.\M__PreferencesDialog.c
 # Begin Source File
 
 SOURCE=.\M__SourceView.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M__StructView.c
 # End Source File
 # Begin Source File
 
@@ -290,10 +294,6 @@ SOURCE=.\M_cmd.c
 # Begin Source File
 
 SOURCE=.\M_cmif.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_cmifwnd.c
 # End Source File
 # Begin Source File
 
@@ -994,6 +994,10 @@ SOURCE=.\M_win32dialog.c
 # Begin Source File
 
 SOURCE=.\M_win32displaylist.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_win32dlview.c
 # End Source File
 # Begin Source File
 
