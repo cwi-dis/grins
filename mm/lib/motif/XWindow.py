@@ -470,6 +470,9 @@ class _Window(_AdornmentSupport):
 			raise error, 'no scrollable window'
 		# this triggers a resizeCallback
 		auto = self._scrwin.scrollBarDisplayPolicy == Xmd.AS_NEEDED
+		val = self._scrwin.GetValues(['width', 'height'])
+		swidth = val['width'] - 4 # whence 4?
+		sheight = val['height'] - 4
 		clipwin = self._scrwin.clipWindow
 		val = clipwin.GetValues(['width', 'height'])
 		cwidth = val['width']
@@ -477,6 +480,14 @@ class _Window(_AdornmentSupport):
 		val = self._form.GetValues(['width', 'height'])
 		fwidth = val['width']
 		fheight = val['height']
+		vs = self._scrwin.verticalScrollBar
+		hs = self._scrwin.horizontalScrollBar
+		hmargin = 2 * vs.shadowThickness + vs.width
+		vmargin = 2 * hs.shadowThickness + hs.height
+		if not auto:
+			swidth = swidth - hmargin
+			sheight = sheight - vmargin
+			hmargin = vmargin = 0
 		forceevent = 0
 		if type(code) is type(()):
 			units, width, height = code
@@ -489,41 +500,24 @@ class _Window(_AdornmentSupport):
 			elif units == UNIT_PXL:
 				width = int(width)
 				height = int(height)
-			if width < cwidth:
-				width = cwidth
-			if height < cheight:
-				height = cheight
+			if width < swidth - hmargin:
+				width = swidth - hmargin
+			if height < sheight - vmargin:
+				height = sheight - vmargin
 			attrs = {'width': width, 'height': height}
 			if width == fwidth and height == fheight:
 				forceevent = 1
 		elif code == RESET_CANVAS:
-			if auto and cwidth < fwidth:
-				# there is a vertical scrollbar which will go
-				vs = self._scrwin.verticalScrollBar
-				hmargin = vs.width + 2 * vs.shadowThickness
-			else:
-				hmargin = 0
-			if auto and cheight < fheight:
-				# there is a horizontal scrollbar which will go
-				hs = self._scrwin.horizontalScrollBar
-				vmargin = hs.height + 2 * hs.shadowThickness
-			else:
-				vmargin = 0
-			attrs = {'width': clipwin.width + hmargin,
-				 'height': clipwin.height + vmargin}
+			attrs = {'width': swidth, 'height': sheight}
 		elif code == DOUBLE_HEIGHT:
 			attrs = {'height': fheight * 2}
 			if auto and cwidth == fwidth:
 				# there will be a vertical scrollbar
-				vs = self._scrwin.verticalScrollBar
-				hmargin = vs.width + 2 * vs.shadowThickness
 				attrs['width'] = cwidth - hmargin
 		elif code == DOUBLE_WIDTH:
 			attrs = {'width': fwidth * 2}
 			if auto and cheight == fheight:
 				# there will be a horizontal scrollbar
-				hs = self._scrwin.horizontalScrollBar
-				vmargin = hs.height + 2 * hs.shadowThickness
 				attrs['height'] = cheight - vmargin
 		else:
 			# unrecognized code
@@ -531,6 +525,73 @@ class _Window(_AdornmentSupport):
 		self._form.SetValues(attrs)
 		if forceevent:
 			self._resize_callback(self._form, 1, None)
+
+	def scrollvisible(self, coordinates, units = UNIT_SCREEN):
+		if self._scrwin is None:
+			raise error, 'no scrollable window'
+		box = self._convert_coordinates(coordinates, units)
+		x, y = box[:2]
+		if len(box) == 2:
+			w = h = 0
+		else:
+			w, h = box[2:4]
+		clipwin = self._scrwin
+		vs = self._scrwin.verticalScrollBar
+		hs = self._scrwin.horizontalScrollBar
+		val = self._scrwin.clipWindow.GetValues(['width', 'height'])
+		cwidth = val['width']
+		cheight = val['height']
+		val = self._form.GetValues(['width', 'height'])
+		fwidth = val['width']
+		fheight = val['height']
+		if fwidth > cwidth:
+			value, slider_size, increment, page_increment = hs.ScrollBarGetValues()
+##			margin = hs.height + 2 * hs.shadowThickness
+##			cwidth = cwidth - margin
+			changed = 0
+			if w < cwidth:
+				if value <= x:
+					if x + w <= value + cwidth:
+						# it's visible
+						pass
+					else:
+						# left visible, right not
+						value = x + w - cwidth
+						changed = 1
+				else:
+					value = x
+					changed = 1
+			else:
+				# too wide, make left edge visible
+				if value != x:
+					value = x
+					changed = 1
+			if changed:
+				hs.ScrollBarSetValues(value, slider_size, increment, page_increment, 1)
+		if fheight > cheight:
+			value, slider_size, increment, page_increment = vs.ScrollBarGetValues()
+##			margin = vs.width + 2 * vs.shadowThickness
+##			cheight = cheight - margin
+			changed = 0
+			if h < cheight:
+				if value <= y:
+					if y + h <= value + cheight:
+						# it's visible
+						pass
+					else:
+						# top visible, bottom not
+						value = y + h - cheight
+						changed = 1
+				else:
+					value = y
+					changed = 1
+			else:
+				# too high, make top edge visible
+				if value != y:
+					value = y
+					changed = 1
+			if changed:
+				vs.ScrollBarSetValues(value, slider_size, increment, page_increment, 1)
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		return _SubWindow(self, coordinates, 0, pixmap, transparent, z, units)
