@@ -8,6 +8,7 @@ currently?
 	Sjoerd: Shortcuts need to be implemented.
 	Kleanthis: Ampersand shortcuts have been added. 
 	For real shortcuts (see 18 below) after patchlevel 5 
+	Kleanthis: Finally implemented fro patchlevel 5
 
 2. File Menu - This has the menu item `Charset' is this name
 sufficient for a new user who may not be familiar with the different
@@ -202,6 +203,7 @@ Debugging Window.
 	finishing the hyperlink creation.  Now this results in a
 	crash, presumably because multchoice doesn't return 0 for
 	cancel.
+	Kleanthis: Bug corrected. (patchlevel>=5.1)
 
 15. Choosing `Edit contents...' from the Tools menu gives a Dialog
 Titled `Choose' I think there's some text missing it should read
@@ -242,6 +244,7 @@ Main Menu shortcuts should be given for Main features Open, Close,
 Exit, Cut, Copy, Paste as well as the Views together with any other
 Features that are considered important.
 	Kleanthis: I agree but after patchlevel 5
+	Kleanthis: Finally implemented from patchlevel 5
 
 19. General - all dialog boxes should have an ampersand shortcut in
 them.  If this extends to the OK and Cancel buttons then it should be
