@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=737166864
+  File Checksum=2841143020
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1414,6 +1414,11 @@ item: If/While Statement
   Variable=COMPONENTS
   Value=A
   Flags=00001010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\win32\DXMedia\bin\aud2rm.ax
+  Destination=%MAINDIR%\aud2rm.ax
+  Flags=0001001010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\rmto3260.dll
