@@ -1002,7 +1002,8 @@ class ListEdit(_Widget):
 		self.__popup.SetValues({'x': x - width,
 				 'y': y - 10})
 		self.__list.ManageChild()
-		self.__popup.Popup(Xtdefs.XtGrabNonexclusive)
+		self.__popup.Popup(Xtdefs.XtGrabExclusive)
+		self.__arrow.AddGrab(0, 0)
 		self.__popped = 1
 
 	def __listcb(self, widget, client_data, call_data):
