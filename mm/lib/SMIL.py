@@ -179,6 +179,7 @@ class SMIL:
 			__layout:None,
 			GRiNSns+' ' 'comment':None,
 			GRiNSns+' ' 'project_default_region':None,
+			GRiNSns+' ' 'project_default_type':None,
 			GRiNSns+' ' 'project_bandwidth_fraction':None,
 			},
 		'switch': {'customTest':None,
