@@ -12,18 +12,18 @@ import re
 error = 'MMLTreeRead.error'
 
 LAYOUT_NONE = 0				# must be 0
-LAYOUT_SMILE = 1
+LAYOUT_SMIL = 1
 LAYOUT_UNKNOWN = -1
 
 coordre = re.compile('^ *(?P<x>[0-9.]+%?)[ ,]+(?P<y>[0-9.]+%?)[ ,]+'
 			'(?P<w>[0-9.]+%?)[ ,]+(?P<h>[0-9.]+%?) *$')
 idref = re.compile('id\((?P<id>' + xmllib._Name + ')\)')
 
-class SMILEParser(xmllib.XMLParser):
+class SMILParser(xmllib.XMLParser):
 	def __init__(self, context, verbose = 0):
 		xmllib.XMLParser.__init__(self, verbose)
-		self.__seen_smile = 0
-		self.__in_smile = 0
+		self.__seen_smil = 0
+		self.__in_smil = 0
 		self.__in_head = 0
 		self.__in_head_switch = 0
 		self.__seen_body = 0
@@ -152,15 +152,36 @@ class SMILEParser(xmllib.XMLParser):
 		self.AddAttrs(node, attributes, mediatype)
 		self.__container._addchild(node)
 		node.__mediatype = mediatype
-		if not attributes.has_key('href'):
-			self.syntax_error(self.lineno, 'node without href attribute')
 		try:
 			channel = attributes['loc']
 		except KeyError:
-			self.syntax_error(self.lineno, 'node without loc attribute')
+			self.warning('node without loc attribute')
+			channel = '<unnamed>'
 		else:
 			if not self.__channels.has_key(channel):
 				self.syntax_error(self.lineno, 'unknown loc')
+		if not attributes.has_key('href'):
+			self.syntax_error(self.lineno, 'node without href attribute')
+		elif mediatype == 'image':
+			import img, urllib
+			file = attributes['href']
+			try:
+				file = urllib.urlretrieve(file)[0]
+				rdr = img.reader(None, file)
+			except:
+				pass
+			else:
+				if self.__channels.has_key(channel):
+					ch = self.__channels[channel]
+				else:
+					self.__channels[channel] = ch = \
+						{'minwidth': 0, 'minheight': 0,
+						 'left': 0, 'top': 0,
+						 'width': 0, 'height': 0}
+				if ch['minwidth'] < rdr.width:
+					ch['minwidth'] = rdr.width
+				if ch['minheight'] < rdr.height:
+					ch['minheight'] = rdr.height
 		if self.__in_a:
 			# deal with hyperlink
 			href, ltype, id = self.__in_a
@@ -173,8 +194,8 @@ class SMILEParser(xmllib.XMLParser):
 			self.__links.append((node.GetUID(), id, href, ltype))
 
 	def NewContainer(self, type, attributes):
-		if not self.__in_smile:
-			self.warning('%s not in smile' % type)
+		if not self.__in_smil:
+			self.warning('%s not in smil' % type)
 		if self.__in_layout:
 			self.error('%s in layout' % type)
 		if not self.__root:
@@ -196,6 +217,29 @@ class SMILEParser(xmllib.XMLParser):
 		for node in root.GetChildren():
 			apply(self.Recurse, (node,) + funcs)
 
+	def FixSizes(self):
+		# calculate minimum required size of top-level window
+		for attrdict in self.__channels.values():
+			try:
+				width = _minsize(attrdict['left'],
+						 attrdict['width'],
+						 attrdict['minwidth'])
+			except error, msg:
+				self.syntax_error(self.lineno, msg)
+			else:
+				if width > self.__width:
+					self.__width = width
+
+			try:
+				height = _minsize(attrdict['top'],
+						  attrdict['height'],
+						  attrdict['minheight'])
+			except error, msg:
+				self.syntax_error(self.lineno, msg)
+			else:
+				if height > self.__height:
+					self.__height = height
+		
 	def FixSyncArcs(self, node):
 		for attr, val in node.__syncarcs:
 			self.SyncArc(node, attr, val)
@@ -243,14 +287,14 @@ class SMILEParser(xmllib.XMLParser):
 			ctx.channelnames.append(name)
 			ctx.channels.append(ch)
 			ch['type'] = mtype
-			if mediatype == 'image':
+			if mediatype in ('image', 'video'):
 				ch['scale'] = 1
 			if mediatype in ('image', 'video', 'text'):
 				# deal with channel with window
 				if not self.__channels.has_key(channel):
 					self.warning('no tuner %s in layout' %
 						     channel)
-					self.__in_layout = LAYOUT_SMILE
+					self.__in_layout = LAYOUT_SMIL
 					self.start_tuner({'id': channel})
 					self.__in_layout = LAYOUT_NONE
 				attrdict = self.__channels[channel]
@@ -329,23 +373,25 @@ class SMILEParser(xmllib.XMLParser):
 				hlinks.addlink((src, _wholenodeanchor(dst),
 						DIR_1TO2, ltype))
 			else:
+				import urllib
 				href, tag = urllib.splittag(href)
 				hlinks.addlink((src, (href, tag), DIR_1TO2, ltype))
 
 	# methods for start and end tags
 
-	# smile contains everything
-	smile_attributes = ['id', 'lipsync']
-	def start_smile(self, attributes):
-		if self.__seen_smile:
-			self.error('more than 1 smile tag')
-		self.__seen_smile = 1
-		self.__in_smile = 1
+	# smil contains everything
+	smil_attributes = ['id', 'lipsync']
+	def start_smil(self, attributes):
+		if self.__seen_smil:
+			self.error('more than 1 smil tag')
+		self.__seen_smil = 1
+		self.__in_smil = 1
 
-	def end_smile(self):
-		self.__in_smile = 0
+	def end_smil(self):
+		self.__in_smil = 0
 		if not self.__root:
 			self.error('empty document')
+		self.FixSizes()
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
 		self.FixLinks()
 
@@ -353,8 +399,8 @@ class SMILEParser(xmllib.XMLParser):
 
 	head_attributes = ['id']
 	def start_head(self, attributes):
-		if not self.__in_smile:
-			self.warning('head not in smile')
+		if not self.__in_smil:
+			self.warning('head not in smil')
 		self.__in_head = 1
 
 	def end_head(self):
@@ -362,8 +408,8 @@ class SMILEParser(xmllib.XMLParser):
 
 	body_attributes = ['id']
 	def start_body(self, attributes):
-		if not self.__in_smile:
-			self.warning('body not in smile')
+		if not self.__in_smil:
+			self.warning('body not in smil')
 		if self.__seen_body:
 			self.error('multiple body tags')
 		self.__seen_body = 1
@@ -383,8 +429,8 @@ class SMILEParser(xmllib.XMLParser):
 		self.__seen_layout = 1
 		self.__in_layout = LAYOUT_UNKNOWN
 		if attributes.has_key('type') and \
-		   attributes['type'] == 'text/smile-basic':
-			self.__in_layout = LAYOUT_SMILE
+		   attributes['type'] == 'text/smil-basic':
+			self.__in_layout = LAYOUT_SMIL
 
 	def end_layout(self):
 		self.__in_layout = LAYOUT_NONE
@@ -393,14 +439,16 @@ class SMILEParser(xmllib.XMLParser):
 	def start_tuner(self, attributes):
 		if not self.__in_layout:
 			self.error('tuner not in layout')
-		if self.__in_layout != LAYOUT_SMILE:
-			# ignore outside of smile-basic-layout
+		if self.__in_layout != LAYOUT_SMIL:
+			# ignore outside of smil-basic-layout
 			return
 		attrdict = {'left': 0,
 			    'top': 0,
 			    'z': 0,
 			    'width': 0,
-			    'height': 0}
+			    'height': 0,
+			    'minwidth': 0,
+			    'minheight': 0,}
 		seen_id = 0
 		for attr, val in attributes.items():
 			if attr in ('left', 'top', 'width', 'height'):
@@ -424,7 +472,7 @@ class SMILEParser(xmllib.XMLParser):
 					val = 1
 				if val <= 0:
 					self.error('tuner with negative z')
-				val = val - 1 # SMILE def is 1, CMIF def is 0
+				val = val - 1 # SMIL def is 1, CMIF def is 0
 			elif attr == 'id':
 				seen_id = 1
 				if self.__channels.has_key(val):
@@ -435,18 +483,6 @@ class SMILEParser(xmllib.XMLParser):
 			attrdict[attr] = val
 		if not seen_id:
 			self.error('tuner without id attribute')
-
-		# calculate minimum required size of top-level window
-		x = attrdict['left']
-		y = attrdict['top']
-		w = attrdict['width']
-		h = attrdict['height']
-		width = _minsize(x, w)
-		if width > self.__width:
-			self.__width = width
-		height = _minsize(y, h)
-		if height > self.__height:
-			self.__height = height
 
 	def end_tuner(self):
 		pass
@@ -734,12 +770,12 @@ def ReadFile(filename):
 def ReadFileContext(filename, context):
 	import os
 	context.setdirname(os.path.dirname(filename))
-	p = SMILEParser(context)
+	p = SMILParser(context)
 	p.feed(open(filename).read())
 	p.close()
 	return p.GetRoot()
 
-def _minsize(start, extent):
+def _minsize(start, extent, minsize):
 	# Determine minimum size for top-level window given that it
 	# has to contain a subwindow with the given start and extent
 	# values.  Start and extent can be integers or floats.  The
@@ -752,13 +788,15 @@ def _minsize(start, extent):
 			if extent == 0 or (extent == 1 and start > 0):
 				raise error, 'tuner with impossible size'
 			if extent == 1:
-				return 0
-			return int(start / (1 - extent) + 0.5)
+				return minsize
+			size = int(start / (1 - extent) + 0.5)
+			if minsize > 0 and extent > 0:
+				size = max(size, int(minsize/extent + 0.5))
+			return size
 		else:
 			# extent is pixel value
-## 			if extent == 0:
-## 				# extent == 0 means rest of window
-## 				extent = 1 # make sure there is a rest
+			if extent == 0:
+				extent = minsize
 			return start + extent
 	else:
 		# start is fraction
@@ -766,9 +804,13 @@ def _minsize(start, extent):
 			raise error, 'tuner with impossible size'
 		if type(extent) is type(0):
 			# extent is pixel value
+			if extent == 0:
+				extent = minsize
 			return int(extent / (1 - start) + 0.5)
 		else:
 			# extent is fraction
+			if minsize > 0 and extent > 0:
+				return int(minsize / extent + 0.5)
 			return 0
 
 def _uniqname(namelist, defname):
