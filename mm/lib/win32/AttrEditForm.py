@@ -1493,13 +1493,15 @@ class TextRenderer(Renderer):
 		if self._textwnd:
 			fp = open(f, 'r')
 			text = fp.read()
-			fp.close()	
+			fp.close()
+			text = self.fixendl(text)
 			self._textwnd.SetWindowText(text)
 			self._textwnd.SendMessage(win32con.EM_SETREADONLY,1,0)
 
 	def createTextWnd(self):
 		if self._textwnd: return
-		self._style=win32con.WS_CHILD | win32con.WS_CLIPSIBLINGS | win32con.WS_VISIBLE | win32con.WS_TABSTOP 
+		self._style=win32con.WS_CHILD | win32con.WS_CLIPSIBLINGS | win32con.WS_VISIBLE | win32con.WS_TABSTOP \
+			| win32con.ES_MULTILINE | win32con.WS_VSCROLL | win32con.WS_HSCROLL
 		self._exstyle = win32con.WS_EX_CONTROLPARENT| win32con.WS_EX_CLIENTEDGE
 		self._strclass='EDIT'
 		l,t,r,b=self._rc
@@ -1508,6 +1510,16 @@ class TextRenderer(Renderer):
 		self._textwnd=window.Wnd(win32ui.CreateWindowFromHandle(hwnd))
 		self._textwnd.SetWindowPos(0,self._rc,
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
+
+	def fixendl(self,text):
+		nl=string.split(text,'\n')
+		rl=string.split(text,'\r')
+		if len(nl)==len(rl):# line_separator='\r\n'
+			return text
+		if len(nl)>len(rl):	# line_separator='\n'
+			return string.join(nl, '\r\n')
+		if len(nl)<len(rl):	# line_separator='\r'
+			return string.join(rl, '\r\n')
 
 
 #################################
@@ -1745,7 +1757,6 @@ class PreviewPage(AttrPage):
 			self._renderer.load(rurl)
 			self._armed=1
 		
-
 	def setRendererRc(self):
 		preview=RealWndCtrl(self,grinsRC.IDC_PREVIEW)
 		preview.attach_to_parent()
