@@ -2234,15 +2234,23 @@ class LayoutView2(LayoutViewDialog2):
 		for nodeRef in nodeRefList:
 			nodeType = self.getNodeType(nodeRef)
 			if self.isAVisibleNode(nodeRef, nodeType):
-				list.append(nodeRef)
 				if optionValue == 'onSelected':
+					list.append(nodeRef)
 					# set value as well on all children recursivly
 					children = self.getAllChildren(nodeRef)
 					list = list+children
 				elif optionValue == 'always':
 					# set value as well on all parents
 					parents = self.getAllParent(nodeRef)
-					list = list+parents
+					pvis = 1
+					for pnode in parents:
+						if not self.isAVisibleNode(pnode, self.getNodeType(pnode)):
+							pvis = 0
+							break
+					# update only to visible if all parents are visible
+					if pvis:
+						list.append(nodeRef)
+						list = list+parents
 
 		# update the visibility
 		if optionValue == 'onSelected':
