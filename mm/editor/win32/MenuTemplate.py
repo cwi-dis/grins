@@ -171,7 +171,7 @@ MENUBAR=(
 		(LIGHT, ENTRY, 'H&yperlinks', '5', LINKVIEW),
 		(CMIF, ENTRY, 'User &groups', '6', USERGROUPVIEW),
 ##		(LIGHT, SEP,),
-		(SMIL, ENTRY, 'Sourc&e', '7', SOURCE),
+		(LIGHT, ENTRY, 'Sourc&e', '7', SOURCE),
 		)),
 
 	('&Help', (
