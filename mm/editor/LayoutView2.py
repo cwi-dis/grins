@@ -395,13 +395,18 @@ class LayoutView2(LayoutViewDialog2):
 
 		# current state
 		self.currentViewport = None
-		self.currentRegionNameList = None
+		
 		self.currentNodeSelected = None
 		self.currentExcludeRegionNameList = None
 		
-		self.currentMediaRegionList = []
 		self.currentExcludeRegionList = []
 
+		self.lastViewportNameSelected = None
+		self.currentRegionNameList = []
+		self.lastRegionNameSelected = None
+		self.currentMediaRegionList = []
+		self.lastMediaNameSelected = None
+		
 		# init state of differents dialog controls
 		self.showName = 1
 		self.asOutLine = 0
@@ -463,23 +468,31 @@ class LayoutView2(LayoutViewDialog2):
 	def globalfocuschanged(self, focustype, focusobject):
 		from MMNode import MMNode
 
+		lastSelectedObject = self.currentNodeSelected
 		# ensure that the last media selected node will be removed
 		self.unSetMediaNode()
 		
 		from MMTypes import leaftypes
-		if focusobject.type not in leaftypes or focusobject.GetChannelType() == 'sound':
-			return
-				
-		self.setMediaNode(focusobject)
-		self.fillMediaListOnDialogBox()
+		if not (focusobject.type not in leaftypes or focusobject.GetChannelType() == 'sound'):
+			self.setMediaNode(focusobject)
+			
 		if len(self.currentMediaRegionList) > 0:
+			self.fillMediaListOnDialogBox()
+			self.enableMediaListOnDialogBox()
 			firstMediaRegion, parentRegion = self.currentMediaRegionList[0]
 			self.currentNodeSelected = firstMediaRegion
 			firstMediaRegion.select()
-			self.enableMediaListOnDialogBox()
 			self.updateMediaOnDialogBox(firstMediaRegion)
 		else:			
+			# if no media selected any more desactive the media selecter
 			self.disableMediaListOnDialogBox()
+			# active the region of the last selected media
+			if self.currentNodeSelected.getNodeType() == TYPE_MEDIA:				
+				region = self.currentNodeSelected.getParent()
+				if region != None:
+					self.currentNodeSelected.hide()
+					region.select()
+					self.updateRegionOnDialogBox(region)					
 				
 	def kill(self):
 		self.destroy()
@@ -543,15 +556,11 @@ class LayoutView2(LayoutViewDialog2):
 	def unSetMediaNode(self):
 		if len(self.currentMediaRegionList) > 0:
 			for mediaRegion, parentRegion in self.currentMediaRegionList:
-				# if the media region was selected, select its parent
-				if mediaRegion == self.currentNodeSelected:
-					parentRegion.select()
-					self.updateRegionOnDialogBox(parentRegion)					
-				mediaRegion.hide()
 				# remove from region tree
 				parentRegion.removeNode(mediaRegion)
 		self.currentMediaRegionList = []
-			
+		self.lastMediaNameSelected = None
+					
 	def setMediaNode(self, node):
 		channel = node.GetChannel()
 		if channel == None: return
@@ -710,7 +719,8 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.fillSelecterCtrl('ViewportSel', self.currentViewportList)
 		self.dialogCtrl.setCheckCtrl('ShowNames', self.showName)
 		self.dialogCtrl.setCheckCtrl('AsOutLine', self.asOutLine)
-							
+		self.disableMediaListOnDialogBox()
+		
 	def applyGeomOnViewport(self, viewport, geom):
 		# apply new size
 		# pass by edit manager
@@ -792,7 +802,12 @@ class LayoutView2(LayoutViewDialog2):
 		
 	def updateViewportOnDialogBox(self, viewport):
 		# update region list
-		self.currentRegionNameList = self.getRegionNameList(viewport.getName())		
+		viewportName = viewport.getName()
+		self.currentRegionNameList = self.getRegionNameList(viewportName)
+		if self.lastViewportNameSelected != viewportName:
+			self.lastRegionNameSelected = None
+			self.lastViewportNameSelected = viewportName
+			
 		self.dialogCtrl.fillSelecterCtrl('RegionSel', self.currentRegionNameList)
 		self.currentExcludeRegionNameList = self.currentRegionNameList
 		self.dialogCtrl.fillMultiSelCtrl('RegionList', self.currentExcludeRegionNameList)
@@ -840,6 +855,8 @@ class LayoutView2(LayoutViewDialog2):
 		
 	def updateRegionOnDialogBox(self, region):
 		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
+
+		self.lastRegionNameSelected = region.getName()
 								
 		# enable valid fields
 		self.dialogCtrl.enable('SendBack',1)
@@ -894,13 +911,16 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)		
 		self.dialogCtrl.enable('MediaSel',0)
 		self.currentMediaNameList = None
+		self.dialogCtrl.enable('MediaCheck', 0)
 
 	def enableMediaListOnDialogBox(self):
 		self.dialogCtrl.enable('MediaSel',1)
+		self.dialogCtrl.enable('MediaCheck', 1)
 		
 	def updateMediaOnDialogBox(self, media):
 		mmnode = media.mmnode
 		mediaName = mmnode.attrdict.get('name')
+		self.lastMediaNameSelected = mediaName
 		# update the media selecter
 		if self.currentMediaNameList != None:
 			index = self.currentMediaNameList.index(mediaName)
@@ -1016,7 +1036,8 @@ class LayoutView2(LayoutViewDialog2):
 
 	def __selectViewport(self, name=None):
 		if name == None:
-			viewport = self._viewports[0]
+			keys = self._viewports.keys()
+			viewport = self._viewports[keys[0]]
 		else:
 			viewport = self._viewports.get(name)
 			
@@ -1024,16 +1045,30 @@ class LayoutView2(LayoutViewDialog2):
 			self.displayViewport(viewport.getName())
 
 	def __selectRegion(self, name=None):
+		if name == None:
+			if self.lastRegionNameSelected != None:
+				name = self.lastRegionNameSelected
+			elif len(self.currentRegionNameList) > 0:
+				name = self.currentRegionNameList[0]
+			
 		region = self.getRegion(name)
 		if region != None:
 			region.select()
+			self.lastRegionNameSelected = name
 			self.currentNodeSelected = region												
 			self.updateRegionOnDialogBox(region)
 
 	def __selectMedia(self, name=None):
+		if name == None:
+			if self.lastMediaNameSelected != None:
+				name = self.lastMediaNameSelected
+			elif len(self.currentMediaNameList) > 0:
+				name = self.currentMediaNameList[0]
+				
 		media = self.getMedia(name)
 		if media != None:
 			media.select()
+			self.lastMediaNameSelected = name
 			self.currentNodeSelected = media
 			self.updateMediaOnDialogBox(media)
 
