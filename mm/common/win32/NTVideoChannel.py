@@ -18,7 +18,7 @@ from AnchorDefs import *
 # channel types and message
 import windowinterface
 
-debug=0
+debug=1
 
 import rma
 
@@ -43,9 +43,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.__mc = None
 		self.__rc = None
 		self.__type = None
+		self.__subtype = None
 		self.need_armdone = 0
 		self.__playing = None
 		self.__rcMediaWnd = None
+		self.__use_windowless_real_rendering = USE_WINDOWLESS_REAL_RENDERING
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
@@ -76,6 +78,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.__ready = 1
 			return 1
 		node.__type = ''
+		node.__subtype = ''
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
@@ -87,6 +90,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		mtype = MMmimetypes.guess_type(url)[0]
 		if mtype and (string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0):
 			node.__type = 'real'
+			if string.find(mtype, 'flash') >= 0:
+				node.__subtype = 'flash'
+
 		if node.__type == 'real':
 			if self.__rc is None:
 				try:
@@ -114,24 +120,26 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def do_play(self, node):
 		self.__playing = node
 		self.__type = node.__type
+		self.__subtype = node.__subtype
+
 		if not self.__ready:
 			# arming failed, so don't even try playing
 			self.playdone(0)
 			return
 		if node.__type == 'real':
 			bpp = self.window._topwindow.getRGBBitCount()
-			if bpp not in (8, 16, 24, 32) and USE_WINDOWLESS_REAL_RENDERING:
-				print 'windowless real rendering not supported for screen depth', bpp
-				global USE_WINDOWLESS_REAL_RENDERING
-				USE_WINDOWLESS_REAL_RENDERING = 0
-
+			if bpp not in (8, 16, 24, 32) and self.__use_windowless_real_rendering:
+				self.__use_windowless_real_rendering = 0
+			if self.__subtype=='flash':
+				self.__use_windowless_real_rendering = 0
+				
 			# real needs an os window yet
-			if not USE_WINDOWLESS_REAL_RENDERING:
+			if not self.__use_windowless_real_rendering:
 				self.window.CreateOSWindow(rect=self.getMediaWndRect())
 			if not self.__rc:
 				self.playdone(0)
 				return
-			if USE_WINDOWLESS_REAL_RENDERING:
+			if self.__use_windowless_real_rendering:
 				res =self.__rc.playit(node,windowless=1)
 			else:
 				res = self.__rc.playit(node, self._getoswindow(), self._getoswinpos())
