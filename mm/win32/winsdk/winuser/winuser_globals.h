@@ -27,6 +27,9 @@ inline void seterror(const char *funcname, DWORD err)
 	LocalFree(pszmsg);
 	}
 
+PyObject* Winuser_MessageLoop(PyObject *self, PyObject *args);
+PyObject* Winuser_PostQuitMessage(PyObject *self, PyObject *args);
+
 PyObject* Winuser_RegisterClassEx(PyObject *self, PyObject *args);
 PyObject* Winuser_CreateWindowEx(PyObject *self, PyObject *args);
 PyObject* Winuser_CreateWindowFromHandle(PyObject *self, PyObject *args);

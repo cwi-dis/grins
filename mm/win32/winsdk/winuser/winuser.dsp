@@ -128,6 +128,10 @@ SOURCE=.\winuser_globals.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\winuser_main.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\winuser_pymenu.cpp
 # End Source File
 # Begin Source File

@@ -20,6 +20,9 @@ PyInterpreterState*
 PyCallbackBlock::s_interpreterState = NULL;
 
 static struct PyMethodDef winuser_methods[] = {
+	{"MessageLoop", (PyCFunction)Winuser_MessageLoop, METH_VARARGS, ""},
+	{"PostQuitMessage", (PyCFunction)Winuser_PostQuitMessage, METH_VARARGS, ""},
+
 	{"RegisterClassEx", (PyCFunction)Winuser_RegisterClassEx, METH_VARARGS, ""},
 
 	{"CreateWindowEx", (PyCFunction)Winuser_CreateWindowEx, METH_VARARGS, ""},

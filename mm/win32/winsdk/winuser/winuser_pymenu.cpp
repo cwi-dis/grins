@@ -12,11 +12,6 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "winuser_globals.h"
 
-#include "mtpycall.h"
-
-#pragma warning(disable: 4786)
-#include <map>
-
 struct PyMenu
 	{
 	PyObject_HEAD
