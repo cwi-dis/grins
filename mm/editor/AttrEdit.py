@@ -226,6 +226,10 @@ class ChannelWrapper(Wrapper):
 
 	def setattr(self, name, value):
 		if name == '.cname':
+		        if self.channel.name != value and \
+			   self.editmgr.context.getchannel(value):
+			    windowinterface.showmessage('Duplicate channel name (not changed)')
+			    return
 			self.editmgr.setchannelname(self.channel.name, value)
 		else:
 			self.editmgr.setchannelattr( \
@@ -233,7 +237,9 @@ class ChannelWrapper(Wrapper):
 
 	def delattr(self, name):
 		if name == '.cname':
-			self.editmgr.setchannelname(self.channel.name, '')
+			pass
+			# Don't do this:
+			# self.editmgr.setchannelname(self.channel.name, '')
 		else:
 			self.editmgr.setchannelattr( \
 				  self.channel.name, name, None)
