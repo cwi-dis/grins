@@ -414,7 +414,7 @@ fonts = [
 class showmessage:
 	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'message',
-		     title = 'message'):
+		     title = 'message', parent = None):
 		pass
 
 	def close(self):
@@ -422,7 +422,7 @@ class showmessage:
 
 class Dialog:
 	def __init__(self, list, title = None, prompt = None, grab = 1,
-		     vertical = 1):
+		     vertical = 1, parent = None):
 		pass
 
 	def close(self):
@@ -443,7 +443,7 @@ class Dialog:
 class MainDialog(Dialog):
 	pass
 
-def multchoice(prompt, list, defindex):
+def multchoice(prompt, list, defindex, parent = None):
 	return defindex
 
 def beep():
