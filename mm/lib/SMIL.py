@@ -406,13 +406,15 @@ class SMIL:
 		'by':None,
 		'path':None, 
 		'origin':None,}
+	__animate_attrs['calcMode'] = 'paced'
 	attributes['animateMotion'] = __animate_attrs.copy()
 	del __animate_attrs['path'], __animate_attrs['origin']
+	__animate_attrs['calcMode'] = 'linear'
 	attributes['animate'] = __animate_attrs.copy()
 	attributes['animateColor'] = attributes['animate']
 	del __animate_attrs['calcMode'], __animate_attrs['values'],
 	del	__animate_attrs['keyTimes'], __animate_attrs['keySplines']
-	del	__animate_attrs['from'], __animate_attrs['to'],
+	del	__animate_attrs['from'], __animate_attrs['by'],
 	attributes['set'] = __animate_attrs.copy()
 	del __animate_attrs
 
