@@ -19,6 +19,10 @@ Testing GRiNS Player under Pocket PC emulator
     Check that the download directory is \\Windows\Start Menu (or create a shortcut there)
     The build process has a custom step to create and copy grinsRC.py to \Program Files\GRiNS\bin\wince
 
+4. Create a folder under My Documents of the emulator, for example:
+	Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\My Documents\Presentations
+   and drop there a test presentation.
+    
 Run GRiNS Player from Pocket PC emulator 'Start' menu
 
 
