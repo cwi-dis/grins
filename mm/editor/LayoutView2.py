@@ -1399,7 +1399,8 @@ class LayoutView2(LayoutViewDialog2):
 		self.previousWidget = widgetList['PreviousWidget'] = PreviousWidget(self)
 		self.treeWidget = widgetList['TreeWidget'] = TreeWidget(self)
 		self.geomFieldWidget = widgetList['GeomFieldWidget'] = GeomFieldWidget(self)
-		widgetList['ZFieldWidget'] = ZFieldWidget(self)
+		widgetList['ZFieldWidget'] = ZFieldWidget(self)		
+		widgetList['FitWidget'] = FitWidget(self)
 		self.animateControlWidget = widgetList['AnimateControlWidget'] = AnimateControlWidget(self)
 
 	def applyGeom(self, nodeRef, geom):
@@ -1439,6 +1440,17 @@ class LayoutView2(LayoutViewDialog2):
 		if self.editmgr.transaction():
 			self.editmgr.setchannelattr(nodeRef.name, 'bgcolor', bgcolor)
 			self.editmgr.setchannelattr(nodeRef.name, 'transparent', transparent)
+			self.editmgr.commit()
+
+	def applyFit(self, nodeRef, value):
+		# test if possible 
+		if self.editmgr.transaction():
+			nodeType = self.getNodeType(nodeRef)
+			if nodeType == TYPE_MEDIA:
+				self.editmgr.setnodeattr(nodeRef, 'fit', value)
+			elif nodeType == TYPE_REGION:
+				self.editmgr.setchannelattr(nodeRef.name, 'fit', value)
+			
 			self.editmgr.commit()
 
 	def applyZOrderOnRegion(self, regionRef, value):
@@ -1566,7 +1578,7 @@ class LayoutView2(LayoutViewDialog2):
 					newdata = (left, top, width, height), bgcolor
 					animationData.updateData(keyTimeIndex, newdata)
 
-			if not animated:
+			if not animated or keyTimeIndex == 0:
 				if nodeType in (TYPE_VIEWPORT, TYPE_REGION):					
 					self.editmgr.setchannelattr(nodeRef.name, attrName, attrValue)
 				elif nodeType == TYPE_MEDIA:
@@ -2516,6 +2528,9 @@ class Widget:
 	def selectNodeList(self, nodeRefList, keepShowedNodes=0):
 		pass
 
+	def onSelecterChanged(self, ctrlName, value):
+		pass
+
 	def show(self):
 		pass
 
@@ -2610,6 +2625,81 @@ class ZFieldWidget(LightWidget):
 				self._context.applyZOrderOnRegion(nodeRef, value)
 			elif nodeType == TYPE_MEDIA:
 				self._context.applyZOrderOnMedia(nodeRef, value)
+
+#
+# z field widget management
+#
+
+class FitWidget(LightWidget):
+	#
+	# inherited methods
+	#
+
+	showedValues = ['show whole media', 'actual size', 'fill whole region', 'scroll media if necessary', 'show whole media in whole region']
+	fitValues = ['meet', 'hidden', 'slice', 'scroll', 'fill']
+	
+	def show(self):
+		self.dialogCtrl.setListener('Fit', self)
+		self.dialogCtrl.fillSelecterCtrl('Fit', self.showedValues)
+		self._selected = None
+
+	def destroy(self):
+		self.dialogCtrl.removeListener('Fit')
+		
+	def selectNodeList(self, nodeRefList, keepShowedNodes=0):
+		nodeType, nodeRef = self.getSingleSelection(nodeRefList)
+		self._selected = (nodeType, nodeRef)
+
+		if nodeType == TYPE_VIEWPORT:
+			self.__unselect()
+		elif nodeType == TYPE_REGION:
+			self.__update(nodeRef, nodeType)
+		elif nodeType == TYPE_MEDIA:
+			self.__update(nodeRef, nodeType)
+		else:
+			self.__unselect()
+
+	# update the dialog box on unselection
+	def __unselect(self):
+		self.dialogCtrl.enable('Fit',0)
+		self.dialogCtrl.setSelecterCtrl('Fit',-1)
+
+	# update the dialog box on valid selection
+	def __update(self, nodeRef, nodeType):
+		if nodeType == TYPE_REGION:
+			fit = nodeRef.GetAttrDef('fit', 'hidden')
+			self.__currentShowedValues = self.showedValues
+			index = self.fitValues.index(fit)
+		elif nodeType == TYPE_MEDIA:
+			fit = nodeRef.GetAttrDef('fit', None)
+			region = self._context.getParentNodeRef(nodeRef)
+			defaultFit = region.GetAttrDef('fit', 'hidden')
+			defaultIndex = self.fitValues.index(defaultFit)
+			if fit is None:
+				index = 0
+			else:
+				index = self.fitValues.index(fit)+1
+			self.__currentShowedValues = ['default ['+self.showedValues[defaultIndex]+']']+self.showedValues
+			
+		self.dialogCtrl.fillSelecterCtrl('Fit', self.__currentShowedValues)		
+		self.dialogCtrl.setSelecterCtrl('Fit',index)
+		self.dialogCtrl.enable('Fit',1)
+		
+	#
+	# interface implementation of 'dialog controls callback' 
+	#
+	
+	def onSelecterChanged(self, ctrlName, value):
+		nodeType, nodeRef = self._selected
+		if nodeType == TYPE_MEDIA:
+			if value == 0:
+				fit = None
+			else:
+				fit = self.fitValues[value-1]
+		else:
+			fit = self.fitValues[value]
+			
+		self._context.applyFit(nodeRef, fit)
 		
 #
 # geom field widget management
@@ -2974,6 +3064,7 @@ class AnimateControlWidget(LightWidget):
 		self.__enabling = 1
 		self._context.onEnableAnimation()
 		self.__enabling = 0
+
 #
 # tree widget management
 #
