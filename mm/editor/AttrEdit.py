@@ -387,9 +387,12 @@ class NodeWrapper(Wrapper):
 		ntype = self.node.GetType()
 		if ntype == 'prio':
 			# special case for prio nodes
-			return ['name', '.type', 'title', 'abstract', 'author',
+			list = ['name', 'title', 'abstract', 'author',
 				'copyright', 'comment',
 				'higher', 'peers', 'lower', 'pauseDisplay']
+			if features.EDIT_TYPE in features.feature_set:
+				list.insert(1, '.type')
+			return list
 		elif ntype == 'comment':
 			# special case for comment nodes
 			return ['.values']
@@ -427,7 +430,8 @@ class NodeWrapper(Wrapper):
 		if ntype in mediatypes or features.compatibility == features.CMIF:
 			namelist.append('channel')
 		if not snap:
-			namelist.append('.type')
+			if features.EDIT_TYPE in features.feature_set:
+				namelist.append('.type')
 			namelist.append('abstract')
 			namelist.append('system_captions')
 			namelist.append('system_overdub_or_caption')
@@ -2366,30 +2370,29 @@ class LanguageAttrEditorFieldWithDefault(LanguageAttrEditorField):
 		options = LanguageAttrEditorField.getoptions(self)
 		return [self.default] + options
 
+import bitrates
 class BitrateAttrEditorField(PopupAttrEditorField):
-	__values = [14400, 19200, 28800, 33600, 34400, 57600, 115200, 262200, 307200, 524300, 1544000, 10485800]
-	__strings = ['14.4K Modem', '19.2K Connection', '28.8K Modem', '33.6K Modem', '56K Modem', '56K Single ISDN', '112K Dual ISDN', '256Kbps DSL/Cable', '300Kbps DSL/Cable', '512Kbps DSL/Cable', 'T1 / LAN', '10Mbps LAN']
 	default = 'Not set'
 	nodefault = 1
 
 	def parsevalue(self, str):
 		if str == self.default:
 			return None
-		return self.__values[self.__strings.index(str)]
+		return bitrates.l2a.get(str)
 
 	def valuerepr(self, value):
 		if value is None:
 			if self.nodefault:
 				return self.getdefault()
 			return self.default
-		str = self.__strings[0]
-		for i in range(len(self.__values)):
-			if self.__values[i] <= value:
-				str = self.__strings[i]
+		str = bitrates.names[0]
+		for val, name in bitrates.bitrates:
+			if val <= value:
+				str = name
 		return str
 
 	def getoptions(self):
-		return self.__strings
+		return bitrates.names
 
 	def getcurrent(self):
 		val = self.wrapper.getvalue(self.getname())
@@ -3076,6 +3079,23 @@ class FontAttrEditorField(PopupAttrEditorField):
 
 Alltypes = interiortypes+playabletypes
 class NodeTypeAttrEditorField(PopupAttrEditorField):
+	__valuesmap = {'par':'parallel group',
+		       'seq':'sequential group',
+		       'excl':'exclusive group',
+		       'prio':'priority group',
+		       'switch':'switch group',
+		       'imm':'immediate object',
+		       'ext':'media object',
+		       'brush':'brush object',
+		       'prefetch':'prefetch object',
+		       'animate':'animate object',
+		       'anchor':'anchor object',
+		       'comment':'comment object',
+		       'foreign':'non-GRiNS object'}
+	__reversemap = {}
+	for k, v in __valuesmap.items():
+		__reversemap[v] = k
+	del k, v
 	def getoptions(self):
 		# XXX this needs work: we need to take animate
 		# children into account and prio can only be a child
@@ -3088,13 +3108,16 @@ class NodeTypeAttrEditorField(PopupAttrEditorField):
 					options.remove(tp)
 		elif ntype == 'imm' and self.wrapper.node.GetValues():
 			options = ['imm']
-		return options
+		values = []
+		for str in options:
+			values.append(self.__valuesmap.get(str, str))
+		return values
 
 	def parsevalue(self, str):
-		return str
+		return self.__reversemap.get(str, str)
 
 	def valuerepr(self, value):
-		return value
+		return self.__valuesmap.get(value, value)
 
 from fmtfloat import fmtfloat
 class AnchorCoordsAttrEditorField(AttrEditorField):
