@@ -587,7 +587,7 @@ def getsyncarc(writer, node, isend):
 				if name:
 					name = name + '.'
 				name = name + escape_name(arc.event, 0)
-			if arc.delay:
+			if arc.delay or not name:
 				if name:
 					name = name + fmtfloat(arc.delay, withsign = 1)
 				else:
