@@ -63,12 +63,11 @@ class AudioFormat:
 
 # converter and wm reader callback agent class
 
-class Wma2rmaConverterAgent:
+class Wma2raConverterAgent:
 	def __init__(self):
 		pass
 
 	def prepareToEncode(self, fmt, outfile):
-		import producer
 		engine = producer.CreateRMBuildEngine()
 		for pin in engine.GetPins():
 			if pin.GetOutputMimeType() == producer.MIME_REALAUDIO:
@@ -169,10 +168,10 @@ def convertWma2ra(infile, outfile):
 
 	# create our specific callback agent
 	# this time will be a ra converter
-	agent = Wma2rmaConverterAgent()
+	agent = Wma2raConverterAgent()
 	readercbobj = wmfapi.CreatePyReaderCallback(agent)
 
-	# open wm file passing reader callbackl
+	# open wm file passing reader callback
 	reader.Open(infile, readercbobj)
 	readercbobj.WaitOpen()
 
