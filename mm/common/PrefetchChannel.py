@@ -10,6 +10,9 @@ import MMurl
 import windowinterface
 import time
 
+# atoi, atof
+import string
+
 debug = 1
 
 class PrefetchChannel(Channel.ChannelAsync):
@@ -65,6 +68,7 @@ class PrefetchChannel(Channel.ChannelAsync):
 		self.__pausedt = 0
 		self.__urlopener = None
 		self.__playdone = 0
+		self.__mmmsg = None
 
 		url = self.getfileurl(node)
 		if not url:
@@ -74,11 +78,17 @@ class PrefetchChannel(Channel.ChannelAsync):
 		
 		self.__urlopener = MMurl.geturlopener()
 		try:
-			filename, headers = self.__urlopener.begin_retrieve(url)
+			filename, mmmsg = self.__urlopener.begin_retrieve(url)
 		except:
 			print 'Warning: cannot open url %s' % url
 			self.__urlopener = None
-			
+		else:
+			self.__mmmsg = mmmsg
+			val = mmmsg.get('content-length')
+			if val:
+				self.__content_length = string.atoi(val)
+			self.__accept_ranges = mmmsg.get('accept-ranges')
+				
 	def __ready(self):
 		return self.__urlopener!=None
 			
