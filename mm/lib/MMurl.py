@@ -28,7 +28,7 @@ if os.name == 'mac':
 				return
 			# They're different. Try setting it correctly.
 			fss.SetCreatorType(wtd_cr, wtd_tp)
-		except 'xxx':
+		except:
 			# Any errors are ignored.
 			pass
 
