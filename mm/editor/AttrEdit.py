@@ -501,7 +501,7 @@ class NodeWrapper(Wrapper):
 		ntype = self.node.GetType()
 		if ntype == 'prio':
 			# special case for prio nodes
-			return ['name', 'title', 'abstract', 'author',
+			return ['name', '.type', 'title', 'abstract', 'author',
 				'copyright', 'comment',
 				'higher', 'peers', 'lower', 'pauseDisplay']
 		elif ntype == 'comment':
