@@ -431,7 +431,11 @@ class DrawRect(DrawObj):
 		# write dimensions
 		#s='(%d,%d,%d,%d)' % self._position.tuple() #pixels
 		if self.__units == UNIT_PXL:
-			s='(%d,%d,%d,%d)' % self._position.tuple_ps()
+			if not drawTk.IsScaled():
+				s='(%d,%d,%d,%d)' % self._position.tuple_ps()
+			else:
+				scaledpos=drawTk.ToScaledCoord(self._position)
+				s='(%d,%d,%d,%d)' % scaledpos.tuple_ps()
 		elif self.__units == UNIT_SCREEN and drawTk._rel_coord_ref:
 			s='(%.2f,%.2f,%.2f,%.2f)' % drawTk._rel_coord_ref.get_relative_coords100(self._position.tuple_ps())
 		else:
@@ -550,7 +554,23 @@ class DrawTk:
 		w=int(100.0*float(rc.width())/rcref.width()+0.5)
 		h=int(100.0*float(rc.height())/rcref.height()+0.5)
 		return (x,y,w,h)
+	
+	# Scaled coordinates support
+	def	SetScale(self,xs,ys):
+		self._xscale=xs
+		self._yscale=ys
+		self._has_scale=1
+	def IsScaled(self):
+		return hasattr(self,'_has_scale') and self._has_scale
+	def ToScaledCoord(self,rc):
+		l=int(self._xscale*rc.left+0.5)
+		t=int(self._yscale*rc.top+0.5)
+		r=int(self._xscale*rc.right+0.5)
+		b=int(self._yscale*rc.bottom+0.5)
+		return Rect((l,t,r,b))
 
+	def	RestoreState(self):
+		del self._has_scale
 
 # Global Context 
 drawTk=	DrawTk()
