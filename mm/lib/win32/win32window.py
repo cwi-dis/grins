@@ -118,6 +118,8 @@ class Window:
 	# Scrolling support
 	#
 	def checkscrolling(self):
+		if not self._mediadisplayrect: 
+			return
 		wd, hd = self._rect[2:]
 		ws, hs = self._mediadisplayrect[2:]
 		if self._fit==-4 and ws>wd or hs>hd:
