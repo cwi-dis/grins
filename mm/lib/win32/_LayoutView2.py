@@ -444,8 +444,8 @@ class TreeManager:
 	def destroyAllNodes(self):								  		
 		self.treeCtrl.DeleteAllItems()
 
-	def selectNode(self, item):
-		self.treeCtrl.SelectItem(item)
+	def selectNodeList(self, itemList):
+		self.treeCtrl.SelectItemList(itemList)
 		
 #	def _onSelect(self, std, extra):
 #		action, itemOld, itemNew, ptDrag = extra
