@@ -185,6 +185,7 @@ class TransitionEngine:
 class InlineTransitionEngine:
 	def __init__(self, window, outtrans, runit, dict, cb):
 		self.window = window
+		self.outtrans = outtrans
 		self.dict = dict
 		self.cb = cb
 
@@ -224,8 +225,8 @@ class InlineTransitionEngine:
 		if wnd.is_closed():
 			return
 		
-		if self.dict['mode']=='out':
-			wnd.updateBackDDS(self._tosurf, exclwnd=wnd) 
+		if self.outtrans:
+			wnd._paintOnDDS(wnd._fromsurf, wnd._rect)
 		else:
 			wnd._paintOnDDS(self._tosurf, wnd._rect)
 		
