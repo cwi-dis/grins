@@ -617,7 +617,7 @@
 (regAlign (enum topLeft topMid topRight midLeft center midRight bottomLeft bottomMid bottomRight) topLeft 'Alignment' default
 	'Alignment point associate to the media' raw (smil2))
 
-(regPoint (enum topLeft topMid topRight midLeft center midRight bottomLeft bottomMid bottomRight) topLeft 'Registration point' default
+(regPoint (string) 'topLeft' 'Registration point' default
 	'Registration point associate to the region' region (smil2))
 
 # prefetch
