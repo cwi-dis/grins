@@ -62,6 +62,10 @@ class AnimateChannel(Channel.ChannelAsync):
 		parser = Animators.AnimateElementParser(node)
 		self.__animator = parser.getAnimator()
 		if self.__animator:
+			# find and apply parent spped
+			speed = node.GetParent().GetRawAttrDefProduct('speed', 1.0)
+			self.__animator._setSpeed(speed)
+			# get the effective animator of the attribute
 			context = self._player._animateContext
 			self.__effAnimator = context.getEffectiveAnimator(
 				parser.getTargetNode(), 
