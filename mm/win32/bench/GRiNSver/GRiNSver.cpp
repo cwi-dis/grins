@@ -33,6 +33,7 @@ int main(int argc, char* argv[])
 	cout << szHeaderMsg << endl << endl;
 	ofs << szHeaderMsg << endl << endl;
 
+	Module::reportPlatformOn(ofs);
 	Module::VerifyAll(pszModules,ofs);
 
 	
@@ -56,5 +57,4 @@ int main(int argc, char* argv[])
 
 	return 0;
 	}
-
 
