@@ -1955,7 +1955,7 @@ class SMILWriter(SMIL):
 		if not viewinfo:
 			return
 		for view, geometry in viewinfo:
-			t, l, w, h = geometry
+			l, t, w, h = geometry
 			self.writetag('%s:viewinfo' % NSGRiNSprefix, [
 				('view', view),
 				('top', `t`),
