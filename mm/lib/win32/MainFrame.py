@@ -118,7 +118,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		self._canscroll = 0
 
 		# player state
-		self.__playerstate = wndusercmd.TB_STOP
+		self.__playerstate = usercmd.STOP
 
 		# full screen player
 		self.__fsPlayer = None
@@ -207,21 +207,21 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		# so do not hook other messages
 
 		# direct all cmds to self.OnUserCmd but dissable them
-		for cmdcl in usercmdui.class2ui.keys():
-			id=usercmdui.class2ui[cmdcl].id
+		L = usercmdui.getcmdids()
+		for id in L:
 			self.HookCommand(self.OnUserCmd,id)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
 		self.HookCommand(self.OnWndUserCmd,afxres.ID_WINDOW_CASCADE)
 		self.HookCommand(self.OnWndUserCmd,afxres.ID_WINDOW_TILE_VERT)
 		self.HookCommand(self.OnWndUserCmd,afxres.ID_WINDOW_TILE_HORZ)
-		id=usercmdui.class2ui[wndusercmd.CLOSE_ACTIVE_WINDOW].id
-		self.HookCommand(self.OnCloseActiveWindow,id)
+
+		self.HookCommand(self.OnCloseActiveWindow,usercmdui.usercmd2id(wndusercmd.CLOSE_ACTIVE_WINDOW))
 	
-		id=usercmdui.class2ui[wndusercmd.ABOUT_GRINS].id
+		id = usercmdui.usercmd2id(wndusercmd.ABOUT_GRINS)
 		self.HookCommand(self.OnAbout,id)
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
 
-		id=usercmdui.class2ui[wndusercmd.SELECT_CHARSET].id
+		id = usercmdui.usercmd2id(wndusercmd.SELECT_CHARSET)
 		self.HookCommand(self.OnCharset,id)
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
 
@@ -239,7 +239,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		
 		# enable mechanism to accept paste files
 		# when the event PasteFile is registered
-		id=usercmdui.class2ui[wndusercmd.PASTE_DOCUMENT].id
+		id = usercmdui.usercmd2id(wndusercmd.PASTE_DOCUMENT)
 		self.HookCommand(self.OnPasteFile,id)
 		self.HookCommandUpdate(self.OnUpdateEditPaste,id)
 		Toolbars.ToolbarMixin.OnCreate(self, createStruct)
@@ -335,7 +335,8 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		except win32ui.error:
 			f=None
 
-		id=usercmdui.class2ui[wndusercmd.CLOSE_ACTIVE_WINDOW].id
+		
+		id = usercmdui.usercmd2id(wndusercmd.CLOSE_ACTIVE_WINDOW)
 		if not f:
 			self._active_child=None
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
@@ -389,7 +390,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		if self._active_child and\
 			hasattr(self._active_child._view,'_commandlist') and\
 			self._active_child._view._commandlist:
-			id=usercmdui.class2ui[usercmd.CLOSE_WINDOW].id
+			id = usercmdui.usercmd2id(CLOSE_WINDOW)
 			self.PostMessage(win32con.WM_COMMAND,id)
 		else:
 			f.PostMessage(win32con.WM_CLOSE)
@@ -750,11 +751,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	# return commnds class id
 	def get_cmdclass_id(self,cmdcl):
-		if usercmdui.class2ui.has_key(cmdcl):
-			return usercmdui.class2ui[cmdcl].id
-		else: 
-			print 'CmdClass not found',cmdcl
-			return -1
+		return usercmdui.usercmd2id(cmdcl)
 
 	# Returns a submenu from its string id (e.g 'File','Edit',etc)
 	def get_submenu(self,strid):
@@ -773,8 +770,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		# cash ids to cmd map for OnUserCmd
 		if commandlist:
 			for cmd in commandlist:
-				usercmd_ui = usercmdui.class2ui[cmd.__class__]
-				id=usercmd_ui.id
+				id = usercmdui.usercmd2id(cmd.__class__)
 				self.enable_cmd(id)
 				self._activecmds[context][id]=cmd
 		self.setplayerstate(self.__playerstate)
@@ -790,8 +786,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		self._activecmds[context]={}
 		commandlist=contextcmds.values()
 		for cmd in commandlist:
-			usercmd_ui = usercmdui.class2ui[cmd.__class__]
-			self.dissable_cmd(usercmd_ui.id)
+			self.dissable_cmd(usercmdui.usercmd2id(cmd.__class__))
 		
 	def enable_cmd(self,id):
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
@@ -806,7 +801,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	# Toggle commands (check/uncheck menu entries)		
 	def set_toggle(self, cmdcl, onoff):
-		id=usercmdui.class2ui[cmdcl].id
+		id = usercmdui.usercmd2id(cmdcl)
 		flags = win32con.MF_BYCOMMAND
 		if onoff==0:
 			flags = flags | win32con.MF_UNCHECKED
@@ -820,40 +815,22 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		import Player
 
 		self.__playerstate = state
-		tb_id_play=usercmdui.class2ui[wndusercmd.TB_PLAY].id
-		tb_id_pause=usercmdui.class2ui[wndusercmd.TB_PAUSE].id
-		tb_id_stop=usercmdui.class2ui[wndusercmd.TB_STOP].id
+		id_play = usercmdui.usercmd2id(usercmd.PLAY)
+		id_pause = usercmdui.usercmd2id(usercmd.PAUSE)
+		id_stop = usercmdui.usercmd2id(usercmd.STOP)
 			
-		id_play=usercmdui.class2ui[usercmd.PLAY].id
-		id_pause=usercmdui.class2ui[usercmd.PAUSE].id
-		id_stop=usercmdui.class2ui[usercmd.STOP].id
-
 		if state == Player.PLAYING:
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_pause)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_stop)
-
-			self.HookCommandUpdate(self.OnUpdateCmdEnable,tb_id_pause)
-			self.HookCommandUpdate(self.OnUpdateCmdDissable,tb_id_play)
-			self.HookCommandUpdate(self.OnUpdateCmdEnable,tb_id_stop)
-		
 		if state == Player.PAUSING:
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdEnableAndCheck,id_pause)
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_stop)
-			
-			self.HookCommandUpdate(self.OnUpdateCmdEnable,tb_id_play)
-			self.HookCommandUpdate(self.OnUpdateCmdEnableAndCheck,tb_id_pause)
-			self.HookCommandUpdate(self.OnUpdateCmdEnable,tb_id_stop)
-		
 		if state == Player.STOPPED:
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_stop)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_pause)
-
-			self.HookCommandUpdate(self.OnUpdateCmdEnable,tb_id_play)
-			self.HookCommandUpdate(self.OnUpdateCmdDissable,tb_id_stop)
-			self.HookCommandUpdate(self.OnUpdateCmdDissable,tb_id_pause)
 
 
 	# Return the commandlist for the context
@@ -899,20 +876,24 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		self.PostMessage(WM_KICKIDLE)
 
 	# Get the command class id
-	def GetUserCmdId(self,cmdcl):
-		return usercmdui.class2ui[cmdcl].id
+	def GetUserCmdId(self, cmdcl):
+		return usercmdui.usercmd2id(cmdcl)
 
-	# Get the command class instance
-	def GetUserCmd(self,cmdcl):
-		id=usercmdui.class2ui[cmdcl].id
-		for contextcmds in self._activecmds.values():
+	# Get the user command class instance
+	def GetUserCmd(self, cmdcl):
+		id = usercmdui.usercmd2id(cmdcl)
+		cmd=None
+		for context in self._activecmds.keys():
+			contextcmds=self._activecmds[context]
 			if contextcmds.has_key(id):
-				return contextcmds[id]
-		return None
+				cmd = contextcmds[id]
+				break
+		return cmd
+
 
 #  	def set_grins_snap_features(self):
 # 		# Assert features.version == 'grins snap!'
-# 		id_openrecent = usercmdui.class2ui[usercmd.OPEN_RECENT].id
+#		id_openrecent = usercmdui.usercmd2id(OPEN_RECENT)
 # 		self.HookCommandUpdate(self.OnUpdateCmdDissable, id_openrecent);
 
 # 		print "DEBUG: I think it worked..";
@@ -927,9 +908,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	# Set the dynamic commands associated with the command class
 	def set_dynamiclist(self, command, list):
-		self._dynamiclists[command]=list
-		submenu=self._mainmenu.get_cascade_menu(command)
-		idstart = usercmdui.class2ui[command].id+1
+		self._dynamiclists[command] = list
+		submenu = self._mainmenu.get_cascade_menu(command)
+		idstart = usercmdui.usercmd2id(command) + 1
 		cmd = self.GetUserCmd(command)
 		if cmd is None:
 			# dissable submenu cmds?
@@ -949,19 +930,19 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			menuspec.append(entry)			
 		if submenu is not None:
 			self._mainmenu.clear_cascade(command)
-			win32menu._create_menu(submenu,menuspec,idstart,self._dyncmds[command])
-			self.set_dyncbd(self._dyncmds[command],submenu)
+			win32menu._create_menu(submenu, menuspec, idstart, self._dyncmds[command])
+			self.set_dyncbd(self._dyncmds[command], submenu)
 		
 		# update popupmenu
 		if self._popupmenu:
-			submenu=self._popupmenu.get_cascade_menu(command)
+			submenu = self._popupmenu.get_cascade_menu(command)
 			if submenu:
 				self._popupmenu.clear_cascade(command)
-				win32menu._create_menu(submenu,menuspec,idstart,self._dyncmds[command])
+				win32menu._create_menu(submenu, menuspec, idstart, self._dyncmds[command])
 		
 	# Helper function to return the dynamic submenu
 	def get_cascade_menu(self,id):
-		cl=usercmdui.get_cascade(id)
+		cl = usercmdui.get_cascade(id)
 		return self._mainmenu.get_cascade_menu(cl)
 	
 	# Response to dynamic menus commands	
@@ -973,7 +954,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 				# apply because the call may result
 				# in a call to set_dynamiclist
 				self.check_cascade_menu_entry(id)
-				apply(apply,cbd[id])
+				apply(apply, cbd[id])
 				break
 		self.PostMessage(WM_KICKIDLE)
 
@@ -1007,7 +988,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	###############################################
 	# Fire a command class instance
 	def fire_cmd(self,cmdcl):
-		id=usercmdui.class2ui[cmdcl].id
+		id = usercmdui.usercmd2id(cmdcl)
 		self.OnUserCmd(id,0)
 	
 	# Compose and set the title  	
@@ -1028,9 +1009,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	# Called by the framework when the user closes the window
 	def OnClose(self):
 		if len(__main__.toplevel._subwindows)>1:
-			self.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CLOSE].id)
+			self.PostMessage(win32con.WM_COMMAND, usercmdui.usercmd2id(usercmd.CLOSE))
 		else:
-			self.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.EXIT].id)
+			self.PostMessage(win32con.WM_COMMAND, usercmdui.usercmd2id(usercmd.EXIT))
 
 	# Bring to top of peers
 	def pop(self):
@@ -1227,8 +1208,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		viewobj._commandlist = []
 		viewobj._title = appview[strid]['title']
 		cmd =  appview[strid]['cmd']
-		if usercmdui.class2ui.has_key(cmd):
-			viewobj._closecmdid = usercmdui.class2ui[cmd].id
+		viewobj._closecmdid = usercmdui.usercmd2id(cmd)
 
 ################################################
 # The ChildFrame purpose is to host the views in its client area
@@ -1317,8 +1297,8 @@ class ChildFrame(window.MDIChildWnd):
 		return self.GetMDIFrame()
 
 	# Returns the cmd class id
-	def GetUserCmdId(self,cmdcl):
-		return self.GetMDIFrame().GetUserCmdId(cmdcl)
+	def GetUserCmdId(self, cmdcl):
+		return usercmdui.usercmd2id(cmdcl)
 
 	# Target for commands that are enabled
 	def OnUpdateCmdEnable(self,cmdui):
@@ -1376,3 +1356,4 @@ class SplitterBrowserChildFrame(ChildFrame):
 
 
 
+ 
