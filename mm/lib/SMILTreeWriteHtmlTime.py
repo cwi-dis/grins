@@ -233,7 +233,7 @@ class SMILHtmlTimeWriter(SMIL):
 		
 		# body contents
 		# viewports
-		if len(self.top_levels)==1:
+		if 1: #len(self.top_levels)==1:
 			self.__currViewport = ch = self.top_levels[0]
 			name = self.ch2name[ch]
 			self.writetag('div', [('id',name), ('style', self.ch2style[ch]),])
@@ -422,39 +422,33 @@ class SMILHtmlTimeWriter(SMIL):
 	
 		lch = self.root.GetContext().getchannel(regionName)
 
-		# 
-		if lch and (self.__currRegion==None or self.__currRegion!=lch):
-			if self.__currRegion!=None:
-				self.pop()
-			self.__currRegion = lch
-			while lch:
-				if lch.get('type') != 'layout':
-					continue
-				if lch in self.top_levels:
-					viewport = lch
-					break
-				parents.insert(0, lch)
-				lch = lch.__parent
+		while lch:
+			if lch.get('type') != 'layout':
+				continue
+			if lch in self.top_levels:
+				viewport = lch
+				break
+			parents.insert(0, lch)
+			lch = lch.__parent
 		
-			if viewport and self.__currViewport!=viewport:
-				if self.__currViewport:
-					self.pop()
-				name = self.ch2name[viewport]
-				self.writetag('div', [('id',name), ('style', self.ch2style[viewport]),])
-				self.push()
-				self.__currViewport = viewport
+		if viewport and self.__currViewport!=viewport:
+			if self.__currViewport:
+				self.pop()
+			name = self.ch2name[viewport]
+			self.writetag('div', [('id',name), ('style', self.ch2style[viewport]),])
+			self.push()
+			self.__currViewport = viewport
 
-			for lch in parents:
-				divlist = []
-				if self.ch2style.has_key(lch):
-					name = self.ch2name[lch]
-					divlist.append(('id', name))
-					divlist.append(('style', self.ch2style[lch]))
-					self.writetag('div', divlist)
-					self.push()
-					self.ids_written[name] = 1
-					pushed = pushed + 1
-			pushed = pushed -1 # keep region open
+		for lch in parents:
+			divlist = []
+			if self.ch2style.has_key(lch):
+				name = self.ch2name[lch]
+				divlist.append(('id', name))
+				divlist.append(('style', self.ch2style[lch]))
+				self.writetag('div', divlist)
+				self.push()
+				self.ids_written[name] = 1
+				pushed = pushed + 1
 				
 		transitions = self.root.GetContext().transitions
 		if transIn or transOut:
