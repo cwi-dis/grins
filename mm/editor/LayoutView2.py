@@ -532,7 +532,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.initDialogBox()		
 		self.displayViewport(self._first)
 		self.select(self.currentViewport)
-		self.editmgr.registerfirst(self, 1, 1)
+		self.editmgr.register(self, 1, 1)
 
 		# get the initial player state		
 		type,node = self.editmgr.getplayerstate()
