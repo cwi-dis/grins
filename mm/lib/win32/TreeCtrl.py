@@ -98,7 +98,8 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 		key = params[2]
 		
 		if key == win32con.VK_TAB: 
-			self.parent.SetFocus() 
+			self.parent.OnChangeTreeFocus()
+			return 0
 		elif key == win32con.VK_DELETE:
 			if hasattr(self.parent, 'OnDelete'):
 				self.parent.OnDelete()
