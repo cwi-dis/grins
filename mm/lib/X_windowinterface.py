@@ -33,6 +33,7 @@ _cm_cache = {}
 _rb_message = """\
 Use left mouse button to draw a box.
 Click `Done' when ready or `Cancel' to cancel."""
+_rb_done = '_rb_done'			# exception to stop create_box loop
 
 # size of arrow head
 ARR_LENGTH = 18
@@ -825,11 +826,13 @@ class _Window:
 		callback = self._rb_callback
 		self._rb_finish()
 		apply(callback, self._rb_cvbox())
+		raise _rb_done
 
 	def _rb_cancel(self):
 		callback = self._rb_callback
 		self._rb_finish()
 		apply(callback, ())
+		raise _rb_done
 
 	def _rb_draw(self):
 		x = self._rb_start_x
@@ -911,6 +914,11 @@ class _Window:
 			self._rb_start_y = y
 			self._rb_width = w
 			self._rb_height = h
+		# wait until box has been drawn or canceled
+		try:
+			Xt.MainLoop()
+		except _rb_done:
+			pass
 
 	def _start_rb(self, w, data, event):
 		self._rb_display.render()
@@ -2329,7 +2337,7 @@ class Dialog:
 		if grab:
 			attrs = {'allowOverlap': 0,
 				 'dialogStyle':
-					Xmd.DIALOG_PRIMARY_APPLICATION_MODAL,
+					Xmd.DIALOG_FULL_APPLICATION_MODAL,
 				 'title': title,
 				 'colormap': toplevel._default_colormap,
 				 'visual': toplevel._default_visual,
@@ -2535,7 +2543,7 @@ class FileDialog:
 		import os
 		self.cb_ok = cb_ok
 		self.cb_cancel = cb_cancel
-		attrs = {'dialogStyle': Xmd.DIALOG_PRIMARY_APPLICATION_MODAL,
+		attrs = {'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
 			 'colormap': toplevel._default_colormap,
 			 'visual': toplevel._default_visual,
 			 'depth': toplevel._default_visual.depth}
@@ -2626,7 +2634,7 @@ class FileDialog:
 
 class InputDialog:
 	def __init__(self, prompt, default, cb):
-		attrs = {'dialogStyle': Xmd.DIALOG_PRIMARY_APPLICATION_MODAL,
+		attrs = {'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
 			 'colormap': toplevel._default_colormap,
 			 'visual': toplevel._default_visual,
 			 'depth': toplevel._default_visual.depth}
