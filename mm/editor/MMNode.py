@@ -887,7 +887,7 @@ class MMNode(MMNodeBase.MMNode):
 		pass
 
 	def commit(self):
-		print 'MMNode: deleting cached values'
+## 		print 'MMNode: deleting cached values'
 		try:
 			del self.sractions
 		except AttributeError:

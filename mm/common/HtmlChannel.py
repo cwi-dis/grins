@@ -528,9 +528,9 @@ def normalize(name):
 	for word in words[1:]:
 		word = string.upper(word[0]) + word[1:]
 		newname = newname + word
-	if newname <> name:
-		print 'HtmlChannel: "%s" has resource name "%s"'%(
-			name, newname)
+## 	if newname <> name:
+## 		print 'HtmlChannel: "%s" has resource name "%s"'%(
+## 			name, newname)
 	return newname
 
 _end_loop = '_end_loop'
