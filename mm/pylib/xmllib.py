@@ -15,7 +15,7 @@ incomplete = re.compile('&(' + _Name + '|#[0-9]*|#x[0-9a-fA-F]*)?|'
 			   '<([a-zA-Z_:][^<>]*|'
 			      '/([a-zA-Z_:][^<>]*)?|'
 			      '![^<>]*|'
-			      '\?[^<>]*)?')
+			      r'\?[^<>]*)?')
 
 ref = re.compile('&(' + _Name + '|#[0-9]+|#x[0-9a-fA-F]+);?')
 entityref = re.compile('&(?P<name>' + _Name + ')[^-a-zA-Z0-9._:]')
@@ -28,12 +28,12 @@ endtagopen = re.compile('</')
 starttagend = re.compile(_opS + '(?P<slash>/?)>')
 endbracket = re.compile('>')
 tagfind = re.compile(_Name)
-cdataopen = re.compile('<!\[CDATA\[')
-cdataclose = re.compile('\]\]>')
+cdataopen = re.compile(r'<!\[CDATA\[')
+cdataclose = re.compile(r'\]\]>')
 doctype = re.compile('<!DOCTYPE' + _S + '(?P<name>' + _Name + ')' + _S)
 special = re.compile('<!(?P<special>[^<>]*)>')
-procopen = re.compile('<\?(?P<proc>' + _Name + ')' + _S)
-procclose = re.compile(_opS + '\?>')
+procopen = re.compile(r'<\?(?P<proc>' + _Name + ')' + _S)
+procclose = re.compile(_opS + r'\?>')
 commentopen = re.compile('<!--')
 commentclose = re.compile('-->')
 doubledash = re.compile('--')
@@ -226,7 +226,7 @@ class XMLParser:
 		if res is not None:
 		    i = res.end(0)
 		    if rawdata[i-1] != ';':
-			self.syntax_error('; missing in charref')
+			self.syntax_error("`;' missing in charref")
 			i = i-1
 		    self.handle_charref(res.group('char')[:-1])
 		    self.lineno = self.lineno + string.count(res.group(0), '\n')
@@ -235,7 +235,7 @@ class XMLParser:
 		if res is not None:
 		    i = res.end(0)
 		    if rawdata[i-1] != ';':
-			self.syntax_error('; missing in entityref')
+			self.syntax_error("`;' missing in entityref")
 			i = i-1
 		    self.handle_entityref(res.group('name'))
 		    self.lineno = self.lineno + string.count(res.group(0), '\n')
@@ -254,7 +254,7 @@ class XMLParser:
 	    j = res.end(0)
 	    if j == n:
 		break # Really incomplete
-	    self.syntax_error('bogus < or &')
+	    self.syntax_error("bogus `<' or `&'")
 	    data = res.group(0)
 	    self.handle_data(data)
 	    self.lineno = self.lineno + string.count(data, '\n')
@@ -514,8 +514,7 @@ class XMLParser:
 	self.handle_data(chr(n))
 
     # Definition of entities -- derived classes may override
-    entitydefs = \
-	    {'lt': '<', 'gt': '>', 'amp': '&', 'quot': '"', 'apos': '\''}
+    entitydefs = {'lt': '<', 'gt': '>', 'amp': '&', 'quot': '"', 'apos': "'"}
 
     # Example -- handle entity reference, no need to override
     def handle_entityref(self, name):
