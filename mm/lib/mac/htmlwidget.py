@@ -694,9 +694,9 @@ def drawGIF((l,t,r,b),obj):
 	fg = port.rgbFgColor
 	Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 	Qd.RGBForeColor((0,0,0))
-##	Qd.CopyBits(pixmap, port.portBits, srcrect, dstrect,
+##	Qd.CopyBits(pixmap, port.GetPortBitMapForCopyBits(), srcrect, dstrect,
 ##		QuickDraw.srcCopy+QuickDraw.ditherCopy, None)
-	Qd.CopyBits(pixmap, port.portBits, srcrect, dstrect,
+	Qd.CopyBits(pixmap, port.GetPortBitMapForCopyBits(), srcrect, dstrect,
 		QuickDraw.srcCopy, None)
 	Qd.RGBBackColor(bg)
 	Qd.RGBForeColor(fg)

@@ -9,7 +9,7 @@ if platform == 'irix6':
 		from MPEGVideoDuration import *
 elif platform == 'sunos5' or platform == 'irix5' or platform[:5] == 'linux':
 	from MPEGVideoDuration import *
-elif platform == 'mac':
+elif platform in ('mac', 'darwin'):
 	from MACVideoDuration import *
 elif platform == 'nt' or platform == 'win32':
 	from NTVideoDuration import *

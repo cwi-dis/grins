@@ -12,7 +12,7 @@ mimetypes.init()
 # XXXX This should also be implemented for Windows: we should lookup
 # the extension in the registry if we don't know of it.
 import sys
-if sys.platform == 'mac':
+if sys.platform in ('mac', 'darwin'):
 	import MMurl
 	import urlparse
 	import MacOS
