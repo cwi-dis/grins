@@ -1422,6 +1422,8 @@ class MMNode:
 		# XXX: ignoring animate elements timing for now, 
 		# just kick animate childs in a parallel envelope	
 		for child in self.children:
+			if MMAttrdefs.getattr(child, 'type')!='animate':
+				continue
 			srlist.append(( [(SCHED, self),], 
 				[(SCHED,child),(PLAY,self)]  ))
 
@@ -1430,6 +1432,13 @@ class MMNode:
 
 			srlist.append((  [(SCHED,child),], 
 				[(PLAY,child)]  ))
+
+			if settings.noprearm:
+				srlist.append((  [(SCHED,child),], 
+					[(PLAY,child)]  ))
+			else:
+				srlist.append((  [(SCHED,child),(ARM_DONE, child),], 
+					[(PLAY,child)]  ))
 
 			srlist.append((  [(PLAY_DONE,child),], 
 				[(SCHED_STOPPING,child),]  ))
