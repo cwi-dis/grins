@@ -219,7 +219,11 @@ class SchedulerContext:
 	# Incoming events from channels, or the start event.
 	#
 	def event(self, ev):
+		#DBG print 'event', SR.ev2string(ev)
 		srlist = self.getsrlist(ev)
+		self.queuesrlist(srlist)
+
+	def queuesrlist(self, srlist):
 		for sr in srlist:
 			if sr[0] == SR.PLAY:
 				prio = PRIO_START
@@ -256,6 +260,8 @@ class SchedulerContext:
 			actionpos = self.srevents[ev]
 			del self.srevents[ev]
 		except KeyError:
+			if ev[0] == SR.TERMINATE:
+				return []
 			raise error, 'Scheduler: Unknown event: %s' % SR.ev2string(ev)
 		srlist = self.sractions[actionpos]
 		if srlist is None:
@@ -610,6 +616,8 @@ class Scheduler(scheduler):
 					num, srlist = sctx.sractions[pos]
 					num = num - 1
 					if num == 0:
+						if ev[0] == SR.SCHED_DONE:
+							sctx.queuesrlist(srlist)
 						sctx.sractions[pos] = None
 					else:
 						sctx.sractions[pos] = num, srlist
