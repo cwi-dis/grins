@@ -1,0 +1,153 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>GRiNS Editor for Windows Release Notes</title>
+  </head>
+
+  <body>
+    <h1>GR<i>i</i>NS Editor for Windows Release Notes</h1>
+    <p>
+      These are the release notes for the GR<i>i</i>NS player for
+      Windows 95/98/NT4, Release 0.5, patchlevel 0. More information on
+      GR<i>i</i>NS can be obtained at <A
+      HREF="http://www.oratrix.com/GRiNS">http://www.oratrix.com/GRiNS</A>,
+      or by email to <A
+      HREF="mailto:grins-request@oratrix.com">grins-request@oratrix.com</A>.
+    </p>
+
+    <p>
+      What (sparse) documentation on GR<i>i</i>NS is available at this 
+      time can also be found on the homepage.
+    </p>
+
+    <h3>Prerequisites</h3>
+    <p>
+      For decent performance you probably need at least a 100Mhz
+      Pentium with 32Mb, but more memory and a faster processor are
+      definitely preferred. You need about 10Mb of free diskspace.
+    </p>
+    <p>
+      For some older versions of Windows 95, and possibly NT too, you
+      may need a COM patch and/or an Active Movie patch. See the <A
+	HREF="#problems">problems</A> section below for the symptoms
+      and the solution.
+    </p>
+
+
+    <h3>Feedback</h3>
+    <p>
+      Bug reports and other technical feedback should be sent to <A
+      HREF="mailto:grins-support@oratrix.com">grins-support@oratrix.com</A>,
+      please check the <A
+      HREF="http://www.oratrix.com/GRiNS/feedback.html">feedback
+      section</A> on the homepage for details.
+    </p>
+
+    <p>
+      Non-technical feedback should be sent to <A
+      HREF="mailto:info@oratrix.com">info@oratrix.com</A>.
+    </p>
+
+    <h3>Platform dependencies in media handling</h3>
+    <p>
+      There are some differences between the various platforms.  See
+      the <a
+	href="http://www.oratrix.com/GRiNS/relnotes/supported.html">chart
+	of supported media types</a> on the GR<i>i</i>NS website
+      for the supported media types on the various supported
+      platforms.
+    </p>
+
+    <h3>Access methods</h3>
+    <p>
+      The GR<i>i</i>NS player supports the following access methods
+      (URL schemes).
+    </p>
+    <ul>
+      <li>file</li>
+      <li>http</li>
+      <li>ftp</li>
+      <li>data</li>
+      <li>gopher</li>
+    </ul>
+
+    <h3><a name="unsup">Unsupported SMIL features</a></h3>
+    <p>
+      There are only a few SMIL features that are not supported
+      by the GR<i>i</i>NS player.  Documents that make use of these
+      features are parsed correctly, but the features are ignored.
+    </p>
+
+    <ul>
+      <li>
+	<code>begin</code> and <code>end</code> attributes in the
+	<code>anchor</code> element.
+      </li>
+      <li>
+	<code>fit="fill"</code> and <code>fit="scroll"</code>
+	attribute values in <code>region</code> element.
+      </li>
+      <li>
+	<code>name="pics-label"</code> attribute value in
+	<code>meta</code> element.
+      </li>
+      <li>
+	<code>alt</code> attribute in media object elements.
+      </li>
+      <li>
+	<code>fill</code> attribute.
+      </li>
+    </ul>
+
+    <h3>Platform-specific issues</h3>
+    <p>
+      There are also a number of features that are not supported on
+      all platforms, or not supported identically. The following
+      problems are known for the player on Windows:
+    </p>
+
+    <p>
+      As issues are reported they are added to the <A
+      HREF="http://www.oratrix.com/GRiNS/relnotes.html">release
+      notes</A> and <A
+      HREF="http://www.oratrix.com/GRiNS/issues.txt">open issues</a>
+      sections on the home page.
+    </p>
+
+    <h3><A NAME="problems">HTML problems</A></h3>
+    <p>
+      GRiNS can render HTML either through the Webster HTML Control,
+      which is built-in, or through the Internet Explorer HTML
+      Control, which is part of IE4. If you have problems rendering
+      HTML try changing the control, in the preferences dialog.
+    </p>
+    <p>
+      Each control has its good and bad points. IE4 has more features 
+      but always shows scrollbars which is not very pretty. Webster is 
+      a HTML 3 control only, and has problems with some things like
+      using tags in URLs.
+    </p>
+
+    <h3>Sound and video problems</h3>
+    <p>
+      If sounds or videos are not played correctly on your machine
+      (e.g. <code>*.aiff</code> or <code>*.mpeg</code>) try installing
+      Active Movie.
+    </p>
+
+    <h3>Menu problems</h3>
+    <p>
+      Occasionally commands will be greyed out in the menubar or
+      toolbar while they should be enabled. Closing and opening a
+      view, or raising and lowering another view, will usually fix
+      this problem.
+    </p>
+
+    <hr>
+    <address><a href="http://www.oratrix.com/GRiNS/">the GRiNS support staff</a></address>
+<!-- Created: Thu Jul 23 16:58:52 MET DST 1998 -->
+<!-- hhmts start -->
+Last modified: Wed Mar 24 14:46:24 MET 1999
+<!-- hhmts end -->
+  </body>
+</html>
