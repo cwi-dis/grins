@@ -1256,7 +1256,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		self._wndToolBar.SetButtonInfo(14,id,afxexttb.TBBS_BUTTON,15)
 		id = usercmdui.class2ui[usercmd.CANVAS_ZOOM_OUT].id
 		self._wndToolBar.SetButtonInfo(15,id,afxexttb.TBBS_BUTTON,16)
-		print "DEBUG: added buttons."
 
 		self._wndToolBar.SetButtonInfo(16,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
 
