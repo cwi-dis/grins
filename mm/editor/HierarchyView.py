@@ -47,6 +47,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.root = self.toplevel.root
 		self.scene_graph = None
+		self.playicons = []
 
 		self.editmgr = self.root.context.editmgr
 
@@ -559,6 +560,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.old_selected_icon = None
 			self.old_multi_selected_widgets = []
 			self.old_event_sources = []
+			self.playicons = []
 		elif self.selected_widget is self.old_selected_widget and \
 		     self.selected_icon is self.old_selected_icon and \
 		     self.droppable_widget is self.old_droppable_widget and \
@@ -612,6 +614,9 @@ class HierarchyView(HierarchyViewDialog):
 		if self.arrow_list:
 			newdl = d.clone()
 			self.draw_arrows(d)
+		for node in self.playicons:
+			node.playicon.draw(d)
+		self.playicons = []
 		d.render()
 		if self.extra_displist is not None:
 			self.extra_displist.close()
