@@ -477,6 +477,10 @@ class AttrEditor(Dialog):
 				C = NameButtonRow
 			elif type == 'string':
 				C = StringButtonRow
+			elif type == 'int':
+				C = IntButtonRow
+			elif type == 'float':
+				C = FloatButtonRow
 			else:
 				C = ButtonRow
 			b = C().init(self, name)
@@ -744,6 +748,46 @@ class BoolButtonRow(ButtonRow):
 		b.value.label = label
 		b.value.set_button(b.currentvalue)
 	#
+
+
+class IntButtonRow(ButtonRow):
+	#
+	def makevalueinput(b, (x, y, w, h)):
+		b.value = b.form.add_input(INT_INPUT, x, y, w-1, h, '')
+		b.value.lstyle = FIXED_STYLE
+		b.value.set_call_back(b.valuecallback, None)
+	#
+	def valuerepr(self, value):
+		return `value`
+	#
+	def parsevalue(self, string):
+		try:
+			x = eval(string)
+		except:
+			raise MMExc.SyntaxError, 'bad int syntax'
+		if type(x) <> type(0):
+			raise MMExc.TypeError, 'not an int value'
+		return x
+
+
+class FloatButtonRow(ButtonRow):
+	#
+	def makevalueinput(b, (x, y, w, h)):
+		b.value = b.form.add_input(FLOAT_INPUT, x, y, w-1, h, '')
+		b.value.lstyle = FIXED_STYLE
+		b.value.set_call_back(b.valuecallback, None)
+	#
+	def valuerepr(self, value):
+		return `value`
+	#
+	def parsevalue(self, string):
+		try:
+			x = eval(string)
+		except:
+			raise MMExc.SyntaxError, 'bad float syntax'
+		if type(x) <> type(0) and type(x) <> type(0.0):
+			raise MMExc.TypeError, 'not a float value'
+		return x
 
 
 class NameButtonRow(ButtonRow):
