@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 advapi32.lib version.lib kernel32.lib user32.lib gdi32.lib winmm.lib vfw32.lib /nologo /dll /machine:I386 /out:"Release/rma.pyd"
+# ADD LINK32 advapi32.lib version.lib kernel32.lib user32.lib gdi32.lib winmm.lib vfw32.lib /nologo /dll /machine:I386 /out:"Release/rma.pyd" /libpath:"..\..\..\python\PCbuild" /libpath:"..\..\..\python\Extensions\win32\Build"
 # Begin Custom Build
 TargetPath=.\Release\rma.pyd
 InputPath=.\Release\rma.pyd
@@ -91,7 +91,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 advapi32.lib version.lib kernel32.lib user32.lib gdi32.lib winmm.lib vfw32.lib /nologo /dll /debug /machine:I386 /out:"Debug/rma_d.pyd" /pdbtype:sept
+# ADD LINK32 advapi32.lib version.lib kernel32.lib user32.lib gdi32.lib winmm.lib vfw32.lib /nologo /dll /debug /machine:I386 /out:"Debug/rma_d.pyd" /pdbtype:sept /libpath:"..\..\..\python\PCbuild" /libpath:"..\..\..\python\Extensions\win32\Build"
 # Begin Custom Build
 TargetPath=.\Debug\rma_d.pyd
 InputPath=.\Debug\rma_d.pyd
