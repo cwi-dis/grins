@@ -96,16 +96,20 @@ class EventStruct:
 				node = self._setnode
 			else:
 				node = s.srcnode
+			if type(node) == type(()): #tmp
+				node, anchor = node
+			else:
+				anchor = s.srcanchor
 			if not node:
 				print "TODO: No node!! (EventEditor)"
 			e = self.get_event()
 			if e.startswith('repeat'):
 				e = e + '(' + `self.get_repeat()` + ')'
 			if e == 'marker':
-				s.__init__(self._node, action, srcnode = node, marker = self.get_marker(),
+				s.__init__(self._node, action, srcnode = node, srcanchor = anchor, marker = self.get_marker(),
 					   delay=self.get_offset())
 			else:
-				s.__init__(self._node, action, srcnode = node, event=e,
+				s.__init__(self._node, action, srcnode = node, srcanchor = anchor, event=e,
 					   delay=self.get_offset())
 		elif c == 'region' and self._setregion:
 			ch = self.get_region()
@@ -154,6 +158,10 @@ class EventStruct:
 		if self.cause == 'node' or self.cause == 'region':
 			if not self.get_event()=='marker':
 				self.event = x.event
+
+		# tmp hack for supporting anchors
+		if x.srcanchor:
+			self._setnode = x.srcnode, x.srcanchor
 
 	def clear_vars(self):
 		# Resets all the variables.
@@ -287,6 +295,8 @@ class EventStruct:
 		if not self.has_node():
 			return 0
 		node = self._setnode
+		if type(node) == type(()):
+			return 0
 		if not node:
 			node = self._syncarc.srcnode
 		return not isinstance(node, MMNode.MMNode)
@@ -295,6 +305,9 @@ class EventStruct:
 		if not self.has_node():
 			return 0
 		node = self._setnode
+		if type(node) == type(()):
+			print 'No relative refs to anchors yet'
+			return 0
 		if not node:
 			node = self._syncarc.srcnode
 		if isinstance(node, MMNode.MMNode):
@@ -386,6 +399,9 @@ class EventStruct:
 					thing = 'Dangling node'
 				else:
 					thing = refnode.GetName()
+			elif type(node) == type(()):
+				node, aid = node
+				thing = '%s#%s' % (node.GetName(), aid)
 			else:
 				thing = "SomeNode"
 		elif c == 'region':
