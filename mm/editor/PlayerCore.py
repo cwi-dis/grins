@@ -135,6 +135,35 @@ class PlayerCore(Selecter):
 			return 1	# Cannot set on internal nodes
 		return ch.updatefixedanchors(node)
 
+	# update the global focus in order to update all views according to this focus
+	# for now, the focus node list is: playing nodes and showing channels
+	def updateFocus(self):
+		# node list is a tuple of (nodetype/node)
+		# here nodetype is either: 'MMChannel' or 'MMNode'
+		nodeList = []
+
+		channelListShowing = []	
+		# first build the region list (only layoutchannel)		
+		for name in self.channelnames:
+			ch = self.channels.get(name)
+			if ch != None:
+				if ch.isShown():
+					if ch._attrdict.get('type') == 'layout':
+						chRef = self.context.getchannel(name)
+						if chRef != None:
+							nodeList.append(('MMChannel',chRef))
+					else:
+						channelListShowing.append(ch)
+
+		# next stape: build a MMNode instance list
+		for ch in channelListShowing:
+			playingNode = ch.getPlayingNode()
+			if playingNode != None:
+				nodeList.append(('MMNode',playingNode))
+
+		# send the global focus event					
+		self.editmgr.setglobalfocus('NodeList', nodeList)
+					
 	#
 	def pause(self, wantpause):
 		if self.pausing == wantpause:
@@ -143,6 +172,7 @@ class PlayerCore(Selecter):
 		self.pausing = wantpause
 		if self.pausing:
 			self.scheduler.setpaused(1)
+			self.updateFocus()
 		else:
 			self.scheduler.setpaused(0)
 		self.showstate()
