@@ -1630,7 +1630,7 @@ class EventCtrl(AttrCtrl):
 					try:
 						self._eventstruct.set_repeat(int(self._repeatwidget.gettext()))
 					except ValueError:
-						win32dialog.showmessage("Repeat must be a number!", parent=self._wnd._form)
+						win32dialog.showmessage("Repeat count must be a number.", parent=self._wnd._form)
 						return
 				else:
 					self._eventstruct.set_repeat(1)
@@ -2822,7 +2822,7 @@ class HtmlRenderer(Renderer):
 		try:
 			self._htmlwnd.CreateHtmlCtrl()
 		except:
-			msg = "Failed to create Browser control.\nCheck that the browser control you have selected is installed"
+			msg = "Failed to create Browser control.\nCheck that the browser control you have selected is installed."
 			win32dialog.showmessage(msg, parent=self._wnd._form)
 		self._htmlwnd.SetWindowPos(0,self._rc,
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)

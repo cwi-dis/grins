@@ -296,7 +296,7 @@ def set(setting, value):
 		return
 	if setting in NEEDS_RESTART and value != get(setting) and not _warned_already:
 		_warned_already = 1
-		windowinterface.showmessage('You have to restart GRiNS for some of these changes to take effect')
+		windowinterface.showmessage('You have to restart GRiNS for some of these changes to take effect.')
 	user_settings[setting] = value
 	commit(auto=1)
 
