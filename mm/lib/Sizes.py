@@ -24,7 +24,8 @@ def GetSize(url, maintype = None, subtype = None):
 		if u is not None:
 			u.close()
 		del u
-		if subtype == 'svg-xml':
+		import ChannelMap
+		if ChannelMap.channelmap.has_key('svg') and subtype == 'svg-xml':
 			width, height = GetSvgSize(url)
 		else:
 			try:
