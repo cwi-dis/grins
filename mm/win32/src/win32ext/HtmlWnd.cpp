@@ -15,9 +15,10 @@
 static CString strLicKey("Webster Pro - Copyright (c) 1995-1998 Home Page Software Inc. - A Webster CodeBase Product"); 
 static BSTR bstrLicKey=strLicKey.AllocSysString(); 
 
+
 // FRAMESET SUPPORT FOR IE5
-static CString strHtmlFrame("about:<HTML><HEAD></HEAD><FRAMESET><FRAME SRC=\"%s\" NAME=\"channel\" SCROLLING=\"auto\"></FRAMESET></HTML>");
-static CString strEmptyHtmlFrame("about:<HTML><HEAD></HEAD><FRAMESET></FRAMESET></HTML>");
+static CString strHtmlFrame("about:<HTML><HEAD></HEAD><FRAMESET FRAMEBORDER=0 FRAMESPACING=0><FRAME SRC=\"%s\" NAME=\"channel\" SCROLLING=\"auto\"></FRAMESET></HTML>");
+static CString strEmptyHtmlFrame("about:<HTML><HEAD></HEAD><FRAMESET FRAMEBORDER=0 FRAMESPACING=0></FRAMESET></HTML>");
 #include "RegKey.h"
 
 // the c++/mfc class 
@@ -213,13 +214,13 @@ BOOL CHtmlWnd::CreateHtmlCtrl()
 			//DestroyWindow();
 			return FALSE;
 			}
+		m_bCtrlCreated=true;
 		m_majorCtrlVersion=GetIEVersion();
 		if(m_majorCtrlVersion<5)
 			m_wndWebBrowser.Navigate("about:",NULL,NULL,NULL,NULL);
 		else
 			m_wndWebBrowser.Navigate(strEmptyHtmlFrame,NULL,NULL,NULL,NULL);
 		m_wndWebBrowser.ShowWindow(SW_SHOW);
-		m_bCtrlCreated=true;
 		}
 	return TRUE;
 	}
