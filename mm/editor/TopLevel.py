@@ -177,7 +177,7 @@ class TopLevel(ViewDialog):
 		prompt = 'Open CMIF file:'
 		dir = self.dirname
 		if dir == '':
-			dir = '.'
+			dir = os.curdir
 		file = self.basename + '.cmif'
 		pat = '*.cmif'
 		windowinterface.FileDialog(prompt, dir, pat, '',
@@ -215,7 +215,7 @@ class TopLevel(ViewDialog):
 		prompt = 'Save CMIF file:'
 		dir = self.dirname
 		if dir == '':
-			dir = '.'
+			dir = os.curdir
 		file = self.basename + '.cmif'
 		pat = '*.cmif'
 		windowinterface.FileDialog('Save CMIF file:', dir, pat, '',
@@ -408,7 +408,7 @@ class TopLevel(ViewDialog):
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
 		for top in opentops:
-			if filename[0] <> '/' and self.dirname:
+			if not os.path.isabs(filename) and self.dirname:
 				filename = os.path.join(self.dirname, filename)
 			if top.is_document(filename):
 				break
