@@ -460,7 +460,7 @@ class TopLevel(ViewDialog):
 		# XXXX Should check that document isn't active already,
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
-		import urllib
+		import MMurl
 		if '/' not in uid:
 			filename = self.filename
 		elif uid[-2:] == '/1':
@@ -468,7 +468,7 @@ class TopLevel(ViewDialog):
 		else:
 			filename = uid
 		try:
-			filename = urllib.urlretrieve(filename)[0]
+			filename = MMurl.urlretrieve(filename)[0]
 		except:
 			windowinterface.showmessage(
 				'Open operation failed.\n'+
