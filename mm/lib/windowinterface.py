@@ -120,12 +120,12 @@ class _Event:
 ##			_toplevel._win_lock.release()
 
 	def _readevent(self):
-		if debug: print 'Event.readevent()'
+##		if debug: print 'Event.readevent()'
 		dev, val = gl.qread()
 		return self._dispatch(dev, val)
 
 	def _dispatch(self, dev, val):
-		if debug: print 'Event.dispatch'+`dev,val`
+##		if debug: print 'Event.dispatch'+`dev,val`
 		if dev == DEVICE.REDRAW:
 			self._savemouse = None
 			if _window_list.has_key(val):
@@ -210,7 +210,7 @@ class _Event:
 		return self._curwin, dev, val
 
 	def _getevent(self, block):
-		if debug: print 'Event.getevent('+`block`+')'
+##		if debug: print 'Event.getevent('+`block`+')'
 		qtest = gl.qtest()
 		while 1:
 			while qtest:
@@ -229,7 +229,7 @@ class _Event:
 			qtest = 1	# block on next round
 
 	def _doevent(self, dev, val):
-		if debug: print 'Event.doevent'+`dev,val`
+##		if debug: print 'Event.doevent'+`dev,val`
 		event = self._dispatch(dev, val)
 		for winkey in _window_list.keys():
 			win = _window_list[winkey]
@@ -238,22 +238,22 @@ class _Event:
 		return event
 		
 	def enterevent(self, win, event, arg):
-		if debug: print 'Event.enterevent'+`win,event,arg`
+##		if debug: print 'Event.enterevent'+`win,event,arg`
 		self._queue.append((win, event, arg))
 
 	def readevent(self):
-		if debug: print 'Event.readevent()'
+##		if debug: print 'Event.readevent()'
 		dummy = self._getevent(1)
 		event = self._queue[0]
 		del self._queue[0]
 		return event
 
 	def testevent(self):
-		if debug: print 'Event.testevent()'
+##		if debug: print 'Event.testevent()'
 		return self._getevent(0)
 
 	def pollevent(self):
-		if debug: print 'Event.pollevent()'
+##		if debug: print 'Event.pollevent()'
 		# Return the first event in the queue if there is one.
 		if self.testevent():
 			return self.readevent()
@@ -261,7 +261,7 @@ class _Event:
 			return None
 
 	def peekevent(self):
-		if debug: print 'Event.peekevent()'
+##		if debug: print 'Event.peekevent()'
 		# Return the first event in the queue if there is one,
 		# but don't remove it.
 		if self.testevent():
@@ -270,7 +270,7 @@ class _Event:
 			return None
 
 	def waitevent(self):
-		if debug: print 'Event.waitevent()'
+##		if debug: print 'Event.waitevent()'
 		# Wait for an event to occur, but don't return it.
 		dummy = self._getevent(1)
 
@@ -412,6 +412,7 @@ class _Button:
 # list is rendered, it becomes the active display list.
 class _DisplayList:
 	def init(self, window):
+		if debug: print 'DisplayList.init('+`window`+')'
 		self._window = window	# window to which this belongs
 		self._rendered = 0	# 1 iff rendered at some point
 		self._bgcolor = window._bgcolor
@@ -445,6 +446,7 @@ class _DisplayList:
 		return self._window == None
 
 	def render(self):
+		if debug: print 'DisplayList.render()'
 		window = self._window
 		if self.is_closed():
 			raise error, 'displaylist already closed'
@@ -466,6 +468,7 @@ class _DisplayList:
 		self._rendered = 1
 
 	def clone(self):
+		if debug: print 'DisplayList.clone()'
 		if self.is_closed():
 			raise error, 'displaylist already closed'
 		new = _DisplayList().init(self._window)
@@ -477,6 +480,7 @@ class _DisplayList:
 		new._fontheight = self._fontheight
 		new._baseline = self._baseline
 		new._curfont = self._curfont
+		self._window._displaylists.append(new)
 		return new
 
 	def fgcolor(self, *color):
@@ -517,6 +521,7 @@ class _DisplayList:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
+		if debug: print 'DisplayList.drawbox'+`coordinates`
 		x, y, w, h = coordinates
 		d = self._displaylist
 		x0, y0, x1, y1 = window._convert_coordinates(x, y, w, h)
@@ -847,6 +852,126 @@ class _Window:
 			raise TypeError, 'arg count mismatch'
 		return list
 
+	def sizebox(self, (x, y, w, h), constrainx, constrainy):
+		if constrainx and constrainy:
+			raise error, 'can\'t constrain both X and Y directions'
+		gl.winset(self._window_id)
+		# we must invert y0 and y1 here because convert_coordinates
+		# inverts them also and here it is important which coordinate
+		# comes first but not which coordinate is the higher
+		x0, y1, x1, y0 = self._convert_coordinates(x, y, w, h)
+		if gl.getplanes() < 12:
+			gl.drawmode(GL.PUPDRAW)
+			gl.mapcolor(GL.RED, 255, 0, 0)
+		else:
+			gl.drawmode(GL.OVERDRAW)
+		gl.color(0)
+		gl.clear()
+		gl.color(GL.RED)
+		gl.recti(x0, y0, x1, y1)
+		screenx0, screeny0 = gl.getorigin()
+		mx, my = x1, y1
+		width, height = gl.getsize()
+		while 1:
+			while testevent() == 0:
+				if not constrainx:
+					mx = gl.getvaluator(DEVICE.MOUSEX) - \
+						  screenx0
+					if mx < 0:
+						mx = 0
+					if mx >= width:
+						mx = width - 1
+				if not constrainy:
+					my = gl.getvaluator(DEVICE.MOUSEY) - \
+						  screeny0
+					if my < 0:
+						my = 0
+					if my >= height:
+						my = height - 1
+				if mx != x1 or my != y1:
+					gl.color(0)
+					gl.clear()
+					x1, y1 = mx, my
+					gl.color(GL.RED)
+					gl.recti(x0, y0, x1, y1)
+			w, e, v = readevent()
+			if e == Mouse0Release:
+				break
+		gl.color(0)
+		gl.clear()
+		gl.drawmode(GL.NORMALDRAW)
+		if x1 < x0:
+			x0, x1 = x1, x0
+		if y1 < y0:
+			y0, y1 = y1, y0
+		x, y, w, h = float(x0) / (width - 1), \
+			  float(height - y1 - 1) / (height - 1), \
+			  float(x1 - x0) / (width - 1), \
+			  float(y1 - y0) / (height - 1)
+		return x, y, w, h
+
+	def movebox(self, (x, y, w, h), constrainx, constrainy):
+		gl.winset(self._window_id)
+		x0, y0, x1, y1 = self._convert_coordinates(x, y, w, h)
+		if gl.getplanes() < 12:
+			gl.drawmode(GL.PUPDRAW)
+			gl.mapcolor(GL.RED, 255, 0, 0)
+		else:
+			gl.drawmode(GL.OVERDRAW)
+		gl.color(0)
+		gl.clear()
+		gl.color(GL.RED)
+		gl.recti(x0, y0, x1, y1)
+		screenx0, screeny0 = gl.getorigin()
+		omx = gl.getvaluator(DEVICE.MOUSEX) - screenx0
+		omy = gl.getvaluator(DEVICE.MOUSEY) - screeny0
+		width, height = gl.getsize()
+		while 1:
+			while testevent() == 0:
+				if not constrainx:
+					mx = gl.getvaluator(DEVICE.MOUSEX) - screenx0
+				if not constrainy:
+					my = gl.getvaluator(DEVICE.MOUSEY) - screeny0
+				if mx != omx or my != omy:
+					dx = mx - omx
+					dy = my - omy
+					gl.color(0)
+					gl.clear()
+					x0 = x0 + dx
+					x1 = x1 + dx
+					if x0 < 0:
+						x1 = x1 - x0
+						x0 = 0
+					if x1 >= width:
+						x0 = x0 - (x1 - width) - 1
+						x1 = width - 1
+					y0 = y0 + dy
+					y1 = y1 + dy
+					if y0 < 0:
+						y1 = y1 - y0
+						y0 = 0
+					if y1 >= height:
+						y0 = y0 - (y1 - height) - 1
+						y1 = height - 1
+					gl.color(GL.RED)
+					gl.recti(x0, y0, x1, y1)
+					omx, omy = mx, my
+			w, e, v = readevent()
+			if e == Mouse0Release:
+				break
+		gl.color(0)
+		gl.clear()
+		gl.drawmode(GL.NORMALDRAW)
+		if x1 < x0:
+			x0, x1 = x1, x0
+		if y1 < y0:
+			y0, y1 = y1, y0
+		x, y, w, h = float(x0) / (width - 1), \
+			  float(height - y1 - 1) / (height - 1), \
+			  float(x1 - x0) / (width - 1), \
+			  float(y1 - y0) / (height - 1)
+		return x, y, w, h
+
 	def pop(self):
 		if _toplevel._win_lock:
 			_toplevel._win_lock.acquire()
@@ -1064,8 +1189,8 @@ class _Window:
 		x1, y1 = x + w, y + h
 		# convert relative sizes to pixel sizes relative to
 		# lower-left corner of the window
-		x0 = int(self._width * x0 + 0.5)
-		y0 = int(self._height * y0 + 0.5)
+		x0 = int((self._width - 1) * x0 + 0.5)
+		y0 = int((self._height - 1) * y0 + 0.5)
 		x1 = int((self._width - 1) * x1 + 0.5)
 		y1 = int((self._height - 1) * y1 + 0.5)
 		y0, y1 = self._height - y1 - 1, self._height - y0 - 1
