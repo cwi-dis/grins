@@ -82,9 +82,12 @@ class QTWnd(MfcOsWnd):
 	def OnCreate(self, params):
 		Qt.InitializeQTML()
 		Qt.EnterMovies()
+		self.port = Qt.CreatePortAssociation(self.GetSafeHwnd())
+		Qt.SetGWorld(self.GetSafeHwnd())
+
 		fn = 'D:\\ufs\\mm\\cmif\\win32\\Qt\\media\\fashion.mov'
 		try:
-			movieResRef = Qt.OpenMovieFile2(fn, 1)
+			movieResRef = Qt.OpenMovieFileWin(fn, 1)
 		except Exception, arg:
 			print arg
 		try:
@@ -93,8 +96,9 @@ class QTWnd(MfcOsWnd):
 			print arg
 
 		print dir(self.movie)
+		box = self.movie.GetMovieBox()
 
-		#self.ctrl = self.movie.NewMovieController( None, 0)
+		self.ctrl = self.movie.NewMovieControllerWin(box)
 		self.movie.SetMovieActive(1)
 		self.movie.StartMovie()
 
@@ -103,26 +107,32 @@ class QTWnd(MfcOsWnd):
 		self.__timer_id = self.SetTimer(1,20)
 	
 	def PreTranslateMessage(self, params):
-		#Qt.WinEventToMacEvent(self.ctrl, params)
+		if self.ctrl:
+			self.ctrl.MCIsPlayerEventWin(params)
 		return 1
 	
 	def OnTimer(self, params):
-		if self.movie:
-			self.movie.UpdateMovie()
+		#if self.movie:
+		#	self.movie.UpdateMovie()
+		if self.ctrl:
+			self.ctrl.MCDrawWin(self.port)
 							
 	def OnDestroy(self, params):
 		self.KillTimer(self.__timer_id)
+		if self.movie:
+			self.movie.StopMovie()
 		del self.ctrl
 		del self.movie
-		del self.port
+		Qt.DestroyPortAssociation(self.port)
 		Qt.ExitMovies()
 		Qt.TerminateQTML()
 
 	def OnPaint(self):
 		dc, paintStruct = self.BeginPaint()
-		if self.movie:
-			self.movie.UpdateMovie()
-		#Qt.MCDraw(self.ctrl, self.port)
+		#if self.movie:
+		#	self.movie.UpdateMovie()
+		if self.ctrl:
+			self.ctrl.MCDrawWin(self.port)
 		self.EndPaint(paintStruct)
 			
 

@@ -3,10 +3,13 @@
 
 #include "Python.h"
 
-
-
 #include "macglue.h"
 #include "pymactoolbox.h"
+
+#ifdef _WIN32
+#include <QTML.h>
+#include <TextUtils.h>
+#endif
 
 /* Macro to test whether a weak-loaded CFM function exists */
 #define PyMac_PRECHECK(rtn) do { if ( &rtn == NULL )  {\
@@ -822,7 +825,15 @@ static PyObject *MovieCtlObj_MCGetInterfaceElement(MovieControllerObject *_self,
 	return _res;
 }
 
+#ifdef _WIN32
+#include "MovieCtlObj.inc"
+#endif
+
+
 static PyMethodDef MovieCtlObj_methods[] = {
+#ifdef _WIN32
+	APPEND_WIN_MovieCtlObj_methods
+#endif
 	{"MCSetMovie", (PyCFunction)MovieCtlObj_MCSetMovie, 1,
 	 "(Movie theMovie, WindowPtr movieWindow, Point where) -> (ComponentResult _rv)"},
 	{"MCGetIndMovie", (PyCFunction)MovieCtlObj_MCGetIndMovie, 1,
@@ -5545,7 +5556,14 @@ static PyObject *MovieObj_QTGetDataRefMaxFileOffset(MovieObject *_self, PyObject
 	return _res;
 }
 
+#ifdef _WIN32
+#include "MovieObj.inc"
+#endif
+
 static PyMethodDef MovieObj_methods[] = {
+#ifdef _WIN32
+	APPEND_WIN_MovieObj_methods
+#endif
 	{"MoviesTask", (PyCFunction)MovieObj_MoviesTask, 1,
 	 "(long maxMilliSecToUse) -> None"},
 	{"PrerollMovie", (PyCFunction)MovieObj_PrerollMovie, 1,
@@ -8120,79 +8138,16 @@ static PyObject *Qt_MoviesTask(PyObject *_self, PyObject *_args)
 }
 
 #ifdef _WIN32
-#include <QTML.h>
-#include <TextUtils.h>
-static PyObject *Qt_InitializeQTML(PyObject *self, PyObject *args) 
-	{
-	long flag = kInitializeQTMLUseGDIFlag;
-	if (!PyArg_ParseTuple(args, "|i", &flag))
-		return NULL;
-    InitializeQTML(flag);
-	Py_INCREF(Py_None);
-	return Py_None;
-	}
-static PyObject *Qt_TerminateQTML(PyObject *self, PyObject *args) 
-	{
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;
-	TerminateQTML();
-	Py_INCREF(Py_None);
-	return Py_None;
-	}
-
-static PyObject *Qt_FSMakeFSSpec(PyObject *self, PyObject *args) 
-	{
-	short theFile = 0;
-	FSSpec fileSpec;
-	char *psz;
-	if (!PyArg_ParseTuple(args, "s", &psz))
-		return NULL;
-	FSMakeFSSpec (0, 0L, c2pstr(psz), &fileSpec);
-	/* create and return FSSpec */
-	Py_INCREF(Py_None);
-	return Py_None;
-	}
-
-/* temporary until the above is complete*/
-static PyObject *Qt_OpenMovieFile2(PyObject *_self, PyObject *_args)
-{
-	PyObject *_res = NULL;
-	OSErr _err;
-	FSSpec fileSpec;
-	short resRefNum;
-	SInt8 permission;
-	char *psz;
-	if (!PyArg_ParseTuple(_args, "sb",
-	                      &psz,
-	                      &permission))
-		return NULL;
-	FSMakeFSSpec (0, 0L, c2pstr(psz), &fileSpec);
-	_err = OpenMovieFile(&fileSpec,
-	                     &resRefNum,
-	                     permission);
-	if (_err != noErr) return PyMac_Error(_err);
-	_res = Py_BuildValue("h",
-	                     resRefNum);
-	return _res;
-}
-#endif /* _WIN32 */
-
+#include "Qt.inc"
+#endif
 
 static PyMethodDef Qt_methods[] = {
-
+#ifdef _WIN32
+	APPEND_WIN_Qt_methods
+#endif
 #if !TARGET_API_MAC_CARBON
 	{"CheckQuickTimeRegistration", (PyCFunction)Qt_CheckQuickTimeRegistration, 1,
 	 "(void * registrationKey, long flags) -> None"},
-#endif
-#ifdef _WIN32
-	{"InitializeQTML", (PyCFunction)Qt_InitializeQTML, 1,
-	 "(long flags) -> None"},
-	{"TerminateQTML", (PyCFunction)Qt_TerminateQTML, 1,
-	 "() -> None"},
-	{"FSMakeFSSpec", (PyCFunction)Qt_FSMakeFSSpec, 1,
-	 "(ConstStr255Param) -> FSSpec fileSpec"},
-	{"OpenMovieFile2", (PyCFunction)Qt_OpenMovieFile2, 1,
-	 "(FSSpec fileSpec, SInt8 permission) -> (short resRefNum)"},
 #endif
 	{"EnterMovies", (PyCFunction)Qt_EnterMovies, 1,
 	 "() -> None"},
