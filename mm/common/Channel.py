@@ -243,7 +243,10 @@ class Channel:
 				return
 		# register that a channel wants to be shown
 		self._player.before_chan_show(self)
-		self._is_shown = self.do_show(pchan)
+		self._is_shown = None
+		is_shown = self.do_show(pchan)
+		if is_shown is not None:
+			self._is_shown = is_shown
 		if not self._is_shown:
 			if self._is_shown == 0:
 				self._player.after_chan_show(self)
@@ -1231,14 +1234,14 @@ class ChannelWindow(Channel):
 		return 1
 
 	def _box_callback(self, *pgeom):
+		if not pgeom:
+			# subwindow was not drawn, so hide it
+			self._is_shown = 0
+			self._want_shown = 0
+			return
 		pname = self._attrdict['base_window']
 		pchan = self._player.ChannelWinDict[pname]
-		if pgeom:
-			self._attrdict['base_winoff'] = pgeom
-		else:
-			# subwindow was not drawn, draw top-level window.
-			pchan._subchannels.remove(self)
-			pchan = None
+		self._attrdict['base_winoff'] = pgeom
 		self.create_window(pchan, pgeom,
 				   units = self._attrdict.get('units',
 						windowinterface.UNIT_SCREEN))
