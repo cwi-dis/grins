@@ -514,6 +514,8 @@ class StructureObjWidget(MMNodeWidget):
 		else:
 			return None
 
+	def get_collapse_icon(self):
+		return self.collapsebutton
 
 	def recalc(self):
 		# One optimisation that could be done is to have a dirty flag
@@ -1791,7 +1793,11 @@ class Icon(MMWidgetDecoration):
 		self.draw(displist)
 		if self.arrowable:	# The arrows get drawn by the Hierarchyview at a later stage.
 			for arrow in self.arrowto:
-				l,t,r,b = arrow.pos_abs
+				p = arrow.get_node().GetCollapsedParent()
+				if p:
+					l,t,r,b = p.views['struct_view'].get_collapse_icon().pos_abs
+				else:
+					l,t,r,b = arrow.pos_abs
 				if l == 0:
 					return
 				xd = (l+r)/2
