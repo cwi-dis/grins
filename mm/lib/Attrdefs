@@ -137,6 +137,9 @@
 (hicolor (tuple (int) (int) (int)) (255 0 0) 'Highlight color' color
 	'Color used for highlighted anchors in window' channel cmif)
 
+(html_template_type (int) 0 'Webpage type' default
+	'0=none, 1=link, 2=ram, 3=embed, 4=embedlayout' raw light)
+
 (hview_winpos (tuple (float) (float)) (-1 -1) 'Hierarchy winpos' hidden
 	 'Window position for hierarchy view' raw light)
 
