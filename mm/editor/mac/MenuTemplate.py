@@ -74,21 +74,6 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Delete', (kMenuNoCommandModifier, '\177', 0x0a), DELETE),
 		
 		(FLAG_ALL, SEP,),
-		(FLAG_ALL, CASCADE, 'Align', (
-			(FLAG_ALL, ENTRY, 'Left', 'L', ALIGN_LEFT),
-			(FLAG_ALL, ENTRY, 'Center', 'C', ALIGN_CENTER),
-			(FLAG_ALL, ENTRY, 'Right', 'R', ALIGN_RIGHT),
-			(FLAG_ALL, SEP,),
-			(FLAG_ALL, ENTRY, 'Top', 'T', ALIGN_TOP),
-			(FLAG_ALL, ENTRY, 'Middle', 'M', ALIGN_MIDDLE),
-			(FLAG_ALL, ENTRY, 'Bottom', 'B', ALIGN_BOTTOM),
-			)),
-		(FLAG_ALL, CASCADE, 'Distribute', (
-			(FLAG_ALL, ENTRY, 'Horizontally', 'H', DISTRIBUTE_HORIZONTALLY),
-			(FLAG_ALL, ENTRY, 'Vertically', 'V', DISTRIBUTE_VERTICALLY),
-			)),
-		
-		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, 'New node...', 'K', NEW_AFTER),
 		(FLAG_PRO, ENTRY, 'New Region', 'M', NEW_REGION),
 		(FLAG_BOSTON, ENTRY, 'New TopLayout', 'T', NEW_TOPLAYOUT),
@@ -181,6 +166,23 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Create End Event', None, CREATE_END_EVENT),
 		)),
 
+	(FLAG_ALL, CASCADE, 'Tools', (
+		(FLAG_ALL, CASCADE, 'Align', (
+			(FLAG_ALL, ENTRY, 'Left', 'L', ALIGN_LEFT),
+			(FLAG_ALL, ENTRY, 'Center', 'C', ALIGN_CENTER),
+			(FLAG_ALL, ENTRY, 'Right', 'R', ALIGN_RIGHT),
+			(FLAG_ALL, SEP,),
+			(FLAG_ALL, ENTRY, 'Top', 'T', ALIGN_TOP),
+			(FLAG_ALL, ENTRY, 'Middle', 'M', ALIGN_MIDDLE),
+			(FLAG_ALL, ENTRY, 'Bottom', 'B', ALIGN_BOTTOM),
+			)),
+		(FLAG_ALL, CASCADE, 'Distribute', (
+			(FLAG_ALL, ENTRY, 'Horizontally', 'H', DISTRIBUTE_HORIZONTALLY),
+			(FLAG_ALL, ENTRY, 'Vertically', 'V', DISTRIBUTE_VERTICALLY),
+			)),
+		(FLAG_ALL, SEP,),
+		)),
+		
 	(FLAG_ALL, CASCADE, 'View', (
 		(FLAG_ALL, ENTRY, 'Expand/Collapse', None, EXPAND),
 		(FLAG_ALL, ENTRY, 'Expand All', None, EXPANDALL),
