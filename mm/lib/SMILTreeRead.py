@@ -3365,14 +3365,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		changed = 0
 		try:
 			width = int(attributes.get('width'))
-		except ValueError:
+		except:
 			width = None
 		if width is not None and width > scrw:
 			attributes['width'] = `scrw`
 			changed = 1
 		try:
 			height = int(attributes.get('height'))
-		except ValueError:
+		except:
 			height = None
 		if height is not None and height > scrh:
 			attributes['height'] = `scrh`
