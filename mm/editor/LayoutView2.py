@@ -1150,6 +1150,7 @@ class LayoutView2(LayoutViewDialog2):
 						left, top, width, height = self.animationWrapper.getRectAt(tp)
 #						bgcolor = self.animationWrapper.getColorAt(tp)
 						newvals = {'left':left, 'top':top, 'width':width, 'height':height}
+					animvals = animvals[:] # don't modify the original to make undo/redo working
 					animvals.insert(index, (tp, newvals))
 					self.editmgr.setnodeattr(animateNode, 'animvals', animvals)
 
@@ -1163,6 +1164,7 @@ class LayoutView2(LayoutViewDialog2):
 		animateNode = self.getAnimateNode()
 		animvals = animateNode.GetAttrDef('animvals', [])
 		if index > 0 and index < len(animvals)-1:
+			animvals = animvals[:] # don't modify the original to make undo/redo working
 			# can only remove a key between the first and the end
 			del animvals[index]
 			self.editmgr.setnodeattr(animateNode, 'animvals', animvals)
@@ -1454,6 +1456,10 @@ class LayoutView2(LayoutViewDialog2):
 		if animationEnabled:
 			animateNode = self.getAnimateNode()
 			animvals = animateNode.GetAttrDef('animvals', [])
+			animvals = animvals[:] # don't modify the original to make undo/redo working
+			canimvals = []
+			for t, v in animvals:
+				canimvals.append((t, v.copy()))
 			keyTimeIndex = self.getKeyTimeIndex()
 			currentTimeValue = self.getCurrentTimeValue()
 			if not currentTimeValue is None:
@@ -1469,9 +1475,9 @@ class LayoutView2(LayoutViewDialog2):
 					animated = 1
 			if animated:
 				# animation value
-				time, vals = animvals[keyTimeIndex]
+				time, vals = canimvals[keyTimeIndex]
 				vals[attrName] = attrValue
-				self.editmgr.setnodeattr(animateNode, 'animvals', animvals)
+				self.editmgr.setnodeattr(animateNode, 'animvals', canimvals)
 
 			if not animated or keyTimeIndex == 0:
 				if nodeType in (TYPE_VIEWPORT, TYPE_REGION):					
@@ -2867,9 +2873,15 @@ class AnimateControlWidget(LightWidget):
 
 			animateNode = self._context.getAnimateNode()
 			animvals = animateNode.GetAttrDef('animvals', [])
-			oldtime, vals = animvals[index]
-			animvals[index] = (time, vals)
-			editmgr.setnodeattr(animateNode, 'animvals', animvals)
+			
+			animvals = animvals[:] # don't modify the original to make undo/redo working
+			canimvals = []
+			for t, v in animvals:
+				canimvals.append((t, v.copy()))
+			
+			oldtime, vals = canimvals[index]
+			canimvals[index] = (time, vals)
+			editmgr.setnodeattr(animateNode, 'animvals', canimvals)
 				
 			self._context.setCurrentTimeValue(time, nodeRef)
 			editmgr.commit()
