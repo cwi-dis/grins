@@ -136,6 +136,8 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 					# default treatement: accept errors and don't allow to edit another view
 				else: # cancel
 					self.editmgr.rollback()
+					# destroy the new root
+					self.toplevel.destroyRoot(root)
 					self.myCommit= 0
 					return
 			else:
