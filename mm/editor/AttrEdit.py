@@ -527,8 +527,8 @@ class FileAttrEditorField(StringAttrEditorField):
 		if url == '' or url == '/dev/null':
 			dir, file = cwd, ''
 		else:
-			type, url = MMurl.splittype(url)
-			if type:
+			utype, url = MMurl.splittype(url)
+			if utype:
 				windowinterface.showmessage('Cannot browse URLs')
 				return
 			file = MMurl.url2pathname(url)

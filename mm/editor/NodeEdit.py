@@ -114,8 +114,8 @@ def showeditor(node):
 		return
 	import MMAttrdefs
 	url = MMAttrdefs.getattr(node,'file')
-	type, url = MMurl.splittype(url)
-	if type:
+	utype, url = MMurl.splittype(url)
+	if utype:
 		windowinterface.showmessage(
 			'NodeEdit.showeditor: cannot edit URL',
 			mtype = 'warning')
