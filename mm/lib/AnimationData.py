@@ -294,22 +294,26 @@ class AnimationData:
 		return x, y, w, h
 
 	def getColorAt(self, keyTime):
+		keyTime = self._clampKeyTime(keyTime)
 		if self._animateColor is not None:
 			return self._animateColor.getValue(keyTime)
 		return self._domcolor
 
 	def getPosAt(self, keyTime):
+		keyTime = self._clampKeyTime(keyTime)
 		if self._animateMotion is not None:
 			z = self._animateMotion.getValue(keyTime)
 			return self._animateMotion.convert(z)
 		return self._domrect[:2]
 
 	def getWidthAt(self, keyTime):
+		keyTime = self._clampKeyTime(keyTime)
 		if self._animateWidth is not None:
 			return round(self._animateWidth.getValue(keyTime))
 		return self._domrect[2]
 
 	def getHeightAt(self, keyTime):
+		keyTime = self._clampKeyTime(keyTime)
 		if self._animateHeight is not None:
 			return round(self._animateHeight.getValue(keyTime))
 		return self._domrect[3]
@@ -325,6 +329,13 @@ class AnimationData:
 		node.attrdict['keyTimes'] = times
 		node.attrdict['values'] = values
 	
+	def _clampKeyTime(self, keyTime):
+		if keyTime<0.0:
+			keyTime = 0.0
+		elif keyTime>=1.0:
+			keyTime = 0.9999
+		return keyTime
+
 	def _setWriteFlagsOn(self):
 		self._writeAnimateMotion = 1
 		self._writeAnimateWidth = 1
