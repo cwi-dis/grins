@@ -701,6 +701,7 @@ static WORD HighBitPos(DWORD dword)
 	return 0;
 	}
 
+static DWORD dwRGBBitCount = 24;  // in (4, 8, 16, 24, 32)
 static WORD numREDbits=8, numGREENbits=8, numBLUEbits=8;
 static WORD loREDbit=16, loGREENbit=8, loBLUEbit=0;
 static PALETTEENTRY paletteEntry[256];
@@ -723,6 +724,9 @@ DirectDrawSurface_GetPixelFormat(DirectDrawSurfaceObject *self, PyObject *args)
 		seterror("DirectDrawSurface_GetPixelFormat", hr);
 		return NULL;
 	}	
+
+	dwRGBBitCount = format.dwRGBBitCount;
+		
 	loREDbit = LowBitPos( format.dwRBitMask );
 	WORD hiREDbit = HighBitPos( format.dwRBitMask );
 	numREDbits=(WORD)(hiREDbit-loREDbit+1);
@@ -732,7 +736,7 @@ DirectDrawSurface_GetPixelFormat(DirectDrawSurfaceObject *self, PyObject *args)
 	numGREENbits=(WORD)(hiGREENbit-loGREENbit+1);
 
 	loBLUEbit  = LowBitPos( format.dwBBitMask );
-	WORD hiBLUEbit  = HighBitPos( format.dwBBitMask );
+	WORD hiBLUEbit  = HighBitPos(format.dwBBitMask);
 	numBLUEbits=(WORD)(hiBLUEbit-loBLUEbit+1);
 
 	Py_BEGIN_ALLOW_THREADS	
@@ -743,7 +747,7 @@ DirectDrawSurface_GetPixelFormat(DirectDrawSurfaceObject *self, PyObject *args)
 		ReleaseDC(NULL, hdc);
 		}
 	Py_END_ALLOW_THREADS	
-	return Py_BuildValue("iii",numREDbits, numGREENbits, numBLUEbits);
+	return Py_BuildValue("iiii",dwRGBBitCount, numREDbits, numGREENbits, numBLUEbits);
 	}
 
 __forceinline int blend(int w, int c1, int c2)
@@ -1039,10 +1043,8 @@ DirectDrawSurface_BltBlend(DirectDrawSurfaceObject *self, PyObject *args)
 	desc.dwSize = sizeof(desc);
 	desc.dwFlags = DDSD_WIDTH | DDSD_HEIGHT;
 	self->pI->GetSurfaceDesc(&desc);
-
 	DWORD width  = desc.dwWidth;
 	DWORD height = desc.dwHeight;
-	DWORD depth  = desc.ddpfPixelFormat.dwRGBBitCount;
 
 	HRESULT hr;
 
@@ -1071,13 +1073,13 @@ DirectDrawSurface_BltBlend(DirectDrawSurfaceObject *self, PyObject *args)
 	}
 
 	Py_BEGIN_ALLOW_THREADS
-	if (depth==8)
+	if (dwRGBBitCount==8)
 		hr=BltBlend8(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
-	else if (depth==16)
+	else if (dwRGBBitCount==16)
 		hr=BltBlend16(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
-	else if (depth==24)
+	else if (dwRGBBitCount==24)
 		hr=BltBlend24(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
-	else if (depth==32)
+	else if (dwRGBBitCount==32)
 		hr=BltBlend32(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
 	Py_END_ALLOW_THREADS
 		
@@ -1100,27 +1102,20 @@ DirectDrawSurface_GetColorMatch(DirectDrawSurfaceObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "(iii)",&r,&g,&b))
 		return NULL;
 	
-	DDSURFACEDESC desc;
-	ZeroMemory(&desc, sizeof(desc));
-	desc.dwSize = sizeof(desc);
-	desc.dwFlags = DDSD_WIDTH | DDSD_HEIGHT;
-	HRESULT hr = self->pI->GetSurfaceDesc(&desc);
-	if (FAILED(hr)){
-		seterror("DirectDrawSurface_GetColorMatch:GetSurfaceDesc", hr);
-		return NULL;
-	}		
-
-	DWORD depth  = desc.ddpfPixelFormat.dwRGBBitCount;
-
 	DWORD ck = 0;
-	if (depth==8){
+	if (dwRGBBitCount==8){
 		ck = FindColour(r,g,b);
 		}
-	else if (depth==16 || depth==24 || depth==32){
-		DWORD rp = r << loREDbit;
-		DWORD gp = g << loGREENbit;
-		DWORD bp = b << loBLUEbit;
-		ck = rp|gp|bp;		
+	else if(dwRGBBitCount==16){
+		int rs=256/(int)pow(2,numREDbits);
+		int gs=256/(int)pow(2,numGREENbits);
+		int bs=256/(int)pow(2,numBLUEbits);
+		ck = (DWORD(r/float(rs)) <<loREDbit)   | 
+			 (DWORD(g/float(gs)) <<loGREENbit) | 
+			 (DWORD(b/float(bs)) <<loBLUEbit);
+		}
+	else if (dwRGBBitCount==24 || dwRGBBitCount==32){
+		ck = (r<<loREDbit) | (g<<loGREENbit) | (b<<loBLUEbit);		
 		}
 	
 	return Py_BuildValue("i",ck);
