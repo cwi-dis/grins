@@ -1845,8 +1845,9 @@ class LayoutnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 
 class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current channel names
-	def __init__(self, attreditor, name, label):
-		self.newchannels = []
+	def __init__(self, attreditor, name, label, wantnewchannels = 1):
+		if wantnewchannels:
+			self.newchannels = []
 		self.__current = None
 		PopupAttrEditorFieldWithUndefined.__init__(self, attreditor, name, label)
 
@@ -1876,7 +1877,10 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 				for ch in ctx.layouts.get(layout, []):
 					layoutchannels[ch.name] = 1
 		channelnames1 = []
-		channelnames2 = self.newchannels[:]
+		if hasattr(self, 'newchannels'):
+			channelnames2 = self.newchannels[:]
+		else:
+			channelnames2 = []
 		channelnames3 = []
 		channelnames4 = []
 		channelnames5 = []
@@ -1930,7 +1934,7 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			if all:
 				all.append(None)
 			all = all + channelnames5
-		if not self.newchannels:
+		if hasattr(self, 'newchannels') and not self.newchannels:
 			if all:
 				all.append(None)
 			all = all + [NEW_CHANNEL]
@@ -2019,6 +2023,9 @@ class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			showchannelattreditor(self.wrapper.toplevel, ch)
 
 class BaseChannelnameAttrEditorField(ChannelnameAttrEditorField):
+	def __init__(self, attreditor, name, label):
+		ChannelnameAttrEditorField.__init__(self, attreditor, name, label, wantnewchannels = 0)
+
 	# Choose from the current channel names
 	def getoptions(self):
 		list = []
