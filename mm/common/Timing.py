@@ -156,7 +156,7 @@ def prep2(node, root):
 	# zero. 
 	delay, downloadlag = node.GetDelays(timingtype)
 	delay = delay + downloadlag
-	parent = node.GetSchedParent()
+	parent = node.GetSchedParent(0)
 	if delay > 0 and parent is not None:
 		if parent.GetType() == 'seq':
 			xnode = None
@@ -220,8 +220,10 @@ def propdown(node, stoptime, dftstarttime=0):
 			if fill == 'freeze':
 				if i == len(children)-1:
 					endtime = node.t2
-				else:
+				elif hasattr(children[i+1], 't0'):
 					endtime = children[i+1].t0
+				else:
+					endtime = node.t2
 			elif fill == 'hold':
 				endtime = node.t2
 			else:
