@@ -13,6 +13,8 @@ mimetypes = {
 	'.rt': 'text/vnd.rn-realtext',
 	'.rv': 'video/vnd.rn-realvideo',
 	'.rf': 'image/vnd.rn-realflash',
+	'.swf': 'application/x-shockwave-flash',
+	'.rm': 'video/vnd.rn-realvideo',
 
 	'.mp3': 'audio/mpeg',
 	}
