@@ -59,4 +59,27 @@ inline std::string fixendl(const char *psz)
 	return str;
 	}
 
+inline std::string trim(const std::string& s)
+	{
+	int i1 = s.find_first_not_of(" \t\r\n");
+	if(i1==std::string::npos) return "";
+	int i2 = s.find_last_not_of(" \r\n\t\v");
+	if(i2==std::string::npos) return "";
+	return s.substr(i1, i2+1);
+	}
+
+inline std::string trim_left(const std::string& s)
+	{
+	int i1 = s.find_first_not_of(" \t\r\n");
+	if(i1==std::string::npos) return "";
+	return s.substr(i1);
+	}
+
+inline std::string trim_right(const std::string& s)
+	{
+	int i2 = s.find_last_not_of(" \r\n\t\v");
+	if(i2==std::string::npos) return "";
+	return s.substr(0, i2+1);
+	}
+
 #endif // INC_STRUTIL
