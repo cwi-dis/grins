@@ -417,6 +417,10 @@ SOURCE=.\RES\Image.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\Node.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\Text.ico
 # End Source File
 # Begin Source File
