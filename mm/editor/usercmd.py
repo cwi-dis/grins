@@ -191,3 +191,12 @@ class ADD_CHANNEL(_CommandBase):
 	help = 'Add channel to layout'
 class RENAME(_CommandBase):
 	help = 'Rename the current layout'
+
+
+# win32++
+class CANVAS_FIT(_CommandBase):
+	help = 'Reset the canvas size to fit in the window'
+class CONTENT_OPEN_REG(_CommandBase):
+	help = 'Show the contents of the selected object'
+class CONTENT_EDIT_REG(_CommandBase):
+	help = 'Edit the contents of the selected object'
