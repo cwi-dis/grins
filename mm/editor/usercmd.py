@@ -207,6 +207,8 @@ class PASTE_UNDER(_CommandBase):
 ##	help = 'Edit this node in the temporal view.'
 class NEW_BEFORE(_CommandBase):
 	help = 'Create new node before selected node'
+class NEW_BEFORE_MEDIA(_CommandBase):
+	help = 'Create new media before selected node'
 class NEW_BEFORE_IMAGE(_CommandBase):
 	help = 'Create new image node before selected node'
 class NEW_BEFORE_SVG(_CommandBase):
@@ -237,6 +239,8 @@ class NEW_BEFORE_ANIMATION(_CommandBase):
 	help = 'Create new animation node before selected node'
 class NEW_AFTER(_CommandBase):
 	help = 'Create new node after selected node'
+class NEW_AFTER_MEDIA(_CommandBase):
+	help = 'Create new media after selected node'
 class NEW_AFTER_IMAGE(_CommandBase):
 	help = 'Create new image node after selected node'
 class NEW_AFTER_SVG(_CommandBase):
@@ -267,6 +271,8 @@ class NEW_AFTER_ANIMATION(_CommandBase):
 	help = 'Create new animation node after selected node'
 class NEW_UNDER(_CommandBase):
 	help = 'Create new node under selected node'
+class NEW_UNDER_MEDIA(_CommandBase):
+	help = 'Create new media under selected node'
 class NEW_UNDER_IMAGE(_CommandBase):
 	help = 'Create new image under selected node'
 class NEW_UNDER_SVG(_CommandBase):
