@@ -5,6 +5,14 @@
 
 ------------------------------ BUGS -------------------------------
 
+soundchannel: crashes if openport fails (if there are too many ports open)
+
+player: on commit, all channels pop up
+
+player prints "Huh? Nothing in the queue?"
+
+channel view: "delete channel" is mapped to "channel attrs"
+
 all: preparing a node pops its window (should be done on real play only)
 
 Player: playing multiple nodes in parallel on the same channel causes
