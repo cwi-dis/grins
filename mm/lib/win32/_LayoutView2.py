@@ -279,80 +279,6 @@ class _LayoutView2(GenFormView):
 		str = fmtfloat(scale, prec=1)
 		t.settext('scale 1 : %s' % str)
 
-	#
-	# User input response from dialog controls
-	# 
-
-	def onEditCoordinates(self):
-		name = self['RegionSel'].getvalue()
-		region = self._layout.getRegion(name)
-		if not region:
-			if self._layout._selected == self._layout._viewport:
-				region = self._layout._viewport
-			else:
-				return
-		rc = self['RegionX'].gettext(),self['RegionY'].gettext(), self['RegionW'].gettext(), self['RegionH'].gettext()
-		try:
-			coordinates = tuple(map(string.atoi,rc))
-		except ValueError:
-			return
-		else:
-			if len(coordinates)==4 and coordinates[2]!=0 and coordinates[3]!=0:
-				region.updatecoordinates(coordinates, units=UNIT_PXL)
-				self._layout.update()
-
-	def onEditZorder(self):
-		name = self['RegionSel'].getvalue()
-		region = self._layout.getRegion(name)
-		if not region:
-			if self._layout._selected == self._layout._viewport:
-				region = self._layout._viewport
-			else:
-				return
-		strz = self['RegionZ'].gettext()
-		try:
-			z = string.atoi(strz)
-		except string.atoi_error:
-			return
-		else:
-			if z>=0:
-				region.updatezindex(z)
-				self._layout.update()
-
-
-	#
-	# Helpers for user input responses
-	# 
-#	def _selectViewport(self, name):
-#		self._layout.setViewport(name)
-#		rgnList = self._layout.getRegions(name)
-#		self['RegionSel'].resetcontent()
-#		i = 0
-#		for reg in rgnList:
-#			self['RegionSel'].addstring(reg)
-#			self._region2ix[reg] = i
-#			i = i + 1
-#		if rgnList:
-#			self['RegionSel'].setcursel(0)
-#			self._selectRegion(rgnList[0])
-#			self['RegionSel'].callcb()
-				
-#	def _selectRegion(self, name):
-#		region = self._layout.getRegion(name)
-#		if region:
-#			self._layout.selectRegion(name)
-#			self.onShapeChange(region)
-			
-#	def onProperties(self, shape):
-#		if not shape: return
-#		r, g, b = shape._bgcolor or (255, 255, 255)
-#		dlg = win32ui.CreateColorDialog(win32api.RGB(r,g,b),win32con.CC_ANYCOLOR,self)
-#		if dlg.DoModal() == win32con.IDOK:
-#			newcol = dlg.GetColor()
-#			rgb = win32ui.GetWin32Sdk().GetRGBValues(newcol)
-#			shape.updatebgcolor(rgb)
-#			self._layout.update()
-
 ###########################
 # tree component management
 # the tree component is based on the PyCTreeCtrl python class, which is itself based
@@ -551,33 +477,6 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		if self.__hsmallfont:
 			Sdk.DeleteObject(self.__hsmallfont)
 
-	def onShapeChange(self, shape):
-		if shape is None:
-			# update user events
-			if self._oldSelected != None:
-				self._mouse_update = 1
-				self._oldSelected.onUnselected()
-				
-			self._selectedList = []
-			self._isGeomChanging = 0
-						
-			self._mouse_update = 0
-			return
-
-		self._mouse_update = 1
-		rc = shape._rectb		
-		if shape._rc != rc:
-			self._isGeomChanging = 1
-			shape.onGeomChanging(rc)
-			shape._rc = rc
-		elif not self._isGeomChanging:
-			if self._oldSelected != shape:
-				self._oldSelected = shape
-				shape.onSelected()
-						
-		self._selectedList = [shape]
-		self._mouse_update = 0
-
 	#
 	# win32window.MSDrawContext listener interface
 	#
@@ -592,11 +491,8 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		self.onGeomChanging(selections)
 			
 	def onDSelResize(self, selection):
-#		rc = selection._rectb		
-#		if selection._rc != rc:
 		self._isGeomChanging = 1
 		self.onGeomChanging([selection])
-#			selection._rc = rc
 
 	def onDSelProperties(self, selection): 
 		if not selection: return
@@ -656,11 +552,6 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		self._sflags = flags
 		self._spoint = point
 		
-		# save the previous selection
-		self._oldSelectedList = []
-		for selected in self._selectedList:
-			self._oldSelectedList.append(selected)
-
 		if not self.__isInsideShapeList(self._selectedList, point):
 			self._wantDown = 0
 			if debugPreview: print 'onLButtonDown: call MSDrawContext.onLButtonDown'
@@ -672,7 +563,6 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		point = self.DPtoLP(point)
 		if self._wantDown:
 			if debugPreview: print 'onLButtonUp: call MSDrawContext.onLButtonDown'
-#			if not self._isGeomChanging:
 			win32window.MSDrawContext.onLButtonDown(self, self._sflags, self._spoint)
 			self._wantDown = 0
 		if debugPreview: print 'onLButtonUp: call MSDrawContext.onLButtonUp'
@@ -691,7 +581,6 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		point = self.DPtoLP(point)
 		if self._wantDown:
 			if debugPreview: print 'onLButtonMove: call MSDrawContext.onLButtonDown'
-#			if not self._isGeomChanging:
 			self._isGeomChanging = 1
 			win32window.MSDrawContext.onLButtonDown(self, self._sflags, self._spoint)
 			self._wantDown = 0
@@ -804,14 +693,6 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		dcc.DeleteDC() # needed?
 		del bmp
 
-	def selectRequest(self, node):
-		self._selected = node
-		self.update()
-
-	def unselectRequest(self, node):
-		self._selected = None
-		self.update()
-		
 	def drawTracker(self, dc):
 		for wnd in self._selections:
 			if wnd != self._viewport:
@@ -858,22 +739,6 @@ class UserEventMng:
 	def removeListener(self, listener):
 		self.listener = None
 		
-	def onSelected(self):
-		if self.listener != None:
-			self.listener.onSelected()
-
-	def onUnselected(self):
-		if self.listener != None:
-			self.listener.onUnselected()
-
-	def onGeomChanging(self, geom):
-		if self.listener != None:
-			self.listener.onGeomChanging(geom)		
-
-	def onGeomChanged(self, geom):
-		if self.listener != None:
-			self.listener.onGeomChanged(geom)		
-
 	def onProperties(self):
 			self.listener.onProperties()
 			
@@ -955,14 +820,7 @@ class Viewport(win32window.Window, UserEventMng):
 			if self._subwindows[ind] is region:
 				del self._subwindows[ind]
 				break
-				
-	def select(self):
-		self._ctx.select(self)
-
-
-	def unselect(self):
-		self._ctx.unselectRequest(self)
-	
+					
 	def setAttrdict(self, attrdict):
 		# print 'setAttrdict', attrdict
 		newBgcolor = attrdict.get('bgcolor')
@@ -1193,12 +1051,6 @@ class Region(win32window.Window, UserEventMng):
 			if self._subwindows[ind] is region:
 				del self._subwindows[ind]
 				break
-
-	def select(self):
-		self._ctx.selectRequest(self)
-
-	def unselect(self):
-		self._ctx.unselectRequest(self)
 
 	def setAttrdict(self, attrdict):
 		newBgcolor = attrdict.get('bgcolor')
