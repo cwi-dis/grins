@@ -64,6 +64,25 @@ PyObject* CreateBitmapFromHandle(HBITMAP hBmp, int nWidth, int nHeight)
 	{
 	return (PyObject*)PyBmp::createInstance(hBmp, nWidth, nHeight);
 	}
+
+PyObject* Wingdi_LoadImage(PyObject *self, PyObject *args)
+	{
+	char *filename;
+	if (!PyArg_ParseTuple(args, "s", &filename))
+		return NULL;
+	HBITMAP hBmp = (HBITMAP)LoadImage(NULL, TextPtr(filename), 
+		0, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+	if(hBmp==NULL)
+		{
+		seterror("LoadImage", GetLastError());
+		return NULL;
+		}
+    BITMAP bm;
+    GetObject(hBmp, sizeof(hBmp),&bm); // get size of bitmap
+	return (PyObject*)PyBmp::createInstance(hBmp, bm.bmWidth, bm.bmHeight);
+	}
+
+
 ////////////////////////////
 // module
 
