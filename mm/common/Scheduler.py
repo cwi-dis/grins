@@ -375,7 +375,10 @@ class SchedulerContext:
 	def trigger(self, arc, node = None, timestamp = None):
 		# if arc == None, arc is not used, but node and timestamp are
 		# if arc != None, arc is used, and node and timestamp are not
+		paused = self.parent.paused
+		self.parent.paused = 0
 		self.flushqueue()
+		self.parent.paused = paused
 
 		if arc is not None:
 			if arc.qid is None:
@@ -536,6 +539,10 @@ class SchedulerContext:
 					self.do_terminate(c, timestamp, cancelarcs = arc is None)
 					# there can be only one active child
 					break
+		paused = self.parent.paused
+		self.parent.paused = 0
+		self.flushqueue()
+		self.parent.paused = paused
 		# we must start the node, but how?
 		if debugevents: print 'starting node',`node`,self.parent.timefunc()
 		if debugdump: self.dump()
@@ -618,7 +625,7 @@ class SchedulerContext:
 		if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 			# no valid intervals, so node should not play
 			self.do_terminate(node, timestamp)
-		elif node.playing == MMStates.IDLE:
+		if path is not None or node.playing == MMStates.IDLE:
 			# no intervals yet, check whether we should play
 			resolved = node.isresolved()
 			if path is not None and resolved is None:
@@ -649,7 +656,7 @@ class SchedulerContext:
 					chan.stopplay(node)
 					node.set_armedmode(ARM_DONE)
 			for c in node.GetSchedChildren():
-				self.do_terminate(c, timestamp)
+				self.do_terminate(c, timestamp, fill=fill, cancelarcs=cancelarcs)
 			node.stopplay(timestamp)
 			node.cleanup_sched(self.parent)
 			for c in node.GetSchedChildren():
@@ -691,7 +698,7 @@ class SchedulerContext:
 				continue
 			arc = argument[0]
 			if arc.srcnode is node and arc.event == 'end':
-				if debugevents: print 'sched_arcs: cancel',`arc`,self.parent.timefunc()
+				if debugevents: print 'do_terminate: cancel',`arc`,self.parent.timefunc()
 				self.parent.cancel(qid)
 				arc.qid = None
 
