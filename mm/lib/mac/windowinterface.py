@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 #
 # Windowinterface for MacOS.
 #
