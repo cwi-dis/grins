@@ -10,7 +10,7 @@ from types import *
 import struct
 import math
 import time
-
+from AnchorDefs import *
 #
 # Stuff needed from other mw_ modules:
 #
@@ -481,29 +481,15 @@ class _DisplayList:
 		self._fgcolor = color
 
 
-#	def newbutton(self, coordinates, z = 0, times = None):
-#		if self._rendered:
-#			raise error, 'displaylist already rendered'
-#		return _Button(self, coordinates, z, times)
-
 	# Define a new button. Coordinates are in window relatives
 	def newbutton(self, coordinates, z = 0, times = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		
-		# test of shape type
-		from AnchorDefs import *
-		if coordinates[0] == A_SHAPETYPE_RECT:
-			return _ButtonRect(self, coordinates, z, times)
-		elif coordinates[0] == A_SHAPETYPE_POLY:
-			return _ButtonPoly(self, coordinates, z, times)
-		elif coordinates[0] == A_SHAPETYPE_CIRCLE:
-			return _ButtonCircle(self, coordinates, z, times)
-		elif coordinates[0] == A_SHAPETYPE_ELIPSE:
-			return _ButtonElipse(self, coordinates, z, times)
-		else:
-			print 'Internal error: invalid shape type'			
-			return _ButtonRect(self, [A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z, times)
+		# factor out shape type
+		shape = coordinates[0]
+		coordinates = coordinates[1:]
+		return _Button(self, shape, coordinates, z, times)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
 				    center = 1, coordinates = None,
@@ -935,11 +921,13 @@ class _DisplayList:
 #	##########################################
 
 class _Button:
-	def __init__(self, dispobj, coordinates, z=0, times=None):
-		self._coordinates = coordinates
+	def __init__(self, dispobj, shape, coordinates, z=0, times=None):
 		self._dispobj = dispobj
+		self._shape = shape
+		self._coordinates = coordinates
 		self._z = z
 		self._times = times
+
 		buttons = dispobj._buttons
 		for i in range(len(buttons)):
 			if buttons[i]._z <= z:
@@ -947,8 +935,10 @@ class _Button:
 				break
 		else:
 			buttons.append(self)
-		self._hicolor = self._color = dispobj._fgcolor
-		self._width = self._hiwidth = dispobj._linewidth
+##		self._hicolor = self._color = dispobj._fgcolor
+##		self._width = self._hiwidth = dispobj._linewidth
+##		if self._color != dispobj._bgcolor:
+##			self._dispobj.drawbox(coordinates)
 
 	# Destroy button
 	def close(self):
@@ -980,8 +970,40 @@ class _Button:
 	def _do_highlight(self):
 		pass
 
+	def _get_button_region(self):
+		"""Return our region, in global coordinates, if we are active"""
+		# XXXX Only rectangulars for now
+		if self._shape != A_SHAPETYPE_RECT:
+			return None
+#		print 'getbuttonregion', self._dispobj._window._convert_coordinates(self._coordinates), self._times, time.time()-self._dispobj.starttime #DBG
+		if not self._insidetemporal():
+			return None
+		x0, y0, w, h = self._dispobj._window._convert_coordinates(self._coordinates)
+		x1, y1 = x0+w, y0+h
+		x0, y0 = Qd.LocalToGlobal((x0, y0))
+		x1, y1 = Qd.LocalToGlobal((x1, y1))
+		box = x0, y0, x1, y1
+		rgn = Qd.NewRgn()
+		Qd.RectRgn(rgn, box)
+		return rgn
+
+	def _inside(self, x, y):
+		if not self._insidetemporal():
+			return 0		
+		if self._shape == A_SHAPETYPE_RECT:
+			return self._insideRect(x, y)
+		elif self._shape == A_SHAPETYPE_POLY:
+			return self._insidePoly(x, y)
+		elif self._shape == A_SHAPETYPE_CIRCLE:
+			return self._insideCircle(x, y)
+		elif self._shape == A_SHAPETYPE_ELIPSE:
+			return self._insideElipse(x, y)
+
+		print 'Internal error: invalid shape type'			
+		return 0
+		
 	# Returns true if the time is inside the temporal space
-	def _inside(self):
+	def _insidetemporal(self):
 		if self._times:
 			import time
 			curtime = time.time() - self._dispobj.starttime
@@ -991,106 +1013,42 @@ class _Button:
 				return 1
 			return 0
 		return 1
+	
+	# Returns true if the point is inside the box	
+	def _insideRect(self, x, y):
+		# for now
+		bx1, by1, bx2, by2 = self._coordinates
+		return CheckInsideArea.insideRect(x, y, bx1, by1, bx2, by2)
+
+	# Warning: this method is called by the window core management every time that you move the mouse
+	# in order to change to graphic cursor mouse when the cursor is inside the area. And for each
+	# area that you have defined in window.
+	# For now, a not very efficient algo is implemented, but it should be better to use a system
+	# call later if possible
+	# Returns true if the point is inside the polygon	
+	def _insidePoly(self, x, y):
+		return CheckInsideArea.insidePoly(x, y, self._coordinates)
 		
-	######################################
-	# Animation experimental methods
+
+	# Returns true if the point is inside the box	
+	def _insideCircle(self, x, y):
+		# for now
+		cx, cy, rd = self._coordinates
+		wx, wy, ww, wh = self._dispobj._window.getgeometry(UNIT_PXL)
+		return CheckInsideArea.insideCircle(x*ww, y*wh, cx*ww, cy*wh, rd*ww)
+
+	# Returns true if the point is inside the elipse	
+	def _insideElipse(self, x, y):
+		# for now
+		cx, cy, rdx, rdy = self._coordinates
+		wx, wy, ww, wh = self._dispobj._window.getgeometry(UNIT_PXL)
+		return CheckInsideArea.insideElipse(x*ww, y*wh, cx*ww, cy*wh, rdx*ww, rdy*wh)
 
 	def updatecoordinates(self, coords):
-		print 'button.updatecoords',coords
-
-	# End of animation experimental methods
-	##########################################
-
-class _ButtonRect(_Button):
-	def __init__(self, dispobj, coordinates, z=0, times=None):
-		_Button.__init__(self, dispobj, coordinates, z=0, times=None)
-		if self._color == dispobj._bgcolor:
-			return
-		self._dispobj.drawbox(self._coordinates[1],
-			self._coordinates[2], self._coordinates[3]-self._coordinates[1],
-			self._coordinates[4]-self._coordinates[2])
-
-	# Returns true if the point is inside the box	
-	def _inside(self, x, y):
-		# for now
-		import CheckInsideArea
-		type, bx1, by1, bx2, by2 = self._coordinates
-		if CheckInsideArea.insideRect(x, y, bx1, by1, bx2, by2) and \
-			_Button._inside(self):
-				return 1
-		return 0
-
-	def _get_button_region(self):
- 		"""Return our region, in global coordinates, if we are active"""
-##		print 'getbuttonregion', self._dispobj._window._convert_coordinates(self._coordinates), self._times, time.time()-self._dispobj.starttime #DBG
-		if self._times:
-			curtime = time.time() - self._dispobj.starttime
-			# Workaround for the fact that timers seem to fire early, some times:
-			curtime = curtime + 0.05
-			t0, t1 = self._times
-			if curtime < t0 or (t1 and curtime >= t1):
-				return None
-		x0, y0, w, h = self._dispobj._window._convert_coordinates(self._coordinates[1],
-			self._coordinates[2], self._coordinates[3]-self._coordinates[1],
-			self._coordinates[4]-self._coordinates[2])
-		x1, y1 = x0+w, y0+h
-		x0, y0 = Qd.LocalToGlobal((x0, y0))
-		x1, y1 = Qd.LocalToGlobal((x1, y1))
-		box = x0, y0, x1, y1
-		rgn = Qd.NewRgn()
-		Qd.RectRgn(rgn, box)
-		return rgn
-		
-class _ButtonPoly(_Button):
-	def __init__(self, dispobj, coordinates, z=0, times=None):
-		_Button.__init__(self, dispobj, coordinates, z=0, times=None)
-		
-	# Returns true if the point is inside the box	
-	# Warning: this method is called by the window core management every time that you move the mouse
-	# in order to change to graphic cursor mouse when the cursor is inside the area. And for each
-	# area that you have defined in window.
-	# For now, a not very efficient algo is implemented, but it should be better to use a system
-	# call later if possible
-	def _inside(self, x, y):
-		import CheckInsideArea
-		if CheckInsideArea.insidePoly(x, y, self._coordinates[1:]) and \
-			_Button._inside(self):
-				return 1
-		return 0
-
-
-class _ButtonCircle(_Button):
-	def __init__(self, dispobj, coordinates, z=0, times=None):
-		_Button.__init__(self, dispobj, coordinates, z=0, times=None)
-		
-	# Returns true if the point is inside the box	
-	def _inside(self, x, y):
-		# for now
-		import CheckInsideArea
-		type, cx, cy, rd = self._coordinates
-		wx, wy, ww, wh = self._dispobj._window.getgeometry(UNIT_PXL)
-		if CheckInsideArea.insideCircle(x*ww, y*wh, cx*ww, cy*wh, rd*ww) and \
-			_Button._inside(self):
-				return 1
-		return 0
-
-class _ButtonElipse(_Button):
-	def __init__(self, dispobj, coordinates, z=0, times=None):
-		_Button.__init__(self, dispobj, coordinates, z=0, times=None)
-		
-	# Warning: this method is called by the window core management every time that you move the mouse
-	# in order to change to graphic cursor mouse when the cursor is inside the area. And for each
-	# area that you have defined in window.
-	# For now, a not very efficient algo is implemented, but it should be better to use a system
-	# call later if possible
-	# Returns true if the point is inside the elipse	
-	def _inside(self, x, y):
-		# for now
-		import CheckInsideArea
-		type, cx, cy, rdx, rdy = self._coordinates
-		wx, wy, ww, wh = self._dispobj._window.getgeometry(UNIT_PXL)
-		if CheckInsideArea.insideElipse(x*ww, y*wh, cx*ww, cy*wh, rdx*ww, rdy*wh) and \
-			_Button._inside(self):
-				return 1
-		return 0
+		if self.is_closed(): return
+		# XXXX This is wrong. But it sort-of works if image and region are the
+		# same size, and if the user has specified the anchor in pixels, and if the
+		# anchor is a square.
+		self._coordinates = self._dispobj._window._pxl2rel(coords)
+		self._dispobj._window._buttonschanged()
 
