@@ -1,7 +1,9 @@
 __version__ = "$Id$"
 
 # Parser for CWI Multimedia Interchange Files (CMIF, extension .cmif)
-
+# TODO: If you're using anything in here which creates an MMNode,
+# please create instead, an EditableMMNode from either editor/EditableObjects.py
+# or grins/EditableObjects.py.
 
 from MMExc import *		# Exceptions
 from MMTypes import *

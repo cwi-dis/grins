@@ -1119,6 +1119,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.focusnode = None
 		else: 
 			self.focusnode = widget.node
+			print "DEBUG: focusnode is a ", self.focusnode 
 			widget.select()
 			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 		self.aftersetfocus()

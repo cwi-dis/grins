@@ -49,6 +49,7 @@ class MMNodeContext:
 		self.comment = ''
 		self.metadata = ''
 		self.root = None
+		self.toplevel = None	# This is set in TopLevel.read_it()
 		self.__channeltree = None
 		if settings.activeFullSmilCss:
 			from SMILCssResolver import SMILCssResolver
@@ -1571,6 +1572,10 @@ class MMNode:
 	# in a hierarchical manner. Playing the GRiNS production involves recursing
 	# through the leaf-nodes of the MMNode structure by calling MMNode.startplay(..).
 	# -mjvdg
+
+	# If you want to edit this structure in the editor (not the player), please
+	# refer to the file EditableObjects.py in the Editor/ directory. It uses this
+	# class as a base class, and adds high-level editing capabilities. -mjvdg
 
 	def __init__(self, type, context, uid):
 		# ASSERT type in alltypes

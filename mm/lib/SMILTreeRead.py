@@ -17,6 +17,7 @@ import settings
 import features
 import compatibility
 import ChannelMap
+import EditableObjects
 
 error = 'SMILTreeRead.error'
 
@@ -4631,7 +4632,9 @@ def ReadFile(url, printfunc = None, new_file = 0, check_compatibility = 0):
 	if os.name == 'mac':
 		import splash
 		splash.splash('loaddoc')	# Show "loading document" splash screen
-	rv = ReadFileContext(url, MMNode.MMNodeContext(MMNode.MMNode), printfunc, new_file, check_compatibility)
+	# by mjvdg:
+	rv = ReadFileContext(url, MMNode.MMNodeContext(EditableObjects.EditableMMNode), printfunc, new_file, check_compatibility)
+	# rv = ReadFileContext(url, MMNode.MMNodeContext(MMNode.MMNode), printfunc, new_file, check_compatibility)
 	if os.name == 'mac':
 		splash.splash('initdoc')	# and "Initializing document" (to be removed in mainloop)
 	return rv
@@ -4661,7 +4664,7 @@ def ReadFileContext(url, context, printfunc = None, new_file = 0, check_compatib
 
 def ReadString(string, name, printfunc = None, check_compatibility = 0):
 	return ReadStringContext(string, name,
-				 MMNode.MMNodeContext(MMNode.MMNode),
+				 MMNode.MMNodeContext(EditableObjects.EditableMMNode),
 				 printfunc, check_compatibility)
 
 def ReadStringContext(string, name, context, printfunc = None, check_compatibility = 0):

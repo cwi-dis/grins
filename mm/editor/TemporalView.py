@@ -48,72 +48,24 @@ class TemporalView(TemporalViewDialog):
 	def __add_commands(self):
 		self.commands = [
 			CLOSE_WINDOW(callback = (self.hide, ())),
-			COPY(callback = (self.copycall, ())),
-			ATTRIBUTES(callback = (self.attrcall, ())),
-			CONTENT(callback = (self.editcall, ())),
-			#THUMBNAIL(callback = (self.thumbnailcall, ())),
-			EXPANDALL(callback = (self.expandallcall, (1,))),
-			COLLAPSEALL(callback = (self.expandallcall, (0,))),
-			PLAYNODE(callback = (self.playcall, ())),
-			PLAYFROM(callback = (self.playfromcall, ())),
 			CANVAS_ZOOM_IN(callback = (self.zoomincall, ())),
 			CANVAS_ZOOM_OUT(callback = (self.zoomoutcall, ())),
 			]
-		self.navigatecommands = [
+
+		self.commands = self.commands + [
 			TOPARENT(callback = (self.toparent, ())),
 			TOCHILD(callback = (self.tochild, (0,))),
 			NEXTSIBLING(callback = (self.tosibling, (1,))),
 			PREVSIBLING(callback = (self.tosibling, (-1,))),
-			]
-
-		self.interiorcommands = [
 			EXPAND(callback = (self.expandcall, ())),
-			NEW_UNDER(callback = (self.createundercall, ())),
-			NEW_UNDER_SEQ(callback = (self.createunderintcall, ('seq',))),
-			NEW_UNDER_PAR(callback = (self.createunderintcall, ('par',))),
-			NEW_UNDER_ALT(callback = (self.createunderintcall, ('alt',))),
-			NEW_UNDER_EXCL(callback = (self.createunderintcall, ('excl',))),
-			NEW_UNDER_IMAGE(callback = (self.createundercall, ('image',))),
-			NEW_UNDER_SOUND(callback = (self.createundercall, ('sound',))),
-			NEW_UNDER_VIDEO(callback = (self.createundercall, ('video',))),
-			NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))),
-			NEW_UNDER_HTML(callback = (self.createundercall, ('html',))),
+			PASTE_UNDER(callback = (self.pasteundercall, ())),
 			]
-
-		self.pasteinteriorcommands = [
-				PASTE_UNDER(callback = (self.pasteundercall, ())),
-				]
-
-		self.pastenotatrootcommands = [
-				PASTE_BEFORE(callback = (self.pastebeforecall, ())),
-				PASTE_AFTER(callback = (self.pasteaftercall, ())),
-				]
-		self.notatrootcommands = [
-				NEW_SEQ(callback = (self.createseqcall, ())),
-				NEW_PAR(callback = (self.createparcall, ())),
-				NEW_CHOICE(callback = (self.createbagcall, ())),
-				NEW_ALT(callback = (self.createaltcall, ())),
-				DELETE(callback = (self.deletecall, ())),
-				CUT(callback = (self.cutcall, ())),
-				]			
-		self.structure_commands = [
-				NEW_BEFORE(callback = (self.createbeforecall, ())),
-				NEW_BEFORE_SEQ(callback = (self.createbeforeintcall, ('seq',))),
-				NEW_BEFORE_PAR(callback = (self.createbeforeintcall, ('par',))),
-				NEW_BEFORE_CHOICE(callback = (self.createbeforeintcall, ('bag',))),
-				NEW_BEFORE_ALT(callback = (self.createbeforeintcall, ('alt',))),
-				NEW_AFTER(callback = (self.createaftercall, ())),
-				NEW_AFTER_SEQ(callback = (self.createafterintcall, ('seq',))),
-				NEW_AFTER_PAR(callback = (self.createafterintcall, ('par',))),
-				NEW_AFTER_CHOICE(callback = (self.createafterintcall, ('bag',))),
-				NEW_AFTER_ALT(callback = (self.createafterintcall, ('alt',))),
-				]
 
 	def show(self):
 		if self.is_showing():
 			TemporalViewDialog.show(self)
 			return
- 		self.showing = 1
+		self.showing = 1
 		self.init_scene()
 		self.editmgr.register(self, 1)
 		title = 'Channel View (' + self.toplevel.basename + ')'
@@ -141,6 +93,17 @@ class TemporalView(TemporalViewDialog):
 
 	def tosibling(self):
 		print "Not implemented: TemporalView.tosibling()"
+
+	def helpcall(self):
+		if self.focusobj: self.focusobj.helpcall()
+
+	def expandcall(self):
+		if self.focusobj: self.focusobj.expandcall()
+		self.draw()
+
+	def expandallcall(self, expand):
+		if self.focusobj: self.focusobj.expandallcall(expand)
+		self.draw()
 
 	def cleanup(self):
 		pass
@@ -192,24 +155,27 @@ class TemporalView(TemporalViewDialog):
 	def update_popupmenu_node(self):
 		# Sets the popup menu to channel mode.
 		# TODO: what about the root node and so forth?
-		commands = self.commands + self.pastenotatrootcommands + self.notatrootcommands
+		commands = self.commands
 		popupmenu = [self.menu_no_nodes]	# there needs to be a default.
 		if len(self.selected_nodes) != 1:
 			print "Warning: Selection is: ", self.selected_nodes
 			print "Warning: Multiple selection pop-ups not thought about yet."
 		else:
-			n = self.selected_nodes[0].node
-			if n.GetType() in MMNode.interiortypes:
-				popupmenu = self.menu_interior_nodes
-				commands = commands + self.interiorcommands \
-					   + self.pasteinteriorcommands \
-					   + self.structure_commands 
-				if n.children:
-					commands = commands + self.navigatecommands
-				if n is not self.root:
-					commands = commands + self.notatrootcommands
-			else:
-				popupmenu = self.menu_leaf_nodes
+			node = self.selected_nodes[0].node
+			commands = commands + node.GetCommands()
+			popupmenu = node.GetContextMenu()
+			##n = self.selected_nodes[0].node
+##			if n.GetType() in MMNode.interiortypes:
+##				popupmenu = self.menu_interior_nodes
+##				commands = commands + self.interiorcommands \
+##					   + self.pasteinteriorcommands \
+##					   + self.structure_commands 
+##				if n.children:
+##					commands = commands + self.navigatecommands
+##				if n is not self.root:
+##					commands = commands + self.notatrootcommands
+##			else:
+##				popupmenu = self.menu_leaf_nodes
 		self.setcommands(commands)
 		self.setpopup(popupmenu)
 
@@ -373,169 +339,6 @@ class TemporalView(TemporalViewDialog):
 		self.ev_mouse0press(dummy,window,event,params)
 		self.scene.dropnode((xf,yf), (x, y))
 
-
-######################################################################
-	# Commands from the menus.
-
-	def helpcall(self):
-		if self.focusobj: self.focusobj.helpcall()
-
-	def expandcall(self):
-		if self.focusobj: self.focusobj.expandcall()
-		self.draw()
-
-	def expandallcall(self, expand):
-		if self.focusobj: self.focusobj.expandallcall(expand)
-		self.draw()
-
-	def playablecall(self):
-		self.toplevel.setwaiting()
-		self.showplayability = not self.showplayability
-		self.settoggle(PLAYABLE, self.showplayability)
-		self.draw()
-
-	def bandwidthcall(self):
-		print "TODO: bandwidth compute."
-##		self.toplevel.setwaiting()
-##		bandwidth = settings.get('system_bitrate')
-##		if bandwidth > 1000000:
-##			bwname = "%dMbps"%(bandwidth/1000000)
-##		elif bandwidth % 1000 == 0:
-##			bwname = "%dkbps"%(bandwidth/1000)
-##		else:
-##			bwname = "%dbps"%bandwidth
-##		msg = 'Computing bandwidth usage at %s...'%bwname
-##		dialog = windowinterface.BandwidthComputeDialog(msg, parent=self.getparentwindow())
-##		bandwidth, prerolltime, delaycount, errorseconds, errorcount = \
-##			BandwidthCompute.compute_bandwidth(self.root)
-##		dialog.setinfo(prerolltime, errorseconds, delaycount, errorcount)
-##		dialog.done()
-
-	def playcall(self):
-		if self.focusobj: self.focusobj.playcall()
-
-	def playfromcall(self):
-		if self.focusobj: self.focusobj.playfromcall()
-
-	def attrcall(self):
-		if isinstance(self.focusobj, MMNode.MMChannel):
-			import AttrEdit
-			AttrEdit.showchannelattreditor(self.toplevel, self.focusobj)
-		else:
-			if self.focusobj: self.focusobj.attrcall()
-
-	def infocall(self):
-		if self.focusobj: self.focusobj.infocall()
-
-	def editcall(self):
-		if self.focusobj: self.focusobj.editcall()
-
-	# win32++
-	def _editcall(self):
-		if self.focusobj: self.focusobj._editcall()
-	def _opencall(self):
-		if self.focusobj: self.focusobj._opencall()
-
-	def anchorcall(self):
-		if self.focusobj: self.focusobj.anchorcall()
-
-	def createanchorcall(self):
-		if self.focusobj: self.focusobj.createanchorcall()
-
-	def hyperlinkcall(self):
-		if self.focusobj: self.focusobj.hyperlinkcall()
-
-	def focuscall(self):
-		if self.focusobj: self.focusobj.focuscall()
-
-	def rpconvertcall(self):
-		if self.focusobj: self.focusobj.rpconvertcall()
-
-	def deletecall(self):
-		if self.focusobj: self.focusobj.deletecall()
-
-	def cutcall(self):
-		if self.focusobj: self.focusobj.cutcall()
-
-	def copycall(self):
-		if self.focusobj: self.focusobj.copycall()
-
-	def deletefocus(self, cut):
-		# Deletes the node with focus.
-		node = self.focusobj.node
-		if not node or node is self.root:
-			windowinterface.beep()
-			return
-		em = self.editmgr
-		if not em.transaction():
-			return
-		self.toplevel.setwaiting()
-		parent = node.GetParent()
-		siblings = parent.GetChildren()
-		nf = siblings.index(node)
-		em.delnode(node)
-		self.destroynode = node
-		em.commit()
-
-	def copyfocus(self):
-		# Copies the node with focus to the clipboard.
-		print "DEBUG: copyfocus called."
-		if len(self.selected_nodes) == 1 and isinstance(self.selected_nodes[0], MMWidget):
-			node = self.selected_nodes[0].node
-			print "DEBUG: Node: ", node
-			if not node:
-				windowinterface.beep()
-				return
-			t, n = Clipboard.getclip()
-			if t == 'node' and n is not None:
-				n.Destroy()
-			Clipboard.setclip('node', node.DeepCopy())
-			print "DEBUG: Copied node to clipboard."
-		else:
-			print "Warning: Multiple selection copy not done yet."
-
-	def createbeforecall(self, chtype=None):
-		if self.focusobj: self.focusobj.createbeforecall(chtype)
-
-	def createbeforeintcall(self, ntype):
-		if self.focusobj: self.focusobj.createbeforeintcall(ntype)
-
-	def createaftercall(self, chtype=None):
-		if self.focusobj: self.focusobj.createaftercall(chtype)
-
-	def createafterintcall(self, ntype):
-		if self.focusobj: self.focusobj.createafterintcall(ntype)
-
-	def createundercall(self, chtype=None):
-		if self.focusobj: self.focusobj.createundercall(chtype)
-
-	def createunderintcall(self, ntype=None):
-		if self.focusobj: self.focusobj.createunderintcall(ntype)
-
-	def createseqcall(self):
-		if self.focusobj: self.focusobj.createseqcall()
-
-	def createparcall(self):
-		if self.focusobj: self.focusobj.createparcall()
-
-	def createexclcall(self):
-		if self.focusobj: self.focusobj.createexclcall()
-
-	def createbagcall(self):
-		if self.focusobj: self.focusobj.createbagcall()
-
-	def createaltcall(self):
-		if self.focusobj: self.focusobj.createaltcall()
-
-	def pastebeforecall(self):
-		if self.focusobj: self.focusobj.pastebeforecall()
-
-	def pasteaftercall(self):
-		if self.focusobj: self.focusobj.pasteaftercall()
-
-	def pasteundercall(self):
-		if self.focusobj: self.focusobj.pasteundercall()
-
 	def zoomincall(self):
 		self.zoomfactorx = self.zoomfactorx * 2
 		self.redraw()
@@ -544,89 +347,6 @@ class TemporalView(TemporalViewDialog):
 		self.zoomfactorx = self.zoomfactorx / 2
 		self.redraw()
 
-######################################################################
-# Upcalls from the widgets. Yes, this /is/ a bad hack.
-
-	def paste(self, where):
-		type, node = Clipboard.getclip()
-		if type <> 'node' or node is None:
-			windowinterface.showmessage(
-			    'The clipboard does not contain a node to paste',
-			    mtype = 'error', parent = self.window)
-			return
-		if isinstance(self.focusobj, TimeWidget):
-			print "DEBUG: trying to paste.."
-			n = self.focusobj.node
-			self.toplevel.setwaiting()
-			if node.context is not self.root.context:
-				node = node.CopyIntoContext(self.root.context)
-			else:
-				Clipboard.setclip(type, node.DeepCopy())
-			self.insertnode(node, where)
-		else:
-			windowinterface.showmessage(
-				'There is no selection to paste into',
-				mtype = 'error', parent = self.window)
-
-	def insertnode(self, node, where, index = -1, start_transaction = 1, end_transaction = 1):
-		# Inserts a node into the MMNode tree.
-		# This /is/ a bad, bad hack. This code has been cut and pasted from
-		# HeirarchyView.py, a better situation would be to rethink how nodes
-		# and channels are stored within GRiNS.
-
-		# This code really should be in MMNode or similar.
-		
-		# 'where' is coded as follows: -1: before 0: under 1: after
-		assert where in [-1,0,1] # asserts by MJVDG.. delete them if they
-		assert node is not None # catch too many bugs :-).
-		assert isinstance(node, MMNode.MMNode)
-		if not isinstance(self.focusobj, TimeWidget):
-			print "Warning: focus is not a MMWidget."
-			return -1
-		else:
-			thenode = self.focusobj.node
-
-		if where <> 0:
-			# Get the parent
-			parent = thenode.GetParent()
-			if parent is None:
-				windowinterface.showmessage(
-					"Can't insert before/after the root",
-					mtype = 'error', parent = self.window)
-				node.Destroy()
-				return 0
-		elif where == 0 and node.GetChannelType()!='animate':
-			# Special condition for animation
-			ntype = thenode.GetType()
-			if ntype not in MMNode.interiortypes and \
-			   (ntype != 'ext' or
-			    node.GetChannelType() != 'animate'): 
-				windowinterface.showmessage('Selection is a leaf node!',
-							    mtype = 'error', parent = self.window)
-				node.Destroy()
-				return 0
-		em = self.editmgr
-		if start_transaction and not em.transaction():
-			node.Destroy()
-			return 0
-
-		if where == 0:		# insert under (within? -mjvdg)
-			# Add (using editmgr) a child to the node with focus
-			# Index is the index in the list of children
-			# Node is the new node
-			em.addnode(thenode, index, node)
-		else:
-			children = parent.GetChildren()
-			i = children.index(thenode)
-			if where > 0:	# Insert after
-				i = i+1
-				em.addnode(parent, i, node)
-				# This code is actually unreachable - I suspect this function is
-				# only ever called when the node being added has no URL. -mjvdg
-				
-			else:		# Insert before
-				em.addnode(parent, i, node)
-		if end_transaction:
-			em.commit()
-		self.unselect_nodes()
-		return 1
+	def pasteundercall(self):
+		# This needs an index to say which element is going to be pasted here.
+		print "TODO: paste under."

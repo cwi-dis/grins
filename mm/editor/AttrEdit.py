@@ -30,7 +30,9 @@ def showattreditor(toplevel, node, initattr = None, chtype = None):
 	try:
 		attreditor = node.attreditor
 	except AttributeError:
-		if node.__class__ is MMNode.MMNode:
+		# don't use __class__ - it doesn't support inheritance. -mjvdg.
+		#if node.__class__ is MMNode.MMNode:
+		if isinstance(node, MMNode.MMNode): # supports also EditableObjects.EditableMMNode
 			if node.GetChannelType() == 'animate' :
 				wrapperclass = AnimationWrapper
 			elif node.GetChannelType() == 'prefetch' :
@@ -1541,7 +1543,8 @@ class AttrEditor(AttrEditorDialog):
 		import settings
 		if not features.lightweight:
 			return 1
-		if self.wrapper.__class__ is SlideWrapper:
+		#if self.wrapper.__class__ is SlideWrapper:
+		if isinstance(self.wrapper, SlideWrapper):
 			# node is a slide
 			import MMmimetypes
 			mtype = MMmimetypes.guess_type(url)[0]
