@@ -133,6 +133,7 @@ class LayoutChannel(ChannelWindow):
 		self.window.register(WMEVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(WMEVENTS.Mouse0Release, self.mouserelease,
 				     None)
+		self.window.register(WMEVENTS.KeyboardInput, self.keyinput, None)
 ##		if menu:
 ##			self.window.create_menu(menu, title = self._name)
 
