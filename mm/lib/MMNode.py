@@ -9,12 +9,13 @@ from MMExc import *		# Exceptions
 class MMNodeContext():
 	#
 	def init(self, nodeclass):
+		self.nodeclass = nodeclass
 		self.nextuid = 1
 		self.uidmap = {}
 		self.styledict = {}
 		self.channelnames = []
 		self.channeldict = {}
-		self.nodeclass = nodeclass
+		self.editmgr = None
 		return self
 	#
 	def newnode(self, type):
@@ -62,6 +63,12 @@ class MMNodeContext():
 		for name, dict in list:
 			self.channelnames.append(name)
 			self.channeldict[name] = dict
+	#
+	def seteditmgr(self, editmgr):
+		self.editmgr = editmgr
+	#
+	def geteditmgr(self):
+		return self.editmgr
 	#
 	# Look for an attribute in the style definitions.
 	# Raise NoSuchAttrError if the attribute is undefined.
