@@ -1101,7 +1101,7 @@ class Scheduler(scheduler):
 		for arc in node.durarcs:
 			if arc.qid is None:
 				arc.qid = self.enterabs(timestamp + arc.paused, 0, sctx.trigger, (arc,))
-				arc.timestamp = arc.timestamp + arc.paused
+				arc.timestamp = timestamp + arc.paused
 				del arc.paused
 		ev = (SR.SCHED, node)
 		if sctx.srdict.has_key(ev):
