@@ -572,10 +572,10 @@ class _LayoutView2(GenFormView):
 			grinsRC.IDC_LAYOUT_SLIDER,
 			grinsRC.IDC_ANIMATE_GROUP,
 			grinsRC.IDC_ANIMATE_ENABLE,
-			grinsRC.IDC_PLAY, grinsRC.IDC_STOP,
+			grinsRC.IDC_PLAY, 
 			grinsRC.IDC_ANIMATE_P0L, grinsRC.IDC_ANIMATE_P100L,
 			grinsRC.IDC_LAYOUT_FITV, grinsRC.IDC_LAYOUT_FITL,
-#			grinsRC.IDUC_ATTRIBUTES
+			grinsRC.IDUC_ATTRIBUTES
 			)
 
 	def resizeCtrls(self, w, h):
