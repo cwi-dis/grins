@@ -75,7 +75,8 @@ class TextChannel() = Channel():
 	# respectively to nodes belonging to this channel.
 	#
 	chan_attrs = ['winsize', 'winpos']
-	node_attrs = ['font', 'pointsize', 'file', 'wait_for_close']
+	node_attrs = \
+		['font', 'pointsize', 'file', 'wait_for_close', 'duration']
 	#
 	# Initialization function.
 	#
