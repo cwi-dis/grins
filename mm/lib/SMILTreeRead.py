@@ -208,6 +208,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'prefetch': (self.start_prefetch, self.end_prefetch),
 			GRiNSns + ' ' + 'assets': (self.start_assets, self.end_assets),
 			}
+		self.__encoding = 'utf-8'
 		xmllib.XMLParser.__init__(self, complain_foreign_namespace = 0)
 		self.__seen_smil = 0
 		self.__in_smil = 0
@@ -2602,6 +2603,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# this also tests for the attributes that are
 		# specified in multiple namespaces.
 		for key, val in attributes.items():
+			# re-encode attribute value using document encoding
+			try:
+				uval = unicode(val, self.__encoding)
+			except UnicodeError:
+				self.syntax_error("bad encoding for attribute value")
+				continue
+			try:
+				val = uval.encode('iso-8859-1')
+			except UnicodeError:
+				self.syntax_error("character not in Latin1 character range")
+				continue
+			attributes[key] = val
+
 			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
 				del attributes[key]
 				key = key[len(GRiNSns)+1:]
@@ -2910,8 +2924,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
-		id = self.__checkid(attributes, checkid = checkid)
 		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes, checkid = checkid)
 		# experimental code for switch layout
 		self.__elementindex = self.__elementindex+1
 		
@@ -3204,12 +3218,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.setliteral()
 				return
 		self.__context.attributes['project_boston'] = 1
+		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes,'viewport')
 		if id is None:
 			id = self.__mkid('viewport')
 			
 		attributes['id'] = id
-		self.__fix_attributes(attributes)
 						
 		self.__viewport = id
 		self.__childregions[id] = []
@@ -4076,6 +4090,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		pass			# XXX needs to be implemented
 
 	# other callbacks
+
+	def handle_xml(self, encoding, standalone):
+		if not encoding:
+			encoding = 'utf-8'
+		self.__encoding = encoding.lower()
 
 	__whitespace = re.compile(_opS + '$')
 	def handle_data(self, data):
