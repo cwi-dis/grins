@@ -11,6 +11,7 @@ from AnchorDefs import *
 class SocketChannel(Channel):
 	chan_attrs = Channel.chan_attrs + ['port', 'nonlocal', \
 		  'mcgroup', 'mcttl']
+	node_attrs = Channel.node_attrs + ['duration']
 	
 	def init(self, name, attrdict, scheduler, ui):
 		self = Channel.init(self, name, attrdict, scheduler, ui)
@@ -69,7 +70,7 @@ class SocketChannel(Channel):
 					if nm == name:
 						self._playcontext.anchorfired(\
 						    self._played_node, \
-						    [(nm,tp)])
+						    [(nm,tp)], None)
 						return
 			windowinterface.showmessage('SocketChannel: no such anchor\n'+
 				  rv)
