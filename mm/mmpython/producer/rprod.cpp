@@ -645,6 +645,30 @@ newRMCIobject()
 	return self;
 }
 
+/* ---------------------------------------------------------------- */
+
+/* Declarations for objects of type Unknown */
+
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IUnknown* pUk;
+} UnknownObject;
+
+staticforward PyTypeObject UnknownType;
+
+static UnknownObject *
+newUnknownObject()
+{
+	UnknownObject *self;
+
+	self = PyObject_NEW(UnknownObject, &UnknownType);
+	if (self == NULL)
+		return NULL;
+	self->pUk = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
 
 
 #define EMPTYARG /**/
@@ -1134,6 +1158,26 @@ RMBE_CreateCodecInfoManager(RMBEobject *self, PyObject *args)
 	return (PyObject *) val;
 }
 
+static char RMBE_QueryInterfaceUnknown__doc__[] =
+""
+;
+
+static PyObject *
+RMBE_QueryInterfaceUnknown(RMBEobject *self, PyObject *args)
+{
+	PN_RESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	UnknownObject *v = newUnknownObject();
+	res = self->buildEngine->QueryInterface(IID_IUnknown, (void **) &v->pUk);
+	if (!SUCCEEDED(res)) {
+		seterror("QueryInterface", res);
+		v->pUk = NULL; // just to be sure...
+		Py_DECREF(v);
+		return NULL;
+	}
+	return (PyObject *) v;
+}
 
 static struct PyMethodDef RMBE_methods[] = {
 	{"GetPins", (PyCFunction)RMBE_GetPins, METH_VARARGS, RMBE_GetPins__doc__},
@@ -1155,6 +1199,7 @@ static struct PyMethodDef RMBE_methods[] = {
 	{"CancelEncoding", (PyCFunction)RMBE_CancelEncoding, METH_VARARGS, RMBE_CancelEncoding__doc__},
 	{"CreateMediaSample", (PyCFunction)RMBE_CreateMediaSample, METH_VARARGS, RMBE_CreateMediaSample__doc__},
 	{"CreateCodecInfoManager", (PyCFunction)RMBE_CreateCodecInfoManager, METH_VARARGS, RMBE_CreateCodecInfoManager__doc__},
+	{"QueryInterfaceUnknown", (PyCFunction)RMBE_QueryInterfaceUnknown, METH_VARARGS, RMBE_QueryInterfaceUnknown__doc__},
 
 	{NULL, 	NULL}		/* sentinel */
 };
@@ -1364,12 +1409,34 @@ RMIP_GetPreferredInputFrameRate(RMIPobject *self, PyObject *args)
 	GETFVALUE(self->videoInputPin, GetPreferredInputFrameRate);
 }
 
+static char RMIP_QueryInterfaceUnknown__doc__[] =
+""
+;
+
+static PyObject *
+RMIP_QueryInterfaceUnknown(RMIPobject *self, PyObject *args)
+{
+	PN_RESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	UnknownObject *v = newUnknownObject();
+	res = self->inputPin->QueryInterface(IID_IUnknown, (void **) &v->pUk);
+	if (!SUCCEEDED(res)) {
+		seterror("QueryInterface", res);
+		v->pUk = NULL; 
+		Py_DECREF(v);
+		return NULL;
+	}
+	return (PyObject *) v;
+}
+
 
 static struct PyMethodDef RMIP_methods[] = {
 	{"GetOutputMimeType", (PyCFunction)RMIP_GetOutputMimeType, METH_VARARGS, RMIP_GetOutputMimeType__doc__},
 	{"GetPinProperties", (PyCFunction)RMIP_GetPinProperties, METH_VARARGS, RMIP_GetPinProperties__doc__},
 	{"SetPinProperties", (PyCFunction)RMIP_SetPinProperties, METH_VARARGS, RMIP_SetPinProperties__doc__},
 	{"Encode", (PyCFunction)RMIP_Encode, METH_VARARGS, RMIP_Encode__doc__},
+	{"QueryInterfaceUnknown", (PyCFunction)RMIP_QueryInterfaceUnknown, METH_VARARGS, RMIP_QueryInterfaceUnknown__doc__},
 
 	{NULL, 	NULL}		/* sentinel */
 };
@@ -1381,6 +1448,7 @@ static struct PyMethodDef RMAIP_methods[] = {
 	{"Encode", (PyCFunction)RMIP_Encode, METH_VARARGS, RMIP_Encode__doc__},
 	{"GetPreferredAudioSourceProperties", (PyCFunction)RMIP_GetPreferredAudioSourceProperties, METH_VARARGS, RMIP_GetPreferredAudioSourceProperties__doc__},
 	{"GetSuggestedInputSize", (PyCFunction)RMIP_GetSuggestedInputSize, METH_VARARGS, RMIP_GetSuggestedInputSize__doc__},
+	{"QueryInterfaceUnknown", (PyCFunction)RMIP_QueryInterfaceUnknown, METH_VARARGS, RMIP_QueryInterfaceUnknown__doc__},
 
 	{NULL, 	NULL}		/* sentinel */
 };
@@ -1392,6 +1460,7 @@ static struct PyMethodDef RMVIP_methods[] = {
 	{"Encode", (PyCFunction)RMIP_Encode, METH_VARARGS, RMIP_Encode__doc__},
 	{"GetClippingSize", (PyCFunction)RMIP_GetClippingSize, METH_VARARGS, RMIP_GetClippingSize__doc__},
 	{"GetPreferredInputFrameRate", (PyCFunction)RMIP_GetPreferredInputFrameRate, METH_VARARGS, RMIP_GetPreferredInputFrameRate__doc__},
+	{"QueryInterfaceUnknown", (PyCFunction)RMIP_QueryInterfaceUnknown, METH_VARARGS, RMIP_QueryInterfaceUnknown__doc__},
 
 	{NULL, 	NULL}		/* sentinel */
 };
@@ -4058,6 +4127,58 @@ static PyTypeObject RMCItype = {
 /* End of code for RMCodecInfo objects */
 /* -------------------------------------------------------- */
 
+
+
+static struct PyMethodDef Unknown_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+Unknown_dealloc(UnknownObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	if(self->pUk)self->pUk->Release();
+	PyMem_DEL(self);
+}
+
+static PyObject *
+Unknown_getattr(UnknownObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(Unknown_methods, (PyObject *)self, name);
+}
+
+static char UnknownType__doc__[] =
+""
+;
+
+static PyTypeObject UnknownType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"Unknown",			/*tp_name*/
+	sizeof(UnknownObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)Unknown_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)Unknown_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	UnknownType__doc__ /* Documentation string */
+};
+
+/* End of code for Unknown objects */
+/* -------------------------------------------------------- */
 
 static char RP_CreateRMBuildEngine__doc__[] =
 ""
