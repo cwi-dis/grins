@@ -114,7 +114,7 @@ PyObject* Wingdi_CreateFontIndirect(PyObject *self, PyObject *args)
 	s.lfClipPrecision =(BYTE) p.getIntAttr("clipprecision", CLIP_DEFAULT_PRECIS);
 	s.lfQuality = (BYTE)p.getIntAttr("quality", DEFAULT_QUALITY);
 	s.lfPitchAndFamily = (BYTE)p.getIntAttr("pitch and family", DEFAULT_PITCH | FF_DONTCARE); // naming compatibility
-	p.getStrAttr("name", TextPtr(s.lfFaceName), LF_FACESIZE, "Arial");  //  naming compatibility
+	p.getStrAttr("name", TextPtr(s.lfFaceName), LF_FACESIZE, "Tahoma");  //  naming compatibility
 	HFONT hfont = CreateFontIndirect(&s);
 	if(hfont==0){
 		seterror("CreateFontIndirect", GetLastError());
