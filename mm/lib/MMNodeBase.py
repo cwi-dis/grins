@@ -33,7 +33,7 @@ class MMNodeContext:
 
 	def setdirname(self, dirname):
 		if not self.dirname:
-			self.dirname = MMurl.pathname2url(dirname)
+			self.dirname = dirname
 			if not self.dirname:
 				self.dirname = '.'
 			if self.dirname[-1] <> '/':
@@ -41,10 +41,10 @@ class MMNodeContext:
 
 	def findurl(self, filename):
 		"Locate a file given by url-style filename."
-		if os.name == 'posix':
-			# XXXX May also work for msdos, etc. (not for mac)
-			filename = os.path.expandvars(filename)
-			filename = os.path.expanduser(filename)
+## 		if os.name == 'posix':
+## 			# XXXX May also work for msdos, etc. (not for mac)
+## 			filename = os.path.expandvars(filename)
+## 			filename = os.path.expanduser(filename)
 		urltype, urlpath = MMurl.splittype(filename)
 		if urltype or filename[:1] == '/':
 			return filename

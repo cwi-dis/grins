@@ -1,8 +1,8 @@
 __version__ = "$Id$"
 
-import os
+import os, posixpath
 import windowinterface
-import MMExc, MMAttrdefs, MMTree
+import MMExc, MMAttrdefs, MMTree, MMurl
 import Timing
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 
@@ -20,22 +20,42 @@ class TopLevel:
 		self.select_fdlist = []
 		self.select_dict = {}
 		self._last_timer_id = None
-		self.filename = filename
 		self.main = main
-		self.dirname, self.basename = os.path.split(self.filename)
-		if self.basename[-5:] == '.cmif':
-			self.basename = self.basename[:-5]
-		elif self.basename[-4:] == '.smi':
-			self.basename = self.basename[:-4]
-		elif self.basename[-5:] == '.smil':
-			self.basename = self.basename[:-5]
+		# convert filename to URL
+		type, url = MMurl.splittype(filename)
+		if not type or type not in ('http', 'file', 'ftp', 'rtsp'):
+			# assume filename using local convention
+			type = None
+			url = MMurl.pathname2url(filename)
+			type, url = MMurl.splittype(url)
+		host, url = MMurl.splithost(url)
+		dir, base = posixpath.split(url)
+		if not type and not host:
+			# local file
+			self.dirname = dir
+		else:
+			# remote file
+			self.dirname = ''
+		if base[-5:] == '.cmif':
+			self.basename = base[:-5]
+		elif base[-4:] == '.smi':
+			self.basename = base[:-4]
+		elif base[-5:] == '.smil':
+			self.basename = base[:-5]
+		else:
+			self.basename = base
+		if host:
+			url = '//%s%s' % (host, url)
+		if type:
+			url = '%s:%s' % (type, url)
+		self.filename = url
 		self.read_it()
 		self.makeplayer()
 		self.window = None
 		opentops.append(self)
 
 	def __repr__(self):
-		return '<TopLevel instance, filename=' + `self.filename` + '>'
+		return '<TopLevel instance, url=' + `self.filename` + '>'
 
 	def show(self):
 		if self.showing:
@@ -99,10 +119,12 @@ class TopLevel:
 	def open_okcallback(self, filename):
 		if os.path.isabs(filename):
 			cwd = self.dirname
-			if not cwd:
+			if cwd:
+				cwd = MMurl.url2pathname(cwd)
+				if not os.path.isabs(cwd):
+					cwd = os.path.join(os.getcwd(), cwd)
+			else:
 				cwd = os.getcwd()
-			elif not os.path.isabs(cwd):
-				cwd = os.path.join(os.getcwd(), cwd)
 			if os.path.isdir(filename):
 				dir, file = filename, os.curdir
 			else:
@@ -114,7 +136,7 @@ class TopLevel:
 			if dir == cwd:
 				filename = file
 		try:
-			top = TopLevel(self.main, filename)
+			top = TopLevel(self.main, MMurl.pathname2url(filename))
 		except:
 			msg = sys.exc_value
 			if type(msg) is type(self):
@@ -132,14 +154,15 @@ class TopLevel:
 		top.setready()
 
 	def open_callback(self):
-		prompt = 'Open CMIF file:'
-		dir = self.dirname
-		if dir == '':
-			dir = os.curdir
-		file = self.basename + '.cmif'
-		pat = '*.cmif'
-		windowinterface.FileDialog(prompt, dir, pat, '',
-					   self.open_okcallback, None)
+		cwd = self.dirname
+		if cwd:
+			cwd = MMurl.url2pathname(cwd)
+			if not os.path.isabs(cwd):
+				cwd = os.path.join(os.getcwd(), cwd)
+		else:
+			cwd = os.getcwd()
+		windowinterface.FileDialog('Open CMIF file:', cwd, '*.cmif',
+					   '', self.open_okcallback, None)
 
 	def read_it(self):
 		import time
@@ -201,27 +224,28 @@ class TopLevel:
 		# XXXX document.
 		import MMurl
 		if '/' not in uid:
-			filename = self.filename
+			url = self.filename
 		elif uid[-2:] == '/1':
-			filename = uid[:-2]
+			url = uid[:-2]
 		else:
-			filename = uid
-		try:
-			filename = MMurl.urlretrieve(filename)[0]
-		except:
-			windowinterface.showmessage(
-				'Open operation failed.\n'+
-				'File: '+filename+'\n'+
-				'Error: '+`msg`)
-			return 0
-		if not os.path.isabs(filename) and self.dirname:
-			filename = os.path.join(self.dirname, filename)
+			url = uid
+		type, url = MMurl.splittype(url)
+		host, url = MMurl.splithost(url)
+		if not type and not host:
+			filename = MMurl.url2pathname(url)
+			if not os.path.isabs(filename) and self.dirname:
+				filename = os.path.join(self.dirname, filename)
+			url = MMurl.pathname2url(filename)
+		if host:
+			url = '//%s%s' % (host, url)
+		if type:
+			url = '%s:%s' % (type, url)
 		for top in opentops:
-			if top is not self and top.is_document(filename):
+			if top is not self and top.is_document(url):
 				break
 		else:
 			try:
-				top = TopLevel(self.main, filename)
+				top = TopLevel(self.main, url)
 			except:
 				msg = sys.exc_value
 				if type(msg) is type(self):
@@ -231,7 +255,7 @@ class TopLevel:
 						msg = msg.args[0]
 				windowinterface.showmessage(
 					'Open operation failed.\n'+
-					'File: '+filename+'\n'+
+					'File: '+url+'\n'+
 					'Error: '+`msg`)
 				return 0
 		top.show()
@@ -248,18 +272,19 @@ class TopLevel:
 			self.close()
 		return 1
 
-	def is_document(self, filename):
-		import posix
+	def is_document(self, url):
+		return self.filename == url
+## 		import posix
 
-		try:
-			fn = self.filename
-			if self.dirname:
-				fn = os.path.join(self.dirname, self.filename)
-			ourdata = posix.stat(fn)
-			hisdata = posix.stat(filename)
-		except posix.error:
-			return 0
-		return (ourdata == hisdata)
+## 		try:
+## 			fn = self.filename
+## 			if self.dirname:
+## 				fn = os.path.join(self.dirname, self.filename)
+## 			ourdata = posix.stat(fn)
+## 			hisdata = posix.stat(filename)
+## 		except posix.error:
+## 			return 0
+## 		return (ourdata == hisdata)
 
 	def _getlocalexternalanchors(self):
 		fn = self.filename

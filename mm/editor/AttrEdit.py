@@ -515,22 +515,23 @@ class FileAttrEditorField(StringAttrEditorField):
 	type = 'file'
 
 	def browser_callback(self):
-		import os
+		import os, MMurl
 		cwd = self.wrapper.toplevel.dirname
-		if not cwd:
+		if cwd:
+			cwd = MMurl.url2pathname(cwd)
+			if not os.path.isabs(cwd):
+				cwd = os.path.join(os.getcwd(), cwd)
+		else:
 			cwd = os.getcwd()
-		elif not os.path.isabs(cwd):
-			cwd = os.path.join(os.getcwd(), cwd)
-		file = self.getvalue()
-		if file == '' or file == '/dev/null':
+		url = self.getvalue()
+		if url == '' or url == '/dev/null':
 			dir, file = cwd, ''
 		else:
-			import MMurl
-			type, file = MMurl.splittype(file)
+			type, url = MMurl.splittype(url)
 			if type:
 				windowinterface.showmessage('Cannot browse URLs')
 				return
-			file = MMurl.url2pathname(file)
+			file = MMurl.url2pathname(url)
 			file = os.path.join(cwd, file)
 			if os.path.isdir(file):
 				dir, file = file, ''
@@ -543,10 +544,12 @@ class FileAttrEditorField(StringAttrEditorField):
 		import MMurl, os
 		if os.path.isabs(pathname):
 			cwd = self.wrapper.toplevel.dirname
-			if not cwd:
+			if cwd:
+				cwd = MMurl.url2pathname(cwd)
+				if not os.path.isabs(cwd):
+					cwd = os.path.join(os.getcwd(), cwd)
+			else:
 				cwd = os.getcwd()
-			elif not os.path.isabs(cwd):
-				cwd = os.path.join(os.getcwd(), cwd)
 			if os.path.isdir(pathname):
 				dir, file = pathname, os.curdir
 			else:
@@ -557,8 +560,7 @@ class FileAttrEditorField(StringAttrEditorField):
 				file = os.path.join(f, file)
 			if dir == cwd:
 				pathname = file
-		pathname = MMurl.pathname2url(pathname)
-		self.setvalue(pathname)
+		self.setvalue(MMurl.pathname2url(pathname))
 
 class TupleAttrEditorField(AttrEditorField):
 	type = 'tuple'

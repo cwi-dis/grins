@@ -88,7 +88,7 @@ def InitEditors():
 	# XXX Should add the directory where the .cmif file resides...
 	# XXX (toplevel.dirname)
 	import cmif, os
-	dirs = ['.', os.environ['HOME'], cmif.findfile('editor')]
+	dirs = [os.curdir, os.environ['HOME'], cmif.findfile('editor')]
 	for dirname in dirs:
 		filename = os.path.join(dirname, '.cmif_editors')
 		try:
@@ -113,7 +113,14 @@ def showeditor(node):
 			mtype = 'error')
 		return
 	import MMAttrdefs
-	filename = MMAttrdefs.getattr(node,'file')
+	url = MMAttrdefs.getattr(node,'file')
+	type, url = MMurl.splittype(url)
+	if type:
+		windowinterface.showmessage(
+			'NodeEdit.showeditor: cannot edit URL',
+			mtype = 'warning')
+		return
+	filename = MMurl.url2pathname(url)
 	chtype = node.GetChannelType()
 	import os
 	if chtype == 'html' and not channeleditors.has_key('html'):

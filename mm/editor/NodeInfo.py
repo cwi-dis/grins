@@ -40,7 +40,7 @@ class NodeInfo(NodeInfoDialog):
 			i = 0		# 'undefined'
 		NodeInfoDialog.__init__(self, title, self.allchannelnames, i,
 					alltypes, alltypes.index(self.type),
-					self.name, self.filename,
+					self.name, self.url,
 					self.children, self.immtext)
 		self.show_correct_group()
 		self.editmgr.register(self)
@@ -108,9 +108,9 @@ class NodeInfo(NodeInfoDialog):
 			self.type = self.node.GetType()
 			self.oldtype = self.type
 			self.ch_type = 0
-		if always or not self.ch_filename:
-			self.filename = MMAttrdefs.getattr(self.node, 'file')
-			self.ch_filename = 0
+		if always or not self.ch_url:
+			self.url = MMAttrdefs.getattr(self.node, 'file')
+			self.ch_url = 0
 		if always or not self.ch_immtext():
 			self.immtext = self.node.GetValues()[:]
 		self.children_nodes = self.node.GetChildren()
@@ -162,12 +162,12 @@ class NodeInfo(NodeInfoDialog):
 				em.setnodevalues(n, [])
 			em.setnodetype(n, self.type)
 			self.ch_type = 0
-		if self.ch_filename:
-			if self.filename:
-				em.setnodeattr(n, 'file', self.filename)
+		if self.ch_url:
+			if self.url:
+				em.setnodeattr(n, 'file', self.url)
 			else:
 				em.setnodeattr(n, 'file', None)
-			self.ch_filename = 0
+			self.ch_url = 0
 		if self.ch_immtext():
 			self.immtext = self.gettextlines()
 			em.setnodevalues(n, self.immtext)
@@ -190,7 +190,7 @@ class NodeInfo(NodeInfoDialog):
 
 		self.settext(self.immtext)
 
-		self.setfilename(self.filename)
+		self.setfilename(self.url)
 
 		self.setchildren(self.children, 0)
 
@@ -292,35 +292,37 @@ class NodeInfo(NodeInfoDialog):
 	# Callbacks for 'ext' type nodes
 	#
 	def file_callback(self):
-		filename = self.getfilename()
-		if filename <> self.filename:
-			self.ch_filename = 1
+		url = self.getfilename()
+		if url <> self.url:
+			self.ch_url = 1
 			self.changed = 1
-			self.filename = filename
+			self.url = url
 	#
 	# File browser callback.
 	# There's a bit of hacky code ahead to try and get
 	# both reasonable pathnames in the cmif file and reasonable
-	# defaults. If the filename is empty we select the same
+	# defaults. If the url is empty we select the same
 	# directory as last time, and we try to remove the current
 	# dir from the resulting pathname.
 	#
 	def browser_callback(self):
+		import MMurl
 		cwd = self.toplevel.dirname
-		if not cwd:
-			cwd = os.getcwd()
-		elif not os.path.isabs(cwd):
-			cwd = os.path.join(os.getcwd(), cwd)
-		file = self.filename
-		if file == '' or file == '/dev/null':
-			dir, file = cwd, ''
+		if cwd:
+			cwd = MMurl.url2pathname(cwd)
+			if not os.path.isabs(cwd):
+				cwd = os.path.join(os.getcwd(), cwd)
 		else:
-			import MMurl
-			type, file = MMurl.splittype(file)
+			cwd = os.getcwd()
+		url = self.url
+		if url == '' or url == '/dev/null':
+			dir, url = cwd, ''
+		else:
+			type, url = MMurl.splittype(url)
 			if type:
 				windowinterface.showmessage('Cannot browse URLs')
 				return
-			file = MMurl.url2pathname(file)
+			file = MMurl.url2pathname(url)
 			file = os.path.join(cwd, file)
 			if os.path.isdir(file):
 				dir, file = file, ''
@@ -333,10 +335,12 @@ class NodeInfo(NodeInfoDialog):
 		import MMurl
 		if os.path.isabs(pathname):
 			cwd = self.toplevel.dirname
-			if not cwd:
+			if cwd:
+				cwd = MMurl.url2pathname(cwd)
+				if not os.path.isabs(cwd):
+					cwd = os.path.join(os.getcwd(), cwd)
+			else:
 				cwd = os.getcwd()
-			elif not os.path.isabs(cwd):
-				cwd = os.path.join(os.getcwd(), cwd)
 			if os.path.isdir(pathname):
 				dir, file = pathname, os.curdir
 			else:
@@ -348,9 +352,9 @@ class NodeInfo(NodeInfoDialog):
 			if dir == cwd:
 				pathname = file
 		pathname = MMurl.pathname2url(pathname)
-		self.ch_filename = 1
+		self.ch_url = 1
 		self.changed = 1
-		self.filename = pathname
+		self.url = pathname
 		self.setfilename(pathname)
 
 	def conteditor_callback(self):

@@ -1,9 +1,9 @@
 __version__ = "$Id$"
 
-import os
+import os, posixpath
 import sys
 import windowinterface
-import MMExc, MMAttrdefs, MMTree
+import MMExc, MMAttrdefs, MMTree, MMurl
 from EditMgr import EditMgr
 import Timing
 from ViewDialog import ViewDialog
@@ -24,23 +24,43 @@ class TopLevel(ViewDialog):
 		self.select_fdlist = []
 		self.select_dict = {}
 		self._last_timer_id = None
-		self.filename = filename
 		self.new_file = new_file
+		# convert filename to URL
+		type, url = MMurl.splittype(filename)
+		if not type or type not in ('http', 'file', 'ftp', 'rtsp'):
+			# assume filename using local convention
+			type = None
+			url = MMurl.pathname2url(filename)
+			type, url = MMurl.splittype(url)
+		host, url = MMurl.splithost(url)
+		dir, base = posixpath.split(url)
+		if not type and not host:
+			# local file
+			self.dirname = dir
+		else:
+			# remote file
+			self.dirname = ''
+		if base[-5:] == '.cmif':
+			self.basename = base[:-5]
+		elif base[-4:] == '.smi':
+			self.basename = base[:-4]
+		elif base[-5:] == '.smil':
+			self.basename = base[:-5]
+		else:
+			self.basename = base
+		if host:
+			url = '//%s%s' % (host, url)
+		if type:
+			url = '%s:%s' % (type, url)
+		self.filename = url
 		self.main = main
-		self.dirname, self.basename = os.path.split(self.filename)
-		if self.basename[-5:] == '.cmif':
-			self.basename = self.basename[:-5]
-		elif self.basename[-4:] == '.smi':
-			self.basename = self.basename[:-4]
-		elif self.basename[-5:] == '.smil':
-			self.basename = self.basename[:-5]
 		self.read_it()
 		self.makeviews()
 		self.window = None
 		opentops.append(self)
 
 	def __repr__(self):
-		return '<TopLevel instance, filename=' + `self.filename` + '>'
+		return '<TopLevel instance, url=' + `self.filename` + '>'
 
 	def show(self):
 		if self.showing:
@@ -172,10 +192,12 @@ class TopLevel(ViewDialog):
 	def open_okcallback(self, filename):
 		if os.path.isabs(filename):
 			cwd = self.dirname
-			if not cwd:
+			if cwd:
+				cwd = MMurl.url2pathname(cwd)
+				if not os.path.isabs(cwd):
+					cwd = os.path.join(os.getcwd(), cwd)
+			else:
 				cwd = os.getcwd()
-			elif not os.path.isabs(cwd):
-				cwd = os.path.join(os.getcwd(), cwd)
 			if os.path.isdir(filename):
 				dir, file = filename, os.curdir
 			else:
@@ -187,7 +209,7 @@ class TopLevel(ViewDialog):
 			if dir == cwd:
 				filename = file
 		try:
-			top = TopLevel(self.main, filename, 0)
+			top = TopLevel(self.main, MMurl.pathname2url(filename), 0)
 		except:
 			msg = sys.exc_value
 			if type(msg) is type(self):
@@ -203,33 +225,45 @@ class TopLevel(ViewDialog):
 		top.setready()
 
 	def open_callback(self):
-		prompt = 'Open CMIF file:'
-		dir = self.dirname
-		if dir == '':
-			dir = os.curdir
-		file = self.basename + '.cmif'
-		pat = '*.cmif'
-		windowinterface.FileDialog(prompt, dir, pat, '',
-					   self.open_okcallback, None)
+		cwd = self.dirname
+		if cwd:
+			cwd = MMurl.url2pathname(cwd)
+			if not os.path.isabs(cwd):
+				cwd = os.path.join(os.getcwd(), cwd)
+		else:
+			cwd = os.getcwd()
+		windowinterface.FileDialog('Open CMIF file:', cwd, '*.cmif',
+					   '', self.open_okcallback, None)
 
 	def save_callback(self):
 		if self.new_file:
 			self.saveas_callback()
 			return
+		type, url = MMurl.splittype(self.filename)
+		host, url = MMurl.splithost(url)
+		if type or host:
+			windowinterface.showmessage('Cannot save to URL',
+						    mtype = 'warning')
+			return
+		file = MMurl.url2pathname(url)
 		self.setwaiting()
-		ok = self.save_to_file(self.filename)
+		ok = self.save_to_file(file)
 		self.setready()
 
 	def save_player_callback(self):
 		self.save_callback()
+		type, url = MMurl.splittype(self.filename)
+		host, url = MMurl.splithost(url)
+		if type or host:
+			# already warned
+			return
+		filename = MMurl.url2pathname(url)
 		self.setwaiting()
 		import MMPlayerTree
-		if self.filename[-4:] == '.smi':
-			filename = self.filename[:-4] + '.cmif'
-		elif self.filename[-5:] == '.smil':
-			filename = self.filename[:-5] + '.cmif'
-		else:
-			filename = self.filename
+		if filename[-4:] == '.smi':
+			filename = filename[:-4] + '.cmif'
+		elif filename[-5:] == '.smil':
+			filename = filename[:-5] + '.cmif'
 		MMPlayerTree.WriteFile(self.root, filename)
 		self.setready()
 
@@ -239,7 +273,7 @@ class TopLevel(ViewDialog):
 		self.setwaiting()
 		try:
 			if self.save_to_file(filename):
-				self.filename = filename
+				self.filename = MMurl.pathname2url(filename)
 				self.fixtitle()
 			else:
 				return 1
@@ -247,22 +281,38 @@ class TopLevel(ViewDialog):
 			self.setready()
 
 	def saveas_callback(self):
-		prompt = 'Save CMIF file:'
-		dir = self.dirname
-		if dir == '':
-			dir = os.curdir
-		file = self.basename + '.cmif'
-		pat = '*.cmif'
-		windowinterface.FileDialog('Save CMIF file:', dir, pat, '',
-					   self.saveas_okcallback, None)
+		cwd = self.dirname
+		if cwd:
+			cwd = MMurl.url2pathname(cwd)
+			if not os.path.isabs(cwd):
+				cwd = os.path.join(os.getcwd(), cwd)
+		else:
+			cwd = os.getcwd()
+		windowinterface.FileDialog('Save CMIF file:', cwd, '*.cmif',
+					   '', self.saveas_okcallback, None)
 
 	def fixtitle(self):
-		self.dirname, self.basename = os.path.split(self.filename)
-		if self.basename[-5:] == '.cmif':
-			self.basename = self.basename[:-5]
+		type, url = MMurl.splittype(filename)
+		host, url = MMurl.splithost(url)
+		dir, base = posixpath.split(url)
+		if not type and not host:
+			# local file
+			self.dirname = dir
+		else:
+			# remote file
+			self.dirname = ''
+		if base[-5:] == '.cmif':
+			self.basename = base[:-5]
+		elif base[-4:] == '.smi':
+			self.basename = base[:-4]
+		elif base[-5:] == '.smil':
+			self.basename = base[:-5]
+		else:
+			self.basename = base
 		self.window.settitle(self.basename)
 		for v in self.views:
 			v.fixtitle()
+
 
 	def save_to_file(self, filename):
 		if os.path.isabs(filename):
@@ -404,7 +454,14 @@ class TopLevel(ViewDialog):
 			return 0
 		if reply == 1:
 			return 1
-		return self.save_to_file(self.filename)
+		type, url = MMurl.splittype(self.filename)
+		host, url = MMurl.splithost(url)
+		if type or host:
+			windowinterface.showmessage('Cannot save to URL',
+						    mtype = 'warning')
+			return 0
+		file = MMurl.url2pathname(url)
+		return self.save_to_file(file)
 
 	def debug_callback(self):
 		import pdb
@@ -469,27 +526,28 @@ class TopLevel(ViewDialog):
 		# XXXX document.
 		import MMurl
 		if '/' not in uid:
-			filename = self.filename
+			url = self.filename
 		elif uid[-2:] == '/1':
-			filename = uid[:-2]
+			url = uid[:-2]
 		else:
-			filename = uid
-		try:
-			filename = MMurl.urlretrieve(filename)[0]
-		except:
-			windowinterface.showmessage(
-				'Open operation failed.\n'+
-				'File: '+filename+'\n'+
-				'Error: '+`msg`)
-			return 0
-		if not os.path.isabs(filename) and self.dirname:
-			filename = os.path.join(self.dirname, filename)
+			url = uid
+		type, url = MMurl.splittype(url)
+		host, url = MMurl.splithost(url)
+		if not type and not host:
+			filename = MMurl.url2pathname(url)
+			if not os.path.isabs(filename) and self.dirname:
+				filename = os.path.join(self.dirname, filename)
+			url = MMurl.pathname2url(filename)
+		if host:
+			url = '//%s%s' % (host, url)
+		if type:
+			url = '%s:%s' % (type, url)
 		for top in opentops:
-			if top is not self and top.is_document(filename):
+			if top is not self and top.is_document(url):
 				break
 		else:
 			try:
-				top = TopLevel(self.main, filename, 0)
+				top = TopLevel(self.main, url, 0)
 			except:
 				msg = sys.exc_value
 				if type(msg) is type(self):
@@ -499,7 +557,7 @@ class TopLevel(ViewDialog):
 						msg = msg.args[0]
 				windowinterface.showmessage(
 					'Open operation failed.\n'+
-					'File: '+filename+'\n'+
+					'File: '+url+'\n'+
 					'Error: '+`msg`)
 				return 0
 		top.show()
@@ -516,18 +574,19 @@ class TopLevel(ViewDialog):
 			self.close()
 		return 1
 
-	def is_document(self, filename):
-		import posix
+	def is_document(self, url):
+		return self.filename == url
+## 		import os
 
-		try:
-			fn = self.filename
-			if self.dirname:
-				fn = os.path.join(self.dirname, self.filename)
-			ourdata = posix.stat(fn)
-			hisdata = posix.stat(filename)
-		except posix.error:
-			return 0
-		return (ourdata == hisdata)
+## 		try:
+## 			fn = self.filename
+## 			if self.dirname:
+## 				fn = os.path.join(self.dirname, self.filename)
+## 			ourdata = os.stat(fn)
+## 			hisdata = os.stat(filename)
+## 		except os.error:
+## 			return 0
+## 		return (ourdata == hisdata)
 
 	def _getlocalexternalanchors(self):
 		fn = self.filename
