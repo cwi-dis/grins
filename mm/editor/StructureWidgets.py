@@ -113,7 +113,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if isinstance(self, CommentWidget):
 			self.iconbox = None
 		else:
-			self.iconbox = IconBox(self, self.mother, vertical = settings.get('vertical_icons'))
+			self.iconbox = IconBox(self, self.mother, vertical = (self.node.GetType() != 'anchor' and settings.get('vertical_icons')))
 		self.cause_event_icon = None
 		self.linksrc_icon = None
 		self.linkdst_icon = None
@@ -231,7 +231,14 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 						otherwidget = othernode.views['struct_view'].get_linkdst_icon()
 				if self.linksrc_icon is None:
 					self.linksrc_icon = self.iconbox.add_icon('linksrc', arrowto = otherwidget, arrowcolor = LINKARROWCOLOR)
-					self.linksrc_icon.set_icon('linksrc')
+					icon = 'linksrc'
+					if x.GetType() == 'anchor':
+						sendto = MMAttrdefs.getattr(x, 'sendTo')
+						if sendto == 'rpcontextwin':
+							icon = 'contextanchor'
+						elif sendto == 'rpbrowser':
+							icon = 'browseranchor'
+					self.linksrc_icon.set_icon(icon)
 					self.linksrc_icon.set_properties(issrc=1, initattr='.href')
 				else:
 					self.linksrc_icon.add_arrow(otherwidget, LINKARROWCOLOR)
@@ -471,6 +478,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		# return the minimum size of this node, in pixels.
 		# Called to work out the size of the canvas.
 		node = self.node
+		ntype = node.GetType()
 
 		# iconbox is displayed at top or left
 		if self.iconbox is not None and node.infoicon and self.infoicon is None:
@@ -498,7 +506,11 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if icon is None:
 			# use thumbnail icon if defined (and we're not using empty_icon)
 			icon = node.GetAttrDef('thumbnail_icon', None)
-		imxsize = imysize = 24
+		imxsize = MINTHUMBX
+		imysize = MINTHUMBY
+		if ntype == 'anchor':
+			imxsize = imysize = 0
+			icon = text = None
 		if not MMAttrdefs.getattr(node, 'thumbnail_scale'):
 			import Sizes
 			if icon is not None:
@@ -547,8 +559,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				xsize2 = xsize2 + 2 + txxsize
 			xsize = max(xsize1, xsize2) + 2*HEDGSIZE
 			ysize = ibysize + imysize + 2*VEDGSIZE
-			xsize = max(xsize, MINSIZE)
-			ysize = max(ysize, MINSIZE)
+			if ntype != 'anchor':
+				xsize = max(xsize, MINSIZE)
+				ysize = max(ysize, MINSIZE)
 			if not text:
 				xsize = min(xsize, max(MAXSIZE, imxsize, ibxsize))
 
@@ -621,7 +634,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			l = l + iw
 ##			if l <= r:
 			self.iconbox.draw(displist)
-		if l < r and self.name and (self.iconbox is None or not self.iconbox.vertical or (isinstance(self, StructureObjWidget) and (not isinstance(self, MediaWidget) or not self.iscollapsed()))):
+		if l < r and self.name and (self.iconbox is None or not self.iconbox.vertical or (isinstance(self, StructureObjWidget) and not isinstance(self, MediaWidget))):
 			x, y = l, t+displist.baselinePXL()
 			displist.setpos(x, y)
 			namewidth = displist.strsizePXL(self.name)[0]
@@ -1287,7 +1300,7 @@ class StructureObjWidget(MMNodeWidget):
 			iconboxwidth = self.iconbox.get_minsize()[0]
 			my_l = my_l + iconboxwidth
 			min_width = min_width - iconboxwidth
-			if self.name:
+			if self.name and not isinstance(self, MediaWidget):
 				my_t = my_t + TITLESIZE
 				min_height = min_height - TITLESIZE
 		else:
@@ -1365,6 +1378,14 @@ class StructureObjWidget(MMNodeWidget):
 				my_b = my_b - this_h - GAPSIZE
 				min_height = min_height - this_h - GAPSIZE
 
+		ntype = self.node.GetType()
+		if isinstance(self, MediaWidget):
+			my_t = my_t + MINTHUMBY + GAPSIZE
+			min_height = min_height - MINTHUMBY - GAPSIZE
+			if timemapper is not None and self.timemapper is None:
+				my_b = my_b - 8
+				min_height = min_height - 8
+
 		free_width = (my_r-my_l) - min_width
 		if vertical_spread:
 			free_height = (my_b-my_t) - min_height
@@ -1378,7 +1399,7 @@ class StructureObjWidget(MMNodeWidget):
 			freeheight_per_child = free_height / max(1, len(self.children))
 			freewidth_per_child = 0
 
-		is_excl = self.node.GetType() in ('excl', 'prio')
+		is_excl = ntype in ('excl', 'prio')
 		if is_excl:
 			tm = None
 		else:
@@ -1517,7 +1538,7 @@ class StructureObjWidget(MMNodeWidget):
 		b = b - VEDGSIZE
 		if self.iconbox is not None and self.iconbox.vertical:
 			l = l + self.iconbox.get_minsize()[0]
-			if self.name and (not isinstance(self, MediaWidget) or not self.iscollapsed()):
+			if self.name and not isinstance(self, MediaWidget):
 				 t = t + TITLESIZE
 		else:
 			t = t + TITLESIZE
@@ -1534,7 +1555,9 @@ class StructureObjWidget(MMNodeWidget):
 		if self.iscollapsed():
 			children = self.node.GetChildren()
 			icon = self.node.GetAttrDef('thumbnail_icon', None)
-			if isinstance(self, MediaWidget):
+			if self.node.GetType() == 'anchor':
+				pass
+			elif isinstance(self, MediaWidget):
 				if self.need_draghandles is not None:
 					# leave space for draghandles
 					b = b - 6
@@ -1559,6 +1582,8 @@ class StructureObjWidget(MMNodeWidget):
 					displist.drawline(TEXTCOLOR, [(l, t),(r, t)])
 					t = t + self.VSTEP
 		elif self.children:
+			if isinstance(self, MediaWidget):
+				self.drawnodecontent(displist, (l,t,r-l,min(b-t, MINTHUMBY)), self.node)
 			for i in self.children:
 				i.draw(displist)
 				l = i.pos_abs[2] + GAPSIZE
@@ -1797,7 +1822,8 @@ class VerticalWidget(StructureObjWidget):
 				mw = w
 			mh = mh + h
 
-		is_excl = self.node.GetType() in ('excl', 'prio')
+		ntype = self.node.GetType()
+		is_excl = ntype in ('excl', 'prio')
 		if is_excl:
 			tm = None
 			if timemapper is not None:
@@ -1807,6 +1833,13 @@ class VerticalWidget(StructureObjWidget):
 				showtime = n.showtime
 		else:
 			tm = timemapper
+
+		if isinstance(self, MediaWidget):
+			mh = mh + MINTHUMBY + GAPSIZE
+			if timemapper is not None and self.timemapper is None:
+				mh = mh + 8 # space for drag handles
+			if mw < MINTHUMBY:
+				mw = MINTHUMBY
 
 		minwidth, minheight = self.calculate_minsize(tm)
 
@@ -1835,7 +1868,7 @@ class VerticalWidget(StructureObjWidget):
 
 		if self.iconbox is not None and self.iconbox.vertical:
 			mw = mw + self.iconbox.get_minsize()[0]
-			if self.name:
+			if self.name and not isinstance(self, MediaWidget):
 				mh = mh + TITLESIZE
 		else:
 			# Add the titleheight
@@ -3037,7 +3070,8 @@ class NonEmptyWidget(MMWidgetDecoration):
 		icon = node.GetAttrDef('non_empty_icon', None)
 		imxsize = imysize = 0
 		if icon:
-			imxsize = imysize = 24
+			imxsize = MINTHUMBX
+			imysize = MINTHUMBY
 			if not MMAttrdefs.getattr(node, 'thumbnail_scale'):
 				import Sizes
 				icon = node.context.findurl(icon)

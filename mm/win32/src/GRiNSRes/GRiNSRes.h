@@ -263,7 +263,9 @@
 #define IDI_PAUSING                     463
 #define IDD_EDITATTR_GEOMETRY           464
 #define IDB_SPLASHREALONE               464
+#define IDI_ICON_BROWSER                464
 #define IDD_EDITATTR_LAYOUT2REAL        465
+#define IDI_ICON_CONTEXT                465
 #define IDD_EDITATTR_REALEXTENSION      466
 #define IDD_EDITATTR_S7F                467
 #define IDD_EDITATTR_SERVER             468
