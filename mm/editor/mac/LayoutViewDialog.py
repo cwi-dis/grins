@@ -3,6 +3,8 @@ __version__ = "$Id$"
 import windowinterface
 from usercmd import *
 
+def ITEMrange(fr, to): return range(fr, to+1)
+
 ID_DIALOG_LAYOUT=526
 
 ITEM_LAYOUT_LIST=4
@@ -17,6 +19,8 @@ ITEM_CHANNEL_ATTRS=11
 
 ITEM_OCHANNEL_LIST=12
 ITEM_OCHANNEL_ADD=13
+
+ITEMLIST_ALL=ITEMrange(1, ITEM_OCHANNEL_ADD)
 
 ITEM_TO_COMMAND={
 	ITEM_LAYOUT_NEW: NEW_LAYOUT,
@@ -35,7 +39,7 @@ class LayoutViewDialog(windowinterface.MACDialog):
 ##		w = windowinterface.Window('LayoutDialog', resizable = 1,
 ##					   deleteCallback = [CLOSE_WINDOW])
 ##		self.__window = w
-		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_LAYOUT,
+		windowinterface.MACDialog.__init__(self, 'Layout', ID_DIALOG_LAYOUT,
 				ITEMLIST_ALL)
 ##		w1 = w.SubWindow(left = None, top = None, bottom = None, right = 0.33)
 ##		w2 = w.SubWindow(left = w1, top = None, bottom = None, right = 0.67)
@@ -72,25 +76,17 @@ class LayoutViewDialog(windowinterface.MACDialog):
 		self.__otherlist = self._window.ListWidget(ITEM_OCHANNEL_LIST)
 
 	def destroy(self):
-		if self.__window is None:
-			return
-		self.__window.close()
-		self.__window = None
+		self.close()
 		del self.__layoutlist
 		del self.__channellist
 		del self.__otherlist
 
-	def show(self):
-		self.__window.show()
-
-	def is_showing(self):
-		if self.__window is None:
-			return 0
-		return self.__window.is_showing()
-
 	def hide(self):
 		if self.__window is not None:
 			self.__window.hide()
+			
+	def do_itemhit(self, item, event):
+		pass
 
 	def setlayoutlist(self, layouts, cur):
 		if layouts != self.__layoutlist.getlist():
@@ -145,10 +141,10 @@ class LayoutViewDialog(windowinterface.MACDialog):
 		self.fill()
 
 	def setwaiting(self):
-		self.__window.setcursor('watch')
+		pass
 
 	def setready(self):
-		self.__window.setcursor('')
+		pass
 
 	def setcommandlist(self, commandlist):
 		self.__window.set_commandlist(commandlist)
