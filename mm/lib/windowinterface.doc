@@ -31,6 +31,7 @@ The functions are:
 		cursor.  Currently just the name 'watch' is defined to
 		set the cursor to a watch cursor.  The empty string ''
 		sets the cursor back to the default arrow cursor.
+		[ Not implemented in the X version. ]
 
 	getsize() -> width, height
 		Returns the size of the monitor in mm.
@@ -39,6 +40,14 @@ The functions are:
 		Read the next event.  This method waits for an event
 		to occur.  A description of the possible events is
 		given below.
+
+	readevent_timeout(timeout) -> event or None
+		Read the next event, wait at most timeout seconds.  If
+		timeout is None, wait indefinitely, if timeout is 0,
+		don't wait.  If no event is available when the timeout
+		occurs, this function returns None.
+		The timeout can be a floating point number.
+		A description of the possible events is given below.
 
 	pollevent() -> event or None
 		Read the next event.  If there are no events pending,
@@ -50,22 +59,38 @@ The functions are:
 		Wait for an event to happen.  The event is left in the
 		event queue.
 
+	waitevent_timeout(timeout)
+		Wait for an event to happen, but wait at most timeout
+		seconds.  The event is left in the event queue.  If
+		timeout is None, wait indefinitely; if timeout is 0,
+		don't wait at all.
+
 	peekevent() -> event or None
 		Return the first event in the event queue if there is
 		one, None otherwise.  The event is not removed from
-		the event queue.  A following peekevent(), polevent(),
-		or readevent() will return the same event.
+		the event queue.  A following peekevent(),
+		pollevent(), or readevent() will return the same
+		event.
 
 	testevent() -> 0 or 1
 		Returns 1 if there is an event pending, returns 0
 		otherwise.
 
-	getfd() -> file_descriptor
-		Get the file descriptor associated with the event
-		queue.  This file descriptor may only be used in
-		select.  The select should only be done when there are
-		no more events pending in the event queue (i.e. when
-		testevent() returns 0).
+	enterevent(window, event, arg)
+		Enter the event (window, event, arg) into the event
+		queue.
+
+	setfd(fd)
+		Add the file descriptor fd to the list of file
+		descriptors the window interface must monitor.  When
+		anything interesting happens on the file descriptor
+		(as defined by the select() system call), a FileEvent
+		is generated.  The window belonging to this is event
+		is None, the argument is the file descriptor.
+
+	rmfd(fd)
+		Remove the file descriptor fd from the list of file
+		descriptors the window interface must monitor.
 
 	findfont(font, size) -> font_object
 		This function returns a font object.  The font is a
@@ -77,6 +102,7 @@ The functions are:
 
 	beep()
 		Ring the bell.
+		[ Not implemented in the X version. ]
 
 	usewindowlock(lock)
 		Use the specified lock to lock out concurrent access
@@ -84,6 +110,11 @@ The functions are:
 		there are multiple threads of control in the
 		application that use window system calls.  The lock
 		should have methods acquire() and release().
+
+	getmouse() -> x, y
+		Return the current position of the mouse in mm from
+		the top-left corner of the screen.
+		[ The X version always returns (0, 0). ]
 
 The methods of the font_object are:
 	close()
@@ -111,7 +142,8 @@ The methods of the window_object are:
 		the methods of a toplevel_window_object.
 
 	close()
-		Close the current window and all its subwindows.
+		Close the current window, all its subwindows, and all
+		display lists of these windows.
 
 	fgcolor(color)
 		Set the default foreground color.  The color is
@@ -161,7 +193,7 @@ The methods of the window_object are:
 		the (x,y) coordinates is fixed, the opposite corner
 		can be dragged around with the mouse.  The width and
 		height may be negative or zero.  The function returns
-		after Mouse0Release event.  The value returned is a
+		after a Mouse0Release event.  The value returned is a
 		tuple consisting of the coordinates of the resized
 		box.
 		When x_constraint is not zero, the X coordinates are
@@ -170,6 +202,7 @@ The methods of the window_object are:
 		coordinates are constrained and only the width of the
 		box can be changed.  At least one of x_constraint and
 		y_constraint must be zero.
+		[ Not implemented in the X version. ]
 
 	movebox(box, x_constraint, y_constraint) -> new_box
 		Draw a box and move it interactively.  The box is
@@ -184,6 +217,7 @@ The methods of the window_object are:
 		coordinates are constrained and the box can only be
 		moved horizontally.  At least one of x_constraint and
 		y_constraint must be zero.
+		[ Not implemented in the X version. ]
 		
 The display object has the following methods:
 	close()
@@ -209,6 +243,7 @@ The display object has the following methods:
 		during the lifetime of the display object.  The new
 		display object is not considered rendered and thus can
 		still be changed.
+		[ Noone uses this, so this is not very well tested. ]
 
 	fgcolor(color)
 		Set the foreground color of the window to the given
@@ -334,6 +369,9 @@ The button object has the following methods.
 	close()
 		Close the button object and free its resources.
 
+	getwindow() -> window_object
+		Return the window object this button belongs to.
+
 	hicolor(color)
 		Set the highlight color of the button.  The highlight
 		color is used to highlight the button.
@@ -374,7 +412,7 @@ resized by the library.  The application only needs to fill in the
 window.
 
 This is a first attempt to define the possible events.  All events
-return the window object which has the mouse focus.
+except FileEvent return the window object which has the mouse focus.
 	KeyboardInput (value: the character typed)
 	Mouse0Press (value: position within window, list of buttons
 		mouse was in)
@@ -384,6 +422,8 @@ return the window object which has the mouse focus.
 	Resize (values: none; the window this event returns is the
 		top-level window that was resized, but we could add a
 		list of all subwindows)
+	FileEvent (value: the file descriptor on which something
+		happened)
 
 After a resize the windows have a different size.  Therefore it is
 necessary that the application redraws the windows.  There are two
