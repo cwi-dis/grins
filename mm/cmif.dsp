@@ -324,6 +324,10 @@ SOURCE=.\common\SoundChannel.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\common\systemtestnames.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\common\TextChannel.py
 # End Source File
 # Begin Source File
