@@ -28,7 +28,7 @@ import MMurl, urllib
 import windowinterface
 
 # DirectShow support
-from win32dxm import GraphBuilder
+import win32dxm
 
 # we need const WM_USER
 import win32con
@@ -65,7 +65,6 @@ class MediaChannel:
 		
 	def release_player(self):
 		if self.__playBuilder:
-			self.__playBuilder.Stop()
 			self.__playBuilder=None
 		if self.__notifyWindow and self.__notifyWindow.IsWindow():
 			self.__notifyWindow.DestroyWindow()
@@ -73,7 +72,6 @@ class MediaChannel:
 
 	def release_armed_player(self):
 		if self.__armBuilder:
-			self.__armBuilder.Stop()
 			self.__armBuilder=None
 
 	def release_res(self):
@@ -87,10 +85,10 @@ class MediaChannel:
 	# For local files we don't have to do anything. 
 	# Do not use  MMurl.urlretrieve since as it
 	# is now implemented blocks the application.
-	def prepare_player(self, node = None):	
+	def prepare_player(self, node = None, window=None):	
 		self.release_armed_player()
 		try:
-			self.__armBuilder = GraphBuilder()
+			self.__armBuilder = win32dxm.GraphBuilder()
 		except:
 			self.__armBuilder=None
 
@@ -173,11 +171,15 @@ class MediaChannel:
 		self.__paused=paused
 
 	def stopit(self):
-		self.release_player()
+		if self.__playBuilder:
+			self.__playBuilder.Stop()
 		
 	def showit(self,window):
 		if self.__playBuilder: 
 			self.__playBuilder.SetVisible(1)
+
+	def destroy(self):
+		self.release_player()
 
 	# Define the anchor area for visible medias
 	def prepare_anchors(self, node, window, coordinates):
@@ -323,4 +325,183 @@ class MediaChannel:
 		import windowinterface
 		windowinterface.unregister(self.__fiber_id)
 		self.__fiber_id=0
+
+
+###################################
+
+class VideoStream:
+	def __init__(self, channel):
+		self.__channel = channel
+		self.__mmstream = None
+		self.__window = None
+		self.__playBegin=0
+		self.__playEnd=0
+		self.__playdone=1
+		self.__paused=1
+		self.__fiber_id=0
+		self.__rcMediaWnd = None
+
+	def destroy(self):
+		if self.__window:
+			self.__window._dlsurf = None
+		self.__unregister_for_timeslices()
+		del self.__mmstream
+		self.__mmstream = None
+
+	def prepare_player(self, node, window):
+		if not window:
+			raise error, 'not a window'
+		ddobj = window._topwindow._ddraw
+		self.__mmstream = win32dxm.MMStream(ddobj)
+
+		url=self.__channel.getfileurl(node)
+		if not url:
+			raise error, 'No URL on node'
+		
+		url = MMurl.canonURL(url)
+		url = urllib.unquote(url)
+		if not self.__mmstream.open(url):
+			raise error, 'Failed to render %s'% url
+		return 1
+
+	def playit(self, node, window):
+		if not window: return 0
+		if not self.__mmstream: return 0
+
+		self.play_loop = self.__channel.getloop(node)
+		duration = node.GetAttrDef('duration', None)
+		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
+		if repeatdur and self.play_loop == 1:
+			self.play_loop = 0
+		clip_begin = self.__channel.getclipbegin(node,'sec')
+		clip_end = self.__channel.getclipend(node,'sec')
+		
+		self.__mmstream.seek(clip_begin)
+		self.__playBegin = clip_begin
+
+		if duration is not None and duration >= 0:
+			if not clip_end:
+				clip_end = clip_begin + duration
+			else:
+				clip_end = min(clip_end, clip_begin + duration)
+		if clip_end:
+			self.__playEnd = clip_end
+		else:
+			self.__playEnd = self.__mmstream.getDuration()
+
+		self.__playdone=0
+		self.__paused=0
+
+		if repeatdur > 0:
+			self.__qid = self.__channel._scheduler.enter(repeatdur, 0, self.__channel.playdone, (0,))
+		elif self.play_loop == 0 and repeatdur == 0:
+			self.__channel.playdone(0)
+		
+		self.__window = window
+		window._dlsurf = self.__mmstream._dds, self.__rcMediaWnd
+		self.__mmstream.run()
+		self.__mmstream.update()
+		self.__window.update()
+		self.__register_for_timeslices()
+
+		return 1
+
+	def stopit(self):
+		if self.__mmstream:
+			self.__mmstream.stop()
+			self.__unregister_for_timeslices()
+
+	def pauseit(self, paused):
+		if self.__mmstream:
+			if paused:
+				self.__mmstream.stop()
+				self.__unregister_for_timeslices()
+			else:
+				self.__mmstream.run()
+				self.__register_for_timeslices()
+
+	def onMediaEnd(self):
+		if not self.__mmstream:
+			return		
+		if self.play_loop:
+			self.play_loop = self.play_loop - 1
+			if self.play_loop: # more loops ?
+				self.__mmstream.seek(self.__playBegin)
+				return
+			# no more loops
+			self.__playdone=1
+			self.__channel.playdone(0)
+			return
+		# self.play_loop is 0 so repeat
+		self.__mmstream.seek(self.__playBegin)
+
+	def on_idle_callback(self):
+		if self.__mmstream and not self.__playdone:
+			running = self.__mmstream.update()
+			if self.__window:
+				self.__window.update()
+			t_sec = self.__mmstream.getTime()
+			if not running or t_sec >= self.__playEnd:
+				self.onMediaEnd()
+	
+	def is_callable(self):
+		return self.__mmstream
+
+	def __register_for_timeslices(self):
+		if self.__fiber_id: return
+		import windowinterface
+		self.__fiber_id=windowinterface.register((self.is_callable,()),(self.on_idle_callback,()))
+
+	def __unregister_for_timeslices(self):
+		if not self.__fiber_id: return
+		windowinterface.unregister(self.__fiber_id)
+		self.__fiber_id=0
+
+	# Define the anchor area for visible medias
+	def prepare_anchors(self, node, window, coordinates):
+		if not window: return
+	
+		# it should be nice to verify this calcul !!!
+		
+#	 	left,top,width,height=self.__armBuilder.GetWindowPosition()
+#	 	print left,top,width,height
+#		left,top,right,bottom = window.GetClientRect()
+		left,top,w_width,w_height = window.GetClientRect()
+#	 	print left,top,right,bottom
+#		x,y,w,h=left,top,right-left,bottom-top
+
+		left,top,width,height = window._convert_coordinates(coordinates)
+		x,y,w,h = left,top,width,height
+		
+		# node attributes
+		import MMAttrdefs
+		scale = MMAttrdefs.getattr(node, 'scale')
+		center = MMAttrdefs.getattr(node, 'center')
+
+		if scale > 0:
+			width = int(width * scale)
+			height = int(height * scale)
+			if width>w or height>h:
+				wscale=float(w)/width
+				hscale=float(h)/height
+				scale=min(wscale,hscale)
+				width = min(int(width * scale), w)
+				height = min(int(height * scale), h)
+				center=1	
+			if center:
+				x = x + (w - width) / 2
+				y = y + (h - height) / 2
+		else:
+			# fit in window
+			wscale=float(w)/width
+			hscale=float(h)/height
+			scale=min(wscale,hscale)
+			width = min(int(width * scale), w)
+			height = min(int(height * scale), h)
+			x = x + (w - width) / 2
+			y = y + (h - height) / 2
+
+		self.__rcMediaWnd=(x, y, width,height)
+		return (x/float(w_width), y/float(w_height), width/float(w_width), height/float(w_height))
+
 
