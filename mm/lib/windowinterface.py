@@ -197,13 +197,13 @@ class _Event:
 	def _getevent(self, timeout):
 		import time
 		if debug > 1: print 'Event._getevent('+`timeout`+')'
-		t0 = time.millitimer()
+		t0 = time.time()
 		if self._queue:
 			timeout = 0	# force collecting events w/out waiting
 		while 1:
 			if timeout != None:
-				t1 = time.millitimer()
-				timeout = timeout - float(t1 - t0) / 1000.0
+				t1 = time.time()
+				timeout = timeout - (t1 - t0)
 				if timeout < 0:
 					timeout = 0
 				t0 = t1
