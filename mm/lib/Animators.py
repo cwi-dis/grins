@@ -2,8 +2,6 @@ __version__ = "$Id$"
 
 
 import MMAttrdefs
-import MMNode
-import EditableObjects
 import string
 import math
 import svgpath
@@ -719,8 +717,14 @@ class EffectiveAnimator:
 		self.__chan = None
 		self.__currvalue = None
 
-		# keep tag for exceptions
-		self.__tag = MMAttrdefs.getattr(targnode, 'atag')
+		# keep target type for exceptions
+		if targnode.getClassName() in ('Region', 'Viewport'):
+			self.__tag = 'region'
+		else:
+			if targnode.GetType() == 'anchor': # area
+				self.__tag = 'area'
+			else:
+				self.__tag = 'subregion'
 			
 		# we need a temporary instance of the
 		# last animator removed from self.__animators
@@ -813,8 +817,7 @@ class EffectiveAnimator:
 			return
 		elif self.__attr == 'transition':
 			self.__settransitionvalue(displayValue)
-			return
-			
+			return			
 		elif self.__attr in ('top','left','width','height','right','bottom','position', 'z', 'bgcolor'):
 			self.__updatesubregion(displayValue)
 			return
@@ -856,7 +859,7 @@ class EffectiveAnimator:
 	# update region attributes display value
 	def __updateregion(self, value):
 		attr = self.__attr
-		ch = self.__node.GetChannel()
+		ch = self.__node
 		regionname = ch.name
 
 		# locate region and its contents (once)
@@ -1125,6 +1128,7 @@ class AnimateElementParser:
 		self.__domval = None		# document attribute value
 		self.__refval = None		# attribute reference value for percent
 		self.__target = None		# target node
+		self.__targettype = None	# target type in ('region', 'subregion', 'area')
 		self.__hasValidTarget = 0	# valid target node and attribute
 
 		self.__grinsattrname = ''	# grins internal target attribute name
@@ -1143,38 +1147,39 @@ class AnimateElementParser:
 		# for some elements not represented by nodes (region, area, transition)
 		# create a virtual node
 		# once target found (self.__target) 
-		# set its grins-type (self.__target._type in ('mmnode', 'region', 'area') )
+		# set its grins-type (self.__targettype in ('subregion', 'region', 'area') )
 
-		if not hasattr(anim,'targetnode') or not anim.targetnode:
+		if anim.targetnode is None:
 			te = MMAttrdefs.getattr(anim, 'targetElement')
 			if te:
 				root = anim.GetRoot()
 				anim.targetnode = root.GetChildByName(te)
-				if anim.targetnode:
-					anim.targetnode._type = 'mmnode'
-				else:
-					self.__checkNotNodeElementsTargets(te)
+				if not anim.targetnode:
+					anim.targetnode = anim.GetContext().channeldict.get(targetid)			
 			else:
 				anim.targetnode = anim.GetParent()
-				anim.targetnode._type = 'mmnode'	
-		else:
-			if not hasattr(anim.targetnode, '_type'):
-				anim.targetnode._type = 'mmnode'
 				
-		if not anim.targetnode:
-			# the target node does not exist within grins
-			# maybe it is an element not represented as a node
+		if anim.targetnode is None:
+			# missing target node
 			te = MMAttrdefs.getattr(anim, 'targetElement')
 			print 'Failed to locate target element', te
 			print '\t',self
 			return
+
+		self.__target = anim.targetnode
+		
+		if self.__target.getClassName() in ('Region', 'Viewport'):
+			self.__targettype = 'region'
 		else:
-			self.__target = anim.targetnode
-
-
+			if self.__target.GetType() == 'anchor': # area
+				self.__targettype = 'area'
+			else:
+				self.__targettype = 'subregion'
+		
+	
 		# verify
 		if debugParser:
-			print self.__elementTag, self.__target._type
+			print self.__elementTag, self.__target, self.__targettype
 
 
 		########################################
@@ -1635,15 +1640,15 @@ class AnimateElementParser:
 	def translateToDefault(self, coords=None, path=None):			
 		# set default origin
 		origin = self.getOrigin()
-		if self.__target._type == 'region':
+		if self.__targettype == 'region':
 			if not origin or origin=='default':
 				origin = regionOrigin
-		elif self.__target._type == 'mmnode':
+		elif self.__targettype == 'subregion':
 			if not origin or origin=='default':
 				origin = mediaOrigin
 
 		# translate region coordiantes to  internal 'parent'
-		if self.__target._type == 'region':			
+		if self.__targettype == 'region':			
 
 			if origin == 'parent':
 				pass
@@ -1661,7 +1666,7 @@ class AnimateElementParser:
 				return self.translateTo((x, y), coords, path)	
 
 		# translate media coordinates to internal 'parent'
-		elif self.__target._type == 'mmnode':
+		elif self.__targettype == 'subregion':
 
 			if origin == 'parent':
 				pass
@@ -1751,14 +1756,14 @@ class AnimateElementParser:
 			self.__grinsattrname = self.__attrname = 'position'
 			self.__attrtype = 'position'
 			rc = None
-			if self.__target._type == 'mmnode':
+			if self.__targettype == 'subregion':
 				try:
 					rc = self.__target.getPxGeom()
 				except:
 					rc = None
 				self.__mmtarget = self.__target
-			elif self.__target._type == 'region':
-				ch = self.__target._region
+			elif self.__targettype == 'region':
+				ch = self.__target
 				try:
 					rc = ch.getPxGeom()
 				except:
@@ -1775,12 +1780,12 @@ class AnimateElementParser:
 			self.__grinsattrname = self.__attrname = 'transition'
 			self.__attrtype = 'float'
 			rc = None
-			if self.__target._type == 'mmnode':
+			if self.__targettype == 'subregion':
 				self.__mmtarget = self.__target
 				self.__domval = 0
 				return 1
-			elif self.__target._type == 'region':
-				self.__mmtarget = self.__target._region
+			elif self.__targettype == 'region':
+				self.__mmtarget = self.__target
 				self.__domval = 0
 				return 1
 			return 0
@@ -1800,7 +1805,7 @@ class AnimateElementParser:
 			attr = self.__grinsattrname = self.__attrname
 			self.__attrtype = 'int'
 			rc = rcref = None
-			if self.__target._type == 'mmnode':
+			if self.__targettype == 'subregion':
 				try:
 					rc = self.__target.getPxGeom()
 				except:
@@ -1811,8 +1816,8 @@ class AnimateElementParser:
 					rcref = region.getPxGeom()
 				except:
 					rcref = rc
-			elif self.__target._type == 'region':
-				ch = self.__target._region
+			elif self.__targettype == 'region':
+				ch = self.__target
 				try:
 					rc = ch.getPxGeom()
 				except:
@@ -1851,13 +1856,13 @@ class AnimateElementParser:
 		if self.__attrname == 'backgroundColor':
 			self.__grinsattrname = 'bgcolor'
 			self.__attrtype = 'color'
-			if self.__target._type == 'region':
-				ch = self.__target._region
+			if self.__targettype == 'region':
+				ch = self.__target
 				self.__domval = ch.get('bgcolor')
 				if not self.__domval:
 					self.__domval = 0, 0, 0
 				return 1
-			elif self.__target._type == 'mmnode':
+			elif self.__targettype == 'subregion':
 				self.__domval = self.__target.attrdict.get('bgcolor')
 				if not self.__domval:
 					self.__domval = 0, 0, 0
@@ -1867,11 +1872,11 @@ class AnimateElementParser:
 		if self.__attrname == 'z-index':
 			self.__grinsattrname = 'z'
 			self.__attrtype = 'int'
-			if self.__target._type == 'region':
-				ch = self.__target._region
+			if self.__targettype == 'region':
+				ch = self.__target
 				self.__domval = ch.get('z')
 				return 1
-			elif self.__target._type == 'mmnode':
+			elif self.__targettype == 'subregion':
 				self.__domval = self.__target.attrdict.get('z')
 				return 1
 			return 0
@@ -1879,8 +1884,8 @@ class AnimateElementParser:
 		if self.__attrname == 'soundLevel':
 			self.__grinsattrname = 'soundLevel'
 			self.__attrtype = 'float'
-			if self.__target._type == 'region':
-				ch = self.__target._region
+			if self.__targettype == 'region':
+				ch = self.__target
 				self.__domval = ch.get('soundLevel', 1.0)
 				self.__refval = 1.0
 				return 1
@@ -2229,58 +2234,6 @@ class AnimateElementParser:
 				print 'splines syntax error'
 			rl.append((x1, y1, x2, y2))
 		return rl
-
-	def __checkNotNodeElementsTargets(self, te):
-		anim = self.__anim
-		ctx = anim.GetContext()
-		if ctx.channeldict.has_key(te):
-			# region
-			targchan = ctx.getchannel(te)
-			if hasattr(targchan,'_vnode'):
-				newnode = targchan._vnode
-			else:
-				#mjvdg- newnode = MMNode.MMNode('imm',ctx,ctx.newuid())
-				newnode = EditableObjects.EditableMMNode('imm', ctx, ctx.newuid())
-				newnode.attrdict = targchan.attrdict.copy()
-				newnode.attrdict['channel'] = te
-				newnode.attrdict['atag'] = 'region'
-				newnode._type = 'region'
-				newnode._region = targchan
-				targchan._vnode = newnode
-			anim.targetnode = newnode
-		elif ctx.transitions.has_key(te):
-			# transition
-			# XXX fix: create one virtual node per transition
-			tr = ctx.transitions[te]
-			#mjvdg- newnode = MMNode.MMNode('imm',ctx,ctx.newuid())
-			newnode = EditableObjects.EditableMMNode('imm', ctx, ctx.newuid())
-			newnode.attrdict = tr.copy()
-			newnode.attrdict['channel'] = te
-			newnode.attrdict['atag'] = 'transition'
-			newnode._type = 'transition'
-			anim.targetnode = newnode
-		else:
-			# is it an area?
-			root = anim.GetRoot()
-			area = root.GetChildWithArea(te)
-			if area:
-				parent, a = area
-				vnodename = '_vnode%s' % te
-				if hasattr(parent,vnodename):
-					newnode = getattr(parent, vnodename)
-				else:
-					#mjvdg- newnode = MMNode.MMNode('imm', ctx, ctx.newuid())
-					newnode = EditableObjects.EditableMMNode('imm', ctx, ctx.newuid())
-					newnode.attrdict = parent.attrdict.copy()
-					newnode.attrdict['atag'] = 'area'
-					newnode.attrdict['coords'] = a.aargs
-					newnode.attrdict['name'] = a.aid
-					newnode.attrdict['parent'] = parent
-					newnode.attrdict['type'] = a.atype
-					newnode.attrdict['times'] = a.atimes
-					newnode._type = 'area'
-					parent.__dict__[vnodename] = newnode
-				anim.targetnode = newnode
 	
 	def safeatof(self, s):
 		if s and s[-1]=='%':
