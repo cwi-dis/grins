@@ -1,0 +1,149 @@
+Microsoft eMbedded Visual Tools Workspace File, Format Version 3.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "Frozen Static GRiNS Player"="..\GRINS PLAYER\Frozen Static GRiNS Player.vcp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name slibjpeg
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name spython16
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name swingdi
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name swinkernel
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name swinmm
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name swinuser
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "Static GRiNS Player"="..\GRINS PLAYER\Static GRiNS Player.vcp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name slibjpeg
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name spython16
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name swingdi
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name swinkernel
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name swinmm
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name swinuser
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "slibjpeg"="..\..\..\..\LIB-SRC\JPEG\WINCE\slibjpeg.vcp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "spython16"=..\..\..\..\PYTHON_CE\PCBUILD\CE\spython16.vcp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "swingdi"=..\..\WINSDK\WINGDI\swingdi.vcp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "swinkernel"=..\..\WINSDK\WINKERNEL\swinkernel.vcp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "swinmm"=..\..\WINSDK\WINMM\swinmm.vcp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "swinuser"=..\..\WINSDK\WINUSER\swinuser.vcp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+
