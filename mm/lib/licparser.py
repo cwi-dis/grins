@@ -79,6 +79,9 @@ class License:
 	def _release(self, features):
 		pass
 
+	def is_evaluation_license(self):
+		return type(self.__moredays) == type(0)
+
 _CODEBOOK="ABCDEFGHIJKLMNOPQRSTUVWXYZ012345"
 _DECODEBOOK={}
 for _ch in range(len(_CODEBOOK)):
