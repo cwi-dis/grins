@@ -1188,10 +1188,7 @@ class AttrSheet(dialog.PropertySheet):
 		self.HookCommand(self.onCancel,win32con.IDCANCEL)
 		self._apply.attach_to_parent()
 
-		ctrl = components.CheckButton(self,101)
-		ctrl.create(components.CHECKBOX(), (0,0,200,20), 'Show all properties')
-		self._showAll = ctrl
-		self.HookCommand(self.onShowAll,101)
+		self.createButtons()
 
 	def onApply(self,id,code): 
 		self._form.call('Apply')
@@ -1207,19 +1204,51 @@ class AttrSheet(dialog.PropertySheet):
 		if self._apply:
 			self._apply.enable(flag)
 
+	def createButtons(self):
+		ctrl = components.CheckButton(self,101)
+		ctrl.create(components.CHECKBOX(), (0,0,110,20), 'Show all properties')
+		self.HookCommand(self.onShowAll,101)
+		self._showAll = ctrl
+
+		ctrl = components.CheckButton(self,102)
+		ctrl.create(components.CHECKBOX(), (0,0,110,20), 'Follow selection')
+		self.HookCommand(self.onFollowSelection, 102)
+		self._followSelection = ctrl
+		
+		# set button font
+		lf = {'name':'', 'pitch and family':win32con.FF_SWISS,'charset':win32con.ANSI_CHARSET}
+		d = Sdk.EnumFontFamiliesEx(lf)
+		logfont = None
+		if d.has_key('Tahoma'): # win2k
+			logfont = {'name':'Tahoma', 'height': 11, 'weight': win32con.FW_MEDIUM, 'charset':win32con.ANSI_CHARSET}
+		elif d.has_key('Microsoft Sans Serif'): # not win2k
+			logfont = {'name':'Microsoft Sans Serif', 'height': 11, 'weight': win32con.FW_MEDIUM, 'charset':win32con.ANSI_CHARSET}
+		if logfont:
+			self._showAll.setfont(logfont)
+			self._followSelection.setfont(logfont)
+
 	def onSize(self, params):
 		if self._showAll:
 			l, t, r, b = self._showAll.getwindowrect()
 			w, h = r-l, b-t
+			dh = 8
 			msg = win32mu.Win32Msg(params)
 			flags = win32con.SWP_NOSIZE | win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE
-			self._showAll.setwindowpos(0, (4 ,msg.height()-h-4, w+4, msg.height()-4), flags)
+			self._showAll.setwindowpos(0, (6 ,msg.height()-h-dh, w+4, msg.height()-dh), flags)
+			self._followSelection.setwindowpos(0, (w+8 ,msg.height()-h-dh, w+w+4, msg.height()-dh), flags)
 
 	def onShowAll(self, id, code):
 		if self._showAll.getcheck():
 			print 'show all' 
 		else:
 			print 'show most important'
+
+	def onFollowSelection(self, id, code):
+		if self._followSelection.getcheck():
+			print 'follow selection' 
+		else:
+			print 'do not follow selection'
+
 		
 class AttrPage(dialog.PropertyPage):
 	enabletooltips = 1
