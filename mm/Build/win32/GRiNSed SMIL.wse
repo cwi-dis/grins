@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_1.0.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_1.5.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -38,7 +38,7 @@ item: Global
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=C:\PROGRA~1\WISEIN~1
+  Variable Default2=E:\PROGRA~1\WISEIN~1
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -1380,7 +1380,7 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\g2-15\QuickStart.pdf
+  Source=D:\ufs\mm\cmif\Build\products\smil-10\QuickStart.pdf
   Destination=%MAINDIR%\QuickStart.pdf
   Flags=0000000010000010
 end
@@ -1402,7 +1402,7 @@ end
 item: End Block
 end
 item: Install File
-  Source=C:\Program Files\Wise InstallMaker\Unwise.exe
+  Source=E:\Program Files\Wise InstallMaker\Unwise.exe
   Destination=%MAINDIR%\Unwise.exe
   Flags=0000000010000010
 end
@@ -1447,7 +1447,7 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
+  Source=e:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
   Destination=%MAINDIR%\WebPro32.ocx
   Flags=0001001010000011
 end
@@ -1687,7 +1687,7 @@ item: Install File
   Flags=0000001010000011
 end
 item: Install File
-  Source=c:\Winnt\system32\Msvcrt40.dll
+  Source=D:\ufs\mm\cmif\Msvcrt40.dll
   Destination=%SYS32%\Msvcrt40.dll
   Flags=0000001010000011
 end
