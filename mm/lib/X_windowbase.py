@@ -1348,6 +1348,14 @@ class _DisplayList:
 			gc.foreground = entry[1]
 			apply(gc.FillRectangle, entry[2])
 			gc.foreground = fg
+		elif cmd == 'marker':
+			fg = gc.foreground
+			gc.foreground = entry[1]
+			x, y = entry[2]
+			radius = 5 # XXXX
+			gc.FillArc(x-radius, y-radius, 2*radius, 2*radius,
+				   0, 360*64)
+			gc.foreground = fg
 		elif cmd == 'font':
 			gc.SetFont(entry[1])
 		elif cmd == 'text':
@@ -1414,6 +1422,12 @@ class _DisplayList:
 		self._list.append('fbox', self._window._convert_color(color),
 				self._window._convert_coordinates(coordinates))
 		self._optimize(1)
+
+	def drawmarker(self, color, coordinates):
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		self._list.append('marker', self._window._convert_color(color),
+				self._window._convert_coordinates(coordinates))
 
 	def usefont(self, fontobj):
 		if self._rendered:

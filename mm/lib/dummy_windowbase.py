@@ -300,6 +300,10 @@ class _DisplayList:
 		r, g, b = color
 		x, y, w, h = coordinates
 
+	def drawmarker(self, color, coordinates):
+		r, g, b = color
+		x, y, w, h = coordinates
+
 	def usefont(self, fontobj):
 		self._font = fontobj
 		return self.baseline(), self.fontheight(), self.pointsize()

@@ -1101,6 +1101,9 @@ class _DisplayList:
 				self._window._convert_coordinates(coordinates))
 ##		self._optimize(1)
 
+	def drawmarker(self, color, coordinates):
+		pass # XXXX To be implemented
+
 	def usefont(self, fontobj):
 		self._font = fontobj
 		self._font._initparams(self._window._wid)
