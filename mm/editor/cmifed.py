@@ -113,7 +113,7 @@ class Main(MainDialog):
 			
 	def collect_template_info(self):
 		import SMILTreeRead
-		import mimetypes
+		import MMmimetypes
 		import MMurl
 		self.templatedir = findfile('Templates')
 		if not os.path.exists(self.templatedir):
@@ -125,7 +125,7 @@ class Main(MainDialog):
 		files.sort()
 		for file in files:
 			url = MMurl.pathname2url(file)
-			if mimetypes.guess_type(url)[0] != 'application/x-grins-project':
+			if MMmimetypes.guess_type(url)[0] != 'application/x-grins-project':
 				continue
 			pathname = os.path.join(self.templatedir, file)
 			try:
@@ -189,8 +189,8 @@ class Main(MainDialog):
 		name = 'Untitled%d'%self._untitled_counter
 		self._untitled_counter = self._untitled_counter + 1
 		if mimetype:
-			import mimetypes
-			ext = mimetypes.guess_extension(mimetype)
+			import MMmimetypes
+			ext = MMmimetypes.guess_extension(mimetype)
 		else:
 			dummy, ext = os.path.splitext(templatename)
 		return name + ext
@@ -320,6 +320,7 @@ class Main(MainDialog):
 		self.tops.append(top)
 
 	def do_exit(self, exitcallback=None):
+		# XXXX This is pretty expensive (and useless) if AttrEdit hasn't been used...
 		import AttrEdit
 		AttrEdit.closepreferenceattreditor()
 		ok = 1
@@ -437,8 +438,8 @@ def main():
 ## 	sys.path.append(findfile('lib'))
 ## 	sys.path.append(findfile('video'))
 
-	import mimetypes, grins_mimetypes
-	mimetypes.types_map.update(grins_mimetypes.mimetypes)
+##	import mimetypes, grins_mimetypes
+##	mimetypes.types_map.update(grins_mimetypes.mimetypes)
 
 	import Channel
 	import GLLock

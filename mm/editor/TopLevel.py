@@ -13,7 +13,7 @@ import Timing
 from ViewDialog import ViewDialog
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 from usercmd import *
-import mimetypes
+import MMmimetypes
 
 # an empty document
 EMPTY = """
@@ -52,7 +52,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			# remote file
 			self.dirname = ''
-		mtype = mimetypes.guess_type(base)[0]
+		mtype = MMmimetypes.guess_type(base)[0]
 		if mtype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
 			self.basename = posixpath.splitext(base)[0]
 		else:
@@ -79,14 +79,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				CHANNELVIEW(callback = (self.view_callback, (2,))),
 				LINKVIEW(callback = (self.view_callback, (3,))),
 				LAYOUTVIEW(callback = (self.view_callback, (4,))),
+				USERGROUPVIEW(callback = (self.view_callback, (5,))),
 				HIDE_CHANNELVIEW(callback = (self.hide_view_callback, (2,))),
 				HIDE_LINKVIEW(callback = (self.hide_view_callback, (3,))),
 				HIDE_LAYOUTVIEW(callback = (self.hide_view_callback, (4,))),
 				HIDE_USERGROUPVIEW(callback = (self.hide_view_callback, (5,))),
 				]
-			self.__ugroup = [USERGROUPVIEW(callback = (self.view_callback, (5,)))]
-		else:
-			self.__ugroup = []
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
 		#self.__save = None
@@ -117,8 +115,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def show(self):
 		TopLevelDialog.show(self)
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
 		if self.hierarchyview is not None:
 			self.hierarchyview.show()
 
@@ -332,7 +328,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def export_callback(self):
 		ask = self.new_file
 		if not ask:
-			if mimetypes.guess_type(self.filename)[0] != 'application/x-grins-project':
+			if MMmimetypes.guess_type(self.filename)[0] != 'application/x-grins-project':
 				# We don't have a project file name. Ask for filename.
 				ask = 1
 			else:
@@ -343,7 +339,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				else:
 					file = MMurl.url2pathname(path)
 					base = os.path.splitext(file)[0]
-					file = base + mimetypes.guess_extension('application/smil')
+					file = base + MMmimetypes.guess_extension('application/smil')
 					self.setwaiting()
 					self.export_okcallback(file)
 					return 
@@ -459,7 +455,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		utype, host, path, params, query, fragment = urlparse(self.filename)
 		dir, filename = posixpath.split(path)
 		filename = posixpath.splitext(filename)[0] + \
-			   mimetypes.guess_extension('application/smil')
+			   MMmimetypes.guess_extension('application/smil')
 		
 		# URL of the SMIL file as it appears on the net
 		if attrs.has_key('project_smil_url'):
@@ -481,7 +477,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.setwaiting()
 		import SMILTreeWrite, tempfile
 		# XXXX This is wrong, probably
-		tmp = tempfile.mktemp(mimetypes.guess_extension('application/x-grins-project'))
+		tmp = tempfile.mktemp(MMmimetypes.guess_extension('application/x-grins-project'))
 		self.__edittmp = tmp
 		SMILTreeWrite.WriteFile(self.root, tmp)
 		self.do_edit(tmp)
@@ -530,7 +526,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			# remote file
 			self.dirname = ''
-		mtype = mimetypes.guess_type(base)[0]
+		mtype = MMmimetypes.guess_type(base)[0]
 		if mtype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
 			self.basename = posixpath.splitext(base)[0]
 		else:
@@ -564,7 +560,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return 0
 		evallicense= (license < 0)
 		url = MMurl.pathname2url(filename)
-		mimetype = mimetypes.guess_type(url)[0]
+		mimetype = MMmimetypes.guess_type(url)[0]
 		if exporting and mimetype != 'application/smil':
 			windowinterface.showmessage('Publish to SMIL (*.smi or *.smil) files only')
 			return
@@ -620,10 +616,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.main._update_recent(MMurl.pathname2url(filename))
 			self.changed = 0
 			self.new_file = 0
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
-		else:
-			self.setcommands(self.commandlist)
+		self.setcommands(self.commandlist)
 		return 1
 		
 	def save_to_ftp(self, filename, smilurl, w_ftpparams, m_ftpparams):
@@ -674,11 +667,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		except KeyboardInterrupt:
 			windowinterface.showmessage('Upload interrupted')
 			return 0
-		# Is this needed?? (Jack)
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
-		else:
-			self.setcommands(self.commandlist)
+		self.setcommands(self.commandlist) # Is this needed?? (Jack)
 		return 1
 		
 	def cancel_upload(self):
@@ -738,7 +727,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##		import time
 ##		print 'parsing', filename, '...'
 ##		t0 = time.time()
-		mtype = mimetypes.guess_type(filename)[0]
+		mtype = MMmimetypes.guess_type(filename)[0]
 		if mtype == None and sys.platform == 'mac':
 			# On the mac we do something extra: for local files we attempt to
 			# get creator and type, and if they are us we assume we're looking
@@ -841,6 +830,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self._in_prefschanged = 1
 		if not self.editmgr.transaction():
 			return
+		self.root.ResetPlayability()
 		self.editmgr.commit()
 		self._in_prefschanged = 0
 	#
@@ -861,10 +851,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# reshow source
 			import SMILTreeWrite
 			self.showsource(SMILTreeWrite.WriteString(self.root), optional=1)
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
-		else:
-			self.setcommands(self.commandlist)
 		#if self.__save is not None:
 		#	self.setcommands(self.commandlist + [self.__save])
 
