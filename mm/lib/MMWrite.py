@@ -231,15 +231,14 @@ attrwriters = MMAttrdefs.useattrdefs(basicwriters)
 # Interface to return a string representation of a value given a typedef.
 #
 def valuerepr(value, typedef):
-	fp = StringOutputNoNL().init()
+	fp = StringOutputNoNL()
 	writerdef = MMAttrdefs.usetypedef(typedef, basicwriters)
 	writegeneric(value, writerdef, fp)
 	return fp.get()
 
 class StringOutputNoNL:
-	def init(self):
+	def __init__(self):
 		self.buf = ''
-		return self
 	def __repr__(self):
 		return '<StringOutputNoNL instance, buf=' + `self.buf` + '>'
 	def write(self, str):

@@ -62,7 +62,7 @@ def readattrdefs(fp, filename):
 		print '(No compiled attribute file', filename_com + ')'
 		print msg
 	print 'Reading attributes from', filename, '...'
-	parser = MMParser.MMParser().init(fp, None)	# Note -- no context!
+	parser = MMParser.MMParser(fp, None)	# Note -- no context!
 	dict = {}
 	#
 	try:

@@ -18,7 +18,7 @@ from MMTypes import *
 #
 class MMNodeContext:
 	#
-	def init(self, nodeclass):
+	def __init__(self, nodeclass):
 		##_stat('init')
 		self.nodeclass = nodeclass
 		self.nextuid = 1
@@ -27,10 +27,9 @@ class MMNodeContext:
 		self.channelnames = []
 		self.channels = []
 		self.channeldict = {}
-		self.hyperlinks = Hlinks().init()
+		self.hyperlinks = Hlinks()
 		self.editmgr = None
 		self.dirname = None
-		return self
 	#
 	def __repr__(self):
 		##_stat('__repr__')
@@ -65,7 +64,7 @@ class MMNodeContext:
 	#
 	def newnodeuid(self, type, uid):
 		##_stat('newnodeuid')
-		node = self.nodeclass().Init(type, self, uid)
+		node = self.nodeclass(type, self, uid)
 		self.knownode(uid, node)
 		return node
 	#
@@ -104,18 +103,18 @@ class MMNodeContext:
 	def addchannels(self, list):
 		##_stat('addchannels')
 		for name, dict in list:
-			c = MMChannel().init(self, name)
-			for key in dict.keys():
-				c[key] = dict[key]
+			c = MMChannel(self, name)
+			for key, val in dict.items():
+				c[key] = val
 			self.channeldict[name] = c
 			self.channelnames.append(name)
 			self.channels.append(c)
 	#
 	def getchannel(self, name):
 		##_stat('getchannel')
-		if name in self.channelnames:
+		try:
 			return self.channeldict[name]
-		else:
+		except AttributeError:
 			return None
 	#
 	def addchannel(self, name, i, type):
@@ -124,7 +123,7 @@ class MMNodeContext:
 			raise CheckError, 'addchannel: existing name'
 		if not 0 <= i <= len(self.channelnames):
 			raise CheckError, 'addchannel: invalid position'
-		c = MMChannel().init(self, name)
+		c = MMChannel(self, name)
 		c['type'] = type
 		self.channeldict[name] = c
 		self.channelnames.insert(i, name)
@@ -138,7 +137,7 @@ class MMNodeContext:
 			raise CheckError, 'copychannel: invalid position'
 		if not orig in self.channelnames:
 		        raise CheckError, 'copychannel: non-existing original'
-		c = MMChannel().init(self, name)
+		c = MMChannel(self, name)
 		orig_i = self.channelnames.index(orig)
 		orig_ch = self.channels[orig_i]
 		for attr in orig_ch.keys():
@@ -288,11 +287,10 @@ class MMNodeContext:
 #
 class MMChannel:
 	#
-	def init(self, context, name):
+	def __init__(self, context, name):
 		self.context = context
 		self.name = name
 		self.attrdict = {}
-		return self
 	#
 	def _setname(self, name): # Only called from context.setchannelname()
 		self.name = name
@@ -333,12 +331,11 @@ class MMChannel:
 #
 class MMSyncArc:
 	#
-	def init(self, context):
+	def __init__(self, context):
 		self.context = context
 		self.src = None
 		self.dst = None
 		self.delay = 0.0
-		return self
 	#
 	def __repr__(self):
 		return '<MMSyncArc instance, from ' + \
@@ -361,7 +358,7 @@ class MMNode:
 	#
 	# Create a new node.
 	#
-	def Init(self, type, context, uid):
+	def __init__(self, type, context, uid):
 		# ASSERT type in alltypes
 		self.type = type
 		self.context = context
@@ -373,7 +370,6 @@ class MMNode:
 		self.summaries = {}
 		self.armedmode = None
 		self.setgensr()
-		return self
 	#
 	# Return string representation of self
 	#
