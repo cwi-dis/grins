@@ -232,15 +232,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.setcommands(self.commandlist + self.__ugroup)
 		else:
 			self.setcommands(self.commandlist + self.commandlist_g2)
-		self.showdefaultviews()
-		
+
 		# if the document is not valid (parse error),
-		# show the source view
-		# XXX may change
+		# show the source view only
 		if not self.context.isValidDocument():
 			if self.sourceview != None and not self.sourceview.is_showing():
 				self.sourceview.show()
-
+		else:
+			self.showdefaultviews()
+		
 	def showdefaultviews(self):
 		import settings
 		defaultviews = settings.get('defaultviews')
