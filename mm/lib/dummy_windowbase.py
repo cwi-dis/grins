@@ -214,6 +214,9 @@ class _Window:
 			raise error, 'can only settitle at top-level'
 		pass
 
+	def getgeometry(self):
+		return self._rect
+
 	def pop(self):
 		pass
 
