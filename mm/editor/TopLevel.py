@@ -80,14 +80,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				CHANNELVIEW(callback = (self.view_callback, (2,))),
 				LINKVIEW(callback = (self.view_callback, (3,))),
 				LAYOUTVIEW(callback = (self.view_callback, (4,))),
+				USERGROUPVIEW(callback = (self.view_callback, (5,))),
 				HIDE_CHANNELVIEW(callback = (self.hide_view_callback, (2,))),
 				HIDE_LINKVIEW(callback = (self.hide_view_callback, (3,))),
 				HIDE_LAYOUTVIEW(callback = (self.hide_view_callback, (4,))),
 				HIDE_USERGROUPVIEW(callback = (self.hide_view_callback, (5,))),
 				]
-			self.__ugroup = [USERGROUPVIEW(callback = (self.view_callback, (5,)))]
-		else:
-			self.__ugroup = []
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
 		#self.__save = None
@@ -118,8 +116,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def show(self):
 		TopLevelDialog.show(self)
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
 		if self.hierarchyview is not None:
 			self.hierarchyview.show()
 
@@ -598,7 +594,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				import SMILTreeWrite
 				if exporting:
 					# XXX enabling this currently crashes the application on Windows during video conversion
-					progress = windowinterface.ProgressDialog("Publishing")
+					progress = windowinterface.ProgressDialog("Publishing", self.cancel_upload)
 					progress.set('Publishing document...')
 					progress = progress.set
 				else:
@@ -616,15 +612,20 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				operation = 'Save'
 			windowinterface.showmessage('%s failed:\n%s'%(operation, msg))
 			return 0
+		except KeyboardInterrupt:
+			# Clear exception:
+			try:
+				raise 'foo'
+			except:
+				pass
+			windowinterface.showmessage('Publish interrupted.')
+			return 0
 ##		print 'done saving.'
 		if not exporting:
 			self.main._update_recent(MMurl.pathname2url(filename))
 			self.changed = 0
 			self.new_file = 0
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
-		else:
-			self.setcommands(self.commandlist)
+		self.setcommands(self.commandlist)
 		return 1
 		
 	def save_to_ftp(self, filename, smilurl, w_ftpparams, m_ftpparams):
@@ -653,7 +654,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			windowinterface.showmessage('Media upload failed:\n%s'%(msg,))
 			return 0
 		except KeyboardInterrupt:
-			windowinterface.showmessage('Upload interrupted')
+			# Clear exception:
+			try:
+				raise 'foo'
+			except:
+				pass
+			windowinterface.showmessage('Upload interrupted.')
 			return 0
 		#
 		# Next create and upload the HTML and RAM files
@@ -673,13 +679,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			windowinterface.showmessage('Webpage upload failed:\n%s'%(msg,))
 			return 0
 		except KeyboardInterrupt:
-			windowinterface.showmessage('Upload interrupted')
+			windowinterface.showmessage('Upload interrupted.')
 			return 0
-		# Is this needed?? (Jack)
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
-		else:
-			self.setcommands(self.commandlist)
+		self.setcommands(self.commandlist) # Is this needed?? (Jack)
 		return 1
 		
 	def cancel_upload(self):
@@ -842,6 +844,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self._in_prefschanged = 1
 		if not self.editmgr.transaction():
 			return
+		self.root.ResetPlayability()
 		self.editmgr.commit()
 		self._in_prefschanged = 0
 	#
@@ -862,10 +865,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# reshow source
 			import SMILTreeWrite
 			self.showsource(SMILTreeWrite.WriteString(self.root), optional=1)
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
-		else:
-			self.setcommands(self.commandlist)
 		#if self.__save is not None:
 		#	self.setcommands(self.commandlist + [self.__save])
 
