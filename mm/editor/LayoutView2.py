@@ -601,7 +601,6 @@ class LayoutView2(LayoutViewDialog2):
 	def mkviewportcommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandViewportList = [
-				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				NEW_REGION(callback = (self.onNewRegion, ())),
 				]
 		else:
@@ -612,7 +611,6 @@ class LayoutView2(LayoutViewDialog2):
 	def mkregioncommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandRegionList = [
-				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				NEW_REGION(callback = (self.onNewRegion, ())),
 #				ENABLE_ANIMATION(callback = (self.onEnableAnimation, ())),
 				]
@@ -623,14 +621,12 @@ class LayoutView2(LayoutViewDialog2):
 
 	def mkanchorcommandlist(self):
 		self.commandAnchorList = [
-				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				]
 		self.__appendCommonCommands(self.commandAnchorList)
 
 	def mkmediacommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandMediaList = [
-				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				ENABLE_ANIMATION(callback = (self.onEnableAnimation, ())),
 				CREATEANCHOR(callback = (self.onNewAnchor, ())),
 				CREATEANCHOREXTENDED(callback = (self.onNewAnchor, (1,))),
@@ -645,7 +641,6 @@ class LayoutView2(LayoutViewDialog2):
 	def mknositemcommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandNoSItemList = [
-				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				]
 		else:
 			self.commandNoSItemList = []
@@ -655,7 +650,6 @@ class LayoutView2(LayoutViewDialog2):
 	def mkmultisitemcommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandMultiSItemList = [
-				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				]
 		else:
 			self.commandMultiSItemList = []		
@@ -664,7 +658,6 @@ class LayoutView2(LayoutViewDialog2):
 	def mkmultisiblingsitemcommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandMultiSiblingSItemList = [
-				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				]
 		else:
 			self.commandMultiSiblingSItemList = []
@@ -675,7 +668,6 @@ class LayoutView2(LayoutViewDialog2):
 	def __appendCommonCommands(self, commandlist):
 		commandlist.append(ZOOMIN(callback = (self.onZoomIn, ())))
 		commandlist.append(ZOOMOUT(callback = (self.onZoomOut, ())))
-		commandlist.append(DRAG_TOPLAYOUT())
 		commandlist.append(DRAG_REGION())
 			
 	def __appendAlignCommands(self, list):
@@ -854,13 +846,15 @@ class LayoutView2(LayoutViewDialog2):
 					commandlist.append(SHOW_ANIMATIONPATH(callback = (self.onShowAnimationPath, ())))
 					checked = self.canShowAnimationPath(selectedNode)
 					self.settoggle(SHOW_ANIMATIONPATH, checked)
-							
+
+		viewportNumber = len(self.getViewportRefList())							
 		if len(self.currentSelectedNodeList) >= 1:
 			active = 1
 			for node in self.currentSelectedNodeList:
 				nodeType = self.getNodeType(node)
 				if (nodeType == TYPE_REGION and node.isDefault()) or \
-					nodeType == TYPE_ANIMATE:
+					nodeType == TYPE_ANIMATE or \
+					nodeType == TYPE_VIEWPORT and viewportNumber <=1:
 					active = 0
 					break
 			if active:
@@ -868,6 +862,10 @@ class LayoutView2(LayoutViewDialog2):
 				commandlist.append(COPY(callback = (self.onCopy, ())))
 				commandlist.append(CUT(callback = (self.onCut, ())))
 				commandlist.append(DELETE(callback = (self.onDelNode, ())))
+
+		if features.MULTIPLE_TOPLAYOUT in features.feature_set or  viewportNumber< 1:
+			commandlist.append(NEW_TOPLAYOUT(callback = (self.onNewViewport, ())))
+			commandlist.append(DRAG_TOPLAYOUT())
 				
 		self.setcommandlist(commandlist)
 
