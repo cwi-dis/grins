@@ -83,6 +83,7 @@ ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
 # Font we use
 f_title = windowinterface.findfont('Helvetica', 10)
+f_timeline = windowinterface.findfont('Helvetica', 9)
 
 # Types of things we can do in the (modal) channel-pointing mode
 PLACING_NEW = 1
@@ -252,6 +253,11 @@ class ChannelView(ChannelViewDialog):
 		elif code == windowinterface.DOUBLE_WIDTH:
 			width = 2 * width
 			self.window.setcanvassize((UNIT_MM, width, height))
+			obj = self.focus
+			if obj and obj.__class__ in (ArcBox, NodeBox):
+				self.window.scrollvisible((obj.left, obj.top,
+						   obj.right-obj.left,
+						   obj.bottom-obj.top))
 
 ##	def layoutcall(self, name = None):
 ##		curlayout = self.curlayout
@@ -1212,6 +1218,7 @@ class TimeScaleBox(GO):
 		if width <= 0:
 			return
 		d = self.mother.new_displist
+		d.usefont(f_timeline)
 		f_width = d.strsize('x')[0]
 		d.fgcolor(BORDERCOLOR)
 		# Draw rectangle around boxes
@@ -1273,9 +1280,14 @@ class TimeScaleBox(GO):
 				d.drawline(BORDERCOLOR, [(l, (t+b)/2), (l, b)])
 			if i%div <> 0:
 				continue
+			if tickstep < 1:
+				ticklabel = `i*tickstep`
+			else:
+				ts_value = int(i*tickstep)
+				ticklabel = '%3d:%02.2d'%(ts_value/60, ts_value%60)
 			d.centerstring(l-f_width*3, b,
 				       l+f_width*3, self.bottom,
-				       `i*tickstep`)
+				       ticklabel)
 		# For things left of t0 (preload time) draw ticks only,
 		# and the total value
 		fart0, dummy = self.mother.timerange()
