@@ -764,28 +764,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 				del self._accelerators[key]
 		self._menu = None
 
-	def create_menu(self, list, title = None):
-		self.destroy_menu()
-		menu = self._form.CreatePopupMenu('menu',
-				{'colormap': self._colormap,
-				 'visual': self._visual,
-				 'depth': self._visual.depth})
-		if self._visual.depth == 8:
-			# make sure menu is readable, even on Suns
-			menu.foreground = self._convert_color((0,0,0))
-			menu.background = self._convert_color((255,255,255))
-		if title:
-			list = [title, None] + list
-		_create_menu(menu, list, self._visual, self._colormap,
-			     self._accelerators)
-		self._menuaccel = []
-		for entry in list:
-			if type(entry) is TupleType:
-				key = entry[0]
-				if key:
-					self._menuaccel.append(key)
-		self._menu = menu
-
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
 		sx, sy = self._convert_coordinates(src)
