@@ -433,13 +433,16 @@ class DirectSound:
 		return sb
 
 		
-directSound = DirectSound()
-
 class DSPlayer:
+	directSound = None
+	dsrefcount = 0
 	def __init__(self, channel):
 		self.__channel = channel
 		self._sound = None
-		
+		if self.directSound is None:
+			DSPlayer.directSound	= DirectSound()			
+		DSPlayer.dsrefcount = DSPlayer.dsrefcount + 1
+			
 	def prepare_player(self, node):
 		f = self.__channel.getfileurl(node)
 		if not f:
@@ -453,7 +456,7 @@ class DSPlayer:
 				arg = arg.strerror
 			raise error, 'Cannot resolve URL "%s": %s' % (f, arg)
 			return 0
-		self._sound = directSound.createBufferFromFile(f)
+		self._sound = DSPlayer.directSound.createBufferFromFile(f)
 		return 1
 
 	def playit(self, node, start_time=0):
@@ -474,6 +477,9 @@ class DSPlayer:
 	def destroy(self):
 		del self._sound
 		self._sound = None
+		DSPlayer.dsrefcount = DSPlayer.dsrefcount - 1
+		if DSPlayer.dsrefcount == 0:
+			DSPlayer.directSound = None	
 		#print 'destroy'
 	
 	def pauseit(self, paused):
