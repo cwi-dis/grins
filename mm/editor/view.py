@@ -57,7 +57,7 @@ class view () :
 		self.unitwidth = (w - THERMW) / self.nrchannels
 		self.unitheight = (h - HDR_SIZE) / root.t1
 		self.thermo = thermo().new(self.thermleft + XMARG, YMARG, THERMW - XMARG * 2, h - HDR_SIZE - YMARG * 2)
-		self.currenttime = root.t1 / 3
+		self.currenttime = root.t0
 		self.dividor = w
 		xi = w + XMARG
 		wi = self.unitwidth - XMARG*2
@@ -482,7 +482,6 @@ class view () :
 	# the associated command.
 	#
 	def command(self, key):
-		print key
 		if self.commanddict.has_key (key) :
 			self.commanddict[key][0](self)
 		else :
@@ -541,7 +540,6 @@ class view () :
 			self.redraw_node(child)
 
 	def setcurrenttime(self, curtim):
-		print 'T =', curtim
 		self.currenttime = curtim
 		self.thermo.draw(curtim * self.unitheight)
 
