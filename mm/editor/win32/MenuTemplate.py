@@ -184,7 +184,7 @@ MENUBAR=(
 		(SMIL, TOGGLE, '&Image thumbnails', None, THUMBNAIL),
 		(LIGHT, TOGGLE, 'Check bandwidth &usage', None, COMPUTE_BANDWIDTH),
 		(SMIL, TOGGLE, '&Bandwidth usage strip', None, TOGGLE_BWSTRIP),
-		(LIGHT, TOGGLE, 'Show &Playable', None, PLAYABLE),
+		(SMIL, TOGGLE, 'Show &Playable', None, PLAYABLE),
 		(SMIL, TOGGLE, 'Show &Durations', None, TIMESCALE),
 		(CMIF, SEP,),
 		(CMIF, TOGGLE, '&Timeline view follows player', None, SYNCCV),
