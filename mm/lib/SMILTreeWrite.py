@@ -639,6 +639,7 @@ smil_mediatype={
 	'html':'text',
 	'label':'text',
 	'midi':'audio',
+	'null':'ref',
 	'RealAudio':'audio',
 	'RealPix':'img',
 	'RealText':'text',
