@@ -20,9 +20,38 @@ class TimeMapper:
 		self.min_pxl_per_sec = min_pxl_per_sec
 
 	def setoffset(self, offset, width):
+		# we're given pixels from offset to offset+width
+		# recalculate mapping so that collisions stay same
+		# size but between collisions we give proportinately
+		# more/fewer pixels to times
 		if __debug__ and DEBUG: print 'setoffset',offset,width
-		self.offset = offset
-		self.width = width
+		coll = 0
+		for pxl in self.collisiondict.values():
+			coll = coll + pxl
+		if width > coll:
+			width = width - coll
+			r0, r1 = self.range
+			numpxl = r1 - r0 - coll
+			factor = float(width) / numpxl
+			coll = r0
+			off = offset - r0
+			for t in self.times:
+				self.minpos[t] = int((self.minpos[t] - coll) * factor + .5) + coll + off
+				coll = coll + self.collisiondict[t]
+			if __debug__ and DEBUG:
+				print 'MINPOS'
+				for t in self.times:
+					print (t, self.minpos[t])
+				print 'RANGES'
+				for t in self.times:
+					print t, self.minpos[t], self.collisiondict[t], self.minpos[t] + self.collisiondict[t]
+				print self.minpos
+			self.range = self.minpos[self.times[0]], self.minpos[self.times[-1]] + self.collisiondict[self.times[-1]]
+		else:
+			# not enough pixels given to fit collisions,
+			# must scale everything.
+			self.offset = offset
+			self.width = width
 
 	def adddependency(self, t0, t1, minpixeldistance, node):
 		if not self.collecting:
@@ -127,7 +156,7 @@ class TimeMapper:
 			for t in self.times:
 				print t, self.minpos[t], self.collisiondict[t], self.minpos[t] + self.collisiondict[t]
 			print self.minpos
-		self.range = self.minpos[self.times[0]], self.minpos[self.times[-1]] + self.collisiondict[self.times[-1]] + 1
+		self.range = self.minpos[self.times[0]], self.minpos[self.times[-1]] + self.collisiondict[self.times[-1]]
 		if realtime:
 			return min_pixels_per_second
 		else:
@@ -136,7 +165,10 @@ class TimeMapper:
 	def pixel2time(self, pxl):
 		if self.collecting:
 			raise Error, 'pixel2time called while still collecting data'
-		pos = (pxl - self.offset) * float(self.range[1] - self.range[0]) / self.width
+		if self.width == 0:
+			pos = pxl - self.offset
+		else:
+			pos = (pxl - self.offset) * float(self.range[1] - self.range[0]) / self.width
 		lasttime = lastpos = None
 		for tm in self.times:
 			mp = self.minpos[tm]
@@ -211,7 +243,7 @@ class TimeMapper:
 		if self.collecting:
 			raise Error, 'time2pixel called while still collecting data'
 		if not self.minpos.has_key(time):
-			print 'Warning: TimeMapper: Interpolating time', time
+			if __debug__: print 'Warning: TimeMapper: Interpolating time', time
 			return self.interptime2pixel(time)
 		pos = self.minpos[time]
 		if align == 'right':
