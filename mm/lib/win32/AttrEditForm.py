@@ -295,8 +295,8 @@ class RegionDefaultCtrl(ChannelCtrl):
 class OptionsRadioCtrl(AttrCtrl):
 	want_default_help = 0
 
-	def __init__(self,wnd,attr,resid):
-		AttrCtrl.__init__(self,wnd,attr,resid)
+	def __init__(self,wnd,attr,resid, residToHide=()):
+		AttrCtrl.__init__(self,wnd,attr,resid, residToHide)
 		self._attrname=components.Control(wnd,resid[0])
 		list = self._attr.getoptions()
 		n = len(list)
@@ -308,6 +308,7 @@ class OptionsRadioCtrl(AttrCtrl):
 			self._radio.append(components.RadioButton(wnd,resid[ix+1]))
 
 	def OnInitCtrl(self):
+		AttrCtrl.OnInitCtrl(self)
 		self._initctrl=self
 		self._attrname.attach_to_parent()
 		if self.want_label:
@@ -4202,11 +4203,11 @@ class SystemGroup3(SnapSystemGroup):
 	def createctrls(self,wnd):
 		cd = SnapSystemGroup.createctrls(self,wnd)
 		a = self.getattr('system_captions')
-		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33,grinsRC.IDC_34x))
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33,grinsRC.IDC_34x), (grinsRC.IDC_GROUP3,))
 		a = self.getattr('system_required')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
 		a = self.getattr('system_screen_depth')
-		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62))
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62), (grinsRC.IDC_GROUP7,))
 		# different system screen crtl than SystemGroup
 		a = self.getattr('system_screen_size')
 		cd[a] = SystemScreenSizeCtrl(wnd,a,(grinsRC.IDC_GROUP8, grinsRC.IDC_WIDTHV,grinsRC.IDC_HEIGHTV))
@@ -4217,9 +4218,9 @@ class SystemGroup3(SnapSystemGroup):
 		a = self.getattr('system_component')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SCOMPONENTL,grinsRC.IDC_SCOMPONENTV))
 		a = self.getattr('system_audiodesc')
-		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_SAUDIODESCL,grinsRC.IDC_SAUDIODESCV1, grinsRC.IDC_SAUDIODESCV2, grinsRC.IDC_SAUDIODESCV3))
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_SAUDIODESCL,grinsRC.IDC_SAUDIODESCV1, grinsRC.IDC_SAUDIODESCV2, grinsRC.IDC_SAUDIODESCV3), (grinsRC.IDC_GROUP6,))
 		a = self.getattr('system_overdub_or_caption')
-		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_DUBSUBL,grinsRC.IDC_42,grinsRC.IDC_43,grinsRC.IDC_44))
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_DUBSUBL,grinsRC.IDC_42,grinsRC.IDC_43,grinsRC.IDC_44), (grinsRC.IDC_GROUP2,))
 		return cd
 
 class SystemGroup2(SystemGroup3):
