@@ -473,13 +473,14 @@ class ChannelView(ViewDialog):
 
 	def scandescendants(self, node):
 		for c in node.GetChildren():
-			if c.GetType() == 'bag':
+			t = c.GetType()
+			if t == 'bag':
 				self.scandescendants(c)
 			elif c.IsMiniDocument():
 				name = c.GetRawAttrDef('name', '(NoName)')
 				tuple = ('', name, (self.setviewrootcb, (c,)))
 				self.baseobject.descendants.append(tuple)
-			elif c.GetType() in interiortypes:
+			elif t in interiortypes:
 				self.scandescendants(c)
 
 	def addancestors(self):
