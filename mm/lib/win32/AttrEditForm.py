@@ -1011,8 +1011,32 @@ class CssColorCtrl(ColorCtrl):
 		self._attrval.settext(txt)
 		self.__setting = 0
 
+		
+	def settooltips(self,tooltipctrl):
+		ColorCtrl.settooltips(self, tooltipctrl)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[3]),'Non-transparent color',None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[4]),self.__getTransparentHelp(),None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[5]),self.__getInheritHelp(),None,0)
+		
+class NodeCssColorCtrl(CssColorCtrl):
+
 	def __getTransparentHelp(self):
-		return 'Transparent color'
+		return 'Transparent (overrides region default)'
+
+	def __getInheritHelp(self):
+		return 'Inherit the color from the region'
+		
+	def gethelp(self):
+		if self.currentValue == 'transparent':
+			return self.__getTransparentHelp()
+		elif self.currentValue == 'inherit':
+			return self.__getInheritHelp()
+		return ColorCtrl.gethelp(self) + '  (overrides region default)'
+
+class RegionCssColorCtrl(CssColorCtrl):
+
+	def __getTransparentHelp(self):
+		return 'Transparent'
 
 	def __getInheritHelp(self):
 		return 'Inherit the color from the parent region'
@@ -1023,13 +1047,7 @@ class CssColorCtrl(ColorCtrl):
 		elif self.currentValue == 'inherit':
 			return self.__getInheritHelp()
 		return ColorCtrl.gethelp(self)
-		
-	def settooltips(self,tooltipctrl):
-		ColorCtrl.settooltips(self, tooltipctrl)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[3]),'Non-transparent color',None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[4]),self.__getTransparentHelp(),None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[5]),self.__getInheritHelp(),None,0)
-		
+
 # Ctrl representing a css pos value
 class CssPosCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -1372,7 +1390,7 @@ import parseutil
 RADIO,EVENT,TEXT,OFFSET,RESULT,REPEAT,RELATIVE,THINGBUTTON = 0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80
 
 class EventCtrl(AttrCtrl):
-	# This is an editor for the 'begin' and 'end'tabs.
+	# This is the base class for an editor for the 'begin' and 'end'tabs.
 	__radiobuttons = {
 		grinsRC.IDC_RDELAY: 'delay',
 		grinsRC.IDC_RNODE: 'node',
@@ -1381,21 +1399,6 @@ class EventCtrl(AttrCtrl):
 		grinsRC.IDC_RACCESSKEY: 'accesskey',
 		grinsRC.IDC_RWALLCLOCK: 'wallclock',
 		}
-
-	__tooltips = [
-		(grinsRC.IDC_EVENTLIST, 'Lists the begin or end conditions for this node.'),
-		(grinsRC.IDC_NEWBUTTON, 'Add a new condition for this node to begin or end'), # begin or end.. hmm.
-		(grinsRC.IDC_DELETEBUTTON, 'Remove a condition for this node to begin or end'),
-		(grinsRC.IDC_EVENTTYPE, 'Sets the type of this event'),
-		(grinsRC.IDC_EDITOFFSET, 'Sets the delay on this node'),
-		(grinsRC.IDC_RDELAY, 'This event fires after the delay'),
-		(grinsRC.IDC_RNODE, 'This event fires relative to the start or end of another node'),
-		(grinsRC.IDC_RLAYOUT, 'This event fires to something which happens with a region'),
-		(grinsRC.IDC_RINDEFINITE, 'This event never fires.\nIf this is the only event, the node will either never start or never end'),
-		(grinsRC.IDC_RACCESSKEY, 'This event fires when the user presses the specified key on the keyboard'),
-		(grinsRC.IDC_RWALLCLOCK, 'This event fires at a certain time of day'),
-		(grinsRC.IDC_RELATIVE, 'Save association as relative path'),
-		]
 
 	def __init__(self, wnd, attr, resid):
 		#'wnd': <AttrEditForm.SingleAttrPage instance at 1cabbe8>,
@@ -1842,6 +1845,47 @@ class EventCtrl(AttrCtrl):
 		if not self._eventstruct.set_relative(relative):
 			self._relative.setcheck(not relative)
 		self.enableApply()
+
+class BeginEventCtrl(EventCtrl):
+	__tooltips = [
+		(grinsRC.IDC_EVENTLIST, 'If specified, playback of the object is delayed until any of these events fire'),
+		(grinsRC.IDC_NEWBUTTON, 'Add a new begin event'), 
+		(grinsRC.IDC_DELETEBUTTON, 'Remove the selected begin event'),
+
+		(grinsRC.IDC_EVENTTYPE, 'Source object and source event determine when the current event fires'),
+		(grinsRC.IDC_THINGVALUE, 'Source object and source event determine when the current event fires'),
+		(grinsRC.IDC_THINGBUTTON, 'Select source object'),
+		(grinsRC.IDC_EDITOFFSET, 'Delay event by this number of seconds (negative values allowed)'),
+		(grinsRC.IDC_EDITREPEAT, 'Event fires on this repeat iteration'),
+		(grinsRC.IDC_RDELAY, 'This event fires after the delay'),
+		(grinsRC.IDC_RNODE, 'This event fires relative tto an event on another node'),
+		(grinsRC.IDC_RLAYOUT, 'This event fires relative to an event on a region'),
+		(grinsRC.IDC_RINDEFINITE, 'This event never fires.\nIf this is the only event, the node will never start'),
+		(grinsRC.IDC_RACCESSKEY, 'This event fires when the user presses the specified key on the keyboard'),
+		(grinsRC.IDC_RWALLCLOCK, 'This event fires at a certain time of day'),
+		(grinsRC.IDC_RELATIVE, 'Refer to other node by relative path in stead of name'),
+		]
+
+class EndEventCtrl(EventCtrl):
+	__tooltips = [
+		(grinsRC.IDC_EVENTLIST, 'If specified, playback of the object is terminated when any of these events fire'),
+		(grinsRC.IDC_NEWBUTTON, 'Add a new end event'), 
+		(grinsRC.IDC_DELETEBUTTON, 'Remove the selected end event'),
+
+		(grinsRC.IDC_EVENTTYPE, 'Source object and source event determine when the current event fires'),
+		(grinsRC.IDC_THINGVALUE, 'Source object and source event determine when the current event fires'),
+		(grinsRC.IDC_THINGBUTTON, 'Select source object'),
+		(grinsRC.IDC_EDITOFFSET, 'Delay event by this number of seconds (negative values allowed)'),
+		(grinsRC.IDC_EDITREPEAT, 'Event fires on this repeat iteration'),
+		(grinsRC.IDC_RDELAY, 'This event fires after the delay'),
+		(grinsRC.IDC_RNODE, 'This event fires relative tto an event on another node'),
+		(grinsRC.IDC_RLAYOUT, 'This event fires relative to an event on a region'),
+		(grinsRC.IDC_RINDEFINITE, 'This event never fires.\nIf this is the only event, the node will never start'),
+		(grinsRC.IDC_RACCESSKEY, 'This event fires when the user presses the specified key on the keyboard'),
+		(grinsRC.IDC_RWALLCLOCK, 'This event fires at a certain time of day'),
+		(grinsRC.IDC_RELATIVE, 'Refer to other node by relative path in stead of name'),
+		]
+
 
 class HrefCtrl(AttrCtrl):
 	def __init__(self, wnd, attr, resid):
@@ -4789,7 +4833,7 @@ class BeginListGroup(AttrGroup):
 		#a = self.getattr('beginlist')
 		#cd[a] = ListCtrl(wnd,a,(grinsRC.IDC_STATIC1, grinsRC.IDC_LIST4, grinsRC.IDC_BUTTON7, grinsRC.IDC_BUTTON8, grinsRC.IDC_BUTTON9))
 		a = self.getattr('beginlist')
-		cd[a] = EventCtrl(wnd,a,())
+		cd[a] = BeginEventCtrl(wnd,a,())
 		return cd
 
 class BeginList2Group(BeginListGroup):
@@ -4821,7 +4865,7 @@ class EndListGroup(AttrGroup):
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('endlist')
-		cd[a] = EventCtrl(wnd,a,())
+		cd[a] = EndEventCtrl(wnd,a,())
 		#a = self.getattr('endlist')
 		#cd[a] = ListCtrl(wnd,a,(grinsRC.IDC_STATIC2, grinsRC.IDC_LIST3, grinsRC.IDC_BUTTON4, grinsRC.IDC_BUTTON5, grinsRC.IDC_BUTTON6))
 		return cd
@@ -5142,7 +5186,7 @@ class CssBackgroundColorGroup(AttrGroup):
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('cssbgcolor')
-		cd[a] = CssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
+		cd[a] = RegionCssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
 									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
 									grinsRC.IDC_CTYPEI))
 		return cd
@@ -5185,7 +5229,7 @@ class Layout2Group(AttrGroup):
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('cssbgcolor')
-		cd[a] = CssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
+		cd[a] = NodeCssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
 									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
 									grinsRC.IDC_CTYPEI))
 		a = self.getattr('fit')
@@ -5220,7 +5264,7 @@ class Layout1Group(AttrGroup):
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('cssbgcolor')
-		cd[a] = CssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
+		cd[a] = NodeCssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
 									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
 									grinsRC.IDC_CTYPEI))
 		a = self.getattr('fit')
@@ -5247,7 +5291,7 @@ class Layout3Group(AttrGroup):
 	def createctrls(self, wnd):
 		cd = {}
 		a = self.getattr('cssbgcolor')
-		cd[a] = CssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
+		cd[a] = RegionCssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
 									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
 									grinsRC.IDC_CTYPEI))
 		a = self.getattr('width')
