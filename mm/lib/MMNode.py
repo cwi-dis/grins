@@ -5,7 +5,6 @@ from MMTypes import *
 from MMExc import *
 from SR import *
 from AnchorDefs import *
-import Duration
 from Hlinks import Hlinks
 import MMurl
 import settings
@@ -545,7 +544,7 @@ class MMChannel:
 # The Sync Arc class
 #
 class MMSyncArc:
-	def __init__(self, dstnode, action, srcnode=None, event=None, marker=None, delay=None):
+	def __init__(self, dstnode, action, srcnode=None, event=None, marker=None, wallclock=None, delay=None):
 		if __debug__:
 			if event is None and marker is None:
 				assert srcnode is None
@@ -560,10 +559,23 @@ class MMSyncArc:
 		self.srcnode = srcnode	# None if parent; "prev" if previous; else MMNode instance
 		self.event = event
 		self.marker = marker
+		self.wallclock = wallclock
 		self.delay = delay
 		self.qid = None
 
 	def __repr__(self):
+		if self.wallclock is not None:
+			yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = self.wallclock
+			if yr is not None:
+				date = '%04d-%02d-%02dT' % (yr, mt, dy)
+			else:
+				date = ''
+			time = '%02d:%02d:%05.2f' % (hr, mn, sc)
+			if tzhr is not None:
+				tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
+			else:
+				tz = ''
+			return '<MMSyncArc instance, wallclock=%s%s%s>' % (date, time, tz)
 		if self.srcnode is None:
 			src = 'syncbase'
 		elif self.srcnode == 'prev':
@@ -588,7 +600,10 @@ class MMSyncArc:
 
 	def refnode(self):
 		node = self.dstnode
-		if self.srcnode == 'prev' or (self.srcnode is None and node.parent.type == 'seq'):
+		if self.wallclock is not None:
+			refnode = node.parent or node
+			refnode = refnode.looping_body_self or refnode
+		elif self.srcnode == 'prev' or (self.srcnode is None and node.parent.type == 'seq'):
 			refnode = node.parent
 			for c in refnode.children:
 				if c is node:
@@ -606,6 +621,8 @@ class MMSyncArc:
 	def isresolved(self):
 		if self.delay is None:
 			return 0
+		if self.wallclock is not None:
+			return 1
 		refnode = self.refnode()
 		if self.event is None and self.marker is None:
 			return 1
@@ -620,7 +637,46 @@ class MMSyncArc:
 			return 1
 		return 0
 
-	def resolvedtime(self):
+	def resolvedtime(self, timefunc):
+		if self.wallclock is not None:
+			import time, calendar
+			t0 = time.time()
+			t1 = timefunc()
+			localtime = time.localtime(t0)
+			yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = self.wallclock
+			if tzhr is not None:
+				# we want the time in our local time zone
+				sc = 3600*hr + 60*mn + sc
+				# first convert to UTC
+				tzsc = 3600*tzhr + 60*tzmn
+				if tzsg == '-':
+					tzsc = -tzsc
+				sc = sc - tzsc
+				# then convert to our own time zone
+				sc = sc - time.timezone + localtime[8]*3600
+				while sc < 0:
+					sc = sc + 86400
+					if dy is not None:
+						dy = dy - 1
+				while dy is not None and dy < 1:
+					mn = mn - 1
+					while mn < 1:
+						yr = yr - 1
+						mn = mn + 12
+					dy = dy + calendar.monthrange(yr, mn)[1]
+				hr,sc = divmod(sc, 3600)
+				mn,sc = divmod(sc, 60)
+			if yr is None:
+				tm = time.mktime((localtime[0],localtime[1],localtime[2],hr,mn,sc,0,0,-1))
+				sc = 3600*hr + 60*mn + sc
+				t = localtime[3]*3600+localtime[4]*60+localtime[5]
+				while sc < t:
+					sc = sc + 86400
+					tm = tm + 86400
+				return tm + t1 - t0 + self.delay
+			t = time.mktime((yr,mt,dy,hr,mn,sc,0,0,-1))
+			return t + t1 - t0 + self.delay
+				
 		refnode = self.refnode()
 		if self.event == 'begin':
 			return refnode.start_time + self.delay
@@ -630,10 +686,17 @@ class MMSyncArc:
 			return refnode.happenings[('event', self.event)] + self.delay
 		if self.marker is not None:
 			return refnode.happenings[('marker', self.marker)] + self.delay
-		if self.dstnode.parent.type == 'seq':
+		if self.dstnode.parent.type == 'seq' and \
+		   refnode is not self.dstnode.parent:
+			# self is previous child in seq, so
+			# event is end
 			event = 'end'
+##			return refnode.end_time + self.delay
 		else:
+			# self is first child of seq, or child
+			# of par/excl, so event is begin
 			event = 'begin'
+			return refnode.start_time + self.delay
 		return refnode.happenings[('event', event)] + self.delay
 			
 
@@ -642,6 +705,7 @@ class MMNode_body:
 	helpertype = "looping"
 	
 	def __init__(self, parent):
+		self.fullduration = None
 		self.parent = parent
 		self.sched_children = []
 		self.arcs = []
@@ -743,6 +807,7 @@ class MMNode:
 		self.scheduled_children = 0
 		self.arcs = []
 		self.reset()
+		self.fullduration = None
 
 	#
 	# Return string representation of self
@@ -772,10 +837,14 @@ class MMNode:
 	def add_arc(self, arc, body = None):
 		if body is None:
 			body = self
-		#print 'add_arc', `body`, `arc`
+		print 'add_arc', `body`, `arc`
 		body.sched_children.append(arc)
 		if self.playing != MMStates.IDLE and arc.delay is not None:
 			# if arc's event has already occurred, trigger it
+			if arc.wallclock is not None:
+				if arc.resolvedtime(self.sctx.parent.timefunc) <= self.sctx.parent.timefunc():
+					self.sctx.trigger(arc)
+				return
 			if arc.event is not None:
 				key = 'event', arc.event
 			elif arc.marker is not None:
@@ -1520,6 +1589,7 @@ class MMNode:
 	# captions.
 	#
 	def gensr_leaf(self, looping=0, overrideself=None):
+		self.calcfullduration()
 		if overrideself:
 			# overrideself is passed for the interior
 			self = overrideself
@@ -1540,13 +1610,14 @@ class MMNode:
 				   [(PLAY, self)] + out0)]
 		fill = self.attrdict.get('fill')
 		if fill is None:
-			if not self.attrdict.has_key('duration') and \
-			   not self.attrdict.has_key('endlist') and \
-			   not self.attrdict.has_key('repeatCount') and \
-			   not self.attrdict.has_key('repeatDur'):
+			if self.attrdict.get('duration') is None and \
+			   not MMAttrdefs.getattr(self, 'endlist') and \
+			   self.attrdict.get('repeatDur') is None and \
+			   self.attrdict.get('loop') is None:
 				fill = 'freeze'
 			else:
 				fill = 'remove'
+
 		sched_done = [(SCHED_DONE,self)] + out1
 		sched_stop = []
 		if fill == 'remove':
@@ -1641,6 +1712,7 @@ class MMNode:
 
 	# XXXX temporary hack to do at least something on ALT nodes
 	def gensr_alt(self):
+		self.calcfullduration()
 		if not self.wtd_children:
 			return self.gensr_empty()
 		selected_child = None
@@ -1698,6 +1770,7 @@ class MMNode:
 		return srdict
 
 	def gensr_bag(self):
+		self.calcfullduration()
 		if not self.wtd_children:
 			return self.gensr_empty()
 		in0, in1 = self.sync_from
@@ -1751,6 +1824,7 @@ class MMNode:
 	# - a list of all (event, action) tuples to be generated
 	# 
 	def gensr_interior(self, looping=0):
+		self.calcfullduration()
 		#
 		# If the node is empty there is very little to do.
 		#
@@ -2108,7 +2182,7 @@ class MMNode:
 			termtype = 'ALL'
 			defbegin = None
 
-		duration = MMAttrdefs.getattr(self, 'duration')
+##		duration = MMAttrdefs.getattr(self, 'duration')
 		duration = self.GetAttrDef('duration', None)
 		if duration is not None:
 			if duration < 0:
@@ -2290,6 +2364,37 @@ class MMNode:
 		if debuggensr: 
 			self.__dump_srdict('gensr_child', srdict)
 		return srdict
+
+	def calcfullduration(self):
+		duration = self.attrdict.get('duration')
+		repeatDur = self.attrdict.get('repeatDur')
+		repeatCount = self.attrdict.get('loop')
+		if duration is None:
+			import Duration
+			duration = Duration.get(self, ignoreloop=1)
+		if repeatDur is not None and \
+		   repeatCount is not None:
+			if duration > 0 and repeatCount > 0 and repeatDur >= 0:
+				duration = min(repeatCount * duration, repeatDur)
+			elif duration > 0 and repeatCount > 0 and repeatDur < 0:
+				duration = repeatCount * duration
+			# else repeatCount=indefinite or to be ignored
+			elif repeatDur >= 0:
+				duration = repeatDur
+			else:
+				duration = -1
+		elif repeatDur is not None: # repeatCount is None
+			duration = repeatDur
+		elif repeatCount is not None: # repeatDur is None
+			if duration > 0:
+				if repeatCount > 0:
+					duration = repeatCount * duration
+				else:
+					duration = -1
+		if duration >= 0:
+			self.fullduration = duration
+		else:
+			self.fullduration = None
 
 	def _is_realpix_with_captions(self):
 		if self.type == 'ext' and self.GetChannelType() == 'RealPix':
