@@ -23,7 +23,7 @@ class Region(base_window.Window):
 			rc = self.getwindowpos()
 			x, y, w, h = self._topwindow.LRtoDR(rc, round = 1)
 			self._canvas = 0, 0, w, h
-					
+				
 	def __repr__(self):
 		return '<Region instance at %x>' % id(self)
 		
@@ -83,13 +83,19 @@ class Region(base_window.Window):
 		# common box
 		return winstruct.rectAnd(ltrb1, ltrb2)
 
-	def _paintOnSurf(self, surf):
-		wnd = self._topwindow.getContext()
-		wnd_dc = wingdi.CreateDCFromHandle(wnd.GetDC())
+	def _paintOnSurf(self, surf, wnd_dc = None):
+		if wnd_dc is None:
+			wnd = self._topwindow.getContext()
+			wnd_dc = wingdi.CreateDCFromHandle(wnd.GetDC())
+			release_wnd_dc = 1
+		else:
+			release_wnd_dc = 0
+			
 		dc = wnd_dc.CreateCompatibleDC()
 		oldsurf = dc.SelectObject(surf)
 
-		xywh_dst = ltrb = self._topwindow.LRtoDR(self._rect, round = 1)
+		ws, hs = surf.GetSize()
+		xywh_dst = ltrb = 0, 0, ws, hs
 		if self._active_displist:
 			entry = self._active_displist._list[0]
 			bgcolor = None
@@ -114,7 +120,8 @@ class Region(base_window.Window):
 
 		dc.SelectObject(oldsurf)
 		dc.DeleteDC()
-		wnd.ReleaseDC(wnd_dc.Detach())
+		if release_wnd_dc:
+			wnd.ReleaseDC(wnd_dc.Detach())
 		
 	# dc origin is viewport origin
 	def _paintOnDC(self, dc):
@@ -144,6 +151,33 @@ class Region(base_window.Window):
 			rgb = winstruct.RGB(self._bgcolor)
 			dc.FillSolidRect((x, y, x+w, y+h), rgb)
 
+	# using surfaces
+	def _paintOnDC_2(self, dc):
+		x, y, w, h = xywh_dst = self.getDR()
+		if self._active_displist:
+			if self._disp_surf is None:
+				self._disp_surf = self._topwindow.createSurface(w, h, self._bgcolor or (0, 0, 0))
+			if not self._active_displist._rendered:
+				if self._bgcolor:
+					self._disp_surf.Fill(self._bgcolor)
+				self._paintOnSurf(self._disp_surf, dc)
+				self._active_displist._rendered = 1 # assert
+			assert 	self._disp_surf is not None, 'logical error'					
+			dcc = dc.CreateCompatibleDC()
+			bmp = dcc.SelectObject(self._disp_surf)
+			ws, hs = self._disp_surf.GetSize()
+			if ws == w and h == hs:
+				dc.BitBlt((x, y), (w, h), dcc, (0, 0), wincon.SRCCOPY)
+			else:
+				# for size animations
+				dc.StretchBlt((x, y, w, h), dcc, (0, 0, ws, hs), wincon.SRCCOPY)
+			dcc.SelectObject(bmp)
+			dcc.DeleteDC()
+		elif self._transparent == 0 and self._bgcolor:
+			x, y, w, h = xywh_dst
+			rgb = winstruct.RGB(self._bgcolor)
+			dc.FillSolidRect((x, y, x+w, y+h), rgb)
+		
 	# normal painting
 	def _paint_0(self, dc, exclwnd = None):
 		self._paintOnDC(dc)
@@ -332,12 +366,22 @@ class Viewport(Region):
 	# 
 	# Painting section
 	#
-	def createSurface(self, w, h, bgcolor):
+	def createSurface(self, w, h, bgcolor = None, dc = None):
 		if self.is_closed(): return
 		wnd = self._ctx
-		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
-		surf = wingdi.CreateDIBSurface(dc, w, h, bgcolor)
-		wnd.ReleaseDC(dc.Detach())
+
+		if dc is None:
+			dc = wingdi.CreateDCFromHandle(wnd.GetDC())
+			relese_wnd_dc = 1
+		else:
+			relese_wnd_dc = 0
+			
+		if bgcolor is not None:
+			surf = wingdi.CreateDIBSurface(dc, w, h, bgcolor)
+		else:
+			surf = wingdi.CreateDIBSurface(dc, w, h)
+		if relese_wnd_dc:
+			wnd.ReleaseDC(dc.Detach())
 		return surf
 	
 	def getBackBuffer(self):
@@ -355,6 +399,8 @@ class Viewport(Region):
 		self._ctx.UpdateWindow()
 
 	def paint(self, dc, exlwnd = None):
+		#import winkernel
+		#start = winkernel.GetTickCount()
 		ltrb = dc.GetClipBox()
 		rgb = winstruct.RGB(self._bgcolor)
 		dc.FillSolidRect(ltrb, rgb)
@@ -363,6 +409,8 @@ class Viewport(Region):
 		L.reverse()
 		for w in L:
 			w.paint(dc, exlwnd)
+		#dt = winkernel.GetTickCount() - start
+		#print 'Viewport.paint %d msec' % dt
 
 	def paintSurfAt(self, dc, surf, pos):
 		dcc = dc.CreateCompatibleDC()

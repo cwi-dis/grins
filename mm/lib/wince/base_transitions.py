@@ -39,6 +39,9 @@ class TransitionEngine:
 			self.__startprogress = self.__endprogress
 		else:
 			self.__transperiod = float(self.__endprogress - self.__startprogress) / self.__duration
+		
+		# shortcut flag for static (not video) transitions
+		self._surf_updated = 0
 
 	def __del__(self):
 		if self.__transitiontype:
@@ -100,23 +103,28 @@ class TransitionEngine:
 				# do a normal painting on active surface
 				wnd.paintOnSurf(self._tosurf, wnd)
 		else:
-			if self.outtrans:
-				wnd._paintOnSurf(wnd._fromsurf)
-				#wnd.updateBackSurf(self._tosurf, exclwnd = wnd) 
-			else:
-				#wnd.updateBackSurf(wnd._fromsurf, exclwnd = wnd)
-				wnd._paintOnSurf(self._tosurf)
-	
+			if not self._surf_updated:
+				if self.outtrans:
+					wnd._paintOnSurf(wnd._fromsurf)
+					#wnd.updateBackSurf(self._tosurf, exclwnd = wnd) 
+				else:
+					#wnd.updateBackSurf(wnd._fromsurf, exclwnd = wnd)
+					wnd._paintOnSurf(self._tosurf)
+				if value > 0.0:
+					self._surf_updated = 1
+
 		fromsurf = 	wnd._fromsurf
 		tosurf = self._tosurf	
 		tmpsurf  = self._tmp
 		dstsurf  = wnd._drawsurf
 		dstrgn = None
 		
+		# ~20-40 msec for current impl under wince (dep on image size)
 		self.__transitiontype.updatebitmap(parameters, tosurf, fromsurf, tmpsurf, dstsurf, dstrgn)
 
+		# ~100-200 msec for current (13/2/02) impl under wince (dep on image/viewport size)
 		wnd.updateNow()
-
+		 
 	def join(self, window, ismaster, cb):
 		# Join this (sub or super) window to an existing transition
 		if ismaster:
