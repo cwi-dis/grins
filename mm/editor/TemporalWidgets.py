@@ -937,9 +937,9 @@ class MultiMMWidget(TimeWidget):
 
 	def happily_receive_dropped_object(self, obj):
 		if isinstance(obj, TimeWidget):
-			print "DEBUG: node is: ", obj.node
-			print "DEBUG: adding to: ", self.mother.focusobj.node
-			self.mother.insertnode(obj.node, -1)
+			self.editmgr.delnode(srcnode)
+			self.editmgr.addnode(self.node, -1, obj.node)
+			self.editmgr.commit()
 		else:
 			windowinterface.beep()
 

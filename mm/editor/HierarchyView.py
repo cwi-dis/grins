@@ -1027,7 +1027,7 @@ class HierarchyView(HierarchyViewDialog):
 		if srcnode.IsAncestorOf(destnode):
 			windowinterface.showmessage("You can't move a node into one of it's children.", mtype='error', parent = self.window)
 			return
-					  
+
 		if not srcnode or srcnode is self.root:
 			windowinterface.beep()
 			return
@@ -1231,7 +1231,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.need_resize = 1
 		self.dirty = 1
 		self.draw()
-		
+
 	def bandwidthcall(self):
 		self.toplevel.setwaiting()
 		bandwidth = settings.get('system_bitrate')
