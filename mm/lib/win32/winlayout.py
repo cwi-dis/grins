@@ -152,11 +152,16 @@ class DrawContext:
 				obj.onDSelProperties(self._selected)
 
 	def checkChanged(self):
-		for obj in self._listeners:
-			if self._sizechanged:
+		if self._sizechanged:
+			for obj in self._listeners:
 				obj.onDSelResized(self._selected)
-			if self._poschanged:
+		self._sizechanged = 0
+		
+		if self._poschanged:
+			for obj in self._listeners:
 				obj.onDSelMoved(self._selected)
+		self._poschanged = 0
+
 	#
 	# Mouse input
 	#
@@ -196,15 +201,16 @@ class DrawContext:
 			self._selected.invalidateDragHandles()
 
 	# force a move by
-	def moveSelectionBy(self, dx, dy):
+	def moveSelectionBy(self, dx, dy, notify=1):
 		if self._selected:
 			shape = self._selected
 			shape.invalidateDragHandles()
 			shape.moveBy((dx, dy))
 			shape.invalidateDragHandles()
-		if self._selected:
-			for obj in self._listeners:
-				obj.onDSelMove(self._selected)
+			if notify:
+				for obj in self._listeners:
+					obj.onDSelMove(self._selected)
+					obj.onDSelMoved(self._selected)
 
 	def reset(self):
 		self._moveRefPt = 0, 0
@@ -308,16 +314,15 @@ class MSDrawContext(DrawContext):
 			shape.invalidateDragHandles()
 
 	# force a move by
-	def moveSelectionBy(self, dx, dy):
-		if dx!=0 or dy!=0:
-			self._poschanged = 1
+	def moveSelectionBy(self, dx, dy, notify=1):
 		for shape in self._selections:
 			shape.invalidateDragHandles()
 			shape.moveBy((dx, dy))
 			shape.invalidateDragHandles()
-		if self._selections:
+		if self._selections and notify:
 			for obj in self._listeners:
 				obj.onDSelMove(self._selections)
+				obj.onDSelMoved(self._selections)
 
 	def reset(self):
 		DrawContext.reset(self)
@@ -405,11 +410,15 @@ class MSDrawContext(DrawContext):
 				obj.onDSelResize(self._selected)
 
 	def checkChanged(self):
-		for obj in self._listeners:
-			if self._sizechanged:
+		if self._sizechanged:
+			for obj in self._listeners:
 				obj.onDSelResized(self._selected)
-			if self._poschanged:
+		self._sizechanged = 0
+		
+		if self._poschanged:
+			for obj in self._listeners:
 				obj.onDSelMoved(self._selections)
+		self._poschanged = 0
 		
 	#
 	# Mouse input (override)
