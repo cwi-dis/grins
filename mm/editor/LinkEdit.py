@@ -24,6 +24,7 @@ M_BVFOCUS = 5
 M_RELATION = 6
 M_NONE = 7
 M_EXTERNAL = 8
+M_KEEP = 9
 
 class LinkEdit(ViewDialog):
 	def init(self, toplevel):
@@ -68,7 +69,9 @@ class LinkEdit(ViewDialog):
 			  ('From Channel view focus', (self.menu_callback,
 						(self.left, M_TCFOCUS))),
 			  ('From Hierarchy view focus', (self.menu_callback,
-						(self.left, M_BVFOCUS)))]
+						(self.left, M_BVFOCUS))),
+			  ('Keep list', (self.menu_callback,
+					 (self.left, M_KEEP)))]
 			 )],
 			top = None, left = None, right = None)
 		self.left.anchoredit_show = win1.ButtonRow(
@@ -117,7 +120,9 @@ class LinkEdit(ViewDialog):
 			  ('No anchors, links only', (self.menu_callback,
 						      (self.right, M_NONE))),
 			  ('External', (self.menu_callback,
-					(self.right, M_EXTERNAL)))]
+					(self.right, M_EXTERNAL))),
+			  ('Keep list', (self.menu_callback,
+					 (self.right, M_KEEP)))]
 			 )],
 			top = None, left = None, right = None)
 		self.right.anchoredit_show = win3.ButtonRow(
@@ -271,6 +276,16 @@ class LinkEdit(ViewDialog):
 	def fill_external(self, str):
 		str.browser.setlabel('External')
 		str.anchors = self.toplevel.getallexternalanchors()
+
+	def fill_keep(self, str):
+		str.browser.setlabel('Kept')
+		# check that all anchors still exist
+		allanchors = getanchors(self.root, 1)
+		oldanchors = str.anchors
+		str.anchors = []
+		for a in oldanchors:
+			if a in allanchors:
+				str.anchors.append(a)
 
 	def finish_link(self, node):
 		self.fixinteresting()
@@ -581,6 +596,9 @@ class LinkEdit(ViewDialog):
 #				if not '/' in doc:
 #					doc = './' + doc
 #				self.external = [(doc, aname)]
+		elif ind == M_KEEP:
+			str.node = None
+			str.fillfunc = self.fill_keep
 		else:
 			print 'Unknown menu selection'
 			return
