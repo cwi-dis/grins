@@ -103,10 +103,12 @@ default_settings = {
 	'structure_dropcolor': (0, 0, 0),
 	
 	'structure_bandwidthfree': (150, 150, 150),
-	'structure_bandwidthok': (50, 50, 50),
+	'structure_bandwidthok': (0, 100, 0),
 	'structure_bandwidthnotok': (100, 0, 0),
+	'structure_bandwidthmaybeok': (100, 60, 0),
 	'structure_bandwidthokfocus': (0, 200, 0),
 	'structure_bandwidthnotokfocus': (200, 0, 0),
+	'structure_bandwidthmaybeokfocus': (200, 120, 0),
 	'structure_bwprerollcolor': (255, 160, 0),
 	'structure_bwmaystallcolor': (255, 160, 0),
 	'structure_bwstallcolor': (255, 0, 0),
