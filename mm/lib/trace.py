@@ -168,7 +168,7 @@ else:
 	prunemodules = ['xmllib.py', 're.py']
 	
 	class DialogTrace(Trace):
-		"""A trace variant that shows whatever is traced in a dialog"""
+		# A trace variant that shows whatever is traced in a dialog
 		def __init__(self):
 			Trace.__init__(self)
 			self.dialog = TraceDialog()
