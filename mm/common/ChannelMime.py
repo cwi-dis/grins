@@ -1,4 +1,4 @@
-__version__ = "$Id"
+__version__ = "$Id$"
 
 # mapping from channel type to supported MIME types
 ChannelMime = {
