@@ -192,6 +192,7 @@ class _Font:
 	def fontheightPXL(self):
 		f = self._font
 		return f.ascent + f.descent
+
 	def fontheight(self):
 		return float(self.fontheightPXL()) / toplevel._vmm2pxl
 
