@@ -31,8 +31,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,5,0,0
- PRODUCTVERSION 1,5,0,0
+ FILEVERSION 1,5,1,0
+ PRODUCTVERSION 1,5,1,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -50,14 +50,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "Oratrix Holding B.V.\0"
             VALUE "FileDescription", "aud2rm.ax filter\0"
-            VALUE "FileVersion", "1.5\0"
+            VALUE "FileVersion", "1.5.1\0"
             VALUE "InternalName", "aud2rm\0"
             VALUE "LegalCopyright", "Copyright © 2000 Oratrix Holding B.V.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "aud2rm.ax\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "GRiNS Application\0"
-            VALUE "ProductVersion", "1.5\0"
+            VALUE "ProductVersion", "1.5.1\0"
             VALUE "SpecialBuild", "\0"
         END
     END
