@@ -4,7 +4,7 @@ import time
 import struct
 import sys
 
-class AudioDevMAC:
+class AudioDevWin:
 	__formats = (linear_8_mono_excess,
 			  linear_8_stereo_excess,
 			  linear_16_mono_big,
@@ -61,13 +61,13 @@ class AudioDevMAC:
 		#	  self.getfilled() + nframes > self.__qsize:
 		#	time.sleep(0.1)
 		print "data---> ", data
-		
+
 
 	def __callback(self, *args):
 		del self.__gc[0]
 		if self.__usercallback:
 			self.__usercallback()
-			
+
 	def setcallback(self, callback):
 		self.__usercallback = callback
 

@@ -52,7 +52,7 @@ class Chunk:
 			raise RuntimeError
 		self.file.seek(self.offset + pos, 0)
 		self.size_read = pos
-		
+
 	def read(self, length):
 		if self.size_read >= self.chunksize:
 			return ''
