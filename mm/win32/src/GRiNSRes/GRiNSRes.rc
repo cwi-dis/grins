@@ -2246,21 +2246,13 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Bitmap
-//
-
-IDB_BITMAP1             BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\g2-15\\pro\\outtransition.ICO"
-IDB_BITMAP2             BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\g2-15\\pro\\intransition.ICO"
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Icon
 //
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON_TRANSOUT       ICON    DISCARDABLE     "res\\ico00010.ico"
-IDI_ICON_TRANSIN        ICON    DISCARDABLE     "res\\ico00011.ico"
+IDI_ICON_TRANSOUT       ICON    DISCARDABLE     "res\\intransition.ico"
+IDI_ICON_TRANSIN        ICON    DISCARDABLE     "res\\outtransition.ico"
 #endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
