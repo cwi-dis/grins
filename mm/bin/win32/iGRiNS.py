@@ -20,14 +20,10 @@ toplevel=None
 ##################### Main Script
 import os
 import sys
-print 'Running CMIF Multimedia presentation'
-#if len(sys.argv)>1:
-#	print sys.argv[1]
 	
 CMIFDIR=r'd:\ufs\mm\cmif'
 
 # TEMP TEST FOLDER
-print "Main GRiNS directory is", CMIFDIR
 
 if what==PLAYER:
 	specificPath = "grins"
@@ -97,12 +93,10 @@ def Boot(what = 0):
 	# the extensionmodules, or if frozen, in the main directory
 	# This call allows Pythonwin to automatically find resources in it.
 	import win32ui
-	print "win32ui loaded from:",win32ui.__file__
 	dllPath = os.path.split(win32ui.__file__)[0]
 	try:
 		global resdll
 		resdll = win32ui.LoadLibrary(os.path.join(dllPath, "GRiNSRes.dll"))
-		print "Loaded", resdll, "from", dllPath
 		resdll.AttachToMFC()
 	except win32ui.error:
 		win32ui.MessageBox("The application resource DLL 'GRiNSRes.dll' can not be located\r\n\r\nPlease correct this problem, and restart the application")
@@ -118,7 +112,6 @@ def Boot(what = 0):
 
 def GuessCMIFRoot():
 	selfDir = win32api.GetFullPathName(os.path.join(os.path.split(sys.argv[0])[0], "." ))
-	print 'selfDir',selfDir
 	l=string.split(selfDir,'\\')
 	found=0;dir=''
 	for s in l:
