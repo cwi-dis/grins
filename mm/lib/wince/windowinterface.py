@@ -57,7 +57,7 @@ def canceltimer(id):
 	toplevel.canceltimer(id)
 
 def setwaiting():
-	pass
+	toplevel.setwaiting()
 
 def setidleproc(cb):
 	return toplevel.setidleproc(cb)
