@@ -253,7 +253,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		return not (self._obj_ and self.IsWindow())
 
 	# Bring window in front of peers
-	def pop(self):
+	def pop(self, poptop=1):
 		# Do nothing
 		# Improperly used by core system
 		pass
@@ -562,8 +562,9 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 				(0,0,0,0),flags)
 	
 	# Bring the subwindow infront of windows with the same z	
-	def pop(self):
-		self._topwindow.activate()
+	def pop(self, poptop=1):
+		if poptop:
+			self._topwindow.activate()
 		parent = self._parent
 		# put self in front of all siblings with equal or lower z
 		if self is not parent._subwindows[0]:
