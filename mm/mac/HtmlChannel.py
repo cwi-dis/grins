@@ -23,6 +23,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 		self.want_default_colormap = 1
 		self.htmlw = None
+		self.played_str = ()
 
 	def do_show(self, pchan):
 		#
@@ -142,6 +143,7 @@ class HtmlChannel(Channel.ChannelWindow):
 	def do_play(self, node):
 		htmlw = self.htmlw
 		self.played_url = self.url = self.armed_url
+		url, tag = MMurl.splittag(self.played_url)
 		self.played_str = self.armed_str
 
 		fontspec = getfont(node)
@@ -154,8 +156,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		fg = self.played_display._fgcolor
 		an = self.window._convert_color(self.getbucolor(node))
 		htmlw.setcolors(bg, fg, an)
-
-		htmlw.insert_html(self.played_str, self.url)
+		
+		htmlw.insert_html(self.played_str, self.url, tag)
 		self.fixanchorlist(node)
 		self.play_node = node
 
