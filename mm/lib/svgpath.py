@@ -570,6 +570,12 @@ class Path:
 			points.append(complex(x,y))
 		return points
 
+	def translatePoints(self, dx, dy):
+		points = []
+		for x, y in self._points:
+			points.append(complex(x,y))
+		self._points = points
+
 	# main query method
 	# get point at length t
 	def getPointAt(self, t):
