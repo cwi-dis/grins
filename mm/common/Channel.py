@@ -111,6 +111,7 @@ class Channel:
 		if visible:
 			self.show()
 		else:
+			self.save_geometry()
 			self.hide()
 
 	def show(self):

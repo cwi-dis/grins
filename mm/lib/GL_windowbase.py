@@ -1199,6 +1199,22 @@ class _Window:
 		else:
 			self._toplevel = self
 
+	def getgeometry(self):
+		if self.is_closed():
+			raise error, 'window already closed'
+		if self._parent_window != toplevel:
+			return self._sizes
+		toplevel._win_lock.acquire()
+		gl.winset(self._window_id)
+		x, y = gl.getorigin()
+		toplevel._win_lock.release()
+		h = float(_mscreenheight) / _screenheight
+		w = float(_mscreenwidth) / _screenwidth
+		return float(x) * w, \
+		       (_screenheight - y - self._rect[_HEIGHT]) * h, \
+		       self._rect[_WIDTH] * w, \
+		       self._rect[_HEIGHT] * h
+
 	def newwindow(self, coordinates, **options):
 		if debug: print `self`+'.newwindow'+`coordinates`
 		x, y, w, h = coordinates
