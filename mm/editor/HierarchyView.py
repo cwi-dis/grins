@@ -246,6 +246,8 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))))
 		if heavy or ctx.compatchannels(chtype='html'):
 			rv.append(NEW_UNDER_HTML(callback = (self.createundercall, ('html',))))
+		if heavy or ctx.compatchannels(chtype='svg'):
+			rv.append(NEW_UNDER_SVG(callback = (self.createundercall, ('svg',))))
 		rv.append(NEW_UNDER_ANIMATION(callback = (self.createundercall, ('animate',))))
 		return rv
 
@@ -266,6 +268,8 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_BEFORE_TEXT(callback = (self.createbeforecall, ('text',))))
 		if heavy or ctx.compatchannels(chtype='html'):
 			rv.append(NEW_BEFORE_HTML(callback = (self.createbeforecall, ('html',))))
+		if heavy or ctx.compatchannels(chtype='svg'):
+			rv.append(NEW_BEFORE_SVG(callback = (self.createbeforecall, ('svg',))))
 		if heavy or ctx.compatchannels(chtype='image'):
 			rv.append(NEW_AFTER_IMAGE(callback = (self.createaftercall, ('image',))))
 		if heavy or ctx.compatchannels(chtype='sound'):
@@ -276,6 +280,8 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_AFTER_TEXT(callback = (self.createaftercall, ('text',))))
 		if heavy or ctx.compatchannels(chtype='html'):
 			rv.append(NEW_AFTER_HTML(callback = (self.createaftercall, ('html',))))
+		if heavy or ctx.compatchannels(chtype='svg'):
+			rv.append(NEW_AFTER_SVG(callback = (self.createaftercall, ('svg',))))
 		rv.append(NEW_BEFORE_ANIMATION(callback = (self.createbeforecall, ('animate',))))
 		rv.append(NEW_AFTER_ANIMATION(callback = (self.createaftercall, ('animate',))))
 		return rv
