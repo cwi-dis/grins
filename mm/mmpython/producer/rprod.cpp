@@ -3687,8 +3687,7 @@ SetDllCategoryPaths()
 #else
 	strcpy(szAppDir, "d:\\ufs\\mm\\cmif\bin\\win32\\");
 #endif
-	printf("producer: appdir = \"%s\"\n", szAppDir);
-    
+
 	// Set the DLL Access paths
 	// Win32 DEBUG builds and all Mac builds set everything to the app dir
 	// All other builds look in subdirs underneath the app dir
