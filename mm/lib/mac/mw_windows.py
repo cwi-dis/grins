@@ -556,20 +556,14 @@ class _CommonWindow:
 		# Next, check for popup menu, if we have one
 		#
 		if shifted:
-			if self._menu:
-				# Convert coordinates back to global
-				Qd.SetPort(self._wid)
-				# XXXX Is this correct? y, x??
-				y, x = Qd.LocalToGlobal(where)
-				self._menu.popup(x, y, event, window=self)
+			if self._menu or self._popupmenu:
+				self._contentpopupmenu(where, event)
 				return
-			elif self._popupmenu:
-				# Convert coordinates back to global
-				Qd.SetPort(self._wid)
-				# XXXX Is this correct? y, x??
-				y, x = Qd.LocalToGlobal(where)
-				self._popupmenu.popup(x, y, event, window=self)
-				return
+		else:
+			if down and (self._menu or self._popupmenu):
+				# Not shifted, but we have a popup menu. Ask toplevel
+				# to re-send the event in a short while
+				mw_globals.toplevel.setmousetimer(self._contentpopupmenu, (where, event))
 		
 		#
 		# It is really in our canvas. Do we have a low-level
@@ -608,6 +602,19 @@ class _CommonWindow:
 					buttons.append(b)
 				
 		func(arg, self, evttype, (x, y, buttons))
+		
+	def _contentpopupmenu(self, where, event):
+		mw_globals.toplevel.clearmousetimer()
+		if self._menu:
+			menu = self._menu
+		elif self._popupmenu:
+			menu = self._popupmenu
+		else:
+			return
+		# Convert coordinates back to global
+		Qd.SetPort(self._wid)
+		y, x = Qd.LocalToGlobal(where)
+		menu.popup(x+2, y+2, event, window=self)
 		
 	def _keyboardinput(self, char, where, event):
 		#
