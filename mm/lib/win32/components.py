@@ -918,8 +918,8 @@ class KeyTimesSlider(window.Wnd):
 		self._markerColor = 0, 0, 0
 		self._selectedMarkerColor = 255, 0, 0
 
-		dlg.HookNotify(self.OnReleaseCapture, commctrl.NM_RELEASEDCAPTURE)
-		
+		dlg.HookMessage(self.OnHScroll, win32con.WM_HSCROLL)
+						
 		self._selected = -1
 		self._dragging = None
 
@@ -1014,11 +1014,11 @@ class KeyTimesSlider(window.Wnd):
 			win32mu.FillPolygon(dc, pts, color)
 			index = index + 1
 
-	def OnReleaseCapture(self, std, extra):
+	def OnHScroll(self, msg):
 		pos = self.GetPos()
 		if self._listener:
 			self._listener.onCursorPosChanged(0.01*pos)
-
+		
 	def setCursorPos(self, t):
 		self.SetPos(int(t*100+0.5))
 
@@ -1204,5 +1204,5 @@ class KeyTimesSlider(window.Wnd):
 		if self.fiber is not None:
 			self.stop()
 
-
+	
 
