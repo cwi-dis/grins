@@ -597,11 +597,6 @@ class Tooltip(Control):
 			hwnd, message, wParam, lParam, time, pt = params
 			newparams = hwnd, win32con.WM_LBUTTONUP, wParam, lParam, time, lParam
 			self.onLButtonUp(params)
-		msg = win32mu.Win32Msg(params)
-		x, y = msg.pos()
-		rc = x, y, x+1, y+1
-		hwnd = self._parent.GetSafeHwnd()
-		Sdk.NewToolRect(self._hwnd, hwnd, 0, rc)
 		self.relayEvent(params)
 
 	def activate(self, flag):
@@ -610,6 +605,10 @@ class Tooltip(Control):
 		else: 
 			flag = 0
 		self.sendmessage(commctrl.TTM_ACTIVATE, flag, 0)
+
+	def settoolrect(self, toolid, rc):
+		hwnd = self._parent.GetSafeHwnd()
+		Sdk.NewToolRect(self._hwnd, hwnd, toolid, rc)
 
 	def updatetiptext(self, toolid, text):
 		assert self._cptext.has_key(toolid), 'tool does not exist'
