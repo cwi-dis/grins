@@ -350,7 +350,7 @@ class SMILHtmlTimeWriter(SMIL):
 						if v == '.activateEvent':
 							value = string.split(value, '.')[0] + '.click'
 						else:
-							self.showunsupported(v)
+							pass # self.showunsupported(v)
 				
 				# endsync translation
 				if name == 'endsync':
