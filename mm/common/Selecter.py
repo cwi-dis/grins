@@ -282,7 +282,7 @@ class Selecter:
 			path.append(x)
 			x = x.GetSchedParent()
 		path.reverse()
-		self.scheduler.sctx_list[0].gototime(self.root, gototime, timestamp, path)
+		self.scheduler.sctx_list[0].gototime(path[0], gototime, timestamp, path)
 		self.scheduler.setpaused(0)
 		return 0
 
