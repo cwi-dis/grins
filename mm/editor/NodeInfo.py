@@ -155,7 +155,7 @@ class NodeInfo(Dialog):
 	    self.oldtype = self.type
 	    self.ch_type = 0
 	if always or not self.ch_filename:
-	    self.filename = self.toplevel.getattr(self.node, 'file')
+	    self.filename = MMAttrdefs.getattr(self.node, 'file')
 	    self.ch_filename = 0
 	if always or not self.ch_immtext:
 	    self.immtext = self.node.GetValues()[:]
