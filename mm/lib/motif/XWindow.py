@@ -1581,7 +1581,7 @@ class _SubWindow(_Window):
 				win._do_resize1()
 		else:
 			resize = 0
-			self._updcoords(coordinates)
+			self._updcoords((x,y,w,h))
 
 		r.UnionRegion(self._region)
 		parent._do_expose(r)
