@@ -37,7 +37,7 @@ class JpgDecoder : public ImgDecoder
 	virtual DIBSurf* decode();
 
 	private:
-	void write_pixel_rows(j_decompress_ptr cinfo, surface<le::trible> *psurf);
+	void write_pixel_rows(j_decompress_ptr cinfo, surface<color_repr_t> *psurf);
 	
 	void create_buffer(int row_width);
 	void free_buffer();
@@ -119,8 +119,8 @@ inline DIBSurf* JpgDecoder::decode()
 	int height = cinfo.output_height;
 
 	// create a bmp surface
-	le::trible *pBits = NULL;
-	BITMAPINFO *pbmpi = GetBmpInfo24(width, height);
+	color_repr_t *pBits = NULL;
+	BITMAPINFO *pbmpi = GetBmpInfo(width, height, color_repr_t::get_bits_size());
 	HBITMAP hBmp = CreateDIBSection(m_hDC, pbmpi, DIB_RGB_COLORS, (void**)&pBits, NULL, 0);
 	if(hBmp==NULL || pBits==NULL)
 		{
@@ -129,7 +129,7 @@ inline DIBSurf* JpgDecoder::decode()
 		return NULL;
 		}
 
-	surface<le::trible> *psurf = new surface<le::trible>(width, height, 24, pBits);
+	surface<color_repr_t> *psurf = new surface<color_repr_t>(width, height, color_repr_t::get_bits_size(), pBits);
 
 	// Process data
 	m_cur_output_row = 0;
@@ -147,17 +147,16 @@ inline DIBSurf* JpgDecoder::decode()
 	return new DIBSurf(hBmp, psurf);
 	}
 
-inline void JpgDecoder::write_pixel_rows(j_decompress_ptr cinfo, surface<le::trible> *psurf)
+inline void JpgDecoder::write_pixel_rows(j_decompress_ptr cinfo, surface<color_repr_t> *psurf)
 	{
 	JSAMPROW inptr = m_dbuffer[0];
-	le::trible* outptr = psurf->get_row(m_cur_output_row);
+	color_repr_t* outptr = psurf->get_row(m_cur_output_row);
 	for(JDIMENSION col = 0; col < cinfo->output_width; col++) 
 		{
-		le::trible t;
-		t.r = *inptr++;
-		t.g = *inptr++;
-		t.b = *inptr++;
-		*outptr++ = t;
+		BYTE r = *inptr++;
+		BYTE g = *inptr++;
+		BYTE b = *inptr++;
+		*outptr++ = color_repr_t(r, g, b);
 		}
 	m_cur_output_row++;
 	}
