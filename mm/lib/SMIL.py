@@ -300,6 +300,8 @@ class SMIL:
 			'systemScreenDepth':None,
 			'systemScreenSize':None,
 			'title':None,
+			'transIn':None,
+			'transOut':None,
 			'type':None,
 			'uGroup':None,
 			__layout:None,
@@ -404,6 +406,20 @@ class SMIL:
 			   'title':None,
 ##			   'override':'allowed',
 			   },
+		'transition':{'id':None,
+				'type':None,
+				'subtype':None,
+				'dur':'1s',
+				'startPercent':'0',
+				'endPercent':'100',
+				'direction':'forward',
+				'horzRepeat':'0',
+				'vertRepeat':'0',
+				'borderWidth':'0',
+				'color':'black',
+				'multiElement':'false',
+				'childrenClip':None,
+				},
 		}
 	attributes['seq'] = attributes['body']
 	attributes[__bag] = attributes[__choice]
@@ -477,7 +493,7 @@ class SMIL:
 	# no allowed content is default, so we don't specify empty ones here
 	entities = {
 		'smil': ['head', 'body'],
-		'head': ['layout', 'switch', 'meta', 'userAttributes', __layouts],
+		'head': ['layout', 'switch', 'meta', 'userAttributes', __layouts, 'transition'],
 		'userAttributes': ['uGroup'],
 		'layout': ['region', 'root-layout', 'viewport'],
 		'viewport': ['region'],

@@ -309,6 +309,14 @@
 (toplevel_winsize (tuple (float) (float)) (31.689453125 72.021484375) 'Top level winsize' hidden
 	 'Window size for top level menu' raw (all))
 
+# XXXX Transitions need a displayer
+# XXXX This allows for a single transition only (should be a list)
+(transIn (name) '' 'In-transition' default
+	'Name of transition at start of item' raw (smil2))
+	
+(transOut (name) '' 'Out-transition' default
+	'Name of transition at end of item' raw (smil2))
+	
 (transparent (int) 0 'Transparent' transparency
 	'Determines transparency of window, overrides background color' raw (g2_pro smil10 cmif))
 
