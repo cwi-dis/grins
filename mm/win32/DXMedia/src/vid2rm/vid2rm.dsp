@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Gz /MD /W3 /Gy /D DBG=0 /D WINVER=0x400 /D _X86_=1 /D "_DLL" /D "_MT" /D "_WIN32" /D "WIN32" /D "STRICT" /D "INC_OLE2" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /FR /Oxs /GF /D_WIN32_WINNT=-0x0400 /c
+# ADD CPP /nologo /Gz /MD /W3 /Gy /I "..\..\classes\base" /I "..\..\include" /D DBG=0 /D WINVER=0x400 /D _X86_=1 /D "_DLL" /D "_MT" /D "_WIN32" /D "WIN32" /D "STRICT" /D "INC_OLE2" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /FR /Oxs /GF /D_WIN32_WINNT=-0x0400 /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 quartz.lib strmbase.lib msvcrt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\vid2rm.ax" /subsystem:windows,4.0 /align:0x1000 /opt:ref /release /debug:none
+# ADD LINK32 ..\..\lib\quartz.lib ..\..\libstrmbase.lib msvcrt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\vid2rm.ax" /subsystem:windows,4.0 /align:0x1000 /opt:ref /release /debug:none
 
 !ELSEIF  "$(CFG)" == "vid2rm - Win32 Debug"
 
@@ -71,7 +71,7 @@ LINK32=link.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Gz /MDd /W3 /Z7 /Gy /D "INC_OLE2" /D "STRICT" /D _WIN32_WINNT=0x0400 /D "WIN32" /D "_WIN32" /D "_MT" /D "_DLL" /D _X86_=1 /D WINVER=0x0400 /D DBG=1 /D "DEBUG" /D "_DEBUG" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /Oid /c
+# ADD CPP /nologo /Gz /MDd /W3 /Z7 /Gy /I "..\..\classes\base" /I "..\..\include" /D "INC_OLE2" /D "STRICT" /D _WIN32_WINNT=0x0400 /D "WIN32" /D "_WIN32" /D "_MT" /D "_DLL" /D _X86_=1 /D WINVER=0x0400 /D DBG=1 /D "DEBUG" /D "_DEBUG" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /Oid /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 strmbasd.lib quartz.lib msvcrtd.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\vid2rm.ax" /align:0x1000 /debug:mapped,full /subsystem:windows,4.0
+# ADD LINK32 ..\..\lib\strmbasd.lib ..\..\lib\quartz.lib msvcrtd.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\vid2rm.ax" /align:0x1000 /debug:mapped,full /subsystem:windows,4.0
 
 !ENDIF 
 
@@ -120,36 +120,6 @@ DEP_CPP_VID2R=\
 	".\rconvert.h"\
 	".\vid2rm.h"\
 	".\vid2rmuids.h"\
-	{$(INCLUDE)}"amextra.h"\
-	{$(INCLUDE)}"amfilter.h"\
-	{$(INCLUDE)}"cache.h"\
-	{$(INCLUDE)}"combase.h"\
-	{$(INCLUDE)}"cprop.h"\
-	{$(INCLUDE)}"ctlutil.h"\
-	{$(INCLUDE)}"dllsetup.h"\
-	{$(INCLUDE)}"fourcc.h"\
-	{$(INCLUDE)}"measure.h"\
-	{$(INCLUDE)}"msgthrd.h"\
-	{$(INCLUDE)}"mtype.h"\
-	{$(INCLUDE)}"outputq.h"\
-	{$(INCLUDE)}"pstream.h"\
-	{$(INCLUDE)}"refclock.h"\
-	{$(INCLUDE)}"reftime.h"\
-	{$(INCLUDE)}"renbase.h"\
-	{$(INCLUDE)}"schedule.h"\
-	{$(INCLUDE)}"source.h"\
-	{$(INCLUDE)}"streams.h"\
-	{$(INCLUDE)}"strmctl.h"\
-	{$(INCLUDE)}"sysclock.h"\
-	{$(INCLUDE)}"transfrm.h"\
-	{$(INCLUDE)}"transip.h"\
-	{$(INCLUDE)}"videoctl.h"\
-	{$(INCLUDE)}"vtrans.h"\
-	{$(INCLUDE)}"winctrl.h"\
-	{$(INCLUDE)}"winutil.h"\
-	{$(INCLUDE)}"wxdebug.h"\
-	{$(INCLUDE)}"wxlist.h"\
-	{$(INCLUDE)}"wxutil.h"\
 	
 # End Source File
 # Begin Source File
