@@ -18,5 +18,6 @@ void GRiNSPlayerAutoAdviceSetDur(int id, double dur);
 void GRiNSPlayerAutoAdviceSetPos(int id, double pos);
 void GRiNSPlayerAutoAdviceSetSpeed(int id, double speed);
 void GRiNSPlayerAutoAdviceSetState(int id, int st);
+void GRiNSPlayerAutoAdviceSetFrameRate(int docid, int fr);
 
 #endif
