@@ -180,7 +180,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		win32window.Window.__init__(self)
 		DropTarget.DropTarget.__init__(self)
 		Toolbars.ToolbarMixin.__init__(self)
-		self._toolbarCombo = []
 		
 		# menu support
 		self._menu = None		# Dynamically created rightmousemenu
@@ -525,10 +524,14 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		basename=urllib.unquote(cmifdoc.basename)
 		self.settitle(basename,'document')
 		self.set_commandlist(commandlist,'document')
+		if adornments and adornments.has_key('pulldown'):
+			pulldownmenus = adornments['pulldown']
+		else:
+			pulldownmenus = None
+		self.setToolbarPulldowns(pulldownmenus)
 		if not IsPlayer:
-			self.setEditorDocumentToolbar(adornments)
 			self.setEditorDocumentMenu(1)
-			self.RecalcLayout()
+		self.RecalcLayout()
 		if not __main__.toplevel.is_embedded():		
 			self.ActivateFrame(win32con.SW_SHOW)
 		if IsPlayer and SHOW_PLAYER_SEEK:
@@ -680,7 +683,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		self.set_commandlist(None,'document')
 		self.settitle(None,'document')
 		if not IsPlayer and len(__main__.toplevel._subwindows)==1:
-			self.setEditorFrameToolbar()
+##			self.setEditorFrameToolbar()
 			self.setEditorDocumentMenu(0)
 		# and document's views
 		self.close_all_views()
