@@ -212,6 +212,11 @@ def urlretrieve(url, filename=None):
 def urlcleanup():
 	if _urlopener:
 		_urlopener.cleanup()
+def geturlopener():
+	global _urlopener
+	if not _urlopener:
+		_urlopener = FancyURLopener()
+	return _urlopener
 
 import urlparse
 basejoin = urlparse.urljoin # urljoin works better...
