@@ -299,6 +299,26 @@ class SchedulerContext:
 			# ignore event when node doesn't want to play
 			if debugevents: print 'node won\'t play'
 			return
+		endlist = MMAttrdefs.getattr(node, 'endlist')
+		if endlist:
+			equal = 0
+			for a in endlist:
+				if not a.isresolved():
+					# any unresolved time is after any resolved time
+					break
+				if a.resolvedtime() > arc.resolvedtime():
+					break
+				elif a.resolvedtime() == arc.resolvedtime():
+					equal = 1
+			else:
+				if debugevents: print 'not allowed to start'
+				if equal:
+					self.parent.sched_arcs(self, node, 'begin')
+					self.parent.sched_arcs(self, node, 'end')
+				srdict = pnode.gensr_child(node, runchild = 0)
+				self.srdict.update(srdict)
+				self.parent.event(self, (SR.SCHED_DONE, node))
+				return
 		if node.playing == MMStates.PLAYING:
 			# node is playing, must terminate it first
 			if debugevents: print 'terminating node'
@@ -584,6 +604,7 @@ class Scheduler(scheduler):
 			#
 			if debugtimer: print 'updatetimer: no more work' #DBG
 			self.stop_all()
+			self.ui.set_timer(0.001)
 			return
 		else:
 			#
@@ -666,7 +687,11 @@ class Scheduler(scheduler):
 		return []
 
 	def sched_arcs(self, sctx, node, event = None, marker = None):
-		if debugevents: print 'sched_arcs',`node`,event
+		if debugevents: print 'sched_arcs',`node`,event,marker
+		if event is not None:
+			node.event(self.timefunc(), event)
+		if marker is not None:
+			node.marker(self.timefunc(), marker)
 		for arc in node.sched_children:
 			if (arc.event == event and
 			    arc.marker == marker and
@@ -822,6 +847,7 @@ class Scheduler(scheduler):
 			chan.terminate(node)
 			if node.playing == MMStates.PLAYING:
 				node.playing = MMStates.PLAYED
+##				node.event(self.timefunc(), 'end')
 			do_arm = 0
 			for queue in self.runqueues:
 				for i in range(len(queue)-1,-1,-1):
