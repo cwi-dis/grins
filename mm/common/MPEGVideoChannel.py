@@ -8,7 +8,7 @@ from AnchorDefs import *
 
 class VideoChannel(ChannelWindowThread):
 	attrs = ['bucolor', 'hicolor', 'scale', 'project_videotype', 'project_targets']
-	node_attrs = Channel.ChannelWindowAsync.node_attrs + [
+	node_attrs = ChannelWindowThread.node_attrs + [
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
 		'project_perfect', 'project_mobile']
@@ -59,21 +59,7 @@ class VideoChannel(ChannelWindowThread):
 			atype = a[A_TYPE]
 			if atype not in SourceAnchors or atype == ATYPE_AUTO:
 				continue
-			args = a[A_ARGS]
-			if len(args) == 0:
-				args = [0,0,1,1]
-			elif len(args) == 4:
-				args = self.convert_args(f, args)
-			if len(args) != 4:
-				print 'VideoChannel: funny-sized anchor'
-				continue
-			x, y, w, h = args[0], args[1], args[2], args[3]
-##			# convert coordinates from image to window size
-##			x = x * self._arm_imbox[2] + self._arm_imbox[0]
-##			y = y * self._arm_imbox[3] + self._arm_imbox[1]
-##			w = w * self._arm_imbox[2]
-##			h = h * self._arm_imbox[3]
-			b = self.armed_display.newbutton((x,y,w,h), times = a[A_TIMES])
+			b = self.armed_display.newbutton((0,0,1,1))
 			b.hiwidth(3)
 			if drawbox:
 				b.hicolor(hicolor)
@@ -137,25 +123,3 @@ class VideoChannel(ChannelWindowThread):
 		import windowinterface
 		windowinterface.showmessage('The whole window will be hot.')
 		cb((anchor[0], anchor[1], [0,0,1,1], anchor[3]))
-
-	# Convert pixel offsets into relative offsets.
-	# If the offsets are in the range [0..1], we don't need to do
-	# the conversion since the offsets are already fractions of
-	# the image.
-	def convert_args(self, file, args):
-		need_conversion = 1
-		for a in args:
-			if a != int(a):	# any floating point number
-				need_conversion = 0
-				break
-		if not need_conversion:
-			return args
-		if args == (0, 0, 1, 1) or args == [0, 0, 1, 1]:
-			# special case: full image
-			return args
-		import Sizes
-		xsize, ysize = Sizes.GetSize(file)
-		return float(args[0]) / float(xsize), \
-		       float(args[1]) / float(ysize), \
-		       float(args[2]) / float(xsize), \
-		       float(args[3]) / float(ysize)
