@@ -53,9 +53,9 @@ class TransitionEngine:
 		self.settransitionvalue(self.__startprogress)
 		if self.__duration<=0.0:
 			self.settransitionvalue(self.__endprogress)
-		else:	
+		else:
 			self.__register_for_timeslices()
-			
+				
 	def endtransition(self):
 		if not self.__transitiontype: return
 		self.__unregister_for_timeslices()
@@ -74,7 +74,7 @@ class TransitionEngine:
 		for win in self.windows:
 			win._transition = None
 			win._drawsurf = None
-		wnd.update(wnd.getwindowpos())
+		wnd.update()
 
 	def settransitionvalue(self, value):
 		if value<0.0 or value>1.0:
@@ -102,9 +102,9 @@ class TransitionEngine:
 		else:
 			if self.outtrans:
 				wnd._paintOnSurf(wnd._fromsurf)
-				wnd.updateBackSurf(self._tosurf, exclwnd = wnd) 
+				#wnd.updateBackSurf(self._tosurf, exclwnd = wnd) 
 			else:
-				wnd.updateBackSurf(wnd._fromsurf, exclwnd = wnd)
+				#wnd.updateBackSurf(wnd._fromsurf, exclwnd = wnd)
 				wnd._paintOnSurf(self._tosurf)
 	
 		fromsurf = 	wnd._fromsurf
@@ -114,6 +114,7 @@ class TransitionEngine:
 		dstrgn = None
 		
 		self.__transitiontype.updatebitmap(parameters, tosurf, fromsurf, tmpsurf, dstsurf, dstrgn)
+
 		wnd.updateNow()
 
 	def join(self, window, ismaster, cb):
@@ -164,13 +165,12 @@ class TransitionEngine:
 				self.settransitionvalue(self.__endprogress)
 				self.endtransition()
 			except wingdi.error, arg:
-				print arg			
+				print arg
 		else:
 			try:
 				self.settransitionvalue(self.__startprogress + self.__transperiod * t_sec)
 			except wingdi.error, arg:
-				print arg			
-				
+				print arg
 	
 	def __register_for_timeslices(self):
 		if not self.__fiber_id:
