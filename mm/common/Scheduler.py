@@ -274,14 +274,8 @@ class SchedulerContext:
 		srlist = self.getsrlist(ev)
 		self.queuesrlist(srlist)
 
-	def Event(self, node, aid):
-		if debugevents: print 'Event', `node`, aid
-		side = node.eventdst[aid]
-		if side == TL:
-			if debugevents: print 'terminating node'
-			self.parent.do_terminate(self, node)
-			return
-		# side == HD
+	def StartEvent(self, node):
+		if debugevents: print 'StartEvent', `node`
 		pnode = node.GetParent()
 		if not pnode or pnode.playing != MMStates.PLAYING:
 			# ignore event when node can't play
@@ -674,6 +668,18 @@ class Scheduler(scheduler):
 				self.remove_terminate(sctx, arg)
 			if action == SR.SCHED_START:
 				arg.playing = MMStates.PLAYING
+				if hasattr(arg, 'helpertype'):
+					# MMNode_body
+					node = arg.parent
+				else:
+					node = arg
+				for ch in arg.sched_children:
+					for arc in MMAttrdefs.getattr(ch, 'beginlist'):
+						if arc.event == 'begin' and \
+						   arc.src is node and \
+						   arc.marker is None and \
+						   arc.delay is not None:
+							self.enter(self.delay, 0, sctx.StartEvent, (ch,))
 			if action == SR.SCHED_STOPPING:
 				arg.playing = MMStates.PLAYED
 				for ch in arg.children:

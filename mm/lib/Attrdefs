@@ -279,6 +279,16 @@
 	() 'SyncTo list' hidden
 	'List of sync arcs ending at this node' raw light)
 
+# The items are (srcnode, event or marker, delay).
+# things causing the node to start
+(beginlist (list (enclosed (any))) ()
+	'Begin events list' hidden
+	'List of events starting this node' raw smil2)
+# things causing the node to end
+(endlist (list (enclosed (any))) ()
+	'End events list' hidden
+	'List of events ending this node' raw smil2)
+
 (terminator (name) 'LAST' 'Endsync child' termnodename
 	'Name of child that terminates parallel node' normal light)
 

@@ -471,27 +471,20 @@ class MMChannel:
 #
 class MMSyncArc:
 
-	def __init__(self, context):
-		self.context = context
-		self.src = None
-		self.dst = None
-		self.event = None
-		self.marker = None
-		self.delay = 0.0
+	def __init__(self, srcnode=None, event=None, marker=None, delay=None):
+		self.src = srcnode	# None if previous else MMNode instance
+		self.event = event
+		self.marker = marker
+		self.delay = delay
 
 	def __repr__(self):
 		return '<MMSyncArc instance, from ' + \
 			  `self.src` + ' to ' + `self.dst` + \
 			  ', delay ' + `self.delay` + '>'
 
-	def setsrc(self, srcnode, srcend):
-		self.src = (srcnode, srcend)
-
-	def setdst(self, dstnode, dstend):
-		self.dst = (dstnode, dstend)
-
-	def setdelay(self, delay):
-		self.delay = delay
+	def isscheduled(self):
+		return self.src is not None and \
+		       self.event is None and self.marker is None
 
 
 class MMNode_body:
@@ -500,6 +493,7 @@ class MMNode_body:
 	
 	def __init__(self, parent):
 		self.parent = parent
+		self.sched_children = []
 
 	def __repr__(self):
 		return "<%s body of %s>"%(self.helpertype, self.parent.__repr__())
@@ -1158,6 +1152,7 @@ class MMNode:
 		self.eventdst = {}
 		self.sync_from = ([],[])
 		self.sync_to = ([],[])
+		self.sched_children = []
 		self.realpix_body = None
 		self.caption_body = None
 		self.force_switch_choice = 0
@@ -1196,6 +1191,7 @@ class MMNode:
 	def _FastPruneTree(self):
 		self.sync_from = ([],[])
 		self.sync_to = ([],[])
+		self.sched_children = []
 		self.events = {}
 		self.eventdst = {}
 		self.realpix_body = None
@@ -1416,12 +1412,11 @@ class MMNode:
 		#
 		wtd_children = []
 		for c in self.wtd_children:
-			synctolist = MMAttrdefs.getattr(c, 'synctolist')
 			skip = 0
-			for xnode, xside, delay, yside in synctolist:
-				if yside == TL:
-					continue
-				if xside == HD or xside == TL:
+			for arc in MMAttrdefs.getattr(c, 'beginlist'):
+				if arc.event in ('begin', 'end') and \
+				   arc.marker is None and \
+				   arc.delay is not None:
 					skip = 0
 					break
 				skip = 1
@@ -1696,41 +1691,38 @@ class MMNode:
 		srlist = []
 		schedstop_actions = []
 		terminate_actions = []
+		terminating_children = []
 		scheddone_events = []
 		if self_body == None:
 			self_body = self
 
 		termtype = MMAttrdefs.getattr(self, 'terminator')
-		if termtype == 'FIRST':
-			terminating_children = wtd_children[:]
-		elif termtype == 'LAST':
-			terminating_children = []
-		elif termtype == 'ALL':
-			terminating_children = []
-			# make sure all children will be waited for
-			for child in self.wtd_children:
-				if child in wtd_children:
-					continue
-				scheddone_events.append( (SCHED_DONE, child) )
-		else:
-			terminating_children = []
-			for child in wtd_children:
-				if MMAttrdefs.getattr(child, 'name') \
-				   == termtype:
-					terminating_children.append(child)
 
-		for child in wtd_children:
-			srdict.update(child.gensr())
-
-			sched_actions.append( (SCHED, child) )
-			schedstop_actions.append( (SCHED_STOP, child) )
-			terminate_actions.append( (TERMINATE, child) )
-
-			if child in terminating_children:
-				srlist.append( ([(SCHED_DONE, child)],
-						[(TERMINATE, self_body)]))
-			else:
-				scheddone_events.append( (SCHED_DONE, child) )
+		for child in self.wtd_children:
+			chname = MMAttrdefs.getattr(child, 'name')
+			schedule = 1
+			refnode = self_body
+			for arc in MMAttrdefs.getattr(child, 'beginlist'):
+				if arc.event in ('begin', 'end') and \
+				   arc.marker is None and \
+				   arc.delay is not None:
+					schedule = 1
+					if arc.src is None:
+						refnode = self_body
+					else:
+						refnode = arc.src
+					break
+				schedule = 0
+			if schedule:
+				refnode.sched_children.append(child)
+				if termtype == 'LAST':
+					scheddone_events.append((SCHED_DONE, child))
+			if termtype == 'ALL':
+				scheddone_events.append((SCHED_DONE, child))
+			if termtype in ('FIRST', chname):
+				terminating_children.append(child)
+				srlist.append(([(SCHED_DONE, child)],
+					       [(TERMINATE, self_body)]))
 
 		#
 		# Trickery to handle dur and end correctly:
