@@ -95,30 +95,6 @@ SOURCE=.\common\win32\PreferencesDialog.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\common\win32\RealAudioChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\win32\RealChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\win32\RealPixChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\win32\RealTextChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\win32\RealVideoChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\win32\RealWindowChannel.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\common\win32\SoundChannel.py
 # End Source File
 # End Group
@@ -132,30 +108,6 @@ SOURCE=.\common\mac\HtmlChannel.py
 # Begin Source File
 
 SOURCE=.\common\mac\PreferencesDialog.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\mac\RealAudioChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\mac\RealChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\mac\RealPixChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\mac\RealTextChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\mac\RealVideoChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\mac\RealWindowChannel.py
 # End Source File
 # Begin Source File
 
@@ -296,6 +248,10 @@ SOURCE=.\common\RealAudioChannel.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\common\RealChannel.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\common\RealPixChannel.py
 # End Source File
 # Begin Source File
@@ -305,6 +261,10 @@ SOURCE=.\common\RealTextChannel.py
 # Begin Source File
 
 SOURCE=.\common\RealVideoChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\RealWindowChannel.py
 # End Source File
 # Begin Source File
 
