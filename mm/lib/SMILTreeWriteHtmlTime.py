@@ -523,9 +523,8 @@ class SMILHtmlTimeWriter(SMIL):
 			style = 'position=absolute;left=%d;top=%d;width=%d;height=%d;' % mediaGeom
 			attrlist.append( ('style',style) )
 
-		if self.writeAnchors(x):
-			self.push()
-			pushed = pushed + 1
+		if self.writeAnchors(x, nodeid):
+			attrlist.append(('usemap', '#'+nodeid+'map'))
 
 		if transOut:
 			self.writetag('t:par')
@@ -549,7 +548,7 @@ class SMILHtmlTimeWriter(SMIL):
 		if vpushed:
 			self.pop()
 
-	def writeAnchors(self, x):
+	def writeAnchors(self, x, name):
 		alist = MMAttrdefs.getattr(x, 'anchorlist')
 		hassrc = 0		# 1 if has source anchors
 		for a in alist:
@@ -557,10 +556,13 @@ class SMILHtmlTimeWriter(SMIL):
 				hassrc = 1
 				break
 		if hassrc:
+			self.writetag('map', [('id', name+'map'),])
+			self.push()
 			for a in alist:
 				if a.atype in SourceAnchors:
 					self.writelink(x, a)
-					return 1 # XXX: allow one anchor for now
+			self.pop()
+			return 1
 		return 0
 
 				
@@ -740,7 +742,7 @@ class SMILHtmlTimeWriter(SMIL):
 			attrlist.append(('begin', fmtfloat(begin, 's')))
 		if end:
 			attrlist.append(('end', fmtfloat(end, 's')))
-		self.writetag('a', attrlist)
+		self.writetag('area', attrlist)
 
 	def linkattrs(self, a2, ltype, stype, dtype, accesskey):
 		attrs = []
