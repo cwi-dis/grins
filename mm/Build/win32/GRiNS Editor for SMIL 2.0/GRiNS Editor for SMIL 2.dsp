@@ -1117,7 +1117,23 @@ SOURCE=.\M_StructureWidgets.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_SVGChannel.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_svgdom.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_svgdtd.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_svgpath.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_svgtypes.c
 # End Source File
 # Begin Source File
 
