@@ -1777,13 +1777,28 @@ class MMNode(MMTreeElement):
 		self.willplay = None	# Used for colours in the editor
 		self.shouldplay = None
 		self.canplay = None
+		self.infoicon = ''	# An alert icon
+		self.errormessage = None # An error message to accompany the alert icon
+		self.force_switch_choice = 0
+		self.views = {}		# Map {string -> Interactive} - that is, a list of views
+					# looking at this object.
+		self.char_positions= None # The character positions that this node corresponds to in the source.
+		self.timing_info_dict = {}
+
+		self._subRegCssId = self.newSubRegCssId()
+		self._mediaCssId = self.newMediaCssId()
+		self._subRegCssId.media = self._mediaCssId
+
+		self.computedMimeType = None
+		self.channelType = None
+		self.reinit(recurse = 0)
+		self.reset()
+
+	def reinit(self, recurse = 1):
 		self.looping_body_self = None
 		self.realpix_body = None
 		self.caption_body = None
 		self.curloopcount = 0
-		self.infoicon = ''	# An alert icon
-		self.errormessage = None # An error message to accompany the alert icon
-		self.force_switch_choice = 0
 		self.srdict = {}
 		self.events = {}	# events others are interested in
 		self.sched_children = [] # arcs that depend on us
@@ -1802,18 +1817,9 @@ class MMNode(MMTreeElement):
 		self.delayed_end = 0
 		self.delayed_play_done = 0
 		self.__calcendtimecalled = 0
-		self.views = {}		# Map {string -> Interactive} - that is, a list of views
-					# looking at this object.
-		self.char_positions= None # The character positions that this node corresponds to in the source.
-		self.timing_info_dict = {}
-
-		self._subRegCssId = self.newSubRegCssId()
-		self._mediaCssId = self.newMediaCssId()
-		self._subRegCssId.media = self._mediaCssId
-
-		self.computedMimeType = None
-		self.channelType = None
-		self.reset()
+		if recurse:
+			for c in self.children:
+				c.reinit(recurse)
 
 	# allow to know the class name without use 'import xxx; isinstance'
 	# note: this method should be implemented for all basic classes of the document

@@ -59,7 +59,7 @@ class SchedulerContext:
 		self.srdict = {}
 		self.erase_chan = {}
 		self.parent._remove_sctx(self)
-		self.playroot.resetall(self.parent)
+		self.playroot.reinit()
 		del self.parent
 		del self.playroot
 
@@ -373,6 +373,13 @@ class SchedulerContext:
 				# the queue: reinsert this one so that the
 				# other one can be handled first
 				arc.qid = parent.enterabs(arc.qid[0], arc.qid[1], self.trigger, (arc,None,None,timestamp))
+				parent.updatetimer()
+				return
+			if not arc.isstart and node.playing in (MMStates.IDLE, MMStates.PLAYED):
+				# node is not playing so we should
+				# ignore terminating arcs
+				if debugevents: print 'trigger: idle',`arc`
+				self.cancelarc(arc, timestamp, propagate = 1)
 				parent.updatetimer()
 				return
 			if node.has_min and not arc.isstart and not arc.ismin:
@@ -736,7 +743,7 @@ class SchedulerContext:
 			if arc.isstart and cancel_gensr:
 				self.cancel_gensr(arc.dstnode)
 			for a in deparcs:
-				self.cancelarc(a, timestamp, cancel_gensr)
+				self.cancelarc(a, timestamp, cancel_gensr, propagate)
 
 	def gototime(self, node, gototime, timestamp, path = None):
 		# XXX trigger syncarcs that should go off after gototime?
