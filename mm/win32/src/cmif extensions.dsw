@@ -229,10 +229,6 @@ Global:
 
 Package=<5>
 {{{
-    begin source code control
-    "$/cmif", TRAAAAAA
-    .
-    end source code control
 }}}
 
 Package=<3>
