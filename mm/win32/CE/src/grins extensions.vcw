@@ -3,7 +3,7 @@ Microsoft eMbedded Visual Tools Workspace File, Format Version 3.00
 
 ###############################################################################
 
-Project: "Python"=..\..\..\..\python_ce\PCbuild\ce\Python.vcp - Package Owner=<4>
+Project: "Python"=..\..\..\..\PYTHON_CE\PCBUILD\CE\Python.vcp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -30,7 +30,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "wincegdi"=..\..\WINSDK\WINGDI\wincegdi.vcp - Package Owner=<4>
+Project: "wingdi"=..\..\winsdk\wingdi\wingdi.vcp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -45,7 +45,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "wincekernel"=..\..\WINSDK\WINKERNEL\wincekernel.vcp - Package Owner=<4>
+Project: "winkernel"=..\..\winsdk\winkernel\winkernel.vcp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -60,7 +60,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "winceuser"=..\..\winsdk\winuser\winceuser.vcp - Package Owner=<4>
+Project: "winuser"=..\..\winsdk\winuser\winuser.vcp - Package Owner=<4>
 
 Package=<5>
 {{{
