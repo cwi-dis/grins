@@ -206,7 +206,9 @@ class _Toplevel:
 			# found one, use the deepest
 			v_best = visuals[0]
 			for v in visuals:
-				if v.depth > v_best.depth:
+				# we only support 8 and 24 bit deep visuals
+				if v.depth in (8, 24) and \
+				   v.depth > v_best.depth:
 					v_best = v
 			self._visual = v_best
 			self._depth = v_best.depth
