@@ -342,10 +342,11 @@ class _ShapeWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 		self.xmid = (x0+x1)/2
 		self.ymid = (y0+y1)/2
 		# We are done interior circle is as big as our diagonal...
-		innerradius = math.sqrt((self.xmid-x0)*(self.xmid-x0)+(self.ymid-y0)*(self.ymid-y0))
+		self.innerradius = math.sqrt((self.xmid-x0)*(self.xmid-x0)+(self.ymid-y0)*(self.ymid-y0))
 		# ...but the cornerpoints lie on the exterior circle
-		inner_to_outer = 1/math.cos(2*math.pi/self._NPOINTS)
-		self.range = innerradius*inner_to_outer
+		inner_to_outer = 1/math.cos(0.5*(self._NPOINTS-2)*math.pi/self._NPOINTS)
+##		inner_to_outer = 1/math.cos(0.5*math.pi-0.5*(self._NPOINTS-2)*math.pi/self._NPOINTS)
+		self.range = self.innerradius*inner_to_outer
 		
 	def computeparameters(self, value):
 		radius = int(value*self.range)
@@ -358,7 +359,7 @@ class _ShapeWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 		return tuple(points), self.ltrb
 
 class TriangleWipeTransition(_ShapeWipeTransition):
-	_FIRSTANGLE=-math.pi/2 # ????
+	_FIRSTANGLE=math.pi/2
 	_NPOINTS=3
 	
 class PentagonWipeTransition(_ShapeWipeTransition):
@@ -372,6 +373,111 @@ class HexagonWipeTransition(_ShapeWipeTransition):
 class EllipseWipeTransition(_ShapeWipeTransition):
 	_FIRSTANGLE=0
 	_NPOINTS=32
+	
+class StarWipeTransition(_ShapeWipeTransition):
+	_FIRSTANGLE=math.pi/2
+	_NPOINTS=4
+
+	def _recomputetop(self):
+		_ShapeWipeTransition._recomputetop(self)
+		self.range = self.range*1.5
+		
+	def computeparameters(self, value):
+		radius = int(value*self.range)
+		iradius = int(value*self.innerradius)
+		print value, radius, iradius
+		points = []
+		for i in range(self._NPOINTS):
+			angle = self._FIRSTANGLE + (2*math.pi*i)/self._NPOINTS
+			x = math.cos(angle)*radius
+			y = math.sin(angle)*radius
+			points.append((self.xmid+x, self.ymid-y))
+			angle = self._FIRSTANGLE + (2*math.pi*(i+0.5))/self._NPOINTS
+			x = math.cos(angle)*iradius
+			y = math.sin(angle)*iradius
+			points.append((self.xmid+x, self.ymid-y))
+		return tuple(points), self.ltrb
+	
+	
+class RoundRectWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	_NPOINTS=16
+	
+	def __init__(self, engine, dict):
+		TransitionClass.__init__(self, engine, dict)
+		self._recomputetop()
+		
+	def move_resize(self, ltrb):
+		TransitionClass.move_resize(self, ltrb)
+		self._recomputetop()
+		
+	def _recomputetop(self):
+		x0, y0, x1, y1 = self.ltrb
+		self.xmid = (x0+x1)/2
+		self.ymid = (y0+y1)/2
+		innerradius = math.sqrt((self.xmid-x0)*(self.xmid-x0)+(self.ymid-y0)*(self.ymid-y0))
+		self.range = innerradius
+		
+	def computeparameters(self, value):
+		radius = value*self.range
+		r4 = radius*radius*radius*radius
+		radius = int(radius)
+		if not radius:
+			return (), self.ltrb
+		xmin = self.xmid - radius
+		points = []
+		for i in range(self._NPOINTS+1):
+			x = xmin + i*radius*2/self._NPOINTS
+			xp = float(x - self.xmid)
+			xp4 = xp*xp*xp*xp
+			y = self.ymid + int(math.sqrt(math.sqrt(r4-xp4)))
+			points.append((x, y))
+		for i in range(self._NPOINTS+1):
+			x = xmin + (self._NPOINTS-i)*radius*2/self._NPOINTS
+			xp = float(x - self.xmid)
+			xp4 = xp*xp*xp*xp
+			y = self.ymid - int(math.sqrt(math.sqrt(r4-xp4)))
+			points.append((x, y))
+		return tuple(points), self.ltrb
+
+class EyeWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	_NPOINTS=16
+	
+	def __init__(self, engine, dict):
+		TransitionClass.__init__(self, engine, dict)
+		self._recomputetop()
+		
+	def move_resize(self, ltrb):
+		TransitionClass.move_resize(self, ltrb)
+		self._recomputetop()
+		
+	def _recomputetop(self):
+		x0, y0, x1, y1 = self.ltrb
+		self.xmid = (x0+x1)/2
+		self.ymid = (y0+y1)/2
+		innerradius = math.sqrt((self.xmid-x0)*(self.xmid-x0)+(self.ymid-y0)*(self.ymid-y0))
+		self.range = innerradius*2
+		
+	def computeparameters(self, value):
+		radius = value*self.range
+		r2 = radius*radius
+		radius = int(radius)
+		if not radius:
+			return (), self.ltrb
+		xmin = self.xmid - radius
+		points = []
+		for i in range(self._NPOINTS+1):
+			x = xmin + i*radius*2/self._NPOINTS
+			xp = float(x - self.xmid)
+			xp2 = xp*xp
+			y = self.ymid + int(math.sqrt(r2-xp2)/2)
+			points.append((x, y))
+		for i in range(self._NPOINTS+1):
+			x = xmin + (self._NPOINTS-i)*radius*2/self._NPOINTS
+			xp = float(x - self.xmid)
+			xp2 = xp*xp
+			y = self.ymid - int(math.sqrt(r2-xp2)/2)
+			points.append((x, y))
+		return tuple(points), self.ltrb
 
 class ArrowHeadWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 	# Reveal the new image by an arrowhead growing from the center outward
@@ -773,9 +879,9 @@ TRANSITIONDICT = {
 	"pentagonWipe" : PentagonWipeTransition,
 	"hexagonWipe" : HexagonWipeTransition,
 	"ellipseWipe" : EllipseWipeTransition,
-#	"eyeWipe" : EyeWipeTransition,
-#	"roundRectWipe" : RoundRectWipeTransition,
-#	"starWipe" : StarWipeTransition,
+	"eyeWipe" : EyeWipeTransition,
+	"roundRectWipe" : RoundRectWipeTransition,
+	"starWipe" : StarWipeTransition,
 	"clockWipe" : ClockWipeTransition,
 #	"pinWheelWipe" : PinWheelWipeTransition,
 	"singleSweepWipe" : SingleSweepWipeTransition,
