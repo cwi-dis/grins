@@ -52,24 +52,19 @@ class PlayerDialog:
 			],
 		'toolbar': [
 			({'label': playbuttonunselect.reader(),
-			  'labelInsensitive': imgconvert.stackreader(
-				  imgformat.grey, playbuttonunselect.reader()),
+			  'labelInsensitive': playbuttonunselect.reader(),
 			  'select': playbutton.reader(),
 			  'selectInsensitive': playbutton.reader(),
 			  }, PLAY, 't'),
 			({'label': pausebuttonunselect.reader(),
-			  'labelInsensitive': imgconvert.stackreader(
-				  imgformat.grey, pausebuttonunselect.reader()),
+			  'labelInsensitive': pausebuttonunselect.reader(),
 			  'select': pausebutton.reader(),
-			  'selectInsensitive': imgconvert.stackreader(
-				  imgformat.grey, pausebutton.reader()),
+			  'selectInsensitive': pausebutton.reader(),
 			  }, PAUSE, 't'),
 			({'label': stopbuttonunselect.reader(),
-			  'labelInsensitive': imgconvert.stackreader(
-				  imgformat.grey, stopbuttonunselect.reader()),
+			  'labelInsensitive': stopbuttonunselect.reader(),
 			  'select': stopbutton.reader(),
-			  'selectInsensitive': imgconvert.stackreader(
-				  imgformat.grey, stopbutton.reader()),
+			  'selectInsensitive': stopbutton.reader(),
 			  }, STOP, 't'),
 			],
 		'close': [ CLOSE_WINDOW, ],
@@ -96,13 +91,39 @@ class PlayerDialog:
 		self.__coords = coords
 		self.__state = -1
 		self.__channels = []
+		self.__channeldict = {}
 
 	def close(self):
 		"""Close the dialog and free resources."""
 		if self.__window is not None:
 			self.__window.close()
-		self.__window = None
+			self.__window = None
 		del self.__channels
+		del self.__channeldict
+
+	def show(self, subwindowof=None):
+		"""Show the control panel."""
+
+		if self.__window is not None:
+			self.__window.pop()
+			return
+		x, y, w, h = self.__coords
+		if subwindowof is not None:
+			raise 'kaboo kaboo'
+		self.__window = w = windowinterface.newwindow(
+			x, y, 0, 0, self.__title, resizable = 0,
+			adornments = self.adornments,
+			commandlist = self.stoplist)
+		if self.__channels:
+			self.setchannels(self.__channels)
+
+	def hide(self):
+		"""Hide the control panel."""
+
+		if self.__window is None:
+			return
+		self.__window.close()
+		self.__window = None
 
 	def settitle(self, title):
 		"""Set (change) the title of the window.
@@ -131,9 +152,9 @@ class PlayerDialog:
 			channel, onoff = channels[i]
 			self.__channeldict[channel] = i
 			menu.append((channel, (channel,), 't', onoff))
-		if self.__window is None:
-			return
-		self.__window.set_dynamiclist(CHANNELS, menu)
+		w = self.__window
+		if w is not None:
+			w.set_dynamiclist(CHANNELS, menu)
 
 	def setchannel(self, channel, onoff):
 		"""Set the on/off status of a channel.
@@ -150,8 +171,7 @@ class PlayerDialog:
 		if self.__channels[i][1] == onoff:
 			return
 		self.__channels[i] = channel, onoff
-		if self.__window is not None:
-			self.setchannels(self.__channels)
+		self.setchannels(self.__channels)
 
 	def setstate(self, state):
 		"""Set the playing state of the control panel.
@@ -165,44 +185,19 @@ class PlayerDialog:
 
 		ostate = self.__state
 		self.__state = state
-		if self.__window is not None and state != ostate:
+		w = self.__window
+		if w is not None:
 			if state == STOPPED:
-				self.__window.set_commandlist(self.stoplist)
+				w.set_commandlist(self.stoplist)
 			if state == PLAYING:
-				self.__window.set_commandlist(self.playlist)
+				w.set_commandlist(self.playlist)
 			if state == PAUSING:
-				self.__window.set_commandlist(self.pauselist)
+				w.set_commandlist(self.pauselist)
 			self.setchannels(self.__channels)
-			self.__window.set_toggle(PLAY, state != STOPPED)
-			self.__window.set_toggle(PAUSE, state == PAUSING)
-			self.__window.set_toggle(STOP, state == STOPPED)
-
-	def hide(self):
-		"""Hide the control panel."""
-
-		if self.__window is None:
-			return
-		self.__window.close()
-		self.__window = None
-
-	def show(self, subwindowof=None):
-		"""Show the control panel."""
-
-		if self.__window is not None:
-			self.__window.pop()
-			return
-		x, y, w, h = self.__coords
-		if subwindowof is not None:
-			raise 'kaboo kaboo'
-		self.__window = w = windowinterface.newwindow(
-			x, y, 0, 0, self.__title, resizable = 0,
-			adornments = self.adornments,
-			commandlist = self.stoplist)
-		if self.__channels:
-			self.setchannels(self.__channels)
-
-	def __close_callback(self, dummy, window, event, val):
-		self.close_callback()
+			if state != ostate:
+				w.set_toggle(PLAY, state != STOPPED)
+				w.set_toggle(PAUSE, state == PAUSING)
+				w.set_toggle(STOP, state == STOPPED)
 
 	def getgeometry(self):
 		"""Get the coordinates of the control panel.
