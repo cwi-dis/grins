@@ -158,14 +158,6 @@ SOURCE=.\wingdi_rgn.cpp
 
 SOURCE=.\wingdi_rgn.h
 # End Source File
-# Begin Source File
-
-SOURCE=.\wingdi_surf.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\wingdi_surf.h
-# End Source File
 # End Group
 # End Target
 # End Project
