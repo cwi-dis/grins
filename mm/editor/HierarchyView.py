@@ -1607,6 +1607,8 @@ class HierarchyView(HierarchyViewDialog):
 			BandwidthCompute.compute_bandwidth(self.root)
 		dialog.setinfo(prerolltime, errorseconds, delaycount, errorcount)
 		dialog.done()
+		self.need_redraw = 1
+		self.draw()
 
 	def transition_callback(self, which, transition):
 		if self.selected_widget: self.selected_widget.transition_callback(which, transition)
