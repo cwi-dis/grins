@@ -6,10 +6,10 @@ class FileCache:
 	def init(self, *funcs):
 		if len(funcs) == 1:
 			self.func = funcs[0]
-			self.check = self.rm = None
+			self.rm = self.check = None
 		elif len(funcs) == 2:
 			self.func, self.rm = funcs
-			self.rm = None
+			self.check = None
 		elif len(funcs) == 3:
 			self.func, self.rm, self.check = funcs
 		else:
