@@ -417,6 +417,11 @@ class Channel:
 		if not list:
 			return 0
 		didfire = self._playcontext.anchorfired(node, list, None)
+		if didfire and self._playstate == PLAYING and \
+		   self._played_node == node:
+		    if not self.syncplay:
+			self._playcontext.play_done(node)
+		    self.playstate = PLAYED
 		return didfire
 
 	def playstop(self):
