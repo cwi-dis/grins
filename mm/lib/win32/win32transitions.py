@@ -8,6 +8,9 @@ import time
 # for ddraw.error
 import ddraw
 
+# for Sleep
+import win32api
+
 class TransitionEngine:
 	def __init__(self, window, outtrans, runit, dict):
 		self.__windows = [window,]
@@ -100,7 +103,7 @@ class TransitionEngine:
 		dst  = wnd._drawsurf
 		dstrgn = None
 		self.__transitiontype.updatebitmap(parameters, vto, vfrom, tmp, dst, dstrgn)
-		wnd.update()
+		wnd.update(wnd.getwindowpos())
 
 	def join(self, window, ismaster):
 		"""Join this (sub or super) window to an existing transition"""
@@ -127,10 +130,17 @@ class TransitionEngine:
 		# or parent window in multiElement transitions
 		wnd = self.__windows[0]
 
-		self._passive = wnd._passive
-		wnd._drawsurf = wnd.createDDS()
-		self._active = wnd.createDDS()
-		self._tmp = wnd.createDDS()
+		while 1:
+			try:
+				self._passive = wnd._passive
+				wnd._drawsurf = wnd.createDDS()
+				self._active = wnd.createDDS()
+				self._tmp = wnd.createDDS()
+			except ddraw.error, arg:
+				print arg
+				win32api.Sleep(50)
+			else:
+				break
 
 		# resize to this window
 		x, y, w, h = wnd._rect
