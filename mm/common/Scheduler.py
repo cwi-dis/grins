@@ -41,6 +41,8 @@ class SchedulerContext:
 	# stop - cleanup SchedulerContext.
 	#
 	def stop(self):
+		if not self.active:
+			return
 		self.active = 0
 		unarmallnodes(self.playroot)
 		self.stopcontextchannels()
