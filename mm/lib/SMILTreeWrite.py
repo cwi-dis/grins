@@ -328,6 +328,21 @@ class SMILWriter:
 								(name, value))
 			if ch.has_key('z'):
 				attrlist.append('z-index="%d"' % ch['z'])
+			if ch.has_key('scale'):
+				scale = ch['scale']
+			else:
+				scale = 0
+			if scale == 0:
+				scale = 'meet'
+			elif scale == -1:
+				scale = 'slice'
+			elif scale == 1:
+				scale = 'hidden'
+			else:
+				scale = None
+				print '** Channel uses unsupported scale value', name
+			if scale is not None:
+				attrlist.append('scale="%s"' % scale)
 ## 			if len(attrlist) == 1:
 ## 				# Nothing to define
 ## 				continue
