@@ -226,8 +226,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def adddependencies(self, timemapper):
 		t0, t1, t2, download, begindelay = self.GetTimes('virtual')
 		w, h = self.get_minsize()
-##		if t0 != t1:
-##			timemapper.adddependency(t0, t1, w)
 		if t0 != t2:
 			timemapper.adddependency(t0, t2, w)
 
@@ -908,6 +906,7 @@ class HorizontalWidget(StructureObjWidget):
 
 		delays = 0
 		tottime = 0
+		lt2 = 0
 		for i in self.children:
 			pushover = 0
 			if timemapper is not None:
@@ -915,8 +914,13 @@ class HorizontalWidget(StructureObjWidget):
 					i.showtime = showtime
 				elif i.node.WillPlay():
 					t0, t1, t2, download, begindelay = i.GetTimes('virtual')
-					delays = delays + download + begindelay
 					tottime = tottime + t2 - t0
+					if lt2 > t0:
+						# compensate for double counting
+						tottime = tottime - lt2 + t0
+					elif t0 > lt2:
+						delays = delays + t0 - lt2
+					lt2 = t2
 			elif hasattr(i, 'showtime'):
 				del i.showtime
 			w,h = i.recalc_minsize(tm)

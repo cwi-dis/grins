@@ -55,7 +55,7 @@ class TimeMapper:
 		self.times.sort()
 		if realtime:
 			for t1, t0, pixels in self.dependencies:
-				if t1 != t0 and pixels/(t1-t0) > min_pixels_per_second:
+				if t1 > t0 and pixels/(t1-t0) > min_pixels_per_second:
 					min_pixels_per_second = pixels/(t1-t0)
 ##			min_pixels_per_second = int(min_pixels_per_second+0.5)
 		else:
