@@ -2773,13 +2773,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__fix_accesskey(c, keys)
 
 	def __parseskin(self):
-		from parseskin import parsegskin
+		import parseskin
 		import Sizes
 		skin = settings.get('skin')
 		try:
 			f = MMurl.urlopen(skin)
-			dict = parsegskin(f)
-		except:
+			dict = parseskin.parsegskin(f)
+		except parseskin.error, msg:
 			self.warning('error parsing skin description file')
 			return
 		image = MMurl.basejoin(skin, dict['image'])
@@ -2824,6 +2824,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				ctx.cssResolver.setRawAttrs(lcd.getCssId(), [('left', coords[0]), ('top', coords[1]), ('width', coords[2]), ('height', coords[3])])
 			else:
 				a = ctx.newnode('anchor')
+				a.attrdict['tabindex'] = -1 # keep out of tabbing order
 				a.attrdict['ashape'] = val[0]
 				coords = val[1]
 				if val[0] == 'rect':
@@ -2837,7 +2838,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				elif key in ('stop', 'toggle'):
 					arc = MMNode.MMSyncArc(self.__root, 'end', srcnode = a, event = 'activateEvent', delay = 0)
 					endlist.append(arc)
-				elif key in ('pause', 'open', 'exit'):
+				elif key in ('pause', 'open', 'exit', 'tab', 'activate'):
 					self.__links.append((a, 'grins:%s()' % key))
 				elif key == 'key':
 					keys.append((val[2], a))
@@ -4417,6 +4418,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			msg = 'warning: %s on line %d' % (message, lineno)
 		if self.__printfunc is not None:
 			self.__printdata.append(msg)
+			if __debug__:
+				if parsedebug: print msg
 		else:
 			print msg
 		line = lineno
@@ -4435,11 +4438,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			message = 'Unrecoverable error: %s' % message
 		else:
 			message = 'Unrecoverable error, line %d: %s' % (lineno, message)
+		msg = msg + message
+		if __debug__:
+			if parsedebug: print msg
 		line = lineno
 		if line is not None:
 			line = lineno-1
-		self.__errorList.insert(0,(msg+message, line))
-		raise MSyntaxError, msg + message
+		self.__errorList.insert(0,(msg, line))
+		raise MSyntaxError, msg
 
 	def unsupportedfeature_error(self, message, lineno=None):
 		if features.editor and features.UNSUPPORTED_ERROR in features.feature_set:

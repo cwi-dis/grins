@@ -440,4 +440,10 @@ class TopLevel(TopLevelDialog):
 		if command == 'exit()':
 			self.main.close_callback()
 			return 1
+		if command == 'tab()':
+			self.player.tab()
+			return 1
+		if command == 'activate()':
+			self.player.activate()
+			return 1
 		return 0
