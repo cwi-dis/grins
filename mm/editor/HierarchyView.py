@@ -446,6 +446,8 @@ class HierarchyView(HierarchyViewDialog):
 		return self.mcanvassize;
 
 	def show(self):
+		import traceback; traceback.print_stack()
+		print "----------------------------------------------------------------------"
 		if self.is_showing():
 			HierarchyViewDialog.show(self)
 			return
@@ -464,7 +466,6 @@ class HierarchyView(HierarchyViewDialog):
 #			do_expand(self.root, 1, levels)
 		#expandnode(self.root)
 		
-		self.scene_graph.uncollapse()
 		self.refresh_scene_graph()
 		self.draw()
 
