@@ -2188,8 +2188,8 @@ class UnitsAttrEditorField(PopupAttrEditorFieldNoDefault):
 		return self.__values[self.__valuesmap.index(value)]
 
 class ScaleAttrEditorField(PopupAttrEditorFieldNoDefault):
-	__values = ['actual size', 'show whole image', 'fill whole region', 'show whole image in whole region']
-	__valuesmap = [1, 0, -1, -3]
+	__values = ['actual size', 'show whole image', 'fill whole region', 'show whole image in whole region', 'scroll image if necessary']
+	__valuesmap = [1, 0, -1, -3, -4]
 
 	# Choose from a list of unit types
 	def getoptions(self):
