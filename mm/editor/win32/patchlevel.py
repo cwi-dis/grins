@@ -4,7 +4,4 @@ __version__ = "$Id$"
 Contains the subversion of the application in the
 format <platform> patchlevel <number>
 """
-
-##patchlevel = 'win32 build 7'
-# Grins Snap! - maybe this should be in the snap/win32 directory??
-patchlevel = 'alpha win32 build 29'
+patchlevel = 'alpha win32 build 30'
