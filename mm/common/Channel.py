@@ -167,7 +167,7 @@ class Channel:
 		else:
 			self.save_geometry()
 			self.hide()
-			
+
 	def replaynode(self):
 		self.wait_for_arm()
 		# Now we should replay the node that was played when
@@ -788,7 +788,7 @@ class Channel:
 			if os.name == 'mac':
 				import greekconv
 				text = string.translate(text, greekconv.iso_8859_7_to_mac)
-				
+
 			if text[-1:] == '\n':
 				text = text[:-1]
 			return text
@@ -1382,7 +1382,7 @@ class ChannelWindowAsync(ChannelWindow):
 			self.armdone()
 		else:
 			self.play_1()
-		
+
 def dummy_callback(arg):
 	pass
 
