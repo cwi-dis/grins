@@ -161,7 +161,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'set': (self.start_set, self.end_set),
 			'animateMotion': (self.start_animatemotion, self.end_animatemotion),
 			'animateColor': (self.start_animatecolor, self.end_animatecolor),
-			'transitionFilter': (self.start_transitionfilter, self.end_transitionfilter),
+			SMIL2 + 'InlineTransitions transitionFilter': (self.start_transitionfilter, self.end_transitionfilter),
 			'param': (self.start_param, self.end_param),
 			'transition': (self.start_transition, self.end_transition),
 			'regPoint': (self.start_regpoint, self.end_regpoint),
