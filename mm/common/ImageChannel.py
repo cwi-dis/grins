@@ -46,6 +46,8 @@ class ImageChannel(ChannelWindow):
 			if len(args) != 4:
 				print 'ImageChannel: funny-sized anchor'
 				continue
+			if args == [0, 0, 1, 1]:
+			    continue
 			x, y, w, h = args[0], args[1], args[2], args[3]
 			# convert coordinates from image size to window size
 			x = x * self._arm_imbox[2] + self._arm_imbox[0]
