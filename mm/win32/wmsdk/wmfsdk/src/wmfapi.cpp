@@ -15,14 +15,15 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include <assert.h>
 
 #include "wmpyrcb.h"
-#include "pycbapi.h"
+
+#include "mtpycall.h"
 
 #pragma comment (lib,"winmm.lib")
 
 static PyObject *ErrorObject;
 
 PyInterpreterState*
-PyCallbackBlock::s_pPyThreadState = NULL;
+PyCallbackBlock::s_interpreterState = NULL;
 
 void seterror(const char *msg){PyErr_SetString(ErrorObject, msg);}
 
@@ -3038,19 +3039,19 @@ static char WMHeaderInfo_GetAttributeCount__doc__[] =
 static PyObject *
 WMHeaderInfo_GetAttributeCount(WMHeaderInfoObject *self, PyObject *args)
 {
-	WORD wStreamNum=0;
-	if (!PyArg_ParseTuple(args, "|i",&wStreamNum))
+	DWORD dwStreamNum=0;
+	if (!PyArg_ParseTuple(args, "|i",&dwStreamNum))
 		return NULL;
 	HRESULT hr;
 	WORD cAttributes;
 	Py_BEGIN_ALLOW_THREADS
-	hr = self->pI->GetAttributeCount(wStreamNum,&cAttributes);
+	hr = self->pI->GetAttributeCount(WORD(dwStreamNum),&cAttributes);
 	Py_END_ALLOW_THREADS
 	if (FAILED(hr)) {
 		seterror("WMHeaderInfo_GetAttributeCount", hr);
 		return NULL;
 	}
-	return Py_BuildValue("i",cAttributes);
+	return Py_BuildValue("i",int(cAttributes));
 }
 
 static char WMHeaderInfo_GetAttributeByIndex__doc__[] =
@@ -5063,8 +5064,6 @@ CoInitialize(PyObject *self, PyObject *args)
 		return NULL;
 	HRESULT hr=CoInitialize(NULL);
 	int res=(hr==S_OK || hr==S_FALSE)?1:0;
-	//res=TlsAlloc()>=0?1:0;
-	PyCallbackBlock::init();	
 	return Py_BuildValue("i",res);
 	}
 
@@ -5265,6 +5264,8 @@ void initwmfapi()
 	FATAL_ERROR_IF(SetItemEnumStrings(d,"wmt_attr_datatype_str",_wmt_attr_datatype)<0)
 	FATAL_ERROR_IF(SetItemEnumStrings(d,"wmt_status_str",_wmt_status)<0)
 	FATAL_ERROR_IF(SetItemEnumStrings(d,"wmt_rights_str",_wmt_rights)<0)
+
+	PyCallbackBlock::init();	
 	
 	/* Check for errors */
 	if (PyErr_Occurred())
