@@ -3199,11 +3199,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		try:
 			width = string.atoi(width)
 		except string.atoi_error:
-			self.syntax_error('root-layout width not an integer')
+			self.syntax_error('root-layout width not a pixel value')
 			width = 0
 		else:
 			if width < 0:
-				self.syntax_error('root-layout width not a positive integer')
+				self.syntax_error('root-layout width not a positive value')
 				width = 0
 		height = attributes['height']
 		if height[-2:] == 'px':
@@ -3211,11 +3211,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		try:
 			height = string.atoi(height)
 		except string.atoi_error:
-			self.syntax_error('root-layout height not an integer')
+			self.syntax_error('root-layout height not a pixel value')
 			height = 0
 		else:
 			if height < 0:
-				self.syntax_error('root-layout height not a positive integer')
+				self.syntax_error('root-layout height not a positive value')
 				height = 0
 		self.__tops[None] = {'width':width,
 				     'height':height,
@@ -3271,11 +3271,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				try:
 					val = string.atoi(val)
 				except string.atoi_error:
-					self.syntax_error('root-layout %s not an integer'%attr)
+					self.syntax_error('viewport %s not a pixel value'%attr)
 					val = 0
 				else:
 					if val < 0:
-						self.syntax_error('root-layout %s not a positive integer'%attr)
+						self.syntax_error('viewport %s not a positive value'%attr)
 						val = 0
 				attrdict[attr] = val
 			elif attr in ('background-color', 'backgroundColor'):
