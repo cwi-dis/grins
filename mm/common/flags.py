@@ -14,8 +14,9 @@ DBG = 0x8000
 
 def curflags():
 	import settings
+	import features
 	flags = LIGHT			# always enabled
-	if not settings.get('lightweight'):
+	if not features.lightweight:
 		flags = flags | SMIL
 		if settings.get('cmif'):
 			flags = flags | CMIF
