@@ -89,7 +89,7 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, 'New node...', 'K', NEW_AFTER),
 		(FLAG_PRO, ENTRY, 'New Region', 'M', NEW_REGION),
-		(FLAG_BOSTON, ENTRY, 'New TopLayout', 'T', NEW_REGION),
+		(FLAG_BOSTON, ENTRY, 'New TopLayout', 'T', NEW_TOPLAYOUT),
 #		(FLAG_PRO, ENTRY, 'New Screen', None, NEW_LAYOUT),
 		(FLAG_PRO, SEP,),
 		(FLAG_PRO, ENTRY, 'Move Region', None, MOVE_REGION),
