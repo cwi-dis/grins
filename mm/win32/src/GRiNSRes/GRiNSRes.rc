@@ -18,96 +18,6 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Neutral resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
-#ifdef _WIN32
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Bitmap
-//
-
-IDB_SPLASHPLAY          BITMAP  DISCARDABLE     "RES\\player8bit.bmp"
-IDB_SPLASHLITE          BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\g2-15\\lite\\splash8bit.bmp"
-IDB_SPLASHPRO           BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\g2-15\\pro\\splash8bit.bmp"
-IDB_SPLASHSMIL          BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\smil-10\\splash8bit.bmp"
-IDB_SPLASHQTPRO         BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\qt\\pro\\splash8bit.bmp"
-IDB_SPLASHSMIL2         BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\smil-20\\player\\splash8bit.bmp"
-
-#ifndef _MAC
-/////////////////////////////////////////////////////////////////////////////
-//
-// Version
-//
-
-VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,5,1,0
- PRODUCTVERSION 1,5,1,0
- FILEFLAGSMASK 0x3fL
-#ifdef _DEBUG
- FILEFLAGS 0x1L
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS 0x4L
- FILETYPE 0x1L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904b0"
-        BEGIN
-            VALUE "Comments", "\0"
-            VALUE "CompanyName", "Oratrix Holding B.V.\0"
-            VALUE "FileDescription", "GRiNSed  resource dll\0"
-            VALUE "FileVersion", "1.5.1\0"
-            VALUE "InternalName", "GRiNSRes\0"
-            VALUE "LegalCopyright", "Copyright © 2000 Oratrix Holding B.V.\0"
-            VALUE "LegalTrademarks", "\0"
-            VALUE "OriginalFilename", "GRiNSRes.dll\0"
-            VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "GRiNS Application\0"
-            VALUE "ProductVersion", "1.5.1\0"
-            VALUE "SpecialBuild", "\0"
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1200
-    END
-END
-
-#endif    // !_MAC
-
-#endif    // Neutral resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// Neutral (Default) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
-#ifdef _WIN32
-LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
-IDC_STOP                CURSOR  DISCARDABLE     "RES\\Stop.cur"
-#endif    // Neutral (Default) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
 // English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -1593,9 +1503,14 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "scale 1:1",IDC_LAYOUT_SCALE,11,4,62,8
-    PUSHBUTTON      "Preview Area",IDC_LAYOUT_PREVIEW,11,16,316,237,BS_FLAT | 
-                    NOT WS_VISIBLE | NOT WS_TABSTOP
     GROUPBOX        "",IDC_GROUP1,337,12,121,217
+    LTEXT           "&Viewport selected:",IDC_GROUP1,345,23,102,10,SS_SUNKEN
+    COMBOBOX        IDC_LAYOUT_VIEWPORT_SEL,344,38,105,59,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Region selected:",IDC_GROUP1,345,76,103,10,SS_SUNKEN
+    COMBOBOX        IDC_LAYOUT_REGION_SEL,344,90,105,59,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Position and Size:",IDC_GROUP1,343,137,109,10,SS_SUNKEN
     LTEXT           "x",IDC_GROUP1,352,149,8,8
     EDITTEXT        IDC_LAYOUT_REGION_X,344,157,27,14,ES_AUTOHSCROLL
     LTEXT           "y",IDC_GROUP1,382,149,8,8
@@ -1606,15 +1521,10 @@ BEGIN
     EDITTEXT        IDC_LAYOUT_REGION_H,428,157,27,14,ES_AUTOHSCROLL
     LTEXT           "Z Index:",IDC_21,344,202,27,8
     EDITTEXT        IDC_LAYOUT_REGION_Z,372,201,83,12,ES_AUTOHSCROLL
-    LTEXT           "&Region selected:",IDC_GROUP1,345,76,103,10,SS_SUNKEN
-    LTEXT           "Position and Size:",IDC_GROUP1,343,137,109,10,SS_SUNKEN
-    LTEXT           "&Viewport selected:",IDC_GROUP1,345,23,102,10,SS_SUNKEN
-    PUSHBUTTON      "&Properties...",IDC_LAYOUT_PROPERTIES,411,239,47,13
     PUSHBUTTON      "&Background...",IDC_LAYOUT_BACKGROUND,338,240,47,13
-    COMBOBOX        IDC_LAYOUT_REGION_SEL,344,90,105,59,CBS_DROPDOWNLIST | 
-                    WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_LAYOUT_VIEWPORT_SEL,344,38,105,59,CBS_DROPDOWNLIST | 
-                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Properties...",IDC_LAYOUT_PROPERTIES,411,239,47,13
+    PUSHBUTTON      "Preview Area",IDC_LAYOUT_PREVIEW,11,16,316,237,BS_FLAT | 
+                    NOT WS_VISIBLE | NOT WS_TABSTOP
 END
 
 
@@ -2184,6 +2094,96 @@ IDI_ICON_BANDWIDTHBAD   ICON    DISCARDABLE     "res\\ico00005.ico"
 IDI_ICON_BANDWIDTHGOOD  ICON    DISCARDABLE     "res\\ico00006.ico"
 IDI_ICON_ERROR          ICON    DISCARDABLE     "res\\ico00007.ico"
 #endif    // Dutch (Netherlands) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Neutral resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#pragma code_page(1253)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_SPLASHPLAY          BITMAP  DISCARDABLE     "RES\\player8bit.bmp"
+IDB_SPLASHLITE          BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\g2-15\\lite\\splash8bit.bmp"
+IDB_SPLASHPRO           BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\g2-15\\pro\\splash8bit.bmp"
+IDB_SPLASHSMIL          BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\smil-10\\splash8bit.bmp"
+IDB_SPLASHQTPRO         BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\qt\\pro\\splash8bit.bmp"
+IDB_SPLASHSMIL2         BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\smil-20\\player\\splash8bit.bmp"
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,5,1,0
+ PRODUCTVERSION 1,5,1,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", "Oratrix Holding B.V.\0"
+            VALUE "FileDescription", "GRiNSed  resource dll\0"
+            VALUE "FileVersion", "1.5.1\0"
+            VALUE "InternalName", "GRiNSRes\0"
+            VALUE "LegalCopyright", "Copyright © 2000 Oratrix Holding B.V.\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "GRiNSRes.dll\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "GRiNS Application\0"
+            VALUE "ProductVersion", "1.5.1\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+#endif    // Neutral resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Neutral (Default) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
+#pragma code_page(1253)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
+IDC_STOP                CURSOR  DISCARDABLE     "RES\\Stop.cur"
+#endif    // Neutral (Default) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
