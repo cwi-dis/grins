@@ -38,7 +38,9 @@ class TemporalView(TemporalViewDialog):
 
 
 	def destroy(self):
-		self.scene.destroy()
+		if self.scene is not None:
+			self.scene.destroy()
+			self.scene = None
 		self.geodl.destroy()
 
 	def __add_commands(self):
