@@ -184,9 +184,6 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		del self.left
 		del self.right
 
-	def get_geometry(self):
-		pass
-
 	# The fill functions. These are set in the left and right structures
 	# and used to fill the browsers.
 

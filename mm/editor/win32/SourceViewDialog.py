@@ -1,10 +1,12 @@
 __version__ = "$Id$"
 
+import ViewDialog
 import windowinterface, usercmd
 from usercmd import *
 
-class SourceViewDialog:
+class SourceViewDialog(ViewDialog.ViewDialog):
 	def __init__(self):
+		ViewDialog.ViewDialog.__init__(self, 'sourceview_')
 		self.__textwindow = None
 		self.__setCommonCommandList()
 
@@ -26,9 +28,11 @@ class SourceViewDialog:
 		self.__textwindow = None
 		
 	def show(self):
+		self.load_geometry()
 		if not self.__textwindow:
 			import MenuTemplate
-			self.window = self.__textwindow = self.toplevel.window.textwindow("", readonly=0)
+			self.window = self.__textwindow = \
+				self.toplevel.window.textwindow("", readonly=0, xywh=self.last_geometry)
 			self.__textwindow.set_mother(self)
 			self.setpopup(MenuTemplate.POPUP_SOURCEVIEW)
 		else:
@@ -37,6 +41,10 @@ class SourceViewDialog:
 		self.__updateCommandList()
 		self.__textwindow.setListener(self)
 
+	def get_geometry(self):
+		if self.__textwindow:
+			self.last_geometry = self.__textwindow.getgeometry()
+			 
 	def pop(self):
 		if self.__textwindow != None:
 			self.__textwindow.pop()
@@ -72,6 +80,7 @@ class SourceViewDialog:
 			return 0
 
 	def hide(self):
+		self.save_geometry()
 		if self.__textwindow:
 			self.__textwindow.removeListener()
 			self.__textwindow.close()

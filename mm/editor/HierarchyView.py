@@ -683,10 +683,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.scene_graph = None
 		self.hide()
 
-	def get_geometry(self):
-		if self.window:
-			self.last_geometry = self.window.getgeometry()
-
 	def init_display(self):
 		self.draw()
 

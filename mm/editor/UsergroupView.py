@@ -14,10 +14,6 @@ class UsergroupView(UsergroupViewDialog):
 
 	def fixtitle(self):
 		pass
-	def get_geometry(self):
-		pass
-	def save_geometry(self):
-		pass
 
 	def destroy(self):
 		self.hide()

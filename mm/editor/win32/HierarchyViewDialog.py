@@ -41,6 +41,7 @@ class HierarchyViewDialog(ViewDialog):
 		x, y, w, h = self.last_geometry
 		toplevel_window=self.toplevel.window
 		self.window = toplevel_window.newview(x, y, w, h, title,
+				units=windowinterface.UNIT_PXL,
 				adornments = self.adornments,
 				canvassize = (w, h),
 				commandlist = self.commands,strid='hview_')

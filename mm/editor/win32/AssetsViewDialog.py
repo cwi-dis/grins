@@ -5,10 +5,12 @@
 __version__ = "$Id$"
 
 import windowinterface
+import ViewDialog
 from usercmd import *
 
-class AssetsViewDialog:
+class AssetsViewDialog(ViewDialog.ViewDialog):
 	def __init__(self):
+		ViewDialog.ViewDialog.__init__(self, 'assetview_')
 		self.__window = None
 		self.__callbacks={
 ##			'New':(self.new_callback, ()),
@@ -30,6 +32,7 @@ class AssetsViewDialog:
 		self.__window = None
 
 	def show(self):
+		self.load_geometry()
 		self.assertwndcreated()	
 		self.__window.show()
 
@@ -39,11 +42,16 @@ class AssetsViewDialog:
 		return self.__window.is_showing()
 
 	def hide(self):
+		self.save_geometry()
 		if self.__window is not None:
 			self.__window.close()
 			self.__window = None
 			f=self.toplevel.window
 
+	def get_geometry(self):
+		if self.__window:
+			self.last_geometry = self.__window.getgeometry()
+			 
 	def setlistheaders(self, headerlist):
 		self.__window.setColumns(headerlist)
 
@@ -84,7 +92,7 @@ class AssetsViewDialog:
 			self.createviewobj()
 		if self.__window.GetSafeHwnd()==0:
 			f=self.toplevel.window
-			f.showview(self.__window,'aview_')
+			f.showview(self.__window,'aview_', self.last_geometry)
 			self.__window.show()
 
 	def getwindow(self):
