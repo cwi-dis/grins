@@ -2000,7 +2000,34 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif tagname != 'smil':
 			self.syntax_error('outermost element must be "smil"')
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
+		
+class SMILMetaCollector(xmllib.XMLParser):
+	"""Collect the meta attributes from a smil file"""
+	
+	def __init__(self, file=None):
+		self.meta_data = {}
+		self.elements = {
+			'meta': (self.start_meta, None)
+		}
+		self.__file = file or '<unknown file>'
+		xmllib.XMLParser.__init__(self)
 
+	def start_meta(self, attributes):
+		name = attributes.get('name')
+		content = attributes.get('content')
+		if name and content:
+			self.meta_data[name] = content
+			
+	def syntax_error(self, msg):
+		print 'warning: syntax error on line %d: %s' % (self.lineno, msg)
+		
+def ReadMetaData(file):
+	p = SMILMetaCollector(file)
+	fp = open(file)
+	p.feed(fp.read())
+	p.close()
+	return p.meta_data
+	
 def ReadFile(url, printfunc = None):
 	if os.name == 'mac':
 		import splash
