@@ -7,8 +7,6 @@ import gl
 import DEVICE
 import fl
 
-import imgfile
-
 from Channel import Channel
 from ChannelWindow import ChannelWindow
 
@@ -129,6 +127,9 @@ class ImageWindow(ChannelWindow):
 			self.channel.done(0)
 	#
 	def armimage(self, (filename_arg, node)):
+		# (Import imgfile here so if it doesn't exist we can
+		# still play documents that don't contain images...)
+		import imgfile
 		filename = rgbcache.get(filename_arg)
 		self.node = node
 		self.setcolors()
@@ -163,10 +164,12 @@ class ImageWindow(ChannelWindow):
 		except imgfile.error, msg:
 			print 'Cannot read image file', filename_arg, ':', msg
 			self.error = 'Cannot read file ' + `filename_arg`
+	#
 	def showimage(self):
 		if self.is_showing():
 			self.pop() # Implies gl.winset()
 			self.render()
+	#
 	def setanchors(self, anchors):
 		self.anchors = anchors
 		# NB: this routine must be called before showimage
@@ -176,10 +179,12 @@ class ImageWindow(ChannelWindow):
 		self.anchors = [anchor]
 		self.setanchor = 1
 		self.redraw()
+	#
 	# Stop defining an anchor
 	def getdefanchor(self):
 		self.setanchor = 0
 		return self.anchors[0]
+	#
 	# Abort defining an anchor
 	def enddefanchor(self, anchor):
 		self.anchors = [anchor]
