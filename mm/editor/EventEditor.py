@@ -18,7 +18,7 @@ import MMNode, windowinterface
 
 CAUSES = [				# What causes the event
 	# This list is incomplete
-	'delay'
+	'delay',
 	'indefinite',		       
 	'node',				# extrainfo is a pointer to an MMNode or string??
 	'region',			# extrainfo is a pointer or string repr a region.
@@ -220,6 +220,7 @@ class EventStruct:
 			self.cause = 'region'
 			self.thing = x.channel
 		else:
+			# TODO: more work needed here.
 			self.cause = 'node'
 			if isinstance(x.srcnode, MMNode.MMNode):
 				self.thing = x.srcnode.GetName()
@@ -230,6 +231,7 @@ class EventStruct:
 			self.event = x.event
 
 	def as_string(self):
+		# Must always return a string.
 		c = self.get_cause()
 		r = ""			# returnable value.
 		s = self._syncarc
@@ -241,28 +243,35 @@ class EventStruct:
 			return "TODO: wallclock"
 		# Now for the offset things
 		elif c == 'node':
-			if s:
-				r = s.srcnode.GetName() + "." + self.get_event()
-			else:
-				r = 'unknown'
+			_, r, _, _ = self.get_thing_string()
+			r = r + '.' + self.get_event()
+			##if isinstance(s, MMNode.MMSyncArc):
+##				if isinstance(s.srcnode, MMNode.MMNode):
+##					r = s.srcnode.GetName() + "." + self.get_event()
+##				else:
+##					r = s.srcnode + "." + self.get_event()
+##			else:
+##				r = 'unknown'
 		elif c == 'region':
-			if self._setregion:
-				r = self._setregion
-			elif s:
-				r = s.channel
-			else:
-				r = 'unknown'
+			_, r, _, _ = self.get_thing_string()
+			r = r + '.' + self.get_event()
+##			if self._setregion:
+##				r = self._setregion
+##			elif isinstance(s, MMNode.MMSyncArc):
+##				r = s.channel
+##			else:
+##				r = 'unknown'
 		elif c == 'prev':
 			if self._setevent:
 				r = 'prev' + self._setevent
-			elif s:
+			elif isinstance(s, MMNode.MMSyncArc):
 				r = 'prev' + "." + s.event
 			else:
 				r = 'prev'
 		elif c == 'accessKey':
 			if self._setkey:
 				r = 'accessKey(' + self._setkey + ')'
-			elif self._syncarc:
+			elif isinstance(self._syncarc, MMNode.MMSyncArc):
 				r = 'accessKey(' + self._syncarc.accesskey + ')'
 			else:
 				r = 'accessKey(?)'
@@ -271,6 +280,7 @@ class EventStruct:
 			if d:
 				return "Delay of " + d
 			else:
+				print "Got strange looking event: ", self._syncarc
 				return "Error: strange event."
 		d = self.get_offset()
 		if d == "0" or d is None:
@@ -289,6 +299,9 @@ class EventStruct:
 	def get_event(self):
 		if self._setevent:
 			return self._setevent
+		elif self.event.startswith('repeat'):
+			# TODO: repeated times.
+			return 'repeat'
 		else:
 			return self.event
 	def get_event_index(self):
@@ -324,7 +337,7 @@ class EventStruct:
 			name = "Node:"
 			if self._setnode:
 				thing = self._setnode
-			elif self._syncarc:
+			elif isinstance(self._syncarc, MMNode.MMSyncArc):
 				thing = self._syncarc.srcnode.GetName()
 			else:
 				thing = "Unknown"
@@ -334,7 +347,7 @@ class EventStruct:
 			readonly = 1
 			if self._setregion:
 				thing = self._setregion
-			elif self._syncarc:
+			elif isinstance(self._syncarc, MMNode.MMSyncArc):
 				thing = self._syncarc.channel
 			else:
 				thing = "unknown"
@@ -343,7 +356,7 @@ class EventStruct:
 			name = "Key:"
 			if self._setkey:
 				thing = self._setkey
-			elif self._syncarc:
+			elif isinstance(self._syncarc, MMNode.MMSyncArc):
 				thing = self._syncarc.accesskey
 			else:
 				thing = ""
@@ -352,7 +365,7 @@ class EventStruct:
 			name = "Wallclock:"
 			if self._setthing:
 				thing = self._setthing
-			elif self._syncarc:
+			elif isinstance(self._syncarc, MMNode.MMSyncArc):
 				thing = self._syncarc.wallclock
 			else:
 				thing = ""
@@ -375,10 +388,11 @@ class EventStruct:
 			self._setkey = newthing
 		else:
 			print "DEBUG: Unknown cause: ", c
+		return None		# return an error otherwise.
 	def get_offset(self):
 		if self._setoffset:
 			return self._setoffset
-		if self._syncarc and self.get_cause() in ['node', 'prev', 'accessKey']: # TODO: check these.
+		if self._syncarc and self.get_cause() in ['node', 'prev', 'accessKey', 'delay']: # TODO: check these.
 			return `self._syncarc.delay`
 		else:
 			return None
