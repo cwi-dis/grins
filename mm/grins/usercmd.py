@@ -67,6 +67,8 @@ class STOP(_CommandBase):
 	help = 'Stop playing document'
 class MAGIC_PLAY(_CommandBase):
 	help = 'Continue when paused, pause when playing, play when stopped'
+class USERGROUPS(_DynamicCascade):
+	help = 'User groups'
 class CHANNELS(_DynamicCascade):
 	help = 'Toggle channels on/off'
 class CRASH(_CommandBase):
