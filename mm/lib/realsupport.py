@@ -784,7 +784,14 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None, sile
 		else:
 			extrafill = 1
 		if extrafill:
-			if colors.rcolors.has_key(bgcolor):
+			if bgcolor == None:
+				# avoid the crash
+				# currently the only way to pass here should be
+				# transparent = 1
+				# In this case I don't know what is the right behavior ???
+				# so for now, just affect a black bg color
+				color = '#000000'
+			elif colors.rcolors.has_key(bgcolor):
 				color = colors.rcolors[bgcolor]
 			else:
 				color = '#%02x%02x%02x' % bgcolor
