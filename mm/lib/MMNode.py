@@ -1631,8 +1631,11 @@ class MMNode:
 					self.sctx.trigger(arc)
 				return
 			event = arc.getevent()
-			if event is not None:
+			if event in ('begin', 'end'):
 				key = 'event', event
+			elif event is not None or arc.accesskey is not None:
+				# before node start, it's insensitive to events
+				return
 			elif arc.marker is not None:
 				key = 'marker', arc.marker
 			elif arc.dstnode.GetSchedParent().type == 'seq' and \
@@ -3342,16 +3345,17 @@ class MMNode:
 				timefunc = None
 			for a in beginlist:
 				t = None
-				if a.getevent() is not None or a.marker is not None or a.wallclock is not None:
+				aevent = a.getevent()
+				if aevent is not None or a.marker is not None or a.wallclock is not None or a.accesskey is not None:
 					maybecached = 0
 				if a.isresolved(timefunc) and syncbase is not None:
 					t = a.resolvedtime(timefunc) - syncbase
-				elif a.getevent() == 'begin' or a.getevent() == 'end':
+				elif aevent == 'begin' or aevent == 'end':
 					n = a.refnode()
 					t0 = n.isresolved()
 					if t0 is None:
 						continue
-					if a.getevent() == 'end':
+					if aevent == 'end':
 						d = n.calcfullduration()
 						if d is None or d < 0:
 							continue
@@ -3363,7 +3367,7 @@ class MMNode:
 							t = t + a.delay - syncbase
 						else:
 							t = None
-				elif a.getevent() is not None or a.marker is not None or a.wallclock is not None:
+				elif aevent is not None or a.marker is not None or a.wallclock is not None or a.accesskey is not None:
 					continue
 				elif a.delay is not None:
 					t = a.delay
