@@ -216,6 +216,7 @@ class TopLevel(TopLevelDialog):
 		# XXXX document.
 		import MMurl
 		if type(anchor) is type (()):
+			uid, aid = anchor
 			if '/' not in uid:
 				url = self.filename
 			elif uid[-2:] == '/1':
