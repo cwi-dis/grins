@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_snap_2.0.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=138905138
+  File Checksum=1142729391
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1411,6 +1411,216 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\win32\DXMedia\bin\vid2rm.ax
+  Destination=%MAINDIR%\Producer-SDK\vid2rm.ax
+  Flags=0001000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\win32\DXMedia\bin\aud2rm.ax
+  Destination=%MAINDIR%\Producer-SDK\aud2rm.ax
+  Flags=0001000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\GRiNS_SV2.exe
+  Destination=%MAINDIR%\GRiNS_SV2.exe
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Common\rnco3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Common\rnco3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\rv303260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\rv303260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\rv203260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\rv203260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\erv13260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\erv13260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\rmto3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Tools\rmto3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\rmme3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Tools\rmme3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\enlv3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Tools\enlv3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\sipr3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\sipr3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\rv103260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\rv103260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\espr3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\espr3260.dll
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\ednt3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\ednt3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\dnet3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\dnet3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\14_43260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\14_43260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\basc3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Plugins\basc3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\auth3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Plugins\auth3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\28_83260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\28_83260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\sdpp3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Plugins\sdpp3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\cook3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\cook3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\atrc3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\atrc3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Common\pnrs3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Common\pnrs3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\erv33260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\erv33260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Common\encn3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Common\encn3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\erv23260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\erv23260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\rn5a3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Plugins\rn5a3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\win32trace.pyd
+  Destination=%MAINDIR%\win32trace.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\win32api.pyd
+  Destination=%MAINDIR%\win32api.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Scintilla.DLL
+  Destination=%MAINDIR%\Scintilla.DLL
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\rmbe3260.dll
+  Destination=%MAINDIR%\rmbe3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\pngu3266.dll
+  Destination=%MAINDIR%\pngu3266.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\pncrt.dll
+  Destination=%MAINDIR%\pncrt.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\imgop.pyd
+  Destination=%MAINDIR%\imgop.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\imgjpeg.pyd
+  Destination=%MAINDIR%\imgjpeg.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\imgformat.pyd
+  Destination=%MAINDIR%\imgformat.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\imgcolormap.pyd
+  Destination=%MAINDIR%\imgcolormap.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\prefetch.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\prefetch.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\dropbox.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\dropbox.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\animate.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\animate.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\SNAP1_empty_slideshow.grins
+  Destination=%MAINDIR%\Templates\SNAP1_empty_slideshow.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\tokr3260.dll
+  Destination=%MAINDIR%\Producer-SDK\Codecs\tokr3260.dll
+  Flags=0000000010000011
+end
+item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\wmfapi.pyd
   Destination=%MAINDIR%\wmfapi.pyd
   Flags=0000000010000011
@@ -1424,11 +1634,6 @@ item: Install File
   Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
   Destination=%MAINDIR%\WebPro32.ocx
   Flags=0001001010000011
-end
-item: Install File
-  Source=D:\ufs\mm\cmif\bin\win32\GRiNS_SV2.exe
-  Destination=%MAINDIR%\GRiNS_SV2.exe
-  Flags=0000000010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\extended-slideshow.bmp
