@@ -115,19 +115,20 @@ def InitEditors():
 _LocalError = '_LocalError'
 
 # showeditor - Show the editor (or selector) for a given node
-def showeditor(node):
+def showeditor(node, url=None):
 	if len(channeleditors) == 0:
 		InitEditors()
-	if node.GetType() == 'imm':
-		dummy = _Convert(node)
-		return
-	if node.GetType() <> 'ext':
-		windowinterface.showmessage(
-			'Only extern nodes can be edited',
-			mtype = 'error')
-		return
-	import MMAttrdefs, MMurl, urlparse
-	url = MMAttrdefs.getattr(node,'file')
+	if not url:
+		if node.GetType() == 'imm':
+			dummy = _Convert(node)
+			return
+		if node.GetType() <> 'ext':
+			windowinterface.showmessage(
+				'Only extern nodes can be edited',
+				mtype = 'error')
+			return
+		import MMAttrdefs
+		url = MMAttrdefs.getattr(node,'file')
 	url = node.context.findurl(url)
 	xx = windowinterface.shell_execute(url, 'edit', showmsg=0)
 	if xx != 0:
