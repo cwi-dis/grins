@@ -41,22 +41,20 @@ rem Set up the PYTHONPATH for the freeze - this points to all the cmif directori
 rem we need to perform the freeze.
 set PYTHONPATH=%GRINS_HOME%
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\win32
-set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib\win32
-set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\common\win32
-set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\win32\src\Build
-
 IF NOT %INCLUDE_MMEXTENSIONS%==yes GOTO restpath
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\mmextensions\real\win32
-
 :restpath
+set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\common\win32
+set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib\win32
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%
-set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\common
+set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\pylib
-set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\pylib\audio
+set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\win32\src\Build
 
 
 rem And the standard Python extensions.
+set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\img\Lib
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\lib
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\Build
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin
@@ -158,7 +156,7 @@ echo -x %EXCLUDE_WHAT% >> FreezeOpts
 
 %PYTHON_EXE% -O %COMPILE% >> log.txt
 
-%PYTHON_EXE% -O %FREEZE% -s windows -i FreezeOpts -e %GRINS_HOME%\win32\extensions.ini %main_script% >> log.txt
+%PYTHON_EXE% -O %FREEZE% -s windows -i FreezeOpts -e %GRINS_HOME%\win32\grins_extensions.ini %main_script% >> log.txt
 
 : Make the target
 rem echo Executing NMAKE

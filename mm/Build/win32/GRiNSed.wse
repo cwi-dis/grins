@@ -22,8 +22,8 @@ item: Global
   EXE Filename=D:\ufs\mm\cmif\bin\win32\grins-win-full-101alpha.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
-  Upload Name=jack
-  Upload Directory=/ufs/jack/tmp
+  Upload Name=sjoerd
+  Upload Directory=/ufs/sjoerd/tmp
   Per-User Version ID=1
   Dialogs Version=7
   Version File=1.0.1alpha
@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=1160979765
+  File Checksum=2498904690
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1389,6 +1389,156 @@ item: If/While Statement
   Variable=COMPONENTS
   Value=A
   Flags=00001010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\producer.pyd
+  Destination=%MAINDIR%\producer.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\imgop.pyd
+  Destination=%MAINDIR%\imgop.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\imgjpeg.pyd
+  Destination=%MAINDIR%\imgjpeg.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\imgformat.pyd
+  Destination=%MAINDIR%\imgformat.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\imgcolormap.pyd
+  Destination=%MAINDIR%\imgcolormap.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\sipr3260.dll
+  Destination=%MAINDIR%\sipr3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\sdpp3260.dll
+  Destination=%MAINDIR%\sdpp3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\rv203260.dll
+  Destination=%MAINDIR%\rv203260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\rv103260.dll
+  Destination=%MAINDIR%\rv103260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\rnco3260.dll
+  Destination=%MAINDIR%\rnco3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\rn5a3260.dll
+  Destination=%MAINDIR%\rn5a3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\rmto3260.dll
+  Destination=%MAINDIR%\rmto3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\rmme3260.dll
+  Destination=%MAINDIR%\rmme3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\rmbe3260.dll
+  Destination=%MAINDIR%\rmbe3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\pnrs3260.dll
+  Destination=%MAINDIR%\pnrs3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\pngu3263.dll
+  Destination=%MAINDIR%\pngu3263.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\pncrt.dll
+  Destination=%MAINDIR%\pncrt.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\espr3260.dll
+  Destination=%MAINDIR%\espr3260.dll
+  Flags=0000000010000010
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\erv23260.dll
+  Destination=%MAINDIR%\erv23260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\erv13260.dll
+  Destination=%MAINDIR%\erv13260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\enlv3260.dll
+  Destination=%MAINDIR%\enlv3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\encn3260.dll
+  Destination=%MAINDIR%\encn3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\ednt3260.dll
+  Destination=%MAINDIR%\ednt3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\dnet3260.dll
+  Destination=%MAINDIR%\dnet3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\cook3260.dll
+  Destination=%MAINDIR%\cook3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\cokr3260.dll
+  Destination=%MAINDIR%\cokr3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\basc3260.dll
+  Destination=%MAINDIR%\basc3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\auth3260.dll
+  Destination=%MAINDIR%\auth3260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\28_83260.dll
+  Destination=%MAINDIR%\28_83260.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=e:\External Program Files\RealSDK\Producer\Bin\14_43260.dll
+  Destination=%MAINDIR%\14_43260.dll
+  Flags=0000000010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\slideshow.smil

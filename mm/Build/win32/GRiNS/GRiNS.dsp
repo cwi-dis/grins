@@ -690,6 +690,10 @@ SOURCE=.\M_RealChannel.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_realnode.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_RealPixChannel.c
 # End Source File
 # Begin Source File

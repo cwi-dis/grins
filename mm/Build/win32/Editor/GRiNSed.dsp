@@ -91,6 +91,16 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 python15_d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# Begin Custom Build
+OutDir=.\Debug
+InputPath=.\Debug\GRiNSed.exe
+SOURCE="$(InputPath)"
+
+"..\..\..\bin\win32\GRiNSed_d.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\..\bin\win32\GRiNSed_d.exe 
+	copy $(OutDir)\GRiNSed.exe ..\..\..\bin\win32\GRiNSed_d.exe 
+	
+# End Custom Build
 
 !ENDIF 
 
@@ -359,6 +369,10 @@ SOURCE=.\M_flags.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_fnmatch.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_Font.c
 # End Source File
 # Begin Source File
@@ -392,6 +406,10 @@ SOURCE=.\M_getpass.c
 # Begin Source File
 
 SOURCE=.\M_GLLock.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_glob.c
 # End Source File
 # Begin Source File
 
@@ -448,6 +466,30 @@ SOURCE=.\M_httplib.c
 # Begin Source File
 
 SOURCE=.\M_ImageChannel.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_img.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_imgbmp.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_imgconvert.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_imghdr.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_imgsgi.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_imgxbm.c
 # End Source File
 # Begin Source File
 
@@ -832,6 +874,10 @@ SOURCE=.\M_RealChannel.c
 # Begin Source File
 
 SOURCE=.\M_realconvert.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_realnode.c
 # End Source File
 # Begin Source File
 
