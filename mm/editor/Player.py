@@ -3,7 +3,6 @@ __version__ = "$Id$"
 # Player module -- mostly defines the Player class.
 
 
-from Scheduler import del_timing
 from PlayerCore import PlayerCore
 from MMExc import *
 import MMAttrdefs

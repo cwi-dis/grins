@@ -1630,13 +1630,6 @@ class ArmStorageLeaf:
 	def do_looponcemore(self):
 		pass
 
-#  Remove all arm_duration attributes (so they will be recalculated)
-
-def del_timing(node):
-	node.DelAttr('arm_duration')
-	children = node.GetChildren()
-	for child in children:
-		del_timing(child)
 #
 # Unarm all nodes
 #
