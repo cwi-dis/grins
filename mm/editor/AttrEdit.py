@@ -286,6 +286,9 @@ class ChannelWrapper(Wrapper):
 					defn = MMAttrdefs.getdef(name)
 					if defn[5] == 'channel':
 						namelist.append(name)
+			else:
+				# XXXX hack to get bgcolor included
+				namelist.append('bgcolor')
 		# Merge in nonstandard attributes
 		extras = []
 		for name in self.channel.keys():
@@ -296,10 +299,8 @@ class ChannelWrapper(Wrapper):
 		rv = namelist + extras
 		# Remove some attributes if we are a base window, or if
 		# we're in SMIL mode.
-		base = None
-		if self.channel.has_key('base_window'):
-			base = self.channel['base_window']
-		if not base:
+		base = self.channel.get('base_window')
+		if base is None:
 			if 'z' in rv: rv.remove('z')
 			if 'base_winoff' in rv: rv.remove('base_winoff')
 			if 'units' in rv: rv.remove('units')
