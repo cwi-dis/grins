@@ -687,7 +687,8 @@ class TemplateDialog(ResDialog):
 		self._cb = cb
 		self._select=ComboBox(self,grinsRC.IDC_TEMPLATECOMBO)
 		self._explanation = Static(self, grinsRC.IDC_EXPLANATION)
-		self._picture = Static(self, grinsRC.IDC_PICTURE)
+		self._picture = WndCtrl(self, grinsRC.IDC_PICTURE)
+		self._bmp = None
 
 		self.show()
 
@@ -699,6 +700,8 @@ class TemplateDialog(ResDialog):
 		self._select.setcursel(0)
 		self._select.hookcommand(self, self.OnChangeTemplate)
 		self._setdialoginfo()
+		self._picture.create_wnd_from_handle()
+		self.HookMessage(self.OnDrawItem,win32con.WM_DRAWITEM)
 		return ResDialog.OnInitDialog(self)
 
 	# Response to combo selection change
@@ -709,7 +712,34 @@ class TemplateDialog(ResDialog):
 	def show(self):
 		self.DoModal()
 
-## XXXX Redraw hook
+	# Response to the WM_DRAWITEM
+	# draw splash
+	def OnDrawItem(self,params):
+		lParam=params[3]
+		hdc=Sdk.ParseDrawItemStruct(lParam)
+		dc=win32ui.CreateDCFromHandle(hdc)
+		rct=self._picture.GetClientRect()
+		# XXXX Should center the picture
+##		print 'ondraw', rct, params, self._bmp
+##		dc.FillSolidRect(rct, win32mu.RGB((255,255,255)))
+		if self._bmp:
+			win32mu.BitBltBmp(dc,self._bmp,rct)
+		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
+		dc.FrameRectFromHandle(rct,br)
+		Sdk.DeleteObject(br)
+		dc.DeleteDC()
+
+	# load splash bmp
+	def _loadbmp(self, file):
+		self._bmp = None
+		if not file:
+			return
+		try:
+			fp = open(file, 'rb')
+		except IOError:
+			return
+		self._bmp=win32ui.CreateBitmap()
+		self._bmp.LoadBitmapFile(fp)
 
 	def close(self):
 		self.EndDialog(win32con.IDCANCEL)
@@ -732,7 +762,8 @@ class TemplateDialog(ResDialog):
 			description = ''
 			picture = None
 		self._explanation.settext(description)
-		# XXXX Fill picture
+		self._loadbmp(picture)
+		self.InvalidateRect()
 
 # Implementation of the channel undefined dialog
 class ChannelUndefDlg(ResDialog):
