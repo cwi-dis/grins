@@ -1,11 +1,12 @@
 # Qt module test
 
-# QuickTime module
+# winqtcon module
 import Qt
 
-# QuickTime constants
-# placeholder -> replace with Mac equivalent
-import QuickTime
+# winqtcon constants
+import sys
+sys.path.append(r'D:\ufs\mm\cmif\lib\win32')
+import winqtcon
 
 # std windows/MFC stuff
 import win32ui, win32api, win32con
@@ -110,7 +111,7 @@ class QTWnd(MfcOsWnd):
 		print 'box =',  self.movie.GetMovieBox()
 
 		l, t, r, b = self.movie.GetMovieBox()
-		self.ctrl = self.movie.NewMovieController((40,40, r+40, b+40), QuickTime.mcTopLeftMovie | QuickTime.mcWithFrame) 
+		self.ctrl = self.movie.NewMovieController((40,40, r+40, b+40), winqtcon.mcTopLeftMovie | winqtcon.mcWithFrame) 
 
 		#self.movie.SetMovieGWorld((self.port,), None)
 		self.movie.SetMovieBox((40,40, r+40, b+40))
