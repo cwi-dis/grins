@@ -1,0 +1,130 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>GRiNS Player for SGI/IRIX Release Notes</title>
+  </head>
+
+  <body>
+    <h1>GR<i>i</i>NS Player for SGI/IRIX Release Notes</h1>
+    <p>
+      These are the release notes for the GR<i>i</i>NS player for
+      Silicon Graphics IRIX 6.X, Release 0.5, patchlevel 0.  More
+      information on GR<i>i</i>NS can be obtained at
+      <a href="http://www.oratrix.com/GRiNS">http://www.oratrix.com/GRiNS</a>,
+      or by email to
+      <a href="mailto:grins-request@oratrix.com">grins-request@oratrix.com</a>.
+    </p>
+
+    <p>
+      What (sparse) documentation on GR<i>i</i>NS is available at this 
+      time can also be found on the homepage.
+    </p>
+
+    <h3>Prerequisites</h3>
+    <p>
+      The GR<i>i</i>NS editor and player use a number of system shared
+      libraries.  Not all of these libraries are installed by
+      default.  Ask your system administrator to install these images
+      if they haven't been installed already.  Which images are
+      installed can be seen with the standard program <em>versions</em>.
+      Shared libraries from the following images are used:
+    </p>
+    <ul>
+      <li>compiler_eoe.sw.lib</li>
+      <li>dmedia_eoe.sw.audio</li>
+      <li>dmedia_eoe.sw.lib</li>
+      <li>eoe.sw.base</li>
+      <li>eoe.sw.gfx</li>
+      <li>motif_eoe.sw.eoe</li>
+      <li>x_eoe.sw.eoe</li>
+    </ul>
+
+        <h3>Feedback</h3>
+    <p>
+      Bug reports and other technical feedback should be sent to
+      <a href="mailto:grins-support@oratrix.com">grins-support@oratrix.com</a>,
+      please check the
+      <a href="http://www.oratrix.com/GRiNS/feedback.html">feedback section</a>
+      on the homepage for details.
+    </p>
+
+    <p>
+      Non-technical feedback should be sent to
+      <a href="mailto:info@oratrix.com">info@oratrix.com</a>.
+    </p>
+
+    <h3>Platform dependencies in media handling</h3>
+    <p>
+      There are some differences between the various platforms.  See
+      the <a href="http://www.oratrix.com/GRiNS/relnotes/supported.html">chart
+	of supported media types</a> on the GR<i>i</i>NS website
+      for the supported media types on the various supported
+      platforms.
+    </p>
+
+    <h3>Access methods</h3>
+    <p>
+      The GR<i>i</i>NS player supports the following access methods
+      (URL schemes).
+    </p>
+    <ul>
+      <li>file</li>
+      <li>http</li>
+      <li>ftp</li>
+      <li>data</li>
+      <li>gopher</li>
+    </ul>
+
+    <h3><a name="unsup">Unsupported SMIL features</a></h3>
+    <p>
+      There are only a few SMIL features that are not supported
+      by the GR<i>i</i>NS player.  Documents that make use of these
+      features are parsed correctly, but the features are ignored.
+    </p>
+
+    <ul>
+      <li>
+	<code>begin</code> and <code>end</code> attributes in the
+	<code>anchor</code> element.
+      </li>
+      <li>
+	<code>fit="fill"</code> and <code>fit="scroll"</code>
+	attribute values in <code>region</code> element.
+      </li>
+      <li>
+	<code>name="pics-label"</code> attribute value in
+	<code>meta</code> element.
+      </li>
+      <li>
+	<code>alt</code> attribute in media object elements.
+      </li>
+      <li>
+	<code>fill</code> attribute.
+      </li>
+    </ul>
+
+    <h3>Platform-specific issues</h3>
+    <p>
+      There are also a number of features that are not supported on
+      all platforms, or not supported identically. The following
+      problems are known for the player on SGI/IRIX:
+    </p>
+
+    <p>
+      As issues are reported they are added to the
+      <a href="http://www.oratrix.com/GRiNS/relnotes.html">release notes</a>
+      and
+      <a href="http://www.oratrix.com/GRiNS/issues.txt">open issues</a>
+      sections on the home page.
+    </p>
+
+
+
+    <hr>
+    <address><a href="http://www.oratrix.com/GRiNS/">the GRiNS support staff</a></address>
+<!-- Created: Fri Mar 26 14:07:42 MET 1999 -->
+<!-- hhmts start -->
+Last modified: Fri Mar 26 14:12:52 MET 1999
+<!-- hhmts end -->
+  </body>
+</html>
