@@ -707,6 +707,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['fillDefault'] = val
 				else:
 					self.syntax_error("bad fillDefault attribute")
+			elif attr == 'erase':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val in ('never', 'whenDone'):
+					attrdict['erase'] = val
+				else:
+					self.syntax_error("bad %s attribute" % attr)
 			elif attr == 'color' and node.__chantype == 'brush':
 				fg = self.__convert_color(val)
 				if type(fg) != type(()):
@@ -777,6 +785,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__context.attributes['project_boston'] = 1
 				if val in ('canSlip', 'locked', 'independent', 'inherit'):
 					attrdict['syncBehaviorDefault'] = val
+				else:
+					self.syntax_error("bad %s attribute" % attr)
+			elif attr == 'attributeType':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val in ('CSS', 'XML', 'auto'):
+					attrdict['calcMode'] = val
 				else:
 					self.syntax_error("bad %s attribute" % attr)
 			elif attr == 'calcMode':
