@@ -269,6 +269,7 @@ class _SourceView(GenView, docview.RichEditView):
 		self.__caretPos = (0, 0)
 
 		self.__lastItemFound = None
+		self._popup = None
 		
 	def OnCreate(self, cs):
 		# create dialog bar and attach controls (though attachement effects are not used for buttons)
@@ -307,6 +308,9 @@ class _SourceView(GenView, docview.RichEditView):
 		# disable the default wrap behavior
 		self.SetWordWrap(win32ui.CRichEditView_WrapNone)
 		self.WrapChanged()
+
+		# popup menu
+		self.HookMessage(self.OnRButtonDown, win32con.WM_RBUTTONDOWN)
 		
 	def Paste(self):
 		if not self.isClipboardEmpty():
@@ -349,6 +353,7 @@ class _SourceView(GenView, docview.RichEditView):
 		
 		# crack win32 message
 		msg=win32mu.Win32Msg(params)
+		nmsg=msg.getnmsg()
 		code = msg.HIWORD_wParam()
 		id = msg.LOWORD_wParam()
 		hctrl = msg._lParam
@@ -476,6 +481,25 @@ class _SourceView(GenView, docview.RichEditView):
 		if hasattr(self,'_obj_') and self._obj_:
 			self.GetParent().DestroyWindow()
 		self._cbdict = None
+
+	def OnRButtonDown(self, params):
+		msg = win32mu.Win32Msg(params)
+		point = msg.pos()
+		flags = msg._wParam
+		point = self.ClientToScreen(point)
+		flags = win32con.TPM_LEFTALIGN | win32con.TPM_RIGHTBUTTON | win32con.TPM_LEFTBUTTON
+
+		if self._popup:
+			self._popup.TrackPopupMenu(point, flags, self.GetParent())
+
+	def setpopupmenu(self, menutemplate):
+		if self._popup:
+			self._popup.DestroyMenu()
+			self._popup = None
+		import win32menu, usercmdui
+		popup = win32menu.Menu('popup')
+		popup.create_popup_from_menubar_spec_list(menutemplate, usercmdui.usercmd2id)
+		self._popup = popup
 
 	# handler called by the system when the selection change
 	def onSelChanged(self, std, extra):
