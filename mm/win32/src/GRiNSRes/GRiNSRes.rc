@@ -13,26 +13,6 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Neutral (Default) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
-#ifdef _WIN32
-LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
-IDC_STOP                CURSOR  DISCARDABLE     "RES\\Stop.cur"
-#endif    // Neutral (Default) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
 // English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -379,7 +359,7 @@ BEGIN
     PUSHBUTTON      "OK",IDOK,122,4,50,14
 END
 
-IDD_CREATE_BOX1 DIALOG DISCARDABLE  0, 0, 196, 71
+IDD_CREATE_BOX1 DIALOGEX 0, 0, 196, 71
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Create Box"
 FONT 8, "MS Sans Serif"
@@ -536,6 +516,38 @@ BEGIN
     PUSHBUTTON      "&Apply",IDUC_APPLY,157,32,35,14
     PUSHBUTTON      "&Restore",IDUC_RESTORE,56,32,35,14
     PUSHBUTTON      "Cancel",IDCANCEL,8,32,35,14
+END
+
+IDD_NODE_INFO DIALOG DISCARDABLE  0, 0, 314, 108
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Name:",IDC_STATIC,8,5,22,8
+    EDITTEXT        IDC_NODE_NAME,31,3,79,14,ES_AUTOHSCROLL
+    LTEXT           "Type:",IDC_STATIC,120,5,19,8
+    COMBOBOX        IDC_NODE_TYPE,139,3,48,43,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Channel:",IDC_STATIC,199,5,29,8
+    COMBOBOX        IDC_CHANNEL,230,3,74,74,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    PUSHBUTTON      "Cancel",IDUC_CANCEL,6,24,32,14
+    PUSHBUTTON      "&Restore",IDUC_RESTORE,40,24,32,14
+    PUSHBUTTON      "&Node properties...",IDUC_NODE_ATTRIBUTES,73,24,63,14
+    PUSHBUTTON      "&Channel properties...",IDUC_CHANNEL_ATTRIBUTES,138,24,
+                    72,14
+    PUSHBUTTON      "Anc&hors...",IDUC_ANCHORS,211,24,40,14
+    PUSHBUTTON      "&Apply",IDUC_APPLY,253,24,26,14
+    PUSHBUTTON      "OK",IDUC_OK,281,24,24,14
+    LTEXT           "URL:",1002,8,48,32,8
+    EDITTEXT        IDC_EXT_EDIT,43,45,166,14,ES_AUTOHSCROLL | NOT 
+                    WS_VISIBLE
+    PUSHBUTTON      "Browse...",IDUC_BROWSE,213,45,38,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Edit...",IDUC_EDIT,253,45,26,14,NOT WS_VISIBLE
+    PUSHBUTTON      "&Open",IDC_OPENCHILD,8,60,28,14,NOT WS_VISIBLE
+    LISTBOX         IDC_INT_LIST,42,84,237,17,LBS_NOINTEGRALHEIGHT | NOT 
+                    WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_IMM_EDIT,42,65,237,16,ES_MULTILINE | ES_WANTRETURN | 
+                    NOT WS_VISIBLE | WS_VSCROLL
 END
 
 
@@ -755,6 +767,14 @@ BEGIN
         RIGHTMARGIN, 248
         BOTTOMMARGIN, 50
     END
+
+    IDD_NODE_INFO, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 307
+        TOPMARGIN, 1
+        BOTTOMMARGIN, 104
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -934,6 +954,19 @@ IDR_GRINSED             BITMAP  MOVEABLE PURE   "res\\grinsbar.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Dialog Info
+//
+
+IDD_NODE_INFO DLGINIT
+BEGIN
+    IDC_NODE_TYPE, 0x403, 2, 0
+0x0031, 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // String Table
 //
 
@@ -966,6 +999,26 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
+// Neutral (Default) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
+#pragma code_page(1253)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
+IDC_STOP                CURSOR  DISCARDABLE     "RES\\Stop.cur"
+#endif    // Neutral (Default) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // Greek resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ELL)
@@ -973,6 +1026,14 @@ END
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 #pragma code_page(1253)
 #endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_DRAGMOVE            CURSOR  DISCARDABLE     "RES\\Dragmove.cur"
+IDC_DRAGLINK            CURSOR  DISCARDABLE     "RES\\Draglink.cur"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1036,14 +1097,6 @@ IDI_CREATE_BOX          ICON    DISCARDABLE     "res\\ico00001.ico"
 //
 
 IDB_SPLASH              BITMAP  DISCARDABLE     "res\\splashimg.bmp"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_DRAGMOVE            CURSOR  DISCARDABLE     "RES\\Dragmove.cur"
-IDC_DRAGLINK            CURSOR  DISCARDABLE     "RES\\Draglink.cur"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
