@@ -13,10 +13,16 @@ class FancyURLopener(_OriginalFancyURLopener):
 	def __init__(self, *args):
 		apply(_OriginalFancyURLopener.__init__, (self,) + args)
 		self.tempcache = {}
+		self.__unlink = os.unlink # See cleanup()
+		self.__OriginalFancyURLopener = _OriginalFancyURLopener
 
 		# prefetch support
 		self.__prefetchcache = {}
 		self.__prefetchtempfiles = {}
+
+	def __del__(self):
+		self.__OriginalFancyURLopener.__del__(self)
+		del self.__OriginalFancyURLopener
 
 	def http_error_default(self, url, fp, errcode, errmsg, headers):
 		void = fp.read()
@@ -133,6 +139,10 @@ class FancyURLopener(_OriginalFancyURLopener):
 
 	# override cleanup for prefetch implementation
 	def cleanup(self):
+		# This code sometimes runs when the rest of this module
+		# has already been deleted, so it can't use any globals
+		# or import anything.
+
 		# first close open streams
 		for fp, tfp in self.__prefetchcache.values():
 			fp.close()
@@ -142,13 +152,13 @@ class FancyURLopener(_OriginalFancyURLopener):
 		# unlink temp files
 		for file, header in self.__prefetchtempfiles.values():
 			try:
-				os.unlink(file)
+				self.__unlink(file)
 			except:
 				pass
 		self.__prefetchtempfiles = {}
 
 		# call original cleanup
-		_OriginalFancyURLopener.cleanup(self)
+		self.__OriginalFancyURLopener.cleanup(self)
 	
 	# open stream to url and read headers but not data yet
 	# see retrieve for signature
