@@ -1637,42 +1637,46 @@ class LayoutView2(LayoutViewDialog2):
 	#
 
 	def __updateZOrder(self, value):
-		self.applyZOrderOnRegion(self.currentNodeSelected, value)
+		if self.currentNodeSelected != None:
+			self.applyZOrderOnRegion(self.currentNodeSelected, value)
 
 	def __updateGeomOnViewport(self, ctrlName, value):
-		dict = self.currentNodeSelected.getDocDict()
-		w,h = dict.get('width'), dict.get('height')
-		if ctrlName == 'RegionW':
-			w = value
-		elif ctrlName == 'RegionH':
-			h = value
-		self.applyGeomOnViewport(self.currentNodeSelected, (w,h))
+		if self.currentNodeSelected != None:
+			dict = self.currentNodeSelected.getDocDict()
+			w,h = dict.get('width'), dict.get('height')
+			if ctrlName == 'RegionW':
+				w = value
+			elif ctrlName == 'RegionH':
+				h = value
+			self.applyGeomOnViewport(self.currentNodeSelected, (w,h))
 
 	def __updateGeomOnRegion(self, ctrlName, value):
-		dict = self.currentNodeSelected.getDocDict()
-		x,y,w,h = dict.get('base_winoff')
-		if ctrlName == 'RegionX':
-			x = value
-		elif ctrlName == 'RegionY':
-			y = value			
-		elif ctrlName == 'RegionW':
-			w = value
-		elif ctrlName == 'RegionH':
-			h = value			
-		self.applyGeomOnRegion(self.currentNodeSelected, (x,y,w,h))
+		if self.currentNodeSelected != None:		
+			dict = self.currentNodeSelected.getDocDict()
+			x,y,w,h = dict.get('base_winoff')
+			if ctrlName == 'RegionX':
+				x = value
+			elif ctrlName == 'RegionY':
+				y = value			
+			elif ctrlName == 'RegionW':
+				w = value
+			elif ctrlName == 'RegionH':
+				h = value			
+			self.applyGeomOnRegion(self.currentNodeSelected, (x,y,w,h))
 
 	def __updateGeomOnMedia(self, ctrlName, value):
-		geom = self.currentNodeSelected._curattrdict['wingeom']
-		x,y,w,h = geom
-		if ctrlName == 'RegionX':
-			x = value
-		elif ctrlName == 'RegionY':
-			y = value			
-		elif ctrlName == 'RegionW':
-			w = value
-		elif ctrlName == 'RegionH':
-			h = value			
-		self.applyGeomOnMedia(self.currentNodeSelected, (x,y,w,h))
+		if self.currentNodeSelected != None:
+			geom = self.currentNodeSelected._curattrdict['wingeom']
+			x,y,w,h = geom
+			if ctrlName == 'RegionX':
+				x = value
+			elif ctrlName == 'RegionY':
+				y = value			
+			elif ctrlName == 'RegionW':
+				w = value
+			elif ctrlName == 'RegionH':
+				h = value			
+			self.applyGeomOnMedia(self.currentNodeSelected, (x,y,w,h))
 		
 	def __updateGeom(self, ctrlName, value):
 		if self.currentNodeSelected != None:
@@ -1771,20 +1775,21 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.setglobalfocus('MMNode',mediaRef)
 
 	def __showEditBackground(self, value):
-		node = self.currentNodeSelected
-		if node.getNodeType() in (TYPE_REGION, TYPE_VIEWPORT):
-			list = []
-			if not value:
-				dict = node.getDocDict()
-				if not dict.has_key('showEditBackground'):
-					list.append(('showEditBackground',1))
-				if not dict.has_key('editBackground'):	
-					list.append(('editBackground',dict.get('bgcolor')))
-			else:
-				dict = node.getDocDict()
-				if dict.has_key('showEditBackground'):
-					list.append(('showEditBackground',None))
-			self.applyEditorPreference(node, list)
+		if self.currentNodeSelected != None:
+			node = self.currentNodeSelected
+			if node.getNodeType() in (TYPE_REGION, TYPE_VIEWPORT):
+				list = []
+				if not value:
+					dict = node.getDocDict()
+					if not dict.has_key('showEditBackground'):
+						list.append(('showEditBackground',1))
+					if not dict.has_key('editBackground'):	
+						list.append(('editBackground',dict.get('bgcolor')))
+				else:
+					dict = node.getDocDict()
+					if dict.has_key('showEditBackground'):
+						list.append(('showEditBackground',None))
+				self.applyEditorPreference(node, list)
 
 	def newRegion(self, parentId):
 		# choice a default name which doesn't exist		
