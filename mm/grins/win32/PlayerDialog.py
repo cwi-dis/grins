@@ -40,16 +40,9 @@ class PlayerDialog:
 	# experimental code for viewport dimentioning
 	#
 	
-	def __getViewportList(self):
-		viewportList = []
-		for chan in self.context.channels:
-			if chan.get('base_window') == None:
-				viewportList.append(chan)
-		return viewportList
-		
 	# set the main window size according to its content (viewports)
 	def __fixMainWindowSize(self):
-		viewportList = self.__getViewportList()
+		viewportList = self.context.getviewports()
 			
 		minWidth = 100
 		minHeight = 100
