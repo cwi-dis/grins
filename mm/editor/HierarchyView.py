@@ -6,6 +6,11 @@ __version__ = "$Id$"
 # positive Y coordinates point down from the top of the window.
 # Also the convention for box coordinates is (left, top, right, bottom)
 
+# mjvdg: TODO:
+# drawing with no children doesn't work well yet.
+# There seems to be a bug which prevents an image being displayed if starting from
+# an empty 'document' - investigate.
+
 import windowinterface, WMEVENTS
 import MMAttrdefs
 import MMNode
@@ -130,9 +135,17 @@ class sizes_notime:
 	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
 	ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
 	ERRSIZE = windowinterface.ICONSIZE_PXL	# width of error/bandwidth indicator
-	GAPSIZE = 2 #2						# size of gap between nodes
-	HEDGSIZE = 3 #3						# size of edges
-	VEDGSIZE = 3 #3						# size of edges
+
+	if slideshow_view:		
+		GAPSIZE = 16;
+		HEDGSIZE = 16;
+		VEDGSIZE = 12 #3						# size of edges		
+	else:
+		GAPSIZE = 2 #2						# size of gap between nodes
+		HEDGSIZE = 3 #3						# size of edges
+		VEDGSIZE = 3 #3						# size of edges
+
+	DROPAREASIZE = 32;		# size of the decoration at the end of a "roll of film"
 	FLATBOX = 0
 	TIMEBARHEIGHT = 0
 	DROPAREA = MINSIZE + HOREXTRASIZE
@@ -534,13 +547,14 @@ class HierarchyView(HierarchyViewDialog):
 			self.setfocusobj(obj) # give the focus to the object which was dropped on.
 			
 		if slideshow_view:	# mjvdg 28-sept-2000
+			# update: 2-October - Nodes should never be empty, so this bit is pointless.
 			# The dropped object will be put into the left-most free node.
 			# Now, obj is the object which had a file dropped on it.
 			prev = obj.GetPrevious();
 			while prev != None and prev.HasNoURL(): # While this object has no URL
 				obj = prev;
 				prev = obj.GetPrevious();
-			prev = None;		# Garbage collect.
+			prev = None;	
 
 
 		if event == WMEVENTS.DropFile:
@@ -616,13 +630,6 @@ class HierarchyView(HierarchyViewDialog):
 					if MMAttrdefs.getattr(obj.node, 'fullimage'):
 						obj.node.SetAttr('imgcropwh', (w,h))
 
-			if slideshow_view:				
-				# If this node is the final node in a sequence (or par), add another.
-				if obj.node.GetNext()==None: # then this is the last node
-					nextnode = obj.node.DeepCopy()
-					self.editmgr.setnodeattr(nextnode, 'file', None)
-					em.addnode(obj.node.parent, -1, nextnode)
-				
 			em.commit()
 
 
@@ -705,6 +712,8 @@ class HierarchyView(HierarchyViewDialog):
 
 	def create(self, where, url = None, index = -1, chtype = None, ntype = None):
 		# Create a new node in the Structure view.
+		# (assuming..) 'where' is -1:before, 0:here, 1:after. -mjvdg
+
 		# experimental SMIL Boston layout code
 		internalchtype = chtype
 		# end experimental
@@ -876,6 +885,10 @@ class HierarchyView(HierarchyViewDialog):
 
 	def insertnode(self, node, where, index = -1):
 		# 'where' is coded as follows: -1: before; 0: under; 1: after
+		assert where in [-1,0,1]; # asserts by MJVDG.. delete them if they
+		assert node is not None; # catch too many bugs :-).
+		assert isinstance(node, MMNode.MMNode);
+
 		if where <> 0:
 			# Get the parent
 			parent = self.focusnode.GetParent()
@@ -1121,7 +1134,7 @@ class HierarchyView(HierarchyViewDialog):
 		ntype = node.GetType()
 		left, top, right, bottom = box
 		if self.timescale:
-			cw, ch = self.canvassize
+			cw, ch = self.canvassize # pixels (from self.sizes.SIZEUNITS)
 			w, h, t0 = node.boxsize
 			left = t0 / cw
 			right = left + w / cw
@@ -1135,10 +1148,10 @@ class HierarchyView(HierarchyViewDialog):
 			return left, top, right, bottom
 		listindex = len(list)
 		list.append((node, INNERBOX, box))
-		top = top + self.titleheight
+		top = top + self.titleheight # coords are fractions of total window size.
 		left = left + self.horedge
 		bottom = bottom - self.veredge
-		right = right - self.horedge
+		right = (right - self.horedge) 
 		children = node.GetChildren()
 		size = 0
 		horizontal = (ntype not in ('par', 'alt', 'excl', 'prio'))
@@ -1151,7 +1164,7 @@ class HierarchyView(HierarchyViewDialog):
 				size = size + child.boxsize[2]
 		# size is minimum size required for children in mm
 # use this to make drop area also proportional to available size
-##		if ntype == 'seq':
+##		if ntype == 'seq' and slideshow_view:
 ##			size = size + self.sizes.DROPAREA
 		if horizontal:
 			gapsize = self.horgap
@@ -1160,8 +1173,8 @@ class HierarchyView(HierarchyViewDialog):
 			gapsize = self.vergap
 			totsize = bottom - top
 # use this to have a fixed size drop area
-		if ntype == 'seq':
-			totsize = totsize - self.droparea
+		if ntype == 'seq' and slideshow_view:
+			totsize = totsize - self.droparea;
 		# totsize is total available size for all children with inter-child gap
 		factor = (totsize - (len(children) - 1) * gapsize) / size
 		maxr = 0
@@ -1181,15 +1194,16 @@ class HierarchyView(HierarchyViewDialog):
 			else:
 				top = b + gapsize
 				if r > maxr: maxr = r
-		if ntype == 'seq':
+		if ntype == 'seq' and slideshow_view:
 			if horizontal:
 ##				left = left + self.sizes.DROPAREA * factor
-				left = left + self.droparea
-			else:
+				left = left + self.droparea + gapsize
+##			else:		# not used? mjvdg.
 ##				right = right + self.sizes.DROPAREA * factor
-				right = right + self.droparea
+##				right = right + self.droparea + gapsize
 		if horizontal:
 			maxr = left - gapsize + self.horedge
+			#if ntype == 'seq': maxr = maxr + sizes_notime.DROPAREASIZE * factor
 			maxb = maxb + self.veredge
 		else:
 			maxb = top - gapsize + self.veredge
@@ -1294,7 +1308,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.displist.close()
 		self.displist = displist
 		self.new_displist = None
-		
+
 	def drawtimescale(self):
 		displist = self.new_displist
 		t0 = self.root.t0
@@ -1564,7 +1578,7 @@ class HierarchyView(HierarchyViewDialog):
 					width = w
 				height = height + h + self.sizes.GAPSIZE
 			width = width + b
-		if ntype == 'seq':
+		if ntype == 'seq' and slideshow_view:
 			if horizontal:
 				width = width + self.sizes.DROPAREA
 			else:
@@ -1573,7 +1587,6 @@ class HierarchyView(HierarchyViewDialog):
 			width = width - self.sizes.GAPSIZE
 		else:
 			height = height - self.sizes.GAPSIZE
-		# XXXX This code does not work for a vertical timeline
 		if self.timescale:
 			# Again, for timescale mode we happily ignore all these computations
 			width = minwidth
@@ -1694,9 +1707,9 @@ class Object:
 		vmargin = vmargin*1.5
 		l, t, r, b = self.box
 		node = self.node
-		nt = node.GetType()
+		ntype = node.GetType()
 		willplay = not self.mother.showplayability or node.WillPlay()
-		if nt in MMNode.leaftypes:
+		if ntype in MMNode.leaftypes:
 			if node.GetChannelType() == 'RealPix':
 				if willplay:
 					color = RPCOLOR
@@ -1712,37 +1725,37 @@ class Object:
 					color = LEAFCOLOR
 				else:
 					color = LEAFCOLOR_NOPLAY
-		elif nt == 'seq':
+		elif ntype == 'seq':
 			if willplay:
 				color = SEQCOLOR
 			else:
 				color = SEQCOLOR_NOPLAY
-		elif nt == 'par':
+		elif ntype == 'par':
 			if willplay:
 				color = PARCOLOR
 			else:
 				color = PARCOLOR_NOPLAY
-		elif nt == 'excl':
+		elif ntype == 'excl':
 			if willplay:
 				color = EXCLCOLOR
 			else:
 				color = EXCLCOLOR_NOPLAY
-		elif nt == 'prio':
+		elif ntype == 'prio':
 			if willplay:
 				color = PRIOCOLOR
 			else:
 				color = PRIOCOLOR_NOPLAY
-		elif nt == 'bag':
+		elif ntype == 'bag':
 			if willplay:
 				color = BAGCOLOR
 			else:
 				color = BAGCOLOR_NOPLAY
-		elif nt == 'alt':
+		elif ntype == 'alt':
 			if willplay:
 				color = ALTCOLOR
 			else:
 				color = ALTCOLOR_NOPLAY
-		elif nt == 'slide':
+		elif ntype == 'slide':
 			if willplay:
 				color = SLIDECOLOR
 			else:
@@ -1809,6 +1822,7 @@ class Object:
 				else:
 					d.fgcolor(TEXTCOLOR)
 					d.drawbox(box)
+
 		# draw a little triangle to indicate expanded/collapsed state
 		title_left = l+hmargin
 		if (node.GetType() in MMNode.interiortypes and not \
@@ -1830,6 +1844,22 @@ class Object:
 					d.drawicon(iconbox, 'closed')
 			else:
 				node.abox = (0, 0, -1, -1)
+
+		if ntype == 'seq' and slideshow_view and not self.boxtype==LEAFBOX: # Draw a decoration at the end of the node.
+			pix_winwidth, pix_winheight = self.mother.canvassize;
+			border = float(sizes_notime.HEDGSIZE)/pix_winwidth;
+			base = float(sizes_notime.VEDGSIZE)/pix_winheight
+			
+			dec_right = r-border;
+			minsize = float(sizes_notime.DROPAREASIZE)/pix_winwidth;
+			dec_left = dec_right - self.mother.droparea;
+			dec_bottom = b-base;
+			dec_top = t+titleheight;
+			
+			d.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM,
+				    (dec_left, dec_top, dec_right-dec_left, dec_bottom-dec_top));
+			d.drawfbox( LEAFCOLOR,
+				    (dec_left+hmargin, dec_top+vmargin, dec_right-dec_left-2*hmargin, dec_bottom-dec_top-2*vmargin) );
 
 		# animate++
 		if node.GetType() in MMNode.leaftypes and node.GetChildren():
