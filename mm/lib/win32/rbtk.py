@@ -24,9 +24,9 @@ class _rbtk:
 		pass
 
 	# Called by the core system to create or resize a box
-	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
+	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0, coolmode=0):
 		self.assert_not_in_create_box()
-		
+
 		# for modal boxes cancel is async, so:
 		if __main__.toplevel._in_create_box and not __main__.toplevel._in_create_box.is_closed():
 			__main__.toplevel._in_create_box.cancel_create_box()
@@ -44,6 +44,7 @@ class _rbtk:
 		self._rb_callback=callback
 		self._rb_units=units
 		self._rb_box=box
+		self._coolmode=coolmode
 
 		if box:
 			# convert box to relative sizes if necessary
@@ -94,8 +95,9 @@ class _rbtk:
 			# simulate a user selection of the obj 
 			drawTool = DrawTk.drawTk.GetCurrentTool()
 			point=Point((l+w/2,t+h/2))
-			drawTool.onLButtonDown(self,0,point)
-			drawTool.onLButtonUp(self,0,point)
+			if not self._coolmode:
+				drawTool.onLButtonDown(self,0,point)
+				drawTool.onLButtonUp(self,0,point)
 		else:
 			DrawTk.drawTk.SelectTool('rect', units = units)
 			DrawTk.drawTk.LimitRects(1)
@@ -153,7 +155,14 @@ class _rbtk:
 ## 				apply(self._rb_callback, rb)
 ## 			else:	
 ## 				apply(self._rb_callback,())
-			apply(self._rb_callback, ())
+			if not self._coolmode:
+				apply(self._rb_callback, ())
+			else:
+ 				if self._rb_modeless and self._rb_dirty(rb):
+ 					apply(self._rb_callback, rb)
+ 				else:	
+ 					apply(self._rb_callback,())
+			
 
 	def cancel_create_box(self):
 		"""Cancel create_box"""
@@ -206,7 +215,7 @@ class _rbtk:
 				if self._objects:
 					drawObj=self._objects[0]
 					rb=self.get_relative_coords100(drawObj._position.tuple_ps(), units = self._rb_units)
-					if self._rb_dirty(rb):
+					if self._rb_dirty(rb) and not self._coolmode:
 						self._rb_finish(win32con.IDOK)
 		return 1
 
