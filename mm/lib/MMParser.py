@@ -490,34 +490,36 @@ def parsevalue(string, typedef, context):
 
 # Test driver for tokenizer
 #
-def testtokenizer():
-	import sys
-	p = MMParser(sys.stdin)
-	try:
-		while 1: p.gettoken()
-	except EOFError:
-		print 'EOF'
-	except MSyntaxError, msg:
-		p.reporterror('<stdin>', 'Syntax error: ' + msg, sys.stderr)
+if __debug__:
+	def testtokenizer():
+		import sys
+		p = MMParser(sys.stdin)
+		try:
+			while 1: p.gettoken()
+		except EOFError:
+			print 'EOF'
+		except MSyntaxError, msg:
+			p.reporterror('<stdin>', 'Syntax error: ' + msg, sys.stderr)
 
 
 # Test driver for parser
 #
-def testparser():
-	import sys
-	import MMNode
-	context = MMNode.MMNodeContext(MMNode.MMNode)
-	p = MMParser(sys.stdin, context)
-	try:
-		x = p.getnode()
-	except EOFError:
-		print 'unexpected EOF at line', p.lineno
-		return
-	except MSyntaxError, msg:
-		if type(msg) is type(()):
-			gotten, expected = msg
-			msg = 'got ' + `gotten` + ', expected ' + `expected`
-		p.reporterror('<stdin>', 'Syntax error: ' + msg, sys.stderr)
-		return
-	import MMWrite
-	MMWrite.WriteOpenFile(x, sys.stdout)
+if __debug__:
+	def testparser():
+		import sys
+		import MMNode
+		context = MMNode.MMNodeContext(MMNode.MMNode)
+		p = MMParser(sys.stdin, context)
+		try:
+			x = p.getnode()
+		except EOFError:
+			print 'unexpected EOF at line', p.lineno
+			return
+		except MSyntaxError, msg:
+			if type(msg) is type(()):
+				gotten, expected = msg
+				msg = 'got ' + `gotten` + ', expected ' + `expected`
+			p.reporterror('<stdin>', 'Syntax error: ' + msg, sys.stderr)
+			return
+		import MMWrite
+		MMWrite.WriteOpenFile(x, sys.stdout)
