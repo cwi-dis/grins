@@ -14,7 +14,8 @@ ITEM_EVAL=5
 ITEM_ENTERKEY=6
 ITEM_QUIT=7
 ITEM_NOTE=8
-ITEMLIST_LICENSE_ALL=ITEMrange(ITEM_SPLASH, ITEM_NOTE)
+ITEM_OPEN=9
+ITEMLIST_LICENSE_ALL=ITEMrange(ITEM_SPLASH, ITEM_OPEN)
 
 ID_DIALOG_ENTERKEY=531
 ITEM_OK=1
@@ -51,6 +52,8 @@ class LicenseDialog(windowinterface.MACDialog):
 			self.cb_eval()
 		elif n == ITEM_ENTERKEY:
 			self.cb_enterkey()
+		elif n == ITEM_OPEN:
+			self.cb_open()
 		else:
 			print 'Unknown LicenseDialog item', n
 		return 1
@@ -63,12 +66,13 @@ class LicenseDialog(windowinterface.MACDialog):
 			ctl.DeactivateControl()
 
 class EnterkeyDialog(windowinterface.MACDialog):
-	def __init__(self, ok_callback, user='', org=''):
+	def __init__(self, ok_callback, user='', org='', license=''):
 		windowinterface.MACDialog.__init__(self, "License", ID_DIALOG_ENTERKEY,
 				ITEMLIST_ENTERKEY_ALL, cancel=ITEM_CANCEL, default=ITEM_OK)
 		self.ok_callback = ok_callback
 		self._setlabel(ITEM_NAME, user)
 		self._setlabel(ITEM_ORGANIZATION, org)
+		self._setlabel(ITEM_KEY, license)
 		self.setdialoginfo()
 		self.show()
 				
