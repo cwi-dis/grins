@@ -29,7 +29,6 @@ error = 'HtmlChannel.error'
 HtmlWidgets = {}
 
 def actionhook(widget, client_data, action, event, plist):
-## 	print widget, widget.Class()
 	if widget.Class() is not Xm.DrawingArea or \
 	   widget.Parent().Class() is not HTML.html:
 		return
@@ -157,36 +156,6 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.htmlw.SetValues(wh)
 		
 
-	def updatefixedanchors(self, node):
-		if self._armstate != Channel.AIDLE or \
-		   self._playstate != Channel.PIDLE:
-			if self._played_node is node:
-				# Ok, all is well, we've played it.
-				return 1
-			if self.window:
-				grab = self.window
-			else:
-				grab = 1
-			windowinterface.showmessage('Cannot recompute anchorlist (channel busy)', grab = grab)
-			return 1
-		windowinterface.setcursor('watch')
-		context = Channel.AnchorContext()
-		self.startcontext(context)
-		save_syncarm = self.syncarm
-		self.syncarm = 1
-		self.arm(node)
-		save_syncplay = self.syncplay
-		self.syncplay = 1
-		self.play(node)
-		self.stopplay(node)
-		self.syncarm = save_syncarm
-		self.syncplay = save_syncplay
-		windowinterface.setcursor('')
-		return 1
-
-#	def seekanchor(self, node, aid, args):
-#		windowinterface.showmessage('JUMP:'+`aid`+`args`)
-		
 	def do_arm(self, node, same=0):
 	        if not same:
 	        	try:
