@@ -57,9 +57,9 @@ def cleansyncarcs(node, attr):
 		else:
 			if xnode.FindMiniDocument() is root:
 				if xnode.GetType() not in leaftypes:
-					print 'Warning: sync arc to non-leaf node'
-				elif xnode.GetChannel():
-					print 'Warning: sync arc to channel-less node'
+					print 'Warning: sync arc to non-leaf node (%s->%s)' % (node.GetAttrDef('name', '#%s' % node.GetUID()), xnode.GetAttrDef('name', '#%s' % xnode.GetUID()))
+				elif not xnode.GetChannel():
+					print 'Warning: sync arc to channel-less node (%s->%s)' % (node.GetAttrDef('name', '#%s' % node.GetUID()), xnode.GetAttrDef('name', '#%s' % xnode.GetUID()))
 			else:
 				# other end in other minidoc: remove
 				dellist.append(i)
@@ -91,8 +91,9 @@ def isbadlink(root, link):
 			alist = node.GetAttrDef('anchorlist', [])
 			for a in alist:
 				if aid1 == a[A_ID]:
-					srcok = 1
-					break
+					if a[A_TYPE] not in DestOnlyAnchors:
+						srcok = 1
+						break
 	if uidmap.has_key(uid2):
 		node = uidmap[uid2]
 		if node.GetRoot() == root:
@@ -101,7 +102,7 @@ def isbadlink(root, link):
 				if aid2 == a[A_ID]:
 					dstok = 1
 					break
-	return not srcok and not dstok
+	return not srcok or not dstok
 
 def cleanlinks(root):
 	global changed
