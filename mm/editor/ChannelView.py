@@ -244,7 +244,7 @@ class ChannelView(ViewDialog):
 
 		# Calculate our position in relative time
 		top = self.nodetop
-		height = 1.0 - top - self.new_displist.fontheight()
+		height = 1.0 - top - self.new_displist.strsize('m')[0]
 		vt0, vt1 = self.timerange()
 		dt = vt1 - vt0
 
@@ -262,18 +262,18 @@ class ChannelView(ViewDialog):
 			i = list.index(channel)
 		except ValueError:
 			return 0, 0
-		width = float(self.timescaleborder) / nchannels
-		x, y = (i + 0.1) * width, (i + 0.9) * width
+		height = float(self.timescaleborder) / nchannels
+		x, y = (i + 0.1) * height, (i + 0.9) * height
 		channel.chview_map = x, y
 		return x, y
 
-	def channelgapindex(self, x):
+	def channelgapindex(self, y):
 		list = self.visiblechannels()
 		nchannels = len(list)
 		if nchannels == 0:
 		    return 0
-		width = float(self.timescaleborder) / nchannels
-		rv = int((x+width/2)/width)
+		height = float(self.timescaleborder) / nchannels
+		rv = int((y+height/2)/height)
 		if rv < 0:
 		    rv = 0
 		elif rv > nchannels:
@@ -315,9 +315,9 @@ class ChannelView(ViewDialog):
 			self.new_displist.close()
 		self.new_displist = displist
 		bl, fh, ps = displist.usefont(f_title)
-		self.channelbottom = 4 * fh
-		self.nodetop = 6 * fh
-		self.timescaleborder = 1.0 - displist.strsize('999999')[0]
+		self.channelright = displist.strsize('999999')[0]
+		self.nodetop = self.channelright * 1.5
+		self.timescaleborder = 1.0 - 4 * fh
 
 		self.objects = []
 		self.focus = self.lockednode = None
@@ -692,7 +692,7 @@ class ChannelView(ViewDialog):
 	def finish_channel(self, x, y):
 	        placement_type = self.placing_channel
 	        self.placing_channel = 0
-		index = self.channelgapindex(x)
+		index = self.channelgapindex(y)
 	        windowinterface.setcursor('')
 		editmgr = self.editmgr
 		if not editmgr.transaction():
@@ -808,8 +808,8 @@ class GO:
 		str = '%d more' % (total-visible)
 		d = self.mother.new_displist
 		d.fgcolor(TEXTCOLOR)
-		StringStuff.centerstring(d, self.mother.timescaleborder, 0,
-					 1.0, self.mother.channelbottom, str)
+		StringStuff.centerstring(d, 0, self.mother.timescaleborder,
+					 self.mother.channelright, 1.0, str)
 
 	def select(self):
 		# Make this object the focus
@@ -883,28 +883,28 @@ class TimeScaleBox(GO):
 		return '<TimeScaleBox instance>'
 
 	def reshape(self):
-		self.left = self.mother.timescaleborder + \
-			  self.mother.new_displist.strsize(' ')[0]
-		self.right = 1.0
+		self.top = self.mother.timescaleborder + \
+			   self.mother.new_displist.fontheight()
+		self.bottom = 1.0
 		t0, t1 = self.mother.timerange()
-		self.top, self.bottom = self.mother.maptimes(t0, t1)
+		self.left, self.right = self.mother.maptimes(t0, t1)
 		self.ok = 1
 
 	def drawfocus(self):
 		l, t, r, b = self.left, self.top, self.right, self.bottom
-		height = b-t
-		if height <= 0:
+		width = r-l
+		if width <= 0:
 			return
 		d = self.mother.new_displist
-		f_fontheight = d.fontheight()
+		f_width = d.strsize('x')[0]
 		d.fgcolor(BORDERCOLOR)
 		# Draw rectangle around boxes
-		hmargin = d.strsize('x')[0] / 4
-		vmargin = d.fontheight() / 9
+		hmargin = d.strsize('x')[0] / 9
+		vmargin = d.fontheight() / 4
 		l = l + hmargin
 		t = t + vmargin
-		r = (4*l+r)/5
-		b = b - vmargin
+		r = r - hmargin
+		b = (4*t+b)/5
 		d.drawbox((l, t, r - l, b - t))
 		# Compute number of division boxes
 		t0, t1 = self.mother.timerange()
@@ -913,7 +913,7 @@ class TimeScaleBox(GO):
 		# Compute distance between numeric indicators
 		div = 1
 		i = 0
-		while (n/div) * 1.5 * f_fontheight >= height:
+		while (n/div) * 1.5 * f_width >= width:
 			if i%3 == 0:
 				div = div*2
 			elif i%3 == 1:
@@ -931,21 +931,21 @@ class TimeScaleBox(GO):
 			#
 			it0 = t0 + i*10
 			it1 = it0 + 5
-			t, b = self.mother.maptimes(it0, it1)
-			t = max(t, self.top)
-			b = min(b, self.bottom)
-			if b <= t:
+			l, r = self.mother.maptimes(it0, it1)
+			l = max(l, self.left)
+			r = min(r, self.right)
+			if r <= l:
 				continue
 			d.drawfbox(BORDERCOLOR, (l, t, r - l, b - t))
 			if i%div <> 0:
 				continue
 			StringStuff.centerstring(d,
-				  r, t-f_fontheight/2,
-				  self.right, t+f_fontheight/2,
+				  l-f_width*2, b,
+				  l+f_width*2, self.bottom,
 				  `i*10`)
 		for i in self.mother.discontinuities:
-		        t, b = self.mother.maptimes(i, i)
-			d.drawline(ANCHORCOLOR, [(l, t), (r, t)])
+		        l, r = self.mother.maptimes(i, i)
+			d.drawline(ANCHORCOLOR, [(l, t), (l, b)])
 			
 
 
@@ -994,17 +994,17 @@ class ChannelBox(GO):
 		self.mother.toplevel.setready()
 
 	def reshape(self):
-		left, right = self.mother.mapchannel(self.channel)
-		if left == right:
+		top, bottom = self.mother.mapchannel(self.channel)
+		if top == bottom:
 			self.ok = 0
 			return
-		self.left = left
-		self.right = right
-		self.top = 0
-		self.bottom = self.mother.channelbottom
+		self.left = 0
+		self.right = self.mother.channelright
+		self.top = top
+		self.bottom = bottom
 		self.xcenter = (self.left + self.right) / 2
 		self.ycenter = (self.top + self.bottom) / 2
-		self.farbottom = 1.0
+		self.farright = 1.0
 		self.ok = 1
 
 	def ishit(self, x, y):
@@ -1052,16 +1052,21 @@ class ChannelBox(GO):
 		d.fgcolor(TEXTCOLOR)
 		StringStuff.centerstring(d, l, t, r, b, self.name)
 
-		# Draw the channel type
-		ctype = '(' + self.ctype + ')'
-		StringStuff.centerstring(d, l, b, r, b + d.fontheight(), ctype)
+## 		# Draw the channel type
+		import ChannelMap
+		map = ChannelMap.shortcuts
+		if map.has_key(self.ctype):
+			C = map[self.ctype]
+		else:
+			C = '?'
+		StringStuff.centerstring(d, r, t, self.mother.nodetop, b, C)
 
 	def drawline(self):
 		# Draw a gray and a white vertical line
 		d = self.mother.new_displist
 		d.fgcolor(BORDERCOLOR)
-		d.drawline(BORDERCOLOR, [(self.xcenter, self.bottom),
-					 (self.xcenter, self.farbottom)])
+		d.drawline(BORDERCOLOR, [(self.right, self.ycenter),
+					 (self.farright, self.ycenter)])
 
 	# Menu stuff beyond what GO offers
 
@@ -1259,29 +1264,29 @@ class NodeBox(GO):
 	def reshape(self):
 		# Compute ideal box coordinates
 		channel = self.node.GetChannel()
-		left, right = self.mother.mapchannel(channel)
-		top, bottom = self.mother.maptimes(self.node.t0, self.node.t1)
+		left, right = self.mother.maptimes(self.node.t0, self.node.t1)
+		top, bottom = self.mother.mapchannel(channel)
 		if self.node.timing_discont:
 		    self.mother.discontinuities.append(
 			self.node.t0+self.node.timing_discont)
 
-		vmargin = self.mother.new_displist.fontheight() / 15
-		top = top + vmargin
-		bottom = bottom - vmargin
+		hmargin = self.mother.new_displist.strsize('x')[0] / 15
+		left = left + hmargin
+		right = right - hmargin
 
 		# Move top down below the previous node if necessary
-		if top < channel.lowest:
-			top = channel.lowest
+		if left < channel.lowest:
+			left = channel.lowest
 
 		# Keep space for at least one line of text
 		# bottom = max(bottom, top+f_fontheight-2)
-		if top + self.mother.new_displist.fontheight() * 1.2 > bottom:
-		    bottom = top + self.mother.new_displist.fontheight() * 1.2
+		if left + self.mother.new_displist.strsize('x')[0] * 1.2 > right:
+		    right = left + self.mother.new_displist.strsize('x')[0] * 1.2
 		    self.mother.discontinuities.append(
 			(self.node.t0+self.node.t1)/2)
 
 		# Update channel's lowest node
-		channel.lowest = bottom
+		channel.lowest = right
 
 		self.left, self.top, self.right, self.bottom = \
 			left, top, right, bottom
@@ -1316,16 +1321,16 @@ class NodeBox(GO):
 			d.drawfpolygon(ALTNODECOLOR, [(r, t), (r, b), (l, b)])
 
 		# If there are anchors on this node,
-		# draw a small orange box in the bottom left corner
+		# draw a small orange box in the top right corner
 		if self.hasanchors:
-			d.drawfbox(ANCHORCOLOR, (l, b-vaboxsize,
+			d.drawfbox(ANCHORCOLOR, (r-haboxsize, t,
 						 haboxsize, vaboxsize))
 
 		# If there is a pausing anchor,
-		# draw an orange line at the bottom
+		# draw an orange line at the right
 		if self.haspause:
-			d.drawfbox(ANCHORCOLOR, (l, b-vaboxsize,
-						 r - l, vaboxsize))
+			d.drawfbox(ANCHORCOLOR, (r-haboxsize, t,
+						 haboxsize, b-t))
 
 		# If this is a pausing node
 		# draw a small orange box in the bottom right corner
@@ -1421,19 +1426,19 @@ class ArcBox(GO):
 		except AttributeError:
 			self.ok = 0
 			return
-		if self.sside: self.sy = sobj.bottom
-		else: self.sy = sobj.top
-		if self.dside: self.dy = dobj.bottom
-		else: self.dy = dobj.top
-		self.sx = (sobj.left + sobj.right) / 2
-		self.dx = (dobj.left + dobj.right) / 2
+		if self.sside: self.sx = sobj.right
+		else: self.sx = sobj.left
+		if self.dside: self.dx = dobj.right
+		else: self.dx = dobj.left
+		self.sy = (sobj.top + sobj.bottom) / 2
+		self.dy = (dobj.top + dobj.bottom) / 2
 		if self.sx == self.dx and self.sy == self.dy:
 			# start and end of arrow are the same
 			# force a difference by moving up the start
-			dy = 0.0000000000001
-			while self.sy == self.dy:
-				dy = dy * 10
-				self.sy = self.sy - dy
+			dx = 0.0000000000001
+			while self.sx == self.dx:
+				dx = dx * 10
+				self.sx = self.sx - dx
 		self.ok = 1
 
 	def ishit(self, x, y):
