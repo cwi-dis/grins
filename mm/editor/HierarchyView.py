@@ -403,11 +403,11 @@ class HierarchyView(HierarchyViewDialog):
 			from mimetypes import guess_type
 			mtype = guess_type(url)[0]
 			interior = (mtype != 'image/vnd.rn-realpix')
-			if interior and \
-			   not MMAttrdefs.getattr(obj.node, 'file'):
-				windowinterface.showmessage('can only edit a RealPix node if the URL has been filled in', mtype = 'error')
-				self.render()
-				return
+##			if interior and \
+##			   not MMAttrdefs.getattr(obj.node, 'file'):
+##				windowinterface.showmessage('can only edit a RealPix node if the URL has been filled in', mtype = 'error')
+##				self.render()
+##				return
 		else:
 			interior = (obj.node.GetType() in MMNode.interiortypes)
 		# make URL relative to document
@@ -432,6 +432,12 @@ class HierarchyView(HierarchyViewDialog):
 					i = -1
 			self.create(0, url, i)
 		else:
+			ctx = obj.node.GetContext()
+			if settings.get('lightweight') and \
+			   obj.node.GetChannelName() not in ctx.compatchannels(url):
+				self.render()
+				windowinterface.showmessage("file not compatible with channel type `%s'" % obj.node.GetChannelType(), mtype = 'error')
+				return
 			em = self.editmgr
 			if not em.transaction():
 				self.render()
@@ -560,6 +566,7 @@ class HierarchyView(HierarchyViewDialog):
 			if chlist:
 				chname = chlist[0]
 			elif settings.get('lightweight'):
+				self.render()
 				windowinterface.showmessage(
 					'No compatible channels for this file',
 					mtype = 'error')
