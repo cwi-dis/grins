@@ -4337,7 +4337,8 @@ class AttrEditForm(GenFormView):
 
 		a = self._attriblist[0]
 
-		self._baseURL = a.wrapper.context.baseurl
+		if hasattr(a.wrapper, 'context'):
+			self._baseURL = a.wrapper.context.baseurl
 
 		if hasattr(a.wrapper,'node'):
 			self._node = a.wrapper.node
