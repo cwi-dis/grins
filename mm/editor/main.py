@@ -72,8 +72,17 @@ class Main:
 			wtd = [glfd, self._mmfd]
 			for top in self.tops:
 				wtd = wtd + top.select_fdlist
-			ifdlist, ofdlist, efdlist = \
-				 select.select(wtd, [], [], 0.1)
+			try:
+				ifdlist, ofdlist, efdlist = \
+					 select.select(wtd, [], [], 0.1)
+			except select.error, arg:
+				if type(arg) is type(()) and \
+				   arg[0] == 4: # interrupted system call
+					# ignore errors due to interrupts
+					ifdlist = ofdlist = efdlist = []
+				else:
+					# re-raise
+					raise select.error, arg
 ##			if ifdlist: print 'select:',`wtd`,`ifdlist`
 			if self._mmfd in ifdlist:
 				self._mmcallback()
@@ -104,12 +113,22 @@ class Main:
 		for top in self.tops:
 			ok = top.save_to_file(top.filename)
 
+def handler(sig, frame):
+	import pdb
+	pdb.set_trace()
+
 def main():
 	#
 	try:
 		opts, files = getopt.getopt(sys.argv[1:], 'qpj:snh:CHPSL')
 	except getopt.error, msg:
 		usage(msg)
+	try:
+		import signal, pdb
+	except ImportError:
+		pass
+	else:
+		signal.signal(signal.SIGINT, handler)
 	if not files:
 		usage('No files specified')
 	#

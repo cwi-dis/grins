@@ -1025,12 +1025,24 @@ class ChannelBox(GO):
 		# Hook for newchannelcall to determine placement
 		return self.mother.context.channelnames.index(self.name)
 
+	def highlight(self):
+		channels = self.mother.toplevel.player.channels
+		if channels.has_key(self.name):
+			channels[self.name].highlight()
+
+	def unhighlight(self):
+		channels = self.mother.toplevel.player.channels
+		if channels.has_key(self.name):
+			channels[self.name].unhighlight()
+
 	commandlist = c = GO.commandlist[:]
 	char, text, proc = c[-1]
 	c[-1] = char, text + '%l', proc
 	c.append('i', '', attrcall)
 	c.append('a', 'Channel attr...', attrcall)
 	c.append('d', 'Delete channel',  delcall)
+	c.append('', 'Highlight window', highlight)
+	c.append('', 'Unhighlight window', unhighlight)
 	menutitle = 'Channel ops'
 	menu = MenuMaker.MenuObject().init(menutitle, commandlist)
 
