@@ -32,12 +32,12 @@ class HierarchyViewDialog(ViewDialog):
 				('New node', [
 					('Before focus', NEW_BEFORE),
 					('After focus', NEW_AFTER),
-					('Under focus', NEW_UNDER),
+					('Child', NEW_UNDER),
 					('Above focus', [
 						('Sequential', NEW_SEQ),
 						('Parallel', NEW_PAR),
+						('Switch', NEW_ALT),
 						('Choice', NEW_CHOICE),
-						('Alternate', NEW_ALT),
 						]),
 					]),
 				('Delete focus', DELETE),
@@ -45,9 +45,9 @@ class HierarchyViewDialog(ViewDialog):
 				('Cut focus', CUT),
 				('Copy focus', COPY),
 				('Paste', [
-					('Before focus', PASTE_BEFORE),
-					('After focus', PASTE_AFTER),
-					('Under focus', PASTE_UNDER),
+					('Before', PASTE_BEFORE),
+					('After', PASTE_AFTER),
+					('As child', PASTE_UNDER),
 					])
 				]),
 			('Node', [
