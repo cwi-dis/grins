@@ -115,7 +115,7 @@ inline bool JpgDecoder::can_decode()
 		return true;
 	return false;
 	}
-DIBSurf* JpgDecoder::decode()
+inline DIBSurf* JpgDecoder::decode()
 	{
 	HMODULE hDLL = LoadLibrary(TEXT("libjpeg.dll"));
 	if(hDLL == NULL) 
@@ -182,6 +182,7 @@ DIBSurf* JpgDecoder::decode()
 		(*m_ef)("CreateDIBSection", "");
 		return NULL;
 		}
+
 	surface<le::trible> *psurf = new surface<le::trible>(width, height, 24, pBits);
 
 	// Process data
@@ -200,11 +201,11 @@ DIBSurf* JpgDecoder::decode()
 	return new DIBSurf(hBmp, psurf);
 	}
 
-void JpgDecoder::write_pixel_rows(j_decompress_ptr cinfo, surface<le::trible> *psurf)
+inline void JpgDecoder::write_pixel_rows(j_decompress_ptr cinfo, surface<le::trible> *psurf)
 	{
 	JSAMPROW inptr = m_dbuffer[0];
 	le::trible* outptr = psurf->get_row(m_cur_output_row);
-	for(JDIMENSION col = 0; col<=cinfo->output_width;col++) 
+	for(JDIMENSION col = 0; col < cinfo->output_width; col++) 
 		{
 		le::trible t;
 		t.r = *inptr++;
