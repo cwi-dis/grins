@@ -13,7 +13,7 @@ CAUSES = [				# What causes the event
 	'node',				# extrainfo is a pointer to an MMNode or string??
 	'region',			# extrainfo is a pointer or string repr a region.
 	'accesskey',			# extrainfo is the key pressed.
-	'marker',			# er.. I admit that I don't understand this.
+	#'marker',			# er.. I admit that I don't understand this.
 	'wallclock',			# extrainfo is the time.
 	# What else??
 	]
@@ -30,11 +30,12 @@ EVENTS_NODE = [				# What the event actually is.
 	'beginEvent',
 	'endEvent',			
 	'repeatEvent',			# NO OFFSET!
+	'marker',
 	]
 
 EVENTS_REGION = [			# no offsets at all!
 	#'activateEvent',
-	#'focusInEvent',		# I'm not sure about these.
+	#'focusInEvent',		# These have all been removed from SMIL2
 	#'focusOutEvent',
 	#'inBoundsEvent',
 	#'outOfBoundsEvent',
@@ -88,16 +89,18 @@ class EventStruct:
 			e = self.get_event()
 			if e.startswith('repeat'):
 				e = e + '(' + `self.get_repeat()` + ')'
-			s.__init__(self._node, action, srcnode = s.srcnode, event=e,
-				   delay=self.get_offset())
+			if e == 'marker':
+				s.__init__(self._node, action, srcnode = s.srcnode, marker = self.get_marker(),
+					   delay=self.get_offset())
+			else:
+				s.__init__(self._node, action, srcnode = s.srcnode, event=e,
+					   delay=self.get_offset())
 		elif c == 'region' and self._setregion:
 			ch = self.get_region()
 			channel = self._node.context.channeldict[ch]
 			s.__init__(self._node, action, channel=channel, event=self.get_event(), delay = self.get_offset())
 		elif c == 'accesskey' and self._setkey:
 			s.__init__(self._node, action, accesskey=self._setkey, delay=self.get_offset())
-		elif c == 'marker' and self._setmarker:
-			s.__init__(self._node, action, marker=self._setmarker, delay=0)
 		elif c == 'delay':
 			s.__init__(self._node, action, srcnode='syncbase', delay=self.get_offset())
 		elif c == 'wallclock':
@@ -125,8 +128,8 @@ class EventStruct:
 			self.cause = 'accesskey'
 			self.thing = x.accesskey
 		elif x.marker is not None:
-			self.cause = 'marker'
-			self.event = None
+			self.cause = 'node'
+			self.event = 'marker'
 			self.thing = x.marker
 		elif x.channel is not None:
 			self.cause = 'region'
@@ -142,7 +145,8 @@ class EventStruct:
 				print "DEBUG: EventEditor.__init_set_vars got strange looking event.", x.srcnode
 		# The event.
 		if self.cause == 'node' or self.cause == 'region':
-			self.event = x.event
+			if not self.get_event()=='marker':
+				self.event = x.event
 
 	def clear_vars(self):
 		# Resets all the variables.
@@ -171,16 +175,6 @@ class EventStruct:
 		s = self._syncarc
 		if c == 'indefinite':
 			return c
-		elif c == 'marker':
-			if s is None and self._setmarker is None:
-				marker = "?"
-			elif s is None and self._setmarker:
-				marker = self._setmarker
-			elif s.marker:
-				marker = s.marker
-			else:
-				marker = ""
-			return "marker('"+marker+"')"
 		elif c == 'wallclock':
 			wc = self.get_wallclock()
 			return SMILTreeWrite.wallclock2string(wc)
@@ -204,7 +198,7 @@ class EventStruct:
 			if e.startswith('repeat'):
 				r = r + "(" + `self.get_repeat()` + ")"
 			elif e.startswith('marker'):
-				print "TODO: markers"
+				r = r + "(" + self.get_marker() + ')'
 			##if isinstance(s, MMNode.MMSyncArc):
 ##				if isinstance(s.srcnode, MMNode.MMNode):
 ##					r = s.srcnode.GetName() + "." + self.get_event()
@@ -243,7 +237,7 @@ class EventStruct:
 			return self.cause
 	def set_cause(self, newcause):
 		assert newcause in CAUSES
-		if newcause in ['node', 'marker'] and not isinstance(self._syncarc.srcnode, MMNode.MMNode):
+		if newcause == 'node' and not isinstance(self._syncarc.srcnode, MMNode.MMNode):
 			# Then a node is required
 			return
 		elif newcause in ['node', 'delay', 'accesskey']:
@@ -418,3 +412,24 @@ class EventStruct:
 		for i in viewports:
 			names.append(i.name)
 		return names
+
+	def get_node(self):
+		if self._setnode:
+			return self._setnode
+		else:
+			n = self._syncarc.srcnode.name
+			return n
+
+#       def set_node(self, node): ... how? Where does 'node' come from?
+
+	def get_marker(self):
+		if self._setmarker:
+			return self._setmarker
+		else:
+			if self._syncarc.marker:
+				return self._syncarc.marker
+			else:
+				return "?"
+
+	def set_marker(self, value):
+		self._setmarker = value
