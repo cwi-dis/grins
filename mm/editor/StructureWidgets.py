@@ -19,7 +19,7 @@ def create_MMNode_widget(node, root):
 			return UnseenVerticalWidget(node, root)
 		if node.parent and node.parent.parent == None and ntype == 'par':
 			# Don't show second-level par either
-			return UnseenVerticalWidget(node, root, root.timescale)
+			return UnseenVerticalWidget(node, root)
 		if node.parent and node.parent.parent and node.parent.parent.parent == None and ntype == 'seq':
 			# And show secondlevel seq as a timestrip
 			return TimeStripSeqWidget(node, root)
@@ -78,22 +78,37 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.node = None
 
 	def adddependencies(self):
-		t0, t1, t2, download, begindelay = self.node.GetTimes()
-		if t0 != t2:
+		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
+		tend = t1
+		if t0 != tend:
 			w, h = self.get_minsize_abs()
-			self.root.timemapper.adddependency(t0, t2, w)
+			self.root.timemapper.adddependency(t0, tend, w)
 		
-	def addcollisions(self, mastert0, mastert2):
+	def addcollisions(self, mastert0, mastertend):
 		edge = sizes_notime.HEDGSIZE
-		t0, t1, t2, download, begindelay = self.node.GetTimes()
-		if t0 == t2:
+		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
+		tend = t1
+		if self.root.timescale and download+begindelay:
+			# Slightly special case. We register a collision on t0, and then continue
+			# computing with t0 minus the delays
+			self.root.timemapper.addcollision(t0, edge)
+			t0 = t0 - (download+begindelay)
+		ledge = redge = edge
+		if t0 == tend:
 			w, h = self.get_minsize_abs()
 			if t0 == mastert0:
-				return w+edge, edge
-			if t0 == mastert2:
-				return egde, w+edge
-			self.root.timemapper.addcollision(t0, w+2*edge)
-		return edge, edge
+				ledge = ledge + w
+			elif t0 == mastertend:
+				redge = redge + w
+			else:
+				self.root.timemapper.addcollision(t0, w+2*edge)
+		if t0 != mastert0:
+			self.root.timemapper.addcollision(t0, ledge)
+			ledge = 0
+		if tend != mastertend:
+			self.root.timemapper.addcollision(tend, redge)
+			redge = 0
+		return ledge, redge
 		
 	#   
 	# These a fillers to make this behave like the old 'Object' class.
@@ -101,7 +116,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def select(self):
 		Widgets.Widget.select(self)
 		self.root.dirty = 1
-		print 'DBG: selected node t0=%d, t1=%d, t2=%d, download=%d, delay=%d'%self.node.GetTimes()
+##		print 'DBG: selected node t0=%f, t1=%f, t2=%f, download=%f, delay=%f'%self.node.GetTimes('bandwidth')
 		
 	def deselect(self):
 		self.unselect()
@@ -119,8 +134,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		# print "DEBUG: set_infoicon called!"
 		self.node.infoicon = icon
 		self.node.errormessage = msg
-		self.root.dirty = 1 # The root needs redrawing
-		self.root.draw_scene()
+		# XXX This is fiendishly expensive.
+##		self.root.dirty = 1 # The root needs redrawing
+##		self.root.draw_scene()
 
 	def getlinkicon(self):
 		# Returns the icon to show for incoming and outgiong hyperlinks.
@@ -376,7 +392,7 @@ class StructureObjWidget(MMNodeWidget):
 		for ch in self.children:
 			ch.adddependencies()
 
-	def addcollisions(self, mastert0, mastert2):
+	def addcollisions(self, mastert0, mastertend):
 		for ch in self.children:
 			ch.addcollisions(None, None)
 		return 0, 0
@@ -387,7 +403,7 @@ class SeqWidget(StructureObjWidget):
 	def __init__(self, node, root):
 		StructureObjWidget.__init__(self, node, root)
 		has_drop_box = not MMAttrdefs.getattr(node, 'project_readonly')
-		if has_drop_box:
+		if root.usetimestripview and has_drop_box:
 			self.dropbox = DropBoxWidget(node, root)
 		else:
 			self.dropbox = None
@@ -395,6 +411,10 @@ class SeqWidget(StructureObjWidget):
 			self.channelbox = ChannelBoxWidget(self, node, root)
 		else:
 			self.channelbox = None
+		if root.timescale and not node.parent:
+			self.timeline = TimelineWidget(node, root)
+		else:
+			self.timeline = None
 
 	def __repr__(self):
 		return "Seq, name = " + self.name
@@ -416,11 +436,9 @@ class SeqWidget(StructureObjWidget):
 		if self.channelbox and not self.iscollapsed():
 			self.channelbox.draw(display_list)
 			
-		if self.root.pushbackbars and not self.iscollapsed():
-			if not self.iscollapsed():
-				for i in self.children:
-					if isinstance(i, MediaWidget):
-						i.pushbackbar.draw(display_list)
+		for i in self.children:
+			if isinstance(i, MediaWidget) and i.pushbackbar:
+				i.pushbackbar.draw(display_list)
 
 		# Draw those funny vertical lines.
 		if self.iscollapsed():
@@ -438,6 +456,8 @@ class SeqWidget(StructureObjWidget):
 		StructureObjWidget.draw(self, display_list)
 		if self.dropbox and not self.iscollapsed():
 			self.dropbox.draw(display_list)
+		if self.timeline:
+			self.timeline.draw(display_list)
 
 	def get_nearest_node_index(self, pos):
 		# Return the index of the node at the specific drop position.
@@ -527,14 +547,15 @@ class SeqWidget(StructureObjWidget):
 			mw = mw + sizes_notime.GAPSIZE
 			
 		for i in self.children:
-			if self.root.pushbackbars and isinstance(i, MediaWidget):
-				i.compute_download_time() # Calculate the push-over for this bar.
-				pushover = i.downloadtime_lag
-			else:
-				pushover = 0;
+			pushover = 0
+##			if self.root.pushbackbars and isinstance(i, MediaWidget):
+##				i.compute_download_time() # Calculate the push-over for this bar.
+##				pushover = i.downloadtime_lag
+##			else:
+##				pushover = 0
 			w,h = i.get_minsize_abs()
 			if h > mh: mh=h
-			mw = mw + w + pushover;
+			mw = mw + w + pushover
 			
 		mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE
 		
@@ -544,6 +565,11 @@ class SeqWidget(StructureObjWidget):
 		mh = mh + 2*sizes_notime.VEDGSIZE
 		# Add the title box.
 		mh = mh + sizes_notime.TITLESIZE
+		if self.timeline:
+			w, h = self.timeline.get_minsize_abs()
+			if w > mw:
+				mw = w
+			mh = mh + h
 		return mw, mh
 
 	def recalc(self):
@@ -558,6 +584,9 @@ class SeqWidget(StructureObjWidget):
 			return
 		
 		l, t, r, b = self.pos_abs
+		if self.timeline:
+			tl_w, tl_h = self.timeline.get_minsize_abs()
+			b = b - tl_h
 		# print "SeqWidget.recalc: l,t,r,b = ", l,t,r,b
 		min_width, min_height = self.get_minsize()
 		
@@ -587,26 +616,28 @@ class SeqWidget(StructureObjWidget):
 			l = l + w + self.get_relx(sizes_notime.GAPSIZE)
 		for chindex in range(len(self.children)):
 			medianode = self.children[chindex]
-			if self.root.pushbackbars and isinstance(medianode, MediaWidget):
-				# print "DEBUG: pushing bar forward. ", medianode
-				l = l + medianode.downloadtime_lag;
+##			if self.root.pushbackbars and isinstance(medianode, MediaWidget):
+##				# print "DEBUG: pushing bar forward. ", medianode
+##				l = l + medianode.downloadtime_lag;
 			w,h = medianode.get_minsize()
 			thisnode_free_width = freewidth_per_child
 			# Give the node the free width.
-			t0, t1, t2, download, begindelay = medianode.node.GetTimes()
+			t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
+			tend = t1
+			# First compute pushback bar position
 			if self.root.timescale:
 				lmin = self.root.timemapper.time2pixel(t0)
 				if l < lmin:
 					l = lmin
 			r = l + w + thisnode_free_width
 			if self.root.timescale:
-				rmin = self.root.timemapper.time2pixel(t2)
-				# t2 is the fill-time, so for fill=hold it may extend past
+				rmin = self.root.timemapper.time2pixel(tend)
+				# tend may be t2, the fill-time, so for fill=hold it may extend past
 				# the begin of the next child. We have to truncate in that
 				# case.
 				if chindex < len(self.children)-1:
 					nextch = self.children[chindex+1]
-					rminmax = self.root.timemapper.time2pixel(nextch.node.GetTimes()[0])
+					rminmax = self.root.timemapper.time2pixel(nextch.node.GetTimes('bandwidth')[0])
 					if rmin > rminmax:
 						rmin = rminmax
 				if r < rmin:
@@ -622,20 +653,27 @@ class SeqWidget(StructureObjWidget):
 			
 			self.dropbox.moveto((l,t,r,b))
 		
+		if self.timeline:
+			l, t, r, b = self.pos_abs
+			tl_w, tl_h = self.timeline.get_minsize_abs()
+			self.timeline.moveto((l, b-tl_h, r, b))
+
 		StructureObjWidget.recalc(self)
 
 	def adddependencies(self):
 		# Sequence widgets need a special adddependencies, because we want to calculate the
 		# time->pixel mapping without the channelbox and dropbox
-		t0, t1, t2, download, begindelay = self.node.GetTimes()
-		if t0 != t2:
+		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
+		tend = t1
+		if t0 != tend:
 			w, h = self.get_minsize_abs(ignoreboxes=1)
-			self.root.timemapper.adddependency(t0, t2, w)
+			self.root.timemapper.adddependency(t0, tend, w)
 		for ch in self.children:
 			ch.adddependencies()
 		
-	def addcollisions(self, mastert0, mastert2):
-		t0, t1, t2, download, begindelay = self.node.GetTimes()
+	def addcollisions(self, mastert0, mastertend):
+		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
+		tend = t1
 		maxneededpixel0 = sizes_notime.HEDGSIZE
 		maxneededpixel1 = sizes_notime.HEDGSIZE
 		if self.channelbox:
@@ -645,18 +683,19 @@ class SeqWidget(StructureObjWidget):
 			mw, mw =self.dropbox.get_minsize_abs()
 			maxneededpixel1 = maxneededpixel1 + mw + sizes_notime.GAPSIZE
 		time_to_collision = {t0: maxneededpixel0}
-		time_to_collision[t2] = time_to_collision.get(t2, 0) + maxneededpixel1
+		time_to_collision[tend] = time_to_collision.get(tend, 0) + maxneededpixel1
 		prevneededpixel = 0
 		for ch in self.children:
-			thist0, dummy, thist2, dummy, dummy = self.node.GetTimes()
-			neededpixel0, neededpixel1 = ch.addcollisions(thist0, thist2)
+			thist0, thist1, thist2, dummy, dummy = self.node.GetTimes('bandwidth')
+			thistend = thist1
+			neededpixel0, neededpixel1 = ch.addcollisions(thist0, thistend)
 			time_to_collision[thist0] = time_to_collision.get(thist0, 0) + neededpixel0
-			time_to_collision[thist2] = time_to_collision.get(thist2, 0) + neededpixel1
+			time_to_collision[thistend] = time_to_collision.get(thistend, 0) + neededpixel1
 		maxneededpixel0 = time_to_collision[t0]
 		del time_to_collision[t0]
-		if time_to_collision.has_key(t2):
-			maxneededpixel1 = time_to_collision[t2]
-			del time_to_collision[t2]
+		if time_to_collision.has_key(tend):
+			maxneededpixel1 = time_to_collision[tend]
+			del time_to_collision[tend]
 		else:
 			maxneededpixel1 = 0
 		for time, pixel in time_to_collision.items():
@@ -665,8 +704,8 @@ class SeqWidget(StructureObjWidget):
 		if t0 != mastert0:
 			self.root.timemapper.addcollision(t0, maxneededpixel0)
 			maxneededpixel0 = 0
-		if t2 != mastert2:
-			self.root.timemapper.addcollision(t2, maxneededpixel1)
+		if tend != mastertend:
+			self.root.timemapper.addcollision(tend, maxneededpixel1)
 			maxneededpixel1 = 0
 		return maxneededpixel0, maxneededpixel1
 
@@ -848,9 +887,9 @@ class UnseenVerticalWidget(StructureObjWidget):
 	# The top level par that doesn't get drawn.
 	HAS_COLLAPSE_BUTTON = 0
 
-	def __init__(self, node, root, wanttimescale=0):
+	def __init__(self, node, root):
 		StructureObjWidget.__init__(self, node, root)
-		if wanttimescale:
+		if root.timescale:
 			self.timeline = TimelineWidget(node, root)
 		else:
 			self.timeline = None
@@ -929,17 +968,18 @@ class UnseenVerticalWidget(StructureObjWidget):
 			# r = l + w # Wrap the node to it's minimum size.
 			this_l = l
 			this_r = r
-			t0, t1, t2, download, begindelay = medianode.node.GetTimes()
+			t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
+			tend = t1
 			if self.root.timescale:
 				lmin = self.root.timemapper.time2pixel(t0)
 				if this_l < lmin:
 					this_l = lmin
 			if self.root.timescale:
-				rmin = self.root.timemapper.time2pixel(t2)
+				rmin = self.root.timemapper.time2pixel(tend)
 				if this_r < rmin:
 					this_r = rmin
 				else:
-					rmax = self.root.timemapper.time2pixel(t2, align='right')
+					rmax = self.root.timemapper.time2pixel(tend, align='right')
 					if this_r > rmax:
 						this_r = rmax
 			medianode.moveto((this_l,t,this_r,b))
@@ -964,7 +1004,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 		for ch in self.children:
 			ch.adddependencies()
 		
-	def addcollisions(self, mastert0, mastert2):
+	def addcollisions(self, mastert0, mastertend):
 		for ch in self.children:
 			ch.addcollisions(None, None)
 
@@ -1027,12 +1067,12 @@ class VerticalWidget(StructureObjWidget):
 
 		for i in self.children:
 			w,h = i.get_minsize_abs()
-			if self.root.pushbackbars and isinstance(i, MediaWidget):
-				i.compute_download_time()
-				pushover = i.downloadtime_lag
-				w = w + pushover
-			else:
-				pushover = 0.0
+##			if self.root.pushbackbars and isinstance(i, MediaWidget):
+##				i.compute_download_time()
+##				pushover = i.downloadtime_lag
+##				w = w + pushover
+##			else:
+##				pushover = 0.0
 			if w > mw: mw=w
 			mh=mh+h
 		mh = mh + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.VEDGSIZE
@@ -1087,11 +1127,11 @@ class VerticalWidget(StructureObjWidget):
 		
 		for medianode in self.children: # for each MMNode:
 			w,h = medianode.get_minsize()
-			if self.root.pushbackbars and isinstance(medianode, MediaWidget):
-				pushover = medianode.downloadtime_lag
-			else:
-				pushover = 0
-			l = l_par + pushover
+##			if self.root.pushbackbars and isinstance(medianode, MediaWidget):
+##				pushover = medianode.downloadtime_lag
+##			else:
+##				pushover = 0
+			l = l_par
 			if h > (b-t):			  # If the node needs to be bigger than the available space...
 				pass				   # TODO!!!!!
 			# Take a portion of the free available width, fairly.
@@ -1103,17 +1143,18 @@ class VerticalWidget(StructureObjWidget):
 			b = t + h + thisnode_free_height
 			this_l = l
 			this_r = r
-			t0, t1, t2, download, begindelay = medianode.node.GetTimes()
+			t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
+			tend = t1
 			if self.root.timescale:
 				lmin = self.root.timemapper.time2pixel(t0)
 				if this_l < lmin:
 					this_l = lmin
 			if self.root.timescale:
-				rmin = self.root.timemapper.time2pixel(t2)
+				rmin = self.root.timemapper.time2pixel(tend)
 				if this_r < rmin:
 					this_r = rmin
 				else:
-					rmax = self.root.timemapper.time2pixel(t2, align='right')
+					rmax = self.root.timemapper.time2pixel(tend, align='right')
 					if this_r > rmax:
 						this_r = rmax
 			
@@ -1124,10 +1165,10 @@ class VerticalWidget(StructureObjWidget):
 
 	def draw(self, display_list):
 		# print "Draw: Verticle widget ", self.get_box()
-		if self.root.pushbackbars and not self.iscollapsed():
-			for i in self.children:
-				if isinstance(i, MediaWidget):
-					i.pushbackbar.draw(display_list);
+##		if self.root.pushbackbars and not self.iscollapsed():
+##			for i in self.children:
+##				if isinstance(i, MediaWidget):
+##					i.pushbackbar.draw(display_list);
 		StructureObjWidget.draw(self, display_list);
 		
 		# Draw those stupid horizontal lines.
@@ -1142,12 +1183,13 @@ class VerticalWidget(StructureObjWidget):
 					display_list.drawline(TEXTCOLOR, [(l, i),(r, i)])
 					i = i + step
 					
-	def addcollisions(self, mastert0, mastert2):
-		t0, t1, t2, download, begindelay = self.node.GetTimes()
+	def addcollisions(self, mastert0, mastertend):
+		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
+		tend = t1
 		maxneededpixel0 = 0
 		maxneededpixel1 = 0
 		for ch in self.children:
-			neededpixel0, neededpixel1 = ch.addcollisions(t0, t2)
+			neededpixel0, neededpixel1 = ch.addcollisions(t0, tend)
 			if neededpixel0 > maxneededpixel0:
 				maxneededpixel0 = neededpixel0
 			if neededpixel1 > maxneededpixel1:
@@ -1157,8 +1199,8 @@ class VerticalWidget(StructureObjWidget):
 		if t0 != mastert0:
 			self.root.timemapper.addcollision(t0, maxneededpixel0)
 			maxneededpixel0 = 0
-		if t2 != mastert2:
-			self.root.timemapper.addcollision(t2, maxneededpixel1)
+		if tend != mastertend:
+			self.root.timemapper.addcollision(tend, maxneededpixel1)
 			maxneededpixel1 = 0
 		return maxneededpixel0, maxneededpixel1
 
@@ -1230,7 +1272,10 @@ class MediaWidget(MMNodeWidget):
 		self.transition_in = TransitionWidget(self, root, 'in')
 		self.transition_out = TransitionWidget(self, root, 'out')
 
-		self.pushbackbar = PushBackBarWidget(self, root);
+		if root.timescale:
+			self.pushbackbar = PushBackBarWidget(self, root)
+		else:
+			self.pushbackbar = None
 		self.downloadtime = 0.0		# not used??
 		self.downloadtime_lag = 0.0	# Distance to push this node to the right - relative coords. Not pixels.
 		self.downloadtime_lag_errorfraction = 1.0
@@ -1246,75 +1291,78 @@ class MediaWidget(MMNodeWidget):
 		MMNodeWidget.destroy(self)
 
 	def is_hit(self, pos):
-		hit = self.transition_in.is_hit(pos) or self.transition_out.is_hit(pos) or self.pushbackbar.is_hit(pos) or MMNodeWidget.is_hit(self, pos)
+		hit = self.transition_in.is_hit(pos) or \
+				self.transition_out.is_hit(pos) or \
+				(self.pushbackbar and self.pushbackbar.is_hit(pos)) or \
+				MMNodeWidget.is_hit(self, pos)
 		return hit
 		
-	def compute_download_time(self):
-		# Compute the download time for this widget.
-		# Values are in distances (self.downloadtime is a distance).
-		 
-		# First get available bandwidth. Silly algorithm to be replaced sometime: in each par we evenly
-		# divide the available bandwidth, for other structure nodes each child has the whole bandwidth
-		# available.
-		prearmtime = self.node.compute_download_time()
-		# print "MediaWidget prearmtime is: ", prearmtime
-
-		# Now subtract the duration of the previous node: this fraction of
-		# the downloadtime is no problem.
-		prevnode = self.node.GetPrevious()
-		if prevnode:
-			# XXXX Wrong it prevt2 > our t0!
-			prevt0, dummy, prevt2, dummy, dummy = prevnode.GetTimes()
-			prevnode_duration = prevt2-prevt0
-		else:
-			prevnode_duration = 0
-		lagtime = prearmtime - prevnode_duration
-
-		# print "            lagtime is: ", lagtime
-		
-		if lagtime < 0:
-			lagtime = 0
-		# Obtaining the begin delay is a bit troublesome:
-		beginlist = MMAttrdefs.getattr(self.node, 'beginlist')
-		if beginlist:
-			begindelay = beginlist[0].delay
-		else:
-			begindelay = 0
-		if begindelay <= 0:
-			self.downloadtime_lag_errorfraction = 1
-		elif begindelay >= lagtime:
-			self.downloadtime_lag_errorfraction = 0
-		else:
-			self.downloadtime_lag_errorfraction = (lagtime-begindelay)/lagtime
-
-		# print "            begindelay is: ", begindelay
-		
-		# Now convert this from time to distance. 
-		# XXX May be wrong if t2 > next.t0!
-		t0, t1, t2, dummy, dummy = self.node.GetTimes()
-		node_duration = (t2-t0)
-		if node_duration <= 0: node_duration = 1
-
-		# print "            node_duration is: ", node_duration
-		#l,t,r,b = self.pos_abs
-		node_width = self.get_minsize()[0]
-		# print "            node width is: ", node_width
-		# Lagwidth is a percentage of this node's width.
-		#lagwidth = lagtime * node_width / node_duration
-		if node_duration == 0:
-			lagwidth = 0
-#		elif lagtime/node_duration > 1.0:
-#			lagwidth = 1.0 * node_width
-		else:
-			lagwidth = (lagtime/node_duration) * node_width
-
-		self.downloadtime = 0
-		if lagwidth > 0:
-			self.downloadtime_lag = lagwidth
-		else:
-			# print "Error: lagwidth is < 0"
-			self.downloadtime_lag = 0
-# print "            set downloadtime_lag to: ", self.downloadtime_lag
+##	def compute_download_time(self):
+##		# Compute the download time for this widget.
+##		# Values are in distances (self.downloadtime is a distance).
+##		 
+##		# First get available bandwidth. Silly algorithm to be replaced sometime: in each par we evenly
+##		# divide the available bandwidth, for other structure nodes each child has the whole bandwidth
+##		# available.
+##		prearmtime = self.node.compute_download_time()
+##		# print "MediaWidget prearmtime is: ", prearmtime
+##
+##		# Now subtract the duration of the previous node: this fraction of
+##		# the downloadtime is no problem.
+##		prevnode = self.node.GetPrevious()
+##		if prevnode:
+##			# XXXX Wrong it prevt2 > our t0!
+##			prevt0, dummy, prevt2, dummy, dummy = prevnode.GetTimes()
+##			prevnode_duration = prevt2-prevt0
+##		else:
+##			prevnode_duration = 0
+##		lagtime = prearmtime - prevnode_duration
+##
+##		# print "            lagtime is: ", lagtime
+##		
+##		if lagtime < 0:
+##			lagtime = 0
+##		# Obtaining the begin delay is a bit troublesome:
+##		beginlist = MMAttrdefs.getattr(self.node, 'beginlist')
+##		if beginlist:
+##			begindelay = beginlist[0].delay
+##		else:
+##			begindelay = 0
+##		if begindelay <= 0:
+##			self.downloadtime_lag_errorfraction = 1
+##		elif begindelay >= lagtime:
+##			self.downloadtime_lag_errorfraction = 0
+##		else:
+##			self.downloadtime_lag_errorfraction = (lagtime-begindelay)/lagtime
+##
+##		# print "            begindelay is: ", begindelay
+##		
+##		# Now convert this from time to distance. 
+##		# XXX May be wrong if t2 > next.t0!
+##		t0, t1, t2, dummy, dummy = self.node.GetTimes()
+##		node_duration = (t2-t0)
+##		if node_duration <= 0: node_duration = 1
+##
+##		# print "            node_duration is: ", node_duration
+##		#l,t,r,b = self.pos_abs
+##		node_width = self.get_minsize()[0]
+##		# print "            node width is: ", node_width
+##		# Lagwidth is a percentage of this node's width.
+##		#lagwidth = lagtime * node_width / node_duration
+##		if node_duration == 0:
+##			lagwidth = 0
+###		elif lagtime/node_duration > 1.0:
+###			lagwidth = 1.0 * node_width
+##		else:
+##			lagwidth = (lagtime/node_duration) * node_width
+##
+##		self.downloadtime = 0
+##		if lagwidth > 0:
+##			self.downloadtime_lag = lagwidth
+##		else:
+##			# print "Error: lagwidth is < 0"
+##			self.downloadtime_lag = 0
+### print "            set downloadtime_lag to: ", self.downloadtime_lag
 
 	def show_mesg(self):
 		if self.node.errormessage:
@@ -1324,13 +1372,23 @@ class MediaWidget(MMNodeWidget):
 		l,t,r,b = self.pos_abs
 
 		self.infoicon.moveto((l+self.get_relx(1), t+self.get_rely(2)))
+		# First compute pushback bar position
+		if self.pushbackbar:
+			t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
+			if download + begindelay == 0:
+				self.downloadtime_lag_errorfraction = 0
+			else:
+				self.downloadtime_lag_errorfraction = download / (download + begindelay)
+			pbb_left = self.root.timemapper.time2pixel(t0-(download+begindelay), align='right')
+			self.pushbackbar.moveto((pbb_left, t, l, t+12))
 
-		lag = self.downloadtime_lag
-		if lag < 0:
-			print "ERROR! Lag is below 0 - node can play before it is loaded. Cool!"
-			lag = 0
-		h = self.get_rely(12);		# 12 pixels high.
-		self.pushbackbar.moveto((l-lag,t,l,t+h))
+##		if self.pushbackbar:
+##			lag = self.downloadtime_lag
+##			if lag < 0:
+##				print "ERROR! Lag is below 0 - node can play before it is loaded. Cool!"
+##				lag = 0
+##			h = self.get_rely(12);		# 12 pixels high.
+##			self.pushbackbar.moveto((l-lag,t,l,t+h))
 #	   l = l + self.get_relx(1);
 #	   b = b - self.get_rely(1);
 #	   r = r - self.get_relx(1);
@@ -1449,7 +1507,7 @@ class MediaWidget(MMNodeWidget):
 				return self.transition_out
 			elif self.infoicon.is_hit(pos):
 				return self.infoicon
-			elif self.pushbackbar.is_hit(pos):
+			elif self.pushbackbar and self.pushbackbar.is_hit(pos):
 				return self.pushbackbar
 			else:
 				return self
