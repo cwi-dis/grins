@@ -4,7 +4,7 @@
     <meta name="title" content="Empty PocketPC Presentation"/>
     <meta name="template_name" content="Empty GRiNS/PocketPC Presentation"/>
     <meta name="template_description" content="An empty PocketPC Presentation."/>
-    <meta name="template_snapshot" content="T-icons/empty_S2.bmp"/>
+    <meta name="template_snapshot" content="T-icons/empty_P1A.bmp"/>
     <meta name="project_html_page" content="external_player.html"/>
     <layout>
       <topLayout id="Player-Window" width="240" height="270" GRiNS:editBackground="192 192 192" GRiNS:showEditBackground="1" >
