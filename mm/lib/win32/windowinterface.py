@@ -1,11 +1,9 @@
 import WIN32_windowbase
-from WIN32_windowbase import TRUE, FALSE, SINGLE, win32Cursors, cmifexPath
+from WIN32_windowbase import TRUE, FALSE, SINGLE, win32Cursors
 
 import win32con, win32api, win32ui, cmifex, cmifex2
 import CloseDialogRC, WMEVENTS
 from pywin.mfc import dialog
-
-dll = win32api.GetModuleHandle(cmifexPath)
 
 WM_MAINLOOP = 200
 
@@ -170,7 +168,7 @@ class _Window(WIN32_windowbase._Window):
 		#	cancelCallback = (self._rb_cancel, ()))
 
 
-		self._rb_dialog = dialog.Dialog(CloseDialogRC.IDD_CREATE_BOX, dll)
+		self._rb_dialog = dialog.Dialog(CloseDialogRC.IDD_CREATE_BOX)
 		self._rb_dialog.HookCommand(self._rb_cancel, win32con.IDCANCEL)
 		self._rb_dialog.HookCommand(self._rb_done, win32con.IDOK)
 		self._rb_dialog.CreateWindow()
