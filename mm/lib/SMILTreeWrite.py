@@ -789,7 +789,7 @@ def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
 	return fmtfloat(delay, 's')
 
 def getterm(writer, node):
-	if node.type in ('seq', 'prio', 'alt'):
+	if node.type in ('seq', 'prio', 'switch'):
 		return
 	terminator = node.GetTerminator()
 	ntype = node.GetType()
@@ -2058,8 +2058,6 @@ class SMILWriter(SMIL):
 			if type == 'bag':
 				mtype = '%s:choice' % NSGRiNSprefix
 				xtype = '%s choice' % GRiNSns
-			elif type == 'alt':
-				xtype = mtype = 'switch'
 			elif type == 'prio':
 				xtype = mtype = 'priorityClass'
 			elif type == 'seq' and root and self.smilboston:
