@@ -463,6 +463,10 @@ SOURCE=.\RES\openedeyekey.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\pausing.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\properties.ico
 # End Source File
 # Begin Source File
