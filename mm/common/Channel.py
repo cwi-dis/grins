@@ -1253,7 +1253,7 @@ class Channel:
 _button = None				# the currently highlighted button
 
 class ChannelWindow(Channel):
-	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup', 'z', 'bgimg']
+	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup', 'z', 'bgimg', 'editBackground', 'showEditBackground']
 	node_attrs = Channel.node_attrs + ['drawbox']
 	if CMIF_MODE:
 		node_attrs.append('bgcolor')
