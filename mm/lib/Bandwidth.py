@@ -17,18 +17,17 @@ CONTINUOUS_CHANNELS = ['video', 'mpeg', 'movie', 'sound',  'RealAudio',
 			     'RealVideo']
 REAL_CHANNELS = ['RealAudio', 'RealVideo', 'RealText', 'RealPix', 'RealFlash']
 
-def get(node):
+def get(node, target=0):
 	ntype = node.GetType()
 	if ntype not in ('ext', 'slide'):
 		# Nodes that are not external consume no bandwidth
 		return 0, 0
+	if ntype == 'slide':
+		raise 'Cannot compute bandwidth for slide'
 	
 	context = node.GetContext()
 	ctype = node.GetChannelType()
 	url = MMAttrdefs.getattr(node, 'file')
-	if ntype == 'slide':
-		purl = MMAttrdefs.getattr(node.GetParent(), 'file')
-		url = MMurl.basejoin(purl, url)
 	url = context.findurl(url)
 	val = urlcache[url].get('bandwidth')
 	if val is not None:
@@ -63,7 +62,6 @@ def get(node):
 	if ctype in CONTINUOUS_CHANNELS:
 		duration = Duration.get(node, ignoreloop=1)
 		if duration <= 0:
-			print "Duration.Get: cannot obtain duration:", filename
 			return 0, 0
 ##		print 'DBG: Bandwidth.get: continuous',filename, filesize, float(filesize)*8/duration
 		urlcache[url]['bandwidth'] = 0, float(filesize)*8/duration
@@ -73,7 +71,7 @@ def get(node):
 		urlcache[url]['bandwidth'] = float(filesize)*8, 0
 		return float(filesize)*8, 0
 
-def GetSize(url):
+def GetSize(url, target=0):
 	val = urlcache[url].get('filesize')
 	if val is not None:
 		return val
