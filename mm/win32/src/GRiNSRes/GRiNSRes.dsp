@@ -413,6 +413,14 @@ SOURCE=.\RES\Blank.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\danglinganchor.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\danglingev.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\Image.ico
 # End Source File
 # Begin Source File
