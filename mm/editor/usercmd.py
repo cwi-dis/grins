@@ -40,7 +40,9 @@ class PREFERENCES(_CommandBase):
 class NEW_DOCUMENT(_CommandBase):
 	help = 'Create new document'
 class OPEN(_CommandBase):
-	help = 'Open existing document'
+	help = 'Open existing document by URL'
+class OPENFILE(_CommandBase):
+	help = 'Open existing local file'
 class OPEN_RECENT(_DynamicCascade):
 	help = 'Open a recently used document'
 class TRACE(_CommandBase):

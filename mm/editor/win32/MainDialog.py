@@ -74,6 +74,19 @@ class MainDialog:
 		self.__text=self.__owindow._text
 		self.__owindow.show()
 
+	def openfile_callback(self):
+		"""Callback for OPENFILE menu command"""
+		import windowinterface
+		f=windowinterface.getmainwnd()
+		windowinterface.FileDialog('Open file', '.', '*.smil', '',
+					   self.__openfile_done, None, 1,
+					   parent = f)
+
+	def __openfile_done(self, filename):
+		"""End of OPENFILE menu command. Open the file (as url)"""
+		url = self.__path2url(filename)
+		if url:
+			self.openURL_callback(url)
 
 	def dropfile(self, arg, window, event, value):
 		x,y,filename=value
@@ -118,6 +131,7 @@ class MainDialog:
 			self.openURL_callback(text)
 
 	def __openfile_callback(self):
+		"""Callback used by "browse" button in open url"""
 		import windowinterface
 		f=windowinterface.getmainwnd()
 		windowinterface.FileDialog('Open file', '.', '*.smil', '',
@@ -125,6 +139,7 @@ class MainDialog:
 					   parent = f)
 
 	def __filecvt(self, filename):
+		"""End of "browse" in "open url" dialog. Set URL"""
 		text=self.__path2url(filename)
 		self.__text.settext(text)
 
