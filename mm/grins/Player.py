@@ -153,6 +153,7 @@ class Player(PlayerCore, PlayerDialog):
 
 	def stop_callback(self):
 		self.toplevel.setwaiting()
+		self.userstarttime = 0
 		self.cc_stop()
 
 	def magic_play(self):
@@ -221,29 +222,16 @@ class Player(PlayerCore, PlayerDialog):
 	def isplaying(self):
 		return self.playing
 
-	def setstarttime(self, starttime, apply=1):
-		self.userstarttime = starttime
-		if self.playing and apply:
-			# XXX: not correct 
-			gototime = starttime
-			seek_node = self.userplayroot # XXX: improve by building doc timing context
-			restorepause = 0
+	def setstarttime(self, gototime):
+		if self.playing:
 			if not self.pausing:
-				restorepause = 1
-				self.scheduler.setpaused(1)
+				self.pause(1)
 			timestamp = self.scheduler.timefunc()
 			sctx = self.scheduler.sctx_list[0]
 			self.scheduler.settime(gototime)
-			x = seek_node
-			path = []
-			while x is not None:
-				path.append(x)
-				x = x.GetSchedParent()
-			path.reverse()
-			sctx.gototime(path[0], gototime, timestamp, path)
-			if restorepause:
-				self.scheduler.setpaused(0, gototime)
-			self.userstarttime = 0
+			sctx.gototime(self.userplayroot, gototime, timestamp)
+		else:
+			self.userstarttime = gototime
 
 	def makemenu(self):
 		channels = []
