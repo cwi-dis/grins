@@ -1261,6 +1261,18 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		w._gc.SetRegion(w._clip)
 		w._gc.foreground = w._convert_color(w._bgcolor)
 		apply(self.threads.resized, self._rect)
+		
+class ChannelAsync(Channel):
+
+	def play(self, node):
+		if debug:
+			print 'ChannelAsync.play('+`self`+','+`node`+')'
+		self.play_0(node)
+		if not self._is_shown or self.syncplay:
+			self.play_1()
+			return
+		self.do_play(node)
+		self.armdone()
 
 def dummy_callback(arg):
 	pass
