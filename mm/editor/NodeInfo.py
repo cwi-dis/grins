@@ -55,7 +55,7 @@ class NodeInfo:
 						left = None, top = None,
 						right = self.type_select)
 		butt = w.ButtonRow(
-			[('Cancel', (self.close, ())),
+			[('Cancel', (self.cancel_callback, ())),
 			 ('Restore', (self.restore_callback, ())),
 			 ('Node attr...', (self.attributes_callback, ())),
 			 ('Anchors...', (self.anchors_callback, ())),
@@ -360,18 +360,21 @@ class NodeInfo:
 		if self.is_showing():
 			self.unregister(self)
 			self.hide()
-		if self.new:
-			editmgr = self.editmgr
-			if not editmgr.transaction():
-				return # Not possible at this time
-			editmgr.delnode(self.node)
-			editmgr.commit()
 	#
 	# Standard callbacks (from Dialog())
 	#
 	def restore_callback(self):
 		self.getvalues(1)
 		self.updateform()
+
+	def cancel_callback(self):
+		self.close()
+		if self.new:
+			editmgr = self.editmgr
+			if not editmgr.transaction():
+				return # Not possible at this time
+			editmgr.delnode(self.node)
+			editmgr.commit()
 
 	def apply_callback(self):
 		self.new = 0
