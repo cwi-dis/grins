@@ -1187,18 +1187,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node.values = data
 		self.__node = node
 		node.__chantype = chtype
+
+		# for SMIL 2, the default bgcolor is transparent
+		if self.__context.attributes.get('project_boston') != 0:
+			if not attributes.has_key('backgroundColor'):
+				attributes['backgroundColor'] = 'transparent'
+				
 		self.AddAttrs(node, attributes)
 		node.__mediatype = mediatype, subtype
 		self.__attributes = attributes
 		if mimetype is not None:
 			node.attrdict['mimetype'] = mimetype
 
-		if not attributes.has_key('region'):
-			# if no region, we must ignore backgroundColor
-			if  node.attrdict.has_key('bgcolor'):
-				del node.attrdict['bgcolor']
-			if  node.attrdict.has_key('transparent'):
-				del node.attrdict['transparent']
+		# for SMIL 1, we have to define all the time transparent
+		# note : don't make this before addattrs to avoid warnings
+		if self.__context.attributes.get('project_boston') == 0:
+			node.attrdict['transparent'] = 1
+			node.attrdict['bgcolor'] = None
 					
 		# experimental SMIL Boston layout code
 		node._internalchtype = chtype
