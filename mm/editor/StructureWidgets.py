@@ -587,7 +587,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			l = l + iw
 			if l <= r:
 				self.iconbox.draw(displist)
-		if l < r and self.name and (self.iconbox is None or not self.iconbox.vertical):
+		if l < r and self.name and (self.iconbox is None or not self.iconbox.vertical or isinstance(self, StructureObjWidget)):
 			x, y = l, t+displist.baselinePXL()
 			displist.setpos(x, y)
 			namewidth = displist.strsizePXL(self.name)[0]
@@ -1219,6 +1219,9 @@ class StructureObjWidget(MMNodeWidget):
 			iconboxwidth = self.iconbox.get_minsize()[0]
 			my_l = my_l + iconboxwidth
 			min_width = min_width - iconboxwidth
+			if self.name:
+				my_t = my_t + TITLESIZE
+				min_height = min_height - TITLESIZE
 		else:
 			my_t = my_t + TITLESIZE
 			min_height = min_height - TITLESIZE
@@ -1417,6 +1420,8 @@ class StructureObjWidget(MMNodeWidget):
 		b = b - VEDGSIZE
 		if self.iconbox is not None and self.iconbox.vertical:
 			l = l + self.iconbox.get_minsize()[0]
+			if self.name:
+				 t = t + TITLESIZE
 		else:
 			t = t + TITLESIZE
 		if self.timeline is not None:
@@ -1579,6 +1584,8 @@ class HorizontalWidget(StructureObjWidget):
 			mh = mh + h
 		if self.iconbox is not None and self.iconbox.vertical:
 			mw = mw + self.iconbox.get_minsize()[0]
+			if self.name:
+				mh = mh + TITLESIZE
 		else:
 			mh = mh + TITLESIZE
 		if mw < minwidth:
@@ -1731,6 +1738,8 @@ class VerticalWidget(StructureObjWidget):
 
 		if self.iconbox is not None and self.iconbox.vertical:
 			mw = mw + self.iconbox.get_minsize()[0]
+			if self.name:
+				mh = mh + TITLESIZE
 		else:
 			# Add the titleheight
 			mh = mh + TITLESIZE
