@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import win32ui,win32api,win32con
 
 afx=win32ui.GetAfx()
