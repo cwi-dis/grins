@@ -1529,6 +1529,34 @@ BEGIN
     LTEXT           "Composite mode:",ID_STATIC4,15,93,74,9
 END
 
+IDD_EDITATTR_S1R3S6 DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_GROUP1,6,5,287,96
+    LTEXT           "Bitrate:",IDC_11,12,19,96,8
+    COMBOBOX        IDC_12,109,17,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Captions:",IDC_21,12,35,96,8
+    CONTROL         "on",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+                    WS_TABSTOP,116,35,24,10
+    CONTROL         "off",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,196,
+                    35,24,10
+    GROUPBOX        "",IDC_GROUP1,109,29,174,17
+    LTEXT           "Language:",IDC_31,12,51,96,8
+    COMBOBOX        IDC_32,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Overdub or Caption:",IDC_41,12,67,96,8
+    CONTROL         "caption",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+                    WS_TABSTOP,116,67,39,10
+    CONTROL         "overdub",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    196,67,42,10
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "",IDC_GROUP1,109,61,174,17
+    CONTROL         "Use Internet Explorer HTML control",IDC_51,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,12,83,127,10
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
