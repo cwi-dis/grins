@@ -174,6 +174,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				for ns in SMIL2ns:
 					self.elements[ns+' '+key] = val
 		xmllib.XMLParser.__init__(self)
+		self.__skipping = 0
 		self.__seen_smil = 0
 		self.__in_smil = 0
 		self.__in_head = 0
@@ -3960,6 +3961,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	__whitespace = re.compile(_opS + '$')
 	def handle_data(self, data):
+		if self.__skipping:
+			return
 		if self.__in_metadata:
 			self.__metadata.append(data)
 			return
@@ -4013,11 +4016,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# catch all
 
-	def unknown_starttag(self, tag, attrs):
-		self.warning('ignoring unknown start tag %s' % tag, self.lineno)
+##	def unknown_starttag(self, tag, attrs):
+##		self.warning('ignoring unknown start tag %s' % tag, self.lineno)
 
-	def unknown_endtag(self, tag):
-		self.warning('ignoring unknown end tag %s' % (tag or ''), self.lineno)
+##	def unknown_endtag(self, tag):
+##		self.warning('ignoring unknown end tag %s' % (tag or ''), self.lineno)
 
 	def unknown_charref(self, ref):
 		self.warning('ignoring unknown char ref %s' % ref, self.lineno)
@@ -4223,6 +4226,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# the rest is to check that the nesting of elements is done
 	# properly (i.e. according to the SMIL DTD)
 	def finish_starttag(self, tagname, attrdict, method):
+		self.__skipping = 0
 		nstag = string.split(tagname, ' ')
 		if len(nstag) == 2 and \
 		   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
@@ -4257,6 +4261,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				pass
 			else:
 				self.syntax_error('%s element not allowed inside %s' % (self.stack[-1][0], self.stack[-2][0]))
+				self.__skipping = self.__saved_attrdict.get('skip-content', 'false') == 'true'
+				if self.__skipping:
+					method = None
 		elif tagname != 'smil':
 			self.error('outermost element must be "smil"', self.lineno)
 		elif ns and self.getnamespace().get('', '') != ns:
@@ -4266,6 +4273,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif ns and ns != SMIL2ns[0]:
 			self.warning('default namespace should be "%s"' % SMIL2ns[0], self.lineno)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
+		self.__saved_attrdict = attrdict
+		if self.__skipping:
+			self.setliteral()
 
 class SMILMetaCollector(xmllib.XMLParser):
 	"""Collect the meta attributes from a smil file"""
