@@ -1093,6 +1093,8 @@ class KeyTimesSlider(window.Wnd):
 			self.EnableWindow(1)
 		self.updateKeyTimes()
 
+	def isEnabled(self):
+		return self._enabled
 
 
 		
