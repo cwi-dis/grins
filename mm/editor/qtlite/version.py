@@ -11,3 +11,4 @@ else:
 	version = 'Lite for QuickTime, v1.5 ' + patchlevel
 	macpreffilename = 'GRiNS-pro-%s-1.5 Prefs' % features.compatibility_short
 	
+title = 'GRiNS Editor Lite'

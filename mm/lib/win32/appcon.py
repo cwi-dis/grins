@@ -36,17 +36,6 @@ Continue = 'Continue'
 
 error = 'windowinterface.error'
 
-import os
-GRiNSApp=os.environ['GRiNSApp']
-IsEditor = (GRiNSApp=='GRiNSed')
-IsPlayer = (GRiNSApp=='GRiNS')
-AppDispName = GRiNSApp
-if IsEditor:
-	AppDisplayName='GRiNS Editor'
-else:
-	AppDisplayName='GRiNS Player'
-	
-
 # DropEffects
 DROPEFFECT_NONE   = 0
 DROPEFFECT_COPY   = 1
