@@ -1651,6 +1651,9 @@ BEGIN
     GROUPBOX        "Transition",IDC_GROUP1,5,10,287,60
     LTEXT           "In transition:",IDC_11,11,26,73,8
     LTEXT           "Out transition:",IDC_21,11,48,73,8
+    GROUPBOX        "Note",IDC_STATIC,5,75,287,49
+    LTEXT           "To get a transition between two elements such as a crossfade, you need to set fill=transition on the first element and set an In transition on the second one.",
+                    IDC_STATIC,11,87,274,32
 END
 
 IDD_EDITATTR_SUBREGION DIALOG DISCARDABLE  0, 0, 300, 164
