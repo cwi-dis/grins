@@ -101,11 +101,11 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		#
 		y = y - h
 		self.pvbutton = \
-			form.add_button(PUSH_BUTTON,x,y,w,h, 'Presentation')
+			form.add_button(PUSH_BUTTON,x,y,w,h, 'Player')
 		#
 		y = y - h
 		self.svbutton = \
-			form.add_button(PUSH_BUTTON,x,y,w,h, 'Styles')
+			form.add_button(PUSH_BUTTON,x,y,w,h, 'Style sheet')
 		#
 		y = 4*bheight
 		#
