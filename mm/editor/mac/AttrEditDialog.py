@@ -172,6 +172,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 ##				self._cur_page.reset_callback()
 		else:
 			print 'Unknown NodeAttrDialog item', item, 'event', event
+			print '_cur_page is', self._cur_page
 		return 1
 
 	def _selectpage(self, item):
