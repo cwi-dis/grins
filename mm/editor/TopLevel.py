@@ -1191,9 +1191,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			import SMILTreeWrite
 			self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense), optional=1)
 		undocommandlist = []
-		if self.editmgr.undoptr >= 0:
+		if self.editmgr.history:
 			undocommandlist = undocommandlist + self.undocommandlist[:1]
-		if self.editmgr.redoptr is not None:
+		if self.editmgr.future:
 			undocommandlist = undocommandlist + self.undocommandlist[1:]
 		if self.context.attributes.get('project_boston', 0):
 			self.setcommands(self.commandlist + self.__ugroup + undocommandlist)
