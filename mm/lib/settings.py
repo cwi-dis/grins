@@ -303,7 +303,7 @@ def unregister(listener):
 def transaction(auto=0):
 	global _in_transaction
 	if auto and _in_transaction:
-		return
+		return 1
 	if not auto:
 		if _in_transaction:
 			raise 'recursive preference transaction'
