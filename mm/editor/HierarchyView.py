@@ -747,9 +747,6 @@ class HierarchyView(HierarchyViewDialog):
 		# (assuming..) 'where' is -1:before, 0:here, 1:after. -mjvdg
 
 		start_transaction = 1
-		# experimental SMIL Boston layout code
-		internalchtype = chtype
-		# end experimental
 		lightweight = features.lightweight
 		node = self.focusnode
 		if node is None:
@@ -869,9 +866,6 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			layout = MMAttrdefs.getattr(node, 'layout')
 		node = ctx.newnode(type) # Create a new node
-		# experimental SMIL Boston layout code
-		node._internalchtype = internalchtype
-		# end experimental			
 		if url is not None:
 			node.SetAttr('file', url)
 		if chname:
