@@ -57,11 +57,10 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"Release/ddraw.pyd" /libpath:"..\..\..\..\python\PCbuild\\"
 # Begin Custom Build
 TargetPath=.\Release\ddraw.pyd
-TargetName=ddraw
 InputPath=.\Release\ddraw.pyd
 SOURCE="$(InputPath)"
 
-"$(TargetName).flg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"..\..\..\bin\win32\ddraw.pyd" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	copy $(TargetPath) ..\..\..\bin\win32
 
 # End Custom Build
@@ -94,11 +93,10 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /out:"Debug/ddraw_d.pyd" /pdbtype:sept /libpath:"..\..\..\..\python\PCbuild\\"
 # Begin Custom Build
 TargetPath=.\Debug\ddraw_d.pyd
-TargetName=ddraw_d
 InputPath=.\Debug\ddraw_d.pyd
 SOURCE="$(InputPath)"
 
-"$(TargetName).flg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"..\..\..\bin\win32\ddraw_d.pyd" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	copy $(TargetPath) ..\..\..\bin\win32
 
 # End Custom Build
@@ -117,8 +115,6 @@ SOURCE="$(InputPath)"
 SOURCE=.\ddraw.cpp
 
 !IF  "$(CFG)" == "ddraw - Win32 Release"
-
-# ADD CPP /I "..\..\..\..\python\Include" /I "..\..\..\..\python\PC"
 
 !ELSEIF  "$(CFG)" == "ddraw - Win32 Debug"
 

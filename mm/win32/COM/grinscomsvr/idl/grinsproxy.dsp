@@ -57,11 +57,10 @@ LINK32=link.exe
 # ADD LINK32 rpcndr.lib rpcns4.lib rpcrt4.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
 # Begin Custom Build
 TargetPath=.\Release\grinsproxy.dll
-TargetName=grinsproxy
 InputPath=.\Release\grinsproxy.dll
 SOURCE="$(InputPath)"
 
-"$(TargetName).flg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"..\..\..\..\bin\win32\grinsproxy.dll" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	copy $(TargetPath) ..\..\..\..\bin\win32
 
 # End Custom Build
@@ -94,11 +93,10 @@ LINK32=link.exe
 # ADD LINK32 rpcndr.lib rpcns4.lib rpcrt4.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
 # Begin Custom Build
 TargetPath=.\Debug\grinsproxy.dll
-TargetName=grinsproxy
 InputPath=.\Debug\grinsproxy.dll
 SOURCE="$(InputPath)"
 
-"$(TargetName).flg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"..\..\..\..\bin\win32\grinsproxy_d.dll" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	copy $(TargetPath) ..\..\..\..\bin\win32
 
 # End Custom Build
