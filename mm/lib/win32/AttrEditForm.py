@@ -607,7 +607,8 @@ class AttrPage(dialog.PropertyPage):
 	def OnApply(self,id,code): self._form.call('Apply')
 	def OnCancel(self,id,code): self._form.call('Cancel')
 	def OnOK(self,id,code): self._form.call('OK')
-	def OnReset(self,id,code):self._attr.reset_callback()
+	def OnReset(self,id,code):
+		if self._attr:self._attr.reset_callback()
 
 class OptionPage(AttrPage):
 	def __init__(self,form,attr):
@@ -733,36 +734,116 @@ class StringPage(AttrPage):
 			return self._attr.getcurrent()
 		return self._attrval.gettext()
 
+##################################
+# LayoutPage
+import cmifwnd, _CmifView
+import appcon, sysmetrics
+import string
+import DrawTk
 
-import cmifwnd
-import _CmifView
+# for now: 
+#	works only with pixels
+#   works with reference the full screen instead of the parent layout
+
 class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	def __init__(self,form,attr):
-		AttrPage.__init__(self,grinsRC.IDD_FORM1,form,attr)
+		AttrPage.__init__(self,grinsRC.IDD_EDITRECTATTR,form,attr)
 		cmifwnd._CmifWnd.__init__(self)
+		self._attrval=components.Edit(self,grinsRC.IDC_EDIT2)
+		self._layoutctrl=None
+
+		# for now work only in pixels
+		self._units=appcon.UNIT_PXL
+
+		# try to preserve screen aspect ratio
+		# but should be layout channel 
+		sw,sh=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
+		self._aspect=sw/float(sh)
+
+		self._ymax=190
+		self._xmax=int(self._ymax*self._aspect)
+
+		self._xscale=sw/float(self._xmax)
+		self._yscale=sh/float(self._ymax)
+
+		DrawTk.drawTk.SetScale(self._xscale,self._yscale)
 
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
+		self._attrval.attach_to_parent()
+
+		# get box and units from self._attr
+		val=self._attr.getcurrent()
+		self._attrval.settext(val)
+		if not val:
+			box=None
+		else:
+			box=self.a2tuple(val)
+			box=self.tolayout(box)		
+
+		# create layout control
 		v=_CmifView._CmifPlayerView(docview.Document(docview.DocTemplate()))
 		v.createWindow(self)
-		v.init((10,10,190,150))
-		v.SetWindowPos(self.GetSafeHwnd(),(10,10,190,150),
-			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
+		rc=(20,20,self._xmax,self._ymax)
+		v.init(rc)
+		v.SetWindowPos(self.GetSafeHwnd(),rc,
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
 		v.OnInitialUpdate()
 		v.ShowWindow(win32con.SW_SHOW)
-		v.UpdateWindow()
-		import appcon
-		box=(10,10,40,40)
-		d=v.newdisplaylist()
-		d.render()
-		v.create_box('',self.onBox,box,appcon.UNIT_PXL,1,1)
+		v.UpdateWindow()	
+		self._layoutctrl=v
 
-	def onBox(self,*b):
-		print b
+		# call create box against layout control but be modeless and cool!
+		modeless=1;cool=1
+		v.create_box('',self.update,box,self._units,modeless,cool)
 
-	def onMouse(self,params):
-		print 'onMouse'
+	# called back by create_box on every change
+	# the user can press reset to cancel changes
+	def update(self,*box):
+		if self._initdialog and box:
+			box=self.fromlayout(box)
+			self._attrval.settext('%d %d %d %d' % box)
 
+	def setvalue(self, val):
+		if self._initdialog:
+			self._attrval.settext(val)
+			if not val:
+				box=None
+			else:
+				box=self.a2tuple(val)
+				box=self.tolayout(box)
+			self._layoutctrl.assert_not_in_create_box()
+			modeless=1;cool=1
+			self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
+
+	def getvalue(self):
+		if not self._initdialog:
+			return self._attr.getcurrent()
+		return self._attrval.gettext()
+	
+	def fromlayout(self,box):
+		if not box: return
+		x=self._xscale
+		y=self._yscale
+		return int(box[0]*x+0.5),int(box[1]*y+0.5),int(box[2]*x+0.5),int(box[3]*y+0.5)
+
+	def tolayout(self,box):
+		if not box: return
+		x=self._xscale
+		y=self._yscale
+		return (int(0.5+box[0]/x),int(0.5+box[1]/y),int(0.5+box[2]/x),int(0.5+box[3]/y))
+	
+	# not validating
+	def a2tuple(self,str):
+		if not str: return ()
+		l=string.split(str, ' ')
+		n=[]
+		for e in l:
+			if e: n.append(string.atoi(e))
+		return (n[0],n[1],n[2],n[3])
+
+	def OnDestroy(self,params):
+		DrawTk.drawTk.RestoreState()
 
 ###########################3
 from  GenFormView import GenFormView
@@ -785,14 +866,11 @@ class AttrEditFormNew(GenFormView):
 		import __main__
 		dll=__main__.resdll
 		prsht=dialog.PropertySheet(grinsRC.IDR_GRINSED,dll)
-		#dimpage=AttrPage(grinsRC.IDD_FORM1,self,None)
-		dimpage=LayoutPage(self,None)
-		prsht.AddPage(dimpage)
 		prsht.EnableStackedTabs(1)
-		l=self._attriblist
+		al=self._attriblist
 		page=None
-		for i in range(len(l)):
-			a=l[i]
+		for i in range(len(al)):
+			a=al[i]
 			t = a.gettype()
 			if t == 'option':
 				page=OptionPage(self,a)
@@ -801,8 +879,10 @@ class AttrEditFormNew(GenFormView):
 			elif t == 'color':
 				page=ColorPage(self,a)
 			else:
-				page=StringPage(self,a)
-			if i==0:firstpage=page
+				if a.getlabel()=='Position and size':
+					page=LayoutPage(self,a)
+				else:
+					page=StringPage(self,a)
 			self._pages[a]=page
 			prsht.AddPage(page)
 
@@ -813,12 +893,18 @@ class AttrEditFormNew(GenFormView):
 		prsht.SetWindowPos(0,(0,0,0,0),
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
 		self._prsht=prsht
-		#prsht.RemovePage(dimpage)
 		tabctrl=prsht.GetTabCtrl()
-		for i in range(1,len(l)):
-			tabctrl.SetItemText(i,l[i].getlabel())
-		tabctrl.SetItemText(0,'Layout test')
-		prsht.SetActivePage(firstpage)
+		for i in range(len(al)):
+			tabctrl.SetItemText(i,al[i].getlabel())
+
+		# add an experimantal layout page
+		# not needed since 'Position and size'
+		#is such an example
+		#layout=LayoutPage(self,None)
+		#prsht.AddPage(layout)
+		#tabctrl.SetItemText(len(al),'Layout test')
+
+		prsht.SetActivePage(self._pages[al[0]])
 		prsht.RedrawWindow()
 
 	def OnInitialUpdate(self):
@@ -916,3 +1002,63 @@ class AttrEditFormNew(GenFormView):
 import __main__
 if hasattr(__main__,'use_tab_attr_editor') and __main__.use_tab_attr_editor:
 	AttrEditForm=AttrEditFormNew
+
+
+
+
+
+
+################################
+# code under development
+
+# a group of controls for an attr
+# StringCtrl, FileCtrl, ColorCtrl and OptionsCtrl are AttrCtrl
+class AttrCtrl:
+	def __init__(self, page, attr):
+		self._page=page
+		self._attr=attr
+		self._initctrl=None
+
+	# called by the parent page OnInitDialog
+	def OnInitCtrl(self):
+		self._initctrl=self
+		# hook commands for this
+
+	# response methods
+	# ...
+
+	# set/get methods
+	def setvalue(self, val):
+		pass
+	def getvalue(self):
+		return ''
+
+# a property page with 1 or more attributes
+class AttrGrPage:
+	def __init__(self):
+		self._title=''
+		# maps attr to AttrCtrl
+		# each AttrCtrl represents an attr
+		self._attrctrl={}
+
+	def OnInitDialog(self):
+		AttrPage.OnInitDialog(self)
+		for ctrl in self._attrctrl.values():
+			ctrl.OnInitCtrl()
+
+	def addattr(self,attr):
+		# for each attr.gettype()
+		self._attrctrl[attr]=AttrCtrl(self,attr)
+
+	# select from the available templates
+	# if none is found use 1 attr per page
+	def __findtemplate(self):
+		pass
+
+	def setvalue(self, attr, val):
+		self._attrctrl[attr].settext(val)
+
+	def getvalue(self, attr):
+		return self._attrctrl[attr].gettext()
+
+
