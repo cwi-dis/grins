@@ -238,6 +238,7 @@ class NodeWrapper(Wrapper):
 			for a1, a2, ldir, ltype in hlinks.findsrclinks((uid, aid)):
 				links.append((a2, ldir, ltype))
 			links.sort()
+			times = times[0], times[1] - times[0]
 			anchors[aid] = atype, aargs, times, links
 		return anchors
 
@@ -273,6 +274,7 @@ class NodeWrapper(Wrapper):
 			anchor = uid, aid
 			oldname = None
 			atype, aargs, times, links = a[:4]
+			times = times[0], times[0] + times[1]
 			if len(a) > 4:
 				oldname = a[4]
 			anchorlist.append((aid, atype, aargs, times))
