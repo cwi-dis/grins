@@ -441,6 +441,10 @@ SOURCE=.\M_GenWnd.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_GeometricPrimitives.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_getopt.c
 # End Source File
 # Begin Source File
@@ -1029,7 +1033,23 @@ SOURCE=.\M_tempfile.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_TemporalView.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_TemporalViewDialog.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_TemporalWidgets.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_TextChannel.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_TimeMapper.c
 # End Source File
 # Begin Source File
 
