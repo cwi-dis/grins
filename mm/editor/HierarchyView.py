@@ -168,6 +168,11 @@ class HierarchyView(HierarchyViewDialog):
 			]
 		self.interiorcommands = [
 			NEW_UNDER(callback = (self.createundercall, ())),
+			NEW_UNDER_IMAGE(callback = (self.createundercall, ('image',))),
+			NEW_UNDER_SOUND(callback = (self.createundercall, ('sound',))),
+			NEW_UNDER_VIDEO(callback = (self.createundercall, ('video',))),
+			NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))),
+			NEW_UNDER_SLIDESHOW(callback = (self.createundercall, ('RealPix',))),
 			]
 		self.pasteinteriorcommands = [
 			PASTE_UNDER(callback = (self.pasteundercall, ())),
@@ -178,7 +183,17 @@ class HierarchyView(HierarchyViewDialog):
 			]
 		self.notatrootcommands = [
 			NEW_BEFORE(callback = (self.createbeforecall, ())),
+			NEW_BEFORE_IMAGE(callback = (self.createbeforecall, ('image',))),
+			NEW_BEFORE_SOUND(callback = (self.createbeforecall, ('sound',))),
+			NEW_BEFORE_VIDEO(callback = (self.createbeforecall, ('video',))),
+			NEW_BEFORE_TEXT(callback = (self.createbeforecall, ('text',))),
+			NEW_BEFORE_SLIDESHOW(callback = (self.createbeforecall, ('RealPix',))),
 			NEW_AFTER(callback = (self.createaftercall, ())),
+			NEW_AFTER_IMAGE(callback = (self.createaftercall, ('image',))),
+			NEW_AFTER_SOUND(callback = (self.createaftercall, ('sound',))),
+			NEW_AFTER_VIDEO(callback = (self.createaftercall, ('video',))),
+			NEW_AFTER_TEXT(callback = (self.createaftercall, ('text',))),
+			NEW_AFTER_SLIDESHOW(callback = (self.createaftercall, ('RealPix',))),
 			NEW_SEQ(callback = (self.createseqcall, ())),
 			NEW_PAR(callback = (self.createparcall, ())),
 			NEW_CHOICE(callback = (self.createbagcall, ())),
@@ -537,7 +552,7 @@ class HierarchyView(HierarchyViewDialog):
 		Clipboard.setclip('node', node.DeepCopy())
 		self.aftersetfocus()
 
-	def create(self, where, url = None, index = -1):
+	def create(self, where, url = None, index = -1, chtype = None):
 		node = self.focusnode
 		if node is None:
 			windowinterface.showmessage(
@@ -556,7 +571,7 @@ class HierarchyView(HierarchyViewDialog):
 		    node.GetChannelType() == 'RealPix') or \
 		   (where != 0 and type == 'slide'):
 			type = 'slide'
-		elif url is None:
+		elif url is None and chtype is None:
 			type = node.GetType()
 			if where == 0:
 				children = node.GetChildren()
@@ -565,8 +580,13 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			type = 'ext'
 		chname = None
-		if url is not None and type != 'slide':
-			chlist = ctx.compatchannels(url, None)
+		if type != 'slide':		# For slides the channel is determined
+			if url is not None:
+				chlist = ctx.compatchannels(url, None)
+			elif chtype is not None:
+				chlist = ctx.compatchannels(url, chtype)
+			else:
+				chlist = []
 			if chlist:
 				chname = chlist[0]
 			elif settings.get('lightweight'):
@@ -1170,14 +1190,14 @@ class HierarchyView(HierarchyViewDialog):
 	def copycall(self):
 		if self.focusobj: self.focusobj.copycall()
 
-	def createbeforecall(self):
-		if self.focusobj: self.focusobj.createbeforecall()
+	def createbeforecall(self, chtype=None):
+		if self.focusobj: self.focusobj.createbeforecall(chtype)
 
-	def createaftercall(self):
-		if self.focusobj: self.focusobj.createaftercall()
+	def createaftercall(self, chtype=None):
+		if self.focusobj: self.focusobj.createaftercall(chtype)
 
-	def createundercall(self):
-		if self.focusobj: self.focusobj.createundercall()
+	def createundercall(self, chtype=None):
+		if self.focusobj: self.focusobj.createundercall(chtype)
 
 	def createseqcall(self):
 		if self.focusobj: self.focusobj.createseqcall()
@@ -1671,14 +1691,14 @@ class Object:
 		mother.toplevel.setwaiting()
 		mother.copyfocus()
 
-	def createbeforecall(self):
-		self.mother.create(-1)
+	def createbeforecall(self, chtype=None):
+		self.mother.create(-1, chtype=chtype)
 
-	def createaftercall(self):
-		self.mother.create(1)
+	def createaftercall(self, chtype=None):
+		self.mother.create(1, chtype=chtype)
 
-	def createundercall(self):
-		self.mother.create(0)
+	def createundercall(self, chtype=None):
+		self.mother.create(0, chtype=chtype)
 
 	def createseqcall(self):
 		self.mother.insertparent('seq')
