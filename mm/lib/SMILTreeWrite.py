@@ -89,7 +89,9 @@ def getchname(writer, node):
 	return writer.ch2name[ch]
 
 def getduration(writer, node, attr):
-	duration = node.GetRawAttrDef(attr, -1)
+	duration = node.GetRawAttrDef(attr, 0)
+	if duration == 0:
+		return None
 	if duration == -1:		# infinite duration...
 		duration = 60*60*24	# ...1 day long enough?
 	sign, value = encodeduration(duration)
