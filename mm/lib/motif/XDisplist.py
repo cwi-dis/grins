@@ -19,6 +19,8 @@ _iconmap = {
 	'beginevent': 'beginevent',
 	'causeevent': 'causeevent',
 	'closed': 'folderclosed',
+	'danglinganchor': 'danglinganchor',
+	'danglingevent': 'danglingevent',
 	'error': 'stopicon',
 	'exclclosed': 'exclclosed',
 	'exclopen': 'exclopen',
