@@ -921,8 +921,8 @@ smil_attrs=[
 	("mediaTime", lambda writer, node: node.GetRawAttrDef("mediaTime", None), "mediaTime"),
 	("bandwidth", lambda writer, node: node.GetRawAttrDef("bandwidth", None), "bandwidth"),
 
-	("thumbnail-icon", lambda writer, node: geturl(writer, node, 'thumbnail_icon'), "thumbnail_icon"),
-	("thumbnail-scale", lambda writer, node: getboolean(writer, node, 'thumbnail_scale', 1), "thumbnail_scale"),
+	("thumbnailIcon", lambda writer, node: geturl(writer, node, 'thumbnail_icon'), "thumbnail_icon"),
+	("thumbnailScale", lambda writer, node: getboolean(writer, node, 'thumbnail_scale', 1), "thumbnail_scale"),
 	("collapsed", getcollapsed, None),
 	("showtime", getshowtime, None),
 	("allowedmimetypes", getallowedmimetypes, None),
