@@ -265,7 +265,7 @@ class VideoChannel(ChannelWindowAsync):
 	# interface for anchor creation
 	def defanchor(self, node, anchor, cb):
 		windowinterface.showmessage('The whole window will be hot.')
-		cb((anchor[0], anchor[1], [A_SHAPETYPE_RECT,0,0,1,1], anchor[3]))
+		cb(anchor)
 
 	def prepare_armed_display(self,node):
 		self.armed_display._bgcolor=self.getbgcolor(node)
@@ -276,17 +276,17 @@ class VideoChannel(ChannelWindowAsync):
 			self.armed_display.fgcolor(self.getbgcolor(node))
 #		hicolor = self.gethicolor(node)
 #		for a in node.GetRawAttrDef('anchorlist', []):
-#			atype = a[A_TYPE]
+#			atype = a.atype
 #			if atype not in SourceAnchors or atype == ATYPE_AUTO:
 #				continue
-#			anchor = node.GetUID(), a[A_ID]
+#			anchor = node.GetUID(), a.aid
 #			if not self._player.context.hyperlinks.findsrclinks(anchor):
 #				continue
-#			b = self.armed_display.newbutton((0,0,1,1), times = a[A_TIMES])
+#			b = self.armed_display.newbutton((0,0,1,1), times = a.atimes)
 #			b.hiwidth(3)
 #			if drawbox:
 #				b.hicolor(hicolor)
-#			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
+#			self.setanchor(a.aid, a.atype, b, a.atimes)
 
 		# by default armbox is all the window
 		armbox=(0.0,0.0,1.0,1.0)
