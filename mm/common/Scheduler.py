@@ -121,7 +121,7 @@ class SchedulerContext:
 	#
 	def restartloop(self, node):
 		if debugdump: self.dump()
-		srdict = node.GenLoopSR(self, self.parent.timefunc())
+		srdict = node.GenLoopSR(self)
 		for key, value in srdict.items():
 			if self.srdict.has_key(key):
 				raise error, 'Duplicate event '+SR.ev2string(key)
