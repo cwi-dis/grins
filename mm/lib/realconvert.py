@@ -441,11 +441,6 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	if not has_video:
 		import windowinterface
 		windowinterface.showmessage("Warning: no video track found in %s"%srcurl)
-	# XXXX Temporary
-	if has_audio:
-		import windowinterface
-		windowinterface.showmessage("Warning: this beta release does not convert the audio from quicktime movies yet.")
-		has_audio = 0
 	for pin in engine.GetPins():
 		if pin.GetOutputMimeType() == producer.MIME_REALVIDEO:
 			videopin = pin
@@ -553,28 +548,26 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	audio_flags = video_flags = 0
 	audio_time = video_time = 0
 	audio_data = video_data = None
-	xxxaudiotime = xxxvideotime = -1
 	if has_audio:
-		xxxaudiotime, audio_data = reader.ReadAudio(audio_inputsize_frames)
+		audio_time, audio_data = reader.ReadAudio(audio_inputsize_frames)
 	if not audio_data:
 		audio_done = 1
 	if has_video:
-		xxxvideotime, video_data = reader.ReadVideo()
+		video_time, video_data = reader.ReadVideo()
 	if not video_data:
 		video_done = 1
 	if progress:
 		dur = max(reader.GetVideoDuration(), reader.GetAudioDuration())
 		now = 0
 	while not audio_done or not video_done:
-##		print 'audio', audio_done, xxxaudiotime, 'video', video_done, xxxvideotime
 		if not audio_done:
-			xxxaudiotime, next_audio_data = reader.ReadAudio(audio_inputsize_frames)
+			next_audio_time, next_audio_data = reader.ReadAudio(audio_inputsize_frames)
 			if not next_audio_data:
 				audio_done = 1
 				audio_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
 			audio_sample.SetBuffer(audio_data, audio_time, audio_flags)
 			audiopin.Encode(audio_sample)
-			audio_time = audio_time + audio_frame_millisecs
+			audio_time = next_audio_time
 			audio_data = next_audio_data
 			if audio_time > now:
 				now = audio_time
@@ -585,7 +578,6 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 				video_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
 			video_sample.SetBuffer(video_data, video_time, video_flags)
 			videopin.Encode(video_sample)
-##			video_time = video_time + video_frame_millisecs
 			video_time = next_video_time
 			video_data = next_video_data
 			if video_time > now:
