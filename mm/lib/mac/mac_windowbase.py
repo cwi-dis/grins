@@ -227,7 +227,6 @@ class _Event:
 		self.removed_splash = 0
 
 	def grab(self, dialog):
-		print 'grab', dialog
 		if dialog:
 			if self._grabbed:
 				print 'Another window is already grabbed!'
@@ -331,25 +330,21 @@ class _Event:
 		self._cur_cursor = None	# We don't know the active cursor
 		
 		wid = Win.WhichWindow(message)
-##		print 'DBG activate', wid, event
 		if not wid:
 			self._install_window_commands(None)
 			MacOS.HandleEvent(event)
 		else:
 			ourwin = self._find_wid(wid)
-##			print 'DBG ourwin', ourwin
 			if not ourwin:
 				self._install_window_commands(None)
 				MacOS.HandleEvent(event)
 			else:
-##				print 'DBG modifiers', modifiers
 				self._activate_ours(ourwin, modifiers&1)
 		# We appear to miss activates, at least with the Sioux window
 		# open (maybe Sioux gets them?). We simulate them when needed.
 		if not (modifiers &1):
 			wid = Win.FrontWindow()
 			ourwin = self._find_wid(wid)
-##			print 'DBG extra activate', ourwin
 			if ourwin:
 				self._activate_ours(ourwin, 1)
 				
@@ -378,7 +373,6 @@ class _Event:
 				#wid.DrawGrowIcon()
 				rv = wid.GrowWindow(where, (32, 32, 0x3fff, 0x3fff))
 				neww, newh = (rv>>16) & 0xffff, rv & 0xffff
-##				print 'GROW RETURNED', neww, newh
 				pass # XXXX find window, call resize, possibly send update?
 			else:
 				partcode = Windows.inContent
@@ -564,6 +558,7 @@ class _Toplevel(_Event):
 			n = Dlg.ModalDialog(None)
 			if n == 1:
 				return
+			print 'Huh? Selected', n
 		
 	def close(self):
 		for func, args in self._closecallbacks:
@@ -612,7 +607,6 @@ class _Toplevel(_Event):
 			if win._title == None:
 				# These are dialogs which aren't open yet
 				continue
-##			print 'Window', win, win._title, win._wid
 			if win._wid == front_wid:
 				current = len(names)
 			names.append(win._title)
@@ -638,7 +632,6 @@ class _Toplevel(_Event):
 		for win in self._subwindows:
 			if win.window_group == group:
 				if win._title:
-##					print 'pop', win
 					win.pop()
 					any_popped = 1
 				else:
@@ -686,7 +679,6 @@ class _Toplevel(_Event):
 		
 	def _openwindow(self, x, y, w, h, title, units):
 		"""Internal - Open window given xywh, title. Returns window-id"""
-##		print 'TOPLEVEL WINDOW', x, y, w, h, title
 		if w <= 0 or h <= 0:
 			raise 'Illegal window size'
 		if x is None or y is None:
@@ -778,7 +770,6 @@ class _Toplevel(_Event):
 		"""User asked to close a window. Dispatch to correct window"""
 		window = self._find_wid(wid)
 		if not window:
-##			print 'No window for', wid #DBG
 			return 0
 		window._goaway()
 		return 1
@@ -795,6 +786,8 @@ class _Toplevel(_Event):
 			
 	def _fixcursor(self):
 		"""Select watch or hand cursor"""
+		if not self._cursor_is_default:
+			return
 		wtd_cursor = _arrow
 		wid = Win.FrontWindow()
 		if self._wid_to_window.has_key(wid):
@@ -830,7 +823,6 @@ class _WindowGroup:
 		self._title = title
 		self._cmds_toggled = {}
 		self.set_commandlist(cmdlist)
-##		print 'NEW WINDOWGROUP', self
 		
 	def __repr__(self):
 		return '<WindowGroup %s>'%self._title
@@ -840,14 +832,12 @@ class _WindowGroup:
 		toplevel._changed_group_commands() # XXXX Is this good enough?
 		
 	def close(self):
-##		print 'CLOSEGROUP', self
 		toplevel._close_windowgroup(self)
 		del self.cmd_callback_dict
 		del self._commandlist
 		
 	def setbutton(self, number, onoff):
 		cmd = self._commandlist[number]
-##		print 'SETBUTTON', self, number, cmd, onoff
 		self.set_cmd_toggle(cmd, onoff)
 		
 	def create_menu(self, menu, title):
@@ -859,24 +849,21 @@ class _WindowGroup:
 		
 	def get_cmd_toggle(self, cmd):
 		if self._cmds_toggled.has_key(cmd):
-##			print 'GETCMDTOGGLE', self, cmd, self._cmds_toggled[cmd]
 			return self._cmds_toggled[cmd]
-##		print 'GETCMDTOGGLE', self, cmd, 'no such cmd'
 		return 0
 		
 	def toggle_cmd_toggle(self, cmd):
 		old = self.get_cmd_toggle(cmd)
-##		print 'TOGGLE FROM USER INPUT', self, cmd, 'to', not old
 		self.set_cmd_toggle(cmd, not old)
 #
 # For now, we do this in the eventloop, so it isn't needed here.
 #	
 #	def _activate(self, onoff):
-#		pass # Or tell menu-code?
+#		pass
 		
 	def _set_cmd_dict(self, dict):
 		self.cmd_callback_dict = dict
-		pass # Tell toplevel
+		toplevel._changed_group_commands()
 		
 	def set_commandlist(self, list):
 		self._commandlist = map(lambda cmd: cmd[0], list)
@@ -1142,7 +1129,6 @@ class _CommonWindow:
 			func, arg = self._eventhandlers[WindowExit]
 		except KeyError:
 			sys.exc_traceback = None
-##			print 'No WindowExit handler for', self #DBG
 			return
 		func(arg, self, WindowExit, (0, 0, 0))
 		
@@ -1439,7 +1425,6 @@ class _SubWindow(_CommonWindow):
 		
 		x, y, w, h = parent._convert_coordinates(coordinates)
 		self._rect = x, y, w, h
-##		print 'subwin:', self._rect
 		if w <= 0 or h <= 0:
 			raise 'Empty subwindow', coordinates
 		self._sizes = coordinates
@@ -1629,10 +1614,8 @@ class _DisplayList:
 		window = self._window
 		wid = window._wid
 		
-##		print '  ', cmd, entry[1:] #DBG
 		if cmd == 'clear':
 			Qd.EraseRect(window.qdrect())
-##			print 'Erased', window.qdrect(),'to', wid.GetWindowPort().rgbBkColor
 		elif cmd == 'fg':
 			Qd.RGBForeColor(entry[1])
 		elif cmd == 'font':
@@ -1644,7 +1627,6 @@ class _DisplayList:
 			mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
 			srcrect = srcx, srcy, srcx+w, srcy+h
 			dstrect = dstx, dsty, dstx+w, dsty+h
-##			print 'IMAGE', image[0], srcrect, dstrect
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 			if mask:
 				# import pdb ; pdb.set_trace() #DBG
@@ -1698,18 +1680,9 @@ class _DisplayList:
 		w = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
 		       w._prepare_image(file, crop, scale, center)
-##		if mask:
-##			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
-##		else:
-##			raise 'kaboo kaboo'
-##			r = Xlib.CreateRegion()
-##			r.UnionRectWithRegion(dest_x, dest_y, width, height)
-##			self._imagemask = r
-##			pass
 		self._list.append('image', mask, image, src_x, src_y,
 				  dest_x, dest_y, width, height)
 		self._optimize(2)
-##		print 'ADDED IMAGE', src_x, src_y, dest_x, dest_y, width, height
 		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
 		x, y, w, h = w._rect
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
@@ -1862,9 +1835,7 @@ class _Button:
 		self._hicolor = self._color = dispobj._fgcolor
 		self._width = self._hiwidth = dispobj._linewidth
 		if self._color == dispobj._bgcolor:
-##			print 'not drawing button'
 			return
-##		print 'drawing button', self._color, dispobj._bgcolor
 		self._dispobj.drawbox(coordinates)
 
 	def close(self):
@@ -2114,7 +2085,6 @@ class _SpecialMenu:
 			# If the list isn't the same we have to modify it
 			if list[:len(self.items)] != self.items:
 				# And if the old list isn't a prefix we start from scratch
-##				print 'zap menu'
 				self.menus.reverse()
 				for m in self.menus:
 					m.delete()
@@ -2132,9 +2102,6 @@ class _SpecialMenu:
 				self.menus[cur].check(1)
 			self.cur = cur
 		self.menu.enable(not not self.items)
-			
-##	def callback(self, item):
-##		print 'CALLBACK', self.title, item
 				
 class CommandHandler:
 	def __init__(self, menubartemplate):
@@ -2154,7 +2121,6 @@ class CommandHandler:
 		self.window_menu = _SpecialMenu('Windows', toplevel._pop_window)
 			
 	def install_cmd(self, number, group):
-##		print 'INSTALL', number, group
 		if self.all_cmd_groups[number] == group:
 			return 0
 		self.all_cmd_groups[number] = group
@@ -2259,12 +2225,6 @@ class CommandHandler:
 		return any_active
 
 	def update_menus(self):
-##		print "UPDATE MENUS:", self.all_cmd_groups
-##		for cmd, mentry in self.cmd_to_menu.items():
-##			must_be_enabled = (not not self.find_command(cmd))
-##			if must_be_enabled != self.cmd_enabled[cmd]:
-##				mentry.enable(must_be_enabled)
-##				self.cmd_enabled[cmd] = must_be_enabled
 		self._update_one(self.menubartraversal)
 		if self.must_update_window_menu:
 			self.update_window_menu()
@@ -2275,12 +2235,10 @@ class CommandHandler:
 				
 	def update_window_menu(self):
 		list, cur = toplevel._get_window_names()
-##		print 'UPDATE WINDOW MENU', list, cur
 		self.window_menu.set(list, cur)
 		
 	def update_document_menu(self):
 		list, cur = toplevel._get_group_names()
-##		print 'UPDATE DOCUMENT MENU', list, cur
 		self.document_menu.set(list, cur)
 		
 def multchoice(prompt, list, defindex):
@@ -2289,4 +2247,3 @@ def multchoice(prompt, list, defindex):
 
 def beep():
 	MacOS.SysBeep()
-	#import pdb ; pdb.set_trace()
