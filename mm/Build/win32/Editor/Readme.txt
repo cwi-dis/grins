@@ -25,3 +25,20 @@ Build GRiNSed.exe
    - check that /MD option is set 
 	 i.e C/C++,Gode Generation,Use run-time Library, Multithreaded DLL
 	
+
+Notes for latest python - pythonwin (1.5.2+): 
+
+For a freeze that uses properly idle but does not depend on Tcl 
+do the following before step 3:
+
+1. Remove from python15 project the libs: Tcl80.lib and tk80.lib
+(navigate to project settings -> link tab and then modify entry Object/library modules)
+This step removes direct dependencies of python15.dll from TCL dlls.
+
+2. Arrange so that pyrhonwin reads configuration info from the application's folder
+(for example override find_config_file in Pythonwin\pywin\scintilla\config.py)
+
+3. Include python\tools\idle in pythonpath
+
+4. Import for freeze only: AutoExpand, AutoIndent, Bindings, CallTips, IdleHistory, FormatParagraph
+
