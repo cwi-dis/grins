@@ -532,7 +532,7 @@ class EffectiveAnimator:
 					print self.__attr,'is',displayValue, '(visible)'
 		elif debug:
 			if cv == self.__domval:
-				print self.__attr,'is',displayValue (domvalue)
+				print self.__attr,'is',displayValue, '(domvalue)'
 			else:
 				print self.__attr,'is',displayValue
 		self.__currvalue = cv
@@ -578,8 +578,57 @@ class AnimateContext:
 # * implement specialization: EffValueAnimator
 
 ###########################
-smil2grins = {'src':'file', 
-	'backgroundColor':'bgcolor',}
+# Animation semantics parser helpers:
+# a set of functions that return a tuple 
+# (domval, grins_attrname, type)
+
+def getregionattr(node, attr):
+	v = None
+	d = node.GetChannel().attrdict
+	if attr in ('left', 'top', 'width', 'height'):
+		if d.has_key('base_winoff'):
+			r = d['base_winoff']
+			if attr == 'position':
+				v = r[0], r[1]
+			elif attr == 'size':
+				v = r[2], r[3]
+			if attr == 'left':
+				v = r[0]
+			elif pos=='top':
+				v = r[1]
+			elif pos=='width':
+				v = r[2]
+			elif pos=='height':
+				v = r[3]
+		return v, attr, 'int'
+	elif attr == 'transparent' and d.has_key('transparent'):
+		return d['transparent'], attr, 'int'
+	elif attr == 'z' and d.has_key('z'):
+		return d['z'], attr, 'int'
+	elif attr == 'center' and d.has_key('center'):
+		return d['center'], attr, 'int'
+	elif attr == 'scale' and d.has_key('scale'):
+		return d['scale'], attr, 'int'
+	elif attr == 'drawbox' and d.has_key('drawbox'):
+		return d['drawbox'], drawbox, 'int'
+	elif attr == 'bgcolor' and d.has_key('bgcolor'):
+		return d['bgcolor'], bgcolor, 'color'
+	return None, attr, ''
+
+def getrenamed(node, attr):
+	return MMAttrdefs.getattr(nodr, attr), attr, MMAttrdefs.getattrtype(attr) 
+
+smil_attrs = {'left':(lambda node:getregionattr(node,'left')),
+	'right':(lambda node:getregionattr(node,'right')),
+	'width':(lambda node:getregionattr(node,'width')),
+	'height':(lambda node:getregionattr(node,'height')),
+	'transparent':(lambda node:getregionattr(node,'transparent')),
+	'z':(lambda node:getregionattr(node,'z')),
+	'backgroundColor': (lambda node:getregionattr(node,'bgcolor')),
+	'position':(lambda node:getregionattr(node,'position')),
+
+	'src': (lambda node:getrenamed(node,'file')),
+	}
 
 # Animation semantics parser
 class AnimateElementParser:
@@ -601,8 +650,20 @@ class AnimateElementParser:
 			if te:
 				root = anim.GetRoot()
 				anim.targetnode = root.GetChildByName(te)
+				if not anim.targetnode:
+					ctx = anim.GetContext()
+					targchan = ctx.getchannel(te)
+					if targchan:
+						from MMNode import MMNode
+						newnode = MMNode('imm',ctx,ctx.newuid())
+						newnode.attrdict = targchan.attrdict.copy()
+						newnode.attrdict['channel'] = te
+						anim.targetnode = newnode
+						print newnode.attrdict
 			else:
 				anim.targetnode = anim.GetParent()
+			
+				
 		if not anim.targetnode:
 			# the target node does not exist within grins
 			# maybe it is a region or a similarly managed element
@@ -615,10 +676,6 @@ class AnimateElementParser:
 
 		# do we have a valid target?
 		self.__hasValidTarget = self.__checkTarget()
-
-		# if we have a valid target get its type
-		if not self.__attrtype and self.__hasValidTarget:
-			self.__attrtype = MMAttrdefs.getattrtype(self.__grinsattrname)
 
 		# Read enumeration attributes
 		self.__additive = MMAttrdefs.getattr(anim, 'additive')
@@ -835,17 +892,15 @@ class AnimateElementParser:
 			print '\t',self
 			return 0
 
-		if smil2grins.has_key(self.__attrname):
-			self.__grinsattrname = smil2grins[self.__attrname]
+		if smil_attrs.has_key(self.__attrname):
+			func = smil_attrs[self.__attrname]
+			self.__domval, self.__grinsattrname, self.__attrtype = func(self.__target)
 		else:
+			self.__domval = MMAttrdefs.getattr(self.__target, self.__attrname)
 			self.__grinsattrname = self.__attrname
-		self.__domval = MMAttrdefs.getattr(self.__target, self.__grinsattrname)
+			self.__attrtype = MMAttrdefs.getattrtype(self.__attrname)
 
 		# check extensions
-		if not self.__domval:
-			d = self.__target.GetChannel().attrdict
-			if not self.__domval and d.has_key(self.__grinsattrname):
-				self.__domval = d[self.__grinsattrname]
 		if not self.__domval:
 			self.__checkExtensions()
 			
