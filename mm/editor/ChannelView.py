@@ -931,7 +931,7 @@ class GO(GOCommand):
 		self.mother.focus = self
 		self.mother.setcommands(self.commandlist,
 					       title = self.menutitle)
-		self.setpopup(obj.popupmenu)
+		self.mother.setpopup(self.popupmenu)
 		if self.ok:
 			self.drawfocus()
 
@@ -946,7 +946,7 @@ class GO(GOCommand):
 			baseobject = mother.baseobject
 			mother.setcommands(baseobject.commandlist,
 						  title = baseobject.menutitle)
-			self.setpopup(baseobject.popupmenu)
+			mother.setpopup(baseobject.popupmenu)
 			self.drawfocus()
 
 	def ishit(self, x, y):

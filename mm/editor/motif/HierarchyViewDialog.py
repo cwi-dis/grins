@@ -83,6 +83,54 @@ class HierarchyViewDialog(ViewDialog):
 		'close': [ CLOSE_WINDOW, ],
 		}
 
+	interior_popupmenu = (
+		('Cut', CUT),
+		('Copy', COPY),
+		('Delete', DELETE),
+		None,
+		('Paste Before', PASTE_BEFORE),
+		('Paste After', PASTE_AFTER),
+		('Paste as Child', PASTE_UNDER),
+		None,
+		('New node Before', NEW_BEFORE),
+		('New node After', NEW_AFTER),
+		('New Child', NEW_UNDER),
+		None,
+		('Play node', PLAYNODE),
+		('Play from node', PLAYFROM),
+		None,
+		('Zoom out', ZOOMOUT),
+		('Zoom in', ZOOMIN),
+		('Zoom here', ZOOMHERE),
+		None,
+		('Show info...', INFO),
+		('Show properties...', ATTRIBUTES),
+		('Edit anchors...', ANCHORS),
+		)
+
+	leaf_popupmenu = (
+		('Cut', CUT),
+		('Copy', COPY),
+		('Delete', DELETE),
+		None,
+		('Paste Before', PASTE_BEFORE),
+		('Paste After', PASTE_AFTER),
+		None,
+		('New node Before', NEW_BEFORE),
+		('New node After', NEW_AFTER),
+		None,
+		('Play node', PLAYNODE),
+		('Play from node', PLAYFROM),
+		None,
+		('Zoom out', ZOOMOUT),
+		('Zoom in', ZOOMIN),
+		None,
+		('Show info...', INFO),
+		('Show properties...', ATTRIBUTES),
+		('Edit contents...', CONTENT),
+		('Edit anchors...', ANCHORS),
+		)
+
 	def __init__(self):
 		ViewDialog.__init__(self, 'hview_')
 
@@ -123,3 +171,6 @@ class HierarchyViewDialog(ViewDialog):
 
 	def setcommands(self, commandlist):
 		self.window.set_commandlist(commandlist)
+
+	def setpopup(self, template):
+		self.window.setpopupmenu(template)
