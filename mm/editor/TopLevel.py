@@ -1020,6 +1020,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				self.context.template = self.new_file
 		self.editmgr = EditMgr(self.root)
 		self.context.seteditmgr(self.editmgr)
+		self.context.toplevel = self
 		self.editmgr.register(self)
 
 	def do_read_it(self, filename):

@@ -3,6 +3,7 @@ __version__ = "$Id$"
 
 import MMAttrdefs
 import MMNode
+import EditableObjects
 import string
 import math
 import svgpath
@@ -1765,7 +1766,8 @@ class AnimateElementParser:
 			if hasattr(targchan,'_vnode'):
 				newnode = targchan._vnode
 			else:
-				newnode = MMNode.MMNode('imm',ctx,ctx.newuid())
+				#mjvdg- newnode = MMNode.MMNode('imm',ctx,ctx.newuid())
+				newnode = EditableObjects.EditableMMNode('imm', ctx, ctx.newuid())
 				newnode.attrdict = targchan.attrdict.copy()
 				newnode.attrdict['channel'] = te
 				newnode.attrdict['tag'] = 'region'
@@ -1777,7 +1779,8 @@ class AnimateElementParser:
 			# transition
 			# XXX fix: create one virtual node per transition
 			tr = ctx.transitions[te]
-			newnode = MMNode.MMNode('imm',ctx,ctx.newuid())
+			#mjvdg- newnode = MMNode.MMNode('imm',ctx,ctx.newuid())
+			newnode = EditableObjects.EditableMMNode('imm', ctx, ctx.newuid())
 			newnode.attrdict = tr.copy()
 			newnode.attrdict['channel'] = te
 			newnode.attrdict['tag'] = 'transition'
@@ -1793,7 +1796,8 @@ class AnimateElementParser:
 				if hasattr(parent,vnodename):
 					newnode = getattr(parent, vnodename)
 				else:
-					newnode = MMNode.MMNode('imm', ctx, ctx.newuid())
+					#mjvdg- newnode = MMNode.MMNode('imm', ctx, ctx.newuid())
+					newnode = EditableObjects.EditableMMNode('imm', ctx, ctx.newuid())
 					newnode.attrdict = parent.attrdict.copy()
 					newnode.attrdict['tag'] = 'area'
 					newnode.attrdict['coords'] = a.aargs
