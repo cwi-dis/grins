@@ -11,8 +11,7 @@ import SR
 
 error = 'MMTree.error'
 
-Version = 'PlayerCache 2.0'		# version of player file
-OldVersion = 'PlayerCache 1.0'		# old version
+Version = 'PlayerCache 2.1'		# version of player file
 
 def ReadFile(filename):
 	try:
@@ -30,21 +29,15 @@ def ReadFile(filename):
 	header = marshal.load(f)
 	if header != (Version, base, stf[ST_MTIME], stf[ST_SIZE]):
 		if header[0] != Version:
-			if header[0] == OldVersion:
-				print 'Warning: old player file version'
-			else:
-				raise error, 'version mismatch'
+			raise error, 'version mismatch'
 		if header[1] != base:
 			print 'Warning: player file does not belong to CMIF file'
 		elif header[2:] != (stf[ST_MTIME], stf[ST_SIZE]):
 			print 'Warning: player file out of date'
 	root = load(f, context)
 	context.root = root
-	if header[0] == OldVersion:
-		f.close()
-	else:
-		root.sroffs = marshal.load(f)
-		root.fildes = f
+	root.sroffs = marshal.load(f)
+	root.fildes = f
 	context.addhyperlinks(root.attrdict['hyperlinks'])
 	context.addchannels(root.attrdict['channellist'])
 	del root.attrdict['hyperlinks']
@@ -143,7 +136,7 @@ def dump(node, mini, f, targets):
 		mini = node
 	node.attrdict['mini'] = mini.uid
 	newattrs.append('mini')
-	if node is mini or node.uid in targets:
+	if node is mini or node.uid in targets or node.GetType() == 'bag':
 		sractions, srevents = mini.GenAllSR(node)
 		prearmlists = gen_prearms(mini)
 		# convert MMNode instances to UIDs
@@ -221,34 +214,8 @@ def load(f, context):
 	try:
 		node.sr_no = attrdict['sr_no']
 	except KeyError:
-		# backward compatibility actions
-		try:
-			sractions = attrdict['sractions']
-			srevents = attrdict['srevents']
-			node.prearmlists = attrdict['prearmlists']
-		except KeyError:
-			pass
-		else:
-			# node is either a mini document or a hyperlink target
-			del attrdict['sractions']
-			del attrdict['srevents']
-			del attrdict['prearmlists']
-			for nevents, actions in sractions:
-				for j in range(len(actions)):
-					a, n = actions[j]
-					if a not in (SR.SYNC, SR.SYNC_DONE):
-						actions[j] = a, mapuid(context, n)
-			node.sractions = sractions
-			node.srevents = {}
-			for event, action in srevents.items():
-				a, n = event
-				if a not in (SR.SYNC, SR.SYNC_DONE):
-					n = mapuid(context, n)
-				node.srevents[(a, n)] = action
-			for list in node.prearmlists.values():
-				for i in range(len(list)):
-					a, n = list[i]
-					list[i] = a, mapuid(context, n)
+		# not a hyperlink destination
+		pass
 	return node
 
 def gen_prearms(node):
