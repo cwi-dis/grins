@@ -21,9 +21,9 @@ class WaitLicense(LicenseDialog):
 			self.setdialoginfo()
 			self.show()
 			
-	def accept_license(self, newlicense=None):
+	def accept_license(self, newlicense=None, user="", organization=""):
 		try:
-			self.license = License(self.features, newlicense)
+			self.license = License(self.features, newlicense, user, organization)
 			if not self.license.msg:
 				return 1	# Everything fine, permanent license
 			# Evaluation license 
@@ -66,9 +66,7 @@ class WaitLicense(LicenseDialog):
 		EnterkeyDialog(self.ok_callback)
 
 	def ok_callback(self, str, name=None, organization=None):
-		import settings
-		import sys
-		self.accept_license(str)
+		self.accept_license(str, name, organization)
 		self.setdialoginfo()
 
 	def do_callback(self):
