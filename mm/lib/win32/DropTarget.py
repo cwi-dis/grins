@@ -9,18 +9,12 @@ class DropTarget:
 		if not self._isregistered:
 			if hasattr(self,'RegisterDropTarget'):
 				self.RegisterDropTarget()
-			else:
-				pass
-				#self.DragAcceptFiles(1)
-				#self.HookMessage(self.onDropFiles,win32con.WM_DROPFILES)
 			self._isregistered=1
 		
 	def revokeDropTarget(self):
 		if self._isregistered:
 			if hasattr(self,'RevokeDropTarget'):
 				self.RevokeDropTarget()
-			else:
-				pass #self.DragAcceptFiles(0)
 			self._isregistered=0
 
 	def OnDragEnter(self,filename,kbdstate,x,y):
@@ -33,7 +27,7 @@ class DropTarget:
 		return self.onEventEx(WMEVENTS.DragFile,(x, y, filename))
 
 	def OnDrop(self,filename,effect,x,y):
-		print 'OnDrop',filename,effect,x,y
+		#print 'OnDrop',filename,effect,x,y
 		if filename:
 			import longpath
 			filename=longpath.short2longpath(filename)
