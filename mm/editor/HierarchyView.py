@@ -767,8 +767,10 @@ class HierarchyView(HierarchyViewDialog):
 				apply(self.window.drawxorline, self.__line)
 				if is_exact:
 					color = (255, 0, 0)
+					self.window.setcursor('darrowhit')
 				else:
 					color = (0,0,255)
+					self.window.setcursor('darrow')
 				self.__line = (px,py),(px, y+h/2), color
 				apply(self.window.drawxorline, self.__line)
 		elif self.scene_graph is not None:
@@ -801,6 +803,7 @@ class HierarchyView(HierarchyViewDialog):
 			if timeline is not None:
 				x,y,w,h = timeline.get_box()
 				color = (255,0,0)
+				self.window.setcursor('darrowhit')
 				self.__line = (px,py),(px, y+h/2), color
 				self.window.drawxorline((px,py),(px, y+h/2), color)
 
