@@ -130,9 +130,6 @@ class SchedulerContext:
 		#
 		self.prearmlists = GenAllPrearms(self.parent.ui,
 						 self.playroot, self.channels)
-##		for ch, v in self.prearmlists.items():
-##			print '-------', ch
-##			v.dump(0)
 		self.playroot.EndPruneTree()
 		mini = self.playroot.FindMiniDocument()
 		Timing.needtimes(mini)
@@ -641,7 +638,7 @@ class Scheduler(scheduler):
 			self.do_looprestart(sctx, arg)
 		else:
 			if action == SR.SCHED_STOP and \
-			   arg.GetType() in interiortypes:
+			   (arg.GetType() in interiortypes or arg.realpix_body or arg.caption_body):
 				self.remove_terminate(sctx, arg)
 			sctx.event((action, arg))
 
@@ -975,6 +972,16 @@ def GenAllPrearms(ui, node, channels):
 	if nodetype in bagtypes:
 		return {}
 	if nodetype in leaftypes:
+		if node.realpix_body or node.caption_body:
+			# Special case for parallel captions to realpix slideshows
+			rv = {}
+			if node.realpix_body:
+				ch = ui.getchannelbynode(node.realpix_body)
+				rv[ch] = ArmStorageLeaf(node.realpix_body)
+			if node.caption_body:
+				ch = ui.getchannelbynode(node.caption_body)
+				rv[ch] = ArmStorageLeaf(node.caption_body)
+			return rv
 		chan = ui.getchannelbynode(node)
 		return {chan : ArmStorageLeaf(node)}
 	#
