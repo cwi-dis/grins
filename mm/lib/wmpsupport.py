@@ -26,12 +26,17 @@ class Exporter:
 ##			self.topwindow = topwindow
 ##		windowinterface.showmessage("Changed, timestamp=%d"%timestamp)
 		print "CHANGED", timestamp-self.starttime, topchannel, window
-		
+		if not self.topwindow:
+			self.topwindow = window
+			self.topwindow.getContext().beginWriting()
+
 	def audiofragment(self):
 		"""XXXX This needs work"""
 		pass
 		
 	def finished(self, aborted):
+		if self.topwindow:
+			self.topwindow.getContext().endWriting()
 		if aborted:
 			self.aborted = 1
 		stoptime = windowinterface.getcurtime()
