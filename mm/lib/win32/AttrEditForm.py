@@ -2358,9 +2358,9 @@ class RealWndCtrl(components.WndCtrl):
 			x, y, w, h = self._rectb
 			msg=win32mu.Win32Msg(params)
 			wm, hm = msg.width(),msg.height()
-			if w>W or h>H:
-				scalex = W/float(wm)
-				scaley = H/float(hm)
+			if wm>w or hm>h:
+				scalex = w/float(wm)
+				scaley = h/float(hm)
 				if scalex < scaley: scale = scalex
 				else: scale = scaley
 				wm, hm = int(scale*wm+0.5), int(scale*hm+0.5)
