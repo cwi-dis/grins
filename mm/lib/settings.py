@@ -21,6 +21,7 @@ default_settings = {
 	'vertical_structure': 1,	# Orientation of Structure View
 	'no_canvas_resize': 1, 	 # Don't resize canvas after window resize (X)
 	'hierarchy_minimum_sizes': 0,	# Leaf nodes drawn using min. size
+	'structure_name_size': 0,
 	'root_expanded': 1,		# Root node always expanded
 	'recent_documents':[],		# Recently used documents
 	'thumbnail_size':10.0,		# Size of thumbnail (mm)
