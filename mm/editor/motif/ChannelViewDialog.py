@@ -8,18 +8,15 @@ from flags import *
 class ChannelViewDialog(ViewDialog):
 	adornments = {
 		'shortcuts': {
-			'n': NEW_CHANNEL,
-			'N': NEXT_MINIDOC,
-			'P': PREV_MINIDOC,
+			'r': NEW_REGION,
 			'T': TOGGLE_UNUSED,
 ##			'i': INFO,
 			'a': ATTRIBUTES,
 			'd': DELETE,
-			'm': MOVE_CHANNEL,
-			'c': COPY_CHANNEL,
+			'm': MOVE_REGION,
+			'c': COPY_REGION,
 			'p': PLAYNODE,
 			'G': PLAYFROM,
-			'f': PUSHFOCUS,
 			's': FINISH_ARC,
 			'T': CREATEANCHOR,
 			'L': FINISH_LINK,
@@ -34,10 +31,10 @@ class ChannelViewDialog(ViewDialog):
 			(FLAG_PRO, 'Edit', [
 				(FLAG_PRO, 'Delete', DELETE),
 				(FLAG_PRO, None),
-				(FLAG_PRO, 'New Channel...', NEW_CHANNEL),
+				(FLAG_PRO, 'New Region...', NEW_REGION),
 				(FLAG_PRO, None),
-				(FLAG_PRO, 'Move Channel', MOVE_CHANNEL),
-				(FLAG_PRO, 'Copy Channel', COPY_CHANNEL),
+				(FLAG_PRO, 'Move Region', MOVE_REGION),
+				(FLAG_PRO, 'Copy Region', COPY_REGION),
 				(FLAG_CMIF, 'Toggle Channel State', TOGGLE_ONOFF),
 				(FLAG_PRO, None),
 ##				(FLAG_PRO, 'Info...', INFO),
@@ -60,20 +57,11 @@ class ChannelViewDialog(ViewDialog):
 				(FLAG_PRO, 'Zoom In', CANVAS_WIDTH),
 				(FLAG_PRO, 'Fit in Window', CANVAS_RESET),
 				(FLAG_PRO, None),
-				(FLAG_PRO, 'Synchronize Selection', PUSHFOCUS),
-				(FLAG_PRO, None),
 				(FLAG_PRO, 'Unused Channels', TOGGLE_UNUSED, 't'),
 				(FLAG_PRO, 'Sync Arcs', TOGGLE_ARCS, 't'),
 				(FLAG_PRO, 'Image Thumbnails', THUMBNAIL, 't'),
 				(FLAG_PRO, 'Bandwidth Usage', TOGGLE_BWSTRIP, 't'),
 				(FLAG_CMIF, None),
-				(FLAG_CMIF, 'Minidocument Navigation', [
-					(FLAG_CMIF, 'Next', NEXT_MINIDOC),
-					(FLAG_CMIF, 'Previous', PREV_MINIDOC),
-					(FLAG_CMIF, 'Ancestors', ANCESTORS),
-					(FLAG_CMIF, 'Siblings', SIBLINGS),
-					(FLAG_CMIF, 'Descendants', DESCENDANTS),
-					]),
 ##				(FLAG_PRO, 'Layout navigation', LAYOUTS),
 				]),
 			(FLAG_PRO, 'Help', [
@@ -113,9 +101,6 @@ class ChannelViewDialog(ViewDialog):
 
 	def setcommands(self, commandlist, title):
 		self.window.set_commandlist(commandlist)
-		self.window.set_dynamiclist(ANCESTORS, self.baseobject.ancestors)
-		self.window.set_dynamiclist(SIBLINGS, self.baseobject.siblings)
-		self.window.set_dynamiclist(DESCENDANTS, self.baseobject.descendants)
 		self.window.set_dynamiclist(SYNCARCS, (self.focus and self.focus.arcmenu) or [])
 ##		self.window.set_dynamiclist(LAYOUTS, self.layouts)
 
@@ -127,7 +112,7 @@ class ChannelViewDialog(ViewDialog):
 
 class GOCommand:
 	POPUP_NONE = (
-		(FLAG_PRO, 'New Channel...', NEW_CHANNEL),
+		(FLAG_PRO, 'New Region...', NEW_REGION),
 		)
 
 	def __init__(self):
@@ -157,8 +142,8 @@ class ChannelBoxCommand:
 		(FLAG_PRO, None),
 		(FLAG_PRO, 'Delete', DELETE),
 		(FLAG_PRO, None),
-		(FLAG_PRO, 'Move Channel', MOVE_CHANNEL),
-		(FLAG_PRO, 'Copy Channel', COPY_CHANNEL),
+		(FLAG_PRO, 'Move Region', MOVE_REGION),
+		(FLAG_PRO, 'Copy Region', COPY_REGION),
 		)
 
 	def __init__(self):

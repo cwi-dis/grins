@@ -23,7 +23,6 @@ class HierarchyViewDialog(ViewDialog):
 			      't': ANCHORS,
 			      'T': CREATEANCHOR,
 			      'L': FINISH_LINK,
-			      'f': PUSHFOCUS,
 			      },
 		'menubar': [
 			(FLAG_ALL, 'Close', [
@@ -32,6 +31,7 @@ class HierarchyViewDialog(ViewDialog):
 			(FLAG_ALL, 'Edit', [
 				(FLAG_ALL, 'Cut', CUT),
 				(FLAG_ALL, 'Copy', COPY),
+				(FLAG_PRO, 'Convert to SMIL 2.0', RPCONVERT),
 				(FLAG_ALL, 'Paste', [
 					(FLAG_ALL, 'Before', PASTE_BEFORE),
 					(FLAG_ALL, 'After', PASTE_AFTER),
@@ -46,8 +46,7 @@ class HierarchyViewDialog(ViewDialog):
 					(FLAG_ALL, None),
 					(FLAG_ALL, 'Seq Parent', NEW_SEQ),
 					(FLAG_ALL, 'Par Parent', NEW_PAR),
-					(FLAG_ALL, 'Switch Parent', NEW_ALT),
-					(FLAG_CMIF, 'Choice Parent', NEW_CHOICE),
+					(FLAG_ALL, 'Switch Parent', NEW_SWITCH),
 					]),
 				(FLAG_ALL, None),
 ##				(FLAG_PRO, 'Info...', INFO),
@@ -67,13 +66,15 @@ class HierarchyViewDialog(ViewDialog):
 				(FLAG_ALL, 'Expand/Collapse', EXPAND),
 				(FLAG_ALL, 'Expand All', EXPANDALL),
 				(FLAG_ALL, 'Collapse All', COLLAPSEALL),
-				(FLAG_PRO, None),
-				(FLAG_PRO, 'Synchronize Selection', PUSHFOCUS),
 				(FLAG_ALL, None),
 				(FLAG_ALL, 'Image Thumbnails', THUMBNAIL, 't'),
 				(FLAG_ALL, 'Show Playable', PLAYABLE, 't'),
-				(FLAG_PRO, 'Show Durations', TIMESCALE, 't'),
 				(FLAG_ALL, 'Check Bandwidth Usage', COMPUTE_BANDWIDTH),
+				(FLAG_ALL, 'Show Time in Structure', [
+					(FLAG_ALL, 'Whole Document, Adaptive', TIMESCALE, 't'),
+					(FLAG_ALL, 'Selection Only, Adaptive', LOCALTIMESCALE, 't'),
+					(FLAG_ALL, 'Selection Only, Fixed', CORRECTLOCALTIMESCALE, 't'),
+					]),
 				]),
 			(FLAG_ALL, 'Help', [
 				(FLAG_ALL, 'Help...', HELP),
@@ -114,6 +115,8 @@ class HierarchyViewDialog(ViewDialog):
 	leaf_popupmenu = (
 		(FLAG_ALL, 'New Node Before', NEW_BEFORE),
 		(FLAG_ALL, 'New Node After', NEW_AFTER),
+		(FLAG_PRO, None),
+		(FLAG_PRO, 'Convert to SMIL 2.0', RPCONVERT),
 		(FLAG_ALL, None),
 		(FLAG_ALL, 'Cut', CUT),
 		(FLAG_ALL, 'Copy', COPY),
@@ -147,6 +150,10 @@ class HierarchyViewDialog(ViewDialog):
 		(FLAG_ALL, None),
 		(FLAG_ALL, 'Properties...', ATTRIBUTES),
 		(FLAG_ALL, 'Edit Content...', CONTENT),
+		)
+
+	transition_popupmenu = (
+		(FLAG_ALL, 'Transition', TRANSITION),
 		)
 
 	def __init__(self):
@@ -193,6 +200,7 @@ class HierarchyViewDialog(ViewDialog):
 
 	def setcommands(self, commandlist):
 		self.window.set_commandlist(commandlist)
+		self.window.set_dynamiclist(TRANSITION, self.translist or [])
 
 	def setpopup(self, template):
 		self.window.setpopupmenu(template, curflags())
@@ -201,10 +209,16 @@ class HierarchyViewDialog(ViewDialog):
 		w = self.window
 		w.set_toggle(THUMBNAIL, self.thumbnails)
 		w.set_toggle(PLAYABLE, self.showplayability)
-		w.set_toggle(TIMESCALE, self.timescale)
 
 	def getparentwindow(self):
 		# Used by machine-independent code to pass as parent
 		# parameter to dialogs
 		##return self.window
 		return self.window
+
+	# this method is called when the mouse is dragged
+	# begin != 0 means that you start the drag, otherwise, assume that the drag is finished
+	# on some plateform (at least Windows), it allows to tell to the system to continue to
+	# send the event even if the mouse go outside the window (during dragging)
+	def mousedrag(self, begin):
+		pass
