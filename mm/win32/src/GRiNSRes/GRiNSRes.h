@@ -74,6 +74,9 @@
 #define IDD_EDITATTR_S1O1S5_R3          336
 #define IDD_EDITATTR_O1_R4              337
 #define IDD_EDITATTR_LS1O2              338
+#define IDD_EDITATTR_S6                 339
+#define IDD_EDITATTR_S4                 340
+#define IDD_EDITATTR_S3                 341
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
 #define IDC_EDIT_LOCATION               1020
