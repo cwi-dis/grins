@@ -1960,9 +1960,9 @@ class NodeBox(GO, NodeBoxCommand):
 			t1 = node_t2
 		left, right = self.mother.maptimes(node_t0, t1)
 		top, bottom = self.mother.mapchannel(channel, self.channelline)
-		if hasattr(self.node,'timing_discont') and self.node.timing_discont:
-			self.mother.discontinuities.append(
-				node_t0+self.node.timing_discont)
+##		if hasattr(self.node,'timing_discont') and self.node.timing_discont:
+##			self.mother.discontinuities.append(
+##				node_t0+self.node.timing_discont)
 
 		hmargin = self.mother.nodemargin
 		left = left + hmargin
@@ -2003,7 +2003,7 @@ class NodeBox(GO, NodeBoxCommand):
 
 		# If the end time was inherited, make the bottom-right
 		# triangle of the box a lighter color
-		if self.node.t0t1_inherited:
+		if self.node.GetFill() != 'remove':
 			d.drawfpolygon(altnodecolor, [(r, t), (r, b), (l, b)])
 
 		# If there are anchors on this node,
