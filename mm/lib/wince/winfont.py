@@ -62,10 +62,9 @@ def findfont(fontname, pointsize):
 	return fontobj	
 
 def delfonts():
-	global _fontcache
 	for key in _fontcache.keys():
 		_fontcache[key].close()
-	_fontcache = {}
+	_fontcache.clear()
 
 # The methods of the font_object are:
 #	close()

@@ -1,5 +1,6 @@
 
-preload_list = ['AnimateChannel',
+preload_list = [
+	'AnimateChannel',
 	'Animators',
 	'ArmStates',
 	'Attrdefs',
@@ -174,4 +175,5 @@ preload_list = ['AnimateChannel',
 	#'winstruct',
 	'wndusercmd',
 	'xmllib',
-	'xmmflib',]
+	'xmmflib',
+	]
