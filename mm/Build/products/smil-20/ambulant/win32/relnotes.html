@@ -1,0 +1,189 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>Ambulant/G Player for SMIL 2.0 Version 1.0 Release Notes for Windows</title>
+  </head>
+
+  <body>
+    <h1>Ambulant/G Player for SMIL 2.0 Version 1.0 Release Notes for Windows</h1>
+
+    <p>
+      These are the release notes for Ambulant/G Player for SMIL 2.0 for
+      Windows, version 1.0. A more recent version of these release notes,
+      as well as more recent builds of the player, may be available
+      through
+      <a href="http://www.ambulantPlayer.org/Player/">
+	http://www.ambulantPlayer.org/Player/</a>.
+    </p>
+    
+    <p>
+      This release is a preview release. It is not for commercial use
+      and is not supported by the Ambulant Player Project.
+    </p>
+
+
+   <h2>Known problems</h2>
+    <p>
+     None.
+    </p>
+
+    <h2>SMIL 2.0 Compatibility</h2>
+
+    <p>
+      This player supports the
+      <a href="http://www.w3.org/TR/smil20/smil20-profile.html">SMIL
+      2.0 Language Profile</a> completely.  The SMIL 2.0 Language
+      Profile consists of the following modules.  Where appropriate, a
+      note is added to clarify the level of support.  For more
+      information about SMIL 2.0 and the SMIL 2.0 Language Profile,
+      see <a href="http://www.w3.org/TR/smil20/">here</a>.
+    </p>
+
+    <ul>
+      <li>Structure functionality
+	<ul>
+	  <li>Structure Module</li>
+	</ul>
+      </li>
+      <li>Metainformation functionality
+	<ul>
+	  <li>Metainformation Module</li>
+	</ul>
+      </li>
+      <li>Timing functionality
+	<ul>
+	  <li>BasicInlineTiming Module</li>
+	  <li>SyncbaseTiming Module</li>
+	  <li>EventTiming Module</li>
+	  <li>MinMaxTiming Module</li>
+	  <li>RepeatTiming Module</li>
+	  <li>RepeatValueTiming Module</li>
+	  <li>WallclockTiming Module</li>
+	  <li>MultiArcTiming Module</li>
+	  <li>AccessKeyTiming Module</li>
+	  <li>BasicTimeContainers Module</li>
+	  <li>ExclTimeContainers Module</li>
+	  <li>RestartTiming Module</li>
+	  <li>SyncBehavior Module
+	    <ul>
+	      <li>Only syncBehavior="independent" is supported.</li>
+	    </ul>
+	  </li>
+	  <li>SyncBehaviorDefault Module</li>
+	  <li>RestartDefault Module</li>
+	  <li>FillDefault Module</li>
+	  <li>MediaMarkerTiming Module</li>
+	</ul>
+      </li>
+      <li>Animation functionality
+	<ul>
+	  <li>BasicAnimation Module
+	    <ul>
+	      <li>The attribute attributeType is recognized but
+		ignored (attributeType is always XML).</li>
+	    </ul>
+	  </li>
+	</ul>
+      </li>
+      <li>Content Control functionality
+	<ul>
+	  <li>BasicContentControl Module</li>
+	  <li>CustomTestAttributes Module</li>
+	  <li>PrefetchControl Module</li>
+	  <li>SkipContentControl Module</li>
+	</ul>
+      </li>
+      <li>Layout functionality
+	<ul>
+	  <li>BasicLayout Module</li>
+	  <li>AudioLayout Module</li>
+	  <li>MultiWindowLayout Module</li>
+	  <li>HierarchicalLayout Module</li>
+	</ul>
+      </li>
+      <li>Linking functionality
+	<ul>
+	  <li>BasicLinking Module</li>
+	  <li>LinkingAttributes Module</li>
+	  <li>ObjectLinking Module
+	    <ul>
+	      <li>Fully supported, but only links in HTML documents
+		can be overridden using the fragment attribute.</li>
+	    </ul>
+	  </li>
+	</ul>
+      </li>
+      <li>Transition Effects functionality
+	<ul>
+	  <li>BasicTransitions Module
+	    <ul>
+	      <li>Type miscShapeWipe is recognized but not implemented.</li>
+	      <li>Only some subtype values are implemented.</li>
+	      <li>The direction attribute is recognized but ignored
+		(direction is always forward).</li>
+	    </ul>
+	  </li>
+	  <li>TransitionModifiers Module
+	    <ul>
+	      <li>The TransitionModifiers attributes (borderColor,
+		borderWidth, horzRepeat, and vertRepeat) are recognized
+		but ignored.</li>
+	    </ul>
+	  </li>
+	</ul>
+      </li>
+      <li>Media functionality
+	<ul>
+	  <li>BasicMedia Module</li>
+	  <li>MediaClipping Module</li>
+	  <li>MediaClipMarkers Module</li>
+	  <li>MediaParam Module
+	    <ul>
+	      <li>The only param value that is recognized is
+		<code>name=&quot;fgcolor&quot;&nbsp;value=&quot;<em>some&nbsp;color&nbsp;specification</em>&quot;</code>.
+		This value only works on media with the MIME type
+		text/plain.</li>
+	    </ul>
+	  </li>
+	  <li>BrushMedia Module</li>
+	  <li>MediaAccessibility Module
+	    <ul>
+	      <li>Fully supported in that the readIndex attribute is
+		parsed correctly. There is no support for actually
+		reading out the alt, title, and longdesc attributes.</li>
+	    </ul>
+	  </li>
+	</ul>
+      </li>
+    </ul>
+
+    <p>
+      In addition to the modules from the SMIL 2.0 Language Profiles, the
+      player also supports the following SMIL 2.0 Modules.
+    </p>
+
+    <ul>
+      <li>Time Manipulations functionality
+	<ul>
+	  <li>Time Manipulations Module
+	    <ul>
+	      <li>Only supported for animation elements (animate,
+		animateColor, animateMotion, set, transitionFilter).
+	      </li>
+	    </ul>
+	  </li>
+	</ul>
+      </li>
+      <li>Animation functionality
+	<ul>
+	  <li>SplineAnimation</li>
+	</ul>
+      </li>
+      <li>Transition Effects functionality
+	<ul>
+	  <li>InlineTransitions</li>
+	</ul>
+      </li>
+    </ul>
+  </body>
+</html>
