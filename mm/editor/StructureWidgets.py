@@ -633,18 +633,20 @@ class StructureObjWidget(MMNodeWidget):
 		for i in self.children:
 			i.collapse_all()
 
-	def get_obj_near(self, (x, y), timemapper = None):
+	def get_obj_near(self, (x, y), timemapper = None, timeline = None):
 		l,t,r,b = self.pos_abs
 		if t <= y <= b:
 			if self.timemapper is not None:
 				timemapper = self.timemapper
+			if self.timeline is not None:
+				timeline = self.timeline
 			if l - EPSILON < x < l + EPSILON:
-				return self, 'left', timemapper
+				return self, 'left', timemapper, timeline
 			if r - EPSILON < x < r + EPSILON:
-				return self, 'right', timemapper
+				return self, 'right', timemapper, timeline
 			if l <= x <= r:
 				for c in self.children:
-					rv = c.get_obj_near((x, y), timemapper)
+					rv = c.get_obj_near((x, y), timemapper, timeline)
 					if rv is not None:
 						return rv
 
@@ -1642,15 +1644,17 @@ class MediaWidget(MMNodeWidget):
 			f = os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
 		return f
 
-	def get_obj_near(self, (x, y), timemapper = None):
+	def get_obj_near(self, (x, y), timemapper = None, timeline = None):
 		l,t,r,b = self.pos_abs
 		if t <= y <= b:
 			if self.timemapper is not None:
 				timemapper = self.timemapper
+			if self.timeline is not None:
+				timeline = self.timeline
 			if l - EPSILON < x < l + EPSILON:
-				return self, 'left', timemapper
+				return self, 'left', timemapper, timeline
 			if r - EPSILON < x < r + EPSILON:
-				return self, 'right', timemapper
+				return self, 'right', timemapper, timeline
 
 	def get_obj_at(self, pos):
 		# Returns an MMWidget at pos. Compare get_clicked_obj_at()

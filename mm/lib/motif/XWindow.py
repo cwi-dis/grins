@@ -455,6 +455,10 @@ class _Window(_AdornmentSupport, _RubberBand):
 				self._pixmap.CopyArea(self._form, self._gc,
 						      x, y, w, h, x, y)
 
+	# draw XOR line from pt0 to pt1 (in pixels)
+	def drawxorline(self, pt0, pt1):
+		pass
+
 	def getgeometry(self, units = UNIT_MM):
 		x, y = self._shell.TranslateCoords(0, 0)
 		for w in self._shell.children[0].children:

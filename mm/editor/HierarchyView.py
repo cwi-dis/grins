@@ -655,7 +655,13 @@ class HierarchyView(HierarchyViewDialog):
 	def mousemove(self, dummy, window, event, point):
 		if self.__dragside is not None:
 			self.window._dragging = None # XXX win32 specific, should define proper interface
-			obj, side, timemapper = self.__dragside
+			obj, side, timemapper, timeline = self.__dragside
+			if timeline is not None:
+				x,y,w,h = timeline.get_box()
+				px, py = point
+				apply(self.window.drawxorline, self.__line)
+				self.__line = (px,py),(px, y+h/2)
+				apply(self.window.drawxorline, self.__line)
 		elif self.scene_graph is not None:
 			rv = self.scene_graph.get_obj_near(point)
 			if rv is None:
@@ -678,15 +684,24 @@ class HierarchyView(HierarchyViewDialog):
 				self.addclick(px, py)
 			else:
 				self.click(px, py)
-		# else start dragging
+		else:
+			# start dragging
+			obj, side, timemapper, timeline = rv
+			if timeline is not None:
+				x,y,w,h = timeline.get_box()
+				self.__line = (px,py),(px, y+h/2)
+				self.window.drawxorline((px,py),(px, y+h/2))
 
 	def mouse0release(self, dummy, window, event, params):
 		x,y = params[0:2]
 		px = int(x * self.mcanvassize[0] + .5)
 		py = int(y * self.mcanvassize[1] + .5)
 		if self.__dragside is not None:
-			obj, side, timemapper = self.__dragside
+			obj, side, timemapper, timeline = self.__dragside
 			self.__dragside = None
+			if timeline is not None:
+				apply(self.window.drawxorline, self.__line)
+				self.__line = None
 			t = obj.pixel2time(px, side, timemapper)
 			em = self.editmgr
 			if not em.transaction():
