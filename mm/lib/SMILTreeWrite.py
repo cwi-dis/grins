@@ -361,7 +361,7 @@ cmif_node_attrs_ignore = [
 	'author', 'copyright', 'abstract', 'mimetype',
 	]
 cmif_chan_attrs_ignore = [
-	'type', 'id', 'title', 'base_window', 'base_winoff', 'z', 'scale',
+	'id', 'title', 'base_window', 'base_winoff', 'z', 'scale',
 	'transparent', 'bgcolor', 'winpos', 'winsize', 'rect', 'center',
 	'drawbox', 'units',
 	]
@@ -376,15 +376,19 @@ smil_mediatype={
 	'mpeg':'video',
 	'html':'text',
 	'label':'text',
-	'midi':'audio'
+	'midi':'audio',
+	'RealAudio':'audio',
+	'RealPix':'image',
+	'RealText':'text',
+	'RealVideo':'video',
 }
 
 def mediatype(chtype, error=0):
 	if smil_mediatype.has_key(chtype):
-		return smil_mediatype[chtype]
+		return smil_mediatype[chtype], smil_mediatype[chtype]
 	if error and chtype != 'layout':
 		print '** Unimplemented channel type', chtype
-	return '%s:%s' % (NSprefix, chtype)
+	return '%s:%s' % (NSprefix, chtype), '%s %s' % (GRiNSns, chtype)
 
 class SMILWriter(SMIL):
 	def __init__(self, node, fp, filename):
@@ -474,12 +478,12 @@ class SMILWriter(SMIL):
 					hasprefix = 1
 					break
 				if attr[:len(NSprefix)] == NSprefix:
-					attrs.insert(0, (xmlns, CMIFns))
+					attrs.insert(0, (xmlns, GRiNSns))
 					hasprefix = 1
 					break
 		if not hasprefix:
 			if tag[:len(NSprefix)] == NSprefix:
-				attrs.insert(0, (xmlns, CMIFns))
+				attrs.insert(0, (xmlns, GRiNSns))
 				hasprefix = 1
 		for attr, val in attrs:
 			write(' %s=%s' % (attr, nameencode(val)))
@@ -493,7 +497,7 @@ class SMILWriter(SMIL):
 		fp.write(doctype)
 		attrlist = []
 		if self.uses_cmif_extension:
-			attrlist.append((xmlns, CMIFns))
+			attrlist.append((xmlns, GRiNSns))
 		self.writetag('smil', attrlist)
 		self.push()
 		self.writetag('head')
@@ -687,7 +691,7 @@ class SMILWriter(SMIL):
 					attrlist.append(('height', '%d' % int(h + .5)))
 			self.writetag('root-layout', attrlist)
 		for ch in channels:
-			mtype = mediatype(ch['type'], error=1)
+			mtype, xtype = mediatype(ch['type'], error=1)
 			isvisual = mtype in ('image', 'video', 'text')
 			if len(self.top_levels) == 1 and \
 			   ch['type'] == 'layout' and \
@@ -701,7 +705,7 @@ class SMILWriter(SMIL):
 			if ch.has_key('base_window') and \
 			   ch.has_key('base_winoff'):
 				x, y, w, h = ch['base_winoff']
-				units = ch['units']
+				units = ch.get('units', 2)
 				if units == 0:		# UNIT_MM
 					# convert mm to pixels (assuming 100 dpi)
 					x = int(x / 25.4 * 100 + .5)
@@ -755,7 +759,7 @@ class SMILWriter(SMIL):
 			self.regions_defined[ch] = 1
 			for key, val in ch.items():
 				if key not in cmif_chan_attrs_ignore:
-					attrlist.append(('%s:%s' % (NSprefix, key), str(val)))
+					attrlist.append(('%s:%s' % (NSprefix, key), MMAttrdefs.valuerepr(key, val)))
 			self.writetag('region', attrlist)
 		self.pop()
 
@@ -805,15 +809,16 @@ class SMILWriter(SMIL):
 		if interior:
 			if type == 'bag':
 				mtype = '%s:bag' % NSprefix
+				xtype = '%s bag' % GRiNSns
 			elif type == 'alt':
-				mtype = 'switch'
+				xtype = mtype = 'switch'
 			else:
-				mtype = type
+				xtype = mtype = type
 		else:
 			chtype = x.GetChannelType()
 			if not chtype:
 				chtype = 'unknown'
-			mtype = mediatype(chtype)
+			mtype, xtype = mediatype(chtype)
 
 		attrlist = []
 
@@ -839,7 +844,7 @@ class SMILWriter(SMIL):
 				mime = mime + ';charset=ISO-8859-1'
 			imm_href = 'data:%s,%s' % (mime, MMurl.quote(data))
 
-		attributes = self.attributes[mtype]
+		attributes = self.attributes[xtype]
 		for name, func in smil_attrs:
 			if name == 'src' and type == 'imm':
 				value = imm_href
@@ -856,7 +861,7 @@ class SMILWriter(SMIL):
 			   key[-8:] != '_winsize' and \
 			   key not in cmif_node_attrs_ignore:
 				attrlist.append(('%s:%s' % (NSprefix, key),
-						 str(val)))
+						 MMAttrdefs.valuerepr(key, val)))
 		if interior:
 			if root and (attrlist or type != 'seq'):
 				root = 0

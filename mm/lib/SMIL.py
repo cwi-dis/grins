@@ -1,18 +1,18 @@
 SMIL_BASIC = 'text/smil-basic-layout'
 SMILpubid = "-//W3C//DTD SMIL 1.0//EN"
 SMILdtd = "http://www.w3.org/TR/REC-smil/SMIL10.dtd"
-CMIFns = "http://www.cwi.nl/Chameleon/"
+GRiNSns = "http://www.oratrix.com/"
 
 class SMIL:
 	# some abbreviations
-	__layouts = CMIFns + ' ' + 'layouts'
-	__layout = CMIFns + ' ' + 'layout'
-	__bag = CMIFns + ' ' 'bag'
-	__cmif = CMIFns + ' ' 'cmif'
-	__shell = CMIFns + ' ' 'shell'
-	__socket = CMIFns + ' ' 'socket'
-	__user_attributes = CMIFns + ' ' 'user-attributes'
-	__u_group = CMIFns + ' ' 'u-group'
+	__layouts = GRiNSns + ' ' + 'layouts'
+	__layout = GRiNSns + ' ' + 'layout'
+	__bag = GRiNSns + ' ' 'bag'
+	__cmif = GRiNSns + ' ' 'cmif'
+	__shell = GRiNSns + ' ' 'shell'
+	__socket = GRiNSns + ' ' 'socket'
+	__user_attributes = GRiNSns + ' ' 'user-attributes'
+	__u_group = GRiNSns + ' ' 'u-group'
 
 	# all allowed entities with all their attributes
 	attributes = {
@@ -33,7 +33,22 @@ class SMIL:
 			   'title':None,
 			   'top':'0',
 			   'width':'0',
-			   'z-index':'0'},
+			   'z-index':'0',
+			   GRiNSns+' ' 'border':None,
+			   GRiNSns+' ' 'bucolor':None,
+			   GRiNSns+' ' 'center':None,
+			   GRiNSns+' ' 'comment':None,
+			   GRiNSns+' ' 'drawbox':None,
+			   GRiNSns+' ' 'duration':None,
+			   GRiNSns+' ' 'fgcolor':None,
+			   GRiNSns+' ' 'file':None,
+			   GRiNSns+' ' 'font':None,
+			   GRiNSns+' ' 'hicolor':None,
+			   GRiNSns+' ' 'pointsize':None,
+			   GRiNSns+' ' 'transparent':None,
+			   GRiNSns+' ' 'type':None,
+			   GRiNSns+' ' 'visible':None,
+			   },
 		'root-layout': {'background-color':'transparent',
 				'height':'0',
 				'id':None,
@@ -41,10 +56,10 @@ class SMIL:
 				'skip-content':'true',
 				'title':None,
 				'width':'0'},
-		__layouts: {CMIFns+' ' 'id':None},
-		__layout: {CMIFns+' ' 'id':None,
-##			   CMIFns+' ' 'title':None,
-			   CMIFns+' ' 'regions':None},
+		__layouts: {GRiNSns+' ' 'id':None},
+		__layout: {GRiNSns+' ' 'id':None,
+##			   GRiNSns+' ' 'title':None,
+			   GRiNSns+' ' 'regions':None},
 		'par': {'abstract':'',
 			'author':'',
 			'begin':None,
@@ -64,7 +79,9 @@ class SMIL:
 			'system-screen-size':None,
 			'title':None,
 			__u_group:None,
-			__layout:None},
+			__layout:None,
+			GRiNSns+' ' 'comment':None,
+			},
 		'seq': {'abstract':'',
 			'author':'',
 			'begin':None,
@@ -82,33 +99,38 @@ class SMIL:
 			'system-screen-size':None,
 			'title':None,
 			__u_group:None,
-			__layout:None,},
+			__layout:None,
+			GRiNSns+' ' 'comment':None,
+			},
 		'switch': {'id':None,
 			   'system-bitrate':None,
 			   'system-captions':None,
 			   'system-language':None,
 			   'system-overdub-or-caption':None,
+
 			   'system-required':None,
 			   'system-screen-depth':None,
 			   'system-screen-size':None,
 			   __u_group:None,
 			   __layout:None},
-		__bag: {CMIFns+' ' 'abstract':'',
-			CMIFns+' ' 'author':'',
-			CMIFns+' ' 'bag-index':None,
-			CMIFns+' ' 'copyright':'',
-			CMIFns+' ' 'id':None,
-			CMIFns+' ' 'system-bitrate':None,
-			CMIFns+' ' 'system-captions':None,
-			CMIFns+' ' 'system-language':None,
-			CMIFns+' ' 'system-overdub-or-caption':None,
-			CMIFns+' ' 'system-required':None,
-			CMIFns+' ' 'system-screen-depth':None,
-			CMIFns+' ' 'system-screen-size':None,
-			CMIFns+' ' 'title':None,
-			CMIFns+' ' 'bag-index':None,
+		__bag: {GRiNSns+' ' 'abstract':'',
+			GRiNSns+' ' 'author':'',
+			GRiNSns+' ' 'bag-index':None,
+			GRiNSns+' ' 'copyright':'',
+			GRiNSns+' ' 'id':None,
+			GRiNSns+' ' 'system-bitrate':None,
+			GRiNSns+' ' 'system-captions':None,
+			GRiNSns+' ' 'system-language':None,
+			GRiNSns+' ' 'system-overdub-or-caption':None,
+			GRiNSns+' ' 'system-required':None,
+			GRiNSns+' ' 'system-screen-depth':None,
+			GRiNSns+' ' 'system-screen-size':None,
+			GRiNSns+' ' 'title':None,
+			GRiNSns+' ' 'bag-index':None,
 			__u_group:None,
-			__layout:None},
+			__layout:None,
+			GRiNSns+' ' 'comment':None,
+			},
 		'ref': {'abstract':'',
 			'alt':None,
 			'author':'',
@@ -134,7 +156,14 @@ class SMIL:
 			'title':None,
 			'type':None,
 			__u_group:None,
-			__layout:None},
+			__layout:None,
+			GRiNSns+' ' 'bgcolor':None,
+			GRiNSns+' ' 'comment':None,
+			GRiNSns+' ' 'font':None,
+			GRiNSns+' ' 'hicolor':None,
+			GRiNSns+' ' 'pointsize':None,
+			GRiNSns+' ' 'scale':None,
+			},
 		'a': {'href':None,
 		      'id':None,
 		      'show':'replace',
@@ -147,13 +176,13 @@ class SMIL:
 			   'show':'replace',
 			   'skip-content':'true',
 			   'title':None,
-			   CMIFns+' ' 'fragment-id':None},
-		__user_attributes: {CMIFns+' ' 'id':None,
+			   GRiNSns+' ' 'fragment-id':None},
+		__user_attributes: {GRiNSns+' ' 'id':None,
 				    },
-		__u_group: {CMIFns+' ' 'id':None,
-			    CMIFns+' ' 'u-state':'RENDERED',
-			    CMIFns+' ' 'title':None,
-			    CMIFns+' ' 'override':'allowed',
+		__u_group: {GRiNSns+' ' 'id':None,
+			    GRiNSns+' ' 'u-state':'RENDERED',
+			    GRiNSns+' ' 'title':None,
+			    GRiNSns+' ' 'override':'allowed',
 			    },
 		}
 
@@ -168,7 +197,7 @@ class SMIL:
 				if ' ' in key:
 					__at[key] = val
 				else:
-					__at[CMIFns+' '+key] = val
+					__at[GRiNSns+' '+key] = val
 		else:
 			attributes[__el] = attributes['ref']
 	del __el, __at
