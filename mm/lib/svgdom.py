@@ -46,7 +46,6 @@ class SvgNode:
 	def getParent(self):
 		return self.parent
 
-
 	def getFirstChild(self):
 		return self.firstchild
 
@@ -152,6 +151,8 @@ class SvgElement(SvgNode, smiltime.TimeElement):
 		self.style = None
 		self.tflist = None
 		self.istimeElement = 0
+
+		self.ctm_provider = None
 
 	def __repr__(self):
 		if self.data is not None:
@@ -327,6 +328,17 @@ class SvgElement(SvgNode, smiltime.TimeElement):
 			if sys.platform == 'win32':
 				import windowinterface
 				windowinterface.shell_execute(p.get('xlink:href'),'open')
+
+	def setCTMProvider(self, p):
+		self.ctm_provider = p
+
+	def getViewportToUserTM(self):
+		if self.ctm_provider:
+			tm = self.ctm_provider.getCTM()
+			tm = tm.copy()
+			tm.inverse()
+			return tm
+		return TM()
 
 class SvgRect(SvgElement):
 	def parseAttributes(self):

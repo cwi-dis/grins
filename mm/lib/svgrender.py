@@ -37,6 +37,7 @@ class SVGRenderer:
 	def getHeight(self): return self._renderbox[3]
 	def getSize(self): return self._renderbox[2:]
 	def getRenderBox(self): return self._renderbox
+	def getCTM(self): return self.graphics.ctm
 
 	def getElementAt(self, pt):
 		rgns = self.regions[:]
@@ -68,6 +69,7 @@ class SVGRenderer:
 	def startnode(self, node):
 		if not node.isVisible():
 			return
+		node.setCTMProvider(self)
 		eltype = node.getType()
 		try:
 			fo = getattr(self, eltype)
@@ -82,6 +84,7 @@ class SVGRenderer:
 	def endnode(self, node):
 		if not node.isVisible():
 			return
+		node.setCTMProvider(None)
 		eltype = node.getType()
 		if eltype in ('svg', 'g'):
 			try:
@@ -96,10 +99,10 @@ class SVGRenderer:
 	#
 	def begingroup(self, node):
 		self.saveGraphics()
-		self.graphics.applyStyle(node.getStyle())
-		self.graphics.applyTfList(node.getTransform())
 		x, y = node.get('x'), node.get('y')
 		self.graphics.applyTfList([('translate', [x, y]),])
+		self.graphics.applyStyle(node.getStyle())
+		self.graphics.applyTfList(node.getTransform())
 		self.graphics.tkOnBeginContext()
 
 	def endgroup(self, node):
