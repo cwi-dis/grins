@@ -24,7 +24,13 @@ interface IGRiNSPlayerAuto : IUnknown
 	HRESULT stop();
 	HRESULT pause();
 	HRESULT update();
+	HRESULT getState([out] int *pstate);
 	HRESULT getSize([out] int *pw, [out] int *ph);
+	HRESULT getDuration([out] double *pdur);
+	HRESULT getTime([out] double *pt);
+	HRESULT setTime([in] double t);
+	HRESULT getSpeed([out] double *ps);
+	HRESULT setSpeed([in] double s);
 	}
 
 // {8443A49C-5957-4019-AEC5-D13CEBF3FCF3}

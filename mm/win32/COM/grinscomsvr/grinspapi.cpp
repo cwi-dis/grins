@@ -139,6 +139,22 @@ ComModule_AdviceSetSize(ComModuleObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char ComModule_CheckPeer__doc__[] =
+""
+;
+static PyObject *
+ComModule_CheckPeer(ComModuleObject *self, PyObject *args)
+{
+	int id;
+	if(!PyArg_ParseTuple(args, "i", &id))
+		return NULL;
+	self->pModule->checkPeer(id);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+
 static struct PyMethodDef ComModule_methods[] = {
 	{"RegisterClassObjects", (PyCFunction)ComModule_RegisterClassObjects, METH_VARARGS, ComModule_RegisterClassObjects__doc__},
 	{"Lock", (PyCFunction)ComModule_Lock, METH_VARARGS, ComModule_Lock__doc__},

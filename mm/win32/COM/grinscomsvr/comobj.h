@@ -8,5 +8,6 @@ bool UnregisterGRiNSPlayerAutoServer();
 HRESULT GetGRiNSPlayerAutoClassObject(IClassFactory** ppv, GRiNSPlayerComModule *pModule);
 HRESULT CoRegisterGRiNSPlayerAutoClassObject(IClassFactory* pIFactory, LPDWORD  lpdwRegister);
 void GRiNSPlayerAutoAdviceSetSize(int id, int w, int h);
+void GRiNSPlayerAutoCheckPeer(int id);
 
 #endif
