@@ -4,25 +4,6 @@ __version__ = "$Id$"
 import win32ui
 
 
-
-####################################
-# get the app module wrapper objects
-# from win32ui server 
-midiex=win32ui.GetMidiex()
-mpegex=win32ui.GetMpegex()
-
-
-# REMOVED
-# cmifex=win32ui.GetCmifex()
-# Htmlex=win32ui.GetHtmlex()
-# timerex=win32ui.GetTimerex()
-# imageex=win32ui.GetImageex()
-# soundex=win32ui.GetSoundex()
-# cmifex2=win32ui.GetCmifex2()
-	
-# resources
-import grinsRC
-
 #############################
 _gifcache = {}
 _imglist = []
@@ -31,21 +12,29 @@ class ImageLib:
 	def __init__(self):
 		self.lib=win32ui.Getig()
 		self.giflib=win32ui.GetGifex()
+		self._tempmap={}
 
 	def __del__(self):
 		for img in _imglist:
 			self.lib.image_delete(img)
-
+	
+	# 1. use abs filenames
+	# 2. use temp files for gif
+	# 3. use cash for gif conversion
 	def load(self,filename):
+		import tempfile
 		filename=self.toabs(filename)
 		self._isgif=0
 		self._isgif,gif_tras=self.giflib.IsGif(filename)
 		tras=0
 		ldfilename=filename
 		if self._isgif:
-			ldfilename = filename + ".bmp"
-			self.assertGifMediaWriteable(ldfilename)
-			self.giflib.Gif2Bmp(filename,ldfilename)
+			if filename in self._tempmap.keys():
+				ldfilename=self._tempmap[filename]
+			else:
+				ldfilename = tempfile.mktemp('.bmp')
+				self._tempmap[filename]=ldfilename
+				self.giflib.Gif2Bmp(filename,ldfilename)
 			tras=gif_tras
 		img= self.lib.load_file(ldfilename)
 		if self._isgif: _gifcache[img]=tras
