@@ -170,7 +170,7 @@ MENUBAR=(
 		(FULL, TOGGLE, 'Bandwidth Usage Strip', None, TOGGLE_BWSTRIP),
 		(ALL, ENTRY, 'Check Bandwidth', None, COMPUTE_BANDWIDTH),
 		(FULL, TOGGLE, 'Show Playable', None, PLAYABLE),
-		(FULL, TOGGLE, 'Show Durations', None, TIMESCALE),
+		(CMIF, TOGGLE, 'Show Durations', None, TIMESCALE),
 		(CMIF, SEP,),
 		(CMIF, TOGGLE, 'Timeline view follows player', None, SYNCCV),
 		(CMIF, CASCADE, 'Minidoc navigation', (
