@@ -1178,8 +1178,10 @@ class PreferenceWrapper(Wrapper):
 		'saveopenviews': 'Save view placement in prefs file',
 		'initial_dialog': 'Show initial dialog on application start',
 		'vertical_icons': 'Show icons vertically in the Structure View',
-		'enable_template': 'Enable features specific to building template documents',
 		}
+	if features.CREATE_TEMPLATES in features.feature_set:
+		__boolprefs['enable_template'] = \
+			'Enable features specific to building template documents'
 	__specprefs = {
 		'system_overdub_or_caption': 'Text captions (subtitles) or overdub',
 ##		'system_overdub_or_subtitle': 'Overdub or subtitles',
@@ -1733,11 +1735,12 @@ class AttrEditorField(AttrEditorDialogField):
 	def mustshow(self):
 		# Return true if we should show this attribute
 		advflags = self.attrdef[6]
-		if advflags & flags.FLAG_TEMPLATE:
+		if (advflags & flags.FLAG_TEMPLATE):
 			# Only show if both "show all" and "template"
 			# are enabled
 			if self.attreditor.show_all_attributes and \
-					settings.get('enable_template'):
+				features.CREATE_TEMPLATES in features.feature_set and \
+				settings.get('enable_template'):
 				return 1
 			return 0
 		elif advflags & flags.FLAG_ADVANCED:
