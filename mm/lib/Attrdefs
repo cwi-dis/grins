@@ -351,16 +351,16 @@
 	'Skip unknown content when parsing this document' raw (advanced cmif smil2))
 
 (syncBehavior (enum default canSlip locked independent) default 'Sync behavior' default
-	'Defines the runtime synchronization behavior for an element' normal (advanced smil2 cmif))
+	'Defines the runtime synchronization behavior for an element' normal (template smil2 cmif))
 
 (syncBehaviorDefault (enum inherit canSlip locked independent) inherit 'Sync behavior default' default
 	'Default value for the Sync behavior property on the children of this group' inherited (template smil2 cmif))
 
 (syncMaster (bool) 0 'Sync master' default
-	'Whether this element is the master clock for sibling elements' normal (advanced smil2 cmif))
+	'Whether this element is the master clock for sibling elements' normal (template smil2 cmif))
 
 (syncTolerance (float) -1 'Sync tolerance' default
-	'Defines the runtime synchronization tolerance for an element' normal (advanced smil2 cmif))
+	'Defines the runtime synchronization tolerance for an element' normal (template smil2 cmif))
 
 (syncToleranceDefault (float) -1 'Sync tolerance default' default
 	'Default value for the Sync tolerance property on the children of this group' inherited (template smil2 cmif))
