@@ -44,18 +44,32 @@ class NodeInfo:
 
 		top = w.SubWindow({'left': None, 'right': None, 'top': None})
 
-		self.name_field = top.TextInput('Name:', '', None, None,
-						{'left': None, 'top': None})
-		self.type_select = top.OptionMenu('Type:', alltypes, 0,
-						  (self.type_callback, ()),
-					{'left': self.name_field, 'top': None})
 		self.channel_select = top.OptionMenu('Channel:', ['undefined'],
 					0, (self.channel_callback, ()),
-					{'left': self.type_select,
+					{'right': None,
 					 'top': None, 'right': None})
-		midd = w.SubWindow({'top': top, 'left': None, 'right': None})
-		alter = midd.AlternateSubWindow({'left': None, 'top': None,
-						 'right': None})
+		self.type_select = top.OptionMenu('Type:', alltypes, 0,
+						  (self.type_callback, ()),
+					{'right': self.channel_select,
+					 'top': None})
+		self.name_field = top.TextInput('Name:', '', None, None,
+						{'left': None, 'top': None,
+						 'right': self.type_select})
+		butt = w.ButtonRow(
+			[('Cancel', (self.close, ())),
+			 ('Restore', (self.restore_callback, ())),
+			 ('Node attr...', (self.attributes_callback, ())),
+			 ('Anchors...', (self.anchors_callback, ())),
+			 ('Apply', (self.apply_callback, ())),
+			 ('OK', (self.ok_callback, ()))],
+			{'bottom': None, 'left': None, 'right': None,
+			 'vertical': 0})
+
+		midd = w.SubWindow({'top': top, 'bottom': butt,
+				    'left': None, 'right': None})
+
+		alter = midd.AlternateSubWindow({'top': None, 'bottom': None,
+						 'right': None, 'left': None})
 ##		self.style_group = midd.SubWindow({'top': None, 'right': None,
 ##					'left': alter})
 ##		self.styles_browser = self.style_group.List('Styles:', [],
@@ -83,25 +97,15 @@ class NodeInfo:
 			 ('Browser...', (self.browser_callback, ()))],
 			{'top': self.file_input, 'left': None, 'right': None,
 			 'vertical': 0})
-		self.children_browser = self.int_group.List('Children:', [],
-				[None, (self.openchild_callback, ())],
-				{'top': None, 'left': None, 'right': None})
+
 		butt = self.int_group.ButtonRow(
 			[('Open...', (self.openchild_callback, ()))],
-			{'top': self.children_browser, 'left': None,
-			 'right': None, 'bottom': None,
+			{'left': None, 'right': None, 'bottom': None,
 			 'vertical': 0})
-
-		butt = w.ButtonRow(
-			[('Cancel', (self.close, ())),
-			 ('Restore', (self.restore_callback, ())),
-			 ('Node attr...', (self.attributes_callback, ())),
-			 ('Anchors...', (self.anchors_callback, ())),
-			 ('Apply', (self.apply_callback, ())),
-			 ('OK', (self.ok_callback, ()))],
-			{'bottom': None, 'left': None,
-			 'right': None, 'top': midd,
-			 'vertical': 0})
+		self.children_browser = self.int_group.List('Children:', [],
+				[None, (self.openchild_callback, ())],
+				{'top': None, 'left': None, 'right': None,
+				 'bottom': butt})
 
 		label = self.imm_group.Label('Contents:',
 				{'top': None, 'left': None, 'right': None})
