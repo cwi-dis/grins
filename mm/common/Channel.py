@@ -1198,7 +1198,8 @@ class ChannelWindow(Channel):
 			'Resize window for channel ' + self._name,
 			self._resize_callback,
 			self._attrdict['base_winoff'],
-			units = self._attrdict.get('units', windowinterface.UNIT_SCREEN))
+			units = self._attrdict.get('units', windowinterface.UNIT_SCREEN),
+			modeless=1)
 
 	def _resize_callback(self, *box):
 		if box:
