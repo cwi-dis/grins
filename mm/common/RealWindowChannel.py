@@ -62,7 +62,7 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 		if self.__rc is not None:
 			self.__rc.pauseit(paused)
 
-	def stopplay(self, node):
+	def stopplay(self, node, no_extend = 0):
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
@@ -70,7 +70,7 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 			print 'stopplay', self, node
 		if self.__rc is not None:
 			self.__rc.stopit()
-		Channel.ChannelWindowAsync.stopplay(self, node)
+		Channel.ChannelWindowAsync.stopplay(self, node, no_extend)
 
 	def _getoswindow(self):
 		if hasattr(self.window, "GetSafeHwnd"):

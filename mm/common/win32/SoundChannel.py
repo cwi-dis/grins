@@ -140,12 +140,12 @@ class SoundChannel(Channel.ChannelAsync):
 		if not outside_induced:
 			self.__playing = None
 
-	def stopplay(self, node):
+	def stopplay(self, node, no_extend = 0):
 		if self.__mc:
 			self.__mc.stopit()
 		if self.__rc:
 			self.__rc.stopit()
-		Channel.ChannelAsync.stopplay(self, node)
+		Channel.ChannelAsync.stopplay(self, node, no_extend)
 
 	def updatesoundlevel(self, val):
 		if self.__mc:

@@ -143,11 +143,11 @@ class ChannelThread(_ChannelThread, Channel):
 		_ChannelThread.armstop(self)
 		Channel.armstop(self)
 
-	def stopplay(self, node):
+	def stopplay(self, node, no_extend = 0):
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
-		Channel.stopplay(self, node)
+		Channel.stopplay(self, node, no_extend)
 		_ChannelThread.stopplay(self, node)
 
 	def setpaused(self, paused):
@@ -201,15 +201,15 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 			GLLock.gl_lock.lock.acquire()
 		ChannelWindow.armstop(self)
 
-	def stopplay(self, node):
+	def stopplay(self, node, no_extend = 0):
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
 		w = self.window
 		if w:
 			w.setredrawfunc(None)
-##		ChannelWindow.stopplay(self, node)
-		Channel.stopplay(self, node)   # These 2 lines repl prev.
+##		ChannelWindow.stopplay(self, node, no_extend)
+		Channel.stopplay(self, node, no_extend)   # These 2 lines repl prev.
 		self.played_display = None
 		if hasattr(w, '_gc'):
 			w._gc.SetRegion(w._getmyarea())
