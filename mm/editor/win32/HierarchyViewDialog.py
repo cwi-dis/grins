@@ -92,6 +92,7 @@ class HierarchyViewDialog(ViewDialog):
 		Help.givehelp('Hierarchy')
 
 	def dropeffect(self, dummy, window, event, params):
+		# event handler for mouse moves while dragging a file over the window.
 		x, y, filename = params
 		if x < 1.0 and y < 1.0:
 			x = x * self.mcanvassize[0]
@@ -112,6 +113,7 @@ class HierarchyViewDialog(ViewDialog):
 		self.dropfile(maybenode, window, event, params)
 
 	def dragnode(self, dummy, window, event, params):
+		# event handler for dragging a node over the window.
 		x, y, cmd, xf, yf = params
 		if x < 1.0 and y < 1.0:
 			x = x * self.mcanvassize[0]
@@ -130,6 +132,7 @@ class HierarchyViewDialog(ViewDialog):
 		return windowinterface.DROPEFFECT_NONE
 			
 	def dropnode(self, dummy, window, event, params):
+		# event handler for dropping the node.
 		x, y, cmd, xf, yf = params
 		if x < 1.0 and y < 1.0:
 			x = x * self.mcanvassize[0]
