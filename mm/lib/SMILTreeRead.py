@@ -4312,8 +4312,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if windowinterface.getcurtime() > self.__progressTimeToUpdate:
 				# determinate the next time to update
 				self.__progressTimeToUpdate = windowinterface.getcurtime()+intervalTime
-				# update the handler. 
-				callback(float(self.lineno)/self.linenumber)
+				if self.linenumber != 0:
+					# update the handler. 
+					callback(float(self.lineno)/self.linenumber)
 				
 class SMILMetaCollector(xmllib.XMLParser):
 	"""Collect the meta attributes from a smil file"""
