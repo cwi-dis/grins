@@ -307,8 +307,8 @@ class Main(MainDialog):
 		if not data:
 			windowinterface.showmessage('You are running the latest version of the software')
 			return
-		ok = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to hear more?')
-		if not ok:
+		cancel = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to hear more?')
+		if cancel:
 			return
 		data = string.strip(data)
 		# Pass the version and the second item of the license along.
