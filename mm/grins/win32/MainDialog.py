@@ -78,7 +78,7 @@ class MainDialog:
 		import windowinterface
 		f=windowinterface.getmainwnd()
 		self.__owindow=windowinterface.OpenLocationDlg(callbacks,f)
-		self.__text=self.__owindow._text
+		self.__text=self.__owindow
 		self.__owindow.show()
 
 	def dropeffect(self, dummy, window, event, params):
