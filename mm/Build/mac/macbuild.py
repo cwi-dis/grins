@@ -36,33 +36,54 @@ import macfreeze
 RESFILE="macbuild.rsrc"
 h = Res.OpenResFile(RESFILE)
 DIALOG_ID=512
-I_GRINS_FREEZE=1
-I_GRINS_BUILD=2
-I_CMIF_FREEZE=3
-I_CMIF_BUILD=4
-I_RN_SUPPORT=5
-N_BUTTONS=7			# Last button plus one
-I_OK=8
-I_CANCEL=9
+I_OK=1
+I_CANCEL=2
+
+I_CMIF_FREEZE=4
+I_CMIF_BUILD=5
+
+I_LITE_FREEZE=7
+I_LITE_BUILD=8
+
+I_GRINS_FREEZE=10
+I_GRINS_BUILD=11
+
+N_BUTTONS=12			# Last button plus one
 
 #
 # Names of the various files/folders
 #
-GRINS_SRC="macplayer.py"
-GRINS_RN_SRC="macplayer.py"
-GRINS_DIR="build.player"
-GRINS_PROJECT="player.prj"
-GRINS_RN_PROJECT="rnplayer.prj"
-#GRINS_TARGET="Player FAT"
-GRINS_TARGET="Player PPC"
+class GRINS:
+	FREEZE_I = I_GRINS_FREEZE
+	BUILD_I = I_GRINS_BUILD
+	
+	SRC="macplayer.py"
+	DIR="build.player"
+	PROJECT="player.prj"
+	#TARGET="Player FAT"
+	TARGET="Player PPC"
 
-CMIFED_SRC="maceditor.py"
-CMIFED_RN_SRC="maceditor.py"
-CMIFED_DIR="build.editor"
-CMIFED_PROJECT="editor.prj"
-CMIFED_RN_PROJECT="rneditor.prj"
-#CMIFED_TARGET="Editor FAT"
-CMIFED_TARGET="Editor PPC"
+class CMIFED:
+	FREEZE_I = I_CMIF_FREEZE
+	BUILD_I = I_CMIF_BUILD
+	
+	SRC="maceditor.py"
+	DIR="build.editor"
+	PROJECT="editor.prj"
+	#TARGET="Editor FAT"
+	TARGET="Editor PPC"
+
+class LITE:
+	FREEZE_I = I_LITE_FREEZE
+	BUILD_I = I_LITE_BUILD
+	
+	SRC="maclite.py"
+	DIR="build.lite"
+	PROJECT="lite.prj"
+	#TARGET="Editor Lite FAT"
+	TARGET="Editor Lite PPC"
+
+ALL=(GRINS, CMIFED, LITE)
 
 #
 # Names of the Attrdefs input file and module.
@@ -93,40 +114,47 @@ def main():
 	do_grins_build = (I_GRINS_BUILD in results)
 	do_cmif_freeze = (I_CMIF_FREEZE in results)
 	do_cmif_build = (I_CMIF_BUILD in results)
-	do_rn_support = (I_RN_SUPPORT in results)
-	print results
-	print do_grins_freeze, do_grins_build, do_cmif_freeze, do_cmif_build, do_rn_support
+	do_lite_freeze = (I_CMIF_FREEZE in results)
+	do_lite_build = (I_CMIF_BUILD in results)
+##	print results
+##	print do_grins_freeze, do_grins_build, do_cmif_freeze, do_cmif_build, do_rn_support
 	if not results:
 		sys.exit(0)
 
 	workdir = os.path.split(sys.argv[0])[0]
-	print "workdir", workdir, sys.argv
+##	print "workdir", workdir, sys.argv
 
-	grins_dir = myjoin(workdir, GRINS_DIR)
-	if do_rn_support:
-		grins_py = myjoin(workdir, GRINS_RN_SRC)
-		grins_prj = myjoin(grins_dir, GRINS_RN_PROJECT)
-	else:
-		grins_py = myjoin(workdir, GRINS_SRC)
-		grins_prj = myjoin(grins_dir, GRINS_PROJECT)
-
-	cmifed_dir = myjoin(workdir, CMIFED_DIR)
-	if do_rn_support:
-		cmifed_py = myjoin(workdir, CMIFED_RN_SRC)
-		cmifed_prj = myjoin(cmifed_dir, CMIFED_RN_PROJECT)
-	else:
-		cmifed_py = myjoin(workdir, CMIFED_SRC)
-		cmifed_prj = myjoin(cmifed_dir, CMIFED_PROJECT)
+##	grins_dir = myjoin(workdir, GRINS_DIR)
+##	if do_rn_support:
+##		grins_py = myjoin(workdir, GRINS_RN_SRC)
+##		grins_prj = myjoin(grins_dir, GRINS_RN_PROJECT)
+##	else:
+##		grins_py = myjoin(workdir, GRINS_SRC)
+##		grins_prj = myjoin(grins_dir, GRINS_PROJECT)
+##
+##	cmifed_dir = myjoin(workdir, CMIFED_DIR)
+##	if do_rn_support:
+##		cmifed_py = myjoin(workdir, CMIFED_RN_SRC)
+##		cmifed_prj = myjoin(cmifed_dir, CMIFED_RN_PROJECT)
+##	else:
+##		cmifed_py = myjoin(workdir, CMIFED_SRC)
+##		cmifed_prj = myjoin(cmifed_dir, CMIFED_PROJECT)
 	
 	checkattrdefs(myjoin(workdir, ATTRDEFS_INPUT),
 				  myjoin(workdir, ATTRDEFS_OUTPUT))
 	
-	e1 = build(grins_py, grins_dir, grins_prj, GRINS_TARGET, do_grins_freeze,
-				do_grins_build)
-	e2 = build(cmifed_py, cmifed_dir, cmifed_prj, CMIFED_TARGET, do_cmif_freeze,
-				do_cmif_build)
+	errors = 0
+	for product in ALL:
+		do_build = (product.BUILD_I in results)
+		do_freeze = (product.FREEZE_I in results)
+		src = myjoin(workdir, product.SRC)
+		dir = myjoin(workdir, product.DIR)
+		prj = myjoin(dir, product.PROJECT)
+		e1 = build(src, dir, prj, product.TARGET, do_freeze, do_build)
+		if e1:
+			errors = errors + 1
 	
-	if e1 or e2:
+	if errors:
 		print "** Errors occurred during build"
 		sys.exit(1)
 	
@@ -172,8 +200,8 @@ def dodialog():
 			return []
 		if n < N_BUTTONS:
 			results[n] = (not results[n])
-			tp, h, rect = d.GetDialogItem(n)
-			h.as_Control().SetControlValue(results[n])
+			h = d.GetDialogItemAsControl(n)
+			h.SetControlValue(results[n])
 	rv = []
 	for i in range(len(results)):
 		if results[i]:
