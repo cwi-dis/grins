@@ -188,6 +188,9 @@
 (unixprog (string) '' 'Unix program name' default
 	'Application name (unix only)' channel)
 
+(units (int) 0 'Units' units
+	'Units for top-level windows' raw)
+
 (video (bool) 0 'Video output' default
 	'Do image smoothing for video output' channel)
 
