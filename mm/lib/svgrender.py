@@ -286,7 +286,7 @@ if __debug__:
 		# create a ddraw surface with this size
 		import ddraw, winuser
 		ddrawobj = ddraw.CreateDirectDraw()
-		ddrawobj.SetCooperativeLevel(winuser.GetDesktopWindow(), ddraw.DDSCL_NORMAL)
+		ddrawobj.SetCooperativeLevel(winuser.GetDesktopWindow().GetSafeHwnd(), ddraw.DDSCL_NORMAL)
 		ddsd = ddraw.CreateDDSURFACEDESC()
 		ddsd.SetFlags(ddraw.DDSD_CAPS)
 		ddsd.SetCaps(ddraw.DDSCAPS_PRIMARYSURFACE)
@@ -306,7 +306,7 @@ if __debug__:
 		svggraphics.tkShutdown()
 		dds.ReleaseDC(ddshdc)
 		winkernel.Sleep(msecwait)
-		winuser.RedrawWindow(0, None, 0, win32con.RDW_INVALIDATE | win32con.RDW_ERASE | win32con.RDW_ALLCHILDREN)
+		winuser.GetDesktopWindow().RedrawWindow(None, 0, win32con.RDW_INVALIDATE | win32con.RDW_ERASE | win32con.RDW_ALLCHILDREN)
 		del dds
 		del ddrawobj
 
