@@ -40,7 +40,7 @@ class HierarchyViewDialog(ViewDialog):
 
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
-		self.window.register(WMEVENTS.PasteFile, self.dropfile, None)
+		self.window.register(WMEVENTS.PasteFile, self.pastefile, None)
 		self.window.register(WMEVENTS.DragFile, self.dropeffect, None)
 		self.window.register(WMEVENTS.DropFile, self.dropfile, None)
 
@@ -93,3 +93,10 @@ class HierarchyViewDialog(ViewDialog):
 			return windowinterface.DROPEFFECT_MOVE
 		else:
 			return windowinterface.DROPEFFECT_COPY
+	
+	def pastefile(self, maybenode, window, event, params):
+		import MMurl
+		x, y, filename = params
+		url = MMurl.pathname2url(filename)
+		params = (x, y, url)
+		self.dropfile(maybenode, window, event, params)
