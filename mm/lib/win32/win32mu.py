@@ -44,7 +44,10 @@ class Rect:
 		return (self.left,self.top,self.right,self.bottom)
 	def tuple_ps(self):
 		return (self.left,self.top,self.right-self.left,self.bottom-self.top)
-
+	def round(self):
+		self.left=int(self.left+0.5);self.top=int(self.top+0.5)
+		self.right=int(self.right+0.5);self.bottom=int(self.bottom+0.5)
+		
 	def pos(self):
 		return (self.left,self.top)
 	def rb_pos(self):
