@@ -217,7 +217,7 @@ class SoundChannel(Channel):
 	# Internal methods.
 	#
 	def getfilename(self, node):
-		return MMAttrdefs.getattr(node, 'file')
+		return aiffcache.get(MMAttrdefs.getattr(node, 'file'))
 	#
 
 
@@ -350,6 +350,7 @@ def closeport(port):
 
 # External interface to restore the original sampling rate.
 # This must work even when called from a "finally" handler in main().
+# (No abused to clean up the aiff temporary file cache as well.)
 #
 def restore():
 	global n_open_ports, current_rate, original_rate
@@ -359,9 +360,96 @@ def restore():
 		pv = [AL.OUTPUT_RATE, original_rate]
 		al.setparams(AL.DEFAULT_DEVICE, pv)
 		original_rate = 0
+	cleanup()
 
 
 # Cache durations
 
 import FileCache
+
 duration_cache = FileCache.FileCache().init(getduration)
+
+
+# Cache conversions to AIFF files
+
+import pipes
+
+toaiff = {}
+
+t = pipes.Template().init()
+t.append('sox -t au - -t aiff -r 8000 -', '--')
+toaiff['au'] = t
+
+t = pipes.Template().init()
+t.append('sox -t hcom - -t aiff -r 22050 -', '--')
+toaiff['hcom'] = t
+
+t = pipes.Template().init()
+t.append('sox -t voc - -t aiff -r 11025 -', '--')
+toaiff['voc'] = t
+
+t = pipes.Template().init()
+t.append('sox -t wav - -t aiff -', '--')
+toaiff['wav'] = t
+
+t = pipes.Template().init()
+t.append('sox -t 8svx - -t aiff -r 16000 -', '--')
+toaiff['8svx'] = t
+
+t = pipes.Template().init()
+t.append('sox -t sndt - -t aiff -r 16000 -', '--')
+toaiff['sndt'] = t
+
+t = pipes.Template().init()
+t.append('sox -t sndr - -t aiff -r 16000 -', '--')
+toaiff['sndr'] = t
+
+uncompress = pipes.Template().init()
+uncompress.append('uncompress', '--')
+
+temps = []
+
+def makeaiff(filename):
+	import sndhdr
+	import tempfile
+	import os
+	compressed = 0
+	if filename[-2:] == '.Z':
+		temp = tempfile.mktemp()
+		temps.append(temp)
+		sts = uncompress.copy(filename, temp)
+		if sts:
+			print 'uncompress of', filename, 'failed.'
+			return filename
+		filename = temp
+		compressed = 1
+	try:
+		type = sndhdr.whathdr(filename)
+		if type:
+			type = type[0] # All we're interested in
+	except IOError:
+		type = None
+	if type and toaiff.has_key(type):
+		temp = tempfile.mktemp()
+		temps.append(temp)
+		sts = toaiff[type].copy(filename, temp)
+		if sts:
+			print 'conversion of', filename, 'failed.'
+			return filename
+		if compressed:
+			os.unlink(filename)
+			temps.remove(filename)
+		filename = temp
+	return filename
+
+def cleanup():
+	import os
+	aiffcache.flushall()
+	for tempname in temps:
+		try:
+			os.unlink(tempname)
+		except (os.error, IOError):
+			pass
+	temps[:] = []
+
+aiffcache = FileCache.FileCache().init(makeaiff)
