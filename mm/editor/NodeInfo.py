@@ -19,8 +19,8 @@ import NodeInfoForm
 
 from Dialog import Dialog
 
-FORMWIDTH=690
-FORMHEIGHT=320
+FORMWIDTH=535
+FORMHEIGHT=255
 
 alltypes = ['imm', 'ext', 'par', 'seq']
 
