@@ -60,6 +60,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self.set_commandlist(None, 'document')
 		self.set_commandlist(None, 'pview_')
 		self._timer = self.SetTimer(1, 20)
+		self.loadSplash()
 		self.InvalidateRect()
 
 	# application exit hook
@@ -344,20 +345,28 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 	def show(self):
 		self.redraw()
 
+	def loadSplash(self):
+		filename = r'\Program Files\GRiNS\cesplash.bmp'
+		dc = wingdi.GetDesktopDC()
+		try:
+			self._splash = wingdi.CreateDIBSurfaceFromFile(dc, filename)
+		except wingdi.error, arg:
+			self._splash = None
+			ws, hs = 240, 144
+		else:
+			ws, hs = self._splash.GetSize()			
+		dc.DeleteDC()
+		l, t, r, b = self.GetClientRect()
+		w, h = r-l, b - t - self._menu_height
+		self._splash_pos = (w-ws)/2, (h-hs)/2 - 24
+		
 	def paintSplash(self, dc):
-		if self._splash is None:
-			filename = r'\Program Files\GRiNS\cesplash.bmp'
-			import mediainterface
-			self._splash = mediainterface.get_image(filename, dc)
-			ws, hs = self._splash.GetSize()
-			l, t, r, b = self.GetClientRect()
-			w, h = r-l, b - t - self._menu_height
-			self._splash_pos = (w-ws)/2, (h-hs)/2 - 24
-		dcc = dc.CreateCompatibleDC()
-		bmp = dcc.SelectObject(self._splash)
-		dc.BitBlt(self._splash_pos, self._splash.GetSize(), dcc, (0, 0), wincon.SRCCOPY)
-		dcc.SelectObject(bmp)
-		dcc.DeleteDC()
+		if self._splash is not None:
+			dcc = dc.CreateCompatibleDC()
+			bmp = dcc.SelectObject(self._splash)
+			dc.BitBlt(self._splash_pos, self._splash.GetSize(), dcc, (0, 0), wincon.SRCCOPY)
+			dcc.SelectObject(bmp)
+			dcc.DeleteDC()
 	
 	def getStatusRect(self):
 		l, t, r, b = self.GetClientRect()
