@@ -156,7 +156,7 @@ TOOLBAR_COMBO_WIDTH = 144
 TOOLBAR_COMBO_HEIGHT = 10*18 # drop down height
 
 ###########################################################
-from pywin.mfc import window, docview
+from pywinlib.mfc import window, docview
 
 class GRiNSToolbar(window.Wnd):
 	def __init__(self, parent):
