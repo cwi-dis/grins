@@ -215,6 +215,7 @@
 #define IDB_SVG                         412
 #define IDD_EDITATTR_S1R3S6             413
 #define IDD_EDITATTR_SYNCHRONIZATION    414
+#define IDI_ICON_NODE                   414
 #define IDD_EDITATTR_ACTIVEDUR2         415
 #define IDD_EDITATTR_MF2                416
 #define IDD_EDITATTR_PF2                417
@@ -721,7 +722,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        414
+#define _APS_NEXT_RESOURCE_VALUE        415
 #define _APS_NEXT_COMMAND_VALUE         32877
 #define _APS_NEXT_CONTROL_VALUE         1437
 #define _APS_NEXT_SYMED_VALUE           104

@@ -2798,6 +2798,11 @@ BEGIN
         BOTTOMMARGIN, 82
     END
 
+    IDD_ASSETSBAR, DIALOG
+    BEGIN
+        RIGHTMARGIN, 248
+    END
+
     IDD_EDITATTR_LAYOUT1, DIALOG
     BEGIN
         RIGHTMARGIN, 295
@@ -2888,6 +2893,7 @@ IDI_ICON_ASSET_VIDEO    ICON    DISCARDABLE     "res\\Video.ico"
 IDI_ICON_ASSET_BLANK    ICON    DISCARDABLE     "res\\Blank.ico"
 IDI_ICON_ASSET_IMAGE    ICON    DISCARDABLE     "res\\Image.ico"
 IDI_ICON_ASSET_TEXT     ICON    DISCARDABLE     "res\\Text.ico"
+IDI_ICON_NODE           ICON    DISCARDABLE     "res\\Node.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
