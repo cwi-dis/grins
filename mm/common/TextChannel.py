@@ -209,7 +209,7 @@ def extract_taglist(parlist):
 	import regex
 	# (1) Extract the raw tags, removing them from the text
 	pat = regex.compile('<a +name=\([a-z0-9_]+\)>\|'
-			    '<a +href="cmif:\([a-z0-9_]+\)>\|</a>',
+			    '<a +href="cmif:\([a-z0-9_]+\)">\|</a>',
 			    regex.casefold)
 	rawtaglist = []
 	for i in range(len(parlist)):
