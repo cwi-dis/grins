@@ -835,8 +835,6 @@ class SMILWriter(SMIL, BaseSMILWriter, SMILWriterBase):
 		title = ch.get('title')
 		if title:
 			attrlist.append(('title', title))
-		elif self.ch2name[ch] != ch.name:
-			attrlist.append(('title', ch.name))
 
 		for name in ['left', 'width', 'right', 'top', 'height', 'bottom']:
 			value = ch.GetAttrDef(name, None)
