@@ -11,7 +11,7 @@ FEATURES={
 	"pro": 0x04,
 	"smil2player": 0x100,
 	"smil2light": 0x200,
-	"smil2pro": 0x400,
+	"smil2real": 0x400,
 	"embeddedplayer": 0x800,
 	"ALLPRODUCTS": 0xf07,
 

@@ -41,7 +41,7 @@ class Main(MainDialog):
 				   "This beta copy of GRiNS has expired.\n\n"
 				   "Do you want to check www.oratrix.com for a newer version?")
 				if rv == 0:
-					url = 'http://www.oratrix.com/indir/%s/update.html'%version.shortversion
+					url = self._get_versiondep_url('update.html')
 					windowinterface.htmlwindow(url)
 				sys.exit(0)
 		self.tmpopts = opts
