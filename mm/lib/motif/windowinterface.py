@@ -5112,11 +5112,12 @@ class _Question:
 			    parent = parent)
 
 	def run(self):
-		self.looping = TRUE
-		toplevel.setready()
-		while self.looping:
-			event = Xt.NextEvent()
-			Xt.DispatchEvent(event)
+# Not needed anymore, now that showmessage() is truly modal.
+# 		self.looping = TRUE
+# 		toplevel.setready()
+# 		while self.looping:
+# 			event = Xt.NextEvent()
+# 			Xt.DispatchEvent(event)
 		return self.answer
 
 	def callback(self, answer):
