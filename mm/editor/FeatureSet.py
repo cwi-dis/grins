@@ -39,4 +39,6 @@ __version__ = "$Id$";
     H_MODIFY_STRUCTURE,                # This is the biggy - decides between templates or not.
     H_DROPBOX,                          # Show an empty drop box at the end of a sequence.
     H_COLLAPSE,                         # Enable internal node collapsing.
-] = range(20)                           # don't forget to update the range!
+    H_TIMESTRIP,						# Show snap!-like documents with correct toplevel par/seq
+] = range(21)                           # don't forget to update the range!
+

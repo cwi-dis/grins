@@ -16,6 +16,18 @@ import whrandom
 def create_MMNode_widget(node, root):
     #assert root != None
     ntype = node.GetType()
+    if features.H_TIMESTRIP in features.feature_set:
+        # We handle toplevel, second-level and third-level nodes differently
+        # in snap
+        if node.parent == None and ntype == 'seq':
+            # Don't show toplevel root (actually the <body> in SMIL)
+            return UnseenVerticalWidget(node, root)
+        if node.parent and node.parent.parent == None and ntype == 'par':
+            # Don't show second-level par either
+            return UnseenVerticalWidget(node, root)
+        if node.parent and node.parent.parent and node.parent.parent.parent == None and ntype == 'seq':
+            # And show secondlevel seq as a timestrip
+            return TimeStripSeqWidget(node, root)
     if ntype == 'seq':
         return SeqWidget(node, root)
     elif ntype == 'par':
@@ -86,18 +98,18 @@ class MMNodeWidget(Widgets.Widget):     # Aka the old 'HierarchyView.Object', an
 
     def getlinkicon(self):
         # Returns the icon to show for incoming and outgiong hyperlinks.
- 		links = self.node.context.hyperlinks
- 		is_src, is_dst = links.findnodelinks(self.node)
- 		if is_src:
- 			if is_dst:
- 				return 'linksrcdst'
- 			else:
- 				return 'linksrc'
- 		else:
- 			if is_dst:
- 				return 'linkdst'
- 			else:
- 				return ''
+        links = self.node.context.hyperlinks
+        is_src, is_dst = links.findnodelinks(self.node)
+        if is_src:
+            if is_dst:
+                return 'linksrcdst'
+            else:
+                return 'linksrc'
+        else:
+            if is_dst:
+                return 'linkdst'
+            else:
+                return ''
 
         
     #
@@ -231,12 +243,16 @@ class MMNodeWidget(Widgets.Widget):     # Aka the old 'HierarchyView.Object', an
 class StructureObjWidget(MMNodeWidget):
     # TODO: make this inherit only from Widgets.Widget and aggregate a list.
     # A view of a seq, par, excl or something else that might exist.
+    HAS_COLLAPSE_BUTTON = 1
     def __init__(self, node, root):
         MMNodeWidget.__init__(self, node, root)
         assert self is not None
         # Create more nodes under me if there are any.
         self.children = []
-        self.collapsebutton = CollapseButtonWidget(self, root);        
+        if self.HAS_COLLAPSE_BUTTON:
+            self.collapsebutton = CollapseButtonWidget(self, root)
+        else:
+            self.collapsebutton = None  
         for i in self.node.children:
             bob = create_MMNode_widget(i, root)
             if bob == None:
@@ -266,7 +282,7 @@ class StructureObjWidget(MMNodeWidget):
     def get_obj_at(self, pos):
         # Return the MMNode widget at position x,y
         # Oh, how I love recursive methods :-). Nice. -mjvdg.
-        if self.collapsebutton.is_hit(pos):
+        if self.collapsebutton and self.collapsebutton.is_hit(pos):
             self.toggle_collapsed()
             self.root.draw()
             return self
@@ -283,7 +299,8 @@ class StructureObjWidget(MMNodeWidget):
             return None
 
     def recalc(self):
-        self.collapsebutton.recalc();
+        if self.collapsebutton:
+            self.collapsebutton.recalc()
 
     def draw(self, displist):
         # This is a base class for other classes.. this code only gets
@@ -300,7 +317,8 @@ class StructureObjWidget(MMNodeWidget):
         b = t + self.get_rely(sizes_notime.TITLESIZE) + self.get_rely(sizes_notime.VEDGSIZE);
         l = l + self.get_relx(16);      # move it past the icon.
         displist.centerstring(l,t,r,b, self.name)
-        self.collapsebutton.draw(displist);
+        if self.collapsebutton:
+            self.collapsebutton.draw(displist)
 
 class SeqWidget(StructureObjWidget):
     def __init__(self, node, root):
@@ -494,7 +512,9 @@ class SeqWidget(StructureObjWidget):
 
         StructureObjWidget.recalc(self);
 
-
+class TimeStripSeqWidget(SeqWidget):
+    pass
+    
 class DropBoxWidget(Widgets.Widget):
     # This is the stupid drop-box at the end of a sequence. Looks like a
     # MediaWidget, acts like a MediaWidget, but isn't a MediaWidget.
@@ -507,6 +527,107 @@ class DropBoxWidget(Widgets.Widget):
         return sizes_notime.MINSIZE, sizes_notime.MINSIZE;
     # Hmm.. as I said. Easy.
         
+
+class UnseenVerticalWidget(StructureObjWidget):
+    HAS_COLLAPSE_BUTTON = 0
+    
+    def get_minsize(self):
+        # Return the minimum size that I can be.
+        min_width = 0; min_height = 0
+
+        if len(self.children) == 0 or self.iscollapsed():
+            return 0, 0
+
+        for i in self.children:
+            w, h = i.get_minsize()
+            if w > min_width:           # The width is the greatest of the width of all children.
+                min_width = w
+            min_height = min_height + h
+
+        return min_width, min_height
+
+    def get_nearest_node_index(self, pos):
+        # Return the index of the node at the specific drop position.
+        if self.iscollapsed():
+            return -1
+        
+        assert self.is_hit(pos);
+        x,y = pos
+        # Working from left to right:
+        for i in range(len(self.children)):
+            l,t,w,h = self.children[i].get_box()
+            if y <= t+(h/2.0):
+                return i
+        return -1
+
+    def get_minsize_abs(self):
+        mw=0
+        mh=0
+
+        if len(self.children) == 0 or self.iscollapsed():
+            return 0, 0
+
+        for i in self.children:
+            w,h = i.get_minsize_abs()
+            if w > mw: mw=w
+            mh=mh+h
+        return mw, mh
+
+    def recalc(self):
+        # Untested.
+        # Recalculate the position of all the contained boxes.
+        # Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
+        # Apportion free space equally, based on the size of self.
+        # TODO: This does not test for maxheight()
+
+        if self.iscollapsed():
+            StructureObjWidget.recalc(self)
+            return
+
+        l, t, r, b = self.pos_rel
+        # Add the titlesize;
+        min_width, min_height = self.get_minsize()
+
+        overhead_height = 0
+        free_height = (b-t) - min_height
+        if free_height < 0.001 or free_height > 1.0:
+            free_height = 0.0
+
+        for medianode in self.children:    # for each MMNode:
+            w,h = medianode.get_minsize()
+            if h > (b-t):               # If the node needs to be bigger than the available space...
+                pass                   # TODO!!!!!
+            # Take a portion of the free available width, fairly.
+            if free_height == 0.0:
+                thisnode_free_height = 0.0
+            else:
+                thisnode_free_height = (float(h)/(min_height-overhead_height)) * free_height
+            # Give the node the free width.
+            b = t + h + thisnode_free_height 
+            # r = l + w # Wrap the node to it's minimum size.
+
+            if r > 1.0:
+#                print "ERROR!!! Node extends too far right.. clipping.."
+                r = 1.0
+            if b > 1.0:
+#                print "ERROR!! Node extends too far down.. clipping.."
+                b = 1.0
+            if l > 1.0:
+#                print "ERROR!! Node starts too far across.. clipping.."
+                l = 1.0
+                r = 1.0
+                
+            medianode.moveto((l,t,r,b))
+            medianode.recalc()
+            t = b #  + self.get_rely(sizes_notime.GAPSIZE)
+        StructureObjWidget.recalc(self)
+
+    def draw(self, display_list):
+        if self.root.pushbackbars and not self.iscollapsed():
+            for i in self.children:
+                if isinstance(i, MediaWidget):
+                    i.pushbackbar.draw(display_list)
+                i.draw(display_list)
 
 class VerticalWidget(StructureObjWidget):
     def get_minsize(self):
