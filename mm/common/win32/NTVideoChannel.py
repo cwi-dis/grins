@@ -113,7 +113,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			return
 		if node.__type == 'real':
 			# real needs an os window yet
-			self.window.CreateOSWindow()
+			self.window.CreateOSWindow(rect=self.getMediaWndRect())
 			if not self.__rc:
 				self.playdone(0)
 			elif not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
