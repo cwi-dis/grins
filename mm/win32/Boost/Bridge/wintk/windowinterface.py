@@ -51,7 +51,7 @@ def getscreensize():
 
 class DocumentFrame:
 	def __init__(self):
-		self._activecmds={'frame':{},'document':{},'pview_':{}}
+		self._activecmds={'app':{},'document':{},'pview_':{}}
 	
 	def set_commandlist(self, commandlist, context):
 		if not self._activecmds.has_key(context):
@@ -74,14 +74,25 @@ class DocumentFrame:
 
 	def execute_cmd(self, cmdclass):
 		dict = self._activecmds['pview_']
-		cmd = dict.get(cmdclass)
+		cmd = None
+		if dict: cmd = dict.get(cmdclass)
 		if cmd is not None and cmd.callback:
 			apply(apply, cmd.callback)
+			return
+		dict = self._activecmds['document']
+		if dict: cmd = dict.get(cmdclass)
+		if cmd is not None and cmd.callback:
+			apply(apply, cmd.callback)
+			return
+		dict = self._activecmds['app']
+		if dict: cmd = dict.get(cmdclass)
+		if cmd is not None and cmd.callback:
+			apply(apply, cmd.callback)
+			return
 
-def FileDialog(prompt, directory, filter, file, cb_ok, cb_cancel, existing = 0, parent = None):
-	pass
-			
-	
+# FileDialog(prompt, directory, filter, file, cb_ok, cb_cancel, existing = 0, parent = None):
+from FileDialog import FileDialog
+				
 import wingeneric
 import usercmd
 
@@ -89,36 +100,31 @@ class MainWnd(wingeneric.Wnd, DocumentFrame):
 	def __init__(self):
 		wingeneric.Wnd.__init__(self)	
 		DocumentFrame.__init__(self)
-		self.__state = 0
 
 	def create(self):
 		wingeneric.Wnd.create(self)
+		self.setMenu()
 		self.SetTimer(1, 100)
 		self.HookMessage(self.OnTimer, win32con.WM_TIMER)
-		self.HookMessage(self.OnLButtonDblClk, win32con.WM_LBUTTONDBLCLK)
+		self.HookMessage(self.OnCommand, win32con.WM_COMMAND)
 
 	def OnTimer(self, params):
 		get_toplevel().serve_events(params)
 	
-	def OnLButtonDblClk(self, params):
-		if self.__state == 0:
-			self.__open()
-			self.__state = 1
-		elif self.__state == 1:
-			self.execute_cmd(usercmd.PLAY)
-			self.__state = 2
-		elif self.__state == 2:
-			self.execute_cmd(usercmd.STOP)
-			self.__state = 1
+	def OnCommand(self, params):
+		cmdid = Win32Msg(params).id()
+		import usercmdui
+		cmd = usercmdui.id2usercmd(cmdid)
+		print cmd
+		self.execute_cmd(cmd)
 
-	def __open(self):
-		filename = r'D:\ufs\Demo_xhtml_smil\Commute\Commute.grins'
-		__onOpenEvent = get_toplevel().getOpenEvent()
-		event = 'OnOpen'
-		if __onOpenEvent is not None:
-			func, arg = __onOpenEvent
-			print 'call open', filename
-			func(arg, self, event, filename)
+	def setMenu(self):
+		import win32menu, MenuTemplate, usercmdui
+		self._mainmenu = win32menu.Menu()
+		template = MenuTemplate.MENUBAR
+		self._mainmenu.create_from_menubar_spec_list(template,  usercmdui.usercmd2id)
+		self.SetMenu(self._mainmenu.GetHandle())
+		self.DrawMenuBar()
 
 def mainloop():
 	pass
@@ -170,12 +176,16 @@ class Application:
 		if self._frame is None:
 			self._frame = MainWnd()
 			self._frame.create()
+			self._frame.set_commandlist(commandlist, 'app')
 		return self._frame
 
 	def getactivedocframe(self):
 		return self._frame
 	
 	def getmainwnd(self):
+		if self._frame is None:
+			self._frame = MainWnd()
+			self._frame.create()
 		return self._frame
 
 	def serve_events(self,params=None):	
@@ -321,3 +331,21 @@ def GetImageSize(filename):
 	from win32ig import win32ig
 	img = win32ig.load(filename) 
 	return win32ig.size(img)[:2]
+
+
+############################
+# XXX: import win32mu
+def loword(v):
+	return v & 0xFFFF
+
+def hiword(v):
+	return (v >> 16) & 0xFFFF
+
+class Win32Msg:
+	def __init__(self,params):
+		self._hwnd,self._message,self._wParam,self._lParam,self._time,self._pt=params
+	def pos(self):
+		return loword(self._lParam), hiword(self._lParam)
+	def id(self):
+		return loword(self._wParam); 
+############################

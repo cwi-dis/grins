@@ -4,8 +4,6 @@ __version__ = "$Id$"
 from appcon import *
 from WMEVENTS import *
 
-import win32mu
-
 from win32ig import win32ig
 from win32displaylist import _DisplayList
 
@@ -386,7 +384,6 @@ class Window:
 		wnd = Window()
 		wnd.create(self, coordinates, units, z, transparent, bgcolor)
 		return wnd
-
 	newcmwindow = newwindow
 
 	def ltrb(self, xywh):
@@ -1203,6 +1200,7 @@ class Window:
 ########################################
 
 # regions, RGB 
+import wingdi
 import win32con
 
 import win32transitions
@@ -1273,51 +1271,7 @@ class Region(Window):
 	def CreateOSWindow(self, rect=None, html=0, svg=0):
 		if self._oswnd:
 			return self._oswnd
-		import win32ui
-		from pywinlib.mfc import window
-		Afx = win32ui.GetAfx()
-		Sdk=win32ui.GetWin32Sdk()
-
-		x, y, w, h = self.getwindowpos()
-		if rect:
-			xp, yp, wp, hp = rect
-			x, y, w, h = x+xp, y+yp, wp, hp
-		if html: obj = win32ui.CreateHtmlWnd()
-		elif svg: obj = win32ui.CreateSvgWnd()
-		else: obj = win32ui.CreateWnd()
-		wnd = window.Wnd(obj)
-		color = self._bgcolor
-		if not color or svg:
-			color = 255, 255, 255
-		brush= Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(color),0)
-		cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
-		icon=0
-		clstyle=win32con.CS_DBLCLKS
-		style=win32con.WS_CHILD | win32con.WS_CLIPSIBLINGS
-		exstyle = 0
-		title = '' 
-		if self._transparent in (-1,1):
-			exstyle=win32con.WS_EX_TRANSPARENT
-		strclass=Afx.RegisterWndClass(clstyle,cursor,brush,icon)
-		rc = self._topwindow.offsetospos((x,y,w,h))
-		wnd.CreateWindowEx(exstyle,strclass,title,style,
-			self.ltrb(rc),self._ctxoswnd,0)
-		
-		# put ddwnd below childwnd
-		flags=win32con.SWP_NOMOVE|win32con.SWP_NOSIZE|win32con.SWP_NOACTIVATE|win32con.SWP_ASYNCWINDOWPOS		
-		self._ctxoswnd.SetWindowPos(wnd.GetSafeHwnd(), (0,0,0,0), flags)
-		
-		wnd.ShowWindow(win32con.SW_SHOW)
-
-		if html:
-			import settings
-			wnd.UseHtmlCtrl(not settings.get('html_control'))
-			wnd.HookMessage(self.onUserUrl,win32con.WM_USER)
-
-		self._oswnd = wnd
-		if not html:
-			self.hookOsWndMessages()
-		return wnd
+		return None
 
 	def hookOsWndMessages(self):
 		if not self._oswnd: return
@@ -1326,19 +1280,19 @@ class Region(Window):
 		self.HookMessage(self.onOsWndMouseMove,win32con.WM_MOUSEMOVE)
 	
 	def onOsWndLButtonDown(self, params):
-		xr, yr = win32mu.Win32Msg(params).pos()
+		xr, yr = Win32Msg(params).pos()
 		x, y, w, h = self.getwindowpos()
 		if self._topwindow:
 			self._topwindow.onMouseEvent((x+xr, y+yr), Mouse0Press)
 
 	def onOsWndLButtonUp(self, params):
-		xr, yr = win32mu.Win32Msg(params).pos()
+		xr, yr = Win32Msg(params).pos()
 		x, y, w, h = self.getwindowpos()
 		if self._topwindow:
 			self._topwindow.onMouseEvent((x+xr, y+yr), Mouse0Release)
 
 	def onOsWndMouseMove(self, params):
-		xr, yr = win32mu.Win32Msg(params).pos()
+		xr, yr = Win32Msg(params).pos()
 		x, y, w, h = self.getwindowpos()
 		if self._topwindow:
 			self._topwindow.onMouseMove(0, (x+xr, y+yr))
@@ -1469,7 +1423,7 @@ class Region(Window):
 
 	def getClipRgn(self, rel=None):
 		x, y, w, h = self.getwindowpos(rel)
-		rgn = CreateRectRgn((x,y,x+w,y+h))
+		rgn = wingdi.CreateRectRgn((x,y,x+w,y+h))
 		if rel==self: return rgn
 		prgn = self._parent.getClipRgn(rel)
 		rgn.CombineRgn(rgn, prgn, win32con.RGN_AND)
@@ -1478,10 +1432,10 @@ class Region(Window):
 
 	# get reg of children
 	def getChildrenRgn(self, rel=None):
-		rgn = CreateRectRgn((0,0,0,0))
+		rgn = wingdi.CreateRectRgn((0,0,0,0))
 		for w in self._subwindows:
 			x, y, w, h = w.getwindowpos(rel)
-			newrgn = CreateRectRgn((x,y,x+w,y+h))
+			newrgn = wingdi.CreateRectRgn((x,y,x+w,y+h))
 			rgn.CombineRgn(rgn, newrgn, win32con.RGN_OR)
 			newrgn.DeleteObject()
 		# finally clip to this
@@ -1499,7 +1453,7 @@ class Region(Window):
 		return rgn
 
 	def clipRect(self, rc, rgn):
-		newrgn = CreateRectRgn(self.ltrb(rc))
+		newrgn = wingdi.CreateRectRgn(self.ltrb(rc))
 		newrgn.CombineRgn(rgn,newrgn,win32con.RGN_AND)
 		ltrb = newrgn.GetRgnBox()
 		newrgn.DeleteObject()
@@ -1507,14 +1461,14 @@ class Region(Window):
 	
 	def rectAnd(self, rc1, rc2):
 		# until we make calcs
-		rc,ans= IntersectRect(self.ltrb(rc1),self.ltrb(rc2))
+		rc,ans= wingdi.IntersectRect(self.ltrb(rc1),self.ltrb(rc2))
 		if ans:
 			return self.xywh(rc)
 		return (0, 0, 0, 0)
 
 	def rectOr(self, rc1, rc2):
 		# until we make calcs
-		rc, ans = UnionRect(self.ltrb(rc1),self.ltrb(rc2))
+		rc, ans = wingdi.UnionRect(self.ltrb(rc1),self.ltrb(rc2))
 		if ans:
 			return self.xywh(rc)
 		return (0, 0, 0, 0)
@@ -1595,7 +1549,7 @@ class Region(Window):
 					print arg
 					return
 
-				dc = CreateDCFromHandle(hdc)
+				dc = wingdi.CreateDCFromHandle(hdc)
 				if rgn:
 					dc.SelectClipRgn(rgn)
 				x0, y0 = dc.SetWindowOrg((-x,-y))
@@ -1608,7 +1562,7 @@ class Region(Window):
 					return
 
 				if self._showing:
-					win32mu.FrameRect(dc,self._rect,self._showing)
+					pass # FrameRect(dc, self._rect,self._showing)
 			
 				dc.SetWindowOrg((x0,y0))
 				dc.Detach()
@@ -1641,7 +1595,7 @@ class Region(Window):
 	# but rel is not an ancestor
 	def getrelativeClipRgn(self, rel):
 		x, y, w, h = self.getrelativepos(rel);
-		return CreateRectRgn((x,y,x+w,y+h))
+		return wingdi.CreateRectRgn((x,y,x+w,y+h))
 						
 	# paint on surface dds relative to ancestor rel			
 	def paintOnDDS(self, dds, rel=None, exclwnd=None):
@@ -1735,7 +1689,7 @@ class Region(Window):
 		dst = self.getwindowpos(self._topwindow)
 		rgn = self.getClipRgn(self._topwindow)
 		if rc:
-			prg = CreateRectRgn(self.ltrb(rc))
+			prgn = wingdi.CreateRectRgn(self.ltrb(rc))
 			rgn.CombineRgn(rgn,prgn,win32con.RGN_AND)
 			prgn.DeleteObject()
 						
@@ -1786,7 +1740,7 @@ class Region(Window):
 	# delta helpers for the next method
 	def __getDC(self, dds):
 		hdc = dds.GetDC()
-		return CreateDCFromHandle(hdc)
+		return wingdi.CreateDCFromHandle(hdc)
 
 	def __releaseDC(self, dds, dc):
 		hdc = dc.Detach()
@@ -2038,7 +1992,6 @@ class Viewport(Region):
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, units = None, bgcolor=None):
 		return Region(self, coordinates, transparent, z, units, bgcolor)
-	
 	newcmwindow = newwindow
 
 	# 
@@ -2049,7 +2002,7 @@ class Viewport(Region):
 
 	def getClipRgn(self, rel=None):
 		x, y, w, h = self._rectb
-		return CreateRectRgn((x,y,x+w,y+h))
+		return wingdi.CreateRectRgn((x,y,x+w,y+h))
 
 	def getDrawBuffer(self):
 		return self._ctx.getDrawBuffer()
@@ -2272,48 +2225,50 @@ class ViewportContext:
 			print 'PlayerView.update', arg
 
 #########################
-# ui section for replacement
+# helpers
 
-import wingdi
+def loword(v):
+	return v & 0xFFFF
 
-def CreateRectRgn(ltrb):
-	return wingdi.CreateRectRgn(ltrb)
+def hiword(v):
+	return (v >> 16) & 0xFFFF
 
-def IntersectRect(ltrb1, ltrb2):
-	return wingdi.IntersectRect(ltrb1, ltrb2)
-
-def UnionRect(ltrb1, ltrb2):
-	return wingdi.UnionRect(ltrb1, ltrb2)
-
-def CreateDCFromHandle(hdc):
-	import win32ui
-	return win32ui.CreateDCFromHandle(hdc)
+class Win32Msg:
+	def __init__(self,params):
+		self._hwnd,self._message,self._wParam,self._lParam,self._time,self._pt=params
+	def pos(self):
+		return loword(self._lParam), hiword(self._lParam)
+	def id(self):
+		return loword(self._wParam); 
 
 import grinsRC
+import winuser
+from __main__ import resdll
+
 def getcursorhandle(strid):
 	if strid == 'hand':
-		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_POINT_HAND)
+		cursor = winuser.LoadCursor(resdll, grinsRC.IDC_POINT_HAND)
 	elif strid == 'darrow':
-		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZEWE)
+		cursor = winuser.LoadStandardCursor(win32con.IDC_SIZEWE)
 	elif strid == 'channel':
-		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGMOVE)
+		cursor = winuser.LoadCursor(resdll, grinsRC.IDC_DRAGMOVE)
 	elif strid == 'stop':
-		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_STOP)
+		cursor = winuser.LoadCursor(resdll, grinsRC.IDC_STOP)
 	elif strid == 'link':
-		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGLINK)
+		cursor = winuser.LoadCursor(resdll, grinsRC.IDC_DRAGLINK)
 	elif strid == 'draghand':
-		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAG_HAND)
+		cursor = winuser.LoadCursor(resdll, grinsRC.IDC_DRAG_HAND)
 	elif strid == 'sizenwse':
-		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZENWSE)
+		cursor = winuser.LoadStandardCursor(win32con.IDC_SIZENWSE)
 	elif strid == 'sizens':
-		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZENS)
+		cursor = winuser.LoadStandardCursor(win32con.IDC_SIZENS)
 	elif strid == 'sizenesw':
-		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZENESW)
+		cursor = winuser.LoadStandardCursor(win32con.IDC_SIZENESW)
 	elif strid == 'sizewe':
-		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZEWE)
+		cursor = winuser.LoadStandardCursor(win32con.IDC_SIZEWE)
 	elif strid == 'cross':
-		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_CROSS)
+		cursor = winuser.LoadStandardCursor(win32con.IDC_CROSS)
 	else:
-		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_ARROW)
+		cursor = winuser.LoadStandardCursor(win32con.IDC_ARROW)
 	return cursor
 
