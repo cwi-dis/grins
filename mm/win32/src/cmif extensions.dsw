@@ -32,6 +32,9 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name GRiNSRes
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name rma
+    End Project Dependency
 }}}
 
 ###############################################################################
