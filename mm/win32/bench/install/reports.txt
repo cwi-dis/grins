@@ -1,12 +1,81 @@
 GRiNS clean installations informal reports:
 
+-------------------------------------------------------------------
 1. NT4 GRiNS installation
 
+Scenario 1.1
+-----------
+step 1: Typical clean installation of Windows NT4 (Build 1381)
+step 2: Install GRiNS
+step 3: Test GRiNS: 
+
+Notes: 
+	i)  The typical clean installation of NT4 installed IE2 
+	ii)  The installation installed Service Pack 1 (a CD 1997) 
+	iii) MFC42.dll was definitely needed (checked)
+
+Result: PARTIAL FAILURE. 
+	GRiNS could display images and html using Webster
+	GRiNS could not play sounds or video (there duration was taken to be 0)
+	The OS could play a limited set of formats of sounds and videos
+	If you select the IE as the HTML browser nothing is shown
+	GRiNS never crashed during the tests.
+
+Scenario 1.2
+--------------
+step 1: Scenario 1.1
+step 2: Install Service Pack 3
+
+Notes: 
+	Same as Scenario 1.1
+	We are now at Service Pack 5 (12 May 1999)
+
+Result: PARTIAL FAILURE. 
+	The OS behavior was definitely improved but the new windows
+	media infrastructure was not there yet.
+	GRiNS never crashed during the tests.
+
+Scenario 1.3
+--------------
+step 1: Scenario 1.2
+step 2: Install Windows Media Player
+
+Notes: 
+	The Windows Media Player installed was the one 
+	coming with Service Pack 4.
+
+Result: COMPLETE SUCCESS.
+	IE4 may install the same infrastructure since it uses all this 
+	stuff (not checked yet).
+	DirectMedia runtime may install the same infrastructure also.
+	The only thing that GRiNS hasn't yet was the capability to display
+	HTML pages using IE. This was expected since GRiNS code requires 
+	IE4 or later and the test machine had only IE2.
+
+CONCLUSIONS
+
+GRiNS can be run on
+	Windows NT4 with NT Service Pack 3 or above and
+	Windows Media Player installed.
+	(To view HTML using IE, IE4 or above is needed)
+
+NT4 alone is weak on media support.
+More code and some changes are required if we want an NT4 
+without addons to run GRiNS properly (play sounds and video).
+
+
+-------------------------------------------------------------------
 2. Win98 GRiNS installation
 
+
+
+-------------------------------------------------------------------
 3. Win95 GRiNS installation
 
 
+
+
+-------------------------------------------------------------------
 4. Win2k (NT5) GRiNS installation
 step 1: Typical clean installation of Windows 2000 Professional Beta 3 (Build 2000)
 step 2: Install GRiNS
@@ -16,10 +85,9 @@ Notes:
 	i)  The typical clean installation of W2k installed IE5 
 	ii) No DLLs transfer is needed (argument checked)
 
-Result: OK. 
+Result: COMPLETE SUCCESS. 
 	GRiNS seems to work correctly with a clean W2k.
 	The test included all the views/forms/dialogs and smil docs containing 
 	all basic media (text,html,image,video)
 
-Tester: Kleanthis
 
