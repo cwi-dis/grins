@@ -2545,7 +2545,7 @@ RMPP_SetVideoSize(RMPPobject *self, PyObject *args)
 
 	if (!PyArg_ParseTuple(args, "ll", &width, &height))
 		return NULL;
-	res = ((IRMAVideoPinProperties *) self->pinProperties)->SetVideoSize((UINT32) width, (UINT32) height);
+	res = (self->videoPinProperties)->SetVideoSize((UINT32) width, (UINT32) height);
 	if (!SUCCEEDED(res)) {
 		seterror("SetVideoSize", res);
 		return NULL;
@@ -2611,7 +2611,7 @@ RMPP_GetCroppingSize(RMPPobject *self, PyObject *args)
 
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	res = ((IRMAVideoPinProperties *) self->pinProperties)->GetCroppingSize(&left, &top, &width, &height);
+	res = (self->videoPinProperties)->GetCroppingSize(&left, &top, &width, &height);
 	if (!SUCCEEDED(res)) {
 		seterror("GetCroppingSize", res);
 		return NULL;
