@@ -1926,7 +1926,7 @@ class Viewport(Region):
 		return color 
 
 	def getwindowpos(self, rel=None):
-		return self._rect
+		return self._rectb
 
 	def offsetospos(self, rc):
 		x, y, w, h = rc
@@ -1969,7 +1969,7 @@ class Viewport(Region):
 		return self._ctx is None
 
 	def getClipRgn(self, rel=None):
-		x, y, w, h = self._canvas
+		x, y, w, h = self._rectb
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn((x,y,x+w,y+h))
 		return rgn
@@ -2054,15 +2054,14 @@ class Viewport(Region):
 ##########################
 class ViewportContext:
 	def __init__(self, wnd, w, h, units, bgcolor):
-		self._viewport = Viewport(self, 0, 0, w, h, bgcolor)
-		self._wnd = wnd
-		self._bgcolor = bgcolor
+		# make viewport context size acceptable by wmf
+		wp, hp = self.__getWMPViewport(w, h)
+		self._viewport = Viewport(self, (wp-w)/2, (hp-h)/2, w, h, bgcolor)
+		w, h = wp, hp
+		self._rect = 0, 0, w, h
 
-		# make viewport size acceptable by wmf
-		# but yet if the aspect ratio  of the viewport is not the same
-		# as the screen the resulting wmv has not the correct aspect ratio
-		w = (w/16 + 1)*16
-		h = (h/16 + 1)*16
+		self._wnd = wnd
+		self._bgcolor = (0, 0, 0) # should be black for WMP
 
 		# set a slow timer so that we get some progress feedback
 		# when nothing is changing in the viewport
@@ -2078,7 +2077,7 @@ class ViewportContext:
 		self._backBuffer = self._ddraw.CreateSurface(ddsd)
 		self._pxlfmt = self._backBuffer.GetPixelFormat()
 
-		self._ddbgcolor = self._backBuffer.GetColorMatch(bgcolor or (255,255,255))
+		self._ddbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
 		self._backBuffer.BltFill((0, 0, w, h), self._ddbgcolor)
 
 	def onTimer(self, params):
@@ -2094,7 +2093,7 @@ class ViewportContext:
 			return 
 
 		if rc is None:
-			x, y, w, h = self._viewport._rect
+			x, y, w, h = self._viewport._rectb
 			rcPaint = x, y, x+w, y+h
 		else:
 			rcPaint = rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3] 
@@ -2149,6 +2148,18 @@ class ViewportContext:
 		dds = self._ddraw.CreateSurface(ddsd)
 		dds.BltFill((0, 0, w, h), self._ddbgcolor)
 		return dds
+
+	# return covering rectangle with
+	# 1. 16 pixels boundaries
+	# 2. w:h=4:3 aspect ratio
+	def __getWMPViewport(self, w, h):
+		n1 = int(h/12.0+0.5)
+		n2 = int(w/16.0+0.5)
+		if n1>n2: n=n1
+		else: n=n2
+		while (3*n % 4)!=0: n = n + 1
+		m = (3*n)/4
+		return n*16, m*16
 
 #############################
 
