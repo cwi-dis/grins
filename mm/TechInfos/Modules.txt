@@ -11,9 +11,8 @@
 	Fully implemented
      6.FillDefault
 	Fully implemented
-     7.MediaMarkerTiming
+     7.MediaMarkerTiming (not part of SMIL 2.0 Language)
 	Recognized, implemented for some media types on some platforms
-	(not part of SMIL 2.0 Language)
      8.MinMaxTiming
 	Fully implemented
      9.MultiArcTiming
@@ -34,21 +33,20 @@
 	Only syncBehavior="independent" implemented (other values recognized)
     17.SyncBehaviorDefault
 	Fully implemented
-    18.SyncMaster
+    18.SyncMaster (not part of SMIL 2.0 Language)
 	Not implemented
-	(not part of SMIL 2.0 Language)
-    19.TimeContainerAttributes
-	Not implemented (not part of SMIL 2.0 Language)
+    19.TimeContainerAttributes (not part of SMIL 2.0 Language)
+	Not implemented
     20.WallclockTiming
 	Fully implemented
 2.Time Manipulations
-     1.TimeManipulations
-	Not implemented (not part of SMIL 2.0 Language)
+     1.TimeManipulations (not part of SMIL 2.0 Language)
+	Not implemented
 3.Animation
      1.BasicAnimation
 	Fully implemented
-     2.SplineAnimation
-	Fully  implemented (but not part of SMIL 2.0 Language)
+     2.SplineAnimation (not part of SMIL 2.0 Language)
+	Fully implemented
 4.Content Control
      1.BasicContentControl
 	Fully implemented
@@ -57,7 +55,7 @@
      3.PrefetchControl
 	Partially implemented (mediaSize, mediaTime and  bandwidth are implemented only for their default values i.e 100%)
      4.SkipContentControl
-	Recognized but ignored
+	Fully implemented
 5.Layout
      1.AudioLayout
 	Recognized
@@ -88,21 +86,22 @@
      6.MediaDescription
 	Fully implemented
      7.MediaParam
-	Recognized, but no renderers use the param information; erase
-	and mediaRepeat recognized but not implemented
+	Recognized
+	no renderers use the param information
+	erase and mediaRepeat recognized but not implemented
 8.Metainformation
      1.Metainformation
 	Fully implemented
 9.Structure
      1.Structure
-	Fully implemented
+	Media elements can't have par/seq/excl/switch children
 10.Transitions
      1.BasicTransistions
 	Mostly implemented (all but direction; only a single subtype
-	per type; transOut not always properly scheduled)
+	per type)
      2.CoordinatedTransitions
 	Fully implemented
-     3.InlineTransitions
-	Not implemented (not part of SMIL 2.0 Language)
+     3.InlineTransitions (not part of SMIL 2.0 Language)
+	Not implemented
      4.TransitionModifiers
 	Parsed, not implemented
