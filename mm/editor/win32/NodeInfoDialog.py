@@ -45,6 +45,13 @@ button, whatever) at which time a callback is called.
 
 """
 
+""" @win32doc|NodeInfoDialog
+This class represents the interface between the NodeInfo platform independent
+class and its implementation NodeInfoForm in lib/win32/NodeInfoForm.py which 
+implements the actual dialog.
+
+"""
+
 __version__ = "$Id$"
 
 
@@ -92,9 +99,11 @@ class NodeInfoDialog:
 				'URL':(self.file_callback, ()),
 				'CallEditor':(self.conteditor_callback, ()),
 				'Browse':(self.browser_callback, ()),
+				'EdBrowse':(self.browserfile_callback,()),
 				'OpenChild':(self.openchild_callback, ())
 				}
 			}
+
 		formid=adornments['form_id']
 		toplevel_window=self.toplevel.window
 		fs=toplevel_window.getformserver()

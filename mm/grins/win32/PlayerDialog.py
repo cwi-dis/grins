@@ -1,5 +1,20 @@
 __version__ = "$Id$"
 
+"""Dialog for the Player control panel.
+
+The PlayerDialog is a window that displays VCR-like controls to
+control the player plus an interface to turn channels on and off and
+an interface to turn options on and off.
+
+"""
+
+""" @win32doc|PlayerDialog
+A PlayerDialog instance manages commands related
+to play. This instance indirectly passes information to
+the windows interface through the get_adornments method
+called by the channel module.
+"""
+
 import windowinterface
 from usercmd import *
 
