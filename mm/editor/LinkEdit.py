@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Link editor.
 
 from MMExc import *

@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # New hierarchy view implementation.
 
 # Beware: this module uses X11-like world coordinates:
