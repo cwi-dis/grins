@@ -792,6 +792,7 @@ class HorizontalWidget(StructureObjWidget):
 		# TODO: This does not test for maxheight()
 		if self.timemapper is not None:
 			timemapper = self.timemapper
+			timemapper.setoffset(self.pos_abs[0])
 
 		if self.iscollapsed():
 			StructureObjWidget.recalc(self, timemapper)
@@ -803,9 +804,7 @@ class HorizontalWidget(StructureObjWidget):
 			b = b - tl_h
 		min_width, min_height = self.get_minsize()
 
-		free_width = ((r-l) - min_width)
-
-		# Add the title	 free
+		free_width = (r-l) - min_width
 
 		t = t + sizes_notime.TITLESIZE
 		min_height = min_height - sizes_notime.TITLESIZE
@@ -847,32 +846,27 @@ class HorizontalWidget(StructureObjWidget):
 			w,h = medianode.get_minsize()
 			thisnode_free_width = freewidth_per_child
 			# First compute pushback bar position
-			if timemapper is not None or medianode.timemapper is not None:
-				if timemapper is None:
-					tm = medianode.timemapper
-					tm.setoffset(l)
-				else:
-					tm = timemapper
+			if timemapper is not None:
 				t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
 				tend = t2
-				lmin = tm.time2pixel(t0)
+				lmin = timemapper.time2pixel(t0)
 				if l < lmin:
 					l = lmin
 				r = l + w + thisnode_free_width
-				rmin = tm.time2pixel(tend)
-				rminmax = tm.time2pixel(tend, align='right')
+				rmin = timemapper.time2pixel(tend)
+				rminmax = timemapper.time2pixel(tend, align='right')
 				# tend may be t2, the fill-time, so for fill=hold it may extend past
 				# the begin of the next child. We have to truncate in that
 				# case.
 				if chindex < len(self.children)-1:
 					nextch = self.children[chindex+1]
-					rminmax = tm.time2pixel(nextch.node.GetTimes('bandwidth')[0])
+					rminmax = timemapper.time2pixel(nextch.node.GetTimes('bandwidth')[0])
 					if rmin > rminmax:
 						rmin = rminmax
 				else:
 					# last child in sequence
 					# let it extend as far to the right as possible
-					rminmax = tm.time2pixel(tend, align='right')
+					rminmax = timemapper.time2pixel(tend, align='right')
 					if rmin < max_r < rminmax:
 						rmin = max_r
 				if r < rmin:
@@ -1004,6 +998,7 @@ class VerticalWidget(StructureObjWidget):
 		# TODO: This does not test for maxheight()
 		if self.timemapper is not None:
 			timemapper = self.timemapper
+			timemapper.setoffset(self.pos_abs[0])
 
 		if self.iscollapsed():
 			StructureObjWidget.recalc(self, timemapper)
@@ -1047,22 +1042,17 @@ class VerticalWidget(StructureObjWidget):
 			b = t + h + thisnode_free_height
 			this_l = l
 			this_r = r
-			if timemapper is not None or medianode.timemapper is not None:
-				if timemapper is None:
-					tm = medianode.timemapper
-					tm.setoffset(this_l)
-				else:
-					tm = timemapper
+			if timemapper is not None:
 				t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
 				tend = t2
-				lmin = tm.time2pixel(t0)
+				lmin = timemapper.time2pixel(t0)
 				if this_l < lmin:
 					this_l = lmin
-##				rmin = tm.time2pixel(tend)
+##				rmin = timemapper.time2pixel(tend)
 ##				if this_r < rmin:
 ##					this_r = rmin
 ##				else:
-				rmax = tm.time2pixel(tend, align='right')
+				rmax = timemapper.time2pixel(tend, align='right')
 				if this_r > rmax:
 					this_r = rmax
 				if this_l > this_r:
@@ -1233,6 +1223,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 		# TODO: This does not test for maxheight()
 		if self.timemapper is not None:
 			timemapper = self.timemapper
+			timemapper.setoffset(self.pos_abs[0])
 
 		if self.iscollapsed():
 			StructureObjWidget.recalc(self, timemapper)
@@ -1269,22 +1260,17 @@ class UnseenVerticalWidget(StructureObjWidget):
 			# r = l + w # Wrap the node to it's minimum size.
 			this_l = l
 			this_r = r
-			if timemapper is not None or medianode.timemapper is not None:
-				if timemapper is None:
-					tm = medianode.timemapper
-					tm.setoffset(this_l)
-				else:
-					tm = timemapper
+			if timemapper is not None:
 				t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
 				tend = t2
-				lmin = tm.time2pixel(t0)
+				lmin = timemapper.time2pixel(t0)
 				if this_l < lmin:
 					this_l = lmin
-##				rmin = tm.time2pixel(tend)
+##				rmin = timemapper.time2pixel(tend)
 ##				if this_r < rmin:
 ##					this_r = rmin
 ##				else:
-				rmax = tm.time2pixel(tend, align='right')
+				rmax = timemapper.time2pixel(tend, align='right')
 				if this_r > rmax:
 					this_r = rmax
 				if this_l > this_r:
@@ -1431,6 +1417,7 @@ class MediaWidget(MMNodeWidget):
 	def recalc(self, timemapper = None):
 		if self.timemapper is not None:
 			timemapper = self.timemapper
+			timemapper.setoffset(self.pos_abs[0])
 		l,t,r,b = self.pos_abs
 		w = 0
 		if self.playicon is not None:
@@ -1863,16 +1850,26 @@ class TimelineWidget(MMWidgetDecoration):
 				displist.drawline(COLCOLOR, [(left, line_y), (right, line_y)])
 			oldright = right
 		displist.usefont(f_timescale)
-		halflabelwidth = displist.strsize('000:00 ')[0] # /2
-		lastlabelpos = x
+		halflabelwidth = displist.strsize('000:00 ')[0] / 2
+		lastlabelpos = x - halflabelwidth - 1
 		for time, tick_x in self.ticks:
 			# Check whether it is time for a tick
 			if int(time) % 10 in (0, 5) and tick_x > lastlabelpos + halflabelwidth:
 				lastlabelpos = tick_x + halflabelwidth
 				cur_tick_top = longtick_top
 				cur_tick_bot = longtick_bot
-				displist.centerstring(max(tick_x-halflabelwidth, x), label_top,
-					min(tick_x+halflabelwidth, x+w), label_bot, '%02d:%02.2d'%(int(time)/60, int(time)%60))
+				label = '%02d:%02.2d'%(int(time)/60, int(time)%60)
+				if tick_x-halflabelwidth < x + sizes_notime.HEDGSIZE:
+					width = displist.strsizePXL(label)[0]
+					displist.setpos(x + sizes_notime.HEDGSIZE, (label_top + label_bot + displist.fontheightPXL()) / 2)
+					displist.writestr(label)
+				elif tick_x+halflabelwidth > x + w - sizes_notime.HEDGSIZE:
+					width = displist.strsizePXL(label)[0]
+					displist.setpos(x + w - width - sizes_notime.HEDGSIZE, (label_top + label_bot + displist.fontheightPXL()) / 2)
+					displist.writestr(label)
+				else:
+					displist.centerstring(tick_x-halflabelwidth, label_top,
+							      tick_x+halflabelwidth, label_bot, label)
 			else:
 				cur_tick_top = tick_top
 				cur_tick_bot = tick_bot
