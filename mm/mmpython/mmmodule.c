@@ -33,9 +33,7 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "modsupport.h"
 #include "thread.h"
 #include "mmmodule.h"
-#ifdef SOLARIS
-#include <time.h>
-#endif
+#include <sys/time.h>
 
 #ifdef MM_DEBUG
 static int mm_debug = 0;
@@ -283,6 +281,8 @@ do_stop(self, args, busyflag, stopflag, func)
 	int busyflag, stopflag;
 	int (*func) Py_PROTO((mmobject *));
 {
+	struct timeval tv;
+
 	CheckMmObject(self);
 	if (args && !PyArg_NoArgs(args))
 		return NULL;
@@ -302,16 +302,9 @@ do_stop(self, args, busyflag, stopflag, func)
 				break;
 			}
 			up_sema(self->mm_flagsema);
-#ifdef SOLARIS
-			{
-				struct timespec rqt;
-				rqt.tv_sec = 0;
-				rqt.tv_nsec = 50000;
-				nanosleep(&rqt, NULL);
-			}
-#else
-			sginap(5); /* release CPU for a bit */
-#endif
+			tv.tv_sec = 0;
+			tv.tv_usec = 5000;
+			select(0, NULL, NULL, NULL, &tv);
 		}
 		dprintf(("exit loop\n"));
 	} else {
