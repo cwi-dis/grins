@@ -44,6 +44,13 @@ class HierarchyViewDialog(ViewDialog):
 		self.window.register(WMEVENTS.DragFile, self.dropeffect, None)
 		self.window.register(WMEVENTS.DropFile, self.dropfile, None)
 
+	def getparentwindow(self):
+		# Used by machine-independent code to pass as parent
+		# parameter to dialogs
+		##return self.window
+		import windowinterface
+		return windowinterface.getmainwnd()
+
 	def hide(self, *rest):
 		self.save_geometry()
 		self.window.close()

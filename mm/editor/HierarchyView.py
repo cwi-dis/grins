@@ -1188,7 +1188,7 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			bwname = "%dbps"%bandwidth
 		msg = 'Computing bandwidth usage at %s...'%bwname
-		dialog = windowinterface.BandwidthComputeDialog(msg)
+		dialog = windowinterface.BandwidthComputeDialog(msg, parent=self.getparentwindow())
 		bandwidth, prerolltime, delaycount, errorseconds, errorcount = \
 			BandwidthCompute.compute_bandwidth(self.root)
 		dialog.setinfo(prerolltime, errorseconds, delaycount, errorcount)
