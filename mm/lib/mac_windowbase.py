@@ -60,7 +60,7 @@ _size_cache = {}
 
 Version = 'mac'
 
-from EVENTS import *
+from WMEVENTS import *
 
 # Routines to save/restore complete textfont info
 def savefontinfo(wid):
@@ -126,6 +126,8 @@ class _Event:
 		what, message, when, where, modifiers = event
 		if what == Events.mouseDown:
 			self._handle_mousedown(event)
+		elif what == Events.mouseUp:
+			self._handle_mouseup(event)
 		elif what == Events.keyDown:
 			self._handle_keydown(event)
 		elif what == Events.updateEvt:
@@ -154,11 +156,13 @@ class _Event:
 			MacOS.HandleEvent(event)
 			return
 		if partcode == Windows.inMenuBar:
-			pass # XXXX
+			# XXXX
+			MacOS.HandleEvent(event)
+			return
 		elif partcode == Windows.inContent:
 			if wid == Win.FrontWindow():
 				# Frontmost. Handle click.
-				pass # XXXX
+				self._handle_contentclick(wid, 1, where, event)
 			else:
 				# Not frontmost. Activate.
 				wid.SelectWindow()
@@ -178,6 +182,17 @@ class _Event:
 		else:
 			# In desk or syswindow. Pass on.
 			MacOS.HandleEvent(event)
+
+	def _handle_mouseup(self, event):
+		"""Handle a MacOS mouseUp event"""
+		what, message, when, where, modifiers = event
+		partcode, wid = Win.FindWindow(where)
+		if not wid:
+			return
+		if partcode == Windows.inContent:
+			if wid == Win.FrontWindow():
+				# Frontmost. Handle click.
+				self._handle_contentclick(wid, 0, where, event)
 
 	def _handle_keydown(self, event):
 		"""Handle a MacOS keyDown event"""
@@ -283,6 +298,13 @@ class _Toplevel(_Event):
 		if self._wid_to_window.has_key(wid):
 			return self._wid_to_window[wid]
 		return None
+		
+	def _handle_contentclick(self, wid, down, where, event):
+		"""A mouse-click inside a window, dispatch to the correct window"""
+		window = self._find_wid(wid)
+		if not window:
+			return
+		window._contentclick(down, where, event)
 
 	def setcursor(self, cursor):
 		if cursor == 'watch':
@@ -312,6 +334,7 @@ class _CommonWindow:
 		self._fgcolor = parent._fgcolor
 		self._clip = None
 		self._active_displist = None
+		self._eventhandlers = {}
 
 	def close(self):
 		"""Close window and all subwindows"""
@@ -365,6 +388,14 @@ class _CommonWindow:
 	def bgcolor(self, color):
 		"""Set backgroundcolor to 3-tuple 0..255"""
 		self._bgcolor = self._convert_color(color)
+		
+	def showwindow(self):
+		"""Highlight the window"""
+		pass
+		
+	def dontshowwindow(self):
+		"""Don't highlight the window"""
+		pass
 
 	def setcursor(self, cursor):
 		raise 'window.setcursor called'
@@ -387,12 +418,12 @@ class _CommonWindow:
 
 	def register(self, event, func, arg):
 		if func is None or callable(func):
-			pass
+			self._eventhandlers[event] = (func, arg)
 		else:
 			raise error, 'invalid function'
 
 	def unregister(self, event):
-		pass
+		del self._eventhandlers[event]
 
 	def destroy_menu(self):
 		pass
@@ -426,8 +457,8 @@ class _CommonWindow:
 			reader = img.reader(format, file)
 		except img.error, arg:
 			raise error, arg
-		xsize = reader.width
-		ysize = reader.height
+		w = xsize = reader.width
+		h = ysize = reader.height
 		_size_cache[file] = xsize, ysize
 			
 		top, bottom, left, right = crop
@@ -446,6 +477,7 @@ class _CommonWindow:
 		left = int(left * scale + .5)
 		right = int(right * scale + .5)
 
+		
 		if 0 and hasattr(reader, 'transparent'):	# XXXX To be done
 			r = img.reader(imgformat.xrgb8, file)
 			for i in range(len(r.colormap)):
@@ -509,6 +541,43 @@ class _CommonWindow:
 		"""return our xywh rect (in pixels) as quickdraw ltrb style"""
 		return self._rect[0], self._rect[1], self._rect[0]+self._rect[2], \
 			self._rect[1]+self._rect[3]
+		
+	def _contentclick(self, down, where, event):
+		"""A click in our content-region. Note: this method is extended
+		for top-level windows (to do global-to-local coordinate transforms)"""
+		#
+		# First see whether the click is in any of our children
+		#
+		for ch in self._subwindows:
+			if Qd.PtInRect(where, ch.qdrect()):
+				ch._contentclick(down, where, event)
+				return
+		#
+		# It is really in our canvas. 
+		# Convert to our type of event and call the appropriate handler.
+		#
+		if down:
+			evttype = Mouse0Press
+		else:
+			evttype = Mouse0Release
+
+		try:
+			func, arg = self._eventhandlers[evttype]
+		except KeyError:
+			return # Not wanted
+			
+		wx, wy, ww, wh = self._rect
+		x, y = where
+		x = float(x-wx)/ww
+		y = float(y-wy)/wh
+		
+		buttons = []
+		if self._active_displist:
+			for b in self._active_displist._buttons:
+				if b._inside(x, y):
+					buttons.append(b)
+				
+		func(arg, self, evttype, (x, y, buttons))
 		
 	def _redraw(self):
 		"""Set clipping and color, redraw, redraw children"""
@@ -584,6 +653,12 @@ class _Window(_CommonWindow):
 		if not self._wid or not self._parent:
 			return
 		self._wid.SendBehind(0)
+		
+	def _contentclick(self, down, where, event):
+		"""A mouse click in our data-region"""
+		Qd.SetPort(self._wid)
+		where = Qd.GlobalToLocal(where)
+		_CommonWindow._contentclick(self, down, where, event)
 
 	def _mkclip(self):
 		if not self._wid or not self._parent:
@@ -604,7 +679,7 @@ class _Window(_CommonWindow):
 				Qd.DisposeRgn(r)
 			w._mkclip()
 
-class _SubWindow(_Window):
+class _SubWindow(_CommonWindow):
 	"""Window "living in" with a toplevel window"""
 
 	def __init__(self, parent, wid, coordinates, defcmap = 0, pixmap = 0, 
@@ -739,11 +814,13 @@ class _DisplayList:
 		if cmd == 'clear':
 			Qd.EraseRect(window.qdrect())
 ##			print 'Erased', window.qdrect(),'to', wid.GetWindowPort().rgbBkColor
+		elif cmd == 'fg':
+			Qd.RGBForeColor(entry[1])
+		elif cmd == 'font':
+			entry[1]._setfont(wid)
 		elif cmd == 'text':
 			Qd.MoveTo(entry[1], entry[2])
 			Qd.DrawString(entry[3]) # XXXX Incorrect for long strings
-		elif cmd == 'font':
-			entry[1]._setfont(wid)
 		elif cmd == 'image':
 			mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
 			if mask:
@@ -753,6 +830,29 @@ class _DisplayList:
 ##			print 'IMAGE', image[0], srcrect, dstrect
 			Qd.CopyBits(image[0], wid.GetWindowPort().portBits, srcrect, dstrect,
 				QuickDraw.srcCopy+QuickDraw.ditherCopy, None)
+		elif cmd == 'line':
+			color = entry[1]
+			points = entry[2]
+			fgcolor = wid.GetWindowPort().rgbFgColor
+			Qd.RGBForeColor(color)
+			Qd.MoveTo(points[0])
+			for np in points[1:]:
+				Qd.LineTo(np)
+			Qd.RGBForeColor(fgcolor)
+		elif cmd == 'box':
+			x, y, w, h = entry[1]
+			Qd.FrameRect((x, y, x+w, y+h))
+		elif cmd == 'fbox':
+			color = entry[1]
+			x, y, w, h = entry[2]
+			fgcolor = wid.GetWindowPort().rgbFgColor
+			Qd.RGBForeColor(color)
+			Qd.PaintRect((x, y, x+w, y+h))
+			Qd.RGBForeColor(fgcolor)
+		elif cmd == 'linewidth':
+			Qd.PenSize(entry[1], entry[1])
+		else:
+			raise 'Unknown displaylist command', cmd
 			
 	def fgcolor(self, color):
 		if self._rendered:
@@ -872,10 +972,11 @@ class _DisplayList:
 
 class _Button:
 	def __init__(self, dispobj, coordinates):
-		x, y, w, h = coordinates
+		self._coordinates = coordinates
 		self._dispobj = dispobj
 		dispobj._buttons.append(self)
 		self._hicolor = self._color = dispobj._fgcolor
+		self._dispobj.drawbox(coordinates)
 
 	def close(self):
 		if self._dispobj is None:
@@ -897,6 +998,10 @@ class _Button:
 
 	def unhighlight(self):
 		pass
+		
+	def _inside(self, x, y):
+		bx, by, bw, bh = self._coordinates
+		return (bx <= x <= bx+bw and by <= y <= by+bh)
 
 _pt2mm = 25.4 / 72			# 1 inch == 72 points == 25.4 mm
 
@@ -991,24 +1096,31 @@ class showmessage:
 class Dialog:
 	def __init__(self, list, title = None, prompt = None, grab = 1,
 		     vertical = 1):
+		print 'DIALOG', self, list, title, prompt, grab, vertical
 		pass
 
 	def close(self):
+##		print 'CLOSE DIALOG', self
 		pass
 
 	def destroy_menu(self):
+##		print 'DESTROY MENU', self
 		pass
 
 	def create_menu(self, list, title = None):
+##		print 'CREATE MENU', self, list, title
 		pass
 
 	def getbutton(self, button):
+##		print 'GET BUTTON', self, button
 		return set
 
 	def setbutton(self, button, onoff = 1):
+##		print 'SET BUTTON', self, button, onoff
 		pass
 
 def multchoice(prompt, list, defindex):
+	print 'MULTCHOICE', list, defindex
 	return defindex
 
 def beep():
