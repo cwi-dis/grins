@@ -3987,6 +3987,8 @@ class AttrEditForm(GenFormView):
 		self._winsize=None
 		self._layoutch=None
 		
+		if not self._attriblist:
+			return
 		a=self._attriblist[0]
 		if hasattr(a.wrapper, 'toplevel') and a.wrapper.toplevel:
 			channels = a.wrapper.toplevel.root.context.channels
