@@ -7,8 +7,6 @@ import MMAttrdefs
 import dialogs
 error = 'Channel.error'
 
-from ChannelWMdeps import ChannelWM, ChannelWindowWM
-
 channel_device = 1
 channels = []				# list of channels
 
@@ -21,7 +19,7 @@ PIDLE = 1
 PLAYING = 2
 PLAYED = 3
 
-class Channel(ChannelWM):
+class Channel:
 	#
 	# The following methods can be called by higher levels.
 	#
@@ -95,6 +93,24 @@ class Channel(ChannelWM):
 			return 1
 		else:
 			return self._attrdict['visible']
+
+	def check_visible(self):
+		if self.may_show():
+			self.show()
+		else:
+			self.hide()
+
+	def flip_visible(self):
+		if self._attrdict.has_key('visible'):
+			visible = self._attrdict['visible']
+		else:
+			visible = 1
+		visible = (not visible)
+		self._attrdict['visible'] = visible
+		if visible:
+			self.show()
+		else:
+			self.hide()
 
 	def show(self):
 		# Indicate that the channel must enter the SHOWN
@@ -178,6 +194,15 @@ class Channel(ChannelWM):
 		# Not yet implemented.
 		if debug:
 			print 'Channel.pause('+`self`+')'
+		pass
+
+	def save_geometry(self):
+		pass
+
+	def setwaiting(self):
+		pass
+
+	def setready(self):
 		pass
 
 	#
@@ -563,7 +588,7 @@ class Channel(ChannelWM):
 # dictionary with channels that have windows
 ChannelWinDict = {}
 
-class ChannelWindow(ChannelWindowWM, Channel):
+class ChannelWindow(Channel):
 	chan_attrs = Channel.chan_attrs + ['base_window', 'base_winoff']
 	node_attrs = Channel.node_attrs + ['duration', 'bgcolor', 'hicolor']
 
@@ -573,6 +598,7 @@ class ChannelWindow(ChannelWindowWM, Channel):
 		self.window = None
 		self.armed_display = self.played_display = None
 		self.nopop = 0
+		self._is_waiting = 0
 		return self
 
 	def __repr__(self):
@@ -583,6 +609,22 @@ class ChannelWindow(ChannelWindowWM, Channel):
 		del self.window
 		del self.armed_display
 		del self.played_display
+
+	def save_geometry(self):
+		if self._is_shown:
+			x, y, w, h = self.window.getgeometry()
+			self._attrdict['winpos'] = x, y
+			self._attrdict['winsize'] = w, h
+
+	def setwaiting(self):
+		self._is_waiting = 1
+		if self._is_shown:
+			self.window.setcursor('watch')
+
+	def setready(self):
+		self._is_waiting = 0
+		if self._is_shown:
+			self.window.setcursor('')
 
 	def do_show(self):
 		if debug:
@@ -635,6 +677,8 @@ class ChannelWindow(ChannelWindowWM, Channel):
 			import windowinterface
 			self.window = windowinterface.newwindow(x, y, \
 				  width, height, self._name)
+		if self._is_waiting:
+			self.window.setcursor('watch')
 		if self._attrdict.has_key('bgcolor'):
 			self.window.bgcolor(self._attrdict['bgcolor'])
 		if self._attrdict.has_key('fgcolor'):
