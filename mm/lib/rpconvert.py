@@ -137,6 +137,9 @@ def rpconvert(node, errorfunc = None):
 				em.setnodeattr(newnode, 'fit', 'fill')
 			base = posixpath.splitext(posixpath.split(tagdict['file'])[1])[0]
 			em.setnodeattr(newnode, 'name', base)
+			# As this item comes from a RealPix file it should
+			# be ready for Real playback
+			em.setnodeattr(newnode, 'project_convert', 0)
 
 		# calculate subregion positioning
 		# first work in source (RealPix) coordinates
