@@ -412,6 +412,9 @@
 #define IDC_TREE_REGION1                1282
 #define IDC_TREE1                       1283
 #define IDC_LAYOUT_SHOW_ALLMEDIAS       1284
+#define IDC_GROUP4                      1285
+#define IDC_GROUP5                      1286
+#define IDC_GROUP6                      1287
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -496,7 +499,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        302
 #define _APS_NEXT_COMMAND_VALUE         32865
-#define _APS_NEXT_CONTROL_VALUE         1285
+#define _APS_NEXT_CONTROL_VALUE         1288
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
