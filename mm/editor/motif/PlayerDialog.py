@@ -8,22 +8,11 @@ an interface to turn options on and off.
 
 __version__ = "$Id$"
 
-import windowinterface, WMEVENTS
+import windowinterface
 from usercmd import *
-import imgformat, imgconvert
 import playbutton, playbuttonunselect
 import pausebutton, pausebuttonunselect
 import stopbutton, stopbuttonunselect
-
-_BLACK = 0, 0, 0
-_GREY = 100, 100, 100
-_GREEN = 0, 255, 0
-_YELLOW = 255, 255, 0
-_BGCOLOR = 200, 200, 200
-_FOCUSLEFT = 244, 244, 244
-_FOCUSTOP = 204, 204, 204
-_FOCUSRIGHT = 40, 40, 40
-_FOCUSBOTTOM = 91, 91, 91
 
 STOPPED, PAUSING, PLAYING = range(3)
 
