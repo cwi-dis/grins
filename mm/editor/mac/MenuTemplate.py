@@ -78,9 +78,6 @@ MENUBAR=(
 		(FLAG_PRO, SEP, ),
 		(FLAG_ALL, ENTRY, 'Properties...', 'A', ATTRIBUTES),
 		(FLAG_ALL, ENTRY, 'Edit Content', 'E', CONTENT),
-		(FLAG_PRO, ENTRY, 'Convert to SMIL 2.0', None, RPCONVERT),
-		(FLAG_PRO, ENTRY, 'Convert to RealPix', None, CONVERTRP),
-		(FLAG_ALL, ENTRY, 'Select node from source', 'S', SELECTNODE_FROM_SOURCE),		
 		(FLAG_ALL, SEP, ),
 		(FLAG_ALL, ENTRY, 'Preferences...', None, PREFERENCES),
 		)),
@@ -161,6 +158,11 @@ MENUBAR=(
 		)),
 
 	(FLAG_ALL, CASCADE, 'Tools', (
+		(FLAG_PRO, ENTRY, 'RealPix to SMIL 2.0', None, RPCONVERT),
+		(FLAG_PRO, ENTRY, 'SMIL 2.0 to RealPix', None, CONVERTRP),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Select node from source', 'S', SELECTNODE_FROM_SOURCE),		
+		(FLAG_ALL, SEP,),
 		(FLAG_ALL, CASCADE, 'Align', (
 			(FLAG_ALL, ENTRY, 'Left', 'L', ALIGN_LEFT),
 			(FLAG_ALL, ENTRY, 'Center', 'C', ALIGN_CENTER),
@@ -174,7 +176,6 @@ MENUBAR=(
 			(FLAG_ALL, ENTRY, 'Horizontally', 'H', DISTRIBUTE_HORIZONTALLY),
 			(FLAG_ALL, ENTRY, 'Vertically', 'V', DISTRIBUTE_VERTICALLY),
 			)),
-		(FLAG_ALL, SEP,),
 		)),
 		
 	(FLAG_ALL, CASCADE, 'View', (
