@@ -1,6 +1,8 @@
 # A class to handle standard geometry loading and saving for views etc.
 # This works both with BasicDialog or GLDialog as base class.
 # Specify this as the first base class, before the *Dialog base class.
+# (Now this also defines dummy versions of methods that every view
+# should have such as getfocus().)
 
 import MMAttrdefs
 
@@ -39,4 +41,9 @@ class ViewDialog:
 	#
 	def globalsetfocus(self, node):
 		# views can override this to allow their focus to be 'pushed'
+		pass
+	#
+	def fixtitle(self):
+		# views can override this to fix their title after the
+		# filename has changed
 		pass
