@@ -22,7 +22,6 @@ class MMNodeContext:
 		self.layouts = {}
 		self.usergroups = {}
 		self.baseurl = None
-		self.baseurlset = 0
 		self.nextuid = 1
 		self.editmgr = None
 		self.armedmode = None
@@ -43,7 +42,6 @@ class MMNodeContext:
 
 	def setbaseurl(self, baseurl):
 		self.baseurl = baseurl
-		self.baseurlset = 1
 
 	def findurl(self, url):
 		"Locate a file given by url-style filename."
