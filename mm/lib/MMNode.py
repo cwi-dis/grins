@@ -2132,7 +2132,7 @@ class MMSyncArc:
 		return refnode.markerhappened(self.marker, sctx) + self.delay
 
 class MMNode_body:
-	"""Helper for looping nodes"""
+	# Helper for looping nodes
 	helpertype = "looping"
 
 	def __init__(self, parent):
@@ -2216,17 +2216,17 @@ class MMNode_body:
 				self.parent.stopplay(timestamp)
 
 class MMNode_pseudopar_body(MMNode_body):
-	"""Helper for RealPix nodes with captions, common part"""
+	# Helper for RealPix nodes with captions, common part
 
 	def _is_realpix_with_captions(self):
 		return 0
 
 class MMNode_realpix_body(MMNode_pseudopar_body):
-	"""Helper for RealPix nodes with captions, realpix part"""
+	# Helper for RealPix nodes with captions, realpix part
 	helpertype = "realpix"
 
 class MMNode_caption_body(MMNode_pseudopar_body):
-	"""Helper for RealPix nodes with captions, caption part"""
+	# Helper for RealPix nodes with captions, caption part
 	helpertype = "caption"
 
 	def GetAttrDict(self):
@@ -4909,7 +4909,7 @@ class MMNode(MMTreeElement):
 		return newlist
 
 	def ChosenSwitchChild(self, childrentopickfrom=None):
-		"""For alt nodes, return the child that will be played"""
+		# For alt nodes, return the child that will be played
 		if childrentopickfrom is None:
 			childrentopickfrom = self.GetChildren()
 		for ch in childrentopickfrom:

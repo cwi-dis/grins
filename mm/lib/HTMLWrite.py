@@ -328,7 +328,7 @@ class HTMLWriter:
 		return out
 		
 	def calcchnames1(self, node):
-		"""Calculate unique names for channels; first pass"""
+		# Calculate unique names for channels; first pass
 		context = node.GetContext()
 		channels = context.channels
 		for ch in channels:
@@ -379,7 +379,7 @@ class HTMLWriter:
 namechars = string.letters + string.digits + '_-.'
 
 def identify(name):
-	"""Turn a CMIF name into an identifier"""
+	# Turn a CMIF name into an identifier
 	rv = []
 	for ch in name:
 		if ch in namechars:
