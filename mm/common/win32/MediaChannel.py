@@ -8,8 +8,16 @@ implement GRiNS audio and video media channels.
 
 Any media supported by Windows Media Player
 are also supported by this module:
-(.avi,.asf,.asx,.rmi,.wav,.mpg,.mpeg,.m1v,.mp2,.mpa, 
+(.avi,.asf,.rmi,.wav,.mpg,.mpeg,.m1v,.mp2,.mpa, 
 .mpe,.mid,.rmi,.qt,.aif,.aifc,.aiff,.mov,.au,.snd)
+---	Exception: asx files can be played directly by MediaPlayer
+	or the MediaPlayer control but not by this module. 
+	(we could use the control for win32 but to leave open
+	the porting to other platforms I prefer not to use it)
+	This module can be used to play the asf streams 
+	referenced in asx files. So, we need to parse the asx 
+	files first using the ASXParser.
+	(I am not sure of how asx support will evolve yet)
 
 The GraphBuilder is a COM object that builds a graph of filters
 appropriate to parse-render each media type from those filters
@@ -57,6 +65,7 @@ WM_REDRAW=win32con.WM_USER+102
 # use: addclosecallback, genericwnd, register, unregister
 import windowinterface
 
+
 class MediaChannel:
 	def __init__(self):
 
@@ -74,6 +83,10 @@ class MediaChannel:
 		# notification mechanism for not window channels
 		self._notifyWindow = None
 		self.__window = None
+
+		# asx flag
+		self._armedIsAsx=0
+		self._armedAsx=None
 
 		# release any resources on exit
 		import windowinterface
@@ -115,7 +128,12 @@ class MediaChannel:
 			print 'failed to create GraphBuilder'
 			return 0
 
-		url = MMurl.canonURL(self.getfileurl(node))
+		url=self.getfileurl(node)
+		if self.isASX(url):
+			self._armedIsAsx=1
+			return self.prepareASX(node)
+		
+		url = MMurl.canonURL(url)
 		url=urllib.unquote(url)
 		if not self._armBuilder.RenderFile(url):
 			print 'Failed to render',url
@@ -234,6 +252,23 @@ class MediaChannel:
 		self._playBuilder.SetPosition(0)
 		self._playBuilder.Run()
 
+	def isASX(self,url):
+		import posixpath
+		base, ext = posixpath.splitext(url)
+		return ext=='.asx'
+	
+	def prepareASX(self,node):
+		import ASXParser
+		x=ASXParser.ASXParser()
+		url=self.getfileurl(node)
+		x.read(url)
+		if not x._playlist:
+			return -1
+		asf_url=x._playlist[0]
+		if not self._armBuilder.RenderFile(asf_url):
+			print 'Failed to render',asf_url
+			return -1
+		return 1
 
 	############################################################## 
 	# ui delays management:
