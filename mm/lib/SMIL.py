@@ -200,6 +200,7 @@ class SMIL:
 			'fill':None,
 			'longdesc':None,
 			'mediaRepeat':None,
+			'readIndex':None,
 			'region':None,
 			'src':None,
 			'tabindex':None,

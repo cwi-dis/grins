@@ -525,6 +525,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad %s attribute' % attr)
 				except error, msg:
 					self.syntax_error(msg)
+			elif attr == 'readIndex':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				try:
+					readIndex = string.atoi(val)
+					if readIndex < 0:
+						raise string.atoi_error, 'negative value'
+				except string.atoi_error:
+					self.syntax_error('bad %s attribute' % attr)
+				else:
+					attrdict['readIndex'] = readIndex
 			elif attr == 'system-bitrate':
 				try:
 					bitrate = string.atoi(val)

@@ -266,6 +266,10 @@
 (queuesize (float) 0 'Queue size' default
 	'Audio playback queue size' channel (cmif))
 
+(readIndex (int) 0 'Read index' default
+	'Position in which descriptive text is read by assistive devices'
+	raw (cmif smil2))
+
 (repeatdur (float) 0 'Repeat duration' default
 	'Time the node should repeat' raw (smil2))
 
