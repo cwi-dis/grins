@@ -288,6 +288,10 @@ class AttrEditorDialogField:
 			toshow=ITEMLIST_STRING
 			tohide=ITEMLISTNOT_STRING
 		self.__parent._hideitemlist(tohide)
+		# It appears input fields have to be shown before
+		# values are inserted??!?
+		if ITEM_STRING in toshow:
+			self.__parent._showitemlist([ITEM_STRING])
 		if t == 'option':
 			list = self.getoptions()
 			if value in list:
@@ -296,6 +300,7 @@ class AttrEditorDialogField:
 				value = None
 			self.__parent._option.setitems(list, value)
 		else:
+			print 'DBG show', `value`
 			self.__parent._setlabel(ITEM_STRING, value)
 			self.__parent._selectinputfield(ITEM_STRING)
 		self.__parent._setlabel(ITEM_INFO_DEFAULT, default)
@@ -374,6 +379,7 @@ class AttrEditorDialogField:
 				value = self.__list[0]
 			self.__parent._option.select(value)
 		else:
+			print 'DBG setvalue', `value`
 			self.__parent._setlabel(ITEM_STRING, value)
 			self.__parent._selectinputfield(ITEM_STRING)
 
