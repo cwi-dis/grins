@@ -16,6 +16,6 @@ def getduration(filename):
 	t, ds, cs = vfile.getrandomframeheader(len(vfile.index)-1)
 	return t * 0.001
 
-duration_cache = FileCache.FileCache().init(getduration)
+duration_cache = FileCache.FileCache(getduration)
 
 get = duration_cache.get
