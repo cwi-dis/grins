@@ -1145,6 +1145,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			copyfiles = 1
 			qtExt = 0
 			rpExt = 0
+			pss4Ext = 0
 			smil_one = 0
 			convertfiles = 0
 			addattrs = 0
@@ -1158,6 +1159,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			elif exporttype == 'WINCE':
 				addattrs = 1
 				grinsExt = 1
+				pss4Ext = 1
 			# XXX enabling this currently crashes the application on Windows during video conversion
 			progress = windowinterface.ProgressDialog("Publishing", self.cancel_upload)
 			progress.set('Publishing document...')
@@ -1166,6 +1168,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			grinsExt = mimetype != 'application/smil'
 			qtExt = features.EXPORT_QT in features.feature_set
 			rpExt = features.EXPORT_REAL in features.feature_set
+			pss4Ext = 0
 			smil_one = 0
 			copyfiles = 0
 			convertfiles = 0
@@ -1184,6 +1187,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 								grinsExt = grinsExt,
 								qtExt = qtExt,
 								rpExt = rpExt,
+								pss4Ext = pss4Ext,
 								copyFiles = copyfiles,
 								convertfiles = convertfiles,
 								convertURLs = 1,
