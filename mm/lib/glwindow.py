@@ -14,7 +14,7 @@
 
 import gl, GL, DEVICE
 import fl, FL
-import windowinterface, EVENTS
+import windowinterface, events, EVENTS
 import GLLock
 
 
@@ -160,9 +160,8 @@ def dispatch(dev, val):
 		GLLock.gl_lock.release()
 	# Use some undocumented internals of the windowinterface module.
 	windowinterface._event._doevent(dev, val)
-	while windowinterface._event._queue:
-		window, event, value = windowinterface._event._queue[0]
-		del windowinterface._event._queue[0]
+	while events.testevent():
+		window, event, value = events.readevent()
 ##		print 'dispatch now:', event #DBG
 ##		global highlight
 		if event == EVENTS.Mouse0Press:
