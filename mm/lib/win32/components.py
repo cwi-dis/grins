@@ -113,6 +113,10 @@ class LightWeightControl:
 	def getwindowrect(self):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.GetWindowRect(self._hwnd)
+	def getclientrect(self):
+		if not self._hwnd: raise error, 'os control has not been created'
+		l, t, r, b = Sdk.GetWindowRect(self._hwnd)
+		return 0, 0, r-l, b-t 
 	def movewindow(self, rc, repaint = 1):
 		if not self._hwnd: raise error, 'os control has not been created'
 		Sdk.MoveWindow(self._hwnd, rc, repaint)
@@ -653,6 +657,71 @@ class Tooltip(Control):
 		r, g, b = color
 		self.sendmessage(commctrl.TTM_SETTIPBKCOLOR, win32api.RGB(r, g, b), 0)
 	
+
+##############################
+# TipWindow (not lightweight)
+# A window similar to the tip-popup the tooltip control uses
+# The purpose is to have a comletely customizable tip window 
+ 
+class TipWindow(window.Wnd):
+	def __init__(self, parent):
+		window.Wnd.__init__(self,win32ui.CreateWnd())
+		self._parent = parent
+		self._text = None
+		self._bgcolor = 0xFF, 0xFF, 0xE0 # LightYellow
+		self._rect = 20, 20, 112, 38
+		self._margins = 2, 0, 2, 0
+		self._dxoffset = 16
+		self._blackbrush = Sdk.CreateBrush(win32con.BS_SOLID,0,0)
+		fd = {'name':'Arial','height':10,'weight':500}
+		self._hsmallfont = Sdk.CreateFontIndirect(fd)		
+
+	def create(self):
+		brush = Sdk.CreateBrush(win32con.BS_SOLID, win32mu.RGB(self._bgcolor), 0)
+		strclass = win32ui.GetAfx().RegisterWndClass(0, 0, brush, 0)
+		style = win32con.WS_POPUP
+		self.CreateWindowEx(win32con.WS_EX_TOPMOST, strclass, '', style,
+			self._rect, self._parent, 0)
+	
+	def OnDestroy(self, params):
+		Sdk.DeleteObject(self._blackbrush)
+		Sdk.DeleteObject(self._hsmallfont)
+
+	def OnPaint(self):
+		dc, paintStruct = self.BeginPaint()
+		dc.SetBkMode(win32con.TRANSPARENT)
+		l, t, r, b = self.GetClientRect()
+		dc.FillSolidRect((l, t, r, b), win32mu.RGB(self._bgcolor or (255,255,255)))
+		if self._text is not None:
+			dl, dt, dr, db = self._margins
+			hf = dc.SelectObjectFromHandle(self._hsmallfont)
+			dc.DrawText(self._text, (l+dl, t+dt, r-dr, b-db))
+			dc.SelectObjectFromHandle(hf)
+		dc.FrameRectFromHandle(self.GetClientRect(), self._blackbrush)
+		self.EndPaint(paintStruct)
+	
+	def settext(self, text):
+		self._text = text
+		if Sdk.IsWindow(self.GetSafeHwnd()):
+			self.InvalidateRect(self.GeClientRect())
+
+	def moveTo(self, pos, text, show=1):
+		self._text = text
+		x, y = pos
+		x =  x + self._dxoffset
+		Sdk.SetWindowPos(self.GetSafeHwnd(), win32con.HWND_TOPMOST, (x,y,0,0),
+			win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE |  win32con.SWP_NOZORDER | win32con.SWP_NOREDRAW)
+		if show and not self.IsWindowVisible():
+			self.ShowWindow(win32con.SW_SHOW)
+		self.InvalidateRect()
+
+	def show(self):
+		self.ShowWindow(win32con.SW_SHOW)
+						
+	def hide(self):
+		self.ShowWindow(win32con.SW_HIDE)
+			
+
 ##############################
 # Base class for controls creation classes
 class WndClass:
