@@ -194,7 +194,7 @@ implements SMILListener
         
         // destroy previous
         if(player!=null) player.stop();
-        if(smil!=null) smil.close();
+        if(smil!=null) {smil.close();smil=null;}
         if(viewport!=null){
             viewport.setVisible(false);
             viewport.dispose();
@@ -204,8 +204,9 @@ implements SMILListener
 	    
         // create SMIL doc
         String license = textFieldLicense.getText();
-	    smil = GRiNSToolkit.createDocument(filename, license);
-	    	    
+        try {smil = GRiNSToolkit.createDocument(filename, license);}   
+	    catch(GRiNSException e){smil = null; System.out.println(""+e); return;}
+	    
 	    // update create UI
 	    setSliderDur(smil.getDuration());
 	    SMILCanvas canvas = new SMILCanvas();
