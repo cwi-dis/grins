@@ -1,0 +1,328 @@
+\chapter{Audio file modules}
+
+This chapter describes a set of modules that can be used to read audio
+files, convert them to some desired format, and play them on the
+system's audio device.  There are three main modules which are
+described in more detail below.
+
+The philosophy of the package is that an audio file is represented by
+a reader object which has a set of methods to obtain information about
+the data format and to obtain the audio data itself.  The format
+information can be used to initialize the audio device, and the data
+can then be written.  It may be that conversion is necessary before
+the audio device can deal with the data.  This conversion takes place
+when reading the data.
+
+The following code fragment will play an audio file on the audio
+device, converting it if needed.
+
+\begin{verbatim}
+dev = audiodev.writer()             # open output device
+# open the audio file and convert to an acceptable format
+rdr = audio.reader(file, dev.getformats(), dev.getframerates())
+# tell device about format and frame rate
+dev.setformat(rdr.getformat())
+dev.setframerate(rdr.getframerate())
+# read and play the file
+while 1:
+    data = rdr.readframes(10000)    # read and convert 10,000 audio frames
+    if not data:                    # if no data, we reached the end
+        break
+    dev.writeframes(data)           # send data to device
+dev.wait()                          # wait for output to drain
+\end{verbatim}
+
+Here is a short glossary of terms used in this document.
+
+\begin{tableii}{|c|p{24em}|}{code}{Term}{Meaning}
+\lineii{sample}{one audio sample}
+\lineii{frame}{one audio sample for each channel}
+\lineii{framerate}{the number of audio frames per second}
+\end{tableii}
+
+\section{Standard module audio}
+\renewcommand{\indexsubitem}{(in module audio)}
+
+This module defines only a single function:
+
+\begin{funcdesc}{reader}{filename\optional{\, dstfmts\, rates}}
+Create a reader object (see below) for audio file \var{filename}.  The
+header of the file will be read, and the format and frame rate of the
+audio file will be made available through the reader interface.  If
+\var{dstfmts} or \var{rates} is specified, a converter is created that
+converts the audio to the desired format and frame rate.  See the
+\code{audioconvert} module for details.
+\end{funcdesc}
+
+This module also defines an exception:
+
+\begin{excdesc}{Error}
+Exception raised by the audio modules on various errors, such as bad
+file format.
+\end{excdesc}
+
+\section{Standard module audiofile}
+\renewcommand{\indexsubitem}{(in module audiofile)}
+
+This module defines a single function:
+
+\begin{funcdesc}{reader}{filename}
+Create a reader object (see below) for audio file \var{filename}.  The
+header of the file will be read, and the format and frame rate of the
+audio file will be made available through the reader interface.
+\end{funcdesc}
+
+\section{Standard module audioconvert}
+\renewcommand{\indexsubitem}{(in module audioconvert)}
+
+This module defines a number of converters plus one function to create
+a new reader object that does the necessary conversions to get from
+one format to another.
+
+\begin{funcdesc}{convert}{rdr\optional{\, dstfmts\, rates}}
+Find a sequence of conversions to convert the audio from the given
+reader object \var{rdr} to any of the formats given in \var{dstfmts}
+at any of the frame rates given by \var{rates}.  If no \var{dstfmts}
+is specified, or if it is \code{None}, the destination format does not
+matter.  If no \var{rates} is specified, or if it is \code{None}, the
+frame rate is unaltered.  Return a reader object that does the
+requested conversion.
+
+In finding a conversion, a sequence of conversions is constructed that
+loses as little information as possible.  Information loss can occur
+in two ways: the conversion causes fewer bits to represent the audio
+(stereo to mono, 16 bit to 8 bit per sample), or the conversion causes
+more bits to represent the audio (mono to stereo, $\mu$-law to 16-bit
+PCM).  The latter type of loss is considered preferable to the former.
+When frame rate conversion needs to take place, first a conversion is
+found to a format that the frame rate conversion function can handle
+(currently this means a linear format).  Then, if a destination format
+is specified, a conversion is made to one of the destination formats.
+\end{funcdesc}
+
+\section{Standard module audioformat}
+\renewcommand{\indexsubitem}{(in module audioformat)}
+
+This module defines a number of objects that represent in-core audio
+formats.  The objects have a number of methods with which more
+information about the format can be got.  See below for a description
+of these methods.  The frame rate is not part of the format, since it
+would increase the number of possible formats to an unmanageable
+number.
+
+\begin{datadesc}{ulaw_mono}
+8 bits per sample, 1 channel, $\mu$-law encoded.
+\end{datadesc}
+
+\begin{datadesc}{ulaw_stereo}
+8 bits per sample, 2 channels interleaved (left channel first),
+$\mu$-law encoded.
+\end{datadesc}
+
+\begin{datadesc}{dvi_mono}
+4 bits per sample, 1 channel, DVI-ADPCM encoded (compatible with
+Intel's DVI audio format).
+\end{datadesc}
+
+\begin{datadesc}{linear_8_mono_signed}
+8 bits per sample, 1 channel, signed PCM encoded.  In this encoding,
+sample values range from -128 to 127.
+\end{datadesc}
+
+\begin{datadesc}{linear_8_mono_excess}
+8 bits per sample, 1 channel, excess-128 (unsigned) encoding.  In this
+encoding, sample values range from 0 to 255 with 128 being the
+mid-point.
+\end{datadesc}
+
+\begin{datadesc}{linear_16_mono_big}
+16 bits per sample, 1 channel, big-endian linear encoding.  Two bytes
+per sample, with the high-order byte coming first.
+\end{datadesc}
+
+\begin{datadesc}{linear_16_mono_little}
+16 bits per sample, 1 channel, little-endian linear encoding.  Two
+bytes per sample, with the low-order byte coming first.
+\end{datadesc}
+
+\begin{datadesc}{linear_16_mono}
+Either \code{linear_16_mono_big} or \code{linear_16_mono_little},
+depending on the natural byte-order of the system.
+\end{datadesc}
+
+\begin{datadesc}{linear_8_stereo_signed}
+8 bits per sample, 2 channels interleaved (left channel first), signed
+PCM encoded.  In this encoding, sample values range from -128 to 127.
+\end{datadesc}
+
+\begin{datadesc}{linear_8_stereo_excess}
+8 bits per sample, 2 channels interleaved (left channel first),
+excess-128 (unsigned) encoding.  In this encoding, sample values range
+from 0 to 255 with 128 being the mid-point.
+\end{datadesc}
+
+\begin{datadesc}{linear_16_stereo_big}
+16 bits per sample, 2 channels interleaved (left channel first),
+big-endian linear encoding.  Two bytes per sample, with the high-order
+byte coming first.
+\end{datadesc}
+
+\begin{datadesc}{linear_16_stereo_little}
+16 bits per sample, 2 channels interleaved (left channel first),
+little-endian linear encoding.  Two bytes per sample, with the
+low-order byte coming first.
+\end{datadesc}
+
+\begin{datadesc}{linear_16_stereo}
+Either \code{linear_16_stereo_big} or \code{linear_16_stereo_little},
+depending on the natural byte-order of the system.
+\end{datadesc}
+
+Format objects have the following methods:
+\renewcommand{\indexsubitem}{(audioformat object methods)}
+
+\begin{funcdesc}{getname}{}
+Returns the name of the format.
+\end{funcdesc}
+
+\begin{funcdesc}{getdescr}{}
+Returns a short (human-readable) description of the format.
+\end{funcdesc}
+
+\begin{funcdesc}{getnchannels}{}
+Returns the number of channels of the format.
+\end{funcdesc}
+
+\begin{funcdesc}{getencoding}{}
+Returns a string describing the type of encoding (u-law,
+linear-signed, etc.).
+\end{funcdesc}
+
+\begin{funcdesc}{getblocksize}{}
+Returns the size in bytes of the smallest unit.  Fewer bytes would
+result in an incomplete frame.
+\end{funcdesc}
+
+\begin{funcdesc}{getfpb}{}
+Returns the number of frames in a single block.  Returns 0 if the
+number of frames per block is variable.
+\end{funcdesc}
+
+The linear formats also have the following method:
+
+\begin{funcdesc}{getbps}{}
+Returns the number of bits per sample.
+\end{funcdesc}
+
+\section{Reader object}
+\renewcommand{\indexsubitem}{(reader object methods)}
+
+A reader object is returned by \code{audio.reader()}, by
+\code{audiofile.reader()}, and by \code{audioconvert.convert()}.
+Reader objects provide a uniform interface to the audio data and
+format descriptions.  Reader objects have the following methods:
+
+\begin{funcdesc}{getformat}{}
+Returns the format object that describes the audio data.
+\end{funcdesc}
+
+\begin{funcdesc}{getframerate}{}
+Returns the frame rate of the audio data.
+\end{funcdesc}
+
+\begin{funcdesc}{readframes}{\optional{nframes}}
+Returns the audio data of up to \var{nframes} frames.  If \var{nframes}
+is omitted, or is negative, returns all remaining audio data.
+\end{funcdesc}
+
+\begin{funcdesc}{getnframes}{}
+Returns the number of audio frames in the data.  Returns -1 if the
+number of frames is unknown.
+\end{funcdesc}
+
+\begin{funcdesc}{rewind}{}
+Resets the audio stream to the beginning.
+\end{funcdesc}
+
+\begin{funcdesc}{getpos}{}
+Returns a magic cookie representing the current position in the audio
+stream.  The only use of this cookie is to pass it to the
+\code{setpos} method.
+\end{funcdesc}
+
+\begin{funcdesc}{setpos}{pos}
+Set the audio stream to the position \var{pos}.  Only values for
+\var{pos} as returned by \code{getpos} are valid.
+\end{funcdesc}
+
+\section{Standard module audiodev}
+\renewcommand{\indexsubitem}{(in module audiodev)}
+
+This module is a system-independent interface to the audio hardware.
+The way to use this module is to first obtain an audio device object.
+Before data can be written, the format and frame rate parameters have
+to be set.  When all data has been written, either \code{wait} or
+\code{stop} should be called.  These methods may reset the audio
+hardware to the initial state.
+
+There is only one function in this module:
+
+\begin{funcdesc}{writer}{\optional{fmt\, qsize}}
+Returns an object representing an audio output stream.  \var{qsize} is
+the queue size in bytes of the internal output buffer.  Whether or not
+this argument is used is system-dependent.
+
+If a \var{fmt} argument is passed, it is passed to the \code{setformat}
+method (see below).
+\end{funcdesc}
+
+The audio device object has the following methods:
+\renewcommand{\indexsubitem}{(audio device output object methods)}
+
+\begin{funcdesc}{getformats}{}
+Returns a tuple containing the audio formats that this device can
+handle.
+\end{funcdesc}
+
+\begin{funcdesc}{getframerates}{}
+Returns a sequence object (tuple, list, xrange object) of frame rates
+that this device can handle.  Returns \code{None} if the device can
+handle any output frame rate.
+\end{funcdesc}
+
+\begin{funcdesc}{setformat}{fmt}
+Set the output format.  This method must be called before
+\code{writeframes} is called, and the format given must be one of the
+formats returned by \code{getformats}.
+\end{funcdesc}
+
+\begin{funcdesc}{setframerate}{rate}
+Set the output frame rate.  This method must be called before
+\code{writeframes} is called, and, if \code{getrates} does not return
+\code{None}, the frame rate given must be one of the rates returned by
+\code{getrates}
+\end{funcdesc}
+
+\begin{funcdesc}{writeframes}{data}
+Send the audio \var{data} to the audio device.  This method may or may
+not block, and it may or may not return before all data has been sent.
+\end{funcdesc}
+
+\begin{funcdesc}{wait}{}
+Wait until all audio data that is still in the output queue has been
+played.
+\end{funcdesc}
+
+\begin{funcdesc}{stop}{}
+Stop playing audio immediately.
+\end{funcdesc}
+
+\begin{funcdesc}{getfilled}{}
+Returns the number of frames still in the output queue of the audio
+device.
+\end{funcdesc}
+
+\begin{funcdesc}{getfillable}{}
+Return the number of frames that can be written without
+\code{writeframes} blocking.
+\end{funcdesc}
