@@ -98,7 +98,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		self._viewCreationListeners = []
 
 		self._defaultwinpos = (0, 0)
-
+		
 	# Create the OS window and set the toolbar	
 	def createOsWnd(self,title):
 		strclass=self.registerwndclass()
@@ -810,19 +810,31 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	# Target for commands that are enabled
 	def OnUpdateCmdEnable(self,cmdui):
-		cmdui.Enable(1)
+		if hasattr(cmdui, 'Enable'):
+			cmdui.Enable(1)
+		else:
+			print 'MainFrame.OnUpdateXXX: wrong object : ',cmdui
 
 	def OnUpdateCmdEnableAndCheck(self,cmdui):
-		cmdui.SetCheck(1)
-		cmdui.Enable(1)
+		if hasattr(cmdui, 'Enable'):
+			cmdui.SetCheck(1)
+			cmdui.Enable(1)
+		else:
+			print 'MainFrame.OnUpdateXXX: wrong object : ',cmdui
 
 	def OnUpdateCmdEnableAndUncheck(self,cmdui):
-		cmdui.SetCheck(0)
-		cmdui.Enable(1)
+		if hasattr(cmdui, 'Enable'):
+			cmdui.SetCheck(0)
+			cmdui.Enable(1)
+		else:
+			print 'MainFrame.OnUpdateXXX: wrong object : ',cmdui
 
 	def OnUpdateCmdDissableAndUncheck(self,cmdui):
-		cmdui.SetCheck(0)
-		cmdui.Enable(0)
+		if hasattr(cmdui, 'Enable'):
+			cmdui.SetCheck(0)
+			cmdui.Enable(0)
+		else:
+			print 'MainFrame.OnUpdateXXX: wrong object : ',cmdui
 
 	def OnUpdateCmdDissable(self,cmdui):
 		# WARNING. Don't call the SetCheck method here.
@@ -832,7 +844,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		# for this three button, we have a special method (OnUpdateCmdDissableAndUncheck) with uncheck as well
 		# the control
 		# note: to change the state of any check marks (in menu), use a different method
-		cmdui.Enable(0)
+		if hasattr(cmdui, 'Enable'):
+			cmdui.Enable(0)
+		else:
+			print 'MainFrame.OnUpdateXXX: wrong object : ',cmdui
 
 	# Response to a user command (menu selection)
 	def OnUserCmd(self,id,code):
