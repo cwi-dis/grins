@@ -243,6 +243,7 @@
 #define IDI_VIEWPORT                    440
 #define IDD_EDITATTR_S1R3S7             440
 #define IDI_REGION                      441
+#define IDD_EDITATTR_CH2                441
 #define IDR_SOURCE_EDIT                 442
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002

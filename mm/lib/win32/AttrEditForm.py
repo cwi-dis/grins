@@ -193,7 +193,7 @@ class OptionsCtrl(AttrCtrl):
 	def settooltips(self,tooltipctrl):
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
 
-class ChannelCtrl(OptionsCtrl):
+class ChannelCtrl(OptionsCtrl):	
 	def OnInitCtrl(self):
 		OptionsCtrl.OnInitCtrl(self)
 		self._wnd.HookCommand(self.OnChannel,self._resid[2])
@@ -227,6 +227,20 @@ class ChannelCtrl(OptionsCtrl):
 		OptionsCtrl.settooltips(self,tooltipctrl)
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Properties of channel',None,0)
 
+class RegionDefaultCtrl(ChannelCtrl):
+	def OnChannel(self,id,code):
+		if self._attr:
+			self._attr.channelprops()
+	
+	def haschannelprops(self):
+		if self._attr:
+			regionName = self._attr.getShowedValue()
+			return self._attr.wrapper.context.getchannel(regionName)
+		return None
+
+	def settooltips(self,tooltipctrl):
+		OptionsCtrl.settooltips(self,tooltipctrl)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Default region',None,0)
 
 class OptionsRadioCtrl(AttrCtrl):
 	want_default_help = 0
@@ -4551,6 +4565,26 @@ class Layout3Group(AttrGroup):
 						   						   
 		return cd
 
+class ContainerLayoutGroup(AttrGroup):
+	data=attrgrsdict['containerlayout']
+	def __init__(self,data=None):
+		AttrGroup.__init__(self,self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_CH2
+
+	def createctrls(self,wnd):
+		cd={}
+		a = self.getattr('project_default_region_image')
+		cd[a] = RegionDefaultCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13))
+		a = self.getattr('project_default_region_video')
+		cd[a] = RegionDefaultCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))
+		a = self.getattr('project_default_region_sound')
+		cd[a] = RegionDefaultCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33))
+		a = self.getattr('project_default_region_text')
+		cd[a] = RegionDefaultCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
+		return cd
+
 class RegionNameGroup(AttrGroup):
 	data=attrgrsdict['regionname']
 	def __init__(self):
@@ -4618,6 +4652,7 @@ groupsui={
 	'Layout1':Layout1Group,
 	'Layout2':Layout2Group,
 	'Layout3':Layout3Group,
+	'containerlayout':ContainerLayoutGroup,
 	'regionname':RegionNameGroup,
 	'viewportname':ViewportNameGroup,
 	'subregion':SubregionGroup,

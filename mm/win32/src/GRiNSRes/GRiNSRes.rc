@@ -2552,6 +2552,33 @@ BEGIN
     GROUPBOX        "",IDC_GROUP9,109,107,174,17
 END
 
+IDD_EDITATTR_CH2 DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Image",IDC_GROUP1,6,6,287,29
+    LTEXT           "Default region:",IDC_11,11,19,49,8
+    COMBOBOX        IDC_12,66,17,156,103,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Properties...",IDC_13,233,17,46,12
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "Video",IDC_GROUP2,6,37,287,29
+    LTEXT           "Default region:",IDC_21,11,50,49,8
+    COMBOBOX        IDC_22,66,48,156,103,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Properties...",IDC_23,233,48,46,12
+    GROUPBOX        "Sound",IDC_GROUP3,6,67,287,29
+    LTEXT           "Default region:",IDC_31,11,80,49,8
+    COMBOBOX        IDC_32,66,78,156,103,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Properties...",IDC_33,233,78,46,12
+    GROUPBOX        "Text",IDC_GROUP6,6,98,287,29
+    LTEXT           "Default region:",IDC_41,11,112,49,8
+    COMBOBOX        IDC_42,66,110,156,103,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Properties...",IDC_43,233,110,46,12
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2968,6 +2995,11 @@ BEGIN
     IDD_EDITATTR_BRUSH, DIALOG
     BEGIN
         RIGHTMARGIN, 296
+    END
+
+    IDD_EDITATTR_CH2, DIALOG
+    BEGIN
+        RIGHTMARGIN, 295
     END
 END
 #endif    // APSTUDIO_INVOKED
