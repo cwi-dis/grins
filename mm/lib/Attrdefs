@@ -124,7 +124,7 @@
 (dropicon (string) '' 'Drop icon' file
 	'URL for a drop icon' normal (template g2 qt smil10 smil2 cmif snap))
 
-(empty_icon (string) '' 'Icon URL' file
+(empty_icon (string) '' 'Empty icon URL' file
 	'URL for an icon when this node is empty' normal (template g2 qt smil10 smil2 cmif snap))
 
 (empty_text (string) '' 'Empty text' default
@@ -136,13 +136,13 @@
 (empty_duration (float) 0.0 'Empty duration' default
 	'Duration to be used for drawing when this node is empty' normal (template g2 qt smil10 smil2 cmif snap))
 
-(non_empty_icon (string) '' 'Icon URL' file
+(non_empty_icon (string) '' 'Non-empty icon URL' file
 	'URL for a drop box icon when this node is not empty' normal (template g2 qt smil10 smil2 cmif snap))
 
-(non_empty_text (string) '' 'Empty text' default
+(non_empty_text (string) '' 'Non-empty text' default
 	'Text to be displayed in the drop box when this node is not empty' normal (template g2 qt smil10 smil2 cmif snap))
 
-(non_empty_color (tuple (int) (int) (int)) (0 0 0) 'Empty color' color
+(non_empty_color (tuple (int) (int) (int)) (0 0 0) 'Non-empty color' color
 	'Color to be used in the drop box when this node is not empty' normal (template g2 qt smil10 smil2 cmif snap))
 
 (thumbnail_scale (bool) 1 'Scale thumbnail' default
