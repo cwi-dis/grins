@@ -140,7 +140,9 @@ void ExampleClientAdviceSink::ShowMeTheStatistics (char* pszRegistryKey)
 	}
 
 	m_pRegistry->GetIntByName(szRegistryValue, lValue);
+#ifdef FUNNY_FPRINTFS
 	fprintf(stdout, "%s = %ld\n", szRegistryValue, lValue);
+#endif
     }
 }
 
@@ -212,7 +214,9 @@ ExampleClientAdviceSink::OnPresentationClosed()
 STDMETHODIMP
 ExampleClientAdviceSink::OnStatisticsChanged(void)
 {
+#ifdef FUNNY_FPRINTFS
     fprintf(stdout, "OnStatisticsChanged():\n");
+#endif
 
     UINT32  unPlayerIndex = 0;
     UINT32  unSourceIndex = 0;
