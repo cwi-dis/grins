@@ -7,7 +7,8 @@ import MMAttrdefs
 from MMStat import _stat
 
 from SR import SCHED, SCHED_DONE, PLAY, PLAY_DONE, \
-	  SCHED_STOP, PLAY_STOP, SYNC, SYNC_DONE, PLAY_ARM, ARM_DONE
+	  SCHED_STOP, PLAY_STOP, SYNC, SYNC_DONE, PLAY_ARM, ARM_DONE, \
+	  BAG_START, BAG_STOP, BAG_DONE
 
 
 from MMTypes import *
@@ -860,7 +861,7 @@ class MMNode:
 			raise 'Seeknode not in tree!'
 		self.sync_from = ([],[])
 		self.sync_to = ([],[])
-		if self.type in ('imm', 'ext'):
+		if self.type in ('imm', 'ext', 'bag'):
 			return
 		self.wtd_children = []
 		if self.type == 'seq':
@@ -894,6 +895,8 @@ class MMNode:
 	def gensr(self):
 		if self.type in ('imm', 'ext'):
 			return self.gensr_leaf(), []
+		elif self.type == 'bag':
+			return self.gensr_bag(), []
 		elif self.type == 'seq':
 			rv = self.gensr_seq(), self.wtd_children
 			return rv
@@ -936,6 +939,34 @@ class MMNode:
 			  ([(PLAY_DONE, arg) ]    ,[(SCHED_DONE,arg), \
 			                            (PLAY_STOP, arg)]+out1),\
 			  ([(SCHED_STOP, arg)]    ,[]) ]
+	#
+#	def gensr_bag(self):
+#		in0, out0, in1, out1 = self.gensr_arcs()
+#		arg = self
+#		if in1:
+#			return [\
+#			  ([(SCHED, arg)]+in0,     [(BAG_START, arg) ]+out0),\
+#			  ([(BAG_DONE, arg) ]+in1, [(SCHED_DONE,arg), \
+#			                            (BAG_STOP, arg)]+out1),\
+#			  ([(SCHED_STOP, arg)]    ,[]) ]
+#		if not MMAttrdefs.getattr(self, 'duration'):
+#			return [\
+#			  ([(SCHED, arg)]+in0,     [(BAG_START, arg)]+out0),\
+#			  ([(BAG_DONE, arg) ]     ,[(SCHED_DONE,arg)]+out1),\
+#			  ([(SCHED_STOP, arg)]    ,[(BAG_STOP, arg)]) ]
+#		else:
+#			return [\
+#			  ([(SCHED, arg)]+in0,     [(BAG_START, arg)]+out0),\
+#			  ([(BAG_DONE, arg) ]     ,[(SCHED_DONE,arg), \
+#			                            (BAG_STOP, arg)]+out1),\
+#			  ([(SCHED_STOP, arg)]    ,[]) ]
+	def gensr_bag(self):
+		in0, out0, in1, out1 = self.gensr_arcs()
+		arg = self
+		return [\
+			  ([(SCHED, arg)]+in0,     [(BAG_START, arg)]+out0),\
+			  ([(BAG_DONE, arg) ]     ,[(SCHED_DONE,arg)]+out1),\
+			  ([(SCHED_STOP, arg)]    ,[(BAG_STOP, arg)]) ]
 	#
 	# Generate schedrecords for a sequential node
 	def gensr_seq(self):
@@ -1017,7 +1048,7 @@ class MMNode:
 				print 'GetArcList: skipping syncarc with deleted source'
 				continue
 			synctolist.append((n1, s1, self, s2, delay))
-		if self.GetType() in interiortypes:
+		if self.GetType() in ('seq', 'par'):
 			for c in self.wtd_children:
 				synctolist = synctolist + c.GetArcList()
 		return synctolist
