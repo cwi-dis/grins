@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Font stuff.
 # Interface:
 #  f = FontOject(fontname, fontsize)
