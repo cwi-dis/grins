@@ -21,7 +21,7 @@ class TreeCtrl(window.Wnd):
 		style = win32con.WS_VISIBLE | commctrl.TVS_HASBUTTONS |\
 				commctrl.TVS_HASLINES | commctrl.TVS_SHOWSELALWAYS |\
 				win32con.WS_BORDER | win32con.WS_TABSTOP\
-				# | commctrl.TVS_LINESATROOT  
+				 | commctrl.TVS_LINESATROOT  
 		self.CreateWindow(style, rc, parent, id)
 		self.HookMessage(self.OnLButtonDown, win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.OnLButtonUp, win32con.WM_LBUTTONUP)
