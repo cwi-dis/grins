@@ -551,14 +551,11 @@ class HierarchyView(HierarchyViewDialog):
 		# Set the size of the first widget.
 		self.need_resize = 0
 		self.need_redraw = 1
-		x,y = self.scene_graph.recalc_minsize()
-		self.mcanvassize = x,y
-
-		if x < 1.0 or y < 1.0:
-			print "Error: unconverted relative coordinates found. HierarchyView:497"
-		self.scene_graph.moveto((0,0,x,y))
+		w,h = self.scene_graph.recalc_minsize()
+		self.mcanvassize = w,h
+		self.scene_graph.moveto((0,0,w,h))
 		self.scene_graph.recalc()
-		self.window.setcanvassize((SIZEUNIT, x, y)) # Causes a redraw() event.
+		self.window.setcanvassize((SIZEUNIT, w, h)) # Causes a redraw() event.
 
 	def draw_scene(self):
 		# Only draw the scene, nothing else.
@@ -780,7 +777,7 @@ class HierarchyView(HierarchyViewDialog):
 			if timeline is not None:
 				apply(self.window.drawxorline, self.__line)
 				self.__line = None
-			if obj.timeline is not None:
+			if obj.timemapper is not None and obj.timeline is not None:
 				if side == 'left':
 					# can't drag left side of timeline
 					return
