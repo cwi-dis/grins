@@ -20,12 +20,6 @@ class MpegChannel(ChannelWindowThread):
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
-		self._armed_anchors = [] # may have been skipped in self.arm_0
-		if self.armed_display:
-			self.armed_display.close()
-		bgcolor = self.getbgcolor(node)
-		self.armed_display = self.window.newdisplaylist(bgcolor)
-		self.armed_display.fgcolor(self.getfgcolor(node))
 		filename = self.getfileurl(node)
 		try:
 			filename = urllib.urlretrieve(filename)[0]
