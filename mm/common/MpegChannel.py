@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
 from Channel import ChannelWindowThread
-import urllib
+import MMurl
 import windowinterface
 from MMExc import *			# exceptions
 from AnchorDefs import *
@@ -22,7 +22,7 @@ class MpegChannel(ChannelWindowThread):
 			return 1
 		filename = self.getfileurl(node)
 		try:
-			filename = urllib.urlretrieve(filename)[0]
+			filename = MMurl.urlretrieve(filename)[0]
 			fp = open(filename, 'rb')
 		except IOError, msg:
 			self.errormsg(node, filename + ':\n' + msg[1])

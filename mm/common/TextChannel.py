@@ -3,7 +3,7 @@ __version__ = "$Id$"
 from Channel import ChannelWindow, error
 from AnchorDefs import *
 import string
-from urllib import urlopen
+from MMurl import urlopen
 import StringStuff
 import MMAttrdefs
 import os

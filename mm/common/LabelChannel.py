@@ -4,7 +4,7 @@ from Channel import ChannelWindow, error
 from TextChannel import mapfont, extract_taglist, fix_anchorlist
 from AnchorDefs import *
 import string
-import urllib
+import MMurl
 import MMAttrdefs
 import os
 
@@ -30,7 +30,7 @@ class LabelChannel(ChannelWindow):
 		img = MMAttrdefs.getattr(node, 'bgimg')
 		if img:
 			try:
-				img = urllib.urlretrieve(img)[0]
+				img = MMurl.urlretrieve(img)[0]
 			except IOError:
 				pass
 			try:

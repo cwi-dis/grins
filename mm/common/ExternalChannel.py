@@ -4,7 +4,7 @@ from Channel import Channel
 import MMAttrdefs
 import string
 import os
-import urllib
+import MMurl
 
 if os.name == 'posix':
 	ProgramAttrname = 'unixprog'
@@ -38,7 +38,7 @@ class ExternalChannel(Channel):
 		argument = self.getfileurl(node)
 		wanturl = MMAttrdefs.getattr(node, 'wanturl')
 		if not wanturl:
-			argument = urllib.urlretrieve(argument)[0]
+			argument = MMurl.urlretrieve(argument)[0]
 		startprog(progname, argument, wanturl)
 
 if os.name == 'posix':

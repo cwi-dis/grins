@@ -13,7 +13,7 @@ import os
 import windowinterface
 import sys
 import select
-import urllib
+import MMurl
 
 sys.path.append('/ufs/jack/src/python/Extensions/midi/build.irix6')
 sys.path.append('/ufs/jack/src/python/Extensions/midi/Lib')
@@ -59,7 +59,7 @@ class MidiChannel(Channel):
 		if same and self.arm_data:
 		    return 1
 		fn = self.getfileurl(node)
-		fn = urllib.urlretrieve(fn)[0]
+		fn = MMurl.urlretrieve(fn)[0]
 		#
 		# Read the midifile, mixing all tracks
 		#

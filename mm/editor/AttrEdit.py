@@ -525,12 +525,12 @@ class FileAttrEditorField(StringAttrEditorField):
 		if file == '' or file == '/dev/null':
 			dir, file = cwd, ''
 		else:
-			import urllib
-			type, file = urllib.splittype(file)
+			import MMurl
+			type, file = MMurl.splittype(file)
 			if type:
 				windowinterface.showmessage('Cannot browse URLs')
 				return
-			file = urllib.url2pathname(file)
+			file = MMurl.url2pathname(file)
 			file = os.path.join(cwd, file)
 			if os.path.isdir(file):
 				dir, file = file, ''
@@ -540,7 +540,7 @@ class FileAttrEditorField(StringAttrEditorField):
 					   dir, '*', file, self.__ok_cb, None)
 
 	def __ok_cb(self, pathname):
-		import urllib, os
+		import MMurl, os
 		if os.path.isabs(pathname):
 			cwd = self.wrapper.toplevel.dirname
 			if not cwd:
@@ -557,7 +557,7 @@ class FileAttrEditorField(StringAttrEditorField):
 				file = os.path.join(f, file)
 			if dir == cwd:
 				pathname = file
-		pathname = urllib.pathname2url(pathname)
+		pathname = MMurl.pathname2url(pathname)
 		self.setvalue(pathname)
 
 class TupleAttrEditorField(AttrEditorField):

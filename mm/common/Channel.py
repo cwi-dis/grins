@@ -11,7 +11,7 @@ import windowinterface, WMEVENTS
 from windowinterface import SINGLE, TEXT, HTM, MPEG
 from windowinterface import TRUE, FALSE
 import string
-import urllib
+import MMurl
 import regsub
 error = 'Channel.error'
 
@@ -705,7 +705,7 @@ class Channel:
 					return node.context.findurl(val)
 		return node.context.findurl(MMAttrdefs.getattr(node, 'file'))
 
-	def getstring(self, node, urlopen=urllib.urlopen):
+	def getstring(self, node, urlopen=MMurl.urlopen):
 		if node.type == 'imm':
 			self.armed_url = ''
 			return string.joinfields(node.GetValues(), '\n')
@@ -1522,4 +1522,4 @@ class AnchorContext:
 		raise error, 'AnchorContext.play_done() called'
 
 # cleanup temporary files when we finish
-windowinterface.addclosecallback(urllib.urlcleanup, ())
+windowinterface.addclosecallback(MMurl.urlcleanup, ())
