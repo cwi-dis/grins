@@ -1395,6 +1395,7 @@ class SMILWriter(SMIL):
 				attrlist.append(('backgroundColor', bgcolor))
 			else:
 				attrlist.append(('background-color', bgcolor))
+				
 			if ch.has_key('winsize'):
 				units = ch.get('units', 0)
 				w, h = ch['winsize']

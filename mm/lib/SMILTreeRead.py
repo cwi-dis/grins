@@ -884,6 +884,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if mimetype is not None:
 			node.attrdict['mimetype'] = mimetype
 
+		# experimental SMIL Boston layout code
+		node._internalchtype = chtype
+		# end experimental		
+
 	def EndNode(self):
 		node = self.__node
 		try:
@@ -992,10 +996,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		   self.__tops[top]['height'] > 0:
 			# we don't have to calculate minimum sizes
 			pass
-		elif (type(l) is type(0)) + (type(w) is type(0)) + (type(r) is type(0)) >= 2 and \
-		     (type(t) is type(0)) + (type(h) is type(0)) + (type(b) is type(0)) >= 2:
+#		elif (type(l) is type(0)) + (type(w) is type(0)) + (type(r) is type(0)) >= 2 and \
+#		     (type(t) is type(0)) + (type(h) is type(0)) + (type(b) is type(0)) >= 2:
 			# size and position is given in pixels
-			pass
+#			pass
 		elif mtype in ('image', 'movie', 'video', 'mpeg',
 			       'RealPix', 'RealText', 'RealVideo'):
 			# if we don't know the region size and
@@ -1288,6 +1292,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		t = attrdict.get('top')
 		h = attrdict.get('height')
 		b = attrdict.get('bottom')
+		
 		# if size of root-layout specified, convert to pixels
 		if self.__tops[top]['declwidth']:
 			if type(l) is type(0.0):
@@ -1344,9 +1349,24 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				units = UNIT_PXL
 			attrdict['units'] = units
+			
 		# change things around so that l,w and t,h are defined
 		# if fewer than two of l,w,r and t,h,b are defined, fill
 		# in defaults: l==t==0, w and h rest of available space
+
+		mh = attrdict.get('minheight')
+		# this case is only possible if you don't affect any node to the channel
+		# in the case, we fix even a min size
+		if mh == None:
+			mh = 100
+		if units == UNIT_SCREEN:
+			mh = float(mh) / height
+		mw = attrdict.get('minwidth')
+		if mw == None:
+			mw = 100
+		if units == UNIT_SCREEN:
+			mw = float(mw) / width
+		
 		if l is None:
 			if w is None:
 				if r is None:
@@ -1356,28 +1376,43 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					else:
 						w = 1.0
 				else:
-					l = 0
-					w = r
+					#l = 0
+					if units == UNIT_PXL:
+						l = width-r-mw
+					else:
+						l = 1.0-r-mw
+					w = mw
+					#w = r
 					r = None
 			else:
 				if r is None:
 					l = 0
 				else:
-					l = r - w
+					# l = r - w
+					if units == UNIT_PXL:
+						l = width-r-w
+					else:
+						l = 1.0 - r - w
 					r = None
 		else:
 			if w is None:
 				if r is None:
-					if units == UNIT_PXL:
-						w = width - l
-					else:
-						w = 1.0 - l
+					w = mw
+					#if units == UNIT_PXL:
+					#	w = width - l
+					#else:
+					#	w = 1.0 - l
 				else:
-					w = r - l
+					if units == UNIT_PXL:
+						w = width-r-l
+					else:
+						w = 1.0 - r - l
+					#w = r - l
 					r = None
 			else:
 				if r is not None:
 					r = None
+					
 		if t is None:
 			if h is None:
 				if b is None:
@@ -1387,24 +1422,38 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					else:
 						h = 1.0
 				else:
-					t = 0
-					h = b
+					#t = 0
+					if units == UNIT_PXL:
+						t = height-b-mh
+					else:
+						l = 1.0-b-mh
+					h = mh
+					#h = b
 					b = None
 			else:
 				if b is None:
 					t = 0
 				else:
-					t = b - h
+					if units == UNIT_PXL:
+						l = height-b-h
+					else:
+						l = 1.0 - b - h
+					# t = b - h
 					b = None
 		else:
 			if h is None:
 				if b is None:
-					if units == UNIT_PXL:
-						h = height - t
-					else:
-						h = 1.0 - t
+					h = mh
+					#if units == UNIT_PXL:
+					#	h = height - t
+					#else:
+					#	h = 1.0 - t
 				else:
-					h = b - t
+					if units == UNIT_PXL:
+						h = height-b-t
+					else:
+						h = 1.0 - b - t
+					#h = b - t
 					b = None
 			else:
 				if b is not None:
@@ -1501,9 +1550,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				ch['base_window'] = self.__base_win
 			# end new
 
-	#  fill channel according to its type. To the layout type, the channel may be visible or
-	#  unvisible (audio, ...). In this particular case, attributes don't the same
-	def __fillchannel(self, ch, attrdict, mtype, visible=1):
+	#  fill channel according to its type. To the layout type
+	def __fillchannel(self, ch, attrdict, mtype):
 		attrdict = attrdict.copy() # we're going to change this...
 		if attrdict.has_key('type'):
 			del attrdict['type']
@@ -1520,46 +1568,46 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if title != ch.name:
 					ch['title'] = title
 				del attrdict['title']
-			if visible:
-				ch['drawbox'] = 0
-				bg = attrdict['backgroundColor']
-				del attrdict['backgroundColor']
-				if features.compatibility == features.G2:
-					ch['transparent'] = -1
-					if bg != 'transparent':
-						ch['bgcolor'] = bg
-						ch['transparent'] = 0
-					elif mtype in ('text', 'RealText'):
-						ch['bgcolor'] = 255,255,255
-					else:
-						ch['bgcolor'] = 0,0,0
-				elif compatibility.QT == features.compatibility:
-					ch['transparent'] = 1
-					ch['fgcolor'] = 255,255,255 
-				
-				elif bg == 'transparent':
-					ch['transparent'] = 1
-				else:
-					ch['transparent'] = -1
+		
+			ch['drawbox'] = 0
+			bg = attrdict['backgroundColor']
+			del attrdict['backgroundColor']
+			if features.compatibility == features.G2:
+				ch['transparent'] = -1
+				if bg != 'transparent':
 					ch['bgcolor'] = bg
-				ch['z'] = attrdict['z-index']
-				del attrdict['z-index']
-				x = attrdict['left']; del attrdict['left']
-				y = attrdict['top']; del attrdict['top']
-				w = attrdict['width']; del attrdict['width']
-				h = attrdict['height']; del attrdict['height']
-				ch['units'] = attrdict['units']; del attrdict['units']
-				fit = attrdict['fit']; del attrdict['fit']
-				if fit == 'hidden':
-					ch['scale'] = 1
-				elif fit == 'meet':
-					ch['scale'] = 0
-				elif fit == 'slice':
-					ch['scale'] = -1
-				ch['center'] = 0
-				# other fit options not implemented
+					ch['transparent'] = 0
+				elif mtype in ('text', 'RealText'):
+					ch['bgcolor'] = 255,255,255
+				else:
+					ch['bgcolor'] = 0,0,0
+			elif compatibility.QT == features.compatibility:
+				ch['transparent'] = 1
+				ch['fgcolor'] = 255,255,255 
+			
+			elif bg == 'transparent':
+				ch['transparent'] = 1
+			else:
+				ch['transparent'] = -1
+				ch['bgcolor'] = bg
+			ch['z'] = attrdict['z-index']
+			del attrdict['z-index']
+			x = attrdict['left']; del attrdict['left']
+			y = attrdict['top']; del attrdict['top']
+			w = attrdict['width']; del attrdict['width']
+			h = attrdict['height']; del attrdict['height']
+			ch['units'] = attrdict['units']; del attrdict['units']
+			fit = attrdict['fit']; del attrdict['fit']
+			if fit == 'hidden':
+				ch['scale'] = 1
+			elif fit == 'meet':
+				ch['scale'] = 0
+			elif fit == 'slice':
+				ch['scale'] = -1
+			ch['center'] = 0
+			# other fit options not implemented
 
-				ch['base_winoff'] = x, y, w, h
+			ch['base_winoff'] = x, y, w, h
 		# keep all attributes that we didn't use
 		for attr, val in attrdict.items():
 			if attr not in ('minwidth', 'minheight', 'units',
@@ -1610,7 +1658,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# self.__fillchannel(ch, attrdict, chtype)
 			# end old
 			# new 03-07-2000
-			self.__fillchannel(ch, attrdict, 'layout', ChannelMap.isvisiblechannel(chtype))
+			self.__fillchannel(ch, attrdict, 'layout')
 			# end new
 			
 	def FixChannel(self, node):
@@ -1709,11 +1757,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				visiblechannel = ChannelMap.isvisiblechannel(mtype)
 				if visiblechannel:
 					attrdict['z-index'] = -1
-				self.__fillchannel(ch, attrdict, mtype, visiblechannel)
+				self.__fillchannel(ch, attrdict, mtype)
 					
 				if not self.__region2channel.has_key(region):
 					self.__region2channel[region] = []
 				self.__region2channel[region].append(ch)
+				
+				# temporarely 
+				x, y, w, h = ch['base_winoff']
+				ch['base_winoff'] = 0, 0, w, h
+
 				# end new
 				
 		node.attrdict['channel'] = name

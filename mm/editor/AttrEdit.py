@@ -1346,7 +1346,14 @@ class AttrEditor(AttrEditorDialog):
 					# multiple root windows
 					root = ''
 		index = len(context.channelnames)
-		em.addchannel(channelname, index, self.guesstype(url))
+		# experimental SMIL Boston layout code
+		em.addchannel(channelname, index, 'layout')
+		layoutchannel = context.channeldict[channelname]
+		em.defnewchannel(self.wrapper.node, layoutchannel)
+		# end experimental
+		# else
+		# em.addchannel(channelname, index, self.guesstype(url))
+		#
 		ch = context.channeldict[channelname]
 		if root:
 			ch['base_window'] = root
@@ -2107,6 +2114,10 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		channelnames4 = []
 		channelnames5 = []
 		for ch in ctx.channels:
+			# experimental SMIL Boston layout code
+			if ch.get('type') != 'layout':
+				continue
+			# end experimental
 			if lightweight or layoutchannels.has_key(ch.name):
 				if ch.get('type','') != 'layout' and ch.name in chlist:
 					channelnames1.append(ch.name)
@@ -2172,6 +2183,18 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			if self.nodefault:
 				return self.getdefault()
 			return UNDEFINED
+			
+		# experimental SMIL Boston layout code
+		ch = self.wrapper.context.getchannel(value)
+		if ch == None:
+			return UNDEFINED
+		ch = ch.GetLayoutChannel()
+		try:
+			value = ch.name
+		except:
+			pass
+		# end experimental	
+
 		return value
 
 	def channelprops(self):
@@ -2257,8 +2280,10 @@ class BaseChannelnameAttrEditorField(ChannelnameAttrEditorField):
 			if name == chname:
 				continue
 			ch = ctx.channeldict[name]
-##			if ch.attrdict['type'] == 'layout':
-			list.append(name)
+			# experimental SMIL Boston layout code
+			if ch.attrdict['type'] == 'layout':
+			# end experimental
+				list.append(name)
 		list.sort()
 		return [DEFAULT, UNDEFINED] + list
 
