@@ -28,4 +28,4 @@ class SoundChannel(ChannelThread):
 			   'format': format, \
 			   'offset': int(f.tell())}, \
 			  None, self.syncarm)
-		return 0
+		return self.syncarm
