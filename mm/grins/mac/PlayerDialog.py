@@ -46,25 +46,52 @@ class PlayerDialog:
 		"""
 
 		self.__window = None
+		self.__topcommandlist = []
 		self.__title = title
 		self.__coords = coords
-		self.__state = STOPPED
+		self.__state = -1
 		self.__menu_created = None
 		self.__channels = []
 		self.__options = []
+		self.__windowgroup = None
+
+	def topcommandlist(self, list):
+		if list != self.__topcommandlist:
+			self.__topcommandlist = list
+			self.setstate(self.__state)
 		
 	def preshow(self):
 		# Note: on the mac we have to create our (non-)window before we open any
 		# of the channels. This is so that the channels are parented to us.
-		PlayerDialog.show(self)
+		self.__windowgroup = windowinterface.windowgroup(self.__title, [])
 		
 	def close(self):
 		"""Close the dialog and free resources."""
 		if self.__window is not None:
 			self.__window.close()
 		self.__window = None
+		self.__menu_created = None
+		self.__windowgroup = None
 		del self.__channels
 		del self.__options
+
+	def __create(self):
+		x, y, w, h = self.__coords
+		self.__window = window = windowinterface.newwindow(
+			x, y, 0, 0, self.__title, resizable = 0,
+			adornments = self.adornments)
+		if self.__channels:
+			self.setchannels(self.__channels)
+
+	def show(self):
+		if self.__menu_created is None:
+			if self.__window is None:
+				self.__create()
+
+	def hide(self):
+		if self.__window is not None:
+			self.__window.close()
+			self.__window = None
 
 	def settitle(self, title):
 		"""Set (change) the title of the window.
@@ -77,48 +104,31 @@ class PlayerDialog:
 			self.__window.settitle(title)
 
 	def setchannels(self, channels):
-		"""Set the list of channels.
-
-		Arguments (no defaults):
-		channels -- a list of tuples (name, onoff) where name
-			is the channel name which is to be presented
-			to the user, and onoff indicates whether the
-			channel is on or off (1 if on, 0 if off)
-		"""
-
-##		self.__channels = channels
-##		self.__channeldict = {}
-##		menu = []
-##		for channel, onoff in channels:
-##			self.__channeldict[channel] = len(menu)
-##			menu.append(('', channel,
-##				     (self.__channel_callback, (channel,)),
-##				     't', onoff))
-##		if self.__window is not None:
-##			self.__subwins[0].create_menu(menu, title = _titles[0])
-##
-##	def __channel_callback(self, channel):
-##		i = self.__channeldict[channel]
-##		self.__channels[i] = channel, not self.__channels[i][1]
-##		self.channel_callback(channel)
+		self.__channels = channels
+		self.__channeldict = {}
+		menu = []
+		for i in range(len(channels)):
+			channel, onoff = channels[i]
+			self.__channeldict[channel] = i
+			if self.__menu_created is not None and \
+			   channel == self.__menu_created._name:
+				continue
+			menu.append((channel, (channel,), 't', onoff))
+		w = self.__window
+		if w is None and self.__menu_created is not None:
+			if hasattr(self.__menu_created, 'window'):
+				w = self.__menu_created.window
+		if w is not None:
+			w.set_dynamiclist(usercmd.CHANNELS, menu)
 
 	def setchannel(self, channel, onoff):
-		"""Set the on/off status of a channel.
-
-		Arguments (no defaults):
-		channel -- the name of the channel whose status is to
-			be set
-		onoff -- the new status
-		"""
-
-##		i = self.__channeldict.get(channel)
-##		if i is None:
-##			raise RuntimeError, 'unknown channel'
-##		if self.__channels[i][1] == onoff:
-##			return
-##		self.__channels[i] = channel, onoff
-##		if self.__window is not None:
-##			self.setchannels(self.__channels)
+		i = self.__channeldict.get(channel)
+		if i is None:
+			return
+		if self.__channels[i][1] == onoff:
+			return
+		self.__channels[i] = channel, onoff
+		self.setchannels(self.__channels)
 
 	def setoptions(self, options):
 		"""Set the list of options.
@@ -155,38 +165,23 @@ class PlayerDialog:
 			PAUSING -- the player is in the pausing state
 		"""
 
+		ostate = self.__state
 		self.__state = state
-		if self.__window is not None:
-			self.__window.set_toggle(usercmd.PLAY, self.__state != STOPPED)
-			self.__window.set_toggle(usercmd.STOP, self.__state == STOPPED)
-			self.__window.set_toggle(usercmd.PAUSE, self.__state == PAUSING)
-		if self.__menu_created is not None and \
-				self.__menu_created.window is not None:
-			w = self.__menu_created.window
-			w.set_toggle(usercmd.PLAY, self.__state != STOPPED)
-			w.set_toggle(usercmd.STOP, self.__state == STOPPED)
-			w.set_toggle(usercmd.PAUSE, self.__state == PAUSING)
-
-	def hide(self):
-		"""Hide the control panel."""
-
-		if self.__window is None:
-			return
-		self.__window.close()
-		self.__window = None
-		
-	def show(self):
-		"""Show the control panel."""
-
-		if self.__window is not None:
-			self.__window.pop()
-			return
-		cmdlist = [
-			usercmd.PLAY(callback=(self.play_callback, ())),
-			usercmd.STOP(callback=(self.stop_callback, ())),
-			usercmd.PAUSE(callback=(self.pause_callback, ())),
-			usercmd.CLOSE(callback=(self.toplevel.close_callback, ()))]
-		self.__window = w = windowinterface.windowgroup(self.__title, cmdlist)
+		w = self.__window
+		if w is None and self.__menu_created is not None:
+			if hasattr(self.__menu_created, 'window'):
+				w = self.__menu_created.window
+		if w is not None:
+			commandlist = [
+				usercmd.CLOSE(callback=(self.toplevel.close_callback, ())),
+				usercmd.CLOSE_WINDOW(callback=(self.toplevel.close_callback, ())),
+				] + self.alllist
+			w.set_commandlist(commandlist)
+			self.setchannels(self.__channels)
+			if 1 or state != ostate: # XXXX
+				w.set_toggle(usercmd.PLAY, state != STOPPED)
+				w.set_toggle(usercmd.PAUSE, state == PAUSING)
+				w.set_toggle(usercmd.STOP, state == STOPPED)
 
 	def getgeometry(self):
 		"""Get the coordinates of the control panel.
