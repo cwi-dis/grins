@@ -15,14 +15,26 @@ class MenuObject:
 
 	# Initialize the object
 	def init(self, title, commandlist):
+		self.menuids = []
 		self.menuprocs = []
 		self.keymap = {}
 		self.menu = self.makesubmenu(title, commandlist)
 		return self
 
+	# Destroy the object
+	def close(self):
+		for menu in self.menuids:
+			gl.freepup(menu)
+		self.menuids = []
+		self.menuprocs = []
+		self.keymap = {}
+		self.menu = None
+
 	# Do mouse interaction.  X and y are the mouse coordinates
 	# (as returned by the mouse event).  Return a function or None.
 	def popup(self, x, y):
+		if not self.menu:
+			return None
 		i = gl.dopup(self.menu)
 		if 0 < i <= len(self.menuprocs):
 			return self.menuprocs[i-1]
@@ -40,6 +52,7 @@ class MenuObject:
 	# Internal function to make a (sub)menu
 	def makesubmenu(self, title, commandlist):
 		menu = gl.newpup()
+		self.menuids.append(menu)
 		if title:
 			gl.addtopup(menu, title + '%t', 0)
 		for char, text, proc in commandlist:
