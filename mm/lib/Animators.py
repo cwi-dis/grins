@@ -7,6 +7,7 @@ import math
 import svgpath
 import re
 from fmtfloat import round
+import tokenizer
 
 # units, messages
 import windowinterface
@@ -1695,7 +1696,12 @@ class AnimateElementParser:
 	def toDOMOriginPosAttr(self, attr):
 		val = MMAttrdefs.getattr(self.__anim, attr)
 		if not val: return val
-		x, y = map(string.atoi, string.split(val,','))
+		cl = tokenizer.splitlist(val, delims = ' ,')
+		if len(cl)>1:
+			try:
+				x, y = string.atoi(cl[0]), string.atoi(cl[1])
+			except:
+				return '0, 0'
 		dx, dy = self.__domval.real, self.__domval.imag
 		x = x - dx
 		y = y - dy
@@ -1983,7 +1989,7 @@ class AnimateElementParser:
 
 	def __getNumPair(self, v):
 		if not v: return None
-		if type(v)==type(complex(0,0)):
+		if type(v) == type(complex(0,0)):
 			return v.real, v.imag
 		v = v.strip()
 		vl = self.__split(v)
@@ -2255,21 +2261,7 @@ class AnimateElementParser:
 		except:
 			return arg
 		
-	_sep = re.compile('[ \t\r\n,]')
 	def __split(self, str):
-		if type(str)!=type(''):
-			return str
-		l = []
-		end = len(str)
-		i = 0
-		while i<len(str):
-			m = AnimateElementParser._sep.search(str, i)
-			if m:
-				begin, end = m.regs[0]
-				if i != begin:
-					l.append(str[i:begin])
-				i = end
-			else:
-				i = i+1
-		l.append(str[end:])
-		return l
+		if type(str) == type(''):
+			return tokenizer.splitlist(str, delims = '\t\r\n,')
+		return str
