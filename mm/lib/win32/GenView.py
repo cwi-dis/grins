@@ -64,6 +64,9 @@ class GenView:
 		self._is_active=0
 		self._parent.getMDIFrame().set_commandlist(None, self._strid)
 
+	def setclosecmd(self, cmdid):
+		self._closecmdid = cmdid
+
 	# Called by the frame work before closing this View
 	def OnClose(self):
 		if self._closecmdid>0:
