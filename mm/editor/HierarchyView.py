@@ -970,7 +970,6 @@ class HierarchyView(HierarchyViewDialog):
 		return 1		# succeeded
 
 	def deletecall(self):
-		# XXX UNTESTED
 		# The "delete" event handler
 		self.toplevel.setwaiting()
 		nodes = self.get_selected_nodes()
@@ -1018,7 +1017,6 @@ class HierarchyView(HierarchyViewDialog):
 	######################################################################
 	# Copy a node.
 	def copycall(self):
-		# UNTESTED XXX
 		# The event handler for copying nodes.
 		windowinterface.setwaiting()
 		nodes = self.get_selected_nodes()
@@ -1091,7 +1089,7 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return 0
 		if self.root in nodes:
-			assert len(nodes)==0
+			assert len(nodes)==1
 			windowinterface.beep()
 			return 0
 
@@ -1708,6 +1706,10 @@ class HierarchyView(HierarchyViewDialog):
 		# If external is enabled, don't call the editmanager.
 		# Deselect the old selected widgets.
 
+		if self.focus_lock:
+			print "WARNING: recursive focus detected in the HierarchyView. Continuing."
+			return 0
+
 		# If the widget is None, well just clear everything.
 		if widget is None:
 			self.unselect_all()
@@ -1744,11 +1746,17 @@ class HierarchyView(HierarchyViewDialog):
 
 		if not external:
 			# If this method is called, there is only _one_ widget selected.
+			self.focus_lock = 1
 			self.editmgr.setglobalfocus('MMNode', self.get_selected_node())
+			self.focus_lock = 0
 
-	def also_select_widget(self, widget):
+	def also_select_widget(self, widget, external=0, scroll=1):
 		# XXX UNTESTED
 		# Select another widget without losing the selection (ctrl-click).
+
+		if self.focus_lock:
+			print "WARNING: recursive focus detected in the HierarchyView. Continuing."
+			return 0
 
 		if len(self.multi_selected_widgets) == 0:
 			self.select_widget(widget)
@@ -1765,8 +1773,20 @@ class HierarchyView(HierarchyViewDialog):
 			self.multi_selected_widgets.append(widget)
 			widget.select()
 
+		if scroll:
+			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
+
 		self.aftersetfocus()	# XXX
 		self.need_redraw_selection = 1
+
+		if not external:
+			# If this method is called, there is only _one_ widget selected.
+			select_us = []
+			for n in self.get_selected_widgets():
+				select_us.append( ('MMNode', n.get_node()) )
+			self.focus_lock = 1
+			self.editmgr.setglobalfocus('List', select_us)
+			self.focus_lock = 0
 
 	def unselect_all(self):
 		# XXX UNTESTED
