@@ -7,7 +7,6 @@ from Scheduler import del_timing
 from PlayerCore import PlayerCore
 from MMExc import *
 import MMAttrdefs
-import Timing
 import windowinterface, WMEVENTS
 from usercmd import *
 
