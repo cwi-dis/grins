@@ -476,13 +476,13 @@ class MMNode:
 		else:
 			return None
 
-	def _get_previousSibling(self):
-		print 'not implemented (yet)' 
-		return None 
+# 	def _get_previousSibling(self):
+# 		print 'not implemented (yet)' 
+# 		return None 
 	
-	def _get_get_nextSibling(self): 
-		print 'not implemented (yet)'
-		return None
+# 	def _get_get_nextSibling(self): 
+# 		print 'not implemented (yet)'
+# 		return None
 
 	def _get_attributes(self):
 		namedNodeMap = grinsDOM.dom.core.NamedNodeMap()
