@@ -1,6 +1,5 @@
 __version__ = "$Id$"
 
-
 """ @win32doc|AttrEditForm
 
 """
@@ -3335,7 +3334,7 @@ class DurationParGroup(AttrGroup):
 		ctrl.settext(self._data['title'])
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_P4
-
+	
 # base_winoff
 class LayoutGroup(AttrGroup):
 	data=attrgrsdict['base_winoff']
@@ -3926,6 +3925,46 @@ class Convert5Group(Convert4Group):
 		return cd
 
 #
+
+class ActiveDuration1Group(AttrGroup):
+	data=attrgrsdict['activeduration1']
+
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_ACTIVEDUR1
+
+	def createctrls(self, wnd):
+		cd = {}
+		a = self.getattr('fill')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_FILLL, grinsRC.IDC_FILLV))
+		a = self.getattr('fillDefault')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_FILLDEFL,grinsRC.IDC_FILLDEFV))
+		a = self.getattr('duration')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_DURL,grinsRC.IDC_DURV))
+		a = self.getattr('min')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_MINL,grinsRC.IDC_MINV))
+		a = self.getattr('max')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_MAXL,grinsRC.IDC_MAXV))
+		a = self.getattr('loop')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_LOOPL,grinsRC.IDC_LOOPV))
+		a = self.getattr('repeatdur')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_REPDURL,grinsRC.IDC_REPDURV))
+		a = self.getattr('terminator')
+		self._endSync = cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_ENDSYNCL,grinsRC.IDC_ENDSYNCV))
+		return cd
+
+class ActiveDuration2Group(ActiveDuration1Group):
+	data=attrgrsdict['activeduration2']
+
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+
+	def oninitdialog(self, wnd):
+		self._endSync.enable(0)
+
+#
 class AnimateAttributeGroup(AttrGroup):
 	data=attrgrsdict['animateAttribute']
 	def __init__(self):
@@ -4062,6 +4101,8 @@ groupsui={
 	'wipe':WipeGroup,
 	'clip':ClipGroup,
 	'bandwidth':BandwidthGroup,
+	'activeduration1':ActiveDuration1Group,
+	'activeduration2':ActiveDuration2Group,
 	
 	'qtpreferences':QTPlayerPreferencesGroup,
 	'qtmediapreferences':QTPlayerMediaPreferencesGroup,
