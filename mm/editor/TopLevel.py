@@ -331,6 +331,12 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.editmgr.register(self)
 	#
 	def quit_callback(self, (obj, arg)):
+		ok = self.quit_ok()
+		obj.set_button(0)
+		if ok:
+			raise SystemExit, 0
+
+	def quit_ok(self):
 		if self.changed:
 			l1 = 'You haven\'t saved your changes yet;'
 			l2 = 'do you want to save them before quitting?'
@@ -340,12 +346,10 @@ class TopLevel(ViewDialog, BasicDialog):
 			b3 = 'Cancel'
 			reply = fl.show_choice(l1, l2, l3, b1, b2, b3)
 			if reply == 3:
-				obj.set_button(0)
-				return
+				return 0
 			if reply == 1:
 				self.save_callback(obj, arg)
-		self.destroy()
-		raise SystemExit, 0
+		return 1
 	#
 	# GL event callback for WINSHUT and WINQUIT (called from glwindow)
 	#
