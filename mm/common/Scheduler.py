@@ -653,7 +653,7 @@ class SchedulerContext:
 			del path[0]
 		if path:
 			path0 = path[0]
-			if path0.type == 'alt':
+			if path0.type == 'switch':
 				path0 = path0.ChosenSwitchChild()
 		for start, end in node.time_list:
 			if start > gototime:
