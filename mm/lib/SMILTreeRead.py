@@ -356,21 +356,39 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					except error, msg:
 						self.syntax_error(msg)
 			elif attr == 'repeat' or attr == 'repeatCount':
+				if attr == 'repeatCount':
+					if self.__context.attributes.get('project_boston') == 0:
+						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					self.__context.attributes['project_boston'] = 1
 				ignore = attr == 'repeat' and attrdict.has_key('loop')
 				if val == 'indefinite':
-					if not ignore:
-						attrdict['loop'] = 0
+					repeat = 0
 				else:
 					try:
-						# XXX fractional values are actually allowed
-						repeat = string.atoi(val)
-					except string.atoi_error:
+						# fractional values are actually allowed in repeatCount
+						repeat = string.atof(val)
+					except string.atof_error:
 						self.syntax_error('bad repeat attribute')
 					else:
 						if repeat <= 0:
-							self.warning('bad repeat value', self.lineno)
-						elif not ignore:
-							attrdict['loop'] = repeat
+							self.syntax_error('bad %s value' % attr)
+							ignore = 1
+						elif attr == 'repeat' and '.' in val:
+							self.syntax_error('fractional repeat value not allowed')
+							ignore = 1
+				if not ignore:
+					attrdict['loop'] = repeat
+			elif attr == 'repeatDur':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val == 'indefinite':
+					attrdict['repeatdur'] = -1
+				else:
+					try:
+						attrdict['repeatdur'] = self.__parsecounter(val)
+					except error, msg:
+						self.syntax_error(msg)
 			elif attr == 'restart':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -2150,8 +2168,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			z = 0
 		anchorlist = self.__node.__anchorlist
 		aid = _uniqname(map(lambda a: a[2], anchorlist), None)
-		if attributes.has_key('fragment-id'):
-			aid = attributes['fragment-id']
+		if attributes.has_key('fragment'):
+			aid = attributes['fragment']
 			atype = ATYPE_NORMAL
 		elif nname is not None and id is not None and \
 		     id[:len(nname)+1] == nname + '-':
