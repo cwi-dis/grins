@@ -1728,8 +1728,14 @@ class WallclockDialog(ResDialog):
 		return self.DoModal()
 
 	def OnOK(self):
-		self.value = self.get_value_from_widgets()
-		return self.parent.OnOK(self)
+		errorMsg, value = self.get_value_from_widgets()
+		if errorMsg is None:
+			# save the new value only if no error
+			self.value = value
+			return self.parent.OnOK(self)
+		else:
+			# just show an error message
+			showmessage(errorMsg, 'error', parent=self)
 		
 ##	def OnCancel(self):
 ##		self.DestroyWindow()
@@ -1742,35 +1748,73 @@ class WallclockDialog(ResDialog):
 	def getvalue(self):
 		return self.value
 
+	def __checkDate(self, dy, mt, yr):
+		# full checking
+		if yr < 1900 or yr > 2200:
+			return 'bad year'
+		if mt < 1 or mt > 12:
+			return 'bad month'
+		if mt in (1, 3, 5, 7, 8, 10, 12):
+			maxDy = 31
+		elif mt in (4, 6, 9, 11):
+			maxDy = 30
+		elif mt == 2:
+			# this check works until 2100. It should be enough !
+			if yr % 4 == 0:
+				maxDy = 29
+			else:
+				maxDy = 28
+		if dy < 1 or dy > maxDy:
+			return 'bad day'
+
+		# no error		
+		return None			
+
+	def __checkHour(self, hr, mn, sc):
+		# full checking
+		if hr < 0 or hr > 23:
+			return 'bad hours'
+		if mn < 0 or mn > 59:
+			return 'bad minutes'
+		if sc is not None and (sc < 0 or sc >= 60.0):
+			return 'bad seconds'
+
+		# no error		
+		return None			
+
 	def get_value_from_widgets(self):
-		#self.yr,self.mt,self.dy,self.hr,self.mn,self.sc,self.tzsg,self.tzhr,self.tzmn = None
+		errorMsg = None
+		yr = mt = dy = hr = mn = sc = tzsg = tzhr = tzmn = None
+		
 		if self.w_cbdate.getcheck():
 			yr = self.__getwidget_asnum(self.w_yr)
 			mt = self.w_mt.getcursel()+1
 			assert mt >= 1 and mt <= 12
 			dy = self.__getwidget_asnum(self.w_dy)
-		else:
-			yr = None
-			mt = None
-			dy = None
-		hr = self.__getwidget_asnum(self.w_hr)
-		mn = self.__getwidget_asnum(self.w_mn)
-		sc = self.__getwidget_asnum(self.w_sc)
+			errorMsg = self.__checkDate(dy, mt, yr)			
+		if errorMsg is None:
+			hr = self.__getwidget_asnum(self.w_hr)
+			mn = self.__getwidget_asnum(self.w_mn)
+			sc = self.__getwidget_asnum(self.w_sc)
+			errorMsg = self.__checkHour(hr, mn, sc)
+
 		if sc == None:
 			sc = 0.0
-		if self.w_cbtz.getcheck():
-			tzsg = self.w_tzsg.getcursel() # it's a combobox.
-			if tzsg == 0:
-				tzsg = '+' # East - forwards towards china
-			else:
-				tzsg = '-' # West - backwards to Tonga.
-			tzhr = self.__getwidget_asnum(self.w_tzhr)
-			tzmn = self.__getwidget_asnum(self.w_tzmn)
-		else:
-			tzsg = None
-			tzhr = None
-			tzmn = None
-		return (yr, mt, dy, hr, mn, sc, tzsg, tzhr, tzmn)
+		if errorMsg is None:			
+			if self.w_cbtz.getcheck():
+				tzsg = self.w_tzsg.getcursel() # it's a combobox.
+				if tzsg == 0:
+					tzsg = '+' # East - forwards towards china
+				else:
+					tzsg = '-' # West - backwards to Tonga.
+				tzhr = self.__getwidget_asnum(self.w_tzhr)
+				tzmn = self.__getwidget_asnum(self.w_tzmn)
+				if tzhr is None or tzhr < 0 or tzhr > 23:
+					errorMsg = 'bad tz hours'
+				elif tzmn is None or tzmn < 0 or tzmn > 59:
+					errorMsg = 'bad tz minutes'
+				
+		return errorMsg, (yr, mt, dy, hr, mn, sc, tzsg, tzhr, tzmn)
 			
 	def w_cbdate_callback(self, id, value):
 		c = self.w_cbdate.getcheck()
@@ -1787,11 +1831,14 @@ class WallclockDialog(ResDialog):
 			self.disable_tz()
 
 	def enable_date(self):
-		# initialize fields
+		# initialize fields if empty
 		# XXX: it would be probably better at some point to initialize with the current day
-		self.w_dy.settext("1")
-		self.w_mt.setcursel(0) # january
-		self.w_yr.settext("2001")
+		if self.w_dy.gettext() == "":
+			self.w_dy.settext("1")
+		if self.w_mt.getcursel() < 0:
+			self.w_mt.setcursel(0) # january
+		if self.w_yr.gettext() == "":
+			self.w_yr.settext("2001")
 		
 		self.w_yr.enable(1)
 		self.w_mt.enable(1) # is a combo box.
@@ -1801,11 +1848,6 @@ class WallclockDialog(ResDialog):
 		self.w_yr.enable(0)
 		self.w_mt.enable(0) # is a combo box.
 		self.w_dy.enable(0)
-
-		# clear fields
-		self.w_dy.settext("")
-		self.w_mt.setcursel(-1) 
-		self.w_yr.settext("")
 
 	def enable_tz(self):
 		self.w_tzsg.enable(1)	# combo box
