@@ -138,8 +138,27 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		TopLevelDialog.show(self)
 		if self.context.attributes.get('project_boston', 0):
 			self.setcommands(self.commandlist + self.__ugroup)
-		if self.hierarchyview is not None:
+		self.showdefaultviews()
+		
+	def showdefaultviews(self):
+		import settings
+		defaultviews = settings.get('defaultviews')
+		if 'hierarchy' in defaultviews and self.hierarchyview is not None:
 			self.hierarchyview.show()
+		if 'player' in defaultviews and self.player is not None:
+			self.player.show()
+		if 'channel' in defaultviews and self.channelview is not None:
+			self.channelview.show()
+		if 'transition' in defaultviews and self.transitionview is not None:
+			self.transitionview.show()
+		if 'layout' in defaultviews and self.layoutview is not None:
+			self.layoutview.show()
+		if 'ugroup' in defaultviews and self.ugroupview is not None:
+			self.ugroupview.show()
+		if 'link' in defaultviews and self.links is not None:
+			self.links.show()
+		if 'source' in defaultviews:
+			self.source_callback()
 
 	def destroy(self):
 		self.set_timer(0)
