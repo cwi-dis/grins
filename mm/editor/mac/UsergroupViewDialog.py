@@ -15,16 +15,17 @@ import WMEVENTS
 def ITEMrange(fr, to): return range(fr, to+1)
 
 # Dialog info for User group browser
-ID_DIALOG_UGROUP_BROWSER=528
+from mw_resources import ID_DIALOG_UGROUP_BROWSER
 ITEM_B_BROWSER=1
 
 ITEM_B_NEW=2
 ITEM_B_EDIT=3
 ITEM_B_DELETE=4
-ITEMLIST_B_ALL=ITEMrange(ITEM_B_BROWSER, ITEM_B_DELETE)
+ITEM_B_BALLOONHELP=5
+ITEMLIST_B_ALL=ITEMrange(ITEM_B_BROWSER, ITEM_B_BALLOONHELP)
 
 # Dialog info for user group editor
-ID_DIALOG_UGROUP_EDITOR=529
+from mw_resources import ID_DIALOG_UGROUP_EDITOR
 ITEM_E_NAME_LABEL=1
 ITEM_E_NAME=2
 ITEM_E_TITLE_LABEL=3
@@ -42,7 +43,7 @@ ITEM_E_BALLOONHELP=11
 ITEMLIST_E_ALL=ITEMrange(ITEM_E_NAME_LABEL, ITEM_E_BALLOONHELP)
 
 
-class UserGroupViewDialog(windowinterface.MACDialog):
+class UsergroupViewDialog(windowinterface.MACDialog):
 	def __init__(self):
 		"""Create the UsergroupView dialog.
 
@@ -50,7 +51,7 @@ class UserGroupViewDialog(windowinterface.MACDialog):
 		the cursor) but don't pop it up.
 		"""
 
-		windowinterface.MACDialog.__init__(self, "UserGroup view",
+		windowinterface.MACDialog.__init__(self, "Usergroup view",
 				ID_DIALOG_UGROUP_BROWSER, ITEMLIST_B_ALL)
 
 		self.__list = self._window.ListWidget(ITEM_B_BROWSER)
@@ -58,8 +59,7 @@ class UserGroupViewDialog(windowinterface.MACDialog):
 
 	def __list_callback(self):
 		pos = self.__list.getselect()
-		self.__buttons.setsensitive(1, pos is not None)
-		self.__buttons.setsensitive(2, pos is not None)
+		self._setsensitive([ITEM_B_EDIT, ITEM_B_DELETE], pos is not None)
 
 	def getgroup(self):
 		"""Return name of currently selected user group."""
@@ -110,10 +110,10 @@ class UserGroupViewDialog(windowinterface.MACDialog):
 			self.edit_callback()
 		elif item == ITEM_B_DELETE:
 			self.delete_callback()
-			print 'Unknown UserGroupViewDialog item', item, 'event', event
+			print 'Unknown UsergroupViewDialog item', item, 'event', event
 		return 1
 
-class UserGroupdEditDialog(windowinterface.MACDialog):
+class UsergroupEditDialog(windowinterface.MACDialog):
 	__rangelist = ['0-1 sec', '0-10 sec', '0-100 sec']
 
 	def __init__(self, ugroup, title, ustate, override):
@@ -151,7 +151,7 @@ class UserGroupdEditDialog(windowinterface.MACDialog):
 ##			 ('Apply', (self.apply_callback, ())),
 ##			 ('OK', (self.ok_callback, ()))], vertical = 0,
 ##			top = sep, left = None, right = None, bottom = None)
-		w.show()
+		self.show()
 
 	def showmessage(self, text):
 		windowinterface.showmessage(text)
@@ -203,5 +203,5 @@ class UserGroupdEditDialog(windowinterface.MACDialog):
 		elif item == ITEM_E_APPLY:
 			self.apply_callback()
 		else:
-			print 'Unknown UserGroupViewEditDialog item', item, 'event', event
+			print 'Unknown UsergroupViewEditDialog item', item, 'event', event
 		return 1
