@@ -31,30 +31,16 @@ CPHEIGHT = 100
 from ChannelMap import channelmap
 
 
-# The Player class has only a single instance.
-# Its run() method, once started, never returns normally; this replaces
-# the mainloop() function in glwindow.py.
+# The Player class normally has only a single instance.
 #
-# It is important that as much time as possible is spent in run()
-# rather than in subordinate routines; this improves response time.
-# No other code should ever sleep or wait for external events
-# (checking events is OK) or do I/O that may block indefinitely
-# (file I/O is OK, but not tty I/O).
+# It implements a queue using "virtual time" using an invisible timer
+# object in its form.
 #
 # An exception may be made for modal dialogs ("goodies" of the FORMS library)
 # but these should be used *very* sparingly.  In principle every user
 # interface component should be reactive at all times.  For example,
 # asking for a file name should not be done with a modal dialog -- a
 # modeless file selector (which may remain open between uses) is better.
-#
-# To add multiple players, the loop in run(), calling glwindow.mainloop(),
-# must be moved to a central place, which implements a real-time queue.
-# Player objects must calculate the expected real-time delay to their
-# next event and post an event in the RT queue for that time.
-# When the expected time changes (e.g., pause is pressed), they should
-# cancel the original event and post a new one.  Etc.
-# XXX BECAUSE OF THIS, CREATING A SECOND PLAYER CURRENTLY DOESN'T WORK;
-# XXX THIS BREAKS THE "RESTORE" COMMAND!
 
 class Player() = scheduler():
 	#
@@ -79,31 +65,48 @@ class Player() = scheduler():
 		# Return self, as any class initializer
 		return self
 	#
+	# Toplevel interface.
+	#
 	def show(self):
+		self.reset()
 		self.showchannels()
 		self.showcpanel()
+		self.showstate()
 	#
 	def hide(self):
-		self.hidecpanel()
+		self.stop()
+		self.reset()
 		self.hidechannels()
+		self.hidecpanel()
 	#
 	def destroy(self):
-		self.destroycpanel()
+		self.hide()
 		self.destroychannels()
+		self.destroycpanel()
 	#
 	def set_setcurrenttime_callback(self, setcurrenttime):
 		self.setcurrenttime_callback = setcurrenttime
 	#
+	# Internal reset.
+	#
+	def reset(self):
+		self.resettimer()
+		self.resetchannels()
+		if self.setcurrenttime_callback:
+			self.setcurrenttime_callback(0.0)
+	#
 	#
 	# Queue interface, based upon sched.scheduler.
 	# This queue has variable time, to implement pause and slow/fast,
-	# but the interface to its callers is the same, except init().
+	# but the interface to its callers is the same, except init()
+	# and run() -- the queue runs automatically as long as our
+	# form is being checked.
 	#
 	# Inherit enter(), cancel(), empty() from scheduler.
 	# Override enterabs() since it must update the timer object.
 	# The timefunc is implemented differently (it's a real method),
 	# but the call to it from enter() doesn't mind.
-	# There is no delayfunc -- our run() doesn't use that.
+	# There is no delayfunc() since we don't have a run() function.
 	#
 	def enterabs(self, args):
 		id = scheduler.enterabs(self, args)
@@ -134,6 +137,7 @@ class Player() = scheduler():
 		for cname in self.channelnames:
 			self.channels[cname].setrate(self.rate)
 		self.updatetimer()
+		self.showtime()
 	#
 	def updatetimer(self):
 		now = self.timefunc()
@@ -149,14 +153,6 @@ class Player() = scheduler():
 		else:
 			delay = delay / self.rate
 		self.timerobject.set_timer(delay)
-	#
-	# This version of run() blocks when there is nothing to do.
-	# It never returns!
-	# XXX Hence destroying and then re-creating this view doesn't work.
-	#
-	def run(self):
-		self.updatetimer()
-		glwindow.mainloop()
 	#
 	# User interface.
 	#
@@ -199,13 +195,13 @@ class Player() = scheduler():
 		#
 		x, y, w, h = 0, 0, 198, 48
 		self.statebutton = \
-			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, '')
+			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, 'T = 0')
 		self.statebutton.boxtype = FLAT_BOX
 		self.statebutton.set_call_back(self.state_callback, None)
 		#
 		x, y, w, h = 250, 50, 48, 48
 		self.speedbutton = \
-			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, '')
+			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, '0')
 		self.speedbutton.boxtype = FLAT_BOX
 		self.speedbutton.set_call_back(self.speed_callback, None)
 		#
@@ -236,32 +232,33 @@ class Player() = scheduler():
 	def play_callback(self, (obj, arg)):
 		if obj.pushed:
 			self.play()
-		self.showstate()
+		else:
+			self.showstate() # Undo unwanted change by FORMS
 	#
 	def pause_callback(self, (obj, arg)):
 		if obj.pushed:
 			if self.playing and self.rate = 0.0:
 				self.play()
 			else:
-				self.freeze()
-		self.showstate()
+				self.pause()
+		else:
+			self.showstate() # Undo unwanted change by FORMS
 	#
 	def stop_callback(self, (obj, arg)):
 		if obj.pushed:
 			if not self.playing:
-				# Extra heavy duty reset
-				self.resettimer()
-				self.resetchannels()
-				if self.setcurrenttime_callback:
-					self.setcurrenttime_callback(0.0)
+				self.reset()
+				self.showstate()
 			else:
 				self.stop()
-		self.showstate()
+		else:
+			self.showstate() # Undo unwanted change by FORMS
 	#
 	def fast_callback(self, (obj, arg)):
 		if obj.pushed:
 			self.faster()
-		self.showstate()
+		else:
+			self.showstate() # Undo unwanted change by FORMS
 	#
 	def ab_callback(self, (obj, arg)):
 		if self.abcontrol:
@@ -289,9 +286,13 @@ class Player() = scheduler():
 				gl.ringbell()
 	#
 	def state_callback(self, (obj, arg)):
+		# This is a button disguised as a button.
+		# The callback needn't do anything, but since it
+		# has to exist anyway, why not let it update the state...
 		self.showstate()
 	#
 	def speed_callback(self, (obj, arg)):
+		# Same comments as for state_callback() above
 		self.showstate()
 	#
 	def timer_callback(self, (obj, arg)):
@@ -310,19 +311,17 @@ class Player() = scheduler():
 	#
 	def play(self):
 		if not self.playing:
-			if not self.maystart():
-				self.showstate()
+			if not self.start_playing():
 				return
-			self.start_playing()
 		self.setrate(1.0)
+		self.showstate()
 	#
-	def freeze(self):
+	def pause(self):
 		if not self.playing:
-			if not self.maystart():
-				self.showstate()
+			if not self.start_playing():
 				return
-			self.start_playing()
 		self.setrate(0.0)
+		self.showstate()
 	#
 	def stop(self):
 		if self.playing:
@@ -331,17 +330,17 @@ class Player() = scheduler():
 	#
 	def faster(self):
 		if not self.playing:
-			if not self.maystart():
-				self.showstate()
+			if not self.start_playing():
 				return
-			self.start_playing()
 		if self.rate = 0.0:
 			self.setrate(2.0)
 		else:
 			self.setrate(self.rate * 2.0)
+		self.showstate()
 	#
 	def maystart(self):
-		return 1
+		import AttrEdit
+		return not AttrEdit.hasattreditor(self.root)
 	#
 	def showstate(self):
 		if not self.playing:
@@ -410,21 +409,23 @@ class Player() = scheduler():
 	# Playing algorithm.
 	#
 	def start_playing(self):
-		self.resettimer()
-		self.resetchannels()
+		if not self.maystart():
+			return 0
+		self.playing = 1
+		self.reset()
 		Timing.calctimes(self.root)
 		Timing.prepare(self.root)
 		self.root.counter[HD] = 1
 		self.decrement(0, self.root, HD)
-		self.playing = 1
+		return 1
 	#
 	def stop_playing(self):
-		self.setrate(0.0) # Stop the clock
+		self.playing = 0
 		self.stopchannels() # Tell the channels to quit it
 		self.queue[:] = [] # Erase all events with brute force!
-		self.updatetimer()
+		self.setrate(0.0) # Stop the clock
 		Timing.cleanup(self.root) # Collect some garbage
-		self.playing = 0
+		self.showstate()
 	#
 	def decrement(self, (delay, node, side)):
 		if self.abcontrol:
