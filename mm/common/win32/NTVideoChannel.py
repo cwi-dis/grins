@@ -38,6 +38,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.__type = None
 		self.need_armdone = 0
 		self.__playing = None
+		self.__rcMediaWnd = None
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
@@ -168,10 +169,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.armed_display.fgcolor(self.getbucolor(node))
 		else:
 			self.armed_display.fgcolor(self.getbgcolor(node))
-		if self.__mc:
-			armbox = self.__mc.prepare_anchors(node, self.window, self.getmediageom(node))
-			self.setArmBox(armbox)
-		# WARNING: for real not implemented yet
+
+		armbox = self.prepare_anchors(node, self.window, self.getmediageom(node))
+		self.setArmBox(armbox)
 		
 
 #		hicolor = self.gethicolor(node)
@@ -238,3 +238,50 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if self.__rc:
 			self.__rc.stopit()
 		Channel.ChannelWindowAsync.stopplay(self, node)
+
+	# Define the anchor area for visible medias
+	def prepare_anchors(self, node, window, coordinates):
+		if not window: return
+	
+		# it should be nice to verify this calcul !!!
+		# GetClientRect by def returns always: 0, 0, w, h		
+		left,top,w_width,w_height = window.GetClientRect()
+
+		left,top,width,height = window._convert_coordinates(coordinates)
+		x,y,w,h = left,top,width,height
+		
+		# node attributes
+		import MMAttrdefs
+		scale = MMAttrdefs.getattr(node, 'scale')
+		center = MMAttrdefs.getattr(node, 'center')
+
+		if scale > 0:
+			width = int(width * scale)
+			height = int(height * scale)
+			if width>w or height>h:
+				wscale=float(w)/width
+				hscale=float(h)/height
+				scale=min(wscale,hscale)
+				width = min(int(width * scale), w)
+				height = min(int(height * scale), h)
+				center=1	
+			if center:
+				x = x + (w - width) / 2
+				y = y + (h - height) / 2
+		else:
+			# fit in window
+			wscale=float(w)/width
+			hscale=float(h)/height
+			scale=min(wscale,hscale)
+			width = min(int(width * scale), w)
+			height = min(int(height * scale), h)
+			x = x + (w - width) / 2
+			y = y + (h - height) / 2
+
+		self.__rcMediaWnd=(x, y, width,height)
+		return (x/float(w_width), y/float(w_height), width/float(w_width), height/float(w_height))
+
+	def getMediaWndRect(self):
+		return self.__rcMediaWnd
+
+
