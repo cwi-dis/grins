@@ -1,7 +1,8 @@
-# $Id$
 # This file contains a list of standard widgets used in the
 # HierarchyView. I tried to keep them view-independant, but
 # I can't promise anything!!
+
+__version__ = "$Id$"
 
 import Widgets
 import MMurl, MMAttrdefs, MMmimetypes, MMNode
@@ -106,6 +107,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.collapsebutton = None
 		self.transition_in = None
 		self.transition_out = None
+		self.dropbox = None
+		self.channelbox = None
 
 	def __repr__(self):
 		return '<%s instance, name="%s", node=%s, id=%X>' % (self.__class__.__name__, self.name, `self.node`, id(self))
@@ -300,8 +303,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if self.timeline is not None:
 			self.timeline.draw(displist)
 		# Draw the silly transitions.
-		if self.mother.transboxes:
+		if self.transition_in is not None:
 			self.transition_in.draw(displist)
+		if self.transition_out is not None:
 			self.transition_out.draw(displist)
 		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 
@@ -526,9 +530,6 @@ class StructureObjWidget(MMNodeWidget):
 		self.need_recalc = 1	# used to determine if this node or any of it's children need recalculating.
 		self.dont_draw_children = 0
 
-#	def __repr__(self):
-#		return "Abstract class StructureObjWidget, name = " + self.name
-
 	def destroy(self):
 		if self.children:
 			for i in self.children:
@@ -741,8 +742,8 @@ class HorizontalWidget(StructureObjWidget):
 
 		if not self.children and self.channelbox is None:
 			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
-			min_width, min_height = boxsize, boxsize
-			if self.dropbox is not None and not ignoreboxes:
+			min_width = min_height = boxsize
+			if self.dropbox is not None:
 				min_width = min_width  + xgap + self.dropbox.recalc_minsize()[0]
 			self.boxsize = min_width, min_height
 			self.fix_timemapper(timemapper)
@@ -750,7 +751,7 @@ class HorizontalWidget(StructureObjWidget):
 
 		mw=0
 		mh=0
-		if self.channelbox is not None and not ignoreboxes:
+		if self.channelbox is not None:
 			mw, mh = self.channelbox.recalc_minsize()
 			mw = mw + sizes_notime.GAPSIZE
 
@@ -762,7 +763,7 @@ class HorizontalWidget(StructureObjWidget):
 
 		mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE
 
-		if self.dropbox is not None and not ignoreboxes:
+		if self.dropbox is not None:
 			mw = mw + self.dropbox.recalc_minsize()[0] + sizes_notime.GAPSIZE
 
 		mh = mh + 2*sizes_notime.VEDGSIZE
@@ -1121,16 +1122,9 @@ class SeqWidget(HorizontalWidget):
 		HorizontalWidget.__init__(self, node, mother)
 		has_drop_box = not MMAttrdefs.getattr(node, 'project_readonly')
 		if mother.usetimestripview and has_drop_box:
-			self.dropbox = DropBoxWidget(node, mother)
-		else:
-			self.dropbox = None
+			self.dropbox = DropBoxWidget(self, mother)
 		if self.HAS_CHANNEL_BOX:
 			self.channelbox = ChannelBoxWidget(self, node, mother)
-		else:
-			self.channelbox = None
-
-#	def __repr__(self):
-#		return "Seq, name = " + self.name
 
 	def destroy(self):
 		HorizontalWidget.destroy(self)
@@ -1673,8 +1667,6 @@ class ForeignWidget(HorizontalWidget):
 	HAS_CHANNEL_BOX = 0
 	def __init__(self, node, mother):
 		HorizontalWidget.__init__(self, node, mother)
-		self.dropbox = None
-		self.channelbox = None
 
 	def draw(self, displist):
 		willplay = not self.mother.showplayability or self.node.WillPlay()
@@ -2103,15 +2095,13 @@ class BrushWidget(MMNodeWidget):
 	def __init__(self):
 		print "TODO: BrushWidget"
 
-#class TimeStripSeqWidget(SeqWidget):
-#	# A sequence that has a channel widget at the start of it.
-#	# This only exists at the second level from the root, assuming the root is a
-#	# par.
-#	# Wow. I like this sort of code. If only the rest of the classes were this easy. -mjvdg
-#	HAS_COLLAPSE_BUTTON = 0
-#	HAS_CHANNEL_BOX = 1
-##	def __repr__(self):
-##		return "TimeStripSeqWidget"
+class TimeStripSeqWidget(SeqWidget):
+	# A sequence that has a channel widget at the start of it.
+	# This only exists at the second level from the root, assuming the root is a
+	# par.
+	# Wow. I like this sort of code. If only the rest of the classes were this easy. -mjvdg
+	HAS_COLLAPSE_BUTTON = 0
+	HAS_CHANNEL_BOX = 1
 
 class ImageBoxWidget(MMWidgetDecoration):
 	# Common baseclass for dropbox and channelbox
