@@ -399,7 +399,7 @@ class VideoChannel(ChannelWindowAsync):
 			windowinterface.cancelidleproc(self.__id)
 		self.idleprocactive = wantone
 		
-	def setpaused(self, paused):
+	def setpaused(self, paused, timestamp):
 		self._paused = paused
 		if self.__rc:
 			self.__rc.pauseit(paused)
