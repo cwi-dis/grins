@@ -752,6 +752,14 @@ class LayoutView2(LayoutViewDialog2):
 		if type not in ('REGION_GEOM', 'MEDIA_GEOM'):
 			self.treeMutation()
 
+		# XXX very temporare to a allow demonstration
+		if self.currentAnimatedNode is not None:
+			if self.existRef(self.currentAnimatedNode):
+				# just update timing. Of course can't work in several cases (when layout view is closed, ...)
+				animationData = self.currentAnimatedNode.getAnimationData()
+				if animationData is not None:
+					animationData.updateTimes()
+		
 		# after a commit, the focus may have changed
 		self.currentFocus = self.editmgr.getglobalfocus()
 		self.previousWidget.mustBeUpdated()
