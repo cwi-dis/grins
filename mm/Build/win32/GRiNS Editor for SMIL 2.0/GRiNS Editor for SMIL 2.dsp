@@ -209,6 +209,14 @@ SOURCE=.\M_ArmStates.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_AssetsView.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_AssetsViewDialog.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_ASXNode.c
 # End Source File
 # Begin Source File
