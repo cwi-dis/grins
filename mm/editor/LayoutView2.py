@@ -2955,15 +2955,6 @@ class PreviousWidget(Widget):
 		if self.__mustBeUpdated:
 			self.updateRegionTree()
 			
-		if not keepShowedNodes:
-			# remove previous medias which are not selected anymore
-			mediaToRemove = []
-			for nodeRef in self.currentMediaRefListM:
-				if not nodeRef in nodeRefList:
-					mediaToRemove.append(nodeRef)
-			for nodeRef in mediaToRemove:
-				self.removeMedia(nodeRef)
-
 		for nodeRef in nodeRefList:			
 			nodeType = self._context.getNodeType(nodeRef)
 			if nodeType == TYPE_VIEWPORT:
