@@ -691,12 +691,6 @@ class _DisplayList:
 		if self.__cmddict.has_key(name):
 			ix = self.__cmddict[name]
 			self._list[ix] = newcmd
-
-	# Update button with name
-	def updatebutton(self, name, coords):
-		if self.__buttondict.has_key(name):
-			ix = self.__butdict[name]
-			self._buttons[ix].setcoordinates(coords)
 	
 	def getcmd(self, name):
 		if self.__cmddict.has_key(name):
@@ -707,9 +701,6 @@ class _DisplayList:
 	def knowcmd(self, name):
 		self.__cmddict[name] = len(self._list)-1
 				
-	def knowbutton(self, name):
-		self.__butdict[name] = len(self._buttons)-1
-
 	# Update background color
 	def updatebgcolor(self, color):
 		self._bgcolor = color
