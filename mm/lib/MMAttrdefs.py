@@ -237,6 +237,14 @@ def getattr(node, attrname):
 	attrdef = getdef(attrname)
 	inheritance = attrdef[5]
 	defaultvalue = attrdef[1]
+
+	# WARNING: HACK
+	# for instance, the conversion is turn off for QuickTime and SMIL docucment.
+	# In order to supress this hack, we should extend the default value management 
+	import features, compatibility
+	if attrname == 'project_convert' and (not (features.compatibility in (compatibility.G2, ))):
+		defaultvalue = 0
+				
 	if inheritance == 'raw':
 		attrvalue = node.GetRawAttrDef(attrname, defaultvalue)
 	elif inheritance == 'normal':
@@ -275,6 +283,14 @@ def getdefattr(node, attrname):
 	attrdef = getdef(attrname)
 	inheritance = attrdef[5]
 	defaultvalue = attrdef[1]
+
+	# WARNING: HACK
+	# for instance, the conversion is turn off for QuickTime and SMIL docucment.
+	# In order to supress this hack, we should extend the default value management 
+	import features, compatibility
+	if attrname == 'project_convert' and (not (features.compatibility in (compatibility.G2, ))):
+		defaultvalue = 0
+	
 	if inheritance == 'raw':
 		return defaultvalue
 	elif inheritance == 'normal':
