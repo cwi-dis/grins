@@ -1706,6 +1706,17 @@ class HierarchyView(HierarchyViewDialog):
 				self.draw()
 
 	def merge_parent(self):
+		# This merges a child node with it's parent.
+		# Possible special cases:
+		# - child node event depends on parent
+		# - parent node event depends on child
+		# - hyperlink from parent to child
+		# - hyperlink from child to parent
+		# - hyperlink from child or parent to itself.
+		# - repeats??
+		# - the root node (done)
+		# - special types of nodes (comment nodes, priority classes)
+		
 		# first check if this can happen.
 		if not self.selected_widget:
 			self.popup_error("No selected node!")
@@ -1717,7 +1728,6 @@ class HierarchyView(HierarchyViewDialog):
 		if not child.parent:
 			self.popup_error("The root node has no parent to merge with!")
 			return
-		child_type=child.type
 		parent = child.parent
 		# Now, check that this node is an only child.
 		if len(parent.children) <> 1:
@@ -1727,7 +1737,6 @@ class HierarchyView(HierarchyViewDialog):
 		em = self.editmgr
 		if not em.transaction():
 			return -1
-		
 
 		# Events..
 		#-------------
@@ -1737,32 +1746,24 @@ class HierarchyView(HierarchyViewDialog):
 
 		print "TODO: check for events between the child and the parent."
 		
-		nodes = self.find_events_to_node(child, self.root) # This is a list of nodes containing events to this node.
+		nodes = self.find_events_to_node(child, self.root) # This is a list of nodes containing events caused by this node.
+		print "DEBUG: nodes are: ", nodes
 		for n in nodes:		# Find all events and change their destination.
 			assert isinstance(n, MMNode.MMNode)
 			newbeginlist = []
 			print "DEBUG: oldbeginlist for ", n, " is: ", MMAttrdefs.getattr(n, 'beginlist')
 			for s in MMAttrdefs.getattr(n, 'beginlist'):
 				assert isinstance(s, MMNode.MMSyncArc)
-				if s.dstnode is child:
-					# Simple: s.dstnode=parent, however:
+				if s.srcnode is child:
 					newsyncarc = s.copy({s.refnode().GetUID():parent.GetUID()})					
-					#newsyncarc = s.copy()
-					#newsyncarc.srcnode = parent
-					#newsyncarc=MMNode.MMSyncArc(parent, s.action, srcnode=s.srcnode, srcanchor=s.srcanchor,
-					#				    channel=s.channel, event=s.event, marker=s.marker,
-					#				    wallclock=s.wallclock, accesskey=s.accesskey, delay=s.delay)
 					newbeginlist.append(newsyncarc)
 				else:
 					newbeginlist.append(s)
 			newendlist = []
 			for s in MMAttrdefs.getattr(n, 'endlist'):
 				assert isinstance(s, MMNode.MMSyncArc)
-				if s.dstnode is child:
+				if s.srcnode is child:
 					newsyncarc = s.copy({s.refnode().GetUID():parent.GetUID()})
-					#newsyncarc=MMNode.MMSyncArc(parent, s.action, srcnode=s.srcnode, srcanchor=s.srcanchor,
-					#				    channel=s.channel, event=s.event, marker=s.marker,
-					#				    wallclock=s.wallclock, accesskey=s.accesskey, delay=s.delay)
 					newendlist.append(newsyncarc)
 				else:
 					newendlist.append(s)
@@ -1770,100 +1771,24 @@ class HierarchyView(HierarchyViewDialog):
 			em.setnodeattr(n, 'beginlist', newbeginlist)
 			em.setnodeattr(n, 'endlist', newendlist)
 
-		# Jack say's don't use a stack; use recursion.
-##		currentnodes = [parent.context.root]
-##		while len(currentnodes) > 0:
-##			tail = currentnodes[1:]
-##			print "DEBUG: tail is: ", tail
-##			assert isinstance(tail, MMNode.MMNode)
-##			currentnodes = currentnodes[:len(currentnodes)-1]
-
-##			beginevents = MMAttrdefs.getattr(tail, 'beginlist')
-##			for index in range(0, len(beginevents)):
-##				if beginevents[index].dstnode == child:
-##					b = beginevents[index]
-##					newsyncarc=MMNode.MMSyncArc(parent, b.action, srcnode=b.srcnode, srcanchor=b.srcanchor,
-##									    channel=b.channel, event=b.event, marker=b.marker,
-##									    wallclock=b.wallclock, accesskey=b.accesskey, delay=b.delay)
-##					em.delsyncarc(tail, 'beginlist', b)
-##					em.addsyncarc(tail, 'beginlist', newsyncarc)
-##			endevents = MMAttrdefs.getattr(tail, 'endlist')
-##			for index in range(0, len(endevents)):
-##				assert isinstance(endevents[index], MMNode.MMSyncArc)
-##				assert isinstance(endevents[index].dstnode, MMNode.MMNode)
-##				if endevents[index].dstnode == child:
-##					b = endevents[index]
-##					newsyncarc=MMNode.MMSyncArc(parent, b.action, srcnode=b.srcnode, srcanchor=b.srcanchor,
-##									    channel=b.channel, event=b.event, marker=b.marker,
-##									    wallclock=b.wallclock, accesskey=b.accesskey, delay=b.delay)
-##					em.delsyncarc(tail, 'endlist', b)
-##					em.addsyncarc(tail, 'endlist', newsyncarc)
-##			if tail.children:
-##				currentnodes = currentnodes + children
-
 		childattrs = child.attrdict
 		myattrs = parent.attrdict
 		conflicts = []		# A list of conflicting keys.
-
-		# Or maybe it would be better to simply replace self with the child.
 
 		# Work through all the attributes; add them all to the parent.
 		# Note that this includes the events ('beginlist', 'endlist') and the anchors.
 		# The anchors have no problem; they reference the node in no way.
 		for ck, cv in childattrs.items():
-			if myattrs.has_key(ck) and ck not in ['name']:
-				conflicts.append(ck)
-			else:
-				em.setnodeattr(parent, ck, cv)
-		# TODO: work through all the attributes.
-		print "DEBUG: conflicts are: ", conflicts
+			#if myattrs.has_key(ck) and ck not in ['name']:
+				#conflicts.append(ck)
+			#else:
+			em.setnodeattr(parent, ck, cv)
+		#print "DEBUG: conflicts are: ", conflicts
 
-		print 'TODO: what about the childs children?'
 		# Hyperlinks..
 		#--------------
-		# 1. Find all hyperlinks pointing to child.
-
-		# Hyperlinks are:
-		# for the source:
-		# A MMAnchor in source MMNode  - stored in the attrdicts dict under 'anchorlist'
-		# A link which is a tuple ( src(uid, aid), dst(uid, aid), a, b, c, d, e)
-		#    stored in context.hyperlinks; which is an HLink
-		# Another MMAnchor in the target MMNode, just like the source.
-
-		# Just to make things simple, this has to go through the editmgr and
-		# there aren't direct object references between anything.
-
-		# The child anchors are migrated to the parent later.
-		# however, first, their uid's need to be updated.
-
-
-##		# 2. Change them to parent.
-##		for i in childanchors:
-##			# If the anchor is a source, the parent should have it.
-##			if len(hlinks.findsrclinks(i)) > 0:
-##				addtoparentlinks.append(i)
-##			else:
-##				for j in hlinks.finddstlinks(i):
-##					# We have an anchor pointing to the child node.
-##					# it needs to point to the parent.
-##					# j is an anchor.
-##					print "DEBUG: looking at: ", j
-##			# else, the anchor is a destination. The other end of the anchor needs to be redirected.
-			
-
-		# Find all the hyperlinks going to the child node.
-##		childanchors = MMAttrdefs.getattr(child, 'anchorlist')
-##		print "DEBUG: childanchors are: ", childanchors
-##		childlinks = []
 		parent_uid = parent.GetUID()
 		child_uid = child.GetUID() # only used for the assert.
-		print "DEBUG: child uid:", child_uid, "parent uid: ", parent_uid
-##		for a in childanchors:
-##			anchor_tuple = (child_uid, a.aid)
-##			childlinks = childlinks + self.root.context.hyperlinks.findalllinks(anchor_tuple, None)
-#		print "DEBUG: all childlinks: ", childlinks
-		print "DEBUG: all links: ", self.root.context.hyperlinks.links
-
 		links = []
 		# Copy the list..
 		for l in self.root.context.hyperlinks.links:
@@ -1871,7 +1796,6 @@ class HierarchyView(HierarchyViewDialog):
 		
 		# Re-align them to the parent node
 		for l in links:
-			print "DEBUG: l is now:", l
 			# l is a tuple that points to my anchors.
 			((suid, said), (duid, daid), d, t, s, p) = l
 			changed = 0
@@ -1886,42 +1810,27 @@ class HierarchyView(HierarchyViewDialog):
 				em.dellink(l)
 				em.addlink(((suid, said), (duid, daid), d, t, s, p))
 
+		child_type=child.type
+		child_children = child.children
 
 		# Lastly, delete the child node.
 		em.delnode(child)
 
-		assert len(parent.children) == 0
-		print "DEBUG: node type is: ", child_type
 		em.setnodetype(parent, child_type) # This cannot be done until the child has been deleted.
-		print "DEBUG: committing now (after merge)."
+		for c in child_children:
+			c.Extract()
+			em.addnode(parent, -1, c)
 
-		self.need_resize = 1
+		self.need_refresh = 1
 		em.commit()		# This does a redraw.
 		print "Done.. links are now:", self.root.context.hyperlinks.links
 
 
-
-##	def merge_child(self):
-##		print "DEBUG: merge child."
-##		if not self.selected_widget:
-##			self.popup_error("No selected node!")
-##			return
-##		if not isinstance(self.selected_widget, StructureWidgets.StructureObjWidget):
-##			self.popup_error("This node cannot have children.")
-##			return
-##		parent = self.selected_widget.node
-##		if len(parent.children) <> 1:
-##			self.popup_error("To merge a node it must have only one child!")
-##		child = parent.children[0]
-##		if child.children:
-##			self.popup_error("You can only merge a parent with it's child when the child has no children.")
-##		parent.merge_with_child()
-##		self.need_recalc = 1
-##		self.draw()
-
 	def find_events_to_node(self, node, current):
 		# /Recursively/ find all event pointing to node, starting from current.
+		# This returns a list of nodes that contain the events.
 		# Jack told me that iteration is a bad thing.
+		# This method (appears to) works.
 		assert isinstance(node, MMNode.MMNode)
 		assert isinstance(current, MMNode.MMNode)
 		return_me = []
@@ -1929,15 +1838,15 @@ class HierarchyView(HierarchyViewDialog):
 		beginlist = MMAttrdefs.getattr(current, 'beginlist')
 		for s in beginlist:
 			assert isinstance(s, MMNode.MMSyncArc)
-			if s.dstnode is node and not appended:
+			if s.srcnode is node and not appended:
 				appended = 1
-				return_me.append(node)
+				return_me.append(current)
 		endlist = MMAttrdefs.getattr(current, 'endlist')
 		for s in endlist:
 			assert isinstance(s, MMNode.MMSyncArc)
 			if s.dstnode is node and not appended:
 				appended = 1
-				return_me.append(node)
+				return_me.append(current)
 				
 		for c in current.children:
 			return_me = return_me + self.find_events_to_node(node, c)
