@@ -1030,7 +1030,7 @@ class DDWndLayer:
 		self._clipper = None
 		self._bgcolor = bgcolor
 
-	def	createDDLayer(self):
+	def	createDDLayer(self, w=0, h=0):
 		self._ddraw = ddraw.CreateDirectDraw()
 		self._ddraw.SetCooperativeLevel(self._wnd.GetSafeHwnd(), ddraw.DDSCL_NORMAL)
 
@@ -1043,9 +1043,10 @@ class DDWndLayer:
 		# size of back buffer
 		# for now we create it at the size of the screen
 		# to avoid resize manipulations
-		from __main__ import toplevel
-		w = toplevel._scr_width_pxl
-		h = toplevel._scr_height_pxl
+		if w==0 or h==0:
+			from __main__ import toplevel
+			w = toplevel._scr_width_pxl
+			h = toplevel._scr_height_pxl
 
 		# create back buffer 
 		# we draw everything on this surface and 
@@ -1108,6 +1109,9 @@ class DDWndLayer:
 
 	def getRGBBitCount(self):
 		return self._pxlfmt[0]
+
+	def getPixelFormat(self):
+		return self._pxlfmt
 
 	def getDrawBuffer(self):
 		if not self._ddraw: return None
@@ -1944,15 +1948,13 @@ class Viewport(Region):
 	def close(self):
 		if self._ctx is None:
 			return
-		self.updateMouseCursor()
-		self._ctx.update()
-		self._ctx.closeViewport(self)
-		self._ctx = None
 		for win in self._subwindows[:]:
 			win.close()
 		for dl in self._displists[:]:
 			dl.close()
 		del self._topwindow
+		self._ctx.closeViewport(self)
+		self._ctx = None
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
 		return Region(self, coordinates, transparent, z, units, bgcolor)
@@ -1975,18 +1977,17 @@ class Viewport(Region):
 	def getDrawBuffer(self):
 		return self._ctx.getDrawBuffer()
 
+	def getPixelFormat(self):
+		return self._ctx.getPixelFormat()
+
 	def getDirectDraw(self):
 		return self._ctx.getDirectDraw()
 
 	def getRGBBitCount(self):
 		return self._ctx.getRGBBitCount()
-
-	def beginExport(self):
-		self._ctx.beginExport()
-
-	def endExport(self):
-		self._ctx.endExport()
-
+		
+	def getContext(self):
+		return self._ctx
 	# 
 	# Painting section
 	# 
@@ -2185,7 +2186,6 @@ class DrawContext:
 		self._selmode = SM_NONE
 		self._ixDragHandle = 0
 		self._capture = None
-
 
 	#
 	# Create new objects support
