@@ -250,6 +250,11 @@ class Wrapper: # Base class -- common operations
 	def parsevalue(self, name, str):
 		return MMAttrdefs.parsevalue(name, str, self.context)
 	def canhideproperties(self):
+		if not features.ADVANCED_PROPERTIES in features.feature_set:
+			# Returning 0 here disables the "advanced" toggle.
+			# We've taken care elsewhere that in this case we don't
+			# show everything but in stead we show only non-advanced.
+			return 0
 		return 1
 	def canfollowselection(self):
 		return 0
@@ -1313,7 +1318,9 @@ from AttrEditDialog import AttrEditorDialog, AttrEditorDialogField
 
 class AttrEditor(AttrEditorDialog):
 	def __init__(self, wrapper, new = 0, initattr = None):
-		if wrapper.canhideproperties():
+		if not features.ADVANCED_PROPERTIES in features.feature_set:
+			self.show_all_attributes = 0
+		elif wrapper.canhideproperties():
 			import settings
 			self.show_all_attributes = settings.get('show_all_attributes')
 		else:
@@ -1735,17 +1742,21 @@ class AttrEditorField(AttrEditorDialogField):
 	def mustshow(self):
 		# Return true if we should show this attribute
 		advflags = self.attrdef[6]
+		can_show_advanced = \
+			features.ADVANCED_PROPERTIES in features.feature_set and \
+			self.attreditor.show_all_attributes
+		can_show_template = can_show_advanced and \
+			features.CREATE_TEMPLATES in features.feature_set and \
+			settings.get('enable_template')
 		if (advflags & flags.FLAG_TEMPLATE):
 			# Only show if both "show all" and "template"
 			# are enabled
-			if self.attreditor.show_all_attributes and \
-				features.CREATE_TEMPLATES in features.feature_set and \
-				settings.get('enable_template'):
+			if can_show_template:
 				return 1
 			return 0
 		elif advflags & flags.FLAG_ADVANCED:
 			# Only show is "advanced" is enabled
-			if self.attreditor.show_all_attributes:
+			if can_show_advanced:
 				return 1
 			return 0
 		# The rest we always show
