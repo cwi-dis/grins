@@ -149,8 +149,10 @@ class NodeInfo(NodeInfoDialog):
 ##			em.setnodeattr(n, 'style', self.styles_list[:])
 ##			self.ch_styles_list = 0
 		if self.ch_name():
-			self.name = self.getname()
-			em.setnodeattr(n, 'name', self.name)
+			self.name = name = self.getname()
+			if name == '':
+				name = None
+			em.setnodeattr(n, 'name', name)
 		if self.ch_channelname:
 			em.setnodeattr(n, 'channel', self.channelname)
 			self.ch_channelname = 0
