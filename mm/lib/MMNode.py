@@ -1140,7 +1140,7 @@ class MMNode:
 			self.gensr = self.gensr_bag
 		elif type == 'alt':
 			self.gensr = self.gensr_alt
-		elif type in ('seq', 'par'):
+		elif type in ('seq', 'par', 'excl'):
 			self.gensr = self.gensr_interior
 		else:
 			raise CheckError, 'MMNode: unknown type %s' % self.type
@@ -1200,6 +1200,11 @@ class MMNode:
 					self.wtd_children.append(c)
 					c.PruneTree(seeknode)
 					c.force_switch_choice = 1
+		elif self.type == 'excl':
+			for c in self.children:
+				if c.IsAncestorOf(seeknode):
+					self.wtd_children.append(c)
+					c.PruneTree(seeknode)
 		else:
 			raise CheckError, 'Cannot PruneTree() on nodes of this type %s' % self.type
 	#
@@ -1225,19 +1230,6 @@ class MMNode:
 ##			for c in self.wtd_children:
 ##				c.EndPruneTree()
 ##			del self.wtd_children
-
-#	def gensr(self):
-#		if self.type in ('imm', 'ext'):
-#			return self.gensr_leaf(), []
-#		elif self.type == 'bag':
-#			return self.gensr_bag(), []
-#		elif self.type == 'seq':
-#			rv = self.gensr_seq(), self.wtd_children
-#			return rv
-#		elif self.type == 'par':
-#			rv = self.gensr_par(), self.wtd_children
-#			return rv
-#		raise 'Cannot gensr() for nodes of this type', self.type
 
 	#
 	# Generate schedrecords for leaf nodes.
@@ -1330,12 +1322,24 @@ class MMNode:
 			  ([(SCHED_STOP, self)], []),
 			  ([(SCHED_STOPPING, self)], [(SCHED_DONE, self)] + out1),
 			  ([(TERMINATE, self)], [])]
+		endlist = MMAttrdefs.getattr(self, 'endlist')
+		for arc in endlist:
+			if arc.srcnode is None or arc.srcnode is self:
+				refnode = self.looping_body_self or self
+			else:
+				refnode = arc.srcnode
+			refnode.sched_children.append(arc)
 		if in1:
 			# wait for sync arcs
 			srlist.append((in1, final))
 		elif duration > 0:
 			# wait for duration
 			actions.append((SYNC, (duration, self)))
+			srlist.append(([(SYNC_DONE, self)], []))
+		elif duration < 0 or endlist:
+			# indefinite duration or end sync arcs
+			# wait for something that isn't going to happen
+			# i.e., wait until terminated
 			srlist.append(([(SYNC_DONE, self)], final))
 		else:
 			# don't wait
@@ -1363,6 +1367,13 @@ class MMNode:
 		out0, out1 = self.sync_to
 		srlist = []
 		duration = MMAttrdefs.getattr(self, 'duration')
+		endlist = MMAttrdefs.getattr(self, 'endlist')
+		for arc in endlist:
+			if arc.srcnode is None or arc.srcnode is self:
+				refnode = self.looping_body_self or self
+			else:
+				refnode = arc.srcnode
+			refnode.sched_children.append(arc)
 		if duration > 0:
 			# if duration set, we must trigger a timeout
 			# and we must catch the timeout to terminate
@@ -1380,6 +1391,11 @@ class MMNode:
 		tlist.append((TERMINATE, selected_child))
 		last_actions = actions
 		actions = [(SCHED_DONE, self)]
+		if duration < 0 or endlist:
+			# indefinite duration or end sync arcs
+			# wait for something that isn't going to happen
+			# i.e., wait until terminated
+			prereqs.append((SYNC_DONE, self))
 		srlist.append((prereqs, [(SCHED_STOPPING, self)]))
 		srlist.append(([(SCHED_STOPPING, self)], actions))
 		srlist.append(([(SCHED_STOP, self)],
@@ -1401,15 +1417,37 @@ class MMNode:
 			return self.gensr_empty()
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
-		result = [([(SCHED, self)] + in0,  [(BAG_START, self)] + out0),
-			  ([(BAG_DONE, self)],     [(SCHED_STOPPING, self)]),
-			  ([(SCHED_STOPPING, self)],[(SCHED_DONE,self)] + out1),
+		duration = MMAttrdefs.getattr(self, 'duration')
+		endlist = MMAttrdefs.getattr(self, 'endlist')
+		for arc in endlist:
+			if arc.srcnode is None or arc.srcnode is self:
+				refnode = self.looping_body_self or self
+			else:
+				refnode = arc.srcnode
+			refnode.sched_children.append(arc)
+		srlist = [([(SCHED_STOPPING, self)],[(SCHED_DONE,self)] + out1),
 			  ([(SCHED_STOP, self)],   [(BAG_STOP, self)]),
 			  ([(TERMINATE, self)],    [])]
+		prereqs = [(BAG_DONE, self)]
+		if duration > 0:
+			# if duration set, we must trigger a timeout
+			# and we must catch the timeout to terminate
+			# the node
+			out0 = out0 + [(SYNC, (duration, self))]
+			srlist.append(([(SYNC_DONE, self)],
+				       [(TERMINATE, self)]))
+		elif duration < 0 or endlist:
+			# indefinite duration or end sync arcs
+			# wait for something that isn't going to happen
+			# i.e., wait until terminated
+			prereqs.append((SYNC_DONE, self))
+		srlist.append(([(SCHED, self)] + in0,
+			       [(BAG_START, self)] + out0))
+		srlist.append((prereqs, [(SCHED_STOPPING, self)]))
 		for ev in in1:
-			result.append(([ev], [(TERMINATE, self)]))
+			srlist.append(([ev], [(TERMINATE, self)]))
 		srdict = {}
-		for events, actions in result:
+		for events, actions in srlist:
 			action = [len(events), actions]
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
@@ -1433,24 +1471,9 @@ class MMNode:
 		#
 		# If the node is empty there is very little to do.
 		#
-		wtd_children = []
-		for c in self.wtd_children:
-			skip = 0
-			for arc in MMAttrdefs.getattr(c, 'beginlist'):
-				if arc.event in ('begin', 'end') and \
-				   arc.marker is None and \
-				   arc.delay is not None:
-					skip = 0
-					break
-				skip = 1
-			if skip:
-				continue
-			wtd_children.append(c)
-		if not wtd_children:
-			return self.gensr_empty()
 		is_realpix = 0
-		if self.type == 'par':
-			gensr_body = self.gensr_body_par
+		if self.type == 'par' or self.type == 'excl':
+			gensr_body = self.gensr_body_parexcl
 		elif self._is_realpix_with_captions():
 			gensr_body = self.gensr_body_realpix
 			is_realpix = 1
@@ -1478,6 +1501,14 @@ class MMNode:
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
 		
+		endlist = MMAttrdefs.getattr(self, 'endlist')
+		for arc in endlist:
+			if arc.srcnode is None or arc.srcnode is self:
+				refnode = self.looping_body_self or self
+			else:
+				refnode = arc.srcnode
+			refnode.sched_children.append(arc)
+
 		if is_realpix:
 			duration = 0
 		else:
@@ -1487,7 +1518,7 @@ class MMNode:
 			# head to tail.
 			out0 = out0[:] + [(SYNC, (duration, self))]
 			in1 = in1[:] + [(SYNC_DONE, self)]
-		elif duration < 0:
+		elif duration < 0 or endlist:
 			# Infinite duration, simulate with SYNC_DONE event
 			# for which there is no SYNC action
 			in1 = in1[:] + [(SYNC_DONE, self)]
@@ -1522,8 +1553,7 @@ class MMNode:
 			       srdict = gensr_envelope(gensr_body, loopcount,
 						       sched_actions_arg,
 						       scheddone_actions_arg,
-						       terminate_events_arg,
-						       wtd_children)
+						       terminate_events_arg)
 		if not looping:
 			#
 			# Tie our start-events to the envelope/body
@@ -1558,15 +1588,14 @@ class MMNode:
 		return srdict
 
 	def gensr_envelope_nonloop(self, gensr_body, loopcount, sched_actions,
-				   scheddone_actions, terminate_events,
-				   wtd_children):
+				   scheddone_actions, terminate_events):
 		if loopcount != 1:
 			raise 'Looping nonlooping node!'
 		self.curloopcount = 0
 
 		sched_actions, schedstop_actions, srdict = \
 			       gensr_body(sched_actions, scheddone_actions,
-					  terminate_events, wtd_children)
+					  terminate_events)
 ##		for event in in1+[(TERMINATE, self)]:
 ##			srdict[event] = self.srdict
 ##			self.srdict[event] = [1, terminate_actions]
@@ -1574,7 +1603,7 @@ class MMNode:
 
 	def gensr_envelope_firstloop(self, gensr_body, loopcount,
 				     sched_actions, scheddone_actions,
-				     terminate_events, wtd_children):
+				     terminate_events):
 		srlist = []
 		terminate_actions = []
 		#
@@ -1610,7 +1639,6 @@ class MMNode:
 				    gensr_body(body_sched_actions,
 					       body_scheddone_actions,
 					       body_terminate_events,
-					       wtd_children,
 					       self.looping_body_self)
 
 		# When the loop has started we start the body
@@ -1670,7 +1698,7 @@ class MMNode:
 
 	def gensr_envelope_laterloop(self, gensr_body, loopcount,
 				     sched_actions, scheddone_actions,
-				     terminate_events, wtd_children):
+				     terminate_events):
 		srlist = []
 
 		body_sched_actions = []
@@ -1681,7 +1709,6 @@ class MMNode:
 				    gensr_body(body_sched_actions,
 					       body_scheddone_actions,
 					       body_terminate_events,
-					       wtd_children,
 					       self.looping_body_self)
 
 		# When the loop has started we start the body
@@ -1709,7 +1736,7 @@ class MMNode:
 		return [], [], srdict
 
 	def cleanup_sched(self, body = None):
-		if self.type != 'par':
+		if self.type != 'par' and self.type != 'excl':
 			return
 		if body is None:
 			if self.looping_body_self:
@@ -1735,9 +1762,16 @@ class MMNode:
 					else:
 						refnode = arc.srcnode
 					refnode.sched_children.remove(arc)
+			for arc in MMAttrdefs.getattr(child, 'endlist'):
+				if arc.srcnode is None or \
+				   arc.srcnode is self:
+					refnode = body
+				else:
+					refnode = arc.srcnode
+				refnode.sched_children.remove(arc)
 
-	def gensr_body_par(self, sched_actions, scheddone_actions,
-			   terminate_events, wtd_children, self_body=None):
+	def gensr_body_parexcl(self, sched_actions, scheddone_actions,
+			       terminate_events, self_body=None):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -1748,13 +1782,17 @@ class MMNode:
 			self_body = self
 
 		termtype = MMAttrdefs.getattr(self, 'terminator')
+		if self.type == 'par':
+			defbegin = 0.0
+		else:
+			defbegin = None
 
 		for child in self.wtd_children:
 			chname = MMAttrdefs.getattr(child, 'name')
 			beginlist = MMAttrdefs.getattr(child, 'beginlist')
 			if not beginlist:
-				self_body.sched_children.append(MMSyncArc(child, 'begin', event = 'begin', delay = 0.0))
-				schedule = 1
+				self_body.sched_children.append(MMSyncArc(child, 'begin', event = 'begin', delay = defbegin))
+				schedule = defbegin is not None
 			else:
 				schedule = 0
 				for arc in beginlist:
@@ -1806,7 +1844,7 @@ class MMNode:
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_body_seq(self, sched_actions, scheddone_actions,
-			   terminate_events, wtd_children, self_body=None):
+			   terminate_events, self_body=None):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -1816,7 +1854,7 @@ class MMNode:
 
 		previous_done_events = []
 		previous_stop_actions = []
-		for ch in wtd_children:
+		for ch in self.wtd_children:
 			# Link previous child to this one
 			if previous_done_events:
 				srlist.append(
@@ -1859,7 +1897,7 @@ class MMNode:
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_body_realpix(self, sched_actions, scheddone_actions,
-			       terminate_events, wtd_children, self_body=None):
+			       terminate_events, self_body=None):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -1910,7 +1948,7 @@ class MMNode:
 				srdict[event] = self.srdict # or just self?
 		return sched_actions, schedstop_actions, srdict
 		
-	def gensr_child_par(self, child):
+	def gensr_child(self, child):
 		srdict = child.gensr()
 		body = self.looping_body_self or self
 		termtype = MMAttrdefs.getattr(self, 'terminator')
@@ -1921,7 +1959,7 @@ class MMNode:
 				if not val:
 					# I think this can't happen
 					continue
-				if key[0] != SCHED_DONE:
+				if key[0] == TERMINATE:
 					# we're not interested in this event
 					continue
 				num, srlist = val
@@ -1937,7 +1975,11 @@ class MMNode:
 				# if found, stop searching
 				break
 			else:
-				print 'gensr_child_par: no SCHED_DONE\'s found'
+				print 'gensr_child: no SCHED_DONE\'s found'
+				srlist = [(SCHED_STOPPING, body)]
+				val = [1, srlist]
+				self.srdict[(SCHED_DONE, child)] = val
+				srdict[(SCHED_DONE, child)] = self.srdict
 		# add child to list of children to terminate
 		numsrlist = self.srdict[(TERMINATE, body)]
 		srlist = numsrlist[1]
@@ -2052,7 +2094,7 @@ class MMNode:
 				print 'GetArcList: skipping syncarc with deleted source'
 				continue
 			synctolist.append((n1, s1, self, s2, delay))
-		if self.GetType() in ('seq', 'par'):
+		if self.GetType() in ('seq', 'par', 'excl'):
 			for c in self.wtd_children:
 				synctolist = synctolist + c.GetArcList()
 		elif self.GetType() == 'alt':

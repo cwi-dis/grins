@@ -297,12 +297,19 @@ class SchedulerContext:
 			# node is playing, must terminate it first
 			if debugevents: print 'terminating node'
 			self.parent.do_terminate(self, node)
+		elif pnode.type == 'excl':
+			# parent is excl, must terminate running child first
+			# XXX must implement pause
+			# XXX musr implement priority class
+			if debugevents: print 'terminating siblings'
+			for c in pnode.children:
+				self.parent.do_terminate(self, c)
 		# we must start the node, but how?
 		if debugevents: print 'starting node'
-		srdict = pnode.gensr_child_par(node)
+		srdict = pnode.gensr_child(node)
 		self.srdict.update(srdict)
-		self.parent.event(self, (SR.SCHED, node))
 		if debugevents: self.dump()
+		self.parent.event(self, (SR.SCHED, node))
 
 	def queuesrlist(self, srlist):
 		for sr in srlist:
@@ -644,11 +651,10 @@ class Scheduler(scheduler):
 		#
 		return []
 
-	def sched_arcs(self, sctx, node):
-		if debugevents: print 'sched_arcs',`node`
-		node.playing = MMStates.PLAYING
+	def sched_arcs(self, sctx, node, event):
+		if debugevents: print 'sched_arcs',`node`,event
 		for arc in node.sched_children:
-			if arc.event == 'begin' and \
+			if arc.event == event and \
 			   arc.marker is None and \
 			   arc.delay is not None:
 				self.enter(self.delay, 0, sctx.trigger, (arc,))
@@ -675,12 +681,14 @@ class Scheduler(scheduler):
 			self.do_terminate(sctx, arg)
 		elif action == SR.LOOPSTART:
 			self.do_loopstart(sctx, arg)
-			self.sched_arcs(sctx, arg.looping_body_self)
+			arg.playing = MMStates.PLAYING
+			self.sched_arcs(sctx, arg.looping_body_self, 'begin')
 		elif action == SR.LOOPEND:
 			self.do_loopend(sctx, arg)
 		elif action == SR.LOOPRESTART:
 			self.do_looprestart(sctx, arg)
-			self.sched_arcs(sctx, arg.looping_body_self)
+			arg.playing = MMStates.PLAYING
+			self.sched_arcs(sctx, arg.looping_body_self, 'begin')
 		else:
 			if action == SR.SCHED_STOPPING and \
 			   (arg.GetType() in interiortypes or arg.realpix_body or arg.caption_body):
@@ -689,8 +697,10 @@ class Scheduler(scheduler):
 				arg.playing = MMStates.PLAYED
 				for ch in arg.children:
 					ch.playing = MMStates.IDLE
+				self.sched_arcs(sctx, arg, 'end')
 			elif action == SR.SCHED_START:
-				self.sched_arcs(sctx, arg)
+				arg.playing = MMStates.PLAYING
+				self.sched_arcs(sctx, arg, 'begin')
 			elif action == SR.SCHED_STOP:
 				if debugevents: print 'cleanup',`arg`
 				arg.cleanup_sched()

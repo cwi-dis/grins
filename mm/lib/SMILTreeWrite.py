@@ -427,7 +427,7 @@ def getsyncarc(writer, node, isend):
 	index = siblings.index(node)
 	if srcside == 0 and \
 	   (srcuid == parent.GetUID() and
-	    (ptype == 'par' or (ptype == 'seq' and index == 0))) or \
+	    (ptype == 'par' or (ptype == 'seq' and index == 0) or ptype == 'excl')) or \
 	   (srcside and ptype == 'seq' and index > 0 and
 	    srcuid == siblings[index-1].GetUID()):
 		# sync arc from parent/previous node
@@ -471,7 +471,7 @@ def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
 	while x is not a:
 		p = x.GetParent()
 		t = p.GetType()
-		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)):
+		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)) and t != 'excl':
 			print '** Out of scope syncarc to',\
 			      node.GetRawAttrDef('name', '<unnamed>'),\
 			      node.GetUID()
@@ -488,7 +488,7 @@ def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
 	while x is not a:
 		p = x.GetParent()
 		t = p.GetType()
-		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)):
+		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)) and t != 'excl':
 			print '** Out of scope syncarc to',\
 			      node.GetRawAttrDef('name', '<unnamed>'),\
 			      node.GetUID()
