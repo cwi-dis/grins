@@ -2118,9 +2118,12 @@ class ChannelWindow(Channel):
 		out_trans = self.gettransition(node, 'transOut')
 		if out_trans <> None:
 			outtransdur = out_trans.get('dur', 1.0)
-			outtranstime = node.calcendfreezetime()-outtransdur
-			self.__out_trans_qid = self._scheduler.enterabs(outtranstime, 0,
-					  self.schedule_out_trans, (out_trans, outtranstime))
+			outtranstime = node.calcendfreezetime()
+			# don't schedule out transition if time unresolved
+			if outtranstime is not None and outtranstime >= 0:
+				outtranstime = outtranstime-outtransdur
+				self.__out_trans_qid = self._scheduler.enterabs(outtranstime, 0,
+					self.schedule_out_trans, (out_trans, outtranstime))
 		if in_trans <> None and self.window:
 			otherwindow = self._find_multiregion_transition(in_trans, node.start_time)
 			if otherwindow:
