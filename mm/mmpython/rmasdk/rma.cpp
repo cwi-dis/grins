@@ -2,7 +2,7 @@
 #include "PyCppApi.h"
 
 static char moduleName[] = "rma";
-static char errorName[] =  "rma";
+static char errorName[] =  "rma error";
 PyObject *module_error;
 
 // Objects served by this module
