@@ -57,6 +57,28 @@ ui_dc_detach(PyObject *self, PyObject *args)
 	return Py_BuildValue("i",hdc);
 }
 
+static PyObject *
+ui_dc_paint_rgn(PyObject *self, PyObject *args)
+{
+	CDC *pDC = ui_dc_object::GetDC(self);
+	if (!pDC)return NULL;
+
+	PyObject *objRgn = Py_None;
+	if (!PyArg_ParseTuple(args,"O:PaintRgn",&objRgn))
+		return NULL;
+
+	CRgn *pRgn = PyCRgn::GetRgn(objRgn);
+	if (!pRgn) return NULL;
+
+
+	GUI_BGN_SAVE;
+	BOOL r=pDC->PaintRgn(pRgn);
+    GUI_END_SAVE;
+
+	return Py_BuildValue("i",r);
+}
+
+
 /*
 // @mfcproto virtual int IntersectClipRect( LPCRECT lpRect );
 // @pymethod |PyCDC|IntersectClipRect|Creates a new clipping region by forming the intersection of the current region and the rectangle specified
@@ -329,6 +351,7 @@ ui_dc_stretch_blt (PyObject *self, PyObject *args)
 #define DEF_NEW_PY_METHODS \
 	{"FrameRectFromHandle", ui_dc_framerect_from_handle, 1},\
 	{"SelectObjectFromHandle",	ui_dc_select_object_from_handle,1},\
+	{"PaintRgn",ui_dc_paint_rgn,1},\
 	{"Detach",	ui_dc_detach,1},
 
 /*	{"SetPolyFillMode",     ui_dc_set_poly_fill_mode, 1},\
