@@ -17,10 +17,10 @@ class Channel():
 	# parameters out of the attribute dictionary each time it
 	# is reset, so changes made while it was dormant are noted.
 	#
-	def init(self, (name, attrdict, player)):
+	def init(self, (name, attrdict, queue)):
 		self.name = name
 		self.attrdict = attrdict
-		self.player = player
+		self.queue = queue
 		self.qid = None
 		return self
 	#
@@ -43,7 +43,7 @@ class Channel():
 	#
 	def play(self, (node, callback, arg)):
 		secs = self.getduration(node)
-		self.qid = self.player.enter(secs, 0, self.done, \
+		self.qid = self.queue.enter(secs, 0, self.done, \
 							(callback, arg))
 	#
 	# Function called when an even't time is up.
@@ -63,7 +63,7 @@ class Channel():
 	#
 	def stop(self):
 		if self.qid <> None:
-			self.player.cancel(self.qid)
+			self.queue.cancel(self.qid)
 			self.qid = None
 	#
 	# Reset the channel's state.
