@@ -4,8 +4,18 @@ import string
 import sys
 
 FEATURES={
-	"editor": 1,	# Synonym
-	"light":2,
+	"editor": 0x01,	# Synonym
+	"light":0x02,
+	"pro": 0x04,
+
+	# platform bits. The names are sys.platform values.
+	# Multiple names mapping to 1 bit is ok.
+	"win32": 0x08,
+	"mac": 0x10,
+	"irix6": 0x20,
+	"sunos5": 0x40,	# untested
+	"linux": 0x80,	# untested
+	"ALLPLATFORMS": 0xf8,
 
 }
 
@@ -42,6 +52,9 @@ class License:
 				break
 		else:
 			raise Error, "License not valid for this program"
+
+		if not self.have(sys.platform):
+			raise Error, "License not valid for this OS/platform"
 			
 		self.msg = ""
 		if type(self.__moredays) == type(0):
