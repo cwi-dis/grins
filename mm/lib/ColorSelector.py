@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Module ColorSelector -- a modal dialog using FORMS and GL (and glwindow).
 # Interface:
 #	import ColorSelector
