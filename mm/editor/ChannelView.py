@@ -117,7 +117,7 @@ class ChannelView(ViewDialog):
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
-		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1)
+		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, canvassize = (w, h))
 		if self.waiting:
 			self.window.setcursor('watch')
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
@@ -225,6 +225,9 @@ class ChannelView(ViewDialog):
 		self.reshape()
 		self.draw()
 		
+	def canvascall(self, code):
+		self.window.setcanvassize(code)
+
 	def redraw(self):
 		if self.new_displist:
 			self.new_displist.close()
@@ -788,6 +791,13 @@ class GO:
 
 		self.commandlist = c = []
 ##		c.append('h', 'Help...', (self.helpcall, ()))
+		c.append('', 'Canvas', [
+			('', 'Double height',
+			 (self.canvascall, (windowinterface.DOUBLE_HEIGHT,))),
+			('', 'Double width',
+			 (self.canvascall, (windowinterface.DOUBLE_WIDTH,))),
+			('', 'Reset',
+			 (self.canvascall, (windowinterface.RESET_CANVAS,)))])
 		c.append('n', 'New channel...',  (self.newchannelcall, ()))
 		c.append('N', 'Next mini-document', (self.nextminicall, ()))
 		c.append('P', 'Previous mini-document', (self.prevminicall, ()))
@@ -868,6 +878,9 @@ class GO:
 ## 	def helpcall(self):
 ## 		import Help
 ## 		Help.givehelp('Channel_view')
+
+	def canvascall(self, code):
+		self.mother.canvascall(code)
 
 	def newchannelcall(self):
 		self.mother.newchannel(self.newchannelindex())
