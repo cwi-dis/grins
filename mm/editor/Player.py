@@ -12,6 +12,7 @@ import MMAttrdefs
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 import Timing
+from MMNode import alltypes, leaftypes, interiortypes
 
 
 # The player algorithm treats the head and tail (begin and end) sides
@@ -541,7 +542,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 			return # Wait for other sync arcs
 		if x < 0:
 			raise RuntimeError, 'counter below zero!?!?'
-		if node.GetType() not in ('seq', 'par'):
+		if node.GetType() not in interiortypes:
 			if side = HD:
 				if doit:
 					chan = self.getchannel(node)
