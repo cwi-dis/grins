@@ -430,7 +430,7 @@ class CORRECTLOCALTIMESCALE(_CommandBase):
 class MERGE_PARENT(_CommandBase):
 	help = 'Merge this node and it\'s parent'
 class MERGE_CHILD(_CommandBase):
-	help = 'Merge this node and it\'s child'
+	help = 'Delete this item but keep its contents'
 
 #
 # Channel view commands
