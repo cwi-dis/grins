@@ -50,10 +50,10 @@ class ShellChannel(Channel):
 			import time
 			try:
 				os.kill(self.pid, 15)
-				time.millisleep(300)
+				time.sleep(0.300)
 				pid, sts = os.waitpid(self.pid, 1)
 				if pid == 0:
-					time.millisleep(700)
+					time.sleep(0.700)
 					pid, sts = os.waitpid(self.pid, 1)
 				if pid == 0:
 					os.kill(self.pid, 9)
