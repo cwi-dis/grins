@@ -168,6 +168,9 @@ class SMILParser(xmllib.XMLParser):
 			try:
 				file = urllib.urlretrieve(file)[0]
 				rdr = img.reader(None, file)
+				width = rdr.width
+				height = rdr.height
+				del rdr
 			except:
 				pass
 			else:
@@ -178,10 +181,38 @@ class SMILParser(xmllib.XMLParser):
 						{'minwidth': 0, 'minheight': 0,
 						 'left': 0, 'top': 0,
 						 'width': 0, 'height': 0}
-				if ch['minwidth'] < rdr.width:
-					ch['minwidth'] = rdr.width
-				if ch['minheight'] < rdr.height:
-					ch['minheight'] = rdr.height
+				node.__size = width, height
+				if ch['minwidth'] < width:
+					ch['minwidth'] = width
+				if ch['minheight'] < height:
+					ch['minheight'] = height
+		elif mediatype == 'video':
+			import urllib
+			file = attributes['href']
+			try:
+				import mv
+				file = urllib.urlretrieve(file)[0]
+				movie = mv.OpenFile(file,
+						    mv.MV_MPEG1_PRESCAN_OFF)
+				track = movie.FindTrackByMedium(mv.DM_IMAGE)
+				width = track.GetImageWidth()
+				height = track.GetImageHeight()
+				del movie, track
+			except:
+				pass
+			else:
+				node.__size = width, height
+				if self.__channels.has_key(channel):
+					ch = self.__channels[channel]
+				else:
+					self.__channels[channel] = ch = \
+						{'minwidth': 0, 'minheight': 0,
+						 'left': 0, 'top': 0,
+						 'width': 0, 'height': 0}
+				if ch['minwidth'] < width:
+					ch['minwidth'] = width
+				if ch['minheight'] < height:
+					ch['minheight'] = height
 		if self.__in_a:
 			# deal with hyperlink
 			href, ltype, id = self.__in_a
@@ -324,16 +355,26 @@ class SMILParser(xmllib.XMLParser):
 					x = float(x) / self.__width
 				if type(w) is type(0):
 					if w == 0:
-						# rest of window
-						w = 1.0 - x
+						try:
+							width = node.__size[0]
+						except AttributeError:
+							# rest of window
+							w = 1.0 - x
+						else:
+							w = float(width) / self.__width
 					else:
 						w = float(w) / self.__width
 				if type(y) is type(0):
 					y = float(y) / self.__height
 				if type(h) is type(0):
 					if h == 0:
-						# rest of window
-						h = 1.0 - y
+						try:
+							height = node.__size[1]
+						except AttributeError:
+							# rest of window
+							h = 1.0 - y
+						else:
+							h = float(height) / self.__height
 					else:
 						h = float(h) / self.__height
 				ch['base_winoff'] = x, y, w, h
@@ -375,7 +416,9 @@ class SMILParser(xmllib.XMLParser):
 			else:
 				import urllib
 				href, tag = urllib.splittag(href)
-				hlinks.addlink((src, (href, tag), DIR_1TO2, ltype))
+				if '/' not in href:
+					href = href + '/1'
+				hlinks.addlink((src, (href, tag or ''), DIR_1TO2, ltype))
 
 	# methods for start and end tags
 
@@ -885,10 +928,8 @@ def _parsecounter(value, maybe_relative):
 			raise error, 'internal error'
 		return offset
 	if maybe_relative:
-		if value == 'begin':
-			return 'begin'
-		if value == 'end':
-			return 'end'
+		if value in ('begin', 'end', 'ready'):
+			return value
 	raise error, 'bogus presentation counter'
 
 id = re.compile('id\((?P<name>' + xmllib._Name + ')\)'
@@ -907,7 +948,9 @@ def _parsetime(xpointer):
 		if counter == 'begin':
 			counter = 0
 		elif counter == 'end':
-			counter = -1		# special value
+			counter = -1	# special value
+		elif counter == 'ready':
+			counter = 0	# treat "ready" as "begin" for now
 		else:
 			raise error, 'bogus presentation counter'
 	else:
