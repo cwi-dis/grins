@@ -10,6 +10,7 @@ structure_name_size = settings.get('structure_name_size')
 show_links = settings.get('show_links')
 
 vertical_icons = settings.get('vertical_icons')
+vertical_spread = settings.get('vertical_spread')
 
 # Fonts used 
 f_title = windowinterface.findfont('Helvetica', 10)

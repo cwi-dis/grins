@@ -1058,7 +1058,10 @@ class StructureObjWidget(MMNodeWidget):
 			my_r = my_r - this_w - GAPSIZE
 
 		free_width = (my_r-my_l) - min_width
-		free_height = (my_b-my_t) - min_height
+		if vertical_spread:
+			free_height = (my_b-my_t) - min_height
+		else:
+			free_height = 0
 
 		if self.HORIZONTAL:
 			freewidth_per_child = free_width / max(1, len(self.children))
