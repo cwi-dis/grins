@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/" xmlns:rn="http://features.real.com/2001/SMIL20/Extensions">
+  <head>
+    <meta name="title" content="SMIL 2.0 320x240 Video with background music and image"/>
+    <meta name="generator" content="GRiNS Pro for SMIL 2.0, v2.2 win32 build 134"/>
+    <meta name="project_html_page" content="external_player.html"/>
+    <layout>
+      <root-layout id="Player-Window" backgroundColor="black" width="330" height="270" GRiNS:editBackground=" 192 192 192" GRiNS:showEditBackground="off"/>
+      <region id="audio" GRiNS:type="sound"/>
+      <region id="bkgd_image" width="330" height="270" GRiNS:type="image"/>
+      <region id="Video" left="7" width="320" top="7" height="240" z-index="1" GRiNS:type="video"/>
+    </layout>
+    <transition id="slideover" type="slideWipe"/>
+    <transition id="fade" type="fade"/>
+    <transition id="push" type="pushWipe"/>
+    <GRiNS:viewinfo view="structure" top="0" left="0" width="800" height="256"/>
+  </head>
+  <body GRiNS:hidden="true">
+    <par id="BroadbandVideoshow" GRiNS:project_default_region_image="Images" GRiNS:project_default_region_video="Video" GRiNS:project_default_region_sound="audio_1" GRiNS:project_default_region_text="Images" GRiNS:thumbnailIcon="T-icons/video_2_1A.bmp" GRiNS:thumbnailScale="false" GRiNS:showtime="bwstrip" GRiNS:timezoom="14">
+      <seq id="Videos" fillDefault="freeze" GRiNS:emptyIcon="T-icons/DropVideo.gif" GRiNS:emptyText="Drop 320x240 Video onto Icon" GRiNS:emptyColor="#dfdb9f" GRiNS:emptyDur="10s" GRiNS:nonEmptyIcon="T-icons/DropVideo.gif">
+      </seq>
+      <img id="BkgdImg" region="bkgd_image" fill="freeze" src="media/Back3S.gif"/>
+    </par>
+  </body>
+</smil>
