@@ -50,7 +50,7 @@ class _LayoutView2(GenFormView):
 		self._mmcontext = None
 		self._slider = None
 
-		self.__ctrlNames=n=('RegionX','RegionY','RegionW','RegionH','RegionZ','AnimateEnable','Fit')
+		self.__ctrlNames=n=('RegionX','RegionY','RegionW','RegionH','RegionZ','AnimateEnable','Fit', 'FitLabel')
 		self.__listeners = {}
 		
 		# save the current value.
@@ -73,6 +73,7 @@ class _LayoutView2(GenFormView):
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
 		self[n[i]]=components.CheckButton(self,grinsRC.IDC_ANIMATE_ENABLE); i=i+1
 		self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_FITV); i=i+1
+		self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_FITL); i=i+1
 			
 		# Initialize control objects whose command are activable as well from menu bar
 		self[ATTRIBUTES]=components.Button(self,usercmd2id(ATTRIBUTES))
@@ -244,6 +245,9 @@ class _LayoutView2(GenFormView):
 		self[ctrlName].settext(sValue)
 		value = self[ctrlName].gettext()
 		self.__values[ctrlName] = value
+
+	def setLabel(self, ctrlName, value):
+		self[ctrlName].settext(value)
 
 	def enable(self, ctrlName, bValue):
 		self[ctrlName].enable(bValue)
