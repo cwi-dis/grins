@@ -2502,8 +2502,9 @@ class MediaRegion(Region):
 
 	def importAttrdict(self):
 		Node.importAttrdict(self)
-		self._curattrdict['bgcolor'] = MMAttrdefs.getattr(self._nodeRef, 'bgcolor')
-		self._curattrdict['transparent'] = MMAttrdefs.getattr(self._nodeRef, 'transparent')
+#		self._curattrdict['bgcolor'] = MMAttrdefs.getattr(self._nodeRef, 'bgcolor')
+#		self._curattrdict['transparent'] = MMAttrdefs.getattr(self._nodeRef, 'transparent')
+		self._curattrdict['transparent'] = 1
 		
 		# get wingeom according to the subregion positionning
 		# note this step is not done during the parsing in order to maintains all constraint information
