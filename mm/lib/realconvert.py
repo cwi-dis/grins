@@ -523,7 +523,9 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		encoding = audio_fmt.getencoding()
 		if not encoding in ('linear-excess', 'linear-signed'):
 			has_audio = 0
-			windowinterface.showmessage('Converting video only: cannot handle %s audio\n(linear audio only)')
+			engine.SetDoOutputMimeType(producer.MIME_REALAUDIO, 0)
+			import windowinterface
+			windowinterface.showmessage('Converting video only: cannot handle %s audio\n(linear audio only)'%encoding)
 	if has_audio:
 		audio_props = audiopin.GetPinProperties()
 		audio_props.SetSampleRate(reader.GetAudioFrameRate())
@@ -546,16 +548,16 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	audio_time = video_time = 0
 	audio_data = video_data = None
 	if has_audio:
-		audio_data, xxxaudiotime = reader.ReadAudio(audio_inputsize_frames)
+		xxxaudiotime, audio_data = reader.ReadAudio(audio_inputsize_frames)
 	if not audio_data:
 		audio_done = 1
 	if has_video:
-		video_data, xxxvideotime = reader.ReadVideo()
+		xxxvideotime, video_data = reader.ReadVideo()
 	if not video_data:
 		video_done = 1
 	while not audio_done or not video_done:
 		if not audio_done:
-			next_audio_data, xxxaudiotime = reader.ReadAudio(audio_inputsize_frames)
+			xxxaudiotime, next_audio_data = reader.ReadAudio(audio_inputsize_frames)
 			if not next_audio_data:
 				audio_done = 1
 				audio_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
@@ -564,7 +566,7 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 			audio_time = audio_time + audio_frame_millisecs
 			audio_data = next_audio_data
 		if not video_done:
-			next_video_data, xxxvideotime = reader.ReadVideo()
+			xxxvideotime, next_video_data = reader.ReadVideo()
 			if not next_video_data:
 				video_done = 1
 				video_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
