@@ -38,7 +38,7 @@ class StyleEditor() = ViewDialog(), BasicDialog():
 			self.browser.add_browser_line(name)
 		#
 		x, y, w, h = 0, 250, 75, 39
-		self.addbutton = form.add_button(RETURN_BUTTON,x,y,w,h, 'Add')
+		self.addbutton = form.add_button(NORMAL_BUTTON,x,y,w,h, 'Add')
 		self.addbutton.set_call_back(self.add_callback, None)
 		#
 		x, y, w, h = 75, 250, 75, 39
@@ -48,7 +48,7 @@ class StyleEditor() = ViewDialog(), BasicDialog():
 		#
 		x, y, w, h = 150, 250, 75, 39
 		self.renamebutton = \
-			form.add_button(NORMAL_BUTTON,x,y,w,h, 'Rename')
+			form.add_button(RETURN_BUTTON,x,y,w,h, 'Rename')
 		self.renamebutton.set_call_back(self.rename_callback, None)
 		#
 		x, y, w, h = 225, 250, 75, 39
