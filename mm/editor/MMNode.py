@@ -397,7 +397,18 @@ class MMNode(MMNodeBase.MMNode):
 ##		self._updsummaries([name])
 
 	def Destroy(self):
+		print 'Destroy', self
 		if self.parent: raise CheckError, 'Destroy() non-root node'
+
+		# delete hyperlinks referring to anchors here
+		from AnchorDefs import A_ID
+		alist = MMAttrdefs.getattr(self, 'anchorlist')
+		hlinks = self.context.hyperlinks
+		for a in alist:
+			aid = (self.uid, a[A_ID])
+			for link in hlinks.findalllinks(aid, None):
+				hlinks.dellink(link)
+
 		self.context.forgetnode(self.uid)
 		for child in self.children:
 			child.parent = None
