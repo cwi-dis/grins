@@ -14,6 +14,9 @@ class AssetsViewDialog:
 ##			'New':(self.new_callback, ()),
 ##			'Edit':(self.edit_callback, ()),
 ##			'Delete':(self.delete_callback, ()),
+			'setview': self.setview_callback,
+			'select': self.select_callback,
+			'sort': self.sort_callback,
 			 }
 
 	def destroy(self):
@@ -45,12 +48,15 @@ class AssetsViewDialog:
 		self.__window.setItems(data)
 		self.__window.rebuildList()
 
+	def setviewbutton(self, which):
+		self.__window.setView(which)
+
 #### support win32 model
 	def createviewobj(self):
 		if self.__window: return
 		f=self.toplevel.window
 		w=f.newviewobj('aview_')
-##		w.set_cmddict(self.__callbacks)
+		w.set_cmddict(self.__callbacks)
 		self.__window = w
 
 	def assertwndcreated(self):
