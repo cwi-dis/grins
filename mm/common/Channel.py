@@ -94,6 +94,7 @@ class Channel:
 		channels.append(self)
 		if hasattr(ui, 'editmgr'):
 			ui.editmgr.register(self)
+		self._curvals = {}
 
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__, self._name)
@@ -128,6 +129,13 @@ class Channel:
 
 	def commit(self):
 		self._armed_node = None
+		if self._is_shown:
+			for key, (val, default) in self._curvals.items():
+				if self._attrdict.get(key, default) != val:
+					print 're-showing',`self`
+					self.hide()
+					self.show()
+					break
 
 	def transaction(self):
 		return 1
@@ -216,6 +224,7 @@ class Channel:
 		# First, check that there is a base_window attribute
 		# and that it isn't "undefined".
 		pname = self._attrdict.get('base_window', 'undefined')
+		self._curvals['base_window'] = (pname, 'undefined')
 		if pname == self._name:
 			pname = 'undefined'
 		pchan = None
@@ -235,6 +244,7 @@ class Channel:
 					' a base-window loop',
 					mtype = 'error')
 				pchan = None
+				pname = 'undefined'
 		if pchan:
 			# Finally, check that the base window is being shown.
 			pchan._subchannels.append(self)
@@ -280,6 +290,7 @@ class Channel:
 			chan.hide()
 			chan._want_shown = want_shown
 		self.do_hide()
+		self._curvals = {}
 		for chan in channels:
 			try:
 				chan._subchannels.remove(self)
@@ -1068,7 +1079,9 @@ class ChannelWindow(Channel):
 				menu.append('', 'unhighlight',
 					    (self.unhighlight, ()))
 			transparent = self._attrdict.get('transparent', 0)
+			self._curvals['transparent'] = (transparent, 0)
 			z = self._attrdict.get('z', 0)
+			self._curvals['z'] = (z, 0)
 			if self.want_default_colormap:
 				self.window = pchan.window.newcmwindow(pgeom,
 						transparent = transparent,
@@ -1112,6 +1125,8 @@ class ChannelWindow(Channel):
 			self.window.bgcolor(self._attrdict['bgcolor'])
 		if self._attrdict.has_key('fgcolor'):
 			self.window.fgcolor(self._attrdict['fgcolor'])
+		self._curvals['bgcolor'] = self._attrdict.get('bgcolor'), None
+		self._curvals['fgcolor'] = self._attrdict.get('fgcolor'), None
 		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
 		self.window.register(WMEVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(WMEVENTS.Mouse0Release, self.mouserelease,
@@ -1174,6 +1189,7 @@ class ChannelWindow(Channel):
 						(self._name, pchan._name),
 					self._box_callback)
 				return None
+			self._curvals['base_winoff'] = pgeom, None
 		self.create_window(pchan, pgeom)
 		return 1
 
