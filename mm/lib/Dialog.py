@@ -96,7 +96,7 @@ class BasicDialog() = (glwindow.glwindow)():
 		pass
 	#
 	def save_geometry(self):
-		pass
+		self.get_geometry() # This is needed for hide()
 
 
 class Dialog() = BasicDialog():
