@@ -1321,6 +1321,9 @@ class _DisplayList:
 		if old_fontinfo:
 			restorefontinfo(w._wid, old_fontinfo)
 		return oldx, oldy, maxx - oldx, newy - oldy + height - base
+		
+	def _optimize(self, ignore = []):
+		pass # XXXX What should this do?
 
 class _Button:
 	def __init__(self, dispobj, coordinates, z=0):
