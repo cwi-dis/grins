@@ -19,8 +19,8 @@ import math
 TAN_PI_DIV_3 = math.tan(math.pi/3)
 
 from TransitionBitBlit import BlitterClass, R1R2BlitterClass, R1R2OverlapBlitterClass, \
-	RlistR2OverlapBlitterClass, PolyR2OverlapBlitterClass, R1R2R3R4BlitterClass, \
-	FadeBlitterClass
+	RlistR2OverlapBlitterClass, PolyR2OverlapBlitterClass, PolylistR2OverlapBlitterClass, \
+	R1R2R3R4BlitterClass, FadeBlitterClass
 
 class TransitionClass:
 
@@ -111,6 +111,130 @@ class DiagonalWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 			(xcur+xwidth, y1),
 			(xcur, y1))
 		return poly, self.ltrb
+
+class MiscDiagonalWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	# Reveal the new image by two diagonals moving from the center out
+
+	def computeparameters(self, value):
+		x0, y0, x1, y1 = self.ltrb
+		width = (x1-x0)
+		height = (y1-y0)
+		xleft = x0 + value * width
+		xright = x1 - value * width
+		ytop = y0 + value * height
+		ybot = y1 - value * height
+		poly = (
+			(x0, ybot),
+			(x0, y1),
+			(xleft, y1),
+			(x1, ytop),
+			(x1, y0),
+			(xright, y0))
+		return poly, self.ltrb
+	
+class VeeWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	# Reveal the new image by sweeping a V shape down
+
+	def computeparameters(self, value):
+		x0, y0, x1, y1 = self.ltrb
+		xmid = (x0+x1)/2
+		width = (x1-x0)
+		height = (y1-y0)
+		if value <= 0.5:
+			xleft = int(xmid-value*width)
+			xright = int(xmid+value*width)
+			ybot = int(y0+value*height)
+			poly = (
+				(xleft, y0),
+				(xright, y0),
+				(xmid, ybot))
+		else:
+			ytop = int(y0+2*(value-0.5)*height)
+			ybot = ytop + height/2
+			poly = (
+				(x0, y0),
+				(x1, y0),
+				(x1, ytop),
+				(xmid, ybot),
+				(x0, ytop))
+		return poly, self.ltrb
+
+class BarnVeeWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	# Reveal the new image by sweeping a V shape outward
+	
+	def computeparameters(self, value):
+		x0, y0, x1, y1 = self.ltrb
+		xmid = (x0+x1)/2
+		width = (x1-x0)
+		height = (y1-y0)
+		xleft = int(x0 + 0.5*value*width)
+		xright = int(x1 - 0.5*value*width)
+		xmidleft = int(xmid - 0.5*value*width)
+		xmidright = int(xmid + 0.5*value*width)
+		ytop = int(y0 + value*height)
+		ybot = int(y1 - value*height)
+		poly = (
+			(x0, y0),
+			(xleft, y0),
+			(xmid, ybot),
+			(xright, y0),
+			(x1, y0),
+			(x1, ytop),
+			(xmidright, y1),
+			(xmidleft, y1),
+			(x0, ytop))
+		return poly, self.ltrb
+
+class DiagonalWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
+	# Reveal the new image by sweeping a diagonal divider line
+
+	def computeparameters(self, value):
+		x0, y0, x1, y1 = self.ltrb
+		xwidth = (x1-x0)
+		xmin = x0 - 2*xwidth
+		xcur = xmin + int(value*2*xwidth)
+		poly = (
+			(xcur, y0),
+			(xcur+2*xwidth, y0),
+			(xcur+xwidth, y1),
+			(xcur, y1))
+		return poly, self.ltrb
+
+class BowTieWipeTransition(TransitionClass, PolylistR2OverlapBlitterClass):
+	# Reveal the new image by sweeping bowtie
+
+	def computeparameters(self, value):
+		x0, y0, x1, y1 = self.ltrb
+		xmid = (x0+x1)/2
+		ymid = (y0+y1)/2
+		width = (x1-x0)
+		height = (y1-y0)
+		if value <= 0.5:
+			xleft = xmid - int(value*width)
+			xright = xmid + int(value*width)
+			ytop = y0 + int(value*height)
+			ybot = y1 - int(value*height)
+			poly1 = ((xleft, y0), (xright, y0), (xmid, ytop))
+			poly2 = ((xleft, y1), (xright, y1), (xmid, ybot))
+			return (poly1, poly2), self.ltrb
+		else:
+			value = value - 0.5
+			xleft = xmid - int(value*width)
+			xright = xmid + int(value*width)
+			ytop = y0 + int(value*height)
+			ybot = y1 - int(value*height)
+			poly = (
+				(x0, y0),
+				(x0, ytop),
+				(xleft, ymid),
+				(x0, ybot),
+				(x0, y1),
+				(x1, y1),
+				(x1, ybot),
+				(xright, ymid),
+				(x1, ytop),
+				(x1, y0))
+			return (poly,), self.ltrb
 
 class TriangleWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 	# Reveal the new image by a triangle growing from the center outward
@@ -497,10 +621,10 @@ TRANSITIONDICT = {
 	"fourBoxWipe" : FourBoxWipeTransition,
 	"barnDoorWipe" : BarnDoorWipeTransition,
 	"diagonalWipe" : DiagonalWipeTransition,
-#	"bowTieWipe" : BowTieWipeTransition,
-#	"miscDiagonalWipe" : MiscDiagonalWipeTransition,
-#	"veeWipe" : VeeWipeTransition,
-#	"barnVeeWipe" : BarnVeeWipeTransition,
+	"bowTieWipe" : BowTieWipeTransition,
+	"miscDiagonalWipe" : MiscDiagonalWipeTransition,
+	"veeWipe" : VeeWipeTransition,
+	"barnVeeWipe" : BarnVeeWipeTransition,
 	"miscShapeWipe" : MiscShapeWipeTransition,
 	"triangleWipe" : TriangleWipeTransition,
 #	"arrowHeadWipe" : ArrowHeadWipeTransition,
