@@ -182,56 +182,59 @@ class _Window(_CommonWindowMixin, mac_windowbase._Window):
 		mac_windowbase._Window.close(self)
 
 	def create_box(self, msg, callback, box = None):
-		import Xcursorfont
-		global _in_create_box
-		if _in_create_box:
-			_in_create_box._next_create_box.append((self, msg, callback, box))
-			return
-		if self.is_closed():
-			apply(callback, ())
-			return
-		_in_create_box = self
-		self.pop()
-		if msg:
-			msg = msg + '\n\n' + _rb_message
-		else:
-			msg = _rb_message
-		self._rb_dl = self._active_displist
-		if self._rb_dl:
-			d = self._rb_dl.clone()
-		else:
-			d = self.newdisplaylist()
-		self._rb_transparent = []
-		sw = self._subwindows[:]
-		sw.reverse()
-		r = Xlib.CreateRegion()
-		for win in sw:
-			if not win._transparent:
-				# should do this recursively...
-				self._rb_transparent.append(win)
-				win._transparent = 1
-				d.drawfbox(win._bgcolor, win._sizes)
-				apply(r.UnionRectWithRegion, win._rect) # XXXX
-		for win in sw:
-			b = win._sizes
-			if b != (0, 0, 1, 1):
-				d.drawbox(b)
-		self._rb_display = d.clone()
-		d.fgcolor((255, 0, 0))
-		if box:
-			d.drawbox(box)
-		if self._rb_transparent:
-			self._mkclip()
-			self._do_expose(r)
-			self._rb_reg = r
-		d.render()
-		self._rb_curdisp = d
-		self._rb_dialog = showmessage(
-			msg, mtype = 'message', grab = 0,
-			callback = (self._rb_done, ()),
-			cancelCallback = (self._rb_cancel, ()))
-		self._rb_callback = callback
-		raise 'not implemented'
+		showmessage("Channel coordinates unknown, set to full base window.\nChange in channel view")
+		if box == None:
+			box = (0, 0, 1, 1)
+		apply(callback, box)
+##		global _in_create_box
+##		if _in_create_box:
+##			_in_create_box._next_create_box.append((self, msg, callback, box))
+##			return
+##		if self.is_closed():
+##			apply(callback, ())
+##			return
+##		_in_create_box = self
+##		self.pop()
+##		if msg:
+##			msg = msg + '\n\n' + _rb_message
+##		else:
+##			msg = _rb_message
+##		self._rb_dl = self._active_displist
+##		if self._rb_dl:
+##			d = self._rb_dl.clone()
+##		else:
+##			d = self.newdisplaylist()
+##		self._rb_transparent = []
+##		sw = self._subwindows[:]
+##		sw.reverse()
+##		r = Xlib.CreateRegion()
+##		for win in sw:
+##			if not win._transparent:
+##				# should do this recursively...
+##				self._rb_transparent.append(win)
+##				win._transparent = 1
+##				d.drawfbox(win._bgcolor, win._sizes)
+##				apply(r.UnionRectWithRegion, win._rect) # XXXX
+##		for win in sw:
+##			b = win._sizes
+##			if b != (0, 0, 1, 1):
+##				d.drawbox(b)
+##		self._rb_display = d.clone()
+##		d.fgcolor((255, 0, 0))
+##		if box:
+##			d.drawbox(box)
+##		if self._rb_transparent:
+##			self._mkclip()
+##			self._do_expose(r)
+##			self._rb_reg = r
+##		d.render()
+##		self._rb_curdisp = d
+##		self._rb_dialog = showmessage(
+##			msg, mtype = 'message', grab = 0,
+##			callback = (self._rb_done, ()),
+##			cancelCallback = (self._rb_cancel, ()))
+##		self._rb_callback = callback
+##		raise 'not implemented'
 ##		form = self._form
 ##		form.AddEventHandler(X.ButtonPressMask, FALSE,
 ##				     self._start_rb, None)
