@@ -1068,6 +1068,10 @@ static PyObject* PyDC_BitBlt(PyDC *self, PyObject *args)
 	if(!PyArg_ParseTuple(args, "(ii)(ii)O|(ii)l", 
 		&nXDest,&nYDest,&nWidth,&nHeight,&obj,&nXSrc,&nYSrc,&dwRop))
 		return NULL;
+
+	if(nWidth<=0 || nHeight<=0)
+		return none();
+
 	HDC hdcSrc = (HDC)GetGdiObjHandle(obj);
 	BOOL res = BitBlt(self->m_hDC,nXDest,nYDest,nWidth,nHeight,hdcSrc,nXSrc,nYSrc,dwRop);
 	if(!res){
@@ -1089,6 +1093,10 @@ static PyObject* PyDC_StretchBlt(PyDC *self, PyObject *args)
 		&nXDest,&nYDest,&nWidthDest,&nHeightDest,&obj,
 		&nXSrc,&nYSrc,&nWidthSrc,&nHeightSrc,&dwRop))
 		return NULL;
+
+	if(nWidthDest<=0 || nHeightDest<=0 || nWidthSrc<=0 || nHeightSrc<=0)
+		return none();
+
 	HDC hdcSrc = (HDC)GetGdiObjHandle(obj);
 	BOOL res = StretchBlt(self->m_hDC,nXDest,nYDest,nWidthDest,nHeightDest,hdcSrc,nXSrc,nYSrc,nWidthSrc,nHeightSrc,dwRop);
 	if(!res){

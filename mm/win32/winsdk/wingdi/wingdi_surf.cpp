@@ -65,6 +65,13 @@ PyObject* Wingdi_CreateDIBSurface(PyObject *self, PyObject *args)
 	int r=0, g=0, b=0;
 	if (!PyArg_ParseTuple(args, "Oii|(iii)", &obj, &width, &height, &r, &g, &b))
 		return NULL;
+	
+	if(width<=0 || height<=0)
+		{
+		seterror("CreateDIBSection", "invalid parameters (zero width or height)");
+		return NULL;
+		}
+
 	HDC hDC = (HDC)GetGdiObjHandle(obj);
 	
 	color_repr_t *pBits = NULL;
@@ -205,7 +212,8 @@ PyObject* Wingdi_BitBltDIBSurface(PyObject *self, PyObject *args)
 	HBITMAP hsrcold = (HBITMAP)SelectObject(hsrc, srcobj->m_hBmp);
 
 	//StretchBlt(hdst, ld, td, rd-ld, bd-td, hsrc, ls, ts, rs-ls, bs-ts, SRCCOPY);
-	BitBlt(hdst, ld, td, rd-ld, bd-td, hsrc, ls, ts, SRCCOPY);
+	if( (rd-ld)> 0 && (bd-td)>0)
+		BitBlt(hdst, ld, td, rd-ld, bd-td, hsrc, ls, ts, SRCCOPY);
 
 	SelectObject(hsrc, hsrcold);
 	DeleteDC(hsrc);
@@ -302,10 +310,7 @@ PyObject* Wingdi_StretchBltTransparent(PyObject *self, PyObject *args)
 		return NULL;
 
 	if(nWidthDest<=0 || nHeightDest<=0 || nWidthSrc<=0 || nHeightSrc<=0)
-		{
-		seterror("StretchBltTransparent", "invalid parameters (a dimension was zero or negative)");
-		return NULL;
-		}
+		return none();
 
 	HDC hDC = (HDC)GetGdiObjHandle(dcobj);
 	bool delDC = false;
