@@ -1563,7 +1563,6 @@ class LayoutView2(LayoutViewDialog2):
 					self.editmgr.setnodeattr(selectedNode, 'channel', None)
 					self.editmgr.commit()
 				
-				
 	def	onPaste(self):
 		# apply some command which are automaticly applied when a control lost the focus
 		# it avoids some recursives transactions and some crashes
@@ -1673,6 +1672,17 @@ class LayoutView2(LayoutViewDialog2):
 		self.updateFocus()
 		self.applyDelRegion(regionRef)
 
+	def dropNode(self, sourceNodeRef, targetNodeRef):
+		sourceNodeType = self.getNodeType(sourceNodeRef)
+		targetNodeType = self.getNodeType(sourceNodeRef)
+		if sourceNodeType == TYPE_MEDIA:
+			# if this case, we just have to change the region attribute of the media
+			pass
+		elif targetNodeType in (TYPE_REGION, TYPE_VIEWPORT):
+			if self.editmgr.transaction():
+				self.editmgr.setchannelattr(sourceNodeRef.name, 'base_window', targetNodeRef.name)
+				self.editmgr.commit('REGION_TREE')
+		
 	# checking if the region/viewport node contains any sub-region or media
 	def isEmpty(self, nodeRef):
 		# checking if has sub-region
@@ -2169,6 +2179,71 @@ class TreeWidget(Widget):
 		for node in rootNodeList:
 			self.expandNodes(node, expandMediaNode)
 
+	#
+	# drag and drop support
+	#
+	
+	def onBeginDrag(self, nodeTreeCtrlId):
+		# the object id allows to idenfify any object (known by any view) 
+		nodeRef= self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
+		nodeType = self._context.getNodeType(nodeRef)
+		if nodeType == TYPE_MEDIA:
+			# XXX define type in another module
+			type = 'Media'
+			objectId = `nodeRef.GetUID()`
+		elif nodeType in (TYPE_VIEWPORT, TYPE_REGION):
+			# XXX define type in another module
+			type = 'Region'
+			# XXX the GetUID seems bugged, so we use directly the region Id as global id for now
+			objectId = nodeRef.name
+			self.treeCtrl.beginDrag(type, objectId)
+
+	def __dragObjectIdToNodeRef(self, type, objectId):
+		if type == 'Media': 
+			# retrieve the reference of the source node
+			uid = int(objectId)
+			try:
+				nodeRef = self._context.context.MapUID(uid)
+			except:
+				nodeRef = None
+						
+		elif type == 'Region':
+			# retrieve the reference of the source node
+			nodeRef = self._context.context.getchannel(objectId)
+
+		return nodeRef			
+		
+	def __ifAcceptDrag(self, nodeTreeCtrlId, type, objectId):
+		targetNodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
+		sourceNodeRef = self.__dragObjectIdToNodeRef(type, objectId)
+		if sourceNodeRef == None:
+			return 0
+		
+		targetNodeType = self._context.getNodeType(targetNodeRef)
+		# for now, accept only drop if the target node is viewport or region
+		if targetNodeType in (TYPE_VIEWPORT, TYPE_REGION):
+			return 1
+		
+		return 0		
+		
+	def onDragOver(self, nodeTreeCtrlId, type, objectId):
+		if self.__ifAcceptDrag(nodeTreeCtrlId, type, objectId):
+			# XXX should change
+			return LayoutViewDialog2.DROPEFFECT_MOVE
+		else:
+			# XXX should change
+			return LayoutViewDialog2.DROPEFFECT_NONE
+
+	def onDrop(self, nodeTreeCtrlId, type, objectId):
+		if not self.__ifAcceptDrag(nodeTreeCtrlId, type, objectId):
+			return 0
+
+		targetNodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
+		sourceNodeRef = self.__dragObjectIdToNodeRef(type, objectId)
+#		self._context.dropNode(sourceNodeRef, targetNodeRef)
+		
+		return 1
+				   
 class PreviousWidget(Widget):
 	def __init__(self, context):
 		self._viewports = {}
