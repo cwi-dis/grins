@@ -1828,13 +1828,11 @@ class ChannelWindow(Channel):
 			top_lchan = our_lchan
 		rv = top_lchan._has_multiregion_transition(trid, transtime, recursive=1)
 		our_lchan._active_multiregion_transition = (trid, transtime, self.window)
-		print 'STORE', our_lchan._active_multiregion_transition, self, our_lchan
 		return rv
 		
 	def _has_multiregion_transition(self, trid, transtime, recursive=0):
 		if self._active_multiregion_transition and \
 				(trid, transtime) == self._active_multiregion_transition[:2]:
-			print 'RETRIEVE', self._active_multiregion_transition
 			return self._active_multiregion_transition[2]
 		if recursive:
 			for child in self._subchannels:
