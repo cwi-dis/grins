@@ -19,9 +19,13 @@ import windowinterface
 debug=0
 
 class VideoChannel(Channel.ChannelWindowAsync,MediaChannel.MediaChannel):
-	node_attrs = Channel.ChannelWindowAsync.node_attrs + \
-		     ['bucolor', 'hicolor', 'scale', 'center',
-		      'clipbegin', 'clipend']
+	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
+	node_attrs = Channel.ChannelWindow.node_attrs + \
+		      ['clipbegin', 'clipend']
+	if Channel.CMIF_MODE:
+		node_attrs = node_attrs + _our_attrs
+	else:
+		chan_attrs = Channel.ChannelWindow.chan_attrs + _our_attrs
 	_window_type = windowinterface.MPEG
 
 	def __init__(self, name, attrdict, scheduler, ui):
