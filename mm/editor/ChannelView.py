@@ -38,6 +38,8 @@ OPTION_TIMESCALEBOX_BOXES = 0		# Turn on for measure-tape timeline
 # Color assignments (RGB)
 
 BGCOLOR = settings.get('timeline_bgcolor')
+GUTTERTOPCOLOR = settings.get('timeline_guttertop')
+GUTTERBOTTOMCOLOR = settings.get('timeline_gutterbottom')
 BORDERCOLOR = settings.get('timeline_bordercolor')
 CHANNELCOLOR = settings.get('timeline_channelcolor')
 CHANNELOFFCOLOR = settings.get('timeline_channeloffcolor')
@@ -93,7 +95,8 @@ PLACING_MOVE = 3
 begend = ('begin', 'end')
 
 CHANGAP = 0.5
-CHANHEIGHT = 5.0
+NOTHUMB_CHANHEIGHT = 5.0
+THUMB_CHANHEIGHT = 15.0
 TSHEIGHT = f_title.fontheight() * 4
 STRIPHEIGHT = f_title.fontheight() * 5
 
@@ -119,6 +122,7 @@ class ChannelView(ChannelViewDialog):
 		self.showarcs = 1
 		self.placing_channel = 0
 		self.thumbnails = 0
+		self.chanheight = NOTHUMB_CHANHEIGHT
 		self.showbandwidthstrip = 0
 		self._ignore_resize = 0
 ##		self.layouts = [('All channels', ())]
@@ -235,12 +239,17 @@ class ChannelView(ChannelViewDialog):
 
 	def thumbnailcall(self):
 		self.thumbnails = not self.thumbnails
+		if self.thumbnails:
+			self.chanheight = THUMB_CHANHEIGHT
+		else:
+			self.chanheight = NOTHUMB_CHANHEIGHT
 		self.settoggle(THUMBNAIL, self.thumbnails)
-		if self.new_displist:
-			self.new_displist.close()
-		self.new_displist = self.window.newdisplaylist(BGCOLOR)
-		bl, fh, ps = self.new_displist.usefont(f_title)
-		self.draw()
+##		if self.new_displist:
+##			self.new_displist.close()
+##		self.new_displist = self.window.newdisplaylist(BGCOLOR)
+##		bl, fh, ps = self.new_displist.usefont(f_title)
+##		self.draw()
+		self.reshape()
 
 	def canvascall(self, code):
 		from windowinterface import UNIT_MM
@@ -357,15 +366,15 @@ class ChannelView(ChannelViewDialog):
 			# channel not visible
 			return 0, 0
 		# store the hard-won information
-		totheight = nlines * CHANHEIGHT + nchannels * CHANGAP
+		totheight = nlines * self.chanheight + nchannels * CHANGAP
 		factor = float(self.bandwidthstripborder) / totheight
-		chh = CHANHEIGHT*factor
+		chh = self.chanheight*factor
 		x = 0
 		for ch in list:
 			n = channellines.get(ch.name, 0) or 1
-			chy = (x + CHANHEIGHT) * factor
+			chy = (x + self.chanheight) * factor
 			chx = x * factor
-			x = x + n * CHANHEIGHT + CHANGAP
+			x = x + n * self.chanheight + CHANGAP
 			ch.chview_map = chx, chy, chh, n
 		x, y, height = channel.chview_map[:3]
 		return x + line*height, y + line*height
@@ -520,7 +529,7 @@ class ChannelView(ChannelViewDialog):
 ##		if hasattr(windowinterface, 'RESET_HEIGHT'):
 ##			self.window.setcanvassize(windowinterface.RESET_HEIGHT)
 		width, height = self.window.getcanvassize(UNIT_MM)
-		height = len(visiblechannels) * CHANGAP + nlines * CHANHEIGHT + TSHEIGHT
+		height = len(visiblechannels) * CHANGAP + nlines * self.chanheight + TSHEIGHT
 		if self.showbandwidthstrip:
 			height = height + STRIPHEIGHT
 		# this causes a ResizeWindow event
@@ -781,7 +790,6 @@ class ChannelView(ChannelViewDialog):
 					break
 				prerolltime = prerolltime + \
 					      (float(prearm)/maxbandwidth)
-##				if prearm: print 'PREROLL', t0, t1, node, prearm, bandwidth, prerolltime #DBG
 		# Adjust timebar
 		self.prerolltime = prerolltime
 		# And the rest of the prearms
@@ -795,7 +803,6 @@ class ChannelView(ChannelViewDialog):
 		prearmlist.sort()
 		for t_arm, t0, prearm, node in prearmlist:
 			pabox = self.bwstripobject.pabox(t_arm, t0, prearm, node)
-##			print 'PREARM', t_arm, t0, prearm, '->', pabox
 			node.bandwidthboxes = node.bandwidthboxes + pabox
 		
 	# Focus stuff (see also recalc)
@@ -1557,11 +1564,9 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 			t = t0+factor*(t1-t0)
 			for t0, t1, node in self.time_to_bwnodes:
 				if t0 <= t <= t1:
-##					print "TEST", t0, t1, t, node
 					self.focussed_bwnodes.append(node)
 			for t0, t1, node in self.time_to_panodes:
 				if t0 <= t <= t1:
-##					print "TEST2", t0, t1, t, node
 					self.focussed_panodes.append(node)
 		self.nodehighlight(self.focussed_bwnodes, PLAYACTIVECOLOR)
 		self.nodehighlight(self.focussed_panodes, ARMACTIVECOLOR)
@@ -1572,7 +1577,6 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 			node.set_bandwidthhighlight(color)
 
 	def deselect(self):
-##		print "DESELECT"
 		self.nodehighlight(self.focussed_bwnodes, None)
 		self.nodehighlight(self.focussed_panodes, None)
 		self.focussed_bwnodes = []
@@ -1727,15 +1731,19 @@ class ChannelBox(GO, ChannelBoxCommand):
 			color = CHANNELCOLOR
 		else:
 			color = CHANNELOFFCOLOR
-		d.drawfdiamond(color, (l, t, r - l, b - t))
+##		d.drawfdiamond(color, (l, t, r - l, b - t))
+		d.drawfbox(color, (l, t, r - l, b - t))
 
 		# Outline the diamond; 'engraved' normally,
 		# 'sticking out' if selected
 		if self.selected:
-			d.draw3ddiamond(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT,
+##			d.draw3ddiamond(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT,
+##					FOCUSBOTTOM, (l, t, r - l, b - t))
+			d.draw3dbox(FOCUSBOTTOM, FOCUSBOTTOM, FOCUSBOTTOM,
 					FOCUSBOTTOM, (l, t, r - l, b - t))
 		d.fgcolor(BORDERCOLOR)
-		d.drawdiamond((l, t, r - l, b - t))
+##		d.drawdiamond((l, t, r - l, b - t))
+		d.drawbox((l, t, r - l, b - t))
 
 		# Draw the name
 		d.fgcolor(TEXTCOLOR)
@@ -1763,10 +1771,11 @@ class ChannelBox(GO, ChannelBoxCommand):
 		x, y, h, n = self.channel.chview_map
 		top = self.mother.mapchannel(self.channel)[0]
 		bottom = self.mother.mapchannel(self.channel, (self.mother.channellines.get(self.channel.name, 0) or 1) - 1)[1]
-		d.drawline(BORDERCOLOR, [(0.0, top),
-					 (1.0, top)])
-		d.drawline(BORDERCOLOR, [(0.0, bottom),
-					 (1.0, bottom)])
+##		d.drawline(BORDERCOLOR, [(0.0, top),
+##					 (1.0, top)])
+##		d.drawline(BORDERCOLOR, [(0.0, bottom),
+##					 (1.0, bottom)])
+		d.draw3dhline(GUTTERTOPCOLOR, GUTTERBOTTOMCOLOR, 0.0, 1.0, bottom)
 
 	# Menu stuff beyond what GO offers
 
@@ -1901,7 +1910,6 @@ class NodeBox(GO, NodeBoxCommand):
 		GO.cleanup(self)
 
 	def set_armedmode(self, mode):
-		# print 'node', self.name, 'setarmedmode', mode
 		if mode <> self.node.armedmode:
 			self.mother.init_display()
 			self.node.armedmode = mode
@@ -1911,7 +1919,6 @@ class NodeBox(GO, NodeBoxCommand):
 			self.mother.delay_drawarcs()
 
 	def set_bandwidthhighlight(self, mode):
-		# print 'node', self.name, 'setarmedmode', mode
 		if mode <> self.bandwidthhighlight:
 ##			self.mother.init_display()
 			self.bandwidthhighlight = mode
@@ -2074,9 +2081,13 @@ class NodeBox(GO, NodeBoxCommand):
 
 
 		# Maybe draw a thumbnail image
+##		print 'rect', l, t, r, b
+		xindent, yindent = d.get3dbordersize()
+		thumb_l = l + xindent
+		thumb_t = t + yindent
+		thumb_w = (r-l)/2 - 2*xindent
+		thumb_h = (b-t) - 2*yindent
 		if self.mother.thumbnails and \
-		   r - l >= haboxsize * 6 and \
-		   b - t >= vaboxsize * 9 and \
 		   self.node.GetChannelType() == 'image':
 			import MMurl
 			try:
@@ -2085,13 +2096,15 @@ class NodeBox(GO, NodeBoxCommand):
 				pass
 			else:
 				try:
-					box = d.display_image_from_file(f, center = 0, coordinates = (l, t, haboxsize * 6, vaboxsize * 9))
+					box = d.display_image_from_file(f, center = 0, 
+							coordinates = (thumb_l, thumb_t, thumb_w, thumb_h))
 				except windowinterface.error:
 					pass
 				else:
 					l = box[0] + box[2]
 					d.fgcolor((0,0,0))
 					d.drawbox(box)
+##					print 'box', box
 
 		# Draw the name, centered in the box
 		d.fgcolor(TEXTCOLOR)
