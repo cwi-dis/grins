@@ -753,6 +753,18 @@ class SingleAttrPage(AttrPage):
 			 OptionsCheckNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_CHECK1,grinsRC.IDC_CHECK2,grinsRC.IDC_CHECK3,grinsRC.IDC_CHECK4,grinsRC.IDC_CHECK5,
 			  grinsRC.IDC_CHECK6)),
+		'base_window':		# Drop down list plus Properties button
+			(grinsRC.IDD_EDITATTR_CH1,
+			 ChannelCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
+		'channel':		# Drop down list plus Properties button
+			(grinsRC.IDD_EDITATTR_CH1,
+			 ChannelCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
+		'captionchannel':	# Drop down list plus Properties button
+			(grinsRC.IDD_EDITATTR_CH1,
+			 ChannelCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
 		}
 	CTRLMAP_BYTYPE = {
 		'option':		# An option selected from a list (as a popup menu)

@@ -1577,6 +1577,11 @@ class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			return self.__nocaptions
 		return value
 
+	def channelprops(self):
+		ch = self.wrapper.context.getchannel(self.getvalue())
+		if ch is not None:
+			showchannelattreditor(self.wrapper.toplevel, ch)
+
 class BaseChannelnameAttrEditorField(ChannelnameAttrEditorField):
 	# Choose from the current channel names
 	def getoptions(self):
@@ -1591,6 +1596,11 @@ class BaseChannelnameAttrEditorField(ChannelnameAttrEditorField):
 			list.append(name)
 		list.sort()
 		return ['Default', 'undefined'] + list
+
+	def channelprops(self):
+		ch = self.wrapper.context.getchannel(self.getvalue())
+		if ch is not None:
+			showchannelattreditor(self.wrapper.toplevel, ch)
 
 class UsergroupAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	def getoptions(self):
