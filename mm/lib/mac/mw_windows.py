@@ -1198,7 +1198,10 @@ class _ScrollMixin:
 	def getcanvassize(self, units = UNIT_MM):
 		if self._canvassize is None:
 			raise error, 'setcanvassize call for non-resizable window!'
-		w, h = self._canvassize
+		wf, hf = self._canvassize
+		rw, rh = self._rect[2:4]
+		w = rw * wf
+		h = rh * hf
 		if units == UNIT_MM:
 			_x_pixel_per_mm, _y_pixel_per_mm = \
 					mw_globals.toplevel._getmmfactors()
@@ -1239,6 +1242,14 @@ class _ScrollMixin:
 				scrh = b-t
 				w = int(width*scrw)
 				h = int(height*scrh)
+			else:
+				raise error, 'bad units'
+			# w,h are in pixels, convert to factors
+			rw, rh = self._rect[2:4]
+			w = float(w) / rw
+			h = float(h) / rh
+			if w < 1: w = 1.0
+			if h < 1: h = 1.0
 		elif how == DOUBLE_WIDTH:
 			w = w * 2
 		elif how == DOUBLE_HEIGHT:
