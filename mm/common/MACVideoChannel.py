@@ -37,6 +37,49 @@ class VideoChannel(ChannelWindowAsync):
 		self.__extra_end_delay = 0
 		self.__qid = None
 		
+	tmpfiles = []
+	__callback_added = 0
+
+	def getfileurl(self, node):
+		# This method has all sorts of magic to write a
+		# RealPix file "just in time".  If the node has
+		# changed there is a tmpfile attribute.  Since the
+		# node has changed internally, we must write a copy
+		# and we'll use the tmpfile attribute for a file name.
+		# If the node has no URL, there is no existing file
+		# that we can use, so we invent a name and write the
+		# file.
+		url = ChannelWindowAsync.getfileurl(self, node)
+		if not url or url[:5] == 'data:':
+			if hasattr(node, 'rptmpfile') and node.rptmpfile[1] == url:
+				url = node.rptmpfile[0]
+			else:
+				import tempfile, realsupport, MMurl
+				f = MMurl.urlopen(url)
+				head = f.read(4)
+				if head != '<imf':
+					f.close()
+					# delete rptmpfile attr if it exists
+					node.rptmpfile = None
+					del node.rptmpfile
+					return url
+				rp = realsupport.RPParser(url)
+				rp.feed(head)
+				rp.feed(f.read())
+				f.close()
+				rp.close()
+				f = tempfile.mktemp('.rp')
+				nurl = MMurl.pathname2url(f)
+				node.rptmpfile = nurl, url
+				realsupport.writeRP(f, rp, node, baseurl = url)
+				if not self.__callback_added:
+					import windowinterface
+					windowinterface.addclosecallback(
+						_deltmpfiles, ())
+					VideoChannel.__callback_added = 1
+				self.tmpfiles.append(f)
+		return url
+
 	def do_show(self, pchan):
 		if not ChannelWindowAsync.do_show(self, pchan):
 			return 0
@@ -374,3 +417,13 @@ class VideoChannel(ChannelWindowAsync):
 	def _getoswinpos(self):
 		x0, y0, x1, y1 = self.window.qdrect()
 		return ((x0, y0), (x1-x0, y1-y0))
+
+
+def _deltmpfiles():
+	import os
+	for f in VideoChannel.tmpfiles:
+		try:
+			os.unlink(f)
+		except:
+			pass
+	VideoChannel.tmpfiles = []
