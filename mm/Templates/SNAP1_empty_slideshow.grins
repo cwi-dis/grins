@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<smil xmlns="http://www.w3.org/TR/REC-smil/2000/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/">
+<smil xmlns="http://www.w3.org/2000/SMIL20/CR/Language" xmlns:GRiNS="http://www.oratrix.com/">
   <head>
     <meta xmlns="" name="title" content="Empty SMIL2 Slideshow"/>
     <meta xmlns="" name="template_name" content="Empty SMIL2 Slideshow"/>
