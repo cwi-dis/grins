@@ -82,7 +82,7 @@ class PlayerCore(Selecter, PlayerCommon):
 				self.playroot = self.root
 			if self.userplayroot.GetRoot() is not self.root:
 				self.userplayroot = self.root
-			self.makeugroups()
+##			self.makeugroups()
 		self.locked = 0
 		self.showstate()
 	#
