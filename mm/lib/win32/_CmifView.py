@@ -604,18 +604,6 @@ class _CmifPlayerView(_CmifView):
 		dds.BltFill((0, 0, w, h), self._convbgcolor)
 		return dds
 
-	def GetDDDC(self):
-		if self._islocked:
-			return None
-		self._islocked = 1
-		hdc = self._backBuffer.GetDC()
-		return win32ui.CreateDCFromHandle(hdc)
-
-	def ReleaseDDDC(self, dc):
-		hdc = dc.Detach()
-		self._backBuffer.ReleaseDC(hdc)
-		self._islocked = 0
-
 	def update(self):
 		if self._usesLightSubWindows:
 			self.paint()
@@ -623,15 +611,11 @@ class _CmifPlayerView(_CmifView):
 		else:
 			_CmifView.update(self)
 
-	def clear(self):
-		dds = self._backBuffer
-		x, y, w, h = self.getwindowpos()
-		if self._convbgcolor == None:
-			r, g, b = self._bgcolor
-			self._convbgcolor = dds.GetColorMatch((r,g,b))
-		dds.BltFill((x, y, x+w, y+h), self._convbgcolor)
-
-	def paint(self):		
+	def paint(self):
+		if self._backBuffer.IsLost():
+			if not self._backBuffer.Restore():
+				return 
+			
 		# first paint self
 		self._paintOnDDS(self._backBuffer, self._canvas)
 
