@@ -78,8 +78,6 @@ MENUBAR=(
 		(FLAG_PRO, SEP, ),
 		(FLAG_ALL, ENTRY, 'Properties...', 'A', ATTRIBUTES),
 		(FLAG_ALL, ENTRY, 'Edit Content', 'E', CONTENT),
-		(FLAG_ALL, SEP, ),
-		(FLAG_ALL, ENTRY, 'Preferences...', None, PREFERENCES),
 		)),
 
 	(FLAG_ALL, CASCADE, 'Insert', (
@@ -145,6 +143,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Play from Node', None, PLAYFROM),
 		(FLAG_CMIF, SEP,),
 		(FLAG_BOSTON|FLAG_SNAP, DYNAMICCASCADE, 'Custom Tests', USERGROUPS),
+		(FLAG_ALL, ENTRY, 'System Properties...', None, PREFERENCES),
 		(FLAG_CMIF, DYNAMICCASCADE, 'Visible Channels', CHANNELS),
 		)),
 
