@@ -15,8 +15,8 @@ LAYOUT_NONE = 0				# must be 0
 LAYOUT_SMIL = 1
 LAYOUT_UNKNOWN = -1
 
-coordre = re.compile('^ *(?P<x>[0-9.]+%?)[ ,]+(?P<y>[0-9.]+%?)[ ,]+'
-			'(?P<w>[0-9.]+%?)[ ,]+(?P<h>[0-9.]+%?) *$')
+coordre = re.compile('^(?P<x>[0-9]+%?),(?P<y>[0-9]+%?),'
+		      '(?P<w>[0-9]+%?),(?P<h>[0-9]+%?)$')
 idref = re.compile('id\((?P<id>' + xmllib._Name + ')\)')
 
 class SMILParser(xmllib.XMLParser):
@@ -33,13 +33,13 @@ class SMILParser(xmllib.XMLParser):
 		self.__context = context
 		self.__root = None
 		self.__container = None
+		self.__node = None	# the media object we're in
 		self.__channels = {}
 		self.__width = self.__height = 0
 		self.__layout = None
 		self.__nodemap = {}
+		self.__anchormap = {}
 		self.__links = []
-		self.__hlink_src = self.__hlink_dst = None
-		self.__in_hlink = 0
 
 	def GetRoot(self):
 		if not self.__root:
@@ -112,7 +112,7 @@ class SMILParser(xmllib.XMLParser):
 				if self.__nodemap.has_key(val):
 					self.warning('node name %s not unique'%val)
 				self.__nodemap[val] = node
-			elif attr == 'href':
+			elif attr == 'src':
 				node.attrdict['file'] = val
 			elif attr == 'begin' or attr == 'end':
 				node.__syncarcs.append(attr, val)
@@ -147,14 +147,15 @@ class SMILParser(xmllib.XMLParser):
 		if mediatype is None:
 			self.error('node of unknown type')
 		node = self.__context.newnode('ext')
+		self.__node = node
 		node.attrdict['transparent'] = -1
 		self.AddAttrs(node, attributes, mediatype)
 		self.__container._addchild(node)
 		node.__mediatype = mediatype, subtype
 		try:
-			channel = attributes['loc']
+			channel = attributes['channel']
 		except KeyError:
-			self.warning('node without loc attribute')
+			self.warning('node without channel attribute')
 			channel = '<unnamed %d>'
 			i = 0
 			while self.__channels.has_key(channel % i):
@@ -162,13 +163,13 @@ class SMILParser(xmllib.XMLParser):
 			channel = channel % i
 		else:
 			if not self.__channels.has_key(channel):
-				self.syntax_error(self.lineno, 'unknown loc')
+				self.syntax_error(self.lineno, 'unknown channel')
 		node.__channel = channel
-		if not attributes.has_key('href'):
-			self.syntax_error(self.lineno, 'node without href attribute')
+		if not attributes.has_key('src'):
+			self.syntax_error(self.lineno, 'node without src attribute')
 		elif mediatype in ('image', 'video'):
 			import MMurl
-			file = attributes['href']
+			file = attributes['src']
 			try:
 				if mediatype == 'image':
 					import img
@@ -214,6 +215,9 @@ class SMILParser(xmllib.XMLParser):
 			id = _uniqname(map(lambda a: a[A_ID], anchorlist), id)
 			anchorlist.append((id, ATYPE_WHOLE, []))
 			self.__links.append((node.GetUID(), id, href, ltype))
+
+	def EndNode(self):
+		self.__node = None
 
 	def NewContainer(self, type, attributes):
 		if not self.__in_smil:
@@ -321,10 +325,10 @@ class SMILParser(xmllib.XMLParser):
 			if mediatype in ('image', 'video', 'text'):
 				# deal with channel with window
 				if not self.__channels.has_key(channel):
-					self.warning('no tuner %s in layout' %
+					self.warning('no channel %s in layout' %
 						     channel)
 					self.__in_layout = LAYOUT_SMIL
-					self.start_tuner({'id': channel})
+					self.start_channel({'id': channel})
 					self.__in_layout = LAYOUT_NONE
 				attrdict = self.__channels[channel]
 				if self.__layout is None:
@@ -396,22 +400,19 @@ class SMILParser(xmllib.XMLParser):
 				node = self.__nodemap[node].GetUID()
 			if type(aid) is type(()):
 				aid, atype, args = aid
-				n = self.__context.uidmap[node]
-				try:
-					anchorlist = n.attrdict['anchorlist']
-				except KeyError:
-					n.attrdict['anchorlist'] = anchorlist = []
-				aid = _uniqname(map(lambda a: a[A_ID], anchorlist), aid)
-				anchorlist.append((aid, atype, args))
 			src = node, aid
 			if href[:1] == '#':
 				try:
-					dst = self.__nodemap[href[1:]]
+					dst = self.__anchormap[href[1:]]
 				except KeyError:
-					print 'warning: unknown node id',href[1:]
-					continue
-				hlinks.addlink((src, _wholenodeanchor(dst),
-						DIR_1TO2, ltype))
+					try:
+						dst = self.__nodemap[href[1:]]
+					except KeyError:
+						print 'warning: unknown node id',href[1:]
+						continue
+					else:
+						dst = _wholenodeanchor(dst)
+				hlinks.addlink((src, dst, DIR_1TO2, ltype))
 			else:
 				import MMurl
 				href, tag = MMurl.splittag(href)
@@ -422,7 +423,7 @@ class SMILParser(xmllib.XMLParser):
 	# methods for start and end tags
 
 	# smil contains everything
-	smil_attributes = ['id', 'lipsync']
+	smil_attributes = {'id':None, 'sync':None}
 	def start_smil(self, attributes):
 		if self.__seen_smil:
 			self.error('more than 1 smil tag')
@@ -439,7 +440,7 @@ class SMILParser(xmllib.XMLParser):
 
 	# head/body sections
 
-	head_attributes = ['id']
+	head_attributes = {'id':None}
 	def start_head(self, attributes):
 		if not self.__in_smil:
 			self.warning('head not in smil')
@@ -448,7 +449,7 @@ class SMILParser(xmllib.XMLParser):
 	def end_head(self):
 		self.__in_head = 0
 
-	body_attributes = ['id']
+	body_attributes = {'id':None}
 	def start_body(self, attributes):
 		if not self.__in_smil:
 			self.warning('body not in smil')
@@ -462,7 +463,7 @@ class SMILParser(xmllib.XMLParser):
 
 	# layout section
 
-	layout_attributes = ['id', 'type']
+	layout_attributes = {'id':None, 'type':'text/smil-basic'}
 	def start_layout(self, attributes):
 		if not self.__in_head:
 			self.warning('layout not in head')
@@ -477,10 +478,11 @@ class SMILParser(xmllib.XMLParser):
 	def end_layout(self):
 		self.__in_layout = LAYOUT_NONE
 
-	tuner_attributes = ['id', 'left', 'top', 'z-index', 'width', 'height']
-	def start_tuner(self, attributes):
+	channel_attributes = {'id':None, 'left':'0', 'top':'0', 'width':'0',
+			    'height':'0', 'z-index':'0'}
+	def start_channel(self, attributes):
 		if not self.__in_layout:
-			self.error('tuner not in layout')
+			self.error('channel not in layout')
 		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout
 			return
@@ -498,53 +500,51 @@ class SMILParser(xmllib.XMLParser):
 					if val[-1] == '%':
 						val = string.atof(val[:-1]) / 100.0
 						if val < 0 or val > 1:
-							self.error('tuner with impossible size')
+							self.error('channel with impossible size')
 					else:
 						val = string.atoi(val)
 						if val < 0:
-							self.error('tuner with impossible size')
+							self.error('channel with impossible size')
 				except (string.atoi_error, string.atof_error):
-					self.syntax_error(self.lineno, 'invalid tuner attribute value')
+					self.syntax_error(self.lineno, 'invalid channel attribute value')
 					val = 0
 			elif attr == 'z-index':
 				try:
 					val = string.atoi(val)
 				except string.atoi_error:
-					self.syntax_error(self.lineno, 'invalid tuner attribute value')
+					self.syntax_error(self.lineno, 'invalid channel attribute value')
 					val = 0
 				if val < 0:
-					self.error('tuner with negative z-index')
+					self.error('channel with negative z-index')
 			elif attr == 'id':
 				seen_id = 1
 				if self.__channels.has_key(val):
-					self.warning('multiple tuner tags for id=%s' % val)
+					self.warning('multiple channel tags for id=%s' % val)
 				self.__channels[val] = attrdict
 			else:
-				self.warning('unknown attribute %s in tuner tag' % `attr`)
+				self.warning('unknown attribute %s in channel tag' % `attr`)
 			attrdict[attr] = val
 		if not seen_id:
-			self.error('tuner without id attribute')
+			self.error('channel without id attribute')
 
-	def end_tuner(self):
+	def end_channel(self):
 		pass
 
 	# container nodes
 
-	par_attributes = ['id', 'endsync', 'lipsync',
-			  'dur', 'begin', 'end', 'repeat']
+	par_attributes = {'id':None, 'endsync':'last', 'sync':None,
+			  'dur':None, 'begin':None, 'end':None, 'repeat':'1',
+			  'bitrate':None, 'language':None, 'screen':None,
+			  'pics-label':None}
 	def start_par(self, attributes):
-		# XXXX we ignore lipsync for now
+		# XXXX we ignore sync for now
 		self.NewContainer('par', attributes)
-		if attributes.has_key('endsync'):
-			self.__container.__endsync = attributes['endsync']
+		self.__container.__endsync = attributes['endsync']
 
 	def end_par(self):
 		node = self.__container
 		self.EndContainer()
-		try:
-			endsync = node.__endsync
-		except AttributeError:
-			return
+		endsync = node.__endsync
 		del node.__endsync
 		if endsync == 'first':
 			node.attrdict['terminator'] = 'FIRST'
@@ -565,7 +565,9 @@ class SMILParser(xmllib.XMLParser):
 				# id not found among the children
 				self.warning('unknown idref in endsync attribute')
 
-	seq_attributes = ['id', 'dur', 'begin', 'end', 'repeat']
+	seq_attributes = {'id':None, 'dur':None, 'begin':None, 'end':None,
+			  'repeat':'1', 'bitrate':None, 'language':None,
+			  'screen':None, 'pics-label':None}
 	def start_seq(self, attributes):
 		self.NewContainer('seq', attributes)
 
@@ -576,7 +578,8 @@ class SMILParser(xmllib.XMLParser):
 
 	end_bag = EndContainer
 
-	switch_attributes = ['id']
+	switch_attributes = {'id':None, 'bitrate':None, 'language':None,
+			     'screen':None, 'pics-label':None}
 	def start_switch(self, attributes):
 		if self.__in_head:
 			if self.__in_head_switch:
@@ -592,69 +595,68 @@ class SMILParser(xmllib.XMLParser):
 
 	# media items
 
-	ref_attributes = ['id', 'href', 'type', 'loc', 'dur', 'begin', 'end', 'repeat']
+	ref_attributes = {'id':None, 'src':None, 'type':None, 'channel':None,
+			  'dur':None, 'begin':None, 'end':None, 'repeat':'1',
+			  'bitrate':None, 'language':None, 'screen':None,
+			  'pics-label':None}
 	def start_ref(self, attributes):
 		self.NewNode(None, attributes)
 
 	def end_ref(self):
-		pass
+		self.EndNode()
 
 	text_attributes = ref_attributes
 	def start_text(self, attributes):
 		self.NewNode('text', attributes)
 
 	def end_text(self):
-		pass
+		self.EndNode()
 
 	audio_attributes = ref_attributes
 	def start_audio(self, attributes):
 		self.NewNode('audio', attributes)
 
 	def end_audio(self):
-		pass
+		self.EndNode()
 
 	img_attributes = ref_attributes
 	def start_img(self, attributes):
 		self.NewNode('image', attributes)
 
 	def end_img(self):
-		pass
+		self.EndNode()
 
 	video_attributes = ref_attributes
 	def start_video(self, attributes):
 		self.NewNode('video', attributes)
 
 	def end_video(self):
-		pass
+		self.EndNode()
 
 	cmif_cmif_attributes = ref_attributes
 	def start_cmif_cmif(self, attributes):
 		self.NewNode('cmif_cmif', attributes)
 
 	def end_cmif_cmif(self):
-		pass
+		self.EndNode()
 
 	cmif_shell_attributes = ref_attributes
 	def start_cmif_shell(self, attributes):
 		self.NewNode('cmif_shell', attributes)
 
 	def end_cmif_shell(self):
-		pass
+		self.EndNode()
 
 	# linking
 
-	a_attributes = ['id', 'href', 'show']
+	a_attributes = {'id':None, 'href':None, 'show':'replace'}
 	def start_a(self, attributes):
 		try:
 			href = attributes['href']
 		except KeyError:
 			self.warning('anchor without HREF')
 			return
-		try:
-			show = attributes['show']
-		except KeyError:
-			show = 'replace'
-		show = string.lower(show)
+		show = attributes['show']
 		if show == 'replace':
 			ltype = TYPE_JUMP
 		elif show == 'pause':
@@ -673,15 +675,31 @@ class SMILParser(xmllib.XMLParser):
 	def end_a(self):
 		self.__in_a = None
 
-	hlink_attributes = ['id', 'show']
-	def start_hlink(self, attributes):
-		if self.__in_hlink:
-			self.syntax_error(self.lineno, 'recursive hlink')
-			return
+	anchor_attributes = {'id':None, 'href':None, 'show':'replace',
+			     'xml-link':'simple', 'inline':'true',
+			     'coords':None, 'z-index':'0', 'begin':None,
+			     'end':None, 'iid':None}
+	def start_anchor(self, attributes):
+		if self.__node is None:
+			self.error('anchor not in media object')
 		try:
-			show = string.lower(attributes['show'])
+			href = attributes['href']
 		except KeyError:
-			show = 'replace'
+			#XXXX is this a document error?
+## 			self.warning('required attribute href missing')
+			href = None	# destination-only anchor
+		try:
+			anchorlist = self.__node.attrdict['anchorlist']
+		except KeyError:
+			self.__node.attrdict['anchorlist'] = anchorlist = []
+		uid = self.__node.GetUID()
+		nname = self.__node.GetRawAttrDef('name', None)
+		aid = _uniqname(map(lambda a: a[A_ID], anchorlist), None)
+		if attributes.has_key('id'):
+			aname = attributes['id']
+		else:
+			aname = None
+		show = attributes['show']
 		if show == 'replace':
 			ltype = TYPE_JUMP
 		elif show == 'pause':
@@ -691,91 +709,50 @@ class SMILParser(xmllib.XMLParser):
 		else:
 			self.warning('unknown show attribute value')
 			ltype = TYPE_JUMP
-		self.__in_hlink = 1
-		self.__hlink_type = ltype
-
-	def end_hlink(self):
-		sattr = self.__hlink_src
-		dattr = self.__hlink_dst
-		self.__in_hlink = 0
-		self.__hlink_src = self.__hlink_dst = None
-		if not sattr:
-			self.warning('source anchor missing')
-			return
-		if not dattr:
-			self.warning('destination anchor missing')
-			return
-		snode = sattr['href'][1:] # remove leading '#'
-		stype = ATYPE_WHOLE
-		sargs = []
-		if sattr.has_key('coords'):
-			if sattr.has_key('shape') and sattr['shape'] != 'rect':
-				self.warning('unrecognized shape attribute')
-				return
-			stype = ATYPE_NORMAL
-			coords = sattr['coords']
+		atype = ATYPE_WHOLE
+		aargs = []
+		if attributes.has_key('coords'):
+## 			if attributes.has_key('shape') and attributes['shape'] != 'rect':
+## 				self.warning('unrecognized shape attribute')
+## 				return
+			atype = ATYPE_NORMAL
+			coords = attributes['coords']
 			res = coordre.match(coords)
 			if not res:
 				self.warning('syntax error in coords attribute')
 				return
 			x, y, w, h = res.group('x', 'y', 'w', 'h')
-			try:
-				if x[-1] == '%':
-					x = string.atof(x[:-1]) / 100.0
-				else:
-					x = string.atoi(x)
-				if y[-1] == '%':
-					y = string.atof(y[:-1]) / 100.0
-				else:
-					y = string.atoi(y)
-				if w[-1] == '%':
-					w = string.atof(w[:-1]) / 100.0
-				else:
-					w = string.atoi(w)
-				if h[-1] == '%':
-					h = string.atof(h[:-1]) / 100.0
-				else:
-					h = string.atoi(h)
-			except (string.atoi_error, string.atof_error):
-				self.warning('syntax error in coords attribute')
-				return
-			sargs = [x, y, w, h]
-		if sattr.has_key('id'):
-			sid = sattr['id']
-		else:
-			sid = None
-		self.__links.append((snode, (sid, stype, sargs), dattr['href'],
-				     self.__hlink_type))
-
-	anchor_attributes = ['id', 'href', 'role']
-	def start_anchor(self, attributes):
-		if not self.__in_hlink:
-			self.error('anchor not in hlink')
-		try:
-			role = string.lower(attributes['role'])
-		except KeyError:
-			self.warning('required attribute role missing')
-			return
-		try:
-			href = attributes['href']
-		except KeyError:
-			self.warning('required attribute href missing')
-			return
-		if role == 'src':
-			if self.__hlink_src:
-				self.warning('multiple source anchors')
-				return
-			if href[:1] != '#':
-				self.warning('source anchor does not point to document')
-				return
-			self.__hlink_src = attributes
-		elif role == 'dst':
-			if self.__hlink_dst:
-				self.warning('multiple destination anchors')
-				return
-			self.__hlink_dst = attributes
-		else:
-			self.warning('unkown role attribute value')
+			if x[-1] == '%':
+				x = string.atoi(x[:-1]) / 100.0
+			else:
+				x = string.atoi(x)
+			if y[-1] == '%':
+				y = string.atoi(y[:-1]) / 100.0
+			else:
+				y = string.atoi(y)
+			if w[-1] == '%':
+				w = string.atoi(w[:-1]) / 100.0
+			else:
+				w = string.atoi(w)
+			if h[-1] == '%':
+				h = string.atoi(h[:-1]) / 100.0
+			else:
+				h = string.atoi(h)
+			# x,y,w,h are now floating point if they were
+			# percentages, otherwise they are ints.
+			aargs = [x, y, w, h]
+		if attributes.has_key('iid'):
+			aid = attributes['iid']
+			atype = ATYPE_NORMAL
+		elif nname is not None and aid[:len(nname)+1] == nname + '-':
+			# undo CMIF encoding of anchor ID
+			aid = aid[len(nname)+1:]
+		if aname is not None:
+			self.__anchormap[aname] = (uid, aid)
+		anchorlist.append((aid, atype, aargs))
+		if href is not None:
+			self.__links.append((uid, (aid, atype, aargs),
+					     href, ltype))
 
 	def end_anchor(self):
 		pass
@@ -827,7 +804,7 @@ def _minsize(start, extent, minsize):
 		if type(extent) is type(0.0):
 			# extent is fraction
 			if extent == 0 or (extent == 1 and start > 0):
-				raise error, 'tuner with impossible size'
+				raise error, 'channel with impossible size'
 			if extent == 1:
 				return minsize
 			size = int(start / (1 - extent) + 0.5)
@@ -842,7 +819,7 @@ def _minsize(start, extent, minsize):
 	else:
 		# start is fraction
 		if start == 1:
-			raise error, 'tuner with impossible size'
+			raise error, 'channel with impossible size'
 		if type(extent) is type(0):
 			# extent is pixel value
 			if extent == 0:
