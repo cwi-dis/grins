@@ -118,7 +118,7 @@ def main(dtd = "http://www.w3.org/AudioVideo/Group/DTD/SMIL20.dtd", func = prdtd
 		if info.text is not None and info.offset is not None:
 			i = string.rfind(info.text, '\n', 0, info.offset) + 1
 			j = string.find(info.text, '\n', info.offset)
-			if j == -1: j = len(info.offset)
+			if j == -1: j = len(info.text)
 			print info.text[i:j]
 			print ' '*(info.offset-i)+'^'
 		return
