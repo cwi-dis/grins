@@ -35,6 +35,7 @@ class LayoutView(LayoutViewDialog):
 		LayoutViewDialog.destroy(self)
 
 	def show(self):
+		self.toplevel.player.show()
 		if self.is_showing():
 			LayoutViewDialog.show(self)
 			return
