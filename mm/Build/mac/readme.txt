@@ -2,6 +2,11 @@ Welcome to Oratrix GRiNS for RealSystem G2, version 1.5. GRiNS for RealSystem G2
 lets you create, edit and preview SMIL presentations and is tailored towards
 presentations that will be viewed with RealPlayer G2.
 
+This is a time-limited beta test distribution. You are strongly
+advised to check the release notes to see what works and what doesn't
+work. Feedback on this beta release is eagerly awaited, send to
+grins-support@oratrix.com please.
+
 GRiNS for RealSystem G2 is available in a Pro version and a Lite version,
 and for various platforms. See the Oratrix website, www.oratrix.com, for details.
 
@@ -23,7 +28,6 @@ RealNetworks suggest having at least 32Mb of real memory and 64Mb of
 virtual memory. We strongly suggest you follow these guidelines, as
 low-memory conditions may otherwise result in rather spectacular crashes.
 
-See the Release notes, relnotes.html, 
 For more information see:
     http://www.oratrix.com/
 or send e-mail to
