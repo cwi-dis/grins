@@ -57,9 +57,12 @@ class ArcInfo(Dialog):
 		return 'Sync arc from "' + sname + '" to "' + dname + '"'
 
 	def open(self):
-		self.show()
-		self.context.editmgr.register(self)
-		self.getvalues()
+		if self.is_showing():
+			self.pop()
+		else:
+			self.show()
+			self.context.editmgr.register(self)
+			self.getvalues()
 
 	def close(self):
 		self.context.editmgr.unregister(self)
