@@ -105,7 +105,7 @@ sound_init(self)
 	PRIV->s_arm.sampbuf = NULL;
 	PRIV->s_arm.file = NULL;
 	PRIV->s_play.file = NULL;
-	PRIV->s_sema = allocate_sema(1);
+	PRIV->s_sema = PyThread_allocate_sema(1);
 	if (PRIV->s_sema == NULL) {
 		ERROR(sound_init, PyExc_RuntimeError, "cannot allocate semaphore");
 		free(self->mm_private);
@@ -116,7 +116,7 @@ sound_init(self)
 	PRIV->s_port = NULL;
 	if (pipe(PRIV->s_pipefd) < 0) {
 		ERROR(sound_init, PyExc_RuntimeError, "cannot create pipe");
-		free_sema(PRIV->s_sema);
+		PyThread_free_sema(PRIV->s_sema);
 		free(self->mm_private);
 		self->mm_private = NULL;
 		return 0;
@@ -293,7 +293,7 @@ sound_player(self)
 	denter(sound_player);
 
 	/* check for multiple active sound channels */
-	(void) down_sema(device_sema, WAIT_SEMA);
+	(void) PyThread_down_sema(device_sema, WAIT_SEMA);
 #ifdef __sgi
 	if (device_used++ == 0) {
 		/* first one to open the device */
@@ -313,15 +313,15 @@ sound_player(self)
 #ifdef sun
 	if (device_used > 1) {
 		printf("Warning: only one active soundchannel at the time is supported\n");
-		up_sema(device_sema);
+		PyThread_up_sema(device_sema);
 		return;
 	}
 	device_used++;
 #endif
-	up_sema(device_sema);
+	PyThread_up_sema(device_sema);
 
 	/* open an audio port */
-	(void) down_sema(PRIV->s_sema, WAIT_SEMA);
+	(void) PyThread_down_sema(PRIV->s_sema, WAIT_SEMA);
 #ifdef __sgi
 	config = ALnewconfig();
 	ALsetwidth(config, PRIV->s_play.framesize / PRIV->s_play.nchannels);
@@ -335,10 +335,10 @@ sound_player(self)
 	PRIV->s_port = open("/dev/audio", 1);
 	if (PRIV->s_port < 0) {
 		printf("Warning: cannot open audio device\n");
-		up_sema(PRIV->s_sema);
-		(void) down_sema(device_sema, WAIT_SEMA);
+		PyThread_up_sema(PRIV->s_sema);
+		(void) PyThread_down_sema(device_sema, WAIT_SEMA);
 		device_used--;
-		up_sema(device_sema);
+		PyThread_up_sema(device_sema);
 		return;
 	}
 	hdr.sample_rate = PRIV->s_play.framerate;
@@ -370,7 +370,7 @@ sound_player(self)
 	audio_setinfo(PRIV->s_port, &audio_info);
 #endif
 	PRIV->s_flag |= PORT_OPEN;
-	up_sema(PRIV->s_sema);
+	PyThread_up_sema(PRIV->s_sema);
 
 	rate = 0;
 	while (nframes > 0
@@ -441,7 +441,7 @@ sound_player(self)
 			dprintf(("sound_player(%lx): reading from pipe\n", (long) self));
 			(void) read(PRIV->s_pipefd[0], &c, 1);
 			dprintf(("sound_player(%lx): read %c\n", (long) self, c));
-			(void) down_sema(PRIV->s_sema, WAIT_SEMA);
+			(void) PyThread_down_sema(PRIV->s_sema, WAIT_SEMA);
 			if (c == 'p' || c == 'r') {
 #ifdef __sgi
 				filled = ALgetfilled(PRIV->s_port);
@@ -460,10 +460,11 @@ sound_player(self)
 			}
 			if (c == 'p') {
 				dprintf(("sound_player(%lx): waiting to continue\n", (long) self));
-				up_sema(PRIV->s_sema);
+				PyThread_up_sema(PRIV->s_sema);
 				(void) read(PRIV->s_pipefd[0], &c, 1);
 				dprintf(("sound_player(%lx): continue playing, read %c\n", (long) self, c));
-				(void) down_sema(PRIV->s_sema, WAIT_SEMA);
+				(void) PyThread_down_sema(PRIV->s_sema,
+							  WAIT_SEMA);
 			}
 			if (c == 'r') {
 #ifdef __sgi
@@ -474,7 +475,7 @@ sound_player(self)
 #ifdef sun
 				audio_resume_play(PRIV->s_port);
 #endif
-				up_sema(PRIV->s_sema);
+				PyThread_up_sema(PRIV->s_sema);
 				continue;
 			} else {
 				dprintf(("sound_player(%lx): stopping with playing\n", (long) self));
@@ -545,7 +546,7 @@ sound_player(self)
 #endif
 		}
 	}
-	(void) down_sema(PRIV->s_sema, WAIT_SEMA);
+	(void) PyThread_down_sema(PRIV->s_sema, WAIT_SEMA);
 #ifdef __sgi
 	ALcloseport(PRIV->s_port);
 #endif
@@ -555,8 +556,8 @@ sound_player(self)
  Py_Cleanup:
 	PRIV->s_port = NULL;
 	PRIV->s_flag &= ~PORT_OPEN;
-	up_sema(PRIV->s_sema);
-	(void) down_sema(device_sema, WAIT_SEMA);
+	PyThread_up_sema(PRIV->s_sema);
+	(void) PyThread_down_sema(device_sema, WAIT_SEMA);
 #ifdef __sgi
 	if (--device_used == 0) {
 		/* last one to close the audio port */
@@ -568,7 +569,7 @@ sound_player(self)
 #ifdef sun
 	device_used--;
 #endif
-	up_sema(device_sema);
+	PyThread_up_sema(device_sema);
 }
 
 static int
@@ -593,12 +594,12 @@ sound_playstop(self)
 	mmobject *self;
 {
 	denter(sound_stop);
-	(void) down_sema(PRIV->s_sema, WAIT_SEMA);
+	(void) PyThread_down_sema(PRIV->s_sema, WAIT_SEMA);
 	if (PRIV->s_flag & PORT_OPEN) {
 		PRIV->s_flag |= STOP;
 		(void) write(PRIV->s_pipefd[1], "s", 1);
 	}
-	up_sema(PRIV->s_sema);
+	PyThread_up_sema(PRIV->s_sema);
 	return 1;
 }
 
@@ -618,7 +619,7 @@ sound_setrate(self, rate)
 	char msg;
 
 	dprintf(("sound_setrate(%lx,%g)\n", (long) self, rate));
-	(void) down_sema(PRIV->s_sema, WAIT_SEMA);
+	(void) PyThread_down_sema(PRIV->s_sema, WAIT_SEMA);
 	if (rate == 0) {
 		PRIV->s_flag |= PAUSE;
 		msg = 'p';
@@ -633,7 +634,7 @@ sound_setrate(self, rate)
 		dprintf(("sound_setrate(%lx): writing %c\n", (long) self, msg));
 		(void) write(PRIV->s_pipefd[1], &msg, 1);
 	}
-	up_sema(PRIV->s_sema);
+	PyThread_up_sema(PRIV->s_sema);
 	return 1;
 }
 
@@ -725,7 +726,7 @@ initsoundchannel()
 #endif
 	dprintf(("initsoundchannel\n"));
 	(void) Py_InitModule("soundchannel", soundchannel_methods);
-	device_sema = allocate_sema(1);
+	device_sema = PyThread_allocate_sema(1);
 	if (device_sema == NULL)
 		Py_FatalError("soundchannelmodule: can't allocate semaphore");
 }
