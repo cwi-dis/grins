@@ -222,6 +222,9 @@ MENUBAR=(
 			)),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Merge with parent', None, MERGE_PARENT),
+		# XXX temporare
+		(FLAG_ALL, SEP,),
+		(FLAG_PRO, TOGGLE, 'Enable animation', None, ENABLE_ANIMATION),
 		)),
 
 	('&View', (

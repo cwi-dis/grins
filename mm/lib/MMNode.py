@@ -2342,7 +2342,6 @@ class MMNode(MMTreeElement):
 		self.channelType = None
 		self.reinit(recurse = 0)
 		self.reset()
-
 		self._animationData = None
 
 	def reinit(self, recurse = 1):
@@ -5060,7 +5059,6 @@ class MMNode(MMTreeElement):
 	# animparent: the parent node of the animations targeting self
 	# if none is given then self is assumed
 	def computeAnimationData(self, animparent=None):
-		# XXX to do: update animation data according to animation nodes
 		if animparent is not None and not isinstance(animparent, MMNode):
 			print 'not a MMNode argument'
 			return
@@ -5077,11 +5075,25 @@ class MMNode(MMTreeElement):
 	
 	def applyAnimationData(self, editmgr):
 		if self._animationData:
+			
+			# XXX HACK: remove the previous animation nodes to make things working
+			# XXX should be removed or move in another location when we know exactly what we need
+			animparent = target = self
+			root = animparent.GetRoot()
+			if not editmgr.transaction():
+				return 0
+			animationList = []
+			for c in animparent.GetChildren():
+				if c.GetType() == 'animate':
+					animationList.append(c)
+			for animation in animationList:
+				editmgr.delnode(animation)
+			from AnimationData import AnimationTarget
+			self._animationData._target = AnimationTarget(root, target, animparent) # animation target
+			# end HACK
+			
 			self._animationData.applyData(editmgr)
-		# XXX to do: destroy the current animation nodes (if exist) for this instance 
-		# XXX and create the new animation nodes according to animationData
 		
-
 class FakeRootNode(MMNode):
 	def __init__(self, root):
 		self.__root = root	# the real root

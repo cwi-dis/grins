@@ -165,6 +165,7 @@ class AnimationData:
 		while len(animateColorValues)<n:
 			animateColorValues.append(self._domcolor)
 
+		self._data = []
 		for i in range(n):
 			x, y = animateMotionValues[i]
 			w = animateWidthValues[i]
@@ -202,8 +203,8 @@ class AnimationData:
 		context = self._target.getContext()
 
 		em = editmgr
-		if not em.transaction():
-			return 0
+#		if not em.transaction():
+#			return 0
 
 		anim = existing.get('pos')
 		if anim is not None:

@@ -918,6 +918,14 @@ class KeyTimesSlider(window.Wnd):
 		self._selected = -1
 		self._dragging = None
 
+		self._listener = None		
+
+	def setListener(self, listener):
+		self._listener = listener
+
+	def removeListener(self):
+		self._listener = None
+		
 	def insertKeyTime(self, tp):
 		if tp <= self.DELTA or tp>1.0-self.DELTA: return
 		index = 0
@@ -939,13 +947,17 @@ class KeyTimesSlider(window.Wnd):
 		self._selected = -1
 		self.updateKeyTimes()
 
-	def insertKeyTimeAtDevicePoint(self, point):
+	def pointToTime(self, point):
 		l, t, r, b = self.GetWindowRect()
 		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
 		x0 = l + self.TICKS_OFFSET
 		x, y = point
 		range = float(self.getDeviceRange())
 		tp = (x-x0)/range
+		return tp
+		
+	def insertKeyTimeAtDevicePoint(self, point):
+		tp = self.pointToTime(point)
 		self.insertKeyTime(tp)
 
 	def removeKeyTimeAtIndex(self, index):
@@ -1028,6 +1040,9 @@ class KeyTimesSlider(window.Wnd):
 				return index, rect.tuple()
 			index = index + 1
 		return -1, None
+
+	def getSelectedKeyTimeIndex(self):
+		return self._selected
 	
 	def isDraggable(self):
 		return self._selected>0 and self._selected<len(self._keyTimes)-1
@@ -1044,11 +1059,17 @@ class KeyTimesSlider(window.Wnd):
 				self._parent.SetCapture()
 			self._selected = index
 			self.updateKeyTimes()
+			if self._listener:
+				self._listener.onSelected(index)
 
 	def onDeselect(self, point, flags):
 		if self._dragging:
 			self._dragging = None
 			self._parent.ReleaseCapture()
+
+	def select(self, index):
+		self._selected = index
+		self.updateKeyTimes()
 
 	def onDrag(self, point, flags):
 		if self._dragging:
@@ -1070,10 +1091,15 @@ class KeyTimesSlider(window.Wnd):
 		# test hit on a key time
 		index, rect = self.getKeyTime(point)
 		if index >= 0:
-			if self.isRemovable(index):
-				self.removeKeyTimeAtIndex(index)	
+			if self._listener:
+				self._listener.onRemoveKey(index)
+#			if self.isRemovable(index):
+#				self.removeKeyTimeAtIndex(index)	
 		else:	
-			self.insertKeyTimeAtDevicePoint(point)
+#			self.insertKeyTimeAtDevicePoint(point)
+			if self._listener:
+				tp = self.pointToTime(point)
+				self._listener.onInsertKey(tp)
 
 	def setSelectedKeyTimeData(self, rect, color):
 		if self._selected<0: return
