@@ -17,9 +17,10 @@ import re
 
 from SMIL import *
 
+NSprefix = 'GRiNS'
 # This string is written at the start of a SMIL file.
 SMILdecl = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
-NSdecl = '<?xml:namespace ns="%s" prefix="cmif"?>\n' % CMIFns
+NSdecl = '<?xml:namespace ns="%s" prefix="%s"?>\n' % (CMIFns, NSprefix)
 doctype = '<!DOCTYPE smil PUBLIC "%s"\n\
                       "%s">\n' % (SMILpubid,SMILdtd)
 
@@ -274,6 +275,14 @@ def getbagindex(writer, node):
 	      node.GetRawAttrDef('name', '<unnamed>'),\
 	      node.GetUID()
 
+def getugroup(writer, node):
+	if not node.GetContext().usergroups:
+		return
+	u_group = node.GetAttrDef('u_group', 'undefined')
+	if u_group == 'undefined':
+		return
+	return writer.ugr2name[u_group]
+
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
@@ -294,7 +303,8 @@ smil_attrs=[
 	("system-required", lambda writer, node:getcmifattr(writer, node, "system_required")),
 	("system-screen-size", getscreensize),
 	("system-screen-depth", lambda writer, node:getcmifattr(writer, node, "system_screen_depth")),
-	("cmif:bag-index", getbagindex),
+	("%s:bag-index" % NSprefix, getbagindex),
+	("%s:u_group" % NSprefix, getugroup),
 ]
 
 # Mapping from CMIF channel types to smil media types
@@ -315,7 +325,7 @@ def mediatype(chtype, error=0):
 		return smil_mediatype[chtype]
 	if error and chtype != 'layout':
 		print '** Unimplemented channel type', chtype
-	return 'cmif:'+chtype
+	return '%s:%s' % (NSprefix, chtype)
 
 class SMILWriter(SMIL):
 	def __init__(self, node, fp, filename):
@@ -325,6 +335,9 @@ class SMILWriter(SMIL):
 		self.__title = None
 
 		self.ids_used = {}
+
+		self.ugr2name = {}
+		self.calcugrnames(node)
 
 		self.ch2name = {}
 		self.top_levels = []
@@ -369,6 +382,7 @@ class SMILWriter(SMIL):
 		self.fp.write('<meta name="generator" content="GRiNS %s"/>\n' %
 			      version.version)
 		self.writelayout()
+		self.writeusergroups()
 		fp.pop()
 		fp.write('</head>\n')
 		fp.write('<body>\n')
@@ -378,6 +392,24 @@ class SMILWriter(SMIL):
 		fp.write('</body>\n')
 		fp.pop()
 		fp.write('</smil>\n')
+
+	def calcugrnames(self, node):
+		"""Calculate unique names for usergroups"""
+		usergroups = node.GetContext().usergroups
+		if not usergroups:
+			return
+		self.uses_cmif_extension = 1
+		for ugroup in usergroups.keys():
+			name = identify(ugroup)
+			if self.ids_used.has_key(name):
+				i = 0
+				nn = '%s-%d' % (name, i)
+				while self.ids_used.has_key(nn):
+					i = i+1
+					nn = '%s-%d' % (name, i)
+				name = nn
+			self.ids_used[name] = 1
+			self.ugr2name[ugroup] = name
 
 	def calcnames1(self, node):
 		"""Calculate unique names for nodes; first pass"""
@@ -571,6 +603,26 @@ class SMILWriter(SMIL):
 		self.fp.pop()
 		self.fp.write('</layout>\n')
 
+	def writeusergroups(self):
+		u_groups = self.root.GetContext().usergroups
+		if not u_groups:
+			return
+		self.fp.write('<%s:user_attributes>\n' % NSprefix)
+		self.fp.push()
+		for key, val in u_groups.items():
+			attrlist = ['<%s:u_group' % NSprefix]
+			attrlist.append('id=%s' % nameencode(self.ugr2name[key]))
+			title, u_state, override = val
+			if title:
+				attrlist.append('title=%s' % nameencode(title))
+			if u_state != 'RENDERED':
+				attrlist.append('u_state=%s' % nameencode(u_state))
+			if override != 'allowed':
+				attrlist.append('override=%s' % nameencode(override))
+			attrs = string.join(attrlist, ' ')
+			self.fp.write(attrs + '/>\n')
+		self.fp.pop()
+		self.fp.write('</%s:user_attributes>\n' % NSprefix)
 
 
 	def writenode(self, x, root = 0):
@@ -584,7 +636,7 @@ class SMILWriter(SMIL):
 		interior = (type in interiortypes)
 		if interior:
 			if type == 'bag':
-				mtype = 'cmif:bag'
+				mtype = '%s:bag' % NSprefix
 			elif type == 'alt':
 				mtype = 'switch'
 			else:
@@ -613,7 +665,7 @@ class SMILWriter(SMIL):
 		imm_href = None
 ## 		if type == 'imm':
 ## 			data = string.join(x.GetValues(), '\n')
-## 			if mtype != 'text' and mtype[:5] != 'cmif:':
+## 			if mtype != 'text' and mtype[:5] != '%s:' % NSprefix:
 ## 				# binary data, use base64 encoding
 ## 				import base64
 ## 				data = base64.encodestring(data)

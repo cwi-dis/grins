@@ -19,6 +19,7 @@ class MMNodeContext:
 		self.channeldict = {}
 		self.hyperlinks = Hlinks()
 		self.layouts = {}
+		self.usergroups = {}
 		self.dirname = None
 		self.nextuid = 1
 		self.editmgr = None
@@ -259,6 +260,36 @@ class MMNodeContext:
 				del channels[i]
 				return
 		raise CheckError, 'dellayoutchannel: channel not in layout'
+
+	#
+	# User group administration
+	#
+	def addusergroups(self, dict):
+		self.usergroups.update(dict)
+
+	def addusergroup(self, name, value):
+		if self.usergroups.has_key(name):
+			raise CheckError, 'addusergroup: existing name'
+		self.usergroups[name] = value
+
+	def delusergroup(self, name):
+		if not self.usergroups.has_key(name):
+			raise CheckError, 'delusergroup: non-existing name'
+		del self.usergroups[name]
+
+	def setusergroupname(self, oldname, newname):
+		if newname == oldname: return # No change
+		if self.usergroups.has_key(newname):
+			raise CheckError, 'setusergroup: existing name'
+		if not self.usergroups.has_key(oldname):
+			raise CheckError, 'setusergroup: non-existing name'
+		self.usergroups[newname] = self.usergroups[oldname]
+		del self.usergroups[oldname]
+		# Patch references to this usergroup in nodes
+		for uid in self.uidmap.keys():
+			n = self.uidmap[uid]
+			if n.GetRawAttrDef('usergroup', None) == oldname:
+				n.SetAttr('usergroup', newname)
 
 	# Internal: predicates to select nodes pertaining to self._roots
 	def _isbadlink(self, link):
@@ -1640,7 +1671,7 @@ class MMNode:
 	#
 	def SetPlayability(self, playable=1):
 		if playable:
-			playable = self._compute_playable()
+			playable = self.__compute_playable()
 		getchannelfunc = self.context.getchannelbynode
 		if playable and self.type in leaftypes and getchannelfunc:
 			# For media nodes check that the channel likes
@@ -1648,6 +1679,12 @@ class MMNode:
 			chan = getchannelfunc(self)
 			if not chan or not chan.getaltvalue(self):
 				playable = 0
+		if playable:
+			u_group = self.GetAttrDef('u_group', 'undefined')
+			if u_group != 'undefined':
+				val = self.context.usergroups.get(u_group)
+				if val is not None and val[1] != 'RENDERED':
+					playable = 0
 		self.playable = playable
 ## 		for child in self.children:
 ## 			child.SetPlayability(playable)
@@ -1661,7 +1698,7 @@ class MMNode:
 			self.SetPlayability(parent_playable)
 		return self.playable
 
-	def _compute_playable(self):
+	def __compute_playable(self):
 		all = settings.getsettings()
 		for setting in all:
 			if self.attrdict.has_key(setting):
@@ -1670,6 +1707,13 @@ class MMNode:
 				if not ok:
 					return 0
 		return 1
+
+	def ResetPlayability(self):
+		if self.playable is None:
+			return
+		self.playable = None
+		for child in self.children:
+			child.ResetPlayability()
 
 # Make a "deep copy" of an arbitrary value
 #

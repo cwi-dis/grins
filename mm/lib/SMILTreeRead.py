@@ -123,6 +123,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__dict__['end_root-layout'] = self.end_0root_layout
 		self.__printfunc = printfunc
 		self.__printdata = []
+		self.__u_groups = {}
 
 	def close(self):
 		xmllib.XMLParser.close(self)
@@ -270,6 +271,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad system-overdub-or-caption attribute', self.lineno)
 			elif attr == 'system-required':
 				attrdict['system_required'] = val
+			elif self.cmif_prefix is not None and \
+			     attr == self.cmif_prefix + ':u_group':
+				if self.__u_groups.has_key(val):
+					attrdict['u_group'] = val
+				else:
+					self.syntax_error("unknown u_group `%s'" % val)
 
 	def NewNode(self, mediatype, attributes):
 		id = attributes.get('id')
@@ -861,7 +868,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 ## 			self.attributes['par']['sync'] = content
 		if name == 'title':
 			# make sure __title cannot be a SMIL region id
-			self.__title = ' %s ' % content
+			if content[:1] == content[-1:] == ' ':
+				self.__title = content
+			else:
+				self.__title = ' %s ' % content
 		elif name == 'base':
 			self.__base = content
 		elif name in ('pics-label', 'PICS-label', 'generator'):
@@ -1012,6 +1022,37 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def end_0root_layout(self):
 		pass
 
+	def start_cmif_user_attributes(self, attributes):
+		id = attributes.get(self.cmif_prefix + ':id')
+		if id is not None:
+			if self.__ids.has_key(id):
+				self.syntax_error('non-unique id %s' % id, self.lineno)
+			self.__ids[id] = 0
+
+	def end_cmif_user_attributes(self):
+		self.__context.addusergroups(self.__u_groups)
+
+	def start_cmif_u_group(self, attributes):
+		# first fix up attributes by removing the prefix
+		prefix_colon = self.cmif_prefix + ':'
+		prefix_colon_len = len(prefix_colon)
+		for key, val in attributes.items():
+			if key[:prefix_colon_len] == prefix_colon:
+				del attributes[key]
+				attributes[key[prefix_colon_len:]] = val
+		id = attributes.get('id')
+		if id is not None:
+			if self.__ids.has_key(id):
+				self.syntax_error('non-unique id %s' % id, self.lineno)
+			self.__ids[id] = 0
+		title = attributes.get('title', '')
+		u_state = attributes['u_state']
+		override = attributes['override']
+		self.__u_groups[id] = title, u_state, override
+
+	def end_cmif_u_group(self):
+		pass
+		
 	# container nodes
 
 	def start_par(self, attributes):
@@ -1345,25 +1386,33 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error('invalid DOCTYPE', self.lineno)
 
 	def handle_xml_namespace(self, prefix, ns, src):
-		if ns == CMIFns and not self.cmif_prefix:
+		if ns == CMIFns and self.cmif_prefix is None:
 			self.cmif_prefix = prefix
 			self.init_cmif_namespace(prefix)
-			self.__dict__['start_' + prefix + ':cmif'] = \
-					       self.start_cmif_cmif
-			self.__dict__['end_' + prefix + ':cmif'] = \
-					     self.end_cmif_cmif
-			self.__dict__['start_' + prefix + ':socket'] = \
-					       self.start_cmif_socket
-			self.__dict__['end_' + prefix + ':socket'] = \
-					     self.end_cmif_socket
-			self.__dict__['start_' + prefix + ':shell'] = \
-					       self.start_cmif_shell
-			self.__dict__['end_' + prefix + ':shell'] = \
-					     self.end_cmif_shell
-			self.__dict__['start_' + prefix + ':bag'] = \
-					       self.start_cmif_bag
-			self.__dict__['end_' + prefix + ':bag'] = \
-					     self.end_cmif_bag
+			self.__dict__['start_%s:cmif' % prefix] = \
+					self.start_cmif_cmif
+			self.__dict__['end_%s:cmif' % prefix] = \
+					self.end_cmif_cmif
+			self.__dict__['start_%s:socket' % prefix] = \
+					self.start_cmif_socket
+			self.__dict__['end_%s:socket' % prefix] = \
+					self.end_cmif_socket
+			self.__dict__['start_%s:shell' % prefix] = \
+					self.start_cmif_shell
+			self.__dict__['end_%s:shell' % prefix] = \
+					self.end_cmif_shell
+			self.__dict__['start_%s:bag' % prefix] = \
+					self.start_cmif_bag
+			self.__dict__['end_%s:bag' % prefix] = \
+					self.end_cmif_bag
+			self.__dict__['start_%s:user_attributes' % prefix] = \
+					self.start_cmif_user_attributes
+			self.__dict__['end_%s:user_attributes' % prefix] = \
+					self.end_cmif_user_attributes
+			self.__dict__['start_%s:u_group' % prefix] = \
+					self.start_cmif_u_group
+			self.__dict__['end_%s:u_group' % prefix] = \
+					self.end_cmif_u_group
 		# ignore other namespaces
 
 	def handle_proc(self, name, data):
