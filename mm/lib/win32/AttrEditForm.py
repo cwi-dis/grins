@@ -1395,7 +1395,7 @@ class EventCtrl(AttrCtrl):
 		if code == win32con.EN_KILLFOCUS and self._eventstruct:
 			if self._eventstruct.get_repeat():
 				try:
-					self._eventstruct.set_repeat(float(self._repeatwidget.gettext()))
+					self._eventstruct.set_repeat(int(self._repeatwidget.gettext()))
 				except ValueError:
 					win32dialog.showmessage("Repeat must be a number!", parent=self._wnd._form)
 					return
