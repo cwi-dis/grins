@@ -12,9 +12,34 @@ __version__ = "$Id$"
 def getfullinfo(url):
 	u = MMurl.urlopen(url)
 	if u.headers.subtype in ('mp3', 'mpeg', 'x-mp3'):
-		u.close()
-		return 80000, 8000, []
-	u.close()
+		import winmm, winuser
+		try:
+			decoder = winmm.CreateMp3Decoder()
+		except winmm.error, msg:
+			print msg
+			u.close()
+			return 0, 8000, []
+		decode_buf_size = 8192
+		data = u.read(decode_buf_size)
+		u.close()	
+		wfx = decoder.GetWaveFormat(data)
+		decbuf = ''
+		status = len(data)
+		decdata, done, inputpos, status = decoder.DecodeBuffer(data)
+		if done>0:
+			decbuf = decbuf + decdata[:done]
+		while not status:
+			decdata, done, status, status = decoder.DecodeBuffer()
+			if done>0:
+				decbuf = decbuf + decdata[:done]
+		if status > 0:
+			status = status - 1
+		decfactor = 1.137*len(decbuf)/float(decode_buf_size - status)
+		filename = MMurl.urlretrieve(url)[0]
+		fsize = winuser.GetFileSize(filename)
+		dur = (decfactor*fsize)/float(wfx[2])
+		dur = 0.001*int(dur*1000.0)
+		return dur, 1, []
 
 	import audio
 	from MMurl import urlretrieve
