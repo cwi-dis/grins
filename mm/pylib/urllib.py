@@ -298,18 +298,21 @@ class URLopener:
 
 	# Use local file
 	def open_local_file(self, url):
+		import mimetypes, mimetools, StringIO
+		mtype = mimetypes.guess_type(url)[0]
+		headers = mimetools.Message(StringIO.StringIO('Content-Type: %s\n' % (mtype or 'text/plain')))
 		host, file = splithost(url)
 		if not host:
 			return addinfourl(
 				open(url2pathname(file), 'rb'),
-				noheaders(), 'file:'+file)
+				headers, 'file:'+file)
 		host, port = splitport(host)
 		if not port and socket.gethostbyname(host) in (
 			  localhost(), thishost()):
 			file = unquote(file)
 			return addinfourl(
 				open(url2pathname(file), 'rb'),
-				noheaders(), 'file:'+file)
+				headers, 'file:'+file)
 		raise IOError, ('local file error', 'not on local host')
 
 	# Use FTP protocol
