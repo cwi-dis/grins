@@ -598,6 +598,7 @@ class AttrCtrl:
 	def getcurrent(self):
 		return self._attr.getcurrent()
 
+	# temp stuff not safe
 	def a2tuple(self,str):
 		if not str: return ()
 		l=string.split(str, ' ')
@@ -614,6 +615,30 @@ class AttrCtrl:
 			return (n[0],n[1],n[2],n[3])
 		return ()
 
+	def zerostuple(self,n):
+		if n==1:
+			return ('0',)
+		elif n==2:
+			return ('0','0')
+		elif n==3:
+			return ('0','0','0')
+		elif n==4:
+			return ('0','0','0','0')
+		else:
+			return ()
+
+	def dtuple2stuple(self,t,n):
+		if not t:
+			return self.zerostuple(n)
+		if len(t)==1 and n==1:
+			return ('%d' % t[0],)
+		elif len(t)==2 and n==2:
+			return ('%s' % t[0],'%s' % t[1])
+		elif len(t)==3 and n==3:
+			return ('%s' % t[0],'%s' % t[1],'%s' % t[2])
+		elif len(t)==4 and n==4:
+			return ('%s' % t[0],'%s' % t[1],'%s' % t[2],'%s' % t[3])
+		return self.zerostuple(n)
 
 ##################################
 class OptionsCtrl(AttrCtrl):
@@ -860,18 +885,17 @@ class IntPairCtrl(AttrCtrl):
 		self._attrname.settext(self._attr.getlabel())
 
 		strxy=self._attr.getcurrent()
-		x,y=self.a2tuple(strxy)
-		self._attrval1.settext('%s' % x)
-		self._attrval2.settext('%s' % y)
+		self.setvalue(strxy)
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnEdit,self._resid[2])
 		self._wnd.HookCommand(self.OnReset,self._resid[3])
 
 	def setvalue(self, val):
 		if self._initctrl:
-			x,y=self.a2tuple(val)
-			self._attrval1.settext('%s' % x)
-			self._attrval2.settext('%s' % y)
+			t=self.a2tuple(val)
+			sx,sy=self.dtuple2stuple(t,2)
+			self._attrval1.settext(sx)
+			self._attrval2.settext(sy)
 
 	def getvalue(self):
 		if not self._initctrl:
@@ -1205,83 +1229,8 @@ class PosSizeLayoutPage(LayoutPage):
 
 
 ############################
-#  goes in:  Attrgrs.py
 
-# order of groups in the file is important (first match first)
-# all attributes not in complete groups 
-# will be displayed on their own page
-
-attrgrs=(
-	{'name':'infogroup',
-	'title': 'Info',
-	'match': 'first', # can be: 'all', 'part', 'first' default: 'all'
-	'attrs':[
-		'title',
-		'abstract',
-		'alt',
-		'longdesc',
-		'author',
-		'copyright',
-		'comment'
-		]},
-
-
-	{'name':'subregion',
-	'title':'Destination region',
-	'attrs':[
-		'subregionxy',
-		'subregionwh',
-		'displayfull',
-		'subregionanchor',
-		]},
-
-	{'name':'base_winoff_and_units',
-	'title':'Position and size',
-	'attrs':[
-		'base_winoff',
-		'units',
-		]},
-
-	{'name':'base_winoff',
-	'title':'Position and size',
-	'attrs':[
-		'base_winoff',
-		]},
-
-	{'name':'system',
-	'title': 'System properties',
-	'attrs':[
-		'system_bitrate',
-		'system_captions',
-		'system_language',
-		'system_overdub_or_caption',
-		'system_required',
-		'system_screen_depth',
-		'system_screen_size',
-		]},
-
-	{'name':'name',
-	'title':'Node name',
-	'attrs':[
-		'name',
-		'channel',
-		]},
-
-	{'name':'.cname',
-	'title':'Channel name',
-	'attrs':[
-		'.cname',
-		'type',
-		]},
-
-	{'name':'duration_and_loop',
-	'title':'Duration and loop',
-	'attrs':[
-		'duration',
-		'loop',
-		]},
-
-	)
+from Attrgrs import attrgrs
 
 attrgrsdict={}
 for d in attrgrs:
