@@ -37,6 +37,7 @@ class SchedulerContext:
 		self.srdict = {}
 		self.scheduled_children = 0
 		self.channels = []	# channels that have received a startcontext call
+		self.erase_chan = {}
 		self.playroot = MMNode.FakeRootNode(node)
 		#self.parent.ui.duration_ind.label = '??:??'
 
@@ -53,6 +54,7 @@ class SchedulerContext:
 		self.active = 0
 		self.stopcontextchannels()
 		self.srdict = {}
+		self.erase_chan = {}
 		self.parent._remove_sctx(self)
 		self.playroot.resetall(self.parent)
 		del self.parent
@@ -632,7 +634,7 @@ class SchedulerContext:
 				ndur = max(maxtime, ndur) # don't play longer than this
 			else:
 				ndur = maxtime
-		if ndur >= 0 and timestamp + ndur <= parent.timefunc() and node.GetFill() == 'remove':
+		if ndur >= 0 and timestamp + ndur <= parent.timefunc() and MMAttrdefs.getattr(node, 'erase') != 'never' and node.GetFill() == 'remove':
 			runchild = 0
 		srdict = pnode.gensr_child(node, runchild, path = path, sctx = self, curtime = parent.timefunc())
 		self.srdict.update(srdict)
@@ -788,7 +790,7 @@ class SchedulerContext:
 					val[0] = num
 			del node.GetSchedParent().srdict[ev]
 
-	def do_terminate(self, node, timestamp, fill = 'remove', cancelarcs = 0, chkevent = 1, skip_cancel = 0):
+	def do_terminate(self, node, timestamp, fill = 'remove', cancelarcs = 0, chkevent = 1, skip_cancel = 0, ignore_erase = 0):
 		if timestamp is None:
 			import traceback; traceback.print_stack()
 		parent = self.parent
@@ -796,6 +798,9 @@ class SchedulerContext:
 		if debugdump: parent.dump()
 		if fill != 'remove' and node.GetSchedParent() is None:
 			fill = 'remove'
+		if not ignore_erase and MMAttrdefs.getattr(node, 'erase') == 'never':
+			fill = 'freeze'
+			self.erase_chan[node.GetChannelName()] = node
 		self.cancel_gensr(node)
 		if not skip_cancel:
 			for arc in node.durarcs + node.GetEndList():
@@ -1391,6 +1396,10 @@ class Scheduler(scheduler):
 		xnode = node
 		if isinstance(xnode, MMNode.MMNode_body):
 			xnode = xnode.parent
+		n = sctx.erase_chan.get(node.GetChannelName())
+		if n is not None:
+			sctx.do_terminate(n, timestamp, ignore_erase = 1)
+			del sctx.erase_chan[node.GetChannelName()]
 		chan = self.ui.getchannelbynode(xnode)
 		if chan not in sctx.channels:
 			sctx.channels.append(chan)
