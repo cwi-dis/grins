@@ -90,8 +90,126 @@ DWORD video_thread::Run()
 		if(wres == WAIT_OBJECT_0) return 0;
 
 		m_decoder.update_framenum();
+		Sleep(10);
 		}
 	m_decoder.write_last_sequence_frame();
+	SetEvent(GetStopHandle());
+	return 0;
+	}
+
+//////////////////////////////
+class audio_thread : public Thread
+	{
+	public:
+	audio_thread(const TCHAR *filename)
+	:	m_filename(filename),
+		m_pwavout(NULL),
+		m_hPlaybackEvent(CreateEvent(NULL, TRUE, FALSE, NULL)),
+		m_ready(false)
+		{
+		}
+
+	~audio_thread()
+		{
+		if(m_pwavout != 0) delete m_pwavout;
+		if(m_hPlaybackEvent) CloseHandle(m_hPlaybackEvent);
+		}
+
+	void suspend_playback()
+		{
+		if(m_pwavout != 0) m_pwavout->suspend();
+		ResetEvent(m_hPlaybackEvent);
+		}
+
+	void resume_playback()
+		{
+		if(m_pwavout != 0) m_pwavout->resume();
+		SetEvent(m_hPlaybackEvent);
+		}
+	
+	bool is_ready() const {return m_ready;}
+	bool is_running() const
+		{return WaitForSingleObject(GetStopHandle(), 0) != WAIT_OBJECT_0;}
+	void wait_ready()
+		{
+		while(is_running() && !is_ready()) 
+			Sleep(50);
+		}
+
+	protected:
+	virtual DWORD Run();
+
+	private:
+	std::basic_string<TCHAR> m_filename;
+	wave_out_device *m_pwavout;
+	HANDLE m_hPlaybackEvent;
+	bool m_ready;
+	enum {buffers_init = 4, buffers_low = 8, buffers_hi = 12};
+	};
+
+DWORD audio_thread::Run()
+	{
+	mpeg_container mpeg2;
+	if(!mpeg2.open(m_filename.c_str()))
+		{
+		SetEvent(GetStopHandle());
+		return 1;
+		}
+
+	if(!mpeg2.has_audio())
+		{
+		SetEvent(GetStopHandle());
+		return 1;
+		}
+
+	printf("has_audio: rate=%d channels=%d\n", mpeg2.get_sample_rate(), mpeg2.get_audio_channels());
+	m_pwavout = new wave_out_device();
+	if(!m_pwavout->open(mpeg2.get_sample_rate(), mpeg2.get_audio_channels()))
+		{
+		delete m_pwavout;
+		m_pwavout = 0;
+		SetEvent(GetStopHandle());
+		return 1;
+		}
+	
+	while(m_pwavout->get_audio_data_size()<buffers_hi)
+		{
+		char *audio_data = 0;
+		int nr = mpeg2.read_audio_chunk(&audio_data);
+		if(nr == 0)
+			{
+			if(audio_data != 0) delete audio_data;
+			break;
+			}
+		if(!m_pwavout->write_audio_chunk(audio_data, nr))
+			break;
+		}
+	m_ready = true;
+
+	HANDLE handles[] = {GetStopHandle(), m_hPlaybackEvent};
+	DWORD wres = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+	if(wres == WAIT_OBJECT_0) return 0;
+	
+	while(WaitForSingleObject(GetStopHandle(), 10) != WAIT_OBJECT_0)
+		{
+		WaitForMultipleObjects(2, handles, FALSE, INFINITE);
+		if(m_pwavout->get_audio_data_size()<buffers_low)
+			{
+			while(m_pwavout->get_audio_data_size()<buffers_hi)
+				{
+				char *audio_data = 0;
+				int nr = mpeg2.read_audio_chunk(&audio_data);
+				if(nr == 0)
+					{
+					if(audio_data != 0) delete audio_data;
+					break;
+					}
+				if(!m_pwavout->write_audio_chunk(audio_data, nr))
+					break;
+				}
+			}
+		}
+
 	SetEvent(GetStopHandle());
 	return 0;
 	}
@@ -104,7 +222,7 @@ mpeg_player::mpeg_player()
 	display(0), 
 	di(0), 
 	pVideoThread(0),
-	pwavout(0)
+	pAudioThread(0)
 	{
 	di = new display_info;
 	memset(di, 0, sizeof(display_info));
@@ -142,39 +260,14 @@ bool mpeg_player::set_input_stream(mpeg_input_stream *in_stream)
 	return true;
 	}
 
-bool mpeg_player::decode_audio_stream()
-	{
-	mpeg_container mpeg2;
-	if(!mpeg2.open(pinstream->get_pathname()))
-		return false;
-
-	if(mpeg2.has_audio())
-		{
-		pwavout = new wave_out_device();
-		if(!pwavout->open(mpeg2.get_sample_rate(), mpeg2.get_audio_channels()))
-			{
-			delete pwavout;
-			pwavout = 0;
-			return false;
-			}
-		mpeg2.read_audio(pwavout->get_data_ref());
-		
-		if(!pwavout->prepare_playback())
-			{
-			delete pwavout;
-			pwavout = 0;
-			return false;
-			}
-		}
-	return true;
-	}
-
 double mpeg_player::get_duration()
 	{
 	if(pinstream == 0) return 0.0;
+	
 	mpeg_container mpeg2;
 	if(!mpeg2.open(pinstream->get_pathname(), false))
 		return 0.0;
+
 	return mpeg2.get_duration();
 	}
 
@@ -208,10 +301,11 @@ void mpeg_player::close()
 		delete display;
 		display = 0;
 		}
-	if(pwavout != 0)
+	if(pAudioThread != 0)
 		{
-		delete pwavout;
-		pwavout = 0;
+		pAudioThread->Stop();
+		delete pAudioThread;
+		pAudioThread = 0;
 		}
 	}
 
@@ -248,6 +342,13 @@ void mpeg_player::prepare_playback(surface<color_repr_t> *psurf)
 		surf_display->set_surface(psurf);
 		display = surf_display;
 
+		if(pAudioThread == 0)
+			{
+			pAudioThread = new audio_thread(pinstream->get_pathname());
+			pAudioThread->Start();
+			pAudioThread->wait_ready();
+			}
+
 		pVideoThread = new video_thread(*decoder);
 		pVideoThread->Start();
 		}
@@ -257,16 +358,17 @@ void mpeg_player::suspend_playback()
 	{
 	if(pVideoThread != 0)
 		pVideoThread->suspend_playback();
-	if(pwavout != 0) 
-		pwavout->suspend();
+	if(pAudioThread != 0) 
+		pAudioThread->suspend_playback();
 	}
 
 void mpeg_player::resume_playback()
 	{
 	if(pVideoThread != 0)
 		pVideoThread->resume_playback();
-	if(pwavout != 0) 
-		pwavout->resume();
+
+	if(pAudioThread != 0) 
+		pAudioThread->resume_playback();
 	}
 
 bool mpeg_player::finished_playback()

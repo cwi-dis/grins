@@ -15,7 +15,6 @@
 
 mpeg_input_stream *open_mpeg_input_stream(TCHAR *path)
 	{
-	//_tprintf(TEXT("open_mpeg_input_stream\n"));
 	wnds_mpeg_input_stream *p = new wnds_mpeg_input_stream(path);
 	if(p != NULL && !p->is_valid())
 		{
@@ -216,10 +215,11 @@ long mpeg_container::read_audio(short *output, long samples, int stream, int cha
 	return writelen;
 	}
 
-void mpeg_container::read_audio(std::basic_string<char>& audio_data, int stream, int channel)
+long mpeg_container::read_audio(std::basic_string<char>& audio_data, int stream, int channel)
 	{
-	if(!m_pmpeg2->has_audio) return;
-	audio_data.reserve(m_pmpeg2->atrack[stream]->total_samples+8*1024);
+	if(!m_pmpeg2->has_audio) return 0;
+	size_t ts = m_pmpeg2->atrack[stream]->total_samples + 8*1024;
+	audio_data.reserve(ts);
 	int samples = 8*1024;
 	short *output = new short[samples];
 	while(true)
@@ -229,4 +229,20 @@ void mpeg_container::read_audio(std::basic_string<char>& audio_data, int stream,
 		audio_data.append((char*)output, 2*n);
 		}
 	delete[] output;
+	return audio_data.size();
 	}
+
+
+long mpeg_container::read_audio_chunk(char **pp, int stream, int channel)
+	{
+	*pp = 0;
+	if(!m_pmpeg2->has_audio) return 0;
+	if(m_pmpeg2->atrack[stream]->total_samples == m_pmpeg2->atrack[stream]->current_position)
+		return 0;
+	size_t ts = 32*1024;
+	*pp = new char[ts];
+	int samples = ts/2;
+	long n = read_audio((short*)*pp, samples, stream, channel);
+	return 2*n;
+	}
+
