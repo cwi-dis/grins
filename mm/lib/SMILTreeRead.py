@@ -484,7 +484,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val in ('always', 'whenNotActive', 'never'):
 					attrdict['restart'] = val
 				else:
-					self.syntax_error('bad restart attribute')
+					self.syntax_error('bad %s attribute' % attr)
+			elif attr == 'restartDefault':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val in ('always', 'whenNotActive', 'never'):
+					attrdict['restartDefault'] = val
+				else:
+					self.syntax_error('bad %s attribute' % attr)
 			elif attr in ('mediaSize', 'mediaTime', 'bandwidth'):
 				try:
 					if val[-1]!='%':
