@@ -433,13 +433,9 @@ class ReaderFilter:
 		self._properties = props
 
 	def OnActive(self):
-		if self._dispname is not None:
-			print self._dispname, 'OnActive'
 		self._active = 1
 
 	def OnInactive(self):
-		if self._dispname is not None:
-			print self._dispname, 'OnInactive'
 		self._active = 0
 
 	def OnRenderSample(self, ms):
@@ -450,21 +446,36 @@ class ReaderFilter:
 			self._dataqueue.append(packet)
 			self._time = btime
 
-	def nextData(self):
+	def readData(self):
+		if not self.isActive():
+			return self.__nextData()
+		import win32ui
+		while not self._dataqueue and self._active and self._driver.isActive():
+			win32ui.PumpWaitingMessages(0,0)
+		return self.__nextData()
+
+	def readDataSamples(self):
+		if not self.isActive():
+			return self.__nextDataSamples()
+		import win32ui
+		while not self._dataqueue and self._active and self._driver.isActive():
+			win32ui.PumpWaitingMessages(0,0)
+		return self.__nextDataSamples()
+
+	def __nextData(self):
 		if self._dataqueue:
 			data = self._dataqueue[0]
 			self._dataqueue = self._dataqueue[1:]
 			return data
 		return self._time, None
 
-	def readData(self):
-		if not self.isActive():
-			return self.nextData()
-		import win32ui
-		while not self._dataqueue and self._active and self._driver.isActive():
-			win32ui.PumpWaitingMessages(0,0)
-		return self.nextData()
-
+	def __nextDataSamples(self):
+		if self._dataqueue:
+			data = self._dataqueue
+			self._dataqueue = []
+			return data
+		return [(self._time, None),]
+		
 class MediaReader:
 	def __init__(self, url):		
 		self._filtergraph = None
@@ -498,17 +509,21 @@ class MediaReader:
 		self._videofilter = None
 		self._filtergraph = None
 
-	def GetAudioDuration(self):
+	def GetDuration(self):
 		if self._filtergraph:
 			mp = self._filtergraph.QueryIMediaPosition()
 			return int(1000*mp.GetDuration()+0.5)
 		return 0
 
-	def GetVideoDuration(self):
-		if self._filtergraph:
-			mp = self._filtergraph.QueryIMediaPosition()
-			return int(1000*mp.GetDuration()+0.5)
-		return 0
+	def GetAudioDuration(self): 
+		return self.GetDuration()
+
+	def GetVideoDuration(self): 
+		return self.GetDuration()
+
+	def GetTime(self):
+		mp = self._filtergraph.QueryIMediaPosition()
+		return int(1000.0*mp.GetCurrentPosition()+0.5)
 
 	def isActive(self):
 		if not self._active:
@@ -534,6 +549,16 @@ class MediaReader:
 		if not self._started:
 			self._run()
 		return self._videofilter.readData()
+
+	def ReadAudioSamples(self, frames=None):
+		if not self._started:
+			self._run()
+		return self._audiofilter.readDataSamples()
+
+	def ReadVideoSamples(self):
+		if not self._started:
+			self._run()
+		return self._videofilter.readDataSamples()
 
 	def GetVideoFormat(self):
 		import imgformat
