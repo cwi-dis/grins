@@ -9,10 +9,10 @@ import WMEVENTS
 from MenuTemplate import POPUP_HVIEW_LEAF, POPUP_HVIEW_STRUCTURE
 
 class HierarchyViewDialog(ViewDialog):
-	
+
 	interior_popupmenu = POPUP_HVIEW_STRUCTURE
 	leaf_popupmenu = POPUP_HVIEW_LEAF
-	
+
 	def __init__(self):
 		ViewDialog.__init__(self, 'hview_')
 
@@ -20,7 +20,6 @@ class HierarchyViewDialog(ViewDialog):
 		if self.is_showing():
 			self.window.pop(poptop=1)
 			return
-		self.toplevel.showstate(self, 1)
 		title = 'Structure View (' + self.toplevel.basename + ')'
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
@@ -50,10 +49,10 @@ class HierarchyViewDialog(ViewDialog):
 
 	def setcommands(self, commandlist):
 		self.window.set_commandlist(commandlist)
-		
+
 	def setpopup(self, template):
 		self.window.setpopupmenu(template)
-		
+
 	def helpcall(self):
 		import Help
 		Help.givehelp('hierarchy')
