@@ -14,6 +14,7 @@ TIMELINE_AT_TOP = 1
 TIMELINE_IN_FOCUS = 1
 
 ICONSIZE = windowinterface.ICONSIZE_PXL
+ARROWCOLOR = (0,255,0)
 
 print "TODO: remove circular references here."
 
@@ -177,7 +178,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		# print "DEBUG: set_infoicon called!"
 		self.node.infoicon = icon
 		self.node.errormessage = msg
-		print "DEBUG: adding to ", self
 		self.iconbox.add_icon(icon, callback = self.show_mesg)
 
 	def getlinkicon(self):
@@ -346,6 +346,7 @@ class StructureObjWidget(MMNodeWidget):
 				icon = 'open'
 			self.collapsebutton = Icon(self, self.mother)
 			self.collapsebutton.setup()
+			self.collapsebutton.set_properties(callbackable=1, selectable=0)
 			self.collapsebutton.set_icon(icon)
 			self.collapsebutton.set_callback(self.toggle_collapsed)
 		else:
@@ -354,7 +355,7 @@ class StructureObjWidget(MMNodeWidget):
 		for i in self.node.children:
 			bob = create_MMNode_widget(i, mother)
 			if bob == None:
-				print "TODO: you haven't written all the code yet, have you Mike?"
+				pass
 			else:
 				bob.parent_widget = self
 				self.children.append(bob)
@@ -909,6 +910,7 @@ class SeqWidget(HorizontalWidget):
 	# Any sequence node.
 	HAS_CHANNEL_BOX = 0
 	def __init__(self, node, mother):
+		mother.debug_arrow = self # debug: TODO: remove.
 		HorizontalWidget.__init__(self, node, mother)
 		has_drop_box = not MMAttrdefs.getattr(node, 'project_readonly')
 		if mother.usetimestripview and has_drop_box:
@@ -1240,10 +1242,10 @@ class MediaWidget(MMNodeWidget):
 		self.iconbox.setup()
 
 		# DEBUG:
-		print "DEBUG: Adding debugging icons."
-		self.iconbox.add_icon('linksrc')
-		self.iconbox.add_icon('linksrcdst')
-		self.iconbox.add_icon('transout')
+		i1 = self.iconbox.add_icon('linksrc').set_properties(arrowable = 1,selectable=1)
+		self.iconbox.add_icon('linksrcdst').add_arrow(i1).set_properties(arrowable = 1,selectable=1)
+		(self.iconbox.add_icon('transout')).add_arrow(self.mother.debug_arrow).set_properties(arrowable=1,selectable=1)
+		self.mother.debug_arrow = i1
 
 		self.node.views['struct_view'] = self
 
@@ -1263,7 +1265,6 @@ class MediaWidget(MMNodeWidget):
 		
 
 	def show_mesg(self):
-		print "DEBUG: calling show_mesg ", self
 		if self.node.errormessage:
 			windowinterface.showmessage(self.node.errormessage, parent=self.mother.window)
 		#else:
@@ -1409,7 +1410,7 @@ class MediaWidget(MMNodeWidget):
 			elif self.transition_out.is_hit(pos):
 				return self.transition_out
 			elif self.iconbox.is_hit(pos):
-				return self.iconbox
+				return self.iconbox.get_clicked_obj_at(pos)
 			elif self.pushbackbar and self.pushbackbar.is_hit(pos):
 				return self.pushbackbar
 			else:
@@ -1528,13 +1529,35 @@ class Icon(MMWidgetDecoration):
 
 	def setup(self):
 		self.callback = None
-	
+		self.arrowto = None	# another MMWidget.
+		
+		# Enable / disable.
+		self.callbackable = 1
+		self.selectable = 1
+		self.arrowable = 0
 	def set_icon(self, iconname):
 		self.icon = iconname
+		return self
+
+	def set_properties(self, selectable=1, callbackable=1, arrowable=0):
+		self.selectable = selectable
+		self.callbackable = callbackable
+		self.arrowable = arrowable
+		return self
+
+	def select(self):
+		if self.selectable:
+			self.mother.need_redraw = 1 # TODO: optimise.
+			MMWidgetDecoration.select(self)
+	def unselect(self):
+		if self.selectable:
+			self.mother.need_redraw = 1
+			MMWidgetDecoration.unselect(self)
 
 	def set_callback(self, callback, args=()):
 ##		print "DEBUG: callback set."
 		self.callback = callback, args
+		return self
 
 	def mouse0release(self, coords):
 ##		print "DEBUG: doing the callback."
@@ -1550,11 +1573,30 @@ class Icon(MMWidgetDecoration):
 		iconsizex = sizes_notime.ERRSIZE
 		iconsizey = sizes_notime.ERRSIZE
 		MMWidgetDecoration.moveto(self, (l, t, l+iconsizex, t+iconsizey))
+		return self
 
 	def draw(self, displist):
 		if self.icon is not None:
+			if self.selected:
+				displist.drawfbox((0,0,0),self.get_box())
 			displist.drawicon(self.get_box(), self.icon)
 
+			if self.arrowable and self.arrowto and self.selected:
+				l,t,r,b = self.arrowto.pos_abs
+				xd = (l+r)/2
+				yd = (t+b)/2
+				l,t,r,b = self.pos_abs
+				xs = (l+r)/2
+				ys = (t+b)/2
+				displist.drawarrow(ARROWCOLOR,(xd,yd),(xs,ys))
+
+	def set_contextmenu(self, foobar):
+		pass			# TODO.
+
+	def add_arrow(self, dest):
+		# dest can be any MMWidget.
+		self.arrowto = dest
+		return self
 
 class TimelineWidget(MMWidgetDecoration):
 	# A widget showing the timeline
@@ -1637,9 +1679,23 @@ class IconBox(MMWidgetDecoration):
 		i = Icon(self.mmwidget, self.mother)
 		i.setup()
 		i.set_icon(iconname)
+		if callback:
+			i.set_callback(callback)
+		if contextmenu:
+			i.set_contextmenu(contextmenu)
+		if arrowto:
+			i.add_arrow(arrowto)
 		self._icons[iconname] = i
 		if iconname not in self.iconlist:
 			self.iconlist.append(iconname)
+		return i
+
+	def get_icon(self, iconname):
+		if self._icons.has_key(iconname):
+			return self._icons[iconname]
+		else:
+			return None
+
 	def del_icon(self, iconname):
 		del self._icons[iconname]
 		del self.iconlist[iconname]
@@ -1649,8 +1705,8 @@ class IconBox(MMWidgetDecoration):
 		return ((len(self._icons) * ICONSIZE), ICONSIZE)
 
 	def get_clicked_obj_at(self, coords):
-		# working here.
-		pass
+		x,y = coords
+		return self.__get_icon(x)
 
 	def is_hit(self, pos):
 		l,t,a,b = self.pos_abs
@@ -1662,9 +1718,9 @@ class IconBox(MMWidgetDecoration):
 
 	def draw(self, display_list):
 		l,t,r,b = self.pos_abs
-		if self.selected_iconname:
-			i = self.iconlist.index(self.selected_iconname)
-			display_list.drawfbox((0,0,0), (l+i*ICONSIZE,t,ICONSIZE,ICONSIZE))
+		#if self.selected_iconname:
+		#	i = self.iconlist.index(self.selected_iconname)
+		#	display_list.drawfbox((0,0,0), (l+i*ICONSIZE,t,ICONSIZE,ICONSIZE))
 		for iconname in self.iconlist:
 			i = self._icons[iconname]
 			i.moveto((l,t,r,b))
@@ -1705,19 +1761,19 @@ class IconBox(MMWidgetDecoration):
 		#if self.callback:
 		#	apply(apply, self.callback)
 
-	def select(self):
-		x,y = self.remember_click
-		self.selected_iconname = self.__get_icon_name(x)
-		print "DEBUG: self.selected_icon is: ", self.selected_iconname
-		self.mother.need_redraw = 1
-		print "TODO: optimise redraws here."
-		if self.selected_iconname:
-			self._icons[self.selected_iconname].select()
+#	def select(self):
+#		x,y = self.remember_click
+#		self.selected_iconname = self.__get_icon_name(x)
+#		print "DEBUG: self.selected_icon is: ", self.selected_iconname
+#		self.mother.need_redraw = 1
+#		print "TODO: optimise redraws here."
+#		if self.selected_iconname:
+	#		self._icons[self.selected_iconname].select()
 
-	def unselect(self):
-		if self.selected_iconname:
-			self._icons[self.selected_iconname].unselect()
-		self.selected_iconname = None
+#	def unselect(self):
+#		if self.selected_iconname:
+#			self._icons[self.selected_iconname].unselect()
+#		self.selected_iconname = None
 
 
 ##############################################################################

@@ -717,9 +717,10 @@ class _DisplayList:
 		color = self._convert_color(color)
 		nsrc = self._convert_coordinates(src, units=units)
 		ndst = self._convert_coordinates(dst, units=units)
-		try:
-			nsx, nsy, ndx, ndy, points = window.arrowcache[(nsrc,ndst)]
-		except KeyError:
+##		try:
+##			nsx, nsy, ndx, ndy, points = window.arrowcache[(nsrc,ndst)]
+##		except KeyError:
+		if 1:			# keep indentation.
 			sx, sy = src
 			dx, dy = dst
 			nsx, nsy = nsrc 
@@ -748,7 +749,7 @@ class _DisplayList:
 				       roundi(ndy + ARR_LENGTH*sin - ARR_HALFWIDTH*cos)))
 			points.append((roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
 				       roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos)))
-			window.arrowcache[(nsrc,ndst)] = nsx, nsy, ndx, ndy, points
+#			window.arrowcache[(nsrc,ndst)] = nsx, nsy, ndx, ndy, points
 		self._list.append(('arrow', color, (nsx, nsy, ndx, ndy), points))
 		self._optimize((1,))
 		self._update_bbox(nsx, nsy, ndx, ndy)
