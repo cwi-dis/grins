@@ -46,6 +46,12 @@ class Window:
 
 		self._convbgcolor = None
 
+		# transition params
+		self._transition = None
+		self._passive = None
+		self._drawsurf = None
+		self._frozen = 0
+
 	def create(self, parent, coordinates, units, z=0, transparent=0):
 		self.__setparent(parent)
 		self.__setcoordinates(coordinates, units)
@@ -185,6 +191,7 @@ class Window:
 	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		return self.newwindow(coordinates, pixmap, transparent, z, type_channel, units)
 
+		
 	# return the coordinates of this window in units
 	def getgeometry(self, units = UNIT_SCREEN):
 		toplevel=__main__.toplevel
@@ -384,14 +391,17 @@ class Window:
 		return  -1
 
 	# Prepare an image for display (load,crop,scale, etc)
+	# Arguments:
+	# 1. crop is a tuple of proportions (see computations)
+	# 2. scale is a hint for scaling and can be 0, -1, -2 or None (see computations)
+	# 3. if center then do the obvious
+	# 4. coordinates specify placement rect
+	# 5. clip specifies the src rect
 	def _prepare_image(self, file, crop, scale, center, coordinates, clip):
-		# width, height: width and height of window
-		# xsize, ysize: width and height of unscaled (original) image
-		# w, h: width and height of scaled (final) image
-		# depth: depth of window (and image) in bytes
 		
 		# get image size. If it can't be found in the cash read it.
 		xsize, ysize = self._image_size(file)
+		
 		# check for valid crop proportions
 		top, bottom, left, right = crop
 		if top + bottom >= 1.0 or left + right >= 1.0 or \
@@ -410,7 +420,8 @@ class Window:
 			x, y, width, height = self._canvas
 		else:
 			x, y, width, height = self._convert_coordinates(coordinates,self._canvas)
-		# compute scale taking into account the hint (0,-1)
+		
+		# compute scale taking into account the hint (0,-1,-2)
 		if scale == 0:
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
@@ -431,6 +442,9 @@ class Window:
 
 		image = self._image_handle(file)
 		mask=None
+
+
+		# scale image sizes
 		w=xsize
 		h=ysize
 		if scale != 1:
@@ -538,15 +552,15 @@ class Window:
 			else:
 				# not visible at all
 				rcKeep = rcKeep[0],rcKeep[1],0,0
+		
 		# return:
-		# image, mask
-		# left,top  of crop rect
-		# x,y left-top of display rect
-		# w_img,h_img crop rect of  width and height
-		# rcKeep  image keep unscaled rectangle
+		# image attrs: image, mask
+		# src left, top (unused)
+		# dest rect
+		# src rect (image crop rect)
 
 		return image, mask, left, top, x, y,\
-			w - left - right, h - top - bottom,rcKeep
+			w - left - right, h - top - bottom, rcKeep
 
 
 	# return true if an arrow has been hit
@@ -728,7 +742,6 @@ class SubWindow(Window):
 		# implementation specific
 		self._oswnd = None
 		self._video = None
-		self.__init_transitions()
 
 	def __repr__(self):
 		return '<_SubWindow instance at %x>' % id(self)
@@ -737,7 +750,19 @@ class SubWindow(Window):
 		return SubWindow(self, coordinates, transparent, z, units)
 
 	def close(self):
-		self.DestroyOSWindow()
+		if self._parent is None:
+			return
+		self._parent._subwindows.remove(self)
+		self.updateMouseCursor()
+		if not self._frozen:
+			self._parent.update()
+		self._parent = None
+		for win in self._subwindows[:]:
+			win.close()
+		for dl in self._displists[:]:
+			dl.close()
+		del self._topwindow
+		del self._convert_color
 		Window.close(self)
 
 	#
@@ -985,7 +1010,7 @@ class SubWindow(Window):
 		if self._drawsurf:
 			self.bltDDS(self._drawsurf)
 			return
-		elif self._freeze and self._passive:
+		elif self._frozen and self._passive:
 			self.bltDDS(self._passive)
 			return
 			
@@ -1015,7 +1040,8 @@ class SubWindow(Window):
 
 	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
 		# first convert any coordinates to pixel
-		coordinates = self._convert_coordinates(coordinates,units=units)
+		if units != UNIT_PXL:
+			coordinates = self._convert_coordinates(coordinates,units=units)
 		
 		# keep old pos
 		x0, y0, w0, h0 = self._rectb
@@ -1063,46 +1089,51 @@ class SubWindow(Window):
 
 	#
 	# Transitions interface
-	#
-
-	def __init_transitions(self):
-		self._transition = None
-		self._passive = None
-		self._drawsurf = None
-		self._freeze = 0
-		
-	def begintransition(self, inout, runit, dict):
+	#		
+	def begintransition(self, outtrans, runit, dict):
+		print 'begintransition', self, outtrans, runit, dict
 		if not self._passive:
-			self.freeze_content('transition')
-		self._transition = win32transitions.TransitionEngine(self, inout, runit, dict)
-		if runit:
-			self._transition.begintransition()
+			self._passive = self.createDDS()
+			self.paintOnDDS(self._passive, self)
+		self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict)
+		self._transition.begintransition()
 
 	def endtransition(self):
 		if self._transition:
 			self._transition.endtransition()
 			self._transition = None
-			self._passive = None
-			self._freeze = 0
+			self.update()
 
 	def changed(self):
-		pass
+		print ' window transition interface: changed'
+	
+	def jointransition(self, window):
+		# Join the transition already created on "window".
+		print 'jointransition'
+		if not window._transition:
+			print 'Joining without a transition', self, window, window._transition
+			return
 		
 	def settransitionvalue(self, value):
 		if self._transition:
 			self._transition.settransitionvalue(value)
-		
+	
 	def freeze_content(self, how):
-		# how is 'transition', 'hold' or None. Freeze the bits in the window
-		# (unless how=None, which unfreezes them) and use for updates and as passive
-		# source for next transition.
+		# Freeze the contents of the window, depending on how:
+		# how='transition' until the next transition,
+		# how='hold' forever,
+		# how=None clears a previous how='hold'. This basically means the next
+		# close() of a display list does not do an erase.
+		print 'freeze_content', how, self
 		if how:
 			self._passive = self.createDDS()
 			self.paintOnDDS(self._passive, self)
-			self._freeze = 1
-		else:
+			self._frozen = how
+		elif self._frozen:
 			self._passive = None
-			self._freeze = 0
+			self._frozen = None
+			self.update()
+		
 
 #############################
 
