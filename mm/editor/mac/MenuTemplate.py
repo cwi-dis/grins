@@ -174,10 +174,6 @@ MENUBAR=(
 	(FLAG_ALL, CASCADE, 'Linking', (
 		(FLAG_ALL, ENTRY, 'Create Whole Node Anchor', 'R', CREATEANCHOR),
 		(FLAG_ALL, ENTRY, 'Finish Hyperlink', 'H', FINISH_LINK),
-##		(FLAG_PRO, ENTRY, 'Anchors...', 'T', ANCHORS),
-		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, 'Create Syncarc from Selection...', None, FINISH_ARC),
-		(FLAG_PRO, DYNAMICCASCADE, 'Select Sync Arc', SYNCARCS),
 		)),
 
 	(FLAG_ALL, CASCADE, 'View', (
@@ -408,50 +404,6 @@ POPUP_EVENT_SOURCE = (
 #	(FLAG_ALL, ENTRY, 'Properties...', None, ATTRIBUTES),
 	)
 
-
-POPUP_CVIEW_NONE = (
-		(FLAG_ALL, ENTRY, 'New Region...', 'M', NEW_REGION),
-)
-
-POPUP_CVIEW_BWSTRIP = (
-		(FLAG_ALL, ENTRY, "14k4", None, BANDWIDTH_14K4),
-		(FLAG_ALL, ENTRY, "28k8", None, BANDWIDTH_28K8),
-		(FLAG_ALL, ENTRY, "ISDN", None, BANDWIDTH_ISDN),
-		(FLAG_ALL, ENTRY, "T1 (1 Mbps)", None, BANDWIDTH_T1),
-		(FLAG_ALL, ENTRY, "LAN (10 Mbps)", None, BANDWIDTH_LAN),
-		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, "Other...", None, BANDWIDTH_OTHER),
-		)
-
-POPUP_CVIEW_CHANNEL = (
-		(FLAG_ALL, ENTRY, 'Properties...', None, ATTRIBUTES),
-		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Delete', None, DELETE),
-		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Move Region', None, MOVE_REGION),
-		(FLAG_ALL, ENTRY, 'Copy Region', None, COPY_REGION),
-
-)
-
-POPUP_CVIEW_NODE = (
-		(FLAG_ALL, ENTRY, 'Play Node', None, PLAYNODE),
-		(FLAG_ALL, ENTRY, 'Play from Node', None, PLAYFROM),
-		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Create Whole Node Anchor', None, CREATEANCHOR),
-		(FLAG_ALL, ENTRY, 'Finish Hyperlink to Selection', 'H', FINISH_LINK),
-		(FLAG_ALL, ENTRY, 'Create Sync Arc from Selection...', None, FINISH_ARC),
-		(FLAG_ALL, SEP,),
-##		(FLAG_ALL, ENTRY, 'Info...', 'I', INFO),
-		(FLAG_ALL, ENTRY, 'Properties...', 'A', ATTRIBUTES),
-##		(FLAG_ALL, ENTRY, 'Anchors...', 'T', ANCHORS),
-		(FLAG_ALL, ENTRY, 'Edit Content', 'E', CONTENT),
-)
-
-POPUP_CVIEW_SYNCARC = (
-		(FLAG_ALL, ENTRY, 'Properties...', 'P', ATTRIBUTES),
-		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Delete', None, DELETE),
-)
 
 #
 # Adornments

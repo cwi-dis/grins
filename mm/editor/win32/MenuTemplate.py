@@ -215,10 +215,6 @@ MENUBAR=(
 	('&Linking', (
 		(FLAG_ALL, ENTRY, 'C&reate whole node anchor', None, CREATEANCHOR),
 		(FLAG_ALL, ENTRY, '&Finish hyperlink to selection', None, FINISH_LINK),
-##		(FLAG_PRO, ENTRY, '&Anchors...', 'T', ANCHORS),
-		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, 'Create s&ync arc from selection...', None, FINISH_ARC),
-		(FLAG_PRO, DYNAMICCASCADE, 'Select &sync arc', SYNCARCS),
 		)),
 
 	('&View', (
@@ -525,51 +521,6 @@ POPUP_MULTI = (
 		(FLAG_ALL, ENTRY, 'Event &source', None, CREATE_BEGIN_EVENT_SOURCE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
-)
-
-POPUP_CVIEW_NONE = (
-		(FLAG_ALL, ENTRY, '&New region', 'M', NEW_REGION),
-)
-
-POPUP_CVIEW_BWSTRIP = (
-		(FLAG_ALL, ENTRY, "&14k4", None, BANDWIDTH_14K4),
-		(FLAG_ALL, ENTRY, "&28k8", None, BANDWIDTH_28K8),
-		(FLAG_ALL, ENTRY, "&ISDN", None, BANDWIDTH_ISDN),
-		(FLAG_ALL, ENTRY, "&T1 (1 Mbps)", None, BANDWIDTH_T1),
-		(FLAG_ALL, ENTRY, "&LAN (10 Mbps)", None, BANDWIDTH_LAN),
-		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, "&Other...", None, BANDWIDTH_OTHER),
-		)
-
-POPUP_CVIEW_CHANNEL = (
-		(FLAG_PRO, ENTRY, '&New', None, NEW_REGION),
-		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
-		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, '&Move region', None, MOVE_REGION),
-		(FLAG_ALL, ENTRY, '&Copy region', None, COPY_REGION),
-		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, '&Properties...', None, ATTRIBUTES),
-
-)
-
-POPUP_CVIEW_NODE = (
-		(FLAG_ALL, ENTRY, '&Play node', None, PLAYNODE),
-		(FLAG_ALL, ENTRY, 'Play from &node', None, PLAYFROM),
-		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Create &whole node anchor', None, CREATEANCHOR),
-		(FLAG_ALL, ENTRY, 'Finish hyperlin&k to selection...', None, FINISH_LINK),
-		(FLAG_ALL, ENTRY, 'Create &syncarc from selection...', None, FINISH_ARC),
-		(FLAG_ALL, SEP,),
-##		(FLAG_PRO, ENTRY, '&Info...', None, INFO),
-		(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
-##		(FLAG_PRO, ENTRY, '&Anchors...', None, ANCHORS),
-		(FLAG_ALL, ENTRY, '&Edit content', None, CONTENT),
-)
-
-POPUP_CVIEW_SYNCARC = (
-		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
-		(FLAG_PRO, SEP,),
-		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
 )
 
 POPUP_EVENT_DEST = (

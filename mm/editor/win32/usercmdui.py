@@ -65,7 +65,6 @@ class2ui={}
 m=20
 idc=((idbegin+100)/m+1)*m
 casc2ui={
-SYNCARCS:idc,
 LAYOUTS:idc+1*m,
 CHANNELS:idc+2*m,
 USERGROUPS:idc+3*m,
@@ -167,7 +166,6 @@ CommandUI(FINISH_LINK, IDUC_FINISH_LINK)
 #
 # Channel view commands
 #
-CommandUI(SYNCARCS, casc2ui[SYNCARCS])
 CommandUI(LAYOUTS, casc2ui[LAYOUTS])
 
 #
