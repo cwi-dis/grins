@@ -4490,6 +4490,34 @@ class Preferences2Group(PreferencesGroup):
 		cd[a] = OptionsRadioNolabelCtrl(wnd,a,resids)
 		return cd
 
+class PreferencesProGroup(AttrGroup):
+	data = attrgrsdict['preferencesPro']
+
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_PREFPRO
+
+	def createctrls(self, wnd):
+		cd = {}
+		a = self.getattr('default_sync_behavior_locked')
+		cd[a] = OptionsCheckCtrl(wnd, a, (grinsRC.IDC_1,))
+		a = self.getattr('default_sync_tolerance')
+		resids = (grinsRC.IDC_TOLLABEL, grinsRC.IDC_TOLVALUE)
+		cd[a] = StringCtrl(wnd, a, resids)
+		a = self.getattr('enable_template')
+		cd[a] = OptionsCheckCtrl(wnd, a, (grinsRC.IDC_2,))
+		a = self.getattr('saveopenviews')
+		cd[a] = OptionsCheckCtrl(wnd, a, (grinsRC.IDC_3,))
+		a = self.getattr('initial_dialog')
+		cd[a] = OptionsCheckCtrl(wnd, a, (grinsRC.IDC_4,))
+		return cd
+
+	def getpageclass(self):
+		return AttrPage
+				
+
 class SystemGroup(PreferencesGroup):
 	data=attrgrsdict['system']
 	nodefault = 0
@@ -5566,6 +5594,7 @@ groupsui={
 	'system3':SystemGroup3,
 	'preferences':PreferencesGroup,
 	'preferences2':Preferences2Group,
+	'preferencesPro':PreferencesProGroup,
 	'name':NameGroup,
 	'.cname':CNameGroup,
 	'.cname2':CNameGroup2,
