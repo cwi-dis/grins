@@ -680,6 +680,64 @@ DirectDrawSurface_SetPalette(DirectDrawSurfaceObject *self, PyObject *args)
 }
 
 
+// primes represent dest coordinates (x -> x_p)
+// xp = ( (x_2^p-x_1^p)*(x-x_1) + (x_2 - x_1)*x_1_p )/(x_2 - x_1)
+inline int lt_x(int x, const RECT *pSrc, const RECT *pDst)
+	{
+	double x1 = pSrc->left, x2 = pSrc->right;
+	double x1p = pDst->left, x2p = pDst->right;
+	double xp = ((x2p-x1p)*(x-x1) + (x2-x1)*x1p)/(x2-x1);
+	return int(floor(xp+0.5));
+	}
+	
+// primes represent dest coordinates (x -> x_p)
+// x = ((x_2 - x_1)*x^p + (x_1*x_2^p-x_2*x_1^p))/(x_2^p-x_1^p)
+inline int lt_x_r(int xp, const RECT *pSrc, const RECT *pDst)
+	{
+	double x1 = pSrc->left, x2 = pSrc->right;
+	double x1p = pDst->left, x2p = pDst->right;
+	double x = ((x2-x1)*xp + (x1*x2p-x2*x1p))/(x2p-x1p);
+	return (int)floor(x+0.5);
+	}
+
+// primes represent dest coordinates (y -> y_p)
+// yp = ( (y_2^p-y_1^p)*(y-y_1) + (y_2 - y_1)*y_1_p )/(y_2 - y_1)
+inline int lt_y(int y, const RECT *pSrc, const RECT *pDst)
+	{
+	double y1 = pSrc->top, y2 = pSrc->bottom;
+	double y1p = pDst->top, y2p = pDst->bottom;
+	double yp = ((y2p-y1p)*(y-y1) + (y2-y1)*y1p)/(y2-y1);
+	return (int)floor(yp+0.5);
+	}
+
+// primes represent dest coordinates (y -> y_p)
+// y = ((y_2 - y_1)*y^p + (y_1*y_2^p-y_2*y_1^p))/(y_2^p-y_1^p)
+inline int lt_y_r(int yp, const RECT *pSrc, const RECT *pDst)
+	{
+	double y1 = pSrc->top, y2 = pSrc->bottom;
+	double y1p = pDst->top, y2p = pDst->bottom;
+	double y = ((y2-y1)*yp + (y1*y2p-y2*y1p))/(y2p-y1p);
+	return (int)floor(y+0.5);
+	}
+
+// find the destination rect (prcdst) on which source rect (prcsrc) is mapped
+inline void lt_rc(RECT *prcdst, const RECT *prcsrc, const RECT *pSrc, const RECT *pDst)
+	{
+	prcdst->left = lt_x(prcsrc->left, pSrc, pDst);
+	prcdst->right = lt_x(prcsrc->right, pSrc, pDst);
+	prcdst->top = lt_y(prcsrc->top, pSrc, pDst);
+	prcdst->bottom = lt_y(prcsrc->bottom, pSrc, pDst);
+	}
+
+// find the source rect (prcsrc) on which destination rect (prcdst) is mapped
+inline void lt_rc_r(RECT *prcsrc, const RECT *prcdst, const RECT *pSrc, const RECT *pDst)
+	{
+	prcsrc->left = lt_x_r(prcdst->left, pSrc, pDst);
+	prcsrc->right = lt_x_r(prcdst->right, pSrc, pDst);
+	prcsrc->top = lt_y_r(prcdst->top, pSrc, pDst);
+	prcsrc->bottom = lt_y_r(prcdst->bottom, pSrc, pDst);
+	}
+
 static char DirectDrawSurface_Blt__doc__[] =
 ""
 ;
@@ -708,7 +766,7 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 
 	HRESULT hr;
 
-	// check first destination surface
+	// check destination surface
 	hr = self->pI->IsLost();
 	if(hr==DDERR_SURFACELOST)
 		hr = self->pI->Restore();
@@ -720,7 +778,7 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 		return Py_None;
 	}
 
-	// abd then the source
+	// check source surface
 	hr = ddsFrom->pI->IsLost();
 	if(FAILED(hr)){
 		// no point in proceeding
@@ -738,18 +796,7 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 			return NULL;
 			}
 		}
-	
-	// check validity of rcFrom
-	RECT rcFromInSurf;
-	if(!IntersectRect(&rcFromInSurf, &rcFrom, &ddsFrom->rc)){
-		seterror("DirectDrawSurface_Blt: Invalid source rectangle");
-		return NULL;
-		}
-	if(!EqualRect(&rcFromInSurf,&rcFrom)){
-		seterror("DirectDrawSurface_Blt: Invalid source rectangle");
-		return NULL;
-		}
-	
+
 	// cache destination surface dimensions
 	if(IsRectEmpty(&self->rc)){
 		hr = GetSurfaceRect(self->pI, &self->rc);
@@ -758,35 +805,52 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 			return NULL;
 			}
 		}
+	
+	// find  rcFromInSurf
+	RECT rcFromInSurf;
+	if(!IntersectRect(&rcFromInSurf, &rcFrom, &ddsFrom->rc)){
+		// nothing to draw
+		// src rect is outsite source surface
+		Py_INCREF(Py_None);
+		return Py_None;
+		}
+	
+	// find  rcToInSurf
 	RECT rcToInSurf;
 	if(!IntersectRect(&rcToInSurf, &rcTo, &self->rc) || IsRectEmpty(&rcToInSurf)){
 		// nothing to draw
 		Py_INCREF(Py_None);
 		return Py_None;
 		}
+
+	// find rcToPaintable which is rcFromInSurf image
+	RECT rcToPaintable;
+	lt_rc(&rcToPaintable, &rcFromInSurf, &rcFrom, &rcTo);
+	if(IsRectEmpty(&rcToPaintable)){
+		Py_INCREF(Py_None);
+		return Py_None;
+		}
 	
-	if(!EqualRect(&rcToInSurf,&rcTo)){
-		// find part of source mapped to the clipped destination
-		// apply linear afine transformation from destination -> source
-		// x^p = ((x_2^p - x_1^p)*x + (x_1^p*x_2-x_2^p*x_1))/(x_2-x_1)
-		// rem: primes represent source coordinates
-		int x1p = rcFrom.left, x2p = rcFrom.right;
-		int x1 = rcTo.left, x2 = rcTo.right;
-		int l = rcToInSurf.left, r = rcToInSurf.right;
-		int lp = int(floor(0.5+((x2p - x1p)*l + (x1p*x2-x2p*x1))/double(x2-x1)));
-		int rp = int(floor(0.5+((x2p - x1p)*r + (x1p*x2-x2p*x1))/double(x2-x1)));
-		rcFromInSurf.left = lp; rcFromInSurf.right = rp;
-		
-		int y1p = rcFrom.top, y2p = rcFrom.bottom;
-		int y1 = rcTo.top, y2 = rcTo.bottom;
-		int t = rcToInSurf.top, b = rcToInSurf.bottom;
-		int tp = int(floor(0.5+((y2p - y1p)*t + (y1p*y2-y2p*y1))/double(y2-y1)));
-		int bp = int(floor(0.5+((y2p - y1p)*b + (y1p*y2-y2p*y1))/double(y2-y1)));
-		rcFromInSurf.top = tp; rcFromInSurf.bottom = bp;
+	// find rcToFinal which must be in and paintable
+	RECT rcToFinal;
+	if(!IntersectRect(&rcToFinal, &rcToInSurf, &rcToPaintable) || IsRectEmpty(&rcToFinal)){
+		// nothing to draw
+		Py_INCREF(Py_None);
+		return Py_None;
+		}
+
+	// find rcFromFinal which is the reverse image of rcToFinal
+	RECT rcFromFinal;
+	lt_rc_r(&rcFromFinal, &rcToFinal, &rcFrom, &rcTo);
+	if(IsRectEmpty(&rcFromFinal))
+		{
+		// nothing to draw
+		Py_INCREF(Py_None);
+		return Py_None;
 		}
 	
 	Py_BEGIN_ALLOW_THREADS
-	hr = self->pI->Blt(&rcToInSurf,ddsFrom->pI,&rcFromInSurf,dwFlags,NULL);
+	hr = self->pI->Blt(&rcToFinal,ddsFrom->pI,&rcFromFinal,dwFlags,NULL);
 	Py_END_ALLOW_THREADS
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_Blt", hr);
