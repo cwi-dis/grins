@@ -93,6 +93,13 @@ class AttrEditorDialog:
 		nkw.update(kw)
 		apply(windowinterface.showmessage, args, nkw)
 
+	def askchannelname(self, default, cb):
+		windowinterface.InputDialog('Name for new channel',
+					    default,
+					    cb,
+					    cancelCallback = (cb, ()),
+					    parent = self.__window)
+
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
 	# this class).
@@ -106,6 +113,7 @@ class AttrEditorDialog:
 		pass
 
 class AttrEditorDialogField:
+	__type = None
 	def _createwidget(self, parent, form, left, right, top, bottom):
 		"""Create the widgets for this attribute.  (internal method)
 
@@ -124,8 +132,12 @@ class AttrEditorDialogField:
 				val = list[0]
 			self.__list = list
 			self.__type = 'option-menu'
+			if hasattr(self, 'optioncb'):
+				cb = (self.optioncb, ())
+			else:
+				cb = None
 			w = form.OptionMenu(None, list,
-					    list.index(val), None,
+					    list.index(val), cb,
 					    top = top, bottom = bottom,
 					    left = left, right = right)
 		elif t == 'file':
@@ -176,6 +188,9 @@ class AttrEditorDialogField:
 			return self.__widget.getvalue()
 		if t == 'file':
 			return self.__text.gettext()
+		if t is None:
+			# not yet initialized
+			return self.getcurrent()
 		return self.__widget.gettext()
 
 	def setvalue(self, value):
@@ -214,6 +229,9 @@ class AttrEditorDialogField:
 				else:
 					self.__widget.setvalue(val)
 			self.__list = list
+
+	def askchannelname(self, default):
+		self.attreditor.askchannelname(default, self.newchan_callback)
 
 	# Methods to be overridden by the sub class.
 	def gettype(self):

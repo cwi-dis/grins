@@ -211,6 +211,8 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		pass
 
 class AttrEditorDialogField:
+	__type = None
+
 	def _createwidget(self, parent):
 		self.__parent = parent
 		t = self.gettype()
@@ -370,6 +372,8 @@ class AttrEditorDialogField:
 
 		The return value is a string giving the current value.
 		"""
+		if self.__type is None:
+			return self.getcurrent()
 		if self.__parent._is_current(self):
 			self._save()
 		return self.__value
@@ -401,6 +405,12 @@ class AttrEditorDialogField:
 			val = self.getcurrent()
 			list = self.getoptions()
 			self.__parent._option.setitems(list, val)
+
+	def askchannelname(self, default):
+		windowinterface.InputDialog('Name for new channel',
+					    default,
+					    self.newchan_callback,
+					    cancelCallback = (self.newchan_callback, ()))
 
 	# Methods to be overridden by the sub class.
 	def gettype(self):
