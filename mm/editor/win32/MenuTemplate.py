@@ -232,7 +232,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, '&Timeline view\tF7', '4', CHANNELVIEW),
 		(FLAG_PRO|FLAG_SNAP, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW2),
 ##		(FLAG_PRO, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW),
-		(FLAG_ALL, ENTRY, 'Rename this view', '8', TEMPORALVIEW),
+		(FLAG_ALL, ENTRY, 'Temporal view', '8', TEMPORALVIEW),
 ##		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, 'H&yperlinks', '5', LINKVIEW),
 		(FLAG_BOSTON, ENTRY, 'User &groups', '6', USERGROUPVIEW),
