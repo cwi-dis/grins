@@ -1422,33 +1422,21 @@ class SMILWriter(SMIL):
 	def writemedianode(self, x, attrlist, mtype):
 		# XXXX Not correct for imm
 		pushed = 0		# 1 if has whole-node source anchor
-		hassrc = 0		# 1 if has other source anchors
 		alist = MMAttrdefs.getattr(x, 'anchorlist')
-		# deal with whole-node source anchors
-		for id, type, args, times in alist:
-			if type == ATYPE_WHOLE:
-				links = x.GetContext().hyperlinks.findsrclinks((x.GetUID(), id))
-				if links:
-					if pushed:
-						print '** Multiple whole-node anchors', \
-						      x.GetRawAttrDef('name', '<unnamed>'), \
-						      x.GetUID()
-					a1, a2, dir, ltype = links[0]
-					self.writetag('a', self.linkattrs(a2, ltype))
-					self.push()
-					pushed = pushed + 1
-			elif type in SourceAnchors:
-				hassrc = 1
 
 		if self.uses_qt_namespace:
 			self.writeQTAttributeOnMediaElement(x,attrlist)
 		
 		self.writetag(mtype, attrlist)
+		hassrc = 0		# 1 if has source anchors
+		for id, type, args, times in alist:
+			if type in SourceAnchors:
+				hassrc = 1
+				break
 		if hassrc:
 			self.push()
 			for id, type, args, times in alist:
-				if type in SourceAnchors and \
-				   type != ATYPE_WHOLE:
+				if type in SourceAnchors:
 					self.writelink(x, id, type, args, times)
 			self.pop()
 		for i in range(pushed):
