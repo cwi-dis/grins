@@ -1636,7 +1636,7 @@ class LayoutView2(LayoutViewDialog2):
 		if name == id:
 			name = None
 		self.applyNewRegion(self.__parentRef, id, name)
-		self.setglobalfocus([self.nameToNodeRef(name)])
+		self.setglobalfocus([self.nameToNodeRef(id)])
 		self.updateFocus()
 
 	def newViewport(self):
