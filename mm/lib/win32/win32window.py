@@ -942,7 +942,8 @@ class SubWindow(Window):
 		self._transition = None
 		self._passive = None
 		self._active = None
-
+		self._freeze = 0
+		
 	def begintransition(self, inout, runit, dict):
 		if not self._passive:
 			self._passive = self.createDDS()
@@ -956,6 +957,7 @@ class SubWindow(Window):
 		if self._transition:
 			self._transition.endtransition()
 			self._transition = None
+			self.freeze_content(None)
 		self.Redraw()
 
 	def changed(self):
@@ -972,9 +974,11 @@ class SubWindow(Window):
 		if how:
 			self._passive = self.createDDS()
 			self._active  = self.createDDS()
+			self._freeze = 1
 		else:
 			self._passive = None
 			self._active = None
+			self._freeze = 0
 
 	def close(self):
 		Window.close(self)
@@ -1009,7 +1013,7 @@ class SubWindow(Window):
 			return
 
 		# avoid painting while frozen
-		if self._transition and self._active:
+		if self._freeze and self._active:
 			self.copySurface(self._active)
 			return
 
