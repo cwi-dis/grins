@@ -57,12 +57,16 @@ class SAVE(_CommandBase):
 class SAVE_AS(_CommandBase):
 	help = 'Save document in new file'
 class EXPORT_G2(_CommandBase):
-	help = 'Save document in new file as pure SMIL'
+	help = 'Create G2 SMIL file and media items'
 class UPLOAD_G2(_CommandBase):
-	help = 'Upload pure SMIL document and media items to FTP server'
+	help = 'Upload G2 SMIL file and media items to FTP server'
 class EXPORT_QT(_CommandBase):
 	help = 'Save document in new file as pure SMIL'
 class UPLOAD_QT(_CommandBase):
+	help = 'Upload pure SMIL document and media items to FTP server'
+class EXPORT_SMIL(_CommandBase):
+	help = 'Save document in new file as pure SMIL'
+class UPLOAD_SMIL(_CommandBase):
 	help = 'Upload pure SMIL document and media items to FTP server'
 class EXPORT_HTML(_CommandBase):
 	help = 'Create a template webpage linking to your presentation'

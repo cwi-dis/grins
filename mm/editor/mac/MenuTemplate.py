@@ -35,7 +35,9 @@ MENUBAR=(
 		(FLAG_QT, ENTRY, 'Publish for QuickTime and upload...', None, UPLOAD_QT),
 		(FLAG_G2, ENTRY, 'Publish for G2...', None, EXPORT_G2),
 		(FLAG_G2, ENTRY, 'Publish for G2 and Upload...', None, UPLOAD_G2),
-		(FLAG_QT|FLAG_G2, SEP,),
+		(FLAG_SMIL_1_0, ENTRY, 'Publish...', None, EXPORT_SMIL),
+		(FLAG_SMIL_1_0, ENTRY, 'Publish and Upload...', None, UPLOAD_SMIL),
+		(FLAG_SMIL_1_0|FLAG_QT|FLAG_G2, SEP,),
 		(FLAG_ALL, ENTRY, 'Document Properties...', (kMenuOptionModifier, 'A'), PROPERTIES),
 		(FLAG_DBG, SEP,),
 		(FLAG_DBG, CASCADE, 'Debug', (
