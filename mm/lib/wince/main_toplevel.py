@@ -5,19 +5,11 @@ import winkernel
 from appcon import *
 
 import main_window
-
-preload_list = ['MMNode', 
-	'SMILTreeRead', 
-	'wincon', 
-	'Channel', 
-	'Scheduler',
-	'Transitions',
-	'SMILCssResolver',
-	'base_window',
-	'urllib',
-	'Attrdefs',
-	'gdi_displist',
-	'xmllib',]
+	
+preload_list = ['xmllib', 'Attrdefs', 'MMAttrdefs', 'MMNode', 'SMILTreeRead', 
+	'TopLevel', 'Player', 'SMILCssResolver', 'Channel',
+	'Scheduler', 'Transitions', 'Animators', 'gdi_layout',]
+preload_list_msg = 0
 
 class Toplevel:
 	def __init__(self):
@@ -59,10 +51,14 @@ class Toplevel:
 		return self._mainwnd
 
 	def serve_events(self,params=None):	
-		global preload_list
+		global preload_list, preload_list_msg
 		if preload_list:
+			self._mainwnd.setStatusMsg('Loading module %s' % preload_list[0])
 			exec 'import %s' % preload_list[0]
 			preload_list = preload_list[1:]
+		elif preload_list_msg == 0:
+			self._mainwnd.setStatusMsg('')
+			preload_list_msg = 1
 
 		while self._timers:
 			t = float(winkernel.GetTickCount())/TICKS_PER_SECOND
