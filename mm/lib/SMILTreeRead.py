@@ -165,8 +165,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			}
 		for key, val in self.elements.items():
 			if ' ' not in key:
-				self.elements[SMIL2+' '+key] = val
-				self.elements[SMIL2Language+' '+key] = val
+				for ns in SMIL2ns:
+					self.elements[ns+' '+key] = val
 		xmllib.XMLParser.__init__(self)
 		self.__seen_smil = 0
 		self.__in_smil = 0
@@ -188,11 +188,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__container = None
 		self.__node = None	# the media object we're in
 		self.__regions = {}	# mapping from region id to chan. attrs
+		self.__regionnames = {}	# mapping from regionName to list of id
 		self.__region2channel = {} # mapping from region to channels
 		self.__region = None	# keep track of nested regions
 		self.__regionlist = []
 		self.__childregions = {}
 		self.__topregion = {}
+		self.__elementindex = 0
 		self.__ids = {}		# collect all id's here
 		self.__nodemap = {}
 		self.__idmap = {}
@@ -218,7 +220,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__alreadymatch = 0
 		self.__switchstack = []
 		# end experimental code for switch layout
-		if new_file and type(new_file) == type(''):
+		if new_file and type(new_file) is type(''):
 			self.__base = new_file
 		self.__validchannels = {'undefined':0}
 		for chtype in ChannelMap.getvalidchanneltypes(context):
@@ -737,7 +739,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error("bad %s attribute" % attr)
 			elif attr == 'color' and node.__chantype == 'brush':
 				fg = self.__convert_color(val)
-				if type(fg) != type(()):
+				if type(fg) is not type(()):
 					self.syntax_error("bad color attribute")
 				else:
 					attrdict['fgcolor'] = fg
@@ -766,7 +768,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
 				self.__context.attributes['project_boston'] = 1
 				bg = self.__convert_color(val)
-				if bg != 'transparent' and bg != None:
+				if bg != 'transparent' and bg is not None:
 					attrdict['transparent'] = 0
 					attrdict['bgcolor'] = bg
 				else:
@@ -863,6 +865,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error("bad %s attribute" % attr)
 			elif attr == 'targetElement':
 				attrdict['targetElement'] = val
+			elif attr == 'project_default_region':
+				region = self.__selectregion(val)
+				attrdict['project_default_region'] = region
+			elif attr == 'project_default_type':
+				attrdict['project_default_type'] = val
+			elif attr == 'project_bandwidth_fraction':
+				try:
+					if val[-1]=='%':
+						p = string.atof(val[:-1])/100.0
+					else:
+						p = string.atof(val)
+					attrdict[attr] = p
+				except string.atof_error:
+					self.syntax_error('bad %s attribute' % attr)
 			elif compatibility.QT == features.compatibility and \
 				self.addQTAttr(attr, val, node):
 				pass
@@ -1157,6 +1173,64 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		self.__childregions[None] = []
 
+	def __selectregion(self, region):
+		# Select the region to play on.
+		# This takes regionName attributes and test attributes
+		# into consideration and returns the name of the selected
+		# region.
+
+		# experimental code for switch layout
+
+		# first, find all elements in the layout section may be mapped
+		# note that the region names are in document order
+		regionIdList = self.__regionnames.get(region, [])
+
+		# resolve the conflict according to the system caption test
+		for regId in regionIdList:
+			# get the first found
+
+			reg = self.__regions.get(regId)
+			all = settings.getsettings()
+			preg = reg
+			allmatch = 1
+			while preg is not None:
+				notmatch = 0
+				for setting in all:		
+					settingvalue = preg.get(setting)
+					if settingvalue is not None:
+						ok = settings.match(setting,settingvalue)
+						if not ok:
+							notmatch = 1
+							break
+				if notmatch:
+					allmatch = 0
+					break
+
+				# also check parent region/viewport
+				pid = preg.get('base_window')
+				if pid is not None:
+					if self.__tops.has_key(pid):
+						preg = self.__tops[pid]
+					else:
+						preg = self.__regions[pid]
+				else:
+					preg = None
+			# if all parent match with system attribute, keep this region
+			if allmatch:
+				return regId
+
+		# end experimental code for switch layout
+
+		if not self.__regions.has_key(region):
+			self.syntax_error('unknown region')
+		# this two lines allow to avoid a crash if region name = top level window name !!!
+		# I tried to resolve this problem clearly --> but I had too many new problems !.
+		# After I day full time spended, i gived up
+		elif self.__tops.has_key(region):
+			self.syntax_error('unknown region')
+			region = 'unnamed region'
+		return region
+
 	def EndNode(self):
 		node = self.__node
 		try:
@@ -1196,90 +1270,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# connect to region
 		if attributes.has_key('region'):
 			region = attributes['region']
-			
-			# experimental code for switch layout
-			
-			# first, find all elements in the layout section may be mapped
-			regionIdList = []
-			for id,reg in self.__regions.items():
-				if reg.has_key('regionName'):
-					regName = reg.get('regionName')
-					if regName == region:
-						regionIdList.append(id)
-			
-			regionSelected = None
-			# resolve the conflict according to the system caption test
-			if len(regionIdList) > 0:
-				regionMapList = []
-				for regId in regionIdList:
-					# get the first found
-					
-					reg = self.__regions.get(regId)
-					all = settings.getsettings()
-					notmatch = 0
-					for setting in all:		
-						settingvalue = reg.get(setting)					
-						if settingvalue != None:
-							ok = settings.match(setting,settingvalue)
-							if not ok:
-								notmatch = 1
-								break
-					if not notmatch:	
-						# if match, check system attributes for parents
-						pid = reg.get('base_window')
-					        if self.__tops.has_key(pid):
-					                preg = self.__tops[pid]
-					        else:
-					                preg = self.__regions[pid]
-						
-						allmatch = 1
-						while preg != None:
-							notmatch = 0
-							for setting in all:		
-								settingvalue = preg.get(setting)					
-								if settingvalue != None:
-									ok = settings.match(setting,settingvalue)
-									if not ok:
-										notmatch = 1
-										break						
-						        if notmatch:
-						                allmatch = 0
-						                break
-						        pid = preg.get('base_window')
-						        if pid != None:
-							        if self.__tops.has_key(pid):
-							                preg = self.__tops[pid]
-							        else:
-							                preg = self.__regions[pid]
-							else:
-								preg = None
-						# if all parent match with system attribute, keep this region
-						if allmatch:
-							regionMapList.append((regId,reg.get('elementindex')))
-				# keep the first (document order) amoung all retains region
-				indexmin = -1
-				for regMap,index in regionMapList:
-					if index < indexmin or indexmin == -1:
-						indexmin = index
-						reg = regMap
-				if indexmin >= 0:
-					regionSelected = reg
-			
-			if regionSelected is None:
-				# end experimental code for switch layout
-
-				if not self.__regions.has_key(region):
-					self.syntax_error('unknown region')
-				# this two lines allow to avoid a crash if region name = top level window name !!!
-				# I tried to resolve this problem clearly --> but I had too many new problems !.
-				# After I day full time spended, i gived up
-				elif self.__tops.has_key(region):
-					self.error('unknown region')
-			else:
-			# experimental code for switch layout
-				region = regionSelected
-			# end experimental code for switch layout
-			
+			region = self.__selectregion(region)
 		else:
 			if CASCADE and not self.__has_layout:
 				region = 'unnamed region %d' % self.__regionno
@@ -1323,7 +1314,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		top = self.__topregion.get(region)
 		# if top doesn't exist (and visible media, we create have to default top window)
 #		import ChannelMap
-		if top == None: #and ChannelMap.isvisiblechannel(mtype):
+		if top is None: #and ChannelMap.isvisiblechannel(mtype):
 			if not self.__tops.has_key(None):
 				self.__newTopRegion()
 			if region not in self.__childregions[None]:
@@ -1336,8 +1327,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# note: For now, it's optimize enough. If we want more optimization,
 		# we have to look in detail _calcmin1, _calcmin2 methods
 		if (not ChannelMap.isvisiblechannel(mtype)) or \
-			(w != None and type(w) is type(0) and \
-				h != None and type(h) is type(0)):
+			(w is not None and type(w) is type(0) and \
+				h is not None and type(h) is type(0)):
 
 			needMinSize = 0
 		else:
@@ -1386,12 +1377,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			regPointId = attributes.get('regPoint')
 			regAlignId = attributes.get('regAlign')
 
-			if regPointId != None or regAlignId != None:
+			if regPointId is not None or regAlignId is not None:
 				# first get the defined regPoint in context
-				if regPointId == None:
+				if regPointId is None:
 					regPointId = 'topLeft'
 				regPoint = self.__context.regpoints.get(regPointId)
-				if regPoint == None:
+				if regPoint is None:
 					# normaly : impossible case, just avoid a crash if bug
 					regPoint = self.__context.regpoints.get('topLeft')
 
@@ -1599,10 +1590,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# get region
 		region = None
 		regionname = node.__region
-		if regionname != None:
+		if regionname is not None:
 			region = self.__regions.get(regionname)
 
-		if region == None:
+		if region is None:
 			cw = 100
 			ch = 100
 		else:
@@ -1754,12 +1745,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		mh = attrdict.get('minheight')
 		# this case is only possible if you don't affect any node to the channel
 		# in the case, we fix even a min size
-		if mh == None:
+		if mh is None:
 			mh = 100
 		if units == UNIT_SCREEN:
 			mh = float(mh) / height
 		mw = attrdict.get('minwidth')
-		if mw == None:
+		if mw is None:
 			mw = 100
 		if units == UNIT_SCREEN:
 			mw = float(mw) / width
@@ -2404,7 +2395,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ns = self.getnamespace().get('')
 		if ns is None or ns == SMIL1:
 			self.__context.attributes['project_boston'] = 0
-		elif ns == SMIL2Language:
+		elif ns == SMIL2ns[0]:
 			self.__context.attributes['project_boston'] = 1
 		for attr in attributes.keys():
 			if attr != 'id' and \
@@ -2627,6 +2618,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('non-unique id %s' % id)
 				self.__ids[id] = 0
 				self.__regions[id] = attrdict
+			elif attr == 'regionName':
+				regions = self.__regionnames.get(val,[])
+				regions.append(id)
+				self.__regionnames[val] = regions
 			elif attr in ('left', 'width', 'right', 'top', 'height', 'bottom'):
 				# XXX are bottom and right allowed in SMIL-Boston basic layout?
 				if attr in ('bottom', 'right'):
@@ -2884,14 +2879,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			del attrdict['bottom']
 		
 		# experimental code for switch layout
-		if not hasattr(self,'_elementindex'):
-			self._elementindex = 1
-		else:
-			self._elementindex = self._elementindex+1
-		attrdict['elementindex'] = self._elementindex
+		self.__elementindex = self.__elementindex+1
+		attrdict['elementindex'] = self.__elementindex
 		
 		if id is None:
-			id = '_#internalid%d' % self._elementindex
+			id = '_#internalid%d' % self.__elementindex
 			attrdict['id'] = id
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
@@ -3151,11 +3143,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		# experimental code for switch layout
 		if len(self.__switchstack) > 0:			
-			if not hasattr(self,'_elementindex'):
-				self._elementindex = 1
-			else:
-				self._elementindex = self._elementindex+1
-			self.__tops[id]['elementindex'] = self._elementindex
+			self.__elementindex = self.__elementindex+1
+			self.__tops[id]['elementindex'] = self.__elementindex
 				
 			notmatch = 0
 			if self.__alreadymatch:
@@ -3164,7 +3153,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				all = settings.getsettings()
 				for setting in all:		
 					settingvalue = self.__tops[id].get(setting)					
-					if settingvalue != None:
+					if settingvalue is not None:
 						ok = settings.match(setting,settingvalue)
 						if not ok:
 							notmatch = 1
@@ -3600,7 +3589,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		endParse = res.end()
 		pixelvalue = res.group('pixel')
-		if pixelvalue != None:
+		if pixelvalue is not None:
 			value = string.atoi(pixelvalue)
 		else:
 			pourcentvalue= res.group('pourcent')
@@ -3620,7 +3609,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				return
 
 			pixelvalue = res.group('pixel')
-			if pixelvalue != None:
+			if pixelvalue is not None:
 				value = string.atoi(pixelvalue)
 			else:
 				pourcentvalue= res.group('pourcent')
@@ -3680,7 +3669,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		atype = defaultValue
 				
 		actuate = attributes.get('actuate')
-		if actuate != None:
+		if actuate is not None:
 			if self.__context.attributes.get('project_boston') == 0:
 				self.syntax_error('actuate attribute not compatible with SMIL 1.0')
 			self.__context.attributes['project_boston'] = 1		
@@ -3733,7 +3722,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		# shape attribute
 		shape = attributes.get('shape')
-		if shape == None or shape == 'rect':
+		if shape is None or shape == 'rect':
 			ashapetype = A_SHAPETYPE_RECT
 		elif shape == 'poly':
 			ashapetype = A_SHAPETYPE_POLY
@@ -4178,13 +4167,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def finish_starttag(self, tagname, attrdict, method):
 		nstag = string.split(tagname, ' ')
 		if len(nstag) == 2 and \
-		   nstag[0] in (SMIL1, SMIL2Language, SMIL2, GRiNSns):
+		   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
 			ns, tagname = nstag
 			d = {}
 			for key, val in attrdict.items():
 				nstag = string.split(key, ' ')
 				if len(nstag) == 2 and \
-				   nstag[0] in (SMIL1, SMIL2, SMIL2Language, GRiNSns):
+				   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
 					key = nstag[1]
 				if not d.has_key(key) or d[key] == self.attributes.get(tagname, {}).get(key):
 					d[key] = val
@@ -4195,7 +4184,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ptag = self.stack[-2][2]
 			nstag = string.split(ptag, ' ')
 			if len(nstag) == 2 and \
-			   nstag[0] in (SMIL1, SMIL2, SMIL2Language, GRiNSns):
+			   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
 				pns, ptag = nstag
 			else:
 				pns = ''
@@ -4214,8 +4203,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.error('outermost element must be "smil"', self.lineno)
 		elif ns and self.getnamespace().get('', '') != ns:
 			self.error('outermost element must be "smil" with default namespace declaration', self.lineno)
-		elif ns and ns != SMIL2Language:
-			self.warning('default namespace should be "%s"' % SMIL2Language, self.lineno)
+		elif ns and ns != SMIL2ns[0]:
+			self.warning('default namespace should be "%s"' % SMIL2ns[0], self.lineno)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 
 class SMILMetaCollector(xmllib.XMLParser):
@@ -4228,8 +4217,8 @@ class SMILMetaCollector(xmllib.XMLParser):
 		}
 		for key, val in self.elements.items():
 			if ' ' not in key:
-				self.elements[SMIL2+' '+key] = val
-				self.elements[SMIL2Language+' '+key] = val
+				for ns in SMIL2ns:
+					self.elements[ns+' '+key] = val
 		self.__file = file or '<unknown file>'
 		xmllib.XMLParser.__init__(self)
 
@@ -4247,13 +4236,13 @@ class SMILMetaCollector(xmllib.XMLParser):
 	def finish_starttag(self, tagname, attrdict, method):
 		nstag = string.split(tagname, ' ')
 		if len(nstag) == 2 and \
-		   nstag[0] in (SMIL1, SMIL2Language, SMIL2, GRiNSns):
+		   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
 			ns, tagname = nstag
 			d = {}
 			for key, val in attrdict.items():
 				nstag = string.split(key, ' ')
 				if len(nstag) == 2 and \
-				   nstag[0] in (SMIL1, SMIL2, SMIL2Language, GRiNSns):
+				   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
 					key = nstag[1]
 				if not d.has_key(key) or d[key] == self.attributes.get(tagname, {}).get(key):
 					d[key] = val
@@ -4411,11 +4400,11 @@ def _minsizeRp(wR1, wR2, wM1, wM2, minsize):
 	# for now. Avoid to have in some case some to big values
 	MAX_REGION_SIZE = 5000
 
-	if wR1 != None and wR2 != None:
+	if wR1 is not None and wR2 is not None:
 		# conflict regpoint attribute
 		return minsize
 
-	if wM1 == None or wM2 == None:
+	if wM1 is None or wM2 is None:
 		# bad parameters
 		raise minsize
 
