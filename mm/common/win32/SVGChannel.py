@@ -44,6 +44,11 @@ class SVGChannel(Channel.ChannelWindow):
 			self.errormsg(node, 'No URL set on node')
 			return 1
 		
+		from winversion import osversion
+		if osversion.isWin9x():
+			self.errormsg(node, 'SVG preview is not supported on Windows 9x versions')
+			return 1
+
 		if svgdom.doccache.hasdoc(url):
 			svgdoc = svgdom.doccache.getDoc(url)
 		else:
@@ -124,6 +129,7 @@ class SVGChannel(Channel.ChannelWindow):
 		self.svgrenderer.render()
 		svggraphics.tkShutdown()
 		dds.ReleaseDC(ddshdc)
+		#dds.AntialiasRGB32()
 		if update:
 			self.window.update(self.window.getwindowpos())
 
