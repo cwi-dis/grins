@@ -240,10 +240,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					val = res.group('name')
 				attrdict['name'] = val
 			elif attr == 'src':
-				if val == '#':	
-					# Special case: # is used as a placeholder for empty URL fields
-					attrdict['file'] = ''
-				else:
+				# Special case: # is used as a placeholder for empty URL fields
+				if val != '#':	
 					attrdict['file'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'begin' or attr == 'end':
 				node.__syncarcs.append((attr, val))
@@ -368,6 +366,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				mtype = res.group('type') or 'text/plain'
 				data = string.split(MMurl.unquote(res.group('data')), '\n')
 				nodetype = 'imm'
+				del attributes['src']
 		else:
 			# remove if immediate data allowed
 			self.syntax_error('no src attribute')
