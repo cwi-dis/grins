@@ -687,6 +687,25 @@ class UploadTabPage(MultiStringTabPage):
 	_items_on_page = _attr_to_item.values()
 	helpstring = 'Where your presentation will be sent when you publish and upload.'
 
+class UploadMediaOnlyTabPage(MultiStringTabPage):
+	TAB_LABEL='Upload'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_UPLOADMEDIAONLY
+	ITEM_GROUP=1
+	ITEM_MEDIAGROUP=2
+	ITEM_MEDIAHOST=4
+	ITEM_MEDIAUSER=6
+	ITEM_MEDIADIR=8
+	N_ITEMS=8
+	_attr_to_item = {
+		'project_ftp_host_media': ITEM_MEDIAHOST,
+		'project_ftp_user_media': ITEM_MEDIAUSER,
+		'project_ftp_dir_media': ITEM_MEDIADIR,
+	}
+	attrs_on_page = ['project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media']
+	_items_on_page = _attr_to_item.values()
+	helpstring = 'Where your presentation will be sent when you publish and upload.'
+
 class ClipTabPage(MultiStringTabPage):
 	TAB_LABEL='Clip'
 	
@@ -2167,6 +2186,7 @@ MULTI_ATTR_CLASSES = [
 	ClipTabPage,
 	HtmlTemplateTabPage,
 	UploadTabPage,
+	UploadMediaOnlyTabPage,
 	WipeTabPage,
 	FadeoutTabPage,
 	CaptionTabPage,
