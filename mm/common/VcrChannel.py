@@ -133,14 +133,14 @@ class VcrChannel(Channel):
 			print 'vcrchannel: no anchors on this node?'
 			return
 		for a in alist:
-			if a[A_ID] == aid:
+			if a.aid == aid:
 				break
 		else:
 			print 'vcrchannel: no such anchor on node:', aid
 			return
-		if a[A_TYPE] == ATYPE_DEST:
+		if a.atype == ATYPE_DEST:
 			return
-		pos = a[A_ARGS]
+		pos = a.aargs
 		if type(pos) is not type(()) or len(pos) <> 4:
 			print 'vcrchannel: ill-formatted anchor:', aid
 			return
@@ -155,17 +155,17 @@ class VcrChannel(Channel):
 		self.startcontext(context)
 		self.vcr.setasync(0)
 		start, stop = self.getstartstop(node)
-		if anchor[A_ARGS]:
-			start = anchor[A_ARGS]
+		if anchor.aargs:
+			start = anchor.aargs
 		self.vcr.goto(start)
 		self.vcr.setasync(1)
 		self.stopcontext(context)
 		if not windowinterface.multchoice(\
 			  'Position video at position wanted for anchor.', \
 			  ['Cancel', 'Done'], 1):
-			apply(cb, (anchor,))
+			cb(anchor)
 		else:
-			apply(cb, ((anchor[0], anchor[1], self.vcr.where(), anchor[3]),))
+			cb(MMAnchor(anchor.aid, anchor.atype, self.vcr.where(), anchor.atimes, anchor.aaccess))
 
 	def play(self, node):	# XXX Override Channel method.
 		self.play_0(node)

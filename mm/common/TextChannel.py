@@ -257,6 +257,7 @@ def fix_anchorlist(node, taglist):
 	if not taglist:
 		return
 	import MMAttrdefs
+	from MMNode import MMAnchor
 	names_in_anchors = []
 	names_in_taglist = []
 	anchor_types = {}
@@ -265,23 +266,23 @@ def fix_anchorlist(node, taglist):
 	anchors = oldanchors[:]
 	i = 0
 	while i < len(anchors):
-		aid, atype, args, times, access = a = anchors[i]
-		if a[A_TYPE] in [ATYPE_DEST, ATYPE_AUTO, ATYPE_COMP]:
+		a = anchors[i]
+		if a.atype in [ATYPE_DEST, ATYPE_AUTO, ATYPE_COMP]:
 			pass
-		elif a[A_ID] not in names_in_anchors:
+		elif a.aid not in names_in_anchors:
 			print 'Remove text anchor from anchorlist:', a
 			anchors.remove(a)
 			i = i - 1	# compensate for later increment
 		else:
-			names_in_taglist.append(a[A_ID])
-			anchor_types[aid] = a[A_TYPE], a[A_TIMES], a[A_ACCESS]
+			names_in_taglist.append(a.aid)
+			anchor_types[aid] = a.atype, a.atimes, a.aaccess
 		i = i + 1
 	for i in range(len(taglist)):
 		item = taglist[i]
 		name = item[4]
 		if not anchor_types.has_key(name):
 			print 'Add text anchor to anchorlist:', name
-			anchors.append((name, ATYPE_NORMAL, [], (0,0), None))
+			anchors.append(MMAnchor(name, ATYPE_NORMAL, [], (0,0), None))
 			anchor_types[name] = ATYPE_NORMAL, (0, 0), None
 		taglist[i] = taglist[i] + anchor_types[name]
 	if anchors <> oldanchors:
