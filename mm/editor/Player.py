@@ -27,7 +27,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	# Initialization.
 	#
 	def __init__(self, toplevel):
-		self.updateuibaglist = self.dummy_updateuibaglist
 		ViewDialog.__init__(self, 'player_')
 		self.playing = self.pausing = self.locked = 0
 		PlayerCore.__init__(self, toplevel)
@@ -47,7 +46,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.seek_nodelist = []
 		self.ignore_delays = 0
 		self.ignore_pauses = 0
-		self.play_all_bags = 0
 		self.pause_minidoc = 1
 		self.sync_cv = 1
 		self.toplevel = toplevel
@@ -113,7 +111,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		del self.stoplist
 		del self.playlist
 		del self.pauselist
-		del self.updateuibaglist
 
 	def fixtitle(self):
 		import MMurl
@@ -376,9 +373,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		else:
 			state = PLAYING
 		self.setstate(state)
-
-	def dummy_updateuibaglist(self):
-		pass
 
 	def makemenu(self):
 		channels = []

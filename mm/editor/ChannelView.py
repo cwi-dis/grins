@@ -671,7 +671,7 @@ class ChannelView(ChannelViewDialog):
 		type = node.GetType()
 		if type in leaftypes and node.GetChannel():
 			self.addarcs(node, arcs, focus)
-		elif type not in bagtypes:
+		else:
 			for c in node.GetChildren():
 				self.scanarcs(c, focus, arcs)
 
