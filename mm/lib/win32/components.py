@@ -692,7 +692,7 @@ class showmessage:
 		elif mtype == 'question':
 			style = win32con.MB_OKCANCEL|win32con.MB_ICONQUESTION
 		
-		if not parent:	
+		if not parent or not hasattr(parent,'MessageBox'):	
 			self._res = win32ui.MessageBox(text,title,style)
 		else:
 			self._res = parent.MessageBox(text,title,style)
@@ -796,10 +796,12 @@ class CreateBoxDlg(ResDialog):
 		self._cancelCallback=cancelCallback
 		self.ShowWindow(win32con.SW_SHOW)
 		self.UpdateWindow()
+
 	def OnOK(self):
 		self._obj_.OnOK()
 		if self._callback:
 			apply(apply,self._callback)
+
 	def OnCancel(self):
 		self._obj_.OnCancel()
 		if self._cancelCallback:
@@ -940,19 +942,16 @@ class CreateBoxBar(DlgBar):
 		
 		self._frame=frame
 		frame.RecalcLayout()
-
-	def close(self):
-		self.DestroyWindow()
-		self._frame.RecalcLayout()
-		del self._obj_
 		
 	def onOK(self,id,code):
-		self.close()
+		self.DestroyWindow()
+		self._frame.RecalcLayout()
 		if self._callback:
 			apply(apply,self._callback)
 
 	def onCancel(self,id,code):
-		self.close()
+		self.DestroyWindow()
+		self._frame.RecalcLayout()
 		if self._cancelCallback:
 			apply(apply,self._cancelCallback)
 
