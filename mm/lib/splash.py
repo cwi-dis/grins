@@ -100,8 +100,16 @@ class _Splash:
 		self.dpy = dpy = Xt.OpenDisplay(None, None, 'Windowinterface',
 						[], sys.argv)
 ## 		dpy.Synchronize(1)
-		visuals = dpy.GetVisualInfo({'class': X.TrueColor,
-					     'depth': 24})
+		try:
+			import glX, glXconst
+			visual = dpy.ChooseVisual([glXconst.GLX_RGBA,
+						   glXconst.GLX_RED_SIZE, 1,
+						   glXconst.GLX_GREEN_SIZE, 1,
+						   glXconst.GLX_BLUE_SIZE, 1])
+			visuals = [visual]
+		except:
+			visuals = dpy.GetVisualInfo({'class': X.TrueColor,
+						     'depth': 24})
 		if not visuals:
 			visuals = dpy.GetVisualInfo({'class': X.TrueColor,
 						     'depth': 8})
