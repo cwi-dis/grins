@@ -164,7 +164,7 @@ class HierarchyView(HierarchyViewDialog):
 			EXPANDALL(callback = (self.expandallcall, (1,))),
 			COLLAPSEALL(callback = (self.expandallcall, (0,))),
 			
-			TOGGLE_BWSTRIP(callback = (self.bandwidthcall, ())), # XXXX Wrong command name
+			COMPUTE_BANDWIDTH(callback = (self.bandwidthcall, ())),
 			]
 		if not lightweight:
 			self.commands.append(PUSHFOCUS(callback = (self.focuscall, ())))

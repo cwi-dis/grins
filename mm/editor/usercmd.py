@@ -192,6 +192,8 @@ class NEXTSIBLING(_CommandBase):
 	help = 'Go to next sibling'
 class PREVSIBLING(_CommandBase):
 	help = 'Go to previous sibling'
+class COMPUTE_BANDWIDTH(_CommandBase):
+	help = 'Check bandwidth usage of presentation'
 
 #
 # Command to hierarchy/channel view
