@@ -304,6 +304,11 @@ no)	;;
 	set -x &&
 	PYTHONPATH=$CHAMELEON/mm/$freeze/motif:$CHAMELEON/mm/$freeze:$CHAMELEON/mm/common/motif:$CHAMELEON/mm/common:$CHAMELEON/mm/lib/motif:$CHAMELEON/mm/lib:$CHAMELEON/mm/video:$CHAMELEON/mm/pylib:$CHAMELEON/mm/pylib/audio:$CHAMELEON/python/Lib:$CHAMELEON/python/Lib/test:$CHAMELEON/python/Lib/plat-$ARCH:$CHAMELEON/python/Extensions/X11/Lib:$CHAMELEON/python/Extensions/img/Lib:$CHAMELEON/python/Extensions/midi/Lib:$CHAMELEON/python/Extensions/X11/build.$ARCH:$CHAMELEON/python/Extensions/img/build.$ARCH$extpath &&
 	export PYTHONPATH &&
+	if [ -d frozen.$freeze.$ARCH ]
+	then	rm -f frozen.$freeze.$ARCH/$main.py
+	else	mkdir frozen.$freeze.$ARCH
+	fi &&
+	ln mm/$freeze/$main.py frozen.$freeze.$ARCH &&
 	$python -O $CHAMELEON/python/Tools/freeze/freeze.py \
 		-o frozen.$freeze.$ARCH \
 		-p $CHAMELEON/python/build.$ARCH/install \
@@ -318,7 +323,7 @@ no)	;;
 		-x Tkinter \
 		-x audiohcom -x audiovoc -x audio8svx \
 		-x audiosndt -x audiosndr \
-		mm/$freeze/$main.py \
+		frozen.$freeze.$ARCH/$main.py \
 		-m imgsgi imggif imgpgm imgppm imgpbm imgtiff imgjpeg imgbmp \
 		imgxbm imgpng &&
 	cd frozen.$freeze.$ARCH &&
