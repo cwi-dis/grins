@@ -74,8 +74,8 @@ class AnimateChannel(Channel.ChannelAsync):
 
 		self.__startAnimate()
 
-	def setpaused(self, paused):
-		Channel.ChannelAsync.setpaused(self, paused)
+	def setpaused(self, paused, timestamp):
+		Channel.ChannelAsync.setpaused(self, paused, timestamp)
 		self.__pauseAnimate(paused)
 
 	def playstop(self, curtime):
