@@ -1,0 +1,70 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Alain Uginet">
+   <meta name="GENERATOR" content="Mozilla/4.7 [en] (Win98; I) [Netscape]">
+   <title>UndoMettingS1</title>
+</head>
+<body>
+
+<center>
+<h1>
+UNDO/REDO</h1></center>
+
+<center>(Sjoerd and Alain. Last update: 21 February 2001)</center>
+
+<br>&nbsp;
+<h2>
+1) design issues</h2>
+
+<h3>
+Test of differents softwares</h3>
+
+<h4>
+Word 2000 behavior</h4>
+for each operation:
+<br>- stack the operation into the undo list
+<br>- clear the redo list
+<p>for each undo operation:
+<br>- unstack the operation from the undo list, and apply the reverse operation
+<br>- stack the operation into the redo list
+<p>for each redo operation:
+<br>- unstack the operation from the redo list, and apply the reverse operation
+<br>- stack the operation into the undo list
+<p>notes:
+<p>- keep undo and redo into two separates menu entries
+<br>- all dialog box properties are modal, and contains (Ok/Cancel button).
+It avoids consistent pb with undo/redo.
+<br>- you can't undo general preference
+<br>- granularity level: word (not character), ...
+<h4>
+Adobe photoshop behavior</h4>
+- manage undo/redo, but keep only one level
+<br>- keep only one menu entry (swap between undo/redo)
+<h4>
+Emacs</h4>
+- keep only one menu entry (undo), but behaves like there was undo and
+redo
+<br>- manage multi-levels
+<h3>
+Sugestion</h3>
+The way that Word 2000 behaves seems clear and poweful enough. In addition,
+it's the way of the current GRiNS implementation.
+<br>So, we suggest to keep this behavior
+<p>warnings
+<p>- we have to just check if there is not consistence pb with UNDO/REDO
+on dialog boxes
+<br>- to evaluate the size of undo entries just to know if we can manage
+a unlimited number of undo
+<h2>
+1) implementation issues</h2>
+The most important problems you may still have are:
+<p>- To trace all operations which don't pass by edit manager and which
+should pass
+<br>- Cleanup nodes stored into the REDO list (and into UNDO list if we
+store a limited number of undos)
+<br>&nbsp;
+<br>&nbsp;
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!--This file created by ClarisWorks HTML Filter 2.0-->
+<HTML>
+<HEAD>
+<META NAME=GENERATOR CONTENT="ClarisWorks HTML Filter 2.0">
+<TITLE>commands</TITLE>
+</HEAD>
+<BODY  >
+
+<P><FONT SIZE=3><B>Commands, menus and toolbars</B></FONT><BR>
+<BR>
+Every command, and I mean <B><I>every</I></B> command, has an entry in the global menubar. Ideally we would make the full functionality available through commands (for the disabled), I think the only new commands needed would be select prev/select next/select parent/select first child. Property boxes (and all other dialogs) should have a taborder.<BR>
+<BR>
+I think we can still fit all this in the menubar, otherwise we may have to go with a modal menubar, where one or two menus (View and Operation?) change when you switch views. I would prefer not to do this, however, it always confuses the hell out of me when programs do this.<BR>
+<BR>
+In addition to being in the menu commands may be available in &#147;convenience&#148; locations:<BR>
+- In the contextual menu<BR>
+- as keyboard shortcuts<BR>
+- in a toolbar or floating palette<BR>
+- as buttons in modeless dialogs<BR>
+<BR>
+Of these, the first four should preferrably be user-configurable. If this is too difficult for the next release we should definitely have the following choices:<BR>
+- Concise contextual menus (jack-style) or complete contextual menus (dick-style)<BR>
+- A set of toolbar/palettes that are easy to open/close and a memory for your setting (probably not per document but per user).<BR>
+<BR>
+By default all views should follow focus. This includes the Node Properties dialog. There should be a way to &#147;disconnect&#148; a properties dialog, though, so you can compare properties. The window title changes from &#147;Node Properties&#148; to &#147;Node Properties for XXXX&#148;.<BR>
+The modeless properties dialog would have  Apply/Revert buttons, the modal one OK/Cancel.<BR>
+<BR>
+We need to think of a grouping of properties, probably in a 2-level hierarchy. Ideally this hierarchy would be used for the propertiies dialog too.</P>
+</BODY>
+</HTML>
+

@@ -1,0 +1,107 @@
+1.Timing
+     1.AccessKeyTiming
+	Fully implemented
+     2.BasicInlineTiming
+	Fully implemented
+     3.BasicTimeContainers
+	Fully implemented
+     4.EventTiming
+	Fully implemented but not all events in the profile are recognized
+     5.ExclTimeContainers
+	Fully implemented
+     6.FillDefault
+	Fully implemented
+     7.MediaMarkerTiming (not part of SMIL 2.0 Language)
+	Recognized, implemented for some media types on some platforms
+     8.MinMaxTiming
+	Fully implemented
+     9.MultiArcTiming
+	Fully implemented
+    10.PrevTiming
+	Fully implemented
+    11.RepeatTiming
+	Fully implemented
+    12.RepeatValueTiming
+	Not implemented
+    13.RestartDefault
+	Fully implemented
+    14.RestartTiming
+	Fully implemented
+    15.SyncbaseTiming
+	Fully implemented
+    16.SyncBehavior
+	Only syncBehavior="independent" implemented (other values recognized)
+    17.SyncBehaviorDefault
+	Fully implemented
+    18.SyncMaster (not part of SMIL 2.0 Language)
+	Not implemented
+    19.TimeContainerAttributes (not part of SMIL 2.0 Language)
+	Not implemented
+    20.WallclockTiming
+	Fully implemented
+2.Time Manipulations
+     1.TimeManipulations (not part of SMIL 2.0 Language)
+	Not implemented
+3.Animation
+     1.BasicAnimation
+	Fully implemented
+     2.SplineAnimation (not part of SMIL 2.0 Language)
+	Fully implemented
+4.Content Control
+     1.BasicContentControl
+	Fully implemented
+     2.CustomTestAttributes
+	Fully implemented
+     3.PrefetchControl
+	Partially implemented (mediaSize, mediaTime and  bandwidth are implemented only for their default values i.e 100%)
+     4.SkipContentControl
+	Fully implemented
+5.Layout
+     1.AudioLayout
+	Recognized
+     2.BasicLayout
+	Fully implemented except fit="scroll" (recognized but not implemented)
+     3.HierarchicalLayout
+	Fully implemented except z-index, width and height attributes on media elements
+     4.MultiWindowLayout
+	Fully implemented
+6.Linking
+     1.BasicLinking
+	Fully implemented
+     2.LinkingAttributes
+	Mostly implemented (all but level attributes, tabindex, and accesskey)
+     3.ObjectLinking
+	Fully implemented
+7.Media Objects
+     1.BasicMedia
+	Fully implemented
+     2.BrushMedia
+	Fully implemented
+     3.MediaAccessibility
+	Fully implemented (although no UI aspects implemented)
+     4.MediaClipping
+	Fully implemented
+     5.MediaClipMarkers
+	Not implemented
+     6.MediaDescription
+	Fully implemented
+     7.MediaParam
+	Recognized
+	no renderers use the param information
+	erase and mediaRepeat recognized but not implemented
+8.Metainformation
+     1.Metainformation
+	Fully implemented
+9.Structure
+     1.Structure
+	Media elements can't have par/seq/excl/switch children
+10.Transitions
+     1.BasicTransistions
+	Mostly implemented (all but direction; only a single subtype
+	per type)
+     2.CoordinatedTransitions
+	Fully implemented
+     3.InlineTransitions (not part of SMIL 2.0 Language)
+	Not implemented
+     4.TransitionModifiers
+	Parsed, not implemented
