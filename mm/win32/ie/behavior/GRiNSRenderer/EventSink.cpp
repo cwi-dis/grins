@@ -4,6 +4,8 @@
 #include "Behavior.h"
 #include "EventSink.h"
 
+#include "appconst.h"
+
 /////////////////////////////////////////////////////////////////////////////
 // CEventSink
 STDMETHODIMP

@@ -5,6 +5,23 @@
 #include "Behavior.h"
 #include "math.h"
 
+#include "appconst.h"
+
+#include <ddraw.h>
+#define _DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+        EXTERN_C const GUID name \
+                = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+_DEFINE_GUID(IID_IDirectDrawSurface,0x6C14DB81,0xA733,0x11CE,0xA5,0x21,0x00,0x20,0xAF,0x0B,0xE5,0x60);
+
+// REM Impl Note:
+// 1. Connect to GRiNS COM server and set it to the appropriate mode
+// 2. When GRiNS needs to update its viewport should call 
+//    InvalidateRect or InvalidateRegion of IHTMLPaintSite
+//    So, GRiNS should have access to this interface
+// 3. When CBehavior::Draw gets called we should pass to GRiNS COM server 
+//    the viewport's direct draw surface for painting 
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CBehavior
 
@@ -35,11 +52,14 @@ CBehavior::Init(IElementBehaviorSite* pBehaviorSite)
 	hr = m_spSite->QueryInterface(
 							IID_IElementBehaviorSiteOM,
 							(void**)&m_spOMSite);
+	if (FAILED(hr)) return hr;
 	
 	// Cache the IHTMLPaintSite interface pointer.
 	hr = m_spSite->QueryInterface(
 							IID_IHTMLPaintSite,
 							(void**)&m_pPaintSite);
+	if (FAILED(hr)) return hr;
+
 
 	return hr;
 }
@@ -92,14 +112,14 @@ CBehavior::Notify(LONG lEvent, VARIANT* pVar)
 			
 			// Set the initial coordinates of the polygon to
 			// the element's corner points
-			m_ptPolyCorners[0].x = 0;
-			m_ptPolyCorners[0].y = 0;
-			m_ptPolyCorners[1].x = lWidth;
-			m_ptPolyCorners[1].y = 0;
-			m_ptPolyCorners[2].x = lWidth;
-			m_ptPolyCorners[2].y = lHeight;
-			m_ptPolyCorners[3].x = 0;
-			m_ptPolyCorners[3].y = lHeight;
+			m_ptPolyCorners[0].x = lWidth/8;
+			m_ptPolyCorners[0].y = lHeight/8;
+			m_ptPolyCorners[1].x = 3*lWidth/4;
+			m_ptPolyCorners[1].y = lHeight/8;
+			m_ptPolyCorners[2].x = 3*lWidth/4;
+			m_ptPolyCorners[2].y = 3*lHeight/4;
+			m_ptPolyCorners[3].x = lWidth/8;
+			m_ptPolyCorners[3].y = 3*lHeight/4;
 
 	
 			// Create and connect the event sink.
@@ -113,8 +133,6 @@ CBehavior::Notify(LONG lEvent, VARIANT* pVar)
 									DIID_HTMLElementEvents,
 									&m_dwCookie);
 			}
-
-
 			break;
 
 		default:
@@ -130,6 +148,11 @@ CBehavior::Notify(LONG lEvent, VARIANT* pVar)
 HRESULT CBehavior::Draw(RECT rcBounds, RECT rcUpdate, LONG lDrawFlags, HDC hdc, LPVOID pvDrawObject)
 {
 	if (!m_pEventSink) return S_OK;
+
+	IDirectDrawSurface *dds = (IDirectDrawSurface*)pvDrawObject;
+	HRESULT hr = dds->GetDC(&hdc);
+	if (FAILED(hr)) return hr;
+	
 	HBRUSH blackBrush     = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	HBRUSH coloredBrush   = CreateSolidBrush(RGB(0x99,0x66,0x99));
 	HBRUSH highlightBrush = CreateSolidBrush(RGB(0xff, 0xff, 0x00));
@@ -168,15 +191,20 @@ HRESULT CBehavior::Draw(RECT rcBounds, RECT rcUpdate, LONG lDrawFlags, HDC hdc, 
 	DeleteObject(coloredBrush);
 	DeleteObject(highlightBrush);
 
+	dds->ReleaseDC(hdc);
+	
 	return S_OK;
 }
 
 HRESULT CBehavior::GetPainterInfo(HTML_PAINTER_INFO *pInfo)
 {
-	pInfo->lFlags = HTMLPAINTER_OPAQUE | HTMLPAINTER_HITTEST;
+	//pInfo->lFlags = HTMLPAINTER_OPAQUE | HTMLPAINTER_HITTEST;
+	pInfo->lFlags = HTMLPAINTER_OPAQUE | HTMLPAINTER_HITTEST | HTMLPAINTER_SURFACE;
 	pInfo->lZOrder = HTMLPAINT_ZORDER_ABOVE_CONTENT;
 
-	memset(&pInfo->iidDrawObject, 0, sizeof(IID));
+	// request an IDirectDrawSurface
+	//memset(&pInfo->iidDrawObject, 0, sizeof(IID));
+	memcpy(&pInfo->iidDrawObject, &IID_IDirectDrawSurface, sizeof(IID));
 
 	pInfo->rcExpand.left = HANDLE_RADIUS;
 	pInfo->rcExpand.right = HANDLE_RADIUS;
