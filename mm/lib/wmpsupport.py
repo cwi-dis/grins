@@ -26,6 +26,8 @@ class Exporter:
 		self.profile = profile
 		self.topwindow = None
 		self.completed = 0
+
+		# set avgTimePerFrame to something good enough for non-video presentations
 		self.avgTimePerFrame = 500 # msec
 
 		self.parent = windowinterface.getmainwnd()
@@ -45,9 +47,13 @@ class Exporter:
 			print "Cannot export multiple topwindows"
 			return
 		self.topwindow = window
+
+		if self._hasvideo():
+			self.avgTimePerFrame = 100
 		self.fulldur = self.player.userplayroot.calcfullduration()
 		if self.fulldur is None or self.fulldur<0:
 			windowinterface.showmessage(msgUnresolvedDur, mtype = 'warning', parent=self.parent)
+
 		self.writer = wmwriter.WMWriter(self, window.getDrawBuffer(), self.profile, self.avgTimePerFrame)
 		self._setAudioFormat()
 		self.writer.setOutputFilename(self.filename)
@@ -134,7 +140,11 @@ class Exporter:
 				p = p + f
 			i = i + 1
 
-				
+	def _hasvideo(self):
+		urls = []
+		self._getNodesOfType('video', self.player.userplayroot, urls)
+		return len(urls)!=0
+
 
 
 
