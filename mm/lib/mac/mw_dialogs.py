@@ -664,16 +664,43 @@ def multchoice(prompt, list, defindex, parent = None):
 class BandwidthComputeDialog:
 	def __init__(self, title):
 		self.title = title
+		self.mustwait = 0
 
-	def setinfo(self, prerolltime, errorseconds, errorcount):
-		self.msg = "%s\nPreroll time: %d\nStall time: %d\nStalling node count: %d\n" % \
-			(self.title, prerolltime, errorseconds, errorcount)
+	def setinfo(self, prerolltime, errorseconds, delaycount, errorcount):
+		print 'setinfo', prerolltime, errorseconds, delaycount, errorcount
+		msg = ''
+		if prerolltime or errorseconds or errorcount or delaycount:
+			self.mustwait = 1
+			msg = 'This is a minor problem.'
+		if errorcount:
+			msg = 'You should probably fix this.'
+		if errorseconds == 0:
+			errorseconds = '0 seconds'
+		elif errorseconds < 1:
+			errorseconds = 'less than a second'
+		else:
+			errorseconds = '%d seconds'%errorseconds
+			msg = 'You should probably fix this.'
+		if errorcount == 1:
+			errorcount = '1 item'
+		else:
+			errorcount = '%d items'%errorcount
+		if delaycount == 1:
+			delaycount = '1 item'
+		else:
+			delaycount = '%d items'%delaycount
+		self.msg = "%s\nMedia errors:%s\nPreroll time: %d\nDelay during playback: %s\nCaused by: %s\n%s" % \
+			(self.title, errorcount, prerolltime, errorseconds, delaycount, msg)
 
 	def done(self, callback=None, cancancel=0):
-		if cancancel:
-			rv = showquestion(self.msg+'\nDo you want to continue?')
-		else:
+		if cancancel == 0:
+			# The dialog is shown because the user used the "compute bw" command
 			showmessage(self.msg)
 			rv = 1
+		elif not self.mustwait:
+			# Export dialog, and nothing to report. Just continue.
+			rv = 1
+		else:
+			rv = showquestion(self.msg+'\nDo you want to continue?')
 		if rv and callback:
 			callback()
