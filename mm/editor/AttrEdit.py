@@ -514,6 +514,7 @@ class NodeWrapper(Wrapper):
 			'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
 			('restart',), ('restartDefault',),
 			('clipbegin',), ('clipend',),	# More time stuff
+			('sensitivity',),
 			('top',), ('height',), ('bottom',),
 			('left',), ('width',), ('right',),
 			('scale',),
@@ -589,6 +590,7 @@ class NodeWrapper(Wrapper):
 					namelist.append('height')
 					namelist.append('bottom')
 					namelist.append('scale')
+					namelist.append('sensitivity')
 				
 			# specific time preference
 			namelist.append('immediateinstantiationmedia')
