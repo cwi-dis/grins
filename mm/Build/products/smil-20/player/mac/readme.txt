@@ -1,13 +1,13 @@
-GRiNS Player 2.0.1 Readme
+GRiNS Player 2.1 Readme
 =========================
 
-GRiNS Player 2.0.1 is a SMiL 2.0 player for the Macintosh and
+GRiNS Player 2.1 is a SMIL 2.0 player for the Macintosh and
 Windows platforms.
 
 System Requirements
 -------------------
 
-GRiNS requires any PowerPC Macintosh running MacOS 8.5. The preferred
+GRiNS requires any PowerPC Macintosh running MacOS 8.6 or later. The preferred
 configuration, though, is at least a 200Mhz machine and 32Mb of RAM. To
 play back RealMedia 64Mb is required. On MacOSX GRiNS will run in Classic
 compatibility mode.
