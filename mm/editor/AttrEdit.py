@@ -1244,6 +1244,7 @@ class AttrEditor(AttrEditorDialog):
 		# Currently the only reason why there might be more than one
 		# channel type is because we have a RealMedia file.  We will
 		# therefore now check whether the file has video in it or not.
+		import realsupport
 		info = realsupport.getinfo(url)
 		if not info:
 			return 'video'
