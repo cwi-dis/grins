@@ -392,7 +392,6 @@ class Channel:
 		self.do_hide()
 		del self.pchan
 		self._curvals = {}
-		self.hideimg()
 		for chan in channels:
 			if self in chan._subchannels:
 				chan._subchannels.remove(self)
@@ -419,12 +418,6 @@ class Channel:
 		pass
 
 	def sensitive(self, callback = None):
-		pass
-
-	def showimg(self):
-		pass
-
-	def hideimg(self):
 		pass
 
 	def popup(self, poptop = 0):
@@ -1144,7 +1137,7 @@ class Channel:
 _button = None				# the currently highlighted button
 
 class ChannelWindow(Channel):
-	chan_attrs = Channel.chan_attrs + ['base_winoff', 'units', 'popup', 'z', 'bgimg', 'editBackground', 'showEditBackground']
+	chan_attrs = Channel.chan_attrs + ['base_winoff', 'units', 'popup', 'z', 'editBackground', 'showEditBackground']
 	node_attrs = Channel.node_attrs + ['drawbox']
 	if CMIF_MODE:
 		node_attrs.append('bgcolor')
@@ -1169,7 +1162,6 @@ class ChannelWindow(Channel):
 		self.armed_display = self.played_display = None
 		self.update_display = None
 		self.want_default_colormap = 0
-		self._bgimg = None
 		self.__callback = None
 		self.__out_trans_qid = None
 		self._active_multiregion_transition = None
@@ -1217,30 +1209,6 @@ class ChannelWindow(Channel):
 		self.__callback = None
 		if self._is_shown and self.window:
 			self.__callback = callback
-
-	def showimg(self):
-		self._showimg = 1
-		img = self._attrdict.get('bgimg')
-		self._curvals['bgimg'] = (img, None)
-		if img:
-			img = self._player.context.findurl(img)
-			try:
-				img = MMurl.urlretrieve(img)[0]
-			except IOError:
-				pass
-			try:
-				d = self.window.newdisplaylist()
-				box = d.display_image_from_file(img, center=0)
-				d.render()
-				self._bgimg = d
-			except (windowinterface.error, IOError), msg:
-				pass
-
-	def hideimg(self):
-		self._showimg = 0
-		if self._bgimg:
-			self._bgimg.close()
-			self._bgimg = None
 
 	def popup(self, poptop = 0):
 		if self._is_shown and self.window:

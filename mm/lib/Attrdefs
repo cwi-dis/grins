@@ -58,9 +58,6 @@
 #(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 #	'Color used for background of window. Overriden by "transparent".' channel (g2 qt smil10 smil2 cmif))
 
-(bgimg (string) '' 'Background image' file
-	'Background image for window' channel (cmif))
-
 (bitrate (int) 14400 'Peak bitrate' default
 	'Peak bitrate reserved for this item, in bits per second' raw (g2 qt smil10 smil2 cmif snap))
 
