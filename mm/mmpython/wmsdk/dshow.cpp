@@ -328,6 +328,28 @@ GraphBuilder_Render(GraphBuilderObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char GraphBuilder_Connect__doc__[] =
+""
+;
+
+static PyObject *
+GraphBuilder_Connect(GraphBuilderObject *self, PyObject *args)
+{
+	HRESULT res;
+	PinObject *pinOut,*pinIn;
+	if (!PyArg_ParseTuple(args, "OO", &pinOut,&pinIn))
+		return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pGraphBuilder->Connect(pinOut->pPin,pinIn->pPin);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("GraphBuilder_Connect", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 
 
 static char GraphBuilder_QueryIMediaControl__doc__[] =
@@ -500,6 +522,7 @@ static struct PyMethodDef GraphBuilder_methods[] = {
 	{"FindFilterByName", (PyCFunction)GraphBuilder_FindFilterByName, METH_VARARGS, GraphBuilder_FindFilterByName__doc__},
 	{"RemoveFilter", (PyCFunction)GraphBuilder_RemoveFilter, METH_VARARGS, GraphBuilder_RemoveFilter__doc__},
 	{"QueryIMediaPosition", (PyCFunction)GraphBuilder_QueryIMediaPosition, METH_VARARGS, GraphBuilder_QueryIMediaPosition__doc__},
+	{"Connect", (PyCFunction)GraphBuilder_Connect, METH_VARARGS, GraphBuilder_Connect__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
