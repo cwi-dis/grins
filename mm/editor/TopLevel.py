@@ -298,6 +298,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##					EXPORT_XMT(callback = (self.bandwidth_callback, ('xmt', self.export_XMT_callback,))),
 ##					UPLOAD_XMT(callback = (self.bandwidth_callback, ('xmt', self.upload_XMT_callback,))),
 ##					]
+			if features.EXPORT_WINCE in features.feature_set:
+				self.publishcommandlist = self.publishcommandlist + [
+					EXPORT_WINCE(callback = (self.export_wince_callback, ())),
+					]
 		else:
 			self.savecommandlist = self.publishcommandlist = []
 		import Help
@@ -688,7 +692,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		evallicense= (license < 0)
 		if not self.save_to_file(filename, exporting = 1):
 			return		# Error, don't save HTML file
-		if exporttype in ('SMIL1', 'SMIL2'):
+		if exporttype in ('SMIL1', 'SMIL2', 'WINCE'):
 			return		# don't create HTML file for SMIL export
 		attrs = self.context.attributes
 		if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
@@ -751,6 +755,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def export_XMT_callback(self):
 		self.export('XMT')
+
+	def export_wince_callback(self):
+		self.export('WINCE')
 
 	def export_WMP_callback(self):
 		import wmpsupport
@@ -1140,6 +1147,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			rpExt = 0
 			smil_one = 0
 			convertfiles = 0
+			addattrs = 0
 			if exporttype == 'REAL':
 				rpExt = 1
 				convertfiles = 1
@@ -1147,6 +1155,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				qtExt = 1
 			elif exporttype == 'SMIL1':
 				smil_one = 1
+			elif exporttype == 'WINCE':
+				addattrs = 1
+				grinsExt = 1
 			# XXX enabling this currently crashes the application on Windows during video conversion
 			progress = windowinterface.ProgressDialog("Publishing", self.cancel_upload)
 			progress.set('Publishing document...')
@@ -1178,7 +1189,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 								evallicense = evallicense,
 								progress = progress,
 								prune = self.prune,
-								smil_one = smil_one)
+								smil_one = smil_one,
+								addattrs = addattrs)
 				finally:
 					self.prune = 0
 			except IOError, msg:
