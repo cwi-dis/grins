@@ -448,6 +448,15 @@ attrgrs=(
 		'fit','z',
 		]},
 
+	{'name':'Layout2',
+	'title':'Layout',
+	'attrs':[
+		'cssbgcolor',
+		'left', 'width', 'right',
+		'top', 'height', 'bottom',
+		'fit','z',
+		]},
+
 	{'name':'CssBackgroundColor',
 	'title':'Background color',
 	'attrs':[
