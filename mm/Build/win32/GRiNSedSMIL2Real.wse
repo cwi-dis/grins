@@ -1,6 +1,6 @@
 Document Type: WSE
 item: Global
-  Version=8.14
+  Version=9.01
   Title=Oratrix GRiNS Editor for RealONE Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -19,7 +19,9 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=..\..\bin\win32\grins_real_win_2.0-129.exe
+  MIF PDF Version=1.0
+  MIF SMS Version=2.0
+  EXE Filename=..\..\bin\win32\grins_real_win_2.0-130.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -37,7 +39,7 @@ item: Global
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=E:\Program Files\Wise InstallBuilder 8.1
+  Variable Default2=C:\PROGRA~1\WISEIN~2
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
