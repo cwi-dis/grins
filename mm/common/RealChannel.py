@@ -65,7 +65,6 @@ class RealChannel:
 	__engine = None
 	__has_rma_support = rma is not None
 	__warned = 0
-	__error = 0
 
 	def __init__(self, channel):
 		if not self.__has_rma_support:
@@ -116,6 +115,14 @@ class RealChannel:
 			self.__channel.errormsg(node, 'No URL set on this node')
 			return 0
 		url = MMurl.canonURL(url)
+##		try:
+##			u = MMurl.urlopen(url)
+##		except:
+##			self.errormsg(node, 'Cannot open '+url)
+##			return 0
+##		else:
+##			u.close()
+##			del u
 		self.__url = url
 ##		self.__window = window
 		self.__rmaplayer.SetStatusListener(self)
@@ -133,15 +140,7 @@ class RealChannel:
 		if realenginedebug:
 			print 'RealChannel.playit', self, `url`
 		self.__rmaplayer.OpenURL(url)
-		if self.__rmaplayer.Begin():
-			# if we call errormsg here, ErrorOccurred gets called
-			# and if we don't call errormsg here, ErrorOccurred
-			# does not get called.
-			# Does anybody understand what goes on?
-			self.__error = 1 # skip errormsg in ErrorOccurred
-			self.__channel.errormsg(node, 'Failed to render '+url)
-			del self.__error
-			return 0
+		self.__rmaplayer.Begin()
 		self.__engine.startusing()
 		self.__using_engine = 1
 		return 1
@@ -179,8 +178,7 @@ class RealChannel:
 	def ErrorOccurred(self,str):
 		if realenginedebug:
 			print 'RealChannel.ErrorOccurred', self
-		if not self.__error:
-			self.__channel.errormsg(None, str)
+		windowinterface.settimer(0.1,(self.__channel.errormsg,(None,str)))
 
 	def pauseit(self, paused):
 		if self.__rmaplayer:
