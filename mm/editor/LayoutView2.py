@@ -53,7 +53,7 @@ class TreeHelper:
 		self.__rootList = {}
 		from MMTypes import mediatypes
 		if features.SPEPARATE_ANIMATE_NODE in features.feature_set:
-			self.__mmnodetypes = mediatypes+['animpar']
+			self.__mmnodetypes = mediatypes+['animpar','animate']
 		else:
 			self.__mmnodetypes = mediatypes
 			
@@ -73,6 +73,8 @@ class TreeHelper:
 		if node.type not in self.__mmnodetypes:
 			return None
 		if node.type in ('animate', 'animpar'):
+			if node.attrdict.get('internal'):
+				return None
 			return TYPE_ANIMATE
 		chtype = node.GetChannelType()
 		if chtype == None:
@@ -785,7 +787,7 @@ class LayoutView2(LayoutViewDialog2):
 			if self.existRef(nodeRef):
 				# keep only seleted nodes belong to this view
 				targetList.append(nodeRef)
-			elif nodeRef.getClassName() == 'MMNode' and nodeRef.type == 'animpar':
+			elif nodeRef.getClassName() == 'MMNode' and nodeRef.type in ('animpar', 'animate'):
 				parentRef = self.treeHelper.getParent(nodeRef, TYPE_ANIMATE)
 				if parentRef is not None and parentRef.getAnimateNode() is nodeRef:
 					targetList.append(parentRef)
@@ -2175,6 +2177,9 @@ class LayoutView2(LayoutViewDialog2):
 			return len(children) == 0
 		return 1
 
+	def isShowed(self, nodeRef):
+		return self.previousWidget.isShowed(nodeRef)
+	
 	# checking if the region/viewport or sub-regions contain any media
 	def doesContainMedias(self, nodeRef):
 		if self.getNodeType(nodeRef) == TYPE_MEDIA:
@@ -2306,9 +2311,10 @@ class LightWidget(Widget):
 		nodeRef = nodeRefList[0]
 		nodeType = self._context.getNodeType(nodeRef)
 
-		if not self._context.isAVisibleNode(nodeRef, nodeType):
+		isShowed = self._context.isShowed(nodeRef)
+		if not self._context.isAVisibleNode(nodeRef, nodeType) or not isShowed:
 			return 0, None
-			
+
 		return nodeType, nodeRef
 
 	def hasVisibleAnimate(self, nodeRef):
@@ -2323,6 +2329,21 @@ class LightWidget(Widget):
 
 	def onCheckCtrl(self, ctrlName, value):
 		pass
+
+	def getVisibleAnimatedAttrList(self, nodeRef, attrList):
+		rList = []
+		for attr in attrList:
+			rList.append(0)
+		children = self._context.getChildren(nodeRef)
+		for child in children:
+			childType = self._context.getNodeType(child)
+			if childType == TYPE_ANIMATE:
+				if self._context.getVisibility(child, childType, 0):
+					if hasattr(child, '_animateEditWrapper'):
+						editWrapper = child._animateEditWrapper
+						for ind in range(len(attrList)):
+							rList[ind] = rList[ind] | editWrapper.isAnimatedAttribute(attrList[ind])
+		return rList
 		
 #
 # z field widget management
@@ -2495,49 +2516,62 @@ class GeomFieldWidget(LightWidget):
 	
 	def selectNodeList(self, nodeRefList, keepShowedNodes=0):
 		nodeType, nodeRef = self.getSingleSelection(nodeRefList)
+		self._eLeft, self._eTop, self._eWidth, self._eHeight = 0, 0, 0, 0
 				
 		if nodeType == TYPE_VIEWPORT:
+			self._eWidth, self._eHeight = 1, 1
+			self.__updateSelection()
 			self.__updateViewport(nodeRef)
 		elif nodeType == TYPE_REGION:
+			self._eLeft, self._eTop, self._eWidth, self._eHeight = 1, 1, 1, 1
+			self.__updateSelection()
 			self.__updateRegion(nodeRef)
 		elif nodeType == TYPE_MEDIA:
-			if self.hasVisibleAnimate(nodeRef):
-				self.__unselect()
-			else:
-				self.__updateMedia(nodeRef)
+			aLeft, aTop, aWidth, aHeight = self.getVisibleAnimatedAttrList(nodeRef, ['left', 'top', 'width', 'height'])
+			self._eLeft, self._eTop, self._eWidth, self._eHeight = not aLeft, not aTop, not aWidth, not aHeight
+			self.__updateSelection()
+			self.__updateMedia(nodeRef)
 		elif nodeType == TYPE_ANIMATE:
+			editWrapper = nodeRef._animateEditWrapper
+			self._eLeft = editWrapper.isAnimatedAttribute('left')
+			self._eTop = editWrapper.isAnimatedAttribute('top')
+			self._eWidth = editWrapper.isAnimatedAttribute('width')
+			self._eHeight = editWrapper.isAnimatedAttribute('height')
+			self.__updateSelection()
 			self.__updateMedia(nodeRef)
 		else:
-			self.__unselect()
+			self.__updateSelection()
 			
 	#
 	#
 	#
 			
-	def __unselect(self):
-		self.__updateUnselected()						
-	
+	def __updateSelection(self):
+		if self._eLeft:
+			self.dialogCtrl.enable('RegionX',1)
+		else:
+			self.dialogCtrl.enable('RegionX',0)
+			self.dialogCtrl.setFieldCtrl('RegionX',"")
+		if self._eTop:
+			self.dialogCtrl.enable('RegionY',1)
+		else:
+			self.dialogCtrl.enable('RegionY',0)
+			self.dialogCtrl.setFieldCtrl('RegionY',"")
+		if self._eWidth:
+			self.dialogCtrl.enable('RegionW',1)
+		else:
+			self.dialogCtrl.enable('RegionW',0)
+			self.dialogCtrl.setFieldCtrl('RegionW',"")
+		if self._eHeight:
+			self.dialogCtrl.enable('RegionH',1)
+		else:
+			self.dialogCtrl.enable('RegionH',0)
+			self.dialogCtrl.setFieldCtrl('RegionH',"")
+		
 	def __updateMediaGeom(self, geom):
 		self.updateRegionGeom(geom)
-
-	def __updateUnselected(self):
-		self.dialogCtrl.enable('RegionX',0)
-		self.dialogCtrl.enable('RegionY',0)
-		self.dialogCtrl.enable('RegionW',0)
-		self.dialogCtrl.enable('RegionH',0)
-		self.dialogCtrl.setFieldCtrl('RegionX',"")		
-		self.dialogCtrl.setFieldCtrl('RegionY',"")		
-		self.dialogCtrl.setFieldCtrl('RegionW',"")		
-		self.dialogCtrl.setFieldCtrl('RegionH',"")
 			
-	def __updateViewport(self, nodeRef):
-		self.dialogCtrl.enable('RegionX',0)
-		self.dialogCtrl.enable('RegionW',1)
-		self.dialogCtrl.enable('RegionH',1)
-		self.dialogCtrl.enable('RegionY',0)
-		self.dialogCtrl.setFieldCtrl('RegionX',"")		
-		self.dialogCtrl.setFieldCtrl('RegionY',"")		
-		
+	def __updateViewport(self, nodeRef):		
 		w,h = nodeRef.getPxGeom()
 		geom = 0,0,w,h
 		self.updateViewportGeom(geom)				
@@ -2548,11 +2582,6 @@ class GeomFieldWidget(LightWidget):
 		self.dialogCtrl.setFieldCtrl('RegionH',"%d"%geom[3])
 		
 	def __updateRegion(self, nodeRef):
-		self.dialogCtrl.enable('RegionX',1)
-		self.dialogCtrl.enable('RegionY',1)
-		self.dialogCtrl.enable('RegionW',1)
-		self.dialogCtrl.enable('RegionH',1)
-
 		geom = self._context.getPxGeom(nodeRef)
 		self.updateRegionGeom(geom)
 		
@@ -2562,12 +2591,7 @@ class GeomFieldWidget(LightWidget):
 		self.dialogCtrl.setFieldCtrl('RegionW',"%d"%geom[2])		
 		self.dialogCtrl.setFieldCtrl('RegionH',"%d"%geom[3])
 		
-	def __updateMedia(self, nodeRef):
-		self.dialogCtrl.enable('RegionX',1)
-		self.dialogCtrl.enable('RegionY',1)
-		self.dialogCtrl.enable('RegionW',1)
-		self.dialogCtrl.enable('RegionH',1)
-		
+	def __updateMedia(self, nodeRef):		
 		geom = self._context.getPxGeom(nodeRef)
 		self.updateMediaGeom(geom)
 						
@@ -3534,7 +3558,13 @@ class PreviousWidget(Widget):
 		else:
 			# return the current value (dom or current animate value according to an eventual visible animate node)
 			return node.getWinGeom()
-				
+
+	def isShowed(self, nodeRef):
+		node = self._nodeRefToNodeTree.get(nodeRef)
+		if node is None:
+			return 0
+		return node.isShowed()
+				 
 class Node:
 	def __init__(self, nodeRef, ctx):
 		self._nodeRef = nodeRef
