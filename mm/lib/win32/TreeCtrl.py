@@ -19,9 +19,9 @@ EVENT_SRC_LButtonDown, EVENT_SRC_Expanded, EVENT_SRC_KeyDown = range(3)
 import MenuTemplate
 
 class TreeCtrl(window.Wnd):
-	dropMap = {'Region': DropTarget.CF_REGION,
-		'Media': DropTarget.CF_MEDIA,
-		'FileName': DropTarget.CF_FILE,}
+##	dropMap = {'Region': DropTarget.CF_REGION,
+##		'Media': DropTarget.CF_MEDIA,
+##		'FileName': DropTarget.CF_FILE,}
 
 	def __init__ (self, dlg=None, resId=None, ctrl=None):
 		# if the tree res is specified from a dialox box, we just create get the existing instance
@@ -262,14 +262,12 @@ class TreeCtrl(window.Wnd):
 		flags, item = self.HitTest(pt)
 		if flags & commctrl.TVHT_ONITEM:
 			if self._dragdropListener:
-				for key, value in self.dropMap.items():
-					# XXXX Needs to use DropTarget.DecodeDragData
-					objectId = dataobj.GetGlobalData(value)
-					if objectId != None:
-						ret = self._dragdropListener.OnDragOver(item, key, objectId)
-						if ret != appcon.DROPEFFECT_NONE:
-							self.SetItemState(item, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
-							self.__lastDragOverItem = item
+				flavor, data = DropTarget.DecodeDragData(dataobj)
+				if flavor and data:
+					ret = self._dragdropListener.OnDragOver(item, flavor, data)
+					if ret != appcon.DROPEFFECT_NONE:
+						self.SetItemState(item, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
+						self.__lastDragOverItem = item
 							
 		return ret							
 
@@ -290,11 +288,9 @@ class TreeCtrl(window.Wnd):
 		flags, item = self.HitTest(pt)
 		if flags & commctrl.TVHT_ONITEM:
 			if self._dragdropListener:
-				for key, value in self.dropMap.items():
-					# XXXX Needs to use DropTarget.DecodeDragData
-					objectId = dataobj.GetGlobalData(value)
-					if objectId != None:
-						return self._dragdropListener.OnDrop(item, key, objectId)
+				flavor, data = DropTarget.DecodeDragData(dataobj)
+				if flavor and data:
+					return self._dragdropListener.OnDrop(item, flavor, data)
 		return 0
 
 	def OnDragLeave(self):
@@ -321,11 +317,10 @@ class TreeCtrl(window.Wnd):
 			self._dragdropListener = None
 
 	# object id have to be a string
-	def beginDrag(self, type, objectId):
-		# XXXX Should use DropTarget.EncodeDragData
-		cf = self.dropMap.get(type)
-		if cf != None:
-			self.DoDragDrop(cf, objectId)
+	def beginDrag(self, flavor, args):
+		flavorid, str = DropTarget.EncodeDragData(flavor, args)
+		if flavorid:
+			self.DoDragDrop(flavorid, str)
 
 	#
 	#
