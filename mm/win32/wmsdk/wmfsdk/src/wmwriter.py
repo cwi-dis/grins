@@ -18,7 +18,7 @@ for ix in range(nprofiles):
 	print ix, prof.GetName()
 
 # find audio pin
-prof = profman.LoadSystemProfile(0)
+prof = profman.LoadSystemProfile(10)
 writer = wmfapi.CreateWriter()
 writer.SetProfile(prof)
 npins = writer.GetInputCount()
@@ -73,6 +73,7 @@ while curSample < nSamples:
 	curSample = curSample + nsamples
 	writer.WriteSample(audiopinix,tmsec,0,sample)
 
+writer.Flush()
 writer.EndWriting()
 
 del avistream
