@@ -232,9 +232,12 @@ BOOL CHtmlWnd::CreateHtmlCtrl()
 
 void CHtmlWnd::DestroyHtmlCtrl()
 	{
-	if(!m_pBrowser) return;
-	RELEASE(m_pBrowser);
-	if(m_wndBrowser) m_wndBrowser.DestroyWindow();
+	if(m_pBrowser)
+		{
+		m_pBrowser->Release();
+		m_pBrowser=NULL;
+		m_wndBrowser.DestroyWindow();
+		}
 	}
 
 void CHtmlWnd::Navigate(LPCTSTR lpszURL, DWORD dwFlags /* = 0 */,
@@ -275,8 +278,15 @@ class PYW_EXPORT PyCHtmlWnd : public PyCWnd
 	static ui_type_CObject type;
 	};
 
+///////////////////////////////////////////////////////////
+//////////// PYTHON MODULE
+// Purpose: This module exports a window capable to host an Html control and
+// receive notifications from it.  
 
 // static mapping helper between c++ obj and python obj
+// internal function that returns a pointer to a CHtmlWnd fron a Python pointer to a PyCHtmlWnd
+// Arguments: a PyCHtmlWnd object
+// Return Values: the coresponding CHtmlWnd object
 CHtmlWnd* PyCHtmlWnd::GetHtmlWndPtr(PyObject *self)
 	{
 	return (CHtmlWnd *)PyCWnd::GetPythonGenericWnd(self, &PyCHtmlWnd::type);
@@ -285,6 +295,10 @@ CHtmlWnd* PyCHtmlWnd::GetHtmlWndPtr(PyObject *self)
 //////////////////////////////////////////////////////
 // dublet creation function: c++/mfc and Python respective object
 // @pymethod <o PyCHtmlWnd>|win32ui|CreateHtmlWnd
+
+// Create the CHtmlWnd object
+// Arguments: No
+// Return Values: a PyCHtmlWnd object
 PyObject *
 py_create_html_wnd(PyObject *self, PyObject *args)
 	{
@@ -297,6 +311,8 @@ py_create_html_wnd(PyObject *self, PyObject *args)
 //////////////////////////////////////////////////////
 // Python object methods implemented by delegating to the coresponding c++/mfc object
 // @pymethod |PyCHtmlWnd|CreateWindow|Creates the actual window
+// Arguments: std creation parameters
+// Return Values: None
 static PyObject *
 py_create_window(PyObject *self, PyObject *args)
 	{
@@ -345,6 +361,8 @@ py_create_window(PyObject *self, PyObject *args)
 	}
 
 // @pymethod |PyCHtmlWnd|Navigate|Navigate to url
+// Arguments: the url to navigate to
+// Return Values: None
 static PyObject *
 py_navigate(PyObject *self, PyObject *args)
 	{
@@ -369,7 +387,9 @@ py_navigate(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
-// @pymethod |PyCHtmlWnd|GetForeignUrl|
+// @pymethod |PyCHtmlWnd|GetForeignUrl|Returns the foreign Url
+// Arguments: No
+// Return Values: The foreign Url
 static PyObject *
 py_get_foreign_url(PyObject *self, PyObject *args)
 	{
@@ -379,7 +399,9 @@ py_get_foreign_url(PyObject *self, PyObject *args)
 	return Py_BuildValue("s",pHtmlWnd->GetForeignUrl());
 	}
 
-// @pymethod |PyCHtmlWnd|CreateHtmlCtrl|
+// @pymethod |PyCHtmlWnd|CreateHtmlCtrl|Create the Html control
+// Arguments: No
+// Return Values: None
 static PyObject *
 py_create_html_ctrl(PyObject *self, PyObject *args)
 	{
@@ -397,7 +419,9 @@ py_create_html_ctrl(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
-// @pymethod |PyCHtmlWnd|DestroyHtmlCtrl|
+// @pymethod |PyCHtmlWnd|DestroyHtmlCtrl|Destroy the Html control
+// Arguments: No
+// Return Values: None
 static PyObject *
 py_destroy_html_ctrl(PyObject *self, PyObject *args)
 	{
@@ -412,7 +436,6 @@ py_destroy_html_ctrl(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
-//	{"CreateWindow",py_create_window,1}, // @pymeth CreateWindow|Create the underlying window object
 
 //////////////////////////////////////////////////////
 // @object PyCHtmlWnd|
