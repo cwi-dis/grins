@@ -93,8 +93,15 @@ class Animator:
 
 		# boundary values
 		if t<0 or t>self._dur:
+			self._curvalue = self._domval
 			return self._domval
 		if self._dur == 0:
+			self._curvalue = self._values[0]
+			return self._values[0]
+
+		# end-point exclusive model 
+		if t == self._dur:
+			self._curvalue = self._values[0]
 			return self._values[0]
 
 		# calcMode
@@ -193,6 +200,9 @@ class Animator:
 
 	def setRetunedValuesConverter(self, cvt):
 		self._convert = cvt
+
+	def freeze(self):
+		pass
 
 	#
 	# begin time manipulation section
@@ -516,27 +526,11 @@ animateContext = AnimateContext()
 
 ###########################
 # Gen impl. rem:
-# ** The semantics of animation timing for static docs (svg for example) seems clean
-#    since they are the same as smil-boston.  
-#    But, how animation timing interacts with smil timing? The draft says nothing.
-#    Yes, we can interpreat this as meaning: like media elements + ?
-#    For me the ? mark exists and should be filled otherwise we 'll have 
-#    multiple interpretations and thus implementations of animation for smil.
 # * restart doc removes all anim effects including frozen val
-# * big remaining: smil-boston timing for animate elements
 # * on syntax error: we can ignore animation effects but not timing
-# * use f(0) if duration is undefined
-# * ignore keyTimes if dur indefinite
 # * attrdefs specs: additive, legal_range 
 # * an animation can effect indirectly more than one attributes (for example anim 'region')
-# * if 'by' and not 'from': additive='sum'
-# * if 'to' and not 'from': additive= <mixed> (start from base but reach to)
-# * there is an exceptional animation case that breaks std composition semantics: 
-#  this is the 'to-only animation for additive attributes'
-#  according to the draft the base value that should be used for the interpolation
-#  is the effective value (the dynamic composite result of other animations).
-#  are any other exceptions to std composition semantics?
-#  implement specialization: EffValueAnimator
+# * implement specialization: EffValueAnimator
 
 ###########################
 # Animation semantics parser
@@ -554,7 +548,7 @@ class AnimateElementParser:
 
 		# get animate element type ('animate', 'set', 'animateMotion', 'animateColor')
 		# use current convention for this
-		self.__elementTag = string.split(anim.attrdict['mimetype'],'/')[1]
+		self.__elementTag = anim.attrdict['tag']
 
 		self.__hasValidTarget = self.__checkTarget()
 		if self.__hasValidTarget:
@@ -599,8 +593,7 @@ class AnimateElementParser:
 		#...
 
 		# 1+: force first value display (fulfil: use f(0) if duration is undefined)
-		# xxx: fix condition
-		if not dur: dur=0
+		if not dur or (type(dur)==type('') and dur=='indefinite'): dur=0
 
 
 		# 2. return None on syntax or logic error
@@ -627,6 +620,17 @@ class AnimateElementParser:
 			values = self.__getColorValues()
 			return ColorAnimator(attr, domval, values, dur, mode, times, splines,
 				accumulate, additive)
+
+		if self.__elementTag=='animateMotion':
+			strpath = MMAttrdefs.getattr(self.__anim, 'path')
+			path = svgpath.Path()
+			if strpath:
+				path.constructFromSVGPathString(strpath)
+			else:
+				coords = self.__getNumPairInterpolationValues()
+				path.constructFromPoints(coords)
+			return MotionAnimator(attr, domval, path, dur, mode, times, splines,
+					accumulate, additive)
 
 		## Begin temp grins extensions
 		# position animation
@@ -678,6 +682,7 @@ class AnimateElementParser:
 		attr = self.__attrname
 		domval = self.__domval
 		dur = self.getDuration()
+		if not dur or (type(dur)==type('') and dur=='indefinite'): dur=0
 		value = self.getTo()
 		if value==None or value=='':
 			print 'set element without attribute to'
@@ -732,6 +737,14 @@ class AnimateElementParser:
 
 	# check that we have a valid target
 	def __checkTarget(self):
+		# for animate motion the implicit target attribute is region.position
+		if self.__elementTag!='animateMotion':
+			d = self.__target.GetChannel().attrdict
+			if d.has_key('base_winoff'):
+				self.__attrname == 'region.position'
+				self.__domval = complex(base_winoff[0], base_winoff[1])
+				return 1
+
 		self.__attrname = MMAttrdefs.getattr(self.__anim, 'attributeName')
 		if not self.__attrname:
 			print 'failed to get attributeName', self.__anim
@@ -745,7 +758,6 @@ class AnimateElementParser:
 			if self.__attrname=='backgroundColor': self.__attrname = 'bgcolor'
 			if not self.__domval and d.has_key(self.__attrname):
 				self.__domval = d[self.__attrname]
-
 		if not self.__domval:
 			self.__checkExtensions()
 			
@@ -800,6 +812,39 @@ class AnimateElementParser:
 		else:
 			return ()
 		return v1, v2
+
+	# return list of interpolation numeric pairs
+	def __getNumPairInterpolationValues(self):	
+		# if 'values' are given ignore 'from/to/by'
+		values =  self.getValues()
+		if values:
+			strcoord = string.split(values,';')
+			coords = []
+			for pair in strvalues:
+				x, y = string.split(pair,', ')
+				x, y = string.atof(x), string.atof(y)
+				coords.append((x, y))
+			return tuple(coords)
+
+		# 'from' is optional
+		# use dom value if missing
+		v1 = self.getFrom()
+		if not v1:
+			v1 = self.__domval
+		x1, y1 = string.split(v1,', ')
+		x1, y1 = string.atof(x1), string.atof(y1)
+
+		v2 = self.getTo()
+		dv = self.getBy()
+		if v2:
+			x2, y2 = string.split(v2,', ')
+			x2, y2 = string.atof(x2), string.atof(y2)
+			return (x1, y1), (x2, y2)
+		elif dv:
+			dx, dy = string.split(dv,', ')
+			dx, dy = string.atof(dx), string.atof(dy)
+			return (x1, y1), (x1+dx,y1+dy)
+		return ()
 
 	# return list of interpolation strings
 	def __getAlphaInterpolationValues(self):
@@ -997,8 +1042,6 @@ class AnimateElementParser:
 				self.__domval = base_winoff[2]
 			elif self.__attrname == 'region.height':
 				self.__domval = base_winoff[3]
-			elif self.__attrname == 'region.position':
-				self.__domval = complex(base_winoff[0], base_winoff[1])
 
 	# temp
 	def _dump(self):
