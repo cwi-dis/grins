@@ -93,6 +93,9 @@
 (editBackground (tuple (int) (int) (int)) (255 255 255) 'Edit background' color
 	'Color used for background of window in Layout View' channel (g2 qt smil10 smil2 cmif snap))
 
+(traceImage (string) '' 'Trace Image' file
+	'Image showed as background' raw (g2 qt smil10 smil2 cmif snap))
+
 (erase (enum never whenDone) whenDone 'Erase media' default
 	'Whether to erase the media when done playing' raw (cmif smil2))
 
