@@ -66,7 +66,7 @@ class _LayoutView2(GenFormView):
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
 			
 		# Initialize control objects whose command are activable as well from menu bar
-		self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
+		self[ATTRIBUTES]=components.Button(self,grinsRC.IDUC_ATTRIBUTES)
 		
 		self._activecmds={}
 
@@ -271,16 +271,6 @@ class _LayoutView2(GenFormView):
 		if nmsg==win32con.LBN_SELCHANGE:
 			ctrlName = None
 		
-			# multi selection ctrl			
-#			if id == self['RegionList']._id:
-#				ctrlName = 'RegionList'
-#			if ctrlName != None:
-#				self[ctrlName].callcb()
-#				itemNumber = self[ctrlName].getselcount()
-#				items = self[ctrlName].getselitems(itemNumber)
-#				self._dialogHandler.onMultiSelCtrl(ctrlName, items)				
-#				return
-		
 		if nmsg==win32con.BN_CLICKED:
 			ctrlName = None
 									
@@ -317,6 +307,14 @@ class _LayoutView2(GenFormView):
 			return
 			
 		# process rest
+		cmd=None
+		contextcmds=self._activecmds
+		if contextcmds.has_key(id):
+			cmd=contextcmds[id]
+		if cmd is not None and cmd.callback is not None:
+			apply(apply,cmd.callback)
+
+	def onUserCmd(self, id, code=0):
 		cmd=None
 		contextcmds=self._activecmds
 		if contextcmds.has_key(id):
@@ -393,7 +391,7 @@ class _LayoutView2(GenFormView):
 			grinsRC.IDC_W, grinsRC.IDC_LAYOUT_REGION_W,
 			grinsRC.IDC_H, grinsRC.IDC_LAYOUT_REGION_H,
 			grinsRC.IDC_Z, grinsRC.IDC_LAYOUT_REGION_Z,
-			grinsRC.IDCMD_ATTRIBUTES)
+			grinsRC.IDUC_ATTRIBUTES)
 
 	def resizeCtrls(self, w, h):
 		# controls margin + posibly scrollbar
@@ -589,6 +587,14 @@ class LayoutManager(LayoutManagerBase):
 		self._listener = None
 		self._viewport = None
 		self._hasfocus = 0
+	
+		self._regionpopup = None
+		self._subregionpopup = None
+
+		# test
+		import MenuTemplate
+		self.setpopup(MenuTemplate.POPUP_REGIONPREVIEW_REGION, 'region')
+		self.setpopup(MenuTemplate.POPUP_REGIONPREVIEW_SUBREGION, 'subregion')
 			
 	# allow to create a LayoutManager instance before the onInitialUpdate of dialog box
 	def onInitialUpdate(self, parent, rc, bgcolor):
@@ -600,6 +606,9 @@ class LayoutManager(LayoutManagerBase):
 		self.HookMessage(self.onKeyDown, win32con.WM_KEYDOWN)
 		self.HookMessage(self.OnSetFocus,win32con.WM_SETFOCUS)
 		self.HookMessage(self.OnKillFocus,win32con.WM_KILLFOCUS)
+
+		# popup menu
+		self.HookMessage(self.OnRButtonDown, win32con.WM_RBUTTONDOWN)
 		
 	def __initState(self):
 		# allow to know the last state about shape (selected, moving, resizing)
@@ -730,6 +739,27 @@ class LayoutManager(LayoutManagerBase):
 			self._wantDown = 0
 		self._drawContext.onMouseMove(flags, point)
 
+	def OnRButtonDown(self, params):
+		if len(self._selectedList) != 1: 
+			return
+
+		item = self._selectedList[0]
+		itemtype = self.getItemType(item)
+		
+		msg = win32mu.Win32Msg(params)
+		point = msg.pos()
+		flags = msg._wParam
+		point = self.ClientToScreen(point)
+		flags = win32con.TPM_LEFTALIGN | win32con.TPM_RIGHTBUTTON | win32con.TPM_LEFTBUTTON
+
+		popup = None
+		if itemtype == 'region' and self._regionpopup:
+			popup = self._regionpopup
+		elif itemtype == 'subregion' and self._subregionpopup:
+			popup = self._subregionpopup
+		if popup:
+			popup.TrackPopupMenu(point, flags, self.GetParent())
+
 	def findDeviceToLogicalScale(self, wl, hl):
 		wd, hd = self.GetClientRect()[2:]
 		md = 32 # device margin
@@ -755,6 +785,40 @@ class LayoutManager(LayoutManagerBase):
 				# the priority is the shape which are on the front
 				return self._viewport.getMouseTarget(point)
 		return None
+
+	#
+	#  popup menu
+	#
+
+	# which in ('topLayout', 'region', 'subregion')
+ 	def setpopup(self, menutemplate, which):
+		import win32menu
+		popup = win32menu.Menu('popup')
+		popup.create_popup_from_menubar_spec_list(menutemplate, self.usercmd2id)
+		if which == 'region':
+			if self._regionpopup:
+				self._regionpopup.DestroyMenu()
+			self._regionpopup = popup
+		elif which == 'subregion':
+			if self._subregionpopup:
+				self._subregionpopup.DestroyMenu()
+			self._subregionpopup = popup
+		else:
+			popup.DestroyMenu()
+	
+	# menu callback which maps usercmds to ids			
+	def usercmd2id(self, cmdcl):
+		import usercmdui
+		if usercmdui.class2ui.has_key(cmdcl):
+			return usercmdui.class2ui[cmdcl].id
+		else: return -1
+
+	# return item type in ('topLayout', 'region', 'subregion')
+	def getItemType(self, item):
+		# XXX: not correct, just a test
+		if item.hasmedia():
+			return 'subregion'
+		return 'region'
 
 	#
 	#  Painting
@@ -924,7 +988,10 @@ class Viewport(win32window.Window, UserEventMng):
 	def showName(self, bv):
 		self._showname = bv
 		self._ctx.update()
-		
+	
+	def hasmedia(self):
+		return 0 # ignore trace image
+				
 	def setImage(self, filename, fit, mediadisplayrect = None):
 		if self._active_displist != None:
 			self._active_displist.newimage(filename, fit, mediadisplayrect)
@@ -1163,6 +1230,14 @@ class Region(win32window.Window, UserEventMng):
 	def showName(self, bv):
 		self._showname = bv
 		self._ctx.update()
+
+	def hasmedia(self):
+		displist = self._active_displist
+		if displist:
+			for entry in displist._list:
+				if entry[0] == 'image':
+					return 1
+		return 0	
 
 	def setImage(self, filename, fit, mediadisplayrect = None):
 		if self._active_displist != None:

@@ -13,6 +13,10 @@ debug = 0
 
 EVENT_SRC_LButtonDown, EVENT_SRC_Expanded, EVENT_SRC_KeyDown = range(3)
 
+import MenuTemplate
+import usercmd
+import grinsRC
+
 class TreeCtrl(window.Wnd):
 	def __init__ (self, dlg=None, resId=None, ctrl=None):
 		# if the tree res is specified from a dialox box, we just create get the existing instance
@@ -35,7 +39,14 @@ class TreeCtrl(window.Wnd):
 		self.__selecting = 0
 		if resId != None:		
 			self._setEvents()
-	
+		
+		self._regionpopup = None
+		self._subregionpopup = None
+
+		# test
+		self.setpopup(MenuTemplate.POPUP_REGIONTREE_REGION, 'region')
+		self.setpopup(MenuTemplate.POPUP_REGIONTREE_SUBREGION, 'subregion')
+
 	def getStyle(self):
 		style = win32con.WS_VISIBLE | win32con.WS_CHILD | commctrl.TVS_HASBUTTONS |\
 				commctrl.TVS_HASLINES | commctrl.TVS_SHOWSELALWAYS |\
@@ -53,21 +64,27 @@ class TreeCtrl(window.Wnd):
 	# set the events that we manage in the tree widget
 	def _setEvents(self):
 		self.HookMessage(self.OnLButtonDown, win32con.WM_LBUTTONDOWN)
-		self.HookMessage(self.OnKeyDown, win32con.WM_KEYDOWN)
 		self.HookMessage(self.OnLButtonUp, win32con.WM_LBUTTONUP)
+		self.HookMessage(self.OnKeyDown, win32con.WM_KEYDOWN)
 		self.parent.HookNotify(self.OnSelChanged, commctrl.TVN_SELCHANGED)
-		self.HookMessage(self.OnDump, win32con.WM_USER+1)
 		self.parent.HookNotify(self.OnExpanded,commctrl.TVN_ITEMEXPANDED)
 		self.HookMessage(self.OnKillFocus,win32con.WM_KILLFOCUS)
 		self.HookMessage(self.OnSetFocus,win32con.WM_SETFOCUS)
-		self.HookMessage(self.onKeyDown, win32con.WM_KEYDOWN)
+		
+		# debug 
+		self.HookMessage(self.OnDump, win32con.WM_USER+1)
+
+		# popup menu
+		self.HookMessage(self.OnRButtonDown, win32con.WM_RBUTTONDOWN)
+		self.GetParent().HookMessage(self.OnCommand,win32con.WM_COMMAND)
 
 	# simulate dialog tab
-	def onKeyDown(self, params):
+	def OnKeyDown(self, params):
 		key = params[2]
 		if key == win32con.VK_TAB: 
 			self.parent.SetFocus() 
 		else:
+			self._selEventSource = EVENT_SRC_KeyDown
 			return 1
 					
 	# create a dlg control replacing a placeholder
@@ -159,6 +176,33 @@ class TreeCtrl(window.Wnd):
 	def OnLButtonUp(self, params):
 		return 1
 
+	def OnRButtonDown(self, params):
+		if len(self._selections) != 1: 
+			return
+
+		item = self._selections[0]
+		itemtype = self.getItemType(item)
+		
+		msg = Win32Msg(params)
+		point = msg.pos()
+		flags = msg._wParam
+		point = self.ClientToScreen(point)
+		flags = win32con.TPM_LEFTALIGN | win32con.TPM_RIGHTBUTTON | win32con.TPM_LEFTBUTTON
+
+		popup = None
+		if itemtype == 'region' and self._regionpopup:
+			popup = self._regionpopup
+		elif itemtype == 'subregion' and self._subregionpopup:
+			popup = self._subregionpopup
+		if popup:
+			popup.TrackPopupMenu(point, flags, self.GetParent())
+
+	def OnDestroy(self, params):
+		if self._regionpopup:
+			self._regionpopup.DestroyMenu()
+		if self._subregionpopup:
+			self._subregionpopup.DestroyMenu()
+
 	def OnExpanded(self, std, extra):
 		self._selEventSource = EVENT_SRC_Expanded
 		nsel = len(self._selections)
@@ -194,10 +238,6 @@ class TreeCtrl(window.Wnd):
 		# if any changement, update the listeners			
 		if self.__changed:
 			self.OnMultiSelChanged()
-		return 1
-
-	def OnKeyDown(self, params):
-		self._selEventSource = EVENT_SRC_KeyDown
 		return 1
 		
 	def OnSelChanged(self, std, extra):
@@ -383,4 +423,54 @@ class TreeCtrl(window.Wnd):
 	def insertLabel(self, text, parent, after):
 		return self.InsertItem(commctrl.TVIF_TEXT, text, 0, 0, 0, 0, None, parent, after)
 	
+	#
+	#  command responses
+	#
+
+	# delegate to what GRiNS thinks as the Layout view
+	def OnCommand(self, params):
+		msg = Win32Msg(params)
+		self.getLayoutView().onUserCmd(msg.cmdid())
+
+	#
+	#  popup menu
+	#
+
+	# which in ('topLayout', 'region', 'subregion')
+ 	def setpopup(self, menutemplate, which):
+		import win32menu
+		popup = win32menu.Menu('popup')
+		popup.create_popup_from_menubar_spec_list(menutemplate, self.usercmd2id)
+		if which == 'region':
+			if self._regionpopup:
+				self._regionpopup.DestroyMenu()
+			self._regionpopup = popup
+		elif which == 'subregion':
+			if self._subregionpopup:
+				self._subregionpopup.DestroyMenu()
+			self._subregionpopup = popup
+		else:
+			popup.DestroyMenu()
+	
+	# menu callback which maps usercmds to ids			
+	def usercmd2id(self, cmdcl):
+		import usercmdui
+		if usercmdui.class2ui.has_key(cmdcl):
+			return usercmdui.class2ui[cmdcl].id
+		else: return -1
+
+	# return what GRiNS thinks as the Layout view for command delegation
+	def getLayoutView(self):
+		return self.parent
+
+	# return item type in ('topLayout', 'region', 'subregion')
+	def getItemType(self, item):
+		# XXX: not correct, just a test
+		try:
+			dummy = self.GetChildItem(item)
+		except:
+			return 'subregion'
+		else:
+			return 'region'
+
  
