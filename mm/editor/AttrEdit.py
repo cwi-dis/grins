@@ -1635,7 +1635,10 @@ class LayoutnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 
 class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current channel names
-	newchannels = []
+	def __init__(self, attreditor, name, label):
+		self.newchannels = []
+		PopupAttrEditorFieldWithUndefined.__init__(self, attreditor, name, label)
+
 	def getoptions(self):
 		import settings
 		# channelnames1 -- compatible channels in node's layout
@@ -1738,7 +1741,9 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		return name
 
 	def newchan_callback(self, name = None):
-		name = name or UNDEFINED
+		if not name:
+			self.setvalue(self.getcurrent())
+			return
 		if name != UNDEFINED and name not in self.wrapper.context.channelnames:
 			self.newchannels.append(name)
 		self.recalcoptions()
@@ -1746,7 +1751,7 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			
 	def optioncb(self):
 		if self.getvalue() == NEW_CHANNEL:
-			self.askchannelname(self.newchannelname())
+			windowinterface.settimer(0.01, (self.askchannelname, (self.newchannelname(),)))
 
 class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current RealText channel names
