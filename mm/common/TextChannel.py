@@ -309,7 +309,7 @@ class TextChannel(Channel):
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = ['winsize', 'winpos', 'visible']
+	chan_attrs = []
 	node_attrs = \
 		['font', 'pointsize', 'file', 'duration', 'fgcolor', \
 		 'hicolor', 'bgcolor']

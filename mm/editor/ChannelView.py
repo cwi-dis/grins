@@ -668,14 +668,9 @@ class GO:
 		if not editmgr.transaction():
 			return # Not possible at this time
 		import multchoice
-		from ChannelMap import channelmap
+		from ChannelMap import channeltypes
 		prompt = 'Channel type:'
-		list = ['null', 'text', 'image']
-		types = channelmap.keys()
-		types.sort()
-		for type in types:
-			if type not in list:
-				list.append(type)
+		list = channeltypes[:]
 		list.append('Cancel')
 		default = list.index('text')
 		i = multchoice.multchoice(prompt, list, default)

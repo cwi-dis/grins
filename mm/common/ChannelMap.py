@@ -14,3 +14,11 @@ channelmap = { \
 	'image': 	ImageChannel, \
 	'movie': 	MovieChannel, \
 	}
+
+channeltypes = ['null', 'text', 'image']
+ct = channelmap.keys()
+ct.sort()
+for t in ct:
+	if t not in channeltypes:
+		channeltypes.append(t)
+del ct, t

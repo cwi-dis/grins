@@ -210,7 +210,7 @@ class NodeWrapper(Wrapper):
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = ['name', 'channel', 'closed', 'comment']
+		namelist = ['name', 'channel', 'comment']
 		if self.node.GetType() == 'bag':
 			namelist.append('bag_index')
 		try:
@@ -233,7 +233,8 @@ class NodeWrapper(Wrapper):
 		# Merge in nonstandard attributes (except synctolist!)
 		extras = []
 		for name in self.node.GetAttrDict().keys():
-			if name not in namelist and name <> 'synctolist':
+			if name not in namelist and \
+					MMAttrdefs.getdef(name)[3] <> 'hidden':
 				extras.append(name)
 		extras.sort()
 		return namelist + extras
@@ -308,7 +309,8 @@ class ChannelWrapper(Wrapper):
 		# Merge in nonstandard attributes
 		extras = []
 		for name in self.attrdict.keys():
-			if name not in namelist:
+			if name not in namelist and \
+					MMAttrdefs.getdef(name)[3] <> 'hidden':
 				extras.append(name)
 		extras.sort()
 		return namelist + extras
@@ -398,7 +400,8 @@ class StyleWrapper(Wrapper):
 		# Merge in nonstandard attributes
 		extras = []
 		for name in self.attrdict.keys():
-			if name not in namelist:
+			if name not in namelist and \
+					MMAttrdefs.getdef(name)[3] <> 'hidden':
 				extras.append(name)
 		extras.sort()
 		return namelist + extras
@@ -453,7 +456,29 @@ class AttrEditor(Dialog):
 		for i in range(len(self.namelist)):
 			itemy = formheight - (i+1)*itemheight
 			name = self.namelist[i]
-			b = ButtonRow().init(self, name)
+			typedef, defaultvalue, labeltext, displayername, \
+				helptext, inheritance = \
+				self.wrapper.getdef(name)
+			type = typedef[0]
+			if displayername == 'file':
+				C = FileButtonRow
+			elif displayername == 'font':
+				C = FontButtonRow
+			elif displayername == 'color':
+				C = ColorButtonRow
+			elif displayername == 'channelname':
+				C = ChannelnameButtonRow
+			elif displayername == 'channeltype':
+				C = ChanneltypeButtonRow
+			elif type == 'bool':
+				C = BoolButtonRow
+			elif type == 'name':
+				C = NameButtonRow
+			elif type == 'string':
+				C = StringButtonRow
+			else:
+				C = ButtonRow
+			b = C().init(self, name)
 			b.makelabeltext(itemx1, itemy, itemw1, itemheight)
 			b.makehelpbutton(itemx1, itemy, itemw1, itemheight)
 			b.makevalueinput(itemx2, itemy, itemw2, itemheight)
@@ -515,7 +540,8 @@ class AttrEditor(Dialog):
 	#
 	def getvalues(self):
 		self.form.freeze_form()
-		for b in self.blist: b.getvalue()
+		for b in self.blist:
+			b.getvalue()
 		self.setchanged(0)
 		self.form.unfreeze_form()
 	#
@@ -625,7 +651,7 @@ class ButtonRow:
 			else:
 				b.wrapper.setattr(b.name, b.currentvalue)
 		b.changed = 0
-		# b.update() # Don't -- commit will do that
+		# Don't call b.update() -- commit will call it
 	#
 	def fixvalue(b):
 		if not b.changed:
@@ -673,9 +699,12 @@ class ButtonRow:
 		b.attreditor.setchanged(1)
 		b.update()
 	#
-	def update(b):
+	def update_specific(b):
 		b.currenttext = b.valuerepr(b.currentvalue)
 		b.value.set_input(b.currenttext[:INPUT_MAX-1])
+	#
+	def update(b):
+		b.update_specific()
 		b.reset.set_button(b.isdefault)
 		if b.isdefault and not b.changed:
 			b.reset.hide_object()
@@ -694,6 +723,151 @@ class ButtonRow:
 	def parsevalue(b, string):
 		return b.wrapper.parsevalue(b.name, string)
 	#
+
+
+class BoolButtonRow(ButtonRow):
+	#
+	def makevalueinput(b, (x, y, w, h)):
+		b.value = b.form.add_button(PUSH_BUTTON, x, y, w-1, h, '')
+		b.value.set_call_back(b.valuecallback, None)
+	#
+	def valuecallback(b, dummy):
+		value = b.value.get_button()
+		if value <> b.currentvalue:
+			b.currentvalue = value
+			b.isdefault = 0
+			b.changed = 1
+			b.attreditor.setchanged(1)
+			b.update()
+	#
+	def update_specific(b):
+		if b.currentvalue:
+			label = 'on'
+		else:
+			label = 'off'
+		b.value.label = label
+		b.value.set_button(b.currentvalue)
+	#
+
+
+class NameButtonRow(ButtonRow):
+	#
+	def valuerepr(self, value):
+		return value
+	#
+	def parsevalue(self, string):
+		return string
+	#
+
+
+StringButtonRow = NameButtonRow # Happens to have the same semantics
+
+
+class FileButtonRow(StringButtonRow):
+	# A string input field with a button next to it
+	# that pops up a file selector window.
+	#
+	def makevalueinput(b, (x, y, w, h)):
+		bw = 2*h
+		StringButtonRow.makevalueinput(b, (x, y, w-bw, h))
+		b.selectorbutton = b.form.add_button(NORMAL_BUTTON, \
+			x + w-bw, y, bw-1, h, 'Brwsr')
+		b.selectorbutton.set_call_back(b.selectorcallback, None)
+	#
+	def selectorcallback(b, dummy):
+		import selector
+		pathname = selector.selector(b.currentvalue)
+		if pathname <> None:
+			b.currentvalue = pathname
+			b.isdefault = 0
+			b.changed = 1
+			b.attreditor.setchanged(1)
+			b.update()
+	#
+
+
+class ColorButtonRow(ButtonRow):
+	# XXX should be 3 sliders plus a button that opens a color browser
+	pass
+
+
+class PopupButtonRow(ButtonRow):
+	# A choice menu choosing from a list -- base class only
+	#
+	def choices(b):
+		# derived class overrides this to defince the choices
+		return []
+	#
+	def makevalueinput(b, (x, y, w, h)):
+		b.value = b.form.add_choice(NORMAL_CHOICE, x, y, w-1, h, '')
+		for choice in b.choices():
+			b.value.addto_choice(choice)
+		b.value.set_call_back(b.valuecallback, None)
+	#
+	def valuecallback(b, dummy):
+		i = b.value.get_choice()
+		choices = b.choices()
+		if 1 <= i <= len(choices):
+			value = choices[i-1]
+		else:
+			value = ''
+		if value <> b.currentvalue:
+			b.currentvalue = value
+			b.isdefault = 0
+			b.changed = 1
+			b.attreditor.setchanged(1)
+			b.update()
+	#
+	def update_specific(b):
+		choices = b.choices()
+		if b.currentvalue in choices:
+			i = choices.index(b.currentvalue) + 1
+		else:
+			i = 0
+		b.value.set_choice(i)
+	#
+	def fixvalue(b):
+		b.value.clear_choice()
+		for choice in b.choices():
+			b.value.addto_choice(choice)
+		ButtonRow.fixvalue(b)
+	#
+
+
+class ChannelnameButtonRow(PopupButtonRow):
+	# Choose from the current channel names
+	#
+	def choices(b):
+		return ['undefined'] + b.wrapper.context.channelnames
+	#
+
+
+class ChanneltypeButtonRow(PopupButtonRow):
+	# Choose from the standard channel types
+	#
+	def choices(b):
+		from ChannelMap import channeltypes
+		return channeltypes
+	#
+
+
+allfontnames = None
+
+class FontButtonRow(PopupButtonRow):
+	# Choose from all possible font names
+	# XXX the menu doesn't fit on the screen -- what to do?
+	#
+	def choices(b):
+		global allfontnames
+		if allfontnames == None:
+			import fm
+			allfontnames = fm.enumerate()
+			import TextChannel
+			for name in TextChannel.fontmap.keys():
+				if name <> '':
+					allfontnames.append(name)
+			allfontnames.sort()
+		return allfontnames
 
 
 # Routine to hide all attribute editors in a tree and its context.

@@ -5,6 +5,11 @@
 
 ------------------------------ BUGS -------------------------------
 
+when the root is a leaf, modifying it (e.g. clicking OK after a change
+in node info or node attr window) while the block view is showing it
+crashes in BlockView.py line 83:
+    self.mkBlockview(modnode.bv_xywh, modnode)
+
 Player: playing multiple nodes in parallel on the same channel causes
 crashes or generally weird behaviour (each channel should protect
 itself against this!)
@@ -18,12 +23,14 @@ part of the window remains unused.  (Hard to reproduce; usually after
 heavy inserting / deleting of nodes and/or zooming in/out?)
 
 player: *sometimes* crash in opt_prearm at self.rtpool.enter(...) when
-playing node w/o channel (hard to reproduce?)
+playing node w/o channel [hard to reproduce?]
 
 FORMS: When one FORM is iconified, *after a while* all events are
 queued, but not acted upon, so the program hangs.  Is this a standard
 FORMS bug or do I do something wrong with handling GL events?  (Not
 reproducible in very simple prog?)
+
+FORMS: events for subwindows get lost.
 
 edit mgr: doesn't fix channel dictionary  [not confirmed]
 
@@ -58,14 +65,15 @@ screen after its time is up
 
 ------------------------------ NITS -------------------------------
 
+attribute editor: the font menu is too big.  should split it in a font
+family and a font style menu...
+
 node info: want a menu of commands just like those in other windows
 
 block & channel view: use channel colors instead of default (gray)?
 
 hyperjumps are confusing because of the long wait between the clearing
 of the windows and the appearance of new data
-
-attr edit: choose different ways of presenting/editing different types
 
 node info: could use a 'convert to ext' button for imm text nodes.
 
@@ -145,6 +153,7 @@ VanGogh demo: move data to subdirectory.
 
 *    Showing the other anchors while drawing an anchor in a node would be
      very useful for lining up the boundaries of the anchor being edited.
+     [fixed for image channel --Guido]
 
 ---
 14/5/92
@@ -165,11 +174,13 @@ VanGogh demo: move data to subdirectory.
 *   It would be nice, when creating a new channel, to be able to choose the
     type of a new channel from a list of possible types.  (I keep typing in
     a wrong name and then CMIF crashes.)
+    [fixed --Guido]
 
 *   I keep wanting to point at a node in the Player and then edit the
     contents, since that's the thing I'm concentrating on (at the time) and
     I want to change *that* text.  (This is more of an observation than an
     actual request for change.)
+    [fixed, sort of, by adding a menu to channel windows --Guido]
 
 ---
 
@@ -414,5 +425,8 @@ is opened and more than 18 channels exist ["fixed" by linking with
 
 blockview: when the focus is the view root, deleting it crashes.
 
-when the root is a leaf, modifying it crashes in BlockView line 83
-[can't reproduce this now?]
+image channel: scale isn't always done right for anchors.
+
+attr edit: choose different ways of presenting/editing different types
+[fixed for types bool, string, name, and for displayer types file, font,
+channelname, channeltype]
