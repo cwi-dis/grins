@@ -14,6 +14,7 @@ import "unknwn.idl";
 ]
 interface IGRiNSPlayerAuto : IUnknown
 	{
+	HRESULT getPermission([in, string] wchar_t *pLicense, [out] int *pPermission);
 	HRESULT open([in, string] wchar_t *szFileOrUrl);
 	HRESULT close();
 	HRESULT play();
