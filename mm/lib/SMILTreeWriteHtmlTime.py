@@ -654,7 +654,8 @@ class SMILHtmlTimeWriter(SMIL):
 				bgcolor = colors.rcolors[bgcolor]
 			else:
 				bgcolor = '#%02x%02x%02x' % bgcolor
-			style = style + 'background-color=%s;' % bgcolor
+			if bgcolor != 'black':
+				style = style + 'background-color=%s;' % bgcolor
 			
 		z = ch.get('z', 0)
 		if z > 0:
