@@ -203,7 +203,7 @@ class HierarchyViewDialog(ViewDialog):
 		rv = windowinterface.DROPEFFECT_NONE
 		if dstwidget:
 			dstnode = dstwidget.get_node()
-			if srcnode.GetType() in ('anchor', 'animpar'):
+			if srcnode is not None and srcnode.GetType() in ('anchor', 'animpar'):
 				# anchor and animpar can only be dropped on media nodes
 				if dstnode.GetType() in MMNode.mediatypes:
 					if cmd=='move':
@@ -215,7 +215,7 @@ class HierarchyViewDialog(ViewDialog):
 						rv = windowinterface.DROPEFFECT_COPY
 			elif dstnode.GetType() in MMNode.interiortypes:
 				if cmd=='move':
-					if not srcnode.IsAncestorOf(dstnode):
+					if srcnode is not None and not srcnode.IsAncestorOf(dstnode):
 						self.droppable_widget = dstwidget
 						rv = windowinterface.DROPEFFECT_MOVE
 				else:
