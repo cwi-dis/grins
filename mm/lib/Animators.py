@@ -711,6 +711,10 @@ class EffectiveAnimator:
 						self.__regionContents.append(chan)
 		
 		mmregion = self.__region._attrdict
+
+		# implemented fit='meet' (0) and fit='hidden' (1)
+		scale = mmregion['scale']
+
 		coordinates = mmregion.GetPresentationAttr('base_winoff')
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
 			x, y, w, h = coordinates
@@ -718,13 +722,31 @@ class EffectiveAnimator:
 			if attr=='position':
 				x, y = value
 				newcoordinates = x, y, w, h
-			elif attr=='left': newcoordinates = value, y, w, h
-			elif attr=='top': newcoordinates = x, value, w, h
-			elif attr=='width': newcoordinates = x, y, value, h
-			elif attr=='height': newcoordinates = x, y, w, value
-			elif attr=='right': newcoordinates = value-w, y, w, h
-			elif attr=='bottom': newcoordinates = x, value-h, w, h
-			self.__updatecoordinates(newcoordinates, units)
+			elif attr=='left':
+				if scale==0:
+					newcoordinates = value, y, w-value, h
+				else:
+					newcoordinates = value, y, w, h
+			elif attr=='top':
+				if scale==0:
+					newcoordinates = x, value, w, h-value
+				else:
+					newcoordinates = x, value, w, h
+			elif attr=='right': 
+				if scale==0:
+					newcoordinates = x, y, w-value, h
+				else:
+					newcoordinates = value-w, y, w, h
+			elif attr=='bottom': 
+				if scale==0:
+					newcoordinates = x, y, w, h-value
+				else:
+					newcoordinates = x, value-h, w, h
+			elif attr=='width': 
+				newcoordinates = x, y, value, h
+			elif attr=='height': 
+				newcoordinates = x, y, w, value
+			self.__updatecoordinates(newcoordinates, units, scale)
 
 		elif attr=='z':
 			self.__updatezindex(value)
@@ -743,9 +765,9 @@ class EffectiveAnimator:
 			print 'update',attr,'of region',regionname,'to',value
 
 
-	def __updatecoordinates(self, coordinates, units):
+	def __updatecoordinates(self, coordinates, units, scale):
 		if self.__region and self.__region.window:
-			self.__region.window.updatecoordinates(coordinates, units)
+			self.__region.window.updatecoordinates(coordinates, units, scale)
 
 	def __updatezindex(self, z):
 		if self.__region and self.__region.window:
@@ -786,7 +808,10 @@ class EffectiveAnimator:
 		attr = self.__attr
 		chan = self.__chan
 		mmchan = chan._attrdict
+
+		# implemented fit='meet' (0) and fit='hidden' (1)
 		scale = mmchan['scale']
+
 		coordinates = mmchan.GetPresentationAttr('base_winoff')
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
 			x, y, w, h = coordinates
