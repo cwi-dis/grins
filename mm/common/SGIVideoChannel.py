@@ -22,9 +22,13 @@ windowinterface.select_setcallback(mv.GetEventFD(), _selcb, ())
 mv.SetSelectEvents(mv.MV_EVENT_MASK_STOP)
 
 class VideoChannel(Channel.ChannelWindowAsync):
+	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
 	node_attrs = Channel.ChannelWindowAsync.node_attrs + \
-		     ['bucolor', 'hicolor', 'scale', 'center',
-		      'clipbegin', 'clipend']
+		      ['clipbegin', 'clipend']
+	if Channel.CMIF_MODE:
+		node_attrs = node_attrs + _our_attrs
+	else:
+		chan_attrs = Channel.ChannelWindowAsync.chan_attrs + _our_attrs
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
