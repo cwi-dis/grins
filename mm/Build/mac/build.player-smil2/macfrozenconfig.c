@@ -39,9 +39,6 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "Python.h"
 
-#ifdef TARGET_API_MAC_CARBON_NOTYET
-#define initicglue 0
-#endif
 
 /* -- ADDMODULE MARKER 1 -- */
 #ifndef initQdoffs
@@ -104,17 +101,11 @@ extern void initMenu();
 #ifndef initEvt
 extern void initEvt();
 #endif
-#ifndef initFm
-extern void initFm();
-#endif
 #ifndef initwaste
 extern void initwaste();
 #endif
 #ifndef initgestalt
 extern void initgestalt();
-#endif
-#ifndef initimgformat
-extern void initimgformat();
 #endif
 #ifndef initimgop
 extern void initimgop();
@@ -130,6 +121,9 @@ extern void init_socket();
 #endif
 #ifndef initerrno
 extern void initerrno();
+#endif
+#ifndef initFm
+extern void initFm();
 #endif
 #ifndef initpcre
 extern void initpcre();
@@ -179,6 +173,9 @@ extern void initimgtiff();
 #ifndef initimgpgm
 extern void initimgpgm();
 #endif
+#ifndef initimgformat
+extern void initimgformat();
+#endif
 #ifndef initimgpng
 extern void initimgpng();
 #endif
@@ -224,15 +221,14 @@ struct _inittab _PyImport_Inittab[] = {
 	{"Scrap", initScrap},
 	{"Menu", initMenu},
 	{"Evt", initEvt},
-	{"Fm", initFm},
 	{"waste", initwaste},
 	{"gestalt", initgestalt},
-	{"imgformat", initimgformat},
 	{"imgop", initimgop},
 	{"Drag", initDrag},
 	{"binascii", initbinascii},
 	{"_socket", init_socket},
 	{"errno", initerrno},
+	{"Fm", initFm},
 	{"pcre", initpcre},
 	{"array", initarray},
 	{"imgpbm", initimgpbm},
@@ -249,6 +245,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"imgcolormap", initimgcolormap},
 	{"imgtiff", initimgtiff},
 	{"imgpgm", initimgpgm},
+	{"imgformat", initimgformat},
 	{"imgpng", initimgpng},
 	{"imp", initimp},
 	{"struct", initstruct},
