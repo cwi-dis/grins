@@ -295,10 +295,13 @@ class SMILHtmlTimeWriter(SMIL):
 		self.__isopen = 1
 		self.__stack.append(tag)
 
-	def closehtmltag(self):
+	def closehtmltag(self, expl=1):
 		write = self.fp.write
 		if self.__isopen:
-			write('></%s>\n' % self.__stack[-1])
+			if expl:
+				write('></%s>\n' % self.__stack[-1])
+			else:
+				write('>\n')
 			self.__isopen = 0
 			del self.__stack[-1]
 
@@ -798,6 +801,7 @@ class SMILHtmlTimeWriter(SMIL):
 		if end:
 			attrlist.append(('end', fmtfloat(end, 's')))
 		self.writetag('area', attrlist)
+		self.closehtmltag(0)
 
 	def linkattrs(self, a2, ltype, stype, dtype, accesskey):
 		attrs = []
@@ -845,8 +849,8 @@ class SMILHtmlTimeWriter(SMIL):
 
 		if href[:1] == '#':
 			withinhref = scriptid(href[1:])
-			attrs.append(('href', '#'+withinhref))
-			attrs.append(('onClick', withinhref + '.beginElement();'))
+			attrs.append(('href', 'javascript:%s.beginElement()' % withinhref))
+			#attrs.append(('href', 'javascript:alert(\'%s.beginElement()\')' % withinhref))
 		else:
 			attrs.append(('href', href))
 
@@ -1242,5 +1246,6 @@ def TransitionFactory(trtype, subtype):
 
 
 
+ 
  
  
