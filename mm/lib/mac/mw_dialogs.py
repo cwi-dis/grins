@@ -1,6 +1,7 @@
 import Qd
 import Dlg
 import Ctl
+import Evt
 import Controls
 import ControlAccessor
 import MacOS
@@ -438,6 +439,7 @@ class TraceDialog(_SelectionDialog):
 		_SelectionDialog.__init__(self, "Stack", [], None, 0)
 		self._onscreen_wid.HideDialogItem(ITEM_SELECT_OK)
 		self.itemcount = 0
+		self.lasttime = Evt.TickCount()/5
 		
 	def setitem(self, item, value, clear=0):
 		oldport = Qd.GetPort()
@@ -449,7 +451,9 @@ class TraceDialog(_SelectionDialog):
 			for i in range(item+1, self.itemcount):
 				self._listwidget.replace(i, '')
 		self._listwidget.select(item, autoscroll=1)
-		self._onscreen_wid.DrawDialog()
+		if Evt.TickCount()/5 != self.lasttime:
+			self.lasttime = Evt.TickCount()/5
+			self._onscreen_wid.DrawDialog()
 		Qd.SetPort(oldport)
 		
 class _CallbackSelectionDialog(_SelectionDialog):
