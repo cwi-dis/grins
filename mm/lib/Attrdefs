@@ -321,7 +321,7 @@
 	'Play node only if end-user wants captions' raw light)
 (system_language (string) '' 'System language' default
 	'Play node only if end-user prefers this language' raw light)
-(system_overdub_or_caption (string) '' 'System overdub or caption' default
+(system_overdub_or_caption (string) '' 'System overdub or caption' captionoverdub3
 	'Play node only depending on end user overdub/caption preference' raw light)
 (system_required (string) '' 'System required' default
 	'Play node only if player supports these features' raw light)
