@@ -205,14 +205,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			hwndCB = CreateRpCommandBar(hWnd);
 			break;
 		case WM_PAINT:
+			return PyWnd_WndProc(hWnd, message, wParam, lParam);
+			/*
 			RECT rt;
-			hdc = BeginPaint(hWnd, &ps);
 			GetClientRect(hWnd, &rt);
 			LoadString(hInst, IDS_HELLO, szHello, MAX_LOADSTRING);
 			DrawText(hdc, szHello, _tcslen(szHello), &rt, 
 				DT_SINGLELINE | DT_VCENTER | DT_CENTER);
-			EndPaint(hWnd, &ps);
-			break; 
+			break; */
 		case WM_DESTROY:
 			CommandBar_Destroy(hwndCB);
 			//PostQuitMessage(0);
