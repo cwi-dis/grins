@@ -37,33 +37,6 @@ ITEM_APPLY=3
 ITEM_SELECT=4
 ITEM_LAST_COMMON=4
 
-# Main group on righthandside
-##ITEM_TABGROUP=5
-##ITEM_HELPGROUP=6
-##ITEM_HELP=7
-##ITEM_DEFAULTGROUP=8
-##ITEM_DEFAULT=9
-##
-### Per-type items
-##ITEM_1_GROUP=10			# String
-##ITEM_1_STRING=11
-##
-##ITEM_2_GROUP=12			# Filename
-##ITEM_2_STRING=13
-##ITEM_2_BROWSE=14
-##
-##ITEM_3_GROUP=15			# Color
-##ITEM_3_STRING=16
-##ITEM_3_PICK=17
-##
-##ITEM_4_GROUP=18			# Option
-##ITEM_4_MENU=19
-
-##ALL_GROUPS=[ITEM_1_GROUP, ITEM_2_GROUP, ITEM_3_GROUP, ITEM_4_GROUP]
-
-# ITEM_BALLOONHELP=15
-
-
 class AttrEditorDialog(windowinterface.MACDialog):
 	def __init__(self, title, attriblist, toplevel=None, initattr=None):
 		"""Create the AttrEditor dialog.
@@ -88,20 +61,38 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		# attributes and pages together.
 		# Each page starts with a grouping item encompassing all the others.
 		#
+		attriblist = attriblist[:]
 		initpagenum = 0
 		self._attr_to_pageindex = {}
 		self._pages = []
 		item0 = ITEM_LAST_COMMON
 		all_groups = []
+		#
+		# First pass: loop over multi-attribute pages (and single-attribute special
+		# case pages, which are implemented similarly) and filter out all attributes
+		# that fit on such a page
+		#
+		attribnames = map(lambda a: a.getname(), attriblist)
+		for cl in MULTI_ATTR_CLASSES:
+			if tabpage_multi_match(cl, attribnames):
+				# Instantiate the class and filter out the attributes taken care of
+				attrsdone = tabpage_multi_getfields(cl, attriblist)
+				page = cl(self, attrsdone)
+				all_groups.append(item0+1)
+				item0 = page.init_controls(item0)
+				for a in attrsdone:
+					self._attr_to_pageindex[a] = len(self._pages)
+					attribnames.remove(a.getname())
+				self._pages.append(page)
+		#
+		# Second pass: everything left in attriblist should be handled by one of the
+		# generic single-attribute pages.
+		#
 		for a in attriblist:
-			pageclass = tabpage_multiattr(a)
-			if not pageclass:
-				pageclass = tabpage_singleattr(a)
+			pageclass = tabpage_single_find(a)
 			page = pageclass(self, [a])
 			all_groups.append(item0+1)
 			item0 = page.init_controls(item0)
-			if a is initattr:
-				initpagenum = len(self._pages)
 			self._attr_to_pageindex[a] = len(self._pages)
 			self._pages.append(page)
 		self._hideitemcontrols(all_groups)
@@ -114,6 +105,10 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			label = a.createwidget()
 			pagenames.append(label)
 		self._pagebrowser = self._window.ListWidget(ITEM_SELECT, pagenames)
+		try:
+			initpagenum = self._attr_to_pageindex[initattr]
+		except KeyError:
+			initpagenum = 0
 		self._selectpage(initpagenum)
 
 		self.show()
@@ -237,9 +232,7 @@ class TabPage:
 		del self.attreditor
 		
 	def createwidget(self):
-		for f in self.fieldlist:
-			name = f._widgetcreated()
-		return name 
+		return self.fieldlist[0]._widgetcreated()
 		
 	def show(self):
 		"""Called by the dialog when the page is shown. Show all
@@ -267,6 +260,12 @@ class TabPage:
 		
 	def do_itemhit(self, item, event):
 		return 0	# To be overridden
+		
+class MultiTabPage(TabPage):
+	def createwidget(self):
+		for f in self.fieldlist:
+			f._widgetcreated()
+		return self.TAB_LABEL
 		
 class SingleTabPage(TabPage):
 	"""A tab-page with a single item plus its description"""
@@ -466,14 +465,60 @@ class ChannelTabPage(OptionTabPage):
 			self.fieldlist[0].channelprops()
 			return 1
 		return OptionTabPage.do_itemhit(self, item, event)
-		
+
+
 class CaptionChannelTabPage(ChannelTabPage):
 	attrs_on_page=['captionchannel']
+		
+class InfoTabPage(MultiTabPage):
+	TAB_LABEL='Info'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_INFO
+	ITEM_GROUP=1
+	ITEM_TITLE=3
+	ITEM_ABSTRACT=5
+	ITEM_ALT=7
+	ITEM_LONGDESC=9
+	ITEM_AUTHOR=11
+	ITEM_COPYRIGHT=13
+	N_ITEMS=13
+	_attr_to_item = {
+		'title': ITEM_TITLE,
+		'abstract': ITEM_ABSTRACT,
+		'alt': ITEM_ALT,
+		'longdesc': ITEM_LONGDESC,
+		'author': ITEM_AUTHOR,
+		'copyright': ITEM_COPYRIGHT,
+	}
+	attrs_on_page = _attr_to_item.keys()
+	_items_on_page = _attr_to_item.values()
+	
+	def do_itemhit(self, item, event):
+		if item-self.item0 in self._items_on_page:
+			return 1
+		return 0
+		
+	def update(self):
+		for field in self.fieldlist:
+			attr = field.getname()
+			item = self._attr_to_item[attr]
+			value = field._getvalueforpage()
+			self.attreditor._setlabel(self.item0+item, value)
+			print 'update', attr, item, value
+
+	def save(self):
+		for field in self.fieldlist:
+			attr = field.getname()
+			item = self._attr_to_item[attr]
+			value = self.attreditor._getlabel(self.item0+item)
+			field._savevaluefrompage(value)
+			print 'save', attr, item, value
 	
 SINGLE_ATTR_CLASSES = [ FileTabPage, ColorTabPage, OptionTabPage, StringTabPage ]
-MULTI_ATTR_CLASSES = [ ChannelTabPage, CaptionChannelTabPage ]
+MULTI_ATTR_CLASSES = [ InfoTabPage, ChannelTabPage, CaptionChannelTabPage ]
 
-def tabpage_singleattr(attrfield):
+def tabpage_single_find(attrfield):
+	"""Find the best single-attribute page class that can handle this attribute field"""
 	for cl in SINGLE_ATTR_CLASSES:
 		if cl.type_supported == attrfield.type:
 			return cl
@@ -481,14 +526,23 @@ def tabpage_singleattr(attrfield):
 			return cl
 	raise 'Unsupported attrclass' # Cannot happen
 	
-def tabpage_multiattr(attrfield):
-	# XXXX WRonfg
-	name = attrfield.getname()
-	for cl in MULTI_ATTR_CLASSES:
-		if attrfield.getname() in cl.attrs_on_page:
-			return cl
-	print 'no special case for', name
-	return None
+def tabpage_multi_match(cl, attrnames):
+	"""Check whether all attributes on pageclass cl are in attrnames"""
+	wtd_fields = cl.attrs_on_page
+	for field in wtd_fields:
+		if not field in attrnames:
+			return 0
+	return 1
+	
+def tabpage_multi_getfields(cl, attrfields):
+	"""Return (and remove) attrfields needed for pageclass cl"""
+	rv = []
+	for a in attrfields:
+		if a.getname() in cl.attrs_on_page:
+			rv.append(a)
+	for a in rv:
+		attrfields.remove(a)
+	return rv
 
 class AttrEditorDialogField:
 	
