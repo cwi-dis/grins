@@ -71,10 +71,6 @@ SOURCE=.\common\win32\ChannelMime.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\common\win32\DownloadChannel.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\common\win32\HtmlChannel.py
 # End Source File
 # Begin Source File
@@ -360,6 +356,10 @@ SOURCE=.\editor\win32\HierarchyViewDialog.py
 # Begin Source File
 
 SOURCE=.\editor\win32\LayoutViewDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\win32\LayoutViewDialog2.py
 # End Source File
 # Begin Source File
 
@@ -719,7 +719,7 @@ SOURCE=.\editor\ViewDialog.py
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\lib\win32\_CmifView.py
+SOURCE=.\lib\win32\_FSPlayerView.py
 # End Source File
 # Begin Source File
 
@@ -727,7 +727,15 @@ SOURCE=.\lib\win32\_LayoutView.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\win32\_LayoutView2.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\win32\_LinkView.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\_PlayerView.py
 # End Source File
 # Begin Source File
 
@@ -736,6 +744,10 @@ SOURCE=.\lib\win32\_PreferencesDialog.py
 # Begin Source File
 
 SOURCE=.\lib\win32\_SourceView.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\_StructView.py
 # End Source File
 # Begin Source File
 
@@ -764,10 +776,6 @@ SOURCE=.\lib\win32\ArcInfoForm.py
 # Begin Source File
 
 SOURCE=.\lib\win32\AttrEditForm.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\win32\cmifwnd.py
 # End Source File
 # Begin Source File
 
@@ -832,6 +840,10 @@ SOURCE=.\lib\win32\win32dialog.py
 # Begin Source File
 
 SOURCE=.\lib\win32\win32displaylist.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\win32dlview.py
 # End Source File
 # Begin Source File
 
