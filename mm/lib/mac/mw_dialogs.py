@@ -223,7 +223,7 @@ def showmessage(text, mtype = 'message', grab = 1, callback = None,
 	if grab:
 		_ModalDialog(title, dlgid, text, callback, cancelCallback)
 	else:
-		_ModelessDialog(title, dlgid, text, callback, cancelCallback)
+		return _ModelessDialog(title, dlgid, text, callback, cancelCallback)
 
 # XXXX Do we need a control-window too?
 
