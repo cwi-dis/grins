@@ -8,6 +8,7 @@ mimetypes = {
 	'.cmi': 'application/x-grins-cmif',
 	'.cmif': 'application/x-grins-cmif',
 	'.grins': 'application/x-grins-project',
+	'.xgrins': 'application/x-grins-binary-project',
 
 	'.ra': 'audio/vnd.rn-realaudio',
 	'.ram': 'audio/x-pn-realaudio',
@@ -35,5 +36,6 @@ descriptions = {
 	'application/smil': 'SMIL presentations',
 	'application/x-grins-cmif': 'CMIF presentations',
 	'application/x-grins-project': 'GRiNS Project files',
+	'application/x-grins-binary-project': 'GRiNS Binary Project files',
 	'image/vnd.rn-realpix': 'RealPix files',
 }
