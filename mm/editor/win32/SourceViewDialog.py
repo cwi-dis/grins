@@ -27,8 +27,10 @@ class SourceViewDialog:
 		
 	def show(self):
 		if not self.__textwindow:
+			import MenuTemplate
 			self.window = self.__textwindow = self.toplevel.window.textwindow("", readonly=0)
 			self.__textwindow.set_mother(self)
+			self.setpopup(MenuTemplate.POPUP_SOURCEVIEW)
 		else:
 			# Pop it up
 			self.pop()
@@ -82,6 +84,10 @@ class SourceViewDialog:
 	def setcommandlist(self, commandlist):
 		if self.__textwindow:
 			self.__textwindow.set_commandlist(commandlist)
+
+	def setpopup(self, template):
+		if self.__textwindow:
+			self.__textwindow.setpopupmenu(template)
 
 	def get_text(self):
 		if self.__textwindow:
