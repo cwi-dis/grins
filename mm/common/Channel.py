@@ -595,6 +595,9 @@ class Channel:
 		# Node is only passed to do consistency checking.
 		if debug:
 			print 'Channel.stopplay('+`self`+','+`node`+')'
+		if self._playstate == PIDLE:
+			# already stopped
+			return
 		if node and self._played_node is not node:
 			raise error, 'node was not the playing node '+`self,node,self._played_node`
 		if self._playstate == PLAYING:
