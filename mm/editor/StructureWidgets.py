@@ -236,6 +236,7 @@ class StructureObjWidget(MMNodeWidget):
         displist.usefont(f_title)
         l,t,r,b = self.pos_rel;
         b = t + self.get_rely(sizes_notime.TITLESIZE) + self.get_rely(sizes_notime.VEDGSIZE);
+        l = l + self.get_relx(16);      # move it past the icon.
         displist.centerstring(l,t,r,b, self.name)
         self.collapsebutton.draw(displist);
 
@@ -426,7 +427,7 @@ class SeqWidget(StructureObjWidget):
 
 class DropBoxWidget(Widgets.Widget):
     # This is the stupid drop-box at the end of a sequence. Looks like a
-    # MediaNode, acts like a MediaNode, but isn't a MediaNode.
+    # MediaWidget, acts like a MediaWidget, but isn't a MediaWidget.
     def draw(self, displist):
         displist.drawfbox(LEAFCOLOR, self.get_box());
         displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
@@ -626,8 +627,8 @@ class MediaWidget(MMNodeWidget):
     
     def __init__(self, node, root):
         MMNodeWidget.__init__(self, node, root)
-        self.transition_in = TransitionWidget(root, 'in')
-        self.transition_out = TransitionWidget(root, 'out')
+        self.transition_in = TransitionWidget(self, root, 'in')
+        self.transition_out = TransitionWidget(self, root, 'out')
 
         self.pushbackbar = PushBackBarWidget(root);
         self.pushbackbar.parent = self; # The pushbackbar refers to values from self.
@@ -639,8 +640,8 @@ class MediaWidget(MMNodeWidget):
         # Remove myself from the MMNode view{} dict.
         MMNodeWidget.destroy(self)
 
-#    def is_hit(self, pos):
- #       return self.pushbackbar.is_hit(pos) or MMNodeWidget.is_hit(self, pos);
+    def is_hit(self, pos):
+        return self.transition_in.is_hit(pos) or self.transition_out.is_hit(pos) or MMNodeWidget.is_hit(self, pos);
 
     def compute_download_time(self):
         # Compute the download time for this widget.
@@ -672,8 +673,13 @@ class MediaWidget(MMNodeWidget):
 
     def recalc(self):
         l,t,r,b = self.pos_rel
-        self.transition_in.moveto((l,b-(1.0/6.0)*(b-t),l+(r-l)*(1.0/6.0),b))
-        self.transition_out.moveto((l+(5.0/6.0)*(r-l),b-(1.0/6.0)*(b-t),r,b))
+#        l = l + self.get_relx(1);
+#        b = b - self.get_rely(1);
+#        r = r - self.get_relx(1);
+        pix16x = self.get_relx(16);
+        pix16y = self.get_rely(16);
+        self.transition_in.moveto((l,b-pix16y,l+pix16x, b))
+        self.transition_out.moveto((r-pix16x,b-pix16y,r, b))
         lag = self.get_relx(self.downloadtime_lag)
 #        dt = self.get_relx(self.downloadtime)
         h = self.get_rely(6);          # 12 pixels high.
@@ -760,22 +766,44 @@ class MediaWidget(MMNodeWidget):
 
     def get_obj_at(self, pos):
         if self.is_hit(pos):
-            return self
+            if self.transition_in.is_hit(pos):
+                return self.transition_in
+            elif self.transition_out.is_hit(pos):
+                return self.transition_out
+            else:
+                return self
         else:
             return None
 
-class TransitionWidget(Widgets.Widget):
-    # TODO: implement and use the append functionality of the Widget class.
-
-    def __init__(self, root, inorout):
+class TransitionWidget(MMNodeWidget):
+    # This is a box at the bottom of a node that represents the in or out transition.
+    def __init__(self, parent, root, inorout):
         self.in_or_out = inorout
-        Widgets.Widget.__init__(self, root)
+        MMNodeWidget.__init__(self, parent.node, root)
+        self.parent = parent
+
+    def select(self):
+        self.parent.select();
+
+    def unselect(self):
+        self.parent.unselect();
     
     def draw(self, displist):
-        displist.drawfbox((255,255,255), self.get_box())
-        displist.drawbox(self.get_box())
+        if self.in_or_out is 'in':
+            displist.drawicon(self.get_box(), 'transin');
+        else:
+            displist.drawicon(self.get_box(), 'transout');
+
+    def attrcall(self):
+        self.root.toplevel.setwaiting()
+        import AttrEdit
+        if self.in_or_out is 'in':
+            AttrEdit.showattreditor(self.root.toplevel, self.node, 'transIn')
+        else:
+            AttrEdit.showattreditor(self.root.toplevel, self.node, 'transOut')
 
 class PushBackBarWidget(Widgets.Widget):
+    # This is a push-back bar between nodes.
     def draw(self, displist):
         # TODO: draw color based on something??
         displist.fgcolor(TEXTCOLOR)
@@ -791,20 +819,21 @@ class PushBackBarWidget(Widgets.Widget):
         self.parent.select()
 
 class CollapseButtonWidget(Widgets.Widget):
+    # This is the "expand/collapse" button at the right hand corner of the nodes.
     def __init__(self, parent, root):
         Widgets.Widget.__init__(self, root);
         self.parent=parent;
-        self.root=root
 
     def recalc(self):
         l,t,w,h = self.parent.get_box();
-        l=l+self.get_relx(sizes_notime.HEDGSIZE)
-        t = t+self.get_rely(sizes_notime.VEDGSIZE)
+        l=l+self.get_relx(1)            # Trial-and-error numbers.
+        t = t+self.get_rely(2)
         r = l + self.get_relx(10);      # This is pretty bad code..
         b = t+self.get_rely(10);
         self.moveto((l,t,r,b));
             
     def draw(self, displist):
+        pass;                           # Disabled for the meanwhile.
         if self.parent.collapsed:
             displist.drawicon(self.get_box(), 'closed')
         else:
