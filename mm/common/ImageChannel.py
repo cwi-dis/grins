@@ -44,11 +44,14 @@ class ImageWindow(ChannelWindow):
 		if not self.is_showing():
 			return
 		gl.reshapeviewport()
+		width, height = gl.getsize()
+		gl.ortho2(-0.5, width-0.5, -0.5, height-0.5)
 		self.render()
 	#
 	def clear(self):
 		self.node = None
 		self.parray = None
+		self.error = None
 		self.anchors = []
 		self.xsize = self.ysize = 0
 		self.setcolors()
@@ -58,10 +61,19 @@ class ImageWindow(ChannelWindow):
 			gl.clear()
 	#
 	def setcolors(self):
+		if self.node:
+			self.bgcolor = MMAttrdefs.getattr(self.node, 'bgcolor')
+			self.fgcolor = MMAttrdefs.getattr(self.node, 'fgcolor')
+			self.hicolor = MMAttrdefs.getattr(self.node, 'hicolor')
+			return
 		if self.attrdict.has_key('bgcolor'):
 			self.bgcolor = self.attrdict['bgcolor']
 		else:
 			self.bgcolor = 255, 255, 255
+		if self.attrdict.has_key('fgcolor'):
+			self.fgcolor = self.attrdict['fgcolor']
+		else:
+			self.fgcolor = 0, 0, 0
 		if self.attrdict.has_key('hicolor'):
 			self.hicolor = self.attrdict['hicolor']
 		else:
@@ -116,22 +128,41 @@ class ImageWindow(ChannelWindow):
 			self.channel.haspauseanchor = 0
 			self.channel.done(0)
 	#
-	def armimage(self, (filename, node)):
-		filename = rgbcache.get(filename)
+	def armimage(self, (filename_arg, node)):
+		filename = rgbcache.get(filename_arg)
+		self.node = node
+		self.setcolors()
 		self.parray = None
+		self.error = None
 		try:
 			self.xsize, self.ysize, dummy = imgfile.getsizes(filename)
 		except imgfile.error, msg:
-			print 'Cannot get size of image file', filename, \
+			print 'Cannot get size of image file', filename_arg, \
 				  ':', msg
+			self.error = 'Bad or missing file ' + `filename_arg`
 			return
-		self.node = node
 		self.scale = MMAttrdefs.getattr(node, 'scale')
-		self.bgcolor = MMAttrdefs.getattr(node, 'bgcolor')
+		if self.scale <= 0.0:
+			if not self.is_showing():
+				self.scale = 1.0
+			else:
+				self.setwin()
+				width, height = gl.getsize()
+				self.scale = min(float(width)/self.xsize, \
+					         float(height)/self.ysize)
 		try:
-			self.parray = imgfile.read(filename)
+			if self.scale == int(self.scale):
+				self.parray = imgfile.read(filename)
+			else:
+				width = int(self.xsize * self.scale)
+				height = int(self.ysize * self.scale)
+				self.parray = imgfile.readscaled(filename, \
+					                         width, height)
+				self.scale = 1.0
+				self.xsize, self.ysize = width, height
 		except imgfile.error, msg:
-			print 'Cannot read image file', filename, ':', msg
+			print 'Cannot read image file', filename_arg, ':', msg
+			self.error = 'Cannot read file ' + `filename_arg`
 	def showimage(self):
 		if self.is_showing():
 			self.pop() # Implies gl.winset()
@@ -179,7 +210,16 @@ class ImageWindow(ChannelWindow):
 				gl.v2i(x1, y1)
 				gl.v2i(x1, y0)
 				gl.endclosedline()
-
+		elif self.error:
+			gl.RGBcolor(self.fgcolor)
+			width, height = gl.getsize()
+			x, y = width/2, height/2
+			sw = gl.strwidth(self.error)
+			sh = gl.getheight()
+			x = max(0, x - sw/2)
+			y = y + sh/2
+			gl.cmov2(x, y)
+			gl.charstr(self.error)
 	#
 
 
@@ -191,8 +231,8 @@ class ImageChannel(Channel):
 	# respectively to nodes belonging to this channel.
 	#
 	chan_attrs = ['winsize', 'winpos', 'visible']
-	node_attrs = ['file', 'duration', 'bgcolor', 'scale', 'arm_duration', \
-		'hicolor']
+	node_attrs = ['file', 'duration', 'scale', 'arm_duration', \
+		 'bgcolor', 'fgcolor', 'hicolor']
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, name, attrdict, player)

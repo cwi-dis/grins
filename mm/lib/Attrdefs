@@ -113,6 +113,7 @@
 
 ##(keep (bool) 0 'Keep' default
 ##	'If on, text in window is kept until explicitly replaced' channel)
+
 (links_winpos  (tuple (int) (int)) (-1 -1) 'Link edit window position' default
 	 'Position of link edit window' raw)
 
@@ -130,7 +131,7 @@
 ##	'If on, suppress space following last word')
 
 (scale (float) 1.0 'Scale factor' default
-	'Image scale factor (magnification)' channel)
+	'Image magnification (0.0 means fit in window)' channel)
 
 ##(scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars' default
 ##	'Select the presence of horizontal/vertical scroll bars' channel)
