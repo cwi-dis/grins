@@ -176,19 +176,25 @@ class ImageChannel(ChannelWindow):
 
 
 	def canupdateattr(self, node, name):
-		if name == 'file': return 1
+		if name == 'file': 
+			return 1
+		elif name in ('region.left','region.top','region.width','region.height'):
+			return 1
 		return 0
 
 	def do_updateattr(self, node, name, value):
-		if name != 'file': return
-		baseurl = self.getfileurl(node)
-		url = MMurl.basejoin(baseurl, value)
-		try:
-			f = urlretrieve(url)[0]
-		except IOError, arg:
-			if type(arg) is type(self):
-				arg = arg.strerror
-			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
-			return
-		if self.played_display:
-			self.played_display.update_image(id(node), f)
+		if name.find('region.')==0:
+			if self.played_display:
+				self.played_display.update_image(id(node), value, name[7:])	
+		elif name == 'file':
+			baseurl = self.getfileurl(node)
+			url = MMurl.basejoin(baseurl, value)
+			try:
+				f = urlretrieve(url)[0]
+			except IOError, arg:
+				if type(arg) is type(self):
+					arg = arg.strerror
+				self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
+				return
+			if self.played_display:
+				self.played_display.update_image(id(node), f, 'file')
