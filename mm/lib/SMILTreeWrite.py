@@ -222,7 +222,7 @@ def getsrc(writer, node):
 		if not val and not writer.copydir:
 			# no URL and not exporting, save as data: URL
 			import base64, realnode
-			node.SetAttr('file', 'dummy.rp')
+			node.SetAttr('file', MMurl.basejoin(writer.convertURLs, 'dummy.rp'))
 			data = realnode.writenode(node, tostring = 1)
 			node.DelAttr('file')
 			return 'data:image/vnd.rn-realpix;base64,' + \
