@@ -5,7 +5,7 @@
 from usercmd import *
 
 # Types of menu entries
-[ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE] = range(5)
+[ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE, SPECIAL] = range(6)
 
 #
 # commands we know are not useable on the Mac:
@@ -63,13 +63,29 @@ MENUBAR=(
 		(ENTRY, 'Copy channel', None, COPY_CHANNEL),
 		(ENTRY, 'Toggle channel state', None, TOGGLE_ONOFF))),
 
-	(CASCADE, 'View', (
-		(TOGGLE, ('Open Player', 'Close Player'), '1', PLAYERVIEW),
-		(TOGGLE, ('Open Layout view', 'Close Layout view'), '2', LAYOUTVIEW),
-		(TOGGLE, ('Open Hierarchy view', 'Close Hierarchy view'), '3', HIERARCHYVIEW),
-		(TOGGLE, ('Open Timeline view', 'Close Timeline view'), '4', CHANNELVIEW),
-		(TOGGLE, ('Open Hyperlink view', 'Close Hyperlink view'), '5', LINKVIEW),
+		
+	(CASCADE, 'Play', (
+		(ENTRY, 'Play document', 'P', PLAY),
+		(ENTRY, 'Pause', None, PAUSE),
+		(ENTRY, 'Stop', None, STOP),
 		(SEP,),
+		(ENTRY, 'Play node', None, PLAYNODE),
+		(ENTRY, 'Play from node', None, PLAYFROM),
+		(SEP,),
+		(DYNAMICCASCADE, 'Channel visibility', CHANNELS))),
+
+	(CASCADE, 'Focus', (
+		(ENTRY, 'Show info', 'I', INFO),
+		(ENTRY, 'Show attributes', 'A', ATTRIBUTES),
+		(ENTRY, 'Show anchors', 'T', ANCHORS),
+		(ENTRY, 'Edit content', 'E', CONTENT),
+		(SEP,),
+		(DYNAMICCASCADE, 'Select syncarc', SYNCARCS),
+		(SEP,),
+		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
+		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC))),
+		
+	(CASCADE, 'Navigate', (
 		(ENTRY, 'Zoom in', None, ZOOMIN),
 		(ENTRY, 'Zoom out', None, ZOOMOUT),
 		(ENTRY, 'Zoom to focus', 'Z', ZOOMHERE),
@@ -77,6 +93,8 @@ MENUBAR=(
 			(ENTRY, 'Enlarge width', None, CANVAS_WIDTH),
 			(ENTRY, 'Enlarge height', None, CANVAS_HEIGHT),
 			(ENTRY, 'Reset', None, CANVAS_RESET))),
+		(SEP,),
+		(ENTRY, 'Send focus to other views', 'F', PUSHFOCUS),
 		(SEP,),
 		(TOGGLE, 'Display unused channels', 'T', TOGGLE_UNUSED),
 		(TOGGLE, 'Display sync arcs', None, TOGGLE_ARCS),
@@ -90,29 +108,15 @@ MENUBAR=(
 			(DYNAMICCASCADE, 'Siblings', SIBLINGS))),
 		(DYNAMICCASCADE, 'Layout navigation', LAYOUTS))),
 		
-		
-	(CASCADE, 'Play', (
-		(ENTRY, 'Play document', 'P', PLAY),
-		(ENTRY, 'Pause', None, PAUSE),
-		(ENTRY, 'Stop', None, STOP),
+	(CASCADE, 'Views', (
+		(SPECIAL, 'Open windows', 'windows'),
+		(SPECIAL, 'Open documents', 'documents'),
 		(SEP,),
-		(ENTRY, 'Play node', None, PLAYNODE),
-		(ENTRY, 'Play from node', None, PLAYFROM),
-		(SEP,),
-		(DYNAMICCASCADE, 'Channel visibility', CHANNELS))),
-
-	(CASCADE, 'Focus', (
-		(ENTRY, 'Synchronize', 'F', PUSHFOCUS),
-		(SEP,),
-		(ENTRY, 'Show info', 'I', INFO),
-		(ENTRY, 'Show attributes', 'A', ATTRIBUTES),
-		(ENTRY, 'Show anchors', 'T', ANCHORS),
-		(ENTRY, 'Edit content', 'E', CONTENT),
-		(SEP,),
-		(DYNAMICCASCADE, 'Select syncarc', SYNCARCS),
-		(SEP,),
-		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
-		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC))))
-		
+		(TOGGLE, ('Show Player', 'Hide Player'), '1', PLAYERVIEW),
+		(TOGGLE, ('Show Layout view', 'Hide Layout view'), '2', LAYOUTVIEW),
+		(TOGGLE, ('Show Hierarchy view', 'Hide Hierarchy view'), '3', HIERARCHYVIEW),
+		(TOGGLE, ('Show Timeline view', 'Hide Timeline view'), '4', CHANNELVIEW),
+		(TOGGLE, ('Show Hyperlink view', 'Hide Hyperlink view'), '5', LINKVIEW))),
+)
 			
 		
