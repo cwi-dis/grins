@@ -137,11 +137,11 @@ class TopLevel(TopLevelDialog):
 
 	def read_it(self):
 ##		import time
-		import mimetypes
+		import MMmimetypes
 		self.changed = 0
 ##		print 'parsing', self.filename, '...'
 ##		t0 = time.time()
-		mtype = mimetypes.guess_type(self.filename)[0]
+		mtype = MMmimetypes.guess_type(self.filename)[0]
 		if mtype == None and sys.platform == 'mac':
 			# On the mac we do something extra: for local files we attempt to
 			# get creator and type, and if they are us we assume we're looking
