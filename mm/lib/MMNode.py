@@ -667,7 +667,6 @@ class MMNode:
 		self.sched_children = []
 		self.scheduled_children = 0
 		self.arcs = []
-		self.animations = []		
 		self.reset()
 
 	#
@@ -1369,9 +1368,9 @@ class MMNode:
 			self.realpix_body = MMNode_realpix_body(self)
 			self.caption_body = MMNode_caption_body(self)
 			return self.gensr_interior(looping)
-		elif self.animations:
+		elif self.children:
 			print 'ignoring animations for node', self
-			for n in self.animations:
+			for n in self.children:
 				print '\t',n.attrdict
 
 		# Clean up realpix stuff: the node may have been a realpix node in the past
