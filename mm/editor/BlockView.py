@@ -111,7 +111,7 @@ class BlockView(ViewDialog, BasicDialog):
     #	5. sets up the blockview
     #	6. set the focus to the root.
     #
-    def new(self, (w, h, root)):
+    def new(self, w, h, root):
 	h = h - MENUH
 	self._init(w, h)
 	area = self.form.add_box(UP_BOX, 0, 0, w, h, '')
@@ -139,13 +139,13 @@ class BlockView(ViewDialog, BasicDialog):
     # addtocommand adds a command to the commanddictionary.
     # Anybody can submit their own commands
     #
-    def addtocommand(self, (key, func)):
+    def addtocommand(self, key, func):
 	self.commanddict[key] = func
 
     # XXX The menu definitions should be done in such a way that
     # XXX you only need to edit a single line to change a shortcut!
 
-    def addmenus(self, (x, y, w, h)):
+    def addmenus(self, x, y, w, h):
 	f = self.form
 	menubar = f.add_box(FLAT_BOX, x, y, w, h, '')
 	zoominbut = f.add_button(NORMAL_BUTTON, x+w-ZOOMW, y, ZOOMW, h, 'Z')
@@ -201,7 +201,7 @@ class BlockView(ViewDialog, BasicDialog):
     # blockview gets a region in the form where it recursively
     #  places a node in this region; (x, y, w, h).
     #
-    def mkBlockview(self, ((x, y, w, h), node)):
+    def mkBlockview(self, (x, y, w, h), node):
 	type = node.GetType()
 
 	obj = self.form.add_box(FRAME_BOX, x, y, w, h, '')
@@ -262,7 +262,7 @@ class BlockView(ViewDialog, BasicDialog):
 			kids = kids[:]
 			kids.reverse()
 		    for child in kids:
-			self.mkBlockview(((x, y, w, h), child))
+			self.mkBlockview((x, y, w, h), child)
 			x, y = x + dx, y + dy
 
     #
@@ -324,7 +324,7 @@ class BlockView(ViewDialog, BasicDialog):
     # called when user clicks on a node to grab the focus
     # the argument is the class 'blockview' itself.
     #
-    def _change_focus_callback(self, (obj, args)):
+    def _change_focus_callback(self, obj, args):
 	gl.winset(self.form.window) # XXX Funny, but seem to need this
 	mx, my = fl.get_mouse()   # XXXX Too late, wrong mouse pos...
 	node = self._find_node(self.rootview, (mx, my))
@@ -361,7 +361,7 @@ class BlockView(ViewDialog, BasicDialog):
     #
     # _init: initialize state
     #
-    def _init(self, (w, h)):
+    def _init(self, w, h):
 	self.w, self.h = w, h
 	self.focus = None
 	self.commanddict = {}
@@ -369,7 +369,7 @@ class BlockView(ViewDialog, BasicDialog):
     # _find_node: given a mouse positioin, find the corresponding node
     # in the (possibly folded) tree
     #
-    def _find_node(self, (node, (x, y))):
+    def _find_node(self, node, (x, y)):
 	if self.isclosedlocal(node): return node
 
 	for child in node.GetChildren():
@@ -377,7 +377,7 @@ class BlockView(ViewDialog, BasicDialog):
 		return  self._find_node(child, (x, y))
 	return node
     #
-    def _menu_callback(self, (obj, args)):
+    def _menu_callback(self, obj, args):
 	index = obj.get_menu()
 	if index:
 	    self._do_command(args[index-1])
@@ -385,7 +385,7 @@ class BlockView(ViewDialog, BasicDialog):
     # command_callback: read which key is clicked and executes
     # the associated command.
     #
-    def _command_callback(self, (obj, args)):
+    def _command_callback(self, obj, args):
 	if forms_v20:
 	    key = obj.get_input()
 	    obj.set_input('')
@@ -395,7 +395,7 @@ class BlockView(ViewDialog, BasicDialog):
     #
     # button_callback: one of the buttons has been pressed
     #
-    def _button_callback(self, (obj, key)):
+    def _button_callback(self, obj, key):
 	self._do_command(key)
     def _do_command(self, key):
 	if self.commanddict.has_key(key):
@@ -403,7 +403,7 @@ class BlockView(ViewDialog, BasicDialog):
 	else:
 	    gl.ringbell()
 
-    def _openclose_callback(self, (obj, node)):
+    def _openclose_callback(self, obj, node):
 	if node.bv_toosmall: return
 	node.bv_form.freeze_form()
 
@@ -418,7 +418,7 @@ class BlockView(ViewDialog, BasicDialog):
 
 	node.bv_form.unfreeze_form()		
 
-    def _in_bounds(self, (node, (x, y))):
+    def _in_bounds(self, node, (x, y)):
 	o = node.bv_obj
 	if  x > o.x and x < o.x+o.w and y > o.y and y < o.y+o.h:
 	    return node
