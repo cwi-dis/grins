@@ -46,8 +46,9 @@ def fast__import__(name, globals=None, locals=None, fromlist=None):
         fp.close()
 
 def fast_find_module(module):
+	isabs = os.path.isabs
 	for dir in sys.path:
-		if not os.path.isabs(dir):
+		if not isabs(dir):
 			try:
 				# just try it for relative paths
 				m = imp.find_module(module, [dir])
@@ -59,7 +60,9 @@ def fast_find_module(module):
 					raise ImportError, msg
 			else:
 				return m
-		if not cache.has_key(dir):
+		try:
+			cd = cache[dir]
+		except KeyError:
 			cache[dir] = cd = {}
 			try:
 				names = os.listdir(dir)
@@ -71,7 +74,7 @@ def fast_find_module(module):
 						n = len(suff)
 						if name[-n:] == suff:
 							cd[name[:-n]] = None
-		if cache[dir].has_key(module):
+		if cd.has_key(module):
 			return imp.find_module(module, [dir])
 	raise ImportError, 'no module named %s' % module
 
