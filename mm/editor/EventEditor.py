@@ -1,6 +1,6 @@
 # This module is a collection of useful functions for working with events.
 
-import EventEditorDialog, grinsRC, components
+import EventEditorDialog
 import MMNode, windowinterface
 
 # An event struct is a temporary representation of an event; it is intended to be used
