@@ -1,7 +1,7 @@
 Document Type: WSE
 item: Global
   Version=8.14
-  Title=Oratrix GRiNS Editor for Real, Version 2.0 Installation
+  Title=Oratrix GRiNS Editor for RealONE Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
   Japanese Font Name=MS Gothic
@@ -27,7 +27,7 @@ item: Global
   Per-User Version ID=1
   Dialogs Version=7
   Version File=2.0
-  Version Description=GRiNS/Real 2.0
+  Version Description=GRiNS/RealONE
   Version Copyright=Copyright 2001 Oratrix Holding B.V.
   Version Company=Oratrix Holding B.V.
   Crystal Format=10111100101100000010001001001001
@@ -116,7 +116,7 @@ item: End Block
 end
 item: Set Variable
   Variable=APPTITLE
-  Value=Oratrix GRiNS Editor for Real, Version 2.0
+  Value=Oratrix GRiNS Editor for RealONE
   Flags=10000000
 end
 item: Set Variable
@@ -2232,7 +2232,7 @@ item: Create Shortcut
 end
 item: Create Shortcut
   Source=%MAINDIR%\Unwise.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS Editor for Real 2.0.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS Editor for RealONE.lnk
   Icon Number=0
 end
 item: If/While Statement
@@ -2264,7 +2264,7 @@ item: If/While Statement
 end
 item: Create Shortcut
   Source=%MAINDIR%\GRiNS_RV2.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Editor for Real 2.0.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Editor for RealONE.lnk
   Icon Number=0
 end
 item: End Block
@@ -2276,7 +2276,7 @@ item: If/While Statement
 end
 item: Create Shortcut
   Source=%MAINDIR%\GRiNS_RV2.exe
-  Destination=%CDESKTOPDIR%\GRiNS Editor for Real 2.0.lnk
+  Destination=%CDESKTOPDIR%\GRiNS Editor for RealONE.lnk
   Icon Number=0
 end
 item: End Block
@@ -2290,7 +2290,7 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Editor for Real 2.0
+  Icon Name=GRiNS Editor for RealONE
   Command Line=%MAINDIR%\GRiNS_RV2.exe
 end
 item: End Block
@@ -2302,7 +2302,7 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Editor for Real 2.0
+  Icon Name=GRiNS Editor for RealONE
   Command Line=%MAINDIR%\GRiNS_RV2.exe
 end
 item: End Block
@@ -2319,7 +2319,7 @@ item: Add ProgMan Icon
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=Uninstall GRiNS Editor for Real 2.0
+  Icon Name=Uninstall GRiNS Editor for RealONE
   Command Line=%MAINDIR%\Unwise.exe
 end
 item: If/While Statement
@@ -2383,7 +2383,7 @@ item: Edit Registry
   Total Keys=3
   item: Key
     Key=SMILfile\shell\edit
-    New Value=Edit with GRiNS Editor for Real 2.0
+    New Value=Edit with GRiNS Editor for RealONE
     New Value=
     Root=32
   end
@@ -2395,7 +2395,7 @@ item: Edit Registry
   end
   item: Key
     Key=SMILfile\shell\open
-    New Value=Edit with GRiNS Editor for Real 2.0
+    New Value=Edit with GRiNS Editor for RealONE
     New Value=
     Root=32
   end
@@ -2430,7 +2430,7 @@ item: Edit Registry
   Total Keys=2
   item: Key
     Key=GRiNSProject\shell\edit
-    New Value=Edit with GRiNS Editor for Real 2.0
+    New Value=Edit with GRiNS Editor for RealONE
     New Value=
     Root=32
   end
@@ -2451,7 +2451,7 @@ item: Edit Registry
   end
   item: Key
     Key=GRiNSProject\shell\open
-    New Value=Edit with GRiNS Editor for Real 2.0
+    New Value=Edit with GRiNS Editor for RealONE
     New Value=
     Root=32
   end
