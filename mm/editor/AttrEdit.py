@@ -1362,6 +1362,8 @@ class AttrEditor(AttrEditorDialog):
 		self.wrapper = wrapper
 		wrapper.register(self)
 		self.__open_dialog(initattr)
+		# update the title bar name
+		self.settitle(wrapper.maketitle())
 
 	def __open_dialog(self, initattr):
 		import settings
@@ -1794,8 +1796,9 @@ class AttrEditor(AttrEditorDialog):
 			a = self.getcurattr()
 ##				self.fixvalues()
 			self.resetall()
-			self.settitle(self.wrapper.maketitle())
 			self.setcurattr(a)
+		# update the title bar name
+		self.settitle(self.wrapper.maketitle())
 
 	def rollback(self):
 		pass
