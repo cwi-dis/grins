@@ -1105,6 +1105,43 @@ GetWMString(PyObject *self, PyObject *args)
 	return obj;
 	}
 
+// InitCommonControlsEx
+static PyObject*
+sdk_init_common_controls_ex(PyObject *self, PyObject *args) 
+	{
+ 	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+    INITCOMMONCONTROLSEX which; 
+    which.dwICC = ICC_WIN95_CLASSES;
+    which.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    InitCommonControlsEx(&which);
+	RETURN_NONE;
+	}
+
+//AddToolInfo
+static PyObject*
+sdk_add_tool_info(PyObject *self, PyObject *args)
+	{
+	HWND hwnd, hwndParent;
+	int id;
+	RECT rc;
+	if (!PyArg_ParseTuple(args,"iii(iiii):AddToolInfo", &hwnd, &hwndParent, &id,
+		        &rc.left, &rc.top, &rc.right,&rc.bottom))
+		return NULL;
+    TOOLINFO ti;
+	ti.cbSize = sizeof(TOOLINFO);
+    ti.uFlags = TTF_SUBCLASS;
+    ti.hwnd = hwndParent;
+    ti.hinst = AfxGetInstanceHandle();
+    ti.uId = id;
+    ti.lpszText = LPSTR_TEXTCALLBACK;
+    ti.rect.left = rc.left;    
+    ti.rect.top = rc.top;
+    ti.rect.right = rc.right;
+    ti.rect.bottom = rc.bottom;
+    SendMessage(hwnd, TTM_ADDTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);	
+	RETURN_NONE;
+	}
 
  // @object PyWin32Sdk|A module wrapper object.  It is a general utility object, and is not associated with an MFC object.
 BEGIN_PYMETHODDEF(Win32Sdk)
@@ -1166,6 +1203,8 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"CoUninitialize",sdk_co_uninitialize,1}, 
 	{"MapVirtualKey",sdk_map_virtual_key,1},
 	
+	{"InitCommonControlsEx",sdk_init_common_controls_ex,1},
+	{"AddToolInfo",sdk_add_tool_info,1},
 	
 	///////////////////////////////////////////////////// Temporary
 	{"ParseDrawItemStruct",sdk_parse_drawitemstruct,1},// undocumented!
