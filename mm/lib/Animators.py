@@ -814,9 +814,10 @@ class EffectiveAnimator:
 		attr = self.__attr
 		chan = self.__chan
 		mmchan = chan._attrdict
-
+		layout = mmchan.GetLayoutChannel()
+		
 		# implemented fit='meet' (0) and fit='hidden' (1)
-		scale = mmchan.get('scale', 1)
+		scale = self.__node.getCssAttr('scale', 1)
 		coordinates = mmchan.GetPresentationAttr('base_winoff', self.__node)
 
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
@@ -1278,24 +1279,16 @@ class AnimateElementParser:
 		if self.__elementTag=='animateMotion':
 			self.__grinsattrname = self.__attrname = 'position'
 			self.__attrtype = 'position'
-			if settings.activeFullSmilCss:
-				rc = None
-				if self.__target._type == 'mmnode':
-					rc = self.__target.getPxGeom()
-				elif self.__target._type == 'region':
-					ch = self.__target._region
-					rc = ch.getPxGeom()
-				if rc:
-					x, y, w, h = rc
-					self.__domval = complex(x, y)
-					return 1
-				return 0
-			else:
-				d = self.__target.GetChannel().attrdict
-				if d.has_key('base_winoff'):
-					base_winoff = d['base_winoff']
-					self.__domval = complex(base_winoff[0], base_winoff[1])
-					return 1
+			rc = None
+			if self.__target._type == 'mmnode':
+				rc = self.__target.getPxGeom()
+			elif self.__target._type == 'region':
+				ch = self.__target._region
+				rc = ch.getPxGeom()
+			if rc:
+				x, y, w, h = rc
+				self.__domval = complex(x, y)
+				return 1
 			return 0
 				
 		# For all other animate elements we must have an explicit attributeName
@@ -1312,47 +1305,27 @@ class AnimateElementParser:
 		if self.__attrname in ('left', 'top', 'width', 'height','right','bottom'):
 			attr = self.__grinsattrname = self.__attrname
 			self.__attrtype = 'int'
-			if settings.activeFullSmilCss:
-				rc = None
-				if self.__target._type == 'mmnode':
-					rc = self.__target.getPxGeom()
-				elif self.__target._type == 'region':
-					ch = self.__target._region
-					rc = ch.getPxGeom()
-				if rc:
-					if attr == 'left':
-						v = rc[0]
-					elif attr=='top':
-						v = rc[1]
-					elif attr == 'right':
-						v = rc[0] + r[2]
-					elif attr == 'bottom':
-						v = rc[1] + r[3]
-					elif attr == 'width':
-						v = rc[2]
-					elif attr == 'height':
-						v = rc[3]
-					self.__domval = v
-					return 1
-				return 0
-			else:
-				d = self.__target.GetChannel().attrdict
-				if d.has_key('base_winoff'):
-					rc = d['base_winoff']
-					if attr == 'left':
-						v = rc[0]
-					elif attr=='top':
-						v = rc[1]
-					elif attr == 'right':
-						v = rc[0] + r[2]
-					elif attr == 'bottom':
-						v = rc[1] + r[3]
-					elif attr == 'width':
-						v = rc[2]
-					elif attr == 'height':
-						v = rc[3]
-					self.__domval = v
-					return 1
+			rc = None
+			if self.__target._type == 'mmnode':
+				rc = self.__target.getPxGeom()
+			elif self.__target._type == 'region':
+				ch = self.__target._region
+				rc = ch.getPxGeom()
+			if rc:
+				if attr == 'left':
+					v = rc[0]
+				elif attr=='top':
+					v = rc[1]
+				elif attr == 'right':
+					v = rc[0] + r[2]
+				elif attr == 'bottom':
+					v = rc[1] + r[3]
+				elif attr == 'width':
+					v = rc[2]
+				elif attr == 'height':
+					v = rc[3]
+				self.__domval = v
+				return 1
 			return 0
 
 		if self.__attrname == 'backgroundColor':
@@ -1382,10 +1355,10 @@ class AnimateElementParser:
 				return 1
 			return 0
 
-		if attr=='coords':
+		if self.__attrname=='coords':
+			self.__grinsattrname = 'coords'
+			self.__attrtype = 'inttuple' # SMIL20: should be managed as 'string'
 			d = self.__target.attrdict
-			self.__grinsattrname = self.__attrname = 'coords'
-			self.__attrtype = 'inttuple' # SMIL20: should be 'string'
 			if d.has_key('coords'):
 				coords = d['coords']
 				# use grins convention
