@@ -601,7 +601,6 @@ class SchedulerContext:
 					if ats > curtime:
 						found = 1
 					elif ats == curtime:
-						equal = 1
 						found = 1
 						break
 		else:
@@ -1213,6 +1212,7 @@ class SchedulerContext:
 
 class Scheduler(scheduler):
 	def __init__(self, ui):
+		# not calling scheduler.__init__ on purpose
 		self.queue = []
 		self.ui = ui
 		self.toplevel = self.ui.toplevel
@@ -1308,7 +1308,7 @@ class Scheduler(scheduler):
 			self.toplevel.setwaiting()
 			when, prio, action, argument = self.queue[0]
 			del self.queue[0]
-			void = apply(action, argument)
+			apply(action, argument)
 			now = self.timefunc()
 		#
 		# Now the normal runqueue

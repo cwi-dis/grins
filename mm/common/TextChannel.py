@@ -75,7 +75,7 @@ class TextChannel(ChannelWindow):
 				continue
 			# write everything before the anchor
 			for line in range(pline, line0):
-				dummy = self.armed_display.writestr(curlines[line][pchar:] + '\n')
+				self.armed_display.writestr(curlines[line][pchar:] + '\n')
 				pchar = 0
 			dummy = self.armed_display.writestr(curlines[line0][pchar:char0])
 			pline, pchar = line0, char0
@@ -201,7 +201,6 @@ def extract_taglist(parlist):
 		res = pat.search(par, j)
 		while res is not None:
 			a, b = res.span(0)
-			tag = par[a:b]
 			par = par[:a] + par[b:]
 			j = a
 			name = res.group(1) or res.group(2) # None if endtag
@@ -248,7 +247,7 @@ def fix_anchorlist(node, taglist):
 			i = i - 1	# compensate for later increment
 		else:
 			names_in_taglist.append(a.aid)
-			anchor_types[aid] = a.atype, a.atimes, a.aaccess
+			anchor_types[a.aid] = a.atype, a.atimes, a.aaccess
 		i = i + 1
 	for i in range(len(taglist)):
 		item = taglist[i]

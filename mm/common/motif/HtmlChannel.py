@@ -191,7 +191,6 @@ class HtmlChannel(Channel.ChannelWindow):
 		      ('header6Font', 6.5)]
 
 	def do_play(self, node, curtime):
-		import Xm
 		htmlw = self.htmlw
 		self.played_url = self.url = self.armed_url
 		utype, host, path, params, query, tag = urlparse.urlparse(self.url)
