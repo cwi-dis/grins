@@ -149,7 +149,7 @@ class Main(MainDialog):
 			self.collect_template_info()
 		if self.template_info:
 			names, descriptions = self.template_info
-			windowinterface.TemplateDialog(names, descriptions,self._new_ok_callback)
+			windowinterface.TemplateDialog(names, descriptions,self._new_ok_callback, parent=self.getparentwindow())
 		else:
 			windowinterface.showmessage("No Templates found, creating empty document")
 			top = TopLevel.TopLevel(self, self.getnewdocumentname('dummy.smil'), 1)

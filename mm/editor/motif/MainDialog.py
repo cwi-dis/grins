@@ -57,6 +57,11 @@ class MainDialog:
 		self.__recent = []
 		self.__lasturl = ''
 
+	def getparentwindow(self):
+		# Used by machine-independent code to pass as parent
+		# parameter to dialogs. Not implemented on unix.
+		return None
+
 	def open_callback(self):
 		import windowinterface
 		if not self.canopennewtop():

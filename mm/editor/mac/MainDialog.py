@@ -42,6 +42,11 @@ class MainDialog:
 		windowinterface.installaehandler('aevt', 'quit', self._ae_quit)
 		windowinterface.installaehandler('aevt', 'odoc', self._ae_opendoc)
 
+	def getparentwindow(self):
+		# Used by machine-independent code to pass as parent
+		# parameter to dialogs. Not implemented on mac.
+		return None
+
 	def open_callback(self):
 		import windowinterface
 		if not self.canopennewtop():
