@@ -107,6 +107,21 @@ default_settings = {
 	'templatedir_url': 'http://www.oratrix.com/indir/images',
 	'defaultviews' : ['hierarchy'],	# Default views to open
 	'showsource' : 0,	# Hidden preference to show source window in the player
+
+	# The temporal view
+	'temporal_barwidth': 4,		# width of the sync bars
+	'temporal_channelwidth':100,	# Width of the channels. If channels are made Hierarchical, this may change.
+	'temporal_nodestart': 102,	# Where the first bar is
+	'temporal_nodeend' : 1000,	# Where the last bar is.
+	'temporal_backgroundcolor' : (227,223,145),	# The color of the background
+	'temporal_channelcolor': (232, 193,152),	# Color of the channels
+	'temporal_channelheight': 16,	# Height of the channels
+	'temporal_nodecolor': (205,207,194),		# the color of each node
+	'temporal_parcolor': (74,158,132),
+	'temporal_seqcolor': (200,154,189),
+	'temporal_exclcolor': (255,106,106),
+	'temporal_priocolor': (255,60,60),
+	'temporal_switchcolor': (100,207,33),
 }
 
 user_settings = {}
