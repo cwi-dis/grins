@@ -39,6 +39,7 @@ class MMNodeContext:
 		self._ichannelnames = []  # internal channels
 		self._ichannels = []
 		self._ichanneldict = {}
+		self.comment = ''
 
 	def __repr__(self):
 		return '<MMNodeContext instance, channelnames=' \

@@ -2729,6 +2729,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def handle_proc(self, name, data):
 		self.warning('ignoring processing instruction %s' % name, self.lineno)
 
+	def handle_comment(self, data):
+		if data == EVALcomment:
+			return
+		self.__context.comment = self.__context.comment + data
+
 	# Example -- handle cdata, could be overridden
 	def handle_cdata(self, cdata):
 		if self.__node is None or self.__is_ext:

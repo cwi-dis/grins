@@ -751,7 +751,7 @@ class ChannelWrapper(Wrapper):
 
 
 class DocumentWrapper(Wrapper):
-	__stdnames = ['title', 'author', 'copyright', 'base', 'project_boston']
+	__stdnames = ['title', 'author', 'comment', 'copyright', 'base', 'project_boston']
 	__publishnames = [
 			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
 			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
@@ -784,6 +784,8 @@ class DocumentWrapper(Wrapper):
 			return self.context.title or None
 		if name == 'base':
 			return self.context.baseurl or None
+		if name == 'comment':
+			return self.context.comment or None
 		if self.context.attributes.has_key(name):
 			return self.context.attributes[name]
 		return None		# unrecognized
@@ -797,6 +799,8 @@ class DocumentWrapper(Wrapper):
 			self.context.title = value
 		elif name == 'base':
 			self.context.setbaseurl(value)
+		elif name == 'comment':
+			self.context.comment = value
 		else:
 			self.context.attributes[name] = value
 
@@ -805,6 +809,8 @@ class DocumentWrapper(Wrapper):
 			self.context.title = None
 		elif name == 'base':
 			self.context.setbaseurl(None)
+		elif name == 'comment':
+			self.context.comment = ''
 		elif self.context.attributes.has_key(name):
 			del self.context.attributes[name]
 
@@ -834,13 +840,13 @@ class DocumentWrapper(Wrapper):
 		return self.__stdnames + names
 		
 	def valuerepr(self, name, value):
-		if name in ('title', 'base'):
+		if name in ('title', 'base', 'comment'):
 			return MMAttrdefs.valuerepr(name, value)
 		else:
 			return value
 
 	def parsevalue(self, name, str):
-		if name in ('title', 'base'):
+		if name in ('title', 'base', 'comment'):
 			return MMAttrdefs.parsevalue(name, str, self.context)
 		else:
 			return str
