@@ -765,16 +765,16 @@ class MMSyncArc:
 	def refnode(self):
 		node = self.dstnode
 		if self.wallclock is not None:
-			refnode = node.parent or node
+			refnode = node.GetSchedParent() or node
 			refnode = refnode.looping_body_self or refnode
-		elif self.srcnode == 'prev' or (self.srcnode is None and node.parent.type == 'seq'):
+		elif self.srcnode == 'prev' or (self.srcnode is None and node.GetSchedParent().type == 'seq'):
 			refnode = node.GetSchedParent()
 			for c in refnode.GetSchedChildren():
 				if c is node:
 					break
 				refnode = c
 		elif self.srcnode is None:
-			refnode = node.parent
+			refnode = node.GetSchedParent()
 			refnode = refnode.looping_body_self or refnode
 		elif self.srcnode is node:
 			refnode = node.looping_body_self or node
@@ -854,8 +854,8 @@ class MMSyncArc:
 			return refnode.happenings[('event', self.event)] + self.delay
 		if self.marker is not None:
 			return refnode.happenings[('marker', self.marker)] + self.delay
-		if self.dstnode.parent.type == 'seq' and \
-		   refnode is not self.dstnode.parent:
+		if self.dstnode.GetSchedParent().type == 'seq' and \
+		   refnode is not self.dstnode.GetSchedParent():
 			# self is previous child in seq, so
 			# event is end
 			event = 'end'
@@ -994,18 +994,19 @@ class MMNode:
 			name = MMAttrdefs.getattr(self, 'name')
 		except:
 			name = ''
-		return '<MMNode instance, type=%s, uid=%s, name=%s>' % \
-		       (`self.type`, `self.uid`, `name`)
+		return '<MMNode instance, type=%s, uid=%s, name=%s, playing=%s>' % \
+		       (`self.type`, `self.uid`, `name`, MMStates.states[self.playing])
 
 	# methods that have to do with playback
 	def reset(self):
-		if debug: print 'MMNode.reset', `self`
 		self.happenings = {}
 		self.playing = MMStates.IDLE
 		self.sctx = None
 		self.start_time = None
+		if debug: print 'MMNode.reset', `self`
 
 	def resetall(self, sched):
+		if debug: print 'resetall', `self`
 		self.reset()
 		for c in self.children:
 			c.resetall(sched)
@@ -1030,15 +1031,19 @@ class MMNode:
 		self.time_list = []
 
 	def startplay(self, sctx, timestamp):
+		if debug: print 'startplay',`self`,timestamp,self.fullduration
 		self.playing = MMStates.PLAYING
 		self.sctx = sctx
-		if self.fullduration is not None and self.fullduration >= 0:
-			endtime = timestamp+self.fullduration
+		if self.GetFill() == 'remove' and \
+		   self.fullduration is not None and \
+		   self.fullduration >= 0:
+			endtime = timestamp + self.fullduration
 		else:
 			endtime = None
 		self.time_list.append((timestamp, endtime))
 
 	def stopplay(self, timestamp):
+		if debug: print 'stopplay',`self`,timestamp
 		self.playing = MMStates.PLAYED
 		self.time_list[-1] = self.time_list[-1][0], timestamp
 
@@ -1067,8 +1072,8 @@ class MMNode:
 				key = 'event', arc.event
 			elif arc.marker is not None:
 				key = 'marker', arc.marker
-			elif arc.dstnode.parent.type == 'seq' and \
-			     self is not arc.dstnode.parent:
+			elif arc.dstnode.GetSchedParent().type == 'seq' and \
+			     self is not arc.dstnode.GetSchedParent():
 				# self is previous child in seq, so
 				# event is end
 				key = 'event', 'end'
@@ -1118,7 +1123,7 @@ class MMNode:
 		fill = self.attrdict.get('fill')
 		if fill is None or fill == 'default':
 			fill = self.GetInherAttrDef('fillDefault', None)
-		if fill is None or fill == 'default':
+		if fill is None or fill == 'inherit' or fill == 'auto':
 			if not self.attrdict.has_key('duration') and \
 			   not self.attrdict.get('endlist') and \
 			   not self.attrdict.has_key('repeatdur') and \
@@ -1132,7 +1137,7 @@ class MMNode:
 		syncBehavior = self.attrdict.get('syncBehavior')
 		if syncBehavior is None or syncBehavior == 'default':
 			syncBehavior = self.GetInherAttrDef('syncBehaviorDefault', None)
-		if syncBehavior is None or syncBehavior == 'default':
+		if syncBehavior is None or syncBehavior == 'inherit':
 			return None
 		return syncBehavior
 
@@ -1140,7 +1145,7 @@ class MMNode:
 		restart = self.attrdict.get('restart')
 		if restart is None or restart == 'default':
 			restart = self.GetInherAttrDef('restartDefault', None)
-		if restart is None or restart == 'default':
+		if restart is None or restart == 'inherit':
 			return 'always'
 		return restart
 
@@ -1935,7 +1940,7 @@ class MMNode:
 
 		# XXX: ignoring animate elements timing for now, 
 		# just kick animate childs in a parallel envelope	
-		for child in self.children:
+		for child in self.GetSchedChildren():
 			if MMAttrdefs.getattr(child, 'type')!='animate':
 				continue
 			srlist.append(( [(SCHED, self),], 
@@ -2183,12 +2188,13 @@ class MMNode:
 		return [], [], srdict
 
 	def cleanup(self):
-		#print 'cleanup', `self`
+		if debug: print 'cleanup', `self`
 		self.sched_children = []
 		for child in self.children:
 			child.cleanup()
 
 	def cleanup_sched(self, sched, body = None):
+		if debug: print 'cleanup_sched', `self`, `body`
 		if self.type in leaftypes:
 			return
 		if body is None:
@@ -2317,7 +2323,7 @@ class MMNode:
 ##			   (len(wtd_children) == 1 and
 ##			    (schedule or termtype == 'ALL')):
 				arc = MMSyncArc(self_body, 'end', srcnode=child, event='end', delay=0)
-				self_body.arcs.append((self_body, arc))
+				self_body.arcs.append((child, arc))
 				child.add_arc(arc)
 			elif schedule or termtype == 'ALL':
 				scheddone_events.append((SCHED_DONE, child))
@@ -2417,6 +2423,7 @@ class MMNode:
 		return sched_actions, schedstop_actions, srdict
 			
 	def gensr_child(self, child, runchild = 1):
+		if debug: print 'gensr_child',`self`,`child`,runchild
 		if runchild:
 			srdict = child.gensr()
 		else:

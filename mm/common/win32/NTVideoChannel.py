@@ -245,7 +245,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def prepare_anchors(self, node, window, coordinates):
 		if not window: return
 	
-		# GetClientRect by def returns always: 0, 0, w, h		
+		# GetClientRect by def returns always: 0, 0, w, h
 		w_left,w_top,w_width,w_height = window.GetClientRect()
 
 		left,top,width,height = window._convert_coordinates(coordinates)
