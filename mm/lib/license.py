@@ -1,6 +1,7 @@
 # License handling code, dummy for now
 import string
 import sys
+from LicenseDialog import LicenseDialog
 
 FEATURES={
 	"save": 1,
@@ -14,6 +15,7 @@ MAGIC=13
 Error="license.error"
 
 NOTYET="Not licensed yet"
+EXPIRED="Your evaluation copy has expired"
 
 class Features:
 	def __init__(self, license, args):
@@ -26,17 +28,34 @@ class Features:
 		del self.args
 	
 class License:
-	def __init__(self, features):
+	def __init__(self, features, newlicense=None):
 		"""Obtain a license, and state that we need at least one
 		of the features given"""
-		self.__available_features, self.__licensee = \
-					   _getlicense()
+		if newlicense:
+			lic = newlicense
+		else:
+			import settings
+			lic = settings.get('license')
+		self.__available_features, self.__licensee, self.__moredays = \
+					   _parselicense(lic)
 		for f in features:
 			if self.have(f):
 				break
 		else:
 			raise Error, "License not valid for this program"
-		
+			
+		self.msg = ""
+		if type(self.__moredays) == type(0):
+			if self.__moredays < 0:
+				raise Error, EXPIRED
+			self.msg = "Evaluation copy, %d more days left"%self.__moredays
+		if newlicense:
+			import settings
+			settings.set('license', newlicense)
+			if not settings.save():
+				import windowinterface
+				windowinterface.showmessage(
+					'Cannot save license! (File permission problems?)')
 
 	def have(self, *features):
 		"""Check whether we have the given features"""
@@ -60,51 +79,68 @@ class License:
 	def _release(self, features):
 		pass
 
-class WaitLicense:
+class WaitLicense(LicenseDialog):
 	def __init__(self, callback, features):
+		self.can_try = 0
+		self.can_eval = 0
+		
 		self.callback = callback
 		self.features = features
 		self.secondtime = 0
 		self.dialog = None
-		if self.get_or_ask():
+		if self.accept_license():
 			self.do_callback()
-
-	def get_or_ask(self):
+		else:
+			LicenseDialog.__init__(self)
+			self.setdialoginfo()
+			self.show()
+			
+	def accept_license(self, newlicense=None):
 		try:
-			self.license = License(self.features)
+			self.license = License(self.features, newlicense)
+			if not self.license.msg:
+				return 1	# Everything fine, permanent license
+			# Evaluation license 
+			self.msg = msg
+			self.can_try = 1
+			self.can_eval = 1
 		except Error, arg:
-			import windowinterface
-			if self.secondtime or arg != NOTYET:
-				windowinterface.showmessage("%s\nSee www.oratrix.com for details."%arg)
-			self.secondtime = 1
-			self.dialog = windowinterface.InputDialog(
-				'Enter license key:',
-				'',
-				self.ok_callback,
-				(self.cancel_callback, ()))
-			return 0
-		return 1
+			self.msg = arg
+			self.can_try = 0
+			if arg == EXPIRED:
+				self.can_eval = 0
+			else:
+				self.can_eval = 1
+		return 0
 
-	def cancel_callback(self):
+	def cb_quit(self):
 		import sys
 		if sys.platform=='win32':
 			import windowinterface
 			windowinterface.forceclose()
 		else:
 			sys.exit(0)
+			
+	def cb_try(self):
+		self.do_callback()
+		
+	def cb_buy(self):
+		import windowinterface
+		windowinterface.showmessage("Go buy it, then")
+		
+	def cb_eval(self):
+		import windowinterface
+		windowinterface.showmessage("Go get one, then")
+		
+	def cb_enterkey(self):
+		import windowinterface
+		windowinterface.InputDialog("Enter key:", "", self.ok_callback, (self.cb_quit, ()))
 
 	def ok_callback(self, str):
 		import settings
 		import sys
-		if sys.platform!='win32':
-			del self.dialog
-		settings.set('license', str)
-		if self.get_or_ask():
-			# The license appears ok. Save it.
-			if not settings.save():
-				windowinterface.showmessage(
-					'Cannot save license, sorry...')
-			self.do_callback()
+		self.accept_license(str)
+		self.setdialoginfo()
 
 	def do_callback(self):
 		license = self.license
@@ -173,38 +209,41 @@ def _decodelicense(str):
 		user = ""
 	return uniqid, date, features, user
 
-def _getlicense():
-	"""Obtain the license information"""
-	str = ''
-	try:
-		import staticlicense
-	except ImportError:
-		pass
-	else:
-		if 'staticlicense' in dir(staticlicense):
-			str = staticlicense.staticlicense
+def _parselicense(str):
 	if not str:
-		import settings
-		str = settings.get('license')
-	if not str:
-		raise Error, NOTYET
+		raise Error, ""
 	uniqid, date, features, user = _decodelicense(str)
+	if user:
+		user = "Licensed to: " + user
 	if date:
 		import time
 		t = time.time()
 		values = time.localtime(t)
-		if values[:3] > date:
-			raise Error, "License expired %d/%02.2d/%02.2d"%date
-		if not user:
-			user = "Temporary license until %d/%02.2d/%02.2d"%date
-## 		import windowinterface
-## 		msg = 'Temporary license, valid until %d/%02.2d/%02.2d.\n'%date
-## 		msg = msg + 'Do you want to replace it with a full license?'
-## 		ok = windowinterface.showquestion(msg)
-## 		if ok:
-## 			raise Error, ""
+		today = mkdaynum(values[:3])
+		expiry = mkdaynum(date)
+		moredays = expiry - today
+		if moredays == 0:
+			moredays = 1	# Don't want to return zero
 	fnames = []
 	for name, value in FEATURES.items():
 		if (features & value) == value:
 			fnames.append(name)
-	return fnames, user
+	return fnames, user, moredays
+
+def mkdaynum((year, month, day)):
+	import calendar
+	# Januari 1st, in 0 A.D. is arbitrarily defined to be day 1,
+	# even though that day never actually existed and the calendar
+	# was different then...
+	days = year*365			# years, roughly
+	days = days + (year+3)/4	# plus leap years, roughly
+	days = days - (year+99)/100	# minus non-leap years every century
+	days = days + (year+399)/400	# plus leap years every 4 centirues
+	for i in range(1, month):
+		if i == 2 and calendar.isleap(year):
+			days = days + 29
+		else:
+			days = days + calendar.mdays[i]
+	days = days + day
+	return days
+	
