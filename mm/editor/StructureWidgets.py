@@ -713,7 +713,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				if drawbox:
 					displist.drawbox(box)
 		box2 = (0,0,0,0)
-		if forcetext or (self.iconbox is not None and self.iconbox.vertical):
+		if name and (forcetext or (self.iconbox is not None and self.iconbox.vertical)):
 			# draw name next to image
 			displist.fgcolor(CTEXTCOLOR)
 			displist.usefont(f_title)
@@ -754,7 +754,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 					box = (x, y, 0, h)
 			else:
 				box = (x, y, 0, h)
-			if forcetext or (self.iconbox is not None and self.iconbox.vertical):
+			if name and (forcetext or (self.iconbox is not None and self.iconbox.vertical)):
 				nx = box[0] + box[2] + 2
 ##				ny = box[1] + box[3] - 2
 				ny = y + (h + displist.baselinePXL()) / 2 + FONTTWEAK
@@ -1889,7 +1889,7 @@ class SeqWidget(HorizontalWidget):
 		HorizontalWidget.__init__(self, node, mother, parent)
 		if mother.usetimestripview and \
 		   not MMAttrdefs.getattr(node, 'project_readonly') and \
-		   seld.dropbox is None:
+		   self.dropbox is None:
 			self.dropbox = DropBoxWidget(self, mother)
 
 #
@@ -3258,14 +3258,16 @@ class NonEmptyWidget(MMWidgetDecoration):
 		node = self.mmwidget.node
 		icon = node.GetAttrDef('non_empty_icon', None)
 		imxsize = imysize = 0
-		if icon and not MMAttrdefs.getattr(node, 'thumbnail_scale'):
-			import Sizes
-			icon = node.context.findurl(icon)
-			try:
-				icon = MMurl.urlretrieve(icon)[0]
-				imxsize, imysize = Sizes.GetImageSize(icon)
-			except:
-				pass
+		if icon:
+			imxsize = imysize = 24
+			if not MMAttrdefs.getattr(node, 'thumbnail_scale'):
+				import Sizes
+				icon = node.context.findurl(icon)
+				try:
+					icon = MMurl.urlretrieve(icon)[0]
+					imxsize, imysize = Sizes.GetImageSize(icon)
+				except:
+					pass
 
 		text = node.GetAttrDef('non_empty_text', None)
 		if text:
@@ -3292,12 +3294,12 @@ class NonEmptyWidget(MMWidgetDecoration):
 				icon = MMurl.urlretrieve(icon)[0]
 			except:
 				icon = None
-		text = node.GetAttrDef('non_empty_text', self.name)
+		text = node.GetAttrDef('non_empty_text', None)
 		color = node.GetAttrDef('non_empty_color', None)
 		if color is not None:
 			displist.drawfbox(color, (l,t,r-l,b-t))
 		if icon or text:
-			self.mmwidget.do_draw_image(icon, text, (l,t,r-l,b-t), displist, forcetext=1, drawbox=0, align='centerleft')
+			self.mmwidget.do_draw_image(icon, text, (l,t,r-l,b-t), displist, forcetext=1, drawbox=0, align='center')
 
 class DropIconWidget(MMWidgetDecoration):
 	def recalc_minsize(self):
