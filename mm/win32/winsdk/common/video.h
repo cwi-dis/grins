@@ -24,7 +24,7 @@ class VideoPlayer
 	public:
 	virtual ~VideoPlayer() {}
 	virtual bool set_input_stream(mpeg_input_stream *in_stream) = 0;
-	virtual bool set_audio_input_stream(mpeg_input_stream *in_stream) = 0;
+	virtual bool decode_audio_stream() = 0;
 	virtual void close() = 0;
 	virtual int get_width() const = 0;
 	virtual int get_height() const = 0;

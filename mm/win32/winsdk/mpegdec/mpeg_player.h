@@ -44,7 +44,7 @@ class mpeg_player : public VideoPlayer
 	mpeg_player();
 	virtual ~mpeg_player();
 	virtual bool set_input_stream(mpeg_input_stream *in_stream);
-	virtual bool set_audio_input_stream(mpeg_input_stream *in_stream);
+	virtual bool decode_audio_stream();
 	virtual void close();
 	virtual int get_width() const;
 	virtual int get_height() const;

@@ -142,15 +142,16 @@ bool mpeg_player::set_input_stream(mpeg_input_stream *in_stream)
 	return true;
 	}
 
-bool mpeg_player::set_audio_input_stream(mpeg_input_stream *in_stream)
+bool mpeg_player::decode_audio_stream()
 	{
 	mpeg_container mpeg2;
-	if(!mpeg2.open(in_stream->get_pathname()))
+	if(!mpeg2.open(pinstream->get_pathname()))
 		return false;
+
 	if(mpeg2.has_audio())
 		{
 		pwavout = new wave_out_device();
-		if(!pwavout->open(mpeg2.get_sample_rate()))
+		if(!pwavout->open(mpeg2.get_sample_rate(), mpeg2.get_audio_channels()))
 			{
 			delete pwavout;
 			pwavout = 0;
@@ -170,19 +171,11 @@ bool mpeg_player::set_audio_input_stream(mpeg_input_stream *in_stream)
 
 double mpeg_player::get_duration()
 	{
-	if(decoder == 0) return 0.0;
-	decoder->reset_framenum();
-	decoder->decode_picture();
-	decoder->update_framenum();
-	while(decoder->get_header())
-		{
-		decoder->decode_picture();
-		decoder->update_framenum();
-		}
-	decoder->write_last_sequence_frame();
-	double rate = decoder->get_frame_rate();
-	int nframes = decoder->get_frames_size();
-	return nframes/rate;
+	if(pinstream == 0) return 0.0;
+	mpeg_container mpeg2;
+	if(!mpeg2.open(pinstream->get_pathname(), false))
+		return 0.0;
+	return mpeg2.get_duration();
 	}
 
 void mpeg_player::close()

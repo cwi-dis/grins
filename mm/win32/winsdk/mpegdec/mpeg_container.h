@@ -17,9 +17,9 @@ class mpeg_container
 	mpeg_container();
 	~mpeg_container();
 
-	bool open(const TCHAR *path);
+	bool open(const TCHAR *path, bool create_streams = true);
 	void close();
-
+	
 	bool has_audio() const { return m_pmpeg2->has_audio != 0;}
 	bool has_video() const { return m_pmpeg2->has_video != 0;}
 	
@@ -48,6 +48,8 @@ class mpeg_container
 	double get_frame_rate(int stream = 0) const 
 		{ return has_video_stream(stream)?m_pmpeg2->vtrack[stream]->frame_rate:0;}
 	
+	double get_duration();
+
 	long read_audio(short *output, long samples, int stream = 0, int channel = 0);
 	void read_audio(std::basic_string<char>& audio_data, int stream = 0, int channel = 0);
 
