@@ -213,8 +213,11 @@ MENUBAR=(
 
 
 	('&Linking', (
-		(FLAG_ALL, ENTRY, 'C&reate whole node anchor', None, CREATEANCHOR),
+		(FLAG_ALL, ENTRY, 'Create whole node &anchor', None, CREATEANCHOR),
 		(FLAG_ALL, ENTRY, '&Finish hyperlink to selection', None, FINISH_LINK),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Event &source', None, CREATE_BEGIN_EVENT_SOURCE),
+		(FLAG_ALL, ENTRY, 'Event &destination', None, CREATE_BEGIN_EVENT_DESTINATION),
 		)),
 
 	('&View', (

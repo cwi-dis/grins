@@ -174,6 +174,9 @@ MENUBAR=(
 	(FLAG_ALL, CASCADE, 'Linking', (
 		(FLAG_ALL, ENTRY, 'Create Whole Node Anchor', 'R', CREATEANCHOR),
 		(FLAG_ALL, ENTRY, 'Finish Hyperlink', 'H', FINISH_LINK),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Event Source', None, CREATE_BEGIN_EVENT_SOURCE),
+		(FLAG_ALL, ENTRY, 'Event Destination', None, CREATE_BEGIN_EVENT_DESTINATION),
 		)),
 
 	(FLAG_ALL, CASCADE, 'View', (
