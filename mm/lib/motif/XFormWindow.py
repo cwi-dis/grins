@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-import Xt, Xm, X, Xmd
+import Xt, Xm, X, Xmd, Xtdefs
 from types import *
 import string
 import ToolTip
@@ -919,6 +919,111 @@ class TextEdit(_Widget):
 		_Widget._destroy(self, widget, value, call_data)
 		del self._linecache
 
+class ListEdit(_Widget):
+	def __init__(self, parent, prompt, inittext, cb, itemlist, useGadget = _def_useGadget, name = 'listEdit', **options):
+		attrs = {}
+		self._attachments(attrs, options)
+		listedit = parent._form.CreateManagedWidget(name, Xm.Form, attrs)
+		if not inittext:
+			inittext = ''
+		arrow = listedit.CreateManagedWidget(
+			name + 'Arrow', Xm.ArrowButton,
+			{'arrowDirection': Xmd.ARROW_DOWN,
+			 'rightAttachment': Xmd.ATTACH_FORM,
+			 'bottomAttachment': Xmd.ATTACH_FORM,
+			 'topAttachment': Xmd.ATTACH_FORM})
+		arrow.AddCallback('activateCallback', self.__arrowcb, None)
+		attrs = {'topAttachment': Xmd.ATTACH_FORM,
+			 'bottomAttachment': Xmd.ATTACH_FORM,
+			 'leftAttachment': Xmd.ATTACH_FORM,
+			 'rightAttachment': Xmd.ATTACH_WIDGET,
+			 'rightWidget': arrow,
+##			 'rightOffset': 20,
+			 'value': inittext}
+		if prompt is not None:
+			if useGadget:
+				labelwidget = Xm.LabelGadget
+			else:
+				labelwidget = Xm.Label
+			label = listedit.CreateManagedWidget(
+				name + 'Label', Xm.Label,
+				{'topAttachment': Xmd.ATTACH_FORM,
+				 'bottomAttachment': Xmd.ATTACH_FORM,
+				 'leftAttachment': Xmd.ATTACH_FORM})
+			label.labelString = prompt
+			attrs['leftAttachment'] = Xmd.ATTACH_WIDGET
+			attrs['leftWidget'] = label
+		textfield = listedit.CreateManagedWidget(name + 'TextField',
+							 Xm.TextField, attrs)
+		if cb:
+			textfield.AddCallback('activateCallback',
+					      self._callback, cb)
+		popup = toplevel._main.CreatePopupShell(
+			name + 'Shell', Xt.OverrideShell,
+			{'colormap': toplevel._default_colormap,
+			 'visual': toplevel._default_visual,
+			 'depth': toplevel._default_visual.depth})
+		list = popup.CreateScrolledList(name + 'List',
+					{'selectionPolicy': Xmd.BROWSE_SELECT,
+					 'listSizePolicy': Xmd.CONSTANT,
+					 'scrollingPolicy': Xmd.AUTOMATIC,
+					 'scrollBarDisplayPolicy': Xmd.STATIC,
+					 'visibleItemCount': 5, 'width': 250})
+		list.AddCallback('browseSelectionCallback', self.__listcb, None)
+		list.ManageChild()
+		list.ListAddItems(itemlist, 1)
+
+		_Widget.__init__(self, parent, listedit)
+		self.__popped = 0
+		self.__arrow = arrow
+		self.__textfield = textfield
+		self.__list = list
+		self.__itemlist = itemlist
+		self.__popup = popup
+
+	def _destroy(self, widget, client_data, call_data):
+		del self.__arrow
+		del self.__textfield
+		del self.__list
+		del self.__itemlist
+		self.__popup.DestroyWidget()
+		del self.__popup
+		_Widget._destroy(self, widget, client_data, call_data)
+
+	def __arrowcb(self, widget, client_data, call_data):
+		if self.__popped:
+			self.__popup.Popdown()
+			self.__popped = 0
+			self.__arrow.arrowDirection = Xmd.ARROW_DOWN
+			return
+		self.__arrow.arrowDirection = Xmd.ARROW_LEFT
+		x, y = widget.TranslateCoords(0, 0)
+		width = self.__popup.width or self.__list.width
+		self.__popup.SetValues({'x': x - width,
+				 'y': y - 10})
+		self.__list.ManageChild()
+		self.__popup.Popup(Xtdefs.XtGrabNonexclusive)
+		self.__popped = 1
+
+	def __listcb(self, widget, client_data, call_data):
+		self.__popup.Popdown()
+		pos = self.__list.ListGetSelectedPos()
+		if not pos:
+			return
+		pos = pos[0] - 1
+		self.__textfield.TextFieldSetString(self.__itemlist[pos])
+
+	def setlist(self, itemlist):
+		self.__list.ListDeleteAllItems()
+		self.__list.ListAddItems(items, 1)
+		self.__itemlist = itemlist
+
+	def settext(self, text):
+		self.__textfield.TextFieldSetString(text)
+
+	def gettext(self):
+		return self.__textfield.TextFieldGetString()
+
 class Html(_Widget):
 	# This class implements an extremely simplistic HTML browser.
 	# When following a link, the html widget is re-created.  This
@@ -1215,6 +1320,9 @@ class _WindowHelpers:
 			     (self, prompt, inittext, chcb, accb), options)
 	def TextEdit(self, inittext, cb, **options):
 		return apply(TextEdit, (self, inittext, cb), options)
+	def ListEdit(self, prompt, inittext, cb, itemlist, **options):
+		return apply(ListEdit, (self, prompt, inittext, cb, itemlist),
+			     options)
 	def Html(self, url, **options):
 		return apply(Html, (self, url), options)
 	def Separator(self, **options):
@@ -1537,7 +1645,7 @@ class Window(_WindowHelpers, _MenuSupport, _CommandSupport):
 		if not self._fixed:
 			self.fix()
 		try:
-			self._shell.Popup(0)
+			self._shell.Popup(Xtdefs.XtGrabNone)
 		except AttributeError:
 			pass
 		self._showing = TRUE
