@@ -73,8 +73,12 @@ class HierarchyViewDialog(ViewDialog):
 				(FLAG_ALL, None),
 				(FLAG_ALL, 'Image Thumbnails', THUMBNAIL, 't'),
 				(FLAG_ALL, 'Show Playable', PLAYABLE, 't'),
-				(FLAG_PRO, 'Show Durations', TIMESCALE, 't'),
 				(FLAG_ALL, 'Check Bandwidth Usage', COMPUTE_BANDWIDTH),
+				(FLAG_ALL, 'Show Time in Structure', [
+					(FLAG_ALL, 'Whole Document, Adaptive', TIMESCALE, 't'),
+					(FLAG_ALL, 'Selection Only, Adaptive', LOCALTIMESCALE, 't'),
+					(FLAG_ALL, 'Selection Only, Fixed', CORRECTLOCALTIMESCALE, 't'),
+					]),
 				]),
 			(FLAG_ALL, 'Help', [
 				(FLAG_ALL, 'Help...', HELP),
@@ -209,7 +213,6 @@ class HierarchyViewDialog(ViewDialog):
 		w = self.window
 		w.set_toggle(THUMBNAIL, self.thumbnails)
 		w.set_toggle(PLAYABLE, self.showplayability)
-		w.set_toggle(TIMESCALE, self.timescale)
 
 	def getparentwindow(self):
 		# Used by machine-independent code to pass as parent
