@@ -1004,6 +1004,7 @@ class ChannelWrapper(Wrapper):
 			if 'close' not in rv: rv.append('close')
 		else:
 			# region
+			if 'regionName' not in rv: rv.append('regionName')
 			if 'traceImage' in rv: rv.remove('traceImage')
 			if 'fit' not in rv: rv.append('fit')
 			if 'showBackground' not in rv: rv.append('showBackground')
