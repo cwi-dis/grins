@@ -898,7 +898,6 @@ class HierarchyView(HierarchyViewDialog):
 				self.fixsyncarcs(self.root, nodes)
 				self.editmgr.commit()
 				if cut:
-					self.__clean_clipboard()
 					self.editmgr.setclip('multinode', nodes)
 		else:
 			node = self.selected_widget.get_node()
@@ -908,7 +907,6 @@ class HierarchyView(HierarchyViewDialog):
 				self.fixsyncarcs(self.root, [node]) #  TODO: shouldn't this be done in the editmanager? -mjvdg
 				self.editmgr.commit()
 				if cut:
-					self.__clean_clipboard()
 					self.editmgr.setclip('node', node)
 
 	######################################################################
@@ -939,23 +937,11 @@ class HierarchyView(HierarchyViewDialog):
 			copyme = []
 			for i in self.get_multi_nodes():
 				copyme.append(i.DeepCopy())
-			self.__clean_clipboard()
-			self.editmgr.setclip('multinode', copyme)
+			self.editmgr.setclip('multinode', copyme, owned=1)
 		else:
 			copyme = self.focusnode.DeepCopy()
-			self.__clean_clipboard()
-			self.editmgr.setclip('node', copyme)
+			self.editmgr.setclip('node', copyme, owned=1)
 		self.aftersetfocus()
-
-	def __clean_clipboard(self):
-		# Note: after this call you *MUST* set the clipboard to
-		# a new value
-		t,n = self.editmgr.getclip()
-		if t == 'node' and n is not None:
-			n.Destroy()
-		elif t == 'multinode' and n is not None:
-			for i in n:
-				i.Destroy()
 
 	######################################################################
 	# Copy and paste properties of a node (or multiple nodes)
@@ -978,7 +964,7 @@ class HierarchyView(HierarchyViewDialog):
 		newnode = context.newattrcontainer()
 		dict = self._copyattrdict(node, newnode, copylist)
 		# XXXX Clear clip
-		context.editmgr.setclip('properties', newnode)
+		context.editmgr.setclip('properties', newnode, owned=1)
 
 	def pastepropertiescall(self):
 		nodes = self.get_multi_nodes()
@@ -1386,17 +1372,15 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		self.toplevel.setwaiting()
 
+		type, node = self.editmgr.getclipcopy()
 		if type == 'node':
 			if node.context is not self.root.context:
 				node = node.CopyIntoContext(self.root.context)
-			else:
-				self.editmgr.setclip(type, node.DeepCopy())
 			self.insertnode(node, where)
 		elif type == 'multinode':
 			if not self.editmgr.transaction():
 				return
-			for i in node:	# I can't use insertnode because I need to access the editmanager.
-				n = i.DeepCopy()
+			for n in node:	# I can't use insertnode because I need to access the editmanager.
 				if n.context is not self.root.context:
 					n = n.CopyIntoContext(self.root.context)
 				self.editmgr.addnode(self.focusnode, -1, n)

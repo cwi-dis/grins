@@ -290,10 +290,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def destroy(self):
 		self.set_timer(-1, None)
 		self.hideviews()
-		type, data = self.editmgr.getclip()
-		if type == 'node' and data is not None:
-			self.editmgr.setclip('', None)
-			data.Destroy()
+		self.editmgr.clearclip()
 		self.editmgr.unregister(self)
 		self.editmgr.destroy()
 		self.destroyviews()
@@ -474,6 +471,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if self.views[i] is not None and \
 			   self.views[i].is_showing():
 				showing.append(i)
+		self.editmgr.clearclip()  # Not optimal, but there is little we can do about it...
 		self.editmgr.unregister(self)
 		self.editmgr.destroy() # kills subscribed views
 		self.context.seteditmgr(None)
@@ -931,6 +929,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 #		self.editmgr.unregister(self)
 #		self.editmgr.destroy() # kills subscribed views
 #		self.context.seteditmgr(None)
+		self.editmgr.clearclip() # Not sure this is needed...
 		self.root.Destroy()
 		save_new = self.new_file
 		self.new_file = 1
@@ -1364,7 +1363,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def destroyRoot(self, root):
 		# get context before it will destroy
 		context = root.GetContext()
-		
+		# Clear the clipboard
+		context.clearclip()
 		# destroy the 'body' part
 		root.Destroy()
 		# destroy the layout part

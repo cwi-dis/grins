@@ -282,6 +282,11 @@ class EditMgr(Clipboard.Clipboard):
 		for client in self.clipboard_registry:
 			client.clipboardchanged()
 
+	# Note: we do NOT override clearclip() here, so the clearclip is
+	# not forwarded to the registered listeners. This is intentional:
+	# a clearclip() is an administrative call for using during cleanup
+	# and not for general use.			
+
 	#
 	# UNDO interface -- this code isn't ready yet.
 	#
