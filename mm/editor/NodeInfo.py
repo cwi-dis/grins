@@ -38,23 +38,21 @@ class NodeInfo:
 		self.getvalues(1)
 		#
 		title = self.maketitle()
-		self.window = w = windowinterface.Window(title,
-					{'resizable': 1,
-					 'deleteCallback': (self.close, ())})
+		self.window = w = windowinterface.Window(title, resizable = 1,
+					deleteCallback = (self.close, ()))
 
-		top = w.SubWindow({'left': None, 'right': None, 'top': None})
+		top = w.SubWindow(left = None, right = None, top = None)
 
 		self.channel_select = top.OptionMenu('Channel:', ['undefined'],
 					0, (self.channel_callback, ()),
-					{'right': None,
-					 'top': None, 'right': None})
+					right = None, top = None, right = None)
 		self.type_select = top.OptionMenu('Type:', alltypes, 0,
 						  (self.type_callback, ()),
-					{'right': self.channel_select,
-					 'top': None})
+						  right = self.channel_select,
+						  top = None)
 		self.name_field = top.TextInput('Name:', '', None, None,
-						{'left': None, 'top': None,
-						 'right': self.type_select})
+						left = None, top = None,
+						right = self.type_select)
 		butt = w.ButtonRow(
 			[('Cancel', (self.close, ())),
 			 ('Restore', (self.restore_callback, ())),
@@ -62,56 +60,53 @@ class NodeInfo:
 			 ('Anchors...', (self.anchors_callback, ())),
 			 ('Apply', (self.apply_callback, ())),
 			 ('OK', (self.ok_callback, ()))],
-			{'bottom': None, 'left': None, 'right': None,
-			 'vertical': 0})
+			bottom = None, left = None, right = None, vertical = 0)
 
-		midd = w.SubWindow({'top': top, 'bottom': butt,
-				    'left': None, 'right': None})
+		midd = w.SubWindow(top = top, bottom = butt, left = None,
+				   right = None)
 
-		alter = midd.AlternateSubWindow({'top': None, 'bottom': None,
-						 'right': None, 'left': None})
-##		self.style_group = midd.SubWindow({'top': None, 'right': None,
-##					'left': alter})
+		alter = midd.AlternateSubWindow(top = None, bottom = None,
+						right = None, left = None)
+##		self.style_group = midd.SubWindow(top = None, right = None,
+##						  left = alter)
 ##		self.styles_browser = self.style_group.List('Styles:', [],
 ##				None,
-##				{'top': None, 'right': None, 'left': None})
+##				top = None, right = None, left = None)
 ##		self.styles_select = self.style_group.OptionMenu('All styles:',
 ##					['No styles'], 0, None,
-##					{'left': None, 'bottom': None,
-##					 'top': self.styles_browser})
+##					left = None, bottom = None,
+##					top = self.styles_browser)
 ##		self.styles_buttons = self.style_group.ButtonRow(
 ##			[('Delete', (self.styles_delete_callback, ())),
 ##			 ('Add', (self.styles_add_callback, ()))],
-##			{'top': self.styles_browser, 'right': None,
-##			 'left': self.styles_select, 'bottom': None,
-##			 'vertical': 0})
+##			top = self.styles_browser, right = None,
+##			left = self.styles_select, bottom = None, vertical = 0)
 		self.imm_group = alter.SubWindow()
 		self.ext_group = alter.SubWindow()
 		self.int_group = alter.SubWindow()
 
 		self.file_input = self.ext_group.TextInput('File:', '',
 				(self.file_callback, ()), None,
-				{'top': None, 'left': None, 'right': None})
+				top = None, left = None, right = None)
 		butt = self.ext_group.ButtonRow(
 			[('Edit contents...', (self.conteditor_callback, ())),
 			 ('Browser...', (self.browser_callback, ()))],
-			{'top': self.file_input, 'left': None, 'right': None,
-			 'vertical': 0})
+			top = self.file_input, left = None, right = None,
+			vertical = 0)
 
 		butt = self.int_group.ButtonRow(
 			[('Open...', (self.openchild_callback, ()))],
-			{'left': None, 'right': None, 'bottom': None,
-			 'vertical': 0})
+			left = None, right = None, bottom = None, vertical = 0)
 		self.children_browser = self.int_group.List('Children:', [],
 				[None, (self.openchild_callback, ())],
-				{'top': None, 'left': None, 'right': None,
-				 'bottom': butt})
+				top = None, left = None, right = None,
+				bottom = butt)
 
 		label = self.imm_group.Label('Contents:',
-				{'top': None, 'left': None, 'right': None})
+				top = None, left = None, right = None)
 		self.text_browser = self.imm_group.TextEdit('', None,
-					{'top': label, 'left': None,
-					 'right': None, 'bottom': None})
+					top = label, left = None,
+					right = None, bottom = None)
 
 		w.fix()
 

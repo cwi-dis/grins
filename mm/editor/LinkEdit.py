@@ -34,9 +34,8 @@ class LinkEdit(ViewDialog):
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
 		title = 'Hyperlinks (' + toplevel.basename + ')'
-		self.window = windowinterface.Window(title,
-					{'resizable': 1,
-					 'deleteCallback': (self.hide, ())})
+		self.window = windowinterface.Window(title, resizable = 1,
+					deleteCallback = (self.hide, ()))
 		self.showing = self.window.is_showing()
 		self.left = Struct()
 		self.right = Struct()
@@ -51,17 +50,16 @@ class LinkEdit(ViewDialog):
 
 		self.link_dir = self.window.OptionMenu('Link direction:',
 				dirstr, 0, (self.linkdir_callback, ()),
-				{'bottom': None, 'left': None})
+				bottom = None, left = None)
 
 		self.ok_group = self.window.ButtonRow(
 			[('OK', (self.ok_callback, ())),
 			 ('Cancel', (self.cancel_callback, ()))],
-			{'bottom': None, 'left': self.link_dir, 'right': None,
-			 'vertical': 0})
+			bottom = None, left = self.link_dir, right = None,
+			vertical = 0)
 
-		win1 = self.window.SubWindow({'top': None, 'left': None,
-					      'bottom': self.link_dir,
-					      'right': 0.333})
+		win1 = self.window.SubWindow(top = None, left = None,
+				bottom = self.link_dir, right = 0.333)
 		menu = win1.PulldownMenu([
 			('Set anchorlist',
 			 [('All', (self.menu_callback, (self.left, M_ALL))),
@@ -72,43 +70,39 @@ class LinkEdit(ViewDialog):
 			  ('From Hierarchy view focus', (self.menu_callback,
 						(self.left, M_BVFOCUS)))]
 			 )],
-			{'top': None, 'left': None, 'right': None})
+			top = None, left = None, right = None)
 		self.left.anchoredit_show = win1.ButtonRow(
 			[('Anchor editor...', (self.anchoredit_callback, (self.left,)))],
-			{'bottom': None, 'left': None, 'right': None})
+			bottom = None, left = None, right = None)
 		self.left.node_show = win1.ButtonRow(
 			[('Push focus', (self.show_callback, (self.left,)))
 			 ],
-			{'bottom': self.left.anchoredit_show,
-			 'left': None, 'right': None})
+			bottom = self.left.anchoredit_show, left = None,
+			right = None)
 		list = win1.List('None', [],
 				 (self.anchor_browser_callback, (self.left,)),
-				 {'top': menu, 'bottom': self.left.node_show,
-				  'left': None, 'right': None})
+				 top = menu, bottom = self.left.node_show,
+				 left = None, right = None)
 		self.left.browser = list
 
-		win2 = self.window.SubWindow({'top': None, 'left': win1,
-					      'bottom': self.link_dir,
-					      'right': 0.667})
+		win2 = self.window.SubWindow(top = None, left = win1,
+				bottom = self.link_dir, right = 0.667)
 		dummymenu = win2.PulldownMenu([('placeholder', [])],
-				{'top': None, 'left': None, 'right': None})
+				top = None, left = None, right = None)
 		self.link_edit = win2.ButtonRow(
 			[('Edit...', (self.link_edit_callback, ())),
 			 ('Delete', (self.link_delete_callback, ()))],
-			{'bottom': None, 'left': None, 'right': None,
-			 'vertical': 0})
+			bottom = None, left = None, right = None, vertical = 0)
 		self.link_new = win2.ButtonRow(
 			[('Add...', (self.link_new_callback, ()))],
-			{'bottom': self.link_edit,
-			 'left': None, 'right': None})
+			bottom = self.link_edit, left = None, right = None)
 		self.link_browser = win2.List('links:', [],
 				(self.link_browser_callback, ()),
-				{'top': dummymenu, 'bottom': self.link_new,
-				 'left': None, 'right': None})
+				top = dummymenu, bottom = self.link_new,
+				left = None, right = None)
 
-		win3 = self.window.SubWindow({'top': None, 'left': win2,
-					      'bottom': self.link_dir,
-					      'right': None})
+		win3 = self.window.SubWindow(top = None, left = win2,
+				bottom = self.link_dir, right = None)
 		menu = win3.PulldownMenu([
 			('Set anchorlist',
 			 [('All', (self.menu_callback, (self.right, M_ALL))),
@@ -125,20 +119,19 @@ class LinkEdit(ViewDialog):
 			  ('External', (self.menu_callback,
 					(self.right, M_EXTERNAL)))]
 			 )],
-				{'top': None, 'left': None, 'right': None})
+			top = None, left = None, right = None)
 		self.right.anchoredit_show = win3.ButtonRow(
 			[('Anchor editor...', (self.anchoredit_callback, (self.right,)))],
-			{'bottom': None,
-			 'left': None, 'right': None})
+			bottom = None, left = None, right = None)
 		self.right.node_show = win3.ButtonRow(
 			[('Push focus', (self.show_callback, (self.right,)))
 			 ],
-			{'bottom': self.right.anchoredit_show,
-			 'left': None, 'right': None})
+			bottom = self.right.anchoredit_show, left = None,
+			right = None)
 		list = win3.List('None', [],
 				 (self.anchor_browser_callback, (self.right,)),
-				 {'top': menu, 'bottom': self.right.node_show,
-				  'left': None, 'right': None})
+				 top = menu, bottom = self.right.node_show,
+				 left = None, right = None)
 		self.right.browser = list
 
 		self.window.fix()
@@ -167,7 +160,7 @@ class LinkEdit(ViewDialog):
 		self.updateform()
 
 	def kill(self):
-		self.destroy()
+		self.hide()
 
 	def show(self):
 		if not self.window.is_showing():
@@ -335,20 +328,69 @@ class LinkEdit(ViewDialog):
 			oldanchors = []
 		str.fillfunc(str)
 		if str.anchors != oldanchors:
-			names = []
-			for a in str.anchors:
-				name = self.makename(a)
-				names.append(name)
-			str.browser.delalllistitems()
-			str.browser.addlistitems(names, -1)
+			# Most of the code here is to make the
+			# behavior of the scrolled lists acceptable.
+			# We don't want the list to be scrolled if it
+			# isn't necessary, and we want to keep the
+			# focus visible.
+			delete = []
+			n = -1
+			ordered = 1
+			for i in range(len(oldanchors)):
+				a = oldanchors[i]
+				try:
+					j = str.anchors.index(a)
+				except ValueError:
+					delete.append(i)
+				else:
+					if j < n:
+						ordered = 0
+						break
+					n = j
+			add = []
+			n = -1
+			for i in range(len(str.anchors)):
+				a = str.anchors[i]
+				try:
+					j = oldanchors.index(a)
+				except ValueError:
+					add.append(i, a)
+				else:
+					if j < n:
+						ordered = 0
+						break
+					n = j
+			if ordered:
+				delete.reverse()
+				for i in delete:
+					str.browser.dellistitem(i)
+				names = []
+				for i, a in add:
+					name = self.makename(a)
+					if not names:
+						pos = i
+					if i == pos + len(names):
+						names.append(name)
+					else:
+						str.browser.addlistitems(names, pos)
+						names = []
+				if names:
+					str.browser.addlistitems(names, pos)
+			else:
+				names = []
+				for a in str.anchors:
+					name = self.makename(a)
+					names.append(name)
+				str.browser.delalllistitems()
+				str.browser.addlistitems(names, -1)
 		if focusvalue:
 			try:
 				str.focus = str.anchors.index(focusvalue)
 			except ValueError:
 				pass
-		if str.focus == None and str.anchors:
-			str.focus = 0
-			self.linkedit = 0
+##		if str.focus == None and str.anchors:
+##			str.focus = 0
+##			self.linkedit = 0
 		if str.focus <> None:
 			str.browser.selectitem(str.focus)
 			if not str.browser.is_visible(str.focus):

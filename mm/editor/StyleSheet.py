@@ -20,16 +20,16 @@ class StyleSheet(ViewDialog):
 		self.window = w = windowinterface.Window(title)
 		self.browser = w.Selection(
 			'Styles', 'Name', [], None,
-			{'left': None, 'top': None, 'right': None})
+			left =: None, top = None, right = None)
 		separator = w.Separator(
-			{'left': None, 'right': None, 'top': self.browser})
+			left = None, right = None, top = self.browser)
 		buttons = w.ButtonRow(
 			[('New', (self.new_callback, ())),
 			 ('Delete', (self.delete_callback, ())),
 			 ('Rename', (self.rename_callback, ())),
 			 ('Edit...', (self.edit_callback, ()))],
-			{'left': None, 'right': None, 'top': separator,
-			 'vertical': 0})
+			left = None, right = None, top = separator,
+			vertical = 0)
 		self.showing = 0
 		return self
 

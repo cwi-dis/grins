@@ -69,7 +69,9 @@ class TopLevel(ViewDialog):
 		if self.showing:
 			return
 		self.load_geometry()
-		self.window = windowinterface.Dialog(self.basename, None, 0, 1,
+		self.window = windowinterface.Window(self.basename,
+				deleteCallback = (self.close_callback, ()))
+		self.buttons = self.window.ButtonRow(
 			[('Play', (self.play_callback, ())),
 			 # The numbers below correspond with the
 			 # positions in the `self.views' list (see
@@ -87,8 +89,11 @@ class TopLevel(ViewDialog):
 			 ('Close', (self.close_callback, ())),
 			 None,
 			 ('Debug', (self.debug_callback, ())),
-			 ('Trace', (self.trace_callback, ()), 't')])
-##			 ('Help', (self.help_callback, ()))])
+			 ('Trace', (self.trace_callback, ()), 't')],
+##			 ('Help', (self.help_callback, ()))],
+			top = None, bottom = None, left = None, right = None,
+			vertical = 1)
+		self.window.show()
 		self.showing = 1
 
 	def hide(self):
@@ -102,7 +107,7 @@ class TopLevel(ViewDialog):
 	def showstate(self, view, showing):
 		for i in range(len(self.views)):
 			if view is self.views[i]:
-				self.window.buttons.setbutton(i+1, showing)
+				self.buttons.setbutton(i+1, showing)
 
 	def destroy(self):
 		self.destroyviews()
@@ -169,7 +174,7 @@ class TopLevel(ViewDialog):
 	#
 	def play_callback(self):
 		self.setwaiting()
-##		self.window.buttons.setbutton(1, 1)
+##		self.buttons.setbutton(1, 1)
 		self.player.show()
 		self.player.playsubtree(self.root)
 		self.setready()
@@ -276,9 +281,12 @@ class TopLevel(ViewDialog):
 			l1 = 'Are you sure you want to re-read the file?\n'
 			l2 = '(This will destroy the changes you have made)\n'
 			l3 = 'Click Yes to restore, No to keep your changes'
-			reply = windowinterface.showquestion(l1+l2+l3)
-			if not reply:
-				return
+			w = windowinterface.Dialog('Destroy?', l1+l2+l3,
+				1, 0, [('Yes', (self.do_restore, ())), 'No'])
+			return
+		self.do_restore()
+
+	def do_restore(self):
 		if not self.editmgr.transaction():
 			return
 		self.editmgr.rollback()
