@@ -19,10 +19,6 @@ else:
 	import quietconsole
 	quietconsole.install()
 	
-# Next, show the splash screen
-import splash
-splash.splash('loadprog')
-
 # Now time for real work.
 import os
 import string
@@ -127,6 +123,10 @@ if not STANDALONE:
 	
 	os.environ["CMIF"] = CMIFDIR
 	#os.environ["CHANNELDEBUG"] = "1"
+
+# Next, show the splash screen
+import splash
+splash.splash('loadprog')
 	
 if len(sys.argv) > 1 and sys.argv[1] == '-p':
 	profile = 1
