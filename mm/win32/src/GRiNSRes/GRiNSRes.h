@@ -281,6 +281,11 @@
 #define IDD_EDITATTR_ANCHOR             480
 #define IDD_EDITATTR_ANCHOR2            480
 #define IDD_EDITATTR_LINK               481
+#define IDD_EDITATTR_EMPTYGROUP         481
+#define IDD_EDITATTR_NONEMPTYGROUP      482
+#define IDD_EDITATTR_TEMPLATE1          483
+#define IDD_EDITATTR_TEMPLATE0          484
+#define IDD_EDITATTR_TEMPLATE2          485
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003

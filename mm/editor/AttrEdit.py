@@ -2668,18 +2668,6 @@ class UsergroupAttrEditorField(ListAttrEditorField):
 class ReqListAttrEditorField(ListAttrEditorField):
 	pass
 
-class ChildnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
-	# Choose from the node's children
-	def getoptions(self):
-		list = []
-		for child in self.wrapper.node.GetChildren():
-			try:
-				list.append(child.GetAttr('name'))
-			except NoSuchAttrError:
-				pass
-		list.sort()
-		return [DEFAULT, UNDEFINED] + list
-
 class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the node's children or the values LAST or FIRST
 	def getoptions(self):
@@ -2704,6 +2692,40 @@ class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 				return 'MEDIA'
 			return 'LAST'
 		return self.valuerepr(val)
+
+class AssetNameAttrEditorField(PopupAttrEditorFieldWithUndefined):
+	def getoptions(self):
+		list = []
+		for asset in self.wrapper.context.getassets():
+			try:
+				list.append(asset.GetAttr('name'))
+			except NoSuchAttrError:
+				pass
+		list.sort()
+		return [UNDEFINED] + list
+
+	def valuerepr(self, value):
+		if not value:
+			return UNDEFINED
+		options = self.getoptions()
+		node = self.wrapper.context.mapuid(value)
+		try:
+			value = node.GetAttr('name')
+		except NoSuchAttrError:
+			return UNDEFINED
+		if value not in options:
+			return UNDEFINED
+		return value
+
+	def parsevalue(self, str):
+		if str == UNDEFINED:
+			return None
+		for asset in self.wrapper.context.getassets():
+			try:
+				if asset.GetAttr('name') == str:
+					return asset.GetUID()
+			except NoSuchAttrError:
+				pass
 
 class ChanneltypeAttrEditorField(PopupAttrEditorFieldNoDefault):
 	# Choose from the standard channel types
@@ -2807,6 +2829,7 @@ class HrefAttrEditorField(AttrEditorField):
 
 DISPLAYERS = {
 	'acoords': AnchorCoordsAttrEditorField,
+	'assetnodename': AssetNameAttrEditorField,
 	'audiotype': RMAudioAttrEditorField,
 	'basechannelname': BaseChannelnameAttrEditorField,
 	'bitrate': BitrateAttrEditorField,
@@ -2817,7 +2840,6 @@ DISPLAYERS = {
 	'captionoverdub3': CaptionOverdubAttrEditorFieldWithDefault,
 	'channelname': ChannelnameAttrEditorField,
 	'channeltype': ChanneltypeAttrEditorField,
-	'childnodename': ChildnodenameAttrEditorField,
 	'color': ColorAttrEditorField,
 	'cpu': CpuAttrEditorField,
 	'csscolor': CssColorAttrEditorField,

@@ -148,7 +148,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'origin': ['parent', 'element'],
 		'override': ['visible', 'hidden'],
 		'resizeBehavior': ['percentOnly', 'zoom'],
-		'sendTo': ['rpcontextwin', 'rpbrowser', 'osdefaultbrowser'],
+		'sendTo': ['_rpcontextwin', '_rpbrowser', 'osdefaultbrowser', 'rpengine'],
 		'shape': ['rect', 'poly', 'circle'],
 		'show': ['replace', 'pause', 'new'],
 		'sourcePlaystate': ['play', 'pause', 'stop'],
@@ -1341,6 +1341,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('invalid timezoom attribute value')
 			elif attr == 'allowedmimetypes':
 				attrdict[attr] = map(string.strip, val.split(','))
+			elif attr == 'project_forcechild':
+				node.__forcechild = val, self.lineno
 			elif attr == 'skip-content':
 				if val in ('true', 'false'):
 					attrdict['skip_content'] = val == 'true'
@@ -1916,6 +1918,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			node = self.__context.newnode(type)
 			self.__container._addchild(node)
+		if type in ('par', 'seq', 'excl'):
+			node.__forcechild = None, 0
 		self.__container = node
 		self.AddAttrs(node, attributes)
 
@@ -2148,6 +2152,25 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# remove and destroy node
 			root.Extract()
 			root.Destroy()
+
+	def FixForceChild(self, node):
+		if node.GetType() not in ('par', 'excl', 'seq'):
+			return
+		forcechild, lineno = node.__forcechild
+		del node.__forcechild
+		if forcechild is None:
+			return
+		if forcechild == '':
+			self.syntax_error('empty project_forcechild attribute not allowed', lineno)
+			return
+		if not self.__nodemap.has_key(forcechild):
+			self.syntax_error('unknown name for project_forcechild attribute', lineno)
+			return
+		asset = self.__nodemap[forcechild]
+		if asset not in self.__context.getassets():
+			self.syntax_error('project_forcechild attribute does not refer to an asset', lineno)
+			return
+		node.attrdict['project_forcechild'] = asset.GetUID()
 
 	def FixSizes(self):
 		self.__cssIdTmpList = []
@@ -2842,6 +2865,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.FixAnimateTargets()
 		self.FixAnimatePar()
 		self.FixAssets(self.__root)
+		self.Recurse(self.__root, self.FixForceChild)
 		metadata = ''.join(self.__metadata)
 		self.__context.metadata = metadata
 		if self.__viewinfo:

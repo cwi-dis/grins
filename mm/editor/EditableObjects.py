@@ -36,8 +36,49 @@ class EditableMMNode(MMNode.MMNode):
 			return self.GetAttr('name')
 		except MMExc.NoSuchAttrError:
 			return 'nameless %s' % self.GetType()
-	#def GetType(self) - defined in MMNode.py
-	
+
+	def getAllowedMimeTypes(self):
+		# For now simply return the attribute value. Later this
+		# will change for structure nodes.
+		mimelist = self.GetAttrDef('allowedmimetypes', None)
+		if mimelist or self.type not in interiortypes:
+			return mimelist
+		forcechild = self.getForcedChild()
+		if not forcechild:
+			return None
+		if forcechild.type not in interiortypes:
+			return forcechild.getAllowedMimeTypes()
+		all = []
+		for grandchild in forcechild.children:
+			more = grandchild.getAllowedMimeTypes()
+			if more is None:
+				# A grandchild accepts anything. So do we.
+				print 'accepting all', grandchild
+				return None
+			all = all + more # Gives dups, but who cares...
+		return all
+
+	def getForcedChild(self):
+		uid = self.GetAttrDef('project_forcechild', None)
+		if not uid:
+			return None
+		return self.context.getAssetByUID(uid)
+
+	def findMimetypeAcceptor(self, mimetype):
+		# Called on forcedchild nodes only. Returns the node
+		# that accepts this mimetype.
+		if self.type in interiortypes:
+			lookat = self.children
+		else:
+			lookat = [self]
+		for ch in lookat:
+			allowed = ch.getAllowedMimeTypes()
+			if allowed is None:
+				return ch
+			if mimetype in allowed:
+				return ch
+		return None
+
 	def NewBeginEvent(self, othernode, event, editmgr = None):
 		# I'm called only from the HierarchyView
 		self.__new_beginorend_event('begin', 'beginlist', othernode, event, editmgr)
@@ -199,18 +240,18 @@ class EditableMMNode(MMNode.MMNode):
 			namelist.append('channel')
 		if ntype != 'switch':
 			namelist.extend(self.__timing)
-		if withspecials and ntype in MMTypes.interiortypes:
-			namelist.extend(['thumbnail_icon',
-					 'dropicon',
-					 'empty_icon',
-					 'empty_text',
-					 'empty_color',
-					 'empty_duration',
-					 'non_empty_icon',
-					 'non_empty_text',
-					 'non_empty_color',
-					 'thumbnail_scale'])
 		if withspecials:
+			if ntype in MMTypes.interiortypes:
+				namelist.extend(['thumbnail_icon',
+						 'dropicon',
+						 'empty_icon',
+						 'empty_text',
+						 'empty_color',
+						 'empty_duration',
+						 'non_empty_icon',
+						 'non_empty_text',
+						 'non_empty_color',
+						 'thumbnail_scale'])
 			if ntype in ('seq', 'excl'):
 				namelist.extend(['project_default_region_video',
 						 'project_default_region_image',
@@ -310,7 +351,7 @@ class EditableMMNode(MMNode.MMNode):
 ##			if name in retlist:
 ##				continue
 ##			retlist.append(name)
-			
+
 ####		if not cmifmode():
 ####			# cssbgcolor is used instead
 ####			if 'bgcolor' in retlist: retlist.remove('bgcolor')
