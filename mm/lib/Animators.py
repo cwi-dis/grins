@@ -146,9 +146,10 @@ class Animator:
 		self._time = t
 
 		# assert that t is in [0,dur)
-		# i.e. assert end-point exclusive model 
-		if t<0 or t>self._dur or (t==self._dur and not self._autoReverse):
-			raise AssertionError
+		# i.e. assert end-point exclusive model
+		if self._dur>0: 
+			if t<0 or t>self._dur or (t==self._dur and not self._autoReverse):
+				raise AssertionError
 			
 		# compute interpolated value according to calcMode
 		v = self._inrepol(t)
@@ -165,6 +166,7 @@ class Animator:
 
 	# mainly for freeze and accumulate calculations 
 	def setToEnd(self):
+		if self._dur <= 0: return
 		# set local time to end
 		if self._autoReverse:t = 0
 		else: t = self._dur
@@ -227,7 +229,7 @@ class Animator:
 		vl = self._values
 		dur = self._dur
 		n = len(vl)
-		if t==dur:
+		if dur>0 and t==dur:
 			return vl[n-1]
 		elif t==0 or n==1:
 			return vl[0]
@@ -1685,6 +1687,7 @@ class AnimateElementParser:
 		from colors import colors
 		from SMILTreeRead import color
 		val = string.lower(val)
+		val = string.strip(val)
 		if colors.has_key(val):
 			return colors[val]
 		if val in ('transparent', 'inherit'):
@@ -1787,7 +1790,7 @@ class AnimateElementParser:
 		
 		# hieuristics to cover proportions in 'discrete' mode
 		dur = self.getDuration()
-		if self.__calcMode =='discrete' and last<1.0:
+		if self.__calcMode =='discrete' and last<=1.0 and dur>0:
 			# unnormalize
 			tl = []
 			for i in range(len(tt)):
@@ -1809,8 +1812,7 @@ class AnimateElementParser:
 			print 'ignoring keyTimes for paced mode'
 			return ()
 		
-		# values should be increasing and in [0,1]
-		if first>1.0 or first<0:return ()
+		# values should be increasing
 		for i in  range(1,len(tt)):
 			if tt[i] < tt[i-1]:
 				print 'keyTimes order mismatch'
