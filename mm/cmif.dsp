@@ -566,6 +566,22 @@ SOURCE=.\editor\motif\TopLevelDialog.py
 SOURCE=.\editor\motif\UsergroupViewDialog.py
 # End Source File
 # End Group
+# Begin Group "editor/g2pro"
+
+# PROP Default_Filter "*.py"
+# Begin Source File
+
+SOURCE=.\editor\g2pro\features.py
+# End Source File
+# End Group
+# Begin Group "editor/g2lite"
+
+# PROP Default_Filter "*.py"
+# Begin Source File
+
+SOURCE=.\editor\g2lite\features.py
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\editor\AnchorEdit.py
@@ -589,6 +605,14 @@ SOURCE=.\editor\ChannelView.py
 # Begin Source File
 
 SOURCE=.\editor\cmifed.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\compatibility.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\features.py
 # End Source File
 # Begin Source File
 
