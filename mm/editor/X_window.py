@@ -843,7 +843,10 @@ class _MenuSupport:
 		if self._form.IsSubclass(Xm.Gadget):
 			raise error, 'cannot create popup menus on gadgets'
 		self.destroy_menu()
-		menu = self._form.CreatePopupMenu('dialogMenu', {})
+		menu = self._form.CreatePopupMenu('dialogMenu',
+				{'colormap': toplevel._default_colormap,
+				 'visual': toplevel._default_visual,
+				 'depth': toplevel._default_visual.depth})
 		if title:
 			list = [title, None] + list
 		X_windowbase._create_menu(menu, list)
@@ -1056,7 +1059,11 @@ class OptionMenu(_Widget):
 		self._useGadget = useGadget
 		initbut = self._do_setoptions(parent._form, optionlist,
 					      startpos)
-		attrs = {'menuHistory': initbut, 'subMenuId': self._omenu}
+		attrs = {'menuHistory': initbut,
+			 'subMenuId': self._omenu,
+			 'colormap': toplevel._default_colormap,
+			 'visual': toplevel._default_visual,
+			 'depth': toplevel._default_visual.depth}
 		self._attachments(attrs, options)
 		option = parent._form.CreateOptionMenu(name, attrs)
 		if label is None:
@@ -1110,7 +1117,10 @@ class OptionMenu(_Widget):
 			pass
 		else:
 			raise error, 'startpos out of range'
-		menu = form.CreatePulldownMenu('windowOption', {})
+		menu = form.CreatePulldownMenu('windowOption',
+				{'colormap': toplevel._default_colormap,
+				 'visual': toplevel._default_visual,
+				 'depth': toplevel._default_visual.depth})
 		self._omenu = menu
 		self._optionlist = optionlist
 		self._value = startpos
@@ -1170,7 +1180,10 @@ class PulldownMenu(_Widget):
 		menubar = parent._form.CreateMenuBar(name, attrs)
 		buttons = []
 		for item, list in menulist:
-			menu = menubar.CreatePulldownMenu('windowMenu', {})
+			menu = menubar.CreatePulldownMenu('windowMenu',
+				{'colormap': toplevel._default_colormap,
+				 'visual': toplevel._default_visual,
+				 'depth': toplevel._default_visual.depth})
 			button = menubar.CreateManagedWidget(
 				'windowMenuButton', cascade,
 				{'labelString': item,
@@ -1191,7 +1204,10 @@ class PulldownMenu(_Widget):
 		if not 0 <= pos < len(self._buttons):
 			raise error, 'position out of range'
 		button = self._buttons[pos]
-		menu = self._form.CreatePulldownMenu('windowMenu', {})
+		menu = self._form.CreatePulldownMenu('windowMenu',
+				{'colormap': toplevel._default_colormap,
+				 'visual': toplevel._default_visual,
+				 'depth': toplevel._default_visual.depth})
 		X_windowbase._create_menu(menu, list)
 		omenu = button.subMenuId
 		button.subMenuId = menu
@@ -1683,7 +1699,10 @@ class ButtonRow(_Widget):
 			if type(callback) is ListType:
 				menu = rowcolumn.CreateMenuBar('submenu', {})
 				submenu = menu.CreatePulldownMenu(
-					'submenu', {})
+					'submenu',
+					{'colormap': toplevel._default_colormap,
+					'visual': toplevel._default_visual,
+					 'depth': toplevel._default_visual.depth})
 				button = menu.CreateManagedWidget(
 					'submenuLabel', cascadebutton,
 					{'labelString': label,
