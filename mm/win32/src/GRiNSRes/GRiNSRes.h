@@ -83,6 +83,7 @@
 #define IDI_ICON_LINKSRCDST             278
 #define IDC_DRAG_HAND                   280
 #define IDB_SPLASHPRO                   285
+#define IDB_SPLASHSMIL                  287
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
 #define IDD_EDITATTR_S5                 328
@@ -135,6 +136,8 @@
 #define IDD_EDITATTR_CONV5              370
 #define IDD_EDITATTR_S2a                371
 #define IDD_EDITATTR_CONV1              372
+#define IDD_EDITATTR_QTPREF             373
+#define IDD_EDITATTR_QTMEDIAPREF        374
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
@@ -286,8 +289,6 @@
 #define IDC_TARGET_EXTERN               1183
 #define IDC_TARGET_EMBEDDED             1184
 #define IDC_BUTTON1                     1186
-#define IDC_PREVIEW                     1186
-#define IDC_ADD_EXTERNAL                1186
 #define IDC_PROGRESS1                   1187
 #define IDC_INIT_NEW                    1188
 #define IDC_INIT_OPEN                   1189
@@ -312,6 +313,29 @@
 #define IDC_ALIST                       1217
 #define IDC_PLAY                        1218
 #define IDC_ATYPE                       1219
+#define IDC_AUTOPLAY                    1222
+#define IDC_QTTIMESLIDER                1223
+#define IDC_FIELD_QTNEXT                1224
+#define IDC_QTCHAPTERMODE1              1225
+#define IDC_QTCHAPTERMODE2              1226
+#define IDC_IMMINST                     1227
+#define ID_STATIC                       1229
+#define IDC_BITRATENECESSARY            1230
+#define ID_STATIC2                      1231
+#define IDC_SYSTEMMIMETYPE              1232
+#define IDC_ATTACHTIMEBASE              1233
+#define IDC_QTCHAPTER                   1234
+#define ID_STATIC3                      1235
+#define IDC_IMMINSTMEDIA1               1236
+#define IDC_IMMINSTMEDIA2               1237
+#define IDC_IMMINSTMEDIA3               1238
+#define IDC_QTCOMPOSITEMODE             1239
+#define IDC_FRAME1                      1240
+#define IDC_FRAME2                      1241
+#define ID_STATIC4                      1242
+#define IDC_PREVIEW                     1243
+#define IDC_BUTTON_QTNEXT               1244
+#define IDC_ADD_EXTERNAL                1245
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -388,9 +412,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        286
+#define _APS_NEXT_RESOURCE_VALUE        288
 #define _APS_NEXT_COMMAND_VALUE         32860
-#define _APS_NEXT_CONTROL_VALUE         1221
+#define _APS_NEXT_CONTROL_VALUE         1246
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
