@@ -302,7 +302,10 @@ class _DisplayList:
 		elif cmd == 'stipplebox':
 			if not self._overlap(region, entry[2]):
 				return
-			dc.FillRect(entry[2],entry[1])
+			dc.SetBkMode(win32con.TRANSPARENT)
+			old = dc.SelectObject(entry[1])
+			dc.Rectangle(entry[2])
+			dc.SelectObject(old)
 		elif cmd == 'font':
 			#dc.SetFont(entry[1])
 			pass
