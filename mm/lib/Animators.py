@@ -492,7 +492,6 @@ class TupleAnimator(Animator):
 			nv.append(a.clamp(v[i]))
 		return tuple(nv)
 
-
 ###########################
 # 'animateColor'  element animator
 class ColorAnimator(TupleAnimator):
@@ -529,13 +528,13 @@ class EffColorAnimator(ColorAnimator):
 			times=None, splines=None, accumulate='none', additive='replace')
 	def getValue(self, t):
 		if not self._effectiveAnimator:
-			return TupleAnimator.getValue(self, t)
+			return ColorAnimator.getValue(self, t)
 		vl = self._effectiveAnimator.getcurrentbasevalue(self)
 		for i in range(len(self._animators)):
 			u, v = self._animators[i]._values[:2]
 			u = vl[i]
 			self._animators[i]._values = (u, v)
-		return TupleAnimator.getValue(self, t)
+		return ColorAnimator.getValue(self, t)
 
 class FloatTupleAnimator(TupleAnimator):
 	def __init__(self, attr, domval, values, dur, mode='linear', 
@@ -564,7 +563,20 @@ class IntTupleAnimator(FloatTupleAnimator):
 			l.append(_round(v[i]))
 		return tuple(l)
 
-
+class EffIntTupleAnimator(IntTupleAnimator):
+	def __init__(self, attr, domval, value, dur):
+		IntTupleAnimator.__init__(self, attr, domval, (domval, value,), dur, mode='linear',
+			times=None, splines=None, accumulate='none', additive='replace')
+	def getValue(self, t):
+		if not self._effectiveAnimator:
+			return IntTupleAnimator.getValue(self, t)
+		vl = self._effectiveAnimator.getcurrentbasevalue(self)
+		for i in range(len(self._animators)):
+			u, v = self._animators[i]._values[:2]
+			u = vl[i]
+			self._animators[i]._values = (u, v)
+		return IntTupleAnimator.getValue(self, t)
+	
 ###########################
 # 'animateMotion' element animator
 class MotionAnimator(Animator):
@@ -1121,14 +1133,18 @@ class AnimateElementParser:
 			return None
 		
 		if self.__animtype == 'invalid':
-			return None
+			return self.nullAnimator()
 
 		################
 		# set element
 		if self.__elementTag=='set':
 			return self.__getSetAnimator()
 
+		# a discrete to animation or a to animation of a non addidive attribute is equivalent to set
+		if self.__animtype == 'to' and (self.__calcMode=='discrete' or not self.__isadditive):
+			return self.__getSetAnimator()
 
+		################
 		# shortcuts
 		attr = self.__grinsattrname
 		domval = self.__domval
@@ -1136,41 +1152,6 @@ class AnimateElementParser:
 		additive = self.__additive
 		mode = self.__calcMode
 		dur = self.getDuration()
-
-		################
-		# to-only animation for additive attributes
-		if self.__animtype == 'to' and self.__isadditive and self.__calcMode!='discrete':
-			if self.__attrtype == 'int':
-				v = string.atoi(self.getTo())
-				anim = EffValueAnimator(attr, domval, v, dur)
-				anim.setRetunedValuesConverter(_round)
-				self.__setTimeManipulators(anim)
-			elif self.__attrtype == 'float':
-				v = string.atof(self.getTo())
-				anim = EffValueAnimator(attr, domval, v, dur)
-				self.__setTimeManipulators(anim)
-			elif self.__attrtype == 'color':
-				values = self.__getColorValues()
-				anim = EffColorAnimator(attr, domval, values, dur)
-				self.__setTimeManipulators(anim)
-			elif self.__attrtype == 'position':
-				coords = self.__getNumPairInterpolationValues()
-				anim = EffMotionAnimator(attr, domval, coords, dur)
-				self.__setTimeManipulators(anim)
-			return anim
-		elif self.__animtype == 'to' and (self.__calcMode=='discrete' or not self.__isadditive):
-			return self.__getSetAnimator()
-
-		################
-		# by-only animation for additive attributes
-		if self.__animtype == 'by' and self.__isadditive and self.__elementTag not in ('animateColor', 'animateMotion'):
-			values = self.__getNumInterpolationValues()
-			anim = Animator(attr, domval, values, dur, mode=mode, accumulate=accumulate, additive='sum')
-			if self.__attrtype == 'int':
-				anim.setRetunedValuesConverter(_round)
-			self.__setTimeManipulators(anim)
-			return anim
-			
 
 		# check for keyTimes, keySplines
 		if not splineAnimation or mode == 'paced':
@@ -1180,12 +1161,66 @@ class AnimateElementParser:
 			times = self.__getInterpolationKeyTimes() 
 			splines = self.__getInterpolationKeySplines()
 
-		# check values
-		if self.__elementTag != 'animateMotion':
-			nvalues = self.__countInterpolationValues()
-			if nvalues==0 or (nvalues==1 and mode!='discrete'):
-				print 'values syntax error'
-				return None
+		################
+		# to-only animation for additive attributes
+		if self.__animtype == 'to' and self.__isadditive and self.__calcMode!='discrete':
+			if self.__attrtype == 'int':
+				v = string.atoi(self.getTo())
+				anim = EffValueAnimator(attr, domval, v, dur)
+				anim.setRetunedValuesConverter(_round)
+				self.__setTimeManipulators(anim)
+				return anim
+			elif self.__attrtype == 'float':
+				v = string.atof(self.getTo())
+				anim = EffValueAnimator(attr, domval, v, dur)
+				self.__setTimeManipulators(anim)
+				return anim
+			elif self.__attrtype == 'color':
+				values = self.__getColorValues()
+				anim = EffColorAnimator(attr, domval, values, dur)
+				self.__setTimeManipulators(anim)
+				return anim
+			elif self.__attrtype == 'position':
+				coords = self.__getNumPairInterpolationValues()
+				anim = EffMotionAnimator(attr, domval, coords, dur)
+				self.__setTimeManipulators(anim)
+				return anim
+			elif self.__attrtype == 'inttuple':
+				coords = self.__getNumTupleInterpolationValues()
+				anim = EffIntTupleAnimator(attr, domval, coords, dur)
+				self.__setTimeManipulators(anim)
+				return anim
+			return self.nullAnimator()
+
+		################
+		# by-only animation for additive attributes
+		if self.__animtype == 'by':
+			if not self.__isadditive:
+				return self.nullAnimator()
+			if self.__attrtype == 'int':
+				values = self.__getNumInterpolationValues()
+				anim = Animator(attr, domval, values, dur, mode, times, splines, accumulate, additive='sum')
+				anim.setRetunedValuesConverter(_round)
+				self.__setTimeManipulators(anim)
+				return anim
+			elif self.__attrtype == 'float':
+				values = self.__getNumInterpolationValues()
+				anim = Animator(attr, domval, values, dur, mode, times, splines, accumulate, additive='sum')
+				self.__setTimeManipulators(anim)
+				return anim
+			elif self.__attrtype == 'color':
+				values = self.__getColorValues()
+				anim = ColorAnimator(attr, domval, values, dur, mode, times, splines, accumulate, additive='sum')
+				self.__setTimeManipulators(anim)
+				return anim
+			elif self.__attrtype == 'position':
+				path = svgpath.Path()
+				coords = self.__getNumPairInterpolationValues()
+				path.constructFromPoints(coords)
+				anim = MotionAnimator(attr, domval, path, dur, mode, times, splines, accumulate, additive='sum')
+				self.__setTimeManipulators(anim)
+				return anim			
+			return self.nullAnimator()
 
 		################
 		# animateColor or attrtype=='color'
@@ -1213,11 +1248,11 @@ class AnimateElementParser:
 					accumulate, additive)
 				self.__setTimeManipulators(anim)
 				return anim
-			return None
+			return self.nullAnimator()
 
 		################
 		# animate
-
+	
 		# 4. Return an animator based on the attr type
 		if debug: print 'Guessing animator for attribute',`self.__attrname`,'(', self.__attrtype,')'
 		anim = None
@@ -1251,7 +1286,7 @@ class AnimateElementParser:
 		# 5. Return a default if anything else failed
 		if not anim:
 			print 'Dont know how to animate attribute.',self.__attrname,self.__attrtype
-			anim = SetAnimator(attr, domval, domval, dur)
+			return self.nullAnimator()
 
 		self.__setTimeManipulators(anim)
 		return anim
@@ -1270,7 +1305,8 @@ class AnimateElementParser:
 		value = self.getTo()
 		if value==None or value=='':
 			print 'set element without attribute to'
-			return None
+			return self.nullAnimator()
+
 
 		dur = self.getDuration()
 
@@ -1299,9 +1335,15 @@ class AnimateElementParser:
 			value = self.__splitf(value)
 			anim = SetAnimator(attr, domval, value, dur)
 
-		else:
-			anim = SetAnimator(attr, domval, domval, dur)
+		if anim:
+			self.__setTimeManipulators(anim)
+			return anim
 
+		return self.nullAnimator()
+
+	def nullAnimator(self):
+		dur = self.getDuration()
+		anim = SetAnimator(self.__attrname, self.__domval, self.__domval, dur)
 		self.__setTimeManipulators(anim)
 		return anim
 
@@ -1608,12 +1650,6 @@ class AnimateElementParser:
 		elif self.__animtype == 'by':
 			return (0, 0), self.__getNumPair(self.getBy())
 		return ()	
-
-	def __getNumTuple(self, v):
-		if not v: return None
-
-	def __getZeroTuple(self):
-		pass
 
 	# return list of interpolation numeric tuples
 	def __getNumTupleInterpolationValues(self):	
