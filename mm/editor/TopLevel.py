@@ -746,26 +746,25 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def export(self, exporttype):
 		self.exporttype = exporttype
-		ask = self.new_file
 
 		# TODO: this also has to handle WMP -mjvdg.
 
-		if not ask:
-			if MMmimetypes.guess_type(self.filename)[0] != 'application/x-grins-project':
-				# We don't have a project file name. Ask for filename.
-				ask = 1
-			else:
+		# If new, we ask
+		if not self.new_file:
+			# If we have a project file name, use it
+			if MMmimetypes.guess_type(self.filename)[0] == 'application/x-grins-project':
 				utype, host, path, params, query, fragment = urlparse(self.filename)
-				if (utype and utype != 'file') or (host and host != 'localhost'):
-					# The project file is remote. Ask for filename.
-					ask = 1
-				else:
+				# If the project file is remote, we ask for filename.
+				if (not utype or utype == 'file') and (not host or host == 'localhost'):
+					# don't ask for a filename
 					file = MMurl.url2pathname(path)
 					base = os.path.splitext(file)[0]
 					file = base + MMmimetypes.guess_extension('application/smil')
 					self.setwaiting()
 					self.export_okcallback(file)
-					return 
+					return
+
+		# ask for a filename
 		cwd = self.dirname
 		if cwd:
 			cwd = MMurl.url2pathname(cwd)
