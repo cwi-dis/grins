@@ -1224,19 +1224,20 @@ CAPTION "GRiNS"
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "Create a new presentation",IDC_INIT_NEW,"Button",
-                    BS_AUTORADIOBUTTON,39,15,130,10
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,39,15,130,10
     CONTROL         "Open existing presentation",IDC_INIT_OPEN,"Button",
-                    BS_AUTORADIOBUTTON,39,29,99,10
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,39,29,99,10
     CONTROL         "Open recent:",IDC_INIT_RECENT,"Button",
-                    BS_AUTORADIOBUTTON,39,42,59,10
-    CONTROL         "Don't show this dialog again",IDC_INIT_NEVER_AGAIN,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,73,107,10
-    DEFPUSHBUTTON   "OK",IDOK,129,69,50,14
-    ICON            IDR_GRINSED,IDC_STATIC,7,7,20,20
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,39,42,59,10
     CONTROL         "Do nothing",IDC_INIT_NOTHING2,"Button",
-                    BS_AUTORADIOBUTTON,39,55,110,10
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,39,55,110,10
+    CONTROL         "Don't show this dialog again",IDC_INIT_NEVER_AGAIN,
+                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,7,73,
+                    107,10
+    DEFPUSHBUTTON   "OK",IDOK,129,69,50,14,WS_GROUP
     COMBOBOX        IDC_INIT_RECENT_COMBO,101,41,78,49,CBS_DROPDOWNLIST | 
-                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+                    CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    ICON            IDR_GRINSED,IDC_STATIC,7,7,20,20
 END
 
 IDD_BANDWIDTH_DIALOG DIALOG DISCARDABLE  0, 0, 190, 146
