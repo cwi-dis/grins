@@ -5,13 +5,12 @@ from usercmd import *
 from wndusercmd import *
 
 
-""" @win32doc|TopLevelDialog
-There is one to one corespondance between a TopLevelDialog
-instance and a document, and a TopLevelDialog
-instance with an MDIFrameWnd. The document level commands
-are enabled. This class has acces to the document and
-can display its various views and its source
-"""
+# @win32doc|TopLevelDialog
+# There is one to one corespondance between a TopLevelDialog
+# instance and a document, and a TopLevelDialog
+# instance with an MDIFrameWnd. The document level commands
+# are enabled. This class has acces to the document and
+# can display its various views and its source
 
 class TopLevelDialog:
 	def __init__(self):
