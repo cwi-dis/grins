@@ -124,7 +124,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			Clipboard.setclip('', None)
 			data.Destroy()
 		for v in self.views:
-			v.toplevel = None
+			if v is not None:
+				v.toplevel = None
 		self.views = []
 		if self in self.main.tops:
 			self.main.tops.remove(self)
@@ -179,7 +180,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def hideviews(self):
 		for v in self.views:
-			v.hide()
+			if v is not None:
+				v.hide()
 
 	def destroyviews(self):
 		for v in self.views:
@@ -207,7 +209,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def view_callback(self, viewno):
 		self.setwaiting()
 		view = self.views[viewno]
-		view.show()
+		if view is not None:
+			view.show()
 ##		if view.is_showing():
 ##			view.hide()
 ##		else:
@@ -215,7 +218,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def hide_view_callback(self, viewno):
 		view = self.views[viewno]
-		if view.is_showing():
+		if view is not None and view.is_showing():
 			view.hide()
 
 	def save_callback(self):
@@ -302,7 +305,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return
 		showing = []
 		for i in range(len(self.views)):
-			if self.views[i].is_showing():
+			if self.views[i] is not None and \
+			   self.views[i].is_showing():
 				showing.append(i)
 		self.editmgr.unregister(self)
 		self.editmgr.destroy() # kills subscribed views
@@ -343,7 +347,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.basename = base
 		self.window.settitle(MMurl.unquote(self.basename))
 		for v in self.views:
-			v.fixtitle()
+			if v is not None:
+				v.fixtitle()
 
 	def relative_url(self, url):
 		# Make a URL relative to self.dirname, if possible
@@ -390,8 +395,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.context.sanitize_hyperlinks(roots)
 		# Get all windows to save their current geometry.
 		for v in self.views:
-			v.get_geometry()
-			v.save_geometry()
+			if v is not None:
+				v.get_geometry()
+				v.save_geometry()
 		# Make a back-up of the original file...
 		try:
 			os.rename(filename, make_backup_filename(filename))
@@ -443,7 +449,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.setwaiting()
 		showing = []
 		for i in range(len(self.views)):
-			if self.views[i].is_showing():
+			if self.views[i] is not None and \
+			   self.views[i].is_showing():
 				showing.append(i)
 		self.editmgr.rollback()
 		self.editmgr.unregister(self)
