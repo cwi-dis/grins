@@ -492,7 +492,7 @@ class Channel:
 		if self._playstate == PLAYED:
 			# someone pushed the button again, I guess
 			return
-		if not self._playcontext.anchorfired(node, anchorlist, arg):
+		if not self.anchor_triggered(node, anchorlist, arg):
 			if self._qid:
 				try:
 					self._scheduler.cancel(self._qid)
@@ -564,7 +564,7 @@ class Channel:
 				f = self.pause_triggered
 				self._has_pause = 1
 			else:
-				f = self._playcontext.anchorfired
+				f = self.anchor_triggered
 			self._anchors[button] = f, (node, [(name, type)], None)
 		self._qid = None
 
@@ -638,7 +638,7 @@ class Channel:
 				list.append((a[A_ID], a[A_TYPE]))
 		if not list:
 			return 0
-		didfire = self._playcontext.anchorfired(node, list, None)
+		didfire = self.anchor_triggered(node, list, None)
 		if didfire and self._playstate == PLAYING and \
 		   self._played_node is node:
 			if not self.syncplay:
