@@ -65,10 +65,10 @@ class ErrorsView(ErrorsViewDialog):
 		if listener == self._listener:
 			self._listener = None
 			
-	def onItemSelected(self, lineNumber):
+	def onItemSelected(self, lineNumber, pop=0):
 		self._selectedError = lineNumber
 		if self._listener != None:
-			self._listener.onSelectError(lineNumber)
+			self._listener.onSelectError(lineNumber, pop)
 
 	def getSelectedError(self):
 		if self._selectedError != None:

@@ -38,6 +38,7 @@ class _ErrorsView(GenView, docview.ListView):
 		doc=docview.Document(docview.DocTemplate())
 		docview.ListView.__init__(self, doc)
 		self._listener = None
+		self._selected = None
 
 	def setListener(self, listener):
 		self._listener = listener
@@ -70,6 +71,9 @@ class _ErrorsView(GenView, docview.ListView):
 		# enable selection notifications
 		self.GetParent().HookNotify(self.onItemChanged, commctrl.LVN_ITEMCHANGED)
 
+		# enable double click notification
+		self.GetParent().HookNotify(self.onDoubleClick, commctrl.NM_DBLCLK)
+
 	def setErrorList(self, errorList):
 		# delete all previous items
 		self.DeleteAllItems()
@@ -88,7 +92,13 @@ class _ErrorsView(GenView, docview.ListView):
 			if self._listener:
 				# nofify the listener
 				self._listener.onItemSelected(nmsg.row)
+				self._selected = nmsg.row
 
+	def onDoubleClick(self, std, extra):
+		if self._listener and self._selected != None:
+			# nofify the listener, and pop it
+			self._listener.onItemSelected(self._selected, 1)
+#	
 	# Reponse to message WM_COMMAND
 	def OnCmd(self,params):
 		pass
