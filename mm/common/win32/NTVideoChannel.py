@@ -365,7 +365,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			blt(data, w, h)
 			if self.window:
 				self.window.update()
-			windowinterface.serve_events()
 
 	def EndBlt(self):
 		# do not remove video yet 
