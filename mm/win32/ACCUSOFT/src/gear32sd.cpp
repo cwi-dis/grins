@@ -508,6 +508,31 @@ static PyObject *ig_ip_resize(PyObject *self, PyObject *args)
 	return Py_None;	
 }
 
+static char ig_ip_rotate_multiple_90__doc__[] =
+""
+;
+static PyObject *ig_ip_rotate_multiple_90(PyObject *self, PyObject *args)
+{
+	long img;
+	int angle = 90; //counterclockwise
+	if (!PyArg_ParseTuple(args, "l|i", &img, &angle))
+		return NULL;
+	AT_MODE nMult_90_Mode = IG_ROTATE_0;
+	if(angle==90)
+		nMult_90_Mode = IG_ROTATE_90;
+	else if(angle==180)
+		nMult_90_Mode = IG_ROTATE_180;
+	else if(angle==270)
+		nMult_90_Mode = IG_ROTATE_270;
+
+	if (IG_IP_rotate_multiple_90((HIGEAR) img, nMult_90_Mode)) {
+		PyErr_SetString(PyExc_ValueError, "bad image handle");
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
 
 static struct PyMethodDef gear32sd_methods[] = {
 	{"load_file", (PyCFunction)ig_load_file, METH_VARARGS, ig_load_file__doc__},
@@ -531,6 +556,7 @@ static struct PyMethodDef gear32sd_methods[] = {
 	{"image_export_ddb",ig_image_export_ddb,METH_VARARGS,ig_image_export_ddb__doc__},
 	{"image_create_ddb",ig_image_create_ddb,METH_VARARGS,ig_image_create_ddb__doc__},
 	{"resize",ig_ip_resize,METH_VARARGS,ig_ip_resize__doc__},
+	{"rotate_multiple_90",ig_ip_rotate_multiple_90,METH_VARARGS,ig_ip_rotate_multiple_90__doc__},
 
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
