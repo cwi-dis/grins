@@ -293,7 +293,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				self.publishcommandlist.extend([
 					EXPORT_SMIL(callback = (self.bandwidth_callback, ('smil', self.export_SMIL2_callback,))),
 					UPLOAD_SMIL(callback = (self.bandwidth_callback, ('smil', self.upload_SMIL2_callback,))),
-					EXPORT_PRUNE(callback = (self.saveas_callback, (1,))),
+					EXPORT_PRUNE(callback = (self.export_SMIL2_callback, (1,))),
 					])
 			if features.EXPORT_SMIL1 in features.feature_set:
 				self.publishcommandlist.extend([
@@ -805,7 +805,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def export_QT_callback(self):
 		self.export('QuickTime')
 
-	def export_SMIL2_callback(self):
+	def export_SMIL2_callback(self, prune):
+		if prune:
+			self.prune = 1
 		self.export('SMIL2')
 
 	def export_SMIL1_callback(self):
