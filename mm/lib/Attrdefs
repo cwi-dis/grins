@@ -53,7 +53,7 @@
 	'Base URL of document, used for resolving relative URLs' raw (all))
 
 (base_window (name) 'undefined' 'Channel base window' basechannelname
-	'Name of window in which channelwin is created' raw (cmif))
+	'Name of window in which channelwin is created' raw (smil2 cmif))
 
 (base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
 	'Position and size' default 'Position and size, usually in pixels' channel (all))
@@ -64,7 +64,7 @@
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 	'Color used for background of window' channel (all))
 #(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
-#	'Color used for background of window. Overriden by "transparent".' channel light)
+#	'Color used for background of window. Overriden by "transparent".' channel (all))
 
 (bgimg (string) '' 'Background image' file
 	'Background image for window' channel (cmif))
@@ -121,6 +121,8 @@
 (file (string) '' 'URL' file
 	'URL for the data of this node' normal (all))
 
+# valid values: freeze, remove, hold, transition
+# default depends on other attributes
 (fill (string) '' 'Fill' fill
 	'Whether data should be retained on screen after playing' normal (cmif))
 
@@ -160,7 +162,7 @@
 (longdesc (string) '' 'Long description URL' default
 	'Link (URL) to a long description of the media object' raw (all))
 
-(loop (int) 1 'Loop' default
+(loop (float) 1 'Loop' default
 	'Number of times the node should loop, 0 for indefinite' raw (all))
 
 (macprog (string) '' 'Mac program signature' default
@@ -202,6 +204,9 @@
 (project_audiotype (int) 0 'Audio type' audiotype
 	'Audio type, determines quality of audio when converting to RealAudio'
 	raw (g2))
+
+(project_boston (bool) 0 'SMIL-Boston' default
+	'Document conforms to SMIL-Boston' raw smil)
 
 (project_convert (bool) 1 'Convert data' default
 	'Convert data to RealMedia format' raw (g2_pro))
@@ -249,6 +254,12 @@
 (queuesize (float) 0 'Queue size' default
 	'Audio playback queue size' channel (cmif))
 
+(repeatdur (float) 0 'Repeat duration' default
+	'Time the node should loop, 0 for indefinite' raw (smil2))
+
+(restart (enum always whenNotActive never) always 'Restart node' restart
+	'When can the node be restart' raw (smil2))
+
 (scale (float) 0.0 'Scale factor' scale
 	'Aspect ratio is maintained for all options' channel (all))
 
@@ -273,6 +284,16 @@
 	() 'SyncTo list' hidden
 	'List of sync arcs ending at this node' raw (all))
 
+# The items are (srcnode, event or marker, delay).
+# things causing the node to start
+(beginlist (list (enclosed (any))) ()
+	'Begin events list' hidden
+	'List of events starting this node' raw smil2)
+# things causing the node to end
+(endlist (list (enclosed (any))) ()
+	'End events list' hidden
+	'List of events ending this node' raw smil2)
+
 (terminator (name) 'LAST' 'Endsync child' termnodename
 	'Name of child that terminates parallel node' normal (all))
 
@@ -295,7 +316,7 @@
 	'Type of media this channel will be used for' raw (all))
 
 (u_group (name) undefined 'User group' usergroup
-	'User group that controls rendering of this node' inherited (cmif))
+	'User group that controls rendering of this node' inherited (smil2 cmif))
 
 (unixprog (string) '' 'Unix program name' default
 	'Application name (unix only)' channel (cmif))
@@ -305,7 +326,7 @@
 
 (usergroups (list (enclosed (tuple (name) (tuple (string) (bool) (bool)))))
 	() 'User groups' hidden
-	'Usergroups used in this document (root node only)' normal (cmif))
+	'Usergroups used in this document (root node only)' normal (smil2 cmif))
 
 (video (bool) 0 'Video output' default
 	'Do image smoothing for video output' channel (cmif))
@@ -329,6 +350,8 @@
 	'Stacking order for channels, higher numbers are on top' normal (all))
 
 # SMIL system test attributes
+(system_audiodesc (bool) 0 'System audio descriptions' bool3
+	'Play node only if end-user wants audio descriptions' raw smil2)
 (system_bitrate (int) 0 'System bitrate' bitrate3
 	'Play node only if bitrate >= value here' raw (all))
 (system_captions (bool) 0 'System captions' bool3
@@ -337,6 +360,8 @@
 	'Play node only if end-user prefers this language' raw (all))
 (system_overdub_or_caption (string) '' 'System overdub or caption' captionoverdub3
 	'Play node only depending on end user overdub/caption preference' raw (all))
+(system_overdub_or_subtitle (string) '' 'System overdub or subtitle' subtitleoverdub3
+	'Play node only depending on end user overdub/subtitle preference' raw (smil2))
 (system_required (string) '' 'System required' default
 	'Play node only if player supports these features' raw (all))
 (system_screen_size (tuple (int) (int)) (0 0) 'System screen size' default
@@ -351,7 +376,7 @@
 (color (tuple (int) (int) (int)) (0 0 0) 'Effect color' color
        'Color for transition effect, see RealPix documentation' normal (g2))
 
-(direction (string) 'left' 'Wipe Direction' direction
+(direction (enum left right up down) left 'Wipe Direction' direction
 	'Direction of wipe' normal (g2))
 
 (href (string) '' 'Hyperlink destination' default
@@ -393,7 +418,7 @@
 (displayfull (bool) 1 'Fill whole region' default
 	'Use whole region for transition effect' normal (g2))
 
-(tag (string) 'fill' 'Transition type' transition
+(tag (enum fill fadein fadeout crossfade wipe viewchange) fill 'Transition type' transition
 	'Type of transition effect' normal (g2))
 	
 (caption (string) '' 'Text caption' default
@@ -402,7 +427,7 @@
 (captionchannel (name) '' 'Caption channel' captionchannelname
 	'Name of channel used to render captions on this node' inherited (g2))
 
-(wipetype (string) 'normal' 'Wipe type' wipetype
+(wipetype (enum normal push) normal 'Wipe type' wipetype
 	'Type of wipe' normal (g2))
 
 (fadeout (bool) 0 'Fadeout' default
@@ -462,44 +487,44 @@
 # animation module
 
 (targetElement (string) '' 'Target node' default
-	'Animation target node' normal light)
+	'Animation target node' normal (all))
 
 (attributeName (string) '' 'Attribute name' default
-	'Animation target attribute' normal light)
+	'Animation target attribute' normal (all))
 
 (attributeType (enum CSS XML auto) XML 'Attribute type' default
-	'Target attribute namespace' normal light)
+	'Target attribute namespace' normal (all))
 
 (additive (enum replace sum) replace 'Add effects' default
-	'Add animation effect' normal light)
+	'Add animation effect' normal (all))
 
 (accumulate (enum none sum) none 'Accumulate' default
-	'Accumulate animation effect' normal light)
+	'Accumulate animation effect' normal (all))
 
 (calcMode (enum discrete linear paced spline) linear 'Interpolation mode' default
-	'Interpolation mode for the animation' normal light)
+	'Interpolation mode for the animation' normal (all))
 
 (values (string) '' 'Interpolation values' default
-	'Interpolation values' normal light)
+	'Interpolation values' normal (all))
 
 (keyTimes (string) '' 'Key times' default
-	'Interpolation control times' normal light)
+	'Interpolation control times' normal (all))
 
 (keySplines (string) '' 'Key splines' default
-	'Interpolation bezier control points associated with the key times' normal light)
+	'Interpolation bezier control points associated with the key times' normal (all))
 
 (from (string) '' 'From value' default
-	'Starting attribute value' normal light)
+	'Starting attribute value' normal (all))
 
 (to (string) '' 'To value' default
-	'Ending attribute value' normal light)
+	'Ending attribute value' normal (all))
 
 (by (string) '' 'By value' default
-	'Ending relative offset attribute value' normal light)
+	'Ending relative offset attribute value' normal (all))
 
 (path (string) '' 'Path' default
-	'Motion path' normal light)
+	'Motion path' normal (all))
 
 (origin (string) '' 'Origin' default
-	'Coordinates origin' normal light)
+	'Coordinates origin' normal (all))
 
