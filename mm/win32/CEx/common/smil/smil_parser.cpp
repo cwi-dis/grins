@@ -453,7 +453,7 @@ void parser::unknown_starttag(const char *tag, raw_attr_list_t *pattrs)
 	{
 	std::basic_string<TCHAR> msg(TEXT("unknown start tag "));
 	msg += TextPtr(tag);
-	showmessage(msg.c_str());
+	windowinterface::showmessage(msg.c_str());
 
 	new_node(tag, pattrs);
 	}
@@ -487,7 +487,7 @@ void parser::end_node()
 
 void parser::show_error(std::string& msg)
 	{
-	showmessage(TextPtr(msg.c_str()));
+	windowinterface::showmessage(TextPtr(msg.c_str()));
 	}
 
 } // namespace smil
