@@ -81,11 +81,6 @@ class Region(base_window.Window):
 		# common box
 		return winstruct.rectAnd(ltrb1, ltrb2)
 
-	def createCompatibleDC(self):
-		wnd = self._ctx
-		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
-		wnd.ReleaseDC(dc.Detach())
-
 	def _paintOnSurf(self, surf):
 		wnd = self._topwindow.getContext()
 		wnd_dc = wingdi.CreateDCFromHandle(wnd.GetDC())
@@ -123,6 +118,7 @@ class Region(base_window.Window):
 		dc.DeleteDC()
 		wnd.ReleaseDC(wnd_dc.Detach())
 		
+	# dc origin is viewport origin
 	def _paintOnDC(self, dc):
 		ltrb = self.getClipDR(dc)
 		if ltrb is None:
@@ -368,16 +364,19 @@ class Viewport(Region):
 		self._ctx.update(rc)
 
 	def updateNow(self, rc = None):
-		return self.update(rc)
-
 		wnd = self._ctx
-		xywh_dev = wnd.LRtoDR(rc, round = 1)
-		ltrb_dev = self.ltrb(rc)
-		ltrb_dev = winstruct.inflate(ltrb_dev, 2, 2)
+
+		# create wnd dc
 		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
+
+		# clip to rc
+		xywh_dev = wnd.LRtoDR(rc, round = 1)
+		ltrb_dev = self.ltrb(xywh_dev)
 		rgn = wingdi.CreateRectRgn(ltrb_dev)
 		dc.SelectClipRgn(rgn)
 		rgn.DeleteObject()
+
+		# do paint
 		self._ctx.paintOn(dc)
 
 	def paint(self, dc, exlwnd = None):
