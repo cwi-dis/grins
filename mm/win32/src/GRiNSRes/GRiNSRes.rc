@@ -36,7 +36,7 @@ IDB_SPLASHLITE          BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\g2
 IDB_SPLASHPRO           BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\g2-15\\pro\\splash8bit.bmp"
 IDB_SPLASHSMIL          BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\smil-10\\splash8bit.bmp"
 IDB_SPLASHQTPRO         BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\qt\\pro\\splash8bit.bmp"
-IDB_SPLASHSMIL2         BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\g2-15\\pro\\splashsm.bmp"
+IDB_SPLASHSMIL2         BITMAP  DISCARDABLE     "..\\..\\..\\build\\products\\smil-20\\player\\splash8bit.bmp"
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
