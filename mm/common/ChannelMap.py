@@ -24,9 +24,13 @@ channelmap = { \
 	}
 
 channeltypes = ['null', 'text', 'image']
+commonchanneltypes = ['text', 'image', 'sound', 'movie']
+otherchanneltypes = []
 ct = channelmap.keys()
 ct.sort()
 for t in ct:
 	if t not in channeltypes:
 		channeltypes.append(t)
+	if t not in commonchanneltypes:
+		otherchanneltypes.append(t)
 del ct, t
