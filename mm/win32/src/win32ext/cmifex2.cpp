@@ -16,7 +16,6 @@ static PyObject *CmifEx2Error;
 static PyObject *CallbackMap = NULL;
 
 
-PYW_EXPORT CWnd *GetWndPtr(PyObject *);
 static char cmifClass[100]="";
 static WNDPROC		orgProc;
 static BOOL flag=FALSE;
@@ -100,9 +99,6 @@ static HFONT EzCreateFont (HDC hdc, char * szFaceName, int iDeciPtHeight,
 
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 static PyObject* py_example_CreateFileOpenDlg(PyObject *self, PyObject *args)
 {
@@ -2646,116 +2642,84 @@ static PyObject* py_example_DrawRect(PyObject *self, PyObject *args)
 	::ReleaseDC(controlWnd->m_hWnd,dc);
 	GUI_END_SAVE;
 
-	Py_INCREF(Py_None);
-	return Py_None;
+	RETURN_NONE;
 }
 
-
-
-#ifdef _DEBUG
-static PyObject *
-py_callbackex_CallbackMap (PyObject * self, PyObject * args)
-{
-	if (!PyArg_ParseTuple (args, ""))
-		return NULL;
-	
-  Py_INCREF (CallbackMap);
-  return (CallbackMap);
-}
-#endif
 
 
 BEGIN_PYMETHODDEF(Cmifex2)
-	{ "CreateFileOpenDlg", (PyCFunction)py_example_CreateFileOpenDlg, 1},
-	{ "CreateFileSaveDlg", (PyCFunction)py_example_CreateFileSaveDlg, 1},
-	{ "MultiFileOpenDlg", (PyCFunction)py_example_MultiFileOpenDlg, 1},
-	{ "CreateButton", (PyCFunction)py_example_CreateButton, 1},
-	{ "CreateStatic", (PyCFunction)py_example_CreateStatic, 1},
-	{ "CreateEdit", (PyCFunction)py_example_CreateSEdit, 1},
-	{ "CreateMultiEdit", (PyCFunction)py_example_CreateMEdit, 1},
-	{ "CreateListbox", (PyCFunction)py_example_CreateListbox, 1},
-	{ "CreateCombobox", (PyCFunction)py_example_CreateCombobox, 1},
-	{ "CreateCheckBox", (PyCFunction)py_example_CreateRCheckbox, 1},
-	{ "CreateLeftCheckBox", (PyCFunction)py_example_CreateLCheckbox, 1},
-	{ "CreateRadioButton", (PyCFunction)py_example_CreateRRadioButton, 1},
-	{ "CreateLeftRadioButton", (PyCFunction)py_example_CreateLRadioButton, 1},
-	{ "CreateGroupBox", (PyCFunction)py_example_CreateGroup, 1},
-	{ "CreateSeparator", (PyCFunction)py_example_CreateSeparator, 1},
-	{ "CreateContainerbox", (PyCFunction)py_example_CreateContainerbox, 1},
-	{ "CreateSlider", (PyCFunction)py_example_CreateSlider, 1},
-	{ "CreateVerSlider", (PyCFunction)py_example_CreateVSlider, 1},
-	{ "CreateDialogbox", (PyCFunction)py_example_CreateDialogbox, 1},
-	{ "SetCaption", (PyCFunction)py_example_SetWindowCaption, 1},
-	{ "GetText", (PyCFunction)py_example_GetText, 1},
-	{ "CheckButton", (PyCFunction)py_example_CheckButton, 1},
-	{ "CheckState", (PyCFunction)py_example_CheckState, 1},
-	{ "SetFont", (PyCFunction)py_example_SetFont, 1},
-	{ "Changed", (PyCFunction)py_example_Changed, 1},
-	{ "Cut", (PyCFunction)py_example_Cut, 1},
-	{ "Copy", (PyCFunction)py_example_Copy, 1},
-	{ "Clear", (PyCFunction)py_example_Clear, 1},
-	{ "Paste", (PyCFunction)py_example_Paste, 1},
-	{ "Select", (PyCFunction)py_example_Select, 1},
-	{ "Replace", (PyCFunction)py_example_Replace, 1},
-	{ "Add", (PyCFunction)py_example_AddString, 1},
-	{ "Delete", (PyCFunction)py_example_DeleteString, 1},
-	{ "DeleteToPos", (PyCFunction)py_example_DeleteToPos, 1},
-	{ "ReplaceToPos", (PyCFunction)py_example_ReplaceToPos, 1},
-	{ "InsertToPos", (PyCFunction)py_example_InsertToPos, 1},
-	{ "Reset", (PyCFunction)py_example_Reset, 1},
-	{ "Get", (PyCFunction)py_example_GetString, 1},
-	{ "GetPos", (PyCFunction)py_example_GetPos, 1},
-	{ "Set", (PyCFunction)py_example_SetSelect, 1},
-	{ "SetRange", (PyCFunction)py_example_SetRange, 1},
-	{ "SetPosition", (PyCFunction)py_example_SetPosition, 1},
-	{ "SetSelection", (PyCFunction)py_example_SetSelection, 1},
-	{ "GetRange", (PyCFunction)py_example_GetRange, 1},
-	{ "GetPosition", (PyCFunction)py_example_GetPosition, 1},
-	{ "GetSelection", (PyCFunction)py_example_GetSelection, 1},
-	{ "CreateMenu", (PyCFunction)py_example_CreateMenu, 1},
-	{ "SetMenu", (PyCFunction)py_example_SetMenu, 1},
-	{ "GetMenu", (PyCFunction)py_example_GetMenu, 1},
-	{ "FloatMenu", (PyCFunction)py_example_FloatMenu, 1},
-	{ "AppendMenu", (PyCFunction)py_example_AppendMenu, 1},
-	{ "CheckMenuItem", (PyCFunction)py_example_CheckMenuItem, 1},
-	{ "PopupAppendMenu", (PyCFunction)py_example_PopupAppendMenu, 1},
-	{ "InsertMenu", (PyCFunction)py_example_InsertMenu, 1},
-	{ "PopupInsertMenu", (PyCFunction)py_example_PopupInsertMenu, 1},
-	{ "DestroyMenu", (PyCFunction)py_example_DestroyMenu, 1},
-	{ "DeleteMenu", (PyCFunction)py_example_DeleteMenu, 1},
-	{ "DrawRect", (PyCFunction)py_example_DrawRect, 1},
-	{ "ResizeWindow", (PyCFunction)py_example_ResizeWindow, 1},
-	{ "ResizeAllWindows", (PyCFunction)py_example_ResizeAllWindows, 1},
-	{ "SetScrollRange", (PyCFunction)py_example_SetScrollRange, 1},
-	{ "ShowScroll", (PyCFunction)py_example_ShowScroll, 1},
-	{ "ScrollWin", (PyCFunction)py_example_ScrollWin, 1},
-	{ "IsWin", (PyCFunction)py_example_IsWin, 1},
-	{ "IsWinEnable", (PyCFunction)py_example_IsWinEnable, 1},
-	{ "GetStringLength", (PyCFunction)py_example_GetStringLength, 1},
-	{ "GetStringLengthFromFont", (PyCFunction)py_example_GetStringLengthFromFont, 1},
-	{ "DestroyWindow", (PyCFunction)py_example_DestroyWindow, 1},
-	{ "SetFlag", (PyCFunction)py_example_SetFlag, 1},
-	{ "MesBox", (PyCFunction)py_example_MesBox, 1},
-	#ifdef _DEBUG
-	{ "_idMap",			py_callbackex_CallbackMap,		1 },
-    #endif
+	{ "CreateFileOpenDlg", py_example_CreateFileOpenDlg, 1},
+	{ "CreateFileSaveDlg", py_example_CreateFileSaveDlg, 1},
+	{ "MultiFileOpenDlg", py_example_MultiFileOpenDlg, 1},
+	{ "CreateButton", py_example_CreateButton, 1},
+	{ "CreateStatic", py_example_CreateStatic, 1},
+	{ "CreateEdit", py_example_CreateSEdit, 1},
+	{ "CreateMultiEdit", py_example_CreateMEdit, 1},
+	{ "CreateListbox", py_example_CreateListbox, 1},
+	{ "CreateCombobox", py_example_CreateCombobox, 1},
+	{ "CreateCheckBox", py_example_CreateRCheckbox, 1},
+	{ "CreateLeftCheckBox", py_example_CreateLCheckbox, 1},
+	{ "CreateRadioButton", py_example_CreateRRadioButton, 1},
+	{ "CreateLeftRadioButton", py_example_CreateLRadioButton, 1},
+	{ "CreateGroupBox", py_example_CreateGroup, 1},
+	{ "CreateSeparator", py_example_CreateSeparator, 1},
+	{ "CreateContainerbox", py_example_CreateContainerbox, 1},
+	{ "CreateSlider", py_example_CreateSlider, 1},
+	{ "CreateVerSlider", py_example_CreateVSlider, 1},
+	{ "CreateDialogbox", py_example_CreateDialogbox, 1},
+	{ "SetCaption", py_example_SetWindowCaption, 1},
+	{ "GetText", py_example_GetText, 1},
+	{ "CheckButton", py_example_CheckButton, 1},
+	{ "CheckState", py_example_CheckState, 1},
+	{ "SetFont", py_example_SetFont, 1},
+	{ "Changed", py_example_Changed, 1},
+	{ "Cut", py_example_Cut, 1},
+	{ "Copy", py_example_Copy, 1},
+	{ "Clear", py_example_Clear, 1},
+	{ "Paste", py_example_Paste, 1},
+	{ "Select", py_example_Select, 1},
+	{ "Replace", py_example_Replace, 1},
+	{ "Add", py_example_AddString, 1},
+	{ "Delete", py_example_DeleteString, 1},
+	{ "DeleteToPos", py_example_DeleteToPos, 1},
+	{ "ReplaceToPos", py_example_ReplaceToPos, 1},
+	{ "InsertToPos", py_example_InsertToPos, 1},
+	{ "Reset", py_example_Reset, 1},
+	{ "Get", py_example_GetString, 1},
+	{ "GetPos", py_example_GetPos, 1},
+	{ "Set", py_example_SetSelect, 1},
+	{ "SetRange", py_example_SetRange, 1},
+	{ "SetPosition", py_example_SetPosition, 1},
+	{ "SetSelection", py_example_SetSelection, 1},
+	{ "GetRange", py_example_GetRange, 1},
+	{ "GetPosition", py_example_GetPosition, 1},
+	{ "GetSelection", py_example_GetSelection, 1},
+	{ "CreateMenu", py_example_CreateMenu, 1},
+	{ "SetMenu", py_example_SetMenu, 1},
+	{ "GetMenu", py_example_GetMenu, 1},
+	{ "FloatMenu", py_example_FloatMenu, 1},
+	{ "AppendMenu", py_example_AppendMenu, 1},
+	{ "CheckMenuItem", py_example_CheckMenuItem, 1},
+	{ "PopupAppendMenu", py_example_PopupAppendMenu, 1},
+	{ "InsertMenu", py_example_InsertMenu, 1},
+	{ "PopupInsertMenu", py_example_PopupInsertMenu, 1},
+	{ "DestroyMenu", py_example_DestroyMenu, 1},
+	{ "DeleteMenu", py_example_DeleteMenu, 1},
+	{ "DrawRect", py_example_DrawRect, 1},
+	{ "ResizeWindow", py_example_ResizeWindow, 1},
+	{ "ResizeAllWindows", py_example_ResizeAllWindows, 1},
+	{ "SetScrollRange", py_example_SetScrollRange, 1},
+	{ "ShowScroll", py_example_ShowScroll, 1},
+	{ "ScrollWin", py_example_ScrollWin, 1},
+	{ "IsWin", py_example_IsWin, 1},
+	{ "IsWinEnable", py_example_IsWinEnable, 1},
+	{ "GetStringLength", py_example_GetStringLength, 1},
+	{ "GetStringLengthFromFont", py_example_GetStringLengthFromFont, 1},
+	{ "DestroyWindow", py_example_DestroyWindow, 1},
+	{ "SetFlag", py_example_SetFlag, 1},
+	{ "MesBox", py_example_MesBox, 1},
 END_PYMETHODDEF()
 
 
-/*
-__declspec(dllexport) 
-void initcmifex2()
-{
-	PyObject *m, *d;
-	m = Py_InitModule("cmifex2",MCmifex2_methods);
-	d = PyModule_GetDict(m);
-	CmifEx2Error = PyString_FromString("cmifex2.error");
-	PyDict_SetItemString(d, "error", CmifEx2Error);
-	CallbackMap = PyDict_New();
-}*/
-
-#ifdef __cplusplus
-}
-#endif
 
 DEFINE_PYMODULETYPE("PyCmifex2",Cmifex2);

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "win32win.h"
 
 #define AM_STANDARD
 
@@ -11,9 +12,7 @@
 DECLARE_PYMODULECLASS(Imageex);
 IMPLEMENT_PYMODULECLASS(Imageex,GetImageex,"Imageex Module Wrapper Object");
 
-DEFINE_MODULEERROR(Imageex);
 
-PYW_EXPORT CWnd *GetWndPtr(PyObject *);
 
 static HIGEAR hIGear=NULL;
 static BOOL fl;
@@ -184,7 +183,6 @@ void paintdll(HWND hWND,HDC dc,long bit,int r,int g,int b,float scale, int cente
    
 }
 
-/* not used
 void paintdll2(HDC dc,long bit)
 {
 	if (bit != 0)
@@ -195,7 +193,7 @@ void paintdll2(HDC dc,long bit)
 
 	  IG_display_image(hBitmap,dc); 
      }
-}*/
+}
 
 void destroyimage(long bit)
 {
@@ -343,7 +341,7 @@ static PyObject* py_ImageEx_ImageRect(PyObject *self, PyObject *args)
 	return tmp;
 }
 
-/* not used yet
+
 static PyObject* py_ImageEx_CreateBitmap(PyObject *self, PyObject *args)
 {
 	PyObject *ob = Py_None;
@@ -382,29 +380,19 @@ static PyObject* py_ImageEx_CreateBitmap(PyObject *self, PyObject *args)
 	Py_INCREF(Py_None);
 	return Py_None;
 }
-*/
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 BEGIN_PYMETHODDEF(Imageex)
-	{ "PutImage", (PyCFunction)py_ImageEx_PutImage, 1},
-    { "PrepareImage", (PyCFunction)py_ImageEx_Prepare, 1},
-	{ "Destroy", (PyCFunction)py_ImageEx_Destroy, 1},
-	{ "SizeOfImage", (PyCFunction)py_ImageEx_SizeOfImage, 1}, // original
-	{ "ImageRect", (PyCFunction)py_ImageEx_ImageRect, 1}, // current
-	//{ "CreateClip", (PyCFunction)py_ImageEx_CreateBitmap, 1},
+	{ "PutImage", py_ImageEx_PutImage, 1},
+    { "PrepareImage", py_ImageEx_Prepare, 1},
+	{ "Destroy", py_ImageEx_Destroy, 1},
+	{ "SizeOfImage", py_ImageEx_SizeOfImage, 1},
+	{ "ImageRect", py_ImageEx_ImageRect, 1},
+	{ "CreateClip", py_ImageEx_CreateBitmap, 1},
 END_PYMETHODDEF()
 
 
-PY_INITMODULE(Imageex);
-
-
-#ifdef __cplusplus
-	}
-#endif
 
 DEFINE_PYMODULETYPE("PyImageex",Imageex);
 

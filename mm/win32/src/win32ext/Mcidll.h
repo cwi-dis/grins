@@ -4,9 +4,6 @@
 #pragma comment (lib,"winmm.lib")
 #define PyEXPORT  __declspec(dllexport)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef struct {
     BOOL fPlaying;
@@ -85,6 +82,3 @@ MCIAPI BOOL MidiSeek(MCI_MIDI_STRUCT *mciMidiInfo);
 MCIAPI long MidiClip( MCI_MIDI_STRUCT *mciMidiInfo, long clip);
 MCIAPI DWORD MidiDuration(MCI_MIDI_STRUCT *mciMidiInfo);
 
-#ifdef __cplusplus
-}
-#endif

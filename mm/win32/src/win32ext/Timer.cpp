@@ -1,10 +1,6 @@
 // Timer.cpp
 
 #include "stdafx.h"
-
-#include <mmsystem.h>
-#include "assert.h"
-//#include "debug.h"
 #include "Timer.h"
 
 // constructor

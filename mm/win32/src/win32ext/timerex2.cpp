@@ -8,9 +8,7 @@
 #include "win32win.h"
 
 #include "moddef.h"
-
 DECLARE_PYMODULECLASS(Timerex2);
-
 IMPLEMENT_PYMODULECLASS(Timerex2,GetTimerex2,"Timerex2 Module Wrapper Object");
 
 ///////////////////////////////////

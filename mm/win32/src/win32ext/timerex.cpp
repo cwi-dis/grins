@@ -1,101 +1,91 @@
 // -*- Mode: C++; tab-width: 4 -*-
 // $Id$
 //
-
 #include "stdafx.h"
 
 #include "win32ui.h"
 #include "win32assoc.h"
 #include "win32win.h"
 
-
 #include "moddef.h"
 DECLARE_PYMODULECLASS(Timerex);
 IMPLEMENT_PYMODULECLASS(Timerex,GetTimerex,"Timerex Module Wrapper Object");
 
+///////////////////////////////////
 
-static PyObject *timerexError;
-static char cmifClass[100]="";
-static char dbgmess[100]="";
-
-static PyObject *testOb = Py_None;
-static PyCWnd *testWnd=NULL;
-static CWnd *newWnd, *mainWnd;
+static CWnd *mainWnd;  
 static UINT timerID = 100;
+static char cmifClass[100]="";
 
-static PyObject* py_timerex_CreateWindow(PyObject *self, PyObject *args)
+static PyObject* py_create_timer_window(PyObject *self, PyObject *args)
 {
-	if(testOb!=Py_None)
-		return Py_BuildValue("O", testOb);
-	
-	newWnd = new CWnd;
 
-	if(!PyArg_ParseTuple(args, ""))
-		return Py_BuildValue("i", 0);
+	CHECK_NO_ARGS(args);
 
-	mainWnd = AfxGetMainWnd();
-	
+	GUI_BGN_SAVE;
 	if(cmifClass[0]==0)
 		strcpy(cmifClass, AfxRegisterWndClass( CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, LoadCursor (NULL, IDC_ARROW), (HBRUSH) GetStockObject (WHITE_BRUSH), NULL));
-		
-	if(newWnd->CreateEx(WS_EX_CLIENTEDGE,
+	CWnd *pWnd = new CWnd;
+	if(pWnd->CreateEx(WS_EX_CLIENTEDGE,
 						cmifClass, "Timer",
 						WS_OVERLAPPEDWINDOW,
 						0, 0, 0, 0,
-						mainWnd->m_hWnd,
+						AfxGetMainWnd()->m_hWnd,
 						NULL))
 		TRACE("timerex CreateWindow OK!\n");
-	else
-	{
-		TRACE("timerex CreateWindow FALSE!\n");
-		return Py_BuildValue("O", testOb);
-	}
+	GUI_END_SAVE;
 	
-	testWnd = testWnd->make(testWnd->type, (CWnd*)(newWnd));
-	testOb = testWnd->GetGoodRet();
-
-	return Py_BuildValue("O", testOb);
+	PyCWnd *pPyWnd = PyCWnd::make(PyCWnd::type,pWnd);
+	PyObject *pPyObj = pPyWnd->GetGoodRet();
+	return Py_BuildValue("O",pPyObj);
 }
 
-
-static PyObject* py_timerex_SetTimer(PyObject *self, PyObject *args)
+static PyObject* py_set_timer(PyObject *self, PyObject *args)
 {
-	UINT elapse, id;
+	UINT elapse;
+	PyObject *pPyObj;	
+	if(!PyArg_ParseTuple(args, "Oi", &pPyObj ,&elapse))
+		return NULL;
 	
-	if(!PyArg_ParseTuple(args, "i", &elapse))
-		return Py_BuildValue("i", -1);
+	CWnd *pWnd = GetWndPtr(pPyObj);
 
-	if(newWnd==NULL)
-		return Py_BuildValue("i", -1);
+	if(pWnd==NULL)
+		return NULL;
 
-	id = newWnd->SetTimer(timerID, elapse, NULL);
-	if(++timerID>20000)
-		timerID = 100;
+	timerID=timerID>100000?100:timerID;
 
+	GUI_BGN_SAVE;
+	UINT id = pWnd->SetTimer(timerID++, elapse, NULL);
+	GUI_END_SAVE;
+	
 	return Py_BuildValue("i", id);
 }
 
-static PyObject* py_timerex_KillTimer(PyObject *self, PyObject *args)
-{
-	BOOL res;
+static PyObject* py_kill_timer(PyObject *self, PyObject *args)
+	{
 	UINT id;
+	PyObject *pPyObj;
+	if(!PyArg_ParseTuple(args, "Oi", &pPyObj, &id))
+		return NULL;
 
-	if(!PyArg_ParseTuple(args, "i", &id))
-		return Py_BuildValue("i", -1);
+    CWnd *pWnd = GetWndPtr(pPyObj);
 
-	if(newWnd==NULL)
-		return Py_BuildValue("i", -1);
+	if(pWnd==NULL)
+		return NULL;
 
-	res = newWnd->KillTimer(id);
+	GUI_BGN_SAVE;
+	BOOL res = pWnd->KillTimer(id);
+	GUI_END_SAVE;
 
 	return Py_BuildValue("i", (int)res);
-}
+	}
 
-
+/////////////////////////////
 BEGIN_PYMETHODDEF(Timerex)
-	{"CreateTimerWindow", py_timerex_CreateWindow, 1},
-	{"SetTimer", py_timerex_SetTimer, 1},
-	{"KillTimer", py_timerex_KillTimer, 1},
+	{ "CreateTimerWindow", py_create_timer_window, 1},
+	{ "SetTimer", py_set_timer, 1},
+	{ "KillTimer", py_kill_timer, 1},
 END_PYMETHODDEF();
 
 DEFINE_PYMODULETYPE("PyMTimerex",Timerex);
+

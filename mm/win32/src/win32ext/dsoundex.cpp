@@ -1,9 +1,6 @@
 // -*- Mode: C++; tab-width: 4 -*-
 // $Id$
 //
-//#include "cmifex.h"
-//#include "sampledll.h"
-
 #define VC_EXTRALEAN
 #define STRICT
 
@@ -33,9 +30,6 @@ DECLARE_PYMODULECLASS(Soundex);
 IMPLEMENT_PYMODULECLASS(Soundex,GetSoundex,"Soundex Module Wrapper Object");
 
 
-#define _SNDDLL_
-#include "sampledll.h"
-
 static AudioStreamServices *mainsound;
 static HWND hWnd=NULL;
 
@@ -48,69 +42,26 @@ struct samples{
 #define MAX_SOUND_NUMBER	20
 static samples sounds[MAX_SOUND_NUMBER];
 static BOOL firsttime=TRUE;
-//static AudioStream *sample;
 
 
-
-
- void initmainsound()
-{
-	if (hWnd==NULL)
+int createsound(HWND hwnd,LPSTR filename)
 	{
-		char cmifClass[200];
-		strcpy(cmifClass, AfxRegisterWndClass( CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS));
-		
-		if((hWnd=CreateWindowEx(WS_EX_CLIENTEDGE,cmifClass,NULL,
-						WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
-						0, 0, 100, 100,
-						NULL,
-						NULL,NULL,NULL))==NULL)
-		{
-			return;
-		}
-	}
-	 
-		
-	 
-	 
-	// hWnd = GetActiveWindow();//new CWnd;
-	//hWnd->Create( NULL, " ");
-	
-	mainsound = new AudioStreamServices;
-    if (mainsound)
-    {
-        mainsound->Initialize (hWnd);
-    }
-   
-	createsound();
-}
-
-
- void createsound()
-{
-	int i;
-	for(i=0;i<MAX_SOUND_NUMBER;i++) 
-	{
-		sounds[i].sample = new AudioStream;
-		sounds[i].hwnd = NULL;
-		sounds[i].reserved = FALSE;
-	}
-}
-
-
- int createsound(HWND hwnd,LPSTR filename)
-{
-	int i;
-
 	if(firsttime)
-	{
+		{
 		firsttime = FALSE;
-		initmainsound();
-		if (hWnd==NULL)
-			return -1;
-	}
+		mainsound = new AudioStreamServices;
+		if (mainsound)
+			mainsound->Initialize (hwnd);
+		hWnd=hwnd;
+		for(int i=0;i<MAX_SOUND_NUMBER;i++) 
+			{
+			sounds[i].sample = new AudioStream;
+			sounds[i].hwnd = NULL;
+			sounds[i].reserved = FALSE;
+			}
+		}
 
-	for(i=0;i<MAX_SOUND_NUMBER;i++)
+	for(int i=0;i<MAX_SOUND_NUMBER;i++)
 	{
 	 if(sounds[i].reserved==FALSE)
 	 {
@@ -132,29 +83,24 @@ static BOOL firsttime=TRUE;
 {
     if(sounds[i].reserved)
 	{
-		//PostMessage(sounds[i].hwnd, MM_MCINOTIFY, 2, 1);
 		sounds[i].sample->Play();
 	}
 }
 
- void stopsound(int i)
+void stopsound(int i)
 {
     if(sounds[i].reserved)
 	{
 	 sounds[i].sample->Stop();
-	 //PostMessage(sounds[i].hwnd, MM_MCINOTIFY, 1, 1); for pause
 	}
 }
 
- BOOL closesound()
+BOOL closesound()
 {
     int i;
 	for(i=0;i<MAX_SOUND_NUMBER;i++) sounds[i].sample->Destroy();
 	if(mainsound) delete mainsound;
 	firsttime=TRUE;
-	//ASSERT(0);
-	if (hWnd) DestroyWindow(hWnd);
-	//delete hWnd;
 	hWnd=NULL;
 	return TRUE;
 }
@@ -191,159 +137,100 @@ seekstart(int i)
 }
 
 
-static PyObject *CmifExError;
 
-PYW_EXPORT CWnd *GetWndPtr(PyObject *);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 //***************************
 //Things to do:
 //	- built a LinkList with the used windows so as to preserve MemoryManagement
 //	- use in a more clever way to cover every case
 //***************************
 
-
-static PyObject* py_example_PlaySound(PyObject *self, PyObject *args)
-{
-	int bit;
-	PyObject *testOb = Py_None;
-
-	//ASSERT(0);
-	
-	if(!PyArg_ParseTuple(args, "i", &bit))
+static PyObject* py_create_sound(PyObject *self, PyObject *args)
 	{
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
+	PyObject *pPyObj;
+	char *filename;
+	if(!PyArg_ParseTuple(args, "Os", &pPyObj, &filename))
+		return NULL;
 	
+	CWnd *pWnd = GetWndPtr(pPyObj);
+	if(!pWnd) return NULL;
+
+	GUI_BGN_SAVE;
+	int ix = createsound(pWnd->m_hWnd,filename);
+	GUI_END_SAVE;
+	
+	return Py_BuildValue("i",ix);
+	}
+
+static PyObject* py_play_sound(PyObject *self, PyObject *args)
+	{
+	int ix;
+	if(!PyArg_ParseTuple(args, "i", &ix))
+		return NULL;
+
+	GUI_BGN_SAVE;
 	SetFocus(hWnd);
-	playsound(bit);
+	playsound(ix);
+	GUI_END_SAVE;
 	
 	return Py_BuildValue("i",1);
-}
-
-
-
-
-static PyObject* py_example_CreateSound(PyObject *self, PyObject *args)
-{
-	char *filename;
-	//HWND hW;
-	CWnd *obWnd;
-	int bit;
-	PyObject *testOb = Py_None;
-
-	//ASSERT(0);
-
-	if(!PyArg_ParseTuple(args, "Os", &testOb, &filename))
-	{
-		Py_INCREF(Py_None);
-		return Py_None;
 	}
-	
-	obWnd = GetWndPtr(testOb);
-
-	bit = createsound(obWnd->m_hWnd,filename);
-	
-	return Py_BuildValue("i",bit);
-}
 
 
-
-static PyObject* py_example_PauseSound(PyObject *self, PyObject *args)
-{
-	int bit;
-
-	
-	if(!PyArg_ParseTuple(args, "i", &bit))
+static PyObject* py_pause_sound(PyObject *self, PyObject *args)
 	{
-		Py_INCREF(Py_None);
-		return Py_None;
+	int ix;
+	if(!PyArg_ParseTuple(args, "i", &ix))
+		return NULL;
+	GUI_BGN_SAVE;
+	stopsound(ix);
+	GUI_END_SAVE;
+	RETURN_NONE;
 	}
-	
-	stopsound(bit);
-
-	Py_INCREF(Py_None);
-	return Py_None;
-}
 
 
-static PyObject* py_example_CloseSound(PyObject *self, PyObject *args)
-{
-	int bit;
-	BOOL res = FALSE;
-		
-	if(!PyArg_ParseTuple(args, "i", &bit))
+static PyObject* py_close_sound(PyObject *self, PyObject *args)
 	{
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
-	
-	res = closesound(bit);
-
+	int ix;
+	if(!PyArg_ParseTuple(args, "i", &ix))
+		return NULL;
+	GUI_BGN_SAVE;
+	BOOL res = closesound(ix);
+	GUI_END_SAVE;
 	return Py_BuildValue("i",res);
-}
-
-
-static PyObject* py_example_CloseAll(PyObject *self, PyObject *args)
-{
-	if(!PyArg_ParseTuple(args, ""))
-	{
-		Py_INCREF(Py_None);
-		return Py_None;
 	}
-	
+
+
+static PyObject* py_close_all(PyObject *self, PyObject *args)
+	{
+	CHECK_NO_ARGS(args);
+	GUI_BGN_SAVE;
 	closesound();
-	
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-
-static PyObject* py_example_SeekStart(PyObject *self, PyObject *args)
-{
-	int bit;
-	
-	if(!PyArg_ParseTuple(args, "i", &bit))
-	{
-		Py_INCREF(Py_None);
-		return Py_None;
+	GUI_END_SAVE;
+	RETURN_NONE;
 	}
-	
-	seekstart(bit);
-
-	Py_INCREF(Py_None);
-	return Py_None;
-}
 
 
-
+static PyObject* py_seek_start(PyObject *self, PyObject *args)
+	{
+	int ix;	
+	if(!PyArg_ParseTuple(args, "i", &ix))
+		return NULL;
+	GUI_BGN_SAVE;
+	seekstart(ix);
+	GUI_END_SAVE;
+	RETURN_NONE;
+	}
 
 
 BEGIN_PYMETHODDEF(Soundex)
-	{ "Play", (PyCFunction)py_example_PlaySound, 1},
-    { "Create", (PyCFunction)py_example_CreateSound, 1},
-	{ "Pause", (PyCFunction)py_example_PauseSound, 1},
-	{ "Close", (PyCFunction)py_example_CloseSound, 1},
-	{ "CloseAll", (PyCFunction)py_example_CloseAll, 1},
-	{ "SeekStart", (PyCFunction)py_example_SeekStart, 1},
+	{ "Play", py_play_sound, 1},
+    { "Create", py_create_sound, 1},
+	{ "Pause", py_pause_sound, 1},
+	{ "Close", py_close_sound, 1},
+	{ "CloseAll", py_close_all, 1},
+	{ "SeekStart", py_seek_start, 1},
 END_PYMETHODDEF()
 
-/*
-__declspec(dllexport) 
-void initdsoundex()
-{
-	PyObject *m, *d;
-	m = Py_InitModule("dsoundex", CmifExMethods);
-	d = PyModule_GetDict(m);
-	CmifExError = PyString_FromString("dsoundex.error");
-	PyDict_SetItemString(d, "error", CmifExError);
-}*/
-
-#ifdef __cplusplus
-}
-#endif
 
 DEFINE_PYMODULETYPE("PySoundex",Soundex);
