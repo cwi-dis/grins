@@ -188,7 +188,7 @@ class SoundChannel(ChannelAsync):
 		if t0 > node.start_time:
 			from audio.select import select
 			print 'skipping',node.start_time,t0,t0-node.start_time
-			self.play_fp = select(self.play_fp, [((t0-node.start_time)*rate, None)])
+			self.play_fp = select(self.play_fp, [(int((t0-node.start_time)*rate+.5), None)])
 		self.event('beginEvent')
 		try:
 			player.play(self.play_fp, (self.my_playdone, ()))
