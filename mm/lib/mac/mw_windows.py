@@ -1,6 +1,8 @@
 import Win
 import Qd
 import QuickDraw
+import Qdoffs
+import QDOffscreen
 import Dlg
 import Ctl
 import Controls
@@ -34,6 +36,7 @@ from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH
 import mw_displaylist
 import mw_menucmd
 import mw_widgets
+import mw_transitions
 
 #
 # Scrollbar constants
@@ -193,7 +196,10 @@ class _CommonWindow:
 		self._parent = parent
 		self._onscreen_wid = wid
 		self._drawing_wid = wid
+		self._drawing_gworld = None
 		self._extra_wid = None
+		self._extra_gworld = None
+		self._transition = None
 		self._subwindows = []
 		self._displists = []
 		self._bgcolor = parent._bgcolor
@@ -219,6 +225,8 @@ class _CommonWindow:
 		if _in_create_box is self:
 			self.cancel_create_box()
 		self._set_movie_active(0)
+		if self._transition:
+			self.endtransition()
 		Qd.SetPort(self._onscreen_wid)
 		self._parent._subwindows.remove(self)
 		Win.InvalRect(self.qdrect())
@@ -246,7 +254,9 @@ class _CommonWindow:
 		del self._clickfunc
 		del self._onscreen_wid
 		del self._drawing_wid
+		del self._drawing_gworld
 		del self._extra_wid
+		del self._extra_gworld
 		del self._accelerators
 		del self._menu
 		del self._popupmenu
@@ -1195,16 +1205,51 @@ class _CommonWindow:
 	# Experimental transition interface
 	def begintransition(self, inout, runit, dict):
 		print 'Transition', dict['trtype']
+		if self._transition:
+			raise 'Multiple Transitions!'
+		self._drawing_gworld, self._drawing_wid = self._create_offscreen_wid()
+		self._extra_gworld, self._extra_wid = self._create_offscreen_wid(inout == 0)
+		self._transition = mw_transitions.TransitionEngine(self, inout, runit, dict)
 		
 	def endtransition(self):
-		pass
+		if not self._transition:
+			raise 'No transition!'
+		self._transition.endtransition()
+		self._transition = None
+		self._extra_wid = None
+		self._extra_gworld = None
+		# XXXX Should we copy the bits? I guess so...
+		self._drawing_wid = self._onscreen_wid
+		self._drawing_gworld = None
 		
 	def changed(self):
 		"""Called if upper layers have modified _drawing_wid"""
-		pass
+		self._transition.changed()
 		
 	def settransitionvalue(self, value):
-		pass
+		self._transition.settransitionvalue(value)
+		
+	def _create_offscreen_wid(self, copybits=1):
+		cur_depth = 16 # XXXX
+		cur_rect = self.qdrect()
+##		cur_font = None
+##		cur_fgcolor = xxxx
+##		cur_bgcolor = xxxx
+		cur_port, cur_dev = Qdoffs.GetGWorld()
+		gworld = Qdoffs.NewGWorld(cur_depth,  cur_rect, None, None, QDOffscreen.keepLocal)
+		# XXXX Set font
+		# XXXX Set fgcolor
+		# XXXX Set bgcolor
+		pixmap = gworld.GetGWorldPixMap()
+		Qdoffs.LockPixels(pixmap)
+		Qdoffs.SetGWorld(gworld.as_GrafPtr(), None)
+		Qd.EraseRect(cur_rect)
+##		if copybits:
+##			portBits = self._onscreen_wid.GetWindowPort().portBits
+##			Qd.CopyBits(portBits, pixmap, cur_rect, cur_rect, QuickDraw.srcCopy, None)
+		Qdoffs.SetGWorld(cur_port, cur_dev)
+		return gworld, pixmap
+		
 
 def calc_extra_size(adornments, canvassize):
 	"""Return the number of pixels needed for toolbar and scrollbars"""
