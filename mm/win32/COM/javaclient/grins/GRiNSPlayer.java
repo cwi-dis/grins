@@ -11,7 +11,7 @@ implements SMILDocument, SMILController, SMILRenderer
     private int PAUSING = 1;
     private int PLAYING = 2;
         
-    GRiNSPlayer(String filename, String license)
+    GRiNSPlayer(String filename, String license) throws GRiNSException
         {
         open(filename, license);
         }
@@ -68,43 +68,38 @@ implements SMILDocument, SMILController, SMILRenderer
             }
         }
       
-    public void open(String fn, String license)
+    public void open(String fn, String license) throws GRiNSException
         {
         if(hgrins!=0) return;
         initializeThreadContext();
-        try {
-            hgrins = nconnect();
-            }
-        catch(Exception e)
+        
+        // connect to GRiNS
+        hgrins = nconnect();
+        if(hgrins == 0)
             {
-            System.out.println("Cann't connect to GRiNS"); 
-            }
-            
-        int permission = 0;
-        if(hgrins != 0) {
-            permission = ngetPermission(hgrins, license);      
-            if(permission == 0) {ndisconnect(hgrins); hgrins = 0;}
-            }
-
-        if(permission == 0){
             uninitializeThreadContext(); 
-            return;
+            throw new GRiNSException("GRiNS Player not registered");
             }
-        if(permission > 0) 
+        
+        // pass license
+        int permission = ngetPermission(hgrins, license);    
+        if(permission == 0)
             {
-            nopen(hgrins, fn);
-            if(canvas!=null && canvas.isDisplayable())
-                {
-                nsetTopLayoutWindow(hgrins, 0, canvas);   
-                nupdate(hgrins);
-                }
-            dur = ngetDuration(hgrins);
-            frameRate = ngetFrameRate(hgrins);
-            monitor = new GRiNSPlayerMonitor(this, 100);
-            monitor.start();
+            ndisconnect(hgrins); hgrins = 0;
+            uninitializeThreadContext(); 
+            throw new GRiNSException("Invalid license");
             }
-        else
-           uninitializeThreadContext(); 
+        
+        nopen(hgrins, fn);
+        if(canvas!=null && canvas.isDisplayable())
+            {
+            nsetTopLayoutWindow(hgrins, 0, canvas);   
+            nupdate(hgrins);
+            }
+        dur = ngetDuration(hgrins);
+        frameRate = ngetFrameRate(hgrins);
+        monitor = new GRiNSPlayerMonitor(this, 100);
+        monitor.start();
         }
    
     
@@ -299,7 +294,8 @@ implements SMILDocument, SMILController, SMILRenderer
     private native int ngetFrameRate(int hgrins);
     private native int ngetMediaFrameRate(int hgrins, String fileOrUrlStr);
     static {
-         System.loadLibrary("grinsp");
+         try {System.loadLibrary("grinsp");}
+         catch(Throwable e){System.out.println("GRiNS Player native library \"grinsp.dll\" could not be located by Java runtime");}
      }
     
 }
