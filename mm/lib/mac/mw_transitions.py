@@ -8,9 +8,9 @@ class TransitionEngine:
 	def __init__(self, window, inout, runit, dict, cb):
 		dur = dict.get('dur', 1)
 		self.exclude_first_window = 0
-		# if this is a multieElt transition with clipChildren we should not
+		# if this is a coordinated transition with clipBoundary==children we should not
 		# include the parent in the clip.
-		if dict.get('multiElement') and dict.get('childrenClip'):
+		if dict.get('coordinated') and dict.get('clipBoundary', 'children') == 'children':
 			self.exclude_first_window = 1
 		self.windows = [window]
 		self.outtransition = inout
