@@ -215,7 +215,6 @@ class HierarchyView(HierarchyViewDialog):
 	def hide(self, *rest):
 		if not self.is_showing():
 			return
-		self.toplevel.showstate(self, 0)
 		HierarchyViewDialog.hide(self)
 		self.cleanup()
 		self.editmgr.unregister(self)

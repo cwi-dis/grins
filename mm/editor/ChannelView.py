@@ -144,7 +144,6 @@ class ChannelView(ChannelViewDialog):
 		if self.is_showing():
 			ChannelViewDialog.show(self, None)
 			return
-		self.toplevel.showstate(self, 1)
 		title = 'Timeline View (' + self.toplevel.basename + ')'
 		ChannelViewDialog.show(self, title)
 		self.window.bgcolor(BGCOLOR)
@@ -161,7 +160,6 @@ class ChannelView(ChannelViewDialog):
 	def hide(self, *rest):
 		if not self.is_showing():
 			return
-		self.toplevel.showstate(self, 0)
 		ChannelViewDialog.hide(self)
 		self.cleanup()
 		self.editmgr.unregister(self)
@@ -415,7 +413,7 @@ class ChannelView(ChannelViewDialog):
 		self.settoggle(TOGGLE_ARCS, self.showarcs)
 		self.arcs = []
 		self.resize()
-		
+
 	def togglebwstrip(self):
 		self.toplevel.setwaiting()
 		self.showbandwidthstrip = not self.showbandwidthstrip
@@ -521,7 +519,7 @@ class ChannelView(ChannelViewDialog):
 
 	def reshape(self):
 		from windowinterface import UNIT_MM
-	        self.discontinuities = []
+		self.discontinuities = []
 		Timing.needtimes(self.viewroot)
 		self.calculatechannellines()
 		channellines = self.channellines
@@ -807,7 +805,7 @@ class ChannelView(ChannelViewDialog):
 		for t_arm, t0, prearm, node in prearmlist:
 			pabox = self.bwstripobject.pabox(t_arm, t0, prearm, node)
 			node.bandwidthboxes = node.bandwidthboxes + pabox
-		
+
 	# Focus stuff (see also recalc)
 
 	def deselect(self):
@@ -888,8 +886,8 @@ class ChannelView(ChannelViewDialog):
 				  "(use shortcut 'T')",
 				  mtype = 'warning', parent = self.window)
 			return
-	        if self.placing_channel:
-		        windowinterface.showmessage(
+		if self.placing_channel:
+			windowinterface.showmessage(
 				'Please place the other channel first!',
 				mtype = 'error', parent = self.window)
 			return
@@ -922,8 +920,8 @@ class ChannelView(ChannelViewDialog):
 		self.placing_channel = PLACING_NEW
 		self.placing_type = name
 		self.finish_channel(1.0, 1.0)
-## 		windowinterface.setcursor('stop')
-## 		self.window.setcursor('channel')
+##		windowinterface.setcursor('stop')
+##		self.window.setcursor('channel')
 
 	def copychannel(self, name):
 		if self.visiblechannels() <> self.context.channels:
@@ -933,8 +931,8 @@ class ChannelView(ChannelViewDialog):
 				  "(use shortcut 'T')",
 				  mtype = 'warning')
 			return
-	        if self.placing_channel:
-		        windowinterface.showmessage(
+		if self.placing_channel:
+			windowinterface.showmessage(
 				'Please place the other channel first!',
 				mtype = 'error')
 			return
@@ -958,8 +956,8 @@ class ChannelView(ChannelViewDialog):
 				  "(use shortcut 'T')",
 				  mtype = 'warning')
 			return
-	        if self.placing_channel:
-		        windowinterface.showmessage(
+		if self.placing_channel:
+			windowinterface.showmessage(
 				'Please place the other channel first!',
 				mtype = 'error')
 			return
@@ -1173,9 +1171,9 @@ class GO(GOCommand):
 
 	# Methods corresponding to the menu entries
 
-## 	def helpcall(self):
-## 		import Help
-## 		Help.givehelp('Channel_view')
+##	def helpcall(self):
+##		import Help
+##		Help.givehelp('Channel_view')
 
 	def canvascall(self, code):
 		self.mother.canvascall(code)
@@ -1318,10 +1316,10 @@ class TimeScaleBox(GO):
 			d.centerstring(l-f_width*5, b,
 				       r, self.bottom,
 				       "%ds preroll"%(t0-fart0))
-			
+
 		# And draw markers in places where time breaks
 		for i in self.mother.discontinuities:
-		        l, r = self.mother.maptimes(i, i)
+			l, r = self.mother.maptimes(i, i)
 			d.drawline(ANCHORCOLOR, [(l, t), (l, b)])
 
 class BandwidthAccumulator:
@@ -1329,7 +1327,7 @@ class BandwidthAccumulator:
 	# list of (starttime, bandwidth) tuples, sorted by _reverse_
 	# starttime.
 	#
-	
+
 	def __init__(self, max):
 		self.max = max
 		self.used = [(0, 0)]
@@ -1371,7 +1369,7 @@ class BandwidthAccumulator:
 			i = i + 1
 		# Now slot i points to the (new) t0,t1 range.
 		return i, t1
-		
+
 	def _findavailbw(self, t0):
 		"""Return the available bandwidth at t0 and the time
 		t1 at which that value may change"""
@@ -1454,7 +1452,7 @@ class BandwidthAccumulator:
 			size = int(size - size_in_slot)
 			t0 = tnext
 		return overall_t0, overall_t1, boxes
-		
+
 class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 	BWSCOLORS = [	# Without focus
 			ARMINACTIVECOLOR,     # Preload
@@ -1509,7 +1507,7 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 		elif bandwidth > 1000:
 			return "%d Kbps" % (bandwidth / 1000)
 		return "%d bps" % bandwidth
-		
+
 	def getbandwidth(self):
 		return self.bandwidth
 
@@ -1545,7 +1543,7 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 			d.centerstring(0, t, self.mother.channelright,
 				       t+f_height, self._bwstr(
 					       self.usedbandwidth.maxused))
-				       
+
 		for box in self.boxes:
 			self._drawbox(box, 0)
 		for box in self.focusboxes:
@@ -1585,7 +1583,7 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 		self.focussed_bwnodes = []
 		self.focussed_panodes = []
 		return GO.deselect(self)
-			       
+
 	def setstripfocus(self, focusboxes):
 		if self.ok:
 			for box in self.focusboxes:
@@ -1650,7 +1648,7 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 	def otherbwcall(self):
 		windowinterface.InputDialog("Bandwidth (bps)",
 					    `self.bandwidth`, self.bwcall)
-		
+
 # Class for Channel Objects
 
 class ChannelBox(GO, ChannelBoxCommand):
@@ -1760,10 +1758,10 @@ class ChannelBox(GO, ChannelBoxCommand):
 		d.fgcolor(TEXTCOLOR)
 		d.centerstring(name_l, name_t, name_r, name_b, self.name)
 
-## 		# Draw the channel type
+##		# Draw the channel type
 		f = os.path.join(self.mother.datadir, '%s.tiff' % self.ctype)
 		try:
-			d.display_image_from_file(f, center = 1, 
+			d.display_image_from_file(f, center = 1,
 					coordinates = (thumb_l, name_t, thumb_r-thumb_l, name_b-name_t))
 		except windowinterface.error:
 			import ChannelMap
@@ -1788,10 +1786,10 @@ class ChannelBox(GO, ChannelBoxCommand):
 ##		d.drawline(BORDERCOLOR, [(0.0, bottom),
 ##					 (1.0, bottom)])
 		d.draw3dhline(GUTTERTOPCOLOR, GUTTERBOTTOMCOLOR, 0.0, 1.0, bottom)
-##  		r = self.right
-##  		xindent, yindent = d.get3dbordersize()
-##  		x = r+xindent/2
-##  		d.drawline(BORDERCOLOR, [(x, top), (x, bottom)])
+##		r = self.right
+##		xindent, yindent = d.get3dbordersize()
+##		x = r+xindent/2
+##		d.drawline(BORDERCOLOR, [(x, top), (x, bottom)])
 
 	# Menu stuff beyond what GO offers
 
@@ -1818,10 +1816,10 @@ class ChannelBox(GO, ChannelBoxCommand):
 		editmgr.commit()
 
 	def movecall(self):
-	        self.mother.movechannel(self.name)
+		self.mother.movechannel(self.name)
 
 	def copycall(self):
-	        self.mother.copychannel(self.name)
+		self.mother.copychannel(self.name)
 
 	def newchannelindex(self):
 		# Hook for newchannelcall to determine placement
@@ -1930,7 +1928,7 @@ class NodeBox(GO, NodeBoxCommand):
 			self.mother.init_display()
 			self.node.armedmode = mode
 			self.drawfocus()
-## 			self.mother.drawarcs((self.left, self.top, self.right, self.bottom))
+##			self.mother.drawarcs((self.left, self.top, self.right, self.bottom))
 			self.mother.render()
 			self.mother.delay_drawarcs()
 
@@ -1939,7 +1937,7 @@ class NodeBox(GO, NodeBoxCommand):
 ##			self.mother.init_display()
 			self.bandwidthhighlight = mode
 			self.drawfocus()
-## 			self.mother.drawarcs((self.left, self.top, self.right, self.bottom))
+##			self.mother.drawarcs((self.left, self.top, self.right, self.bottom))
 ##			self.mother.render()
 			self.mother.delay_drawarcs()
 
@@ -2115,7 +2113,7 @@ class NodeBox(GO, NodeBoxCommand):
 				pass
 			else:
 				try:
-					box = d.display_image_from_file(f, center = 0, 
+					box = d.display_image_from_file(f, center = 0,
 							coordinates = (thumb_l, thumb_t, thumb_w, thumb_h))
 				except windowinterface.error:
 					pass

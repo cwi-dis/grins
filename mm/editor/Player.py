@@ -128,7 +128,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 				apply(apply, afterfunc)
 			return
 		self.aftershow = afterfunc
-		self.toplevel.showstate(self, 1)
 		self.fullreset()
 		self.toplevel.checkviews()
 		PlayerDialog.show(self)
@@ -145,7 +144,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	def hide(self, *rest):
 		if not self.showing: return
 		self.showing = 0
-		self.toplevel.showstate(self, 0)
 		self.stop()
 		self.fullreset()
 		self.save_geometry()

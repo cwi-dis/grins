@@ -99,17 +99,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		TopLevelDialog.show(self)
 		self.hierarchyview.show()
 
-	def showstate(self, view, showing):
-		self.setbuttonstate(view.__command, showing)
-		if showing:
-			if view is self.layoutview:
-				# if opening layout, also open player
-				self.player.show()
-		else:
-			if view is self.player:
-				# if closing player, also close layout
-				self.layoutview.hide()
-
 	def destroy(self):
 		self.editmgr.unregister(self)
 		self.editmgr.destroy()
@@ -145,27 +134,21 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def makeviews(self):
 		import HierarchyView
 		self.hierarchyview = HierarchyView.HierarchyView(self)
-		self.hierarchyview.__command = HIERARCHYVIEW
 
 		import ChannelView
 		self.channelview = ChannelView.ChannelView(self)
-		self.channelview.__command = CHANNELVIEW
 
 		import Player
 		self.player = Player.Player(self)
-		self.player.__command = PLAYERVIEW
 
 		import LinkEdit
 		self.links = LinkEdit.LinkEdit(self)
-		self.links.__command = LINKVIEW
 
 		import LayoutView
 		self.layoutview = LayoutView.LayoutView(self)
-		self.layoutview.__command = LAYOUTVIEW
 
 		import UsergroupView
 		self.ugroupview = UsergroupView.UsergroupView(self)
-		self.ugroupview.__command = USERGROUPVIEW
 
 		# Views that are destroyed by restore (currently all)
 		self.views = [self.player, self.hierarchyview,
