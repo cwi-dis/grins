@@ -369,14 +369,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def EndNode(self):
 		node = self.__node
-		attributes = self.__attributes
+		try:
+			attributes = self.__attributes
+		except AttributeError:
+			# Some error occurred in the handling of the start tag.
+			return
 		self.__node = None
 		del self.__attributes
 		mediatype, subtype = node.__mediatype
 
 		if not self.__is_ext:
 			# don't warn since error message already printed
-			encoding = attributes['encoding']
+## 			encoding = attributes['encoding']
 			data = string.split(string.join(self.__nodedata, ''), '\n')
 			for i in range(len(data)-1, -1, -1):
 				tmp = string.join(string.split(data[i]))
