@@ -613,13 +613,14 @@ def read_RTIPA():
 # RTIPA end
 #
 
-def read_components():
+def read_components(url = None):
 	import MMurl
 	del components[:]
-	url = get('components')
-	if not url:
-		components.append('http://www.oratrix.com/GRiNS/smil2.0')
-		return
+	if url is None:
+		url = get('components')
+		if not url:
+			components.append('http://www.oratrix.com/GRiNS/smil2.0')
+			return
 	try:
 		u = MMurl.urlopen(url)
 	except:
