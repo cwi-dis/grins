@@ -250,8 +250,8 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 
 	# Set the title of this window
 	def settitle(self,title):
-		import urllib
-		title=urllib.unquote(title)
+		import MMurl
+		title=MMurl.unquote(title)
 		self._title=title
 		self.GetParent().SetWindowText(title)
 

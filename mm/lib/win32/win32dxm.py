@@ -12,6 +12,8 @@ import win32con
 # private graph notification message
 WM_GRPAPHNOTIFY=win32con.WM_USER+101
 
+import MMurl
+
 # a composite interface to dshow infrastructure.
 # gets its name from its main interface: IGraphBuilder
 class GraphBuilder:
@@ -43,6 +45,8 @@ class GraphBuilder:
 		pass
 
 	def RenderFile(self, url, exporter=None):
+		url = MMurl.canonURL(url)
+		url = MMurl.unquote(url)
 		try:
 			self._builder.RenderFile(url)
 		except dshow.error, arg:
@@ -229,6 +233,8 @@ def GetFrameRate(url):
 		if __debug__:
 			print 'Missing DirectShow infrasrucrure'
 		return 0
+	url = MMurl.canonURL(url)
+	url = MMurl.unquote(url)
 	try:
 		builder.RenderFile(url)
 	except:
@@ -292,9 +298,11 @@ class MMStream:
 		return filters
 
 	def open(self, url, exporter=None):
-		mmstream = 	self._mmstream
+		mmstream = self._mmstream
+		url = MMurl.canonURL(url)
+		url = MMurl.unquote(url)
 		try:
-			self._mmstream.OpenFile(url)
+			mmstream.OpenFile(url)
 		except:
 			if __debug__:
 				print 'failed to render', url
@@ -533,6 +541,8 @@ class MediaReader:
 		self._started = 0
 
 		self._filtergraph = dshow.CreateGraphBuilder()
+		url = MMurl.canonURL(url)
+		url = MMurl.unquote(url)
 		try:
 			self._filtergraph.RenderFile(url)
 		except dshow.error, arg:
