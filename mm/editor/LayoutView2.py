@@ -433,7 +433,7 @@ class LayoutView2(LayoutViewDialog2):
 	def __init__(self, toplevel):
 		self.toplevel = toplevel
 		self.root = toplevel.root
-		self.context = self.root.context
+		self.context = self.root.GetContext()
 		self.editmgr = self.context.editmgr
 
 		# global variable which allow to acces the to tree region structure on the reference document		
@@ -1012,7 +1012,7 @@ class LayoutView2(LayoutViewDialog2):
 
 	def __makeMediaRefList(self):
 		self.__mediaRefList = []
-		self.__makeNodeRefList(self.context.root)
+		self.__makeNodeRefList(self.root)
 
 	def existMediaRef(self, nodeRef):
 		return nodeRef in self.__mediaRefList
