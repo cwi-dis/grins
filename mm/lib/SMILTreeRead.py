@@ -2029,7 +2029,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if not name:
 			name = layout_name # only for anonymous root-layout
 		ctx = self.__context
-		layout = MMNode.MMChannel(ctx, name, 'layout', 1)
+		layout = MMNode.MMChannel(ctx, name, 'layout')
 
 		if not self.__region2channel.has_key(top):
 			self.__region2channel[top] = []
