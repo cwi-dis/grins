@@ -679,7 +679,7 @@ class _Window:
 		# depth: depth of window (and image) in bytes
 		oscale = scale
 		tw = self._topwindow
-		format = self._imgformat
+		format = toplevel._imgformat
 		depth = format.descr['align'] / 8
 		reader = None
 		try:
