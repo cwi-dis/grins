@@ -7,6 +7,7 @@ from WMEVENTS import *
 # windows
 import winuser, wingdi, wincon
 import winstruct
+import gdi_displist
 
 #
 import base_window
@@ -26,6 +27,12 @@ class Region(base_window.Window):
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, units = None, bgcolor=None):
 		return Region(self, coordinates, transparent, z, units, bgcolor)
 	
+	def newdisplaylist(self, bgcolor = None, units = UNIT_SCREEN):
+		if bgcolor is None:
+			if not self._transparent:
+				bgcolor = self._bgcolor
+		return gdi_displist.DisplayList(self, bgcolor, units)
+
 	def close(self):
 		if self._parent is None:
 			return

@@ -9,11 +9,6 @@ from types import *
 from appcon import *
 from winfont import findfont
 
-import wincon
-import wingdi
-
-is_dummy = 0
-
 class DisplayList:
 	def __init__(self, window, bgcolor, units):
 		self._window = window
@@ -123,15 +118,8 @@ class DisplayList:
 
 			rc_dest = ldc, tdc, rdc - ldc - 1, bdc - tdc - 1
 			rc_src = lsc, tsc, rsc - lsc - 1, bsc - tsc - 1
-			if not is_dummy:
-				dcc = dc.CreateCompatibleDC()
-				bmp = dcc.SelectObject(image)
-				try:
-					dc.StretchBlt(rc_dest, dcc, rc_src, wincon.SRCCOPY)
-				except wingdi.error, arg:
-					print arg
-				dcc.SelectObject(bmp)
-				dcc.DeleteDC()
+
+			# paint image (rc_src) on rc_dest 
 
 	# Define a new button. Coordinates are in window relatives
 	def newbutton(self, coordinates, z = 0, sensitive = 1):
@@ -151,9 +139,8 @@ class DisplayList:
 			units = self._units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if is_dummy:
-			self._list.append(('image', file, coordinates, fit))
-			return 0, 0, 100, 100
+		self._list.append(('image', file, coordinates, fit))
+		return 0, 0, 100, 100
 		
 		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
 		       self._window._prepare_image(file, crop, fit, center, coordinates, clip, align, units)
