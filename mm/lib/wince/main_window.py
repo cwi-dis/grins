@@ -134,7 +134,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 	def set_toggle(self, cmdcl, onoff):
 ##		print 'set_toggle',  cmdcl, onoff
 		if cmdcl == usercmd.PLAY:
-			self.redraw()
+			pass
 
 	def newViewport(self, width, height, units, bgcolor):
 		l, t, r, b = self.GetClientRect()
