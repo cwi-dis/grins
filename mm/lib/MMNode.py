@@ -194,7 +194,7 @@ class MMNodeContext:
 		orig_i = self.channelnames.index(orig)
 		orig_ch = self.channels[orig_i]
 		for attr in orig_ch.keys():
-		    c[attr] = eval(repr(orig_ch[attr]))
+			c[attr] = eval(repr(orig_ch[attr]))
 		self.channeldict[name] = c
 		self.channelnames.insert(i, name)
 		self.channels.insert(i, c)
@@ -206,15 +206,15 @@ class MMNodeContext:
 			raise CheckError, 'movechannel: invalid position'
 		old_i = self.channelnames.index(name)
 		if old_i == i:
-		    return
+			return
 		self.channels.insert(i, self.channels[old_i])
 		self.channelnames.insert(i, name)
 		if old_i < i:
-		    del self.channelnames[old_i]
-		    del self.channels[old_i]
+			del self.channelnames[old_i]
+			del self.channels[old_i]
 		else:
-		    del self.channelnames[old_i+1]
-		    del self.channels[old_i+1]
+			del self.channelnames[old_i+1]
+			del self.channels[old_i+1]
 
 	def delchannel(self, name):
 		if name not in self.channelnames:
