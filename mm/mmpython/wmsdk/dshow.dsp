@@ -44,8 +44,8 @@ RSC=rc.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "rma_EXPORTS" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /I "..\..\..\python\Include" /I "..\..\..\python\PC" /I "..\..\win32\DXMedia\include" /I "..\..\win32\DXMedia\classes\base" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PY_EXPORTS" /FD /c
-# SUBTRACT CPP /Fr /YX
+# ADD CPP /nologo /MT /W3 /GX /O2 /I "..\..\..\python\Include" /I "..\..\..\python\PC" /I "..\..\win32\DXMedia\include" /I "..\..\win32\DXMedia\classes\base" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PY_EXPORTS" /Fr /FD /c
+# SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x408 /d "NDEBUG"
@@ -82,7 +82,8 @@ SOURCE="$(InputPath)"
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "rma_EXPORTS" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I ".\include" /I "..\..\..\python\Include" /I "..\..\..\python\PC" /I "..\..\win32\DXMedia\include" /I "..\..\win32\DXMedia\classes\base" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PY_EXPORTS" /FR /Yu"std.h" /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I ".\include" /I "..\..\..\python\Include" /I "..\..\..\python\PC" /I "..\..\win32\DXMedia\include" /I "..\..\win32\DXMedia\classes\base" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PY_EXPORTS" /FR /FD /GZ /c
+# SUBTRACT CPP /YX /Yc /Yu
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x408 /d "_DEBUG"
@@ -115,6 +116,14 @@ SOURCE="$(InputPath)"
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\dscom.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\dscom.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\dshow.cpp
 
 !IF  "$(CFG)" == "dshow - Win32 Release"
@@ -141,6 +150,10 @@ SOURCE=.\aud2rm.py
 # Begin Source File
 
 SOURCE=.\dshowplay.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\renderingListener.py
 # End Source File
 # Begin Source File
 
