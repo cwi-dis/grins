@@ -118,7 +118,7 @@ def dispatch(dev, val):
 		# Ignore events for unregistered windows
 		key = `val`
 		if windowmap.has_key(key):
-			window = windowmap[`val`]
+			window = windowmap[key]
 			gl.winset(val)
 			window.redraw()
 		else:
@@ -144,10 +144,14 @@ def dispatch(dev, val):
 		if val = 0:
 			pass
 		else:
-			state.focuswindow = windowmap[`val`]
-			state.focuswid = val
-			gl.winset(val)
-			state.focuswindow.enter()
+			key = `val`
+			if windowmap.has_key(key):
+				state.focuswindow = windowmap[key]
+				state.focuswid = val
+				gl.winset(val)
+				state.focuswindow.enter()
+			else:
+				report('INPUTCHANGE for unregistered window')
 	elif dev = WINSHUT:
 		key = `val`
 		if windowmap.has_key(key):
@@ -157,6 +161,7 @@ def dispatch(dev, val):
 		else:
 			report('WINSHUT for unregistered window')
 	elif dev = WINQUIT:
+		report('WINQUIT')
 		key = `val`
 		if windowmap.has_key(key):
 			gl.winset(val)
