@@ -6,6 +6,19 @@ from appcon import *
 
 import main_window
 
+preload_list = ['MMNode', 
+	'SMILTreeRead', 
+	'wincon', 
+	'Channel', 
+	'Scheduler',
+	'Transitions',
+	'SMILCssResolver',
+	'base_window',
+	'urllib',
+	'Attrdefs',
+	'gdi_displist',
+	'xmllib',]
+
 class Toplevel:
 	def __init__(self):
 		
@@ -18,7 +31,7 @@ class Toplevel:
 
 		# application's main window
 		self._mainwnd = None
-	
+
 	def close(self):
 		pass
 
@@ -46,6 +59,11 @@ class Toplevel:
 		return self._mainwnd
 
 	def serve_events(self,params=None):	
+		global preload_list
+		if preload_list:
+			exec 'import %s' % preload_list[0]
+			preload_list = preload_list[1:]
+
 		while self._timers:
 			t = float(winkernel.GetTickCount())/TICKS_PER_SECOND
 			sec, cb, tid = self._timers[0]
