@@ -731,8 +731,7 @@ class SMILWriter(SMIL):
 		self.calcanames(node)
 
 		if len(self.top_levels) > 1:
-			print '** Document uses multiple toplevel channels'
-			self.uses_cmif_extension = 1
+			self.smilboston = 1
 
 		self.syncidscheck(node)
 
@@ -860,7 +859,6 @@ class SMILWriter(SMIL):
 		usergroups = node.GetContext().usergroups
 		if not usergroups:
 			return
-		self.uses_cmif_extension = 1
 		self.smilboston = 1
 		for ugroup in usergroups.keys():
 			name = identify(ugroup)
@@ -1033,9 +1031,8 @@ class SMILWriter(SMIL):
 		self.writetag('layout') # default: type="text/smil-basic-layout"
 		self.push()
 		channels = self.root.GetContext().channels
-		if len(self.top_levels) == 1:
+		for ch in self.top_levels:
 			attrlist = []
-			ch = self.top_levels[0]
 			if ch['type'] == 'layout':
 				attrlist.append(('id', self.ch2name[ch]))
 			title = ch.get('title')
@@ -1050,7 +1047,10 @@ class SMILWriter(SMIL):
 				bgcolor = ch['bgcolor']
 				if compatibility != settings.G2 or \
 				   bgcolor != (0,0,0):
-					attrlist.append(('background-color', '#%02x%02x%02x' % bgcolor))
+					if self.smilboston:
+						attrlist.append(('backgroundColor', '#%02x%02x%02x' % bgcolor))
+					else:
+						attrlist.append(('background-color', '#%02x%02x%02x' % bgcolor))
 			if ch.has_key('winsize'):
 				units = ch.get('units', 0)
 				w, h = ch['winsize']
@@ -1066,9 +1066,16 @@ class SMILWriter(SMIL):
 				else:
 					attrlist.append(('width', '%d' % int(w + .5)))
 					attrlist.append(('height', '%d' % int(h + .5)))
-			self.writetag('root-layout', attrlist)
-		for ch in self.top_levels:
-			self.writeregion(ch)
+			if self.smilboston:
+				self.writetag('top-layout', attrlist)
+				self.push()
+				self.writeregion(ch)
+				self.pop()
+			else:
+				self.writetag('root-layout', attrlist)
+		if not self.smilboston:	# implies one top-level
+			for ch in self.top_levels:
+				self.writeregion(ch)
 		self.pop()
 
 	def writeregion(self, ch):
@@ -1076,8 +1083,7 @@ class SMILWriter(SMIL):
 		compatibility = settings.get('compatibility')
 		mtype, xtype = mediatype(ch['type'], error=1)
 		isvisual = mtype in ('img', 'video', 'text')
-		if len(self.top_levels) == 1 and \
-		   ch['type'] == 'layout' and \
+		if ch['type'] == 'layout' and \
 		   not ch.has_key('base_window'):
 			# top-level layout channel has been handled
 			for sch in self.__subchans[ch.name]:
@@ -1151,8 +1157,12 @@ class SMILWriter(SMIL):
 					# transparent==never, so set
 					# background-color if not
 					# transparent
-					attrlist.append(('background-color',
-							 "#%02x%02x%02x" % (bgcolor or (0,0,0))))
+					if self.smilboston:
+						attrlist.append(('backgroundColor',
+								 "#%02x%02x%02x" % (bgcolor or (0,0,0))))
+					else:
+						attrlist.append(('background-color',
+								 "#%02x%02x%02x" % (bgcolor or (0,0,0))))
 					bgcolor = None # skip below
 				# non-SMIL extension:
 				# permanently visible region
@@ -1168,8 +1178,12 @@ class SMILWriter(SMIL):
 			    ((ch['type'] not in ('text', 'RealText') or
 			      bgcolor != (255,255,255)) and
 			     bgcolor != (0,0,0))):
-				attrlist.append(('background-color',
-						 "#%02x%02x%02x" % bgcolor))
+				if self.smilboston:
+					attrlist.append(('backgroundColor',
+							 "#%02x%02x%02x" % bgcolor))
+				else:
+					attrlist.append(('background-color',
+							 "#%02x%02x%02x" % bgcolor))
 			# Since background-color="transparent" is the
 			# default, we don't need to actually write that
 ##			if transparent == 1:
