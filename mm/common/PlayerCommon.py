@@ -88,8 +88,13 @@ class PlayerCommon:
 
 	def killRenderer(self, name):
 		if debug: print 'PlayerCore, killRenderer ',name
-		# XXX remove channel from reference document
+		# destroy the relation-ship parent-child before destroying the channel
 		ctx = self.context
+		try:
+			del ctx.channeldict[name]['base_window']
+		except:
+			print "Unexpected error: PlayerCommon.killRenderer, can't remove ",name
+		# XXX remove channel from reference document
 		i = ctx.channelnames.index(name)
 		del ctx.channels[i]
 		del ctx.channelnames[i]
