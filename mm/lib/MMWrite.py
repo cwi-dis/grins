@@ -77,6 +77,8 @@ def writename(value, dummy, fp):
 	needquote = 0
 	if value == '':
 		needquote = 1
+	elif value[0] in string.digits:
+		needquote = 1
 	else:
 		for c in value:
 			if c not in namechars:
