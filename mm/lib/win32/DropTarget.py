@@ -5,11 +5,8 @@ Sdk=win32ui.GetWin32Sdk()
 
 # add missing const
 win32con.MK_ALT = 0x20
-DROPEFFECT_NONE = 0
-DROPEFFECT_COPY = 1
-DROPEFFECT_MOVE = 2
-DROPEFFECT_LINK = 4
-DROPEFFECT_SCROLL = 0x80000000
+from appcon import DROPEFFECT_NONE, DROPEFFECT_COPY, \
+	DROPEFFECT_MOVE, DROPEFFECT_LINK, DROPEFFECT_SCROLL
 
 class DropTarget:
 	cfmap={'FileName':Sdk.RegisterClipboardFormat('FileName')}
