@@ -37,7 +37,6 @@ default_settings = {
 	'root_expanded': 0,		# Root node always expanded
 	'recent_documents':[],		# Recently used documents
 	'thumbnail_size':10.0,		# Size of thumbnail (mm)
-	'use_tab_attr_editor':1,	# New tabs-based props editor
 	'time_scale_factor': 1.0,	# Scale factor for sec to mm
 	'no_initial_dialog': 0,		# Don't show initial dialog if true
 # HierarchyView colors
