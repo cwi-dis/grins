@@ -16,7 +16,7 @@ class Dialog() = (glwindow.glwindow)():
 		self.title = title
 		self.hint = hint
 		self.showing = 0
-		self.last_origin = self.last_size = None
+		self.last_geometry = None
 		self.make_form()
 		return self
 	#
@@ -64,26 +64,20 @@ class Dialog() = (glwindow.glwindow)():
 	#
 	def show(self):
 		if not self.showing:
-			if self.last_origin and self.last_size:
-				x, y = self.last_origin
-				w, h = self.last_size
-				gl.prefposition(x, x+w, y, y+h)
-				type = PLACE_FREE
-			else:
-				type = PLACE_SIZE
-			fl.qdevice(DEVICE.WINSHUT)
-			self.form.show_form(type, TRUE, self.title)
+			if self.last_geometry:
+				glwindow.setgeometry(self.last_geometry)
+			self.form.show_form(PLACE_SIZE, TRUE, self.title)
 			gl.winset(self.form.window)
+			fl.qdevice(DEVICE.WINSHUT)
 			gl.winconstraints()
-			self.register(self.form.window)
+			glwindow.register(self, self.form.window)
 			self.showing = 1
 	#
 	def hide(self):
 		if self.showing:
-			self.unregister()
+			glwindow.unregister(self)
 			gl.winset(self.form.window)
-			self.last_origin = gl.getorigin()
-			self.last_size = gl.getsize()
+			self.last_geometry = glwindow.getgeometry()
 			self.form.hide_form()
 			self.showing = 0
 	#
