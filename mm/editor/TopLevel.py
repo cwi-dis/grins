@@ -1225,6 +1225,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				showing.append(i)
 #		self.editmgr.rollback()
 		# cleanup
+		self.editmgr.clearclip()
 		self.editmgr.unregister(self)
 		self.editmgr.destroy() # kills subscribed views
 		self.context.seteditmgr(None)
@@ -1373,8 +1374,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def destroyRoot(self, root):
 		# get context before it will destroy
 		context = root.GetContext()
-		# Clear the clipboard
-		context.clearclip()
 		# destroy the 'body' part
 		root.Destroy()
 		# destroy the layout part
