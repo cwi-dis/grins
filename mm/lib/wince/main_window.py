@@ -61,6 +61,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self.HookMessage(self.OnLButtonUp, wincon.WM_LBUTTONUP)
 		self.HookMessage(self.OnLButtonDblClk, wincon.WM_LBUTTONDBLCLK)
 		self.HookMessage(self.OnMouseMove, wincon.WM_MOUSEMOVE)
+		self.HookMessage(self.OnKeyDown, wincon.WM_KEYDOWN)
 		self.set_commandlist(None, 'document')
 		self.set_commandlist(None, 'pview_')
 		self._timer = self.SetTimer(1, 20)
@@ -248,6 +249,17 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		lpt = self.DPtoLP(pt)
 ##		print 'OnLButtonDblClk %d %d' % lpt
 		#winuser.MessageBox('OnLButtonDblClk %d %d' % lpt)
+
+	__keymap = {
+		wincon.VK_RETURN: 'RETURN',
+		wincon.VK_LEFT: 'LEFT',
+		wincon.VK_UP: 'UP',
+		wincon.VK_DOWN: 'DOWN',
+		wincon.VK_RIGHT: 'RIGHT',
+		}
+	def OnKeyDown(self, params):
+		if self.__keymap.has_key(params[2]):
+			self._viewport.onKeyboardEvent(self.__keymap[params[2]], KeyboardInput)
 
 	# rem: we want to reuse this window
 	def close(self):
