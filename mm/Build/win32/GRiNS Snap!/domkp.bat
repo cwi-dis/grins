@@ -73,6 +73,7 @@ set PYTHONPATH=%PYTHONPATH%;%PYTHONHOME%\Lib\lib-old
 if exist FreezeOpts del FreezeOpts
 echo -x NodeInfo >> FreezeOpts
 echo -x AnchorEdit >> FreezeOpts
+echo -x LayoutView >> FreezeOpts
 
 rem The channels...
 echo -x ExternalChannel >> FreezeOpts
