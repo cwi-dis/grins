@@ -233,7 +233,7 @@ class Player:
 			port.writeframes(self.__data)
 			callbacks = self.__callbacks
 			self.__callbacks = []
-			for rdr, cb in self.__callbacks:
+			for rdr, cb in callbacks:
 				self.__merger.delete(rdr)
 				if cb:
 					apply(cb[0], cb[1])
