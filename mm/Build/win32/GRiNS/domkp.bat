@@ -5,7 +5,7 @@ set GRINS_HOME=d:\ufs\mm\cmif
 set FREEZE_WHAT=grins
 set EXCLUDE_WHAT=cmifed
 
-set INCLUDE_MMEXTENSIONS=yes
+set INCLUDE_MMEXTENSIONS=no
 
 set main_script=%GRINS_HOME%\fGRiNS.py
 
