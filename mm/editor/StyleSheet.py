@@ -140,13 +140,13 @@ class StyleSheet(ViewDialog, BasicDialog):
 			return
 		self.editmgr.addstyle(newname)
 		# (3a) Before committing, add it to the browser and select it
-		self.browser.freeze_object()
+		self.form.freeze_form()
 		self.browser.add_browser_line(newname)
 		i = self.browser.get_browser_maxline()
 		self.browser.select_browser_line(i)
 		# (3b) Commit the transaction
 		self.editmgr.commit()
-		self.browser.unfreeze_object()
+		self.form.unfreeze_form()
 		# (4) Immediately open a style editor for it
 		import AttrEdit
 		AttrEdit.showstyleattreditor(self.context, newname)
