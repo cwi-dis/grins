@@ -1068,7 +1068,7 @@ class MMNode:
 		self.happenings[('event', event)] = time
 
 	def marker(self, time, marker):
-		self.happenngs[('marker', marker)] = time
+		self.happenings[('marker', marker)] = time
 
 	def eventhappened(self, event):
 		return self.happenings.has_key(('event', event))
@@ -2358,7 +2358,7 @@ class MMNode:
 			if termtype in ('FIRST', chname):
 				arc = MMSyncArc(self_body, 'end', srcnode=child, event='end', delay=0)
 				self_body.arcs.append((self_body, arc))
-				self_body.add_arc(arc)
+				child.add_arc(arc)
 ##				terminating_children.append(child)
 ##				srlist.append(([(SCHED_DONE, child)],
 ##					       [(TERMINATE, self_body)]))
