@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 #
 # ID's of resources
 ABOUT_ID=512
