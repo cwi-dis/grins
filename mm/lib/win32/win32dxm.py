@@ -3,6 +3,9 @@ __version__ = "$Id$"
 # DirectShow support
 import dshow
 
+# DirectDraw support for MMStream
+import ddraw
+
 # we need const WM_USER
 import win32con
 
@@ -38,7 +41,7 @@ class GraphBuilder:
 	def Release(self):
 		pass
 
-	def RenderFile(self,url):
+	def RenderFile(self, url, exporter=None):
 		try:
 			self._builder.RenderFile(url)
 		except dshow.error, arg:
@@ -46,8 +49,15 @@ class GraphBuilder:
 			self._rendered = 0
 		else:
 			self._rendered = 1
+		if exporter and self._rendered:
+			writer = exporter.getWriter()
+			writer.redirectAudioFilter(self._builder)
 		return self._rendered
 
+	def RedirectAudioFilter(self, writer):
+		if writer and self._rendered:
+			writer.redirectAudioFilter(self._builder)
+		
 	def Run(self):
 		if self._builder and self._rendered:
 			mc = self._builder.QueryIMediaControl()
@@ -103,9 +113,10 @@ class GraphBuilder:
 	def SetWindow(self,wnd,msgid=WM_GRPAPHNOTIFY):
 		vw = self.GetVideoWindow()
 		if vw:
-			vw.SetOwner(wnd.GetSafeHwnd()) 
+			hwnd = wnd.GetSafeHwnd()
+			vw.SetOwner(hwnd) 
 			mex = self._builder.QueryIMediaEventEx()
-			mex.SetNotifyWindow(wnd.GetSafeHwnd(),msgid)
+			mex.SetNotifyWindow(hwnd,msgid)
 
 	def SetNotifyWindow(self,wnd,msgid=WM_GRPAPHNOTIFY):
 		if self._builder and self._rendered:
@@ -157,35 +168,26 @@ class GraphBuilder:
 # the type of an asf stream (video or audio)
 def HasVideo(url):
 	try:
-		builder = dshow.CreateGraphBuilder()
+		builder = GraphBuilder()
 	except:
 		print 'Missing DirectShow infrasrucrure'
 		return None
-	try:
-		vrenderer = builder.FindFilterByName('Video Renderer')
-	except:
-		vrenderer = None
-	return vrenderer
+	if not builder.RenderFile(url):
+		return None
+	return builder.HasVideo()
 
 # Returns the size of a video	
 def GetVideoSize(url):
 	try:
-		builder = dshow.CreateGraphBuilder()
+		builder = GraphBuilder()
 	except:
 		print 'Missing DirectShow infrasrucrure'
-		return (0, 0)
-	try:
-		builder.RenderFile(url)
-	except:
-		print 'failed to render',url
-		return(0, 0)
-	vw = builder.QueryIVideoWindow()
-	try:
-		width, height = vw.GetWindowPosition()[2:]
-	except:
-		print 'failed to get size',url
-		width, height = 0, 0
-	return (width, height)
+		return 100, 100
+
+	if not builder.RenderFile(url):
+		return 100, 100
+
+	return builder.GetWindowPosition()[2:]
 
 
 # Returns the duration of the media file in secs	
@@ -198,10 +200,123 @@ def GetMediaDuration(url):
 	if not builder.RenderFile(url):
 		return 0
 
-	# avoid crash for ASF
-	if builder.IsASF():
-		return 0
-
 	return builder.GetDuration()
+
+
+class MMStream:
+	def __init__(self, ddobj):
+		mmstream = dshow.CreateMultiMediaStream()
+		mmstream.Initialize()
+		mmstream.AddPrimaryVideoMediaStream(ddobj)
+		try:
+			mmstream.AddPrimaryAudioMediaStream()
+		except dshow.error, arg:
+			print arg
+		self._mmstream = mmstream
+		self._mstream = None
+		self._ddstream = None
+		self._sample = None
+		self._dds = None
+		self._rect = None
+		self._parsed = 0
+
+	def __repr__(self):
+		s = '<%s instance' % self.__class__.__name__
+		filters = self.getFiltersNames()
+		n = len(filters)
+		if n: 
+			s = s + ', filters = '
+			s = s + "\'" + filters[0] + "\'"
+		else:
+			s = s + ', not rendered'
+			
+		for i in range(1,n):
+			s = s + ", \'" + filters[i] + "\'"
+		s = s + '>'
+		return s
+
+	def getFiltersNames(self):
+		if not self._parsed: return []
+		fg = self._mmstream.GetFilterGraph()
+		enumobj = fg.EnumFilters()
+		f = enumobj.Next()
+		filters = []
+		while f:		
+			fname = f.QueryFilterName()
+			filters.insert(0,fname)
+			f = enumobj.Next()
+		return filters
+
+	def open(self, url, exporter=None):
+		mmstream = 	self._mmstream
+		try:
+			self._mmstream.OpenFile(url)
+		except:
+			print 'failed to render', url
+			self._parsed = 0
+			return 0
+		self._parsed = 1
+		if exporter and self._parsed:
+			fg = self._mmstream.GetFilterGraph()
+			writer = exporter.getWriter()
+			writer.redirectAudioFilter(fg, hint='0001')
+		self._mstream = self._mmstream.GetPrimaryVideoMediaStream()
+		self._ddstream = self._mstream.QueryIDirectDrawMediaStream()
+		try:
+			self._sample = self._ddstream.CreateSample()
+		except dshow.error, arg:
+			print arg
+			return 0
+		self._dds = ddraw.CreateSurfaceObject()
+		self._rect = self._sample.GetSurface(self._dds)
+		return 1
+
+	def __del__(self):
+		del self._mstream
+		del self._ddstream
+		del self._sample
+		del self._mmstream
+			
+	def run(self):
+		if self._parsed:
+			self._mmstream.SetState(1)
+
+	def stop(self):
+		if self._parsed:
+			self._mmstream.SetState(0)
+		
+	def update(self):
+		if not self._parsed: return 0
+		return self._sample.Update()
+
+	def seek(self, secs):
+		if not self._parsed: return
+		if secs==0.0:
+			v = dshow.large_int(0)
+		else:
+			msecs = dshow.large_int(int(secs*1000+0.5))
+			f = dshow.large_int('10000')
+			v = msecs * f
+		try:
+			self._mmstream.Seek(v)
+		except:
+			print 'seek not supported for media type'
+
+	def getDuration(self):
+		if not self._parsed: return
+		d = self._mmstream.GetDuration()
+		f = dshow.large_int('10000')
+		v = d / f
+		secs = 0.001*float(v)
+		return secs
+
+	def getTime(self):
+		if not self._parsed: return
+		d = self._mmstream.GetTime()
+		f = dshow.large_int('10000')
+		v = d / f
+		secs = 0.001*float(v)
+		return secs
+
 
 

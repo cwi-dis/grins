@@ -94,8 +94,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 	#	the parent window (subwindows only)
 	# _rect: the position and size of the window in pixels
 	# _region: _rect as an X Region
-	# _clip: an X Region representing the visible area of the
-	#	window
 	# _cursor: the desired cursor shape (only has effect for
 	#	top-level windows)
 	# _callbacks: a dictionary with callback functions and
@@ -106,9 +104,8 @@ class _Window(_AdornmentSupport, _RubberBand):
 	#	window
 	# _exp_reg: a region in which the exposed area is built up
 	#	(top-level window only)
-	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0,
-		     units = UNIT_MM, adornments = None,
-		     canvassize = None, commandlist = None, resizable = 1):
+	def __init__(self, parent, x, y, w, h, title, defcmap, pixmap, units,
+		     adornments, canvassize, commandlist, resizable, bgcolor):
 		_AdornmentSupport.__init__(self)
 		menubar = toolbar = shortcuts = None
 		flags = 0xffff
@@ -126,6 +123,9 @@ class _Window(_AdornmentSupport, _RubberBand):
 		self._title = title
 		parent._subwindows.insert(0, self)
 		self._do_init(parent)
+		if bgcolor is not None:
+			self._bgcolor = bgcolor
+		# else already inherited from parent (i.e. toplevel)
 		self._topwindow = self
 		self._exp_reg = Xlib.CreateRegion()
 
@@ -323,7 +323,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 			# no canvas (DrawingArea) needed
 			self._form = None
 			shell.Popup(0)
-			self._rect = self._region = self._clip = \
+			self._rect = self._region = \
 				     self._pixmap = self._gc = None
 			return
 		form = form.CreateManagedWidget('toplevel',
@@ -348,8 +348,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 		self._gc = gc
 		w = float(w) / toplevel._hmm2pxl
 		h = float(h) / toplevel._vmm2pxl
-		self._clip = Xlib.CreateRegion()
-		apply(self._clip.UnionRectWithRegion, self._rect)
 		form.AddCallback('exposeCallback', self._expose_callback, None)
 		form.AddCallback('resizeCallback', self._resize_callback, None)
 		form.AddCallback('inputCallback', self._input_callback, None)
@@ -419,7 +417,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 			self._shell.DestroyWidget()
 		del self._shell
 		del self._form
-		del self._clip
 		del self._topwindow
 		del self._gc
 		del self._pixmap
@@ -457,6 +454,10 @@ class _Window(_AdornmentSupport, _RubberBand):
 				self._gc.SetRegion(r)
 				self._pixmap.CopyArea(self._form, self._gc,
 						      x, y, w, h, x, y)
+
+	# draw XOR line from pt0 to pt1 (in pixels)
+	def drawxorline(self, pt0, pt1):
+		pass
 
 	def getgeometry(self, units = UNIT_MM):
 		x, y = self._shell.TranslateCoords(0, 0)
@@ -568,7 +569,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 	def scrollvisible(self, coordinates, units = UNIT_SCREEN):
 		if self._scrwin is None:
 			raise error, 'no scrollable window'
-		box = self._convert_coordinates(coordinates, units)
+		box = self._convert_coordinates(coordinates, units=units)
 		x, y = box[:2]
 		if len(box) == 2:
 			w = h = 0
@@ -634,31 +635,43 @@ class _Window(_AdornmentSupport, _RubberBand):
 				# do it for vertical scrollbar
 				vs.ScrollBarSetValues(value, slider_size, increment, page_increment, 1)
 
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		return _SubWindow(self, coordinates, 0, pixmap, transparent, z, units)
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor = None):
+		return _SubWindow(self, coordinates, 0, pixmap, transparent, z, units, bgcolor)
 
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		return _SubWindow(self, coordinates, 1, pixmap, transparent, z, units)
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor = None):
+		return _SubWindow(self, coordinates, 1, pixmap, transparent, z, units, bgcolor)
 
 	def fgcolor(self, color):
 		r, g, b = color
 		self._fgcolor = r, g, b
 
 	def bgcolor(self, color):
-		r, g, b = color
-		self._bgcolor = r, g, b
+		if self._topwindow is self and color is None:
+			color = self._topwindow._bgcolor
+		if color == self._bgcolor:
+			return
+		bgcolor = self._bgcolor
+		self._bgcolor = color
 		# set window background if nothing displayed on it
 		if self._topwindow is self and not self._active_displist and \
 		   not self._subwindows:
 			self._form.background = self._convert_color(color)
 		if not self._active_displist and self._transparent == 0:
-			self._gc.SetRegion(self._clip)
+			self._gc.SetRegion(self._getmyarea())
 			self._gc.foreground = self._convert_color(color)
 			x, y, w, h = self._rect
 			self._gc.FillRectangle(x, y, w, h)
 			if self._pixmap is not None:
 				self._pixmap.CopyArea(self._form, self._gc,
 						      x, y, w, h, x, y)
+			# we may have overwritten our transparent children
+			r = Xlib.CreateRegion()
+			for w in self._subwindows:
+				if w._transparent == 1 or \
+				   (w._transparent == -1 and not w._active_displist):
+					apply(r.UnionRectWithRegion, w._rect)
+			if not r.EmptyRegion():
+				self._do_expose(r)
 
 	def setcursor(self, cursor):
 		if cursor == _WAITING_CURSOR:
@@ -675,10 +688,8 @@ class _Window(_AdornmentSupport, _RubberBand):
 		_setcursor(self._shell, cursor)
 		self._curcursor = cursor
 
-	def newdisplaylist(self, bgcolor = None):
-		if bgcolor is None:
-			bgcolor = self._bgcolor
-		return _DisplayList(self, bgcolor)
+	def newdisplaylist(self, bgcolor = None, units=UNIT_SCREEN):
+		return _DisplayList(self, bgcolor, units)
 
 	def settitle(self, title):
 		self._shell.SetValues({'title': title, 'iconName': title})
@@ -895,41 +906,43 @@ class _Window(_AdornmentSupport, _RubberBand):
 		h = float(ph) / rh
 		return x, y, w, h
 
-	def _mkclip(self):
-		if self._parent is None:
-			return
-		# create region for whole window
-		self._clip = region = Xlib.CreateRegion()
+	def _getmyarea(self):
+		# return Region that we must overwrite on expose
+		region = Xlib.CreateRegion()
 		apply(region.UnionRectWithRegion, self._rect)
-		self._buttonregion = bregion = Xlib.CreateRegion()
-		# subtract all subwindows
+		# subtract area children will overwrite
 		for w in self._subwindows:
-			if w._transparent == 0 or \
-			   (w._transparent == -1 and w._active_displist):
-				r = Xlib.CreateRegion()
-				apply(r.UnionRectWithRegion, w._rect)
-				region.SubtractRegion(r)
-			w._mkclip()
-			bregion.UnionRegion(w._buttonregion)
-		# create region for all visible buttons
-		if self._active_displist is not None:
-			r = Xlib.CreateRegion()
-			r.UnionRegion(self._clip)
-			r.IntersectRegion(self._active_displist._buttonregion)
-			bregion.UnionRegion(r)
-		if self._topwindow is self:
-			self._setmotionhandler()
+			region.SubtractRegion(w._getcoverarea())
+		# subtract area siblings will overwrite
+		while self is not self._topwindow:
+			i = self._parent._subwindows.index(self)
+			for w in self._parent._subwindows[:i]:
+				region.SubtractRegion(w._getcoverarea())
+			self = self._parent
+		return region
 
-	def _delclip(self, child, region):
-		# delete child's overlapping siblings
+	def _getcoverarea(self):
+		# return Region that we guarantee to overwrite on expose
+		r = Xlib.CreateRegion()
+		if self._transparent == 0 or \
+		   (self._transparent == -1 and self._active_displist):
+			apply(r.UnionRectWithRegion, self._rect)
+			return r
 		for w in self._subwindows:
-			if w is child:
-				break
+			r.UnionRegion(w._getcoverarea())
+		if self._active_displist:
+			r.UnionRegion(self._active_displist._getcoverarea())
+		return r
+
+	def _opaque_children(self):
+		r = Xlib.CreateRegion()
+		for w in self._subwindows:
 			if w._transparent == 0 or \
 			   (w._transparent == -1 and w._active_displist):
-				r = Xlib.CreateRegion()
 				apply(r.UnionRectWithRegion, w._rect)
-				region.SubtractRegion(r)
+			else:
+				r.UnionRegion(w._opaque_children())
+		return r
 
 	def _image_size(self, file):
 		try:
@@ -944,12 +957,11 @@ class _Window(_AdornmentSupport, _RubberBand):
 			toplevel._image_size_cache[file] = xsize, ysize
 		return xsize, ysize
 
-	def _prepare_image(self, file, crop, scale, center, coordinates, clip):
+	def _prepare_image(self, file, crop, fit, center, coordinates, units = UNIT_SCREEN):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
 		# depth: depth of window (and image) in bytes
-		oscale = scale
 		tw = self._topwindow
 		format = toplevel._imgformat
 		depth = format.descr['align'] / 8
@@ -979,20 +991,22 @@ class _Window(_AdornmentSupport, _RubberBand):
 		if coordinates is None:
 			x, y, width, height = self._rect
 		else:
-			x, y, width, height = self._convert_coordinates(coordinates)
-		if clip is not None:
-			clip = self._convert_coordinates(clip)
-		if scale == 0:
+			x, y, width, height = self._convert_coordinates(coordinates, units = units)
+		if fit == 'meet':
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
-		elif scale == -1:
+		elif fit == 'slice':
 			scale = max(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
-		elif scale == -2:
+		elif fit == 'icon':
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
 			if scale > 1:
 				scale = 1
+		else:
+			# value not reconized. Set scale to 1
+			scale = 1
+				
 		top = int(top * scale + .5)
 		bottom = int(bottom * scale + .5)
 		left = int(left * scale + .5)
@@ -1012,7 +1026,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 			if not reader:
 				# we got the size from the cache, don't believe it
 				del toplevel._image_size_cache[file]
-				return self._prepare_image(file, crop, oscale, center, coordinates, clip)
+				return self._prepare_image(file, crop, fit, center, coordinates, units = units)
 			if hasattr(reader, 'transparent'):
 				if type(file) is type(''):
 					r = img.reader(imgformat.xrgb8, file)
@@ -1103,7 +1117,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 		xim = tw._visual.CreateImage(tw._visual.depth, X.ZPixmap, 0, image,
 					     w, h, format.descr['align'], 0)
 		xim.byte_order = toplevel._byteorder
-		return xim, mask, left, top, x, y, w - left - right, h - top - bottom, clip
+		return xim, mask, left, top, x-self._rect[0], y-self._rect[1], w - left - right, h - top - bottom
 
 	def _destroy_callback(self, form, client_data, call_data):
 		self._shell = None
@@ -1236,7 +1250,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 				x, y, w, h = self._rect
 				pm.CopyArea(form, self._gc, x, y, w, h, x, y)
 
-	def _do_expose(self, region, recursive = 0):
+	def _do_expose(self, region, recursive = 0, transparent = 1):
 		if self._parent is None:
 			return
 		# check if there is any overlap of our window with the
@@ -1249,19 +1263,23 @@ class _Window(_AdornmentSupport, _RubberBand):
 			return
 		# first redraw opaque subwindow, top-most first
 		for w in self._subwindows:
-			if w._transparent == 0 or \
-			   (w._transparent == -1 and w._active_displist):
-				w._do_expose(region, 1)
+			w._do_expose(region, 1, 0)
+		if not transparent and \
+		   (self._transparent == 1 or
+		    (self._transparent == -1 and not self._active_displist)):
+			return
 		# then draw background window
-		r = Xlib.CreateRegion()
-		r.UnionRegion(self._clip)
+		r = self._getmyarea()
 		r.IntersectRegion(region)
 		if not r.EmptyRegion():
-			if self._transparent and not recursive:
+			if not recursive and \
+			   (self._transparent == 1 or
+			    (self._transparent == -1 and
+			     not self._active_displist)):
 				self._parent._do_expose(r)
 			elif self._active_displist:
 				self._active_displist._render(r)
-			elif self._transparent == 0 or self._topwindow is self:
+			elif self._bgcolor is not None:	# not tranparent
 				gc = self._gc
 				gc.SetRegion(r)
 				gc.foreground = self._convert_color(self._bgcolor)
@@ -1316,7 +1334,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 			d.close()
 		for w in self._subwindows:
 			w._do_resize1()
-		self._mkclip()
 		self._do_expose(self._region)
 		if pixmap is not None:
 			gc.SetRegion(self._region)
@@ -1344,10 +1361,38 @@ class _Window(_AdornmentSupport, _RubberBand):
 		if self._curcursor != cursor:
 			self.setcursor(cursor)
 
+	def updatebgcolor(self, color):
+		self.bgcolor(color)
+		if self._active_displist:
+			self._do_expose(self._getmyarea())
+
+	# transition interface, placeholder
+	
+	def begintransition(self, inout, runit, dict, cb):
+		print 'Transition', dict['trtype']
+		if cb:
+			apply(apply, cb)
+		
+	def endtransition(self):
+		pass
+		
+	def jointransition(self, window, cb):
+		pass
+
+	def changed(self):
+		pass
+		
+	def settransitionvalue(self, value):
+		pass
+	
+	def freeze_content(self, how):
+		# how is 'transition', 'hold' or None. Freeze the bits in the window
+		# (unless how=None, which unfreezes them) and use for updates and as passive
+		# source for next transition.
+		pass
+
 class _SubWindow(_Window):
-	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z, units):
-		if z < 0:
-			raise error, 'invalid z argument'
+	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z, units, bgcolor):
 		self._z = z
 		x, y, w, h = parent._convert_coordinates(coordinates, crop = 1, units = units)
 		self._rect = x, y, w, h
@@ -1358,19 +1403,20 @@ class _SubWindow(_Window):
 
 		self._convert_color = parent._convert_color
 		for i in range(len(parent._subwindows)):
-			if self._z >= parent._subwindows[i]._z:
+			if z >= parent._subwindows[i]._z:
 				parent._subwindows.insert(i, self)
 				break
 		else:
 			parent._subwindows.append(self)
 		self._do_init(parent)
+		if transparent == 1:
+			self._bgcolor = None
+		if bgcolor is not None:
+			self._bgcolor = bgcolor
 		self._motion_handler = parent._motion_handler
-		if parent._transparent:
-			self._transparent = parent._transparent
-		else:
-			if transparent not in (-1, 0, 1):
-				raise error, 'invalid value for transparent arg'
-			self._transparent = transparent
+		if transparent not in (-1, 0, 1):
+			raise error, 'invalid value for transparent arg'
+		self._transparent = transparent
 		self._topwindow = parent._topwindow
 
 		self._form = parent._form
@@ -1381,7 +1427,6 @@ class _SubWindow(_Window):
 
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
-		parent._mkclip()
 		if self._transparent == 0:
 			self._do_expose(self._region)
 			if self._pixmap is not None:
@@ -1403,7 +1448,6 @@ class _SubWindow(_Window):
 			win.close()
 		for dl in self._displists[:]:
 			dl.close()
-		parent._mkclip()
 		parent._do_expose(self._region)
 		if self._pixmap is not None:
 			x, y, w, h = self._rect
@@ -1412,7 +1456,6 @@ class _SubWindow(_Window):
 					      x, y, w, h, x, y)
 		del self._pixmap
 		del self._form
-		del self._clip
 		del self._topwindow
 		del self._region
 		del self._gc
@@ -1450,8 +1493,6 @@ class _SubWindow(_Window):
 					break
 			else:
 				parent._subwindows.append(self)
-			# recalculate clipping regions
-			parent._mkclip()
 			# draw the window's contents
 			if self._transparent == 0 or self._active_displist:
 				self._do_expose(self._region)
@@ -1476,8 +1517,6 @@ class _SubWindow(_Window):
 				break
 		else:
 			parent._subwindows.insert(0, self)
-		# recalculate clipping regions
-		parent._mkclip()
 		# draw exposed windows
 		for w in self._parent._subwindows:
 			if w is not self:
@@ -1488,18 +1527,6 @@ class _SubWindow(_Window):
 			self._pixmap.CopyArea(self._form, self._gc,
 					      x, y, w, h, x, y)
 
-	def _mkclip(self):
-		if self._parent is None:
-			return
-		_Window._mkclip(self)
-		region = self._clip
-		# subtract overlapping siblings
-		self._parent._delclip(self, self._clip)
-
-	def _delclip(self, child, region):
-		_Window._delclip(self, child, region)
-		self._parent._delclip(self, region)
-
 	def _do_resize1(self):
 		# calculate new size of subwindow after resize
 		# close all display lists
@@ -1507,6 +1534,9 @@ class _SubWindow(_Window):
 		self._pixmap = parent._pixmap
 		self._gc = parent._gc
 		x, y, w, h = parent._convert_coordinates(self._sizes, crop = 1)
+		if (x, y, w, h) == self._rect:
+			# no change
+			return
 		self._rect = x, y, w, h
 		w, h = self._sizes[2:]
 		if w == 0:
@@ -1520,3 +1550,80 @@ class _SubWindow(_Window):
 			d.close()
 		for w in self._subwindows:
 			w._do_resize1()
+
+	# Experimental animation interface
+	def updatecoordinates(self, coordinates, units=UNIT_SCREEN, fit=None, mediacoords=None):
+		parent = self._parent
+
+		# first convert any coordinates to pixel
+		coordinates = parent._convert_coordinates(coordinates,units=units)
+		x, y = coordinates[:2]
+
+		# move or/and resize window
+		if len(coordinates)==2:
+			w, h = self._rect[2:]
+		elif len(coordinates)==4:
+			w, h = coordinates[2:]
+		else:
+			raise error, 'invalid value for coordinates arg'
+
+		px, py, pw, ph = parent._rect
+		if x + w > px + pw:
+			w = px + pw - x
+		if y + h > py + ph:
+			h = py + ph - y
+
+		if (x, y, w, h) == self._rect:
+			# nothing to do
+			return
+
+		r = Xlib.CreateRegion()
+		r.UnionRegion(self._region)
+
+		if (w,h) != self._rect[2:]:
+			# resize
+			resize = 1
+			self._rect = x, y, w, h
+			self._sizes = self._parent._pxl2rel(self._rect)
+			self._region = Xlib.CreateRegion()
+			apply(self._region.UnionRectWithRegion, self._rect)
+			for d in self._displists[:]:
+				d.close()
+			for win in self._subwindows:
+				win._do_resize1()
+		else:
+			resize = 0
+			self._updcoords((x,y,w,h))
+
+		r.UnionRegion(self._region)
+		parent._do_expose(r)
+		if resize:
+			# call callback functions
+			self._do_resize2()
+
+	def _updcoords(self, coordinates):
+		x, y, w, h = coordinates
+		# do move
+		ox, oy, ow, oh = self._rect
+		self._rect = x, y, w, h
+		self._sizes = self._parent._pxl2rel(self._rect)
+		self._region = Xlib.CreateRegion()
+		apply(self._region.UnionRectWithRegion, self._rect)
+		for win in self._subwindows:
+			sx, sy = win._rect[:2]
+			win._updcoords((sx + x - ox, sy + y - oy, w, h))
+
+	def updatezindex(self, z):
+		self._z = z
+		# do reorder subwindows
+		print 'window.updatezindex',z
+
+		parent = self._parent
+		parent._subwindows.remove(self)
+		for i in range(len(parent._subwindows)):
+			if z >= parent._subwindows[i]._z:
+				parent._subwindows.insert(i, self)
+				break
+		else:
+			parent._subwindows.append(self)
+		parent._do_expose(self._region)

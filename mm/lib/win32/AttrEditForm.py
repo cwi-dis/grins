@@ -16,7 +16,7 @@ import win32mu,components,sysmetrics
 import win32dialog
 
 # std mfc windows stuf
-from pywin.mfc import window,object,docview,dialog
+from pywinlib.mfc import window,object,docview,dialog
 import afxres,commctrl
 
 # GRiNS resource ids
@@ -38,6 +38,8 @@ if settings.user_settings.get('use_input_validators'):
 else:
 	ENABLE_VALIDATORS = 0
 
+# Other parts of GRiNS.
+import EventEditor
 
 error = components.error
 
@@ -70,11 +72,15 @@ class AttrCtrl:
 		if not self._initctrl: return
 		if not hasattr(self._wnd,'_attrinfo'): return
 		infoc=self._wnd._attrinfo
-		hd=self._attr.gethelpdata()
-		if hd[1] and self.want_default_help:
-			infoc.settext("%s (leave empty for %s)"%(hd[2], hd[1]))
+		try:
+			hd = self._attr.gethelpdata()
+		except:
+			print 'gethelpdata on', self._attr, 'failed'
 		else:
-			infoc.settext(hd[2])
+			if hd[1] and self.want_default_help:
+				infoc.settext("%s (leave empty for %s)"%(hd[2], hd[1]))
+			else:
+				infoc.settext(hd[2])
 	
 	def getcurrent(self):
 		return self._attr.getcurrent()
@@ -877,7 +883,98 @@ class ColorCtrl(AttrCtrl):
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Pick color from color dialog',None,0)
 
+class CssColorCtrl(ColorCtrl):
+	def __init__(self,wnd,attr,resid):
+		ColorCtrl.__init__(self, wnd, attr, resid)
+		self._radioColor = components.RadioButton(wnd,resid[3])
+		self._radioTransparent = components.RadioButton(wnd,resid[4])
+		self._radioInherit = components.RadioButton(wnd,resid[5])
+		self.currentValue = self._attr.getcurrent()
 
+	def OnInitCtrl(self):
+		self._initctrl=self
+		self._attrname.attach_to_parent()
+		self._attrval.attach_to_parent()
+		self._radioTransparent.attach_to_parent()
+		self._radioInherit.attach_to_parent()
+		self._radioColor.attach_to_parent()
+
+		if self.want_label:
+			label = self._attr.getlabel()
+			if self.want_colon_after_label:
+				label = label + ':'
+			self._attrname.settext(label)
+
+		self.calcIndicatorRC()
+
+		self.setvalue(self.currentValue)		
+
+		self._wnd.HookCommand(self.OnEdit,self._resid[1])
+		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
+		if self._validator:
+			self._attrval.hookmessage(self.OnKeyDown,win32con.WM_KEYDOWN)
+			
+		self._wnd.HookCommand(self.onColorCheck,self._resid[3])
+		self._wnd.HookCommand(self.onTransparentCheck,self._resid[4])
+		self._wnd.HookCommand(self.onInheritCheck,self._resid[5])
+
+	def setvalue(self, val):
+		self.currentValue = val
+		if self._initctrl:
+			if val == 'transparent':			
+				self.enable(0)
+				self._radioTransparent.setcheck(1)
+				self._attrval.settext('')
+			elif val == 'inherit':
+				self.enable(0)
+				self._radioInherit.setcheck(1)
+				self._attrval.settext('')
+			else:
+				self.enable(1)
+				self._radioColor.setcheck(1)
+				self._attrval.settext(val)
+				self.invalidateInd()
+
+	def getvalue(self):
+		return self.currentValue
+
+	def OnEdit(self,id,code):
+		if code==win32con.EN_SETFOCUS:
+			self.sethelp()
+		elif code==win32con.EN_CHANGE:
+			self.invalidateInd()
+			self.currentValue = self._attrval.gettext()
+			self.enableApply()
+			
+	def OnBrowse(self,id,code):
+		if not self._initctrl: return
+		r,g,b=self.getdispcolor()
+		rv = self.ColorSelect(r, g, b)
+		if rv != None:
+			self._radioTransparent.setcheck(0)
+			self._radioInherit.setcheck(0)
+			self._radioColor.setcheck(1)
+			self.enable(1)
+			colorstring = "%d %d %d"%rv
+			self._attrval.settext(colorstring)
+			self.currentValue = colorstring
+			self.invalidateInd()
+		
+	def onColorCheck(self, id, code):
+		self.enable(1)
+		self.currentValue = self._attrval.gettext()
+		self.enableApply()
+		
+	def onTransparentCheck(self, id, code):
+		self.enable(0)
+		self.currentValue = 'transparent'
+		self.enableApply()
+
+	def onInheritCheck(self, id, code):
+		self.enable(0)
+		self.currentValue = 'inherit'
+		self.enableApply()
+		
 ##################################
 class StringCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -1009,6 +1106,304 @@ class FloatTupleCtrl(TupleCtrl):
 					s = st[i]
 				self._attrval[i].settext(s)
 
+import SMILTreeWrite
+class EventCtrl(AttrCtrl):
+	# This is a list control, but it's specific to events. If you
+	# want a generic list control, you'll need to rename this.
+	# _attr, _attrval, _initctrl, _listeners, _resid, _validator, _wnd
+	# I think _attrval is the value of the attribute (currently '[]')
+	
+	# Made by mjvdg; cut and paste from the tuple class above.
+	def __init__(self, wnd, attr, resid):
+		#'wnd': <AttrEditForm.SingleAttrPage instance at 1cabbe8>,
+		#'attr': <TimelistAttrEditorField instance, name=beginlist>, 
+		#'resid': a list of win32 resources; not used.
+		AttrCtrl.__init__(self, wnd, attr, resid)
+		#self._attrname=components.Control(wnd,grinsRC.IDC_EVENTLASSOO)
+		#self._nedit=len(resid)-1 - how can an int have a length?
+		self._attrval=[]
+
+		# State variables:
+		self._eventstruct = None	# This is the currently edited struct.
+		self.selected_radiobutton = 'delay'
+		self.dont_update = 0
+		
+		self._list = components.ListBox(wnd, grinsRC.IDC_EVENTLIST)
+		self._addbutton = components.Button(wnd, grinsRC.IDC_NEWBUTTON)
+		self._deletebutton = components.Button(wnd, grinsRC.IDC_DELETEBUTTON)
+
+		self._eventwidget = components.ComboBox(self._wnd, grinsRC.IDC_EVENTTYPE)
+		self._textwidget = components.Edit(self._wnd, grinsRC.IDC_THINGVALUE)
+		self._thingnamewidget = components.Edit(self._wnd, grinsRC.IDC_THINGNAME) # static text box.
+		self._resultwidget = components.Edit(self._wnd, grinsRC.IDC_EVENTLASSOO)
+		self._offsetwidget = components.Edit(self._wnd, grinsRC.IDC_EDITOFFSET)
+		self._repeatwidget = components.Edit(self._wnd, grinsRC.IDC_EDITREPEAT)
+
+		g = grinsRC
+		self._radiobuttons = {
+			g.IDC_RDELAY: 'delay',
+			g.IDC_RNODE: 'node',
+			g.IDC_RLAYOUT: 'region',
+			g.IDC_RINDEFINITE: 'indefinite',
+			g.IDC_RACCESSKEY: 'accesskey',
+			g.IDC_RWALLCLOCK: 'wallclock',
+			g.IDC_RMARKER: 'marker',
+			}
+		self._radiobuttonwidgets = {}
+		
+		self._node = self._wnd._form._node	# MMNode. Needed for creating new nodes.
+					# now that also feels like a hack. Oh well.
+
+	def OnInitCtrl(self):
+		self._initctrl=self
+
+		#self._attrname.attach_to_parent()
+		self._list.attach_to_parent()
+		self._addbutton.attach_to_parent()
+		self._deletebutton.attach_to_parent()
+		self._eventwidget.attach_to_parent()
+		self._textwidget.attach_to_parent()
+		self._thingnamewidget.attach_to_parent()
+		self._resultwidget.attach_to_parent()
+		self._offsetwidget.attach_to_parent()
+		self._repeatwidget.attach_to_parent()
+		self.__init_radiobuttons()
+
+		# Top half of window.
+		self._list.hookcommand(self._wnd, self._listcallback)
+		self._wnd.HookCommand(self.OnNew, grinsRC.IDC_NEWBUTTON)
+		self._wnd.HookCommand(self.OnDelete, grinsRC.IDC_DELETEBUTTON)
+
+		# Bottom half of window
+		#self._causewidget.hookcommand(self, self._causewidgetcallback)
+		self._eventwidget.hookcommand(self._wnd, self._eventwidgetcallback)
+		self._textwidget.hookcommand(self._wnd, self._textwidgetcallback)
+		self._offsetwidget.hookcommand(self._wnd, self._offsetwidgetcallback)
+		self._repeatwidget.hookcommand(self._wnd, self._repeatwidgetcallback)
+
+		bob = self._attr.getcurrent()
+		self.setvalue(bob)
+		self.update()
+
+	def __init_radiobuttons(self):
+		for k,v in self._radiobuttons.items():
+			new = components.RadioButton(self._wnd, k)
+			self._radiobuttonwidgets[v] = new
+			new.attach_to_parent()
+			new.hookcommand(self._wnd, self._radiobuttoncallback)
+
+	def update(self):
+		# Updates all the widgets.
+		if self.dont_update:
+			return		# If I don't do this, the widgets refresh themselves ad inifinitium.
+		self.dont_update = 1
+		self.resetlist()
+		self.initevent()
+		self.dont_update = 0
+
+	def initevent(self):
+		self.set_radiobuttons()
+		self.set_eventwidget()
+		self.set_textwidget()
+		self.set_offsetwidget()
+		self.set_resultwidget()
+		self.set_repeatwidget()
+
+	def sethelp(self):
+		print "TODO: sethelp."
+
+	def OnNew(self, id, code):
+		# Callback from the "add" button, which I renamed to "new"
+		# self._node should be an MMNode
+		if self._node is None:
+			print "ERROR: I cannot create this! I have no node."
+			return
+		n = EventEditor.EventStruct(None, node = self._node, action = self._attr.getname())
+		self._value.append(n)
+		self._eventstruct = n
+		self.update()
+
+	def OnDelete(self, id, code):
+		# callback for the "delete" button
+		a = self._list.getselected()
+		if a >= 0 and a < len(self._value):
+			#self._list.deletestring(a)
+			del self._value[a]
+			self._eventstruct = None
+			self.resetlist()
+			# delete only from the list; this will later be converted to a lack of syncarc.
+		else:
+			print "DEBUG: weirdly selected list member: ", a
+
+	def enable(self, enable):
+		pass
+
+	def resetlist(self):
+		sel = self._list.getcursel()
+		self._list.resetcontent()
+		for i in range(0, len(self._value)):
+			self._list.insertstring(i, self._value[i].as_string())
+		if sel >= 0 and sel < len(self._value):
+			self._list.setcursel(sel)
+
+	def setvalue(self, val):
+		if isinstance(val, type(())):
+			self._node, self._value = val	# store for later use.
+		elif isinstance(val, type([])):
+			self._value = val
+		else:
+			print "ERROR: ListCtrl.setvalue received an invalid value."
+
+	def getvalue(self):
+		return self._value
+		#return (self._node, self._value)
+
+	def settooltips(self,tooltipctrl):
+		pass
+		#help = self.gethelp()
+		#for i in [0,1,2,3]:
+		#	tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[i]), help, None, 0)
+		#for i in range(self._nedit):
+		#	tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[i+1]),self.gethelp(),None,0)
+
+	def clear_radiobuttons(self):
+		# Yes, this is a hack. The radio buttons wouldn't behave so I'm using brute force.
+		for i in self._radiobuttonwidgets.values():
+			i.setcheck(0)
+
+	def set_radiobuttons(self):
+		if not self._eventstruct:
+			return
+		cause = self._eventstruct.get_cause()
+		self.clear_radiobuttons() # fix a stupid bug by brute force.
+		#self._radiobuttonwidgets[self.selected_radiobutton].setcheck(0)
+		self._radiobuttonwidgets[cause].setcheck(1)
+	def set_eventwidget(self):
+		# Sets the value of the event widget.
+		self._eventwidget.resetcontent()
+		if not self._eventstruct:
+			return
+		l = self._eventstruct.get_possible_events()
+		if l:
+			#self._eventwidget.setreadonly(0) # combo boxes don't have readonly attributes.
+			map(self._eventwidget.addstring, l)
+		#else:
+			#self._eventwidget.setreadonly(1)
+		i = self._eventstruct.get_event_index()
+		if i:
+			self._eventwidget.setcursel(i)
+		# else this doesn't really apply here. Maybe I should disable the event box.
+			
+	def set_textwidget(self):
+		if not self._eventstruct:
+			self._textwidget.settext("")
+			self._textwidget.setreadonly(1)
+			return
+		name, string, isnumber, isreadonly = self._eventstruct.get_thing_string()
+		if isreadonly or string is None:
+			self._textwidget.setreadonly(1)
+		else:
+			self._textwidget.setreadonly(0)
+		if string:
+			self._textwidget.settext(string)
+		else:
+			self._textwidget.settext("")
+		self._thingnamewidget.settext(name)
+	def set_resultwidget(self):
+		if not self._eventstruct:
+			self._resultwidget.settext("")
+		else:
+			self._resultwidget.settext(self._eventstruct.as_string())
+	def set_offsetwidget(self):
+		if not self._eventstruct:
+			self._offsetwidget.settext("")
+			self._offsetwidget.setreadonly(1)
+			return
+		r = self._eventstruct.get_offset()
+		#if r:
+		self._offsetwidget.setreadonly(0)
+		self._offsetwidget.settext(SMILTreeWrite.fmtfloat(r))
+		#else:
+		#	self._offsetwidget.settext("")
+		#	self._offsetwidget.setreadonly(1)
+	def set_repeatwidget(self):
+		# Only for event widgets or markers.
+		if not self._eventstruct:
+			self._repeatwidget.settext("")
+			self._repeatwidget.setreadonly(1)
+		else:
+			i = self._eventstruct.get_repeat()
+			if i:
+				self._repeatwidget.settext(`i`)
+				self._repeatwidget.setreadonly(0)
+			
+			
+
+	def _listcallback(self, id, code):
+		if code != win32con.CBN_SELCHANGE:
+			return
+		i = self._list.getselected()
+		if i >= 0 and i < len(self._value):
+			self._eventstruct = self._value[i]
+			self.dont_update = 1
+			self.initevent()
+			self.dont_update = 0
+		else:
+			print "error: wierdly selected list member: ", i
+
+##	def _causewidgetcallback(self, id, code):
+##		if not self._eventstruct:
+##			return		
+##		if code == win32con.CBN_SELCHANGE:
+##			s = self._causewidget.getvalue()
+##			self._eventstruct.set_cause(s)
+##			self.set_eventwidget()
+	def _eventwidgetcallback(self, id, code):
+		if not self._eventstruct:
+			return
+		if code == win32con.CBN_SELCHANGE:
+			s = self._eventwidget.getvalue()
+			self._eventstruct.set_event(s)
+			self.update()
+	def _textwidgetcallback(self, id, code):
+		if not self._eventstruct:
+			return
+		if code != win32con.EN_KILLFOCUS:
+			return
+		t = self._textwidget.gettext()
+		error = self._eventstruct.set_thing_string(t)
+		if error:
+			print "ERROR:", error
+		self.update()
+	def _offsetwidgetcallback(self, id, code):
+		if code != win32con.EN_KILLFOCUS:
+			return
+		if not self._eventstruct:
+			return
+		try:
+			self._eventstruct.set_offset(float(self._offsetwidget.gettext()))
+		except ValueError:
+			win32dialog.showmessage("Must be a number!", parent=self._wnd._form)
+			return
+		self.update()
+	def _radiobuttoncallback(self, id, code):
+		if code == win32con.BN_CLICKED and self._eventstruct:
+			newcause = self._radiobuttons[id]
+			self._eventstruct.set_cause(newcause)
+			self.update()
+			self.selected_radiobutton = newcause
+	def _repeatwidgetcallback(self, id, code):
+		if code == win32con.EN_KILLFOCUS and self._eventstruct:
+			if self._eventstruct.get_repeat():
+				try:
+					self._eventstruct.set_repeat(int(self._repeatwidget.gettext()))
+				except ValueError:
+					win32dialog.showmessage("Repeat must be a number!", parent=self._wnd._form)
+					return
+			else:
+				print "TODO: media marker."
+			self.update()
+				
 ##################################
 # StringOptionsCtrl can be used as a StringCtrl but the user 
 # can optionally select the string from a drop down list
@@ -1072,7 +1467,7 @@ class HtmlTemplateCtrl(StringOptionsCtrl):
 		import features
 		# for instance, only embedded_player is supported in QuickTime version
 		if compatibility.QT == features.compatibility:
-			options=['external_player_qt.html', 'embedded_player_qt.html']
+			options=['embedded_player.html']
 		else:
 			options=['external_player.html','embedded_player.html']
 		StringOptionsCtrl.__init__(self,wnd,attr,resid,options)
@@ -1082,17 +1477,22 @@ class HtmlTemplateCtrl(StringOptionsCtrl):
 class AttrSheet(dialog.PropertySheet):
 	def __init__(self,form):
 		self._form=form
+		self._showAll = None
+		self._followSelection = None
 		import __main__
 		dll=__main__.resdll
 		dialog.PropertySheet.__init__(self,grinsRC.IDR_GRINSED,dll)
 		self.HookMessage(self.onInitDialog,win32con.WM_INITDIALOG)
 		self._apply=components.Button(self,afxres.ID_APPLY_NOW)
+		self.HookMessage(self.onSize,win32con.WM_SIZE)
 
 	def onInitDialog(self,params):
 		self.HookCommand(self.onApply,afxres.ID_APPLY_NOW)
 		self.HookCommand(self.onOK,win32con.IDOK)
 		self.HookCommand(self.onCancel,win32con.IDCANCEL)
 		self._apply.attach_to_parent()
+
+		self.createButtons()
 
 	def onApply(self,id,code): 
 		self._form.call('Apply')
@@ -1107,6 +1507,76 @@ class AttrSheet(dialog.PropertySheet):
 	def enableApply(self,flag):
 		if self._apply:
 			self._apply.enable(flag)
+		# XXXX (Jack) Shouldn't we enable/disable OK as well?
+
+	def createButtons(self):
+		l,t,r,b = self.GetDlgItem(win32con.IDOK).GetWindowRect()
+		h = b-t
+		if self._form._has_showAll:
+			ctrl = components.CheckButton(self,101)
+			ctrl.create(components.CHECKBOX(), (0,0,116,h), 'Show all properties')
+			ctrl.setcheck(self._form._showAll_initial)
+			self.HookCommand(self.onShowAll, 101)
+			self._showAll = ctrl
+
+		if self._form._has_followSelection:
+			ctrl = components.CheckButton(self,102)
+			ctrl.create(components.CHECKBOX(), (0,0,100,h), 'Follow selection')
+			ctrl.setcheck(self._form._followSelection_initial)
+			ctrl.hookmessage(self.onFollowSelection, win32con.WM_LBUTTONDOWN)
+			self._followSelection = ctrl
+		
+		# set button font
+		lf = {'name':'', 'pitch and family':win32con.FF_SWISS,'charset':win32con.ANSI_CHARSET}
+		d = Sdk.EnumFontFamiliesEx(lf)
+		logfont = None
+		if d.has_key('Tahoma'): # win2k
+			logfont = {'name':'Tahoma', 'height': 11, 'weight': win32con.FW_MEDIUM, 'charset':win32con.ANSI_CHARSET}
+		elif d.has_key('Microsoft Sans Serif'): # not win2k
+			logfont = {'name':'Microsoft Sans Serif', 'height': 11, 'weight': win32con.FW_MEDIUM, 'charset':win32con.ANSI_CHARSET}
+		if logfont:
+			if self._showAll:
+				self._showAll.setfont(logfont)
+			if self._followSelection:
+				self._followSelection.setfont(logfont)
+
+	def fixbuttonstate(self, showall, follow, okstate):
+		if self._showAll:
+			self._showAll.setcheck(showall)
+		if self._followSelection:
+			self._followSelection.setcheck(follow)
+		self.enableApply(okstate)
+
+	def onShowAll(self, id, code):
+		self._form.call('Showall')
+#		if self._showAll.getcheck():
+#			self._showAll.setcheck(0)
+#			print 'show most important' 
+#		else:
+#			self._showAll.setcheck(1) 
+#			print 'show all' 
+
+	def onFollowSelection(self, params):
+		self._form.call('Followselection')
+#		if self._followSelection.getcheck():
+#			self._followSelection.setcheck(0) 
+#			print 'do not follow selection' 
+#		else:
+#			self._followSelection.setcheck(1) 
+#			print 'follow selection' 
+		
+	def onSize(self, params):
+		if self._showAll:
+			l, t, r, b = self._showAll.getwindowrect()
+			w, h = r-l, b-t
+			dh = 6
+			msg = win32mu.Win32Msg(params)
+			flags = win32con.SWP_NOSIZE | win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE
+			self._showAll.setwindowpos(0, (6 ,msg.height()-h-dh, w+4, msg.height()-dh), flags)
+			if self._followSelection:
+				self._followSelection.setwindowpos(0, (w+8 ,msg.height()-h-dh, w+w+4, msg.height()-dh), flags)
+
+
 		
 class AttrPage(dialog.PropertyPage):
 	enabletooltips = 1
@@ -1128,9 +1598,17 @@ class AttrPage(dialog.PropertyPage):
 		self.createctrls()
 		import __main__
 		dll=__main__.resdll
+		# Create a new dialog box for this attribute.
 		dialog.PropertyPage.__init__(self,id,dll,grinsRC.IDR_GRINSED)
 		
+	def do_close(self):
+		self._form = None
+		# XXXX More may be needed...
+
 	def OnInitDialog(self):
+		if not self._form:
+			# Closing down the property sheet
+			return 0
 		self._initdialog=self
 		dialog.PropertyPage.OnInitDialog(self)
 		self._attrinfo.attach_to_parent()
@@ -1144,6 +1622,7 @@ class AttrPage(dialog.PropertyPage):
 			self._tooltipctrl.Activate(1)
 			self.SetToolTipCtrl(self._tooltipctrl)
 			self.settooltips()
+		return 1
 		
 	def OnPaint(self):
 		dc, paintStruct = self.BeginPaint()
@@ -1240,6 +1719,18 @@ class StringNolabelCtrl(StringCtrl):
 class ColorNolabelCtrl(ColorCtrl):
 	want_label = 0
 
+class EmptyAttrPage(AttrPage):
+	def __init__(self, form):
+		AttrPage.__init__(self, form)
+		self._title = 'No properties'
+		self._attr = None
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_EMPTY
+
+	def createctrls(self):
+		return {}
+
 ###############################	
 class SingleAttrPage(AttrPage):
 	# These map attribute names to (dialog-resource-id, constructor-function, control-ids)
@@ -1258,10 +1749,6 @@ class SingleAttrPage(AttrPage):
 			 OptionsRadioNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
 		'visible':		# Three radio buttons
-			(grinsRC.IDD_EDITATTR_R3,
-			 OptionsRadioNocolonCtrl,
-			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
-		'drawbox':		# Three radio buttons
 			(grinsRC.IDD_EDITATTR_R3,
 			 OptionsRadioNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
@@ -1328,6 +1815,11 @@ class SingleAttrPage(AttrPage):
 			(grinsRC.IDD_EDITATTR_E1,
 			 StringNocolonCtrl,
 			 (grinsRC.IDC_11,grinsRC.IDC_12)),
+##		'timelist':		# A list of events.
+##			(grinsRC.IDD_EDITATTR_2LIST,
+##			 ListCtrl,
+##			 (grinsRC.IDC_LIST4, grinsRC.IDC_BUTTON7, grinsRC.IDC_BUTTON8, grinsRC.IDC_BUTTON9,)),
+##			  #grinsRC.IDC_LIST3, grinsRC.IDC_BUTTON4, grinsRC.IDC_BUTTON5, grinsRC.IDC_BUTTON6)),
 		}
 
 	def __init__(self,form,attr):
@@ -1335,7 +1827,8 @@ class SingleAttrPage(AttrPage):
 		self._attr=attr
 
 	def OnInitDialog(self):
-		AttrPage.OnInitDialog(self)
+		if not AttrPage.OnInitDialog(self):
+			return
 		ctrl=self._cd[self._attr]
 		ctrl.OnInitCtrl()
 		ctrl.sethelp()
@@ -1442,36 +1935,40 @@ class LayoutScale:
 
 ##################################
 # LayoutPage
-import cmifwnd, _CmifView
+import winlayout
 import appcon, sysmetrics
 import string
-import DrawTk
 
-class LayoutPage(AttrPage,cmifwnd._CmifWnd):
+class LayoutPage(AttrPage):
 	def __init__(self,form):
-		AttrPage.__init__(self,form)
-		cmifwnd._CmifWnd.__init__(self)
-		self._units=self._form.getunits()
-		self._layoutctrl=None
-		self._isintscale=1
+		AttrPage.__init__(self, form)
+		self._units = self._form.getunits()
+		self._layoutctrl = None
+		self._isintscale = 1
 		self._boxoff = 0, 0
 		self._inupdate = 0
 			
 	def OnInitDialog(self):
-		AttrPage.OnInitDialog(self)
-		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
-		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
-		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
-		preview=components.Control(self,grinsRC.IDC_PREVIEW)
+		if not AttrPage.OnInitDialog(self):
+			return
+		self.HookMessage(self.onLButtonDown, win32con.WM_LBUTTONDOWN)
+		self.HookMessage(self.onLButtonUp, win32con.WM_LBUTTONUP)
+		self.HookMessage(self.onMouseMove, win32con.WM_MOUSEMOVE)
+		preview = components.Control(self, grinsRC.IDC_PREVIEW)
 		preview.attach_to_parent()
-		l1,t1,r1,b1=self.GetWindowRect()
-		l2,t2,r2,b2=preview.getwindowrect()
-		self._layoutpos =(l2-l1,t2-t1)
-		self._layoutsize = (r2-l2,b2-t2)
-		self.createLayoutContext(self._form._winsize)
-		self._layoutctrl=self.createLayoutCtrl()
+		l1, t1, r1, b1 = self.GetWindowRect()
+		l2, t2, r2, b2 = preview.getwindowrect()
+		self._layoutpos = l2-l1, t2-t1
+		self._layoutsize = r2-l2, b2-t2
 
-		t=components.Static(self,grinsRC.IDC_SCALE1)
+		import MMAttrdefs
+		pnode = self._form._node.parent
+		w, h = MMAttrdefs.getattr(pnode, 'size')
+		self.findLayoutScale((w, h))
+
+		self._layoutctrl = self.createLayoutCtrl()
+
+		t = components.Static(self,grinsRC.IDC_SCALE1)
 		t.attach_to_parent()
 		if self._isintscale:
 			t.settext('scale 1 : %.0f' % self._xscale)
@@ -1479,17 +1976,19 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			t.settext('scale 1 : %.1f' % self._xscale)
 		self.create_box(self.getcurrentbox())
 
-	# hack messages! 
+	# update layout control that the mouse is outside its region
 	def onLButtonDown(self,params):
-		self._layoutctrl._notifyListener('onLButtonDown',params)
-		self._layoutctrl._notifyListener('onLButtonUp',params)
+		if self._layoutctrl:
+			self._layoutctrl.onNCLButton(params)
 	def onLButtonUp(self,params):
-		self._layoutctrl._notifyListener('onLButtonUp',params)
+		if self._layoutctrl:
+			self._layoutctrl.onNCLButton(params)
 	def onMouseMove(self,params):
-		pass #self._layoutctrl.notifyListener('onLButtonUp',params)
+		if self._layoutctrl:
+			self._layoutctrl.onNCLButton(params)
 
 	def OnSetActive(self):
-		if self._layoutctrl and not self._layoutctrl.in_create_box_mode():
+		if self._layoutctrl:
 			self.create_box(self.getcurrentbox())
 		return self._obj_.OnSetActive()
 
@@ -1497,92 +1996,60 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		return self._obj_.OnKillActive()
 
 	def OnDestroy(self,params):
-		if self._layoutctrl:
-			self._layoutctrl.exit_create_box()
+		pass
 
 	def createLayoutCtrl(self):
-		v=_CmifView._CmifPlayerView(docview.Document(docview.DocTemplate()))
-		v.createWindow(self)
-		x,y,w,h=self.getboundingbox()
-		dw=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)
-		dh=2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)
-		rc=(self._layoutpos[0],self._layoutpos[1],w+dw,h+dh)
-		v.init(rc,'Untitled',units=UNIT_PXL)
-		v.SetWindowPos(self.GetSafeHwnd(),rc,
-			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
-		v.OnInitialUpdate()
-		v.ShowWindow(win32con.SW_SHOW)
-		v.UpdateWindow()	
-		self.init_tk(v)
+		v = winlayout.LayoutOsWndCtrl(self, self._xscale)
+		x, y, w, h = self.getboundingbox()
+		dw = 2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)
+		dh = 2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)
+		rc = self._layoutpos[0], self._layoutpos[1], w+dw, h+dh
+		v.createWindow(self, rc, (255,255,255))
+		self.initLayoutCtrl(v)
 		return v
 	
-	def init_tk(self, v):
-		v.drawTk.SetLayoutMode(0)
-		self._scale=LayoutScale(v,self._xscale,self._yscale,self._boxoff)
-		v.drawTk.SetScale(self._scale)
+	def initLayoutCtrl(self, v):
+		self._scale = LayoutScale(v, self._xscale, self._yscale, self._boxoff)
+		# add regions of interest to layout control
 
-		(x,y,w,h),bunits=self._form.GetBBox()
-		rc=(x,y,x+w,y+h)
-		rc = v._convert_coordinates(rc, units = bunits)
-		rc=self._scale.layoutbox(rc,UNIT_PXL)
-		v.drawTk.SetBRect(rc)
-
-		(x,y,w,h),bunits=self._form.GetCBox()
-		rc=(x,y,x+w,y+h)
-		rc = v._convert_coordinates(rc, units = bunits)
-		rc=self._scale.layoutbox(rc,UNIT_PXL)
-		v.drawTk.SetCRect(rc)
-
-	def createLayoutContext(self,winsize=None,units=appcon.UNIT_PXL):
+	def findLayoutScale(self, winsize = None, units = appcon.UNIT_PXL):
 		if winsize:
-			sw,sh=winsize
+			sw, sh = winsize
 		else:
-			sw,sh=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
+			sw, sh = sysmetrics.scr_width_pxl, sysmetrics.scr_height_pxl
 		
 		# try first an int scale
 		n = max(1, (sw+self._layoutsize[0]-1)/self._layoutsize[0], 
 			(sh+self._layoutsize[1]-1)/self._layoutsize[1])
-		scale=float(n)
-		self._xmax=int(sw/scale+0.5)
-		self._ymax=int(sh/scale+0.5)
-		self._isintscale=1
+		scale = float(n)
+		self._xmax = int(sw/scale+0.5)
+		self._ymax = int(sh/scale+0.5)
+		self._isintscale = 1
 		if n!=1 and (self._xmax<3*self._layoutsize[0]/4 or self._ymax<3*self._layoutsize[1]/4):
 			# try to find a better scale
 			scale = max(1, float(sw)/self._layoutsize[0], float(sh)/self._layoutsize[1])
-			self._xmax=int(sw/scale+0.5)
-			self._ymax=int(sh/scale+0.5)
-			self._isintscale=0
+			self._xmax = int(sw/scale+0.5)
+			self._ymax = int(sh/scale+0.5)
+			self._isintscale = 0
 		
 		# finally the exact scale:
-		self._xscale=float(sw)/self._xmax
-		self._yscale=float(sh)/self._ymax
+		self._xscale = float(sw)/self._xmax
+		self._yscale = float(sh)/self._ymax
 	
 	def getboundingbox(self):
-		return (0,0,self._xmax,self._ymax)
+		return  0, 0, self._xmax, self._ymax
 
 	def create_box(self,box):
-		self._layoutctrl.exit_create_box()
-		if box and (box[2]==0 or box[3]==0):box=None
-		# call create box against layout control but be modeless and cool!
-		modeless=1;cool=1;
-		self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
-		self.check_units()
+		self._layoutctrl.removeObjects()
+		self._layoutctrl.update()
+		if box and (box[2]==0 or box[3]==0):
+			box = None
+		if box is None:
+			self._layoutctrl.selectTool('shape')
+		else:
+			self._layoutctrl.setObject(box)
+			self._layoutctrl.selectTool('select')
 
-	def check_units(self):
-		units=self._form.getunits()
-		if units!=self._units:
-			self._units=units
-			v=self._layoutctrl
-			v.drawTk.SetUnits(self._units)
-			v.InvalidateRect()
-			if v._objects:
-				drawObj=v._objects[0]
-				rb=v.inverse_coordinates(drawObj._position.tuple_ps(), units = self._units)
-				apply(self.update, rb)
-				from __main__ import toplevel
-				toplevel.settimer(0.1,(self._form._prsht.onApply,(0,0)))
-
-			
 	def setvalue(self, attr, val):
 		if not self._initdialog: return
 		self._cd[attr].setvalue(val)
@@ -1593,26 +2060,26 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	######################
 	# subclass overrides
 
-	def getcurrentbox(self,saved=1):
-		lc=self.getctrl('base_winoff')
+	def getcurrentbox(self, saved=1):
+		lc = self.getctrl('base_winoff')
 		if saved:
-			val=lc.getcurrent()
+			val = lc.getcurrent()
 		else:
 			val = lc.getvalue()
-		box=self.val2box(val)
-		lbox=self._scale.layoutbox(box,self._units)
+		box = self.val2box(val)
+		lbox = self._scale.layoutbox(box,self._units)
 		return lbox
 
 	def setvalue2layout(self,val):
-		box=self.val2box(val)
-		lbox=self._scale.layoutbox(box,self._units)
+		box = self.val2box(val)
+		lbox = self._scale.layoutbox(box, self._units)
 		self.create_box(lbox)
 	
 	def val2box(self,val):
 		if not val:
-			box=None
+			box = None
 		else:
-			box=atoft(val)
+			box = atoft(val)
 		return box
 		
 	def islayoutattr(self,attr):
@@ -1623,14 +2090,14 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 
 	# called back by create_box on every change
 	# the user can press reset to cancel changes
-	def update(self,*box):
+	def updateBox(self, *box):
 		if self._initdialog:
 			self._inupdate=1
 			lc=self.getctrl('base_winoff')
 			if not box:
 				lc.setvalue('')
 			else:	
-				box=self._scale.orgbox(box,self._units)
+				box=self._scale.orgbox(box, self._units)
 				if self._units==UNIT_PXL:prec=0
 				elif self._units==UNIT_SCREEN:prec=1
 				else: prec=2
@@ -1646,7 +2113,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 
 class PosSizeLayoutPage(LayoutPage):
 	def __init__(self,form):
-		LayoutPage.__init__(self,form)
+		LayoutPage.__init__(self, form)
 		self._xy=None
 		self._wh=None
 		ch = form._node.parent.GetChannel()
@@ -1688,7 +2155,7 @@ class PosSizeLayoutPage(LayoutPage):
 
 	# called back by create_box on every change
 	# the user can press reset to cancel changes
-	def update(self,*box):
+	def updateBox(self,*box):
 		if self._initdialog:
 			self._inupdate=1
 			lc=self.getctrl('base_winoff')
@@ -1728,6 +2195,8 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		self._wh=None
 
 	def OnInitDialog(self):
+		if not AttrPage.OnInitDialog(self):
+			return
 		tag = None
 		file = None
 		for a in self._form._attriblist:
@@ -1737,7 +2206,6 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 				file = a
 			if tag is not None and file is not None:
 				break
-		AttrPage.OnInitDialog(self)
 		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
@@ -1765,7 +2233,7 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 			else:
 				w, h = self._layoutsize
 		self.__bbox = w,h
-		self.createLayoutContext((w,h))
+		self.findLayoutScale((w,h))
 		self._layoutctrl=self.createLayoutCtrl()
 
 		t=components.Static(self,grinsRC.IDC_SCALE1)
@@ -1779,22 +2247,9 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 			url = a.wrapper.getcontext().findurl(f)
 			self.loadimg(url)
 
-	def init_tk(self, v):
-		v.drawTk.SetLayoutMode(0)
-		self._scale=LayoutScale(v,self._xscale,self._yscale,self._boxoff)
-		v.drawTk.SetScale(self._scale)
-
-		x=y=0
-		w,h = self.__bbox
-		rc=(x,y,x+w,y+h)
-		rc = v._convert_coordinates(rc, units = UNIT_PXL)
-		rc=self._scale.layoutbox(rc,UNIT_PXL)
-		v.drawTk.SetBRect(rc)
-
-		rc=(x,y,x+w,y+h)
-		rc = v._convert_coordinates(rc, units = UNIT_PXL)
-		rc=self._scale.layoutbox(rc,UNIT_PXL)
-		v.drawTk.SetCRect(rc)
+	def initLayoutCtrl(self, v):
+		self._scale = LayoutScale(v, self._xscale, self._yscale, self._boxoff)
+		# add regions of interest to layout control
 
 	def loadimg(self,url):
 		import MMurl
@@ -1803,32 +2258,27 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		except IOError, arg:
 			print 'failed to retrieve',url
 			return
-		from win32ig import win32ig
-		try:
-			img = win32ig.load(f)
-		except error:
-			print 'failed to load',f
-			return
-		self._layoutctrl.drawTk.SetBkImg(img)
+		if self._layoutctrl:
+			self._layoutctrl.setImage(f, fit='fill', mediadisplayrect = None)
 		
 class AnchorlistPage(LayoutPage):
 	def getcurrentbox(self, saved = 1):
 		box = self._group.anchorlistctrl.getbox(saved)
 		if box:
 			box = box[0]+self._boxoff[0], box[1]+self._boxoff[1], box[2], box[3]
-			box = self._scale.layoutbox(box,self._units)
+			box = self._scale.layoutbox(box, self._units)
 		return box
 
 	def setvalue2layout(self, val):
 		box = self._group.anchorlistctrl.getbox(0)
 		x, y = self._boxoff
 		box = box[0]+x, box[1]+y, box[2], box[3]
-		box = self._scale.layoutbox(box,self._units)
+		box = self._scale.layoutbox(box, self._units)
 		self.create_box(box)
 
 	# called back by create_box on every change
 	# the user can press reset to cancel changes
-	def update(self,*box):
+	def updateBox(self,*box):
 		if self._initdialog:
 			grp = self._group
 			self._inupdate=1
@@ -1850,12 +2300,13 @@ class AnchorlistPage(LayoutPage):
 		self.create_box(self.getcurrentbox(0))
 
 	def OnInitDialog(self):
+		if not AttrPage.OnInitDialog(self):
+			return
 		file = None
 		for a in self._form._attriblist:
 			if a.getname() == 'file':
 				file = a
 				break
-		AttrPage.OnInitDialog(self)
 		self.HookMessage(self.onLButtonDown, win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onLButtonUp, win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouseMove, win32con.WM_MOUSEMOVE)
@@ -1877,8 +2328,8 @@ class AnchorlistPage(LayoutPage):
 				w, h = self._layoutsize
 		else:
 			w, h = self._layoutsize
-		self._imagesize = w,h
-		self.createLayoutContext((w, h))
+		self._imagesize = w, h
+		self.findLayoutScale((w, h))
 		self._layoutctrl = self.createLayoutCtrl()
 
 		t = components.Static(self, grinsRC.IDC_SCALE1)
@@ -1892,22 +2343,9 @@ class AnchorlistPage(LayoutPage):
 			url = a.wrapper.getcontext().findurl(f)
 			self.loadimg(url)
 
-	def init_tk(self, v):
-		v.drawTk.SetLayoutMode(0)
-		self._scale=LayoutScale(v, self._xscale, self._yscale, self._boxoff)
-		v.drawTk.SetScale(self._scale)
-
-		x = y = 0
-		w, h = self._imagesize
-		rc = x, y, x + w, y + h
-		rc = v._convert_coordinates(rc, units = UNIT_PXL)
-		rc = self._scale.layoutbox(rc, UNIT_PXL)
-		v.drawTk.SetBRect(rc)
-
-		rc = x, y, x + w, y + h
-		rc = v._convert_coordinates(rc, units = UNIT_PXL)
-		rc=self._scale.layoutbox(rc, UNIT_PXL)
-		v.drawTk.SetCRect(rc)
+	def initLayoutCtrl(self, v):
+		self._scale = LayoutScale(v, self._xscale, self._yscale, self._boxoff)
+		# add regions of interest to layout control
 
 	def loadimg(self,url):
 		import MMurl
@@ -1916,13 +2354,8 @@ class AnchorlistPage(LayoutPage):
 		except IOError, arg:
 ##			print 'failed to retrieve',url
 			return
-		from win32ig import win32ig
-		try:
-			img = win32ig.load(f)
-		except error:
-##			print 'failed to load',f
-			return
-		self._layoutctrl.drawTk.SetBkImg(img)
+		if self._layoutctrl:
+			self._layoutctrl.setImage(f, fit='fill', mediadisplayrect = None)
 		
 ############################
 # Base class for media renderers
@@ -1959,9 +2392,9 @@ class Renderer:
 		self._wnd.InvalidateRect(self.inflaterc(self._rc))
 
 	# borrow cmifwnd's _prepare_image but make some adjustments
-	def adjustSize(self, size, crop = (0,0,0,0), scale = 0, center = 1):
+	def adjustSize(self, size):
 		rc=win32mu.Rect(self._rc)
-		return rc.adjustSize(size,crop,scale,center)
+		return rc.adjustSize(size)
 
 	def inflaterc(self,rc,dl=1,dt=1,dr=1,db=1):
 		l,t,r,b=rc
@@ -2098,8 +2531,14 @@ class HtmlRenderer(Renderer):
 		self._htmlwnd.CreateWindow(self._strclass,'untitled',self._style,
 			self._rc,self._wnd,0)
 		import settings
-		self._htmlwnd.UseHtmlCtrl(not settings.get('html_control'))
-		self._htmlwnd.CreateHtmlCtrl()
+		which =  settings.get('html_control')
+		if not which: which = 0
+		self._htmlwnd.UseHtmlCtrl(which)
+		try:
+			self._htmlwnd.CreateHtmlCtrl()
+		except:
+			msg = "Failed to create Browser control.\nCheck that the browser control you have selected is installed"
+			win32dialog.showmessage(msg, parent=self._wnd._form)
 		self._htmlwnd.SetWindowPos(0,self._rc,
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
 
@@ -2253,11 +2692,6 @@ try:
 except ImportError:
 	rma = None
 
-# check implicitly rma version
-if rma and hasattr(rma,'CreateClientContext'):
-	HAS_PRECONFIGURED_PLAYER = 0
-else:
-	HAS_PRECONFIGURED_PLAYER = 1
 
 class RealRenderer(Renderer):
 	realengine=None
@@ -2272,16 +2706,12 @@ class RealRenderer(Renderer):
 	def do_init(self):
 		if rma and not RealRenderer.realengine:
 			try:
-				 RealRenderer.realengine = rma.CreateEngine()
+				RealRenderer.realengine = rma.CreateEngine()
 			except:
 				RealRenderer.realengine=None
 		if RealRenderer.realengine and not self._rmaplayer:
 			try:
-				if HAS_PRECONFIGURED_PLAYER:
-					self._rmaplayer = RealRenderer.realengine.CreatePlayer()
-				else:
-					from RealChannel import RealPlayer
-					self._rmaplayer = RealPlayer(RealRenderer.realengine)
+				self._rmaplayer = RealRenderer.realengine.CreatePlayer()
 			except:
 				self._rmaplayer=None
 	
@@ -2359,15 +2789,22 @@ class RealWndCtrl(components.WndCtrl):
 		self.HookMessage(self.onFocus,win32con.WM_SETFOCUS)
 		l,t,r,b=self.GetWindowRect()
 		lr,tr,rr,br=self.GetParent().GetWindowRect()
-		self._rcref=win32mu.Rect((l-lr,t-tr,r-lr,b-tr))
-		self._box=None
+		self._rectb = l-lr, t-tr, r-l, b-t
+		self._box = None
 
 	def onSize(self,params):
 		if not self._box:
-			msg=win32mu.Win32Msg(params)		
-			src_x, src_y, dest_x, dest_y, width, height,rcKeep=\
-				self._rcref.adjustSize((msg.width(),msg.height()))
-			self._box=(dest_x, dest_y, width, height)
+			x, y, w, h = self._rectb
+			msg=win32mu.Win32Msg(params)
+			wm, hm = msg.width(),msg.height()
+			if wm>w or hm>h:
+				scalex = w/float(wm)
+				scaley = h/float(hm)
+				if scalex < scaley: scale = scalex
+				else: scale = scaley
+				wm, hm = int(scale*wm+0.5), int(scale*hm+0.5)
+			xm, ym = x + (w-wm)/2, y + (h-hm)/2
+			self._box = xm, ym, wm, hm
 		self.SetWindowPos(self.GetSafeHwnd(),self._box,
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
 
@@ -2386,6 +2823,7 @@ class PreviewPage(AttrPage):
 		self._armed=0
 		self._playing=0
 		self._tid=0
+		self._renderer = None
 		if renderersig=='video':
 			self._renderer=VideoRenderer(self,self._prevrc,self._form._baseURL)
 		elif renderersig=='audio':
@@ -2404,7 +2842,8 @@ class PreviewPage(AttrPage):
 			self._renderer=Renderer(self,self._prevrc,self._form._baseURL)
 
 	def OnInitDialog(self):
-		AttrPage.OnInitDialog(self)
+		if not AttrPage.OnInitDialog(self):
+			return
 		if PreviewPage.dragaccept:
 			self.DragAcceptFiles(1)
 			self.HookMessage(self.onDropFiles,win32con.WM_DROPFILES)
@@ -2429,7 +2868,6 @@ class PreviewPage(AttrPage):
 
 	def OnDestroy(self,params):
 		self.OnStop()
-		del self._renderer
 
 	def OnSetActive(self):
 		if self._initdialog and not self._armed:
@@ -2654,7 +3092,6 @@ class AttrGroup:
 		'system_overdub_or_caption':OptionsRadioCtrl,
 		'layout':OptionsRadioCtrl,
 		'visible':OptionsRadioCtrl,
-		'drawbox':OptionsRadioCtrl,
 		}
 
 	def getctrlclass(self,a):
@@ -2671,6 +3108,24 @@ class AttrGroup:
 	# do whatever not default
 	def oninitdialog(self,wnd):
 		pass
+
+	# resize labels and attr editors
+	def resizelabels(self,wnd, labels, attrctrls, dw):
+		hwnd = wnd.GetSafeHwnd()
+		l,t,r,b = wnd.GetWindowRect()
+		flags = win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER
+		for id in attrctrls:
+			ctrl=components.Control(wnd,id)
+			ctrl.attach_to_parent()
+			l1,t1,r1,b1=ctrl.getwindowrect()
+			rc = l1-l+dw,t1-t, r1-l1-dw,b1-t1
+			ctrl.setwindowpos(hwnd,rc,flags)
+		for id in labels:
+			ctrl=components.Control(wnd,id)
+			ctrl.attach_to_parent()
+			l1,t1,r1,b1=ctrl.getwindowrect()
+			rc = l1-l,t1-t, r1-l1+dw,b1-t1
+			ctrl.setwindowpos(hwnd,rc,flags)
 	
 class StringGroup(AttrGroup):
 	data = None
@@ -2695,6 +3150,12 @@ class StringGroup(AttrGroup):
 		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
 		ctrl.attach_to_parent()
 		ctrl.settext(self._data['title'])
+
+class StringGroupNoTitle(StringGroup):
+	def oninitdialog(self,wnd):
+		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
+		ctrl.attach_to_parent()
+		ctrl.settext('')
 
 class InfoGroup(StringGroup):
 	data=attrgrsdict['infogroup']
@@ -2758,12 +3219,9 @@ class WebserverGroup(StringGroup):
 class MediaserverGroup(StringGroup):
 	data=attrgrsdict['mediaserver']
 
-class MediaserverGroup2(StringGroup):
-	data=attrgrsdict['mediaserver2']
-
 class DurationGroup(StringGroup):
 	data=attrgrsdict['timing1']
-
+	
 class ClipGroup(StringGroup):
 	data=attrgrsdict['clip']
 	def getpageresid(self):
@@ -2776,6 +3234,9 @@ class BandwidthGroup(StringGroup):
 		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
 		ctrl.attach_to_parent()
 		ctrl.settext('')
+
+class DurationSBGroup(StringGroup):
+	data=attrgrsdict['timingsb']
 
 class Duration2Group(AttrGroup):
 	data=attrgrsdict['timing2']
@@ -2899,18 +3360,19 @@ class LayoutGroupWithUnits(LayoutGroup):
 		cd[a]=StringNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
 		return cd
 
-class Imgregion1Group(AttrGroup):
-	data=attrgrsdict['imgregion1']
+class ImgregionGroup(AttrGroup):
+	data=attrgrsdict['imgregion']
 	_attrnames = {'xy':'imgcropxy',
 		      'wh':'imgcropwh',
 		      'full':'fullimage',
 		      }
+	__convert = None		# default
 
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
 
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_LS1O2a
+		return grinsRC.IDD_EDITATTR_LS1O2
 
 	def createctrls(self,wnd):
 		cd={}
@@ -2928,8 +3390,6 @@ class Imgregion1Group(AttrGroup):
 			cd[a]=OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_61,))
 			self.__convert = cd[a]
 			self.__cd = cd
-		else:
-			self.__convert = None
 		return cd
 
 	def oninitdialog(self,wnd):
@@ -2952,15 +3412,6 @@ class Imgregion1Group(AttrGroup):
 
 	def islayoutattr(self,attr):
 		return attr.getname() in (self._attrnames['xy'], self._attrnames['wh'])
-
-class ImgregionGroup(Imgregion1Group):
-	data=attrgrsdict['imgregion']
-	_attrnames = {'xy':'imgcropxy',
-		      'wh':'imgcropwh',
-		      'full':'fullimage',}
-
-	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_LS1O2
 
 class Subregion2Group(ImgregionGroup):
 	data=attrgrsdict['subregion2']
@@ -2999,6 +3450,29 @@ class SubregionGroup(Subregion1Group):
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LS1O3
 
+##class Subregion3Group(ImgregionGroup):
+##	data=attrgrsdict['subregion3']
+
+##	def getpageresid(self):
+##		return grinsRC.IDD_EDITATTR_SUBREGION
+
+##	def createctrls(self,wnd):
+##		cd={}
+##		a=self.getattr('left')
+##		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+##		a=self.getattr('top')
+##		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_13))
+##		a=self.getattr('width')
+##		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14))
+##		a=self.getattr('height')
+##		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_15))
+##		a=self.getattr('scale')
+##		cd[a]=OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_22,))
+##		return cd
+
+##	def getpageclass(self):
+##		return PosSizeLayoutPage
+
 class AnchorlistGroup(AttrGroup):
 	data=attrgrsdict['anchorlist']
 
@@ -3018,63 +3492,81 @@ class AnchorlistGroup(AttrGroup):
 		self.anchorlistctrl = cd[a] = AnchorlistCtrl(wnd, a, ())
 		return cd
 
-class SystemGroup(AttrGroup):
-	data=attrgrsdict['system']
+class TransitionGroup(AttrGroup):
+	data=attrgrsdict['transition']
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
 
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_S1R3S5
+		return grinsRC.IDD_EDITATTR_TRANSITION
 
 	def createctrls(self,wnd):
 		cd = {}
-		a = self.getattr('system_bitrate')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12))
-		a = self.getattr('system_captions')
-		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24))
-		a = self.getattr('system_language')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_31, grinsRC.IDC_32))
-		a = self.getattr('system_overdub_or_caption')
-		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43,grinsRC.IDC_44))
-		a = self.getattr('system_required')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
-		a = self.getattr('system_screen_depth')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62))
-		a = self.getattr('system_screen_size')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
+		a = self.getattr('transIn')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12))
+		a = self.getattr('transOut')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_21, grinsRC.IDC_22))
 		return cd
 
 	def getpageclass(self):
 		return AttrPage
 
-class PreferencesGroup(SystemGroup):
-	data=attrgrsdict['preferences']
+class SnapSystemGroup(AttrGroup):
+	data=attrgrsdict['snapsystem']
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
 
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_S1R3S4
+		return grinsRC.IDD_EDITATTR_O2
 
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('system_bitrate')
 		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12))
-		a = self.getattr('system_captions')
-		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))
 		a = self.getattr('system_language')
-		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_31, grinsRC.IDC_32))
-		a = self.getattr('system_overdub_or_caption')
-		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_21, grinsRC.IDC_22))
 		return cd
 
-class Preferences1Group(PreferencesGroup):
-	data=attrgrsdict['preferences1']
+	def getpageclass(self):
+		return AttrPage
+
+class PreferencesGroup(SnapSystemGroup):
+	data=attrgrsdict['preferences']
+	nodefault = 1
 
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_S1R3S6
+		return grinsRC.IDD_EDITATTR_S1R3S4
+
+	def createctrls(self,wnd):
+		cd = SnapSystemGroup.createctrls(self,wnd)
+		a = self.getattr('system_captions')
+		if self.nodefault:
+			resids = (grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33)
+		else:
+			resids = (grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33,grinsRC.IDC_34x)
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,resids)
+		a = self.getattr('system_overdub_or_caption')
+		if self.nodefault:
+			resids = (grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43)
+		else:
+			resids = (grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43,grinsRC.IDC_44)
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,resids)
+		return cd
+
+class SystemGroup(PreferencesGroup):
+	data=attrgrsdict['system']
+	nodefault = 0
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S1R3S5
 
 	def createctrls(self,wnd):
 		cd = PreferencesGroup.createctrls(self,wnd)
-		a = self.getattr('html_control')
-		cd[a] = OptionsCheckNolabelCtrl(wnd, a, (grinsRC.IDC_51,))
+		a = self.getattr('system_required')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
+		a = self.getattr('system_screen_depth')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62))
+		a = self.getattr('system_screen_size')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
 		return cd
 
 class NameGroup(AttrGroup):
@@ -3107,6 +3599,32 @@ class INameGroup(NameGroup):
 	data=attrgrsdict['intname']
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_S1O2
+
+class GeneralGroup(AttrGroup):
+	data=attrgrsdict['general']
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_GENERAL
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('name')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+##		a = self.getattr('.type')
+##		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		a = self.getattr('title')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
+		a = self.getattr('alt')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42))
+		a = self.getattr('author')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
+		a = self.getattr('copyright')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62))
+		a = self.getattr('.begin1')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
+		a = self.getattr('duration')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_81,grinsRC.IDC_82))
+		return cd
 
 class FileGroup(AttrGroup):
 	data=attrgrsdict['file']
@@ -3255,6 +3773,41 @@ class WipeGroup(AttrGroup):
 		cd[a] = OptionsRadioNocolonCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24,grinsRC.IDC_25))
 		return cd
 
+class BeginListGroup(AttrGroup):
+	data=attrgrsdict['beginlist']
+
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_EVENTLIST
+
+	def createctrls(self,wnd):
+		cd = {}
+		#a = self.getattr('beginlist')
+		#cd[a] = ListCtrl(wnd,a,(grinsRC.IDC_STATIC1, grinsRC.IDC_LIST4, grinsRC.IDC_BUTTON7, grinsRC.IDC_BUTTON8, grinsRC.IDC_BUTTON9))
+		a = self.getattr('beginlist')
+		cd[a] = EventCtrl(wnd,a,())
+		return cd
+
+class EndListGroup(AttrGroup):
+	data=attrgrsdict['endlist']
+
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_EVENTLIST
+
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('endlist')
+		cd[a] = EventCtrl(wnd,a,())
+		#a = self.getattr('endlist')
+		#cd[a] = ListCtrl(wnd,a,(grinsRC.IDC_STATIC2, grinsRC.IDC_LIST3, grinsRC.IDC_BUTTON4, grinsRC.IDC_BUTTON5, grinsRC.IDC_BUTTON6))
+		return cd
+
+ 
 class Convert1Group(AttrGroup):
 	data = attrgrsdict['convert1']
 
@@ -3357,20 +3910,112 @@ class Convert5Group(Convert4Group):
 		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
 		return cd
 
+#
+class AnimateAttributeGroup(AttrGroup):
+	data=attrgrsdict['animateAttribute']
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S1O2
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('attributeName')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+		a = self.getattr('attributeType')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		return cd
+#
+class AnimateValuesGroup(StringGroup):
+	data=attrgrsdict['animateValues']
+
+#
+class TimeManipulationGroup(AttrGroup):
+	data=attrgrsdict['timeManipulation']
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S3R2
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('speed')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+		a = self.getattr('accelerate')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		a = self.getattr('decelerate')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
+		a = self.getattr('autoReverse')
+		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
+		return cd
+
+class CalcModeGroup(AttrGroup):
+	data=attrgrsdict['calcMode']
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_O1S2
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('calcMode')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+		a = self.getattr('keyTimes')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		a = self.getattr('keySplines')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
+		return cd
+
+class CssBackgroundColorGroup(AttrGroup):
+	data=attrgrsdict['CssBackgroundColor']
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_COLORSEL
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('cssbgcolor')
+		cd[a] = CssColorCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK,
+									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
+									grinsRC.IDC_CTYPEI))
+		return cd
+	
+#
+class TransitionTypeGroup(NameGroup):
+	data=attrgrsdict['transitionType']
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S1O1
+
+#
+class TransitionRepeatGroup(StringGroupNoTitle):
+	data=attrgrsdict['transitionRepeat']
+#
+class TransitionTimingGroup(StringGroupNoTitle):
+	data=attrgrsdict['transitionTiming']
+
+#
+class MachineGroup(StringGroupNoTitle):
+	data=attrgrsdict['machine']
+	def oninitdialog(self,wnd):
+		# enlarge labels by dwpx pixels
+		dwpx = 32
+		labels = (grinsRC.IDC_11, grinsRC.IDC_21)
+		edits = (grinsRC.IDC_12, grinsRC.IDC_22)
+		self.resizelabels(wnd, labels, edits, dwpx)
+		return StringGroupNoTitle.oninitdialog(self, wnd)
 
 ############################
 # platform dependent association
 # what we have implemented, anything else goes as singleton
 groupsui={
 	'infogroup':InfoGroup,
+	'general':GeneralGroup,
 
 	'base_winoff':LayoutGroup,
 	'base_winoff_and_units':LayoutGroupWithUnits,
+	'CssBackgroundColor':CssBackgroundColorGroup,
 	'subregion':SubregionGroup,
 	'imgregion':ImgregionGroup,
 	'subregion1':Subregion1Group,
-	'imgregion1':Imgregion1Group,
 	'subregion2':Subregion2Group,
+##	'subregion3':Subregion3Group,
 	'anchorlist':AnchorlistGroup,
 
 	'convert1':Convert1Group,
@@ -3379,13 +4024,16 @@ groupsui={
 	'convert4':Convert4Group,
 	'convert5':Convert5Group,
 
+	'transition':TransitionGroup,
+	'snapsystem':SnapSystemGroup,
 	'system':SystemGroup,
 	'preferences':PreferencesGroup,
-	'preferences1':Preferences1Group,
 	'name':NameGroup,
 	'.cname':CNameGroup,
 	'intname':INameGroup,
 
+	'beginlist':BeginListGroup,
+	'endlist':EndListGroup,
 	'timing1':DurationGroup,
 	'timing2':Duration2Group,
 	'timing3':Duration3Group,
@@ -3395,7 +4043,6 @@ groupsui={
 	'timingpar':DurationParGroup,
 	'webserver':WebserverGroup,
 	'mediaserver':MediaserverGroup,
-	'mediaserver2':MediaserverGroup2,
 	'file':FileGroup,
 	'wipe':WipeGroup,
 	'clip':ClipGroup,
@@ -3403,6 +4050,18 @@ groupsui={
 	
 	'qtpreferences':QTPlayerPreferencesGroup,
 	'qtmediapreferences':QTPlayerMediaPreferencesGroup,
+
+	'animateAttribute':AnimateAttributeGroup,
+	'animateValues':AnimateValuesGroup,
+	'timeManipulation':TimeManipulationGroup,
+	'calcMode':CalcModeGroup,
+	'timingsb':DurationSBGroup,
+
+	'transitionType': TransitionTypeGroup,
+	'transitionRepeat':TransitionRepeatGroup,
+	'transitionTiming':TransitionTimingGroup,
+
+	'machine':MachineGroup,
 	}
 
 ###########################
@@ -3535,22 +4194,42 @@ class AttrEditForm(GenFormView):
 		self._pages=[]
 		self._tid=None
 		self._attrchanged={}
+		self._window_created = 0
 
 	# Creates the actual OS window
-	def createWindow(self,parent):
+	def createWindow(self, parent):
 		self._parent=parent
 		import __main__
 		dll=__main__.resdll
 		prsht=AttrSheet(self)
 		prsht.EnableStackedTabs(1)
+		self._prsht = prsht
 
 		self.buildcontext()
 
+		initindex = self.buildpages()
+
+		if not self._window_created:
+			self.CreateWindow(parent)
+			self._window_created = 1
+		prsht.CreateWindow(self,win32con.DS_CONTEXTHELP | win32con.DS_SETFONT | win32con.WS_CHILD | win32con.WS_VISIBLE)
+		self.HookMessage(self.onSize,win32con.WM_SIZE)		
+		rc=self.GetWindowRect()
+		prsht.SetWindowPos(0,(0,0,0,0),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
+
+		self.finishbuildpages(initindex)
+
+		# remove the next line to disable tabs shortcuts
+##		self._tabshortcut = TabShortcut(self)
+
+	def buildpages(self):
+		prsht = self._prsht
 		grattrl=[] # list of attr in groups (may be all)
 		# create groups pages
 		grattrl=self.creategrouppages()
 		
-		# create singletons not desrciped by groups
+		# create singletons not desrcibed by groups
 		for i in range(len(self._attriblist)):
 			a=self._attriblist[i]
 			if a not in grattrl:
@@ -3582,14 +4261,17 @@ class AttrEditForm(GenFormView):
 				initindex = self._pages.index(p)
 		self._initattr = None
 
-		self.CreateWindow(parent)
-		prsht.CreateWindow(self,win32con.DS_CONTEXTHELP | win32con.DS_SETFONT | win32con.WS_CHILD | win32con.WS_VISIBLE)
-		self.HookMessage(self.onSize,win32con.WM_SIZE)		
-		rc=self.GetWindowRect()
-		prsht.SetWindowPos(0,(0,0,0,0),
-			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
-		self._prsht=prsht
-
+		# Create a dummy page if there is nothing there
+		if not self._pages:
+			page = EmptyAttrPage(self)
+			self._pages.append(page)
+			page.do_init()
+			prsht.AddPage(page)
+			page.settabix(0)
+		return initindex
+	
+	def finishbuildpages(self, initindex):
+		prsht = self._prsht
 		tabctrl=prsht.GetTabCtrl()
 		for page in self._pages:
 			page.settabtext(tabctrl)
@@ -3597,8 +4279,41 @@ class AttrEditForm(GenFormView):
 		prsht.SetActivePage(self._pages[initindex])
 		prsht.RedrawWindow()
 
-		# remove the next line to disable tabs shortcuts
-##		self._tabshortcut = TabShortcut(self)
+	def removepages(self):
+		for p in self._pages:
+			p.do_close()
+		for p in self._pages:
+			self._prsht.RemovePage(p)
+##		self._prsht = None # XXX Should we close or something?
+		self._pages = []
+
+	def showAllAttributes(self, flag):
+		previous = -1
+		if self._prsht and self._prsht._showAll:
+			previous = self._prsht._showAll.getcheck()
+			if flag:
+				if not previous:
+					self.call('Showall')
+			else:
+				if previous:
+					self.call('Showall')
+		return previous
+						
+	def RecreateWindow(self):
+		self.SetRedraw(0)
+		self.removepages()
+##		self.createWindow(self._parent)
+##		return
+		self.buildcontext()
+
+		initindex = self.buildpages()
+
+		self._prsht.SetWindowPos(0,(0,0,0,0),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
+
+		self.finishbuildpages(initindex)
+		self.SetRedraw(1)
+		self.RedrawWindow()
 
 	def getcurattr(self):
 		page = self._prsht.GetActivePage()
@@ -3643,68 +4358,38 @@ class AttrEditForm(GenFormView):
 
 	# XXX: either the help string (default value for units) must be corrected 
 	#      or the attrdict.get calls in Channel.py and LayoutView.py and here
-	def getunits(self,ch=None):
-		if not ch:
-			if not self._channel:
-				return appcon.UNIT_SCREEN
-			return self._channel.attrdict.get('units',appcon.UNIT_SCREEN)
-		else:
-			return ch.attrdict.get('units',appcon.UNIT_SCREEN)
+	def getunits(self):
+		if self._channel:
+			return self._channel.attrdict.get('units', appcon.UNIT_SCREEN)
+		return appcon.UNIT_PXL
 			
 	def buildcontext(self):
-		self._channels={}
-		self._channels_rc={}
+		self._node = None
+		self._channel = None
 
-		self._winsize=None
-		self._layoutch=None
-		
-		a=self._attriblist[0]
-		if hasattr(a.wrapper, 'toplevel') and a.wrapper.toplevel:
-			channels = a.wrapper.toplevel.root.context.channels
-			self._baseURL=a.wrapper.context.baseurl
-			for ch in channels:
-				self._channels[ch.name]=ch
-				units=self.getunits(ch)
-				t=ch.attrdict['type']
-				if t=='layout' and ch.attrdict.has_key('winsize'):
-					w,h=ch.attrdict['winsize']
-					self._winsize=(w,h)
-					self._channels_rc[ch.name]=((0,0,w,h),units)
-					self._layoutch=ch
-				elif ch.attrdict.has_key('base_winoff'):
-					self._channels_rc[ch.name]=(ch.attrdict['base_winoff'],units)
-				else:
-					self._channels_rc[ch.name]=((0,0,0,0),0)
-			
+		if not self._attriblist:
+			return
+
+		a = self._attriblist[0]
+
+		if hasattr(a.wrapper, 'context'):
+			self._baseURL = a.wrapper.context.baseurl
+
 		if hasattr(a.wrapper,'node'):
-			self._node=a.wrapper.node
-			chname=self.getchannel(self._node)
-			self._channel=self._channels.get(chname)
+			self._node = a.wrapper.node
+ 			if hasattr(a.wrapper, 'toplevel') and a.wrapper.toplevel:
+				try:
+					chname = self.getchannel(self._node)
+					if chname:
+						self._channel =  a.wrapper.toplevel.root.context.channeldict[chname]
+				except:
+					self._channel =  None
 		else:
-			self._node=None		
-
-		if hasattr(a.wrapper,'channel'):
-			self._channel=a.wrapper.channel
-
+ 			self._node = None		
 	
 	def getchannel(self,node):
 		import MMAttrdefs
 		return MMAttrdefs.getattr(node, 'channel')
-
-	def GetBBox(self):
-		if not self._channel:
-			return ((0,0,0,0),0) # XXX ?
-		if self._node:
-			return self._channels_rc[self._channel.name]
-		else:
-			bw=self._channel.attrdict['base_window']
-			return self._channels_rc[bw]
-
-	def GetCBox(self):
-		if not self._channel:
-			return ((0,0,0,0),0) # XXX ?
-		bw=self._channel.attrdict['base_window']
-		return self._channels_rc[bw]
 					
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
@@ -3729,15 +4414,14 @@ class AttrEditForm(GenFormView):
 
 	# Called when the view is activated 
 	def activate(self):
-		self._is_active=1
+		GenFormView.activate(self)
 		childframe=self.GetParent()
 		frame=childframe.GetMDIFrame()
 		frame.LoadAccelTable(grinsRC.IDR_ATTR_EDIT)
-
 		
 	# Called when the view is deactivated 
 	def deactivate(self):
-		self._is_active=0
+		GenFormView.deactivate(self)
 		childframe=self.GetParent()
 		frame=childframe.GetMDIFrame()
 		frame.LoadAccelTable(grinsRC.IDR_GRINSED)
@@ -3839,3 +4523,5 @@ class AttrEditForm(GenFormView):
 		if self._tid:
 			import __main__
 			__main__.toplevel.canceltimer(self._tid)
+ 
+ 

@@ -6,7 +6,9 @@ import win32mu
 import components
 
 # mfc docview stuff
-from pywin.mfc import window,object,docview
+from pywinlib.mfc import window,object,docview
+
+import usercmdui
 
 class GenFormView(docview.FormView,components.ControlsDict):
 	# Class constructor. Initializes base class and associates controls to ids
@@ -16,6 +18,17 @@ class GenFormView(docview.FormView,components.ControlsDict):
 		self._idd=idd
 		self._closecmdid=-1
 		self._freezesize=freezesize
+		self._commandlist = []
+		self._cmd_state = {}
+		self._is_active = 0
+		# We need an ID so MainFrame knows about our commandlist
+		self._strid = 'GenForView%x' % id(self)
+
+	#
+	# Creation attributes
+	#
+	def isResizeable(self):
+		return 0
 
 	# Creates the actual OS window
 	def create(self,parent):
@@ -44,13 +57,33 @@ class GenFormView(docview.FormView,components.ControlsDict):
 			self.EnableCmd(ck,0)
 		self.HookMessage(self.OnCmd,win32con.WM_COMMAND)
 
-	# Called when the view is activated 
+	# Sets the acceptable command list by delegating to its parent keeping a copy.
+	def set_commandlist(self, list):
+		self._commandlist=list
+		if self._is_active:
+			self.activate()
+
+	# Toggles menu entries by delegating to its parent
+	def set_toggle(self, command, onoff):
+		self._cmd_state[command]=onoff
+		if self._is_active:
+			self._parent.getMDIFrame().set_toggle(command,onoff)
+
+	def set_menu_state(self):
+		for command in self._cmd_state.keys():
+			onoff=self._cmd_state[command]
+			self._parent.getMDIFrame().set_toggle(command,onoff)
+
+	# Called when the view is deactivated
 	def activate(self):
-		pass
+		self._is_active=1
+		self._parent.getMDIFrame().set_commandlist(self._commandlist,self._strid)
+		self.set_menu_state()
 
 	# Called when the view is deactivated 
 	def deactivate(self):
-		pass
+		self._is_active=0
+		self._parent.getMDIFrame().set_commandlist(None,self._strid)
 
 	# Called by the frame work before closing this View
 	def OnClose(self):
@@ -62,13 +95,6 @@ class GenFormView(docview.FormView,components.ControlsDict):
 	# Returns true if the OS window exists
 	def is_oswindow(self):
 		return (hasattr(self,'GetSafeHwnd') and self.GetSafeHwnd())
-
-
-	# Return the user cmd from the command class
-	def GetUserCmdId(self,cmdcl):
-		if hasattr(self,'GetParent'):
-			return self.GetParent().GetUserCmdId(cmdcl)
-		return -1
 
 	# Adjust dimensions to fit resource template
 	def fittemplate(self):
@@ -116,7 +142,12 @@ class GenFormView(docview.FormView,components.ControlsDict):
 		if hasattr(self,'GetSafeHwnd'):
 			if self.GetSafeHwnd():
 				self.GetParent().ShowWindow(win32con.SW_SHOW)
-				self.GetParent().getMDIFrame().MDIActivate(self.GetParent())
+				try:
+					self.GetParent().getMDIFrame().MDIActivate(self.GetParent())
+				except:
+					# splitter
+					splitter = self.GetParent()
+					splitter.GetParent().getMDIFrame().MDIActivate(splitter.GetParent())
 
 	# Called by the core system to hide this view
 	def hide(self):

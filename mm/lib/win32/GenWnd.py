@@ -7,7 +7,7 @@ A Generic win32-Mfc Wnd class
 import win32ui,win32con 
 Afx=win32ui.GetAfx()
 Sdk=win32ui.GetWin32Sdk()
-from pywin.mfc import window
+from pywinlib.mfc import window
 
 class GenWnd(window.Wnd):
 	"""Generic win32-Mfc Wnd class"""

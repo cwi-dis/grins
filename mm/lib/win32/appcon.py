@@ -66,6 +66,8 @@ WM_KICKIDLE        = 0x036A
 WM_USER_CREATE_BOX_OK		= win32con.WM_USER + 1
 WM_USER_CREATE_BOX_CANCEL	= win32con.WM_USER + 2
 
+# constants to select web browser control
+[IE_CONTROL, WEBSTER_CONTROL]=0, 1
 
 # start of unnamed messages
 WM_USER_GRINS				= win32con.WM_USER + 100

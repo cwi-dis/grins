@@ -3,6 +3,14 @@ import WMEVENTS
 import win32ui, win32con
 Sdk=win32ui.GetWin32Sdk()
 
+# add missing const
+win32con.MK_ALT = 0x20
+DROPEFFECT_NONE = 0
+DROPEFFECT_COPY = 1
+DROPEFFECT_MOVE = 2
+DROPEFFECT_LINK = 4
+DROPEFFECT_SCROLL = 0x80000000
+
 class DropTarget:
 	cfmap={'FileName':Sdk.RegisterClipboardFormat('FileName')}
 	def __init__(self):
@@ -50,11 +58,18 @@ class DropTarget:
 	def OnDragLeave(self):
 		pass
 
+	def isControlPressed(self, kbdstate):
+		return (kbdstate & win32con.MK_CONTROL)!=0
+	def isShiftPressed(self, kbdstate):
+		return (kbdstate & win32con.MK_SHIFT)!=0
+	def isAltPressed(self, kbdstate):
+		return (kbdstate & win32con.MK_ALT)!=0
+
 	def dragfile(self,dataobj,kbdstate,x,y):
 		filename=dataobj.GetGlobalData(self.CF_FILE)
 		if filename:
 			x,y=self._DPtoLP((x,y))
-			x,y = self._inverse_coordinates((x, y),self._canvas)
+			x,y = self._pxl2rel((x, y),self._canvas)
 			return self.onEventEx(WMEVENTS.DragFile,(x, y, filename))
 		return 0
 
@@ -64,7 +79,7 @@ class DropTarget:
 			import longpath
 			filename=longpath.short2longpath(filename)
 			x,y=self._DPtoLP((x,y))
-			x,y = self._inverse_coordinates((x, y),self._canvas)
+			x,y = self._pxl2rel((x, y),self._canvas)
 			self.onEvent(WMEVENTS.DropFile,(x, y, filename))
 			return 1
 		return 0

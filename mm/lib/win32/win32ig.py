@@ -64,6 +64,9 @@ class ImageLib:
 		if img<0: return 10,10,8
 		return self.lib.image_dimensions_get(img)
 
+	def gettransp(self, img):
+		return self._transpdict.get(img)
+
 	def read(self, img, crop = None):
 		if crop is None:
 			data = self.lib.area_get(img)
@@ -75,9 +78,15 @@ class ImageLib:
 		self.lib.color_promote(img, flag)
 
 	# Render image
-	def render(self,hdc,bgcolor,mask, img, 
-		src_x, src_y,dest_x, dest_y, width, height,rcKeep):
+	def render(self, hdc, bgcolor, mask, img, src_x, src_y,dest_x, dest_y, width, height,
+			   rcKeep, aspect = 'default'):
 		if img<0: return
+		
+		if aspect == 'none':
+				aspect = self.lib.IG_ASPECT_NONE
+		else:
+				aspect = self.lib.IG_ASPECT_DEFAULT
+		
 		if img not in self._imglist:
 			# image already deleted?
 			# XXXX this is a quick hack, since the image
@@ -86,10 +95,19 @@ class ImageLib:
 			print 'warning: win32 image management bug'
 			return
 		rc=(dest_x, dest_y, dest_x+width, dest_y+height)
-		self.lib.ip_crop(img,rcKeep)
+		try:
+			self.lib.ip_crop(img,rcKeep)
+		except:
+			errcodes = []
+			for i in range(self.lib.error_check()):
+				errcodes.append(`self.lib.error_get(i)`)
+			from windowinterface import error
+			from string import join
+			raise error, 'failed to load image, errcode(s) = %s' % join(errcodes, ', ')
 		if self._transpdict.has_key(img):
 			trans_rgb = self._transpdict[img]
 			self.lib.display_transparent_set(img,trans_rgb,1)
+		rc = self.lib.display_adjust_aspect(img, rc, aspect)
 		self.lib.device_rect_set(img,rc)
 		self.lib.display_desktop_pattern_set(img,0)
 		self.lib.display_image(img,hdc)
@@ -119,7 +137,7 @@ class ImageLib:
 		if os.path.isfile(filename):
 			if not os.path.isabs(filename):
 				filename=os.path.join(os.getcwd(),filename)
-				filename=ntpath.normpath(filename)	
+				filename=ntpath.normpath(filename)
 		return filename
 
 
