@@ -6,21 +6,23 @@ import audio
 class select:
 	def __init__(self, rdr, rangelist):
 		lastbegin = 0
-		lastend = 0
+		lastend = -1
 		for begin, end in rangelist:
 			if begin is None:
 				begin = 0
-			if end is None or end == 0:
-				end = rdr.getnframes()
-			if begin >= end or \
-			   begin < lastend:
+			if lastend is None or lastend > begin:
 				raise audio.Error, 'rangelist must be non-overlapping and sorted'
+			if end is not None and end < begin:
+				raise audio.Error, 'end must not be less than begin'
 			lastbegin, lastend = begin, end
 		self.__rdr = rdr
 		self.__rangelist = rangelist
 		self.__currange = 0
 		self.__curframe = 0
-		dummy = self.readframes(0)
+		if rangelist:
+			begin = rangelist[0][0]
+			if begin:
+				dummy, self.__curframe = rdr.readframes(begin)
 
 	def getformat(self):
 		return self.__rdr.getformat()
@@ -59,7 +61,7 @@ class select:
 			data.append(d)
 			read = read + n
 			curframe = curframe + n
-			if end is not None and curframe >= end:
+			if end is not None and end != 0 and curframe >= end:
 				currange = currange + 1
 			if nframes > 0:
 				nframes = nframes - n
