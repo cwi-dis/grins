@@ -605,11 +605,14 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		if adornments.has_key('view'):strid=adornments['view']
 		else:  raise "undefined view request"
 		if strid=='pview_':
-			if adornments.has_key('show') and adornments['show']=='fullscreen':
+			exporting = adornments.get('exporting')
+			if exporting:
+				return self.newExport(x, y, w, h, title, units, adornments,canvassize, commandlist,strid, bgcolor)
+			elif adornments.has_key('show') and adornments['show']=='fullscreen':
 				if not self.__fsPlayer:
 					self.__fsPlayer = self.newFSPlayer(self, bgcolor)
 				return self.__fsPlayer.newviewport(x, y, w, h, title, units, adornments,canvassize, commandlist,strid,bgcolor)
-		return self.newview(x, y, w, h, title, units, adornments,canvassize, commandlist,strid, bgcolor)
+		return self.newview(x, y, w, h, title, units, adornments, canvassize, commandlist, strid, bgcolor)
 
 	def newFSPlayer(self, frame, bgcolor):
 		from _FSPlayerView import _FSPlayerView
@@ -625,6 +628,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 
 	def delFSPlayer(self):
 		self.__fsPlayer = None
+
+	def newExport(self, x, y, w, h, title, units = UNIT_MM, adornments=None, canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
+		return win32window.ViewportContext(w, h, units, bgcolor)
 
 	# Return the framework document object associated with this frame
 	def getdoc(self):
