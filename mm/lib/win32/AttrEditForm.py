@@ -452,7 +452,7 @@ class AnchorlistCtrl(AttrCtrl):
 		else:
 			i = self.__anchors.index(self.__curanchor)
 			self._list.setcursel(i)
-			atype, aargs, links = self.__anchorlinks[self.__curanchor]
+			atype, aargs, times, links = self.__anchorlinks[self.__curanchor]
 			self._rename.enable(1)
 			self._delete.enable(1)
 			self._link.enable(1)
@@ -474,12 +474,13 @@ class AnchorlistCtrl(AttrCtrl):
 ##			self._type.resetcontent()
 ##			self._type.setoptions(typelist)
 ##			self._type.setcursel(index)
-##			for c in self._se:
-##				c.enable(1)
 			if atype not in AnchorDefs.WholeAnchors:
 				self._type.setcheck(1)
-				for i in range(4):
-					self._xywh[i].enable(1)
+				for c in self._xywh:
+					c.enable(1)
+				for i in range(len(self._se)):
+					self._se[i].enable(1)
+					self._se[i].settext(`times[i]`)
 				if aargs:
 					# maybe convert to pixel values
 					self.__convert(aargs)
@@ -488,7 +489,7 @@ class AnchorlistCtrl(AttrCtrl):
 					self._wnd.create_box(self._wnd.getcurrentbox())
 			else:
 				self._type.setcheck(0)
-				for c in self._xywh:
+				for c in self._xywh + self._se:
 					c.settext('')
 					c.enable(0)
 
@@ -509,7 +510,7 @@ class AnchorlistCtrl(AttrCtrl):
 	def getbox(self, saved):
 		if self.__curanchor is None:
 			return None
-		atype, aargs, links = self.__anchorlinks[self.__curanchor]
+		atype, aargs, times, links = self.__anchorlinks[self.__curanchor]
 		if atype not in AnchorDefs.WholeAnchors:
 			if saved:
 				return aargs or None
@@ -528,7 +529,7 @@ class AnchorlistCtrl(AttrCtrl):
 	def setbox(self, box = None):
 		if self.__curanchor is None:
 			return None
-		atype, aargs, links = self.__anchorlinks[self.__curanchor]
+		atype, aargs, times, links = self.__anchorlinks[self.__curanchor]
 		if atype not in AnchorDefs.WholeAnchors:
 			if box:
 				while len(aargs) < len(box):
@@ -564,7 +565,7 @@ class AnchorlistCtrl(AttrCtrl):
 			# not unique, so don't change
 			components.showmessage('Name should be unique', mtype = 'error', parent = self._wnd._form)
 			return
-		self.__anchorlinks[name] = AnchorDefs.TypeValues[0], [], []
+		self.__anchorlinks[name] = AnchorDefs.TypeValues[0], [], (0,0), []
 		self.__curanchor = name
 		self.fill()
 
@@ -603,12 +604,12 @@ class AnchorlistCtrl(AttrCtrl):
 	def OnType(self, id, code):
 		if self.__curanchor is None or code != win32con.BN_CLICKED:
 			return
-		atype, aargs, links = self.__anchorlinks[self.__curanchor]
+		atype, aargs, times, links = self.__anchorlinks[self.__curanchor]
 		if self._type.getcheck():
 			atype = AnchorDefs.ATYPE_NORMAL
 		else:
 			atype = AnchorDefs.ATYPE_WHOLE
-		self.__anchorlinks[self.__curanchor] = atype, aargs, links
+		self.__anchorlinks[self.__curanchor] = atype, aargs, times, links
 		self.fill(newlist = 0)
 		self.enableApply()
 
@@ -623,7 +624,7 @@ class AnchorlistCtrl(AttrCtrl):
 		if code == win32con.EN_SETFOCUS:
 			self.sethelp()
 		elif code == win32con.EN_CHANGE:
-			atype, aargs, links = self.__anchorlinks[self.__curanchor]
+			atype, aargs, times, links = self.__anchorlinks[self.__curanchor]
 			for i in range(4):
 				if id == self._xywh[i]._id:
 					str = self._xywh[i].gettext()
