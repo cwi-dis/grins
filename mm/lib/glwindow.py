@@ -17,8 +17,10 @@ from GL import *
 from DEVICE import *
 import fl, FL
 
+
 # List of windows, indexed by window id converted to string.
 windowmap = {}
+
 
 # The base class for GL windows
 class glwindow():
@@ -78,16 +80,20 @@ class glwindow():
 	def winquit(self):
 		#  WINQUIT event: close last window.
 		# This may be refused.
-		pass
+		# By default, call the method for closing any old window.
+		self.winshut()
+
 
 # Debug/warning output function
 def report(s):
 	print 'glwindow:', s
 
+
 # Global state
 class Struct(): pass
 state = Struct()
 state.focuswindow = None
+state.focuswid = None
 
 
 # Some utility functions
@@ -106,30 +112,39 @@ def check():
 def dispatch(dev, val):
 	if dev = REDRAW:
 		window = windowmap[`val`]
+		gl.winset(val)
 		window.redraw()
 	elif dev = KEYBD:
 		if state.focuswindow:
+			gl.winset(state.focuswid)
 			state.focuswindow.keybd(val)
 		else:
 			report('KEYBD event with no focus window!')
 	elif dev in (MOUSE3, MOUSE2, MOUSE1): # In left-to-right order
 		if state.focuswindow:
+			gl.winset(state.focuswid)
 			state.focuswindow.mouse(dev, val)
 		else:
 			report('MOUSE event with no focus window!')
 	elif dev = INPUTCHANGE:
 		if state.focuswindow:
+			gl.winset(state.focuswid)
 			state.focuswindow.leave()
 			state.focuswindow = None
+			state.focuswid = None
 		if val = 0:
 			pass
 		else:
 			state.focuswindow = windowmap[`val`]
+			state.focuswid = val
+			gl.winset(val)
 			state.focuswindow.enter()
 	elif dev = WINSHUT:
+		gl.winset(val)
 		window = windowmap[`val`]
 		window.winshut()
 	elif dev = WINQUIT:
+		gl.winset(val)
 		window = windowmap[`val`]
 		window.winquit()
 	else:
