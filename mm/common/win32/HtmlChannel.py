@@ -120,9 +120,10 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.window.Refresh()
 
 	def stopplay(self, node):
-		if self.window and hasattr(self.window,'DestroyHtmlCtrl'):
-			self.window.DestroyHtmlCtrl()
-			self.window.setredrawfunc(None)
+		self.window.SetImmHtml(' ')
+##		if self.window and hasattr(self.window,'DestroyHtmlCtrl'):
+##			self.window.DestroyHtmlCtrl()
+##			self.window.setredrawfunc(None)
 		Channel.ChannelWindow.stopplay(self, node)
 		
 
