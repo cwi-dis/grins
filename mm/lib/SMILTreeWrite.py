@@ -2309,7 +2309,10 @@ class SMILWriter(SMIL):
 				val = v[attr]
 				if attr == 'left' and v.has_key('top'):
 					val = val, v['top']
-					posValues.append('(%d %d)' % val)
+					if self.rpExt and not self.grinsExt:
+						posValues.append('%d %d' % val)	# RealONE doesn't do parens (yet?)
+					else:
+						posValues.append('(%d %d)' % val)
 				elif attr == 'width':
 					widthValues.append('%d' % val)
 				elif attr == 'height':
@@ -2428,6 +2431,10 @@ class SMILWriter(SMIL):
 				else:
 					value = func(self, node)
 				if value and value != attributes[name]:
+					if self.rpExt and not self.grinsExt and tag == 'animateMotion' and name in ('from','to','by','values'):
+						# remove parentheses for RealONE
+						value = ''.join(value.split('('))
+						value = ''.join(value.split(')'))
 					attrlist.append((name, value))
 		self.writetag(tag, attrlist, node)
 
