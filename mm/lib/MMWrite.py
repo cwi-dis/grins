@@ -71,10 +71,16 @@ def writestring(value, dummy, fp):
 import string
 namechars = string.letters + string.digits + '_'
 def writename(value, dummy, fp):
-	for c in value:
-		if c not in namechars:
-			value = `value`
-			break
+	needquote = 0
+	if value = '':
+		needquote = 1
+	else:
+		for c in value:
+			if c not in namechars:
+				needquote = 1
+				break
+	if needquote:
+		value = `value`
 	fp.write(value)
 #
 def writeuid(value, dummy, fp):
