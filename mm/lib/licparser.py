@@ -14,7 +14,7 @@ FEATURES={
 	"mac": 0x10,
 	"irix6": 0x20,
 	"sunos5": 0x40,	# untested
-	"linux": 0x80,	# untested
+	"linux2": 0x80,	# untested
 	"ALLPLATFORMS": 0xf8,
 
 }
