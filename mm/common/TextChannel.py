@@ -221,9 +221,4 @@ def mapfont(fontname):
 	if fontmap.has_key(fontname):
 		return fontmap[fontname]
 	else:
-		import compatibility
-		import features
-		if compatibility.QT == features.QT:
-			return fontname, 12
-		else:
-			return fontname, 12
+		return fontname, 12
