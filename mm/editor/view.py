@@ -1,4 +1,5 @@
 import fl
+import gl
 #from GL import *
 #from gl import *
 from figures import *
@@ -24,6 +25,12 @@ THERMW = 50
 HDR_SIZE = 100 # header size for diamonds
 B=5	# the size of the round button
 
+# Some special constants
+F_NONE = 0 # No focus
+F_NODE = 1 # Focus on node
+F_CHAN = 2 # Focus on channel
+F_ARC  = 3 # Focus on timing arc
+
 class view () :
 	#
 	# new makes an object of type 'channelview'
@@ -34,7 +41,6 @@ class view () :
 	#	2. initializes the command dict / command callbak
 	#	3. initializes the commandarea (Help, File, ...)
 	#	4. sets up the channelview
-	#	5. set the focus to the root.
 	#
 
 	def new (self, (w, h, toplevel, debug)) :
@@ -51,7 +57,8 @@ class view () :
 		self.arrowlist = []
 #		Timing.calctimes(root)
 	 	duration = self.calcDuration(root) # for channel headers
-		self.channellist.sort()
+#		self.channellist.sort()
+		self.channellist = root.context.channelnames
 		self.nrchannels = len(self.channellist)
 		self.chanboxes = []
 		self.thermleft = w - THERMW
@@ -73,16 +80,16 @@ class view () :
 			xi = xi + self.unitwidth
 		self.mkView((0,0,w,h,h-HDR_SIZE),root)
 		self.mkArrows(root)
-		self.focus = root
-		self.focusarrow = None
-		self.focuschan = None
-		self.setfocus(root)
+		self.focuskind = F_NONE
+		self.focus = None
 		self.locked_focus = None
 		return self
 
 	def recalc(self):
 		Timing.calctimes(self.root)
 		self.unitheight = (self.h - HDR_SIZE) / self.root.t1
+		for i in range(self.nrchannels):
+			self.chanboxes[i].label = self.channellist[i]
 		self.re_mkView((0,0,self.w / 2,self.h,self.h-HDR_SIZE),\
 			self.root)
 		for arrow in self.arrowlist:
@@ -111,6 +118,46 @@ class view () :
 		self.addtocommand('t', add_arrow, 'add timing arc')
 		self.addtocommand('u', unlock_focus, 'unfocus locked focus')
 	#
+
+	def pupmenu(self, (x, y)):
+		menu = gl.newpup()
+		gl.addtopup(menu, 'menu %t', 0)
+		gl.addtopup(menu, '%l', 0)
+		gl.addtopup(menu, 'help %x3', 0)
+		if self.focuskind <> F_NONE:
+			gl.addtopup(menu, 'edit %x1', 0)
+		if self.focuskind = F_NODE:
+			gl.addtopup(menu, 'info %x5', 0)
+			gl.addtopup(menu, 'play %x6', 0)
+			if self.locked_focus <> None:
+				gl.addtopup(menu, 'add arc %x8', 0)
+		if self.focuskind = F_ARC:
+			gl.addtopup(menu, 'delete %x2', 0)
+		if self.focuskind = F_NODE:
+			gl.addtopup(menu, 'lock %x4', 0)
+		if self.locked_focus <> None:
+			gl.addtopup(menu, 'unlock %x9', 0)
+		gl.addtopup(menu, 'redraw %x7', 0)
+		val = gl.dopup(menu)
+		gl.freepup(menu)
+		if val = 1:
+			attreditfunc(self)
+		elif val = 2:
+			deletearrow(self)
+		elif val = 3:
+			helpfunc(self)
+		elif val = 4:
+			lock_focus(self)
+		elif val = 5:
+			infofunc(self)
+		elif val = 6:
+			play_focus(self)
+		elif val = 7:
+			redrawfunc(self)
+		elif val = 8:
+			add_arrow(self)
+		elif val = 9:
+			unlock_focus(self)
 
 	# calcDuration calculates the duration of each node, moreover it
 	# maintains a list of channels used.
@@ -264,8 +311,6 @@ class view () :
 		self.ybase = y
 
 	def change_focus (self, (mx, my)) :
-	#	self.form.freeze_form()
-
 		mx, my = mx - self.xbase, my - self.ybase
 		for arrow in self.arrowlist:
 			if arrow.hotspot(mx, my) = 1:
@@ -281,15 +326,16 @@ class view () :
 		if node.ch_blockobj.boxtype <> FG_BOX:
 			return
 		if mx<self.dividor or node.GetType() not in ('seq','par','grp'):
-			if self.focus <> None:
-				self.unfocus(self.focus)
-				self.redraw_node(self.focus)
+			self.dounfocus()
 			self.setfocus (node)
 			self.redraw_node(node)
 			for arrow in self.arrowlist:
 				arrow.draw()
-	#	self.form.unfreeze_form ()
+
 	def add_focus(self, (mx, my)):
+		if self.focuskind <> F_NODE:
+			fl.show_message ('No node selected yet','','')
+			return
 		if self.focus = None:
 			self.change_focus(mx, my)
 			return
@@ -312,6 +358,9 @@ class view () :
 			for arrow in self.arrowlist:
 				arrow.draw()
 	def lock_focus(self):
+		if self.focuskind <> F_NODE:
+			fl.show_message ('No node selected yet','','')
+			return
 		if self.locked_focus = self.focus:
 			return
 		if self.locked_focus <> None:
@@ -326,6 +375,7 @@ class view () :
 		self.lockchanfocus(node)
 		self.locked_focus = node
 		self.focus = None
+		self.focuskind = F_NONE
 		self.redraw_node(node)
 		for arrow in self.arrowlist:
 			arrow.draw()
@@ -342,19 +392,27 @@ class view () :
 	#
 	# setfocus
 	#
+	def dounfocus(self):
+		if self.focuskind = F_ARC:
+			self.focus.kind = NORM_ARROW
+			self.focus.draw()
+			self.focus = None
+		elif self.focuskind = F_CHAN:
+			self.focus.kind = NORM_CHAN
+			self.focus.redraw()
+			self.focus = None
+		elif self.focuskind = F_NODE:
+			self.unfocus(self.focus)
+			self.redraw_node(self.focus)
+		self.focuskind = F_NONE
+		self.focus = None
 	def setfocus (self, node) :
+		self.dounfocus()
 		node.ch_blockobj.boxtype = FOCUS_BOX
 		if node <> self.root:
 			self.setchanfocus (node)
 		self.focus = node
-		if self.focusarrow <> None:
-			self.focusarrow.kind = NORM_ARROW
-			self.focusarrow.draw()
-			self.focusarrow = None
-		if self.focuschan <> None:
-			self.focuschan.kind = NORM_CHAN
-			self.focuschan.redraw()
-			self.focuschan = None
+		self.focuskind = F_NODE
 	def setchanfocus(self, node):
 		if node.GetType() in ('seq','par','grp'):
 			for child in node.GetChildren():
@@ -393,8 +451,8 @@ class view () :
 		if self.locked_focus = None:
 			fl.show_message ('There is no locked focus','','')
 			return
-		if self.focus = None:
-			fl.show_message ('There is no focus','','')
+		if self.focuskind <> F_NODE:
+			fl.show_message ('There is no focus on a node','','')
 			return
 		self.add_arrow_at(self.locked_focus, self.focus, 1, 0.0, 0).draw()
 
@@ -436,17 +494,9 @@ class view () :
 		arr.repos(frx, fry, tox, toy)
 
 	def arrowhit(self, arrow):
-		if self.focus <> None:
-			self.unfocus(self.focus)
-			self.redraw_node(self.focus)
-		if self.focusarrow <> None:
-			self.focusarrow.kind = NORM_ARROW
-			self.focusarrow.draw()
-		if self.focuschan <> None:
-			self.focuschan.kind = NORM_CHAN
-			self.focuschan.redraw()
-			self.focuschan = None
-		self.focusarrow = arrow
+		self.dounfocus()
+		self.focus = arrow
+		self.focuskind = F_ARC
 		arrow.kind = FOCUS_ARROW
 		arrow.draw()
 	def setarcvalues(self, (arrow, newinfo)):
@@ -457,33 +507,26 @@ class view () :
 		arclist.append(newinfo)
 		dst.SetAttr('synctolist', arclist)
 	def deletearc(self):
-		if self.focusarrow = None:
+		if self.focus = None:
 			return
-		arrow = self.focusarrow
+		arrow = self.focus
 		view, dst, arcinfo = arrow.arc
 		arclist = MMAttrdefs.getattr(dst, 'synctolist')
 		arclist.remove(arcinfo)
 		dst.SetAttr('synctolist', arclist)
 		arrow.hidden = 1
 		del arrow
-		self.focusarrow = None
 		self.redrawfunc()
+		self.focuskind = F_NONE
+		self.focus = None
 	def diamhit(self, diam):
-		if self.focus <> None:
-			self.unfocus(self.focus)
-			self.redraw_node(self.focus)
-		if self.focusarrow <> None:
-			self.focusarrow.kind = NORM_ARROW
-			self.focusarrow.draw()
-		if self.focuschan <> None:
-			self.focuschan.kind = NORM_CHAN
-			self.focuschan.redraw()
-			self.focuschan = None
+		self.dounfocus()
 		i = self.chanboxes.index(diam)
 		name = self.channellist[i]
-		self.focuschan = self.chanboxes[i]
-		self.focuschan.kind = FOCUS_CHAN
-		self.focuschan.redraw()
+		self.focus = self.chanboxes[i]
+		self.focus.kind = FOCUS_CHAN
+		self.focus.redraw()
+		self.focuskind = F_CHAN
 
 
 	#
@@ -536,9 +579,9 @@ class view () :
 
 
 	def modify_arrow(self):
-		if self.focusarrow = None:
+		if self.focuskind <> F_ARC:
 			return
-		showarceditor(self.focusarrow)
+		showarceditor(self.focus)
 
 
 
@@ -594,14 +637,8 @@ class view () :
 		self.thermo.draw(curtim * self.unitheight)
 
 	def play_focus(self):
-		if self.focuschan <> None:
-			fl.show_message ('Cannot play a channel', '', '(yet)')
-			return
-		elif self.focusarrow <> None:
-			fl.show_message ('Cannot play an arrow', '', '')
-			return
-		elif self.focus = None:
-			fl.show_message ('No node selected','','')
+		if self.focuskind <> F_NODE:
+			fl.show_message ('Can only play a node', '', '(yet)')
 			return
 		self.toplevel.player.playsubtree(self.focus)
 
@@ -614,23 +651,26 @@ def helpfunc (bv) :
 import AttrEdit
 
 def attreditfunc (bv) :
-	node = bv.focus
-	if node = None:
-		fl.show_message ('No node selected','','')
-		return
-	AttrEdit.showattreditor (bv.focus)
-def channeleditfunc(bv):
-	if bv.focuschan <> None:
-		name = bv.focuschan.label
+	if bv.focuskind = F_NODE:
+		AttrEdit.showattreditor (bv.focus)
+	elif bv.focuskind = F_CHAN:
+		channeleditfunc(bv)
+	elif bv.focuskind = F_ARC:
+		modify_arrow(bv)
 	else:
+		fl.show_message ('No node selected','','')
+def channeleditfunc(bv):
+	if bv.focuskind = F_CHAN:
+		name = bv.focus.label
+	elif bv.focuskind = F_NODE:
 		node = bv.focus
-		if node = None:
-			fl.show_message ('No node selected','','')
-			return
 		if node.GetType() in ['seq','par','grp']:
 			fl.show_message('Not a single node selected','','')
 			return
 		name = node.GetInherAttrDef('channel', '?')
+	else:
+		fl.show_message('Not a node or channel selected','','')
+		return
 	AttrEdit.showchannelattreditor(bv.root.context, name)
 #
 # delete the focussed node.
@@ -649,12 +689,12 @@ def add_arrow(self):
 def redrawfunc(self):
 	self.redrawfunc()
 def modify_arrow(self):
-	if self.focusarrow = None:
+	if self.focuskind <> F_ARC:
 		fl.show_message ('No arc selected','','')
 		return
 	self.modify_arrow()
 def deletearrow(self):
-	if self.focusarrow = None:
+	if self.focuskind <> F_ARC:
 		fl.show_message ('No arc selected','','')
 		return
 	self.deletearc()
@@ -665,8 +705,7 @@ def play_focus(self):
 import NodeInfo
 
 def infofunc (bv) :
-	node = bv.focus
-	if node = None:
+	if bv.focuskind <> F_NODE:
 		fl.show_message ('No node selected','','')
 		return
-	NodeInfo.shownodeinfo(node)
+	NodeInfo.shownodeinfo(bv.focus)
