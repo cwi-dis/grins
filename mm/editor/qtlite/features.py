@@ -10,3 +10,4 @@ compatibility_short = 'QT'
 cmif = 0
 lightweight = 1
 editor = 1
+level = 'lite'
