@@ -443,8 +443,6 @@ class _CommonWindow:
 		# if crop is set, constrain the coordinates to the
 		# area of the window
 		# NOTE: does not work for millimeters, only pixels/relative
-		print 'DBG', self, coordinates
-		print '  rect', self._rect #DBG
 		x, y = coordinates[:2]
 		if len(coordinates) > 2:
 			w, h = coordinates[2:]
@@ -472,7 +470,6 @@ class _CommonWindow:
 			if py >= rh:
 				py, ph = rh - 1, py - rh + 1
 		if len(coordinates) == 2:
-			print '  ->', px+rx, py+ry #DBG
 			return px+rx, py+ry
 		if units == UNIT_PXL or (units is None and type(w) is type(0)):
 			pw = int(w + pw)
@@ -491,7 +488,6 @@ class _CommonWindow:
 				ph = 1
 			if py + ph > rh:
 				ph = rh - py
-		print '  ->', px+rx, py+ry, pw, ph
 		return px+rx, py+ry, pw, ph
 		
 	def _scrolloffset(self):
