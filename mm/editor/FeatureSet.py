@@ -67,4 +67,5 @@ __version__ = "$Id$";
 
 	INTERNAL_LINKS,			# allow creation of internal hyperlinks
 	UNSUPPORTED_ERROR,		# unsupported features cause fatal errors
-] = range(42)				# don't forget to update this range!
+	EDIT_COMPONENTS,		# allow editing components setting (see settings.py)
+] = range(43)				# don't forget to update this range!

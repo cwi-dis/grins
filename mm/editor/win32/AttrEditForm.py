@@ -535,7 +535,10 @@ class FileCtrl(AttrCtrl):
 	def setvalue(self, val):
 		if self._initctrl:
 			if val:
-				url = self._attr.wrapper.context.findurl(val)
+				if self._attr.wrapper.toplevel is None:
+					url = val
+				else:
+					url = self._attr.wrapper.context.findurl(val)
 				import urlparse
 				scheme, netloc, url, params, query, fragment = urlparse.urlparse(url)
 				if not scheme or scheme == 'file':
@@ -550,7 +553,10 @@ class FileCtrl(AttrCtrl):
 		if '\\' in val:
 			import MMurl
 			url = MMurl.pathname2url(val)
-			val = self._attr.wrapper.context.relativeurl(url)
+			if self._attr.wrapper.toplevel is None:
+				val = MMurl.canonURL(url)
+			else:
+				val = self._attr.wrapper.context.relativeurl(url)
 		return val
 
 	def OnBrowse(self,id,code):
