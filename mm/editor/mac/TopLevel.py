@@ -257,7 +257,7 @@ class TopLevel(ViewDialog):
 			return
 		utype, url = MMurl.splittype(self.filename)
 		host, url = MMurl.splithost(url)
-		if utype or host:
+		if (utype and utype != 'file') or host:
 			windowinterface.showmessage('Cannot save to remote URL',
 						    mtype = 'warning')
 			return
@@ -490,7 +490,7 @@ class TopLevel(ViewDialog):
 			return 1
 		utype, url = MMurl.splittype(self.filename)
 		host, url = MMurl.splithost(url)
-		if utype or host:
+		if (utype and utype != 'file') or host:
 			windowinterface.showmessage('Cannot save to URL',
 						    mtype = 'warning')
 			return 0
