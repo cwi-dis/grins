@@ -16,6 +16,7 @@ import win32api, win32con
 from win32con import *
 
 print 'Running CMIF Multimedia presentation'
+print sys.argv
 if len(sys.argv)>1:
 	print sys.argv[1]
 	
@@ -46,6 +47,7 @@ CMIF_USE_WIN32="ON"
 #CHANNELDEBUG="ON"
 
 sys.path[0:0] = CMIFPATH
+print "CMIFPATH=", CMIFPATH
 
 os.environ["CMIF"] = CMIFDIR
 #os.environ["CHANNELDEBUG"] = "ON"
@@ -56,7 +58,8 @@ os.environ["CMIF_USE_WIN32"] = "ON"
 print "sys.argv-->", sys.argv
 import cmifex
 for i in range(1,len(sys.argv)):
-	sys.argv[i]=cmifex.ToLongName(sys.argv[i])
+	# cmifex.ToLongName???
+	sys.argv[i]=win32api.GetFullPathName(sys.argv[i])
 print "long sys.argv-->", sys.argv
 
 import grins
