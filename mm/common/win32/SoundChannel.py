@@ -25,7 +25,6 @@ class SoundChannel(Channel.ChannelAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.__mc = None
 		self.__rc = None
-		self.need_armdone = 0
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
@@ -122,12 +121,6 @@ class SoundChannel(Channel.ChannelAsync):
 			self.__mc.pauseit(paused)
 		Channel.ChannelAsync.setpaused(self, paused)
 
-
-	def playdone(self, outside_induced):
-		if self.need_armdone:
-			self.need_armdone = 0
-			self.armdone()
-		Channel.ChannelAsync.playdone(self, outside_induced)
 
 	def stopplay(self, node):
 		self.__stopplayer()
