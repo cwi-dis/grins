@@ -79,6 +79,9 @@ class RealChannel:
 #		self.__rmaplayer.Stop()
 #		self.__rmaplayer.Begin()
 
+	def ErrorOccurred(self,str):
+		print str
+
 	def pauseit(self, paused):
 		if self.__rmaplayer:
 			if paused:
