@@ -330,7 +330,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				# catch all
 				attrdict[attr] = parseattrval(attr, val, self.__context)
 
-	def NewNode(self, mediatype, attributes):
+	def NewNode(self, tagname, attributes):
+		# mimetype -- the MIME type of the node as specified in attr
+		# mtype -- the MIME type of the node as calculated
+		# mediatype, subtype -- mtype split into parts
+		# tagname -- the tag name in the SMIL file (None for "ref")
+		# nodetype -- the CMIF node type (imm/ext/...)
 		for key, val in attributes.items():
 			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
 				del attributes[key]
@@ -387,8 +392,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
  			# guess the type from the file extension
  			mtype = mimetypes.guess_type(url)[0]
 		if url is not None and mtype is None and \
-		   (mediatype is None or
-		    (mediatype == 'text' and subtype is None)):
+		   (tagname is None or tagname == 'text'):
 			# last resort: get file and see what type it is
 			try:
 				u = MMurl.urlopen(url)
@@ -400,30 +404,32 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				mtype = u.headers.type
 				u.close()
 
-		if mtype is None and mediatype is None:
+		if mtype is None and tagname is None:
 			# we've tried, but we just don't know what
 			# we're dealing with
 			self.syntax_error('unknown object type')
 			return
 
+		mediatype = tagname
 		if mtype is not None:
 			mtype = string.split(mtype, '/')
-##			if mediatype is not None and mtype[0]!=mediatype and \
-##			   (mediatype[:5]!='cmif_' or mtype!=['text','plain']):
+##			if tagname is not None and mtype[0]!=tagname and \
+##			   (tagname[:5]!='cmif_' or mtype!=['text','plain']):
 ##				self.warning("file type doesn't match element", self.lineno)
-			if mediatype is None or mediatype[:5] != 'cmif_':
+			if tagname is None or tagname[:5] != 'cmif_':
 				mediatype = mtype[0]
 				subtype = mtype[1]
+			
 
 		# now determine channel type
 		if subtype is not None and \
 		   string.find(string.lower(subtype), 'real') >= 0:
 			# if it's a RealMedia type, use tag to determine chtype
-			if mtype == 'audio':
+			if tagname == 'audio':
 				chtype = 'RealAudio'
-			elif mtype == 'img':
+			elif tagname == 'image':
 				chtype = 'RealPix'
-			elif mtype == 'text':
+			elif tagname == 'text':
 				chtype = 'RealText'
 			else:
 				chtype = 'RealVideo'
@@ -614,6 +620,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node = self.__context.newnode(type)
 			self.__container._addchild(node)
 		self.__container = node
+		node.__chanlist = {}
 		self.AddAttrs(node, attributes)
 
 	def EndContainer(self):
@@ -895,24 +902,39 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		mtype = node.__chantype
 		del node.__chantype
 		ctx = self.__context
+		# find a channel of the right type that represents
+		# this node's region
+		name = None
 		for ch in self.__region2channel.get(region, []):
 			if ch['type'] == mtype:
+				# found existing channel of correct type
 				name = ch.name
-				break
-		else:
-			name = attrdict.get('title')
-		if not name or \
-		   (ctx.channeldict.has_key(name) and
-		    ctx.channeldict[name]['type'] != mtype):
-			name = attrdict.get('id')
-		if not name or \
-		   (ctx.channeldict.has_key(name) and
-		    ctx.channeldict[name]['type'] != mtype):
-			name = region
-		if not name or \
-		   (ctx.channeldict.has_key(name) and
-		    ctx.channeldict[name]['type'] != mtype):
-			name = '%s %s' % (region, mediatype)
+				# check whether channel can be used
+				# we can only use a channel if it isn't used
+				# by another node parallel to this one
+				par = node.GetParent()
+				while par is not None:
+					if par.__chanlist.has_key(name):
+						if par.GetType() == 'par':
+							# conflict
+							name = None
+							break
+						else:
+							# no conflict
+							break
+					par = par.GetParent()
+				if name is not None:
+					break
+		# either we use name or name is None and we have to
+		# create a new channel
+		if not name:
+			name = attrdict.get('id', region)
+			if ctx.channeldict.has_key(name):
+				name = name + ' %d'
+				i = 0
+				while ctx.channeldict.has_key(name % i):
+					i = i + 1
+				name = name % i
 		ch = ctx.channeldict.get(name)
 		if ch is None:
 			# there is no channel of the right name and type
@@ -938,6 +960,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attrdict = self.__regions[region]
 				self.__fillchannel(ch, attrdict, mtype)
 		node.attrdict['channel'] = name
+		par = node.GetParent()
+		while par is not None:
+			par.__chanlist[name] = 0
+			par = par.GetParent()
 
 	def FixLayouts(self):
 		if not self.__layouts:
@@ -984,6 +1010,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					href = href + '/1'
 				hlinks.addlink((src, (href, tag or ''), DIR_1TO2, ltype))
 
+	def CleanChanList(self, node):
+		if node.GetType() not in leaftypes:
+			del node.__chanlist
+
 	# methods for start and end tags
 
 	# smil contains everything
@@ -1016,6 +1046,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.FixSizes()
 		self.MakeChannels()
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
+		self.Recurse(self.__root, self.CleanChanList)
 		self.FixLayouts()
 		self.FixBaseWindow()
 		self.FixLinks()
