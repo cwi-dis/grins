@@ -5,7 +5,7 @@
 from MMExc import *
 import MMAttrdefs
 
-class Channel():
+class Channel:
 	#
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
