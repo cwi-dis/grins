@@ -237,14 +237,14 @@ class SMILHtmlTimeWriter(SMIL):
 		if len(self.top_levels)==1:
 			self.__currViewport = ch = self.top_levels[0]
 			name = self.ch2name[ch]
-			self.writetag('div', [('id',name), ('class', 'reg'+name),])
+			self.writetag('div', [('id',scriptid(name)), ('class', 'reg'+name),])
 			self.push()
 			self.writenode(self.root, root = 1)
 			self.pop()
 		else:
 			for viewport in self.top_levels:
 				name = self.ch2name[viewport]
-				self.writetag('div', [('id',name), ('class', 'reg'+name),])
+				self.writetag('div', [('id',scriptid(name)), ('class', 'reg'+name),])
 				self.push()
 				self.pop()
 			self.writenode(self.root, root = 1)
@@ -344,7 +344,7 @@ class SMILHtmlTimeWriter(SMIL):
 			value = func(self, x)
 			if value and attributes.has_key(name) and value != attributes[name]:
 				if name in not_xhtml_time_attrs:
-					self.showunsupported(name)
+					pass # self.showunsupported(name)
 				for v in not_xhtml_time_attrs_values:
 					if string.find(value, v)>=0:
 						if v == '.activateEvent':
@@ -358,12 +358,17 @@ class SMILHtmlTimeWriter(SMIL):
 						name = 'end'
 						value = value[3:-1] + '.end'
 
+				# scriptify ids of known refs
+				if value: value = scriptidref(value)
+
 				# 
 				if name == 'end' and value == 'activateEvent':
 					name = 'onClick'
 					value = 'endElement()'
 
 				if interior:
+					if name == 'id':
+						value = scriptid(value)
 					attrlist.append((name, value))
 				else:	
 					if name == 'region': 
@@ -373,6 +378,7 @@ class SMILHtmlTimeWriter(SMIL):
 					elif name == 'id':
 						self.ids_written[value] = 1
 						nodeid = value
+						value = scriptid(value)
 					elif name == 'transIn':
 						transIn = value
 					elif name == 'transOut':
@@ -386,8 +392,7 @@ class SMILHtmlTimeWriter(SMIL):
 		
 		if interior:
 			if mtype in not_xhtml_time_elements:
-				self.showunsupported(mtype)
-				#return
+				pass # self.showunsupported(mtype)
 
 			if not root:
 				if self.__currRegion!=None:
@@ -426,14 +431,13 @@ class SMILHtmlTimeWriter(SMIL):
 					
 		if mtype == 'audio':
 			if nodeid:
-				attrlist.insert(0,('id', nodeid))
+				attrlist.insert(0,('id', scriptid(nodeid)))
 			self.writetag('t:'+mtype, attrlist)
 			return	
 
 		parents = []
 		viewport = None
 		pushed = 0
-		vpushed = 0
 	
 		lch = self.root.GetContext().getchannel(regionName)
 
@@ -449,8 +453,8 @@ class SMILHtmlTimeWriter(SMIL):
 		lch = parents[0]
 		name = self.ch2name[lch]
 		divlist = []
-		divlist.append(('id', name))
-		divlist.append(('class', 'reg'+regionName))
+		divlist.append(('id', scriptid(name)))
+		divlist.append(('class', 'reg'+scriptid(regionName)))
 		self.writetag('div', divlist)
 		self.push()
 		self.ids_written[name] = 1
@@ -462,8 +466,6 @@ class SMILHtmlTimeWriter(SMIL):
 			if not nodeid:
 				nodeid = 'm' + x.GetUID()
 			subregid = nodeid + 'd1'
-			subregid = string.join(string.split(subregid, '-'), '')
-			subregid = string.join(string.split(subregid, '_'), '')
 
 		subRegGeom, mediaGeom = None, None
 		geoms = x.getPxGeomMedia()
@@ -475,7 +477,7 @@ class SMILHtmlTimeWriter(SMIL):
 			style = self.rc2style(subRegGeom)
 
 			if transIn or transOut:
-				divlist.append(('id', subregid))
+				divlist.append(('id', scriptid(subregid)))
 				style = style + 'filter:'
 			
 			if transIn:
@@ -509,7 +511,7 @@ class SMILHtmlTimeWriter(SMIL):
 
 			if transIn:
 				style = style + 'visibility=hidden;'
-				trans = 'transIn(%s, \'%s\')' % (subregid, transInName)
+				trans = 'transIn(%s, \'%s\')' % (scriptid(subregid), transInName)
 				attrlist.append( ('onbegin', trans) )
 
 			divlist.append(('style', style))
@@ -519,12 +521,12 @@ class SMILHtmlTimeWriter(SMIL):
 
 		if mediaGeom:
 			if nodeid:
-				attrlist.insert(0,('id', nodeid))
+				attrlist.insert(0,('id', scriptid(nodeid)))
 			style = 'position=absolute;left=%d;top=%d;width=%d;height=%d;' % mediaGeom
 			attrlist.append( ('style',style) )
 
 		if self.writeAnchors(x, nodeid):
-			attrlist.append(('usemap', '#'+nodeid+'map'))
+			attrlist.append(('usemap', '#'+scriptid(nodeid)+'map'))
 
 		if transOut:
 			self.writetag('t:par')
@@ -538,14 +540,12 @@ class SMILHtmlTimeWriter(SMIL):
 			self.writetag('t:'+mtype, attrlist)
 
 		if transOut:
-			trans = 'transOut(%s, \'%s\')' % (subregid, transOutName)
-			self.writetag('t:set', [ ('begin','%s.end-%.1f' % (nodeid,transOutDur)), ('dur', '%.1f' % transOutDur), ('onbegin', trans), ])
+			trans = 'transOut(%s, \'%s\')' % (scriptid(subregid), transOutName)
+			self.writetag('t:set', [ ('begin','%s.end-%.1f' % (scriptid(nodeid),transOutDur)), ('dur', '%.1f' % transOutDur), ('onbegin', trans), ])
 			self.pop()
 			pushed = pushed - 1
 		
 		for i in range(pushed):
-			self.pop()
-		if vpushed:
 			self.pop()
 
 	def writeAnchors(self, x, name):
@@ -556,7 +556,7 @@ class SMILHtmlTimeWriter(SMIL):
 				hassrc = 1
 				break
 		if hassrc:
-			self.writetag('map', [('id', name+'map'),])
+			self.writetag('map', [('id', scriptid(name)+'map'),])
 			self.push()
 			for a in alist:
 				if a.atype in SourceAnchors:
@@ -583,8 +583,8 @@ class SMILHtmlTimeWriter(SMIL):
 		lch = parents[0]
 		name = self.ch2name[lch]
 		divlist = []
-		divlist.append(('id', name))
-		divlist.append(('class', 'reg'+regionName))
+		divlist.append(('id', scriptid(name) ))
+		divlist.append(('class', 'reg'+scriptid(regionName)))
 		self.writetag('div', divlist)
 		self.push()
 		self.ids_written[name] = 1
@@ -610,8 +610,10 @@ class SMILHtmlTimeWriter(SMIL):
 		for name, func in smil_attrs:
 			if attributes.has_key(name):
 				value = func(self, node)
+				if value: value = scriptidref(value)
 				if name == 'targetElement':
 					targetElement = value
+					value = scriptid(value)
 				if name == 'from':value = fromxy
 				elif name == 'to':value = toxy
 				elif name == 'values':value = values
@@ -645,7 +647,7 @@ class SMILHtmlTimeWriter(SMIL):
 				bgcolor = '#%02x%02x%02x' % bgcolor
 			style = 'position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;background-color=%s;' % (x, y, w, h, bgcolor)
 			self.ch2style[ch] = style
-			self.fp.write('.reg'+name + ' {' + style + '}\n')
+			self.fp.write('.reg'+scriptid(name) + ' {' + style + '}\n')
 
 			if self.__subchans.has_key(ch.name):
 				for sch in self.__subchans[ch.name]:
@@ -678,7 +680,7 @@ class SMILHtmlTimeWriter(SMIL):
 		self.ch2style[ch] = style
 
 		name = self.ch2name[ch]
-		self.fp.write('.reg'+name + ' {' + style + '}\n')
+		self.fp.write('.reg'+scriptid(name) + ' {' + style + '}\n')
 		
 		if self.__subchans.has_key(ch.name):
 			for sch in self.__subchans[ch.name]:
@@ -691,7 +693,7 @@ class SMILHtmlTimeWriter(SMIL):
 	def writelink(self, x, a):
 		attrlist = []
 		aid = (x.GetUID(), a.aid)
-		attrlist.append(('id', self.aid2name[aid]))
+		attrlist.append(('id', scriptid(self.aid2name[aid])))
 
 		links = x.GetContext().hyperlinks.findsrclinks(aid)
 		if links:
@@ -792,8 +794,8 @@ class SMILHtmlTimeWriter(SMIL):
 			href = a2
 
 		if href[:1] == '#':
-			attrs.append(('href', href))
-			action = href[1:]
+			action = scriptid(href[1:])
+			attrs.append(('href', '#'+action))
 			action = action + '.beginElement()'
 			attrs.append(('onClick', action))
 		else:
@@ -1012,6 +1014,31 @@ class SMILHtmlTimeWriter(SMIL):
 		if node.GetType() in interiortypes:
 			for child in node.children:
 				self.syncidscheck(child)
+
+#
+#   Util
+#
+def scriptid(name):
+	l = []
+	for ch in name:
+		if ch=='-': ch = '_'
+		l.append(ch)
+	return string.join(l, '')
+
+smil20suffix = ('.begin', '.end', '.activateEvent',)
+xhtmlsuffix = ('.click', '.beginElement', '.endElement')
+
+def scriptidref(value):
+	if not value: return value
+	for suffix in smil20suffix:	
+		ix = string.find(value, suffix)
+		if ix>0: 
+			return scriptid(value[:ix]) + value[ix:]
+	for suffix in xhtmlsuffix:	
+		ix = string.find(value, suffix)
+		if ix>0: 
+			return scriptid(value[:ix]) + value[ix:]
+	return value
 
 #
 #	Transitions
