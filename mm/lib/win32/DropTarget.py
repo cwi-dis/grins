@@ -67,9 +67,9 @@ def DecodeDragData(dataobj):
 		# We cannot convert these back to a node, as we
 		# don't have access to the context here
 	elif name == 'Region':
-		assert 0
+		rv = data # UID string
 	elif name == 'Media':
-		assert 0
+		rv = data # UID string
 	else:
 		print 'Unknown dragformat', name
 		rv = None
@@ -97,9 +97,13 @@ def EncodeDragData(name, args):
 			context = id(node.context)
 		return CF_NODEUID, "%d %s"%(context, uid)
 	if name == 'Region':
-		assert 0
+		if hasattr(args, 'GetUID'):
+			args = args.GetUID()
+		return CF_REGION, args
 	if name == 'Media':
-		assert 0
+		if hasattr(args, 'GetUID'):
+			args = args.GetUID()
+		return CF_MEDIA, args
 	assert 0
 
 class CoreDropTarget:
