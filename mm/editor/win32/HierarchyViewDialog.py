@@ -52,11 +52,12 @@ class HierarchyViewDialog(ViewDialog):
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
 		self.window.register(WMEVENTS.PasteFile, self.pastefile, None)
 		self.window.register(WMEVENTS.DragFile, self.dropeffect, None)
-		self.window.register(WMEVENTS.DropFile, self.dropfile, None)
+		self.window.register(WMEVENTS.DropFile, self.__dropfile, None)
 
 		self.window.register(WMEVENTS.DragNode, self.dragnode, None)
 		self.window.register(WMEVENTS.DropNode, self.dropnode, None)
 		self.window.register(WMEVENTS.MouseMove, self.mousemove, None)
+		self.window.register(WMEVENTS.DragEnd, self.dragend, None)
 
 	def getparentwindow(self):
 		# Used by machine-independent code to pass as parent
@@ -106,13 +107,14 @@ class HierarchyViewDialog(ViewDialog):
 
 	def dropeffect(self, dummy, window, event, params):
 		# event handler for mouse moves while dragging a file over the window.
+		self.droppable_widget = None
 		x, y, filename = params
 		if not (0 <= x < 1 and 0 <= y < 1):
+			self.draw()
 			return windowinterface.DROPEFFECT_NONE
 		x = x * self.mcanvassize[0]
 		y = y * self.mcanvassize[1]		
 		obj = self.whichhit(x, y)
-		self.droppable_widget = None
 		if not obj:
 			rv = windowinterface.DROPEFFECT_NONE
 		elif obj.node.GetType() in MMNode.leaftypes:
@@ -134,7 +136,9 @@ class HierarchyViewDialog(ViewDialog):
 	def dragnode(self, dummy, window, event, params):
 		# event handler for dragging a node over the window.
 		x, y, cmd, ucmd, args = params
+		self.droppable_widget = None
 		if not (0 <= x < 1 and 0 <= y < 1):
+			self.draw()
 			return windowinterface.DROPEFFECT_NONE
 		if ucmd == DRAG_NODE:
 			xf, yf = args
@@ -146,7 +150,6 @@ class HierarchyViewDialog(ViewDialog):
 		x = x * self.mcanvassize[0]
 		y = y * self.mcanvassize[1]
 		obj = self.whichhit(x, y)
-		self.droppable_widget = None
 		if obj and obj.node.GetType() in MMNode.interiortypes:
 			if objSrc and cmd=='move':
 				if objSrc.node.IsAncestorOf(obj.node):
@@ -161,11 +164,17 @@ class HierarchyViewDialog(ViewDialog):
 			rv = windowinterface.DROPEFFECT_NONE
 		self.draw()
 		return rv
+
+	def dragend(self, dummy, window, event, params):
+		self.droppable_widget = None
+		self.draw()
 			
 	def dropnode(self, dummy, window, event, params):
 		# event handler for dropping the node.
 		x, y, cmd, ucmd, args = params
+		self.droppable_widget = None
 		if not (0 <= x < 1 and 0 <= y < 1):
+			self.draw()
 			return windowinterface.DROPEFFECT_NONE
 		if ucmd == DRAG_NODE:
 			xf, yf = args
@@ -183,12 +192,18 @@ class HierarchyViewDialog(ViewDialog):
 		if objSrc and objDst and objDst.node.GetType() in MMNode.interiortypes:
 			if cmd=='move':
 				if objSrc.node.IsAncestorOf(objDst.node):
+					self.draw()
 					return 0
 				self.movenode((x, y), (xf, yf))
 			else:
 				self.copynode((x, y), (xf, yf))
 			return 1
+		self.draw()
 		return 0
+
+	def __dropfile(self, maybenode, window, event, params):
+		self.droppable_widget = None
+		self.dropfile(maybenode, window, event, params)
 
 	# this method is called when the mouse is dragged
 	# begin != 0 means that you start the drag, otherwise, assume that the drag is finished

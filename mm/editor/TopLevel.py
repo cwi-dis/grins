@@ -1530,7 +1530,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def setwaiting(self):
 		windowinterface.setwaiting()
-		pass
 
 	def prefschanged(self):
 		# HACK: we don't want to set the file changed bit (in the

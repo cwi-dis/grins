@@ -180,29 +180,26 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		return self.node
 
 	def add_event_icons(self):
-		beginevents = MMAttrdefs.getattr(self.node, 'beginlist')
-		endevents = MMAttrdefs.getattr(self.node, 'endlist')
+		self.__add_events_helper('beginevent', 'beginlist')
+		self.__add_events_helper('endevent', 'endlist')
 
-		self.__add_events_helper(beginevents, 'beginevent', 'beginlist')
-		self.__add_events_helper(endevents, 'endevent', 'endlist')
-
-	def __add_events_helper(self, events, iconname, initattr):
+	def __add_events_helper(self, iconname, attr):
 		icon = None
-		for b in events:
-			othernode = b.refnode()
+		for arc in MMAttrdefs.getattr(self.node, attr):
+			othernode = arc.refnode()
 			if othernode:
 				if not othernode.views.has_key('struct_view'):
 					print "DEBUG: Node is not in the structure view: ", othernode
-					return None
+					continue
 				otherwidget = othernode.views['struct_view'].get_cause_event_icon()
 				if icon is None:
-					icon = self.iconbox.add_icon(iconname, arrowto = otherwidget).set_properties(arrowable=1,initattr=initattr).set_contextmenu(self.mother.event_popupmenu_dest)
+					icon = self.iconbox.add_icon(iconname, arrowto = otherwidget).set_properties(arrowable=1,initattr=attr).set_contextmenu(self.mother.event_popupmenu_dest)
 				else:
 					icon.add_arrow(otherwidget)
 				otherwidget.add_arrow(icon)
 			else: # no arrow.
 				if icon is None:
-					icon = self.iconbox.add_icon(iconname).set_properties(arrowable=1,initattr=initattr).set_contextmenu(self.mother.event_popupmenu_dest)
+					icon = self.iconbox.add_icon(iconname).set_properties(arrowable=1,initattr=attr).set_contextmenu(self.mother.event_popupmenu_dest)
 
 	def uncollapse_all(self):
 		# Placeholder for a recursive function.
@@ -909,7 +906,7 @@ class HorizontalWidget(StructureObjWidget):
 	# All widgets drawn horizontally; e.g. sequences.
 	def draw(self, displist):
 		# Draw those funny vertical lines.
-		if self.iscollapsed():
+		if self.iscollapsed() and self.timeline is None:
 			l,t,r,b = self.pos_abs
 			i = l + HEDGSIZE
 			t = t + VEDGSIZE + TITLESIZE
@@ -1350,7 +1347,7 @@ class VerticalWidget(StructureObjWidget):
 		StructureObjWidget.recalc(self, timemapper)
 
 	def draw(self, displist):
-		if self.iscollapsed():
+		if self.iscollapsed() and self.timeline is None:
 			l,t,r,b = self.pos_abs
 			i = t + VEDGSIZE + TITLESIZE
 			l = l + HEDGSIZE

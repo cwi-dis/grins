@@ -166,8 +166,10 @@ class _StructView(DisplayListView):
 				# python/Extensions/Pythonwin/win32view.cpp.
 				# The returned value is whether the drop result was successful or not.
 				# ***** DoDragDrop only needs to be called ONCE ***********
-				self.DoDragDrop(self.CF_NODE, str) # Ignore the result.
+				res = self.DoDragDrop(self.CF_NODE, str)
 				self._dragging = None
+				if not res:
+					self.onEvent(DragEnd, point)
 
 # OnDragLeave is a callback that is called when a dragging node leaves the current
 # window.
