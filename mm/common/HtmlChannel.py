@@ -332,6 +332,7 @@ class HtmlChannel(Channel.ChannelWindow):
 			href = urllib.basejoin(self.url, href)
 		else:
 			href = self.url
+		self._player.toplevel.setwaiting()
 		if list:
 			href = addquery(href, list)
 		self.url, tag = urllib.splittag(href)
@@ -350,6 +351,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.htmlw.SetText(newtext, None, footer, 0, tag)
 ##		self.htmlw.footerText = '<P>[<A HREF="'+self.armed_url+\
 ##			  '">BACK</A> to CMIF node]<P>'
+		self._player.toplevel.setready()
 
 	def resolveImage(self, widget, src, noload = 0):
 		import X
