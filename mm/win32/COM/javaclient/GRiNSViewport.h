@@ -53,6 +53,14 @@ JNIEXPORT void JNICALL Java_GRiNSViewport_disconnect
 
 /*
  * Class:     GRiNSViewport
+ * Method:    getSizeAdvice
+ * Signature: (I)Ljava/awt/Dimension;
+ */
+JNIEXPORT jobject JNICALL Java_GRiNSViewport_getSizeAdvice
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     GRiNSViewport
  * Method:    open
  * Signature: (ILjava/lang/String;)V
  */
