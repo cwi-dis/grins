@@ -10,14 +10,9 @@ from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 # an empty document
 EMPTY = "(seq '1' ((channellist) (hyperlinks)))"
 
-# List of currently open toplevel windows
-opentops = []
-
 class TopLevel:
 	def __init__(self, main, filename):
-		self._tracing = 0
 		self.waiting = 0
-		self.showing = 0
 		self.select_fdlist = []
 		self.select_dict = {}
 		self._last_timer_id = None
@@ -51,52 +46,19 @@ class TopLevel:
 		self.filename = url
 		self.read_it()
 		self.makeplayer()
-		self.window = None
-		self.source = None
-		opentops.append(self)
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
 
 	def show(self):
-		if self.showing:
-			return
-		self.load_geometry()
-		buttons = [('Open...', (self.open_callback, ())),
-			   ('Close', (self.close_callback, ())),
-			   None,
-			   ('Debug', (self.debug_callback, ())),
-			   ('Trace', (self.trace_callback, ()))]
-		if hasattr(self.root, 'source') and \
-		   hasattr(windowinterface, 'TextEdit'):
-			buttons.insert(0, ('View Source...', (self.source_callback, ())))
-		self.window = windowinterface.MainDialog(
-			buttons, self.basename, grab = 0)
-## 		self.window = windowinterface.Window(self.basename,
-## 				deleteCallback = (self.close_callback, ()))
-## 		self.buttons = self.window.ButtonRow(
-## 			buttons,
-## 			top = None, bottom = None, left = None, right = None,
-## 			vertical = 1)
-## 		self.window.show()
-		self.showing = 1
-
-	def load_geometry(self):
-		name = 'toplevel_'
-		h, v = MMAttrdefs.getattr(self.root, name + 'winpos')
-		width, height = MMAttrdefs.getattr(self.root, name + 'winsize')
-		self.last_geometry = h, v, width, height
+		pass
 
 	def destroy(self):
 		self.destroyplayer()
-		if self.window:
-			self.window.close()
-			self.window = None
-		self.showing = 0
 		self.root.Destroy()
 		self.player.toplevel = None
-		if self in opentops:
-			opentops.remove(self)
+		if self in self.main.tops:
+			self.main.tops.remove(self)
 
 	def timer_callback(self):
 		self._last_timer_id = None
@@ -123,21 +85,6 @@ class TopLevel:
 	#
 	# Callbacks.
 	#
-	def source_callback(self):
-		if self.source is not None and not self.source.is_closed():
-			self.source.show()
-			return
-		w = windowinterface.Window('Source', resizable = 1,
-					   deleteCallback = 'hide')
-		b = w.ButtonRow([('Close', (w.hide, ()))],
-				top = None, left = None, right = None,
-				vertical = 0)
-		t = w.TextEdit(self.root.source, None, editable = 0,
-			       top = b, left = None, right = None,
-			       bottom = None, rows = 30, columns = 80)
-		w.show()
-		self.source = w
-
 	def open_okcallback(self, filename):
 		if os.path.isabs(filename):
 			cwd = os.getcwd()
@@ -210,29 +157,11 @@ class TopLevel:
 
 	def close_callback(self):
 		self.setwaiting()
-		if self.source is not None and not self.source.is_closed():
-			self.source.close()
-		self.source = None
 		self.close()
 		self.setready()
 
 	def close(self):
 		self.destroy()
-		if len(opentops) == 0:
-			raise SystemExit, 0
-
-	def debug_callback(self):
-		import pdb
-		pdb.set_trace()
-
-	def trace_callback(self):
-		import trace
-		if self._tracing:
-			trace.unset_trace()
-			self._tracing = 0
-		else:
-			self._tracing = 1
-			trace.set_trace()
 
 	def setwaiting(self):
 		if self.waiting: return
@@ -261,7 +190,7 @@ class TopLevel:
 		else:
 			url = uid
 		url = MMurl.basejoin(self.filename, url)
-		for top in opentops:
+		for top in self.main.tops:
 			if top is not self and top.is_document(url):
 				break
 		else:
@@ -319,7 +248,7 @@ class TopLevel:
 
 	def getallexternalanchors(self):
 		rv = []
-		for top in opentops:
+		for top in self.main.tops:
 			if top is not self:
 				rv = rv + top._getlocalexternalanchors()
 		return rv
