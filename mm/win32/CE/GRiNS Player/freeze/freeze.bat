@@ -69,8 +69,6 @@ rem set PYTHONPATH=%PYTHONPATH%;%PYTHONHOME%\Lib\lib-old
 
 : Do the freeze
 if exist FreezeOpts del FreezeOpts
-echo -x NodeInfo >> FreezeOpts
-echo -x AnchorEdit >> FreezeOpts
 echo -x cmifed >> FreezeOpts
 echo -x AutoLicense >> FreezeOpts
 echo -x base_displist >> FreezeOpts
