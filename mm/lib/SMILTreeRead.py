@@ -60,6 +60,11 @@ mediamarker = re.compile(		# id-ref ".marker(" name ")"
 wallclock = re.compile(			# "wallclock(" wallclock-value ")"
 	r'wallclock\((?P<wallclock>[^()]+)\)$'
 	)
+wallclockval = re.compile(
+	r'(?:(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})T)?'
+	r'(?P<hour>\d{2}):(?P<min>\d{2})(?::(?P<sec>\d{2})(?:\.(?P<fraction>\d+))?)?'
+	r'(?:(?P<Z>Z)|(?P<tzsign>[-+])(?P<tzhour>\d{2}):(?P<tzmin>\d{2}))?$'
+	)
 ##clock = re.compile(r'(?P<name>local|remote):'
 ##		   r'(?P<hours>\d+):'
 ##		   r'(?P<minutes>\d{2}):'
@@ -297,7 +302,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if res is not None:
 					if not boston:
 						boston = 'wallclock time'
-					wc = res.group('wallclock')
+					wc = string.strip(res.group('wallclock'))
+					res = wallclockval.match(wc)
+					if res is None:
+						self.syntax_error('bad wallclock value')
+						continue
+##					list.append(MMNode.MMSyncArc(node, attr, wallclock = XXX))
 					continue
 				self.syntax_error('unrecognized %s value' % attr)
 		if boston:
