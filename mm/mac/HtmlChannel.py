@@ -114,7 +114,7 @@ class HtmlChannel(Channel.ChannelWindow):
 #		windowinterface.showmessage('JUMP:'+`aid`+`args`)
 		
 	def do_arm(self, node, same=0):
-	        if not same:
+		if not same:
 			self.armed_str = self.getstring(node)
 		if self._is_shown and not self.htmlw:
 			self._after_creation()
@@ -144,14 +144,14 @@ class HtmlChannel(Channel.ChannelWindow):
 		an = self.window._convert_color(self.getbucolor(node))
 		htmlw.setcolors(bg, fg, an)
 
-		htmlw.insert_html(self.played_str)
+		htmlw.insert_html(self.played_str, self.url)
 		self.fixanchorlist(node)
 		self.play_node = node
 
 	def stopplay(self, node):
 		Channel.ChannelWindow.stopplay(self, node)
 		if self.htmlw:
-			self.htmlw.insert_html('')
+			self.htmlw.insert_html('', '')
 			
 	def getstring(self, node):
 		if node.type == 'imm':
@@ -264,7 +264,7 @@ class HtmlChannel(Channel.ChannelWindow):
 			return
 		if href:
 			if href == 'XXXX:play/node':
-				self.htmlw.insert_html(self.played_str)
+				self.htmlw.insert_html(self.played_str, self.url)
 				return
 			href = urllib.basejoin(self.url, href)
 		else:
@@ -284,7 +284,7 @@ class HtmlChannel(Channel.ChannelWindow):
 				  `(sys.exc_type, sys.exc_value)`+ \
 				  '<P>\n'
 		footer = '<HR>[<A HREF="XXXX:play/node">BACK</A> to CMIF node]'
-		self.htmlw.insert_html(newtext+footer)
+		self.htmlw.insert_html(newtext+footer, self.url)
 ##		self.htmlw.footerText = '<P>[<A HREF="'+self.armed_url+\
 ##			  '">BACK</A> to CMIF node]<P>'
 
