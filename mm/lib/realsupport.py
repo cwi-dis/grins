@@ -2,25 +2,7 @@ __version__ = "$Id$"
 
 import xmllib, string, re
 
-colors = {
-	# color values taken from HTML 4.0 spec
-	'aqua': (0x00, 0xFF, 0xFF),
-	'black': (0x00, 0x00, 0x00),
-	'blue': (0x00, 0x00, 0xFF),
-	'fuchsia': (0xFF, 0x00, 0xFF),
-	'gray': (0x80, 0x80, 0x80),
-	'green': (0x00, 0x80, 0x00),
-	'lime': (0x00, 0xFF, 0x00),
-	'maroon': (0x80, 0x00, 0x00),
-	'navy': (0x00, 0x00, 0x80),
-	'olive': (0x80, 0x80, 0x00),
-	'purple': (0x80, 0x00, 0x80),
-	'red': (0xFF, 0x00, 0x00),
-	'silver': (0xC0, 0xC0, 0xC0),
-	'teal': (0x00, 0x80, 0x80),
-	'white': (0xFF, 0xFF, 0xFF),
-	'yellow': (0xFF, 0xFF, 0x00),
-	}
+from colors import colors
 # see SMILTreeRead for a more elaborate version
 color = re.compile('#(?P<hex>[0-9a-fA-F]{3}|'		# #f00
 		   '[0-9a-fA-F]{6})$')			# #ff0000
@@ -531,6 +513,7 @@ class RPParser(xmllib.XMLParser):
 		val = attributes.get('color')
 		if val is None:
 			return
+		val = string.lower(val)
 		if colors.has_key(val):
 			return colors[val]
 		res = color.match(val)
