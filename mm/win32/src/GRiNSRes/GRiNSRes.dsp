@@ -181,7 +181,15 @@ SOURCE=.\RES\player8bit.bmp
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\..\Build\products\g2-15\lite\splash8bit.bmp"
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\Build\products\g2-15\pro\splash8bit.bmp"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\Build\products\smil-10\splash8bit.bmp"
 # End Source File
 # Begin Source File
 
@@ -190,6 +198,10 @@ SOURCE=.\RES\splashimg.bmp
 # Begin Source File
 
 SOURCE="..\..\..\Build\products\g2-15\lite\splashpr.bmp"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\Build\products\g2-15\pro\splashsm.bmp"
 # End Source File
 # Begin Source File
 
