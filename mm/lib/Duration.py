@@ -23,6 +23,15 @@ def get(node, ignoreloop=0, wanterror=0):
 				return 0
 		context = node.GetContext()
 		url = MMAttrdefs.getattr(node, 'file')
+		if node.GetChannelType() == 'RealPix' and hasattr(node, 'slideshow'):
+			import base64, realnode
+			node.SetAttr('file', 'dummy.rp')
+			data = realnode.writenode(node, tostring = 1)
+			node.DelAttr('file')
+			if url:
+				node.SetAttr('file', url)
+			url = 'data:image/vnd.rn-realpix;base64,' + \
+			       string.join(string.split(base64.encodestring(data), '\n'), '')
 		url = context.findurl(url)
 		cache = urlcache.urlcache[url]
 		dur = cache.get('duration')
