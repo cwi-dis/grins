@@ -1,4 +1,4 @@
-GRiNS clean installations reports:
+GRiNS clean installations informal reports:
 
 1. NT4 GRiNS installation
 
@@ -6,5 +6,20 @@ GRiNS clean installations reports:
 
 3. Win95 GRiNS installation
 
+
 4. Win2k (NT5) GRiNS installation
+step 1: Typical clean installation of Windows 2000 Professional Beta 3 (Build 2000)
+step 2: Install GRiNS
+step 3: Test GRiNS: 
+
+Notes: 
+	i)  The typical clean installation of W2k installed IE5 
+	ii) No DLLs transfer is needed (argument checked)
+
+Result: OK. 
+	GRiNS seems to work correctly with a clean W2k.
+	The test included all the views/forms/dialogs and smil docs containing 
+	all basic media (text,html,image,video)
+
+Tester: Kleanthis
 
