@@ -73,6 +73,7 @@ class _Splash:
 	def __init__(self):
 		self.main = None
 		self.__initialized = 0
+		self.__exposed = 0
 
 	def splash(self, version = None):
 		self.wininit()
@@ -128,9 +129,12 @@ class _Splash:
 		w.DefineCursor(self.watchcursor)
 		self.dpy.Flush()
 		import Xtdefs, time
-		Xt.ProcessEvent(Xtdefs.XtIMAll)
-## 		time.sleep(0.1)
+		while not self.__exposed:
+			# at least wait until we were exposed
+			Xt.ProcessEvent(Xtdefs.XtIMAll)
 		while Xt.Pending():
+			# then wait until all pending events have been
+			# processed
 			Xt.ProcessEvent(Xtdefs.XtIMAll)
 		return 1
 
@@ -276,6 +280,7 @@ class _Splash:
 
 	def expose(self, w, (func, args), call_data):
 		apply(func, args)
+		self.__exposed = 1
 
 	def close(self):
 		if not self.main or not hasattr(self, 'shell'):
