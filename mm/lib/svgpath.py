@@ -66,41 +66,59 @@ class PathSeg:
 		elif letter == 'z' or letter == 'Z': self._type = PathSeg.SVG_PATHSEG_CLOSEPATH
 		else: self._type = index
 
+	def ff(self, val):
+		if val < 0:
+			val = -val
+			sign = '-'
+		else:
+			sign = ''
+		str = '%f' % val
+		if '.' in str:
+			while str[-1] == '0':
+				str = str[:-1]
+			if str[-1] == '.':
+				str = str[:-1]
+		while len(str) > 1 and str[0] == '0' and str[1] in '0123456789':
+			str = str[1:]
+		if not str:
+			str = '0'
+		return sign + str
+
 	def __repr__(self):
 		t = self._type
 		if t == PathSeg.SVG_PATHSEG_CLOSEPATH: return 'z'
-		elif t == PathSeg.SVG_PATHSEG_MOVETO_ABS: return 'M %f %f' % (self._x, self._y)
-		elif t == PathSeg.SVG_PATHSEG_MOVETO_REL: return 'm %f %f' % (self._x, self._y)
-		elif t == PathSeg.SVG_PATHSEG_LINETO_ABS: return 'L %f %f' % (self._x, self._y)
-		elif t == PathSeg.SVG_PATHSEG_LINETO_REL: return 'l %f %f' % (self._x, self._y)
+		elif t == PathSeg.SVG_PATHSEG_MOVETO_ABS: return 'M %s %s' % (self.ff(self._x), self.ff(self._y))
+		elif t == PathSeg.SVG_PATHSEG_MOVETO_REL: return 'm %s %s' % (self.ff(self._x), self.ff(self._y))
+		elif t == PathSeg.SVG_PATHSEG_LINETO_ABS: return 'L %s %s' % (self.ff(self._x), self.ff(self._y))
+		elif t == PathSeg.SVG_PATHSEG_LINETO_REL: return 'l %s %s' % (self.ff(self._x), self.ff(self._y))
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_ABS: 
-			return 'C %f %f %f %f %f %f' % (self._x1, self._y1, self._x2, self._y2, self._x, self._y)
+			return 'C %s %s %s %s %s %s' % (self.ff(self._x1), self.ff(self._y1),self.ff(self._x2), self.ff(self._y2), self.ff(self._x), self.ff(self._y))
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_REL: 
-			return 'c %f %f %f %f %f %f' % (self._x1, self._y1, self._x2, self._y2, self._x, self._y)
+			return 'c %s %s %s %s %s %s' % (self.ff(self._x1), self.ff(self._y1), self.ff(self._x2), self.ff(self._y2), self.ff(self._x), self.ff(self._y))
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_ABS: 
-			return 'Q %f %f %f %f %f %f' % (self._x1, self._y1, self._x, self._y)
+			return 'Q %s %s %s %s %s %s' % (self.ff(self._x1), self.ff(self._y1), self.ff(self._x), self.ff(self._y))
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_REL: 
-			return 'q %f %f %f %f %f %f' % (self._x1, self._y1, self._x, self._y)
+			return 'q %s %s %s %s %s %s' % (self.ff(self._x1), self.ff(self._y1), self.ff(self._x), self.ff(self._y))
 		elif t == PathSeg.SVG_PATHSEG_ARC_ABS:
 			sweep = self._sweepFlag
 			largeArc = self._largeArcFlag
-			return 'A %f %f %f %d %d %f %f' % (self._r1, self._r2, self._angle, largeArc, sweep, self._x, self._y)
+			return 'A %s %s %s %d %d %s %s' % (self.ff(self._r1), self.ff(self._r2), self.ff(self._angle), largeArc, sweep, self.ff(self._x), self.ff(self._y))
 		elif t == PathSeg.SVG_PATHSEG_ARC_REL:
 			sweep = self._sweepFlag
 			largeArc = self._largeArcFlag
-			return 'a %f %f %f %d %d %f %f' % (self._r1, self._r2, self._angle, largeArc, sweep, self._x, self._y)
-		elif t == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_ABS: return 'H %f' % self._x
-		elif t == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_REL: return 'h %f' % self._x
-		elif t == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_ABS: return 'V %f' % self._y
-		elif t == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_REL: return 'v %f' % self._y
+			return 'a %s %s %s %d %d %s %s' % (self.ff(self._r1), self.ff(self._r2), self.ff(self._angle), largeArc, sweep, self.ff(self._x), self.ff(self._y))
+		elif t == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_ABS: return 'H %s' % self.ff(self._x)
+		elif t == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_REL: return 'h %s' % self.ff(self._x)
+		elif t == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_ABS: return 'V %s' % self.ff(self._y)
+		elif t == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_REL: return 'v %s' % self.ff(self._y)
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_SMOOTH_ABS: 
-			return 'S %f %f %f %f' % (self._x2, self._y2, self._x, self._y)
+			return 'S %s %s %s %s' % (self.ff(self._x2), self.ff(self._y2), self.ff(self._x), self.ff(self._y))
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_SMOOTH_REL: 
-			return 's %f %f %f %f' % (self._x2, self._y2, self._x, self._y)
+			return 's %s %s %s %s' % ( self.ff(self._x2),  self.ff(self._y2),  self.ff(self._x),  self.ff(self._y))
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS: 
-			return 'T %f %f' % (self._x, self._y)
+			return 'T %s %s' % (self.ff(self._x), self.ff(self._y))
 		elif t == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL: 
-			return 't %f %f' % (self._x, self._y)
+			return 't %s %s' % (self.ff(self._x), self.ff(self._y))
 		else:
 			return ''
 
@@ -570,10 +588,10 @@ class Path:
 			points.append(complex(x,y))
 		return points
 
-	def translatePoints(self, dx, dy):
+	def translate(self, dx, dy):
 		points = []
 		for x, y in self._points:
-			points.append(complex(x,y))
+			points.append(complex(x+dx,y+dy))
 		self._points = points
 
 	# main query method
@@ -619,7 +637,7 @@ class Path:
 		return d
 	
 	def __repr__(self):
-		return 'path = "' + `self._svgpath` + '"'
+		return repr(self._svgpath)
 	
 	def moveTo(self, pt):
 		n = len(self.__ptTypes)
@@ -712,3 +730,4 @@ class Path:
 		return (z1, z12, z123,z1234),z1234,(z1234,z234,z34,z4)
 
 
+ 
