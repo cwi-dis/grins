@@ -102,6 +102,6 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 
 	def playdone(self, dummy):
 		if self.need_armdone:
-			self.armdone()
 			self.need_armdone = 0
+			self.armdone()
 		Channel.ChannelWindowAsync.playdone(self, dummy)
