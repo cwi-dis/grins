@@ -16,7 +16,7 @@
   <body>
     <seq id="Extended-Slideshow">
       <par id="Audio-and-Images">
-        <audio id="audio-0" region="audio" src="music.aiff" dur="15s" repeat="indefinite"/>
+        <audio id="audio-0" region="audio" src="music.aiff"/>
         <seq id="Image-Sequence">
           <img id="picture_1" region="Top-L" src="picture_1.jpg" dur="5s"/>
           <img id="picture_2" region="Mid" src="picture_2.jpg" dur="5s"/>
