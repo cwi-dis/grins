@@ -1,12 +1,11 @@
 GRiNS for Unix
 
-This is the readme file for the GRiNS editor and player Release 0.5,
-patchlevel 2 for Silicon Graphics IRIX 6.5 and for Sun Solaris 2.5.
-More information on GRiNS can be obtained at
-http://www.oratrix.com/GRiNS, or by email to
-grins-request@oratrix.com.  Release notes for this version can be
-found in the file relnotes.html in the top-level directory.  More
-documentation can be found on the homepage.
+This is the readme file for the GRiNS editor and player Release
+1.0beta, for Silicon Graphics IRIX 6.5 and for Sun Solaris 2.5.  More
+information on GRiNS can be obtained at http://www.oratrix.com/GRiNS,
+or by email to grins-request@oratrix.com.  Release notes for this
+version can be found in the file relnotes.html in the top-level
+directory.  More documentation can be found on the homepage.
 
 Prerequisites
 
