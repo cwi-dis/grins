@@ -35,7 +35,7 @@ class TopLevelDialog:
 		b2 = "Don't save"
 		b3 = 'Cancel'
 		##return windowinterface.multchoice(prompt, [b1, b2, b3], -1)
-		rv = EasyDialogs.AskYesNoCancel(prompt)
+		rv = EasyDialogs.AskYesNoCancel(prompt, 1)
 		if rv < 0: return 2
-		if rv > 0: return 1
-		return 0
+		if rv > 0: return 0
+		return 1
