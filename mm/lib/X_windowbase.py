@@ -210,8 +210,6 @@ class _Toplevel:
 				  X.DoRed|X.DoGreen|X.DoBlue))
 		self._colormap.StoreColors(xcolors)
 		self._setupimg()
-		return
-
 
 	def _setupimg(self):
 		import imgcolormap, imgconvert
@@ -301,6 +299,60 @@ class _Toplevel:
 		self._main.Display().Flush()
 
 class _Window:
+	# Instances of this clas represent top-level windows.  This
+	# class is also used as base class for subwindows, but then
+	# some of the methods are overridden.
+	#
+	# The following instance variables are used.  Unless otherwise
+	# noted, the variables are used both in top-level windows and
+	# subwindows.
+	# _shell: the Xt.ApplicationShell widget used for the window
+	#	(top-level windows only)
+	# _form: the Xm.DrawingArea widget used for the window
+	# _colormap: the colormap used by the window (top-level
+	#	windows only)
+	# _visuel: the visual used by the window (top-level windows
+	#	only)
+	# _depth: the depth of the window in pixels (top-level windows
+	#	only)
+	# _pixmap: if present, the backing store pixmap for the window
+	# _gc: the graphics context with which the window (or pixmap)
+	#	is drawn
+	# _title: the title of the window (top-level window only)
+	# _topwindow: the top-level window
+	# _subwindows: a list of subwindows.  This list is also the
+	#	stacking order of the subwindows (top-most first).
+	#	This list is manipulated by the subwindow.
+	# _parent: the parent window (for top-level windows, this
+	#	refers to the instance of _Toplevel).
+	# _displists: a list of _DisplayList instances
+	# _active_displist: the currently rendered _displayList
+	#	instance or None
+	# _bgcolor: background color of the window
+	# _fgcolor: foreground color of the window
+	# _transparent: 1 if window has a transparent background (if a
+	#	window is transparent, all its subwindows should also
+	#	be transparent)
+	# _sizes: the position and size of the window in fractions of
+	#	the parent window (subwindows only)
+	# _rect: the position and size of the window in pixels
+	# _region: _rect as an X Region
+	# _clip: an X Region representing the visible area of the
+	#	window
+	# _hfactor: horizontal multiplication factor to convert pixels
+	#	to relative sizes
+	# _vfactor: vertical multipliction factor to convert pixels to
+	#	relative sizes
+	# _cursor: the desired cursor shape (only has effect for
+	#	top-level windows)
+	# _callbacks: a dictionary with callback functions and
+	#	arguments
+	# _accelerators: a dictionary of accelarators
+	# _menu: the pop-up menu for the window
+	# _showing: 1 if a box is shown to indicate the size of the
+	#	window
+	# _exp_reg: a region in which the exposed area is built up
+	#	(top-level window only)
 	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0):
 		self._title = title
 		self._do_init(parent)
@@ -914,9 +966,26 @@ class _Window:
 
 class _BareSubWindow:
 	def __init__(self, parent, coordinates, defcmap, pixmap, transparent):
-		self._convert_color = parent._convert_color
+		x, y, w, h = parent._convert_coordinates(coordinates)
+		if w == 0: w = 1
+		if h == 0: h = 1
+		self._rect = x, y, w, h
 		self._sizes = coordinates
 		x, y, w, h = coordinates
+		if w == 0 or h == 0:
+			showmessage('Creating subwindow with zero dimension',
+				    type = 'warning')
+		if w == 0:
+			w = float(self._rect[_WIDTH]) / parent._rect[_WIDTH]
+		if h == 0:
+			h = float(self._rect[_HEIGHT]) / parent._rect[_HEIGHT]
+		# conversion factors to convert from mm to relative size
+		# (this uses the fact that _hfactor == _vfactor == 1.0
+		# in toplevel)
+		self._hfactor = parent._hfactor / w
+		self._vfactor = parent._vfactor / h
+
+		self._convert_color = parent._convert_color
 		self._do_init(parent)
 		if parent._transparent:
 			self._transparent = parent._transparent
@@ -932,13 +1001,7 @@ class _BareSubWindow:
 			have_pixmap = 0
 		else:
 			have_pixmap = 1
-		# conversion factors to convert from mm to relative size
-		# (this uses the fact that _hfactor == _vfactor == 1.0
-		# in toplevel)
-		self._hfactor = parent._hfactor / w
-		self._vfactor = parent._vfactor / h
 
-		self._rect = parent._convert_coordinates(coordinates)
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
 		parent._mkclip()
@@ -988,7 +1051,9 @@ class _BareSubWindow:
 			return		# no-op
 		parent._subwindows.remove(self)
 		parent._subwindows.insert(0, self)
+		# recalculate clipping regions
 		parent._mkclip()
+		# draw the window's contents
 		if not self._transparent or self._active_displist:
 			self._do_expose(self._region)
 			if hasattr(self, '_pixmap'):
@@ -1005,7 +1070,9 @@ class _BareSubWindow:
 			return		# no-op
 		parent._subwindows.remove(self)
 		parent._subwindows.append(self)
+		# recalculate clipping regions
 		parent._mkclip()
+		# draw exposed windows
 		for w in self._parent._subwindows:
 			if w is not self:
 				w._do_expose(self._region)
@@ -1030,7 +1097,8 @@ class _BareSubWindow:
 				region.SubtractRegion(r)
 
 	def _do_resize1(self):
-		w, h = self._sizes[2:]
+		# calculate new size of subwindow after resize
+		# close all display lists
 		parent = self._parent
 		try:
 			del self._pixmap
@@ -1039,9 +1107,17 @@ class _BareSubWindow:
 		else:
 			self._pixmap = parent._pixmap
 		self._gc = parent._gc
+		x, y, w, h = parent._convert_coordinates(self._sizes)
+		if w == 0: w = 1
+		if h == 0: h = 1
+		self._rect = x, y, w, h
+		w, h = self._sizes[2:]
+		if w == 0:
+			w = float(self._rect[_WIDTH]) / parent._rect[_WIDTH]
+		if h == 0:
+			h = float(self._rect[_HEIGHT]) / parent._rect[_HEIGHT]
 		self._hfactor = parent._hfactor / w
 		self._vfactor = parent._vfactor / h
-		self._rect = parent._convert_coordinates(self._sizes)
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
 		self._active_displist = None
