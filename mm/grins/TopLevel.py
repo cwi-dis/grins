@@ -208,6 +208,9 @@ class TopLevel(TopLevelDialog):
 ##		elif mtype == 'application/x-grins-cmif':
 ##			import MMRead
 ##			self.root = MMRead.ReadFile(self.filename)
+		elif sys.platform == 'win32':
+			import MediaRead
+			self.root = MediaRead.MediaRead(self.filename, mtype, self.printfunc)		
 		else:
 			import SMILTreeRead
 			if mtype is None or \
