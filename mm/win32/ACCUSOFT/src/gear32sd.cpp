@@ -213,13 +213,37 @@ static PyObject* ig_device_rect_set(PyObject *self, PyObject *args)
 		return NULL;
 		}
 
-//	IG_display_adjust_aspect(img,&rect,IG_ASPECT_DEFAULT);
-	IG_display_adjust_aspect(img,&rect,IG_ASPECT_NONE);
-	
 	IG_device_rect_set(img,&rect);
 
 	Py_INCREF(Py_None);
 	return Py_None;	
+	}
+
+
+static char ig_display_adjust_aspect__doc__[] =
+""
+;
+static PyObject* ig_display_adjust_aspect(PyObject *self, PyObject *args)
+	{
+	HIGEAR img;
+	AT_RECT rect;
+	int aspect;
+	if (!PyArg_ParseTuple(args,"l(iiii)i",&img,
+						&rect.left, &rect.top,
+						&rect.right, &rect.bottom,
+						&aspect))
+		return NULL;
+
+	if(!IG_image_is_valid(img))
+		{
+		seterror("ig_device_rect_set","Invalid image");
+		return NULL;
+		}
+
+	IG_display_adjust_aspect(img,&rect,aspect);
+	
+	return Py_BuildValue("(iiii)", rect.left, rect.top,
+			     rect.right, rect.bottom);	
 	}
 
 
@@ -430,6 +454,7 @@ static struct PyMethodDef gear32sd_methods[] = {
 	{ "image_dimensions_get",ig_image_dimensions_get, METH_VARARGS,ig_image_dimensions_get__doc__},
 	{ "display_transparent_set",ig_display_transparent_set,METH_VARARGS,ig_display_transparent_set__doc__},
 	{ "device_rect_set",ig_device_rect_set,METH_VARARGS,ig_device_rect_set__doc__},
+	{ "display_adjust_aspect",ig_display_adjust_aspect,METH_VARARGS,ig_display_adjust_aspect__doc__},
 	{ "display_desktop_pattern_set",ig_display_desktop_pattern_set,METH_VARARGS,ig_display_desktop_pattern_set__doc__},
 	{ "ip_crop", ig_ip_crop,METH_VARARGS,ig_ip_crop__doc__},
 	{ "display_image", ig_display_image,METH_VARARGS,ig_display_image__doc__},
@@ -462,6 +487,8 @@ void initgear32sd()
 	d = PyModule_GetDict(m);
 	ErrorObject = PyString_FromString("gear32sd.error");
 	PyDict_SetItemString(d, "error", ErrorObject);
+	PyDict_SetItemString(d, "IG_ASPECT_DEFAULT", PyInt_FromLong(IG_ASPECT_DEFAULT));
+	PyDict_SetItemString(d, "IG_ASPECT_NONE", PyInt_FromLong(IG_ASPECT_NONE));
 
 
 	/* Check for errors */
