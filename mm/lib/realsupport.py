@@ -652,10 +652,33 @@ def writeRP(file, rp, node):
 		f.write('  <image handle="%d" name=%s/>\n' % (handle, nameencode(name)))
 	start = 0
 	duration = 0
+	fadeouts = []
 	for attrs in rp.tags:
+		start = start + attrs.get('start', 0)
+		while fadeouts:
+			t, a = fadeouts[0]
+			if t > start:
+				break
+			del fadeouts[0]
+			color = a.get('fadeoutcolor', (0,0,0))
+			for name, val in colors.items():
+				if color == val:
+					color = name
+					break
+			else:
+				color = '#%02x%02x%02x' % color
+			f.write('  <fadeout start="%g" duration="%g" color="%s"' %
+				(t, a.get('fadeoutduration',0), color))
+			writecoords(f, 'dst', a.get('displayfull', 1),
+				    a.get('subregionxy', (0,0)),
+				    a.get('subregionwh', (0,0)),
+				    a.get('subregionanchor', 'top-left'))
+			maxfps = a.get('maxfps')
+			if maxfps is not None:
+				f.write(' maxfps="%d"' % maxfps)
+			f.write('/>\n')
 		tag = attrs.get('tag', 'fill')
 		f.write('  <%s' % tag)
-		start = start + attrs.get('start', 0)
 		f.write(' start="%g"' % start)
 		if tag != 'fill':
 			duration = attrs.get('duration', 0)
@@ -701,6 +724,33 @@ def writeRP(file, rp, node):
 			maxfps = attrs.get('maxfps')
 			if maxfps is not None:
 				f.write(' maxfps="%d"' % maxfps)
+		f.write('/>\n')
+		if tag == 'fadein' and attrs.get('fadeout',0):
+			t = start+duration+attrs.get('fadeouttime',0)
+			for i in range(len(fadeouts)):
+				if t < fadeouts[i][0]:
+					fadeouts.insert(i, (t, attrs))
+					break
+			else:
+				fadeouts.append((t, attrs))
+	for start,a in fadeouts:
+		color = a.get('fadeoutcolor', (0,0,0))
+		for name, val in colors.items():
+			if color == val:
+				color = name
+				break
+		else:
+			color = '#%02x%02x%02x' % color
+		duration = a.get('fadeoutduration',0)
+		f.write('  <fadeout start="%g" duration="%g" color="%s"' %
+			(start, duration, color))
+		writecoords(f, 'dst', a.get('displayfull', 1),
+			    a.get('subregionxy', (0,0)),
+			    a.get('subregionwh', (0,0)),
+			    a.get('subregionanchor', 'top-left'))
+		maxfps = a.get('maxfps')
+		if maxfps is not None:
+			f.write(' maxfps="%d"' % maxfps)
 		f.write('/>\n')
 	f.write('</imfl>\n')
 	f.close()

@@ -342,3 +342,15 @@
 
 (wipetype (string) 'normal' 'Wipe type' wipetype
 	'Type of wipe' normal)
+
+(fadeout (bool) 0 'Fadeout' default
+	'Fadeout image after specified time' normal)
+
+(fadeouttime (float) 0.0 'Fadeout start time' default
+	'Start time for fadeout relative to transition completion' normal)
+
+(fadeoutcolor (tuple (int) (int) (int)) (0 0 0) 'Fadeout color' color
+	'Color to fadeout to' normal)
+
+(fadeoutduration (float) 0.0 'Fadeout duration' default
+	'Duration of fadeout transition' normal)
