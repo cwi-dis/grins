@@ -106,8 +106,8 @@ class _Toplevel:
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append((func, args))
 
-	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
-		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
+	def newwindow(self, x, y, w, h, title,
+		      pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
 		      commandlist = None, resizable = 1, bgcolor = None):
 		from XWindow import _Window
@@ -115,8 +115,8 @@ class _Toplevel:
 			       adornments, canvassize, commandlist, resizable,
 			       bgcolor)
 
-	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
-			type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
+	def newcmwindow(self, x, y, w, h, title,
+			pixmap = 0, units = UNIT_MM,
 			adornments = None, canvassize = None,
 			commandlist = None, resizable = 1, bgcolor = None):
 		from XWindow import _Window
