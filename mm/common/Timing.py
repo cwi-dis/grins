@@ -73,9 +73,9 @@ def docalctimes(root):
 	print '(and', (t2-t1)*0.001, 'sec. in propdown)'
 
 def getinitial(root):
-        if initial_arms == None or root <> ia_root:
-	    print 'Timing.getinitial: have to compute initial arms'
-	    calctimes(root)
+	if initial_arms == None or root <> ia_root:
+		print 'Timing.getinitial: have to compute initial arms'
+		calctimes(root)
 	return initial_arms
 
 
@@ -208,7 +208,7 @@ def adddep(xnode, xside, delay, ynode, yside):
 
 
 def decrement(q, (delay, node, side)):
-        global initial_arms
+	global initial_arms
 	if delay > 0:
 		id = q.enter(delay, 0, decrement, (q, (0, node, side)))
 		return
@@ -223,15 +223,16 @@ def decrement(q, (delay, node, side)):
 	elif side == TL:
 		node.t1 = q.timefunc()
 	node.node_to_arm = None
-	if node.GetType() not in interiortypes:
+	if node.GetType() in interiortypes:
+		node.t0t1_inherited = 1
+	else:
 		if side == HD:
 			import time
 			t0 = time.millitimer()
 			dt = getduration(node)
-			node.t0t1_inherited = (dt == 0)
-			# Don't mess if it has timing deps
-			if len(node.deps[TL]) > 1:
-				node.t0t1_inherited = 0
+			node.t0t1_inherited = \
+				(dt == 0 and len(node.deps[TL]) <= 1)
+				# Don't mess if it has timing deps
 			t1 = time.millitimer()
 			global getd_times
 			getd_times = getd_times + (t1-t0)
@@ -239,19 +240,17 @@ def decrement(q, (delay, node, side)):
 			try:
 				cname = MMAttrdefs.getattr(node, 'channel')
 				if node.GetRawAttr('arm_duration') >= 0:
-				    if lastnode.has_key(cname):
-					ln = lastnode[cname]
-					ln.node_to_arm = node
-				    else:
-					initial_arms.append(node)
+					if lastnode.has_key(cname):
+						ln = lastnode[cname]
+						ln.node_to_arm = node
+					else:
+						initial_arms.append(node)
 			except:
 				pass
 			try:
 				lastnode[cname] = node
 			except:
 				pass
-	else:
-		node.t0t1_inherited = 1
 	for arg in node.deps[side]:
 		decrement(q, arg)
 
