@@ -12,6 +12,10 @@ import winmm
 
 error = 'VideoChannel.error'
 
+# if true disable updates
+# should be true if winmm was build with the symbol USE_GAPI defined
+USE_GAPI = 1
+
 class VideoChannel(Channel.ChannelWindowAsync):
 	_our_attrs = ['fit']
 	node_attrs = Channel.ChannelWindow.node_attrs + [
@@ -36,6 +40,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if self.__video_player:
 			self.__video_player = None
 			self.__unregister_for_timeslices()
+			if self.window:
+				# no effect if winmm was build with the symbol USE_GAPI not defined
+				self.window._topwindow.EnableGAPI(0)
 		Channel.ChannelWindowAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):
@@ -87,6 +94,13 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		dx, dy = self.window.getwindowpos()[:2]
 		self.__update_box = x+dx, y+dy, w, h
 
+		# no effect if winmm was build with the symbol USE_GAPI not defined
+		self.window._topwindow.EnableGAPI(1)
+
+		# meaningful only for GAPI
+		xs, ys, ws, hs = self.window.get_screen_windowpos()
+		self.__video_player.SetDirectUpdateBox((x+xs, y+ys, w, h))
+		self.__video_surf.Fill(self.window._bgcolor or (255, 255, 255))
 		return 1
 
 	def play(self, node, curtime):
@@ -137,6 +151,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if self.__video_player:
 			self.__video_player = None
 			self.__unregister_for_timeslices()
+			if self.window:
+				self.window._topwindow.EnableGAPI(0)
 		Channel.ChannelWindowAsync.stopplay(self, node, curtime)
 
 	def defanchor(self, node, anchor, cb):
@@ -217,7 +233,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.window.updateNow(self.__update_box)
 				
 	def __register_for_timeslices(self):
-		if self.__fiber_id is None:
+		if self.__fiber_id is None and not USE_GAPI:
 			self.__fiber_id = windowinterface.setidleproc(self.onIdle)
 
 	def __unregister_for_timeslices(self):

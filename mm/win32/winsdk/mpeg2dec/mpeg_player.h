@@ -38,6 +38,7 @@ class MpegPlayer : public VideoPlayer
 	virtual bool finished_playback();
 	virtual void lock_surface();
 	virtual void unlock_surface();
+	virtual void set_direct_update_box(int x, int y, int w, int h);
 
 	private:
 	MpegDecoder *decoder;

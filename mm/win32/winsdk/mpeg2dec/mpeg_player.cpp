@@ -188,4 +188,8 @@ void MpegPlayer::unlock_surface()
 	if(display != 0) display->unlock();
 	}
 
+void MpegPlayer::set_direct_update_box(int x, int y, int w, int h)
+	{
+	if(display != 0) display->set_direct_update_box(x, y, w, h);
+	}
 

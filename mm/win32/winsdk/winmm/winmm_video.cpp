@@ -16,6 +16,11 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 // native video decoders/players
 #include "../mpeg2dec/mpeg_player.h"
 
+#ifdef USE_GAPI
+#include "../../CE/gx/inc/gx.h"
+#pragma comment(lib, "..\\..\\CE\\gx\\ARM\\gx.lib")
+#endif
+
 struct PyVideoPlayer
 	{
 	PyObject_HEAD
@@ -78,6 +83,27 @@ PyObject* Winmm_CreateVideoPlayerFromFile(PyObject *self, PyObject *args)
 	platform::close(handle);
 	seterror("CreateVideoPlayerFromFile", "cant find decoder for video format");
 	return NULL;
+	}
+
+PyObject* Winmm_GXOpenDisplay(PyObject *self, PyObject *args)
+	{
+	HWND hWnd;
+	if (!PyArg_ParseTuple(args, "i", &hWnd))
+		return NULL;
+#ifdef USE_GAPI
+	GXOpenDisplay(hWnd, GX_FULLSCREEN);
+#endif
+	return none();
+	}
+
+PyObject* Winmm_GXCloseDisplay(PyObject *self, PyObject *args)
+	{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+#ifdef USE_GAPI
+	GXCloseDisplay();
+#endif
+	return none();
 	}
 
 ///////////////////////////////////////////
@@ -176,6 +202,16 @@ static PyObject* PyVideoPlayer_UnlockSurface(PyVideoPlayer *self, PyObject *args
 	return none(); 
 	}
 
+// for use with GAPI
+static PyObject* PyVideoPlayer_SetDirectUpdateBox(PyVideoPlayer *self, PyObject *args)
+	{
+	int x, y, w, h;
+	if (!PyArg_ParseTuple(args,"(iiii)", &x, &y, &w, &h))
+		return NULL;
+	self->m_player->set_direct_update_box(x, y, w, h);
+	return none(); 
+	}
+
 PyMethodDef PyVideoPlayer::methods[] = {
 	{"GetVideoSize", (PyCFunction)PyVideoPlayer_GetVideoSize, METH_VARARGS, ""},
 	{"GetVideoDuration", (PyCFunction)PyVideoPlayer_GetVideoDuration, METH_VARARGS, ""},
@@ -185,6 +221,7 @@ PyMethodDef PyVideoPlayer::methods[] = {
 	{"FinishedPlayback", (PyCFunction)PyVideoPlayer_FinishedPlayback, METH_VARARGS, ""},
 	{"LockSurface", (PyCFunction)PyVideoPlayer_LockSurface, METH_VARARGS, ""},
 	{"UnlockSurface", (PyCFunction)PyVideoPlayer_UnlockSurface, METH_VARARGS, ""},
+	{"SetDirectUpdateBox", (PyCFunction)PyVideoPlayer_SetDirectUpdateBox, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
 

@@ -11,6 +11,11 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 // mpeg2 constants
 #include "mpglib/mpeg2dec.h"
 
+#ifdef USE_GAPI
+#include "../../CE/gx/inc/gx.h"
+GXDisplayProperties GXDP;
+#endif
+
 // tables used
 extern "C" int Inverse_Table_6_9[8][4];
 extern "C"  unsigned char *Clip;
@@ -18,8 +23,14 @@ extern "C"  unsigned char *Clip;
 MpegDisplay::MpegDisplay(const display_info& di)
 :	u422(0), v422(0), u444(0), v444(0),
 	m_di(di), 
-	m_surf(0)
+	m_surf(0),
+	m_dx(0), m_dy(0), 
+	m_dw(di.horizontal_size), m_dh(di.vertical_size)
 	{
+#ifdef USE_GAPI
+	GXDP = GXGetDisplayProperties();
+#endif
+
 	if(m_di.chroma_format != CHROMA444)
 		{
 		if (!u444)
@@ -76,12 +87,22 @@ void MpegDisplay::update_surface(unsigned char *src[], int frame, int offset,int
 	int cgv = Inverse_Table_6_9[m_di.matrix_coefficients][3];
   
 	m_cs.enter();
-	color_repr_t *pcr = 0;
+
+#ifdef USE_GAPI
+	unsigned short *pDest = (unsigned short*)GXBeginDraw();
+    int cxPitch = GXDP.cbxPitch / 2; 
+	int cyPitch = GXDP.cbyPitch / 2;
+	pDest += m_dx * cxPitch + m_dy * cyPitch;
+#endif
+
 	for (int yi=0; yi<vsteps; yi++)
 		{
 		unsigned char *py = src[0] + offset + incr*yi;
 		unsigned char *pu = u444 + offset + incr*yi;
 		unsigned char *pv = v444 + offset + incr*yi;
+#ifdef USE_GAPI
+		unsigned short *d = pDest + yi * cyPitch;
+#endif
 		color_repr_t *pcr = m_surf->get_row(yi);
 		for (int xi=0; xi<m_di.horizontal_size; xi++)
 			{
@@ -91,10 +112,19 @@ void MpegDisplay::update_surface(unsigned char *src[], int frame, int offset,int
 			int r = Clip[(y + crv*v + 32768)>>16];
 			int g = Clip[(y - cgu*u - cgv*v + 32768)>>16];
 			int b = Clip[(y + cbu*u + 32786)>>16];
-			// store to bitmap surface for display
+#ifdef USE_GAPI
+			unsigned short us = b >> 3; 
+			us |= (g & 0xfc) << 3; 
+			us |= (r & 0xf8) << 8; 
+			*d = us;
+			d += cxPitch;
+#endif 
 			*pcr++ = color_repr_t(r, g, b);
 			}
 		}
+#ifdef USE_GAPI
+	GXEndDraw();	
+#endif
 	m_cs.leave();
 	}
 

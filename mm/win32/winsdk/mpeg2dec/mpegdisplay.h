@@ -37,6 +37,7 @@ class MpegDisplay
 
 	void set_surface(surface<color_repr_t> *surf) { m_surf = surf;}
 	void update_surface(uchar_t *src[], int frame, int offset,int incr, int vsteps);
+	void set_direct_update_box(int x, int y, int w, int h) { m_dx=x; m_dy=y; m_dw=w; m_dh=h;}
 
 	void lock() { m_cs.enter();}
 	void unlock() { m_cs.leave();}
@@ -50,6 +51,7 @@ class MpegDisplay
 	uchar_t *u422, *v422, *u444, *v444;
 	surface<color_repr_t> *m_surf;
 	critical_section m_cs;
+	int m_dx, m_dy, m_dw, m_dh;
 	};
 
 #endif // INC_MPEGDISPLAY

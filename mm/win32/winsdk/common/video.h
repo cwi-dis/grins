@@ -20,6 +20,7 @@ class VideoPlayer
 	virtual bool finished_playback() = 0;
 	virtual void lock_surface() = 0;
 	virtual void unlock_surface() = 0;
+	virtual void set_direct_update_box(int x, int y, int w, int h) = 0;
 	};
 
 #endif // INC_VIDEO
