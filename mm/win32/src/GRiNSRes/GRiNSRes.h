@@ -46,6 +46,12 @@
 #define IDD_ENTER_KEY                   249
 #define IDD_INTERNAL                    250
 #define IDR_STRUCT_EDIT                 251
+#define IDD_FORM1                       251
+#define IDD_EDITCOLORATTR1              252
+#define IDD_EDITCOLORATTR2              253
+#define IDD_EDITFILEATTR1               254
+#define IDD_EDITOPTIONSATTR1            255
+#define IDD_EDITSTRINGATTR1             256
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
 #define IDC_EDIT_LOCATION               1020
@@ -130,6 +136,7 @@
 #define IDC_NAME                        1130
 #define IDC_ORGANIZATION                1131
 #define IDC_NULL                        1132
+#define IDC_ATTR_INFO                   1134
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -180,7 +187,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        252
 #define _APS_NEXT_COMMAND_VALUE         32833
-#define _APS_NEXT_CONTROL_VALUE         1133
+#define _APS_NEXT_CONTROL_VALUE         1135
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
