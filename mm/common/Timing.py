@@ -41,7 +41,7 @@ def prepare(root):
 	prep1(root)
 	prep2(root, root)
 	if root.counter[HD] <> 0:
-		raise RuntimeError, 'head of root has dependencies!?!'
+		raise CheckError, 'head of root has dependencies!?!'
 
 
 # Interface to clean up the mess left behind by prepare().
@@ -67,7 +67,7 @@ def cleanup(node):
 #
 def getduration(node):
 	if node.GetType() in interiortypes:
-		raise RuntimeError, 'Timing.getduration() on non-leaf'
+		raise CheckError, 'Timing.getduration() on non-leaf'
 	try:
 		cname = MMAttrdefs.getattr(node, 'channel')
 		cattrs = node.context.channeldict[cname]
@@ -137,7 +137,7 @@ def decrement(q, (delay, node, side)):
 	if x > 0:
 		return
 	if x < 0:
-		raise RuntimeError, 'counter below zero!?!?'
+		raise CheckError, 'counter below zero!?!?'
 	if side = HD:
 		node.t0 = q.timefunc()
 	elif side = TL:
