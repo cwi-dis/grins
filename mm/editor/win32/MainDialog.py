@@ -147,23 +147,20 @@ class MainDialog:
 		# this method is called also from the drop stuff
 		# so check for UNC names before calling pathname2url
 		# otherwise it will fail.
-		import longpath
-		if longpath.pathIsUNC(filename):
-			return filename
-
-		import os, MMurl
-		if os.path.isabs(filename):
-			cwd = os.getcwd()
-			if os.path.isdir(filename):
-				dir, file = filename, os.curdir
-			else:
-				dir, file = os.path.split(filename)
-			# XXXX maybe should check that dir gets shorter!
-			while len(dir) > len(cwd):
-				dir, f = os.path.split(dir)
-				file = os.path.join(f, file)
-			if dir == cwd:
-				filename = file
+		import longpath, MMurl, os
+		filename = longpath.short2longpath(filename)
+##		if os.path.isabs(filename):
+##			cwd = os.getcwd()
+##			if os.path.isdir(filename):
+##				dir, file = filename, os.curdir
+##			else:
+##				dir, file = os.path.split(filename)
+##			# XXXX maybe should check that dir gets shorter!
+##			while len(dir) > len(cwd):
+##				dir, f = os.path.split(dir)
+##				file = os.path.join(f, file)
+##			if dir == cwd:
+##				filename = file
 		return MMurl.pathname2url(filename)
 
 	def console_callback(self):
