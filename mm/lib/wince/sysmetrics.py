@@ -6,20 +6,6 @@ import wincon
 
 from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 
-def GetSystemMetrics():
-	try:
-		cxframe = winuser.GetSystemMetrics(wincon.SM_CXFRAME)
-	except:
-		cxframe = 0
-	try:
-		cyframe = winuser.GetSystemMetrics(wincon.SM_CYFRAME)
-	except:
-		cyframe = 0
-	cxborder = winuser.GetSystemMetrics(wincon.SM_CXBORDER)
-	cyborder = winuser.GetSystemMetrics(wincon.SM_CYBORDER)
-	cycaption = winuser.GetSystemMetrics(wincon.SM_CYCAPTION)
-	return cxframe, cyframe, cxborder, cyborder, cycaption
-
 def GetDeviceCaps():
 	import wingdi
 	hdc = winuser.GetDC()
@@ -44,7 +30,6 @@ def GetDeviceCaps():
 
 
 [scr_width_pxl, scr_height_pxl, scr_width_mm, scr_height_mm, dpi_x, dpi_y,depth] = GetDeviceCaps()	
-[cxframe, cyframe, cxborder, cyborder, cycaption]=GetSystemMetrics()
 pixel_per_mm_x = float(scr_width_pxl) / scr_width_mm
 pixel_per_mm_y = float(scr_height_pxl) / scr_height_mm
 mm_per_point = 25.4 / 96			# 1 inch == 96 points == 25.4 mm
