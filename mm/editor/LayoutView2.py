@@ -3012,15 +3012,29 @@ class MediaRegion(Region):
 				url = MMurl.guessurl(f)
 				# real the icon size
 				iconWidth, iconHeight = Sizes.GetSize(url, 'image', 'tiff')
+				if iconWidth == 0 or iconHeight == 0:
+					print 'LayoutView.Preview.Media.show: invalid icon :',url
+					return
+				iconRatio = float(iconWidth)/iconHeight
 
 				# min space 1 between each icon: used if the area is small
-				spaceMinBetweenIcon1 = 30
+				spaceMinBetweenIcon1 = 40
 				# min space 2 between each icon: used if the area is large
-				spaceMinBetweenIcon2 = 80
+				spaceMinBetweenIcon2 = 100
 				# derterminate if the first value is too small : important for optimization
 				# show too many icons may be very slow
-				limitOfMin2 = 2
+				limitOfMin2 = 3
 
+				fit = 'hidden'				
+				if height < iconHeight:
+					fit = 'fill'
+					iconWidth = int(iconRatio*height)
+					iconHeight = height
+				if width < iconWidth:
+					fit = 'fill'
+					iconHeight = int(width/iconRatio)
+					iconWidth = width
+					
 				#
 				# Vertical loop
 				#
@@ -3029,22 +3043,20 @@ class MediaRegion(Region):
 				if height > 2*iconHeight+10:
 					# figure out out the icon number in y axes
 					heightLeft = height - 2*iconHeight
-					iconYNumber = (heightLeft-spaceMinBetweenIcon1)/(iconHeight+spaceMinBetweenIcon1)
+					iconYNumber = int(heightLeft-spaceMinBetweenIcon1)/int(iconHeight+spaceMinBetweenIcon1)
 					if iconYNumber < 0:
 						spaceYBetweenIcon = heightLeft
 						iconYNumber = 2
 					else:
 						if iconYNumber > limitOfMin2:
 							# too many icon, use the second specified space
-							iconYNumber = (heightLeft-spaceMinBetweenIcon2)/(iconHeight+spaceMinBetweenIcon2)
+							iconYNumber = int(heightLeft-spaceMinBetweenIcon2)/int(iconHeight+spaceMinBetweenIcon2)
 						# figure out the real space
-						spaceYBetweenIcon = (heightLeft-iconHeight*iconYNumber)/(iconYNumber+1)
+						spaceYBetweenIcon = float(heightLeft-iconHeight*iconYNumber)/(iconYNumber+1)
 						iconYNumber = iconYNumber+2
 					offsetY = top
-				elif height > iconHeight:
-					offsetY = top+(height-iconHeight)/2
 				else:
-					offsetY = top
+					offsetY = top+(height-iconHeight)/2
 
 				for indY in range(iconYNumber):
 					#
@@ -3055,26 +3067,27 @@ class MediaRegion(Region):
 					if width > 2*iconWidth+10:
 						# figure out out the icon number in x axes
 						widthLeft = width - 2*iconWidth
-						iconXNumber = (widthLeft-spaceMinBetweenIcon1)/(iconWidth+spaceMinBetweenIcon1)
+						iconXNumber = int(widthLeft-spaceMinBetweenIcon1)/int(iconWidth+spaceMinBetweenIcon1)
 						if iconXNumber < 0:
 							spaceXBetweenIcon = widthLeft
 							iconXNumber = 2
 						else:
 							if iconXNumber > limitOfMin2:
 								# too many icon, use the second specified space
-								iconXNumber = (widthLeft-spaceMinBetweenIcon2)/(iconWidth+spaceMinBetweenIcon2)
+								iconXNumber = int(widthLeft-spaceMinBetweenIcon2)/int(iconWidth+spaceMinBetweenIcon2)
 							# figure out the real space
-							spaceXBetweenIcon = (widthLeft-iconWidth*iconXNumber)/(iconXNumber+1)
+							spaceXBetweenIcon = float(widthLeft-iconWidth*iconXNumber)/(iconXNumber+1)
 							iconXNumber = iconXNumber+2					
 						offsetX = left
-					elif width > iconWidth:
-						offsetX = left+(width-iconWidth)/2
 					else:
-						offsetX = left
+						offsetX = left+(width-iconWidth)/2
 
+					xShift = iconWidth+spaceXBetweenIcon
+					yShift = iconHeight+spaceYBetweenIcon
 					# draw icons
 					for indX in range(iconXNumber):
-						self._graphicCtrl.setImage(f, 'hidden', (offsetX+(iconWidth+spaceXBetweenIcon)*indX, offsetY+(iconHeight+spaceYBetweenIcon)*indY, iconWidth, iconHeight))
+						self._graphicCtrl.setImage(f, fit, (offsetX+xShift*indX, \
+															offsetY+yShift*indY, iconWidth, iconHeight))
 										
 	def onProperties(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
