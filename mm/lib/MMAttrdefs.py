@@ -223,10 +223,7 @@ def showstats(a):
 # Get an attribute of a node according to the rules.
 #
 def getattr(node, attrname, animated=0):
-	if animated:
-		return getdirattr(node, attrname, animated)
-
-	if node != None:
+	if not animated and node is not None:
 		if node.isCssAttr(attrname):
 			return node.getCssAttr(attrname)
 				
@@ -236,55 +233,13 @@ def getattr(node, attrname, animated=0):
 		else:
 			attrstats[attrname] = 1
 	# Check the cache
-	if hasattr(node, 'attrcache'):
-		if node.attrcache.has_key(attrname):
-			return node.attrcache[attrname]
-	else:
-		node.attrcache = {}
+	if not animated:
+		if hasattr(node, 'attrcache'):
+			if node.attrcache.has_key(attrname):
+				return node.attrcache[attrname]
+		else:
+			node.attrcache = {}
 	#
-	attrdef = getdef(attrname)
-	inheritance = attrdef[5]
-	defaultvalue = attrdef[1]
-	if inheritance == 'raw':
-		attrvalue = node.GetRawAttrDef(attrname, defaultvalue)
-	elif inheritance == 'normal':
-		attrvalue = node.GetAttrDef(attrname, defaultvalue)
-	elif inheritance == 'inherited':
-		attrvalue = node.GetInherAttrDef(attrname, defaultvalue)
-	elif inheritance == 'channel':
-		try:
-			attrvalue = node.GetAttr(attrname)
-		except NoSuchAttrError:
-			ch = node.GetChannel()
-			if ch is not None:
-				attrvalue = ch.get(attrname, defaultvalue)
-			else:
-				attrvalue = defaultvalue
-	elif inheritance == 'region':
-		try:
-			attrvalue = node.GetAttr(attrname)
-		except NoSuchAttrError:
-			ch = node.GetChannel()
-			if ch is not None:
-				region = ch.GetLayoutChannel()
-				if region is not None:
-					attrvalue = region.GetInherAttrDef(attrname, defaultvalue)
-				else:
-					attrvalue = defaultvalue
-			else:
-				attrvalue = defaultvalue
-	else:
-		raise CheckError, 'bad inheritance ' +`inheritance` + \
-				' for attr ' + `attrname`
-	# Update the cache
-	node.attrcache[attrname] = attrvalue
-	#
-	return attrvalue
-
-
-# Get an attribute of a node according to the rules but not using attrcache.
-#
-def getdirattr(node, attrname, animated=0):
 	attrdef = getdef(attrname)
 	inheritance = attrdef[5]
 	defaultvalue = attrdef[1]
@@ -296,7 +251,7 @@ def getdirattr(node, attrname, animated=0):
 		attrvalue = node.GetInherAttrDef(attrname, defaultvalue, animated)
 	elif inheritance == 'channel':
 		try:
-			attrvalue = node.GetAttr(attrname, animated)
+			attrvalue = node.GetAttr(attrname)
 		except NoSuchAttrError:
 			ch = node.GetChannel()
 			if ch is not None:
@@ -305,7 +260,7 @@ def getdirattr(node, attrname, animated=0):
 				attrvalue = defaultvalue
 	elif inheritance == 'region':
 		try:
-			attrvalue = node.GetAttr(attrname, animated)
+			attrvalue = node.GetAttr(attrname)
 		except NoSuchAttrError:
 			ch = node.GetChannel()
 			if ch is not None:
@@ -319,6 +274,10 @@ def getdirattr(node, attrname, animated=0):
 	else:
 		raise CheckError, 'bad inheritance ' +`inheritance` + \
 				' for attr ' + `attrname`
+	if not animated:
+		# Update the cache
+		node.attrcache[attrname] = attrvalue
+	#
 	return attrvalue
 
 
