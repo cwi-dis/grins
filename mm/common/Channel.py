@@ -63,6 +63,7 @@ class Channel:
 		self._paused = 0
 		self._subchannels = []
 		self._want_shown = 0
+		self.nopop = 0
 		self.syncarm = 0
 		self.syncplay = 0
 		self.is_layout_channel = 0
@@ -737,7 +738,6 @@ class ChannelWindow(Channel):
 		self._player.ChannelWinDict[self._name] = self
 		self.window = None
 		self.armed_display = self.played_display = None
-		self.nopop = 0
 		self._is_waiting = 0
 		self.want_default_colormap = 0
 
