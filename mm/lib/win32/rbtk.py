@@ -28,9 +28,11 @@ class _rbtk:
 		self.assert_not_in_create_box()
 		
 		# for modal boxes cancel is async, so:
-		if self.in_create_box_mode():
-			apply(callback, ())
-			return
+		if __main__.toplevel._in_create_box and not __main__.toplevel._in_create_box.is_closed():
+			__main__.toplevel._in_create_box.cancel_create_box()
+##		if self.in_create_box_mode():
+##			apply(callback, ())
+##			return
 					
 		# if we are closed call cancel
 		if self.is_closed():
@@ -157,24 +159,22 @@ class _rbtk:
 		"""Cancel create_box"""
 		if not self.in_create_box_mode():
 			raise 'Not in_create_box mode', self
-		if self.in_create_box_mode():
-			mw=self.get_box_modal_wnd()
-			if self._rb_modeless:
-				mw._rb_finish(win32con.IDCANCEL)
-			else:
-				mw.PostMessage(appcon.WM_USER_CREATE_BOX_CANCEL)	
+		mw=self.get_box_modal_wnd()
+		if self._rb_modeless:
+			mw._rb_finish(win32con.IDCANCEL)
+		else:
+			mw.PostMessage(appcon.WM_USER_CREATE_BOX_CANCEL)	
 			
 		
 	def return_create_box(self):
 		"""Return create_box"""
 		if not self.in_create_box_mode():
 			raise 'Not _in_create_box', self
-		if self.in_create_box_mode():
-			mw=self.get_box_modal_wnd()
-			if self._rb_modeless:
-				mw._rb_finish(win32con.IDOK)
-			else:
-				mw.PostMessage(appcon.WM_USER_CREATE_BOX_OK)
+		mw=self.get_box_modal_wnd()
+		if self._rb_modeless:
+			mw._rb_finish(win32con.IDOK)
+		else:
+			mw.PostMessage(appcon.WM_USER_CREATE_BOX_OK)
 
 	def _rb_dirty(self,box):
 		if not self._rb_box and box: return 1
@@ -212,7 +212,7 @@ class _rbtk:
 
 	# returns true if we are in create box mode 
 	def in_create_box_mode(self):
-		return __main__.toplevel._in_create_box
+		return __main__.toplevel._in_create_box is self
 
 	def in_modal_create_box_mode(self):
 		mw=__main__.toplevel._in_create_box
