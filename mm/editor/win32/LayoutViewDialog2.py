@@ -1,14 +1,10 @@
 # experimental layout view
 
-treeVersion = 1
-
 import windowinterface
 import win32ui, win32api, win32con
 
 from usercmd import *
 IMPL_AS_FORM=1
-
-from _LayoutView2 import treeVersion
 
 class LayoutViewDialog2:
 	def __init__(self):
@@ -33,11 +29,9 @@ class LayoutViewDialog2:
 
 		# for now, avoid to define one handler by ctrl	
 		self.dialogCtrl=w.getDialogComponent()
-		self.dialogCtrl.setDialogHandler(self)
 
-		if treeVersion:
-			# tree control
-			self.treeCtrl = w.getTreeComponent()
+		# tree control
+		self.treeCtrl = w.getTreeComponent()
 
 		self.__window = w
 		
