@@ -437,8 +437,7 @@ class AttrEditor:
 				C = ButtonRow
 			b = C(self, name, labeltext)
 			l = form.Button(labeltext,
-					(windowinterface.showmessage,
-					 (b.gethelptext(),)),
+					(self.showhelp, (b,)),
 					top = l, left = None, right = 0.5,
 					bottom = (i+1)*height)
 			r = form.Button('Reset', (self.reset, (b,)),
@@ -451,6 +450,9 @@ class AttrEditor:
 
 	def settitle(self, title):
 		self.dialog.settitle(title)
+
+	def showhelp(self, b):
+		windowinterface.showmessage(b.gethelptext())
 
 	def reset(self, b):
 		b.setvalue(b.getcurrent())
