@@ -16,6 +16,8 @@ def rpconvert(node):
 		print 'no region associated with node'
 		return
 	url = ctx.findurl(furl)
+	if furl[:5] == 'data:':
+		furl = ''
 	try:
 		f = MMurl.urlopen(url)
 	except IOError:
@@ -26,6 +28,7 @@ def rpconvert(node):
 		print 'not a RealPix file'
 		f.close()
 		return
+
 	# parse the RealPix file, result in rp
 	rp = realsupport.RPParser(url)
 	rp.feed(head)
@@ -37,7 +40,9 @@ def rpconvert(node):
 	
 	em = ctx.editmgr
 	if not em.transaction():
+		# not allowed to do it at this point
 		return
+
 	# convert the ext node to a par node
 	em.setnodeattr(node, 'file', None)
 	em.setnodetype(node, 'par')
