@@ -2116,7 +2116,6 @@ class HierarchyView(HierarchyViewDialog):
 
 		widget.select()
 		if scroll:
-			print 'DBG select widget scroll', widget.get_box(), widget
 			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 
 		self.multi_selected_widgets = [widget]
