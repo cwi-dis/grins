@@ -4,6 +4,8 @@ from audioformat import *
 _skiplist = ('COMT', 'INST', 'MIDI', 'AESD',
 	     'APPL', 'NAME', 'AUTH', '(c) ', 'ANNO')
 
+_AIFC_VERSION = 0xA2805140		# Version 1 of AIFF-C
+
 def _read_long(file):
 	x = 0L
 	for i in range(4):
@@ -64,6 +66,62 @@ def _read_float(f): # 10 bytes
 		expon = expon - 16383
 		f = (himant * 0x100000000L + lomant) * pow(2.0, expon - 63)
 	return sign * f
+
+def _write_short(f, x):
+	d, m = divmod(x, 256)
+	f.write(chr(d))
+	f.write(chr(m))
+
+def _write_long(f, x):
+	if x < 0:
+		x = x + 0x100000000L
+	data = []
+	for i in range(4):
+		d, m = divmod(x, 256)
+		data.append(m)
+		x = d
+	data.reverse()
+	for c in data:
+		f.write(chr(int(c)))
+
+def _write_string(f, s):
+	f.write(chr(len(s)))
+	f.write(s)
+	if len(s) & 1 == 0:
+		f.write(chr(0))
+
+def _write_float(f, x):
+	import math
+	if x < 0:
+		sign = 0x8000
+		x = x * -1
+	else:
+		sign = 0
+	if x == 0:
+		expon = 0
+		himant = 0
+		lomant = 0
+	else:
+		fmant, expon = math.frexp(x)
+		if expon > 16384 or fmant >= 1:		# Infinity or NaN
+			expon = sign|0x7FFF
+			himant = 0
+			lomant = 0
+		else:					# Finite
+			expon = expon + 16382
+			if expon < 0:			# denormalized
+				fmant = math.ldexp(fmant, expon)
+				expon = 0
+			expon = expon | sign
+			fmant = math.ldexp(fmant, 32)
+			fsmant = math.floor(fmant)
+			himant = long(fsmant)
+			fmant = math.ldexp(fmant - fsmant, 32)
+			fsmant = math.floor(fmant)
+			lomant = long(fsmant)
+	_write_short(f, expon)
+	_write_long(f, himant)
+	_write_long(f, lomant)
 
 class Chunk:
 	def __init__(self, file):
@@ -271,3 +329,118 @@ class reader:
 
 	def getmarkers(self):
 		return self.__markers
+
+class writer:
+	__formats = (linear_8_mono_signed,
+		     linear_16_mono_big,
+		     linear_8_stereo_signed,
+		     linear_16_stereo_big,
+		     ulaw_mono,
+		     ulaw_stereo)
+
+	__rates = None
+
+	def __init__(self, filename, fmt = None, rate = None):
+		self.__format = None
+		self.__framerate = None
+		self.__initialized = 0
+		self.__filename = filename # only needed for __repr__
+		self.__file = open(filename, 'wb')
+		if fmt:
+			self.setformat(fmt)
+		if rate:
+			self.setframerate(rate)
+
+	def __repr__(self):
+		return '<AIFCwriter instance, file=%s, format=%s, rate=%s>' % \
+		       (self.__filename, `self.__format`, `self.__framerate`)
+
+	def __del__(self):
+		self.close()
+
+	def getformats(self):
+		return self.__formats
+
+	def getformat(self):
+		return self.__format
+
+	def setformat(self, fmt):
+		if fmt not in self.__formats:
+			raise Error, 'bad format'
+		self.__format = fmt
+		self.__blocksize = fmt.getblocksize()
+
+	def getframerates(self):
+		return self.__rates
+
+	def getframerate(self):
+		return self.__framerate
+
+	def setframerate(self, rate):
+		if self.__rates and rate not in self.__rates:
+			raise Error, 'bad frame rate'
+		self.__framerate = rate
+
+	def writeframes(self, data):
+		if not self.__initialized:
+			self.__init()
+		if len(data) % self.__blocksize != 0:
+			raise Error, 'not a whole number of frames'
+		self.__length = self.__length + len(data)
+		self.__file.write(data)
+
+	def close(self):
+		if not self.__initialized:
+			return
+		file = self.__file
+		fmt = self.__format
+		datalength = self.__length
+		if self.__length & 1:
+			file.write('\000')
+			datalength = datalength + 1
+		file.seek(self.__form_length_pos)
+		_write_long(file, datalength + self.__headersize + 16)
+		file.seek(self.__nframes_pos)
+		_write_long(file, self.__length * fmt.getfpb() / self.__blocksize)
+		file.seek(self.__ssnd_length_pos)
+		_write_long(file, datalength + 8)
+		file.close()
+
+	def __init(self):
+		if not self.__format or not self.__framerate:
+			raise Error, 'no format or frame rate specified'
+		file = self.__file
+		fmt = self.__format
+		file.write('FORM')
+		self.__form_length_pos = file.tell()
+		_write_long(file, 0)
+		file.write('AIFC')				# 4
+		file.write('FVER')				# 4
+		_write_long(file, 4)				# 4
+		_write_long(file, _AIFC_VERSION)		# 4
+		file.write('COMM')				# 4
+		_write_long(file, 38)				# 4
+		_write_short(file, fmt.getnchannels())# 2
+		self.__nframes_pos = file.tell()
+		_write_long(file, 0)				# 4
+		_write_short(file, fmt.getbps())	# 2
+		_write_float(file, self.__framerate)		# 10
+		encoding = fmt.getencoding()
+		if encoding == 'linear':
+			file.write('NONE')			# 4
+			_write_string(file, 'Not compressed')	# 16
+			self.__headersize = 62
+		elif encoding == 'u-law':
+			file.write('ULAW')			# 4
+			_write_string(file, 'u-law compressed')	# 18
+			self.__headersize = 64
+		else:
+			raise Error, 'internal error'
+		# the rest doesn't count as "headersize"
+		file.write('SSND')				# 4
+		self.__ssnd_length_pos = file.tell()
+		_write_long(file, 8)				# 4
+		_write_long(file, 0)				# 4
+		_write_long(file, 0)				# 4
+		self.__length = 0
+		self.__initialized = 1
