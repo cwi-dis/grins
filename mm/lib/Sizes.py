@@ -3,23 +3,16 @@ cache = {}
 def GetSize(file, maintype, subtype):
 	if cache.has_key(file):
 		return cache[file]
-	if maintype == 'image':
-		if subtype == 'vnd.rn-realpix':
-			import realsupport
-			rp = realsupport.RPParser(file)
-			rp.feed(open(file).read())
-			rp.close()
-			width, height = rp.width, rp.height
-		else:
-			width, height = GetImageSize(file)
+	if subtype[:6] == 'vnd.rn':
+		# any RealMedia type
+		import realsupport
+		info = realsupport.getinfo(file)
+		width = info.get('width', 200)
+		height = info.get('height', 200)
+	elif maintype == 'image':
+		width, height = GetImageSize(file)
 	elif maintype == 'video':
 		width, height = GetVideoSize(file)
-	elif maintype == 'text' and subtype == 'vnd.rn-realtext':
-		import realsupport
-		rp = realsupport.RTParser(file)
-		rp.feed(open(file).read())
-		rp.close()
-		width, height = rp.width, rp.height
 	else:
 		width = height = 0
 	cache[file] = width, height

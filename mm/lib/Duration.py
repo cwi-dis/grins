@@ -39,18 +39,10 @@ def get(node, ignoreloop=0):
 				return loop * SoundDuration.get(filename)
 			except IOError, msg:
 				print filename, msg
-		elif ctype == 'RealText':
+		elif ctype[:4] == 'Real':
 			import realsupport
-			rp = realsupport.RTParser(filename)
-			rp.feed(open(filename).read())
-			rp.close()
-			return loop * rp.duration
-		elif ctype == 'RealPix':
-			import realsupport
-			rp = realsupport.RPParser(filename)
-			rp.feed(open(filename).read())
-			rp.close()
-			return loop * rp.duration
+			info = realsupport.getinfo(filename)
+			return loop * info.get('duration', 0)
 		elif ctype not in ChannelMap.channelhierarchy['text'] and \
 		     ctype not in ChannelMap.channelhierarchy['image']:
 			# give them a duration

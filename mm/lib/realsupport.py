@@ -271,9 +271,20 @@ class RPParser(xmllib.XMLParser):
 			except string.atoi_error:
 				self.syntax_error('badly formatted height attribute')
 				height = 100
+		bitrate = attributes.get('bitrate')
+		if bitrate is None:
+			self.syntax_error('required attribute bitrate missing in head element')
+			bitrate = 64000
+		else:
+			try:
+				bitrate = string.atoi(string.strip(bitrate))
+			except string.atoi_error:
+				self.syntax_error('badly formatted bitrate attribute')
+				bitrate = 64000
 		self.duration = duration
 		self.width = width
 		self.height = height
+		self.bitreate = bitrate
 
 	def syntax_error(self, msg):
 		print 'Warning: syntax error in file %s, line %d: %s' % (self.__file, self.lineno, msg)
@@ -313,3 +324,155 @@ def decode_duration(str):
 	minutes = minutes + 60 * hours
 	seconds = string.atof(seconds)
 	return seconds + 60 * minutes
+
+def rmff(file, data):
+	from StringIO import StringIO
+	from chunk import Chunk
+	import struct
+	info = {}
+	fp = StringIO(data)
+	chunk = Chunk(fp)
+	if chunk.getname() != '.RMF':
+		print '%s: not a RealMedia file' % file
+		return
+	object_version = struct.unpack('>h', chunk.read(2))[0]
+	if object_version != 0:
+		print '%s: unknown .RMF version' % file
+	else:
+		file_version, num_headers = struct.unpack('>ll', chunk.read(8))
+##		print 'file version', `file_version`
+##		print 'num headers', `num_headers`
+	for i in range(num_headers):
+		chunk.close()
+		chunk = Chunk(fp)
+		name = chunk.getname()
+##		print 'CHUNK', name
+		if name == 'PROP':
+			object_version = struct.unpack('>h', chunk.read(2))[0]
+			if object_version != 0:
+				print '%s: unknown PROP version' % file
+			else:
+				max_bit_rate, avg_bit_rate, max_packet_size, avg_packet_size, num_packets, duration, preroll, index_offset, data_offset, num_streams, flags = struct.unpack('>lllllllllhh', chunk.read(40))
+##				print 'max_bit_rate', `max_bit_rate`
+##				print 'avg_bit_rate', `avg_bit_rate`
+##				print 'max_packet_size', `max_packet_size`
+##				print 'avg_packet_size', `avg_packet_size`
+##				print 'num_packets', `num_packets`
+##				print 'duration', `duration`
+##				print 'preroll', `preroll`
+##				print 'index_offset', `index_offset`
+##				print 'data_offset', `data_offset`
+##				print 'num_streams', `num_streams`
+##				print 'flags', `flags`
+				info['duration'] = float(duration)/1000
+				info['bitrate'] = avg_bit_rate
+				info['max_bit_rate'] = max_bit_rate
+				info['avg_bit_rate'] = avg_bit_rate
+		elif name == 'MDPR':
+			object_version = struct.unpack('>h', chunk.read(2))[0]
+			if object_version != 0:
+				print '%s: unknown MDPR version' % file
+			else:
+				stream_number, max_bit_rate, avg_bit_rate, max_packet_size, avg_packet_size, start_time, preroll, duration, stream_name_size = struct.unpack('>hlllllllb', chunk.read(31))
+				stream_name = chunk.read(stream_name_size)
+				mime_type_size = struct.unpack('>b', chunk.read(1))[0]
+				mime_type = chunk.read(mime_type_size)
+				type_specific_len = struct.unpack('>l', chunk.read(4))[0]
+				type_specific_data = chunk.read(type_specific_len)
+##				print 'stream_number', `stream_number`
+##				print 'max_bit_rate', `max_bit_rate`
+##				print 'avg_bit_rate', `avg_bit_rate`
+##				print 'max_packet_size', `max_packet_size`
+##				print 'start_time', `start_time`
+##				print 'preroll', `preroll`
+##				print 'duration', `duration`
+##				print 'stream_name_size', `stream_name_size`
+##				print 'stream_name', `stream_name`
+##				print 'mime_type_size', `mime_type_size`
+##				print 'mime_type', `mime_type`
+##				print 'type_specific_len', `type_specific_len`
+##				print 'type_specific_data', `type_specific_data`
+				if mime_type == 'video/x-pn-realvideo' and \
+				   type_specific_len == 34:
+					width, height = struct.unpack('>hh', type_specific_data[12:16])
+					info['width'] = width
+					info['height'] = height
+		elif name == 'CONT':
+			object_version = struct.unpack('>h', chunk.read(2))[0]
+			if object_version != 0:
+				print '%s: unknown CONT version' % file
+			else:
+				title_len = struct.unpack('>h', chunk.read(2))[0]
+				title = chunk.read(title_len)
+				author_len = struct.unpack('>h', chunk.read(2))[0]
+				author = chunk.read(author_len)
+				copyright_len = struct.unpack('>h', chunk.read(2))[0]
+				copyright = chunk.read(copyright_len)
+				comment_len = struct.unpack('>h', chunk.read(2))[0]
+				comment = chunk.read(comment_len)
+##				print 'title_len', `title_len`
+##				print 'title', `title`
+##				print 'author_len', `author_len`
+##				print 'author', `author`
+##				print 'copyright_len', `copyright_len`
+##				print 'copyright', `copyright`
+##				print 'comment_len', `comment_len`
+##				print 'comment', `comment`
+		elif name == 'DATA':
+			object_version = struct.unpack('>h', chunk.read(2))[0]
+			if object_version != 0:
+				print '%s: unknown DATA version' % file
+			else:
+				num_packets, next_data_header = struct.unpack('>ll', chunk.read(8))
+##				print 'num_packets', `num_packets`
+##				print 'next_data_header', `next_data_header`
+		elif name == 'INDX':
+			object_version = struct.unpack('>h', chunk.read(2))[0]
+			if object_version != 0:
+				print '%s: unknown INDX version' % file
+			else:
+				num_indices, stream_number, next_index_header = struct.unpack('>lhl', chunk.read(10))
+##				print 'num_indices', `num_indices`
+##				print 'stream_number', `stream_number`
+##				print 'next_index_header', `next_index_header`
+	return info
+
+cache = {}
+import MMurl
+
+def getinfo(file):
+	if cache.has_key(file):
+		return cache[file]
+	try:
+		data = open(MMurl.urlretrieve(file)[0]).read()
+	except:
+		cache[file] = info = {}
+		return info
+	if data[:5] == '<imfl':
+		# RealPix
+		rp = RPParser(file)
+		rp.feed(data)
+		rp.close()
+		info = {'width': rp.width,
+			'height': rp.height,
+			'duration': rp.duration,
+			'bitrate': rp.bitrate,}
+	elif string.lower(data[:7]) == '<window':
+		# RealText
+		rp = RTParser(file)
+		rp.feed(data)
+		rp.close()
+		info = {'width': rp.width,
+			'height': rp.height,
+			'duration': rp.duration,}
+	elif data[:4] == '.RMF':
+		# RealMedia
+		info = rmff(file, data)
+	elif data[:4] == '.ra\375':
+		# RealAudio
+		info = {}
+	else:
+		# unknown format
+		info = {}
+	cache[file] = info
+	return info
