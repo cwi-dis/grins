@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 Error = 'audio.Error'
 
 def reader(filename, dstfmts = None, dstrates = None):
