@@ -110,7 +110,7 @@ class TopLevel(TopLevelDialog):
 
 	def timer_callback(self, curtime):
 		self.__intimer = 1
-		self.setwaiting()
+##		self.setwaiting()
 		self._last_timer_id = None
 		self.player.timer_callback(curtime)
 		while self.__immediate:

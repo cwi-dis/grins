@@ -1416,7 +1416,7 @@ class Scheduler(scheduler):
 			return
 		now = self.timefunc()
 		while self.queue and self.queue[0][0] <= now:
-			self.toplevel.setwaiting()
+##			self.toplevel.setwaiting()
 			when, prio, action, argument = self.queue[0]
 			del self.queue[0]
 			apply(action, argument)
@@ -1428,7 +1428,7 @@ class Scheduler(scheduler):
 		#
 		queue = self.selectqueue()
 		if queue:
-			self.toplevel.setwaiting()
+##			self.toplevel.setwaiting()
 			for action in queue:
 				timestamp = None
 				if len(action) > 3:
