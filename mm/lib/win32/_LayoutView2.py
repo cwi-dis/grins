@@ -544,8 +544,7 @@ class _LayoutView2(GenFormView):
 			return 1
 		else:
 			# redirect the key to the pane
-			self._layout.onKeyDown(params)
-		return 0
+			return self._layout.onKeyDown(params)
 
 	def OnSetTreeFocusCtrl(self, params):
 		# redirect the focus to tree
