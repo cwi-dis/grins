@@ -40,7 +40,7 @@ class Main:
 			files = ['NEW DOCUMENT.cmif']
 			new_file = 1
 		for fn in files:
-			top = TopLevel.TopLevel().init(self, fn, new_file)
+			top = TopLevel.TopLevel(self, fn, new_file)
 			top.setwaiting()
 			top.show()
 			for opt, arg in opts:
