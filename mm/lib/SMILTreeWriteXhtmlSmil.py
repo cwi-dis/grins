@@ -388,13 +388,12 @@ class SMILXhtmlSmilWriter(SMIL):
 			if type == 'prio':
 				xtype = mtype = 'priorityClass'
 			elif type == 'foreign':
-				tag = x.GetRawAttrDef('tag', None)
-				if ' ' in tag:
-					ns, tag = string.split(tag, ' ', 1)
+				ns = x.GetRawAttrDef('namespace', '')
+				tag = x.GetRawAttrDef('elemname', None)
+				if ns:
 					xtype = mtype = 'foreign:%s' % tag
 					attrlist.append(('xmlns:foreign', ns))
 				else:
-					ns = ''
 					xtype = mtype = tag
 			else:
 				xtype = mtype = type
@@ -418,7 +417,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			attrs = []
 			extensions = {ns: 'foreign'}
 			for attr, val in x.attrdict.items():
-				if attr == 'tag':
+				if attr == 'namespace' or attr == 'elemname':
 					continue
 				if ' ' in attr:
 					ans, attr = string.split(attr, ' ', 1)

@@ -4962,7 +4962,7 @@ class MMNode(MMTreeElement):
 				return ['.values']
 			return []
 		if ntype == 'foreign':
-			return self.node.attrdict.keys()
+			return self.attrdict.keys()
 		namelist = [
 			'name', 'title', 'alt', 'longdesc',
 			'system_audiodesc', 'system_bitrate',

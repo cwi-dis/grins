@@ -413,6 +413,11 @@
 (z (int) 0 'Z order' default
 	'Stacking order for regions, higher numbers are on top' normal (g2 qt smil10 smil2 cmif snap))
 
+(namespace (string) '' 'Namespace of object' default
+	'Namespace of a foreign object' normal (advanced smil2))
+(elemname (string) '' 'Tag of object' default
+	'XML tag of a foreign object' normal (advanced smil2))
+
 # SMIL system test attributes
 # XXX for now, most of these in template mode to not show then in Real
 # product

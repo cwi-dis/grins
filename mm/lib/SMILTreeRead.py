@@ -4136,7 +4136,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node = self.__context.newnode('foreign')
 			self.__container._addchild(node)
 			node.attrdict.update(attrs)
-			node.attrdict['tag'] = tag
+			tag = tag.split()
+			node.attrdict['elemname'] = tag[-1]
+			if len(tag) == 2:
+				node.attrdict['namespace'] = tag[0]
 			self.__container = node
 
 	def unknown_endtag(self, tag):
