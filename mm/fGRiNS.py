@@ -6,4 +6,5 @@ class PlayerApp(grins_app_core.GrinsApp):
 		import exec_cmif
 		exec_cmif.Boot(0)
 
+grins_app_core.fix_argv()
 grins_app_core.BootApplication(PlayerApp)
