@@ -1628,6 +1628,25 @@ class MMChannel(MMTreeElement):
 	def isDefault(self):
 		return self.attrdict.get('isDefault')
 
+	#
+	# animation editor support
+	#
+
+	# animparent: the parent node (MMNode) of the animations targeting self
+	def computeAnimationData(self, animparent):
+		if self._animationData is None:
+			root = animparent.GetRoot()
+			self._animationData = AnimationData.AnimationData(root, self, animparent)
+		self._animationData.readData()
+		return self._animationData
+
+	def getAnimationData(self):
+		return self._animationData
+	
+	def applyAnimationData(self, editmgr):
+		if self._animationData:
+			self._animationData.applyData(editmgr)
+
 		
 class MMViewport(MMChannel):
 	# allow to know the class name without use 'import xxx; isinstance'
@@ -5034,13 +5053,15 @@ class MMNode(MMTreeElement):
 	#
 	# animation editor support
 	#
-	def computeAnimationData(self, root=None, animparent=None):
+
+	# animparent: the parent node of the animations targeting self
+	# if none is given then self is assumed
+	def computeAnimationData(self, animparent=None):
 		# XXX to do: update animation data according to animation nodes
 		if self._animationData is None:
-			if root is None:
-				root = self.GetRoot()
 			if animparent is None:
 				animparent = self
+			root = animparent.GetRoot()
 			self._animationData = AnimationData.AnimationData(root, self, animparent)
 		self._animationData.readData()
 		return self._animationData
