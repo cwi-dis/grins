@@ -183,7 +183,7 @@ class AnimationData:
 			self._data.append((rect, color))
 		
 	# create animate nodes from self data
-	def applyData(self, editmgr, replace=0):
+	def applyData(self, editmgr, replace=0, defaultDuration=2):
 		em = editmgr
 #		if not em.transaction():
 #			return 0
@@ -224,6 +224,10 @@ class AnimationData:
 			self._updateNode(anim, keyTimes, animateMotionValues)
 		elif self._writeAnimateMotion:
 			anim = context.newanimatenode('animateMotion')
+			# XXX temporare
+			anim.attrdict['duration'] = defaultDuration
+			anim.attrdict['fill'] = 'freeze'
+			# XXX end temporare
 			anim.targetnode = self._target.getTargetNode()
 			self._updateNode(anim, keyTimes, animateMotionValues, None, targname)
 			em.addnode(parent, 0, anim)
@@ -233,6 +237,10 @@ class AnimationData:
 			self._updateNode(anim, keyTimes, animateWidthValues)
 		elif self._writeAnimateWidth:
 			anim = context.newanimatenode('animate')
+			# XXX temporare
+			anim.attrdict['duration'] = defaultDuration
+			anim.attrdict['fill'] = 'freeze'
+			# XXX end temporare
 			anim.targetnode = self._target.getTargetNode()
 			self._updateNode(anim, keyTimes, animateWidthValues, 'width', targname)
 			em.addnode(parent, 1, anim)
@@ -242,6 +250,10 @@ class AnimationData:
 			self._updateNode(anim, keyTimes, animateHeightValues)
 		elif self._writeAnimateHeight:
 			anim = context.newanimatenode('animate')
+			# XXX temporare
+			anim.attrdict['duration'] = defaultDuration
+			anim.attrdict['fill'] = 'freeze'
+			# XXX end temporare
 			anim.targetnode = self._target.getTargetNode()
 			self._updateNode(anim, keyTimes, animateHeightValues, 'height', targname)
 			em.addnode(parent, 2, anim)
@@ -251,6 +263,10 @@ class AnimationData:
 			self._updateNode(anim, keyTimes, animateColorValues)
 		elif self._writeAnimateColor:
 			anim = context.newanimatenode('animateColor')
+			# XXX temporare
+			anim.attrdict['duration'] = defaultDuration
+			anim.attrdict['fill'] = 'freeze'
+			# XXX end temporare
 			anim.targetnode = self._target.getTargetNode()
 			self._updateNode(anim, keyTimes, animateColorValues, 'backgroundColor', targname)
 			em.addnode(parent, 3, anim)
