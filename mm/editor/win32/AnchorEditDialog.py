@@ -80,20 +80,19 @@ class AnchorEditorDialog:
 		formid=adornments['form_id']
 		toplevel_window=self.toplevel.window
 		fs=toplevel_window.getformserver()
-		w=fs.newformobj(formid)
-		w.do_init(title, typelabels, list, initial,adornments)
-		fs.showform(w,formid)
-		self.__window=w
+		self.__window=fs.newformobj(formid)
+		self.__window.do_init(title, typelabels, list, initial,adornments)
+		fs.showform(self.__window,formid)
 
 	def close(self):
 		"""Close the dialog and free resources."""
 		self.__window.close()
 		# delete some attributes so that GC can collect them
-		del self.__window
+		self.__window=None
 
 	def pop(self):
 		"""Pop the dialog window to the foreground."""
-		self.__window.pop()
+		if self.__window: self.__window.pop()
 
 	def settitle(self, title):
 		"""Set (change) the title of the window.
@@ -101,7 +100,7 @@ class AnchorEditorDialog:
 		Arguments (no defaults):
 		title -- string to be displayed as new window title.
 		"""
-		self.__window.settitle(title)
+		if self.__window: self.__window.settitle(title)
 
 	# Interface to the composite part of the window.  This part
 	# consists of just a single label (piece of text) which can be
@@ -109,11 +108,11 @@ class AnchorEditorDialog:
 	# run time and is initially just `Composite:'.
 	def composite_hide(self):
 		"""Hide the composite part of the dialog."""
-		self.__window.composite_hide()
+		if self.__window: self.__window.composite_hide()
 
 	def composite_show(self):
 		"""Show the composite part of the dialog."""
-		self.__window.composite_show()
+		if self.__window: self.__window.composite_show()
 
 	def composite_setlabel(self, label):
 		"""Set the composite label.
@@ -121,7 +120,7 @@ class AnchorEditorDialog:
 		Arguments (no defaults):
 		label -- string to display
 		"""
-		self.__window.composite_setlabel(label)
+		if self.__window: self.__window.composite_setlabel(label)
 
 	# Interface to the type_choice part of the dialog.  This is a
 	# part of the dialog that indicates to the user which of a
@@ -131,11 +130,11 @@ class AnchorEditorDialog:
 	# possible to hide or deactivate this part of the window.
 	def type_choice_hide(self):
 		"""Hide the type choice part of the dialog."""
-		self.__window.type_choice_hide()
+		if self.__window: self.__window.type_choice_hide()
 
 	def type_choice_show(self):
 		"""Show the type choice part of the dialog."""
-		self.__window.type_choice_show()
+		if self.__window: self.__window.type_choice_show()
 
 	def type_choice_setchoice(self, choice):
 		"""Set the current choice.
