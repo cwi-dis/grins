@@ -16,7 +16,7 @@ else:
 
 error = 'RealChannel.error'
 
-realenginedebug=1
+realenginedebug=0
 
 class RealEngine:
 	# This class holds the RMA engine and a useage counter. This counter is
