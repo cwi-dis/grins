@@ -56,6 +56,8 @@ class TextWindow(ChannelWindow):
 	def init(self, (name, attrdict, channel)):
 		self = ChannelWindow.init(self, name, attrdict, channel)
 		self.text = [] # Initially, display no text
+		self.fontname = None
+		self.pointsize = None
 		self.node = None
 		self.vobj = None
 		self.setanchor = 0
@@ -162,7 +164,7 @@ class TextWindow(ChannelWindow):
 			fontspec = self.attrdict['font']
 		else:
 			fontspec = 'default'
-		self.fontname, self.pointsize = mapfont(fontspec)
+		fontname, pointsize = mapfont(fontspec)
 		# Get the explicit point size, if any
 		if self.node <> None:
 			ps = MMAttrdefs.getattr(self.node, 'pointsize')
@@ -170,14 +172,18 @@ class TextWindow(ChannelWindow):
 			ps = self.attrdict['pointsize']
 		else:
 			ps = 0
-		if ps <> 0: self.pointsize = ps
+		if ps <> 0: pointsize = ps
+		if fontname == self.fontname and pointsize == self.pointsize:
+			return
+		self.fontname = fontname
+		self.pointsize = pointsize
 		try:
-			self.font1 = fm.findfont(self.fontname) # At 1 point...
+			self.font = newfont(self.fontname, self.pointsize)
 		except RuntimeError: # That's what fm raises...
 			print 'Bad fontname', `self.fontname`,
-			print '; using default', `mapfont('default')[0]`
-			self.font1 = fm.findfont(mapfont('default')[0])
-		self.font = self.font1.scalefont(self.pointsize)
+			self.fontname = mapfont('default')[0]
+			print '; using default', `self.fontname`
+			self.font = newfont(self.fontname, self.pointsize)
 		# Find out some parameters of the font
 		self.avgcharwidth, self.baseline, self.fontheight = \
 			getfontparams(self.font)
@@ -426,6 +432,12 @@ class TextChannel(Channel):
 			raise CheckError, \
 				'gettext on wrong node type: ' +`node.type`
 	#
+	def setwaiting(self):
+		self.window.setwaiting()
+	#
+	def setready(self):
+		self.window.setready()
+	#
 
 def getfontparams(font):
 	avgcharwidth = font.getstrwidth('m')
@@ -451,3 +463,21 @@ def mapfont(fontname):
 		return fontmap[fontname]
 	else:
 		return fontname, 12
+
+
+# Cache font objects, since each time you create a new one, the first
+# call to f.getfontinfo() takes about half a second...
+
+fontcache = {}
+
+def newfont(name, size):
+	key = name + `size`
+	if fontcache.has_key(key):
+		return fontcache[key]
+	key1 = name + '1'
+	if fontcache.has_key(key1):
+		f1 = fontcache[key1]
+	else:
+		f1 = fontcache[key1] = fm.findfont(name)
+	f = fontcache[key] = f1.scalefont(size)
+	return f
