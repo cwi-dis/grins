@@ -47,10 +47,10 @@
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 	'Color used for text/images in window' channel)
 
-(blockview_winpos (tuple (int) (int)) (-1 -1) 'Hierarchy winpos' hidden
+(blockview_winpos (tuple (float) (float)) (-1 -1) 'Hierarchy winpos' hidden
 	 'Window position for hierarchy view' raw)
 
-(blockview_winsize (tuple (int) (int)) (400 400) 'Hierarchy winsize' hidden
+(blockview_winsize (tuple (float) (float)) (115.234375 115.234375) 'Hierarchy winsize' hidden
 	 'Window size for hierarchy view' raw)
 
 (border (int) 1 'Channel border' default
@@ -62,10 +62,10 @@
 (channel (name) undefined 'Channel' channelname
 	'Name of channel used to render this node/subtree' inherited)
 
-(cview_winpos  (tuple (int) (int)) (-1 -1) 'Time chart winpos' hidden
+(cview_winpos  (tuple (float) (float)) (-1 -1) 'Time chart winpos' hidden
 	 'Window position for Time chart view' raw)
 
-(cview_winsize  (tuple (int) (int)) (400 400) 'Time chart winsize' hidden
+(cview_winsize  (tuple (float) (float)) (115.234375 115.234375) 'Time chart winsize' hidden
 	 'Window size for Time chart view' raw)
 
 (channellist (list (enclosed (tuple (name) (attrdict)))) ()
@@ -96,19 +96,19 @@
 ##(format (enum ASCII PostScript) ASCII 'Format' default
 ##	'Format used by external text file (ASCII or PostScript)' channel)
 
-##(help_winpos  (tuple (int) (int)) (-1 -1) 'Help window position' hidden
+##(help_winpos  (tuple (float) (float)) (-1 -1) 'Help window position' hidden
 ##	 'Position of help window' raw)
 
-##(help_winsize  (tuple (int) (int)) (400 600) 'Help window size' hidden
+##(help_winsize  (tuple (float) (float)) (115.234375 172.8515625) 'Help window size' hidden
 ##	 'Size of help window' raw)
 
 (hicolor (tuple (int) (int) (int)) (255 0 0) 'Hilight color' color
 	'Color used for anchors in window' channel)
 
-(hview_winpos (tuple (int) (int)) (-1 -1) 'Hierarchy winpos' hidden
+(hview_winpos (tuple (float) (float)) (-1 -1) 'Hierarchy winpos' hidden
 	 'Window position for hierarchy view' raw)
 
-(hview_winsize (tuple (int) (int)) (400 400) 'Hierarchy winsize' hidden
+(hview_winsize (tuple (float) (float)) (115.234375 115.234375) 'Hierarchy winsize' hidden
 	 'Window size for hierarchy view' raw)
 
 (hyperlinks (list (enclosed (tuple (enclosed (tuple (string) (any)))
@@ -126,10 +126,10 @@
 ##(keep (bool) 0 'Keep' default
 ##	'If on, text in window is kept until explicitly replaced' channel)
 
-(links_winpos  (tuple (int) (int)) (-1 -1) 'Link edit window position' hidden
+(links_winpos  (tuple (float) (float)) (-1 -1) 'Link edit window position' hidden
 	 'Position of link edit window' raw)
 
-(links_winsize  (tuple (int) (int)) (510 460) 'Link edit window size' hidden
+(links_winsize  (tuple (float) (float)) (146.923828125 132.51953125) 'Link edit window size' hidden
 	 'Size of link edit window' raw)
 
 (name (name) '' 'Node name' default
@@ -150,10 +150,10 @@
 ##(scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars' default
 ##	'Select the presence of horizontal/vertical scroll bars' channel)
 
-(player_winpos (tuple (int) (int)) (-1 -1) 'Player winpos' hidden
+(player_winpos (tuple (float) (float)) (-1 -1) 'Player winpos' hidden
 	 'Window position for player control panel' raw)
 
-(player_winsize (tuple (int) (int)) (290 160) 'Player winsize' hidden
+(player_winsize (tuple (float) (float)) (83.544921875 46.09375) 'Player winsize' hidden
 	 'Window size for player control panel' raw)
 
 (pointsize (float) 0 'Point size' default
@@ -165,10 +165,10 @@
 (style (list (name)) () 'Style(s)' default
 	'List of style names that apply to this node/subtree' raw)
 
-(style_winpos (tuple (int) (int)) (-1 -1) 'Style editor winpos' hidden
+(style_winpos (tuple (float) (float)) (-1 -1) 'Style editor winpos' hidden
 	 'Window position for style editor' raw)
 
-(style_winsize (tuple (int) (int)) (300 320) 'Style editor winsize' hidden
+(style_winsize (tuple (float) (float)) (86.42578125 92.1875) 'Style editor winsize' hidden
 	 'Window size for style editor' raw)
 
 (styledict (namedict (attrdict)) () 'Style Dictionary' hidden
@@ -191,10 +191,10 @@
 	() 'SyncTo list' hidden
 	'List of sync arcs ending at this node' raw)
 
-(toplevel_winpos (tuple (int) (int)) (-1 -1) 'Top level winpos' hidden
+(toplevel_winpos (tuple (float) (float)) (-1 -1) 'Top level winpos' hidden
 	 'Window position for top level menu' raw)
 
-(toplevel_winsize (tuple (int) (int)) (110 250) 'Top level winsize' hidden
+(toplevel_winsize (tuple (float) (float)) (31.689453125 72.021484375) 'Top level winsize' hidden
 	 'Window size for top level menu' raw)
 
 (type (name) null 'Channel type' channeltype
@@ -212,8 +212,8 @@
 ##(wait_for_close (bool) 0 'Wait for close' default
 ##	'Wait for "close window" action to proceed' channel)
 
-(winpos (tuple (int) (int)) (-1 -1) 'Window position' hidden
+(winpos (tuple (float) (float)) (-1 -1) 'Window position' hidden
 	'Initial window position (x, y) (x axis pointing down!)' raw)
 
-(winsize (tuple (int) (int)) (0 0) 'Window size' hidden
+(winsize (tuple (float) (float)) (0 0) 'Window size' hidden
 	'Initial window size (width, height)' raw)
