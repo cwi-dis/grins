@@ -468,14 +468,11 @@ def getproportion(writer, node, attr, defstr='0'):
 			prop = prop[:-4]
 		return prop
 
-def getfill(writer, node):
-	if node.GetType() not in leaftypes:
-		return
-	duration = getduration(writer, node)
-	if duration:
-		return
-	if node.GetChannelType() in ('image', 'text'):
-		return 'freeze'
+def getfill(writer, node, attr):
+	fill = getcmifattr(writer, node, attr)
+	if fill != 'default':
+		return fill
+	return None
 
 def escape_name(name, quote_initial = 1):
 	name = string.join(string.split(name, '.'), '\\.')
@@ -858,9 +855,8 @@ smil_attrs=[
 	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
 	("dur", getduration),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
-##	("fill", getfill),
-	("fill", lambda writer, node:getcmifattr(writer, node, "fill")),
-	("fillDefault", lambda writer, node:getcmifattr(writer, node, "fillDefault")),
+	("fill", lambda writer, node: getfill(writer, node, 'fill')),
+	("fillDefault", lambda writer, node: getfill(writer, node, 'fillDefault')),
 	("endsync", getterm),
 	("repeat", lambda writer, node:(not writer.smilboston and getrepeat(writer, node)) or None),
 	("repeatCount", lambda writer, node:(writer.smilboston and getrepeat(writer, node)) or None),
