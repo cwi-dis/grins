@@ -648,7 +648,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 	def newEmbedded(self, x, y, w, h, title, units = UNIT_MM, adornments=None, canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
 		hwnd =  __main__.toplevel.get_embedded_hwnd()
 		import embedding
-		return embedding.EmbeddedWnd(self, w, h, units, bgcolor, hwnd, title)
+		wnd = embedding.EmbeddedWnd(self, w, h, units, bgcolor, hwnd, title)
+		__main__.toplevel.set_embedded_wnd(wnd)
+		return wnd
 
 	# Return the framework document object associated with this frame
 	def getdoc(self):

@@ -14,7 +14,7 @@ WM_USER_STOP = win32con.WM_USER+4
 WM_USER_PAUSE = win32con.WM_USER+5
 WM_USER_GETSTATUS = win32con.WM_USER+6
 WM_USER_SETHWND = win32con.WM_USER+7
-WM_USER_CLOSE = win32con.WM_USER+8
+WM_USER_UPDATE = win32con.WM_USER+8
 
 class ListenerWnd(GenWnd.GenWnd):
 	def __init__(self, toplevel):
@@ -28,6 +28,7 @@ class ListenerWnd(GenWnd.GenWnd):
 		self.HookMessage(self.OnPause, WM_USER_PAUSE)
 		self.HookMessage(self.OnGetStatus, WM_USER_GETSTATUS)
 		self.HookMessage(self.OnSetWindow, WM_USER_SETHWND)
+		self.HookMessage(self.OnUpdate, WM_USER_UPDATE)
 
 	def OnOpen(self, params):
 		# lParam (params[3]) is a pointer to a c-string
@@ -61,6 +62,9 @@ class ListenerWnd(GenWnd.GenWnd):
 	def OnSetWindow(self, params):
 		self._toplevel.set_embedded_hwnd(params[3])
 
+	def OnUpdate(self, params):
+		wnd = self._toplevel.get_embedded_wnd()
+		if wnd: wnd.update()
 
 ############################
 import win32window
