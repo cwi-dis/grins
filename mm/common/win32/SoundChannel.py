@@ -129,7 +129,7 @@ class SoundChannel(Channel):
 		except IOError, arg:
 			if type(arg) is type(self):
 				arg = arg.strerror
-			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (fn, arg))
+			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (url, arg))
 			return 1
 		fn = os.path.join(os.getcwd(), fn)
 		builder=DirectShowSdk.CreateGraphBuilder()
