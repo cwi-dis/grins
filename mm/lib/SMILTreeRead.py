@@ -241,7 +241,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attrdict['name'] = val
 			elif attr == 'src':
 				# Special case: # is used as a placeholder for empty URL fields
-				if val != '#':	
+				if val != '#':
 					attrdict['file'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'begin' or attr == 'end':
 				node.__syncarcs.append((attr, val))
@@ -2084,7 +2084,6 @@ def ReadFileContext(url, context, printfunc = None, new_file = 0):
 		else:
 			baseurl = None
 		context.setbaseurl(baseurl)
-		context.baseurlset = 0
 	data = u.read()
 	u.close()
 	p.feed(data)

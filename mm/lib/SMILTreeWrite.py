@@ -94,10 +94,10 @@ class IndentedFile:
 
 Error = 'Error'
 
-def WriteFile(root, filename, cleanSMIL = 0, copyFiles = 0, evallicense = 0, progress = None):
+def WriteFile(root, filename, cleanSMIL = 0, copyFiles = 0, evallicense = 0, progress = None, convertURLs = 0):
 	fp = IndentedFile(open(filename, 'w'))
 	try:
-		writer = SMILWriter(root, fp, filename, cleanSMIL, copyFiles, evallicense, progress = progress)
+		writer = SMILWriter(root, fp, filename, cleanSMIL, copyFiles, evallicense, progress = progress, convertURLs = convertURLs)
 	except Error, msg:
 		from windowinterface import showmessage
 		showmessage(msg, mtype = 'error')
@@ -248,9 +248,13 @@ def getsrc(writer, node):
 			# If not exporting we insert a placeholder
 			val = '#'
 		return val
-	if not writer.copydir:		
-		return val
 	ctx = node.GetContext()
+	if not writer.copydir:
+		if writer.convertURLs:
+			val = MMurl.canonURL(ctx.findurl(val))
+			if val[:len(writer.convertURLs)] == writer.convertURLs:
+				val = val[len(writer.convertURLs):]
+		return val
 	url = ctx.findurl(val)
 	if writer.copycache.has_key(url):
 		# already seen and copied
@@ -620,8 +624,20 @@ def mediatype(chtype, error=0):
 	return '%s:%s' % (NSprefix, chtype), '%s %s' % (GRiNSns, chtype)
 
 class SMILWriter(SMIL):
-	def __init__(self, node, fp, filename, cleanSMIL = 0, 
-				copyFiles = 0, evallicense = 0, tmpcopy = 0, progress=None):
+	def __init__(self, node, fp, filename, cleanSMIL = 0, copyFiles = 0,
+		     evallicense = 0, tmpcopy = 0, progress = None,
+		     convertURLs = 0):
+		ctx = node.GetContext()
+		if convertURLs:
+			url = MMurl.canonURL(MMurl.pathname2url(filename))
+			i = string.rfind(url, '/')
+			if i >= 0: url = url[:i+1]
+			else: url = ''
+			self.convertURLs = url
+			print 'converting',url,filename
+		else:
+			self.convertURLs = None
+			print 'not converting'
 		self.__cleanSMIL = cleanSMIL	# if set, no GRiNS namespace
 		self.evallicense = evallicense
 		self.__generate_number = 0
@@ -663,7 +679,7 @@ class SMILWriter(SMIL):
 		self.uses_cmif_extension = not cleanSMIL
 		self.root = node
 		self.fp = fp
-		self.__title = node.GetContext().gettitle()
+		self.__title = ctx.gettitle()
 
 		self.ids_used = {}
 
@@ -780,16 +796,16 @@ class SMILWriter(SMIL):
 					       ('content', self.__title)])
 		self.writetag('meta', [('name', 'generator'),
 				       ('content','GRiNS %s'%version.version)])
-		i = string.rfind(ctx.baseurl or '', '/')
-		if i >= 0:
-			# baseurl up to and including last slash
-			baseurl = ctx.baseurl[:i+1]
-		else:
-			# no baseurl
-			baseurl = None
-		if baseurl and ctx.baseurlset and not self.copydir:
-			self.writetag('meta', [('name', 'base'),
-					       ('content', baseurl)])
+##		i = string.rfind(ctx.baseurl or '', '/')
+##		if i >= 0:
+##			# baseurl up to and including last slash
+##			baseurl = ctx.baseurl[:i+1]
+##		else:
+##			# no baseurl
+##			baseurl = None
+##		if baseurl and ctx.baseurlset and not self.copydir:
+##			self.writetag('meta', [('name', 'base'),
+##					       ('content', baseurl)])
 		for key, val in ctx.attributes.items():
 			# for export don't write attributes starting with project_, they are meant
 			# for internal information-keeping only

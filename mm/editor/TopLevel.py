@@ -247,7 +247,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.setwaiting()
 		if self.save_to_file(filename):
 			self.filename = MMurl.pathname2url(filename)
-			self.context.setbaseurl(self.filename)
+##			self.context.setbaseurl(self.filename)
 			self.fixtitle()
 		else:
 			return 1
@@ -583,7 +583,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		url = MMurl.pathname2url(filename)
 		mimetype = mimetypes.guess_type(url)[0]
 		if exporting and mimetype != 'application/smil':
-			windowinterface.showmessage('Export to SMIL (*.smi or *.smil) files only')
+			windowinterface.showmessage('Publish to SMIL (*.smi or *.smil) files only')
 			return
 		if mimetype == 'application/x-grins-cmif':
 			import settings
@@ -624,7 +624,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 							cleanSMIL = cleanSMIL,
 							copyFiles = exporting,
 							evallicense=evallicense,
-							progress = progress)
+							progress = progress,
+							convertURLs = 1)
 		except IOError, msg:
 			windowinterface.showmessage('Save operation failed.\n'+
 						    'File: '+filename+'\n'+
