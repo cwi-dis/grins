@@ -66,11 +66,8 @@ class Main(MainDialog):
 		import TopLevel
 		import windowinterface
 		
-		have_templates = 0
 		templatedir = findfile('Templates')
 		if os.path.exists(templatedir):
-			have_templates = 1
-		if have_templates:
 			windowinterface.FileDialog('Select a template', templatedir, '*', '',
 				self._new_ok_callback, None, 1)
 		else:
@@ -187,7 +184,6 @@ def handler(sig, frame):
 	pdb.set_trace()
 
 def main():
-	import os
 	os.environ['CMIF_USE_X'] = '1'
 	try:
 		opts, files = getopt.getopt(sys.argv[1:], 'qpj:snh:CHPSL')
@@ -317,7 +313,6 @@ cmifpath = None
 
 def findfile(name):
 	global cmifpath
-	import os
 	if os.path.isabs(name):
 		return name
 	if cmifpath is None:
