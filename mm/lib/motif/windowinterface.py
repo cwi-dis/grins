@@ -52,8 +52,6 @@ class _Question:
 		return self.answer
 
 	def callback(self, answer):
-		if toplevel._in_create_box:
-			return
 		self.answer = answer
 		self.looping = FALSE
 
@@ -80,8 +78,6 @@ class _MultChoice:
 		return self.answer
 
 	def callback(self, msg):
-		if toplevel._in_create_box:
-			return
 		for i in range(len(self.msg_list)):
 			if msg == self.msg_list[i]:
 				self.answer = i

@@ -5,7 +5,7 @@ import string, math
 from types import ListType
 RegionType = type(Xlib.CreateRegion())
 from XTopLevel import toplevel
-from XConstants import TRUE, FALSE, error, ARR_HALFWIDTH, ARR_LENGTH, _WIDTH
+from XConstants import TRUE, FALSE, error, ARR_HALFWIDTH, ARR_LENGTH, _WIDTH, UNIT_SCREEN
 from XFont import findfont
 from XButton import _Button
 from splash import roundi
@@ -339,32 +339,32 @@ class _DisplayList:
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
 
-	def drawline(self, color, points):
+	def drawline(self, color, points, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		p = []
 		for point in points:
-			p.append(w._convert_coordinates(point))
+			p.append(w._convert_coordinates(point, units = units))
 		self._list.append(('line', w._convert_color(color),
 				   self._linewidth, p))
 		self._optimize((1,))
 
-	def drawbox(self, coordinates):
+	def drawbox(self, coordinates, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		self._list.append(('box', w._convert_color(self._fgcolor),
 				   self._linewidth,
-				   w._convert_coordinates(coordinates)))
+				   w._convert_coordinates(coordinates, units = units)))
 		self._optimize((1,))
 
-	def drawfbox(self, color, coordinates):
+	def drawfbox(self, color, coordinates, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		self._list.append(('fbox', w._convert_color(color),
-				   w._convert_coordinates(coordinates)))
+				   w._convert_coordinates(coordinates, units = units)))
 		self._optimize((1,))
 
 	def drawmarker(self, color, coordinates):
