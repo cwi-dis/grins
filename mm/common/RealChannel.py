@@ -152,17 +152,26 @@ class RealChannel:
 		url = MMurl.unquote(url)
 		if realenginedebug:
 			print 'RealChannel.playit', self, `url`
+		self._playargs = (node, window, winpossize, url, windowless)
 		self.__rmaplayer.OpenURL(url)
+		
+		# postpone till the presentation is open
+#		t0 = self.__channel._scheduler.timefunc()
+#		if t0 > node.start_time:
+##			print 'skipping',node.start_time,t0,t0-node.start_time
+#			self.__rmaplayer.Seek(int((t0-node.start_time)*1000))
+#		self.__rmaplayer.Begin()
+		self.__engine.startusing()
+		self.__using_engine = 1
+		return 1
+
+	def OnPresentationOpened(self):
+		node = self._playargs[0]
 		t0 = self.__channel._scheduler.timefunc()
 		if t0 > node.start_time:
 ##			print 'skipping',node.start_time,t0,t0-node.start_time
 			self.__rmaplayer.Seek(int((t0-node.start_time)*1000))
 		self.__rmaplayer.Begin()
-		self.__engine.startusing()
-		self.__using_engine = 1
-		self._playargs = (node, window, winpossize, url, windowless)
-		return 1
-
 
 	def replay(self):
 		if not self._playargs:
@@ -252,3 +261,4 @@ class RealChannel:
 				self.__channel._scheduler.cancel(self.__qid)
 			self.__qid = 0
 			self.__rmaplayer.Pause()
+ 
