@@ -32,8 +32,8 @@ QTns = 'http://www.apple.com/quicktime/resources/smilextensions'
 # namespaces they are valid in
 limited = {
 	# viewport was changed to topLayout after CR
-	'viewport': SMIL2ns[2:],
-	'topLayout': SMIL2ns[:4],
+	'viewport': SMIL2ns[4:],
+	'topLayout': SMIL2ns[:6],
 	}
 
 import string
