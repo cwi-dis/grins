@@ -2665,21 +2665,27 @@ class MMNode(MMTreeElement):
 	def GetAttrDict(self):
 		return self.attrdict
 
+	# Important: this method is called many times (when you save the document)
+	# it has to be optimized
 	def GetRawAttr(self, name, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
 		# only for css positioning attributes
-		if self.isCssAttr(name):
+		if name in _CssAttrs:
+#		don't use : if self.isCssAttr(name)->equivalent. just the fact to call the method takes a lot of times
 			return self.getCssRawAttr(name)
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		raise NoSuchAttrError, 'in GetRawAttr()'
 
+	# Important: this method is called many times (when you save the document)
+	# it has to be optimized
 	def GetRawAttrDef(self, name, default, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
 		# only for css positioning attributes
-		if self.isCssAttr(name):
+		if name in _CssAttrs:
+#		don't use : if self.isCssAttr(name)->equivalent. just the fact to call the method takes a lot of times
 			return self.getCssRawAttr(name)
 		return self.attrdict.get(name, default)
 
