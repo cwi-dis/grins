@@ -452,12 +452,9 @@ class HtmlChannel(Channel.ChannelWindow):
 			if hdrs.type != 'text/html':
 				import Hlinks
 				self._player.toplevel.jumptoexternal(self.url, None, Hlinks.TYPE_JUMP)
-				# don't call setready below
-				return
 			else:
 				newtext = open(fn, 'rb').read()
 				self.htmlw.SetText(newtext, None, self.footer, 0, tag)
-		self._player.toplevel.setready()
 
 image_cache = {}
 
