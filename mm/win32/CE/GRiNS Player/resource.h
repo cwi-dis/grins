@@ -10,8 +10,13 @@
 #define IDD_ABOUTBOX                    103
 #define IDS_HELP                        104
 #define IDD_PYSTDOUT                    105
+#define IDD_PROFILE                     106
 #define IDS_COMMAND1                    301
 #define IDC_STDOUT                      1001
+#define IDC_BASIC                       1006
+#define IDC_PSS4                        1007
+#define IDC_PSS5                        1008
+#define IDC_LANGUAGE                    1009
 #define IDM_MAIN_COMMAND1               40001
 #define IDM_HELP_ABOUT                  40003
 #define IDM_MAIN_COMMAND2               40007
@@ -29,9 +34,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        106
+#define _APS_NEXT_RESOURCE_VALUE        107
 #define _APS_NEXT_COMMAND_VALUE         40018
-#define _APS_NEXT_CONTROL_VALUE         1002
+#define _APS_NEXT_CONTROL_VALUE         1007
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
