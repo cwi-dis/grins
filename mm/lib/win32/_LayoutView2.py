@@ -538,9 +538,6 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 			Sdk.DeleteObject(self.__hsmallfont)
 
 
-	#
-	# win32window.MSDrawContext listener interface
-	# 
 	def onShapeChange(self, shape):
 		if shape is None:
 			# update user events
@@ -568,13 +565,23 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		self._selected = shape
 		self._mouse_update = 0
 
-	def onProperties(self, shape):
-		if not shape: return
-		shape.onProperties()
-
-	def onMultiSelChanged(self, selections):
+	#
+	# win32window.MSDrawContext listener interface
+	# 
+ 	def onDSelChanged(self, selections):
 		if self._listener != None:
 			self._listener.onMultiSelChanged(selections)
+
+	def onDSelMove(self, selections):
+		pass
+
+ 	def onDSelResize(self, selection):
+		self.onShapeChange(selection)
+
+	def onDSelProperties(self, selection): 
+		if not selection: return
+		selection.onProperties()
+
 	# 
 	# interface implementation: function called from an external module
 	#

@@ -2442,7 +2442,14 @@ class ViewportContext:
 [SO_REPLACE, SO_APPEND] = range(2)
 
 Sdk = win32ui.GetWin32Sdk()
-	 
+
+# listeners should implement the interface
+#class ListenerInterface:
+# 	def onDSelChanged(self, selection): pass
+# 	def onDSelMove(self, selection): pass
+# 	def onDSelResize(self, selection): pass
+#	def onDSelProperties(self, shape): pass
+
 class DrawContext:
 	def __init__(self):
 		self._moveRefPt = 0, 0
@@ -2525,30 +2532,28 @@ class DrawContext:
 			self._selected.invalidateDragHandles()
 			self._selected.moveBy((xp-xl, yp-yl))
 			self._selected.invalidateDragHandles()
-			self._notifyListeners(self._selected)
+			for obj in self._listeners:
+				obj.onDSelMove(self._selected)
 	
 	def moveSelectionHandleTo(self, point):
 		if self._selected:
 			self._selected.invalidateDragHandles()
 			self._selected.moveDragHandleTo(self._ixDragHandle, point)
 			self._selected.invalidateDragHandles()
-			self._notifyListeners(self._selected)
+			for obj in self._listeners:
+				obj.onDSelResize(self._selected)
 
 	def select(self, shape, mode=SO_REPLACE):
 		if self._selected:
 			self._selected.invalidateDragHandles()	
 		self._selected = shape
-		self._notifyListeners(shape)
+		for obj in self._listeners:
+			obj.onDSelChanged(self._selected)
 	
 	def showproperties(self):
 		if self._selected:
 			for obj in self._listeners:
-				obj.onProperties(self._selected)
-	
-	def _notifyListeners(self, shape):
-		for obj in self._listeners:
-			obj.onShapeChange(shape)
-
+				obj.onDSelProperties(self._selected)
 	#
 	# Mouse input
 	#
@@ -2569,6 +2574,14 @@ class DrawContext:
 		self._selmode = SM_NONE
 		self._ixDragHandle = 0
 		self._capture = None
+
+	# force selection
+	def selectShape(self, shape):
+		if self._selected:
+			self._selected.invalidateDragHandles()
+		self._selected = shape
+		if self._selected:
+			self._selected.invalidateDragHandles()
 
 	#
 	# Create new objects support
@@ -2592,11 +2605,12 @@ class DrawContext:
 # It offers the same functionality plus multi selection
 
 # A client/notification listener is now required to implement
-# onMultiSelChanged(self, selections) beyond onShapeChange(self, shape)
-# selections is a list of shapes.
-# onMultiSelChanged callback will be called by MSDrawContext on
-# any selection change with the currently selected list of shapes 
-# as argument
+#class ListenerInterface:
+# 	def onDSelChanged(self, selections): pass
+# 	def onDSelMove(self, selections): pass
+# 	def onDSelResize(self, selection): pass
+#	def onDSelProperties(self, selection): pass
+# where selections is the list of selected objects
 
 # Please note that currently a client/notification listener will
 # receive the same callbacks through onShapeChange(self, shape) 
@@ -2625,6 +2639,7 @@ class MSDrawContext(DrawContext):
 		self._lastPt = 0, 0
 		self._focusdrawn = 0
 	
+	# force selection
 	def selectShapes(self, shapeList):
 		for shape in self._selections:
 			shape.invalidateDragHandles()
@@ -2676,16 +2691,8 @@ class MSDrawContext(DrawContext):
 						self._selected = None
 			# update shape drag handles was either added or removed
 			shape.invalidateDragHandles()
-		self.notifyForSelChange()
-
-	def notifyForSelChange(self):
-		if debugMSDrawContext:
-			for shape in self._selections:
-				print shape.getwindowpos(),
-			print ""
-		self._notifyListeners(self._selected)
 		for obj in self._listeners:
-			obj.onMultiSelChanged(self._selections)
+			obj.onDSelChanged(self._selections)
 	
 	def moveSelectionTo(self, point):
 		xp, yp = point
@@ -2694,7 +2701,16 @@ class MSDrawContext(DrawContext):
 			shape.invalidateDragHandles()
 			shape.moveBy((xp-xl, yp-yl))
 			shape.invalidateDragHandles()
-			self._notifyListeners(shape)
+		for obj in self._listeners:
+			obj.onDSelMove(self._selections)
+
+	def moveSelectionHandleTo(self, point):
+		if self._selected:
+			self._selected.invalidateDragHandles()
+			self._selected.moveDragHandleTo(self._ixDragHandle, point)
+			self._selected.invalidateDragHandles()
+			for obj in self._listeners:
+				obj.onDSelResize(self._selected)
 
 	def reset(self):
 		DrawContext.reset(self)
@@ -2838,7 +2854,6 @@ class SelectTool(DrawTool):
 	
 	def onLButtonUp(self, flags, point):
 		ctx = self._ctx
-
 		if ctx.hasCapture():
 			if ctx._selmode == SM_NET:
 				if ctx._focusdrawn:
@@ -2993,4 +3008,4 @@ class _ResizeableDisplayList(_DisplayList):
  
  
  
- 
+ 
