@@ -1233,6 +1233,12 @@ class _DisplayList:
 		region = window._clip
 		# draw our bit
 		self._render(region)
+		# now draw transparent subwindows
+		windows = window._subwindows[:]
+		windows.reverse()
+		for w in windows:
+			if w._transparent:
+				w._do_expose(region, 1)
 		# now draw transparent windows that lie on top of us
 		if window._topwindow is not window:
 			i = window._parent._subwindows.index(window)
@@ -1980,19 +1986,17 @@ class _MultChoice(Dialog):
 				grab = TRUE, vertical = FALSE)
 
 	def run(self):
-		try:
-			self.looping = TRUE
-			Xt.MainLoop()
-		except _end_loop:
-			pass
+		self.looping = TRUE
+		while self.looping:
+			event = Xt.NextEvent()
+			Xt.DispatchEvent(event)
 		return self.answer
 
 	def callback(self, msg):
 		for i in range(len(self.msg_list)):
 			if msg is self.msg_list[i]:
 				self.answer = i
-				if self.looping:
-					raise _end_loop
+				self.looping = FALSE
 				return
 
 def multchoice(prompt, list, defindex):
