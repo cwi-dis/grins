@@ -470,8 +470,9 @@ class AttrEditor(Dialog):
 			namelist = self.wrapper.attrnames()
 			if namelist <> self.namelist:
 				# re-open with possibly different size
-				self.hide()
-				self.open()
+				if self.is_showing():
+					self.hide()
+					self.open()
 			else:
 				self.fixvalues()
 				self.settitle(self.wrapper.maketitle())
@@ -518,14 +519,17 @@ class AttrEditor(Dialog):
 		self.setchanged(0)
 		self.form.unfreeze_form()
 	#
-	def setvalues(self):
-		if not self.wrapper.transaction(): return 0
+	def setvalues(self, keep_open):
+		if not self.wrapper.transaction():
+			return
+		if not keep_open:
+			self.hide()
 		self.form.freeze_form()
-		for b in self.blist: b.setvalue()
+		for b in self.blist:
+			b.setvalue()
 		self.setchanged(0)
 		self.wrapper.commit()
 		self.form.unfreeze_form()
-		return 1
 	#
 	def fixvalues(self):
 		self.fixfocus()
@@ -546,14 +550,16 @@ class AttrEditor(Dialog):
 		obj.set_button(1)
 		self.fixfocus()
 		if self.changed:
-			dummy = self.setvalues()
+			self.setvalues(1)
 		obj.set_button(0)
 	#
 	def ok_callback(self, (obj, arg)):
 		obj.set_button(1)
 		self.fixfocus()
-		if not self.changed or self.setvalues():
+		if not self.changed:
 			self.hide()
+		else:
+			self.setvalues(0)
 		obj.set_button(0)
 	#
 	def fixfocus(self):

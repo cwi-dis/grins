@@ -6,7 +6,6 @@
 # XXX To do:
 # - remember 'locked' over commit
 # - remember sync arc focus over commit
-# - redraw all sync arcs whenever a node is redrawn
 # - what about group nodes?  (I'd say draw a box to display them?)
 # - store focus and locked node as attributes
 # - improve arm colors
@@ -132,6 +131,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.context = self.root.context
 		self.editmgr = self.context.editmgr
 		self.focus = None
+		self.future_focus = None
 		self = ViewDialog.init(self, 'cview_')
 		return GLDialog.init(self, 'Time chart')
 
@@ -204,7 +204,10 @@ class ChannelView(ViewDialog, GLDialog):
 		pass # Nothing changed
 
 	def commit(self):
-		if self.focus is None:
+		if self.future_focus <> None:
+			focus = self.future_focus
+			self.future_focus = None
+		elif self.focus is None:
 			focus = '', None
 		elif self.focus.__class__ == ChannelBox:
 			focus = 'c', self.focus.name
@@ -667,13 +670,30 @@ class GO:
 		context = self.mother.context
 		if not editmgr.transaction():
 			return # Not possible at this time
+		import multchoice
+		from ChannelMap import channelmap
+		prompt = 'Channel type:'
+		list = ['null', 'text', 'image']
+		types = channelmap.keys()
+		types.sort()
+		for type in types:
+			if type not in list:
+				list.append(type)
+		list.append('Cancel')
+		default = list.index('text')
+		i = multchoice.multchoice(prompt, list, default)
+		if i+1 >= len(list):
+			editmgr.rollback()
+			return # User doesn't want to choose a type
+		type = list[i]
 		i = 1
 		base = 'NEW'
 		name = base + `i`
 		while name in self.mother.context.channelnames:
 			i = i+1
 			name = base + `i`
-		editmgr.addchannel(name, self.newchannelindex(), 'null')
+		editmgr.addchannel(name, self.newchannelindex(), type)
+		self.mother.future_focus = 'c', name
 		editmgr.commit()
 		# NB: when we get here, this object is nearly dead already!
 		import AttrEdit
