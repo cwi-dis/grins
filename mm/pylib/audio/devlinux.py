@@ -25,11 +25,11 @@ class AudioDevLINUX:
 	else:
 		# try if hardware supports CD quality
 		try:
-		    __port.setparameters(44100, 16, 2, linuxaudiodev.AFMT_S16_LE)
+			__port.setparameters(44100, 16, 2, linuxaudiodev.AFMT_S16_LE)
 		except linuxaudiodev.error:
-		    # CD quality not supported, use phone quality
-		    __formats = {linear_8_mono_signed:AudioDevLINUX.__formats[linear_8_mono_signed]}
-		    __rates = (8000,)
+			# CD quality not supported, use phone quality
+			__formats = {linear_8_mono_signed:AudioDevLINUX.__formats[linear_8_mono_signed]}
+			__rates = (8000,)
 		# cleanup
 		__port.close()
 		del __port
@@ -93,15 +93,15 @@ class AudioDevLINUX:
 			return 0
 
 	def getfillable(self):
-	    inited = 0
-	    if not self.__port:
-		self.__initport()
-		inited = 1
-	    rv = self.__port.obuffree()
-	    if inited:
-		self.__port.close()
-		self.__port = None
-	    return rv
+		inited = 0
+		if not self.__port:
+			self.__initport()
+			inited = 1
+		rv = self.__port.obuffree()
+		if inited:
+			self.__port.close()
+			self.__port = None
+		return rv
 
 	def __initport(self):
 		fmt = self.__format
@@ -111,11 +111,10 @@ class AudioDevLINUX:
 
 		bps = (fmt.getbps() + 7) & ~7
 		try:
-
-		    self.__port.setparameters(self.__framerate, bps, 
-					      fmt.getnchannels(),
-					      self.__formats[fmt])
+			self.__port.setparameters(self.__framerate, bps, 
+						  fmt.getnchannels(),
+						  self.__formats[fmt])
 		except linuxaudiodev.error:
-		    if fmt.getencoding() != 'linear' or \
-		       self.__framerate != 8000:
-			raise Error, 'unsupported format'
+			if fmt.getencoding() != 'linear' or \
+			   self.__framerate != 8000:
+				raise Error, 'unsupported format'
