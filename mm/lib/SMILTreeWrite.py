@@ -1503,7 +1503,7 @@ class SMILWriter(SMIL):
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
 			if ch.GetParent() is None and \
-			   ChannelMap.isvisible(ch['type']):
+			   ChannelMap.isvisiblechannel(ch['type']):
 				# top-level channel with window
 				if not self.__title:
 					self.__title = ch.name
