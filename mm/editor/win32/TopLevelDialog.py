@@ -13,9 +13,9 @@ are enabled. This class has acces to the document and
 can display its various views and its source
 """
 
-class TopLevelDialog:
-	adornments = {}
+import bitrates, languages
 
+class TopLevelDialog:
 	def __init__(self):
 		self.commandlist = self.commandlist + [
 			PAUSE(callback = (self.pause_callback, ())),
@@ -25,7 +25,6 @@ class TopLevelDialog:
 			TB_STOP(callback = (self.stop_callback, ())),
 			SCHEDDUMP(callback = (self.__dump, ())),
 		]
-		pass
 
 	def __dump(self):
 		self.player.scheduler.dump()
@@ -33,8 +32,30 @@ class TopLevelDialog:
 	def show(self):
 		if self.window is not None:
 			return
+		import settings
+		bitrate = settings.get('system_bitrate')
+		rates = []
+		initbitrate = bitrates.bitrates[0][1]
+		for val, str in bitrates.bitrates:
+			rates.append(str)
+			if val <= bitrate:
+				initbitrate = str
+		language = settings.get('system_language')
+		langs = []
+		initlang = 'English'	# we know this occurs
+		for val, str in languages.languages:
+			langs.append(str)
+			if language == val:
+				initlang = str
+
+		adornments = {
+			'pulldown': [(rates, self.bitratecb, initbitrate),
+				     (langs, self.languagecb, initlang),
+				     ],
+			}
+
 		self.window = windowinterface.newdocument(self, 
-			adornments = self.adornments,commandlist = self.commandlist)
+			adornments = adornments,commandlist = self.commandlist)
 		import Player
 		self.setplayerstate(Player.STOPPED)
 

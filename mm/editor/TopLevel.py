@@ -309,6 +309,28 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if view is not None and view.is_showing():
 			view.hide()
 
+	def bitratecb(self, bitrate):
+		import bitrates, settings
+		if not self.editmgr.transaction():
+			return 0	# indicate failure
+		for val, str in bitrates.bitrates:
+			if bitrate == str:
+				settings.set('system_bitrate', val)
+				break
+		self.editmgr.commit()
+		return 1		# indicate success
+
+	def languagecb(self, language):
+		import languages, settings
+		if not self.editmgr.transaction():
+			return 0	# indicate failure
+		for val, str in languages.languages:
+			if language == str:
+				settings.set('system_language', val)
+				break
+		self.editmgr.commit()
+		return 1		# indicate success
+
 	def save_callback(self):
 		if self.new_file:
 			self.saveas_callback()
