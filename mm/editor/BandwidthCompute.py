@@ -327,7 +327,7 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 						ss = ""
 					else:
 						ss = "s"
-					msg = 'Needs %s second%s longer to load.\nShall I add an extra begin delay?'%(fmtfloat(bwdelay, prec = 1), ss)
+					msg = 'Needs %s second%s longer to load.\nAutomatically adjust begin time?'%(fmtfloat(bwdelay, prec = 1), ss)
 					node.set_infoicon('bandwidthbad', msg, fixcallback=(node.fixdelay_callback, (bwdelay,)))
 				errornodes[node] = 1
 				delaycount = delaycount + 1
