@@ -1,28 +1,30 @@
+cache = {}
+
 def GetImageSize(file):
+	if cache.has_key(file):
+		return cache[file]
 	try:
 		import img
 	except ImportError:
-		try:
-			import imageex
-		except ImportError:
-			return 0, 0
-		else:
-			return imageex.something(file)
+		import imageex
+		width, height = imageex.SizeOfImage(file)
 	else:
 		rdr = img.reader(None, file)
-		return rdr.width, rdr.height
+		width, height = rdr.width, rdr.height
+	cache[file] = width, height
+	return width, height
 
 def GetVideoSize(file):
+	if cache.has_key(file):
+		return cache[file]
 	try:
 		import mv
 	except ImportError:
-		try:
-			import movieex
-		except ImportError:
-			return 0, 0
-		else:
-			return movieex.something(file)
+		import mpegex
+		width, height = mpegex.SizeOfImage(file)
 	else:
-		movie =mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
+		movie = mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
 		track = movie.FindTrackByMedium(mv.DM_IMAGE)
-		return track.GetImageWidth(), track.GetImageHeight()
+		width, height = track.GetImageWidth(), track.GetImageHeight()
+	cache[file] = width, height
+	return width, height
