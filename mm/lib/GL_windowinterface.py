@@ -129,6 +129,9 @@ class _Toplevel:
 	def pop(self):
 		pass
 
+	def push(self):
+		pass
+
 	def getsize(self):
 		if debug: print 'Toplevel.getsize()'
 		return _mscreenwidth, _mscreenheight
@@ -1542,6 +1545,15 @@ class _Window:
 		toplevel._win_lock.acquire()
 		gl.winset(self._window_id)
 		gl.winpop()
+		toplevel._win_lock.release()
+
+	def push(self):
+		if debug: print `self`+'.push()'
+		if self.is_closed():
+			raise error, 'window already closed'
+		toplevel._win_lock.acquire()
+		gl.winset(self._window_id)
+		gl.winpush()
 		toplevel._win_lock.release()
 
 	def getgeometry(self):
