@@ -8,6 +8,7 @@
 #include "modsupport.h"
 #include "mmmodule.h"
 #include <sys/time.h>
+#include <cl.h>
 
 #ifdef MM_DEBUG
 static int moviechannel_debug = 0;
@@ -20,6 +21,7 @@ static int moviechannel_debug = 0;
 #define MAXMAP		(4096 - 256) /* max nr. of colormap entries to use */
 
 #define FORMAT_RGB8	1
+#define FORMAT_CL	2
 
 static type_lock gl_lock;
 extern type_lock getlocklock PROTO((object *));
@@ -40,6 +42,8 @@ struct movie_data {
 	int m_size;		/* size of frame */
 	long m_bgcolor;		/* background color for window */
 	int m_bgindex;		/* colormap index for background color */
+	CL_Handle m_decomp;	/* decompressor for compressed movie */
+	object *m_comphdr;	/* header info for compressed movie */
 };
 struct movie {
 	long m_width, m_height;	/* width and height of window */
@@ -53,9 +57,14 @@ struct movie {
 static char graphics_version[12]; /* gversion() output */
 static int is_entry_indigo;	/* true iff we run on an Entry Indigo */
 static int maxbits;		/* max # of bitplanes for color index */
+#if 0
 static short colors[256][3];	/* saved color map entries */
+#endif
 static int colormap[256];	/* rgb8 -> rgb24 conversion */
-static int window_used, initialized;
+static int window_used;
+#if 0
+static int initialized;
+#endif
 
 static int
 movie_init(self)
@@ -80,11 +89,15 @@ movie_init(self)
 	PRIV->m_play.m_bframe = NULL;
 	PRIV->m_play.m_f = NULL;
 	PRIV->m_play.m_wid = -1;
+	PRIV->m_play.m_decomp = NULL;
+	PRIV->m_play.m_comphdr = NULL;
 	PRIV->m_arm.m_index = NULL;
 	PRIV->m_arm.m_frame = NULL;
 	PRIV->m_arm.m_bframe = NULL;
 	PRIV->m_arm.m_f = NULL;
 	PRIV->m_arm.m_wid = -1;
+	PRIV->m_arm.m_decomp = NULL;
+	PRIV->m_arm.m_comphdr = NULL;
 	window_used++;
 	return 1;
 }
@@ -126,6 +139,12 @@ movie_dealloc(self)
 		free(PRIV->m_arm.m_frame);
 	if (PRIV->m_arm.m_bframe)
 		free(PRIV->m_arm.m_bframe);
+	if (PRIV->m_play.m_decomp)
+		clCloseDecompressor(PRIV->m_play.m_decomp);
+	if (PRIV->m_arm.m_decomp)
+		clCloseDecompressor(PRIV->m_arm.m_decomp);
+	XDECREF(PRIV->m_play.m_comphdr);
+	XDECREF(PRIV->m_arm.m_comphdr);
 	(void) close(PRIV->m_pipefd[0]);
 	(void) close(PRIV->m_pipefd[1]);
 	free(self->mm_private);
@@ -179,6 +198,8 @@ init_colormap(self)
 		if (PRIV->m_play.m_bframe)
 			return;
 		break;
+	case FORMAT_CL:
+		return;
 	}
 	bgr = (PRIV->m_play.m_bgcolor >> 16) & 0xff;
 	bgg = (PRIV->m_play.m_bgcolor >>  8) & 0xff;
@@ -237,6 +258,8 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 	denter(movie_arm);
 	XDECREF(PRIV->m_arm.m_index);
 	PRIV->m_arm.m_index = NULL;
+	XDECREF(PRIV->m_arm.m_comphdr);
+	PRIV->m_arm.m_comphdr = NULL;
 	v = dictlookup(attrdict, "width");
 	if (v && is_intobject(v))
 		PRIV->m_arm.m_width = getintvalue(v);
@@ -263,7 +286,17 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 		format = getstringvalue(v);
 		if (strcmp(format, "rgb8") == 0)
 			PRIV->m_arm.m_format = FORMAT_RGB8;
-		else {
+		else if (strcmp(format, "compress") == 0) {
+			PRIV->m_arm.m_format = FORMAT_CL;
+			v = dictlookup(attrdict, "compressheader");
+			if (v && is_stringobject(v)) {
+				PRIV->m_arm.m_comphdr = v;
+				INCREF(v);
+			} else {
+				err_setstr(RuntimeError, "no compressheader specified");
+				return 0;
+			}
+		} else {
 			err_setstr(RuntimeError, "unrecognized format");
 			return 0;
 		}
@@ -373,6 +406,10 @@ movie_armer(self)
 		free(PRIV->m_arm.m_bframe);
 		PRIV->m_arm.m_bframe = NULL;
 	}
+	if (PRIV->m_arm.m_decomp) {
+		clCloseDecompressor(PRIV->m_arm.m_decomp);
+		PRIV->m_arm.m_decomp = NULL;
+	}
 	v = getlistitem(PRIV->m_arm.m_index, 0);
 	if (v == NULL || !is_tupleobject(v) || gettuplesize(v) < 2) {
 		dprintf(("movie_armer(%lx): index[0] not a proper tuple\n", (long) self));
@@ -396,15 +433,61 @@ movie_armer(self)
 	}
 	offset = getintvalue(t);
 
+	if (PRIV->m_arm.m_format == FORMAT_CL) {
+		int scheme;
+		void *comphdr;
+		int length;
+		int params[6];
+
+		length = getstringsize(PRIV->m_arm.m_comphdr);
+		comphdr = getstringvalue(PRIV->m_arm.m_comphdr);
+		scheme = clQueryScheme(comphdr);
+		if (scheme < 0) {
+			dprintf(("movie_player: unknown compression scheme"));
+			return;
+		}
+		if (clOpenDecompressor(scheme, &PRIV->m_arm.m_decomp) == FAILURE) {
+			dprintf(("movie_armer: cannot open decompressor"));
+			return;
+		}
+		(void) clReadHeader(PRIV->m_arm.m_decomp, length, comphdr);
+		PRIV->m_arm.m_width = clGetParam(PRIV->m_arm.m_decomp,
+						 CL_IMAGE_WIDTH);
+		PRIV->m_arm.m_height = clGetParam(PRIV->m_arm.m_decomp,
+						  CL_IMAGE_HEIGHT);
+		params[0] = CL_ORIGINAL_FORMAT;
+		params[1] = CL_RGBX;
+		params[2] = CL_ORIENTATION;
+		params[3] = CL_BOTTOM_UP;
+		params[4] = CL_FRAME_BUFFER_SIZE;
+		params[5] = PRIV->m_arm.m_width * PRIV->m_arm.m_height * CL_BytesPerPixel(CL_RGBX);
+		PRIV->m_arm.m_bframe = malloc(params[5]);
+		clSetParams(PRIV->m_arm.m_decomp, params, 6);
+		if (PRIV->m_arm.m_bframe == NULL) {
+			dprintf(("movie_armer: malloc bframe failed"));
+			return;
+		}
+	}
+
 	PRIV->m_arm.m_frame = malloc(PRIV->m_arm.m_size);
-	if (!is_entry_indigo && maxbits < 11)
+	if (PRIV->m_arm.m_frame == NULL) {
+		dprintf(("movie_armer: malloc failed"));
+		return;
+	}
+	if (!is_entry_indigo && maxbits < 11 && PRIV->m_arm.m_format == FORMAT_RGB8)
 		PRIV->m_arm.m_bframe = malloc(PRIV->m_arm.m_size * 4);
 	fd = fileno(getfilefile(PRIV->m_arm.m_f));
 	PRIV->m_arm.m_offset = lseek(fd, 0L, SEEK_CUR);
 	(void) lseek(fd, offset, SEEK_SET);
 	if (read(fd, PRIV->m_arm.m_frame, PRIV->m_arm.m_size) != PRIV->m_arm.m_size)
 		dprintf(("movie_armer: read incorrect amount\n"));
-	if (PRIV->m_arm.m_bframe) {
+
+	if (PRIV->m_arm.m_format == FORMAT_CL) {
+		if (clDecompress(PRIV->m_arm.m_decomp, 1, PRIV->m_arm.m_size,
+				 PRIV->m_arm.m_frame, PRIV->m_arm.m_bframe)
+		    == FAILURE)
+			dprintf(("movie_armer: decompress failed"));
+	} else if (PRIV->m_arm.m_bframe) {
 		long *lp;
 		unsigned char *p;
 		int i;
@@ -430,11 +513,16 @@ movie_play(self)
 		free(PRIV->m_play.m_frame);
 	if (PRIV->m_play.m_bframe)
 		free(PRIV->m_play.m_bframe);
+	XDECREF(PRIV->m_play.m_comphdr);
+	if (PRIV->m_play.m_decomp)
+		clCloseDecompressor(PRIV->m_play.m_decomp);
 	PRIV->m_play = PRIV->m_arm;
 	PRIV->m_arm.m_index = NULL;
 	PRIV->m_arm.m_frame = NULL;
 	PRIV->m_arm.m_bframe = NULL;
 	PRIV->m_arm.m_f = NULL;
+	PRIV->m_arm.m_comphdr = NULL;
+	PRIV->m_arm.m_decomp = NULL;
 	if (PRIV->m_play.m_frame == NULL) {
 		/* apparently the arm failed */
 		dprintf(("movie_play(%lx): not playing because arm failed\n", (long) self));
@@ -453,7 +541,8 @@ movie_play(self)
 	winset(PRIV->m_play.m_wid);
 	getsize(&PRIV->m_width, &PRIV->m_height);
 	/* initialize color map */
-	if (initialized == 0) {
+#if 0
+	if (initialized == 0 && PRIV->m_play.m_bframe == NULL) {
 		initialized = 1;
 		if (maxbits < 11 && !is_entry_indigo) {
 			for (i = 0; i < 256; i++) {
@@ -467,9 +556,11 @@ movie_play(self)
 			}
 		}
 	}
+#endif
 	winpop();		/* pop up the window */
-	if ((PRIV->m_arm.m_format == FORMAT_RGB8 && is_entry_indigo &&
+	if ((PRIV->m_play.m_format == FORMAT_RGB8 && is_entry_indigo &&
 	     strcmp(graphics_version, "GL4DLG-4.0.") == 0) ||
+	    PRIV->m_play.m_format == FORMAT_CL ||
 	    PRIV->m_play.m_bframe) {
 		/* only on entry-level Indigo running IRIX 4.0.5 */
 		RGBmode();
@@ -478,7 +569,7 @@ movie_play(self)
 			 (PRIV->m_play.m_bgcolor >>  8) & 0xff,
 			 (PRIV->m_play.m_bgcolor      ) & 0xff);
 		clear();
-		if (PRIV->m_play.m_bframe)
+		if (PRIV->m_play.m_bframe || PRIV->m_play.m_format == FORMAT_CL)
 			pixmode(PM_SIZE, 32);
 		else
 			pixmode(PM_SIZE, 8);
@@ -507,11 +598,12 @@ movie_player(self)
 	long newtime;
 	long offset;
 	int fd;
-	object *v, *t;
+	object *v, *t0, *t;
 	long xorig, yorig;
 	struct pollfd pollfd;
 	int i;
 	double scale;
+	int size;
 
 	denter(movie_player);
 	dprintf(("movie_player(%lx): width = %d, height = %d\n", (long) self, PRIV->m_play.m_width, PRIV->m_play.m_height));
@@ -552,7 +644,7 @@ movie_player(self)
 				   xorig + PRIV->m_play.m_width - 1,
 				   yorig + PRIV->m_play.m_height - 1,
 				   PRIV->m_play.m_frame);
-		if (PRIV->m_play.m_bgindex >= 0)
+		if (PRIV->m_play.m_bframe == NULL && PRIV->m_play.m_bgindex >= 0)
 			writemask(0xffffffff);
 		gflush();
 		release_lock(gl_lock);
@@ -569,12 +661,12 @@ movie_player(self)
 				dprintf(("movie_player(%lx): index[%d] not a proper tuple\n", (long) self, index));
 				goto loop_exit;
 			}
-			t = gettupleitem(v, 0);
-			if (t == NULL || !is_tupleobject(t) || gettuplesize(t) < 1) {
+			t0 = gettupleitem(v, 0);
+			if (t0 == NULL || !is_tupleobject(t0) || gettuplesize(t0) < 1) {
 				dprintf(("movie_player(%lx): index[%d][0] not a proper tuple\n", (long) self, index));
 				goto loop_exit;
 			}
-			t = gettupleitem(t, 0);
+			t = gettupleitem(t0, 0);
 			if (t == NULL || !is_intobject(t)) {
 				dprintf(("movie_player(%lx): index[%d][0][0] not an int\n", (long) self, index));
 				goto loop_exit;
@@ -589,8 +681,26 @@ movie_player(self)
 		}
 		offset = getintvalue(t);
 		lseek(fd, offset, SEEK_SET);
-		read(fd, PRIV->m_play.m_frame, PRIV->m_play.m_size);
-		if (PRIV->m_play.m_bframe) {
+		t = gettupleitem(t0, 1);
+		if (t == NULL || !is_intobject(t)) {
+			dprintf(("movie_player(%lx): index[%d][0][1] not an int\n", (long) self, index));
+			break;
+		}
+		size = getintvalue(t);
+		if (size > PRIV->m_play.m_size) {
+			PRIV->m_play.m_size = size;
+			PRIV->m_play.m_frame = realloc(PRIV->m_play.m_frame, size);
+			if (PRIV->m_play.m_frame == NULL) {
+				dprintf(("movie_player(%lx): realloc failed\n", (long) self));
+				break;
+			}
+		}
+		read(fd, PRIV->m_play.m_frame, size);
+		if (PRIV->m_play.m_format == FORMAT_CL) {
+			(void) clDecompress(PRIV->m_play.m_decomp, 1, size,
+					    PRIV->m_play.m_frame,
+					    PRIV->m_play.m_bframe);
+		} else if (PRIV->m_play.m_bframe) {
 			long *lp;
 			unsigned char *p;
 			int i;
@@ -727,15 +837,13 @@ movie_finished(self)
 {
 	if (PRIV->m_play.m_wid >= 0) {
 		winset(PRIV->m_play.m_wid);
-		if (PRIV->m_play.m_bgindex >= 0) {
+		if (PRIV->m_play.m_bgindex >= 0)
+			color(PRIV->m_play.m_bgindex);
+		else
 			RGBcolor((PRIV->m_play.m_bgcolor >> 16) & 0xff,
 				 (PRIV->m_play.m_bgcolor >>  8) & 0xff,
 				 (PRIV->m_play.m_bgcolor      ) & 0xff);
-			clear();
-		} else {
-			color(PRIV->m_play.m_bgindex);
-			clear();
-		}
+		clear();
 	}
 	XDECREF(PRIV->m_play.m_index);
 	PRIV->m_play.m_index = NULL;
@@ -748,6 +856,11 @@ movie_finished(self)
 		free(PRIV->m_play.m_bframe);
 	PRIV->m_play.m_bframe = NULL;
 	PRIV->m_play.m_wid = -1;
+	XDECREF(PRIV->m_play.m_comphdr);
+	PRIV->m_play.m_comphdr = NULL;
+	if (PRIV->m_play.m_decomp)
+		clCloseDecompressor(PRIV->m_play.m_decomp);
+	PRIV->m_play.m_decomp = NULL;
 	return 1;
 }
 
