@@ -207,3 +207,6 @@ PyTypeObject PyStdOut::type = {
 	"PyStdOut Type" // Documentation string
 	};
 
+// Local Variables:
+// tab-width:4
+// End:
