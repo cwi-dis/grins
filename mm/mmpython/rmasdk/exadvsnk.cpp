@@ -282,7 +282,7 @@ ExampleClientAdviceSink::OnPreSeek(	UINT32	ulOldTime,
 						UINT32	ulNewTime)
 	{
 	//fprintf(stdout, "OnPreSeek(%ld, %ld)\n", ulOldTime, ulNewTime);
-	if(0 && m_pyAdviceSink)
+	if(m_pyAdviceSink)
 		{
 		CallerHelper helper("OnPreSeek",m_pyAdviceSink);
 		if(helper.HaveHandler())helper.call(ulOldTime,ulNewTime);
@@ -304,7 +304,7 @@ ExampleClientAdviceSink::OnPostSeek(	UINT32	ulOldTime,
 						UINT32	ulNewTime)
 	{
     //fprintf(stdout, "OnPostSeek(%ld, %ld)\n", ulOldTime, ulNewTime);
- 	if(0 && m_pyAdviceSink)
+ 	if(m_pyAdviceSink)
 		{
 		CallerHelper helper("OnPostSeek",m_pyAdviceSink);
 		if(helper.HaveHandler())helper.call(ulOldTime,ulNewTime);
