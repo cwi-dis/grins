@@ -146,6 +146,33 @@ static PyObject* PyMenu_GetSubMenu(PyMenu *self, PyObject *args)
 	return (PyObject*)pymenu;
 }
 
+#ifdef _WIN32_WCE
+static PyObject* PyMenu_wce_GetSubMenu(PyMenu *self, PyObject *args)
+{
+	UINT uId, uFlags = MF_BYPOSITION; 	
+	if (!PyArg_ParseTuple(args,"i|i",&uId, &uFlags))
+		return NULL;
+	HMENU hMenu = wce_GetSubMenu(self->m_hMenu, uId, uFlags);
+	if(hMenu == 0)
+		{
+		seterror("wce_GetSubMenu", GetLastError());
+		return NULL;
+		}
+	PyMenu *pymenu = PyMenu::createInstance(hMenu);
+	if(pymenu==NULL) return NULL;
+	return (PyObject*)pymenu;
+}
+
+static PyObject* PyMenu_wce_GetMenuItemID(PyMenu *self, PyObject *args)
+{
+	int nPos; 	
+	if (!PyArg_ParseTuple(args,"i",&nPos))
+		return NULL;
+	return Py_BuildValue("i", wce_GetMenuItemID(self->m_hMenu, nPos));
+}
+
+#endif
+
 
 static PyObject* PyMenu_DestroyMenu(PyMenu *self, PyObject *args)
 {
@@ -209,8 +236,13 @@ PyMethodDef PyMenu::methods[] = {
 	{"GetMenuItemCount", (PyCFunction)PyMenu_GetMenuItemCount, METH_VARARGS, ""},
 	{"Detach", (PyCFunction)PyMenu_Detach, METH_VARARGS, ""},
 	{"GetHandle", (PyCFunction)PyMenu_GetHandle, METH_VARARGS, ""},
+#ifdef _WIN32_WCE
+	{"wce_GetSubMenu", (PyCFunction)PyMenu_wce_GetSubMenu, METH_VARARGS, ""},
+	{"wce_GetMenuItemID", (PyCFunction)PyMenu_wce_GetMenuItemID, METH_VARARGS, ""},
+#endif
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
+
 
 PyTypeObject PyMenu::type = {
 	PyObject_HEAD_INIT(&PyType_Type)
