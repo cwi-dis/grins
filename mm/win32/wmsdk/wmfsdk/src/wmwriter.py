@@ -1,4 +1,6 @@
 import wmfapi
+large_int = wmfapi.large_int
+
 
 # init COM libs
 wmfapi.CoInitialize()
@@ -62,6 +64,7 @@ nSamples = avistream.End()
 print nSamples,'samples in avi'
 curSample = avistream.Start()
 tmsec = 0
+ms2cns = large_int(10000)
 
 writer.BeginWriting()
 samplesToRead = 1024
@@ -70,8 +73,9 @@ while curSample < nSamples:
 	sample = writer.AllocateSample(bytes)
 	sample.SetBuffer(data)
 	tmsec = tmsec + bytes*1000/bps
+	tcnsec = large_int(tmsec)*ms2cns  
 	curSample = curSample + nsamples
-	writer.WriteSample(audiopinix,tmsec,0,sample)
+	writer.WriteSample(audiopinix,tcnsec,0,sample)
 
 writer.Flush()
 writer.EndWriting()
