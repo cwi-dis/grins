@@ -32,6 +32,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "Python.h"
 
 extern void initarray(void);
+extern void initaudioop(void);
 extern void initbinascii(void);
 extern void initce(void);
 extern void initcmath(void);
@@ -63,6 +64,7 @@ extern void initwinuser(void);
 struct _inittab _PyImport_Inittab[]=
 {
 	{"array",		initarray},
+	{"audioop",		initaudioop},
 	{"binascii",		initbinascii},
 	{"ce",			initce},
 	{"cmath", 		initcmath},
