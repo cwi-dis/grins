@@ -11,7 +11,7 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		self.context = self.root.context
 		self.editmgr = self.context.editmgr
 		SourceViewDialog.SourceViewDialog.__init__(self)
-		
+
 	def fixtitle(self):
 		pass
 	def get_geometry(self):
@@ -26,10 +26,10 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 	def show(self):
 		if self.is_showing():
 			SourceViewDialog.SourceViewDialog.show(self)
-			return
-		SourceViewDialog.SourceViewDialog.show(self)
-		self.read_text()
-		self.editmgr.register(self)
+		else:
+			SourceViewDialog.SourceViewDialog.show(self) # creates the text widget
+			self.read_text()
+			self.editmgr.register(self)
 
 	def hide(self):
 		if not self.is_showing():
@@ -60,10 +60,19 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		
 	# self.get_text is defined to be system-dependant - it reads from the widget.
 
-	def close_source_callback(self):
-		saveme = windowinterface.GetYesNoCancel("Do you want to keep your changes?", self.toplevel.window)
-		if saveme==0:		# Which means "YES"
-			self.write_text()
+	def write_text_and_close(self):
+		text = self.get_text()
+		self.hide()
+		self.toplevel.save_source_callback(text)
+
+	def close_callback(self):
+		#self.toplevel.save_source_callback(text)
+		if self.is_changed():
+			saveme = windowinterface.GetYesNoCancel("Do you want to keep your changes?", self.toplevel.window)
+			if saveme == 0:		# Which means "YES"
+				self.write_text_and_close() # Which will close all windows.
+			elif saveme == 1: # Which means "No"
+				self.hide()
 
 	def kill(self):
 		self.destroy()
