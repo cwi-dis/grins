@@ -5,8 +5,8 @@ import posix
 import string
 
 def main():
-	if not (3 <= len(sys.argv) <= 4):
-		print "Usage %s count outputfile [ product ]"%sys.argv[0]
+	if not (3 <= len(sys.argv) <= 5):
+		print "Usage %s count outputfile [ product [ platform ] ]"%sys.argv[0]
 		print "  Generates count licenses and stores them in the"
 		print "  (dos-linefeeds) outputfile"
 		sys.exit(1)
@@ -17,8 +17,12 @@ def main():
 		product = sys.argv[3]
 	else:
 		product = None
+	if len(sys.argv) > 4:
+		platform = sys.argv[4]
+	else:
+		platform = None
 	for i in range(count):
-		license = grlicense.gencommerciallicense(product)
+		license = grlicense.gencommerciallicense(product, platform)
 		fp.write(license+'\r\n')
 	fp.close()
 
