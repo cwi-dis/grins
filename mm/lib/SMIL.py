@@ -131,7 +131,6 @@ class SMIL:
 			   __layout:None,
 			   GRiNSns+' ' 'comment':None,
 			   },
-		__bag = __choice
 		'ref': {'abstract':'',
 			'alt':None,
 			'author':'',
@@ -186,6 +185,7 @@ class SMIL:
 			    GRiNSns+' ' 'override':'allowed',
 			    },
 		}
+	attributes[__bag] = attributes[__choice]
 
 	__media_object = ['audio', 'video', 'text', 'img', 'animation',
 			  'textstream', 'ref', __cmif, __shell, __socket]
@@ -203,7 +203,7 @@ class SMIL:
 			attributes[__el] = attributes['ref']
 	del __el, __at
 
-	__schedule = ['par', 'seq', __choice, _bag] + __media_object
+	__schedule = ['par', 'seq', __choice, __bag] + __media_object
 	__container_content = __schedule + ['switch', 'a']
 	__assoc_link = ['anchor']
 	__empty = []
