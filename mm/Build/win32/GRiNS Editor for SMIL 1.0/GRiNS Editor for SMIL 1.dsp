@@ -137,6 +137,10 @@ SOURCE=.\M__LinkView.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M__PreferencesDialog.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M__SourceView.c
 # End Source File
 # Begin Source File
@@ -262,10 +266,6 @@ SOURCE=.\M_bdb.c
 # Begin Source File
 
 SOURCE=.\M_bisect.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_bitrates.c
 # End Source File
 # Begin Source File
 
