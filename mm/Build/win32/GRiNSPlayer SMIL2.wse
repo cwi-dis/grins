@@ -33,7 +33,7 @@ item: Global
   Distribute Path=\\UNIXSERVER\auginet\GRiNS
   Distribute Type=2
   Step View=All
-  File Checksum=3350781966
+  File Checksum=2167234356
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -967,6 +967,11 @@ item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\grinsproxy.dll
+  Destination=%MAINDIR%\grinsproxy.dll
+  Flags=0001000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\grinspapi.pyd
   Destination=%MAINDIR%\grinspapi.pyd
   Flags=0000000010000010
@@ -1259,7 +1264,7 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\GRiNSP_SV2.exe
   Destination=%MAINDIR%\GRiNSP_SV2.exe
-  Flags=0000000010000010
+  Flags=0001000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\_socket.pyd
