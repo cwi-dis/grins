@@ -46,6 +46,24 @@ class SchedulerContext():
 		del self.playroot
 
 	#
+	# Dump - Dump a scheduler context
+	#
+	def dump(self):
+		print '------------------------------'
+		print '--------- events:'
+		for ev in self.srevents.keys():
+			print ev,'\t', self.srevents[ev]
+		print '--------- actions:'
+		for i in range(len(self.sractions)):
+			if self.sractions[i]:
+				ac, list = self.sractions[i]
+				print i,'\t',ac, '\t', SR.evlist2string(list)
+		print '------------ #prearms outstanding:'
+		for i in self.channelnames:
+			print i, '\t', len(self.prearmlists[i])
+		print '----------------------------------'
+
+	#
 	# genprearms generates the list of channels and a list of
 	# nodes to be prearmed, in the right order.
 	def gen_prearms(self):
@@ -201,7 +219,6 @@ class SchedulerContext():
 class Scheduler(scheduler):
 	def init(self):
 		self.sctx_list = []
-		self.playing_nodes = []
 		self.pause_minidoc = 1
 		self.starting_to_play = 0
 		return self
@@ -230,12 +247,11 @@ class Scheduler(scheduler):
 		if self.sync_cv:
 			self.toplevel.channelview.globalsetfocus(self.playroot)
 		if self.userplayroot != self.root:
-			# Partial play
 			end_action = END_KEEP
-		elif self.pause_minidoc:
-			end_action = END_PAUSE
-		else:
+		elif not self.pause_minidoc or self.playroot == self.root:
 			end_action = END_STOP
+		else:
+			end_action = END_PAUSE
 		sctx = SchedulerContext().init(self, self.playroot, \
 			  None, end_action)
 		self.sctx_list.append(sctx)
@@ -263,6 +279,18 @@ class Scheduler(scheduler):
 			for ev in tokill:
 				queue.remove(ev)
 	#
+	def dump(self):
+		print '=============== scheduler dump'
+		print '# timed events:', len(self.queue)
+		print '# contexts:', len(self.sctx_list)
+		for i in range(len(self.runqueues)):
+			print '---- runqueue',i
+			print SR.evlist2string(self.runqueues[i])
+		for i in range(len(self.sctx_list)):
+			print '---- context',i
+			self.sctx_list[i].dump()
+		print '==============================='
+		
 	def stop_playing(self):
 		if not self.playing:
 			return
@@ -531,7 +559,6 @@ class Scheduler(scheduler):
 		ready_ev = (sctx, (SR.PLAY_DONE, node))
 		node.set_armedmode(ARM_PLAYING)
 		chan.play(node, self.event, ready_ev)
-		#self.playing_nodes.append(node)
 	#
 	# Execute a PLAY_STOP SR.
 	#
@@ -539,7 +566,6 @@ class Scheduler(scheduler):
 		chan = self.getchannel(node)
 		node.set_armedmode(ARM_DONE)
 		chan.clearnode(node)
-		#self.playing_nodes.remove(node)
 	#
 	# Execute a SYNC SR
 	#
