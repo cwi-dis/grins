@@ -736,11 +736,10 @@ class EffectiveAnimator:
 		from Channel import channels
 		for chan in channels:
 			chtype = chan._attrdict.get('type')
-			if type == 'layout':
-				base_window = chan._attrdict.get('base_window')
-				if base_window == region._name:
-					childs.append(chan)
-					self.__appendSubChannels(chan, childs)
+			base_window = chan._attrdict.get('base_window')
+			if base_window == region._name:
+				childs.append(chan)
+				self.__appendSubChannels(chan, childs)
 
 	# update region attributes display value
 	def __updateregion(self, value):
@@ -760,44 +759,42 @@ class EffectiveAnimator:
 		if attr == 'position':
 			cssregion = self.getCssObj(region)
 			cssregion.move(value)
-			cssregion.update()
+			cssregion.updateTree()
 			coords = cssregion.getPxGeom()
 			scale = cssregion.getScale()
-			mediacoords = None
-			if cssregion.media:
-				cssregion.media.update()
-				mediacoords = cssregion.media.getPxGeom()
 			if self.__layout.window:
-				self.__layout.window.updatecoordinates(coords, UNIT_PXL, scale, mediacoords)
+				self.__layout.window.updatecoordinates(coords, UNIT_PXL, scale, None)
 			for subch in self.__subChannels:
-				cssreg = self.getCssObj(subch._attrdict)
-				mediacoords = None
-				if cssreg.media:
-					cssreg.media.update()
-					mediacoords = cssreg.media.getPxGeom()
-				if subch.window:
-					subch.window.updatecoordinates(cssreg.getPxGeom(), UNIT_PXL, cssreg.getScale(), mediacoords)
+				if subch._attrdict.get('type') == 'layout':
+					cssreg = self.getCssObj(subch._attrdict)
+					if subch.window:
+						subch.window.updatecoordinates(cssreg.getPxGeom(), UNIT_PXL, cssreg.getScale(), None)
+				elif subch._armed_node:
+					node = subch._armed_node
+					csssubreg = self.getCssObj(node)
+					cssmedia = csssubreg.media
+					if subch.window:
+						subch.window.updatecoordinates(csssubreg.getPxGeom(), UNIT_PXL, csssubreg.getScale(), cssmedia.getPxGeom())
 
 		elif attr in ('left','top','width','height','right','bottom'):
 			cssregion = self.getCssObj(region)
 			cssregion.changeRawAttr(attr, value)
-			cssregion.update()
+			cssregion.updateTree()
 			coords = cssregion.getPxGeom()
 			scale = cssregion.getScale()
-			mediacoords = None
-			if cssregion.media:
-				cssregion.media.update()
-				mediacoords = cssregion.media.getPxGeom()
 			if self.__layout.window:
-				self.__layout.window.updatecoordinates(coords, UNIT_PXL, cssregion.getScale(), None)
+				self.__layout.window.updatecoordinates(coords, UNIT_PXL, scale, None)
 			for subch in self.__subChannels:
-				cssreg = self.getCssObj(subch._attrdict)
-				mediacoords = None
-				if cssreg.media:
-					cssreg.media.update()
-					mediacoords = cssreg.media.getPxGeom()
-				if subch.window:
-					subch.window.updatecoordinates(cssreg.getPxGeom(), UNIT_PXL, cssreg.getScale(), mediacoords)
+				if subch._attrdict.get('type') == 'layout':
+					cssreg = self.getCssObj(subch._attrdict)
+					if subch.window:
+						subch.window.updatecoordinates(cssreg.getPxGeom(), UNIT_PXL, cssreg.getScale(), None)
+				elif subch._armed_node:
+					node = subch._armed_node
+					csssubreg = self.getCssObj(node)
+					cssmedia = csssubreg.media
+					if subch.window:
+						subch.window.updatecoordinates(csssubreg.getPxGeom(), UNIT_PXL, csssubreg.getScale(), cssmedia.getPxGeom())
 
 		elif attr=='z':
 			if self.__layout.window:
@@ -851,7 +848,7 @@ class EffectiveAnimator:
 		if self.__attr == 'position':
 			csssubregion = self.getCssObj(self.__node)
 			csssubregion.move(value)
-			csssubregion.update()
+			csssubregion.updateTree()
 			coords = csssubregion.getPxGeom()
 			scale = csssubregion.getScale()
 			mediacoords = None
@@ -864,7 +861,7 @@ class EffectiveAnimator:
 		elif self.__attr in ('left','top','width','height','right','bottom'):
 			csssubregion = self.getCssObj(self.__node)
 			csssubregion.changeRawAttr(self.__attr, value)
-			csssubregion.update()
+			csssubregion.updateTree()
 			coords = csssubregion.getPxGeom()
 			scale = csssubregion.getScale()
 			mediacoords = None
