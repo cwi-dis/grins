@@ -127,13 +127,14 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	# Internal reset.
 	#
 	def fullreset(self):
+		self.resetchannels()
 		self.reset()
 		self.playroot = self.userplayroot = self.root
 		self.measure_armtimes = 0
 	#
 	def reset(self):
 		self.resettimer()
-		self.resetchannels()
+		self.softresetchannels()
 		if self.setcurrenttime_callback:
 			self.setcurrenttime_callback(0.0)
 		self.oldrate = 1.0
@@ -299,7 +300,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			if delay > 0.0:
 				break
 			del self.queue[0]
-			void = action(argument)
+			void = apply(action, argument)
 ##		if not self.queue and self.rate > 0.0:
 ##			print 'Player: Huh? Nothing in the queue?'
 		if not self.queue or self.rate == 0.0:
@@ -308,7 +309,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		rtevent = self.rtpool.bestfit(now, delay)
 		if rtevent:
 			dummy, dummy2, action, argument = rtevent
-			dummy = action(argument)
+			dummy = apply(action, argument)
 		self.updatetimer()
 		self.showtime()
 	#
@@ -359,6 +360,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			else:
 				self.oldrate = self.rate
 				self.setrate(0.0)
+				self.setready() # Cancel possible watch cursor
 		else:
 			self.start_playing(0.0)
 		self.showstate()
@@ -503,9 +505,23 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		for cname in self.channelnames:
 			self.channels[cname].reset()
 	#
+	def softresetchannels(self):
+		for cname in self.channelnames:
+			self.channels[cname].softreset()
+	#
 	def stopchannels(self):
 		for cname in self.channelnames:
 			self.channels[cname].stop()
+	#
+	def setwaiting(self):
+		BasicDialog.setwaiting(self)
+		for cname in self.channelnames:
+			self.channels[cname].setwaiting()
+	#
+	def setready(self):
+		BasicDialog.setready(self)
+		for cname in self.channelnames:
+			self.channels[cname].setready()
 	#
 	# Playing algorithm.
 	#
@@ -537,6 +553,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	#
 	def resume_1_playing(self,rate):
 		#MMAttrdefs.startstats()
+		self.setwaiting()
 		self.playing = 1
 		self.reset()
 		self.setrate(rate)
@@ -556,6 +573,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.duration_ind.label = label
 		self.playroot.counter[HD] = 1
 		self.decrement(0, self.playroot, HD)
+		dummy = self.enter(0.1, 0, self.setready, ())
 	#
 	def suspend_playing(self):
 		self.stopchannels() # Tell the channels to quit it
@@ -567,6 +585,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		#print 'Player: unarm chview'
 		chv = self.toplevel.channelview
 		chv.unarm_all()
+		self.setready()
 	#
 	def stop_playing(self):
 		self.playing = 0
@@ -675,7 +694,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 				else:
 					dummy = self.enter(0.0, -1, \
 						  chan.arm_only, node)
-			    self.setarmedmode(node, ARM_PLAYING)
+			    self.setarmedmode(node, ARM_PLAYING) # XXX fout!
 			    dummy = self.enter(0.0, 0, chan.play, \
 				(node, self.decrement, (0, node, TL)))
 			    if self.setcurrenttime_callback:
