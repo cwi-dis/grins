@@ -495,10 +495,9 @@ class ChannelView(ViewDialog, GLDialog):
 			if mini == None:
 				return
 		self.setviewroot(mini) # No-op if already there
-		try:
-			obj = node.cv_obj
-		except:
+		if not hasattr(node, 'cb_obj'):
 			return
+		obj = node.cv_obj
 		self.setwin()
 		self.deselect()
 		obj.select()
@@ -682,7 +681,7 @@ class TimeScaleBox(GO):
 		height = b-t
 		if height <= 0:
 			return
-		gl.RGBcolor(TEXTCOLOR)
+		gl.RGBcolor(BORDERCOLOR)
 		# Draw rectangle around boxes
 		l = l+2
 		t = t+2
@@ -718,6 +717,7 @@ class TimeScaleBox(GO):
 			b = min(b, self.bottom - 2)
 			if b <= t:
 				continue
+			gl.RGBcolor(BORDERCOLOR)
 			gl.bgnpolygon()
 			gl.v2f(l, t)
 			gl.v2f(r, t)
@@ -726,6 +726,7 @@ class TimeScaleBox(GO):
 			gl.endpolygon()
 			if i%div <> 0:
 				continue
+			gl.RGBcolor(TEXTCOLOR)
 			f_title.centerstring( \
 				  r, t-f_fontheight/2, \
 				  self.right, t+f_fontheight/2, \
