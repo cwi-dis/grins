@@ -52,7 +52,7 @@ def create_MMNode_widget(node, root):
 ##############################################################################
 
 class MMNodeWidget(Widgets.Widget):     # Aka the old 'HierarchyView.Object', and the base class for a MMNode view.
-    # View of a Node within the Hierarchy view
+    # View of every MMNode within the Hierarchy view
     def __init__(self, node, root):
         Widgets.Widget.__init__(self, root)
         self.node = node               # : MMNode
@@ -242,10 +242,10 @@ class MMNodeWidget(Widgets.Widget):     # Aka the old 'HierarchyView.Object', an
 
     def pasteundercall(self):
         self.root.paste(0)
+
         
 class StructureObjWidget(MMNodeWidget):
-    # TODO: make this inherit only from Widgets.Widget and aggregate a list.
-    # A view of a seq, par, excl or something else that might exist.
+    # A view of a seq, par, excl or any internal structure node.
     HAS_COLLAPSE_BUTTON = 1
     def __init__(self, node, root):
         MMNodeWidget.__init__(self, node, root)
@@ -333,7 +333,9 @@ class StructureObjWidget(MMNodeWidget):
         if self.collapsebutton:
             self.collapsebutton.draw(displist)
 
+
 class SeqWidget(StructureObjWidget):
+    # Any sequence node.
     HAS_CHANNEL_BOX = 0
     def __init__(self, node, root):
         self.dropbox = DropBoxWidget(root)
@@ -545,10 +547,16 @@ class SeqWidget(StructureObjWidget):
 
         StructureObjWidget.recalc(self);
 
+
 class TimeStripSeqWidget(SeqWidget):
+    # A sequence that has a channel widget at the start of it.
+    # This only exists at the second level from the root, assuming the root is a
+    # par.
+    # Wow. I like this sort of code. If only the rest of the classes were this easy. -mjvdg
     HAS_COLLAPSE_BUTTON = 0
     HAS_CHANNEL_BOX = 1
     pass
+
     
 class DropBoxWidget(Widgets.Widget):
     # This is the stupid drop-box at the end of a sequence. Looks like a
@@ -562,7 +570,9 @@ class DropBoxWidget(Widgets.Widget):
         return sizes_notime.MINSIZE, sizes_notime.MINSIZE;
     # Hmm.. as I said. Easy.
         
+
 class ChannelBoxWidget(Widgets.Widget):
+    # This is the box at the start of a Sequence which represents which channel it 'owns'
     def __init__(self, node, root):
         self.node = node
         Widgets.Widget.__init__(self, root)
@@ -604,6 +614,7 @@ class ChannelBoxWidget(Widgets.Widget):
         return f
 
 class UnseenVerticalWidget(StructureObjWidget):
+    # The top level par that doesn't get drawn.
     HAS_COLLAPSE_BUTTON = 0
     
     def get_minsize(self):
@@ -704,7 +715,10 @@ class UnseenVerticalWidget(StructureObjWidget):
                     i.pushbackbar.draw(display_list)
                 i.draw(display_list)
 
+
 class VerticalWidget(StructureObjWidget):
+    # Any node which is drawn vertically
+    
     def get_minsize(self):
         # Return the minimum size that I can be.
         min_width = 0; min_height = 0
@@ -846,6 +860,7 @@ class VerticalWidget(StructureObjWidget):
 
 
 class ParWidget(VerticalWidget):
+    # Parallel node
     def draw(self, display_list):
         if self.selected:
             display_list.drawfbox(self.highlight(PARCOLOR), self.get_box())
@@ -855,7 +870,9 @@ class ParWidget(VerticalWidget):
             display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
         VerticalWidget.draw(self, display_list)
 
+
 class ExclWidget(VerticalWidget):
+    # Exclusive node.
     def draw(self, display_list):
         if self.selected:
             display_list.drawfbox(self.highlight(EXCLCOLOR), self.get_box())
@@ -865,7 +882,9 @@ class ExclWidget(VerticalWidget):
             display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
         VerticalWidget.draw(self, display_list)
 
+
 class PrioWidget(VerticalWidget):
+    # Prio node (?!) - I don't know what they are, but here is the code I wrote! :-)
     def draw(self, display_list):
         if self.selected:
             display_list.drawfbox(self.highlight(PRIOCOLOR), self.get_box())
@@ -875,7 +894,9 @@ class PrioWidget(VerticalWidget):
             display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
         VerticalWidget.draw(self, display_list)
 
+
 class SwitchWidget(VerticalWidget):
+    # Switch Node
     def draw(self, display_list):
         if self.selected:
             display_list.drawfbox(self.highlight(ALTCOLOR), self.get_box())
@@ -884,6 +905,7 @@ class SwitchWidget(VerticalWidget):
             display_list.drawfbox(ALTCOLOR, self.get_box());
             display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
         VerticalWidget.draw(self, display_list);
+
 
 ##############################################################################
 # The Media objects (images, videos etc) in the Structure view.
@@ -1098,6 +1120,8 @@ class MediaWidget(MMNodeWidget):
                 return self
         else:
             return None
+
+
 class TransitionWidget(MMNodeWidget):
     # This is a box at the bottom of a node that represents the in or out transition.
     def __init__(self, parent, root, inorout):
@@ -1157,6 +1181,7 @@ class TransitionWidget(MMNodeWidget):
         editmgr.setnodeattr(self.node, which, new)
         editmgr.commit()
 
+
 class PushBackBarWidget(Widgets.Widget):
     # This is a push-back bar between nodes.
     def draw(self, displist):
@@ -1172,6 +1197,7 @@ class PushBackBarWidget(Widgets.Widget):
 
     def select(self):
         self.parent.select()
+
 
 class CollapseButtonWidget(Widgets.Widget):
     # This is the "expand/collapse" button at the right hand corner of the nodes.
