@@ -16,6 +16,7 @@ import compatibility
 import string
 import os
 import MMurl
+import MMmimetypes
 import re
 
 from SMIL import *
@@ -955,7 +956,12 @@ smil_mediatype={
 	'svg': 'img',
 }
 
-def mediatype(chtype, error=0):
+def mediatype(x, error=0):
+	chtype = x.GetChannelType()
+	if not chtype:
+		chtype = 'unknown'
+	if chtype == 'video' and MMmimetypes.guess_type(x.GetAttrDef('file', None) or '')[0] == 'image/vnd.rn-realpix':
+		chtype = 'RealPix'
 	if smil_mediatype.has_key(chtype):
 		return smil_mediatype[chtype], smil_mediatype[chtype]
 	if error and chtype != 'layout':
@@ -1607,7 +1613,6 @@ class SMILWriter(SMIL):
 		self.pop()
 
 	def writeregion(self, ch):
-		mtype, xtype = mediatype(ch['type'], error=1)
 		if ch['type'] == 'layout' and \
 		   ch.GetParent() is None:
 			# top-level layout channel has been handled
@@ -1887,7 +1892,7 @@ class SMILWriter(SMIL):
 			chtype = x.GetChannelType()
 			if not chtype:
 				chtype = 'unknown'
-			mtype, xtype = mediatype(chtype)
+			mtype, xtype = mediatype(x)
 
 		# if node used as destination, make sure it's id is written
 		uid = x.GetUID()
@@ -2224,7 +2229,6 @@ class SMILWriter(SMIL):
 		import posixpath, urlparse
 		utype, host, path, params, query, fragment = urlparse.urlparse(srcurl)
 		if utype == 'data':
-			import MMmimetypes
 			mtype = MMmimetypes.guess_type(srcurl)[0]
 			if mtype is None:
 				mtype = 'text/plain'
