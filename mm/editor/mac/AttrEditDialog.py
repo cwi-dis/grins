@@ -26,6 +26,8 @@ import string
 import windowinterface
 import WMEVENTS
 import AnchorList
+import compatibility
+import features
 
 def ITEMrange(fr, to): return range(fr, to+1)
 # Dialog info
@@ -516,7 +518,10 @@ class HtmlTemplateTabPage(OptionTabPage):
 	
 	def update(self):
 		value = self.fieldlist[0]._getvalueforpage()
-		list = ['external_player.html','embedded_player.html']
+		if compatibility.QT == features.compatibility:
+			list = ['external_player_qt.html', 'embedded_player_qt.html']
+		else:
+			list = ['external_player.html','embedded_player.html']
 		if not value in list:
 			list.append(value)
 		self._option.setitems(list, value)
