@@ -397,6 +397,10 @@ SOURCE=.\M_EditMgr.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_embedding.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_exceptions.c
 # End Source File
 # Begin Source File
@@ -697,6 +701,10 @@ SOURCE=.\M_os.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_parsehtml.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_patchlevel.c
 # End Source File
 # Begin Source File
@@ -706,6 +714,10 @@ SOURCE=.\M_pdb.c
 # Begin Source File
 
 SOURCE=.\M_Player.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_PlayerCommon.c
 # End Source File
 # Begin Source File
 
@@ -1010,6 +1022,10 @@ SOURCE=.\M_Selecter.c
 # Begin Source File
 
 SOURCE=.\M_settings.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_sgmllib.c
 # End Source File
 # Begin Source File
 
