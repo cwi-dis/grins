@@ -16,7 +16,7 @@ import settings
 import MMStates
 
 debugtimer = 0
-debugevents = 1
+debugevents = 0
 
 # Priorities for the various events:
 N_PRIO = 6
