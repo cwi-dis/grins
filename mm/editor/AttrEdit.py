@@ -177,10 +177,6 @@ class NodeWrapper(Wrapper):
 		del self.root
 		Wrapper.close(self)
 
-	def commit(self):
-		self.root.ResetPlayability()
-		Wrapper.commit(self)
-
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
 
@@ -379,7 +375,7 @@ class NodeWrapper(Wrapper):
 			('clipbegin',), ('clipend',),	# More time stuff
 			'title', 'abstract', ('alt',), ('longdesc',), 'author',
 			'copyright', 'comment',
-			'layout', ('u_group',),
+			'layout', 'u_group',
 			('mimetype',),	# XXXX Or should this be with file?
 			'system_bitrate', 'system_captions',
 			'system_language', 'system_overdub_or_caption',
@@ -673,9 +669,9 @@ class ChannelWrapper(Wrapper):
 
 class DocumentWrapper(Wrapper):
 	__stdnames = ['title', 'author', 'copyright', 'base', 
-			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
-			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
-			'project_smil_url']
+		      'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
+		      'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
+		      'project_smil_url', 'project_boston']
 
 	def __init__(self, toplevel):
 		Wrapper.__init__(self, toplevel, toplevel.context)
@@ -708,6 +704,8 @@ class DocumentWrapper(Wrapper):
 		return None		# unrecognized
 
 	def getdefault(self, name):
+		if name == 'project_boston':
+			return 0
 		return ''
 
 	def setattr(self, name, value):
@@ -910,17 +908,20 @@ class AttrEditor(AttrEditorDialog):
 		allnamelist = wrapper.attrnames()
 		namelist = []
 		lightweight = settings.get('lightweight')
+		smil2 = 0
+		if hasattr(wrapper, 'context'):
+			smil2 = wrapper.context.attributes.get('project_boston', 0)
 		if not lightweight:
 			cmif = settings.get('cmif')
 		else:
 			cmif = 0
 		for name in allnamelist:
 			flags = wrapper.getdef(name)[6]
-			if flags != 'light':
-				if lightweight or \
-				   (not cmif and flags == 'cmif'):
-					continue
-			namelist.append(name)
+			if cmif or \
+			   (smil2 and (flags == 'smil2' or flags == 'smil' or flags == 'light')) or \
+			   (not lightweight and (flags == 'smil' or flags == 'light')) or \
+			   (lightweight and flags == 'light'):
+				namelist.append(name)
 		self.__namelist = namelist
 		initattrinst = None
 		for i in range(len(namelist)):
@@ -955,12 +956,12 @@ class AttrEditor(AttrEditorDialog):
 				C = TransparencyAttrEditorField
 			elif displayername == 'usergroup':
 				C = UsergroupAttrEditorField
-			elif displayername == 'transition':
-				C = TransitionAttrEditorField
-			elif displayername == 'direction':
-				C = WipeDirectionAttrEditorField
-			elif displayername == 'wipetype':
-				C = WipeTypeAttrEditorField
+##			elif displayername == 'transition':
+##				C = TransitionAttrEditorField
+##			elif displayername == 'direction':
+##				C = WipeDirectionAttrEditorField
+##			elif displayername == 'wipetype':
+##				C = WipeTypeAttrEditorField
 			elif displayername == 'subregionanchor':
 				C = AnchorTypeAttrEditorField
 			elif displayername == 'targets':
@@ -1003,6 +1004,8 @@ class AttrEditor(AttrEditorDialog):
 				C = FloatAttrEditorField
 			elif type == 'tuple':
 				C = TupleAttrEditorField
+			elif type == 'enum':
+				C = EnumAttrEditorField
 			else:
 				C = AttrEditorField
 			b = C(self, name, labeltext or name)
@@ -1261,7 +1264,7 @@ class AttrEditorField(AttrEditorDialogField):
 		self.label = label
 		self.attreditor = attreditor
 		self.wrapper = attreditor.wrapper
-		self.__attrdef = self.wrapper.getdef(name)
+		self.attrdef = self.wrapper.getdef(name)
 
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__,
@@ -1271,7 +1274,7 @@ class AttrEditorField(AttrEditorDialogField):
 		AttrEditorDialogField.close(self)
 		del self.attreditor
 		del self.wrapper
-		del self.__attrdef
+		del self.attrdef
 
 	def getname(self):
 		return self.__name
@@ -1283,14 +1286,14 @@ class AttrEditorField(AttrEditorDialogField):
 		return self.label
 
 	def gethelptext(self):
-		return '%s\ndefault: %s' % (self.__attrdef[4], self.getdefault())
+		return '%s\ndefault: %s' % (self.attrdef[4], self.getdefault())
 ##		return 'atribute: %s\n' \
 ##		       'default: %s\n' \
 ##		       '%s' % (self.__name, self.getdefault(),
-##			       self.__attrdef[4])
+##			       self.attrdef[4])
 
 	def gethelpdata(self):
-		return self.__name, self.getdefault(), self.__attrdef[4]
+		return self.__name, self.getdefault(), self.attrdef[4]
 
 	def getcurrent(self):
 		return self.valuerepr(self.wrapper.getvalue(self.__name))
@@ -1676,6 +1679,14 @@ class BitrateAttrEditorFieldWithDefault(BitrateAttrEditorField):
 			return self.default
 		return self.valuerepr(val)
 
+class EnumAttrEditorField(PopupAttrEditorFieldNoDefault):
+	def __init__(self, attreditor, name, label):
+		PopupAttrEditorFieldNoDefault.__init__(self, attreditor, name, label)
+		self.__values = self.attrdef[0][1]
+
+	def getoptions(self):
+		return self.__values
+
 class QualityAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['low', 'normal', 'high', 'highest']
 	__valuesmap = [20, 50, 75, 90]
@@ -1906,9 +1917,6 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		ch = self.wrapper.context.getchannel(self.getvalue())
 		if ch is not None:
 			showchannelattreditor(self.wrapper.toplevel, ch)
-			
-	def channelexists(self, name):
-		return self.wrapper.context.getchannel(name) is not None
 
 	def newchannelname(self):
 		base = 'NEW'
@@ -1963,9 +1971,6 @@ class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 				return self.getdefault()
 			return self.__nocaptions
 		return value
-
-	def channelexists(self, name):
-		return self.wrapper.context.getchannel(name) is not None
 
 	def channelprops(self):
 		ch = self.wrapper.context.getchannel(self.getvalue())
