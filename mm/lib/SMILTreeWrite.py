@@ -387,35 +387,46 @@ class SMILWriter:
 			self.fp.pop()
 			self.fp.write('</%s>\n'%mtype)
 		elif type in ('imm', 'ext'):
-			# XXXX Not correct for imm
-			pushed = 0
-			hassrc = 0
-			alist = x.GetAttrDef('anchorlist', [])
-			for id, type, args in alist:
-				if type == ATYPE_WHOLE:
-					links = x.GetContext().hyperlinks.findsrclinks((x.GetUID(), id))
-					if links:
-						a1, a2, dir, ltype = links[0]
-						self.fp.write('<a %s>\n' % self.linkattrs(a2, ltype))
-						self.fp.push()
-						pushed = pushed + 1
-				elif type in SourceAnchors:
-					hassrc = 1
-			if hassrc:
-				attrlist = attrlist + '>\n'
-			else:
-				attrlist = attrlist + '/>\n'
-			self.fp.write(attrlist)
-			if hassrc:
-				self.fp.push()
-				self.writelinks(x)
-				self.fp.pop()
-				self.fp.write('</%s>\n'%mtype)
-			for i in range(pushed):
-				self.fp.pop()
-				self.fp.write('</a>\n')
+			self.writemedianode(x, attrlist)
 		else:
 			raise CheckError, 'bad node type in writenode'
+
+	def writemedianode(self, x, attrlist):
+		# XXXX Not correct for imm
+		pushed = 0		# 1 if has whole-node source anchor
+		hassrc = 0		# 1 if has other source anchors
+		alist = x.GetAttrDef('anchorlist', [])
+		# deal with whole-node source anchors
+		for id, type, args in alist:
+			if type == ATYPE_WHOLE:
+				links = x.GetContext().hyperlinks.findsrclinks((x.GetUID(), id))
+				if links:
+					if pushed:
+						print '** Multiple whole-node anchors', \
+						      x.GetRawAttrDef('name', '<unnamed>'), \
+						      x.GetUID()
+					a1, a2, dir, ltype = links[0]
+					self.fp.write('<a %s>\n' % self.linkattrs(a2, ltype))
+					self.fp.push()
+					pushed = pushed + 1
+			elif type in SourceAnchors:
+				hassrc = 1
+		self.fp.write(attrlist)
+		if not hassrc:
+			# if no source anchors, make empty element
+			self.fp.write('/')
+		self.fp.write('>\n')
+		if hassrc:
+			self.fp.push()
+			for id, type, args in alist:
+				if type in SourceAnchors and \
+				   type != ATYPE_WHOLE:
+					self.writelink(x, id, type, args)
+			self.fp.pop()
+			self.fp.write('</%s>\n'%mtype)
+		for i in range(pushed):
+			self.fp.pop()
+			self.fp.write('</a>\n')
 
 	def linkattrs(self, a2, ltype):
 		attrs = []
@@ -435,12 +446,6 @@ class SMILWriter:
 			href = '#' + self.uid2name[uid2]
 		attrs.append('href="%s"' % href)
 		return string.join(attrs)
-
-	def writelinks(self, x):
-		alist = x.GetAttrDef('anchorlist', [])
-		for id, type, args in alist:
-			if type in SourceAnchors and type != ATYPE_WHOLE:
-				self.writelink(x, id, type, args)
 
 	def writelink(self, x, id, atype, args):
 		items = ["<anchor"]
