@@ -48,14 +48,12 @@ class License:
 		self.__available_features, self.__licensee, self.__moredays = \
 					   _parselicense(lic)
 		for f in features:
-			if self.have(f):
-				break
-		else:
-			raise Error, "License not valid for this program"
+			if not self.have(f):
+				if f == sys.platform:
+					raise Error, "License not valid for this OS/platform"
+				else:
+					raise Error, "License not valid for this program"
 
-		if not self.have(sys.platform):
-			raise Error, "License not valid for this OS/platform"
-			
 		self.msg = ""
 		if type(self.__moredays) == type(0):
 			if self.__moredays < 0:
