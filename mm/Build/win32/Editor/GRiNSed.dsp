@@ -23,6 +23,8 @@ CFG=GRiNSed - Win32 Debug
 
 # Begin Project
 # PROP AllowPerConfigDependencies 0
+# PROP Scc_ProjName ""
+# PROP Scc_LocalPath ""
 CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
@@ -53,6 +55,16 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
 # ADD LINK32 python15.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
+# Begin Custom Build
+OutDir=.\.
+InputPath=.\GRiNSed.exe
+SOURCE="$(InputPath)"
+
+"d:\ufs\mm\cmif\bin\win32 \GRiNSed.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del d:\ufs\mm\cmif\bin\win32\GRiNSed.exe 
+	copy $(OutDir)\GRiNSed.exe d:\ufs\mm\cmif\bin\win32 
+	
+# End Custom Build
 
 !ELSEIF  "$(CFG)" == "GRiNSed - Win32 Debug"
 
@@ -943,11 +955,31 @@ SOURCE=.\M_xmllib.c
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
+SOURCE=.\cmifdoc.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\Editor.ico
 # End Source File
 # Begin Source File
 
 SOURCE=.\Editor.rc
+# End Source File
+# Begin Source File
+
+SOURCE=.\ico00001.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\ico1.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\ico2.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\smildoc.ico
 # End Source File
 # End Group
 # Begin Group "Python Source files"
