@@ -89,6 +89,9 @@ extern void initstrop();
 #ifndef initSnd
 extern void initSnd();
 #endif
+#ifndef initmacfs
+extern void initmacfs();
+#endif
 #ifndef initScrap
 extern void initScrap();
 #endif
@@ -104,8 +107,8 @@ extern void initFm();
 #ifndef initwaste
 extern void initwaste();
 #endif
-#ifndef initmacfs
-extern void initmacfs();
+#ifndef initgestalt
+extern void initgestalt();
 #endif
 #ifndef initimgformat
 extern void initimgformat();
@@ -196,12 +199,13 @@ struct _inittab _PyImport_Inittab[] = {
 	{"imggif", initimggif},
 	{"strop", initstrop},
 	{"Snd", initSnd},
+	{"macfs", initmacfs},
 	{"Scrap", initScrap},
 	{"Menu", initMenu},
 	{"Evt", initEvt},
 	{"Fm", initFm},
 	{"waste", initwaste},
-	{"macfs", initmacfs},
+	{"gestalt", initgestalt},
 	{"imgformat", initimgformat},
 	{"imgop", initimgop},
 	{"Drag", initDrag},
