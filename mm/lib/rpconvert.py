@@ -427,12 +427,13 @@ def convertrp(node, errorfunc = None):
 				else:
 					trdict = None
 			# start value may be updated in next iteration if fill="freeze"
-			if trdict and trdict.get('dur', 1) > 0:
+			if transOut and trdict is not None and trdict.get('dur', 1) > 0:
 				tagdict['tag'] = 'fadeout'
 				tagdict['tduration'] = trdict.get('dur', 1)
 				tagdict['start'] = start - tagdict['tduration']
 				start = tagdict['tduration']
 			else:
+				# no transition
 				tagdict['tag'] = 'fill'
 				tagdict['tduration'] = 0
 				tagdict['start'] = start
