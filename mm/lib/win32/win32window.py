@@ -2601,6 +2601,16 @@ class _ResizeableDisplayList(_DisplayList):
 			mediadisplayrect = self._window._rect
 		self._list.append(('image', imgid, fit, mediadisplayrect))
 
+	def updateimage(self, fit='hidden', mediadisplayrect=None):
+		list = self._list
+		for ind in range(len(list)):
+			entry = list[ind][0]
+			if entry == 'image':
+				entry, id, ofit, omediadisplayrect = list[ind]
+				if id == self._imgid:
+					list[ind] = (entry, id, fit, mediadisplayrect)
+					break
+				
 	def newlabel(self, str):
 		if self._rendered:
 			raise error, 'displaylist already rendered'

@@ -1381,6 +1381,10 @@ class RectShape(win32window.Window, Shape, UserEventMng):
 		if self._active_displist != None:
 			self._active_displist.newimage(filename, fit, mediadisplayrect)
 
+	def updateImage(self, fit, mediadisplayrect = None):
+		if self._active_displist != None:
+			self._active_displist.updateimage(fit, mediadisplayrect)
+		
 	def drawbox(self, box):
 		self._active_displist.drawbox(box, units=UNIT_PXL)
 
