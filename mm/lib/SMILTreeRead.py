@@ -2291,13 +2291,33 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for key, val in attributes.items():
 			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
 				del attributes[key]
-				attributes[key[len(GRiNSns)+1:]] = val
+				key = key[len(GRiNSns)+1:]
+				if attributes.has_key(key):
+					self.syntax_error("duplicate attribute `%s' in different namespaces" % key)
+					continue
+				attributes[key] = val
 			if key[:len(QTns)+1] == QTns + ' ':
 				del attributes[key]
-				attributes[key[len(QTns)+1:]] = val
-			if key[:len(SMIL2)] == SMIL2:
-				del attributes[key]
-				attributes[key.split(' ',1)[1]] = val
+				key = key[len(QTns)+1:]
+				if attributes.has_key(key):
+					self.syntax_error("duplicate attribute `%s' in different namespaces" % key)
+					continue
+				attributes[key] = val
+			for ns in SMIL2ns:
+				if key[:len(ns)+1] == ns + ' ':
+					del attributes[key]
+					key = key[len(ns)+1:]
+					if attributes.has_key(key):
+						self.syntax_error("duplicate attribute `%s' in different namespaces" % key)
+						continue
+					attributes[key] = val
+				elif ns[-1:] == '/' and key[:len(ns)] == ns:
+					del attributes[key]
+					key = key.split(' ',1)[1]
+					if attributes.has_key(key):
+						self.syntax_error("duplicate attribute `%s' in different namespaces" % key)
+						continue
+					attributes[key] = val
 		if features.compatibility == features.QT:
 			self.parseQTAttributeOnSmilElement(attributes)
 
