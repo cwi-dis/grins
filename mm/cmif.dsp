@@ -91,10 +91,6 @@ SOURCE=.\common\win32\NTVideoChannel.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\common\win32\PreferencesDialog.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\common\win32\SoundChannel.py
 # End Source File
 # End Group
@@ -104,10 +100,6 @@ SOURCE=.\common\win32\SoundChannel.py
 # Begin Source File
 
 SOURCE=.\common\mac\HtmlChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\mac\PreferencesDialog.py
 # End Source File
 # Begin Source File
 
@@ -140,10 +132,6 @@ SOURCE=.\common\motif\playbuttonunselect.py
 # Begin Source File
 
 SOURCE=.\common\motif\PlayerDialogBase.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\motif\PreferencesDialog.py
 # End Source File
 # Begin Source File
 
@@ -241,10 +229,6 @@ SOURCE=.\common\MPEGVideoChannel.py
 # Begin Source File
 
 SOURCE=.\common\NullChannel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\Preferences.py
 # End Source File
 # Begin Source File
 
@@ -1279,6 +1263,10 @@ SOURCE=.\grins\win32\PlayerDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\grins\win32\PreferencesDialog.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\grins\win32\splashbmp.py
 # End Source File
 # Begin Source File
@@ -1315,6 +1303,10 @@ SOURCE=.\grins\mac\PlayerDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\grins\mac\PreferencesDialog.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\grins\mac\TopLevelDialog.py
 # End Source File
 # End Group
@@ -1332,6 +1324,10 @@ SOURCE=.\grins\motif\patchlevel.py
 # Begin Source File
 
 SOURCE=.\grins\motif\PlayerDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\grins\motif\PreferencesDialog.py
 # End Source File
 # Begin Source File
 
@@ -1361,6 +1357,10 @@ SOURCE=.\grins\Player.py
 # Begin Source File
 
 SOURCE=.\grins\PlayerCore.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\grins\Preferences.py
 # End Source File
 # Begin Source File
 
