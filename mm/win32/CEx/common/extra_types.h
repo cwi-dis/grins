@@ -17,6 +17,7 @@ typedef void (*v_callback_v)();
 
 typedef std::pair<std::string, std::string> raw_attr_t;
 typedef std::list<raw_attr_t> raw_attr_list_t;
+typedef std::map<std::string, std::string> raw_attr_map_t;
 
 typedef unsigned char uchar_t;
 typedef unsigned char* uchar_ptr;
