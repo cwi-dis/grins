@@ -4578,17 +4578,33 @@ class ActiveDuration1Group(ActiveDuration2Group):
 		return cd
 
 #
-class AnimateAttributeGroup(AttrGroup):
-	data=attrgrsdict['animateAttribute']
+class AnimateTargetGroup(AttrGroup):
+	data=attrgrsdict['animateTarget']
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_ANIMATETARGET
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('targetElement')
+		cd[a] = ElementSelCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12, grinsRC.IDC_13))
+		a = self.getattr('attributeName')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		a = self.getattr('attributeType')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
+		return cd
+
+class AnimateGeneralGroup(AttrGroup):
+	data=attrgrsdict['animateGeneral']
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_S1O2
 	def createctrls(self,wnd):
 		cd = {}
-		a = self.getattr('attributeName')
+		a = self.getattr('name')
 		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
-		a = self.getattr('attributeType')
+		a = self.getattr('atag')
 		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
 		return cd
 #
@@ -4869,7 +4885,8 @@ groupsui={
 	'qtpreferences':QTPlayerPreferencesGroup,
 	'qtmediapreferences':QTPlayerMediaPreferencesGroup,
 
-	'animateAttribute':AnimateAttributeGroup,
+	'animateGeneral':AnimateGeneralGroup,
+	'animateTarget':AnimateTargetGroup,
 	'animateValues':AnimateValuesGroup,
 	'timeManipulation':TimeManipulationGroup,
 	'calcMode':CalcModeGroup,

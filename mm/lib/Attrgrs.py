@@ -427,9 +427,17 @@ attrgrs=(
 		'qtcompositemode',
 		]},
 
-	{'name':'animateAttribute',
-	'title':'Target attribute',
+	{'name':'animateGeneral',
+	'title':'General',
 	'attrs':[
+		'name',
+		'atag',
+		]},
+
+	{'name':'animateTarget',
+	'title':'Target',
+	'attrs':[
+		'targetElement',
 		'attributeName',
 		'attributeType',
 		]},
