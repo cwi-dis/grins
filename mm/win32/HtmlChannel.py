@@ -9,7 +9,7 @@ import string
 import MMAttrdefs
 import sys
 import windowinterface
-import urllib
+import MMurl
 import Htmlex, win32con, cmifex
 #from TextChannel import getfont, mapfont
 
@@ -93,8 +93,8 @@ class HtmlChannel(Channel.ChannelWindow):
 			filename = self.getfileurl(node)
 			#self.armed_url = filename
 			try:
-				#fp = urllib.urlopen(filename)
-				filename = urllib.url2pathname(filename)			
+				#fp = MMurl.urlopen(filename)
+				filename = MMurl.url2pathname(filename)			
 				fp = open(filename)
 			except IOError:
 				return '<H1>Cannot Open</H1><P>'+ \
@@ -104,11 +104,11 @@ class HtmlChannel(Channel.ChannelWindow):
 			self.armed_url = filename
 			# use undocumented feature so we can cleanup
 			#Comment out by Achilleas 16/1/97
-			#if urllib._urlopener.tempcache is None:
-			#	urllib._urlopener.tempcache = {}
+			#if MMurl._urlopener.tempcache is None:
+			#	MMurl._urlopener.tempcache = {}
 			#	# cleanup temporary files when we finish
 			#	windowinterface.addclosecallback(
-			#		urllib.urlcleanup, ())
+			#		MMurl.urlcleanup, ())
 			text = fp.read()
 			fp.close()
 			if text[-1:] == '\n':
@@ -191,15 +191,15 @@ def encodequery(query):
 	return (name, value)
 
 def encodestring(s):
-	return urllib.quote(s or '')	# Catches None as well!
+	return MMurl.quote(s or '')	# Catches None as well!
 
 #
 # Get the data-behind-the-URL
 #
 def urlget(newurl):
-	file = urllib.url2pathname(newurl)
+	file = MMurl.url2pathname(newurl)
 	return open(file).read()
-	#return urllib.urlopen(newurl).read()
+	#return MMurl.urlopen(newurl).read()
 
 #
 # Turn a CMIF channel name into a name acceptable for an X widget
