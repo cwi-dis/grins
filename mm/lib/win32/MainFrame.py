@@ -241,6 +241,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		flag=msg.LOWORD_wParam()
 		if flag!=win32con.WA_INACTIVE:
 			__main__.toplevel.setActiveDocFrame(self)
+			self.SendMessage(win32con.WM_MDIREFRESHMENU)
 
 	# Mirrors mdi window-menu to tab bar (not impl)
 	# do ... on new activate	
