@@ -6,6 +6,7 @@ __version__ = "$Id$"
 from MMExc import *		# Exceptions
 from MMNode import alltypes, leaftypes, interiortypes
 import MMCache
+import MMAttrdefs
 import Hlinks
 import AnchorDefs
 import string
@@ -130,9 +131,11 @@ def getsyncarc(writer, node, isend):
 	rv = 'id(%s)'%srcname
 	if srcside:
 		rv = rv+'(end)'
+	else:
+		rv = rv+'(begin)'
 	sign, delay = encodeduration(delay)
 	if delay:
-		rv = rv + sign + '(%s)'%delay
+		rv = rv + sign + delay
 	return rv
 
 def getterm(writer, node):
@@ -301,25 +304,67 @@ class MMLWriter:
 
 		interior = (type in interiortypes)
 		if interior:
-			chtype = type
+			mtype = type
 		else:
 			chtype = x.GetChannelType()
 			if not chtype:
 				chtype = 'unknown'
-			chtype = mediatype(chtype)
+			mtype = mediatype(chtype)
 
+		imm_href = None
 		if type == 'imm':
+			if chtype == 'label':
+				sep = '</p>\n<p>'
+			else:
+				sep = '\n'
 			fname = self.mmltempfile(x)
 			fp = open(fname, 'w')
-			data = string.join(x.GetValues(), '\n')
+			data = string.join(x.GetValues(), sep)
 			if data[-1] != '\n':
 				data = data + '\n'
+			if chtype == 'text':
+				data = string.join(string.split(data, '\n\n'),
+						   '</p>\n<p>')
+			if chtype in ('text', 'label'):
+				data = '<p>%s</p>\n' % data
 			fp.write(data)
 			fp.close()
 			imm_href = urllib.pathname2url(fname)
-		else:
-			imm_href = None
-		attrlist = ['<%s'%chtype]
+		elif type == 'ext':
+			if chtype == 'label':
+				try:
+					fp = open(MMAttrdefs.getattr(x, 'file'))
+				except IOError:
+					pass
+				else:
+					data = fp.readlines()
+					fp.close()
+					if data and data[-1] == '':
+						del data[-1]
+					fname = self.mmltempfile(x)
+					fp = open(fname, 'w')
+					fp.write('<p>')
+					fp.write(string.join(data, '</p>\n<p>'))
+					fp.write('</p>\n')
+					imm_href = urllib.pathname2url(fname)
+			if chtype == 'text':
+				try:
+					fp = open(MMAttrdefs.getattr(x, 'file'))
+				except IOError:
+					pass
+				else:
+					data = fp.read()
+					fp.close()
+					data = string.join(string.split(data,
+									'\n\n'),
+							   '</p>\n<p>')
+					fname = self.mmltempfile(x)
+					fp = open(fname, 'w')
+					fp.write('<p>')
+					fp.write(data)
+					fp.write('</p>\n')
+					imm_href = urllib.pathname2url(fname)
+		attrlist = ['<%s'%mtype]
 		for name, func in mml_attrs:
 			if name == 'href' and imm_href:
 				value = imm_href
@@ -336,7 +381,7 @@ class MMLWriter:
 			for child in x.GetChildren():
 				self.writenode(child)
 			self.fp.pop()
-			self.fp.write('</%s>\n'%chtype)
+			self.fp.write('</%s>\n'%mtype)
 		elif type in ('imm', 'ext'):
 			# XXXX Not correct for imm
 			self.fp.write(attrlist+'/>\n')
