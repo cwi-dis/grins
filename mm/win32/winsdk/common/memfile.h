@@ -5,17 +5,17 @@
 #include <windows.h>
 #endif
 
+#ifndef INC_MEMMAN
+#include "memman.h"
+#endif
+
 class memfile
 	{
 	public:
 	memfile();
 	~memfile();
 
-	// file-mem and mem-file transfer
 	bool open(LPCTSTR szFileName);
-
-	bool fillBuffer(DWORD nRead);
-	bool fill();
 
 	BYTE* data() const { return m_begin;}
 	DWORD size() const { return m_end - m_begin;}
@@ -64,31 +64,15 @@ class memfile
 		if(nt!=nb) throw_range_error();
 		}
 
-	int write(const BYTE *b, int nb)
-   		{
-		memcpy(m_pnext, b, nb);
-		m_gnext += nb;
-		return nb;
-		}
-	int write(int v){return write((BYTE*)&v, sizeof(int));}
-
-	HANDLE get_handle() const { return m_hf;}
-	void reset_file_pointer() 
-		{ 
-		//assert(m_hf != INVALID_HANDLE_VALUE); 
-		SetFilePointer(m_hf, 0, NULL, FILE_BEGIN);
-		}
-
 	private:
 	void throw_range_error()
 		{
 		#ifdef STD_CPP
 		throw std::range_error("index out of range");
 		#else
-		//throw "index out of range";
+		assert(0);
 		#endif
 		}
-	void reserve(DWORD dwBytes);
 
 	BYTE *m_begin;
 	BYTE *m_end;
@@ -96,52 +80,37 @@ class memfile
 
 	// file type read support
 	BYTE *m_gnext;
-
-	// file type write support
-	BYTE *m_pnext;
-
-	// in place processing
-	HANDLE m_hf;
-	TCHAR *m_pfname;
 	};
 
-inline memfile::memfile():
-	m_begin(NULL), m_end(NULL),
-	m_capacity(0),
-	m_gnext(NULL),
-	m_pnext(NULL),
-	m_hf(INVALID_HANDLE_VALUE)
+/////////////////////
+struct file_reader
+	{
+	size_t (*read_file)(void *p, void *buf, unsigned long sizeofbuf);
+
+	static size_t read_file_impl(void *p, void *buf, unsigned long sizeofbuf)
+		{
+		return ((file_reader*)p)->m_mf.read((BYTE*)buf, sizeofbuf);
+		}
+
+	file_reader(memfile& mf) : m_mf(mf)
+		{
+		m_mf.seekg(0);
+		read_file = &file_reader::read_file_impl;
+		}
+	memfile& m_mf;
+	};
+
+/////////////////////
+inline memfile::memfile()
+:	m_begin(0), m_end(0), m_capacity(0),
+	m_gnext(0)
 	{
 	}
 
 inline memfile::~memfile()
 	{
-	if(m_hf != INVALID_HANDLE_VALUE)
-		CloseHandle(m_hf);
-
 	if(m_begin)
-		::HeapFree(GetProcessHeap(), 0, m_begin);
-
-	if(m_pfname)
-		delete[] m_pfname;
-	}
-
-inline void memfile::reserve(DWORD dwBytes)
-	{
-	if(m_begin==NULL)
-		{
-		m_begin= (BYTE*)::HeapAlloc(GetProcessHeap(), 0, dwBytes);
-		//assert(m_begin != NULL);
-		m_capacity= ::HeapSize(GetProcessHeap(), 0, m_begin);
-		}
-	else
-		{
-		if(dwBytes>m_capacity)
-			{
-			m_begin = (BYTE*)::HeapReAlloc(GetProcessHeap(), 0, m_begin, dwBytes); 
-			m_capacity = ::HeapSize(GetProcessHeap(), 0, m_begin);
-			}
-		}
+		memman::free(m_begin, m_capacity);
 	}
 
 inline bool memfile::open(LPCTSTR szFileName)
@@ -157,10 +126,6 @@ inline bool memfile::open(LPCTSTR szFileName)
 	if(hf == INVALID_HANDLE_VALUE) 
 		return false;
 	
-	// keep a copy of filename
-	m_pfname = new TCHAR[lstrlen(szFileName)+1];
-	lstrcpy(m_pfname, szFileName);
-
 	DWORD dwSize =::GetFileSize(hf, NULL);
 	if (dwSize == 0xFFFFFFFF)
 		{
@@ -168,30 +133,17 @@ inline bool memfile::open(LPCTSTR szFileName)
 		hf = INVALID_HANDLE_VALUE;
 		return false;
 		}
-	m_hf = hf;
-	reserve(dwSize);
-	m_pnext = m_gnext = m_begin;
+	m_capacity = dwSize;
+	m_gnext = m_begin = memman::alloc(m_capacity);
+	if(m_capacity < dwSize)
+		return false; // memman::alloc failed
 	m_end = m_begin + dwSize;
-	return true;
-	}
-
-inline bool memfile::fillBuffer(DWORD nRead)
-	{
 	DWORD bytesRead = 0;
-	if(!ReadFile(m_hf, m_pnext, nRead, &bytesRead, 0)) 
+	if(!ReadFile(hf, m_begin, dwSize, &bytesRead, 0)) 
 		return false;
-	m_pnext += bytesRead;
-	return nRead == bytesRead;
-	}
-
-inline bool memfile::fill()
-	{
-	DWORD nRead = m_end - m_pnext;
-	DWORD bytesRead = 0;
-	if(!ReadFile(m_hf, m_pnext, nRead, &bytesRead, 0)) 
-		return false;
-	m_pnext += bytesRead;
-	return nRead == bytesRead;
+	CloseHandle(hf);
+	m_end = m_begin + bytesRead;
+	return bytesRead == dwSize;
 	}
 
 #endif
