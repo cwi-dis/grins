@@ -1,5 +1,6 @@
 import fl
 from FL import *
+import GL
 import MMAttrdefs
 import glwindow
 from Dialog import BasicDialog
@@ -34,9 +35,10 @@ from ViewDialog import ViewDialog
 # some constants that can be used to expiriment with how the
 # blocks are placed on top of each other.
 #
-XMARG = 10 # margin width
-YMARG = 5 # two time the  margin width
-B=5	# the size of the roundbutton
+XMARG = 10 # left/right margin width
+YMARG = 5 # top/bottom margin width (half as wide)
+BW=6	# the width of the open/close button
+BH=12	# the height of the open/close button
 
 class BlockView () = ViewDialog(), BasicDialog () :
 	#
@@ -115,9 +117,12 @@ class BlockView () = ViewDialog(), BasicDialog () :
 	
 		kids = node.GetChildren()
 		if type in ('seq','par','grp') and len(kids) > 0:
-			o=self.form.add_roundbutton(NORMAL_BUTTON,x+B,y+h-3*B,B,B,'')
+			bx = x + (XMARG-BW)/2
+			by = y + h - YMARG - BH
+			o=self.form.add_button(NORMAL_BUTTON,bx,by,BW,BH,'')
+			o.boxtype = BORDER_BOX
 			o.set_call_back(self._openclose_callback, node)
-			o.col1, o.col2 = 1, 2
+			o.col1, o.col2 = GL.GREEN, GL.RED
 			node.bv_openclose	= o
 
 			if type in ('grp', 'seq') :
@@ -227,7 +232,6 @@ class BlockView () = ViewDialog(), BasicDialog () :
 	#
 	def _command_callback(self, (obj, args)) :
 		key = obj.get_default()
-		print key
 		if self.commanddict.has_key (key) :
 			self.commanddict[key][0](self)
 		else :
