@@ -10,6 +10,11 @@ __version__ = "$Id$"
 # When in full screen mode press ESC to return to normal mode
 
 
+# Implementation note:
+# Currently full screen mode is not otimized.
+# We have to enumerate direct draw drivers
+# and find the appropriate for hardware (video card) blitting.
+
 # direct draw infrastructure module
 import ddraw
 
@@ -57,7 +62,7 @@ class _FSPlayerView(window.Wnd, win32window.DDWndLayer):
 		self.CreateWindowEx(exstyle, strclass, title, style, (x, y, w, h), parent, id)
 
 	def OnCreate(self, params):
-		self.createDDLayer()				
+		self.createDDLayer()			
 		self.hookMessages()
 	
 	def hookMessages(self):
