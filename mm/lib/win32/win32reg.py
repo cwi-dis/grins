@@ -1,3 +1,4 @@
+__version__ = "$Id$"
 
 import win32con
 import win32api

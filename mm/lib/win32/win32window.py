@@ -1,3 +1,4 @@
+__version__ = "$Id$"
 
 # app constants
 from appcon import *
