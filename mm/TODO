@@ -50,3 +50,8 @@ even a warning.						-sjoerd 20/2/97
 Pause a document while it is playing an MPEG movie, then close the
 document.  This results in a "hang".			-sjoerd
 11/3/97
+
+In the channel view you are not allowed to delete a channel that has
+a node assigned to it and the node is visible. If however, the node
+is not displayed in the channel view, then the channel can be
+deleted.                                                 -mariat 24/3/97
