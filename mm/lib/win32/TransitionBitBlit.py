@@ -131,14 +131,6 @@ class FadeBlitterClass(BlitterClass):
 	"""Parameter is float in range 0..1, use this as blend value"""
 	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
 		value = parameters
-		white = src1.GetColorMatch(0xFFFFFF)
-		black = src1.GetColorMatch(0)
-		ck = src1.GetColorMatch(int(value*0xFFFFFF))
-		src1.SetColorKey(ddraw.DDCKEY_SRCBLT, (ck, white))
-		src2.SetColorKey(ddraw.DDCKEY_SRCBLT, (black, ck))
-		self.copyBits(src2, tmp, self.ltrb, self.ltrb, ddraw.DDBLT_KEYSRC)
-		self.copyBits(src1, tmp, self.ltrb, self.ltrb, ddraw.DDBLT_KEYSRC)
-		self.copyBits(tmp, dst, self.ltrb, self.ltrb)
 					
 
 
