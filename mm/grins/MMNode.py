@@ -789,6 +789,8 @@ class MMNode(MMNodeBase.MMNode):
 				arg = self.wtd_children[i]
 				actions.append((SCHED, arg))
 				t_list.append((TERMINATE, arg))
+			if no_action:
+				actions = []
 			sr_list.append((prereq, actions))
 		sr_list.append( ([(SCHED_STOP, self)], last_actions) )
 		for ev in in1:
