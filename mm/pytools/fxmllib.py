@@ -893,10 +893,10 @@ class XMLParser:
                                 self.__error("NOTATION not allowed on EMPTY element", data, i, self.baseurl)
                 if content[0] == '(':
                     i = res.start('content')
-                    j, content, start, end = self.__dfa(data, i)
+                    j, content, start, end, str = self.__dfa(data, i)
                     if type(content) is type([]) and content and type(content[0]) is type({}):
                         self.__check_dfa(content, start, name, data, i)
-                    contentstr = data[i:j]
+                    contentstr = str # data[i:j]
                     i = j
                 else:
                     contentstr = content
@@ -1100,8 +1100,8 @@ class XMLParser:
                 mixed = '#PCDATA'
             return res.end(0), mixed, 0, 0
         dfa = []
-        i, start, end = self.__dfa1(data, i, dfa)
-        return i, dfa, start, end
+        i, start, end, str = self.__dfa1(data, i, dfa)
+        return i, dfa, start, end, str
 
     def __dfa1(self, data, i, dfa):
         res = dfaelem0.match(data, i)
@@ -1109,7 +1109,7 @@ class XMLParser:
             self.__error("syntax error in element content: `(' or Name expecter", data, i, self.baseurl, fatal = 1)
         token = res.group('token')
         if token == '(':
-            i, start, end = self.__dfa1(data, res.end(0), dfa)
+            i, start, end, str = self.__dfa1(data, res.end(0), dfa)
             res = dfaelem1.match(data, i)
             if res is None:
                 self.__error("syntax error in element content: `)', `|', or `,' expected", data, i, self.baseurl, fatal = 1)
@@ -1118,7 +1118,9 @@ class XMLParser:
             while token in (',','|'):
                 if sep != token:
                     self.__error("syntax error in element content: `%s' or `)' expected" % sep, data, i, self.baseurl, fatal = 1)
-                i, nstart, nend = self.__dfa1(data, res.end(0), dfa)
+                str = str + sep
+                i, nstart, nend, nstr = self.__dfa1(data, res.end(0), dfa)
+                str = str + nstr
                 res = dfaelem1.match(data, i)
                 if res is None:
                     self.__error("syntax error in element content: `%s' or `)' expected" % sep, data, i, self.baseurl, fatal = 1)
@@ -1144,8 +1146,10 @@ class XMLParser:
                     dfa.append({})
             # token == ')'
             i = res.end(0)
+            str = '(' + str + ')'
         else:
             # it's a Name
+            str = token
             start = len(dfa)
             dfa.append({token: [start+1]})
             end = len(dfa)
@@ -1154,6 +1158,9 @@ class XMLParser:
         res = dfaelem2.match(data, i)
         if res is not None:
             token = res.group('token')
+            if str[-1] != ')':
+                str = '(' + str + ')'
+            str = str + token
             s = len(dfa)
             e = s+1
             if token == '+':
@@ -1169,7 +1176,7 @@ class XMLParser:
             start = s
             end = e
             i = res.end(0)
-        return i, start, end
+        return i, start, end, str
 
     def parse_doctype(self, tag, publit, syslit, data):
         """parse_doctype(tag, publit, syslit, data)
