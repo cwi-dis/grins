@@ -129,7 +129,7 @@ class MainDialog:
 			return
 		import windowinterface
 		f=windowinterface.getmainwnd()
-		filetypes = ['/SMIL presentation', 'application/x-grins-project', 'application/smil']
+		filetypes = ['/All presentations', 'application/x-grins-project', 'application/smil']
 		windowinterface.FileDialog('Open file', 'Desktop', filetypes, '',
 					   self.__openfile_done, None, 1,
 					   parent = f)
@@ -202,7 +202,7 @@ class MainDialog:
 				file = MMurl.url2pathname(path)
 				dir, file = os.path.split(file)
 		f=windowinterface.getmainwnd()
-		filetypes = ['/SMIL presentations', 'application/x-grins-project', 'application/smil']
+		filetypes = ['/All presentations', 'application/x-grins-project', 'application/smil']
 		windowinterface.FileDialog('Open file', dir, filetypes, file,
 					   self.__filecvt, None, 1,
 					   parent = f)
