@@ -4,7 +4,7 @@ from AnchorDefs import *
 import windowinterface			# for windowinterface.error
 from urllib import urlretrieve
 import MMurl
-import gifex
+from win32modules import gifex
 
 
 class ImageChannel(ChannelWindow):

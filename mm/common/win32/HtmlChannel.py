@@ -8,7 +8,8 @@ import MMAttrdefs
 import sys
 import windowinterface
 import urllib, MMurl
-import Htmlex, win32con, win32api, cmifex
+import win32con, win32api
+from win32modules import Htmlex, cmifex
 import os
 #from TextChannel import getfont, mapfont
 
