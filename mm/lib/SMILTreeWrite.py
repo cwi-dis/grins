@@ -418,13 +418,18 @@ class SMILWriter:
 		uid, aid = anchor
 		if '/' in uid:
 			# External. Try to convert
-			lastslash = string.rfind('/', uid)
-			href = uid[:lastslash] + '#' + uid[lastslash+1:]
+			if aid:
+				href = uid + '#' + aid
+			else:
+				lastslash = string.rfind('/', uid)
+				href = uid[:lastslash] + '#' + uid[lastslash+1:]
+			tp = AnchorDefs.ATYPE_DEST
+			args = []
 		else:
 			# Internal
 			href = '#' + self.uid2name[uid]
+			tp, args = self.getanchor(uid, aid, href)
 		items.append('href="%s"'%href)
-		tp, args = self.getanchor(uid, aid, href)
 		# First fixup unimplemented tps
 		if tp == AnchorDefs.ATYPE_AUTO:
 			print "** unsupported auto anchor on", href
@@ -440,9 +445,8 @@ class SMILWriter:
 			tp = AnchorDefs.ATYPE_DEST # XXXX ATYPE_WHOLE
 		if tp == AnchorDefs.ATYPE_DEST:
 			pass
-## XXXX Not yet
-##		elif tp == AnchorDefs.ATYPE_WHOLE:
-##			pass
+		elif tp == AnchorDefs.ATYPE_WHOLE:
+			pass
 		elif tp == AnchorDefs.ATYPE_NORMAL:
 			# XXXX Hack: see if these are coordinates
 			ok = 0
