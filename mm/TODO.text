@@ -18,7 +18,7 @@ Priority top-to-bottom.
 --> Source editor view.
 	- Handle import errors well.
 	- Selections - go to a specific line.
-	- Work out how to tell if the text widget has been altered.
+	- SMILTree r/w - calculate line numbers for nodes.
 
 Results:
 * Structure view - add small icon capability, arrows and events.

@@ -336,6 +336,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.player.stop_callback()
 
 	def source_callback(self):
+		print "ERROR: You shouldn't be calling TopLevel.sourcecallback!"
 		license = self.main.wanttosave()
 		if not license:
 			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
@@ -345,6 +346,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense), readonly = 0)
 
 	def hide_source_callback(self):
+		print "ERROR! You shouldn't be calling TopLevel.soucecallback!"
 		if self.source:
 			self.showsource(None)
 
@@ -1158,6 +1160,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		progress = windowinterface.ProgressDialog("Reloading")
 		progress.set("Reloading SMIL document from source view...")
 		self.root = SMILTreeRead.ReadString(text, self.filename, self.printfunc)
+
+	def edit_node_in_sourceview(self, node):
+		if self.sourceview and node.line_numbers:
+			s,e = node.line_numbers
+			if not self.sourceview.is_showing():
+				self.sourceview.show()
+			self.sourceview.select_lines(s,e)
 
 	def printfunc(self, msg):
 		windowinterface.showmessage('while reading %s\n\n' % self.filename + msg)

@@ -1257,6 +1257,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				
 		node.__endsync = attributes.get('endsync')
 		node.__lineno = self.lineno
+		# and also, so other people can use it:
+		node.line_numbers = (self.lineno, self.lineno+1)
 
 		self.AddAttrs(node, attributes)
 		node.__mediatype = mediatype, subtype

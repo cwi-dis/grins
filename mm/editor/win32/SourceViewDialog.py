@@ -10,7 +10,6 @@ class SourceViewDialog:
 		self.__textwindow = None
 	def show(self):
 		if not self.__textwindow:
-			print "DEBUG: creating a new text window."
 			self.__textwindow = self.toplevel.window.textwindow("", readonly=0)
 			self.__textwindow.setmother(self)
 		else:
@@ -43,3 +42,7 @@ class SourceViewDialog:
 	def is_changed(self):
 		if self.__textwindow:
 			return self.__textwindow.is_changed()
+
+	def select_lines(self, s, e):
+		self.__textwindow.select_lines(s,e)
+
