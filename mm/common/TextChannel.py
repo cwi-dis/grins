@@ -50,7 +50,7 @@ def mustfitstring(s, sizefunc, length):
 class TextWindow(ChannelWindow):
 	#
 	def init(self, (title, attrdict, player)):
-		self = ChannelWindow.init(self, (title, attrdict))
+		self = ChannelWindow.init(self, title, attrdict)
 		self.player = player
 		self.text = [] # Initially, display no text
 		self.node = None
@@ -232,7 +232,7 @@ class TextChannel(Channel):
 	# Initialization function.
 	#
 	def init(self, (name, attrdict, player)):
-		self = Channel.init(self, (name, attrdict, player))
+		self = Channel.init(self, name, attrdict, player)
 		self.window = TextWindow().init(name, attrdict, player)
 		return self
 	#
@@ -260,7 +260,7 @@ class TextChannel(Channel):
 	#
 	def play(self, (node, callback, arg)):
 		self.showtext(node)
-		Channel.play(self, (node, callback, arg))
+		Channel.play(self, node, callback, arg)
 	#
 	def reset(self):
 		self.window.settext('', None)
