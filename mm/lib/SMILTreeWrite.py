@@ -118,8 +118,6 @@ def getcmifattr(writer, node, attr):
 
 def geturlattr(writer, node, attr):
 	val = getcmifattr(writer, node, attr)
-##	if val is not None:
-##		val = MMurl.quote(val)
 	return val
 
 def getchname(writer, node):
@@ -803,18 +801,16 @@ class SMILWriter(SMIL):
 		uid2, aid2 = a2
 		if '/' in uid2:
 			if aid2:
-				base, tag = a2
+				href, tag = a2
 			else:
 				lastslash = string.rfind(uid2, '/')
-				base, tag = uid2[:lastslash], uid2[lastslash+1:]
+				href, tag = uid2[:lastslash], uid2[lastslash+1:]
 				if tag == '1':
 					tag = None
 		else:
-			base = ''
+			href = ''
 			tag = self.uid2name[uid2]
-##		href = MMurl.quote(base)
 		if tag:
-##			href = href + '#' + MMurl.quote(tag)
 			href = href + '#' + tag
 		attrs.append(('href', href))
 		return attrs
