@@ -48,7 +48,7 @@ class _ImageMixin:
 		try:
 			rdr = img.reader(format, image)
 			bits = rdr.read()
-		except (img.error, IOError):
+		except (img.error, IOError, MemoryError):
 			return
 		
 		pixmap = mac_image.mkpixmap(rdr.width, rdr.height, format, bits)
