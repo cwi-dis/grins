@@ -1,19 +1,34 @@
-TODO for Michael :-)
-----------------------
+TODO for Michael :-) 
+---------------------------------------------
 
-* Enable Quicktime support
+Priority top-to-bottom.
+------------------------
+
+* Create an 
 
 * Disable drag + drop of structure nodes.
-* Fix bug: paste an image node.
-* Test + Fix D&D of everything.
-* Windows media support.
+
+* Fix bug: paste image node.
 
 * Display the player and the structure view at startup.
 
 * Toolbar or asset box - D&D transitions
+
 * Create templates for Snap! (slideshow)
 
-* Be happy. Enjoy life. Or at least try.
+
+* Enable Quicktime support
 
 * Traverse through the files and use the options
 	in features.py.
+
+
+Incoming
+--------
+
+* Add drop-downs in the toolbar for bitrate. Ask Kleanthis.
+* Add a asset box for transitions.
+
+* Test + Fix D&D of everything.
+* Windows media support.
+* Configure Eudora to do mail locally rather than to the server.
