@@ -1,0 +1,31 @@
+This file contains (terse) instructions on how to build GRiNS
+and CMIFed on the macintosh.
+
+Start out with a file tree that looks like this:
+...:Python			Python source distribution (Python's CVS)
+          :Extensions:img	(CWI CVS)
+          :Mac                  (CWI CVS)
+   :gdbm			(CWI CVS)
+   :CWGUSI                      Version 1.8.4, with mods from Python:Mac
+   :imglibs			(CWI CVS lib-src)
+   :cmif			(CWI CVS)
+
+First build CWGUSI, gdbm, the image libraries and Python itself. The
+instructions for this are in the Python:Mac:Demo folder. Test Python.
+
+To build cmifed and grins go to the cmif:Build:mac folder.
+
+You may have to rebuild the attrdefs.rsrc files. You can do this with
+mkattrdefsresource.py script (XXXX but that script is old, so it may
+need a bit of massaging).
+
+Next, running the macbuild.py script should do the complete build.
+In case it doesn't work, here are the steps it does:
+1. Freeze macgrins.py into the build.macgrins folder. To do this by
+   hand run Python:mac:Tools:macfreeze:macfreeze.py, select
+   macgrins.py as source, and select "CW project and source".
+2. Build grins, by opening macgrins.prj (in build.macgrins) and
+   building the GRiNS FAT target.
+3. Freeze maccmifed.py into build.maccmif.
+4. Build maccmifed.
+
