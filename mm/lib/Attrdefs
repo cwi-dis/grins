@@ -206,7 +206,7 @@
 	raw (g2))
 
 (project_boston (bool) 0 'SMIL-Boston' default
-	'Document conforms to SMIL-Boston' raw smil)
+	'Document conforms to SMIL-Boston' raw (smil2))
 
 (project_convert (bool) 1 'Convert data' default
 	'Convert data to RealMedia format' raw (g2_pro))
@@ -288,11 +288,11 @@
 # things causing the node to start
 (beginlist (list (enclosed (any))) ()
 	'Begin events list' hidden
-	'List of events starting this node' raw smil2)
+	'List of events starting this node' raw (smil2))
 # things causing the node to end
 (endlist (list (enclosed (any))) ()
 	'End events list' hidden
-	'List of events ending this node' raw smil2)
+	'List of events ending this node' raw (smil2))
 
 (terminator (name) 'LAST' 'Endsync child' termnodename
 	'Name of child that terminates parallel node' normal (all))
@@ -351,7 +351,7 @@
 
 # SMIL system test attributes
 (system_audiodesc (bool) 0 'System audio descriptions' bool3
-	'Play node only if end-user wants audio descriptions' raw smil2)
+	'Play node only if end-user wants audio descriptions' raw (smil2))
 (system_bitrate (int) 0 'System bitrate' bitrate3
 	'Play node only if bitrate >= value here' raw (all))
 (system_captions (bool) 0 'System captions' bool3
