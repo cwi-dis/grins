@@ -31,7 +31,7 @@ if MacOS.runtimemodel == 'carbon':
 	
 ID_SPLASH_DIALOG=513
 # XXXX Debugging code: assure the resource file is available
-import Res
+from Carbon import Res
 try:
 	Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 except:
