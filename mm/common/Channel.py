@@ -55,7 +55,7 @@ class Channel:
 	# The following methods can be called by higher levels.
 	#
 	chan_attrs = ['visible', 'base_window']
-	node_attrs = ['file']
+	node_attrs = ['file', 'mimetype']
 	_visible = FALSE
 
 	def __init__(self, name, attrdict, scheduler, ui):
@@ -756,8 +756,10 @@ class Channel:
 			url, tag = MMurl.splittag(url)
 			try:
 				# use urlretrieve so that data gets cached
-				fn = MMurl.urlretrieve(url)[0]
-				self.armed_url = MMurl._urlopener.openedurl
+				fn, hdr = MMurl.urlretrieve(url)
+				if hdr.has_key('Content-Location'):
+					url = hdr['Content-Location']
+				self.armed_url = url
 				if tag:
 					self.armed_url = self.armed_url+'#'+tag
 				fp = open(fn, 'r')
