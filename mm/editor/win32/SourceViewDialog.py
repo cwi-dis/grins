@@ -24,6 +24,10 @@ class SourceViewDialog:
 		self.__updateCommandList()
 		self.__textwindow.setListener(self)
 
+	def pop(self):
+		if self.__textwindow != None:
+			self.__textwindow.pop()
+			
 	def __updateCommandList(self):
 		commandList = []
 
