@@ -26,6 +26,9 @@ class TemporalView(TemporalViewDialog):
 
 		self.geodl = GeoWidget(self) # This is the basic graph of geometric primitives.
 		self.scene = None	# This is the collection of widgets which define the behaviour of the geo privs.
+		self.editmgr = self.root.context.editmgr
+
+		self.recurse_lock = 0	# a lock to prevent recursion.
 
 	def destroy(self):
 		pass;
@@ -41,6 +44,7 @@ class TemporalView(TemporalViewDialog):
 			return
 		self.showing = 1
 		self.init_scene()
+		self.editmgr.register(self, 1)
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		TemporalViewDialog.show(self)
 		self.recalc()
@@ -61,6 +65,12 @@ class TemporalView(TemporalViewDialog):
 
 	def draw(self):
 		self.geodl.redraw()
+
+	def redraw(self):
+		# No optimisation - do a complete scene graph redraw.
+		self.init_scene()
+		self.recalc()
+		self.draw()
 
 	def recalc(self):
 		self.scene.recalc()
@@ -83,14 +93,48 @@ class TemporalView(TemporalViewDialog):
 			i.unselect()
 
 ######################################################################
+		# Edit manager interface
+
+	def transaction(self, type):
+		return 1
+
+	def rollback(self):
+		print "TODO: rollback."
+
+	def commit(self, type):
+		self.redraw()
+
+	def kill(self):
+		self.destroy()
+
+	def globalfocuschanged(self, focustype, focusobject):
+		if self.recurse_lock:
+			return
+		self.recurse_lock = 1
+		if self.scene:
+			if focustype == 'MMNode':
+				try:
+					self.scene.select_node(focusobject.views['tempview'])
+				except KeyError:
+					pass # Don't worry about it. This means it is probably a structure node.
+					# What we /could/ do is select all of the syncbars associated to it..
+			#elif focustype == 'MMChannel':
+			#	self.scene.select_channel(focusobject)
+		self.draw()
+		self.recurse_lock = 0
+
+######################################################################
 		# window event handlers:
 
-	def ev_mouse0press(self, dummy, window, event, params):
-		x,y = params[0:2]
-		if x < 1.0 and y < 1.0:
+	def rel2abs(self, (x, y)):
+		if x < 1.0 and y < 1.0 and self.geodl:
 			x = x * self.geodl.canvassize[0]
 			y = y * self.geodl.canvassize[1]
-		self.scene.click((x,y))
+		return x,y
+
+	def ev_mouse0press(self, dummy, window, event, params):
+		coords = self.rel2abs(params[0:2])
+		self.scene.click(coords)
 		self.draw()
 
 	def ev_mouse0release(self, dummy, window, event, params):
@@ -115,7 +159,10 @@ class TemporalView(TemporalViewDialog):
 		print "Dropping a file!"
 
 	def ev_dragnode(self, dummy, window, event, params):
-		print "Dragging a node!"
+		x,y,filename = params[0:3]
+		x,y = self.rel2abs((x,y))
+		self.scene.dragging_node((x,y),filename)
+		self.draw()
 
 	def ev_dropnode(self, dummy, window, event, params):
 		print "Dropped a node!"
