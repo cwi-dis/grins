@@ -63,18 +63,18 @@ def _readparser(p, filename):
 	except EOFError:
 		p.reporterror(filename, 'Unexpected EOF', sys.stderr)
 		raise EOFError
-	except SyntaxError, msg:
+	except MSyntaxError, msg:
 		if type(msg) is type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
 		p.reporterror(filename, 'Syntax error: ' + msg, sys.stderr)
-		raise SyntaxError, msg
-	except TypeError, msg:
+		raise MSyntaxError, msg
+	except MTypeError, msg:
 		if type(msg) is type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
 		p.reporterror(filename, 'Type error: ' + msg, sys.stderr)
-		raise TypeError, msg
+		raise MTypeError, msg
 	#
 	# Make sure that there is no garbage in the file after the node.
 	#
@@ -82,7 +82,7 @@ def _readparser(p, filename):
 	if token <> '':
 		msg = 'Node ends before EOF'
 		p.reporterror(filename, msg, sys.stderr)
-		raise SyntaxError, msg
+		raise MSyntaxError, msg
 	#
 	_fixcontext(root)
 	return root
