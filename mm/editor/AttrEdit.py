@@ -853,6 +853,37 @@ class ChannelWrapper(Wrapper):
 	def stillvalid(self):
 		return self.channel.stillvalid()
 
+	def canfollowselection(self):
+		return 1
+		
+	def link_to_selection(self, onoff, attreditor):
+		if onoff:
+			if self.channel.attreditor != attreditor:
+				print 'attreditor confusion'
+				print 'I am', attreditor
+				print 'node has', self.channel.attreditor
+				raise 'attreditor confusion'
+			del self.channel.attreditor
+		else:
+			if hasattr(self.channel, 'attreditor'):
+				raise 'Channel already has attreditor!'
+			self.channel.attreditor = attreditor
+			
+	def selection_changed(self, seltype, selvalue, doit=1):
+		if not selvalue:
+			return
+		if type(selvalue) in (type(()), type([])):
+			print 'Multinode not yet supported'
+			return 0
+		if not hasattr(selvalue, 'getClassName'):
+			print 'Focus items should have getClassName() method'
+			return 0
+		if selvalue.getClassName() != 'MMChannel':
+			return 0
+		if doit:
+			self.channel = selvalue
+		return 1
+
 	def maketitle(self):
 		return 'Properties of region ' + self.channel.name
 
