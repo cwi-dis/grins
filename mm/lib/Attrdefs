@@ -40,7 +40,7 @@
 (arm_duration (float) -1.0 'Arm duration' hidden
 	'Time needed to arm this event before displaying' raw)
 
-(bag_index (name) '' 'Bag index' default
+(bag_index (name) undefined 'Bag index' childnodename
 	'Name of child used as index' normal)
 
 (base_window (name) 'undefined' 'Channel base window' channelname

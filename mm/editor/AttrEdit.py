@@ -448,6 +448,8 @@ class AttrEditor(Dialog):
 				C = ColorButtonRow
 			elif displayername == 'channelname':
 				C = ChannelnameButtonRow
+			elif displayername == 'childnodename':
+				C = ChildnodenameButtonRow
 			elif displayername == 'channeltype':
 				C = ChanneltypeButtonRow
 			elif type == 'bool':
@@ -905,6 +907,24 @@ class ChannelnameButtonRow(PopupButtonRow):
 	#
 	def choices(self):
 		return ['undefined'] + self.wrapper.context.channelnames
+	#
+
+
+class ChildnodenameButtonRow(PopupButtonRow):
+	# Choose from the node's children
+	#
+	def __repr__(self):
+		return '<ChildnodenameButtonRow instance, name=' \
+			+ `self.name` + '>'
+	#
+	def choices(self):
+		list = ['undefined']
+		for child in self.wrapper.node.GetChildren():
+			try:
+				list.append(child.GetAttr('name'))
+			except MMExc.NoSuchAttrError:
+				pass
+		return list
 	#
 
 
