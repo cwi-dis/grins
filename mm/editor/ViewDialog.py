@@ -27,4 +27,5 @@ class ViewDialog:
 			self.root.SetAttr(name + 'winpos', (h, v))
 		if width <> 0 and height <> 0:
 			self.root.SetAttr(name + 'winsize', (width, height))
+		MMAttrdefs.flushcache(self.root)
 	#
