@@ -149,49 +149,21 @@ class MdbDatabase:
 		return os.path.join(self._dirname, rv)
 
 	def lock(self, id, new=0):
-		if new:
-			filename = self.id2filename(id, 'TMP')
-			open(filename, 'w').close()
-		else:
-			filename = self.id2filename(id)
-		lockname = self.id2filename(id, 'LCK')
-		while 1:
-			try:
-				os.link(filename, lockname)
-			except (OSError, IOError):
-				try:
-					mtime = os.stat(lockname)[stat.ST_MTIME]
-				except (OSError, IOError):
-					# Gone in the mean time
-					continue
-				if mtime < time.time()-20:
-					sys.stderr.write("Breaking lock: %s\n"
-							 %lockname)
-					# More than 2 minutes old
-					try:
-						os.unlink(lockname)
-					except (OSError, IOError):
-						pass
-				else:
-					sys.stderr.write("Wait on lock: %s\n"
-							 %lockname)
-					time.sleep(2)
-			else:
-				break
-		if new:
-			os.unlink(filename)
-		
+		filename = self.id2filename(id)
+		lock(filename)
 
 	def unlock(self, id, newfilename=None):
-		lockname = self.id2filename(id, 'LCK')
+		filename = self.id2filename(id)
 		if newfilename:
-			filename = self.id2filename(id)
 			backupname = self.id2filename(id, 'BAK')
-			
+			if os.path.exists(filename):
+				try:
+					os.unlink(backupname)
+				except:
+					pass
+				os.rename(filename, backupname)
 			os.rename(newfilename, filename)
-			os.rename(lockname, backupname)
-		else:
-			os.unlink(lockname)
+		unlock(filename)
 
 	def getnewlockedid(self):
 		allids = self.allids()
@@ -290,43 +262,11 @@ class Index:
 		self.__unlock()
 
 	def __lock(self, filename):
-		import tempfile
-		tempfile.tempdir = os.path.dirname(filename)
-		lockname = filename + '.LCK'
-		self.__lockname = lockname
-		tmpname = tempfile.mktemp()
-		f = open(tmpname, 'w')
-		while 1:
-			try:
-				os.link(tmpname, lockname)
-			except (OSError, IOError):
-				try:
-					mtime = os.stat(lockname)[stat.ST_MTIME]
-				except (OSError, IOError):
-					# Gone in the mean time
-					continue
-				if mtime < time.time()-20:
-					sys.stderr.write("Breaking lock: %s\n"
-							 %lockname)
-					# More than 20 seconds old
-					try:
-						os.unlink(lockname)
-					except (OSError, IOError):
-						pass
-				else:
-					sys.stderr.write("Wait on lock: %s\n"
-							 %lockname)
-					time.sleep(2)
-			else:
-				break
-		os.unlink(tmpname)
-		
+		lock(filename)
+		self.__lockname = filename
 
 	def __unlock(self):
-		try:
-			os.unlink(self.__lockname)
-		except:
-			pass
+		unlock(self.__lockname)
 
 	def add(self, key, value, id):
 		if not key in self._keylist:
@@ -405,6 +345,44 @@ def _test():
 			obj['Matched'] = 'yes'
 			dbase.save(obj)
 	dbase.close()
+
+def lock(filename):
+	import tempfile
+	tempfile.tempdir = os.path.dirname(filename)
+	lockname = filename + '.LCK'
+	tmpname = tempfile.mktemp()
+	f = open(tmpname, 'w')
+	while 1:
+		try:
+			os.link(tmpname, lockname)
+		except (OSError, IOError):
+			try:
+				mtime = os.stat(lockname)[stat.ST_MTIME]
+			except (OSError, IOError):
+				# Gone in the mean time
+				continue
+			if mtime < time.time()-20:
+				sys.stderr.write("Breaking lock: %s\n"
+						 %lockname)
+				# More than 20 seconds old
+				try:
+					os.unlink(lockname)
+				except (OSError, IOError):
+					pass
+			else:
+				sys.stderr.write("Wait on lock: %s\n"
+						 %lockname)
+				time.sleep(2)
+		else:
+			break
+	os.unlink(tmpname)
+
+def unlock(filename):
+	lockname = filename + '.LCK'
+	try:
+		os.unlink(lockname)
+	except:
+		pass
 
 if __name__ == "__main__":
 	_test()
