@@ -5,6 +5,9 @@ __version__ = "$Id$"
 from compatibility import *
 import sys
 
+from FeatureSet import *
+feature_set = [];
+
 #
 version = 'pro'
 compatibility = G2
