@@ -1710,7 +1710,6 @@ class NodeBox(GO, NodeBoxCommand):
 			FINISH_ARC(callback = (self.newsyncarccall, ())),
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
-##			INFO(callback = (self.infocall, ())),
 			ATTRIBUTES(callback = (self.attrcall, ())),
 			CONTENT(callback = (self.editcall, ())),
 			ANCHORS(callback = (self.anchorcall, ())),
@@ -1998,11 +1997,6 @@ class NodeBox(GO, NodeBoxCommand):
 		self.mother.toplevel.setwaiting()
 		import AttrEdit
 		AttrEdit.showattreditor(self.mother.toplevel, self.node)
-
-	def infocall(self):
-		self.mother.toplevel.setwaiting()
-		import NodeInfo
-		NodeInfo.shownodeinfo(self.mother.toplevel, self.node)
 
 	def editcall(self):
 		self.mother.toplevel.setwaiting()
