@@ -88,6 +88,9 @@ class PlayerCore(Selecter):
 		self.play()
 	#
 	def playfrom(self, node):
+		self.savecurlayout = self.curlayout
+		self.savecurchannel = self.curchannel
+		self.setlayout()
 		self.playfromanchor(node, None)
 	#
 	def playfromanchor(self, node, anchor):
