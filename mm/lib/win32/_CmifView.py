@@ -390,7 +390,7 @@ class _CmifStructView(_CmifView):
 		self.CF_NODE=self.getClipboardFormat('Node')
 
 		# enable or dissable node drag and drop
-		self._enableNodeDragDrop=1
+		self._enableNodeDragDrop=0
 			
 		if self._enableNodeDragDrop:
 			self._dropmap['Node']=(self.dragnode,self.dropnode)
