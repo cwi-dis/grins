@@ -175,7 +175,7 @@ class PlayerDialog:
 			commandlist = [
 				usercmd.CLOSE(callback=(self.toplevel.close_callback, ())),
 				usercmd.CLOSE_WINDOW(callback=(self.toplevel.close_callback, ())),
-				] + self.alllist
+				] + self.alllist + self.__topcommandlist
 			w.set_commandlist(commandlist)
 			self.setchannels(self.__channels)
 			if 1 or state != ostate: # XXXX
