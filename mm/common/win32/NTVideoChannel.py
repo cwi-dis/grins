@@ -83,7 +83,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 					# can't do RealAudio
 ##					self.__rc = 0 # don't try again
 					self.errormsg(node, msg)
-			elif self.__rc:
+			if self.__rc:
 				if self.__rc.prepare_player(node):
 					self.__ready = 1
 		else:
