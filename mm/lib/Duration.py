@@ -65,8 +65,8 @@ def get(node, ignoreloop=0, wanterror=0):
 					raise IOError, msg
 				print url, msg
 		elif maintype in ('image', 'text'):
-			# give them a duration
-			return 5
+			# static media doesn't have a duration
+			return 0
 		if dur is not None:
 			cache['duration'] = dur
 			return loop * dur
