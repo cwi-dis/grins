@@ -112,7 +112,7 @@ class ImageChannel(ChannelWindow):
 				break
 		if not need_conversion:
 			return args
-		if args == (0, 0, 1, 1):
+		if args == (0, 0, 1, 1) or args == [0, 0, 1, 1]:
 			# special case: full image
 			return args
 		xsize, ysize = self.window._image_size(file)
