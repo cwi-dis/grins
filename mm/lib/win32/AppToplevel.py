@@ -436,6 +436,10 @@ class _Toplevel:
 
 # Implementation of the FileDialog 
 class FileDialog:
+	# Remember last location when the program does not request a specific
+	# location
+	last_location = None
+
 	# Class constructor. Creates abd displays a std FileDialog
 	def __init__(self, prompt,directory,filter,file, cb_ok, cb_cancel,existing = 0,parent=None):
 		
@@ -462,8 +466,13 @@ class FileDialog:
 		#
 		import os
 		curdir = os.getcwd()
+		default_dir = directory in ('.', '')
+		if default_dir and FileDialog.last_location:
+			directory = FileDialog.last_location
 		dlg.SetOFNInitialDir(directory)
 		result=dlg.DoModal()
+		if default_dir:
+			FileDialog.last_location = os.getcwd()
 		os.chdir(curdir)
 		if result==win32con.IDOK:
 			if cb_ok: cb_ok(dlg.GetPathName())
