@@ -484,7 +484,9 @@ class AttrEditor(Dialog):
 		self.show()
 	#
 	def show(self):
-		if not self.showing:
+		if self.is_showing():
+			self.pop()
+		else:
 			namelist = self.wrapper.attrnames()
 			if namelist <> self.namelist:
 				del self.form
