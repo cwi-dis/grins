@@ -175,30 +175,31 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
-		if self.main.cansave() and self.context.isValidDocument():
+		if self.main.cansave():
 			self.commandlist = self.commandlist + [
 				SAVE_AS(callback = (self.saveas_callback, ())),
 				SAVE(callback = (self.save_callback, ())),
 				]
-			self.commandlist_g2 = self.commandlist + [
-				EXPORT_G2(callback = (self.bandwidth_callback, (self.export_G2_callback, ))),
-				UPLOAD_G2(callback = (self.bandwidth_callback, (self.upload_G2_callback, ))),
-				]
-			self.commandlist = self.commandlist + [
-				EXPORT_QT(callback = (self.bandwidth_callback, (self.export_QT_callback,))),
-				UPLOAD_QT(callback = (self.bandwidth_callback, (self.upload_QT_callback,))),
-				]
+			if self.context.isValidDocument():
+				self.commandlist_g2 = self.commandlist + [
+					EXPORT_G2(callback = (self.bandwidth_callback, (self.export_G2_callback, ))),
+					UPLOAD_G2(callback = (self.bandwidth_callback, (self.upload_G2_callback, ))),
+					]
+				self.commandlist = self.commandlist + [
+					EXPORT_QT(callback = (self.bandwidth_callback, (self.export_QT_callback,))),
+					UPLOAD_QT(callback = (self.bandwidth_callback, (self.upload_QT_callback,))),
+					]
 
-#			print "TODO: make this version dependant. TopLevel.py:__init__()"
-##			self.commandlist.append(EXPORT_WMP(callback = (self.bandwidth_callback, (self.export_WMP_callback,))));
-			self.commandlist.append(EXPORT_WMP(callback = (self.export_WMP_callback,())))
-			self.commandlist.append(UPLOAD_WMP(callback = (self.bandwidth_callback, (self.upload_WMP_callback,))));
-			self.commandlist.append(EXPORT_HTML_TIME(callback = (self.export_HTML_TIME_callback,())))
+#				print "TODO: make this version dependant. TopLevel.py:__init__()"
+##				self.commandlist.append(EXPORT_WMP(callback = (self.bandwidth_callback, (self.export_WMP_callback,))));
+				self.commandlist.append(EXPORT_WMP(callback = (self.export_WMP_callback,())))
+				self.commandlist.append(UPLOAD_WMP(callback = (self.bandwidth_callback, (self.upload_WMP_callback,))));
+				self.commandlist.append(EXPORT_HTML_TIME(callback = (self.export_HTML_TIME_callback,())))
 			
-			self.commandlist = self.commandlist + [
-					EXPORT_SMIL(callback = (self.bandwidth_callback, (self.export_SMIL_callback,))),
-					UPLOAD_SMIL(callback = (self.bandwidth_callback, (self.upload_SMIL_callback,))),
-				]								
+				self.commandlist = self.commandlist + [
+						EXPORT_SMIL(callback = (self.bandwidth_callback, (self.export_SMIL_callback,))),
+						UPLOAD_SMIL(callback = (self.bandwidth_callback, (self.upload_SMIL_callback,))),
+					]								
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(
@@ -1171,25 +1172,37 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.do_restore()
 
 	def do_restore(self):
-		if not self.editmgr.transaction():
-			return
+#		if not self.editmgr.transaction():
+#			return
 		self.setwaiting()
+		# keep the showing state of all current views
 		showing = []
 		for i in range(len(self.views)):
 			if self.views[i] is not None and \
 			   self.views[i].is_showing():
 				showing.append(i)
-		self.editmgr.rollback()
+#		self.editmgr.rollback()
+		# cleanup
 		self.editmgr.unregister(self)
 		self.editmgr.destroy() # kills subscribed views
 		self.context.seteditmgr(None)
-		self.root.Destroy()
+		self.destroyRoot(self.root)
+
+		# editmgr have to be re-created. 		
+		self.editmgr = EditMgr(self)
+		self.editmgr.register(self)
+
+		# read the document		
 		self.read_it()
+
+		# check initial errors		
+		self.__checkInitialErrors()
+
+		# update command list, re-make the views, and show the views prviously showed		
+		self.set_commandlist()
 		self.makeviews()
 		for i in showing:
 			self.views[i].show()
-##		if self.source and not self.source.is_closed():
-##			self.source_callback()
 
 	def read_it(self):
 		self.changed = 0
