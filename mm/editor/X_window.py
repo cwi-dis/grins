@@ -27,6 +27,14 @@ class _Toplevel(X_windowbase._Toplevel):
 		return toplevel._mscreenwidth, toplevel._mscreenheight
 
 class _Window(X_windowbase._Window):
+	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0):
+		X_windowbase._Window.__init__(self, parent, x, y, w, h, title, defcmap, pixmap)
+		self.arrowcache = {}
+
+	def close(self):
+		self.arrowcache = {}
+		X_windowbase._Window.close(self)
+
 	def newdisplaylist(self, *bgcolor):
 		if bgcolor != ():
 			bgcolor = bgcolor[0]
@@ -114,11 +122,9 @@ class _Window(X_windowbase._Window):
 
 		# wait until box has been drawn or canceled
 		try:
-			toplevel._setcursor()
 			Xt.MainLoop()
 		except _rb_done:
 			pass
-		toplevel._setcursor('watch')
 
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
@@ -159,6 +165,7 @@ class _Window(X_windowbase._Window):
 						     call_data)
 
 	def _resize_callback(self, form, client_data, call_data):
+		self.arrowcache = {}
 		raised = 0
 		if _in_create_box:
 			try:
@@ -528,37 +535,43 @@ class _DisplayList(X_windowbase._DisplayList):
 		self._list.append('3ddiamond', (cl, ct, cr, cb), coordinates)
 		self._optimize(1)
 
-	def drawarrow(self, color, (sx, sy), (dx, dy)):
+	def drawarrow(self, color, src, dst):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
-		nsx, nsy = window._convert_coordinates((sx, sy))
-		ndx, ndy = window._convert_coordinates((dx, dy))
-		if nsx == ndx and sx != dx:
-			if sx < dx:
-				nsx = nsx - 1
-			else:
-				nsx = nsx + 1
-		if nsy == ndy and sy != dy:
-			if sy < dy:
-				nsy = nsy - 1
-			else:
-				nsy = nsy + 1
 		color = self._window._convert_color(color)
-		lx = ndx - nsx
-		ly = ndy - nsy
-		if lx == ly == 0:
-			angle = 0.0
-		else:
-			angle = math.atan2(ly, lx)
-		rotation = math.pi + angle
-		cos = math.cos(rotation)
-		sin = math.sin(rotation)
-		points = [(ndx, ndy)]
-		points.append(roundi(ndx + ARR_LENGTH*cos + ARR_HALFWIDTH*sin),
-			      roundi(ndy + ARR_LENGTH*sin - ARR_HALFWIDTH*cos))
-		points.append(roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
-			      roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos))
+		try:
+			nsx, nsy, ndx, ndy, points = window.arrowcache[(src,dst)]
+		except KeyError:
+			sx, sy = src
+			dx, dy = dst
+			nsx, nsy = window._convert_coordinates((sx, sy))
+			ndx, ndy = window._convert_coordinates((dx, dy))
+			if nsx == ndx and sx != dx:
+				if sx < dx:
+					nsx = nsx - 1
+				else:
+					nsx = nsx + 1
+			if nsy == ndy and sy != dy:
+				if sy < dy:
+					nsy = nsy - 1
+				else:
+					nsy = nsy + 1
+			lx = ndx - nsx
+			ly = ndy - nsy
+			if lx == ly == 0:
+				angle = 0.0
+			else:
+				angle = math.atan2(ly, lx)
+			rotation = math.pi + angle
+			cos = math.cos(rotation)
+			sin = math.sin(rotation)
+			points = [(ndx, ndy)]
+			points.append(roundi(ndx + ARR_LENGTH*cos + ARR_HALFWIDTH*sin),
+				      roundi(ndy + ARR_LENGTH*sin - ARR_HALFWIDTH*cos))
+			points.append(roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
+				      roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos))
+			window.arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
 		self._list.append('arrow', color, (nsx, nsy, ndx, ndy), points)
 		self._optimize(1)
 
@@ -624,9 +637,6 @@ class FileDialog:
 			self._form = None
 
 	def setcursor(self, cursor):
-		pass
-
-	def _setcursor(self, cursor):
 		X_windowbase._setcursor(self._form, cursor)
 
 	def is_closed(self):
@@ -635,7 +645,6 @@ class FileDialog:
 	def _cancel_callback(self, *rest):
 		if self.is_closed():
 			return
-		toplevel._setcursor('watch')
 		must_close = TRUE
 		try:
 			if self.cb_cancel:
@@ -648,12 +657,10 @@ class FileDialog:
 		finally:
 			if must_close:
 				self.close()
-			toplevel._setcursor()
 
 	def _ok_callback(self, widget, client_data, call_data):
 		if self.is_closed():
 			return
-		toplevel._setcursor('watch')
 		import os
 		filename = call_data.value
 		dir = call_data.dir
@@ -663,17 +670,14 @@ class FileDialog:
 			if os.path.isdir(filename):
 				filter = os.path.join(filename, filter)
 				self._dialog.FileSelectionDoSearch(filter)
-				toplevel._setcursor()
 				return
 		if self.cb_ok:
 			ret = self.cb_ok(filename)
 			if ret:
 				if type(ret) is StringType:
 					showmessage(ret)
-				toplevel._setcursor()
 				return
 		self.close()
-		toplevel._setcursor()
 
 class SelectionDialog:
 	def __init__(self, listprompt, selectionprompt, itemlist, default):
@@ -705,9 +709,6 @@ class SelectionDialog:
 		toplevel._subwindows.append(self)
 
 	def setcursor(self, cursor):
-		pass
-
-	def _setcursor(self, cursor):
 		X_windowbase._setcursor(self._form, cursor)
 
 	def is_closed(self):
@@ -723,16 +724,13 @@ class SelectionDialog:
 	def _nomatch_callback(self, widget, client_data, call_data):
 		if self.is_closed():
 			return
-		toplevel._setcursor('watch')
 		ret = self.NomatchCallback(call_data.value)
 		if ret and type(ret) is StringType:
 			showmessage(ret, type = 'error')
-		toplevel._setcursor()
 
 	def _ok_callback(self, widget, client_data, call_data):
 		if self.is_closed():
 			return
-		toplevel._setcursor('watch')
 		try:
 			func = self.OkCallback
 		except AttributeError:
@@ -742,15 +740,12 @@ class SelectionDialog:
 			if ret:
 				if type(ret) is StringType:
 					showmessage(ret, type = 'error')
-				toplevel._setcursor()
 				return
 		self.close()
-		toplevel._setcursor()
 
 	def _cancel_callback(self, widget, client_data, call_data):
 		if self.is_closed():
 			return
-		toplevel._setcursor('watch')
 		try:
 			func = self.CancelCallback
 		except AttributeError:
@@ -760,10 +755,8 @@ class SelectionDialog:
 			if ret:
 				if type(ret) is StringType:
 					showmessage(ret, type = 'error')
-				toplevel._setcursor()
 				return
 		self.close()
-		toplevel._setcursor()
 
 class InputDialog:
 	def __init__(self, prompt, default, cb):
@@ -789,24 +782,17 @@ class InputDialog:
 	def _ok(self, w, client_data, call_data):
 		if self.is_closed():
 			return
-		toplevel._setcursor('watch')
 		value = call_data.value
 		self.close()
 		if client_data:
 			client_data(value)
-		toplevel._setcursor()
 
 	def _cancel(self, w, client_data, call_data):
 		if self.is_closed():
 			return
-		toplevel._setcursor('watch')
 		self.close()
-		toplevel._setcursor()
 
 	def setcursor(self, cursor):
-		pass
-
-	def _setcursor(self, cursor):
 		X_windowbase._setcursor(self._form, cursor)
 
 	def close(self):
@@ -1036,9 +1022,7 @@ class Button(_Widget):
 	def _callback(self, widget, callback, call_data):
 		if self.is_closed():
 			return
-		toplevel._setcursor('watch')
 		apply(callback[0], callback[1])
-		toplevel._setcursor()
 
 class OptionMenu(_Widget):
 	'''Option menu window object.'''
@@ -1141,6 +1125,7 @@ class OptionMenu(_Widget):
 			while len(self._buttons) > n:
 				self._buttons[n].DestroyWidget()
 				del self._buttons[n]
+			self._optionlist = optionlist
 		# set the start position
 		self.setpos(startpos)
 
@@ -1177,10 +1162,8 @@ class OptionMenu(_Widget):
 			return
 		self._value = value
 		if self._callback:
-			toplevel._setcursor('watch')
 			f, a = self._callback
 			apply(f, a)
-			toplevel._setcursor()
 
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
@@ -1352,9 +1335,7 @@ class _List:
 	def _callback(self, w, (func, arg), call_data):
 		if self.is_closed():
 			return
-		toplevel._setcursor('watch')
 		apply(func, arg)
-		toplevel._setcursor()
 
 	def _destroy(self):
 		del self._itemlist
@@ -1568,9 +1549,7 @@ class TextInput(_Widget):
 	def _callback(self, w, (func, arg), call_data):
 		if self.is_closed():
 			return
-		toplevel._setcursor('watch')
 		apply(func, arg)
-		toplevel._setcursor()
 
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
@@ -1664,9 +1643,7 @@ class TextEdit(_Widget):
 	def _callback(self, w, (func, arg), call_data):
 		if self.is_closed():
 			return
-		toplevel._setcursor('watch')
 		apply(func, arg)
-		toplevel._setcursor()
 
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
@@ -1805,12 +1782,10 @@ class ButtonRow(_Widget):
 	def _callback(self, widget, callback, call_data):
 		if self.is_closed():
 			return
-		toplevel._setcursor('watch')
 		if self._cb:
 			apply(self._cb[0], self._cb[1])
 		if callback:
 			apply(callback[0], callback[1])
-		toplevel._setcursor()
 
 	def _popup(self, widget, submenu, call_data):
 		submenu.ManageChild()
@@ -1877,9 +1852,7 @@ class Slider(_Widget):
 	def _callback(self, widget, callback, call_data):
 		if self.is_closed():
 			return
-		toplevel._setcursor('watch')
 		apply(callback[0], callback[1])
-		toplevel._setcursor()
 
 	def _calcrange(self, minimum, initial, maximum):
 		self._minimum, self._maximum = minimum, maximum
@@ -2125,9 +2098,6 @@ class Window(_WindowHelpers, _MenuSupport):
 		return not hasattr(self, '_form')
 
 	def setcursor(self, cursor):
-		pass
-
-	def _setcursor(self, cursor):
 		X_windowbase._setcursor(self._form, cursor)
 
 	def fix(self):
@@ -2220,7 +2190,7 @@ class Window(_WindowHelpers, _MenuSupport):
 		pass
 
 	def _delete_callback(self, widget, client_data, call_data):
-		if type(client_data) == StringType:
+		if type(client_data) is StringType:
 			if client_data == 'hide':
 				self.hide()
 			elif client_data == 'close':
@@ -2258,11 +2228,9 @@ class _Question:
 	def run(self):
 		try:
 			self.looping = TRUE
-			toplevel._setcursor()
 			Xt.MainLoop()
 		except _end_loop:
 			pass
-		toplevel._setcursor('watch')
 		return self.answer
 
 	def callback(self, answer):
@@ -2287,11 +2255,9 @@ class _MultChoice:
 	def run(self):
 		try:
 			self.looping = TRUE
-			toplevel._setcursor()
 			Xt.MainLoop()
 		except _end_loop:
 			pass
-		toplevel._setcursor('watch')
 		return self.answer
 
 	def callback(self, msg):
