@@ -22,7 +22,7 @@ TIMELINE_IN_FOCUS = 1
 NAMEDISTANCE = 150
 SPACEWIDTH = f_title.strsizePXL(' ')[0]
 
-ICONSIZE = windowinterface.ICONSIZE_PXL
+ICONXSIZE = ICONYSIZE = windowinterface.ICONSIZE_PXL
 EVENTARROWCOLOR = (0,255,0)
 LINKARROWCOLOR = (0,0,255)
 
@@ -560,7 +560,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 ##			t0, t1, t2, downloadlag, begindelay = self.GetTimes('virtual')
 ##			if t0 == t2:
 ##				# very special case--zero duration element
-##				return ICONSIZE+2*HEDGSIZE, MINSIZE
+##				return ICONXSIZE+2*HEDGSIZE, MINSIZE
 		return xsize, ysize
 
 	def recalc_minsize(self, timemapper = None, ignore_time = 0):
@@ -2926,10 +2926,9 @@ class IconBox(MMWidgetDecoration):
 	def recalc_minsize(self):
 		# Always the number of icons.
 		if self.vertical:
-			# we only show a max of 3 icons when vertical
-			self.boxsize = ICONSIZE, (min(len(self._iconlist), 3) * ICONSIZE)
+			self.boxsize = ICONXSIZE, len(self._iconlist) * ICONYSIZE
 		else:
-			self.boxsize = (len(self._iconlist) * ICONSIZE), ICONSIZE
+			self.boxsize = len(self._iconlist) * ICONXSIZE, ICONYSIZE
 		return self.boxsize
 
 	def get_clicked_obj_at(self, coords):
@@ -2940,28 +2939,28 @@ class IconBox(MMWidgetDecoration):
 		l,t,a,b = self.pos_abs
 		x,y = pos
 		if self.vertical:
-			return l < x < l+ICONSIZE and t < y < t+(len(self._iconlist)*ICONSIZE)
+			return l < x < l+ICONXSIZE and t < y < t+(len(self._iconlist)*ICONYSIZE)
 		else:
-			return l < x < l+(len(self._iconlist)*ICONSIZE) and t < y < t+ICONSIZE
+			return l < x < l+(len(self._iconlist)*ICONXSIZE) and t < y < t+ICONYSIZE
 
 	def draw(self, displist):
 		l,t,r,b = self.pos_abs
 		for icon in self._iconlist:
-			icon.moveto((l,t,r,b))
+			icon.moveto((l,t,l+ICONXSIZE,t+ICONYSIZE))
 			icon.draw(displist)
 			if self.vertical:
-				t = t + ICONSIZE
+				t = t + ICONYSIZE
 			else:
-				l = l + ICONSIZE
+				l = l + ICONXSIZE
 
 	draw_selected = draw
 
 	def __get_icon_at_position(self, x, y):
 		l,t,r,b = self.pos_abs
 		if self.vertical:
-			index = int((y-t)/ICONSIZE)
+			index = int((y-t)/ICONYSIZE)
 		else:
-			index = int((x-l)/ICONSIZE)
+			index = int((x-l)/ICONXSIZE)
 		if 0 <= index < len(self._iconlist):
 			return self._iconlist[index]
 
@@ -2999,7 +2998,7 @@ class Icon(MMWidgetDecoration):
 		MMWidgetDecoration.destroy(self)
 
 	def recalc_minsize(self):
-		self.boxsize = ICONSIZE, ICONSIZE
+		self.boxsize = ICONXSIZE, ICONYSIZE
 		return self.boxsize
 
 	def set_icon(self, iconname):
@@ -3028,9 +3027,7 @@ class Icon(MMWidgetDecoration):
 
 	def moveto(self, pos):
 		l,t,r,b = pos
-		iconsizex = ERRSIZE
-		iconsizey = ERRSIZE
-		MMWidgetDecoration.moveto(self, (l, t, l+iconsizex, t+iconsizey))
+		MMWidgetDecoration.moveto(self, (l, t, l+ICONXSIZE, t+ICONYSIZE))
 
 	def draw_selected(self, displist):
 		if not self.selectable:
