@@ -202,6 +202,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 
 class TabPage:
 	"""The internal representation of a tab-page. Used for subclassing only."""
+	items_to_hide = []		# Can be overridden by subsubclasses to hide some items
 	
 	def __init__(self, dialog, fieldlist):
 		self.fieldlist = fieldlist
@@ -232,6 +233,11 @@ class TabPage:
 		"""Called by the dialog when the page is shown. Show all
 		controls and update their values"""
 		self.update()
+		if self.items_to_hide:
+			hide=[]
+			for i in self.items_to_hide:
+				hide.append(i+self.item0)
+			self.attreditor._hideitemcontrols(hide)
 		self.attreditor._showitemcontrols([self.item0+self.ITEM_GROUP])
 			
 	def hide(self):
@@ -523,21 +529,26 @@ class InfoTabPage(MultiStringTabPage):
 	ITEM_GROUP=1
 	ITEM_TITLE=3
 	ITEM_ABSTRACT=5
-	ITEM_ALT=7
-	ITEM_LONGDESC=9
-	ITEM_AUTHOR=11
-	ITEM_COPYRIGHT=13
+	ITEM_AUTHOR=7
+	ITEM_COPYRIGHT=9
+	ITEM_ALT=11
+	ITEM_LONGDESC=13
 	N_ITEMS=13
 	_attr_to_item = {
 		'title': ITEM_TITLE,
 		'abstract': ITEM_ABSTRACT,
-		'alt': ITEM_ALT,
-		'longdesc': ITEM_LONGDESC,
 		'author': ITEM_AUTHOR,
 		'copyright': ITEM_COPYRIGHT,
+		'alt': ITEM_ALT,
+		'longdesc': ITEM_LONGDESC,
 	}
 	attrs_on_page = _attr_to_item.keys()
 	_items_on_page = _attr_to_item.values()
+	
+class InteriorInfoTabPage(InfoTabPage):
+	"""Info page without the alt and longdesc items"""
+	items_to_hide = [10, 11, 12, 13]
+	attrs_on_page = ['title', 'abstract', 'author', 'copyright']
 
 class TimingTabPage(MultiStringTabPage):
 	TAB_LABEL='Timing'
@@ -624,6 +635,143 @@ class TargetAudienceTabPage(MultiTabPage):
 				targets.append(t)
 		print 'save dbg targets', targets
 		field._savevaluefrompage(string.join(targets, ','))
+
+class ConversionTabPage(MultiTabPage):
+	TAB_LABEL='Conversion'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_CONVERSION
+	ITEM_GROUP=1
+	ITEM_CONVERT=2
+	ITEM_TARGET_GROUP=3
+	ITEM_28K8=4
+	ITEM_56K=5
+	ITEM_ISDN=6
+	ITEM_2ISDN=7
+	ITEM_CABLE=8
+	ITEM_LAN=9
+	ITEM_AUDIOTYPE=11
+	ITEM_VIDEOTYPE=13
+	ITEM_PERFECTPLAY=14
+	ITEM_MOBILEPLAY=15
+	N_ITEMS=15
+	# Toggle button items
+	_attr_to_item = {
+		'project_convert': ITEM_CONVERT,
+		'project_perfect': ITEM_PERFECTPLAY,
+		'project_mobile': ITEM_MOBILEPLAY,
+	}
+	# Note: the keys here are the values in AttrEdit.RMTargetsAttrEditorField
+	_value_to_item = {
+		'28k8 modem': ITEM_28K8,
+		'56k modem': ITEM_56K,
+		'Single ISDN': ITEM_ISDN,
+		'Double ISDN': ITEM_2ISDN,
+		'Cable modem': ITEM_CABLE,
+		'LAN': ITEM_LAN,
+	}
+	attrs_on_page = ['project_convert', 'project_targets', 'project_videotype',
+		'project_audiotype', 'project_mobile', 'project_perfect']
+	_items_on_page = _value_to_item.values() + _attr_to_item.values()
+	
+	def close(self):
+		del self._attr_to_field
+		if self._videopopup:
+			self._videopopup.delete()
+		if self._audiopopup:
+			self._audiopopup.delete()
+		MultiTabPage.close(self)
+		
+	def init_controls(self, item0):
+		rv = SingleTabPage.init_controls(self, item0)
+		# We want the fields as a dictionary, as there are many different
+		# variants of this tab
+		self._attr_to_field = {}
+		for f in self.fieldlist:
+			name = f.getname()
+			self._attr_to_field[name] = f
+		if self._attr_to_field.has_key('project_videotype'):
+			self._videopopup = windowinterface.SelectWidget(self.attreditor._dialog, 
+				self.item0+self.ITEM_VIDEOTYPE, [], None)
+		else:
+			self._videopopup = None
+		if self._attr_to_field.has_key('project_audiotype'):
+			self._audiopopup = windowinterface.SelectWidget(self.attreditor._dialog,
+				self.item0+self.ITEM_AUDIOTYPE, [], None)
+		else:
+			self._audiopopup = None
+		return rv
+
+	def do_itemhit(self, item, event):
+		if item-self.item0 == self.ITEM_AUDIOTYPE:
+			return 1
+		elif item-self.item0 == self.ITEM_VIDEOTYPE:
+			return 1
+		elif item-self.item0 in self._items_on_page:
+			# The rest are all toggle buttons
+			self.attreditor._togglebutton(item)
+			return 1
+		return 0
+		
+	def update(self):
+		self.update_target()
+		for attr, item in self._attr_to_item.items():
+			if self._attr_to_field.has_key(attr):
+				field = self._attr_to_field[attr]
+				self.attreditor._setbutton(self.item0+item, field._getvalueforpage()=='on')
+		if self._attr_to_field.has_key('project_videotype'):
+			self.update_popup(self._attr_to_field['project_videotype'], self._videopopup)
+		if self._attr_to_field.has_key('project_audiotype'):
+			self.update_popup(self._attr_to_field['project_audiotype'], self._audiopopup)
+		
+	def update_popup(self, field, popup):
+		value = field._getvalueforpage()
+		list = field.getoptions()
+		popup.setitems(list, value)
+		
+	def update_target(self):
+		field = self._attr_to_field['project_targets']
+		attr = field._getvalueforpage()
+		targets = string.split(attr, ',')
+		for t, item in self._value_to_item.items():
+			self.attreditor._setbutton(self.item0+item, (t in targets))
+
+	def save(self):
+		self.save_target()
+		for attr, item in self._attr_to_item.items():
+			if self._attr_to_field.has_key(attr):
+				field = self._attr_to_field[attr]
+				value = self.attreditor._getbutton(self.item0+item)
+				field._savevaluefrompage(['off', 'on'][value])
+		if self._attr_to_field.has_key('project_videotype'):
+			self.save_popup(self._attr_to_field['project_videotype'], self._videopopup)
+		if self._attr_to_field.has_key('project_audiotype'):
+			self.save_popup(self._attr_to_field['project_audiotype'], self._audiopopup)
+
+	def save_target(self):
+		field = self._attr_to_field['project_targets']
+		targets = []
+		for t, item in self._value_to_item.items():
+			if self.attreditor._getbutton(self.item0+item):
+				targets.append(t)
+		field._savevaluefrompage(string.join(targets, ','))
+		
+	def save_popup(self, field, popup):
+		value = popup.getselectvalue()
+		field._savevaluefrompage(value)
+
+class Conversion1TabPage(MultiTabPage):
+	# audio: no videotype
+	attrs_on_page = ['project_convert', 'project_targets', 
+		'project_audiotype', 'project_mobile', 'project_perfect']
+
+class Conversion2TabPage(MultiTabPage):
+	# Lightweight video: no convert/mobile/perfect buttons
+	attrs_on_page = ['project_targets', 'project_videotype',
+		'project_audiotype']
+
+class Conversion3TabPage(MultiTabPage):
+	# Lightweight audio: no convert/mobile/perfect buttons, no video
+	attrs_on_page = ['project_targets', 'project_audiotype']
 
 class GeneralTabPage(MultiTabPage):
 	TAB_LABEL='General'
@@ -831,9 +979,14 @@ MULTI_ATTR_CLASSES = [
 	TimingTabPage,
 	XXFileTabPage,
 	InfoTabPage,
+	InteriorInfoTabPage,
 	ChannelTabPage,
 	CaptionChannelTabPage,
 	SystemPropertiesTabPage,
+	ConversionTabPage,
+	Conversion1TabPage,
+	Conversion2TabPage,
+	Conversion3TabPage,
 	TargetAudienceTabPage,
 	ClipTabPage,
 ]
