@@ -515,6 +515,8 @@ class LayoutView2(LayoutViewDialog2):
 		self.updateRegionTree()
 
 	def isValidMMNode(self, node):
+		if node == None:
+			return 0
 		from MMTypes import leaftypes
 		if not node.type in leaftypes:
 			return 0
@@ -535,7 +537,6 @@ class LayoutView2(LayoutViewDialog2):
 
 		# append and update media node list
 		self.appendMediaNodeList(appendList)
-#		self.updateMediaNodeList()
 		self.updateFocus(focusobject)
 		
 	def updateFocus(self, object):
@@ -593,27 +594,6 @@ class LayoutView2(LayoutViewDialog2):
 		if self.currentFocus != None:
 			self.focusOnMMNode(self.currentFocus)
 
-			
-	def updateMediaNodeList(self):
-		l = len(self.currentMediaRegionList)
-		if l > 0:					
-			lastMediaRegion, parentRegion = self.currentMediaRegionList[l-1]
-			
-			# display the right viewport
-			if self.currentViewport != parentRegion.getViewport():
-				self.displayViewport(parentRegion.getViewport().getName())
-		else:			
-			# active the region of the last selected media
-			print 'update media node list no media'
-			if self.currentNodeSelected != None:
-				print 'update media node list no media 2'
-				if self.currentNodeSelected.getNodeType() == TYPE_MEDIA:				
-					print 'update media node list no media 3'
-					region = self.currentNodeSelected.getParent()
-					if region != None:
-						print 'update media node list no media 4'
-						self.select(region)
-		
 	def isSelectedRegion(self, regionName):
 		# by default all region selected
 		if self.currentSelectedRegionList == None:
