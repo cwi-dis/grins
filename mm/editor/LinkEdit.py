@@ -7,9 +7,8 @@ import MMAttrdefs
 import AttrEdit
 from ViewDialog import ViewDialog
 import windowinterface
-from MMTypes import *
-
-from MMNode import interiortypes
+import MMTypes
+import features
 
 from Hlinks import ANCHOR1, ANCHOR2, DIR, DIR_1TO2, DIR_2TO1, DIR_2WAY
 dirstr = ['->', '<-', '<->']
@@ -38,8 +37,8 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 		self.right = Struct()
 		self.left.fillfunc = self.fill_all
 		self.right.fillfunc = self.fill_relation
-		self.left.node = None
-		self.right.node = None
+		self.left.nodelist = []
+		self.right.nodelist = []
 		self.left.focus = None
 		self.right.focus = None
 		self.left.hidden = 0
@@ -50,13 +49,13 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 			[('All internal', (self.menu_callback, (self.left, M_ALL))),
 			 ('Dangling',
 			  (self.menu_callback, (self.left, M_DANGLING))),
-			 ('From Structure view selection',
+			 ('Follow global focus',
 			  (self.menu_callback, (self.left, M_BVFOCUS))),
 			 ], self.left,
 			[('All internal', (self.menu_callback, (self.right, M_ALL))),
 			  ('Dangling',
 			   (self.menu_callback, (self.right, M_DANGLING))),
-			  ('From Structure view selection',
+			  ('Follow global focus',
 			   (self.menu_callback, (self.right, M_BVFOCUS))),
 			  ('All related anchors',
 			   (self.menu_callback, (self.right, M_RELATION))),
@@ -113,9 +112,10 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 			self.updateform()
 			LinkBrowserDialog.show(self)
 			self.toplevel.checkviews()
-			self.editmgr.register(self)
+			self.followfocus = []
+			self.editmgr.register(self, want_focus = 1)
 		if node is not None:
-			self.left.node = node
+			self.left.nodelist = [node]
 			self.left.fillfunc = self.fill_node
 			self.left.focus = None
 			self.reloadanchors(self.left, 0)
@@ -129,7 +129,7 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 					if self.left.anchors[i] is anchor:
 						self.left.focus = i
 						break
-				self.right.node = None
+				self.right.nodelist = []
 				self.right.fillfunc = self.fill_relation
 			self.updateform(self.left)
 
@@ -181,8 +181,10 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 		str.anchors = []
 
 	def fill_node(self, str):
-		str.browser_setlabel('Node:')
-		str.anchors = getanchors(str.node, 0)
+		str.browser_setlabel('From focus')
+		str.anchors = []
+		for n in str.nodelist:
+			str.anchors = str.anchors + getanchors(n, 0)
 
 	def fill_all(self, str):
 		str.browser_setlabel('All internal')
@@ -245,9 +247,11 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 		str.focus = None
 		# If the browser is node-bound, check that the node still
 		# exists.
-		if str.node:
-			if str.node.GetRoot() is not self.root:
-				str.node = None
+		if str.nodelist:
+			for i in range(len(str.nodelist)-1,-1,-1):
+				if str.nodelist[i].GetRoot() is not self.root:
+					del str.nodelist[i]
+			if not str.nodelist:
 				str.fillfunc = self.fill_none
 		if hasattr(str, 'anchors'):
 			oldanchors = str.anchors
@@ -345,9 +349,9 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 				str.buttons_setsensitive(1)
 		else:
 			str.buttons_setsensitive(0)
-		if str.node:
-			str.browser_setlabel('Node: ' +
-					MMAttrdefs.getattr(str.node, 'name'))
+##		if str.nodelist and len(str.nodelist) == 1:
+##			str.browser_setlabel('Node: ' +
+##					MMAttrdefs.getattr(str.nodelist[0], 'name'))
 
 	# This function reloads the link browser or makes it invisible
 	def reloadlinks(self):
@@ -474,32 +478,31 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 		self.editmgr.setglobalfocus([node])
 
 	def menu_callback(self, str, ind):
+		if str in self.followfocus:
+			self.followfocus.remove(str)
 		self.addexternalsetsensitive(0)
 		str.hidden = 0
 		if ind == M_ALL:
-			str.node = None
+			str.nodelist = []
 			str.fillfunc = self.fill_all
 		elif ind == M_DANGLING:
-			str.node = None
+			str.nodelist = []
 			str.fillfunc = self.fill_dangling
 		elif ind == M_INTERESTING:
-			str.node = None
+			str.nodelist = []
 			str.fillfunc = self.fill_interesting
 		elif ind == M_BVFOCUS:
-			str.node = self.GetHierarchyViewFocus()
-			if str.node is None:
-				str.fillfunc = self.fill_none
-			else:
-				str.fillfunc = self.fill_node
+			self.followfocus.append(str)
+			self.globalfocuschanged(self.editmgr.getglobalfocus())
 		elif ind == M_RELATION:
-			str.node = None
+			str.nodelist = []
 			str.fillfunc = self.fill_relation
 		elif ind == M_NONE:
-			str.node = None
+			str.nodelist = []
 			str.fillfunc = self.fill_none
 			str.hidden = 1
 		elif ind == M_EXTERNAL:
-			str.node = None
+			str.nodelist = []
 			str.fillfunc = self.fill_external
 			self.addexternalsetsensitive(1)
 #			if self.external:
@@ -515,12 +518,25 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 #					doc = './' + doc
 #				self.external = [(doc, aname)]
 		elif ind == M_KEEP:
-			str.node = None
+			str.nodelist = []
 			str.fillfunc = self.fill_keep
 		else:
 			print 'Unknown menu selection'
 			return
 		self.updateform(str)
+
+	def globalfocuschanged(self, focuslist, update = 1):
+		for str in self.followfocus:
+			str.nodelist = []
+			for n in focuslist:
+				if n.getClassName() == 'MMNode':
+					str.nodelist.append(n)
+			if not str.nodelist:
+				str.fillfunc = self.fill_none
+			else:
+				str.fillfunc = self.fill_node
+			if update:
+				self.updateform(str)
 
 	def add_external_callback(self):
 		windowinterface.InputDialog('URL',
@@ -593,11 +609,6 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 ##		else:
 ##			node = anchor
 		AttrEdit.showattreditor(self.toplevel, anchor)
-
-	def GetHierarchyViewFocus(self):
-		if self.toplevel.hierarchyview is None:
-			return None
-		return self.toplevel.hierarchyview.getfocus()
 
 	# EditMgr interface
 	def transaction(self, type):
@@ -692,11 +703,9 @@ class LinkEditEditor(LinkEditorDialog):
 #
 def getanchors(node, recursive):
 	anchors = []
-	for c in node.GetChildren():
-		if c.GetType() == 'anchor':
-			anchors.append(c)
-		elif recursive:
+	if node.GetType() == 'anchor':
+		anchors.append(node)
+	elif recursive or (features.SHOW_MEDIA_CHILDREN not in features.feature_set and node.GetType() in MMTypes.mediatypes):
+		for c in node.GetChildren():
 			anchors.extend(getanchors(c, recursive))
 	return anchors
-
-# Return a dest-only anchor for a node
