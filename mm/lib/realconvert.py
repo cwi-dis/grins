@@ -225,7 +225,7 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 	try:
 		import dshow
 	except ImportError:
-		return
+		return file
 	b = dshow.CreateGraphBuilder()
 	b.RenderFile(fin)
 	renderer=b.FindFilterByName('Video Renderer')
@@ -237,26 +237,26 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 		f = dshow.CreateFilter('Video Real Media Converter')
 	except:
 		print 'Video real media converter filter is not installed'
-		return
+		return file
 	b.AddFilter(f,'VRMC')
 	b.Render(lastpin)
 	try:
 		rconv=f.QueryIRealConverter()
 	except:
 		print 'Filter does not support interface IRealConverter'
-		return
+		return file
 	try:
 		uk=engine.QueryInterfaceUnknown()
 	except:
 		print 'RMABuildEngine QueryInterfaceUnknown failed'
-		return
+		return file
 	rconv.SetInterface(uk,'IRMABuildEngine')
 
 	try:
 		uk=videopin.QueryInterfaceUnknown()
 	except:
 		print 'RMAInputPin QueryInterfaceUnknown failed'
-		return
+		return file
 	rconv.SetInterface(uk,'IRMAInputPin')
 
 	# find default audio renderer filter
