@@ -2349,7 +2349,6 @@ class MMNode(MMTreeElement):
 		self.computedMimeType = None
 		self.channelType = None
 		self.reinit(recurse = 0)
-		self.animchildren = []
 		self.reset()
 		self._animationData = None
 
@@ -2990,78 +2989,13 @@ class MMNode(MMTreeElement):
 			c = self.ChosenSwitchChild()
 			if c is not None:
 				return c.__checkchild(check_playability)
+		elif self.type == 'animpar':
+			return []
 		else:
 			return [self]
 		return []
 
 	def GetSchedChildren(self, check_playability = 1):
-		if self.type == 'animpar':
-			if not self.animchildren:
-				from fmtfloat import fmtfloat
-				self.animchildren = []
-				context = self.context
-				nodeclass = context.nodeclass
-				context.nodeclass = self.__class__
-				animvals = self.attrdict.get('animvals', [])
-				attrs = {}
-				for t, v in animvals:
-					if v.has_key('top') and v.has_key('left'):
-						v['pos'] = v['top'], v['left']
-						del v['top'], v['left']
-					attrs.update(v)
-				if (attrs.has_key('top') or attrs.has_key('left')) and attrs.has_key('pos'):
-					for t, v in animvals:
-						if v.has_key('pos'):
-							v['top'], v['left'] = v['pos']
-							del v['pos']
-					del attrs['pos']
-				attrs = attrs.keys()
-
-				for attr in attrs:
-					c = context.newnode('animate')
-					c.parent = self
-					self.animchildren.append(c)
-					c.attrdict['endlist'] = [MMSyncArc(c, 'end', srcnode = self, event = 'end', delay = 0)]
-					times = []
-					vals = []
-					for t, v in animvals:
-						if v.has_key(attr):
-							times.append(t)
-							vals.append(v[attr])
-					c.attrdict['keyTimes'] = times
-					values = []
-					if attr == 'pos':
-						for v in vals:
-							values.append('%d %d' % v)
-						c.attrdict['atag'] = 'animateMotion'
-					elif attr == 'bgcolor':
-						for v in vals:
-							import colors
-							if colors.rcolors.has_key(v):
-								values.append(colors.rcolors[v])
-							else:
-								values.append('#%02x%02x%02x' % v)
-						c.attrdict['atag'] = 'animateColor'
-					else:
-						for v in vals:
-							values.append('%d' % v)
-						c.attrdict['atag'] = 'animate'
-					c.attrdict['values'] = ';'.join(values)
-
-					# synthesize a name for the channel
-					chname = 'animate%s' % c.GetUID()
-					c.attrdict['channel'] = chname
-
-					# add to context an internal channel for this node
-					context.addinternalchannels( [(chname, 'animate', c.attrdict), ] )
-					
-				# cleanup
-				for t, v in animvals:
-					if v.has_key('pos'):
-						v['top'], v['left'] = v['pos']
-						del v['pos']
-				context.nodeclass = nodeclass
-			return self.animchildren
 		children = []
 		for c in self.children:
 			children = children + c.__checkchild(check_playability)
@@ -3391,14 +3325,16 @@ class MMNode(MMTreeElement):
 	#
 	# GetAllMediaNodes - Get a list of all nodes may be played with
 	# a renderer channel.
-	def GetAllMediaNodes(self, list = None):
+	# Also: if animateList is not None, fill it with animate nodes
+	def GetAllMediaNodes(self, list = None, animateList = None):
 		if list is None:
 			list = []
 		if self.type in mediatypes:
 			list.append(self)
-			return list
+		elif animateList is not None and self.type in ('animate', 'animpar'):
+			animateList.append(self)
 		for node in self.children:
-			node.GetAllMediaNodes(list)
+			node.GetAllMediaNodes(list, animateList)
 		return list
 
 	#
@@ -3690,7 +3626,7 @@ class MMNode(MMTreeElement):
 				elif seeknode is None:
 					self.wtd_children.append(c)
 					c._FastPruneTree()
-		elif self.type == 'par' or self.type == 'animpar' or self.type in playabletypes:
+		elif self.type == 'par' or self.type in playabletypes:
 			self.wtd_children = self.GetSchedChildren()[:]
 			for c in self.GetSchedChildren():
 				if c.IsAncestorOf(seeknode):
@@ -4846,10 +4782,6 @@ class MMNode(MMTreeElement):
 
 	def commit(self, type):
 ##		print 'MMNode: deleting cached values'
-		for c in self.animchildren:
-			c.parent = None
-			c.Destroy()
-		self.animchildren = []
 		self.editmgr.unregister(self)
 		del self.editmgr
 

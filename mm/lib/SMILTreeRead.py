@@ -1994,8 +1994,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		# synthesize a name for the channel
 		# intrenal for now so no conflicts
-		chname = 'animate%s' % node.GetUID()
-		node.attrdict['channel'] = chname
+#		chname = 'animate%s' % node.GetUID()
+#		node.attrdict['channel'] = chname
 
 
 		# add this node to the tree if it is possible
@@ -2008,19 +2008,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__animatenodes.append((node, self.lineno))
 
 		# add to context an internal channel for this node
-		self.__context.addinternalchannels( [(chname, 'animate', node.attrdict), ] )
+#		self.__context.addinternalchannels( [(chname, 'animate', node.attrdict), ] )
 
-		editMode = attributes.get('editMode')
-		if features.editor and editMode is not None:
-			if editMode == 'animatePar':
-				# A animpar mmnode instance will be created from FixAnimatePar method
-				animatePar = self.__animateParSet.get(self.__container)
-				if animatePar is None:
-					animatePar = []
-					self.__animateParSet[self.__container] = animatePar
-				animatePar.append((node, chname, self.lineno))
+		editGroup = attributes.get('editGroup')
+		if features.editor and editGroup is not None:
+			# A animpar mmnode instance will be created from FixAnimatePar method
+			parset = self.__animateParSet.get(editGroup)
+			if parset is None:
+				animatePar = []
+				self.__animateParSet[editGroup] = animatePar, self.__container
 			else:
-				self.syntax_error('unrecognized %s edit mode' % editMode)
+				animatePar, ct = parset
+			animatePar.append((node, self.lineno))
 		self.__container = node
 				
 	def EndAnimateNode(self):
@@ -2087,7 +2086,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def FixAnimatePar(self):
 		# for each set
-		for container, animatepar in self.__animateParSet.items():
+		for editGroup, (animatepar, container) in self.__animateParSet.items():
 			errorMsg = None
 			keyTimes = None
 			posValues = None
@@ -2095,7 +2094,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			heightValues = None
 			bgcolorValues = None
 			end = None
-			for node, chname, lineno in animatepar:
+			for node, lineno in animatepar:
 				attributes = node.attrdict
 				
 				tagName = attributes.get('atag')
@@ -2143,7 +2142,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							break
 						if len(pos) != keyTimesLen:
 							# invalid size
-							errorMsg = 'imcompatible values number'
+							errorMsg = 'incompatible values number'
 							break
 						posValues = pos
 					elif tagName == 'animateColor' and attributes.get('attributeName') == 'backgroundColor':
@@ -2158,7 +2157,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							break
 						if len(bgcolor) != keyTimesLen:
 							# invalid size
-							errorMsg = 'imcompatible values number'
+							errorMsg = 'incompatible values number'
 							break
 						bgcolorValues = bgcolor
 					elif tagName == 'animate':
@@ -2175,7 +2174,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 								break
 							if len(width) != keyTimesLen:
 								# invalid size
-								errorMsg = 'imcompatible values number'
+								errorMsg = 'incompatible values number'
 								break
 							widthValues = width
 						elif attributeName == 'height':							
@@ -2190,7 +2189,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 								break
 							if len(height) != keyTimesLen:
 								# invalid size
-								errorMsg = 'imcompatible values number'
+								errorMsg = 'incompatible values number'
 								break
 							heightValues = height
 						else:
@@ -2210,12 +2209,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				# XXX to do
 
 			if errorMsg:
-				self.syntax_error('edit mode value not compatible with this node:%s' % errorMsg, lineno)				
+				self.syntax_error('can not edit this node as an group of animate nodes:%s' % errorMsg, lineno)
 			else:
 				ctx = self.__context
 				# transfert the set of animate nodes to a animpar node 
-				for node, chname, lineno in animatepar:
-					ctx._delinternalchannel(chname)
+				for node, lineno in animatepar:
 					node.Extract()
 
 				# create the node

@@ -2340,11 +2340,13 @@ class SMILWriter(SMIL):
 		attrlist.append(('values', ';'.join(values)))
 		attrlist.append(('keyTimes', ';'.join(times)))
 		attrlist.append(('fill', 'freeze'))
-		attrlist.append(('%s:editMode' % NSGRiNSprefix, 'animatePar'))
 
-		# duration
 		# for now, the target node can only be the parent node
 		targetNode = node.GetParent()
+		
+		attrlist.append(('%s:editGroup' % NSGRiNSprefix, targetNode.GetUID()))
+
+		# duration
 		duration = targetNode.GetDuration()
 		if duration is not None and duration >= 0:
 			dur = fmtfloat(duration, 's')
@@ -2393,6 +2395,8 @@ class SMILWriter(SMIL):
 				self.writetag(tag, attrlist)
 
 	def writeanimatenode(self, node):
+		if node.attrdict.get('internal'):
+			return
 		attrlist = []
 		tag = node.GetAttrDict().get('atag')
 		attributes = self.attributes.get(tag, {})
