@@ -23,7 +23,8 @@ class ImageLib:
 	# Delete resources
 	def deltemp(self):
 		for img in self._imglist:
-			self.lib.image_delete(img)
+			if img>=0:
+				self.lib.image_delete(img)
 		self._imglist=[]
 		self._transpdict = {}
 
