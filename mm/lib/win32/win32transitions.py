@@ -178,6 +178,7 @@ class TransitionEngine:
 				self.settransitionvalue(self.__startprogress + self.__transperiod * t_sec)
 			except ddraw.error, arg:
 				print arg			
+		win32api.Sleep(0)
 				
 	
 	def __register_for_timeslices(self):

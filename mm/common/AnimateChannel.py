@@ -21,6 +21,7 @@ import Animators
 
 # for timer support
 import windowinterface
+import win32api
 
 debug = 0
 USE_IDLE_PROC=hasattr(windowinterface, 'setidleproc')
@@ -225,6 +226,7 @@ class AnimateChannel(Channel.ChannelAsync):
 				self.__animate()
 				if not USE_IDLE_PROC:
 					self.__register_for_timeslices()
+			win32api.Sleep(0)
 			
 	def __register_for_timeslices(self):
 		if self.__fiber_id is None:
