@@ -970,9 +970,6 @@ DirectDrawSurface_SetColorKey(DirectDrawSurfaceObject *self, PyObject *args)
 	return Py_None;
 }
 
-
-
-
 static WORD LowBitPos(DWORD dword)
 	{
 	DWORD test=1;
@@ -1276,19 +1273,10 @@ HRESULT BltBlend24(IDirectDrawSurface *surf,
 		for (DWORD col=0;col<w;col++)
 			{
 			// apply transform on pixel: *surfpixel
-			DWORD r1 = (*(DWORD*)surfpixel1 & desc1.ddpfPixelFormat.dwRBitMask) >> loREDbit;
-			DWORD g1 = (*(DWORD*)surfpixel1 & desc1.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
-			DWORD b1 = (*(DWORD*)surfpixel1++ & desc1.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
-			
-			DWORD r2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwRBitMask) >> loREDbit;
-			DWORD g2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
-			DWORD b2 = (*(DWORD*)surfpixel2++ & desc2.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
-
-			DWORD r = (DWORD)blend(weight, r1, r2);
-			DWORD g = (DWORD)blend(weight, g1, g2);
-			DWORD b = (DWORD)blend(weight, b1, b2);
-
-			*(DWORD*)surfpixel++ = (r << loREDbit) | (g << loGREENbit) | (b << loBLUEbit);
+			surfpixel->rgbtRed = (BYTE)blend(weight, surfpixel1->rgbtRed, surfpixel2->rgbtRed);
+			surfpixel->rgbtGreen = (BYTE)blend(weight, surfpixel1->rgbtGreen, surfpixel2->rgbtGreen);
+			surfpixel->rgbtBlue = (BYTE)blend(weight, surfpixel1->rgbtBlue, surfpixel2->rgbtBlue);
+			surfpixel++;surfpixel1++;surfpixel2++;
 			}
 		}
 	surf->Unlock(0);
@@ -1784,7 +1772,10 @@ DirectDrawSurface_Blt_RGB24_On_RGB24(DirectDrawSurfaceObject *self, PyObject *ar
 		RGBTRIPLE* surfpixel=(RGBTRIPLE*)((BYTE*)desc.lpSurface+row*desc.lPitch);
 		for (DWORD col=0;col<w;col++,p++)
 			{
-			*(DWORD*)surfpixel++ = (p->rgbtRed << loREDbit) | (p->rgbtGreen << loGREENbit) | (p->rgbtBlue << loBLUEbit);
+			surfpixel->rgbtRed = p->rgbtRed;
+			surfpixel->rgbtGreen = p->rgbtGreen;
+			surfpixel->rgbtRed = p->rgbtRed;
+			surfpixel++;
 			}
 		}
 	Py_END_ALLOW_THREADS	
