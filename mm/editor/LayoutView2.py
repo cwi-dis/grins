@@ -238,7 +238,7 @@ class MediaRegion(Region):
 		# note this step is not done during the parsing in order to maintains all constraint information
 		# at some point we'll have to do the same thing for regions
 		channel = self.mmnode.GetChannel()
-		wingeom = self._ctx._getwingeom(channel, self.mmnode)
+		wingeom = self._nodeRef.getPxGeom()
 
 		self.ctype = self.mmnode.GetChannelType()
 
@@ -1883,93 +1883,3 @@ class LayoutView2(LayoutViewDialog2):
 		elif ctrlName == 'HideMedia':
 			self.__hideMedia()
 
-# ################################################################################################
-# for now, copied from channel
-# to do: when all mix constraints will be managed fully, we'll can (move / suppress) this code
-# ################################################################################################
-
-	def _getParentChannel(self, channel):
-		# actualy the layout channel is directly the parent channel
-		cname = channel.attrdict.get('base_window')
-		if not cname:
-			return None
-		return self.context.channeldict.get(cname)
-
-	# get the parent window geometry in pixel
-	def _getWingeomInPixel(self, layoutchannel):
-		parentChannel = self._getParentChannel(layoutchannel)
-		
-		if parentChannel == None:
-			# top window
-			size = layoutchannel._attrdict.get('winsize', (50, 50))
-			w,h = size
-			return 0,0,w,h
-		
-		units = layoutchannel.attrdict['units']
-		import windowinterface
-		if units == windowinterface.UNIT_PXL:
-			# The size in smil source is specified in pixel, we don't need to 
-			# convert it and return directly it
-			return layoutchannel.attrdict['base_winoff']
-		if layoutchannel._wingeomInPixel != None:
-			# The size is expressed in pourcent in smil source document, but
-			# the size in pixel is already pre-calculate.
-			return layoutchannel._wingeomInPixel
-
-		# The size is expressed in pourcent in smil source document, we don't determinate 
-		# yet its size in pixel. For this, we need to know the parent size in pixel
-		
-		parentChannel = self._getParentChannel(layoutchannel)
-		parentGeomInPixel = parentChannel._getWingeomInPixel()
-		
-		x,y,w,h = layoutchannel._attrdict['base_winoff']
-		px,py,pw,ph = parentGeomInPixel
-		
-		# we save the current size in pixel for the next request
-		layoutchannel._wingeomInPixel = x*pw, y*ph, w*pw, h*ph
-		
-		return layoutchannel._wingeomInPixel
-
-	# get the sub channel geom according to sub-regions
-	# return in pixel value
-	def _getwingeom(self, channel, node):
-		if settings.activeFullSmilCss:
-			regGeom = node.getPxGeom()
-			return regGeom
-		subreg_left = node.GetAttrDef('left', 0)
-		subreg_right = node.GetAttrDef('right', 0)
-		subreg_top = node.GetAttrDef('top', 0)
-		subreg_bottom = node.GetAttrDef('bottom', 0)
-
-		layoutchannel = self._getParentChannel(channel)
-		reg_left, reg_top, reg_width, reg_height = self._getWingeomInPixel(layoutchannel)
-
-		# translate in pixel
-		if type(subreg_left) == type(0.0):
-			subreg_left = int(reg_width*subreg_left)
-		if type(subreg_top) == type(0.0):
-			subreg_top = int(reg_height*subreg_top)
-		if type(subreg_right) == type(0.0):
-			subreg_right = int(reg_width*subreg_right)
-		if type(subreg_bottom) == type(0.0):
-			subreg_bottom = int(reg_height*subreg_bottom)
-
-		# determinate subregion height and width
-		subreg_height = reg_height-subreg_top-subreg_bottom
-		subreg_width = reg_width-subreg_left-subreg_right
-		# print 'sub region height =',subreg_height
-		# print 'sub region width = ',subreg_width
-
-		# allow only no null or negative value
-		if subreg_height <= 0:
-			subreg_height = 1
-		if subreg_width <= 0:
-			subreg_width = 1
-
-		node.__subreg_height = subreg_height
-		node.__subreg_width = subreg_width
-		node.__subreg_top = subreg_top
-		node.__subreg_left = subreg_left
-
-		# print subreg_left, subreg_top, subreg_width, subreg_height
-		return subreg_left, subreg_top, subreg_width, subreg_height
