@@ -31,11 +31,13 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Save As...', (kMenuOptionModifier, 'S'), SAVE_AS),
 		(FLAG_ALL, ENTRY, 'Revert to saved', None, RESTORE),
 		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Publish for G2...', None, EXPORT_G2),
-		(FLAG_ALL, ENTRY, 'Publish for G2 and Upload...', None, UPLOAD_G2),
-		(FLAG_ALL, SEP,),
+		(FLAG_QT, ENTRY, 'Publish for QuickTime...', None, EXPORT_QT),
+		(FLAG_QT, ENTRY, 'Publish for QuickTime and upload...', None, UPLOAD_QT),
+		(FLAG_G2, ENTRY, 'Publish for G2...', None, EXPORT_G2),
+		(FLAG_G2, ENTRY, 'Publish for G2 and Upload...', None, UPLOAD_G2),
+		(FLAG_QT|FLAG_G2, SEP,),
 		(FLAG_ALL, ENTRY, 'Document Properties...', (kMenuOptionModifier, 'A'), PROPERTIES),
-		(FLAG_ALL, SEP,),
+		(FLAG_DBG, SEP,),
 		(FLAG_DBG, CASCADE, 'Debug', (
 			(FLAG_ALL, ENTRY, 'Dump scheduler data', None, SCHEDDUMP),
 			(FLAG_ALL, TOGGLE, ('Enable call tracing','Disable call tracing'), None, TRACE),
@@ -43,7 +45,7 @@ MENUBAR=(
 			(FLAG_ALL, ENTRY, 'Abort', None, CRASH),
 			(FLAG_ALL, ENTRY, 'Show log/debug window', None, CONSOLE),
 			)),
-		(FLAG_DBG, SEP,),
+		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Check for GRiNS update...', None, CHECKVERSION),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Quit', 'Q', EXIT),
@@ -81,16 +83,21 @@ MENUBAR=(
 			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_IMAGE),
 			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_IMAGE),
 		)),
-		(FLAG_ALL, CASCADE, 'Slideshow node', (
-			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_SLIDESHOW),
-			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SLIDESHOW),
-			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_SLIDESHOW),
+		(FLAG_G2, CASCADE, 'Slideshow node', (
+			(FLAG_G2, ENTRY, 'Before', None, NEW_BEFORE_SLIDESHOW),
+			(FLAG_G2, ENTRY, 'After', None, NEW_AFTER_SLIDESHOW),
+			(FLAG_G2, ENTRY, 'Within', None, NEW_UNDER_SLIDESHOW),
 		)),
 		(FLAG_ALL, CASCADE, 'Text node', (
 			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_TEXT),
 			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_TEXT),
 			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_TEXT),
 		)),
+		(FLAG_SMIL_1_0, CASCADE, 'HTML node', (
+			(FLAG_SMIL_1_0, ENTRY, 'Before', None, NEW_BEFORE_HTML),
+			(FLAG_SMIL_1_0, ENTRY, 'After', None, NEW_AFTER_HTML),
+			(FLAG_SMIL_1_0, ENTRY, 'Within', None, NEW_UNDER_HTML),
+			)),
 		(FLAG_ALL, CASCADE, 'Sound node', (
 			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_SOUND),
 			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SOUND),
@@ -166,7 +173,7 @@ MENUBAR=(
 		(FLAG_PRO, TOGGLE, 'Bandwidth Usage Strip', None, TOGGLE_BWSTRIP),
 		(FLAG_ALL, ENTRY, 'Check Bandwidth', None, COMPUTE_BANDWIDTH),
 		(FLAG_PRO, TOGGLE, 'Show Playable', None, PLAYABLE),
-		(FLAG_CMIF, TOGGLE, 'Show Durations', None, TIMESCALE),
+##		(FLAG_CMIF, TOGGLE, 'Show Durations', None, TIMESCALE),
 		(FLAG_CMIF, SEP,),
 		(FLAG_CMIF, TOGGLE, 'Timeline view follows player', None, SYNCCV),
 		(FLAG_CMIF, CASCADE, 'Minidoc navigation', (
@@ -214,14 +221,18 @@ POPUP_HVIEW_LEAF = (
 				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_IMAGE),
 				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_IMAGE),
 			)),
-			(FLAG_ALL, CASCADE, 'Slideshow node', (
-				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_SLIDESHOW),
-				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SLIDESHOW),
+			(FLAG_G2, CASCADE, 'Slideshow node', (
+				(FLAG_G2, ENTRY, 'Before', None, NEW_BEFORE_SLIDESHOW),
+				(FLAG_G2, ENTRY, 'After', None, NEW_AFTER_SLIDESHOW),
 			)),
 			(FLAG_ALL, CASCADE, 'Text node', (
 				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_TEXT),
 				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_TEXT),
 			)),
+			(FLAG_SMIL_1_0, CASCADE, 'HTML node', (
+				(FLAG_SMIL_1_0, ENTRY, 'Before', None, NEW_BEFORE_HTML),
+				(FLAG_SMIL_1_0, ENTRY, 'After', None, NEW_AFTER_HTML),
+				)),
 			(FLAG_ALL, CASCADE, 'Sound node', (
 				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_SOUND),
 				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SOUND),
@@ -264,19 +275,19 @@ POPUP_HVIEW_LEAF = (
 )
 
 POPUP_HVIEW_SLIDE = (
-		(FLAG_ALL, ENTRY, 'Cut', 'X', CUT),
-		(FLAG_ALL, ENTRY, 'Copy', 'C', COPY),
-		(FLAG_ALL, ENTRY, 'Paste', None, PASTE_AFTER),
-		(FLAG_ALL, ENTRY, 'Paste Before', None, PASTE_BEFORE),
-		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Delete', None, DELETE),
-		(FLAG_ALL, CASCADE, 'Insert Image', (
-			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_IMAGE),
-			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_IMAGE),
+		(FLAG_G2, ENTRY, 'Cut', 'X', CUT),
+		(FLAG_G2, ENTRY, 'Copy', 'C', COPY),
+		(FLAG_G2, ENTRY, 'Paste', None, PASTE_AFTER),
+		(FLAG_G2, ENTRY, 'Paste Before', None, PASTE_BEFORE),
+		(FLAG_G2, SEP,),
+		(FLAG_G2, ENTRY, 'Delete', None, DELETE),
+		(FLAG_G2, CASCADE, 'Insert Image', (
+			(FLAG_G2, ENTRY, 'Before', None, NEW_BEFORE_IMAGE),
+			(FLAG_G2, ENTRY, 'After', None, NEW_AFTER_IMAGE),
 		)),
-		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Properties...', 'A', ATTRIBUTES),
-		(FLAG_ALL, ENTRY, 'Edit Content', 'E', CONTENT),
+		(FLAG_G2, SEP,),
+		(FLAG_G2, ENTRY, 'Properties...', 'A', ATTRIBUTES),
+		(FLAG_G2, ENTRY, 'Edit Content', 'E', CONTENT),
 )
 
 POPUP_HVIEW_STRUCTURE = (
@@ -297,16 +308,21 @@ POPUP_HVIEW_STRUCTURE = (
 				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_IMAGE),
 				(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_IMAGE),
 			)),
-			(FLAG_ALL, CASCADE, 'Slideshow node', (
-				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_SLIDESHOW),
-				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SLIDESHOW),
-				(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_SLIDESHOW),
+			(FLAG_G2, CASCADE, 'Slideshow node', (
+				(FLAG_G2, ENTRY, 'Before', None, NEW_BEFORE_SLIDESHOW),
+				(FLAG_G2, ENTRY, 'After', None, NEW_AFTER_SLIDESHOW),
+				(FLAG_G2, ENTRY, 'Within', None, NEW_UNDER_SLIDESHOW),
 			)),
 			(FLAG_ALL, CASCADE, 'Text node', (
 				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_TEXT),
 				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_TEXT),
 				(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_TEXT),
 			)),
+			(FLAG_SMIL_1_0, CASCADE, 'HTML node', (
+				(FLAG_SMIL_1_0, ENTRY, 'Before', None, NEW_BEFORE_HTML),
+				(FLAG_SMIL_1_0, ENTRY, 'After', None, NEW_AFTER_HTML),
+				(FLAG_SMIL_1_0, ENTRY, 'Within', None, NEW_UNDER_HTML),
+				)),
 			(FLAG_ALL, CASCADE, 'Sound node', (
 				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_SOUND),
 				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SOUND),
@@ -362,6 +378,16 @@ POPUP_CVIEW_NONE = (
 		(FLAG_ALL, ENTRY, 'New Channel...', 'M', NEW_CHANNEL),
 )
 
+POPUP_CVIEW_BWSTRIP = (
+		(FLAG_ALL, ENTRY, "14k4", None, BANDWIDTH_14K4),
+		(FLAG_ALL, ENTRY, "28k8", None, BANDWIDTH_28K8),
+		(FLAG_ALL, ENTRY, "ISDN", None, BANDWIDTH_ISDN),
+		(FLAG_ALL, ENTRY, "T1 (1 Mbps)", None, BANDWIDTH_T1),
+		(FLAG_ALL, ENTRY, "LAN (10 Mbps)", None, BANDWIDTH_LAN),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, "Other...", None, BANDWIDTH_OTHER),
+		)
+
 POPUP_CVIEW_CHANNEL = (
 		(FLAG_ALL, ENTRY, 'Properties...', None, ATTRIBUTES),
 		(FLAG_ALL, SEP,),
@@ -391,16 +417,6 @@ POPUP_CVIEW_SYNCARC = (
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Delete', None, DELETE),
 )
-
-POPUP_CVIEW_BWSTRIP = (
-		(FLAG_ALL, ENTRY, "14k4", None, BANDWIDTH_14K4),
-		(FLAG_ALL, ENTRY, "28k8", None, BANDWIDTH_28K8),
-		(FLAG_ALL, ENTRY, "ISDN", None, BANDWIDTH_ISDN),
-		(FLAG_ALL, ENTRY, "T1 (1 Mbps)", None, BANDWIDTH_T1),
-		(FLAG_ALL, ENTRY, "LAN (10 Mbps)", None, BANDWIDTH_LAN),
-		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, "Other...", None, BANDWIDTH_OTHER),
-		)
 
 #
 # Adornments
