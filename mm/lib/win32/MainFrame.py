@@ -159,7 +159,11 @@ ID_TOOLBAR_COMBO = grinsRC._APS_NEXT_COMMAND_VALUE + 1000
 TOOLBAR_COMBO_WIDTH = 144
 TOOLBAR_COMBO_HEIGHT = 10*18 # drop down height
 
-###########################################################
+# show a play seek control for player
+# when doc duration is resolved
+SHOW_PLAYER_SEEK = 0
+
+#########################################################
 from pywinlib.mfc import window, docview
 
 class GRiNSToolbar(window.Wnd):
@@ -580,6 +584,12 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 			self.RecalcLayout()
 		if not __main__.toplevel.is_embedded():		
 			self.ActivateFrame(win32con.SW_SHOW)
+		if IsPlayer and SHOW_PLAYER_SEEK:
+			ctx = self._cmifdoc.player.userplayroot.GetContext()
+			fulldur = self._cmifdoc.player.userplayroot.calcfullduration(ctx)
+			if fulldur>0:
+				self.__slider = win32dialog.SeekDialog('Seek', self)
+				self.__slider.setRange(0, fulldur)
 
 	def setEditorDocumentMenu(self,flag):
 		if USE_NODOC_MENUBAR:
