@@ -6,6 +6,7 @@ __version__ = "$Id$"
 from MMExc import *		# Exceptions
 from MMNode import alltypes, leaftypes, interiortypes
 import MMCache
+import os
 
 
 # Write a node to a CMF file, given by filename
