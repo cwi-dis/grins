@@ -1352,6 +1352,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 		# update the undo/redo 
 		self.update_undocommandlist()
+
+		# mark the document as changed
+		# XXX if the document is restored to a initial state, this flag should be cleared
+		self.changed = 1
 		
 	def do_read_it_from_string(self, text):
 		import SMILTreeRead
