@@ -40,13 +40,13 @@ def fitstring(s, sizefunc, length):
 	if p >= 0:
 		return p
 	return l
-
+## XXXX Routine seems unused:
 # In this case the string *must* fit.
-def mustfitstring(s, sizefunc, length):
-	l = fitstring(s, sizefunc, length)
-	if sizefunc(s[:l]) <= length:
-		return l
-	raise nofit_error, (s, length)
+##def mustfitstring(s, sizefunc, length):
+##	l = fitstring(s, sizefunc, length)
+##	if sizefunc(s[:l]) <= length:
+##		return l
+##	raise nofit_error, (s, length)
 
 def between(v, x0, x1):
 	return ((x0 <= v and v <= x1) or (x1 <= v and v <= x0))

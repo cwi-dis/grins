@@ -71,21 +71,22 @@ class ImageWindow(ChannelWindow):
 	def setcolors(self):
 		if self.node:
 			self.bgcolor = MMAttrdefs.getattr(self.node, 'bgcolor')
-			self.fgcolor = MMAttrdefs.getattr(self.node, 'fgcolor')
+##			self.fgcolor = MMAttrdefs.getattr(self.node, 'fgcolor')
 			self.hicolor = MMAttrdefs.getattr(self.node, 'hicolor')
 			return
 		if self.attrdict.has_key('bgcolor'):
 			self.bgcolor = self.attrdict['bgcolor']
 		else:
 			self.bgcolor = 255, 255, 255
-		if self.attrdict.has_key('fgcolor'):
-			self.fgcolor = self.attrdict['fgcolor']
-		else:
-			self.fgcolor = 0, 0, 0
+##		if self.attrdict.has_key('fgcolor'):
+##			self.fgcolor = self.attrdict['fgcolor']
+##		else:
+##			self.fgcolor = 0, 0, 0
 		if self.attrdict.has_key('hicolor'):
 			self.hicolor = self.attrdict['hicolor']
 		else:
 			self.hicolor = 255, 0, 0
+		self.fgcolor = self.hicolor
 	#
 	def getmouse(self):
 		mx, my = fl.get_mouse()
@@ -281,7 +282,8 @@ class ImageChannel(Channel):
 	#
 	chan_attrs = ['base_window', 'base_winoff']
 	node_attrs = ['file', 'duration', 'scale', \
-		 'bgcolor', 'fgcolor', 'hicolor']
+		 'bgcolor', 'hicolor']
+##		 'bgcolor', 'fgcolor', 'hicolor']
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, name, attrdict, player)
