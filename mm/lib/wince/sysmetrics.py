@@ -7,8 +7,14 @@ import wincon
 from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 
 def GetSystemMetrics():
-	cxframe = winuser.GetSystemMetrics(wincon.SM_CXFRAME)
-	cyframe = winuser.GetSystemMetrics(wincon.SM_CYFRAME)
+	try:
+		cxframe = winuser.GetSystemMetrics(wincon.SM_CXFRAME)
+	except:
+		cxframe = 0
+	try:
+		cyframe = winuser.GetSystemMetrics(wincon.SM_CYFRAME)
+	except:
+		cyframe = 0
 	cxborder = winuser.GetSystemMetrics(wincon.SM_CXBORDER)
 	cyborder = winuser.GetSystemMetrics(wincon.SM_CYBORDER)
 	cycaption = winuser.GetSystemMetrics(wincon.SM_CYCAPTION)
