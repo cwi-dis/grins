@@ -616,7 +616,7 @@ class Scheduler(scheduler):
 	def runone(self, (sctx, todo, dummy)):
 		if not sctx.active:
 			raise error, 'Scheduler: running from finished context'
-##		print 'exec: ', SR.ev2string(todo)
+		print 'exec: ', SR.ev2string(todo)
 		action, arg = todo
 		if action == SR.PLAY:
 			self.do_play(sctx, arg)

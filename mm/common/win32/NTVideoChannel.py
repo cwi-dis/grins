@@ -164,12 +164,12 @@ class VideoChannel(ChannelWindow):
 		if debug:print 'VideoChannel.play('+`self`+','+`node`+')'
 		self.play_0(node)
 	
-		if debug: print 'self._is_shown',self._is_shown,'node.IsPlayable()',node.IsPlayable(),'self.syncplay',self.syncplay
-		if not self._is_shown or not node.IsPlayable() or not self.window:
+		if debug: print 'self._is_shown',self._is_shown,'node.ShouldPlay()',node.ShouldPlay(),'self.syncplay',self.syncplay
+		if not self._is_shown or not node.ShouldPlay() or not self.window:
 			self.play_1()
 			return
 
-		if self._is_shown and node.IsPlayable() and self.window:
+		if self._is_shown and node.ShouldPlay() and self.window:
 			self.check_popup()
 			self.set_arm_display()
 			if not self.syncplay:
