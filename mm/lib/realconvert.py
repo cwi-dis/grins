@@ -172,3 +172,31 @@ def converttextfile(u, dstdir, file, node):
 	f.write('</window>\n')
 	f.close()
 	return file
+
+def convertvideofile(u, dstdir, file, node):
+	file = os.path.splitext(file)[0] + '.rm'
+	fullpath = os.path.join(dstdir, file)
+	try:
+		import dshow
+	except ImportError:
+		return
+	b = dshow.CreateGraphBuilder()
+	b.RenderFile(u)
+	renderer=b.FindFilterByName('Video Renderer')
+	enumpins=renderer.EnumPins()
+	pin=enumpins.Next()
+	lastpin=pin.ConnectedTo()
+	b.RemoveFilter(renderer)
+	try:
+		f = dshow.CreateFilter('Video Real Media Converter')
+	except:
+		print 'Video real media converter filter is not installed'
+		return
+	b.AddFilter(f,'VRMC')
+	sink = f.QueryIFileSinkFilter()
+	sink.SetFileName(fullpath)
+	b.Render(lastpin)
+	mc = b.QueryIMediaControl()
+	mc.Run()
+	b.WaitForCompletion()
+	mc.Stop()
