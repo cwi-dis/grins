@@ -49,6 +49,7 @@ class stdio_mpeg_input_stream : public mpeg_input_stream
 	virtual size_t tell() const { return m_current_byte;}
 	virtual bool is_eof() const { return m_current_byte >= m_total_bytes;}
 	virtual bool is_bof() const { return m_current_byte == 0;}
+	virtual const TCHAR *get_pathname() const { return m_path.c_str();}
 
 	virtual void close()
 		{
@@ -96,7 +97,7 @@ class stdio_mpeg_input_stream : public mpeg_input_stream
 
 	virtual bool seek_relative(long bytes)
 		{
-		if(bytes<0 && size_t(-bytes) > m_current_byte)
+		if(bytes<0 && -bytes > m_current_byte)
 			{
 			m_current_byte = 0;
 			fseek(m_fd, 0, SEEK_SET);
