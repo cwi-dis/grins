@@ -673,6 +673,10 @@ SOURCE=.\M_MediaChannel.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_MediaRead.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_MenuTemplate.c
 # End Source File
 # Begin Source File
@@ -1002,6 +1006,14 @@ SOURCE=.\M_pywinlib__mfc__window.c
 # Begin Source File
 
 SOURCE=.\M_Queue.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_QuickRead.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_QuickWrite.c
 # End Source File
 # Begin Source File
 

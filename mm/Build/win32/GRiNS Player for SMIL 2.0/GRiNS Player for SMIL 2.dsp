@@ -866,6 +866,10 @@ SOURCE=.\M_Queue.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_QuickRead.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_quopri.c
 # End Source File
 # Begin Source File
