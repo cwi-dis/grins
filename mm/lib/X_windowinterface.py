@@ -130,7 +130,7 @@ class _Toplevel:
 
 class _Window:
 	def __init__(self, is_toplevel, parent, x, y, w, h, title, defcmap):
-		if debug: print '_Window.init() --> '+`self`
+##		if debug: print '_Window.init() --> '+`self`
 		self._parent_window = parent
 		if not is_toplevel:
 			return
@@ -416,6 +416,8 @@ class _Window:
 
 	def _resize_callback(self, *rest):
 		if debug: print `self`+'._resize_callback()'
+		if hasattr(self, '_resizing'):
+			return # XXX Hack for HtmlWidget :-(
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
 		val = self._form.GetValues(['width', 'height'])
@@ -425,8 +427,10 @@ class _Window:
 		self._height = val['height']
 		for displist in self._displaylists[:]:
 			displist.close()
+		self._resizing = 1
 		for win in self._subwindows:
 			win._do_resize()
+		del self._resizing
 		enterevent(self, ResizeWindow, None)
 
 	def newwindow(self, *coordinates):
