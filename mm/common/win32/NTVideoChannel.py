@@ -148,7 +148,8 @@ class VideoChannel(ChannelWindow):
 		except IOError:
 			self._builders[node]=None
 			return 1	
-		fn = self.toabs(fn)
+##		fn = self.toabs(fn)
+		fn = MMurl.canonURL(fn)
 		builder=DirectShowSdk.CreateGraphBuilder()
 		if builder:
 			if not builder.RenderFile(fn):
@@ -388,17 +389,6 @@ class VideoChannel(ChannelWindow):
 
 
 	################################# general url stuff
-	def islocal(self,url):
-		utype, url = MMurl.splittype(url)
-		host, url = MMurl.splithost(url)
-		return not utype and not host
-
 	def toabs(self,url):
-		if not self.islocal(url):
-			return url
-		filename=MMurl.url2pathname(MMurl.splithost(url)[1])
-		if os.path.isfile(filename):
-			if not os.path.isabs(filename):
-				filename=os.path.join(os.getcwd(),filename)
-				filename=ntpath.normpath(filename)	
-		return filename
+		import Help_
+		return Help_.toabs(url)
