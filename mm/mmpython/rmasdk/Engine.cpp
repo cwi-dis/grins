@@ -249,7 +249,9 @@ EngineObject::EventOccurred(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "O&", PyMac_GetEventRecord, &ev))
 		return NULL;
 	pn_event.event = ev.what;
+	pn_event.window = 0;
 	pn_event.param1 = &ev;
+	pn_event.param2 = 0;
 #else
 	/* What _may_ work on unix is passing a zeroed struct. See the main program of
 	** the minimal playback engine for details.
