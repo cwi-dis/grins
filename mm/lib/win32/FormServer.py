@@ -14,21 +14,21 @@ forms implementation and modules that use them.
 
 # forms served
 from AttrEditForm import AttrEditForm
-from AnchorEditForm import AnchorEditForm
-from NodeInfoForm import NodeInfoForm
-from ArcInfoForm import ArcInfoForm
 
 appform={
-	0:{'cmd':-1,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm},
-	1:{'cmd':-1,'title':'Anchor Editor','id':'anchor_edit','obj':None,'class':AnchorEditForm,'freezesize':1},
-	2:{'cmd':-1,'title':'NodeInfo Editor','id':'node_info','obj':None,'class':NodeInfoForm,'freezesize':1},
-	3:{'cmd':-1,'title':'ArcInfo Editor','id':'arc_info','obj':None,'class':ArcInfoForm,'freezesize':1},
+	'attr_edit':{'cmd':-1,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm},
 	}
 
 import settings
 if settings.get('use_tab_attr_editor'):
-	appform[0]=	{'cmd':-1,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm,'freezesize':1}
-
+	appform['attr_edit']={'cmd':-1,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm,'freezesize':1}
+if not settings.get('lightweight'):
+	from NodeInfoForm import NodeInfoForm
+	from AnchorEditForm import AnchorEditForm
+	from ArcInfoForm import ArcInfoForm
+	appform['node_info']={'cmd':-1,'title':'NodeInfo Editor','id':'node_info','obj':None,'class':NodeInfoForm,'freezesize':1}
+	appform['anchor_edit']={'cmd':-1,'title':'Anchor Editor','id':'anchor_edit','obj':None,'class':AnchorEditForm,'freezesize':1}
+	appform['arc_info']={'cmd':-1,'title':'ArcInfo Editor','id':'arc_info','obj':None,'class':ArcInfoForm,'freezesize':1}
 
 # interface needed for FormServer contructor argument
 class IFormServerContext:
@@ -143,42 +143,32 @@ class FormServer:
 
 	# Returns a new form object
 	def newformobj(self,strid):
-		formno=self.getformno(strid)
-		if appform[formno].has_key('hosted') and appform[formno]['hosted']:
-			formclass=appform[formno]['class']
+		if appform[strid].get('hosted'):
+			formclass=appform[strid]['class']
 			return formclass()
 		else:
-			return self._newformobj(formno)
+			return self._newformobj(strid)
 
 	# Show the form passed as argument
 	def showform(self,form,strid):
 		if not form or not form._obj_:
 			return
-		formno=self.getformno(strid)
-		self.frameform(form,formno)
+		self.frameform(form,strid)
 
 	# Create the form with string id
 	def createform(self,strid):
-		formno=self.getformno(strid)
-		form=self._newformobj(formno)
-		self.frameform(form,formno)
+		form=self._newformobj(strid)
+		self.frameform(form,strid)
 		return form
 
-	# Create a new form with formno
-	def _newformobj(self,formno):
-		formclass=appform[formno]['class'] 
+	# Create a new form with strid
+	def _newformobj(self,strid):
+		formclass=appform[strid]['class'] 
 		return formclass(self._context.getdoc())
 
-	# Returns the form number from the string id
-	def getformno(self,strid):
-		for formno in appform.keys():
-			if appform[formno]['id']==strid:
-				return formno
-		raise error,'undefined requested form'
-	
 	# Create a ChildFrame to host this view
-	def frameform(self,form,formno):
-		freezeSize=appform[formno].get('freezesize', 0)
+	def frameform(self,form,strid):
+		freezeSize=appform[strid].get('freezesize', 0)
 		f=ChildFrame(form,freezeSize)
 		rc=self._context.getPrefRect()
 		f.Create(form._title,rc,self._context,0)
