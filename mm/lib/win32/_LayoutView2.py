@@ -431,11 +431,23 @@ class TreeManager:
 ###########################
 debugPreview = 0
 
-class LayoutManager(window.Wnd, win32window.MSDrawContext):
+#LayoutManagerBase = window.Wnd
+LayoutManagerBase = docview.ScrollView
+AUTO_SCALE = 0
+
+class LayoutManager(LayoutManagerBase, win32window.MSDrawContext):
 	def __init__(self):
-		window.Wnd.__init__(self, win32ui.CreateWnd())
+		self.initLayoutManagerBase(LayoutManagerBase)
 		win32window.MSDrawContext.__init__(self)
 		self._listener = None
+	
+	def initLayoutManagerBase(self, base):
+		self._base = base
+		if base == window.Wnd:
+			base.__init__(self, win32ui.CreateWnd())
+		elif base == docview.ScrollView:
+			doc = docview.Document(docview.DocTemplate())
+			docview.ScrollView.__init__(self, doc)
 		
 	# allow to create a LayoutManager instance before the onInitialUpdate of dialog box
 	def onInitialUpdate(self, parent, rc, bgcolor):
@@ -452,19 +464,29 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		fd = {'name':'Arial','height':10,'weight':700}
 		self.__hsmallfont = Sdk.CreateFontIndirect(fd)		
 
-		brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(bgcolor),0)
-		cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
-		icon=0
-		clstyle=win32con.CS_DBLCLKS
-		style=win32con.WS_CHILD | win32con.WS_CLIPSIBLINGS
-		exstyle = 0
-		title = ''
-		strclass=Afx.RegisterWndClass(clstyle, cursor, brush, icon)
-		self.CreateWindowEx(exstyle,strclass, title, style,
-			(rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3]),parent,0)
-		self.ShowWindow(win32con.SW_SHOW)
-		self.UpdateWindow()
-
+		if self._base == window.Wnd: 
+			self._canvas = 0, 0, rc[2], rc[3]
+			self.OnPaint = self._OnPaint
+			brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(bgcolor),0)
+			cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
+			icon=0
+			clstyle=win32con.CS_DBLCLKS
+			style=win32con.WS_CHILD | win32con.WS_CLIPSIBLINGS
+			exstyle = 0
+			title = ''
+			strclass=Afx.RegisterWndClass(clstyle, cursor, brush, icon)
+			self.CreateWindowEx(exstyle,strclass, title, style,
+				(rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3]),parent,0)
+			self.ShowWindow(win32con.SW_SHOW)
+			self.UpdateWindow()
+		elif self._base == docview.ScrollView:
+			self._canvas = 0, 0, 1280, 1024
+			self.CreateWindow(parent)
+			self.SetWindowPos(self.GetSafeHwnd(),rc,
+				win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
+			self.SetScrollSizes(win32con.MM_TEXT,self._canvas[2:])
+			self.ShowWindow(win32con.SW_SHOW)
+			self.UpdateWindow()		
 		self.__initState()
 
 	def __initState(self):
@@ -540,7 +562,10 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 	def newViewport(self, attrdict, name):
 		x,y,w, h = attrdict.get('wingeom')
 		self._cycaption = win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
-		self._device2logical = self.findDeviceToLogicalScale(w,h+self._cycaption)
+		if self._base == window.Wnd or AUTO_SCALE:
+			self._device2logical = self.findDeviceToLogicalScale(w, h + self._cycaption)
+		else:
+			self._device2logical = 1
 		self._parent.showScale(self._device2logical)
 		self.__initState()
 		self._viewport = Viewport(name, self, attrdict, self._device2logical)
@@ -566,11 +591,10 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 	def onLButtonDown(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
-		point = self.DPtoLP(point)
+		point = self.DPtoLSP(point)
 		self._wantDown = 1
 		self._sflags = flags
 		self._spoint = point
-		
 		if not self.__isInsideShapeList(self._selectedList, point):
 			self._wantDown = 0
 			if debugPreview: print 'onLButtonDown: call MSDrawContext.onLButtonDown'
@@ -579,7 +603,7 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 	def onLButtonUp(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
-		point = self.DPtoLP(point)
+		point = self.DPtoLSP(point)
 		if self._wantDown:
 			if debugPreview: print 'onLButtonUp: call MSDrawContext.onLButtonDown'
 			win32window.MSDrawContext.onLButtonDown(self, self._sflags, self._spoint)
@@ -597,7 +621,7 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 	def onMouseMove(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
-		point = self.DPtoLP(point)
+		point = self.DPtoLSP(point)
 		if self._wantDown:
 			if debugPreview: print 'onLButtonMove: call MSDrawContext.onLButtonDown'
 			self._isGeomChanging = 1
@@ -608,13 +632,13 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 	def onLButtonDblClk(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
-		point = self.DPtoLP(point)
+		point = self.DPtoLSP(point)
 		win32window.MSDrawContext.onLButtonDblClk(self, flags, point)
 
 	def onNCLButton(self, params):
 		win32window.MSDrawContext.onNCButton(self)
 
-	def OnPaint(self):
+	def _OnPaint(self):
 		dc, paintStruct = self.BeginPaint()
 		
 		hf = dc.SelectObjectFromHandle(self.__hsmallfont)
@@ -625,11 +649,18 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		dc.SelectObjectFromHandle(hf)
 		
 		# paint frame decoration
-		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
-		dc.FrameRectFromHandle(self.GetClientRect(),br)
-		Sdk.DeleteObject(br)
+		if self._base == window.Wnd: 
+			br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
+			dc.FrameRectFromHandle(self.GetClientRect(),br)
+			Sdk.DeleteObject(br)
 
 		self.EndPaint(paintStruct)
+
+	def OnDraw(self, dc):
+		hf = dc.SelectObjectFromHandle(self.__hsmallfont)
+		dc.SetBkMode(win32con.TRANSPARENT)
+		self.paintOn(dc)
+		dc.SelectObjectFromHandle(hf)
 
 	def findDeviceToLogicalScale(self, wl, hl):
 		wd, hd = self.GetClientRect()[2:]
@@ -661,6 +692,7 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		if rc:
 			x, y, w, h = rc
 			rc = x, y, x+w, y+h
+			rc = self.LRtoDR(rc)
 		try:
 			self.InvalidateRect(rc or self.GetClientRect())
 		except:
@@ -669,47 +701,52 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 
 	def getClipRgn(self, rel=None):
 		rgn = win32ui.CreateRgn()
-		rgn.CreateRectRgn(self.GetClientRect())
+		rgn.CreateRectRgn(self._canvas)
 		return rgn
 
 	def OnEraseBkgnd(self,dc):
 		return 1
 
 	def paintOn(self, dc, rc=None):
-		rc = l, t, r, b = self.GetClientRect()
-		w, h = r - l, b - t
+		l, t, w, h = self._canvas
+		r, b = l+w, t+h
 
 		# draw to offscreen bitmap for fast looking repaints
-		dcc=dc.CreateCompatibleDC()
+		dcc = dc.CreateCompatibleDC()
 
-		bmp=win32ui.CreateBitmap()
+		bmp = win32ui.CreateBitmap()
 		bmp.CreateCompatibleBitmap(dc, w, h)
-				
+		
+		# called by win32ui
+		#self.OnPrepareDC(dcc)
+		
+		# offset origin more because bitmap is just piece of the whole drawing
 		dcc.OffsetViewportOrg((-l, -t))
 		oldBitmap = dcc.SelectObject(bmp)
+		dcc.SetBrushOrg((l % 8, t % 8))
+		dcc.IntersectClipRect((l, t, r, b))
 
 		rgn = self.getClipRgn()
 
 		# background decoration on dcc
-		dcc.FillSolidRect((0,0,w,h),win32mu.RGB(self._bgcolor or (255,255,255)))
+		dcc.FillSolidRect((l, t, r, b),win32mu.RGB(self._bgcolor or (255,255,255)))
 
 		# draw objects on dcc
 		if self._viewport:
 			self._viewport.paintOn(dcc)
 			dcc.SelectClipRgn(rgn)
-			#self._viewport._drawcaption(dcc)
 			self._viewport._draw3drect(dcc)
 			self.drawTracker(dcc)
 
 		# copy bitmap
-		dc.SetViewportOrg((0, 0))
-		dc.SetWindowOrg((0,0))
-		dc.SetMapMode(win32con.MM_TEXT)
-		dc.BitBlt((l, t),(w, h),dcc,(0, 0), win32con.SRCCOPY)
+		dcc.SetViewportOrg((0, 0))
+		dcc.SetWindowOrg((0,0))
+		dcc.SetMapMode(win32con.MM_TEXT)
+		dc.BitBlt((l,t),(w, h),dcc,(0, 0), win32con.SRCCOPY)
 
-		# clean up (revisit this)
+		# clean up
 		dcc.SelectObject(oldBitmap)
-		dcc.DeleteDC() # needed?
+		dcc.DeleteDC()
 		del bmp
 
 	def drawTracker(self, dc):
@@ -723,28 +760,63 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 				dc.PatBlt((x, y), (w, h), win32con.DSTINVERT);
 
 	#
-	# Scaling support
+	# Scaling/scrolling support
 	#
-	def DPtoLP(self, pt):
+	def DPtoSP(self, pt):
+		# scaling
 		x, y = pt
 		sc = self._device2logical
 		return int(sc*x+0.5), int(sc*y+0.5)
+
+	def DRtoSR(self, rc):
+		x, y = self.DPtoSP(rc[:2])
+		w, h = self.DPtoSP(rc[2:])
+		return x, y, w, h
+
+
+	def DPtoLP(self, pt):
+		if self._base == window.Wnd: 
+			return pt
+		dc=self.GetDC()
+		x, y = dc.DPtoLP(pt)
+		self.ReleaseDC(dc)
+		return pt
 
 	def DRtoLR(self, rc):
-		x, y, w, h = rc
-		sc = self._device2logical
-		return int(sc*x+0.5), int(sc*y+0.5), int(sc*w+0.5), int(sc*h+0.5)
+		x, y = self.DPtoLP(rc[:2])
+		w, h = self.DPtoLP(rc[2:])
+		return x, y, w, h
 
-	def LPtoDP(self, pt):
+
+	def SPtoDP(self, pt):
 		x, y = pt
 		sc = 1.0/self._device2logical
 		return int(sc*x+0.5), int(sc*y+0.5)
 
-	def LRtoDR(self, rc):
-		x, y, w, h = rc
-		sc = 1.0/self._device2logical
-		return int(sc*x+0.5), int(sc*y+0.5), int(sc*w+0.5), int(sc*h+0.5)
+	def SRtoDR(self, rc):
+		x, y = self.SPtoDP(rc[:2])
+		w, h = self.SPtoDP(rc[2:])
+		return x, y, w, h
 
+
+	def LPtoDP(self, pt):
+		if self._base == window.Wnd: 
+			return pt
+		dc=self.GetDC()
+		pt = dc.LPtoDP(pt)
+		self.ReleaseDC(dc)
+		return pt
+
+	def LRtoDR(self, rc):
+		x, y = self.LPtoDP(rc[:2])
+		w, h = self.LPtoDP(rc[2:])
+		return x, y, w, h
+
+	def DPtoLSP(self, pt):
+		return self.DPtoLP(self.DPtoSP(pt))
+
+	def LSPtoDP(self, pt):
+		return self.LPtoDP(self.SPtoDP(pt))
 
 # for now manage only on listener in the same time
 # it should be enough
@@ -759,7 +831,7 @@ class UserEventMng:
 		self.listener = None
 		
 	def onProperties(self):
-			self.listener.onProperties()
+		self.listener.onProperties()
 			
 ###########################
 
@@ -1104,3 +1176,5 @@ class Region(win32window.Window, UserEventMng):
 	#
 
 
+
+ 
