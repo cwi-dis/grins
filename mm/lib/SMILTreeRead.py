@@ -1152,6 +1152,42 @@ class SMILParser(xmllib.XMLParser):
 			anchorlist.append(a)
 		return node.GetUID(), a[2]
 
+	# the rest is to check that the nesting of elements is done
+	# properly (i.e. according to the SMIL DTD)
+
+	__media_object = ('audio', 'video', 'text', 'img', 'ref')
+	__schedule = ('par', 'seq') + __media_object
+	__container_content = __schedule + ('switch', 'a')
+	__assoc_link = ('anchor',)
+	__empty = ()
+	__allowed_content = {
+		'smil': ('head', 'body'),
+		'head': ('layout', 'switch', 'meta'),
+		'layout': ('channel',),
+		'channel': __empty,
+		'meta': __empty,
+		'body': __container_content,
+		'par': __container_content,
+		'seq': __container_content,
+		'switch': ('layout',) + __container_content,
+		'ref': __assoc_link,
+		'audio': __assoc_link,
+		'img': __assoc_link,
+		'video': __assoc_link,
+		'text': __assoc_link,
+		'a': __schedule + ('switch',),
+		'anchor': __empty,
+		}
+
+	def finish_starttag(self, tag, attrs):
+		if self.stack:
+			ptag = self.stack[-1]
+			if tag not in self.__allowed_content.get(ptag, ()):
+				self.syntax_error('%s element not allowed inside %s' % (tag, ptag))
+		elif tag != 'smil':
+			self.syntax_error('outermost element must be "smil"')
+		xmllib.XMLParser.finish_starttag(self, tag, attrs)
+
 def ReadFile(url):
 	if os.name == 'mac':
 		import MacOS
