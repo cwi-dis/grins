@@ -79,13 +79,13 @@ class PlayerCore(Selecter):
 			ch.set_visible(1)
 			self.makemenu()
 		return ch
-	#	
+	#
 	def updatefixedanchors(self, node):
 		ch = self.anchorinit(node)
 		if ch is None:
 			return 1	# Cannot set on internal nodes
 		return ch.updatefixedanchors(node)
-			
+
 	#
 	def pause(self, wantpause):
 		if self.pausing == wantpause:

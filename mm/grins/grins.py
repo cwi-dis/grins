@@ -10,7 +10,7 @@ try:
 except:
 	pass
 
-if os.name != 'mac' and __file__ != '<frozen>':
+if os.name == 'posix' and __file__ != '<frozen>':
 	import fastimp
 	fastimp.install()
 
@@ -134,7 +134,7 @@ def main():
 		opts, files = getopt.getopt(sys.argv[1:], 'qj:')
 	except getopt.error, msg:
 		usage(msg)
-	if not files and os.name != 'mac':
+	if not files and sys.platform not in ('mac', 'nt'):
 		usage('No files specified')
 
 	try:
@@ -225,8 +225,9 @@ def main():
 			print
 			pdb.post_mortem(exc_traceback)
 	finally:
-		import windowinterface
-		windowinterface.close()
+		if sys.platform != 'nt':
+			import windowinterface
+			windowinterface.close()
 
 
 # A copy of cmif.findfile().  It is copied here rather than imported
