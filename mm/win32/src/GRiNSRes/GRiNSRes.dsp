@@ -53,11 +53,11 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /noentry
 # Begin Custom Build - Generating grinsRC.py
 OutDir=.\..\Build
-InputPath=\jack\cmif\win32\src\Build\GRiNSRes.dll
+InputPath=\cmif\win32\src\Build\GRiNSRes.dll
 SOURCE="$(InputPath)"
 
 "$(OutDir)\grinsRC.py" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	c:\jack\python\pcbuild\python c:\jack\python\tools\scripts\h2py.py  GRiNSRes.h 
+	d:\cmif\bin\python d:\python\tools\scripts\h2py.py  GRiNSRes.h 
 	copy GRiNSRes.py $(OutDir)\grinsRC.py 
 	del GRiNSRes.py 
 	del d:\cmif\bin\GRiNSRes.dll 
