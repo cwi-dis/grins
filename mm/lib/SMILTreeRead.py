@@ -1358,8 +1358,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if ChannelMap.isvisiblechannel(mtype):
 				# create here all positioning nodes and initialize them
 				cssResolver = self.__context.cssResolver				
-				subRegCssId = node.newSubRegCssId()
-				mediaCssId = node.newMediaCssId()
+				subRegCssId = node.getSubRegCssId()
+				mediaCssId = node.getMediaCssId()
 				attrList = [('left',node.attrdict.get('left')),
 							('width',node.attrdict.get('width')),
 							('right',node.attrdict.get('right')),
