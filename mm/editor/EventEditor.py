@@ -446,9 +446,11 @@ class EventStruct:
 		return None		# return an error otherwise.
 
 	def get_offset(self):
+		if self.get_cause() not in ['node', 'accesskey', 'delay', 'region']: # TODO: check these.
+			return None
 		if self._setoffset is not None:
 			return self._setoffset
-		if self._syncarc and self.get_cause() in ['node', 'accesskey', 'delay', 'region']: # TODO: check these.
+		if self._syncarc:
 			if self._syncarc.delay:
 				return self._syncarc.delay
 			else:
