@@ -3118,7 +3118,9 @@ def _generic_callback(widget, callback, call_data):
 	apply(apply, callback)
 	toplevel.setready()
 
-def _create_menu(menu, list, visual, colormap, acc = None, widgets = {}):
+def _create_menu(menu, list, visual, colormap, acc = None, widgets = None):
+	if widgets is None:
+		widgets = {}
 	if len(list) > 30:
 		menu.numColumns = (len(list) + 29) / 30
 		menu.packing = Xmd.PACK_COLUMN
@@ -3567,7 +3569,7 @@ class InputDialog:
 class _MenuSupport:
 	'''Support methods for a pop up menu.'''
 	def __init__(self):
-		self._menu = None
+		self.__menu = None
 
 	def close(self):
 		'''Close the menu.'''
@@ -3602,9 +3604,9 @@ class _MenuSupport:
 			list = [title, None] + list
 		_create_menu(menu, list, toplevel._default_visual,
 			     toplevel._default_colormap)
-		self._menu = menu
+		self.__menu = menu
 		self._form.AddEventHandler(X.ButtonPressMask, FALSE,
-					   self._post_menu, None)
+					   self.__post_menu, None)
 
 	def destroy_menu(self):
 		'''Destroy the pop up menu.
@@ -3613,23 +3615,23 @@ class _MenuSupport:
 		is created using create_menu, or when the window
 		object is closed.'''
 
-		menu = self._menu
-		self._menu = None
+		menu = self.__menu
+		self.__menu = None
 		if menu:
 			self._form.RemoveEventHandler(X.ButtonPressMask, FALSE,
-						      self._post_menu, None)
+						      self.__post_menu, None)
 			menu.DestroyWidget()
 
 	# support methods, only used by derived classes
-	def _post_menu(self, w, client_data, call_data):
-		if _in_create_box or not self._menu:
+	def __post_menu(self, w, client_data, call_data):
+		if _in_create_box or not self.__menu:
 			return
 		if call_data.button == X.Button3:
-			self._menu.MenuPosition(call_data)
-			self._menu.ManageChild()
+			self.__menu.MenuPosition(call_data)
+			self.__menu.ManageChild()
 
 	def _destroy(self):
-		self._menu = None
+		self.__menu = None
 
 class _Widget(_MenuSupport):
 	'''Support methods for all window objects.'''
@@ -3665,23 +3667,6 @@ class _Widget(_MenuSupport):
 	def is_closed(self):
 		'''Returns true if the window is already closed.'''
 		return not hasattr(self, '_form')
-
-	def _callback(self, widget, callback, call_data):
-		'''Generic callback.'''
-		ToolTip.rmtt()
-		if _in_create_box or self.is_closed():
-			return
-		apply(apply, callback)
-		toplevel.setready()
-
-	def _get_acceleratortext(self, callback):
-		return self._parent._get_acceleratortext(callback)
-
-	def _set_callback(self, widget, callbacktype, callback):
-		self._parent._set_callback(widget, callbacktype, callback)
-
-	def _set_togglelabels(self, widget, labels):
-		self._parent._set_togglelabels(widget, labels)
 
 	def _showme(self, w):
 		self._parent._showme(w)
@@ -3726,6 +3711,23 @@ class _Widget(_MenuSupport):
 				offset = options.get('offset')
 			if offset is not None:
 				attrs[pos + 'Offset'] = offset
+
+	def _callback(self, widget, callback, call_data):
+		'''Generic callback.'''
+		ToolTip.rmtt()
+		if _in_create_box or self.is_closed():
+			return
+		apply(apply, callback)
+		toplevel.setready()
+
+	def _get_acceleratortext(self, callback):
+		return self._parent._get_acceleratortext(callback)
+
+	def _set_callback(self, widget, callbacktype, callback):
+		self._parent._set_callback(widget, callbacktype, callback)
+
+	def _set_togglelabels(self, widget, labels):
+		self._parent._set_togglelabels(widget, labels)
 
 	def _destroy(self, widget, client_data, call_data):
 		'''Destroy callback.'''
@@ -3799,7 +3801,7 @@ class Button(_Widget):
 		self.__text = text
 
 	def setsensitive(self, sensitive):
-		self._form.sensitive = sensitive
+		self._form.SetSensitive(sensitive)
 
 class OptionMenu(_Widget):
 	'''Option menu window object.'''
@@ -3885,7 +3887,7 @@ class OptionMenu(_Widget):
 
 	def setsensitive(self, pos, sensitive):
 		if 0 <= pos < len(self._buttons):
-			self._buttons[pos].sensitive = sensitive
+			self._buttons[pos].SetSensitive(sensitive)
 		else:
 			raise error, 'pos out of range'
 
@@ -4028,11 +4030,12 @@ class PulldownMenu(_Widget):
 		if onoff is not None:
 			w.set = onoff
 		if sensitive is not None:
-			w.sensitive = sensitive
+			w.SetSensitive(sensitive)
 
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
-		del self._buttons
+		self._buttons = None
+		self._widgets = None
 
 # super class for Selection and List
 class _List:
@@ -4216,6 +4219,7 @@ class Selection(_Widget, _List):
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
 		_List._destroy(self)
+		del self._text
 
 class List(_Widget, _List):
 	def __init__(self, parent, listprompt, itemlist, sel_cb,
@@ -4331,7 +4335,7 @@ class TextInput(_Widget):
 			attrs['editable'] = 0
 		self._text = text = form.CreateTextField(name, attrs)
 		text.ManageChild()
-		if not widget:
+		if widget is None:
 			widget = text
 		if chcb:
 			text.AddCallback('valueChangedCallback',
@@ -4558,7 +4562,7 @@ class ButtonRow(_Widget, _ButtonSupport):
 	def setsensitive(self, button, sensitive):
 		if not 0 <= button < len(self._buttons):
 			raise error, 'button number out of range'
-		self._buttons[button].sensitive = sensitive
+		self._buttons[button].SetSensitive(sensitive)
 
 	def _popup(self, widget, submenu, call_data):
 		submenu.ManageChild()
@@ -4824,7 +4828,7 @@ class Window(_WindowHelpers, _MenuSupport, _CommandSupport):
 		if grab:
 			attrs['dialogStyle'] = \
 					     Xmd.DIALOG_FULL_APPLICATION_MODAL
-			parent = options.get('parent', toplevel)
+			parent = options.get('parent')
 			if parent is None:
 				parent = toplevel
 			while 1:
