@@ -13,7 +13,7 @@ class SocketChannel(Channel):
 	chan_attrs = Channel.chan_attrs + ['port', 'nonlocal', \
 		  'mcgroup', 'mcttl']
 	node_attrs = Channel.node_attrs + ['duration']
-	
+
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.__init__(self, name, attrdict, scheduler, ui)
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -110,7 +110,7 @@ class SocketChannel(Channel):
 			else:
 				print 'SocketChannel: bad cmd:', cmd
 				return
-				
+
 
 	def playstop(self):
 		self.anchorlist = None

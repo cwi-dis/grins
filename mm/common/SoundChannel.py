@@ -64,7 +64,7 @@ class SoundChannel(ChannelAsync):
 			import audioselect
 			self.arm_fp = audioselect.select(self.arm_fp, [(begin, end)])
 		return 1
-		
+
 	def do_play(self, node):
 		if not self.arm_fp:
 			print 'SoundChannel: not playing'
@@ -72,7 +72,7 @@ class SoundChannel(ChannelAsync):
 			self.arm_fp = None
 			self.playdone(0)
 			return
-			
+
 		if debug: print 'SoundChannel: play', node
 		self.play_fp = self.arm_fp
 		self.arm_fp = None
