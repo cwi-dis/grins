@@ -1126,6 +1126,14 @@ class SMILXhtmlSmilWriter(SMIL):
 				i = i + 2
 		return coords
 
+	def fixurl(self, url):
+		ctx = self.context
+		if self.convertURLs:
+			url = MMurl.canonURL(ctx.findurl(url))
+			if url[:len(self.convertURLs)] == self.convertURLs:
+				url = url[len(self.convertURLs):]
+		return url
+	
 	def writeAnchors(self, node, name):
 		hassrc = 0
 		x, y, w, h = 0, 0, 1, 1
