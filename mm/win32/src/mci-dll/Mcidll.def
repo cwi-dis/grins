@@ -1,0 +1,16 @@
+LIBRARY mcidll
+EXPORTS
+    AviOpen			@1
+    AviPlay			@2
+    AviPause		@3
+    AviStop			@4
+    AviClose		@5
+    AviSeek			@6
+    MidiOpen		@7
+    MidiPlay		@8
+    MidiPause		@9
+    MidiStop		@10
+    MidiClose		@11
+    MidiSeek		@12               
+    MCIError		@13
+	positionMovie	@14
