@@ -8,8 +8,13 @@ win32con.MK_ALT = 0x20
 from appcon import DROPEFFECT_NONE, DROPEFFECT_COPY, \
 	DROPEFFECT_MOVE, DROPEFFECT_LINK, DROPEFFECT_SCROLL
 
+CF_FILE = Sdk.RegisterClipboardFormat('FileName')
+CF_NODE = Sdk.RegisterClipboardFormat('Node')
+CF_TOOL = Sdk.RegisterClipboardFormat('Tool')
+CF_NODEUID = Sdk.RegisterClipboardFormat('NodeUID')
+
 class DropTarget:
-	cfmap={'FileName':Sdk.RegisterClipboardFormat('FileName')}
+	cfmap={'FileName':CF_FILE}
 	def __init__(self):
 		self._isregistered=0
 		self._dropmap={
