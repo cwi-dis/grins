@@ -677,9 +677,17 @@ class ShapeTool(DrawTool):
 
 
 class Polyline:
-	def __init__(self, points):
+	def __init__(self, viewport, points):
+		self._viewport = viewport
 		self._points = points
 		self._device2logical = 1.0
+
+	def getDevicePoints(self):
+		x0, y0 = self._viewport.getOrg()
+		points = []
+		for pt in self._points:
+			points.append(self.LPtoDP((x0 + pt[0], y0+pt[1]), round=1))
+		return points
 
 	#
 	# Scaling support
@@ -701,9 +709,11 @@ class Polyline:
 		sc = self._device2logical
 		return sc*x, sc*y, sc*w, sc*h
 
-	def LPtoDP(self, pt):
+	def LPtoDP(self, pt, round=0):
 		x, y = pt
 		sc = 1.0/self._device2logical
+		if round:
+			return int(sc*x+0.5), int(sc*y+0.5)
 		return sc*x, sc*y
 
 	def LRtoDR(self, rc, round=0):
@@ -724,23 +734,27 @@ class Polyline:
 	#
 	# return drag handle position in device coordinates
 	def getDragHandle(self, ix):
-		return self.LPtoDP(self._points[ix])
+		x0, y0 = self._viewport.getOrg()
+		x, y = self._points[ix-1]
+		return self.LPtoDP((x0+x,y0+y))
 
 	# return drag handle rectangle in device coordinates
 	def getDragHandleRect(self, ix):
-		x, y = self.LPtoDP(self._points[ix])
+		x0, y0 = self._viewport.getOrg()
+		x, y = self._points[ix-1]
+		x, y = self.LPtoDP((x0+x,y0+y))
 		return x-3, y-3, 7, 7
 
 	def getDragHandleCount(self):
 		return len(self._points)
 
 	def getDragHandleCursor(self, ix):
-		return 'sizenesw'
+		return 'arrow'
 
 	# return drag handle at device coordinates
 	def getDragHandleAt(self, point):
 		xp, yp = point
-		for ix in range(len(self._points)):
+		for ix in range(1, len(self._points)+1):
 			x, y, w, h = self.getDragHandleRect(ix)
 			l, t, r, b = x, y, x+w, y+h
 			if xp>=l and xp<r and yp>=t and yp<b:
@@ -749,8 +763,9 @@ class Polyline:
 
 	# move drag handle in device coordinates to point in device coordinates
 	def moveDragHandleTo(self, ixHandle, point):
+		x0, y0 = self._viewport.getOrg()
 		xp, yp = self.DPtoLP(point)
-		self._points[ixHandle] = xp, yp
+		self._points[ixHandle-1] = xp - x0, yp - y0
 		self.update()
 
 	def moveBy(self, delta):
@@ -763,7 +778,10 @@ class Polyline:
 		return 1
 	
 	def update(self):
-		pass
+		self._viewport.update()
+
+	def getAncestors(self):
+		return []
 
 ################################
 
