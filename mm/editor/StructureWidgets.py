@@ -33,7 +33,7 @@ def create_MMNode_widget(node, mother, parent = None):
 		pnode = node.GetParent()
 		if pnode is None and ntype == 'seq':
 			# Don't show toplevel root (actually the <body> in SMIL)
- 			return UnseenVerticalWidget(node, mother, parent)
+			return UnseenVerticalWidget(node, mother, parent)
 		gpnode = pnode.GetParent() # grand parent node
 		if pnode is not None and gpnode is None and ntype == 'par':
 			# Don't show second-level par either
@@ -209,7 +209,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		for node in self.node.GetPath()[:-1]:
 			if node.collapsed:
 				node.views['struct_view'].uncollapse()
-		self.mother.need_redraw = 1
+		#self.mother.need_redraw = 1
 
 	def adddependencies(self, timemapper):
 		t0, t1, t2, download, begindelay = self.node.GetTimes('virtual')
