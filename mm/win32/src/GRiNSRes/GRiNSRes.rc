@@ -46,6 +46,7 @@ IDB_TEXT                BITMAP  DISCARDABLE     "RES\\text.bmp"
 IDB_HTML                BITMAP  DISCARDABLE     "RES\\html.bmp"
 IDB_SOUND               BITMAP  DISCARDABLE     "RES\\sound.bmp"
 IDB_SPLASHSMILBOSTON    BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\smil-20\\editor\\splash8bit.bmp"
+IDB_SVG                 BITMAP  DISCARDABLE     "RES\\svg.bmp"
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
