@@ -31,6 +31,7 @@ class PlayerDialog:
 				]),
 			('Channels', CHANNELS),
 			('Options', [
+				('Preferences...', PREFERENCES),
 				('Dump scheduler data', SCHEDDUMP),
 				]),
 			('Help', [
