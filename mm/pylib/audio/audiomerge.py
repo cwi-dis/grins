@@ -25,7 +25,9 @@ class merge:
 						    (self.__framerate,))
 		else:
 			nrdr = audioconvert.convert(rdr, (linear_8_mono_signed,
-							  linear_16_mono))
+							  linear_8_stereo_signed,
+							  linear_16_mono,
+							  linear_16_stereo))
 			self.__framerate = nrdr.getframerate()
 			self.__format = nrdr.getformat()
 		self.__readers.append((nrdr, callback))
