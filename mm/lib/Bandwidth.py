@@ -99,8 +99,8 @@ def getstreamdata(node, target=0):
 			if targets & (1 << i):
 				bitrate = TARGET_BITRATES[i]
 		# don't cache since the result depends on project_targets
-		prerolltime = DEFAULT_STREAMING_MEDIA_PRELOAD
-		prerollbits = prerolltime*bitrate
+		prerollseconds = DEFAULT_STREAMING_MEDIA_PRELOAD
+		prerollbits = prerollseconds*bitrate
 		return prerollbits, prerollseconds, bitrate, bitrate
 
 	# XXXX Need to pass more args (crop, etc)
