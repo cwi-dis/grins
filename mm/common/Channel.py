@@ -2040,7 +2040,7 @@ class ChannelWindow(Channel):
 		# Handle fill=transition and (in the future) fill=hold
 		if not self.window:
 			return
-		fill = MMAttrdefs.getattr(node, 'fill')
+		fill = node.GetFill()
 		erase = MMAttrdefs.getattr(node, 'erase')
 		if fill == 'transition':
 			self.window.freeze_content('transition')
