@@ -14,20 +14,27 @@ def create_box(window, msg, *box):
 	display = window._active_display_list
 	window.pop()
 	window._close_subwins()
-	try:
-		oldfuncarg1 = windowinterface.getregister(window,
+	win = window
+	fa1 = []
+	fa2 = []
+	while win:
+		try:
+			fa = windowinterface.getregister(win,
 							 EVENTS.Mouse0Press)
-	except windowinterface.error:
-		oldfuncarg1 = None
-	else:
-		windowinterface.unregister(window, EVENTS.Mouse0Press)
-	try:
-		oldfuncarg2 = windowinterface.getregister(window,
-							  EVENTS.Mouse0Release)
-	except windowinterface.error:
-		oldfuncarg2 = None
-	else:
-		windowinterface.unregister(window, EVENTS.Mouse0Release)
+		except windowinterface.error:
+			fa = None
+		else:
+			windowinterface.unregister(win, EVENTS.Mouse0Press)
+		fa1.append(fa)
+		try:
+			fa = windowinterface.getregister(win,
+						EVENTS.Mouse0Release)
+		except windowinterface.error:
+			fa = None
+		else:
+			windowinterface.unregister(win, EVENTS.Mouse0Release)
+		fa2.append(fa)
+		win = win._parent_window
 	try:
 		if msg:
 			msg = msg + '\n\n' + message
@@ -36,6 +43,7 @@ def create_box(window, msg, *box):
 		dialog = dialogs.Dialog((msg, '!Done', 'Cancel'))
 		while not box:
 			win, ev, val = windowinterface.readevent()
+			print 'event:',`win, ev, val`
 			if win == window and ev == EVENTS.Mouse0Press:
 				box = window.sizebox((val[0], val[1], 0, 0), 0, 0)
 				break
@@ -107,11 +115,18 @@ def create_box(window, msg, *box):
 	finally:
 		window._open_subwins()
 		windowinterface.endmonitormode()
-		if oldfuncarg1:
-			windowinterface.register(window, EVENTS.Mouse0Press,
-						 oldfuncarg1[0],
-						 oldfuncarg1[1])
-		if oldfuncarg2:
-			windowinterface.register(window, EVENTS.Mouse0Release,
-						 oldfuncarg2[0],
-						 oldfuncarg2[1])
+		win = window
+		while win:
+			fa = fa1[0]
+			del fa1[0]
+			if fa:
+				windowinterface.register(win,
+							 EVENTS.Mouse0Press,
+							 fa[0], fa[1])
+			fa = fa2[0]
+			del fa2[0]
+			if fa:
+				windowinterface.register(win,
+							 EVENTS.Mouse0Release,
+							 fa[0], fa[1])
+			win = win._parent_window

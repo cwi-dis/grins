@@ -420,14 +420,16 @@ class _Window:
 		pass
 
 	def newdisplaylist(self, *bgcolor):
-		list = _DisplayList(self)
 		if len(bgcolor) == 1 and type(bgcolor[0]) == type(()):
 			bgcolor = bgcolor[0]
 		if len(bgcolor) == 3:
-			list._bgcolor = list._curcolor = bgcolor
-		elif len(bgcolor) != 0:
+			pass
+		elif len(bgcolor) == 0:
+			# inherit bgcolor from window
+			bgcolor = self._bgcolor
+		else:
 			raise TypeError, 'arg count mismatch'
-		return list
+		return _DisplayList(self, bgcolor)
 
 	def settitle(self, title):
 		if self._parent_window != toplevel:
@@ -645,14 +647,14 @@ class _Window:
 		event.unregister(self, ev)
 
 class _DisplayList:
-	def __init__(self, window):
+	def __init__(self, window, bgcolor):
 		if debug: print '_DisplayList.init('+`window`+') --> '+`self`
 		self._window = window
 		self._rendered = 0
 		# color support
-		self._bgcolor = window._bgcolor
+		self._bgcolor = bgcolor
+		self._xbgcolor = window._convert_color(bgcolor)
 		self._fgcolor = window._fgcolor
-		self._xbgcolor = window._xbgcolor
 		self._xfgcolor = window._xfgcolor
 		# line width
 		self._linewidth = 1
@@ -727,7 +729,7 @@ class _DisplayList:
 		if self.is_closed():
 			raise error, 'displaylist already closed'
 		w = self._window
-		new = _DisplayList(w)
+		new = _DisplayList(w, self._bgcolor)
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
 		self._pixmap.CopyArea(new._pixmap, None, 0, 0, w._width, w._height, 0, 0)
@@ -1264,13 +1266,16 @@ class _Event:
 		window, event, value = self._queue[0]
 		if self._modal:
 			if event != ResizeWindow:
+				if debug: print 'event._trycallback: modal, no resize'
 				return 0
 		if event == FileEvent:
 			if self._select_dict.has_key(value):
+				if debug: print 'event._trycallback: FileEvent: callback'
 				del self._queue[0]
 				func, arg = self._select_dict[value]
 				apply(func, arg)
 				return 1
+			if debug: print 'event._trycallback: FileEvent: no callback'
 		if window and window.is_closed():
 			return 0
 		for w in [window, None]:
@@ -1405,6 +1410,8 @@ class _Event:
 				self.register(win, event, None, None)
 
 	def select_setcallback(self, fd, cb, arg):
+		if type(fd) <> type(1):
+			fd = fd.fileno()
 		if cb == None:
 			self._select_fdlist.remove(fd)
 			del self._select_dict[fd]
