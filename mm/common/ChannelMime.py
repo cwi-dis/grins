@@ -23,6 +23,8 @@ ChannelMime = {
 		'application/vnd.rn-realmedia', # but only if it's audio only
 		'audio/basic',
 		'audio/vnd.rn-realaudio',
+		'audio/x-pn-realaudio',
+		'audio/x-realaudio',
 		'audio/x-aiff',
 		'audio/x-wav',
 		],
