@@ -962,7 +962,7 @@ class ChannelBox(GO):
 			self.ctype = '???'
 		c = self.commandlist
 		c.append(None)
-		c.append('i', '', (self.attrcall, ()))
+## 		c.append('i', '', (self.attrcall, ()))
 		c.append('a', 'Channel attr...', (self.attrcall, ()))
 		c.append('d', 'Delete channel',  (self.delcall, ()))
 		c.append('m', 'Move channel', (self.movecall, ()))
