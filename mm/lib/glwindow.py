@@ -42,7 +42,7 @@ def unregister(object):
 class glwindow:
 	#
 	# Event dispatchers, named after the events.
-	# Note: the window is *not* made current; you must call winset()!
+	# The window is current by the time this function is called.
 	#
 	def redraw(self):
 		# REDRAW event.  This may also mean a resize!
@@ -77,12 +77,12 @@ class glwindow:
 		pass
 	#
 	def winshut(self):
-		#  WINSHUT event: close window, other windows remain.
+		# WINSHUT event: close window, other windows remain.
 		# This may be refused.
 		pass
 	#
 	def winquit(self):
-		#  WINQUIT event: close last window.
+		# WINQUIT event: close last window.
 		# This may be refused.
 		# By default, call the method for closing any old window.
 		self.winshut()
