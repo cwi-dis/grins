@@ -1207,7 +1207,7 @@ class SMILWriter(SMIL):
 		self.writetag('par', parentattrlist)
 		self.push()
 		self.writemedianode(x, attrlist, mtype)
-		self.writetag('textstream', [('href', rturl), ('region', region)])
+		self.writetag('text', [('src', rturl), ('region', region)])
 		self.pop()
 		
 	def getrealtextcaptions(self, node):
