@@ -28,6 +28,10 @@ class ListCtrl(window.Wnd):
 		self._down = 0
 		self._dragging = 0
 
+		# drag and drop callbacks map
+		# one entry for each supported format
+		self._dropmap = {}
+
 		self.RegisterDropTarget()
 
 	def OnDragEnter(self, dataobj, kbdstate, x, y): 
@@ -40,15 +44,25 @@ class ListCtrl(window.Wnd):
 
 	def OnDragOver(self, dataobj, kbdstate, x, y): 
 		print 'OnDragOver', self, dataobj, kbdstate, x, y
-		return DropTarget.DROPEFFECT_LINK
+
+		fmt_name, data = DropTarget.GetData(dataobj)
+		callbacks = self._dropmap.get(fmt_name)
+		if callbacks:
+			dragcb = callbacks[0]
+			return dragcb(dataobj, kbdstate, x, y)
+		return DropTarget.DROPEFFECT_LINK # after debug -> DROPEFFECT_NONE
 
 	def OnDrop(self, dataobj, effect, x, y): 
 		print 'OnDrop', self, dataobj, effect, x, y
-
 		format_name, data = DropTarget.GetData(dataobj)
 		print format_name, data
 
-		return DropTarget.DROPEFFECT_NONE
+		fmt_name, data = DropTarget.GetData(dataobj)
+		callbacks = self._dropmap.get(fmt_name)
+		if callbacks:
+			dropcb = callbacks[1]
+			return dropcb(dataobj, effect, x, y)
+		return DropTarget.DROPEFFECT_LINK # after debug -> DROPEFFECT_NONE
 
 	def getStyle(self):
 		style = win32con.WS_VISIBLE | win32con.WS_CHILD\
