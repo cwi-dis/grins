@@ -258,8 +258,6 @@ class EditMgr:
 		self.setnodetype(node, oldtype)
 
 	def setnodeattr(self, node, name, value):
-		if name == 'synctolist':
-			raise MMExc.AssertError, 'cannot set synctolist attr'
 		oldvalue = node.GetRawAttrDef(name, None)
 		self.addstep('setnodeattr', node, name, oldvalue)
 		if value is not None:
@@ -280,58 +278,31 @@ class EditMgr:
 	#
 	# Sync arc operations
 	#
-##	def __isbegin(self, xnode, xside, ynode, yside):
-##		if yside == HD:
-##			if ynode.GetParent().GetType() == 'seq' and xside == TL:
-##				prev = None
-##				for n in ynode.GetParent().GetChildren():
-##					if n is ynode:
-##						break
-##					prev = n
-##				if prev is not None and xnode is prev:
-##					return 1
-##			elif xside == HD and xnode is ynode.GetParent():
-##				return 1
-##		return 0
+	def addsyncarc(self, node, attr, arc):
+		list = node.GetRawAttrDef(attr, [])[:]
+		if arc in list:
+			return
+		list.append(arc)
+		node.SetAttr(attr, list)
+		self.addstep('addsyncarc', node, attr, arc)
 
-##	def addsyncarc(self, xnode, xside, delay, ynode, yside):
-##		skip = 0
-##		if self.__isbegin(xnode, xside, ynode, yside):
-##			skip = 1
-##			self.setnodeattr(ynode, 'begin', delay)
-##		list = ynode.GetRawAttrDef('synctolist', None)
-##		if list is None:
-##			list = []
-##			if not skip:
-##				ynode.SetAttr('synctolist', list)
-##		xuid = xnode.GetUID()
-##		for item in list:
-##			xn, xs, de, ys = item
-##			if xn==xuid and (xs,ys) == (xside,yside):
-##				self.addstep('delsyncarc',xnode,xs,de,ynode,ys)
-##				list.remove(item)
-##				break
-##		if not skip:
-##			self.addstep('addsyncarc', xnode, xside, delay, ynode, yside)
-##			list.append((xuid, xside, delay, yside))
+	def undo_addsyncarc(self, node, attr, arc):
+		self.delsyncarc(node, attr, arc)
 
-##	def delsyncarc(self, xnode, xside, delay, ynode, yside):
-##		if self.__isbegin(xnode, xside, ynode, yside):
-##			self.setnodeattr(ynode, 'begin', None)
-##			return
-##		list = ynode.GetRawAttrDef('synctolist', [])
-##		xuid = xnode.GetUID()
-##		for item in list:
-##			xn, xs, de, ys = item
-##			if xn==xuid and (xs,de,ys) == (xside,delay,yside):
-##				self.addstep('delsyncarc',xnode,xs,de,ynode,ys)
-##				list.remove(item)
-##				if not list:
-##					# no sync arcs left
-##					ynode.DelAttr('synctolist')
-##				break
-##		else:
-##			raise MMExc.AssertError, 'bad delsyncarc call'
+	def delsyncarc(self, node, attr, arc):
+		list = node.GetRawAttrDef(attr, [])[:]
+		if arc not in list:
+			raise MMExc.AssertError, 'bad delsyncarc call'
+		list.remove(arc)
+		if list:
+			node.SetAttr(attr, list)
+		else:
+			node.DelAttr(attr)
+		self.addstep('delsyncarc', node, attr, arc)
+
+	def undo_delsyncarc(self, node, attr, arc):
+		self.addsyncarc(node, attr, arc)
+
 	#
 	# Hyperlink operations
 	#

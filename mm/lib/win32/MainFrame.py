@@ -140,13 +140,13 @@ else:
 	appform={}
 
 import features
-if not features.lightweight:
+##if not features.lightweight:
 ##	from NodeInfoForm import NodeInfoForm
 ##	from AnchorEditForm import AnchorEditForm
-	from ArcInfoForm import ArcInfoForm
+##	from ArcInfoForm import ArcInfoForm
 ##	appform['node_info']={'cmd':-1,'title':'NodeInfo Editor','id':'node_info','obj':None,'class':NodeInfoForm,'freezesize':1}
 ##	appform['anchor_edit']={'cmd':-1,'title':'Anchor Editor','id':'anchor_edit','obj':None,'class':AnchorEditForm,'freezesize':1}
-	appform['arc_info']={'cmd':-1,'title':'ArcInfo Editor','id':'arc_info','obj':None,'class':ArcInfoForm,'freezesize':1}
+##	appform['arc_info']={'cmd':-1,'title':'ArcInfo Editor','id':'arc_info','obj':None,'class':ArcInfoForm,'freezesize':1}
 
 # controls whether to remove or not the minimize button 
 # when resize is not allowed. (my preference is NO_MINIMIZEBOX = 1)
@@ -1770,4 +1770,3 @@ class ChildFrameForm(window.MDIChildWnd):
 	# Target for commands that are dissabled
 	def OnUpdateCmdDissable(self,cmdui):
 		cmdui.Enable(0)
- 

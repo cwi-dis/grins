@@ -661,55 +661,57 @@ class ChannelView(ChannelViewDialog):
 	# Arc stuff
 
 	def initarcs(self, focus):
-		if not self.showarcs:
-			return
-		arcs = []
-		self.scanarcs(self.root, focus, arcs)
-		self.arcs = arcs
+		# to be implemented for new sync arcs
+		pass
+##		if not self.showarcs:
+##			return
+##		arcs = []
+##		self.scanarcs(self.root, focus, arcs)
+##		self.arcs = arcs
 
-	def scanarcs(self, node, focus, arcs):
-		type = node.GetType()
-		if type in leaftypes and node.GetChannel():
-			self.addarcs(node, arcs, focus)
-		else:
-			for c in node.GetChildren():
-				self.scanarcs(c, focus, arcs)
+##	def scanarcs(self, node, focus, arcs):
+##		type = node.GetType()
+##		if type in leaftypes and node.GetChannel():
+##			self.addarcs(node, arcs, focus)
+##		else:
+##			for c in node.GetChildren():
+##				self.scanarcs(c, focus, arcs)
 
-	def addarcs(self, ynode, arcs, focus):
-		synctolist = MMAttrdefs.getattr(ynode, 'synctolist')
-		delay = MMAttrdefs.getattr(ynode, 'begin')
-		if delay > 0:
-			from HDTL import HD, TL
-			parent = ynode.GetParent()
-			if parent.GetType() == 'seq':
-				xnode = None
-				xside = TL
-				for n in parent.GetChildren():
-					if n is ynode:
-						break
-					xnode = n
-				if xnode is None:
-					# first child in seq
-					xnode = parent
-					xside = HD
-			else:
-				xnode = parent
-				xside = HD
-			# don't append, make copy!
-			synctolist = synctolist + [(xnode.GetUID(), xside, delay, HD)]
-		for arc in synctolist:
-			xuid, xside, delay, yside = arc
-			try:
-				xnode = ynode.MapUID(xuid)
-			except NoSuchUIDError:
-				# Skip sync arc from non-existing node
-				continue
-			obj = ArcBox(self,
-				     xnode, xside, delay, ynode, yside)
-			arcs.append(obj)
-			if focus[0] == 'a' and \
-			   focus[1] == (xnode, xside, delay, ynode, yside):
-				obj.select()
+##	def addarcs(self, ynode, arcs, focus):
+##		synctolist = MMAttrdefs.getattr(ynode, 'synctolist')
+##		delay = MMAttrdefs.getattr(ynode, 'begin')
+##		if delay > 0:
+##			from HDTL import HD, TL
+##			parent = ynode.GetParent()
+##			if parent.GetType() == 'seq':
+##				xnode = None
+##				xside = TL
+##				for n in parent.GetChildren():
+##					if n is ynode:
+##						break
+##					xnode = n
+##				if xnode is None:
+##					# first child in seq
+##					xnode = parent
+##					xside = HD
+##			else:
+##				xnode = parent
+##				xside = HD
+##			# don't append, make copy!
+##			synctolist = synctolist + [(xnode.GetUID(), xside, delay, HD)]
+##		for arc in synctolist:
+##			xuid, xside, delay, yside = arc
+##			try:
+##				xnode = ynode.MapUID(xuid)
+##			except NoSuchUIDError:
+##				# Skip sync arc from non-existing node
+##				continue
+##			obj = ArcBox(self,
+##				     xnode, xside, delay, ynode, yside)
+##			arcs.append(obj)
+##			if focus[0] == 'a' and \
+##			   focus[1] == (xnode, xside, delay, ynode, yside):
+##				obj.select()
 
 	# Bandwidth strip stuff
 
@@ -1783,24 +1785,16 @@ class NodeBox(GO, NodeBoxCommand):
 		if not editmgr.transaction():
 			return # Not possible at this time
 		root = mother.root
-		snode, sside, delay, dnode, dside, new = \
-			mother.lockednode.node, 1, 0.0, self.node, 0, 1
-##		# find a sync arc between the two nodes and use that
-##		list = dnode.GetRawAttrDef('synctolist', None)
-##		if list is None:
-##			list = []
-##		suid = snode.GetUID()
-##		for (xn, xs, de, ys) in list:
-##			if xn is suid:
-##				sside, delay, dside, new = xs, de, ys, 0
-##				break
-		editmgr.addsyncarc(snode, sside, delay, dnode, dside)
+		snode, sside, delay, dnode, dside = \
+			mother.lockednode.node, 'end', 0.0, self.node, 'begin'
+		arc = MMNode.MMSyncArc(dnode, dside, srcnode=snode, event=sside, delay=0.0)
+		editmgr.addsyncarc(dnode, dside, arc)
 		mother.cleanup()
 		editmgr.commit()
-		# NB: when we get here, this object is nearly dead already!
-		import ArcInfo
-		ArcInfo.showarcinfo(mother, root, snode, sside, delay,
-				    dnode, dside, new = new)
+##		# NB: when we get here, this object is nearly dead already!
+##		import ArcInfo
+##		ArcInfo.showarcinfo(mother, root, snode, sside, delay,
+##				    dnode, dside, new = new)
 
 	def select(self):
 		self.unlock()
@@ -2107,11 +2101,12 @@ class ArcBox(GO, ArcBoxCommand):
 	# Menu stuff beyond what GO offers
 
 	def attrcall(self):
-		self.mother.toplevel.setwaiting()
-		import ArcInfo
-		ArcBox.arc_info=ArcInfo.showarcinfo(self.mother, self.mother.root,
-				    self.snode, self.sside, self.delay,
-				    self.dnode, self.dside)
+		pass
+##		self.mother.toplevel.setwaiting()
+##		import ArcInfo
+##		ArcBox.arc_info=ArcInfo.showarcinfo(self.mother, self.mother.root,
+##				    self.snode, self.sside, self.delay,
+##				    self.dnode, self.dside)
 
 	def delcall(self):
 		mother = self.mother

@@ -71,7 +71,6 @@ else:
 # macfreeze: exclude LinkEdit
 # macfreeze: exclude AnchorEdit
 # macfreeze: exclude AnchorEditForm
-# macfreeze: exclude ArcInfoForm
 # macfreeze: exclude CmifChannel
 # macfreeze: exclude SocketChannel
 # macfreeze: exclude GraphChannel
