@@ -89,6 +89,7 @@ class _Toplevel:
 		self._appcommandlist=None
 
 		self._activeDocFrame=None
+		self._register_entries=[]
 
 	# set/get active doc frame (MDIFrameWnd)
 	def setActiveDocFrame(self,frame):
@@ -164,6 +165,9 @@ class _Toplevel:
 			frame.init_cmif(None, None, 0, 0, self._apptitle,
 				UNIT_MM, self._appadornments,self._appcommandlist)
 			self.setActiveDocFrame(frame)
+			for r in self._register_entries:
+				ev,cb,arg=r
+				frame.register(ev,cb,arg)
 		return self._subwindows[0]
 
 	# Called by win32 modules for every open document
@@ -177,6 +181,9 @@ class _Toplevel:
 		frame.init_cmif(None, None, 0, 0,self._apptitle,
 			UNIT_MM,self._appadornments,self._appcommandlist)
 		frame.setdocument(cmifdoc,adornments,commandlist)
+		for r in self._register_entries:
+			ev,cb,arg=r
+			frame.register(ev,cb,arg)
 		return frame
 	
 	# Returns the active mainwnd
@@ -184,6 +191,10 @@ class _Toplevel:
 		if len(self._subwindows)==0:
 			self.createmainwnd()
 		return self.getActiveDocFrame() # return the active
+	
+	# register events for all main frames (top level wnds)
+	def register_event(self,ev,cb,arg):
+		self._register_entries.append((ev,cb,arg))
 		
 	############ /SDI-MDI Model Support	
 
