@@ -68,7 +68,7 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 	def close_callback(self):
 		#self.toplevel.save_source_callback(text)
 		if self.is_changed():
-			saveme = windowinterface.GetYesNoCancel("Do you want to keep your changes?", self.toplevel.window)
+			saveme = windowinterface.GetYesNoCancel("Do you wish to keep the changes in the source view?\n(This will not save your document to disk.)", self.toplevel.window)
 			if saveme == 0:		# Which means "YES"
 				self.write_text_and_close() # Which will close all windows.
 			elif saveme == 1: # Which means "No"
