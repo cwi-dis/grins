@@ -114,7 +114,7 @@ class TransitionEngine:
 		dstrgn = None
 		
 		self.__transitiontype.updatebitmap(parameters, tosurf, fromsurf, tmpsurf, dstsurf, dstrgn)
-		wnd.update(wnd.getwindowpos())
+		wnd.updateNow()
 
 	def join(self, window, ismaster, cb):
 		# Join this (sub or super) window to an existing transition

@@ -56,6 +56,12 @@ class Region(base_window.Window):
 			if rc is None:
 				rc = self.getwindowpos()
 			self._topwindow.update(rc)
+
+	def updateNow(self, rc = None):
+		if self._topwindow and self._topwindow != self:
+			if rc is None:
+				rc = self.getwindowpos()
+			self._topwindow.updateNow(rc)
 	
 	def getDR(self):
 		rc = self.getwindowpos()
@@ -363,6 +369,16 @@ class Viewport(Region):
 		if rc is None:
 			rc = self._viewport.getwindowpos()
 		self._ctx.update(rc)
+
+	def updateNow(self, rc = None):
+		wnd = self._ctx
+		xywh_dev = wnd.LRtoDR(rc, round = 1)
+		ltrb_dev = self.ltrb(rc)
+		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
+		rgn = wingdi.CreateRectRgn(ltrb_dev)
+		dc.SelectClipRgn(rgn)
+		rgn.DeleteObject()
+		self._ctx.paintOn(dc)
 
 	def paint(self, dc, exlwnd = None):
 		ltrb = dc.GetClipBox()
