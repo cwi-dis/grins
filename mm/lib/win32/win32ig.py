@@ -90,8 +90,8 @@ class ImageLib:
 
 	# Delete image (release resources)
 	def delete(self,img):
-		if img is not None:
-			img.delete()
+		# let Python's reference counting do the work
+		pass
 
 	# Create a DDB
 	def createDDB(self,img, w = 0, h = 0):

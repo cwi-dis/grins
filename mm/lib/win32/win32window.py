@@ -2531,9 +2531,9 @@ class _ResizeableDisplayList(_DisplayList):
 
 	def close(self):
 		_DisplayList.close(self)
-		if self._img is not None:
-			self._img.delete()	
-			self._img = None
+##		if self._img is not None:
+##			self._img.delete()	
+		self._img = None
 
 	def _do_render(self, entry, dc, region):
 		cmd = entry[0]
@@ -2587,9 +2587,9 @@ class _ResizeableDisplayList(_DisplayList):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 
-		if self._img is not None:
-			self._img.delete()	
-			self._img = None
+##		if self._img is not None:
+##			self._img.delete()	
+		self._img = None
 
 		try:
 			img = win32ig.load(filename)
@@ -2607,7 +2607,7 @@ class _ResizeableDisplayList(_DisplayList):
 			entry = list[ind][0]
 			if entry == 'image':
 				entry, id, ofit, omediadisplayrect = list[ind]
-				if id == self._img:
+				if id is self._img:
 					list[ind] = (entry, id, fit, mediadisplayrect)
 					break
 				

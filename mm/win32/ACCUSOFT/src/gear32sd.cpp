@@ -494,23 +494,23 @@ static PyObject* ig_display_image(PyImage *self, PyObject *args)
 	}
 
 
-static char ig_image_delete__doc__[] =
-""
-;
-static PyObject* ig_image_delete(PyImage *self, PyObject *args)
-	{
-	if(!PyArg_ParseTuple(args, ""))
-		return NULL;
+// static char ig_image_delete__doc__[] =
+// ""
+// ;
+// static PyObject* ig_image_delete(PyImage *self, PyObject *args)
+// 	{
+// 	if(!PyArg_ParseTuple(args, ""))
+// 		return NULL;
 
-	if(IG_image_is_valid(self->m_hIGear))
-		{
-		IG_image_delete(self->m_hIGear);
-		self->m_hIGear = -1;
-		}
+// 	if(IG_image_is_valid(self->m_hIGear))
+// 		{
+// 		IG_image_delete(self->m_hIGear);
+// 		self->m_hIGear = -1;
+// 		}
 
-	Py_INCREF(Py_None);
-	return Py_None;	
-	}
+// 	Py_INCREF(Py_None);
+// 	return Py_None;	
+// 	}
 	
 
 static char ig_color_promote__doc__[] =
@@ -682,8 +682,8 @@ PyMethodDef PyImage::methods[] = {
 	{ "ip_crop", (PyCFunction)ig_ip_crop,METH_VARARGS,ig_ip_crop__doc__},
 	{ "display_image", (PyCFunction)ig_display_image,METH_VARARGS,ig_display_image__doc__},
 	{ "display", (PyCFunction)ig_display_image,METH_VARARGS,ig_display_image__doc__},
-	{ "image_delete",(PyCFunction)ig_image_delete,METH_VARARGS,ig_image_delete__doc__},
-	{ "delete",(PyCFunction)ig_image_delete,METH_VARARGS,ig_image_delete__doc__},
+// 	{ "image_delete",(PyCFunction)ig_image_delete,METH_VARARGS,ig_image_delete__doc__},
+// 	{ "delete",(PyCFunction)ig_image_delete,METH_VARARGS,ig_image_delete__doc__},
 	{ "palette_entry_get",(PyCFunction)ig_palette_entry_get,METH_VARARGS,ig_palette_entry_get__doc__},
 	{ "image_export_ddb",(PyCFunction)ig_image_export_ddb,METH_VARARGS,ig_image_export_ddb__doc__},
 	{ "image_create_ddb",(PyCFunction)ig_image_create_ddb,METH_VARARGS,ig_image_create_ddb__doc__},
