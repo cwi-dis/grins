@@ -35,6 +35,7 @@ class Main(MainDialog):
 		self._closing = 0
 		self._mm_callbacks = {}
 		self.tops = []
+		self.last_location = ''
 		try:
 			import mm, posix, fcntl, FCNTL
 		except ImportError:
@@ -71,6 +72,7 @@ class Main(MainDialog):
 		windowinterface.setwaiting()
 		from MMExc import MSyntaxError
 		import TopLevel
+		self.last_location = url
 		try:
 			top = TopLevel.TopLevel(self, url)
 		except IOError:
