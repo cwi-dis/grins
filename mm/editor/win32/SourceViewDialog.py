@@ -44,6 +44,7 @@ class SourceViewDialog(ViewDialog.ViewDialog):
 	def get_geometry(self):
 		if self.__textwindow:
 			self.last_geometry = self.__textwindow.getgeometry()
+			return self.last_geometry
 			 
 	def pop(self):
 		if self.__textwindow != None:

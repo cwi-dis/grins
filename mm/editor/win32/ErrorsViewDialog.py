@@ -8,9 +8,11 @@ The Errors View is a window that displays a list of source errors
 
 import windowinterface
 from usercmd import *
+import ViewDialog
 
-class ErrorsViewDialog:
+class ErrorsViewDialog(ViewDialog.ViewDialog):
 	def __init__(self):
+		ViewDialog.ViewDialog.__init__(self, 'errorsview_')
 		self.__window = None
 		self.__callbacks={
 			 }
@@ -42,6 +44,11 @@ class ErrorsViewDialog:
 			self.__window.close()
 			self.__window = None
 
+	def get_geometry(self):
+		if self.__window:
+			self.last_geometry = self.__window.getgeometry()
+			return self.last_geometry
+			 
 	def setErrorList(self, errorList):
 		if self.__window != None:
 			self.__window.setErrorList(errorList)
@@ -59,7 +66,7 @@ class ErrorsViewDialog:
 			self.createviewobj()
 		if self.__window.GetSafeHwnd()==0:
 			f=self.toplevel.window
-			f.showview(self.__window,'erview_')
+			f.showview(self.__window,'erview_', self.last_geometry)
 #			self.__window.show()
 
 	def getwindow(self):
