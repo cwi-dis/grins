@@ -13,10 +13,11 @@ class reader:
 		self.format = format
 		self.format_choices = (format,)
 		import imgcolormap
-	if _bigendian:
-		self.colormap = imgcolormap.new('''\
+		if _bigendian:
+			self.colormap = imgcolormap.new('''\
 \0\0\0\0\0\0\0\335\0\377\377\377\0\377\0\0''')
-	else:		self.colormap = imgcolormap.new('''\
+		else:
+			self.colormap = imgcolormap.new('''\
 \0\0\0\0\335\0\0\0\377\377\377\0\0\0\377\0''')
 		self.transparent = 3
 		self.top = 0
