@@ -45,9 +45,8 @@ MENUBAR=(
 	('File', (
 		(ENTRY, 'Open URL...', 'U', OPEN_URL),
 		(ENTRY, 'Open...', 'O', OPEN_FILE),
-		(ENTRY, 'Close', 'W', CLOSE_WINDOW),
-		(SEP,),
-		(ENTRY, 'Close document', None, CLOSE),
+		(ENTRY, 'Close Window', 'W', CLOSE_WINDOW),
+		(ENTRY, 'Close Document', None, CLOSE),
 		(SEP,),
 		(CASCADE, 'Debug', (
 			(TOGGLE, 'Enable call tracing', None, TRACE),
