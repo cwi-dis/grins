@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from UserDict import UserDict
 
 import settings
