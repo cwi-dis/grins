@@ -33,15 +33,13 @@ def create_MMNode_widget(node, root):
 		return MediaWidget(node, root)
 	# TODO: test for a realmedia MMslide node.
 	elif ntype == 'imm':
-#	   print "TODO: Got an imm node."
 		return MediaWidget(node, root)
 	elif ntype == 'excl':
 		return ExclWidget(node, root)
 	elif ntype == 'prio':
 		return PrioWidget(node, root)
 	else:
-		print "DEBUG: Error! I am not sure what sort of node this is!! StructureViews.py:12"
-		print "Node appears to be a ", ntype
+		raise "Unknown node type", ntype
 		return None
 
 ##############################################################################
@@ -478,52 +476,6 @@ class SeqWidget(StructureObjWidget):
 		# Return the minimum size that I can be.
 		return self.get_minsize_abs()
 
-##		if self.iscollapsed():
-##			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
-##			return self.get_relx(boxsize), self.get_rely(boxsize)
-
-##		xgap = self.get_relx(sizes_notime.GAPSIZE)
-
-##		if not self.children and not self.channelbox:
-##			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
-##			min_width, min_height = self.get_relx(boxsize), self.get_rely(boxsize)
-##			if self.dropbox:
-##				min_width = min_width + self.dropbox.get_minsize()[0] + xgap
-##			return min_width, min_height
-
-##		min_width = 0.0; min_height = 0.0
-		
-##		if self.channelbox:
-##			min_width, min_height = self.channelbox.get_minsize()
-##			min_width = min_width + xgap
-			
-##		for i in self.children:
-##			w, h = i.get_minsize()
-##			if self.root.pushbackbars and isinstance(i, MediaWidget):
-##				pushover = self.get_relx(i.downloadtime_lag)
-##				min_width = min_width + pushover
-##			else:
-##				pushover = 0.0;
-##			#assert w < 1.0 and w > 0.0
-##			#assert h < 1.0 and h > 0.0
-##			min_width = min_width + w;
-##			if h > min_height:
-##				min_height = h
-###	   handle = self.get_relx(sizes_notime.HANDLESIZE);
-###	   droparea = self.get_relx(sizes_notime.DROPAREASIZE);
-##		#assert min_width < 1.0
-##		#assert min_height < 1.0
-
-##		#			current +   gaps between nodes  +  gaps at either end	
-##		min_width = min_width + xgap*( len(self.children)-1) + 2*self.get_relx(sizes_notime.HEDGSIZE)
-
-##		if self.dropbox:
-##			min_width = min_width + self.dropbox.get_minsize()[0] + xgap;
-
-##		min_height = min_height + 2*self.get_rely(sizes_notime.VEDGSIZE)
-##		# Add the title
-##		min_height = min_height + self.get_rely(sizes_notime.TITLESIZE);
-##		return min_width, min_height
 
 	def get_minsize_abs(self, ignoreboxes=0):
 		# Everything here calculated in pixels.
@@ -548,11 +500,6 @@ class SeqWidget(StructureObjWidget):
 			
 		for i in self.children:
 			pushover = 0
-##			if self.root.pushbackbars and isinstance(i, MediaWidget):
-##				i.compute_download_time() # Calculate the push-over for this bar.
-##				pushover = i.downloadtime_lag
-##			else:
-##				pushover = 0
 			w,h = i.get_minsize_abs()
 			if h > mh: mh=h
 			mw = mw + w + pushover
@@ -616,9 +563,6 @@ class SeqWidget(StructureObjWidget):
 			l = l + w + self.get_relx(sizes_notime.GAPSIZE)
 		for chindex in range(len(self.children)):
 			medianode = self.children[chindex]
-##			if self.root.pushbackbars and isinstance(medianode, MediaWidget):
-##				# print "DEBUG: pushing bar forward. ", medianode
-##				l = l + medianode.downloadtime_lag;
 			w,h = medianode.get_minsize()
 			thisnode_free_width = freewidth_per_child
 			# Give the node the free width.
@@ -846,8 +790,6 @@ class ChannelBoxWidget(ImageBoxWidget):
 		displist.usefont(f_title)
 		displist.centerstring(x, texty, x+w, texty+texth, label)
 	
-	#def get_minsize(self):
-	#	return self.get_relx(sizes_notime.MINSIZE), self.get_rely(sizes_notime.MINSIZE + sizes_notime.TITLESIZE)
 	def get_minsize(self):
 		return self.get_minsize_abs()
 
@@ -1015,46 +957,6 @@ class VerticalWidget(StructureObjWidget):
 	def __repr__(self):
 		return "VerticalWidget, name is: " + self.name
 
-##	def get_minsize(self):
-##		# Return the minimum size that I can be.
-##		min_width = 0; min_height = 0
-		
-##		if len(self.children) == 0 or self.iscollapsed():
-##			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
-##			return self.get_relx(boxsize), self.get_rely(boxsize)
-		
-##		for i in self.children:
-##			w, h = i.get_minsize()
-##			if self.root.pushbackbars and isinstance(i, MediaWidget):
-##				pushover = self.get_relx(i.downloadtime_lag)
-##				w = w + pushover
-##			else:
-##				pushover = 0.0
-###		   print "VerticalWidget: w and h are: ", w, h
-###		   #assert w < 1.0 and w > 0.0
-##			#assert h < 1.0 and h > 0.0
-##			if w > min_width:		  # The width is the greatest of the width of all children.
-##				min_width = w
-##			min_height = min_height + h
-		
-##		# Add the text label to the top.
-##		titleheight = self.get_rely(sizes_notime.TITLESIZE)
-##		min_height = min_height + titleheight;
-		
-##		ygap = self.get_rely(sizes_notime.GAPSIZE)
-		
-##		#assert min_width < 1.0
-##		#assert min_height < 1.0
-		
-##		min_width = min_width + 2*self.get_relx(sizes_notime.HEDGSIZE)
-##		min_height = min_height + ygap*(len(self.children)-1) + 2.0*self.get_rely(sizes_notime.VEDGSIZE)
-		
-###	   print "VerticalWidget: min_width is: ", min_width
-###	   #assert min_width < 1.0 and min_width > 0.0
-##		#assert min_height < 1.0 and min_height > 0.0
-		
-##		return min_width, min_height
-
 	def get_minsize(self):
 		return self.get_minsize_abs()
 
@@ -1067,12 +969,6 @@ class VerticalWidget(StructureObjWidget):
 
 		for i in self.children:
 			w,h = i.get_minsize_abs()
-##			if self.root.pushbackbars and isinstance(i, MediaWidget):
-##				i.compute_download_time()
-##				pushover = i.downloadtime_lag
-##				w = w + pushover
-##			else:
-##				pushover = 0.0
 			if w > mw: mw=w
 			mh=mh+h
 		mh = mh + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.VEDGSIZE
@@ -1127,10 +1023,6 @@ class VerticalWidget(StructureObjWidget):
 		
 		for medianode in self.children: # for each MMNode:
 			w,h = medianode.get_minsize()
-##			if self.root.pushbackbars and isinstance(medianode, MediaWidget):
-##				pushover = medianode.downloadtime_lag
-##			else:
-##				pushover = 0
 			l = l_par
 			if h > (b-t):			  # If the node needs to be bigger than the available space...
 				pass				   # TODO!!!!!
@@ -1165,10 +1057,6 @@ class VerticalWidget(StructureObjWidget):
 
 	def draw(self, display_list):
 		# print "Draw: Verticle widget ", self.get_box()
-##		if self.root.pushbackbars and not self.iscollapsed():
-##			for i in self.children:
-##				if isinstance(i, MediaWidget):
-##					i.pushbackbar.draw(display_list);
 		StructureObjWidget.draw(self, display_list);
 		
 		# Draw those stupid horizontal lines.
@@ -1297,72 +1185,6 @@ class MediaWidget(MMNodeWidget):
 				MMNodeWidget.is_hit(self, pos)
 		return hit
 		
-##	def compute_download_time(self):
-##		# Compute the download time for this widget.
-##		# Values are in distances (self.downloadtime is a distance).
-##		 
-##		# First get available bandwidth. Silly algorithm to be replaced sometime: in each par we evenly
-##		# divide the available bandwidth, for other structure nodes each child has the whole bandwidth
-##		# available.
-##		prearmtime = self.node.compute_download_time()
-##		# print "MediaWidget prearmtime is: ", prearmtime
-##
-##		# Now subtract the duration of the previous node: this fraction of
-##		# the downloadtime is no problem.
-##		prevnode = self.node.GetPrevious()
-##		if prevnode:
-##			# XXXX Wrong it prevt2 > our t0!
-##			prevt0, dummy, prevt2, dummy, dummy = prevnode.GetTimes()
-##			prevnode_duration = prevt2-prevt0
-##		else:
-##			prevnode_duration = 0
-##		lagtime = prearmtime - prevnode_duration
-##
-##		# print "            lagtime is: ", lagtime
-##		
-##		if lagtime < 0:
-##			lagtime = 0
-##		# Obtaining the begin delay is a bit troublesome:
-##		beginlist = MMAttrdefs.getattr(self.node, 'beginlist')
-##		if beginlist:
-##			begindelay = beginlist[0].delay
-##		else:
-##			begindelay = 0
-##		if begindelay <= 0:
-##			self.downloadtime_lag_errorfraction = 1
-##		elif begindelay >= lagtime:
-##			self.downloadtime_lag_errorfraction = 0
-##		else:
-##			self.downloadtime_lag_errorfraction = (lagtime-begindelay)/lagtime
-##
-##		# print "            begindelay is: ", begindelay
-##		
-##		# Now convert this from time to distance. 
-##		# XXX May be wrong if t2 > next.t0!
-##		t0, t1, t2, dummy, dummy = self.node.GetTimes()
-##		node_duration = (t2-t0)
-##		if node_duration <= 0: node_duration = 1
-##
-##		# print "            node_duration is: ", node_duration
-##		#l,t,r,b = self.pos_abs
-##		node_width = self.get_minsize()[0]
-##		# print "            node width is: ", node_width
-##		# Lagwidth is a percentage of this node's width.
-##		#lagwidth = lagtime * node_width / node_duration
-##		if node_duration == 0:
-##			lagwidth = 0
-###		elif lagtime/node_duration > 1.0:
-###			lagwidth = 1.0 * node_width
-##		else:
-##			lagwidth = (lagtime/node_duration) * node_width
-##
-##		self.downloadtime = 0
-##		if lagwidth > 0:
-##			self.downloadtime_lag = lagwidth
-##		else:
-##			# print "Error: lagwidth is < 0"
-##			self.downloadtime_lag = 0
-### print "            set downloadtime_lag to: ", self.downloadtime_lag
 
 	def show_mesg(self):
 		if self.node.errormessage:
@@ -1382,22 +1204,11 @@ class MediaWidget(MMNodeWidget):
 			pbb_left = self.root.timemapper.time2pixel(t0-(download+begindelay), align='right')
 			self.pushbackbar.moveto((pbb_left, t, l, t+12))
 
-##		if self.pushbackbar:
-##			lag = self.downloadtime_lag
-##			if lag < 0:
-##				print "ERROR! Lag is below 0 - node can play before it is loaded. Cool!"
-##				lag = 0
-##			h = self.get_rely(12);		# 12 pixels high.
-##			self.pushbackbar.moveto((l-lag,t,l,t+h))
-#	   l = l + self.get_relx(1);
-#	   b = b - self.get_rely(1);
-#	   r = r - self.get_relx(1);
 		t = t + self.get_rely(sizes_notime.TITLESIZE)
 		pix16x = self.get_relx(16);
 		pix16y = self.get_rely(16);
 		self.transition_in.moveto((l,b-pix16y,l+pix16x, b))
 		self.transition_out.moveto((r-pix16x,b-pix16y,r, b))
-#	   dt = self.get_relx(self.downloadtime)
 
 		MMNodeWidget.recalc(self) # This is probably not necessary.
 
@@ -1485,10 +1296,6 @@ class MediaWidget(MMNodeWidget):
 			return None
 		
 		channel_type = self.node.GetChannelType()
-#	   if channel_type == 'sound' or channel_type == 'video':
-			# TODO: return a sound or video bitmap.
-#		   print "DEBUG: get_image_filename: url is a sound or video."
- #		 return None
 		if url and self.root.thumbnails and channel_type == 'image':
 			url = self.node.context.findurl(url)
 			try:
@@ -1638,14 +1445,6 @@ class Icon(MMNodeWidget):
 		iconsizey = sizes_notime.ERRSIZE
 		MMNodeWidget.moveto(self, (x, y, x+iconsizex, y+iconsizey))
 
-##  def recalc(self):
-##	  l,t,w,h = self.parent.get_box();
-##	  l=l+self.get_relx(1)			# Trial-and-error numbers.
-##	  t = t+self.get_rely(2)
-##	  r = l + self.get_relx(16);	# This is pretty bad code..
-##	  b = t+self.get_rely(16);
-##	  self.moveto((l,t,r,b));
-
 	def draw(self, displist):
 		if self.icon is not None:
 			displist.drawicon(self.get_box(), self.icon)
@@ -1679,9 +1478,6 @@ class TimelineWidget(MMNodeWidget):
 		longtick_top = y + (h/6)
 		label_top = y + (h/2)
 		label_bot = y + h
-##		display_list.drawfbox(self.highlight(COLCOLOR), self.get_box())
-##		display_list.fgcolor(TEXTCOLOR)
-##		display_list.drawbox(self.get_box())
 		starttime, dummy, oldright = self.time_segments[0]
 		stoptime, dummy, dummy = self.time_segments[-1]
 		for time, left, right in self.time_segments[1:]:
