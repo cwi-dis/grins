@@ -598,6 +598,8 @@ class DrawTk:
 		return self._has_scale
 
 	def AdjustScale(self,lbox,box):
+		if not box or not lbox or len(box)!=4 or len(lbox)!=4:
+			return
 		self._xscale=float(lbox[0])/box[0]
 		self._yscale=float(lbox[1])/box[1]
 		self._wscale=float(lbox[2])/box[2]
