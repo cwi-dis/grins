@@ -1,0 +1,7 @@
+#!/bin/sh
+grinsdbsrc=/ufs/jack/src/mm/pytools/grinsdb/src
+PYTHONPATH=$PYTHONPATH:$grinsdbsrc
+export PYTHONPATH
+MOD=`basename $0`
+
+exec python $grinsdbsrc/$MOD.py ${1+"$@"}
