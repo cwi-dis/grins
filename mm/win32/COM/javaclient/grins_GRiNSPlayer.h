@@ -41,6 +41,14 @@ JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_ndisconnect
 
 /*
  * Class:     grins_GRiNSPlayer
+ * Method:    ngetCookie
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetCookie
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     grins_GRiNSPlayer
  * Method:    ngetDuration
  * Signature: (I)D
  */
