@@ -18,10 +18,10 @@ ALL_LAYOUTS = '(All Channels)'
 TYPE_ABSTRACT, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT = range(4)
 
 class Node:
-	def __init__(self, name, dict, ctx):
+	def __init__(self, name, nodeRef, ctx):
 		self._isExclude = 0
 		self._name = name
-		self._defattrdict = dict
+		self._nodeRef = nodeRef
 		self._parent = None
 		self._children = []
 		self._ctx = ctx
@@ -72,12 +72,12 @@ class Node:
 	def importAttrdict(self):
 		self._curattrdict = {}
 		
-		isExclude = self._defattrdict.get('isExclude')
+		isExclude = self._nodeRef.GetAttrDef('isExclude',None)
 		# todo: optimize
 		if isExclude == None:
 			parent = self.getParent()
 			while parent != None:
-				isExclude = parent._defattrdict.get('isExclude')
+				isExclude = parent._nodeRef.GetAttrDef('isExclude',None)
 				if isExclude:
 					break
 				parent = parent.getParent()
@@ -87,8 +87,8 @@ class Node:
 				
 		self._isExclude = isExclude
 			
-	def getDocDict(self):
-		return self._defattrdict
+	def getNodeRef(self):
+		return self._nodeRef
 
 	def getSubNodeList(self):
 		return self._children
@@ -140,7 +140,7 @@ class Node:
 		return self._curattrdict['wingeom']
 
 	def isShowEditBackground(self):
-		showEditBackground = self._defattrdict.get('showEditBackground')
+		showEditBackground = self._nodeRef.GetAttrDef('showEditBackground',None)
 		if showEditBackground != None and showEditBackground == 1:
 			return 1
 		return 0		
@@ -152,8 +152,8 @@ class Node:
 		return not self._isExclude
 	
 class Region(Node):
-	def __init__(self, name, dict, ctx):
-		Node.__init__(self, name, dict, ctx)
+	def __init__(self, name, nodeRef, ctx):
+		Node.__init__(self, name, nodeRef, ctx)
 		self._nodeType = TYPE_REGION
 		
 	def importAttrdict(self):
@@ -164,17 +164,17 @@ class Region(Node):
 		else:			
 			editBackground = None
 			if self.isShowEditBackground():
-				editBackground = self._defattrdict.get('editBackground')
+				editBackground = self._nodeRef.GetAttrDef('editBackground',None)
 			
 			if editBackground != None:				
 					self._curattrdict['bgcolor'] = editBackground
 					self._curattrdict['transparent'] = 0
 			else:
-				self._curattrdict['bgcolor'] = self._defattrdict.get('bgcolor')
-				self._curattrdict['transparent'] = self._defattrdict.get('transparent')
+				self._curattrdict['bgcolor'] = self._nodeRef.GetInherAttrDef('bgcolor', (0,0,0))
+				self._curattrdict['transparent'] = self._nodeRef.GetInherAttrDef('transparent', 1)
 		
-		self._curattrdict['wingeom'] = self._defattrdict.get('base_winoff')
-		self._curattrdict['z'] = self._defattrdict.get('z')
+		self._curattrdict['wingeom'] = self._nodeRef.getPxGeom()
+		self._curattrdict['z'] = self._nodeRef.GetAttrDef('z', 0)
 	
 	def show(self):
 		if self.canShow and self._parent._graphicCtrl != None:
@@ -240,7 +240,7 @@ class Region(Node):
 			self._ctx.selectBgColor(self)
 
 	def isExclude(self):
-		isExclude = self._defattrdict.get('isExclude')
+		isExclude = self._nodeRef.GetAttrDef('isExclude',0)
 		
 		return isExclude
 
@@ -250,14 +250,14 @@ class Region(Node):
 class MediaRegion(Region):
 	def __init__(self, name, node, ctx):
 		self.mmnode = node
-		dict = node.attrdict
-		Region.__init__(self, name, dict, ctx)
+		nodeRef = node
+		Region.__init__(self, name, nodeRef, ctx)
 		self._nodeType = TYPE_MEDIA
 
 	def importAttrdict(self):
 		Node.importAttrdict(self)
-		self._curattrdict['bgcolor'] = self._defattrdict.get('bgcolor')
-		self._curattrdict['transparent'] = 1		
+		self._curattrdict['bgcolor'] = MMAttrdefs.getattr(self._nodeRef, 'bgcolor')
+		self._curattrdict['transparent'] = MMAttrdefs.getattr(self._nodeRef, 'transparent')
 		
 		# get wingeom according to the subregion positionning
 		# note this step is not done during the parsing in order to maintains all constraint information
@@ -301,8 +301,8 @@ class MediaRegion(Region):
 			bottom = self.mmnode.GetRawAttrDef('bottom', None) 
 			width =	self.mmnode.GetRawAttrDef('width', None) 
 			height = self.mmnode.GetRawAttrDef('height', None)
-			regPoint = self.mmnode.GetAttr('regPoint', None)
-			regAlign = self.mmnode.GetAttr('regAlign', None)
+			regPoint = self.mmnode.GetAttrDef('regPoint', None)
+			regAlign = self.mmnode.GetAttrDef('regAlign', None)
 			self.media_width, self.media_height = self.mmnode.GetDefaultMediaSize(wingeom[2], wingeom[3])
 			if regPoint == 'topLeft' and regAlign == 'topLeft':
 				if fit == 'hidden':
@@ -377,11 +377,11 @@ class MediaRegion(Region):
 		return Node.canShow(self) and self.getParent().canShow()
 	
 class Viewport(Node):
-	def __init__(self, name, dict, ctx):
+	def __init__(self, name, nodeRef, ctx):
 		self.currentX = 8
 		self.currentY = 8
 		
-		Node.__init__(self, name, dict, ctx)
+		Node.__init__(self, name, nodeRef, ctx)
 		self._nodeType = TYPE_VIEWPORT
 		self._viewport = self
 
@@ -390,16 +390,16 @@ class Viewport(Node):
 
 		editBackground = None
 		if self.isShowEditBackground():
-			editBackground = self._defattrdict.get('editBackground')
+			editBackground = self._nodeRef.GetAttrDef('editBackground',None)
 			
 		if editBackground != None:				
 				self._curattrdict['bgcolor'] = editBackground
 				self._curattrdict['transparent'] = 0
 		else:
-			self._curattrdict['bgcolor'] = self._defattrdict.get('bgcolor')
-			self._curattrdict['transparent'] = self._defattrdict.get('transparent')
+			self._curattrdict['bgcolor'] = self._nodeRef.GetInherAttrDef('bgcolor', (0,0,0))
+			self._curattrdict['transparent'] = self._nodeRef.GetInherAttrDef('transparent', 1)
 		
-		w,h=self._defattrdict.get('width'),self._defattrdict.get('height')
+		w,h=self._nodeRef.getPxGeom()
 		self._curattrdict['wingeom'] = (self.currentX,self.currentY,w,h)
 
 	def getRegion(self, name):
@@ -564,7 +564,7 @@ class LayoutView2(LayoutViewDialog2):
 	# the pure sound region are excluded
 	def __buildOrderedRegionList(self, orderedRegionList, parentId):
 		for subreg in self.__channelTreeRef.getsubregions(parentId):
-			if subreg.get('chsubtype') != 'sound':
+			if subreg.GetAttrDef('chsubtype',None) != 'sound':
 				orderedRegionList.append(subreg)
 			self.__buildOrderedRegionList(orderedRegionList, subreg.name)
 
@@ -871,8 +871,8 @@ class LayoutView2(LayoutViewDialog2):
 		self._viewports = {}
 		id2parentid = {}
 		for chan in mmctx.channels:
-			if chan.get('type')=='layout':
-				if chan.get('chsubtype') != 'sound':
+			if chan.GetAttrDef('type',None)=='layout':
+				if chan.GetAttr('chsubtype') != 'sound':
 					if chan.has_key('base_window'):
 						# region
 						id2parentid[chan.name] = chan['base_window']
@@ -1099,9 +1099,10 @@ class LayoutView2(LayoutViewDialog2):
 
 	def selectBgColor(self, node):
 		if node.getNodeType() != TYPE_MEDIA:
-			dict = node.getDocDict()
-			bgcolor = dict.get('bgcolor')
-			transparent = dict.get('transparent')
+			nodeRef = node.getNodeRef()
+			# to do: for snap version, manage the inherit value
+			bgcolor = nodeRef.GetInherAttrDef('bgcolor', (0,0,0))
+			transparent = nodeRef.GetInherAttrDef('transparent', 1)
 		
 			newbg = self.chooseBgColor(bgcolor)
 			if newbg != None:
@@ -1120,8 +1121,8 @@ class LayoutView2(LayoutViewDialog2):
 						self.context.channeldict[node.getName()])
 
 	def sendBack(self, region):
-		dict = region.getDocDict()
-		currentZ = dict.get('z')
+		nodeRef = region.getNodeRef()
+		currentZ = nodeRef.GetAttrDef('z',0)
 		
 		# get the list of sibling regions 
 		regionList = region.getParent().getSubNodeList()
@@ -1134,8 +1135,8 @@ class LayoutView2(LayoutViewDialog2):
 		min = -1
 		cntMin = 0
 		for sibRegion in regionList:
-			dict = sibRegion.getDocDict()
-			z = dict.get('z')
+			nodeRef = sibRegion.getNodeRef()
+			z = nodeRef.GetAttrDef('z', 0)
 			if z<min or min == -1:
 				min = z
 				cntMin = 0
@@ -1151,8 +1152,8 @@ class LayoutView2(LayoutViewDialog2):
 		if min == 0:
 			# we have to increment all z-index values
 			for sibRegion in regionList:
-				dict = sibRegion.getDocDict()
-				z = dict.get('z')
+				nodeRef = sibRegion.getNodeRef()
+				z = nodeRef.GetAttrDef('z', 0)
 				if sibRegion == region:
 					chList.append((region, min))
 				else:
@@ -1165,8 +1166,8 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyZOrderOnRegionList(chList)
 		
 	def bringFront(self, region):
-		dict = region.getDocDict()
-		currentZ = dict.get('z')
+		nodeRef = region.getNodeRef()
+		currentZ = nodeRef.GetAttrDef('z', 0)
 		
 		# get the list of sibling regions 
 		regionList = region.getParent().getSubNodeList()
@@ -1179,8 +1180,8 @@ class LayoutView2(LayoutViewDialog2):
 		max = -1
 		cntMax = 0
 		for sibRegion in regionList:
-			dict = sibRegion.getDocDict()
-			z = dict.get('z')
+			nodeRef = sibRegion.getNodeRef()
+			z = nodeRef.GetAttrDef('z', 0)
 			if z>max:
 				max = z
 				cntMax = 0
@@ -1356,11 +1357,11 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
 			
 		# get the current geom value
-		dict = viewport.getDocDict()
-		geom = dict.get('width'), dict.get('height')
+		nodeRef = viewport.getNodeRef()
+		geom = nodeRef.getPxGeom()
 
 		self.dialogCtrl.enable('ShowRbg',1)
-		showEditBackground = dict.get('showEditBackground')
+		showEditBackground = nodeRef.GetAttrDef('showEditBackground', 0)
 		if showEditBackground == 1:
 			self.dialogCtrl.setCheckCtrl('ShowRbg', 0)
 		else:
@@ -1432,17 +1433,17 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.enable('RegionX',1)
 		self.dialogCtrl.enable('RegionY',1)
 
-		dict = region.getDocDict()
-		geom = dict.get('base_winoff')
+		nodeRef = region.getNodeRef()
+		geom = nodeRef.getPxGeom()
 
 		self.dialogCtrl.enable('ShowRbg',1)
-		showEditBackground = dict.get('showEditBackground')
+		showEditBackground = nodeRef.GetAttrDef('showEditBackground', 0)
 		if showEditBackground == 1:
 			self.dialogCtrl.setCheckCtrl('ShowRbg', 0)
 		else:
 			self.dialogCtrl.setCheckCtrl('ShowRbg', 1)
 
-		z = dict.get('z', 0)
+		z = nodeRef.GetAttrDef('z', 0)
 		self.dialogCtrl.setFieldCtrl('RegionZ',"%d"%z)		
 								  
 		self.updateRegionGeomOnDialogBox(geom)
@@ -1642,8 +1643,8 @@ class LayoutView2(LayoutViewDialog2):
 
 	def __updateGeomOnViewport(self, ctrlName, value):
 		if self.currentNodeSelected != None:
-			dict = self.currentNodeSelected.getDocDict()
-			w,h = dict.get('width'), dict.get('height')
+			nodeRef = self.currentNodeSelected.getNodeRef()
+			w,h = nodeRef.getPxGeom()
 			if ctrlName == 'RegionW':
 				w = value
 			elif ctrlName == 'RegionH':
@@ -1652,8 +1653,8 @@ class LayoutView2(LayoutViewDialog2):
 
 	def __updateGeomOnRegion(self, ctrlName, value):
 		if self.currentNodeSelected != None:		
-			dict = self.currentNodeSelected.getDocDict()
-			x,y,w,h = dict.get('base_winoff')
+			nodeRef = self.currentNodeSelected.getNodeRef()
+			x,y,w,h = nodeRef.getPxGeom()
 			if ctrlName == 'RegionX':
 				x = value
 			elif ctrlName == 'RegionY':
@@ -1780,14 +1781,14 @@ class LayoutView2(LayoutViewDialog2):
 			if node.getNodeType() in (TYPE_REGION, TYPE_VIEWPORT):
 				list = []
 				if not value:
-					dict = node.getDocDict()
-					if not dict.has_key('showEditBackground'):
+					nodeRef = node.getNodeRef()
+					if not nodeRef.has_key('showEditBackground'):
 						list.append(('showEditBackground',1))
-					if not dict.has_key('editBackground'):	
-						list.append(('editBackground',dict.get('bgcolor')))
+					if not nodeRef.has_key('editBackground'):	
+						list.append(('editBackground',nodeRef.GetAttrDef('bgcolor')))
 				else:
-					dict = node.getDocDict()
-					if dict.has_key('showEditBackground'):
+					nodeRef = node.getNodeRef()
+					if nodeRef.has_key('showEditBackground'):
 						list.append(('showEditBackground',None))
 				self.applyEditorPreference(node, list)
 
