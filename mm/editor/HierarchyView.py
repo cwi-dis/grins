@@ -201,25 +201,58 @@ class HierarchyView(HierarchyViewDialog):
 			self.commands.append(PUSHFOCUS(callback = (self.focuscall, ())))
 			self.commands.append(TIMESCALE(callback = (self.timescalecall, ())))
 			self.commands.append(PLAYABLE(callback = (self.playablecall, ())))
+
 		self.interiorcommands = self._getmediaundercommands(toplevel.root.context) + [
 			EXPAND(callback = (self.expandcall, ())),
-			]
-		self.pasteinteriorcommands = [
-			PASTE_UNDER(callback = (self.pasteundercall, ())),
-			]
-		self.pastenotatrootcommands = [
-			PASTE_BEFORE(callback = (self.pastebeforecall, ())),
-			PASTE_AFTER(callback = (self.pasteaftercall, ())),
-			]
+		]
+
 		self.mediacommands = self._getmediacommands(toplevel.root.context)
-		self.notatrootcommands = [
-			NEW_SEQ(callback = (self.createseqcall, ())),
-			NEW_PAR(callback = (self.createparcall, ())),
-			NEW_CHOICE(callback = (self.createbagcall, ())),
-			NEW_ALT(callback = (self.createaltcall, ())),
-			DELETE(callback = (self.deletecall, ())),
-			CUT(callback = (self.cutcall, ())),
-			]
+
+		if features.H_MODIFY_STRUCTURE in features.feature_set: # Allow structure node changes.
+			print "DEBUG: Adding structure modifying commands.";
+			# mjvdg 12-oct-2000. I have a bad feeling that this is the _wrong_ thing to do.
+			self.pasteinteriorcommands = [
+				PASTE_UNDER(callback = (self.pasteundercall, ())),
+				]
+			self.pastenotatrootcommands = [
+				PASTE_BEFORE(callback = (self.pastebeforecall, ())),
+				PASTE_AFTER(callback = (self.pasteaftercall, ())),
+				]
+			self.notatrootcommands = [
+				NEW_SEQ(callback = (self.createseqcall, ())),
+				NEW_PAR(callback = (self.createparcall, ())),
+				NEW_CHOICE(callback = (self.createbagcall, ())),
+				NEW_ALT(callback = (self.createaltcall, ())),
+				DELETE(callback = (self.deletecall, ())),
+				CUT(callback = (self.cutcall, ())),
+				]			
+			self.structure_commands = [
+				NEW_BEFORE(callback = (self.createbeforecall, ())),
+				NEW_BEFORE_SEQ(callback = (self.createbeforeintcall, ('seq',))),
+				NEW_BEFORE_PAR(callback = (self.createbeforeintcall, ('par',))),
+				NEW_BEFORE_CHOICE(callback = (self.createbeforeintcall, ('bag',))),
+				NEW_BEFORE_ALT(callback = (self.createbeforeintcall, ('alt',))),
+				NEW_AFTER(callback = (self.createaftercall, ())),
+				NEW_AFTER_SEQ(callback = (self.createafterintcall, ('seq',))),
+				NEW_AFTER_PAR(callback = (self.createafterintcall, ('par',))),
+				NEW_AFTER_CHOICE(callback = (self.createafterintcall, ('bag',))),
+				NEW_AFTER_ALT(callback = (self.createafterintcall, ('alt',))),
+				]
+			self.mediacommands = self.mediacommands + self.structure_commands;
+			if toplevel.root.context.attributes.get('project_boston', 0):
+				self.structure_commands.append(NEW_AFTER_EXCL(callback = (self.createafterintcall, ('excl',))))
+				self.structure_commands.append(NEW_BEFORE_EXCL(callback = (self.createbeforeintcall, ('excl',))))
+
+			
+		else:			# TODO: clean this up. This should be later.
+			self.interiorcommands = [];
+			self.pasteinteriorcommands = [];
+			self.pastenotatrootcommands = [];
+			self.notatrootcommands = [
+				DELETE(callback = (self.deletecall, ())),
+				CUT(callback = (self.cutcall, ())),
+				];
+
 		if toplevel.root.context.attributes.get('project_boston', 0):
 			self.notatrootcommands.append(NEW_EXCL(callback = (self.createexclcall, ())))
 		self.animatecommands = self._getanimatecommands(toplevel.root.context)
@@ -237,6 +270,7 @@ class HierarchyView(HierarchyViewDialog):
 				]
 
 		if features.H_MODIFY_STRUCTURE in features.feature_set:
+			print "DEBUG: Adding structure modifying commands.";
 			self.slidecommands = self._getmediacommands(toplevel.root.context, slide = 1) + self.notatrootcommands[4:6]
 			self.rpcommands = self._getmediaundercommands(toplevel.root.context, slide = 1)
 		self.finishlinkcommands = [
@@ -303,26 +337,32 @@ class HierarchyView(HierarchyViewDialog):
 		return rv
 
 	def _getmediacommands(self, ctx, slide = 0):
+		# Enable commands to edit the media
+		# If slide is 0, include commands. Else, not.
+
 		import settings
 		heavy = not features.lightweight
-		if slide:
-			rv = []
-		else:
-			rv = [
-				NEW_BEFORE(callback = (self.createbeforecall, ())),
-				NEW_BEFORE_SEQ(callback = (self.createbeforeintcall, ('seq',))),
-				NEW_BEFORE_PAR(callback = (self.createbeforeintcall, ('par',))),
-				NEW_BEFORE_CHOICE(callback = (self.createbeforeintcall, ('bag',))),
-				NEW_BEFORE_ALT(callback = (self.createbeforeintcall, ('alt',))),
-				NEW_AFTER(callback = (self.createaftercall, ())),
-				NEW_AFTER_SEQ(callback = (self.createafterintcall, ('seq',))),
-				NEW_AFTER_PAR(callback = (self.createafterintcall, ('par',))),
-				NEW_AFTER_CHOICE(callback = (self.createafterintcall, ('bag',))),
-				NEW_AFTER_ALT(callback = (self.createafterintcall, ('alt',))),
-				]
-			if ctx.attributes.get('project_boston', 0):
-				rv.append(NEW_AFTER_EXCL(callback = (self.createafterintcall, ('excl',))))
-				rv.append(NEW_BEFORE_EXCL(callback = (self.createbeforeintcall, ('excl',))))
+
+		rv = [];
+# mjvdg 12-oct-2000: moved this to the constructor.
+# 		if slide:
+# 			rv = []
+# 		else:
+# 			rv = [
+# 				NEW_BEFORE(callback = (self.createbeforecall, ())),
+# 				NEW_BEFORE_SEQ(callback = (self.createbeforeintcall, ('seq',))),
+# 				NEW_BEFORE_PAR(callback = (self.createbeforeintcall, ('par',))),
+# 				NEW_BEFORE_CHOICE(callback = (self.createbeforeintcall, ('bag',))),
+# 				NEW_BEFORE_ALT(callback = (self.createbeforeintcall, ('alt',))),
+# 				NEW_AFTER(callback = (self.createaftercall, ())),
+# 				NEW_AFTER_SEQ(callback = (self.createafterintcall, ('seq',))),
+# 				NEW_AFTER_PAR(callback = (self.createafterintcall, ('par',))),
+# 				NEW_AFTER_CHOICE(callback = (self.createafterintcall, ('bag',))),
+# 				NEW_AFTER_ALT(callback = (self.createafterintcall, ('alt',))),
+# 				]
+# 			if ctx.attributes.get('project_boston', 0):
+# 				rv.append(NEW_AFTER_EXCL(callback = (self.createafterintcall, ('excl',))))
+# 				rv.append(NEW_BEFORE_EXCL(callback = (self.createbeforeintcall, ('excl',))))
 		if slide or heavy or ctx.compatchannels(chtype='image'):
 			rv.append(NEW_BEFORE_IMAGE(callback = (self.createbeforecall, ('image',))))
 		if not slide and (heavy or ctx.compatchannels(chtype='sound')):
