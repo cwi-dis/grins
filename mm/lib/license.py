@@ -103,7 +103,7 @@ class WaitLicense(LicenseDialog):
 			# Evaluation license 
 			self.msg = self.license.msg
 			self.can_try = 1
-			self.can_eval = 1
+			self.can_eval = 0
 		except Error, arg:
 			self.msg = arg
 			self.can_try = 0
