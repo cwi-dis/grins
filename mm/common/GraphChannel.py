@@ -4,6 +4,12 @@ from AnchorDefs import *
 import windowinterface			# for windowinterface.error
 import string
 
+try:
+	from urlopen import urlopen
+except ImportError:
+	def urlopen(file):
+		return open(file, 'r')
+
 XBORDER = 0.05
 YBORDER = 0.05
 
@@ -132,7 +138,7 @@ class GraphChannel(ChannelWindow):
 		elif node.type == 'ext':
 			filename = self.getfilename(node)
 			try:
-				fp = open(filename, 'r')
+				fp = urlopen(filename)
 			except IOError:
 				print 'Cannot open text file', `filename`
 				return ''

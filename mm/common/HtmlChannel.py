@@ -7,6 +7,12 @@ from AnchorDefs import *
 from debug import debug
 import string
 
+try:
+	from urlopen import urlopen
+except ImportError:
+	def urlopen(file):
+		return open(file, 'r')
+
 class HtmlChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + ['fgcolor', 'font', \
 		  'pointsize']
@@ -99,7 +105,7 @@ class HtmlChannel(ChannelWindow):
 		elif node.type == 'ext':
 			filename = self.getfilename(node)
 			try:
-				fp = open(filename, 'r')
+				fp = urlopen(filename)
 			except IOError:
 				print 'Cannot open text file', `filename`
 				return ''
