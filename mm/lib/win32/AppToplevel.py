@@ -519,20 +519,35 @@ class FileDialog:
 				dftext = string.split(filter, '.')[-1]
 		else:
 			# New-style mimetype filter
+			descr = None
 			if type(filter) == type(''):
 				filter = [filter]
+			elif filter and filter[0][:1] == '/':
+				descr = filter[0][1:]
+				filter = filter[1:]
 			dftext = None
 			newfilter = []
+			allext = []
 			for f in filter:
 				extlist = mimetypes.get_extensions(f)
 				if not extlist:
 					extlist = ('.*',)
-				elif not dftext:
-					dftext = extlist[0]
+				else:
+					if not dftext:
+						dftext = extlist[0]
+					allext = allext + extlist
 				description = grins_mimetypes.descriptions.get(f, f)
 				# Turn the extension list into the ; separated pattern list
 				extlist = string.join(map(lambda x:"*"+x, extlist), ';')
 				newfilter.append('%s (%s)|%s'%(description, extlist, extlist))
+			if descr:
+				extlist = string.join(map(lambda x:"*"+x, allext), ';')
+				newfilter.insert(0, '%s|%s'%(descr, extlist))
+				if len(newfilter) == 2:
+					# special case: don't display two
+					# entries that are basically the same
+					del newfilter[1]
+			newfilter.append('Any file (*.*)|*.*')
 			filter = string.join(newfilter, '|') + '||'
 ##		else:
 ##			if existing:
