@@ -11,16 +11,17 @@
     <p>
       These are the release notes for GRiNS for RealSystem G2, version 1.5
       for Windows.  This file contains release notes for both the Lite and the
-      Pro version.
+      Pro versions.
       
-      For a more up-to-date version of
+      For a more up-to-date edition of
       these notes, see <a href="http://www.oratrix.com/GRiNS/">http://www.oratrix.com/GRiNS</a>.
     </p>
 
     <h3>Open Issues</h3>
     <p>
-      Using the <em>Edit Content</em> command starts the program
-      registered for that file type.  This may not always be an editor.
+      Using the <em>Edit Content</em> command from the <em>Edit</em>
+      menu starts the program registered for that file type.  This may
+      not always be an Editor.
     </p>
     <p>
       Although it is possible to create timed anchors (Pro version
@@ -29,15 +30,15 @@
     </p>
     <p>
       There are some differences in execution between the preview
-      player and the RealPlayer G2 when repeats are involved.
+      player and the RealPlayer G2 when looping images and text.
     </p>
     <p>
-      Text nodes get translated to RealText files when publishing the
+      Text nodes are translated to RealText files when publishing the
       document.  If such a text node does not have an explicit
       duration set, the RealText file will not have one either.  No
-      duration in a RealText file means that it will have an implicit
+      duration in a RealText file means that it will have an default
       duration of one minute, which is probably not what was intended.
-      It is better to always add an explicit duration to text nodes.
+      It is better to always add a duration to text nodes.
     </p>
     <p>
       If text does not fit in its region, a small red box is shown in
@@ -45,10 +46,32 @@
       not all text is shown.
     </p>
     <p>
-      In SMIL it is not allowed to jump (hyperlink) into a switch
-      node.  GRiNS currently does not prevent the user from creating
-      such hyperlinks and also does not warn about them.  The
-      RealPlayer G2 refuses to follow such links.
+      The SMIL standard does not permit a jump (hyperlink) into a
+      switch node.  GRiNS currently does not prevent the user from
+      creating such hyperlinks and also does not warn about them.  The
+      RealPlayer G2 does not follow such links.
+    </p>
+    <p>
+      Windows NT does not allow playback of two separate audio
+      channels simultaneously.  Windows 98 does not have this problem.
+    </p>
+    <p>
+      When the height and width in a RealText file differ from the
+      height and width of the region it is played in, the behavior of
+      the preview player in GRiNS and the RealPlayer G2 differ.  It is
+      best to make sure that the height and width in both locations
+      are the same.
+    </p>
+    <p>
+      There may be problems with certain types of TIFF files when they 
+      are converted to JPEG files during publishing.  The problems
+      only occur with TIFF files that use CMYK colors.
+    </p>
+    <p>
+      GRiNS can crash when invalid values are entered for the Clip
+      begin or Clip end properties in video nodes.  Make sure that the
+      values are valid (or empty) before trying to play back a
+      document using Clip begin or Clip end.
     </p>
 
   </body>
