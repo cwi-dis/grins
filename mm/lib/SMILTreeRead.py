@@ -4711,19 +4711,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif ns and ns not in SMIL2ns and ns[-8:] != 'Language':
 			self.warning('default namespace should be "%s"' % SMIL2ns[0], self.lineno)
 		self.__fix_attributes(ns, tagname, attrdict)
-		if method is None and self._elements.has_key(tagname):
+		if self._elements.has_key(tagname):
 			method = self._elements[tagname][0]
-##			if ns:
-##				self._elements[ns + ' ' + tagname] = self._elements[tagname]
 		if method is not None:
 			for module in ELEMENTS.get(tagname, []):
 				if settings.MODULES.get(module):
 					break
 			else:
 				method = None
-		if method is not None:
-			for attr in attrdict.keys():
-				ATTRIBUTES.get(attr)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 
 	def unknown_endtag(self, tagname):
@@ -4760,14 +4755,11 @@ class SMILMetaCollector(xmllib.XMLParser):
 
 	def __init__(self, file=None):
 		self.meta_data = {}
-		self.elements = {
+		self._elements = {
 			'meta': (self.start_meta, None)
 		}
-		for key, val in self.elements.items():
-			if ' ' not in key:
-				for ns in SMIL2ns:
-					self.elements[ns+' '+key] = val
 		self.__file = file or '<unknown file>'
+		self.__encoding = 'utf-8'
 		xmllib.XMLParser.__init__(self)
 
 	def close(self):
@@ -4785,25 +4777,69 @@ class SMILMetaCollector(xmllib.XMLParser):
 	def syntax_error(self, msg):
 		print 'warning: syntax error on line %d: %s' % (self.lineno, msg)
 
-	# the rest is to check that the nesting of elements is done
-	# properly (i.e. according to the SMIL DTD)
+	def handle_xml(self, encoding, standalone):
+		if not encoding:
+			encoding = 'utf-8'
+		self.__encoding = encoding.lower()
+
 	def finish_starttag(self, tagname, attrdict, method):
 		nstag = tagname.split(' ')
 		if len(nstag) == 2 and \
-		   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
+		   (nstag[0] in [SMIL1, GRiNSns]+SMIL2ns or extensions.has_key(nstag[0])):
 			ns, tagname = nstag
-			d = {}
-			for key, val in attrdict.items():
-				nstag = key.split(' ')
-				if len(nstag) == 2 and \
-				   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
-					key = nstag[1]
-				if not d.has_key(key):
-					d[key] = val
-			attrdict = d
 		else:
 			ns = ''
+		if self._elements.has_key(tagname):
+			method = self._elements[tagname][0]
+			# only fix attrs when we're actuall interested in them
+			if method is not None:
+				self.__fix_attributes(ns, tagname, attrdict)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
+
+	def __fix_attributes(self, ns, tagname, attributes):
+		# fix up attributes by removing namespace qualifiers.
+		for key, val in attributes.items():
+			# re-encode attribute value using document encoding
+			try:
+				uval = unicode(val, self.__encoding)
+			except UnicodeError:
+				self.syntax_error("bad encoding for attribute value")
+				del attributes[key]
+				continue
+			except LookupError:
+				self.syntax_error("unknown encoding")
+				del attributes[key]
+				continue
+			try:
+				val = uval.encode('iso-8859-1')
+			except UnicodeError:
+				self.syntax_error("character not in Latin1 character range")
+				del attributes[key]
+				continue
+
+			nsattr = key.split(' ')
+			if len(nsattr) == 2:
+				ans, attr = nsattr
+				if ans in (GRiNSns, QTns, RP9ns):
+					pass
+				elif ans in SMIL2ns:
+					pass
+				else:
+					for sns in SMIL2ns:
+						if ans[:len(sns)] == sns:
+							# recognized
+							break
+					else:
+						# not recognized
+						attr = key
+			else:
+				# keep the same
+				attr = key
+
+			if attr != key:
+				# fix up attribute
+				del attributes[key]
+				attributes[attr] = val
 
 def ReadMetaData(file):
 	p = SMILMetaCollector(file)
