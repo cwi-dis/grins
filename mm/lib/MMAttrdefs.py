@@ -188,8 +188,6 @@ def showstats(a):
 
 # Get an attribute of a node according to the rules.
 #
-toplevel = None
-#
 def getattr(node, attrname):
 	##_stat('MMAttrdefs.getattr')
 	if attrstats != None:
@@ -228,9 +226,6 @@ def getattr(node, attrname):
 	else:
 		raise CheckError, 'bad inheritance ' +`inheritance` + \
 				' for attr ' + `attrname`
-	if attrname == 'file' and toplevel:
-		# Incredible hack to patch filenames
-		attrvalue = toplevel.findfile(attrvalue)
 	# Update the cache
 	try:
 		node.attrcache[attrname] = attrvalue

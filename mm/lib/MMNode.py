@@ -24,12 +24,29 @@ class MMNodeContext:
 		self.channeldict = {}
 		self.hyperlinks = Hlinks().init()
 		self.editmgr = None
+		self.dirname = None
 		return self
 	#
 	def __repr__(self):
 		##_stat('__repr__')
 		return '<MMNodeContext instance, channelnames=' \
 			+ `self.channelnames` + '>'
+	#
+	def setdirname(self, dirname):
+		if not self.dirname:
+			self.dirname = dirname
+	#
+	def findfile(self, filename):
+		import os
+		if os.path.isabs(filename):
+			return filename
+		if self.dirname:
+			altfilename = os.path.join(self.dirname, filename)
+			if os.path.exists(altfilename):
+				return altfilename
+		# As a last resort, search along the cmif search path
+		import cmif
+		return cmif.findfile(filename)
 	#
 	def newnode(self, type):
 		##_stat('newnode')
