@@ -74,3 +74,5 @@ multchoice = mw_dialogs.multchoice
 showmessage = mw_dialogs.showmessage
 showquestion = mw_dialogs.showquestion
 
+beep = mw_toplevel.beep
+
