@@ -73,8 +73,12 @@ class BasicDialog(glwindow.glwindow):
 			return
 		self.load_geometry()
 		self.fix_geometry()
-		glwindow.setgeometry(self.last_geometry)
-		self.form.show_form(PLACE_FREE, 1, self.title)
+		if self.last_geometry:
+			glwindow.setgeometry(self.last_geometry)
+			mode = PLACE_FREE
+		else:
+			mode = PLACE_SIZE
+		self.form.show_form(mode, 1, self.title)
 		glwindow.register(self, self.form.window)
 		self.showing = 1
 		self.setwin()
@@ -139,7 +143,8 @@ class BasicDialog(glwindow.glwindow):
 			x, y, w, h = -1, -1, 0, 0
 		if w == 0: w = self.width
 		if h == 0: h = self.height
-		self.last_geometry = x, y, w, h
+		if (x, y, w, h) <> (-1, -1, 0, 0):
+			self.last_geometry = x, y, w, h
 	#
 	# Clients can override these methods to copy self.last_geometry
 	# from/to more persistent storage:
