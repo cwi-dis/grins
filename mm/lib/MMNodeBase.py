@@ -278,12 +278,18 @@ class MMNode:
 	#
 	# Playability depending on system/environment parameters
 	#
-	def SetPlayability(self, playable=1):
+	def SetPlayability(self, playable=1, getchannelfunc=None):
 		if playable:
 			playable = self._compute_playable()
+		if playable and self.type in leaftypes and getchannelfunc:
+			# For media nodes check that the channel likes
+			# the node
+			chan = getchannelfunc(self)
+			if not chan or not chan.getaltvalue(self):
+				playable = 0
 		self.playable = playable
-		for ch in self.children:
-			ch.SetPlayability(playable)
+		for child in self.children:
+			child.SetPlayability(playable, getchannelfunc)
 
 	def IsPlayable(self):
 		return self.playable
