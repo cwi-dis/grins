@@ -92,10 +92,7 @@ class Region(base_window.Window):
 		dc = wnd_dc.CreateCompatibleDC()
 		oldsurf = dc.SelectObject(surf)
 
-		xywy_dst = ltrb = self._topwindow.LRtoDR(self._rect, round = 1)
-		if self._active_displist:
-			self._active_displist._render(dc, ltrb, xywy_dst, start=1)
-		
+		xywh_dst = ltrb = self._topwindow.LRtoDR(self._rect, round = 1)
 		if self._active_displist:
 			entry = self._active_displist._list[0]
 			bgcolor = None
@@ -109,7 +106,7 @@ class Region(base_window.Window):
 				dc.Rectangle(ltrb)
 				dc.SelectObject(old_brush)
 				wingdi.DeleteObject(brush)
-			self._active_displist._render(dc, ltrb, xywy_dst, start=1)
+			self._active_displist._render(dc, ltrb, xywh_dst, start=1)
 			if self._showing:
 				brush =  wingdi.CreateSolidBrush((255, 0, 0))
 				dc.FrameRect(ltrb, brush)
@@ -143,7 +140,7 @@ class Region(base_window.Window):
 				dc.Rectangle(ltrb)
 				dc.SelectObject(old_brush)
 				wingdi.DeleteObject(brush)
-			self._active_displist._render(dc, ltrb, self.getDR(), start=1)
+			self._active_displist._render(dc, ltrb, self.getDR(), start = 1)
 			if self._showing:
 				brush =  wingdi.CreateSolidBrush((255, 0, 0))
 				dc.FrameRect(ltrb, brush)
@@ -371,9 +368,12 @@ class Viewport(Region):
 		self._ctx.update(rc)
 
 	def updateNow(self, rc = None):
+		return self.update(rc)
+
 		wnd = self._ctx
 		xywh_dev = wnd.LRtoDR(rc, round = 1)
 		ltrb_dev = self.ltrb(rc)
+		ltrb_dev = winstruct.inflate(ltrb_dev, 2, 2)
 		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
 		rgn = wingdi.CreateRectRgn(ltrb_dev)
 		dc.SelectClipRgn(rgn)
@@ -400,7 +400,7 @@ class Viewport(Region):
 	
 	def cloneSurface(self, region, exclwnd = None, dopaint = 1):
 		# what rect to clone
-		rcd = xd, yd, wd, hd = self.LRtoDR(region.getwindowpos())
+		rcd = xd, yd, wd, hd = self.LRtoDR(region.getwindowpos(), round = 1)
 
 		wnd = self._ctx
 		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
@@ -433,7 +433,7 @@ class Viewport(Region):
 
 	def updateSurface(self, surf, region, exclwnd = None):
 		# what rect to update
-		rcd = xd, yd, wd, hd = self.LRtoDR(region.getwindowpos())
+		rcd = xd, yd, wd, hd = self.LRtoDR(region.getwindowpos(), round = 1)
 
 		wnd = self._ctx
 		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
@@ -461,7 +461,7 @@ class Viewport(Region):
 
 	def blitSurfaceOn(self, dc, surf, rc):
 		# what rect to blit
-		rc_dst = xd, yd, wd, hd = self.LRtoDR(rc)
+		rc_dst = xd, yd, wd, hd = self.LRtoDR(rc, round = 1)
 
 		dcc = dc.CreateCompatibleDC()
 		oldsurf = dcc.SelectObject(surf)
