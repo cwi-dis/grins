@@ -69,6 +69,10 @@ echo -x LayoutView >> FreezeOpts
 echo -x UsergroupView >> FreezeOpts
 echo -x LinkEdit >> FreezeOpts
 echo -x AnchorEdit >> FreezeOpts
+echo -x NodeInfo >> FreezeOpts
+echo -x AnchorEditForm >> FreezeOpts
+echo -x ArcInfoForm >> FreezeOpts
+echo -x NodeInfoForm >> FreezeOpts
 
 rem The channels...
 echo -x ExternalChannel >> FreezeOpts

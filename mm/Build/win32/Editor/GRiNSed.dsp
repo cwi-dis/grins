@@ -541,6 +541,10 @@ SOURCE=.\M_LinkEditDialog.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_LinkEditLight.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_longpath.c
 # End Source File
 # Begin Source File
