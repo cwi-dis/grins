@@ -1375,6 +1375,19 @@ class _Window(_AdornmentSupport, _RubberBand):
 		# ...
 		print 'window.updatebgcolor',color
 
+	# transition interface, placeholder
+	
+	def begintransition(self, inout, runit, dict):
+		print 'Transition', dict['trtype']
+		
+	def endtransition(self):
+		pass
+		
+	def changed(self):
+		pass
+		
+	def settransitionvalue(self, value):
+		pass
 
 class _SubWindow(_Window):
 	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z, units):
