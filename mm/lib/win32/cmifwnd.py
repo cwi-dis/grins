@@ -35,6 +35,9 @@ from WMEVENTS import *
 from win32ig import win32ig
 import grinsRC
 
+# commands for popups
+import usercmd,usercmdui
+
 # globals 
 import __main__
 
@@ -344,11 +347,11 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		istr = '%s (z=%d t=%d)'%(self._title,self._z,self._transparent)
 
 		self.SetWindowText(title)
-		list.append(None)
-		list.append(('','highlight all',(self.showall,(1,))))
-		list.append(('','unhighlight all',(self.showall,(0,))))
-		list.append(('','dump hierarchy',(self._topwindow.WndsHierarchy,())))
-		list.append(('','dump displist',(self.dump_active_displist,())))
+#		list.append(None)
+#		list.append(('','highlight all',(self.showall,(1,))))
+#		list.append(('','unhighlight all',(self.showall,(0,))))
+#		list.append(('','dump hierarchy',(self._topwindow.WndsHierarchy,())))
+#		list.append(('','dump displist',(self.dump_active_displist,())))
 
 		self.destroy_menu()
 		menu = win32menu.Menu() 
@@ -368,16 +371,26 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 
 		self.HookAllKeyStrokes(self._char_callback)
 		self._menu = menu
-		
+	
+	# return commnds class id
+	def get_cmdclass_id(self,cmdcl):
+		if cmdcl in usercmdui.class2ui.keys():
+			return usercmdui.class2ui[cmdcl].id
+		else: 
+			print 'CmdClass not found',cmdcl
+			return -1
+
 	def setpopupmenu(self, menutemplate):
 		# Menutemplate is a MenuTemplate-style menu template.
 		# It should be turned into an win32menu-style menu and put
 		# into self._popupmenu.
 		self._destroy_popupmenu()
-		pass
+		self._popupmenu = win32menu.Menu('popup')
+		self._popupmenu.create_popup_from_menubar_spec_list(menutemplate,self.get_cmdclass_id)
 		
 	def _destroy_popupmenu(self):
 		# Free resources held by self._popupmenu and set it to None
+		if self._popupmenu:self._popupmenu.DestroyMenu()
 		self._popupmenu = None
 		
 
@@ -523,6 +536,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 	def onRButtonDown(self, params):
 		msg=win32mu.Win32Msg(params)
 		xpos,ypos=msg.pos()
+
 		if self._menu:
 			id = self._menu.FloatMenu(self,xpos, ypos)
 			if self._cbld.has_key(id) :
