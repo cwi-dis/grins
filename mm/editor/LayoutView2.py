@@ -1696,6 +1696,9 @@ class LayoutView2(LayoutViewDialog2):
 		# for now, moving a viewport is forbidden
 		if sourceNodeType == TYPE_VIEWPORT:
 			return 0
+
+		if sourceNodeType == TYPE_MEDIA and targetNodeType != TYPE_REGION:
+			return 0
 		
 		return 1
 
@@ -1705,11 +1708,12 @@ class LayoutView2(LayoutViewDialog2):
 			return 0
 		
 		sourceNodeType = self.getNodeType(sourceNodeRef)
-		targetNodeType = self.getNodeType(sourceNodeRef)
+		targetNodeType = self.getNodeType(targetNodeRef)
 		
-		if sourceNodeType == TYPE_MEDIA:
-			# if this case, we just have to change the region attribute of the media
-			pass
+		if sourceNodeType == TYPE_MEDIA and targetNodeType == TYPE_REGION:
+			if self.editmgr.transaction():
+				self.editmgr.setnodeattr(sourceNodeRef, 'channel', targetNodeRef.name)
+				self.editmgr.commit('REGION_TREE')
 		elif targetNodeType in (TYPE_REGION, TYPE_VIEWPORT):
 			if self.editmgr.transaction():
 				self.editmgr.setchannelattr(sourceNodeRef.name, 'base_window', targetNodeRef.name)
@@ -2224,20 +2228,19 @@ class TreeWidget(Widget):
 		if nodeType == TYPE_MEDIA:
 			# XXX define type in another module
 			type = 'Media'
-			objectId = `nodeRef.GetUID()`
+			objectId = nodeRef.GetUID()
 		elif nodeType in (TYPE_VIEWPORT, TYPE_REGION):
 			# XXX define type in another module
 			type = 'Region'
 			# XXX the GetUID seems bugged, so we use directly the region Id as global id for now
 			objectId = nodeRef.name
-			self.treeCtrl.beginDrag(type, objectId)
+		self.treeCtrl.beginDrag(type, objectId)
 
 	def __dragObjectIdToNodeRef(self, type, objectId):
 		if type == 'Media': 
 			# retrieve the reference of the source node
-			uid = int(objectId)
 			try:
-				nodeRef = self._context.context.MapUID(uid)
+				nodeRef = self._context.context.mapuid(objectId)
 			except:
 				nodeRef = None
 						
@@ -2250,7 +2253,6 @@ class TreeWidget(Widget):
 	def onDragOver(self, nodeTreeCtrlId, type, objectId):
 		targetNodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
 		sourceNodeRef = self.__dragObjectIdToNodeRef(type, objectId)
-		
 		if self._context.isValidMove(sourceNodeRef, targetNodeRef):
 			# XXX should change
 			return LayoutViewDialog2.DROPEFFECT_MOVE
