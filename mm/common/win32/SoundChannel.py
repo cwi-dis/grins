@@ -106,7 +106,7 @@ class SoundChannel(Channel.ChannelAsync):
 
 	# part of stop sequence
 	def stopplay(self, node):
-		if self.__playing is node and node is not None:
+		if self.__playing is node:
 			if self.__type == 'real':
 				if self.__rc:
 					self.__rc.stopit()
@@ -137,9 +137,10 @@ class SoundChannel(Channel.ChannelAsync):
 			self.need_armdone = 0
 			self.armdone()
 
-	def playdone(self, dummy):
-		self.__playing = None
+	def playdone(self, outside_induced):
+		if not outside_induced:
+			self.__playing = None
 		if self.need_armdone:
 			self.need_armdone = 0
 			self.armdone()
-		Channel.ChannelAsync.playdone(self, dummy)
+		Channel.ChannelAsync.playdone(self, outside_induced)
