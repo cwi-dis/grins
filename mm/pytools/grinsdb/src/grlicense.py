@@ -26,7 +26,7 @@ def gencommerciallicense():
 	dbase = grinsdb.Database()
 	features = getdefaultfeatures()
 	newid = grinsdb.uniqueid()
-	date = (1999, 8, 31)	# Temporary!
+	date = None
 	name = None
 	license = codelicense(newid, date, features, name)
 	grinsdb.loglicense(license)
