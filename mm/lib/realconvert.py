@@ -16,7 +16,7 @@ else:
 engine = None
 audiopin = None
 
-def convertaudiofile(u, dstdir, file, node):
+def convertaudiofile(u, dstdir, file, node, progress = None):
 	import producer, MMAttrdefs, audio, audio.format
 	global engine, audiopin
 	# ignore suggested extension and make our own
@@ -77,6 +77,7 @@ def convertaudiofile(u, dstdir, file, node):
 	bytesperframe = fmt.getblocksize() / fmt.getfpb()
 	nchan = fmt.getnchannels()
 	frate = rdr.getframerate()
+	totframes = rdr.getnframes()
 
 	pp = audiopin.GetPinProperties()
 	pp.SetNumChannels(fmt.getnchannels())
@@ -95,6 +96,8 @@ def convertaudiofile(u, dstdir, file, node):
 	while (flags & producer.MEDIA_SAMPLE_END_OF_STREAM) == 0:
 		nframes = 0
 		data = ''
+		if progress:
+			apply(progress[0], progress[1] + (fread, totframes))
 		while nframes < nframestoread:
 			d, n = rdr.readframes(nframestoread - nframes)
 			if not d:
@@ -180,7 +183,7 @@ def converttextfile(u, dstdir, file, node):
 	return file
 
 
-def convertvideofile(u, srcurl, dstdir, file, node):
+def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	import producer, MMAttrdefs, urllib
 	global engine
 	u.close()
@@ -327,7 +330,12 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 		# dispatch only paint message
 		import win32ui
 		win32ui.PumpWaitingMessages()
+		i = 0
 		while b.WaitForCompletion(0)==0:
+			if progress and (i % 100) == 0:
+				# XXX 30000 is certainly not correct
+				apply(progress[0], progress[1] + (i, 30000))
+			i = i + 1
 			win32ui.PumpWaitingMessages()
 		mc.Stop()
 		win32ui.PumpWaitingMessages()
