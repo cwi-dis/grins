@@ -684,6 +684,7 @@
 #define IDC_54                          1450
 #define IDC_INIT_RECENT_COMBO           1451
 #define IDC_SLIDER1                     1452
+#define IDC_LAYOUT_SLIDER               1453
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -791,7 +792,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        457
 #define _APS_NEXT_COMMAND_VALUE         32900
-#define _APS_NEXT_CONTROL_VALUE         1453
+#define _APS_NEXT_CONTROL_VALUE         1454
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
