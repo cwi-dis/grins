@@ -56,6 +56,7 @@ BH=20	# the height of the open/close button and title
 BW=10   # width of open/close button
 
 MENUH = 20	# Height of menu bar
+ZOOMW = 20	# Width of zoo buttons
 
 class BlockView () = ViewDialog(), BasicDialog () :
 	#
@@ -142,6 +143,11 @@ class BlockView () = ViewDialog(), BasicDialog () :
 	def addmenus(self, (x,y,w,h)):
 		f = self.form
 		menubar = f.add_box(FLAT_BOX,x,y,w,h,'')
+		zoominbut = f.add_button(NORMAL_BUTTON, x+w-ZOOMW,y,ZOOMW,h,'Z')
+		zoominbut.set_call_back(self._button_callback,'+')
+		zoomoutbut = f.add_button(NORMAL_BUTTON, x+w-2*ZOOMW,y,ZOOMW,h,'z')
+		zoomoutbut.set_call_back(self._button_callback,'-')
+		w = w-2*ZOOMW
 
 		edit_menu = f.add_menu(PUSH_MENU,x,y,w/3,h,'Edit')
 		edit_menu.set_menu('i Insert before|a Insert after|u Insert child%l|d Delete')
@@ -343,6 +349,11 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		    obj.set_input('')
 		else:
 		    key = obj.get_default()
+		self._do_command(key)
+	#
+	# button_callback: one of the buttons has been pressed
+	#
+	def _button_callback(self, (obj, key)):
 		self._do_command(key)
 	def _do_command(self,key):
 		if self.commanddict.has_key (key) :
