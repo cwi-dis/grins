@@ -1075,11 +1075,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			self.__container._addchild(node)
 
-		# + what AddAttrs has not translated to grins conventions
-		attributeName = attributes.get('attributeName')
-		if attributeName and attributeName == 'src':
-			node.attrdict['attributeName'] = 'file'
-			
 		node.attrdict['type'] = 'animate'
 		node.attrdict['tag'] = tagname
 		node.attrdict['mimetype'] = 'animate/%s' % tagname

@@ -683,10 +683,7 @@ def getcalcmode(writer, node):
 	return mode
 
 def getattributename(writer, node):
-	grins2smil = {'file':'src', 'bgcolor':'backgroundColor',}
 	attr = MMAttrdefs.getattr(node, 'attributeName')
-	if grins2smil.has_key(attr):
-		return grins2smil[attr]
 	return attr
 
 #
