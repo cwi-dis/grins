@@ -129,7 +129,7 @@ class Player() = scheduler():
 					idle = 0
 			if idle:
 				self.showtime()
-				time.millisleep(25)
+				time.millisleep(50)
 	#
 	# User interface.
 	#
