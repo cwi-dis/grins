@@ -4666,6 +4666,10 @@ class MMNode(MMTreeElement):
 			refnode = arc.refnode()
 			if refnode is None:
 				continue
+			if refnode.GetRoot() is not self.GetRoot():
+				# refnode is not part of the document
+				# (it could be on the clip board)
+				continue
 			if refnode.canplay is None:
 				path = refnode.GetPath()
 				for node in path:

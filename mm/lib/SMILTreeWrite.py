@@ -597,6 +597,9 @@ def getsyncarc(writer, node, isend):
 				refnode = arc.refnode()
 				if writer.prune and refnode is not None and not arc.refnode().WillPlay():
 					continue
+			elif srcnode.GetRoot() is not node.GetRoot():
+				# src node not in document
+				continue
 			elif writer.prune and srcnode is not None and not srcnode.WillPlay():
 				continue
 			elif arc.srcanchor:
@@ -1546,6 +1549,9 @@ class SMILWriter(SMIL):
 				if arc.channel is not None:
 					pass
 				elif srcnode in ('syncbase', 'prev'):
+					pass
+				elif type(srcnode) is not type('') and srcnode.GetRoot() is not node.GetRoot():
+					# srcnode not in document
 					pass
 				elif self.prune and srcnode is not None and not srcnode.WillPlay():
 					pass

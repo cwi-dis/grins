@@ -972,7 +972,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		for node in nodes:
 			self.editmgr.delnode(node)
-			self.fixsyncarcs(self.root, nodes)
+		self.fixsyncarcs(self.root, nodes)
 
 		self.editmgr.commit()
 
@@ -1088,7 +1088,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		for n in nodes:
 			self.editmgr.delnode(n)
-		self.fixsyncarcs(self.root, nodes)
+##		self.fixsyncarcs(self.root, nodes)
 		if len(nodes) == 0:
 			self.editmgr.setclip('', None)
 		elif len(nodes) == 1:
@@ -1249,13 +1249,9 @@ class HierarchyView(HierarchyViewDialog):
 	# returned for "prev" and "syncbase" syncarcs).
 	def fixsyncarcs(self, root, nodelist):
 		em = self.editmgr
-		beginlist = []
-		changed = 0
 		for arc in MMAttrdefs.getattr(root, 'beginlist'):
 			if isinstance(arc.srcnode, MMNode.MMNode) and arc.srcnode.GetRoot() in nodelist:
 				em.delsyncarc(root, 'beginlist', arc)
-		endlist = []
-		changed = 0
 		for arc in MMAttrdefs.getattr(root, 'endlist'):
 			if isinstance(arc.srcnode, MMNode.MMNode) and arc.srcnode.GetRoot() in nodelist:
 				em.delsyncarc(root, 'endlist', arc)
