@@ -507,7 +507,7 @@ class _CommonWindow:
 					try:
 						image = imageop.scale(image, 1,
 							xsize, ysize, w, h)
-					except imageop.error:
+					except (imageop.error, MemoryError):
 						raise error, 'Error scaling image'
 				bitmap = ''
 				for i in range(h):
