@@ -1,6 +1,8 @@
 __version__ = "$Id$"
 
-import sys, os, img, imgformat, getopt
+import sys, os, img, imgformat, getopt, struct
+
+bigendian = struct.pack('i', 1)[0] == '\0'
 
 def mkimg(file, format):
 	try:
@@ -17,19 +19,71 @@ def mkimg(file, format):
 		print 'internal error: unknown format'
 		sys.exit(1)
 
+	descr = rdr.format.descr
+	byteorder = 0			# whether we deal with byte order
+	if descr['size'] > 8:
+		byteorder = 1
+		# must deal with little-endian / big-endian difference
+		comp = descr['comp']
+		for c in comp:
+			if c[0] % 8 != 0 or c[1] != 8:
+				print 'format must use whole-byte pixels/colors'
+				sys.exit(1)
+		size = descr['size']
+		align = descr['align']
+		for altname in dir(imgformat):
+			altfmt = getattr(imgformat, altname)
+			if type(altfmt) is not type(rdr.format):
+				continue
+			descr1 = altfmt.descr
+			if descr1['size'] != size or \
+			   descr1['align'] != align or \
+			   len(descr1['comp']) != len(comp):
+				continue
+			comp1 = descr1['comp']
+			for i in range(len(comp)):
+				if comp1[i][0] != size - comp[i][1] - comp[i][0]:
+					break
+			else:
+				# success
+				break
+		else:
+			print 'cannot find format for other byte order'
+			sys.exit(1)
+
 	f = open(os.path.splitext(os.path.basename(file))[0] + '.py', 'w')
 	f.write('''\
 __version__ = "$''' 'Id' '''$"
 
 import imgformat
+''')
+	if byteorder:
+		f.write('''\
+import struct
 
+_bigendian = struct.pack('i', 1)[0] == '\\0'
+''')
+	f.write('''
 class reader:
 	def __init__(self):
 		self.width = %(width)d
 		self.height = %(height)d
-		self.format = imgformat.%(fmt)s
-		self.format_choices = (self.format,)
-''' % {'width': rdr.width, 'height': rdr.height, 'fmt': fmt})
+''' % {'width': rdr.width, 'height': rdr.height})
+	if byteorder:
+		f.write('''\
+		if _bigendian == %(bigendian)d:
+			format = imgformat.%(format)s
+		else:
+			format = imgformat.%(altformat)s
+''' % {'bigendian': bigendian, 'format': fmt, 'altformat': altname})
+	else:
+		f.write('''\
+		format = imgformat.%s
+''' % fmt)
+	f.write('''\
+		self.format = format
+		self.format_choices = (format,)
+''')
 	if hasattr(rdr, 'colormap'):
 		f.write('\t\timport imgcolormap\n')
 		f.write('\t\tself.colormap = imgcolormap.new(')
