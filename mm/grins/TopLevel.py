@@ -157,8 +157,8 @@ class TopLevel(TopLevelDialog):
 					pass
 				else:
 					if ct == 'GRIN' and tp == 'TEXT':
-						mtype = 'application/smil'
-		if mtype == 'application/smil':
+						mtype = 'application/x-grins-project'
+		if mtype in ('application/x-grins-project', 'application/smil'):
 			import SMILTreeRead
 			self.root = SMILTreeRead.ReadFile(self.filename, self.printfunc)
 		elif mtype == 'application/x-grins-cmif':
