@@ -1,4 +1,3 @@
-
 import os
 debug = os.environ.has_key('CHANNELDEBUG')
 from Channel import Channel
@@ -64,8 +63,10 @@ def startprog(prog, argv):
 	#if osVersion == WINNT:
 	#	com = "start "+ argv[0]
 
-	win32api.WinExec(com, win32con.SW_SHOWNORMAL)
-
+	try:
+		win32api.WinExec(com, win32con.SW_SHOWNORMAL)
+	except win32api.error, e:	
+		print "Shell Channel, WinExec Error: ", e
+	
 	return 0
 	#return os.system(com)
-		
