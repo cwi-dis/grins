@@ -3,27 +3,30 @@ __version__ = "$Id$"
 
 """
 System configuration profiles
-0 Dial-up Modems - ISDN Multiple Bit Rate Video
-1 Intranet - High Speed LAN Multiple Bit Rate Video
-2 28.8, 56, and 100 Multiple Bit Rate Video
-3 6.5 voice audio
-4 16 AM Radio
-5 28.8 FM Radio Mono
-6 28.8 FM Radio Stereo
-7 56 Dial-up High Quality Stereo
-8 64 Near CD Quality Audio
-9 96 CD Quality Audio
-10 128 CD Quality Audio
-11 28.8 Video - Voice
-12 28.8 Video - Audio Emphasis
-13 28.8 Video for Web Server
-14 56 Dial-up Modem Video
-15 56 Dial-up Video for Web Server
-16 100 Video
-17 250 Video
-18 512 Video
-19 1Mb Video
-20 3Mb Video
+0 Video for dial-up modems or single channel ISDN (28.8 to 56 Kbps)
+1 Video for LAN, cable modem, or xDSL (100 to 768 Kbps)
+2 Video for dial-up modems or LAN (28.8 to 100 Kbps)
+3 Video with voice emphasis for dial-up modems (28.8 Kbps)
+4 Video with audio emphasis for dial-up modems (28.8 Kbps)
+5 Video for Web servers (28.8 Kbps)
+6 Video for Web servers (56 Kbps)
+7 Video for single-channel ISDN (64 Kbps)
+8 Video for e-mail and dual-channel ISDN (128 Kbps)
+9 Video for broadband NTSC (256 Kbps)
+10 Video for broadband NTSC (384 Kbps)
+11 Video for broadband NTSC (768 Kbps)
+12 Video for broadband NTSC (1500 Kbps total)
+13 Video for broadband NTSC (2 Mbps total)
+14 Video for broadband film content (768 Kbps)
+15 Video for broadband film content (1500 Kbps total)
+16 Audio for low bit rate voice-oriented content (6.5 Kbps)
+17 Audio for FM radio quality for dial-up modems (28.8 Kbps mono)
+18 Audio for FM radio quality for dial-up modems (28.8 Kbps stereo)
+19 Audio for dial-up modems (56 Kbps stereo)
+20 Audio for single-channel ISDN (64 Kbps stereo)
+21 Audio for near-CD quality (64 Kbps stereo)
+22 Audio for CD-quality (96 Kbps stereo)
+23 Audio for CD-quality transparency (128 Kbps stereo)
 """
 
 import dshow
@@ -48,6 +51,7 @@ class WMWriter:
 		if not wmfapi:
 			return
 		profman = wmfapi.CreateProfileManager()
+		profman.SetSystemProfileVersion(wmfapi.WMT_VER_7_0)
 		prof = profman.LoadSystemProfile(profile) 
 		writer = wmfapi.CreateDDWriter(prof)
 		wmtype = wmfapi.CreateDDVideoWMType(self._dds, avgTimePerFrame)
