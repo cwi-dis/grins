@@ -47,7 +47,7 @@ PLATFORM_TO_PLATFORM = {
 
 def gencommerciallicense(version=None, platform=None):
 	features = PRODUCT_TO_FEATURE[version]
-	features = features + PLATFORM_TO_PLATFORM[platform]
+	features = features + [PLATFORM_TO_PLATFORM[platform]]
 	features = encodefeatures(features)
 	dbase = grinsdb.Database()
 	newid = grinsdb.uniqueid()
@@ -60,7 +60,7 @@ def gencommerciallicense(version=None, platform=None):
 	
 def genevaluationlicense(version=None, valid=14, platform=None):
 	features = PRODUCT_TO_FEATURE[version]
-	features = features + PLATFORM_TO_PLATFORM[platform]
+	features = features + [PLATFORM_TO_PLATFORM[platform]]
 	features = encodefeatures(features)
 	dbase = grinsdb.Database()
 	newid = grinsdb.uniqueid()
