@@ -68,17 +68,20 @@ class DropTarget:
 		return self.OnDragOver(dataobj,kbdstate,x,y)
 
 	def OnDragOver(self,dataobj,kbdstate,x,y):
-		for fmt in self._dropmap.keys():
-			cb=	self._dropmap[fmt][0]
-			res = cb(dataobj,kbdstate,x,y)
-			if res: return res
+		fmt_name, data = GetData(dataobj)
+		callbacks = self._dropmap.get(fmt_name)
+		if callbacks:
+			dragcb = callbacks[0]
+			return dragcb(dataobj, kbdstate, x, y)
+		return DROPEFFECT_NONE
 				
 	def OnDrop(self,dataobj,effect,x,y):
-		for fmt in self._dropmap.keys():
-			cb=	self._dropmap[fmt][1]
-			res = cb(dataobj,effect,x,y)
-			if res: return res
-		return 0
+		fmt_name, data = GetData(dataobj)
+		callbacks = self._dropmap.get(fmt_name)
+		if callbacks:
+			dropcb = callbacks[1]
+			return dropcb(dataobj, effect, x, y)
+		return DROPEFFECT_NONE
 
 	def OnDragLeave(self):
 		pass
