@@ -210,6 +210,25 @@ def prep1(node):
 def prep2(node, root):
 ##	if not node.GetSummary('synctolist'): return
 	arcs = MMAttrdefs.getattr(node, 'synctolist')
+	delay = node.GetAttrDef('begin', 0.0)
+	if delay > 0:
+		parent = node.GetParent()
+		if parent.GetType() == 'seq':
+			xnode = None
+			xside = TL
+			for n in parent.GetChildren():
+				if n is node:
+					break
+				xnode = n
+			if xnode is None:
+				# first child in seq
+				xnode = parent
+				xside = HD
+		else:
+			xnode = parent
+			xside = HD
+		# don't modify the list!!
+		arcs = [(xnode.GetUID(), xside, delay, HD)] + arcs
 	for arc in arcs:
 		xuid, xside, delay, yside = arc
 		try:

@@ -4,6 +4,7 @@ __version__ = "$Id$"
 # Amazing as it may seem, this module is not dependent on window software!
 
 import MMExc
+from HDTL import HD, TL
 
 class EditMgr:
 	#
@@ -142,8 +143,22 @@ class EditMgr:
 	# Sync arc operations
 	#
 	def addsyncarc(self, xnode, xside, delay, ynode, yside):
+		skip = 0
+		if yside == HD:
+			if ynode.GetParent().GetType() == 'seq' and xside == TL:
+				prev = None
+				for n in ynode.GetParent().GetChildren():
+					if n is ynode:
+						break
+					prev = n
+				if prev is not None and xnode is prev:
+					self.setnodeattr(ynode, 'begin', delay)
+					skip = 1
+			elif xside == HD and xnode is ynode.GetParent():
+				self.setnodeattr(ynode, 'begin', delay)
+				skip = 1
 		list = ynode.GetRawAttrDef('synctolist', None)
-		if list is None:
+		if list is None and not skip:
 			list = []
 			ynode.SetAttr('synctolist', list)
 		xuid = xnode.GetUID()
@@ -153,10 +168,24 @@ class EditMgr:
 				self.addstep('delsyncarc',xnode,xs,de,ynode,ys)
 				list.remove(item)
 				break
-		self.addstep('addsyncarc', xnode, xside, delay, ynode, yside)
-		list.append((xuid, xside, delay, yside))
+		if not skip:
+			self.addstep('addsyncarc', xnode, xside, delay, ynode, yside)
+			list.append((xuid, xside, delay, yside))
 	#
 	def delsyncarc(self, xnode, xside, delay, ynode, yside):
+		if yside == HD:
+			if ynode.GetParent().GetType() == 'seq' and xside == TL:
+				prev = None
+				for n in ynode.GetParent().GetChildren():
+					if n is ynode:
+						break
+					prev = n
+				if prev is not None and xnode is prev and ynode.GetAttrDef('begin',None) == delay:
+					self.setnodeattr(ynode, 'begin', None)
+					return
+			elif xside == HD and xnode is ynode.GetParent() and ynode.GetAttrDef('begin',None) == delay:
+				self.setnodeattr(ynode, 'begin', None)
+				return
 		list = ynode.GetRawAttrDef('synctolist', [])
 		xuid = xnode.GetUID()
 		for item in list:
@@ -170,19 +199,6 @@ class EditMgr:
 				break
 		else:
 			raise MMExc.AssertError, 'bad delsyncarc call'
-	#
-	def setsyncarcdelay(self, xnode, xside, delay, ynode, yside):
-		list = ynode.GetRawAttrDef('synctolist', [])
-		xuid = xnode.GetUID()
-		for i in range(len(list)):
-			xn, xs, de, ys = item = list[i]
-			if xn == xuid and (xs, ys) == (xside, yside):
-				self.addstep('setsyncarcdelay', \
-					xnode, xs, delay, ynode, ys)
-				list[i] = (xn, xs, delay, ys)
-				break
-		else:
-			raise MMExc.AssertError, 'bad setsyncarcdelay call'
 	#
 	# Hyperlink operations
 	#
