@@ -1,5 +1,5 @@
-# Null channel
-
 from Channel import Channel
 
-NullChannel = Channel
+class NullChannel(Channel):
+	def __repr__(self):
+		return '<NullChannel instance, name=' + `self._name` + '>'
