@@ -567,3 +567,282 @@ class AttrEditForm(docview.ListView):
 			self._dlgBar._options.setcursel(ix_sel)
 			self.SetItemText(ix_item,1,val)
 
+
+
+
+##################################################
+# AttrEditor as a tab-dialog
+
+class AttrPage(dialog.PropertyPage):
+	def __init__(self,id,form,ixattr):
+		import __main__
+		dll=__main__.resdll
+		dialog.PropertyPage.__init__(self,id,dll,grinsRC.IDR_GRINSED)
+		self._form=form
+		self._ixattr=ixattr
+
+	def OnInitDialog(self):
+		dialog.PropertyPage.OnInitDialog(self)
+		self.HookCommand(self.OnRestore,grinsRC.IDUC_RESTORE)
+		self.HookCommand(self.OnApply,grinsRC.IDUC_APPLY)
+		self.HookCommand(self.OnCancel,win32con.IDCANCEL)
+		self.HookCommand(self.OnOK,win32con.IDOK)
+		if self._ixattr>=0:
+			self._attrname=components.Edit(self,grinsRC.IDC_EDIT1)
+			self._attrinfo=components.Static(self,grinsRC.IDC_ATTR_INFO)
+			self._attrname.attach_to_parent()
+			self._attrinfo.attach_to_parent()
+			if self._attrname._hwnd:
+				a=self._form._attriblist[self._ixattr]
+				self._attrname.settext(a.getlabel())
+				hd=a.gethelpdata()
+				if hd[1]:
+					self._attrinfo.settext(hd[2]+' - default: ' + hd[1])
+				else:
+					self._attrinfo.settext(hd[2])
+					
+	def OnSetActiveX(self):
+		return self._obj_.OnSetActive()
+
+	def OnRestore(self,id,code):
+		print 'OnRestore'
+	def OnApply(self,id,code):
+		print 'OnApply'
+	def OnCancel(self,id,code):
+		self._form.GetParent().PostMessage(win32con.WM_CLOSE)
+	def OnOK(self,id,code):
+		self._form.GetParent().PostMessage(win32con.WM_CLOSE)
+
+class OptionPage(AttrPage):
+	def __init__(self,form,ixattr):
+		AttrPage.__init__(self,grinsRC.IDD_EDITOPTIONSATTR1,form,ixattr)
+
+	def OnSetActiveX(self):
+		print 'OptionPage.OnSetActive'
+
+	def OnInitDialog(self):
+		AttrPage.OnInitDialog(self)
+		self._options=components.ComboBox(self,grinsRC.IDC_COMBO1)
+		self._options.attach_to_parent()
+		self.HookCommand(self.OnChangeOption,grinsRC.IDC_COMBO1)
+		if not self._options._hwnd: return
+		a=self._form._attriblist[self._ixattr]
+		list = a.getoptions()
+		val = a.getcurrent()
+		if val not in list:
+			val = list[0]
+		ix=list.index(val)
+		self._options.setoptions(list)
+		self._options.setcursel(ix)
+	
+	# Response to combo selection change
+	def OnChangeOption(self,id,code):
+		if code==win32con.CBN_SELCHANGE:
+			#apply(self._change_cb,(self._options.getvalue(),))
+			print self._options.getvalue()
+
+class FilePage(AttrPage):
+	def __init__(self,form,ixattr):
+		AttrPage.__init__(self,grinsRC.IDD_EDITFILEATTR1,form,ixattr)
+
+	def OnSetActiveX(self):
+		return AttrPage.OnSetActive(self)
+
+	def OnInitDialog(self):
+		AttrPage.OnInitDialog(self)
+		self._attrval=components.Edit(self,grinsRC.IDC_EDIT2)
+		self._attrval.attach_to_parent()
+		if not self._attrval._hwnd: retrun
+		a=self._form._attriblist[self._ixattr]
+		self._attrval.settext(a.getcurrent())
+		self.HookCommand(self.OnEdit,grinsRC.IDC_EDIT2)
+
+	# Response to edit change
+	def OnEdit(self,id,code):
+		if code==win32con.EN_CHANGE:
+			print self._attrval.gettext()
+
+class ColorPage(AttrPage):
+	def __init__(self,form,ixattr):
+		AttrPage.__init__(self,grinsRC.IDD_EDITCOLORATTR1,form,ixattr)
+
+	def OnSetActiveX(self):
+		return AttrPage.OnSetActive(self)
+
+	def OnInitDialog(self):
+		AttrPage.OnInitDialog(self)
+		self._attrval=components.Edit(self,grinsRC.IDC_EDIT2)
+		self._attrval.attach_to_parent()
+		if not self._attrval._hwnd: retrun
+		a=self._form._attriblist[self._ixattr]
+		self._attrval.settext(a.getcurrent())
+		self.HookCommand(self.OnEdit,grinsRC.IDC_EDIT2)
+
+	# Response to edit change
+	def OnEdit(self,id,code):
+		if code==win32con.EN_CHANGE:
+			print self._attrval.gettext()
+
+class StringPage(AttrPage):
+	def __init__(self,form,ixattr):
+		AttrPage.__init__(self,grinsRC.IDD_EDITSTRINGATTR1,form,ixattr)
+
+	def OnSetActiveX(self):
+		return AttrPage.OnSetActive(self)
+
+	def OnInitDialog(self):
+		AttrPage.OnInitDialog(self)
+		self._attrval=components.Edit(self,grinsRC.IDC_EDIT2)
+		self._attrval.attach_to_parent()
+		if not self._attrval._hwnd: retrun
+		a=self._form._attriblist[self._ixattr]
+		self._attrval.settext(a.getcurrent())
+		self.HookCommand(self.OnEdit,grinsRC.IDC_EDIT2)
+
+	# Response to edit change
+	def OnEdit(self,id,code):
+		if code==win32con.EN_CHANGE:
+			print self._attrval.gettext()
+
+from  GenFormView import GenFormView
+
+class AttrEditFormNew(GenFormView):
+	# class variables to store user preferences
+	# None
+	# Class constructor. Calls base constructor and nullify members
+	def __init__(self,doc):
+		GenFormView.__init__(self,doc,grinsRC.IDD_FORM1)	
+		self._title='Properties'
+		self._attriblist=None
+		self._cbdict=None
+		self._prsht=None;
+
+	# Creates the actual OS window
+	def createWindow(self,parent):
+		self._parent=parent
+		import __main__
+		dll=__main__.resdll
+		prsht=dialog.PropertySheet(grinsRC.IDR_GRINSED,dll)
+		dimpage=AttrPage(grinsRC.IDD_FORM1,self,0)
+		prsht.AddPage(dimpage)
+		prsht.EnableStackedTabs(1)
+		#self.HookMessage(self.onSize,win32con.WM_SIZE)		
+		l=self._attriblist
+		page=None
+		for i in range(len(l)):
+			t = l[i].gettype()
+			if t == 'option':
+				page=OptionPage(self,i)
+			elif t == 'file':
+				page=FilePage(self,i)
+			elif t == 'color':
+				page=ColorPage(self,i)
+			else:
+				page=StringPage(self,i)
+			if i==0:firstpage=page	
+			prsht.AddPage(page)
+
+		self.CreateWindow(parent)
+		prsht.CreateWindow(self,win32con.DS_CONTEXTHELP | win32con.DS_SETFONT | win32con.WS_CHILD | win32con.WS_VISIBLE)
+		self.HookMessage(self.onSize,win32con.WM_SIZE)		
+		rc=self.GetWindowRect()
+		prsht.SetWindowPos(0,(0,0,0,0),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
+		self._prsht=prsht
+		prsht.RemovePage(dimpage)
+		tabctrl=prsht.GetTabCtrl()
+		for i in range(len(l)):
+			tabctrl.SetItemText(i,l[i].getlabel())
+		prsht.SetActivePage(firstpage)
+		prsht.RedrawWindow()
+
+	def OnInitialUpdate(self):
+		GenFormView.OnInitialUpdate(self)
+		
+	def OnEraseBkgndX(self,dc):
+		print 'OnEraseBkgnd'
+
+	def onSize(self,params):
+		msg=win32mu.Win32Msg(params)
+		if msg.minimized(): return
+		if not self._parent or not self._parent._obj_:return
+		if not self._prsht or not self._prsht._obj_:return
+		rc=self._prsht.GetWindowRect()
+		frc=self._parent.CalcWindowRect(rc)
+		mainframe=self._parent.GetMDIFrame()
+		frc=mainframe.ScreenToClient(frc)
+		self._parent.MoveWindow(frc)
+
+		
+	# Called when the view is activated 
+	def activate(self):
+		pass
+
+	# Called when the view is deactivated 
+	def deactivate(self):
+		pass
+
+	# cmif general interface
+	# Called by the core system to close this window
+	def close(self):
+		if hasattr(self,'GetParent'):
+			self.GetParent().DestroyWindow()
+
+	# Called by the core system to set the title of this window
+	def settitle(self,title):
+		self._title=title
+		if hasattr(self,'GetParent'):
+			if self.GetParent().GetSafeHwnd():
+				self.GetParent().SetWindowText(title)
+
+	# Called by the core system to show this window
+	def show(self):
+		self.pop() # for now
+
+	# Called by the core system to bring to front this window
+	def pop(self):
+		childframe=self.GetParent()
+		childframe.ShowWindow(win32con.SW_SHOW)
+		frame=childframe.GetMDIFrame()
+		frame.MDIActivate(childframe)
+
+	# Called by the core system to hide this window
+	def hide(self):
+		self.ShowWindow(win32con.SW_HIDE)
+
+	# Part of the closing mechanism
+	# the parent frame delegates the responcibility to us
+	def OnClose(self):
+		self.call('Cancel')
+
+	# Helper to call a callback given its string id
+	def call(self,k):
+		d=self._cbdict
+		if d and d.has_key(k) and d[k]:
+			apply(apply,d[k])				
+
+	# cmif specific interface
+	# Called by the core system to get a value from the list
+	def getvalue(self,attrobj):
+		return ''
+
+	# Called by the core system to set a value on the list
+	def setvalue(self,attrobj,newval):
+		print 'setvalue',attrobj,newval
+		if not self._obj_:
+			raise error, 'os window not exists'
+		if attrobj not in self._attriblist:
+			raise error, 'item not in list'
+		ix=self._attriblist.index(attrobj)
+		print ix,l,newval
+
+	# Called by the core system to set attribute options
+	def setoptions(self,attrobj,list,val):
+		ix_item=self._attriblist.index(attrobj)
+		t = attrobj.gettype()
+		print 'setoptions',attrobj,list,val
+
+
+import __main__
+if hasattr(__main__,'use_tab_attr_editor') and __main__.use_tab_attr_editor:
+	AttrEditForm=AttrEditFormNew
