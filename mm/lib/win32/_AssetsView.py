@@ -13,12 +13,14 @@ from pywinlib.mfc import docview
 import GenView
 
 ICONNAME_TO_RESID={
-	'text': grinsRC.IDI_GRINS_INFO,
-	'image': grinsRC.IDI_GRINS_QUESTION,
-	'video': None,
-	'audio': None,
-	'html': None,
-	'node': None,
+	None: grinsRC.IDI_ICON_ASSET_BLANK,
+	'ref': grinsRC.IDI_ICON_ASSET_BLANK,
+	'text': grinsRC.IDI_ICON_ASSET_TEXT,
+	'image': grinsRC.IDI_ICON_ASSET_IMAGE,
+	'video': grinsRC.IDI_ICON_ASSET_VIDEO,
+	'audio': grinsRC.IDI_ICON_ASSET_AUDIO,
+	'html': grinsRC.IDI_ICON_ASSET_TEXT,
+	'node': grinsRC.IDI_ICON_ASSET_BLANK,
 }
 
 class _AssetsView(GenView.GenView, docview.ListView):
@@ -35,6 +37,8 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		
 		self.listCtrl = None
 		self.initicons()
+		self.columnsTemplate = []
+		self.items = []
 
 	def initicons(self):
 		self.iconlist_small = []
@@ -77,13 +81,6 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		else:
 			print 'OnCmd', id, code
 
-	# temp for dev
-	def OnClose(self):
-		if 0 and self._closecmdid>0:
-			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND, self._closecmdid)
-		else:
-			self.GetParent().DestroyWindow()
-
 	def showAll(self):
 		print 'showAll'
 	
@@ -92,22 +89,29 @@ class _AssetsView(GenView.GenView, docview.ListView):
 
 	def rebuildList(self):
 		lc = self.listCtrl
+		if not lc: return
 		
 		# set icons
 		lc.setIconLists(self.iconlist_small, self.iconlist_small)
 
 		# insert columns: (align, width, text) list
-		columnsTemplate = [('left', 200, 'column 1'), ('left', 600, 'column 2')]
-		lc.insertColumns(columnsTemplate)
+		lc.insertColumns(self.columnsTemplate)
 
-		# insert item at row 0
-		row, text, imageindex, iteminfo = 0, 'entry 1', 1, ('entry 1 info', )
-		lc.insertItem(row, text, imageindex, iteminfo)
+		lc.removeAll()
 
-		# insert item at row 1
-		row, text, imageindex, iteminfo = 1, 'entry 2', 0, ('entry 2 info', )
-		lc.insertItem(row, text, imageindex, iteminfo)
+		row = 0
+		for item in self.items:
+			imagename = item[0]
+			imageindex = self.iconname_to_index[imagename]
+			if imageindex is None:
+				imageindex = -1 # XXXX
+			text = item[1]
+			iteminfo = item[2:]
+			lc.insertItem(row, text, imageindex, iteminfo)
+			row = row + 1
 
-		print lc.getItemCount(), 'items in list'
+	def setColumns(self, columnlist):
+		self.columnsTemplate = columnlist
 
-
+	def setItems(self, items):
+		self.items = items
