@@ -135,7 +135,7 @@ class RealChannel:
 #		self.__rmaplayer.Begin()
 
 	def ErrorOccurred(self,str):
-		print str
+		self.errormsg(None, str)
 
 	def pauseit(self, paused):
 		if self.__rmaplayer:
