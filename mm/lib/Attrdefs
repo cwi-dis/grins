@@ -35,7 +35,7 @@
 (alt (string) '' 'Alternate text' default
 	'Alternate text for media object' raw light)
 
-(anchorlist (list (enclosed (tuple (any) (int) (enclosed (list (any))) (enclosed (tuple (float) (float))))))
+(anchorlist (list (enclosed (tuple (any) (int) (enclosed (list (any))) (optenclosed (tuple (float) (float))))))
 	() 'Anchors' hidden 'List of anchors on this node' raw light)
 
 (arm_duration (float) -1.0 'Arm duration' hidden
