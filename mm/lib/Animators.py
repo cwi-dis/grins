@@ -716,6 +716,23 @@ class EffectiveAnimator:
 				print 'update',self.__attr,'of node',name,'to',displayValue		
 	
 
+	def __getregion(self, name):
+		from Channel import channels
+		for chan in channels:
+			type = chan._attrdict.get('type')
+			if type == 'layout' and chan._name == name:
+				return chan
+
+	def __appendsubregions(self, region, childs):
+		from Channel import channels
+		for chan in channels:
+			chtype = chan._attrdict.get('type')
+			if chtype == 'layout':
+				base_window = chan._attrdict.get('base_window')
+				if base_window == region._name:
+					childs.append(chan)
+					self.__appendsubregions(chan, childs)
+
 	# update region attributes display value
 	def __updateregion(self, value):
 		attr = self.__attr
@@ -723,30 +740,26 @@ class EffectiveAnimator:
 		regionname = ch.name
 
 		# locate region and its contents (once)
-		# self.__region : layout channel
 		if not self.__region:
-			from Channel import channels
-			for chan in channels:
-				type = chan._attrdict.get('type')
-				if type == 'layout' and chan._name == regionname:
-					self.__region = chan
-				else:
-					base_window = chan._attrdict.get('base_window')
-					if base_window == regionname:
-						self.__regionContents.append(chan)
+			self.__region = self.__getregion(regionname)
+			self.__appendsubregions(self.__region, self.__regionContents)
+	
 		mmlchan = self.__region._attrdict
+
+		# fit (scale): ['hidden':1, 'meet':0, 'slice': -1, 'fill':-3]
+		scale = mmlchan.getCssRawAttr('scale',1)
 
 		if attr == 'position':
 			region = mmlchan.getCssId()
 			region.move(value)
 			coords = region.getPxGeom()
-			self.__updatecoordinates(coords)
+			self.__updatecoordinates(coords, scale=scale)
 
 		elif attr in ('left','top','width','height','right','bottom'):
 			region = mmlchan.getCssId()
 			region.changeRawAttr(attr, value)
 			coords = region.getPxGeom()
-			self.__updatecoordinates(coords)
+			self.__updatecoordinates(coords, scale=scale)
 			
 		elif attr=='z':
 			self.__updatezindex(value)
@@ -765,9 +778,9 @@ class EffectiveAnimator:
 		if debug: 
 			print 'update',attr,'of region',regionname,'to',value
 
-	def __updatecoordinates(self, coords, units = UNIT_PXL, mediacoords=None):
+	def __updatecoordinates(self, coords, units = UNIT_PXL, scale=None):
 		if self.__region and self.__region.window:
-			self.__region.window.updatecoordinates(coords, units, mediacoords)
+			self.__region.window.updatecoordinates(coords, units, scale)
 
 	def __updatezindex(self, z):
 		if self.__region and self.__region.window:
@@ -779,9 +792,8 @@ class EffectiveAnimator:
 			# update content with inherited backgroundColor
 			for chan in self.__regionContents:
 				# check for inherited attr
-				if chan._attrdict.get('bgcolor') == self.__domval: 
-					if chan.window:
-						chan.window.updatebgcolor(color)
+				if not chan._attrdict.get('bgcolor') and chan.window: 
+					chan.window.updatebgcolor(color)
 			
 	def __updatesoundlevel(self, level):
 		for chan in self.__regionContents:
