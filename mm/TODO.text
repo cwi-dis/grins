@@ -1,11 +1,7 @@
 TODO for Michael :-) 
 ---------------------------------------------
 
-* Arrows, arrows, arrows. Multiple arrows to and from source and destination event nodes.
 * Finish off the "simple" click-click event creation that Sjoerd doesn't like.
-* Fix the bugs in the HeirarchyView Icon selection.
-* Optimise the display lists. Again. Use one base display list for as long as possible.
-
 
 * Add two buttons "revert" and "close" to the source view.
 * Error management (go to the source view if there is an error)
@@ -39,3 +35,5 @@ Priority top-to-bottom.
 
 * Create templates for Snap! (slideshow)
 * Show whether a node is empty or not (in the Hierarchy View?).
+
+* Hyperlinks don't appear to work any more.

@@ -173,10 +173,18 @@ class EditableMMNode(MMNode.MMNode):
 		em = self.context.editmgr
 		if not em.transaction():
 			return
-		newnode = self._newleafnode(url)
+		newnode = self._newleafnode(url) # Ahh.. this is a bit wrong?
 		self._insertnode(newnode, -1)
 		print "DEBUG: region is: ", channel
 		newnode.SetAttr('channel', channel)
+		em.commit()
+
+	def NewBeginEvent(self, othernode, event):
+		em = self.context.editmgr
+		if not em.transaction():
+			return
+		e = MMNode.MMSyncArc(self, 'begin', srcnode=othernode, event=event)
+		em.addsyncarc(self, 'beginlist', e)
 		em.commit()
 
 ######################################################################
