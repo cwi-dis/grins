@@ -31,7 +31,7 @@
 	'Key to actuate anchor' raw (smil2 cmif))
 
 (actuate (enum onRequest onLoad) onRequest 'Anchor type' default
-	'How the anchor gets actuated' raw (advanced smil2 cmif))
+	'How the anchor gets actuated' raw (smil2 cmif))
 
 (fragment (string) '' 'Fragment name' default
 	'Fragment identifier' raw (advanced smil2 cmif))

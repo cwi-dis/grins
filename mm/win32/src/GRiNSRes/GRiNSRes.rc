@@ -3048,13 +3048,10 @@ BEGIN
     LTEXT           "Shape:",IDC_STATIC2,14,20,24,8
     COMBOBOX        IDC_COMBO1,59,18,62,50,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "Fragment:",IDC_STATIC3,181,20,32,8
-    EDITTEXT        IDC_EDIT2,226,17,58,14,ES_AUTOHSCROLL
+    LTEXT           "Fragment:",IDC_STATIC3,14,84,32,8
+    EDITTEXT        IDC_EDIT2,59,81,58,14,ES_AUTOHSCROLL
     LTEXT           "Tab index:",IDC_STATIC4,14,106,34,8
     EDITTEXT        IDC_EDIT3,59,102,40,14,ES_AUTOHSCROLL
-    LTEXT           "Actuate:",IDC_STATIC5,14,83,28,8
-    COMBOBOX        IDC_COMBO2,59,81,48,97,CBS_DROPDOWNLIST | WS_VSCROLL | 
-                    WS_TABSTOP
     CONTROL         "External application",IDC_CHECK1,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,209,83,77,10
     LTEXT           "Source level:",IDC_STATIC7,14,62,42,8
@@ -3095,6 +3092,9 @@ BEGIN
     LTEXT           "Destination play state:",IDC_STATIC3,16,109,70,8
     LTEXT           "Access key:",IDC_STATIC4,166,71,40,8
     LTEXT           "Send to:",IDC_STATIC5,166,90,28,8
+    LTEXT           "Actuate:",IDC_STATIC6,166,109,28,8
+    COMBOBOX        IDC_COMBO5,221,106,64,93,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
 END
 
 IDD_EDITATTR_EMPTYGROUP DIALOG DISCARDABLE  0, 0, 300, 164
