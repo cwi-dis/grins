@@ -210,7 +210,8 @@ class _DisplayList:
 		elif cmd == 'box':
 			gc.foreground = entry[1]
 			gc.line_width = entry[2]
-			apply(gc.DrawRectangle, entry[3])
+			x,y,w,h = entry[3]
+			gc.DrawRectangle(x,y,w-2,h-2)
 		elif cmd == 'fbox':
 			gc.foreground = entry[1]
 			apply(gc.FillRectangle, entry[2])
@@ -232,29 +233,26 @@ class _DisplayList:
 			cl, ct, cr, cb = entry[1]
 			l, t, w, h = entry[2]
 			r, b = l + w, t + h
-			l = l+1
-			t = t+1
-			r = r-1
-			b = b-1
-			l1 = l - 1
-			t1 = t - 1
-			r1 = r
-			b1 = b
-			ll = l + 2
-			tt = t + 2
-			rr = r - 2
-			bb = b - 3
+			# l, r, t, b are the corners
+			l3 = l+3
+			t3 = t + 3
+			r3 = r - 3
+			b3 = b - 3
+			# draw left side
 			gc.foreground = cl
-			gc.FillPolygon([(l1, t1), (ll, tt), (ll, bb), (l1, b1)],
+			gc.FillPolygon([(l, t), (l3, t3), (l3, b3), (l, b)],
 				       X.Convex, X.CoordModeOrigin)
+			# draw top side
 			gc.foreground = ct
-			gc.FillPolygon([(l1, t1), (r1, t1), (rr, tt), (ll, tt)],
+			gc.FillPolygon([(l, t), (r, t), (r3, t3), (l3, t3)],
 				       X.Convex, X.CoordModeOrigin)
+			# draw right side
 			gc.foreground = cr
-			gc.FillPolygon([(r1, t1), (r1, b1), (rr, bb), (rr, tt)],
+			gc.FillPolygon([(r3, t3), (r, t), (r, b), (r3, b3)],
 				       X.Convex, X.CoordModeOrigin)
+			# draw bottom side
 			gc.foreground = cb
-			gc.FillPolygon([(l1, b1), (ll, bb), (rr, bb), (r1, b1)],
+			gc.FillPolygon([(l3, b3), (r3, b3), (r, b), (l, b)],
 				       X.Convex, X.CoordModeOrigin)
 		elif cmd == 'diamond':
 			gc.foreground = entry[1]
