@@ -1036,7 +1036,7 @@ class ChannelWindow(Channel):
 			top.hierarchyview.globalsetfocus(node)
 			top.channelview.globalsetfocus(node)
 		else:
-			windowinterface.showmessage('Can only push focus when playing', mtype = 'warning', grab = 1, parent = self.window)
+			windowinterface.showmessage('No node currently playing on %s'%self._name, mtype = 'warning', grab = 1, parent = self.window)
 
 	def save_geometry(self):
 		if self._is_shown and self.window:
