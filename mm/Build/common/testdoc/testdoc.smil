@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+  <head>
+    <meta name="title" content=" basewindow "/>
+    <meta name="generator" content="GRiNS editor 0.5 Unix/motif patchlevel 0"/>
+    <layout>
+      <root-layout id="basewindow-" title=" basewindow " width="640" height="480"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="description" title="description" left="15" top="372" width="610" height="88" GRiNS:type="text"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="text" title="text" left="13" top="9" width="614" height="345" GRiNS:type="text"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="html" title="html" left="91" top="116" width="518" height="216" GRiNS:type="html"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="image" title="image" left="123" top="60" width="428" height="256" GRiNS:type="image"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="sound" title="sound" fit="meet" GRiNS:type="sound"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="video" title="video" left="33" top="93" width="463" height="197" GRiNS:type="video"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="realaudio" title="realaudio" fit="meet" GRiNS:type="RealAudio"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="realvideo" title="realvideo" left="68" top="23" width="460" height="275" GRiNS:type="RealVideo"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="realpix" title="realpix" left="47" top="41" width="462" height="273" GRiNS:type="RealPix"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="realtext" title="realtext" left="79" top="61" width="481" height="264" GRiNS:type="RealText"/>
+    </layout>
+  </head>
+  <body>
+    <par>
+      <text region="description" src="data:,Playing%20a%20text%20node" type="text/plain" dur="2s"/>
+      <text region="text" src="testdata.txt" type="text/plain"/>
+    </par>
+    <par>
+      <text region="description" src="data:,Playing%20a%20html%20node" type="text/plain" dur="2s"/>
+      <text region="html" src="testdata.html" type="text/html"/>
+    </par>
+    <par>
+      <text region="description" src="data:,Playing%20an%20image%20node" type="text/plain" dur="2s"/>
+      <img region="image" src="testdata.jpg"/>
+    </par>
+    <par>
+      <text region="description" src="data:,Playing%20a%20sound%20node" type="text/plain" dur="2s"/>
+      <audio region="sound" src="testdata.aiff"/>
+    </par>
+    <par>
+      <text region="description" src="data:,Playing%20a%20video%20node" type="text/plain" dur="2s"/>
+      <video region="video" src="testdata.mpg"/>
+    </par>
+    <par>
+      <text region="description" src="data:,Playing%20a%20RealAudio%20node" type="text/plain" dur="2s"/>
+      <audio region="realaudio" src="testdata.ra"/>
+    </par>
+    <par>
+      <text region="description" src="data:,Playing%20a%20RealVideo%20node" type="text/plain" dur="2s"/>
+      <video region="realvideo" src="testdata.rv"/>
+    </par>
+    <par>
+      <text region="description" src="data:,Playing%20a%20RealPix%20node" type="text/plain" dur="2s"/>
+      <img region="realpix" src="testdata.rp"/>
+    </par>
+    <par>
+      <text region="description" src="data:,Playing%20a%20RealText%20node" type="text/plain" dur="2s"/>
+      <text region="realtext" src="testdata.rt"/>
+    </par>
+  </body>
+</smil>
