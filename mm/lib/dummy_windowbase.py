@@ -242,9 +242,6 @@ class _Window:
 	def destroy_menu(self):
 		pass
 
-	def create_menu(self, list, title = None):
-		pass
-
 	def _image_size(self, file):
 		if _size_cache.has_key(file):
 			return _size_cache[file]
@@ -429,9 +426,6 @@ class Dialog:
 		pass
 
 	def destroy_menu(self):
-		pass
-
-	def create_menu(self, list, title = None):
 		pass
 
 	def getbutton(self, button):
