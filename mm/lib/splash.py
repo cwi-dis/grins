@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-import Xt, Xm, sys, X
+import Xt, Xm, sys, X, Xcursorfont
 
 def _roundi(x):
 	if x < 0:
@@ -70,6 +70,7 @@ class _Splash:
 		time.sleep(0.1)
 		while Xt.Pending():
 			Xt.ProcessEvent(Xtdefs.XtIMAll)
+		w.DefineCursor(self.watchcursor)
 		return 1
 
 	def wininit(self):
@@ -213,6 +214,7 @@ class _Splash:
 						  'input': X.TRUE,
 						  'x': 500, 'y': 500})
 		self.main = main
+		self.watchcursor = dpy.CreateFontCursor(Xcursorfont.watch)
 
 	def expose(self, w, (func, args), call_data):
 		apply(func, args)
