@@ -1638,6 +1638,53 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# and also, so other people can use it:
 ##		node.char_positions = (self.lineno, self.lineno+1)
 
+		if url and features.editor and features.EXPORT_REAL in features.feature_set:
+			import urlparse
+			utype, host, path, params, query, fragment = urlparse.urlparse(url)
+			if utype == 'file':
+				path, query = MMurl.splitquery(path)
+			if query:
+				rpcontexturl = rpcontextwidth = rpcontextheight = None
+				if '&' in query:
+					queries = query.split('&')
+				elif ';' in query:
+					queries = query.split(';')
+				else:
+					queries = [query]
+				nqueries = []
+				for query in queries:
+					qa = query.split('=', 1)
+					if len(qa) == 2:
+						q, a = qa
+						if q == 'rpcontexturl':
+							rpcontexturl = a
+						elif q == 'rpcontextwidth':
+							try:
+								rpcontextwidth = int(a)
+							except:
+								pass
+						elif q == 'rpcontextheight':
+							try:
+								rpcontextheight = int(a)
+							except:
+								pass
+						else:
+							nqueries.append(query)
+				query = '&'.join(nqueries)
+				if rpcontexturl:
+					anchor = self.__context.newnode('anchor')
+					anchor.__syncarcs = []
+					node._addchild(anchor)
+					self.__links.append((anchor, rpcontexturl))
+					anchor.attrdict['external'] = 1
+					anchor.attrdict['sendTo'] = 'rpcontextwin'
+					anchor.attrdict['actuate'] = 'onLoad'
+					if rpcontextwidth is not None:
+						anchor.attrdict['contextwidth'] = rpcontextwidth
+					if rpcontextheight is not None:
+						anchor.attrdict['contextheight'] = rpcontextheight
+				url = urlparse.urlunparse((utype, host, path, params, query, fragment))
+				attributes['src'] = url
 		self.AddAttrs(node, attributes)
 		node.__mediatype = mediatype, subtype
 		self.__attributes = attributes
