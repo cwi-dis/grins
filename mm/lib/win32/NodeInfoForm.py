@@ -177,13 +177,10 @@ class NodeInfoForm(GenFormView):
 		self.settitle(self._title)
 		self.setchannelnames(self._channelnames,self._initchannel)
 		self.settypes(self._types,self._inittype)
-		if self._name: self.setname(self._name)
-		if self._immtext:
-			self.settext(self._immtext)
-		elif self._children:
-			self.setchildren(self._children)
-		elif self._filename:
-			self.setfilename(self._filename)
+		self.setname(self._name or '')
+		self.settext(self._immtext or '')
+		self.setchildren(self._children or [])
+		self.setfilename(self._filename or '')
 
 	def settitle(self,title):
 		self._title=title
