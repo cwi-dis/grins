@@ -126,7 +126,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.interiorcommands = self._getmediaundercommands(self.toplevel.root.context) + [
 			EXPAND(callback = (self.expandcall, ())),
-			MERGE_CHILD(callback = (self.merge_child, ())),
+			#MERGE_CHILD(callback = (self.merge_child, ())),
 		]
 
 		if not lightweight:
@@ -1699,26 +1699,53 @@ class HierarchyView(HierarchyViewDialog):
 		if len(parent.children) <> 1:
 			self.popup_error("You can only merge a node with it's parents if it has no siblings.")
 			return
-		parent.merge_with_child()
-		self.need_recalc = 1
+
+		em = self.editmgr
+		if not em.transaction():
+			return -1
+		
+		childattrs = child.attrdict
+		myattrs = parent.attrdict
+		conflicts = []		# A list of conflicting keys.
+
+		# Or maybe it would be better to simply replace self with the child.
+		for ck, cv in childattrs.items():
+			if myattrs.has_key(ck) and ck not in ['name']:
+				conflicts.append(ck)
+			else:
+				em.setnodeattr(parent, ck, cv)
+		# TODO: work through all the attributes.
+		print "DEBUG: conflicts are: ", conflicts
+
+		type = child.type
+
+		# Lastly, delete the child node.
+		em.delnode(child)
+
+		em.setnodetype(parent, type) # This cannot be done until the child has been deleted.
+		em.commit()
+
+		self.need_recalc = 1; self.need_redraw = 1
 		self.draw()
 
-	def merge_child(self):
-		if not self.selected_widget:
-			self.popup_error("No selected node!")
-			return
-		if not isinstance(self.selected_widget, StructureWidgets.StructureObjWidget):
-			self.popup_error("This node cannot have children.")
-			return
-		parent = self.selected_widget.node
-		if len(parent.children) <> 1:
-			self.popup_error("To merge a node it must have only one child!")
-		child = parent.children[0]
-		if child.children:
-			self.popup_error("You can only merge a parent with it's child when the child has no children.")
-		parent.merge_with_child()
-		self.need_recalc = 1
-		self.draw()
+
+##	def merge_child(self):
+##		print "DEBUG: merge child."
+##		if not self.selected_widget:
+##			self.popup_error("No selected node!")
+##			return
+##		if not isinstance(self.selected_widget, StructureWidgets.StructureObjWidget):
+##			self.popup_error("This node cannot have children.")
+##			return
+##		parent = self.selected_widget.node
+##		if len(parent.children) <> 1:
+##			self.popup_error("To merge a node it must have only one child!")
+##		child = parent.children[0]
+##		if child.children:
+##			self.popup_error("You can only merge a parent with it's child when the child has no children.")
+##		parent.merge_with_child()
+##		self.need_recalc = 1
+##		self.draw()
 
 	def popup_error(self, message):
 		# I should have done this a long time ago.
