@@ -935,13 +935,13 @@ class HierarchyView(HierarchyViewDialog):
 				em.setnodeattr(obj.node, 'duration', t)
 		else:
 			old_t0 = obj.node.GetBeginDelay()
-			old_dur = MMAttrdefs.getattr(obj.node, 'duration')
+			old_dur = obj.node.GetAttrDef('duration', None)
 			delta_t0 = delta_dur = delta_next = 0
 			if side == 'left':
 				delta_t0 = t - old_t0
 				delta_dur = -delta_t0
 			else:
-				delta_dur = t - old_dur
+				delta_dur = t - (old_dur or 0)
 				delta_next = -delta_dur
 			if delta_t0:
 				t = delta_t0
@@ -952,8 +952,9 @@ class HierarchyView(HierarchyViewDialog):
 						break
 				newarc = MMNode.MMSyncArc(obj.node, 'begin', srcnode = 'syncbase', delay = t)
 				em.addsyncarc(obj.node, 'beginlist', newarc, 0)
-			if delta_dur:
-				dur = MMAttrdefs.getattr(obj.node, 'duration') + delta_dur
+			if delta_dur and (side == 'right' or old_dur is not None):
+				# if dragging left side, only set duration if it was already set
+				dur = (old_dur or 0) + delta_dur
 				if dur < 0:
 					# Can happen: if we drag into the freeze duration
 					dur = 0
