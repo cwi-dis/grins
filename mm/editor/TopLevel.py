@@ -1,41 +1,44 @@
 # Top level menu.
 # Read the file and create a menu that accesses the basic functions.
 
+import posix
+
 import MMExc
 import MMAttrdefs
 import MMTree
+
 from EditMgr import EditMgr
+
+import glwindow
 from Dialog import BasicDialog
+from ViewDialog import ViewDialog
 import AttrEdit
+
 import Timing
 
-import gl, GL, DEVICE
+import gl, DEVICE
 import fl
 from FL import *
 
 
 # Parametrizations
-WIDTH, HEIGHT = 120, 280		# Menu dimensions
 BHEIGHT = 30				# Button height
 HELPDIR = '/ufs/guido/mm/demo/help'	# Where to find the help files
 
 
-class TopLevel() = BasicDialog():
+class TopLevel() = ViewDialog(), BasicDialog():
 	#
 	# Initialization.
 	#
 	def init(self, filename):
-		self.filename = filename
-		print 'parsing', self.filename, '...'
-		self.root = MMTree.ReadFile(self.filename)
-		print 'done.'
-		self.context = self.root.GetContext()
-		self.editmgr = EditMgr().init(self.root)
-		self.context.seteditmgr(self.editmgr)
-		self.editmgr.register(self)
+		self = ViewDialog.init(self, 'toplevel_')
 		self.help = None
+		self.filename = filename
+		self.read_it()
+		width, height = \
+			MMAttrdefs.getattr(self.root, 'toplevel_winsize')
+		self = BasicDialog.init(self, (width, height, 'CMIF'))
 		Timing.calctimes(self.root)
-		BasicDialog.init(self, (WIDTH, HEIGHT, 'CMIF'))
 		self.makeviews()	# References the form just made
 		return self
 	#
@@ -44,16 +47,16 @@ class TopLevel() = BasicDialog():
 	def show(self):
 		if self.showing: return
 		BasicDialog.show(self)
-		fl.qdevice(DIALOG.WINQUIT)
+		fl.qdevice(DEVICE.WINQUIT)
 	#
 	def hide(self):
-		self.hideviews()
 		BasicDialog.hide(self)
+		self.hideviews()
 	#
 	def destroy(self):
-		AttrEdit.closeall(self.root)
-		self.destroyviews()
 		BasicDialog.destroy(self)
+		self.destroyviews()
+		AttrEdit.closeall(self.root)
 	#
 	# Main interface.
 	#
@@ -79,9 +82,11 @@ class TopLevel() = BasicDialog():
 	# Make the menu form (called from BasicDialog.init).
 	#
 	def make_form(self):
-		self.form = form = fl.make_form(FLAT_BOX, WIDTH, HEIGHT)
+		width, height = self.width, self.height
+		bheight = height/9
+		self.form = form = fl.make_form(FLAT_BOX, width, height)
 		#
-		x, y, w, h = 0, HEIGHT, WIDTH, BHEIGHT
+		x, y, w, h = 0, height, width, bheight
 		#
 		y = y - h
 		self.bvbutton = \
@@ -99,7 +104,7 @@ class TopLevel() = BasicDialog():
 		self.svbutton = \
 			form.add_button(PUSH_BUTTON,x,y,w,h, 'Styles')
 		#
-		y = 120
+		y = 4*bheight
 		#
 		y = y - h
 		self.savebutton = \
@@ -165,12 +170,25 @@ class TopLevel() = BasicDialog():
 	#
 	def save_callback(self, (obj, arg)):
 		if not obj.pushed: return
-		if not self.editmgr.transaction():
-			obj.set_button(0)
-			return
-		fl.show_message('You don\'t want to save this mess!','',':-)')
+		# Get all windows to save their current geometry.
+		self.get_geometry()
+		self.save_geometry()
+		for v in self.views:
+			v.get_geometry()
+			v.save_geometry()
+		# The help window too!
+		if self.help <> None:
+			self.help.get_geometry()
+			self.help.save_geometry()
+		# Make a back-up of the original file...
+		try:
+			posix.rename(self.filename, self.filename + '~')
+		except posix.error:
+			pass
+		print 'saving to', self.filename, '...'
+		MMTree.WriteFile(self.root, self.filename)
+		print 'done saving.'
 		obj.set_button(0)
-		self.editmgr.rollback()
 	#
 	def restore_callback(self, (obj, arg)):
 		if not obj.pushed: return
@@ -183,6 +201,26 @@ class TopLevel() = BasicDialog():
 		self.editmgr.unregister(self)
 		self.context.seteditmgr(None)
 		self.root.Destroy()
+		self.read_it()
+		#
+		# Move the menu window to where it's supposed to be
+		#
+		self.get_geometry() # From window
+		old_geometry = self.last_geometry
+		self.load_geometry() # From document
+		new_geometry = self.last_geometry
+		if new_geometry[:2]<>(-1,-1) and new_geometry <> old_geometry:
+			self.hide()
+			# Undo unwanted save_geometry()
+			self.last_geometry = new_geometry
+			self.save_geometry()
+			self.show()
+		#
+		Timing.calctimes(self.root)
+		self.makeviews()
+		obj.set_button(0)
+	#
+	def read_it(self):
 		print 'parsing', self.filename, '...'
 		self.root = MMTree.ReadFile(self.filename)
 		print 'done.'
@@ -190,8 +228,6 @@ class TopLevel() = BasicDialog():
 		self.editmgr = EditMgr().init(self.root)
 		self.context.seteditmgr(self.editmgr)
 		self.editmgr.register(self)
-		self.makeviews()
-		obj.set_button(0)
 	#
 	def quit_callback(self, (obj, arg)):
 		self.destroy()
@@ -200,13 +236,14 @@ class TopLevel() = BasicDialog():
 	def help_callback(self, (obj, arg)):
 		if self.help = None:
 			import help
-			self.help = help.HelpWindow().init(HELPDIR)
+			self.help = help.HelpWindow().init(HELPDIR, self.root)
 		self.help.show()
 	#
 	# GL event callback for WINSHUT and WINQUIT (called from glwindow)
 	#
 	def winshut(self):
-		self.quitbutton.set_button(1)
-		self.destroy()
-		raise MMExc.ExitException, 0
+		if fl.show_question('Do you really want to quit?', '', ''):
+			self.quitbutton.set_button(1)
+			self.destroy()
+			raise MMExc.ExitException, 0
 	#
