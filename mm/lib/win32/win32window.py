@@ -406,7 +406,7 @@ class Window:
 	# Prepare an image for display (load,crop,scale, etc)
 	# Arguments:
 	# 1. crop is a tuple of proportions (see computations)
-	# 2. scale is a hint for scaling and can be 0, -1, -2 or None (see computations)
+	# 2. scale is a hint for scaling and can be 0, -1, -2, -3 or None (see computations)
 	# 3. if center then do the obvious
 	# 4. coordinates specify placement rect
 	# 5. clip specifies the src rect
@@ -662,12 +662,9 @@ class Window:
 
 	def __settransparent(self, transparent):
 		parent = self._parent
-		if parent._transparent:
-			self._transparent = parent._transparent
-		else:
-			if transparent not in (-1, 0, 1):
-				raise error, 'invalid value for transparent arg'
-			self._transparent = transparent
+		if transparent not in (0, 1):
+			raise error, 'invalid value for transparent arg'
+		self._transparent = transparent
 
 	# redraw this window and its childs
 	def update(self):
