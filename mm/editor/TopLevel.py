@@ -90,10 +90,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.editmgr.register(self)
 		settings.register(self)
 
-		# read the document		
-		self.read_it()
-		
-		self.__checkInitialErrors()
+		try:
+			# read the document		
+			self.read_it()
+			self.__checkInitialErrors()
+		except:
+			self.editmgr.unregister(self)
+			settings.unregister(self)
+			raise
 
 		# when a document with errors, and if the user accept the errors,
 		# the views are not relevant in this case. So we set a flag on the context to say
@@ -1576,7 +1580,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def close_ok(self):
 		sourceModified = self.sourceview != None and self.sourceview.is_changed()
 
-		# if no changement, and source not modified, can close
+		# if no change, and source not modified, can close
 		if not self.changed and not sourceModified:
 			return 1
 		
