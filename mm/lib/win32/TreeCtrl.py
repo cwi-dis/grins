@@ -196,10 +196,16 @@ class TreeCtrl(window.Wnd):
 	#  drag and drop support methods
 	#
 	
-	def OnBeginDrag(self, std, extra):
+	def OnBeginDrag(self, std, extra):	
 		pt = win32api.GetCursorPos()
 		pt = self.ScreenToClient(pt)
 		flags, item = self.HitTest(pt)
+		
+		# force a multi select clear to keep a consistent feedback
+		# otherwise, if you move fast, sometimes, the dragged node is not the same as the selected node !
+		# XXX it works as long as we don't allow to drag multi nodes
+		self.__clearMultiSelect(item)
+		
 		if flags & commctrl.TVHT_ONITEM:
 			if self._dragdropListener:
 				self._dragdropListener.OnBeginDrag(item)
