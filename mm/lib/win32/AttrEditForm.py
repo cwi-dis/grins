@@ -67,6 +67,7 @@ class AttrCtrl:
 	def sethelp(self):
 		if not self._initctrl: return
 		if not hasattr(self._wnd,'_attrinfo'): return
+		if not hasattr(self._attr,'wrapper'): return # already closed
 		infoc=self._wnd._attrinfo
 		try:
 			hd = self._attr.gethelpdata()
@@ -4112,10 +4113,11 @@ class NameGroup(AttrGroup):
 		return AttrGroup.getctrlclass(self,a)
 
 
-class CNameGroup(NameGroup):
+class CNameGroup(StringGroup):
 	data=attrgrsdict['.cname']
-	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_S1O1
+
+class CNameRealGroup(StringGroup):
+	data=attrgrsdict['.cname-real']
 
 class INameGroup(NameGroup):
 	data=attrgrsdict['intname']
@@ -4875,6 +4877,7 @@ groupsui={
 	'preferences2':Preferences2Group,
 	'name':NameGroup,
 	'.cname':CNameGroup,
+	'.cname-real':CNameRealGroup,
 	'intname':INameGroup,
 
 	'beginlist':BeginListGroup,

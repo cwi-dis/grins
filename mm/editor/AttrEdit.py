@@ -899,72 +899,14 @@ class ChannelWrapper(Wrapper):
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = ['.cname', 'type', 'title', 'comment']
-		ctype = self.channel.get('type', 'unknown')
-		if ChannelMap.channelmap.has_key(ctype):
-			cclass = ChannelMap.channelmap[ctype]
-			# Add the class's declaration of attributes
-			namelist = namelist + cclass.chan_attrs
-			# And, for CMIF, add attributes that nodes inherit
-			# from channel
-			if cmifmode():
-				for name in cclass.node_attrs:
-					if name in namelist: continue
-					defn = MMAttrdefs.getdef(name)
-					if defn[5] == 'channel':
-						namelist.append(name)
-##			else:
-##				# XXXX hack to get bgcolor included
-##				namelist.append('bgcolor')
-						
-		rv = namelist
-		# Merge in nonstandard attributes
-		# XXX uncomment these lines if you want to activate
-#		extras = []
-#		for name in self.channel.keys():
-#			if name not in namelist and \
-#				    MMAttrdefs.getdef(name)[3] <> 'hidden':
-#				extras.append(name)
-#		extras.sort()
-#		rv = namelist + extras
-
-		# Remove some attributes if we are a base window, or if
-		# we're in SMIL mode.
-		base = self.channel.get('base_window')
-		if base is None:
+		namelist = ['.cname', 'title', 'alt', 'longdesc', 'height', 'width', 'cssbgcolor']
+		if self.channel.get('base_window') is None:
 			# top layout
-			if 'z' in rv: rv.remove('z')
-			if 'base_winoff' in rv: rv.remove('base_winoff')
-			if 'units' in rv: rv.remove('units')
-			if 'transparent' in rv: rv.remove('transparent')
-			if 'traceImage' not in rv: rv.append('traceImage')			
-			if 'open' not in rv: rv.append('open')
-			if 'close' not in rv: rv.append('close')
-			if 'showEditBgMode' not in rv: rv.append('showEditBgMode')
-			if 'resizeBehavior' not in rv: rv.append('resizeBehavior')
+			namelist.extend(['traceImage', 'open', 'close', 'showEditBgMode', 'resizeBehavior'])
 		else:
 			# region
-			if 'regionName' not in rv: rv.append('regionName')
-			if 'traceImage' in rv: rv.remove('traceImage')
-			if 'fit' not in rv: rv.append('fit')
-			if 'showBackground' not in rv: rv.append('showBackground')
-			if 'top' not in rv: rv.append('top')
-			if 'bottom' not in rv: rv.append('bottom')
-			if 'left' not in rv: rv.append('left')
-			if 'right' not in rv: rv.append('right')
-			if 'z' not in rv: rv.append('z')
-			if 'soundLevel' not in rv: rv.append('soundLevel')
-			if 'opacity' not in rv: rv.append('opacity')
-##		if not cmifmode():
-##			if 'file' in rv: rv.remove('file')
-##			if 'fit' in rv: rv.remove('fit')
-		if 'height' not in rv: rv.append('height')
-		if 'width' not in rv: rv.append('width')
-		if ctype == 'layout' and not cmifmode():
-			rv.remove('type')
-			if 'bgcolor' in rv: rv.remove('bgcolor')
-			if 'transparent' in rv: rv.remove('transparent')
-		return rv
+			namelist.extend(['regionName', 'fit', 'showBackground', 'top', 'bottom', 'left', 'right', 'z', 'soundLevel', 'opacity'])
+		return namelist
 	#
 	# Override three methods from Wrapper to fake channel name attribute
 	#
@@ -1473,7 +1415,7 @@ class AttrEditor(AttrEditorDialog):
 		settings.set('show_all_attributes', self.show_all_attributes)
 		# settings.save()
 		#print 'showall', self.show_all_attributes
-		self.redisplay()
+		self.redisplay(force = 1)
 
 	def followselection_callback(self):
 		if not self.pagechange_allowed():
@@ -1704,8 +1646,8 @@ class AttrEditor(AttrEditorDialog):
 
 		self.redisplay(newwrapper)
 
-	def redisplay(self, newwrapper = None):
-		if newwrapper or self.wrapper.attrnames() != self.__namelist:
+	def redisplay(self, newwrapper = None, force = 0):
+		if newwrapper or force or self.wrapper.attrnames() != self.__namelist:
 			# re-open with possibly different size
 			attr = self.getcurattr()
 			if attr:
@@ -1747,12 +1689,12 @@ class AttrEditorField(AttrEditorDialogField):
 		return '<%s instance, name=%s>' % (self.__class__.__name__,
 						   self.__name)
 						   
-	def earlyclose(self):
-		# Call this close routine if you want to get rid of the object
-		# before the AttrEditorDialogField has been initialized.
-		del self.attreditor
-		del self.wrapper
-		del self.attrdef
+##	def earlyclose(self):
+##		# Call this close routine if you want to get rid of the object
+##		# before the AttrEditorDialogField has been initialized.
+##		del self.attreditor
+##		del self.wrapper
+##		del self.attrdef
 
 	def close(self):
 		AttrEditorDialogField.close(self)
