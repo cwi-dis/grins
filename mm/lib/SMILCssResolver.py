@@ -1099,7 +1099,7 @@ class MediaNode(Node):
 		else:
 			region = self.__getRegion()
 			if region != None:
-				return self.container.getRegPoint()
+				return region.getRegPoint()
 
 		# we shouldn't pass here
 		return 'topLeft'			
