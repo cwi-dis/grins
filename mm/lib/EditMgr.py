@@ -47,11 +47,14 @@ class EditMgr:
 	#
 	# Initialization.
 	#
-	def __init__(self, root):
+	def __init__(self, toplevel):
 		self.reset()
-		self.root = root
-		self.context = root.GetContext()
+		self.toplevel = toplevel
 
+	def setRoot(self, root):
+		self.root = root
+		self.context = self.root.context
+		
 	def __repr__(self):
 		return '<EditMgr instance, context=' + `self.context` + '>'
 
@@ -68,6 +71,9 @@ class EditMgr:
 		self.playerstate_registry = []
 		self.playerstate = None, None
 		self.playerstate_busy = 0
+
+		# if the context is changed there are some special treatment to do during commit		
+		self.__newRoot = None
 
 	def destroy(self):
 		for x in self.registry[:]:
@@ -137,20 +143,40 @@ class EditMgr:
 		if self.busy: raise MMExc.AssertError, 'recursive transaction'
 		self.__delete(self.future)
 		self.future = []
-		return self.__start_transaction(self, type)
+
+		# allow transaction only the document is valid, or if the transaction come from the source view
+		# note: this test can't be done from the source view which may be closed
+		if type != 'source' and not self.context.isValidDocument():
+			import windowinterface
+			windowinterface.showmessage('The source document contains some errors\nYou have to fix them before to be able to edit',
+						    mtype = 'error')
+			return 0
+		
+		return self.__start_transaction(type)
 
 	def commit(self, type=None):
 		if not self.busy: raise MMExc.AssertError, 'invalid commit'
 		import MMAttrdefs
-		MMAttrdefs.flushcache(self.root)
-		self.context.changedtimes()
-		self.root.clear_infoicon()
-		self.root.ResetPlayability()
-		for x in self.registry[:]:
-			x.commit(type)
+		# test if the root node has changed
+		if not self.__newRoot:
+			# the root node hasn't changed (the document hasn't been reloaded)
+			# normal treatment
+			MMAttrdefs.flushcache(self.root)
+			
+			self.context.changedtimes()
+			self.root.clear_infoicon()
+			self.root.ResetPlayability()
+			for x in self.registry[:]:
+				x.commit(type)
+		else:
+			# the root node has changed (the document has been reloaded)
+			# special treatment			
+			self.toplevel.changeRoot(self.__newRoot)
+			self.__newRoot = None
+			
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
-
+			
 	def rollback(self):
 		if not self.busy: raise MMExc.AssertError, 'invalid rollback'
 		# undo changes made in this transaction
@@ -696,3 +722,26 @@ class EditMgr:
 
 	def clean_settransitionvalue(self, name, key, oldvalue):
 		pass
+
+	#
+	# Document operations
+	#
+	def deldocument(self, root):
+		self.addstep('deldocument', root)
+
+	def adddocument(self, root):
+		self.addstep('adddocument', root)
+		self.__newRoot = root
+
+	def undo_deldocument(self, root):
+		self.adddocument(root)
+
+	def undo_adddocument(self, root):
+		self.deldocument(root)
+
+	def clean_deldocument(self, root):
+		pass		
+
+	def clean_adddocument(self, root):
+		pass		
+				  

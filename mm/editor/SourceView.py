@@ -10,6 +10,7 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		self.root = toplevel.root
 		self.context = self.root.context
 		self.editmgr = self.context.editmgr
+		self.myCommit = 0
 		SourceViewDialog.SourceViewDialog.__init__(self)
 		
 	def fixtitle(self):
@@ -41,13 +42,24 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		SourceViewDialog.SourceViewDialog.hide(self)
 
 	def __setFocus(self, focustype, focusobject):
+		# the normal focus is set only if there is no parsing error
+		parseErrors = self.context.getParseErrors()
+		if parseErrors != None:
+			return
+		
 		if hasattr(focusobject, 'char_positions') and focusobject.char_positions:
 			apply(self.select_chars, focusobject.char_positions)
 		
 	def globalfocuschanged(self, focustype, focusobject):
 		self.__setFocus(focustype, focusobject)
-		
-	def transaction(self,type):
+
+	#
+	# edit manager interface
+	#
+	
+	def transaction(self, type):
+		if self.myCommit:
+			return 1
 		if self.is_changed():
 			q = windowinterface.GetOKCancel("You have unsaved changes in the source view.\nIs it OK to discard these?", self.toplevel.window)
 			return not q
@@ -57,27 +69,64 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		pass
 
 	def commit(self, type=None):
+		self.root = self.toplevel.root
 		self.read_text()
 
+	#
+	#
+	#
+	
 	def read_text(self):
-		# Converts the MMNode structure into SMIL and puts it in the window.
-		text = SMILTreeWrite.WriteString(self.root, set_char_pos = 1)
-		self.set_text(text)
-
+		parseErrors = self.context.getParseErrors()
+		if parseErrors == None:
+			# Converts the MMNode structure into SMIL and puts it in the window.
+			text = SMILTreeWrite.WriteString(self.root, set_char_pos = 1)
+			self.set_text(text)
+		else:
+			self.set_text(parseErrors.getSource())
+			
+			# get first error
+			firstError = parseErrors.getErrorList()[0]
+			msg, line = firstError
+			if line != None:
+				self.select_line(line)
+			# XXX pop the source view
+			# to do
+			
 	def write_text(self):
 		# Writes the text back to the MMNode structure.
 		self.toplevel.save_source_callback(self.get_text())
 		
-	# self.get_text is defined to be system-dependant - it reads from the widget.
+	def __startTransaction(self, hide):
+		self.myCommit = 1
+		if self.editmgr.transaction('source'):
+			text = self.get_text()
+			if hide:
+				self.hide()
+			self.toplevel.change_source(text)
+			parseErrors = self.context.getParseErrors()
+			if parseErrors != None:
+				# XXX note: the choices may be different for 'fatal error'
+				ret = windowinterface.GetYesNoCancel('The source document contains some errors\nDo you wish to leave the editor to fix automaticly the errors', self.toplevel.window)
+				if ret == 0: # yes
+					# accept the errors automaticly fixed by GRiNS
+					self.toplevel.forgetParseErrors()
+				elif ret == 1: # no
+					# default treatement: accept errors and don't allow to edit another view
+					pass
+				else: # cancel
+					self.editmgr.rollback()
+					self.myCommit= 0
+					return
+			self.editmgr.commit()
+						
+		self.myCommit= 0
 
 	def write_text_and_close(self):
-		text = self.get_text()
-		self.hide()
-		self.toplevel.save_source_callback(text)
+		self.__startTransaction(1)
 
 	def apply_callback(self):
-		text = self.get_text()
-		self.toplevel.save_source_callback(text)
+		self.__startTransaction(0)
 
 	# XXX Hack: see as well TopLevelDialog
 	def close_callback(self):

@@ -40,6 +40,8 @@ class TopLevel(TopLevelDialog):
 		self.filename = url
 		self.source = None
 		self.read_it()
+		self.__checkParseErrors()
+		
 		self.makeplayer()
 		self.commandlist = [
 			CLOSE(callback = (self.close_callback, ())),
@@ -52,6 +54,14 @@ class TopLevel(TopLevelDialog):
 		   hasattr(windowinterface, 'textwindow'):
 			self.commandlist.append(
 				SOURCEVIEW(callback = (self.source_callback, ())))
+
+	# detect the errors/fatal errors
+	# if it's a fatal error, re-raise the error
+	def __checkParseErrors(self):
+		parseErrors = self.root.GetContext().getParseErrors()
+		if parseErrors != None:
+			if parseErrors.getType() == 'fatal':
+				raise MSyntaxError
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
