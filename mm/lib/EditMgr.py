@@ -438,13 +438,16 @@ class EditMgr:
 			raise MMExc.AssertError, \
 				  'unknown channel name in delchannel'
 		i = self.context.channels.index(c)
-		attrdict = c.attrdict
+		pchan = c.GetParent()
+		attrdict = c.attrdict.copy()
+		if pchan is not None:
+			attrdict['base_window'] = pchan.name
 		self.addstep('delchannel', name, i, attrdict)
 		self.context.delchannel(name)
 
 	def undo_delchannel(self, name, i, attrdict):
 		self.addchannel(name, i, attrdict['type'])
-		for key, val in attrdict.values():
+		for key, val in attrdict.items():
 			if key == 'type':
 				continue
 			self.setchannelattr(name, key, val)
