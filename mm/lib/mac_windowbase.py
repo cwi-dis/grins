@@ -136,7 +136,6 @@ class _Event:
 			gotone, event = Evt.WaitNextEvent(EVENTMASK, timeout)
 			if gotone:
 				self._handle_event(event)
-				what, message, when, where, modifiers = event
 			else:
 				for rtn in self._idles:
 					rtn()
@@ -899,6 +898,7 @@ class _SubWindow(_CommonWindow):
 		self._parent._clipchanged()
 		# XXXX Pixmap?
 ##		self._parent._redraw() # XXXX Too aggressive...
+		self._parent.pop()
 
 	def push(self):
 		"""Push to bottom of subwindow stack"""
@@ -911,6 +911,7 @@ class _SubWindow(_CommonWindow):
 		self._parent._clipchanged()
 		# XXXX Pixmap?
 ##		self._parent._redraw() # XXXX Too aggressive...
+		self._parent.push()
 
 	def _mkclip(self):
 		if not self._parent:
