@@ -39,6 +39,7 @@ import DropTarget
 
 class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTarget):
 	def __init__(self, doc):
+		self._curcursor = ''
 		docview.ScrollView.__init__(self,doc)
 		win32window.Window.__init__(self)
 		DropTarget.DropTarget.__init__(self)
@@ -634,28 +635,12 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 		if not self.setcursor_from_point(point):
 			self.setcursor(self._cursor)
 
-	# Get the win32 cursor handle given its string id		
-	def getcursorhandle(self, strid):
-		if strid=='hand':
-			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_POINT_HAND)
-		elif strid=='channel':
-			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGMOVE)
-		elif strid=='stop':
-			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_STOP)
-		elif strid=='link':
-			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGLINK)
-		elif strid=='' or strid=='arrow':
-			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
-		elif strid=='draghand':
-			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAG_HAND)
-		else:
-			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
-		return cursor
-
 	# Set the cursor given its string id		
 	def setcursor(self, strid):
+		if strid == self._curcursor:
+			return
 		self._curcursor = strid
-		cursor = self.getcursorhandle(strid)
+		cursor = win32window.getcursorhandle(strid)
 		Sdk.SetCursor(cursor)
 	
 	#
