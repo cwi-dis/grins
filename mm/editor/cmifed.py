@@ -112,7 +112,7 @@ class Main(MainDialog):
 				self._new_ok_callback, None, 1)
 		else:
 			windowinterface.showmessage("No Templates found, creating empty document")
-			top = TopLevel.TopLevel(self, self.getnewdocumentname('dummy.cmif'), 1)
+			top = TopLevel.TopLevel(self, self.getnewdocumentname('dummy.smil'), 1)
 			self.new_top(top)
 	
 	def help_callback(self, params=None):
