@@ -9,6 +9,8 @@ root_expanded = settings.get('root_expanded')
 structure_name_size = settings.get('structure_name_size')
 show_links = settings.get('show_links')
 
+vertical_icons = settings.get('vertical_icons')
+
 # Fonts used 
 f_title = windowinterface.findfont('Helvetica', 10)
 f_channel = windowinterface.findfont('Helvetica', 8)

@@ -104,7 +104,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if isinstance(self, CommentWidget):
 			self.iconbox = None
 		else:
-			self.iconbox = IconBox(self, self.mother, vertical = isinstance(self, MediaWidget))
+			self.iconbox = IconBox(self, self.mother, vertical = vertical_icons)
 		self.cause_event_icon = None
 		self.infoicon = None
 		if self.iconbox is not None and node.infoicon:
@@ -404,18 +404,22 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.iconbox.del_icon(self.infoicon)
 			self.infoicon.destroy()
 			self.infoicon = None
-		if self.iconbox is not None and not isinstance(self, CommentWidget):
+		if self.iconbox is not None:
 			node.set_infoicon = self.set_infoicon
 			node.set_armedmode = self.set_armedmode
 			self.set_armedmode(node.armedmode, redraw = 0)
 		if self.iconbox is not None:
 			ixsize, iysize = self.iconbox.recalc_minsize()
+			if self.iconbox.vertical:
+				iysize = iysize + 2*VEDGSIZE
+			else:
+				ixsize = ixsize + 2*HEDGSIZE
 		else:
 			ixsize = iysize = 0
-		if self.name and (self.iconbox is not None or not self.iconbox.vertical):
+		if self.name and (self.iconbox is None or not self.iconbox.vertical):
 			ixsize = ixsize + f_title.strsizePXL(self.name)[0]
-		ixsize = ixsize + 2*HEDGSIZE
 		xsize = min(max(xsize, ixsize), MAXSIZE)
+		ysize = min(max(ysize, iysize), MAXSIZE)
 		if self.timeline is not None:
 			w, h = self.timeline.recalc_minsize()
 			if w > xsize:
@@ -444,7 +448,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		l,t,r,b = self.pos_abs
 		b = t + TITLESIZE + VEDGSIZE
 		if self.iconbox is not None:
-			self.iconbox.moveto((l,t+2,r,b))
+			self.iconbox.moveto((l+HEDGSIZE,t+VEDGSIZE,r,b))
 			iw, ih = self.iconbox.get_minsize()
 			l = l + iw
 			if l <= r:
@@ -988,29 +992,140 @@ class StructureObjWidget(MMNodeWidget):
 	def get_collapse_icon(self):
 		return self.collapsebutton
 
-	def recalc(self, timemapper):
-		# One optimisation that could be done is to have a dirty flag
-		# for recalculating the relative sizes of all the nodes.
-		# If the node sizes don't need to be changed, then don't
-		# change them.
-		# For the meanwhile, this is too difficult.
-		l,t,r,b = self.pos_abs
+	def recalc(self, timemapper = None):
+		# Recalculate the position of all the contained boxes.
+		# Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
+		# Apportion free space equally, based on the size of self.
+		# TODO: This does not test for maxheight()
+		self.need_resize = 0
+
+		my_l, my_t, my_r, my_b = self.pos_abs
+
+		# account for edges
+		my_l = my_l + HEDGSIZE
+		my_t = my_t + VEDGSIZE
+		my_b = my_b - VEDGSIZE
+		my_r = my_r - HEDGSIZE
+
+		if not self.node.WillPlay():
+			timemapper = None
+
+		min_width, min_height = self.get_minsize()
+		min_width = min_width - 2*HEDGSIZE
+		min_height = min_height - 2*VEDGSIZE
+
+		if self.iconbox is not None and self.iconbox.vertical:
+			iconboxwidth = self.iconbox.get_minsize()[0]
+			my_l = my_l + iconboxwidth
+			min_width = min_width - iconboxwidth
+		else:
+			my_t = my_t + TITLESIZE
+			min_height = min_height - TITLESIZE
+
+		if self.timemapper is not None:
+			timemapper = self.timemapper
+			timemapper.setoffset(my_l, my_r - my_l)
+
+		# Add the timeline
 		if self.timeline is not None:
 			tl_w, tl_h = self.timeline.get_minsize()
 			if TIMELINE_AT_TOP:
-				self.timeline.moveto((l, t+VEDGSIZE+TITLESIZE, r, t+VEDGSIZE+TITLESIZE+tl_h), timemapper)
+				self.timeline.moveto((my_l, my_t, my_r, my_t+tl_h), timemapper)
+				my_t = my_t + tl_h
 			else:
-				self.timeline.moveto((l, b-VEDGSIZE-tl_h, r, b-VEDGSIZE), timemapper)
-		self.need_resize = 0
+				self.timeline.moveto((my_l, my_b-tl_h, my_r, my_b), timemapper)
+				my_b = my_b - tl_h
+			y = self.timeline.params[0]
+			self.need_draghandles = my_l,my_r,y-DRAGHANDLESIZE/2
+			min_height = min_height - tl_h
+
 		if timemapper is None:
 			self.need_draghandles = None
 		else:
 			l,t,r,b = self.pos_abs
-			if self.timemapper is not None and self.timeline is not None:
-				y = self.timeline.params[0]
-				self.need_draghandles = l,r,y-DRAGHANDLESIZE/2
-			else:
+			if self.timemapper is None or self.timeline is None:
+##				self.need_draghandles = l,r,(t+b)/2
 				self.need_draghandles = l,r,b-8
+
+		if self.channelbox is not None:
+			this_w, this_h = self.channelbox.get_minsize()
+			self.channelbox.moveto((my_l, my_t, my_l+this_w, my_b))
+			my_l = my_l + this_w + GAPSIZE
+
+		if self.dropbox is not None:
+			this_w,this_h = self.dropbox.get_minsize()
+			self.dropbox.moveto((my_r-this_w,my_t,my_r,my_b))
+			my_r = my_r - this_w - GAPSIZE
+
+		free_width = (my_r-my_l) - min_width
+		free_height = (my_b-my_t) - min_height
+
+		if self.HORIZONTAL:
+			freewidth_per_child = free_width / max(1, len(self.children))
+			freeheigt_per_child = 0
+		else:
+			freeheight_per_child = free_height / max(1, len(self.children))
+			freewidth_per_child = 0
+
+		is_excl = self.node.GetType() in ('excl', 'prio')
+		if is_excl:
+			tm = None
+		else:
+			tm = timemapper
+
+		this_l = my_l
+		this_t = my_t
+		this_r = my_r
+		this_b = my_b
+
+		for chindex in range(len(self.children)):
+			medianode = self.children[chindex]
+			# Compute rightmost position we may draw
+			if chindex == len(self.children)-1:
+				max_r = my_r
+			elif tm is None:
+				# XXXX Should do this more intelligently
+				max_r = my_r
+			else:
+				# max_r is set below
+				pass
+			this_w, this_h = medianode.get_minsize()
+			if not self.HORIZONTAL:
+				this_b = this_t + this_h + freeheight_per_child
+
+			# First compute pushback bar position
+			if tm is not None and medianode.node.WillPlay():
+				t0, t1, t2, download, begindelay, neededpixel0, neededpixel1 = self.childrentimes[chindex]
+				tend = t2
+				# tend may be t2, the fill-time, so for fill=hold it may extend past
+				# the begin of the next child. We have to truncate in that
+				# case.
+				if self.HORIZONTAL and chindex < len(self.children)-1:
+					nextt = self.childrentimes[chindex+1][0]
+					if tend > nextt:
+						tend = nextt
+				lmin = tm.time2pixel(t0)
+				if this_l < lmin:
+					this_l = lmin
+				this_r = tm.time2pixel(tend) + neededpixel1
+				if t0 == tend:
+					this_r = min(this_r + neededpixel0 + neededpixel1, tm.time2pixel(tend, 'right'), this_l + this_w)
+				max_r = min(this_r, my_r)
+			else:
+				this_r = this_l + this_w + freewidth_per_child
+				if not self.HORIZONTAL or chindex == len(self.children)-1:
+					# The last child is extended the whole way to the end
+					this_r = my_r
+			if this_r > max_r:
+				this_r = max_r
+			if this_l > this_r:
+				this_l = this_r
+			medianode.moveto((this_l,this_t,this_r,this_b))
+			medianode.recalc(tm)
+			if self.HORIZONTAL:
+				this_l = this_r + GAPSIZE
+			else:
+				this_t = this_b + GAPSIZE
 
 	def set_need_resize(self):
 		# Sets the need_resize attribute.
@@ -1033,9 +1148,6 @@ class StructureObjWidget(MMNodeWidget):
 		displist.draw3dbox(DROPCOLOR, DROPCOLOR, DROPCOLOR, DROPCOLOR, self.get_box())
 
 	def draw(self, displist):
-		# This is a base class for other classes.. this code only gets
-		# called once the aggregating node has been called.
-		# Draw only the children.
 		willplay = not self.mother.showplayability or self.node.WillPlay()
 		if willplay:
 			color = self.PLAYCOLOR
@@ -1056,9 +1168,13 @@ class StructureObjWidget(MMNodeWidget):
 
 		l,t,r,b = self.pos_abs
 		l = l + HEDGSIZE
-		t = t + VEDGSIZE + TITLESIZE
+		t = t + VEDGSIZE
 		r = r - HEDGSIZE
 		b = b - VEDGSIZE
+		if self.iconbox is not None and self.iconbox.vertical:
+			l = l + self.iconbox.get_minsize()[0]
+		else:
+			t = t + TITLESIZE
 		if self.timeline is not None:
 			if TIMELINE_AT_TOP:
 				t = t + self.timeline.get_minsize()[1]
@@ -1073,13 +1189,17 @@ class StructureObjWidget(MMNodeWidget):
 				self.do_draw_image(icon, (l,t,r-l,b-t), displist)
 			elif self.DRAWCOLLAPSEDMEDIACHILD and children and children[0].GetType() in MMTypes.mediatypes:
 				self.drawnodecontent(displist, (l,t,r-l,b-t), children[0])
+			elif self.HORIZONTAL:
+				# draw vertical lines
+				while l < r:
+					displist.drawline(TEXTCOLOR, [(l, t),(l, b)])
+					l = l + self.HSTEP
 			else:
-				while t < b and l < r:
+				# draw horizontal lines
+				while t < b:
 					displist.drawline(TEXTCOLOR, [(l, t),(r, t)])
 					t = t + self.VSTEP
-					l = l + self.HSTEP
-
-		if not self.iscollapsed():
+		else:
 			if self.children:
 				for i in self.children:
 					i.draw(displist)
@@ -1098,7 +1218,8 @@ class StructureObjWidget(MMNodeWidget):
 #
 class HorizontalWidget(StructureObjWidget):
 	VSTEP = 0
-	HSTEP = 8
+	HSTEP = 4
+	HORIZONTAL = 1
 	# All widgets drawn horizontally; e.g. sequences.
 
 	def get_nearest_node_index(self, pos):
@@ -1174,13 +1295,15 @@ class HorizontalWidget(StructureObjWidget):
 			mw = mw + self.dropbox.recalc_minsize()[0] + GAPSIZE
 
 		mh = mh + 2*VEDGSIZE
-		# Add the title box.
-		mh = mh + TITLESIZE
 		if self.timeline is not None:
 			w, h = self.timeline.recalc_minsize()
 			if w > mw:
 				mw = w
 			mh = mh + h
+		if self.iconbox is not None and self.iconbox.vertical:
+			mw = mw + self.iconbox.get_minsize()[0]
+		else:
+			mh = mh + TITLESIZE
 		if mw < minwidth:
 			mw = minwidth
 		if mh < minheight:
@@ -1197,114 +1320,6 @@ class HorizontalWidget(StructureObjWidget):
 			minpos = minpos + ch.get_minsize()[0] + GAPSIZE
 		raise 'Unknown child node'
 
-	def recalc(self, timemapper = None):
-		# Recalculate the position of all the contained boxes.
-		# Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
-		# Apportion free space equally, based on the size of self.
-		# TODO: This does not test for maxheight()
-		l, t, r, b = self.pos_abs
-
-		if self.timemapper is not None:
-			timemapper = self.timemapper
-			timemapper.setoffset(l, r - l)
-		if not self.node.WillPlay():
-			timemapper = None
-
-		if self.iscollapsed():
-			StructureObjWidget.recalc(self, timemapper)
-			return
-
-		if self.timeline is not None and not TIMELINE_AT_TOP:
-			tl_w, tl_h = self.timeline.get_minsize()
-			b = b - tl_h
-		min_width, min_height = self.get_minsize()
-
-		free_width = (r-l) - min_width
-
-		t = t + TITLESIZE
-		min_height = min_height - TITLESIZE
-
-		# Add the timeline, if it is at the top
-		if self.timeline is not None and TIMELINE_AT_TOP:
-			tl_w, tl_h = self.timeline.get_minsize()
-			self.timeline.moveto((l, t, r, t+tl_h), timemapper)
-			t = t + tl_h
-			min_height = min_height - tl_h
-
-		# Umm.. Jack.. the free width for each child isn't proportional to their size doing this..
-		freewidth_per_child = free_width / max(1, len(self.children))
-
-		l = l + HEDGSIZE
-		t = t + VEDGSIZE
-		b = b - VEDGSIZE
-
-		if self.channelbox is not None:
-			w, h = self.channelbox.get_minsize()
-			self.channelbox.moveto((l, t, l+w, b))
-			l = l + w + GAPSIZE
-		is_excl = self.node.GetType() in ('excl', 'prio')
-		if is_excl:
-			tm = None
-		else:
-			tm = timemapper
-		for chindex in range(len(self.children)):
-			medianode = self.children[chindex]
-			# Compute rightmost position we may draw
-			if chindex == len(self.children)-1:
-				max_r = self.pos_abs[2] - HEDGSIZE
-			elif tm is None:
-				# XXXX Should do this more intelligently
-				max_r = self.pos_abs[2] - HEDGSIZE
-			else:
-				# max_r is set below
-				pass
-			w,h = medianode.get_minsize()
-			thisnode_free_width = freewidth_per_child
-			# First compute pushback bar position
-			if tm is not None:
-				t0, t1, t2, download, begindelay, neededpixel0, neededpixel1 = self.childrentimes[chindex]
-				tend = t2
-				# tend may be t2, the fill-time, so for fill=hold it may extend past
-				# the begin of the next child. We have to truncate in that
-				# case.
-				if chindex < len(self.children)-1:
-					nextt = self.childrentimes[chindex+1][0]
-					if tend > nextt:
-						tend = nextt
-				lmin = tm.time2pixel(t0)
-				if l < lmin:
-					l = lmin
-				r = tm.time2pixel(tend) + neededpixel1
-				if t0 == tend:
-					r = min(r + neededpixel0 + neededpixel1, tm.time2pixel(tend, 'right'), l + w)
-				max_r = min(r, self.pos_abs[2]-HEDGSIZE)
-			else:
-				r = l + w + thisnode_free_width
-				if chindex == len(self.children)-1:
-					# The last child is extended the whole way to the end
-					r = max_r
-			if r > max_r:
-				r = max_r
-			if l > r:
-				l = r
-			medianode.moveto((l,t,r,b))
-			medianode.recalc(tm)
-			l = r + GAPSIZE
-
-		if self.dropbox is not None:
-			w,h = self.dropbox.get_minsize()
-			# The dropbox takes up the rest of the free width.
-			r = self.pos_abs[2]-HEDGSIZE
-
-			self.dropbox.moveto((l,t,r,b))
-
-		if self.timeline is not None and not TIMELINE_AT_TOP:
-			l, t, r, b = self.pos_abs
-			tl_w, tl_h = self.timeline.get_minsize()
-			self.timeline.moveto((l, b-tl_h, r, b), timemapper)
-
-		StructureObjWidget.recalc(self, timemapper)
-
 	def addcollisions(self, mastert0, mastertend, timemapper, mytimes = None):
 		if not self.children or self.iscollapsed() or not self.node.WillPlay():
 			return MMNodeWidget.addcollisions(self, mastert0, mastertend, timemapper, mytimes)
@@ -1317,6 +1332,8 @@ class HorizontalWidget(StructureObjWidget):
 		tend = t2
 		myt0, myt1, myt2, mytend = t0, t1, t2, tend
 		maxneededpixel0 = HEDGSIZE
+		if self.iconbox is not None and self.iconbox.vertical:
+			maxneededpixel0 = maxneededpixel0 + self.iconbox.get_minsize()[0]
 		maxneededpixel1 = HEDGSIZE
 		if self.channelbox is not None:
 			mw, mh = self.channelbox.get_minsize()
@@ -1369,8 +1386,9 @@ class HorizontalWidget(StructureObjWidget):
 # The Verticalwidget is any vertically-drawn StructureObjWidget.
 #
 class VerticalWidget(StructureObjWidget):
-	VSTEP = 8
+	VSTEP = 4
 	HSTEP = 0
+	HORIZONTAL = 0
 
 	# Any node which is drawn vertically
 
@@ -1419,8 +1437,11 @@ class VerticalWidget(StructureObjWidget):
 			mh=mh+h
 		mh = mh + GAPSIZE*(len(self.children)-1) + 2*VEDGSIZE
 
-		# Add the titleheight
-		mh = mh + TITLESIZE
+		if self.iconbox is not None and self.iconbox.vertical:
+			mw = mw + self.iconbox.get_minsize()[0]
+		else:
+			# Add the titleheight
+			mh = mh + TITLESIZE
 		mw = mw + 2*HEDGSIZE
 		if mw < minwidth:
 			mw = minwidth
@@ -1447,91 +1468,11 @@ class VerticalWidget(StructureObjWidget):
 				return i
 		return -1
 
-	def recalc(self, timemapper = None):
-		# Recalculate the position of all the contained boxes.
-		# Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
-		# Apportion free space equally, based on the size of self.
-		# TODO: This does not test for maxheight()
-		if self.timemapper is not None:
-			timemapper = self.timemapper
-			timemapper.setoffset(self.pos_abs[0], self.pos_abs[2] - self.pos_abs[0])
-		if not self.node.WillPlay():
-			timemapper = None
-
-		if self.iscollapsed():
-			StructureObjWidget.recalc(self, timemapper)
-			return
-
-		l, t, r, b = self.pos_abs
-		# Add the titlesize
-		t = t + TITLESIZE
-
-		# Add the timeline, if it is at the top
-		if self.timeline is not None and TIMELINE_AT_TOP:
-			tl_w, tl_h = self.timeline.get_minsize()
-			t = t + tl_h
-
-		min_width, min_height = self.get_minsize()
-		min_height = min_height - TITLESIZE
-
-		overhead_height = 2*VEDGSIZE + len(self.children)-1*GAPSIZE
-		free_height = (b-t) - min_height
-
-		if free_height < 0:
-			free_height = 0
-
-		l_par = l + HEDGSIZE
-		r = r - HEDGSIZE
-		t = t + VEDGSIZE
-
-		is_excl = self.node.GetType() in ('excl', 'prio')
-		if is_excl:
-			tm = None
-		else:
-			tm = timemapper
-		for medianode in self.children: # for each MMNode:
-			w,h = medianode.get_minsize()
-			l = l_par
-			if h > (b-t):			  # If the node needs to be bigger than the available space...
-				pass				   # TODO!!!!!
-			# Take a portion of the free available width, fairly.
-			if free_height == 0:
-				thisnode_free_height = 0
-			else:
-				thisnode_free_height = int(h/(min_height-overhead_height) * free_height)
-			# Give the node the free width.
-			b = t + h + thisnode_free_height
-			this_l = l
-			this_r = r
-			if tm is not None and medianode.node.WillPlay():
-				t0, t1, t2, download, begindelay = medianode.GetTimes('virtual')
-				tend = t2
-				lmin = tm.time2pixel(t0)
-				if this_l < lmin:
-					this_l = lmin
-##				rmin = tm.time2pixel(tend)
-##				if this_r < rmin:
-##					this_r = rmin
-##				else:
-				rmax = tm.time2pixel(tend, align='right')
-				if this_r > rmax:
-					this_r = rmax
-				if this_l > this_r:
-					this_l = this_r
-
-			medianode.moveto((this_l,t,this_r,b))
-			medianode.recalc(tm)
-			t = b + GAPSIZE
-		if self.timeline is not None and not TIMELINE_AT_TOP:
-			l, t, r, b = self.pos_abs
-			tl_w, tl_h = self.timeline.get_minsize()
-
-		StructureObjWidget.recalc(self, timemapper)
-
 	def addcollisions(self, mastert0, mastertend, timemapper, mytimes = None):
 		if not self.children or self.iscollapsed() or not self.node.WillPlay():
 			return MMNodeWidget.addcollisions(self, mastert0, mastertend, timemapper, mytimes)
 
+		self.childrentimes = []
 		if mytimes is not None:
 			t0, t1, t2, download, begindelay = mytimes
 		else:
@@ -1545,11 +1486,14 @@ class VerticalWidget(StructureObjWidget):
 			else:
 				chtimes = t0, t2, t2, 0, 0
 			neededpixel0, neededpixel1 = ch.addcollisions(t0, tend, timemapper, chtimes)
+			self.childrentimes.append(chtimes + (neededpixel0, neededpixel1))
 			if neededpixel0 > maxneededpixel0:
 				maxneededpixel0 = neededpixel0
 			if neededpixel1 > maxneededpixel1:
 				maxneededpixel1 = neededpixel1
 		maxneededpixel0 = maxneededpixel0 + HEDGSIZE
+		if self.iconbox is not None and self.iconbox.vertical:
+			maxneededpixel0 = maxneededpixel0 + self.iconbox.get_minsize()[0]
 		maxneededpixel1 = maxneededpixel1 + HEDGSIZE
 		if t0 == tend == mastert0:
 			maxneededpixel0 = maxneededpixel0 + maxneededpixel1
@@ -1826,7 +1770,7 @@ class MediaWidget(MMNodeWidget):
 		self.__timemapper = timemapper
 		l,t,r,b = self.pos_abs
 
-		self.iconbox.moveto((l+1, t+2, 0, 0))
+		self.iconbox.moveto((l+HEDGSIZE, t+VEDGSIZE, 0, 0))
 		# First compute pushback bar position
 		if self.pushbackbar is not None:
 			self.pushbackbar.destroy()
@@ -1891,6 +1835,7 @@ class MediaWidget(MMNodeWidget):
 			if dw > w: dw = w
 		else:
 			dw = w
+##		self.need_draghandles = x,x+dw,y+h/2
 		self.need_draghandles = x,x+dw,y+h-8
 		if dw > 0:
 			displist.drawfbox(color, (x, y+16, dw, h-16))
@@ -2010,7 +1955,7 @@ class CommentWidget(MMNodeWidget):
 	def recalc(self, timemapper = None):
 		l,t,r,b = self.pos_abs
 ##		if self.iconbox is not None:
-##			self.iconbox.moveto((l+1, t+2,0,0))
+##			self.iconbox.moveto((l+HEDGSIZE, t+VEDGSIZE, 0, 0))
 
 	def get_maxsize(self):
 		return MAXSIZE, MAXSIZE
