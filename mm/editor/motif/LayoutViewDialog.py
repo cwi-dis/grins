@@ -22,7 +22,7 @@ class LayoutViewDialog:
 		self.__layoutlist = l1
 		b2 = w2.ButtonRow([('New...', NEW_CHANNEL),
 				   ('Remove', REMOVE_CHANNEL),
-				   ('Attrs...', ATTRIBUTES),
+				   ('Properties...', ATTRIBUTES),
 				   ],
 				  vertical = 0,
 				  left = None, right = None, bottom = None)
