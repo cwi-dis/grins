@@ -957,6 +957,7 @@ class AnimateContext:
 		self._id2key = {}
 		self._mmtree = MMNode.MMChannelTree(player.context)
 		self._cssResolver = self._mmtree.newCssResolver()
+		self._cssDomResolver = None # will be created if needed
 	
 	def reset(self):
 		del self._id2key
@@ -985,6 +986,23 @@ class AnimateContext:
 	def getCssResolver(self):
 		return self._cssResolver
 
+	def getDOMCssResolver(self):
+		if not self._cssDomResolver:
+			self._cssDomResolver = self._mmtree.newCssResolver()
+		return self._cssDomResolver
+
+	def getAbsPos(self, mmobj):
+		resolver = self.getDOMCssResolver()
+		region = resolver.getCssObj(mmobj)
+		return region.getAbsPos()
+
+	def getParentAbsPos(self, mmobj):
+		resolver = self.getDOMCssResolver()
+		region = resolver.getCssObj(mmobj)
+		if region.container:
+			return region.container.getAbsPos()
+		return 0, 0
+
 ###########################
 
 additivetypes = ['int', 'float', 'color', 'position', 'inttuple', 'floattuple']
@@ -994,7 +1012,7 @@ animatetypes = ['invalid', 'values', 'from-to', 'from-by', 'to', 'by']
 
 # Animation syntax and semantics parser
 class AnimateElementParser:
-	def __init__(self, anim):
+	def __init__(self, anim, ctx):
 		self.__anim = anim			# the animate element node
 		self.__elementTag = anim.attrdict['atag']
 		self.__attrname = ''		# target attribute name
@@ -1006,6 +1024,9 @@ class AnimateElementParser:
 		self.__grinsattrname = ''	# grins internal target attribute name
 		self.__animtype = 'invalid'	# in animatetypes (see above)
 		self.__isadditive = 0
+		
+		self.__animateContext = ctx # animate context
+		self.__mmtarget = None # the MM object target of animateMotion (used for absolute coords)
 			
 		if not basicAnimation:
 			return
@@ -1222,9 +1243,9 @@ class AnimateElementParser:
 			elif self.__attrtype == 'position':
 				path = svgpath.Path()
 				coords = self.__getNumPairInterpolationValues()
+				coords = self.translateToParent(coords=coords)
 				path.constructFromPoints(coords)
 				anim = MotionAnimator(attr, domval, path, dur, mode, times, splines, accumulate, additive='sum')
-				anim.setOrigin(self.getOrigin())
 			if anim: 
 				self.__setTimeManipulators(anim)			
 			return anim
@@ -1248,14 +1269,14 @@ class AnimateElementParser:
 			path = svgpath.Path()
 			if strpath:
 				path.constructFromSVGPathString(strpath)
+				path = self.translateToParent(path=path)
 			else:
 				coords = self.__getNumPairInterpolationValues()
-				path.constructFromPoints(coords)
+				coords = self.translateToParent(coords=coords)
 			if path.getLength():
 				anim = MotionAnimator(attr, domval, path, dur, mode, times, splines,
 					accumulate, additive)
 				self.__setTimeManipulators(anim)
-				anim.setOrigin(self.getOrigin())
 				return anim
 			return None
 
@@ -1406,6 +1427,40 @@ class AnimateElementParser:
 	def isAdditive(self):
 		return self.__additive == 'sum'
 
+	#
+	#  Translate coordinates
+	#
+	def translateTo(self, pt, coords=None, path=None):
+		dx, dy = pt
+		if coords:
+			tcoords = []
+			for x, y in coords:
+				tcoords.append((x-dx, y-dy))
+			return tcoords
+		elif path:
+			path.translate(-dx, -dy)
+			return path
+			
+	# translate from DOM origin to parent (our default origin)
+	def translateFromDOMToParent(self, pt, coords=None, path=None):
+		x, y = self.__domval.real, self.__domval.imag
+		return self.translateTo((-x,-y), coords, path)	
+
+	# translate from topLayout to parent (our default origin)
+	def translateFromTopLayoutToParent(self, pt, coords=None, path=None):
+		x, y = self.__animateContext.getParentAbsPos(self.__mmtarget)
+		return self.translateTo((x, y), coords, path)	
+	
+	def translateToParent(self, coords=None, path=None):
+		origin = self.getOrigin()
+		if not origin or origin=='parent':
+			if coords: return coords
+			elif path: return path
+		# ++ waiting spec for clarification...
+		 
+	#
+	# The following 3 translate methods are used by SMILTreeWriteHtmlTime
+	#
 	def toDOMOriginPosAttr(self, attr):
 		val = MMAttrdefs.getattr(self.__anim, attr)
 		if not val: return val
@@ -1440,6 +1495,7 @@ class AnimateElementParser:
 		path.constructFromSVGPathString(strpath)
 		path.translate(-dx, -dy)
 		return repr(path)
+
 
 	# set time manipulators to the animator
 	def __setTimeManipulators(self, anim):
@@ -1479,9 +1535,11 @@ class AnimateElementParser:
 			rc = None
 			if self.__target._type == 'mmnode':
 				rc = self.__target.getPxGeom()
+				self.__mmtarget = self.__target
 			elif self.__target._type == 'region':
 				ch = self.__target._region
 				rc = ch.getPxGeom()
+				self.__mmtarget = ch
 			if rc:
 				x, y, w, h = rc
 				self.__domval = complex(x, y)
