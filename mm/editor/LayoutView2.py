@@ -1,7 +1,11 @@
 # experimental layout view
 
 from LayoutViewDialog2 import LayoutViewDialog2
+from windowinterface import UNIT_PXL
+
 from usercmd import *
+
+import MMAttrdefs
 
 ALL_LAYOUTS = '(All Channels)'
 
@@ -31,13 +35,23 @@ class Node:
 		node._parent = self
 		node._viewport = self._viewport
 
+	# not completed yet. But for subregion positioning it's enough for now
+	def removeNode(self, node):
+		ind = 0
+		for child in self._children:
+			if child._name == node._name:
+				# remove child as well			
+				if node.isShowed():
+					node.hide()
+				del self._children[ind]
+				break
+			ind = ind+1
+			
 	def _do_init(self, parent):
 		self._parent = parent
 		parent._children.append(self)
 		self._viewport = parent._viewport
 			
-#	def removeNode(self, name)
-
 	def isShowed(self):
 		return self._graphicCtrl != None
 
@@ -77,7 +91,11 @@ class Node:
 			self._graphicCtrl.select()
 
 	def hide(self):
-		self._graphicCtrl = None
+		if self._graphicCtrl != None:
+			if self._parent != None:
+				if self._parent._graphicCtrl != None:
+					self._parent._graphicCtrl.removeRegion(self._graphicCtrl)
+			self._graphicCtrl = None
 
 	def hideAllNodes(self):
 		self.hide()
@@ -162,48 +180,85 @@ class Region(Node):
 		self._ctx.selectBgColor(self)
 
 class MediaRegion(Region):
-	def __init__(self, name, node, wingeom, ctx):
+	def __init__(self, name, node, ctx):
 		self.mmnode = node
 		dict = node.attrdict
-		self.wingeom = wingeom
 		Region.__init__(self, name, dict, ctx)
 		self._nodeType = TYPE_MEDIA
 
 	def importAttrdict(self):
 		Node.importAttrdict(self)		
-		Node.importAttrdict(self)		
 		self._curattrdict['bgcolor'] = self._defattrdict.get('bgcolor')
 		self._curattrdict['transparent'] = 1
 		
-		self._curattrdict['wingeom'] = self.wingeom
+		# get wingeom according to the subregion positionning
+		# note this step is not done during the parsing in order to maintains all constraint information
+		# at some point we'll have to do the same thing for regions
+		channel = self.mmnode.GetChannel()
+		wingeom = self._ctx._getwingeom(channel, self.mmnode)
+
+		self.ctype = self.mmnode.GetChannelType()
+
+		# determinate the real fit attribute		
+		scale = MMAttrdefs.getattr(self.mmnode,'scale')
+		if scale == 1:
+			fit = 'hidden'
+		elif scale == 0:
+			fit = 'meet'
+		elif scale == -1:
+			fit = 'slice'
+		else:
+			fit = 'fill'
+		self.fit = fit
+		
+		# ajust the internal geom for edition. If no constraint neither on right nor botton,
+		# with fit==hidden: chg the internal region size.
+		# it avoid a unexepected effet during the edition when you resize. don't change the semantic
+		right =	self.mmnode.GetAttrDef('right', None) 
+		bottom = self.mmnode.GetAttrDef('bottom', None) 
+		media_width, media_height = self.mmnode.GetDefaultMediaSize(wingeom[2], wingeom[3])
+		if fit == 'hidden':
+			if right == None:
+				x,y,w,h = wingeom
+				wingeom = x,y,media_width,h
+			if bottom == None:
+				x,y,w,h = wingeom
+				wingeom = x,y,w,media_height
+				
+		self._curattrdict['wingeom'] = wingeom
+		
 		self._curattrdict['z'] = 0
 
 	def onSelected(self):
 		self._ctx.onPreviousSelectMedia(self)
 
 	def show(self):
-		Region.show(self)
-
-		# copy from old hierarchical view to determinate the image
+		self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
+		self._graphicCtrl.showName(0)		
+		self._graphicCtrl.addListener(self)
+		
+		# copy from old hierarchical view to determinate the image to showed
 		node = self.mmnode
 		ntype = node.GetType()
-		ctype = node.GetChannelType()
 		
 		from cmif import findfile
 		self.datadir = findfile('GRiNS-Icons')
 
 		import os
-		f = os.path.join(self.datadir, '%s.tiff' % ctype)
+		f = os.path.join(self.datadir, '%s.tiff' % self.ctype)
 		url = node.GetAttrDef('file', None)		
-		if ctype == 'image':
+		if self.ctype == 'image':
+			fit = self.fit
 			url = node.context.findurl(url)
 			try:
 				import MMurl
 				f = MMurl.urlretrieve(url)[0]
 			except IOError, arg:
 				print "Cannot load image: %s"%arg
+		else:
+			fit = 'fill'
 		if f is not None:
-			self._graphicCtrl.setImage(f, 1)
+			self._graphicCtrl.setImage(f, fit)
 		
 	def onUnselected(self):
 		print 'media unselected : ',self._name
@@ -217,7 +272,8 @@ class MediaRegion(Region):
 		self._ctx.applyGeomOnMedia(self, geom)
 
 	def onProperties(self):
-		self._ctx.selectBgColor(self)
+		# nothing for now
+		pass
 		
 class Viewport(Node):
 	def __init__(self, name, dict, ctx):
@@ -306,6 +362,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentViewport = None
 		self.currentRegionNameList = None
 		self.currentNodeSelected = None
+		self.currentMediaRegionList = []		
 
 		# init state of differents dialog controls
 		self.showName = 1
@@ -346,6 +403,7 @@ class LayoutView2(LayoutViewDialog2):
 			if node.type in ('imm','ext'):
 				self.nodelist.append(node)
 		self.globalfocuschanged(focustype, self.nodelist[0])
+		self.globalfocuschanged(focustype, self.nodelist[1])
 		# ###
 		
 	def hide(self):
@@ -368,6 +426,9 @@ class LayoutView2(LayoutViewDialog2):
 #		print "LayoutView 2: focus received : ",focustype, focusobject
 		from MMNode import MMNode
 #		if focusobject is MMNode:
+
+		# insure that last media node selected will be removed
+		self.unSetMediaNode()
 		self.setMediaNode(focusobject)
 		
 	def kill(self):
@@ -427,6 +488,17 @@ class LayoutView2(LayoutViewDialog2):
 				self.updateRegionOnDialogBox(self.currentNodeSelected)
 			elif nodeType == TYPE_MEDIA:
 				self.updateMediaOnDialogBox(self.currentNodeSelected)
+
+	def unSetMediaNode(self):
+		if len(self.currentMediaRegionList) > 0:
+			for mediaRegion, parentRegion in self.currentMediaRegionList:
+				# if the media region was selected, select its parent
+				if mediaRegion == self.currentNodeSelected:
+					parentRegion.select()
+				mediaRegion.hide()
+				# remove from region tree
+				parentRegion.removeNode(mediaRegion)
+		self.currentMediaRegionList = []
 			
 	def setMediaNode(self, node):
 		channel = node.GetChannel()
@@ -437,22 +509,13 @@ class LayoutView2(LayoutViewDialog2):
 		regionNode = self.getRegion(layoutChannelName)
 		if regionNode == None: return
 		newname = channel.name
-		# for now don't modify the original attrdict
-		newattrdict = channel.attrdict.copy()
 
-		# get wingeom according to the subregion positionning
-		# note this step is not done during the parsing in order to maintains all constraint information
-		# at some point we'll have to do the same thing for regions
-		wingeom = self._getwingeom(channel, node)
-		newattrdict['base_winoff'] = wingeom
-		
-		newRegionNode = MediaRegion(newname, node, wingeom, self)
+		newRegionNode = MediaRegion(newname, node, self)
 
 		# display the right viewport
 		if self.currentViewport != regionNode.getViewport():
 			self.displayViewport(regionNode.getViewport().getName())
 
-		self.currentMediaRegionList = []
 		# add the new media region
 		if self.currentViewport	!= None:
 			self.currentMediaRegionList.append((newRegionNode, regionNode))
@@ -590,6 +653,7 @@ class LayoutView2(LayoutViewDialog2):
 		# test if possible at this time
 		if self.editmgr.transaction():
 			self.editmgr.setchannelattr(viewport.getName(), 'winsize', geom)
+			self.editmgr.setchannelattr(viewport.getName(), 'units', UNIT_PXL)						
 			self.editmgr.commit()
 
 	def applyGeomOnRegion(self, region, geom):
@@ -599,10 +663,18 @@ class LayoutView2(LayoutViewDialog2):
 		# test if possible 
 		if self.editmgr.transaction():
 			self.editmgr.setchannelattr(region.getName(), 'base_winoff', geom)
+			self.editmgr.setchannelattr(region.getName(), 'units', UNIT_PXL)			
 			self.editmgr.commit()
 
 	def applyGeomOnMedia(self, media, value):
-		print 'apply geom on media not implemented yet'
+		attrdict = media.mmnode.attrdict
+		if self.editmgr.transaction():
+			x,y,w,h = value
+			if x != 0: self.editmgr.setnodeattr(media.mmnode, 'left', x)
+			if y != 0: self.editmgr.setnodeattr(media.mmnode, 'top' , y)
+
+			# todo: some ajustements for take into account all fit values
+			self.editmgr.commit()
 		
 	def applyBgColor(self, node, bgcolor, transparent):
 		# test if possible 
