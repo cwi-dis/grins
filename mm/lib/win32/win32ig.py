@@ -75,9 +75,15 @@ class ImageLib:
 		self.lib.color_promote(img, flag)
 
 	# Render image
-	def render(self,hdc,bgcolor,mask, img, 
-		src_x, src_y,dest_x, dest_y, width, height,rcKeep):
+	def render(self, hdc, bgcolor, mask, img, src_x, src_y,dest_x, dest_y, width, height,
+			   rcKeep, aspect = 'default'):
 		if img<0: return
+		
+		if aspect == 'none':
+				aspect = self.lib.IG_ASPECT_NONE
+		else:
+				aspect = self.lib.IG_ASPECT_DEFAULT
+		
 		if img not in self._imglist:
 			# image already deleted?
 			# XXXX this is a quick hack, since the image
@@ -90,7 +96,7 @@ class ImageLib:
 		if self._transpdict.has_key(img):
 			trans_rgb = self._transpdict[img]
 			self.lib.display_transparent_set(img,trans_rgb,1)
-		rc = self.lib.display_adjust_aspect(img, rc, self.lib.IG_ASPECT_DEFAULT)
+		rc = self.lib.display_adjust_aspect(img, rc, aspect)
 		self.lib.device_rect_set(img,rc)
 		self.lib.display_desktop_pattern_set(img,0)
 		self.lib.display_image(img,hdc)
