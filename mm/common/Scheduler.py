@@ -1374,10 +1374,10 @@ class Scheduler(scheduler):
 		elif action == SR.LOOPEND:
 			self.do_loopend(sctx, arg, timestamp)
 		elif action == SR.LOOPRESTART:
-			self.do_looprestart(sctx, arg, timestamp)
-			arg.looping_body_self.startplay(sctx, timestamp)
-			sctx.sched_arcs(arg.looping_body_self,
-					'begin', timestamp=timestamp)
+			if self.do_looprestart(sctx, arg, timestamp):
+				arg.looping_body_self.startplay(sctx, timestamp)
+				sctx.sched_arcs(arg.looping_body_self,
+						'begin', timestamp=timestamp)
 		else:
 			if action == SR.SCHED_STOPPING:
 				if arg.scheduled_children:
@@ -1484,13 +1484,14 @@ class Scheduler(scheduler):
 		if not node.moreloops(decrement=1):
 			# Node has been terminated in the mean time
 			self.event(sctx, (SR.LOOPEND_DONE, node), timestamp)
-			return
+			return 0
 		if not settings.noprearm and node.moreloops():
 			# If this is still not the last loop we also
 			# set the arm-structures to loop once more.
 			sctx.arm_moreloops(node)
 		sctx.restartloop(node)
 		self.event(sctx, (SR.LOOPSTART_DONE, node), timestamp)
+		return 1
 	#
 	# Execute an ARM SR
 	#
