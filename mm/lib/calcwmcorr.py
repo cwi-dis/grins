@@ -36,6 +36,6 @@ _wmcorr = None
 
 def calcwmcorr():
 	global _wmcorr
-	if _wmcorr == None:
+	if _wmcorr is None:
 		_wmcorr = _calcwmcorr()
 	return _wmcorr
