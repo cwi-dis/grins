@@ -236,6 +236,9 @@ class TopLevel(TopLevelDialog):
 		self.reload()
 
 	def reload(self):
+		# create a new instance
+		# important: we have to create the new instance before to delete the old one
+		# Thus, if the operation fails we can easily back to the original
 		try:
 			top = TopLevel(self.main, self.url)
 		except IOError:
@@ -246,10 +249,17 @@ class TopLevel(TopLevelDialog):
 			import windowinterface
 			windowinterface.showmessage('parsing document %s failed' % self.url)
 			return
+
+		# show the main frame
 		top.show()
-		top.player.show()
-		top.player.playsubtree(top.root)
 		
+		# update the recent list.
+		self.main._update_recent(None)
+
+		# at list
+		top.player.show()
+
+		# at least, we can close the old instance, before at there was no error		
 		self.close()
 		
 	def close_callback(self):
