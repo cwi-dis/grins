@@ -516,7 +516,7 @@ END
 IDD_LICENSE DIALOGEX 0, 0, 331, 234
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "License"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Try",IDOK,7,191,50,14
     PUSHBUTTON      "Buy...",IDUC_BUY,106,191,50,14
@@ -873,7 +873,7 @@ END
 IDD_TEMPLATE_DIALOG DIALOGEX 0, 0, 330, 177
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Choose Template"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     COMBOBOX        IDC_TEMPLATECOMBO,15,18,150,100,CBS_DROPDOWNLIST | 
                     CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -1091,6 +1091,21 @@ BEGIN
     CONTROL         "Radio4",IDC_25,"Button",BS_AUTORADIOBUTTON,151,82,100,
                     10
     GROUPBOX        "",IDC_21,5,49,287,52
+END
+
+IDD_EDITATTR_MF1 DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_GROUP1,5,4,287,42
+    LTEXT           "Untitled",IDC_1,11,20,73,8
+    EDITTEXT        IDC_2,88,17,154,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse...",IDC_3,246,17,41,12
+    PUSHBUTTON      "",IDC_4,211,31,14,12,BS_ICON | BS_CENTER | BS_VCENTER
+    PUSHBUTTON      "",IDC_5,229,31,14,12,BS_ICON | BS_CENTER | BS_VCENTER
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,48,277,80,BS_FLAT | NOT 
+                    WS_VISIBLE | NOT WS_TABSTOP
 END
 
 
@@ -1329,6 +1344,11 @@ BEGIN
     BEGIN
         RIGHTMARGIN, 296
     END
+
+    IDD_EDITATTR_MF1, DIALOG
+    BEGIN
+        RIGHTMARGIN, 296
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1346,6 +1366,8 @@ IDI_CREATE_BOX          ICON    DISCARDABLE     "res\\ico00001.ico"
 IDI_GRINS_QUESTION      ICON    DISCARDABLE     "res\\icon1.ico"
 IDI_GRINS_INFO          ICON    DISCARDABLE     "res\\ico00002.ico"
 IDI_GRINS_STOP          ICON    DISCARDABLE     "res\\ico00003.ico"
+IDI_PLAY                ICON    DISCARDABLE     "RES\\play.ico"
+IDI_STOP                ICON    DISCARDABLE     "RES\\stop.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
