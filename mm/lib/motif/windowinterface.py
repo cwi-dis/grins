@@ -94,12 +94,12 @@ def GetYesNoCancel(prompt, parent = None):
 def GetOKCancel(prompt, parent = None):
 	return multchoice(prompt, ["OK", "Cancel"], 0)
 
-def textwindow(text):
-	w = Window('Source', resizable = 1, deleteCallback = 'hide')
+def textwindow(text, readonly = 1, closeCallback = None):
+	w = Window('Source', resizable = 1, deleteCallback = closeCallback or 'hide')
 	b = w.ButtonRow([('Close', (w.hide, ()))],
 			top = None, left = None, right = None,
 			vertical = 0)
-	t = w.TextEdit(text, None, editable = 0,
+	t = w.TextEdit(text, None, editable = not readonly,
 		       top = b, left = None, right = None,
 		       bottom = None, rows = 30, columns = 80)
 	w.show()

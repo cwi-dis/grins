@@ -552,6 +552,9 @@ class _DisplayList:
 			return baseline
 		return self._window._pxl2rel((0,0,0,baseline))[3]
 
+	def baselinePXL(self):
+		return self._font.baselinePXL()
+
 	def fontheight(self, units = None):
 		if units is None:
 			units = self.__units
@@ -559,6 +562,9 @@ class _DisplayList:
 		if units == UNIT_PXL:
 			return fontheight
 		return self._window._pxl2rel((0,0,0,fontheight))[3]
+
+	def fontheightPXL(self):
+		return self._font.fontheightPXL()
 
 	def pointsize(self):
 		return self._font.pointsize()
@@ -570,6 +576,9 @@ class _DisplayList:
 		if units == UNIT_PXL:
 			return width, height
 		return self._window._pxl2rel((0,0,width,height))[2:4]
+
+	def strsizePXL(self, str):
+		return self._font.strsize(str)
 
 	def setpos(self, x, y, units = None):
 		if units is None:
