@@ -156,6 +156,23 @@ class MMChannel(MMNodeBase.MMChannel):
 
 MMSyncArc = MMNodeBase.MMSyncArc
 
+class MMNode_body:
+	"""Helper for looping nodes"""
+	def __init__(self, parent):
+		self.parent = parent
+
+	def __repr__(self):
+		return "<looping body of %s>"%self.parent.__repr__()
+
+	def __getattr__(self, name):
+		return getattr(self.parent, name)
+
+	def GetUID(self):
+		return '%s-looping-%d'%(self.parent.GetUID(), id(self))
+
+	def stoplooping(self):
+		pass
+
 class MMNode(MMNodeBase.MMNode):
 	def __init__(self, type, context, uid):
 		MMNodeBase.MMNode.__init__(self, type, context, uid)
@@ -163,7 +180,9 @@ class MMNode(MMNodeBase.MMNode):
 		self.children = []
 ##		self.summaries = {}
 		self.setgensr()
-		self.isloopnode = 0
+##		self.isloopnode = 0
+##		self.isinfiniteloopnode = 0
+		self.looping_body_self = None
 
 	#
 	# Private methods to build a tree
@@ -415,6 +434,7 @@ class MMNode(MMNodeBase.MMNode):
 		self.sync_to = None
 		self.wtd_children = None
 ##		self.summaries = None
+		self.looping_body_self = None
 
 	def Extract(self):
 		if not self.parent: raise CheckError, 'Extract() root node'
@@ -581,10 +601,8 @@ class MMNode(MMNodeBase.MMNode):
 			self.gensr = self.gensr_bag
 		elif type == 'alt':
 			self.gensr = self.gensr_alt
-		elif type == 'seq':
-			self.gensr = self.gensr_seq
-		elif type == 'par':
-			self.gensr = self.gensr_par
+		elif type in ('seq', 'par'):
+			self.gensr = self.gensr_interior
 		else:
 			raise CheckError, 'MMNode: unknown type %s' % self.type
 	#
@@ -776,214 +794,289 @@ class MMNode(MMNodeBase.MMNode):
 		for ev in in1:
 			result.append(([ev], [(TERMINATE, self)]))
 		return result
+
 	#
-	# gensr_headactions returns a list of srrecords and a list of
-	# events that start an interior node. Incoming syncarcs and looping
-	# are handled here.
+	# There's a lot of common code for par and seq nodes.
+	# We attempt to factor that out with a few helper routines.
+	# All the helper routines accept at least two arguments
+	# - the actions to be taken when the node is "starting"
+	# - the actions to be taken when the node is "finished"
+	# (or, colloquially, the outgoing head-syncarcs and the SCHED_DONE
+	# event) and return 4 items:
+	# - actions to be taken upon node starting (SCHED)
+	# - actions to be taken upon SCHED_STOP
+	# - actions to be taken upon TERMINATE or incoming tail-syncarcs
+	# - a list of all (event, action) tuples to be generated
 	#
-	def gensr_headactions(self, looping):
-		if looping:
-			# This is not the first time we're generating
-			# events, it is yet another time through the loop
-			return [], [(LOOPSTART_DONE, self)]
-		in0 = self.sync_from[0]		# incoming syncarcs to head
-		prereq = [(SCHED, self)] + in0	# all events needed to start
-		sr_list = []
+	def gensr_interior(self, looping=0):
+		#
+		# If the node is empty there is very little to do.
+		#
+		if not self.wtd_children:
+			return self.gensr_empty()
+		if self.type == 'par':
+			gensr_body = self.gensr_body_par
+		else:
+			gensr_body = self.gensr_body_seq
+
+		#
+		# Select the  generator for the outer code: either non-looping
+		# or, for looping nodes, the first or subsequent times through
+		# the loop.
+		#
 		loopcount = MMAttrdefs.getattr(self, 'loop')
-		self.isloopnode = (loopcount != 1)
-		if self.isloopnode:
-			# Looping node. Our SCHEDSTART (plus syncarcs) gives
-			# a LOOPSTART, and the LOOPSTART_DONE starts playing
-			# the node.
-			# First decrement of loopcount will be done
-			# during LOOPSTART.
-			if loopcount == 0:
-				self.curloopcount = -1
-			else:
-				self.curloopcount = loopcount
-			sr_list = [
-				(
-					prereq,
-					[(LOOPSTART, self)]
-				)
-			]
-			prereq = [(LOOPSTART_DONE, self)]
+		if loopcount == 1:
+			gensr_envelope = self.gensr_envelope_nonloop
+		elif looping == 0:
+			# First time loop generation
+			gensr_envelope = self.gensr_envelope_firstloop
 		else:
-			# Non-looping node, so our SCHEDSTART (and arcs) just
-			# starts playing the node.
-			# There is no LOOPSTART, so we decrement the count
-			# here.
-			self.curloopcount = loopcount-1
-		return sr_list, prereq
-	#
-	# gensr_tailactions gets the list of events that should all have
-	# occurred before a node finishes. It returns the srrecords list
-	# that make the world continue revolving. This may include a loop
-	# end construct, or may be an immedeate SCHED_DONE and outgoing
-	# tail syncarc list
-	#
-	def gensr_tailactions(self, events, looping):
-		if looping:
-			# Second (or later) pass through the loop.
-			# Only regenerate records for the LOOPEND.
-			return [(events, [(LOOPEND, self)])]
-		out1 = self.sync_to[1]	# outgoing syncarcs from tail
-		if self.isloopnode:
-			# all children done -> LOOPEND
-			# LOOPEND_DONE -> SCHED_DONE, syncarcs
-			srlist = [(
-				    events,
-				    [(LOOPEND, self)]
-				  ) , (
-				    [(LOOPEND_DONE, self)],
-				    [(SCHED_DONE, self)]+out1
-				  )]
-		else:
-			# all children done -> SCHED_DONE, syncarcs
-			srlist = [(
-				    events,
-				    [(SCHED_DONE, self)]+out1
-				 )]
+			gensr_envelope = self.gensr_envelope_laterloop
+
+		#
+		# If the node has a duration we add a syncarc from head
+		# to tail. This will terminate the node when needed.
+		#
+		in0, in1 = self.sync_from
+		out0, out1 = self.sync_to
+
+		duration = MMAttrdefs.getattr(self, 'duration')
+		if duration > 0:
+			# Implement duration by adding a syncarc from
+			# head to tail.
+			out0 = out0[:] + [(SYNC, (duration, self))]
+			in1 = in1[:] + [(SYNC_DONE, self)]
+
+		#
+		# We are started when we get our SCHED and all our
+		# incoming head-syncarcs.
+		#
+		sched_events = [(SCHED, self)] + in0
+		#
+		# Once we are started we should fire our outgoing head
+		# syncarcs
+		#
+		sched_actions_arg = out0[:]
+		#
+		# When we're done we should signal SCHED_DONE to our parent
+		# and fire our outgoing tail syncarcs.
+		#
+		scheddone_actions_arg = [(SCHED_DONE, self)]+out1
+		#
+		# And when the parent is really done with us we get a
+		# SCHED_STOP
+		#
+		schedstop_events = [(SCHED_STOP, self)]
+
+		sched_actions, schedstop_actions, terminate_actions, \
+			       srlist = gensr_envelope(gensr_body, loopcount,
+						       sched_actions_arg,
+						       scheddone_actions_arg)
+		if not looping:
+			#
+			# Tie our start-events to the envelope/body
+			# start-actions
+			#
+			srlist.append( (sched_events, sched_actions) )
+			#
+			# Tie the envelope/body done events to our done actions
+			#
+			srlist.append( (schedstop_events, schedstop_actions) )
+			#
+			# And, for our incoming tail syncarcs and a
+			# TERMINATE for ourselves we abort everything.
+			#
+			for event in in1+[(TERMINATE, self)]:
+				srlist.append( ([event], terminate_actions) )
 		return srlist
+
+	def gensr_envelope_nonloop(self, gensr_body, loopcount, sched_actions,
+				   scheddone_actions):
+		if loopcount != 1:
+			raise 'Looping nonlooping node!'
+		self.curloopcount = 0
+
+		return gensr_body(sched_actions, scheddone_actions)
+
+	def gensr_envelope_firstloop(self, gensr_body, loopcount,
+				     sched_actions, scheddone_actions):
+		srlist = []
+		terminate_actions = []
+		#
+		# Remember the loopcount.
+		#
+		if loopcount == 0:
+			self.curloopcount = -1
+		else:
+			self.curloopcount = loopcount
 		
-			
-			
-	#
-	# Generate schedrecords for a sequential node
-	def gensr_seq(self, looping=0):
-		if not self.wtd_children:
-			self.curloopcount = 0
-			return self.gensr_empty()
-		in0, in1 = self.sync_from
-		out0, out1 = self.sync_to
-		n_sr = len(self.wtd_children)+1
-		sr_list, trigger_events = self.gensr_headactions(looping)
-		last_actions = []
-		t_list = []
-		duration = MMAttrdefs.getattr(self, 'duration')
-		if duration > 0:
-			# if duration set, we must trigger a timeout
-			# and we must catch the timeout to terminate
-			# the node
-			out0 = out0 + [(SYNC, (duration, self))]
-			sr_list.append(([(SYNC_DONE, self)],
-					[(TERMINATE, self)]))
-		for i in range(n_sr):
-			if i == 0:
-				prereq = trigger_events
-				actions = out0[:]
-			else:
-				arg = self.wtd_children[i-1]
-				sr_list = sr_list + arg.gensr()
-				prereq = [(SCHED_DONE, arg)]
-				actions = [(SCHED_STOP, arg)]
-			if i == n_sr-1:
-				last_actions = actions
-				tail_srlist = self.gensr_tailactions(prereq,
-						    looping)
-				sr_list[len(sr_list):] = tail_srlist
-			else:
-				actions.append((SCHED, self.wtd_children[i]))
-				sr_list.append((prereq, actions))
-			if i < n_sr-1:
-				t_list.append((TERMINATE,
-					       self.wtd_children[i]))
-		sr_list.append( ([(SCHED_STOP, self)], last_actions) )
-		for ev in in1:
-			sr_list.append(([ev], [(TERMINATE, self)]))
-## 		t_list.append((SCHED_DONE, self))
-		sr_list.append(([(TERMINATE, self)], t_list))
-		return sr_list
+		#
+		# We create a helper node, to differentiate between terminates
+		# from the inside and the outside (needed for par nodes with
+		# endsync, which can generate terminates internally that should
+		# not stop the whole loop).
+		#
+		self.looping_body_self = MMNode_body(self)
 
-	def gensr_par(self, looping=0):
-		if not self.wtd_children:
-			self.curloopcount = 0
-			return self.gensr_empty()
-		in0, in1 = self.sync_from
-		out0, out1 = self.sync_to
-		duration = MMAttrdefs.getattr(self, 'duration')
+		#
+		# When we start we do our syncarc stuff, and also LOOPSTART
+		# XXXX Note this is incorrect: we should check which of the
+		# syncarcs refer to children
+		#
+		# XXXX We should also do our SCHED_DONE here if we are
+		# looping indefinitely.
+		#
+		sched_actions.append( (LOOPSTART, self) )
+		body_sched_actions = []
+		body_scheddone_actions = [(SCHED_DONE, self.looping_body_self)]
+
+		body_sched_actions, body_schedstop_actions, \
+				    body_terminate_actions, srlist = \
+				    gensr_body(body_sched_actions,
+					       body_scheddone_actions,
+					       self.looping_body_self)
+
+		# When the loop has started we start the body
+		srlist.append( ([(LOOPSTART_DONE, self)], body_sched_actions) )
+				
+		# Terminating the body doesn't terminate the loop,
+		# but the other way around it does
+		srlist.append( ([(TERMINATE, self.looping_body_self)],
+				body_terminate_actions) )
+		terminate_actions = [(TERMINATE, self.looping_body_self)]
+
+		# When the body is done we stop it, and we end/restart the loop
+		srlist.append( ([(SCHED_DONE, self.looping_body_self)],
+				[(LOOPEND, self),
+				 (SCHED_STOP, self.looping_body_self)]) )
+		srlist.append( ([(SCHED_STOP, self.looping_body_self)],
+				body_schedstop_actions) )
+		
+		#
+		# We signal to our parent we're done when the loop terminates,
+		# unless we loop indefinitely, then we signal it when
+		# we enter the loop. We then also request a TERMINATE for
+		# ourselves upon a SCHED_STOP
+		#
+		if self.curloopcount < 0:
+			sched_actions = sched_actions + scheddone_actions
+			terminate_actions.append( (TERMINATE, self) )
+			srlist.append( ([(LOOPEND_DONE, self)], []) )
+		else:
+			srlist.append( ([(LOOPEND_DONE, self)],
+					scheddone_actions) )
+
+		return sched_actions, terminate_actions, terminate_actions, \
+		       srlist
+		
+
+	def gensr_envelope_laterloop(self, gensr_body, loopcount,
+				     sched_actions, scheddone_actions):
+		srlist = []
+
+		body_sched_actions = []
+		body_scheddone_actions = [(SCHED_DONE, self.looping_body_self)]
+
+		body_sched_actions, body_schedstop_actions, \
+				    body_terminate_actions, srlist = \
+				    gensr_body(body_sched_actions,
+					       body_scheddone_actions,
+					       self.looping_body_self)
+
+		# When the loop has started we start the body
+		srlist.append( ([(LOOPSTART_DONE, self)], body_sched_actions) )
+				
+		# Terminating the body doesn't terminate the loop,
+		# but the other way around it does
+		srlist.append( ([(TERMINATE, self.looping_body_self)],
+				body_terminate_actions) )
+
+		# When the body is done we stop it, and we end/restart the loop
+		srlist.append( ([(SCHED_DONE, self.looping_body_self)],
+				[(LOOPEND, self),
+				 (SCHED_STOP, self.looping_body_self)]) )
+		srlist.append( ([(SCHED_STOP, self.looping_body_self)],
+				body_schedstop_actions) )
+		
+		return [], [], [], srlist
+
+	def gensr_body_par(self, sched_actions, scheddone_actions,
+			   self_body=None):
+		srlist = []
+		schedstop_actions = []
+		terminate_actions = []
+		scheddone_events = []
+		if self_body == None:
+			self_body = self
+
 		termtype = MMAttrdefs.getattr(self, 'terminator')
-		alist = out0[:]		# actions on SCHED of self
-		plist = []		# events needed before we stop
-		slist = []		# actions on SCHED_STOP of self
-		tlist = []		# actions on TERMINATE of self
+		if termtype == 'FIRST':
+			terminating_children = self.wtd_children[:]
+		elif termtype == 'LAST':
+			terminating_children = []
+		else:
+			terminating_children = []
+			for child in self.wtd_children:
+				if MMAttrdefs.getattr(child, 'name') \
+				   == termtype:
+					terminating_children.append(child)
+					
+		for child in self.wtd_children:
+			srlist = srlist + child.gensr()
 
-		result, trigger_events = self.gensr_headactions(looping)
+			sched_actions.append( (SCHED, child) )
+			schedstop_actions.append( (SCHED_STOP, child) )
+			terminate_actions.append( (TERMINATE, child) )
 
-		result.append((trigger_events, alist))
-		result.append(([(SCHED_STOP, self)], slist))
-		result.append(([(TERMINATE, self)], tlist))
+			if child in terminating_children:
+				srlist.append( ([(SCHED_DONE, child)],
+						[(TERMINATE, self_body)]))
+			else:
+				scheddone_events.append( (SCHED_DONE, child) )
 
-		for ev in in1:
-			result.append(([ev], [(TERMINATE, self)]))
-		added_entry = 0
-		for arg in self.wtd_children:
-			alist.append((SCHED, arg))
-			slist.append((SCHED_STOP, arg))
-			tlist.append((TERMINATE, arg))
-			result = result + arg.gensr()
-			if termtype == 'FIRST':
-				added_entry = 1
-				result.append(([(SCHED_DONE, arg)],
-					       [(TERMINATE, self)]))
-			elif termtype != 'FIRST' and \
-			     termtype != 'LAST' and \
-			     MMAttrdefs.getattr(arg, 'name') == termtype:
-				added_entry = 1
-				result.append(([(SCHED_DONE, arg)],
-					       [(TERMINATE, self)]))
+		if scheddone_events:
+			srlist.append((scheddone_events,
+				       scheddone_actions))
+		else:
+			terminate_actions = terminate_actions + \
+					    scheddone_actions
+		return sched_actions, schedstop_actions, terminate_actions, \
+		       srlist
+		
+	def gensr_body_seq(self, sched_actions, scheddone_actions,
+			   self_body=None):
+		srlist = []
+		schedstop_actions = []
+		terminate_actions = []
+
+		previous_done_events = []
+		previous_stop_actions = []
+		for ch in self.wtd_children:
+			# Link previous child to this one
+			if previous_done_events:
+				srlist.append(
+					(previous_done_events,
+					 [(SCHED, ch)]+previous_stop_actions) )
 			else:
-				plist.append((SCHED_DONE, arg))
-		if plist:
-			# come here only when there were children, and
-			# termtype != 'FIRST' and (if termtype refers to
-			# a node) there were other children as well
-			if not added_entry:
-				# termtype=='LAST' or termtype refers to
-				# non-existent child
-				added_entry = 1
-				tail_srlist = self.gensr_tailactions(plist,
-								     looping)
-				result[len(result):] = tail_srlist
-			else:
-				# termtype refers to child, basically
-				# ignore the other children
-				result.append((plist, []))
-		if termtype != 'LAST' and added_entry:
-			# XXXX Comment by Jack: I _think_ this is also
-			# correct for looping nodes, but I'm not 100% sure.
-			tlist[len(tlist):] = [(SCHED_DONE, self)] + out1
-		if duration > 0:
-			# if duration set, we must trigger a timeout
-			# and we must catch the timeout to terminate
-			# the node
-			alist.append((SYNC, (duration, self)))
-			if not added_entry:
-				tail_srlist = self.gensr_tailactions(
-					[(SYNC_DONE, self)], looping)
-				result[len(result):] = tail_srlist
-			else:
-				result.append(([(SYNC_DONE, self)],
-					       [(TERMINATE, self)]))
-		return result
-# 	#
-#	# gensr_arcs returns 4 lists of sync arc events: incoming head,
-#	# outgoing head, incoming tail, outgoing tail.
-#	#
-#	def gensr_arcs(self):
-#		in0 = []
-#		out0 = []
-#		in1 = []
-#		out1 = []
-#		for i in self.sync_from[0]:
-#			in0.append((SYNC_DONE, i))
-#		for i in self.sync_from[1]:
-#			in1.append((SYNC_DONE, i))
-#		for i in self.sync_to[0]:
-#			out0.append((SYNC, i))
-#		for i in self.sync_to[1]:
-#			out1.append((SYNC, i))
-#		return in0, out0, in1, out1
+				sched_actions.append((SCHED, ch))
+
+			# Setup events/actions for next child to link to
+			previous_done_events = [(SCHED_DONE, ch)]
+			previous_stop_actions = [(SCHED_STOP, ch)]
+
+			# And setup terminate actions
+			terminate_actions.append( (TERMINATE, ch) )
+
+			# And child's own events/actions
+			srlist = srlist + ch.gensr()
+
+		# Link the events/actions for the last child to the parent
+		srlist.append( (previous_done_events, scheddone_actions) )
+##		append SCHED_DONE to terminate_actions??
+		schedstop_actions = previous_stop_actions
+		return sched_actions, schedstop_actions, terminate_actions, \
+		       srlist
+		
 			
 	def GenAllSR(self, seeknode):
 		if not seeknode:
@@ -1050,6 +1143,9 @@ class MMNode(MMNodeBase.MMNode):
 		if decrement and self.curloopcount > 0:
 			self.curloopcount = self.curloopcount - 1
 		return (rv != 0)
+
+	def stoplooping(self):
+		self.curloopcount = 0
 
 	def transaction(self):
 		return 1
