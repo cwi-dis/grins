@@ -15,6 +15,8 @@ from SMIL import ATTRIBUTES
 import re
 import colors
 
+FORBIDDEN = ':'				# characters not allowed in file names
+
 qt_node_attrs = {
 	'immediateinstantiationmedia':0,
 	'bitratenecessary':0,
@@ -496,7 +498,11 @@ class SMILWriterBase:
 			ext = MMmimetypes.guess_extension(mtype)
 			base = 'data'
 		else:
-			file = MMurl.url2pathname(posixpath.basename(path))
+			file = posixpath.basename(path)
+			# replace forbidden characters by something innocuous
+			for c in FORBIDDEN:
+				file = file.replace(c, '-')
+			file = MMurl.url2pathname(file)
 			base, ext = os.path.splitext(file)
 		if self.bases_used.has_key(base):
 			i = 1
