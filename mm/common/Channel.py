@@ -1407,7 +1407,7 @@ class ChannelWindow(Channel):
 				self.armed_display.fgcolor(self.getbucolor(node))
 			else:
 				self.armed_display.fgcolor(bgcolor)
-			b = self.armed_display.newbutton((0.0, 0.0, 1.0, 1.0))
+			b = self.armed_display.newbutton((0.0, 0.0, 1.0, 1.0), times = armed_anchor[A_TIMES])
 			b.hiwidth(3)
 			b.hicolor(self.gethicolor(node))
 			self.armed_display.fgcolor(fgcolor)
