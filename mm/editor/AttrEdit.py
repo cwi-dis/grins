@@ -1796,13 +1796,18 @@ class FloatAttrEditorField(AttrEditorField):
 	type = 'float'
 
 	def valuerepr(self, value):
+		if value is None:
+			return ''
 		if value == -1 and self.getname() in ('duration', 'repeatdur', 'max', 'syncTolerance', 'syncToleranceDefault'):
 			return 'indefinite'
 		if value == 0 and self.getname() == 'loop':
 			return 'indefinite'
-		return AttrEditorField.valuerepr(self, value)
+		return fmtfloat(value)
 
 	def parsevalue(self, str):
+		str = str.strip()
+		if str == '':
+			return None
 		if str == 'indefinite':
 			attrname = self.getname()
 			if attrname in ('duration', 'repeatdur', 'max', 'syncTolerance', 'syncToleranceDefault'):
@@ -1813,7 +1818,7 @@ class FloatAttrEditorField(AttrEditorField):
 
 class PercentAttrEditorField(AttrEditorField):
 	def valuerepr(self, value):
-		if value == None:
+		if value is None:
 			return ''
 		return fmtfloat(value*100, '%')
 
@@ -2176,6 +2181,12 @@ class PopupAttrEditorField(AttrEditorField):
 			return self.default
 		return value
 
+	def reset_callback(self):
+		if self.type == 'option':
+			self.recalcoptions()
+		else:
+			AttrEditorField.reset_callback(self)
+
 class PopupAttrEditorFieldWithUndefined(PopupAttrEditorField):
 	# This class differs from the one above in that when a value
 	# does not occur in the list of options, valuerepr will return
@@ -2195,9 +2206,6 @@ class PopupAttrEditorFieldWithUndefined(PopupAttrEditorField):
 		if value not in options:
 			return UNDEFINED
 		return value
-
-	def reset_callback(self):
-		self.recalcoptions()
 
 class PopupAttrEditorFieldNoDefault(PopupAttrEditorField):
 	def getcurrent(self):
@@ -2488,18 +2496,20 @@ class FitAttrEditorField(PopupAttrEditorField):
 	__valuesmap = ['meet', 'hidden', 'slice', 'scroll', 'fill']
 
 	# Choose from a list of unit types
+	def default(self):
+		return 'default [%s]' % self.getdefault()
+
 	def getoptions(self):
-		self.default = 'default [%s]' % self.getdefault()
-		return [self.default] + self.__values
+		return [self.default()] + self.__values
 
 	def parsevalue(self, str):
-		if str == self.default:
+		if str[:7] == 'default':
 			return None
 		return self.__valuesmap[self.__values.index(str)]
 
 	def valuerepr(self, value):
 		if value is None:
-			return self.default
+			return self.default()
 		return self.__values[self.__valuesmap.index(value)]
 
 	def getcurrent(self):
