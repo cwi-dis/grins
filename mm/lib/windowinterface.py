@@ -27,6 +27,17 @@ error = 'windowinterface.error'
 
 from fl_or_gl import *
 
+have_cl = have_jpeg = 0
+try:
+	import cl, CL
+	have_cl = 1
+except ImportError:
+	try:
+		import jpeg
+		have_jpeg = 1
+	except ImportError:
+		pass
+
 # Cursors
 _ARROW = 0				# predefined
 _WATCH = 1
@@ -38,6 +49,7 @@ _DEF_FGCOLOR =   0,  0,  0		# black
 _window_list = {}			# mapping from window ID to object
 _image_cache = {}			# cache of prepared images
 _cache_full = 0				# 1 if we shouldn't cache more images
+_size_cache = {}
 
 gl.foreground()
 _screenwidth = gl.getgdesc(GL.GD_XPMAX)
@@ -225,6 +237,16 @@ class _Event:
 ##			print `dev`,
 ##		print `val`
 		if debug: print 'Event._dispatch'+`dev,val`
+		if dev == DEVICE.INPUTCHANGE:
+			self._savemouse = None
+			if val == 0:
+				self._curwin = None
+			elif not _window_list.has_key(val):
+##				print 'inputchange to unknown window '+`val`
+				self._curwin = None
+			else:
+				self._curwin = _window_list[val]
+			return
 		if dev == DEVICE.REDRAW:
 			self._savemouse = None
 			if _window_list.has_key(val):
@@ -243,17 +265,7 @@ class _Event:
 ##			else:
 ##				print 'redraw event for unknown window '+`val`
 			return
-		elif dev == DEVICE.INPUTCHANGE:
-			self._savemouse = None
-			if val == 0:
-				self._curwin = None
-			elif not _window_list.has_key(val):
-##				print 'inputchange to unknown window '+`val`
-				self._curwin = None
-			else:
-				self._curwin = _window_list[val]
-			return
-		elif dev == DEVICE.KEYBD:
+		if dev == DEVICE.KEYBD:
 			self._savemouse = None
 			if gl.getvaluator(DEVICE.LEFTALTKEY) or \
 				  gl.getvaluator(DEVICE.RIGHTALTKEY):
@@ -269,6 +281,9 @@ class _Event:
 		elif dev == DEVICE.MOUSEY:
 			if not self._curwin or not self._savemouse:
 ##				print 'mouse event when not in known window'
+				return
+			if self._curwin.is_closed():
+##				print 'window is closed'
 				return
 			y = val
 			dev, val = self._savemouse
@@ -306,8 +321,6 @@ class _Event:
 					dev = Mouse2Release
 			self.enterevent(self._curwin, dev, (x, y, buttons))
 			return
-		elif dev in (DEVICE.MOUSEX, DEVICE.MOUSEY):
-			raise error, 'got mouse position event'
 		elif dev in (DEVICE.WINSHUT, DEVICE.WINQUIT):
 			self.enterevent(self._curwin, WindowExit, None)
 			return
@@ -1294,11 +1307,11 @@ class _Window:
 		magic = f.read(4)
 		if magic[:2] == '\001\332':
 			f.close()
-			retval = self._prepare_RGB_image_from_file(file, \
+			retval = self._prepare_RGB_image_from_file(file,
 				  top, bottom, left, right)
 		elif magic == '\377\330\377\340':
 			f.seek(0)
-			retval = self._prepare_JPEG_image_from_filep(f, \
+			retval = self._prepare_JPEG_image_from_filep(file, f,
 				  top, bottom, left, right)
 			f.close()
 		else:
@@ -1308,7 +1321,7 @@ class _Window:
 				f = torgb.torgb(file)
 			except torgb.error, msg:
 				raise error, msg
-			retval = self._prepare_RGB_image_from_file(f, \
+			retval = self._prepare_RGB_image_from_file(f,
 				  top, bottom, left, right)
 			retval = retval[:-1] + (1,)
 			if f != file:
@@ -1335,6 +1348,8 @@ class _Window:
 		return retval[:-1]
 
 	def _image_size(self, file):
+		if _size_cache.has_key(file):
+			return _size_cache[file]
 		f = open(file, 'r')
 		header = f.read(16)
 		if header[:2] == '\001\332':
@@ -1343,24 +1358,24 @@ class _Window:
 			xsize, ysize = rgbimg.sizeofimage(file)
 			return xsize, ysize
 		elif header[:4] == '\377\330\377\340':
-			import cl, CL
-			f.seek(0)
-			scheme = cl.QueryScheme(header)
-			decomp = cl.OpenDecompressor(scheme)
-			header = f.read(cl.QueryMaxHeaderSize(scheme))
-			f.seek(0)
-			headersize = decomp.ReadHeader(header)
-			xsize = decomp.GetParam(CL.IMAGE_WIDTH)
-			ysize = decomp.GetParam(CL.IMAGE_HEIGHT)
-			decomp.CloseDecompressor()
-			f.close()
-			return xsize, ysize
-		else:
-			raise error, 'cannot determine size of image'
+			if have_cl:
+				f.seek(0)
+				scheme = cl.QueryScheme(header)
+				decomp = cl.OpenDecompressor(scheme)
+				header = f.read(cl.QueryMaxHeaderSize(scheme))
+				f.seek(0)
+				headersize = decomp.ReadHeader(header)
+				xsize = decomp.GetParam(CL.IMAGE_WIDTH)
+				ysize = decomp.GetParam(CL.IMAGE_HEIGHT)
+				decomp.CloseDecompressor()
+				f.close()
+				return xsize, ysize
+		raise error, 'cannot determine size of image'
 
 	def _prepare_RGB_image_from_file(self, file, top, bottom, left, right):
 		import rgbimg
 		xsize, ysize = rgbimg.sizeofimage(file)
+		_size_cache[file] = xsize, ysize
 		top = int(top * ysize + 0.5)
 		bottom = int(bottom * ysize + 0.5)
 		left = int(left * xsize + 0.5)
@@ -1392,30 +1407,12 @@ class _Window:
 			  left, bottom, width, height, 4, scale, \
 			  image, do_cache
 
-	def _prepare_JPEG_image_from_filep(self, filep, top, bottom, left, right):
-		import cl, CL
-		header = filep.read(16)
-		filep.seek(0)
-		scheme = cl.QueryScheme(header)
-		decomp = cl.OpenDecompressor(scheme)
-		header = filep.read(cl.QueryMaxHeaderSize(scheme))
-		filep.seek(0)
-		headersize = decomp.ReadHeader(header)
-		xsize = decomp.GetParam(CL.IMAGE_WIDTH)
-		ysize = decomp.GetParam(CL.IMAGE_HEIGHT)
-##		if _is_entry_indigo:		-- doesn't seem to work
-##			original_format = CL.RGB
-##			zsize = 1
-##		else:
-		original_format = CL.RGBX
-		zsize = 4
-		params = [CL.ORIGINAL_FORMAT, original_format, \
-			  CL.ORIENTATION, CL.BOTTOM_UP, \
-			  CL.FRAME_BUFFER_SIZE, \
-				 xsize*ysize*CL.BytesPerPixel(original_format)]
-		decomp.SetParams(params)
-		image = decomp.Decompress(1, filep.read())
-		decomp.CloseDecompressor()
+	def _prepare_JPEG_image_from_filep(self, file, filep, top, bottom, left, right):
+		if have_cl:
+			image, xsize, ysize, zsize = self._prepare_JPEG_image_from_filep_with_cl(filep)
+		elif have_jpeg:
+			image, xsize, ysize, zsize =  self._prepare_JPEG_image_from_filep_with_jpeg(filep)
+		_size_cache[file] = xsize, ysize
 
 		top = int(top * ysize + 0.5)
 		bottom = int(bottom * ysize + 0.5)
@@ -1446,6 +1443,34 @@ class _Window:
 			zsize = 3
 		return x, y, width - left - right, height - top - bottom, \
 			  left, bottom, width, height, zsize, scale, image, 1
+
+	def _prepare_JPEG_image_from_filep_with_jpeg(self, filep):
+		return jpeg.decompress(filep.read())
+
+	def _prepare_JPEG_image_from_filep_with_cl(self, filep):
+		header = filep.read(16)
+		filep.seek(0)
+		scheme = cl.QueryScheme(header)
+		decomp = cl.OpenDecompressor(scheme)
+		header = filep.read(cl.QueryMaxHeaderSize(scheme))
+		filep.seek(0)
+		headersize = decomp.ReadHeader(header)
+		xsize = decomp.GetParam(CL.IMAGE_WIDTH)
+		ysize = decomp.GetParam(CL.IMAGE_HEIGHT)
+##		if _is_entry_indigo:		-- doesn't seem to work
+##			original_format = CL.RGB
+##			zsize = 1
+##		else:
+		original_format = CL.RGBX
+		zsize = 4
+		params = [CL.ORIGINAL_FORMAT, original_format, \
+			  CL.ORIENTATION, CL.BOTTOM_UP, \
+			  CL.FRAME_BUFFER_SIZE, \
+				 xsize*ysize*CL.BytesPerPixel(original_format)]
+		decomp.SetParams(params)
+		image = decomp.Decompress(1, filep.read())
+		decomp.CloseDecompressor()
+		return image, xsize, ysize, zsize
 
 	def _convert_coordinates(self, x, y, w, h):
 		x0, y0 = x, y
