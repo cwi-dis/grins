@@ -545,15 +545,7 @@ SOURCE=.\M_LayoutChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_LayoutView.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_LayoutView2.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_LayoutViewDialog.c
 # End Source File
 # Begin Source File
 
