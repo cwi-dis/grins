@@ -126,7 +126,7 @@ class _DisplayList:
 		wnd.update()
 
 	# Render the display list on dc within the region	
-	def _render(self, dc, region, clear=1):
+	def _render(self, dc, region=None, clear=1):
 		self._rendered = 1
 
 		clonestart = self._clonestart

@@ -864,6 +864,7 @@ class Window:
 		self._bgcolor = r, g, b
 		if self._active_displist:
 			self._active_displist.updatebgcolor(color)
+		self.update()
 
 	#
 	# Transitions interface
