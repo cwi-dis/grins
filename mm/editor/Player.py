@@ -329,6 +329,21 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.playroot = node
 		self.play()
 	#
+	def defanchor(self, node, anchor):
+		if not self.showing:
+			self.show()
+		if self.playing:
+			self.stop()
+		ch = self.getchannel(node)
+		if ch == None:
+			fl.show_message('Cannot set internal anchor', \
+				  '(node not on a channel)', '')
+			return
+		if not ch.is_showing():
+			ch.flip_visible()
+			self.makemenu()
+		return ch.defanchor(node, anchor)
+	#
 	def pause(self):
 		self.ff = 0
 		self.seeking = 0
@@ -687,34 +702,33 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	# Callback for anchor activations
 	#
 	def anchorfired(self, node, anchorlist):
-		for i in anchorlist:
-			print 'Anchor fired: ', i
 		destlist = []
 		for i in anchorlist:
 			aid = (node.GetUID(), i[0])
-			print 'Anchorid: ', aid
 			rv = self.context.hyperlinks.findsrclink(aid)
 			destlist = destlist + rv
 		print 'Destinations:', destlist
 		if not destlist:
-			fl.show_message('No hyperlink sourced at this anchor')
+			fl.show_message('No hyperlink sourced at this anchor'\
+				  , '', '')
 			return
 		if len(destlist) <> 1:
-			print 'Sorry, not supported yet'
+			fl.show_message('Sorry, multiple links not supported' \
+				  , '', '')
 			return
 		dest = destlist[0][1]
 		if destlist[0][0] <> 0:
-			print 'Sorry, will do JUMP anyway'
+			fl.show_message('Sorry, will JUMP anyway', '', '')
 		try:
 			self.seek_node = self.context.mapuid(dest[0])
-			self.suspend_playing()
-			self.seeking = 1
-			self.playroot = self.root
-			dummy = self.resume_1_playing(1.0)
-			self.resume_2_playing()
 		except NoSuchUIDError:
-			fl.show_message('Dangling hyperlink selected')
+			fl.show_message('Dangling hyperlink selected', '', '')
 			return
+		self.suspend_playing()
+		self.seeking = 1
+		self.playroot = self.root
+		dummy = self.resume_1_playing(1.0)
+		self.resume_2_playing()
 
 #
 # del_timing removes all arm_duration attributes (so they will be recalculated)
