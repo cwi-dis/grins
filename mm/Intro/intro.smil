@@ -5,7 +5,7 @@
   <head>
     <meta name="title" content="Welcome to GRiNS"/>
     <layout>
-      <root-layout id="Welcome-to-GRiNS" title="Welcome to GRiNS" background-color="#000000" width="300" height="300"/>
+      <root-layout title="Welcome to GRiNS" background-color="#000000" width="300" height="300"/>
       <region id="logo-Ani" title="logo-Ani" left="23%" top="26%" width="53%" height="40%" z-index="3" background-color="#000000"/>
       <region id="audio" title="audio" fit="meet"/>
       <region id="text" title="text" top="72%" z-index="5" background-color="#000000"/>
