@@ -33,7 +33,8 @@ const char* logident = "Grinsdb mail-wrapper";
 
 
 const char *VALID_COMMANDS[] = {
-	"grinsregister.py", 
+	"grinsregister.py",
+	"lostkey.py",
 	NULL				     /* Sentinel, don't remove */
 };
 
