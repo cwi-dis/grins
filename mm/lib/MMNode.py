@@ -64,6 +64,7 @@ class MMNodeContext:
 		
 		self.__parseErrors = None # keep the parse errors (fatal, normal and warning)
 		self.disableviews = 0 # for the comments look at Editor/TopLevel.__init__ method
+		self.viewinfo = None # Open views and their position. None: default.
 
 	def isValidDocument(self):
 		return self.getParseErrors() == None
@@ -89,6 +90,12 @@ class MMNodeContext:
 
 	def gettitle(self):
 		return self.title
+
+	def setviewinfo(self, info):
+		self.viewinfo = info
+
+	def getviewinfo(self):
+		return self.viewinfo
 
 	def setbaseurl(self, baseurl):
 		if baseurl:
