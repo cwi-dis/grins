@@ -56,7 +56,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 	def OnCommand(self, params):
 		cmdid = winstruct.winmsg(params).id()
 		cmd = usercmdui.id2usercmd(cmdid)
-		winuser.MessageBox('On Command id=%d usercmd=%s' % (cmdid, repr(cmd)))
+		print 'Cmd: id=%d usercmd=%s' % (cmdid, repr(cmd))
 		if cmd:
 			self.execute_cmd(cmd)
 			return 
