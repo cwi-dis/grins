@@ -7,9 +7,8 @@ import bisect
 error = 'rtpool.error'
 
 class rtpool:
-	def init(self):
+	def __init__(self):
 		self.pool = []
-		return self
 
 	def __repr__(self):
 		return '<rtpool instance, pool=' + `self.pool` + '>'
