@@ -673,7 +673,7 @@ def _calcdur(tags):
 			endtime = start + duration
 	return endtime
 
-def writeRP(rpfile, rp, node, savecaptions=0):
+def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0):
 	from SMILTreeWrite import nameencode
 	import MMAttrdefs
 
@@ -686,7 +686,11 @@ def writeRP(rpfile, rp, node, savecaptions=0):
 	else:
 		baseurl = ''		# no slashes
 
-	f = open(rpfile, 'w')
+	if tostring:
+		from StringIO import StringIO
+		f = StringIO()
+	else:
+		f = open(rpfile, 'w')
 	f.write('<imfl>\n')
 	f.write('  <head')
 	sep = ' '
@@ -810,8 +814,13 @@ def writeRP(rpfile, rp, node, savecaptions=0):
 	for start, a in fadeouts:
 		_writeFadeout(f, start, a, bgcolor)
 	f.write('</imfl>\n')
+	if tostring:
+		# must call getvalue *before* closing the StringIO instance
+		data = f.getvalue()
+		f.close()
+		return data
 	f.close()
-	if os.name == 'mac':
+	if os.name == 'mac' and not tostring:
 		import macfs
 		import macostools
 		fss = macfs.FSSpec(rpfile)

@@ -61,14 +61,20 @@ class SlideShow:
 			url = urlparse.urlunparse((utype, host, path, params, query, ''))
 			self.url = url
 			fp = None
+			is_data = utype == 'data'
 			if new_file and type(new_file) == type(''):
 				url = MMurl.basejoin(new_file, ourl)
+				if is_data:
+					file = None
+					baseurl = new_file
+				else:
+					file = baseurl = url
 				try:
-					fn, hdr = MMurl.urlretrieve(url)
-					fp = open(fn)
-					rp = realsupport.RPParser(url, baseurl = url, printfunc = self.printfunc)
+					fp = MMurl.urlopen(url)
+					rp = realsupport.RPParser(file, baseurl = baseurl, printfunc = self.printfunc)
 					rp.feed(fp.read())
 					rp.close()
+					fp.close()
 					update = 1
 					# zap the URL so that the
 					# template doesn't get
@@ -82,19 +88,30 @@ class SlideShow:
 					pass
 				url = self.url
 			else:
+				if is_data:
+					file = None
+					baseurl = ctx.findurl('')
+				else:
+					file = url
+					baseurl = ourl
 				try:
-					fn, hdr = MMurl.urlretrieve(url)
-					fp = open(fn)
-					rp = realsupport.RPParser(url, baseurl = ourl, printfunc = self.printfunc)
+					fp = MMurl.urlopen(url)
+					rp = realsupport.RPParser(file, baseurl = baseurl, printfunc = self.printfunc)
 					rp.feed(fp.read())
 					rp.close()
+					fp.close()
 				except:
-					rp = None
-					if rp is None:
-						windowinterface.showmessage('Cannot read slideshow file with URL %s in node %s on channel %s' % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
-						rp = DummyRP()
+					windowinterface.showmessage('Cannot read slideshow file with URL %s in node %s on channel %s' % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
+					rp = DummyRP()
 			if fp is not None:
 				fp.close()
+			if is_data:
+				# zap the URL for "immediate" RP files
+				try:
+					node.DelAttr('file')
+				except NoSuchAttrError:
+					pass
+				self.url = url = ''
 		self.url = url
 		self.rp = rp
 		attrdict = node.GetAttrDict()
@@ -197,14 +214,13 @@ class SlideShow:
 			try:
 				if not url:
 					raise IOError
-				fn, hdr = MMurl.urlretrieve(url)
+				fp = MMurl.urlopen(url)
 			except IOError:
 				# new file does not exist, keep content
 				rp = self.rp
 			else:
 				# new file exists, use it
 				import realsupport
-				fp = open(fn)
 				self.filename = url
 				rp = realsupport.RPParser(url, baseurl = ourl, printfunc = self.printfunc)
 				try:
@@ -472,11 +488,13 @@ def deltmpfiles():
 			pass
 	SlideShow.tmpfiles = []
 
-def writenode(node, evallicense = 0):
+def writenode(node, evallicense = 0, tostring = 0):
 	if not hasattr(node, 'tmpfile'):
 		return
 	import realsupport
-	realsupport.writeRP(node.tmpfile, node.slideshow.rp, node, savecaptions=1)
+	data = realsupport.writeRP(node.tmpfile, node.slideshow.rp, node, savecaptions=1, tostring = 1)
+	if tostring:
+		return data
 	url = MMAttrdefs.getattr(node, 'file')
 	url = node.GetContext().findurl(url)
 	utype, host, path, params, query, tag = urlparse.urlparse(url)
@@ -484,7 +502,7 @@ def writenode(node, evallicense = 0):
 	   (not host or host == 'localhost'):
 		try:
 			f = open(MMurl.url2pathname(path), 'w')
-			f.write(open(node.tmpfile).read())
+			f.write(data)
 			f.close()
 		except:
 			windowinterface.showmessage("cannot write `%s' for node `%s'" % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>'))
