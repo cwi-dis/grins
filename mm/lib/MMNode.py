@@ -700,7 +700,6 @@ class MMChannel:
 			self.attrdict['center'] = 0
 			self.attrdict['drawbox'] = 0
 			self.attrdict['z'] = 0
-			self.attrdict['showEditBackground'] = 1
 			self.attrdict['editBackground'] = 100,100,100
 			
 	def newCssId(self, isRoot = 0):
@@ -858,6 +857,9 @@ class MMChannel:
 
 					# experimental algorithm to define a default edit bg color
 					if wantNewEditBg:
+						if pchan.get('showEditBackground') == 1:
+							self.attrdict['showEditBackground'] = 1
+
 						parentBg = pchan.attrdict.get('editBackground')
 						if parentBg is None:
 							parentBg = 20, 20, 20
