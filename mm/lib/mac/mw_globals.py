@@ -45,6 +45,13 @@ Version = 'mac'
 _X, _Y, _WIDTH, _HEIGHT = 0, 1, 2, 3
 
 #
+# Constants for arrow drawing
+#
+ARR_LENGTH = 18
+ARR_HALFWIDTH = 5
+ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
+
+#
 # The single _Toplevel instance. Note that modules should not
 # use import from for this one: it is set when all mw_ modules
 # have been imported.
