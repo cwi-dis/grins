@@ -82,7 +82,7 @@ class SocketChannel(Channel):
 	def do_arm(self, node, same=0):
 		alist =  MMAttrdefs.getattr(node, 'anchorlist')
 		for a in alist:
-			self.setanchor(a[A_ID], a[A_TYPE], None, a[A_TIMES])
+			self.setanchor(a.aid, a.atype, None, a.atimes)
 		return 1
 
 	def do_play(self, node):
