@@ -1,4 +1,4 @@
-from Channel import ChannelWindow, TEXT
+from Channel import ChannelWindow
 #from TextChannel import mapfont, extract_taglist, fix_anchorlist
 from TextChannel import mapfont, fix_anchorlist
 #from TextChannel import mapfont
@@ -9,14 +9,16 @@ from urllib import urlopen, urlretrieve
 import MMAttrdefs
 import textex
 
+[SINGLE, HTM, TEXT] = range(3)
+
 class LabelChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + \
 		     ['fgcolor', 'font', 'pointsize', 'textalign', \
 		      'bgimg', 'scale', 'noanchors']
-	_window_type = TEXT
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
+		self._visible = 1
 		self._filename = ""
 		self.id = -1
 		self.taglist = []
@@ -24,23 +26,26 @@ class LabelChannel(ChannelWindow):
 		self._facename = "Arial"
 		self._pointsize = 12
 		self.TextException = "Text Error:"
+		self._window_type = TEXT
 
 	def __repr__(self):
 		return '<LabelChannel instance, name=' + `self._name` + '>'
 
 	
 	def create_anchor_list(self, left, top, right, bottom, string):
-		#print "in create_anchor_list"
+		# Appends the button list of the anchors.
 		self.taglist.append(left, top, right, bottom, string)
 	
 	
 	
 	def do_arm(self, node, same = 0):
-		print "-----------in label channel------------------"
 		self.win = self.window
 		if same and self.armed_display:
 			return 1
+		#get the image id
 		img = MMAttrdefs.getattr(node, 'bgimg')
+		#most of the labelchannels become same with an imagechannel
+		#and they take their functionality
 		if img:
 			try:
 				img = urlretrieve(img)[0]
@@ -53,6 +58,8 @@ class LabelChannel(ChannelWindow):
 					msg = msg[1]
 				self.errormsg(node, img + ':\n' + msg)
 
+		#same as the text channel
+		self.window._fgcolor = MMAttrdefs.getattr(node, 'fgcolor')
 		fontspec = MMAttrdefs.getattr(node, 'font')
 		fontname, pointsize = mapfont(fontspec)
 		ps = MMAttrdefs.getattr(node, 'pointsize')
@@ -62,9 +69,13 @@ class LabelChannel(ChannelWindow):
 			self._pointsize = pointsize
 		
 		align = MMAttrdefs.getattr(node, 'textalign')
+		# Default align for labelchannel. Align for labelchannel
+		# must contain always a proper string. 
+		if align == "":
+			align = "top,left"
 		self.window._align = align
-		print "align-->", self.window._align
-				
+						
+		# Same jobs as in textchannel
 		self.id, str = self.getstring(node)
 						
 		if MMAttrdefs.getattr(node, 'noanchors'):
@@ -78,12 +89,7 @@ class LabelChannel(ChannelWindow):
 					
 		fix_anchorlist(node, self.taglist)
 
-		print "Taglist-->", self.taglist
-		
 		buttons = []
-		
-		
-		#self.armed_display.writeText(self._facename, self._pointsize, self.id, str)	
 
 		width, height = self.window._rect[2:]
 		for (left, top, right, bottom, name, type) in self.taglist:
@@ -104,6 +110,7 @@ class LabelChannel(ChannelWindow):
 					
 		return 1
 
+	# Not used
 	def position(self, y, line, right):
 		w, h = self.armed_display.strsize(line)
 		if right:
@@ -141,6 +148,7 @@ class LabelChannel(ChannelWindow):
 			raise CheckError, \
 				'gettext on wrong node type: ' +`node.type`
 
+# Not used
 def extract_paragraphs(text):
 	lines = string.splitfields(text, '\n')
 	for lineno in range(len(lines)):
@@ -154,48 +162,3 @@ def extract_paragraphs(text):
 
 
 
-#def fix_anchorlist(node, taglist):
-#	if not taglist:
-#		return
-#	#print "TagList: ", taglist
-#	import MMAttrdefs
-#	names_in_anchors = []
-#	names_in_taglist = []
-#	anchor_types = {}
-#	names_in_anchors = map(lambda item: item[4], taglist)
-#	oldanchors = MMAttrdefs.getattr(node, 'anchorlist')
-#	print "oldanchors : ", oldanchors
-#	print node.attrdict
-#	modanchorlist(oldanchors)
-#	anchors = oldanchors[:]
-#	i = 0
-#	while i < len(anchors):
-#		aid, atype, args = a = anchors[i]
-#		if atype in [ATYPE_WHOLE, ATYPE_AUTO, ATYPE_COMP]:
-#			pass
-#		elif aid not in names_in_anchors:
-#			print 'Remove text anchor from anchorlist:', a
-#			anchors.remove(a)
-#			i = i - 1	# compensate for later increment
-#		else:
-#			names_in_taglist.append(aid)
-#			anchor_types[aid] = atype
-#		i = i + 1
-#	print 'NUM OF TAGS:'
-#	print len(taglist)
-#	for i in range(len(taglist)):
-#		item = taglist[i]
-#		name = item[4]
-#		if not anchor_types.has_key(name):
-#			print 'Add text anchor to anchorlist:', name
-#			anchors.append(name, ATYPE_NORMAL, [])
-#			anchor_types[name] = ATYPE_NORMAL
-#		taglist[i] = taglist[i] + (anchor_types[name],)
-#	if anchors <> oldanchors:
-#		print 'New anchors:', anchors
-#		print node
-#		print node.attrdict
-#		#node.SetAttr('anchorlist', anchors)
-#		node.attrdict['anchorlist'] = anchors 
-#		print node.attrdict
-#		#MMAttrdefs.flushcache(node)
