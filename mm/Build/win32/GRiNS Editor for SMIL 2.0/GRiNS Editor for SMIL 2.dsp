@@ -693,10 +693,6 @@ SOURCE=.\M_MMAttrdefs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMCache.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_MMExc.c
 # End Source File
 # Begin Source File
