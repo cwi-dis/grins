@@ -1,4 +1,8 @@
-#! /bin/sh
+#!/bin/sh
+# Common code for cmifed and cmifplay. Set
+# $function set to "editor" or "player"
+#
+function=editor
 
 case `uname -sr` in
 IRIX\ 5.*)	ARCH=irix5;;
@@ -36,7 +40,7 @@ case "$dir" in
 */bin)	dir=`dirname "$dir"`;;
 esac
 
-for sub in editor common video python lib mmpython
+for sub in $function common video python lib mmpython
 do
 	if [ ! -d "$dir/$sub" ]
 	then
@@ -46,12 +50,29 @@ do
 done
 
 python="$dir/mmpython/$ARCH/python"
+pythonlib="$dir/../lib/python"
+pythonsrc="$dir/python"
 
 CMIF="$dir"
 export CMIF
 
-PYTHONPATH="$CMIF/editor:$CMIF/common:$CMIF/lib:$CMIF/video:$dir/python:$dir/python/test:$dir/python/$ARCH:$dir/python/X11:$dir/python/img"
+PYTHONPATH=$CMIF/$function
+PYTHONPATH=$PYTHONPATH:$CMIF/common
+PYTHONPATH=$PYTHONPATH:$CMIF/lib
+PYTHONPATH=$PYTHONPATH:$CMIF/video
+
+PYTHONPATH=$PYTHONPATH:$pythonlib
+PYTHONPATH=$PYTHONPATH:$pythonlib/test
+PYTHONPATH=$PYTHONPATH:$pythonlib/$ARCH
+PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/X11/Lib
+PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/img/Lib
+
 export PYTHONPATH
+
+# Is this still needed?
+
+CMIF_USE_X=1
+export CMIF_USE_X
 
 PATH="$PATH:$dir/demo/amsterdam"
 export PATH
