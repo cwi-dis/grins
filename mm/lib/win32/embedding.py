@@ -223,6 +223,7 @@ class EmbeddedWnd(win32window.DDWndLayer):
 			self.createPrimaryDDLayer(hwnd)
 			self._peerwnd = window.Wnd(win32ui.CreateWindowFromHandle(hwnd))
 			self.settitle(self._title)
+			self.update()
 
 	def settitle(self,title):
 		if not title: return
@@ -305,12 +306,11 @@ class EmbeddedWnd(win32window.DDWndLayer):
 		return self._viewport._rect
 
 	def closeViewport(self, viewport):
-#		self._peerdocid = peerdocid
-#		try:
-#			from __main__ import commodule
-#			if peerdocid: 
-#				commodule.AdviceClosePeerWnd(peerdocid, id(self))
-#		except: pass
+		try:
+			from __main__ import commodule
+			if self._peerdocid: 
+				commodule.AdviceClosePeerWnd(self._peerdocid, id(self))
+		except: pass
 		self._viewport = None
 		del viewport
 		self.destroyDDLayer()
