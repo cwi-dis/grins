@@ -256,6 +256,7 @@ HRESULT __stdcall GRiNSPlayerAuto::getTime(/* [out] */ double __RPC_FAR *pt)
 
 HRESULT __stdcall GRiNSPlayerAuto::setTime(/* [in] */ double t)
 	{
+	m_curpos = t;
 	PostMessage(getListener(), WM_USER_SETPOS, WPARAM(this), LPARAM(floor(1000.0*t+0.5)));	
 	return S_OK;
 	}
