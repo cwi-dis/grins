@@ -16,6 +16,12 @@ def get(node):
 				return MovieDuration.get(filename)
 			except IOError, msg:
 				print filename, msg
+		elif ctype == 'mpeg':
+			import MpegDuration
+			try:
+				return MpegDuration.get(filename)
+			except IOError, msg:
+				print filename, msg
 		elif ctype == 'sound':
 			import SoundDuration
 			try:
