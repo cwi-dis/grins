@@ -207,7 +207,7 @@ class SoundChannel(Channel):
 def getduration(filename):
 	f, nchannels, nsampframes, sampwidth, samprate, format = \
 		getinfo(filename)
-	duration = nsampframes / samprate
+	duration = float(nsampframes) / samprate
 	return duration
 
 
