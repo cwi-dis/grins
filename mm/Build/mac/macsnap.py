@@ -28,7 +28,7 @@ import Res
 try:
 	Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 except:
-	Res.FSpOpenResFile(':macsmilpro.rsrc', 0)
+	Res.FSpOpenResFile(':macsnap.rsrc', 0)
 	Res.FSpOpenResFile(':editor.rsrc', 0)
 	Res.FSpOpenResFile(':playercontrols.rsrc', 0)
 	Res.FSpOpenResFile(':common.rsrc', 0)
@@ -54,7 +54,8 @@ else:
 # Mangle sys.path. Here are the directives for macfreeze:
 #
 # macfreeze: path :
-# macfreeze: path :::editor:smil10
+# macfreeze: path :::editor:snap:mac
+# macfreeze: path :::editor:snap
 # macfreeze: path :::editor:mac
 # macfreeze: path :::editor
 # macfreeze: path :::common:mac
@@ -139,7 +140,8 @@ if not STANDALONE:
 	
 	CMIFPATH = [
 		CMIFDIR+":mac",
-		CMIFDIR+":editor:smil10",
+		CMIFDIR+":editor:snap:mac",
+		CMIFDIR+":editor:snap",
 		CMIFDIR+":editor:mac",
 		CMIFDIR+":editor",
 		CMIFDIR+":common:mac",
