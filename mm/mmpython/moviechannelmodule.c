@@ -401,15 +401,19 @@ movie_player(self)
 	nplayed = 0;
 	while (index <= lastindex) {
 		/*dprintf(("movie_player(%lx): writing image %d\n", (long) self, index));*/
-		acquire_lock(gl_lock, 1);
+		acquire_lock(gl_lock, WAIT_LOCK);
 		winset(PRIV->m_play.m_wid);
 		pixmode(PM_SIZE, 8);
+		if (PRIV->m_play.m_bgindex >= 0)
+			writemask(0xff);
 		xorig = (PRIV->m_width - PRIV->m_play.m_width * PRIV->m_play.m_scale) / 2;
 		yorig = (PRIV->m_height - PRIV->m_play.m_height * PRIV->m_play.m_scale) / 2;
 		rectzoom(PRIV->m_play.m_scale, PRIV->m_play.m_scale);
 		lrectwrite(xorig, yorig, xorig + PRIV->m_play.m_width - 1,
 			   yorig + PRIV->m_play.m_height - 1,
 			   PRIV->m_play.m_frame);
+		if (PRIV->m_play.m_bgindex >= 0)
+			writemask(0xffffffff);
 		gflush();
 		release_lock(gl_lock);
 		nplayed++;
@@ -487,19 +491,24 @@ movie_resized(self)
 	if (PRIV->m_play.m_frame) {
 		winset(PRIV->m_play.m_wid);
 		pixmode(PM_SIZE, 8);
-		if (PRIV->m_play.m_bgindex >= 0)
+		if (PRIV->m_play.m_bgindex >= 0) {
 			color(PRIV->m_play.m_bgindex);
-		else
+			clear();
+			writemask(0xff);
+		} else {
 			RGBcolor((PRIV->m_play.m_bgcolor >> 16) & 0xff,
 				 (PRIV->m_play.m_bgcolor >>  8) & 0xff,
 				 (PRIV->m_play.m_bgcolor      ) & 0xff);
-		clear();
+			clear();
+		}
 		xorig = (PRIV->m_width - PRIV->m_play.m_width * PRIV->m_play.m_scale) / 2;
 		yorig = (PRIV->m_height - PRIV->m_play.m_height * PRIV->m_play.m_scale) / 2;
 		rectzoom(PRIV->m_play.m_scale, PRIV->m_play.m_scale);
 		lrectwrite(xorig, yorig, xorig + PRIV->m_play.m_width - 1,
 			   yorig + PRIV->m_play.m_height - 1,
 			   PRIV->m_play.m_frame);
+		if (PRIV->m_play.m_bgindex >= 0)
+			writemask(0xffffffff);
 		gflush();
 	}
 	return 1;

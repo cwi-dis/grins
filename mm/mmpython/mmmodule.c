@@ -61,17 +61,16 @@ mm_armer(arg)
 	denter(mm_armer);
 
 	for (;;) {
-		if (acquire_lock(self->mm_armlock, WAIT_LOCK) < 0)
-			perror("armer: acquire_lock");
+		down_sema(self->mm_armsema);
 
-		(void) acquire_lock(self->mm_flaglock, WAIT_LOCK);
+		down_sema(self->mm_flagsema);
 		if (self->mm_flags & EXIT)
 			break;
-		release_lock(self->mm_flaglock);
+		up_sema(self->mm_flagsema);
 
 		(*self->mm_chanobj->chan_funcs->armer)(self);
 
-		(void) acquire_lock(self->mm_flaglock, WAIT_LOCK);
+		down_sema(self->mm_flagsema);
 		if (self->mm_flags & EXIT)
 			break;
 		if (self->mm_flags & STOPPING) {
@@ -82,10 +81,10 @@ mm_armer(arg)
 			qenter(self->mm_ev, ARMDONE);
 		}
 		self->mm_flags &= ~(ARMING|STOPPING);
-		release_lock(self->mm_flaglock);
+		up_sema(self->mm_flagsema);
 		/*DEBUG*/up_sema(self->mm_waitarm);
 	}
-	release_lock(self->mm_flaglock);
+	up_sema(self->mm_flagsema);
 	up_sema(self->mm_exitsema);
 	exit_thread();
 	/*NOTREACHED*/
@@ -100,17 +99,16 @@ mm_player(arg)
 	denter(mm_player);
 
 	for (;;) {
-		if (acquire_lock(self->mm_playlock, WAIT_LOCK) < 0)
-			perror("player: acquire_lock");
+		down_sema(self->mm_playsema);
 
-		(void) acquire_lock(self->mm_flaglock, WAIT_LOCK);
+		down_sema(self->mm_flagsema);
 		if (self->mm_flags & EXIT)
 			break;
-		release_lock(self->mm_flaglock);
+		up_sema(self->mm_flagsema);
 
 		(*self->mm_chanobj->chan_funcs->player)(self);
 
-		(void) acquire_lock(self->mm_flaglock, WAIT_LOCK);
+		down_sema(self->mm_flagsema);
 		if (self->mm_flags & EXIT)
 			break;
 		if (self->mm_flags & STOPPING) {
@@ -121,9 +119,9 @@ mm_player(arg)
 			qenter(self->mm_ev, PLAYDONE);
 		}
 		self->mm_flags &= ~(PLAYING|STOPPING);
-		release_lock(self->mm_flaglock);
+		up_sema(self->mm_flagsema);
 	}
-	release_lock(self->mm_flaglock);
+	up_sema(self->mm_flagsema);
 	up_sema(self->mm_exitsema);
 	exit_thread();
 	/*NOTREACHED*/
@@ -194,17 +192,17 @@ mm_arm(self, args)
 	denter(mm_arm);
 	if (!getargs(args, "(OiiOO)", &file, &delay, &duration, &attrlist, &anchorlist))
 		return NULL;
-	(void) acquire_lock(self->mm_flaglock, WAIT_LOCK);
+	down_sema(self->mm_flagsema);
 	if (self->mm_flags & ARMING) {
-		release_lock(self->mm_flaglock);
+		up_sema(self->mm_flagsema);
 		err_setstr(MmError, "already arming");
 		return NULL;
 	}
 	self->mm_flags |= ARMING;
-	release_lock(self->mm_flaglock);
+	up_sema(self->mm_flagsema);
 	if (!(*self->mm_chanobj->chan_funcs->arm)(self, file, delay, duration, attrlist, anchorlist))
 		return NULL;
-	release_lock(self->mm_armlock);
+	up_sema(self->mm_armsema);
 	/*DEBUG*/down_sema(self->mm_waitarm);
 	INCREF(None);
 	return None;
@@ -225,17 +223,17 @@ mm_play(self, args)
 	denter(mm_play);
 	if (!getnoarg(args))
 		return NULL;
-	(void) acquire_lock(self->mm_flaglock, WAIT_LOCK);
+	down_sema(self->mm_flagsema);
 	if (self->mm_flags & PLAYING) {
-		release_lock(self->mm_flaglock);
+		up_sema(self->mm_flagsema);
 		err_setstr(MmError, "already playing");
 		return NULL;
 	}
 	self->mm_flags |= PLAYING;
-	release_lock(self->mm_flaglock);
+	up_sema(self->mm_flagsema);
 	if (!(*self->mm_chanobj->chan_funcs->play)(self))
 		return NULL;
-	release_lock(self->mm_playlock);
+	up_sema(self->mm_playsema);
 	INCREF(None);
 	return None;
 }
@@ -254,27 +252,27 @@ mm_stop(self, args)
 	denter(mm_stop);
 	if (!getnoarg(args))
 		return NULL;
-	(void) acquire_lock(self->mm_flaglock, WAIT_LOCK);
+	down_sema(self->mm_flagsema);
 	if (self->mm_flags & (ARMING|PLAYING)) {
 		self->mm_flags |= STOPPING;
-		release_lock(self->mm_flaglock);
+		up_sema(self->mm_flagsema);
 		if (!(*self->mm_chanobj->chan_funcs->stop)(self))
 			return NULL;
 		/*DEBUG: wait until armer and player have actually stopped */
 		for (;;) {
-			(void) acquire_lock(self->mm_flaglock, WAIT_LOCK);
+			down_sema(self->mm_flagsema);
 			dprintf(("looping %x\n", self->mm_flags));
 			if ((self->mm_flags & (ARMING|PLAYING)) == 0) {
-				release_lock(self->mm_flaglock);
+				up_sema(self->mm_flagsema);
 				break;
 			}
-			release_lock(self->mm_flaglock);
+			up_sema(self->mm_flagsema);
 			sginap(5); /* release CPU for a bit */
 		}
 		dprintf(("exit loop\n"));
 	} else {
 		/* printf("mmmodule: mm_stop: already stopped\n"); */
-		release_lock(self->mm_flaglock);
+		up_sema(self->mm_flagsema);
 	}
 	INCREF(None);
 	return None;
@@ -307,13 +305,13 @@ do_close(self)
 	mmobject *self;
 {
 	/* tell other threads to exit */
-	(void) acquire_lock(self->mm_flaglock, WAIT_LOCK);
+	down_sema(self->mm_flagsema);
 	self->mm_flags |= EXIT;
 	if ((self->mm_flags & ARMING) == 0)
-		release_lock(self->mm_armlock);
+		up_sema(self->mm_armsema);
 	if ((self->mm_flags & PLAYING) == 0)
-		release_lock(self->mm_playlock);
-	release_lock(self->mm_flaglock);
+		up_sema(self->mm_playsema);
+	up_sema(self->mm_flagsema);
 
 	/* wait for other threads to exit */
 	down_sema(self->mm_exitsema);
@@ -325,12 +323,12 @@ do_close(self)
 	/* now cleanup our own mess */
 	XDECREF(self->mm_attrlist);
 	self->mm_attrlist = NULL;
-	free_lock(self->mm_armlock);
-	self->mm_armlock = NULL;
-	free_lock(self->mm_playlock);
-	self->mm_playlock = NULL;
-	free_lock(self->mm_flaglock);
-	self->mm_flaglock = NULL;
+	free_sema(self->mm_armsema);
+	self->mm_armsema = NULL;
+	free_sema(self->mm_playsema);
+	self->mm_playsema = NULL;
+	free_sema(self->mm_flagsema);
+	self->mm_flagsema = NULL;
 	free_sema(self->mm_exitsema);
 	self->mm_exitsema = NULL;
 	/*DEBUG*/free_sema(self->mm_waitarm);
@@ -397,12 +395,11 @@ static typeobject Mmtype = {
 };
 
 static object *
-newmmobject(wid, ev, attrlist, locks, semas, chanobj)
+newmmobject(wid, ev, attrlist, armsema, playsema, flagsema, exitsema, waitarm, chanobj)
 	int wid;
 	int ev;
 	object *attrlist;
-	type_lock locks[];
-	type_sema semas[];
+	type_sema armsema, playsema, flagsema, exitsema, waitarm;
 	channelobject *chanobj;
 {
 	mmobject *mmp;
@@ -414,11 +411,11 @@ newmmobject(wid, ev, attrlist, locks, semas, chanobj)
 	mmp->mm_flags = 0;
 	XINCREF(attrlist);
 	mmp->mm_attrlist = attrlist;
-	mmp->mm_armlock = locks[0];
-	mmp->mm_playlock = locks[1];
-	mmp->mm_flaglock = locks[2];
-	mmp->mm_exitsema = semas[0];
-	/*DEBUG*/mmp->mm_waitarm = semas[1];
+	mmp->mm_armsema = armsema;
+	mmp->mm_playsema = playsema;
+	mmp->mm_flagsema = flagsema;
+	mmp->mm_exitsema = exitsema;
+	/*DEBUG*/mmp->mm_waitarm = waitarm;
 	INCREF(chanobj);
 	mmp->mm_chanobj = chanobj;
 	mmp->mm_private = NULL;
@@ -457,9 +454,9 @@ mm_init(self, args)
 	object *attrlist;
 	object *mmp;
 	channelobject *chanobj;
-	type_lock locks[3];
+	type_sema armsema = NULL, playsema = NULL;
+	type_sema flagsema = NULL, exitsema = NULL, waitarm = NULL;
 	int i;
-	type_sema semas[2];
 
 	dprintf(("mm_init\n"));
 	wid = 0;
@@ -474,67 +471,38 @@ mm_init(self, args)
 	dprintf(("mm_init: chanobj = %lx (%s)\n", (long) mmp, mmp->ob_type->tp_name));
 	chanobj = (channelobject *) mmp;
 
-	/* allocate necessary locks */
-	for (i = 0; i < sizeof(locks)/sizeof(locks[0]); i++) {
-		locks[i] = allocate_lock();
-		if (locks[i] == NULL) {
-			err_setstr(IOError, "could not allocate all locks");
-			while (--i >= 0)
-				free_lock(locks[i]);
-			return NULL;
-		}
-	}
-	/* acquire some locks */
-	for (i = 0; i < 2; i++) {
-		if (!acquire_lock(locks[i], NOWAIT_LOCK)) {
-			err_setstr(IOError, "could not acquire locks");
-			for (i = 0; i < sizeof(locks)/sizeof(locks[0]); i++)
-				free_lock(locks[i]);
-			return NULL;
-		}
-	}
 	/* allocate necessary semaphores */
-	for (i = 0; i < sizeof(semas)/sizeof(semas[0]); i++) {
-		semas[i] = allocate_sema(0);
-		if (semas[i] == NULL) {
-			while (--i >= 0)
-				free_sema(semas[i]);
-			for (i = 0; i < sizeof(locks)/sizeof(locks[0]); i++)
-				free_lock(locks[i]);
-			err_setstr(IOError, "could not allocate semaphore");
-			return NULL;
-		}
+	if ((armsema = allocate_sema(0)) == NULL ||
+	    (playsema = allocate_sema(0)) == NULL ||
+	    (flagsema = allocate_sema(1)) == NULL ||
+	    (exitsema = allocate_sema(0)) == NULL ||
+	    (waitarm = allocate_sema(0)) == NULL) {
+		err_setstr(IOError, "could not allocate all semaphores");
+		if (armsema) free_sema(armsema);
+		if (playsema) free_sema(playsema);
+		if (flagsema) free_sema(flagsema);
+		if (exitsema) free_sema(exitsema);
+		if (waitarm) free_sema(waitarm);
+		return NULL;
 	}
 
-	mmp = newmmobject(wid, ev, attrlist, locks, semas, chanobj);
+	mmp = newmmobject(wid, ev, attrlist, armsema, playsema, flagsema, exitsema, waitarm, chanobj);
 	dprintf(("newmmobject() --> %lx\n", (long) mmp));
-	if (mmp == NULL) {
-		for (i = 0; i < sizeof(locks)/sizeof(locks[0]); i++)
-			free_lock(locks[i]);
-		for (i = 0; i < sizeof(semas)/sizeof(semas[0]); i++)
-			free_sema(semas[i]);
-		XDECREF(((mmobject *) mmp)->mm_attrlist);
-		DECREF(((mmobject *) mmp)->mm_chanobj);
-		return NULL;
-	}
-	if (!(*chanobj->chan_funcs->init)((mmobject *) mmp)) {
-		for (i = 0; i < sizeof(locks)/sizeof(locks[0]); i++)
-			free_lock(locks[i]);
-		for (i = 0; i < sizeof(semas)/sizeof(semas[0]); i++)
-			free_sema(semas[i]);
-		XDECREF(((mmobject *) mmp)->mm_attrlist);
-		DECREF(((mmobject *) mmp)->mm_chanobj);
-		return NULL;
-	}
-	if (!start_new_thread(mm_armer, (void *) mmp) ||
+	if (mmp == NULL ||
+	    !(*chanobj->chan_funcs->init)((mmobject *) mmp) ||
+	    !start_new_thread(mm_armer, (void *) mmp) ||
 	    !start_new_thread(mm_player, (void *) mmp)) {
-		for (i = 0; i < sizeof(locks)/sizeof(locks[0]); i++)
-			free_lock(locks[i]);
-		for (i = 0; i < sizeof(semas)/sizeof(semas[0]); i++)
-			free_sema(semas[i]);
+		/* only the start_thread() calls don't set the error */
+		if (!err_occurred())
+			err_setstr(IOError, "could not start threads");
+		free_sema(armsema);
+		free_sema(playsema);
+		free_sema(flagsema);
+		free_sema(exitsema);
+		free_sema(waitarm);
 		XDECREF(((mmobject *) mmp)->mm_attrlist);
 		DECREF(((mmobject *) mmp)->mm_chanobj);
-		err_setstr(IOError, "could not start threads");
+		DECREF(mmp);
 		return NULL;
 	}
 	return mmp;
