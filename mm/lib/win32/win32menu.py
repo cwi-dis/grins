@@ -94,6 +94,7 @@ class Menu:
 	def create_from_menubar_spec_list(self,list,cb_obj2id=None):
 		self._exec_list=[] # common list for algorithm
 		self._cb_obj2id=cb_obj2id # callback for id transl
+		self._submenus_dict={} # dictionary for 1st level submenus
 		self._create_toplevel_menu(self,list)
 		while len(self._exec_list):
 			proc_list=self._exec_list[:]
@@ -108,9 +109,10 @@ class Menu:
 	def _create_toplevel_menu(self,menu,list):
 		flags=win32con.MF_STRING|win32con.MF_ENABLED|win32con.MF_POPUP
 		for item in list:
-			submenu=win32ui.CreatePopupMenu()
+			submenu=Menu('popup') #win32ui.CreatePopupMenu()
 			menu.AppendMenu(flags,submenu.GetHandle(),item[0])
 			self._exec_list.append((submenu,item[1]))
+			self._submenus_dict[item[0]]=submenu
 
 	# create menu from a <menu_spec_list>
 	# appends remaining to self <menu_exec_list>
