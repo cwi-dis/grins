@@ -372,6 +372,7 @@ class NodeWrapper(Wrapper):
 			'.type',
 			('terminator',),
 			'begin', ('duration',), 'loop',	# Time stuff
+			'restart',
 			('clipbegin',), ('clipend',),	# More time stuff
 			'title', 'abstract', ('alt',), ('longdesc',), 'author',
 			'copyright', 'comment',
