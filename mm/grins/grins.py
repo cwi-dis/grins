@@ -215,15 +215,21 @@ def main():
 				exc_type, exc_value, exc_traceback = sys.exc_info()
 			else:
 				exc_type, exc_value, exc_traceback = sys.exc_type, sys.exc_value, sys.exc_traceback
-			import traceback, pdb
-			print
-			print '\t--------------------------------------------'
-			print '\t| Entering debugger -- call Sjoerd or Jack |'
-			print '\t--------------------------------------------'
-			print
-			traceback.print_exception(exc_type, exc_value, None)
-			print
-			pdb.post_mortem(exc_traceback)
+			if __debug__:
+				import traceback, pdb
+				print
+				print '\t--------------------------------------------'
+				print '\t| Entering debugger -- call Sjoerd or Jack |'
+				print '\t--------------------------------------------'
+				print
+				traceback.print_exception(exc_type, exc_value, None)
+				print
+				pdb.post_mortem(exc_traceback)
+			else:
+				import traceback
+				print
+				print 'GRiNS crash, please e-mail this output to grins-support@cwi.nl:'
+				traceback.print_exception(exc_type, exc_value, exc_traceback)
 	finally:
 		if sys.platform != 'win32':
 			import windowinterface
