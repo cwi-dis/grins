@@ -325,6 +325,7 @@ class SelectElementDlg(ResDialog):
 		'brush': grinsRC.IDI_BRUSH,
 		'animate': grinsRC.IDI_ANIMATE,
 		'prefetch': grinsRC.IDI_ICON_ASSET_BLANK,
+		'comment': grinsRC.IDI_ICON_ASSET_BLANK,
 		}
 	ICON_WIDTH, ICON_HEIGHT = 16, 16
 
@@ -355,7 +356,8 @@ class SelectElementDlg(ResDialog):
 			self._display_id = id
 
 		def isRegion(self):
-			return self._mmobj.__class__.__name__ == 'MMChannel'
+			classname = self._mmobj.__class__.__name__
+			return classname in ('MMChannel', 'MMViewport')
 			
 		def getId(self):
 			if self._mmobj is None: return ''
