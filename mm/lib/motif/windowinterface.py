@@ -101,3 +101,21 @@ def textwindow(text):
 		       bottom = None, rows = 30, columns = 80)
 	w.show()
 	return w
+
+class htmlwindow:
+	def __init__(self, url):
+		w = Window('Help', resizable = 1, deleteCallback = 'hide')
+		b = w.ButtonRow([('Close', (w.hide, ()))],
+				top = None, left = None, right = None,
+				vertical = 0)
+		h = w.Html(url, top = b, left = None, right = None, bottom = None)
+		w.show()
+		self.__window = w
+		self.__htmlw = h
+
+	def goto_url(self, url):
+		self.__htmlw.goto_url(url)
+		self.__window.pop()
+
+	def is_closed(self):
+		return self.__window.is_closed()
