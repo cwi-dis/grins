@@ -1421,10 +1421,10 @@ class _CommonWindow:
 		Win.InvalRect(self.qdrect())
 
 	# Experimental transition interface
-	def begintransition(self, inout, runit, dict):
-		if not self._transition_setup_before():
+	def begintransition(self, isouttransition, runit, dict):
+		if not self._transition_setup_before(isouttransition):
 			return
-		self._transition = mw_transitions.TransitionEngine(self, inout, runit, dict)
+		self._transition = mw_transitions.TransitionEngine(self, isouttransition, runit, dict)
 		self._transition_setup_after()
 		
 	def jointransition(self, window):
@@ -1432,7 +1432,8 @@ class _CommonWindow:
 		if not window._transition:
 			print 'Joining without a transition', self, window, window._transition
 			return
-		if not self._transition_setup_before():
+		isouttransition = window._transition.isouttransition()
+		if not self._transition_setup_before(isouttransition):
 			return
 		ismaster = self._windowlevel() < window._windowlevel()
 		self._transition = window._transition
@@ -1494,7 +1495,7 @@ class _CommonWindow:
 			prev = prev._parent
 		return count
 		
-	def _transition_setup_before(self):
+	def _transition_setup_before(self, isouttransition):
 		"""Check that begintransition() is allowed, create the offscreen bitmaps 
 		and set the event handler"""
 		rect = self.qdrect()
@@ -1504,6 +1505,8 @@ class _CommonWindow:
 		if self._frozen == 'transition':
 			# We are frozen, so we have already saved the contents
 			self._frozen = None
+		elif isouttransition:
+			self._mac_create_gworld(BM_PASSIVE, 0, rect)
 		else:
 			# Make sure our screen pixels reflect the actual current
 			# situation, so we can grab them
@@ -1520,7 +1523,7 @@ class _CommonWindow:
 			del updrgn
 			
 			self._mac_create_gworld(BM_PASSIVE, 1, rect)
-		self._mac_create_gworld(BM_DRAWING, 0, rect)
+		self._mac_create_gworld(BM_DRAWING, isouttransition, rect)
 		return 1
 	
 	def _transition_setup_after(self):
