@@ -2216,7 +2216,6 @@ class SubregionGroup(ImgregionGroup):
 		      'wh':'subregionwh',
 		      'full':'displayfull',
 		      'anchor':'subregionanchor',
-		      'aspect':'aspect',
 		      }
 
 	def getpageresid(self):
@@ -2224,8 +2223,10 @@ class SubregionGroup(ImgregionGroup):
 
 	def createctrls(self,wnd):
 		cd = ImgregionGroup.createctrls(self,wnd)
-		a = self.getattr(self._attrnames['aspect'])
+		a = self.getattr('aspect')
 		cd[a]=OptionsRadioCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
+		a = self.getattr('project_quality')
+		cd[a]=OptionsNocolonCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
 		return cd
 
 	def getpageclass(self):
