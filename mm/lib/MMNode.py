@@ -934,7 +934,7 @@ class MMChannel(MMTreeElement):
 		if self.attrdict.get('type') == 'layout':
 			self.attrdict['transparent'] = 1
 			self.attrdict['z'] = 0
-			self.attrdict['editBackground'] = 100,100,100
+#			self.attrdict['editBackground'] = 100,100,100
 			
 	def newCssId(self, isRoot = 0):
 		if not isRoot:
@@ -1065,7 +1065,8 @@ class MMChannel(MMTreeElement):
 					self.context.cssResolver.link(self._cssId, pchan._cssId)
 
 				# experimental algorithm to define a default edit bg color
-				if wantNewEditBg:
+				# for now disactivate this code
+				if wantNewEditBg and 0:
 					if pchan.get('showEditBackground') == 1:
 						self.attrdict['showEditBackground'] = 1
 
