@@ -234,6 +234,7 @@ class NodeInfo(NodeInfoDialog):
 		return 1
 
 	def newchannel(self):
+		import ChannelMap
 		em = self.editmgr
 		context = self.context
 		channelname = self.channelname
@@ -258,6 +259,7 @@ class NodeInfo(NodeInfoDialog):
 		if root:
 			from windowinterface import UNIT_PXL, UNIT_SCREEN
 			ch['base_window'] = root
+		if ChannelMap.isvisiblechannel(ch['type']):
 			units = ch.get('units', UNIT_SCREEN)
 			if units == UNIT_PXL:
 				import Sizes
