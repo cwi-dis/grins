@@ -72,10 +72,10 @@ class RealWindowChannel(Channel.ChannelWindow):
 		if not self._has_rma_support:
 			Channel.ChannelWindow.do_play(self,node)
 			return
-		url=self.getfileurl(node)
-		url = MMurl.basejoin(MMurl.pathname2url(os.getcwd())+'/',url)
-		type, url = MMurl.splittype(url)
-		url = 'file:/'+ url
+		url = MMurl.canonURL(self.getfileurl(node))
+##		url = MMurl.basejoin(MMurl.pathname2url(os.getcwd())+'/',url)
+##		type, url = MMurl.splittype(url)
+##		url = 'file:/'+ url
 
 		if not self._rmaplayer:
 			self._rmaplayer=rma.CreatePlayer()
