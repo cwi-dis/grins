@@ -45,7 +45,6 @@ inline bool BmpDecoder::can_decode()
 
 inline DIBSurf* BmpDecoder::decode()
 	{
-	m_mf.fill();
 	m_mf.seekg(0);
 	BITMAPFILEHEADER bfh;
 	if(m_mf.read((BYTE*)&bfh, sizeof(bfh)) != sizeof(bfh))
