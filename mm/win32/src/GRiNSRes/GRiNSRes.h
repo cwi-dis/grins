@@ -191,6 +191,16 @@
 #define IDI_ZOOMOUT                     394
 #define IDD_EDITATTR_EMPTY              395
 #define IDI_ZOOMIN                      396
+#define IDI_ICON_PAROPEN                397
+#define IDI_ICON_EXCLOPEN               398
+#define IDI_ICON_SWITCHOPEN             399
+#define IDI_ICON_PRIOOPEN               400
+#define IDI_ICON_SEQOPEN                401
+#define IDI_ICON_PARCLOSED              402
+#define IDI_ICON_SEQCLOSED              403
+#define IDI_ICON_SWITCHCLOSED           404
+#define IDI_ICON_PRIOCLOSED             405
+#define IDI_ICON_EXCLCLOSED             406
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003

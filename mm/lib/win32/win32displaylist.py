@@ -48,9 +48,19 @@ _icon_ids = {
 	'repeat' : grinsRC.IDI_REPEAT,
 	'spaceman': grinsRC.IDI_SPACEMAN,
 	'wallclock': grinsRC.IDI_WALLCLOCK,
-	'playing': grinsRC.IDI_PLAYING,	# 
-	'waitstop': grinsRC.IDI_WAITSTOP, # 
-	'idle': grinsRC.IDI_IDLE,	# 
+	'playing': grinsRC.IDI_PLAYING,
+	'waitstop': grinsRC.IDI_WAITSTOP,
+	'idle': grinsRC.IDI_IDLE,
+	'paropen': grinsRC.IDI_ICON_PAROPEN,
+	'parclosed': grinsRC.IDI_ICON_PARCLOSED,
+	'seqopen': grinsRC.IDI_ICON_SEQOPEN,
+	'seqclosed': grinsRC.IDI_ICON_SEQCLOSED,
+	'switchopen': grinsRC.IDI_ICON_SWITCHOPEN,
+	'switchclosed': grinsRC.IDI_ICON_SWITCHCLOSED,
+	'prioopen': grinsRC.IDI_ICON_PRIOOPEN,
+	'prioclosed': grinsRC.IDI_ICON_PRIOCLOSED,
+	'exclopen': grinsRC.IDI_ICON_EXCLOPEN,
+	'exclclosed': grinsRC.IDI_ICON_EXCLCLOSED,
 }
 
 def _get_icon(which):

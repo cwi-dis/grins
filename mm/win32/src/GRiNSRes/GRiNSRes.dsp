@@ -349,11 +349,59 @@ SOURCE=.\RES\wallcloc.ico
 # End Group
 # Begin Source File
 
+SOURCE=.\RES\Anim_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Anim_open.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Excl_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Excl_open.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\GRiNSRes.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\Par_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Par_open.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Prio_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Prio_open.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Seq_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Seq_open.ico
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\Build\products\smil-20\editor\splash8bit.bmp"
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Switch_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Switch_open.ico
 # End Source File
 # Begin Source File
 

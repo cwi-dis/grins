@@ -19,6 +19,16 @@ _iconmap = {
 	'bandwidthbad': 'bandwidthbad',
 	'open': 'folderopen',
 	'closed': 'folderclosed',
+	'paropen': 'folderopen',
+	'parclosed': 'folderclosed',
+	'seqopen': 'folderopen',
+	'seqclosed': 'folderclosed',
+	'switchopen': 'folderopen',
+	'switchclosed': 'folderclosed',
+	'prioopen': 'folderopen',
+	'prioclosed': 'folderclosed',
+	'exclopen': 'folderopen',
+	'exclclosed': 'folderclosed',
 	'linksrc': 'emptyicon', # XXXX
 	'linkdst': 'emptyicon', # XXXX
 	'linksrcdst': 'emptyicon', # XXXX
