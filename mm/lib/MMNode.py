@@ -1430,7 +1430,7 @@ class MMSyncArc:
 					return t + atimes[1] + self.delay
 				if refnode.playing == MMStates.PLAYED:
 					return refnode.happenings[('event', event)] + atimes[1] + self.delay
-				d = refnode.calcfullduration(stcx)
+				d = refnode.calcfullduration(sctx)
 				if refnode.start_time is not None and \
 				   refnode.fullduration is not None:
 					self.timestamp = t + d + self.delay
@@ -3568,9 +3568,12 @@ class MMNode:
 				srcnode = child
 				event = 'end'
 
-		if duration is None and (self.type == 'seq' or not wtd_children):
+		if duration is None and (self.type == 'seq' or not wtd_children) and \
+		   not self.FilterArcList(MMAttrdefs.getattr(self, 'endlist')):
 			# connect last child's end to parent's end
 			# if no children, this would connects seq's begin to end
+			# but only do this if there is no other way in
+			# which the node should end (dur/end attr)
 			arc = MMSyncArc(self_body, 'end', srcnode=srcnode, event=event, delay=0)
 			self_body.arcs.append((srcnode, arc))
 			srcnode.add_arc(arc, sctx)
