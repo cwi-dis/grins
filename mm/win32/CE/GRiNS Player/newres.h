@@ -39,3 +39,7 @@
 #define IDC_STATIC      (-1)
 
 #endif //__NEWRES_H__
+
+// Local Variables:
+// tab-width:4
+// End:

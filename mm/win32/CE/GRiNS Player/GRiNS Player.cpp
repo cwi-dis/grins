@@ -291,3 +291,7 @@ LRESULT CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	}
     return FALSE;
 }
+
+// Local Variables:
+// tab-width:4
+// End:

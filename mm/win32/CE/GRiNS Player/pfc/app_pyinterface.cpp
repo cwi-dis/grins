@@ -177,3 +177,7 @@ void FinalizePythonInterface()
 	AppPyInterface::finalize();
 	PyInterface::finalize();	
 	}
+
+// Local Variables:
+// tab-width:4
+// End:
