@@ -7,6 +7,12 @@ On bireme (or snelboot--don't do this on oratrix since that's not an O2):
 # CVSROOT directory (but I don't think so):
 #	cd /ufs/multimedia/sjoerd/src
 #	find mm python -name Root -print | while read f; do echo 'trawler.cwi.nl:/hosts/mm/CVSPRIVATE' > $f; done
+#
+# Alternatively, you can "su sjoerd", and
+# HOME=/ufs/sjoerd
+# CVS_RSH=`which ssh`
+# export CVS_RSH
+#
 cd /ufs/multimedia/sjoerd/src/mm
 cvs update -d
 cd /ufs/multimedia/sjoerd/src/python
