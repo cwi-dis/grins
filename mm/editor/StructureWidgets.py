@@ -576,7 +576,8 @@ class StructureObjWidget(MMNodeWidget):
 			self.iconbox.draw(displist)
 			l = l + self.iconbox.get_minsize()[0]
 		
-		displist.centerstring(l,t,r,b, self.name)
+		#displist.centerstring(l,t,r,b, self.name)
+		displist.centerstring(l,t,r,b, '<'+self.node.type + '>'+ self.name)
 		if self.collapsebutton:
 			self.collapsebutton.draw(displist)
 		if self.timeline:
