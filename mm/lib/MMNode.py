@@ -308,7 +308,7 @@ class MMNodeContext:
 		return not self._isgoodlink(link)
 
 	def _isgoodlink(self, link):
-		a1, a2, dir, type = link
+		a1, a2, dir, ltype = link
 		if type(a1) is type(()):
 			uid1, aid1 = a1
 			srcok = (self.uidmap.has_key(uid1) and
@@ -1805,7 +1805,7 @@ def _valuedeepcopy(value):
 def _copyinternalhyperlinks(src_hyperlinks, dst_hyperlinks, uidremap):
 	links = src_hyperlinks.getall()
 	newlinks = []
-	for a1, a2, dir, type in links:
+	for a1, a2, dir, ltype in links:
 		if type(a1) is not type(()) or type(a2) is not type(()):
 			continue
 		uid1, aid1 = a1
@@ -1815,7 +1815,7 @@ def _copyinternalhyperlinks(src_hyperlinks, dst_hyperlinks, uidremap):
 			uid2 = uidremap[uid2]
 			a1 = uid1, aid1
 			a2 = uid2, aid2
-			link = a1, a2, dir, type
+			link = a1, a2, dir, ltype
 			newlinks.append(link)
 	if newlinks:
 		dst_hyperlinks.addlinks(newlinks)
@@ -1824,7 +1824,7 @@ def _copyoutgoinghyperlinks(hyperlinks, uidremap):
 	from Hlinks import DIR_1TO2, DIR_2TO1, DIR_2WAY
 	links = hyperlinks.getall()
 	newlinks = []
-	for a1, a2, dir, type in links:
+	for a1, a2, dir, ltype in links:
 		changed = 0
 		if type(a1) is type(()):
 			uid1, aid1 = a1
@@ -1841,7 +1841,7 @@ def _copyoutgoinghyperlinks(hyperlinks, uidremap):
 				a2 = uid2, aid2
 				changed = 1
 		if changed:
-			link = a1, a2, dir, type
+			link = a1, a2, dir, ltype
 			newlinks.append(link)
 ##		uid1, aid1 = a1
 ##		uid2, aid2 = a2
@@ -1853,7 +1853,7 @@ def _copyoutgoinghyperlinks(hyperlinks, uidremap):
 ##			if uidremap.has_key(uid2):
 ##				uid2 = uidremap[uid2]
 ##				a2 = uid2, aid2
-##			link = a1, a2, dir, type
+##			link = a1, a2, dir, ltype
 ##			newlinks.append(link)
 	if newlinks:
 		hyperlinks.addlinks(newlinks)
