@@ -240,7 +240,8 @@ CommandUI(RENAME)
 CommandUI(CANVAS_ZOOM_IN, IDUC_CANVAS_ZOOM_IN)
 CommandUI(CANVAS_ZOOM_OUT, IDUC_CANVAS_ZOOM_OUT)
 
-
+#
+CommandUI(SHOWALLPROPERTIES)
 #
 # Add the rest without a predefined id
 # 

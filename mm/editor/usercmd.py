@@ -357,3 +357,7 @@ class ADD_REGION(_CommandBase):
 	help = 'Add region to layout'
 class RENAME(_CommandBase):
 	help = 'Rename the current layout'
+#
+# Property dialog commands
+class SHOWALLPROPERTIES(_CommandBase):
+	help = 'Toggle between showing all properties and used ones only'

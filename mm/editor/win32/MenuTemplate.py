@@ -208,6 +208,7 @@ MENUBAR=(
 		(FLAG_CMIF, SEP,),
 		(FLAG_CMIF, TOGGLE, '&Timeline view follows player', None, SYNCCV),
 ##		(FLAG_ALL, DYNAMICCASCADE, '&Layout navigation', LAYOUTS),
+		(FLAG_ALL, TOGGLE, 'Show A&ll Properties', None, SHOWALLPROPERTIES),
 		)
 	 ),
  
