@@ -224,7 +224,13 @@ class Channel:
 		# only when showBackground attribute equal to always
 		if not force: 
 			if self._get_parent_channel() != None:
-				if self._attrdict.has_key('showBackground'):
+				# for now, we have to create a media channel only when it's active
+				# it's important for sub-region positioning as long as that
+				# the dynamic resizing won't be possible on all plateform
+				if not self.is_layout_channel:
+					return
+					
+				elif self._attrdict.has_key('showBackground'):
 					if self._attrdict['showBackground'] == 'whenActive':
 						return
 			else:
@@ -1456,9 +1462,18 @@ class ChannelWindow(Channel):
 			# Find the base layout channel window geom.
 			#
 			if self._wingeom == None:
-				# by default channel area is the same as LayoutChannel area
+				######################### WARNING ###########################
+				############ for now we shouldn't pass here #################
+				#### this lines doesn't work for sub region pos #############
+				# these lines avoid just to avoid a crash
+
+				# when it'll be possible to resizing on all plateform a channel
+				# we'll be able to change this
+				
+				# by default channel area is the same as LayoutChannel area		
 				left, top, width, height = pchan._attrdict['base_winoff']
 				self._wingeom = 0, 0, width, height
+				#############################################################
 			
 			pgeom = self._wingeom
 #			if pchan._attrdict.has_key('base_winoff'):
