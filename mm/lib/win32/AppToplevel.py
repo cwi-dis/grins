@@ -28,6 +28,40 @@ import grins_mimetypes
 def beep():
 	win32api.MessageBeep()
 
+################
+# temporary test
+ENABLE_AUTOMATION = 0
+
+class CmdListener:
+	def __init__(self):
+		print 'CmdListener'
+
+	def __del__(self):
+		print '~CmdListener'
+
+	def __message(self, msg):
+		win32api.MessageBeep()
+		print msg
+
+	def Open(self, fileOrUrl):
+		self.__message('Open: ' + fileOrUrl)
+
+	def Close(self):
+		self.__message('Close')
+
+	def Play(self):
+		self.__message('Play')
+
+	def Stop(self):
+		self.__message('Stop')
+
+	def Pause(self):
+		self.__message('Pause')
+
+	def OnClick(self, x, y):
+		self.__message('OnClick at %d %d' % (x, y) )
+################
+		 
 # The _Toplevel class represents the root of all windows.  It is never
 # accessed directly by any user code.
 class _Toplevel:
@@ -294,6 +328,7 @@ class _Toplevel:
 	def usewindowlock(self, lock):
 		pass
 
+
 	#########################################
 	# Main message loop of the application
 	def mainloop(self):
@@ -312,8 +347,18 @@ class _Toplevel:
 			if grinspapi:
 				grinspapi.commodule.RegisterClassObjects()
 
+		if ENABLE_AUTOMATION:
+			import cmld
+			server = cmld.CreateCMLServer(5001)
+			server.SetCmdListener(CmdListener())
+			server.Start()
+
 		# enter application loop
 		win32ui.GetApp().RunLoop()
+
+		if ENABLE_AUTOMATION:
+			server.Stop()
+			del server
 
 		# revoke com automation
 		if grinspapi:
