@@ -1658,15 +1658,23 @@ class findfont:
 	def pointsize(self):
 		return self._pointsize
 
-class showmessage:
-	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
+##class showmessage:
+##	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
+##		     cancelCallback = None, name = 'message',
+##		     title = 'message'):
+##		pass
+##
+##	def close(self):
+##		pass
+
+def showmessage(text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'message',
 		     title = 'message'):
-		pass
-
-	def close(self):
-		pass
-
+	import EasyDialogs
+	EasyDialogs.Message(text)
+	if callback:
+		callback()
+		
 class Dialog:
 	def __init__(self, *args):
 		raise 'Dialogs not implemented for mac'
