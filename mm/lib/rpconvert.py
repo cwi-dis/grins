@@ -119,13 +119,15 @@ def rpconvert(node):
 		if transition in ('viewchange', 'animate'):
 			print "ignoring transition we can't convert"
 			continue
-		newnode = ctx.newnode('ext')
-		em.addnode(node, -1, newnode)
 		if transition in ('fadeout', 'fill'):
 			chtype = 'brush'
+			newnode = ctx.newnode('brush')
+			em.addnode(node, -1, newnode)
 			em.setnodeattr(newnode, 'fgcolor', tagdict['color'])
 		else:
 			chtype = 'image'
+			newnode = ctx.newnode('ext')
+			em.addnode(node, -1, newnode)
 			em.setnodeattr(newnode, 'file', MMurl.basejoin(furl, tagdict['file']))
 			if tagdict.get('aspect', rp.aspect == 'true'):
 				em.setnodeattr(newnode, 'scale', 0)

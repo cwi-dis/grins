@@ -42,9 +42,6 @@ def get(node, target=0):
 		bitrate = MMAttrdefs.getattr(node, 'bitrate')
 		return 0, bitrate
 
-	if ntype == 'ext' and ctype == 'brush':
-		return 0, 0
-
 	url = MMAttrdefs.getattr(node, 'file')
 	url = context.findurl(url)
 	val = urlcache[url].get('bandwidth')

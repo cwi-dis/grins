@@ -2023,13 +2023,13 @@ class SMILWriter(SMIL):
 		"""Write a node (possibly recursively)"""
 		type = x.GetType()
 		# XXX I don't like this special casing here --sjoerd
-		if type=='imm' and x.GetChannelType()=='animate':
+		if type=='animate':
 			if root:
 				self.writetag('body')
 				self.push()
 			self.writeanimatenode(x)
 			return
-		elif x.GetChannelType()=='prefetch':
+		elif type=='prefetch':
 			if root:
 				self.writetag('body')
 				self.push()
@@ -2141,7 +2141,7 @@ class SMILWriter(SMIL):
 			# to convert it into a <par> containing a realpix node and a
 			# realtext caption node
 			self.writerealpixnode(x, attrlist, mtype)
-		elif type in ('imm', 'ext'):
+		elif type in ('imm', 'ext', 'brush'):
 			children = x.GetChildren()
 			if not children:				
 				self.writemedianode(x, attrlist, mtype)

@@ -39,6 +39,12 @@ def create_MMNode_widget(node, mother):
 		return ExclWidget(node, mother)
 	elif ntype == 'prio':
 		return PrioWidget(node, mother)
+	elif ntype == 'brush':
+		return MediaWidget(node, mother)
+	elif ntype == 'animate':
+		return MediaWidget(node, mother)
+	elif ntype == 'prefetch':
+		return MediaWidget(node, mother)
 	else:
 		raise "Unknown node type", ntype
 		return None
@@ -727,6 +733,10 @@ class SeqWidget(StructureObjWidget):
 			self.mother.timemapper.addcollision(tend, maxneededpixel1)
 			maxneededpixel1 = 0
 		return maxneededpixel0, maxneededpixel1
+
+class BrushWidget(MMNodeWidget):
+	def __init__(self):
+		print "TODO: BrushWidget"
 
 class TimeStripSeqWidget(SeqWidget):
 	# A sequence that has a channel widget at the start of it.

@@ -1410,6 +1410,7 @@ class AttrEditor(AttrEditorDialog):
 		dict = {}
 		newchannel = None
 		mustChangeChannel = 0
+		checkType = 0
 		ctx = self.wrapper.getcontext()		
 		regionName = None
 		for b in self.attrlist:
@@ -1446,12 +1447,16 @@ class AttrEditor(AttrEditorDialog):
 						exp = exp + " or `indefinite'"
 					self.showmessage('%s: value should be a%s %s' % (b.getlabel(), n, exp), mtype = 'error')
 					return 1
+				# if we change any of this attribute, we have to check the consistence,
+				# and re, compute the computedMimeType, channel type, ...
+				if name in ('file', 'mimetype', '.type', 'channel'):
+					checkType = 1
 				# if the mime type change, we have to change the channel as well
-				if name == 'file': 
+				if name == 'file':
 					compatChannelTypeList = ctx.compatchtypes(value)
 					currentChannelType = self.wrapper.node.GetChannelType()
 					if currentChannelType not in compatChannelTypeList:
-						mustChangeChannel = 1						
+						mustChangeChannel = 1
 				# if we change the region, we have to determinate (and create) the channel
 				# WARNING: 'channel' attribute is now a region name (chosen by the user)
 				elif name == 'channel': 
@@ -1490,8 +1495,16 @@ class AttrEditor(AttrEditorDialog):
 				self.wrapper.setattr(name, value)
 		if mustChangeChannel:
 			self.changeChannel(self.wrapper.node, regionName)
+		if checkType:
+			self.checkType(self.wrapper.node)
+			
 		self.wrapper.commit()
 
+	# but need to check if mimetype compatible, with region type, url, ...
+	# for now, do nothing
+	def checkType(self, node):
+		pass
+			
 	def changeChannel(self, node, newRegionName):
 		# get the current region name
 		em = self.wrapper.editmgr
@@ -2657,7 +2670,7 @@ class FontAttrEditorField(PopupAttrEditorField):
 		fonts.sort()
 		return [DEFAULT] + fonts
 
-Alltypes = alltypes[:]
+Alltypes = interiortypes+mediatypes
 Alltypes[Alltypes.index('bag')] = 'choice'
 Alltypes[Alltypes.index('alt')] = 'switch'
 class NodeTypeAttrEditorField(PopupAttrEditorField):

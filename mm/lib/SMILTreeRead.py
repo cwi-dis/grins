@@ -1069,10 +1069,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 ##				self.syntax_error('no type attribute')
 
 		if tagname == 'brush':
+			nodetype = 'brush'
 			chtype = 'brush'
 			mediatype = subtype = None
 			mimetype = None
 		elif tagname == 'prefetch':
+			nodetype = 'prefetch'
 			chtype = 'prefetch'
 			mediatype = subtype = None
 			mimetype = None
@@ -1225,7 +1227,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		node.__mediatype = mediatype, subtype
 		self.__attributes = attributes
 		if mimetype is not None:
-			node.attrdict['mimetype'] = mimetype
+			node.SetAttr('mimetype', mimetype)
+			
+		# XXX we store the channel determinated by the previous code
+		# but at some point, we should leave MMNode determinate itself the
+		# right channel type.
+#		node.SetChannelType(chtype)
 
 		# for SMIL 1, we have to define all the time transparent
 		# note : don't make this before addattrs to avoid warnings
@@ -1651,14 +1658,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			attributes['attributeName'] = ''
 
 		# create the node
-		node = self.__context.newnode('imm')
+		node = self.__context.newnode('animate')
 		self.AddAttrs(node, attributes)
 		if self.__node:
 			self.__node._addchild(node)
 		else:
 			self.__container._addchild(node)
 
-		node.attrdict['type'] = 'animate'
 		node.attrdict['tag'] = tagname
 		node.attrdict['mimetype'] = 'animate/%s' % tagname
 
@@ -1677,7 +1683,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__animatenodes.append((node, self.lineno))
 
 		# add to context an internal channel for this node
-		self.__context.addinternalchannels( [(chname, node.attrdict), ] )
+		self.__context.addinternalchannels( [(chname, 'animate', node.attrdict), ] )
 
 
 	def EndAnimateNode(self):
@@ -2382,7 +2388,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def FixChannel(self, node):
 		if node.GetType() not in leaftypes:
 			return
-		if MMAttrdefs.getattr(node, 'type') == 'animate':
+		if node.GetType() == 'animate':
 			return
 		mediatype, subtype = node.__mediatype
 		del node.__mediatype

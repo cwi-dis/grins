@@ -305,7 +305,7 @@ class SMILHtmlTimeWriter(SMIL):
 	def writenode(self, x, root = 0):
 		type = x.GetType()
 
-		if type=='imm' and x.GetChannelType()=='animate':
+		if type=='animate':
 			self.writeanimatenode(x, root)
 			return
 

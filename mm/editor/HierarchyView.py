@@ -615,7 +615,8 @@ class HierarchyView(HierarchyViewDialog):
 
 		ctx = obj.node.GetContext() # ctx is the node context (MMNodeContext)
 		t = obj.node.GetType()	# t is the type of node (String)
-		if t == 'imm':
+		# Test for invalid targets.
+		if t == ('imm','brush','animate','prefetch'):
 			self.render()
 			windowinterface.showmessage('destination node is an immediate node, change to external?', mtype = 'question', callback = (self.cvdrop, (obj.node, window, event, params)), parent = self.window)
 			return
@@ -864,9 +865,8 @@ class HierarchyView(HierarchyViewDialog):
 			layout = MMAttrdefs.getattr(parent, 'layout')
 		else:
 			layout = MMAttrdefs.getattr(node, 'layout')
-
-		node = ctx.newnode(type)
-
+		node = ctx.newnode(type) # Create a new node
+			
 		if url is not None:
 			node.SetAttr('file', url)
 		if chname:
