@@ -1,3 +1,4 @@
+__version__ = "$Id$"
 
 # win32 libs
 import win32ui, win32con

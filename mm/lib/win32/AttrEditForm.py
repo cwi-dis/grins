@@ -1446,7 +1446,6 @@ import win32window
 import _PlayerView
 import appcon, sysmetrics
 import string
-import DrawTk
 
 class LayoutPage(AttrPage,win32window.Window):
 	def __init__(self,form):
@@ -1518,21 +1517,21 @@ class LayoutPage(AttrPage,win32window.Window):
 		return v
 	
 	def init_tk(self, v):
-		v.drawTk.SetLayoutMode(0)
+		v.SetLayoutMode(0)
 		self._scale=LayoutScale(v,self._xscale,self._yscale,self._boxoff)
-		v.drawTk.SetScale(self._scale)
+		v.SetScale(self._scale)
 
 		(x,y,w,h),bunits=self._form.GetBBox()
 		rc=(x,y,x+w,y+h)
 		rc = v._convert_coordinates(rc, units = bunits)
 		rc=self._scale.layoutbox(rc,UNIT_PXL)
-		v.drawTk.SetBRect(rc)
+		v.SetBRect(rc)
 
 		(x,y,w,h),bunits=self._form.GetCBox()
 		rc=(x,y,x+w,y+h)
 		rc = v._convert_coordinates(rc, units = bunits)
 		rc=self._scale.layoutbox(rc,UNIT_PXL)
-		v.drawTk.SetCRect(rc)
+		v.SetCRect(rc)
 
 	def createLayoutContext(self,winsize=None,units=appcon.UNIT_PXL):
 		if winsize:
@@ -1574,7 +1573,7 @@ class LayoutPage(AttrPage,win32window.Window):
 		if units!=self._units:
 			self._units=units
 			v=self._layoutctrl
-			v.drawTk.SetUnits(self._units)
+			v.SetUnits(self._units)
 			v.InvalidateRect()
 			if v._objects:
 				drawObj=v._objects[0]
@@ -1781,21 +1780,21 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 			self.loadimg(url)
 
 	def init_tk(self, v):
-		v.drawTk.SetLayoutMode(0)
+		v.SetLayoutMode(0)
 		self._scale=LayoutScale(v,self._xscale,self._yscale,self._boxoff)
-		v.drawTk.SetScale(self._scale)
+		v.SetScale(self._scale)
 
 		x=y=0
 		w,h = self.__bbox
 		rc=(x,y,x+w,y+h)
 		rc = v._convert_coordinates(rc, units = UNIT_PXL)
 		rc=self._scale.layoutbox(rc,UNIT_PXL)
-		v.drawTk.SetBRect(rc)
+		v.SetBRect(rc)
 
 		rc=(x,y,x+w,y+h)
 		rc = v._convert_coordinates(rc, units = UNIT_PXL)
 		rc=self._scale.layoutbox(rc,UNIT_PXL)
-		v.drawTk.SetCRect(rc)
+		v.SetCRect(rc)
 
 	def loadimg(self,url):
 		import MMurl
@@ -1810,7 +1809,7 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		except error:
 			print 'failed to load',f
 			return
-		self._layoutctrl.drawTk.SetBkImg(img)
+		self._layoutctrl.SetBkImg(img)
 		
 class AnchorlistPage(LayoutPage):
 	def getcurrentbox(self, saved = 1):
@@ -1894,21 +1893,21 @@ class AnchorlistPage(LayoutPage):
 			self.loadimg(url)
 
 	def init_tk(self, v):
-		v.drawTk.SetLayoutMode(0)
+		v.SetLayoutMode(0)
 		self._scale=LayoutScale(v, self._xscale, self._yscale, self._boxoff)
-		v.drawTk.SetScale(self._scale)
+		v.SetScale(self._scale)
 
 		x = y = 0
 		w, h = self._imagesize
 		rc = x, y, x + w, y + h
 		rc = v._convert_coordinates(rc, units = UNIT_PXL)
 		rc = self._scale.layoutbox(rc, UNIT_PXL)
-		v.drawTk.SetBRect(rc)
+		v.SetBRect(rc)
 
 		rc = x, y, x + w, y + h
 		rc = v._convert_coordinates(rc, units = UNIT_PXL)
 		rc=self._scale.layoutbox(rc, UNIT_PXL)
-		v.drawTk.SetCRect(rc)
+		v.SetCRect(rc)
 
 	def loadimg(self,url):
 		import MMurl
@@ -1923,7 +1922,7 @@ class AnchorlistPage(LayoutPage):
 		except error:
 ##			print 'failed to load',f
 			return
-		self._layoutctrl.drawTk.SetBkImg(img)
+		self._layoutctrl.SetBkImg(img)
 		
 ############################
 # Base class for media renderers
