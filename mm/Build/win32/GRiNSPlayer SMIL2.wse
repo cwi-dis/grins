@@ -1179,37 +1179,37 @@ end
 item: Install File
   Source=c:\Winnt\System32\Msvcirt.dll
   Destination=%SYS32%\Msvcirt.dll
-  Flags=0000001010000011
+  Flags=0000011010010011
 end
 item: Install File
   Source=c:\Winnt\System32\Oleaut32.dll
   Destination=%SYS32%\Oleaut32.dll
-  Flags=0000001010000011
+  Flags=0000011010010011
 end
 item: Install File
   Source=c:\Winnt\System32\Olepro32.dll
   Destination=%SYS32%\Olepro32.dll
-  Flags=0001001010000011
+  Flags=0001011010010011
 end
 item: Install File
   Source=c:\Winnt\System32\Msvcp60.dll
   Destination=%SYS32%\Msvcp60.dll
-  Flags=0000001010000011
+  Flags=0000011010010011
 end
 item: Install File
   Source=c:\Winnt\System32\Msvcrt.dll
   Destination=%SYS32%\Msvcrt.dll
-  Flags=0000001010000011
+  Flags=0000011010010011
 end
 item: Install File
   Source=c:\Winnt\System32\msvcrt40.dll
   Destination=%SYS32%\msvcrt40.dll
-  Flags=0000001010000011
+  Flags=0000011010010011
 end
 item: Install File
   Source=c:\Winnt\System32\Mfc42.dll
   Destination=%SYS32%\Mfc42.dll
-  Flags=0001001010000011
+  Flags=0001011010010011
 end
 item: Install File
   Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
@@ -1229,12 +1229,12 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\Gear32sd.dll
   Destination=%MAINDIR%\Gear32sd.dll
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\GRiNSRes.dll
   Destination=%MAINDIR%\GRiNSRes.dll
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\win32ui.pyd
@@ -1249,12 +1249,12 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\gear32sd.pyd
   Destination=%MAINDIR%\gear32sd.pyd
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\GRiNSP_SV2.exe
   Destination=%MAINDIR%\GRiNSP_SV2.exe
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\_socket.pyd
@@ -1269,7 +1269,7 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\python16.dll
   Destination=%MAINDIR%\python16.dll
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Build\products\smil-20\player\BugReportForm.txt
