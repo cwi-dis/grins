@@ -15,9 +15,6 @@
 #include "decode_jpg.h"
 #include "decode_png.h"
 
-// static
-HMODULE JpgDecoder::s_hDLL = LoadLibrary(TEXT("libjpeg.dll"));
-
 struct PyDIBSurf
 	{
 	PyObject_HEAD
