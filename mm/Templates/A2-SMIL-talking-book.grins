@@ -3,7 +3,7 @@
   <head>
     <meta name="title" content="Talking Book"/>
     <meta name="template_name" content="Simple Talking Book"/>
-    <meta name="template_description" content="A simple slideshow with parallel soundfiles and self-scrolling HTML."/>
+    <meta name="template_description" content="A simple slideshow with parallel sound files and self-scrolling HTML."/>
     <meta name="template_snapshot" content="talkingbook.bmp"/>
     <layout>
       <root-layout id="Player-Window" width="615" height="245"/>
