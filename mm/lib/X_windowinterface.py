@@ -126,16 +126,20 @@ def _create_menu(menu, list, acc = None):
 							 Xm.SeparatorGadget,
 							 {})
 			continue
+		if type(entry) is StringType:
+			dummy = menu.CreateManagedWidget(
+				'menuLabel', Xm.LabelGadget,
+				{'labelString': entry})
+			continue
 		if acc is None:
 			label, callback = entry
 		else:
 			accelerator, label, callback = entry
 		if type(callback) is ListType:
-			button = menu.CreateManagedWidget(
-				'submenuLabel', Xm.CascadeButtonGadget, {})
-			button.labelString = label
 			submenu = menu.CreatePulldownMenu('submenu', {})
-			button.subMenuId = submenu
+			button = menu.CreateManagedWidget(
+				'submenuLabel', Xm.CascadeButtonGadget,
+				{'labelString': label, 'subMenuId': submenu})
 			_create_menu(submenu, callback, acc)
 		else:
 			if type(callback) is not TupleType:
@@ -726,7 +730,7 @@ class _Window:
 			toplevel._win_lock.release()
 
 	def setcursor(self, cursor):
-		if not self.is_closed() or not self._form:
+		if not self.is_closed() and self._form:
 			for win in self._subwindows:
 				win.setcursor(cursor)
 			_setcursor(self._form, cursor)
@@ -950,6 +954,7 @@ class _Window:
 		del self._rb_dialog
 		del self._rb_dl
 		del self._rb_display
+		del self._gc_rb
 
 	def _rb_cvbox(self):
 		x0 = self._rb_start_x
@@ -2817,32 +2822,30 @@ class _MenuSupport:
 		self.destroy_menu()
 
 	def create_menu(self, title, list):
-		'''Create a pop up menu.
+		'''Create a popup menu.
 
 		TITLE is the title of the menu.  If None or '', the
 		menu will not have a title.  LIST is a list with menu
 		entries.  Each entry is either None to get a
-		separator, or a tuple of two elements.  The first
-		element is the label in the menu, the second argument
-		is either a callback which is called when the menu
-		entry is selected or a list which defines a cascading
-		submenu.  A callback is either a callable object or a
-		tuple consisting of a callable object and a tuple.  If
-		the callback is just a callable object, it is called
-		with the menu label as argument; if the callback is a
-		tuple consisting of a callable object and a tuple, the
-		object is called using apply with the tuple as
-		argument.'''
+		separator, a string to get a label, or a tuple of two
+		elements.  The first element is the label in the menu,
+		the second argument is either a callback which is
+		called when the menu entry is selected or a list which
+		defines a cascading submenu.  A callback is either a
+		callable object or a tuple consisting of a callable
+		object and a tuple.  If the callback is just a
+		callable object, it is called without arguments; if
+		the callback is a tuple consisting of a callable
+		object and a tuple, the object is called using apply
+		with the tuple as argument.'''
 
+		if self._form.IsSubclass(Xm.Gadget):
+			raise error, 'cannot create popup menus on gadgets'
 		self.destroy_menu()
 		toplevel._win_lock.acquire()
 		menu = self._form.CreatePopupMenu('dialogMenu', {})
 		if title:
-			dummy = menu.CreateManagedWidget('menuTitle',
-							 Xm.LabelGadget, {})
-			dummy.labelString = title
-			dummy = menu.CreateManagedWidget(
-				'menuSeparator', Xm.SeparatorGadget, {})
+			list = [title, None] + list
 		_create_menu(menu, list)
 		self._menu = menu
 		self._form.AddEventHandler(X.ButtonPressMask, FALSE,
@@ -3146,7 +3149,7 @@ class OptionMenu(_Widget):
 class PulldownMenu(_Widget):
 	'''Menu bar window object.'''
 	def __init__(self, parent, menulist, useGadget = 1,
-		     name = 'windowMenubar', **options):
+		     name = 'menuBar', **options):
 		'''Create a menu bar window object.
 
 		PARENT is the parent window, MENULIST is a list giving
@@ -4156,19 +4159,34 @@ def Dialog(title, prompt, grab, vertical, list):
 	w.show()
 	return w
 
-def showmessage(text, type = 'message'):
+def showmessage(text, type = 'message', grab = 1, callback = None,
+		cancelCallback = None):
 	if type == 'error':
 		func = toplevel._main.CreateErrorDialog
 	elif type == 'warning':
 		func = toplevel._main.CreateWarningDialog
 	elif type == 'information':
 		func = toplevel._main.CreateInformationDialog
+	elif type == 'question':
+		func = toplevel._main.CreateQuestionDialog
 	else:
 		func = toplevel._main.CreateMessageDialog
+	if grab:
+		dialogStyle = Xmd.DIALOG_FULL_APPLICATION_MODAL
+	else:
+		dialogStyle = Xmd.DIALOG_MODELESS
 	w = func('message', {'messageString': text,
+			     'dialogStyle': dialogStyle,
 			     'visual': toplevel._default_visual,
 			     'depth': toplevel._default_visual.depth,
 			     'colormap': toplevel._default_colormap})
-	for b in Xmd.DIALOG_CANCEL_BUTTON, Xmd.DIALOG_HELP_BUTTON:
-		w.MessageBoxGetChild(b).UnmanageChild()
+	w.MessageBoxGetChild(Xmd.DIALOG_HELP_BUTTON).UnmanageChild()
+	if type == 'question':
+		if cancelCallback:
+			w.AddCallback('cancelCallback', _generic_callback,
+				      cancelCallback)
+	else:
+		w.MessageBoxGetChild(Xmd.DIALOG_CANCEL_BUTTON).UnmanageChild()
+	if callback:
+		w.AddCallback('okCallback', _generic_callback, callback)
 	w.ManageChild()
