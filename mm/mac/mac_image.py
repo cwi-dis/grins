@@ -29,6 +29,16 @@ def mkpixmap(w, h, fmt, data):
 ##	print 'Our pixmap, size %d:'%len(rv)
 ##	dumppixmap(rv)
 	return Qd.RawBitMap(rv)
+	
+def mkbitmap(w, h, fmt, data):
+	if fmt != imgformat.xbmpacked:
+		raise imgformat.error, 'Incorrect format for mkbitmap: %s'%fmt
+	rv = struct.pack("lhhhhh",
+		id(data)+MacOS.string_id_to_buffer,
+		(w+7)/8,
+		0, 0, h, w)
+	return Qd.RawBitMap(rv)
+		
 
 def dumppixmap(data):
 	baseAddr, \
