@@ -910,6 +910,8 @@ def getcalcmode(writer, node):
 		return None
 	elif tag=='animateMotion' and mode == 'paced':
 		return None
+	if mode == 'spline': # not smil-boston
+		return None
 	return mode
 
 def getattributename(writer, node):
