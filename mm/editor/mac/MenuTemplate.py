@@ -32,10 +32,8 @@ MENUBAR=(
 		(ALL, SEP,),
 		(ALL, ENTRY, 'Save', 'S', SAVE),
 		(ALL, ENTRY, 'Save As...', (kMenuOptionModifier, 'S'), SAVE_AS),
-		(ALL, CASCADE, 'Generate', (
-			(ALL, ENTRY, 'RealSystem G2...', None, EXPORT_SMIL),
-			(ALL, ENTRY, 'Upload RealSystem G2...', None, UPLOAD_SMIL),
-			)),
+		(ALL, ENTRY, 'Publish RealSystem G2...', None, EXPORT_SMIL),
+		(ALL, ENTRY, 'Upload RealSystem G2...', None, UPLOAD_SMIL),
 		(ALL, ENTRY, 'Revert to saved', None, RESTORE),
 		(ALL, SEP,),
 		(ALL, ENTRY, 'Document Properties...', (kMenuOptionModifier, 'A'), PROPERTIES),
