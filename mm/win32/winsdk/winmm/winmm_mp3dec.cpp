@@ -11,6 +11,11 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "utils.h"
 
+////////////////////////////////////////
+// define LINK_MP3LIB to include mp3 decode support
+
+#ifdef LINK_MP3LIB
+
 #include "../../CE/mp3lib/mp3lib.h"
 
 // just in case we need instance variables (state)
@@ -157,3 +162,6 @@ PyTypeObject PyMP3Decoder::type = {
 
 	"PyMP3Decoder Type" // Documentation string
 	};
+
+#endif // LINK_MP3LIB
+//////////////////////////////////
