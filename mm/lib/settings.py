@@ -225,7 +225,7 @@ default_settings = {
 	'license_organization' : '',
 	'baselicense': '',
 	'skin': '',			# URL for skin definition file
-	'askskin': 1,			# Ask for skin file when opening file in player
+	'askskin': 0,			# Ask for skin file when opening file in player
 
 	'default_sync_behavior_locked' : 0,
 	'default_sync_tolerance' : 0.1,
