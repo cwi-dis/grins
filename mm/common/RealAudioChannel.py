@@ -14,6 +14,10 @@ class RealAudioChannel(Channel.ChannelAsync, RealChannel.RealChannel):
 		RealChannel.RealChannel.__init__(self)
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 
+	def do_hide(self):
+		self.stopit()
+		Channel.ChannelAsync.do_hide(self)
+		
 	def do_arm(self, node, same = 0):
 		self.prepare_player(node)
 		return 1
