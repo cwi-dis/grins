@@ -1936,7 +1936,10 @@ class DialogWindow(_Window):
 			self._do_defaulthit = self._optional_defaulthit
 			self.__default = default
 			wid.SetDialogDefaultItem(default)
-		if not cancel is None:
+		if callable(cancel):
+			cmdlist.append(
+				usercmd.CLOSE_WINDOW(callback=(cancel, ())))
+		elif not cancel is None:
 			self._do_cancelhit = self._optional_cancelhit
 			self.__cancel = cancel
 			cmdlist.append(
