@@ -76,7 +76,7 @@ class AttrDlgBar(DlgBar):
 		# and we press a button. The first button press transfers the focus to the list 
 		# and a second press is needed to activate the associated action.
 		from __main__ import toplevel
-		toplevel.settimer(0.1,(setFocus,()))
+		toplevel.settimer(0.25,(setFocus,()))
 
 	def resize(self,cx):
 		rc=win32mu.Rect(self.GetWindowRect())
