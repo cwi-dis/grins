@@ -110,6 +110,13 @@ class _Toplevel:
 		if debug: print `self`+'.usewindowlock()'
 		self._win_lock = lock
 
+	def getmouse(self):
+		mx = gl.getvaluator(DEVICE.MOUSEX)
+		my = _screenheight - gl.getvaluator(DEVICE.MOUSEY) - 1
+		return float(mx) * _mscreenwidth / _screenwidth, \
+			  float(my) * _mscreenheight / _screenheight
+
+
 class _Event:
 	def init(self):
 		if debug: print 'Event.init('+`self`+')'
@@ -1427,3 +1434,6 @@ def beep():
 
 def usewindowlock(lock):
 	_toplevel.usewindowlock(lock)
+
+def getmouse():
+	return _toplevel.getmouse()
