@@ -8,15 +8,24 @@ class SourceViewDialog:
 		self.__textwindow = None
 		self.__setCommonCommandList()
 
+		self._findDlg = None
+		self._replaceDlg = None
+		self._findText = None
+		self._findOptions = None
+		
 	def __setCommonCommandList(self):
-		self._commonCommandList = [SELECTNODE_FROM_SOURCE(callback = (self.onRetrieveNode, ()))]
+		self._commonCommandList = [SELECTNODE_FROM_SOURCE(callback = (self.onRetrieveNode, ())),
+								   FIND(callback = (self.onFind, ())),
+								   FINDNEXT(callback = (self.onFindNext, ())),
+								   REPLACE(callback = (self.onReplace, ())),
+								   ]
 		
 	def destroy(self):
 		self.__textwindow = None
 		
 	def show(self):
 		if not self.__textwindow:
-			self.__textwindow = self.toplevel.window.textwindow("", readonly=0)
+			self.window = self.__textwindow = self.toplevel.window.textwindow("", readonly=0)
 			self.__textwindow.set_mother(self)
 		else:
 			# Pop it up
@@ -132,3 +141,34 @@ class SourceViewDialog:
 
 	def onUndo(self):
 		self.__textwindow.Undo()
+
+
+	#
+	# find/replace support
+	#
+
+	def onFind(self):
+		import win32dialog
+		self.findDlg = win32dialog.FindDialog(self.doFindNext, self._findText, self._findOptions, self.window)
+		self.findDlg.show()
+	
+	def onFindNext(self):
+		pass
+
+	def onReplace(self):
+		pass
+
+	def doFindNext(self, text, options):
+		# save the text and options for the next time
+		self._findText = text
+		self._findOptions = options
+
+		if self.__textwindow:
+			# first seach from the current position
+			begin = self.getCurrentCharIndex()
+			if self.__textwindow.findNext(begin, text, options) == None:
+				# not found, search from the begining
+				if self.__textwindow.findNext(0, text, options) == None:
+					windowinterface.showmessage("Text not found", mtype = 'error')
+
+			
