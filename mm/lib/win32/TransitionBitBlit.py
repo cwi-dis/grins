@@ -62,9 +62,12 @@ class BlitterClass:
 			npl.append((x,y))
 		rgn = win32ui.CreateRgn()
 		try:
-			rgn.CreatePolygonRgn(npl)
+			succeeded = rgn.CreatePolygonRgn(npl)
 		except:
-			print 'pointlist:', npl
+			succeeded = 0
+
+		if not succeeded:
+			print 'CreatePolygonRgn failed. pointlist:', npl
 			return None
 		return rgn
 
@@ -110,7 +113,7 @@ class PolyR2OverlapBlitterClass(BlitterClass):
 		if pointlist:
 			rgn = self.createRegion(pointlist)
 			self.copyBits(src1, tmp, self.ltrb, self.ltrb, 0, rgn)
-			rgn.DeleteObject()
+			if rgn: rgn.DeleteObject()
 		self.copyBits(tmp, dst, self.ltrb, self.ltrb)
 
 class PolylistR2OverlapBlitterClass(BlitterClass):
@@ -121,12 +124,14 @@ class PolylistR2OverlapBlitterClass(BlitterClass):
 		self.copyBits(src2, tmp, rect2, rect2)
 		if pointlist:
 			rgn = self.createRegion(pointlist[0])
-			for pl in pointlist[1:]:
-				newrgn = self.createRegion(pl)
-				rgn.CombineRgn(rgn,newrgn,win32con.RGN_OR)
-				newrgn.DeleteObject()		
-			self.copyBits(src1, tmp, self.ltrb, self.ltrb, 0, rgn)
-			rgn.DeleteObject()
+			if rgn:
+				for pl in pointlist[1:]:
+					newrgn = self.createRegion(pl)
+					if newrgn:
+						rgn.CombineRgn(rgn,newrgn,win32con.RGN_OR)
+						newrgn.DeleteObject()
+				self.copyBits(src1, tmp, self.ltrb, self.ltrb, 0, rgn)
+				rgn.DeleteObject()
 		self.copyBits(tmp, dst, self.ltrb, self.ltrb)
 
 	
