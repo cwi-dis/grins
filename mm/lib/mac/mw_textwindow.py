@@ -14,8 +14,10 @@ TITLE="Source"
 
 class _common_window:
 	# The subclasses provide X,Y,W,H,TITLE and __init__
+	def __init__(self):
+		self.window = None
 		
-	def show(self):
+	def _do_show(self):
 		self.window = wd = mw_globals.toplevel.newwindow(
 			self.X, self.Y, self.W, self.H, self.TITLE, 
 			units=UNITS, commandlist=self.commandlist)
@@ -30,6 +32,12 @@ class _common_window:
 		wd.register(WMEVENTS.WindowDeactivate, self.deactivate, 0)
 		wd.register(WMEVENTS.ResizeWindow, self.resize, 0)
 		self.widget.setanchorcallback(self.goto_url)
+		
+	def show(self):
+		if self.window:
+			self.window.pop()
+		else:
+			self._do_show()
 		
 	def hide(self):
 		self.window.close()
@@ -77,6 +85,7 @@ class textwindow(_common_window):
 	TITLE="Source"
 
 	def __init__(self, data):
+		_common_window.__init__(self)
 		self.data = data
 		self.is_html = 0
 		self.url = None
@@ -99,6 +108,7 @@ class htmlwindow(_common_window):
 	TITLE="GRiNS Help"
 	
 	def __init__(self, url):
+		_common_window.__init__(self)
 		self.url = None
 		self.load(url)
 		self.is_html = 1
