@@ -1,8 +1,9 @@
 // ContainerWnd.cpp : implementation file
 //
 
-
-#include "stdafx.h"
+#include "afx.h"
+#include "afxwin.h"
+#include "afxdisp.h"
 #include "htmlex.h"
 #include "ContainerWnd.h"
 #include "string.h"
