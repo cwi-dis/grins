@@ -462,6 +462,7 @@ class TreeManager:
 		import TreeCtrl
 		self.treeCtrl = TreeCtrl.TreeCtrl()
 		self.treeCtrl.createAsDlgItem(parent, grinsRC.IDC_TREE1)
+		self.treeCtrl.addMultiSelListener(self)
 
 		# init the image list used in the tree
 		self.__initImageList()
@@ -551,7 +552,10 @@ class TreeManager:
 		item, field2, field3, field4, field5, field6, field7, field8 = itemNew
 		if self._handler != None:
 			self._handler.onSelectTreeNodeCtrl(item)
-		
+	
+	def OnMultiSelChanged(self):
+		print self.treeCtrl.getSelectedItems()
+
 ###########################
 class LayoutManager(window.Wnd, win32window.DrawContext):
 	def __init__(self):
