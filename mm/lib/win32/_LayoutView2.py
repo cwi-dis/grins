@@ -208,7 +208,7 @@ class _LayoutView2(GenFormView):
 	#
 
 	def onMouse(self, params):
-		if self._layout.hasCapture():
+		if self._layout._drawContext.hasCapture():
 			self._layout.onNCLButton(params)
 
 	# Sets the acceptable command list by delegating to its parent keeping a copy.
@@ -577,11 +577,15 @@ debugPreview = 0
 
 import winlayout
 
-LayoutManagerBase = winlayout.MSLayoutScrollOsWnd
+LayoutManagerBase = winlayout.LayoutScrollOsWnd
+LayoutManagerDrawContext = winlayout.MSDrawContext
 
 class LayoutManager(LayoutManagerBase):
 	def __init__(self):
-		LayoutManagerBase.__init__(self)
+		LayoutManagerBase.__init__(self, LayoutManagerDrawContext())
+		self._drawContext.addListener(self)
+		self._drawContext.setShapeContainer(self)
+
 		self._listener = None
 		self._viewport = None
 		self._hasfocus = 0
@@ -593,6 +597,7 @@ class LayoutManager(LayoutManagerBase):
 
 	def OnCreate(self, cs):
 		LayoutManagerBase.OnCreate(self, cs)
+		self.HookMessage(self.onKeyDown, win32con.WM_KEYDOWN)
 		self.HookMessage(self.OnSetFocus,win32con.WM_SETFOCUS)
 		self.HookMessage(self.OnKillFocus,win32con.WM_KILLFOCUS)
 		
@@ -665,14 +670,14 @@ class LayoutManager(LayoutManagerBase):
 		self._parent.showScale(self._device2logical)
 		self.__initState()
 		self._viewport = Viewport(name, self, attrdict, self._device2logical)
-		self._drawContextBase.reset(self)
+		self._drawContext.reset()
 
 		return self._viewport
 
 	# selection of a list of nodes
 	def selectNodeList(self, shapeList):
 		self._selectedList = shapeList
-		self.selectShapes(shapeList)			
+		self._drawContext.selectShapes(shapeList)			
 	
 	#
 	# end implementation interface 
@@ -694,7 +699,7 @@ class LayoutManager(LayoutManagerBase):
 		if not self.__isInsideShapeList(self._selectedList, point):
 			self._wantDown = 0
 			if debugPreview: print 'onLButtonDown: call MSDrawContext.onLButtonDown'
-			self._drawContextBase.onLButtonDown(self, flags, point)
+			self._drawContext.onLButtonDown(flags, point)
 
 	def onLButtonUp(self, params):
 		msg=win32mu.Win32Msg(params)
@@ -702,10 +707,10 @@ class LayoutManager(LayoutManagerBase):
 		point = self.DPtoLSP(point)
 		if self._wantDown:
 			if debugPreview: print 'onLButtonUp: call MSDrawContext.onLButtonDown'
-			self._drawContextBase.onLButtonDown(self, self._sflags, self._spoint)
+			self._drawContext.onLButtonDown(self._sflags, self._spoint)
 			self._wantDown = 0
 		if debugPreview: print 'onLButtonUp: call MSDrawContext.onLButtonUp'
-		self._drawContextBase.onLButtonUp(self, flags, point)
+		self._drawContext.onLButtonUp(flags, point)
 
 		# update user events
 		if self._isGeomChanging:
@@ -721,9 +726,9 @@ class LayoutManager(LayoutManagerBase):
 		if self._wantDown:
 			if debugPreview: print 'onLButtonMove: call MSDrawContext.onLButtonDown'
 			self._isGeomChanging = 1
-			self._drawContextBase.onLButtonDown(self, self._sflags, self._spoint)
+			self._drawContext.onLButtonDown(self._sflags, self._spoint)
 			self._wantDown = 0
-		self._drawContextBase.onMouseMove(self, flags, point)
+		self._drawContext.onMouseMove(flags, point)
 
 	def findDeviceToLogicalScale(self, wl, hl):
 		wd, hd = self.GetClientRect()[2:]
@@ -786,7 +791,7 @@ class LayoutManager(LayoutManagerBase):
 		rgn.DeleteObject()
 
 	def drawTracker(self, dc):
-		for wnd in self._selections:
+		for wnd in self._drawContext._selections:
 			if wnd != self._viewport:
 				rgn = self._viewport.getClipRgn()
 				dc.SelectClipRgn(rgn)
