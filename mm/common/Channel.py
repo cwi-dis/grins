@@ -205,6 +205,16 @@ class Channel:
 		# stop highlighting the channel instance
 		pass
 
+	def popup(self):
+		# raise the window to the front (dummy for channels
+		# without windows)
+		pass
+
+	def popdown(self):
+		# lower the window to the back (dummy for channels
+		# without windows)
+		pass
+
 	def pause(self):
 		# Pause playing the current node.
 		# Not yet implemented.
@@ -659,6 +669,14 @@ class ChannelWindow(Channel):
 		if self._is_shown:
 			self.window.dontshowwindow()
 
+	def popup(self):
+		if self._is_shown:
+			self.window.pop()
+
+	def popdown(self):
+		if self._is_shown:
+			self.window.push()
+
 	def save_geometry(self):
 		if self._is_shown:
 			x, y, w, h = self.window.getgeometry()
@@ -700,6 +718,9 @@ class ChannelWindow(Channel):
 	def create_window(self, pchan, pgeom):
 		menu = []
 		if pchan:
+			menu.append('', 'raise', (self.popup, ()))
+			menu.append('', 'lower', (self.popdown, ()))
+			menu.append(None)
 			menu.append('', 'highlight', (self.highlight, ()))
 			menu.append('', 'unhighlight', (self.unhighlight, ()))
 			if self.want_default_colormap:
