@@ -120,6 +120,11 @@ ALL=['system_bitrate', 'system_captions', 'system_language',
 NEEDS_RESTART=['cmif', 'vertical_structure', 'no_canvas_resize', 'root_expanded']
 
 extensions = {
+	# SMIL 2.0 Language Profile Modules
+# one of CoordinatedTransitions and MultiElementTransitions should be removed
+# TransitionModifiers is missing from Modules document
+# MediaAccessibility is missing from Modules document
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/AccessKeyTiming': 0,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/AudioLayout': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicAnimation': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicContentControl': 1,
@@ -130,6 +135,7 @@ extensions = {
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicTimeContainers': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicTransistions': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BrushMedia': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/CoordinatedTransitions': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/CustomTestAttributes': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/EventTiming': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/ExclTimeContainers': 1,
@@ -137,13 +143,15 @@ extensions = {
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/HierarchicalLayout': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/InlineTransitions': 0,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/LinkingAttributes': 1,
-	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaClipMarkers': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaAccessibility': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaClipMarkers': 0,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaClipping': 1,
-	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaMarkerTiming': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaMarkerTiming': 0,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaParam': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/Metainformation': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MinMaxTiming': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MultiElementTransitions': 1,
-	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MultiSyncArcTiming': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MultiArcTiming': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MultiWindowLayout': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/ObjectLinking': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/PrefetchControl': 1,
@@ -158,11 +166,16 @@ extensions = {
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/SyncBehavior': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/SyncBehaviorDefault': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/SyncMaster': 0,
-	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/TimeContainerAttributes': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/TimeContainerAttributes': 0,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/TimeManipulations': 0,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/TransitionModifiers': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/WallclockTiming': 1,
+
+	# SMIL 2.0 Language Profile Psuedo Modules
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/NestedTimeContainers': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/DeprecatedFeatures': 1,
+
+	# SMIL 1.0
 	'http://www.w3.org/TR/REC-smil/': 1,
 }
 
