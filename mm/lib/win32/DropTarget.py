@@ -1,10 +1,16 @@
 
-import WMEVENTS, win32con
+import WMEVENTS
+import win32ui, win32con
+Sdk=win32ui.GetWin32Sdk()
 
 class DropTarget:
+	cfmap={'FileName':Sdk.RegisterClipboardFormat('FileName')}
 	def __init__(self):
 		self._isregistered=0
 		self._dropmap={'FileName':(self.dragfile,self.dropfile)}
+		
+		# shortcut
+		self.CF_FILE=self.getClipboardFormat('FileName')
 
 	def registerDropTarget(self):
 		if not self._isregistered:
@@ -17,6 +23,13 @@ class DropTarget:
 			if hasattr(self,'RevokeDropTarget'):
 				self.RevokeDropTarget()
 			self._isregistered=0
+
+	def getClipboardFormat(self,strFmt):
+		if DropTarget.cfmap.has_key(strFmt):
+			return DropTarget.cfmap[strFmt]
+		cf= Sdk.RegisterClipboardFormat(strFmt)
+		DropTarget.cfmap[strFmt]=cf
+		return cf
 
 	def OnDragEnter(self,dataobj,kbdstate,x,y):
 		return self.OnDragOver(dataobj,kbdstate,x,y)
@@ -38,7 +51,7 @@ class DropTarget:
 		pass
 
 	def dragfile(self,dataobj,kbdstate,x,y):
-		filename=dataobj.GetGlobalData('FileName')
+		filename=dataobj.GetGlobalData(self.CF_FILE)
 		if filename:
 			x,y=self._DPtoLP((x,y))
 			x,y = self._inverse_coordinates((x, y),self._canvas)
@@ -46,7 +59,7 @@ class DropTarget:
 		return 0
 
 	def dropfile(self,dataobj,effect,x,y):
-		filename=dataobj.GetGlobalData('FileName')
+		filename=dataobj.GetGlobalData(self.CF_FILE)
 		if filename:
 			import longpath
 			filename=longpath.short2longpath(filename)
