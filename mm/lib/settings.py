@@ -276,6 +276,10 @@ if sys.platform == 'win32':
 	default_settings['system_cpu'] = 'x86'
 	default_settings['system_operating_system'] = 'win32'
 	default_settings['savedir'] = 'Desktop'
+elif sys.platform == 'wince':
+	default_settings['system_cpu'] = 'arm'
+	default_settings['system_operating_system'] = 'wince'
+	default_settings['savedir'] = r'\My Documents'
 elif sys.platform == 'mac':
 	default_settings['system_cpu'] = 'ppc'
 	default_settings['system_operating_system'] = 'macos'
