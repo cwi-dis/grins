@@ -46,7 +46,7 @@ class: 42
 type: 0
 box: 260.000000 220.000000 80.000000 30.000000
 boxtype: 5
-colors: 47 0
+colors: 7 0
 alignment: 2
 style: 0
 size: 11.000000
@@ -61,7 +61,7 @@ class: 42
 type: 0
 box: 420.000000 220.000000 110.000000 30.000000
 boxtype: 5
-colors: 47 0
+colors: 7 0
 alignment: 2
 style: 0
 size: 11.000000
@@ -106,7 +106,7 @@ class: 42
 type: 0
 box: 360.000000 40.000000 170.000000 30.000000
 boxtype: 5
-colors: 47 0
+colors: 7 0
 alignment: 2
 style: 0
 size: 11.000000
