@@ -11,6 +11,19 @@ __version__ = "$Id$"
 # (3) or call givehelp(topic) to show help on a particular subject.
 # When the help window is already open, it is popped up.
 
+""" @win32doc|Help.py
+Utility module that supplies a standard interface to the
+application in order to utilize context sensitive help in html form.
+The core system recognizes that the application has a help
+system by calling the function hashelp().
+It displays context sensitive help by calling
+the function givehelp(topic) and the index
+by calling the function showhelpwindow()
+or givehelp('index')
+The old documentation was in hlp form but 
+for the current version the documentation 
+must be converted to the html format.
+"""
 
 import os
 import string
@@ -67,6 +80,9 @@ def givehelp(topic):
 def showhelpwindow():
 	givehelp('index')
 
+
+######################################
+# url parsing to pass browser control
 def islocal(url):
 	utype, url = MMurl.splittype(url)
 	host, url = MMurl.splithost(url)
