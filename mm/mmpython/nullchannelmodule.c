@@ -11,6 +11,80 @@ static int nullchannel_debug = 0;
 #endif
 #define denter(func)	dprintf(( # func "(%lx)\n", (long) self))
 
+static void
+null_armer(self)
+	mmobject *self;
+{
+	denter(null_armer);
+}
+
+static void
+null_player(self)
+	mmobject *self;
+{
+	denter(null_player);
+}
+
+static int
+null_resized(self)
+	mmobject *self;
+{
+	denter(null_resized);
+	return 1;
+}
+
+static int
+null_arm(self, file, delay, duration, attrlist, anchorlist)
+	mmobject *self;
+	object *file;
+	int delay, duration;
+	object *attrlist, *anchorlist;
+{
+	denter(null_arm);
+	return 1;
+}
+
+static int
+null_armstop(self)
+	mmobject *self;
+{
+	denter(null_armstop);
+	return 1;
+}
+
+static int
+null_play(self)
+	mmobject *self;
+{
+	denter(null_play);
+	return 1;
+}
+
+static int
+null_playstop(self)
+	mmobject *self;
+{
+	denter(null_playstop);
+	return 1;
+}
+
+static int
+null_finished(self)
+	mmobject *self;
+{
+	denter(null_finished);
+	return 1;
+}
+
+static int
+null_setrate(self, rate)
+	mmobject *self;
+	double rate;
+{
+	denter(null_setrate);
+	return 1;
+}
+
 static int
 null_init(self)
 	mmobject *self;
@@ -26,80 +100,15 @@ null_dealloc(self)
 	denter(null_dealloc);
 }
 
-static int
-null_arm(self, file, delay, duration, attrlist, anchorlist)
-	mmobject *self;
-	object *file;
-	int delay, duration;
-	object *attrlist, *anchorlist;
-{
-	denter(null_arm);
-	return 1;
-}
-
-static void
-null_armer(self)
-	mmobject *self;
-{
-	denter(null_armer);
-}
-
-static int
-null_play(self)
-	mmobject *self;
-{
-	denter(null_play);
-	return 1;
-}
-
-static void
-null_player(self)
-	mmobject *self;
-{
-	denter(null_player);
-}
-
-static int
-null_done(self)
-	mmobject *self;
-{
-	denter(null_done);
-	return 1;
-}
-
-static int
-null_resized(self)
-	mmobject *self;
-{
-	denter(null_resized);
-	return 1;
-}
-
-static int
-null_stop(self)
-	mmobject *self;
-{
-	denter(null_stop);
-	return 1;
-}
-
-static int
-null_setrate(self, rate)
-	mmobject *self;
-	double rate;
-{
-	denter(null_setrate);
-	return 1;
-}
-
 static struct mmfuncs null_channel_funcs = {
 	null_armer,
 	null_player,
-	null_done,
 	null_resized,
 	null_arm,
+	null_armstop,
 	null_play,
-	null_stop,
+	null_playstop,
+	null_finished,
 	null_setrate,
 	null_init,
 	null_dealloc,
