@@ -42,7 +42,6 @@ class Main(MainDialog):
 				sys.exit(0)
 
 		self.do_init()
-##		self.recent_file_list = []
 				
 	def do_init(self, license=None):
 		# We ignore the license, not needed in the player
@@ -55,27 +54,19 @@ class Main(MainDialog):
 		self.commandlist = [
 			OPEN(callback = (self.open_callback, ())),
 			OPENFILE(callback = (self.openfile_callback, ())),
-##			OPEN_RECENT(callback = self.open_recent_callback),	# Dynamic cascade
-##			RELOAD(callback = (self.reload_callback, ())), 
-##			PREFERENCES(callback = (self.preferences_callback, ())),
-##			CHECKVERSION(callback=(self.checkversion_callback, ())),
-##			CHOOSECOMPONENTS(callback = (self.components_callback, ())),
 			EXIT(callback = (self.close_callback, ())),
 			]
 		if not hasattr(features, 'trial') or not features.trial:
 			self.commandlist.append(CHOOSESKIN(callback = (self.skin_callback, ())))
 		import settings
-##		if hasattr(windowinterface, 'is_embedded') and windowinterface.is_embedded():
-##			settings.factory_defaults()
 		MainDialog.__init__(self, 'GRiNS')
 		if settings.get('skin'):
 			self.openURL_callback(EMPTYDOC)
-##		self._update_recent(None)
 
 	def __skin_done(self, filename):
 		if filename:
-			import settings
-			url = self.__path2url(filename)
+			import settings, MMurl
+			url = MMurl.pathname2url(filename)
 			settings.set('skin', url)
 			settings.save()
 
@@ -92,16 +83,16 @@ class Main(MainDialog):
 				url = self.tops[0].url
 			else:
 				url = EMPTYDOC
-			self.openURL_callback(url)
+			self.openURL_callback(url, askskin = 0)
 
-	def openURL_callback(self, url):
+	def openURL_callback(self, url, askskin = 1):
 		import windowinterface
 		windowinterface.setwaiting()
 		from MMExc import MSyntaxError
 		import TopLevel
 		self.last_location = url
 		try:
-			top = TopLevel.TopLevel(self, url)
+			top = TopLevel.TopLevel(self, url, askskin = askskin)
 		except IOError:
 			import windowinterface
 			windowinterface.showmessage('Cannot open: %s' % url)
@@ -114,84 +105,16 @@ class Main(MainDialog):
 			self.tops.append(top)
 			top.show()
 			top.player.show()
-##			self._update_recent(url)
 			top.player.play_callback()
 
-##	def open_recent_callback(self, url):
-##		self.openURL_callback(url)
-		
 	def _update_recent(self, url):
 		pass
-##		if url:
-##			self.add_recent_file(url)
-##		doclist = self.get_recent_files()
-##		self.set_recent_list(doclist)
-
-##	def get_recent_files(self):
-##		if not hasattr(self, 'set_recent_list'):
-##			return
-##		import settings
-##		import posixpath
-##		recent = settings.get('recent_documents')
-##		doclist = []
-##		for url in recent:
-##			base = posixpath.basename(url)
-##			doclist.append( (base, (url,)))
-##		return doclist
-
-##	def add_recent_file(self, url):
-##		# Add url to the top of the recent file list.
-##		import windowinterface
-##		assert url
-##		import settings
-##		recent = settings.get('recent_documents')
-##		if url in recent:
-##			recent.remove(url)
-##		recent.insert(0, url)
-##		if len(recent) > NUM_RECENT_FILES:
-##			recent = recent[:NUM_RECENT_FILES]
-##		settings.set('recent_documents', recent)
-##		settings.save()
 
 	def close_callback(self, exitcallback=None):
 		for top in self.tops[:]:
 			top.destroy()
 		import windowinterface
 		windowinterface.getmainwnd().destroy()
-
-##	def preferences_callback(self):
-##		import Preferences
-##		Preferences.showpreferences(1, self.prefschanged)
-
-##	def prefschanged(self):
-##		for top in self.tops:
-##			top.prefschanged()
-
-##	def checkversion_callback(self):
-##		import MMurl
-##		import version
-##		import windowinterface
-##		import settings
-##		url = 'http://www.oratrix.com/indir/%s/updatecheck.txt'%version.shortversion
-##		try:
-##			fp = MMurl.urlopen(url)
-##			data = fp.read()
-##			fp.close()
-##		except:
-##			windowinterface.showmessage('Unable to check for upgrade. You can try again later, or visit www.oratrix.com with your webbrowser.')
-##			print "Could not load URL", url
-##			return
-##		data = data.strip()
-##		if not data:
-##			windowinterface.showmessage('You are running the latest version of the software')
-##			return
-##		cancel = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to know more?')
-##		if cancel:
-##			return
-##		# Pass the version and the second item of the license along.
-##		id = settings.get('license').split('-')[1]
-##		url = '%s?version=%s&id=%s'%(data, version.shortversion, id)
-##		windowinterface.htmlwindow(url)
 
 	def closetop(self, top):
 		if self._closing:
