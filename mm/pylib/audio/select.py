@@ -10,9 +10,10 @@ class select:
 		for begin, end in rangelist:
 			if begin is None:
 				begin = 0
-			if (not end and begin >= end) or \
-			   not lastend or begin < lastend:
+			if lastend is None or lastend > begin:
 				raise audio.Error, 'rangelist must be non-overlapping and sorted'
+			if end is not None and end < begin:
+				raise audio.Error, 'end must not be less than begin'
 			lastbegin, lastend = begin, end
 		self.__rdr = rdr
 		self.__rangelist = rangelist
