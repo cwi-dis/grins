@@ -773,7 +773,7 @@ class AttrEditor(AttrEditorDialog):
 		wrapper.register(self)
 		self.__open_dialog(initattr)
 
-	def __open_dialog(self, initattr):
+	def __open_dialog(self, initattr = None):
 		import settings
 		wrapper = self.wrapper
 		list = []
