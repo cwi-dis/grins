@@ -6,9 +6,9 @@
 #include "stdafx.h"
 
 
-#include "..\\..\\Accusoft\\Gear\\gear.h" // Accusoft DLL header.
+#include "..\..\..\cmif\win32\\Accusoft\\Gear\\gear.h" // Accusoft DLL header.
 
-#pragma comment (lib,"Gear32sd.lib")
+#pragma comment (lib,"d:\\ufs\\mm\\cmif\\win32\\Accusoft\\Gear\\Gear32sd.lib")
 
 // Gif convertion
 #include "igif.h"
