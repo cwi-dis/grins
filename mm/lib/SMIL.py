@@ -430,7 +430,6 @@ class SMIL:
 			      'animateColor', 'set']
 	__animate_attrs_core = {'attributeName':None,
 				'attributeType':None,
-##				'autoReverse':'false',
 				'customTest':None,
 				'fill':None,
 				'skip-content':None,
@@ -442,16 +441,27 @@ class SMIL:
 				 'by':None,
 				 'calcMode':None,
 				 'from':None,
-##				 'keySplines':None,
-##				 'keyTimes':None,
 				 'values':None,
 				 }
+	__timeManipulations = {'speed':'1',
+		    'accelerate':'0',
+		    'decelerate':'0',
+		    'autoReverse': 'false',
+		    }
+
+	from settings import profileExtensions
+
+	if profileExtensions.get('SplineAnimation'):
+		__animate_attrs_extra['keySplines'] = None
+		__animate_attrs_extra['keyTimes'] = None
+
 	attributes['animateMotion'] = __animate_attrs_core.copy()
 	attributes['animateMotion'].update(__animate_attrs_extra)
 	del attributes['animateMotion']['attributeName']
 	del attributes['animateMotion']['attributeType']
 	attributes['animateMotion']['calcMode'] = 'paced'
-##	attributes['animateMotion']['path'] = None
+	if profileExtensions.get('SplineAnimation'):
+		attributes['animateMotion']['path'] = None
 	attributes['animateMotion']['origin'] = None
 
 	attributes['animate'] = __animate_attrs_core.copy()
@@ -464,6 +474,10 @@ class SMIL:
 
 	del __animate_attrs_core, __animate_attrs_extra
 
+	if profileExtensions.get('TimeManipulations'):
+		# add TimeManipulations to certain elements
+		for __el in ('animate', 'set', 'animateMotion', 'animateColor',):
+			attributes[__el].update(__timeManipulations)
 
 	__schedule = ['par', 'seq', 'excl', __choice, __bag] + __media_object
 	__container_content = __schedule + ['switch', 'a'] + __animate_elements
