@@ -53,8 +53,7 @@ class _common_window:
 		
 	def create_widget(self):
 		rect = self.window.qdrect()
-		wid = self.window._wid
-		self.widget = htmlwidget.HTMLWidget(wid, rect, self.TITLE, self.window)
+		self.widget = htmlwidget.HTMLWidget(self.window, rect, self.TITLE, self.window)
 		
 	def redraw(self):
 		if self.widget:
