@@ -1466,7 +1466,24 @@ class FindDialog(ResDialog):
 
 		# hook commands
 		self._findNextBtn.hookcommand(self, self._onFindNext)
+		self.HookMessage(self._onCommand, win32con.WM_COMMAND)
 		self._isInit = 1
+
+	def _onCommand(self, params):
+		# crack win32 message
+		msg=win32mu.Win32Msg(params)
+		code = msg.HIWORD_wParam()
+		hctrl = msg._lParam
+
+		findWhatEmpty = self._findWhat.gettext() == ''
+			
+		# if the 'find what' field is empty, disable all buttons
+		if findWhatEmpty:
+			self._findNextBtn.enable(0)
+		else:
+			self._findNextBtn.enable(1)
+
+		return 1
 
 	def OnDestroy(self, id):
 		self._isInit = 0
@@ -1520,16 +1537,27 @@ class ReplaceDialog(FindDialog):
 		# additional hook commands
 		self._replaceBtn.hookcommand(self, self._onReplace)
 		self._replaceAllBtn.hookcommand(self, self._onReplaceAll)
-		self.HookMessage(self._onCommand, win32con.WM_COMMAND)
 
 	def _onCommand(self, params):
 		# crack win32 message
 		msg=win32mu.Win32Msg(params)
 		code = msg.HIWORD_wParam()
+		hctrl = msg._lParam
 
-		if code == win32con.EN_CHANGE:
+		findWhatEmpty = self._findWhat.gettext() == ''
+			
+		if code == win32con.EN_CHANGE or findWhatEmpty:
 			# disable the replace button
 			self.enableReplace(0)
+			
+		# if the 'find what' field is empty, disable all buttons
+		if findWhatEmpty:
+			self._replaceAllBtn.enable(0)
+			self._findNextBtn.enable(0)
+		else:
+			self._replaceAllBtn.enable(1)
+			self._findNextBtn.enable(1)
+
 		return 1
 		
 	def _onReplace(self, id, value):
