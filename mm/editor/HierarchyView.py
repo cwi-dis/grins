@@ -126,7 +126,7 @@ class HierarchyView(HierarchyViewDialog):
 			COMPUTE_BANDWIDTH(callback = (self.bandwidthcall, ())),
 			CREATE_EVENT_SOURCE(callback = (self.create_begin_event_source, ())),
 			CREATE_BEGIN_EVENT(callback = (self.create_begin_event_dest, ())),
-##			CREATE_END_EVENT(callback = (self.create_end_event_dest, ())),
+			CREATE_END_EVENT(callback = (self.create_end_event_dest, ())),
 			FIND_EVENT_SOURCE(callback = (self.find_event_source, ())),
 			DRAG_PAR(),
 			DRAG_SEQ(),
@@ -1794,6 +1794,16 @@ class HierarchyView(HierarchyViewDialog):
 			self.old_begin_event_source = None
 			self.selected_widget.get_node().NewBeginEvent(src, 'activateEvent')
 			# I assume a draw is not needed (due to NewBeginEvent)...
+		else:
+			windowinterface.beep() # Should not happen
+
+	def create_end_event_dest(self):
+		if self.selected_widget and self.begin_event_source:
+			src = self.begin_event_source
+			self.begin_event_source = None
+			self.old_begin_event_source = None
+			self.selected_widget.get_node().NewEndEvent(src, 'activateEvent')
+			# I assume a draw is not needed (due to NewEndEvent)...
 		else:
 			windowinterface.beep() # Should not happen
 
