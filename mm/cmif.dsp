@@ -1226,6 +1226,10 @@ SOURCE=.\mmextensions\real\win32\RealAudioChannel.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\mmextensions\real\win32\RealChannel.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\mmextensions\real\win32\RealPixChannel.py
 # End Source File
 # Begin Source File
