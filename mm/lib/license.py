@@ -50,11 +50,11 @@ class WaitLicense(LicenseDialog):
 		
 	def cb_buy(self):
 		import Help
-		Help.givehelp('buy')
+		Help.givehelp('buy', web=1)
 		
 	def cb_eval(self):
 		import Help
-		Help.givehelp('eval')
+		Help.givehelp('eval', web=1)
 		
 	def cb_enterkey(self):
 ##		import windowinterface
