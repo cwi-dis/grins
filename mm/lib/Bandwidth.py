@@ -65,8 +65,8 @@ def get(node):
 		if duration == 0:
 ##			print "DBG: Bandwidth.get: zero-time file", filename
 			return 0, 0
-		print 'DBG: Bandwidth.get: continuous',filename, filesize, float(filesize)*8/duration
-##		return 0, float(filesize)*8/duration
+##		print 'DBG: Bandwidth.get: continuous',filename, filesize, float(filesize)*8/duration
+		return 0, float(filesize)*8/duration
 	else:
 ##		print 'DBG: Bandwidth.get: discrete',filename, filesize, float(filesize)*8
 		return float(filesize)*8, 0
