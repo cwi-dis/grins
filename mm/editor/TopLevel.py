@@ -316,7 +316,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.root = MMRead.ReadFile(filename)
 		else:
 			import SMILTreeRead
-			if mtype[:6] != 'audio/' and \
+			if mtype and mtype[:6] != 'audio/' and \
 			   mtype[:6] != 'video/':
 				dur = ' dur="indefinite"'
 			else:
