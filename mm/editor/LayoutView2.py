@@ -1308,6 +1308,7 @@ class LayoutView2(LayoutViewDialog2):
 		if self.editmgr.transaction():
 			self.editmgr.addchannel(name, 0, 'layout')
 			self.editmgr.setchannelattr(name, 'transparent', 0)
+			self.editmgr.setchannelattr(name, 'showEditBackground', 1)
 			self.editmgr.setchannelattr(name, 'width', 400)
 			self.editmgr.setchannelattr(name, 'height', 400)
 #			self.editmgr.setchannelattr(name, 'winsize', (400, 400))
