@@ -14,6 +14,7 @@ import List
 MacList=List
 import Win
 import Dlg
+import Dialogs
 [_X, _Y, _WIDTH, _HEIGHT] = range(4)
 _def_useGadget = 1
 
@@ -1097,6 +1098,59 @@ class _ListWidget:
 		
 	def _activate(self, onoff):
 		self.list.LActivate(onoff)
+		
+class SelectWidget:
+	def __init__(self, wid, ctlid, items=[], default=None, labelctl=None, callback=None):
+		self.wid = wid
+		self.control = ctlid
+		self.menu = None
+		self.choice = None
+		self.labelctl = labelctl
+		self.setitems(items, default)
+		tp, h, rect = self.wid.GetDialogItem(self.control)
+		self.topleft = rect[0], rect[1]
+		self.usercallback = callback
+		
+	def delete(self):
+		self.menu.delete()
+		del self.menu
+		del self.wid
+		
+	def setitems(self, items=[], default=None):
+		items = items[:]
+		if not items:
+			items.append('')
+		self.choice = None
+		self.data = items
+		if default != None:
+			self.select(default)
+		menuitems=[]
+		for i in range(len(items)):
+			menuitems.append(items[i], (self._callback, (i,)))
+		self.menu = FullPopupMenu(menuitems, title=None)
+		
+	def select(self, item):
+		self.choice = self.data[item]
+		if self.labelctl:
+			tp, h, rect = self.wid.GetDialogItem(self.labelctl)
+			Dlg.SetDialogItemText(h, self.choice)
+		
+	def click(self, event):
+		Qd.SetPort(self.wid)
+		y, x = Qd.LocalToGlobal(self.topleft)
+		self.menu.popup(x, y, event, self.wid)
+		
+	def _callback(self, item):
+		self.select(item)
+		if self.usercallback:
+			self.usercallback()
+		
+	def getselect(self):
+		if self.labelctl:
+			tp, h, rect = self.wid.GetDialogItem(self.labelctl)
+			return Dlg.GetDialogItemText(h)
+		else:
+			return self.choice
 		
 class SelectionDialog(DialogWindow):
 	def __init__(self, listprompt, selectionprompt, itemlist, default):
