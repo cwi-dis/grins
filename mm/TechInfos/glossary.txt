@@ -8,23 +8,28 @@ ASX - Microsoft metadata file for describing a list of media to play.
 
 Attribute - As in OO terminology.
 
-Channel - 
+Channel - Fiction used in GRiNS to 
 
-Element - 
+Edit manager - used to 
+
+Element - Individual SMiL thing.. like a structure node (par, seq..) or 
+	a leaf node (image, sound, video). 
 
 Heirachy - Misspelled version of "Hierarchy".
 
 Layout - geographical location of objects
 
-Layout channel - ??
+Layout channel - channel specifically used for layout.l
 
 Link - HTML reference to an external HTML file or Anchor within
      presentation
 
-MMNode - Node instance ( or class ).
+MMNode - Fiction representing an individual SMiL element in GRiNS e.g. leaf node or par.
 
-Node - Element within the multimedia presentation (holds a URL of
+Node - Element within the multimedia presentation (holds a URL for
      data)
+
+Par - Parallel SMiL element. Learn SMiL
 
 Pen - item used for chewing when hacking.
 
@@ -34,17 +39,18 @@ Register - ???
 
 User Group - ?? I don't know what this is used for.
 
+Seq - See Sequence.
 Sequence - Ordered collection of elements
 
 SMiL - Multimedia presentation file format :-).
 
-Style - 
+Style - You don't need to know.
 
 SyncArc - Used for syncronisation of media elements ?
 
 TopLevel - Main window; creates child windows.
 
-Transaction -
+Transaction - Ask a bank teller. Actually, used by the Edit manager.
 
 Transition - Visual effect when player finishes or starts a node.
 

@@ -3,20 +3,21 @@ TODO for Michael :-)
 
 Priority top-to-bottom.
 ------------------------
-Reload button on the player.
-
-Bars should not collide (think about this more.)
+* Make a SMiL presentation.
 
 * Indefinite durations in the temporal view.
-* Look into durations more,
+* Add extra node types to the Structure Widgets (waiting for Alain)
+
+* Begin delay in the Temporal view.
+* Bars should not collide (think about this more.)
+* Begin attribute 
+* Reload button on the player.
+* Create templates for Snap! (slideshow)
+* Add facilities to create asset boxes!
+* Clean up the resource files
+* Show whether a node is empty or not (in the Hierarchy View?).
 
 
 Incoming
 --------
-* Create templates for Snap! (slideshow)
 
-* Add a asset box for transitions.
-
-* Clean up the resource files
-
-* Show whether a node is empty or not.

@@ -968,7 +968,7 @@ class MultiMMWidget(TimeWidget):
 
 	def happily_receive_dropped_file(self, url, channel):
 		# Add the file as a new leaf node.
-		self.node.NewLeafNode(url=url)
+		self.node.NewLeafNode(url, channel)
 
 class SeqMMWidget(MultiMMWidget):
 	# Represents a seq widget on the screen
@@ -984,7 +984,7 @@ class SeqMMWidget(MultiMMWidget):
 		self.w_endbar_b = self.graph.AddWidget(Box(self.mother))
 		self.w_startbar.set_color(self.color)
 		self.w_endbar.set_color(self.color)
-		self.w_lines = []
+		#self.w_lines = []
 		self.w_endline = self.graph.AddWidget(Line(self.mother))
 
 	def destroy(self):
@@ -993,13 +993,13 @@ class SeqMMWidget(MultiMMWidget):
 		self.graph.DelWidget(self.w_startbar_b)
 		self.graph.DelWidget(self.w_endbar)
 		self.graph.DelWidget(self.w_endbar_b)
-		for i in self.w_lines:
-			self.graph.DelWidget(i)
+		#for i in self.w_lines:
+		#	self.graph.DelWidget(i)
 		self.graph.DelWidget(self.w_endline)
 
 	def add(self, bob):
 		MultiMMWidget.add(self, bob)
-		self.w_lines.append(self.graph.AddWidget(Line(self.mother)))
+		#self.w_lines.append(self.graph.AddWidget(Line(self.mother)))
 
 	def __repr__(self):
 		return "I'm a SeqMMWidget"
@@ -1037,7 +1037,7 @@ class SeqMMWidget(MultiMMWidget):
 				self.subwidgets[i].set_x(cl, cr)
 				self.subwidgets[i].recalc()
 				y1, y2 = self.subwidgets[i].get_y_end()
-				self.w_lines[i].moveto((prevx, prevy, cl, (y1+y2)/2))
+				#self.w_lines[i].moveto((prevx, prevy, cl, (y1+y2)/2))
 				# WORKING HERE - Things don't look quite right yet.
 				prevx = cr
 				prevy = (y1+y2)/2
