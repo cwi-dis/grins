@@ -33,9 +33,7 @@ class MpegChannel(ChannelWindowThread):
 		try:
 			import MMAttrdefs, GLLock
 			arminfo = {'scale': MMAttrdefs.getattr(node, 'scale'),
-				   'wid': self.window._window_id,
-				   'bgcolor': self.getbgcolor(node),
-				   'gl_lock': GLLock.gl_rawlock}
+				   'bgcolor': self.getbgcolor(node)}
 			self.threads.arm(fp, 0, 0, arminfo, None,
 				  self.syncarm)
 		except RuntimeError, msg:
