@@ -430,9 +430,9 @@ class AnimationData:
 			nodeIndex = self._updateNodesWithoutKeyTimes(animList, 'width', targname, nodeIndex)
 			animList = existing.get('height')
 			nodeIndex = self._updateNodesWithoutKeyTimes(animList, 'height', targname, nodeIndex)
-			if self._writeAnimateColor:
-				animList = existing.get('color')
-				nodeIndex = self._updateNodesWithoutKeyTimes(animList, 'backgroundColor', targname, nodeIndex)
+#			if self._writeAnimateColor:
+#				animList = existing.get('color')
+#				nodeIndex = self._updateNodesWithoutKeyTimes(animList, 'backgroundColor', targname, nodeIndex)
 			
 #		em.commit()
 		return 1
