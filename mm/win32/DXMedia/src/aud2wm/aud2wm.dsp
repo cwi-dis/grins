@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 msvcrtd.lib ..\..\..\wmsdk\wmfsdk\lib\wmstub.lib ..\..\..\wmsdk\wmfsdk\lib\wmvcore.lib ..\..\lib\strmbased.lib ..\..\lib\quartz.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2wm_d.ax" /debug:mapped,full /subsystem:windows,4.0
+# ADD LINK32 msvcrtd.lib ..\..\..\wmsdk\wmfsdk\lib\wmstub.lib ..\..\..\wmsdk\wmfsdk\lib\wmvcore.lib ..\..\lib\strmbasd.lib ..\..\lib\quartz.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2wm_d.ax" /debug:mapped,full /subsystem:windows,4.0
 
 !ENDIF 
 
@@ -89,59 +89,6 @@ LINK32=link.exe
 
 # Name "vaud2wm - Win32 Release"
 # Name "vaud2wm - Win32 Debug"
-# Begin Group "common files"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\common\wmwriter.cpp
-DEP_CPP_WMWRI=\
-	"..\..\..\wmsdk\wmfsdk\include\asferr.h"\
-	"..\..\..\wmsdk\wmfsdk\include\nserror.h"\
-	"..\..\..\wmsdk\wmfsdk\include\wmsbuffer.h"\
-	"..\..\..\wmsdk\wmfsdk\include\wmsdk.h"\
-	"..\..\..\wmsdk\wmfsdk\include\wmsdkidl.h"\
-	"..\..\classes\base\amextra.h"\
-	"..\..\classes\base\amfilter.h"\
-	"..\..\classes\base\cache.h"\
-	"..\..\classes\base\combase.h"\
-	"..\..\classes\base\cprop.h"\
-	"..\..\classes\base\ctlutil.h"\
-	"..\..\classes\base\dllsetup.h"\
-	"..\..\classes\base\fourcc.h"\
-	"..\..\classes\base\measure.h"\
-	"..\..\classes\base\msgthrd.h"\
-	"..\..\classes\base\mtype.h"\
-	"..\..\classes\base\outputq.h"\
-	"..\..\classes\base\pstream.h"\
-	"..\..\classes\base\refclock.h"\
-	"..\..\classes\base\reftime.h"\
-	"..\..\classes\base\renbase.h"\
-	"..\..\classes\base\Schedule.h"\
-	"..\..\classes\base\source.h"\
-	"..\..\classes\base\streams.h"\
-	"..\..\classes\base\strmctl.h"\
-	"..\..\classes\base\sysclock.h"\
-	"..\..\classes\base\transfrm.h"\
-	"..\..\classes\base\transip.h"\
-	"..\..\classes\base\videoctl.h"\
-	"..\..\classes\base\vtrans.h"\
-	"..\..\classes\base\winctrl.h"\
-	"..\..\classes\base\winutil.h"\
-	"..\..\classes\base\wxdebug.h"\
-	"..\..\classes\base\wxlist.h"\
-	"..\..\classes\base\wxutil.h"\
-	"..\common\wmwriter.h"\
-	
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\wmwriter.h
-# End Source File
-# End Group
-# Begin Group "source files"
-
-# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=.\aud2wm.cpp
@@ -181,7 +128,6 @@ DEP_CPP_AUD2W=\
 	"..\..\classes\base\wxdebug.h"\
 	"..\..\classes\base\wxlist.h"\
 	"..\..\classes\base\wxutil.h"\
-	"..\common\wmwriter.h"\
 	".\aud2wm.h"\
 	
 # End Source File
@@ -197,6 +143,5 @@ SOURCE=.\aud2wm.h
 
 SOURCE=.\aud2wm.rc
 # End Source File
-# End Group
 # End Target
 # End Project
