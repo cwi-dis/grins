@@ -1,19 +1,16 @@
 __version__ = "$Id$"
 
-"""Dialog for the Player control panel.
+# Dialog for the Player control panel.
 
-The PlayerDialog is a window that displays VCR-like controls to
-control the player plus an interface to turn channels on and off and
-an interface to turn options on and off.
+# The PlayerDialog is a window that displays VCR-like controls to
+# control the player plus an interface to turn channels on and off and
+# an interface to turn options on and off.
 
-"""
-
-""" @win32doc|PlayerDialog
-A PlayerDialog instance manages commands related
-to play. This instance indirectly passes information to
-the windows interface through the get_adornments method
-called by the channel module.
-"""
+# @win32doc|PlayerDialog
+# A PlayerDialog instance manages commands related
+# to play. This instance indirectly passes information to
+# the windows interface through the get_adornments method
+# called by the channel module.
 
 import windowinterface
 from usercmd import *
@@ -167,14 +164,13 @@ class PlayerDialog:
 		self.setusergroups()
 
 	def setchannels(self, channels=None):
-		"""Set the list of channels.
+		# Set the list of channels.
 
-		Arguments (no defaults):
-		channels -- a list of tuples (name, onoff) where name
-			is the channel name which is to be presented
-			to the user, and onoff indicates whether the
-			channel is on or off (1 if on, 0 if off)
-		"""
+		# Arguments (no defaults):
+		# channels -- a list of tuples (name, onoff) where name
+		# 	is the channel name which is to be presented
+		# 	to the user, and onoff indicates whether the
+		# 	channel is on or off (1 if on, 0 if off)
 		if channels is None:
 			channels = self.__channels
 		else:
@@ -191,13 +187,12 @@ class PlayerDialog:
 			w.set_dynamiclist(CHANNELS, menu)
 
 	def setchannel(self, channel, onoff):
-		"""Set the on/off status of a channel.
+		# Set the on/off status of a channel.
 
-		Arguments (no defaults):
-		channel -- the name of the channel whose status is to
-			be set
-		onoff -- the new status
-		"""
+		# Arguments (no defaults):
+		# channel -- the name of the channel whose status is to
+		# 	be set
+		# onoff -- the new status
 
 		i = self.__channeldict.get(channel)
 		if i is None:

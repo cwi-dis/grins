@@ -22,7 +22,7 @@ class BandwidthAccumulator:
 		return self.initialmax, self.maxused
 
 	def _findslot(self, t0):
-		"""Find the slot in which t0 falls"""
+		# Find the slot in which t0 falls
 ##		if t0 < 0:
 ##			raise 'Illegal t0', t0
 		#
@@ -38,8 +38,8 @@ class BandwidthAccumulator:
 		return i
 
 	def _find(self, t0, t1):
-		"""Create a slot from t0 to t1, or possibly shorter,
-		return the slot index and the new t1"""
+		# Create a slot from t0 to t1, or possibly shorter,
+		# return the slot index and the new t1
 		i = self._findslot(t0)
 		t_i, bandwidth, maxbw = self.used[i]
 		# If the slot doesn't start exactly at t0 we split it
@@ -59,8 +59,8 @@ class BandwidthAccumulator:
 		return i, t1
 
 	def _findavailbw(self, t0):
-		"""Return the available bandwidth at t0 and the time
-		t1 at which that value may change"""
+		# Return the available bandwidth at t0 and the time
+		# t1 at which that value may change
 		i = self._findslot(t0)
 		dummyt0, oldbw, maxbw = self.used[i]
 		bw = maxbw - oldbw
@@ -213,8 +213,8 @@ class BandwidthAccumulator:
 ##		return 0, overall_t0, overall_t1, boxes
 
 def compute_bandwidth(root, seticons=1, storetiming=None):
-	"""Compute bandwidth usage of a tree. Sets error icons, and returns
-	a tuple (bandwidth, prerolltime, delaycount, errorseconds, errorcount)"""
+	# Compute bandwidth usage of a tree. Sets error icons, and returns
+	# a tuple (bandwidth, prerolltime, delaycount, errorseconds, errorcount)
 	assert(not storetiming) # Not implemented in this version yet
 	import settings
 	maxbandwidth = settings.get('system_bitrate')
@@ -286,7 +286,7 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 	return maxbandwidth, prerolltime, delaycount, errorseconds, errorcount, stalls
 	
 def _getallbandwidthdata(datalist, node):
-	"""Recursively get all bandwidth usage info. Modifies first argument"""
+	# Recursively get all bandwidth usage info. Modifies first argument
 	errorcount = 0
 	node.set_bandwidthboxes([])
 	try:
@@ -299,7 +299,7 @@ def _getallbandwidthdata(datalist, node):
 	return errorcount
 	
 def _getbandwidthdatainto(datalist, node):
-	"""Get bandwidth usage info for a single node"""
+	# Get bandwidth usage info for a single node
 	if node.type != 'ext':
 		return
 	if not node.WillPlay():
