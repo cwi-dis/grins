@@ -105,12 +105,23 @@ class FancyURLopener(_OriginalFancyURLopener):
 			self.fin_retrieve(url)
 		return _OriginalFancyURLopener.retrieve(self, url, filename, reporthook)
 
+	# override cleanup for prefetch implementation
+	def cleanup(self):
+		for url, value in self.__prefetchcache:
+			fp, tfp = value
+			fp.close()
+			tfp.close()
+			if self.__prefetchtempfiles.has_key(url):
+				os.unlink(self.__prefetchtempfiles[url])
+		self.__prefetchcache = {}
+		self.__prefetchtempfiles = {}
+		_OriginalFancyURLopener.cleanup()
+
 	def begin_retrieve(self, url, filename=None, reporthook=None):
 		"""begin_retrieve(url) returns (filename, None, None) for a local object
 		or (tempfilename, headers, fptuple) for a remote object."""
 		url = unwrap(url)
-		if self.tempcache and self.tempcache.has_key(url):
-			return self.tempcache[url]
+		self.__clean_retrieve(url)
 		type, url1 = splittype(url)
 		if not filename and (not type or type == 'file'):
 			try:
@@ -130,21 +141,17 @@ class FancyURLopener(_OriginalFancyURLopener):
 			path, garbage = splitattr(path or "")
 			suffix = os.path.splitext(path)[1]
 			filename = tempfile.mktemp(suffix)
-			self.__tempfiles.append(filename)
+			self.__prefetchtempfiles[url] = filename
 		result = filename, headers
 		if self.tempcache is not None:
 			self.tempcache[url] = result
 		tfp = open(filename, 'wb')
-		if self.prefetchcache is not None:
-			self.prefetchcache[url] = fp, tfp
-		if reporthook:
-			if headers.has_key("content-length"):
-				size = int(headers["Content-Length"])
-			reporthook(0, 0, size)
+		if self.__prefetchcache is not None:
+			self.__prefetchcache[url] = fp, tfp
 		return result
 	
 	def do_retrieve(self, url, bs):
-		if not self.prefetchcache or not self.prefetchcache.has_key(url):
+		if not self.prefetchcache.has_key(url):
 			return None
 		fp, tfp = self.prefetchcache[url]
 		block = fp.read(bs)
@@ -152,26 +159,38 @@ class FancyURLopener(_OriginalFancyURLopener):
 			tfp.write(block)
 		return block!=None
 
-	def fin_retrieve(url):
-		if not self.prefetchcache or not self.prefetchcache.has_key(url):
-			return
+	def end_retrieve(self, url):
+		if not self.__prefetchcache.has_key(url):
+			return None
+		fp, tfp = self.__prefetchcache[url]
+		del self.__prefetchcache[url]
+		fp.close()
+		tfp.close()
+
+	def __fin_retrieve(url):
+		if not self.__prefetchcache.has_key(url):
+			return None
 		fp, tfp = self.prefetchcache[url]
 		bs = 1024*8
 		block = fp.read(bs)
 		while block:
 			tfp.write(block)
 			block = fp.read(bs)
- 		del self.prefetchcache[url]
-		fp.close()
-		tfp.close()
-		
-	def end_retrieve(self, url):
-		if not self.prefetchcache or not self.prefetchcache.has_key(url):
-			return
-		fp, tfp = self.prefetchcache[url]
 		del self.prefetchcache[url]
 		fp.close()
 		tfp.close()
+
+	def __clean_retrieve(self, url):
+		if self.__prefetchtempfiles.has_key(url):
+			file = self.__prefetchtempfiles[url]
+			try:
+				os.unlink(file)
+			except:
+				pass
+			del self.__prefetchtempfiles[url]
+		if self.tempcache and self.tempcache.has_key(url):
+			# unlink will be called on __tempfiles on close
+			del self.tempcache[url]
 
 _urlopener = None
 def urlopen(url, data=None):

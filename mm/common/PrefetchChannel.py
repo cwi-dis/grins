@@ -64,37 +64,39 @@ class PrefetchChannel(Channel.ChannelAsync):
 	def __initEngine(self, node):
 		self.__fiber_id = 0
 		self.__start = None
-		self.__reader = None
 		self.__pausedt = 0
+		self.__urlopener = None
+		self.__playdone = 0
 
 		url = self.getfileurl(node)
 		if not url:
 			print 'No URL set on node'
 			return
-
-		url = MMurl.canonURL(url)
+		self.__url = url
+		
+		self.__urlopener = MMurl.geturlopener()
 		try:
-			u = MMurl.urlopen(url)
+			filename, headers = self.__urlopener.begin_retrieve(url)
 		except:
-			print 'Warning: cannot open url %s', url
+			print 'Warning: cannot open url %s' % url
+			self.__urlopener = None
 		else:
-			#print u.headers
-			#print dir(u)
-			self.__reader = u
+			print filename, headers
 			
 	def __ready(self):
-		return self.__reader!=None
+		return self.__urlopener!=None
 			
 	def __startFetch(self, repeat=0):
 		self.__start = time.time()
+		if repeat:
+			self.__urlopener.begin_retrieve(self.__url)
 		self.__fetch()
 		self.__register_for_timeslices()
 
 	def __stopFetch(self):
 		if self.__fetching:
 			self.__unregister_for_timeslices()
-			self.__reader.close()
-			self.__reader = None
+			self.__urlopener=None
 
 	def __pauseFetch(self, paused):
 		if self.__fetching:
@@ -107,8 +109,10 @@ class PrefetchChannel(Channel.ChannelAsync):
 
 	def __fetch(self):
 		dt = time.time() - self.__start
-		if self.__reader:
-			self.__reader.read()
+		if self.__urlopener and self._playstate == PLAYING:
+			if not self.__urlopener.do_retrieve(self.__url, 1024):
+				self.__urlopener.end_retrieve(url)
+				self.playdone(0)
 
 	def __onFetchDur(self):
 		if not self.__fetching:
