@@ -434,7 +434,7 @@ class RPParser(xmllib.XMLParser):
 				  'subregionwh': destrect[2:],
 				  'subregionanchor': 'top-left',
 				  'start': start,
-				  'duration': duration,
+				  'tduration': duration,
 				  'maxfps': maxfps,
 				  'displayfull': destrect == (0,0,0,0)})
 
@@ -460,7 +460,7 @@ class RPParser(xmllib.XMLParser):
 				  'subregionwh': dstrect[2:],
 				  'subregionanchor': 'top-left',
 				  'start': start,
-				  'duration': duration,
+				  'tduration': duration,
 				  'maxfps': maxfps,
 				  'displayfull': dstrect == (0,0,0,0)})
 
@@ -489,7 +489,7 @@ class RPParser(xmllib.XMLParser):
 			 'subregionanchor': 'top-left',
 			 'aspect': aspect,
 			 'start': start,
-			 'duration': duration,
+			 'tduration': duration,
 			 'maxfps': maxfps,
 			 'href': url,
 			 'displayfull': dstrect == (0,0,0,0)}
@@ -664,7 +664,7 @@ def _calcdur(tags):
 		start = start + attrs.get('start', 0)
 		tag = attrs.get('tag', 'fill')
 		if tag != 'fill':
-			duration = attrs.get('duration', 0)
+			duration = attrs.get('tduration', 0)
 		else:
 			duration = 0
 		if tag == 'fadein' and attrs.get('fadeout', 0):
@@ -759,7 +759,7 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None):
 		f.write('  <%s' % tag)
 		f.write(' start="%g"' % start)
 		if tag != 'fill':
-			duration = attrs.get('duration', 0)
+			duration = attrs.get('tduration', 0)
 			f.write(' duration="%g"' % duration)
 		else:
 			duration = 0

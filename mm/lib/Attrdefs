@@ -407,3 +407,6 @@
 
 (fadeoutduration (float) 0.0 'Fadeout duration' default
 	'Duration of fadeout transition' normal light)
+
+(tduration (float) 0.0 'Transition duration' default
+	'Duration of the transition' normal light)
