@@ -78,10 +78,15 @@ class Animator:
 					d = d + self.distValues(values[i-1],values[i])
 					self._efftimes.append(f*d)
 				self._efftimes.append(dur)
+			elif mode == 'discrete':
+				# for discrete mode n is the number of intervals
+				tau = dur/float(n)
+				t = 0.0
+				for i in range(n):
+					self._efftimes.append(t)
+					t = t + tau
 			else:
 				# create uniform intervals
-				# for discrete mode n is the number of intervals
-				if mode == 'discrete': n = n + 1
 				if n <= 2:
 					self._efftimes = [0, dur]
 				else:
@@ -92,9 +97,12 @@ class Animator:
 						t = t + tau
 		else:
 			# scale times to dur
-			self._efftimes = []
-			for p in times:
-				self._efftimes.append(p*dur)	
+			if mode=='discrete':
+				self._efftimes = times
+			else:
+				self._efftimes = []
+				for p in times:
+					self._efftimes.append(p*dur)	
 
 		# repeat counter
 		self._repeatCounter = 0
@@ -208,6 +216,8 @@ class Animator:
 			if t >= tl[i] and t < tl[i+1]:
 				return i, (t - tl[i]) / (tl[i+1] - tl[i])
 		# t == dur
+		if self._mode == 'discrete':
+			return n-1, 1.0
 		return n-2, 1.0
 
 	def _discrete(self, t):
@@ -591,7 +601,6 @@ class MotionAnimator(Animator):
 # * we must either assert that onAnimateBegin are called in the proper order
 # or implement within EffectiveAnimator a proper ordering method
 # 
-# XXX: Fix keyTimes for discrete animations
 
 class EffectiveAnimator:
 	def __init__(self, context, targnode, attr, domval):
@@ -1674,23 +1683,23 @@ class AnimateElementParser:
 
 		# len of values must be equal to len of keyTimes
 		lvl = self.__countInterpolationValues()
-		#if self.__calcMode=='discrete': lvl = lvl + 1
 		if  lvl != len(tl):
 			print 'values vs times mismatch'		 
 			return ()
 			
 		tt = tuple(map(string.atof, tl))
 
-		# normalize keyTimes		
-		last = tt[len(tt)-1]
-		if last<=0.0:
-			print 'invalid keyTimes'
-			return ()
-		if last!=1.0:
-			tl = []
-			for i in range(len(tt)):
-				tl.append(tt[i]/last)
-			tt = tuple(tl)
+		if self.__calcMode !='discrete':
+			# normalize keyTimes		
+			last = tt[len(tt)-1]
+			if last<=0.0:
+				print 'invalid keyTimes'
+				return ()
+			if last!=1.0:
+				tl = []
+				for i in range(len(tt)):
+					tl.append(tt[i]/last)
+				tt = tuple(tl)
 
 		# check boundary constraints
 		first = tt[0]
@@ -1712,9 +1721,6 @@ class AnimateElementParser:
 		for i in  range(1,len(tt)):
 			if tt[i] < tt[i-1]:
 				print 'keyTimes order mismatch'
-				return ()
-			if tt[i]>1.0 or tt[i]<0:
-				print 'keyTimes range error'
 				return ()
 		return tt
 
@@ -1840,5 +1846,6 @@ class AnimateElementParser:
 
 
 
+ 
  
  
