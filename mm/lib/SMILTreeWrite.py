@@ -1315,6 +1315,13 @@ class SMILWriter(SMIL):
 		self.push()
 		self.writetag('head')
 		self.push()
+		self.writeusergroups()
+		if ctx.metadata:
+			self.writetag('metadata', [])
+			self.push()
+			self.fp.write(ctx.metadata)
+			self.pop()
+			
 		if self.__title:
 			self.writetag('meta', [('name', 'title'),
 					       ('content', self.__title)])
@@ -1356,7 +1363,6 @@ class SMILWriter(SMIL):
 			self.writetag('meta', [('name', 'project_links'), ('content', string.join(links))])
 		self.writelayout()
 		self.writetransitions()
-		self.writeusergroups()
 		self.writegrinslayout()
 		self.pop()
 		self.writetag('body')
