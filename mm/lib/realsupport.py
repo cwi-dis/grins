@@ -148,6 +148,9 @@ class RTParser(xmllib.XMLParser):
 				data.append('. . .')
 			self.__printfunc(string.join(data, '\n'))
 			self.__printdata = []
+		self.elements = None
+		self.__printdata = None
+		self.__printfunc = None
 
 	# the rest is to check that the nesting of elements is done
 	# properly (i.e. according to the SMIL DTD)
@@ -314,6 +317,10 @@ class RPParser(xmllib.XMLParser):
 			start = tag['start']
 			tag['start'] = start - prevstart
 			prevstart = start
+		self.elements = None
+		self.__images = None
+		self.__printdata = None
+		self.__printfunc = None
 
 	def goahead(self, end):
 		try:

@@ -247,6 +247,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				data.append('. . .')
 			self.__printfunc(string.join(data, '\n'))
 			self.__printdata = []
+		self.elements = {}
 
 	def GetRoot(self):
 		if not self.__root:
