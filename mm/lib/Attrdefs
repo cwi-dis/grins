@@ -47,12 +47,6 @@
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 	'Color used for text/images in window' channel)
 
-(blockview_winpos (tuple (float) (float)) (-1 -1) 'Hierarchy winpos' hidden
-	 'Window position for hierarchy view' raw)
-
-(blockview_winsize (tuple (float) (float)) (115.234375 115.234375) 'Hierarchy winsize' hidden
-	 'Window size for hierarchy view' raw)
-
 (border (int) 1 'Channel border' default
 	'Determines whether channel window has a border (1=yes)' raw)
 
