@@ -60,9 +60,9 @@ OutDir=.\.
 InputPath=.\GRiNSed Light.exe
 SOURCE="$(InputPath)"
 
-"d:\ufs\mm\cmif\bin\win32 \GRiNSed Light.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	del "d:\ufs\mm\cmif\bin\win32\GRiNSed Light.exe" 
-	copy "$(OutDir)\GRiNSed Light.exe" d:\ufs\mm\cmif\bin\win32 
+"..\..\..\bin\win32 \GRiNSed Light.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del "..\..\..\bin\win32\GRiNSed Light.exe" 
+	copy "$(OutDir)\GRiNSed Light.exe" ..\..\..\bin\win32 
 	
 # End Custom Build
 
@@ -200,6 +200,38 @@ SOURCE=.\M_AttrEditForm.c
 # Begin Source File
 
 SOURCE=.\M_Attrgrs.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_audio.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_audio__aifc.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_audio__au.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_audio__convert.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_audio__file.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_audio__format.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_audio__wav.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_audio__what.c
 # End Source File
 # Begin Source File
 
@@ -380,6 +412,10 @@ SOURCE=.\M_Hlinks.c
 # Begin Source File
 
 SOURCE=.\M_HtmlChannel.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_HTMLWrite.c
 # End Source File
 # Begin Source File
 
@@ -751,6 +787,10 @@ SOURCE=.\M_RealChannel.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_realconvert.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_RealPixChannel.c
 # End Source File
 # Begin Source File
@@ -856,6 +896,10 @@ SOURCE=.\M_string.c
 # Begin Source File
 
 SOURCE=.\M_StringIO.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_stringold.c
 # End Source File
 # Begin Source File
 

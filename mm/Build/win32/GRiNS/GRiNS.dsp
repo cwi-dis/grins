@@ -59,9 +59,9 @@ OutDir=.\.
 InputPath=.\GRiNS.exe
 SOURCE="$(InputPath)"
 
-"d:\ufs\mm\cmif\bin\win32 \GRiNS.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	del d:\ufs\mm\cmif\bin\win32\GRiNS.exe 
-	copy $(OutDir)\GRiNS.exe d:\ufs\mm\cmif\bin\win32 
+"..\..\..\bin\win32\GRiNS.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\..\bin\win32\GRiNS.exe 
+	copy $(OutDir)\GRiNS.exe ..\..\..\bin\win32 
 	
 # End Custom Build
 
@@ -795,6 +795,10 @@ SOURCE=.\M_string.c
 # Begin Source File
 
 SOURCE=.\M_StringIO.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_stringold.c
 # End Source File
 # Begin Source File
 
