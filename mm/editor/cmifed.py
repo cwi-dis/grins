@@ -102,7 +102,7 @@ class Main(MainDialog):
 			windowinterface.FileDialog('Select a template', templatedir, '*', '',
 				self._new_ok_callback, None, 1)
 		else:
-			print "Warning: no Templates directory, creating empty document"
+			windowinterface.showmessage("No Templates found, creating empty document")
 			top = TopLevel.TopLevel(self, self.getnewdocumentname('dummy.cmif'), 1)
 			self.new_top(top)
 	
