@@ -216,6 +216,7 @@ class _Toplevel:
 		self._main.RealizeWidget()
 		self._timer_callback_func = None
 		self._fdmap = {}
+		self._closecallbacks = []
 
 	def _setupcolormap(self, dpy):
 		visattr = {'class': X.TrueColor}
@@ -273,6 +274,9 @@ class _Toplevel:
 		if debug: print 'Toplevel.close()'
 		import os
 		global _image_cache
+		for func, args in self._closecallbacks:
+			apply(func, args)
+		self._closecallbacks = []
 		for win in self._subwindows[:]:
 			win.close()
 		for key in _image_cache.keys():
@@ -281,6 +285,9 @@ class _Toplevel:
 			except os.error:
 				pass
 		_image_cache = {}
+
+	def addclosecallback(self, func, args):
+		self._closecallbacks.append(func, args)
 
 	def newwindow(self, x, y, w, h, title, **options):
 		if debug: print 'Toplevel.newwindow'+`x, y, w, h, title`
@@ -2196,6 +2203,8 @@ newwindow = toplevel.newwindow
 newcmwindow = toplevel.newcmwindow
 
 close = toplevel.close
+
+addclosecallback = toplevel.addclosecallback
 
 setcursor = toplevel.setcursor
 

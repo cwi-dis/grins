@@ -169,11 +169,15 @@ class _Toplevel:
 		self._bgcolor = _DEF_BGCOLOR
 		self._cursor = ''
 		self._win_lock = _DummyLock()
+		self._closecallbacks = []
 		if debug: print 'TopLevel.__init__('+`self`+')'
 
 	def close(self):
 		if debug: print 'Toplevel.close()'
 		global _image_cache
+		for func, args in self._closecallbacks:
+			apply(func, args)
+		self._closecallbacks = []
 		for win in self._subwindows[:]:
 			win.close()
 		for key in _image_cache.keys():
@@ -182,6 +186,9 @@ class _Toplevel:
 			except os.error:
 				pass
 		_image_cache = {}
+
+	def addclosecallback(self, func, args):
+		self._closecallbacks.append(func, args)
 
 	def setcursor(self, cursor):
 		if debug: print 'Toplevel.setcursor('+`cursor`+')'
@@ -2396,6 +2403,8 @@ newwindow = toplevel.newwindow
 newcmwindow = newwindow
 
 close = toplevel.close
+
+addclosecallback = toplevel.addclosecallback
 
 setcursor = toplevel.setcursor
 
