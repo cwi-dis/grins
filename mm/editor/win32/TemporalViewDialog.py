@@ -54,10 +54,10 @@ class TemporalViewDialog(ViewDialog):
 ##		self.window.register(WMEVENTS.WindowExit, self.ev_exit, None)
 		
 		self.window.register(WMEVENTS.PasteFile, self.ev_pastefile, None)
-#		self.window.register(WMEVENTS.DragFile, self.ev_dragfile, None)
-#		self.window.register(WMEVENTS.DropFile, self.ev_dropfile, None)
-#		self.window.register(WMEVENTS.DragNode, self.ev_dragnode, None)
-#		self.window.register(WMEVENTS.DropNode, self.ev_dropnode, None)
+		self.window.register(WMEVENTS.DragFile, self.ev_dragfile, None)
+		self.window.register(WMEVENTS.DropFile, self.ev_dropfile, None)
+		self.window.register(WMEVENTS.DragNode, self.ev_dragnode, None)
+		self.window.register(WMEVENTS.DropNode, self.ev_dropnode, None)
 
 	def setcommands(self, commandlist):
 		self.window.set_commandlist(commandlist)
