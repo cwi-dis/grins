@@ -755,7 +755,7 @@ class _Window:
 			try:
 				image = reader.read()
 			except:
-				raise error, 'unspecified error reading image'
+				raise error, sys.exc_value
 			if scale != 1:
 				import imageop
 				w = int(xsize * scale + .5)
