@@ -154,6 +154,37 @@ The methods of the window_object are:
 		as the window system and the window manager being
 		used.
 
+	sizebox(box, x_constraint, y_constraint) -> new_box
+		Draw a box and resize it interactively.  The box is
+		initially drawn with the coordinates given in box (a
+		tuple consisting of (x,y,width,height)).  The point at
+		the (x,y) coordinates is fixed, the opposite corner
+		can be dragged around with the mouse.  The width and
+		height may be negative or zero.  The function returns
+		after Mouse0Release event.  The value returned is a
+		tuple consisting of the coordinates of the resized
+		box.
+		When x_constraint is not zero, the X coordinates are
+		constrained, meaning that only the height of the box
+		can be changed.  When y_constraint is not zero, the Y
+		coordinates are constrained and only the width of the
+		box can be changed.  At least one of x_constraint and
+		y_constraint must be zero.
+
+	movebox(box, x_constraint, y_constraint) -> new_box
+		Draw a box and move it interactively.  The box is
+		initially drawn with the coordinates given in box (a
+		tuple consisting of (x,y,width,height)).  The function
+		returns after a Mouse0Release event.  The value
+		returned is a tuple consisting of the coordinates of
+		the moved box.
+		When x_constraint is not zero, the X coordinates are
+		constrained, meaning that the box can only be moved
+		vertically.  When y_constraint is not zero, the Y
+		coordinates are constrained and the box can only be
+		moved horizontally.  At least one of x_constraint and
+		y_constraint must be zero.
+		
 The display object has the following methods:
 	close()
 		Close the display object and free its resources.  This
