@@ -206,8 +206,8 @@ class BlockView(ViewDialog, BasicDialog):
 	node.bv_obj = obj
 
 	kids = node.GetChildren()
+	node.bv_xywh = (x, y, w, h)
 	if type in interiortypes:
-	    node.bv_xywh = (x, y, w, h)
 	    # Create the open/close button:
 	    bx = x + LMARG
 	    by = y + h - TMARG - BH
