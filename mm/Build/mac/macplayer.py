@@ -113,6 +113,7 @@ else:
 # macfreeze: exclude cmifex
 # macfreeze: exclude readline
 # macfreeze: exclude CORBA.services
+# macfreeze: exclude win32ig
 # macfreeze: optional rma
 #
 # And here's the code for non-standalone version of the editor:
