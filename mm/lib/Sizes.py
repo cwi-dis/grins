@@ -29,11 +29,14 @@ def GetSize(url, maintype = None, subtype = None):
 		if u is not None:
 			u.close()
 		del u
-		try:
-			file = MMurl.urlretrieve(url)[0]
-		except IOError:
-			return 0, 0
-		width, height = GetImageSize(file)
+		if subtype == 'svg-xml':
+			width, height = GetSvgSize(url)
+		else:
+			try:
+				file = MMurl.urlretrieve(url)[0]
+			except IOError:
+				return 0, 0
+			width, height = GetImageSize(file)
 	elif maintype == 'video':
 		if u is not None:
 			u.close()
@@ -57,6 +60,13 @@ def GetImageSize(file):
 	except:
 		return 0, 0
 
+def GetSvgSize(url):
+	import svgparser
+	try:
+		return svgparser.GetSvgSize(url)
+	except:
+		return 0, 0
+		
 def GetVideoSize(file):
 	import windowinterface
 	try:
