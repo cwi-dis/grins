@@ -2333,7 +2333,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				node = ctx.newnode('animpar')
 				container._addchild(node)
 
-				if not features.SPEPARATE_ANIMATE_NODE in features.feature_set:
+				if not features.SEPARATE_ANIMATE_NODE in features.feature_set:
 					container.attrdict['animated'] = 1
 				
 				attrdict = node.attrdict

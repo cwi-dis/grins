@@ -42,7 +42,7 @@ __version__ = "$Id$";
 	ADVANCED_PROPERTIES,		# Enable advanced property editing
 
 	ANIMATE,			# enable insertion of animate object
-	SPEPARATE_ANIMATE_NODE, # show separate animate nodes
+	SEPARATE_ANIMATE_NODE,		# show separate animate nodes
 	EDIT_REALPIX,			# enable editing of RealPix media (XXX probably non-functional)
 	CONVERT2REALPIX,		# conversion to RealPix
 

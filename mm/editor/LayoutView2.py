@@ -52,7 +52,7 @@ class TreeHelper:
 		self.__nodeList = {}
 		self.__rootList = {}
 		from MMTypes import mediatypes
-		if features.SPEPARATE_ANIMATE_NODE in features.feature_set:
+		if features.SEPARATE_ANIMATE_NODE in features.feature_set:
 			self.__mmnodetypes = mediatypes+['animpar', 'animate', 'anchor']
 		else:
 			self.__mmnodetypes = mediatypes+['anchor']
@@ -94,7 +94,7 @@ class TreeHelper:
 			if not parentRef is None:
 				self.__checkNode(parentRef, nodeRef, position, TYPE_VIEWPORT, TYPE_REGION, TYPE_MEDIA)
 		elif type == TYPE_ANIMATE:
-			if features.SPEPARATE_ANIMATE_NODE not in features.feature_set:
+			if features.SEPARATE_ANIMATE_NODE not in features.feature_set:
 				return
 			parentRef = self.getParent(nodeRef, TYPE_ANIMATE)
 			if parentRef.getClassName() == 'MMNode' and parentRef.isAnimated():
