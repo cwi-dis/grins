@@ -18,6 +18,7 @@ class CmifChannel(Channel):
 			cmds = node.GetValues()
 		else:
 			filename = self.getfileurl(node)
+			from urllib import urlopen
 			try:
 				fp = urlopen(filename)
 			except IOError, msg:
