@@ -1228,10 +1228,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if node.attrdict.has_key('bgcolor'):
 				del node.attrdict['bgcolor']
 					
-		# experimental SMIL Boston layout code
-		node._internalchtype = chtype
-		# end experimental
-
 	def __newTopRegion(self):
 		attrs = {}
 
