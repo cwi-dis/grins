@@ -601,10 +601,6 @@ SOURCE=.\M_MMParser.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMRead.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_MMStates.c
 # End Source File
 # Begin Source File
