@@ -1,6 +1,5 @@
 __version__ = "$Id$"
 
-from fmtfloat import fmtfloat
 
 #
 #	Export interface 
@@ -110,6 +109,12 @@ class XHTML_SMIL:
 #	SMILXhtmlSmilWriter
 # 
 from SMILTreeWrite import *
+
+# imported by SMILTreeWrite:
+# import string 
+# from fmtfloat import fmtfloat (imported by SMILTreeWrite)
+# from nameencode import nameencode
+
 import math
 import Animators
 
@@ -504,16 +509,38 @@ class SMILXhtmlSmilWriter(SMIL):
 				attrlist.append(('timeContainer', 'par'))
 
 		# write media node
-		if mtype=='brush':
-			attrlist.append( ('class','time') )
+		if mtype == 'brush':
+			sensitive = self.issensitive(node)
+			if sensitive:
+				self.writetag('a', [('href', '#')])
+				self.push()
+			else:
+				attrlist.append( ('class','time') )
 			self.writetag('div', attrlist)
 			self.closehtmltag()
-		elif mtype=='img' and self.issensitive(node):
+			if sensitive:
+				self.pop()
+
+		elif mtype == 'img' and self.issensitive(node):
 			# interactivity enabler hack
 			self.writetag('a', [('href', '#')])
 			self.push()
 			self.writetag(mtype, attrlist)
 			self.pop()
+
+		elif mtype == 'text' and node.GetType() == 'imm':
+			self.removeAttr(attrlist, 'src')
+			self.writetag('div', attrlist)
+			self.push()
+			self.fp.write('<p>')
+			text = string.join(node.GetValues(), '\n')
+			if text:
+				text = nameencode(text)
+				self.fp.write(text[1:-1])
+			self.fp.write('</p>')
+			self.pop()
+
+
 		else:
 			self.writetag('t:'+mtype, attrlist)
 		
@@ -590,7 +617,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		# Duration hint for IE scheduler when dur attr has 
 		# not been given and not both begin and end.
 		# Possibly temporary until we find a way to make it needless			
-		if pardur is None and timing_spec < 2:
+		if pardur is None and timing_spec < 2 and not (timing_spec == 0 and mtype == 'img'):
 			val = self.getDurHint(node)
 			if val > 0:
 				pardur = fmtfloat(val, prec = 2)
@@ -858,6 +885,8 @@ class SMILXhtmlSmilWriter(SMIL):
 					elif name == 'values':value = values
 					elif name == 'path': value = path
 				if value and value != attributes[name]:
+					if name in ('begin', 'end'):
+						value = event2xhtml(value)
 					attrlist.append((name, value))
 
 		if not self.ids_written.has_key(targetElement):
