@@ -319,7 +319,7 @@ def fix(x, n):
 	if n < 0:
 		f = pow(10.0, n)
 	else:
-		f = float(pow(10, n)) # Make an exact 
+		f = float(pow(10, n)) # Make an exact
 	x = x * f
 	x = floor(x + 0.5)
 	x = x / f
