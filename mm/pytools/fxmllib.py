@@ -28,7 +28,7 @@ _opS = '[ \t\r\n]*'			# optional white space
 _Name = '[a-zA-Z_:][-a-zA-Z0-9._:]*'    # valid XML name
 _QStr = "(?:'[^']*'|\"[^\"]*\")"        # quoted XML string
 
-comment = re.compile('<!--(?P<comment>(?:[^-]|-[^-])*-?)-->')
+comment = re.compile('<!--(?P<comment>(?:[^-]|-[^-])*)-->')
 space = re.compile(_S)
 interesting = re.compile('[&<]')
 amp = re.compile('&')
@@ -197,9 +197,7 @@ class XMLParser:
             return
         nstag, attrs, namespaces = val
 	self.finish_starttag(nstag, attrs)
-	if slash:
-	    self.finish_endtag(nstag)
-	else:
+	if not slash:
 	    i = self.__parse_content(data, i, tagname, namespaces)
 	    if i is None:
 		return
@@ -211,8 +209,8 @@ class XMLParser:
 		self.__error('end tag missing', data, i, fatal = 0)
             elif res.group('tagname') != tagname:
 		self.__error("end tag doesn't match start tag", data, res.start('tagname'), fatal = 0)
-	    self.finish_endtag(nstag)
 	    i = res.end(0)
+        self.finish_endtag(nstag)
 	i = self.__parse_misc(data, i)
 	if i != len(data):
 	    self.__error('garbage at end of document', data, i, fatal = 0)
@@ -238,12 +236,32 @@ class XMLParser:
 		i = res.end(0)
 	return i
 
+    def __update_state(self, dfa, states, tagname):
+        # update the list of states in the dfa.  If tagname is None,
+        # we're looking for the final state, so return a list of all
+        # states reqchable using epsilon transitions
+        nstates = []
+        seenstates = {}
+        while states:
+            s = states[0]
+            seenstates[s] = 1
+            del states[0]
+            if tagname is not None and dfa[s].has_key(tagname):
+                nstates = dfa[s][tagname][:]
+            else:
+                for s in dfa[s].get('', []):
+                    if not seenstates.has_key(s):
+                        states.append(s)
+        if tagname is None:
+            nstates = seenstates.keys()
+        states[:] = nstates # change in-line
+
     def __parse_content(self, data, i, ptagname, namespaces, states = None):
         # parse the content of an element (i.e. the string between
         # start tag and end tag)
 	datalen = len(data)
         if self.elems.has_key(ptagname):
-            content, attributes, start, end = self.elems[ptagname] # content model
+            content, attributes, start, end = self.elems[ptagname][:4] # content model
             if states == None:
                 states = [start]
         else:
@@ -285,19 +303,7 @@ class XMLParser:
                     if tagname not in content:
                         self.__error("illegal content in element `%s'" % ptagname, data, res.start(0), fatal = 0)
                 elif content is not None:
-                    nstates = []
-                    seenstates = {}
-                    while states:
-                        s = states[0]
-                        seenstates[s] = 1
-                        del states[0]
-                        if content[s].has_key(tagname):
-                            nstates = content[s][tagname][:]
-                        else:
-                            for s in content[s].get('', []):
-                                if not seenstates.has_key(s):
-                                    states.append(s)
-                    states[:] = nstates # change in-line
+                    self.__update_state(content, states, tagname)
                     if not states:
                         self.__error("illegal content for element `%s'" % ptagname, data, i)
 		val = self.__parse_attrs(tagname, data, res.start('tagname'), res.span('attrs'), namespaces)
@@ -306,9 +312,7 @@ class XMLParser:
 		i = res.end(0)
                 nstag, attrs, subnamespaces = val
 		self.finish_starttag(nstag, attrs)
-		if slash:
-		    self.finish_endtag(nstag)
-		else:
+		if not slash:
 		    i = self.__parse_content(data, i, tagname, subnamespaces)
 		    if i is None:
 			return
@@ -320,11 +324,15 @@ class XMLParser:
 			self.__error('end tag missing', data, i, fatal = 0)
 		    elif res.group('tagname') != tagname:
 			self.__error("end tag doesn't match start tag", data, res.start('tagname'), fatal = 0)
-		    self.finish_endtag(nstag)
 		    i = res.end(0)
+                self.finish_endtag(nstag)
                 continue
 	    res = endtag.match(data, i)
 	    if res is not None:
+                if type(content) is type([]) and content and type(content[0]) is type({}):
+                    self.__update_state(content, states, None)
+                    if end not in states:
+                        self.__error("content of element `%s' doesn't match content model" % ptagname, data, i, fatal = 0)
 		return res
 	    res = comment.match(data, i)
 	    if res is not None:
@@ -657,8 +665,14 @@ class XMLParser:
                     self.__error('non-unique element name declaration', data, i, fatal = 0)
                 else:
                     if content[0] == '(':
-                        i, content, start, end = self.__dfa(data, res.start('content'))
-                    self.elems[name] = (content, {}, start, end)
+                        i = res.start('content')
+                        j, content, start, end = self.__dfa(data, i)
+                        contentstr = data[i:j]
+                        i = j
+                    else:
+                        contentstr = content
+                        start = end = 0
+                    self.elems[name] = (content, {}, start, end, contentstr)
                 res = space.match(data, i)
                 if res is not None:
                     i = res.end(0)
@@ -796,9 +810,9 @@ class XMLParser:
             return res.end(0), mixed, 0, 0
         dfa = []
         i, start, end = self.__dfa1(data, i, dfa)
-        import pprint
-        pprint.pprint(dfa)
-        print start, end
+##        import pprint
+##        pprint.pprint(dfa)
+##        print start, end
         return i, dfa, start, end
 
     def __dfa1(self, data, i, dfa):

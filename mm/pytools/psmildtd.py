@@ -76,7 +76,7 @@ def main(dtd = "http://www.w3.org/AudioVideo/Group/DTD/SMIL20.dtd"):
 	print 'Last modified: %s' % time.strftime('%a, %e %b %Y, %T %Z', time.localtime(time.time()))
 	print '</caption>'
 	for elem in elems:
-		content, attrs = x.elems[elem]
+		dfa, attrs, start, end, content = x.elems[elem]
 		if type(elem) is type(unicode('a')):
 			elem = elem.encode('latin-1')
 		if type(content) is type(unicode('a')):
