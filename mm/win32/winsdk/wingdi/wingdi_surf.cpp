@@ -207,11 +207,11 @@ PyObject* Wingdi_BitBltDIBSurface(PyObject *self, PyObject *args)
 	//StretchBlt(hdst, ld, td, rd-ld, bd-td, hsrc, ls, ts, rs-ls, bs-ts, SRCCOPY);
 	BitBlt(hdst, ld, td, rd-ld, bd-td, hsrc, ls, ts, SRCCOPY);
 
-	SelectObject(hdst, hsrcold);
-	DeleteDC(hdst);
-
-	SelectObject(hsrc, hdstold);
+	SelectObject(hsrc, hsrcold);
 	DeleteDC(hsrc);
+
+	SelectObject(hdst, hdstold);
+	DeleteDC(hdst);
 
 	DeleteDC(hdc);
 	return none();
@@ -231,6 +231,49 @@ PyObject* Wingdi_BltBlendDIBSurface(PyObject *self, PyObject *args)
 
 	return none();
 	}
+
+PyObject* Wingdi_StretchBltTransparent(PyObject *self, PyObject *args)
+	{
+	PyObject *dcobj;
+	int nXDest, nYDest, nWidthDest, nHeightDest;
+
+	PyDIBSurf *surfobj;
+	int nXSrc, nYSrc, nWidthSrc, nHeightSrc;
+
+	if(!PyArg_ParseTuple(args, "O(iiii)O!(iiii)", &dcobj, 
+		&nXDest, &nYDest, &nWidthDest,&nHeightDest,
+		&PyDIBSurf::type, &surfobj,
+		&nXSrc,&nYSrc,&nWidthSrc,&nHeightSrc))
+		return NULL;
+
+	// Process:
+	// make a copy of dest (surf1)
+	// blit bmp to a temp surf (surf2)
+	// transfer not transparent bits of surf2 -> surf1
+	// blit surf1 to dc
+	
+	// but for environment testing just do a copy for now
+
+	DWORD dwRop = SRCCOPY;
+	HDC hDestDC = (HDC)GetGdiObjHandle(dcobj);
+
+	HDC hSrcDC = CreateCompatibleDC(hDestDC);
+	HBITMAP hsrcold = (HBITMAP)SelectObject(hSrcDC, surfobj->m_hBmp);
+
+	BOOL res = StretchBlt(hDestDC, nXDest, nYDest, nWidthDest, nHeightDest, 
+		hSrcDC, nXSrc, nYSrc, nWidthSrc, nHeightSrc, dwRop);
+
+	SelectObject(hSrcDC, hsrcold);
+	DeleteDC(hSrcDC);
+
+	if(!res){
+		seterror("StretchBltTransparent:StretchBlt()", GetLastError());
+		return NULL;
+		}
+
+	return none();
+	}
+
 
 ////////////////////////////
 // module
@@ -332,6 +375,9 @@ PyMethodDef PyDIBSurf::methods[] = {
 	{"GetDepth", (PyCFunction)PyDIBSurf_GetDepth, METH_VARARGS, ""},
 
 	{"Fill", (PyCFunction)PyDIBSurf_Fill, METH_VARARGS, ""},
+
+	{"IsTransparent", (PyCFunction)PyDIBSurf_IsTransparent, METH_VARARGS, ""},
+	{"GetTransparentColor", (PyCFunction)PyDIBSurf_GetTransparentColor, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
 
