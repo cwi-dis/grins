@@ -37,12 +37,7 @@ class SMIL:
 	# some abbreviations
 	__layouts = GRiNSns + ' ' + 'layouts'
 	__layout = GRiNSns + ' ' + 'layout'
-	__choice = GRiNSns + ' ' 'choice'
-	__bag = GRiNSns + ' ' 'bag'
 	__null = GRiNSns + ' ' 'null'
-	__cmif = GRiNSns + ' ' 'cmif'
-	__shell = GRiNSns + ' ' 'shell'
-	__socket = GRiNSns + ' ' 'socket'
 
 	# abbreviations for collections of attributes
 	__Core = {'alt':None,
@@ -232,15 +227,6 @@ class SMIL:
 				  'skip-content':'true',
 				  GRiNSns+' ' 'collapsed':None,
 				  },
-		__choice: {GRiNSns+' ' 'abstract':'',
-			   GRiNSns+' ' 'author':'',
-			   GRiNSns+' ' 'choice-index':None,
-			   GRiNSns+' ' 'comment':None,
-			   GRiNSns+' ' 'copyright':'',
-			   GRiNSns+' ' 'customTest':None,
-			   __layout:None,
-			   GRiNSns+' ' 'collapsed':None,
-			   },
 		'ref': {'abstract':'',
 			'author':'',
 			'clip-begin':None,
@@ -422,13 +408,12 @@ class SMIL:
 		}
 
 	attributes['viewport'] = attributes['topLayout'].copy()
-	attributes[__bag] = attributes[__choice].copy()
 	attributes['anchor'] = attributes['area'].copy()
 
 	__media_object = ['audio', 'video', 'text', 'img', 'animation',
 			  'textstream', 'ref', 'brush',
 			  'prefetch',
-			  __null, __cmif, __shell, __socket]
+			  __null]
 
 	__at = None
 	for __el in __media_object:
@@ -505,7 +490,7 @@ class SMIL:
 	__LinkAnchor = ['a', 'area', 'anchor']
 	__Animation = ['animate', 'set', 'animateMotion', 'animateColor']
 
-	__schedule = ['par', 'seq', 'excl', __choice, __bag] + __media_object
+	__schedule = ['par', 'seq', 'excl'] + __media_object
 	__container_content = __schedule + ['switch', 'a'] + __animate_elements
 	__media_content = ['anchor', 'area', 'param', 'switch'] + __animate_elements
 
@@ -536,7 +521,7 @@ class SMIL:
 	# add Timing to certain other elements
 	for __el in ('text', 'img', 'audio', 'animation', 'video', 'ref',
 		     'textstream', 'brush', 'body', 'par', 'seq',
-		     'excl', 'prefetch', __choice):
+		     'excl', 'prefetch'):
 		if __el[:len(GRiNSns)+1] == GRiNSns+' ':
 			for __key, __val in __Timing.items():
 				if ' ' in __key:
@@ -578,8 +563,6 @@ class SMIL:
 		'seq': __container_content,
 		'excl': __container_content + ['priorityClass'],
 		'priorityClass': __container_content,
-		__choice: __container_content,
-		__bag: __container_content,
 		'switch': ['layout', 'region', 'topLayout', 'viewport'] + __container_content,
 		'ref': __media_content,
 		'audio': __media_content,
@@ -590,9 +573,6 @@ class SMIL:
 		'textstream': __media_content,
 		'brush': __media_content,
 		__null: __media_content,
-		__cmif: __media_content,
-		__shell: __media_content,
-		__socket: __media_content,
 		'a': __schedule + ['switch'],
 
 ##		'switch': __Schedule + __MediaContent + __ContentControl + __LinkAnchor + __Animation + ['priorityClass','layout'],
@@ -622,7 +602,7 @@ class SMIL:
 	entities['viewport'] = entities['topLayout'][:]
 
 	# cleanup
-	del __choice, __bag, __cmif, __shell, __socket, __null
+	del __null
 	del __media_object, __schedule, __container_content,
 	del __media_content
 	del __layouts, __layout

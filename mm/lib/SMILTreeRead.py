@@ -113,8 +113,8 @@ _fp = r'(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)'
 controlpt = re.compile('^'+_opS+_fp+_comma_sp+_fp+_comma_sp+_fp+_comma_sp+_fp+_opS+'$')
 fpre = re.compile('^' + _opS + _fp + _opS + '$')
 smil_node_attrs = [
-	'region', 'clip-begin', 'clip-end', 'endsync', 'choice-index',
-	'bag-index', 'type', 'clipBegin', 'clipEnd',
+	'region', 'clip-begin', 'clip-end', 'endsync', 
+	'type', 'clipBegin', 'clipEnd',
 	]
 
 class SMILParser(SMIL, xmllib.XMLParser):
@@ -146,8 +146,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'switch': (self.start_switch, self.end_switch),
 			'excl': (self.start_excl, self.end_excl),
 			'priorityClass': (self.start_prio, self.end_prio),
-			GRiNSns+' '+'choice': (self.start_choice, self.end_choice),
-			GRiNSns+' '+'bag': (self.start_choice, self.end_choice),
 			'ref': (self.start_ref, self.end_ref),
 			'text': (self.start_text, self.end_text),
 			'audio': (self.start_audio, self.end_audio),
@@ -3131,34 +3129,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_prio(self):
 		self.__container = self.__container.GetParent()
-
-	def start_choice(self, attributes):
-		self.__fix_attributes(attributes)
-		id = self.__checkid(attributes)
-		self.NewContainer('bag', attributes)
-		self.__container.__choice_index = attributes.get('choice-index')
-		if self.__container.__choice_index is None:
-			self.__container.__choice_index = attributes.get('bag-index')
-
-	def end_choice(self):
-		node = self.__container
-		self.EndContainer('bag')
-		choice_index = node.__choice_index
-		del node.__choice_index
-		if choice_index is None:
-			return
-		res = idref.match(choice_index)
-		if res is None:
-			self.syntax_error('bad choice-index attribute')
-			return
-		id = res.group('id')
-		if self.__nodemap.has_key(id):
-			child = self.__nodemap[id]
-			if child in node.GetChildren():
-				node.attrdict['bag_index'] = child.GetRawAttr('name')
-				return
-		# id not found among the children
-		self.warning('unknown idref in choice-index attribute', self.lineno)
 
 	def start_switch(self, attributes):
 		self.__fix_attributes(attributes)

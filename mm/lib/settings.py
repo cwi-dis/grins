@@ -68,8 +68,6 @@ default_settings = {
 	'structure_darkrp': (196,159,127),
 	'structure_slidecolor': (222,255,255),
 	'structure_darkslide': (164,181,181),
-	'structure_bagcolor': (148,117,166),
-	'structure_darkbag': (131,119,137),
 	'structure_altcolor': (184,95,95),
 	'structure_darkalt': (157,108,108),
 	'structure_parcolor': (79,156,130),
