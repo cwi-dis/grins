@@ -38,10 +38,7 @@ class TreeCtrl(window.Wnd):
 		msg = Win32Msg(params)
 		point = msg.pos()
 		flags = msg._wParam
-
-		# what base tree considers as selected
-		try: selected = self.GetSelectedItem()
-		except: selected = None
+		self.SetFocus()
 
 		hitflags, hititem = self.HitTest(point)
 		if not (hitflags & commctrl.TVHT_ONITEM):
@@ -49,34 +46,50 @@ class TreeCtrl(window.Wnd):
 			return 1
 
 		if not (flags & win32con.MK_CONTROL):
-			# deselect all
+			# remove multi-select mode
 			for item in self._selections:
 				self.SetItemState(item, 0, commctrl.TVIS_SELECTED)
 			self._selections = []
+			self.SetItemState(hititem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
+			self.appendSelection(hititem)
+			
 			# do a normal selection/deselection
 			if debug: self.scheduleDump()
 			return 1
-
-		# enter multi-select mode
-		if self._selections:
-			self.SelectItem(0)
-			
-		if selected and selected not in self._selections:
-			self._selections.append(selected)
 		
-		state = self.GetItemState(hititem, commctrl.TVIS_SELECTED)
-		if not (state & commctrl.TVIS_SELECTED):
-			# not selected, so do select it
-			self.SetItemState(hititem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
-			if hititem not in self._selections:
-				self._selections.append(hititem)
-		else:
-			# its selected, so deselect it
+		# enter multi-select mode
+
+		# selected item on entry
+		try: 
+			selitem = self.GetSelectedItem()
+			if selitem:
+				selstate = self.GetItemState(selitem, commctrl.TVIS_SELECTED)
+		except: 
+			selitem = None
+
+		# select/deselect normally hit item the same way base would do
+		hitstate = self.GetItemState(hititem, commctrl.TVIS_SELECTED)
+		if hitstate & commctrl.TVIS_SELECTED:
 			self.SetItemState(hititem, 0, commctrl.TVIS_SELECTED)
-			if hititem in self._selections:
-				self._selections.remove(hititem)
+			self.removeSelection(hititem)
+		else:
+			self.SelectItem(hititem)
+			self.SetItemState(hititem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
+			self.appendSelection(hititem)
+		
+		# restore selection of previously selected item once not the hit item
+		if selitem and selitem!=hititem and (selstate & commctrl.TVIS_SELECTED):
+			self.SetItemState(selitem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)	
+			self.appendSelection(selitem)
+
+		# keep always at least one selection
+		if not self._selections:
+			self.SetItemState(hititem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
+			self.appendSelection(hititem)
+				
 		if debug: self.scheduleDump()
 		return 0
+
 
 	def OnLButtonUp(self, params):
 		return 1
@@ -94,7 +107,15 @@ class TreeCtrl(window.Wnd):
 
 	def insertLabel(self, text, parent, after):
 		return self.InsertItem(commctrl.TVIF_TEXT, text, 0, 0, 0, 0, None, parent, after)
-		
+	
+	def appendSelection(self, item):
+		if item not in self._selections:
+			self._selections.append(item)
+
+	def removeSelection(self, item):
+		if item in self._selections:
+			self._selections.remove(item)
+
 	def GetSelectedItems(self):
 		if len(self._selections)>0:
 			return self._selections
@@ -102,3 +123,4 @@ class TreeCtrl(window.Wnd):
 		except: return []
 		return [selected,]
 
+ 
