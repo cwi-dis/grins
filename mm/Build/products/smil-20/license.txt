@@ -13,9 +13,9 @@ Definitions
 (a) "Software" means the programs supplied by Oratrix Development 
     herewith, and any and all updates thereto.
 (b) "Authoring Product" means Software, such as Oratrix Development's 
-    GRiNS Editor for SMIL 1.0 version 1.5.1 which generate "End-User Products".
+    GRiNS Editor for SMIL which generate "End-User Products".
 (c) "Player Product" means Software, such as Oratrix Development's 
-    GRiNS Player for SMIL 1.0 version 1.5.1.
+    GRiNS Player for SMIL.
 (d) "License-key" means a number supplied by Oratrix Development to 
     unlock an Authoring Product.
 (e) "Evaluation Period" means the period of validity of a License-key 
