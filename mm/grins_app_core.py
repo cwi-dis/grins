@@ -105,7 +105,7 @@ def BootApplication(appClass):
 
 	# If we are not hosted by Pythonwin.exe, we need to simulate an MFC startup.
 	if win32ui.GetApp().IsInproc():
-		print "Not hosted by pythonwin - simulating MFC startup..."
+		#print "Not hosted by pythonwin - simulating MFC startup..."
 		#win32ui.MessageBox('Not hosted by pythonwin - simulating MFC startup...')
 		rc = gapp.InitInstance()
 		#print "InitInstance returned", rc
