@@ -90,9 +90,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name puthon15
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name python15
     End Project Dependency
 }}}
@@ -144,15 +141,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name puthon15
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name PyWinTypes
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name win32api
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name win32ui
     End Project Dependency
 }}}
@@ -167,6 +155,12 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name python15
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name PyWinTypes
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -179,9 +173,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name puthon15
-    End Project Dependency
     Begin Project Dependency
     Project_Dep_Name PyWinTypes
     End Project Dependency
@@ -201,9 +192,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name puthon15
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name PyWinTypes
     End Project Dependency
     Begin Project Dependency
@@ -221,9 +209,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name puthon15
-    End Project Dependency
     Begin Project Dependency
     Project_Dep_Name PyWinTypes
     End Project Dependency
