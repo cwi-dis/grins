@@ -64,6 +64,19 @@ class Window:
 		except KeyError:
 			pass
 
+	# Call registered callback
+	def onEvent(self,event,params=None):
+		try:
+			func, arg = self._callbacks[event]			
+		except KeyError:
+			pass
+		else:
+			try:
+				func(arg, self, event, params)
+			except Continue:
+				return 0
+		return 1
+
 	# bring the subwindow infront of windows with the same z	
 	def pop(self, poptop=1):
 		# if poptop:
@@ -81,6 +94,7 @@ class Window:
 
 	# send the subwindow back of the windows with the same z	
 	def push(self):
+		print 'push'
 		parent = self._parent
 		# put self behind all siblings with equal or higher z
 		if self is parent._subwindows[-1]:
@@ -712,6 +726,56 @@ class SubWindow(Window):
 		rgn.DeleteObject()
 		del rgn
 
+	def IsClientPoint(self, point):
+		x, y, w, h = self.getwindowpos()
+		l, t, r, b = x, y, x+w, y+h
+		xp, yp = point
+		if xp>=l and xp<r and yp>=t and yp<b:
+			return 1
+		return 0
+
+	def onMouseEvent(self,point, ev):
+		for wnd in self._subwindows:
+			if wnd.IsClientPoint(point):
+				wnd.onMouseEvent(point, ev)
+				return
+		x, y, w, h = self.getwindowpos()
+		xp, yp = point
+		point= xp-x, yp-y
+		disp = self._active_displist
+		#point = self._DPtoLP(point)
+		x,y = self._pxl2rel(point,self._canvas)
+		buttons = []
+		if disp is not None:
+			for button in disp._buttons:
+				if button._inside(x,y):
+					buttons.append(button)
+		return self.onEvent(ev,(x, y, buttons))
+
+	def setcursor_from_point(self, point):
+		for w in self._subwindows:
+			if w.IsClientPoint(point):
+				w.setcursor_from_point(point)
+				return
+
+		if self._active_displist:
+			x, y, w, h = self.getwindowpos()
+			xp, yp = point
+			point= xp-x, yp-y
+			# point = self._DPtoLP(point)
+			x,y = self._pxl2rel(point,self._canvas)
+			for button in self._active_displist._buttons:
+				if button._inside(x,y):
+					if self._cursor != 'hand':
+						self.setcursor('hand')
+					return
+		if self._cursor != 'arrow':
+			self.setcursor('arrow')
+	
+	def setcursor(self, strid):
+		self._cursor = strid
+		self._topwindow.setcursor(strid)
+
 	#
 	# Animations interface
 	#
@@ -758,7 +822,7 @@ class SubWindow(Window):
 		parent = self._parent
 		parent._subwindows.remove(self)
 		for i in range(len(parent._subwindows)):
-			if self._z > parent._subwindows[i]._z:
+			if self._z >= parent._subwindows[i]._z:
 				parent._subwindows.insert(i, self)
 				break
 		else:
