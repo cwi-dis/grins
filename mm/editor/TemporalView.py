@@ -341,11 +341,13 @@ class TemporalView(TemporalViewDialog):
 
 	def zoomincall(self):
 		self.zoomfactorx = self.zoomfactorx * 2
-		self.redraw()
+		self.recalc()
+		self.draw()
 
 	def zoomoutcall(self):
 		self.zoomfactorx = self.zoomfactorx / 2
-		self.redraw()
+		self.recalc()
+		self.draw()
 
 	def pasteundercall(self):
 		# This needs an index to say which element is going to be pasted here.
