@@ -18,6 +18,7 @@ import mw_textwindow
 # by stuffing showmessage into mw_windows' namespace by hand.
 #
 mw_windows.showmessage = mw_dialogs.showmessage
+mw_toplevel.showmessage = mw_dialogs.showmessage
 
 #
 # Initialize toplevel and make it available. Initializing the commands
@@ -57,6 +58,7 @@ mainloop = toplevel.mainloop
 canceltimer = toplevel.canceltimer
 getscreensize = toplevel.getscreensize
 getscreendepth = toplevel.getscreendepth
+_getmmfactors = toplevel._getmmfactors
 lopristarting = toplevel.lopristarting
 setidleproc = toplevel.setidleproc
 cancelidleproc = toplevel.cancelidleproc
