@@ -181,19 +181,19 @@ ELEMENTS = {
 	},
 	'SplineAnimation': {
 		'animate': [
-			'calcMode="spline"',
+			'calcMode',
 			'keyTimes',
 			'keySplines',
 			'path',
 		],
 		'animateMotion': [
-			'calcMode="spline"',
+			'calcMode',
 			'keyTimes',
 			'keySplines',
 			'path',
 		],
 		'animateColor': [
-			'calcMode="spline"',
+			'calcMode',
 			'keyTimes',
 			'keySplines',
 			'path',
@@ -937,6 +937,13 @@ class SMIL:
 								continue
 							for __ns in ATTRIBUTES[__at]:
 								__atd[__sns + __ns+' '+__at] = __vl
+					for __ns in ELEMENTS.keys():
+						if ELEMENTS[__ns].has_key(__el) and __at in ELEMENTS[__ns][__el]:
+							for __sns in SMIL2ns:
+								if __sns[-1:] != '/':
+									continue
+								__atd[__sns + __ns+' '+__at] = __vl
+
 	for __ns in ELEMENTS.keys():
 		for __el in ELEMENTS[__ns].keys():
 			if not attributes.has_key(__el):
