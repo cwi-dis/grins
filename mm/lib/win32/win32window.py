@@ -945,8 +945,11 @@ class Window:
 		return x, y
 
 	# return drag handle rectangle in device coordinates
-	def getDragHandleRect(self, ix):
-		x, y = self.LPtoDP(self.getDragHandle(ix))
+	def getDragHandleRect(self, ix, log=0):
+		if log:
+			x, y = self.getDragHandle(ix)
+		else:	
+			x, y = self.LPtoDP(self.getDragHandle(ix))
 		return x-3, y-3, 6, 6
 
 	def getDragHandleCount(self):
@@ -963,7 +966,7 @@ class Window:
 	def getDragHandleAt(self, point):
 		xp, yp = point
 		for ix in range(1,9):
-			x, y, w, h = self.getDragHandleRect(ix)
+			x, y, w, h = self.getDragHandleRect(ix, log=1)
 			l, t, r, b = x, y, x+w, y+h
 			if xp>=l and xp<r and yp>=t and yp<b:
 				return ix
