@@ -18,9 +18,11 @@ class RMDuration:
 
 	def calcDur(self):
 		self._player.Begin()
-		while not self.dur:
+		repeat = 0
+		while not self.dur and repeat<40:
 			win32ui.PumpWaitingMessages(0,0)
 			win32api.Sleep(50)
+			repeat = repeat + 1
 		self._player.Stop()
 
 	def OnPosLength(self, pos, len):
