@@ -122,14 +122,9 @@ class MediaChannel:
 			self.__playFileHasBeenRendered=0
 			return 0
 		self.__playFileHasBeenRendered=1
-		self.play_loop = self.__channel.getloop(node)
-		self.__iteration = 0
 
 		# get duration in secs (float)
 		duration = node.GetAttrDef('duration', None)
-		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
-		if repeatdur and self.play_loop == 1:
-			self.play_loop = 0
 		clip_begin = self.__channel.getclipbegin(node,'sec')
 		clip_end = self.__channel.getclipend(node,'sec')
 		self.__playBegin = clip_begin
@@ -147,23 +142,14 @@ class MediaChannel:
 
 		t0 = self.__channel._scheduler.timefunc()
 		if t0 > node.start_time and not self.__channel._exporter:
-##			print 'skipping',node.start_time,t0,t0-node.start_time
+			if __debug__:
+				print 'skipping',node.start_time,t0,t0-node.start_time
 			mediadur = self.__playEnd - self.__playBegin
 			late = t0 - node.start_time
-			skiprep = int(late / mediadur) # nr. of whole iterations skipped
-			self.__iteration = self.__iteration + skiprep
-			if self.play_loop > 0:
-				self.play_loop = self.play_loop - skiprep
-				if self.play_loop <= 0:
-					self.__channel.playdone(0)
-					return 1
-			if repeatdur > 0:
-				repeatdur = repeatdur - t0 + node.start_time
-				if repeatdur <= 0:
-					self.__channel.playdone(0)
-					return 1
-			skip = late - skiprep * mediadur
-			clip_begin = clip_begin + skip
+			if late > mediadur:
+				self.playdone(0, node.start_time + mediadur)
+				return 1
+			clip_begin = clip_begin + late
 		self.__playBuilder.SetPosition(clip_begin)
 
 		if window:
@@ -178,15 +164,7 @@ class MediaChannel:
 		self.__playdone=0
 		self.__playBuilder.Run()
 		self.__register_for_timeslices()
-		if repeatdur > 0:
-			self.__qid = self.__channel._scheduler.enter(repeatdur, 0, self.__stoprepeat, ())
-##		elif self.play_loop == 0 and repeatdur == 0:
-##			self.__channel.playdone(0)
 		return 1
-
-	def __stoprepeat(self):
-		self.stopit()
-		self.__channel.playdone(0)
 
 	def pauseit(self, paused):
 		if self.__playBuilder:
@@ -235,25 +213,8 @@ class MediaChannel:
 	def OnMediaEnd(self):
 		if not self.__playBuilder:
 			return		
-		if self.play_loop:
-			self.play_loop = self.play_loop - 1
-			if self.play_loop > 0: # more loops ?
-				self.__iteration = self.__iteration + 1
-				if self.play_loop < 1:
-					# incomplete last iteration
-					clip_end = self.__playBegin + (self.__playEnd - self.__playBegin) * self.play_loop
-					self.__playBuilder.SetStopTime(clip_end)
-				self.__channel.event('repeat(%d)' % self.__iteration)
-				self.__playBuilder.SetPosition(self.__playBegin)
-				self.__playBuilder.Run()
-				return
-			# no more loops
-			self.__playdone=1
-			self.__channel.playdone(0)
-			return
-		# self.play_loop is 0 so repeat
-		self.__playBuilder.SetPosition(self.__playBegin)
-		self.__playBuilder.Run()
+		self.__playdone=1
+		self.__channel.playdone(0, self.__channel._played_node.start_time + self.__playEnd - self.__playBegin)
 		
 	def onIdle(self):
 		if self.__playBuilder and not self.__playdone:
@@ -316,15 +277,10 @@ class VideoStream:
 		if not window: return 0
 		if not self.__mmstream: return 0
 
-		self.play_loop = self.__channel.getloop(node)
-		self.__iteration = 0
 		self.__pausedelay = 0
 		self.__pausetime = 0
 		duration = node.GetAttrDef('duration', None)
 		self.__duration = duration
-		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
-		if repeatdur and self.play_loop == 1:
-			self.play_loop = 0
 		clip_begin = self.__channel.getclipbegin(node,'sec')
 		clip_end = self.__channel.getclipend(node,'sec')
 		self.__playBegin = clip_begin
@@ -344,29 +300,14 @@ class VideoStream:
 ##			print 'skipping',node.start_time,t0,t0-node.start_time
 			mediadur = self.__playEnd - self.__playBegin
 			late = t0 - node.start_time
-			skiprep = int(late / mediadur) # nr. of whole iterations skipped
-			self.__iteration = self.__iteration + skiprep
-			if self.play_loop > 0:
-				self.play_loop = self.play_loop - skiprep
-				if self.play_loop <= 0:
-					self.__channel.playdone(0)
-					return 1
-			if repeatdur > 0:
-				repeatdur = repeatdur - t0 + node.start_time
-				if repeatdur <= 0:
-					self.__channel.playdone(0)
-					return 1
-			skip = late - skiprep * mediadur
-			clip_begin = clip_begin + skip
+			if late > mediadur:
+				self.playdone(0, node.start_time + mediadur)
+				return 1
+			clip_begin = clip_begin + late
 		self.__mmstream.seek(clip_begin)
 		
 		self.__playdone=0
 
-		if repeatdur > 0:
-			self.__qid = self.__channel._scheduler.enter(repeatdur, 0, self.__stoprepeat, ())
-##		elif self.play_loop == 0 and repeatdur == 0:
-##			self.__channel.playdone(0)
-		
 		window.setvideo(self.__mmstream._dds, self.__channel.getMediaWndRect(), self.__mmstream._rect)
 		self.__window = window
 		if self.__duration:
@@ -378,11 +319,6 @@ class VideoStream:
 		self.__register_for_timeslices()
 
 		return 1
-
-	def __stoprepeat(self):
-		self.__qid = None
-		self.stopit()
-		self.__channel.playdone(0)
 
 	def stopit(self):
 		if self.__dqid:
@@ -435,26 +371,10 @@ class VideoStream:
 	def onMediaEnd(self):
 		if not self.__mmstream:
 			return		
-		if self.play_loop:
-			self.play_loop = self.play_loop - 1
-			if self.play_loop > 0: # more loops ?
-				self.__iteration = self.__iteration + 1
-				if self.play_loop < 1:
-					# incomplete last iteration
-					self.__playEnd = self.__playBegin + (self.__playEnd - self.__playBegin) * self.play_loop
-				self.__channel.event('repeat(%d)' % self.__iteration)
-				if self.__duration:
-					self.__dqid = self.__channel._scheduler.enterabs(self.__node.start_time + (self.__iteration + 1) * self.__duration, 0, self.onMediaEnd, ())
-				self.__mmstream.seek(self.__playBegin)
-				return
-			# no more loops
-			self.__playdone=1
-			self.__channel.playdone(0)
-			self.__node = None
-			del self.__node
-			return
-		# self.play_loop is 0 so repeat
-		self.__mmstream.seek(self.__playBegin)
+		self.__playdone=1
+		self.__channel.playdone(0, self.__channel._played_node.start_time + self.__playEnd - self.__playBegin)
+		self.__node = None
+		del self.__node
 
 	def onIdle(self):
 		if self.__mmstream and not self.__playdone:

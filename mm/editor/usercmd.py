@@ -338,9 +338,6 @@ class TOGGLE_ONOFF(_CommandBase): pass
 class HIGHLIGHT(_CommandBase): pass
 class UNHIGHLIGHT(_CommandBase): pass
 class SYNCARCS(_DynamicCascade): pass
-class ANCESTORS(_DynamicCascade): pass
-class SIBLINGS(_DynamicCascade): pass
-class DESCENDANTS(_DynamicCascade): pass
 class LAYOUTS(_DynamicCascade): pass
 
 class BANDWIDTH_14K4(_CommandBase): pass

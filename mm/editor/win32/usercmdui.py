@@ -41,13 +41,10 @@ m=100
 idc=((idbegin+100)/m+1)*m
 casc2ui={
 SYNCARCS:idc,
-ANCESTORS:idc+m,
-DESCENDANTS:idc+2*m,
-SIBLINGS:idc+3*m,
-LAYOUTS:idc+4*m,
-CHANNELS:idc+5*m,
-USERGROUPS:idc+6*m,
-OPEN_RECENT:idc+7*m,
+LAYOUTS:idc+1*m,
+CHANNELS:idc+2*m,
+USERGROUPS:idc+3*m,
+OPEN_RECENT:idc+4*m,
 }
 def get_cascade(id):
 	global idc,m,casc2ui
@@ -226,9 +223,6 @@ CommandUI(TOGGLE_ONOFF)
 CommandUI(HIGHLIGHT) 
 CommandUI(UNHIGHLIGHT) 
 CommandUI(SYNCARCS,casc2ui[SYNCARCS])
-CommandUI(ANCESTORS,casc2ui[ANCESTORS])
-CommandUI(SIBLINGS,casc2ui[SIBLINGS])
-CommandUI(DESCENDANTS,casc2ui[DESCENDANTS])
 CommandUI(LAYOUTS,casc2ui[LAYOUTS])
 CommandUI(BANDWIDTH_14K4)
 CommandUI(BANDWIDTH_28K8)

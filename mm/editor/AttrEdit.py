@@ -524,7 +524,7 @@ class NodeWrapper(Wrapper):
 				namelist.append('longdesc')
 		if ntype == 'bag':
 			namelist.append('bag_index')
-		if ntype in ('par', 'excl'):
+		if ntype in partypes + ['excl']:
 			namelist.append('terminator')
 		if ntype in ('par', 'seq', 'excl'):
 			namelist.append('duration')

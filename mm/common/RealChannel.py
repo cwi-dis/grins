@@ -122,7 +122,6 @@ class RealChannel:
 		self.__winpos = window, winpossize, windowless
 		if not self.__createplayer(node):
 			return 0
-		self.__loop = self.__channel.getloop(node)
 		duration = self.__channel.getduration(node)
 		if url is None:
 			url = self.__channel.getfileurl(node)
@@ -143,8 +142,8 @@ class RealChannel:
 		if windowless:
 			self.__rmaplayer.SetPyVideoRenderer(self.__channel.getRealVideoRenderer())
 		if duration > 0:
-			self.__qid = self.__channel._scheduler.enter(duration, 0,
-							   self.__stop, ())
+			self.__qid = self.__channel._scheduler.enterabs(node.start_time + duration, 0,
+							   self.__stop, (node.start_time + duration,))
 		self.__playdone_called = 0
 		# WARNING: RealMedia player doesn't unquote, so we must do it
 		url = MMurl.unquote(url)
@@ -203,36 +202,26 @@ class RealChannel:
 		self.__rmaplayer.Begin()
 
 
-	def __stop(self):
+	def __stop(self, endtime):
 		self.__qid = None
 		if self.__rmaplayer:
 			if realenginedebug:
 				print 'RealChannel.__stop', self
-			self.__loop = 1
 			self.__rmaplayer.Stop()
 			# This may cause OnStop to be called, and it may not....
 			if not self.__playdone_called:
-				self.__channel.playdone(0)
+				self.__channel.playdone(0, endtime)
 				self.__playdone_called = 1
 		else:
-			self.__channel.playdone(0)
+			self.__channel.playdone(0, endtime)
 
 	def OnStop(self):
-		if self.__loop:
-			self.__loop = self.__loop - 1
-			if self.__loop == 0:
-				if realenginedebug:
-					print 'RealChannel.OnStop', self
-				if self.__qid is None:
-					if not self.__playdone_called:
-						self.__channel.playdone(0)
-						self.__playdone_called = 1
-				return
-##		print 'looping'
-#		windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
-		windowinterface.settimer(0.1,(self.replay,()))
-#		self.__rmaplayer.Stop()
-#		self.__rmaplayer.Begin()
+		if realenginedebug:
+			print 'RealChannel.OnStop', self
+		if self.__qid is None:
+			if not self.__playdone_called:
+				self.__channel.playdone(0)
+				self.__playdone_called = 1
 
 	def ErrorOccurred(self,str):
 		if realenginedebug:
@@ -252,7 +241,6 @@ class RealChannel:
 		if self.__rmaplayer:
 			if realenginedebug:
 				print 'RealChannel.stopit', self
-			self.__loop = 1
 			if self.__qid:
 				self.__channel._scheduler.cancel(self.__qid)
 			self.__qid = 0
@@ -266,7 +254,6 @@ class RealChannel:
 		if self.__rmaplayer:
 			if realenginedebug:
 				print 'RealChannel.pauseit', self, paused
-			self.__loop = 1
 			if self.__qid:
 				self.__channel._scheduler.cancel(self.__qid)
 			self.__qid = 0

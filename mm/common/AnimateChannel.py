@@ -35,7 +35,6 @@ class AnimateChannel(Channel.ChannelAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 		self.__duration = None
-		self.__repeatDur = None
 		self.__animating = None
 
 	def __repr__(self):
@@ -59,13 +58,8 @@ class AnimateChannel(Channel.ChannelAsync):
 		
 		self.__animating = node
 
-		# get timing
-		self.play_loop = self.getloop(node)
-
 		# get duration in secs (float)
 		self.__duration = self.__animator.getTimeManipulatedDur()
-
-		self.__repeatDur = node.GetAttrDef('repeatdur', None)
 
 		self.__startAnimate()
 
@@ -124,16 +118,12 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__targetChannel = self._player.getchannelbyname(chname)
 		return self.__targetChannel
 		
-	def __startAnimate(self, repeat=0):
-		if repeat==0:
-			self.__start = self.__animating.start_time
-		else:
-			self.__start = self._scheduler.timefunc()
+	def __startAnimate(self):
+		self.__start = self.__animating.start_time
 		if self.__start is None:
 			print 'Warning: None start_time for node',self.__animating
 			self.__start = 0
-		if not repeat:		
-			self.__effAnimator.onAnimateBegin(self.__getTargetChannel(), self.__animator)
+		self.__effAnimator.onAnimateBegin(self.__getTargetChannel(), self.__animator)
 		self.__animate()
 		self.__register_for_timeslices()
 
@@ -173,22 +163,7 @@ class AnimateChannel(Channel.ChannelAsync):
 			return
 		# set to the end for the benefit of freeze and repeat
 		self.__animator.setToEnd()
-		if self.__repeatDur:
-			self.__repeatDur = self.__repeatDur - self.__duration
-			if self.__repeatDur>0:
-				self.__startAnimate(repeat=1)
-				return
-			self.playdone(0)
-			return
-		if self.play_loop:
-			self.play_loop = self.play_loop - 1
-			if self.play_loop: # more loops ?
-				self.__startAnimate(repeat=1)
-				return
-			self.playdone(0)
-			return
-		# self.play_loop is 0 so repeat
-		self.__startAnimate(repeat=1)
+		self.playdone(0)
 
 	def onIdle(self):
 		if not USE_IDLE_PROC:

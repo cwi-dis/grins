@@ -131,12 +131,7 @@ class SchedulerContext:
 		#
 		# Create per-channel list of prearms
 		#
-		if not settings.noprearm:
-			self.prearmlists = GenAllPrearms(self.parent.ui,
-							 self.playroot,
-							 self.channels)
 		self.playroot.EndPruneTree()
-		mini = self.playroot.FindMiniDocument()
 		return 1
 
 	def cancelprearms(self, node):
@@ -265,13 +260,7 @@ class SchedulerContext:
 		playroot = self.playroot
 		if timestamp is None:
 			timestamp = self.parent.timefunc()
-		playroot.start_time = timestamp
-		if playroot.looping_body_self:
-			playroot.looping_body_self.start_time = timestamp
-		if playroot.realpix_body:
-			playroot.realpix_body.start_time = timestamp
-		if playroot.caption_body:
-			playroot.caption_body.start_time = timestamp
+		playroot.set_start_time(timestamp)
 
 		self.parent.event(self, (SR.SCHED, self.playroot), timestamp)
 ##		self.parent.updatetimer()
@@ -372,7 +361,7 @@ class SchedulerContext:
 				prio = 0
 			arc.qid = self.parent.enterabs(arc.timestamp, prio, self.trigger, (arc,))
 			if arc.isstart:
-				arc.dstnode.start_time = arc.timestamp
+				arc.dstnode.set_start_time(arc.timestamp, 0)
 				arc.dstnode.depends['begin'].append(arc)
 			else:
 				arc.dstnode.depends['end'].append(arc)
@@ -650,17 +639,7 @@ class SchedulerContext:
 						if node not in pnode.pausestack:
 							srdict = pnode.gensr_child(node, sctx = self, curtime = parent.timefunc())
 							self.srdict.update(srdict)
-						node.start_time = timestamp
-						p = node.parent
-						while p and p.type == 'alt':
-							p.start_time = timestamp
-							p = p.parent
-						if node.looping_body_self:
-							node.looping_body_self.start_time = node.start_time
-						if node.realpix_body:
-							node.realpix_body.start_time = node.start_time
-						if node.caption_body:
-							node.caption_body.start_time = node.start_time
+						node.set_start_time(timestamp)
 						self.do_pause(pnode, node, 'hide', timestamp)
 						parent.updatetimer()
 						return
@@ -708,32 +687,41 @@ class SchedulerContext:
 		# we must start the node, but how?
 		if debugevents: print 'starting node',`node`,parent.timefunc()
 		if debugdump: self.dump()
+		# complicated rules to determine whether we need to play:
+		# if start time + duration is before current time and
+		# fill is remove, we don't play.  Duration is
+		# determined from the real duration and the min and
+		# max times.
 		ndur = node.calcfullduration(self)
-		mintime = node.GetMin()
-		if mintime == 0 and \
-		   (equal or (ndur == 0 and node.GetFill() == 'remove')):
+		mintime, maxtime = node.GetMinMax()
+		print ndur,mintime,maxtime,timestamp,node
+		if ndur is None:
+			# unknown duration, assume indefinite
+			ndur = -1
+		if ndur >= 0:
+			ndur = max(mintime, ndur) # play at least this long
+		if maxtime >= 0 and ndur >= 0:
+			ndur = max(maxtime, ndur) # don't play longer than this
+		if ndur >= 0 and timestamp + ndur <= parent.timefunc() and node.GetFill() == 'remove':
 			runchild = 0
 		else:
 			runchild = 1
+		print runchild
+##		if mintime == 0 and \
+##		   (equal or (ndur == 0 and node.GetFill() == 'remove')):
+##			runchild = 0
+##		else:
+##			runchild = 1
 		srdict = pnode.gensr_child(node, runchild, path = path, sctx = self, curtime = parent.timefunc())
 		self.srdict.update(srdict)
 		if debugdump: self.dump()
-		node.start_time = timestamp
-		p = node.parent
-		while p and p.type == 'alt':
-			p.start_time = timestamp
-			p = p.parent
-		if node.looping_body_self:
-			node.looping_body_self.start_time = node.start_time
-		if node.realpix_body:
-			node.realpix_body.start_time = node.start_time
-		if node.caption_body:
-			node.caption_body.start_time = node.start_time
+		node.set_start_time(timestamp)
 		if runchild:
 			parent.event(self, (SR.SCHED, node), timestamp)
 		else:
 			if debugevents: print 'trigger, no run',parent.timefunc()
 			node.startplay(timestamp)
+			timestamp = timestamp + ndur # we know ndur >= 0
 			node.stopplay(timestamp)
 ##			self.sched_arcs(node, 'begin', timestamp=timestamp)
 ##			self.sched_arcs(node, 'end', timestamp=timestamp)
@@ -902,7 +890,12 @@ class SchedulerContext:
 					chan.stopplay(node)
 					node.set_armedmode(ARM_DONE)
 			if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
-				for c in node.GetSchedChildren():
+				for c in [node.looping_body_self,
+					  node.realpix_body,
+					  node.caption_body] + \
+					 node.GetSchedChildren():
+					if c is None:
+						continue
 					self.do_terminate(c, timestamp, fill=fill, cancelarcs=cancelarcs)
 					if not parent.playing:
 						return
@@ -1046,11 +1039,7 @@ class SchedulerContext:
 		if debugevents: print 'resume',node,timestamp,self.parent.timefunc()
 		ev = (SR.SCHED, node)
 		if self.srdict.has_key(ev):
-			node.start_time = timestamp
-			p = node.parent
-			while p and p.type == 'alt':
-				p.start_time = timestamp
-				p = p.parent
+			node.set_start_time(timestamp, 0)
 			self.sched_arcs(node, 'begin', timestamp=timestamp)
 			self.parent.event(self, ev, timestamp)
 		else:
@@ -1102,7 +1091,11 @@ class SchedulerContext:
 			self.parent.add_lopriqueue(self, pev[1].GetTimes()[0], pev)
 	#
 	def play_done(self, node, timestamp = None):
-		self.parent.event(self, (SR.PLAY_DONE, node), timestamp)
+		node.set_armedmode(ARM_WAITSTOP)
+		if node.GetTerminator() == 'MEDIA' and \
+		   not node.attrdict.has_key('duration') and \
+		   not node.FilterArcList(node.attrdict.get('endlist',[])):
+			self.parent.event(self, (SR.SCHED_STOPPING, node.looping_body_self or node), timestamp)
 
 	#
 	def arm_done(self, node, timestamp = None):
@@ -1181,10 +1174,6 @@ class Scheduler(scheduler):
 	# Playing algorithm.
 	#
 	def play(self, node, seek_node, anchor_id, anchor_arg, timestamp=None):
-		# XXXX Is the following true for alt nodes too?
-		if node.GetType() == 'bag':
-			raise error, 'Cannot play choice node'
-		# XXXX This statement should move to an intermedeate level.
 		if self.ui.sync_cv and self.toplevel.channelview is not None:
 			self.toplevel.channelview.globalsetfocus(node)
 		sctx = SchedulerContext(self, node, seek_node)
@@ -1356,9 +1345,7 @@ class Scheduler(scheduler):
 	#
 	def event(self, sctx, ev, timestamp):
 		if sctx.active:
-			if ev[0] == SR.PLAY_DONE:
-				ev[1].set_armedmode(ARM_WAITSTOP)
-			elif ev[0] == SR.ARM_DONE:
+			if ev[0] == SR.ARM_DONE:
 				ev[1].set_armedmode(ARM_ARMED)
 			sctx.event(ev, timestamp)
 		self.updatetimer()
@@ -1426,54 +1413,65 @@ class Scheduler(scheduler):
 			self.do_play_arm(sctx, arg, timestamp)
 		elif action == SR.PLAY_OPTIONAL_ARM:
 			self.do_play_arm(sctx, arg, timestamp, optional=1)
-		elif action in (SR.BAG_START, SR.BAG_STOP):
-			raise RuntimeError('BAG')
-##			self.ui.bag_event(sctx, todo)
 		elif action == SR.LOOPSTART:
 			self.do_loopstart(sctx, arg, timestamp)
-			arg.looping_body_self.startplay(timestamp)
+			arg.looping_body_self.set_start_time(timestamp)
+			if arg.type in leaftypes:
+				self.do_play(sctx, arg.looping_body_self, timestamp)
+			else:
+				arg.looping_body_self.startplay(timestamp)
 			sctx.sched_arcs(arg.looping_body_self,
 					'begin', timestamp=timestamp)
 		elif action == SR.LOOPEND:
 			self.do_loopend(sctx, arg, timestamp)
 		elif action == SR.LOOPRESTART:
 			if self.do_looprestart(sctx, arg, timestamp):
-				arg.looping_body_self.startplay(timestamp)
+				arg.looping_body_self.set_start_time(timestamp)
+				if arg.type in leaftypes:
+					self.do_play(sctx, arg.looping_body_self, timestamp)
+				else:
+					arg.looping_body_self.startplay(timestamp)
 				sctx.sched_arcs(arg.looping_body_self,
 						'begin', timestamp=timestamp)
-		else:
-			if action == SR.SCHED_STOPPING:
-				if arg.scheduled_children:
-					if debugevents: print 'not stopping',`arg`,arg.scheduled_children,self.timefunc()
-					return
-				if arg.type in interiortypes and \
-				   arg.playing != MMStates.PLAYED and \
-				   (arg.attrdict.get('duration') is not None or
-				    arg.attrdict.get('end') is not None):
-					if debugevents: print 'not stopping (dur/end)',`arg`,self.timefunc()
-					return
-				if arg.GetFill() == 'remove':
-					for ch in arg.GetSchedChildren():
-						sctx.do_terminate(ch, timestamp, chkevent = 0)
-						if not self.playing:
-							return
-				else:
-					sctx.do_terminate(arg, timestamp, fill = arg.GetFill(), chkevent = 0)
+		elif action == SR.SCHED_STOPPING:
+			if arg.scheduled_children:
+				if debugevents: print 'not stopping',`arg`,arg.scheduled_children,self.timefunc()
+				return
+			if arg.type in interiortypes and \
+			   arg.playing != MMStates.PLAYED and \
+			   (arg.attrdict.get('duration') is not None or
+			    arg.attrdict.get('end') is not None):
+				if debugevents: print 'not stopping (dur/end)',`arg`,self.timefunc()
+				return
+			if arg.GetFill() == 'remove':
+				for ch in arg.GetSchedChildren():
+					sctx.do_terminate(ch, timestamp, chkevent = 0)
 					if not self.playing:
 						return
-				adur = arg.calcfullduration(self)
-				if arg.fullduration is None or adur is None or adur < 0:
-					if not arg.has_min:
-						sctx.sched_arcs(arg, 'end', timestamp=timestamp)
-			elif action == SR.SCHED_START:
+			else:
+				sctx.do_terminate(arg, timestamp, fill = arg.GetFill(), chkevent = 0)
+				if not self.playing:
+					return
+			adur = arg.calcfullduration(self)
+			if arg.fullduration is None or adur is None or adur < 0:
+				if not arg.has_min:
+					sctx.sched_arcs(arg, 'end', timestamp=timestamp)
+			sctx.event((action, arg), timestamp)
+		elif action == SR.SCHED_START:
+			if arg.type in leaftypes and arg.looping_body_self is None:
+				self.do_play(sctx, arg, timestamp)
+			else:
 				arg.startplay(timestamp)
-				sctx.sched_arcs(arg, 'begin', timestamp=timestamp)
+			sctx.sched_arcs(arg, 'begin', timestamp=timestamp)
 ##				adur = arg.calcfullduration(self)
 ##				if arg.fullduration is not None and adur is not None and adur >= 0:
 ##					sctx.sched_arcs(arg, 'end', timestamp=timestamp+adur)
-			elif action == SR.SCHED_STOP:
-				if debugevents: print 'cleanup',`arg`,self.timefunc()
-				arg.cleanup_sched(self)
+			sctx.event((action, arg), timestamp)
+		elif action == SR.SCHED_STOP:
+			if debugevents: print 'cleanup',`arg`,self.timefunc()
+			arg.cleanup_sched(self)
+			sctx.event((action, arg), timestamp)
+		else:
 			sctx.event((action, arg), timestamp)
 
 	#
@@ -1736,48 +1734,6 @@ class ArmStorageLeaf:
 	def do_looponcemore(self):
 		pass
 
-#
-# GenAllPrearms fills the prearmlists dictionary with all arms needed.
-#
-def GenAllPrearms(ui, node, channels):
-	if settings.noprearm:
-		raise error, 'GenAllPrearms called when noprearm set'
-	nodetype = node.GetType()
-	if nodetype in bagtypes:
-		return {}
-	if nodetype in leaftypes:
-		if node.realpix_body or node.caption_body:
-			# Special case for parallel captions to realpix slideshows
-			rv = {}
-			if node.realpix_body:
-				ch = ui.getchannelbynode(node.realpix_body)
-				rv[ch] = ArmStorageLeaf(node.realpix_body)
-			if node.caption_body:
-				ch = ui.getchannelbynode(node.caption_body)
-				rv[ch] = ArmStorageLeaf(node.caption_body)
-			return rv
-		chan = ui.getchannelbynode(node)
-		return {chan : ArmStorageLeaf(node)}
-	#
-	# For now, create internal data structure for each interior node
-	#
-	prearmlists = {}
-	for ch in channels:
-		prearmlists[ch] = ArmStorageTree(node)
-	for child in node.GetWtdChildren():
-		newprearmlists = GenAllPrearms(ui, child, channels)
-		for key, value in newprearmlists.items():
-			prearmlists[key].append(value)
-		# XXXX hack to only play first child in alt nodes
-		if nodetype == 'alt':
-			break
-	for k, v in prearmlists.items():
-		if v.isempty():
-			del prearmlists[k]
-		else:
-			v.setparents()
-	return prearmlists
-
 #  Remove all arm_duration attributes (so they will be recalculated)
 
 def del_timing(node):
@@ -1800,6 +1756,5 @@ def unarmallnodes(node):
 	except AttributeError:
 		return
 	for child in children:
-##		if child.GetType() not in bagtypes:
-			unarmallnodes(child)
+		unarmallnodes(child)
 

@@ -790,13 +790,20 @@ def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
 	return fmtfloat(delay, 's')
 
 def getterm(writer, node):
-	terminator = MMAttrdefs.getattr(node, 'terminator')
-	if terminator == 'LAST':
+	if node.type in ('seq', 'prio', 'alt'):
 		return
+	terminator = node.GetTerminator()
+	ntype = node.GetType()
+	if terminator == 'LAST':
+		if ntype in ('par', 'excl'):
+			return
+		return 'last'
 	if terminator == 'FIRST':
 		return 'first'
 	if terminator == 'ALL':
 		return 'all'
+	if terminator == 'MEDIA' and ntype in leaftypes:
+		return
 	for child in node.children:
 		if child.GetRawAttrDef('name', '') == terminator:
 			id = writer.uid2name[child.GetUID()]

@@ -442,6 +442,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		node.__syncarcs = []
 		node.__anchorlist = []
 		attrdict = node.attrdict
+		pnode = node.GetSchedParent()
 		for attr, val in attributes.items():
 			val = string.strip(val)
 			if attr == 'id':
@@ -460,8 +461,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['file'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'begin' or attr == 'end':
 				if attr == 'begin' and \
-				   self.__container and \
-				   self.__container.type == 'seq' and \
+				   pnode is not None and \
+				   pnode.type == 'seq' and \
 				   (offsetvalue.match(val) is None or
 				    val[0] == '-'):
 					self.syntax_error('bad begin attribute for child of seq node')
@@ -1214,6 +1215,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if data is not None:
 			node.values = data
 		self.__node = node
+		self.__container = node
 		node.__chantype = chtype
 
 		# for SMIL 2, the default bgcolor is transparent
@@ -1221,6 +1223,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if not attributes.has_key('backgroundColor'):
 				attributes['backgroundColor'] = 'transparent'
 				
+		node.__endsync = attributes.get('endsync')
+		node.__lineno = self.lineno
+
 		self.AddAttrs(node, attributes)
 		node.__mediatype = mediatype, subtype
 		self.__attributes = attributes
@@ -1238,7 +1243,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node.attrdict['transparent'] = 1
 			if node.attrdict.has_key('bgcolor'):
 				del node.attrdict['bgcolor']
-					
+
 	def __newTopRegion(self):
 		attrs = {}
 
@@ -1316,6 +1321,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		return region
 
 	def EndNode(self):
+		self.__container = self.__container.GetParent()
 		node = self.__node
 		try:
 			attributes = self.__attributes
@@ -1326,6 +1332,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		del self.__attributes
 		mediatype, subtype = node.__mediatype
 		mtype = node.__chantype
+		self.__fixendsync(node)
 
 		if not self.__is_ext:
 			# don't warn since error message already printed
@@ -1626,11 +1633,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error('node in layout')
 			return
 		
-		# at least for now
-		if self.__node:
-			# message already given
-			#self.error('%s elements can not be in the content model of media elements' % tagname)
-			return
+##		# at least for now
+##		if self.__node:
+##			# message already given
+##			#self.error('%s elements can not be in the content model of media elements' % tagname)
+##			return
 			
 		# find target node (explicit or implicit)
 		targetnode = None
@@ -1653,11 +1660,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		# create the node
 		node = self.__context.newnode('animate')
+		self.__container._addchild(node)
+		self.__container = node
 		self.AddAttrs(node, attributes)
-		if self.__node:
-			self.__node._addchild(node)
-		else:
-			self.__container._addchild(node)
 
 		node.attrdict['atag'] = tagname
 		node.attrdict['mimetype'] = 'animate/%s' % tagname
@@ -1681,7 +1686,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 
 	def EndAnimateNode(self):
-		pass
+		self.__container = self.__container.GetParent()
 
 	def Recurse(self, root, *funcs):
 		for func in funcs:
@@ -3493,16 +3498,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		self.__container.__endsync = attributes.get('endsync')
 		self.__container.__lineno = self.lineno
-##		if self.__container.__endsync is not None and \
-##		   self.__container.attrdict.has_key('duration'):
-##			self.warning('ignoring dur attribute', self.lineno)
-##			del self.__container.attrdict['duration']
 
 	def end_parexcl(self, ntype):
 		node = self.__container
 		self.EndContainer(ntype)
+		self.__fixendsync(node)
+
+	def __fixendsync(self, node):
 		endsync = node.__endsync
 		del node.__endsync
+		if endsync is not None and node.type in leaftypes:
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error("endsync attribute on media element not compatible with SMIL 1.0", node.__lineno)
+			self.__context.attributes['project_boston'] = 1
 		if endsync is None:
 			pass
 		elif endsync == 'first':
@@ -3515,7 +3523,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__context.attributes['project_boston'] = 1
 			node.attrdict['terminator'] = 'ALL'
 		elif endsync == 'media':
-			self.syntax_error("endsync attribute value `media' not allowed in par and excl", node.__lineno)
+			if node.type in ('par', 'excl'):
+				self.syntax_error("endsync attribute value `media' not allowed in par and excl", node.__lineno)
+			else:
+				node.attrdict['terminator'] = 'MEDIA'
 		else:
 			res = idref.match(endsync)
 			if res is None:
