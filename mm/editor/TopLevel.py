@@ -59,6 +59,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def __init__(self, main, url, new_file):
 		ViewDialog.__init__(self, 'toplevel_')
 		self.prune = 0
+		self.template = 0
 		self.select_fdlist = []
 		self.select_dict = {}
 		self._last_timer_id = None
@@ -853,6 +854,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if self.filename:
 			utype, host, path, params, query, fragment = urlparse(self.filename)
 			dftfilename = os.path.split(MMurl.url2pathname(path))[-1]
+		self.template = 1	# so that savedir isn't updated
 		windowinterface.FileDialog('Publish GRiNS template:', dir, 'application/x-grins-project', dftfilename, self.export_okcallback, None)
 
 	def export(self, exporttype):
@@ -1161,7 +1163,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			os.rename(filename, make_backup_filename(filename))
 		except os.error:
 			pass
-		settings.set('savedir', os.path.dirname(filename))
+		if not self.template:
+			settings.set('savedir', os.path.dirname(filename))
 
 		if exporting:
 			exporttype = self.exporttype
@@ -1182,7 +1185,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				smil_one = 1
 			elif exporttype == 'WINCE':
 				addattrs = 1
-				grinsExt = 1
 				pss4Ext = 1
 			# XXX enabling this currently crashes the application on Windows during video conversion
 			progress = windowinterface.ProgressDialog("Publishing", self.cancel_upload)
@@ -1222,6 +1224,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 								addattrs = addattrs)
 				finally:
 					self.prune = 0
+					self.template = 0
 			except IOError, msg:
 				if exporting:
 					operation = 'Publish'
@@ -1297,6 +1300,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 						       weburl = weburl)
 			finally:
 				self.prune = 0
+				self.template = 0
 		except IOError, msg:
 			windowinterface.showmessage('Media upload failed:\n%s'%(msg,))
 			return 0
