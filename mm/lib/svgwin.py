@@ -30,7 +30,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		wingdi.SetGraphicsMode(hdc, win32con.GM_ADVANCED)
 		wingdi.SetBkMode(hdc, win32con.TRANSPARENT)
 		wingdi.SetTextAlign(hdc, win32con.TA_BASELINE)
-
+			
 	# called to dispose platform toolkit objects after rendering
 	def tkShutdown(self):
 		wingdi.SetGraphicsMode(self.hdc, win32con.GM_COMPATIBLE)
@@ -158,6 +158,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		# fill should be painted first, then the stroke, and then the marker symbols
 		fill = self.getStyleAttr('fill', style)
 		stroke = self.getStyleAttr('stroke', style)
+		fillRule = self.getStyleAttr('fill-rule', style)
 
 		# fill attrs
 		brush = None
@@ -171,9 +172,17 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 				if stroke and stroke != 'none':
 					# keep path for stroke
 					dcid = wingdi.SaveDC(self.hdc)
+					if fillRule == 'nonzero':
+						wingdi.SetPolyFillMode(self.hdc, win32con.WINDING)
+					else:
+						wingdi.SetPolyFillMode(self.hdc, win32con.ALTERNATE)
 					wingdi.FillPath(self.hdc)
 					wingdi.RestoreDC(self.hdc, dcid)
 				else:
+					if fillRule == 'nonzero':
+						wingdi.SetPolyFillMode(self.hdc, win32con.WINDING)
+					else:
+						wingdi.SetPolyFillMode(self.hdc, win32con.ALTERNATE)
 					wingdi.FillPath(self.hdc)
 			except wingdi.error, arg:
 				print arg,  style, tflist
