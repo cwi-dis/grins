@@ -15,7 +15,10 @@
 #endif
 #endif
 
-MP3LIB_API void mp3_lib_init(int,char*);
-MP3LIB_API void mp3_lib_finalize(void);
-MP3LIB_API int mp3_lib_decode_header(unsigned char * inbuff, int insize, int* Freq, int* ch, int* br);
-MP3LIB_API int mp3_lib_decode_buffer(unsigned char * inbuff, int insize, char *outmemory, int outmemsize, int *done, int* inputpos);
+MP3LIB_API void mp3_lib_create_instance(void **pp);
+MP3LIB_API void mp3_lib_release_instance(void *vps);
+
+MP3LIB_API void mp3_lib_init(void *vps, int,char*);
+MP3LIB_API void mp3_lib_finalize(void *vps);
+MP3LIB_API int mp3_lib_decode_header(void *vps, unsigned char * inbuff, int insize, int* Freq, int* ch, int* br);
+MP3LIB_API int mp3_lib_decode_buffer(void *vps, unsigned char * inbuff, int insize, char *outmemory, int outmemsize, int *done, int* inputpos);
