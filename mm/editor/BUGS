@@ -1,53 +1,48 @@
+------------------------------ BUGS -------------------------------
+
+channel view: deleted arc is still drawn
+
+channel view: add channel complains about duplucate name
+
+channel view: add channel opens wrong channel?!?!
+
+edit mgr: doesn't fix channel dictionary
+
+channel view: doesn't draw thermo on show()
+
+channel view: resize behavior is weird
+
+block view: open/close must be done different; opening something that
+had a red button before zooming should open all of it, not keep it
+closed... 
+
+block view: resize behavior is weird
+
+player: crash when putting two events on same channel simultaneously
+(can't seem to reproduce this now?)
+
+------------------------------ JAMMER MAAR HELAAS -----------------
+
+text channel: after a while the font manager fails with
+"ValidateFont: fmfntread failed."
+(Not much we can do about this -- "fixed in IRIX 4.0.1")
+
 general: sometimes, after a while the entire CMIF editor hangs...
 
-channel view: help is printed on stdout
-
-channel view: uninformative dialog box for unknown keyboard input
-(should beep)
-
-block view: should beep instead of pop up a dialog offering help for
-wrong keyboard entry (a static help button in the menu bar is a better
-way to offer help)
+------------------------------ PERFORMANCE ------------------------
 
 channel view: many double redraws
 
-toplevel: sometimes complaint about unknown command when clicking in
-toplevel menu while things are busy?
-
-channel view: draws sync arcs even when an end is not on any channel
-
-movie channel: takes too much priority that sound doesn't play and
+movie channel: takes so much priority that sound doesn't play and
 buttons don't react
 
 movie channel: loading colormap takes ages
 
 form loader: parsing .fd files takes ages
 
-channel view: when an existing node that had no channel re-appears, it
-isn't drawn
+------------------------------ PROJECT MANAGEMENT -----------------
 
-channel view: when selecting multiple nodes, goes up one level too much
-
-channel view: should display no dialogs when transactions fail
-
-channel view: doesn't draw thermo on show()
-
-channel view: newly added arcs are drawn twice, once with the wrong
-timing information (before the commit)
-
-text channel: after a while the font manager fails with
-"ValidateFont: fmfntread failed."
-(Not much we can do about this -- "fixed in IRIX 4.0.1")
-    
-block view: open/close must be done different; opening something that
-had a red button before zooming should open all of it, not keep it
-closed... 
-
-player: crash when putting two events on same channel simultaneously
-
-block view: resize behavior is weird
-
-channel view: resize behavior is weird
+general: need to use CVS for project management
 
 ------------------------------ FEATURES ---------------------------
 
@@ -62,6 +57,22 @@ block & channel view: want to show other view's focus
 block & channel view: use channel colors instead of default gray / yellow
 
 ------------------------------ NITS -------------------------------
+
+general: need a template for a simple e-mail document
+
+channel view: should display no dialogs when transactions fail
+
+channel view: help is printed on stdout
+
+channel view: uninformative dialog box for unknown keyboard input
+(should beep)
+
+block view: should beep instead of pop up a dialog offering help for
+wrong keyboard entry (a static help button in the menu bar is a better
+way to offer help)
+
+toplevel: sometimes complaint about unknown command when clicking in
+toplevel menu while things are busy?
 
 player: should remember & save which channels are "off"
 
@@ -120,3 +131,15 @@ channel view: open it, then close; open in the block view a node that
 was closed; and then 'add' there.  This crashes the channel view...
 
 channel view: doesn't notice when a node has moved to another channel
+
+channel view: draws sync arcs even when an end is not on any channel
+
+channel view: when an existing node that had no channel re-appears, it
+isn't drawn
+
+channel view: when selecting multiple nodes, goes up one level too much
+
+channel view: newly added arcs are drawn twice, once with the wrong
+timing information (before the commit)
+
+channel view: can't create channels once the last channel is deleted...
