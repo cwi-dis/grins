@@ -90,6 +90,7 @@ struct movie {
 	Widget m_widget;	/* the window widget */
 	Visual *m_visual;	/* the visual to use */
 #endif
+	type_sema m_dispsema;	/* semaphore for display synchronization */
 };
 #define X	0
 #define Y	1
@@ -177,6 +178,10 @@ movie_init(self)
 		dprintf(("movie_init(%lx): malloc failed\n", (long) self));
 		(void) PyErr_NoMemory();
 		return 0;
+	}
+	if ((PRIV->m_dispsema = allocate_sema(0)) == NULL) {
+		ERROR(movie_init, PyExc_RuntimeError, "cannot create semaphore");
+		goto error_return_no_close;
 	}
 	if (pipe(PRIV->m_pipefd) < 0) {
 		ERROR(movie_init, PyExc_RuntimeError, "cannot create pipe");
@@ -329,6 +334,8 @@ movie_init(self)
 	(void) close(PRIV->m_pipefd[0]);
 	(void) close(PRIV->m_pipefd[1]);
  error_return_no_close:
+	if (PRIV->m_dispsema)
+		free_sema(PRIV->m_dispsema);
 	free(self->mm_private);
 	self->mm_private = NULL;
 	return 0;
@@ -377,6 +384,7 @@ movie_dealloc(self)
 		return;
 	movie_free_old(&PRIV->m_play);
 	movie_free_old(&PRIV->m_arm);
+	free_sema(PRIV->m_dispsema);
 	(void) close(PRIV->m_pipefd[0]);
 	(void) close(PRIV->m_pipefd[1]);
 	free(self->mm_private);
@@ -1024,6 +1032,7 @@ movie_do_display(self)
 	default:
 		abort();
 	}
+	up_sema(PRIV->m_dispsema);
 }
 
 static void
@@ -1069,6 +1078,7 @@ movie_player(self)
 			if (gl_lock)
 				release_lock(gl_lock);
 #endif
+			down_sema(PRIV->m_dispsema);
 			break;
 #endif /* USE_GL */
 #ifdef USE_XM
@@ -1082,6 +1092,7 @@ movie_player(self)
 #else
 			my_qenter(self->mm_ev, 3);
 #endif
+			down_sema(PRIV->m_dispsema);
 			break;
 #endif /* USE_XM */
 		default:
@@ -1243,6 +1254,7 @@ movie_resized(self, x, y, w, h)
 				clear();
 			}
 			movie_do_display(self);
+			down_sema(PRIV->m_dispsema);
 		}
 		if (gl_lock)
 			release_lock(gl_lock);
@@ -1260,6 +1272,7 @@ movie_resized(self, x, y, w, h)
 				       PRIV->m_rect[WIDTH],
 				       PRIV->m_rect[HEIGHT]);
 			movie_do_display(self);
+			down_sema(PRIV->m_dispsema);
 		}
 		break;
 	}

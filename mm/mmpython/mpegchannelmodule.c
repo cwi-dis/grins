@@ -45,6 +45,7 @@ struct mpeg {
 	struct mpeg_data arm, play;/* info for nodes being armed and played */
 	int rect[4];		/* origin and size of window */
 	int pipefd[2];		/* pipe for synchronization with player */
+	type_sema dispsema;	/* semaphore for display synchronization */
 #ifdef USE_XM
 	Widget widget;		/* the widget in which to draw */
 	Visual *visual;		/* the visual of the window */
@@ -88,6 +89,7 @@ mpeg_display(self)
 	default:
 		abort();
 	}
+	up_sema(PRIV->dispsema);
 }
 
 static void
@@ -124,10 +126,9 @@ mpeg_player(self)
 		gettimeofday(&tm0, NULL);
 		my_qenter(self->mm_ev, 3);
 		/* mpeg_display(self); */
+		down_sema(PRIV->dispsema);
 		PRIV->play.moreframes = GetMPEGFrame(&PRIV->play.imagedesc,
 						     PRIV->play.image->data);
-		if (!PRIV->play.moreframes)
-			break;
 		gettimeofday(&tm1, NULL);
 		timediff_actual = (tm1.tv_sec - tm0.tv_sec) * 1000 +
 			(tm1.tv_usec - tm0.tv_usec) / 1000;
@@ -471,6 +472,10 @@ mpeg_init(self)
 	PRIV->arm.file = PRIV->play.file = NULL;
 	PRIV->arm.imagedesc.vid_stream = NULL;
 	PRIV->arm.imagedesc.Colormap = NULL;
+	if ((PRIV->dispsema = allocate_sema(0)) == NULL) {
+		ERROR(mpeg_init, PyExc_RuntimeError, "cannot create semaphore");
+		goto error_return_no_close;
+	}
 	if (pipe(PRIV->pipefd) < 0) {
 		ERROR(mpeg_init, PyExc_RuntimeError, "cannot create pipe");
 		goto error_return_no_close;
@@ -552,6 +557,8 @@ error_return:
 	(void) close(PRIV->pipefd[0]);
 	(void) close(PRIV->pipefd[1]);
 error_return_no_close:
+	if (PRIV->dispsema)
+		free_sema(PRIV->dispsema);
 	free(self->mm_private);
 	self->mm_private = NULL;
 	return 0;
@@ -564,6 +571,7 @@ mpeg_dealloc(self)
 	denter(mpeg_dealloc);
 	if (self->mm_private == NULL)
 		return;
+	free_sema(PRIV->dispsema);
 	(void) close(PRIV->pipefd[0]);
 	(void) close(PRIV->pipefd[1]);
 	free(self->mm_private);
