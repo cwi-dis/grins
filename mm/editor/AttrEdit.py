@@ -923,10 +923,10 @@ class PreferenceWrapper(Wrapper):
 		'cmif': 'Enable CMIF-specific extensions',
 		'html_control': 'Choose between Internet Explorer and WebsterPro HTML controls',
 		'showhidden': 'Show hidden custom tests',
-		'saveopenviews': 'Save view placement in prefs file',
+		'saveopenviews': 'Remember placement of views globally',
 		'initial_dialog': 'Show initial dialog on application start',
 ##		'vertical_icons': 'Show icons vertically in the Structure View',
-		'default_sync_behavior_locked': 'Playback will be fully synchronized',
+		'default_sync_behavior_locked': 'Playback will be fully synchronized by default',
 		}
 	__floatprefs = {
 		'default_sync_tolerance': 'Maximum media clock drift for synchronized playback',
