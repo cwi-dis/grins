@@ -394,7 +394,9 @@ class _Window(_AdornmentSupport):
 		gc.SetClipMask(None)
 		gc.foreground = self._convert_color(color)
 		x, y, w, h = self._rect
-		gc.DrawRectangle(x, y, w-1, h-1)
+		# -2 because we want the bottom and right lines just
+		# inside the window
+		gc.DrawRectangle(x, y, w-2, h-2)
 		if self._pixmap is not None:
 			x, y, w, h = self._rect
 			self._pixmap.CopyArea(self._form, gc,
@@ -754,11 +756,11 @@ class _Window(_AdornmentSupport):
 		if units == UNIT_PXL or (units is None and type(x) is type(0)):
 			px = int(x)
 		else:
-			px = int((rw - 1) * x + 0.5)
+			px = int(rw * x + 0.5)
 		if units == UNIT_PXL or (units is None and type(y) is type(0)):
 			py = int(y)
 		else:
-			py = int((rh - 1) * y + 0.5)
+			py = int(rh * y + 0.5)
 		pw = ph = 0
 		if crop:
 			if px < 0:
@@ -774,11 +776,11 @@ class _Window(_AdornmentSupport):
 		if units == UNIT_PXL or (units is None and type(w) is type(0)):
 			pw = int(w + pw)
 		else:
-			pw = int((rw - 1) * w + 0.5) + pw
+			pw = int(rw * w + 0.5) + pw
 		if units == UNIT_PXL or (units is None and type(h) is type(0)):
 			ph = int(h + ph)
 		else:
-			ph = int((rh - 1) * h + 0.5) + ph
+			ph = int(rh * h + 0.5) + ph
 		if crop:
 			if pw <= 0:
 				pw = 1
@@ -791,15 +793,16 @@ class _Window(_AdornmentSupport):
 		return px+rx, py+ry, pw, ph
 
 	def _pxl2rel(self, coordinates):
+		"""Convert pixel coordinates to fractional coordinates."""
 		px, py = coordinates[:2]
 		rx, ry, rw, rh = self._rect
-		x = float(px - rx) / (rw - 1)
-		y = float(py - ry) / (rh - 1)
+		x = float(px - rx) / rw
+		y = float(py - ry) / rh
 		if len(coordinates) == 2:
 			return x, y
 		pw, ph = coordinates[2:]
-		w = float(pw) / (rw - 1)
-		h = float(ph) / (rh - 1)
+		w = float(pw) / rw
+		h = float(ph) / rh
 		return x, y, w, h
 
 	def _mkclip(self):
@@ -1271,10 +1274,10 @@ class _Window(_AdornmentSupport):
 		if y1 < y: y1 = y
 		if y1 >= y + height: y1 = y + height - 1
 		if units == UNIT_SCREEN:
-			return float(x0 - x) / (width - 1), \
-			       float(y0 - y) / (height - 1), \
-			       float(x1 - x0) / (width - 1), \
-			       float(y1 - y0) / (height - 1)
+			return float(x0 - x) / width, \
+			       float(y0 - y) / height, \
+			       float(x1 - x0) / width, \
+			       float(y1 - y0) / height
 		elif units == UNIT_PXL:
 			return x0 - x, y0 - y, x1 - x0, y1 - y0
 		elif units == UNIT_MM:
