@@ -109,4 +109,8 @@ class merge:
 
 	def setpos(self, pos):
 		for (rdr, p) in pos:
-			rdr.setpos(p)
+			# only set pos of readers that weren't deleted
+			for i in range(len(self.__readers)):
+				if self.__readers[i][0] == rdr:
+					rdr.setpos(p)
+					break
