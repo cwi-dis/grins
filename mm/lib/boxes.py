@@ -3,7 +3,7 @@ import dialogs, windowinterface, EVENTS
 message = 'Use left mouse button to draw a box.\n' + \
 	  'Click `Done\' when ready or `Cancel\' to cancel.'
 
-def create_box(window, *box):
+def create_box(window, msg, *box):
 	if len(box) == 1 and type(box) == type(()):
 		box = box[0]
 	if len(box) not in (0, 4):
@@ -12,7 +12,11 @@ def create_box(window, *box):
 		box = None
 	display = window._active_display_list
 	window.pop()
-	dialog = dialogs.Dialog().init((message, '!Done', 'Cancel'))
+	if msg:
+		msg = msg + '\n\n' + message
+	else:
+		msg = message
+	dialog = dialogs.Dialog().init((msg, '!Done', 'Cancel'))
 	while not box:
 		win, ev, val = windowinterface.readevent()
 		if win == window and ev == EVENTS.Mouse0Press:

@@ -338,6 +338,7 @@ class _Button:
 		self._hicolor = dispobj._fgcolor
 		self._linewidth = dispobj._linewidth
 		self._hiwidth = self._linewidth
+		self._highlighted = 0
 		d = dispobj._displaylist
 		if dispobj._curcolor != self._color:
 			d.append(gl.RGBcolor, self._color)
@@ -385,21 +386,26 @@ class _Button:
 		gl.recti(self._coordinates)
 		if _toplevel._win_lock:
 			_toplevel._win_lock.release()
+		self._highlighted = 1
 
 	def unhighlight(self):
 		if self.is_closed():
 			raise error, 'button already closed'
+		self._highlighted = 0
 		dispobj = self._dispobj
 		if dispobj._window._active_display_list != dispobj:
 			raise error, 'can only unhighlight rendered button'
-		if _toplevel._win_lock:
-			_toplevel._win_lock.acquire()
-		gl.winset(self._dispobj._window._window_id)
-		gl.RGBcolor(self._color)
-		gl.linewidth(self._linewidth)
-		gl.recti(self._coordinates)
-		if _toplevel._win_lock:
-			_toplevel._win_lock.release()
+		if self._hiwidth > self._linewidth:
+			dispobj.render()
+		else:
+			if _toplevel._win_lock:
+				_toplevel._win_lock.acquire()
+			gl.winset(self._dispobj._window._window_id)
+			gl.RGBcolor(self._color)
+			gl.linewidth(self._linewidth)
+			gl.recti(self._coordinates)
+			if _toplevel._win_lock:
+				_toplevel._win_lock.release()
 
 	def _inside(self, x, y):
 		# return 1 iff the given coordinates fall within the button
@@ -451,6 +457,9 @@ class _DisplayList:
 		window = self._window
 		if self.is_closed():
 			raise error, 'displaylist already closed'
+		if window._active_display_list:
+			for but in window._active_display_list._buttonlist:
+				but._highlighted = 0
 		window._active_display_list = self
 		if _toplevel._win_lock:
 			_toplevel._win_lock.acquire()
@@ -1018,7 +1027,13 @@ class _Window:
 	def _redraw(self):
 		if debug: print 'Window._redraw()'
 		if self._active_display_list:
+			buttons = []
+			for but in self._active_display_list._buttonlist:
+				if but._highlighted:
+					buttons.append(but)
 			self._active_display_list.render()
+			for but in buttons:
+				but.highlight()
 		else:
 			if _toplevel._win_lock:
 				_toplevel._win_lock.acquire()
