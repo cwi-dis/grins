@@ -1259,6 +1259,16 @@ def ReadFileContext(url, context):
 	p.close()
 	return p.GetRoot()
 
+def ReadString(string, name):
+	return ReadStringContext(string, name,
+				 MMNode.MMNodeContext(MMNode.MMNode))
+
+def ReadStringContext(string, name, context):
+	p = SMILParser(context)
+	p.feed(string)
+	p.close()
+	return p.GetRoot()
+
 def _minsize(start, extent, minsize):
 	# Determine minimum size for top-level window given that it
 	# has to contain a subwindow with the given start and extent
