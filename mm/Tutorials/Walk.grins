@@ -18,11 +18,10 @@
     <seq id="City-Walk">
       <par id="Audio-Visual-Show">
         <seq id="Images">
-          <img id="Map" region="Top-L" src="Assets/mapc.jpg" dur="5s"/>
-          <img id="HG" region="Mid" src="Assets/h168c.jpg" dur="5s"/>
-          <img id="HG-0" region="Bot-R" src="Assets/h218c.jpg" dur="5s"/>
+          <img id="Picture_1" region="Top-L" dur="5s" src="#"/>
+          <img id="Picture_2" region="Mid" dur="5s" src="#"/>
+          <img id="Picture_3" region="Bot-R" dur="5s" src="#"/>
         </seq>
-        <audio id="Music" region="Audio" src="Assets/tune2NM.aiff" repeat="indefinite"/>
       </par>
     </seq>
   </body>
