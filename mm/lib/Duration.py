@@ -32,6 +32,9 @@ def getintrinsicduration(node, wanterror):
 	# we hadn't cached the duration, do the hard work
 	# first figure out MIME type
 	mtype = urlcache.mimetype(url)
+	if mtype is None:
+		# MIME type can't be found
+		return 0
 	maintype, subtype = mtype.split('/')
 	# now figure out duration depending on type
 	if string.find(subtype, 'real') >= 0 or string.find(subtype, 'shockwave') >= 0:
@@ -42,7 +45,8 @@ def getintrinsicduration(node, wanterror):
 			except IOError, msg:
 				if wanterror:
 					raise IOError, msg
-				print url, msg
+				if __debug__:
+					print url, msg
 				return 0
 		else:
 			import realsupport
@@ -55,7 +59,8 @@ def getintrinsicduration(node, wanterror):
 		except IOError, msg:
 			if wanterror:
 				raise IOError, msg
-			print url, msg
+			if __debug__:
+				print url, msg
 			return 0
 	elif maintype == 'audio':
 		import SoundDuration
@@ -64,7 +69,8 @@ def getintrinsicduration(node, wanterror):
 		except IOError, msg:
 			if wanterror:
 				raise IOError, msg
-			print url, msg
+			if __debug__:
+				print url, msg
 			return 0
 ##	elif maintype == 'image' and subtype == 'svg-xml':
 ##		dur = -1

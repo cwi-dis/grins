@@ -4109,7 +4109,7 @@ class MMNode(MMTreeElement):
 				arc.path = subpath
 			elif not beginlist:
 				if defbegin is None:
-					child.set_infoicon('error', 'This node can only be started by an external hyperlink.')
+					child.set_infoicon('error', 'This object can only be started by an external hyperlink.')
 				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin, implicit = 1)
 				self_body.arcs.append((srcnode, arc))
 				srcnode.add_arc(arc, curtime, sctx)

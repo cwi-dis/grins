@@ -44,6 +44,7 @@ ChannelMime = {
 		'image/vnd.rn-realpix',
 		'text/vnd.rn-realtext',
 		'video/x-msvideo', ## ++
+		'video/msvideo',	# some servers erroneously use this
 		'video/x-ms-wmv', ## ++
 ##		'video/x-sgi-movie',
 		],

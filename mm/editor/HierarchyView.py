@@ -27,7 +27,7 @@ import os, sys
 import urlparse, MMurl
 from math import ceil
 import string
-import MMmimetypes
+import urlcache
 import features
 import compatibility
 import Widgets
@@ -1190,7 +1190,7 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			interior = (obj.node.GetType() in MMTypes.interiortypes)
 		# make URL relative to document
-		url = ctx.relativeurl(url)
+		rurl = ctx.relativeurl(url)
 
 		# TODO: this code really could be less obfuscated.. the widgets should be able to handle their
 		# own drag and drop. The MMNode's should be able to create nodes after them if they are sequences
@@ -1204,8 +1204,8 @@ class HierarchyView(HierarchyViewDialog):
 			# to the correct child.
 			if obj.iscollapsed() and \
 					MMAttrdefs.getattr(obj.node, 'project_autoroute'):
-				mimetype = MMmimetypes.guess_type(url)[0]
-				if '/' in mimetype:
+				mimetype = urlcache.mimetype(url)
+				if mimetype:
 					mimetype = string.split(mimetype, '/')[0]
 				dnode = obj.node.findMimetypeAcceptor(mimetype)
 				if dnode:
@@ -1213,14 +1213,15 @@ class HierarchyView(HierarchyViewDialog):
 					if transaction and not em.transaction():
 						self.draw()
 						return
-					em.setnodeattr(dnode, 'file', url)
+					em.setnodeattr(dnode, 'file', rurl)
 					if transaction:
 						em.commit()
 					return
 				else:
 					# This "shouldn't happen": the drag code
 					# should have disallowed the drop here.
-					print "Autorouting structure node did not accept:", mimetype
+					if __debug__:
+						print "Autorouting structure node did not accept:", mimetype
 					# We fall through and create a new node.
 			# if node is expanded, determine where in the node
 			# the file is dropped, else create at end
@@ -1368,8 +1369,8 @@ class HierarchyView(HierarchyViewDialog):
 			# check whether this parent has a forced child
 			template = pnode.getForcedChild()
 			if template:
-				mimetype = MMmimetypes.guess_type(url)[0]
-				if '/' in mimetype:
+				mimetype = urlcache.mimetype(self.root.context.findurl(url))
+				if mimetype:
 					mimetype = string.split(mimetype, '/')[0]
 				cnode = template.DeepCopy()
 				# set collapsed and autoroute option
@@ -1415,8 +1416,8 @@ class HierarchyView(HierarchyViewDialog):
 
 			if features.EXPORT_REAL in features.feature_set:
 				# some types shouldn't be converted to RealMedia
-				mimetype = MMmimetypes.guess_type(url)[0]
-				if mimetype in ('image/png', 'image/jpeg', 'audio/mpeg') or mimetype.find('real') >= 0:
+				mimetype = urlcache.mimetype(self.root.context.findurl(url))
+				if not mimetype or mimetype in ('image/png', 'image/jpeg', 'audio/mpeg') or mimetype.find('real') >= 0:
 					node.SetAttr('project_convert', 0)
 
 		dftchannel = None
@@ -1588,7 +1589,7 @@ class HierarchyView(HierarchyViewDialog):
 		if len(nodeList) == 0:
 			# Should not happen.
 			windowinterface.showmessage(
-			    'The clipboard does not contain a node to paste.',
+			    'The clipboard does not contain an object to paste.',
 			    mtype = 'error', parent = self.window)
 			return
 		fnode = self.get_selected_node()
@@ -1653,7 +1654,7 @@ class HierarchyView(HierarchyViewDialog):
 			if ntype not in MMTypes.interiortypes and \
 				   (ntype != 'ext' or node.GetChannelType() != 'animate'):
 				# Should not happen.
-				windowinterface.showmessage('Selection is a leaf node!',
+				windowinterface.showmessage('Selection is a media object!',
 							    mtype = 'error', parent = self.window)
 				node.Destroy()
 				return 0

@@ -185,25 +185,8 @@ class TopLevel(TopLevelDialog):
 ##		t0 = time.time()
 		import urlcache
 		mtype = urlcache.mimetype(self.filename)
-		if mtype == None and sys.platform == 'mac':
-			# On the mac we do something extra: for local files we attempt to
-			# get creator and type, and if they are us we assume we're looking
-			# at a SMIL file.
-			import MacOS
-			utype, host, path, params, query, fragment = urlparse(self.filename)
-			if (not utype or utype == 'file') and \
-			   (not host or host == 'localhost'):
-				# local file
-				fn = MMurl.url2pathname(path)
-				try:
-					ct, tp = MacOS.GetCreatorAndType(fn)
-				except:
-					pass
-				else:
-					if ct == 'GRIN' and tp == 'TEXT':
-						mtype = 'application/x-grins-project'
 		if mtype not in ('application/x-grins-project', 'application/smil'):
-			if windowinterface.showquestion('MIME type not application/smil or application/x-grins-project.\nFix?'):
+			if windowinterface.showquestion('MIME type not application/smil or application/x-grins-project.\nOpen anyway?'):
 				mtype = 'application/smil'
 		if mtype in ('application/x-grins-project', 'application/smil'):
 			# init progress dialog

@@ -137,11 +137,12 @@ class MainDialog:
 			return
 		x,y,filename=value
 		url=self.__path2url(filename)
-		import MMmimetypes, windowinterface
-		mimetype = MMmimetypes.guess_type(url)[0]
+		import urlcache
+		mimetype = urlcache.mimetype(url)
 		if mimetype in ('application/x-grins-project', 'application/smil'):
 			self.openURL_callback(url)
 		else:
+			import windowinterface
 			windowinterface.showmessage('Only GRiNS or SMIL files can be dropped.')
 	
 	def pastefile(self, arg, window, event, value):
@@ -152,10 +153,10 @@ class MainDialog:
 		self.openURL_callback(url)
 		
 	def dropeffect(self, dummy, window, event, params):
+		import windowinterface
 		x,y,filename=params
 		url=self.__path2url(filename)
-		import MMmimetypes, windowinterface
-		mimetype = MMmimetypes.guess_type(url)[0]
+		mimetype = urlcache.mimetype(url)
 		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
 			return windowinterface.DROPEFFECT_COPY
 		else:

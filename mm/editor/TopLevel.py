@@ -12,6 +12,7 @@ from ViewDialog import ViewDialog
 from Hlinks import *
 from usercmd import *
 import MMmimetypes
+import urlcache
 import features
 import compatibility
 import settings
@@ -93,7 +94,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					windowinterface.showmessage('Adding query string "%s"' % query)
 			# RTIPA end
 		url = urlunparse((utype, host, path, params, query, None))
-		import urlcache
 		mtype = urlcache.mimetype(url)
 		if mtype in ('application/x-grins-project', 'application/smil'):
 			self.basename = posixpath.splitext(base)[0]
@@ -794,7 +794,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# If new, we ask
 		if not self.new_file:
 			# If we have a project file name, use it
-			if MMmimetypes.guess_type(self.filename)[0] == 'application/x-grins-project':
+			if urlcache.mimetype(self.filename) == 'application/x-grins-project':
 				utype, host, path, params, query, fragment = urlparse(self.filename)
 				# If the project file is remote, we ask for filename.
 				if (not utype or utype == 'file') and (not host or host == 'localhost'):
@@ -1046,7 +1046,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			# remote file
 			self.dirname = ''
-		mtype = MMmimetypes.guess_type(base)[0]
+		mtype = urlcache.mimetype(self.filename)
 		if mtype in ('application/x-grins-project', 'application/smil'):
 			self.basename = posixpath.splitext(base)[0]
 		else:
@@ -1369,27 +1369,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##		import time
 ##		print 'parsing', filename, '...'
 ##		t0 = time.time()
-		import urlcache
 		mtype = urlcache.mimetype(filename)
-		if mtype is None and sys.platform == 'mac':
-			# On the mac we do something extra: for local files we attempt to
-			# get creator and type, and if they are us we assume we're looking
-			# at a SMIL file.
-			import MacOS
-			utype, host, path, params, query, fragment = urlparse(filename)
-			if (not utype or utype == 'file') and \
-			   (not host or host == 'localhost'):
-				# local file
-				fn = MMurl.url2pathname(path)
-				try:
-					ct, tp = MacOS.GetCreatorAndType(fn)
-				except:
-					pass
-				else:
-					if ct == 'GRIN' and tp == 'TEXT':
-						mtype = 'application/x-grins-project'
 		if mtype not in ('application/x-grins-project', 'application/smil'):
-			if windowinterface.showquestion('MIME type not application/smil or application/x-grins-project.\nFix?'):
+			if windowinterface.showquestion('MIME type not application/smil or application/x-grins-project.\nOpen anyway?'):
 				mtype = 'application/smil'
 		if mtype in ('application/smil', 'application/x-grins-project'):
 			import SMILTreeRead
@@ -1697,7 +1679,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			try:
 				# if the destination document is not a smil/grins document,
 				# it's handle by an external application
-				import urlcache
 				mtype = urlcache.mimetype(url)
 				utype, url2 = MMurl.splittype(url)
 				if mtype in ('application/smil',
