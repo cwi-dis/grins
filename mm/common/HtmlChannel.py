@@ -59,6 +59,8 @@ class HtmlChannel(Channel.ChannelWindow):
 			wh = {'width': w, 'height': h, 'x': x, 'y': y,
 			      'visual': wd._topwindow._visual}
 		wh['mappedWhenManaged'] = 0
+		wh['resolveImageFunction'] = self.resolveImage
+		wh['resolveDelayedImage'] = self.resolveImage
 		#
 		# Create the widget
 		#
@@ -71,8 +73,6 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.htmlw.AddCallback('submitFormCallback', self.cbform, None)
 		self.htmlw.AddCallback('destroyCallback', self.cbdestroy, None)
 		self.htmlw.AddCallback('linkCallback', self.cblink, None)
-		self.htmlw.SetResolveImage(self.resolveImage)
-		self.htmlw.SetResolveDelayedImage(self.resolveImage)
 
 	def cbdestroy(self, widget, userdata, calldata):
 		self.htmlw.FreeImageInfo()
