@@ -449,6 +449,9 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		return l, y, r, y+24
 		
 	def setStatusMsg(self, msg):
+		if not msg:
+			import version
+			msg = version.version
 		self._status_msg = msg
 		rc = self.getStatusRect()
 		self.InvalidateRect(rc)
