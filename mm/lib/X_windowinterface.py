@@ -2419,8 +2419,10 @@ class FileDialog:
 					{'leftAttachment': Xmd.ATTACH_FORM,
 					 'rightAttachment': Xmd.ATTACH_FORM,
 					 'topAttachment': Xmd.ATTACH_WIDGET,
-					 'topWidget': label})
+					 'topWidget': label,
+					 'width': 400})
 		else:
+			attrs['width'] = 400
 			dialog = toplevel._main.CreateFileSelectionDialog(
 							  'fileSelect', attrs)
 			self._form = dialog
