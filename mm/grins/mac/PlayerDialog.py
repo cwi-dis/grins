@@ -96,7 +96,6 @@ class PlayerDialog:
 			self.__window = None
 		for w in self.__all_windows:
 			if hasattr(w, 'window') and w.window:
-				print 'PlayerDialog.hide found', w.window, type(w.window)
 				w.window.close()
 		self.__all_windows = []
 
