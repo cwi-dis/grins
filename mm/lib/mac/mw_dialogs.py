@@ -629,8 +629,96 @@ class TemplateDialog(DialogWindow):
 		Dlg.SetDialogItemText(htext, text)
 		self.snapshot.setfromfile(image)
 
-[TOP, CENTER, BOTTOM] = range(3)
+class BandwidthComputeDialog(DialogWindow):
+	def __init__(self, title, parent=None):
+		DialogWindow.__init__(self, ID_DIALOG_BANDWIDTH,
+				default=ITEM_BANDWIDTH_OK, cancel=ITEM_BANDWIDTH_CANCEL)
+		self._settext(ITEM_BANDWIDTH_MESSAGE, title)
+		self._settext(ITEM_BANDWIDTH_ERRORS, 'Computing...')
+		self._settext(ITEM_BANDWIDTH_STALLTIME,'Computing...')
+		self._settext(ITEM_BANDWIDTH_STALLCOUNT, 'Computing...')
+		self._settext(ITEM_BANDWIDTH_PREROLL, 'Computing...')
+		self._settext(ITEM_BANDWIDTH_MESSAGE2, '')
+##		self.mustwait = 0
+		self.calback = None
+		ctl = self._wid.GetDialogItemAsControl(ITEM_BANDWIDTH_OK)
+		ctl.DeactivateControl()
+		ctl = self._wid.GetDialogItemAsControl(ITEM_BANDWIDTH_CANCEL)
+		ctl.DeactivateControl()
+		self.show()
+		self._wid.DrawDialog()
+		
+	def _settext(self, item, str):
+		h = self._wid.GetDialogItemAsControl(item)
+		Dlg.SetDialogItemText(h, str)
 
+	def setinfo(self, prerolltime, errorseconds, delaycount, errorcount):
+		msg = 'Everything appears to be fine.'
+		if prerolltime or errorseconds or errorcount or delaycount:
+			self.mustwait = 1
+			msg = 'This is a minor problem.'
+		if errorcount:
+			msg = 'You should probably fix this.'
+		if prerolltime == 0:
+			prerolltime = '0 seconds'
+		elif prerolltime < 1:
+			prerolltime = 'less than a second'
+		else:
+			prerolltime = '%d seconds'%prerolltime
+		if errorseconds == 0:
+			errorseconds = '0 seconds'
+		elif errorseconds < 1:
+			errorseconds = 'less than a second'
+		else:
+			errorseconds = '%d seconds'%errorseconds
+			msg = 'You should probably fix this.'
+		if errorcount == 1:
+			errorcount = '1 item'
+		else:
+			errorcount = '%d items'%errorcount
+		if delaycount == 1:
+			delaycount = '1 item'
+		else:
+			delaycount = '%d items'%delaycount
+		self._settext(ITEM_BANDWIDTH_ERRORS, errorcount)
+		self._settext(ITEM_BANDWIDTH_STALLTIME,errorseconds)
+		self._settext(ITEM_BANDWIDTH_STALLCOUNT, delaycount)
+		self._settext(ITEM_BANDWIDTH_PREROLL, prerolltime)
+		self._settext(ITEM_BANDWIDTH_MESSAGE2, msg)
+
+	def done(self, callback=None, cancancel=0):
+		if cancancel and self.mustwait == 0:
+			# Continue without waiting
+			self.close()
+			if callback:
+				callback()
+			return
+		self.callback = callback
+		ctl = self._wid.GetDialogItemAsControl(ITEM_BANDWIDTH_OK)
+		ctl.ActivateControl()
+		if cancancel:
+			ctl.SetControlTitle('Continue')
+			ctl = self._wid.GetDialogItemAsControl(ITEM_BANDWIDTH_CANCEL)
+			ctl.ActivateControl()
+
+	def do_itemhit(self, item, event):
+		if item == ITEM_BANDWIDTH_CANCEL:
+			self.close()
+		elif item == ITEM_BANDWIDTH_OK:
+			self.close()
+			if self.callback:
+				self.callback()
+		elif item == ITEM_BANDWIDTH_HELP:
+			self.do_Help()
+		else:
+			print 'Bandwidth Dialog item: ', item
+		return 1
+
+	def do_Help(self):
+		import Help
+		Help.givehelp('bandwidth')
+
+[TOP, CENTER, BOTTOM] = range(3)
 
 def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1,
 	   parent = None):
@@ -684,51 +772,3 @@ def GetOKCancel(prompt, parent = None):
 	rv = EasyDialogs.AskYesNoCancel(prompt, 1, yes="OK")
 	if rv > 0: return 0
 	return 1
-
-class BandwidthComputeDialog:
-	def __init__(self, title, parent=None):
-		self.title = title
-		self.mustwait = 0
-
-	def setinfo(self, prerolltime, errorseconds, delaycount, errorcount):
-		print 'setinfo', prerolltime, errorseconds, delaycount, errorcount
-		msg = ''
-		if prerolltime or errorseconds or errorcount or delaycount:
-			self.mustwait = 1
-			msg = 'This is a minor problem.'
-		if errorcount:
-			msg = 'You should probably fix this.'
-		if errorseconds == 0:
-			errorseconds = '0 seconds'
-		elif errorseconds < 1:
-			errorseconds = 'less than a second'
-		else:
-			errorseconds = '%d seconds'%errorseconds
-			msg = 'You should probably fix this.'
-		if errorcount == 1:
-			errorcount = '1 item'
-		else:
-			errorcount = '%d items'%errorcount
-		if delaycount == 1:
-			delaycount = '1 item'
-		else:
-			delaycount = '%d items'%delaycount
-		self.msg = "%s\nMedia errors:%s\nPreroll time: %d\nDelay during playback: %s\nCaused by: %s\n%s" % \
-			(self.title, errorcount, prerolltime, errorseconds, delaycount, msg)
-
-	def done(self, callback=None, cancancel=0):
-		if cancancel == 0:
-			# The dialog is shown because the user used the "compute bw" command
-			showmessage(self.msg)
-			rv = 1
-		elif not self.mustwait:
-			# Export dialog, and nothing to report. Just continue.
-			rv = 1
-		else:
-			rv = showquestion(self.msg+'\nDo you want to continue?')
-		if rv and callback:
-			callback()
-
-	def do_Help(self):
-		import Help
-		Help.givehelp('bandwidth')
