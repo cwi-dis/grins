@@ -89,8 +89,8 @@ class Main(MainDialog):
 			self.openURL_callback(MMurl.guessurl(file))
 
 		if ENABLE_FNORB_SUPPORT:
-			import CORBA.services
-			self.corba_services = CORBA.services.services(sys.argv,self)
+			import grins.CORBA.services
+			self.corba_services = grins.CORBA.services.services(sys.argv,self)
 				
 
 	def new_callback(self):
