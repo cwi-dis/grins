@@ -121,7 +121,7 @@ item: Set Variable
 end
 item: Set Variable
   Variable=GROUP
-  Value=Oratrix GRiNS\GRiNS Editor for Real 2.0
+  Value=Oratrix GRiNS\GRiNS Editor for RealONE
   Flags=10000000
 end
 item: Set Variable
@@ -2181,6 +2181,21 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil2real\tutorials.pdf
+  Destination=%MAINDIR%\tutorials.pdf
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil2real\TDG.html
+  Destination=%MAINDIR%\TDG.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil2real\REFM.html
+  Destination=%MAINDIR%\REFM.html
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\Build\products\smil2real\QuickStart.pdf
   Destination=%MAINDIR%\QuickStart.pdf
   Flags=0000000010000010
@@ -2221,7 +2236,79 @@ item: Create Shortcut
 end
 item: End Block
 end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\REFM.html
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Reference Manual.lnk
+  Icon Number=0
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\TDG.html
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Template Design Guide.lnk
+  Icon Number=0
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\tutorials.pdf
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Tutorial Users Guide.lnk
+  Icon Number=0
+end
+item: End Block
+end
 item: Else Statement
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Reference Manual
+  Command Line=%MAINDIR%\REFM.html
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=Template Design Guide
+  Command Line=%MAINDIR%\TDG.html
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=Tutorial Users Guide
+  Command Line=%MAINDIR%\tutorials.pdf
+end
+item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS
