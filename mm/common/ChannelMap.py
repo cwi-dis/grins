@@ -67,7 +67,7 @@ class ChannelMap:
 				self.channelmodules[key] = mod
 				return mod
 		# no success, use NullChannel as backup
-		exec 'from NullChannel import NullChannel'
+		from NullChannel import NullChannel
 		self.channelmodules[key] = NullChannel
 		return NullChannel
 
