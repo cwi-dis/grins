@@ -40,6 +40,7 @@ class _Reader:
 		fsspec = macfs.FSSpec(path)
 		fd = Qt.OpenMovieFile(fsspec, 0)
 		self.movie, d1, d2 = Qt.NewMovieFromFile(fd, 0, 0)
+		self.movietimescale = self.movie.GetMovieTimeScale()
 		try:
 			self.audiotrack = self.movie.GetMovieIndTrackType(1,
 				QuickTime.SoundMediaType, QuickTime.movieTrackMediaType)
@@ -49,26 +50,22 @@ class _Reader:
 			self.audiodescr = {}
 		else:
 			handle = Res.Handle('')
+			n = self.audiomedia.GetMediaSampleDescriptionCount()
 			self.audiomedia.GetMediaSampleDescription(1, handle)
-			print len(handle.data)
 			self.audiodescr = MediaDescr.SoundDescription.decode(handle.data)
 			del handle
-##			print 'AUDIO DUR', self._gettrackduration_ms(self.audiotrack)
 	
 		try:	
 			self.videotrack = self.movie.GetMovieIndTrackType(1,
-					QuickTime.VideoMediaType, QuickTime.movieTrackMediaType)
+					QuickTime.VisualMediaCharacteristic, QuickTime.movieTrackCharacteristic)
 			self.videomedia = self.videotrack.GetTrackMedia()
 		except Qt.Error:
 			self.videotrack = self.videomedia = self.videotimescale = None
 		if self.videotrack:
-			handle = Res.Handle('')
-			self.videomedia.GetMediaSampleDescription(1, handle)
-			print 'video', len(handle.data)
-			self.videodescr = MediaDescr.ImageDescription.decode(handle.data)
-			del handle
+			self.videotimescale = self.videomedia.GetMediaTimeScale()
+			x0, y0, x1, y1 = self.movie.GetMovieBox()
+			self.videodescr = {'width':(x1-x0), 'height':(y1-y0)}
 			self._initgworld()
-			print 'VIDEO DUR', self._gettrackduration_ms(self.videotrack)
 		
 	def __del__(self):
 		self.audiomedia = None
@@ -94,14 +91,25 @@ class _Reader:
 			self.movie.MoviesTask(0)
 			self.movie.SetMoviePlayHints(QuickTime.hintsHighQuality, QuickTime.hintsHighQuality)
 			# XXXX framerate
-			self.videocurtime = 0
+			self.videocurtime = None
 		finally:
 			Qdoffs.SetGWorld(old_port, old_dev)
 		
 	def _gettrackduration_ms(self, track):
-		movietimescale = self.movie.GetMovieTimeScale()
 		tracktime = track.GetTrackDuration()
-		value, d1, d2 = Qt.ConvertTimeScale((tracktime, movietimescale, None), 1000)
+		return self._movietime_to_ms(tracktime)
+		
+	def _movietime_to_ms(self, time):
+		value, d1, d2 = Qt.ConvertTimeScale((time, self.movietimescale, None), 1000)
+		return value
+		
+	def _videotime_to_ms(self, time):
+		value, d1, d2 = Qt.ConvertTimeScale((time, self.videotimescale, None), 1000)
+		return value
+		
+	def _videotime_to_movietime(self, time):
+		value, d1, d2 = Qt.ConvertTimeScale((time, self.videotimescale, None),
+				self.movietimescale)
 		return value
 		
 	def HasAudio(self):
@@ -110,8 +118,17 @@ class _Reader:
 	def HasVideo(self):
 		return not self.videotrack is None
 		
+	def GetAudioDuration(self):
+		if not self.audiotrack:
+			return 0
+		return self._gettrackduration_ms(self.audiotrack)
+
+	def GetVideoDuration(self):
+		if not self.videotrack:
+			return 0
+		return self._gettrackduration_ms(self.videotrack)
+		
 	def GetAudioFormat(self):
-		print 'audiofmt', self.audiodescr
 		bps = self.audiodescr['sampleSize']
 		nch = self.audiodescr['numChannels']
 		if nch == 1:
@@ -147,7 +164,13 @@ class _Reader:
 		return VideoFormat('dummy_format', 'Dummy Video Format', width, height, imgformat.macrgb)
 		
 	def GetVideoFrameRate(self):
-		return 25
+		tv = self.videocurtime
+		if tv == None:
+			tv = 0
+		flags = QuickTime.nextTimeStep|QuickTime.nextTimeEdgeOK
+		tv, dur = self.videomedia.GetMediaNextInterestingTime(flags, tv, 1.0)
+		dur = self._videotime_to_ms(dur)
+		return int((1000.0/dur)+0.5)
 		
 	def ReadAudio(self, nframes):
 		return ''
@@ -155,16 +178,18 @@ class _Reader:
 	def ReadVideo(self, time=None):
 		if not time is None:
 			self.videocurtime = time
-		tv, dur = self.videomedia.GetMediaNextInterestingTime(
-				QuickTime.nextTimeMediaSample|QuickTime.nextTimeEdgeOK,
-				self.videocurtime, 1.0)
-		if tv < 0:
-			return self.videocurtime, None
-##		print 'DBG: old', self.videocurtime, 'tv, dur', tv, dur
-		self.videocurtime = tv+dur
-		self.movie.SetMovieTimeValue(self.videocurtime)
+		flags = QuickTime.nextTimeStep
+		if self.videocurtime == None:
+			flags = flags | QuickTime.nextTimeEdgeOK
+			self.videocurtime = 0
+		tv = self.videomedia.GetMediaNextInterestingTimeOnly(flags, self.videocurtime, 1.0)
+		if tv < 0 or (self.videocurtime and tv <= self.videocurtime):
+			return self._movietime_to_ms(self.videocurtime), None
+		self.videocurtime = tv
+		moviecurtime = self._videotime_to_movietime(self.videocurtime)
+		self.movie.SetMovieTimeValue(moviecurtime)
 		self.movie.MoviesTask(0)
-		return tv, self._getpixmapcontent()
+		return self._videotime_to_ms(self.videocurtime), self._getpixmapcontent()
 		
 	def _getpixmapcontent(self):
 		"""Shuffle the offscreen PixMap data, because it may have funny stride values"""
@@ -180,17 +205,10 @@ class _Reader:
 		return rv
 
 def reader(url):
-##	print 'No video conversion yet'
-##	return None
 	try:
 		rdr = _Reader(url)
 	except IOError:
 		return None
-##	if not rdr.HasVideo():
-##		print "DBG: No video in", url
-##		return None
-##	if not rdr.HasAudio():
-##		print "DBG: warning: no audio"
 	return rdr
 
 def _test():
