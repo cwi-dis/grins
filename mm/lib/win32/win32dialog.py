@@ -337,11 +337,9 @@ class SelectElementDlg(ResDialog):
 		self._tree = self.GetDlgItem(grinsRC.IDC_TREE1)
 		self._tree.SetImageList(self._imageList, commctrl.LVSIL_NORMAL)
 		self.buildElementsTree()
-		if self._selectionid:
-			self._tree.SetItemState(self._selectionid, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
-			self._tree.Select(self._selectionid,commctrl.TVGN_CARET)
-			self.sethelpstring(self._selectionid)
 		self.HookNotify(self.OnSelChanged, commctrl.TVN_SELCHANGED)
+		if self._selectionid:
+			self._tree.Select(self._selectionid,commctrl.TVGN_CARET)
 		return ResDialog.OnInitDialog(self)
 
 	def OnOK(self):
@@ -378,7 +376,7 @@ class SelectElementDlg(ResDialog):
 		self.__reg2id = {}
 		for top in top_levels:
 			name = top.GetUID()
-			itemid = self.insertLabel(name, self.ET_TOPLAYOUT, 0)
+			itemid = self.insertLabel(name, self.ET_TOPLAYOUT, self.ET_TOPLAYOUT)
 			self.__reg2id[top] = itemid
 			self.__appendRegions(top, itemid)
 		self.__appendNodes(root)
@@ -391,7 +389,7 @@ class SelectElementDlg(ResDialog):
 		for reg in parent.GetChildren():
 			if reg.get('type') == 'layout':
 				name = reg.GetUID()
-				childitemid = self.insertLabel(name, self.ET_REGION, 0, itemid)
+				childitemid = self.insertLabel(name, self.ET_REGION, self.ET_REGION, itemid)
 				self.__reg2id[reg] = childitemid
 				self.__appendRegions(reg, childitemid)
 
@@ -418,7 +416,8 @@ class SelectElementDlg(ResDialog):
 					if regid is not None:
 						mimetype = node.GetComputedMimeType()
 						mtype = string.split(mimetype, '/')[0]
-						self.insertLabel(name, self.ET_SUBREGION, self.mtypes.get(mtype) or 0, regid) 
+						imageix = self.ET_SUBREGION + (self.mtypes.get(mtype) or 0)
+						self.insertLabel(name, self.ET_SUBREGION, imageix, regid) 
 			self.__appendNodes(node)
 
 	def OnSelChanged(self, std, extra):
@@ -439,7 +438,7 @@ class SelectElementDlg(ResDialog):
 
 	def insertLabel(self, text, etype = 0, imageix = 0, parent = commctrl.TVI_ROOT, after = commctrl.TVI_LAST):
 		mask = commctrl.TVIF_TEXT | commctrl.TVIF_PARAM |  commctrl.TVIF_IMAGE | commctrl.TVIF_SELECTEDIMAGE
-		itemid = self._tree.InsertItem(mask, text, etype+imageix, etype+imageix, 0, 0, etype, parent, after)
+		itemid = self._tree.InsertItem(mask, text, imageix, imageix, 0, 0, etype, parent, after)
 		if text == 	self._selection:
 			self._selectionid = itemid
 		return itemid
