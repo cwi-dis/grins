@@ -395,7 +395,7 @@ def run(rgb):
 	return a_selector.run(rgb)
 
 def test():
-	run(255, 255, 255)
+	run((255, 255, 255))
 
 import sys
 if sys.argv == ['']: test()
