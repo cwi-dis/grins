@@ -99,9 +99,18 @@ class Dialog:
 		buttonheight = float(buttonheight) / height
 		mw = float(mw) / width
 		sw = float(sw) / width
-		self.window = windowinterface.newwindow( \
-			  float(scrwidth - winwidth) / 2, \
-			  float(scrheight - winheight) / 2, \
+		mx, my = windowinterface.getmouse()
+		mx = mx - winwidth / 2
+		if mx < 0:
+			mx = 0
+		if mx + winwidth > scrwidth:
+			mx = scrwindth - winwidth
+		my = my - winheight / 2
+		if my < 0:
+			my = 0
+		if my + winheight > scrheight:
+			my = scrwidth - winheight
+		self.window = windowinterface.newwindow(mx, my,
 			  winwidth, winheight, WINDOWTITLE)
 		self.window.bgcolor(BGCOLOR)
 		# remember these settings since we may need them later
@@ -119,6 +128,7 @@ class Dialog:
 	def draw_window(self):
 		d = self.window.newdisplaylist()
 		d.fgcolor(self.FGCOLOR)
+		d.drawbox(0,0,1,1)
 		bm = (self.widest_button + self.INTERBUTTONGAP) * (len(self.buttons) - 1) + self.widest_button
 		if type(self.message) == type(''):
 			m = self.message + '\n' + '\n' * self.buttonlines + bm
