@@ -49,7 +49,6 @@ struct PyDIBSurf
 		}
 	};
 
-
 PyObject* Wingdi_CreateDIBSurface(PyObject *self, PyObject *args)
 	{
 	PyObject *obj;
@@ -116,8 +115,12 @@ PyObject* Wingdi_CreateDIBSurfaceFromFile(PyObject *self, PyObject *args)
 	HDC hDC = (HDC)GetGdiObjHandle(obj);
 	
 	memfile mf;
-	mf.open(TextPtr(filename));
-	mf.fillBuffer(16);
+	if(!mf.open(TextPtr(filename)))
+		{
+		seterror("CreateDIBSurfaceFromFile", "failed to read file");
+		return NULL;
+		}
+
 	ImgDecoder *decoder = CreateImgDecoder(mf, hDC);
 	if(decoder == NULL)
 		{
