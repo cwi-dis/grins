@@ -17,7 +17,7 @@ from win32mu import Point,Rect
 import win32ui,win32con,win32api
 import appcon
 import __main__
-
+from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 
 class _rbtk:
 	def __init__(self):
@@ -128,7 +128,7 @@ class _rbtk:
 		# 5. get user object
 		if len(self._objects):
 			drawObj=self._objects[0]
-			rb=self.get_relative_coords100(drawObj._position.tuple_ps(), units = units)		
+			rb=self.get_relative_coords100(drawObj._position.tuple_ps(), units = units)	
 		self.DeleteContents()
 				
 		# call user selected callback
