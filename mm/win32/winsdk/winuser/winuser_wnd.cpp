@@ -527,11 +527,17 @@ static PyObject* PyWnd_MessageBox(PyWnd *self, PyObject *args)
 static PyObject* PyWnd_SetMenu(PyWnd *self, PyObject *args)
 {
 	PyObject *obj;
+	HMENU hMenu;
 	if (!PyArg_ParseTuple(args, "O", &obj))
 		return NULL;
+	if(PyInt_Check(obj))
+		hMenu = (HMENU)PyInt_AsLong(obj);
+	else
+		{
+		struct Temp { PyObject_HEAD; HMENU m_hMenu;};
+		hMenu = ((Temp*)obj)->m_hMenu;
+		}
 	ASSERT_ISWINDOW(self->m_hWnd)
-	extern HMENU GetHandleFromPyMenu(PyObject *);
-	HMENU hMenu = GetHandleFromPyMenu(obj);
 #ifdef _WIN32_WCE
 	return none();
 #else
