@@ -1237,6 +1237,11 @@ class Region(Window):
 			dl.close()
 		del self._topwindow
 		del self._convert_color
+		del self._transition
+		del self._video 
+		del self._drawsurf
+		del self._passive
+		del self._frozen
 
 	#
 	# OS windows simulation support
@@ -2614,3 +2619,5 @@ class _ResizeableDisplayList(_DisplayList):
 		self._list.append(('label', str))
 
 
+
+ 
