@@ -1,6 +1,7 @@
 import Win
 import Qd
 import Res
+import Icn
 import string
 import QuickDraw
 from types import *
@@ -12,9 +13,10 @@ import math
 #
 from mw_globals import error
 from mw_globals import TRUE, FALSE
-from mw_globals import _X, _Y, _WIDTH, _HEIGHT
+from mw_globals import _X, _Y, _WIDTH, _HEIGHT, ICONSIZE_PXL
 from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH, SIZE_3DBORDER
 import mw_fonts
+import mw_resources
 
 # Special round function (XXXX needs work).
 def _roundi(x):
@@ -24,6 +26,25 @@ def _roundi(x):
 	
 def _colormix((r1, g1, b1), (r2, g2, b2)):
 	return (r1+r2)/2, (g1+g2)/2, (b1+b2)/2
+	
+# Icon storage
+_icons = {}
+_icon_ids = {
+	# '' is special: don't draw any icon (needed for removing icons in optimize)
+	'closed': mw_resources.ID_ICON_TRIANGLE_RIGHT,
+	'open': mw_resources.ID_ICON_TRIANGLE_DOWN,
+	'bandwidthgood': mw_resources.ID_ICON_BANDWIDTH_OK,
+	'bandwidthbad': mw_resources.ID_ICON_BANDWIDTH_ERROR,
+	'error': mw_resources.ID_ICON_ERROR
+}
+
+def _get_icon(which):
+	if not _icons:
+		for name, resid in _icon_ids.items():
+			_icons[name] = Icn.GetCIcon(resid)
+		_icons[''] = None
+	return _icons[which]
+	
 
 class _DisplayList:
 	def __init__(self, window, bgcolor):
@@ -187,6 +208,17 @@ class _DisplayList:
 			Qd.MoveTo(entry[1]+xscrolloffset, entry[2]+yscrolloffset)
 			 # XXXX Incorrect for long strings:
 			Qd.DrawString(entry[3])
+		elif cmd == 'icon':
+			if entry[2] != None:
+				x, y, w, h = entry[1]
+				x = x+xscrolloffset
+				y = y+yscrolloffset
+				fgcolor = wid.GetWindowPort().rgbFgColor
+				Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+				Qd.RGBForeColor((0xffff, 0, 0))
+				Icn.PlotCIcon((x, y, x+w, y+h), entry[2])
+				Qd.RGBBackColor(self._bgcolor)
+				Qd.RGBForeColor(fgcolor)
 		elif cmd == 'image':
 			mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
 			dstx, dsty = dstx+xscrolloffset, dsty+yscrolloffset
@@ -540,6 +572,24 @@ class _DisplayList:
 		x, y, w, h = coordinates
 ##		self._update_bbox(x, y, x+w, y+h)
 
+	def drawicon(self, coordinates, icon):
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		window = self._window
+		x, y, w, h = window._convert_coordinates(coordinates)
+		# Keep it square, top it off, center it
+		size = min(w, h, ICONSIZE_PXL)
+		xextra = w-size
+		yextra = h-size
+		if xextra > 0:
+			x = x + xextra/2
+		if yextra > 0:
+			y = y + yextra/2
+		data = _get_icon(icon)
+		self._list.append('icon', (x, y, size, size), data)
+		self._optimize(2)
+
+		
 	def drawarrow(self, color, src, dst):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
