@@ -6,7 +6,7 @@ from Hlinks import Hlinks
 
 
 leaftypes = ['imm', 'ext']
-interiortypes = ['seq', 'par']
+interiortypes = ['seq', 'par', 'bag']
 alltypes = leaftypes + interiortypes
 
 
@@ -174,8 +174,9 @@ class MMNode:
 		_stat('GetPath')
 		path = []
 		while x:
-			path.insert(0, x)
+			path.append(x)
 			x = x.parent
+		path.reverse()
 		return path
 	#
 	def IsAncestorOf(self, x):

@@ -45,8 +45,13 @@ import sys
 
 # The file from which the attribute definitions are read.
 #
-ATTRDEFS_LOCAL = './Attrdefs'
-ATTRDEFS = '/ufs/guido/mm/demo/lib/Attrdefs'
+ATTRDEFS_LOCAL = 'Attrdefs'
+import os
+if os.environ.has_key('CMIF'):
+	CMIF = os.environ['CMIF']
+else:
+	CMIF = '/ufs/guido/mm/demo'
+ATTRDEFS = os.path.join(CMIF, 'lib/Attrdefs')
 
 
 # Parse a file containing attribute definitions.
@@ -132,10 +137,10 @@ def useattrdefs(mapping):
 # Initialize the attrdefs table.
 #
 try:
-    attrdefs = readattrdefs(ATTRDEFS_LOCAL)
-    print '(Using local Attrdefs file)'
+	attrdefs = readattrdefs(ATTRDEFS_LOCAL)
+	print '(Using local Attrdefs file)'
 except:
-    attrdefs = readattrdefs(ATTRDEFS)
+	attrdefs = readattrdefs(ATTRDEFS)
 
 
 
