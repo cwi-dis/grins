@@ -142,6 +142,7 @@ else:
 # macfreeze: exclude NodeInfoHelper
 # macfreeze: exclude dshow
 # macfreeze: exclude win32ui
+# macfreeze: exclude linuxaudiodev
 
 #
 # And here's the code for non-standalone version of the editor:
