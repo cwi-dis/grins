@@ -120,7 +120,7 @@ class PlayerCore(Scheduler):
 				self.setrate(0)
 				self.setready() # Cancel possible watch cursor
 		else:
-			self.start_playing(0.0)
+			dummy = self.start_playing(0.0)
 			self.setready()
 		self.showstate()
 	#
