@@ -32,7 +32,6 @@ feature_set = [
 	AUTO_EVALUATE,
 	]
 
-auto_evaluate_cookie = 'Ajax'
 version = 'pro'
 compatibility = Boston
 compatibility_short = 'SMIL2'
