@@ -7,6 +7,7 @@ _EndLoopEvent = 30			# event to end internal loops
 
 error = 'windowinterface.error'
 FALSE, TRUE = X.FALSE, X.TRUE
+ReadMask, WriteMask = 1, 2
 
 Version = 'X'
 
@@ -68,22 +69,26 @@ def _colormask(mask):
 
 def _setupimg(rs, rm, gs, gm, bs, bm):
 	global myxrgb8
+	r, g, b = imgformat.xrgb8.descr['comp'][:3]
+	xrs, xrm = r[0], (1 << r[1]) - 1
+	xgs, xgm = g[0], (1 << g[1]) - 1
+	xbs, xbm = b[0], (1 << b[1]) - 1
 	c = []
-	if (rm, gm, bm) != (7, 7, 3):
+	if (rm, gm, bm) != (xrm, xgm, xbm):
 		for n in range(256):
-			r = roundi(((n >> 5) & 7) / 7. * rm)
-			g = roundi(((n     ) & 7) / 7. * gm)
-			b = roundi(((n >> 3) & 3) / 3. * bm)
+			r = roundi(((n >> xrs) & xrm) / float(xrm) * rm)
+			g = roundi(((n >> xgs) & xgm) / float(xgm) * gm)
+			b = roundi(((n >> xbs) & xbm) / float(xbm) * bm)
 			c.append((r << rs) | (g << gs) | (b << bs))
 		lossy = 2
-	elif (rs, gs, bs) == (5, 0, 3):
+	elif (rs, gs, bs) == (xrs, xgs, xbs):
 		# no need for extra conversion
 		return
 	else:
 		for n in range(256):
-			r = (n >> 5) & 7
-			g = (n     ) & 7
-			b = (n >> 3) & 3
+			r = (n >> xrs) & xgm
+			g = (n >> xgs) & xgm
+			b = (n >> xbs) & xbm
 			c.append((r << rs) | (g << gs) | (b << bs))
 		lossy = 0
 	import imgcolormap, imgconvert
@@ -228,14 +233,16 @@ class _Toplevel:
 		self._visual = visuals[0]
 		self._depth = self._visual.depth
 		self._colormap = self._visual.CreateColormap(X.AllocNone)
-		self._red_shift, self._red_mask = 5, 7
-		self._green_shift, self._green_mask = 0, 7
-		self._blue_shift, self._blue_mask = 3, 3
+		r, g, b = imgformat.xrgb8.descr['comp'][:3]
+		self._red_shift,   self._red_mask   = r[0], (1 << r[1]) - 1
+		self._green_shift, self._green_mask = g[0], (1 << g[1]) - 1
+		self._blue_shift,  self._blue_mask  = b[0], (1 << b[1]) - 1
 		(plane_masks, pixels) = self._colormap.AllocColorCells(1, 8, 1)
 		xcolors = []
 		for n in range(256):
 			# The colormap is set up so that the colormap
-			# index has the meaning: rrrbbggg.
+			# index has the meaning: rrrbbggg (same as
+			# imgformat.xrgb8).
 			xcolors.append((n+pixels[0],
 				  int((float((n >> self._red_shift) & self._red_mask) / float(self._red_mask)) * 255.)<<8,
 				  int((float((n >> self._green_shift) & self._green_mask) / float(self._green_mask)) * 255.)<<8,
@@ -1913,20 +1920,19 @@ class _Event:
 		if debug: print 'event._timeout_callback'
 		self._timeout_called = TRUE
 
-	def _input_callback(self, client_data, fd, id):
+	def _input_callback(self, fd_mask, fd, id):
 		if debug: print 'event._input_callback'
 		self.entereventunique(None, FileEvent, fd)
 		if not self._looping:
 			Xt.RemoveInput(self._fdlist[fd])
 			del self._fdlist[fd]
-			self._savefds.append(fd)
+			self._savefds.append(fd_mask)
 
 	def _getevent(self, timeout):
 		toplevel._win_lock.acquire()
-		for fd in self._savefds:
-			self._fdlist[fd] = Xt.AddInput(fd,
-				  Xtdefs.XtInputReadMask, self._input_callback,
-				  None)
+		for fd, mask in self._savefds:
+			self._fdlist[fd] = Xt.AddInput(fd, mask,
+					self._input_callback, (fd, mask))
 		self._savefds = []
 		if timeout is not None and timeout > 0.001:
 			if debug: print '_getevent: timeout:',`timeout`
@@ -2055,20 +2061,27 @@ class _Event:
 		else:
 			return None
 
-	def setfd(self, fd):
+	def setfd(self, fd, mask = ReadMask):
 		if debug: print 'setfd',`fd`
 		if type(fd) is not IntType:
 			fd = fd.fileno()
-		self._fdlist[fd] = Xt.AddInput(fd, Xtdefs.XtInputReadMask,
-			  self._input_callback, None)
+		xmask = 0
+		if mask & ReadMask:
+			xmask = xmask | Xtdefs.XtInputReadMask
+		if mask & WriteMask:
+			xmask = xmask | Xtdefs.XtInputWriteMask
+		self._fdlist[fd] = Xt.AddInput(fd, xmask,
+			  self._input_callback, (fd, xmask))
 
 	def rmfd(self, fd):
 		if self._fdlist.has_key(fd):
 			id = self._fdlist[fd]
 			Xt.RemoveInput(id)
 			del self._fdlist[fd]
-		if fd in self._savefds:
-			self._savefds.remove(fd)
+		for i in range(len(self._savefds)):
+			if self._savefds[i][0] == fd:
+				del self._savefds[i]
+				break
 
 	def getfd(self):
 		return -1		# for now...
