@@ -180,7 +180,7 @@ class LinkEditDialog(windowinterface.MACDialog):
 		(what, message, when, where, modifiers) = event
 		Qd.SetPort(self._dialog)
 		where = Qd.GlobalToLocal(where)
-		is_double, item = list.click(where, modifiers)
+		item, is_double = list.click(where, modifiers)
 		apply(cbfunc, cbarg)
 		
 	def _showmenu(self, event, baseitem, menu):
