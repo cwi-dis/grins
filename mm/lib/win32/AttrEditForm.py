@@ -27,7 +27,12 @@ from win32mu import Point,Size,Rect # shorcuts
 from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 
 # input validators
-ENABLE_VALIDATORS = 0
+import settings
+if settings.user_settings.get('use_input_validators'):
+	ENABLE_VALIDATORS = 1
+else:
+	ENABLE_VALIDATORS = 0
+
 
 if ENABLE_VALIDATORS:
 	import InputValidator
@@ -634,6 +639,66 @@ class FloatTupleCtrl(TupleCtrl):
 				else:
 					s = st[i]
 				self._attrval[i].settext(s)
+
+##################################
+# StringOptionsCtrl can be used as a StringCtrl but the user 
+# can optionally select the string from a drop down list
+class StringOptionsCtrl(AttrCtrl):
+	def __init__(self,wnd,attr,resid,options=[]):
+		AttrCtrl.__init__(self,wnd,attr,resid)
+		self._attrname=components.Edit(wnd,resid[0])
+		self._attrval=components.ComboBox(wnd,resid[1])
+		self._options=options
+		self._queryctrl='e'
+		
+	def OnInitCtrl(self):
+		self._initctrl=self
+		self._attrname.attach_to_parent()
+		self._attrval.attach_to_parent()
+		label = self._attr.getlabel()
+		if self.want_colon_after_label:
+			label = label + ':'
+		self._attrname.settext(label)
+		if len(self._options):
+			self._attrval.initoptions(self._options)
+		self.setvalue(self._attr.getcurrent())
+		self._wnd.HookCommand(self.OnCombo,self._resid[1])
+
+	def setvalue(self, val):
+		if self._initctrl:
+			self._attrval.setedittext(val)
+
+	def getvalue(self):
+		if not self._initctrl:
+			return self._attr.getcurrent()
+		if self._queryctrl=='e':
+			val = self._attrval.getedittext()
+		elif self._queryctrl=='o':
+			sel=self._attrval.getcursel()
+			if self and sel>=0:
+				val=self._attrval.gettext(sel)
+			else:
+				val=''
+		return val
+
+	def OnReset(self,id,code):
+		if self._attr:
+			self._attr.reset_callback()
+
+	def OnCombo(self,id,code):
+		self.sethelp()
+		if code==win32con.CBN_SELCHANGE:
+			self._queryctrl='o'
+			self.enableApply()
+		elif code==win32con.CBN_EDITCHANGE:
+			self._queryctrl='e'
+			self.enableApply()
+
+class HtmlTemplateCtrl(StringOptionsCtrl):
+	def __init__(self,wnd,attr,resid):
+		options=['external_player.html','embedded_player.html']
+		StringOptionsCtrl.__init__(self,wnd,attr,resid,options)
+
 	
 ##################################
 class AttrSheet(dialog.PropertySheet):
@@ -813,6 +878,10 @@ class SingleAttrPage(AttrPage):
 			(grinsRC.IDD_EDITATTR_CH1,
 			 ChannelCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
+		'project_html_page':	# A string field with a drop down selection list
+			(grinsRC.IDD_EDITATTR_D1,
+			 HtmlTemplateCtrl,
+			 (grinsRC.IDC_11,grinsRC.IDC_12)),
 		}
 	CTRLMAP_BYTYPE = {
 		'option':		# An option selected from a list (as a popup menu)
