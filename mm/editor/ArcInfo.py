@@ -48,8 +48,17 @@ class ArcInfo(ArcInfoDialog):
 		self.dside = dside
 		self.cview = cview
 		self.setchoices()
-		if self.sside: src_init = len(self.src_markers) + 1
-		else: src_init = 0
+		if self.sside == 0:
+			src_init = 0
+		elif self.sside == 1:
+			src_init = len(self.src_markers) + 1
+		else:
+			for i in range(len(self.src_markers)):
+				if self.src_markers[i][2] == self.sside:
+					src_init = i + 1
+					break
+			else:
+				src_init = len(self.src_markers) + 1
 		if self.dside: dst_init = len(self.dst_markers) + 1
 		else: dst_init = 0
 
@@ -168,9 +177,18 @@ class ArcInfo(ArcInfoDialog):
 
 	def getvalues(self):
 		self.delay_setvalue(self.delay)
-		if self.sside: i = len(self.src_markers) + 1
-		else: i = 0
-		self.src_setpos(i)
+		if self.sside == 0:
+			src_init = 0
+		elif self.sside == 1:
+			src_init = len(self.src_markers) + 1
+		else:
+			for i in range(len(self.src_markers)):
+				if self.src_markers[i][2] == self.sside:
+					src_init = i + 1
+					break
+			else:
+				src_init = len(self.src_markers) + 1
+		self.src_setpos(src_init)
 		if self.dside: i = len(self.dst_markers) + 1
 		else: i = 0
 		self.dst_setpos(i)
@@ -182,7 +200,9 @@ class ArcInfo(ArcInfoDialog):
 		if delay != self.delay:
 			changed = 1
 		# XXX For now, clip sides to [0, 1]
-		sside = min(self.src_getpos(), 1)
+		sside = self.src_getpos()
+		if 0 < sside <= len(self.src_markers):
+			sside = self.src_markers[sside-1][2]
 		if sside != self.sside:
 			changed = 1
 		dside = min(self.dst_getpos(), 1)

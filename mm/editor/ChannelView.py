@@ -1808,7 +1808,9 @@ class NodeBox(GO, NodeBoxCommand):
 			xname = MMAttrdefs.getattr(xnode, 'name')
 			if not xname:
 				xname = '#' + xnode.GetUID()
-			arcmenu.append(('From %s of node "%s" to %s of self' % (begend[xside], xname, begend[yside]), (xnode, xside, delay, yside)))
+			if xside in (0, 1):
+				xside = begend[xside]
+			arcmenu.append(('From %s of node "%s" to %s of self' % (xside, xname, begend[yside]), (xnode, xside, delay, yside)))
 		self.menutitle = 'Node %s ops' % self.name
 		NodeBoxCommand.__init__(self, mother, node)
 

@@ -13,6 +13,7 @@ from HDTL import HD, TL
 # Not needed? from AnchorDefs import *
 import SR
 import settings
+import MMStates
 
 debugtimer = 0
 debugevents = 1
@@ -255,7 +256,7 @@ class SchedulerContext:
 		if s_node and s_aid:
 			self.seekanchor(s_node, s_aid, s_args)
 		self.parent.event(self, (SR.SCHED, self.playroot))
-		self.parent.updatetimer()
+##		self.parent.updatetimer()
 		return 1
 	#
 	# Seekanchor indicates that we are playing here because of the
@@ -272,6 +273,22 @@ class SchedulerContext:
 		if debugevents: print 'event', SR.ev2string(ev)
 		srlist = self.getsrlist(ev)
 		self.queuesrlist(srlist)
+
+	def Event(self, node, aid):
+		if debugevents: print 'Event', `node`, aid
+		side = node.eventdst[aid]
+		if side == TL:
+			self.parent.do_terminate(self, node)
+			return
+		# side == HD
+		pnode = node.GetParent()
+		if not pnode or pnode.playing != MMStates.PLAYING:
+			# ignore event when node can't play
+			return
+		# we must start the node, but how?
+		srdict = pnode.gensr_child_par(node)
+		self.srdict.update(srdict)
+		self.parent.event(self, (SR.SCHED, node))
 
 	def queuesrlist(self, srlist):
 		for sr in srlist:
@@ -643,6 +660,12 @@ class Scheduler(scheduler):
 			if action == SR.SCHED_STOPPING and \
 			   (arg.GetType() in interiortypes or arg.realpix_body or arg.caption_body):
 				self.remove_terminate(sctx, arg)
+			if action == SR.SCHED_START:
+				arg.playing = MMStates.PLAYING
+			if action == SR.SCHED_STOPPING:
+				arg.playing = MMStates.PLAYED
+				for ch in arg.children:
+					ch.playing = MMStates.IDLE
 			sctx.event((action, arg))
 
 	def remove_terminate(self, sctx, node):
@@ -689,6 +712,7 @@ class Scheduler(scheduler):
 	# Execute a TERMINATE SR.
 	#
 	def do_terminate(self, sctx, node):
+		if debugevents: print 'terminate',node
 		if node.GetType() in interiortypes:
 			node.stoplooping()
 			# Remove prearms for all our descendents

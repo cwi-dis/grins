@@ -11,6 +11,7 @@ import MMurl
 import settings
 from HDTL import HD, TL
 import string
+import MMStates
 
 class MMNodeContext:
 	def __init__(self, nodeclass):
@@ -582,6 +583,8 @@ class MMNode:
 		self.errormessage = None
 		self.force_switch_choice = 0
 		self.srdict = {}
+		self.playing = MMStates.IDLE
+		self.events = {}	# events others are interested in
 
 	#
 	# Return string representation of self
@@ -1149,6 +1152,8 @@ class MMNode:
 			return
 		if seeknode is not None and not self.IsAncestorOf(seeknode):
 			raise CheckError, 'Seeknode not in tree!'
+		self.events = {}
+		self.eventdst = {}
 		self.sync_from = ([],[])
 		self.sync_to = ([],[])
 		self.realpix_body = None
@@ -1189,6 +1194,8 @@ class MMNode:
 	def _FastPruneTree(self):
 		self.sync_from = ([],[])
 		self.sync_to = ([],[])
+		self.events = {}
+		self.eventdst = {}
 		self.realpix_body = None
 		self.caption_body = None
 		self.force_switch_choice = 0
@@ -1405,7 +1412,21 @@ class MMNode:
 		#
 		# If the node is empty there is very little to do.
 		#
-		if not self.wtd_children:
+		wtd_children = []
+		for c in self.wtd_children:
+			synctolist = MMAttrdefs.getattr(c, 'synctolist')
+			skip = 0
+			for xnode, xside, delay, yside in synctolist:
+				if yside == TL:
+					continue
+				if xside == HD or xside == TL:
+					skip = 0
+					break
+				skip = 1
+			if skip:
+				continue
+			wtd_children.append(c)
+		if not wtd_children:
 			return self.gensr_empty()
 		is_realpix = 0
 		if self.type == 'par':
@@ -1481,16 +1502,19 @@ class MMNode:
 			       srdict = gensr_envelope(gensr_body, loopcount,
 						       sched_actions_arg,
 						       scheddone_actions_arg,
-						       terminate_events_arg)
+						       terminate_events_arg,
+						       wtd_children)
 		if not looping:
 			#
 			# Tie our start-events to the envelope/body
 			# start-actions
 			#
-			action = [len(sched_events), sched_actions]
+			action = [len(sched_events), [(SCHED_START, self)]]
 			for event in sched_events:
 				self.srdict[event] = action # MUST all be same object
-				srdict[event] = self.srdict # or just self?
+				srdict[event] = self.srdict
+			self.srdict[(SCHED_START, self)] = [1, sched_actions]
+			srdict[(SCHED_START, self)] = self.srdict
 
 			#
 			# Tie the envelope/body done events to our done actions
@@ -1514,14 +1538,15 @@ class MMNode:
 		return srdict
 
 	def gensr_envelope_nonloop(self, gensr_body, loopcount, sched_actions,
-				   scheddone_actions, terminate_events):
+				   scheddone_actions, terminate_events,
+				   wtd_children):
 		if loopcount != 1:
 			raise 'Looping nonlooping node!'
 		self.curloopcount = 0
 
 		sched_actions, schedstop_actions, srdict = \
 			       gensr_body(sched_actions, scheddone_actions,
-					  terminate_events)
+					  terminate_events, wtd_children)
 ##		for event in in1+[(TERMINATE, self)]:
 ##			srdict[event] = self.srdict
 ##			self.srdict[event] = [1, terminate_actions]
@@ -1529,7 +1554,7 @@ class MMNode:
 
 	def gensr_envelope_firstloop(self, gensr_body, loopcount,
 				     sched_actions, scheddone_actions,
-				     terminate_events):
+				     terminate_events, wtd_children):
 		srlist = []
 		terminate_actions = []
 		#
@@ -1565,6 +1590,7 @@ class MMNode:
 				    gensr_body(body_sched_actions,
 					       body_scheddone_actions,
 					       body_terminate_events,
+					       wtd_children,
 					       self.looping_body_self)
 
 		# When the loop has started we start the body
@@ -1599,8 +1625,8 @@ class MMNode:
 		# ourselves.
 		#
 		if terminate_events:
-			srlist.append(terminate_events, scheddone_actions +
-				      [(TERMINATE, self)])
+			srlist.append((terminate_events, scheddone_actions +
+				       [(TERMINATE, self)]))
 			terminate_actions.append( (TERMINATE, self) )
 			srlist.append( ([(LOOPEND_DONE, self)], []) )
 		elif self.curloopcount < 0:
@@ -1611,8 +1637,8 @@ class MMNode:
 			srlist.append( ([(LOOPEND_DONE, self)],
 					scheddone_actions) )
 ##		for ev in terminate_events + [(TERMINATE, self)]:
-##			srlist.append( [ev], terminate_actions )
-		srlist.append([(TERMINATE, self)], terminate_actions)
+##			srlist.append( ([ev], terminate_actions) )
+		srlist.append(([(TERMINATE, self)], terminate_actions))
 
 		for events, actions in srlist:
 			action = [len(events), actions]
@@ -1624,7 +1650,7 @@ class MMNode:
 
 	def gensr_envelope_laterloop(self, gensr_body, loopcount,
 				     sched_actions, scheddone_actions,
-				     terminate_events):
+				     terminate_events, wtd_children):
 		srlist = []
 
 		body_sched_actions = []
@@ -1635,6 +1661,7 @@ class MMNode:
 				    gensr_body(body_sched_actions,
 					       body_scheddone_actions,
 					       body_terminate_events,
+					       wtd_children,
 					       self.looping_body_self)
 
 		# When the loop has started we start the body
@@ -1662,7 +1689,7 @@ class MMNode:
 		return [], [], srdict
 
 	def gensr_body_par(self, sched_actions, scheddone_actions,
-			   terminate_events, self_body=None):
+			   terminate_events, wtd_children, self_body=None):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -1673,17 +1700,17 @@ class MMNode:
 
 		termtype = MMAttrdefs.getattr(self, 'terminator')
 		if termtype == 'FIRST':
-			terminating_children = self.wtd_children[:]
+			terminating_children = wtd_children[:]
 		elif termtype == 'LAST':
 			terminating_children = []
 		else:
 			terminating_children = []
-			for child in self.wtd_children:
+			for child in wtd_children:
 				if MMAttrdefs.getattr(child, 'name') \
 				   == termtype:
 					terminating_children.append(child)
 
-		for child in self.wtd_children:
+		for child in wtd_children:
 			srdict.update(child.gensr())
 
 			sched_actions.append( (SCHED, child) )
@@ -1717,7 +1744,7 @@ class MMNode:
 		terminate_actions = terminate_actions + scheddone_actions
 
 		for ev in terminate_events+[(TERMINATE, self_body)]:
-			srlist.append( [ev], terminate_actions )
+			srlist.append( ([ev], terminate_actions) )
 		for events, actions in srlist:
 			action = [len(events), actions]
 			for event in events:
@@ -1726,7 +1753,7 @@ class MMNode:
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_body_seq(self, sched_actions, scheddone_actions,
-			   terminate_events, self_body=None):
+			   terminate_events, wtd_children, self_body=None):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -1736,7 +1763,7 @@ class MMNode:
 
 		previous_done_events = []
 		previous_stop_actions = []
-		for ch in self.wtd_children:
+		for ch in wtd_children:
 			# Link previous child to this one
 			if previous_done_events:
 				srlist.append(
@@ -1767,7 +1794,7 @@ class MMNode:
 		terminate_actions = terminate_actions + scheddone_actions
 
 		for ev in terminate_events+[(TERMINATE, self_body)]:
-			srlist.append( [ev], terminate_actions )
+			srlist.append( ([ev], terminate_actions) )
 
 		schedstop_actions = previous_stop_actions
 
@@ -1779,7 +1806,7 @@ class MMNode:
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_body_realpix(self, sched_actions, scheddone_actions,
-			   terminate_events, self_body=None):
+			   terminate_events, wtd_children, self_body=None):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -1822,7 +1849,7 @@ class MMNode:
 					    scheddone_actions
 
 		for ev in terminate_events+[(TERMINATE, self_body)]:
-			srlist.append( [ev], terminate_actions )
+			srlist.append( ([ev], terminate_actions) )
 		for events, actions in srlist:
 			action = [len(events), actions]
 			for event in events:
@@ -1830,6 +1857,36 @@ class MMNode:
 				srdict[event] = self.srdict # or just self?
 		return sched_actions, schedstop_actions, srdict
 		
+	def gensr_child_par(self, child):
+		srdict = child.gensr()
+		body = self.looping_body_self or self
+		termtype = MMAttrdefs.getattr(self, 'terminator')
+		if termtype == 'LAST':
+			# add child to list of children to wait for
+			ev = SCHED_STOPPING, body
+			for key, val in self.srdict.items():
+				if not val:
+					continue
+				num, srlist = val
+				for sr in srlist:
+					if sr == ev and key[0] == SCHED_DONE:
+						val[0] = num + 1
+						self.srdict[(SCHED_DONE, child)] = val
+						srdict[(SCHED_DONE, child)] = self.srdict
+						break
+				else:
+					# if not yet found, continue searching
+					continue
+				# if found, stop searching
+				break
+			numsrlist = self.srdict[(TERMINATE, body)]
+			srlist = numsrlist[1]
+			srlist.insert(len(srlist)-1, (TERMINATE, child))
+			numsrlist = self.srdict[(SCHED_STOP, body)]
+			srlist = numsrlist[1]
+			srlist.append((SCHED_STOP, child))
+		return srdict
+
 	def _is_realpix_with_captions(self):
 		if self.type == 'ext' and self.GetChannelType() == 'RealPix':
 			# It is a realpix node. Check whether it has captions
@@ -1850,8 +1907,15 @@ class MMNode:
 		arcs = self.FilterArcList(arcs)
 		for i in range(len(arcs)):
 			n1, s1, n2, s2, delay = arcs[i]
-			n1.SetArcSrc(s1, delay, i)
-			n2.SetArcDst(s2, i)
+			if s1 in (HD, TL):
+				n1.SetArcSrc(s1, delay, i)
+				n2.SetArcDst(s2, i)
+			else:
+				if not n1.events.has_key(s1):
+					n1.events[s1] = []
+				n1.events[s1].append((delay, n2, i))
+				n2.SetEventDst(s2, i)
+				
 		#
 		# Now run through the tree
 		#
@@ -1994,6 +2058,9 @@ class MMNode:
 	#
 	def SetArcDst(self, side, aid):
 		self.sync_from[side].append((SYNC_DONE, aid))
+
+	def SetEventDst(self, side, aid):
+		self.eventdst[aid] = side
 
 	#
 	# method for maintaining armed status when the ChannelView is
