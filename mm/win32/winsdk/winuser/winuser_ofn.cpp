@@ -95,7 +95,7 @@ PyObject* Winuser_CreateFileDialog(PyObject *self, PyObject *args)
 
 	if(pszFilter != NULL)
 		{
-		pyofn->m_pszFilter = new TCHAR[lstrlenA(pszFilter)+1];
+		pyofn->m_pszFilter = new TCHAR[strlen(pszFilter)+1];
 		lstrcpy(pyofn->m_pszFilter, toTEXT(pszFilter));
 		TCHAR *pch = pyofn->m_pszFilter;
 		while( (pch = textchr(pch, '|')) != NULL )
@@ -103,11 +103,13 @@ PyObject* Winuser_CreateFileDialog(PyObject *self, PyObject *args)
 		}
 	if(pszDefExt != NULL)
 		{
-		pyofn->m_pszDefExt = new TCHAR[lstrlenA(pszDefExt)+1];
+		pyofn->m_pszDefExt = new TCHAR[strlen(pszDefExt)+1];
 		lstrcpy(pyofn->m_pszDefExt, toTEXT(pszDefExt));
 		}
 	if (pszFileName != NULL)
-		lstrcpyn(pyofn->m_szFileName, toTEXT(pszFileName), MAX_PATH);
+		{
+		memcpy(pyofn->m_szFileName, toTEXT(pszFileName), MAX_PATH*sizeof(TCHAR));
+		}
 	pyofn->m_ofn.hwndOwner = hWndParent;
 	pyofn->m_ofn.lpstrFile = pyofn->m_szFileName;
 	pyofn->m_ofn.lpstrDefExt = pyofn->m_pszDefExt;
@@ -210,7 +212,9 @@ static PyObject* PyOfn_SetOFNTitle(PyOfn *self, PyObject *args)
 	if(obj == Py_None)
 		self->m_szFileTitle[0] = '\0';
 	else
-		lstrcpyn(self->m_szFileTitle, toTEXT(PyString_AsString(obj)), MAX_PATH);
+		{
+		memcpy(self->m_szFileTitle, toTEXT(PyString_AsString(obj)), MAX_PATH*sizeof(TCHAR));
+		}
 	return none();
 	}
 
@@ -227,7 +231,9 @@ static PyObject* PyOfn_SetOFNInitialDir(PyOfn *self, PyObject *args)
 	if(obj == Py_None)
 		self->m_szInitialDir[0] = '\0';
 	else
-		lstrcpyn(self->m_szInitialDir, toTEXT(PyString_AsString(obj)), MAX_PATH);
+		{
+		memcpy(self->m_szInitialDir, toTEXT(PyString_AsString(obj)), MAX_PATH*sizeof(TCHAR));
+		}
 	return none();
 	}
 

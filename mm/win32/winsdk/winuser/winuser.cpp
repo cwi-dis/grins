@@ -17,10 +17,7 @@ PyObject *ErrorObject;
 #include "winuser_main.h"
 #include "winuser_wnd.h"
 #include "winuser_menu.h"
-
-#ifndef _WIN32_WCE
 #include "winuser_ofn.h"
-#endif
 
 #include "mtpycall.h"
 
@@ -52,10 +49,7 @@ static struct PyMethodDef winuser_methods[] = {
 	{"CreateMenu", (PyCFunction)Winuser_CreateMenu, METH_VARARGS, ""},
 	{"CreatePopupMenu", (PyCFunction)Winuser_CreatePopupMenu, METH_VARARGS, ""},
 	{"CreateMenuFromHandle", (PyCFunction)Winuser_CreateMenuFromHandle, METH_VARARGS, ""},
-
-#ifndef _WIN32_WCE
 	{"CreateFileDialog", (PyCFunction)Winuser_CreateFileDialog, METH_VARARGS, ""},
-#endif
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 	};
 
