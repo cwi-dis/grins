@@ -1702,6 +1702,17 @@ class AnimateElementParser:
 			
 		tt = tuple(map(string.atof, tl))
 
+		# normalize keyTimes		
+		last = tt[len(tt)-1]
+		if last<=0.0:
+			print 'invalid keyTimes'
+			return ()
+		if last!=1.0:
+			tl = []
+			for i in range(len(tt)):
+				tl.append(tt[i]/last)
+			tt = tuple(tl)
+
 		# check boundary constraints
 		first = tt[0]
 		last = tt[len(tt)-1]
