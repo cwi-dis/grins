@@ -4,6 +4,8 @@ import string
 
 import MMAttrdefs
 
+from fmtfloat import fmtfloat
+
 # AnimationData pattern:
 # <ref ...>
 #   <animateMotion targetElement="xxx" values="x1, y1; x2, y2; x3, y3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
@@ -146,7 +148,7 @@ class AnimationData:
 		if anim is not None:
 			self._updateNode(anim, keyTimes, animateColorValues)
 		else:
-			anim = self.root.context.newanimatenode('animate')
+			anim = self.root.context.newanimatenode('animateColor')
 			anim.targetnode = self.node
 			self._updateNode(anim, keyTimes, animateColorValues, 'backgroundColor', targname)
 			em.addnode(self.node, 3, anim)
@@ -203,7 +205,7 @@ class AnimationData:
 	def _floatListToStr(self, sl):
 		str = ''
 		for val in sl:
-			str = str + '%f;' % val
+			str = str + '%s;' % fmtfloat(val)
 		return str[:-1]
 		
 	def _posListToStr(self, sl):
