@@ -273,7 +273,7 @@
 	'When can the node be restarted' raw (cmif smil2))
 
 (restartDefault (enum inherit always whenNotActive never) inherit 'Restart default' restart
-	'Default value for the restart property on the children of this node' raw (cmif smil2))
+	'Default value for the restart property on the children of this node' inherited (cmif smil2))
 
 (scale (float) 1.0 'Scale factor' scale
 	'Aspect ratio is maintained for all options' channel (all))
@@ -337,8 +337,8 @@
 	'What to do when lower priority nodes interrupt our children' raw (smil2))
 (peers (enum stop pause defer never) stop 'Peers' default
 	'What to do when equal priority nodes interrupt our children' raw (smil2))
-(pauseDisplay (enum inherited disable hide show) inherited 'Pause display' default
-	'How paused children should behave (inherited means inherited from parent prio node)' raw (smil2))
+(pauseDisplay (enum inherit disable hide show) inherit 'Pause display' default
+	'How paused children should behave (inherit means inherit from parent prio node)' raw (smil2))
 
 # XXXX Transitions need a displayer
 # XXXX This allows for a single transition only (should be a list)
