@@ -115,13 +115,7 @@ class ImageChannel(Channel):
 		self.window.save_geometry()
 	#
 	def getduration(self, node):
-		wait = MMAttrdefs.getattr(node, 'wait_for_close')
-		if wait:
-			# An approximation of infinity for the
-			# time analysis algorithm
-			return 1000000.0
-		else:
-			return Channel.getduration(self, node)
+		return Channel.getduration(self, node)
 	#
 	def play(self, (node, callback, arg)):
 		if not self.is_showing():
@@ -132,14 +126,7 @@ class ImageChannel(Channel):
 		    self.arm(node)
 		self.armed_node = None
 		self.window.showimage()
-		wait = MMAttrdefs.getattr(node, 'wait_for_close')
-		if wait:
-			self.player.freeze() # Should have another interface
-			now = self.player.timefunc()
-			self.qid = self.player.enter(now + 0.001, 0, \
-						self.done, (callback, arg))
-		else:
-			Channel.play(self, (node, callback, arg))
+		Channel.play(self, (node, callback, arg))
 	#
 	def reset(self):
 		self.window.clear()
