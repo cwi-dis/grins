@@ -14,6 +14,7 @@ import os, sys
 from SMIL import *
 import settings
 import features
+import compatibility
 
 error = 'SMILTreeRead.error'
 
@@ -58,6 +59,7 @@ dataurl = re.compile('data:(?P<type>'+_token+'/'+_token+')?'
 		     '(?P<params>(?:;'+_token+'=(?:'+_token+'|"[^"\\\r\177-\377]*(?:\\.[^"\\\r\177-\377]*)*"))*)'
 		     '(?P<base64>;base64)?'
 		     ',(?P<data>.*)', re.I)
+
 del _token
 
 from colors import colors
@@ -322,6 +324,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['fill'] = val
 				else:
 					self.syntax_error("bad fill attribute")
+			elif compatibility.QT == features.compatibility and \
+				self.addQTAttr(attr, val, node):
+				pass
 			elif attr not in smil_node_attrs:
 				# catch all
 				try:
@@ -331,8 +336,54 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attrdict.has_key('fill') and \
 		   attrdict['fill'] == 'freeze' and \
 		   not attrdict.has_key('duration'):
-			del attrdict['fill']
+			del attrdict['fill']			
 
+	def addQTAttr(self, key, val, node):
+		attrdict = node.attrdict
+		if key == 'immediate-instantiation': 
+			internalval = self.parseEnumValue(val, {'false':0,'true':1},key, 'immediateinstantiationmedia')
+			attrdict['immediateinstantiationmedia'] = internalval
+			return 1
+		elif key == 'bitrate':
+			internalval = self.parseIntValue(val, key, 'bitratenecessary')
+			attrdict['bitratenecessary'] = internalval
+			return 1
+		elif key == 'system-mime-type-supported':
+			internalval = val
+			attrdict['systemmimetypesupported'] = internalval
+			return 1
+		elif key == 'attach-timebase': 
+			internalval = self.parseEnumValue(val, {'false':0,'true':1},key, 'attachtimebase')
+			attrdict['attachtimebase'] = internalval
+			return 1
+		elif key == 'chapter':
+			internalval = val
+			attrdict['qtchapter'] = internalval
+			return 1
+		elif key == 'composite-mode':
+			internalval = val
+			attrdict['qtcompositemode'] = internalval
+			return 1
+		
+		return 0
+				
+	def parseEnumValue(self, val, dict, smilattributename, internalattributename):
+		if dict.has_key(val):
+			return dict[val]
+		else:
+			self.syntax_error('invalid '+smilattributename+' value')
+			return MMAttrdefs.getdefattr(None, internalattributename)
+
+	def parseIntValue(self, val, smilattributename, internalattributename):
+		intvalue = 0
+		try:
+			intvalue = string.atoi(val)
+		except string.atoi_error:
+			self.syntax_error('invalid '+smilattributename+' value')
+			intvalue = MMAttrdefs.getdefattr(None, internalattributename)
+			
+		return intvalue
+			
 	def NewNode(self, tagname, attributes):
 		# mimetype -- the MIME type of the node as specified in attr
 		# mtype -- the MIME type of the node as calculated
@@ -343,6 +394,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
 				del attributes[key]
 				attributes[key[len(GRiNSns)+1:]] = val
+			if key[:len(QTns)+1] == QTns + ' ':
+				del attributes[key]
+				attributes[key[len(QTns)+1:]] = val
+
 		id = attributes.get('id')
 		if id is not None:
 			res = xmllib.tagfind.match(id)
@@ -429,24 +484,26 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			
 
 		# now determine channel type
-		if subtype is not None and \
-		   string.find(string.lower(subtype), 'real') >= 0:
-			# if it's a RealMedia type, use tag to determine chtype
-			if tagname == 'audio':
-				chtype = 'sound'
-			elif tagname == 'image':
-				chtype = 'RealPix'
-			elif tagname == 'text':
-				chtype = 'RealText'
-			else:
-				if mediatype == 'audio':
+		if compatibility.G2 == features.compatibility and \
+			subtype is not None and \
+			string.find(string.lower(subtype), 'real') >= 0:
+				# if it's a RealMedia type, use tag to determine chtype
+				if tagname == 'audio':
 					chtype = 'sound'
-				elif mediatype == 'image':
+				elif tagname == 'image':
 					chtype = 'RealPix'
-				elif mediatype == 'text':
+				elif tagname == 'text':
 					chtype = 'RealText'
 				else:
-					chtype = 'video'
+					if mediatype == 'audio':
+						chtype = 'sound'
+					elif mediatype == 'image':
+						chtype = 'RealPix'
+					elif mediatype == 'text':
+						chtype = 'RealText'
+					else:
+						chtype = 'video'
+								
 		elif mediatype == 'audio':
 			chtype = 'sound'
 		elif mediatype == 'image':
@@ -553,8 +610,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__width > 0 and self.__height > 0:
 			# we don't have to calculate minimum sizes
 			pass
-		elif mtype in ('image', 'movie', 'video', 'mpeg',
-			       'RealPix', 'RealText', 'RealVideo'):
+		elif mtype in ('image', 'movie', 'video', 'mpeg') or \
+		 (compatibility.G2 == features.compatibility and \
+		 mtype in ('RealPix', 'RealText', 'RealVideo')):
 			x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
 			# if we don't know the region size and
 			# position in pixels, we need to look at the
@@ -758,8 +816,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		attrdict = attrdict.copy() # we're going to change this...
 		if attrdict.has_key('type'): del attrdict['type']
 		if mtype in ('text', 'image', 'movie', 'video', 'mpeg',
-			     'html', 'label', 'graph', 'layout', 'RealPix',
-			     'RealText', 'RealVideo'):
+			     'html', 'label', 'graph', 'layout') or \
+		(compatibility.G2 == features.compatibility and \
+		mtype in ('RealPix','RealText', 'RealVideo')):
 			# deal with channel with window
 			ch['drawbox'] = 0
 			if attrdict.has_key('id'): del attrdict['id']
@@ -770,7 +829,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				del attrdict['title']
 			bg = attrdict['background-color']
 			del attrdict['background-color']
-			if features.compatibility == features.G2:
+			if compatibility.G2 == features.compatibility:
 				ch['transparent'] = -1
 				if bg != 'transparent':
 					ch['bgcolor'] = bg
@@ -779,6 +838,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					ch['bgcolor'] = 255,255,255
 				else:
 					ch['bgcolor'] = 0,0,0
+			elif compatibility.QT == features.compatibility:
+				ch['transparent'] = 1
+				ch['fgcolor'] = 255,255,255 
+				
 			elif bg == 'transparent':
 				ch['transparent'] = 1
 			else:
@@ -970,8 +1033,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ctx.channels.append(ch)
 			ch['type'] = mtype
 			if mtype in ('image', 'movie', 'video', 'mpeg',
-				     'RealPix', 'RealText', 'RealVideo',
-				     'text', 'label', 'html', 'graph'):
+				     'text', 'label', 'html', 'graph') or \
+			 (compatibility.G2 == features.compatibility and \
+			    mtype in ('RealPix', 'RealText', 'RealVideo')):
 				if not self.__regions.has_key(region):
 					self.warning('no region %s in layout' %
 						     region, self.lineno)
@@ -986,8 +1050,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		while par is not None:
 			par.__chanlist[name] = 0
 			par = par.GetParent()
-		if mtype == 'RealPix':
-			self.__realpixnodes.append(node)
+		if compatibility.G2 == features.compatibility:
+			if mtype == 'RealPix':
+				self.__realpixnodes.append(node)
 
 	def FixLayouts(self):
 		if not self.__layouts:
@@ -1046,6 +1111,31 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node.attrdict['anchorlist'] = alist
 		del node.__anchorlist
 		
+	def parseQTAttributeOnSmilElement(self, attributes):
+		for key, val in attributes.items():
+			if key == 'time-slider':
+				internalval = self.parseEnumValue(val, {'false':0,'true':1},key, 'qttimeslider')
+				self.__context.attributes['qttimeslider'] = internalval
+				del attributes[key]
+			elif key == 'autoplay':
+				internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 'autoplay')
+				self.__context.attributes['autoplay'] = internalval
+				del attributes[key]
+			elif key == 'chapter-mode':
+				internalval = self.parseEnumValue(val, {'all':0,'clip':1}, key, 'qtchaptermode')
+				self.__context.attributes['qtchaptermode'] = internalval
+				del attributes[key]
+			elif key == 'next':
+				if val is not None:
+					val = MMurl.basejoin(self.__base, val)
+					val = self.__context.findurl(val)
+					self.__context.attributes['qtnext'] = val
+				del attributes[key]
+			elif key == 'immediate-instantiation':
+				internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 'immediateinstantiation')
+				self.__context.attributes['immediateinstantiation'] = internalval
+				del attributes[key]
+		
 	# methods for start and end tags
 
 	# smil contains everything
@@ -1054,6 +1144,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
 				del attributes[key]
 				attributes[key[len(GRiNSns)+1:]] = val
+			if key[:len(QTns)+1] == QTns + ' ':
+				del attributes[key]
+				attributes[key[len(QTns)+1:]] = val
+		if features.compatibility == features.QT:
+			self.parseQTAttributeOnSmilElement(attributes)
 		id = attributes.get('id')
 		if id is not None:
 			res = xmllib.tagfind.match(id)
@@ -1307,6 +1402,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					val = 'sound'
 				elif val == 'RealVideo':
 					val = 'video'
+				if not (compatibility.G2 == features.compatibility):
+					if val == 'RealPix':
+						val = 'unknown'
 				attrdict[attr] = val
 			else:
 				# catch all
@@ -2213,3 +2311,5 @@ def parseattrval(name, string, context):
 	if MMAttrdefs.getdef(name)[0][0] == 'string':
 		return string
 	return MMAttrdefs.parsevalue(name, string, context)
+
+

@@ -497,7 +497,7 @@ class AnchorlistCtrl(AttrCtrl, AnchorList):
 		self._bplay = components.Button(wnd, grinsRC.IDC_PLAY)
 		self._bpause = components.Button(wnd, grinsRC.IDC_PAUSE)
 		self._bstop = components.Button(wnd, grinsRC.IDC_STOP)
-
+		
 	def OnInitCtrl(self):
 		self._initctrl = self
 		self._list.attach_to_parent()
@@ -1067,7 +1067,13 @@ class StringOptionsCtrl(AttrCtrl):
 
 class HtmlTemplateCtrl(StringOptionsCtrl):
 	def __init__(self,wnd,attr,resid):
-		options=['external_player.html','embedded_player.html']
+		import compatibility
+		import features
+		# for instance, only embedded_player is supported in QuickTime version
+		if compatibility.QT == features.compatibility:
+			options=['embedded_player.html']
+		else:
+			options=['external_player.html','embedded_player.html']
 		StringOptionsCtrl.__init__(self,wnd,attr,resid,options)
 
 	
@@ -2692,6 +2698,59 @@ class StringGroup(AttrGroup):
 class InfoGroup(StringGroup):
 	data=attrgrsdict['infogroup']
 
+class QTPlayerPreferencesGroup(AttrGroup):
+	data=attrgrsdict['qtpreferences']
+
+	def __init__(self,data = None):
+		AttrGroup.__init__(self,data or self.data)
+
+	def createctrls(self,wnd):
+		cd={}
+		a = self.getattr('autoplay')
+		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_AUTOPLAY,))
+		a = self.getattr('qtchaptermode')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_GROUP1,grinsRC.IDC_QTCHAPTERMODE1,grinsRC.IDC_QTCHAPTERMODE2))
+		a = self.getattr('qttimeslider')
+		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_QTTIMESLIDER,))
+		a = self.getattr('qtnext')
+		cd[a] = FileCtrl(wnd,a,(grinsRC.IDC_GROUP1,grinsRC.IDC_FIELD_QTNEXT,grinsRC.IDC_BUTTON_QTNEXT))
+		a = self.getattr('immediateinstantiation')
+		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_IMMINST,))
+		return cd
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_QTPREF
+
+#	def oninitdialog(self,wnd):
+#		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
+#		ctrl.attach_to_parent()
+#		ctrl.settext(self._data['title'])
+
+class QTPlayerMediaPreferencesGroup(AttrGroup):
+	data=attrgrsdict['qtmediapreferences']
+
+	def __init__(self,data = None):
+		AttrGroup.__init__(self,data or self.data)
+
+	def createctrls(self,wnd):
+		cd={}
+		a = self.getattr('immediateinstantiationmedia')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_GROUP1, grinsRC.IDC_IMMINSTMEDIA1, grinsRC.IDC_IMMINSTMEDIA2, grinsRC.IDC_IMMINSTMEDIA3))
+		a = self.getattr('bitratenecessary')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_GROUP1, grinsRC.IDC_BITRATENECESSARY))
+		a = self.getattr('systemmimetypesupported')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_GROUP1, grinsRC.IDC_SYSTEMMIMETYPE,))	
+		a = self.getattr('attachtimebase')
+		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_ATTACHTIMEBASE,))
+		a = self.getattr('qtchapter')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_GROUP1, grinsRC.IDC_QTCHAPTER,))	
+		a = self.getattr('qtcompositemode')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_GROUP1, grinsRC.IDC_QTCOMPOSITEMODE,))	
+		return cd
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_QTMEDIAPREF
+
 class WebserverGroup(StringGroup):
 	data=attrgrsdict['webserver']
 
@@ -3323,6 +3382,9 @@ groupsui={
 	'wipe':WipeGroup,
 	'clip':ClipGroup,
 	'bandwidth':BandwidthGroup,
+	
+	'qtpreferences':QTPlayerPreferencesGroup,
+	'qtmediapreferences':QTPlayerMediaPreferencesGroup,
 	}
 
 ###########################
