@@ -149,14 +149,16 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 	def showwindow(self,color=(255,0,0)):
 		self._showing = color
 		dc=self.GetDC()
-		win32mu.FrameRect(dc,self.GetClientRect(),self._showing)
+		if self._topwindow != self: 
+			win32mu.FrameRect(dc,self.GetClientRect(),self._showing)
 #		if self._topwindow != self:
 #			self._display_info(dc)
 		self.ReleaseDC(dc)
 
 	# Highlight the window
 	def showwindow_on(self,dc):
-		win32mu.FrameRect(dc,self.GetClientRect(),self._showing)
+		if self._topwindow != self: 
+			win32mu.FrameRect(dc,self.GetClientRect(),self._showing)
 		if self._topwindow != self and self._active_displist==None:
 			self._display_info(dc)
 
@@ -224,7 +226,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			print 'displist:',d
 		self.update()
 
-	# Forced window upadate
+	# Forced window update
 	def update(self):
 		self.InvalidateParentRect()
 
@@ -314,6 +316,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 	# Destroy popup menu
 	def destroy_menu(self):
 		if self._menu:
+			self._menu.DestroyMenu()
 			del self._menu 
 		self._menu = None
 		self._accelerators = {}
@@ -400,6 +403,12 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 	def inside(self,pt):
 		rc=win32mu.Rect(self.GetClientRect())
 		return rc.isPtInRect(win32mu.Point(pt))
+
+	# Returns the grins document
+	def getgrinsdoc(self):
+		w=self._topwindow
+		frame=(w.GetParent()).GetMDIFrame()		
+		return frame._cmifdoc
 
 	# Returns the coordinates of this window
 	def getgeometry(self, units = UNIT_MM):
@@ -794,6 +803,11 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			xsize,ysize,depth=win32ig.size(img)
 			toplevel._image_size_cache[file] = xsize, ysize
 			toplevel._image_cache[file] = img
+			doc=self.getgrinsdoc()
+			if doc in toplevel._image_docmap.keys():
+				toplevel._image_docmap[doc].append(file)
+			else:
+				toplevel._image_docmap[doc]=[file,]
 		return xsize, ysize
 
 	# Prepare an image for display (load,crop,scale, etc)
