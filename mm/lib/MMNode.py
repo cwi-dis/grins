@@ -23,6 +23,7 @@ class MMNodeContext:
 		self.nextuid = 1
 		self.editmgr = None
 		self.armedmode = None
+		self.getchannelbynode = None
 
 	def __repr__(self):
 		return '<MMNodeContext instance, channelnames=' \
@@ -173,6 +174,8 @@ class MMNodeContext:
 			if n.GetRawAttrDef('channel', None) == oldname:
 				n.SetAttr('channel', newname)
 
+	def registergetchannelbynode(self, func):
+		self.getchannelbynode = func
 	#
 	# Hyperlink administration
 	#
@@ -1446,9 +1449,8 @@ class MMNode:
 		return sched_actions, schedstop_actions, srlist
 
 
-	def GenAllSR(self, seeknode, getchannelfunc=None):
-		MMNode.getchannelfunc = getchannelfunc
-		self.SetPlayability(getchannelfunc=getchannelfunc)
+	def GenAllSR(self, seeknode):
+		self.SetPlayability()
 		if not seeknode:
 			seeknode = self
 ## Commented out for now: this cache messes up Scheduler.GenAllPrearms()
@@ -1636,9 +1638,10 @@ class MMNode:
 	#
 	# Playability depending on system/environment parameters
 	#
-	def SetPlayability(self, playable=1, getchannelfunc=None):
+	def SetPlayability(self, playable=1):
 		if playable:
 			playable = self._compute_playable()
+		getchannelfunc = self.context.getchannelbynode
 		if playable and self.type in leaftypes and getchannelfunc:
 			# For media nodes check that the channel likes
 			# the node
@@ -1647,7 +1650,7 @@ class MMNode:
 				playable = 0
 		self.playable = playable
 ## 		for child in self.children:
-## 			child.SetPlayability(playable, getchannelfunc)
+## 			child.SetPlayability(playable)
 
 	def IsPlayable(self):
 		if self.playable is None:
@@ -1655,8 +1658,7 @@ class MMNode:
 				parent_playable = 1
 			else:
 				parent_playable = self.parent.IsPlayable()
-			self.SetPlayability(parent_playable,
-					    self.getchannelfunc)
+			self.SetPlayability(parent_playable)
 		return self.playable
 
 	def _compute_playable(self):
