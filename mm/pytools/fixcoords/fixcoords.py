@@ -1,9 +1,12 @@
 """Fix faulty coords attributes in anchors"""
 
-from pysmil import *
 from xml.dom.transformer import *
-from xml.dom.dc_builder import DcBuilder
 from xml.dom.writer import XmlWriter
+from xml.dom.dc_builder import DcBuilder
+## For XML 0.5:
+##from xml.dom.sax_builder import SaxBuilder
+##from xml.dom.core import createDocument
+##from xml.sax import saxexts
 
 import sys
 import urlparse
@@ -85,10 +88,19 @@ def process(input, save):
 
 	parser = DcBuilder()
 	parser.feed(data)
+	document = parser.document
 
+## For xml 0.5:
+##	parser = saxexts.make_parser()
+##	builder = SaxBuilder()
+##	parser.setDocumentHandler(builder)
+##	parser.parse(input)
+##	parser.close()
+##	document = builder.document
+	
 	transformer = CoordsTransformer()
 
-	document = transformer.transform(parser.document)
+	document = transformer.transform(document)
 	transformer.add_generator()
 
 	if transformer.new_style:
