@@ -21,6 +21,9 @@ if sys.platform == 'mac':
 	except:
 		_ic_instance = None
 		
+	# Warn only once per URL last part
+	warned_names = {}
+		
 	def guess_type(url):
 		# On the mac we can have serious conflicts between the
 		# extension and the cretor/type of the file. As there is
@@ -60,19 +63,28 @@ if sys.platform == 'mac':
 			creator, type = MacOS.GetCreatorAndType(filename)
 		except MacOS.Error:
 			# File doesn't exist. Give the long talk.
-			windowinterface.showmessage('Extension for "%s" not recognized.\nFor use with GRiNS (and for use on the web in general) please give your file the correct extension.'%filename_lastpart, identity='nomimetype')
+			if not warned_names.has_key(filename_lastpart):
+				windowinterface.showmessage('Extension for "%s" not recognized.\nFor use with GRiNS (and for use on the web in general) please give your file the correct extension.'%filename_lastpart, identity='nomimetype')
+				warned_names[filename_lastpart] = 1
 			return None, None
 		try:
 			descr = _ic_instance.maptypecreator(type, creator, url)
 		except:
 			descr = None
 		if not descr:
-			windowinterface.showmessage('Extension for "%s" not recognized.\nFor use with GRiNS (and for use on the web in general) please give your file the correct extension.'%filename_lastpart, identity='nomimetype')
+			if not warned_names.has_key(filename_lastpart):
+				windowinterface.showmessage('Extension for "%s" not recognized.\nFor use with GRiNS (and for use on the web in general) please give your file the correct extension.'%filename_lastpart, identity='nomimetype')
+				warned_names[filename_lastpart] = 1
 			return None, None
 		import windowinterface
-		windowinterface.showmessage('Incorrect extension for "%s"\nThis may cause problems on the web'%filename_lastpart, identity='mimetypemismatch')
+		if not warned_names.has_key(filename_lastpart):
+			windowinterface.showmessage('Incorrect extension for "%s"\nThis may cause problems on the web'%filename_lastpart, identity='mimetypemismatch')
+			warned_names[filename_lastpart] = 1
 		mimetype = descr[8]
 		if mimetype:
 			if not '/' in mimetype:
 				mimetype = mimetype + '/unknown'
+		else:
+			# it may be an empty string, turn into None
+			mimetype = None
 		return mimetype, None
