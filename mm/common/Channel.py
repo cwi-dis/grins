@@ -55,6 +55,7 @@ class Channel:
 		self._want_shown = 0
 		self.syncarm = 0
 		self.syncplay = 0
+		self.is_layout_channel = 0
 		if debug:
 			print 'Channel.init() -> '+`self`
 		channels.append(self)
@@ -819,12 +820,16 @@ class ChannelWindow(Channel):
 			pname = self._attrdict['base_window']
 		else:
 			pname = 'undefined'
+		if pname == self._name:
+		        pname = 'undefined'
 		if pname <> 'undefined':
 			#
 			# Next, check that the base window channel exists.
 			#
 			if self._player.ChannelWinDict.has_key(pname):
 				pchan = self._player.ChannelWinDict[pname]
+				if not pchan.is_layout_channel:
+				    print 'Warning: Base channel is not a layout channel:', pname
 			else:
 				pchan = None
 				windowinterface.showmessage(
