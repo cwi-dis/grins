@@ -1490,15 +1490,11 @@ class ChannelWindow(Channel):
 	def updateToActiveState(self, node):
 
 		# determine the transparent and background color attributes
-		transparent = node.GetAttrDef('transparent', None)
-
-		bgcolor = self.getbgcolor(node)
-
-		if transparent == None:
-			if bgcolor != None:
-				transparent = 0
-			else:
-				transparent = 1
+		transparent = MMAttrdefs.getattr(node, 'transparent')
+		if transparent:
+			bgcolor = None
+		else:
+			bgcolor = self.getbgcolor(node)
 
 		self.__transparent = transparent
 		self.__bgcolor = bgcolor

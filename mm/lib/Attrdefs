@@ -89,10 +89,10 @@
 	'Channels used in this document (root node only)' normal (all))
 
 (clipbegin (string) '' 'Clip begin' default
-	'Start of range of frames to be played. Simplest form is "npt=3s".' channel (g2_pro qt_pro smil10 cmif))
+	'Start of range of frames to be played. Simplest form is "npt=3s".' raw (g2_pro qt_pro smil10 cmif))
 
 (clipend (string) '' 'Clip end' default
-	'End of range of frames to be played. Simplest form is "npt=3s".' channel (g2_pro qt_pro smil10 cmif))
+	'End of range of frames to be played. Simplest form is "npt=3s".' raw (g2_pro qt_pro smil10 cmif))
 
 (comment (string) '' 'Comment' default
 	 'A comment (authoring convenience only)' raw (cmif))
@@ -101,7 +101,7 @@
 
 (crop (tuple (float) (float) (float) (float)) (0 0 0 0) 'Image crop' default
     'Crop image.  Values are fractions to crop from top, bottom, left, right.'
-	channel (cmif))
+	raw (cmif))
 
 (cview_winpos  (tuple (float) (float)) (-1 -1) 'Time chart winpos' hidden
 	 'Window position for Time chart view' raw (g2_pro qt_pro smil10 cmif))
@@ -346,7 +346,7 @@
 	'Name of transition at end of item' raw (smil2))
 	
 (transparent (int) 0 'Transparent' transparency
-	'Determines transparency of window, overrides background color' raw (g2_pro smil10 cmif))
+	'Determines transparency of window, overrides background color' channel (g2_pro smil10 cmif))
 
 (type (name) null 'Channel type' channeltype
 	'Type of media this channel will be used for' raw (all))
