@@ -88,6 +88,14 @@ class _Toplevel:
 		self._appadornments=None
 		self._appcommandlist=None
 
+		self._activeDocFrame=None
+
+	# set/get active doc frame (MDIFrameWnd)
+	def setActiveDocFrame(self,frame):
+		self._activeDocFrame=frame
+	def getActiveDocFrame(self):
+		return self._activeDocFrame
+
 	# Paint all the windows now
 	def forcePaint(self):
 		for w in self._subwindows:
@@ -151,6 +159,7 @@ class _Toplevel:
 			frame.create(self._apptitle)
 			frame.init_cmif(None, None, 0, 0, self._apptitle,
 				UNIT_MM, self._appadornments,self._appcommandlist)
+			self.setActiveDocFrame(frame)
 		return self._subwindows[0]
 
 	# Called by win32 modules for every open document
@@ -170,7 +179,7 @@ class _Toplevel:
 	def getmainwnd(self):
 		if len(self._subwindows)==0:
 			self.createmainwnd()
-		return self._subwindows[0] # return the active
+		return self.getActiveDocFrame() # return the active
 		
 	############ /SDI-MDI Model Support	
 
