@@ -164,6 +164,23 @@ class MMNode():
 			x = x.parent
 		return path
 	#
+	def IsAncestorOf(self, x):
+		_stat('IsAncestorOf')
+		while x <> None:
+			if self = x: return 1
+			x = x.parent
+		return 0
+	#
+	def CommonAncestor(self, x):
+		_stat('CommonAncestor')
+		p1 = self.GetPath()
+		p2 = x.GetPath()
+		n = min(len(p1), len(p2))
+		i = 0
+		while i < n and p1[i] = p2[i]: i = i+1
+		if i = 0: return None
+		else: return p1[i-1]
+	#
 	def GetChildren(self):
 		_stat('GetChildren')
 		return self.children
@@ -203,10 +220,6 @@ class MMNode():
 	#
 	def GetAttr(self, name):
 		_stat('GetAttr')
-		if name = '*':
-			list = self.attrdict.keys()
-			list.sort()
-			return list
 		try:
 			return self.attrdict[name]
 		except RuntimeError:
@@ -322,7 +335,7 @@ class MMNode():
 		if self.type in ('seq', 'par') and type in ('seq', 'par'):
 			self.type = type
 			return
-		if self.children <> [] or self.values <> []:
+		if self.children <> []: # TEMP! or self.values <> []:
 			raise CheckError, 'SetType() on non-empty node'
 		self.type = type
 	#
@@ -392,8 +405,6 @@ class MMNode():
 	#
 	def _updsummaries(x, tofix):
 		_stat('_updsummaries')
-		if '*' not in tofix:
-			tofix.append('*')
 		while x and tofix:
 			for key in tofix[:]:
 				if not x.summaries.has_key(key):
