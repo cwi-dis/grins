@@ -1,34 +1,25 @@
 __version__ = "$Id$"
 
 import windowinterface, WMEVENTS
-import Timing
 
 class TopLevel:
 	def __init__(self, main, filename):
-		import Player
-		self.filename = filename
+		import MMTree, Player, MMurl
+		# convert filename to URL
+		utype, url = MMurl.splittype(filename)
+		if not utype or utype not in ('http', 'file', 'ftp', 'rtsp'):
+			# assume filename using local convention
+			url = MMurl.pathname2url(filename)
+			utype, url = MMurl.splittype(url)
+		if utype:
+			url = '%s:%s' % (utype, url)
+		self.filename = url
+		print 'URL=', self.filename
 		self.main = main
 		self.waiting = 0
-		self.read_it()
+		self.root = MMTree.ReadFile(self.filename)
 		self.player = Player.Player(self)
 		self._last_timer_id = None
-
-	def read_it(self):
-		import time
-		self.changed = 0
-		print 'parsing', self.filename, '...'
-		t0 = time.time()
-		if self.filename[-4:] == '.smi' or \
-		   self.filename[-5:] == '.smil':
-			import SMILTree
-			self.root = SMILTree.ReadFile(self.filename)
-		else:
-			import MMTree
-			self.root = MMTree.ReadFile(self.filename)
-		t1 = time.time()
-		print 'done in', round(t1-t0, 3), 'sec.'
-		Timing.changedtimes(self.root)
-		self.context = self.root.GetContext()
 
 	def __repr__(self):
 		return '<TopLevel instance, filename=' + `self.filename` + '>'
@@ -118,11 +109,11 @@ class TopLevel:
 			filename = uid
 		try:
 			filename = MMurl.urlretrieve(filename)[0]
-		except:
+		except IOError, msg:
 			windowinterface.showmessage(
 				'Open operation failed.\n'+
 				'File: '+filename+'\n'+
-				'Error: '+`msg`)
+				'Error: '+msg[1])
 			return 0
 		for top in main.tops:
 			if top is not self and top.is_document(filename):
