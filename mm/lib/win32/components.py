@@ -897,6 +897,10 @@ class KeyTimesSlider(window.Wnd):
 		hwnd = Sdk.GetDlgItem(dlg.GetSafeHwnd(),id)
 		window.Wnd.__init__(self, win32ui.CreateWindowFromHandle(hwnd))
 		
+		self._enabled = 0
+		if not self._enabled:
+			self.EnableWindow(0)
+
 		self.SetTicFreq(5)
 		self.SetLineSize(5)
 		self.SetPageSize(20)
@@ -971,13 +975,14 @@ class KeyTimesSlider(window.Wnd):
 
 	def getDeviceRange(self):
 		l, t, r, b = self.GetWindowRect()
-		return r-l-2*self.TICKS_OFFSET-1 
+		return r-l-2*self.TICKS_OFFSET-2 
 			
 	def drawOn(self, dc):
+		if not self._enabled: return
 		l, t, r, b = self.GetWindowRect()
 		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
 		x0 = l + self.TICKS_OFFSET # first tick in pixels or pos zero 
-		w = r-l-2*self.TICKS_OFFSET-1 # last tick in pixels or pos 100
+		w = r-l-2*self.TICKS_OFFSET-2 # pixels range
 		dw = self.MARKER_WIDTH/2
 		index = 0
 		for p in self._keyTimes:
@@ -1012,7 +1017,7 @@ class KeyTimesSlider(window.Wnd):
 		l, t, r, b = self.GetWindowRect()
 		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
 		x0 = l + self.TICKS_OFFSET # first tick in pixels or pos zero 
-		w = r-l-2*self.TICKS_OFFSET-1 # last tick in pixels or pos 100
+		w = r-l-2*self.TICKS_OFFSET-2 # last tick in pixels or pos 100
 		dw = self.MARKER_WIDTH/2
 		index = 0
 		point = win32mu.Point(point)
@@ -1080,6 +1085,13 @@ class KeyTimesSlider(window.Wnd):
 	def getKeyTimesData(self):
 		return self._keyTimesData
 
+	def enable(self, flag):
+		self._enabled = flag
+		if not flag:
+			self.EnableWindow(0)
+		else:
+			self.EnableWindow(1)
+		self.updateKeyTimes()
 
 
 
