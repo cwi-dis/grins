@@ -294,11 +294,6 @@ class NodeWrapper(Wrapper):
 	def getattr(self, name): # Return the attribute or a default
 		if name == '.type':
 			return self.node.GetType()
-		if name == '.begin1':
-			beginlist = MMAttrdefs.getattr(self.node, 'beginlist')
-			if not beginlist:
-				return 0
-			return beginlist[0].delay
 		if name == '.values':
 			return self.node.GetValues()
 		if name == 'cssbgcolor':
@@ -311,11 +306,6 @@ class NodeWrapper(Wrapper):
 	def getvalue(self, name): # Return the raw attribute or None
 		if name == '.type':
 			return self.node.GetType()
-		if name == '.begin1':
-			beginlist = MMAttrdefs.getattr(self.node, 'beginlist')
-			if not beginlist:
-				return None
-			return beginlist[0].delay
 		if name == '.values':
 			return self.node.GetValues() or None
 		if name == 'cssbgcolor':
@@ -327,8 +317,6 @@ class NodeWrapper(Wrapper):
 	def getdefault(self, name): # Return the default or None
 		if name == '.type':
 			return None
-		if name == '.begin1':
-			return 0
 		if name == '.values':
 			return None
 		return MMAttrdefs.getdefattr(self.node, name)
@@ -338,11 +326,6 @@ class NodeWrapper(Wrapper):
 			if self.node.GetType() == 'imm' and value != 'imm':
 				self.editmgr.setnodevalues(self.node, [])
 			self.editmgr.setnodetype(self.node, value)
-			return
-		if name == '.begin1':
-			arc = MMNode.MMSyncArc(self.node, 'begin', srcnode='syncbase',delay=value)
-			beginlist = [arc]
-			self.editmgr.setnodeattr(self.node, 'beginlist', beginlist)
 			return
 		if name == '.values':
 			# ignore value if not immediate or comment node
@@ -358,9 +341,6 @@ class NodeWrapper(Wrapper):
 		self.editmgr.setnodeattr(self.node, name, value)
 
 	def delattr(self, name):
-		if name == '.begin1':
-			self.editmgr.setnodeattr(self.node, 'beginlist', None)
-			return
 		if name == '.values':
 			self.editmgr.setnodevalues(self.node, [])
 			return
@@ -381,7 +361,6 @@ class NodeWrapper(Wrapper):
 	#
 	def attrnames(self):
 		import settings
-		snap = hasattr(features, 'grins_snap') and features.grins_snap
 		lightweight = features.lightweight
 		boston = self.context.attributes.get('project_boston', 0)
 		ntype = self.node.GetType()
@@ -429,51 +408,47 @@ class NodeWrapper(Wrapper):
 		ctype = self.node.GetChannelType()
 		if ntype in mediatypes or features.compatibility == features.CMIF:
 			namelist.append('channel')
-		if not snap:
-			if features.EDIT_TYPE in features.feature_set:
-				namelist.append('.type')
-			namelist.append('abstract')
-			namelist.append('system_captions')
-			namelist.append('system_overdub_or_caption')
-			namelist.append('system_required')
-			namelist.append('system_screen_size')
-			namelist.append('system_screen_depth')
-			if boston:
-				namelist.append('system_audiodesc')
-				namelist.append('system_cpu')
-				namelist.append('system_operating_system')
-				namelist.append('system_component')
-				if ntype != 'switch':
-					namelist.append('restart')
-					namelist.append('restartDefault')
-					namelist.append('fillDefault')
-					namelist.append('syncBehavior')
-					namelist.append('syncBehaviorDefault')
-					namelist.append('min')
-					namelist.append('max')
-				if ntype in mediatypes:
-					namelist.append('readIndex')
-					namelist.append('erase')
-					if features.EXPORT_REAL in features.feature_set:
-						if ctype != 'sound':
-							namelist.append('backgroundOpacity')
-							namelist.append('chromaKey')
-							namelist.append('chromaKeyOpacity')
-							namelist.append('chromaKeyTolerance')
-							namelist.append('mediaOpacity')
-						namelist.append('reliable')
-						if ctype in ('text','image'):
-							namelist.append('strbitrate')
-		else:
-			# Snap!
+		if features.EDIT_TYPE in features.feature_set:
+			namelist.append('.type')
+		namelist.append('abstract')
+		namelist.append('system_captions')
+		namelist.append('system_overdub_or_caption')
+		namelist.append('system_required')
+		namelist.append('system_screen_size')
+		namelist.append('system_screen_depth')
+		if boston:
+			namelist.append('system_audiodesc')
+			namelist.append('system_cpu')
+			namelist.append('system_operating_system')
+			namelist.append('system_component')
 			if ntype != 'switch':
-				namelist.append('.begin1')
-		if not snap and (ntype in playabletypes or boston) and ntype != 'switch':
+				namelist.append('restart')
+				namelist.append('restartDefault')
+				namelist.append('fillDefault')
+				namelist.append('syncBehavior')
+				namelist.append('syncBehaviorDefault')
+				namelist.append('min')
+				namelist.append('max')
+			if ntype in mediatypes:
+				namelist.append('readIndex')
+				namelist.append('erase')
+				if features.EXPORT_REAL in features.feature_set:
+					if ctype != 'sound':
+						namelist.append('backgroundOpacity')
+						namelist.append('chromaKey')
+						namelist.append('chromaKeyOpacity')
+						namelist.append('chromaKeyTolerance')
+						namelist.append('mediaOpacity')
+					namelist.append('reliable')
+					if ctype in ('text','image'):
+						namelist.append('strbitrate')
+		if features.EXPORT_REAL in features.feature_set and 'u_group' in namelist:
+			namelist.remove('u_group')
+		if (ntype in playabletypes or boston) and ntype != 'switch':
 			namelist.append('fill')
 		if boston:
 			namelist.append('alt')
-			if not snap:
-				namelist.append('longdesc')
+			namelist.append('longdesc')
 		if ntype in ('par', 'excl') or (ntype in termtypes and boston):
 			namelist.append('terminator')
 		if ntype in interiortypes:
@@ -505,25 +480,23 @@ class NodeWrapper(Wrapper):
 		if ntype in playabletypes:
 			namelist.append('alt')
 			namelist.append('allowedmimetypes')
-			if not snap:
-				namelist.append('longdesc')
-				if ctype != 'brush':
-					namelist.append('clipbegin')
-					namelist.append('clipend')
+			namelist.append('longdesc')
+			if ctype != 'brush':
+				namelist.append('clipbegin')
+				namelist.append('clipend')
 			if boston:
-				if not snap:
-					if ChannelMap.isvisiblechannel(ctype):
-						namelist.append('left')
-						namelist.append('width')
-						namelist.append('right')
-						namelist.append('top')
-						namelist.append('height')
-						namelist.append('bottom')
-						namelist.append('fit')
-						namelist.append('regPoint')
-						namelist.append('regAlign')
-						namelist.append('z')
-					namelist.append('sensitivity')
+				if ChannelMap.isvisiblechannel(ctype):
+					namelist.append('left')
+					namelist.append('width')
+					namelist.append('right')
+					namelist.append('top')
+					namelist.append('height')
+					namelist.append('bottom')
+					namelist.append('fit')
+					namelist.append('regPoint')
+					namelist.append('regAlign')
+					namelist.append('z')
+				namelist.append('sensitivity')
 				if ctype == 'brush':
 					namelist.append('fgcolor')
 
@@ -589,10 +562,6 @@ class NodeWrapper(Wrapper):
 			return (('enum', alltypes), '',
 				'Node type', 'nodetype',
 				'Node type', 'raw', flags.FLAG_ALL|flags.FLAG_ADVANCED)
-		if name == '.begin1':
-			return (('float', None), 0.0,
-				'Begin delay', 'default',
-				'Start delay of node', 'normal', flags.FLAG_SNAP)
 		if name == '.values':
 			return (('string', None), '',
 				'Content', 'text',
@@ -1315,7 +1284,7 @@ class AttrEditor(AttrEditorDialog):
 		curflags = flags.curflags()
 		for name in allnamelist:
 			fl = wrapper.getdef(name)[6]
-			if fl & curflags:
+			if fl & curflags: # and self.mustshow(fl):
 				namelist.append(name)
 
 		self.__namelist = namelist
@@ -1407,6 +1376,28 @@ class AttrEditor(AttrEditorDialog):
 				return 1
 		return 0
 				
+##	def mustshow(self, advflags):
+##		# Return true if we should show this attribute
+##		can_show_advanced = \
+##			features.ADVANCED_PROPERTIES in features.feature_set and \
+##			self.show_all_attributes
+##		can_show_template = can_show_advanced and \
+##			features.CREATE_TEMPLATES in features.feature_set and \
+##			settings.get('enable_template')
+##		if (advflags & flags.FLAG_TEMPLATE):
+##			# Only show if both "show all" and "template"
+##			# are enabled
+##			if can_show_template:
+##				return 1
+##			return 0
+##		elif advflags & flags.FLAG_ADVANCED:
+##			# Only show is "advanced" is enabled
+##			if can_show_advanced:
+##				return 1
+##			return 0
+##		# The rest we always show
+##		return 1
+
 	def showall_callback(self):
 #		if not self.pagechange_allowed():
 #			self.fixbuttonstate()
