@@ -336,6 +336,10 @@ POPUP_HVIEW_LEAF = (
 		(FLAG_ALL, ENTRY, '&Edit content', None, CONTENT),
 )
 
+POPUP_HVIEW_TRANS = (
+		(FLAG_ALL, DYNAMICCASCADE, '&Transition', TRANSITION),
+		)
+
 POPUP_HVIEW_SLIDE = (
 		# XXXX Need to add the "new xxx node" commands for the
 		# light version
