@@ -108,7 +108,7 @@ channelhierarchy = {
 		'null'],
     'ole': ['word'],
     }
-SMILchanneltypes = ['null', 'text', 'html', 'image', 'sound', 'video',
+SMILchanneltypes = ['null', 'text', 'image', 'sound', 'video',
 		    'RealAudio', 'RealVideo', 'RealPix', 'RealText']
 
 ct = channelmap.keys()
