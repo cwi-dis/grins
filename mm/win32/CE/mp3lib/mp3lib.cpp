@@ -1,4 +1,4 @@
- /* This program is free software; you can redistribute it and/or modify
+/* This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
@@ -48,6 +48,7 @@ static int equalizer=0;
 unsigned long  clipped=0;
 mad_fixed_t attenuation=MAD_F_ONE;
 static DWORD conf_attsensitivity = MAD_F(0x02000000) * 4;
+#ifndef MS_NO_COREDLL
 BOOL APIENTRY DllMain( HANDLE hModule, 
                        DWORD  ul_reason_for_call, 
                        LPVOID lpReserved
@@ -63,6 +64,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
     }
     return TRUE;
 }
+#endif
 
 
 
