@@ -641,8 +641,15 @@ class SelectElementDlg(ResDialog):
 			self._wrappers[itemid] = wrapper
 		else:
 			print 'Warning: SelectElement: duplicate itemid', itemid
-		if self._selection is not None and wrapper.getMMObj() is self._selection:
-			self._selwrapper = wrapper
+		if type(self._selection) == type(""):
+			# XXX special case for region/viewport
+			mmobj = wrapper.getMMObj()
+			if hasattr(mmobj,'name'):
+				if self._selection is not None and mmobj.name == self._selection:
+					self._selwrapper = wrapper
+		else:			
+			if self._selection is not None and wrapper.getMMObj() is self._selection:
+				self._selwrapper = wrapper
 		return itemid
 
 # Implementation of the Layout name dialog
