@@ -511,7 +511,7 @@ def identify(name):
 			if rv and rv[-1] != '_':
 				rv = rv + '_'
 	# the first character must not be a digit
-	if rv[:1] in string.digits:
+	if rv and rv[0] in string.digits:
 		rv = '_' + rv
 	return rv
 
