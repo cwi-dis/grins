@@ -729,6 +729,7 @@ class DocumentWrapper(Wrapper):
 			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
 			'project_smil_url', 'project_web_url']
 	__qtnames = ['autoplay', 'qttimeslider', 'qtnext', 'qtchaptermode', 'immediateinstantiation']
+	__templatenames = ['template_name', 'template_description', 'template_snapshot']
 
 	def __init__(self, toplevel):
 		Wrapper.__init__(self, toplevel, toplevel.context)
@@ -799,7 +800,7 @@ class DocumentWrapper(Wrapper):
 		# XXX disable temporarly 'project_boston'
 		if 'project_boston' in names:
 			names.remove('project_boston')
-		for name in self.__stdnames + self.__publishnames + self.__qtnames:
+		for name in self.__stdnames + self.__publishnames + self.__qtnames + self.__templatenames:
 			if attrs.has_key(name):
 				names.remove(name)
 		if not features.lightweight and \
@@ -811,6 +812,8 @@ class DocumentWrapper(Wrapper):
 		     attrs.has_key('project_html_page'):
 			names.remove('project_html_page')
 		names.sort()
+		if features.CREATE_TEMPLATES in features.feature_set:
+			names = self.__templatenames + names
 		if features.compatibility in (features.Boston, features.G2, features.QT):
 			if features.compatibility == features.QT:
 				names = self.__qtnames + names

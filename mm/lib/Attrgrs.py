@@ -812,4 +812,12 @@ attrgrs=(
 		  'dropicon',
 		  ],
 	 },
+
+	{'name':'doctemplate',
+	 'title':'Template settings',
+	 'attrs':['template_name',
+		  'template_description',
+		  'template_snapshot',
+		  ],
+	 },
 	)

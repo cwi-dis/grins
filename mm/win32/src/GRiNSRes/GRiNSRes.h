@@ -294,6 +294,7 @@
 #define IDD_EDITATTR_TEMPLATE2          485
 #define IDD_EDITATTR_PREFPRO            486
 #define IDC_CDARROW                     487
+#define IDD_EDITATTR_DOCTEMPLATE        487
 #define IDC_CDARROWHIT                  488
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002

@@ -5555,6 +5555,24 @@ class Template2Group(TemplateGroup):
 		cd[a] = OptionsCheckNolabelCtrl(wnd, a, (grinsRC.IDC_CHECK2,))
 		return cd
 
+class DocTemplateGroup(AttrGroup):
+	data = attrgrsdict['doctemplate']
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_DOCTEMPLATE
+
+	def createctrls(self, wnd):
+		cd = {}
+		a = self.getattr('template_name')
+		cd[a] = StringNolabelCtrl(wnd, a, (grinsRC.IDC_STATIC2,grinsRC.IDC_EDIT3,))
+		a = self.getattr('template_description')
+		cd[a] = StringNolabelCtrl(wnd, a, (grinsRC.IDC_STATIC3,grinsRC.IDC_EDIT4,))
+		a = self.getattr('template_snapshot')
+		cd[a] = FileNolabelCtrl(wnd, a, (grinsRC.IDC_STATIC1, grinsRC.IDC_EDIT2, grinsRC.IDC_BUTTON2,))
+		return cd
+
 ############################
 # platform dependent association
 # what we have implemented, anything else goes as singleton
@@ -5657,6 +5675,7 @@ groupsui={
 	'template1':Template1Group,
 	'template2':Template2Group,
 	'template':TemplateGroup,
+	'doctemplate':DocTemplateGroup,
 	}
 
 ###########################

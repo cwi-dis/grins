@@ -643,9 +643,9 @@ class SMILWriter(SMIL, BaseSMILWriter, SMILWriterBase):
 			self.writetag('meta', [('name', 'customColors'),
 					       ('content',','.join(colors[:last]))])
 		for key, val in ctx.attributes.items():
-			# for export don't write attributes starting with project_, they are meant
+			# for export don't write attributes starting with project_ or template_, they are meant
 			# for internal information-keeping only
-			if not self.grinsExt and key[:8] == 'project_':
+			if not self.grinsExt and (key[:8] == 'project_' or key[:9] == 'template_'):
 				continue
 			if qt_context_attrs.has_key(key):
 				continue
