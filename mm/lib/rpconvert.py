@@ -250,3 +250,204 @@ def rpconvert(node):
 			em.setnodeattr(newnode, 'anchorlist', [MMAnchor('0', ATYPE_WHOLE, [], (0, 0), None)])
 			em.addlink(((newnode.GetUID(), '0'), tagdict['href'], DIR_1TO2, TYPE_FORK, A_SRC_PLAY, A_DEST_PLAY))
 	em.commit()
+##	convertrp(node)
+
+def convertrp(node):
+	# Convert a seq node into a RealPix node.  The seq's children
+	# must all be images, playing to the same region, the images
+	# must not have an effective fill value "transition" (other
+	# values are ok), the images may only have zero or one begin
+	# syncarc which specifies a simple offset, and only zero or
+	# one end syncarc which specifies a simple offset.
+	ctx = node.GetContext()
+	if node.GetType() != 'seq':
+		print 'not a seq node'
+		return
+	import realnode
+	rp = realnode.DummyRP()
+	rp.tags = []			# must make new copy
+	start = 0
+	rp.duration = 0
+	region = None
+	bgcolor = None
+	fill = None
+	for c in node.GetChildren():
+		# first some checks
+		if c.GetType() != 'ext':
+			print 'child not an external node'
+			return
+		if region is None:
+			region = c.GetChannel()
+			rp.width, rp.height = region.getPxGeom()[2:]
+			bgcolor = c['bgcolor']
+		elif c.GetChannel() != region:
+			print 'different region'
+			return
+		tagdict = {}
+		rp.tags.append(tagdict)
+		# set the start time
+		beginlist = c.GetAttrDef('beginlist', [])
+		if beginlist:
+			if len(beginlist) > 1:
+				print 'too many begin values'
+				return
+			if beginlist[0].srcnode != 'syncbase':
+				print 'begin not a syncbase value'
+			start = start + beginlist[0].delay
+		if fill == 'freeze':
+			# need to update start of out transition
+			rp.tags[-2]['start'] = start - rp.tags[-2]['tduration']
+			start = rp.tags[-2]['tduration']
+		tagdict['start'] = start
+		rp.duration = rp.duration + start
+		# figure out syncbase for next child
+		start = 0
+		endlist = c.GetAttrDef('endlist', [])
+		if endlist:
+			if len(endlist) > 1:
+				print 'too many end values'
+				return
+			if endlist[0].srcnode != 'syncbase':
+				print 'end not a syncbase value'
+			start = endlist[0].delay
+		dur = c.GetAttrDef('duration', None)
+		if dur is not None:
+			if not endlist or dur < start:
+				start = dur
+
+		# set file
+		file = c.GetAttrDef('file', None)
+		if not file:
+			print 'no file specified on image'
+			return
+		tagdict['file'] = file
+
+		# figure out the transition
+		transIn = c.GetAttrDef('transIn', [])
+		if transIn:
+			for tr in transIn:
+				trdict = ctx.transitions.get(tr)
+				if trdict.get('trtype', 'fade') in ('fade', 'barWipe', 'pushWipe'):
+					break
+			else:
+				trdict = None
+		if not transIn or trdict is None:
+			# no transition
+			tagdict['tduration'] = 0
+			tagdict['tag'] = 'fadein'
+		else:
+			if trdict.get('startProgress', 0.0) != 0 or \
+			   trdict.get('endProgress', 1.0) != 1 or \
+			   trdict.get('horzRepeat', 1) != 1 or \
+			   trdict.get('vertRepeat', 1) != 1 or \
+			   trdict.get('borderWidth', 0) != 0:
+				print 'translation of transition looses information'
+			tagdict['tduration'] = trdict.get('dur', 1)
+			trtype = tagdict.get('trtype', 'fade')
+			if trtype == 'barWipe':
+				tagdict['tag'] = 'wipe'
+				tagdict['wipetype'] = 'normal'
+				if trdict.get('subtype', 'leftToRight') == 'leftToRight':
+					if trdict.get('direction', 'forward') == 'forward':
+						tagdict['direction'] = 'right'
+					else:
+						# direction="reverse"
+						tagdict['direction'] = 'left'
+				else:
+					# subtype="topToBottom"
+					if trdict.get('direction', 'forward') == 'forward':
+						tagdict['direction'] = 'down'
+					else:
+						# direction="reverse"
+						tagdict['direction'] = 'up'
+			elif trtype == 'pushWipe':
+				tagdict['tag'] = 'wipe'
+				tagdict['wipetype'] = 'push'
+				subtype = trdict.get('subtype', 'fromLeft')
+				if subtype == 'fromLeft':
+					tagdict['direction'] = 'right'
+				elif subtype == 'fromRight':
+					tagdict['direction'] = 'left'
+				elif subtype == 'fromBottom':
+					tagdict['direction'] = 'up'
+				else:
+					# subtype="fromTop"
+					tagdict['direction'] = 'down'
+			elif trtype == 'fade':
+				tagdict['tag'] = 'fadein'
+			else:
+				print 'untranslatable transition'
+				tagdict['tag'] = 'fadein'
+				tagdict['tduration'] = 0
+
+		subRegGeom, mediaGeom = c.getPxGeomMedia()
+		effSubRegGeom = intersect((rp.width, rp.height), subRegGeom)
+		effMediaGeom = intersect(effSubRegGeom[2:], mediaGeom)
+		tagdict['displayfull'] = 0
+		tagdict['subregionxy'] = effMediaGeom[:2]
+		tagdict['subregionwh'] = effMediaGeom[2:]
+		if effMediaGeom == mediaGeom:
+			tagdict['fullimage'] = 1
+		else:
+			width, height = apply(self.GetDefaultMediaSize, mediaGeom[2:])
+			tagdict['fullimage'] = 0
+			tagdict['imgcropxy'] = int(width * effMediaGeom[0] / float(mediaGeom[2]) + .5), int(height * effMediaGeom[1] / float(mediaGeom[3]) + .5)
+			tagdict['imgcropwh'] = int(width * effMediaGeom[2] / float(mediaGeom[2]) + .5), int(height * effMediaGeom[3] / float(mediaGeom[3]) + .5)
+		tagdict['aspect'] = 0
+		fill = c.GetFill()
+		if fill == 'transition':
+			fill = 'remove'
+			print 'fill="transition" replaced by fill="remove"'
+		if fill != 'hold':
+			tagdict = {}
+			rp.tags.append(tagdict)
+			transOut = c.GetAttrDef('transIn', [])
+			if transOut:
+				for tr in transOut:
+					trdict = ctx.transitions.get(tr)
+					if trdict.get('trtype', 'fade') == 'fade':
+						break
+				else:
+					trdict = None
+			# start value may be updated in next iteration if fill="freeze"
+			if trdict and trdict.get('dur', 1) > 0:
+				tagdict['tag'] = 'fadeout'
+				tagdict['tduration'] = trdict.get('dur', 1)
+				tagdict['start'] = start - tagdict['tduration']
+				start = tagdict['tduration']
+			else:
+				tagdict['tag'] = 'fill'
+				tagdict['tduration'] = 0
+				tagdict['start'] = start
+				start = 0
+			tagdict['color'] = bgcolor
+			tagdict['displayfull'] = 0
+			tagdict['subregionxy'] = effMediaGeom[:2]
+			tagdict['subregionwh'] = effMediaGeom[2:]
+	rp.duration = rp.duration + start
+	if rp.tags:
+		rp.duration = rp.duration + rp.tags[-1]['tduration']
+	dur = node.GetAttrDef('duration', None)
+	if dur is not None:
+		# seq duration overrides calculated duration
+		rp.duration = dur
+	if fill == 'freeze':
+			# need to update start of out transition
+			rp.tags[-1]['start'] = start - rp.tags[-1]['tduration']
+			start = rp.tags[-1]['tduration']
+##	realsupport.writeRP('rp.rp', rp, node)
+
+def intersect((width, height), (x,y,w,h)):
+	# calculate the intersection of a parent region (width,height)
+	# with a child region (x,y,w,h)
+	if x < 0:
+		x, w = 0, w + x
+	if x + w > width:
+		w = width - x
+	if y < 0:
+		y, h = 0, h + y
+	if y + h > height:
+		h = height - y
+	if w <= 0 or h <= 0:
+		x = y = w = h = 0
+	return x,y,w,h
