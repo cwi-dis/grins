@@ -2146,7 +2146,7 @@ end
 item: Edit Registry
   Total Keys=1
   Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
-  New Value=mailto:info@oratrix.com
+  New Value=info@oratrix.com
   Value Name=Contact
   Root=2
 end
