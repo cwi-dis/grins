@@ -85,7 +85,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__animator = None
 		self.__effAnimator = None
 
-		self.__fiber_id = 0
+		self.__fiber_id = None
 		self.__playdone = 0
 		self.__targetChannel = None
 		self.__lastvalue = None
@@ -173,7 +173,7 @@ class AnimateChannel(Channel.ChannelAsync):
 
 	def onIdle(self):
 		if not USE_IDLE_PROC:
-			self.__fiber_id = 0
+			self.__fiber_id = None
 		if self.__animating:
 			t_sec=self._scheduler.timefunc() - self.__start
 			# end-point exclusive model
@@ -185,17 +185,16 @@ class AnimateChannel(Channel.ChannelAsync):
 				self.__register_for_timeslices()
 			
 	def __register_for_timeslices(self):
-		if not self.__fiber_id:
+		if self.__fiber_id is None:
 			if USE_IDLE_PROC:
-				windowinterface.setidleproc(self.onIdle)
-				self.__fiber_id = 1
+				self.__fiber_id = windowinterface.setidleproc(self.onIdle)
 			else:
 				self.__fiber_id = windowinterface.settimer(0.05, (self.onIdle,()))
 
 	def __unregister_for_timeslices(self):
-		if self.__fiber_id:
+		if self.__fiber_id is not None:
 			if USE_IDLE_PROC:
-				windowinterface.cancelidleproc(self.onIdle)
+				windowinterface.cancelidleproc(self.__fiber_id)
 			else:
 				windowinterface.canceltimer(self.__fiber_id)
-			self.__fiber_id = 0
+			self.__fiber_id = None
