@@ -21,6 +21,7 @@ class TopLevelDialog:
 			(FLAG_ALL, 'Save as...', SAVE_AS),
 			(FLAG_G2, 'Publish for G2...', EXPORT_G2),
 			(FLAG_QT, 'Publish for QuickTime...', EXPORT_QT),
+			(FLAG_SMIL_1_0, 'Publish...', EXPORT_SMIL),
 			(FLAG_ALL, 'Restore', RESTORE),
 			(FLAG_ALL, 'Close', CLOSE),
 			(FLAG_ALL, 'Help', HELP),
