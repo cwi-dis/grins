@@ -49,6 +49,9 @@ class ArcInfo(Dialog):
 		hint = ''
 		self = Dialog.init(self, width, height, title, hint)
 		flp.merge_full_form(self, self.form, form_template)
+		self.one_sec.set_button(0)
+		self.ten_sec.set_button(1)
+		self.hundred_sec.set_button(0)
 		return self
 
 	def __repr__(self):
@@ -117,6 +120,24 @@ class ArcInfo(Dialog):
 		self.setvalues()
 		self.close()
 
+	def one_sec_callback(self, args):
+		delay = min(1.0, self.delay_slider.get_slider_value())
+		self.delay_slider.set_slider_value(delay)
+		self.delay_slider.set_slider_bounds(0.0, 1.0)
+		self.delay_slider.set_slider_precision(2)
+
+	def ten_sec_callback(self, args):
+		delay = min(10.0, self.delay_slider.get_slider_value())
+		self.delay_slider.set_slider_value(delay)
+		self.delay_slider.set_slider_bounds(0.0, 10.0)
+		self.delay_slider.set_slider_precision(1)
+
+	def hundred_sec_callback(self, args):
+		delay = min(100.0, self.delay_slider.get_slider_value())
+		self.delay_slider.set_slider_value(delay)
+		self.delay_slider.set_slider_bounds(0.0, 100.0)
+		self.delay_slider.set_slider_precision(0)
+
 	# Dummy callback for from/to beginning/end buttons and delay slider
 
 	def dummy_callback(self, args):
@@ -125,8 +146,23 @@ class ArcInfo(Dialog):
 	# Get/set values
 
 	def getvalues(self):
-		self.delay_slider.set_slider_bounds(0.0, 100.0)
-		self.delay_slider.set_slider_precision(1)
+		if self.delay > 10.0:
+			self.hundred_sec.set_button(1)
+			self.ten_sec.set_button(0)
+			self.one_sec.set_button(0)
+		elif self.delay > 1.0 and self.one_sec.get_button():
+			self.hundred_sec.set_button(0)
+			self.ten_sec.set_button(1)
+			self.one_sec.set_button(0)
+		if self.hundred_sec.get_button():
+			self.delay_slider.set_slider_bounds(0.0, 100.0)
+			self.delay_slider.set_slider_precision(0)
+		elif self.ten_sec.get_button():
+			self.delay_slider.set_slider_bounds(0.0, 10.0)
+			self.delay_slider.set_slider_precision(1)
+		else:
+			self.delay_slider.set_slider_bounds(0.0, 1.0)
+			self.delay_slider.set_slider_precision(2)
 		self.delay_slider.set_slider_value(self.delay)
 		self.from_beginning.set_button(not self.sside)
 		self.from_end.set_button(self.sside)
@@ -139,7 +175,10 @@ class ArcInfo(Dialog):
 			return # Not possible at this time
 		editmgr.delsyncarc(self.snode, self.sside, self.delay, \
 			self.dnode, self.dside)
-		self.delay = self.delay_slider.get_slider_value()
+		d = self.delay_slider.get_slider_value()
+		p = 100.0 / self.delay_slider.get_slider_bounds()[1]
+		self.delay = int(d*p + 0.5) / p
+		self.delay_slider.set_slider_value(self.delay)
 		self.sside = self.from_end.get_button()
 		self.dside = self.to_end.get_button()
 		editmgr.addsyncarc(self.snode, self.sside, self.delay, \
