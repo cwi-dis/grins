@@ -304,6 +304,35 @@ class EditMgr:
 			      'name already in use in setlayoutname'
 		self.addstep('setlayoutname', name, newname)
 		self.context.setlayoutname(name, newname)
+
+	#
+	# User group operations
+	#
+	def addusergroup(self, name, value):
+		if self.context.usergroups.has_key(name):
+			raise MMExc.AssertError, \
+			      'duplicate usergroup name in addusergroup'
+		self.addstep('addusergroup', name)
+		self.context.addusergroup(name, value)
+
+	def delusergroup(self, name):
+		usergroup = self.context.usergroups.get(name)
+		if usergroup is None:
+			raise MMExc.AssertError, 'unknown usergroup in delusergroup'
+		self.addstep('delusergroup', name, usergroup)
+		self.context.delusergroup(name)
+
+	def setusergroupname(self, name, newname):
+		if newname == name:
+			return		# no change
+		if not self.context.usergroups.has_key(name):
+			raise MMExc.AssertError, \
+			      'unknown usergroup name in setusergroupname'
+		if self.context.usergroups.has_key(newname):
+			raise MMExc.AssertError, \
+			      'name already in use in setusergroupname'
+		self.addstep('setusergroupname', name, newname)
+		self.context.setusergroupname(name, newname)
 		
 ##	#
 ##	# Style operations
