@@ -154,13 +154,20 @@
 #define IDUC_CUT                        32814
 #define IDUC_COPY                       32815
 #define IDUC_MAGIC_PLAY                 32818
+#define IDUC_HVIEW                      32819
+#define IDUC_PLAYER                     32820
+#define IDUC_LAYOUT                     32821
+#define IDUC_CVIEW                      32822
+#define IDUC_HLINKS                     32823
+#define IDUC_SOURCE                     32824
+#define IDUC_UGROUPS                    32825
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        232
-#define _APS_NEXT_COMMAND_VALUE         32819
+#define _APS_NEXT_COMMAND_VALUE         32826
 #define _APS_NEXT_CONTROL_VALUE         1107
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

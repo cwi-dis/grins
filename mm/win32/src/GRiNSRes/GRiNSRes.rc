@@ -13,6 +13,25 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
+// Neutral (Default) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
+#endif    // Neutral (Default) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -776,6 +795,13 @@ IDR_GRINSED             ICON    DISCARDABLE     "res\\GRiNSed.ico"
 
 IDR_GRINSED ACCELERATORS PRELOAD MOVEABLE PURE 
 BEGIN
+    "1",            IDUC_PLAYER,            VIRTKEY, ALT, NOINVERT
+    "2",            IDUC_LAYOUT,            VIRTKEY, ALT, NOINVERT
+    "3",            IDUC_HVIEW,             VIRTKEY, ALT, NOINVERT
+    "4",            IDUC_CVIEW,             VIRTKEY, ALT, NOINVERT
+    "5",            IDUC_HLINKS,            VIRTKEY, ALT, NOINVERT
+    "6",            IDUC_UGROUPS,           VIRTKEY, ALT, NOINVERT
+    "7",            IDUC_SOURCE,            VIRTKEY, ALT, NOINVERT
     "C",            IDUC_COPY,              VIRTKEY, CONTROL, NOINVERT
     "H",            IDUC_STOP,              VIRTKEY, CONTROL, NOINVERT
     "N",            IDUC_NEW_DOCUMENT,      VIRTKEY, CONTROL, NOINVERT
@@ -905,25 +931,6 @@ BEGIN
 END
 
 #endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// Neutral (Default) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
-#ifdef _WIN32
-LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
-#pragma code_page(1253)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
-#endif    // Neutral (Default) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
