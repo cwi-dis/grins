@@ -185,8 +185,8 @@ class AnimationData:
 	# create animate nodes from self data
 	def applyData(self, editmgr, replace=0):
 		em = editmgr
-		if not em.transaction():
-			return 0
+#		if not em.transaction():
+#			return 0
 
 		if replace:
 			animations = self._target.getAnimations()
@@ -255,7 +255,7 @@ class AnimationData:
 			self._updateNode(anim, keyTimes, animateColorValues, 'backgroundColor', targname)
 			em.addnode(parent, 3, anim)
 		
-		em.commit()
+#		em.commit()
 		return 1
 
 	def createAnimators(self):
