@@ -161,7 +161,7 @@ def getdefaultfeatures():
 def getfeatures(str):
 	strlist = string.split(str, ',')
 	features = 0
-	for f in str:
+	for f in strlist:
 		try:
 			features = features + license.FEATURES[f]
 		except IndexError:
