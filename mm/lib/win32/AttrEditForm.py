@@ -2267,7 +2267,7 @@ class RealRenderer(Renderer):
 	def do_init(self):
 		if rma and not RealRenderer.realengine:
 			try:
-				 RealRenderer.realengine = rma.CreateEngine()
+				RealRenderer.realengine = rma.CreateEngine()
 			except:
 				RealRenderer.realengine=None
 		if RealRenderer.realengine and not self._rmaplayer:

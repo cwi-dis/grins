@@ -970,7 +970,7 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 ## 			if self._rb_modeless and self._rb_dirty(rb):
 ## 				apply(self._rb_callback, rb)
 ## 			else:	
- 				apply(self._rb_callback,())
+			apply(self._rb_callback,())
 
 
 	def cancel_create_box(self):
