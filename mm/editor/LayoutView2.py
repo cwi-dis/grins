@@ -680,13 +680,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.updateFocus(1)
 				
 	def isValidMMNode(self, node):
-		if node == None:
-			return 0
-		from MMTypes import leaftypes
-		if not node.type in leaftypes:
-			return 0
-		import ChannelMap
-		return ChannelMap.isvisiblechannel(node.GetChannelType())
+		return self.treeHelper._isValidMMNode(node)
 
 	def focusOnMMChannel(self, focusobject, keepShowedNodes=0):		
 		nodeType = self.getNodeType(focusobject)
@@ -2487,11 +2481,17 @@ class PreviousWidget(Widget):
 		# determinate the right viewport to show
 		viewport = None
 		if len(nodeRefList) > 0:
-			lastNodeRef = nodeRefList[-1]
-			if lastNodeRef.getClassName() != 'FakeMMChannel' and (nodeType != TYPE_MEDIA or nodeRef.GetChannel()):
-				viewport = self._context.getViewportRef(lastNodeRef)
+			# get the last selected valid object
+			indList = range(len(nodeRefList))
+			indList.reverse()
+			for ind in indList:
+				n = nodeRefList[ind]
+				if (n.getClassName() == 'MMNode' and self._context.isValidMMNode(n)) or n.getClassName() == 'MMChannel':
+					if nodeType != TYPE_MEDIA or nodeRef.GetChannel():
+						viewport = self._context.getViewportRef(n)
+						break
 		if viewport != None:
-			self.__showViewport(nodeRef)
+			self.__showViewport(viewport)
 
 		# select the list of shapes
 		shapeList = []
