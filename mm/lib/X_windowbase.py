@@ -1907,6 +1907,8 @@ class Dialog:
 	# pop up menu
 	def destroy_menu(self):
 		if self._menu:
+			self._widget.RemoveEventHandler(X.ButtonPressMask,
+						FALSE, self._post_menu, None)
 			self._menu.DestroyWidget()
 		self._menu = None
 
