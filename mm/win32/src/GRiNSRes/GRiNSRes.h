@@ -214,6 +214,11 @@
 #define IDD_EDITATTR_PF2                417
 #define IDD_EDITATTR_F2                 418
 #define IDD_EDITATTR_EVENTLIST2         419
+#define IDD_EDITATTR_LAYOUT3            420
+#define IDD_EDITATTR_INFO1              421
+#define IDD_EDITATTR_ID1                422
+#define IDD_EDITATTR_ID2                423
+#define IDD_EDITATTR_ID3                424
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -476,7 +481,9 @@
 #define IDC_SHOWBACKGROUNDV2            1276
 #define IDC_LABEL                       1277
 #define IDC_LABEL2                      1278
+#define IDC_OPENV1                      1278
 #define IDC_SLIDER_POS                  1279
+#define IDC_OPENV2                      1279
 #define IDC_MIN                         1280
 #define IDC_MAX                         1281
 #define IDC_TREE_REGION1                1282
@@ -599,6 +606,17 @@
 #define IDC_RESTARTNODEL                1421
 #define IDC_RESTARTDEFAULTL             1422
 #define IDC_SHOWBACKGROUNDL             1422
+#define IDC_OPENL                       1423
+#define IDC_CLOSEV1                     1424
+#define IDC_CLOSEV2                     1425
+#define IDC_CLOSEL                      1426
+#define IDC_TRACEIMAGEL                 1427
+#define IDC_TRACEIMAGEV                 1428
+#define IDC_TRACEIMAGEB                 1429
+#define IDC_IDL                         1430
+#define IDC_IDV                         1431
+#define IDC_NAMEL                       1432
+#define IDC_NAMEV                       1433
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -687,7 +705,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        411
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1423
+#define _APS_NEXT_CONTROL_VALUE         1432
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
