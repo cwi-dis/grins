@@ -2,6 +2,8 @@ __version__ = "$Id$"
 
 import audio
 from format import *
+import struct
+from chunk import Chunk
 
 _skiplist = ('COMT', 'INST', 'MIDI', 'AESD',
 	     'APPL', 'NAME', 'AUTH', '(c) ', 'ANNO')
@@ -9,35 +11,22 @@ _skiplist = ('COMT', 'INST', 'MIDI', 'AESD',
 _AIFC_VERSION = 0xA2805140		# Version 1 of AIFF-C
 
 def _read_long(file):
-	x = 0L
-	for i in range(4):
-		byte = file.read(1)
-		if byte == '':
-			raise EOFError
-		x = x*256 + ord(byte)
-	if x >= 0x80000000L:
-		x = x - 0x100000000L
-	return int(x)
+	try:
+		return struct.unpack('>l', file.read(4))[0]
+	except struct.error:
+		raise EOFError
 
 def _read_ulong(file):
-	x = 0L
-	for i in range(4):
-		byte = file.read(1)
-		if byte == '':
-			raise EOFError
-		x = x*256 + ord(byte)
-	return x
+	try:
+		return struct.unpack('>L', file.read(4))[0]
+	except struct.error:
+		raise EOFError
 
 def _read_short(file):
-	x = 0
-	for i in range(2):
-		byte = file.read(1)
-		if byte == '':
-			raise EOFError
-		x = x*256 + ord(byte)
-	if x >= 0x8000:
-		x = x - 0x10000
-	return x
+	try:
+		return struct.unpack('>h', file.read(2))[0]
+	except struct.error:
+		raise EOFError
 
 def _read_string(file):
 	length = ord(file.read(1))
@@ -70,21 +59,10 @@ def _read_float(f): # 10 bytes
 	return sign * f
 
 def _write_short(f, x):
-	d, m = divmod(x, 256)
-	f.write(chr(d))
-	f.write(chr(m))
+	f.write(struct.pack('>h', x))
 
 def _write_long(f, x):
-	if x < 0:
-		x = x + 0x100000000L
-	data = []
-	for i in range(4):
-		d, m = divmod(x, 256)
-		data.append(m)
-		x = d
-	data.reverse()
-	for c in data:
-		f.write(chr(int(c)))
+	f.write(struct.pack('>L', x))
 
 def _write_string(f, s):
 	f.write(chr(len(s)))
@@ -125,45 +103,24 @@ def _write_float(f, x):
 	_write_long(f, himant)
 	_write_long(f, lomant)
 
-class Chunk:
-	def __init__(self, file):
-		self.file = file
-		self.chunkname = self.file.read(4)
-		if len(self.chunkname) < 4:
-			raise EOFError
-		self.chunksize = _read_long(self.file)
-		self.size_read = 0
-		self.offset = self.file.tell()
-
-	def rewind(self):
-		self.file.seek(self.offset, 0)
-		self.size_read = 0
-
-	def getpos(self):
-		return self.size_read
-
-	def setpos(self, pos):
-		if pos < 0 or pos > self.chunksize:
-			raise RuntimeError
-		self.file.seek(self.offset + pos, 0)
-		self.size_read = pos
-
-	def read(self, length):
-		if self.size_read >= self.chunksize:
-			return ''
-		if length > self.chunksize - self.size_read:
-			length = self.chunksize - self.size_read
-		data = self.file.read(length)
-		self.size_read = self.size_read + len(data)
-		return data
-
-	def skip(self):
-		self.file.seek(self.chunksize - self.size_read, 1)
-		if self.chunksize & 1:
-			dummy = self.read(1)
-
 class reader:
 	def __init__(self, file):
+		self.__handlers = {
+			'COMM': self.__read_comm_chunk,
+			'SSND': self.__read_ssnd_chunk,
+			'FVER': self.__read_vfer_chunk,
+			'MARK': self.__read_mark_chunk,
+			'COMT': self.__skip_chunk,
+			'INST': self.__skip_chunk,
+			'MIDI': self.__skip_chunk,
+			'AESD': self.__skip_chunk,
+			'APPL': self.__skip_chunk,
+			'NAME': self.__skip_chunk,
+			'AUTH': self.__skip_chunk,
+			'(c) ': self.__skip_chunk,
+			'ANNO': self.__skip_chunk,
+			}
+
 		if type(file) == type(''):
 			self.__filename = file # only needed for __repr__
 			self.__file = file = open(file, 'rb')
@@ -171,70 +128,49 @@ class reader:
 			self.__filename = '<unknown filename>'
 			self.__file = file
 		# initialization
+		self.__chunk = None	# the chunk currently being read
+		self.__format = None
+		self.__ssnd_chunk = None
 		self.__version = None
-		self.__markers = []
+		self.__markers = None
 		self.__soundpos = 0
 		self.__framesread = 0
 		# start parsing
-		form = file.read(4)
-		if form != 'FORM':
+		self.__file = file = Chunk(file)
+		if file.getname() != 'FORM':
 			raise audio.Error, 'file does not start with FORM id'
-		formlength = _read_long(file)
-		if formlength <= 4:
-			raise audio.Error, 'invalid FORM chunk data size'
 		formdata = file.read(4)
-		formlength = formlength - 4
 		if formdata == 'AIFF':
 			self.__aifc = 0
 		elif formdata == 'AIFC':
 			self.__aifc = 1
 		else:
 			raise audio.Error, 'not an AIFF or AIFF-C file'
-		comm_chunk_read = 0
-		while formlength > 0:
-			ssnd_seek_needed = 1
-			#DEBUG: SGI's soundfiler has a bug.  There should
-			# be no need to check for EOF here.
-			try:
-				chunk = Chunk(file)
-			except EOFError, msg:
-				if formlength == 8:
-					print 'Warning: FORM chunk size too large'
-					formlength = 0
-					break
-				# different error, raise exception
-				raise EOFError, msg
-			chunkname = chunk.chunkname
-			if chunkname == 'COMM':
-				self.__read_comm_chunk(chunk)
-				comm_chunk_read = 1
-			elif chunkname == 'SSND':
-				self.__ssnd_chunk = chunk
-				self.__ssnd_offset = _read_long(chunk)
-				self.__ssnd_block_size = _read_long(chunk)
-				ssnd_seek_needed = 0
-			elif chunkname == 'FVER':
-				self.__version = _read_long(chunk)
-			elif chunkname == 'MARK':
-				self.__readmark(chunk)
-			elif chunkname in _skiplist:
-				pass
-			else:
-				raise audio.Error, 'unrecognized chunk type '+chunkname
-			formlength = formlength - 8 - chunk.chunksize
-			if chunk.chunksize & 1:
-				formlength = formlength - 1
-			if formlength > 0:
-				chunk.skip()
-		if not comm_chunk_read or not self.__ssnd_chunk:
-			raise audio.Error, 'COMM chunk and/or SSND chunk missing'
-		if ssnd_seek_needed:
-			chunk = self.__ssnd_chunk
-			chunk.rewind()
-			dummy = chunk.read(8 + self.__ssnd_offset)
 
 	def __repr__(self):
+		if self.__format is None:
+			return '<AIFCreader instance, file=%s, unknown format>' % self.__filename
 		return '<AIFCreader instance, file=%s, format=%s, framerate=%d>' % (self.__filename, `self.__format`, self.__framerate)
+
+	def __read_until(self, name):
+		if self.__chunk is not None:
+			self.__chunk.skip()
+		while 1:
+			try:
+				chunk = Chunk(self.__file)
+			except EOFError:
+				raise audio.Error, 'chunk %s not found' % name
+			else:
+				self.__chunk = chunk
+			chunkname = chunk.getname()
+			func = self.__handlers.get(chunkname)
+			if func is not None:
+				func(chunk)
+			else:
+				raise audio.Error, 'unrecognized chunk type '+chunkname
+			if name == chunkname:
+				return
+			chunk.skip()
 
 	def __read_comm_chunk(self, chunk):
 		nchannels = _read_short(chunk)
@@ -285,7 +221,16 @@ class reader:
 		else:
 			raise audio.Error, 'Unsupported format'
 
-	def __readmark(self, chunk):
+	def __read_ssnd_chunk(self, chunk):
+		self.__ssnd_chunk = chunk
+		self.__ssnd_offset = _read_long(chunk)
+		self.__ssnd_block_size = _read_long(chunk)
+		self.__ssnd_curpos = self.getpos()
+
+	def __read_vfer_chunk(self, chunk):
+		self.__version = _read_long(chunk)
+
+	def __read_mark_chunk(self, chunk):
 		nmarkers = _read_short(chunk)
 		# Some files appear to contain invalid counts.
 		# Cope with this by testing for EOF.
@@ -306,16 +251,32 @@ class reader:
 			else: print 'markers',
 			print 'instead of', nmarkers
 
+	def __skip_chunk(self, chunk):
+		pass
+
 	def getformat(self):
+		if self.__format is None:
+			self.__read_until('COMM')
 		return self.__format
 
 	def getnframes(self):
+		if self.__format is None:
+			self.__read_until('COMM')
 		return self.__nframes - self.__framesread
 
 	def getframerate(self):
+		if self.__format is None:
+			self.__read_until('COMM')
 		return self.__framerate
 
 	def readframes(self, nframes = -1):
+		if self.__format is None:
+			self.__read_until('COMM')
+		if self.__ssnd_chunk is None:
+			self.__read_until('SSND')
+		if self.__chunk is not self.__ssnd_chunk:
+			self.__chunk = self.__ssnd_chunk
+			self.__ssnd_chunk.setpos(self.__ssnd_curpos)
 		fmt = self.__format
 		if nframes >= 0:
 			nbytes = (nframes / fmt.getfpb()) * fmt.getblocksize()
@@ -324,22 +285,32 @@ class reader:
 		data = self.__ssnd_chunk.read(nbytes)
 		nframes = len(data) * fmt.getfpb() / fmt.getblocksize()
 		self.__framesread = self.__framesread + nframes
+		self.__ssnd_curpos = self.getpos()
 		return data, nframes
 
 	def rewind(self):
-		chunk = self.__ssnd_chunk
-		chunk.rewind()
-		dummy = chunk.read(8 + self.__ssnd_offset)
+		self.__ssnd_chunk.seek(8 + self.__ssnd_offset)
 		self.__framesread = 0
+		self.__ssnd_curpos = self.getpos()
+		self.__chunk = self.__ssnd_chunk
 
 	def getpos(self):
-		return self.__ssnd_chunk.getpos(), self.__framesread
+		if self.__ssnd_chunk is None:
+			self.__read_until('SSND')
+		return self.__ssnd_chunk.tell(), self.__framesread
 
 	def setpos(self, (pos, framesread)):
-		self.__ssnd_chunk.setpos(pos)
+		self.__ssnd_chunk.seek(pos)
 		self.__framesread = framesread
+		self.__chunk = self.__ssnd_chunk
 
 	def getmarkers(self):
+		if self.__markers is None:
+			try:
+				self.__read_until('MARK')
+			except audio.Error:
+				# no markers found
+				self.__markers = []
 		return self.__markers
 
 class writer:
