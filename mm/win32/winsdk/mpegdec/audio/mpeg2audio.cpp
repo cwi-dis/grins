@@ -11,6 +11,10 @@
 #include "synthesizers.h"
 
 #include <stdlib.h>
+#include <limits.h>
+
+// debug
+#include <stdio.h>
 
 mpeg2audio_t* mpeg2audio_allocate_struct(mpeg2_t *file, mpeg2_atrack_t *track)
 	{
@@ -66,20 +70,24 @@ int mpeg2audio_read_frame(mpeg2audio_t *audio)
 		switch(audio->format)
 			{
 			case AUDIO_AC3:
+				//printf("AUDIO_AC3\n");
 				result = mpeg2audio_do_ac3(audio);
 				break;	
 				
 			case AUDIO_MPEG:
+				//printf("AUDIO_MPEG\n");
 				switch(audio->layer)
 					{
 					case 1:
 						break;
 
 					case 2:
+						//printf("AUDIO_MPEG layer 2\n");
 						result = mpeg2audio_dolayer2(audio);
 						break;
 
 					case 3:
+						//printf("AUDIO_MPEG layer 3\n");
 						result = mpeg2audio_dolayer3(audio);
 						break;
 
@@ -90,6 +98,7 @@ int mpeg2audio_read_frame(mpeg2audio_t *audio)
 				break;
 			
 			case AUDIO_PCM:
+				//printf("AUDIO_PCM\n");
 				result = mpeg2audio_do_pcm(audio);
 				break;
 			}
@@ -403,6 +412,7 @@ int mpeg2audio_read_raw(mpeg2audio_t *audio, unsigned char *output, long *size, 
 	return result;
 	}
 
+/*
 // Channel is 0 to channels - 1
 bool mpeg2audio_decode_audio(mpeg2audio_t *audio, float *output_f, short *output_i, 
 		int channel, long start_position, long len, long *pwritelen)
@@ -502,6 +512,92 @@ bool mpeg2audio_decode_audio(mpeg2audio_t *audio, float *output_f, short *output
 		*pwritelen = i;
 		//for( ; i < len; i++){ output_i[i] = 0;}
 		}
+
+	if(audio->pcm_point > 0)
+		return true;
+	else
+		return result == 0;
+	}
+*/
+
+/////////////////////////
+
+// Channel is 0 to channels - 1
+bool mpeg2audio_decode_audio(mpeg2audio_t *audio, short *output_i, 
+		int channel, long start_position, long len, long *pwritelen)
+	{
+	long allocation_needed = len + MPEG2AUDIO_PADDING;
+	long i, j, result = 0;
+	mpeg2_t *file = (mpeg2_t *)audio->file;
+	mpeg2_atrack_t *atrack = (mpeg2_atrack_t *)audio->track;
+	long attempts;
+
+	//printf("start_position = %ld, audio->pcm_position = %ld\n", start_position, audio->pcm_position);
+	//printf("audio->pcm_allocated = %ld\n", audio->pcm_allocated);
+
+	// Create new buffer
+	if(audio->pcm_allocated < allocation_needed)
+		{
+		mpeg2audio_replace_buffer(audio, allocation_needed);
+		}
+
+	// Entire output is in buffer so don't do anything.
+	if(start_position >= audio->pcm_position && start_position < audio->pcm_position + audio->pcm_size &&
+		start_position + len <= audio->pcm_size)
+		{
+		;
+		}
+	else if(start_position <= audio->pcm_position + audio->pcm_size && start_position >= audio->pcm_position)
+		{
+		// Output starts in buffer but ends later so slide it back.
+		for(i = 0, j = (start_position - audio->pcm_position) * audio->channels;
+			j < audio->pcm_size * audio->channels;
+			i++, j++)
+			{
+			audio->pcm_sample[i] = audio->pcm_sample[j];
+			}
+		audio->pcm_point = i;
+		audio->pcm_size -= start_position - audio->pcm_position;
+		audio->pcm_position = start_position;
+		}
+	else
+		{
+		// Output is outside buffer completely.
+		result = mpeg2audio_seek(audio, start_position);
+		audio->sample_seek = -1;
+		// Check sanity
+		if(start_position < audio->pcm_position) audio->pcm_position = start_position;
+		}
+	audio->sample_seek = -1;
+
+	// Read packets until the buffer is full.
+	if(!result)
+		{
+		attempts = 0;
+		while(attempts < 6 && !mpeg2bits_eof(audio->astream) &&
+			audio->pcm_size + audio->pcm_position < start_position + len)
+			{
+			result = mpeg2audio_read_frame(audio);
+			if(result) attempts++;
+			audio->pcm_size = audio->pcm_point / audio->channels;
+			}
+		}
+
+	// filter constants for wince
+	const float pf = 0.25f;
+	const float fr = 0.5f;
+
+	// Copy the buffer to the output
+	for(i = 0, j = (start_position - audio->pcm_position) * audio->channels + channel; 
+		i < len && j < audio->pcm_size * audio->channels; 
+		i++, j += audio->channels)
+		{	
+			float v = audio->pcm_sample[j];
+			v = (v<-pf)? (-pf + fr*(v+pf)):((v>pf)? (pf + fr*(v-pf)):v);
+			int sample = int(v  * SHRT_MAX);
+			output_i[i] = short((sample > SHRT_MAX)?SHRT_MAX:((sample < SHRT_MIN)?SHRT_MIN:sample));
+		}
+	*pwritelen = i;
 
 	if(audio->pcm_point > 0)
 		return true;
