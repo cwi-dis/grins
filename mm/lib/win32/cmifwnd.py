@@ -1079,6 +1079,11 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		elif scale == -1:
 			scale = max(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
+		elif scale == -2:
+			scale = min(float(width)/(xsize - left - right),
+				    float(height)/(ysize - top - bottom))
+			if scale > 1:
+				scale = 1
 
 		# scale crop sizes
 		top = int(top * scale + .5)

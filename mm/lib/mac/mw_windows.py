@@ -424,6 +424,11 @@ class _CommonWindow:
 		elif scale == -1:
 			scale = max(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
+		elif scale == -2:
+			scale = min(float(width)/(xsize - left - right),
+				    float(height)/(ysize - top - bottom))
+			if scale > 1:
+				scale = 1
 				    
 		top = int(top * scale + .5)
 		bottom = int(bottom * scale + .5)
