@@ -86,6 +86,8 @@ class ExampleWindowlessSite :
 	public IRMASiteWindowless, 
 	public IRMAValues
 {
+public:
+    ExampleVideoSurface*	m_pVideoSurface;
 private:
     LONG32			m_lRefCount;
     IRMASiteUser*		m_pUser;
@@ -96,7 +98,6 @@ private:
 
     ExampleWindowlessSite*	m_pParentSite;
     IRMAValues*			m_pValues;    
-    ExampleVideoSurface*	m_pVideoSurface;
 
     IRMACommonClassFactory*	m_pCCF;
 
