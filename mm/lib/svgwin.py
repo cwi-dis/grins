@@ -47,10 +47,10 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			x, y, w, h = 0, 0, cx, cy
 
 		# XXX: test implementation
-		# will change
 		wingdi.SetMapMode(self.hdc, win32con.MM_ISOTROPIC)
 		vcx, vcy = wingdi.GetViewportExtEx(self.hdc)
 		if vcy<0: vcy = -vcy
+		wingdi.SetWindowExtEx(self.hdc, (vcx, vcy))
 		wingdi.SetViewportExtEx(self.hdc, (vcx, vcy))
 		wingdi.SetViewportOrgEx(self.hdc, (x, y))
 		wingdi.Rectangle(self.hdc, (x, y, x+w, y+h))
