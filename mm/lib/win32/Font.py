@@ -125,12 +125,16 @@ class _Font:
 		return self._fd['name']	
 			
 	# Returns this font baseline
+	def baselinePXL(self):
+		return self._tm['tmAscent']+self._tm['tmDescent']
 	def baseline(self):
-		return pxl2mm_y(self._tm['tmAscent']+self._tm['tmDescent'])
+		return pxl2mm_y(self.baselinePXL())
 
 	# Returns this font height
+	def fontheightPXL(self):
+		return self._tm['tmHeight']
 	def fontheight(self):
-		return pxl2mm_y(self._tm['tmHeight'])
+		return pxl2mm_y(self.fontheightPXL())
 
 	# Returns this font pointsize
 	def pointsize(self):
@@ -139,7 +143,7 @@ class _Font:
 		return ps
 	
 	# Returns the string size in mm	
-	def strsize(self,str):
+	def strsizePXL(self,str):
 		strlist = string.splitfields(str, '\n')
 		wnd=Afx.GetMainWnd()
 		dc=wnd.GetDC()
@@ -152,6 +156,9 @@ class _Font:
 				maxwidth = cx
 		dc.SelectObjectFromHandle(self._hfont_org)
 		wnd.ReleaseDC(dc)
+		return maxwidth, maxheight
+	def strsize(self,str):
+		maxwidth, maxheight = self.strsizePXL(str)
 		return pxl2mm_x(maxwidth),pxl2mm_y(maxheight)
 
 	# Returns the text metrics structure

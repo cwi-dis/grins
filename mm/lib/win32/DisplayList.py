@@ -557,12 +557,12 @@ class DisplayList:
 
 	# Returns font's  baseline
 	def baseline(self):
-		baseline = self._font.baseline()
+		baseline = self._font.baselinePXL()
 		return self._inverse_coordinates((0,0,0,baseline))[3]
 
 	# Returns font's  height
 	def fontheight(self):
-		fontheight = self._font.fontheight()
+		fontheight = self._font.fontheightPXL()
 		return self._inverse_coordinates((0,0,0,fontheight))[3]
 
 	# Returns font's  pointsize
@@ -571,7 +571,7 @@ class DisplayList:
 
 	# Returns string's  size
 	def strsize(self, str):
-		width, height = self._font.strsize(str)
+		width, height = self._font.strsizePXL(str)
 		return self._inverse_coordinates((0,0,width,height))[2:4]
 
 	# Set the current position
