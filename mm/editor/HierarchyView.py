@@ -769,7 +769,23 @@ class HierarchyView(HierarchyViewDialog):
 
 		chname = None
 		if type == 'ext' or type == 'imm':
+			# See whether the current node specifies a default channel.
+			# XXXX Because this is actually a regionname we have a bit of work
+			# to do to find the two possible channel names. This code also needs
+			# a bit of cleanup, as the channelname<->regionname mapping may be
+			# different.
+			dftchannel = MMAttrdefs.getattr(node, 'project_default_region')
+			if dftchannel == 'undefined':
+				dftchannel = None
+			if dftchannel:
+				dftchannelalt = dftchannel + ' 0'
+			else:
+				dftchannelalt = None
 			chlist = ctx.compatchannels(url, chtype)
+			if dftchannel and dftchannel in chlist:
+				chlist = [dftchannel]
+			elif dftchannelalt and dftchannelalt in chlist:
+				chlist = [dftchannelalt]
 			if chlist:
 				if len(chlist) > 1:
 					i = windowinterface.multchoice('Choose a channel for this file', chlist, 0, parent = self.window)
