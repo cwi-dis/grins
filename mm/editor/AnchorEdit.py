@@ -74,30 +74,31 @@ class AnchorEditor:
 			 {'resizable': 1,
 			  'deleteCallback': (self.cancel_callback, ())})
 
-		self.anchor_browser = w.Selection(None, 'Id:', [],
-						  (self.anchor_callback, ()),
-						  {'top': None, 'left': None})
-		self.buttons = w.ButtonRow(
-			[('New', (self.add_callback, ())),
-			 ('Edit...', (self.edit_callback, ())),
-			 ('Delete', (self.delete_callback, ())),
-			 ('Export...', (self.export_callback, ()))],
-			{'top': None, 'left': self.anchor_browser,
-			 'right': None})
-		self.type_choice = w.OptionMenu('Type:', TypeLabels, 0,
-						(self.type_callback, ()),
-				{'top': self.anchor_browser,
-				 'left': None, 'right': None})
-		self.composite = w.Label('Composite:',
-				{'top': self.type_choice,
-				 'left': None, 'right': None})
 		buttons = w.ButtonRow(
 				[('Cancel', (self.cancel_callback, ())),
 				 ('Restore', (self.restore_callback, ())),
 				 ('Apply', (self.apply_callback, ())),
 				 ('OK', (self.ok_callback, ()))],
-				{'top': self.composite,
-				 'left': None, 'right': None, 'vertical': 0})
+				{'bottom': None, 'left': None, 'right': None,
+				 'vertical': 0})
+		self.composite = w.Label('Composite:',
+				{'bottom': buttons,
+				 'left': None, 'right': None})
+		self.type_choice = w.OptionMenu('Type:', TypeLabels, 0,
+						(self.type_callback, ()),
+				{'bottom': self.composite,
+				 'left': None, 'right': None})
+		self.buttons = w.ButtonRow(
+			[('New', (self.add_callback, ())),
+			 ('Edit...', (self.edit_callback, ())),
+			 ('Delete', (self.delete_callback, ())),
+			 ('Export...', (self.export_callback, ()))],
+			{'top': None, 'right': None})
+		self.anchor_browser = w.Selection(None, 'Id:', [],
+						  (self.anchor_callback, ()),
+						  {'top': None, 'left': None,
+						   'right': self.buttons,
+						   'bottom': self.type_choice})
 		w.fix()
 		return self
 

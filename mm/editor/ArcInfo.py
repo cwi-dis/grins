@@ -37,7 +37,7 @@ class ArcInfo:
 		title = self.maketitle()
 		self.window = windowinterface.Window(title,
 					{'resizable': 1,
-					 'deleteCallback': (self.close ())})
+					 'deleteCallback': (self.close, ())})
 		self.src_choice = self.window.OptionMenu('From:',
 					['dummy name'],
 					0, None,
