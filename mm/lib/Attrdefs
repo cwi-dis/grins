@@ -183,7 +183,7 @@
 (macprog (string) '' 'Mac program signature' default
 	'4-byte application signature (mac only)' channel (cmif))
 
-(max (float) 0.0 'Maximum duration' default
+(max (float) -1.0 'Maximum duration' default
 	'Maximum duration of a node or subtree' normal (smil2 snap))
 
 (mcgroup (string) '' 'Multicast group' default
