@@ -12,6 +12,7 @@ class Trace:
 			'return': self.trace_dispatch_return,
 			'exception': self.trace_dispatch_exception,
 			}
+		self.modules = None	# restrict to these modules
 		self.curframe = None
 		self.depth = 0
 		self.__printargs = 1
@@ -38,7 +39,7 @@ class Trace:
 		finally:
 			sys.setprofile(None)
 
-	def trace_dispatch(self, frame, event, arg, None = None):
+	def trace_dispatch(self, frame, event, arg, None = None, split = os.path.split, splitext = os.path.splitext):
 		curframe = self.curframe
 		if curframe is not frame:
 			if frame.f_back is curframe:
@@ -48,6 +49,12 @@ class Trace:
 ##			elif curframe is not None and curframe.f_back is frame.f_back:
 ##				pass
 		self.curframe = frame
+		if self.modules is not None:
+			if not self.modules.has_key(splitext(split(frame.f_code.co_filename)[1])[0]):
+				if event == 'return':
+					self.curframe = frame.f_back
+					self.depth = self.depth - 1
+				return
 		self.dispatch[event](frame, arg)
 
 	def trace_dispatch_call(self, frame, arg, None = None, time = time.time):
@@ -104,11 +111,17 @@ class Trace:
 		self.outputfile.write('%sE %s:%d %s%s\n' % (' '*self.depth,filename,frame.f_lineno,funcname,t))
 		self.outputfile.flush()
 
-	def set_trace(self):
+	def set_trace(self, *modules):
 		try:
 			raise 'xyzzy'
 		except:
 			frame = sys.exc_traceback.tb_frame
+		if modules:
+			self.modules = {}
+			for m in modules:
+				self.modules[m] = 1
+		else:
+			self.modules = None
 		while frame.f_code.co_name != 'set_trace':
 			frame = frame.f_back
 		d = 0
@@ -234,8 +247,8 @@ def run(cmd, globals = None, locals = None):
 def runcall(*func_args):
 	apply(TraceClass().runcall, funcargs)
 
-def set_trace():
-	TraceClass().set_trace()
+def set_trace(*modules):
+	apply(TraceClass().set_trace, modules)
 
 def unset_trace():
 	sys.setprofile(None)
