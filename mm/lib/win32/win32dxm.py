@@ -178,8 +178,14 @@ def HasVideo(url):
 
 # Returns the size of a video	
 def GetVideoSize(url):
-	import MMmimetypes
-	mtype = MMmimetypes.guess_type(url)[0]
+	mtype = None
+	import settings
+	if settings.get('checkext'):
+		import MMmimetypes
+		mtype = MMmimetypes.guess_type(url)[0]
+	if not mtype:
+		import urlcache
+		mtype = urlcache.mimetype(url)
 	if mtype and mtype.find('quicktime') >= 0:
 		import winqt
 		if winqt.HasQtSupport():

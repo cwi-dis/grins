@@ -79,8 +79,14 @@ class SoundChannel(ChannelAsync):
 		if not fn:
 			self.errormsg(node, 'No URL set on node.')
 			return 1
-		import MMmimetypes
-		mtype = MMmimetypes.guess_type(fn)[0]
+		mtype = node.GetAttrDef('type', None)
+		import settings
+		if not mtype and settings.get('checkext'):
+			import MMmimetypes
+			mtype = MMmimetypes.guess_type(fn)[0]
+		if not mtype:
+			import urlcache
+			mtype = urlcache.mimetype(fn)
 		if mtype and string.find(mtype, 'real') >= 0:
 			node.__type = 'real'
 			if self.__rc is None:

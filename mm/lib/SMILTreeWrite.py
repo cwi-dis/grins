@@ -1101,8 +1101,17 @@ def mediatype(x, error=0):
 	chtype = x.GetChannelType()
 	if not chtype:
 		chtype = 'unknown'
-	if chtype == 'video' and MMmimetypes.guess_type(x.GetAttrDef('file', None) or '')[0] == 'image/vnd.rn-realpix':
-		chtype = 'RealPix'
+	if chtype == 'video':
+		import settings
+		mtype = None
+		url = x.GetAttrDef('file', None) or ''
+		if settings.get('checkext') and url:
+			mtype = MMmimetypes.guess_type(url)[0]
+		if not mtype and url:
+			import urlcache
+			mtype = urlcache.mimetype(x.GetContext().findurl(url))
+		if mtype == 'image/vnd.rn-realpix':
+			chtype = 'RealPix'
 	if smil_mediatype.has_key(chtype):
 		return smil_mediatype[chtype], smil_mediatype[chtype]
 	if error and chtype != 'layout':
@@ -2544,7 +2553,13 @@ class SMILWriter(SMIL):
 		import posixpath, urlparse
 		utype, host, path, params, query, fragment = urlparse.urlparse(srcurl)
 		if utype == 'data':
-			mtype = MMmimetypes.guess_type(srcurl)[0]
+			import settings
+			mtype = None
+			if settings.get('checkext'):
+				mtype = MMmimetypes.guess_type(srcurl)[0]
+			if not mtype:
+				import urlcache
+				mtype = urlcache.mimetype(srcurl)
 			if mtype is None:
 				mtype = 'text/plain'
 			ext = MMmimetypes.guess_extension(mtype)

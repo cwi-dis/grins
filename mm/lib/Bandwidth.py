@@ -10,7 +10,7 @@ import MMAttrdefs
 import os
 from stat import ST_SIZE
 import MMurl
-from urlcache import urlcache
+import urlcache
 import string
 
 Error="Bandwidth.Error"
@@ -49,7 +49,7 @@ def getstreamdata(node, target=0):
 
 	url = MMAttrdefs.getattr(node, 'file')
 	url = context.findurl(url)
-	val = urlcache[url].get('bandwidth')
+	val = urlcache.urlcache[url].get('bandwidth')
 	if val is not None:
 		return val
 
@@ -63,18 +63,10 @@ def getstreamdata(node, target=0):
 ##		print "DBG: Bandwidth.get: skip nonlocal", url
 		return None, None, None, None
 
-	if urlcache[url].has_key('mimetype'):
-		maintype, subtype = urlcache[url]['mimetype']
-	else:
-		try:
-			u = MMurl.urlopen(url)
-		except IOError:
-			raise Error, 'Cannot open: %s'%url
-		maintype = u.headers.getmaintype()
-		subtype = u.headers.getsubtype()
-		urlcache[url]['mimetype'] = maintype, subtype
-		u.close()
-		del u
+	mtype = urlcache.mimetype(url)
+	if not mtype:
+		raise Error, 'Cannot open: %s'%url
+	maintype, subtype = mtype.split('/')
 	if string.find(subtype, 'real') >= 0:
 		# For real channels we parse the header and such
 		# XXXX If we want to do real-compatible calculations
@@ -90,7 +82,7 @@ def getstreamdata(node, target=0):
 			prerolltime = DEFAULT_STREAMING_MEDIA_PRELOAD
 		prerollbits = prerolltime*bandwidth
 ##		print "DBG: Bandwidth.get: real:", url, prearm, bandwidth
-		urlcache[url]['bandwidth'] = prerollbits, prerolltime, bandwidth, bandwidth
+		urlcache.urlcache[url]['bandwidth'] = prerollbits, prerolltime, bandwidth, bandwidth
 		return prerollbits, prerolltime, bandwidth, bandwidth
 	if maintype == 'audio' or maintype == 'video':
 		targets = MMAttrdefs.getattr(node, 'project_targets')
@@ -112,11 +104,11 @@ def getstreamdata(node, target=0):
 ##	print 'DBG: Bandwidth.get: discrete',filename, filesize, float(filesize)*8
 	bits = float(filesize)*8
 	prerollbitrate = DEFAULT_STATIC_MEDIA_BITRATE
-	urlcache[url]['bandwidth'] = bits, None, prerollbitrate, None
+	urlcache.urlcache[url]['bandwidth'] = bits, None, prerollbitrate, None
 	return bits, None, prerollbitrate, None
 
 def GetSize(url, target=0, attrs = {}, convert = 1):
-	val = urlcache[url].get('filesize')
+	val = urlcache.urlcache[url].get('filesize')
 	if val is not None:
 		return val
 
@@ -161,5 +153,5 @@ def GetSize(url, target=0, attrs = {}, convert = 1):
 		except:
 			pass
 	filesize = statb[ST_SIZE]
-	urlcache[url]['filesize'] = filesize
+	urlcache.urlcache[url]['filesize'] = filesize
 	return filesize

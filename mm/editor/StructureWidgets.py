@@ -678,7 +678,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			channel_type = 'RealText'
 		elif mime == 'video/vnd.rn-realvideo':
 			channel_type = 'RealVideo'
-		elif mime == 'audio/vnd.rn-realaudio':
+		elif mime in ('audio/vnd.rn-realaudio', 'audio/x-pn-realaudio', 'audio/x-realaudio'):
 			channel_type = 'RealAudio'
 		else:
 			channel_type = node.GetChannelType()

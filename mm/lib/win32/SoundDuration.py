@@ -5,11 +5,17 @@ __version__ = "$Id$"
 import MMurl
 import urllib
 import MMmimetypes
+import settings
 
 # Used to get full info
 def getfullinfo(url):
 	duration = 0
-	mtype = MMmimetypes.guess_type(url)[0]
+	mtype = None
+	if settings.get('checkext'):
+		mtype = MMmimetypes.guess_type(url)[0]
+	if not mtype:
+		import urlcache
+		mtype = urlcache.mimetype(url)
 	if mtype and (mtype.find('x-aiff') >= 0 or mtype.find('quicktime') >= 0):
 		import winqt
 		if winqt.HasQtSupport():

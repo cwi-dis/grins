@@ -49,7 +49,7 @@ default_settings = {
 ##	'compatibility': G2,		# Try to be compatible with...
 	'cmif': 0,			# Show cmif-only attributes
 	'debug': 0,			# Show debug commands
-	'checkext': 1,			# Guess Mime type based on extension
+	'checkext': 0,			# Guess Mime type based on extension
 	'no_canvas_resize': 1,	 # Don't resize canvas after window resize (X)
 	'showhidden': 0,		# Show override="hidden" custom tests
 	'hierarchy_minimum_sizes': 0,	# Leaf nodes drawn using min. size

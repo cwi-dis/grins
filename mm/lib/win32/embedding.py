@@ -242,14 +242,21 @@ class SliderPeer:
 		self.__updatepeer = 1
 
 	def findMedia(self, node, media, url2mtype):
-		import MMTypes, MMmimetypes
+		import MMTypes
 		nt = node.GetType()
 		if nt == 'ext':
 			url = node.GetRawAttr('file')
 			if url:
 				media.append(url)
 				if not url2mtype.has_key(url):
-					mimetype = 	MMmimetypes.guess_type(url)[0]
+					import settings
+					mimetype = None
+					if settings.get('checkext'):
+						import MMmimetypes
+						mimetype = MMmimetypes.guess_type(url)[0]
+					if not mimetype:
+						import urlcache
+						mimetype = urlcache.mimetype(url)
 					try:
 						mtype, subtype = string.split(mimetype, '/')
 					except:
