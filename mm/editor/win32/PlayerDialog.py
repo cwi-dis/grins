@@ -181,7 +181,7 @@ class PlayerDialog:
 				w.set_commandlist(self.pauselist,self.__cmdtgt)
 			self.setchannels(self.__channels)
 			if state != ostate:
-				w.set_toggle(PLAY, state != STOPPED)
+				#w.set_toggle(PLAY, state != STOPPED)
 				w.set_toggle(PAUSE, state == PAUSING)
 				w.set_toggle(STOP, state == STOPPED)
 
