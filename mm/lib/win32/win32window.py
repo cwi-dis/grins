@@ -685,6 +685,30 @@ class SubWindow(Window):
 		if self._showing:
 			self.__showwindowOn(dc, self._showing)
 
+	def paintOnDDS(self, dds):
+		# first paint self
+		if self._active_displist:
+			hdc = dds.GetDC()
+			dc = win32ui.CreateDCFromHandle(hdc)
+			self._active_displist._render(dc,None)
+			if self._redrawfunc:
+				self._redrawfunc()
+			dc.Detach()
+			dds.ReleaseDC(hdc)
+
+		# then paint children bottom up
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
+			w.paintOnDDS(dds)
+
+		if self._showing:
+			hdc = dds.GetDC()
+			dc = win32ui.CreateDCFromHandle(hdc)
+			self.__showwindowOn(dc, self._showing)
+			dc.Detach()
+			dds.ReleaseDC(hdc)
+
 	def showwindow(self, color = (255,0,0)):
 		dc=self._topwindow.GetDC()
 		self.__showwindowOn(dc, color)
@@ -941,14 +965,14 @@ class SubWindow(Window):
 	def __init_transitions(self):
 		self._transition = None
 		self._passive = None
-		self._active = None
+		self._drawsurf = None
 		self._freeze = 0
 		
 	def begintransition(self, inout, runit, dict):
 		if not self._passive:
 			self._passive = self.createDDS()
-		if not self._active:
-			self._active = self.createDDS()
+			self._passive.BltFill(self.GetClientRect(),0)
+			inout = 1
 		self._transition = win32transitions.TransitionEngine(self, inout, runit, dict)
 		if runit:
 			self._transition.begintransition()
@@ -957,7 +981,8 @@ class SubWindow(Window):
 		if self._transition:
 			self._transition.endtransition()
 			self._transition = None
-			self.freeze_content(None)
+			self._passive = None
+			self._freeze = 0
 		self.Redraw()
 
 	def changed(self):
@@ -972,12 +997,10 @@ class SubWindow(Window):
 		# (unless how=None, which unfreezes them) and use for updates and as passive
 		# source for next transition.
 		if how:
-			self._passive = self.createDDS()
-			self._active  = self.createDDS()
+			self._passive = self.createWndDDS()
 			self._freeze = 1
 		else:
 			self._passive = None
-			self._active = None
 			self._freeze = 0
 
 	def close(self):
@@ -987,14 +1010,15 @@ class SubWindow(Window):
 	def createDDS(self):
 		x, y, w, h = self._rect
 		dds = self._topwindow.CreateSurface(w,h)
-		hdc = dds.GetDC()
-		dc = win32ui.CreateDCFromHandle(hdc)
-		self.paintOn(dc, 0)
-		dc.Detach()
-		dds.ReleaseDC(hdc)
 		return dds
 
-	def copySurface(self, srfc):
+	def createWndDDS(self):
+		x, y, w, h = self._rect
+		dds = self._topwindow.CreateSurface(w,h)
+		self.paintOnDDS(dds)
+		return dds
+
+	def flip(self, srfc):
 		x, y, w, h = self.getwindowpos()
 		flags = ddraw.DDBLT_WAIT
 		bb = self._topwindow._backBuffer
@@ -1013,10 +1037,13 @@ class SubWindow(Window):
 			return
 
 		# avoid painting while frozen
-		if self._freeze and self._active:
-			self.copySurface(self._active)
+		if self._drawsurf:
+			self.flip(self._drawsurf)
 			return
-
+		elif self._freeze and self._passive:
+			self.flip(self._passive)
+			return
+			
 		# first paint self
 		dc = self.GetDDDC()
 		if not dc: return
