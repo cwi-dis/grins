@@ -575,7 +575,7 @@ class AnchorlistCtrl(AttrCtrl, AnchorList):
 		self.newanchor(name, partial = 1)
 
 	def OnRename(self, id, code):
-		name = self.getcurrent()
+		name = AnchorList.getcurrent(self)
 		if name is None:
 			return
 		w = win32dialog.AnchorNameDlg('Anchor name', name,
