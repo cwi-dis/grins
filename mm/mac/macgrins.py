@@ -5,8 +5,13 @@ __version__ = "$Id$"
 #
 
 # First, immedeately disable the console window
+DEBUG=0
+
 import sys
-if len(sys.argv) > 1 and sys.argv[1] == '-v':
+if DEBUG:
+	print '** Verbose **'
+	quietconsole=None
+elif len(sys.argv) > 1 and sys.argv[1] == '-v':
 	del sys.argv[1]
 	print '** Verbose **'
 	quietconsole=None
@@ -130,17 +135,17 @@ else:
 ##import trace
 ##trace.set_trace()
 
-if len(sys.argv) < 2:
-	splash.splash()
-	fss, ok = macfs.PromptGetFile('SMIL file (cancel for URL)', 'TEXT')
-	if ok:
-		sys.argv = ["macgrins", fss.as_pathname()]
-	else:
-		import EasyDialogs
-		url = EasyDialogs.AskString("SMIL URL")
-		if url is None:
-			sys.exit(0)
-		sys.argv = ["macgrins", url]
+##if len(sys.argv) < 2:
+##	splash.splash()
+##	fss, ok = macfs.PromptGetFile('SMIL file (cancel for URL)', 'TEXT')
+##	if ok:
+##		sys.argv = ["macgrins", fss.as_pathname()]
+##	else:
+##		import EasyDialogs
+##		url = EasyDialogs.AskString("SMIL URL")
+##		if url is None:
+##			sys.exit(0)
+##		sys.argv = ["macgrins", url]
 		
 no_exception=0
 try:
