@@ -105,9 +105,12 @@ class Player:
 						 self.__port.getframerates())
 			self.__framerate = self.__converter.getframerate()
 			self.__readsize = self.__framerate
-			self.__timeout = 0.5 * self.__readsize / self.__framerate
 			self.__port.setformat(self.__converter.getformat())
 			self.__port.setframerate(self.__converter.getframerate())
+			fillable = self.__port.getfillable()
+			if fillable < self.__readsize:
+				self.__readsize = fillable
+			self.__timeout = 0.5 * self.__readsize / self.__framerate
 			self.__data = self.__converter.readframes(self.__readsize)
 			self.__playsome(1)
 
