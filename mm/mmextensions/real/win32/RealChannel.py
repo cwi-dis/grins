@@ -57,8 +57,9 @@ class RealChannel:
 				self.playdone(0)
 				return
 		print 'looping'
-##		self.__rmaplayer.Stop()
-		self.__rmaplayer.Begin()
+		windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
+#		self.__rmaplayer.Stop()
+#		self.__rmaplayer.Begin()
 
 	def pauseit(self, paused):
 		if self.__rmaplayer:
