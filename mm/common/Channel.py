@@ -919,8 +919,9 @@ class ChannelWindow(Channel):
 				else:
 					a = self.setanchorargs(a, button, value)
 					self._player.toplevel.setwaiting()
-					dummy = apply(f, a)
-					self._player.toplevel.setready()
+					dummy = apply(f, a) # may close channel
+					if hasattr(self, '_player'):
+						self._player.toplevel.setready()
 		if _button and not _button.is_closed():
 			_button.unhighlight()
 		_button = None
