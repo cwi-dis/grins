@@ -6,7 +6,7 @@ from compatibility import *
 from FeatureSet import *
 import sys
 
-feature_set = [];
+feature_set = []
 
 #
 version = 'lite'
