@@ -4,7 +4,6 @@ from Channel import *
 from MMExc import *			# exceptions
 from AnchorDefs import *
 import string
-from MMurl import urlopen
 
 XBORDER = 0.05
 YBORDER = 0.05
