@@ -231,7 +231,6 @@ class TopLevel(TopLevelDialog):
 		windowinterface.showmessage('while reading %s\n\n' % self.filename + msg)
 
 	def reload_callback(self):
-		print "DEBUG: reload_callback called."
 		self.setwaiting()
 		self.reload()
 
