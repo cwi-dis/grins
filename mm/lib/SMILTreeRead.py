@@ -91,7 +91,7 @@ color = re.compile('(?:'
 			   ' *(?P<bp>[0-9]+) *% *)\))$')
 
 smil_node_attrs = [
-	'region', 'clip-begin', 'clip-end', 'endsync', 'bag-index',
+	'region', 'clip-begin', 'clip-end', 'endsync', 'bag-index', 'type',
 	]
 
 class SMILParser(SMIL, xmllib.XMLParser):
@@ -726,7 +726,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.CreateLayout()
 				title = attrdict.get('title')
 				if title is not None:
-					ch['comment'] = title
+					if title != name:
+						ch['comment'] = title
 					del attrdict['title']
 				bg = attrdict['background-color']
 				del attrdict['background-color']
