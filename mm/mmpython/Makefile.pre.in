@@ -36,13 +36,13 @@
 #
 # Hint: if you want to use VPATH, you can start in an empty
 # subdirectory and say (e.g.):
-# make -f ../Makefile.pre.in srcdir=.. VPATH=.. Makefile
+# make -f ../Makefile.pre.in VERSION=1.4 srcdir=.. VPATH=.. Makefile
 
 
 # === Variables that you just *have* to customize manually ===
 
 # (You can also specify their values on the command line for
-# "make -f Makefile.pre.in Makefile".)
+# "make -f Makefile.pre.in VERSION=1.4 Makefile".)
 
 # The prefix used by "make inclinstall libainstall" of core python
 installdir=	/usr/local
@@ -82,6 +82,7 @@ MODLIBS=	_MODLIBS_
 
 # === Variables from configure (through sedscript) ===
 
+VERSION=	@VERSION@
 CC=		@CC@
 DEFS=		@DEFS@
 LIBS=		@LIBS@
@@ -179,6 +180,7 @@ sedscript:	$(MAKEFILE)
 		sed -n \
 		  -e '1s/.*/1i\\/p' \
 		  -e '2s%.*%# $H%p' \
+		  -e '/^VERSION=/s/^VERSION=[ 	]*\(.*\)/s%@VERSION[@]%\1%/p' \
 		  -e '/^CC=/s/^CC=[ 	]*\(.*\)/s%@CC[@]%\1%/p' \
 		  -e '/^DEFS=/s/^DEFS=[ 	]*\(.*\)/s%@DEFS[@]%\1%/p' \
 		  -e '/^LIBS=/s/^LIBS=[ 	]*\(.*\)/s%@LIBS[@]%\1%/p' \
