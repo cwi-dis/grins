@@ -9,6 +9,7 @@ from sched import scheduler
 import glwindow
 from MMExc import *
 import MMAttrdefs
+import Timing
 
 
 # The player algorithm treats the head and tail (begin and end) sides
@@ -57,11 +58,13 @@ class Player() = scheduler():
 		self.resettimer()
 		# Initialize the player
 		self.root = root
-		self.state = 'stopped'
+		self.playing = 0
 		# Make the channel objects -- this pops up windows...
 		self.channels = {}
 		self.channelnames = []
 		self.makechannels()
+		# Initialize the setcurrenttime callback
+		self.setcurrenttime_callback = None
 		# Make the control panel last, to show we're ready, finally...
 		self.makecpanel()
 		# Return self, as any class initializer
@@ -78,6 +81,9 @@ class Player() = scheduler():
 	def destroy(self):
 		self.destroycpanel()
 		self.destroychannels()
+	#
+	def set_setcurrenttime_callback(self, setcurrenttime):
+		self.setcurrenttime_callback = setcurrenttime
 	#
 	#
 	# Queue interface, based upon sched.scheduler.
@@ -101,7 +107,9 @@ class Player() = scheduler():
 	#
 	def setrate(self, rate):
 		if rate < 0.0:
-			raise RuntimeError, 'Queue.setrate with negative rate'
+			raise RuntimeError, 'setrate with negative rate'
+		if self.rate = rate:
+			return
 		msec = time.millitimer()
 		t = (msec - self.msec_origin) / 1000.0
 		now = self.origin + t * self.rate
@@ -143,35 +151,35 @@ class Player() = scheduler():
 		# to avoid the default interaction between mouse clicks
 		# the button's appearance...
 		#
-		x, y, w, h = 0, 50, 100, 50
+		x, y, w, h = 0, 50, 98, 48
 		self.playbutton = \
 			cpanel.add_button(INOUT_BUTTON, x,y,w,h, 'Play')
 		self.playbutton.set_call_back(self.play_callback, None)
 		# self.playbutton.active = 0
 		#
-		x, y, w, h = 100, 50, 50, 50
+		x, y, w, h = 100, 50, 48, 48
 		self.pausebutton = \
 			cpanel.add_button(INOUT_BUTTON,x,y,w,h, 'Pause')
 		self.pausebutton.set_call_back(self.pause_callback, None)
 		# self.pausebutton.active = 0
 		#
-		x, y, w, h = 150, 50, 50, 50
+		x, y, w, h = 150, 50, 48, 48
 		self.stopbutton = \
 			cpanel.add_button(INOUT_BUTTON,x,y,w,h, 'Stop')
 		self.stopbutton.set_call_back(self.stop_callback, None)
 		#
-		x, y, w, h = 50, 0, 150, 50
+		x, y, w, h = 200, 50, 48, 48
+		self.fastbutton = \
+			cpanel.add_button(INOUT_BUTTON,x,y,w,h, 'Faster')
+		self.fastbutton.set_call_back(self.fast_callback, None)
+		#
+		x, y, w, h = 0, 0, 298, 48
 		self.statebutton = \
 			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, '')
 		self.statebutton.boxtype = FLAT_BOX
 		self.statebutton.set_call_back(self.state_callback, None)
 		#
-		x, y, w, h = 200, 50, 50, 50
-		self.fastbutton = \
-			cpanel.add_button(INOUT_BUTTON,x,y,w,h, 'Faster')
-		self.fastbutton.set_call_back(self.fast_callback, None)
-		#
-		x, y, w, h = 250, 50, 50, 50
+		x, y, w, h = 250, 50, 48, 48
 		self.speedbutton = \
 			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, '')
 		self.speedbutton.boxtype = FLAT_BOX
@@ -199,116 +207,84 @@ class Player() = scheduler():
 	# FORMS callbacks.
 	#
 	def play_callback(self, (obj, arg)):
-		self.play()
+		if obj.pushed:
+			self.play()
+		self.showstate()
 	#
 	def pause_callback(self, (obj, arg)):
-		if not obj.pushed:
-			self.showstate()
-		else:
-			if self.state = 'frozen':
+		if obj.pushed:
+			if self.playing and self.rate = 0.0:
 				self.play()
 			else:
 				self.freeze()
+		self.showstate()
 	#
 	def stop_callback(self, (obj, arg)):
-		if self.state = 'stopped' and obj.pushed:
-			# Perform some extra resetting
-			self.resettimer()
-			self.resetchannels()
-		else:
-			self.stop()
-	#
-	def state_callback(self, (obj, arg)):
-		self.showtime()
+		if obj.pushed:
+			if not self.playing:
+				# Extra heavy duty reset
+				self.resettimer()
+				self.resetchannels()
+			else:
+				self.stop()
+		self.showstate()
 	#
 	def fast_callback(self, (obj, arg)):
 		if obj.pushed:
 			self.faster()
+		self.showstate()
+	#
+	def state_callback(self, (obj, arg)):
+		self.showstate()
 	#
 	def speed_callback(self, (obj, arg)):
-		self.showtime()
+		self.showstate()
 	#
 	# State transitions.
-	# There are three states: 'stopped', 'frozen' and 'playing'.
-	# (The word 'frozen' is used instead of 'paused' since the pause
-	# button toggles between 'frozen' and 'playing').
-	# The difference between 'frozen' and 'playing' state is really
-	# only the rate (0.0 vs. 1.0).  'stopped' is very different
-	# because the playing process is not active, and the tree may
-	# be edited.  A variant on playing state, fast forward, is not
-	# represented as a separate state -- the rate is simply larger.
-	# (XXX maybe pause should also not be represented as a state.)
 	#
 	def play(self):
-		if self.state = 'playing':
-			pass
-		elif self.state = 'frozen':
-			pass
-		elif self.state = 'stopped':
+		if not self.playing:
 			if not self.maystart():
 				self.showstate()
 				return
 			self.start_playing()
-		else:
-			raise CheckError, 'play in state ' + `self.state`
 		self.setrate(1.0)
-		self.setstate('playing')
 	#
 	def freeze(self):
-		if self.state = 'playing':
-			pass
-		elif self.state = 'frozen':
-			pass
-		elif self.state = 'stopped':
+		if not self.playing:
 			if not self.maystart():
 				self.showstate()
 				return
 			self.start_playing()
-		else:
-			raise CheckError, 'freeze in state ' + `self.state`
 		self.setrate(0.0)
-		self.setstate('frozen')
 	#
 	def stop(self):
-		if self.state = 'playing':
+		if self.playing:
+			self.setrate(0.0)
 			self.stop_playing()
-		elif self.state = 'frozen':
-			self.stop_playing()
-		elif self.state = 'stopped':
-			pass
-		else:
-			raise CheckError, 'stop in state ' + `self.state`
-		self.setrate(0.0)
-		self.setstate('stopped')
 	#
 	def faster(self):
-		if self.state = 'playing':
-			pass
-		elif self.state = 'frozen':
-			self.setrate(1.0)
-		elif self.state = 'stopped':
+		if not self.playing:
 			if not self.maystart():
 				self.showstate()
 				return
 			self.start_playing()
+		if self.rate = 0.0:
 			self.setrate(1.0)
-		else:
-			raise CheckError, 'fast in state ' + `self.state`
 		self.setrate(self.rate * 2.0)
-		self.setstate('playing')
 	#
 	def maystart(self):
 		return 1
 	#
-	def setstate(self, state):
-		self.state = state
-		self.showstate()
-	#
 	def showstate(self):
-		self.playbutton.set_button(self.state = 'playing')
-		self.pausebutton.set_button(self.state = 'frozen')
-		self.fastbutton.set_button( \
-			self.state = 'playing' and self.rate > 1.0)
+		if not self.playing:
+			self.playbutton.set_button(0)
+			self.pausebutton.set_button(0)
+			self.fastbutton.set_button(0)
+		else:
+			self.playbutton.set_button(0.0 < self.rate <= 1.0)
+			self.pausebutton.set_button(0.0 = self.rate)
+			self.fastbutton.set_button(1.0 < self.rate)
 		self.showtime()
 	#
 	def showtime(self):
@@ -364,63 +340,15 @@ class Player() = scheduler():
 	def start_playing(self):
 		self.resettimer()
 		self.resetchannels()
-		self.prep1(self.root)
-		self.prep2(self.root)
-		if self.root.counter[HD] <> 0:
-			raise RuntimeError, 'head of root has dependencies!?!'
+		Timing.prepare(self.root)
+		self.playing = 1
 		self.root.counter[HD] = 1
 		self.decrement(0, self.root, HD)
 	#
 	def stop_playing(self):
 		self.queue[:] = [] # Erase all events with brute force!
-		self.cleanup(self.root)
-	#
-	def cleanup(self, node):
-		# XXX (doesn't need to be a method)
-		del node.counter
-		del node.deps
-		type = node.GetType()
-		if type in ('seq', 'par'):
-			for c in node.GetChildren():
-				self.cleanup(c)
-	#
-	def prep1(self, node):
-		node.counter = [0, 0]
-		node.deps = [], []
-		type = node.GetType()
-		if type = 'seq':
-			xnode, xside = node, HD
-			for c in node.GetChildren():
-				self.prep1(c)
-				self.adddep(xnode, xside, 0, c, HD)
-				xnode, xside = c, TL
-			self.adddep(xnode, xside, 0, node, TL)
-		elif type = 'par':
-			for c in node.GetChildren():
-				self.prep1(c)
-				self.adddep(node, HD, 0, c, HD)
-				self.adddep(c, TL, 0, node, TL)
-		else:
-			# Special case -- delay -1 means execute leaf node
-			# of leaf node when playing
-			self.adddep(node, HD, -1, node, TL)
-	#
-	def prep2(self, node):
-		arcs = MMAttrdefs.getattr(node, 'synctolist')
-		for arc in arcs:
-			print 'sync arc:', arc, 'to:', node.GetUID()
-			xuid, xside, delay, yside = arc
-			xnode = node.MapUID(xuid)
-			self.adddep(xnode, xside, delay, node, yside)
-		#
-		if node.GetType() in ('seq', 'par'):
-			for c in node.GetChildren(): self.prep2(c)
-	#
-	def adddep(self, (xnode, xside, delay, ynode, yside)):
-		# XXX (doesn't need to be a method)
-		ynode.counter[yside] = ynode.counter[yside] + 1
-		if delay >= 0:
-			xnode.deps[xside].append(delay, ynode, yside)
+		Timing.cleanup(self.root)
+		self.playing = 0
 	#
 	def decrement(self, (delay, node, side)):
 		if delay > 0:
@@ -444,10 +372,6 @@ class Player() = scheduler():
 			self.stop()
 	#
 	# Channel access utilities.
-	#
-	def getduration(self, node):
-		chan = self.getchannel(node)
-		return chan.getduration(node)
 	#
 	def getchannel(self, node):
 		cname = MMAttrdefs.getattr(node, 'channel')
