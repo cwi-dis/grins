@@ -165,10 +165,10 @@ class SMILParser(xmllib.XMLParser):
 		if not attributes.has_key('href'):
 			self.syntax_error(self.lineno, 'node without href attribute')
 		elif mediatype == 'image':
-			import img, urllib
+			import img, MMurl
 			file = attributes['href']
 			try:
-				file = urllib.urlretrieve(file)[0]
+				file = MMurl.urlretrieve(file)[0]
 				rdr = img.reader(None, file)
 				width = rdr.width
 				height = rdr.height
@@ -189,11 +189,11 @@ class SMILParser(xmllib.XMLParser):
 				if ch['minheight'] < height:
 					ch['minheight'] = height
 		elif mediatype == 'video':
-			import urllib
+			import MMurl
 			file = attributes['href']
 			try:
 				import mv
-				file = urllib.urlretrieve(file)[0]
+				file = MMurl.urlretrieve(file)[0]
 				movie = mv.OpenFile(file,
 						    mv.MV_MPEG1_PRESCAN_OFF)
 				track = movie.FindTrackByMedium(mv.DM_IMAGE)
@@ -419,8 +419,8 @@ class SMILParser(xmllib.XMLParser):
 				hlinks.addlink((src, _wholenodeanchor(dst),
 						DIR_1TO2, ltype))
 			else:
-				import urllib
-				href, tag = urllib.splittag(href)
+				import MMurl
+				href, tag = MMurl.splittag(href)
 				if '/' not in href:
 					href = href + '/1'
 				hlinks.addlink((src, (href, tag or ''), DIR_1TO2, ltype))
@@ -476,7 +476,7 @@ class SMILParser(xmllib.XMLParser):
 			self.warning('multiple layouts without switch')
 		self.__seen_layout = 1
 		self.__in_layout = LAYOUT_UNKNOWN
-		if attributes.has_key('type') and \
+		if not attributes.has_key('type') or \
 		   attributes['type'] == 'text/smil-basic':
 			self.__in_layout = LAYOUT_SMIL
 

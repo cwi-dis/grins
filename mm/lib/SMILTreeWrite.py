@@ -11,7 +11,7 @@ import Hlinks
 import AnchorDefs
 import string
 import os
-import urllib
+import MMurl
 import regsub
 
 # A fileish object with indenting
@@ -343,7 +343,7 @@ class SMILWriter:
 				data = data + '\n'
 			fp.write(data)
 			fp.close()
-			imm_href = urllib.pathname2url(fname)
+			imm_href = MMurl.pathname2url(fname)
 		for name, func in smil_attrs:
 			if name == 'href' and imm_href:
 				value = imm_href

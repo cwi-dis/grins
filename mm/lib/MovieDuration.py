@@ -3,10 +3,10 @@ __version__ = "$Id$"
 # Cache durations of movie files
 
 import FileCache
-import urllib
+import MMurl
 
 def getduration(filename):
-	filename = urllib.urlretrieve(filename)[0]
+	filename = MMurl.urlretrieve(filename)[0]
 	fp = open(filename, 'rb')
 	import VFile
 	import os
