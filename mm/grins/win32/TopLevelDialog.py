@@ -41,7 +41,7 @@ class TopLevelDialog:
 			self.window.set_toggle(SOURCEVIEW,1)
 
 	def setplayerstate(self, state):
-		if self.window:
+		if hasattr(self, 'window') and self.window:
 			self.window.setplayerstate(state)
 			
 	def __close_source(self):
