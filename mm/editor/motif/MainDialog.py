@@ -27,6 +27,7 @@ class MainDialog:
 			('New', NEW_DOCUMENT),
 			('Open...', OPEN),
 			('Preferences...', PREFERENCES),
+			('Help...', HELP),
 			('Exit', EXIT),
 			],
 		'close': [ EXIT, ],

@@ -77,6 +77,10 @@ class Main(MainDialog):
 			OPEN(callback = (self.open_callback, ())),
 			PREFERENCES(callback=(self.preferences_callback, ())),
 			]
+		import Help
+		if hasattr(Help, 'hashelp') and Help.hashelp():
+			self.commandlist.append(
+				HELP(callback = (self.help_callback, ())))
 		if __debug__:
 			self.commandlist = self.commandlist + [
 				TRACE(callback = (self.trace_callback, ())),
@@ -107,6 +111,10 @@ class Main(MainDialog):
 			top = TopLevel.TopLevel(self, self.getnewdocumentname('dummy.cmif'), 1)
 			self.new_top(top)
 	
+	def help_callback(self, params=None):
+		import Help
+		Help.showhelpwindow()
+
 	def _new_ok_callback(self, filename):
 		import windowinterface
 		windowinterface.setwaiting()
