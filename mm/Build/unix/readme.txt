@@ -1,16 +1,17 @@
-GRiNS for SGI/IRIX
+GRiNS for Unix
 
-This is the readme file for the GRiNS editor and player for Silicon
-Graphics IRIX 6.5, Release 0.5, patchlevel 2.  More information on
-GRiNS can be obtained at http://www.oratrix.com/GRiNS, or by email to
+This is the readme file for the GRiNS editor and player Release 0.5,
+patchlevel 2 for Silicon Graphics IRIX 6.5 and for Sun Solaris 2.5.
+More information on GRiNS can be obtained at
+http://www.oratrix.com/GRiNS, or by email to
 grins-request@oratrix.com.  Release notes for this version can be
 found in the file relnotes.html in the top-level directory.  More
 documentation can be found on the homepage.
 
 Prerequisites
 
-The GRiNS editor and player have only been tested on an SGI O2 running
-IRIX 6.5.2.  Other versions may or may not work.
+The SGI version of the GRiNS editor and player have only been tested
+on an SGI O2 running IRIX 6.5.2.  Other systems may or may not work.
 
 The GRiNS editor and player use a number of system shared libraries.
 Not all of these libraries are installed by default.  Ask your system
@@ -47,3 +48,10 @@ SGI-IRIX user interface open issues
 The editor crashes occasionally when deep inside the X/Motif
 libraries.  This seems to happen only when Motif dialogs are active.
 Save your work regularly.
+
+Sun-Solaris user interface open issues
+
+There seems to be a wide range of audio capabilities on Sun
+workstations.  It is not guaranteed that audio works in all
+circumstances.
+MPEG video rendering on the Sun is slow.
