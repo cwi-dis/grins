@@ -7,7 +7,6 @@ import MMAttrdefs
 import settings
 import features
 import windowinterface
-import Clipboard
 
 ALL_LAYOUTS = '(All Channels)'
 
@@ -705,7 +704,7 @@ class LayoutView2(LayoutViewDialog2):
 
 		# determinate is paste is valid		
 		activePaste = 0
-		t, n = Clipboard.getclip()
+		t, n = self.editmgr.getclip()
 		if t == 'viewport' and n is not None:
 			activePaste = 1
 		elif len(self.currentSelectedNodeList) == 1: # only simple selection
@@ -1574,7 +1573,7 @@ class LayoutView2(LayoutViewDialog2):
 		# for now, support only simple selection
 		if len(self.currentSelectedNodeList) == 1:
 			selectedNode = self.currentSelectedNodeList[0]
-			type, node = Clipboard.getclip()
+			type, node = self.editmgr.getclip()
 			cNode = None
 			if self.editmgr.transaction():
 				if type == 'region':
@@ -1601,13 +1600,13 @@ class LayoutView2(LayoutViewDialog2):
 	def __copyIntoClipboard(self, selectedNode):
 		if self.getNodeType(selectedNode) == TYPE_REGION:
 			exportedNode = selectedNode.deepExport()
-			Clipboard.setclip('region', exportedNode)
+			self.editmgr.setclip('region', exportedNode)
 		elif self.getNodeType(selectedNode) == TYPE_VIEWPORT:
 			exportedNode = selectedNode.deepExport()
-			Clipboard.setclip('viewport', exportedNode)
+			self.editmgr.setclip('viewport', exportedNode)
 		elif self.getNodeType(selectedNode) == TYPE_MEDIA:
 			# XXX special case, put for now just the node itself
-			Clipboard.setclip('media', selectedNode)
+			self.editmgr.setclip('media', selectedNode)
 				
 	def __cleanClipboard(self):
 		# XXX to do something

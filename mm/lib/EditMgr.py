@@ -42,14 +42,16 @@ __version__ = "$Id$"
 import MMExc
 from HDTL import HD, TL
 import features
+import Clipboard
 
-class EditMgr:
+class EditMgr(Clipboard.Clipboard):
 	#
 	# Initialization.
 	#
 	def __init__(self, toplevel):
 		self.reset()
 		self.toplevel = toplevel
+		Clipboard.Clipboard.__init__(self)
 
 	def setRoot(self, root):
 		self.root = root

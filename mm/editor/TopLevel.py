@@ -282,16 +282,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def destroy(self):
 		self.set_timer(-1)
 		self.hideviews()
+		type, data = self.editmgr.getclip()
+		if type == 'node' and data is not None:
+			self.editmgr.setclip('', None)
+			data.Destroy()
 		self.editmgr.unregister(self)
 		self.editmgr.destroy()
 		self.destroyviews()
 		self.hide()
 		self.root.Destroy()
-		import Clipboard
-		type, data = Clipboard.getclip()
-		if type == 'node' and data is not None:
-			Clipboard.setclip('', None)
-			data.Destroy()
 		for v in self.views:
 			if v is not None:
 				v.toplevel = None
@@ -970,8 +969,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# (XXX We shouldn't *save* the links to/from the clipboard,
 		# but we don't want to throw them away either...)
 		roots = [self.root]
-		import Clipboard
-		type, data = Clipboard.getclip()
+		type, data = self.root.context.editmgr.getclip()
 		if type == 'node' and data is not None:
 			roots.append(data)
 		self.context.sanitize_hyperlinks(roots)

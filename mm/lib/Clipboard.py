@@ -26,23 +26,19 @@ __version__ = "$Id$"
 #		then *copy* it back to the clipboard:
 #		type, x = getclip(); setclip(type, x.DeepCopy())
 
-class GlobalClipboard:
+class Clipboard:
 
 	def __init__(self):
-		self.type = ''
-		self.data = None
+		self.__type = ''
+		self.__data = None
 
 	def __repr__(self):
-		return '<GlobalClipboard instance, type=' + `self.type` + '>'
+		return '<Clipboard instance, type=' + `self.type` + '>'
 
 	def setclip(self, type, data):
-		self.type = type
-		self.data = data
+		self.__type = type
+		self.__data = data
 
 	def getclip(self):
-		return self.type, self.data
+		return self.__type, self.__data
 
-theClipboard = GlobalClipboard()
-
-getclip = theClipboard.getclip
-setclip = theClipboard.setclip
