@@ -461,6 +461,10 @@ class _CommonWindow:
 				Qd.UnionRgn(self._button_region, rgn, self._button_region)
 				Qd.DisposeRgn(rgn)
 		return self._button_region
+		
+	def _iscontrolclick(self, down, where, event):
+		# Overriden for toplevel window
+		return 0
 				
 	def _contentclick(self, down, where, event, shifted):
 		"""A click in our content-region. Note: this method is extended
@@ -478,6 +482,11 @@ class _CommonWindow:
 					pass
 				else:
 					return
+		#
+		# Then, check for a click in a control
+		#
+		if self._iscontrolclick(down, where, event):
+			return
 		#
 		# Next, check for popup menu, if we have one
 		#
@@ -685,6 +694,7 @@ class _AdornmentsMixin:
 	"""Class to handle toolbars and other adornments on toplevel windows"""
 	def __init__(self):
 		self._cmd_to_cntl = {}
+		self._cntl_to_cmd = {}
 		
 	def _add_addornments(self, adornments):
 		if not adornments:
@@ -700,6 +710,7 @@ class _AdornmentsMixin:
 					print 'CNTL resource %d not found: %s'%(resid, arg)
 				else:
 					self._cmd_to_cntl[cmd] = cntl
+					self._cntl_to_cmd = cmd
 			#
 			# Create the toolbar
 			#
@@ -715,9 +726,27 @@ class _AdornmentsMixin:
 			#
 			x, y, w, h = self._rect
 			self._rect = x, y+height, w, h-height
+			
+	def _iscontrolclick(self, down, local, event):
+		if down:
+			# Check for control
+			ptype, ctl = Ctl.FindControl(local, self._wid)
+			if ptype and ctl:
+##				if ptype in TRACKED_PARTS:
+##					dummy = ctl.TrackControl(local, self.scrollbar_callback)
+##				else:
+				part = ctl.TrackControl(local)
+				if part:
+					self._control_callback(ctl, part)
+				return 1
+		return 0
+		
+	def _control_callback(self, ctl, part):
+		print 'DBG controlhit', ctl, part, self._cntl_to_cmd[ctl]
 				
 	def close(self):
 		del self._cmd_to_cntl
+		del self._cntl_to_cmd
 			
 	def set_commandlist(self, cmdlist):
 		enabled = {}
