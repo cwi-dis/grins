@@ -1,7 +1,7 @@
 import time
 import Qd
+import QuickDraw
 import mw_globals
-import math
 import Transitions
 	
 class TransitionEngine:
@@ -22,6 +22,7 @@ class TransitionEngine:
 		klass = Transitions.TransitionFactory(trtype, subtype)
 		self.transitiontype = klass(self, dict)
 		self.dstrgn = None
+		self.verbatimrgn = None
 		self.move_resize()
 		self.currentparameters = None
 		
@@ -66,21 +67,21 @@ class TransitionEngine:
 		"""Internal: recompute the region and rect on which this transition operates"""
 		if self.dstrgn:
 			Qd.DisposeRgn(self.dstrgn)
+		if self.verbatimrgn:
+			Qd.DisposeRgn(self.verbatimrgn)
 		exclude_first_window = self.exclude_first_window
 		x0, y0, x1, y1 = self.windows[0].qdrect()
 		self.dstrgn = Qd.NewRgn()
 		print 'move_resize', self, (x0, y0, x1, y1)
 		for w in self.windows:
 			rect = w.qdrect()
+			newrgn = w._mac_getclip()
 			if exclude_first_window:
 				exclude_first_window = 0
-				print 'dont include', rect
+				self.verbatimrgn = Qd.NewRgn()
+				Qd.CopyRgn(newrgn, self.verbatimrgn)
 			else:
-				print 'include', rect
-				newrgn = Qd.NewRgn()
-				Qd.RectRgn(newrgn, rect)
 				Qd.UnionRgn(self.dstrgn, newrgn, self.dstrgn)
-				Qd.DisposeRgn(newrgn)
 			nx0, ny0, nx1, ny1 = rect
 			if nx0 < x0: 
 				x0 = nx0
@@ -90,12 +91,16 @@ class TransitionEngine:
 				x1 = nx1
 			if ny1 > y1:
 				y1 = ny1
+		# We still subtract our children (there may be transparent windows in there)
+		if self.verbatimrgn:
+			Qd.DiffRgn(self.verbatimrgn, self.dstrgn, self.verbatimrgn)
 		print 'transition size now', (x0, y0, x1, y1), self
-		self.transitiontype.move_resize((x0, y0, x1, y1))
+		self.ltrb = (x0, y0, x1, y1)
+		self.transitiontype.move_resize(self.ltrb)
 			
 	def ismaster(self, window):
 		return window == self.windows[0]
-		
+				
 	def _idleproc(self):
 		"""Called in the event loop to optionally do a recompute"""
 		self.changed(0)
@@ -139,3 +144,5 @@ class TransitionEngine:
 		Qd.RGBForeColor((0, 0, 0))
 		self.transitiontype.updatebitmap(self.currentparameters, src_active, src_passive, tmp, dst, 
 			self.dstrgn)
+		if self.verbatimrgn:
+			Qd.CopyBits(src_active, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, self.verbatimrgn)
