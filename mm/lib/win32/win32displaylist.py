@@ -528,7 +528,8 @@ class _DisplayList:
 		self._window.setmediafit(int(scale))
 
 		#
-		self.setMediaBox(mediaBox)
+		if self._directdraw:
+			self.setMediaBox(mediaBox)
 		if units == UNIT_PXL:
 			return dest_x - x, dest_y - y, width, height
 		else:
