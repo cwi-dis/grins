@@ -29,7 +29,7 @@ class _Reader:
 		return 1
 		
 	def HasVideo(self):
-		return 0
+		return 1
 		
 	def GetAudioFormat(self):
 		import audio.format
