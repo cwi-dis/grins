@@ -4,10 +4,13 @@ TODO for Michael :-)
 What am I doing:
 ----------------
 
-* Move the transition boxes in a bit.
+* Make the new UI stuff look like the old ui stuff (*sigh*).
 
-* Make the insert.. menus work.
+* Push-back bars on pars.
 
+* Pasting.
+
+* Expand an collapse nodes.
 
 Priority top-to-bottom.
 ------------------------
@@ -15,10 +18,6 @@ Priority top-to-bottom.
 * Transition boxes
 
 * Convert all the drawing code to pixels. Floating point numbers are silly and difficult.
-
-* New build for Dick of Snap! and the 2.0 player.
-
-* Rename all the view classes to Widget classes.
 
 * Disable drag + drop of structure nodes.
 
@@ -46,3 +45,6 @@ Incoming
 * Add a asset box for transitions.
 * Windows media support.
 * Configure Eudora to do mail locally rather than to the server.
+* Clean up the resource files
+* Pop up a list of transitions.
+* Show whether a node is empty or not.

@@ -1118,6 +1118,7 @@ class MMNode:
 		self.__calcendtimecalled = 0
 		self.views = {};	# Map {string -> Interactive} - that is, a list of views
 					# looking at this object.
+		self.collapsed = 0;	# Whether this node is collapsed in the structure view.
 
 	#
 	# Return string representation of self

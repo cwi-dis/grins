@@ -391,6 +391,7 @@ class HierarchyView(HierarchyViewDialog):
 		# and create a scene graph from it.
 		Timing.needtimes(self.root)  # For bandwidth bars
 		self.scene_graph = create_MMNode_widget(self.root, self)
+		self.scene_graph.collapse_levels(3); # Collapse all nodes less than 3 levels down.
 
 	def refresh_scene_graph(self):
 		if self.scene_graph:

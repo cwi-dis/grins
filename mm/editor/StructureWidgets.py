@@ -13,7 +13,6 @@ from AppDefaults import *
 # remove this. TODO
 import whrandom
 
-
 def create_MMNode_widget(node, root):
     #assert root != None
     ntype = node.GetType()
@@ -48,7 +47,11 @@ class MMNodeWidget(Widgets.Widget):     # Aka the old 'HierarchyView.Object', an
         assert isinstance(node, MMNode.MMNode)
         self.node.views['struct_view'] = self
         self.name = MMAttrdefs.getattr(self.node, 'name')
-        
+
+    def collapse_levels(self, level):
+        # Place holder for a recursive function.
+        return;
+
     def destroy(self):
         # Prevent cyclic dependancies.
         Widgets.Widget.destroy(self)
@@ -233,8 +236,7 @@ class StructureObjWidget(MMNodeWidget):
         assert self is not None
         # Create more nodes under me if there are any.
         self.children = []
-        self.collapsed = 0;             # Whether this node is collapsed or not.
-        self.collapsebutton = CollapseButtonWidget(self, root);
+        self.collapsebutton = CollapseButtonWidget(self, root);        
         for i in self.node.children:
             bob = create_MMNode_widget(i, root)
             if bob == None:
@@ -246,15 +248,32 @@ class StructureObjWidget(MMNodeWidget):
         MMNodeWidget.destroy(self)
         self.children = None
 
+    def collapse_levels(self, levels):
+        if levels < 1:
+            self.collapse()
+        for i in self.children:
+            i.collapse_levels(levels-1)
+
     def collapse(self):
-        self.collapsed = 1;
+        self.node.collapsed = 1;
     def uncollapse(self):
-        self.collapsed = 0;
+        self.node.collapsed = 0;
+    def toggle_collapsed(self):
+        self.node.collapsed = not self.node.collapsed
+    def iscollapsed(self):
+        return self.node.collapsed
 
     def get_obj_at(self, pos):
         # Return the MMNode widget at position x,y
         # Oh, how I love recursive methods :-). Nice. -mjvdg.
+        if self.collapsebutton.is_hit(pos):
+            self.toggle_collapsed()
+            self.root.draw()
+            return self
+
         if self.is_hit(pos):
+            if self.iscollapsed():
+                return self
             for i in self.children:
                 ob = i.get_obj_at(pos)
                 if ob != None:
@@ -270,7 +289,7 @@ class StructureObjWidget(MMNodeWidget):
         # This is a base class for other classes.. this code only gets
         # called once the aggregating node has been called.
         # Draw only the children.
-        if not self.collapsed:
+        if not self.iscollapsed():
             for i in self.children:
                 i.draw(displist)
 
@@ -296,19 +315,21 @@ class SeqWidget(StructureObjWidget):
             display_list.drawfbox(SEQCOLOR, self.get_box())
             display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
 
-        if self.root.pushbackbars:
+        if self.root.pushbackbars and not self.iscollapsed():
             for i in self.children:
                 if isinstance(i, MediaWidget):
                     i.pushbackbar.draw(display_list)
 
         StructureObjWidget.draw(self, display_list)
-        if self.root.dropbox:
+        if self.root.dropbox and not self.iscollapsed():
             self.dropbox.draw(display_list);
-
-        assert self.node is not None
 
     def get_nearest_node_index(self, pos):
         # Return the index of the node at the specific drop position.
+
+        if self.iscollapsed():
+            return -1
+
         assert self.is_hit(pos);
         x,y = pos;
         # Working from left to right:
@@ -321,7 +342,7 @@ class SeqWidget(StructureObjWidget):
     def get_minsize(self):
         # Return the minimum size that I can be.
 
-        if len(self.children) == 0:
+        if len(self.children) == 0 or self.iscollapsed():
             boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE;
             return self.get_relx(boxsize), self.get_rely(boxsize);
 
@@ -359,7 +380,7 @@ class SeqWidget(StructureObjWidget):
     def get_minsize_abs(self):
         # Everything here calculated in pixels.
 
-        if len(self.children) == 0:
+        if len(self.children) == 0 or self.iscollapsed():
             boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE;
             return boxsize, boxsize
 
@@ -389,6 +410,10 @@ class SeqWidget(StructureObjWidget):
         # Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
         # Apportion free space equally, based on the size of self.
         # TODO: This does not test for maxheight()
+
+        if self.iscollapsed():
+            StructureObjWidget.recalc(self)
+            return
         
         l, t, r, b = self.pos_rel
         min_width, min_height = self.get_minsize()
@@ -488,7 +513,7 @@ class VerticalWidget(StructureObjWidget):
         # Return the minimum size that I can be.
         min_width = 0; min_height = 0
 
-        if len(self.children) == 0:
+        if len(self.children) == 0 or self.iscollapsed():
             boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE;
             return self.get_relx(boxsize), self.get_rely(boxsize);
 
@@ -521,6 +546,9 @@ class VerticalWidget(StructureObjWidget):
 
     def get_nearest_node_index(self, pos):
         # Return the index of the node at the specific drop position.
+        if self.iscollapsed():
+            return -1
+        
         assert self.is_hit(pos);
         x,y = pos;
         # Working from left to right:
@@ -533,7 +561,7 @@ class VerticalWidget(StructureObjWidget):
     def get_minsize_abs(self):
         mw=0; mh=0
 
-        if len(self.children) == 0:
+        if len(self.children) == 0 or self.iscollapsed():
             boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE;
             return boxsize, boxsize
 
@@ -553,6 +581,10 @@ class VerticalWidget(StructureObjWidget):
         # Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
         # Apportion free space equally, based on the size of self.
         # TODO: This does not test for maxheight()
+
+        if self.iscollapsed():
+            StructureObjWidget.recalc(self)
+            return;
 
         l, t, r, b = self.pos_rel
         # Add the titlesize;
@@ -609,7 +641,7 @@ class VerticalWidget(StructureObjWidget):
         StructureObjWidget.recalc(self);
 
     def draw(self, display_list):
-        if self.root.pushbackbars:
+        if self.root.pushbackbars and not self.iscollapsed():
             for i in self.children:
                 if isinstance(i, MediaWidget):
 #                    print "Par: drawing bar";
@@ -953,8 +985,7 @@ class CollapseButtonWidget(Widgets.Widget):
         self.moveto((l,t,r,b));
             
     def draw(self, displist):
-        pass;                           # Disabled for the meanwhile.
-        if self.parent.collapsed:
+        if self.parent and self.parent.iscollapsed():
             displist.drawicon(self.get_box(), 'closed')
         else:
             displist.drawicon(self.get_box(), 'open')
