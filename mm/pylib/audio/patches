@@ -212,3 +212,25 @@ diff -c -r1.4 libaudioop.tex
   \begin{funcdesc}{reverse}{fragment\, width}
   Reverse the samples in a fragment and returns the modified fragment.
   \end{funcdesc}
+Index: Lib/test/test_audioop.py
+===================================================================
+RCS file: /ufs/sjoerd/.CVSroot/python/Lib/test/test_audioop.py,v
+retrieving revision 1.1
+diff -c -r1.1 test_audioop.py
+*** test_audioop.py	1994/01/12 09:55:09	1.1
+--- test_audioop.py	1997/02/04 13:55:02
+***************
+*** 131,136 ****
+--- 131,142 ----
+  		return 0
+  	return 1
+  
++ def testratecv(data):
++ 	state = (-8000, ((256, 512),))
++ 	if audioop.ratecv(data[0], 1, 1, 8000, 16000, state) != ('\001\000\000\001\001\002', state):
++ 		return 0
++ 	return 1
++ 
+  def testreverse(data):
+  	if audioop.reverse(data[0], 1) <> '\2\1\0':
+  		return 0
