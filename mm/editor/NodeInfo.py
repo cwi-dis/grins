@@ -86,6 +86,9 @@ class NodeInfo(NodeInfoDialog):
 	def rollback(self):
 		pass
 
+	def kill(self):
+		self.close()
+
 	def getvalues(self, always):
 		#
 		# First get all values (except those changed, if

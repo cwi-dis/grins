@@ -107,6 +107,9 @@ class ArcInfo(ArcInfoDialog):
 		else:
 			self.settitle(self.maketitle())
 
+	def kill(self):
+		self.close()
+
 	def stillvalid(self):
 		if self.snode.GetRoot() is not self.root or \
 		   self.dnode.GetRoot() is not self.root:

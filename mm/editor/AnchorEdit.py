@@ -98,6 +98,9 @@ class AnchorEditor(AnchorEditorDialog):
 	def rollback(self):
 		pass
 
+	def kill(self):
+		self.close()
+
 	def getvalues(self, force):
 		# If 'force' is false, don't get the values if the
 		# user has already edited them in any way; this is
