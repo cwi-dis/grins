@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.9.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -30,7 +30,7 @@ item: Global
   Version Description=GRiNS/SMIL 2.0
   Version Copyright=Copyright 2000 Oratrix Holding B.V.
   Version Company=Oratrix Holding B.V.
-  Distribute Path=D:\File Grins installation
+  Distribute Path=\\UNIXSERVER\auginet\GRiNS
   Distribute Type=1
   Step View=All
   File Checksum=3872004673
@@ -1152,7 +1152,7 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\ddraw.pyd
   Destination=%MAINDIR%\ddraw.pyd
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
@@ -1505,7 +1505,7 @@ item: Edit Registry
   end
   item: Key
     Key=SMILfile\DefaultIcon
-    New Value=%MAINDIR%\GRiNS_SV1.exe,2
+    New Value=%MAINDIR%\GRiNSP_SV2.exe,2
     Root=32
   end
 end
@@ -1525,7 +1525,7 @@ item: Edit Registry
   end
   item: Key
     Key=SMILfile\shell\edit\command
-    New Value=%MAINDIR%\GRiNS_SV1.exe "%%1"
+    New Value=%MAINDIR%\GRiNSP_SV2.exe "%%1"
     Root=32
   end
   item: Key
@@ -1551,7 +1551,7 @@ item: Edit Registry
   end
   item: Key
     Key=GRiNSProject\DefaultIcon
-    New Value=%MAINDIR%\GRiNS_SV1.exe,2
+    New Value=%MAINDIR%\GRiNSP_SV2.exe,2
   end
   item: Key
     Key=GRiNSProject\shell\open
@@ -1571,18 +1571,18 @@ item: Edit Registry
   end
   item: Key
     Key=GRiNSProject\shell\edit\command
-    New Value=%MAINDIR%\GRiNS_SV1.exe "%%1"
+    New Value=%MAINDIR%\GRiNSP_SV2.exe "%%1"
   end
 end
 item: Edit Registry
   Total Keys=2
   item: Key
     Key=GRiNSProject\shell\open\command
-    New Value=%MAINDIR%\GRiNS_SV1.exe "%%1"
+    New Value=%MAINDIR%\GRiNSP_SV2.exe "%%1"
   end
   item: Key
     Key=SMILfile\shell\open\command
-    New Value=%MAINDIR%\GRiNS_SV1.exe "%%1"
+    New Value=%MAINDIR%\GRiNSP_SV2.exe "%%1"
     Root=32
   end
 end
