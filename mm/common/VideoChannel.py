@@ -39,8 +39,12 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			movie = self.played_movie
 			self.played_movie = None
 			movie.Stop()
-			t = float(movie.GetCurrentTime(1000)) / 1000
 			d = float(movie.GetMovieDuration(1000)) / 1000
+			if hasattr(movie, 'GetCurrentTime'):
+				t = float(movie.GetCurrentTime(1000)) / 1000
+			else:
+				# if no GetCurrentTime, act as if at end
+				t = d
 			looplimit = movie.GetPlayLoopLimit()
 			loopcount = movie.GetPlayLoopCount()
 			movie.UnbindOpenGLWindow()
