@@ -99,7 +99,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		#for i in win32displaylist._icon_ids.keys():
 		#	self.iconbox.add_icon(i)
 
-		self.iconbox.add_icon('activateevent')
+		#self.iconbox.add_icon('activateevent')
 
 		for b in beginevents:
 			othernode = b.refnode()
