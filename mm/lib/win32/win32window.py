@@ -1858,6 +1858,10 @@ class Viewport(Region):
 		else:
 			rcPaint = self.rectAnd(rc, self._rectb)
 
+		# check for empty update
+		if rcPaint[2]==0 or rcPaint[3]==0:
+			return
+
 		# first paint self
 		try:
 			self._paintOnDDS(drawBuffer, rcPaint)
