@@ -22,6 +22,8 @@ mimetypes = {
 	'.asf': 'video/x-ms-asf',
 	'.wma': 'audio/x-ms-wma',
 	'.wmv': 'video/x-ms-wmv',
+
+	'.svg': 'image/svg-xml'
 	}
 
 
