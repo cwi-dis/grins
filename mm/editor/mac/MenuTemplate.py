@@ -99,7 +99,6 @@ MENUBAR=(
 		)),
 
 	(ALL, CASCADE, 'Linking', (
-		(ALL, SEP,),
 		(ALL, ENTRY, 'Create Simple Anchor', 'R', CREATEANCHOR),
 		(ALL, ENTRY, 'Finish Hyperlink to Selection', 'H', FINISH_LINK),
 		(ALL, ENTRY, 'Anchors...', 'T', ANCHORS),
@@ -140,7 +139,6 @@ MENUBAR=(
 		(ALL, TOGGLE, ('Show Structure View', 'Hide Structure view'), '6', HIERARCHYVIEW),
 		(ALL, TOGGLE, ('Show Timeline View', 'Hide Timeline view'), '7', CHANNELVIEW),
 		(ALL, TOGGLE, ('Show Layout View', 'Hide Layout view'), '8', LAYOUTVIEW),
-		(ALL, SEP,),
 		(ALL, TOGGLE, ('Show Hyperlinks', 'Hide Hyperlink view'), '9', LINKVIEW),
 		(CMIF, TOGGLE, ('Show User Groups', 'Hide User group view'), '0', USERGROUPVIEW),
 		(ALL, SEP,),
