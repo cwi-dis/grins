@@ -288,7 +288,7 @@ class SchedulerContext:
 		srlist = self.getsrlist(ev)
 		self.queuesrlist(srlist, timestamp)
 
-	def sched_arcs(self, node, event = None, marker = None, timestamp = None):
+	def sched_arcs(self, node, event = None, marker = None, deparc = None, timestamp = None):
 		if debugevents: print 'sched_arcs',`node`,event,marker,timestamp,self.parent.timefunc()
 		if timestamp is None:
 			timestamp = self.parent.timefunc()
@@ -323,8 +323,7 @@ class SchedulerContext:
 			if arc.timestamp is not None and arc.timestamp != timestamp+arc.delay:
 				if arc.qid is not None:
 					if debugevents: print 'sched_arcs: cancel',`arc`,self.parent.timefunc()
-					self.parent.cancel(arc.qid)
-					arc.qid = None
+					arc.cancel(self.parent)
 ##				arc.timestamp = None
 			skip = 0
 			for a in list:
@@ -334,8 +333,7 @@ class SchedulerContext:
 					continue
 				if a.timestamp > timestamp + arc.delay:
 					if debugevents: print 'sched_arcs: cancel',`a`,self.parent.timefunc()
-					self.parent.cancel(a.qid)
-					a.qid = None
+					a.cancel(self.parent)
 					if a.isstart:
 						if a.dstnode.GetSchedParent():
 							srdict = a.dstnode.GetSchedParent().gensr_child(a.dstnode, runchild = 0, curtime = self.parent.timefunc())
@@ -368,8 +366,16 @@ class SchedulerContext:
 					arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
 				arc.timestamp = timestamp+arc.delay
 				arc.qid = self.parent.enterabs(arc.timestamp, 0, self.trigger, (arc,))
+				if arc.depends is not None:
+					try:
+						arc.depends.remove(arc)
+					except ValueError:
+						pass
+				arc.depends = deparc # can be None
+				if deparc is not None:
+					deparc.deparcs.append(arc)
 			if not arc.ismin and (arc.dstnode is not node or dev != event):
-				self.sched_arcs(arc.dstnode, dev, timestamp=timestamp+arc.delay)
+				self.sched_arcs(arc.dstnode, dev, deparc = arc, timestamp=timestamp+arc.delay)
 		if debugevents: print 'sched_arcs return',`node`,event,marker,timestamp,self.parent.timefunc()
 
 	def trigger(self, arc, node = None, timestamp = None):
@@ -386,7 +392,17 @@ class SchedulerContext:
 		if arc is not None:
 			if arc.qid is None:
 				if debugevents: print 'trigger: ignore arc',`arc`
+				parent.updatetimer()
 				return
+			if arc.depends is not None:
+				try:
+					arc.depends.deparcs.remove(arc)
+				except ValueError:
+					pass
+				arc.depends = None
+			for a in arc.deparcs:
+				a.depends = None
+			arc.deparcs = []
 			timestamp = arc.resolvedtime(parent.timefunc)
 			node = arc.dstnode
 			arc.qid = None
@@ -410,7 +426,19 @@ class SchedulerContext:
 					arc = node.delayed_arcs[0]
 					del node.delayed_arcs[0]
 					self.trigger(arc)
-				return
+				if node.scheduled_children > 0:
+					parent.updatetimer()
+					return
+				# if there is a SCHED_STOPPING event on the
+				# right-hand side in the srdict, don't stop
+				for ev, srdict in self.srdict.items():
+					numac = srdict[ev]
+					if numac is None:
+						continue
+					for ac in numac[1]:
+						op, nd = ac
+						if op == SR.SCHED_STOPPING and nd == node:
+							return
 			if not arc.isstart:
 				if node.has_min:
 					# must delay this arc
@@ -420,6 +448,7 @@ class SchedulerContext:
 						self.do_terminate(c, timestamp, fill = fill)
 						if not parent.playing:
 							return
+					parent.updatetimer()
 					return
 				if debugevents: print 'scheduled_children-1',`node`,parent.timefunc()
 				if node.scheduled_children > 0:
@@ -427,6 +456,7 @@ class SchedulerContext:
 				if node.playing not in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 					# ignore end event if not playing
 					if debugevents: print 'node not playing',parent.timefunc()
+					parent.updatetimer()
 					return
 				if debugevents: print 'terminating node',parent.timefunc()
 				pnode = node.GetSchedParent()
@@ -441,6 +471,7 @@ class SchedulerContext:
 					self.do_resume(nnode, timestamp)
 				else:
 					self.do_terminate(node, timestamp, fill = node.GetFill())
+				parent.updatetimer()
 				return
 		pnode = node.GetSchedParent()
 		if not pnode:
@@ -448,6 +479,7 @@ class SchedulerContext:
 		if not pnode or pnode.playing != MMStates.PLAYING:
 			# ignore event when node can't play
 			if debugevents: print 'parent not playing',parent.timefunc()
+			parent.updatetimer()
 			return
 		# ignore restart attribute on hyperjump (i.e. when arc is None)
 		if arc is not None and \
@@ -457,6 +489,7 @@ class SchedulerContext:
 		     node.GetRestart() == 'never')):
 			# ignore event when node doesn't want to play
 			if debugevents: print "node won't restart",parent.timefunc()
+			parent.updatetimer()
 			return
 		endlist = MMAttrdefs.getattr(node, 'endlist')
 		equal = 0
@@ -481,6 +514,7 @@ class SchedulerContext:
 				ev = (SR.SCHED_DONE, node)
 				if debugevents: print 'trigger: queueing',SR.ev2string(ev), timestamp, parent.timefunc()
 				parent.event(self, ev, timestamp)
+				parent.updatetimer()
 				return
 		# if node is playing (or not stopped), must terminate it first
 		if node.playing not in (MMStates.IDLE, MMStates.PLAYED):
@@ -515,6 +549,7 @@ class SchedulerContext:
 						if not parent.playing:
 							return
 					elif action == 'never':
+						parent.updatetimer()
 						return
 					elif action == 'defer':
 						srdict = pnode.gensr_child(node, curtime = parent.timefunc())
@@ -527,6 +562,7 @@ class SchedulerContext:
 						if node.caption_body:
 							node.caption_body.start_time = node.start_time
 						self.do_pause(pnode, node, 'hide', timestamp)
+						parent.updatetimer()
 						return
 					elif action == 'pause':
 						if pcmp == 0:
@@ -567,7 +603,8 @@ class SchedulerContext:
 		if debugevents: print 'starting node',`node`,parent.timefunc()
 		if debugdump: self.dump()
 		ndur = node.calcfullduration()
-		if equal or (ndur == 0 and node.GetFill() == 'remove'):
+		if MMAttrdefs.getattr(node, 'min') == 0 and \
+		   (equal or (ndur == 0 and node.GetFill() == 'remove')):
 			runchild = 0
 		else:
 			runchild = 1
@@ -592,6 +629,7 @@ class SchedulerContext:
 			ev = (SR.SCHED_DONE, node)
 			if debugevents: print 'trigger: queueing(2)',SR.ev2string(ev), timestamp, parent.timefunc()
 			parent.event(self, ev, timestamp)
+		parent.updatetimer()
 
 	def gototime(self, node, gototime, timestamp, path = None):
 		# XXX trigger syncarcs that should go off after gototime?
@@ -665,8 +703,7 @@ class SchedulerContext:
 		for arc in node.durarcs + MMAttrdefs.getattr(node, 'endlist'):
 			if arc.qid is not None:
 				if debugevents: print 'cancel',`arc`,parent.timefunc()
-				parent.cancel(arc.qid)
-				arc.qid = None
+				arc.cancel(parent)
 				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
 		if fill == 'remove' and node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 			for arc in node.delayed_arcs:
@@ -711,6 +748,9 @@ class SchedulerContext:
 			else:
 				# not yet queued
 				if debugevents: print 'queueing',SR.ev2string(ev), timestamp, parent.timefunc()
+				adur = node.calcfullduration()
+				if node.fullduration is None or adur is None or adur < 0:
+					self.sched_arcs(node, 'end', timestamp=timestamp)
 				parent.event(self, ev, timestamp)
 		if fill == 'remove':
 			ev = (SR.SCHED_STOP, node)
@@ -729,8 +769,7 @@ class SchedulerContext:
 			arc = argument[0]
 			if arc.srcnode is node and arc.event == 'end':
 				if debugevents: print 'do_terminate: cancel',`arc`,parent.timefunc()
-				parent.cancel(qid)
-				arc.qid = None
+				arc.cancel(parent)
 
 	def flushqueue(self):
 		parent = self.parent
@@ -771,9 +810,8 @@ class SchedulerContext:
 			pnode.pausestack.remove(node)
 		for arc in node.durarcs:
 			if arc.qid is not None:
-				self.parent.cancel(arc.qid)
 				arc.paused = arc.qid[0] - timestamp
-				arc.qid = None
+				arc.cancel(self.parent)
 				if debugevents: print 'pause_play',`arc`,arc.paused,self.parent.timefunc()
 		if node.playing in (MMStates.IDLE, MMStates.PLAYED):
 			for i in range(len(pnode.pausestack)):
