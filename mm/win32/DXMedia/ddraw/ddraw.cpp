@@ -11,6 +11,7 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include <windows.h>
 #include <wtypes.h>
 #include <assert.h>
+#include <math.h>
 
 #include <mmsystem.h>
 #include <ddraw.h>
@@ -707,7 +708,13 @@ DirectDrawSurface_GetPixelFormat(DirectDrawSurfaceObject *self, PyObject *args)
 	return Py_BuildValue("iii",numREDbits, numGREENbits, numBLUEbits);
 	}
 
-HRESULT ScanSurface8(IDirectDrawSurface *surf, DWORD w, DWORD h)
+inline DWORD blend(double prop, DWORD c1, DWORD c2)
+	{
+	return (DWORD)floor(double(c1) + prop*(double(c2)-c1) + 0.5);
+	}
+HRESULT ScanSurface8(IDirectDrawSurface *surf, 
+					 IDirectDrawSurface *from, IDirectDrawSurface *to, 
+					 float prop, DWORD w, DWORD h)
 	{
 	DDSURFACEDESC desc;
 	ZeroMemory(&desc, sizeof(desc));
@@ -728,7 +735,9 @@ HRESULT ScanSurface8(IDirectDrawSurface *surf, DWORD w, DWORD h)
 	return hr;
 	}
 
-HRESULT ScanSurface16(IDirectDrawSurface *surf, DWORD w, DWORD h)
+HRESULT ScanSurface16(IDirectDrawSurface *surf, 
+					 IDirectDrawSurface *from, IDirectDrawSurface *to, 
+					 float prop, DWORD w, DWORD h)
 	{
 	DDSURFACEDESC desc;
 	ZeroMemory( &desc, sizeof(desc) );
@@ -752,31 +761,65 @@ HRESULT ScanSurface16(IDirectDrawSurface *surf, DWORD w, DWORD h)
 	return hr;
 	}
 
-HRESULT ScanSurface24(IDirectDrawSurface *surf, DWORD w, DWORD h)
+HRESULT ScanSurface24(IDirectDrawSurface *surf, 
+					 IDirectDrawSurface *from, IDirectDrawSurface *to, 
+					 float prop, DWORD w, DWORD h)
 	{
-	DDSURFACEDESC desc;
-	ZeroMemory( &desc, sizeof(desc) );
+	DDSURFACEDESC desc, desc1, desc2;
+	ZeroMemory(&desc, sizeof(desc));
 	desc.dwSize=sizeof(desc);
+	ZeroMemory(&desc1, sizeof(desc1));
+	desc1.dwSize=sizeof(desc1);
+	ZeroMemory(&desc2, sizeof(desc2));
+	desc2.dwSize=sizeof(desc2);
 	HRESULT hr;
 	hr=surf->Lock(0,&desc,DDLOCK_WAIT | DDLOCK_READONLY,0);
 	if(hr!=DD_OK) return hr;
+	hr=from->Lock(0,&desc1,DDLOCK_WAIT | DDLOCK_READONLY,0);
+	if(hr!=DD_OK) return hr;
+	hr=to->Lock(0,&desc2,DDLOCK_WAIT | DDLOCK_READONLY,0);
+	if(hr!=DD_OK) return hr;
+	
 	for(int row=h-1;row>=0;row--)
 		{
 		RGBTRIPLE* surfpixel=(RGBTRIPLE*)((BYTE*)desc.lpSurface+row*desc.lPitch);
+		RGBTRIPLE* surfpixel1=(RGBTRIPLE*)((BYTE*)desc1.lpSurface+row*desc1.lPitch);
+		RGBTRIPLE* surfpixel2=(RGBTRIPLE*)((BYTE*)desc2.lpSurface+row*desc2.lPitch);
 		for (DWORD col=0;col<w;col++)
 			{
 			// apply transform on pixel: *surfpixel
-			DWORD r = (*(DWORD*)surfpixel & desc.ddpfPixelFormat.dwRBitMask) >> loREDbit;
-			DWORD g = (*(DWORD*)surfpixel & desc.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
-			DWORD b = (*(DWORD*)surfpixel & desc.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+			DWORD r1 = (*(DWORD*)surfpixel1 & desc1.ddpfPixelFormat.dwRBitMask) >> loREDbit;
+			DWORD g1 = (*(DWORD*)surfpixel1 & desc1.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
+			DWORD b1 = (*(DWORD*)surfpixel1 & desc1.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+			
+			DWORD r2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwRBitMask) >> loREDbit;
+			DWORD g2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
+			DWORD b2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
+
+			DWORD r = blend(prop, r1, r2);
+			DWORD g = blend(prop, g1, g2);
+			DWORD b = blend(prop, b1, b2);
+			
+			r = r << loREDbit;
+			g = g << loGREENbit;
+			b = b << loBLUEbit;
+			DWORD* data=(DWORD*)surfpixel;
+			*data = r|g|b;
+			
 			surfpixel++;
+			surfpixel1++;
+			surfpixel2++;
 			}
 		}
 	surf->Unlock(0);
+	from->Unlock(0);
+	to->Unlock(0);
 	return hr;
 	}
 
-HRESULT ScanSurface32(IDirectDrawSurface *surf, DWORD w, DWORD h)
+HRESULT ScanSurface32(IDirectDrawSurface *surf, 
+					 IDirectDrawSurface *from, IDirectDrawSurface *to, 
+					 float prop, DWORD w, DWORD h)
 	{
 	DDSURFACEDESC desc;
 	ZeroMemory( &desc, sizeof(desc) );
@@ -806,7 +849,9 @@ static char DirectDrawSurface_ApplyTransform__doc__[] =
 static PyObject *
 DirectDrawSurface_ApplyTransform(DirectDrawSurfaceObject *self, PyObject *args)
 	{
-	if (!PyArg_ParseTuple(args, ""))
+	float prop;
+	DirectDrawSurfaceObject *ddsFrom, *ddsTo;
+	if (!PyArg_ParseTuple(args, "fO!O!",&prop,&DirectDrawSurfaceType,&ddsFrom,&DirectDrawSurfaceType,&ddsTo))
 		return NULL;
 
 	DDSURFACEDESC desc;
@@ -821,13 +866,13 @@ DirectDrawSurface_ApplyTransform(DirectDrawSurfaceObject *self, PyObject *args)
 
 	HRESULT hr;
 	if (depth==8)
-		hr=ScanSurface8(self->pI, width, height);
+		hr=ScanSurface8(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
 	else if (depth==16)
-		hr=ScanSurface16(self->pI, width, height);
+		hr=ScanSurface16(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
 	else if (depth==24)
-		hr=ScanSurface24(self->pI, width, height);
+		hr=ScanSurface24(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
 	else if (depth==32)
-		hr=ScanSurface32(self->pI, width, height);
+		hr=ScanSurface32(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_ApplyTransform", hr);
 		return NULL;
