@@ -92,7 +92,7 @@ class PrefetchChannel(Channel.ChannelAsync):
 		return self.__urlopener!=None
 			
 	def __startFetch(self):
-		self.__start = self.__fetching.start_time
+		self.__start = self.__fetching.get_start_time()
 		if self.__start is None:
 			print 'Warning: None start_time for node',self.__fetching
 			self.__start = 0

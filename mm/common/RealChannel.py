@@ -118,7 +118,7 @@ class RealChannel:
 				return 0
 		return 1
 
-	def playit(self, node, window = None, winpossize=None, url=None, windowless=0):
+	def playit(self, node, window = None, winpossize=None, url=None, windowless=0, start_time=0):
 		self.__winpos = window, winpossize, windowless
 		if not self.__createplayer(node):
 			return 0
@@ -142,18 +142,18 @@ class RealChannel:
 		if windowless:
 			self.__rmaplayer.SetPyVideoRenderer(self.__channel.getRealVideoRenderer())
 		if duration > 0:
-			self.__qid = self.__channel._scheduler.enterabs(node.start_time + duration, 0,
-							   self.__stop, (node.start_time + duration,))
+			self.__qid = self.__channel._scheduler.enterabs(start_time + duration, 0,
+							   self.__stop, (start_time + duration,))
 		self.__playdone_called = 0
 		# WARNING: RealMedia player doesn't unquote, so we must do it
 		url = MMurl.unquote(url)
 		if realenginedebug:
 			print 'RealChannel.playit', self, `url`
-		self._playargs = (node, window, winpossize, url, windowless)
+		self._playargs = (node, window, winpossize, url, windowless, start_time)
 		self.__rmaplayer.OpenURL(url)
 		
 		t0 = self.__channel._scheduler.timefunc()
-		if t0 > node.start_time:
+		if t0 > start_time:
 			self.__spark = 1
 		else:
 			self.__spark = 0
@@ -166,11 +166,11 @@ class RealChannel:
 		if not self.__spark: return
 		node = self._playargs[0]
 		t0 = self.__channel._scheduler.timefunc()
-		if t0 > node.start_time:
+		if t0 > self._playargs[5]:
 			if not __debug__:
-				print 'RealChannel: skipping',node.start_time,t0,t0-node.start_time
+				print 'RealChannel: skipping',node.get_start_time(),t0,t0-node.start_time
 			try:
-				self.__rmaplayer.Seek(int((t0-node.start_time)*1000))
+				self.__rmaplayer.Seek(int((t0-node.get_start_time())*1000))
 			except rma.error, arg:
 				print arg
 		else:
@@ -185,7 +185,7 @@ class RealChannel:
 	def replay(self):
 		if not self._playargs:
 			return
-		node, window, winpossize, url, windowless = self._playargs
+		node, window, winpossize, url, windowless, start_time = self._playargs
 		temp = self.__rmaplayer
 		self.__rmaplayer = None
 		self.__createplayer(node)

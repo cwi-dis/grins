@@ -1252,6 +1252,7 @@ class MMSyncArc:
 		self.dstnode = dstnode
 		self.isstart = action == 'begin'
 		self.ismin = action == 'min'
+		self.isdur = action == 'dur'
 		self.srcnode = srcnode	# None if not associated with a node,
 					# "syncbase" if syncbase;
 					# "prev" if previous;
@@ -1321,6 +1322,8 @@ class MMSyncArc:
 			dst = dst + '.end'
 			if self.ismin:
 				dst = dst + '(min)'
+			elif self.isdur:
+				dst = dst + '(dur)'
 		if self.timestamp is not None:
 			ts = ', timestamp = %g' % self.timestamp
 		else:
@@ -1563,6 +1566,9 @@ class MMNode_body:
 	def add_arc(self, arc, sctx):
 		self.parent.add_arc(arc, sctx, self)
 
+	def set_start_time(self, timestamp, include_pseudo = 1):
+		self.start_time = timestamp
+
 	def startplay(self, timestamp):
 		if debug: print 'startplay',`self`,timestamp,self.fullduration
 		self.playing = MMStates.PLAYING
@@ -1692,13 +1698,13 @@ class MMNode:
 		self.durarcs = []
 		self.deparcs = {'begin': [], 'end': []}	# arcs that depend on the event
 		self.depends = {'begin': [], 'end': []}	# arcs on which the event depends
-		self.reset()
 		self.time_list = []
 		self.fullduration = None
 		self.pausestack = []	# used only by excl nodes
 		# stuff to do with the min attribute
 		self.has_min = 0
-		self.delayed_arcs = []
+##		self.delayed_arcs = []
+		self.delayed_end = 0
 		self.__calcendtimecalled = 0
 		self.views = {}		# Map {string -> Interactive} - that is, a list of views
 					# looking at this object.
@@ -1711,6 +1717,7 @@ class MMNode:
 
 		self.computedMimeType = None
 		self.channelType = None
+		self.reset()
 		
 	#
 	# Return string representation of self
@@ -1721,8 +1728,12 @@ class MMNode:
 			name = MMAttrdefs.getattr(self, 'name')
 		except:
 			name = ''
-		return '<%s instance, type=%s, uid=%s, name=%s, playing=%s>' % \
-		       (self.__class__.__name__, `self.type`, `self.uid`, `name`, MMStates.states[self.playing])
+		if self.has_min:
+			min = ', min=%g' % self.has_min
+		else:
+			min = ''
+		return '<%s instance, type=%s, uid=%s, name=%s, playing=%s%s>' % \
+		       (self.__class__.__name__, `self.type`, `self.uid`, `name`, MMStates.states[self.playing], min)
 
 	def _fill(self):
 		# fill with the requiered default attribute values
@@ -1737,7 +1748,7 @@ class MMNode:
 			self.playing = MMStates.IDLE
 			self.starting_children = 0
 			self.set_armedmode(ARM_NONE)
-		self.start_time = None
+			self.start_time = None
 		if debug: print 'MMNode.reset', `self`
 		if self.parent and self.parent.type == 'switch':
 			self.parent.reset()
@@ -1931,6 +1942,12 @@ class MMNode:
 			self.realpix_body.start_time = self.start_time
 		if self.caption_body:
 			self.caption_body.start_time = self.start_time
+
+	# return start time of current iteration
+	def get_start_time(self):
+		if self.looping_body_self:
+			return self.looping_body_self.start_time
+		return self.start_time
 
 	def startplay(self, timestamp):
 		if debug: print 'startplay',`self`,timestamp,self.fullduration
@@ -2791,6 +2808,8 @@ class MMNode:
 				action = 'begin'
 			elif arc.ismin:
 				action = 'min'
+			elif arc.isdur:
+				action = 'dur'
 			else:
 				action = 'end'
 			uid = arc.dstnode.uid
@@ -2910,7 +2929,7 @@ class MMNode:
 		self.durarcs = None
 		self.time_list = None
 		self.pausestack = None
-		self.delayed_arcs = None
+##		self.delayed_arcs = None
 		self.happenings = None
 		self.timing_info_dict = None
 
@@ -3436,7 +3455,7 @@ class MMNode:
 				delay = None
 			else:
 				delay = duration
-			arc = MMSyncArc(self_body, 'end', srcnode=self_body, event='begin', delay=delay)
+			arc = MMSyncArc(self_body, 'dur', srcnode=self_body, event='begin', delay=delay)
 			self_body.durarcs.append(arc)
 ##			self_body.arcs.append((self_body, arc))
 			self_body.add_arc(arc, sctx)
@@ -3477,15 +3496,15 @@ class MMNode:
 			elif termtype in ('FIRST', chname): ## or
 ##			   (len(wtd_children) == 1 and
 ##			    (schedule or termtype == 'ALL')):
-				arc = MMSyncArc(self_body, 'end', srcnode=child, event='end', delay=0)
+				arc = MMSyncArc(self_body, 'dur', srcnode=child, event='end', delay=0)
 				self_body.arcs.append((child, arc))
 				child.add_arc(arc, sctx)
 				# we need this in case all children
 				# (or the relevant child) has an
 				# unresolved end and we have a min
 				# duration
-				srlist.append(([(SCHED_DONE, child)],
-					       scheddone_actions))
+##				srlist.append(([(SCHED_DONE, child)],
+##					       scheddone_actions))
 			elif schedule or termtype == 'ALL':
 				scheddone_events.append((SCHED_DONE, child))
 			for arc in self.FilterArcList(child.GetEndList()):
@@ -3497,14 +3516,14 @@ class MMNode:
 					delay = None
 				else:
 					delay = cdur
-				arc = MMSyncArc(child, 'end', srcnode=child, event='begin', delay=delay)
+				arc = MMSyncArc(child, 'dur', srcnode=child, event='begin', delay=delay)
 				child.durarcs.append(arc)
 ##				self_body.arcs.append((child, arc))
 				child.add_arc(arc, sctx)
 			min, max = child.GetMinMax()
 			if min > 0:
 				arc = MMSyncArc(child, 'min', srcnode=child, event='begin', delay=min)
-				child.has_min = 1
+				child.has_min = min
 				child.durarcs.append(arc)
 				child.add_arc(arc, sctx)
 			else:
@@ -3722,7 +3741,7 @@ class MMNode:
 			self.__calcendtimecalled = 0
 		if start is None:
 			# no resolved begin time
-			return None, maybecached
+			return None, 0
 		self.__calcendtimecalled = 1
 		d = self.calcfullduration(sctx)
 		self.__calcendtimecalled = 0
@@ -3744,10 +3763,6 @@ class MMNode:
 		termtype = self.GetTerminator()
 		if self.type in leaftypes and termtype == 'MEDIA':
 			return Duration.get(self, ignoreloop=1), maybecached
-		elif self.type == 'excl':
-			# XXX it's too hard to calculate this properly with all
-			# this pause stuff in priorityClasses
-			return None, 0
 		syncbase = self.isresolved(sctx)
 		if self.type in partypes + ['excl']:
 			if termtype not in ('LAST', 'FIRST', 'ALL'):
@@ -3785,6 +3800,10 @@ class MMNode:
 			if not scheduled_children and \
 			   termtype == 'LAST':
 				return 0, 1
+			elif self.type == 'excl':
+				# XXX it's too hard to calculate this properly with all
+				# this pause stuff in priorityClasses
+				return None, 0
 			return val, maybecached
 		if self.type == 'seq':
 			val = 0

@@ -111,7 +111,7 @@ class MediaChannel:
 		return 1
 
 
-	def playit(self, node, window = None):
+	def playit(self, node, window = None, start_time = 0):
 		if not self.__armBuilder:
 			return 0
 
@@ -122,6 +122,7 @@ class MediaChannel:
 			self.__playFileHasBeenRendered=0
 			return 0
 		self.__playFileHasBeenRendered=1
+		self.__start_time = start_time
 
 		# get duration in secs (float)
 		duration = node.GetAttrDef('duration', None)
@@ -141,13 +142,13 @@ class MediaChannel:
 			self.__playEnd = self.__playBuilder.GetDuration()
 
 		t0 = self.__channel._scheduler.timefunc()
-		if t0 > node.start_time and not self.__channel._exporter:
+		if t0 > start_time and not self.__channel._exporter:
 			if __debug__:
-				print 'skipping',node.start_time,t0,t0-node.start_time
+				print 'skipping',start_time,t0,t0-start_time
 			mediadur = self.__playEnd - self.__playBegin
-			late = t0 - node.start_time
+			late = t0 - start_time
 			if late > mediadur:
-				self.__channel.playdone(0, node.start_time + mediadur)
+				self.__channel.playdone(0, start_time + mediadur)
 				return 1
 			clip_begin = clip_begin + late
 		self.__playBuilder.SetPosition(clip_begin)
@@ -218,7 +219,7 @@ class MediaChannel:
 		if not self.__playBuilder:
 			return		
 		self.__playdone=1
-		self.__channel.playdone(0, self.__channel._played_node.start_time + self.__playEnd - self.__playBegin)
+		self.__channel.playdone(0, self.__start_time + self.__playEnd - self.__playBegin)
 		
 	def onIdle(self):
 		if self.__playBuilder and not self.__playdone:
@@ -277,12 +278,13 @@ class VideoStream:
 
 		return 1
 
-	def playit(self, node, window):
+	def playit(self, node, window, start_time = 0):
 		if not window: return 0
 		if not self.__mmstream: return 0
 
 		self.__pausedelay = 0
 		self.__pausetime = 0
+		self.__start_time = start_time
 		duration = node.GetAttrDef('duration', None)
 		clip_begin = self.__channel.getclipbegin(node,'sec')
 		clip_end = self.__channel.getclipend(node,'sec')
@@ -299,12 +301,12 @@ class VideoStream:
 			self.__playEnd = self.__mmstream.getDuration()
 
 		t0 = self.__channel._scheduler.timefunc()
-		if t0 > node.start_time and not self.__channel._exporter:
-			if __debug__: print 'skipping',node.start_time,t0,t0-node.start_time
+		if t0 > start_time and not self.__channel._exporter:
+			if __debug__: print 'skipping',start_time,t0,t0-start_time
 			mediadur = self.__playEnd - self.__playBegin
-			late = t0 - node.start_time
+			late = t0 - start_time
 			if late > mediadur:
-				self.__channel.playdone(0, node.start_time + mediadur)
+				self.__channel.playdone(0, start_time + mediadur)
 				return 1
 			clip_begin = clip_begin + late
 		self.__mmstream.seek(clip_begin)
@@ -370,7 +372,7 @@ class VideoStream:
 		if not self.__mmstream:
 			return		
 		self.__playdone=1
-		self.__channel.playdone(0, self.__channel._played_node.start_time + self.__playEnd - self.__playBegin)
+		self.__channel.playdone(0, self.__start_time + self.__playEnd - self.__playBegin)
 
 	def onIdle(self):
 		if self.__mmstream and not self.__playdone:

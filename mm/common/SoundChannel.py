@@ -139,19 +139,20 @@ class SoundChannel(ChannelAsync):
 	def do_play(self, node):
 		self.__playing = node
 		self.__type = node.__type
+		start_time = node.get_start_time()
 		if not self.__ready:
 			# arming failed, so don't even try playing
-			self.playdone(0, node.start_time)
+			self.playdone(0, start_time)
 			return
 		if node.__type == 'real':
-			if not self.__rc or not self.__rc.playit(node):
-				self.playdone(0, node.start_time)
+			if not self.__rc or not self.__rc.playit(node, start_time = start_time):
+				self.playdone(0, start_time)
 			return
 		if not self.arm_fp or player is None:
 ##			print 'SoundChannel: not playing'
 			self.play_fp = None
 			self.arm_fp = None
-			self.playdone(0, node.start_time)
+			self.playdone(0, start_time)
 			return
 
 		if debug: print 'SoundChannel: play', node
@@ -175,21 +176,21 @@ class SoundChannel(ChannelAsync):
 			qid = self._scheduler.enter(t, 0, self.__marker, (node, marker))
 			self.__evid.append(qid)
 		t0 = self._scheduler.timefunc()
-		if t0 > node.start_time:
-			late = t0 - node.start_time
+		if t0 > start_time:
+			late = t0 - start_time
 			mediadur = float(self.play_fp.getnframes()) / rate
 			if late > mediadur:
-				self.playdone(0, node.start_time + mediadur)
+				self.playdone(0, start_time + mediadur)
 				return
 			from audio.select import select
-			print 'skipping',node.start_time,t0,late
+			if __debug__: print 'skipping',start_time,t0,late
 			self.play_fp = select(self.play_fp, [(int((late)*rate+.5), None)])
 		self.event('beginEvent')
 		try:
-			player.play(self.play_fp, (self.my_playdone, (node.start_time + mediadur,)))
+			player.play(self.play_fp, (self.my_playdone, (start_time + mediadur,)))
 		except audio.Error, msg:
 			print 'error reading file %s: %s' % (self.getfileurl(node), msg)
-			self.playdone(0, node.start_time)
+			self.playdone(0, node.get_start_time())
 			return
 
 	def my_playdone(self, endtime):
