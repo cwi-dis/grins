@@ -16,26 +16,23 @@ class TopLevel():
 	#
 	def init(self, filename):
 		self.filename = filename
-		#
-		print 'parsing', filename, '...'
+		print 'parsing', self.filename, '...'
 		self.root = MMTree.ReadFile(self.filename)
 		print 'done.'
-		#
-		self.makecpanel()
 		self.makeviews()
-		#
+		self.makecpanel()
 		return self
 	#
 	def show(self):
 		self.showcpanel()
 	#
 	def hide(self):
-		self.hidecpanel()
 		self.hideviews()
+		self.hidecpanel()
 	#
 	def destroy(self):
-		self.destroycpanel()
 		self.destroyviews()
+		self.destroycpanel()
 	#
 	#
 	#
@@ -46,6 +43,7 @@ class TopLevel():
 	#
 	def makecpanel(self):
 		self.cpanel = cp = fl.make_form(FLAT_BOX, WIDTH, HEIGHT)
+		self.cpshown = 0
 		#
 		x, y, w, h = 0, HEIGHT, WIDTH, BHEIGHT
 		#
@@ -73,21 +71,22 @@ class TopLevel():
 		#
 		y = y - h
 		self.savebutton = \
-			cp.add_button(NORMAL_BUTTON,x,y,w,h, 'Save')
+			cp.add_button(INOUT_BUTTON,x,y,w,h, 'Save')
 		self.savebutton.set_call_back(self.save_callback, None)
 		#
 		y = y - h
 		self.restorebutton = \
-			cp.add_button(NORMAL_BUTTON,x,y,w,h, 'Restore')
+			cp.add_button(INOUT_BUTTON,x,y,w,h, 'Restore')
 		self.restorebutton.set_call_back(self.restore_callback, None)
 		#
 		y = y - h
 		self.quitbutton = \
-			cp.add_button(NORMAL_BUTTON,x,y,w,h, 'Quit')
+			cp.add_button(INOUT_BUTTON,x,y,w,h, 'Quit')
 		self.quitbutton.set_call_back(self.quit_callback, None)
 		#
 	#
 	def showcpanel(self):
+		if self.cpshown: return
 		#
 		# Use the winpos attribute of the root to place the panel
 		#
@@ -96,12 +95,15 @@ class TopLevel():
 		glwindow.setgeometry(h, v, width, height)
 		#
 		self.cpanel.show_form(PLACE_SIZE, TRUE, 'MM ed')
+		self.cpshown = 1
 	#
 	def hidecpanel(self):
+		if not self.cpshown: return
 		self.cpanel.hide_form()
+		self.cpshown = 0
 	#
 	def destroycpanel(self):
-		self.cpanel.hide_form()
+		self.hidecpanel()
 	#
 	#
 	#
@@ -114,14 +116,19 @@ class TopLevel():
 		self.presview = Player.Player().init(self.root)
 		import StyleEdit
 		self.styleview = StyleEdit.StyleEditor().init(self.root)
+		self.views = [self.blockview, self.channelview, \
+				self.presview, self.styleview]
 	#
 	def hideviews(self):
-		self.blockview.hide()
-		self.presview.hide()
+		self.bvbutton.set_button(0)
+		self.cvbutton.set_button(0)
+		self.pvbutton.set_button(0)
+		self.svbutton.set_button(0)
+		for v in self.views: v.hide()
 	#
 	def destroyviews(self):
-		self.blockview.destroy()
-		self.presview.destroy()
+		self.hideviews()
+		for v in self.views: v.destroy()
 	#
 	#
 	#
@@ -150,10 +157,18 @@ class TopLevel():
 			self.styleview.hide()
 	#
 	def save_callback(self, (obj, arg)):
-		print 'save not yet implemented'
+		if not obj.get_button(): return
+		fl.show_message('You don\'t want to save this mess!','',':-)')
+		obj.set_button(0)
 	#
 	def restore_callback(self, (obj, arg)):
-		print 'restore not yet implemented'
+		if not obj.get_button(): return
+		self.destroyviews()
+		self.root.Destroy()
+		print 'parsing', self.filename, '...'
+		self.root = MMTree.ReadFile(self.filename)
+		print 'done.'
+		self.makeviews()
 	#
 	def quit_callback(self, (obj, arg)):
 		self.destroy()
