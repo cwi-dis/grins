@@ -1,0 +1,49 @@
+\documentstyle[twoside,11pt,myformat]{report}
+
+% NOTE: this file controls which chapters/sections of the library
+% manual are actually printed.  It is easy to customize your manual
+% by commenting out sections that you're not interested in.
+
+\title{Python Library Reference - Addendum}
+
+\input{boilerplate}
+
+\makeindex			% tell \index to actually write the .idx file
+
+
+\begin{document}
+
+\pagenumbering{roman}
+
+\maketitle
+
+\input{copyright}
+
+\begin{abstract}
+
+\noindent
+Python is an extensible, interpreted, object-oriented programming
+language.  It supports a wide range of applications, from simple text
+processing scripts to interactive WWW browsers.
+
+This manual describes some extension(s) to the python language.
+\end{abstract}
+
+\pagebreak
+
+{
+\parskip = 0mm
+\tableofcontents
+}
+
+\pagebreak
+
+\pagenumbering{arabic}
+
+				% Chapter title:
+
+\input{libaudio.tex}
+
+\input{lib.ind}			% Index
+
+\end{document}
