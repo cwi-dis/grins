@@ -9,7 +9,7 @@ __version__ = "$Id$"
 
 # ----------------------------------------------------------------------------
 # Email sent:
-# At 15:37 12/10/2000 +0200, you wrote: This is an idea that I have; I
+# At 15:37 12/10/2000 +0200, you wrote: This is an idea that I have I
 # just want to see what people think. I've discussed this with Sjoerd so
 # far, and I'll probably try to start implementing it (pending
 # management approval) after Snap! is ready.
@@ -51,7 +51,7 @@ __version__ = "$Id$"
 # easier and tidier. The structure view could be composed of many nested
 # widgets. The layout view that Alain is working on could consist of
 # image widgets with a z-order and resizing handles, so that images
-# could be resized; and so forth for the other views available. We could
+# could be resized and so forth for the other views available. We could
 # have entire widgets glued to the pointer when we drag-and-drop.
 
 # Just an idea... personally I would just like to see simple lighting
@@ -73,7 +73,7 @@ from AppDefaults import *
 
 # Appendability: (used in Interactive.appended_to_loc to determine where this is appended
 # to another Interactive).
-LEFT, RIGHT, TOP, BOTTOM, LEFTBOTTOM, RIGHTBOTTOM, LEFTTOP, RIGHTTOP = range(8);
+LEFT, RIGHT, TOP, BOTTOM, LEFTBOTTOM, RIGHTBOTTOM, LEFTTOP, RIGHTTOP = range(8)
 
 ##############################################################################
 
@@ -99,161 +99,161 @@ class Interactive:
 
     def __init__(self, root):
         # Root is the Hierarchy view window.
-        assert root != None;
-        self.root = root;
+        assert root != None
+        self.root = root
 
         # Mutable attributes
-        self.pos_rel = (0.0, 0.0, 1.0, 1.0); # relative position (0.0 <= n <= 1.0);
-        self.pos_z = 0;                 # Z value - order on screen. 
-        self.minsize = (0.0, 0.0);      # Minimum size that this is likely to be.
-        self.maxsize = (1.0, 1.0);      # Maximum size that this is likely to be.
+        self.pos_rel = (0.0, 0.0, 1.0, 1.0) # relative position (0.0 <= n <= 1.0)
+        self.pos_z = 0                 # Z value - order on screen. 
+        self.minsize = (0.0, 0.0)      # Minimum size that this is likely to be.
+        self.maxsize = (1.0, 1.0)      # Maximum size that this is likely to be.
         # The relative window size is always (1.0, 1.0, 1.0, 1.0).
 
-        self.selected = 0;              # TRUE or FALSE
+        self.selected = 0              # TRUE or FALSE
 
         # The next block of functionality will probably never be implemented.
-        self.visable = 1;               # TRUE or FALSE, I'm not sure about the usefullness of this..
-        self.appended_to = None;        # Object that this will be appended to.
-        self.appended_to_loc = None;    # The manner which it is appended to another object.
+        self.visable = 1               # TRUE or FALSE, I'm not sure about the usefullness of this..
+        self.appended_to = None        # Object that this will be appended to.
+        self.appended_to_loc = None    # The manner which it is appended to another object.
         self.appended_to_pos = (0.0, 0.0, 0.0, 0,0) # Relative coordinates from the certain position on the appended thingy.
         
         # pseudo-immutable attributes
-        self.clickable = 1;             # whether this will accept events
-        self.movable = 1;               # whether this can be moved or resized.
-        self.drag_dropable = 1;         # whether this does the D&D thing.
-        self.context_menu = None;       # Pops up when right-clicked (not used);
+        self.clickable = 1             # whether this will accept events
+        self.movable = 1               # whether this can be moved or resized.
+        self.drag_dropable = 1         # whether this does the D&D thing.
+        self.context_menu = None       # Pops up when right-clicked (not used)
 
-        self.parent = None;             # Sometimes nodes have parents.
+        self.parent = None             # Sometimes nodes have parents.
 
     def draw(self, displist):
         # For the base Interactive, nothing will be drawn.
-        self.recalc();
+        self.recalc()
 
         if self.pos_rel == (0,0,0,0):
-            print "Warning! Interactive drawn with null coords.";
-            return 0;
+            print "Warning! Interactive drawn with null coords."
+            return 0
 
-        l, t, r, b = self.pos_rel;
-        width = r-l;
-        height = b-t;
+        l, t, r, b = self.pos_rel
+        width = r-l
+        height = b-t
 
         # Check that this widget is on the screen.
         if l<0.0 or t<0.0 or r>1.0 or b>1.0:
-            print "Warning! Widget drawn off window.";
-            return 0;
+            print "Warning! Widget drawn off window."
+            return 0
 
-        print "DEBUG: drawing a grey box.";
+        print "DEBUG: drawing a grey box."
         # DEBUG: draw a grey, outlined box.
         print l, t, width, height
         if self.selected:
-            displist.drawfbox(BGCOLOR, (l, t, width, height) );
+            displist.drawfbox(BGCOLOR, (l, t, width, height) )
         else:
-            displist.drawfbox(LEAFCOLOR, (l, t, width, height) );
-        displist.drawbox((l, t, width, height));
-        return 1;
+            displist.drawfbox(LEAFCOLOR, (l, t, width, height) )
+        displist.drawbox((l, t, width, height))
+        return 1
     
     def recalc(self):
         # Calculate the position if this is relative to another widget.
-        pass;
+        pass
 
     def highlight(self, color):
         # Make the color a bit brighter
         # This could be used to highlight a selected node.
         # TODO: should this be a global function?
         r, g, b = color
-        return min(float(r)*1.25, 255), min(float(g)*1.25, 255), min(float(b)*1.25, 255);
+        return min(float(r)*1.25, 255), min(float(g)*1.25, 255), min(float(b)*1.25, 255)
 
     def dim_to_z_index(self):
         # Adjust the color depending on the distance from the user
         # and the maximum z-index used.
-        assert 0;
+        assert 0
 
     def get_pos_abs(self):
-        x, y = self.root.get_window_size_abs();
-        lr, tr, rr, br = self.pos_rel;
-        l = float(lr) * x;
-        t = float(tr) * y;
-        r = float(rr) * x;
-        b = float(br) * y;
-        return (l,t,r,b);
+        x, y = self.root.get_window_size_abs()
+        lr, tr, rr, br = self.pos_rel
+        l = float(lr) * x
+        t = float(tr) * y
+        r = float(rr) * x
+        b = float(br) * y
+        return (l,t,r,b)
 
     def click(self, pos):
-        self.select();
+        self.select()
 
     def double_click(self, pos):
-        print "TODO: Interactive.double_click()";
+        print "TODO: Interactive.double_click()"
 
     def right_click(self, pos):
-        print "TODO: Interactive.right_click()";
+        print "TODO: Interactive.right_click()"
 
     def moveto(self, newpos):
         # Also handles resizing - new size is in newpos as well.
-        l,t,r,b = newpos;
+        l,t,r,b = newpos
 #        print "DEBUG: moveto Received sizes: ", l, t, r, b
-#        print "DEBUG: moveto self.get_minsize is: ", self.get_minsize();
-#        print "DEBUG: moveto self.get_maxsize is: ", self.get_maxsize();
+#        print "DEBUG: moveto self.get_minsize is: ", self.get_minsize()
+#        print "DEBUG: moveto self.get_maxsize is: ", self.get_maxsize()
 
 # TODO: put this back.
-#        lw, lh = self.get_minsize();
-#        mw, mh = self.get_maxsize();
-#        assert (r-l) > lw and (b-t) > lh;
-#        assert (r-l) < mw and (b-t) < mh;
+#        lw, lh = self.get_minsize()
+#        mw, mh = self.get_maxsize()
+#        assert (r-l) > lw and (b-t) > lh
+#        assert (r-l) < mw and (b-t) < mh
 
         if r < l:
-            print "Interactive: Error: box is right-to-left";
+            print "Interactive: Error: box is right-to-left"
         if t > b:
-            print "Interactive: Error: box is upside down.";
+            print "Interactive: Error: box is upside down."
 
         assert r <= 1.0 and r >= 0.0 and l <= 1.0 and l >= 0.0
-        assert t >= 0.0 and t <= 1.0 and b >= 0.0 and b <= 1.0;
-        self.pos_rel = newpos;
+        assert t >= 0.0 and t <= 1.0 and b >= 0.0 and b <= 1.0
+        self.pos_rel = newpos
 
     def set_append(self, otherobject, position):
         # Used to make the position of this object relative to another.
         # Warning! Don't start doing traversals using this!
         # Make a container that inherits from EditWindow instead.
-        print "TODO: Interactive.append()";
+        print "TODO: Interactive.append()"
 
     def select(self):
-        self.selected = 1;
+        self.selected = 1
 
     def unselect(self):
-        self.selected = 0;
+        self.selected = 0
 
     def get_minsize(self):
         # Return the least size that this widget is likely to be.
-        return self.minsize;
+        return self.minsize
 
     def get_maxsize(self):
         # Return the maximum size that this widget is likely to be. 
-        return self.maxsize;
+        return self.maxsize
 
     # TODO: def deepcopy?? And other methods here.
 
     def get_box(self):
-        l,t,r,b = self.pos_rel;
-        return l,t,r-l,b-t;
+        l,t,r,b = self.pos_rel
+        return l,t,r-l,b-t
 
     def get_relx(self, xvalue):
-        return float(xvalue)/ self.root.get_window_size_abs()[0];
+        return float(xvalue)/ self.root.get_window_size_abs()[0]
 
     def get_rely(self, yvalue):
-        return float(yvalue) / self.root.get_window_size_abs()[1];
+        return float(yvalue) / self.root.get_window_size_abs()[1]
 
     def is_hit(self, (x, y)):
-        l,t,r,b = self.pos_rel;
+        l,t,r,b = self.pos_rel
         if l < x <= r and t < y < b:
-            return 1;
+            return 1
         else:
-            return 0;
+            return 0
 
     def destroy(self):
         # Python garbage collection is prone to circular references.
         # Remove the self.esteem from this object.
-        self.root = None;
-        self.appended_to = None;
-        self.context_menu = None;
-        self.parent = None;
+        self.root = None
+        self.appended_to = None
+        self.context_menu = None
+        self.parent = None
 
 ##############################################################################
 
@@ -273,13 +273,13 @@ class EditWindow(Interactive):
     # it. 
 
     def __init__(self, root):
-        Interactive.__init__(self, root);
-        self.widgets = [];
+        Interactive.__init__(self, root)
+        self.widgets = []
         
     def draw(self, displist):
         # Draw widgets, starting with the furthest (z-index = 0)
         for i in self.widgets:
-            i.draw(displist);            
+            i.draw(displist)            
 
     def click(self, pos):
         # Find the closest widget (z-index is greatest)
@@ -289,7 +289,7 @@ class EditWindow(Interactive):
                 self.widgets[i].click(pos)
                 return
         # else: 
-        self.select();
+        self.select()
         
 
     def double_click(self, pos):
@@ -309,28 +309,28 @@ class EditWindow(Interactive):
     ## List handling functions
     
     def __len__(self):
-        return len(self.widgets);
+        return len(self.widgets)
 
     def __getitem__(self, key):
-        return self.widgets[key];
+        return self.widgets[key]
 
     def __setitem__(self, key, value):
-        self.insert(value);
+        self.insert(value)
 
     def __delitem__(self, key): # incorrect arguments
-        del self.widgets[key];
+        del self.widgets[key]
 
     def __add__(self):                  # incorrect arguments.
-        assert 0; # not useful.
+        assert 0 # not useful.
 
     def append(self, node):
-        assert isinstance(node, Interactive);
-        node.parent = self;
-        node.pos_z = self.pos_z + 1;
-        self.insert(node);
+        assert isinstance(node, Interactive)
+        node.parent = self
+        node.pos_z = self.pos_z + 1
+        self.insert(node)
 
     def count(self):
-        assert 0; # not useful.
+        assert 0 # not useful.
 
 
     ## Maintaining the z-index:
@@ -338,45 +338,45 @@ class EditWindow(Interactive):
     def insert(self, intact):
         # Keep the Interactives ordered by z-index.
         # intact is the Interactive widget to insert by z-index.
-        self.widgets.append(intact);
-        self.resort();
+        self.widgets.append(intact)
+        self.resort()
 
     # alternatively (untested):
 #     def insert(self, intact):
-#         element = 0;
+#         element = 0
 #         for i in range(len(self.widgets)):
 #             if self.widgets[i].pos_z = intact.pos_z:
-#                 element = i;
-#                 break;
-#         head = self.widgets[:i];
-#         tail = self.widgets[i:];
-#         self.widgets = head + intact + tail;
+#                 element = i
+#                 break
+#         head = self.widgets[:i]
+#         tail = self.widgets[i:]
+#         self.widgets = head + intact + tail
 
     def resort(self):
         # Ensure that the list is sorted by z-index.
         # Using the python built-in sort function..
         # Sjoerd reckons this is faster..
-        tuple_list = [];
+        tuple_list = []
         for i in self.widgets:
-            tuple_list.append((i.pos_z, i));
-        tuple_list.sort();
+            tuple_list.append((i.pos_z, i))
+        tuple_list.sort()
         
-        new_widgetlist = [];
+        new_widgetlist = []
         for k,v in tuple_list:
-            new_widgetlist.append(v);
+            new_widgetlist.append(v)
 
-        self.widgets = new_widgetlist;
+        self.widgets = new_widgetlist
 
     def destroy(self):
-        Interactive.destroy(self);
+        Interactive.destroy(self)
         for i in self.widgets:
-            i.destroy();
-        self.widgets = [];
+            i.destroy()
+        self.widgets = []
     
 #    def get_minsize(self):
 #        # The minimum size of a container is the sum of all of it's children.
-#        print "TODO";
+#        print "TODO"
 
 #    def get_maxsize(self):
 #        # the maximum size of a container is the sum of all of it's children.
- #       print "TODO";
+ #       print "TODO"

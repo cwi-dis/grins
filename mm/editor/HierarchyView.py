@@ -25,8 +25,8 @@ import string
 import MMmimetypes
 import features
 import compatibility
-import Interactive;			# mjvdg 13-oct-2000.
-from StructureViews import *;
+import Interactive			# mjvdg 13-oct-2000.
+from StructureViews import *
 
 # TODO: this is not used properly everywhere in this file.
 grins_snap = features.H_NIPPLES in features.feature_set
@@ -34,7 +34,7 @@ grins_snap = features.H_NIPPLES in features.feature_set
 import settings
 
 # Color settings
-from AppDefaults import *;
+from AppDefaults import *
 
 class HierarchyView(HierarchyViewDialog):
 
@@ -51,11 +51,11 @@ class HierarchyView(HierarchyViewDialog):
 		self.last_geometry = None
 
 		self.root = self.toplevel.root # : MMNode - the root of the MMNode heirachy
-		self.objects = [];	# A list of objects that are displayed on the screen.
-		self.scene_graph = None; # The next generation list of objects that are displayed on the screen
+		self.objects = []	# A list of objects that are displayed on the screen.
+		self.scene_graph = None # The next generation list of objects that are displayed on the screen
 					# of type EditWindow.
-		self.selected_widget = None;
-		self.focusobj = None;	# Old Object() code - remove this when no longer used. TODO
+		self.selected_widget = None
+		self.focusobj = None	# Old Object() code - remove this when no longer used. TODO
 		self.focusnode = self.prevfocusnode = self.root	# : MMNode - remove when no longer used.
 
 		self.editmgr = self.root.context.editmgr
@@ -69,10 +69,10 @@ class HierarchyView(HierarchyViewDialog):
 		from cmif import findfile
 		self.datadir = findfile('GRiNS-Icons')
 		
-		self.__add_commands();
+		self.__add_commands()
 		HierarchyViewDialog.__init__(self)		
 
-		self.create_scene_graph(); # A hierarchy of displayable objects for the screen.
+		self.create_scene_graph() # A hierarchy of displayable objects for the screen.
 
 
 	def __add_commands(self):
@@ -105,7 +105,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.mediacommands = self._getmediacommands(self.toplevel.root.context)
 
 		if features.H_MODIFY_STRUCTURE in features.feature_set: # Allow structure node changes.
-			print "DEBUG: Adding structure modifying commands.";
+			print "DEBUG: Adding structure modifying commands."
 			# mjvdg 12-oct-2000. I have a bad feeling that this is the _wrong_ thing to do.
 			self.pasteinteriorcommands = [
 				PASTE_UNDER(callback = (self.pasteundercall, ())),
@@ -134,20 +134,20 @@ class HierarchyView(HierarchyViewDialog):
 				NEW_AFTER_CHOICE(callback = (self.createafterintcall, ('bag',))),
 				NEW_AFTER_ALT(callback = (self.createafterintcall, ('alt',))),
 				]
-		self.mediacommands = self.mediacommands + self.structure_commands;
+		self.mediacommands = self.mediacommands + self.structure_commands
 		if self.toplevel.root.context.attributes.get('project_boston', 0):
 			self.structure_commands.append(NEW_AFTER_EXCL(callback = (self.createafterintcall, ('excl',))))
 			self.structure_commands.append(NEW_BEFORE_EXCL(callback = (self.createbeforeintcall, ('excl',))))
 
 			
 		else:			# TODO: clean this up. This should be later.
-			self.interiorcommands = [];
-			self.pasteinteriorcommands = [];
-			self.pastenotatrootcommands = [];
+			self.interiorcommands = []
+			self.pasteinteriorcommands = []
+			self.pastenotatrootcommands = []
 			self.notatrootcommands = [
 				DELETE(callback = (self.deletecall, ())),
 				CUT(callback = (self.cutcall, ())),
-				];
+				]
 
 		if self.toplevel.root.context.attributes.get('project_boston', 0):
 			self.notatrootcommands.append(NEW_EXCL(callback = (self.createexclcall, ())))
@@ -166,7 +166,7 @@ class HierarchyView(HierarchyViewDialog):
 				]
 
 		if features.H_MODIFY_STRUCTURE in features.feature_set:
-			print "DEBUG: Adding structure modifying commands.";
+			print "DEBUG: Adding structure modifying commands."
 			self.slidecommands = self._getmediacommands(self.toplevel.root.context, slide = 1) + self.notatrootcommands[4:6]
 			self.rpcommands = self._getmediaundercommands(self.toplevel.root.context, slide = 1)
 		self.finishlinkcommands = [
@@ -224,7 +224,7 @@ class HierarchyView(HierarchyViewDialog):
 		import settings
 		heavy = not features.lightweight
 
-		rv = [];
+		rv = []
 # mjvdg 12-oct-2000: moved this to the constructor.
 # TODO: delete this code, if it is correct.
 # 		if slide:
@@ -365,11 +365,11 @@ class HierarchyView(HierarchyViewDialog):
 	def create_scene_graph(self):
 		# Iterate through the MMNode structure (starting from self.root)
 		# and create a scene graph from it.
-		self.scene_graph = create_MMNode_view(self.root, self);
+		self.scene_graph = create_MMNode_view(self.root, self)
 
 	# Callbacks for the Interactive classes.
 	def get_window_size_abs(self):
-		return self.window.getcanvassize(self.sizes.SIZEUNIT);
+		return self.window.getcanvassize(self.sizes.SIZEUNIT)
 
 	def show(self):
 		if self.is_showing():
@@ -388,22 +388,22 @@ class HierarchyView(HierarchyViewDialog):
 			levels = countlevels(self.root, NODES_WANTED_OPEN)
 			do_expand(self.root, 1, levels)
 		expandnode(self.root)
-		self.draw();
+		self.draw()
 		
 	def draw(self):
 		# Recalculate the size of all boxes and draw on screen.
 		#self.toplevel.setwaiting()
 
-		x,y = self.scene_graph.get_minsize_abs();
-		self.window.setcanvassize((self.sizes.SIZEUNIT, x, y));
+		x,y = self.scene_graph.get_minsize_abs()
+		self.window.setcanvassize((self.sizes.SIZEUNIT, x, y))
 
 		# Known bug: this will actually cause a Hierarchyview.redraw() event.
 		self.displist = self.window.newdisplaylist(BGCOLOR)
 
-		self.scene_graph.recalc();
-		self.scene_graph.draw(self.displist);
+		self.scene_graph.recalc()
+		self.scene_graph.draw(self.displist)
 
-		self.displist.render();
+		self.displist.render()
 
 	def hide(self, *rest):
 		if not self.is_showing():
@@ -470,11 +470,11 @@ class HierarchyView(HierarchyViewDialog):
 		# Er.. Now I am thoughrally confused. The program works fine without this
 		# function...!!!!?????
 
-		return;
+		return
 	        # This is wrong anyway:
 		##if self.displist:
-##			bob = self.displist.clone();
-##			bob.render();
+##			bob = self.displist.clone()
+##			bob.render()
 
 	def mouse(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
@@ -509,11 +509,11 @@ class HierarchyView(HierarchyViewDialog):
 			# update: 2-October - Nodes should never be empty, so this bit is pointless.
 			# The dropped object will be put into the left-most free node.
 			# Now, obj is the object which had a file dropped on it.
-			prev = obj.GetPrevious();
+			prev = obj.GetPrevious()
 		#	while prev != None and prev.HasNoURL(): # While this object has no URL
-		#		obj = prev;
-		#		prev = obj.GetPrevious();
-		#	prev = None;	
+		#		obj = prev
+		#		prev = obj.GetPrevious()
+		#	prev = None	
 
 
 		if event == WMEVENTS.DropFile:
@@ -616,10 +616,13 @@ class HierarchyView(HierarchyViewDialog):
 		if self.destroynode:
 			self.destroynode.Destroy()
 		self.destroynode = None
-		self.scene_graph.destroy();
-		self.create_scene_graph();
-		if self.is_showing():
-			self.recalcboxes()
+
+		# TODO: Invent a better architecture than this!! I don't like this approach: -mjvdg
+		self.scene_graph.destroy()
+		self.create_scene_graph()
+		# Creating the scene graph will recalculate the boxes.
+		#if self.is_showing():
+		#	self.recalcboxes()
 
 	def kill(self):
 		self.destroy()
@@ -844,10 +847,10 @@ class HierarchyView(HierarchyViewDialog):
 		dummy = self.insertnode(node, where)
 
 	def insertnode(self, node, where, index = -1):
-		# 'where' is coded as follows: -1: before; 0: under; 1: after
-		assert where in [-1,0,1]; # asserts by MJVDG.. delete them if they
-		assert node is not None; # catch too many bugs :-).
-		assert isinstance(node, MMNode.MMNode);
+		# 'where' is coded as follows: -1: before 0: under 1: after
+		assert where in [-1,0,1] # asserts by MJVDG.. delete them if they
+		assert node is not None # catch too many bugs :-).
+		assert isinstance(node, MMNode.MMNode)
 
 		if where <> 0:
 			# Get the parent
@@ -885,8 +888,8 @@ class HierarchyView(HierarchyViewDialog):
 			children = parent.GetChildren()
 			i = children.index(self.focusnode)
 			if where > 0:	# Insert after
-				i = i+1;
-				em.addnode(parent, i, node);
+				i = i+1
+				em.addnode(parent, i, node)
 				# This code is actually unreachable - I suspect this function is
 				# only ever called when the node being added has no URL. -mjvdg
 # 				print "DEBUG: coming very close to untested code."
@@ -895,10 +898,10 @@ class HierarchyView(HierarchyViewDialog):
 # 					# (copying this node to preserve all attr's)
 # 					print "DEBUG: Maybe add a node after the current?"
 # 					if obj.GetNext() == None:
-# 						print "DEBUG: entered untested code";
-# 						nextnode = node.DeepCopy();
-# 						em.setnodeattr(nextnode.node, "file", None);
-# 						em.addnode(parent, i+1, nextnode);
+# 						print "DEBUG: entered untested code"
+# 						nextnode = node.DeepCopy()
+# 						em.setnodeattr(nextnode.node, "file", None)
+# 						em.addnode(parent, i+1, nextnode)
 				
 			else:		# Insert before
 				em.addnode(parent, i, node)
@@ -955,12 +958,12 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Clear the list of objects
    	def cleanup(self):
-		print "DEBUG: Hierarchyview.cleanup called";
-		import traceback;
-		traceback.print_stack();
-		return;
+		print "DEBUG: Hierarchyview.cleanup called"
+		import traceback
+		traceback.print_stack()
+		return
 	
-##	 	assert(0);
+##	 	assert(0)
 ##		for obj in self.objects:
 ##			obj.cleanup()
 ##		self.objects = []
@@ -1015,28 +1018,28 @@ class HierarchyView(HierarchyViewDialog):
 	def select_widget(self, widget):
 		# Make the widget the current selection.
 		if isinstance(self.selected_widget, Interactive.Interactive):
-			self.selected_widget.unselect();
-		print "DEBUG: Selecting widget ", widget;
-		self.selected_widget = widget;		
-		self.focusobj = widget;	# Used for callbacks.
-		self.prevfocusnode = self.focusnode;
+			self.selected_widget.unselect()
+		print "DEBUG: Selecting widget ", widget
+		self.selected_widget = widget		
+		self.focusobj = widget	# Used for callbacks.
+		self.prevfocusnode = self.focusnode
 		if widget == None:
-			self.focusnode = None;
+			self.focusnode = None
 		else: 
-			self.focusnode = widget.node;
-			widget.select();
-		self.window.scrollvisible(widget.get_box());
+			self.focusnode = widget.node
+			widget.select()
+		self.window.scrollvisible(widget.get_box())
 
 	# Handle a selection click at (x, y)
 	def select(self, x, y):
-		widget = self.scene_graph.get_obj_at((x,y));
+		widget = self.scene_graph.get_obj_at((x,y))
 		if widget == self.selected_widget:
-			return;
+			return
 		else:
-			self.select_widget(widget);
+			self.select_widget(widget)
 
-		self.aftersetfocus();
-		self.draw();
+		self.aftersetfocus()
+		self.draw()
 
 ##		obj = self.whichhit(x, y)
 ##		if not obj:
@@ -1071,8 +1074,8 @@ class HierarchyView(HierarchyViewDialog):
 		# Now a bad hack.
 		# Return the scene object which is at position x,y.
 		# Used for dragging and dropping objects.
-		print "TODO: better to call self.scene_graph.get_obj_at.. directly..";
-		return self.scene_graph.get_obj_at((x,y));
+		print "TODO: better to call self.scene_graph.get_obj_at.. directly.."
+		return self.scene_graph.get_obj_at((x,y))
 		
 ##		hitobj = None
 ##		for obj in self.objects:
@@ -1082,7 +1085,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Find the object corresponding to the node
 	def whichobj(self, node):
-		assert 0;		
+		assert 0		
 ##		for obj in self.objects:
 ##			if obj.node is node:
 ##				return obj
@@ -1090,8 +1093,8 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Select the given object, deselecting the previous focus
 	def setfocusobj(self, obj):
-		assert 0;
-##		assert isinstance(obj, Interactive.Interactive);
+		assert 0
+##		assert isinstance(obj, Interactive.Interactive)
 
 ##		self.init_display()
 ##		if self.focusobj:
@@ -1108,7 +1111,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Select the given node as focus
 	def setfocusnode(self, node):
-		assert 0; 
+		assert 0 
 ##		if not node:
 ##			self.setfocusobj(None)
 ##			self.render()
@@ -1132,7 +1135,7 @@ class HierarchyView(HierarchyViewDialog):
 	# Recursively position the boxes. Minimum sizes are already set, we may only have
 	# to extend them.
 	def makeboxes(self, list, node, box):
-		assert 0;
+		assert 0
 
 ##		ntype = node.GetType()
 ##		left, top, right, bottom = box
@@ -1178,7 +1181,7 @@ class HierarchyView(HierarchyViewDialog):
 ##			totsize = bottom - top
 ### use this to have a fixed size drop area
 ##		if ntype == 'seq' and grins_snap:
-##			totsize = totsize - self.droparea;
+##			totsize = totsize - self.droparea
 ##		# totsize is total available size for all children with inter-child gap
 ##		factor = (totsize - (len(children) - 1) * gapsize) / size
 ##		maxr = 0
@@ -1220,10 +1223,10 @@ class HierarchyView(HierarchyViewDialog):
 	# sizes are already set. We only have to compute gapsizes (based on current w/h),
 	# call makeboxes to position the boxes and create the objects.
 #	def recalcboxes(self):
-#		x,y = self.scene_graph.get_minsize_abs();
-#		print "DEBUG: Recalcboxes: recalculating the scene graph.";
-#		self.scene_graph.recalc();
-#		return;
+#		x,y = self.scene_graph.get_minsize_abs()
+#		print "DEBUG: Recalcboxes: recalculating the scene graph."
+#		self.scene_graph.recalc()
+#		return
 		
 	# TODO: Remove this code -mjvdg
 ##		self.focusobj = None
@@ -1261,12 +1264,12 @@ class HierarchyView(HierarchyViewDialog):
 
 ##			# Attach nipples to media nodes only
 ##			if grins_snap and obj.node.GetType() in MMNode.leaftypes:
-##				left_nipple = Nipple(self, item);
-##				left_nipple.append_to_left();
-##				self.objects.append(left_nipple);
-##				right_nipple = Nipple(self, item);
-##				right_nipple.append_to_right();
-##				self.objects.append(right_nipple);
+##				left_nipple = Nipple(self, item)
+##				left_nipple.append_to_left()
+##				self.objects.append(left_nipple)
+##				right_nipple = Nipple(self, item)
+##				right_nipple.append_to_right()
+##				self.objects.append(right_nipple)
 
 ##			if item[0] is self.focusnode:
 ##				self.focusobj = obj
@@ -1317,7 +1320,7 @@ class HierarchyView(HierarchyViewDialog):
 	# step in the redraw code (and the only step needed if we only enable
 	# thumbnails, or do a similar action that does not affect box coordinates).
 ##	def draw(self):
-##		print "DEBUG: drawing.";
+##		print "DEBUG: drawing."
 ##		displist = self.new_displist
 ##		dummy = displist.usefont(f_title)
 
@@ -1326,7 +1329,7 @@ class HierarchyView(HierarchyViewDialog):
 ##		#if self.timescale:
 ##		#	self.drawtimescale()
 
-##		self.scene_graph.draw(displist);
+##		self.scene_graph.draw(displist)
 
 ##		self.new_displist = None
 ##		displist.render()
@@ -1462,7 +1465,7 @@ class HierarchyView(HierarchyViewDialog):
 		dialog.done()
 
 	def playcall(self):
-		print "DEBUG: Hierarchyview: focusobj is: ", self.focusobj;
+		print "DEBUG: Hierarchyview: focusobj is: ", self.focusobj
 		if self.focusobj: self.focusobj.playcall()
 
 	def playfromcall(self):
@@ -1551,7 +1554,7 @@ class HierarchyView(HierarchyViewDialog):
 	def sizeboxes(self, node):
 		# Helper for first step in size recomputation: compute minimum sizes of
 		# all node boxes.
-		assert 0;
+		assert 0
 ##		ntype = node.GetType()
 ##		minsize = self.sizes.MINSIZE
 ##		if self.timescale:
@@ -1592,11 +1595,11 @@ class HierarchyView(HierarchyViewDialog):
 ##		children = node.GetChildren()
 ##		# if this is an empty root...
 ##		if node == self.root and not children and ntype in ('seq', 'par', 'alt', 'excl', 'prio'):
-##			print "DEBUG: this is the root node without any children.";
-##			width = minwidth + 2*self.sizes.HOREXTRASIZE;
-##			height = minheight + 2*self.sizes.GAPSIZE + self.sizes.LABSIZE;	# Bah. It's sort of the same size. Who'll notice?
+##			print "DEBUG: this is the root node without any children."
+##			width = minwidth + 2*self.sizes.HOREXTRASIZE
+##			height = minheight + 2*self.sizes.GAPSIZE + self.sizes.LABSIZE	# Bah. It's sort of the same size. Who'll notice?
 ##			node.boxsize = width, height, begin
-##			return node.boxsize;
+##			return node.boxsize
 ##		if not hasattr(node, 'expanded') or not children:
 ##			node.boxsize = minwidth, minheight + self.sizes.LABSIZE, begin
 ##			return node.boxsize
@@ -1685,7 +1688,7 @@ def countlevels(node, numwanted):
 # 	def __init__(self, mother, item):
 # 		# mother is a HierachyView
 # 		# item is a tuple of (MMNode, int, box) where box is (float, float, float, float)		
-# 		print "TODO: Objects will soon no longer be used. -mjvdg.";
+# 		print "TODO: Objects will soon no longer be used. -mjvdg."
 # 		self.mother = mother	# : HierarchyView
 # 		node, self.boxtype, self.box = item
 # 		node.box = self.box	# Assigning the coords to the MMNode
@@ -1865,13 +1868,13 @@ def countlevels(node, numwanted):
 # 			# Draw the transition handles. WORKING HERE mjvdg
 # 			# Actually, I was just mucking around. Delete this.
 # 			#gap = sizes_notime.GAPSIZE/pix_winwidth
-# 			#wsize = gap/2;
-# 			#hsize = (b-t)/3;
+# 			#wsize = gap/2
+# 			#hsize = (b-t)/3
 # 			#th_top = t +  ( (b-t)/2 - hsize/2 ) # top of box.
 # 			#th1_left = l - gap/2		    			
-# 			#th2_left = r;
-# 			#d.drawbox((th1_left, th_top, wsize, hsize));
-# 			#d.drawbox((th2_left, th_top, wsize, hsize));
+# 			#th2_left = r
+# 			#d.drawbox((th1_left, th_top, wsize, hsize))
+# 			#d.drawbox((th2_left, th_top, wsize, hsize))
 			
 # 		# draw a little triangle to indicate expanded/collapsed state
 # 		title_left = l+hmargin
@@ -1897,19 +1900,19 @@ def countlevels(node, numwanted):
 				
 # 		# Draw a decoration at the end of the node.
 # 		if ntype == 'seq' and grins_snap and (not self.boxtype==LEAFBOX or self.node==self.mother.root): 
-# 			border = float(sizes_notime.HEDGSIZE)/rw;
+# 			border = float(sizes_notime.HEDGSIZE)/rw
 # 			base = float(sizes_notime.VEDGSIZE)/rh
 			
-# 			dec_right = r-border;
-# 			minsize = float(sizes_notime.DROPAREASIZE)/rw;
-# 			dec_left = dec_right - self.mother.droparea;
-# 			dec_bottom = b-base;
-# 			dec_top = t+titleheight;
+# 			dec_right = r-border
+# 			minsize = float(sizes_notime.DROPAREASIZE)/rw
+# 			dec_left = dec_right - self.mother.droparea
+# 			dec_bottom = b-base
+# 			dec_top = t+titleheight
 			
 # 			d.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM,
-# 				    (dec_left, dec_top, dec_right-dec_left, dec_bottom-dec_top));
+# 				    (dec_left, dec_top, dec_right-dec_left, dec_bottom-dec_top))
 # 			d.drawfbox( LEAFCOLOR,
-# 				    (dec_left+hmargin, dec_top+vmargin, dec_right-dec_left-2*hmargin, dec_bottom-dec_top-2*vmargin) );
+# 				    (dec_left+hmargin, dec_top+vmargin, dec_right-dec_left-2*hmargin, dec_bottom-dec_top-2*vmargin) )
 
 # 		# animate++
 # 		if node.GetType() in MMNode.leaftypes and node.GetChildren() and \
@@ -2027,20 +2030,20 @@ def countlevels(node, numwanted):
 # 	def GetPrevious(self):		# mjvdg 27-sept-2000
 # 		# returns the object prior to this one.
 # 		if isinstance(self.node, MMNode.MMNode):
-# 			#import pdb;
+# 			#import pdb
 # 			#pdb.set_trace()
-# 			return self.mother.whichobj(self.node.GetPrevious());
+# 			return self.mother.whichobj(self.node.GetPrevious())
 # 		else:
 # 			# This shouldn't happen.. in theory.
-# 			print "DEBUG: Object does not have an MMNode!";
-# 			return None;
+# 			print "DEBUG: Object does not have an MMNode!"
+# 			return None
 
 # 	def HasNoURL(self):		# mjvdg 27-sept-2000
 # 		# returns True if this object's URL is empty.
 # 		if isinstance(self.node, MMNode.MMNode):
-# 			return not self.node.attrdict.has_key('file');
+# 			return not self.node.attrdict.has_key('file')
 # 		else:
-# 			return 0;
+# 			return 0
 	
 
 # 	#
@@ -2176,58 +2179,58 @@ def countlevels(node, numwanted):
 # 	# TODO: rewrite this code.
 
 # 	def __init__(self, mother, item):
-# 		self.mother = mother;
-# 		self.node, self.boxtype, self.box = item; # self.node is shared with another Object.
-# 		self.breast = self.mother.whichobj(self.node); # The object that I'm attached to.
-# 		self.iconbox = None;	# This is the relevant icon for this nipple.
-# 		self.top = None;
-# 		self.left = None;
-# 		self.width = None;
-# 		self.height = None;
+# 		self.mother = mother
+# 		self.node, self.boxtype, self.box = item # self.node is shared with another Object.
+# 		self.breast = self.mother.whichobj(self.node) # The object that I'm attached to.
+# 		self.iconbox = None	# This is the relevant icon for this nipple.
+# 		self.top = None
+# 		self.left = None
+# 		self.width = None
+# 		self.height = None
 
 # 	def select(self):
-# 		Object.select(self.breast);
+# 		Object.select(self.breast)
 
 # 	def deselect(self):
-# 		Object.deselect(self.breast);
+# 		Object.deselect(self.breast)
 
 # 	def draw(self):
-# 		d = self.mother.new_displist;
-# 		d.drawbox((self.left, self.top, self.width, self.height));
+# 		d = self.mother.new_displist
+# 		d.drawbox((self.left, self.top, self.width, self.height))
 
 # 	def append_to_left(self):
 # 		# Calulates size and position for appending to left of an Object.
-# 		l, t, r, b = self.box;
+# 		l, t, r, b = self.box
 
-# 		canvas_width, canvas_height = self.mother.canvassize;
-# 		wgapsize = (sizes_notime.GAPSIZE)/canvas_width;
+# 		canvas_width, canvas_height = self.mother.canvassize
+# 		wgapsize = (sizes_notime.GAPSIZE)/canvas_width
 		
-# 		self.left = l - wgapsize/2;
-# 		self.top = t + (b-t)/3;
-# 		self.width = wgapsize/2;
-# 		self.height = (b-t)/3;
+# 		self.left = l - wgapsize/2
+# 		self.top = t + (b-t)/3
+# 		self.width = wgapsize/2
+# 		self.height = (b-t)/3
 
 # 	def append_to_right(self):
 # 		# Calulates size and position for appending to right of an Object.
-# 		l, t, r, b = self.box;
+# 		l, t, r, b = self.box
 
-# 		canvas_width, canvas_height = self.mother.canvassize;
-# 		wgapsize = (sizes_notime.GAPSIZE)/canvas_width;
+# 		canvas_width, canvas_height = self.mother.canvassize
+# 		wgapsize = (sizes_notime.GAPSIZE)/canvas_width
 
-# 		self.left = r;
-# 		self.top = t + (b-t)/3;
-# 		self.width = wgapsize/2;
-# 		self.height = (b-t)/3;
+# 		self.left = r
+# 		self.top = t + (b-t)/3
+# 		self.width = wgapsize/2
+# 		self.height = (b-t)/3
 		
 # 	def ishit(self, x, y):
 # 		if self.top < y <= self.top+self.height and self.left < x < self.left+self.width:
-# 			print "Hit!!";
-# 			return 1;
+# 			print "Hit!!"
+# 			return 1
 # 		else:
-# 			return 0;
+# 			return 0
 
 # 	def cleanup(self):
-# 		return;			# no cleanup needs to be done on a Nipple.
+# 		return			# no cleanup needs to be done on a Nipple.
 # 					# This is handled by the assoc-ed Object.
 				       		
 # specialized node for RealPix slides (transitions)
