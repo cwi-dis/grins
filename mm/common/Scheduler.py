@@ -321,7 +321,7 @@ class SchedulerContext:
 			list = list + arc.dstnode.durarcs
 		if arc.timestamp is not None and arc.timestamp != timestamp+arc.delay:
 			if arc.qid is not None:
-				if debugevents: print 'sched_arcs: cancel',`arc`,self.parent.timefunc()
+				if debugevents: print 'sched_arc: cancel',`arc`,self.parent.timefunc()
 				self.cancelarc(arc, timestamp)
 		for a in list:
 			if a.qid is None:
@@ -329,7 +329,7 @@ class SchedulerContext:
 			if a.ismin:
 				continue
 			if a.timestamp > timestamp + arc.delay:
-				if debugevents: print 'sched_arcs: cancel',`a`,self.parent.timefunc()
+				if debugevents: print 'sched_arc: cancel',`a`,self.parent.timefunc()
 				self.cancelarc(a, timestamp)
 				if a.isstart:
 					if a.dstnode.GetSchedParent():
@@ -451,6 +451,7 @@ class SchedulerContext:
 		# if arc == None, arc is not used, but node and timestamp are
 		# if arc != None, arc is used, and node and timestamp are not
 		parent = self.parent
+		if debugevents: print 'trigger',`arc`,`node`,`path`,timestamp,parent.timefunc()
 		paused = parent.paused
 		parent.paused = 0
 		self.flushqueue()
@@ -484,7 +485,6 @@ class SchedulerContext:
 			timestamp = arc.resolvedtime(parent.timefunc)
 			node = arc.dstnode
 			arc.qid = None
-			if debugevents: print 'trigger', `arc`, timestamp,parent.timefunc()
 ##			if arc in node.durarcs:
 ##				node.sched_children.remove(arc)
 ##				node.durarcs.remove(arc)
@@ -495,7 +495,6 @@ class SchedulerContext:
 ##				if (arc.srcnode, arc) in pbody.arcs:
 ##					pbody.arcs.remove((arc.srcnode, arc))
 ##					arc.srcnode.sched_children.remove(arc)
-		elif debugevents: print 'trigger', `node`, timestamp,parent.timefunc()
 		pnode = node.GetSchedParent()
 		if arc is not None:
 			if arc.ismin:
@@ -554,7 +553,6 @@ class SchedulerContext:
 					parent.updatetimer()
 					return
 				if debugevents: print 'terminating node',parent.timefunc()
-				pnode = node.GetSchedParent()
 				if pnode is not None and \
 				   pnode.type == 'excl' and \
 				   pnode.pausestack and \
@@ -761,6 +759,9 @@ class SchedulerContext:
 
 	def cancelarc(self, arc, timestamp, cancel_gensr = 1):
 		if debugevents: print 'cancelarc',`arc`,timestamp
+		if arc.timestamp == timestamp:
+			if debugevents: print 'cancelarc returning early'
+			return
 		try:
 			self.parent.cancel(arc.qid)
 		except ValueError:
