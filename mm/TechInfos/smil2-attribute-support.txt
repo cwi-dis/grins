@@ -431,9 +431,9 @@ Tag audio:
 	Attribute top:
 		to be supplied
 	Attribute transIn:
-		to be supplied
+		Parsed, not implemented
 	Attribute transOut:
-		to be supplied
+		Parsed, not implemented
 	Attribute type:
 		to be supplied
 Tag body:
@@ -792,9 +792,9 @@ Tag img:
 	Attribute top:
 		to be supplied
 	Attribute transIn:
-		to be supplied
+		Implemented
 	Attribute transOut:
-		to be supplied
+		Implemented
 	Attribute type:
 		to be supplied
 Tag layout:
@@ -1027,9 +1027,9 @@ Tag ref:
 	Attribute top:
 		to be supplied
 	Attribute transIn:
-		to be supplied
+		Implemented
 	Attribute transOut:
-		to be supplied
+		Implemented
 	Attribute type:
 		to be supplied
 Tag region:
@@ -1326,9 +1326,9 @@ Tag text:
 	Attribute top:
 		to be supplied
 	Attribute transIn:
-		to be supplied
+		Implemented
 	Attribute transOut:
-		to be supplied
+		Implemented
 	Attribute type:
 		to be supplied
 Tag textstream:
@@ -1431,38 +1431,39 @@ Tag textstream:
 	Attribute top:
 		to be supplied
 	Attribute transIn:
-		to be supplied
+		Implemented, untested
 	Attribute transOut:
-		to be supplied
+		Implemented, untested
 	Attribute type:
 		to be supplied
 Tag transition:
+		
 	Attribute borderWidth:
-		to be supplied
+		Parsed, not implemented
 	Attribute childrenClip:
-		to be supplied
+		Will be replaced in next draft
 	Attribute color:
-		to be supplied
+		Not implemented, partially parsed (value "blend" not recognized)
 	Attribute direction:
-		to be supplied
+		Parsed, not implemented
 	Attribute dur:
-		to be supplied
+		Implemented
 	Attribute endProgress:
-		to be supplied
+		Implemented
 	Attribute horzRepeat:
-		to be supplied
+		Parsed, not implemented
 	Attribute id:
-		to be supplied
+		Implemented
 	Attribute multiElement:
-		to be supplied
+		Will be replaced in next draft
 	Attribute startProgress:
-		to be supplied
+		Implemented
 	Attribute subtype:
-		to be supplied
+		Implemented (although not all subtypes are recognized this is OK with the spec)
 	Attribute type:
-		to be supplied
+		Implemented, but will be changed slightly in the next draft
 	Attribute vertRepeat:
-		to be supplied
+		Parsed, not implemented
 Tag video:
 	Attribute abstract:
 		to be supplied
@@ -1563,9 +1564,9 @@ Tag video:
 	Attribute top:
 		to be supplied
 	Attribute transIn:
-		to be supplied
+		Implemented
 	Attribute transOut:
-		to be supplied
+		Implemented
 	Attribute type:
 		to be supplied
 Tag viewport:
