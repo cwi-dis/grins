@@ -268,7 +268,10 @@ class SMILParser(xmllib.XMLParser):
 				if ch['minheight'] < height:
 					ch['minheight'] = height
 		elif not self.__channels.has_key(channel):
-			self.__channels[channel] = {}
+			self.__channels[channel] = {'left':0, 'top':0,
+						    'z-index':0, 'width':0,
+						    'height':0,
+						    'scale':'meet'}
 		range = attributes.get('range')
 		if range is not None:
 			try:
@@ -459,9 +462,10 @@ class SMILParser(xmllib.XMLParser):
 					else:
 						h = float(h) / self.__height
 				ch['base_winoff'] = x, y, w, h
-				# anchors should not be visible
-				ch['hicolor'] = ch['bucolor'] = \
-						MMAttrdefs.getdef('bgcolor')[1]
+## doesn't do any good for HTML channels
+## 				# anchors should not be visible
+## 				ch['hicolor'] = ch['bucolor'] = \
+## 						MMAttrdefs.getdef('bgcolor')[1]
 		node.attrdict['channel'] = name
 
 	def FixLinks(self):
