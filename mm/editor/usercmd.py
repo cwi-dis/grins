@@ -431,6 +431,8 @@ class TOGGLE_UNUSED(_CommandBase):
 	help = 'Toggle showing unused channels'
 class TOGGLE_ARCS(_CommandBase):
 	help = 'Toggle showing synchronization arcs'
+class TOGGLE_TIMESCALE(_CommandBase):
+	help = 'Toggle showing timeline and bandwidth usage strip'
 class TOGGLE_BWSTRIP(_CommandBase):
 	help = 'Toggle showing bandwidth usage strip'
 class MOVE_REGION(_CommandBase): pass

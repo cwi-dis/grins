@@ -132,6 +132,7 @@ class HierarchyView(HierarchyViewDialog):
 			DRAG_BRUSH(),
 			TIMESCALE(callback = (self.timescalecall, ('global',))),
 			TOGGLE_BWSTRIP(callback = (self.timescalecall, ('bwstrip',))),
+			TOGGLE_TIMESCALE(callback = (self.timescalecall, ('toggle',))),
 			]
 		self.anyfocuscommands = [
 			COPY(callback = (self.copycall, ())),
@@ -2094,7 +2095,16 @@ class HierarchyView(HierarchyViewDialog):
 
 	def timescalecall(self, which):
 		self.toplevel.setwaiting()
-		if which == 'global':
+		if which == 'toggle':
+			# tri-state toggle: nothing -> bwstrip -> cfocus -> nothing
+			node = self.root
+			if node.showtime == 'cfocus':
+				which = 'cfocus'
+			elif node.showtime == 'bwstrip':
+				which = 'cfocus'
+			else:
+				which = 'bwstrip'
+		elif which == 'global':
 			which = 'cfocus'
 			node = self.root
 		elif which == 'bwstrip':
