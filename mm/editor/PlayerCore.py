@@ -1,7 +1,7 @@
 # PlayerCore module -- Player stuff not related to UI or scheduling
 
 
-import fl
+import dialogs
 #from MMExc import *
 import MMAttrdefs
 from Selecter import Selecter
@@ -32,10 +32,10 @@ class PlayerCore(Selecter):
 	def transaction(self):
 		# Disallow changes while we are playing.
 		if self.playing:
-			m1 = 'You cannot change the document'
-			m2 = 'while it is playing.'
+			m1 = 'You cannot change the document\n'
+			m2 = 'while it is playing.\n'
 			m3 = 'Do you want to stop playing?'
-			if not fl.show_question(m1, m2, m3):
+			if not dialogs.showquestion(m1 + m2 + m3):
 				return 0
 			self.stop()
 		self.locked = 1
@@ -103,8 +103,8 @@ class PlayerCore(Selecter):
 			self.stop()
 		ch = self.getchannelbynode(node)
 		if ch == None:
-			fl.show_message('Cannot set internal anchor', \
-				  '(node not on a channel)', '')
+			dialogs.showmessage('Cannot set internal anchor\n' + \
+				  '(node not on a channel)')
 			return None
 		if not ch.is_showing():
 			ch.flip_visible()
