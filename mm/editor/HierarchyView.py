@@ -592,19 +592,19 @@ class HierarchyView(HierarchyViewDialog):
 			chlist = ctx.compatchannels(url, chtype)
 			if chlist:
 				if len(chlist) > 1:
-					i = windowinterface.multchoice('Choose a channel for this file', ['Cancel']+chlist, 0, parent = self.window)
-					if i == 0:
+					i = windowinterface.multchoice('Choose a channel for this file', chlist, 0, parent = self.window)
+					if i < 0:
 						self.opt_render()
 						# Cancel
 						return
-					chname = chlist[i-1]
+					chname = chlist[i]
 				else:
 					chname = chlist[0]
 			elif lightweight and \
 			     (url is not None or chtype is not None):
 				self.opt_render()
 				windowinterface.showmessage(
-					'No compatible channels for this file',
+					'There are no channels for this mediatype in the presentation',
 					mtype = 'error', parent = self.window)
 				return
 		self.toplevel.setwaiting()
