@@ -192,10 +192,13 @@ def prep1(node):
 def prep2(node, root):
 	# XXX we only deal with a single offset syncarc; all others are ignored
 	arcs = MMAttrdefs.getattr(node, 'beginlist')
-	delay = 0.0
+	delay = None
 	for arc in arcs:
 		if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
-			delay = arc.delay
+			if delay is None or arc.delay < delay:
+				delay = arc.delay
+	else:
+		delay = 0.0
 	parent = node.GetSchedParent()
 	if delay > 0 and parent is not None:
 		if parent.GetType() == 'seq':
