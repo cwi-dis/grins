@@ -160,7 +160,7 @@ def save():
 	except IOError:
 		return 0
 	for name, value in user_settings.items():
-		if value != default_settings[name]:
+		if not default_settings.has_key(name) or value != default_settings[name]:
 			fp.write('%s = %s\n'%(name, `value`))
 	fp.close()
 	return 1
