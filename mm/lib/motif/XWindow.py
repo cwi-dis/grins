@@ -1049,6 +1049,12 @@ class _Window(_AdornmentSupport):
 						self._menu.ManageChild()
 						return
 					elif self._popupmenu:
+						if self._callbacks.has_key(Mouse0Press):
+							func, arg = self._callbacks[Mouse0Press]
+							x, y, width, height = self._rect
+							x = float(event.x - x) / width
+							y = float(event.y - y) / height
+							func(arg, self, Mouse2Press, (x, y, []))
 						self._popupmenu.MenuPosition(event)
 						self._popupmenu.ManageChild()
 						return
