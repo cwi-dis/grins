@@ -559,10 +559,18 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				MMWrite.WriteFile(self.root, filename, evallicense=evallicense)
 			else:
 				import SMILTreeWrite
+				if cleanSMIL and 0:
+					# XXX enabling this currently crashes the application on Windows during video conversion
+					progress = windowinterface.ProgressDialog("Exporting")
+					progress.set('Exporting document...')
+					progress = progress.set
+				else:
+					progress = None
 				SMILTreeWrite.WriteFile(self.root, filename,
 							cleanSMIL = cleanSMIL,
 							copyFiles = cleanSMIL,
-							evallicense=evallicense)
+							evallicense=evallicense,
+							progress = progress)
 		except IOError, msg:
 			windowinterface.showmessage('Save operation failed.\n'+
 						    'File: '+filename+'\n'+

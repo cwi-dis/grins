@@ -94,10 +94,10 @@ class IndentedFile:
 
 Error = 'Error'
 
-def WriteFile(root, filename, cleanSMIL = 0, copyFiles = 0, evallicense = 0):
+def WriteFile(root, filename, cleanSMIL = 0, copyFiles = 0, evallicense = 0, progress = None):
 	fp = IndentedFile(open(filename, 'w'))
 	try:
-		writer = SMILWriter(root, fp, filename, cleanSMIL, copyFiles, evallicense)
+		writer = SMILWriter(root, fp, filename, cleanSMIL, copyFiles, evallicense, progress = progress)
 	except Error, msg:
 		from windowinterface import showmessage
 		showmessage(msg, mtype = 'error')
