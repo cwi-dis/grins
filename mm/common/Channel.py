@@ -147,7 +147,6 @@ class Channel:
 			if playstate in (PLAYING, PLAYED):
 				# if still in one of these states...
 				self._playstate = PIDLE
-				self.armed_duration = 0
 				save_syncplay = self.syncplay
 				self.syncplay = 1
 				save_nopop = self.nopop
