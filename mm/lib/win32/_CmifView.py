@@ -530,12 +530,23 @@ class _CmifPlayerView(_CmifView):
 		msg=win32mu.Win32Msg(params)
 		point=msg.pos()
 		point = self._DPtoLP(point)
+		
+		# check subwindows first
 		for w in self._subwindows:
 			if w.inside(point):
 				if w.setcursor_from_point(point):
 					return
 
-		self.setcursor_from_point(point, self)
+		# not in a subwindow, handle it ourselves
+		if self._active_displist:
+			x, y, w, h = self.getwindowpos()
+			xp, yp = point
+			point = xp-x, yp-y
+			x, y = self._pxl2rel(point,self._canvas)
+			for button in self._active_displist._buttons:
+				if button._inside(x,y):
+					self.setcurcursor('hand')
+		self.setcurcursor('arrow')
 
 	def OnEraseBkgnd(self,dc):
 		if not self._usesLightSubWindows or not self._active_displist:
