@@ -33,9 +33,14 @@ else:
 	os.environ['GRiNSApp']='GRiNSed'
 
 
+# The order here is extremeley important.
+# Modules in earlier folders override modules in later folders.
+# OS-specific folders should always come before the corresponding
+# generic folder, and product-specific folders should come before
+# generic folders.
 CMIFPATH = [
-	os.path.join(CMIFDIR, '%s\\snap' % specificPath), # Anything in this directory will override other imports.
 	os.path.join(CMIFDIR, '%s\\snap\\win32' % specificPath),
+	os.path.join(CMIFDIR, '%s\\snap' % specificPath),
 	os.path.join(CMIFDIR, 'bin\\win32'),
 	os.path.join(CMIFDIR, '%s\\win32' % specificPath),
 	os.path.join(CMIFDIR, 'mmextensions\\real\\win32'),
