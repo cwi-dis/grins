@@ -225,6 +225,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__root_layout = None
 		self.__viewport = None
 		self.__tops = {}
+		self.__toplayouts = []	# used to remember the order of topLayout elements
 		self.__topchans = []
 		self.__container = None
 		self.__node = None	# the media object we're in
@@ -1665,6 +1666,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attrs[key] = val
 				
 		self.__tops[None] = {'attrs':attrs}
+		self.__toplayouts.append(None)
 
 		self.__childregions[None] = []
 
@@ -2271,7 +2273,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if not name:
 			name = layout_name # only for anonymous root-layout
 		ctx = self.__context
-		layout = ctx.newviewport(name, 0, 'layout')
+		layout = ctx.newviewport(name, -1, 'layout')
 		
 		from Owner import OWNER_DOCUMENT
 		layout.addOwner(OWNER_DOCUMENT)
@@ -2488,8 +2490,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def __makeLayoutChannels(self):
 		ctx = self.__context
-		for top in self.__tops.keys():
+		for top in self.__toplayouts:
 			self.CreateLayout(self.__tops[top]['attrs'], top is None)
+		del self.__toplayouts
 			
 		# create first the MMChannel instances
 		list = []
@@ -2707,6 +2710,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val is not None:
 					attrs[key] = val
 			self.__tops[None] = {'attrs':attrs}
+			self.__toplayouts.append(None)
 			if not self.__childregions.has_key(None):
 				self.__childregions[None] = []
 		self.__makeLayoutChannels()
@@ -3177,6 +3181,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				     'declwidth':width,
 				     'declheight':height,
 				     'attrs':attributes}
+		self.__toplayouts.append(None)
 		self.AddTestAttrs(self.__tops[None], attributes)
 		self.AddCoreAttrs(self.__tops[None], attributes)
 		if attributes.has_key('resizeBehavior'):
@@ -3222,6 +3227,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for attr,val in attributes.items():
 			if attr == 'id':
 				self.__tops[val] = attrdict
+				self.__toplayouts.append(val)
 			elif attr == 'open':
 				if val not in ('onStart', 'whenActive'):
 					self.syntax_error('illegal open attribute value')
