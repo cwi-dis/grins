@@ -25,6 +25,7 @@ VIEWNUM2NAME=[
 	"oldlayout",
 	"customtests",
 	"transitions",
+	"layout",
 	"source",
 	"assets",
 	"errors",
