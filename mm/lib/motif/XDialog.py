@@ -365,7 +365,6 @@ class InputDialog:
 	def __init__(self, prompt, default, cb, cancelCallback = None,
 		     parent = None, passwd = 0):
 		# XXXX passwd parameter to be implemented
-		import time
 		attrs = {'textString': default or '',
 			 'selectionLabelString': prompt or '',
 			 'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
