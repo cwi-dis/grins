@@ -928,9 +928,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		import NodeEdit
 		NodeEdit._showviewer(self.node)
 
-	def createanchorcall(self):
-		self.mother.toplevel.links.wholenodeanchor(self.node)
-
 	def hyperlinkcall(self):
 		self.mother.toplevel.links.finish_link(self.node)
 

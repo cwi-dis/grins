@@ -3069,6 +3069,7 @@ IDD_EDITATTR_ANCHOR1 DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
+    EDITTEXT        IDC_EDIT1,82,44,203,14,ES_AUTOHSCROLL | WS_GROUP
     CONTROL         "No hyperlink",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | 
                     WS_GROUP | WS_TABSTOP,18,28,55,10
     CONTROL         "Internal link",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,
@@ -3077,7 +3078,6 @@ BEGIN
                     18,46,54,10
     PUSHBUTTON      "Browse destination...",IDC_BUTTON1,199,25,86,14,
                     WS_GROUP
-    EDITTEXT        IDC_EDIT1,82,44,203,14,ES_AUTOHSCROLL | WS_GROUP
     COMBOBOX        IDC_COMBO1,89,68,62,73,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     EDITTEXT        IDC_EDIT3,221,68,20,14,ES_AUTOHSCROLL
@@ -3848,6 +3848,7 @@ BEGIN
     BUTTON      IDUC_BRUSH
     BUTTON      IDUC_REGION
     BUTTON      IDUC_TOPLAYOUT
+    BUTTON      IDUC_CREATE_ANCHOREXTENDED
 END
 
 IDR_TB_COMMON TOOLBAR DISCARDABLE  16, 15
@@ -3993,6 +3994,8 @@ BEGIN
     IDUC_TOPLAYOUT          "Create TopLayout\nCreate TopLayout"
     IDUC_ZOOMIN             "Zoom in\nZoom in"
     IDUC_ZOOMOUT            "Zoom out\nZoom out"
+    IDUC_CREATE_ANCHOREXTENDED 
+                            "Create hyperlink source and edit\nCreate hyperlink source and edit"
 END
 
 #endif    // English (U.S.) resources

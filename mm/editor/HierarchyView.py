@@ -215,6 +215,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.animatecommands = self._getanimatecommands(self.toplevel.root.context)
 		self.createanchorcommands = [
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
+			CREATEANCHOREXTENDED(callback = (self.createanchorcall, (1,))),
 			]
 		self.playcommands = [
 			PLAYNODE(callback = (self.playcall, ())),
@@ -331,8 +332,7 @@ class HierarchyView(HierarchyViewDialog):
 			commands = commands + self.interiorcommands # Add interior structure modifying commands.
 		if self.root.showtime:
 			commands = commands + self.timelinezoomcommands
-		if fntype not in MMTypes.interiortypes and \
-		   fntype not in ('anchor', 'animpar', 'animate', 'prefetch') and \
+		if fntype in MMTypes.mediatypes and \
 		   fnode.GetChannelType() != 'sound' and \
 		   self.toplevel.links.findwholenodeanchor(fnode) is None:
 			commands = commands + self.createanchorcommands
@@ -2138,8 +2138,13 @@ class HierarchyView(HierarchyViewDialog):
 	def playfromcall(self):
 		if self.get_selected_widget(): self.get_selected_widget().playfromcall()
 
-	def createanchorcall(self):
-		if self.get_selected_widget(): self.get_selected_widget().createanchorcall()
+	def createanchorcall(self, extended = 0):
+		node = self.get_selected_node()
+		if node is None:
+			return
+		anchor = self.toplevel.links.createanchor(node, interesting = 1, extended = extended)
+		if anchor is not None and extended:
+			AttrEdit.showattreditor(self.toplevel, anchor, '.href')
 
 	def hyperlinkcall(self):
 		if self.get_selected_widget(): self.get_selected_widget().hyperlinkcall()
