@@ -183,9 +183,8 @@ DWORD audio_thread::Run()
 		return 1;
 		}
 
-	//printf("has_audio: rate=%d channels=%d\n", mpeg2.get_sample_rate(), mpeg2.get_audio_channels());
 	m_pwavout = new wave_out_device();
-	if(!m_pwavout->open2(mpeg2.get_sample_rate(), mpeg2.get_audio_channels()))
+	if(!m_pwavout->open(mpeg2.get_sample_rate(), 16, 1))
 		{
 		delete m_pwavout;
 		m_pwavout = 0;
