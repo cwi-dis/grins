@@ -51,6 +51,10 @@ class MpegChannel(ChannelWindowThread):
 	# since two mpeg channels will still cause trouble,
 	# but it will solve the common case of arming the next file while
 	# the current one is playing.
+	#
+	# XXXX This problem has to be reassesed with the 5.2 cl. See also
+	# the note in mpegchannelmodule.c
+	#
 	def play(self, node):
 		self.play_0(node)
 		if not self.is_showing() or self.syncplay:
