@@ -285,6 +285,10 @@ SOURCE=.\M_ChannelMap.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_ChannelMime.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_ChannelView.c
 # End Source File
 # Begin Source File
@@ -382,6 +386,10 @@ SOURCE=.\M_Font.c
 # Begin Source File
 
 SOURCE=.\M_FormServer.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_fsm.c
 # End Source File
 # Begin Source File
 
@@ -497,6 +505,10 @@ SOURCE=.\M_imgxbm.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_InputValidator.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_keyword.c
 # End Source File
 # Begin Source File
@@ -609,10 +621,6 @@ SOURCE=.\M_MMRead.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMTree.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_MMTypes.c
 # End Source File
 # Begin Source File
@@ -630,18 +638,6 @@ SOURCE=.\M_MPEGVideoDuration.c
 # Begin Source File
 
 SOURCE=.\M_NodeEdit.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_NodeInfo.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_NodeInfoDialog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_NodeInfoForm.c
 # End Source File
 # Begin Source File
 
@@ -869,10 +865,6 @@ SOURCE=.\M_re.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_RealAudioChannel.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_RealChannel.c
 # End Source File
 # Begin Source File
@@ -894,10 +886,6 @@ SOURCE=.\M_realsupport.c
 # Begin Source File
 
 SOURCE=.\M_RealTextChannel.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_RealVideoChannel.c
 # End Source File
 # Begin Source File
 
