@@ -67,6 +67,8 @@ def main():
 			Help.sethelpdir(arg)
 	#
 	GLLock.init()
+	import windowinterface
+	windowinterface.usewindowlock(GLLock.gl_lock)
 	tops = []
 	for fn in files:
 		top = TopLevel.TopLevel().init(fn)
@@ -96,6 +98,10 @@ def main():
 			import select, gl, fl
 			glfd = gl.qgetfd()
 			while 1:
+##				while 1:
+##					result = windowinterface.pollevent()
+##					if not result:
+##						break
 				locked = None
 				if GLLock.gl_lock:
 					GLLock.gl_lock.acquire()
@@ -107,8 +113,8 @@ def main():
 ##			fl.do_forms()
 			# This point isn't reached
 			raise RuntimeError, 'unexpected do_forms return'
-		except KeyboardInterrupt:
-			print 'Interrupt.'
+##		except KeyboardInterrupt:
+##			print 'Interrupt.'
 		except SystemExit, sts:
 			if sts:
 				print 'Exit', sts
@@ -127,8 +133,8 @@ def main():
 			import pdb
 			pdb.post_mortem(sys.exc_traceback)
 	finally:
-		SoundChannel.restore()
-		ImageChannel.cleanup()
+##		SoundChannel.restore()
+##		ImageChannel.cleanup()
 		#
 		if stats:
 			import MMNode
