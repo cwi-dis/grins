@@ -100,7 +100,7 @@ class EventStruct:
 			if not node:
 				print "TODO: No node!! (EventEditor)"
 			e = self.get_event()
-			if e.startswith('repeat'):
+			if e.startswith('repeat') and e != 'repeatEvent':
 				e = e + '(' + `self.get_repeat()` + ')'
 			if e == 'marker':
 				s.__init__(self._node, action, srcnode = node, marker = self.get_marker(),
@@ -203,7 +203,7 @@ class EventStruct:
 			e = self.get_event()
 			if r: r = r + '.' + e
 			else: r = e
-			if e.startswith('repeat'):
+			if e.startswith('repeat') and e != 'repeatEvent':
 				r = r + "(" + `self.get_repeat()` + ")"
 			elif e.startswith('marker'):
 				r = r + "(" + self.get_marker() + ')'
@@ -327,7 +327,7 @@ class EventStruct:
 		elif not self.event: # This should _never_ happen anyway..
 					# if it does then there is something wrong with the event lists.
 			return ""
-		elif self.event.startswith('repeat'):
+		elif self.event.startswith('repeat') and self.event != 'repeatEvent':
 			return 'repeat'
 		elif self.event.startswith('marker'):
 			return 'marker'
@@ -365,6 +365,8 @@ class EventStruct:
 
 	def __isMediaNode(self):
 		node = self._setnode
+		if type(node) is type(""):	
+			node = self._syncarc.refnode()
 		from MMTypes import mediatypes
 		return node is not None and node.type in mediatypes
 		
@@ -488,7 +490,8 @@ class EventStruct:
 	def get_repeat(self):
 		if self._setrepeat is not None:
 			return self._setrepeat
-		elif self.get_event() and self.get_event().startswith("repeat"):
+		event = self.get_event()
+		if event and event.startswith("repeat") and event != "repeatEvent":
 			a = self._syncarc.get_repeat()
 			if a:
 				return a
