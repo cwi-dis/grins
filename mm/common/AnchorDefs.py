@@ -18,6 +18,11 @@ ATYPE_PAUSE  = 3	# Pausing (same plus player pauses until choice made)
 # XXX ATYPE_PAUSE should be replaced by a separate 'pause' flag on the node
 ATYPE_COMP   = 4	# Composite anchor (args are other anchors)
 ATYPE_ARGS   = 5	# Pausing, with arguments
+
+# whole-node (destination only) anchors types
+WholeAnchors = (ATYPE_WHOLE, ATYPE_AUTO, ATYPE_COMP)
+DestOnlyAnchors = (ATYPE_WHOLE, ATYPE_COMP)
+
 #
 # This is a (temporary) routine to modify anchor lists so all anchor id's
 # are strings.
