@@ -108,7 +108,7 @@ class ChannelView(ChannelViewDialog):
 		for name in self.context.layouts.keys():
 			self.layouts.append((name, (name,)))
 		self.curlayout = None
-		title = 'Channel View (' + self.toplevel.basename + ')'
+		title = 'Timeline View (' + self.toplevel.basename + ')'
 		from cmif import findfile
 		self.datadir = findfile('Data')
 		ChannelViewDialog.__init__(self)
@@ -123,7 +123,7 @@ class ChannelView(ChannelViewDialog):
 		if self.is_showing():
 			return
 		self.toplevel.showstate(self, 1)
-		title = 'Channel View (' + self.toplevel.basename + ')'
+		title = 'Timeline View (' + self.toplevel.basename + ')'
 		ChannelViewDialog.show(self, title)
 		self.window.bgcolor(BGCOLOR)
 		# Other administratrivia
@@ -543,7 +543,7 @@ class ChannelView(ChannelViewDialog):
 		self.setviewroot(node)
 
 	def fixtitle(self):
-		title = 'Channel View (' + self.toplevel.basename + ')'
+		title = 'Timeline View (' + self.toplevel.basename + ')'
 		if None is not self.viewroot is not self.root:
 			name = MMAttrdefs.getattr(self.viewroot, 'name')
 			title = title + ': ' + name
