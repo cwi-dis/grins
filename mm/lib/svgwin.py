@@ -355,7 +355,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		self.beginDraw(style, tflist)
 		wingdi.BeginPath(self.hdc)
 		oldtf = wingdi.GetWorldTransform(self.hdc)
-		tm = self.ctm.copy()
+		tm = svgtypes.TM(oldtf)
 		prec = path.getPrecision()
 		if prec>=3:
 			scale = 0.001
