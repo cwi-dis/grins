@@ -159,6 +159,15 @@ class Node:
 			self.changeRawValues(name, value)
 		elif name in ['regAlign', 'regPoint', 'scale']:
 			self.changeAlignAttr(name, value)
+	
+	def move(self, pos):
+		# XXX: needs optimization
+		x, y = pos
+		l, t, w, h = self.getPxGeom()
+		self.changeRawAttr('left', x)
+		self.changeRawAttr('top', y)
+		self.changeRawAttr('width', w)
+		self.changeRawAttr('height', h)
 			
 	def link(self, container):
 		# if already link, unlink before
@@ -1170,3 +1179,4 @@ class MediaNode(Node):
 	def _getPxGeom(self):
 		return (self.pxleft, self.pxtop, self.pxwidth, self.pxheight)
 		
+ 
