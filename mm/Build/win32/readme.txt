@@ -19,7 +19,7 @@ http://www.real.com/) you can also view SMIL documents that contain
 Real Media assets.
 
 To uninstall this software, use the standard Windows mechanism (Start
-Menu -> Control Panel -> Add/Remove Software).
+Menu -> Settings -> Control Panel -> Add/Remove Programs).
 
 The folder Examples contains some example SMIL documents that you can
 view (and edit) using the GRiNS Editor and Player.
