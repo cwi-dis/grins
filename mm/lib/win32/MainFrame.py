@@ -216,7 +216,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		# copy/paste file support
 		id=usercmdui.class2ui[wndusercmd.PASTE_FILE].id
 		self.HookCommand(self.OnPasteFile,id)
-		self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
+		self.HookCommandUpdate(self.OnUpdateEditPaste,id)
 
 		id=usercmdui.class2ui[wndusercmd.ABOUT_GRINS].id
 		self.HookCommand(self.OnAbout,id)
@@ -232,7 +232,13 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		# hook tab sel change
 		#TCN_FIRST =-550;TCN_SELCHANGE  = TCN_FIRST - 1
 		#self.HookNotify(self.OnNotifyTcnSelChange,TCN_SELCHANGE)
-		self.dragAcceptFiles()
+
+		# drag/drop is enabled by register
+		
+		# copy/paste support
+		client.HookMessage(self.onRButtonDown,win32con.WM_RBUTTONDOWN)
+		self.setpopupmenu(MenuTemplate.MAIN_FRAME_POPUP)
+		
 		return 0
 
 	# drag and drop files support for MainFrame
@@ -849,6 +855,26 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		if self in __main__.toplevel._subwindows:
 			__main__.toplevel._subwindows.remove(self)
 		window.MDIFrameWnd.OnDestroy(self, msg)
+
+	# Response to right button down
+	def onRButtonDown(self, params):
+		msg=win32mu.Win32Msg(params)
+		xpos,ypos=msg.pos()
+		if self._menu:
+			id = self._menu.FloatMenu(self,xpos, ypos)
+			if self._cbld.has_key(id) :
+				callback = self._cbld[id]
+				apply(callback[0], callback[1])
+		else:
+			menu=None
+			if self._popupmenu:
+				self.onLButtonDown(params)
+				menu = self._popupmenu
+			if not menu:return
+			pt=(xpos,ypos)
+			pt=self.ClientToScreen(pt);
+			menu.TrackPopupMenu(pt,win32con.TPM_RIGHTBUTTON|win32con.TPM_LEFTBUTTON,
+				self)
 
 	# Set the editor toolbar to the state without a document
 	def setEditorFrameToolbar(self):
