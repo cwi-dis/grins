@@ -42,8 +42,8 @@ class linear2linear(audio_filter):
 
 	def readframes(self, nframes = -1):
 		import audioop
-		data = self._rdr.readframes(nframes)
-		return audioop.lin2lin(data, self.__owidth, self.__nwidth)
+		data, nframes = self._rdr.readframes(nframes)
+		return audioop.lin2lin(data, self.__owidth, self.__nwidth), nframes
 
 class ulaw2linear(audio_filter):
 	def __init__(self, rdr, fmt):
@@ -52,8 +52,8 @@ class ulaw2linear(audio_filter):
 
 	def readframes(self, nframes = -1):
 		import audioop
-		data = self._rdr.readframes(nframes)
-		return audioop.ulaw2lin(data, self.__width)
+		data, nframes = self._rdr.readframes(nframes)
+		return audioop.ulaw2lin(data, self.__width), nframes
 
 class linear2ulaw(audio_filter):
 	def __init__(self, rdr, fmt):
@@ -62,8 +62,8 @@ class linear2ulaw(audio_filter):
 
 	def readframes(self, nframes = -1):
 		import audioop
-		data = self._rdr.readframes(nframes)
-		return audioop.lin2ulaw(data, self.__width)
+		data, nframes = self._rdr.readframes(nframes)
+		return audioop.lin2ulaw(data, self.__width), nframes
 
 class dvi2linear(audio_filter):
 	def __init__(self, rdr, fmt):
@@ -74,10 +74,10 @@ class dvi2linear(audio_filter):
 
 	def readframes(self, nframes = -1):
 		import audioop
-		data = self._rdr.readframes(nframes)
+		data, nframes = self._rdr.readframes(nframes)
 		data, self.__state = audioop.adpcm2lin(data, self.__width,
 						       self.__state)
-		return data
+		return data, nframes
 
 	def rewind(self):
 		self._rdr.rewind()
@@ -106,10 +106,10 @@ class linear2dvi(audio_filter):
 
 	def readframes(self, nframes = -1):
 		import audioop
-		data = self._rdr.readframes(nframes)
+		data, nframes = self._rdr.readframes(nframes)
 		data, self.__state = audioop.lin2adpcm(data, self.__width,
 						       self.__state)
-		return data
+		return data, nframes
 
 	def rewind(self):
 		self._rdr.rewind()
@@ -141,9 +141,9 @@ class stereo2mono(audio_filter):
 
 	def readframes(self, nframes = -1):
 		import audioop
-		data = self._rdr.readframes(nframes)
+		data, nframes = self._rdr.readframes(nframes)
 		return audioop.tomono(data, self.__width,
-				      self.__fac1, self.__fac2)
+				      self.__fac1, self.__fac2), nframes
 
 class mono2stereo(audio_filter):
 	def __init__(self, rdr, fmt):
@@ -157,9 +157,9 @@ class mono2stereo(audio_filter):
 
 	def readframes(self, nframes = -1):
 		import audioop
-		data = self._rdr.readframes(nframes)
+		data, nframes = self._rdr.readframes(nframes)
 		return audioop.tostereo(data, self.__width,
-					self.__fac1, self.__fac2)
+					self.__fac1, self.__fac2), nframes
 
 class unsigned2linear(audio_filter):
 	__translation = None
@@ -174,8 +174,8 @@ class unsigned2linear(audio_filter):
 
 	def readframes(self, nframes = -1):
 		import string
-		data = self._rdr.readframes(nframes)
-		return string.translate(data, self.__translation)
+		data, nframes = self._rdr.readframes(nframes)
+		return string.translate(data, self.__translation), nframes
 
 class swap(audio_filter):
 	def __init__(self, rdr, fmt):
@@ -192,10 +192,10 @@ class swap(audio_filter):
 
 	def readframes(self, nframes = -1):
 		import array
-		data = self._rdr.readframes(nframes)
+		data, nframes = self._rdr.readframes(nframes)
 		a = array.array(self.__fmt, data)
 		a.byteswap()
-		return a.tostring()
+		return a.tostring(), nframes
 
 class cvrate(audio_filter):
 	def __init__(self, rdr, rate):
@@ -212,11 +212,11 @@ class cvrate(audio_filter):
 
 	def readframes(self, nframes = -1):
 		import audioop
-		data = self._rdr.readframes(nframes * self.__inrate / self.__outrate)
+		data, nframes = self._rdr.readframes(nframes * self.__inrate / self.__outrate)
 		data, self.__state = audioop.ratecv(data, self.__width,
 					self.__nchannels, self.__inrate,
 					self.__outrate, self.__state)
-		return data
+		return data, len(data) / (self.__width * self.__nchannels)
 
 	def rewind(self):
 		self._rdr.rewind()
