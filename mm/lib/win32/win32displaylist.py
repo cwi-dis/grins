@@ -134,11 +134,21 @@ class _DisplayList:
 		if not self._cloneof or self._cloneof is not self._window._active_displist:
 			clonestart = 0
 
+		x, y, w, h = self._canvas
+		dcc=dc.CreateCompatibleDC()
+		bmp=win32ui.CreateBitmap()
+		bmp.CreateCompatibleBitmap(dc,w,h)
+		oldbmp = dcc.SelectObject(bmp)
+
 		for i in range(clonestart, len(self._list)):
-			self._do_render(self._list[i],dc, region)
+			self._do_render(self._list[i],dcc, region)
 
 		for b in self._buttons:
 			if b._highlighted:b._do_highlight()
+		
+		dc.BitBlt((x,y),(w,h),dcc,(0, 0),win32con.SRCCOPY)
+		dcc.SelectObject(oldbmp)
+		dcc.DeleteDC()
 
 	def close(self):
 		wnd = self._window
