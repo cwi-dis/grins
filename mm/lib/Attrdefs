@@ -90,6 +90,9 @@
 (help_winsize  (tuple (int) (int)) (400 600) 'Help window size' default
 	 'Size of help window' raw)
 
+(hicolor (tuple (int) (int) (int)) (255 0 0) 'Hilight color' default
+	'Color used for anchors in window' channel)
+
 (hyperlinks (list (enclosed (tuple (enclosed (tuple (string) (int)))
                                    (enclosed (tuple (string) (int)))
 				   (int) (int)))) ()
@@ -104,6 +107,12 @@
 
 ##(keep (bool) 0 'Keep' default
 ##	'If on, text in window is kept until explicitly replaced' channel)
+(links_winpos  (tuple (int) (int)) (-1 -1) 'Link edit window position' default
+	 'Position of link edit window' raw)
+
+(links_winsize  (tuple (int) (int)) (510 460) 'Link edit window size' default
+	 'Size of link edit window' raw)
+
 
 (name (name) '' 'Name' default
 	'Name given to a node' raw)
