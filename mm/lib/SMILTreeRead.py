@@ -108,7 +108,7 @@ controlpt = re.compile('^'+_opS+_fp+_comma_sp+_fp+_comma_sp+_fp+_comma_sp+_fp+_o
 fpre = re.compile('^' + _opS + _fp + _opS + '$')
 smil_node_attrs = [
 	'region', 'clip-begin', 'clip-end', 'endsync', 'choice-index',
-	'bag-index', 'type',
+	'bag-index', 'type', 'clipBegin', 'clipEnd',
 	]
 
 class SMILParser(SMIL, xmllib.XMLParser):
