@@ -51,6 +51,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self.HookMessage(self.OnLButtonUp, wincon.WM_LBUTTONUP)
 		self.HookMessage(self.OnLButtonDblClk, wincon.WM_LBUTTONDBLCLK)
 		self.HookMessage(self.OnMouseMove, wincon.WM_MOUSEMOVE)
+		self.InvalidateRect()
 
 	# application exit hook
 	def OnClose(self, params):
