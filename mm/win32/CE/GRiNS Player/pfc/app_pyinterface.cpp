@@ -74,8 +74,10 @@ bool AppPyInterface::initialize(HWND hWnd)
 
 void AppPyInterface::finalize()
 	{
+#ifdef WITH_THREAD
 	AcquireThread at(PyInterface::getPyThreadState());
-	
+#endif
+
 	Py_XDECREF(s_pyapp);
 	s_pyapp = NULL;
 	
@@ -88,7 +90,9 @@ void AppPyInterface::finalize()
 
 PyObject* AppPyInterface::get_application()
 	{
+#ifdef WITH_THREAD
 	AcquireThread at(PyInterface::getPyThreadState());
+#endif
 	PyObject *d = PyModule_GetDict(s_winuser);
 	PyObject *ga = PyDict_GetItemString(d, "GetApplication");
 	PyObject *arglist = Py_BuildValue("()");
@@ -105,7 +109,9 @@ PyObject* AppPyInterface::get_application()
 
 bool AppPyInterface::set_mainwnd(PyObject *appobj, PyObject *pwnd)
 	{
+#ifdef WITH_THREAD
 	AcquireThread at(PyInterface::getPyThreadState());
+#endif
 	PyObject *method = PyObject_GetAttrString(appobj, "SetMainWnd");
 	PyObject *arglist = Py_BuildValue("(O)", pwnd);
 	PyObject *retobj = PyEval_CallObject(method, arglist);
@@ -122,7 +128,9 @@ bool AppPyInterface::set_mainwnd(PyObject *appobj, PyObject *pwnd)
 
 bool AppPyInterface::set_pysys_stdout(PyObject *pystdout)
 	{
+#ifdef WITH_THREAD
 	AcquireThread at(PyInterface::getPyThreadState());
+#endif
 	PySys_SetObject("stderr", pystdout);
 	PySys_SetObject("stdout", pystdout);
 	return true;
@@ -130,13 +138,21 @@ bool AppPyInterface::set_pysys_stdout(PyObject *pystdout)
 
 void AppPyInterface::restore_pysys_stdout(PyObject *pystdout)
 	{
+#ifdef WITH_THREAD
 	AcquireThread at(PyInterface::getPyThreadState());
+#endif
 	DetachPyStdOut(pystdout);
 	}
+
+void *PyInterfaceImport(const TCHAR *psztmodule)
+{
+	return (void *) PyInterface::import(psztmodule);
+}
 
 bool InitializePythonInterface(HWND hWnd)
 	{	
 	Py_OptimizeFlag = 2;
+//	Py_VerboseFlag = 2;
 	PyInterface::setPythonHome(python_home);
 	if(!PyInterface::initialize(GetApplicationName()))
 		{

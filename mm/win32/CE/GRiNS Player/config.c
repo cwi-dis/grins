@@ -47,7 +47,9 @@ extern void init_socket(void);
 extern void initselect(void);
 extern void initstrop(void);
 extern void initstruct(void);
+#ifdef WITH_THREAD
 extern void initthread(void);
+#endif
 extern void inittime(void);
 extern void init_codecs(void);
 extern void initwingdi(void);
@@ -73,7 +75,9 @@ struct _inittab _PyImport_Inittab[]=
 	{"regex",		initregex},
 	{"strop",		initstrop},
 	{"struct",		initstruct},
+#ifdef WITH_THREAD
 	{"thread",		initthread},
+#endif
 	{"time",        	inittime},
 	{"pcre", 		initpcre},
 	{"_socket", 		init_socket},
