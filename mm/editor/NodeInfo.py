@@ -1,5 +1,4 @@
 # Node info modeless dialog
-print 'import NodeInfo'
 
 
 import path
@@ -19,11 +18,11 @@ cwdcache = None
 formtemplates = None
 
 
-def shownodeinfo(node):
+def shownodeinfo(toplevel, node):
 	try:
 		nodeinfo = node.nodeinfo
 	except AttributeError:
-		nodeinfo = NodeInfo().init(node)
+		nodeinfo = NodeInfo().init(toplevel, node)
 		node.nodeinfo = nodeinfo
 	nodeinfo.open()
 
@@ -38,7 +37,8 @@ def hidenodeinfo(node):
 
 class NodeInfo(Dialog):
 
-	def init(self, node):
+	def init(self, toplevel,  node):
+	        self.toplevel = toplevel
 		self.node = node
 		self.context = node.GetContext()
 		self.editmgr = self.context.geteditmgr()
@@ -371,7 +371,7 @@ class NodeInfo(Dialog):
 
 	def anchors_callback(self, (obj, dummy)):
 		import AnchorEdit
-		AnchorEdit.showanchoreditor(self.node)
+		AnchorEdit.showanchoreditor(self.toplevel, self.node)
 	#
 	# Callbacks for 'imm' type nodes
 	#
