@@ -75,50 +75,32 @@ class LayoutViewDialog(windowinterface.MACDialog):
 
 	def setlayoutlist(self, layouts, cur):
 		if layouts != self.__layoutlist.get():
-			self.__layoutlist.set(layouts)
-		if cur is not None:
-			self.__layoutlist.select(layouts.index(cur))
+			self.__layoutlist.setitems(layouts, cur)
 		else:
-			self.__layoutlist.select(None)
+			self.__layoutlist.select(cur)
 
 	def setchannellist(self, channels, cur):
 		if channels != self.__channellist.get():
-			self.__channellist.set(channels)
-		if cur is not None:
-			self.__channellist.select(channels.index(cur))
+			self.__channellist.setitems(channels, cur)
 		else:
-			self.__channellist.select(None)
+			self.__channellist.select(cur)
 
 	def setotherlist(self, channels, cur):
 		if channels != self.__otherlist.get():
-			self.__otherlist.set(channels)
-		if cur is not None:
-			self.__otherlist.select(channels.index(cur))
+			self.__otherlist.setitems(channels, cur)
 		else:
-			self.__otherlist.select(None)
+			self.__otherlist.select(cur)
 
 	def __layoutcb(self):
-		sel = self.__layoutlist.getselect()
-		if sel is None:
-			self.curlayout = None
-		else:
-			self.curlayout = self.__layoutlist.getitem(sel)
+		self.curlayout = self.__layoutlist.getselectvalue()
 		self.fill()
 
 	def __channelcb(self):
-		sel = self.__channellist.getselect()
-		if sel is None:
-			self.curchannel = None
-		else:
-			self.curchannel = self.__channellist.getitem(sel)
+		self.curchannel = self.__channellist.getselectvalue()
 		self.fill()
 
 	def __othercb(self):
-		sel = self.__otherlist.getselect()
-		if sel is None:
-			self.curother = None
-		else:
-			self.curother = self.__otherlist.getitem(sel)
+		self.curother = self.__otherlist.getselectvalue()
 		self.fill()
 
 	def setwaiting(self):
