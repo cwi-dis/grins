@@ -1986,6 +1986,9 @@ class Viewport(Region):
 	# 
 	def update(self, rc=None):
 		self._ctx.update(rc)
+		if self._callbacks.has_key(WindowContentChanged):
+			func, arg = self._callbacks[WindowContentChanged]
+			func(arg, self, WindowContentChanged, mw_globals.toplevel.getcurtime())
 
 	def paint(self, rc=None):
 		drawBuffer = self._ctx.getDrawBuffer()
