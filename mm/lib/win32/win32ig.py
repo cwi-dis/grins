@@ -51,11 +51,17 @@ class ImageLib:
 	def render(self,hdc,bgcolor,mask, img, 
 		src_x, src_y,dest_x, dest_y, width, height,rcKeep):
 		if img<0: return
+		if img not in self._imglist:
+			# image already deleted?
+			# XXXX this is a quick hack, since the image
+			# shouldn't have been deleted if it was still
+			# being used.
+			return
 		rc=(dest_x, dest_y, dest_x+width, dest_y+height)
 		self.lib.ip_crop(img,rcKeep)
-		if img in self._transpdict.keys():
+		if self._transpdict.has_key(img):
 			trans_rgb = self._transpdict[img]
-			self.lib.display_transparent_set(img,trans_rgb,1)			
+			self.lib.display_transparent_set(img,trans_rgb,1)
 		self.lib.device_rect_set(img,rc)
 		self.lib.display_desktop_pattern_set(img,0)
 		self.lib.display_image(img,hdc)
@@ -66,7 +72,7 @@ class ImageLib:
 		self.lib.image_delete(img)
 		if img in self._imglist: 
 			self._imglist.remove(img)
-		if img in self._transpdict.keys():
+		if self._transpdict.has_key(img):
 			del self._transpdict[img]
 
 	# Return the absolute filename
