@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
 # Edit Manager.
+# TODO: What does the EditMgr do, specifically -mjvdg
 # Amazing as it may seem, this module is not dependent on window software!
 
 import MMExc

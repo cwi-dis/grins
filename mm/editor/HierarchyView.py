@@ -518,7 +518,7 @@ class HierarchyView(HierarchyViewDialog):
 			if not obj:
 				windowinterface.beep()
 				return
-			self.setfocusobj(obj)
+			self.setfocusobj(obj) # give the focus to the object which was dropped on.
 		if event == WMEVENTS.DropFile:
 			url = MMurl.pathname2url(filename)
 		else:
@@ -666,6 +666,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.aftersetfocus()
 
 	def create(self, where, url = None, index = -1, chtype = None, ntype = None):
+		# Create a new node in the Structure view.
 		# experimental SMIL Boston layout code
 		internalchtype = chtype
 		# end experimental
@@ -766,7 +767,7 @@ class HierarchyView(HierarchyViewDialog):
 			# and provide a default caption
 			node.SetAttr('caption', '<clear/>')
 		else:
-			node = self.root.context.newnode(type)
+			node = ctx.newnode(type) # Create a new node
 		# experimental SMIL Boston layout code
 		node._internalchtype = internalchtype
 		# end experimental			
@@ -846,6 +847,7 @@ class HierarchyView(HierarchyViewDialog):
 				node.Destroy()
 				return 0
 		elif where == 0 and node.GetChannelType()!='animate':
+			# Special condition for animation
 			ntype = self.focusnode.GetType()
 			if ntype not in MMNode.interiortypes and \
 			   (ntype != 'ext' or
@@ -860,7 +862,11 @@ class HierarchyView(HierarchyViewDialog):
 		if not em.transaction():
 			node.Destroy()
 			return 0
+
 		if where == 0:
+			# Add (using editmgr) a child to the node with focus
+			# Index is the index in the list of children
+			# Node is the new node
 			em.addnode(self.focusnode, index, node)
 			expandnode(self.focusnode)
 		else:
@@ -1521,12 +1527,14 @@ def countlevels(node, numwanted):
 
 # (Graphical) object class
 class Object:
-
+	# This is a representation of an MMNode on the screen
+	# e.g. all the boxes in the structure view. TODO: elaborate.
+	
 	# Initialize an instance
 	def __init__(self, mother, item):
-		self.mother = mother
+		self.mother = mother	# Hierarchy view 
 		node, self.boxtype, self.box = item
-		node.box = self.box
+		node.box = self.box	# Assigning the coords to the MMNode
 		node.set_infoicon = self.set_infoicon # Temp override of class method
 		self.node = node
 		self.iconbox = None
@@ -1760,6 +1768,7 @@ class Object:
 			b1 = b - vmargin*2
 			if l1 < r1 and t1 < b1:
 				if (node.GetType() in ('par', 'alt', 'excl', 'prio')) == DISPLAY_VERTICAL:
+					# Draw verticle lines.
 					stepsize = (r1-l1)/2
 					while stepsize > hmargin*4:
 						stepsize = stepsize / 2
@@ -1769,6 +1778,7 @@ class Object:
 							   [(x, t1), (x, b1)])
 						x = x + stepsize
 				else:
+					# Draw horizontal lines
 					stepsize = (b1-t1)/2
 					while stepsize > vmargin*4:
 						stepsize = stepsize / 2
@@ -1831,13 +1841,16 @@ class Object:
 			else:
 				return ''
 
-	# Menu handling functions
+	#
+	# Menu handling functions, aka callbacks.
+	#
 
 ##	def helpcall(self):
 ##		import Help
 ##		Help.givehelp('Hierarchy_view')
 
 	def expandcall(self):
+		# 'Expand' the view of this node.
 		self.mother.toplevel.setwaiting()
 		if hasattr(self.node, 'expanded'):
 			collapsenode(self.node)
@@ -1846,6 +1859,7 @@ class Object:
 		self.mother.recalc()
 
 	def expandallcall(self, expand):
+		# Expand the view of this node and all kids.
 		self.mother.toplevel.setwaiting()
 		if do_expand(self.node, expand, None, 1):
 			# there were changes
