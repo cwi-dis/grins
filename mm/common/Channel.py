@@ -138,19 +138,35 @@ class Channel:
 		# currently.
 		armstate = self._armstate
 		armed_node = self._armed_node
-		# Don't do anything if the channel is PLAYING.  That
-		# will change in due time and it is too hard to do
-		# something about it here.
-		if self._playstate == PLAYED:
+		if self._playstate in (PLAYING, PLAYED):
 			node = self._played_node
 			self._armstate = AIDLE
 			self.syncarm = 1
 			self.arm(node)
-			self._playstate = PIDLE
-			self.armed_duration = 0
-			self.syncplay = 1
-			self.play(node)
+			playstate = self._playstate
+			if playstate in (PLAYING, PLAYED):
+				# if still in one of these states...
+				self._playstate = PIDLE
+				self.armed_duration = 0
+				self.syncplay = 1
+				self.nopop = 1
+				self.play(node)
+				self.nopop = 0
+				self._playstate = playstate
 			self._armstate = AIDLE
+##		# Don't do anything if the channel is PLAYING.  That
+##		# will change in due time and it is too hard to do
+##		# something about it here.
+##		if self._playstate == PLAYED:
+##			node = self._played_node
+##			self._armstate = AIDLE
+##			self.syncarm = 1
+##			self.arm(node)
+##			self._playstate = PIDLE
+##			self.armed_duration = 0
+##			self.syncplay = 1
+##			self.play(node)
+##			self._armstate = AIDLE
 		if armstate == ARMED:
 			self._armstate = AIDLE
 			self.syncarm = 1
@@ -187,8 +203,8 @@ class Channel:
 		self._subchannels = subchannels
 		if self._armstate == ARMING:
 			self.arm_1()
-		if self._playstate == PLAYING:
-			self.playstop()
+##		if self._playstate == PLAYING:
+##			self.playstop()
 
 	def highlight(self):
 		# highlight the channel instance (dummy for channels
