@@ -26,10 +26,10 @@ class Separator:
 		self.width = width
 
 class Pulldown:
-	def __init__(self):
+	def __init__(self, name, width=None):
 		self.type = 'pulldown'
-		self.cmdid = None
-		self.arg = None
+		self.name = name
+		self.width = width
 
 PLAYER_TEMPLATE = (
 	('General', wndusercmd.TOOLBAR_GENERAL, grinsRC.IDR_GRINS, (
@@ -42,7 +42,6 @@ PLAYER_TEMPLATE = (
 		Button(usercmd.STOP, 11),
 		Separator(6),
 		Button(usercmd.HELP, 12),
-		Pulldown(),
 		)
 	)
 )

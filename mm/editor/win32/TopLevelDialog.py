@@ -49,10 +49,11 @@ class TopLevelDialog:
 				initlang = str
 
 		adornments = {
-			'pulldown': [(rates, self.bitratecb, initbitrate),
-				     (langs, self.languagecb, initlang),
-				     ],
-			}
+			'pulldown': {
+				'Bitrate': (rates, self.bitratecb, initbitrate),
+				'Language': (langs, self.languagecb, initlang),
+			},
+		}
 
 		self.window = windowinterface.newdocument(self, 
 			adornments = adornments,commandlist = self.commandlist)
