@@ -566,7 +566,7 @@ class _DisplayList:
 		# 'error' Some error has occurred on the node
 		w = self._window
 		module = _iconmap.get(icon) or _iconmap['']
-		reader = __import__(module).reader
+		reader = __import__(module)
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
 		       w._prepare_image(reader, (0,0,0,0), -2, 1, coordinates)
 		if mask:
