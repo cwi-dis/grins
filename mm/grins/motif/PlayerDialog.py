@@ -67,29 +67,38 @@ class PlayerDialog:
 			]
 
 	def __init__(self, coords, title):
-		self.__coords = coords
-		self.__title = title
 		self.__window = None
+		self.__title = title
+		self.__coords = coords
 		self.__state = -1
 		self.__menu_created = None
 		self.__topcommandlist = []
 		self.__commandlist = []
+		self.__channels = []
+		self.__channeldict = {}
 
 	def topcommandlist(self, list):
 		if list != self.__topcommandlist:
 			self.__topcommandlist = list
 			self.setstate(self.__state)
 
+	def close(self):
+		if self.__window is not None:
+			self.__window.close()
+			self.__window = None
+		del self.__menu_created
+		del self.__topcommandlist
+		del self.__commanlist
+		del self.__channels
+		del self.__channeldict
+
 	def __create(self):
 		x, y, w, h = self.__coords
 		self.__window = window = windowinterface.newwindow(
 			x, y, 0, 0, self.__title, resizable = 0,
 			adornments = self.adornments)
-
-	def close(self):
-		if self.__window is not None:
-			self.__window.close()
-			self.__window = None
+		if self.__channels:
+			window.setchannels(self.__channels)
 
 	def show(self):
 		if self.__menu_created is None:
@@ -101,6 +110,11 @@ class PlayerDialog:
 		if self.__window is not None:
 			self.__window.close()
 			self.__window = None
+
+	def settitle(self, title):
+		self.__title = title
+		if self.__window is not None:
+			self.__window.settitle(title)
 
 	def setchannels(self, channels):
 		self.__channels = channels
@@ -128,11 +142,6 @@ class PlayerDialog:
 			return
 		self.__channels[i] = channel, onoff
 		self.setchannels(self.__channels)
-
-	def settitle(self, title):
-		self.__title = title
-		if self.__window is not None:
-			self.__window.settitle(title)
 
 	def setstate(self, state):
 		ostate = self.__state
