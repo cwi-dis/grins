@@ -300,7 +300,7 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 				try:
 					j = oldanchors.index(a)
 				except ValueError:
-					add.append(i, a)
+					add.append((i, a))
 				else:
 					if j < n:
 						ordered = 0
