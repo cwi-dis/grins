@@ -700,8 +700,8 @@ class SubWindow(Window):
 		return SubWindow(self, coordinates, transparent, z, units)
 
 	def close(self):
-		Window.close(self)
 		self.DestroyOSWindow()
+		Window.close(self)
 
 	#
 	# OS windows simulation support
@@ -716,8 +716,9 @@ class SubWindow(Window):
 		return x, y, x+w, y+h
 
 	def update(self):
-		if hasattr(self,'_topwindow'):
-			self._topwindow.update()
+		if self.is_closed():
+			print 'update while closed'
+		self._topwindow.update()
 
 	def HookMessage(self, f, m):
 		if self._oswnd: wnd = self._oswnd
@@ -771,7 +772,8 @@ class SubWindow(Window):
 		if self._oswnd:
 			self._oswnd.DestroyWindow()
 			self._oswnd = None
-			self.update()
+			if not self.is_closed():
+				self.update()
 
 	def RetrieveUrl(self,fileOrUrl):
 		if not self._oswnd:
