@@ -464,10 +464,10 @@ class Channel:
 		# callback just yet but wait till the anchor is hit.
 		if self._has_pause:
 			return
-		if not outside_induced:
-		    if self._try_auto_anchors():
-			return
 		if not self.syncplay:
+			if not outside_induced:
+				if self._try_auto_anchors():
+					return
 			self._playcontext.play_done(self._played_node)
 		self._playstate = PLAYED
 
