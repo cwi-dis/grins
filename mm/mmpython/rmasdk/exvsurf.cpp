@@ -28,6 +28,8 @@
 #include "Std.h"
 #include "PyCppApi.h"
 
+#include "mtpycall.h"
+
 #ifdef _DEBUG
 #undef PN_THIS_FILE		
 static char PN_THIS_FILE[] = __FILE__;
@@ -162,15 +164,22 @@ ExampleVideoSurface::BeginOptimizedBlt(RMABitmapInfoHeader* pBitmapInfo)
 	    // format has changed since last blit...
 		if(m_pPyVideoRenderer && pBitmapInfo->biCompression==BI_BITFIELDS)
 			{
-			CallerHelper helper("OnFormatBitFields",m_pPyVideoRenderer);
-			if(helper.HaveHandler()) 
-				helper.call(pBitmapInfo->rcolor,pBitmapInfo->gcolor,pBitmapInfo->bcolor);
+			CallbackHelper helper("OnFormatBitFields",m_pPyVideoRenderer);
+			if(helper.cancall())
+				{
+				PyObject *arg = Py_BuildValue("(iii)", pBitmapInfo->rcolor,pBitmapInfo->gcolor,pBitmapInfo->bcolor);
+				helper.call(arg);
+				}
 			}
 		if(m_pPyVideoRenderer)
 			{
-			CallerHelper helper("OnFormatChange",m_pPyVideoRenderer);
-			if(helper.HaveHandler())helper.call(pBitmapInfo->biWidth,pBitmapInfo->biHeight,
-				pBitmapInfo->biBitCount, pBitmapInfo->biCompression);
+			CallbackHelper helper("OnFormatChange",m_pPyVideoRenderer);
+			if(helper.cancall())
+				{
+				PyObject *arg = Py_BuildValue("(iiii)", pBitmapInfo->biWidth,pBitmapInfo->biHeight,
+					pBitmapInfo->biBitCount, pBitmapInfo->biCompression);
+				helper.call(arg);
+				}
 			}
 	    // save settings for comparison next time 
 	    m_lastBitmapInfo.biWidth = pBitmapInfo->biWidth;
@@ -191,8 +200,12 @@ ExampleVideoSurface::OptimizedBlt(UCHAR* pImageBits,
     if (!m_pBitmapInfo) return PNR_UNEXPECTED;
 	if(m_pPyVideoRenderer)
 		{
-		CallerHelper helper("Blt",m_pPyVideoRenderer);
-		if(helper.HaveHandler())helper.call((int)pImageBits);
+		CallbackHelper helper("Blt",m_pPyVideoRenderer);
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("(i)", (int)pImageBits);
+			helper.call(arg);
+			}
 		}
     return PNR_OK;
 }	
@@ -203,8 +216,12 @@ ExampleVideoSurface::EndOptimizedBlt(void)
 {
 	if(m_pPyVideoRenderer)
 		{
-		CallerHelper helper("EndBlt",m_pPyVideoRenderer);
-		if(helper.HaveHandler())helper.call();
+		CallbackHelper helper("EndBlt",m_pPyVideoRenderer);
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("()");
+			helper.call(arg);
+			}
 		}
     m_pBitmapInfo = NULL;
     return PNR_OK;
