@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<smil xmlns="http://www.w3.org/TR/REC-smil/2000/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/">
+  <head>
+    <meta name="title" content="GRiNS Test Document"/>
+    <meta name="generator" content="GRiNS Pro for SMIL Boston, v2.0 alpha win32 build 0"/>
+    <layout>
+      <viewport id="basewindow" backgroundColor="white" width="400" height="300">
+        <region id="description" left="15" top="10" width="200" height="88"/>
+        <region id="text" left="13" top="9" width="300" height="260"/>
+        <region id="image" left="123" top="60" width="300" height="256"/>
+        <region id="video" left="33" top="93" width="300" height="197"/>
+      </viewport>
+    </layout>
+  </head>
+  <body>
+    <par id="test-image">
+      <text region="description" type="text/plain" dur="2s" src="data:,Playing%20an%20image%20node%0a"/>
+      <img region="image" src="file:///D|/ufs/mm/cmif/Build/common/testdoc/testdata.jpg"/>
+    </par>
+    <par id="test-video">
+      <text region="description" type="text/plain" dur="2s" src="data:,Playing%20a%20video%20node%0a"/>
+      <video region="video" src="file:///D|/ufs/mm/cmif/win32/DXMedia/bin/hokey.avi"/>
+    </par>
+  </body>
+</smil>

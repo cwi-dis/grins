@@ -3,10 +3,9 @@
                       "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
 <smil>
   <head>
-    <meta name="title" content=" basewindow "/>
-    <meta name="generator" content="GRiNS editor 0.5 Unix/motif patchlevel 0"/>
+    <meta name="title" content="GRiNS Test Document"/>
     <layout>
-      <root-layout id="basewindow-" title=" basewindow " width="640" height="480"/>
+      <root-layout id="basewindow" width="640" height="480" background-color="white"/>
       <region xmlns:GRiNS="http://www.oratrix.com/" id="description" title="description" left="15" top="372" width="610" height="88" GRiNS:type="text"/>
       <region xmlns:GRiNS="http://www.oratrix.com/" id="text" title="text" left="13" top="9" width="614" height="345" GRiNS:type="text"/>
       <region xmlns:GRiNS="http://www.oratrix.com/" id="html" title="html" left="91" top="116" width="518" height="216" GRiNS:type="html"/>
