@@ -1137,7 +1137,7 @@ class Channel:
 _button = None				# the currently highlighted button
 
 class ChannelWindow(Channel):
-	chan_attrs = Channel.chan_attrs + ['base_winoff', 'units', 'popup', 'z', 'editBackground', 'showEditBackground']
+	chan_attrs = Channel.chan_attrs + ['base_winoff', 'units', 'popup', 'z']
 	node_attrs = Channel.node_attrs[:]
 	if CMIF_MODE:
 		node_attrs.append('transparent')
