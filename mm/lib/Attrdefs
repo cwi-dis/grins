@@ -784,8 +784,3 @@
 	'URL of a snapshot image that represents the template' raw (smil2 template cmif))
 (skin (string) '' 'Active Device Model' file
 	'URL of skin and components file' raw (smil2 template cmif))
-
-# RTIPA start
-(RTIPA_server (string) '' 'RTIPA server' default
-	'Server name to be used for bitrate testing (RTIPA demo)' raw (smil2 advanced))
-# RTIPA end
