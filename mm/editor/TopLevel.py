@@ -29,6 +29,8 @@ EMPTY = """
 
 from TopLevelDialog import TopLevelDialog
 
+Error = 'TopLevel.Error'
+
 class TopLevel(TopLevelDialog, ViewDialog):
 	def __init__(self, main, url, new_file):
 		ViewDialog.__init__(self, 'toplevel_')
@@ -710,6 +712,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			import SMILTreeRead
 			self.root = SMILTreeRead.ReadFile(filename, self.printfunc)
 		elif mtype == 'application/x-grins-cmif':
+			import settings
+			if settings.get('lightweight'):
+				windowinterface.showmessage('cannot read CMIF files in this version', mtype = 'error')
+				raise Error, filename
 			import MMRead
 			self.root = MMRead.ReadFile(filename)
 		else:

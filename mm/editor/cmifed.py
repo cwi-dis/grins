@@ -213,6 +213,8 @@ class Main(MainDialog):
 		except MSyntaxError:
 			import windowinterface
 			windowinterface.showmessage('parsing document %s failed' % url)
+		except TopLevel.Error:
+			return
 		else:
 			self.new_top(top)
 			self._update_recent(url)
