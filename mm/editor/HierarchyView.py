@@ -359,6 +359,10 @@ class HierarchyView(HierarchyViewDialog):
 		self.displist = self.new_displist
 		self.new_displist = None
 
+	def opt_render(self):
+		if self.new_displist:
+			self.render()
+
 	#################################################
 	# Outside interface (inherited from ViewDialog) #
 	#################################################
@@ -411,7 +415,7 @@ class HierarchyView(HierarchyViewDialog):
 			if not obj:
 				windowinterface.beep()
 				return
-		self.setfocusobj(obj)
+			self.setfocusobj(obj)
 		if event == WMEVENTS.DropFile:
 			url = MMurl.pathname2url(filename)
 		else:
@@ -419,18 +423,13 @@ class HierarchyView(HierarchyViewDialog):
 		t = obj.node.GetType()
 		if t == 'imm':
 			self.render()
-			windowinterface.showmessage('destination node is an immediate node, change to external?', mtype = 'question', callback = (self.cvdrop, (obj.node, window, event, params)))
+			windowinterface.showmessage('destination node is an immediate node, change to external?', mtype = 'question', callback = (self.cvdrop, (obj.node, window, event, params)), parent = self.window)
 			return
 		if t == 'ext' and \
 		   obj.node.GetChannelType() == 'RealPix':
 			from mimetypes import guess_type
 			mtype = guess_type(url)[0]
 			interior = (mtype != 'image/vnd.rn-realpix')
-##			if interior and \
-##			   not MMAttrdefs.getattr(obj.node, 'file'):
-##				windowinterface.showmessage('can only edit a RealPix node if the URL has been filled in', mtype = 'error')
-##				self.render()
-##				return
 		else:
 			interior = (obj.node.GetType() in MMNode.interiortypes)
 		# make URL relative to document
@@ -459,7 +458,7 @@ class HierarchyView(HierarchyViewDialog):
 			if settings.get('lightweight') and \
 			   obj.node.GetChannelName() not in ctx.compatchannels(url):
 				self.render()
-				windowinterface.showmessage("file not compatible with channel type `%s'" % obj.node.GetChannelType(), mtype = 'error')
+				windowinterface.showmessage("file not compatible with channel type `%s'" % obj.node.GetChannelType(), mtype = 'error', parent = self.window)
 				return
 			em = self.editmgr
 			if not em.transaction():
@@ -559,15 +558,17 @@ class HierarchyView(HierarchyViewDialog):
 	def create(self, where, url = None, index = -1, chtype = None):
 		node = self.focusnode
 		if node is None:
+			self.opt_render()
 			windowinterface.showmessage(
 				'There is no selection to insert into',
-				mtype = 'error')
+				mtype = 'error', parent = self.window)
 			return
 		parent = node.GetParent()
 		if parent is None and where <> 0:
+			self.opt_render()
 			windowinterface.showmessage(
 				"Can't insert before/after the root",
-				mtype = 'error')
+				mtype = 'error', parent = self.window)
 			return
 		ctx = node.GetContext()
 		type = node.GetType()
@@ -586,13 +587,23 @@ class HierarchyView(HierarchyViewDialog):
 		chname = None
 		if type == 'ext' or type == 'imm':
 			chlist = ctx.compatchannels(url, chtype)
+			lightweight = settings.get('lightweight')
 			if chlist:
-				chname = chlist[0]
-			elif settings.get('lightweight') and \
+				if len(chlist) > 1:
+					i = windowinterface.multchoice('Choose a channel for this file', ['Cancel']+chlist, 0, parent = self.window)
+					if i == 0:
+						self.opt_render()
+						# Cancel
+						return
+					chname = chlist[i-1]
+				else:
+					chname = chlist[0]
+			elif lightweight and \
 			     (url is not None or chtype is not None):
+				self.opt_render()
 				windowinterface.showmessage(
 					'No compatible channels for this file',
-					mtype = 'error')
+					mtype = 'error', parent = self.window)
 				return
 		self.toplevel.setwaiting()
 		if where <> 0:
@@ -645,13 +656,13 @@ class HierarchyView(HierarchyViewDialog):
 		if node is None:
 			windowinterface.showmessage(
 				'There is no selection to insert at',
-				mtype = 'error')
+				mtype = 'error', parent = self.window)
 			return
 		parent = node.GetParent()
 		if parent is None:
 			windowinterface.showmessage(
 				"Can't insert above the root",
-				mtype = 'error')
+				mtype = 'error', parent = self.window)
 			return
 		em = self.editmgr
 		if not em.transaction():
@@ -677,12 +688,12 @@ class HierarchyView(HierarchyViewDialog):
 		if type <> 'node' or node is None:
 			windowinterface.showmessage(
 			    'The clipboard does not contain a node to paste',
-			    mtype = 'error')
+			    mtype = 'error', parent = self.window)
 			return
 		if self.focusnode is None:
 			windowinterface.showmessage(
 				'There is no selection to paste into',
-				mtype = 'error')
+				mtype = 'error', parent = self.window)
 			return
 		self.toplevel.setwaiting()
 		if node.context is not self.root.context:
@@ -698,7 +709,7 @@ class HierarchyView(HierarchyViewDialog):
 			if parent is None:
 				windowinterface.showmessage(
 					"Can't insert before/after the root",
-					mtype = 'error')
+					mtype = 'error', parent = self.window)
 				node.Destroy()
 				return 0
 		elif where == 0:
@@ -708,7 +719,7 @@ class HierarchyView(HierarchyViewDialog):
 			    self.focusnode.GetChannelType() != 'RealPix' or
 			    node.__class__ is not SlideMMNode):
 				windowinterface.showmessage('Selection is a leaf node!',
-							    mtype = 'error')
+							    mtype = 'error', parent = self.window)
 				node.Destroy()
 				return 0
 		em = self.editmgr
@@ -809,7 +820,7 @@ class HierarchyView(HierarchyViewDialog):
 				msg = obj.node.errormessage
 				if not msg:
 					msg = 'No message for this item'
-				windowinterface.showmessage(msg)
+				windowinterface.showmessage(msg, parent = self.window)
 			# Don't return but fall through
 		if obj.node is self.focusnode:
 			return
