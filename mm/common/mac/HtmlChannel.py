@@ -68,7 +68,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		#
 		# Create the widget
 		#
-		self.htmlw = htmlwidget.HTMLWidget(wd._wid, wd.qdrect(), self._name)
+		self.htmlw = htmlwidget.HTMLWidget(wd, wd.qdrect(), self._name)
 		bg = wd._bgcolor
 		fg = wd._fgcolor
 		an = fg # Not needed anyway, and we have to provide something...
