@@ -362,8 +362,10 @@ class SVGLength(SVGAttr):
 		elif self._units is None:
 			return '%s' % ff(self._value)
 		else:	
+			print self._value
+			return ''
 			return '%s%s' % (ff(self._value), self._units)
-	
+
 	def getValue(self, units='px'):
 		if self._value is not None:
 			if self._units=='%':
@@ -465,6 +467,8 @@ class SVGAngle(SVGAttr):
 					self._units = units
 
 	def __repr__(self):
+		if self._value is None:
+			return ''
 		return '%s%s' % (ff(self._value), self._units)
 	
 	def getValue(self, units='rad'):
@@ -652,8 +656,13 @@ class SVGTime:
 					self._units = units
 
 	def __repr__(self):
-		return '%s%s' % (ff(self._value), self._units)
-	
+		if self._value is None:
+			return ''
+		elif type(self._value) == type(''):
+			return self._value
+		else:
+			return '%s%s' % (ff(self._value), self._units)
+
 	def getValue(self, units='s'):
 		if self._value is not None:
 			if self._value == 'indefinite':
@@ -1110,17 +1119,19 @@ class SVGPoints:
 		self._attr = attr
 		self._points = []
 		self._default = default
-		st = StringSplitter(str, delim=' ,\t\n\r\f')
-		while st.hasMoreTokens():
-			x = st.nextToken()
-			if st.hasMoreTokens():
-				y = st.nextToken()
+		if str:
+			L = splitlist(str)
+			n = len(L)
+			i = 0
+			while i<n-2:
 				try:
-					x, y = string.atoi(x), string.atoi(y)
+					x, y = math.floor(0.5+string.atof(L[i])), math.floor(0.5+string.atof(L[i+1]))
+					x, y = int(x), int(y)
 				except:
 					pass
 				else:
 					self._points.append((x, y))
+				i = i + 2
 
 	def __repr__(self):
 		s = ''

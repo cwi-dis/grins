@@ -297,10 +297,10 @@ class SvgSvg(SvgElement):
 		height = self.get('height')
 		if width is None: 
 			width = self.getXMLAttr('width')
-			width.setValue(100) # should be 100%
+			width.setValue(640) # should be 100%
 		if height is None:
 			height = self.getXMLAttr('height')
-			height.setValue(100) # should be 100%
+			height.setValue(480) # should be 100%
 							
 	def getSize(self):
 		return self.get('width'), self.get('height')
@@ -369,7 +369,9 @@ class SvgPar(SvgElement, svgtime.Par):
 
 	def timeInit(self, ttype, timeroot):
 		svgtime.Par.__init__(self, ttype, timeroot or self)
-			
+	
+	def isVisible(self):
+		return 0		
 #
 # Animate elements
 #
@@ -387,6 +389,9 @@ class AnimateElement(SvgElement, svgtime.TimeElement):
 	def createAnimator(self):
 		assert self._targetElement != None, 'invalid target element'
 		return None
+
+	def isVisible(self):
+		return 0		
 
 	def checkValues(self):
 		self._animtype = self.findAnimationType()
