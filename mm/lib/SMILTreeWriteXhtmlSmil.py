@@ -535,6 +535,8 @@ class SMILXhtmlSmilWriter(SMIL):
 				# set fill = 'freeze' if last visible child has it
 				if mtype == 'seq' and not hasfill:
 					self.applyFillHint(x, attrlist)
+				if mtype == 'seq' and not x.GetChildren():
+					self.applyEmptySeqHint(x, attrlist)
 				# normal
 				self.writetag('t:' + mtype, attrlist)
 			self.push()
@@ -889,6 +891,12 @@ class SMILXhtmlSmilWriter(SMIL):
 					else:
 						if diff > 0.0:
 							attrlist.append(('begin', fmtfloat(diff, prec = 2)))
+
+	def applyEmptySeqHint(self, x, attrlist):
+		d = x.attrdict
+		hasendcond = d.get('duration') or d.get('repeatdur') or d.get('endlist')
+		if not hasendcond:
+			attrlist.append(('dur', '0'))
 
 	def applyMediaStyle(self, node, nodeid, attrlist, mtype):
 		subRegGeom, mediaGeom = None, None
