@@ -1,4 +1,4 @@
-#include "std.h"
+#include "Std.h"
 #include "PyCppApi.h"
 
 // Cpp framework 
@@ -18,21 +18,21 @@
 // TypeObject
 
 TypeObject::TypeObject(const char *name,TypeObject *pBase,int typeSize,
-	struct PyMethodDef* methodList, Object *(*thector)())
+	struct PyMethodDef* methodList, RMAObject *(*thector)())
 	{
 	static PyTypeObject type_template = 
 		{
 		PyObject_HEAD_INIT(&PyType_Type)
 		0,											/*ob_size*/
 		"unnamed",									/*tp_name*/
-		sizeof(Object), 							/*tp_size*/
+		sizeof(RMAObject), 							/*tp_size*/
 		0,											/*tp_itemsize*/
-		(destructor)  Object::so_dealloc, 			/*tp_dealloc*/
+		(destructor)  RMAObject::so_dealloc, 			/*tp_dealloc*/
 		0,											/*tp_print*/
-		(getattrfunc) Object::so_getattr, 			/*tp_getattr*/
-		(setattrfunc) Object::so_setattr,			/*tp_setattr*/
+		(getattrfunc) RMAObject::so_getattr, 			/*tp_getattr*/
+		(setattrfunc) RMAObject::so_setattr,			/*tp_setattr*/
 		0,											/*tp_compare*/
-		(reprfunc)    Object::so_repr,				/*tp_repr*/
+		(reprfunc)    RMAObject::so_repr,				/*tp_repr*/
     	0,											/*tp_as_number*/
 		};
 
@@ -51,25 +51,25 @@ TypeObject::~TypeObject()
 
 ////////////////////////////////////////////////
 ////////////////////////////////////////////////
-// Object
+// RMAObject
 
-Object::Object()
+RMAObject::RMAObject()
 	{
 	}
 
-Object::~Object()
+RMAObject::~RMAObject()
 	{
 	#ifdef TRACE_LIFETIMES
 	TRACE("Destructing a '%s' at %p\n", ob_type->tp_name, this);
 	#endif
 	}
 
-Object *Object::make(TypeObject &makeTypeRef)
+RMAObject *RMAObject::make(TypeObject &makeTypeRef)
 	{
 	TypeObject *makeType = &makeTypeRef; // use to pass ptr as param!
 	if (makeType->ctor==NULL)
 		RETURN_ERR("Internal error - the type does not declare a constructor");	
-	Object *pNew = (*makeType->ctor)();
+	RMAObject *pNew = (*makeType->ctor)();
 	pNew->ob_type = makeType;
 	_Py_NewReference(pNew);
 	#ifdef TRACE_LIFETIMES
@@ -79,9 +79,9 @@ Object *Object::make(TypeObject &makeTypeRef)
 	}
 
 /*static*/ 
-BOOL Object::is_object(PyObject *&o,TypeObject *which)
+BOOL RMAObject::is_object(PyObject *&o,TypeObject *which)
 	{
-	Object *ob = (Object *)o;
+	RMAObject *ob = (RMAObject *)o;
 	if (ob==NULL || ob==Py_None)
 		return FALSE;
 	// quick fasttrack.
@@ -103,13 +103,13 @@ BOOL Object::is_object(PyObject *&o,TypeObject *which)
 			return FALSE;
 			}
 		o = obattr;
-		ob = (Object *)o;
+		ob = (RMAObject *)o;
 		}
 	return is_nativeobject(ob, which);
 	}
 
 /*static*/
-BOOL Object::is_nativeobject(PyObject *ob, TypeObject *which)
+BOOL RMAObject::is_nativeobject(PyObject *ob, TypeObject *which)
 	{
 	// check for inheritance.
 	TypeObject *thisType = (TypeObject *)ob->ob_type;
@@ -121,19 +121,19 @@ BOOL Object::is_nativeobject(PyObject *ob, TypeObject *which)
 	return FALSE;
 	}
 
-BOOL Object::is_object(TypeObject *which)
+BOOL RMAObject::is_object(TypeObject *which)
 	{
 	PyObject *cpy = this;
 	BOOL ret = is_object(cpy,which);
 	return ret;
 	}
 
-PyObject* Object::so_getattr(PyObject *self, char *name)
+PyObject* RMAObject::so_getattr(PyObject *self, char *name)
 	{
-	return ((Object *)self)->getattr(name);
+	return ((RMAObject *)self)->getattr(name);
 	}
 
-PyObject* Object::getattr(char *name)
+PyObject* RMAObject::getattr(char *name)
 	{
 	// implement inheritance.
 	PyObject *retMethod = NULL;
@@ -148,13 +148,13 @@ PyObject* Object::getattr(char *name)
 	return retMethod;
 	}
 
-int Object::so_setattr(PyObject *op, char *name, PyObject *v)
+int RMAObject::so_setattr(PyObject *op, char *name, PyObject *v)
 	{
-	Object* bc = (Object *)op;
+	RMAObject* bc = (RMAObject *)op;
 	return bc->setattr(name,v);
 	}
 
-int Object::setattr(char *name, PyObject *v)
+int RMAObject::setattr(char *name, PyObject *v)
 	{
 	char buf[128];
 	sprintf(buf, "%s has read-only attributes", ob_type->tp_name );
@@ -163,14 +163,14 @@ int Object::setattr(char *name, PyObject *v)
 	}
 
 /*static*/ 
-PyObject* Object::so_repr(PyObject *op)
+PyObject* RMAObject::so_repr(PyObject *op)
 	{
-	Object* w = (Object *)op;
+	RMAObject* w = (RMAObject *)op;
 	string ret = w->repr();
 	return Py_BuildValue("s",ret.c_str());
 	}
 
-string Object::repr()
+string RMAObject::repr()
 	{
 	string csRet;
 	char buf[50];
@@ -178,32 +178,31 @@ string Object::repr()
 	return string(buf);
 	}
 
-void Object::cleanup()
+void RMAObject::cleanup()
 	{
 	string rep = repr();
 	TRACE("cleanup detected %s, refcount = %d\n",rep.c_str(),ob_refcnt);
 	}
 
 /*static*/ 
-void Object::so_dealloc(PyObject *obj)
+void RMAObject::so_dealloc(PyObject *obj)
 	{
-	delete (Object*)obj;
+	delete (RMAObject*)obj;
 	}
 
 // @pymethod |PyAssocObject|GetMethodByType|Given a method name and a type object, return the attribute.
 /*static*/ 
-PyObject* Object::GetMethodByType(PyObject *self, PyObject *args)
+PyObject* RMAObject::GetMethodByType(PyObject *self, PyObject *args)
 	{
 	// @comm This function allows you to obtain attributes for base types.
 	PyObject *obType;
 	char *attr;
-	Object *pAssoc = (Object *)self;
+	RMAObject *pAssoc = (RMAObject *)self;
 	if (pAssoc==NULL) return NULL;
 	if (!PyArg_ParseTuple(args, "sO:GetAttributeByType", &attr, &obType ))
 		return NULL;
 
 	// check it is one of ours.
-	PyObject *retMethod = NULL;
 	TypeObject *thisType = (TypeObject *)pAssoc->ob_type;
 	while (thisType) 
 		{
@@ -215,15 +214,15 @@ PyObject* Object::GetMethodByType(PyObject *self, PyObject *args)
 	return Py_FindMethod(thisType->methods, self, attr);
 	}
 
-struct PyMethodDef Object_methods[] = {
-	{"GetMethodByType",Object::GetMethodByType,1},
+struct PyMethodDef RMAObject_methods[] = {
+	{"GetMethodByType",RMAObject::GetMethodByType,1},
 	{NULL,	NULL}
 };
 
-TypeObject Object::type("Object", 
+TypeObject RMAObject::type("RMAObject", 
 						NULL, 
-						sizeof(Object), 
-						Object_methods, 
+						sizeof(RMAObject), 
+						RMAObject_methods, 
 						NULL);
 
 
