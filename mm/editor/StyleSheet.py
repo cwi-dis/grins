@@ -20,7 +20,7 @@ class StyleSheet(ViewDialog):
 		self.window = w = windowinterface.Window(title)
 		self.browser = w.Selection(
 			'Styles', 'Name', [], None,
-			left =: None, top = None, right = None)
+			left = None, top = None, right = None)
 		separator = w.Separator(
 			left = None, right = None, top = self.browser)
 		buttons = w.ButtonRow(
