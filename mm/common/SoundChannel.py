@@ -13,53 +13,13 @@ import os
 from stat import ST_SIZE
 import string
 
-
-# Don't import 'al' here; this makes it possible to use the CMIF editor
-# on workstations without audio, as long as the document has no sound...
-import AL
-import aifc
-
 MAXQSIZE = 100*1024		# Max audio-queue size=100K
 
 from MMExc import *
 import MMAttrdefs
 
 from Channel import Channel
-
-##class csfile:
-##	def open(self, fname, mode):
-##		self.cached = ''
-##		self.f = open(fname, mode)
-##		return self
-##
-##	def __repr__(self):
-##		return '<csfile instance, f=' + `self.f` + '>'
-##
-##	def seek(self, *args):
-##		self.cached = ''
-##		return apply(self.f.seek, args)
-##
-##	def read(self, n):
-##		if n <= len(self.cached):
-##			rv = self.cached[:n]
-##			self.cached = self.cached[n:]
-##			self.f.seek(n, 1)
-##			return rv
-##		if self.cached:
-##			rv1 = self.cached
-##			self.cached = ''
-##			self.f.seek(len(rv1),1)
-##			return rv1 + self.read(n-len(rv1))
-##		self.cached = ''
-##		return self.f.read(n)
-##
-##	def readahead(self, n):
-##		self.cached = self.f.read(n)
-##		self.f.seek(-len(self.cached), 1)
-##
-##	def close(self):
-##		self.f.close()
-			
+		
 
 def armdone(arg):
 	pass
