@@ -606,6 +606,7 @@ class SMILHtmlTimeWriter(SMIL):
 		if tag == 'animateMotion':
 			from Animators import AnimateElementParser
 			aparser = AnimateElementParser(node)
+			isAdditive = aparser.isAdditive()
 			fromxy = aparser.toDOMOriginPosAttr('from')
 			toxy = aparser.toDOMOriginPosAttr('to')
 			values = aparser.toDOMOriginPosValues()
@@ -619,7 +620,7 @@ class SMILHtmlTimeWriter(SMIL):
 				if name == 'targetElement':
 					targetElement = value
 					value = scriptid(value)
-				if tag == 'animateMotion':
+				if tag == 'animateMotion' and not isAdditive:
 					if name == 'from':value = fromxy
 					elif name == 'to':value = toxy
 					elif name == 'values':value = values
