@@ -5,7 +5,6 @@ import MMNode, MMAttrdefs
 from MMExc import *
 from MMTypes import *
 import MMurl
-## from windowinterface import UNIT_PXL
 from HDTL import HD, TL
 import string
 from AnchorDefs import *
@@ -142,7 +141,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__nodemap = {}
 		self.__anchormap = {}
 		self.__links = []
-## 		self.attributes['par']['sync'] = None # reset in case it changed
 		self.__title = None
 		self.__base = ''
 		self.__printfunc = printfunc
@@ -233,7 +231,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					val = res.group('name')
 				attrdict['name'] = val
 			elif attr == 'src':
-				val = MMurl.unquote(val)
 				attrdict['file'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'begin' or attr == 'end':
 				node.__syncarcs.append(attr, val)
@@ -326,9 +323,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		data = None
 		mtype = None
 		if url is not None:
-			url = MMurl.unquote(url)
-			url = MMurl.basejoin(self.__base, url)
 			url, tag = MMurl.splittag(url)
+			url = MMurl.basejoin(self.__base, url)
 			url = self.__context.findurl(url)
 			nodetype = 'ext'
 			res = dataurl.match(url)
@@ -448,7 +444,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if not self.__regions.has_key(region):
 				self.syntax_error('unknown region')
 		else:
-## 			self.warning('node without region attribute', self.lineno)
 			region = '<unnamed %d>'
 			i = 0
 			while self.__regions.has_key(region % i):
@@ -612,6 +607,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		del node.__syncarcs
 
 	def CreateLayout(self):
+		from windowinterface import UNIT_PXL
 		bg = None
 		attrs = self.__root_layout
 		if attrs is not None:
@@ -640,7 +636,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__height = 480
 		layout['winsize'] = \
 			self.__width, self.__height
-		layout['units'] = 2 # UNIT_PXL
+		layout['units'] = UNIT_PXL
 
 	def FixBaseWindow(self):
 		if self.__layout is None:
@@ -769,10 +765,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					else:
 						h = float(h) / self.__height
 				ch['base_winoff'] = x, y, w, h
-## doesn't do any good for HTML channels
-## 				# anchors should not be visible
-## 				ch['hicolor'] = ch['bucolor'] = \
-## 						MMAttrdefs.getdef('bgcolor')[1]
 		node.attrdict['channel'] = name
 
 	def FixLinks(self):
@@ -790,19 +782,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if type(aid) is type(()):
 				aid, atype, args = aid
 			src = node, aid
-			if href[:1] == '#':
-				if self.__anchormap.has_key(href[1:]):
-					dst = self.__anchormap[href[1:]]
+			href, tag = MMurl.splittag(href)
+			if not href:
+				if self.__anchormap.has_key(tag):
+					dst = self.__anchormap[tag]
 				else:
-					if self.__nodemap.has_key(href[1:]):
-						dst = self.__nodemap[href[1:]]
+					if self.__nodemap.has_key(tag):
+						dst = self.__nodemap[tag]
 						dst = self.__wholenodeanchor(dst)
 					else:
-						self.warning('unknown node id %s' % href[1:])
+						self.warning("unknown node id `%s'" % tag)
 						continue
 				hlinks.addlink((src, dst, DIR_1TO2, ltype))
 			else:
-				href, tag = MMurl.splittag(href)
 				if '/' not in href:
 					href = href + '/1'
 				hlinks.addlink((src, (href, tag or ''), DIR_1TO2, ltype))
@@ -906,12 +898,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			self.syntax_error('required attribute content missing in meta element')
 			return
-# no 'sync' in REC
-## 		if name == 'sync':
-## 			if content not in ('hard', 'soft'):
-## 				self.syntax_error('illegal value for sync attribute')
-## 				return
-## 			self.attributes['par']['sync'] = content
 		if name == 'title':
 			# make sure __title cannot be a SMIL region id
 			if content[:1] == content[-1:] == ' ':
@@ -1307,7 +1293,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_a:
 			self.syntax_error('nested a elements')
 		if attributes.has_key('href'):
-			href = MMurl.unquote(attributes['href'])
+			href = attributes['href']
 		else:
 			self.syntax_error('anchor without HREF')
 			return
@@ -1422,7 +1408,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__anchormap[id] = (uid, aid)
 		anchorlist.append((z, len(anchorlist), aid, atype, aargs))
 		if href is not None:
-			href = MMurl.unquote(href)
 			self.__links.append((uid, (aid, atype, aargs),
 					     href, ltype))
 
