@@ -1,45 +1,21 @@
 Creating a standalone CMIF for the mac.
 ---------------------------------------
 
-1.	Make a Python build directory, for instance build.maccmif.stand.
-2.	Create projects PythonCMIF.prj, by copying PythonStandalone.prj
-3.	Create a mwerks_cmif_config.h: copy it from mwerks_nonshared_config.h
-	and edit it (applet support must be enabled, ctb/tcl/shlib/complex
-	can be disabled)
-4.	Copy maccmifplay.rsrc to the build directory and add it to the project *replacing*
-	bundle.rsrc.
-5.	Set output file name to PythonCmif-68k, set C Header file to mwerks_cmif_config,
-	give the executable a decent size (10-15Mb),
-	remove cmathmodule, cobject, ctb, tcl files and build.
-6.	option-drag maccmifplay.py to this Python, select "interactive mode after script" and run.
-	Make sure you exercise all channels (more precise:
-	make sure *all* needed modules are imported)
-7.	Stop cmif with the abort command and exit pdb, giving you an interactive prompt.
-8.	Import findmodulefiles, and run findmodulefiles.findmodulefiles()
-	this produces a list of all modules used by cmif. Name the output file
-	modules.txt in the build.maccmif.stand folder.
-9.	Exit python with "import sys; sys.exit(0)"
-10.	Copy config.c from Mac:modules to the build directory and rename
-	it cmifconfig.c.
-11.	Start CmifPython, read the list of files from the file produced from
-	findmodulefiles, pass it to findmodulefiles.findunusedbuiltins.
-12.	Edit the cmifconfig.c file to remove modules listed as "unused" in the
-	previous step.
-13.	Open cmif.prj, replace config.c with cmifconfig.c, remove modules that
-	are no longer used (note: Cm is needed by Quicktime, so don't remove it). 
-	The resulting Python should still be able to run cmif.
+1.  Run macfreeze (PythonPPC should be 32Mb big at least) and create build.maccmif
+    folder.
+2.  Move to the Python folder as (build.maccmif), and leave an alias build.maccmif
+    in the cmif:mac folder.
+3.  Merge maccmifed.rsrc into frozenbundle.rsrc (take everything from maccmifed but the
+    STR# from frozenbundle). 
 11. Run mkattrdefresource.py (from cmif:mac). Put the result in attrdefs.rsrc
 	in the build folder.
-12. Start a python, read the list of files from findmodulefiles, pass it to
-	findmodulefiles.mkpycresourcefile. Select maccmifplay.py as main module input
-	file, put the output in cmifmodules.rsrc.
 13.	Copy maccmifplay.rsrc to cmifbundle.rsrc.
 14.	Drop cmifbundle.rsrc on EditPythonPrefs and set the search path to be only
 	$(APPLICATION). Also set the "Don't show console window until needed" bit.
 	Open with Resedit and remove the 'alis' resource, if present.
-14. Copy PythonCMIF-68K.µ to CMIF-68K.µ. Open it. Remove bundle.rsrc and maccmifplay.rsrc,
-	add attrdefs.rsrc, cmifbundle.rsrc and cmifmodules.rsrc. Replace macapplication.c by
-	macapplet.c. Set output file to CMIF-68K, set creator code to CMIF, build.
+14. Open the project, set target names to "CMIF ...", set application signature to
+    "GRIN", set output filenames to "CMIF ....".
+14. Add attrdefs.rsrc.
 15. Run and test it.
 16.	Repeat step 14 for PPC.
 
