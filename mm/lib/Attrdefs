@@ -25,14 +25,8 @@
 # A definition need not be wholly contained in a single input line;
 # blank lines and comments may be inserted freely.
 
-('_schedcache' (any) (1 2) 'Scheduler record list cache' default
-	'Scheduler record list cache' raw)
-
 (align (string) 'left' 'Alignment' default
 	'Alignment of short datasets' channel)
-
-(anchorid (int) 1 'Next anchor UID' hidden
-	'Next anchor UID to use' raw)
 
 (anchorlist (list (enclosed (tuple (any) (int) (enclosed (list (any))))))
 	() 'Anchors' hidden 'List of anchors on this node' raw)
@@ -70,9 +64,6 @@
 (channellist (list (enclosed (tuple (name) (attrdict)))) ()
 	'Channel List' hidden
 	'Channels used in this document (root node only)')
-
-(closed (bool) 0 'Closed' hidden
-	'If on, the node is closed in the hierarchy view' raw)
 
 (comment (string) '' 'Comment' default
 	 'An arbitrary comment string, not interpreted' raw)
@@ -142,9 +133,6 @@
 
 (pointsize (float) 0 'Point size' default
 	'Point size of text displayed in window' channel)
-
-(startupfile (string) '/dev/null' 'Startup file' file
-	'File executed at startup and reset of the channel' raw)
 
 (style (list (name)) () 'Style(s)' default
 	'List of style names that apply to this node/subtree' raw)
