@@ -20,7 +20,8 @@ class TransitionEngine:
 		self.move_resize()
 		self.currentparameters = None
 		
-		self.reverse = (dict['direction'] == 'reverse')
+##		self.reverse = (dict['direction'] == 'reverse')
+		self.reverse = 0
 		if not self.reverse:
 			self.startprogress = dict['startProgress']
 			self.endprogress = dict['endProgress']
@@ -41,6 +42,10 @@ class TransitionEngine:
 	def endtransition(self):
 		"""Called by upper layer (window) to tear down the transition"""
 		if self.windows != None:
+			# Show final result (saves us a redraw in window code)
+			self.value = 1.0
+			self._doredraw(0)
+			# Tear down our datastructures
 			mw_globals.toplevel.cancelidleproc(self._idleproc)
 			self.windows = None
 			self.transitiontype = None
@@ -65,6 +70,7 @@ class TransitionEngine:
 			if ny0 < y0: y0 = ny0
 			if nx1 > x1: x1 = nx1
 			if ny1 > y1: y1 = ny1
+		print 'transition size now', (x0, y0, x1, y1), self
 		self.transitiontype.move_resize((x0, y0, x1, y1))
 			
 		
@@ -77,8 +83,6 @@ class TransitionEngine:
 		mustredraw is true we should do the recalc even if the transition hasn't advanced."""
 		if self.running:
 			self.value = float(time.time() - self.starttime) / self.duration
-			if self.reverse:
-				self.value = 1 - self.value
 			if self.value >= self.endprogress:
 				self._cleanup()
 				return

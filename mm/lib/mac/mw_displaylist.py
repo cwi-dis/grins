@@ -230,6 +230,26 @@ class _DisplayList:
 		Qd.DisposeRgn(rgn)
 		return ok
 		
+	def _getredrawguarantee(self):
+		"""Return a region that we promise we will redraw. Simple implementation,
+		only return the initial clear or the first image (good enough for now)"""
+		window = self._window
+		for entry in self._list:
+			cmd = entry[0]
+			if cmd == 'clear':
+				r = Qd.NewRgn()
+				Qd.RectRgn(r, window.qdrect())
+				return r
+			if cmd == 'image':
+				xscrolloffset, yscrolloffset = window._scrolloffset()
+				mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
+				dstx, dsty = dstx+xscrolloffset, dsty+yscrolloffset
+				dstrect = dstx, dsty, dstx+w, dsty+h
+				r = Qd.NewRgn()
+				Qd.RectRgn(r, dstrect)
+				return r
+		return None
+		
 	def _render(self, clonestart=0):
 		self._really_rendered = 1
 		window = self._window
@@ -505,6 +525,14 @@ class _DisplayList:
 		self._list.append(('image', mask, image, src_x, src_y,
 				   dest_x, dest_y, width, height))
 		self._optimize(2)
+##		# Optimize out the initial clear, if possible
+##		if win.qdrect() == (dest_x, dest_y, dest_x+width, dest_y+height):
+##			if self._list[0][0] == 'clear':
+##				del self._list[0]
+##				print 'Removed clear'
+##			print 'No clear there'
+##		else:
+##			print 'Could not remove clear', win.qdrect(),  (dest_x, dest_y, dest_x+width, dest_y+height)
 ##		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
 		x, y, w, h = win._rect
 		wf, hf = win._scrollsizefactors()

@@ -855,17 +855,18 @@ class _CommonWindow:
 		# Next do ourselves
 		saveclip = Qd.NewRgn()
 		Qd.GetClip(saveclip)
-		Qd.SetClip(self._clip)
-		if not self._outline_color is None:
-			Qd.RGBForeColor(self._outline_color)
-			rect = self.qdrect()
-			Qd.FrameRect(rect)
-		Qd.RGBBackColor(self._bgcolor)
-		Qd.RGBForeColor(self._fgcolor)
-		if self._redrawfunc:
-			self._redrawfunc()
-		else:
-			self._do_redraw()
+		if not Qd.EmptyRgn(self._clip):
+			Qd.SetClip(self._clip)
+			if not self._outline_color is None:
+				Qd.RGBForeColor(self._outline_color)
+				rect = self.qdrect()
+				Qd.FrameRect(rect)
+			Qd.RGBBackColor(self._bgcolor)
+			Qd.RGBForeColor(self._fgcolor)
+			if self._redrawfunc:
+				self._redrawfunc()
+			else:
+				self._do_redraw()
 		if self._transition:
 			self._transition.changed()
 		Qd.SetClip(saveclip)
@@ -886,11 +887,12 @@ class _CommonWindow:
 		"""Do actual redraw"""
 		if self._active_displist:
 			self._active_displist._render()
-		elif self._frozen:
-			self._mac_setwin(mw_globals.BM_ONSCREEN)
+		elif self._frozen and not self._transition:
+##			self._mac_setwin(mw_globals.BM_ONSCREEN)
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 			Qd.RGBForeColor((0, 0, 0))
-			dst = self._mac_getoswindowpixmap(mw_globals.BM_ONSCREEN)
+##			dst = self._mac_getoswindowpixmap(mw_globals.BM_ONSCREEN)
+			dst = self._mac_getoswindowpixmap(mw_globals.BM_DRAWING)
 			src = self._mac_getoswindowpixmap(mw_globals.BM_PASSIVE)
 			rect = self.qdrect()
 			Qd.CopyBits(src, dst, rect, rect, QuickDraw.srcCopy, None)
@@ -947,6 +949,60 @@ class _CommonWindow:
 		if which == None:
 			which = self._mac_getdrawingbitmapindex()
 		return self._parent._mac_getoswindowpixmap(which)
+					
+	def _mkclip(self):
+		if not self._onscreen_wid or not self._parent:
+			return
+		if self._clip:
+			raise 'Clip already valid!'
+		# create region for whole window
+		self._clip = Qd.NewRgn()
+		Qd.RectRgn(self._clip, self.qdrect())
+##		self._clipvisible(self._clip)
+		#
+		# subtract all subwindows, insofar they aren't transparent
+		# at the moment
+		#
+		for w in self._subwindows:
+			r = w._getredrawguarantee()
+			if r:
+				Qd.DiffRgn(self._clip, r, self._clip)
+				Qd.DisposeRgn(r)
+		self._clipsubtractsiblings()
+	
+	def _clipsubtractsiblings(self):
+		pass	# Only implemented for subwindows
+
+	def _getredrawguarantee(self):
+		"""Return the region that we will paint on (i.e. what our parent does not
+		need to paint on)"""
+		if not self._onscreen_wid or not self._parent:
+			return
+		# If we're transparent we give no guarantees whatsoever
+		r = Qd.NewRgn()
+		# If we're not transparent, or transparent-when-empty and non-empty
+		# we redraw everything
+		if self._transparent == 0 or (self._transparent == -1 and self._active_displist):
+			Qd.RectRgn(r, self.qdrect())
+			return r
+		didsome = 0
+		if self._active_displist:
+			r2 = self._active_displist._getredrawguarantee()
+			if r2:
+				Qd.UnionRgn(r, r2, r)
+				Qd.DisposeRgn(r2)
+				didsome = 1
+		# The difficult case: we're not active, but our children may be.
+		for w in self._subwindows:
+			r2 = w._getredrawguarantee()
+			if r2:
+				Qd.UnionRgn(r, r2, r)
+				Qd.DisposeRgn(r2)
+				didsome = 1
+		if not didsome:
+			Qd.DisposeRgn(r)
+			return
+		return r
 					
 	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
 		global _in_create_box
@@ -1255,10 +1311,12 @@ class _CommonWindow:
 
 	# Experimental transition interface
 	def begintransition(self, inout, runit, dict):
+		print 'begintransition', self
 		if not self._transition_setup_before():
 			return
 		self._transition = mw_transitions.TransitionEngine(self, inout, runit, dict)
 		self._transition_setup_after()
+		print 'begintransition done', self
 		
 	def jointransition(self, window):
 		# Join the transition already created on "window".
@@ -1272,6 +1330,7 @@ class _CommonWindow:
 		self._transition_setup_after()
 
 	def endtransition(self):
+		print 'endtransition', self, self._transition
 		if not self._transition:
 			return
 ##		has_tmp = self._transition.need_tmp_wid()
@@ -1282,7 +1341,7 @@ class _CommonWindow:
 		self._mac_dispose_gworld(BM_PASSIVE)
 		if has_tmp:
 			self._mac_dispose_gworld(BM_TEMP)
-		self._mac_invalwin()
+##		self._mac_invalwin()
 		# Tell upper layers, if they are interested
 		if self._eventhandlers.has_key(OSWindowChanged):
 			func, arg = self._eventhandlers[OSWindowChanged]
@@ -1332,7 +1391,13 @@ class _CommonWindow:
 			Qd.SetPort(self._onscreen_wid)
 			updrgn = Qd.NewRgn()
 			Qd.RectRgn(updrgn, rect)
-			self._redraw_now(updrgn)
+			winupdrgn = Qd.NewRgn()
+			self._onscreen_wid.GetWindowUpdateRgn(winupdrgn)
+			Qd.SectRgn(updrgn, winupdrgn, updrgn)
+			if not Qd.EmptyRgn(updrgn):
+				self._redraw_now(updrgn)
+			Qd.DisposeRgn(updrgn)
+			Qd.DisposeRgn(winupdrgn)
 			del updrgn
 			
 			self._mac_create_gworld(BM_PASSIVE, 1, rect)
@@ -2109,28 +2174,6 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		where = Qd.GlobalToLocal(where)
 		return _CommonWindow._keyboardinput(self, char, where, event)
 
-	def _mkclip(self):
-		if not self._onscreen_wid or not self._parent:
-			return
-		if self._clip:
-			raise 'Clip already valid!'
-		# create region for whole window
-
-		self._clip = Qd.NewRgn()
-		Qd.RectRgn(self._clip, self.qdrect())
-		self._clipvisible(self._clip)
-		#
-		# subtract all subwindows, insofar they aren't transparent
-		# at the moment
-		#
-		for w in self._subwindows:
-			if w._transparent == 0 or \
-			   (w._transparent == -1 and w._active_displist):
-				r = Qd.NewRgn()
-				Qd.RectRgn(r, w.qdrect())
-				Qd.DiffRgn(self._clip, r, self._clip)
-				Qd.DisposeRgn(r)
-				
 	def _redraw(self, rgn=None):
 		_CommonWindow._redraw(self, rgn)
 		if rgn is None:
@@ -2140,6 +2183,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		
 	def _redraw_now(self, rgn):
 		"""Do a redraw of the specified region now"""
+		print '_redraw_now', self
 		self._redraw(rgn)
 		if not rgn:
 			rgn = self._onscreen_wid.GetWindowPort().visRgn
@@ -2413,32 +2457,16 @@ class _SubWindow(_CommonWindow):
 		# XXXX This is not good enough, really...
 		return (self._parent._subwindows[0] is self)
 
-	def _mkclip(self):
+	def _clipsubtractsiblings(self):
+		# subtract our higher-stacked siblings
 		if not self._parent:
 			return
-		if self._clip:
-			raise 'Clipregion already valid!'
-			
-		# create region for our subwindow
-		self._clip = Qd.NewRgn()
-		Qd.RectRgn(self._clip, self.qdrect())
-		# subtract all our subsubwindows
-		for w in self._subwindows:
-			if w._transparent == 0 or \
-			   (w._transparent == -1 and w._active_displist):
-				r = Qd.NewRgn()
-				Qd.RectRgn(r, w.qdrect())
-				Qd.DiffRgn(self._clip, r, self._clip)
-				Qd.DisposeRgn(r)
-		# subtract our higher-stacked siblings
 		for w in self._parent._subwindows:
 			if w == self:
 				# Stop when we meet ourselves
 				break
-			if w._transparent == 0 or \
-			   (w._transparent == -1 and w._active_displist):
-				r = Qd.NewRgn()
-				Qd.RectRgn(r, w.qdrect())
+			r = w._getredrawguarantee()
+			if r:
 				Qd.DiffRgn(self._clip, r, self._clip)
 				Qd.DisposeRgn(r)
 
