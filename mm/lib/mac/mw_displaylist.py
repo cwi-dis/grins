@@ -525,7 +525,7 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		win = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       win._prepare_image(file, crop, scale, center, coordinates)
+		       win._prepare_image(file, crop, scale, center, coordinates, self.__units)
 		self._list.append(('image', mask, image, src_x, src_y,
 				   dest_x, dest_y, width, height))
 		self._optimize(2)
