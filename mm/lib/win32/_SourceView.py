@@ -138,3 +138,8 @@ class _SourceView(docview.RichEditView):
 		if self._obj_==None: return 1
 		if self.GetSafeHwnd()==0: return 1
 		return (not self.IsWindowVisible())
+
+	def apply_callback(self, args):
+		pass
+	def revert_callback(self, args):
+		pass
