@@ -213,6 +213,9 @@ MENUBAR=(
 		(FLAG_BOSTON, ENTRY, 'RealPix to S&MIL 2.0', None, RPCONVERT),
 		(FLAG_PRO, ENTRY, 'SMIL 2.0 to RealPi&x', None, CONVERTRP),
 		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Mark on timeline\tCtrl+M', 'M', MARK),		
+		(FLAG_ALL, ENTRY, '&Clear marks', None, CLEARMARKS),
+		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Select object from source', 'S', SELECTNODE_FROM_SOURCE),		
 		(FLAG_ALL, SEP,),
 		((features.ALIGNTOOL,), CASCADE, '&Align', (

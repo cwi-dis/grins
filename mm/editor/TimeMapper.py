@@ -65,6 +65,19 @@ class TimeMapper:
 		self.collisiondict[t0] = 0
 		self.collisiondict[t1] = 0
 
+	def addmarker(self, time):
+		if self.collisiondict.has_key(time):
+			return
+		self.collisiondict[time] = 0
+		if self.collecting:
+			return
+		# Not collecting anymore, so we hand-update the other
+		# data structures
+		px = self.interptime2pixel(time)
+		self.times.append(time)
+		self.times.sort()
+		self.minpos[time] = px
+
 	def addcollision(self, time, minpixeldistance):
 		if not self.collecting:
 			raise Error, 'Adding collision while not collecting data anymore'
@@ -118,10 +131,12 @@ class TimeMapper:
 ##			min_pixels_per_second = int(min_pixels_per_second+0.5)
 		elif min_pixels_per_second == 0:
 			min_pixels_per_second = 2
+		# Jack added this back in:
+		min_pixels_per_second = int(min_pixels_per_second+0.5)
 		if __debug__:
 			if DEBUG: print 'min pxl per sec:',min_pixels_per_second
 		for time, (stalltime, stalltype) in self.stalldict.items():
-			stallpixels = stalltime * min_pixels_per_second
+			stallpixels = int(stalltime * min_pixels_per_second +0.5)
 			if stallpixels > self.collisiondict[time]:
 				self.collisiondict[time] = stallpixels
 		minpos = 0
@@ -183,6 +198,10 @@ class TimeMapper:
 		for tm in self.times:
 			mp = self.minpos[tm]
 			cd = self.collisiondict[tm]
+			if mp == pxl:
+				# Note by Jack: I added this "if" but I don't
+				# fully understand the code below...
+				return tm, 1
 			if pos < mp:
 				if lasttime is not None:
 					# need to interpolate

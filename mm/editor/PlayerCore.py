@@ -248,6 +248,9 @@ class PlayerCore(Selecter, PlayerCommon):
 	def maystart(self):
 		return not self.locked
 
+	def get_mark_info(self):
+		return self.playroot, self.scheduler.timefunc()
+
 	def checkRegions(self):
 		# XXX Ought to detect renamed channels...
 		# (1) Delete channels that have disappeared

@@ -64,26 +64,32 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			SCHEDDUMP(callback = (self.scheduler.dump, ())),
 			MAGIC_PLAY(callback = (self.magic_play, ())),
 			]
-		play = PLAY(callback = (self.play_callback, ()))
-		pause = PAUSE(callback = (self.pause_callback, ()))
-		stop = STOP(callback = (self.stop_callback, ()))
+## These commands are implemented by TopLevel nowadays.
+##		play = PLAY(callback = (self.play_callback, ()))
+##		pause = PAUSE(callback = (self.pause_callback, ()))
+##		stop = STOP(callback = (self.stop_callback, ()))
+##		mark = MARK(callback = (self.mark_callback, ()))
+
 		self.stoplist = self.commandlist + [
-			# when stopped, we can play and pause
-			play,
-			pause,
-			stop,
+##			# when stopped, we can play and pause
+##			play,
+##			pause,
+##			stop,
+##			mark, # DBG
 			]
 		self.playlist = self.commandlist + [
-			# when playing, we can pause and stop
-			pause,
-			stop,
+##			# when playing, we can pause and stop
+##			pause,
+##			stop,
+##			mark,
 			]
 		self.pauselist = self.commandlist + [
-			# when pausing, we can continue (play or
-			# pause) and stop
-			play,
-			pause,
-			stop,
+##			# when pausing, we can continue (play or
+##			# pause) and stop
+##			play,
+##			pause,
+##			stop,
+##			mark,
 			]
 		self.alllist = self.pauselist
 		
@@ -267,6 +273,9 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		for ch in self.channels.values():
 			ch.register_exporter(exporter) 
 		self.play()
+
+	def can_mark(self):
+		return self.playing
 	#
 	# FORMS callbacks.
 	#

@@ -433,6 +433,10 @@ class MERGE_PARENT(_CommandBase):
 	help = 'Merge this node and it\'s parent'
 class MERGE_CHILD(_CommandBase):
 	help = 'Delete this item but keep its contents'
+class MARK(_CommandBase):
+	help = 'Mark the current playback time on the timeline'
+class CLEARMARKS(_CommandBase):
+	help = 'Clear all timeline markers'
 
 #
 # Channel view commands
