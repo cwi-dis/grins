@@ -87,29 +87,47 @@ static PyObject* MP3Decoder_DecodeHeader(PyMP3Decoder *self, PyObject *args)
 // mp3_lib_decode_buffer
 static PyObject* MP3Decoder_DecodeBuffer(PyMP3Decoder *self, PyObject *args)
 	{
-	PyObject *obj;
-	int outbufsize = 8192;
-	if (!PyArg_ParseTuple(args,"S|i",&obj, &outbufsize))
+	PyObject *obj = NULL;
+	int outbufsize = 4800;
+	if (!PyArg_ParseTuple(args,"|Si",&obj, &outbufsize))
 		return NULL;
-	unsigned char *inbuf = (unsigned char*)PyString_AS_STRING(obj);
-	int insize = PyString_GET_SIZE(obj);
 
+	unsigned char *inbuf = NULL;
+	int insize = 0;	
+	if(obj != NULL)
+		{
+		inbuf = (unsigned char*)PyString_AS_STRING(obj);
+		insize = PyString_GET_SIZE(obj);
+		if(insize == 0)
+			inbuf = NULL;
+		}
 	PyObject *outbufobj = PyString_FromStringAndSize(NULL, outbufsize);
 	if(outbufobj == NULL)
 		return NULL;
 	char *outbuf = PyString_AsString(outbufobj);
-	int done = 0;
-	int decsize = 0;
-	int status = mp3_lib_decode_buffer(inbuf, insize, outbuf, outbufsize, &done, &decsize);
-	PyObject *rv = Py_BuildValue("(Oiii)", outbufobj, decsize, done, status);
+	int done = 0, inputpos = 0;
+	int status = mp3_lib_decode_buffer(inbuf, insize, outbuf, outbufsize, &done, &inputpos);
+	PyObject *rv = Py_BuildValue("(Oiii)", outbufobj, done, inputpos, status);
 	Py_DECREF(outbufobj);
 	return rv;
+	}
+
+static PyObject* MP3Decoder_Reset(PyMP3Decoder *self, PyObject *args)
+	{
+	int equalizer = 0;
+	char *eqfactors = 0;
+	if (!PyArg_ParseTuple(args, "|is", &equalizer, &eqfactors))
+		return NULL;
+	mp3_lib_finalize();
+	mp3_lib_init(equalizer, eqfactors);
+	return none();
 	}
 
 PyMethodDef PyMP3Decoder::methods[] = {
 	{"GetWaveFormat", (PyCFunction)MP3Decoder_GetWaveFormat, METH_VARARGS, ""},
 	{"DecodeHeader", (PyCFunction)MP3Decoder_DecodeHeader, METH_VARARGS, ""},
 	{"DecodeBuffer", (PyCFunction)MP3Decoder_DecodeBuffer, METH_VARARGS, ""},
+	{"Reset", (PyCFunction)MP3Decoder_Reset, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
 
