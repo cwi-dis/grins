@@ -851,7 +851,8 @@ class _MenuSupport:
 				 'depth': toplevel._default_visual.depth})
 		if title:
 			list = [title, None] + list
-		X_windowbase._create_menu(menu, list)
+		X_windowbase._create_menu(menu, list, toplevel._default_visual,
+					  toplevel._default_colormap)
 		self._menu = menu
 		self._form.AddEventHandler(X.ButtonPressMask, FALSE,
 					   self._post_menu, None)
@@ -1027,6 +1028,9 @@ class Button(_Widget):
 		self._form.labelString = text
 		self._text = text
 
+	def setsensitive(self, sensitive):
+		self._form.sensitive = sensitive
+
 	def _callback(self, widget, callback, call_data):
 		if self.is_closed():
 			return
@@ -1100,6 +1104,12 @@ class OptionMenu(_Widget):
 			return
 		self._form.menuHistory = self._buttons[pos]
 		self._value = pos
+
+	def setsensitive(self, pos, sensitive):
+		if 0 <= pos < len(self._buttons):
+			self._buttons[pos].sensitive = sensitive
+		else:
+			raise error, 'pos out of range'
 
 	def setvalue(self, value):
 		'''Set the currently selected option to VALUE.'''
@@ -1212,7 +1222,9 @@ class PulldownMenu(_Widget):
 				'windowMenuButton', cascade,
 				{'labelString': item,
 				 'subMenuId': menu})
-			X_windowbase._create_menu(menu, list)
+			X_windowbase._create_menu(menu, list,
+						  toplevel._default_visual,
+						  toplevel._default_colormap)
 			buttons.append(button)
 		_Widget.__init__(self, parent, menubar)
 		self._buttons = buttons
@@ -1232,7 +1244,9 @@ class PulldownMenu(_Widget):
 				{'colormap': toplevel._default_colormap,
 				 'visual': toplevel._default_visual,
 				 'depth': toplevel._default_visual.depth})
-		X_windowbase._create_menu(menu, list)
+		X_windowbase._create_menu(menu, list,
+					  toplevel._default_visual,
+					  toplevel._default_colormap)
 		omenu = button.subMenuId
 		button.subMenuId = menu
 		omenu.DestroyWidget()
@@ -1728,7 +1742,9 @@ class ButtonRow(_Widget):
 					'submenuLabel', cascadebutton,
 					{'labelString': label,
 					 'subMenuId': submenu})
-				X_windowbase._create_menu(submenu, callback)
+				X_windowbase._create_menu(submenu, callback,
+					  toplevel._default_visual,
+					  toplevel._default_colormap)
 				menu.ManageChild()
 				continue
 			if callback and type(callback) is not TupleType:
@@ -1790,6 +1806,11 @@ class ButtonRow(_Widget):
 			raise error, 'button number out of range'
 		button = self._buttons[button]
 		button.set = onoff
+
+	def setsensitive(self, button, sensitive):
+		if not 0 <= button < len(self._buttons):
+			raise error, 'button number out of range'
+		self._buttons[button].sensitive = sensitive
 
 	def _callback(self, widget, callback, call_data):
 		if self.is_closed():
