@@ -2579,7 +2579,7 @@ class _ResizeableDisplayList(_DisplayList):
 		elif cmd == 'box':
 			rc = x, y, w, h = wnd.LRtoDR(entry[1])
 			# XXXX should we subtract 1 from right and bottom edges
-			if not self._overlap(region, rc):
+			if not self._overlap_xywh(region, rc):
 				return
 			win32mu.DrawRectangle(dc,rc,self._curfg)			
 		else:
