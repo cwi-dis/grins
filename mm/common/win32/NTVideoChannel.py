@@ -19,7 +19,7 @@ from AnchorDefs import *
 import windowinterface
 
 debug=0
-
+	
 class VideoChannel(Channel.ChannelWindowAsync):
 	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
 	node_attrs = Channel.ChannelWindow.node_attrs + [
@@ -46,16 +46,14 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def do_show(self, pchan):
 		if not Channel.ChannelWindowAsync.do_show(self, pchan):
 			return 0
-		self.__mc = MediaChannel.MediaChannel(self)
-		self.__mc.showit(self.window)
 		return 1
 
 	def do_hide(self):
 		self.__playing = None
-		self.__mc.unregister_for_timeslices()
-		self.__mc.release_res()
-		self.__mc.paint()
-		self.__mc = None
+		if self.__mc:
+			self.__mc.stopit()
+			self.__mc.destroy()
+			self.__mc = None
 		if self.__rc:
 			self.__rc.stopit()
 			self.__rc.destroy()
@@ -93,8 +91,10 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				if self.__rc.prepare_player(node):
 					self.__ready = 1
 		else:
+			if self.__mc is None:
+				self.__mc = MediaChannel.MediaChannel(self)
 			try:
-				self.__mc.prepare_player(node)
+				self.__mc.prepare_player(node, self.window)
 				self.__ready = 1
 			except MediaChannel.error, msg:
 				self.errormsg(node, msg)
@@ -110,8 +110,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			# arming failed, so don't even try playing
 			self.playdone(0)
 			return
-		self.window.CreateOSWindow()
 		if node.__type == 'real':
+			self.window.CreateOSWindow()
 			if not self.__rc:
 				self.playdone(0)
 			elif not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
@@ -123,9 +123,13 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				windowinterface.showmessage('No playback support for %s on this system\n'
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
 				self.playdone(0)
-		elif not self.__mc.playit(node, self.window):
-			self.errormsg(node,'Can not play')
-			self.playdone(0)
+		else:
+			self.window.CreateOSWindow()
+			if not self.__mc:
+				self.playdone(0)	
+			elif not self.__mc.playit(node, self.window):
+				windowinterface.showmessage('Failed to play media file', mtype = 'warning')
+				self.playdone(0)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
@@ -229,7 +233,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.__playing = None
 
 	def stopplay(self, node):
-		if self.__mc is not None:
+		if self.__mc:
 			self.__mc.stopit()
 		if self.__rc:
 			self.__rc.stopit()
