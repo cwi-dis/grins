@@ -494,20 +494,23 @@ class EffectiveAnimator:
 				self.__animators.remove(animator)			
 		self.__animators.append(animator)
 		animator.setEffectiveAnimator(self)
+		if debug: print 'adding animator', animator
 
 		if not self.__chan:
 			self.__chan = targChan
-		if self.__chan != targChan:
-			raise AssertionError
 
-	def onAnimateEnd(self, animator):
-		self.__animators.remove(animator)			
-		self.update()
+	def onAnimateEnd(self, targChan, animator):
+		self.__animators.remove(animator)
+		if debug: print 'removing animator',animator		
+		self.update(targChan)
 
 	# compute and apply animations composite effect
 	# this method is a notification from some animator 
 	# or some other knowledgeable entity that something has changed
-	def update(self):
+	def update(self, targChan):
+		if not self.__chan:
+			self.__chan = targChan
+
 		cv = self.__domval
 		for a in self.__animators:
 			if a.isAdditive():
@@ -523,9 +526,15 @@ class EffectiveAnimator:
 		if self.__chan and self.__chan.canupdateattr(self.__node, self.__attr):
 			self.__chan.updateattr(self.__node, self.__attr, displayValue)
 			if debug:
-				print self.__attr,'is',displayValue, '(visible)'
+				if cv == self.__domval:
+					print self.__attr,'is',displayValue, '(visible-domvalue)'
+				else:
+					print self.__attr,'is',displayValue, '(visible)'
 		elif debug:
-			print self.__attr,'is',displayValue
+			if cv == self.__domval:
+				print self.__attr,'is',displayValue (domvalue)
+			else:
+				print self.__attr,'is',displayValue
 		self.__currvalue = cv
 	
 	def getcurrentbasevalue(self, animator=None):
@@ -583,16 +592,25 @@ class AnimateElementParser:
 		self.__domval = None
 		self.__enable = 0
 		self.__grinsext = 0
+		self.__hasValidTarget = 0
+		self.__target = None
 
 		# locate target
-		if not anim.targetnode:
+		if not hasattr(anim,'targetnode') or not anim.targetnode:
 			te = MMAttrdefs.getattr(anim, 'targetElement')
 			if te:
-				root = self.node.GetRoot()
+				root = anim.GetRoot()
 				anim.targetnode = root.GetChildByName(te)
 			else:
 				anim.targetnode = anim.GetParent()
-		self.__target = anim.targetnode
+		if not anim.targetnode:
+			# the target node does not exist within grins
+			# maybe it is a region or a similarly managed element
+			print 'Failed to locate target element',te
+			print '\t',self
+			return
+		else:
+			self.__target = anim.targetnode
 
 
 		# do we have a valid target?
@@ -760,6 +778,9 @@ class AnimateElementParser:
 	def getAttrName(self):
 		return self.__attrname
 
+	def getGrinsAttrName(self):
+		return self.__grinsattrname
+
 	def getDOMValue(self):
 		return self.__domval
 							
@@ -811,7 +832,7 @@ class AnimateElementParser:
 		self.__attrname = MMAttrdefs.getattr(self.__anim, 'attributeName')
 		if not self.__attrname:
 			print 'failed to get attributeName'
-			print '>>', self
+			print '\t',self
 			return 0
 
 		if smil2grins.has_key(self.__attrname):
@@ -830,7 +851,7 @@ class AnimateElementParser:
 			
 		if not self.__domval:
 			print 'Failed to get original DOM value for attr',self.__attrname,'from node',self.__target
-			print '>>',self
+			print '\t',self
 			return 0
 		return 1
 
