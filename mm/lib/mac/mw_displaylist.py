@@ -13,7 +13,7 @@ import math
 from mw_globals import error
 from mw_globals import TRUE, FALSE
 from mw_globals import _X, _Y, _WIDTH, _HEIGHT
-from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH
+from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH, SIZE_3DBORDER
 import mw_fonts
 
 # Special round function (XXXX needs work).
@@ -21,6 +21,9 @@ def _roundi(x):
 	if x < 0:
 		return _roundi(x + 1024) - 1024
 	return int(x + 0.5)
+	
+def _colormix((r1, g1, b1), (r2, g2, b2)):
+	return (r1+r2)/2, (g1+g2)/2, (b1+b2)/2
 
 class _DisplayList:
 	def __init__(self, window, bgcolor):
@@ -234,14 +237,18 @@ class _DisplayList:
 			Qd.RGBForeColor(fgcolor)
 		elif cmd == '3dbox':
 			cl, ct, cr, cb = entry[1]
+			clt = _colormix(cl, ct)
+			ctr = _colormix(ct, cr)
+			crb = _colormix(cr, cb)
+			cbl = _colormix(cb, cl)
 			l, t, w, h = entry[2]
 			r, b = l + w, t + h
 ##			print '3Dbox', (l, t, r, b) # DBG
 			# l, r, t, b are the corners
-			l3 = l+3
-			t3 = t + 3
-			r3 = r - 3
-			b3 = b - 3
+			l3 = l + SIZE_3DBORDER
+			t3 = t + SIZE_3DBORDER
+			r3 = r - SIZE_3DBORDER
+			b3 = b - SIZE_3DBORDER
 			# Save old foreground color
 			fgcolor = wid.GetWindowPort().rgbFgColor
 			# draw left side
@@ -260,6 +267,18 @@ class _DisplayList:
 			Qd.RGBForeColor(cb)
 			polyhandle = self._polyhandle([(l3, b3), (r3, b3), (r, b), (l, b)])
 			Qd.PaintPoly(polyhandle)
+			# draw topleft
+			Qd.RGBForeColor(clt)
+			Qd.PaintRect((l, t, l3, t3))
+			# draw topright
+			Qd.RGBForeColor(ctr)
+			Qd.PaintRect((r3, t, r, t3))
+			# draw botright
+			Qd.RGBForeColor(crb)
+			Qd.PaintRect((r3, b3, r, b))
+			# draw leftbot
+			Qd.RGBForeColor(cbl)
+			Qd.PaintRect((l, b3, l3, b))
 ##			l = l+1
 ##			t = t+1
 ##			r = r-1
