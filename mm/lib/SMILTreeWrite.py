@@ -366,7 +366,38 @@ def getsubregionatt(writer, node, attr):
 		else:
 			return str(val)
 	return None
-	
+
+def getfitatt(writer, node, attr):
+	try:
+		val = node.GetRawAttr(attr)
+	except:
+		fit = None
+	else:
+		fit = 'hidden'
+		if val == 0:
+			fit = 'meet'
+		elif val == -1:
+			fit = 'slice'
+		elif val == 1:
+			fit = 'hidden'
+	return fit
+
+def getregpointatt(writer, node, attr):
+	try:
+		regpoint = node.GetRawAttr(attr)
+	except:
+		regpoint = None
+
+	return regpoint
+
+def getregalignatt(writer, node, attr):
+	try:
+		regalign = node.GetRawAttr(attr)
+	except:
+		regalign = None
+
+	return regalign
+		
 def getcmifattr(writer, node, attr):
 	val = MMAttrdefs.getattr(node, attr)
 	if val is not None:
@@ -623,6 +654,55 @@ def getsyncarc(writer, node, isend):
 ##	      node.GetUID()
 ##	return '%.3fs' % delay
 
+def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
+	if writer.smilboston:
+		return rv
+	if dstside != 0 or srcside != 0:
+		print '** Out of scope syncarc to',\
+		      node.GetRawAttrDef('name', '<unnamed>'),\
+		      node.GetUID()
+		return rv
+	srcnode = node.GetContext().mapuid(srcuid)
+	a = node.CommonAncestor(srcnode)
+	x = srcnode
+	while x is not a:
+		p = x.GetParent()
+		t = p.GetType()
+		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)) and t != 'excl':
+			print '** Out of scope syncarc to',\
+			      node.GetRawAttrDef('name', '<unnamed>'),\
+			      node.GetUID()
+			return rv
+		for xuid, xside, xdelay, yside in MMAttrdefs.getattr(x, 'synctolist'):
+			if yside == 0 and xdelay != 0:
+				# too complicated
+				print '** Out of scope syncarc to',\
+				      node.GetRawAttrDef('name', '<unnamed>'),\
+				      node.GetUID()
+				return rv
+		x = p
+	x = node
+	while x is not a:
+		p = x.GetParent()
+		t = p.GetType()
+		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)) and t != 'excl':
+			print '** Out of scope syncarc to',\
+			      node.GetRawAttrDef('name', '<unnamed>'),\
+			      node.GetUID()
+			return rv
+		for xuid, xside, xdelay, yside in MMAttrdefs.getattr(x, 'synctolist'):
+			if yside == 0 and xdelay != 0 and x is not node:
+				# too complicated
+				print '** Out of scope syncarc to',\
+				      node.GetRawAttrDef('name', '<unnamed>'),\
+				      node.GetUID()
+				return rv
+		x = p
+	print '*  Fixing out of scope syncarc to',\
+	      node.GetRawAttrDef('name', '<unnamed>'),\
+	      node.GetUID()
+	return '%.3fs' % delay
+
 def getterm(writer, node):
 	terminator = MMAttrdefs.getattr(node, 'terminator')
 	if terminator == 'LAST':
@@ -817,9 +897,10 @@ smil_attrs=[
 	("right", lambda writer, node:getsubregionatt(writer, node, 'right')),
 	("top", lambda writer, node:getsubregionatt(writer, node, 'top')),
 	("bottom", lambda writer, node:getsubregionatt(writer, node, 'bottom')),
+	("fit", lambda writer, node:getfitatt(writer, node, 'scale')),
 	# registration points
-	("regPoint", lambda writer, node:getstringattr(writer, node, "regPoint")),
-	("regAlign", lambda writer, node:getstringattr(writer, node, "regAlign")),
+	("regPoint", lambda writer, node:getregpointatt(writer, node, "regPoint")),
+	("regAlign", lambda writer, node:getregalignatt(writer, node, "regAlign")),
 	
 	("from", lambda writer, node:getstringattr(writer, node, "from")),
 	("to", lambda writer, node:getstringattr(writer, node, "to")),
@@ -852,7 +933,7 @@ cmif_node_attrs_ignore = {
 	'title':0, 'mimetype':0, 'terminator':0, 'begin':0, 'fill':0,
 	'fillDefault':0,
 	'repeatdur':0, 'beginlist':0, 'endlist':0, 'restart':0,
-	'left':0,'right':0,'top':0,'bottom':0,'units':0,
+	'left':0,'right':0,'top':0,'bottom':0,'scale':0,'units':0,
 	'regPoint':0, 'regAlign':0,
 	'transIn':0, 'transOut':0,
 	}
@@ -1374,11 +1455,14 @@ class SMILWriter(SMIL):
 
 	def __writeRegPoint(self):
 		regpoints = self.root.GetContext().regpoints
-		for name, dict in regpoints.items():
+		for name, regpoint in regpoints.items():
+			if regpoint.isdefault():
+				continue
+				
 			attrlist = []
 			attrlist.append(('id', name))
 			
-			for attr, val in dict.items():
+			for attr, val in regpoint.items():
 				# for instance, we assume that a integer type value is a pixel value,
 				# and a float type value is a relative value (%)
 				if attr == 'top' or attr == 'bottom' or attr == 'left' or attr == 'right':
@@ -1541,8 +1625,9 @@ class SMILWriter(SMIL):
 					bgcolor = None # skip below
 				# non-SMIL extension:
 				# permanently visible region
-				attrlist.append(('%s:transparent' % NSGRiNSprefix,
-						 '0'))
+				if not self.smilboston:
+					attrlist.append(('%s:transparent' % NSGRiNSprefix,
+							 '0'))
 			#
 			# We write the background color only if it is not None.
 			# We also refrain from writing it if we're in G2 compatability mode and

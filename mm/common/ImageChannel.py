@@ -43,7 +43,8 @@ class ImageChannel(ChannelWindow):
 		
 		try:
 			self._arm_imbox = self.armed_display.display_image_from_file(
-					f, scale = scale, crop = crop, center = center)
+					f, scale = scale, crop = crop, center = center,
+					coordinates=self.getmediageom(node))
 			self.armed_display.knowcmd('image')
 		except (windowinterface.error, IOError), msg:
 			if type(msg) is type(self):
@@ -205,7 +206,8 @@ class ImageChannel(ChannelWindow):
 		crop = MMAttrdefs.getattr(node, 'crop', animated)
 		center = MMAttrdefs.getattr(node, 'center', animated)
 		try:
-			self._update_imbox = self.update_display.display_image_from_file(f, scale = scale, crop = crop, center = center)
+			self._update_imbox = self.update_display.display_image_from_file(f, scale = scale, crop = crop, center = center,
+			coordinates=self.getmediageom(node))
 			self.update_display.knowcmd('image')
 		except (windowinterface.error, IOError), msg:
 			if type(msg) is type(self):

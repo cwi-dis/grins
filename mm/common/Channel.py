@@ -8,6 +8,7 @@ from AnchorDefs import *
 import os
 debug = os.environ.has_key('CHANNELDEBUG')
 import MMAttrdefs
+from MMExc import NoSuchAttrError
 import windowinterface, WMEVENTS
 from windowinterface import SINGLE, TEXT, HTM, MPEG
 from windowinterface import TRUE, FALSE
@@ -1124,6 +1125,8 @@ class ChannelWindow(Channel):
 		self._bgimg = None
 		self.__callback = None
 		self.__out_trans_qid = None
+		self.__wingeom = None		
+		self.__mediageom = None		
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
 			PLAY(callback = (ui.play_callback, ())),
@@ -1279,7 +1282,8 @@ class ChannelWindow(Channel):
 ##					     (self.highlight, ())))
 ##				menu.append(('', 'unhighlight',
 ##					     (self.unhighlight, ())))
-			transparent = self._attrdict.get('transparent', 0)
+			# all the time transparent
+			transparent = -1 
 			self._curvals['transparent'] = (transparent, 0)
 			z = self._attrdict.get('z', 0)
 			self._curvals['z'] = (z, 0)
@@ -1295,41 +1299,10 @@ class ChannelWindow(Channel):
 						z = z,
 						type_channel = self._window_type,
 						units = units)
-##			if hasattr(self._player, 'editmgr'):
-##				menu.append(None)
-##				menu.append(('', 'resize',
-##					     (self.resize_window, (pchan,))))
 		else:
-			# no basewindow, create a top-level window
-			adornments = self._player.get_adornments(self)
-			units = self._attrdict.get('units',
-						   windowinterface.UNIT_MM)
-			width, height = self._attrdict.get('winsize', (50, 50))
-			self._curvals['winsize'] = ((width, height), (50,50))
-			x, y = self._attrdict.get('winpos', (None, None))
-			if self.want_default_colormap:
-				self.window = windowinterface.newcmwindow(x, y,
-					width, height, self._name,
-					visible_channel = self._visible,
-					type_channel = self._window_type,
-					units = units, adornments = adornments,
-					commandlist = self.commandlist)
-			else:
-				self.window = windowinterface.newwindow(x, y,
-					width, height, self._name,
-					visible_channel = self._visible,
-					type_channel = self._window_type,
-					units = units, adornments = adornments,
-					commandlist = self.commandlist)
-##			if hasattr(self._player, 'editmgr'):
-##				menu.append(('', 'select in timeline view',
-##					     (self.focuscall, ())))
-		if self._attrdict.has_key('bgcolor'):
-			self.window.bgcolor(self._attrdict['bgcolor'])
-		if self._attrdict.has_key('fgcolor'):
-			self.window.fgcolor(self._attrdict['fgcolor'])
-		self._curvals['bgcolor'] = self._attrdict.get('bgcolor'), None
-		self._curvals['fgcolor'] = self._attrdict.get('fgcolor'), None
+			# case not possible in internal channel
+			# only possible in LayoutChannel (look at LayoutChannel.py)
+			pass
 		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
 		self.window.register(WMEVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(WMEVENTS.Mouse0Release, self.mouserelease,
@@ -1396,34 +1369,32 @@ class ChannelWindow(Channel):
 	def do_show(self, pchan):
 		if debug:
 			print 'ChannelWindow.do_show('+`self`+')'
-		try:
-			del self.winoff
-		except AttributeError:
-			pass
+#		try:
+#			del self.winoff
+#		except AttributeError:
+#			pass
 		# create a window for this channel
-		pgeom = None
 		units = self._attrdict.get('units',
 					   windowinterface.UNIT_SCREEN)
 		if pchan:
 			#
-			# Find the base window offsets, or ask for them.
+			# Find the base layout channel window geom.
 			#
-			if self._played_node:
-				try:
-					pgeom = MMAttrdefs.getattr(self._played_node, 'base_winoff')
-				except KeyError:
-					pass
-			if pgeom:
-				self.winoff = pgeom
-			elif self._attrdict.has_key('base_winoff'):
-				self.winoff = pgeom = self._attrdict['base_winoff']
-			elif self._player.playing:
-				windowinterface.showmessage(
-					'No geometry for subchannel %s known' % self._name,
-					mtype = 'error', grab = 1)
-				pchan._subchannels.remove(self)
-				pchan = None
-			else:
+			if self.__wingeom == None:
+				# by default channel area is the same as LayoutChannel area
+				left, top, width, height = pchan._attrdict['base_winoff']
+				self.__wingeom = 0, 0, width, height
+			
+			pgeom = self.__wingeom
+#			if pchan._attrdict.has_key('base_winoff'):
+#				self.wingeom = pgeom = pchan._attrdict['base_winoff']
+#			elif self._player.playing:
+#				windowinterface.showmessage(
+#					'No geometry for subchannel %s known' % self._name,
+#					mtype = 'error', grab = 1)
+#				pchan._subchannels.remove(self)
+#				pchan = None
+#			else:
 ##				pchan.window.create_box(
 ##					'Draw a subwindow for %s in %s' %
 ##						(self._name, pchan._name),
@@ -1436,10 +1407,10 @@ class ChannelWindow(Channel):
 				# without using the edit mgr).
 				# Or should I skip the curvals stuff below, to do this correctly?
 				#
-				self.winoff = pgeom = (0.0, 0.0, 1.0, 1.0)
-				units = windowinterface.UNIT_SCREEN
-				self._attrdict['base_winoff'] = pgeom
-				self._attrdict['units'] = units
+#				self.winoff = pgeom = (0.0, 0.0, 1.0, 1.0)
+#				units = windowinterface.UNIT_SCREEN
+#				self._attrdict['base_winoff'] = pgeom
+#				self._attrdict['units'] = units
 			self._curvals['base_winoff'] = pgeom, None
 		self.create_window(pchan, pgeom, units)
 		return 1
@@ -1494,10 +1465,28 @@ class ChannelWindow(Channel):
 		if not self._is_shown or not node.ShouldPlay() \
 		   or not self.window:
 			return 0
+
 		if self.armed_display:
 			self.armed_display.close()
 		bgcolor = self.getbgcolor(node)
+		
+		# experimental subregion and regpoint code
+		# we have to resize the window before the do_arm() method call, because
+		# do_arm use the real window size to determinate the real scale of an image
+		# when the scale computation will be clean, we'll be able to resize the
+		# window from play method just before display the media.
+		wingeom = self.getwingeom(node)
+		if wingeom != self.__wingeom:
+			self.__wingeom = wingeom
+			# print 'old geom : ',self.__wingeom
+			# print 'new geom : ',wingeom
+			units = self._attrdict.get('units',
+				   windowinterface.UNIT_SCREEN)
+ 			self.window.updatecoordinates(wingeom, units)
+ 		# experimental subregion and regpoint code
+
 		self.armed_display = self.window.newdisplaylist(bgcolor)
+			
 		for arc in node.sched_children:
 			if arc.event == 'click':
 				self.armed_display.fgcolor(bgcolor)
@@ -1530,7 +1519,168 @@ class ChannelWindow(Channel):
 			self.setanchor(armed_anchor[A_ID],
 				       armed_anchor[A_TYPE], b,
 				       armed_anchor[A_TIMES])
+				       
 		return 0
+
+	# get the area media geom according to registration points
+	# Actual duration: about 1ms
+	def getmediageom(self, node):
+		subreg_height = node.__subreg_height
+		subreg_width = node.__subreg_width
+		subreg_top = node.__subreg_top
+		subreg_left = node.__subreg_left
+
+		# determinate media size
+		try:
+			file = node.GetAttr('file')
+			url = node.context.findurl(file)
+			import Sizes
+			media_width, media_height = Sizes.GetSize(url)
+		except:
+			# want to make them at least visible...
+			media_width = subreg_width
+			media_height = subreg_height
+
+		# print 'media width =',media_width
+		# print 'media height =',media_height
+
+		# get fit attribute 
+		scale = MMAttrdefs.getattr(node,'scale')
+		# print 'scale =',scale
+			
+		# get regpoint
+		regpoint = node.GetRegPoint()
+		# print 'regpoint =',regpoint
+		regpoint_x = regpoint.getx(subreg_width)
+		regpoint_y = regpoint.gety(subreg_height)
+		
+		# get regalign
+		regalign = node.GetRegAlign(regpoint)
+		# print 'regalign =',regalign
+
+		# start of positioning algorithm
+		#
+
+		# at first, calculation of geom for fill attribute
+				
+		# according to the scale (fit), compute the values
+		if scale == 1:  #hidden
+			area_height = media_height
+			area_width = media_width
+			 
+		elif scale == 0: # meet
+			if regalign in ('topLeft', 'topMid', 'topRight'):
+				area_height = subreg_height-regpoint_y
+			if regalign in ('topLeft', 'midLeft', 'bottomLeft'):
+				area_width = subreg_width-regpoint_x
+			if regalign in ('topMid', 'center', 'bottomMid'):
+				area_width = subreg_width-regpoint_x
+				if regpoint_x < area_width:
+					area_width = regpoint_x
+				area_width = area_width*2
+			if regalign in ('topRight', 'midRight', 'bottomRight'):
+				area_width = regpoint_x
+			if regalign in ('midLeft', 'midRight', 'center'):
+				area_height = subreg_height-regpoint_y
+				if regpoint_y < area_height:
+					area_height = regpoint_y
+				area_height = area_height*2
+			if regalign in ('bottomLeft', 'bottomMid', 'bottomRight'):
+				area_height = regpoint_y
+
+			media_ratio = float(media_width)/float(media_height)
+			# print 'ratio=',media_ratio
+			if area_height*media_ratio > area_width:
+				area_height = area_width/media_ratio
+			else:
+				area_width = area_height*media_ratio
+
+		elif scale == -1: # slice
+			if regalign in ('topLeft', 'topMid', 'topRight'):
+				area_height = subreg_height-regpoint_y
+			if regalign in ('topLeft', 'midLeft', 'bottomLeft'):
+				area_width = subreg_width-regpoint_x
+			if regalign in ('topMid', 'center', 'bottomMid'):
+				area_width = subreg_width-regpoint_x
+				if regpoint_x > area_width:
+					area_width = regpoint_x
+				area_width = area_width*2
+			if regalign in ('topRight', 'midRight', 'bottomRight'):
+				area_width = regpoint_x
+			if regalign in ('midLeft', 'midRight', 'center'):
+				area_height = subreg_height-regpoint_y
+				if regpoint_y > area_height:
+					area_height = regpoint_y
+				area_height = area_height*2
+			if regalign in ('bottomLeft', 'bottomMid', 'bottomRight'):
+				area_height = regpoint_y
+			
+		if regalign in ('topLeft', 'topMid', 'topRight'):
+			area_top = regpoint_y
+		if regalign in ('topLeft', 'midLeft', 'bottomLeft'):
+			area_left = regpoint_x
+		if regalign in ('topMid', 'center', 'bottomMid'):
+			area_left = regpoint_x-(area_width/2)
+		if regalign in ('topRight', 'midRight', 'bottomRight'):
+			area_left = regpoint_x-area_width
+		if regalign in ('midLeft', 'midRight', 'center'):
+			area_top = regpoint_y-(area_height/2)
+		if regalign in ('bottomLeft', 'bottomMid', 'bottomRight'):
+			area_top = regpoint_y-area_height
+
+		#
+		# end of positioning algorithm
+
+		# print 'area geom = ',area_left, area_top, area_width, area_height
+		
+		return float(area_left)/subreg_width, float(area_top)/subreg_height, \
+					 float(area_width)/subreg_width, float(area_height)/subreg_height
+		
+	# get the sub channel geom according to registration sub-regions
+	def getwingeom(self, node):		
+		try:
+			subreg_left = node.GetAttr('left')
+		except NoSuchAttrError:
+			subreg_left = 0
+		try:
+			subreg_right = node.GetAttr('right')
+		except NoSuchAttrError:
+			subreg_right = 0
+		try:
+			subreg_top = node.GetAttr('top')
+		except NoSuchAttrError:
+			subreg_top = 0
+		try:
+			subreg_bottom = node.GetAttr('bottom')
+		except NoSuchAttrError:
+			subreg_bottom = 0
+
+		reg_left, reg_top, reg_width, reg_height =  \
+			self._get_parent_channel()._attrdict['base_winoff']
+		
+		# translate in pixel 
+		if type(subreg_left) == type(0.0):
+			subreg_left = int(reg_height*subreg_left)
+		if type(subreg_top) == type(0.0):
+			subreg_top = int(reg_height*subreg_top)
+		if type(subreg_right) == type(0.0):
+			subreg_right = int(reg_height*subreg_right)
+		if type(subreg_bottom) == type(0.0):
+			subreg_bottom = int(reg_height*subreg_bottom)
+
+		# determinate subregion height and width
+		subreg_height = reg_height-subreg_top-subreg_bottom
+		subreg_width = reg_width-subreg_left-subreg_right
+		# print 'sub region height =',subreg_height
+		# print 'sub region width = ',subreg_width
+		
+		node.__subreg_height = subreg_height
+		node.__subreg_width = subreg_width
+		node.__subreg_top = subreg_top
+		node.__subreg_left = subreg_left
+
+		# print 'subreg geom : ',subreg_left, subreg_top, subreg_width, subreg_height
+		return subreg_left, subreg_top, subreg_width, subreg_height
 
 	def play(self, node):
 		if debug:
@@ -1539,15 +1689,18 @@ class ChannelWindow(Channel):
 		if not self._armcontext:
 			return
 		if self._is_shown and node.ShouldPlay() and self.window:
-			try:
-				winoff = self.winoff
-				winoff = MMAttrdefs.getattr(node, 'base_winoff')
-			except (AttributeError, KeyError):
-				pass
-			else:
-				if winoff != self.winoff:
-					self.hide()
-					self.show()
+#				self.hide()
+#				self.show()
+#			try:
+#				winoff = self.winoff
+#				winoff = MMAttrdefs.getattr(node, 'base_winoff')
+#			except (AttributeError, KeyError):
+#				pass
+#			else:
+#				if wingeom != self.wingeom:
+#				if winoff != self.winoff:
+#					self.hide()
+#					self.show()
 			self.check_popup()
 			self.schedule_transitions(node)
 			if self.armed_display.is_closed():
