@@ -1213,7 +1213,7 @@ class Shape:
 		dc.RestoreDC(hsave)
 		
 		for w in self._polyList:
-			w.paintBorderOn(dc, newClipRgn, newExclRgn)
+			w.paintBorderOn(dc, None, newClipRgn, newExclRgn)
 
 		L = self._subwindows[:]
 		L.reverse()
