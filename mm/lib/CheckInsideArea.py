@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import sys
 
 [A_L, A_R]=range(2)

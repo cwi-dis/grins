@@ -1,4 +1,7 @@
-"""FtpWriter - Class that looks file-like and writes to ftp server"""
+__version__ = "$Id$"
+
+# FtpWriter - Class that looks file-like and writes to ftp server
+
 import ftplib
 from ftplib import all_errors, error_perm
 import string

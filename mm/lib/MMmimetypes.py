@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import mimetypes
 guess_type = mimetypes.guess_type
 
