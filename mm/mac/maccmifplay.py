@@ -24,6 +24,7 @@ addpack.addpack('bgen')
 addpack.addpack('snd')
 addpack.addpack('evt')
 addpack.addpack('win')
+addpack.addpack('qd')
 
 os.environ["CMIF"] = CMIFDIR
 #os.environ["CHANNELDEBUG"] = "1"
@@ -33,7 +34,7 @@ if not ok: sys.exit(0)
 
 sys.argv = ["maccmifplay", fss.as_pathname()]
 
-print "ENVIRON:", os.environ
-print "PATH:", sys.path
+##print "ENVIRON:", os.environ
+##print "PATH:", sys.path
 
 import main
