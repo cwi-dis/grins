@@ -93,23 +93,9 @@ class tree_node
 	typedef tree_iterator<iterator_arg> iterator;
 	typedef const tree_iterator<iterator_arg> const_iterator;
 
-	tree_node(const char *name=NULL, const char **attrs=NULL)
-	:	m_name(name?name:""),
-		m_parent(NULL),
-		m_child(NULL),												   
-		m_next(NULL),
-		m_attrs(NULL)
-		{
-		m_beginit = iterator(this);
-		if(attrs) {
-			m_attrs = new raw_attr_list_t();
-			for(int i=0;attrs[i];i+=2)
-				m_attrs->push_back(raw_attr_t(attrs[i], attrs[i+1]));
-			}
-		}
-
-	tree_node(const char *name, raw_attr_list_t *attrs)
-	:	m_name(name?name:""),
+	tree_node(const std::string& name, 
+		std::map<std::string, std::string>* attrs = 0)
+	:	m_name(name),
 		m_parent(NULL),
 		m_child(NULL),												   
 		m_next(NULL),
@@ -148,8 +134,8 @@ class tree_node
 	const char *getData() const {return m_data.c_str();}
 
 	int getDataSize() const {return m_data.size();}
-	const char *getAttribute(const char *name) const;
-	const raw_attr_list_t& getAttributes() const {return *m_attrs;}
+	std::string get_raw_attribute(const char *name) const;
+	const std::map<std::string, std::string>* getAttributes() const {return m_attrs;}
 	void getChildren(std::list<const tree_node*>& l) const;
 	void getChildren(std::list<const tree_node*>& l, const char *name) const;
 	const tree_node *getFirstChild(const char *name) const;
@@ -185,7 +171,7 @@ class tree_node
 	iterator m_endit;
 
 	std::string m_data;
-	raw_attr_list_t *m_attrs;
+	std::map<std::string, std::string>* m_attrs;
 	};
 
 inline void tree_node::appendChild(tree_node* child)
@@ -202,14 +188,13 @@ inline void tree_node::appendChild(tree_node* child)
 	child->m_endit = iterator(this);
 	}
 
-inline const char *tree_node::getAttribute(const char *name) const 
+inline std::string tree_node::get_raw_attribute(const char *name) const 
 	{
-	std::list< std::pair<std::string, std::string> >::const_iterator it = m_attrs->begin();
-	while(it!=m_attrs->end()) {
-		if((*it).first == name)
-			return (*it).second.c_str();
-		}
-	return "";
+	if(m_attrs == 0) return "";
+	std::map<std::string, std::string>::const_iterator it = m_attrs->find(name);
+	if(it == m_attrs->end())
+		return "";
+	return (*it).second;
 	}
 
 inline void tree_node::getChildren(std::list<const tree_node*>& l) const
@@ -249,8 +234,9 @@ inline tree_node *tree_node::getFirstChild(const char *name)
 
 inline std::string tree_node::xmlrepr() const {
 	std::string s(m_name);
-	std::list< std::pair<std::string, std::string> >::const_iterator it = m_attrs->begin();
-	while(it!=m_attrs->end()) {
+	if(m_attrs == 0) return s;
+	std::map<std::string, std::string>::const_iterator it = m_attrs->begin();
+	while(!(it == m_attrs->end())) {
 		s += " ";
 		s += (*it).first;
 		s += "=\"";
