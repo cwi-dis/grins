@@ -172,7 +172,11 @@ class SoundChannel(Channel):
 	#DEBUG: remove dummy entry from queue and call proper done method
 	def done(self, arg):
 		if self.dummy_event_id:
-			self.player.cancel(self.dummy_event_id)
+			try:
+				self.player.cancel(self.dummy_event_id)
+			except ValueError:
+				# probably already removed by someone else
+				pass
 			self.dummy_event_id = None
 		if not self.node:
 			# apparantly someone has already called stop()
