@@ -31,6 +31,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.want_default_colormap = 1
 		self.htmlw = None
 		self.widget_name = normalize(name)
+		self.backlist = []
 
 	def do_show(self):
 		#
@@ -160,6 +161,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		htmlw = self.htmlw
 		self.played_url = self.url = self.armed_url
 		self.played_str = self.armed_str
+		self.backlist = []
 		attrs = {}
 		fontspec = getfont(node)
 		fontname, pointsize = mapfont(fontspec)
@@ -313,52 +315,6 @@ class HtmlChannel(Channel.ChannelWindow):
 		node.SetAttr('anchorlist', nodeanchorlist)
 		MMAttrdefs.flushcache(node)
 
-	#
-	# The stuff below has little to do with CMIF per se, it implements
-	# a general www browser
-	#
-	def www_jump(self, href, method, enctype, list):
-		#
-		# Check that we understand what is happening
-		if enctype is not None:
-			print 'HtmlChannel: unknown enctype:', enctype
-			return
-		if method not in (None, 'GET'):
-			print 'HtmlChannel: unknown method:', method
-			print 'href:', href
-			print 'method:', method
-			print 'enctype:', enctype
-			print 'list:', list
-			return
-		if href:
-			if href == 'XXXX:play/node':
-				self.url = self.played_url
-				self.htmlw.SetText(self.played_str, '', '')
-				return
-			href = urllib.basejoin(self.url, href)
-		else:
-			href = self.url
-		self._player.toplevel.setwaiting()
-		if list:
-			href = addquery(href, list)
-		self.url, tag = urllib.splittag(href)
-		try:
-			u = urlopen(self.url)
-			if u.headers.maintype == 'image':
-				newtext = '<IMG SRC="%s">\n' % self.url
-			else:
-				newtext = u.read()
-		except IOError:
-			newtext = '<H1>Cannot Open</H1><P>'+ \
-				  'Cannot open '+self.url+':<P>'+ \
-				  `(sys.exc_type, sys.exc_value)`+ \
-				  '<P>\n'
-		footer = '<HR>[<A HREF="XXXX:play/node">BACK</A> to CMIF node]'
-		self.htmlw.SetText(newtext, None, footer, 0, tag)
-##		self.htmlw.footerText = '<P>[<A HREF="'+self.armed_url+\
-##			  '">BACK</A> to CMIF node]<P>'
-		self._player.toplevel.setready()
-
 	def resolveImage(self, widget, src, noload = 0):
 		import X
 		src = urllib.basejoin(self.url, src)
@@ -393,6 +349,60 @@ class HtmlChannel(Channel.ChannelWindow):
 			'image_data': reader.read(), 'colors': colors}
 		image_cache[src] = dict
 		return dict
+
+	#
+	# The stuff below has little to do with CMIF per se, it implements
+	# a general www browser
+	#
+	footer = '<HR><A HREF="XXXX:play/node">BACK</A> to CMIF node<BR>\n' \
+		 '<A HREF="XXXX:back">PREVIOUS</A> node'
+
+	def www_jump(self, href, method, enctype, list):
+		#
+		# Check that we understand what is happening
+		if enctype is not None:
+			print 'HtmlChannel: unknown enctype:', enctype
+			return
+		if method not in (None, 'GET'):
+			print 'HtmlChannel: unknown method:', method
+			print 'href:', href
+			print 'method:', method
+			print 'enctype:', enctype
+			print 'list:', list
+			return
+		if href:
+			if href == 'XXXX:back':
+				if len(self.backlist) > 1:
+					href = self.backlist[-2]
+					del self.backlist[-2:]
+				else:
+					href = 'XXXX:play/node'
+			if href == 'XXXX:play/node':
+				self.backlist = []
+				self.url = self.played_url
+				self.htmlw.SetText(self.played_str, '', '')
+				return
+			href = urllib.basejoin(self.url, href)
+		else:
+			href = self.url
+		self._player.toplevel.setwaiting()
+		if list:
+			href = addquery(href, list)
+		self.backlist.append(href)
+		self.url, tag = urllib.splittag(href)
+		try:
+			u = urlopen(self.url)
+			if u.headers.maintype == 'image':
+				newtext = '<IMG SRC="%s">\n' % self.url
+			else:
+				newtext = u.read()
+		except IOError:
+			newtext = '<H1>Cannot Open</H1><P>'+ \
+				  'Cannot open '+self.url+':<P>'+ \
+				  `(sys.exc_type, sys.exc_value)`+ \
+				  '<P>\n'
+		self.htmlw.SetText(newtext, None, self.footer, 0, tag)
+		self._player.toplevel.setready()
 
 image_cache = {}
 
