@@ -395,10 +395,6 @@ SOURCE=.\editor\win32\usercmdui.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\editor\win32\usercmduiHold.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\editor\win32\UsergroupViewDialog.py
 # End Source File
 # Begin Source File
@@ -565,6 +561,14 @@ SOURCE=.\editor\motif\UsergroupViewDialog.py
 # Begin Group "editor/g2pro"
 
 # PROP Default_Filter "*.py"
+# Begin Group "editor/g2pro/win32"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\editor\g2pro\win32\splashbmp.py
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\editor\g2pro\features.py
@@ -573,6 +577,14 @@ SOURCE=.\editor\g2pro\features.py
 # Begin Group "editor/g2lite"
 
 # PROP Default_Filter "*.py"
+# Begin Group "editor/g2lite/win32"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\editor\g2lite\win32\splashbmp.py
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\editor\g2lite\features.py
@@ -589,6 +601,14 @@ SOURCE=.\editor\qtlite\features.py
 # Begin Group "editor/qtpro"
 
 # PROP Default_Filter ""
+# Begin Group "editor/qtpro/win32"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\editor\qtpro\win32\splashbmp.py
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\editor\qtpro\features.py
@@ -597,11 +617,27 @@ SOURCE=.\editor\qtpro\features.py
 # Begin Group "editor/smil10"
 
 # PROP Default_Filter ""
+# Begin Group "editor/smil10/win32"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\editor\smil10\win32\splashbmp.py
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\editor\smil10\features.py
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=.\editor\.cvsignore
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\.win32_cmif_editors
+# End Source File
 # Begin Source File
 
 SOURCE=.\editor\AnchorEdit.py
@@ -629,10 +665,6 @@ SOURCE=.\editor\ChannelView.py
 # Begin Source File
 
 SOURCE=.\editor\cmifed.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\features.py
 # End Source File
 # Begin Source File
 
@@ -720,6 +752,10 @@ SOURCE=.\lib\win32\_SourceView.py
 # Begin Source File
 
 SOURCE=.\lib\win32\_UsergroupView.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\afxexttb.py
 # End Source File
 # Begin Source File
 
@@ -823,6 +859,10 @@ SOURCE=.\lib\win32\win32mu.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\win32\win32reg.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\win32\windowinterface.py
 # End Source File
 # End Group
@@ -919,6 +959,10 @@ SOURCE=.\lib\mac\machtmlentitydefs.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\mac\macos9htmlwidget.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\mac\mw_dialogs.py
 # End Source File
 # Begin Source File
@@ -976,15 +1020,19 @@ SOURCE=.\lib\mac\windowinterface.py
 # End Group
 # Begin Source File
 
+SOURCE=.\lib\.cvsignore
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\ASXNode.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\ASXParser.py
 # End Source File
 # Begin Source File
 
 SOURCE=.\lib\Attrdefs
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\Attrdefs.py
 # End Source File
 # Begin Source File
 
@@ -1048,14 +1096,6 @@ SOURCE=.\lib\FtpWriter.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\GL_window.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\GL_windowbase.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\lib\glwindow.py
 # End Source File
 # Begin Source File
@@ -1100,10 +1140,6 @@ SOURCE=.\lib\mkimg.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\mklicense.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\lib\mksplash.py
 # End Source File
 # Begin Source File
@@ -1117,6 +1153,10 @@ SOURCE=.\lib\MMCache.py
 # Begin Source File
 
 SOURCE=.\lib\MMExc.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\MMmimetypes.py
 # End Source File
 # Begin Source File
 
@@ -1403,11 +1443,27 @@ SOURCE=.\pylib\audio\au.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\pylib\audio\audio.tex
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\boilerplate.tex
+# End Source File
+# Begin Source File
+
 SOURCE=.\pylib\audio\convert.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\pylib\audio\copyright.tex
+# End Source File
+# Begin Source File
+
 SOURCE=.\pylib\audio\dev.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\audio\devlinux.py
 # End Source File
 # Begin Source File
 
@@ -1435,6 +1491,10 @@ SOURCE=.\pylib\audio\format.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\pylib\audio\libaudio.tex
+# End Source File
+# Begin Source File
+
 SOURCE=.\pylib\audio\merge.py
 # End Source File
 # Begin Source File
@@ -1456,11 +1516,31 @@ SOURCE=.\pylib\audio\what.py
 # End Group
 # Begin Source File
 
+SOURCE=.\pylib\checkextensions_win32.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\frozenmain.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\getpathp.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\import.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\pylib\longpath.py
 # End Source File
 # Begin Source File
 
 SOURCE=.\pylib\mimetypes.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\pylib\smildom.py
 # End Source File
 # Begin Source File
 
@@ -1475,7 +1555,19 @@ SOURCE=.\pylib\xmllib.py
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\bin\win32\.cvsignore
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\cmif_editors.ini
+# End Source File
+# Begin Source File
+
 SOURCE=.\bin\win32\iGRiNS.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\iGRiNS_SMIL.py
 # End Source File
 # Begin Source File
 
@@ -1485,7 +1577,55 @@ SOURCE=.\bin\win32\iGRiNSlight.py
 
 SOURCE=.\bin\win32\iGRiNSplayer.py
 # End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\iGRiNSQT.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\pythonwin.ini
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\pythonwin_d.ini
+# End Source File
+# Begin Source File
+
+SOURCE=".\bin\win32\runit SMIL.bat"
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\runit.bat
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\runitlight.bat
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\runitplayer.bat
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\runitqt.bat
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\testASXParser.py
+# End Source File
 # End Group
+# Begin Source File
+
+SOURCE=.\bin\cmifed
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\grins
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\python
+# End Source File
 # End Group
 # End Target
 # End Project
