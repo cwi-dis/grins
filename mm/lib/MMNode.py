@@ -796,7 +796,6 @@ class MMChannel:
 			if settings.activeFullSmilCss:
 				if key == 'base_winoff':
 					# keep the compatibility with old version
-					print 'Warning: base_winoff deprecated attribute. Instead, use getPxGeom'
 					return self.getPxGeom()
 				elif self.isCssAttr(key):
 					# keep the compatibility with old version
@@ -822,7 +821,6 @@ class MMChannel:
 		elif key == 'base_winoff':
 			if settings.activeFullSmilCss:
 				# keep the compatibility with old version
-				print 'Warning: base_winoff deprecated attribute.Instead, modify directly the raw attributes positioning, or use setPxGeom (if absolutly required for last case)'
 				self.setPxGeom(value)
 				return
 
@@ -874,18 +872,15 @@ class MMChannel:
 			print 'getPxGeom unsupported on no layout channel'
 			return (0, 0, 100, 100)
 
-	# use this method only if it's an absolute requirement
-	# for now, it's use for keep the compatibility with old implementation
-	# Instead of use this method, modify directly the raw attributes (left, top, width and height)
+	# this method change the pixel geometry of the channel. The modification is reflected in the raw attribute.
+	# for instance, if the raw attribute is specified in pourcent value, the new value still specify in pourcent value, but with a new value.
 	def setPxGeom(self, geom):
 		if self.attrdict.get('type') == 'layout':
 			left, top, width, height = geom
 			self.context.cssResolver.changePxValue(self._cssId, 'left', left)
 			self.context.cssResolver.changePxValue(self._cssId, 'width', width)
-			self.context.cssResolver.changePxValue(self._cssId, 'right', None)
 			self.context.cssResolver.changePxValue(self._cssId, 'top', top)
 			self.context.cssResolver.changePxValue(self._cssId, 'height', height)
-			self.context.cssResolver.changePxValue(self._cssId, 'bottom', None)
 		else:
 			print 'setPxGeom unsupported on no layout channel'
 
@@ -1568,6 +1563,20 @@ class MMNode:
 		self.__unlinkCssId()
 
 		return subRegGeom, mediaGeom
+
+	# this method change the pixel geometry of the sub-region. The modification is reflected in the raw attribute.
+	# for instance, if the raw attribute is specified in pourcent value, the new value still specify in pourcent value, but with a new value.
+	def setPxGeom(self, geom):
+		left, top, width, height = geom
+
+		# a dynamic link should be enough for this method
+		# it avoid to keep a synchonization with the css resolver
+		self.__linkCssId()
+		self.context.cssResolver.changePxValue(self._subRegCssId, 'left', left)
+		self.context.cssResolver.changePxValue(self._subRegCssId, 'width', width)
+		self.context.cssResolver.changePxValue(self._subRegCssId, 'top', top)
+		self.context.cssResolver.changePxValue(self._subRegCssId, 'height', height)
+		self.__unlinkCssId()
 
 	def startplay(self, sctx, timestamp):
 		if debug: print 'startplay',`self`,timestamp,self.fullduration
@@ -2281,6 +2290,11 @@ class MMNode:
 		self.values = values
 
 	def SetAttr(self, name, value):
+		if settings.activeFullSmilCss:
+			if name == 'base_winoff':
+				# allow to fix the pixel geometry in the same way as for the regions
+				self.setPxGeom(value)
+				return
 		self.attrdict[name] = value
 		MMAttrdefs.flushcache(self)
 ##		self._updsummaries([name])
