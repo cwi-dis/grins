@@ -21,7 +21,7 @@ default_settings = {
 ## Special case, see get() routine
 ##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
 ##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
-	'system_required': (),		# Needs special handling in match...
+	'system_required': '',		# Needs special handling in match...
 	'system_audiodesc': 0,		# No audio description
 	'system_operating_system': 'UNKNOWN',
 	'system_cpu': 'UNKNOWN',
@@ -110,7 +110,6 @@ user_settings = {}
 # Which of these should match exactly:
 EXACT=['system_captions', 'system_overdub_or_captions',
        'system_audiodesc', 'system_overdub_or_subtitle']
-ELEMENT=['system_required']
 LANGUAGE=['system_language']
 ALL=['system_bitrate', 'system_captions', 'system_language',
      'system_overdub_or_caption', 'system_screen_size',
@@ -118,6 +117,53 @@ ALL=['system_bitrate', 'system_captions', 'system_language',
      'system_operating_system', 'system_cpu']
 
 NEEDS_RESTART=['cmif', 'vertical_structure', 'no_canvas_resize', 'root_expanded']
+
+extensions = {
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/AudioLayout': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicAnimation': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicContentControl': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicInlineTiming': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicLayout': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicLinking': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicMedia': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicTimeContainers': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicTransistions': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BrushMedia': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/CustomTestAttributes': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/EventTiming': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/ExclTimeContainers': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/FillDefault': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/HierarchicalLayout': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/InlineTransitions': 0,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/LinkingAttributes': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaClipMarkers': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaClipping': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaMarkerTiming': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaParam': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/Metainformation': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MultiElementTransitions': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MultiSyncArcTiming': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MultiWindowLayout': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/ObjectLinking': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/PrefetchControl': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/PrevTiming': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/RestartDefault': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/RestartTiming': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/SkipContentControl': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/SplineAnimation': 0,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/StreamingMedia': 0,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/Structure': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/SyncbaseTiming': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/SyncBehavior': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/SyncBehaviorDefault': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/SyncMaster': 0,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/TimeContainerAttributes': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/TimeManipulations': 0,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/WallclockTiming': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/NestedTimeContainers': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/DeprecatedFeatures': 1,
+	'http://www.w3.org/TR/REC-smil/': 1,
+}
 
 # Where is the preferences file:
 if os.name == 'posix':
@@ -181,11 +227,11 @@ def match(name, wanted_value):
 		import opsys, string
 		wanted_value = string.upper(wanted_value)
 		return opsys.cpu.has_key(wanted_value) and opsys.cpu[wanted_value]
+	if name == 'system_required':
+		return extensions.get(wanted_value, 0)
 	real_value = get(name)
 	if name in EXACT:
 		return (real_value == wanted_value)
-	elif name in ELEMENT:
-		return (wanted_value in real_value)
 	elif name in LANGUAGE:
 		import string
 		# Evaluates to "true" if one of the languages
