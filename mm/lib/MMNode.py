@@ -1110,7 +1110,7 @@ class MMNode:
 		self.reset()
 		for c in self.children:
 			c.resetall(sched)
-		for arc in MMAttrdefs.getattr(self, 'beginlist') + MMAttrdefs.getattr(self, 'endlist') + self.durarcs:
+		for arc in self.FilterArcList(MMAttrdefs.getattr(self, 'beginlist') + MMAttrdefs.getattr(self, 'endlist')) + self.durarcs:
 			refnode = self.__find_refnode(arc)
 			if arc in refnode.sched_children:
 				refnode.sched_children.remove(arc)
@@ -1236,9 +1236,10 @@ class MMNode:
 		fill = self.attrdict.get('fill')
 		if fill is None or fill == 'default':
 			fill = self.GetInherAttrDef('fillDefault', None)
+		# XXX should endlist be filtered here?
 		if fill is None or fill == 'inherit' or fill == 'auto':
 			if not self.attrdict.has_key('duration') and \
-			   not self.attrdict.get('endlist') and \
+			   not self.attrdict.get('endlist',[]) and \
 			   not self.attrdict.has_key('repeatdur') and \
 			   not self.attrdict.has_key('loop'):
 				fill = 'freeze'
@@ -1353,6 +1354,8 @@ class MMNode:
 	def GetSchedChildren(self):
 		children = []
 		for c in self.children:
+			if not c._CanPlay():
+				continue
 			if c.type == 'prio':
 				children = children + c.GetSchedChildren()
 			elif c.type == 'alt':
@@ -2038,6 +2041,7 @@ class MMNode:
 				# if parent not resolved, we're not resolved
 				return None
 		beginlist = self.attrdict.get('beginlist', [])
+		beginlist = self.FilterArcList(beginlist)
 		if not beginlist:
 			# unless parent is excl, we're resolved if parent is
 			if pnode is None:
@@ -2425,19 +2429,19 @@ class MMNode:
 		body.durarcs = []
 		for child in self.wtd_children:
 			beginlist = MMAttrdefs.getattr(child, 'beginlist')
-			if beginlist:
-				for arc in beginlist:
-					#print 'deleting arc',`arc`
-					refnode = child.__find_refnode(arc)
-					refnode.sched_children.remove(arc)
-					if arc.qid is not None:
-						try:
-							sched.cancel(arc.qid)
-						except ValueError:
-							pass
-						arc.qid = None
-##					arc.timestamp = None
-			for arc in MMAttrdefs.getattr(child, 'endlist'):
+			beginlist = self.FilterArcList(beginlist)
+			for arc in beginlist:
+				#print 'deleting arc',`arc`
+				refnode = child.__find_refnode(arc)
+				refnode.sched_children.remove(arc)
+				if arc.qid is not None:
+					try:
+						sched.cancel(arc.qid)
+					except ValueError:
+						pass
+					arc.qid = None
+##				arc.timestamp = None
+			for arc in self.FilterArcList(MMAttrdefs.getattr(child, 'endlist')):
 				#print 'deleting arc',`arc`
 				refnode = child.__find_refnode(arc)
 				refnode.sched_children.remove(arc)
@@ -2524,6 +2528,7 @@ class MMNode:
 		for child in wtd_children:
 			chname = MMAttrdefs.getattr(child, 'name')
 			beginlist = MMAttrdefs.getattr(child, 'beginlist')
+			beginlist = self.FilterArcList(beginlist)
 			if not beginlist:
 				if self.type == 'bag':
 					if bagindex is child:
@@ -2554,7 +2559,7 @@ class MMNode:
 				child.add_arc(arc)
 			elif schedule or termtype == 'ALL':
 				scheddone_events.append((SCHED_DONE, child))
-			for arc in MMAttrdefs.getattr(child, 'endlist'):
+			for arc in self.FilterArcList(MMAttrdefs.getattr(child, 'endlist')):
 				refnode = child.__find_refnode(arc)
 				refnode.add_arc(arc)
 			cdur = child.calcfullduration()
@@ -2713,6 +2718,7 @@ class MMNode:
 			return None, 0	# break recursion
 		start = None
 		beginlist = MMAttrdefs.getattr(self, 'beginlist')
+		beginlist = self.FilterArcList(beginlist)
 		pnode = self.GetSchedParent()
 		if not beginlist:
 			if pnode.type == 'excl':
@@ -2849,6 +2855,7 @@ class MMNode:
 		repeatDur = self.attrdict.get('repeatdur')
 		repeatCount = self.attrdict.get('loop')
 		endlist = self.attrdict.get('endlist')
+		endlist = self.FilterArcList(endlist)
 		if endlist is not None and duration is None and \
 		   repeatCount is None and repeatDur is None:
 			# "If an end attribute is specified but none
@@ -3057,7 +3064,7 @@ class MMNode:
 	# WillPlay()   - Based on ShouldPlay() and switch items.
 	#
 	def _CanPlay(self):
-		if not self.canplay is None:
+		if self.canplay is not None:
 			return self.canplay
 		self.canplay = self.ShouldPlay()
 		if not self.canplay:
@@ -3116,6 +3123,23 @@ class MMNode:
 			return 0
 		self.willplay = 1
 		return 1
+
+	def FilterArcList(self, arclist):
+		# filter list of sync arcs and remove all arcs that
+		# depend on a node that is not playable
+		newlist = []
+		for arc in arclist:
+			refnode = arc.refnode()
+			skip = 0
+			if refnode.canplay is None:
+				path = refnode.GetPath()
+				for node in path:
+					if not node._CanPlay():
+						refnode.canplay = 0
+						break
+			if refnode.canplay:
+				newlist.append(arc)
+		return newlist
 
 	def ChosenSwitchChild(self, childrentopickfrom=None):
 		"""For alt nodes, return the child that will be played"""
