@@ -1,5 +1,6 @@
 import Qd
 import Dlg
+import Ctl
 import Controls
 import ControlAccessor
 import MacOS
@@ -318,36 +319,32 @@ class ProgressDialog:
 			if self.cancelcallback:
 				self.cancelcallback()
 		
-class SelectionDialog(DialogWindow):
-	def __init__(self, listprompt, selectionprompt, itemlist, default, fixed=0, hascancel=1):
+class _SelectionDialog(DialogWindow):
+	def __init__(self, listprompt, itemlist, default=None, hascancel=1):
 		# First create dialogwindow and set static items
 		if hascancel:
 			DialogWindow.__init__(self, ID_SELECT_DIALOG, 
 					default=ITEM_SELECT_OK, cancel=ITEM_SELECT_CANCEL)
 		else:
 			DialogWindow.__init__(self, ID_SELECT_DIALOG, default=ITEM_SELECT_OK)
-		if fixed:
-			# The user cannot modify the items, nor cancel
-			self._wid.HideDialogItem(ITEM_SELECT_SELECTPROMPT)
-			self._wid.HideDialogItem(ITEM_SELECT_ITEM)
 		if not hascancel:
 			self._wid.HideDialogItem(ITEM_SELECT_CANCEL)
 		h = self._wid.GetDialogItemAsControl(ITEM_SELECT_LISTPROMPT)
 		Dlg.SetDialogItemText(h, _string2dialog(listprompt))
-		h = self._wid.GetDialogItemAsControl(ITEM_SELECT_SELECTPROMPT)
-		Dlg.SetDialogItemText(h, _string2dialog(selectionprompt))
 		
 		# Now setup the scrolled list
 		self._itemlist = itemlist
 		self._listwidget = self.ListWidget(ITEM_SELECT_ITEMLIST, itemlist)
-		if default in itemlist:
-			num = itemlist.index(default)
-			self._listwidget.select(num)
-			
-		# and the default item
-		h = self._wid.GetDialogItemAsControl(ITEM_SELECT_ITEM)
-		Dlg.SetDialogItemText(h, _string2dialog(default))
+		self._listwidget.setkeyboardfocus()
 		
+		# And the default value and ok button
+		ctl = self._wid.GetDialogItemAsControl(ITEM_SELECT_OK)
+		if default is None:
+			ctl.DeactivateControl()
+		else:
+			ctl.ActivateControl()
+			self._listwidget.select(default)
+			
 		# And show it
 		self.show()
 	
@@ -356,31 +353,30 @@ class SelectionDialog(DialogWindow):
 		if item == ITEM_SELECT_CANCEL:
 			self.CancelCallback()
 			self.close()
+			return 1
 		elif item == ITEM_SELECT_OK:
 			is_ok = 1
 		elif item == ITEM_SELECT_ITEMLIST:
-			item = self._listwidget.getselect()
-			if item is None:
-				return 1
-			h = self._wid.GetDialogItemAsControl(ITEM_SELECT_ITEM)
-			Dlg.SetDialogItemText(h, _string2dialog(self._itemlist[item]))
 			# XXXX is_ok = isdouble
-		elif item == ITEM_SELECT_ITEM:
 			pass
 		else:
 			print 'Unknown item', self, item, event
 		# Done a bit funny, because of double-clicking
+		item = self._listwidget.getselect()
+		ctl = self._wid.GetDialogItemAsControl(ITEM_SELECT_OK)
+		if item is None:
+			ctl.DeactivateControl()
+		else:
+			ctl.ActivateControl()
 		if is_ok:
-			h = self._wid.GetDialogItemAsControl(ITEM_SELECT_ITEM)
-			rv = Dlg.GetDialogItemText(h)
-			self.OkCallback(rv)
+			self.OkCallback(item)
 			self.close()
 		return 1
 		
-class SingleSelectionDialog(SelectionDialog):
+class _CallbackSelectionDialog(_SelectionDialog):
 	def __init__(self, list, title, prompt):
 		# XXXX ignore title for now
-		self.__dict = {}
+		self.__callbacklist = []
 		hascancel = 0
 		keylist = []
 		for item in list:
@@ -389,23 +385,33 @@ class SingleSelectionDialog(SelectionDialog):
 			if item == 'Cancel':
 				hascancel = 1
 			else:
-				k, v = item
-				self.__dict[k] = v
-				keylist.append(k)
-		SelectionDialog.__init__(self, prompt, '', keylist, keylist[0], 
-				fixed=1, hascancel=hascancel)
+				label, callback = item
+				keylist.append(label)
+				self.__callbacklist.append(callback)
+		_SelectionDialog.__init__(self, prompt, keylist, hascancel=hascancel)
 
-	def OkCallback(self, key):
-		if not self.__dict.has_key(key):
-			print 'You made an impossible selection??'
-			return
-		else:
-			rtn, args = self.__dict[key]
-			apply(rtn, args)
-			self.grabdone()
+	def OkCallback(self, index):
+		rtn, args = self.__callbacklist[index]
+		apply(rtn, args)
+		self.grabdone()
 			
 	def CancelCallback(self):
 		self.grabdone()
+			
+class _ModalSelectionDialog(_SelectionDialog):
+	def __init__(self, list, title, prompt, default):
+		self.__value = None
+		_SelectionDialog.__init__(self, prompt, list, default=default)
+
+	def OkCallback(self, index):
+		self.__value = index
+		self.grabdone()
+			
+	def CancelCallback(self):
+		self.grabdone()
+		
+	def getvalue(self):
+		return self.__value
 			
 class InputDialog(DialogWindow):
 	DIALOG_ID=ID_INPUT_DIALOG
@@ -433,6 +439,7 @@ class InputDialog(DialogWindow):
 		if self._is_passwd_dialog:
 			ControlAccessor.SetControlData(h, Controls.kControlEditTextPart, 
 				Controls.kControlEditTextPasswordTag, text)
+			Ctl.SetKeyboardFocus(self._wid, h, Controls.kControlEditTextPart)
 		else:
 			Dlg.SetDialogItemText(h, text)
 			self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
@@ -460,7 +467,7 @@ class InputDialog(DialogWindow):
 		return 1
 			
 	def done(self):
-		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
+		ctl = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
 		rv = self._gettext()
 		if self._is_passwd_dialog:
 			# For password dialogs make it disappear quickly
@@ -623,7 +630,7 @@ class TemplateDialog(DialogWindow):
 
 def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1,
 	   parent = None):
-	w = SingleSelectionDialog(list, title, prompt)
+	w = _CallbackSelectionDialog(list, title, prompt)
 	if grab:
 		w.rungrabbed()
 	return w
@@ -654,15 +661,23 @@ def showquestion(text, parent = None):
 	return _Question(text).run()
 
 def multchoice(prompt, list, defindex, parent = None):
-	if len(list) == 2:
-		list.append('')		# An empty cancel will remove it
-	elif len(list) != 3:
-		raise "MultChoice must have 3 args"
-	if defindex < 0:
-		defindex = 3-defindex
+	w = _ModalSelectionDialog(list, '', prompt, default=defindex)
+	w.rungrabbed()
+	rv = w.getvalue()
+	if rv is None:
+		return -1
+	return rv
+
+def GetYesNoCancel(prompt, parent = None):
 	import EasyDialogs
-	rv = EasyDialogs.AskYesNoCancel(prompt, defindex, list[0], list[1], list[2])
+	rv = EasyDialogs.AskYesNoCancel(prompt, 1)
 	if rv < 0: return 2
+	if rv > 0: return 0
+	return 1
+
+def GetOKCancel(prompt, parent = None):
+	import EasyDialogs
+	rv = EasyDialogs.AskYesNoCancel(prompt, 1, yes="OK")
 	if rv > 0: return 0
 	return 1
 
