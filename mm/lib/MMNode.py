@@ -1641,6 +1641,9 @@ class MMChannel(MMTreeElement):
 			root = animparent.GetRoot()
 			self._animationData = AnimationData.AnimationData(root, self, animparent)
 		self._animationData.readData()
+		# XXX this test seems to avoid a crash
+		if not self._animationData.isEmpty():
+			self._animationData.createAnimators()
 		return self._animationData
 
 	def getAnimationData(self):
@@ -1648,6 +1651,9 @@ class MMChannel(MMTreeElement):
 	
 	def applyAnimationData(self, editmgr):
 		if self._animationData:
+			# XXX this test seems to avoid a crash
+			if not self._animationData.isEmpty():
+				self._animationData.createAnimators()
 			self._animationData.applyData(editmgr, replace=1)
 
 		
@@ -5068,6 +5074,9 @@ class MMNode(MMTreeElement):
 			root = animparent.GetRoot()
 			self._animationData = AnimationData.AnimationData(root, self, animparent)
 		self._animationData.readData()
+		# XXX this test seems to avoid a crash
+		if not self._animationData.isEmpty():
+			self._animationData.createAnimators()
 		return self._animationData
 
 	def getAnimationData(self):
@@ -5076,6 +5085,9 @@ class MMNode(MMTreeElement):
 	def applyAnimationData(self, editmgr):
 		if self._animationData:
 			self._animationData.applyData(editmgr, replace=1)
+			# XXX this test seems to avoid a crash
+			if not self._animationData.isEmpty():
+				self._animationData.createAnimators()
 
 			# temporary test
 			if 0:
