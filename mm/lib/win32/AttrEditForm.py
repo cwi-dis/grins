@@ -575,6 +575,10 @@ class AnchorlistCtrl(AttrCtrl):
 		if name == self.__curanchor:
 			# no change, so do nothing
 			return
+		if not name:
+			# no name, do we want to give an error message?
+##			components.showmessage('No name given', mtype = 'error', parent = self._wnd._form)
+			return
 		if self.__anchorlinks.has_key(name):
 			# not unique, so don't change
 			components.showmessage('Name should be unique', mtype = 'error', parent = self._wnd._form)
