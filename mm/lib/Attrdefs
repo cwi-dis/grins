@@ -35,9 +35,6 @@
 (anchorlist (list (enclosed (any)))
 	() 'Anchors' hidden 'List of anchors on this node' raw (g2 qt smil10 smil2 cmif snap))
 
-(arm_duration (float) -1.0 'Arm duration' hidden
-	'Time needed to arm this event before displaying' raw (g2 qt smil10 smil2 cmif snap))
-
 (author (string) '' 'Author' default 'Author (informational only)' raw (g2 qt smil10 smil2 cmif snap))
 
 (base (string) '' 'Base URL' default

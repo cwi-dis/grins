@@ -999,7 +999,7 @@ prio_attrs = [
 # attributes that we know about and so don't write into the SMIL file using
 # our namespace extension
 cmif_node_attrs_ignore = {
-	'arm_duration':0, 'styledict':0, 'name':0, 'bag_index':0,
+	'styledict':0, 'name':0, 'bag_index':0,
 	'anchorlist':0, 'channel':0, 'file':0, 'duration':0,
 	'min':0, 'max':0, 'erase':0,
 	'system_bitrate':0, 'system_captions':0, 'system_language':0,
