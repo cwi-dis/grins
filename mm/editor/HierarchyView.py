@@ -838,10 +838,11 @@ class HierarchyView(HierarchyViewDialog):
 	# Edit a node
 	def attrcall(self):
 		if self.selected_widget:
-			node = self.selected_widget.get_node()
-			self.toplevel.setwaiting()
-			import AttrEdit
-			AttrEdit.showattreditor(self.toplevel, node, initattr = self.which_attribute)
+			self.selected_widget.attrcall()
+			#node = self.selected_widget.get_node()
+			#self.toplevel.setwaiting()
+			#import AttrEdit
+			#AttrEdit.showattreditor(self.toplevel, node, initattr = self.which_attribute)
 		self.which_attribute = None
 
 	def infocall(self):
