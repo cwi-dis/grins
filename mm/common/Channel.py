@@ -135,6 +135,10 @@ class Channel:
 	def rollback(self):
 		pass
 
+	def kill(self):
+		if hasattr(self, '_name'):
+			self.destroy()
+
 	def may_show(self):
 		# Indicate to the higher level whether this channel is
 		# visible and may be shown.
