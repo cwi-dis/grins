@@ -13,6 +13,7 @@ class TransitionEngine:
 		if dict.get('multiElement') and dict.get('childrenClip'):
 			self.exclude_first_window = 1
 		self.windows = [window]
+		self.outtransition = inout
 		self.starttime = time.time()	# Correct?
 		self.duration = dur
 		self.running = runit
@@ -139,10 +140,16 @@ class TransitionEngine:
 		src_active = w._mac_getoswindowpixmap(mw_globals.BM_DRAWING)
 		src_passive = w._mac_getoswindowpixmap(mw_globals.BM_PASSIVE)
 		tmp = w._mac_getoswindowpixmap(mw_globals.BM_TEMP)
+		if self.outtransition:
+			src_old = src_active
+			src_new = src_passive
+		else:
+			src_old = src_passive
+			src_new = src_active
 		w._mac_setwin(mw_globals.BM_ONSCREEN)
 		Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 		Qd.RGBForeColor((0, 0, 0))
-		self.transitiontype.updatebitmap(self.currentparameters, src_active, src_passive, tmp, dst, 
+		self.transitiontype.updatebitmap(self.currentparameters, src_new, src_old, tmp, dst, 
 			self.dstrgn)
 		if self.verbatimrgn:
 			Qd.CopyBits(src_active, dst, self.ltrb, self.ltrb, QuickDraw.srcCopy, self.verbatimrgn)
