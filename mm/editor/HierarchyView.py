@@ -752,24 +752,15 @@ class HierarchyView(HierarchyViewDialog):
 	# this works best if node is not part of the tree (so that it is not
 	# returned for "prev" and "syncbase" syncarcs).
 	def fixsyncarcs(self, root, node):
+		em = self.editmgr
 		beginlist = []
 		changed = 0
 		for arc in MMAttrdefs.getattr(root, 'beginlist'):
-			if arc.refnode() is not node:
-				beginlist.append(arc)
-			else:
-				changed = 1
-		if changed:
-			self.editmgr.setnodeattr(root, 'beginlist', beginlist or None)
+			em.delsyncarc(root, 'beginlist', arc)
 		endlist = []
 		changed = 0
 		for arc in MMAttrdefs.getattr(root, 'endlist'):
-			if arc.refnode() is not node:
-				endlist.append(arc)
-			else:
-				changed = 1
-		if changed:
-			self.editmgr.setnodeattr(root, 'endlist', endlist or None)
+			em.delsyncarc(root, 'endlist', arc)
 		for c in root.GetChildren():
 			self.fixsyncarcs(c, node)
 
@@ -798,11 +789,11 @@ class HierarchyView(HierarchyViewDialog):
 		
 		if cut:
 			t, n = Clipboard.getclip()
-			if t == 'node' and node is not None:
-				self.destroynode = n
+##			if t == 'node' and node is not None:
+##				self.destroynode = n
 			Clipboard.setclip('node', node)
-		else:
-			self.destroynode = node
+##		else:
+##			self.destroynode = node
 		em.commit()
 
 	def copyfocus(self):
@@ -941,10 +932,10 @@ class HierarchyView(HierarchyViewDialog):
 		   self.toplevel.layoutview.curlayout is not None:
 			node.SetAttr('layout', self.toplevel.layoutview.curlayout)
 		if self.insertnode(node, where, index, start_transaction = start_transaction, end_transaction = 0):
-			prearmtime = node.compute_download_time()
-			if prearmtime:
-				arc = MMNode.MMSyncArc(node, 'begin', srcnode='syncbase', delay=prearmtime)
-				self.editmgr.setnodeattr(node, 'beginlist', [arc])
+##			prearmtime = node.compute_download_time()
+##			if prearmtime:
+##				arc = MMNode.MMSyncArc(node, 'begin', srcnode='syncbase', delay=prearmtime)
+##				self.editmgr.addsyncarc(node, 'beginlist', arc)
 			self.editmgr.commit()
 			if not lightweight:
 				AttrEdit.showattreditor(self.toplevel, node, chtype = chtype)

@@ -75,6 +75,7 @@ MENUBAR=(
 
 	('&Edit', (
 		(FLAG_ALL, ENTRY, '&Undo\tCtrl+Z', 'Z', UNDO),
+		(FLAG_ALL, ENTRY, '&Redo\tCtrl+Y', 'Y', REDO),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Cu&t\tCtrl+X', 'X', CUT),
 		(FLAG_ALL, ENTRY, '&Copy\tCtrl+C', 'C', COPY),
