@@ -528,8 +528,11 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 
 	def __findanchor(self, anchor):
 		if anchor is not None:
-			node = self.context.mapuid(anchor[0])
-			aid = anchor[1]
+			uid, aid = anchor
+			if '/' in uid:
+				# external anchor
+				return (aid, ATYPE_WHOLE, ())
+			node = self.context.mapuid(uid)
 			for a in MMAttrdefs.getattr(node, 'anchorlist'):
 				if a[A_ID] == aid:
 					return a
