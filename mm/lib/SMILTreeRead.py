@@ -2212,7 +2212,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			# since we have suppressed the behavior transparent when empty
 			# it's not possible any more to set transparent to -1
-			ch['transparent'] = 1
+			ch['transparent'] = 0
 #			ch['transparent'] = -1
 			ch['bgcolor'] = bg
 
