@@ -3,6 +3,8 @@ __version__ = "$Id$"
 import string, MMurl, urlcache
 
 def GetSize(url, maintype = None, subtype = None):
+	if not url:
+		return 0, 0
 	cache = urlcache.urlcache[url]
 	width = cache.get('width')
 	height = cache.get('height')

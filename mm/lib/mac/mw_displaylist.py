@@ -19,7 +19,7 @@ import CheckInsideArea
 from mw_globals import error
 from mw_globals import TRUE, FALSE
 from mw_globals import _X, _Y, _WIDTH, _HEIGHT, ICONSIZE_PXL
-from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH, SIZE_3DBORDER, UNIT_PXL
+from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH, SIZE_3DBORDER, UNIT_PXL, UNIT_SCREEN
 import mw_globals
 import mw_fonts
 import mw_resources
@@ -279,8 +279,9 @@ class _DisplayList:
 				return r
 			if cmd == 'image':
 				xscrolloffset, yscrolloffset = window._scrolloffset()
-				mask, image, srcx, srcy, dstx, dsty, w, h, units = entry[1:]
-				dstrect = self._convert_coordinates((dstx, dsty, w, h), units=units)
+				mask, image, srcx, srcy, coordinates, w, h, units = entry[1:]
+				dstx, dsty = self._convert_coordinates(coordinates[:2], units=units)
+				dstrect = dstx, dsty, dstx+w, dsty+h
 				r = Qd.NewRgn()
 				Qd.RectRgn(r, dstrect)
 				return r
@@ -354,8 +355,9 @@ class _DisplayList:
 				y1 = y0 + ICONSIZE_PXL
 			Icn.PlotCIcon((x0, y0, x1, y1), icon)
 		elif cmd == 'image':
-			mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
-			dstrect = self._convert_coordinates((dstx, dsty, w, h))
+			mask, image, srcx, srcy, coordinates, w, h, units = entry[1:]
+			dstx, dsty = self._convert_coordinates(coordinates[:2], units=units)
+			dstrect = dstx, dsty, dstx+w, dsty+h
 			if not self._render_overlaprgn(dstrect):
 				return
 			w = dstrect[2]-dstrect[0]
@@ -366,11 +368,11 @@ class _DisplayList:
 			if mask:
 				# XXXX We should also take note of the clip here.
 				Qd.CopyMask(image[0], mask[0],
-					    self._render_grafport.portBits,
+					    self._render_grafport.GetPortBitMapForCopyBits(),
 					    srcrect, srcrect, dstrect)
 			else:
 				Qd.CopyBits(image[0],
-				      self._render_grafport.portBits,
+				      self._render_grafport.GetPortBitMapForCopyBits(),
 				      srcrect, dstrect,
 				      QuickDraw.srcCopy+QuickDraw.ditherCopy,
 				      clip)
@@ -620,15 +622,12 @@ class _DisplayList:
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
 		       win._prepare_image(file, crop, fit, center, coordinates, align, units)
 		self._list.append(('image', mask, image, src_x, src_y,
-				   dest_x, dest_y, width, height, units))
+				   coordinates, width, height, units))
 		self._optimize(2)
-##		x, y, w, h = win._rect
-##		wf, hf = win._scrollsizefactors()
-##		w, h = w*wf, h*hf
-##		return float(dest_x - x) / w, float(dest_y - y) / h, \
-##		       float(width) / w, float(height) / h
-		return dest_x, dest_y, width, height
-
+		# Note: we always return window-relative coordinates here!
+		dest_x1, dest_y1 = dest_x + width, dest_y + height
+		return self._window._convert_qdcoords((dest_x, dest_y, dest_x1, dest_y1))
+		
 	def drawline(self, color, points):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -1032,7 +1031,7 @@ class _Button:
 		pass
 		
 	def _convert_point(self, point):
-		return self._dispobj._window._convert_coordinates(point)
+		return self._dispobj._window._convert_coordinates(point, units=UNIT_SCREEN)
 
 	def _get_button_region(self):
 		"""Return our region, in global coordinates, if we are active"""

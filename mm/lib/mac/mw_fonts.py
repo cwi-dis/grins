@@ -21,14 +21,15 @@ def _checkfontinfo(port, finfo):
 	"""Return true if font info different from args"""
 	if not port:
 		return 1
-	curfinfo = (port.txFont, port.txFace, port.txSize)
+	curfinfo = (port.GetPortTextFont, port.GetPortTextFace(), port.GetPortTextSize())
 	return finfo <> curfinfo
 	
 def _savefontinfo(port):
 	"""Return all font-pertaining info for a macos window"""
 	if not port:
 		return ()
-	return port.txFont, port.txFace, port.txMode, port.txSize, port.spExtra
+	return port.GetPortTextFont(), port.GetPortTextFace(), port.GetPortTextMode(), \
+		port.GetPortTextSize(), port.GetPortSpExtra()
 	
 def _restorefontinfo(port, (font, face, mode, size, spextra)):
 	"""Set all font-pertaining info for a macos window"""

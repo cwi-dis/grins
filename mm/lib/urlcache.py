@@ -36,7 +36,7 @@ def mimetype(url):
 				pass
 			else:
 				mtype = u.headers.type
-		if not mtype and sys.platform == 'mac':
+		if not mtype and sys.platform in ('mac', 'darwin'):
 			# On the mac we do something extra: for local files we attempt to
 			# get creator and type, and if they are us we assume we're looking
 			# at a SMIL file.

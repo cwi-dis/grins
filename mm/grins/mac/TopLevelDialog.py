@@ -24,3 +24,6 @@ class TopLevelDialog:
 
 	def setusergroupsmenu(self, menu):
 		self.player.setusergroupsmenu(menu)
+
+	def setsettingsdict(self, dict):
+		pass
