@@ -664,15 +664,34 @@ class _Button:
 		
 		if shape == 'rect':
 			self._insideshape = self._insideRect
+			self._bbox = coordinates[0],coordinates[1],coordinates[2]-coordinates[0],coordinates[3]-coordinates[1]
 		elif shape == 'poly':
 			self._insideshape = self._insidePoly
+			minx = miny = maxx = maxy = None
+			for i in range(len(coordinates)):
+				if i & 1:
+					# y coordinate
+					if miny is None or coordinates[i] < miny:
+						miny = coordinates[i]
+					if maxy is None or coordinates[i] > maxy:
+						maxy = coordinates[i]
+				else:
+					# x coordinate
+					if minx is None or coordinates[i] < minx:
+						minx = coordinates[i]
+					if maxx is None or coordinates[i] > maxx:
+						maxx = coordinates[i]
+			self._bbox = minx, miny, maxx-minx, maxy-miny
 		elif shape == 'circle':
 			self._insideshape = self._insideCircle
+			self._bbox = coordinates[0]-coordinates[2],coordinates[1]-coordinates[2],2*coordinates[2],2*coordinates[2]
 		elif shape == 'elipse':
 			self._insideshape = self._insideElipse
+			self._bbox = coordinates[0]-coordinates[2],coordinates[1]-coordinates[3],2*coordinates[2],2*coordinates[3]
 		else:
 			print 'Internal error: invalid shape type'			
 			self._insideshape = self._insideRect
+			self._bbox = coordinates[0],coordinates[1],coordinates[2]-coordinates[0],coordinates[3]-coordinates[1]
 		
 		# for now, until draw works for circle and poly
 		# otherwise : crash

@@ -24,9 +24,6 @@ class Region(base_window.Window):
 			x, y, w, h = self._topwindow.LRtoDR(rc, round = 1)
 			self._canvas = 0, 0, w, h
 				
-	def __repr__(self):
-		return '<Region instance at %x>' % id(self)
-		
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, units = None, bgcolor=None):
 		return Region(self, coordinates, transparent, z, units, bgcolor)
 
@@ -321,13 +318,13 @@ class Viewport(Region):
 		# scaling
 		self._device2logical = self._ctx._d2l
 						
+		# highlighted button
+		self._hibutton = None
+
 		# init bmp 
 		wd, hd = self.LPtoDP(coordinates[2:])
 		self._backBuffer = self.createSurface(wd, hd, bgcolor)
 			
-	def __repr__(self):
-		return '<Viewport instance at %x>' % id(self)
-
 	def _convert_color(self, color):
 		return color 
 
@@ -345,10 +342,12 @@ class Viewport(Region):
 ##		print 'Viewport.setcursor', strid
 
 	def close(self):
-		if self._ctx is None:
-			return
 		ctx = self._ctx
+		if ctx is None:
+			return
 		self._ctx = None
+		if ctx._viewport is self:
+			ctx._viewport = None
 		for win in self._subwindows[:]:
 			win.close()
 		for dl in self._displists[:]:
@@ -393,6 +392,27 @@ class Viewport(Region):
 	def getBackBuffer(self):
 		return self._backBuffer
 
+	def _highlight(self, button, hilite):
+		rc1 = rc2 = None
+		if self._hibutton is not None:
+			if self._hibutton is button and hilite:
+				# highlighted button must be highlighted
+				return
+			rc1 = self._hibutton.getbbox()
+			self._hibutton = None
+		if hilite:
+			self._hibutton = button
+			rc2 = button.getbbox()
+		if rc1 and rc2:
+			rc = self.rectOr(rc1, rc2)
+		elif rc1:
+			rc = rc1
+		elif rc2:
+			rc = rc2
+		else:
+			return
+		self.update(rc)
+
 	def update(self, rc=None):
 		if self._ctx is None or self._backBuffer is None: 
 			return
@@ -415,6 +435,8 @@ class Viewport(Region):
 		L.reverse()
 		for w in L:
 			w.paint(dc, exlwnd)
+		if self._hibutton is not None:
+			self._hibutton.paint(dc)
 		#dt = winkernel.GetTickCount() - start
 		#print 'Viewport.paint %d msec' % dt
 

@@ -41,8 +41,6 @@ class DisplayList:
 
 	def render(self):
 		wnd = self._window
-		for b in self._buttons:
-			b._highlighted = 0 
 		wnd._active_displist = self
 		wnd.update()
 
@@ -75,7 +73,8 @@ class DisplayList:
 			self._do_render(self._list[i], dc, ltrb, dst_xywh)
 
 		for b in self._buttons:
-			if b._highlighted:b._do_highlight()
+			if b._highlighted:
+				b._do_highlight()
 
 	def _do_render(self, entry, dc, ltrb, dst_xywh):
 		cmd = entry[0]
@@ -689,6 +688,7 @@ class _Button:
 		self._coordinates = coordinates
 		self._z = z
 		self._sensitive = sensitive
+		self._highlighted = 0
 
 		buttons = dispobj._buttons
 		for i in range(len(buttons)):
@@ -697,20 +697,41 @@ class _Button:
 				break
 		else:
 			buttons.append(self)
-		self._hicolor = self._color = dispobj._fgcolor
-		self._width = self._hiwidth = dispobj._linewidth
 		
 		if shape == 'rect':
 			self._insideshape = self._insideRect
+			bbox = dispobj._convert_coordinates((coordinates[0],coordinates[1],coordinates[2]-coordinates[0],coordinates[3]-coordinates[1]))
 		elif shape == 'poly':
 			self._insideshape = self._insidePoly
+			minx = miny = maxx = maxy = None
+			for i in range(len(coordinates)):
+				if i & 1:
+					# y coordinate
+					if miny is None or coordinates[i] < miny:
+						miny = coordinates[i]
+					if maxy is None or coordinates[i] > maxy:
+						maxy = coordinates[i]
+				else:
+					# x coordinate
+					if minx is None or coordinates[i] < minx:
+						minx = coordinates[i]
+					if maxx is None or coordinates[i] > maxx:
+						maxx = coordinates[i]
+			bbox = dispobj._convert_coordinates((minx, miny, maxx-minx, maxy-miny))
 		elif shape == 'circle':
 			self._insideshape = self._insideCircle
+			bbox = dispobj._convert_coordinates((coordinates[0]-coordinates[2],coordinates[1]-coordinates[2],2*coordinates[2],2*coordinates[2]))
 		elif shape == 'elipse':
 			self._insideshape = self._insideElipse
+			bbox = dispobj._convert_coordinates((coordinates[0]-coordinates[2],coordinates[1]-coordinates[3],2*coordinates[2],2*coordinates[3]))
 		else:
 			print 'Internal error: invalid shape type'			
 			self._insideshape = self._insideRect
+			bbox = dispobj._convert_coordinates((coordinates[0],coordinates[1],coordinates[2]-coordinates[0],coordinates[3]-coordinates[1]))
+		wnd = dispobj._window
+		x,y,w,h = wnd.getwindowpos()
+		bx,by,bw,bh = bbox
+		self._bbox = wnd.rectAnd(wnd.getVisibleWindowPos(), (x+bx,y+by,bw,bh))
 		
 		# for now, until draw works for circle and poly
 		# otherwise : crash
@@ -744,42 +765,61 @@ class _Button:
 
 	# Set highlight color
 	def hicolor(self, color):
-		self._hicolor = color
+		pass
 
 	# Highlight box
 	def highlight(self):
-		pass
+		if self.is_closed():
+			return
+		self._highlighted = 1
+		self._do_highlight()
 
 	# Unhighlight box
 	def unhighlight(self):
-		pass
-		
-	def _do_highlight(self):
-		pass
+		if self.is_closed():
+			return
+		self._highlighted = 0
+		self._do_highlight(0)
 
-	def _inside(self, x, y):
-		if not self._sensitive:
-			# if not sensitive, no click is inside
-			return 0
-		return self._insideshape(x, y)
+	def _do_highlight(self, hilite = 1):
+		if self.is_closed():
+			return
+		self._dispobj._window._topwindow._highlight(self, hilite)
 
-	# Returns true if the point is inside the box	
-	def _insideRect(self, x, y):
-		# for now
-		bx1, by1, bx2, by2 = self._coordinates
-		return CheckInsideArea.insideRect(x, y, bx1, by1, bx2, by2)
+	def paint(self, dc, exlwnd = None):
+		if self.is_closed():
+			return
+		x,y,w,h = self.getbbox()
+		if w == 0 or h == 0:
+			# no point drawing 0-sized rectangle
+			return
+		dc.Polyline([(x,y),(x+w-1,y),(x+w-1,y+h-1),(x,y+h-1),(x,y)]) # for now just draw bounding box
+
+	def getbbox(self):
+		return self._bbox
 
 	# Warning: this method is called by the window core management every time that you move the mouse
 	# in order to change to graphic cursor mouse when the cursor is inside the area. And for each
 	# area that you have defined in window.
 	# For now, a not very efficient algo is implemented, but it should be better to use a system
 	# call later if possible
-	# Returns true if the point is inside the polygon	
+	def _inside(self, x, y):
+		if not self._sensitive:
+			# if not sensitive, no click is inside
+			return 0
+		return self._insideshape(x, y)
+
+	# Returns true if the point is inside the rectangle
+	def _insideRect(self, x, y):
+		# for now
+		bx1, by1, bx2, by2 = self._coordinates
+		return CheckInsideArea.insideRect(x, y, bx1, by1, bx2, by2)
+
+	# Returns true if the point is inside the polygon
 	def _insidePoly(self, x, y):
 		return CheckInsideArea.insidePoly(x, y, self._coordinates)
-		
 
-	# Returns true if the point is inside the box	
+	# Returns true if the point is inside the circle
 	def _insideCircle(self, x, y):
 		# for now
 		cx, cy, rd = self._coordinates
@@ -797,4 +837,3 @@ class _Button:
 		if self.is_closed(): return		
 		self._coordinates = self._dispobj._pxl2rel(coords)
 		self._dispobj._window.updateMouseCursor()
-
