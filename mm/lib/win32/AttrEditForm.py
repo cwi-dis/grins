@@ -145,12 +145,13 @@ def fttoa(t,n,prec):
 class OptionsCtrl(AttrCtrl):
 	want_default_help = 0
 
-	def __init__(self,wnd,attr,resid):
-		AttrCtrl.__init__(self,wnd,attr,resid)
+	def __init__(self,wnd,attr,resid, residToHide=()):
+		AttrCtrl.__init__(self,wnd,attr,resid, residToHide)
 		self._attrname=components.Edit(wnd,resid[0])
 		self._options=components.ComboBox(wnd,resid[1])
 
 	def OnInitCtrl(self):
+		AttrCtrl.OnInitCtrl(self)
 		self._initctrl=self
 		self._attrname.attach_to_parent()
 		self._options.attach_to_parent()
@@ -4964,7 +4965,10 @@ class Layout1Group(AttrGroup):
 		a = self.getattr('z')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_ZL, grinsRC.IDC_ZV))
 		a = self.getattr('regPoint')
-		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_REGPOINTL, grinsRC.IDC_REGPOINTV))
+		residToHide = ()
+		if not a.mustshow():
+			residToHide = (grinsRC.IDC_LABEL2,)
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_REGPOINTL, grinsRC.IDC_REGPOINTV), residToHide)
 		a = self.getattr('regAlign')
 		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_REGALIGNL, grinsRC.IDC_REGALIGNV))
 		a = self.getattr('channel')
