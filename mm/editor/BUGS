@@ -5,20 +5,30 @@
 
 --------------------------- BIG PLANS -----------------------------
 
-rewrite the scheduler
-
 redo the user interface for creating and editing hyperlinks to be more
 intuitive
 
 perhaps: make things more object-oriented so the list of commands
 pertaining to an object depends on the object only, not on the view...
+[fixed in part for channel objects; arcs, links, anchors and styles
+still need to be done]
 
 ------------------------------ CRASHES ----------------------------
 
+"Play Node" from a channel in the player doesn't work any more
+
+Unknown event:: 'PLAY_DONE(Next point in walk#65)'
+> /ufs/guido/mm/demo/mm4/Scheduler.py(204)getsrlist:
+    raise 'Scheduler: Unknown event:', SR.ev2string(ev)
+Dit is makkelijk te reproduceren door in de Amsterdam demo de short
+walk te kiezen, en tijdens de wandeling tweemaal snel achter elkaar op
+Next te drukken (de eerste keer highlight het anchor, de tweede keer
+tekent een kleinere highlight daarbinnen!).
+
+Mysterious MemoryError in imgfile called from ImageChannel
+
 printout "MovieChannel: node not armed", followed by hang *as well as*
 core dump, when you play the traffic movies from the Amsterdam demo
-
-MemoryError in imgfile called from ImageChannel
 
 When opening a second document, we usually crash soon, in FORMS (in
 fl_qread).
@@ -44,6 +54,8 @@ Kaboo!: None
 > /ufs/guido/mm/demo/mm4/Scheduler.py(72)unfreeze: raise 'Kaboo!'
 
 ------------------------------ BUGS -------------------------------
+
+Pressing "PLAY" while already playing a movie, makes the movie red...
 
 "Keep time chart in sync" doesn't work if the time chart is brought up
 after the player has started (or similar vague sort of circumstances)
@@ -610,7 +622,7 @@ enough.]  [Fixed by Sjoerd -- soundchannel.c is much more careful now.]
 renaming a channel when the player is also open (possibly only when it
 is opened after the channel view) causes a crash.
 
---- 2 Feb 1992 ---
+--- 2 Feb 1993 ---
 
 block view calculates geometry wrong after sequence of zoom in -
 enlarge window - zoom out 
@@ -626,7 +638,7 @@ block view: on resize, the menu bar changes height in a weird way
 rewrite the block view without using FORMS, so user interface can be
 improved
 
---- 4 Feb 1992 ---
+--- 4 Feb 1993 ---
 
 Pressing the "reset" button next to the channel name in a channel
 attributes dialog causes a crash -- self.currenttext is None, and so
@@ -643,3 +655,12 @@ is read into the context.]
 
 FORMS: When a window is iconified, the first redraw operation to that
 window hangs the entire application.  [Fixed since FORMS 2.1a]
+
+--- 24 Mar 1993 ---
+
+rewrite the scheduler [Jack]
+
+--- 16 Apr 1993 ---
+
+Text anchors are sometimes drawn wrong when highlighted... [I *think*
+this has been fixed.]
