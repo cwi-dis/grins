@@ -162,6 +162,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def destroy(self):
 		self.set_timer(0)
+		self.hideviews()
 		self.editmgr.unregister(self)
 		self.editmgr.destroy()
 		self.destroyviews()
@@ -234,6 +235,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		for v in self.views:
 			if v is not None:
 				v.hide()
+		self.hide_source_callback()
 
 	def destroyviews(self):
 		for v in self.views:
