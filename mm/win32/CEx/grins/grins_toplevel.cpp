@@ -8,6 +8,9 @@
 
 #include "charconv.h"
 #include "memfile.h"
+
+#include "tree_node.h"
+
 #include "xml_parsers.h"
 
 #include "smil/smil_parser.h"
@@ -16,21 +19,24 @@
 
 namespace grins {
 
+static smil::parser smil_parser;
 
 TopLevel::TopLevel(Main *pMain, const TCHAR *url)
 :	m_pMain(pMain), 
-	m_url(url)
+	m_url(url),
+	m_root(0)
 	{
-	read_it();
 	}
 		
 TopLevel::~TopLevel()
 	{
+	if(m_root != 0)
+		delete m_root;
 	}
 
 bool TopLevel::read_it()
 	{
-	smil::parser smil_parser;
+	assert(m_root == 0);
 
 	ExpatParser xml_parser(&smil_parser);
 
@@ -42,12 +48,14 @@ bool TopLevel::read_it()
 		}
 	mf.fill();
 
+	smil_parser.reset();
 	if(!xml_parser.parse((const char*)mf.data(), mf.size(), true))
 		{
-		showmessage(TEXT("buildFromFile() failed"));
+		showmessage(TEXT("parse() failed"));
 		return false;
 		}
-	showmessage(TEXT("parsed document"));
+	
+	m_root = smil_parser.detach();
 	return true;
 	}
 
