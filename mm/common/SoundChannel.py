@@ -32,12 +32,12 @@ class SoundChannel(ChannelAsync):
 			fn = urllib.urlretrieve(fn)[0]
 			self.arm_fp = audio.reader(fn)
 		except IOError:
-			print 'Cannot open audio file', fn
+			self.errormsg(node, '%s: Cannot open audio file' % fn)
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
 		except audio.Error:
-			print 'Unknown audio file type', fn
+			self.errormsg(node, '%s: Unknown audio file type' % fn)
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
@@ -78,6 +78,8 @@ class SoundChannel(ChannelAsync):
 
 class Player:
 	def __init__(self):
+		# __merger, __converter, __tid, and __data are all None/'',
+		# or none of them are.
 		self.__port = audiodev.writer(qsize = 400000)
 		self.__merger = None
 		self.__converter = None
@@ -87,7 +89,6 @@ class Player:
 		self.__timeout = 0
 		self.__data = ''
 		self.__callbacks = []
-		self.__is_playing = 0
 
 	def __callback(self, arg):
 		self.__callbacks.append(arg)
@@ -97,7 +98,6 @@ class Player:
 		if not self.__merger:
 			first = 1
 			self.__merger = audiomerge.merge()
-		self.__is_playing = 1
 		self.__merger.add(rdr, (self.__callback, (cb,)))
 		if first:
 			self.__converter = audioconvert.convert(self.__merger,
@@ -120,20 +120,25 @@ class Player:
 			self.__converter.setpos(self.__oldpos)
 			self.__data = self.__converter.readframes(self.__readsize)
 			if not self.__data:
-				self.__is_playing = 0
+				# deleted the last one
+				self.__port.stop()
+				self.__merger = None
+				self.__converter = None
+				if self.__tid:
+					windowinterface.canceltimer(self.__tid)
+					self.__tid = None
 
 	def __playsome(self, first = 0):
 		self.__tid = None
-		if not self.__is_playing:
+		if not self.__data:
 			self.__port.wait()
+			self.__merger = None
+			self.__converter = None
 			for cb in self.__callbacks:
 				if cb:
 					apply(cb[0], cb[1])
 			self.__callbacks = []
-			if not self.__is_playing:
-				self.__merger = None
-				self.__converter = None
-				return
+			return
 		self.__port.writeframes(self.__data)
 		for cb in self.__callbacks:
 			if cb:
@@ -141,8 +146,6 @@ class Player:
 		self.__callbacks = []
 		self.__oldpos = self.__converter.getpos()
 		self.__data = self.__converter.readframes(self.__readsize)
-		if not self.__data:
-			self.__is_playing = 0
 		timeout = float(self.__port.getfilled())/self.__framerate - self.__timeout
 		if timeout <= 0:
 			timeout = 0.001
