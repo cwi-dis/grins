@@ -981,6 +981,8 @@ class MMChannel(MMTreeElement):
 				else:
 					#XXX for now, change the original name to make working
 					channelTarget['css_'+attrName] = attrValue
+		# keep the 'collapsed' information
+		channelTarget['collapsed'] = self.collapsed
 
 		
 	# copy the a tree into a parent region of a specified context
@@ -1018,6 +1020,8 @@ class MMChannel(MMTreeElement):
 					break
 			if attrName != 'type':
 				context.editmgr.setchannelattr(channelTarget.name, attrName, attrValue)
+		# restore the 'collapsed' information
+		channelTarget.collapsed = self['collapsed']
 					
 	# compute a region name according to a base name
 	def __getName(self, context, name):
@@ -1271,6 +1275,9 @@ class MMChannel(MMTreeElement):
 			return self.getPxGeom()
 		if self.attrdict.has_key(key):
 			return self.attrdict[key]
+		if self.isCssAttr(key):
+			# keep the compatibility with old version
+			return self.getCssRawAttr(key)
 #		if key == 'bgcolor' and \
 #		   self.attrdict.has_key('base_window') and \
 #		   self.attrdict.get('transparent', 0) <= 0:
