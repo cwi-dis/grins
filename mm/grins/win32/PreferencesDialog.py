@@ -33,7 +33,9 @@ boolitems = {
 	'system_overdub_or_caption': 'audible or visible "captions"',
 	'html_control': 'choose between IE4 and WebsterPro HTML controls',
 	}
-
+import features
+if features.compatibility == features.Boston:
+	boolitems['system_audiodesc'] = 'whether audio descriptions are to be shown'
 
 
 class _PreferencesDialog(win32dialog.ResDialog,ControlsDict):
@@ -43,13 +45,18 @@ class _PreferencesDialog(win32dialog.ResDialog,ControlsDict):
 		langs = languages.l2a.keys()
 		langs.sort()
 		self.__languages = langs
-		win32dialog.ResDialog.__init__(self,grinsRC.IDD_PREFERENCES,parent)
+		if features.compatibility == features.Boston:
+			win32dialog.ResDialog.__init__(self,grinsRC.IDD_PREFERENCES2,parent)
+		else:
+			win32dialog.ResDialog.__init__(self,grinsRC.IDD_PREFERENCES,parent)
 		ControlsDict.__init__(self)
 
 		self['system_bitrate']= ComboBox(self,grinsRC.IDC_COMBO1)
 		self['system_language']= ComboBox(self,grinsRC.IDC_COMBO2)
-		self['system_captions']=CheckButton(self,grinsRC.IDC_CHECK1)
-		self['system_overdub_or_caption']=CheckButton(self,grinsRC.IDC_CHECK2)
+		self['system_overdub_or_caption']=CheckButton(self,grinsRC.IDC_CHECK1)
+		self['system_captions']=CheckButton(self,grinsRC.IDC_CHECK2)
+		if features.compatibility == features.Boston:
+			self['system_audiodesc']=CheckButton(self,grinsRC.IDC_CHECK3)
 		self['html_control']=CheckButton(self, grinsRC.IDC_CHECK4)
 
 		self['OK']=Button(self,win32con.IDOK)

@@ -2,7 +2,7 @@ __version__ = "$Id$"
 
 """ @win32doc|usercmdui
 Contains extensions to usercmd classes specific to 
-win32 plarform. Specifically defines commands for windows 
+win32 platform. Specifically defines commands for windows 
 arrangement, the about command and the select charset command.
 """
 
@@ -35,9 +35,17 @@ class GRINS_QSG(_CommandBase):
 class GRINS_TUTORIAL(_CommandBase):
 	help = 'GRiNS Tutorial'
 
-class TB_PLAY(_CommandBase):
-	help = 'Play document'
-class TB_PAUSE(_CommandBase):
-	help = 'Pause playing document'
-class TB_STOP(_CommandBase):
-	help = 'Stop playing document'
+class TOOLBAR_GENERAL(_CommandBase):
+	help = 'Show/Hide the general toolbar'
+class TOOLBAR_PLAYER(_CommandBase):
+	help = 'Show/Hide the player controls'
+class TOOLBAR_ALIGNMENT(_CommandBase):
+	help = 'Show/Hide the region alignment toolbar'
+
+class ATTRIBUTES_ANCHORS(_CommandBase):
+	help = 'Create anchors'
+class ATTRIBUTES_BACKGROUND(_CommandBase):
+	help = 'Set background color'
+class ATTRIBUTES_ZORDER(_CommandBase):
+	help = 'Set z-order'
+

@@ -5,12 +5,9 @@ import windowinterface
 import MMAttrdefs, MMurl
 from urlparse import urlparse, urlunparse
 from MMExc import *
-from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
+from Hlinks import *
 from AnchorDefs import *
 from usercmd import *
-
-# an empty document
-EMPTY = "(seq '1' ((channellist) (hyperlinks)))"
 
 from TopLevelDialog import TopLevelDialog
 
@@ -31,9 +28,9 @@ class TopLevel(TopLevelDialog):
 		else:
 			# remote file
 			self.dirname = ''
-		if base[-5:] == '.cmif':
-			self.basename = base[:-5]
-		elif base[-4:] == '.smi':
+##		if base[-5:] == '.cmif':
+##			self.basename = base[:-5]
+		if base[-4:] == '.smi':
 			self.basename = base[:-4]
 		elif base[-5:] == '.smil':
 			self.basename = base[:-5]
@@ -43,6 +40,8 @@ class TopLevel(TopLevelDialog):
 		self.filename = url
 		self.source = None
 		self.read_it()
+		self.__checkParseErrors()
+		
 		self.makeplayer()
 		self.commandlist = [
 			CLOSE(callback = (self.close_callback, ())),
@@ -54,10 +53,26 @@ class TopLevel(TopLevelDialog):
 		if hasattr(self.root, 'source') and \
 		   hasattr(windowinterface, 'textwindow'):
 			self.commandlist.append(
-				SOURCE(callback = (self.source_callback, ())))
+				SOURCEVIEW(callback = (self.source_callback, ())))
+
+	# detect the errors/fatal errors
+	# if it's a fatal error, re-raise the error
+	def __checkParseErrors(self):
+		parseErrors = self.root.GetContext().getParseErrors()
+		if parseErrors != None:
+			if parseErrors.getType() == 'fatal':
+				raise MSyntaxError
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
+
+	def show(self):
+		TopLevelDialog.show(self)
+		if hasattr(self.root, 'source') and \
+		   hasattr(windowinterface, 'textwindow'):
+			import settings
+			if settings.get('showsource'):
+				self.source_callback()
 
 	def destroy(self):
 		if self in self.main.tops:
@@ -81,7 +96,7 @@ class TopLevel(TopLevelDialog):
 			windowinterface.canceltimer(self._last_timer_id)
 			self._last_timer_id = None
 		self.__immediate = 0
-		if delay:
+		if delay >= 0:
 			if delay <= 0.01 and self.__intimer:
 				self.__immediate = 1
 			else:
@@ -104,6 +119,7 @@ class TopLevel(TopLevelDialog):
 	#
 	def source_callback(self):
 		self.showsource(self.root.source)
+##		self.source.set_mother(self)
 
 	def open_okcallback(self, filename):
 		if os.path.isabs(filename):
@@ -162,9 +178,9 @@ class TopLevel(TopLevelDialog):
 		if mtype in ('application/x-grins-project', 'application/smil'):
 			import SMILTreeRead
 			self.root = SMILTreeRead.ReadFile(self.filename, self.printfunc)
-		elif mtype == 'application/x-grins-cmif':
-			import MMRead
-			self.root = MMRead.ReadFile(self.filename)
+##		elif mtype == 'application/x-grins-cmif':
+##			import MMRead
+##			self.root = MMRead.ReadFile(self.filename)
 		else:
 			import SMILTreeRead
 			if mtype is None or \
@@ -187,9 +203,18 @@ class TopLevel(TopLevelDialog):
 	def printfunc(self, msg):
 		windowinterface.showmessage('while reading %s\n\n' % self.filename + msg)
 
+	def reload_callback(self):
+		print "DEBUG: reload_callback called."
+		self.setwaiting()
+		self.reload()
+
+	def reload(self):
+		self.open_okcallback(self.filename);
+		self.close()
+		
 	def close_callback(self):
 		self.setwaiting()
-		if self.source and not self.source.is_closed():
+		if self.source is not None:
 			self.source.close()
 		self.source = None
 		self.close()
@@ -210,28 +235,38 @@ class TopLevel(TopLevelDialog):
 	#
 	# Global hyperjump interface
 	#
-	def jumptoexternal(self, anchor, atype):
+	def jumptoexternal(self, anchor, atype, stype=A_SRC_PLAY, dtype=A_DEST_PLAY):
 		# XXXX Should check that document isn't active already,
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
 		import MMurl
-		if type(anchor) is type (()):
-			uid, aid = anchor
-			if '/' not in uid:
-				url = self.filename
-			elif uid[-2:] == '/1':
-				url = uid[:-2]
-			else:
-				url = uid
-		else:
-			url, aid = MMurl.splittag(anchor)
+		url, aid = MMurl.splittag(anchor)
 		url = MMurl.basejoin(self.filename, url)
+		
+		# by default, the document target will be handled by GRiNS
+		# note: this varib allow to manage correctly the sourcePlaystate attribute
+		# as well, even if the target document is not handled by GRiNS
+		grinsTarget = 1
+
 		for top in self.main.tops:
 			if top is not self and top.is_document(url):
 				break
 		else:
 			try:
-				top = TopLevel(self.main, url)
+				# if the destination document is not a smil/grins document,
+				# it's handle by an external application
+				import MMmimetypes, MMurl
+				utype, url2 = MMurl.splittype(url)
+				mtype = MMmimetypes.guess_type(url)[0]
+				if mtype in ('application/smil',
+					     'application/x-grins-project',
+##					     'application/x-grins-cmif',
+					     ):
+					# in this case, the document is handle by grins
+					top = TopLevel(self.main, url)
+				else:
+					grinsTarget = 0
+					windowinterface.shell_execute(url)
 			except:
 				msg = sys.exc_value
 				if type(msg) is type(self):
@@ -244,20 +279,44 @@ class TopLevel(TopLevelDialog):
 					'File: '+url+'\n'+
 					'Error: '+`msg`)
 				return 0
-		top.show()
-		node = top.root
-		if type(anchor) is type(()) and '/' not in uid:
-			try:
-				node = top.root.context.mapuid(uid)
-			except NoSuchUIDError:
-				print 'uid not found in document'
-		elif hasattr(node, 'SMILidmap') and node.SMILidmap.has_key(aid):
-			node = node.context.mapuid(node.SMILidmap[aid])
-		top.player.show((top.player.playfromanchor, (node, aid)))
-		if atype == TYPE_CALL:
-			self.player.pause(1)
-		elif atype == TYPE_JUMP:
-			self.close()
+
+		if grinsTarget:
+			top.show()
+			node = top.root
+			if hasattr(node, 'SMILidmap') and node.SMILidmap.has_key(aid):
+				val = node.SMILidmap[aid]
+				if type(val) is type(()):
+					uid, aid = val
+				else:
+					uid, aid = val, None
+				node = node.context.mapuid(uid)
+			if dtype == A_DEST_PLAY:
+				top.player.show()
+				top.player.playfromanchor(node, aid)
+			elif dtype == A_DEST_PAUSE:
+				top.player.show()
+				top.player.playfromanchor(node, aid)
+				top.player.pause(1)
+			else:
+				print 'jump to external: invalid destination state'
+			
+		if atype == TYPE_JUMP:
+			if grinsTarget:
+				self.close()
+			else:
+				# The hide method doesn't work fine.
+				# So, for now stop only the player, instead to hide the window
+				self.player.stop()
+		elif atype == TYPE_FORK:
+			if stype == A_SRC_PLAY:
+				pass
+			elif stype == A_SRC_PAUSE:
+				self.player.pause(1)
+			elif stype == A_SRC_STOP:
+				self.player.stop()
+			else:
+				print 'jump to external: invalid source state'
+			
 		return 1
 
 	def is_document(self, url):
@@ -270,7 +329,7 @@ class TopLevel(TopLevelDialog):
 		rv = []
 		alist = MMAttrdefs.getattr(self.root, 'anchorlist')
 		for a in alist:
-			rv.append((fn, a[A_ID]))
+			rv.append((fn, a.aid))
 		return rv
 
 	def getallexternalanchors(self):

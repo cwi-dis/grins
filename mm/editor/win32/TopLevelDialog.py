@@ -13,24 +13,48 @@ are enabled. This class has acces to the document and
 can display its various views and its source
 """
 
-class TopLevelDialog:
-	adornments = {}
+import bitrates, languages
 
+class TopLevelDialog:
 	def __init__(self):
 		self.commandlist = self.commandlist + [
 			PAUSE(callback = (self.pause_callback, ())),
 			STOP(callback = (self.stop_callback, ())),
-			TB_PLAY(callback = (self.play_callback, ())),
-			TB_PAUSE(callback = (self.pause_callback, ())),
-			TB_STOP(callback = (self.stop_callback, ())),
+			PLAY(callback = (self.play_callback, ())),
+			SCHEDDUMP(callback = (self.__dump, ())),
 		]
-		pass
+
+	def __dump(self):
+		self.player.scheduler.dump()
 
 	def show(self):
 		if self.window is not None:
 			return
+		import settings, bitrates, languages
+		bitrate = settings.get('system_bitrate')
+		rates = []
+		initbitrate = bitrates.bitrates[0][1]
+		for val, str in bitrates.bitrates:
+			rates.append(str)
+			if val <= bitrate:
+				initbitrate = str
+		language = settings.get('system_language')
+		langs = []
+		initlang = 'English'	# we know this occurs
+		for val, str in languages.languages:
+			langs.append(str)
+			if language == val:
+				initlang = str
+
+		adornments = {
+			'pulldown': {
+				'Bitrate': (rates, self.bitratecb, initbitrate),
+				'Language': (langs, self.languagecb, initlang),
+			},
+		}
+
 		self.window = windowinterface.newdocument(self, 
-			adornments = self.adornments,commandlist = self.commandlist)
+			adornments = adornments,commandlist = self.commandlist)
 		import Player
 		self.setplayerstate(Player.STOPPED)
 
@@ -46,7 +70,7 @@ class TopLevelDialog:
 	def setplayerstate(self, state):
 		self.window.setplayerstate(state)
 
-	def showsource(self, source = None, optional=0):
+	def showsource(self, source = None, optional=0, readonly = 0):
 		if source is None:
 			if self.source is not None:
 				self.source.close()
@@ -55,8 +79,27 @@ class TopLevelDialog:
 			if self.source is not None:
 				self.source.settext(source)
 			else:
-				self.source = self.window.textwindow(source)
+				self.source = self.window.textwindow(source, readonly=1)
+				self.source.set_mother(self)
 
+	def closeSourceView(self):
+		# XXX HACK
+		# in the source view, the user may have done some changements without apply them.
+		# return 1 if the user want to continue (not cancel)
+		if self.sourceview != None:
+			if self.sourceview.is_changed():
+				ret = windowinterface.GetYesNoCancel("Do you wish to keep the changes in the source view?\n", self.window)
+				if ret == 0:		# Which means "YES"
+					self.sourceview.write_text_and_close() # Which will close all windows.
+					return 1
+				elif ret == 1: # Which means "No"
+					# close the view without save and continue
+					self.sourceview.hide()
+					return 1
+				else:		# "Cancel"
+					return 0
+		return 1
+						
 	def mayclose(self):
 		prompt = 'You haven\'t saved your changes yet;\n' + \
 			 'do you want to save them before closing?'

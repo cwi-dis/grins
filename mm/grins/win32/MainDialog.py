@@ -33,8 +33,10 @@ __version__ = "$Id$"
 
 from usercmd import *
 from wndusercmd import *
-
+import features
+from compatibility import Boston
 import WMEVENTS
+import MMurl
 
 class MainDialog:
 	def __init__(self, title):
@@ -59,10 +61,10 @@ class MainDialog:
 				GRINS_WEB(callback = (self.grins_web_callback, ('http://www.oratrix.com/GRiNS/index.html',))))
 		# register events for all frame wnds
 		import windowinterface
+		windowinterface.register_event(WMEVENTS.DragFile, self.dropeffect, None)		
 		windowinterface.register_event(WMEVENTS.DropFile, self.dropfile, None)
-		windowinterface.register_event(WMEVENTS.DragFile, self.dropeffect, None)
 		windowinterface.register_event(WMEVENTS.PasteFile, self.dropfile, None)
-		import windowinterface
+		windowinterface.register_embedded('OnOpen', self.embeddedopenfile, None)
 		windowinterface.createmainwnd(title,
 			adornments = None,
 			commandlist = self.commandlist)
@@ -79,16 +81,6 @@ class MainDialog:
 		self.__text=self.__owindow._text
 		self.__owindow.show()
 
-	def dropfile(self, arg, window, event, value):
-		x,y,filename=value
-		url=self.__path2url(filename)
-		import MMmimetypes, windowinterface
-		mimetype = MMmimetypes.guess_type(url)[0]
-		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
-			self.openURL_callback(url)
-		else:
-			windowinterface.showmessage('Incorrect filetype for drop/paste')
-
 	def dropeffect(self, dummy, window, event, params):
 		x,y,filename=params
 		url=self.__path2url(filename)
@@ -99,11 +91,24 @@ class MainDialog:
 		else:
 			return windowinterface.DROPEFFECT_NONE
 
+	def dropfile(self, arg, window, event, value):
+		x,y,filename=value
+		url=self.__path2url(filename)
+		import MMmimetypes, windowinterface
+		mimetype = MMmimetypes.guess_type(url)[0]
+		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
+			self.openURL_callback(url)
+		else:
+			windowinterface.showmessage('Incorrect filetype for drop/paste')
+
 	def openfile_callback(self):
 		"""Callback for OPENFILE menu command"""
 		import windowinterface
 		f=windowinterface.getmainwnd()
-		filetypes = ['application/smil', 'application/x-grins-project']
+		if features.compatibility == Boston:
+			filetypes = ['application/smil', 'application/x-grins-project']
+		else:
+			filetypes = ['application/x-grins-project', 'application/smil']
 ##		import features
 ##		if not features.lightweight:
 ##			filetypes.append('application/x-grins-cmif')
@@ -117,6 +122,17 @@ class MainDialog:
 		if url:
 			self.openURL_callback(url)
 
+	def embeddedopenfile(self, arg, window, event, value):
+		if len(value)>7 and value[:6] == 'file:/':
+			if value[7]==':':
+				url = 'file:///%s|%s' % (value[6], value[8:])
+			else:
+				url = MMurl.canonURL(value)
+		else:
+			url = self.__path2url(value)
+		if url:
+			self.openURL_callback(url)
+		
 	def set_recent_list(self, list):
 		import windowinterface
 		f=windowinterface.getactivedocframe()
@@ -136,7 +152,10 @@ class MainDialog:
 	def __openfile_callback(self):
 		import windowinterface
 		f=windowinterface.getmainwnd()
-		filetypes = ['application/x-grins-project', 'application/smil']
+		if features.compatibility == Boston:
+			filetypes = ['application/smil', 'application/x-grins-project' ]
+		else:
+			filetypes = ['application/x-grins-project','application/smil' ]
 ##		import features
 ##		if not features.lightweight:
 ##			filetypes.append('application/x-grins-cmif')
@@ -152,23 +171,20 @@ class MainDialog:
 		# this method is called also from the drop stuff
 		# so check for UNC names before calling pathname2url
 		# otherwise it will fail.
-		import longpath
-		if longpath.pathIsUNC(filename):
-			return filename
-
-		import os, MMurl
-		if os.path.isabs(filename):
-			cwd = os.getcwd()
-			if os.path.isdir(filename):
-				dir, file = filename, os.curdir
-			else:
-				dir, file = os.path.split(filename)
-			# XXXX maybe should check that dir gets shorter!
-			while len(dir) > len(cwd):
-				dir, f = os.path.split(dir)
-				file = os.path.join(f, file)
-			if dir == cwd:
-				filename = file
+		import longpath, os
+		filename = longpath.short2longpath(filename)
+##		if os.path.isabs(filename):
+##			cwd = os.getcwd()
+##			if os.path.isdir(filename):
+##				dir, file = filename, os.curdir
+##			else:
+##				dir, file = os.path.split(filename)
+##			# XXXX maybe should check that dir gets shorter!
+##			while len(dir) > len(cwd):
+##				dir, f = os.path.split(dir)
+##				file = os.path.join(f, file)
+##			if dir == cwd:
+##				filename = file
 		return MMurl.pathname2url(filename)
 
 	def console_callback(self):
@@ -188,3 +204,4 @@ class MainDialog:
 	def grins_web_callback(self, url):
 		import windowinterface
 		helpwindow = windowinterface.shell_execute(url,'open')
+ 

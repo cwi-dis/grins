@@ -84,7 +84,7 @@ class UsergroupViewDialog:
 
 
 class UsergroupEditDialog:
-	def __init__(self, ugroup, title, ustate, override):
+	def __init__(self, ugroup, title, ustate, override, uid):
 		"""Create the UsergroupEdit dialog.
 
 		Create the dialog window (non-modal, so does not grab
@@ -98,7 +98,7 @@ class UsergroupEditDialog:
 			}
 		w=self.getparent().getwindow()
 		self.__window=w=windowinterface.UsergroupEditDialog(w)
-		w.do_init(ugroup, title, ustate, override, cbdict)
+		w.do_init(ugroup, title, ustate, override, cbdict, uid)
 		w.show()
 
 	def showmessage(self, text):
@@ -113,16 +113,17 @@ class UsergroupEditDialog:
 		self.__window.close()
 		self.__window = None
 
-	def setstate(self, ugroup, title, ustate, override):
+	def setstate(self, ugroup, title, ustate, override, uid):
 		"""Set the values in the dialog.
 
 		Arguments (no defaults):
 		ugroup -- string name of the user group
 		title -- string title of the user group
 		ustate -- string 'RENDERED' or 'NOT RENDERED'
-		override -- string 'allowed' or 'not allowed'
+		override -- string 'visible' or 'hidden'
+		uid -- string UID of the user group
 		"""
-		self.__window.setstate(ugroup, title, ustate, override)
+		self.__window.setstate(ugroup, title, ustate, override, uid)
 
 	def getstate(self):
 		"""Return the current values in the dialog."""

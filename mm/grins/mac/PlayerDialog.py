@@ -56,6 +56,7 @@ class PlayerDialog:
 		self.__channels = []
 		self.__options = []
 		self.__windowgroup = None
+		self.__all_windows = []
 
 	def topcommandlist(self, list):
 		if list != self.__topcommandlist:
@@ -97,6 +98,7 @@ class PlayerDialog:
 		if self.__window is not None:
 			self.__window.close()
 			self.__window = None
+		self.__all_windows = []
 
 	def settitle(self, title):
 		"""Set (change) the title of the window.
@@ -159,6 +161,10 @@ class PlayerDialog:
 		self.__channels[i] = channel, onoff
 		self.setchannels(self.__channels)
 
+	def after_chan_show(self, channel=None):
+		# XXX This is rather inefficient.
+		self.showstate()
+		
 	def setoptions(self, options):
 		"""Set the list of options.
 
@@ -205,14 +211,23 @@ class PlayerDialog:
 				usercmd.CLOSE(callback=(self.toplevel.close_callback, ())),
 				usercmd.CLOSE_WINDOW(callback=(self.toplevel.close_callback, ())),
 				] + self.alllist + self.__topcommandlist
-			w.set_commandlist(commandlist)
 			self.setchannels(self.__channels)
 			self.setusergroups(self.__ugroups)
-			if 1 or state != ostate: # XXXX
+			for w in self._getallwindows():
+				w.set_commandlist(commandlist)
 				w.set_toggle(usercmd.PLAY, state != STOPPED)
 				w.set_toggle(usercmd.PAUSE, state == PAUSING)
 				w.set_toggle(usercmd.STOP, state == STOPPED)
 
+	def _getallwindows(self):
+		rv = []
+		if self.__window:
+			rv.append(self.__window)
+		for w in self.__all_windows:
+			if hasattr(w, 'window') and w.window:
+				rv.append(w.window)
+		return rv
+		
 	def getgeometry(self):
 		"""Get the coordinates of the control panel.
 
@@ -231,7 +246,8 @@ class PlayerDialog:
 		windowinterface.setcursor(cursor)
 
 	def get_adornments(self, channel):
+		self.__all_windows.append(channel)
 		if self.__menu_created is not None:
-			return self.adornments2
+			return self.adornments #2
 		self.__menu_created = channel
 		return self.adornments

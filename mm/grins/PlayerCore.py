@@ -7,6 +7,7 @@ import windowinterface
 #from MMExc import *
 import MMAttrdefs
 from Selecter import Selecter
+from PlayerCommon import PlayerCommon
 
 
 # The Player class normally has only a single instance.
@@ -14,7 +15,7 @@ from Selecter import Selecter
 # It implements a queue using "virtual time" using an invisible timer
 # object in its form.
 
-class PlayerCore(Selecter):
+class PlayerCore(Selecter, PlayerCommon):
 	#
 	# Initialization.
 	#
@@ -26,13 +27,18 @@ class PlayerCore(Selecter):
 		self.context = self.root.GetContext()
 		self.chans_showing = 0
 		Selecter.__init__(self)
+		PlayerCommon.__init__(self)
 		self.context.registergetchannelbynode(self.getchannelbynode)
+		self.__ichannels = {} # internal channels map
 
 	# Internal reset.
 	#
 	def fullreset(self):
 		self.reset()
 		self.playroot = self.userplayroot = self.root
+		if hasattr(self, '_animateContext'):
+			self._animateContext.reset()
+
 	#
 	# play_done - Upcall by scheduler to indicate that all is done.
 	#
@@ -61,6 +67,8 @@ class PlayerCore(Selecter):
 		if self.playing:
 			self.stop()
 		self.reset()
+		self.pause(1)
+		self.play()
 		if not self.gotonode(node, anchor, None):
 			return
 		self.playing = 1
@@ -105,21 +113,38 @@ class PlayerCore(Selecter):
 	# Channels.
 	#
 	def makechannels(self):
+		# make layout channels
 		for name in self.context.channelnames:
 			attrdict = self.context.channeldict[name]
-			self.newchannel(name, attrdict)
-			self.channelnames.append(name)
+			if attrdict.get('type') == 'layout':
+				self.newchannel(name, attrdict)
+				self.channelnames.append(name)
+		# make renderer channels
+		self.makeRendererChannels()
+		
+		# make internal channels
+		self.__makeichannels()
+		
 		self.makemenu()
+
 	#
 	def getchannelbyname(self, name):
-	        if self.channels.has_key(name):
-		    return self.channels[name]
+		if self.channels.has_key(name):
+			return self.channels[name]
+		elif self.__ichannels.has_key(name):
+			return self.__ichannels[name]
 		else:
-		    return None
+			return None
 	#
+	
 	def getchannelbynode(self, node):
-		cname = MMAttrdefs.getattr(node, 'channel')
-		return self.getchannelbyname(cname)
+		import MMTypes
+		if node.GetType() in MMTypes.mediatypes:
+			return self.getRenderer(node)
+		else:
+			cname = MMAttrdefs.getattr(node, 'channel')
+			return self.getchannelbyname(cname)
+		
 	#
 	def before_chan_show(self, chan = None):
 		self.chans_showing = self.chans_showing + 1
@@ -142,16 +167,20 @@ class PlayerCore(Selecter):
 			if ch.may_show():
 				ch.show()
 		self.after_chan_show()
+		self.__showichannels()
 		self.makemenu()
+
 	#
 	def hidechannels(self):
 		for name in self.channelnames:
 			self.channels[name].hide()
+		self.__hideichannels()
 		self.makemenu()
 	#
 	def destroychannels(self):
 		for name in self.channelnames[:]:
 			self.killchannel(name)
+		self.__destroyichannels()
 		self.makemenu()
 	#
 	def killchannel(self, name):
@@ -172,6 +201,57 @@ class PlayerCore(Selecter):
 				'channel ' +`name`+ ' has bad type ' +`type`
 		ch = chclass(name, attrdict, self.scheduler, self)
 		if self.pausing:
-			ch.setpaused(self.pausing)
+			ch.uipaused(self.pausing)
 		self.channels[name] = ch
 		self.channeltypes[name] = type
+
+	##########################
+	#
+	# Internal channels support.
+	# 
+
+	def __makeichannels(self):
+		for name in self.context._ichannelnames:
+			if not self.__ichannels.has_key(name):
+				attrdict = self.context._ichanneldict[name]
+				self.__newichannel(name, attrdict)
+
+	def __showichannels(self):
+		for name in self.__ichannels.keys():
+			ch = self.__ichannels[name]
+			if ch.may_show():
+				ch.show()
+
+	#
+	def __hideichannels(self):
+		for name in self.__ichannels.keys():
+			self.__ichannels[name].hide()
+
+	def __killchannel(self, name):
+		if self.__ichannels.has_key(name):
+			self.__ichannels[name].destroy()
+			del self.__ichannels[name]
+
+	#
+	def __destroyichannels(self):
+		ichnames = self.__ichannels.keys()
+		for name in ichnames:
+			self.__ichannels[name].destroy()
+			del self.__ichannels[name]
+	#
+	def __newichannel(self, name, attrdict):
+		if not attrdict.has_key('type'):
+			raise TypeError, \
+				'channel ' +`name`+ ' has no type attribute'
+		type = attrdict['type']
+		from ChannelMap import internalchannelmap
+		if not internalchannelmap.has_key(type):
+			raise TypeError, \
+				'internal channel ' +`name`+ ' has bad type ' +`type`
+		chclass = internalchannelmap[type]
+		ch = chclass(name, attrdict, self.scheduler, self)
+		self.__ichannels[name] = ch
+
+	#
+	# End of Internal channels support.
+	##########################
