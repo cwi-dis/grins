@@ -47,6 +47,16 @@ class EditableMMNode(MMNode.MMNode):
 		em.addsyncarc(self, 'beginlist', e)
 		em.commit()
 
+	def NewEndEvent(self, othernode, event):
+		# I'm called from the HierarchyView
+		#print "DEBUG: NewEndEvent"
+		em = self.context.editmgr
+		if not em.transaction():
+			return
+		e = MMNode.MMSyncArc(self, 'end', srcnode=othernode, event=event, delay=0)
+		em.addsyncarc(self, 'endlist', e)
+		em.commit()
+
 	def GetCollapsedParent(self):
 		# return the top-most collapsed ancestor, or None if all ancestors are uncollapsed
 		# I'm used by the event editor.
