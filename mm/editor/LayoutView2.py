@@ -114,19 +114,34 @@ class Node:
 
 	def getGeom(self):
 		return self._curattrdict['wingeom']
+
+	def isShowEditBackground(self):
+		showEditBackground = self._defattrdict.get('showEditBackground')
+		if showEditBackground != None and showEditBackground == "on":
+			return 1
+		return 0		
 					
 class Region(Node):
 	def __init__(self, name, dict, ctx):
 		Node.__init__(self, name, dict, ctx)
 		self._nodeType = TYPE_REGION
-
+		
 	def importAttrdict(self):
-		Node.importAttrdict(self)		
-		self._curattrdict['bgcolor'] = self._defattrdict.get('bgcolor')
-		if self._ctx.asOutLine:
-			self._curattrdict['transparent'] = 1
+		Node.importAttrdict(self)
+
+		editBackground = None
+		if self.isShowEditBackground():
+			editBackground = self._defattrdict.get('editBackground')
+			
+		if editBackground != None:				
+				self._curattrdict['bgcolor'] = editBackground
+				self._curattrdict['transparent'] = 0
 		else:
-			self._curattrdict['transparent'] = self._defattrdict.get('transparent')
+			self._curattrdict['bgcolor'] = self._defattrdict.get('bgcolor')
+			if self._ctx.asOutLine:
+				self._curattrdict['transparent'] = 1
+			else:
+				self._curattrdict['transparent'] = self._defattrdict.get('transparent')
 		
 		self._curattrdict['wingeom'] = self._defattrdict.get('base_winoff')
 		self._curattrdict['z'] = self._defattrdict.get('z')
@@ -193,7 +208,7 @@ class MediaRegion(Region):
 		self._nodeType = TYPE_MEDIA
 
 	def importAttrdict(self):
-		Node.importAttrdict(self)		
+		Node.importAttrdict(self)
 		self._curattrdict['bgcolor'] = self._defattrdict.get('bgcolor')
 		self._curattrdict['transparent'] = 1
 		
@@ -295,8 +310,18 @@ class Viewport(Node):
 
 	def importAttrdict(self):
 		Node.importAttrdict(self)
-		self._curattrdict['bgcolor'] = self._defattrdict.get('bgcolor')
-		self._curattrdict['transparent'] = self._defattrdict.get('transparent')
+
+		editBackground = None
+		if self.isShowEditBackground():
+			editBackground = self._defattrdict.get('editBackground')
+			
+		if editBackground != None:				
+				self._curattrdict['bgcolor'] = editBackground
+				self._curattrdict['transparent'] = 0
+		else:
+			self._curattrdict['bgcolor'] = self._defattrdict.get('bgcolor')
+			self._curattrdict['transparent'] = self._defattrdict.get('transparent')
+		
 		w,h=self._defattrdict.get('winsize')
 		self._curattrdict['wingeom'] = (self.currentX,self.currentY,w,h)
 
@@ -589,7 +614,12 @@ class LayoutView2(LayoutViewDialog2):
 		
 			newbg = self.chooseBgColor(bgcolor)
 			if newbg != None:
-				self.applyBgColor(node, newbg, transparent)
+				if node.isShowEditBackground():
+					list = []
+					list.append(('editBackground',newbg))
+					self.applyEditorPreference(node, list)
+				else:
+					self.applyBgColor(node, newbg, transparent)
 		
 
 	def sendBack(self, region):
@@ -748,6 +778,13 @@ class LayoutView2(LayoutViewDialog2):
 				self.editmgr.setchannelattr(region.getName(), 'z', z)
 			self.editmgr.commit()
 
+	def applyEditorPreference(self, node, attrList):
+		if self.editmgr.transaction():
+			if node.getNodeType() in (TYPE_REGION, TYPE_VIEWPORT):
+				for name, value in attrList:
+					self.editmgr.setchannelattr(node.getName(), name, value)
+				self.editmgr.commit()
+		
 	def updateViewportOnDialogBox(self, viewport):
 		# update region list
 		self.currentRegionNameList = self.getRegionNameList(viewport.getName())		
@@ -760,11 +797,17 @@ class LayoutView2(LayoutViewDialog2):
 		dict = viewport.getDocDict()
 		geom = dict.get('winsize')		
 
+		self.dialogCtrl.enable('ShowRbg',1)
+		showEditBackground = dict.get('showEditBackground')
+		if showEditBackground == 'on':
+			self.dialogCtrl.setCheckCtrl('ShowRbg', 0)
+		else:
+			self.dialogCtrl.setCheckCtrl('ShowRbg', 1)
+
 		# clear and disable not valid fields
 		self.dialogCtrl.setSelecterCtrl('RegionSel',-1)
 		self.dialogCtrl.enable('SendBack',0)
 		self.dialogCtrl.enable('BringFront',0)
-		self.dialogCtrl.enable('ShowRbg',0)
 		self.dialogCtrl.enable('RegionZ',0)
 
 		self.dialogCtrl.enable('BgColor', 1)
@@ -798,7 +841,7 @@ class LayoutView2(LayoutViewDialog2):
 		# enable valid fields
 		self.dialogCtrl.enable('SendBack',1)
 		self.dialogCtrl.enable('BringFront',1)
-		self.dialogCtrl.enable('ShowRbg',1)
+		
 		self.dialogCtrl.enable('RegionZ',1)
 
 		self.dialogCtrl.enable('BgColor', 1)
@@ -808,6 +851,13 @@ class LayoutView2(LayoutViewDialog2):
 
 		dict = region.getDocDict()
 		geom = dict.get('base_winoff')
+
+		self.dialogCtrl.enable('ShowRbg',1)
+		showEditBackground = dict.get('showEditBackground')
+		if showEditBackground == 'on':
+			self.dialogCtrl.setCheckCtrl('ShowRbg', 0)
+		else:
+			self.dialogCtrl.setCheckCtrl('ShowRbg', 1)
 
 		z = dict.get('z')
 		self.dialogCtrl.setFieldCtrl('RegionZ',"%d"%z)		
@@ -860,6 +910,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.enable('SendBack',0)
 		self.dialogCtrl.enable('BringFront',0)
 		self.dialogCtrl.enable('ShowRbg',0)
+		self.dialogCtrl.setCheckCtrl('ShowRbg', 1)
 		self.dialogCtrl.enable('RegionZ',0)
 
 		self.dialogCtrl.enable('BgColor', 0)
@@ -876,7 +927,7 @@ class LayoutView2(LayoutViewDialog2):
 	#
 	# internal methods
 	#
-	
+
 	def __updateZOrder(self, value):
 		self.applyZOrderOnRegion(self.currentNodeSelected, value)
 
@@ -949,6 +1000,22 @@ class LayoutView2(LayoutViewDialog2):
 			media.select()
 			self.currentNodeSelected = media
 			self.updateMediaOnDialogBox(media)
+
+	def __showEditBackground(self, value):
+		node = self.currentNodeSelected
+		if node.getNodeType() in (TYPE_REGION, TYPE_VIEWPORT):
+			list = []
+			if not value:
+				dict = node.getDocDict()
+				if not dict.has_key('showEditBackground'):
+					list.append(('showEditBackground','on'))
+				if not dict.has_key('editBackground'):	
+					list.append(('editBackground',dict.get('bgcolor')))
+			else:
+				dict = node.getDocDict()
+				if dict.has_key('showEditBackground'):
+					list.append(('showEditBackground',None))
+			self.applyEditorPreference(node, list)
 		
 	#
 	# interface implementation of 'previous tree node' 
@@ -992,6 +1059,8 @@ class LayoutView2(LayoutViewDialog2):
 			self.asOutLine = value
 			if self.currentViewport != None:
 				self.currentViewport.updateAllAsOutLines(self.asOutLine)
+		elif ctrlName == 'ShowRbg':
+			self.__showEditBackground(value)			
 
 	def onFieldCtrl(self, ctrlName, value):
 		if ctrlName in ('RegionX','RegionY','RegionW','RegionH'):
@@ -1008,8 +1077,6 @@ class LayoutView2(LayoutViewDialog2):
 			self.__sendBack()
 		elif ctrlName == 'BringFront':
 			self.__bringFront()
-		elif ctrlName == 'ShowRbg':
-			print 'ShowRbg not implemented yet'
 
 
 # ################################################################################################
@@ -1027,7 +1094,7 @@ class LayoutView2(LayoutViewDialog2):
 	# get the parent window geometry in pixel
 	def _getWingeomInPixel(self, layoutchannel):
 		parentChannel = self._getParentChannel(layoutchannel)
-	        
+		
 		if parentChannel == None:
 			# top window
 			size = layoutchannel._attrdict.get('winsize', (50, 50))
