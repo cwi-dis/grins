@@ -990,25 +990,26 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		if not self._font:
 			raise error, 'font not set'
-		strlist = string.splitfields(str, '\n')
+		w = self._window	# some abbreviations
+		f = self._font._font
 		d = self._displaylist
+		strlist = string.splitfields(str, '\n')
 		if self._curcolor != self._fgcolor:
 			d.append(gl.RGBcolor, self._fgcolor)
 			self._curcolor = self._fgcolor
-		if self._curfont != self._font._font:
-			d.append(self._font._font.setfont)
-			self._curfont = self._font._font
-		x, y = self._curpos
-		oldx, oldy = self._curpos
+		if self._curfont != f:
+			d.append(f.setfont)
+			self._curfont = f
+		x, y = oldx, oldy = self._curpos
 		oldy = oldy - self._baseline
 		maxx = oldx
 		for str in strlist:
 			x0, y0, x1, y1 = \
-				  self._window._convert_coordinates(x, y, 0, 0)
+				  w._convert_coordinates(x, y, 0, 0)
 			d.append(gl.cmov2, (x0, y0))
 			d.append(fm.prstr, str)
-			self._curpos = x + float(self._font._font.getstrwidth(
-				  str)) / self._window._width, y
+			self._curpos = x + float(f.getstrwidth(
+				  str)) / w._width, y
 			x = self._xpos
 			y = y + self._fontheight
 			if self._curpos[0] > maxx:
