@@ -91,9 +91,9 @@ mkclean() {
 		fi
 	done
 	cd $depth
-	case $ARCH in
-	irix6*)	;;
-	*)	cd mm/mmpython/$ARCH
+	if [ ! -f /usr/include/dmedia/moviefile.h ]
+	then
+		cd mm/mmpython/$ARCH
 		case $1 in
 		all|binary)	rm -f python *.o *.a;;
 		esac
@@ -101,8 +101,7 @@ mkclean() {
 		all|config)	rm -f Makefile Makefile.pre config.c sedscript;;
 		esac
 		cd $depth
-		;;
-	esac
+	fi
 }
 
 while [ $# -gt 0 ]
@@ -196,7 +195,7 @@ then
 	then
 		./config.status
 	else
-		../configure --with-gcc=no
+		../configure --with-gcc=no `[ -f /usr/include/dmedia/moviefile.h ] || echo --with-thread`
 	fi
 else
 	:
@@ -241,9 +240,8 @@ then
 else
 	:
 fi &&
-case $ARCH in
-irix6*)	;;
-*)
+if [ ! -f /usr/include/dmedia/moviefile.h ]
+then
 	cd ../../../../mm/mmpython/$ARCH &&
 	if [ ! -f Makefile ]
 	then
@@ -255,8 +253,9 @@ irix6*)	;;
 	else
 		$make ${1+"$@"} Makefile
 	fi
-	;;
-esac &&
+else
+	:
+fi &&
 $make ${1+"$@"} python &&
 cd $depth &&
 CMIF=$CHAMELEON/mm PYTHONPATH=$CHAMELEON/mm/lib:$CHAMELEON/python/Lib:$CHAMELEON/python/Lib/test:$CHAMELEON/python/Lib/plat-$ARCH $python -c 'import MMAttrdefs'
@@ -305,6 +304,11 @@ no)	;;
 	set -x &&
 	PYTHONPATH=$CHAMELEON/mm/$freeze/motif:$CHAMELEON/mm/$freeze:$CHAMELEON/mm/common/motif:$CHAMELEON/mm/common:$CHAMELEON/mm/lib/motif:$CHAMELEON/mm/lib:$CHAMELEON/mm/video:$CHAMELEON/mm/pylib:$CHAMELEON/mm/pylib/audio:$CHAMELEON/python/Lib:$CHAMELEON/python/Lib/test:$CHAMELEON/python/Lib/plat-$ARCH:$CHAMELEON/python/Extensions/X11/Lib:$CHAMELEON/python/Extensions/img/Lib:$CHAMELEON/python/Extensions/midi/Lib:$CHAMELEON/python/Extensions/X11/build.$ARCH:$CHAMELEON/python/Extensions/img/build.$ARCH$extpath &&
 	export PYTHONPATH &&
+	if [ -d frozen.$freeze.$ARCH ]
+	then	rm -f frozen.$freeze.$ARCH/$main.py
+	else	mkdir frozen.$freeze.$ARCH
+	fi &&
+	ln mm/$freeze/$main.py frozen.$freeze.$ARCH &&
 	$python -O $CHAMELEON/python/Tools/freeze/freeze.py \
 		-o frozen.$freeze.$ARCH \
 		-p $CHAMELEON/python/build.$ARCH/install \
@@ -319,7 +323,7 @@ no)	;;
 		-x Tkinter \
 		-x audiohcom -x audiovoc -x audio8svx \
 		-x audiosndt -x audiosndr \
-		mm/$freeze/$main.py \
+		frozen.$freeze.$ARCH/$main.py \
 		-m imgsgi imggif imgpgm imgppm imgpbm imgtiff imgjpeg imgbmp \
 		imgxbm imgpng &&
 	cd frozen.$freeze.$ARCH &&
