@@ -1060,6 +1060,9 @@ class SubWindow(Window):
 	# i.e. self._active_displist and/or bgcolor
 	# clip painting to argument rgn when given
 	def _paintOnDDS(self, dds, dst, rgn=None):
+		if self._transition and self._outtrans:
+			return
+
 		x, y, w, h = dst
 		if w==0 or h==0:
 			return
@@ -1149,6 +1152,7 @@ class SubWindow(Window):
 
 	# get a copy of the screen area of this window
 	def getBackDDS(self):
+		self._topwindow.update()
 		bf = self._topwindow._backBuffer
 		x, y, w, h = self.getwindowpos()
 		dds = self.createDDS()
@@ -1375,6 +1379,7 @@ class SubWindow(Window):
 			return
 		self._multiElement = dict.get('multiElement')
 		self._childrenClip = dict.get('childrenClip')
+		self._outtrans = outtrans
 		self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict)
 		if runit:
 			#print 'begintransition', self, outtrans, runit, dict
@@ -1387,7 +1392,6 @@ class SubWindow(Window):
 			#print 'endtransition', self
 			self._transition.endtransition()
 			self._transition = None
-			self.update()
 	
 	def freeze_content(self, how):
 		# Freeze the contents of the window, depending on how:
