@@ -35,7 +35,7 @@ static void ThrowCOMException(JNIEnv *env, const char *funcname, HRESULT hr) {
 	char sz[512];
 	sprintf(sz, "Native function %s failed, error = %x, %s", funcname, hr, pszmsg);
 	LocalFree(pszmsg);
-	env->ThrowNew(env->FindClass("GRiNSInterfaceException"), sz);
+	env->ThrowNew(env->FindClass("grins/GRiNSNativeInterfaceException"), sz);
 	} 
 /*
  * Class:     GRiNSPlayer
@@ -70,11 +70,12 @@ JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_nconnect(JNIEnv *env, jobject play
 	DWORD dwClsContext = CLSCTX_LOCAL_SERVER;
 	IGRiNSPlayerAuto *pIGRiNSPlayer = NULL;
 	HRESULT hr = CoCreateInstance(CLSID_GRiNSPlayerAuto, NULL, dwClsContext, IID_IGRiNSPlayerAuto,(void**)&pIGRiNSPlayer);
-	if(FAILED(hr))
-		{
-		ThrowCOMException(env, "CoCreateInstance", hr);
-		return 0;
-		}
+	
+	// return 0 instead of throwing a grins/GRiNSNativeInterfaceException
+	// GRiNS not registered
+	if(FAILED(hr)) return 0;
+	//ThrowCOMException(env, "CoCreateInstance", hr);
+
 	return jint(pIGRiNSPlayer);
 	}
 
@@ -129,9 +130,7 @@ JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetTopLayoutWindow(JNIEnv *env, j
 		if(FAILED(hr))
 			ThrowCOMException(env, "setTopLayoutWindow", hr);
 		}
-	
 	}
-
 
 /*
  * Class:     GRiNSPlayer
