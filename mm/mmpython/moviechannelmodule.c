@@ -239,8 +239,9 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 	}
 	dprintf(("movie_arm(%lx): gl_lock = %lx\n", (long) self, (long) gl_lock));
 #ifdef MM_DEBUG
-	if (PRIV->m_arm.m_index)
+	if (PRIV->m_arm.m_index) {
 		dprintf(("movie_arm(%lx): indexsize: %d\n", (long) self, getlistsize(PRIV->m_arm.m_index)));
+	}
 #endif
 	XDECREF(PRIV->m_arm.m_f);
 	PRIV->m_arm.m_f = file;
@@ -258,15 +259,33 @@ movie_armer(self)
 	int fd;
 
 	denter(movie_armer);
+	if (PRIV->m_arm.m_frame) {
+		free(PRIV->m_arm.m_frame);
+		PRIV->m_arm.m_frame = NULL;
+	}
 	v = getlistitem(PRIV->m_arm.m_index, 0);
+	if (v == NULL || !is_tupleobject(v) || gettuplesize(v) < 2) {
+		dprintf(("movie_armer(%lx): index[0] not a proper tuple\n", (long) self));
+		return;
+	}
 	t = gettupleitem(v, 0);
+	if (t == NULL || !is_tupleobject(t) || gettuplesize(t) < 1) {
+		dprintf(("movie_armer(%lx): index[0][0] not a proper tuple\n", (long) self));
+		return;
+	}
 	t = gettupleitem(t, 1);
+	if (t == NULL || !is_intobject(t)) {
+		dprintf(("movie_armer(%lx): index[0][0][1] not an int\n", (long) self));
+		return;
+	}
 	PRIV->m_arm.m_size = getintvalue(t);
 	t = gettupleitem(v, 1);
+	if (t == NULL || !is_intobject(t)) {
+		dprintf(("movie_armer(%lx): index[0][1] not an int\n", (long) self));
+		return;
+	}
 	offset = getintvalue(t);
 
-	if (PRIV->m_arm.m_frame)
-		free(PRIV->m_arm.m_frame);
 	PRIV->m_arm.m_frame = malloc(PRIV->m_arm.m_size);
 	fd = fileno(getfilefile(PRIV->m_arm.m_f));
 	PRIV->m_arm.m_offset = lseek(fd, 0L, SEEK_CUR);
@@ -301,6 +320,8 @@ init_colormap(self)
 	double c0v, c1v, c2v;
 	void (*convcolor)(double, double, double, int *, int *, int *);
 
+	denter(init_colormap);
+
 	switch (PRIV->m_play.m_format) {
 	case FORMAT_RGB8:
 		convcolor = conv_rgb8;
@@ -332,7 +353,7 @@ init_colormap(self)
 					(c2 << (c0bits+c1bits));
 				if (index < MAXMAP) {
 					(*convcolor)(c0v, c1v, c2v, &r, &g, &b);
-					dprintf(("mapcolor(%d,%d,%d,%d)\n", index, r, g, b));
+					/*dprintf(("mapcolor(%d,%d,%d,%d)\n", index, r, g, b));*/
 					mapcolor(index, r, g, b);
 					if (index == offset)
 						color(index);
@@ -365,6 +386,12 @@ movie_play(self)
 	PRIV->m_arm.m_index = NULL;
 	PRIV->m_arm.m_frame = NULL;
 	PRIV->m_arm.m_f = NULL;
+	if (PRIV->m_play.m_frame == NULL) {
+		/* apparently the arm failed */
+		dprintf(("movie_play(%lx): not playing because arm failed\n", (long) self));
+		err_setstr(RuntimeError, "asynchronous arm failed");
+		return 0;
+	}
 	/* empty the pipe */
 	(void) fcntl(PRIV->m_pipefd[0], F_SETFL, FNDELAY);
 	while (read(PRIV->m_pipefd[0], &c, 1) == 1)
@@ -380,9 +407,11 @@ movie_play(self)
 			for (i = 0; i < 256; i++) {
 				getmcolor(i, &colors[i][0], &colors[i][1],
 					  &colors[i][2]);
+				/*
 				dprintf(("movie_play(%lx): colors %d %d %d\n",
 					 (long) self, colors[i][0],
 					 colors[i][1], colors[i][2]));
+				*/
 			}
 		}
 	}
@@ -419,7 +448,7 @@ movie_player(self)
 	long newtime;
 	long offset;
 	int fd;
-	object *v;
+	object *v, *t;
 	long xorig, yorig;
 	struct pollfd pollfd;
 	int i;
@@ -466,10 +495,29 @@ movie_player(self)
 		do {
 			index++;
 			v = getlistitem(PRIV->m_play.m_index, index);
-			newtime = getintvalue(gettupleitem(gettupleitem(v, 0), 0));
+			if (v == NULL || !is_tupleobject(v) || gettuplesize(v) < 2) {
+				dprintf(("movie_player(%lx): index[%d] not a proper tuple\n", (long) self, index));
+				goto loop_exit;
+			}
+			t = gettupleitem(v, 0);
+			if (t == NULL || !is_tupleobject(t) || gettuplesize(t) < 1) {
+				dprintf(("movie_player(%lx): index[%d][0] not a proper tuple\n", (long) self, index));
+				goto loop_exit;
+			}
+			t = gettupleitem(t, 0);
+			if (t == NULL || !is_intobject(t)) {
+				dprintf(("movie_player(%lx): index[%d][0][0] not an int\n", (long) self, index));
+				goto loop_exit;
+			}
+			newtime = getintvalue(t);
 			/*dprintf(("movie_player(%lx): td = %d, newtime = %d\n", (long) self, td, newtime));*/
 		} while (index < lastindex && newtime <= td);
-		offset = getintvalue(gettupleitem(v, 1));
+		t = gettupleitem(v, 1);
+		if (t == NULL || !is_intobject(t)) {
+			dprintf(("movie_player(%lx): index[%d][1] not an int\n", (long) self, index));
+			break;
+		}
+		offset = getintvalue(t);
 		lseek(fd, offset, SEEK_SET);
 		read(fd, PRIV->m_play.m_frame, PRIV->m_play.m_size);
 		gettimeofday(&tm, NULL);
@@ -509,6 +557,7 @@ movie_player(self)
 			}
 		}
 	}
+ loop_exit:
 	printf("played %d out of %d frames\n", nplayed, lastindex + 1);
 	lseek(fd, PRIV->m_play.m_offset, SEEK_SET);
 }
