@@ -1,11 +1,63 @@
 # SGI image library interface
 
-import sys, posix, string
+# This now uses caching.
+# For now, the cache assumes that you don't modify the files.
+# If that is a problem, it should be fixed by recording the mtime
+# of files with the cached value -- NOT by telling the users to
+# avoid modifying files.  (For now I'm just lazy.)
+
+# TO CONVERVE SPACE IN /usr/tmp, THE MAIN PROGRAM MUST CALL
+# zapcache() when it is done!
+
+import sys, posix, path, string
 
 ISTAT = '/usr/sbin/istat'
-SHOWIMG = './showimg' # Special version!
+SHOWIMG = './showimg'
+PREPIMG = './prepimg'
+SHOWPREP = './showprep'
+TMPDIR = '/usr/tmp'
+
+cache = {}
+
+def tmpnam():
+	i = len(cache)
+	head = path.join(TMPDIR, 'img.' + `posix.getpid()` + '.')
+	file = head + `i`
+	while path.exists(file):
+		i = i+1
+		file = head + `i`
+	return file
+
+def cachefile(file):
+	if cache.has_key(file) and path.exists(cache[file]):
+		return cache[file]
+	tmpfile = tmpnam()
+	# Put the entry in the cache before running the command,
+	# so zapcache will remove halfway-finined entries
+	cache[file] = tmpfile
+	sts = posix.system(PREPIMG + ' ' + file + ' ' + tmpfile)
+	if sts:
+		try:
+			posix.unlink(tmpfile)
+			del cache[file]
+		except posix.error:
+			pass
+		raise RuntimeError, 'file caching failed'
+	return cache[file]
+
+def zapcache():
+	for file in cache.keys():
+		try:
+			posix.unlink(cache[file])
+			del cache[file]
+		except posix.error:
+			pass
+
+statcache = {}
 
 def istat(filename):
+	if statcache.has_key(filename):
+		return statcache[filename]
 	p = posix.popen(ISTAT + ' ' + filename, 'r')
 	dummy = p.readline()
 	line = p.readline()
@@ -13,16 +65,19 @@ def istat(filename):
 		raise RuntimeError, 'bad file for istat: ' + filename
 	w = string.split(line)
 	# xsize, ysize, zsize, min, max, bpp, type, storage, name
-	return	eval(w[0]), eval(w[1]), eval(w[2]), \
+	statcache[filename] = retval = \
+		eval(w[0]), eval(w[1]), eval(w[2]), \
 		eval(w[3]), eval(w[4]), eval(w[5]), \
 		w[6], w[7], w[8]
+	return retval
 
 def imgsize(filename):
 	return istat(filename)[:2]
 
 class _showimg():
 	def init(self, (filename, xy)):
-		cmd = 'exec showimg ' + filename
+		tempname = cachefile(filename)
+		cmd = 'exec ' + SHOWPREP + ' ' + tempname
 		if xy:
 			x, y = xy
 			cmd = cmd + ' ' + `x` + ' ' + `y`
