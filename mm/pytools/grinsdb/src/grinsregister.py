@@ -84,7 +84,11 @@ def register(file, filename):
 			print "But password sent."
 			user = oldobj['email']
 			clear = oldobj['password']
-			mail(user, clear, "", dup=1)
+			try:
+				lic = oldobj['eval-license']
+			except:
+				lic = ""
+			mail(user, clear, lic, dup=1)
 		raise Error
 
 	grpasswd.addpasswd(obj)
