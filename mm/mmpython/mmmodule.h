@@ -10,6 +10,8 @@
 #define STOPARM		0x0020	/* channel must stop arming */
 #define ARMED		0x0040	/* channel finished arming */
 #define SYNCARM		0x0080	/* arm synchronously */
+#define ARMTHREAD	0x0100	/* an arm thread exists */
+#define PLAYTHREAD	0x0200	/* a play thread exists */
 
 typedef struct {
 	OB_HEAD

@@ -399,18 +399,25 @@ do_close(self)
 
 	/* tell other threads to exit */
 	down_sema(self->mm_flagsema);
+	flags = self->mm_flags;
 	self->mm_flags |= EXIT;
 	up_sema(self->mm_flagsema);
-	do_stop(self, NULL, ARMING, STOPARM,
-		self->mm_chanobj->chan_funcs->armstop);
-	up_sema(self->mm_armsema);
-	do_stop(self, NULL, PLAYING, STOPPLAY,
-		self->mm_chanobj->chan_funcs->playstop);
-	up_sema(self->mm_playsema);
+	if (flags & ARMTHREAD) {
+		do_stop(self, NULL, ARMING, STOPARM,
+			self->mm_chanobj->chan_funcs->armstop);
+		up_sema(self->mm_armsema);
+	}
+	if (flags & PLAYTHREAD) {
+		do_stop(self, NULL, PLAYING, STOPPLAY,
+			self->mm_chanobj->chan_funcs->playstop);
+		up_sema(self->mm_playsema);
+	}
 
 	/* wait for other threads to exit */
-	down_sema(self->mm_exitsema);
-	down_sema(self->mm_exitsema);
+	if (flags & ARMTHREAD)
+		down_sema(self->mm_exitsema);
+	if (flags & PLAYTHREAD)
+		down_sema(self->mm_exitsema);
 
 	/* give module a chance to do some cleanup */
 	(*self->mm_chanobj->chan_funcs->dealloc)(self);
@@ -454,6 +461,7 @@ mm_do_display(self, args)
 	object *args;
 {
 	CheckMmObject(self);
+	denter(mm_do_display);
 	if (self->mm_chanobj->chan_funcs->do_display)
 		(*self->mm_chanobj->chan_funcs->do_display)(self);
 	else {
@@ -514,7 +522,7 @@ static typeobject Mmtype = {
 	0,		/*tp_repr*/
 };
 
-static object *
+static mmobject *
 newmmobject(wid, ev, attrdict, armsema, playsema, flagsema, exitsema, armwaitsema, chanobj)
 	int wid;
 	int ev;
@@ -524,8 +532,14 @@ newmmobject(wid, ev, attrdict, armsema, playsema, flagsema, exitsema, armwaitsem
 {
 	mmobject *mmp;
 	mmp = NEWOBJ(mmobject, &Mmtype);
-	if (mmp == NULL)
+	if (mmp == NULL) {
+		free_sema(armsema);
+		free_sema(playsema);
+		free_sema(flagsema);
+		free_sema(exitsema);
+		free_sema(armwaitsema);
 		return NULL;
+	}
 	mmp->mm_wid = wid;
 	mmp->mm_ev = ev;
 	mmp->mm_flags = 0;
@@ -539,7 +553,7 @@ newmmobject(wid, ev, attrdict, armsema, playsema, flagsema, exitsema, armwaitsem
 	INCREF(chanobj);
 	mmp->mm_chanobj = chanobj;
 	mmp->mm_private = NULL;
-	return (object *) mmp;
+	return mmp;
 }
 
 /*
@@ -564,27 +578,26 @@ newmmobject(wid, ev, attrdict, armsema, playsema, flagsema, exitsema, armwaitsem
  */
 static object *
 mm_init(self, args)
-	mmobject *self;
+	object *self;
 	object *args;
 {
 	int wid, ev;
 	object *attrdict;
-	object *mmp;
+	mmobject *mmp = NULL;
 	channelobject *chanobj;
 	type_sema armsema = NULL, playsema = NULL;
 	type_sema flagsema = NULL, exitsema = NULL, armwaitsema = NULL;
 	int i;
 
 	dprintf(("mm_init\n"));
-	if (!getargs(args, "(OiiO)", &mmp, &wid, &ev, &attrdict))
+	if (!getargs(args, "(OiiO)", &chanobj, &wid, &ev, &attrdict))
 		return NULL;
-	if (!is_channelobject(mmp)) {
+	if (!is_channelobject(chanobj)) {
 		err_setstr(RuntimeError, "first arg must be channel object");
 		return NULL;
 	}
-	dprintf(("mm_init: chanobj = %lx (%s)\n", (long) mmp,
-		 mmp->ob_type->tp_name));
-	chanobj = (channelobject *) mmp;
+	dprintf(("mm_init: chanobj = %lx (%s)\n", (long) chanobj,
+		 chanobj->ob_type->tp_name));
 
 	/* allocate necessary semaphores */
 	if ((armsema = allocate_sema(0)) == NULL ||
@@ -604,24 +617,29 @@ mm_init(self, args)
 	mmp = newmmobject(wid, ev, attrdict, armsema, playsema, flagsema,
 			  exitsema, armwaitsema, chanobj);
 	dprintf(("newmmobject() --> %lx\n", (long) mmp));
-	if (mmp == NULL ||
-	    !(*chanobj->chan_funcs->init)((mmobject *) mmp) ||
-	    !start_new_thread(mm_armer, (void *) mmp) ||
-	    !start_new_thread(mm_player, (void *) mmp)) {
-		/* only the start_thread() calls don't set the error */
-		if (!err_occurred())
-			err_setstr(IOError, "could not start threads");
-		free_sema(armsema);
-		free_sema(playsema);
-		free_sema(flagsema);
-		free_sema(exitsema);
-		free_sema(armwaitsema);
-		XDECREF(((mmobject *) mmp)->mm_attrdict);
-		DECREF(((mmobject *) mmp)->mm_chanobj);
-		DECREF(mmp);
+	if (mmp == NULL)
 		return NULL;
+	if (!(*chanobj->chan_funcs->init)(mmp))
+		goto error_return;
+	if (!start_new_thread(mm_armer, (void *) mmp)) {
+		err_setstr(IOError, "could not start arm thread");
+		goto error_return;
 	}
-	return mmp;
+	down_sema(mmp->mm_flagsema);
+	mmp->mm_flags |= ARMTHREAD;
+	up_sema(mmp->mm_flagsema);
+	if (!start_new_thread(mm_player, (void *) mmp)) {
+		err_setstr(IOError, "could not start play thread");
+		goto error_return;
+	}
+	down_sema(mmp->mm_flagsema);
+	mmp->mm_flags |= PLAYTHREAD;
+	up_sema(mmp->mm_flagsema);
+	return (object *) mmp;
+
+ error_return:
+	DECREF(mmp);
+	return NULL;
 }
 
 /*

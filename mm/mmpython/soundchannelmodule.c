@@ -199,6 +199,35 @@ sound_play(self)
 	return 1;
 }
 
+#ifdef sun
+static unsigned
+audio_get_filled(port)
+	int port;
+{
+	unsigned val;
+	audio_get_play_samples(port, &val);
+	dprintf(("audio_get_play_samples: %d\n", val));
+	return val;
+}
+
+static void
+audio_set_eof(port, val)
+	int port;
+	unsigned val;
+{
+	audio_set_play_eof(port, &val);
+}
+
+static unsigned
+audio_get_eof(port)
+	int port;
+{
+	unsigned val;
+	audio_get_play_eof(port, &val);
+	return val;
+}
+#endif
+
 static void
 sound_player(self)
 	mmobject *self;
@@ -215,6 +244,8 @@ sound_player(self)
 	int n;
 	int rate;
 	struct pollfd pollfd[2];
+	int npollfd = 2;
+	int timeout = -1;
 
 	denter(sound_player);
 
@@ -273,6 +304,7 @@ sound_player(self)
 	hdr.encoding = AUDIO_ENCODING_LINEAR;
 	hdr.data_size = PRIV->s_play.nsamples * PRIV->s_play.sampwidth;
 	audio_set_play_config(PRIV->s_port, &hdr);
+	audio_set_eof(PRIV->s_port, 0);
 #endif
 	PRIV->s_flag |= PORT_OPEN;
 	up_sema(PRIV->s_sema);
@@ -281,6 +313,9 @@ sound_player(self)
 	while (nsamps > 0
 #ifdef __sgi
 	       || ALgetfilled(PRIV->s_port) > 0
+#endif
+#ifdef sun
+	       || audio_get_eof(PRIV->s_port) == 0
 #endif
 	       ) {
 		if (PRIV->s_play.sampsread > 0) {
@@ -307,23 +342,27 @@ sound_player(self)
 			ALsetfillpoint(PRIV->s_port, ALgetqueuesize(config));
 		else
 			ALsetfillpoint(PRIV->s_port, n);
-		pollfd[0].fd = portfd;
+		pollfd[1].fd = portfd;
 #endif
 #ifdef sun
-		pollfd[0].fd = PRIV->s_port;
+		if (n == 0) {
+			npollfd = 1;
+			timeout = 50;
+		}
+		pollfd[1].fd = PRIV->s_port;
 #endif
-		pollfd[0].events = POLLOUT;
-		pollfd[0].revents = 0;
-		pollfd[1].fd = PRIV->s_pipefd[0];
-		pollfd[1].events = POLLIN;
+		pollfd[1].events = POLLOUT;
 		pollfd[1].revents = 0;
+		pollfd[0].fd = PRIV->s_pipefd[0];
+		pollfd[0].events = POLLIN;
+		pollfd[0].revents = 0;
 		dprintf(("sound_player(%lx): polling\n", (long) self));
-		if (poll(pollfd, sizeof(pollfd)/sizeof(pollfd[0]), -1) < 0) {
+		if (poll(pollfd, npollfd, timeout) < 0) {
 			perror("poll");
 			break;
 		}
 		dprintf(("sound_player(%lx): poll returned\n", (long) self));
-		if (pollfd[1].revents & POLLIN) {
+		if (pollfd[0].revents & POLLIN) {
 			char c;
 			long filled;
 			dprintf(("sound_player(%lx): reading from pipe\n", (long) self));
@@ -366,11 +405,14 @@ sound_player(self)
 				continue;
 			} else {
 				dprintf(("sound_player(%lx): stopping with playing\n", (long) self));
+#ifdef sun
+				audio_flush_play(PRIV->s_port);
+#endif
 				goto cleanup;
 			}
 		}
-		if (pollfd[0].revents & (POLLERR|POLLHUP|POLLNVAL)) {
-			dprintf(("sound_player(%lx): pollfd[0].revents=%x\n", (long) self, pollfd[0].revents));
+		if (pollfd[1].revents & (POLLERR|POLLHUP|POLLNVAL)) {
+			dprintf(("sound_player(%lx): pollfd[1].revents=%x\n", (long) self, pollfd[1].revents));
 			break;
 		}
 		if (n == 0)
@@ -405,6 +447,8 @@ sound_player(self)
 #ifdef sun
 			write(PRIV->s_port, PRIV->s_play.sampbuf,
 			      n * PRIV->s_play.sampwidth);
+			if (nsamps == 0)
+				audio_play_eof(PRIV->s_port);
 #endif
 		}
 	}
