@@ -46,6 +46,10 @@ class ChannelViewDialog(ViewDialog):
 class GOCommand:
 	def __init__(self):
 		pass
+
+	def helpcall(self):
+		import Help
+		Help.givehelp('timeline')
 		
 class ChannelBoxCommand:
 	def __init__(self):
