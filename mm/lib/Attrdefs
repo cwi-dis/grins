@@ -77,7 +77,7 @@
 	'Determines whether image is centered' channel)
 
 (channel (name) undefined 'Channel' channelname
-	'Name of channel used to render this node' inherited)
+	'Name of channel used to render this node (or its descendants)' inherited)
 
 (channellist (list (enclosed (tuple (name) (attrdict)))) ()
 	'Channel List' hidden
@@ -241,7 +241,7 @@
 (tag (string) 'fill' 'Transition type' transition
 	'Type of transition effect.' normal)
 
-(terminator (name) 'LAST' 'Terminator child' CMIFtermnodename
+(terminator (name) 'LAST' 'Endsync child' CMIFtermnodename
 	'Name of child that terminates parallel node' normal)
 
 (textalign (string) 'center' 'Alignment' CMIFdefault
