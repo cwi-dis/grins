@@ -582,6 +582,30 @@ SOURCE=.\editor\g2pro\features.py
 SOURCE=.\editor\g2lite\features.py
 # End Source File
 # End Group
+# Begin Group "editor/qtlite"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\editor\qtlite\features.py
+# End Source File
+# End Group
+# Begin Group "editor/qtpro"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\editor\qtpro\features.py
+# End Source File
+# End Group
+# Begin Group "editor/smil10"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\editor\smil10\features.py
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\editor\AnchorEdit.py
