@@ -111,6 +111,8 @@ if IsPlayer:
 	usercmd.HIDE_LAYOUTVIEW2=None
 	usercmd.HIDE_TEMPORALVIEW=None
 
+# This is a list of classes that are instantiated for each particular view.
+# Not the simplest way of coding it, but it seems to work -mjvdg.
 appview={
 	0:{'cmd':usercmd.HIDE_PLAYERVIEW,'title':'Player','id':'pview_','class':_PlayerView,},
 	1:{'cmd':usercmd.HIDE_HIERARCHYVIEW,'title':'Structure view','id':'hview_','class':_HierarchyView,},
@@ -1426,7 +1428,11 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 	# Keep instance of player
 	def newview(self,x, y, w, h, title, units = UNIT_MM, adornments=None,canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
 		viewno=self.getviewno(strid)
+		
 		viewclass=appview[viewno]['class'] 
+		# viewclass is a class that is initialised here now.
+		# For example, it is a _StructView (from _StructView.py) for the HierarchyView.
+		# -mjvdg.
 		view=viewclass(self.getdoc(), bgcolor)
 		self.add_common_interface(view,viewno)
 		if not x or x<0: x=0
