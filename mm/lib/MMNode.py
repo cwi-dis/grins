@@ -2318,8 +2318,8 @@ class MMNode(MMTreeElement):
 				# of par/excl, so event is begin
 				key = 'event', 'begin'
 			if debug: print 'add_arc: key =',`key`,self.happenings.get(key)
-			if self.happenings.has_key(key):
-				sctx.sched_arc(self, arc, event=event, marker=arc.marker, timestamp=self.happenings[key])
+##			if self.happenings.has_key(key):
+##				sctx.sched_arc(self, arc, event=event, marker=arc.marker, timestamp=self.happenings[key])
 
 	def event(self, time, event, anchorname = None):
 		if anchorname is None:
@@ -3636,6 +3636,11 @@ class MMNode(MMTreeElement):
 			body = self
 		for node, arc in body.arcs:
 			node.sched_children.remove(arc)
+			try:
+				sched.cancel(arc.qid)
+			except ValueError:
+				pass
+			arc.qid = None
 		body.arcs = []
 		for child in self.wtd_children:
 			for arc in child.durarcs:
