@@ -102,9 +102,9 @@ class MainDialog:
 		import windowinterface
 		f=windowinterface.getmainwnd()
 		if features.compatibility == Boston:
-			filetypes = ['/SMIL presentation', 'application/smil', 'application/x-grins-project']
+			filetypes = ['/SMIL presentation', 'application/smil', 'application/x-grins-project', 'application/x-grins-binary-project']
 		else:
-			filetypes = ['/SMIL presentation', 'application/x-grins-project', 'application/smil']
+			filetypes = ['/SMIL presentation', 'application/x-grins-project', 'application/smil', 'application/x-grins-binary-project']
 ##		import features
 ##		if not features.lightweight:
 ##			filetypes.append('application/x-grins-cmif')
@@ -159,7 +159,7 @@ class MainDialog:
 				file = MMurl.url2pathname(path)
 				dir, file = os.path.split(file)
 		f=windowinterface.getmainwnd()
-		filetypes = ['/SMIL presentations', 'application/smil', 'application/x-grins-project' ]
+		filetypes = ['/SMIL presentations', 'application/smil', 'application/x-grins-project', 'application/x-grins-binary-project']
 		windowinterface.FileDialog('Open file', dir, filetypes, file,
 					   self.__filecvt, None, 1,
 					   parent = f)
