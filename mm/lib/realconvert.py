@@ -414,9 +414,13 @@ def _win_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	else:
 		b.WaitForCompletion()
 		mc.Stop()
-	
 	del b
-		
+	return file
+	
+
+
+
+
 def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	global engine
 	import MMAttrdefs, MMurl
