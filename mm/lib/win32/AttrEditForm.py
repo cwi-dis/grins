@@ -1671,8 +1671,8 @@ class LayoutPage(AttrPage,win32window.Window):
 		pass #self._layoutctrl.notifyListener('onLButtonUp',params)
 
 	def OnSetActive(self):
-		if self._layoutctrl and not self._layoutctrl.in_create_box_mode():
-			self.create_box(self.getcurrentbox())
+		if self._layoutctrl: # and not self._layoutctrl.in_create_box_mode():
+			pass #self.create_box(self.getcurrentbox())
 		return self._obj_.OnSetActive()
 
 	def OnKillActive(self): 
@@ -1680,7 +1680,7 @@ class LayoutPage(AttrPage,win32window.Window):
 
 	def OnDestroy(self,params):
 		if self._layoutctrl:
-			self._layoutctrl.exit_create_box()
+			pass #self._layoutctrl.exit_create_box()
 
 	def createLayoutCtrl(self):
 		v=_PlayerView._PlayerView(docview.Document(docview.DocTemplate()))
@@ -1743,11 +1743,11 @@ class LayoutPage(AttrPage,win32window.Window):
 		return (0,0,self._xmax,self._ymax)
 
 	def create_box(self,box):
-		self._layoutctrl.exit_create_box()
+		#self._layoutctrl.exit_create_box()
 		if box and (box[2]==0 or box[3]==0):box=None
 		# call create box against layout control but be modeless and cool!
 		modeless=1;cool=1;
-		self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
+		#self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
 		self.check_units()
 
 	def check_units(self):
@@ -2077,21 +2077,21 @@ class AnchorlistPage(LayoutPage):
 			self.loadimg(url)
 
 	def init_tk(self, v):
-		v.SetLayoutMode(0)
+		#v.SetLayoutMode(0)
 		self._scale=LayoutScale(v, self._xscale, self._yscale, self._boxoff)
-		v.SetScale(self._scale)
+		#v.SetScale(self._scale)
 
 		x = y = 0
 		w, h = self._imagesize
 		rc = x, y, x + w, y + h
 		rc = v._convert_coordinates(rc, units = UNIT_PXL)
 		rc = self._scale.layoutbox(rc, UNIT_PXL)
-		v.SetBRect(rc)
+		#v.SetBRect(rc)
 
 		rc = x, y, x + w, y + h
 		rc = v._convert_coordinates(rc, units = UNIT_PXL)
 		rc=self._scale.layoutbox(rc, UNIT_PXL)
-		v.SetCRect(rc)
+		#v.SetCRect(rc)
 
 	def loadimg(self,url):
 		import MMurl
@@ -2106,7 +2106,7 @@ class AnchorlistPage(LayoutPage):
 		except error:
 ##			print 'failed to load',f
 			return
-		self._layoutctrl.SetBkImg(img)
+		#self._layoutctrl.SetBkImg(img)
 		
 ############################
 # Base class for media renderers
@@ -4258,4 +4258,4 @@ class AttrEditForm(GenFormView):
 		if self._tid:
 			import __main__
 			__main__.toplevel.canceltimer(self._tid)
- 
+ 

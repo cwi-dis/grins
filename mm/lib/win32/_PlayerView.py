@@ -57,8 +57,6 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 
 	def OnInitialUpdate(self):
 		DisplayListView.OnInitialUpdate(self)
-		self.HookMessage(self.onCreateBoxOK,WM_USER_CREATE_BOX_OK)
-		self.HookMessage(self.onCreateBoxCancel,WM_USER_CREATE_BOX_CANCEL)
 		self.HookMessage(self.onChar, win32con.WM_KEYDOWN)
 
 	def onChar(self, params):
@@ -112,13 +110,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		self._canclose=1
 
 	def OnDraw(self, dc):
-		if self.in_create_box_mode() and self.get_box_modal_wnd()==self:
-			self.notifyListener('OnDraw',dc)
-			return
-		if not self._usesLightSubWindows:
-			DisplayListView.OnDraw(self,dc)
-		else:
-			self.update()
+		self.update()
 
 	# override DisplayListView default to eliminate cursor flashing
 	def setcursor(self, strid):
@@ -148,9 +140,6 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 			return
 		if not params: params = self.__lastMouseMoveParams
 		else: self.__lastMouseMoveParams = params
-		
-		if not self._usesLightSubWindows or self.in_create_box_mode():
-			DisplayListView.onMouseMove(self, params)
 		
 		msg=win32mu.Win32Msg(params)
 		flags = 0
