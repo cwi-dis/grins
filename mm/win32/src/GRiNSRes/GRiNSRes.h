@@ -260,6 +260,8 @@
 #define IDI_OPENEDEYEKEY                460
 #define IDI_CLOSEDEYE                   462
 #define IDD_REGISTER                    463
+#define IDD_EDITATTR_GEOMETRY           464
+#define IDD_EDITATTR_LAYOUT2REAL        465
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -707,6 +709,8 @@
 #define IDC_LATER                       1463
 #define IDC_DONTREGISTER                1464
 #define IDC_REGISTER                    1465
+#define IDC_OL                          1466
+#define IDC_OV                          1467
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -816,7 +820,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        464
 #define _APS_NEXT_COMMAND_VALUE         32902
-#define _APS_NEXT_CONTROL_VALUE         1466
+#define _APS_NEXT_CONTROL_VALUE         1468
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
