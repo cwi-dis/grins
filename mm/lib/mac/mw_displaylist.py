@@ -227,13 +227,13 @@ class _DisplayList:
 		Qd.DisposeRgn(rgn)
 		return ok
 		
-	def _getredrawguarantee(self):
+	def _getredrawguarantee(self, skipclear=0):
 		"""Return a region that we promise we will redraw. Simple implementation,
 		only return the initial clear or the first image (good enough for now)"""
 		window = self._window
 		for entry in self._list:
 			cmd = entry[0]
-			if cmd == 'clear' and self._bgcolor != None:
+			if cmd == 'clear' and self._bgcolor != None and not skipclear:
 				r = Qd.NewRgn()
 				Qd.RectRgn(r, window.qdrect())
 				return r
@@ -242,12 +242,6 @@ class _DisplayList:
 				mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
 				dstx0, dsty0 = dstx+xscrolloffset, dsty+yscrolloffset
 				dstx1, dsty1 = dstx+w, dsty+h
-				# XXXX Not really correct as we only cater for square sections.
-				winx0, winy0, winx1, winy1 = window.qdrect()
-				if dstx0 < winx0: dstx0 = winx0
-				if dsty0 < winy0: dsty0 = winy0
-				if dstx1 > winx1: dstx1 = winx1
-				if dsty1 > winy1: dsty1 = winy1
 				dstrect = dstx0, dsty0, dstx1, dsty1
 				r = Qd.NewRgn()
 				Qd.RectRgn(r, dstrect)
@@ -276,7 +270,16 @@ class _DisplayList:
 		
 		if cmd == 'clear':
 			if self._bgcolor != None:
-				Qd.EraseRect(window.qdrect())
+				r = self._getredrawguarantee(skipclear=1)
+				if r:
+					r2 = Qd.NewRgn()
+					Qd.RectRgn(r2, window.qdrect())
+					Qd.DiffRgn(r2, r, r2)
+					Qd.EraseRgn(r2)
+					Qd.DisposeRgn(r)
+					Qd.DisposeRgn(r2)
+				else:
+					Qd.EraseRect(window.qdrect())
 		elif cmd == 'fg':
 			Qd.RGBForeColor(entry[1])
 		elif cmd == 'font':
