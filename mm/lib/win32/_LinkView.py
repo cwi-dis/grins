@@ -20,10 +20,10 @@ the run time GRiNSRes.dll
 import win32ui,win32con
 Sdk=win32ui.GetWin32Sdk()
 Afx=win32ui.GetAfx()
-import win32mu,wc
+import win32mu
 
 import grinsRC,win32menu
-import components
+import components, win32dialog
 import usercmd
 import win32mu
 
@@ -34,9 +34,9 @@ import afxres,commctrl
 # std interface required by the core system. It is used to implement the LinkView
 
 
-class LinkPropDlg(components.ResDialog):
+class LinkPropDlg(win32dialog.ResDialog):
 	def __init__(self,cbd,dir,type,dirsens,parent=None):
-		components.ResDialog.__init__(self,grinsRC.IDD_LINK_PROPERTY,parent)
+		win32dialog.ResDialog.__init__(self,grinsRC.IDD_LINK_PROPERTY,parent)
 
 		d0=components.RadioButton(self,grinsRC.IDC_RADIO1)
 		d1=components.RadioButton(self,grinsRC.IDC_RADIO2)
@@ -61,7 +61,7 @@ class LinkPropDlg(components.ResDialog):
 		self.linktypesetchoice(self._type)
 		for i in range(len(self._dirsens)):
 			self._dir_buttons[i].enable(self._dirsens[i])
-		return components.ResDialog.OnInitDialog(self)
+		return win32dialog.ResDialog.OnInitDialog(self)
 
 	def show(self):
 		self.DoModal()

@@ -11,14 +11,15 @@ __version__ = "$Id$"
 
 
 from components import *
+import win32dialog
 import string
 
 
-class PreferencesDialog(ResDialog,ControlsDict):
+class PreferencesDialog(win32dialog.ResDialog,ControlsDict):
 
 	# Class constructor. Calls base class constructors and associates ids to controls
 	def __init__(self,cbd=None,parent=None):
-		ResDialog.__init__(self,grinsRC.IDD_PREFERENCES,parent)
+		win32dialog.ResDialog.__init__(self,grinsRC.IDD_PREFERENCES,parent)
 		ControlsDict.__init__(self)
 
 		self['system_bitrate']= Edit(self,grinsRC.IDC_EDIT1)
