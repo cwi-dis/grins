@@ -1949,8 +1949,8 @@ class LayoutView2(LayoutViewDialog2):
 					animateNode = self.context.newnode('animpar')
 					left, top, width, height = selectedNode.getPxGeom()
 					bgcolor = selectedNode.GetInherAttrDef('bgcolor', (0,0,0))
-					animateNode.SetAttr('animvals', [(0.0, {'top':top, 'left':left, 'width':width, 'height':height, 'bgcolor':bgcolor}),
-														(1.0, {'top':top, 'left':left, 'width':width, 'height':height, 'bgcolor':bgcolor})])
+					animateNode.SetAttr('animvals', [(0.0, {'top':top, 'left':left, 'width':width, 'height':height}),
+														(1.0, {'top':top, 'left':left, 'width':width, 'height':height})])
 					editmgr.addnode(selectedNode, -1, animateNode)
 					
 				editmgr.commit()
