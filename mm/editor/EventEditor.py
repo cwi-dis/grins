@@ -364,7 +364,7 @@ class EventStruct:
 			return self._setoffset
 		if self._syncarc and self.get_cause() in ['node', 'accesskey', 'delay', 'region']: # TODO: check these.
 			if self._syncarc.delay:
-				return self_syncarc.delay
+				return self._syncarc.delay
 			else:
 				return 0
 		else:
