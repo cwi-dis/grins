@@ -46,7 +46,7 @@ import os
 from stat import ST_MTIME
 import marshal
 
-verbose = 1
+verbose = 0
 
 # Parse a file containing attribute definitions.
 #
