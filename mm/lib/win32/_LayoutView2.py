@@ -666,17 +666,22 @@ class Region(win32window.Window):
 		transparent = dict.get('transparent')
 		bgcolor = dict.get('bgcolor')
 		self.create(parent, rc, units, z, transparent, bgcolor)
-
+		
+		# disp list of this window
+		# use shortcut instead of render 
+		self._active_displist = self.newdisplaylist(bgcolor)
 
 	def paintOn(self, dc, rc=None):
-		ltrb = self.ltrb(self.LRtoDR(self.getwindowpos()))
+		ltrb = l, t, r, b = self.ltrb(self.LRtoDR(self.getwindowpos()))
 
 		rgn = self.getClipRgn()
 
 		dc.SelectClipRgn(rgn)
 
-		if self._bgcolor:
-			dc.FillSolidRect(ltrb,win32mu.RGB(self._bgcolor))
+		x0, y0 = dc.SetWindowOrg((-l,-t))
+		if self._active_displist:
+			self._active_displist._render(dc)
+		dc.SetWindowOrg((x0,y0))
 
 		L = self._subwindows[:]
 		L.reverse()
