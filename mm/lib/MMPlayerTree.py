@@ -279,6 +279,13 @@ def gen_prearms(node):
 	#
 	# Create channel lists
 	#
+	if hasattr(node, 'prearmlists'):
+		prearmlists = {}
+		for cn, val in node.prearmlists.items():
+			prearmlists[cn] = list = []
+			for a, n in val:
+				list.append((a, n.uid))
+		return prearmlists
 	channelnames, err = node.GetAllChannels()
 	if err:
 		enode, echan = err
