@@ -27,6 +27,7 @@ ChannelMime = {
 		'audio/x-aiff',
 		'audio/x-wav',
 		'audio/mpeg', ## ++
+		'audio/x-mp3',		# obsolete (?) MIME type for MP3
 		'audio/x-ms-wma',## ++
 		],
 	'video': [
