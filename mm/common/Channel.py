@@ -189,6 +189,8 @@ class Channel(ChannelWM):
 			print 'Channel.arm_0('+`self`+','+`node`+')'
 		if self._armstate != AIDLE:
 			raise error, 'arm not idle'
+		if not self._armcontext:
+			raise error, 'no context to arm in'
 		self._armstate = ARMING
 		self._armed_node = node
 		self._armed_anchors = []
