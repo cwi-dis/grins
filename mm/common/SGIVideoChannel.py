@@ -174,7 +174,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		bg = self.getbgcolor(node)
 		movie.SetViewBackground(bg)
 		self.armed_bg = self.window._convert_color(bg)
-		self.armed_loop = self.getloop(node)
 		drawbox = MMAttrdefs.getattr(node, 'drawbox')
 		if drawbox:
 			self.armed_display.fgcolor(self.getbucolor(node))
@@ -232,10 +231,13 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			return
 		duration = node.GetAttrDef('duration', None)
 		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
-		loop = self.armed_loop
-		if repeatdur and loop == 1:
-			loop = 0
+		loop = node.GetAttrDef('loop', None)
 		self.played_loop = loop
+		if loop is None:
+			if repeatdur:
+				loop = 0
+			else:
+				loop = 1
 		if loop == 0:
 			movie.SetPlayLoopLimit(mv.MV_LIMIT_FOREVER)
 		else:
@@ -338,7 +340,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	def stopped(self):
 		if not self.__stopped:
-			if self.__qid:
+			if self.__qid or self.played_loop is None:
 				return
 			self.playdone(0)
 

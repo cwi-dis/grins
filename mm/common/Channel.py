@@ -502,7 +502,11 @@ class Channel:
 		self._played_anchors = self._armed_anchors[:]
 		durationattr = node.GetAttrDef('duration', None)
 		repeatdur = node.GetAttrDef('repeatdur', None)
-		if repeatdur is not None and repeatdur < 0:
+		loop = node.GetAttrDef('loop', None)
+		if loop is not None and loop > 0 and \
+		   durationattr is not None and durationattr >= 0:
+			self._has_pause = 0
+		elif repeatdur is not None and repeatdur < 0:
 			self._has_pause = 1
 		elif repeatdur is not None:
 			self._has_pause = 0
@@ -743,7 +747,8 @@ class Channel:
 			self.syncarm = 1
 			self.stoparm()
 			self.syncarm = save_syncarm
-			self._armcontext.arm_ready(self)
+			if not self.syncarm:
+				self._armcontext.arm_ready(self)
 		if self._playstate != PIDLE and self._played_node is node:
 			# hack to not generate play_done event
 			save_syncplay = self.syncplay

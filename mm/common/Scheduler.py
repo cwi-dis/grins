@@ -280,7 +280,7 @@ class SchedulerContext:
 			node.parent.scheduled_children = node.parent.scheduled_children - 1
 		else:
 			self.scheduled_children = self.scheduled_children - 1
-		if debugevents: print 'trigger', `node`
+		if debugevents: print 'trigger', `arc`
 		if not arc.isstart:
 			if node.playing != MMStates.PLAYING:
 				# ignore end event if not playing
