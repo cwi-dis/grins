@@ -37,7 +37,7 @@ class TreeCtrl(window.Wnd):
 			self._setEvents()
 	
 	def getStyle(self):
-		style = win32con.WS_VISIBLE | commctrl.TVS_HASBUTTONS |\
+		style = win32con.WS_VISIBLE | win32con.WS_CHILD | commctrl.TVS_HASBUTTONS |\
 				commctrl.TVS_HASLINES | commctrl.TVS_SHOWSELALWAYS |\
 				win32con.WS_BORDER | win32con.WS_TABSTOP\
 				 | commctrl.TVS_LINESATROOT
