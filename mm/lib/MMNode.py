@@ -921,16 +921,16 @@ class MMNode:
 		self.sctx = None
 		self.start_time = self.end_time = None
 
-	def resetall(self):
+	def resetall(self, sched):
 		self.reset()
 		for c in self.children:
-			c.resetall()
+			c.resetall(sched)
 		for arc in MMAttrdefs.getattr(self, 'beginlist') + MMAttrdefs.getattr(self, 'endlist'):
 			refnode = self.__find_refnode(arc)
 			if arc in refnode.sched_children:
 				refnode.sched_children.remove(arc)
 			if arc.qid is not None:
-				self.cancel(arc.qid)
+				sched.cancel(arc.qid)
 				arc.qid = None
 				arc.triggered = 0
 		self.sched_children = []

@@ -52,7 +52,7 @@ class SchedulerContext:
 		self.stopcontextchannels()
 		self.srdict = {}
 		self.parent._remove_sctx(self)
-		self.playroot.resetall()
+		self.playroot.resetall(self.parent)
 		del self.parent
 		del self.playroot
 		if not settings.noprearm:
@@ -290,12 +290,12 @@ class SchedulerContext:
 		node = arc.dstnode
 		timestamp = arc.resolvedtime(self.parent.timefunc)
 		arc.qid = None
-		arc.triggered = 1
+##		arc.triggered = 1
 		if arc.isstart:
-			if node.parent:
-				node.parent.scheduled_children = node.parent.scheduled_children - 1
-			else:
+			if not node.parent:
 				self.scheduled_children = self.scheduled_children - 1
+##			else:
+##				node.parent.scheduled_children = node.parent.scheduled_children - 1
 		if debugevents: print 'trigger', `arc`, timestamp
 		if not arc.isstart:
 			if node.playing != MMStates.PLAYING:
@@ -739,7 +739,9 @@ class Scheduler(scheduler):
 				if arc.qid is None and not arc.triggered:
 					if arc.isstart:
 						if arc.dstnode.parent:
-							arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
+							srdict = arc.dstnode.parent.gensr_child(arc.dstnode, runchild = 0)
+							sctx.srdict.update(srdict)
+##							arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
 						else:
 							# root node
 							sctx.scheduled_children = sctx.scheduled_children + 1
