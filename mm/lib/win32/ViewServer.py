@@ -30,7 +30,7 @@ _LayoutView=_LayoutView
 _SourceView=_SourceView
 
 # imports
-import win32ui,win32con,win32mu
+import win32ui,win32con,win32api, win32mu
 from pywin.mfc import window,object,docview,dialog
 import appcon
 
@@ -185,15 +185,26 @@ class ViewServer:
 		if not w or not h:rc=None
 		else:
 			x,y,w,h=sysmetrics.to_pixels(x,y,w,h,units)
-			rc=(x,y,x+w+2*sysmetrics.cxframe,y+h+sysmetrics.cycaption+2*sysmetrics.cyframe)
+			dw=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)+2*sysmetrics.cxframe
+			dh=sysmetrics.cycaption + 2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)+2*sysmetrics.cyframe
+			rc=(x,y,x+w+dw,y+h+dh)
 		f=ChildFrame(view)
 		f.Create(title,rc,self._context,0)
-		view.init((x,y,w,h),title,units,adornments,canvassize,commandlist)
+		view.init(rc,title,units,adornments,canvassize,commandlist)
 		self._context.MDIActivate(f)
 		if appcon.IsPlayer:
-			self._context.setcoords((x, y, w, h),units)
+			self._context.RecalcLayout()
+			rcco=self._context.GetWindowRect()
+			client=self._context.GetMDIClient()
+			rcci= client.GetWindowRect() #self._context.GetClientRect()
+			l,t,r,b=f.GetWindowRect()
+			w=r-l;h=b-t
+			dhp=(rcco[3]-rcco[1])-(rcci[3]-rcci[1])
+			dwp=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)+2*sysmetrics.cxframe
+			self._context.setcoords((x,y,w+dw,h+dhp),units)
 		if strid=='pview_':self._player=view
 		return view
+
 
 	# Create a new view object 
 	def newviewobj(self,strid):
