@@ -1781,17 +1781,22 @@ class AttrSheet(dialog.PropertySheet):
 #			print 'follow selection' 
 		
 	def onSize(self, params):
+		flags = win32con.SWP_NOSIZE | win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE
+		msg = win32mu.Win32Msg(params)
 		if self._showAll:
 			l, t, r, b = self._showAll.getwindowrect()
 			w, h = r-l, b-t
 			dh = 6
-			msg = win32mu.Win32Msg(params)
-			flags = win32con.SWP_NOSIZE | win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE
 			self._showAll.setwindowpos(0, (6 ,msg.height()-h-dh, w+4, msg.height()-dh), flags)
-			if self._followSelection:
-				self._followSelection.setwindowpos(0, (w+8 ,msg.height()-h-dh, w+w+4, msg.height()-dh), flags)
-
-
+		if self._followSelection:
+			l, t, r, b = self._followSelection.getwindowrect()
+			w, h = r-l, b-t
+			dh = 6
+			if self._showAll:
+				left = w+24
+			else:
+				left = 6
+			self._followSelection.setwindowpos(0, (left,msg.height()-h-dh, w+w+4, msg.height()-dh), flags)
 		
 class AttrPage(dialog.PropertyPage):
 	enabletooltips = 1
