@@ -34,7 +34,7 @@ class MovieChannel(ChannelWindowThread):
 				   'scale': MMAttrdefs.getattr(node, 'scale'), \
 				   'wid': self.window._window_id, \
 				   'bgcolor': self.getbgcolor(node), \
-				   'gl_lock': GLLock.gl_lock}, \
+				   'gl_lock': GLLock.gl_rawlock}, \
 				  None, self.syncarm)
 		except RuntimeError, msg:
 			print 'Bad movie file', `vfile.filename`, msg

@@ -635,36 +635,36 @@ class Object:
 		self.ok = 1
 		return self
 
-	def before_call(self):
+##	def before_call(self):
 ##		print 'callback start'
-		self.locked = 0
-		if GLLock.gl_lock:
+##		self.locked = 0
+##		if GLLock.gl_lock:
 ##			print 'try acquire'
-			if not GLLock.gl_lock.acquire(0):
+##			if not GLLock.gl_lock.acquire(0):
 ##				print 'acquire failed'
-				self.locked = 1
+##				self.locked = 1
 ##			print 'release'
-			GLLock.gl_lock.release()
-	def after_call(self):
+##			GLLock.gl_lock.release()
+##	def after_call(self):
 ##		print 'callback end'
-		if self.locked:
+##		if self.locked:
 ##			print 're-acquire'
-			GLLock.gl_lock.acquire()
+##			GLLock.gl_lock.acquire()
 
 	# Handle a right button mouse click in the object
 	def popupmenu(self, x, y):
-		self.before_call()
+##		self.before_call()
 		func = self.__class__.menu.popup(x, y)
 		if func: func(self)
-		self.after_call()
+##		self.after_call()
 
 	# Handle a shortcut in the object
 	def shortcut(self, c):
 		func = self.__class__.menu.shortcut(c)
-		self.before_call()
+##		self.before_call()
 		if func: func(self)
 		else: gl.ringbell()
-		self.after_call()
+##		self.after_call()
 
 	# Make this object the focus
 	def select(self):

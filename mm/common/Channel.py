@@ -4,6 +4,7 @@
 from AnchorDefs import *
 from debug import debug
 import MMAttrdefs
+import dialogs
 error = 'Channel.error'
 
 from ChannelWMdeps import ChannelWM, ChannelWindowWM, _ChannelThreadWM
@@ -504,6 +505,14 @@ class Channel(ChannelWM):
 
 	def gethicolor(self, node):
 		return MMAttrdefs.getattr(node, 'hicolor')
+
+	# This method is called when the user defines a new anchor. It
+	# may be overridden by derived classes.
+	def defanchor(self, node, anchor):
+		print 'DEFANCHOR', node, anchor
+		dialogs.showmessage('Channel '+self._name+' does not support\n'+ \
+			  'editing of anchors (yet)')
+		return anchor
 
 # dictionary with channels that have windows
 ChannelWinDict = {}
