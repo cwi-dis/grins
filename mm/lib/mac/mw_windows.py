@@ -359,7 +359,8 @@ class _CommonWindow:
 		left = int(left * xsize + 0.5)
 		right = int(right * xsize + 0.5)
 		if coordinates is None:
-			x, y, width, height = self._rect
+##			x, y, width, height = self._rect # XXXXSCROLL
+			x, y, width, height = self._convert_coordinates((0,0,1,1))
 		else:
 			x, y, width, height = self._convert_coordinates(coordinates)
 		
@@ -422,8 +423,8 @@ class _CommonWindow:
 ##			raise error, 'coordinates out of bounds'
 ##		px = int((self._rect[_WIDTH] - 1) * x + 0.5) + self._rect[_X]
 ##		py = int((self._rect[_HEIGHT] - 1) * y + 0.5) + self._rect[_Y]
-		px = int(self._rect[_WIDTH] * x) + self._rect[_X]
-		py = int(self._rect[_HEIGHT] * y) + self._rect[_Y]
+		px = int(self._rect[_WIDTH] * x)  + self._rect[_X]
+		py = int(self._rect[_HEIGHT] * y)  + self._rect[_Y]
 		if len(coordinates) == 2:
 			return px, py
 		w, h = coordinates[2:]
@@ -436,13 +437,17 @@ class _CommonWindow:
 		ph = int(self._rect[_HEIGHT] * h)
 		return px, py, pw, ph
 		
+	def scrolloffset(self):
+		return 0, 0
+		
 	def _convert_color(self, (r, g, b)):
 		"""Convert 8-bit r,g,b tuple to 16-bit r,g,b tuple"""
 		return r*0x101, g*0x101, b*0x101
 
 
 	def qdrect(self):
-		"""return our xywh rect (in pixels) as quickdraw ltrb style"""
+		"""return our xywh rect (in pixels) as quickdraw ltrb style.
+		This is the on-screen rectangle, not the full drawing area"""
 		return self._rect[0], self._rect[1], \
 		       self._rect[0]+self._rect[2], \
 			self._rect[1]+self._rect[3]
@@ -554,7 +559,7 @@ class _CommonWindow:
 			sys.exc_traceback = None
 			return # Not wanted
 			
-		wx, wy, ww, wh = self._rect
+		wx, wy, ww, wh = self._rect # XXXXSCROLL
 		x, y = where
 		x = float(x-wx)/ww
 		y = float(y-wy)/wh
@@ -725,7 +730,7 @@ class _CommonWindow:
 		del self._rb_display
 
 	def _rb_cvbox(self):
-		wx0, wy0, wx1, wy1 = self.qdrect()
+		wx0, wy0, wx1, wy1 = self.qdrect() # XXXXSCROLL
 		ww = wx1-wx0
 		wh = wy1-wy0
 		x0, y0, x1, y1 = self._rb_box
@@ -817,17 +822,22 @@ class _CommonWindow:
 		Qd.PenMode(oldmode)
 		
 	def _rb_doredraw(self):
+		xscroll, yscroll = self.scrolloffset()
 		x0, y0, x1, y1 = self._rb_box
 		if x0 > x1: x0, x1 = x1, x0
 		if y0 > y1: y0, y1 = y1, y0
 		if x0 != x1 or y0 != y1:
-			Qd.FrameRect((x0, y0, x1, y1))
-		smallboxes = self._rb_smallboxes()
+			Qd.FrameRect((x0+xscroll, y0+yscroll, x1+xscroll, y1+yscroll))
+		smallboxes = self._rb_smallboxes(scroll=1)
 		for box in smallboxes:
 			Qd.PaintRect(box)
 			
-	def _rb_smallboxes(self):
+	def _rb_smallboxes(self, scroll=0):
 		x0, y0, x1, y1 = self._rb_box
+		if scroll:
+			xscroll, yscroll = self.scrolloffset()
+			x0, y0 = x0+xscroll, y0+yscroll
+			x1, y1 = x1+xscroll, y1+yscroll
 		points = [
 			(x0, y0),
 			(x0, y1),
@@ -840,7 +850,7 @@ class _CommonWindow:
 		return smallboxes
 
 	def _rb_constrain(self, where):
-		x0, y0, x1, y1 = self.qdrect()
+		x0, y0, x1, y1 = self.qdrect() # XXXXSCROLL
 		x, y = where
 		if x < x0: x = x0
 		if x > x1: x = x1
@@ -848,7 +858,7 @@ class _CommonWindow:
 		if y > y1: y = y1
 		return x, y
 
-	def _rb_mousedown(self, where, shifted):
+	def _rb_mousedown(self, where, shifted): # XXXXSCROLL
 		# called on mouse press
 		self._rb_display.render()
 		x, y = where
@@ -1326,28 +1336,6 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 			return FALSE
 		return TRUE
 
-##	# have to override these for create_box
-##	def _input_callback(self, form, client_data, call_data):
-##		if _in_create_box:
-##			return
-##		mac_windowbase._Window._input_callback(self, form, client_data,
-##						     call_data)
-	def _delete_callback(self, form, client_data, call_data):
-		self.arrowcache = {}
-		w = _in_create_box
-		if w:
-			next_create_box = w._next_create_box
-			w._next_create_box = []
-			try:
-				w._rb_cancel()
-			except _rb_done:
-				pass
-			w._next_create_box[0:0] = next_create_box
-		if w:
-			w._rb_end()
-			raise _rb_done
-
-
 class _SubWindow(_CommonWindow):
 	"""Window "living in" with a toplevel window"""
 
@@ -1464,6 +1452,7 @@ class _SubWindow(_CommonWindow):
 	def _do_resize1(self):
 		# calculate new size of subwindow after resize
 		# close all display lists
+		# XXXXSCROLL
 		parent = self._parent
 		## XXXX Should have crop=1?
 		x, y, w, h = parent._convert_coordinates(self._sizes)

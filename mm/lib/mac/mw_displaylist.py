@@ -172,6 +172,7 @@ class _DisplayList:
 		cmd = entry[0]
 		window = self._window
 		wid = window._wid
+		xscrolloffset, yscrolloffset = window.scrolloffset()
 		
 		if cmd == 'clear':
 			Qd.EraseRect(window.qdrect())
@@ -180,11 +181,12 @@ class _DisplayList:
 		elif cmd == 'font':
 			entry[1]._setfont(wid)
 		elif cmd == 'text':
-			Qd.MoveTo(entry[1], entry[2])
+			Qd.MoveTo(entry[1]+xscrolloffset, entry[2]+yscrolloffset)
 			 # XXXX Incorrect for long strings:
 			Qd.DrawString(entry[3])
 		elif cmd == 'image':
 			mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
+			dstx, dsty = dstx+xscrolloffset, dsty+yscrolloffset
 			srcrect = srcx, srcy, srcx+w, srcy+h
 			dstrect = dstx, dsty, dstx+w, dsty+h
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
@@ -204,16 +206,20 @@ class _DisplayList:
 			points = entry[2]
 			fgcolor = wid.GetWindowPort().rgbFgColor
 			Qd.RGBForeColor(color)
-			apply(Qd.MoveTo, points[0])
+			x, y = points[0]
+			Qd.MoveTo(x+xscrolloffset, y+yscrolloffset)
 			for np in points[1:]:
-				apply(Qd.LineTo, np)
+				x, y = np
+				Qd.LineTo(x+xscrolloffset, y+yscrolloffset)
 			Qd.RGBForeColor(fgcolor)
 		elif cmd == 'box':
 			x, y, w, h = entry[1]
+			x, y = x+xscrolloffset, y+yscrolloffset
 			Qd.FrameRect((x, y, x+w, y+h))
 		elif cmd == 'fbox':
 			color = entry[1]
 			x, y, w, h = entry[2]
+			x, y = x+xscrolloffset, y+yscrolloffset
 			fgcolor = wid.GetWindowPort().rgbFgColor
 			Qd.RGBForeColor(color)
 			Qd.PaintRect((x, y, x+w, y+h))
@@ -264,6 +270,7 @@ class _DisplayList:
 			Qd.RGBForeColor(fgcolor)
 		elif cmd == 'diamond':
 			x, y, w, h = entry[1]
+			x, y = x+xscrolloffset, y+yscrolloffset
 			Qd.MoveTo(x, y + h/2)
 			Qd.LineTo(x + w/2, y)
 			Qd.LineTo(x + w, y + h/2)
@@ -317,8 +324,12 @@ class _DisplayList:
 			points = entry[2]
 			fgcolor = wid.GetWindowPort().rgbFgColor
 			Qd.RGBForeColor(color)
-			apply(Qd.MoveTo, points[:2])
-			apply(Qd.LineTo, points[2:])
+			x0, y0, x1, y1 = points
+			x0, y0 = x0+xscrolloffset, y0+yscrolloffset
+			x1, y1 = x1+xscrolloffset, y1+yscrolloffset
+
+			Qd.MoveTo(x0, y0)
+			Qd.LineTo(x1, y1)
 			polyhandle = self._polyhandle(entry[3])
 			Qd.PaintPoly(polyhandle)
 			Qd.RGBForeColor(fgcolor)
@@ -349,7 +360,7 @@ class _DisplayList:
 				  dest_x, dest_y, width, height)
 		self._optimize(2)
 		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
-		x, y, w, h = w._rect
+		x, y, w, h = w._rect # XXXXSCROLL
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
 
@@ -505,6 +516,8 @@ class _DisplayList:
 	def _polyhandle(self, pointlist):
 		"""Return poligon structure"""
 		# XXXX Note: This leaks handles like anything!!
+		xscrolloffset, yscrolloffset = self._window.scrolloffset()
+
 		# Find the bounding box
 		minx = maxx = pointlist[0][0]
 		miny = maxy = pointlist[0][1]
@@ -515,10 +528,11 @@ class _DisplayList:
 			if y > maxy: maxy = y
 		# Create structure head
 		size = len(pointlist)*4 + 10
-		data = struct.pack("hhhhh", size, miny, minx, maxy, maxx)
+		data = struct.pack("hhhhh", size, miny+yscrolloffset, minx+xscrolloffset, 
+				maxy+yscrolloffset, maxx+xscrolloffset)
 		self._update_bbox(minx, miny, maxx, maxy)
 		for x, y in pointlist:
-			data = data + struct.pack("hh", y, x)
+			data = data + struct.pack("hh", y+yscrolloffset, x+xscrolloffset)
 		return Res.Resource(data)
 
 	def usefont(self, fontobj):
@@ -696,7 +710,7 @@ class _Button:
 		
 	def _get_button_region(self):
 		"""Return our region, in global coordinates"""
-		x0, y0, w, h = self._dispobj._window._convert_coordinates(self._coordinates)
+		x0, y0, w, h = self._dispobj._window._convert_coordinates(self._coordinates) # XXXXSCROLL
 		x1, y1 = x0+w, y0+h
 		x0, y0 = Qd.LocalToGlobal((x0, y0))
 		x1, y1 = Qd.LocalToGlobal((x1, y1))
