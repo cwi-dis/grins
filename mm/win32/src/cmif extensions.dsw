@@ -54,7 +54,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "GRiNS"=..\..\Build\win32\GRiNS\GRiNS.dsp - Package Owner=<4>
+Project: "GRiNS"="..\..\Build\win32\GRiNS\GRiNS.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -66,7 +66,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "GRiNSRes"=.\GRiNSRes\GRiNSRes.dsp - Package Owner=<4>
+Project: "GRiNSRes"=".\GRiNSRes\GRiNSRes.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -84,7 +84,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "GRiNSed"=..\..\Build\win32\Editor\GRiNSed.dsp - Package Owner=<4>
+Project: "GRiNSed"="..\..\Build\win32\Editor\GRiNSed.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -108,7 +108,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "PyWinTypes"=..\..\..\python\Extensions\win32\PyWinTypes.dsp - Package Owner=<4>
+Project: "PyWinTypes"="..\..\..\python\Extensions\win32\PyWinTypes.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -123,7 +123,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "cmif"=..\..\cmif.dsp - Package Owner=<4>
+Project: "cmif"="..\..\cmif.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -135,7 +135,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "imgcolormap"=..\..\..\python\Extensions\img\win32\imgcolormap.dsp - Package Owner=<4>
+Project: "imgcolormap"="..\..\..\python\Extensions\img\win32\imgcolormap.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -147,7 +147,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "imgformat"=..\..\..\python\Extensions\img\win32\imgformat.dsp - Package Owner=<4>
+Project: "imgformat"="..\..\..\python\Extensions\img\win32\imgformat.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -159,7 +159,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "imgjpeg"=..\..\..\python\Extensions\img\win32\imgjpeg.dsp - Package Owner=<4>
+Project: "imgjpeg"="..\..\..\python\Extensions\img\win32\imgjpeg.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -174,7 +174,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "imgop"=..\..\..\python\Extensions\img\win32\imgop.dsp - Package Owner=<4>
+Project: "imgop"="..\..\..\python\Extensions\img\win32\imgop.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -198,7 +198,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "producer"=..\..\mmpython\producer\producer.dsp - Package Owner=<4>
+Project: "producer"="..\..\mmpython\producer\producer.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -210,7 +210,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "python"=..\..\..\python\PCbuild\python.dsp - Package Owner=<4>
+Project: "python"="..\..\..\python\PCbuild\python.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -222,7 +222,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "python15"=..\..\..\python\PCbuild\python15.dsp - Package Owner=<4>
+Project: "python15"="..\..\..\python\PCbuild\python15.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -234,7 +234,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "pythonwin"=..\..\..\python\Extensions\Pythonwin\pythonwin.dsp - Package Owner=<4>
+Project: "pythonwin"="..\..\..\python\Extensions\Pythonwin\pythonwin.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -249,7 +249,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "rma"=..\..\mmpython\rmasdk\rma.dsp - Package Owner=<4>
+Project: "rma"="..\..\mmpython\rmasdk\rma.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -267,7 +267,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "win32api"=..\..\..\python\Extensions\win32\win32api.dsp - Package Owner=<4>
+Project: "win32api"="..\..\..\python\Extensions\win32\win32api.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -285,7 +285,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "win32trace"=..\..\..\python\Extensions\win32\win32trace.dsp - Package Owner=<4>
+Project: "win32trace"="..\..\..\python\Extensions\win32\win32trace.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -303,7 +303,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "win32ui"=..\..\..\python\Extensions\Pythonwin\win32ui.dsp - Package Owner=<4>
+Project: "win32ui"="..\..\..\python\Extensions\Pythonwin\win32ui.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
