@@ -214,6 +214,11 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self.HookCommand(self.OnWndUserCmd,afxres.ID_WINDOW_TILE_HORZ)
 		id=usercmdui.class2ui[wndusercmd.CLOSE_ACTIVE_WINDOW].id
 		self.HookCommand(self.OnCloseActiveWindow,id)
+	
+		# copy/paste file support
+		id=usercmdui.class2ui[wndusercmd.PASTE_FILE].id
+		self.HookCommand(self.OnPasteFile,id)
+		self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
 
 		id=usercmdui.class2ui[wndusercmd.ABOUT_GRINS].id
 		self.HookCommand(self.OnAbout,id)
@@ -229,9 +234,47 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		# hook tab sel change
 		#TCN_FIRST =-550;TCN_SELCHANGE  = TCN_FIRST - 1
 		#self.HookNotify(self.OnNotifyTcnSelChange,TCN_SELCHANGE)
+		self.dragAcceptFiles()
 		return 0
 
+	# drag and drop files support for MainFrame
+	# enable drop files
+	def dragAcceptFiles(self):
+		self.DragAcceptFiles(1)
+		self.HookMessage(self.onDropFiles,win32con.WM_DROPFILES)
+		client=self.GetMDIClient()
+		client.DragAcceptFiles(1)
+		client.HookMessage(self.onDropFiles,win32con.WM_DROPFILES)
+
+	# dissable drop files
+	def dragRefuseFiles(self):
+		self.DragAcceptFiles(0)
+		client=self.GetMDIClient()
+		client.DragAcceptFiles(0)
+
+	# response to drop files. Ignore x, y for docs
+	def onDropFiles(self,params):
+		msg=win32mu.Win32Msg(params)	
+		hDrop=msg._wParam
+		numfiles=win32api.DragQueryFile(hDrop,-1)
+		for ix in range(numfiles):
+			filename=win32api.DragQueryFile(hDrop,ix)
+			self.onEvent(DropFile,(0, 0, filename))
+		win32api.DragFinish(hDrop)
+
+	# copy/paste file support
+	def OnPasteFile(self,id,code):
+		filename=Sdk.GetClipboardFileData()
+		if filename:
+			import longpath
+			filename=longpath.short2longpath(filename)
+			self.onEvent(PasteFile,(0, 0, filename))
+	def OnUpdateEditPaste(self,cmdui):
+		cmdui.Enable(Sdk.IsClipboardFileDataAvailable())
+
 	def onInitMenu(self,params):
+		if Sdk.IsClipboardFormatAvailable(win32con.CF_TEXT):
+			pass # enable paste file
 		self.PostMessage(WM_KICKIDLE)
 		
 	def onKey(self,key):
