@@ -54,10 +54,7 @@ class TransitionEngine:
 		tmp  = self._tmp
 		dst  = self.window._drawsurf
 		dstrgn = None
-		if not self.inout:
-			self.transitiontype.updatebitmap(parameters, src_active, src_passive, tmp, dst, dstrgn)
-		else:
-			self.transitiontype.updatebitmap(parameters, src_passive, src_active, tmp, dst, dstrgn)
+		self.transitiontype.updatebitmap(parameters, src_active, src_passive, tmp, dst, dstrgn)
 		self.window.update()
 
 	def __onDur(self):
