@@ -320,11 +320,6 @@ class SelectElementDlg(ResDialog):
 		self.attach_handles_to_subwindows()
 		self._editsel.settext(self._selection)
 		self._tree = self.GetDlgItem(grinsRC.IDC_TREE1)
-		style = win32con.WS_VISIBLE | win32con.WS_CHILD | commctrl.TVS_HASBUTTONS |\
-				commctrl.TVS_HASLINES | commctrl.TVS_SHOWSELALWAYS |\
-				win32con.WS_BORDER | win32con.WS_TABSTOP\
-				 | commctrl.TVS_LINESATROOT
-		self._tree.SetWindowLong(win32con.GWL_STYLE, style)
 		self.buildElementsTree()
 		self.HookNotify(self.OnSelChanged, commctrl.TVN_SELCHANGED)
 		return ResDialog.OnInitDialog(self)
