@@ -890,7 +890,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 	def get_upload_info(self, w_passwd='', m_passwd=''):
 		attrs = self.context.attributes
-		have_web_page = (self.exporttype in (compatibility.G2, compatibility.QT))
+		have_web_page = attrs.has_key('project_html_page')
 
 		# Website FTP parameters
 		w_hostname = ''
@@ -1159,6 +1159,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			SMILTreeWrite.WriteFTP(self.root, filename, m_ftpparams,
 						cleanSMIL = 1,
 						copyFiles = 1,
+						convertfiles = (self.exporttype not in (compatibility.SMIL10, compatibility.Boston)),
 						evallicense=evallicense,
 						progress=progress.set)
 		except IOError, msg:
