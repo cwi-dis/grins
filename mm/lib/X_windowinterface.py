@@ -2283,7 +2283,7 @@ class _Event:
 			if win and win.is_closed():
 				self.register(win, event, None, None)
 
-	def select_setcallback(self, fd, cb, arg):
+	def select_setcallback(self, fd, cb, arg, mask = ReadMask):
 		if type(fd) is not IntType:
 			fd = fd.fileno()
 		if cb is None:
@@ -2294,7 +2294,7 @@ class _Event:
 		if not self._select_dict.has_key(fd):
 			self._select_fdlist.append(fd)
 		self._select_dict[fd] = (cb, arg)
-		self.setfd(fd)
+		self.setfd(fd, mask)
 
 	def startmodal(self, window):
 		self._modal = TRUE
@@ -2517,8 +2517,8 @@ def getregister(win, ev):
 def clean_callbacks():
 	event.clean_callbacks()
 
-def select_setcallback(fd, cb, arg):
-	event.select_setcallback(fd, cb, arg)
+def select_setcallback(fd, cb, arg, mask = ReadMask):
+	event.select_setcallback(fd, cb, arg, mask)
 
 def startmodal(window):
 	event.startmodal(window)
