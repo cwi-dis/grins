@@ -5,27 +5,25 @@
   <head>
     <meta name="title" content="A'DAM FACADES - HERENGRACHT"/>
     <layout>
-      <root-layout id="A-DAM-FACADES--HERENGRACHT" title="A'DAM FACADES - HERENGRACHT" width="600" height="400"/>
-      <region id="Acknowledgements1" title="Acknowledgements1" left="5%" top="95%" z-index="3"/>
-      <region id="image1" title="image1" left="24%" top="13%" width="65%" height="80%"/>
-      <region id="image2" title="image2" left="37%" top="13%" width="46%" height="80%"/>
-      <region id="image3" title="image3" left="35%" top="13%" width="38%" height="80%"/>
-      <region id="image4" title="image4" left="75" top="1%" width="450" height="25"/>
-   </layout>
+      <root-layout id="A-DAM-FACADES--HERENGRACHT" width="600" height="400"/>
+      <region id="Acknowledgements1" left="30" top="380" width="570" height="20" z-index="3"/>
+      <region id="image4" left="75" top="4" width="450" height="25"/>
+      <region id="image1" left="144" top="52" width="390" height="320"/>
+      <region id="image2" left="222" top="52" width="276" height="320"/>
+      <region id="image3" left="210" top="52" width="228" height="320"/>
+    </layout>
   </head>
   <body>
-
     <par id="HERENGRACHT">
-      <text type="text/plain" id="Credits" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam"/>
-        <img id="stroll" region="image4" src="stroll.jpg"/>
-
-        <seq id="HERENGRACHT_stroll">
+      <text id="Credits" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam" type="text/plain"/>
+      <img id="stroll" region="image4" src="stroll.jpg"/>
+      <seq id="HERENGRACHT_stroll">
         <img id="map" region="image1" src="1map.jpg" dur="5s"/>
-          <img id="herengracht_168-image" region="image2" src="1h168.jpg" dur="5s"/>
-          <img id="herengracht_218-image" region="image3" src="1h218.jpg" dur="5s"/>
-          <img id="herengracht_284-image" region="image2" src="1h284.jpg" dur="5s"/>
+        <img id="herengracht_168-image" region="image2" src="1h168.jpg" dur="5s"/>
+        <img id="herengracht_218-image" region="image3" src="1h218.jpg" dur="5s"/>
+        <img id="herengracht_284-image" region="image2" src="1h284.jpg" dur="5s"/>
       </seq>
     </par>
-      <text type="text/plain" id="Credits1" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam" dur="10s"/>
+    <text id="Credits1" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam" type="text/plain" dur="10s"/>
   </body>
 </smil>
