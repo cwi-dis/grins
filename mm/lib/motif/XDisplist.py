@@ -9,6 +9,7 @@ from XConstants import TRUE, FALSE, error, ARR_HALFWIDTH, ARR_LENGTH, _WIDTH, UN
 from XFont import findfont
 from XButton import _Button, _ButtonRect, _ButtonPoly, _ButtonCircle
 from splash import roundi
+from AnchorDefs import *
 
 # mapping from icon name to module
 _iconmap = {
@@ -419,7 +420,6 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		
 		# test of shape type
-		from AnchorDefs import *
 		if coordinates[0] == A_SHAPETYPE_RECT:
 			return _ButtonRect(self, coordinates, z, times, sensitive)
 		elif coordinates[0] == A_SHAPETYPE_POLY:

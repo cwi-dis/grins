@@ -24,6 +24,7 @@ def usage(msg):
 	sys.exit(2)
 
 from MainDialog import MainDialog
+from usercmd import *
 
 from version import version
 
@@ -75,8 +76,6 @@ class Main(MainDialog):
 			windowinterface.select_setcallback(pipe_r,
 						self._mmcallback,
 						(posix.read, fcntl.fcntl, FCNTL))
-		from usercmd import *
-
 		self.commandlist = [
 			OPEN(callback = (self.open_callback, ())),
 			OPENFILE(callback = (self.openfile_callback, ())),
