@@ -51,7 +51,7 @@ class MainDialog:
 			self.commandlist.append(
 				HELP_CONTENTS(callback = (self.help_contents_callback, ())))
 			self.commandlist.append(
-				GRINS_WEB(callback = (self.grins_web_callback, ('http://www.cwi.nl/GRiNS/index.html',))))
+				GRINS_WEB(callback = (self.grins_web_callback, ('http://www.oratrix.com/GRiNS/index.html',))))
 		import windowinterface
 		windowinterface.createmainwnd(title,
 			adornments = self.adornments,
