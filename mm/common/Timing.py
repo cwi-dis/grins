@@ -45,7 +45,8 @@ def computetimes(node, which):
 ##			  '(ignoring sync arcs and trying again)')
 ##		prep1(node)
 ##		_do_times_work(node)
-		print 'No endtime for', node
+		if __debug__:
+			print 'No endtime for', node
 		node.t1 = node.t0 + 10.0
 	propdown(node, node, node.t1, node.t0)
 	node.t2 = node.t1
@@ -96,7 +97,8 @@ def getduration(node):
 	import Duration
 	d = Duration.get(node)
 	if d < 0:
-		print 'Duration < 0 for', node
+		if __debug__:
+			print 'Duration < 0 for', node
 		return 0
 	return d
 
