@@ -925,7 +925,13 @@ class _Button:
 	# Animation experimental methods
 
 	def updatecoordinates(self, coords):
-		print 'button.updatecoords',coords
+		self._coordinates = coords
+#		if self.is_closed(): return
+#		diffdl = self._dispobj._window.newdisplaylist()
+#		diffdl = self._dispobj.drawboxanchor(coords)
+#		cmdname = '%d' % id(self)
+#		diffdl.knowcmd(cmdname)
+#		self._dispobj.update(cmdname, diffdl)
 
 	# End of animation experimental methods
 	##########################################
