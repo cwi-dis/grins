@@ -66,8 +66,12 @@ def docalctimes(root):
 	decrement(q, (0, root, HD))
 	q.run()
 	t1 = time.millitimer()
-	print 'done in', (t1-t0) * 0.001, 'sec.',
+	dummy = propup(root)
+	propdown(root, root.t1-root.t0)
+	t2 = time.millitimer()
+	print 'done in', (t2-t0) * 0.001, 'sec.',
 	print '(of which', getd_times*0.001, 'sec. in getduration())'
+	print '(and', (t2-t1)*0.001, 'sec. in propup and propdown)'
 
 def getinitial(root):
         if initial_arms == None or root <> ia_root:
@@ -177,6 +181,45 @@ def prep2(node, root):
 	if node.GetType() in interiortypes:
 		for c in node.GetChildren(): prep2(c, root)
 
+#
+# propup - propagate timing up the tree
+def propup(node):
+	tp = node.GetType()
+	if tp == 'par':
+		d = 0
+		for c in node.GetChildren():
+			dc = propup(c)
+			if dc > d: d = dc
+		node.t1 = node.t0 + d
+	elif tp == 'seq':
+		d = 0
+		for c in node.GetChildren():
+			d = d + propup(c)
+		node.t1 = node.t0 + d
+	return node.t1 - node.t0
+
+#
+# propdown - propagate timing down the tree again
+def propdown(node, time):
+	tp = node.GetType()
+	if tp == 'par':
+		for c in node.GetChildren():
+			propdown(c, time)
+	elif tp == 'seq':
+		lastfree = None
+		used = 0
+		for c in node.GetChildren():
+			used = used + c.t1 - c.t0
+			propdown(c, c.t1-c.t0)
+			if c.t0t1_inherited:
+				lastfree = c
+		if lastfree and used < time:
+			time = time - used
+			time = time + (lastfree.t1-lastfree.t0)
+			propdown(lastfree, time)
+	elif node.t0t1_inherited:
+		node.t1 = node.t0+time
+
 
 def adddep(xnode, xside, delay, ynode, yside):
 	ynode.counter[yside] = ynode.counter[yside] + 1
@@ -205,6 +248,7 @@ def decrement(q, (delay, node, side)):
 			import time
 			t0 = time.millitimer()
 			dt = getduration(node)
+			node.t0t1_inherited = (dt == 0)
 			t1 = time.millitimer()
 			global getd_times
 			getd_times = getd_times + (t1-t0)
@@ -223,6 +267,8 @@ def decrement(q, (delay, node, side)):
 				lastnode[cname] = node
 			except:
 				pass
+	else:
+		node.t0t1_inherited = 1
 	for arg in node.deps[side]:
 		decrement(q, arg)
 
