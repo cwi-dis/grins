@@ -39,6 +39,7 @@ ALTCOLOR = settings.get('structure_altcolor')
 PARCOLOR = settings.get('structure_parcolor')
 SEQCOLOR = settings.get('structure_seqcolor')
 EXCLCOLOR = settings.get('structure_exclcolor')
+PRIOCOLOR = settings.get('structure_priocolor')
 TEXTCOLOR = settings.get('structure_textcolor')
 CTEXTCOLOR = settings.get('structure_ctextcolor')
 EXPCOLOR = settings.get('structure_expcolor')
@@ -53,6 +54,7 @@ ALTCOLOR_NOPLAY = settings.get('structure_darkalt')
 PARCOLOR_NOPLAY = settings.get('structure_darkpar')
 SEQCOLOR_NOPLAY = settings.get('structure_darkseq')
 EXCLCOLOR_NOPLAY = settings.get('structure_darkexcl')
+PRIOCOLOR_NOPLAY = settings.get('structure_darkprio')
 
 # Focus color assignments (from light to dark gray)
 
@@ -536,7 +538,7 @@ class HierarchyView(HierarchyViewDialog):
 		# make URL relative to document
 		url = ctx.relativeurl(url)
 		if interior:
-			horizontal = (t in ('par', 'alt', 'excl')) == DISPLAY_VERTICAL
+			horizontal = (t in ('par', 'alt', 'excl', 'prio')) == DISPLAY_VERTICAL
 			i = -1
 			# if node is expanded, determine where in the node
 			# the file is dropped, else create at end
@@ -1042,7 +1044,7 @@ class HierarchyView(HierarchyViewDialog):
 		right = right - self.horedge
 		children = node.GetChildren()
 		size = 0
-		horizontal = (t in ('par', 'alt', 'excl')) == DISPLAY_VERTICAL
+		horizontal = (t in ('par', 'alt', 'excl', 'prio')) == DISPLAY_VERTICAL
 		# animate++
 		if t in MMNode.leaftypes and node.GetChildren():
 			horizontal = 0
@@ -1444,7 +1446,7 @@ class HierarchyView(HierarchyViewDialog):
 			return node.boxsize
 		nchildren = len(children)
 		width = height = 0
-		horizontal = (ntype in ('par', 'alt', 'excl')) == DISPLAY_VERTICAL
+		horizontal = (ntype in ('par', 'alt', 'excl', 'prio')) == DISPLAY_VERTICAL
 		for child in children:
 			w, h, b = self.sizeboxes(child)
 			if horizontal:
@@ -1615,6 +1617,11 @@ class Object:
 				color = EXCLCOLOR
 			else:
 				color = EXCLCOLOR_NOPLAY
+		elif nt == 'prio':
+			if willplay:
+				color = PRIOCOLOR
+			else:
+				color = PRIOCOLOR_NOPLAY
 		elif nt == 'bag':
 			if willplay:
 				color = BAGCOLOR
@@ -1752,7 +1759,7 @@ class Object:
 			r1 = r - hmargin*2
 			b1 = b - vmargin*2
 			if l1 < r1 and t1 < b1:
-				if (node.GetType() in ('par', 'alt', 'excl')) == DISPLAY_VERTICAL:
+				if (node.GetType() in ('par', 'alt', 'excl', 'prio')) == DISPLAY_VERTICAL:
 					stepsize = (r1-l1)/2
 					while stepsize > hmargin*4:
 						stepsize = stepsize / 2

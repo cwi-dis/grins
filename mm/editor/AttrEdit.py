@@ -389,6 +389,13 @@ class NodeWrapper(Wrapper):
 	def attrnames(self):
 		import settings
 		lightweight = features.lightweight
+		ntype = self.node.GetType()
+		if ntype == 'prio':
+			# special case for prio nodes
+			return ['name', 'title', 'abstract', 'author',
+				'copyright', 'comment',
+				'higher', 'peers', 'lower', 'pauseDisplay']
+
 		# Tuples are optional names and will be removed if they
 		# aren't set
 		namelist = [
@@ -410,7 +417,6 @@ class NodeWrapper(Wrapper):
 			'system_overdub_or_caption', 'system_required',
 			'system_screen_size', 'system_screen_depth',
 			]
-		ntype = self.node.GetType()
 		ctype = self.node.GetChannelType()
 		if ntype in leaftypes or features.compatibility == features.CMIF:
 			namelist[1:1] = ['channel']

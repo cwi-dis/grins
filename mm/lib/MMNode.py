@@ -696,8 +696,8 @@ class MMSyncArc:
 			refnode = node.parent or node
 			refnode = refnode.looping_body_self or refnode
 		elif self.srcnode == 'prev' or (self.srcnode is None and node.parent.type == 'seq'):
-			refnode = node.parent
-			for c in refnode.children:
+			refnode = node.GetSchedParent()
+			for c in refnode.GetSchedChildren():
 				if c is node:
 					break
 				refnode = c
@@ -895,7 +895,7 @@ class MMNode:
 		self.force_switch_choice = 0
 		self.srdict = {}
 		self.events = {}	# events others are interested in
-		self.sched_children = []
+		self.sched_children = [] # arcs that depend on us
 		self.scheduled_children = 0
 		self.arcs = []
 		self.reset()
@@ -959,7 +959,7 @@ class MMNode:
 				if chan:
 					if debug: print 'freeze',`self`
 					chan.freeze(self)
-			for c in self.children:
+			for c in self.GetSchedChildren():
 				c.freeze_play()
 			self.playing = MMStates.FROZEN
 
@@ -972,7 +972,7 @@ class MMNode:
 				if chan:
 					if debug: print 'stopplay',`self`
 					chan.stopplay(self)
-			for c in self.children:
+			for c in self.GetSchedChildren():
 				c.terminate_play()
 			self.playing = MMStates.PLAYED
 
@@ -1053,6 +1053,12 @@ class MMNode:
 	def GetParent(self):
 		return self.parent
 
+	def GetSchedParent(self):
+		parent = self.parent
+		while parent is not None and parent.type == 'prio':
+			parent = parent.parent
+		return parent
+
 	def GetRoot(self):
 		root = None
 		x = self
@@ -1087,6 +1093,15 @@ class MMNode:
 
 	def GetChildren(self):
 		return self.children
+
+	def GetSchedChildren(self):
+		children = []
+		for c in self.children:
+			if c.type == 'prio':
+				children = children + c.GetSchedChildren()
+			else:
+				children.append(c)
+		return children
 
 	def GetChild(self, i):
 		return self.children[i]
@@ -1501,14 +1516,14 @@ class MMNode:
 	def IsMiniDocument(self):
 		if self.type in bagtypes:
 			return 0
-		parent = self.parent
+		parent = self.GetSchedParent()
 		return parent is None or parent.type in bagtypes
 
 	# Find the first mini-document in a tree
 	def FirstMiniDocument(self):
 		if self.IsMiniDocument():
 			return self
-		for child in self.children:
+		for child in self.GetSchedChildren():
 			mini = child.FirstMiniDocument()
 			if mini is not None:
 				return mini
@@ -1519,7 +1534,7 @@ class MMNode:
 		if self.IsMiniDocument():
 			return self
 		res = None
-		for child in self.children:
+		for child in self.GetSchedChildren():
 			mini = child.LastMiniDocument()
 			if mini is not None:
 				res = mini
@@ -1530,10 +1545,10 @@ class MMNode:
 	def NextMiniDocument(self):
 		node = self
 		while 1:
-			parent = node.parent
+			parent = node.GetSchedParent()
 			if parent is None:
 				break
-			siblings = parent.children
+			siblings = parent.GetSchedChildren()
 			index = siblings.index(node) # Cannot fail
 			while index+1 < len(siblings):
 				index = index+1
@@ -1548,10 +1563,10 @@ class MMNode:
 	def PrevMiniDocument(self):
 		node = self
 		while 1:
-			parent = node.parent
+			parent = node.GetSchedParent()
 			if parent is None:
 				break
-			siblings = parent.children
+			siblings = parent.GetSchedChildren()
 			index = siblings.index(node) # Cannot fail
 			while index > 0:
 				index = index-1
@@ -1577,55 +1592,6 @@ class MMNode:
 			raise CheckError, 'FindMiniBag: minidoc not rooted in a choice node!'
 		return bag
 
-##	#
-##	# Private methods for summary management
-##	#
-##	def _rmsummaries(self, keep):
-##		x = self
-##		while x is not None:
-##			changed = 0
-##			for key in x.summaries.keys():
-##				if key not in keep:
-##					del x.summaries[key]
-##					changed = 1
-##			if not changed:
-##				break
-##			x = x.parent
-
-##	def _fixsummaries(self, summaries):
-##		tofix = summaries.keys()
-##		for key in tofix[:]:
-##			if summaries[key] == []:
-##				tofix.remove(key)
-##		self._updsummaries(tofix)
-
-##	def _updsummaries(self, tofix):
-##		x = self
-##		while x is not None and tofix:
-##			for key in tofix[:]:
-##				if not x.summaries.has_key(key):
-##					tofix.remove(key)
-##				else:
-##					s = x._summarize(key)
-##					if s == x.summaries[key]:
-##						tofix.remove(key)
-##					else:
-##						x.summaries[key] = s
-##			x = x.parent
-
-##	def _summarize(self, name):
-##		try:
-##			summary = [self.GetAttr(name)]
-##		except NoSuchAttrError:
-##			summary = []
-##		for child in self.children:
-##			list = child.GetSummary(name)
-##			for item in list:
-##				if item not in summary:
-##					summary.append(item)
-##		summary.sort()
-##		return summary
-
 	#
 	# Set the correct method for generating scheduler records.
 	def setgensr(self):
@@ -1634,8 +1600,10 @@ class MMNode:
 			self.gensr = self.gensr_leaf
 		elif type == 'bag':
 			self.gensr = self.gensr_bag
-		elif type in ('seq', 'par', 'excl', 'alt'):
+		elif type in ('seq', 'par', 'excl', 'alt', 'bag'):
 			self.gensr = self.gensr_interior
+		elif type == 'prio':
+			self.gensr = None # should never be called
 		else:
 			raise CheckError, 'MMNode: unknown type %s' % self.type		 
 	#
@@ -1666,7 +1634,7 @@ class MMNode:
 		if self.type in playabletypes:
 			return
 		if self.type == 'seq':
-			for c in self.children:
+			for c in self.GetSchedChildren():
 				if seeknode is not None and \
 				   c.IsAncestorOf(seeknode):
 					self.wtd_children.append(c)
@@ -1676,37 +1644,36 @@ class MMNode:
 					self.wtd_children.append(c)
 					c._FastPruneTree()
 		elif self.type == 'par':
-			self.wtd_children = self.children[:]
-			for c in self.children:
+			self.wtd_children = self.GetSchedChildren()[:]
+			for c in self.GetSchedChildren():
 				if c.IsAncestorOf(seeknode):
 					c.PruneTree(seeknode)
 				else:
 					c._FastPruneTree()
 		elif self.type == 'alt':
-			for c in self.children:
+			for c in self.GetSchedChildren():
 				c.force_switch_choice = 0
 				if c.IsAncestorOf(seeknode):
 					self.wtd_children.append(c)
 					c.PruneTree(seeknode)
 					c.force_switch_choice = 1
 		elif self.type == 'excl':
-			for c in self.children:
+			for c in self.GetSchedChildren():
 				if c.IsAncestorOf(seeknode):
 					self.wtd_children.append(c)
 					c.PruneTree(seeknode)
 		else:
 			raise CheckError, 'Cannot PruneTree() on nodes of this type %s' % self.type
 	#
-	# PruneTree - The fast lane. Just copy children->wtd_children and
-	# create sync_from and sync_to.
+	# PruneTree - The fast lane. Just copy GetSchedChildren()->wtd_children.
 	def _FastPruneTree(self):
 		self.reset()
 		self.events = {}
 		self.realpix_body = None
 		self.caption_body = None
 		self.force_switch_choice = 0
-		self.wtd_children = self.children[:]
-		for c in self.children:
+		self.wtd_children = self.GetSchedChildren()[:]
+		for c in self.GetSchedChildren():
 			c._FastPruneTree()
 
 
@@ -1748,7 +1715,7 @@ class MMNode:
 			fill = self.GetInherAttrDef('fillDefault', None)
 		if fill is None:
 			if self.attrdict.get('duration') is None and \
-			   not MMAttrdefs.getattr(self, 'endlist') and \
+			   not self.attrdict.get('endlist') and \
 			   self.attrdict.get('repeatDur') is None and \
 			   self.attrdict.get('loop') is None:
 				fill = 'freeze'
@@ -2146,7 +2113,7 @@ class MMNode:
 			child.cleanup()
 
 	def cleanup_sched(self, sched, body = None):
-		if self.type != 'par' and self.type != 'excl':
+		if self.type in leaftypes:
 			return
 		if body is None:
 			if self.looping_body_self:
@@ -2214,10 +2181,18 @@ class MMNode:
 
 		srcnode = self_body
 		event = 'begin'
-		if self.type == 'excl':
+		if self.type in ('excl', 'bag'):
 			defbegin = None
 		else:
 			defbegin = 0.0
+		if self.type == 'bag':
+			indexname = MMAttrdefs.getattr(self, 'bag_index')
+			bagindex = None
+			for child in self.GetSchedChildren():
+				chname = MMAttrdefs.getattr(child, 'name')
+				if chname and chname == indexname:
+					bagindex = child
+					break
 
 		duration = self.GetAttrDef('duration', None)
 		if duration is not None:
@@ -2233,6 +2208,11 @@ class MMNode:
 			chname = MMAttrdefs.getattr(child, 'name')
 			beginlist = MMAttrdefs.getattr(child, 'beginlist')
 			if not beginlist:
+				if self.type == 'bag':
+					if bagindex is child:
+						defbegin = 0.0
+					else:
+						defbegin = None
 				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin)
 				self_body.arcs.append((srcnode, arc))
 				srcnode.add_arc(arc)
@@ -2378,9 +2358,22 @@ class MMNode:
 		duration = self.attrdict.get('duration')
 		repeatDur = self.attrdict.get('repeatDur')
 		repeatCount = self.attrdict.get('loop')
-		if duration is None and self.type in leaftypes:
-			import Duration
-			duration = Duration.get(self, ignoreloop=1)
+		endlist = self.attrdict.get('endlist')
+		if endlist is not None and duration is None and \
+		   repeatCount is None and repeatDur is None:
+			# "If an end attribute is specified but none
+			# of dur, repeatCount and repeatDur are
+			# specified, the simple duration is defined to
+			# be indefinite"
+			duration = -1
+		if duration is None and repeatCount is not None:
+			# if repeatCount is set, we need to know duration
+			if self.type in leaftypes:
+				import Duration
+				duration = Duration.get(self, ignoreloop=1)
+			else:
+				# XXX should find duration of interior node
+				pass
 		if repeatDur is not None and duration is None:
 			duration = -1
 		if repeatDur is not None and \
@@ -2625,7 +2618,7 @@ class MMNode:
 	def ChosenSwitchChild(self, childrentopickfrom=None):
 		"""For alt nodes, return the child that will be played"""
 		if childrentopickfrom is None:
-			childrentopickfrom = self.children
+			childrentopickfrom = self.GetSchedChildren()
 		for ch in childrentopickfrom:
 			if ch.force_switch_choice:
 				return ch
