@@ -13,7 +13,9 @@ class ChannelWindow(GLDialog):
 		return GLDialog.init(self, title)
 	#
 	def show(self):
-		if self.wid <> 0: return
+		if self.wid <> 0:
+			gl.winset(self.wid)
+			return
 		GLDialog.show(self)
 		# Use RGB mode
 		gl.RGBmode()
