@@ -1473,7 +1473,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	# this method is called by the parser to print the error messages		
 	def printfunc(self, msg):
 		# in this version, the error messages aren't printed at this step, but later in order to reduce the dialog box number
-		# we just save here the formated message
 		pass
 	
 	def close_callback(self):
