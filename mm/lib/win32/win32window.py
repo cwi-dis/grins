@@ -107,12 +107,12 @@ class Window:
 			     Mouse2Press, Mouse2Release, 
 				 DropFile, PasteFile, DragFile,
 				 DragNode, DropNode,
-				 WindowExit):
+				 WindowExit, WindowContentChanged):
 			self._callbacks[event] = func, arg
 			if event == DropFile:
 				self.registerDropTarget()
 		else:
-			raise error, 'Unregister event',event
+			raise error, 'Registering unknown event %d'%event
 
 	# Unregister user input callbacks
 	def unregister(self, event):
@@ -1740,7 +1740,7 @@ class Region(Window):
 			self._paint_5()
 			return
 
-		if self._transition and self._transition._isrunning() and\
+		if self._transition and self._transition._isrunning() and \
 				self._transition._ismaster(self):
 			if self._multiElement:
 				if self._childrenClip:
@@ -1988,7 +1988,7 @@ class Viewport(Region):
 		self._ctx.update(rc)
 		if self._callbacks.has_key(WindowContentChanged):
 			func, arg = self._callbacks[WindowContentChanged]
-			func(arg, self, WindowContentChanged, mw_globals.toplevel.getcurtime())
+			func(arg, self, WindowContentChanged, __main__.toplevel.getcurtime())
 
 	def paint(self, rc=None):
 		drawBuffer = self._ctx.getDrawBuffer()
