@@ -1002,6 +1002,11 @@ class _DisplayList:
 			addrgn.DeleteObject()
 			del addrgn
 
+	def _inside_bbox(self, point):
+		if self._win32rgn:
+			return self._win32rgn.PtInRegion(point)
+		return 0
+
 	# List optimizer
 	def _optimize(self, ignore = ()):
 		entry = self._list[-1]
