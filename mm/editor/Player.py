@@ -406,8 +406,15 @@ class Player() = scheduler():
 			self.adddep(node, HD, -1, node, TL)
 	#
 	def prep2(self, node):
-		# XXX Should recursively do explicit deps from synctolist attr
-		pass
+		arcs = MMAttrdefs.getattr(node, 'synctolist')
+		for arc in arcs:
+			print 'sync arc:', arc, 'to:', node.GetUID()
+			xuid, xside, delay, yside = arc
+			xnode = node.MapUID(xuid)
+			self.adddep(xnode, xside, delay, node, yside)
+		#
+		if node.GetType() in ('seq', 'par'):
+			for c in node.GetChildren(): self.prep2(c)
 	#
 	def adddep(self, (xnode, xside, delay, ynode, yside)):
 		# XXX (doesn't need to be a method)
