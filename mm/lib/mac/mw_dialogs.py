@@ -519,33 +519,15 @@ class _Question:
 def showquestion(text, parent = None):
 	return _Question(text).run()
 
-class _MultChoice:
-	def __init__(self, prompt, msg_list, defindex):
-		raise 'MultChoice called!'
-		self.looping = FALSE
-		self.answer = None
-		self.msg_list = msg_list
-		list = []
-		for msg in msg_list:
-			list.append(msg, (self.callback, (msg,)))
-		self.dialog = Dialog(list, title = None, prompt = prompt,
-				     grab = TRUE, vertical = FALSE)
-
-	def run(self):
-		try:
-			self.looping = TRUE
-			Xt.MainLoop()
-		except _end_loop:
-			pass
-		return self.answer
-
-	def callback(self, msg):
-		for i in range(len(self.msg_list)):
-			if msg == self.msg_list[i]:
-				self.answer = i
-				if self.looping:
-					raise _end_loop
-				return
-
 def multchoice(prompt, list, defindex, parent = None):
-	return _MultChoice(prompt, list, defindex).run()
+	if len(list) == 2:
+		list.append('')		# An empty cancel will remove it
+	elif len(list) != 3:
+		raise "MultChoice must have 3 args"
+	if defindex < 0:
+		defindex = 3-defindex
+	import EasyDialogs
+	rv = EasyDialogs.AskYesNoCancel(prompt, defindex, list[0], list[1], list[2])
+	if rv < 0: return 2
+	if rv > 0: return 0
+	return 1
