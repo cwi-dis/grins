@@ -11,7 +11,7 @@ class Trace:
 			'exception': self.trace_dispatch_exception,
 			}
 		self.curframe = None
-		self.depth = -1
+		self.depth = 0
 
 	def run(self, cmd, globals = None, locals = None):
 		if globals is None:
@@ -33,11 +33,19 @@ class Trace:
 			sys.setprofile(None)
 
 	def trace_dispatch(self, frame, event, arg):
+		curframe = self.curframe
+		if curframe is not frame:
+			if frame.f_back is curframe:
+				self.depth = self.depth + 1
+			elif curframe is not None and curframe.f_back is frame:
+				self.depth = self.depth - 1
+			elif curframe is not None and curframe.f_back is frame.f_back:
+				pass
+		self.curframe = frame
 		self.dispatch[event](frame, arg)
 
-	def trace_dispatch_call(self, frame, arg):
-		self.depth = self.depth + 1
-		self.curframe = frame
+	def trace_dispatch_call(self, frame, arg, None = None):
+		pframe = frame.f_back
 		code = frame.f_code
 		funcname = code.co_name
 		if not funcname:
@@ -48,8 +56,7 @@ class Trace:
 			code = code.co_code
 			if ord(code[0]) == 127:	# SET_LINENO
 				lineno = ord(code[1]) | ord(code[2]) << 8
-		pframe = frame.f_back
-		if pframe:
+		if pframe is not None:
 			plineno = ' (%d)' % pframe.f_lineno
 		else:
 			plineno = ''
@@ -57,36 +64,26 @@ class Trace:
 		frame.f_locals['__start_time'] = time()
 
 	def trace_dispatch_return(self, frame, arg):
-		try:
-			t = frame.f_locals['__start_time']
-		except KeyError:
-			t = ''
-		else:
+		t = frame.f_locals.get('__start_time', '')
+		if t != '':
 			t = ' [%.4f]' % (time() - t)
 		funcname = frame.f_code.co_name
-		self.curframe = frame.f_back
 		if not funcname:
 			funcname = '<lambda>'
 		filename = frame.f_code.co_filename
 		print '%s< %s:%d %s%s' % (' '*self.depth,filename,frame.f_lineno,funcname,t)
+		self.curframe = frame.f_back
 		self.depth = self.depth - 1
 
 	def trace_dispatch_exception(self, frame, arg):
-		t = ''
-		if frame is not self.curframe:
-			try:
-				t = frame.f_locals['__start_time']
-			except KeyError:
-				pass
-			else:
-				t = ' [%.4f]' % (time() - t)
-			self.depth = self.depth - 1
-			self.curframe = frame
+		t = frame.f_locals.get('__start_time', '')
+		if t != '':
+			t = ' [%.4f]' % (time() - t)
 		funcname = frame.f_code.co_name
 		if not funcname:
 			funcname = '<lambda>'
 		filename = frame.f_code.co_filename
-		print '%sE %s:%d %s%s' % (' '*(self.depth+1),filename,frame.f_lineno,funcname,t)
+		print '%sE %s:%d %s%s' % (' '*self.depth,filename,frame.f_lineno,funcname,t)
 
 	def set_trace(self):
 		try:
@@ -96,6 +93,7 @@ class Trace:
 		while frame.f_code.co_name != 'set_trace':
 			frame = frame.f_back
 		d = 0
+		self.curframe = frame
 		while frame:
 			d = d + 1
 			frame = frame.f_back

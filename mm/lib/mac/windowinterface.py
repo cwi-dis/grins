@@ -1094,7 +1094,7 @@ def _ModalDialog(title, dialogid, text, okcallback, cancelcallback=None):
 			
 def showmessage(text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'message',
-		     title = 'message'):
+		     title = 'message', parent = None):
 	if '\n' in text:
 		text = string.join(string.split(text, '\n'), '\r')
 	if mtype == 'question' or cancelCallback:
@@ -1448,7 +1448,8 @@ class InputDialog(DialogWindow):
 [TOP, CENTER, BOTTOM] = range(3)
 
 
-def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1):
+def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1,
+	   parent = None):
 	w = SingleSelectionDialog(list, title, prompt)
 	if grab:
 		w.rungrabbed()
@@ -1476,7 +1477,7 @@ class _Question:
 		if self.looping:
 			raise _end_loop
 
-def showquestion(text):
+def showquestion(text, parent = None):
 	return _Question(text).run()
 
 class _MultChoice:
@@ -1507,7 +1508,7 @@ class _MultChoice:
 					raise _end_loop
 				return
 
-def multchoice(prompt, list, defindex):
+def multchoice(prompt, list, defindex, parent = None):
 	return _MultChoice(prompt, list, defindex).run()
 
 def roundi(x):
