@@ -2892,6 +2892,7 @@ class IconBox(MMWidgetDecoration):
 			  ArmStates.ARM_ARMING, ArmStates.ARM_ARMED,
 			  ArmStates.ARM_PLAYING, ArmStates.ARM_WAITSTOP,
 			  'error',
+			  'bandwidthgood', 'bandwidthbad',
 			  'danglingevent', 'danglinganchor',
 			  'linkdst', 'beginevent',
 			  'linksrc','causeevent',

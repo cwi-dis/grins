@@ -125,12 +125,15 @@ class HierarchyViewDialog(ViewDialog):
 		x = x * self.mcanvassize[0]
 		y = y * self.mcanvassize[1]		
 		obj = self.whichhit(x, y)
+		from StructureWidgets import MMWidgetDecoration
+		if isinstance(obj, MMWidgetDecoration):
+			obj = obj.mmwidget
 		# On the grey area we fail
 		if not obj:
 			rv = windowinterface.DROPEFFECT_NONE
 			self.draw()
 			return
-		node = obj.node
+		node = obj.get_node()
 		# If the node accepts only certain mimetypes
 		# we check for that too.
 		mimetypes = node.getAllowedMimeTypes()
@@ -156,7 +159,7 @@ class HierarchyViewDialog(ViewDialog):
 			rv = windowinterface.DROPEFFECT_COPY
 		self.draw()
 		return rv
-	
+
 	def pastefile(self, maybenode, window, event, params):
 		import MMurl
 		x, y, filename = params
@@ -170,7 +173,7 @@ class HierarchyViewDialog(ViewDialog):
 		srcy = srcy * self.mcanvassize[1]
 		srcwidget = self.whichhit(srcx, srcy)
 		if srcwidget:
-			srcnode = srcwidget.node
+			srcnode = srcwidget.get_node()
 			return 'NodeUID', srcnode
 		return None, None
 
@@ -181,27 +184,28 @@ class HierarchyViewDialog(ViewDialog):
 		if not (0 <= dstx < 1 and 0 <= dsty < 1):
 			self.draw()
 			return windowinterface.DROPEFFECT_NONE
+		srcnode = None
 		if ucmd == DRAG_NODE:
 			srcx, srcy = args
 			srcx = srcx * self.mcanvassize[0]
 			srcy = srcy * self.mcanvassize[1]
 			srcwidget = self.whichhit(srcx, srcy)
-			srcnode = srcwidget.node
+			if srcwidget:
+				srcnode = srcwidget.get_node()
 		elif ucmd == DRAG_NODEUID:
 			contextid, nodeuid = args
 			if contextid != id(self.root.context):
 				print "Cannot drag/drop between documents"
 				return windowinterface.DROPEFFECT_NONE
 			srcnode = self.root.context.mapuid(nodeuid)
-			srcwidget = None
-		else:
-			srcnode = None
-			srcwidget = None
 		dstx = dstx * self.mcanvassize[0]
 		dsty = dsty * self.mcanvassize[1]
 		dstwidget = self.whichhit(dstx, dsty)
-		dstnode = dstwidget.node
-		if dstwidget and dstwidget.node.GetType() in MMNode.interiortypes:
+		from StructureWidgets import MMWidgetDecoration
+		if isinstance(dstwidget, MMWidgetDecoration):
+			dstwidget = dstwidget.mmwidget
+		dstnode = dstwidget.get_node()
+		if dstwidget and dstwidget.get_node().GetType() in MMNode.interiortypes:
 			if cmd=='move':
 				if srcnode.IsAncestorOf(dstnode):
 					rv = windowinterface.DROPEFFECT_NONE

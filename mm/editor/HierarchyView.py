@@ -1156,8 +1156,7 @@ class HierarchyView(HierarchyViewDialog):
 			obj = maybenode.views['struct_view']
 			self.select_widget(obj)
 		else:
-			obj = self.scene_graph.get_obj_at((x,y))
-			#obj = self.whichhit(x, y)
+			obj = self.whichhit(x, y)
 			if not obj:
 				windowinterface.beep()
 				self.draw()
@@ -1238,6 +1237,9 @@ class HierarchyView(HierarchyViewDialog):
 			x = x * self.mcanvassize[0]
 			y = y * self.mcanvassize[1]
 			obj = self.whichhit(x, y)
+			from StructureWidgets import MMWidgetDecoration
+			if isinstance(obj, MMWidgetDecoration):
+				obj = obj.mmwidget
 
 		if not obj:
 			windowinterface.setdragcursor('dragnot')
@@ -1647,6 +1649,9 @@ class HierarchyView(HierarchyViewDialog):
 		# Problem: dstobj will be an internal node.
 		dstobj = self.whichhit(xd, yd)
 		self.select_widget(dstobj)
+		from StructureWidgets import MMWidgetDecoration
+		if isinstance(dstobj, MMWidgetDecoration):
+			dstobj = dstobj.mmwidget
 		ntype = None
 		chtype = None
 		if type == DRAG_PAR:
@@ -1686,6 +1691,9 @@ class HierarchyView(HierarchyViewDialog):
 			# Compat code for x/y based drag-drop.
 			sx, sy = srcpos
 			srcwidget = self.whichhit(sx, sy)
+			from StructureWidgets import MMWidgetDecoration
+			if isinstance(srcwidget, MMWidgetDecoration):
+				srcwidget = srcwidget.mmwidget
 			srcnode = srcwidget.node
 		if not srcnode:
 			# shouldn't happen
@@ -1714,6 +1722,9 @@ class HierarchyView(HierarchyViewDialog):
 			if mustdestroy:
 				mustdestroy.Destroy()
 			return None
+		from StructureWidgets import MMWidgetDecoration
+		if isinstance(dstwidget, MMWidgetDecoration):
+			dstwidget = dstwidget.mmwidget
 		dstnode = dstwidget.node
 		if cmd == 'move' and srcnode.IsAncestorOf(dstnode):
 			windowinterface.showmessage("You cannot move a node to its children")
