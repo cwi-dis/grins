@@ -16,7 +16,7 @@ class ImageWindow(ChannelWindow):
 	# Initialization function.
 	#
 	def init(self, (title, attrdict)):
-		self = ChannelWindow.init(self, (title, attrdict))
+		self = ChannelWindow.init(self, title, attrdict)
 		self.clear()
 		return self
 	#
@@ -90,7 +90,7 @@ class ImageChannel(Channel):
 	node_attrs = ['file', 'duration', 'bgcolor', 'scale', 'arm_duration']
 	#
 	def init(self, (name, attrdict, player)):
-		self = Channel.init(self, (name, attrdict, player))
+		self = Channel.init(self, name, attrdict, player)
 		self.window = ImageWindow().init(name, attrdict)
 		self.armed_node = 0
 		return self
@@ -126,7 +126,7 @@ class ImageChannel(Channel):
 		    self.arm(node)
 		self.armed_node = None
 		self.window.showimage()
-		Channel.play(self, (node, callback, arg))
+		Channel.play(self, node, callback, arg)
 	#
 	def reset(self):
 		self.window.clear()
