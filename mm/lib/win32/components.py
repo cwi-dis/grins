@@ -403,10 +403,6 @@ class DialogBase(window.Wnd):
 		if type(id)==type([]):	# a template
 			dlg=win32ui.CreateDialogIndirect(id)
 		else:
-			if not parent:
-				import __main__
-				if __main__.toplevel:
-					parent=__main__.toplevel.getActiveDocFrame()
 			dlg=win32ui.CreateDialog(id, self.dll,parent)
 		window.Wnd.__init__(self, dlg)
 		self.HookCommands()
