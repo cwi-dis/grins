@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 mono = 'mono'
 left = 'left'
 right = 'right'
