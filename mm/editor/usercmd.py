@@ -346,6 +346,12 @@ class DRAG_SEQ(_CommandBase): pass
 class DRAG_SWITCH(_CommandBase): pass
 class DRAG_EXCL(_CommandBase): pass
 class DRAG_PRIO(_CommandBase): pass
+class DRAG_MEDIA(_CommandBase): pass
+class DRAG_ANIMATE(_CommandBase): pass
+class DRAG_BRUSH(_CommandBase): pass
+class DRAG_REGION(_CommandBase): pass
+class DRAG_TOPLAYOUT(_CommandBase): pass
+
 #
 # Command to hierarchy/channel view
 #

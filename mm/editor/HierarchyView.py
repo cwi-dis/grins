@@ -137,6 +137,9 @@ class HierarchyView(HierarchyViewDialog):
 			DRAG_SWITCH(),
 			DRAG_EXCL(),
 			DRAG_PRIO(),
+			DRAG_MEDIA(),
+			DRAG_ANIMATE(),
+			DRAG_BRUSH(),
 			]
 
 		self.interiorcommands = self._getmediaundercommands(self.toplevel.root.context) + [
@@ -1579,6 +1582,8 @@ class HierarchyView(HierarchyViewDialog):
 		# Problem: dstobj will be an internal node.
 		dstobj = self.whichhit(xd, yd)
 		self.select_widget(dstobj)
+		ntype = None
+		chtype = None
 		if type == DRAG_PAR:
 			ntype = 'par'
 		elif type == DRAG_SEQ:
@@ -1589,10 +1594,16 @@ class HierarchyView(HierarchyViewDialog):
 			ntype = 'excl'
 		elif type == DRAG_PRIO:
 			ntype = 'prio'
+		elif type == DRAG_MEDIA:
+			ntype = 'ext'
+		elif type == DRAG_ANIMATE:
+			chtype = 'animate'
+		elif type == DRAG_BRUSH:
+			ntype = 'brush'
 		else:
 			print 'Unknown dragtool:', type
 			return
-		dummy = self.create(0, ntype=ntype)
+		dummy = self.create(0, ntype=ntype, chtype=chtype)
 
 	def dropexistingnode(self, cmd, dstpos, srcnode=None, srcpos=None):
 		# cmd can be 'copy' or 'move'. The return value is the

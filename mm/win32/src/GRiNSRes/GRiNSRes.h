@@ -765,13 +765,18 @@
 #define IDUC_FIND                       32890
 #define IDUC_REPLACE                    32891
 #define IDUC_FINDNEXT                   32892
+#define IDUC_MEDIA                      32895
+#define IDUC_ANIMATE                    32896
+#define IDUC_BRUSH                      32897
+#define IDUC_REGION                     32898
+#define IDUC_TOPLAYOUT                  32899
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        446
-#define _APS_NEXT_COMMAND_VALUE         32893
+#define _APS_NEXT_COMMAND_VALUE         32900
 #define _APS_NEXT_CONTROL_VALUE         1448
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
