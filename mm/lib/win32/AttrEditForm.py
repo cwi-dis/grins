@@ -1059,6 +1059,10 @@ class AttrPage(dialog.PropertyPage):
 class SingleAttrPage(AttrPage):
 	# These map attribute names to (dialog-resource-id, constructor-function, control-ids)
 	# tuples. For unknown attributes we default to "string".
+	# The fact that we also have a mapping by name (in stead of by type
+	# only) means we can have special-case dialogs for Windows while
+	# the code will continue to work (with a boring popup menu)
+	# for the other platforms.
 	CTRLMAP_BYNAME = {
 		'layout':		# Two radio buttons
 			(grinsRC.IDD_EDITATTR_R2,
@@ -1080,6 +1084,19 @@ class SingleAttrPage(AttrPage):
 			(grinsRC.IDD_EDITATTR_R4,
 			 OptionsRadioCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6)),
+		'project_audiotype':	# Four radio buttons
+			(grinsRC.IDD_EDITATTR_R4,
+			 OptionsRadioCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6)),
+		'project_videotype':	# Four radio buttons
+			(grinsRC.IDD_EDITATTR_R4,
+			 OptionsRadioCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6)),
+		'project_targets':	# Six radio buttons
+			(grinsRC.IDD_EDITATTR_R6,
+			 OptionsRadioCtrl,
+			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4,grinsRC.IDC_5,
+			  grinsRC.IDC_6,grinsRC.IDC_7,grinsRC.IDC_8)),
 		}
 	CTRLMAP_BYTYPE = {
 		'option':		# An option selected from a list (as a popup menu)

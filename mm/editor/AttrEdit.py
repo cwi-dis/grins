@@ -597,6 +597,12 @@ class AttrEditor(AttrEditorDialog):
 				C = WipeTypeAttrEditorField
 			elif displayername == 'subregionanchor':
 				C = AnchorTypeAttrEditorField
+			elif displayername == 'targets':
+				C = RMTargetsAttrEditorField
+			elif displayername == 'audiotype':
+				C = RMAudioAttrEditorField
+			elif displayername == 'videotype':
+				C = RMVideoAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -1043,6 +1049,66 @@ class TransparencyAttrEditorField(PopupAttrEditorField):
 	# Choose from a list of unit types
 	def getoptions(self):
 		return ['Default'] + self.__values
+
+	def parsevalue(self, str):
+		if str == 'Default':
+			return None
+		return self.__valuesmap[self.__values.index(str)]
+
+	def valuerepr(self, value):
+		if value is None:
+			return 'Default'
+		return self.__values[self.__valuesmap.index(value)]
+
+class RMTargetsAttrEditorField(PopupAttrEditorField):
+	# Note: these values come from the producer module, but we don't want to import
+	# that here
+	__values = ['28k8 modem', '56k modem', 
+		'Single ISDN', 'Double ISDN', 'Cable modem', 'LAN']
+	__valuesmap = [0, 1, 2, 3, 4, 5]
+
+	# Choose from a list of unit types
+	def getoptions(self):
+##		return ['Default'] + self.__values
+		return self.__values
+
+	def parsevalue(self, str):
+		if str == 'Default':
+			return None
+		return self.__valuesmap[self.__values.index(str)]
+
+	def valuerepr(self, value):
+		if value is None:
+			return 'Default'
+		return self.__values[self.__valuesmap.index(value)]
+
+class RMAudioAttrEditorField(PopupAttrEditorField):
+	__values = ['Voice', 'Voice and background music', 'Music (mono)', 'Music (stereo)']
+	__valuesmap = [0, 1, 2, 3]
+
+	# Choose from a list of unit types
+	def getoptions(self):
+##		return ['Default'] + self.__values
+		return self.__values
+
+	def parsevalue(self, str):
+		if str == 'Default':
+			return None
+		return self.__valuesmap[self.__values.index(str)]
+
+	def valuerepr(self, value):
+		if value is None:
+			return 'Default'
+		return self.__values[self.__valuesmap.index(value)]
+
+class RMVideoAttrEditorField(PopupAttrEditorField):
+	__values = ['Normal quality', 'Smoother motion', 'Sharper pictures', 'Slideshow']
+	__valuesmap = [0, 1, 2, 3]
+
+	# Choose from a list of unit types
+	def getoptions(self):
+##		return ['Default'] + self.__values
+		return self.__values
 
 	def parsevalue(self, str):
 		if str == 'Default':
