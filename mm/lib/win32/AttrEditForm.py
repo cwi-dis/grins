@@ -85,6 +85,17 @@ class AttrCtrl:
 		else:
 			return 1
 
+	def gethelp(self):
+		a=self._attr
+		hd=a.gethelpdata()
+		if hd[1] and self.want_default_help:
+			return "%s (leave empty for %s)"%(hd[2], hd[1])
+		else:
+			return hd[2]
+
+	def settooltips(self,tooltipctrl):
+		pass
+
 # temp stuff not safe
 def atoft(str):
 	# convert string into tuple of floats
@@ -148,6 +159,9 @@ class OptionsCtrl(AttrCtrl):
 		if code==win32con.CBN_SELCHANGE:
 			self.enableApply()
 
+	def settooltips(self,tooltipctrl):
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
+
 class ChannelCtrl(OptionsCtrl):
 	def OnInitCtrl(self):
 		OptionsCtrl.OnInitCtrl(self)
@@ -177,6 +191,10 @@ class ChannelCtrl(OptionsCtrl):
 		if self._attr: 
 			return self._attr.wrapper.context.getchannel(self._attr.getvalue())
 		return None
+
+	def settooltips(self,tooltipctrl):
+		OptionsCtrl.settooltips(self,tooltipctrl)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Properties of channel',None,0)
 
 
 class OptionsRadioCtrl(AttrCtrl):
@@ -256,6 +274,12 @@ class OptionsRadioCtrl(AttrCtrl):
 		if code==win32con.BN_CLICKED:
 			self.enableApply()
 
+	def settooltips(self,tooltipctrl):
+		list = self._attr.getoptions()
+		n = len(list)
+		for ix in range(min(n,len(self._resid)-1)):
+			tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[ix+1]),self.gethelp(),None,0)
+
 class OptionsCheckCtrl(AttrCtrl):
 	want_default_help = 0
 
@@ -324,6 +348,12 @@ class OptionsCheckCtrl(AttrCtrl):
 		if code==win32con.BN_CLICKED:
 			self.enableApply()
 
+	def settooltips(self,tooltipctrl):
+		list = self._attr.getoptions()
+		n = len(list)
+		for ix in range(min(n,len(self._resid)-1)):
+			tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[ix+1]),self.gethelp(),None,0)
+
 ##################################
 class FileCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -364,6 +394,9 @@ class FileCtrl(AttrCtrl):
 			if hasattr(self._wnd,'onAttrChange'):
 				self._wnd.onAttrChange()
 			self.enableApply()
+
+	def settooltips(self,tooltipctrl):
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
 
 # a file ctrl with icon buttons play, pause and stop
 # indented for continous media preview
@@ -418,6 +451,12 @@ class FileMediaCtrl(FileCtrl):
 			self._bplay.enable(1)
 			self._bpause.enable(0)
 			self._bstop.enable(1)
+
+	def settooltips(self,tooltipctrl):
+		FileCtrl.settooltips(self,tooltipctrl)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[3]),'Play',None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[4]),'Pause',None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[5]),'Stop',None,0)
 			
 	
 ##################################
@@ -533,6 +572,9 @@ class ColorCtrl(AttrCtrl):
 		else:
 			return 1
 
+	def settooltips(self,tooltipctrl):
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
+
 
 ##################################
 class StringCtrl(AttrCtrl):
@@ -572,6 +614,9 @@ class StringCtrl(AttrCtrl):
 			self.sethelp()
 		elif code==win32con.EN_CHANGE:
 			self.enableApply()
+
+	def settooltips(self,tooltipctrl):
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
 
 class TupleCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -622,6 +667,10 @@ class TupleCtrl(AttrCtrl):
 			self.sethelp()
 		elif code==win32con.EN_CHANGE:
 			self.enableApply()
+
+	def settooltips(self,tooltipctrl):
+		for i in range(self._nedit):
+			tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[i+1]),self.gethelp(),None,0)
 	
 class IntTupleCtrl(TupleCtrl):
 	def setvalue(self, val):
@@ -710,6 +759,9 @@ class StringOptionsCtrl(AttrCtrl):
 			self._queryctrl='e'
 			self.enableApply()
 
+	def settooltips(self,tooltipctrl):
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
+
 class HtmlTemplateCtrl(StringOptionsCtrl):
 	def __init__(self,wnd,attr,resid):
 		options=['external_player.html','embedded_player.html']
@@ -747,6 +799,7 @@ class AttrSheet(dialog.PropertySheet):
 			self._apply.enable(flag)
 		
 class AttrPage(dialog.PropertyPage):
+	enabletooltips = 1
 	def __init__(self,form):
 		self._form=form
 		self._cd={}
@@ -755,6 +808,10 @@ class AttrPage(dialog.PropertyPage):
 		self._title='Untitled page'
 		self._initdialog=None
 		self._attrinfo=components.Static(self,grinsRC.IDC_ATTR_INFO)
+		if AttrPage.enabletooltips:
+			self._tooltipctrl=win32ui.CreateToolTipCtrl()
+		else:
+			self._tooltipctrl=None
 		
 	def do_init(self):
 		id=self.getpageresid()
@@ -770,6 +827,11 @@ class AttrPage(dialog.PropertyPage):
 		for ctrl in self._cd.values():ctrl.OnInitCtrl()
 		if self._group:
 			self._group.oninitdialog(self)
+		if self._tooltipctrl:
+			self._tooltipctrl.CreateWindow(self,0)
+			self._tooltipctrl.Activate(1)
+			self.SetToolTipCtrl(self._tooltipctrl)
+			self.settooltips()
 		
 	def OnPaint(self):
 		dc, paintStruct = self.BeginPaint()
@@ -793,6 +855,10 @@ class AttrPage(dialog.PropertyPage):
 	def setgroup(self,group):
 		self._group=group
 	
+	def settooltips(self):
+		if self._tooltipctrl:
+			for ctrl in self._cd.values():
+				ctrl.settooltips(self._tooltipctrl)
 
 	# override for not group attributes
 	def createctrls(self):
