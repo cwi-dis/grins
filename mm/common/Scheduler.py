@@ -273,14 +273,15 @@ class SchedulerContext:
 		srlist = self.getsrlist(ev)
 		self.queuesrlist(srlist)
 
-	def trigger(self, arc):
+	def trigger(self, arc, late = 0):
 		node = arc.dstnode
 		arc.qid = None
-		if node.parent:
-			node.parent.scheduled_children = node.parent.scheduled_children - 1
-		else:
-			self.scheduled_children = self.scheduled_children - 1
-		if debugevents: print 'trigger', `arc`
+		if arc.isstart:
+			if node.parent:
+				node.parent.scheduled_children = node.parent.scheduled_children - 1
+			else:
+				self.scheduled_children = self.scheduled_children - 1
+		if debugevents: print 'trigger', `arc`, late
 		if not arc.isstart:
 			if node.playing != MMStates.PLAYING:
 				# ignore end event if not playing
@@ -319,17 +320,18 @@ class SchedulerContext:
 				self.srdict.update(srdict)
 				self.parent.event(self, (SR.SCHED_DONE, node))
 				return
-		if node.playing == MMStates.PLAYING:
-			# node is playing, must terminate it first
-			if debugevents: print 'terminating node'
-			self.parent.do_terminate(self, node)
-		elif pnode.type == 'excl' or pnode.type == 'seq':
+		# if node is playing (or not stopped), must terminate it first
+		if debugevents: print 'terminating node'
+		self.parent.do_terminate(self, node)
+		if pnode.type == 'excl' or pnode.type == 'seq':
 			# parent is excl, must terminate running child first
 			# XXX must implement pause
 			# XXX musr implement priority class
 			if debugevents: print 'terminating siblings'
 			for c in pnode.children:
-				self.parent.do_terminate(self, c)
+				# don't have to terminate it again
+				if c is not node:
+					self.parent.do_terminate(self, c)
 		# we must start the node, but how?
 		if debugevents: print 'starting node'
 		srdict = pnode.gensr_child(node)
@@ -702,11 +704,12 @@ class Scheduler(scheduler):
 			    arc.delay is not None and
 			    ((arc.dstnode in node.children and event == 'begin') or
 			     (arc.dstnode not in node.children and event == 'end'))):
-				if arc.dstnode.parent:
-					arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
-				else:
-					# root node
-					sctx.scheduled_children = sctx.scheduled_children + 1
+				if arc.isstart:
+					if arc.dstnode.parent:
+						arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
+					else:
+						# root node
+						sctx.scheduled_children = sctx.scheduled_children + 1
 				arc.qid = self.enter(arc.delay, 0, sctx.trigger, (arc,))
 
 	def runone(self, (sctx, todo, dummy)):
@@ -731,13 +734,13 @@ class Scheduler(scheduler):
 			self.do_terminate(sctx, arg)
 		elif action == SR.LOOPSTART:
 			self.do_loopstart(sctx, arg)
-			arg.playing = MMStates.PLAYING
+			arg.startplay(sctx)
 			self.sched_arcs(sctx, arg.looping_body_self, 'begin')
 		elif action == SR.LOOPEND:
 			self.do_loopend(sctx, arg)
 		elif action == SR.LOOPRESTART:
 			self.do_looprestart(sctx, arg)
-			arg.playing = MMStates.PLAYING
+			arg.startplay(sctx)
 			self.sched_arcs(sctx, arg.looping_body_self, 'begin')
 		else:
 			if action == SR.SCHED_STOPPING and \
@@ -748,12 +751,12 @@ class Scheduler(scheduler):
 				if arg.scheduled_children:
 					if debugevents: print 'not stopping',`arg`
 					return
-				arg.playing = MMStates.PLAYED
+				arg.stopplay()
 				for ch in arg.children:
-					ch.playing = MMStates.IDLE
+					ch.reset()
 				self.sched_arcs(sctx, arg, 'end')
 			elif action == SR.SCHED_START:
-				arg.playing = MMStates.PLAYING
+				arg.startplay(sctx)
 				self.sched_arcs(sctx, arg, 'begin')
 			elif action == SR.SCHED_STOP:
 				if debugevents: print 'cleanup',`arg`
@@ -792,7 +795,7 @@ class Scheduler(scheduler):
 			self.starting_to_play = 0
 		chan = self.ui.getchannelbynode(node)
 		node.set_armedmode(ARM_PLAYING)
-		node.playing = MMStates.PLAYING
+		node.startplay(sctx)
 		self.sched_arcs(sctx, node, 'begin')
 		chan.play(node)
 	#
@@ -846,7 +849,7 @@ class Scheduler(scheduler):
 			node.set_armedmode(ARM_DONE)
 			chan.terminate(node)
 			if node.playing == MMStates.PLAYING:
-				node.playing = MMStates.PLAYED
+				node.stopplay()
 ##				node.event(self.timefunc(), 'end')
 			do_arm = 0
 			for queue in self.runqueues:
