@@ -49,7 +49,7 @@ def hasattreditor(node):
 		attreditor = node.attreditor
 	except NameError:
 		return 0 # No attribute editor active
-	return attreditor.showing
+	return attreditor.is_showing()
 
 
 # A similar interface for channels (note different arguments!).
@@ -82,7 +82,7 @@ def haschannelattreditor(context, name):
 		return 0
 	if not dict.has_key(name):
 		return 0
-	return dict[name].showing
+	return dict[name].is_showing()
 
 
 # And again a similar interface for styles.
@@ -115,7 +115,7 @@ def hasstyleattreditor(context, name):
 		return 0
 	if not dict.has_key(name):
 		return 0
-	return dict[name].showing
+	return dict[name].is_showing()
 
 
 # The "Wrapper" classes encapsulate the differences between attribute
