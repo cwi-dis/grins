@@ -1,78 +1,74 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <html>
-  <head>
-    <title>GRiNS for RealSystem G2, version 1.5 Release Notes
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.72 [en] (WinNT; U) [Netscape]">
+   <title>GRiNS for RealSystem G2, version 1.5 Release Notes
       for Windows</title>
-  </head>
+</head>
+<body>
 
-  <body>
-    <h1>GRiNS for RealSystem G2, version 1.5 Release Notes for Windows</h1>
-
-    <p>
-      These are the release notes for GRiNS for RealSystem G2, version 1.5
-      for Windows.  This file contains release notes for both the Lite and the
-      Pro versions.
-      
-      For a more up-to-date edition of
-      these notes, see <a href="http://www.oratrix.com/GRiNS/">http://www.oratrix.com/GRiNS</a>.
-    </p>
-
-    <h3>Open Issues</h3>
-    <p>
-      Using the <em>Edit Content</em> command from the <em>Edit</em>
-      menu starts the program registered for that file type.  This may
-      not always be an Editor.
-    </p>
-    <p>
-      Although it is possible to create timed anchors (Pro version
-      only), the preview player does not honor them.  The RealPlayer
-      G2, however, does.
-    </p>
-    <p>
-      There are some differences in execution between the preview
-      player and the RealPlayer G2 when looping images and text.
-    </p>
-    <p>
-      Text nodes are translated to RealText files when publishing the
-      document.  If such a text node does not have an explicit
-      duration set, the RealText file will not have one either.  No
-      duration in a RealText file means that it will have an default
-      duration of one minute, which is probably not what was intended.
-      It is better to always add a duration to text nodes.
-    </p>
-    <p>
-      If text does not fit in its region, a small red box is shown in
-      the bottom right corner of the preview player to indicate that
-      not all text is shown.
-    </p>
-    <p>
-      The SMIL standard does not permit a jump (hyperlink) into a
-      switch node.  GRiNS currently does not prevent the user from
-      creating such hyperlinks and also does not warn about them.  The
-      RealPlayer G2 does not follow such links.
-    </p>
-    <p>
-      Windows NT does not allow playback of two separate audio
-      channels simultaneously.  Windows 98 does not have this problem.
-    </p>
-    <p>
-      When the height and width in a RealText file differ from the
-      height and width of the region it is played in, the behavior of
-      the preview player in GRiNS and the RealPlayer G2 differ.  It is
-      best to make sure that the height and width in both locations
-      are the same.
-    </p>
-    <p>
-      There may be problems with certain types of TIFF files when they 
-      are converted to JPEG files during publishing.  The problems
-      only occur with TIFF files that use CMYK colors.
-    </p>
-    <p>
-      GRiNS can crash when invalid values are entered for the Clip
-      begin or Clip end properties in video nodes.  Make sure that the
-      values are valid (or empty) before trying to play back a
-      document using Clip begin or Clip end.
-    </p>
-
-  </body>
+<h1>
+GR<i>i</i>NS for RealSystem G2, version 1.5.1 Release Notes for Windows</h1>
+These are the release notes for GR<i>i</i>NS for RealSystem G2, version
+1.5.1 for Windows. This file contains release notes for both the Lite and
+the Pro versions. For a more up-to-date edition of these notes, see <a href="http://www.oratrix.com/GRiNS/">http://www.oratrix.com/GR<i>i</i>NS</a>.
+<h3>
+Open Issues</h3>
+Using the <i>Edit Content</i> command from the <i>Edit</i> menu starts
+the program registered for that file type. This may not always be an Editor.
+<p>There are some differences in execution between the preview player and
+the RealPlayer G2 when looping images and text.
+<p>Text nodes are translated to RealText files when publishing the document.
+If such a text node does not have an explicit duration set, the RealText
+file will not have one either. No duration in a RealText file means that
+it will have an default duration of one minute, which is probably not what
+was intended. It is better to always add a duration to text nodes.
+<p>If text does not fit in its region, a small red box is shown in the
+bottom right corner of the preview player to indicate that not all text
+is shown.
+<p>The SMIL standard does not permit a jump (hyperlink) into a switch node.
+GR<i>i</i>NS currently does not prevent the user from creating such hyperlinks
+and also does not warn about them. The RealPlayer G2 does not follow such
+links.
+<p>Windows NT does not allow playback of two separate audio channels simultaneously.
+Windows 98 does not have this problem.
+<p>When the height and width in a RealText file differ from the height
+and width of the region it is played in, the behavior of the preview player
+in GR<i>i</i>NS and the RealPlayer G2 differ. It is best to make sure that
+the height and width in both locations are the same.
+<p>There may be problems with certain types of TIFF files when they are
+converted to JPEG files during publishing. The problems only occur with
+TIFF files that use CMYK colors.
+<p>GR<i>i</i>NS can crash when invalid values are entered for the Clip
+begin or Clip end properties in video nodes. Make sure that the values
+are valid (or empty) before trying to play back a document using Clip begin
+or Clip end.
+<p>Partial anchors on video nodes can be created and are saved correctly,
+but during playback in GR<i>i</i>NS, the whole video region is sensitive
+instead of just the anchor area.
+<h3>
+Changes since Version 1.5</h3>
+The GR<i>i</i>NS Tutorials are now included in the GR<i>i</i>NS installer.
+<p>GR<i>i</i>NS now checks whether a .grins file was created with a compatible
+version and gives the option of going ahead or cancelling.
+<p>Start and end times on anchors are now obeyed during playback.
+<p>The background color of a RealPix Caption Region is now properly saved.
+<p>The problem of pausing and stopping audio halfway through playback which
+didn't actually stop the audio has now been fixed.
+<p>The latest version of RealNetworks RealProducer library is now used
+to convert media objects to RealMedia types.
+<p>The crash that occurred when the top-most element has a begin delay
+has now been fixed.
+<p>It is now possible to create hyperlinks to external documents from all
+media items (Pro version only).
+<p>The start and end times of anchors are now correctly read in when opening
+a SMIL file.
+<p>Anchors with no link attached are now no longer active (i.e. clickable)
+during playback (Pro version only).
+<p>The scale attribute on channels is now a pop-up list with the possible
+values.
+<p>Timed anchors are now specified using the start time and the duration,
+instead of start and end times.
+</body>
 </html>
