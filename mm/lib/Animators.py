@@ -16,17 +16,14 @@ from windowinterface import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 # conditional behaviors
 import settings
 
-debug = 0
-debugParser = 0
-
 # modules flags
 basicAnimation	= 1
 splineAnimation = settings.profileExtensions.get('SplineAnimation')
 timeManipulations = settings.profileExtensions.get('TimeManipulations')
 
-if hasattr(settings, 'activeFullSmilCss') and not settings.activeFullSmilCss:
-	windowinterface.showmessage('BasicAnimation module is dissabled.\nPlease enable settings.activeFullSmilCss flag')
-	basicAnimation = 0
+# debug flags
+debug = 0
+debugParser = 0
 
 # An Animator represents an animate element at run time.
 # An Animator entity implements interpolation taking into 
