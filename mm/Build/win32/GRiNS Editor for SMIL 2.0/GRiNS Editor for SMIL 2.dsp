@@ -769,10 +769,6 @@ SOURCE=.\M_posixpath.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pprint.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_PrefetchChannel.c
 # End Source File
 # Begin Source File
@@ -1270,10 +1266,6 @@ SOURCE=.\M_TopLevel.c
 # Begin Source File
 
 SOURCE=.\M_TopLevelDialog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_trace.c
 # End Source File
 # Begin Source File
 
