@@ -53,7 +53,7 @@ class _StructView(DisplayListView):
 		import components
 		tooltip = components.Tooltip(parent = self, id = 0)
 		tooltip.createWindow()
-		tooltip.addToolText( (0,0,600,400), 'Hierarchy View' )
+		tooltip.addTool(0, (0,0,600,400), 'Structure View')
 		self._tooltip = tooltip
 
 	def OnDestroy(self, params):
