@@ -164,9 +164,15 @@ class OptionsRadioCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
 		self._attrname=components.Control(wnd,resid[0])
-		n = len(self._attr.getoptions())
+		list = self._attr.getoptions()
+		n = len(list)
 		self._radio=[]
-		for ix in range(n):
+		if n>len(resid)-1:
+			print 'More options than radio buttons',attr.getname(),n,len(resid)-1,list
+		elif n<len(resid)-1:
+			print 'Less options than radio buttons',attr.getname(),n,len(resid)-1,list
+			
+		for ix in range(min(n,len(resid)-1)):
 			self._radio.append(components.RadioButton(wnd,resid[ix+1]))
 
 	def OnInitCtrl(self):
@@ -178,6 +184,7 @@ class OptionsRadioCtrl(AttrCtrl):
 		self._attrname.settext(label)
 		list = self._attr.getoptions()
 		n = len(list)
+		n = min(n,len(self._resid)-1)
 		for ix in range(n):
 			self._radio[ix].attach_to_parent()
 			self._radio[ix].hookcommand(self._wnd,self.OnRadio)
@@ -188,11 +195,14 @@ class OptionsRadioCtrl(AttrCtrl):
 		if val not in list:
 			val = list[0]
 		if self._initctrl:
-			for i in range(len(list)):
+			n = len(list)
+			n = min(n,len(self._resid)-1)
+			for i in range(n):
 				self._radio[i].settext(list[i])
 				self._radio[i].setcheck(0)
 			ix=list.index(val)
-			self._radio[ix].setcheck(1)
+			if ix<n:
+				self._radio[ix].setcheck(1)
 		
 	def setvalue(self, val):
 		if not self._initctrl: return
@@ -200,14 +210,18 @@ class OptionsRadioCtrl(AttrCtrl):
 		if val not in list:
 			val = list[0]
 		ix=list.index(val)
-		for i in range(len(list)):
+		n = len(list)
+		n = min(n,len(self._resid)-1)
+		for i in range(n):
 			self._radio[i].setcheck(0)
 		self._radio[ix].setcheck(1)
 
 	def getvalue(self):
 		if self._initctrl:
 			list = self._attr.getoptions()
-			for ix in range(len(list)):
+			n = len(list)
+			n = min(n,len(self._resid)-1)
+			for ix in range(n):
 				if self._radio[ix].getcheck():
 					return list[ix]	
 		return self._attr.getcurrent()
@@ -836,6 +850,10 @@ class SingleAttrPage(AttrPage):
 	def _getcontrolinfo(self):
 		n = self._attr.getname()
 		t = self._attr.gettype()
+		# manage special cases
+		if n=='layout' and len(self._attr.getoptions())>2:
+			if self.CTRLMAP_BYTYPE.has_key(t):
+				return self.CTRLMAP_BYTYPE[t]
 		if self.CTRLMAP_BYNAME.has_key(n):
 			return self.CTRLMAP_BYNAME[n]
 		if self.CTRLMAP_BYTYPE.has_key(t):
