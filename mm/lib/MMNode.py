@@ -1578,8 +1578,9 @@ class MMNode:
 					arc.qid = 0
 					self.sctx.trigger(arc)
 				return
-			if arc.getevent() is not None:
-				key = 'event', arc.getevent()
+			event = arc.getevent()
+			if event is not None:
+				key = 'event', event
 			elif arc.marker is not None:
 				key = 'marker', arc.marker
 			elif arc.dstnode.GetSchedParent().type == 'seq' and \
@@ -1591,17 +1592,9 @@ class MMNode:
 				# self is first child of seq, or child
 				# of par/excl, so event is begin
 				key = 'event', 'begin'
+			if debug: print 'add_arc: key =',`key`,self.happenings.get(key)
 			if self.happenings.has_key(key):
-				time = self.sctx.parent.timefunc()
-				t = self.happenings[key]
-				if arc.delay <= time - t:
-					if arc.dstnode is not None:
-						pdstnode = arc.dstnode.GetSchedParent()
-						if pdstnode is not None and pdstnode.playing != MMStates.PLAYING:
-							pdstnode.sched_children.append(arc)
-							return
-					arc.qid = 0
-					self.sctx.trigger(arc)
+				self.sctx.sched_arc(self, arc, event=event, marker=arc.marker, timestamp=self.happenings[key])
 
 	def event(self, time, event, anchorname = None):
 		if anchorname is None:
