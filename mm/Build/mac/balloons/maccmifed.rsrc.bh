@@ -93,8 +93,8 @@ DIALOG 619 ArcInfoDialog
 END-DIALOG
 DIALOG 620 NodeInfoDialog
 2.1 Enter the name of the node here
-3.1 With this popup you can select whether the node is a media item, parallel or sequential node, etc.
-4.1 For media item nodes you can select the channel here. For SMIL documents, each channel is mapped to a SMIL region
+3.* With this popup you can select whether the node is a media item, parallel or sequential node, etc.
+4.* For media item nodes you can select the channel here. For SMIL documents, each channel is mapped to a SMIL region
 5.1 Press this button to cancel the changes made above and close the dialog
 6.1 Press this button to cancel the changes made above, but keep the dialog open
 7.1 Press this button to open an attribute editor for this node
@@ -118,7 +118,7 @@ DIALOG 623 Node Attrs dialog
 12.1 Press this to apply ALL changes made and close the dialog
 13.1 Enter the value for the attribute here. Multiple values like coordinates should be separated by spaces. Use "." for decimal point
 14.1 Press this button to select a local file for which you want the URL to be used
-15.1 This attribute can have a number of fixed values. Select the value you want with this popup
+15.* This attribute can have a number of fixed values. Select the value you want with this popup
 END-DIALOG
 DIALOG 626 LayoutViewDialog
 1.2 ´stt´ Layouts
@@ -139,5 +139,5 @@ DIALOG 627 NewChannelDialog
 1.1 Press this button to create the new channel
 2.1 Press this button to cancel the whole channel creation operation
 3.1 Enter the name of the channel here
-5.1 Select the type of the channel here. Channel types are required in CMIF but not supported in SMIL, where each channel is mapped to a region
+5.* Select the type of the channel here. Channel types are required in CMIF but not supported in SMIL, where each channel is mapped to a region
 END-DIALOG
