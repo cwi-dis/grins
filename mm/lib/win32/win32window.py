@@ -2012,6 +2012,7 @@ class DrawContext:
 		self._ixDragHandle = 0
 		self._capture = None
 		self._curtool = SelectTool(self)
+		self._listeners = []
 
 	def reset(self):
 		self._last = 0, 0
@@ -2050,15 +2051,20 @@ class DrawContext:
 	def update(self, rc=None):
 		pass
 	
+	def addListener(self, entity):
+		self._listeners.append(entity)
+
 	def moveSelectionTo(self, point):
 		xp, yp = point
 		xl, yl = self._last
 		if self._selected:
 			self._selected.moveBy((xp-xl, yp-yl))
+			self.__notifyListeners(self._selected)
 	
 	def moveSelectionHandleTo(self, point):
 		if self._selected:
 			self._selected.moveDragHandleTo(self._ixDragHandle, point)
+			self.__notifyListeners(self._selected)
 	
 	def onLButtonDown(self, flags, point):
 		self._curtool.onLButtonDown(flags, point)
@@ -2068,6 +2074,10 @@ class DrawContext:
 
 	def onMouseMove(self, flags, point):
 		self._curtool.onMouseMove(flags, point)
+	
+	def __notifyListeners(self, shape):
+		for obj in self._listeners:
+			obj.onShapeChange(shape)
 				
 class Shape:
 	def getDragHandle(self, ix):
