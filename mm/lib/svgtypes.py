@@ -1123,7 +1123,7 @@ class SVGPoints:
 			L = splitlist(str)
 			n = len(L)
 			i = 0
-			while i<n-2:
+			while i<n-1:
 				try:
 					x, y = math.floor(0.5+string.atof(L[i])), math.floor(0.5+string.atof(L[i+1]))
 					x, y = int(x), int(y)
