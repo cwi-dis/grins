@@ -181,7 +181,15 @@ class EditableMMNode(MMNode.MMNode):
 					 'actuate',
 					 'ashape',
 					 'fragment',
-					 'tabindex'])
+					 'tabindex',
+					 'show',
+					 'sourcePlaystate',
+					 'destinationPlaystate',
+					 'external',
+					 'sourceLevel',
+					 'destinationLevel',
+					 'target',
+					 ])
 			if features.EXPORT_REAL in features.feature_set:
 				namelist.append('sendTo')
 			return namelist

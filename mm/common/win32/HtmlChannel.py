@@ -42,7 +42,6 @@ import MMAttrdefs
 # url parsing
 import os, ntpath, urllib, MMurl, urlparse
 
-from AnchorDefs import *
 import sys, string
 #import WMEVENTS
 

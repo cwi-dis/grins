@@ -1551,10 +1551,10 @@ class HierarchyView(HierarchyViewDialog):
 		self._copyattrdict(node, newnode, copylist, editmgr=em)
 
 		# move hyperlinks to node to the new parent
-		for n1,n2,dir,ltype,stype,dtype in ctx.hyperlinks.finddstlinks(node):
+		for n1,n2,dir in ctx.hyperlinks.finddstlinks(node):
 			# we know that n2 is node
-			em.dellink((n1,n2,dir,ltype,stype,dtype))
-			em.addlink((n1,newnode,dir,ltype,stype,dtype))
+			em.dellink((n1,n2,dir))
+			em.addlink((n1,newnode,dir))
 
 ##		# This is another.
 ##		url = MMAttrdefs.getattr(node, 'file')
@@ -2336,14 +2336,14 @@ class HierarchyView(HierarchyViewDialog):
 
 		# Hyperlinks..
 		#--------------
-		for n1,n2,dir,ltype,stype,dtype in self.root.context.hyperlinks.findalllinks(child, None):
+		for n1,n2,dir in self.root.context.hyperlinks.findalllinks(child, None):
 			if n1 is child:
-				em.dellink((n1,n2,dir,ltype,stype,dtype))
-				em.addlink((parent,n2,dir,ltype,stype,dtype))
+				em.dellink((n1,n2,dir))
+				em.addlink((parent,n2,dir))
 				n1 = parent
 			if n2 is child:
-				em.dellink((n1,n2,dir,ltype,stype,dtype))
-				em.addlink((n1,parent,dir,ltype,stype,dtype))
+				em.dellink((n1,n2,dir))
+				em.addlink((n1,parent,dir))
 
 		child_type=child.type
 		child_children = child.children

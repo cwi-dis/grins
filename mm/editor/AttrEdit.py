@@ -7,8 +7,7 @@ import ChannelMime
 from MMExc import *			# exceptions
 import MMNode
 from MMTypes import *
-from AnchorDefs import *		# ATYPE_*
-from Hlinks import DIR_1TO2, TYPE_JUMP, A_SRC_STOP, A_DEST_PLAY
+from Hlinks import DIR_1TO2, TYPE_JUMP, TYPE_FORK, A_SRC_PLAY, A_SRC_STOP, A_DEST_PLAY
 import features
 import string
 import os
@@ -233,9 +232,11 @@ class Wrapper: # Base class -- common operations
 	def getcontext(self):
 		return self.context
 	def register(self, object):
+		import settings
 		self.editmgr.register(object, want_focus=1)
 		settings.register(object)
 	def unregister(self, object):
+		import settings
 		self.editmgr.unregister(object)
 		settings.unregister(object)
 	def transaction(self):
@@ -470,6 +471,54 @@ class PrefetchWrapper(NodeWrapper):
 		return 'Properties of prefetch node %s' % name
 
 class AnchorWrapper(NodeWrapper):
+	def attrnames(self):
+		return self.node.getallattrnames(1) + ['.href']
+
+	def getattr(self, name):
+		if name == '.href':
+			links = self.context.hyperlinks.findsrclinks(self.node)
+			if not links:
+				return None
+			link = links[0]	# first hyperlink
+			return link[1]	# string for external, MMNode instance for internal
+		return NodeWrapper.getattr(self, name)
+
+	def getvalue(self, name):
+		if name == '.href':
+			links = self.context.hyperlinks.findsrclinks(self.node)
+			if not links:
+				return None
+			link = links[0]	# first hyperlink
+			return link[1]	# string for external, MMNode instance for internal
+		return NodeWrapper.getvalue(self, name)
+
+	def getdefault(self, name):
+		if name == '.href':
+			return None
+		return NodeWrapper.getdefault(self, name)
+
+	def setattr(self, name, value):
+		if name == '.href':
+			for link in self.context.hyperlinks.findsrclinks(self.node):
+				self.editmgr.dellink(link)
+			self.editmgr.addlink((self.node, value, DIR_1TO2))
+			return
+		NodeWrapper.setattr(self, name, value)
+
+	def delattr(self, name):
+		if name == '.href':
+			for link in self.context.hyperlinks.findsrclinks(self.node):
+				self.editmgr.dellink(link)
+			return
+		NodeWrapper.delattr(self, name)
+
+	def getdef(self, name):
+		if name == '.href':
+			return (('any', None), None,
+				'Hyperlink destination', 'href',
+				'Hyperlink destination', 'raw', flags.FLAG_ALL)
+		return NodeWrapper.getdef(self, name)
+
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
 		if name:
@@ -874,16 +923,20 @@ class PreferenceWrapper(Wrapper):
 	def setwaiting(self):
 		pass
 
-	def register(self, object):
+	def registers(self, object):
+		import settings
 		settings.register(object)
 
 	def unregister(self, object):
+		import settings
 		settings.unregister(object)
 
 	def transaction(self):
+		import settings
 		return settings.transaction()
 
 	def commit(self):
+		import settings
 		settings.commit()
 
 	def rollback(self):
@@ -1257,7 +1310,6 @@ class AttrEditor(AttrEditorDialog):
 		pass
 					
 	def checkurl(self, url):
-		import settings
 		if not features.lightweight:
 			return 1
 		#if self.wrapper.__class__ is SlideWrapper:
@@ -1423,6 +1475,7 @@ class AttrEditorField(AttrEditorDialogField):
 
 	def mustshow(self):
 		# Return true if we should show this attribute
+		import settings
 		advflags = self.attrdef[6]
 		can_show_advanced = \
 			features.ADVANCED_PROPERTIES in features.feature_set and \
@@ -2378,8 +2431,6 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		PopupAttrEditorFieldWithUndefined.__init__(self, attreditor, name, label)
 
 	def getoptions(self):
-		import settings
-
 		# for the full version, any region may be selected: for now, it's the only case supported
 		# (for other version, we have to test the new 'subtype' channel attribute)
 		ctx = self.wrapper.context
@@ -2484,8 +2535,6 @@ class RegionDefaultAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		PopupAttrEditorFieldWithUndefined.__init__(self, attreditor, name, label)
 
 	def getoptions(self):
-		import settings
-
 		ctx = self.wrapper.context
 		node = self.wrapper.node
 
@@ -2551,7 +2600,6 @@ class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	__nocaptions = 'No captions'
 
 	def getoptions(self):
-		import settings
 		list = []
 		ctx = self.wrapper.context
 		chlist = ctx.compatchannels(None, 'RealText')
@@ -2751,6 +2799,12 @@ class AnchorCoordsAttrEditorField(AttrEditorField):
 				values.append(v)
 		return values
 
+class HrefAttrEditorField(AttrEditorField):
+	def valuerepr(self, value):
+		return value
+	def parsevalue(self, str):
+		return str
+
 DISPLAYERS = {
 	'acoords': AnchorCoordsAttrEditorField,
 	'audiotype': RMAudioAttrEditorField,
@@ -2795,6 +2849,7 @@ DISPLAYERS = {
 	'units': UnitsAttrEditorField,
 	'usergroup': UsergroupAttrEditorField,
 	'videotype': RMVideoAttrEditorField,
+	'href': HrefAttrEditorField,
 }
 
 TYPEDISPLAYERS = {

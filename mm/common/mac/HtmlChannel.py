@@ -4,7 +4,6 @@ __version__ = "$Id$"
 # Macintosh HTML channel.
 #
 import Channel
-from AnchorDefs import *
 import string
 import MMAttrdefs
 import sys

@@ -1,7 +1,6 @@
 __version__ = "$Id$"
 
 from Channel import ChannelWindow, error
-from AnchorDefs import *
 import string
 import StringStuff
 import MMAttrdefs

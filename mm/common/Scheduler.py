@@ -10,7 +10,6 @@ import MMNode
 from MMTypes import *
 from ArmStates import *
 from HDTL import HD, TL
-from AnchorDefs import *
 import SR
 import settings
 import features
