@@ -281,7 +281,8 @@ class PlayerCommon:
 				self.__iChannelList.append(chan)
 				self.newichannel(chname, chan)
 				# reinitialize the target node
-				node.targetnode = None
+				# please override it!!!
+				#node.targetnode = None
 					
 	def clearInternalChannels(self):
 		# for animate par node, we have to manage also dynamicly the right animate nodes
