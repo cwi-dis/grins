@@ -92,17 +92,19 @@ class LayoutView(LayoutViewDialog):
 		self.setotherlist(ochanlist, curother)
 		commandlist = [NEW_LAYOUT(callback = (self.new_callback, ())),
 			       CLOSE_WINDOW(callback = (self.hide, ()))]
-		if self.curlayout is not None and self.curlayout != ALL_LAYOUTS:
+		if self.curlayout is not None and \
+		   self.curlayout != ALL_LAYOUTS:
 			commandlist.append(DELETE(callback = (self.delete_callback, ())))
 			commandlist.append(NEW_CHANNEL(callback = (self.new_channel_callback, ())))
 			commandlist.append(RENAME(callback = (self.rename_callback, ())))
 			if self.curchannel is not None:
 				commandlist.append(REMOVE_CHANNEL(callback = (self.remove_callback, ())))
-				commandlist.append(ATTRIBUTES(callback = (self.attr_callback, ())))
 			if self.curother is not None:
 				commandlist.append(ADD_CHANNEL(callback = (self.add_callback, ())))
-		if self.curlayout == ALL_LAYOUTS:
+		elif self.curlayout == ALL_LAYOUTS:
 			commandlist.append(NEW_CHANNEL(callback = (self.new_channel_callback, ())))
+		if self.curchannel is not None:
+			commandlist.append(ATTRIBUTES(callback = (self.attr_callback, ())))
 		self.setcommandlist(commandlist)
 		self.toplevel.player.setlayout(self.curlayout, self.curchannel)
 
