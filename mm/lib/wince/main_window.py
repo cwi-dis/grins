@@ -29,13 +29,10 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self._splash = None
 
 	def __getattr__(self, attr):
-		try:	
-			if attr != '__dict__':
-				o = self.__dict__['_obj_']
-				if o:
-					return getattr(o, attr)
-		except KeyError:
-			pass
+		if attr != '__dict__':
+			o = self.__dict__.get('_obj_')
+			if o is not None:
+				return getattr(o, attr)
 		raise AttributeError, attr
 
 	def create(self):
@@ -204,7 +201,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 	# Offscreen painting
 	# 
 	def OnPaint(self, params):
-		if self._obj_ is None:
+		if self.__dict__['_obj_'] is None:
 			return 0
 		ps = self.BeginPaint()
 		hdc, eraceBg, rcPaint  = ps[:3]
