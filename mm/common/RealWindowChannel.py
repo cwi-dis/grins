@@ -13,19 +13,18 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.__rc = None
 		self.__override_url = None
+		self.__eat_armdone = 0
+		self.__eat_playdone = 0
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def do_arm(self, node, same = 0):
-		if self.__rc is None:
-			self.errormsg(node, 'No playback support for Real Media in this version')
-			return 1
-		if not self.__rc.prepare_player(node):
+		if self.__rc is None or not self.__rc.prepare_player(node):
 			import MMAttrdefs
 			name = MMAttrdefs.getattr(node, 'name')
 			if not name:
 				name = '<unnamed node>'
 			chtype = self.__class__.__name__[:-7] # minus "Channel"
-			msg = 'Warning:\nNo playback support for %s on this system\n' \
+			msg = 'Warning:\nNo playback support for %s\n' \
 			      'node %s on channel %s' % (chtype, name, self._name)
 			parms = self.armed_display.fitfont('Times-Roman', msg)
 			w, h = self.armed_display.strsize(msg)
@@ -39,7 +38,7 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 			return 0
 		try:
 			self.__rc = RealChannel.RealChannel(self)
-		except 'xxx':
+		except:
 			self.__rc = None
 		return 1
 			
@@ -88,16 +87,37 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 
 	def parallel_arm(self, node, url=None):
 		"""Used by RealPix channel to play RealText captions in parallel"""
+		self.__eat_armdone = 1
 		self.arm(node)
 		
 	def parallel_play(self, node, url=None):
 		# XXXX Is this safe, i.e. can we call playdone?
+		self.__eat_playdone = 1
+##		self.__eat_armdone = 1
 		self.__override_url = url
 		self.play(node)
+##		self.__eat_armdone = 0
 			
 	def parallel_stopplay(self, node):
 		self.stopplay(node)
+		self.__eat_playdone = 0
 
 	def parallel_stoparm(self):
 		self.stoparm()
-
+		self.__eat_armdone = 0
+		
+	def armdone(self):
+		saved_syncarm = self.syncarm
+		if self.__eat_armdone:
+			self.__eat_armdone = 0
+			self.syncarm = 1
+		Channel.ChannelWindowAsync.armdone(self)
+		self.syncarm = saved_syncarm
+		
+	def playdone(self, outside):
+		saved_syncplay = self.syncplay
+		if self.__eat_playdone:
+			self.__eat_playdone = 0
+			self.syncplay = 1
+		Channel.ChannelWindowAsync.playdone(self, outside)
+		self.syncplay = saved_syncplay

@@ -1513,15 +1513,15 @@ class ChannelWindowAsync(ChannelWindow):
 		self.play_0(node)
 		if self._is_shown and node.ShouldPlay() \
 		   and self.window and not self.syncplay:
-			try:
-				winoff = self.winoff
-				winoff = MMAttrdefs.getattr(node, 'base_winoff')
-			except (AttributeError, KeyError):
-				pass
-			else:
-				if winoff != self.winoff:
-					self.hide()
-					self.show()
+##			try:
+##				winoff = self.winoff
+##				winoff = MMAttrdefs.getattr(node, 'base_winoff')
+##			except (AttributeError, KeyError):
+##				pass
+##			else:
+##				if winoff != self.winoff:
+##					self.hide()
+##					self.show()
 			self.check_popup()
 			if self.armed_display.is_closed():
 				# assume that we are going to get a
