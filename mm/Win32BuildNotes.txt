@@ -1,12 +1,27 @@
-0. update editor\win32\patchlevel.py
-1. cvs update
-2. cd Build\win32\GRiNSedSMIL2Real
+Editor build:
+
+0. update build number in editor\win32\patchlevel.py
+1. cvs update -d (don't forget python\Extensions)
+2. cd Build\win32\GRiNSedSMIL2Real and/or Build\win32\GRiNS Editor for SMIL 2.0
 3. execute domkp.bat
 4. update file list in Visual Studio (GRiNSedSMIL2Real -> Source
-   Files)
+   Files and/or GRiNS SMIL Boston -> Source Files)
 5. build the project
 6. update destination file in installer
    (Build\win32\GRiNSedSMIL2Real.wse, Build Settings -> Installation
-   EXE Name)
+   EXE Name and/or Build\win32\GRiNSed SMIL Boston.wse, Build Settings
+   -> Installation EXE Name)
 7. compile installation
 8. distribute installation
+9. cvs commit the changed .wse and .dsp files
+10. cd back to top level
+11. cvs tag the source tree with a name similar to the other tag names
+    (something like GRiNS-Player107-Editor109-14112001, but change
+    build numbers and date, and remove Player or Editor if the build
+    is only for one or the other).
+
+Player build:
+In the above, change editor\win32\patchlevel.py to
+grins\win32\patchlevel.py; execute domkp.bat in Build\win32\GRiNS
+Player for SMIL 2.0; update VC file list in GRiNS Player SMIL2
+project; change installation name in GRiNSPlayer SMIL2.wse.
