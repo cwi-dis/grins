@@ -2899,7 +2899,21 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if u_state not in ('true', 'false'):
 			self.syntax_error('invalid defaultState attribute value')
 		override = attributes.get('override', 'hidden')
-		if override not in ('visible', 'hidden'):
+		nsdict = self.getnamespace()
+		if override in ('allowed', 'not-allowed'):
+			for ns in nsdict.values():
+				if ns in limited['viewport']:
+					break
+				else:
+					self.syntax_error('allowed/not-allowed deprecated in favor of visible/hidden')
+			override = {'allowed':'visible', 'not-allowed':'hidden'}[override]
+		elif override in ('visible', 'hidden'):
+			for ns in nsdict.values():
+				if ns in limited['topLayout']:
+					break
+				else:
+					self.syntax_error('visible/hidden not available in old namespace')
+		else:
 			self.syntax_error('invalid override attribute value')
 		uid = attributes.get('uid', '')
 		self.__custom_tests[id] = title, u_state == 'true', override, uid
