@@ -255,6 +255,10 @@ SOURCE=.\M_bisect.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_calendar.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_Channel.c
 # End Source File
 # Begin Source File
@@ -448,6 +452,14 @@ SOURCE=.\M_LayoutViewDialog.c
 # Begin Source File
 
 SOURCE=.\M_license.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_LicenseDialog.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_licparser.c
 # End Source File
 # Begin Source File
 
