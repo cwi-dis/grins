@@ -62,6 +62,11 @@ mediamarker = re.compile(		# id-ref ".marker(" name ")"
 	r'(?P<id>' + xmllib._Name + r')\.'			# ID-ref "."
 	r'marker\(' + _opS + r'(?P<markername>' + xmllib._Name + r')' + _opS + r'\)' + _opS + r'$'	# "marker(...)"
 	)
+accesskey = re.compile(			# "accessKey(" character ")"
+	_opS +
+	r'accessKey\((?P<character>.)\)' +
+	_opS + r'$'
+	)
 wallclock = re.compile(			# "wallclock(" wallclock-value ")"
 	r'wallclock\((?P<wallclock>[^()]+)\)$'
 	)
@@ -331,6 +336,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						continue
 					marker = res.group('markername')
 					list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode, marker=marker, delay=offset or 0))
+					continue
+				res = accesskey.match(val)
+				if res is not None:
+					if not boston:
+						boston = 'accessKey'
+					char = res.group('character')
+					list.append(MMNode.MMSyncArc(node, attr, accesskey=char, delay=offset or 0))
 					continue
 				res = wallclock.match(val)
 				if res is not None:
