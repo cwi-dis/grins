@@ -64,11 +64,13 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Cut', 'X', CUT),
 		(FLAG_ALL, ENTRY, 'Copy', 'C', COPY),
+		(FLAG_ALL, ENTRY, 'Copy Properties...', (kMenuShiftModifier, 'C'), COPYPROPERTIES),
 		(FLAG_ALL, ENTRY, 'Paste', 'V', PASTE),
 		(FLAG_ALL, CASCADE, 'Paste Special', (
 			(FLAG_ALL, ENTRY, 'Before', (kMenuOptionModifier, 'V'), PASTE_BEFORE),
 			(FLAG_ALL, ENTRY, 'Within', None, PASTE_UNDER),
 			)),
+		(FLAG_ALL, ENTRY, 'Paste Properties', (kMenuShiftModifier, 'V'), PASTEPROPERTIES),
 		(FLAG_ALL, ENTRY, 'Delete', (kMenuNoCommandModifier, '\177', 0x0a), DELETE),
 		
 		(FLAG_ALL, SEP,),

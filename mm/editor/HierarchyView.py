@@ -110,6 +110,8 @@ class HierarchyView(HierarchyViewDialog):
 			CLOSE_WINDOW(callback = (self.hide, ())),
 
 			COPY(callback = (self.copycall, ())),
+			COPYPROPERTIES(callback = (self.copypropertiescall, ())),
+			PASTEPROPERTIES(callback = (self.pastepropertiescall, ())),
 
 			ATTRIBUTES(callback = (self.attrcall, ())),
 			CONTENT(callback = (self.editcall, ())),
@@ -906,6 +908,15 @@ class HierarchyView(HierarchyViewDialog):
 			for i in n:
 				i.Destroy()
 
+	######################################################################
+	# Copy and paste properties of a node (or multiple nodes)
+	def copypropertiescall(self):
+		self.focusnode.copypropertiescall()
+		
+	def pastepropertiescall(self):
+		for node in self.get_multi_nodes():
+			node.pastepropertiescall()
+	
 	######################################################################
 	# Cut a node.
 	def cutcall(self):

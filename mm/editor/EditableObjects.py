@@ -61,6 +61,8 @@ class EditableMMNode(MMNode.MMNode):
 		# Non-specific standard commands.
 		return [
 			COPY(callback = (self.copycall, ())),
+			COPYPROPERTIES(callback = (self.copypropertiescall, ())),
+			PASTEPROPERTIES(callback = (self.pastepropertiescall, ())),
 			ATTRIBUTES(callback = (self.attrcall, ())),
 			CONTENT(callback = (self.editcall, ())),
 			PLAYNODE(callback = (self.playcall, ())),
@@ -277,7 +279,6 @@ class EditableMMNode(MMNode.MMNode):
 			n.Destroy()	# Wha ha ha ha. <evil grin>
 		copyme = self.DeepCopy()
 		em.setclip('node', copyme)
-
 ##	def createbeforecall(self, chtype=None):
 ##		assert 0
 
@@ -372,7 +373,18 @@ class EditableMMNode(MMNode.MMNode):
 				return
 			self._insertnode(pasteme, index)
 			em.commit()
+		
+	def copypropertiescall(self):
+		if not hasattr(windowinterface, 'mmultchoice'):
+			return
+		attrlist = ['foo', 'bar', 'bletch']
+		defattrlist = ['foo', 'bletch']
+		copylist = windowinterface.mmultchoice('Select properties to copy', attrlist, defattrlist)
+		print copylist
 
+	def pasteproperties(self):
+		return
+		
 	def take(self, othernode, index):
 		print "DEBUG: take"
 		# othernode is a leafnode or sub-tree that I'm going to grab and put under me.
