@@ -122,21 +122,11 @@ class AttrEditorDialogField:
 			if val not in list:
 				val = list[0]
 			self.__list = list
-			if len(list) > 30:
-				# list too long for option menu
-				self.__type = 'option-button'
-				w = form.Button(val,
-						(self.__option_callback, ()),
-						left = left, right = right,
-						bottom = bottom, top = top,
-						tooltip = 'Select an entry from the list of possibilities')
-				self.__label = val
-			else:
-				self.__type = 'option-menu'
-				w = form.OptionMenu(None, list,
-						    list.index(val), None,
-						    top = top, bottom = bottom,
-						    left = left, right = right)
+			self.__type = 'option-menu'
+			w = form.OptionMenu(None, list,
+					    list.index(val), None,
+					    top = top, bottom = bottom,
+					    left = left, right = right)
 		elif t == 'file':
 			w = form.SubWindow(top = top, bottom = bottom,
 					   left = left, right = right)
@@ -168,17 +158,6 @@ class AttrEditorDialogField:
 			del self.__text
 		del self.__widget
 		del self.__type
-
-	def __option_callback(self):
-		"""Callback called when a new option is to be selected."""
-		_MySelectionDialog(self.getlabel(), self.__label,
-				   self.getoptions(),
-				   self.__option_done_callback)
-
-	def __option_done_callback(self, value):
-		"""Callback called when a new option was selected."""
-		self.__widget.setlabel(value)
-		self.__label = value
 
 	def getvalue(self):
 		"""Return the current value of the attribute.
