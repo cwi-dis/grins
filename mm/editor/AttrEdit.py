@@ -398,9 +398,11 @@ class NodeWrapper(Wrapper):
 			'begin', 'duration', 'loop', 'repeatdur', # Time stuff
 			'restart',
 			('clipbegin',), ('clipend',),	# More time stuff
+			('fill',),
 			'title', 'abstract', ('alt',), ('longdesc',), 'author',
 			'copyright', 'comment',
 			'layout', 'u_group',
+			('fgcolor',),
 			('mimetype',),	# XXXX Or should this be with file?
 			'system_audiodesc', 'system_bitrate',
 			'system_captions', 'system_cpu',
@@ -412,6 +414,9 @@ class NodeWrapper(Wrapper):
 		ctype = self.node.GetChannelType()
 		if ntype in leaftypes or features.compatibility == features.CMIF:
 			namelist[1:1] = ['channel']
+		if ntype in leaftypes or \
+		   self.context.attributes.get('project_boston', 0):
+			namelist.append('fill')
 		if ntype == 'bag':
 			namelist.append('bag_index')
 		if ntype == 'par':
@@ -1175,6 +1180,8 @@ class AttrEditor(AttrEditorDialog):
 				C = BitrateAttrEditorField
 			elif displayername == 'bitrate3':
 				C = BitrateAttrEditorFieldWithDefault
+			elif displayername == 'fill':
+				C = FillAttrEditorFieldWithDefault
 			elif displayername == 'quality':
 				C = QualityAttrEditorField
 			elif displayername == 'chanpos':
@@ -1539,12 +1546,12 @@ class FloatAttrEditorField(AttrEditorField):
 	type = 'float'
 
 	def valuerepr(self, value):
-		if value == -1 and self.getname() == 'duration':
+		if value == -1 and self.getname() in ('duration', 'repeatdur'):
 			return 'indefinite'
 		return AttrEditorField.valuerepr(self, value)
 
 	def parsevalue(self, str):
-		if str == 'indefinite' and self.getname() == 'duration':
+		if str == 'indefinite' and self.getname() in ('duration', 'repeatdur'):
 			return -1.0
 		return AttrEditorField.parsevalue(self, str)
 
@@ -1696,13 +1703,14 @@ class ColorAttrEditorField(TupleAttrEditorField):
 class PopupAttrEditorField(AttrEditorField):
 	# A choice menu choosing from a list -- base class only
 	type = 'option'
+	default = DEFAULT
 
 	def getoptions(self):
 		# derived class overrides this to defince the choices
-		return [DEFAULT]
+		return [self.default]
 
 	def parsevalue(self, str):
-		if str == DEFAULT:
+		if str == self.default:
 			return None
 		return str
 
@@ -1710,7 +1718,7 @@ class PopupAttrEditorField(AttrEditorField):
 		if value is None:
 			if self.nodefault:
 				return self.getdefault()
-			return DEFAULT
+			return self.default
 		return value
 
 class PopupAttrEditorFieldWithUndefined(PopupAttrEditorField):
@@ -1844,6 +1852,18 @@ class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
 
 	def getoptions(self):
 		return [self.default] + self.__values
+
+class FillAttrEditorFieldWithDefault(PopupAttrEditorField):
+	__values = ['remove', 'freeze']
+	__values_boston = ['hold', 'transition']
+	default = 'Default'
+	nodefault = 0
+
+	def getoptions(self):
+		v = [self.default] + self.__values
+		if self.wrapper.context.attributes.get('project_boston', 0):
+			v = v + self.__values_boston
+		return v
 
 ##class SubtitleOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
 ##	__values = ['subtitle', 'overdub']
