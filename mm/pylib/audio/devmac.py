@@ -65,7 +65,7 @@ class AudioDevMAC:
 		while self.__gc and \
 			  self.getfilled() + nframes > self.__qsize:
 			time.sleep(0.1)
-		h1 = struct.pack('llhhllBbl',
+		h1 = struct.pack('llHhllBbl',
 			id(data)+MacOS.string_id_to_buffer,	# ARGH!!!  HACK, HACK!
 			self.__nchannels,
 			self.__outrate, 0,
