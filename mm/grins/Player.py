@@ -35,7 +35,6 @@ class Player(PlayerCore, PlayerDialog):
 		self.userstarttime = 0
 		self.commandlist = [
 			CHANNELS(callback = self.channel_callback),
-			USERGROUPS(callback = self.usergroup_callback),
 			SCHEDDUMP(callback = (self.scheduler.dump, ())),
 			MAGIC_PLAY(callback = (self.magic_play, ())),
 			]
@@ -98,7 +97,6 @@ class Player(PlayerCore, PlayerDialog):
 		PlayerDialog.preshow(self)
 		self.aftershow = afterfunc
 		self.makechannels()
-		self.makeugroups()
 		self.fullreset()
 		self.showing = 1
 		self.showchannels()
@@ -171,17 +169,6 @@ class Player(PlayerCore, PlayerDialog):
 			# start playing if stopped
 			self.play_callback()
 
-	def usergroup_callback(self, name):
-		self.toplevel.setwaiting()
-		title, u_state, override, uid = self.context.usergroups[name]
-		if u_state == 'RENDERED':
-			u_state = 'NOT_RENDERED'
-		else:
-			u_state = 'RENDERED'
-		self.context.usergroups[name] = title, u_state, override, uid
-		self.setusergroup(name, u_state == 'RENDERED')
-		self.root.ResetPlayability()
-
 	def channel_callback(self, name):
 		import settings
 		if settings.get('cmif'):
@@ -246,15 +233,3 @@ class Player(PlayerCore, PlayerDialog):
 			channels.append((name, self.channels[name].is_showing()))
 		channels.sort()
 		self.setchannels(channels)
-
-	def makeugroups(self):
-		import settings
-		ugroups = []
-		showhidden = settings.get('showhidden')
-		for name, (title, u_state, override, uid) in self.context.usergroups.items():
-			if not showhidden and override != 'visible':
-				continue
-			if not title:
-				title = name
-			ugroups.append((name, title, u_state == 'RENDERED'))
-		self.setusergroups(ugroups)
