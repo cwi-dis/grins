@@ -575,7 +575,7 @@ class ColorAttrEditorField(TupleAttrEditorField):
 	def parsevalue(self, str):
 		import string
 		str = string.strip(str)
-		if str[0] == '#':
+		if str[:1] == '#':
 			rgb = []
 			if len(str) == 4:
 				for i in range(1, 4):
