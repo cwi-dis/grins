@@ -181,7 +181,7 @@ class: 2
 type: 0
 box: 230.000000 30.000000 50.000000 20.000000
 boxtype: 2
-colors: 0 1
+colors: 0 3
 alignment: 4
 style: 1
 size: 8.000000
@@ -208,7 +208,7 @@ argument:
 
 --------------------
 class: 11
-type: 5
+type: 1
 box: 190.000000 130.000000 90.000000 20.000000
 boxtype: 1
 colors: 47 47
@@ -216,9 +216,9 @@ alignment: 4
 style: 0
 size: 8.000000
 lcol: 0
-label: Delete timing
-name: deltimingbutton
-callback: deltiming_callback
+label: Calculate timing
+name: calctimingbutton
+callback: calctiming_callback
 argument: 0
 
 --------------------
