@@ -99,7 +99,17 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		context = self.root.GetContext()
 		parseErrors = context.getParseErrors()
 		if parseErrors != None:
-			message = "The source document contains "+`parseErrors.getErrorNumber()`+" errors : \n\n" + \
+			if parseErrors.getType() == 'fatal':
+				message = 'The source document contains an unrecoverable error\n\n' + \
+					  parseErrors.getFormatedErrorsMessage(5) + \
+					  '\nDo you want to edit the source file?'
+				allowCancel = 0
+				ret = windowinterface.GetYesNo(message, self.window)
+				if ret != 0:
+					raise MSyntaxError
+				return
+			else:
+				message = "The source document contains "+`parseErrors.getErrorNumber()`+" errors : \n\n" + \
 					  parseErrors.getFormatedErrorsMessage(5) + \
 					  "\nDo you wish to accept GRiNS' automatic fixes?"
 			if allowCancel:
@@ -110,11 +120,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				# accept the errors automatically fixed by GRiNS
 				context.setParseErrors(None)
 			elif ret == 1: # no
-				# default treatement: accept errors and don't allow to edit another view
+				# default treatment: accept errors and don't allow to edit another view
 				pass
 			else: # cancel: raise an error: it will be intercepted
-				raise MSyntaxError			
-		
+				raise MSyntaxError
+
 	# detect the errors/fatal errors
 	# if it's a fatal error, then load an empty document to keep GRiNS in a stable state
 	def checkParseErrors(self, root):
