@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-# Main program for the CMIF editor.
+# Main program for the CMIF player.
 
 import sys
 import os
@@ -166,6 +166,10 @@ def main():
 	else:
 		splash.splash(version = 'GRiNS ' + version)
 
+	import Help
+	if hasattr(Help, 'sethelpprogram'):
+		Help.sethelpprogram('player')
+		
 	if ('-q', '') in opts:
 		sys.stdout = open('/dev/null', 'w')
 	elif __debug__:

@@ -282,6 +282,9 @@ def main():
 	#
 	stats = 0
 	#
+	import Help
+	if hasattr(Help, 'sethelpprogram'):
+		Help.sethelpprogram('editor')
 	for opt, arg in opts:
 		if opt == '-s':
 			stats = 1
