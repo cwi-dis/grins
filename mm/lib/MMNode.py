@@ -87,8 +87,8 @@ class MMNodeContext:
 		import MMNode
 		for name, dict in list:
 			c = MMNode.MMChannel(self, name)
-## 			for key, val in dict.items():
-## 				c[key] = val
+##			for key, val in dict.items():
+##				c[key] = val
 			c.attrdict = dict # we know the internals...
 			self.channeldict[name] = c
 			self.channelnames.append(name)
@@ -125,7 +125,7 @@ class MMNodeContext:
 		if not 0 <= i <= len(self.channelnames):
 			raise CheckError, 'copychannel: invalid position'
 		if not orig in self.channelnames:
-		        raise CheckError, 'copychannel: non-existing original'
+			raise CheckError, 'copychannel: non-existing original'
 		c = MMChannel(self, name)
 		orig_i = self.channelnames.index(orig)
 		orig_ch = self.channels[orig_i]
@@ -182,6 +182,10 @@ class MMNodeContext:
 			n = self.uidmap[uid]
 			if n.GetRawAttrDef('channel', None) == oldname:
 				n.SetAttr('channel', newname)
+		# Patch references to this channel in other channels
+		for ch in self.channels:
+			if ch.get('base_window') == oldname:
+				ch['base_window'] = newname
 
 	def registergetchannelbynode(self, func):
 		self.getchannelbynode = func
@@ -587,10 +591,10 @@ class MMNode:
 		raise NoSuchAttrError, 'in GetInherDefAttr()'
 
 	def GetInherAttrDef(self, name, default):
-## 		try:
-## 			return self.GetInherAttr(name)
-## 		except NoSuchAttrError:
-## 			return default
+##		try:
+##			return self.GetInherAttr(name)
+##		except NoSuchAttrError:
+##			return default
 		x = self
 		while x is not None:
 			if x.attrdict and x.attrdict.has_key(name):
@@ -598,10 +602,10 @@ class MMNode:
 			x = x.parent
 		return default
 
-## 	def GetSummary(self, name):
-## 		if not self.summaries.has_key(name):
-## 			self.summaries[name] = self._summarize(name)
-## 		return self.summaries[name]
+##	def GetSummary(self, name):
+##		if not self.summaries.has_key(name):
+##			self.summaries[name] = self._summarize(name)
+##		return self.summaries[name]
 
 	def Dump(self):
 		print '*** Dump of', self.type, 'node', self, '***'
@@ -609,13 +613,13 @@ class MMNode:
 		attrnames.sort()
 		for name in attrnames:
 			print 'Attr', name + ':', `self.attrdict[name]`
-## 		summnames = self.summaries.keys()
-## 		if summnames:
-## 			summnames.sort()
-## 			print 'Has summaries for attrs:',
-## 			for name in summnames:
-## 				print name,
-## 			print
+##		summnames = self.summaries.keys()
+##		if summnames:
+##			summnames.sort()
+##			print 'Has summaries for attrs:',
+##			for name in summnames:
+##				print name,
+##			print
 		if self.type == 'imm' or self.values:
 			print 'Values:',
 			for value in self.values: print value,
@@ -817,8 +821,8 @@ class MMNode:
 		else:
 			parent.children.insert(i, self)
 		self.parent = parent
-## 		parent._fixsummaries(self.summaries)
-## 		parent._rmsummaries(self.summaries.keys())
+##		parent._fixsummaries(self.summaries)
+##		parent._rmsummaries(self.summaries.keys())
 
 	#
 	# Methods for mini-document management
@@ -903,54 +907,54 @@ class MMNode:
 			raise CheckError, 'FindMiniBag: minidoc not rooted in a choice node!'
 		return bag
 
-## 	#
-## 	# Private methods for summary management
-## 	#
-## 	def _rmsummaries(self, keep):
-## 		x = self
-## 		while x is not None:
-## 			changed = 0
-## 			for key in x.summaries.keys():
-## 				if key not in keep:
-## 					del x.summaries[key]
-## 					changed = 1
-## 			if not changed:
-## 				break
-## 			x = x.parent
+##	#
+##	# Private methods for summary management
+##	#
+##	def _rmsummaries(self, keep):
+##		x = self
+##		while x is not None:
+##			changed = 0
+##			for key in x.summaries.keys():
+##				if key not in keep:
+##					del x.summaries[key]
+##					changed = 1
+##			if not changed:
+##				break
+##			x = x.parent
 
-## 	def _fixsummaries(self, summaries):
-## 		tofix = summaries.keys()
-## 		for key in tofix[:]:
-## 			if summaries[key] == []:
-## 				tofix.remove(key)
-## 		self._updsummaries(tofix)
+##	def _fixsummaries(self, summaries):
+##		tofix = summaries.keys()
+##		for key in tofix[:]:
+##			if summaries[key] == []:
+##				tofix.remove(key)
+##		self._updsummaries(tofix)
 
-## 	def _updsummaries(self, tofix):
-## 		x = self
-## 		while x is not None and tofix:
-## 			for key in tofix[:]:
-## 				if not x.summaries.has_key(key):
-## 					tofix.remove(key)
-## 				else:
-## 					s = x._summarize(key)
-## 					if s == x.summaries[key]:
-## 						tofix.remove(key)
-## 					else:
-## 						x.summaries[key] = s
-## 			x = x.parent
+##	def _updsummaries(self, tofix):
+##		x = self
+##		while x is not None and tofix:
+##			for key in tofix[:]:
+##				if not x.summaries.has_key(key):
+##					tofix.remove(key)
+##				else:
+##					s = x._summarize(key)
+##					if s == x.summaries[key]:
+##						tofix.remove(key)
+##					else:
+##						x.summaries[key] = s
+##			x = x.parent
 
-## 	def _summarize(self, name):
-## 		try:
-## 			summary = [self.GetAttr(name)]
-## 		except NoSuchAttrError:
-## 			summary = []
-## 		for child in self.children:
-## 			list = child.GetSummary(name)
-## 			for item in list:
-## 				if item not in summary:
-## 					summary.append(item)
-## 		summary.sort()
-## 		return summary
+##	def _summarize(self, name):
+##		try:
+##			summary = [self.GetAttr(name)]
+##		except NoSuchAttrError:
+##			summary = []
+##		for child in self.children:
+##			list = child.GetSummary(name)
+##			for item in list:
+##				if item not in summary:
+##					summary.append(item)
+##		summary.sort()
+##		return summary
 
 	#
 	# Set the correct method for generating scheduler records.
@@ -983,7 +987,7 @@ class MMNode:
 	# - Call EndPruneTree() to clear the garbage.
 	# Alternatively, call GenAllSR(), and then call EndPruneTree() to clear
 	# the garbage.
- 	def PruneTree(self, seeknode):
+	def PruneTree(self, seeknode):
 		if seeknode is None or seeknode is self:
 			self._FastPruneTree()
 			return
@@ -1016,7 +1020,7 @@ class MMNode:
 	#
 	# PruneTree - The fast lane. Just copy children->wtd_children and
 	# create sync_from and sync_to.
- 	def _FastPruneTree(self):
+	def _FastPruneTree(self):
 		self.sync_from = ([],[])
 		self.sync_to = ([],[])
 		self.wtd_children = self.children[:]
@@ -1026,12 +1030,12 @@ class MMNode:
 
 	def EndPruneTree(self):
 		pass
-## 		del self.sync_from
-## 		del self.sync_to
-## 		if self.type in ('seq', 'par'):
-## 			for c in self.wtd_children:
-## 				c.EndPruneTree()
-## 			del self.wtd_children
+##		del self.sync_from
+##		del self.sync_to
+##		if self.type in ('seq', 'par'):
+##			for c in self.wtd_children:
+##				c.EndPruneTree()
+##			del self.wtd_children
 
 #	def gensr(self):
 #		if self.type in ('imm', 'ext'):
@@ -1514,12 +1518,12 @@ class MMNode:
 		if not seeknode:
 			seeknode = self
 ## Commented out for now: this cache messes up Scheduler.GenAllPrearms()
-## 		if hasattr(seeknode, 'sractions'):
-## 			sractions = seeknode.sractions[:]
-## 			srevents = {}
-## 			for key, val in seeknode.srevents.items():
-## 				srevents[key] = val
-## 			return sractions, srevents
+##		if hasattr(seeknode, 'sractions'):
+##			sractions = seeknode.sractions[:]
+##			srevents = {}
+##			for key, val in seeknode.srevents.items():
+##				srevents[key] = val
+##			return sractions, srevents
 		#
 		# First generate arcs
 		#
@@ -1590,7 +1594,7 @@ class MMNode:
 		pass
 
 	def commit(self):
-## 		print 'MMNode: deleting cached values'
+##		print 'MMNode: deleting cached values'
 		try:
 			del self.sractions
 		except AttributeError:
@@ -1616,8 +1620,8 @@ class MMNode:
 	# Unused sync arcs are not filtered out of the list yet.
 	#
 	def GetArcList(self):
-## 		if not self.GetSummary('synctolist'):
-## 			return []
+##		if not self.GetSummary('synctolist'):
+##			return []
 		synctolist = []
 		arcs = self.GetAttrDef('synctolist', [])
 		for arc in arcs:
@@ -1667,7 +1671,7 @@ class MMNode:
 
 	def GetWtdChildren(self):
 		return self.wtd_children
-		
+
 	def IsWanted(self):
 		# This is not very efficient...
 		if self.parent == None:
@@ -1774,7 +1778,7 @@ class MMNode:
 			if ch._CanPlay():
 				return ch
 		return None
-				 
+
 	def ResetPlayability(self):
 		self.canplay = self.willplay = self.shouldplay = None
 		for child in self.children:
