@@ -3591,12 +3591,11 @@ def _minsize(start, extent, end, minsize):
 			return start + extent
 		elif type(end) is type(0.0):
 			# no extent, end is fraction
-			return int((start + minsize) / end + 0.5)
+			return int((start + minsize) / (1 - end) + 0.5)
 		elif type(end) is type(0):
 			# no extent, end is pixel value
 			# warning end is relative to the parent end egde 
 			return start + minsize + end
-#			return end
 		else:
 			# no extent and no end
 			return start + minsize
@@ -3616,15 +3615,10 @@ def _minsize(start, extent, end, minsize):
 			return 0
 		elif type(end) is type(0):
 			# no extent, end is pixel value
-			# warning end is relative to the parent end egde 
-			################ not completed ###############
-			return end + minsize 
-#			return end
+			return int ((minsize + end) / (1 - start) + 0.5)
 		elif type(end) is type(0.0):
 			# no extent, end is fraction
-			if minsize > 0 and end > start:
-				return int(minsize / (end - start) + 0.5)
-			return 0
+			return int(minsize / (1 - start - end) + 0.5)
 		else:
 			# no extent and no end
 			return int(minsize / (1 - start) + 0.5)
@@ -3632,7 +3626,6 @@ def _minsize(start, extent, end, minsize):
 		# no start, end is pixel value
 		# warning end is relative to the parent end egde 
 		return end + minsize
-#		return end
 	elif type(end) is type(0.0):
 		# no start, end is fraction
 		if end <= 0:
