@@ -786,11 +786,16 @@ class _Window:
 		gl.prefposition(x0 - wmcorr_x, x1 - wmcorr_x, \
 			  _screenheight - y1 - 1 + wmcorr_y, \
 			  _screenheight - y0 - 1 + wmcorr_y)
-		if not title:
+		if title == None:
 			gl.noborder()
 			title = ''
+			noborder = 1
+		else:
+			noborder = 0
 		self._window_id = gl.winopen(title)
 		if debug: print 'Window.init'+`self, parent, x, y, w, h, title`
+		if noborder:
+			gl.noborder()
 		gl.winconstraints()
 		self._parent_window = parent
 		return self._init2()
@@ -1196,6 +1201,7 @@ class _Window:
 		header = f.read(16)
 		if header[:2] == '\001\332':
 			f.close()
+			import imgfile
 			xsize, ysize, zsize = imgfile.getsizes(file)
 			return xsize, ysize
 		elif header[:4] == '\377\330\377\340':

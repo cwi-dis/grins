@@ -35,7 +35,7 @@ BUTTONFILLER = ' '			# extra space added before and
 					# after button text
 FONT = 'Times-Roman'			# font used for texts
 POINTSIZE = 14				# point size used for texts
-WINDOWTITLE = 'MESSAGE'			# title of pop-up window
+WINDOWTITLE = None			# title of pop-up window
 DEFLINEWIDTH = 3			# linewidth round default button
 WINDOWMARGIN = 1			# margin around text and buttons
 CENTERLINES = 0				# whether to center all lines
