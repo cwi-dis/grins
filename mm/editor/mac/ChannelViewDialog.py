@@ -12,8 +12,12 @@ class ChannelViewDialog(ViewDialog):
 	
 	def __init__(self):
 		ViewDialog.__init__(self, 'cview_')
+		self.window = None
 
 	def show(self, title):
+		if self.window:
+			self.window.pop(poptop=1)
+			return
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
 		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, canvassize = (w, h))
