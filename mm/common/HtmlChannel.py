@@ -110,9 +110,6 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.htmlw.SetValues(wh)
 		
 
-	def __repr__(self):
-		return '<HtmlChannel instance, name=' + `self._name` + '>'
-
 	def updatefixedanchors(self, node):
 		if self._armstate != Channel.AIDLE or \
 		   self._playstate != Channel.PIDLE:
