@@ -38,9 +38,8 @@ TYPE_FORK = 2
 class Hlinks:
 
 	# Initialize this instance
-	def init(self):
+	def __init__(self):
 		self.links = []
-		return self
 
 	# Return a string representation of this instance
 	def __repr__(self):

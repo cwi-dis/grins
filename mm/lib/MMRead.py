@@ -32,7 +32,7 @@ def ReadOpenFile(fp, filename):
 	return ReadOpenFileContext(fp, filename, _newctx())
 
 def ReadOpenFileContext(fp, filename, context):
-	p = MMParser.MMParser().init(fp, context)
+	p = MMParser.MMParser(fp, context)
 	return _readparser(p, filename)
 
 
@@ -42,14 +42,15 @@ def ReadString(string, name):
 	return ReadStringContext(string, name, _newctx())
 
 def ReadStringContext(string, name, context):
-	p = MMParser.MMParser().init(MMParser.StringInput().init(string), context)
+	import StringIO
+	p = MMParser.MMParser(StringIO.StringIO(string), context)
 	return _readparser(p, name)
 
 
 # Private functions to read nodes
 
 def _newctx():
-	return MMNode.MMNodeContext().init(MMNode.MMNode)
+	return MMNode.MMNodeContext(MMNode.MMNode)
 
 def _readparser(p, filename):
 	#

@@ -20,13 +20,13 @@ from string import letters, digits
 
 class MMParser:
 	#
-	def init(self, input, context):
+	def __init__(self, input, context):
 		#
 		# 'input' should have a parameterless method readline()
 		# which returns the next line, including trailing '\n',
 		# or the empty string if there is no more data.
 		# An open file will do nicely, as does an instance
-		# of StringInput below.
+		# of StringIO.StringIO.
 		#
 		self.input = input
 		self.lineno = 0
@@ -52,7 +52,6 @@ class MMParser:
 		#
 		self.reset()
 		#
-		return self
 	#
 	def __repr__(self):
 		return '<MMParser instance, context=' + `self.context` + '>'
@@ -455,8 +454,9 @@ def makeattrparsers(cl):
 
 def parsevalue(string, typedef, context):
 	import MMAttrdefs
-	fp = StringInput().init(string)
-	parser = MMParser().init(fp, context)
+	import StringIO
+	fp = StringIO.StringIO(string)
+	parser = MMParser(fp, context)
 	parserdef = MMAttrdefs.usetypedef(typedef, MMParser.basicparsers)
 	value = parser.getgenericvalue(parserdef)
 	if parser.peektoken() <> '':
@@ -464,39 +464,11 @@ def parsevalue(string, typedef, context):
 	return value
 
 
-# A class to parse from a string
-
-class StringInput:
-	#
-	def init(self, string):
-		self.string = string
-		self.pos = 0
-		return self
-	#
-	def __repr__(self):
-		return '<StringInput instance, string=' + `self.string` \
-			+ ', pos=' + `self.pos` + '>'
-	#
-	def readline(self):
-		string = self.string
-		i = self.pos
-		n = len(string)
-		while i < n:
-			if string[i] == '\n':
-				i = i+1
-				break
-			i = i+1
-		string = string[self.pos : i]
-		self.pos = i
-		return string
-	#
-
-
 # Test driver for tokenizer
 #
 def testtokenizer():
 	import sys
-	p = MMParser().init(sys.stdin)
+	p = MMParser(sys.stdin)
 	try:
 		while 1: p.gettoken()
 	except EOFError:
@@ -510,8 +482,8 @@ def testtokenizer():
 def testparser():
 	import sys
 	import MMNode
-	context = MMNode.MMNodeContext().init(MMNode.MMNode)
-	p = MMParser().init(sys.stdin, context)
+	context = MMNode.MMNodeContext(MMNode.MMNode)
+	p = MMParser(sys.stdin, context)
 	try:
 		x = p.getnode()
 	except EOFError:

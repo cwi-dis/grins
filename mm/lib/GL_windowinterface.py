@@ -107,6 +107,7 @@ _ARROW = 0				# predefined
 _WATCH = 1
 _CHANNEL = 2
 _LINK = 3
+_STOP = 4
 
 # Colors
 _DEF_BGCOLOR = 255,255,255		# white
@@ -147,7 +148,12 @@ _link = [0x0000, 0x7f80, 0x8040, 0x7e20,
 	 0x1010, 0x0e10, 0x1010, 0x0e28,
 	 0x1044, 0x0c82, 0x0304, 0x0248,
 	 0x0110, 0x00a0, 0x0040, 0x0000
-	 ]
+	]
+_stop = [0x0000, 0x07c0, 0x1ff0, 0x3ff8,
+	 0x7ffc, 0x7ffc, 0xfffe, 0xc006,
+	 0xc006, 0xc006, 0xfffe, 0x7ffc,
+	 0x7ffc, 0x3ff8, 0x1ff0, 0x07c0
+	]
 _watch.reverse()			# Turn it upside-down
 gl.defcursor(_WATCH, _watch*8)
 gl.curorigin(_WATCH, 8, 8)
@@ -157,6 +163,9 @@ gl.curorigin(_CHANNEL, 8, 8)
 _link.reverse()
 gl.defcursor(_LINK, _link*8)
 gl.curorigin(_LINK, 0, 14)
+_stop.reverse()
+gl.defcursor(_STOP, _stop*8)
+gl.curorigin(_STOP, 8, 8)
 
 class _DummyLock:
 	def acquire(self):
@@ -172,7 +181,7 @@ class _Toplevel:
 		self._bgcolor = _DEF_BGCOLOR
 		self._cursor = ''
 		self._win_lock = _DummyLock()
-		if debug: print 'TopLevel.init('+`self`+')'
+		if debug: print 'TopLevel.__init__('+`self`+')'
 
 	def close(self):
 		if debug: print 'Toplevel.close()'
@@ -396,7 +405,7 @@ class _Event:
 		self._timenow = time.time()
 		self._timerid = 0
 		self._modal = []
-		if debug: print 'Event.init('+`self`+')'
+		if debug: print 'Event.__init__('+`self`+')'
 
 	def _qdevice(self):
 		if debug: print 'Event.qdevice()'
@@ -796,7 +805,7 @@ class _Font:
 		self._pointsize = size
 		self._closed = 0
 ##		self._pointsize = float(self.fontheight()) * 72.0 / 25.4
-##		print '_Font().init() pointsize:',size,self._pointsize
+##		print '_Font() pointsize:',size,self._pointsize
 
 	def __repr__(self):
 		s = '<_Font instance, font=' + `self._fontname` + \
@@ -849,7 +858,7 @@ class _Font:
 class _Button:
 	def __init__(self, dispobj, x, y, w, h):
 ##		print 'create',`self`
-		if debug: print 'Button.init()'
+		if debug: print 'Button.__init__()'
 		self._dispobj = dispobj
 		window = dispobj._window
 		self._corners = x, y, x + w, y + h
@@ -2155,6 +2164,8 @@ class _Window:
 				        gl.setcursor(_CHANNEL, 0, 0)
 				elif cursor == 'link':
 					gl.setcursor(_LINK, 0, 0)
+				elif cursor == 'stop':
+					gl.setcursor(_STOP, 0, 0)
 				elif cursor == '':# default is arrow cursor
 					gl.setcursor(_ARROW, 0, 0)
 				else:
@@ -2388,6 +2399,10 @@ _fontmap = {
 	  'Helvetica':		'Helvetica',
 	  'Helvetica-Bold':	'Helvetica-Bold',
 	  'Helvetica-Oblique':	'Helvetica-Oblique',
+	  'Courier':		'Courier',
+	  'Courier-Bold':	'Courier-Bold',
+	  'Courier-Oblique':	'Courier-Oblique',
+	  'Courier-Bold-Oblique':'Courier-Bold-Oblique',
 	  }
 fonts = _fontmap.keys()
 
@@ -2395,8 +2410,9 @@ toplevel = _Toplevel()
 event = _Event()
 
 # Interface routines for the top level.
-def newwindow(x, y, w, h, title):
-	return toplevel.newwindow(x, y, w, h, title)
+##def newwindow(x, y, w, h, title, **options):
+##	return apply(toplevel.newwindow, (x, y, w, h, title), options)
+newwindow = toplevel.newwindow
 
 newcmwindow = newwindow
 
@@ -2766,14 +2782,20 @@ class Dialog:
 	def getgeometry(self):
 		return self.window.getgeometry()
 
-	def create_menu(self, title, list):
+	def _convert_menu_list(self, list):
 		newlist = []
 		for entry in list:
 			if entry is None:
 				newlist.append(entry)
 			else:
-				newlist.append(('',) + entry)
-		self.window.create_menu(title, newlist)
+				label, callback = entry
+				if type(callback) == type([]):
+					callback = self._convert_menu_list(callback)
+				newlist.append('', label, callback)
+		return newlist
+
+	def create_menu(self, title, list):
+		self.window.create_menu(title, self._convert_menu_list(list))
 
 	def close(self):
 		self.window.close()
@@ -2852,321 +2874,9 @@ def InputDialog(prompt, default, cb):
 	if value and cb is not None:
 		cb(value)
 
-class AttrDialog:
-	def __init__(self, title, prompt, entries, cb_apply, cb_close):
-		import fl, FL
-		self._cb_apply = cb_apply
-		self._cb_close = cb_close
-		itemwidth = 450
-		itemheight = 25
-		formwidth = itemwidth
-		formheight = len(entries) * itemheight + 30
-		self._form = fl.make_form(FL.FLAT_BOX, formwidth, formheight)
-		form = self._form
-		x, y, w, h = 0, 0, 66, 26
-
-		x = 0
-		b = form.add_button(FL.NORMAL_BUTTON, x, y, w, h, 'Cancel')
-		b.set_call_back(self.cancel_callback, None)
-		self.cancel_button = b
-
-		x = x + 70
-		b = form.add_button(FL.NORMAL_BUTTON, x, y, w, h, 'Restore')
-		b.set_call_back(self.restore_callback, None)
-		self.restore_button = b
-
-		x = x + 70
-		w1 = formwidth - 4*70
-		b = form.add_text(FL.NORMAL_TEXT, x, y, w1, h,
-				  '[Click on labels for help]')
-		b.align = FL.ALIGN_CENTER
-		self.hint_button = b
-
-		x = formwidth - 70 - 70
-		b = form.add_button(FL.NORMAL_BUTTON, x, y, w, h, 'Apply')
-		b.set_call_back(self.apply_callback, None)
-		self.apply_button = b
-
-		x = x + 70
-		b = form.add_button(FL.RETURN_BUTTON, x, y, w, h, 'OK')
-		b.set_call_back(self.ok_callback, None)
-		self.ok_button = b
-
-		itemw3 = 50
-		itemw2 = itemwidth/2
-		itemw1 = itemwidth - itemw2 - itemw3
-
-		itemx1 = 0
-		itemx2 = itemx1 + itemw1
-		itemx3 = itemx2 + itemw2
-
-		self.blist = []
-		for i in range(len(entries)):
-			entry = entries[i]
-			name, label, help, bclass, value, default = entry[:6]
-			if len(entry) > 6:
-				list = entry[6]
-			else:
-				list = None
-			itemy = formheight - (i+1)*itemheight
-			b = bclass(self, name)
-			b.makelabeltext(itemx1, itemy, itemw1, itemheight, label)
-			b.makehelpbutton(itemx1, itemy, itemw1, itemheight, help)
-			b.makevalueinput(itemx2, itemy, itemw2, itemheight, value, list)
-			b.makeresetbutton(itemx3, itemy, itemw3, itemheight, default)
-			self.blist.append(b)
-		form.show_form(FL.PLACE_SIZE, 1, title)
-
-	def __del__(self):
-		self.close()
-
-	def close(self):
-		if self._form:
-			self._form.hide_form()
-			self._form = None
-			if self._cb_close:
-				self._cb_close()
-
-	def do_apply(self):
-		dict = {}
-		for b in self.blist:
-			name = b.name
-			value = b.currentvalue
-			if value != b.initvalue:
-				dict[name] = value
-		if self._cb_apply:
-			self._cb_apply(dict)
-
-	def cancel_callback(self, *dummy):
-		self.close()
-
-	def restore_callback(self, obj, arg):
-		obj.set_button(1)
-		for b in self.blist:
-			b.resetcallback()
-		obj.set_button(0)
-
-	def apply_callback(self, obj, arg):
-		obj.set_button(1)
-		self.fixfocus()
-		self.do_apply()
-		obj.set_button(0)
-
-	def ok_callback(self, obj, arg):
-		self.apply_callback(obj, arg)
-		self.close()
-
-	def fixfocus(self):
-		for b in self.blist:
-			if b.value.focus:
-				b.valuecallback(b.value, None)
-
-class _C:
-	def __init__(self, parent, name):
-		self.parent = parent
-		self.name = name
-		self.form = parent._form
-		self.changed = 0
-
-	def __repr__(self):
-		return '<_C instance, name=' + `self.name` + '>'
-
-	def makelabeltext(self, x, y, w, h, labeltext):
-		import FL
-		self.labeltext = labeltext
-		self.label = self.form.add_text(FL.NORMAL_TEXT, x, y, w-1, h,
-						labeltext)
-
-	def makehelpbutton(self, x, y, w, h, helptext):
-		import FL
-		self.help = self.form.add_button(FL.HIDDEN_BUTTON, x, y, w-1, h,
-						 '')
-		self.helptext = helptext
-		self.help.set_call_back(self.helpcallback, None)
-
-	def makevalueinput(self, x, y, w, h, value, dummy):
-		import FL
-		self.currentvalue = value
-		self.initvalue = value
-		self.value = self.form.add_input(FL.NORMAL_INPUT, x, y, w-1, h,
-						 '')
-		self.value.lstyle = FL.FIXED_STYLE
-		self.value.set_call_back(self.valuecallback, None)
-		self.update_specific()
-
-	def makeresetbutton(self, x, y, w, h, default):
-		import FL
-		self.defaultvalue = default
-		self.reset = self.form.add_button(FL.PUSH_BUTTON, x, y, w-1, h,
-						  'reset')
-		self.reset.set_call_back(self.resetcallback, None)
-
-	def valuecallback(self, *rest):
-		import FL
-		newtext = self.value.get_input()[:FL.INPUT_MAX-1]
-		if newtext == self.currenttext[:FL.INPUT_MAX-1]:
-			return # No change
-		try:
-			value = self.parsevalue(newtext)
-		except _apply_error:
-			return
-		self.currentvalue = value
-		self.isdefault = 0
-		self.changed = 1
-		self.update()
-
-	def helpcallback(self, *rest):
-		showmessage(self.helptext)
-
-	def resetcallback(self, *rest):
-		self.currentvalue = self.defaultvalue
-		self.isdefault = 1
-		self.changed = 1
-		self.update()
-
-	def update_specific(self):
-		import FL
-		self.currenttext = self.valuerepr(self.currentvalue)
-		self.value.set_input(self.currenttext[:FL.INPUT_MAX-1])
-
-	def update(self):
-		import FL
-		self.update_specific()
-		self.reset.set_button(self.isdefault)
-		if self.isdefault and not self.changed:
-			self.reset.hide_object()
-		else:
-			self.form.freeze_form()
-			if self.changed:
-				self.reset.boxtype = FL.UP_BOX
-			else:
-				self.reset.boxtype = FL.FRAME_BOX
-			self.reset.show_object()
-			self.form.unfreeze_form()
-
-	def valuerepr(self, value):
-		return value
-
-	def parsevalue(self, string):
-		return string
-
-
-class AttrOption(_C):
-	def __repr__(self):
-		return '<AttrOption instance, name=' + `self.name` + '>'
-
-	def makevalueinput(self, x, y, w, h, value, choices):
-		import FL
-		self.currentvalue = value
-		self.initvalue = value
-		self.choices = choices
-		self.value = self.form.add_choice(FL.NORMAL_CHOICE, x, y, w-3, h-2, '')
-		self.value.boxtype = FL.SHADOW_BOX
-		for choice in choices:
-			self.value.addto_choice(choice)
-		self.value.set_call_back(self.valuecallback, None)
-		self.update_specific()
-
-	def valuecallback(self, *dummy):
-		i = self.value.get_choice()
-		choices = self.choices
-		if 1 <= i <= len(choices):
-			value = choices[i-1]
-		else:
-			value = ''
-		if value <> self.currentvalue:
-			self.currentvalue = value
-			self.isdefault = 0
-			self.changed = 1
-			self.update()
-
-	def update_specific(self):
-		choices = self.choices
-		if self.currentvalue in choices:
-			i = choices.index(self.currentvalue) + 1
-		else:
-			i = 0
-		self.value.set_choice(i)
-
-class AttrString(_C):
-	def __repr__(self):
-		return '<AttrString instance, name=' + `self.name` + '>'
-
-class AttrInt(_C):
-	def __repr__(self):
-		return '<AttrInt instance, name=' + `self.name` + '>'
-
-	def makevalueinput(self, x, y, w, h, value, dummy):
-		import FL
-		self.currentvalue = value
-		self.initvalue = value
-		self.value = self.form.add_input(FL.INT_INPUT, x, y, w-1, h,
-						 '')
-		self.value.lstyle = FL.FIXED_STYLE
-		self.value.set_call_back(self.valuecallback, None)
-		self.update_specific()
-
-	def valuerepr(self, value):
-		return `value`
-
-	def parsevalue(self, value):
-		import string
-		return string.atoi(value)
-			
-class AttrFloat(_C):
-	def __repr__(self):
-		return '<AttrFloat instance, name=' + `self.name` + '>'
-
-	def makevalueinput(self, x, y, w, h, value, dummy):
-		import FL
-		self.currentvalue = value
-		self.initvalue = value
-		self.value = self.form.add_input(FL.FLOAT_INPUT, x, y, w-1, h,
-						 '')
-		self.value.lstyle = FL.FIXED_STYLE
-		self.value.set_call_back(self.valuecallback, None)
-		self.update_specific()
-
-	def valuerepr(self, value):
-		return `value`
-
-	def parsevalue(self, value):
-		import string
-		return string.atof(value)
-			
-class AttrFile(AttrString):
-	def __repr__(self):
-		return '<AttrFile instance, name=' + `self.name` + '>'
-
-	def makevalueinput(self, x, y, w, h, value, dummy):
-		import FL
-		bw = 2*h
-		AttrString.makevalueinput(self, x, y, w-bw, h, value, dummy)
-		self.selectorbutton = self.form.add_button(FL.NORMAL_BUTTON,
-						x + w-bw, y, bw-1, h, 'Brwsr')
-		self.selectorbutton.set_call_back(self.selectorcallback, None)
-
-	def selectorcallback(self, *dummy):
-		import os
-		base = ''
-		file = self.currentvalue
-		if file:
-			if os.path.isdir(file):
-				base, file = file, ''
-			else:
-				base, file = os.path.split(file)
-		FileDialog('Choose File for ' + self.labeltext, base, '*',
-			   file, self._ok_cb, None)
-
-	def _ok_cb(self, filename):
-		self.currentvalue = filename
-		self.isdefault = 0
-		self.changed = 1
-		self.update()
-
-class ListDialog:
-	def __init__(self, title, prompt, listprompt, itemprompt, itemlist,
-		     buttonlist):
+class SelectionDialog:
+	def __init__(self, listprompt, itemprompt, itemlist, default,
+		     title = 'SelectionDialog'):
 		import fl, FL
 		self._title = title
 		self._callbacks = {}
@@ -3181,6 +2891,7 @@ class ListDialog:
 
 		buttonwidth = 300 / len(buttonlist)
 		x, y, w, h = 0, 250, buttonwidth, 39
+		buttonlist = ['Ok', 'Cancel']
 		for entry in buttonlist:
 			if type(entry) == type(()):
 				accelerator, label, callback = entry
@@ -3204,23 +2915,8 @@ class ListDialog:
 		for item in itemlist:
 			self._browser.add_browser_line(item)
 
-		self.showing = 0
-
-	def __del__(self):
-		self.close()
-
-	def show(self):
-		import FL
-		if self.showing:
-			return
-		self._form.show_form(FL.PLACE_SIZE, 1, self._title)
+		form.show_form(FL.PLACE_SIZE, 1, self._title)
 		self.showing = 1
-
-	def hide(self):
-		if not self.showing:
-			return
-		self._form.hide_form()
-		self.showing = 0
 
 	def close(self):
 		self._browser = None
@@ -3280,9 +2976,29 @@ class ListDialog:
 		self.nameinput.set_input(name)
 
 	def _callback(self, obj, arg):
-		callback = self._callbacks[arg]
-		if callback:
-			apply(callback[0], callback[1])
+		if arg == 'Ok':
+			try:
+				func = self.OkCallback
+			except AttributeError:
+				pass
+			else:
+				ret = func(self.nameinput.get_input())
+				if ret:
+					if type(ret) == type(''):
+						showmessage(ret, type = 'error')
+					return
+		if arg == 'Cancel':
+			try:
+				func = self.CancelCallback
+			except AttributeError:
+				pass
+			else:
+				ret = func()
+				if ret:
+					if type(ret) == type(''):
+						showmessage(ret, type = 'error')
+					return
+		self.close()
 
 	def name_callback(self, obj, arg):
 		# When the user presses TAB or RETURN,
