@@ -5,11 +5,11 @@
 #include "Python.h"
 #endif
 
-#ifndef __WINDOWS__
-#include <windows.h>
+#ifndef _WIN32_WCE
+PyObject* Winuser_RegisterClassEx(PyObject *self, PyObject *args);
 #endif
 
-PyObject* Winuser_RegisterClassEx(PyObject *self, PyObject *args);
+PyObject* Winuser_RegisterClass(PyObject *self, PyObject *args);
 PyObject* Winuser_CreateWindowEx(PyObject *self, PyObject *args);
 PyObject* Winuser_CreateWindowFromHandle(PyObject *self, PyObject *args);
 PyObject* Winuser_GetDesktopWindow(PyObject *self, PyObject *args);
@@ -18,7 +18,6 @@ HINSTANCE GetAppHinstance();
 
 LONG APIENTRY PyWnd_WndProc(HWND hWnd, UINT uMsg, UINT wParam, LONG lParam);
  
-#ifdef _WIN32_WCE
 #define DECLARE_WND_CLASS(WndClassName) \
 static WNDCLASS& GetWndClass() \
 { \
@@ -28,9 +27,9 @@ static WNDCLASS& GetWndClass() \
 	return wc; \
 }
 
-#else // not _WIN32_WCE
-#define DECLARE_WND_CLASS(WndClassName) \
-static WNDCLASSEX& GetWndClass() \
+#ifndef _WIN32_WCE
+#define DECLARE_WND_CLASSEX(WndClassName) \
+static WNDCLASSEX& GetWndClassEx() \
 { \
 	static WNDCLASSEX wc = \
 		{ sizeof(WNDCLASSEX), CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, PyWnd_WndProc, \
