@@ -63,6 +63,8 @@ lopristarting = toplevel.lopristarting
 setidleproc = toplevel.setidleproc
 cancelidleproc = toplevel.cancelidleproc
 installaehandler = toplevel.installaehandler
+getcurtime = toplevel.getcurtime
+settimevirtual = toplevel.settimevirtual
 
 #
 # Make various other items from other modules available

@@ -596,6 +596,12 @@ class _Event(AEServer):
 					self._timers[i] = (tt + t, cb, tid)
 				return
 		raise 'unknown timer', id
+		
+	def getcurtime(self):
+		return Evt.TickCount()/TICKS_PER_SECOND
+		
+	def settimevirtual(self, virtual):
+		pass
 				
 	def setidleproc(self, cb):
 		"""Adds an idle-loop callback"""
