@@ -724,18 +724,6 @@ class _Window(GL_windowbase._Window):
 			h = 1 - y
 		return x, y, w, h
 
-	def getgeometry(self):
-		if self.is_closed():
-			raise error, 'window already closed'
-		toplevel._win_lock.acquire()
-		gl.winset(self._window_id)
-		x, y = gl.getorigin()
-		toplevel._win_lock.release()
-		h = float(_mscreenheight) / _screenheight
-		w = float(_mscreenwidth) / _screenwidth
-		return float(x) * w, (_screenheight - y - self._height) * h, \
-			  self._width * w, self._height * h
-
 	def hitarrow(self, x, y, sx, sy, dx, dy):
 		# return 1 iff (x,y) is within the arrow head
 		if self.is_closed():

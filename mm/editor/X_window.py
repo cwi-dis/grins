@@ -34,12 +34,6 @@ class _Window(X_windowbase._Window):
 			bgcolor = self._bgcolor
 		return _DisplayList(self, bgcolor)
 
-	def getgeometry(self):
-		x, y = self._form.TranslateCoords(0, 0)
-		w, h = self._rect[2:]
-		return float(x) / toplevel._hmm2pxl, y / toplevel._vmm2pxl, \
-		       w / toplevel._hmm2pxl, h / toplevel._vmm2pxl
-
 	def create_box(self, msg, callback, box = None):
 		import Xcursorfont
 		global _in_create_box
@@ -358,8 +352,7 @@ class _Window(X_windowbase._Window):
 		self._rb_curdisp.render()
 
 class _SubWindow(X_windowbase._BareSubWindow, _Window):
-	def getgeometry(self):
-		return self._sizes
+	pass
 
 class _DisplayList(X_windowbase._DisplayList):
 	def _do_render(self, entry, region):

@@ -520,6 +520,12 @@ class _Window:
 				self._pixmap.CopyArea(self._form, self._gc,
 						      x, y, w, h, x, y)
 
+	def getgeometry(self):
+		x, y = self._form.TranslateCoords(0, 0)
+		w, h = self._rect[2:]
+		return float(x) / toplevel._hmm2pxl, y / toplevel._vmm2pxl, \
+		       w / toplevel._hmm2pxl, h / toplevel._vmm2pxl
+
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0):
 		return _SubWindow(self, coordinates, 0, pixmap, transparent)
 
@@ -1043,6 +1049,9 @@ class _BareSubWindow:
 
 	def settitle(self, title):
 		raise error, 'can only settitle at top-level'
+
+	def getgeometry(self):
+		return self._sizes
 
 	def pop(self):
 		parent = self._parent
