@@ -1670,6 +1670,8 @@ class MMSyncArc:
 		# Parse my own event string and return the repeats.
 		# I'm not very good with regular expressions, so excuse the roughness here:
 		e = self.getevent()
+		if not e:
+			return None
 		repeatnum = _repeat_regexp.findall(e)
 		if isinstance(repeatnum, type([])) and len(repeatnum) > 0:
 			try:
