@@ -104,7 +104,7 @@ def _showmenu(menu, filename):	# Show (modal) editor choice dialog
 		list.append(key, (_do_edit, (menu[key], filename)))
 	list.append(None)
 	list.append('Cancel', None)
-	w = windowinterface.Dialog(list, title = 'Choose',
+	w = windowinterface.Dialog(list, title = 'Choose Editor',
 				   prompt = 'Choose an editor:', grab = 1,
 				   vertical = 0)
 
