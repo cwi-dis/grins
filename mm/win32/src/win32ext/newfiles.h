@@ -20,7 +20,6 @@ extern PyObject *create_ole_data_object( PyObject *self, PyObject *args );
 #define DEF_NEW_PY_METHODS\
 	{"GetWin32Sdk",MWin32Sdk::create,1},\
 	{"GetAfx",MAfx::create,1},\
-	{"CreateOleDataObject",create_ole_data_object,1},
 //	{"CreateFrame",ui_create_frame,1},\
 //	{"CreateToolTipCtrl",PyCToolTipCtrl_create,1},
 //	{"CreateRgn",PyCRgn::create,1},\
