@@ -2399,6 +2399,10 @@ class HierarchyView(HierarchyViewDialog):
 ##			return MMAttrdefs.getattr(self.GetParent(), 'bgcolor')
 ##		return default
 
+def expandnode(node):
+	# Bad hack. I shouldn't refer to private attrs of a node.
+	node.collapsed = 0
+
 ##def expandnode(node):
 ##	if hasattr(node, 'expanded'):
 ##		# already expanded
