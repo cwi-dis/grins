@@ -247,7 +247,9 @@ GraphBuilder_AddSourceFilter(GraphBuilderObject *self, PyObject *args)
 	obj = newBaseFilterObject();
 	WCHAR wPath[MAX_PATH];
 	MultiByteToWideChar(CP_ACP,0,pszFile,-1,wPath,MAX_PATH);
+	Py_BEGIN_ALLOW_THREADS
 	res = self->pGraphBuilder->AddSourceFilter(wPath,L"File reader",&obj->pFilter);
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("GraphBuilder_AddSourceFilter", res);
 		obj->pFilter=NULL;
@@ -272,7 +274,9 @@ GraphBuilder_AddFilter(GraphBuilderObject *self, PyObject *args)
 
 	WCHAR wsz[MAX_PATH];
 	MultiByteToWideChar(CP_ACP,0,psz,-1,wsz,MAX_PATH);
+	Py_BEGIN_ALLOW_THREADS
 	res = self->pGraphBuilder->AddFilter(obj->pFilter,wsz);
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("GraphBuilder_AddFilter", res);
 		return NULL;
@@ -292,7 +296,9 @@ GraphBuilder_Render(GraphBuilderObject *self, PyObject *args)
 	PinObject *obj;
 	if (!PyArg_ParseTuple(args, "O", &obj))
 		return NULL;
+	Py_BEGIN_ALLOW_THREADS
 	res = self->pGraphBuilder->Render(obj->pPin);
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("GraphBuilder_Render", res);
 		return NULL;
@@ -314,7 +320,9 @@ GraphBuilder_QueryIMediaControl(GraphBuilderObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 	MediaControlObject *obj = newMediaControlObject();
+	Py_BEGIN_ALLOW_THREADS
 	res = self->pGraphBuilder->QueryInterface(IID_IMediaControl, (void **) &obj->pCtrl);
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("GraphBuilder_QueryIMediaControl", res);
 		obj->pCtrl=NULL;
@@ -346,7 +354,9 @@ GraphBuilder_WaitForCompletion(GraphBuilderObject *self, PyObject *args)
 		return NULL;
 	}
 	long evCode=0;
+	Py_BEGIN_ALLOW_THREADS
 	res=pME->WaitForCompletion(msTimeout,&evCode);
+	Py_END_ALLOW_THREADS
 	pME->Release();
 	
 	// res is S_OK or E_ABORT 
@@ -374,7 +384,9 @@ GraphBuilder_RenderFile(GraphBuilderObject *self, PyObject *args)
 
 	WCHAR wsz[MAX_PATH];
 	MultiByteToWideChar(CP_ACP,0,psz,-1,wsz,MAX_PATH);
+	Py_BEGIN_ALLOW_THREADS
 	res = self->pGraphBuilder->RenderFile(wsz,NULL);
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("GraphBuilder_RenderFile", res);
 		return NULL;
@@ -400,7 +412,9 @@ GraphBuilder_FindFilterByName(GraphBuilderObject *self, PyObject *args)
 	obj = newBaseFilterObject();
 	WCHAR wsz[MAX_PATH];
 	MultiByteToWideChar(CP_ACP,0,psz,-1,wsz,MAX_PATH);
+	Py_BEGIN_ALLOW_THREADS
 	res = self->pGraphBuilder->FindFilterByName(wsz,&obj->pFilter);
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("GraphBuilder_AddSourceFilter", res);
 		obj->pFilter=NULL;
@@ -423,7 +437,9 @@ GraphBuilder_RemoveFilter(GraphBuilderObject *self, PyObject *args)
 	BaseFilterObject *obj;
 	if (!PyArg_ParseTuple(args, "O", &obj))
 		return NULL;
+	Py_BEGIN_ALLOW_THREADS
 	res = self->pGraphBuilder->RemoveFilter(obj->pFilter);
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("GraphBuilder_RemoveFilter", res);
 		return NULL;
@@ -461,7 +477,7 @@ GraphBuilder_getattr(GraphBuilderObject *self, char *name)
 }
 
 static char GraphBuilderType__doc__[] =
-""
+"GraphBuilder"
 ;
 
 static PyTypeObject GraphBuilderType = {
@@ -507,7 +523,9 @@ BaseFilter_FindPin(BaseFilterObject *self, PyObject *args)
 	PinObject *obj = newPinObject();
 	WCHAR wsz[MAX_PATH];
 	MultiByteToWideChar(CP_ACP,0,psz,-1,wsz,MAX_PATH);
+	Py_BEGIN_ALLOW_THREADS
 	res = self->pFilter->FindPin(wsz,&obj->pPin);
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("BaseFilter_FindPin", res);
 		Py_DECREF(obj);
@@ -530,7 +548,9 @@ BaseFilter_QueryIFileSinkFilter(BaseFilterObject *self, PyObject *args)
 		return NULL;
 
 	FileSinkFilterObject *obj = newFileSinkFilterObject();
+	Py_BEGIN_ALLOW_THREADS
 	res = self->pFilter->QueryInterface(IID_IFileSinkFilter,(void**)&obj->pFilter);;
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("BaseFilter_QueryIFileSinkFilter", res);
 		Py_DECREF(obj);
@@ -554,7 +574,9 @@ BaseFilter_QueryIRealConverter(BaseFilterObject *self, PyObject *args)
 		return NULL;
 
 	RealConverterObject *obj = newRealConverterObject();
+	Py_BEGIN_ALLOW_THREADS
 	res = self->pFilter->QueryInterface(IID_IRealConverter,(void**)&obj->pRealConverter);
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("BaseFilter_QueryIRealConverter", res);
 		Py_DECREF(obj);
@@ -571,10 +593,13 @@ static char BaseFilter_EnumPins__doc__[] =
 static PyObject *
 BaseFilter_EnumPins(BaseFilterObject *self, PyObject *args)
 {
+	HRESULT res;
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 	EnumPinsObject *obj = newEnumPinsObject();
-	HRESULT res = self->pFilter->EnumPins(&obj->pPins);
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pFilter->EnumPins(&obj->pPins);
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("BaseFilter_EnumPins", res);
 		Py_DECREF(obj);
@@ -646,10 +671,13 @@ static char Pin_ConnectedTo__doc__[] =
 static PyObject *
 Pin_ConnectedTo(PinObject *self, PyObject *args)
 {
+	HRESULT res;
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 	PinObject *obj = newPinObject();
-	HRESULT res=self->pPin->ConnectedTo(&obj->pPin);
+	Py_BEGIN_ALLOW_THREADS
+	res=self->pPin->ConnectedTo(&obj->pPin);
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("Pin_ConnectedTo", res);
 		Py_DECREF(obj);
@@ -730,7 +758,9 @@ FileSinkFilter_SetFileName(FileSinkFilterObject *self, PyObject *args)
 		return NULL;
 	WCHAR wsz[MAX_PATH];
 	MultiByteToWideChar(CP_ACP,0,psz,-1,wsz,MAX_PATH);
+	Py_BEGIN_ALLOW_THREADS
 	res = self->pFilter->SetFileName(wsz,pmt);
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("FileSinkFilter_SetFileName", res);
 		return NULL;
@@ -805,7 +835,9 @@ MediaControl_Run(MediaControlObject *self, PyObject *args)
 	HRESULT res;
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
+	Py_BEGIN_ALLOW_THREADS
 	res = self->pCtrl->Run();
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("MediaControl_Run", res);
 		return NULL;
@@ -824,7 +856,9 @@ MediaControl_Stop(MediaControlObject *self, PyObject *args)
 	HRESULT res;
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
+	Py_BEGIN_ALLOW_THREADS
 	res = self->pCtrl->Stop();
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("MediaControl_Stop", res);
 		return NULL;
@@ -843,7 +877,9 @@ MediaControl_Pause(MediaControlObject *self, PyObject *args)
 	HRESULT res;
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
+	Py_BEGIN_ALLOW_THREADS
 	res = self->pCtrl->Pause();
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("MediaControl_Pause", res);
 		return NULL;
@@ -921,7 +957,10 @@ EnumPins_Next(EnumPinsObject *self, PyObject *args)
 		return NULL;
 	PinObject *obj = newPinObject();
 	ULONG fetched=0;
-	HRESULT res = self->pPins->Next(1,&obj->pPin,&fetched);
+	HRESULT res ;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pPins->Next(1,&obj->pPin,&fetched);
+	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		seterror("EnumPins_Next", res);
 		Py_DECREF(obj);
@@ -1004,7 +1043,9 @@ RealConverter_SetInterface(RealConverterObject *self, PyObject *args)
 		return NULL;
 	WCHAR wsz[MAX_PATH];
 	MultiByteToWideChar(CP_ACP,0,hint,-1,wsz,MAX_PATH);
+	Py_BEGIN_ALLOW_THREADS
 	self->pRealConverter->SetInterface(obj->pUk,wsz);
+	Py_END_ALLOW_THREADS
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -1131,14 +1172,16 @@ CreateGraphBuilder(PyObject *self, PyObject *args)
 
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-
+	
 	obj = newGraphBuilderObject();
 	if (obj == NULL)
 		return NULL;
 
     IGraphBuilder *pGraphBuilder=NULL;
+	Py_BEGIN_ALLOW_THREADS
 	res=CoCreateInstance(CLSID_FilterGraph,NULL,CLSCTX_INPROC_SERVER,
 				 IID_IGraphBuilder,(void**)&pGraphBuilder);
+	Py_END_ALLOW_THREADS
 	if (!SUCCEEDED(res)) {
 		Py_DECREF(obj);
 		seterror("CoCreateInstance FilterGraph", res);
@@ -1245,7 +1288,10 @@ CreateFilter(PyObject *self, PyObject *args)
 	obj = newBaseFilterObject();
 	if (obj == NULL)
 		return NULL;
-	IBaseFilter *pFilter=CreateDirectShowFilter(psz,"ActiveMovieFilter");
+	IBaseFilter *pFilter;
+	Py_BEGIN_ALLOW_THREADS
+	pFilter=CreateDirectShowFilter(psz,"ActiveMovieFilter");
+	Py_END_ALLOW_THREADS
 	if (!pFilter) {
 		Py_DECREF(obj);
 		seterror("CreateFilter", S_OK);
@@ -1256,9 +1302,38 @@ CreateFilter(PyObject *self, PyObject *args)
 	return (PyObject *) obj;
 	}
 
+static char CoInitialize__doc__[] =
+""
+;
+
+static PyObject*
+CoInitialize(PyObject *self, PyObject *args) 
+	{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	HRESULT hr=CoInitialize(NULL);
+	int res=(hr==S_OK || hr==S_FALSE)?1:0;
+	return Py_BuildValue("i",res);
+	}
+
+static char CoUninitialize__doc__[] =
+""
+;
+static PyObject*
+CoUninitialize(PyObject *self, PyObject *args) 
+	{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	CoUninitialize();
+	Py_INCREF(Py_None);
+	return Py_None;
+	}
+
 static struct PyMethodDef DShow_methods[] = {
 	{"CreateGraphBuilder", (PyCFunction)CreateGraphBuilder, METH_VARARGS, CreateGraphBuilder__doc__},
 	{"CreateFilter", (PyCFunction)CreateFilter, METH_VARARGS, CreateFilter__doc__},
+	{"CoInitialize", (PyCFunction)CoInitialize, METH_VARARGS, CoInitialize__doc__},
+	{"CoUninitialize", (PyCFunction)CoUninitialize, METH_VARARGS, CoUninitialize__doc__},
 
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
