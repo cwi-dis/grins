@@ -18,15 +18,64 @@ public class GRiNSApplet extends Applet
 		// parse your Java file into its visual environment.
 		//{{INIT_CONTROLS
 		setLayout(null);
-		setSize(350,350);
+		setSize(480,400);
 		add(grinsCanvas);
 		grinsCanvas.setBackground(java.awt.Color.pink);
 		grinsCanvas.setBounds(25,25,300,300);
+		buttonConnect.setLabel("Connect");
+		add(buttonConnect);
+		buttonConnect.setBackground(java.awt.Color.lightGray);
+		buttonConnect.setBounds(360,264,104,28);
+		buttonDisconnect.setLabel("Disconnect");
+		add(buttonDisconnect);
+		buttonDisconnect.setBackground(java.awt.Color.lightGray);
+		buttonDisconnect.setBounds(360,304,104,28);
+		buttonOpen.setLabel("Open");
+		add(buttonOpen);
+		buttonOpen.setBackground(java.awt.Color.lightGray);
+		buttonOpen.setBounds(360,348,104,28);
+		labelOpen.setText("Open:");
+		add(labelOpen);
+		labelOpen.setBounds(12,352,40,24);
+		textFieldURL.setText("D:\\ufs\\Demo1\\Kerst\\NieuwJaar2.grins");
+		add(textFieldURL);
+		textFieldURL.setBounds(56,348,304,28);
+		buttonPlay.setLabel("Play");
+		add(buttonPlay);
+		buttonPlay.setBackground(java.awt.Color.lightGray);
+		buttonPlay.setBounds(360,25,104,28);
+		buttonPause.setLabel("Pause");
+		add(buttonPause);
+		buttonPause.setBackground(java.awt.Color.lightGray);
+		buttonPause.setBounds(360,76,104,28);
+		buttonStop.setLabel("Stop");
+		add(buttonStop);
+		buttonStop.setBackground(java.awt.Color.lightGray);
+		buttonStop.setBounds(360,128,104,28);
+		//}}
+	
+		//{{REGISTER_LISTENERS
+		SymAction lSymAction = new SymAction();
+		buttonConnect.addActionListener(lSymAction);
+		buttonDisconnect.addActionListener(lSymAction);
+		buttonOpen.addActionListener(lSymAction);
+		buttonPlay.addActionListener(lSymAction);
+		buttonPause.addActionListener(lSymAction);
+		buttonStop.addActionListener(lSymAction);
 		//}}
 	}
 	
 	//{{DECLARE_CONTROLS
 	GRiNSCanvas grinsCanvas = new GRiNSCanvas();
+	//java.awt.Canvas grinsCanvas = new java.awt.Canvas();
+	java.awt.Button buttonConnect = new java.awt.Button();
+	java.awt.Button buttonDisconnect = new java.awt.Button();
+	java.awt.Button buttonOpen = new java.awt.Button();
+	java.awt.Label labelOpen = new java.awt.Label();
+	java.awt.TextField textFieldURL = new java.awt.TextField();
+	java.awt.Button buttonPlay = new java.awt.Button();
+	java.awt.Button buttonPause = new java.awt.Button();
+	java.awt.Button buttonStop = new java.awt.Button();
 	//}}
 	
 	// standalone execution support
@@ -40,14 +89,75 @@ public class GRiNSApplet extends Applet
 					{System.exit(0);} 
 				});
 	
-		GRiNSApplet	appletTemplate = new GRiNSApplet();
+		GRiNSApplet	grinsApplet = new GRiNSApplet();
 
-		appletTemplate.init();
-		appletTemplate.start();
+		grinsApplet.init();
+		grinsApplet.start();
 
-		f.add("Center", appletTemplate);
-		f.setSize(360, 380);
+		f.add("Center", grinsApplet);
+		f.setSize(500,420);
 		f.show();
 		}
 	
+
+	class SymAction implements java.awt.event.ActionListener
+	{
+		public void actionPerformed(java.awt.event.ActionEvent event)
+		{
+			Object object = event.getSource();
+			if (object == buttonConnect)
+				buttonConnect_ActionPerformed(event);
+			else if (object == buttonDisconnect)
+				buttonDisconnect_ActionPerformed(event);
+			else if (object == buttonOpen)
+				buttonOpen_ActionPerformed(event);
+			else if (object == buttonPlay)
+				buttonPlay_ActionPerformed(event);
+			else if (object == buttonPause)
+				buttonPause_ActionPerformed(event);
+			else if (object == buttonStop)
+				buttonStop_ActionPerformed(event);
+		}
+	}
+
+	void buttonConnect_ActionPerformed(java.awt.event.ActionEvent event)
+	{
+		// to do: code goes here.
+		grinsCanvas.connect(getGraphics());	 
+	}
+
+	void buttonDisconnect_ActionPerformed(java.awt.event.ActionEvent event)
+	{
+		// to do: code goes here.
+		grinsCanvas.disconnect();	 
+			 
+	}
+
+	void buttonOpen_ActionPerformed(java.awt.event.ActionEvent event)
+	{
+		// to do: code goes here.
+		grinsCanvas.open(textFieldURL.getText());	 
+			 
+	}
+
+	void buttonPlay_ActionPerformed(java.awt.event.ActionEvent event)
+	{
+		// to do: code goes here.
+		grinsCanvas.play();	 
+			 
+	}
+
+	void buttonPause_ActionPerformed(java.awt.event.ActionEvent event)
+	{
+		// to do: code goes here.
+		grinsCanvas.pause();	 
+			 
+	}
+
+	void buttonStop_ActionPerformed(java.awt.event.ActionEvent event)
+	{
+		// to do: code goes here.
+		grinsCanvas.stop();	 
+			 
+	}
 }
