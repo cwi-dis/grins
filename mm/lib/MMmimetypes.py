@@ -27,8 +27,11 @@ if sys.platform == 'mac':
 		# override the creator/type. This will only lead to unexpected
 		# results when a file is given an extension _and_ that extension
 		# belongs to files with a different mimetype.
-		type = mimetypes.guess_type(url)
-		if type or not _ic_instance: return type
+		type, encoding = mimetypes.guess_type(url)
+		if type:
+			return type, encoding
+		if not _ic_instance:
+			return type, encoding
 		#
 		# Next step is to see whether the extension is known to Internet Config
 		#
@@ -37,22 +40,26 @@ if sys.platform == 'mac':
 		except ic.error:
 			descr = None
 		else:
-			return descr[8]
+			return descr[8], None
 		#
 		# Final step, for urls pointing to existing local files, we use
 		# the creator/type code and give a warning
 		#
 		utype, host, path, params, query, fragment = urlparse.urlparse(url)
 		if (utype and utype != 'file') or (host and host != 'localhost'):
-			return None
+			return None, None
+		import windowinterface
 		filename = MMurl.url2pathname(path)
 		try:
-			creator, type = MacOS.GetCreatorType(filename)
+			creator, type = MacOS.GetCreatorAndType(filename)
 		except MacOS.Error:
-			return None
+			# File doesn't exist. Give the long talk.
+			windowinterface.showmessage('For use with GRiNS (and for use on the web in general) please give your file the correct extension.', identity='nomimetype')
+			return None, None
 		descr = _ic_instance.maptypecreator(type, creator, url)
 		if not descr:
-			return None
+			windowinterface.showmessage('For use with GRiNS (and for use on the web in general) please give your file the correct extension.', identity='nomimetype')
+			return None, None
 		import windowinterface
 		windowinterface.showmessage('Incorrect extension for %s\nThis may cause problems on the web'%url, identity='mimetypemismatch')
-		return descr[8]	# The mimetype
+		return descr[8], None	# The mimetype
