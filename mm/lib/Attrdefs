@@ -61,12 +61,6 @@
 (bitrate (int) 14400 'Peak bitrate' default
 	'Peak bitrate reserved for this item, in bits per second' raw (g2 qt smil10 smil2 cmif snap))
 
-(border (int) 1 'Channel border' default
-	'Determines whether channel window has a border (1=yes)' raw (cmif))
-
-(bucolor (tuple (int) (int) (int)) (255 0 0) 'Anchor color' color
-	'Color used for anchors in window' channel (cmif))
-
 (center (bool) 1 'Center image' default
 	'Determines whether image is centered' channel (cmif))
 
@@ -104,9 +98,6 @@
 (tview_winsize  (tuple (float) (float)) (115.234375 115.234375) 'Time chart winsize' hidden
 	 'Window size for Time chart view' raw (g2_pro qt_pro smil10 cmif))
 
-(drawbox (bool) 1 'Draw anchor boxes' default
-	'Draw anchors as boxes' channel (cmif))
-
 (duration (float) 0.0 'Duration' default
 	'Duration of a node or subtree, 0 uses natural duration' normal (g2 qt smil10 smil2 cmif snap))
 
@@ -132,9 +123,6 @@
 
 (font (string) 'Times-Roman' 'Font' font
 	'Font used to display text' channel (cmif))
-
-(hicolor (tuple (int) (int) (int)) (255 0 0) 'Highlight color' color
-	'Color used for highlighted anchors in window' channel (cmif))
 
 (hview_winpos (tuple (float) (float)) (-1 -1) 'Hierarchy winpos' hidden
 	 'Window position for hierarchy view' raw (g2 qt smil10 smil2 cmif snap))
