@@ -323,7 +323,7 @@ def getsrc(writer, node):
 	if writer.copycache.has_key(url):
 		# already seen and copied
 		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(writer.copycache[url]))
-		if features.compatibility == features.G2:
+		if writer.rpExt and not writer.grinsExt:
 			val = MMurl.unquote(val)
 		return val
 	if chtype == 'RealPix' or (chtype == 'video' and val and val[:33] == 'data:image/vnd.rn-realpix;base64,'):
@@ -395,7 +395,7 @@ def getsrc(writer, node):
 			return val
 	writer.copycache[url] = file
 	val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
-	if features.compatibility == features.G2:
+	if writer.rpExt and not writer.grinsExt:
 		val = MMurl.unquote(val)
 	return val
 
@@ -1156,7 +1156,6 @@ class SMILWriter(SMIL):
 		if copyFiles:
 			dir, base = os.path.split(filename)
 			base, ext = os.path.splitext(base)
-			base = MMurl.pathname2url(base)
 ##			if not ext:
 ##				base = base + '.dir'
 ##			newdir = self.newfile(base, dir)
