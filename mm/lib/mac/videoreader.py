@@ -53,7 +53,7 @@ class _Reader:
 			print len(handle.data)
 			self.audiodescr = MediaDescr.SoundDescription.decode(handle.data)
 			del handle
-			print 'AUDIO DUR', self._gettrackduration_ms(self.audiotrack)
+##			print 'AUDIO DUR', self._gettrackduration_ms(self.audiotrack)
 	
 		try:	
 			self.videotrack = self.movie.GetMovieIndTrackType(1,
@@ -186,11 +186,11 @@ def reader(url):
 		rdr = _Reader(url)
 	except IOError:
 		return None
-	if not rdr.HasVideo():
-		print "DBG: No video in", url
-		return None
-	if not rdr.HasAudio():
-		print "DBG: warning: no audio"
+##	if not rdr.HasVideo():
+##		print "DBG: No video in", url
+##		return None
+##	if not rdr.HasAudio():
+##		print "DBG: warning: no audio"
 	return rdr
 
 def _test():
