@@ -1355,6 +1355,9 @@ class SMILWriter(SMIL):
 		if self.__title:
 			self.writetag('meta', [('name', 'title'),
 					       ('content', self.__title)])
+		if not self.convertURLs and ctx.baseurl:
+			self.writetag('meta', [('name', 'base'),
+					       ('content', ctx.baseurl)])
 		self.writetag('meta', [('name', 'generator'),
 				       ('content','GRiNS %s'%version.version)])
 		for key, val in ctx.attributes.items():
