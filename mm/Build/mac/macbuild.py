@@ -40,21 +40,26 @@ I_GRINS_FREEZE=1
 I_GRINS_BUILD=2
 I_CMIF_FREEZE=3
 I_CMIF_BUILD=4
-N_BUTTONS=6			# Last button plus one
-I_OK=7
-I_CANCEL=8
+I_RN_SUPPORT=5
+N_BUTTONS=7			# Last button plus one
+I_OK=8
+I_CANCEL=9
 
 #
 # Names of the various files/folders
 #
 GRINS_SRC="macplayer.py"
+GRINS_RN_SRC="macplayer.py"
 GRINS_DIR="build.player"
 GRINS_PROJECT="player.prj"
+GRINS_RN_PROJECT="rnplayer.prj"
 GRINS_TARGET="Player FAT"
 
 CMIFED_SRC="maceditor.py"
+CMIFED_RN_SRC="maceditor.py"
 CMIFED_DIR="build.editor"
 CMIFED_PROJECT="editor.prj"
+CMIFED_RN_PROJECT="rneditor.prj"
 CMIFED_TARGET="Editor FAT"
 
 #
@@ -86,21 +91,30 @@ def main():
 	do_grins_build = (I_GRINS_BUILD in results)
 	do_cmif_freeze = (I_CMIF_FREEZE in results)
 	do_cmif_build = (I_CMIF_BUILD in results)
+	do_rn_support = (I_RN_SUPPORT in results)
 	print results
-	print do_grins_freeze, do_grins_build, do_cmif_freeze, do_cmif_build
+	print do_grins_freeze, do_grins_build, do_cmif_freeze, do_cmif_build, do_rn_support
 	if not results:
 		sys.exit(0)
 
 	workdir = os.path.split(sys.argv[0])[0]
 	print "workdir", workdir, sys.argv
 
-	grins_py = myjoin(workdir, GRINS_SRC)
 	grins_dir = myjoin(workdir, GRINS_DIR)
-	grins_prj = myjoin(grins_dir, GRINS_PROJECT)
+	if do_rn_support:
+		grins_py = myjoin(workdir, GRINS_RN_SRC)
+		grins_prj = myjoin(grins_dir, GRINS_RN_PROJECT)
+	else:
+		grins_py = myjoin(workdir, GRINS_SRC)
+		grins_prj = myjoin(grins_dir, GRINS_PROJECT)
 
-	cmifed_py = myjoin(workdir, CMIFED_SRC)
 	cmifed_dir = myjoin(workdir, CMIFED_DIR)
-	cmifed_prj = myjoin(cmifed_dir, CMIFED_PROJECT)
+	if do_rn_support:
+		cmifed_py = myjoin(workdir, CMIFED_RN_SRC)
+		cmifed_prj = myjoin(cmifed_dir, CMIFED_RN_PROJECT)
+	else:
+		cmifed_py = myjoin(workdir, CMIFED_SRC)
+		cmifed_prj = myjoin(cmifed_dir, CMIFED_PROJECT)
 	
 	checkattrdefs(myjoin(workdir, ATTRDEFS_INPUT),
 				  myjoin(workdir, ATTRDEFS_OUTPUT))
