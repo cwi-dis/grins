@@ -15,6 +15,7 @@
 from math import sin, cos, atan2, pi, ceil, floor
 import gl, GL, DEVICE
 import fl
+import GLLock
 import FontStuff
 import MenuMaker
 from Dialog import GLDialog
@@ -113,7 +114,11 @@ class ChannelView(ViewDialog, GLDialog):
 
 	def show(self):
 		if self.is_showing():
+			if GLLock.gl_lock:
+				GLLock.gl_lock.acquire()
 			self.setwin()
+			if GLLock.gl_lock:
+				GLLock.gl_lock.release()
 			return
 		GLDialog.show(self)
 		self.initwindow()
@@ -171,11 +176,15 @@ class ChannelView(ViewDialog, GLDialog):
 			focus = '', None
 		self.cleanup()
 		if self.is_showing():
+			if GLLock.gl_lock:
+				GLLock.gl_lock.acquire()
 			self.setwin()
 			self.fixviewroot()
 			self.recalc(focus)
 			self.reshape()
 			self.draw()
+			if GLLock.gl_lock:
+				GLLock.gl_lock.release()
 
 	def kill(self):
 		self.destroy()
@@ -206,8 +215,12 @@ class ChannelView(ViewDialog, GLDialog):
 		# player (this bypasses the edit manager so it can be
 		# done even when the document is playing).
 		if self.is_showing():
+			if GLLock.gl_lock:
+				GLLock.gl_lock.acquire()
 			self.setwin()
 			self.redraw()
+			if GLLock.gl_lock:
+				GLLock.gl_lock.release()
 
 	def mouse(self, dev, val):
 		# MOUSE[123] event.
@@ -407,10 +420,14 @@ class ChannelView(ViewDialog, GLDialog):
 		self.cleanup()
 		self.viewroot = node
 		self.recalc(('b', None))
+		if GLLock.gl_lock:
+			GLLock.gl_lock.acquire()
 		self.setwin()
 		self.reshape()
 		self.fixtitle()
 		self.draw()
+		if GLLock.gl_lock:
+			GLLock.gl_lock.release()
 
 	def fixtitle(self):
 		title = 'Channel View (' + self.toplevel.basename + ')'
@@ -562,10 +579,14 @@ class ChannelView(ViewDialog, GLDialog):
 		if not hasattr(node, 'cv_obj'):
 			return
 		obj = node.cv_obj
+		if GLLock.gl_lock:
+			GLLock.gl_lock.acquire()
 		self.setwin()
 		self.deselect()
 		obj.select()
 		self.drawarcs()
+		if GLLock.gl_lock:
+			GLLock.gl_lock.release()
 
 	# Create a new channel
 
@@ -1056,9 +1077,13 @@ class NodeBox(GO):
 		# print 'node', self.name, 'setarmedmode', mode
 		if mode <> self.node.armedmode:
 			self.node.armedmode = mode
+			if GLLock.gl_lock:
+				GLLock.gl_lock.acquire()
 			self.mother.setwin()
 			self.drawfocus()
 			self.mother.drawarcs()
+			if GLLock.gl_lock:
+				GLLock.gl_lock.release()
 
 	def lock(self):
 		if not self.locked:
