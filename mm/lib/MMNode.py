@@ -25,10 +25,18 @@ class MMNodeContext:
 		self.editmgr = None
 		self.armedmode = None
 		self.getchannelbynode = None
+		self.title = None
+		self.attributes = {}	# unrecognized SMIL meta values
 
 	def __repr__(self):
 		return '<MMNodeContext instance, channelnames=' \
 			+ `self.channelnames` + '>'
+
+	def settitle(self, title):
+		self.title = title
+
+	def gettitle(self):
+		return self.title
 
 	def setbaseurl(self, baseurl):
 		self.baseurl = baseurl

@@ -97,6 +97,8 @@ smil_node_attrs = [
 	]
 
 class SMILParser(SMIL, xmllib.XMLParser):
+	__warnmeta = 0		# whether to warn for unknown meta properties
+
 	def __init__(self, context, printfunc = None):
 		self.elements = {
 			'smil': (self.start_smil, self.end_smil),
@@ -322,6 +324,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['layout'] = val
 				else:
 					self.syntax_error("unknown layout `%s'" % val)
+			elif attr == 'title':
+				attrdict['title'] = val
 			elif attr not in smil_node_attrs:
 				# catch all
 				attrdict[attr] = parseattrval(attr, val, self.__context)
@@ -333,6 +337,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -695,7 +702,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			title = attrdict.get('title')
 			if title is not None:
 				if title != ch.name:
-					ch['comment'] = title
+					ch['title'] = title
 				del attrdict['title']
 			bg = attrdict['background-color']
 			del attrdict['background-color']
@@ -972,6 +979,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -1004,6 +1014,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -1023,6 +1036,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -1043,6 +1059,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -1057,7 +1076,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		self.__in_meta = 1
 		if attributes.has_key('name'):
-			name = attributes['name']
+			name = string.lower(attributes['name'])
 		else:
 			self.syntax_error('required attribute name missing in meta element')
 			return
@@ -1068,17 +1087,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		if name == 'title':
 			# make sure __title cannot be a SMIL region id
-			if content[:1] == content[-1:] == ' ':
-				self.__title = content
-			else:
-				self.__title = ' %s ' % content
+			self.__context.settitle(content)
+##			if content[:1] == content[-1:] == ' ':
+##				self.__title = content
+##			else:
+##				self.__title = ' %s ' % content
 		elif name == 'base':
 			self.__base = content
 		elif name in ('pics-label', 'PICS-label', 'generator'):
 			pass
 		else:
-			self.warning('unrecognized meta property', self.lineno)
-			# we currently ignore all other meta element
+			if self.__warnmeta:
+				self.warning('unrecognized meta property', self.lineno)
+			self.__context.attributes[name] = content
 
 	def end_meta(self):
 		self.__in_meta = 0
@@ -1092,6 +1113,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -1140,6 +1164,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attr = attr[len(GRiNSns)+1:]
 			if attr == 'id':
 				attrdict[attr] = id = val
+				res = xmllib.tagfind.match(id)
+				if res is None or res.end(0) != len(id):
+					self.syntax_error("illegal ID value `%s'" % id)
 				if self.__ids.has_key(id):
 					self.syntax_error('non-unique id %s' % id)
 				self.__ids[id] = 0
@@ -1199,6 +1226,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -1238,6 +1268,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -1252,6 +1285,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -1270,6 +1306,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -1286,6 +1325,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if id is None:
 			self.syntax_error('GRiNS layout without id attribute')
 			return
+		res = xmllib.tagfind.match(id)
+		if res is None or res.end(0) != len(id):
+			self.syntax_error("illegal ID value `%s'" % id)
 		if self.__ids.has_key(id):
 			self.syntax_error('non-unique id %s' % id)
 		self.__ids[id] = 0
@@ -1307,6 +1349,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -1352,6 +1397,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -1366,6 +1414,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -1401,6 +1452,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -1489,6 +1543,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
@@ -1526,6 +1583,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(GRiNSns)+1:]] = val
 		id = attributes.get('id')
 		if id is not None:
+			res = xmllib.tagfind.match(id)
+			if res is None or res.end(0) != len(id):
+				self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0

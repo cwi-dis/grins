@@ -214,6 +214,9 @@
 (terminator (name) 'LAST' 'Terminator child' termnodename
 	'Name of child that terminates parallel node' normal)
 
+(title (string) '' 'Title' default
+	 'The title of this object' raw)
+
 (toplevel_winpos (tuple (float) (float)) (-1 -1) 'Top level winpos' hidden
 	 'Window position for top level menu' raw)
 
