@@ -70,11 +70,13 @@ class ArcInfoForm(DlgBar):
 		for i in self.keys():
 			if id==self[i]._id:
 				self[i].callcb()
+				break
 
 	#########################################################
 	# cmif specific interface
 	# Called by the core to close this window
 	def close(self):
+		if not hasattr(self,'GetParent'): return
 		frame=self.GetParent()
 		self.DestroyWindow()
 		frame.RecalcLayout()
@@ -90,7 +92,7 @@ class ArcInfoForm(DlgBar):
 
 	# Called by the core to hide this window
 	def hide(self):
-		self.close()
+		self.ShowWindow(win32con.SW_HIDE)
 
 	# Sets the parameters from the core system 
 	def do_init(self, title, srclist, srcinit, dstlist, dstinit, delay, adornments=None):
