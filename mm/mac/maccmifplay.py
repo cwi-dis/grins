@@ -10,20 +10,35 @@ import sys
 import string
 import macfs
 
-# For now:
-progdir=os.path.split(sys.argv[0])[0]
-CMIFDIR=os.path.split(progdir)[0]
+#
+# Set variable for standalone cmif:
+#
+try:
+	import MMNode
+except ImportError:
+	STANDALONE=0
+else:
+	STANDALONE=1
+	print 'Standalone, path=', sys.path
 
-CMIFPATH = [
-	CMIFDIR+":mac",
-	CMIFDIR+":player",
-	CMIFDIR+":common",
-	CMIFDIR+":lib"
-]
-sys.path[0:0] = CMIFPATH
-
-os.environ["CMIF"] = CMIFDIR
-#os.environ["CHANNELDEBUG"] = "1"
+if not STANDALONE:
+	# For now:
+	progdir=os.path.split(sys.argv[0])[0]
+	CMIFDIR=os.path.split(progdir)[0]
+	
+	CMIFPATH = [
+		CMIFDIR+":mac",
+		CMIFDIR+":player",
+		CMIFDIR+":common",
+		CMIFDIR+":lib",
+	# Overrides for Python distribution
+		CMIFDIR+":pylib",
+		CMIFDIR+":pylib:audio"
+	]
+	sys.path[0:0] = CMIFPATH
+	
+	os.environ["CMIF"] = CMIFDIR
+	#os.environ["CHANNELDEBUG"] = "1"
 
 if len(sys.argv) < 2:
 	MacOS.splash()

@@ -333,7 +333,7 @@ class HTMLWidget:
 	
 	def new_font(self, font):
 		self.delayed_para_send()
-		print 'FONT', font # DBG
+##		print 'FONT', font # DBG
 		if font == None:
 			font = (0, 0, 0, 0)
 		font = map(lambda x:x, font)
@@ -448,15 +448,15 @@ class MyHTMLParser(htmllib.HTMLParser):
 		self.do_p(attrs)
 	
 	def handle_image(self, src, alt, ismap, align, width, height):
-		print 'IMAGE', self.url, src
+##		print 'IMAGE', self.url, src
 		url = urllib.basejoin(self.url, src)
-		print 'URL', url
+##		print 'URL', url
 		fname = urllib.urlretrieve(url)[0]
-		print 'FILENAME', fname
+##		print 'FILENAME', fname
 		try:
 			image = img.reader(imgformat.macrgb16, fname)
 		except img.error:
-			print 'FAILED'
+			print 'Html: failed to get image', fname
 			self.formatter.add_flowing_data(alt)
 			return
 		data = image.read()
