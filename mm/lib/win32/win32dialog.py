@@ -304,20 +304,29 @@ class OpenLocationDlg(ResDialog):
 ##############################
 
 class SelectElementDlg(ResDialog):
-	def __init__(self, parent=None, elements = None, selection=''):
+	def __init__(self, parent, mmnode, selection=''):
 		ResDialog.__init__(self,grinsRC.IDD_SELECT_ELEMENT, parent)
-		self._elements = elements
+		self._mmnode = mmnode
 		self._selection = selection
 		self.__isoswnd = 0
 
 		self._bselect = Button(self,win32con.IDOK)
 		self._bcancel = Button(self,win32con.IDCANCEL)
 		self._editsel = Edit(self, grinsRC.IDC_EDIT1)
+		self._tree = None
 
 	def OnInitDialog(self):	
 		self.__isoswnd = 1
 		self.attach_handles_to_subwindows()
 		self._editsel.settext(self._selection)
+		self._tree = self.GetDlgItem(grinsRC.IDC_TREE1)
+		style = win32con.WS_VISIBLE | win32con.WS_CHILD | commctrl.TVS_HASBUTTONS |\
+				commctrl.TVS_HASLINES | commctrl.TVS_SHOWSELALWAYS |\
+				win32con.WS_BORDER | win32con.WS_TABSTOP\
+				 | commctrl.TVS_LINESATROOT
+		self._tree.SetWindowLong(win32con.GWL_STYLE, style)
+		self.buildElementsTree()
+		self.HookNotify(self.OnSelChanged, commctrl.TVN_SELCHANGED)
 		return ResDialog.OnInitDialog(self)
 
 	def OnOK(self):
@@ -346,6 +355,47 @@ class SelectElementDlg(ResDialog):
 	def settext(self, text):
 		if self.__isoswnd:
 			self._editsel.settext(text)
+
+	def buildElementsTree(self):
+		ctx = self._mmnode.GetContext()
+		root = self._mmnode.GetRoot()
+		top_levels = ctx.getviewports()
+		self.__reg2id = {}
+		for top in top_levels:
+			itemid = self.insertLabel(top.GetUID())
+			self.__reg2id[top] = itemid
+			self.__appendRegions(top, itemid)
+		self.__appendNodes(root)
+		del self.__reg2id
+					
+	def __appendRegions(self, parent, itemid):
+		for reg in parent.GetChildren():
+			if reg.get('type') == 'layout':
+				childitemid = self.insertLabel(reg.GetUID(), itemid)
+				self.__reg2id[reg] = childitemid
+				self.__appendRegions(reg, childitemid)
+
+	def __appendNodes(self, parent):
+		from MMTypes import mediatypes
+		for node in parent.children:
+			ntype = node.GetType()
+			if ntype in mediatypes:
+				name = node.GetRawAttrDef('name', '<no id>')
+				mmchan = node.GetChannel()
+				if mmchan:
+					reg = mmchan.GetLayoutChannel()
+					regid = self.__reg2id.get(reg)
+					if regid is not None:
+						self.insertLabel(name, regid) 
+			self.__appendNodes(node)
+
+	def OnSelChanged(self, std, extra):
+		nmsg = win32mu.Win32NotifyMsg(std, extra, 'tree')
+		text = self._tree.GetItemText(nmsg.itemNew[0])
+		self.settext(text)
+
+	def insertLabel(self, text, parent = commctrl.TVI_ROOT, after = commctrl.TVI_LAST):
+		return self._tree.InsertItem(commctrl.TVIF_TEXT, text, 0, 0, 0, 0, None, parent, after)
 
 # Implementation of the Layout name dialog
 class LayoutNameDlg(ResDialog):
