@@ -1487,6 +1487,8 @@ class AttrEditor(AttrEditorDialog):
 				C = ChanPosAttrEditorField
 			elif displayername == '.anchorlist':
 				C = AnchorlistAttrEditorField
+			elif displayername == 'percent':
+				C = PercentAttrEditorField				
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -1884,6 +1886,19 @@ class FloatAttrEditorField(AttrEditorField):
 			if attrname == 'loop':
 				return 0.0
 		return AttrEditorField.parsevalue(self, str)
+
+class PercentAttrEditorField(AttrEditorField):
+	def valuerepr(self, value):
+		if value == None:
+			return ''
+		
+		return AttrEditorField.valuerepr(self, value*100)
+
+	def parsevalue(self, str):
+		if str == '':
+			return None
+		
+		return AttrEditorField.parsevalue(self, str)/100.0
 
 class StringAttrEditorField(AttrEditorField):
 	def valuerepr(self, value):
