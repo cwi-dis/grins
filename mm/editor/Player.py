@@ -99,25 +99,25 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	# FORMS callbacks.
 	#
 	#
- 	def before_call(self):
+## 	def before_call(self):
 ##		print 'callback start'
-		self.waslocked = 0
-		if GLLock.gl_lock:
+##		self.waslocked = 0
+##		if GLLock.gl_lock:
 ##			print 'try acquire'
-			if not GLLock.gl_lock.acquire(0):
+##			if not GLLock.gl_lock.acquire(0):
 ##				print 'acquire failed'
-				self.waslocked = 1
+##				self.waslocked = 1
 ##			print 'release'
-			GLLock.gl_lock.release()
-	#
-	def after_call(self):
+##			GLLock.gl_lock.release()
+##	#
+##	def after_call(self):
 ##		print 'callback end'
-		if self.waslocked:
+##		if self.waslocked:
 ##			print 're-acquire'
-			GLLock.gl_lock.acquire()
+##			GLLock.gl_lock.acquire()
 	#
 	def play_callback(self, obj, arg):
-		self.before_call()
+##		self.before_call()
 		self.playbutton.lcol = MYBLUE
 		if self.playing and self.pausing:
 			# Case 1: user pressed play to cancel pause
@@ -128,10 +128,10 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		else:
 			# nothing, restore state.
 			self.showstate()
-		self.after_call()
+##		self.after_call()
 	#
 	def pause_callback(self, obj, arg):
-		self.before_call()
+##		self.before_call()
 		self.pausebutton.lcol = MYBLUE
 		if self.playing and self.pausing:
 			# Case 1: press pause to cancel pause
@@ -144,34 +144,34 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			self.pause(1)
 			self.playbutton.lcol = MYBLUE
 			self.play()
-		self.after_call()
+##		self.after_call()
 	#
 	def stop_callback(self, obj, arg):
-		self.before_call()
+##		self.before_call()
 		self.stopbutton.lcol = MYBLUE
 		self.continuous = 0
 		self.stop()
 		if self.pausing:
 			self.pause(0)
-		self.after_call()
+##		self.after_call()
 
 	def timer_callback(self, obj, arg):
-		self.before_call()
+##		self.before_call()
 		self.scheduler.timer_callback()
-		self.after_call()
+##		self.after_call()
 	#
 	def cmenu_callback(self, obj, arg):
-		self.before_call()
+##		self.before_call()
 		i = self.cmenubutton.get_menu() - 1
 		if 0 <= i < len(self.channelnames):
 			name = self.channelnames[i]
 			self.channels[name].flip_visible()
 			self.toplevel.channelview.channels_changed()
 			self.makemenu()
-		self.after_call()
+##		self.after_call()
 	#
 	def omenu_callback(self, obj, arg):
-		self.before_call()
+##		self.before_call()
 		i = self.omenubutton.get_menu()
 		if i == 1:
 			self.measure_armtimes = (not self.measure_armtimes)
@@ -197,10 +197,10 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		else:
 			print 'Player: Option menu: funny choice', i
 		self.makeomenu()
-		self.after_call()
+##		self.after_call()
 
 	def slotmenu_callback(self, obj, arg):
-		self.before_call()
+##		self.before_call()
 		slot = obj.get_menu()
 		if slot:
 			node = self.runslots[slot-1][0]
@@ -208,7 +208,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 				self.toplevel.channelview.globalsetfocus(node)
 			else:
 				dialogs.showmessage('That slot is not active')
-		self.after_call()
+##		self.after_call()
 		
 	def dummy_callback(self, *dummy):
 		pass
