@@ -13,7 +13,7 @@
 	Fully implemented
      7.MediaMarkerTiming
 	Recognized, implemented for some media types on some platforms
-	(not part of SMIL 2.0 Language?)
+	(not part of SMIL 2.0 Language)
      8.MinMaxTiming
 	Fully implemented
      9.MultiArcTiming
@@ -24,7 +24,6 @@
 	Fully implemented
     12.RepeatValueTiming
 	Not implemented
-	(not part of SMIL 2.0 Language?)
     13.RestartDefault
 	Fully implemented
     14.RestartTiming
@@ -37,7 +36,7 @@
 	Fully implemented
     18.SyncMaster
 	Not implemented
-	(not part of SMIL 2.0 Language?)
+	(not part of SMIL 2.0 Language)
     19.TimeContainerAttributes
 	Not implemented (not part of SMIL 2.0 Language)
     20.WallclockTiming
