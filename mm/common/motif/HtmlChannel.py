@@ -13,6 +13,7 @@ import sys
 import windowinterface
 import XHtml
 import MMurl
+import urlparse
 from TextChannel import getfont, mapfont
 try:
 	import Xrm
@@ -191,7 +192,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		import Xm
 		htmlw = self.htmlw
 		self.played_url = self.url = self.armed_url
-		url, tag = MMurl.splittag(self.played_url)
+		utype, host, path, params, query, tag = urlparse.urlparse(self.url)
 		self.played_str = self.armed_str
 		self.played_anchor = self.armed_anchor
 		self.backlist = []
