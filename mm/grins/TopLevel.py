@@ -87,7 +87,7 @@ class TopLevel(TopLevelDialog):
 
 	def timer_callback(self, curtime):
 		self.__intimer = 1
-		self.setwaiting()
+##		self.setwaiting()
 		self._last_timer_id = None
 		self.player.timer_callback(curtime)
 		while self.__immediate:
@@ -165,7 +165,7 @@ class TopLevel(TopLevelDialog):
 ##		t0 = time.time()
 		import urlcache
 		mtype = urlcache.mimetype(self.filename)
-		if mtype not in ('application/x-grins-project', 'application/smil', 'application/smil+xml', 'application/x-grins-binary-project') (not hasattr(windowinterface, 'is_embedded') or not windowinterface.is_embedded()):
+		if mtype not in ('application/x-grins-project', 'application/smil', 'application/smil+xml', 'application/x-grins-binary-project') and (not hasattr(windowinterface, 'is_embedded') or not windowinterface.is_embedded()):
 			ans = windowinterface.GetYesNoCancel('MIME type not application/smil or application/x-grins-project.\nOpen as SMIL document anyway?')
 			if ans == 0:	# yes
 				mtype = 'application/smil'
