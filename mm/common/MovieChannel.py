@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-from Channel import ChannelWindowThread
+from ChannelThread import ChannelWindowThread
 import MMurl
 
 class MovieChannel(ChannelWindowThread):
