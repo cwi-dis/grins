@@ -1076,6 +1076,18 @@ sdk_map_virtual_key(PyObject *self, PyObject *args)
 	return Py_BuildValue("i",ret);
 	}
 
+static PyObject*
+GetWMString(PyObject *self, PyObject *args)
+	{
+	int pval;
+	if (!PyArg_ParseTuple(args, "i", &pval))
+		return NULL;
+	char *buf = (char*)pval;
+	PyObject *obj = Py_BuildValue("s",buf);
+	delete[] buf;
+	return obj;
+	}
+
 
  // @object PyWin32Sdk|A module wrapper object.  It is a general utility object, and is not associated with an MFC object.
 BEGIN_PYMETHODDEF(Win32Sdk)
@@ -1142,6 +1154,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"CrackNMHDR",sdk_crack_nmhdr,1}, // undocumented!
 	{"New",sdk_new,1}, // undocumented!
 	{"Delete",sdk_delete,1}, // undocumented!
+	{"GetWMString",GetWMString,1}, // undocumented!
 
 END_PYMETHODDEF()
 
