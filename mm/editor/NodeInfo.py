@@ -43,7 +43,7 @@ class NodeInfo:
 
 		top = w.SubWindow({'left': None, 'right': None, 'top': None})
 
-		self.name_field = top.TextInput('Name:', '', None,
+		self.name_field = top.TextInput('Name:', '', None, None,
 						{'left': None, 'top': None})
 		self.type_select = top.OptionMenu('Type:', alltypes, 0,
 						  (self.type_callback, ()),
@@ -53,28 +53,29 @@ class NodeInfo:
 					{'left': self.type_select,
 					 'top': None, 'right': None})
 		midd = w.SubWindow({'top': top, 'left': None, 'right': None})
-		alter = midd.AlternateSubWindow({'left': None, 'top': None})
-		self.style_group = midd.SubWindow({'top': None, 'right': None,
-					'left': alter})
-		self.styles_browser = self.style_group.List('Styles:', [],
-				None,
-				{'top': None, 'right': None, 'left': None})
-		self.styles_select = self.style_group.OptionMenu('All styles:',
-					['No styles'], 0, None,
-					{'left': None, 'bottom': None,
-					 'top': self.styles_browser})
-		self.styles_buttons = self.style_group.ButtonRow(
-			[('Delete', (self.styles_delete_callback, ())),
-			 ('Add', (self.styles_add_callback, ()))],
-			{'top': self.styles_browser, 'right': None,
-			 'left': self.styles_select, 'bottom': None,
-			 'vertical': 0})
+		alter = midd.AlternateSubWindow({'left': None, 'top': None,
+						 'right': None})
+##		self.style_group = midd.SubWindow({'top': None, 'right': None,
+##					'left': alter})
+##		self.styles_browser = self.style_group.List('Styles:', [],
+##				None,
+##				{'top': None, 'right': None, 'left': None})
+##		self.styles_select = self.style_group.OptionMenu('All styles:',
+##					['No styles'], 0, None,
+##					{'left': None, 'bottom': None,
+##					 'top': self.styles_browser})
+##		self.styles_buttons = self.style_group.ButtonRow(
+##			[('Delete', (self.styles_delete_callback, ())),
+##			 ('Add', (self.styles_add_callback, ()))],
+##			{'top': self.styles_browser, 'right': None,
+##			 'left': self.styles_select, 'bottom': None,
+##			 'vertical': 0})
 		self.imm_group = alter.SubWindow()
 		self.ext_group = alter.SubWindow()
 		self.int_group = alter.SubWindow()
 
 		self.file_input = self.ext_group.TextInput('File:', '',
-				(self.file_callback, ()),
+				(self.file_callback, ()), None,
 				{'top': None, 'left': None, 'right': None})
 		butt = self.ext_group.ButtonRow(
 			[('Edit contents...', (self.conteditor_callback, ())),
@@ -82,7 +83,7 @@ class NodeInfo:
 			{'top': self.file_input, 'left': None, 'right': None,
 			 'vertical': 0})
 		self.children_browser = self.int_group.List('Children:', [],
-				None,
+				[None, (self.openchild_callback, ())],
 				{'top': None, 'left': None, 'right': None})
 		butt = self.int_group.ButtonRow(
 			[('Open...', (self.openchild_callback, ()))],
@@ -181,10 +182,10 @@ class NodeInfo:
 		del self.name_field
 		del self.type_select
 		del self.channel_select
-		del self.style_group
-		del self.styles_browser
-		del self.styles_select
-		del self.styles_buttons
+##		del self.style_group
+##		del self.styles_browser
+##		del self.styles_select
+##		del self.styles_buttons
 		del self.imm_group
 		del self.ext_group
 		del self.int_group
@@ -214,13 +215,13 @@ class NodeInfo:
 		#
 		self.allchannelnames = ['undefined'] + \
 				       self.context.channelnames
-		self.allstyles = self.context.styledict.keys()
-		self.allstyles.sort()
+##		self.allstyles = self.context.styledict.keys()
+##		self.allstyles.sort()
 		if always:
 			self.changed = 0
-		if always or not self.ch_styles_list:
-			self.styles_list = self.node.GetRawAttrDef('style', [])[:]
-			self.ch_styles_list = 0
+##		if always or not self.ch_styles_list:
+##			self.styles_list = self.node.GetRawAttrDef('style', [])[:]
+##			self.ch_styles_list = 0
 		if always or not self.ch_name():
 			self.name = MMAttrdefs.getattr(self.node, 'name')
 		if always or not self.ch_channelname:
@@ -270,9 +271,9 @@ class NodeInfo:
 		if not em.transaction():
 			return 0
 		n = self.node
-		if self.ch_styles_list:
-			em.setnodeattr(n, 'style', self.styles_list[:])
-			self.ch_styles_list = 0
+##		if self.ch_styles_list:
+##			em.setnodeattr(n, 'style', self.styles_list[:])
+##			self.ch_styles_list = 0
 		if self.ch_name():
 			self.name = self.name_field.gettext()
 			em.setnodeattr(n, 'name', self.name)
@@ -311,14 +312,14 @@ class NodeInfo:
 			i = 0		# 'undefined'
 		self.channel_select.setoptions(self.allchannelnames, i)
 
-		self.styles_browser.delalllistitems()
-		self.styles_browser.addlistitems(self.styles_list, -1)
-
-		if self.allstyles:
-			self.styles_select.setoptions(self.allstyles, 0)
-			self.style_group.show()
-		else:
-			self.style_group.hide()
+##		self.styles_browser.delalllistitems()
+##		self.styles_browser.addlistitems(self.styles_list, -1)
+##
+##		if self.allstyles:
+##			self.styles_select.setoptions(self.allstyles, 0)
+##			self.style_group.show()
+##		else:
+##			self.style_group.hide()
 
 
 		self.text_browser.settext(self.immtext)
@@ -407,27 +408,27 @@ class NodeInfo:
 			self.ch_channelname = 1
 			self.changed = 1
 
-	def styles_add_callback(self):
-		if not self.styles_select.is_showing():
-			return
-		i = self.styles_select.getpos()
-		self.ch_styles_list = 1
-		self.changed = 1
-		new = self.allstyles[i]
-		if not new in self.styles_list:
-			self.styles_list.append(new)
-		self.styles_browser.addlistitems(self.styles_list, -1)
-		self.styles_browser.selectitem(-1)
-
-	def styles_delete_callback(self):
-		if not self.styles_select.is_showing():
-			return
-		i = self.styles_browser.getselected()
-		self.ch_styles_list = 1
-		self.changed = 1
-		self.styles_browser.dellistitem(i)
-		del self.styles_list[i]
-		self.styles_browser.selectitem(0)
+##	def styles_add_callback(self):
+##		if not self.styles_select.is_showing():
+##			return
+##		i = self.styles_select.getpos()
+##		self.ch_styles_list = 1
+##		self.changed = 1
+##		new = self.allstyles[i]
+##		if not new in self.styles_list:
+##			self.styles_list.append(new)
+##		self.styles_browser.addlistitems(self.styles_list, -1)
+##		self.styles_browser.selectitem(-1)
+##
+##	def styles_delete_callback(self):
+##		if not self.styles_select.is_showing():
+##			return
+##		i = self.styles_browser.getselected()
+##		self.ch_styles_list = 1
+##		self.changed = 1
+##		self.styles_browser.dellistitem(i)
+##		del self.styles_list[i]
+##		self.styles_browser.selectitem(0)
 
 	def attributes_callback(self):
 		import AttrEdit

@@ -15,7 +15,7 @@ def usage(msg):
 	print '-C         : open Channel view right away'
 	print '-H         : open Hierarchy view right away'
 	print '-P         : open Player window right away'
-	print '-S         : open Style sheet window right away'
+##	print '-S         : open Style sheet window right away'
 	print '-L         : open Hyperlinks window right away'
 	print '-h helpdir : specify help directory'
 	print 'file ...   : one or more CMIF files'
@@ -59,8 +59,8 @@ class Main:
 					if opt == '-j':
 						top.player.playfromanchor(
 							  top.root, arg)
-				elif opt == '-S':
-					top.styleview.show()
+##				elif opt == '-S':
+##					top.styleview.show()
 				elif opt == '-L':
 					top.links.show()
 			top.checkviews()
