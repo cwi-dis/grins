@@ -104,7 +104,7 @@ class NodeInfoDialog:
 			   ('Anchors...', (self.anchors_callback, ())),
 			   ('Apply', (self.apply_callback, ())),
 			   ('OK', (self.ok_callback, ()))]
-		if settings.get('lightweight'):
+		if features.lightweight:
 			del buttons[4]	# no Anchors... command
 		butt = w.ButtonRow(buttons,
 			bottom = None, left = None, right = None, vertical = 0)
