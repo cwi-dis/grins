@@ -326,44 +326,26 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	def OnFormatChange(self, w, h, bpp, fmt):
 		if not self.window: return
-		self.__rmdds = self.window._topwindow.CreateSurface(w, h)
-		self.__RGB_On_RGB = {
-			'32-32': self.__rmdds.Blt_RGB32_On_RGB32,
-			'32-24': self.__rmdds.Blt_RGB32_On_RGB24,
-			'32-16': self.__rmdds.Blt_RGB32_On_RGB16,
-			'32-8' : self.__rmdds.Blt_RGB32_On_RGB8,
-
-			'24-32': self.__rmdds.Blt_RGB24_On_RGB32,
-			'24-24': self.__rmdds.Blt_RGB24_On_RGB24,
-			'24-16': self.__rmdds.Blt_RGB24_On_RGB16,
-			'24-8' : self.__rmdds.Blt_RGB24_On_RGB8,
-			}
-
-		screenBPP = self.window._topwindow.getRGBBitCount()
-		self.__rmrender = None
 		
-		#print 'Rendering real video: %s bpp=%d (%d x %d) on RGB%d' % (self.toStringFmt(fmt), bpp, w, h, screenBPP)
-
+		screenBPP = self.window._topwindow.getRGBBitCount()	
 		if fmt==rma.RMA_RGB:
-			pair = '%d-%d' % (bpp, screenBPP)
-			if self.__RGB_On_RGB.has_key(pair):
-				self.__rmrender = self.__RGB_On_RGB[pair], w, h
-
+			bltCode = 'Blt_RGB%d_On_RGB%d' % (bpp, screenBPP)
 		elif fmt==rma.RMA_YUV420:
-			if screenBPP==32:
-				self.__rmrender = self.__rmdds.Blt_YUV420_On_RGB32, w, h
-			elif screenBPP==24:
-				self.__rmrender = self.__rmdds.Blt_YUV420_On_RGB24, w, h
-			elif screenBPP==16:
-				self.__rmrender = self.__rmdds.Blt_YUV420_On_RGB16, w, h
-			elif screenBPP==8:
-				self.__rmrender = self.__rmdds.Blt_YUV420_On_RGB8, w, h
+			bltCode = 'Blt_YUV420_On_RGB%d' % screenBPP
 		
-		if self.__rmrender:
-			self.window.setvideo(self.__rmdds, self.getMediaWndRect(), (0,0,w,h) )
-		else:
-			self.window.removevideo()
+		if debug:
+			print 'Rendering real video: %s bpp=%d (%d x %d) on RGB%d' % (self.toStringFmt(fmt), bpp, w, h, screenBPP)
+		
+		try:
+			dymmy = getattr(self.window._topwindow.getDrawBuffer(), bltCode)
+		except AttributeError:
 			self.__rmdds = None
+			self.__rmrender = None
+			self.window.removevideo()
+		else:
+			self.__rmdds = self.window._topwindow.CreateSurface(w, h)
+			self.__rmrender = getattr(self.__rmdds, bltCode), w, h
+			self.window.setvideo(self.__rmdds, self.getMediaWndRect(), (0,0,w,h) )
 			
 	def Blt(self, data):
 		if self.__rmdds and self.__rmrender:
