@@ -217,29 +217,16 @@ class Main(MainDialog):
 		import Preferences
 		Preferences.showpreferences(0)
 		ok = 1
-		toclose = []
-		for top in self.tops:
-			if top.close_ok():
-				toclose.append(top)
-			else:
-				ok = 0
-## Original code did not close each top:
-##		if not ok:
-##			# can't exit yet but close the ones that are
-##			# ok to close
-##			for top in toclose:
-##				top.close()
-##			return
-		for top in toclose:
+		for top in self.tops[:]:
 			top.close()
-		if not ok:
+		if self.tops:
 			return
 		if exitcallback:
 			rtn, arg = exitcallback
 			apply(rtn, arg)
 		else:
 			raise SystemExit, 0
-
+		
 	def run(self):
 		import windowinterface
 		windowinterface.mainloop()
