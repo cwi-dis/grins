@@ -1125,6 +1125,7 @@ class ChannelWindow(Channel):
 		self._bgimg = None
 		self.__callback = None
 		self.__out_trans_qid = None
+		self._active_multiregion_transition = None
 		self.__wingeom = None		
 		self.__mediageom = None		
 		self.commandlist = [
@@ -1745,15 +1746,24 @@ class ChannelWindow(Channel):
 		out_trans = self.gettransition(node, 'transOut')
 		if out_trans <> None:
 			outtransdur = out_trans['dur']
-			self.__out_trans_qid = self._scheduler.enterabs(
-					  node.start_time+self.armed_duration-outtransdur, 0,
-					  self.schedule_out_trans, (out_trans,))
+			outtranstime = node.start_time+self.armed_duration-outtransdur
+			self.__out_trans_qid = self._scheduler.enterabs(outtranstime, 0,
+					  self.schedule_out_trans, (out_trans, outtranstime))
 		if in_trans <> None and self.window:
-			self.window.begintransition(0, 1, in_trans)
+			otherwindow = self._find_multiregion_transition(in_trans, node.start_time)
+			if otherwindow:
+				self.window.jointransition(otherwindow)
+			else:
+				self.window.begintransition(0, 1, in_trans)
 	
-	def schedule_out_trans(self, out_trans):
+	def schedule_out_trans(self, out_trans, outtranstime):
 		self.__out_trans_qid = None
-		if self.window:
+		if not self.window:
+			return
+		otherwindow = self._find_multiregion_transition(out_trans, outtranstime)
+		if otherwindow:
+			self.window.jointransition(otherwindow)
+		else:
 			self.window.begintransition(0, 1, out_trans)
 		
 	def cleanup_transitions(self):
@@ -1762,6 +1772,29 @@ class ChannelWindow(Channel):
 			self.__out_trans_qid = None
 		if self.window:
 			self.window.endtransition()
+		self._active_multiregion_transition = None
+			
+	def _find_multiregion_transition(self, trans, transtime):
+		if not trans.get('multiElement', 0):
+			return None
+		# Unfortunately the transition name isn't in the dictionary. 
+		# We use the id of the dictionary as its unique value
+		trid = id(trans)
+		print '_find_multiregion_transition', trid, self
+		rv = self.pchan._has_multiregion_transition(trid, transtime)
+		if not rv:
+			for child in self._subchannels:
+				rv = child._has_multiregion_transition(trid, transtime)
+				if rv:
+					break
+		self._active_multiregion_transition = (trid, transtime)
+		return rv
+		
+	def _has_multiregion_transition(self, trid, transtime):
+		print '_has_multiregion_transition', trid, transtime, self, self._active_multiregion_transition
+		if (trid, transtime) == self._active_multiregion_transition:
+			return self.window
+		return None
 			
 	# use this code to get the error message in the window instead
 	# of in a popup window
