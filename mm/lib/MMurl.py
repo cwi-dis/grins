@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from urllib import *
 
 _OriginalFancyURLopener = FancyURLopener
