@@ -554,11 +554,14 @@
 	'Play forwards then backwards' normal (all))
 
 # Transitions
+(trname (name) '' 'Name' default
+	'ID of transition, as used when referring to it' raw (smil2))
+	
 (trtype (enum fade slideWipe pushWipe matrixWipe radialWipe irisWipe edgeWipe) fade 
 		'Transition type' default
 	'The type of transition to perform' raw (smil2))
 	
-(subtype (string) '' 'Transition subtype' default
+(subtype (name) '' 'Transition subtype' default
 	'Further refinement of transition to perform' raw (smil2))
 	
 (dur (float) 1.0 'Duration' default
