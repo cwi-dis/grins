@@ -51,6 +51,7 @@ __version__ = "$Id$";
 	ALIGNTOOL,			# enable align tools
 
 	EDIT_TYPE,			# allow editing of node type
+	EDIT_BASE,			# allow editing of base attribute
 
 	# Different capabilities within the hierarchy view
 	H_TRANSITIONS,
@@ -60,4 +61,4 @@ __version__ = "$Id$";
 	H_TIMESTRIP,			# Show snap!-like documents with correct toplevel par/seq
 	H_PLAYABLE,			# Toggle showing of playability of nodes
 	H_THUMBNAILS,			# Toggle showing of image thumbnails
-] = range(37)				# don't forget to update this range!
+] = range(38)				# don't forget to update this range!

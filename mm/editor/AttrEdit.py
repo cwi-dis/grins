@@ -1093,8 +1093,11 @@ class DocumentWrapper(Wrapper):
 			if features.compatibility == features.QT:
 				names = self.__qtnames + names
 			names = self.__publishnames + names
-		return self.__stdnames + names
-		
+		names = self.__stdnames + names
+		if features.EDIT_BASE not in features.feature_set and 'base' in names:
+			names.remove('base')
+		return names
+
 	def valuerepr(self, name, value):
 		if name in ('title', 'base', 'comment'):
 			return MMAttrdefs.valuerepr(name, value)
