@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
 """ @win32doc|_UsergroupView
-This module contains the ui implementation of the TransitionView.
+This module contains the ui implementation of the UsergroupView.
 It is implemented as a Form view.
 The MFC CFormView is essentially a view that contains controls. 
 These controls are laid out based on a dialog-template resource
@@ -10,7 +10,7 @@ Objects of this class are exported to Python through the win32ui pyd
 as objects of type PyCFormView.
 The _UsergroupView extends the GenFormView which is an extension to PyCFormView.
 
-The _TransitionView is created using the resource dialog template with identifier IDD_USERGROUP.
+The _UsergroupView is created using the resource dialog template with identifier IDD_USERGROUP.
 To edit this template, open it using the resource editor. 
 Like all resources it can be found in cmif\win32\src\GRiNSRes\GRiNSRes.rc.
 The resource project is cmif\win32\src\GRiNSRes\GRiNSRes.dsp which creates
@@ -37,7 +37,7 @@ import grinsRC
 
 from GenFormView import GenFormView
 
-class _TransitionView(GenFormView):
+class _UsergroupView(GenFormView):
 	def __init__(self,doc,bgcolor=None):
 		GenFormView.__init__(self,doc,grinsRC.IDD_USERGROUP)	
 		self['Groups']=components.ListBox(self,grinsRC.IDC_GROUPS)
@@ -118,3 +118,72 @@ class _TransitionView(GenFormView):
 		else:
 			self._init_ugroups=ugroups
 			self._init_pos=pos
+				
+
+
+
+class UsergroupEditDialog(win32dialog.ResDialog,components.ControlsDict):
+	def __init__(self,parent=None):
+		win32dialog.ResDialog.__init__(self,grinsRC.IDD_EDIT_USERGROUP,parent)
+		components.ControlsDict.__init__(self)
+		self['Name']=components.Edit(self,grinsRC.IDC_EDIT1)
+		self['Title']=components.Edit(self,grinsRC.IDC_EDIT2)
+		self['State']=components.ComboBox(self,grinsRC.IDC_COMBO1)
+		self['Override']=components.ComboBox(self,grinsRC.IDC_COMBO2)
+		self['Cancel']=components.Button(self,win32con.IDCANCEL)
+		self['Restore']=components.Button(self,grinsRC.IDC_RESTORE)
+		self['Apply']=components.Button(self,grinsRC.IDC_APPLY)
+		self['OK']=components.Button(self,win32con.IDOK)
+
+		self.CreateWindow()
+		self.attach_handles_to_subwindows()	
+		self.HookCommand(self.OnRestore,self['Restore']._id)
+		self.HookCommand(self.OnApply,self['Apply']._id)
+
+	def do_init(self, ugroup, title, ustate, override, cbdict):
+		ls=['NOT RENDERED', 'RENDERED']	
+		self['State'].initoptions(ls)
+		lo=['not allowed', 'allowed']
+		self['Override'].initoptions(lo)
+		self.setstate(ugroup, title, ustate, override)
+		self._cbdict=cbdict
+
+	def OnOK(self):
+		apply(apply,self._cbdict['OK'])
+	def OnCancel(self):
+		apply(apply,self._cbdict['Cancel'])
+	def OnRestore(self,id,code):
+		apply(apply,self._cbdict['Restore'])
+	def OnApply(self,id,code):
+		apply(apply,self._cbdict['Apply'])
+		
+	def show(self):
+		"""Show the dialog (pop it up again)."""
+		self.CenterWindow()
+		self.ShowWindow(win32con.SW_SHOW)
+		self.UpdateWindow()
+
+	def close(self):
+		"""Close the dialog."""
+		self.DestroyWindow()
+
+	def setstate(self, ugroup, title, ustate, override):
+		"""Set the values in the dialog.
+
+		Arguments (no defaults):
+		ugroup -- string name of the user group
+		title -- string title of the user group
+		ustate -- string 'RENDERED' or 'NOT RENDERED'
+		override -- string 'allowed' or 'not allowed'
+		"""
+		self['Name'].settext(ugroup)
+		self['Title'].settext(title)
+		self['State'].setpos(ustate == 'RENDERED')
+		self['Override'].setpos(override == 'allowed')
+
+	def getstate(self):
+		"""Return the current values in the dialog."""
+		return self['Name'].gettext(), \
+		       self['Title'].gettext(), \
+		       self['State'].getvalue(), \
+		       self['Override'].getvalue()

@@ -56,6 +56,7 @@ class LayoutChannel(ChannelWindow):
 
 	def create_window(self, pchan, pgeom, units = None):
 ##		menu = []
+		bgcolor = self._attrdict.get('bgcolor')
 		if pchan:
 ##			if hasattr(self._player, 'editmgr'):
 ##				menu.append(('', 'raise', (self.popup, ())))
@@ -102,19 +103,19 @@ class LayoutChannel(ChannelWindow):
 					visible_channel = self._visible,
 					type_channel = self._window_type,
 					units = units, adornments = adornments,
-					commandlist = self.commandlist)
+					commandlist = self.commandlist,
+					bgcolor = bgcolor)
 			else:
 				self.window = windowinterface.newwindow(x, y,
 					width, height, self._name,
 					visible_channel = self._visible,
 					type_channel = self._window_type,
 					units = units, adornments = adornments,
-					commandlist = self.commandlist)
+					commandlist = self.commandlist,
+					bgcolor = bgcolor)
 ##			if hasattr(self._player, 'editmgr'):
 ##				menu.append(('', 'select in timeline view',
 ##					     (self.focuscall, ())))
-		if self._attrdict.has_key('bgcolor'):
-			self.window.bgcolor(self._attrdict['bgcolor'])
  		if self._attrdict.has_key('fgcolor'):
 			self.window.fgcolor(self._attrdict['fgcolor'])
 		self._curvals['bgcolor'] = self._attrdict.get('bgcolor'), None
@@ -189,5 +190,3 @@ class LayoutChannel(ChannelWindow):
 			if ch._activeMediaNumber <= 0:
 				ch.hide(0)
 			ch = ch._get_parent_channel()
-			
-			
