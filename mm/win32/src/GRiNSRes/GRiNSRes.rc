@@ -4011,6 +4011,7 @@ BEGIN
     BUTTON      IDUC_HELP
     BUTTON      IDUC_ZOOMIN
     BUTTON      IDUC_ZOOMOUT
+    BUTTON      IDUC_ZOOMRESET
 END
 
 IDR_TB_UNUSED TOOLBAR DISCARDABLE  16, 15
@@ -4146,6 +4147,7 @@ BEGIN
                             "Create a link to the Context subwindow\nCreate a link to the Context subwindow"
     IDUC_CREATE_ANCHOR_BROWSER 
                             "Create a link to the Browser subwindow\nCreate a link to the Browser subwindow"
+    IDUC_ZOOMRESET          "Fit in window\nFit in window"
 END
 
 #endif    // English (U.S.) resources
