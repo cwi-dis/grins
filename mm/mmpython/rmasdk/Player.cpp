@@ -30,6 +30,7 @@ class PlayerObject : public Object
   	static PyObject* Seek(PyObject *self, PyObject *args);
 
 	static PyObject* SetPyAdviceSink(PyObject *self, PyObject *args);
+	static PyObject* SetPyVideoSurface(PyObject *self, PyObject *args);
 
 
 	protected:
@@ -175,6 +176,19 @@ PyObject* PlayerObject::SetPyAdviceSink(PyObject *self, PyObject *args)
 	if(pCC)pCC->m_pClientSink->SetPyAdviceSink(obj);
 	RETURN_NONE;
 	}
+PyObject* PlayerObject::SetPyVideoSurface(PyObject *self, PyObject *args)
+	{
+	PyObject *obj;
+	if(!PyArg_ParseTuple(args,"O",&obj))return NULL;
+	ExampleClientContext *pCC=((PlayerObject*)self)->pContext;
+	if(pCC)
+		{
+		ExampleSiteSupplier *ss=pCC->m_pSiteSupplier;
+		if(ss)ss->SetPyVideoSurface(obj);
+		}
+	RETURN_NONE;
+	}
+
 
 
 static struct PyMethodDef PyRMPlayer_methods[] =
@@ -189,6 +203,7 @@ static struct PyMethodDef PyRMPlayer_methods[] =
 	{"Seek",PlayerObject::Seek,1},
 	{"SetPyAdviceSink",PlayerObject::SetPyAdviceSink,1},   // formal name
 	{"SetStatusListener",PlayerObject::SetPyAdviceSink,1}, // alias
+	{"SetVideoSurface",PlayerObject::SetPyVideoSurface,1},
 	{NULL, 	NULL}
 	};
 
