@@ -370,7 +370,7 @@ imgpgm imgpgmmodule.o -I\$(PBMINC) \$(SYSFLAGS)
 imgpbm imgpbmmodule.o -I\$(PBMINC) \$(SYSFLAGS)
 imgtiff imgtiffmodule.o tif_stdio.o -I\$(TIFFINC) \$(SYSFLAGS)
 imgcolormap imgcolormapmodule.o dither.o genmap.o mppm3.o \$(SYSFLAGS)
-$(INCLUDEGIF:+imggif imggifmodule.o \$(SYSFLAGS)}
+${INCLUDEGIF:+imggif imggifmodule.o \$(SYSFLAGS)}
 imgsgi imgsgimodule.o \$(SYSFLAGS)
 imgop imgopmodule.o \$(SYSFLAGS)
 ${NOCL:+imgjpeg imgjpegmodule.o -I\$(JPEGINC) -I\$(JPEGLIB) \$(SYSFLAGS)}
