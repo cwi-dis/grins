@@ -38,13 +38,8 @@ class Main(MainDialog):
 		import license
 		self.tmpopts = opts
 		self.tmpfiles = files
-		if features.lightweight:
-			whichversion = 'light'
-		else:
-			whichversion = 'pro'
-		# The old version uses 'editor'
 		self.tmplicensedialog = license.WaitLicense(self.do_init,
-					   (whichversion,))
+					   features.license_features_needed)
 
 	def do_init(self, license):
 		opts, files = self.tmpopts, self.tmpfiles
