@@ -56,6 +56,13 @@ class ChannelWindow(GLDialog):
 			# Now convert from GL coordinates to X precentages
 			pgeom = pchan.sqconvert(sq)
 			self.attrdict['base_winoff'] = pgeom
+		if pgeom:
+			if pgeom[0] < 0 or pgeom[0] > 1 or \
+				  pgeom[1] < 0 or pgeom[1] > 1 or \
+				  pgeom[2] < 0 or pgeom[1] > 1 or \
+				  pgeom[3] < 0 or pgeom[3] > 1:
+				print 'Warning: channel',self.name,
+				print 'extends outside parent window'
 		GLDialog.setparent(self, pwid, pgeom)
 		GLDialog.show(self)
 		# Use RGB mode
