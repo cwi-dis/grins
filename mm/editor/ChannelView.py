@@ -29,7 +29,8 @@ from ArmStates import *
 # Color assignments (RGB)
 
 BGCOLOR = 200, 200, 200			# Light gray
-BORDERCOLOR = 75, 75, 75		# Dark gray
+BORDER1COLOR = 75, 75, 75		# Dark gray
+BORDER2COLOR = 50, 50, 150		# Dark blueish gray
 CHANNELCOLOR = 240, 240, 240		# Very light gray
 NODECOLOR = 220, 220, 220		# Rather light gray
 ARROWCOLOR = 0, 0, 255			# Blue
@@ -528,7 +529,7 @@ class ChannelBox(GO):
 		if self.selected:
 			gl.RGBcolor(FOCUSCOLOR)
 		else:
-			gl.RGBcolor(BORDERCOLOR)
+			gl.RGBcolor(BORDER1COLOR)
 		gl.linewidth(2)
 		gl.bgnclosedline()
 		gl.v2f(self.left, self.ycenter)
@@ -647,8 +648,10 @@ class NodeBox(GO):
 			gl.RGBcolor(LOCKEDCOLOR)
 		elif self.selected:
 			gl.RGBcolor(FOCUSCOLOR)
+		elif self.node.t0t1_inherited:
+			gl.RGBcolor(BORDER2COLOR)
 		else:
-			gl.RGBcolor(BORDERCOLOR)
+			gl.RGBcolor(BORDER1COLOR)
 		gl.linewidth(2)
 		gl.bgnclosedline()
 		gl.v2f(self.left, self.top)
