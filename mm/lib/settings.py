@@ -13,8 +13,6 @@ G2 = 'g2'
 
 # Defaults:
 default_settings = {
-	'license': 'A-2IKA-Q4BCB-DA-DGMW',
-
 	'lightweight': 0,		# Lightweight version
 
 	'system_bitrate': 14400,	# Slow modem
