@@ -67,6 +67,10 @@ MTL=midl.exe
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\common\win32\DownloadChannel.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\common\win32\Help_.py
 # End Source File
 # Begin Source File
@@ -132,6 +136,26 @@ SOURCE=.\common\mac\PreferencesDialog.py
 # Begin Source File
 
 SOURCE=.\common\mac\RealAudioChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\mac\RealChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\mac\RealPixChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\mac\RealTextChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\mac\RealVideoChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\mac\RealWindowChannel.py
 # End Source File
 # Begin Source File
 
@@ -880,6 +904,10 @@ SOURCE=.\lib\motif\XWindow.py
 # End Group
 # Begin Source File
 
+SOURCE=.\lib\ASXParser.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\Attrdefs
 # End Source File
 # Begin Source File
@@ -992,10 +1020,6 @@ SOURCE=.\lib\MMParser.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\MMPlayerTree.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\lib\MMRead.py
 # End Source File
 # Begin Source File
@@ -1028,11 +1052,11 @@ SOURCE=.\lib\MPEGVideoDuration.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\NTVideoDuration.py
+SOURCE=.\lib\README
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\README
+SOURCE=.\lib\realsupport.py
 # End Source File
 # Begin Source File
 
@@ -1069,10 +1093,6 @@ SOURCE=.\lib\smpte.py
 # Begin Source File
 
 SOURCE=.\lib\SoundDuration.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\splashimg.py
 # End Source File
 # Begin Source File
 
