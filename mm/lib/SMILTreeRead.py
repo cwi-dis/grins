@@ -405,6 +405,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						else:
 							self.syntax_error('ambiguous syncbase definition')
 							continue
+				xanchor = xchan = None
 				if name == 'prev':
 					xnode = 'prev'
 				elif name is None:
@@ -415,7 +416,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						if not name:
 							self.syntax_error('invalid name')
 							continue
-					xanchor = xchan = None
 					xnode = self.__nodemap.get(name)
 					if xnode is None:
 						xanchor = self.__anchormap.get(name)
