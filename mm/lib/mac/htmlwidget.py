@@ -15,7 +15,6 @@ import Controls
 import waste
 import WASTEconst
 import os
-import regsub
 import string
 import htmllib
 import MMurl
@@ -23,6 +22,9 @@ import img
 import imgformat
 import mac_image
 import formatter
+
+##PIXELFORMAT=imgformat.macrgb16
+PIXELFORMAT=imgformat.macrgb
 
 LEFTMARGIN=4
 TOPMARGIN=4
@@ -59,14 +61,13 @@ class HTMLWidget:
 		self.font_tt = Fm.GetFNum('Courier')
 		self.font_size = 12
 		self.name = name
-		self.window = window
-		self.wid = window._wid
+		self.wid = window
 		self.controlhandler = controlhandler
 		l, t, r, b = rect
 		self.rect = rect
 		vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
 		dr = (0, 0, vr[2]-vr[0], 0)
-		Qd.SetPort(self.wid)
+		Qd.SetPort(window)
 		Qd.TextFont(4)
 		Qd.TextSize(9)
 		flags = WASTEconst.weDoAutoScroll | WASTEconst.weDoOutlineHilite
@@ -76,13 +77,11 @@ class HTMLWidget:
 		
 	def close(self):
 		Qd.SetPort(self.wid) # XXXX Needed?
-		Win.InvalRect(self.rect)
 		if self.bary:
 			self.bary.DisposeControl()
 		del self.bary
 		del self.ted
 		del self.wid
-		del self.window
 		
 	def setcolors(self, bg, fg, an, recalc=0):
 		any = 0
@@ -238,8 +237,6 @@ class HTMLWidget:
 	def do_update(self):
 		if self.must_clear:
 			self._clear_html()
-		if self.current_data_loaded == None and self.window._transparent < 0:
-			return
 		visregion = self.wid.GetWindowPort().visRgn
 		myregion = Qd.NewRgn()
 		Qd.RectRgn(myregion, self.rect) # or is it self.ted.WEGetViewRect() ?
@@ -252,8 +249,7 @@ class HTMLWidget:
 			return
 		Qd.RGBBackColor(self.bg_color)
 		Qd.RGBForeColor((0, 0xffff, 0)) # DBG
-		if self.window._transparent == 0 or (self.window._transparent < 0 and self.current_data_loaded == None):
-			Qd.EraseRgn(visregion)
+		Qd.EraseRgn(visregion)
 		self.ted.WEUpdate(myregion)
 ##		self._updatescrollbars()
 		
@@ -264,7 +260,7 @@ class HTMLWidget:
 		Qd.RGBBackColor(self.bg_color)
 		vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
 		self.ted.WESetViewRect(vr)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 		self._createscrollbars()
 		
 	def do_click(self, down, local, evt):
@@ -312,7 +308,7 @@ class HTMLWidget:
 		self.ted.WESetSelection(0, 0x3fffffff)
 		self.ted.WEDelete()
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 		self._createscrollbars(reset=1)
 		self.anchor_offsets = []
 		self.current_data_loaded = None
@@ -321,8 +317,7 @@ class HTMLWidget:
 	def insert_html(self, data, url, tag=None):		
 		if data == '':
 			self.must_clear = 1
-			Qd.SetPort(self.wid)
-			Win.InvalRect(self.rect)
+			self.wid.InvalWindowRect(self.rect)
 			return
 
 		self.must_clear = 0
@@ -359,15 +354,14 @@ class HTMLWidget:
 		self.ted.WESetSelection(pos, pos)
 ##		self.ted.WESetSelection(0, 0)
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 
 		self._createscrollbars(reset=1)
 
 	def insert_plaintext(self, data):		
 		if data == '':
 			self.must_clear = 1
-			Qd.SetPort(self.wid)
-			Win.InvalRect(self.rect)
+			self.wid.InvalWindowRect(self.rect)
 			return
 
 		self.must_clear = 0
@@ -391,7 +385,7 @@ class HTMLWidget:
 		self.ted.WESetSelection(pos, pos)
 ##		self.ted.WESetSelection(0, 0)
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 
 		self._createscrollbars(reset=1)
 		
@@ -526,7 +520,7 @@ class HTMLWidget:
 	def send_literal_data(self, data):
 		self.delayed_para_send()
 		self.delayed_name_send()
-		data = regsub.gsub('\n', '\r', data)
+		data = string.join(string.split(data, '\n'), '\r')
 		data = string.expandtabs(data)
 		self.ted.WEInsert(data, None, None)
 		
@@ -723,9 +717,9 @@ class _Gifkeeper:
 			self.dict[url][0] = self.dict[url][0] + 1
 			return self.dict[url][1]
 		fname = MMurl.urlretrieve(url)[0]
-		image = img.reader(imgformat.macrgb16, fname)
+		image = img.reader(PIXELFORMAT, fname)
 		data = image.read()
-		pixmap = mac_image.mkpixmap(image.width, image.height, imgformat.macrgb16, data)
+		pixmap = mac_image.mkpixmap(image.width, image.height, PIXELFORMAT, data)
 		handle = Res.Resource(url)
 		self.dict[url] = [1, handle, pixmap, data, image.width, image.height]
 		return handle
