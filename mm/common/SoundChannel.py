@@ -52,9 +52,9 @@ class SoundChannel(ChannelAsync):
 			return
 			
 		if debug: print 'SoundChannel: play', node
-		player.play(self.arm_fp, (self.my_playdone, (0,)))
 		self.play_fp = self.arm_fp
 		self.arm_fp = None
+		player.play(self.play_fp, (self.my_playdone, (0,)))
 		
 	def my_playdone(self, outside_induces):
 		if debug: print 'SoundChannel: playdone',`self`
