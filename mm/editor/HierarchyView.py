@@ -506,13 +506,10 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		self.redrawing = 1
 		if self.dirty:
-			print "DEBUG: drawing scene."
 			d = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
 			self.scene_graph.draw(d)
 			d.render()
 			self.dirty = 0
-		else:
-			print "DEBUG: don't need to draw scene."
 		self.redrawing = 0
 
 	def hide(self, *rest):
