@@ -9,6 +9,8 @@ from appcon import *
 # kick toplevel.serve_events()
 import __main__
 
+import win32ui
+
 # win32 structures helpers
 import win32mu
 
@@ -27,7 +29,6 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		self.__lastMouseMoveParams = None
 
 		self._usesLightSubWindows = 1
-		self._wndclasscursor = 'arrow'
 
 		win32window.DDWndLayer.__init__(self, self, bgcolor)
 
@@ -60,7 +61,6 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		self.HookMessage(self.onChar, win32con.WM_KEYDOWN)
 
 	def onChar(self, params):
-		import win32ui
 		from WMEVENTS import KeyboardInput
 		c = win32ui.TranslateVirtualKey(params[2])
 		self.onEvent(KeyboardInput, c)
@@ -112,14 +112,6 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 	def OnDraw(self, dc):
 		self.update()
 
-	# override DisplayListView default to eliminate cursor flashing
-	def setcursor(self, strid):
-		if self._wndclasscursor == strid: return
-		self._wndclasscursor = strid
-		import win32ui
-		cursor = win32window.getcursorhandle(strid)
-		win32ui.GetWin32Sdk().SetClassLong(self.GetSafeHwnd(),win32con.GCL_HCURSOR,cursor)
-
 	def onMouseEvent(self, point, ev, params=None):
 		cont, stop = 0, 1	
 		if not self._usesLightSubWindows:
@@ -156,7 +148,6 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 	
 	def rectAnd(self, rc1, rc2):
 		# until we make calcs
-		import win32ui
 		rc, ans= win32ui.GetWin32Sdk().IntersectRect(self.ltrb(rc1),self.ltrb(rc2))
 		if ans:
 			return self.xywh(rc)
