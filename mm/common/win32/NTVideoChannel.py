@@ -19,7 +19,7 @@ import windowinterface
 debug=0
 
 class VideoChannel(Channel.ChannelWindowAsync,MediaChannel.MediaChannel):
-	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
+	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center', 'project_videotype', 'project_targets']
 	node_attrs = Channel.ChannelWindow.node_attrs + \
 		      ['clipbegin', 'clipend']
 	if Channel.CMIF_MODE:

@@ -260,7 +260,8 @@ class SlideWrapper(NodeWrapper):
 				    'imgcropwh', 'imgcropanchor', 'aspect',
 				    'displayfull', 'subregionxy',
 				    'subregionwh', 'subregionanchor', 'start',
-				    'duration', 'maxfps', 'href']
+				    'duration', 'maxfps', 'href',
+				    'project_quality']
 			if tag == 'wipe':
 				namelist.append('direction')
 				namelist.append('wipetype')

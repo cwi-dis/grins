@@ -16,7 +16,7 @@ if not QT_AVAILABLE:
 debug = 0 # os.environ.has_key('CHANNELDEBUG')
 
 class VideoChannel(ChannelWindow):
-	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
+	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center', 'project_videotype', 'project_targets']
 	node_attrs = ChannelWindow.node_attrs + \
 		     ['clipbegin', 'clipend']
 	if CMIF_MODE:
