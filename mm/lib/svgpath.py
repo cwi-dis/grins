@@ -39,7 +39,7 @@ class PathSeg:
 		self._y2 = 0
 		self._r1 = 0
 		self._r2 = 0
- 		self._angle = 0
+		self._angle = 0
 		self._largeArcFlag = 0
 		self._sweepFlag = 0
 		self.setTypeFromLetter(segtype)
