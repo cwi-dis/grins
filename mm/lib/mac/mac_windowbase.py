@@ -546,6 +546,8 @@ class _Toplevel(_Event):
 		self._menus = []
 		
 	def initcommands(self):
+		for cmd in MenuTemplate.UNUSED_COMMANDS:
+			_all_commands[cmd] = 1
 		self._command_handler = CommandHandler(MenuTemplate.MENUBAR)
 		
 	def _addmenu(self, title):
@@ -917,6 +919,9 @@ class _WindowGroup:
 		dict = {}
 		for item in list:
 			cmd = item.__class__
+			if __debug__:
+				if not _all_commands.has_key(cmd):
+					print 'Warning: user has no way to issue command', cmd
 			dict[cmd] = item
 		self._set_cmd_dict(dict)
 		
@@ -2278,6 +2283,11 @@ class _SpecialMenu:
 			self.cur = cur
 		self.menu.enable(not not self.items)
 				
+#
+# Debug, really: this dict will hold all commands available anywhere. It is used to
+# check that all commands used by the various views are indeed selectable.
+_all_commands = {}
+
 class CommandHandler:
 	def __init__(self, menubartemplate):
 		self.cmd_to_menu = {}
@@ -2322,6 +2332,7 @@ class CommandHandler:
 			entry_type = entry[0]
 			if entry_type in (MenuTemplate.ENTRY, MenuTemplate.TOGGLE):
 				dummy, name, shortcut, cmd = entry
+				_all_commands[cmd] = 1
 				if self.cmd_to_menu.has_key(cmd):
 					raise 'Duplicate menu command', (name, cmd)
 				if entry_type == MenuTemplate.ENTRY:
