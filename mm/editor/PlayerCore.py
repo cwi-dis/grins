@@ -59,7 +59,6 @@ class PlayerCore(Scheduler):
 
 	def kill(self):
 		self.destroy()
-		BasicDialog.destroy(self)
 	#
 	# Internal reset.
 	#

@@ -23,13 +23,19 @@ class HelpWindow(ViewDialog, BasicDialog):
     def inittopics(self):
 	if self.topics <> None: return
 	self.topics = []
-	for topic in os.listdir(self.dirname):
+	try:
+		files = os.listdir(self.dirname)
+	except os.error:
+		files = []
+	for topic in files:
 		if topic[:1] not in ('.', '#') and topic[-1:] <> '~':
 			self.topics.append(topic)
 	self.topics.sort()
 	for line in self.topics:
 	    self.topic.add_browser_line(line)
 	self.curtopic = ''
+	if not self.topics:
+		print 'Sorry, no help topics found'
     def show(self):
 	self.inittopics()
     	BasicDialog.show(self)
