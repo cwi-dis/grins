@@ -68,41 +68,41 @@ default_settings = {
 	'vertical_icons': 1,		# Display icons vertically in Structure View
 	'vertical_spread': 1,		# Fill vertical free space in Structure View
 # HierarchyView colors
-	'structure_bgcolor': (150, 150, 150), # Light gray
-	'structure_leafcolor': (255,255,222),
-	'structure_darkleaf': (203,203,170),
-	'structure_commentcolor': (203,203,170), # for now equal to darkleaf
-	'structure_foreigncolor': (255,222,255),
-	'structure_darkforeign': (181,164,181),
-	'structure_rpcolor': (196,159,127),
-	'structure_darkrp': (196,159,127),
-	'structure_slidecolor': (222,255,255),
-	'structure_darkslide': (164,181,181),
-	'structure_altcolor': (184,95,95),
-	'structure_darkalt': (157,108,108),
-	'structure_parcolor': (79,156,130),
-	'structure_darkpar': (91,126,114),
-	'structure_seqcolor': (116,154,189),
-	'structure_darkseq': (108,128,146),
-	'structure_exclcolor': (148,117,166),
-	'structure_darkexcl': (131,119,137),
-	'structure_priocolor': (166,61,126),
-	'structure_darkprio': (142,53,108),
-	'structure_textcolor': (0, 0, 0), # Black
-	'structure_ctextcolor': (50, 50, 50),	# Very dark gray
-	'structure_expcolor': (200, 200, 200), # Open disclosure triangle
-	'structure_colcolor': (200, 200, 200), # Closed disclosure triangle
-	'structure_fillcolor': (255,255,222),
-	'structure_freezecolor': (200, 200, 200),
-	'structure_repeatcolor': (100, 100, 100),
-	'structure_trunccolor': (255,0,0),
-	'structure_ecbordercolor': (40, 40, 40), # triangle border
-	'structure_focusleft': (200, 200, 200),
-	'structure_focustop': (200, 200, 200),
-	'structure_focusright': (40, 40, 40),
-	'structure_focusbottom': (40, 40, 40),
-	'structure_dropcolor': (0, 0, 0),
-	
+	'structure_bgcolor': (150, 150, 150), # Background of Structure View
+	'structure_leafcolor': (255,255,222), # Unselected playable leaf nodes
+	'structure_darkleaf': (203,203,170), # Unselected unplayable leaf nodes
+	'structure_commentcolor': (203,203,170), # Comment nodes
+	'structure_foreigncolor': (255,222,255), # Playable foreign nodes
+	'structure_darkforeign': (181,164,181),	# Unplayable foreign nodes
+	'structure_rpcolor': (196,159,127), # Playable RealPix nodes (G2 only)
+	'structure_darkrp': (196,159,127), # Unplayable RealPix nodes (G2 only)
+	'structure_slidecolor': (222,255,255), # Playable RealPix slide (G2 only)
+	'structure_darkslide': (164,181,181), # Unplayable RealPix slide (G2 only)
+	'structure_altcolor': (184,95,95), # Playable switch node
+	'structure_darkalt': (157,108,108), # Unplayable switch node
+	'structure_parcolor': (79,156,130), # Playable par node
+	'structure_darkpar': (91,126,114), # Unplayable par node
+	'structure_seqcolor': (116,154,189), # Playable seq node
+	'structure_darkseq': (108,128,146), # Unplayable seq node
+	'structure_exclcolor': (148,117,166), # Playable excl node
+	'structure_darkexcl': (131,119,137), # Unplayable excl node
+	'structure_priocolor': (166,61,126), # Playable prio node
+	'structure_darkprio': (142,53,108), # Unplayable prio node
+	'structure_textcolor': (0, 0, 0), # Most text
+	'structure_ctextcolor': (50, 50, 50),	# Region names
+	'structure_expcolor': (200, 200, 200), # Open disclosure triangle (not used?)
+	'structure_colcolor': (200, 200, 200), # Collision color (not used?)
+	'structure_fillcolor': (255,255,222), # Fill bar color in media node
+	'structure_freezecolor': (200, 200, 200), # Freeze color in media node
+	'structure_repeatcolor': (100, 100, 100), # Repeat color in media node
+	'structure_trunccolor': (255,0,0), # Indication that node is truncated
+	'structure_ecbordercolor': (40, 40, 40), # triangle border (not used?)
+	'structure_focusleft': (200, 200, 200),	# left edge of 3D focus border
+	'structure_focustop': (200, 200, 200), # top edge of 3D focus border
+	'structure_focusright': (40, 40, 40), # right edge of 3D focus border
+	'structure_focusbottom': (40, 40, 40), # bottom edge of 3D focus border
+	'structure_dropcolor': (0, 0, 0), # drop target border color
+
 	'structure_bandwidthfree': (150, 150, 150),
 	'structure_bandwidthok': (0, 100, 0),
 	'structure_bandwidthnotok': (100, 0, 0),
@@ -113,7 +113,7 @@ default_settings = {
 	'structure_bwprerollcolor': (255, 160, 0),
 	'structure_bwmaystallcolor': (255, 160, 0),
 	'structure_bwstallcolor': (255, 0, 0),
-	
+
 	# Locations on the net
 	'templatedir_url': 'http://www.oratrix.com/indir/images',
 	'openviews' : [('structure', (-1, -1, -1, -1))],	# Default views to open
