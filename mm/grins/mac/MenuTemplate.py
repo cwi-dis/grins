@@ -60,5 +60,5 @@ PLAYER_ADORNMENTS = {
 
 #
 # CNTL resource for the toolbar and its height
-TOOLBAR=(2500, 22)
+TOOLBAR=(2500, 62, 22)
 		
