@@ -256,7 +256,7 @@ class RPParser(xmllib.XMLParser):
 		'viewchange': __empty,
 		}
 
-	def __init__(self, file = None):
+	def __init__(self, file = None, printfunc = None):
 		self.elements = {
 			'head': (self.start_head, None),
 			'image': (self.start_image, None),
@@ -270,16 +270,48 @@ class RPParser(xmllib.XMLParser):
 		self.tags = []
 		self.__images = {}
 		self.__file = file or '<unknown file>'
+		self.__printdata = []
+		self.__printfunc = printfunc
 		xmllib.XMLParser.__init__(self, accept_utf8 = 1)
 
 	def close(self):
 		xmllib.XMLParser.close(self)
+		if self.__printfunc is not None and self.__printdata:
+			data = string.join(self.__printdata, '\n')
+			# first 30 lines should be enough
+			data = string.split(data, '\n')
+			if len(data) > 30:
+				data = data[:30]
+				data.append('. . .')
+			self.__printfunc(string.join(data, '\n'))
+			self.__printdata = []
 		self.tags.sort(self.__tagsort)
 		prevstart = 0
 		for tag in self.tags:
 			start = tag['start']
 			tag['start'] = start - prevstart
 			prevstart = start
+
+	def goahead(self, end):
+		try:
+			xmllib.XMLParser.goahead(self, end)
+		except:
+			type, value, traceback = sys.exc_info()
+			if self.__printfunc is not None:
+				msg = 'Fatal error while parsing at line %d: %s' % (self.lineno, str(value))
+				if self.__printdata:
+					data = string.join(self.__printdata, '\n')
+					# first 30 lines should be enough
+					data = string.split(data, '\n')
+					if len(data) > 30:
+						data = data[:30]
+						data.append('. . .')
+				else:
+					data = []
+				data.insert(0, msg)
+				self.__printfunc(string.join(data, '\n'))
+				self.__printdata = []
+			raise		# re-raise
 
 	def __tagsort(self, tag1, tag2):
 		return cmp(tag1['start'], tag2['start'])
@@ -495,7 +527,10 @@ class RPParser(xmllib.XMLParser):
 		return time
 
 	def syntax_error(self, msg):
-		print 'Warning: syntax error in file %s, line %d: %s' % (self.__file, self.lineno, msg)
+		if self.__printfunc is None:
+			print 'Warning: syntax error in file %s, line %d: %s' % (self.__file, self.lineno, msg)
+		else:
+			self.__printdata.append('Warning: syntax error on line %d: %s' % (self.lineno, msg))
 
 	# the rest is to check that the nesting of elements is done
 	# properly (i.e. according to the SMIL DTD)

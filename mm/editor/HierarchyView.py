@@ -1354,10 +1354,11 @@ class SlideShow:
 			url = ctx.findurl(url)
 			utype, host, path, params, query, tag = urlparse.urlparse(url)
 			url = urlparse.urlunparse((utype, host, path, params, query, ''))
+			self.url = url
 			try:
 				fn, hdr = MMurl.urlretrieve(url)
 				fp = open(fn)
-				rp = realsupport.RPParser(fn)
+				rp = realsupport.RPParser(fn, self.printfunc)
 				rp.feed(fp.read())
 				rp.close()
 			except:
@@ -1390,6 +1391,9 @@ class SlideShow:
 		del self.node
 		del self.rp
 		del self.editmgr
+
+	def printfunc(self, msg):
+		windowinterface.showmessage('While reading %s:\n\n' % self.url + msg)
 
 	def transaction(self):
 		return 1
