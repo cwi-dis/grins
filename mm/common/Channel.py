@@ -582,10 +582,6 @@ class Channel:
 				return
 			raise error, 'not playing'
 		self._qid = None
-		if end_time is None:
-			self._played_node.end_time = self._scheduler.timefunc()
-		else:
-			self._played_node.end_time = end_time
 		if self._played_node.happenings.has_key(('event','beginEvent')):
 			# can only end when we've actually started
 			self.event('endEvent')
@@ -613,7 +609,6 @@ class Channel:
 		if didfire and self._playstate == PLAYING and \
 		   self._played_node is node:
 			if not self.syncplay:
-				self._played_node.end_time = self._scheduler.timefunc()
 				self._playcontext.play_done(node)
 			self._playstate = PLAYED
 		return didfire
