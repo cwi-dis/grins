@@ -411,8 +411,8 @@ class NodeWrapper(Wrapper):
 			self.editmgr.setnodeattr(self.node, 'beginlist', beginlist)
 			return
 		if name == '.values':
-			# ignore value if not immediate node
-			if self.node.GetType() == 'imm':
+			# ignore value if not immediate or comment node
+			if self.node.GetType() in ('imm', 'comment'):
 				self.editmgr.setnodevalues(self.node, value)
 			return
 		if name == '.anchorlist':
@@ -465,6 +465,9 @@ class NodeWrapper(Wrapper):
 			return ['name', 'title', 'abstract', 'author',
 				'copyright', 'comment',
 				'higher', 'peers', 'lower', 'pauseDisplay']
+		elif ntype == 'comment':
+			# special case for comment nodes
+			return ['.values']
 
 		# Tuples are optional names and will be removed if they
 		# aren't set

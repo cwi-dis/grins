@@ -1216,6 +1216,19 @@ class SMILWriter(SMIL):
 			self.pop()
 		fp.close()
 
+	def writecomment(self, x):
+		write = self.fp.write
+		if self.__isopen:
+			start, end = write('/>\n')
+			n = self.__stack[-1][2]
+			if self.set_char_pos and n is not None:
+				n.char_positions = n.char_positions[0], end
+			self.__isopen = 0
+			del self.__stack[-1]
+		start, end = write('<!--%s-->\n' % string.join(x.values, '\n'))
+		if self.set_char_pos and x is not None:
+			x.char_positions = start, end
+
 	def writetag(self, tag, attrs = None, x = None):
 		compatibility = features.compatibility
 		if attrs is None:
@@ -1953,6 +1966,9 @@ class SMILWriter(SMIL):
 				self.writetag('body')
 				self.push()
 			self.writeprefetchnode(x)
+			return
+		elif type == 'comment':
+			self.writecomment(x)
 			return
 
 		interior = (type in interiortypes)

@@ -1609,6 +1609,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for func in funcs:
 			func(root)
 		for node in root.GetChildren():
+			if node.type == 'comment':
+				continue
 			apply(self.Recurse, (node,) + funcs)
 
 	def FixSizes(self):
@@ -3663,7 +3665,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def handle_comment(self, data):
 		if data == EVALcomment:
 			return
-		self.__context.comment = self.__context.comment + data
+		if self.__container is not None:
+			node = self.__context.newnode('comment')
+			self.__container._addchild(node)
+			node.values = string.split(data, '\n')
+		else:
+			self.__context.comment = self.__context.comment + data
 
 	# Example -- handle cdata, could be overridden
 	def handle_cdata(self, cdata):

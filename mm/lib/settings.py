@@ -62,6 +62,7 @@ default_settings = {
 	'structure_bgcolor': (150, 150, 150), # Light gray
 	'structure_leafcolor': (255,255,222),
 	'structure_darkleaf': (203,203,170),
+	'structure_commentcolor': (203,203,170), # for now equal to darkleaf
 	'structure_rpcolor': (196,159,127),
 	'structure_darkrp': (196,159,127),
 	'structure_slidecolor': (222,255,255),
@@ -72,7 +73,7 @@ default_settings = {
 	'structure_darkpar': (91,126,114),
 	'structure_seqcolor': (116,154,189),
 	'structure_darkseq': (108,128,146),
-	'structure_exclcolor': (148,117,166), # for now equal to bag colors
+	'structure_exclcolor': (148,117,166),
 	'structure_darkexcl': (131,119,137),
 	'structure_priocolor': (166,61,126),
 	'structure_darkprio': (142,53,108),
