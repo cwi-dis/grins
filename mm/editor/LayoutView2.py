@@ -21,7 +21,6 @@ debugPreview = 0
 
 COPY_PASTE_MEDIAS = 1
 SHOW_ANIMATE_NODES = 0
-USE_NEW_ANIMATECODE = 1
 
 TYPE_UNKNOWN, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT, TYPE_ANIMATE = range(5)
 CHILD_TYPE = (TYPE_ANIMATE,)
@@ -759,14 +758,6 @@ class LayoutView2(LayoutViewDialog2):
 		self.root = self.toplevel.root
 		if type not in ('REGION_GEOM', 'MEDIA_GEOM'):
 			self.treeMutation()
-
-		# XXX very temporare to a allow demonstration
-		if not USE_NEW_ANIMATECODE and self.currentTargetAnimateNode is not None:
-			if self.existRef(self.currentTargetAnimateNode):
-				# just update timing. Of course can't work in several cases (when layout view is closed, ...)
-				animationData = self.currentTargetAnimateNode.getAnimationData()
-				if animationData is not None:
-					animationData.updateTimes()
 		
 		# after a commit, the focus may have changed
 		self.currentFocus = self.editmgr.getglobalfocus()
@@ -912,26 +903,13 @@ class LayoutView2(LayoutViewDialog2):
 			nodeRef = localSelList[0]
 			nodeType = self.getNodeType(nodeRef)
 
-			if USE_NEW_ANIMATECODE:
-				self.currentAnimateNode = animateNode = self.findAnimateNode(nodeRef)
-				if animateNode is not None:
-					self.currentTargetAnimateNode = nodeRef
-					enabled = 1
-			else:
-				animationData = None
-				if nodeType == TYPE_MEDIA:
-					animationData = nodeRef.computeAnimationData()
-				else:
-					# XXX 
-					if hasattr(nodeRef,'_animparent'):
-						animationData = nodeRef.computeAnimationData(nodeRef._animparent)
-				if animationData is not None and not animationData.isEmpty():
-					enabled = 1
-					self.currentTargetAnimateNode = nodeRef
+			self.currentAnimateNode = animateNode = self.findAnimateNode(nodeRef)
+			if animateNode is not None:
+				self.currentTargetAnimateNode = nodeRef
+				enabled = 1
 					
 		if enabled:
-			if USE_NEW_ANIMATECODE:
-				self.updateAnimationWrapper()
+			self.updateAnimationWrapper()
 			self.settoggle(ENABLE_ANIMATION, 1)
 		else:
 			self.currentTargetAnimateNode = None
@@ -1101,17 +1079,12 @@ class LayoutView2(LayoutViewDialog2):
 			self.timeValueChanged = 1
 		self.currentKeyTimeIndex = keyTimeIndex
 		if not nodeRef is None and not keyTimeIndex is None:
-			if USE_NEW_ANIMATECODE:
-				self.currentTimeValue = None # by default, indefinite
-				animateNode = self.getAnimateNode()
-				if animateNode is not None and animateNode.GetType() == 'animpar':
-					animvals = animateNode.GetAttrDef('animvals', [])
-					if len(animvals) > keyTimeIndex:
-						self.currentTimeValue, vals = animvals[keyTimeIndex]
-			else:
-				animationData = nodeRef.getAnimationData()
-				timeList = animationData.getTimes()
-				self.currentTimeValue = timeList[keyTimeIndex]
+			self.currentTimeValue = None # by default, indefinite
+			animateNode = self.getAnimateNode()
+			if animateNode is not None and animateNode.GetType() == 'animpar':
+				animvals = animateNode.GetAttrDef('animvals', [])
+				if len(animvals) > keyTimeIndex:
+					self.currentTimeValue, vals = animvals[keyTimeIndex]
 			self.isAKeyTime = 1
 		else:
 			self.currentTimeValue = None
@@ -1120,34 +1093,20 @@ class LayoutView2(LayoutViewDialog2):
 		return self.currentKeyTimeIndex
 	
 	def setCurrentTimeValue(self, currentTimeValue, nodeRef):
-		if USE_NEW_ANIMATECODE:
-			self.currentTimeValue = None # by default, indefinite
-			animateNode = self.getAnimateNode()
-			if animateNode is not None and animateNode.GetType() == 'animpar':
-				animvals = animateNode.GetAttrDef('animvals', [])
-				if self.currentTimeValue != currentTimeValue:
-					self.timeValueChanged = 1
-				self.currentTimeValue = currentTimeValue
-				self.isAKeyTime = 0
-				keyTimeIndex = self.getKeyForThisTime(animvals, currentTimeValue)
-				if not keyTimeIndex is None:
-					self.isAKeyTime = 1
-				if self.currentKeyTimeIndex != keyTimeIndex:
-					self.timeValueChanged = 1
-				self.currentKeyTimeIndex = keyTimeIndex					
-		else:
-			animationData = nodeRef.getAnimationData()
-			timeList = animationData.getTimes()
+		self.currentTimeValue = None # by default, indefinite
+		animateNode = self.getAnimateNode()
+		if animateNode is not None and animateNode.GetType() == 'animpar':
+			animvals = animateNode.GetAttrDef('animvals', [])
 			if self.currentTimeValue != currentTimeValue:
 				self.timeValueChanged = 1
 			self.currentTimeValue = currentTimeValue
 			self.isAKeyTime = 0
-			keyTimeIndex = self.getKeyForThisTime(timeList, currentTimeValue)
+			keyTimeIndex = self.getKeyForThisTime(animvals, currentTimeValue)
 			if not keyTimeIndex is None:
 				self.isAKeyTime = 1
 			if self.currentKeyTimeIndex != keyTimeIndex:
 				self.timeValueChanged = 1
-			self.currentKeyTimeIndex = keyTimeIndex
+			self.currentKeyTimeIndex = keyTimeIndex					
 
 	def getCurrentTimeValue(self):
 		return self.currentTimeValue
@@ -1171,46 +1130,28 @@ class LayoutView2(LayoutViewDialog2):
 	# have to be called from inside a transaction	
 	def insertKeyTime(self, nodeRef, tp, duplicateKey=None):
 		index = 0
-		if USE_NEW_ANIMATECODE:
-			self.currentTimeValue = None # by default, indefinite
-			animateNode = self.getAnimateNode()
-			if animateNode is not None and animateNode.GetType() == 'animpar':
-				animvals = animateNode.GetAttrDef('animvals', None)
-				if animvals is not None:
-					for time, vals in animvals:
-						if time > tp:
-							break
-						index = index+1
-					if index > 0 and index < len(animvals):
-						# can only insert a key between the first and the end
-						if duplicateKey is not None and duplicateKey >= 0:
-							# duplicate a key value
-							time, vals = animvals[duplicateKey]
-							newvals = vals.copy()
-						else:
-							# interpolate values at this time
-							left, top, width, height = self.animationWrapper.getRectAt(tp)
-#							bgcolor = self.animationWrapper.getColorAt(tp)
-							newvals = {'left':left, 'top':top, 'width':width, 'height':height}
-						animvals.insert(index, (tp, newvals))
-						self.editmgr.setnodeattr(animateNode, 'animvals', animvals)
-		else:			
-			animationData = nodeRef.getAnimationData()
-			timeList = animationData.getTimes()
-			data = animationData.getData()
-			index = 0
-			for time in timeList:
-				if time > tp:
-					break
-				index = index+1
-
-			if index > 0 and index < len(timeList):
-				# can only insert a key between the first and the end
-				if duplicateKey is not None and duplicateKey >= 0:
-					newData = (animationData.getRectAt(timeList[duplicateKey]), animationData.getColorAt(timeList[duplicateKey]))
-				else:
-					newData = (animationData.getRectAt(tp), animationData.getColorAt(tp))
-				animationData.insertTimeData(index, tp, newData)
+		self.currentTimeValue = None # by default, indefinite
+		animateNode = self.getAnimateNode()
+		if animateNode is not None and animateNode.GetType() == 'animpar':
+			animvals = animateNode.GetAttrDef('animvals', None)
+			if animvals is not None:
+				for time, vals in animvals:
+					if time > tp:
+						break
+					index = index+1
+				if index > 0 and index < len(animvals):
+					# can only insert a key between the first and the end
+					if duplicateKey is not None and duplicateKey >= 0:
+						# duplicate a key value
+						time, vals = animvals[duplicateKey]
+						newvals = vals.copy()
+					else:
+						# interpolate values at this time
+						left, top, width, height = self.animationWrapper.getRectAt(tp)
+#						bgcolor = self.animationWrapper.getColorAt(tp)
+						newvals = {'left':left, 'top':top, 'width':width, 'height':height}
+					animvals.insert(index, (tp, newvals))
+					self.editmgr.setnodeattr(animateNode, 'animvals', animvals)
 
 		if index > 0:
 			self.setKeyTimeIndex(index, nodeRef) # XXX for new code, nodeRef should be removed
@@ -1219,46 +1160,29 @@ class LayoutView2(LayoutViewDialog2):
 			
 	# have to be called from inside a transaction	
 	def removeKeyTime(self, nodeRef, index):
-		if USE_NEW_ANIMATECODE:
-			animateNode = self.getAnimateNode()
-			animvals = animateNode.GetAttrDef('animvals', [])
-			if index > 0 and index < len(animvals)-1:
-				# can only remove a key between the first and the end
-				del animvals[index]
-				self.editmgr.setnodeattr(animateNode, 'animvals', animvals)
-				self.animateControlWidget.removeKey(index)
-				self.setKeyTimeIndex(index-1, nodeRef)
+		animateNode = self.getAnimateNode()
+		animvals = animateNode.GetAttrDef('animvals', [])
+		if index > 0 and index < len(animvals)-1:
+			# can only remove a key between the first and the end
+			del animvals[index]
+			self.editmgr.setnodeattr(animateNode, 'animvals', animvals)
+			self.animateControlWidget.removeKey(index)
+			self.setKeyTimeIndex(index-1, nodeRef)
 		
 	def getKeyForThisTime(self, list, time):
-		if USE_NEW_ANIMATECODE:
-			index = 0
-			for timeRef, vals in list:
-				if timeRef == time:
-					return index
-				index = index+1
-			return None
-		else:
-			index = 0
-			for timeRef in list:
-				if timeRef == time:
-					return index
-				index = index+1
-			return None
+		index = 0
+		for timeRef, vals in list:
+			if timeRef == time:
+				return index
+			index = index+1
+		return None
 	
 	def getPxGeomWithContextAnimation(self, nodeRef):
 		time = self.currentTimeValue
-		if USE_NEW_ANIMATECODE:
-			if time is not None and nodeRef is self.getTargetAnimateNode():
-				wingeom = self.animationWrapper.getRectAt(time)
-			else:
-				wingeom = nodeRef.getPxGeom()
+		if time is not None and nodeRef is self.getTargetAnimateNode():
+			wingeom = self.animationWrapper.getRectAt(time)
 		else:
-			animationData = nodeRef.getAnimationData()
-			if not time is None and animationData is not None:
-				# XXX should move in another place
-				wingeom = animationData.getRectAt(time)
-			else:
-				wingeom = nodeRef.getPxGeom()
+			wingeom = nodeRef.getPxGeom()
 			
 		return wingeom
 		
@@ -1531,66 +1455,32 @@ class LayoutView2(LayoutViewDialog2):
 		animationEnabled = self.currentTargetAnimateNode is not None
 		
 		if animationEnabled:
-			if USE_NEW_ANIMATECODE:
-				animateNode = self.getAnimateNode()
-				animvals = animateNode.GetAttrDef('animvals', [])
-				keyTimeIndex = self.getKeyTimeIndex()
-				currentTimeValue = self.getCurrentTimeValue()
-				if not currentTimeValue is None:
-					if not self.isAKeyTime:
-						self.insertKeyTime(animateNode, currentTimeValue)
-						keyTimeIndex = self.getKeyTimeIndex()
-			else:
-				animatedType, animatedNode = self.animateControlWidget._selected
-				animationData = animatedNode.getAnimationData()
-				data = animationData.getData()
-				timeList = animationData.getTimes()
-				keyTimeIndex = self.getKeyTimeIndex()
-				currentTimeValue = self.getCurrentTimeValue()
-				if not currentTimeValue is None:
-					if not self.isAKeyTime:
-						self.insertKeyTime(animatedNode, currentTimeValue)
-						keyTimeIndex = self.getKeyTimeIndex()
+			animateNode = self.getAnimateNode()
+			animvals = animateNode.GetAttrDef('animvals', [])
+			keyTimeIndex = self.getKeyTimeIndex()
+			currentTimeValue = self.getCurrentTimeValue()
+			if not currentTimeValue is None:
+				if not self.isAKeyTime:
+					self.insertKeyTime(animateNode, currentTimeValue)
+					keyTimeIndex = self.getKeyTimeIndex()
 					
 		for nodeRef, attrName, attrValue in nodeRefAndValueList:
 			nodeType = self.getNodeType(nodeRef)
 			animated = 0
-			if USE_NEW_ANIMATECODE:
-				if animationEnabled and nodeRef is self.getTargetAnimateNode() and attrName in ('left', 'top', 'width', 'height') and \
-					not keyTimeIndex is None and keyTimeIndex >= 0:
-						animated = 1
-			else:
-				if animationEnabled and nodeRef is animatedNode and attrName in ('left', 'top', 'width', 'height') and \
-					not keyTimeIndex is None and keyTimeIndex >= 0:
-						animated = 1
+			if animationEnabled and nodeRef is self.getTargetAnimateNode() and attrName in ('left', 'top', 'width', 'height') and \
+				not keyTimeIndex is None and keyTimeIndex >= 0:
+					animated = 1
 			if animated:
-				if USE_NEW_ANIMATECODE:
-					# animation value
-					time, vals = animvals[keyTimeIndex]
-					vals[attrName] = attrValue
-					self.editmgr.setnodeattr(animateNode, 'animvals', animvals)
-				else:
-					# animation value
-					(left, top, width, height), bgcolor = data[keyTimeIndex]
-					if attrName == 'left':
-						left = attrValue
-					elif attrName == 'top':
-						top = attrValue
-					elif attrName == 'width':
-						width = attrValue
-					elif attrName == 'height':
-						height = attrValue
-					newdata = (left, top, width, height), bgcolor
-					animationData.updateData(keyTimeIndex, newdata)
+				# animation value
+				time, vals = animvals[keyTimeIndex]
+				vals[attrName] = attrValue
+				self.editmgr.setnodeattr(animateNode, 'animvals', animvals)
 
 			if not animated or keyTimeIndex == 0:
 				if nodeType in (TYPE_VIEWPORT, TYPE_REGION):					
 					self.editmgr.setchannelattr(nodeRef.name, attrName, attrValue)
 				elif nodeType == TYPE_MEDIA:
 					self.editmgr.setnodeattr(nodeRef, attrName, attrValue)
-				
-		if animationEnabled and not USE_NEW_ANIMATECODE:
-			nodeRef.applyAnimationData(self.editmgr)
 				
 		self.editmgr.commit()
 
@@ -1936,68 +1826,26 @@ class LayoutView2(LayoutViewDialog2):
 		if len(self.currentSelectedNodeList) > 0:
 			selectedNode = self.currentSelectedNodeList[0]
 			nodeType = self.getNodeType(selectedNode)
-			if USE_NEW_ANIMATECODE:
-				animateNode = self.getAnimateNode()
-				editmgr = self.editmgr
-				if not editmgr.transaction():
-					return
-				if animateNode is not None:
-					# disable animation
-					editmgr.delnode(animateNode)
-				else:
-					# enable animation
-					animateNode = self.context.newnode('animpar')
-					left, top, width, height = selectedNode.getPxGeom()
-					bgcolor = selectedNode.GetInherAttrDef('bgcolor', (0,0,0))
-					animateNode.SetAttr('animvals', [(0.0, {'top':top, 'left':left, 'width':width, 'height':height}),
-														(1.0, {'top':top, 'left':left, 'width':width, 'height':height})])
-					editmgr.addnode(selectedNode, -1, animateNode)
-					
-				editmgr.commit()
-				if animateNode is not None:
-					self.setCurrentTimeValue(0, selectedNode)
-					self.updateFocus()
+			animateNode = self.getAnimateNode()
+			editmgr = self.editmgr
+			if not editmgr.transaction():
 				return
-			
-			animationData = selectedNode.getAnimationData()
-			if animationData is None:
-				if nodeType == TYPE_MEDIA:
-					animationData = selectedNode.computeAnimationData()
-#				elif nodeType == TYPE_REGION:
-#					animparent = None
-#					import win32dialog
-#					dlg = win32dialog.SelectElementDlg(self.toplevel.window, self.root, None, filter='node')
-#					if dlg.show():
-#						animparent = dlg.getmmobject()
-#						self.updateFocus(1)
-#						return
-#					else:
-#						# do not create animation
-#						self.updateFocus(1)
-#						return
-#					# XXX save parent
-#					selectedNode._animparent = animparent
-#					
-#					animationData = selectedNode.computeAnimationData(animparent)
-
-			if not self.editmgr.transaction():
-				return
-					
-			if animationData.isEmpty():
-				geom = selectedNode.getPxGeom()
-				bgcolor = selectedNode.GetInherAttrDef('bgcolor', (0,0,0))
-				item1 = geom, bgcolor
-				item2 = geom, bgcolor
-				# enable animation: just initialize the first and the last value with the current value
-				animationData.setTimesData([0.0, 1.0], [item1, item2])
-				self.setKeyTimeIndex(0, selectedNode)
+			if animateNode is not None:
+				# disable animation
+				editmgr.delnode(animateNode)
 			else:
-				# disable animation: just remove all datas
-				animationData.clear()
-				self.setKeyTimeIndex(None, selectedNode)
-			selectedNode.applyAnimationData(self.editmgr)
-			self.updateFocus(1)
-			self.editmgr.commit()
+				# enable animation
+				animateNode = self.context.newnode('animpar')
+				left, top, width, height = selectedNode.getPxGeom()
+				bgcolor = selectedNode.GetInherAttrDef('bgcolor', (0,0,0))
+				animateNode.SetAttr('animvals', [(0.0, {'top':top, 'left':left, 'width':width, 'height':height}),
+														(1.0, {'top':top, 'left':left, 'width':width, 'height':height})])
+				editmgr.addnode(selectedNode, -1, animateNode)
+					
+			editmgr.commit()
+			if animateNode is not None:
+				self.setCurrentTimeValue(0, selectedNode)
+				self.updateFocus()
 
 	def onEditProperties(self):
 		if len(self.currentSelectedNodeList) > 0:
@@ -2916,29 +2764,19 @@ class AnimateControlWidget(LightWidget):
 		self.__updateUnselected()
 			
 	def __updateNode(self, nodeRef):
-		if USE_NEW_ANIMATECODE:
-			animateNode = self._context.getAnimateNode()
-			if animateNode is None or animateNode.GetType() != 'animpar':
-				self.__updateUnselected()
-				return
+		animateNode = self._context.getAnimateNode()
+		if animateNode is None or animateNode.GetType() != 'animpar':
+			self.__updateUnselected()
+			return
 
-			if animateNode.GetType() == 'animpar':
-				animvals = animateNode.GetAttrDef('animvals', [])
-				keyTimeList = []
-				for time, vals in animvals:
-					keyTimeList.append(time)
-			else:
-				# no key time
-				keyTimeList = None
-		else:
-			animationData = nodeRef.getAnimationData()
-			if animationData is None or animationData.isEmpty():
-				self.__updateUnselected()
-				return
-			times = animationData.getTimes()
+		if animateNode.GetType() == 'animpar':
+			animvals = animateNode.GetAttrDef('animvals', [])
 			keyTimeList = []
-			for time in times:
+			for time, vals in animvals:
 				keyTimeList.append(time)
+		else:
+			# no key time
+			keyTimeList = None
 			
 		self.sliderCtrl.setKeyTimes(keyTimeList)
 		timeIndex = self._context.getKeyTimeIndex()
@@ -2979,38 +2817,16 @@ class AnimateControlWidget(LightWidget):
 			if not editmgr.transaction():
 				return -1
 			self._context.insertKeyTime(nodeRef, tp, duplicateKey)
-			if not USE_NEW_ANIMATECODE:
-				nodeRef.applyAnimationData(editmgr)
 			editmgr.commit()
 			
 	def onRemoveKey(self, index):
 		if self.isEnabled:
-			if USE_NEW_ANIMATECODE:
-				nodeType, nodeRef = self._selected
-				editmgr = self._context.editmgr
-				if not editmgr.transaction():
-					return -1
-				index = self._context.removeKeyTime(nodeRef, index)
-				editmgr.commit()
-			else:
-				nodeType, nodeRef = self._selected
-				animationData = nodeRef.getAnimationData()
-				timeList = animationData.getTimes()
-				if index > 0 and index < len(timeList)-1:
-					# can only remove a key between the first and the end
-					data = animationData.getData()
-					if index < len(timeList):
-						editmgr = self._context.editmgr
-						if not editmgr.transaction():
-							return
-						animationData.eraseTimeData(index)
-						self.sliderCtrl.removeKeyTimeAtIndex(index)
-						self._context.setKeyTimeIndex(index-1, nodeRef)
-						list = self.sliderCtrl.getKeyTimes()
-						self.sliderCtrl.setCursorPos(list[index-1])
-						self.sliderCtrl.selectKeyTime(index-1)
-						nodeRef.applyAnimationData(editmgr)
-						editmgr.commit()			
+			nodeType, nodeRef = self._selected
+			editmgr = self._context.editmgr
+			if not editmgr.transaction():
+				return -1
+			index = self._context.removeKeyTime(nodeRef, index)
+			editmgr.commit()
 					
 	def onSelected(self, index):
 		if self.isEnabled and not self.__selecting:
@@ -3024,14 +2840,9 @@ class AnimateControlWidget(LightWidget):
 		if self.isEnabled:
 			nodeType, nodeRef = self._selected
 			self._context.setCurrentTimeValue(pos, nodeRef)
-			if USE_NEW_ANIMATECODE:
-				animateNode = self._context.getAnimateNode()
-				animvals = animateNode.GetAttrDef('animvals', [])
-				keyTimeIndex = self._context.getKeyForThisTime(animvals, pos)
-			else:
-				animationData = nodeRef.getAnimationData()
-				timeList = animationData.getTimes()
-				keyTimeIndex = self._context.getKeyForThisTime(timeList, pos)
+			animateNode = self._context.getAnimateNode()
+			animvals = animateNode.GetAttrDef('animvals', [])
+			keyTimeIndex = self._context.getKeyForThisTime(animvals, pos)
 			if keyTimeIndex is not None and keyTimeIndex >= 0:
 				self.sliderCtrl.selectKeyTime(keyTimeIndex)
 			else:
@@ -3049,16 +2860,11 @@ class AnimateControlWidget(LightWidget):
 			if not editmgr.transaction(editmgr):
 				return
 
-			if USE_NEW_ANIMATECODE:
-				animateNode = self._context.getAnimateNode()
-				animvals = animateNode.GetAttrDef('animvals', [])
-				oldtime, vals = animvals[index]
-				animvals[index] = (time, vals)
-				editmgr.setnodeattr(animateNode, 'animvals', animvals)
-			else:
-				animationData = nodeRef.getAnimationData()
-				animationData.updateTime(index, time)
-				nodeRef.applyAnimationData(editmgr)
+			animateNode = self._context.getAnimateNode()
+			animvals = animateNode.GetAttrDef('animvals', [])
+			oldtime, vals = animvals[index]
+			animvals[index] = (time, vals)
+			editmgr.setnodeattr(animateNode, 'animvals', animvals)
 				
 			self._context.setCurrentTimeValue(time, nodeRef)
 			editmgr.commit()
