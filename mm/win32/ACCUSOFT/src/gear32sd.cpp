@@ -442,6 +442,23 @@ static PyObject *ig_image_create_ddb(PyObject *self, PyObject *args)
 }
 
 
+static char ig_ip_resize__doc__[] =
+""
+;
+static PyObject *ig_ip_resize(PyObject *self, PyObject *args)
+{
+	long img;
+	int nWidth, nHeight;
+	if (!PyArg_ParseTuple(args, "l(ii)", &img, &nWidth, &nHeight))
+		return NULL;
+	if (IG_IP_resize((HIGEAR) img, nWidth, nHeight, IG_INTERPOLATION_NONE)) {
+		PyErr_SetString(PyExc_ValueError, "bad image handle");
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
 
 static struct PyMethodDef gear32sd_methods[] = {
 	{"load_file", (PyCFunction)ig_load_file, METH_VARARGS, ig_load_file__doc__},
@@ -464,6 +481,7 @@ static struct PyMethodDef gear32sd_methods[] = {
 	{"error_get",ig_error_get,METH_VARARGS,ig_error_get__doc__},
 	{"image_export_ddb",ig_image_export_ddb,METH_VARARGS,ig_image_export_ddb__doc__},
 	{"image_create_ddb",ig_image_create_ddb,METH_VARARGS,ig_image_create_ddb__doc__},
+	{"resize",ig_ip_resize,METH_VARARGS,ig_ip_resize__doc__},
 
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
