@@ -105,7 +105,7 @@ class MainDialog:
 	def _ae_openapp(self, *args, **kwargs):
 		import settings
 		if not settings.get('no_initial_dialog'):
-			OpenAppDialog(self.new_callback, self.open_callback, self.never_again)
+			OpenAppDialog(self.new_callback, self.openfile_callback, self.never_again)
 		
 	def _ae_opendoc(self, aliases, **kwargs):
 		if not type(aliases) in (type(()), type([])):
