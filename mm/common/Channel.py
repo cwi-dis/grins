@@ -114,6 +114,7 @@ class Channel:
 			self._player.editmgr.unregister(self)
 		del self._armcontext
 		del self._armed_anchors
+		del self._armed_anchor2button
 		del self._armed_node
 		del self._armstate
 		del self._attrdict
@@ -121,6 +122,7 @@ class Channel:
 		del self._anchors
 		del self._playcontext
 		del self._played_anchors
+		del self._played_anchor2button
 		del self._played_node
 		del self._player
 		del self._playstate
@@ -474,6 +476,7 @@ class Channel:
 			return 1
 		self._armed_node = node
 		self._armed_anchors = []
+		self._armed_anchor2button = {}
 		duration = node.GetAttrDef('duration', None)
 		repeatdur = node.GetAttrDef('repeatdur', None)
 		if repeatdur is not None:
@@ -581,6 +584,7 @@ class Channel:
 		self.playBox = self.armBox
 		self._anchors = {}
 		self._played_anchors = self._armed_anchors[:]
+		self._played_anchor2button.update(self._armed_anchor2button)
 		durationattr = node.GetAttrDef('duration', None)
 		repeatdur = node.GetAttrDef('repeatdur', None)
 		loop = node.GetAttrDef('loop', None)
