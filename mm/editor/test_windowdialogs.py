@@ -1,4 +1,7 @@
 """Test windowinterface fixed dialogs, editor specifics"""
+
+__version__ = "$Id$"
+
 import sys
 import os
 
