@@ -547,7 +547,7 @@ class FileDialog:
 					# special case: don't display two
 					# entries that are basically the same
 					del newfilter[1]
-			newfilter.append('Any file (*.*)|*.*')
+			newfilter.append('All files (*.*)|*.*')
 			filter = string.join(newfilter, '|') + '||'
 ##		else:
 ##			if existing:
