@@ -124,6 +124,8 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		self['LeftAnchorEd']=components.Button(self,grinsRC.IDC_ANCHOR_EDITOR1)
 		self['RightAnchorEd']=components.Button(self,grinsRC.IDC_ANCHOR_EDITOR2)
 
+		self['AddExternal']=components.Button(self,grinsRC.IDC_ADD_EXTERNAL)
+
 		self['AddLink']=components.Button(self,grinsRC.IDC_ADD_LINK)
 		self['EditLink']=components.Button(self,grinsRC.IDC_EDIT_LINK)
 		self['DeleteLink']=components.Button(self,grinsRC.IDC_DELETE_LINK)
@@ -417,7 +419,8 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		"""Hide the right list with associated buttons."""
 		self.EnableCmd('RightList',0)
 		self.EnableCmd('RightPushFocus',0)
-		self.EnableCmd('RightAnchorEd',0) 
+		self.EnableCmd('RightAnchorEd',0)
+		self.EnableCmd('AddExternal',0)
 
 	def rightshow(self):
 		"""Show the right list with associated buttons."""
@@ -500,6 +503,9 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		"""
 		self.EnableCmd('RightPushFocus',sensitive) 
 		self.EnableCmd('RightAnchorEd',sensitive) 
+
+	def addexternalsetsensitive(self, sensitive):
+		self.EnableCmd('AddExternal', sensitive)
 		 
 	# Interface to the middle list and associated buttons.
 	def middlehide(self):
