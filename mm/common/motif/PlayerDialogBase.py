@@ -12,19 +12,19 @@ STOPPED, PAUSING, PLAYING = range(3)
 class PlayerDialogBase:
 	adornments = {
 		'toolbar': [
-			(LIGHT,
+			(FLAG_ALL,
 			 {'label': playbuttonunselect.reader(),
 			  'labelInsensitive': playbuttonunselect.reader(),
 			  'select': playbutton.reader(),
 			  'selectInsensitive': playbutton.reader(),
 			  }, PLAY, 't'),
-			(LIGHT,
+			(FLAG_ALL,
 			 {'label': pausebuttonunselect.reader(),
 			  'labelInsensitive': pausebuttonunselect.reader(),
 			  'select': pausebutton.reader(),
 			  'selectInsensitive': pausebutton.reader(),
 			  }, PAUSE, 't'),
-			(LIGHT,
+			(FLAG_ALL,
 			 {'label': stopbuttonunselect.reader(),
 			  'labelInsensitive': stopbuttonunselect.reader(),
 			  'select': stopbutton.reader(),
