@@ -31,12 +31,14 @@ class _StructView(DisplayListView):
 
 		# shortcut for GRiNS private clipboard format
 		self.CF_NODE = self.getClipboardFormat('Node')
+		self.CF_TOOL = self.getClipboardFormat('Tool')
 
 		# enable or dissable node drag and drop
 		self._enableNodeDragDrop = 1
 			
 		if self._enableNodeDragDrop:
 			self._dropmap['Node']=(self.dragnode, self.dropnode)
+			self._dropmap['Tool']=(self.dragtool, self.droptool)
 			self._dragging = None
 
 	def OnCreate(self,params):
@@ -172,3 +174,24 @@ class _StructView(DisplayListView):
 
 		return DROP_FAILED
 							
+	def dragtool(self, dataobj, kbdstate, x, y):
+		node=dataobj.GetGlobalData(self.CF_TOOL)
+		if node:
+			x, y = self._DPtoLP((x,y))
+			x, y = self._pxl2rel((x, y),self._canvas)
+			return self.onEventEx(DragNode,(x, y, 'copy'))
+		return DropTarget.DROPEFFECT_NONE
+
+	def droptool(self, dataobj, effect, x, y):
+		DROP_FAILED, DROP_SUCCEEDED = 0, 1
+		tool = dataobj.GetGlobalData(self.CF_TOOL)
+		if tool:
+			x, y = self._DPtoLP((x,y))
+			x, y = self._pxl2rel((x, y),self._canvas)
+
+			# if the operation can not be executed return DROP_FAILED
+			# else return DROP_SUCCEEDED
+
+			return DROP_SUCCEEDED
+
+		return DROP_FAILED
