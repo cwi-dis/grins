@@ -107,7 +107,8 @@ class ArcEditor():
 		self.close()
 
 	def setvalues(self):
-		self.view.setarcvalues(self.view, (self.arrow, (self.uid, self.frompos, self.delay, self.topos)))
+		print 'arcedit', self.delay
+		self.view.setarcvalues(self.arrow, (self.uid, self.frompos, self.delay, self.topos))
 
 	def close(self):
 		self.f.hide_form()
