@@ -105,22 +105,6 @@ def _write_float(f, x):
 
 class reader:
 	def __init__(self, file):
-		self.__handlers = {
-			'COMM': self.__read_comm_chunk,
-			'SSND': self.__read_ssnd_chunk,
-			'FVER': self.__read_vfer_chunk,
-			'MARK': self.__read_mark_chunk,
-			'COMT': self.__skip_chunk,
-			'INST': self.__skip_chunk,
-			'MIDI': self.__skip_chunk,
-			'AESD': self.__skip_chunk,
-			'APPL': self.__skip_chunk,
-			'NAME': self.__skip_chunk,
-			'AUTH': self.__skip_chunk,
-			'(c) ': self.__skip_chunk,
-			'ANNO': self.__skip_chunk,
-			}
-
 		if type(file) == type(''):
 			self.__filename = file # only needed for __repr__
 			self.__file = file = open(file, 'rb')
@@ -164,9 +148,16 @@ class reader:
 			else:
 				self.__chunk = chunk
 			chunkname = chunk.getname()
-			func = self.__handlers.get(chunkname)
-			if func is not None:
-				func(chunk)
+			if chunkname == 'COMM':
+				self.__read_comm_chunk(chunk)
+			elif chunkname == 'SSND':
+				self.__read_ssnd_chunk(chunk)
+			elif chunkname == 'FVER':
+				self.__read_vfer_chunk(chunk)
+			elif chunkname == 'MARK':
+				self.__read_mark_chunk(chunk)
+			elif chunkname in ('COMT','INST','MIDI','AESD','APPL','NAME','AUTH','(c) ','ANNO'):
+				self.__skip_chunk(chunk)
 			else:
 				raise audio.Error, 'unrecognized chunk type '+chunkname
 			if name == chunkname:
