@@ -167,12 +167,11 @@ class Player(PlayerCore, PlayerDialog):
 	def usergroup_callback(self, name):
 		self.toplevel.setwaiting()
 		title, u_state, override, uid = self.context.usergroups[name]
-		if override == 'visible':
-			if u_state == 'RENDERED':
-				u_state = 'NOT_RENDERED'
-			else:
-				u_state = 'RENDERED'
-			self.context.usergroups[name] = title, u_state, override, uid
+		if u_state == 'RENDERED':
+			u_state = 'NOT_RENDERED'
+		else:
+			u_state = 'RENDERED'
+		self.context.usergroups[name] = title, u_state, override, uid
 		self.setusergroup(name, u_state == 'RENDERED')
 		self.root.ResetPlayability()
 
@@ -251,9 +250,11 @@ class Player(PlayerCore, PlayerDialog):
 		self.setchannels(channels)
 
 	def makeugroups(self):
+		import settings
 		ugroups = []
+		showhidden = settings.get('showhidden')
 		for name, (title, u_state, override, uid) in self.context.usergroups.items():
-			if override != 'visible':
+			if not showhidden and override != 'visible':
 				continue
 			if not title:
 				title = name

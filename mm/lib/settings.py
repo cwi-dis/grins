@@ -44,6 +44,7 @@ default_settings = {
 	'debug': 0,			# Show debug commands
 	'checkext': 1,			# Guess Mime type based on extension
 	'no_canvas_resize': 1,	 # Don't resize canvas after window resize (X)
+	'showhidden': 0,		# Show override="hidden" custom tests
 	'hierarchy_minimum_sizes': 0,	# Leaf nodes drawn using min. size
 	'structure_name_size': 1,
 	'structure_thumbnails': 1,	# Display image thumbnails by default
