@@ -48,11 +48,12 @@ class Player(ViewDialog, PlayerCore):
 		self.pause_minidoc = 1
 		self.sync_cv = 1
 		self.toplevel = toplevel
-		self.set_timer = toplevel.set_timer
 		self.showing = 0
 		self.waiting = 0
 		self.last_geometry = None
 		self.window = None
+		self.set_timer = toplevel.set_timer
+		self.timer_callback = self.scheduler.timer_callback
 
 	def destroy(self):
 		self.close()
@@ -250,9 +251,6 @@ class Player(ViewDialog, PlayerCore):
 		if self.pausing:
 			self.pause(0)
 
-	def timer_callback(self, *rest):
-		self.scheduler.timer_callback()
-	#
 	def cmenu_callback(self, name):
 		isvis = self.channels[name].may_show()
 		self.cc_enable_ch(name, (not isvis))
