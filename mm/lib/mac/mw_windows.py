@@ -951,9 +951,9 @@ class _CommonWindow:
 				if not self._transparent:
 					# XXX This causes flashing in movie windows and such.
 					Qd.EraseRect(self.qdrect())
-				self._redrawfunc()
+				self._redrawfunc(rgn)
 			else:
-				self._do_redraw()
+				self._do_redraw(rgn)
 		
 		# Then do transparent children bottom-to-top
 		still_to_do.reverse()
@@ -974,10 +974,10 @@ class _CommonWindow:
 		if self is _in_create_box:
 			self._rb_redraw()
 					
-	def _do_redraw(self):
+	def _do_redraw(self, rgn=None):
 		"""Do actual redraw"""
 		if self._active_displist:
-			self._active_displist._render()
+			self._active_displist._render(rgn=rgn)
 		elif self._frozen and not self._transition:
 ##			self._mac_setwin(mw_globals.BM_ONSCREEN)
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
