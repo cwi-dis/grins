@@ -1699,7 +1699,8 @@ class LayoutView2(LayoutViewDialog2):
 			nodeList = [node]
 		else:
 			nodeList = node
-			
+
+		newFocus = []			
 		for node in nodeList:
 			className = node.getClassName()
 			if className not in ('Region', 'Viewport','RegionAssociation'):
@@ -1714,7 +1715,7 @@ class LayoutView2(LayoutViewDialog2):
 					self.editmgr.setnodeattr(node, 'channel', selectedNode.name)					
 			elif className == 'Viewport':
 				self.editmgr.addchannel(None, -1, node)
-			
+			newFocus = [node]			
 #			if type == 'region':
 #				cNode = node.CopyIntoContext(self.context, selectedNode)
 #			elif type == 'viewport':
@@ -1731,6 +1732,8 @@ class LayoutView2(LayoutViewDialog2):
 #				if doPaste and self.getNodeType(selectedNode) == TYPE_REGION:
 #					cNode = node
 #					self.editmgr.setnodeattr(node, 'channel', selectedNode.name)
+		# update the focus
+		self.setglobalfocus(newFocus)
 		self.editmgr.commit()
 
 	def newRegion(self, parentRef):
