@@ -239,17 +239,19 @@
 #define IDI_DANGLINGANCHOR              437
 #define IDD_REPLACE                     438
 #define IDI_PROPERTIES                  439
-#define IDD_EDITATTR_BRUSH              439
-#define IDI_VIEWPORT                    440
-#define IDD_EDITATTR_S1R3S7             440
-#define IDI_REGION                      441
-#define IDD_EDITATTR_CH2                441
-#define IDR_SOURCE_EDIT                 442
-#define IDI_BRUSH                       443
-#define IDI_ANIMATE                     444
-#define IDD_SELECT_ELEMENT              445
-#define IDD_EDITATTR_ANIMATETARGET      446
-#define IDD_EDITATTR_ITRANSITION        447
+#define IDD_EDITATTR_BRUSH              440
+#define IDI_VIEWPORT                    441
+#define IDD_EDITATTR_S1R3S7             442
+#define IDI_REGION                      443
+#define IDD_EDITATTR_CH2                444
+#define IDR_SOURCE_EDIT                 445
+#define IDI_BRUSH                       446
+#define IDI_ANIMATE                     447
+#define IDD_SELECT_ELEMENT              448
+#define IDD_EDITATTR_ANIMATETARGET      449
+#define IDD_EDITATTR_ITRANSITION        450
+#define IDD_EDITATTR_ANIMATEGENERAL     451
+#define IDD_EDITATTR_ANIMATEGENERALM    452
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -673,6 +675,7 @@
 #define IDC_RELATIVE                    1446
 #define IDC_STATIC_MSG                  1447
 #define IDC_STATIC_MSG2                 1448
+#define IDC_54                          1450
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -778,9 +781,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        448
+#define _APS_NEXT_RESOURCE_VALUE        453
 #define _APS_NEXT_COMMAND_VALUE         32900
-#define _APS_NEXT_CONTROL_VALUE         1449
+#define _APS_NEXT_CONTROL_VALUE         1451
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
