@@ -118,5 +118,19 @@ MENUBAR=(
 		(TOGGLE, ('Show Timeline view', 'Hide Timeline view'), '4', CHANNELVIEW),
 		(TOGGLE, ('Show Hyperlink view', 'Hide Hyperlink view'), '5', LINKVIEW))),
 )
-			
-		
+
+#
+# Adornments
+#
+PLAYER_ADORNMENTS = {
+	'toolbar': (
+		(TOGGLE, 1000, STOP),
+		(TOGGLE, 1500, PLAY),
+		(TOGGLE, 2000, PAUSE),
+		)
+}
+
+#
+# CNTL resource for the toolbar and its height
+TOOLBAR=(2500, 62, 22)
+
