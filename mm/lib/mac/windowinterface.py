@@ -8,6 +8,7 @@ import UserCmd
 from types import *
 import math
 import struct
+import string
 import macfs
 import MacOS
 import Res
@@ -22,12 +23,12 @@ _def_useGadget = 1
 
 # Resource IDs
 ID_SELECT_DIALOG=516
-ITEM_SELECT_LISTPROMPT=1
-ITEM_SELECT_ITEMLIST=2
-ITEM_SELECT_SELECTPROMPT=3
-ITEM_SELECT_ITEM=4
-ITEM_SELECT_CANCEL=5
-ITEM_SELECT_OK=6
+ITEM_SELECT_OK=1
+ITEM_SELECT_CANCEL=2
+ITEM_SELECT_LISTPROMPT=3
+ITEM_SELECT_ITEMLIST=4
+ITEM_SELECT_SELECTPROMPT=5
+ITEM_SELECT_ITEM=6
 
 # For askstring re-use Pythons standard EasyDialogs resource
 ID_INPUT_DIALOG=257
@@ -39,8 +40,8 @@ ITEM_INPUT_TEXT=4
 # For messages and questions:
 ID_MESSAGE_DIALOG=521
 ID_QUESTION_DIALOG=522
-ITEM_QUESTION_TEXT=1
-ITEM_QUESTION_OK=2
+ITEM_QUESTION_OK=1
+ITEM_QUESTION_TEXT=2
 ITEM_QUESTION_CANCEL=3
 
 # XXXX Debugging code: assure the resource file is available
@@ -62,6 +63,13 @@ ARR_HALFWIDTH = 5
 ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
 class _Toplevel(mac_windowbase._Toplevel):
+	
+	def __init__(self,closing=0):
+		mac_windowbase._Toplevel.__init__(self, closing)
+		Dlg.SetUserItemHandler(None)
+		if not closing:
+			self._dialog_user_item_handler = Dlg.SetUserItemHandler(self._do_user_item)
+		
 	# We are overriding these only so we get the correct _Window (ours)
 	
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE,
@@ -88,7 +96,44 @@ class _Toplevel(mac_windowbase._Toplevel):
 				return
 		mac_windowbase._Toplevel._handle_event(self, event)
 
+	def _do_user_item(self, wid, item):
+		print 'UserItem', wid, item
+		try:
+			win = self._wid_to_window[wid]
+		except KeyError:
+			print "Unknown dialog for user item redraw", wid, item
+		else:
+			try:
+				redrawfunc = win.do_itemdraw
+			except AttributeError:
+				print "Dialog for user item redraw has no do_itemdraw()", win, item
+			else:
+				redrawfunc(item)
+		
 	def _do_dialogevent(self, event):
+		what = event[0]
+		if what == Events.keyDown:
+			what, message, when, where, modifiers = event
+			if modifiers & Events.cmdKey:
+				return 0	# Let menu code handle it
+			c = chr(message & Events.charCodeMask)
+			print 'dlg keydown', `c`, event
+			pass # Do command-key processing
+			# Do default key processing
+			if c == '\r':
+				wid = Win.FrontWindow()
+				try:
+					window = self._wid_to_window[wid]
+				except KeyError:
+					pass
+				else:
+					try:
+						defaultcb = window._do_defaulthit
+					except AttributeError:
+						pass
+					else:
+						defaultcb()
+						return 1
 		gotone, wid, item = Dlg.DialogSelect(event)
 		if gotone:
 			if self._wid_to_window.has_key(wid):
@@ -799,10 +844,16 @@ class DialogWindow(_Window):
 		wid = Dlg.GetNewDialog(resid, -1)
 		x0, y0, x1, y1 = wid.GetWindowPort().portRect
 		w, h = x1-x0, y1-y0
-		_Window.__init__(self, toplevel, wid, 0, 0, w, h)
+		cmdlist = [
+			(UserCmd.COPY, (wid.DialogCopy, ())),
+			(UserCmd.PASTE, (wid.DialogPaste, ())),
+			(UserCmd.CUT, (wid.DialogCut, ())),
+			(UserCmd.DELETE, (wid.DialogDelete, ())),
+		]			
+		_Window.__init__(self, toplevel, wid, 0, 0, w, h, commands=cmdlist)
 		toplevel._register_wid(wid, self)
 		Qd.SetPort(wid)
-		self._widgetlist = []
+		self._widgetdict = {}
 		self._is_shown = 0 # XXXX Is this always true??!?
 		self.title = title
 		
@@ -821,33 +872,42 @@ class DialogWindow(_Window):
 		
 	def close(self):
 		self.hide()
-		self._widgetlist = []
+		self._widgetdict = {}
 		_Window.close(self)
 		
-	def addwidget(self, widget):
-		self._widgetlist.append(widget)
+	def addwidget(self, num, widget):
+		self._widgetdict[num] = widget
 		
 	def do_itemhit(self, item, event):
 		print 'Dialog %s item %d event %s'%(self, item, event)
 		
+	def do_itemdraw(self, item):
+		print 'Draw item', item
+		try:
+			w = self._widgetdict[item]
+		except KeyError:
+			print 'Unknown user item', item
+		else:
+			w._redraw()
+		
 	def _redraw(self, rgn):
-		#print 'redraw dialogwindow', self, self._bgcolor, self._fgcolor
-		Qd.SetPort(self._wid)
-		Qd.ClipRect(self._wid.GetWindowPort().portRect)
-		Qd.RGBBackColor(self._bgcolor)
-		Qd.RGBForeColor(self._fgcolor)
-		for w in self._widgetlist:
-			w._redraw(rgn)
+##		#print 'redraw dialogwindow', self, self._bgcolor, self._fgcolor
+##		Qd.SetPort(self._wid)
+##		Qd.ClipRect(self._wid.GetWindowPort().portRect)
+##		Qd.RGBBackColor(self._bgcolor)
+##		Qd.RGBForeColor(self._fgcolor)
+##		for w in self._widgetlist:
+##			w._redraw(rgn)
+		pass
 			
 	def _activate(self, onoff):
-		for w in self._widgetlist:
+		for w in self._widgetdict.values():
 			w._activate(onoff)
 			
-	def ListWidget(self, rect, content=[]):
-		widget = _ListWidget(self._wid, rect, content)
-		self.addwidget(widget)
+	def ListWidget(self, item, content=[]):
+		widget = _ListWidget(self._wid, item, content)
+		self.addwidget(item, widget)
 		return widget
-		
 #
 # XXXX Maybe the previous class should be combined with this one, or does that
 # give too many stuff in one object (window, dialogwindow, per-dialog info, editor
@@ -859,13 +919,18 @@ class MACDialog:
 		self._dialog = self._window._wid
 		# Override event handler:
 		self._window.do_itemhit = self.do_itemhit
+		self._window._do_defaulthit = self._do_defaulthit
 
 		# Setup default key bindings
-		if not default is None:
+		self._default = default
+		if not self._default is None:
 			self._dialog.SetDialogDefaultItem(default)
 		if not cancel is None:
 			self._dialog.SetDialogCancelItem(cancel)
 
+	def _do_defaulthit(self):
+		self.do_itemhit(self._default, None)
+		
 	def _showitemlist(self, itemlist):
 		"""Make sure the items in itemlist are visible and active"""
 		for item in itemlist:
@@ -1020,6 +1085,8 @@ def _ModalDialog(title, dialogid, text, okcallback, cancelcallback=None):
 def showmessage(text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'message',
 		     title = 'message'):
+	if '\n' in text:
+		text = string.join(string.split(text, '\n'), '\r')
 	if mtype == 'question' or cancelCallback:
 		dlgid = ID_QUESTION_DIALOG
 	else:
@@ -1069,8 +1136,15 @@ class FileDialog:
 	def is_closed(self):
 		return 1
 
-class _ListWidget:
-	def __init__(self, wid, rect, content=[]):
+class _Widget:
+	def __init__(self, wid, item):
+		tp, h, rect = wid.GetDialogItem(item)
+		wid.SetDialogItem(item, tp, toplevel._dialog_user_item_handler, rect)
+		
+class _ListWidget(_Widget):
+	def __init__(self, wid, item, content=[]):
+		_Widget.__init__(self, wid, item)
+		tp, h, rect = wid.GetDialogItem(item)
 		# wid is the window (dialog) where our list is going to be in
 		# rect is it's item rectangle (as in dialog item)
 		self.rect = rect
@@ -1228,9 +1302,15 @@ class SelectWidget:
 		return None
 		
 class SelectionDialog(DialogWindow):
-	def __init__(self, listprompt, selectionprompt, itemlist, default):
+	def __init__(self, listprompt, selectionprompt, itemlist, default, fixed=0, hascancel=1):
 		# First create dialogwindow and set static items
 		DialogWindow.__init__(self, ID_SELECT_DIALOG)
+		if fixed:
+			# The user cannot modify the items, nor cancel
+			self._wid.HideDialogItem(ITEM_SELECT_SELECTPROMPT)
+			self._wid.HideDialogItem(ITEM_SELECT_ITEM)
+		if not hascancel:
+			self._wid.HideDialogItem(ITEM_SELECT_CANCEL)
 		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_LISTPROMPT)
 		Dlg.SetDialogItemText(h, listprompt)
 		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_SELECTPROMPT)
@@ -1242,11 +1322,10 @@ class SelectionDialog(DialogWindow):
 
 		# Now setup the scrolled list
 		self._itemlist = itemlist
-		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEMLIST)
-		self._listwidget = self.ListWidget(rect, itemlist)
+		self._listwidget = self.ListWidget(ITEM_SELECT_ITEMLIST, itemlist)
 		if default in itemlist:
 			num = itemlist.index(default)
-			self._indexlist.select(num)
+			self._listwidget.select(num)
 			
 		# and the default item
 		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEM)
@@ -1282,7 +1361,41 @@ class SelectionDialog(DialogWindow):
 			rv = Dlg.GetDialogItemText(h)
 			self.OkCallback(rv)
 			self.close()
-		
+			
+class SingleSelectionDialog(SelectionDialog):
+	def __init__(self, list, title, prompt):
+		# XXXX ignore title for now
+		self.__dict = {}
+		self.__done = 0
+		hascancel = 0
+		keylist = []
+		for item in list:
+			if item == None:
+				continue
+			if item == 'Cancel':
+				hascancel = 1
+			else:
+				k, v = item
+				self.__dict[k] = v
+				keylist.append(k)
+		SelectionDialog.__init__(self, prompt, '', keylist, keylist[0], 
+				fixed=1, hascancel=hascancel)
+
+	def OkCallback(self, key):
+		if not self.__dict.has_key(key):
+			print 'You made an impossible selection??'
+			return
+		else:
+			rtn, args = self.__dict[key]
+			apply(rtn, args)
+			self.__done = 1
+			
+	def rungrabbed(self):
+		toplevel.grab(self)
+		while not self.__done:
+			toplevel._eventloop(100)
+		toplevel.grab(None)
+			
 class InputDialog(DialogWindow):
 	def __init__(self, prompt, default, cb):
 		# First create dialogwindow and set static items
@@ -1299,1469 +1412,25 @@ class InputDialog(DialogWindow):
 		if item == ITEM_INPUT_CANCEL:
 			self.close()
 		elif item == ITEM_INPUT_OK:
-			tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
-			rv = Dlg.GetDialogItemText(h)
-			self._cb(rv)
-			self.close()
+			self._do_defaulthit()
 		elif item == ITEM_INPUT_TEXT:
 			pass
 		else:
 			print 'Unknown item', self, item, event
+			
+	def _do_defaulthit(self):
+		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
+		rv = Dlg.GetDialogItemText(h)
+		self._cb(rv)
+		self.close()
 
 [TOP, CENTER, BOTTOM] = range(3)
 
-class _MenuSupport:
-	'''Support methods for a pop up menu.'''
-	def __init__(self):
-		self._menu = None
-
-	def close(self):
-		'''Close the menu.'''
-		self.destroy_menu()
-
-	def create_menu(self, list, title = None):
-		'''Create a popup menu.
-
-		TITLE is the title of the menu.  If None or '', the
-		menu will not have a title.  LIST is a list with menu
-		entries.  Each entry is either None to get a
-		separator, a string to get a label, or a tuple of two
-		elements.  The first element is the label in the menu,
-		the second argument is either a callback which is
-		called when the menu entry is selected or a list which
-		defines a cascading submenu.  A callback is either a
-		callable object or a tuple consisting of a callable
-		object and a tuple.  If the callback is just a
-		callable object, it is called without arguments; if
-		the callback is a tuple consisting of a callable
-		object and a tuple, the object is called using apply
-		with the tuple as argument.'''
-
-		if self._form.IsSubclass(Xm.Gadget):
-			raise error, 'cannot create popup menus on gadgets'
-		self.destroy_menu()
-		menu = self._form.CreatePopupMenu('dialogMenu',
-				{'colormap': toplevel._default_colormap,
-				 'visual': toplevel._default_visual,
-				 'depth': toplevel._default_visual.depth})
-		if title:
-			list = [title, None] + list
-		mac_windowbase._create_menu(menu, list, toplevel._default_visual,
-					  toplevel._default_colormap)
-		self._menu = menu
-		self._form.AddEventHandler(X.ButtonPressMask, FALSE,
-					   self._post_menu, None)
-
-	def destroy_menu(self):
-		'''Destroy the pop up menu.
-
-		This function is called automatically when a new menu
-		is created using create_menu, or when the window
-		object is closed.'''
-
-		menu = self._menu
-		self._menu = None
-		if menu:
-			self._form.RemoveEventHandler(X.ButtonPressMask, FALSE,
-						      self._post_menu, None)
-			menu.DestroyWidget()
-
-	# support methods, only used by derived classes
-	def _post_menu(self, w, client_data, call_data):
-		if not self._menu:
-			return
-		if call_data.button == X.Button3:
-			self._menu.MenuPosition(call_data)
-			self._menu.ManageChild()
-
-	def _destroy(self):
-		self._menu = None
-
-class _Widget(_MenuSupport):
-	'''Support methods for all window objects.'''
-	def __init__(self, parent, widget):
-		self._parent = parent
-		parent._children.append(self)
-		self._showing = TRUE
-		self._form = widget
-		widget.ManageChild()
-		_MenuSupport.__init__(self)
-		self._form.AddCallback('destroyCallback', self._destroy, None)
-
-	def __repr__(self):
-		return '<_Widget instance at %x>' % id(self)
-
-	def close(self):
-		'''Close the window object.'''
-		try:
-			form = self._form
-		except AttributeError:
-			pass
-		else:
-			del self._form
-			_MenuSupport.close(self)
-			form.DestroyWidget()
-		if self._parent:
-			self._parent._children.remove(self)
-		self._parent = None
-
-	def is_closed(self):
-		'''Returns true if the window is already closed.'''
-		return not hasattr(self, '_form')
-
-	def _showme(self, w):
-		self._parent._showme(w)
-
-	def _hideme(self, w):
-		self._parent._hideme(w)
-
-	def show(self):
-		'''Make the window visible.'''
-		self._parent._showme(self)
-		self._showing = TRUE
-
-	def hide(self):
-		'''Make the window invisible.'''
-		self._parent._hideme(self)
-		self._showing = FALSE
-
-	def is_showing(self):
-		'''Returns true if the window is visible.'''
-		return self._showing
-
-	# support methods, only used by derived classes
-	def _attachments(self, attrs, options):
-		'''Calculate the attachments for this window.'''
-		for pos in ['left', 'top', 'right', 'bottom']:
-			attachment = pos + 'Attachment'
-			try:
-				widget = options[pos]
-			except:
-				pass
-			else:
-				if type(widget) in (FloatType, IntType):
-					attrs[attachment] = \
-						Xmd.ATTACH_POSITION
-					attrs[pos + 'Position'] = \
-						int(widget * 100 + .5)
-				elif widget:
-					attrs[pos + 'Attachment'] = \
-						  Xmd.ATTACH_WIDGET
-					attrs[pos + 'Widget'] = widget._form
-				else:
-					attrs[pos + 'Attachment'] = \
-						  Xmd.ATTACH_FORM
-
-	def _destroy(self, widget, client_data, call_data):
-		'''Destroy callback.'''
-		try:
-			del self._form
-		except AttributeError:
-			return
-		if self._parent:
-			self._parent._children.remove(self)
-		self._parent = None
-		_MenuSupport._destroy(self)
-
-class Label(_Widget):
-	'''Label window object.'''
-	def __init__(self, parent, text, useGadget = _def_useGadget,
-		     name = 'windowLabel', **options):
-		'''Create a Label subwindow.
-
-		PARENT is the parent window, TEXT is the text for the
-		label.  OPTIONS is an optional dictionary with
-		options.  The only options recognized are the
-		attachment options.'''
-		attrs = {}
-		self._attachments(attrs, options)
-		if useGadget:
-			label = Xm.LabelGadget
-		else:
-			label = Xm.Label
-		label = parent._form.CreateManagedWidget(name, label, attrs)
-		label.labelString = text
-		self._text = text
-		_Widget.__init__(self, parent, label)
-
-	def __repr__(self):
-		return '<Label instance at %x, text=%s>' % (id(self), self._text)
-
-	def setlabel(self, text):
-		'''Set the text of the label to TEXT.'''
-		self._form.labelString = text
-		self._text = text
-
-class Button(_Widget):
-	'''Button window object.'''
-	def __init__(self, parent, label, callback, useGadget = _def_useGadget,
-		     name = 'windowButton', **options):
-		'''Create a Button subwindow.
-
-		PARENT is the parent window, LABEL is the label on the
-		button, CALLBACK is the callback function that is
-		called when the button is activated.  The callback is
-		a tuple consiting of a callable object and an argument
-		tuple.'''
-		self._text = label
-		attrs = {'labelString': label}
-		self._attachments(attrs, options)
-		if useGadget:
-			button = Xm.PushButtonGadget
-		else:
-			button = Xm.PushButton
-		button = parent._form.CreateManagedWidget(name, button, attrs)
-		if callback:
-			button.AddCallback('activateCallback',
-					   self._callback, callback)
-		_Widget.__init__(self, parent, button)
-
-	def __repr__(self):
-		return '<Button instance at %x, text=%s>' % (id(self), self._text)
-
-	def setlabel(self, text):
-		self._form.labelString = text
-		self._text = text
-
-	def setsensitive(self, sensitive):
-		self._form.sensitive = sensitive
-
-	def _callback(self, widget, callback, call_data):
-		if self.is_closed():
-			return
-		apply(callback[0], callback[1])
-
-class OptionMenu(_Widget):
-	'''Option menu window object.'''
-	def __init__(self, parent, label, optionlist, startpos, cb,
-		     useGadget = _def_useGadget, name = 'windowOptionMenu',
-		     **options):
-		'''Create an option menu window object.
-
-		PARENT is the parent window, LABEL is a label for the
-		option menu, OPTIONLIST is a list of options, STARTPOS
-		gives the initial selected option, CB is the callback
-		that is to be called when the option is changed,
-		OPTIONS is an optional dictionary with options.
-		If label is None, the label is not shown, otherwise it
-		is shown to the left of the option menu.
-		The optionlist is a list of strings.  Startpos is the
-		index in the optionlist of the initially selected
-		option.  The callback is either None, or a tuple of
-		two elements.  If None, no callback is called when the
-		option is changed, otherwise the the first element of
-		the tuple is a callable object, and the second element
-		is a tuple giving the arguments to the callable
-		object.'''
-
-		if 0 <= startpos < len(optionlist):
-			pass
-		else:
-			raise error, 'startpos out of range'
-		self._useGadget = useGadget
-		initbut = self._do_setoptions(parent._form, optionlist,
-					      startpos)
-		attrs = {'menuHistory': initbut,
-			 'subMenuId': self._omenu,
-			 'colormap': toplevel._default_colormap,
-			 'visual': toplevel._default_visual,
-			 'depth': toplevel._default_visual.depth}
-		self._attachments(attrs, options)
-		option = parent._form.CreateOptionMenu(name, attrs)
-		if label is None:
-			option.OptionLabelGadget().UnmanageChild()
-			self._text = '<None>'
-		else:
-			option.labelString = label
-			self._text = label
-		self._callback = cb
-		_Widget.__init__(self, parent, option)
-
-	def __repr__(self):
-		return '<OptionMenu instance at %x, label=%s>' % (id(self), self._text)
-
-	def close(self):
-		_Widget.close(self)
-		self._callback = self._value = self._optionlist = \
-				 self._buttons = None
-
-	def getpos(self):
-		'''Get the index of the currently selected option.'''
-		return self._value
-
-	def getvalue(self):
-		'''Get the value of the currently selected option.'''
-		return self._optionlist[self._value]
-
-	def setpos(self, pos):
-		'''Set the currently selected option to the index given by POS.'''
-		if pos == self._value:
-			return
-		self._form.menuHistory = self._buttons[pos]
-		self._value = pos
-
-	def setsensitive(self, pos, sensitive):
-		if 0 <= pos < len(self._buttons):
-			self._buttons[pos].sensitive = sensitive
-		else:
-			raise error, 'pos out of range'
-
-	def setvalue(self, value):
-		'''Set the currently selected option to VALUE.'''
-		self.setpos(self._optionlist.index(value))
-
-	def setoptions(self, optionlist, startpos):
-		'''Set new options.
-
-		OPTIONLIST and STARTPOS are as in the __init__ method.'''
-
-		if optionlist != self._optionlist:
-			if self._useGadget:
-				createfunc = self._omenu.CreatePushButtonGadget
-			else:
-				createfunc = self._omenu.CreatePushButton
-			# reuse old menu entries or create new ones
-			for i in range(len(optionlist)):
-				item = optionlist[i]
-				if i == len(self._buttons):
-					button = createfunc(
-						'windowOptionButton',
-						{'labelString': item})
-					button.AddCallback('activateCallback',
-							   self._cb, i)
-					button.ManageChild()
-					self._buttons.append(button)
-				else:
-					button = self._buttons[i]
-					button.labelString = item
-			# delete superfluous menu entries
-			n = len(optionlist)
-			while len(self._buttons) > n:
-				self._buttons[n].DestroyWidget()
-				del self._buttons[n]
-			self._optionlist = optionlist
-		# set the start position
-		self.setpos(startpos)
-
-	def _do_setoptions(self, form, optionlist, startpos):
-		if 0 <= startpos < len(optionlist):
-			pass
-		else:
-			raise error, 'startpos out of range'
-		menu = form.CreatePulldownMenu('windowOption',
-				{'colormap': toplevel._default_colormap,
-				 'visual': toplevel._default_visual,
-				 'depth': toplevel._default_visual.depth})
-		self._omenu = menu
-		self._optionlist = optionlist
-		self._value = startpos
-		self._buttons = []
-		if self._useGadget:
-			createfunc = menu.CreatePushButtonGadget
-		else:
-			createfunc = menu.CreatePushButton
-		for i in range(len(optionlist)):
-			item = optionlist[i]
-			button = createfunc('windowOptionButton',
-					    {'labelString': item})
-			button.AddCallback('activateCallback', self._cb, i)
-			button.ManageChild()
-			if startpos == i:
-				initbut = button
-			self._buttons.append(button)
-		return initbut
-
-	def _cb(self, widget, value, call_data):
-		if self.is_closed():
-			return
-		self._value = value
-		if self._callback:
-			f, a = self._callback
-			apply(f, a)
-
-	def _destroy(self, widget, value, call_data):
-		_Widget._destroy(self, widget, value, call_data)
-		del self._omenu
-		del self._optionlist
-		del self._buttons
-		del self._callback
-
-class PulldownMenu(_Widget):
-	'''Menu bar window object.'''
-	def __init__(self, parent, menulist, useGadget = _def_useGadget,
-		     name = 'menuBar', **options):
-		'''Create a menu bar window object.
-
-		PARENT is the parent window, MENULIST is a list giving
-		the definition of the menubar, OPTIONS is an optional
-		dictionary of options.
-		The menulist is a list of tuples.  The first elements
-		of the tuples is the name of the pulldown menu, the
-		second element is a list with the definition of the
-		pulldown menu.'''
-
-		attrs = {}
-		self._attachments(attrs, options)
-		if useGadget:
-			cascade = Xm.CascadeButtonGadget
-		else:
-			cascade = Xm.CascadeButton
-		menubar = parent._form.CreateMenuBar(name, attrs)
-		buttons = []
-		for item, list in menulist:
-			menu = menubar.CreatePulldownMenu('windowMenu',
-				{'colormap': toplevel._default_colormap,
-				 'visual': toplevel._default_visual,
-				 'depth': toplevel._default_visual.depth})
-			button = menubar.CreateManagedWidget(
-				'windowMenuButton', cascade,
-				{'labelString': item,
-				 'subMenuId': menu})
-			mac_windowbase._create_menu(menu, list,
-						  toplevel._default_visual,
-						  toplevel._default_colormap)
-			buttons.append(button)
-		_Widget.__init__(self, parent, menubar)
-		self._buttons = buttons
-
-	def __repr__(self):
-		return '<PulldownMenu instance at %x>' % id(self)
-
-	def close(self):
-		_Widget.close(self)
-		self._buttons = None
-
-	def setmenu(self, pos, list):
-		if not 0 <= pos < len(self._buttons):
-			raise error, 'position out of range'
-		button = self._buttons[pos]
-		menu = self._form.CreatePulldownMenu('windowMenu',
-				{'colormap': toplevel._default_colormap,
-				 'visual': toplevel._default_visual,
-				 'depth': toplevel._default_visual.depth})
-		mac_windowbase._create_menu(menu, list,
-					  toplevel._default_visual,
-					  toplevel._default_colormap)
-		omenu = button.subMenuId
-		button.subMenuId = menu
-		omenu.DestroyWidget()
-
-	def _destroy(self, widget, value, call_data):
-		_Widget._destroy(self, widget, value, call_data)
-		del self._buttons
-
-# super class for Selection and List
-class _List:
-	def __init__(self, list, itemlist, initial, sel_cb):
-		self._list = list
-		list.ListAddItems(itemlist, 1)
-		self._itemlist = itemlist
-		if type(sel_cb) is ListType:
-			if len(sel_cb) >= 1 and sel_cb[0]:
-				list.AddCallback('singleSelectionCallback',
-						 self._callback, sel_cb[0])
-			if len(sel_cb) >= 2 and sel_cb[1]:
-				list.AddCallback('defaultActionCallback',
-						 self._callback, sel_cb[1])
-		elif sel_cb:
-			list.AddCallback('singleSelectionCallback',
-					 self._callback, sel_cb)
-		if itemlist:
-			self.selectitem(initial)
-
-	def close(self):
-		self._itemlist = None
-		self._list = None
-
-	def getselected(self):
-		pos = self._list.ListGetSelectedPos()
-		if pos:
-			return pos[0] - 1
-		else:
-			return None
-
-	def getlistitem(self, pos):
-		return self._itemlist[pos]
-
-	def getlist(self):
-		return self._itemlist
-
-	def addlistitem(self, item, pos):
-		if pos < 0:
-			pos = len(self._itemlist)
-		self._list.ListAddItem(item, pos + 1)
-		self._itemlist.insert(pos, item)
-
-	def addlistitems(self, items, pos):
-		if pos < 0:
-			pos = len(self._itemlist)
-		self._list.ListAddItems(items, pos + 1)
-		self._itemlist[pos:pos] = items
-
-	def dellistitem(self, pos):
-		del self._itemlist[pos]
-		self._list.ListDeletePos(pos + 1)
-
-	def dellistitems(self, poslist):
-		self._list.ListDeletePositions(map(lambda x: x+1, poslist))
-		list = poslist[:]
-		list.sort()
-		list.reverse()
-		for pos in list:
-			del self._itemlist[pos]
-
-	def replacelistitem(self, pos, newitem):
-		self.replacelistitems(pos, [newitem])
-
-	def replacelistitems(self, pos, newitems):
-		self._itemlist[pos:pos+len(newitems)] = newitems
-		self._list.ListReplaceItemsPos(newitems, pos + 1)
-
-	def delalllistitems(self):
-		self._itemlist = []
-		self._list.ListDeleteAllItems()
-
-	def selectitem(self, pos):
-		if pos is None:
-			self._list.ListDeselectAllItems()
-			return
-		if pos < 0:
-			pos = len(self._itemlist) - 1
-		self._list.ListSelectPos(pos + 1, TRUE)
-
-	def is_visible(self, pos):
-		if pos < 0:
-			pos = len(self._itemlist) - 1
-		top = self._list.topItemPosition - 1
-		vis = self._list.visibleItemCount
-		return top <= pos < top + vis
-
-	def scrolllist(self, pos, where):
-		if pos < 0:
-			pos = len(self._itemlist) - 1
-		if where == TOP:
-			self._list.ListSetPos(pos + 1)
-		elif where == BOTTOM:
-			self._list.ListSetBottomPos(pos + 1)
-		elif where == CENTER:
-			vis = self._list.visibleItemCount
-			toppos = pos - vis / 2 + 1
-			if toppos + vis > len(self._itemlist):
-				toppos = len(self._itemlist) - vis + 1
-			if toppos <= 0:
-				toppos = 1
-			self._list.ListSetPos(toppos)
-		else:
-			raise error, 'bad argument for scrolllist'
-			
-
-	def _callback(self, w, (func, arg), call_data):
-		if self.is_closed():
-			return
-		apply(func, arg)
-
-	def _destroy(self):
-		del self._itemlist
-		del self._list
-
-class Selection(_Widget, _List):
-	def __init__(self, parent, listprompt, itemprompt, itemlist, initial,
-		     sel_cb, name = 'windowSelection', **options):
-		attrs = {}
-		self._attachments(attrs, options)
-		selection = parent._form.CreateSelectionBox(name, attrs)
-		for widget in Xmd.DIALOG_APPLY_BUTTON, \
-		    Xmd.DIALOG_CANCEL_BUTTON, Xmd.DIALOG_DEFAULT_BUTTON, \
-		    Xmd.DIALOG_HELP_BUTTON, Xmd.DIALOG_OK_BUTTON, \
-		    Xmd.DIALOG_SEPARATOR:
-			selection.SelectionBoxGetChild(widget).UnmanageChild()
-		w = selection.SelectionBoxGetChild(Xmd.DIALOG_LIST_LABEL)
-		if listprompt is None:
-			w.UnmanageChild()
-			self._text = '<None>'
-		else:
-			w.labelString = listprompt
-			self._text = listprompt
-		w = selection.SelectionBoxGetChild(Xmd.DIALOG_SELECTION_LABEL)
-		if itemprompt is None:
-			w.UnmanageChild()
-		else:
-			w.labelString = itemprompt
-		list = selection.SelectionBoxGetChild(Xmd.DIALOG_LIST)
-		list.selectionPolicy = Xmd.SINGLE_SELECT
-		list.listSizePolicy = Xmd.CONSTANT
-		try:
-			cb = options['enterCallback']
-		except KeyError:
-			pass
-		else:
-			txt = selection.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
-			txt.AddCallback('activateCallback', self._callback, cb)
-		_List.__init__(self, list, itemlist, initial, sel_cb)
-		_Widget.__init__(self, parent, selection)
-
-	def __repr__(self):
-		return '<Selection instance at %x; label=%s>' % (id(self), self._text)
-
-	def close(self):
-		_List.close(self)
-		_Widget.close(self)
-
-	def setlabel(self, label):
-		w = self._form.SelectionBoxGetChild(Xmd.DIALOG_LIST_LABEL)
-		w.labelString = label
-
-	def getselection(self):
-		text = self._form.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
-		if hasattr(text, 'TextFieldGetString'):
-			return text.TextFieldGetString()
-		else:
-			return text.TextGetString()
-
-	def seteditable(self, editable):
-		text = self._form.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
-		text.editable = editable
-
-	def _destroy(self, widget, value, call_data):
-		_Widget._destroy(self, widget, value, call_data)
-		_List._destroy(self)
-
-class List(_Widget, _List):
-	def __init__(self, parent, listprompt, itemlist, sel_cb,
-		     rows = 10, useGadget = _def_useGadget,
-		     name = 'windowList', **options):
-		attrs = {'resizePolicy': parent.resizePolicy}
-		self._attachments(attrs, options)
-		if listprompt is not None:
-			if useGadget:
-				labelwidget = Xm.LabelGadget
-			else:
-				labelwidget = Xm.Label
-			form = parent._form.CreateManagedWidget(
-				'windowListForm', Xm.Form, attrs)
-			label = form.CreateManagedWidget(name + 'Label',
-					labelwidget,
-					{'topAttachment': Xmd.ATTACH_FORM,
-					 'leftAttachment': Xmd.ATTACH_FORM,
-					 'rightAttachment': Xmd.ATTACH_FORM})
-			self._label = label
-			label.labelString = listprompt
-			attrs = {'topAttachment': Xmd.ATTACH_WIDGET,
-				 'topWidget': label,
-				 'leftAttachment': Xmd.ATTACH_FORM,
-				 'rightAttachment': Xmd.ATTACH_FORM,
-				 'bottomAttachment': Xmd.ATTACH_FORM,
-				 'visibleItemCount': rows,
-				 'selectionPolicy': Xmd.SINGLE_SELECT}
-			try:
-				attrs['width'] = options['width']
-			except KeyError:
-				pass
-			if parent.resizePolicy == Xmd.RESIZE_ANY:
-				attrs['listSizePolicy'] = \
-							Xmd.RESIZE_IF_POSSIBLE
-			else:
-				attrs['listSizePolicy'] = Xmd.CONSTANT
-			list = form.CreateScrolledList(name, attrs)
-			list.ManageChild()
-			widget = form
-			self._text = listprompt
-		else:
-			attrs['visibleItemCount'] = rows
-			attrs['selectionPolicy'] = Xmd.SINGLE_SELECT
-			if parent.resizePolicy == Xmd.RESIZE_ANY:
-				attrs['listSizePolicy'] = \
-							Xmd.RESIZE_IF_POSSIBLE
-			else:
-				attrs['listSizePolicy'] = Xmd.CONSTANT
-			try:
-				attrs['width'] = options['width']
-			except KeyError:
-				pass
-			list = parent._form.CreateScrolledList(name, attrs)
-			widget = list
-			self._text = '<None>'
-		_List.__init__(self, list, itemlist, 0, sel_cb)
-		_Widget.__init__(self, parent, widget)
-
-	def __repr__(self):
-		return '<List instance at %x; label=%s>' % (id(self), self._text)
-
-	def close(self):
-		_List.close(self)
-		_Widget.close(self)
-
-	def setlabel(self, label):
-		try:
-			self._label.labelString = label
-		except AttributeError:
-			raise error, 'List created without label'
-		else:
-			self._text = label
-
-	def _destroy(self, widget, value, call_data):
-		try:
-			del self._label
-		except AttributeError:
-			pass
-		_Widget._destroy(self, widget, value, call_data)
-		_List._destroy(self)
-
-class TextInput(_Widget):
-	def __init__(self, parent, prompt, inittext, chcb, accb,
-		     useGadget = _def_useGadget, name = 'windowTextfield',
-		     modifyCB = None,
-		     **options):
-		attrs = {}
-		self._attachments(attrs, options)
-		if prompt is not None:
-			if useGadget:
-				labelwidget = Xm.LabelGadget
-			else:
-				labelwidget = Xm.Label
-			form = parent._form.CreateManagedWidget(
-				name + 'Form', Xm.Form, attrs)
-			label = form.CreateManagedWidget(
-				name + 'Label', labelwidget,
-				{'topAttachment': Xmd.ATTACH_FORM,
-				 'leftAttachment': Xmd.ATTACH_FORM,
-				 'bottomAttachment': Xmd.ATTACH_FORM})
-			self._label = label
-			label.labelString = prompt
-			attrs = {'topAttachment': Xmd.ATTACH_FORM,
-				 'leftAttachment': Xmd.ATTACH_WIDGET,
-				 'leftWidget': label,
-				 'bottomAttachment': Xmd.ATTACH_FORM,
-				 'rightAttachment': Xmd.ATTACH_FORM}
-			widget = form
-		else:
-			form = parent._form
-			widget = None
-		try:
-			attrs['columns'] = options['columns']
-		except KeyError:
-			pass
-		attrs['value'] = inittext
-		try:
-			attrs['editable'] = options['editable']
-		except KeyError:
-			pass
-		self._text = text = form.CreateTextField(name, attrs)
-		text.ManageChild()
-		if not widget:
-			widget = text
-		if chcb:
-			text.AddCallback('valueChangedCallback',
-					 self._callback, chcb)
-		if accb:
-			text.AddCallback('activateCallback',
-					 self._callback, accb)
-		if modifyCB:
-			text.AddCallback('modifyVerifyCallback',
-					 self._modifyCB, modifyCB)
-		_Widget.__init__(self, parent, widget)
-
-	def __repr__(self):
-		return '<TextInput instance at %x>' % id(self)
-
-	def close(self):
-		_Widget.close(self)
-		self._text = None
-
-	def setlabel(self, label):
-		if not hasattr(self, '_label'):
-			raise error, 'TextInput create without label'
-		self._label.labelString = label
-
-	def gettext(self):
-		return self._text.TextFieldGetString()
-
-	def settext(self, text):
-		self._text.value = text
-
-	def setfocus(self):
-		self._text.ProcessTraversal(Xmd.TRAVERSE_CURRENT)
-
-	def _callback(self, w, (func, arg), call_data):
-		if self.is_closed():
-			return
-		apply(func, arg)
-
-	def _modifyCB(self, w, func, call_data):
-		text = func(call_data.text)
-		if text is not None:
-			call_data.text = text
-
-	def _destroy(self, widget, value, call_data):
-		_Widget._destroy(self, widget, value, call_data)
-		try:
-			del self._label
-		except AttributeError:
-			pass
-		del self._text
-
-class TextEdit(_Widget):
-	def __init__(self, parent, inittext, cb, name = 'windowText',
-		     **options):
-		attrs = {'editMode': Xmd.MULTI_LINE_EDIT,
-			 'editable': TRUE,
-			 'rows': 10}
-		for option in ['editable', 'rows', 'columns']:
-			try:
-				attrs[option] = options[option]
-			except KeyError:
-				pass
-		if not attrs['editable']:
-			attrs['cursorPositionVisible'] = FALSE
-		self._attachments(attrs, options)
-		text = parent._form.CreateScrolledText(name, attrs)
-		if cb:
-			text.AddCallback('activateCallback', self._callback,
-					 cb)
-		_Widget.__init__(self, parent, text)
-		self.settext(inittext)
-
-	def __repr__(self):
-		return '<TextEdit instance at %x>' % id(self)
-
-	def settext(self, text):
-		if type(text) is ListType:
-			text = string.joinfields(text, '\n')
-		self._form.TextSetString(text)
-		self._linecache = None
-
-	def gettext(self):
-		return self._form.TextGetString()
-
-	def getlines(self):
-		text = self.gettext()
-		text = string.splitfields(text, '\n')
-		if len(text) > 0 and text[-1] == '':
-			del text[-1]
-		return text
-
-	def _mklinecache(self):
-		text = self.getlines()
-		self._linecache = c = []
-		pos = 0
-		for line in text:
-			c.append(pos)
-			pos = pos + len(line) + 1
-
-	def getline(self, line):
-		lines = self.getlines()
-		if line < 0 or line >= len(lines):
-			line = len(lines) - 1
-		return lines[line]
-
-	def scrolltext(self, line, where):
-		if not self._linecache:
-			self._mklinecache()
-		if line < 0 or line >= len(self._linecache):
-			line = len(self._linecache) - 1
-		if where == TOP:
-			pass
-		else:
-			rows = self._form.rows
-			if where == BOTTOM:
-				line = line - rows + 1
-			elif where == CENTER:
-				line = line - rows/2 + 1
-			else:
-				raise error, 'bad argument for scrolltext'
-			if line < 0:
-				line = 0
-		self._form.TextSetTopCharacter(self._linecache[line])
-
-	def selectchars(self, line, start, end):
-		if not self._linecache:
-			self._mklinecache()
-		if line < 0 or line >= len(self._linecache):
-			line = len(self._linecache) - 1
-		pos = self._linecache[line]
-		self._form.TextSetSelection(pos + start, pos + end, 0)
-
-	def _callback(self, w, (func, arg), call_data):
-		if self.is_closed():
-			return
-		apply(func, arg)
-
-	def _destroy(self, widget, value, call_data):
-		_Widget._destroy(self, widget, value, call_data)
-		del self._linecache
-
-class Separator(_Widget):
-	def __init__(self, parent, useGadget = _def_useGadget,
-		     name = 'windowSeparator', **options):
-		attrs = {}
-		self._attachments(attrs, options)
-		if useGadget:
-			separator = Xm.SeparatorGadget
-		else:
-			separator = Xm.Separator
-		separator = parent._form.CreateManagedWidget(name, separator,
-							     attrs)
-		_Widget.__init__(self, parent, separator)
-
-	def __repr__(self):
-		return '<Separator instance at %x>' % id(self)
-
-class ButtonRow(_Widget):
-	def __init__(self, parent, buttonlist,
-		     vertical = 1, callback = None,
-		     buttontype = 'pushbutton', useGadget = _def_useGadget,
-		     name = 'windowRowcolumn', **options):
-		attrs = {'entryAlignment': Xmd.ALIGNMENT_CENTER,
-			 'traversalOn': FALSE}
-		if not vertical:
-			attrs['orientation'] = Xmd.HORIZONTAL
-##			attrs['packing'] = Xmd.PACK_COLUMN
-		self._cb = callback
-		if useGadget:
-			separator = Xm.SeparatorGadget
-			cascadebutton = Xm.CascadeButtonGadget
-			pushbutton = Xm.PushButtonGadget
-			togglebutton = Xm.ToggleButtonGadget
-		else:
-			separator = Xm.Separator
-			cascadebutton = Xm.CascadeButton
-			pushbutton = Xm.PushButton
-			togglebutton = Xm.ToggleButton
-		self._attachments(attrs, options)
-		rowcolumn = parent._form.CreateManagedWidget(name,							Xm.RowColumn, attrs)
-		self._buttons = []
-		for entry in buttonlist:
-			if entry is None:
-				if vertical:
-					attrs = {'orientation': Xmd.HORIZONTAL}
-				else:
-					attrs = {'orientation': Xmd.VERTICAL}
-				dummy = rowcolumn.CreateManagedWidget(
-					'buttonSeparator', separator, attrs)
-				continue
-			btype = buttontype
-			if type(entry) is TupleType:
-				label, callback = entry[:2]
-				if len(entry) > 2:
-					btype = entry[2]
-			else:
-				label, callback = entry, None
-			if type(callback) is ListType:
-				menu = rowcolumn.CreateMenuBar('submenu', {})
-				submenu = menu.CreatePulldownMenu(
-					'submenu',
-					{'colormap': toplevel._default_colormap,
-					'visual': toplevel._default_visual,
-					 'depth': toplevel._default_visual.depth})
-				button = menu.CreateManagedWidget(
-					'submenuLabel', cascadebutton,
-					{'labelString': label,
-					 'subMenuId': submenu})
-				mac_windowbase._create_menu(submenu, callback,
-					  toplevel._default_visual,
-					  toplevel._default_colormap)
-				menu.ManageChild()
-				continue
-			if callback and type(callback) is not TupleType:
-				callback = (callback, (label,))
-			if btype[0] in ('b', 'p'): # push button
-				gadget = pushbutton
-				battrs = {}
-				callbackname = 'activateCallback'
-			elif btype[0] == 't': # toggle button
-				gadget = togglebutton
-				battrs = {'indicatorType': Xmd.N_OF_MANY}
-				callbackname = 'valueChangedCallback'
-			elif btype[0] == 'r': # radio button
-				gadget = togglebutton
-				battrs = {'indicatorType': Xmd.ONE_OF_MANY}
-				callbackname = 'valueChangedCallback'
-			else:
-				raise error, 'bad button type'
-			battrs['labelString'] = label
-			button = rowcolumn.CreateManagedWidget('windowButton',
-					gadget, battrs)
-			if callback or self._cb:
-				button.AddCallback(callbackname,
-						   self._callback, callback)
-			self._buttons.append(button)
-		_Widget.__init__(self, parent, rowcolumn)
-
-	def __repr__(self):
-		return '<ButtonRow instance at %x>' % id(self)
-
-	def close(self):
-		_Widget.close(self)
-		self._buttons = None
-		self._cb = None
-
-	def hide(self, button = None):
-		if button is None:
-			_Widget.hide(self)
-			return
-		if not 0 <= button < len(self._buttons):
-			raise error, 'button number out of range'
-		self._buttons[button].UnmanageChild()
-
-	def show(self, button = None):
-		if button is None:
-			_Widget.show(self)
-			return
-		if not 0 <= button < len(self._buttons):
-			raise error, 'button number out of range'
-		self._buttons[button].ManageChild()
-
-	def getbutton(self, button):
-		if not 0 <= button < len(self._buttons):
-			raise error, 'button number out of range'
-		return self._buttons[button].set
-
-	def setbutton(self, button, onoff = 1):
-		if not 0 <= button < len(self._buttons):
-			raise error, 'button number out of range'
-		button = self._buttons[button]
-		button.set = onoff
-
-	def setsensitive(self, button, sensitive):
-		if not 0 <= button < len(self._buttons):
-			raise error, 'button number out of range'
-		self._buttons[button].sensitive = sensitive
-
-	def _callback(self, widget, callback, call_data):
-		if self.is_closed():
-			return
-		if self._cb:
-			apply(self._cb[0], self._cb[1])
-		if callback:
-			apply(callback[0], callback[1])
-
-	def _popup(self, widget, submenu, call_data):
-		submenu.ManageChild()
-
-	def _destroy(self, widget, value, call_data):
-		_Widget._destroy(self, widget, value, call_data)
-		del self._buttons
-		del self._cb
-
-class Slider(_Widget):
-	def __init__(self, parent, prompt, minimum, initial, maximum, cb,
-		     vertical = 0, showvalue = 1, name = 'windowScale',
-		     **options):
-		if vertical:
-			orientation = Xmd.VERTICAL
-		else:
-			orientation = Xmd.HORIZONTAL
-		self._orientation = orientation
-		direction, minimum, initial, maximum, decimal, factor = \
-			   self._calcrange(minimum, initial, maximum)
-		attrs = {'minimum': minimum,
-			 'maximum': maximum,
-			 'processingDirection': direction,
-			 'decimalPoints': decimal,
-			 'orientation': orientation,
-			 'showValue': showvalue,
-			 'value': initial}
-		self._attachments(attrs, options)
-		scale = parent._form.CreateScale(name, attrs)
-		if cb:
-			scale.AddCallback('valueChangedCallback',
-					  self._callback, cb)
-		if prompt is None:
-			for w in scale.GetChildren():
-				if w.Name() == 'Title':
-					w.UnmanageChild()
-					break
-		else:
-			scale.titleString = prompt
-		_Widget.__init__(self, parent, scale)
-
-	def __repr__(self):
-		return '<Slider instance at %x>' % id(self)
-
-	def getvalue(self):
-		return self._form.ScaleGetValue() / self._factor
-
-	def setvalue(self, value):
-		value = int(value * self._factor + .5)
-		self._form.ScaleSetValue(value)
-
-	def setrange(self, minimum, maximum):
-		direction, minimum, initial, maximum, decimal, factor = \
-			   self._calcrange(minimum, self.getvalue(), maximum)
-		self._form.SetValues({'minimum': minimum,
-				      'maximum': maximum,
-				      'processingDirection': direction,
-				      'decimalPoints': decimal,
-				      'value': initial})
-
-	def getrange(self):
-		return self._minimum, self._maximum
-
-	def _callback(self, widget, callback, call_data):
-		if self.is_closed():
-			return
-		apply(callback[0], callback[1])
-
-	def _calcrange(self, minimum, initial, maximum):
-		self._minimum, self._maximum = minimum, maximum
-		range = maximum - minimum
-		if range < 0:
-			if self._orientation == Xmd.VERTICAL:
-				direction = Xmd.MAX_ON_BOTTOM
-			else:
-				direction = Xmd.MAX_ON_LEFT
-			range = -range
-			minimum, maximum = maximum, minimum
-		else:
-			if self._orientation == Xmd.VERTICAL:
-				direction = Xmd.MAX_ON_TOP
-			else:
-				direction = Xmd.MAX_ON_RIGHT
-		decimal = 0
-		factor = 1
-		if FloatType in [type(minimum), type(maximum)]:
-			factor = 1.0
-		while 0 < range <= 10:
-			range = range * 10
-			decimal = decimal + 1
-			factor = factor * 10
-		self._factor = factor
-		return direction, int(minimum * factor + .5), \
-		       int(initial * factor + .5), \
-		       int(maximum * factor + .5), decimal, factor
-
-class _WindowHelpers:
-	def __init__(self):
-		self._fixkids = []
-		self._fixed = FALSE
-		self._children = []
-
-	def close(self):
-		self._fixkids = None
-		for w in self._children[:]:
-			w.close()
-
-	# items with which a window can be filled in
-	def Label(self, text, **options):
-		return apply(Label, (self, text), options)
-	def Button(self, label, callback, **options):
-		return apply(Button, (self, label, callback), options)
-	def OptionMenu(self, label, optionlist, startpos, cb, **options):
-		return apply(OptionMenu,
-			     (self, label, optionlist, startpos, cb),
-			     options)
-	def PulldownMenu(self, menulist, **options):
-		return apply(PulldownMenu, (self, menulist), options)
-	def Selection(self, listprompt, itemprompt, itemlist, initial, sel_cb,
-		      **options):
-		return apply(Selection,
-			     (self, listprompt, itemprompt, itemlist, initial,
-			      sel_cb),
-			     options)
-	def List(self, listprompt, itemlist, sel_cb, **options):
-		return apply(List,
-			     (self, listprompt, itemlist, sel_cb), options)
-	def TextInput(self, prompt, inittext, chcb, accb, **options):
-		return apply(TextInput,
-			     (self, prompt, inittext, chcb, accb), options)
-	def TextEdit(self, inittext, cb, **options):
-		return apply(TextEdit, (self, inittext, cb), options)
-	def Separator(self, **options):
-		return apply(Separator, (self,), options)
-	def ButtonRow(self, buttonlist, **options):
-		return apply(ButtonRow, (self, buttonlist), options)
-	def Slider(self, prompt, minimum, initial, maximum, cb, **options):
-		return apply(Slider,
-			     (self, prompt, minimum, initial, maximum, cb),
-			     options)
-	def SubWindow(self, **options):
-		return apply(SubWindow, (self,), options)
-	def AlternateSubWindow(self, **options):
-		return apply(AlternateSubWindow, (self,), options)
-
-class SubWindow(_Widget, _WindowHelpers):
-	def __init__(self, parent, name = 'windowSubwindow', **options):
-		attrs = {'resizePolicy': parent.resizePolicy}
-		self.resizePolicy = parent.resizePolicy
-		self._attachments(attrs, options)
-		form = parent._form.CreateManagedWidget(name, Xm.Form, attrs)
-		_WindowHelpers.__init__(self)
-		_Widget.__init__(self, parent, form)
-		parent._fixkids.append(self)
-
-	def __repr__(self):
-		return '<SubWindow instance at %x>' % id(self)
-
-	def close(self):
-		_Widget.close(self)
-		_WindowHelpers.close(self)
-
-	def fix(self):
-		for w in self._fixkids:
-			w.fix()
-		self._form.ManageChild()
-		self._fixed = TRUE
-
-	def show(self):
-		_Widget.show(self)
-		if self._fixed:
-			for w in self._fixkids:
-				if w.is_showing():
-					w.show()
-				else:
-					w.hide()
-			self._fixkids = []
-
-class _AltSubWindow(SubWindow):
-	def __init__(self, parent, name):
-		self._parent = parent
-		SubWindow.__init__(self, parent, left = None, right = None,
-				   top = None, bottom = None, name = name)
-
-	def show(self):
-		for w in self._parent._windows:
-			w.hide()
-		SubWindow.show(self)
-
-class AlternateSubWindow(_Widget):
-	def __init__(self, parent, name = 'windowAlternateSubwindow',
-		     **options):
-		attrs = {'resizePolicy': parent.resizePolicy,
-			 'allowOverlap': TRUE}
-		self.resizePolicy = parent.resizePolicy
-		self._attachments(attrs, options)
-		form = parent._form.CreateManagedWidget(name, Xm.Form, attrs)
-		self._windows = []
-		_Widget.__init__(self, parent, form)
-		parent._fixkids.append(self)
-		self._fixkids = []
-		self._children = []
-
-	def __repr__(self):
-		return '<AlternateSubWindow instance at %x>' % id(self)
-
-	def close(self):
-		_Widget.close(self)
-		self._windows = None
-		self._fixkids = None
-
-	def SubWindow(self, name = 'windowSubwindow'):
-		widget = _AltSubWindow(self, name = name)
-		for w in self._windows:
-			w.hide()
-		self._windows.append(widget)
-		return widget
-
-	def fix(self):
-		for w in self._fixkids:
-			w.fix()
-		for w in self._windows:
-			w._form.ManageChild()
-
-class Window(_WindowHelpers, _MenuSupport):
-	def __init__(self, title, resizable = 0, grab = 0,
-		     Name = 'windowShell', Class = None, **options):
-		if not resizable:
-			self.resizePolicy = Xmd.RESIZE_NONE
-		else:
-			self.resizePolicy = Xmd.RESIZE_ANY
-		if not title:
-			title = ''
-		self._title = title
-		wattrs = {'title': title,
-			  'minWidth': 60, 'minHeight': 60,
-			  'colormap': toplevel._default_colormap,
-			  'visual': toplevel._default_visual,
-			  'depth': toplevel._default_visual.depth}
-		attrs = {'allowOverlap': FALSE,
-			 'resizePolicy': self.resizePolicy}
-		if not resizable:
-			attrs['noResize'] = TRUE
-			attrs['resizable'] = FALSE
-		if grab:
-			attrs['dialogStyle'] = \
-					     Xmd.DIALOG_FULL_APPLICATION_MODAL
-			for key, val in wattrs.items():
-				attrs[key] = val
-			self._form = toplevel._main.CreateFormDialog(
-				'grabDialog', attrs)
-		else:
-			wattrs['iconName'] = title
-			self._shell = toplevel._main.CreatePopupShell(Name,
-				Xt.ApplicationShell, wattrs)
-			self._form = self._shell.CreateManagedWidget(
-				'windowForm', Xm.Form, attrs)
-			try:
-				deleteCallback = options['deleteCallback']
-			except KeyError:
-				pass
-			else:
-				self._shell.AddWMProtocolCallback(
-					toplevel._delete_window,
-					self._delete_callback,
-					deleteCallback)
-				self._shell.deleteResponse = Xmd.DO_NOTHING
-		self._showing = FALSE
-		self._not_shown = []
-		self._shown = []
-		_WindowHelpers.__init__(self)
-		_MenuSupport.__init__(self)
-		toplevel._subwindows.append(self)
-
-	def __repr__(self):
-		s = '<Window instance at %x' % id(self)
-		if hasattr(self, '_title'):
-			s = s + ', title=' + `self._title`
-		if self.is_closed():
-			s = s + ' (closed)'
-		elif self._showing:
-			s = s + ' (showing)'
-		s = s + '>'
-		return s
-
-	def close(self):
-		try:
-			form = self._form
-		except AttributeError:
-			return
-		try:
-			shell = self._shell
-		except AttributeError:
-			shell = None
-		toplevel._subwindows.remove(self)
-		del self._form
-		form.DestroyWidget()
-		del form
-		if shell:
-			shell.UnmanageChild()
-			shell.DestroyWidget()
-			del self._shell
-			del shell
-		_WindowHelpers.close(self)
-		_MenuSupport.close(self)
-
-	def is_closed(self):
-		return not hasattr(self, '_form')
-
-	def setcursor(self, cursor):
-		mac_windowbase._setcursor(self._form, cursor)
-
-	def fix(self):
-		for w in self._fixkids:
-			w.fix()
-		self._form.ManageChild()
-		try:
-			self._shell.RealizeWidget()
-		except AttributeError:
-			pass
-		self._fixed = TRUE
-
-	def _showme(self, w):
-		if self.is_closed():
-			return
-		if self.is_showing():
-			if not w._form.IsSubclass(Xm.Gadget):
-				w._form.MapWidget()
-		elif w in self._not_shown:
-			self._not_shown.remove(w)
-		elif w not in self._shown:
-			self._shown.append(w)
-
-	def _hideme(self, w):
-		if self.is_closed():
-			return
-		if self.is_showing():
-			if not w._form.IsSubclass(Xm.Gadget):
-				w._form.UnmapWidget()
-		elif w in self._shown:
-			self._shown.remove(w)
-		elif w not in self._not_shown:
-			self._not_shown.append(w)
-
-	def show(self):
-		if not self._fixed:
-			self.fix()
-		try:
-			self._shell.Popup(0)
-		except AttributeError:
-			pass
-		self._showing = TRUE
-		for w in self._not_shown:
-			if not w.is_closed() and \
-			   not w._form.IsSubclass(Xm.Gadget):
-				w._form.UnmapWidget()
-		for w in self._shown:
-			if not w.is_closed() and \
-			   not w._form.IsSubclass(Xm.Gadget):
-				w._form.MapWidget()
-		self._not_shown = []
-		self._shown = []
-		for w in self._fixkids:
-			if w.is_showing():
-				w.show()
-			else:
-				w.hide()
-		self._fixkids = []
-
-	def hide(self):
-		try:
-			self._shell.Popdown()
-		except AttributeError:
-			pass
-		self._showing = FALSE
-
-	def is_showing(self):
-		return self._showing
-
-	def settitle(self, title):
-		if self._title != title:
-			try:
-				self._shell.title = title
-				self._shell.iconName = title
-			except AttributeError:
-				self._form.dialogTitle = title
-			self._title = title
-
-	def getgeometry(self):
-		if self.is_closed():
-			raise error, 'window already closed'
-		x, y  = self._form.TranslateCoords(0, 0)
-		val = self._form.GetValues(['width', 'height'])
-		w = val['width']
-		h = val['height']
-		return x / toplevel._hmm2pxl, y / toplevel._vmm2pxl, \
-		       w / toplevel._hmm2pxl, h / toplevel._vmm2pxl
-
-	def pop(self):
-		try:
-			self._shell.Popup(0)
-		except AttributeError:
-			pass
-
-	def _delete_callback(self, widget, client_data, call_data):
-		if type(client_data) is StringType:
-			if client_data == 'hide':
-				self.hide()
-			elif client_data == 'close':
-				self.close()
-			else:
-				raise error, 'bad deleteCallback argument'
-			return
-		func, args = client_data
-		apply(func, args)
 
 def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1):
-	w = Window(title, grab = grab)
-	options = {'top': None, 'left': None, 'right': None}
-	if prompt:
-		l = apply(w.Label, (prompt,), options)
-		options['top'] = l
-	options['vertical'] = vertical
+	w = SingleSelectionDialog(list, title, prompt)
 	if grab:
-		options['callback'] = (lambda w: w.close(), (w,))
-	b = apply(w.ButtonRow, (list,), options)
-	w.buttons = b
-	w.show()
+		w.rungrabbed()
 	return w
 
 _end_loop = '_end_loop'			# exception for ending a loop
