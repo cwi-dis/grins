@@ -1911,13 +1911,13 @@ class SMILWriter(SMIL):
 		# XXX I don't like this special casing here --sjoerd
 		if type=='animate':
 			if root:
-				self.writetag('body')
+				self.writetag('body', [('%s:hidden' % NSGRiNSprefix, 'true')])
 				self.push()
 			self.writeanimatenode(x)
 			return
 		elif type=='prefetch':
 			if root:
-				self.writetag('body')
+				self.writetag('body', [('%s:hidden' % NSGRiNSprefix, 'true')])
 				self.push()
 			self.writeprefetchnode(x)
 			return
@@ -2016,7 +2016,7 @@ class SMILWriter(SMIL):
 						attrlist.append((name, value))
 		is_realpix = type == 'ext' and x.GetChannelType() == 'RealPix'
 		if not interior and root:
-			self.writetag('body')
+			self.writetag('body', [('%s:hidden' % NSGRiNSprefix, 'true')])
 			self.push()
 		if interior:
 			if type == 'seq' and self.copydir and not x.GetChildren():
@@ -2026,7 +2026,7 @@ class SMILWriter(SMIL):
 				x.set_infoicon('error', 'Warning: some G2 versions crash on empty sequence nodes')
 			if root:
 				if type != 'seq' or (not self.smilboston and attrlist):
-					self.writetag('body')
+					self.writetag('body', [('%s:hidden' % NSGRiNSprefix, 'true')])
 					self.push()
 				else:
 					mtype = 'body'
