@@ -2,6 +2,14 @@ __version__ = "$Id$"
 
 import windowinterface
 import wmwriter
+	
+def haswmpruntimecomponents():
+	try:
+		import wmfapi
+		dummy = wmfapi.CreateProfileManager()
+	except:
+		return 0
+	return 1
 
 class Exporter:
 	def __init__(self, filename, player, profile=19):
