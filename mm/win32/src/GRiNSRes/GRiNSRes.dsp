@@ -189,6 +189,10 @@ SOURCE="..\..\..\Build\products\g2-15\pro\splash8bit.bmp"
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\Build\products\qt\pro\splash8bit.bmp
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\Build\products\smil-10\splash8bit.bmp"
 # End Source File
 # Begin Source File
