@@ -1,10 +1,10 @@
-import Win
-import Qd
-import Dlg
-import Evt
-import Events
-import Windows
-import Menu
+from Carbon import Win
+from Carbon import Qd
+from Carbon import Dlg
+from Carbon import Evt
+from Carbon import Events
+from Carbon import Windows
+from Carbon import Menu
 MenuMODULE=Menu  # Silly name clash with FrameWork.Menu
 from FrameWork import MenuBar, AppleMenu
 from MiniAEFrame import AEServer
@@ -12,11 +12,11 @@ import MacOS
 import sys
 import MenuTemplate
 import gestalt
-import Qt
-import QuickTime
-import Scrap
-import TE
-import AE
+from Carbon import Qt
+from Carbon import QuickTime
+from Carbon import Scrap
+from Carbon import TE
+from Carbon import AE
 
 def _qtavailable():
 	try:

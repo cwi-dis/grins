@@ -1,9 +1,9 @@
-import Qd
-import Dlg
-import Ctl
-import Evt
-import Controls
-import ControlAccessor
+from Carbon import Qd
+from Carbon import Dlg
+from Carbon import Ctl
+from Carbon import Evt
+from Carbon import Controls
+from Carbon import ControlAccessor
 import MacOS
 import string
 import sys
