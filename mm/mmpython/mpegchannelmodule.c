@@ -897,9 +897,9 @@ static typeobject Mpegchanneltype = {
 	sizeof(channelobject),	/*tp_size*/
 	0,			/*tp_itemsize*/
 	/* methods */
-	mpegchannel_dealloc,	/*tp_dealloc*/
+	(destructor)mpegchannel_dealloc, /*tp_dealloc*/
 	0,			/*tp_print*/
-	mpegchannel_getattr,	/*tp_getattr*/
+	(getattrfunc)mpegchannel_getattr, /*tp_getattr*/
 	0,			/*tp_setattr*/
 	0,			/*tp_compare*/
 	0,			/*tp_repr*/
@@ -922,11 +922,11 @@ mpegchannel_init(self, args)
 	} else {
 		INCREF(mpeg_chan_obj);
 	}
-	return mpeg_chan_obj;
+	return (object *) mpeg_chan_obj;
 }
 
 static struct methodlist mpegchannel_methods[] = {
-	{"init",		mpegchannel_init},
+	{"init",		(method)mpegchannel_init},
 	{NULL,			NULL}
 };
 

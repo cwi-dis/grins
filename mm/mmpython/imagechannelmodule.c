@@ -155,9 +155,9 @@ static typeobject Imagechanneltype = {
 	sizeof(channelobject),	/*tp_size*/
 	0,			/*tp_itemsize*/
 	/* methods */
-	imagechannel_dealloc,	/*tp_dealloc*/
+	(destructor)imagechannel_dealloc, /*tp_dealloc*/
 	0,			/*tp_print*/
-	imagechannel_getattr,	/*tp_getattr*/
+	(getattrfunc)imagechannel_getattr, /*tp_getattr*/
 	0,			/*tp_setattr*/
 	0,			/*tp_compare*/
 	0,			/*tp_repr*/
@@ -186,7 +186,7 @@ imagechannel_init(self, args)
 }
 
 static struct methodlist imagechannel_methods[] = {
-	{"init",		imagechannel_init},
+	{"init",		(method)imagechannel_init},
 	{NULL,			NULL}
 };
 
