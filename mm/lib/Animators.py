@@ -717,13 +717,8 @@ class EffectiveAnimator:
 		mmregion = self.__region._attrdict
 
 		# implemented fit='meet' (0) and fit='hidden' (1)
-
-		if settings.activeFullSmilCss:
-			scale = mmregion.getCssAttr('scale', 1)
-			coordinates = mmregion.getPxGeom()
-		else:
-			scale = mmregion['scale']
-			coordinates = mmregion.GetPresentationAttr('base_winoff')
+		scale = mmregion.get('scale')
+		coordinates = mmregion.GetPresentationAttr('base_winoff')
 
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
 			x, y, w, h = coordinates
@@ -822,7 +817,7 @@ class EffectiveAnimator:
 			scale = 1 # mmchan.getCssAttr('scale', 1)
 			coordinates = self.__node.getPxGeom()
 		else:
-			scale = mmchan['scale']
+			scale = mmchan.get('scale')
 			coordinates = mmchan.GetPresentationAttr('base_winoff')
 
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
