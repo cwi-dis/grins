@@ -705,9 +705,10 @@ class NewChannelDlg(ResDialog):
 
 # Implementation of the select template dialog
 class OpenAppDialog(ResDialog):
-	def __init__(self,cb_new, cb_open, cb_never_again, 
-				recentlist, cb_recent, parent=None):
+	def __init__(self, title, cb_new, cb_open, cb_never_again, 
+		     recentlist, cb_recent, parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_INIT_DIALOG,parent)
+		self._title = title or 'GRiNS'
 		self._cb_open = cb_open
 		self._cb_new = cb_new
 		self._cb_never_again = cb_never_again
@@ -723,6 +724,7 @@ class OpenAppDialog(ResDialog):
 		self.show()
 
 	def OnInitDialog(self):
+		self.SetWindowText(self._title)
 		self.attach_handles_to_subwindows()
 		self.init_subwindows()
 		self._r_new.setcheck(1)
