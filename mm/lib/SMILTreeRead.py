@@ -148,7 +148,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'origin': ['parent', 'element'],
 		'override': ['visible', 'hidden'],
 		'resizeBehavior': ['percentOnly', 'zoom'],
-		'sendTo': ['_rpcontextwin', '_rpbrowser', 'osdefaultbrowser', 'rpengine'],
+		'sendTo': {'_rpcontextwin':'rpcontextwin', '_rpbrowser':'rpbrowser', 'osdefaultbrowser':'osdefaultbrowser', 'rpengine':'rpengine'},
 		'shape': ['rect', 'poly', 'circle'],
 		'show': ['replace', 'pause', 'new'],
 		'sourcePlaystate': ['play', 'pause', 'stop'],
