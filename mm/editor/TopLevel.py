@@ -281,8 +281,8 @@ class TopLevel(ViewDialog):
 		print 'saving to', filename, '...'
 		try:
 			if filename[-4:] == '.smi':
-				import MMLTree
-				MMLTree.WriteFile(self.root, filename)
+				import SMILTree
+				SMILTree.WriteFile(self.root, filename)
 			else:
 				MMTree.WriteFile(self.root, filename)
 		except IOError, msg:
@@ -343,8 +343,8 @@ class TopLevel(ViewDialog):
 			print 'parsing', self.filename, '...'
 			t0 = time.time()
 			if self.filename[-4:] == '.smi':
-				import MMLTree
-				self.root = MMLTree.ReadFile(self.filename)
+				import SMILTree
+				self.root = SMILTree.ReadFile(self.filename)
 			else:
 				self.root = MMTree.ReadFile(self.filename)
 			t1 = time.time()
