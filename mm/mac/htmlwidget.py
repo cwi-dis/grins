@@ -16,7 +16,10 @@ import regsub
 import string
 import htmllib
 
-LEFTMARGIN=0
+LEFTMARGIN=4
+TOPMARGIN=4
+RIGHTMARGIN=2
+BOTTOMMARGIN=0
 SCROLLBARWIDTH=16
 
 # Sizes for HTML tag types
@@ -27,6 +30,7 @@ HTML_SIZE={
 
 class HTMLWidget:
 	def __init__(self, window, rect, name):
+		init_waste()
 		self.bary = None
 		self.anchor_offsets = []
 		self.anchor_hrefs = []
@@ -40,8 +44,8 @@ class HTMLWidget:
 		self.wid = window
 		l, t, r, b = rect
 		self.rect = rect
-		vr = l+LEFTMARGIN, t, r, b
-		dr = (0, 0, vr[2], 0)
+		vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
+		dr = (0, 0, vr[2]-vr[0], 0)
 		Qd.SetPort(window)
 		Qd.TextFont(4)
 		Qd.TextSize(9)
@@ -82,8 +86,8 @@ class HTMLWidget:
 		dr = self.ted.WEGetDestRect()
 		need_bary = ((dr[3]-dr[1]) >= (vr[3]-vr[1]))
 		if need_bary:
-			vr = l+LEFTMARGIN, t, r-(SCROLLBARWIDTH-1), b
-			dr = dr[0], dr[1], vr[2], dr[3]
+			vr = l+LEFTMARGIN, t+TOPMARGIN, r-(RIGHTMARGIN+SCROLLBARWIDTH-1), b-BOTTOMMARGIN
+			dr = dr[0], dr[1], vr[2]-vr[0], dr[3]
 			self.ted.WESetViewRect(vr)
 			self.ted.WESetDestRect(dr)
 			self.ted.WECalText()
@@ -96,8 +100,8 @@ class HTMLWidget:
 			if not self.activated: self.bary.HiliteControl(255)
 			self.updatedocview()
 		else:
-			vr = l+LEFTMARGIN, t, r, b
-			dr = dr[0], dr[1], vr[2], dr[3]
+			vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
+			dr = dr[0], dr[1], vr[2]-vr[0], dr[3]
 			self.ted.WESetViewRect(vr)
 			self.ted.WESetDestRect(dr)
 			self.ted.WECalText()
@@ -136,11 +140,11 @@ class HTMLWidget:
 		#
 		# "line" size is minimum of top and bottom line size
 		#
-		topline_off,dummy = self.ted.WEGetOffset((1,1))
+		topline_off,dummy = self.ted.WEGetOffset((l+1,t+1))
 		topline_num = self.ted.WEOffsetToLine(topline_off)
 		toplineheight = self.ted.WEGetHeight(topline_num, topline_num+1)
 			
-		botline_off, dummy = self.ted.WEGetOffset((1, b-1))
+		botline_off, dummy = self.ted.WEGetOffset((l+1, b-1))
 		botline_num = self.ted.WEOffsetToLine(botline_off)
 		botlineheight = self.ted.WEGetHeight(botline_num, botline_num+1)
 		
@@ -188,12 +192,17 @@ class HTMLWidget:
 	def do_update(self):
 		visregion = self.wid.GetWindowPort().visRgn
 		myregion = Qd.NewRgn()
-		Qd.RectRgn(myregion, self.ted.WEGetDestRect())
+		Qd.RectRgn(myregion, self.rect) # or is it self.ted.WEGetViewRect() ?
 		Qd.SectRgn(myregion, visregion, myregion)
+		# Waste doesn't honour the clipping region, do it ourselves
+		clipregion = Qd.NewRgn()
+		Qd.GetClip(clipregion)
+		Qd.SectRgn(myregion, clipregion, myregion)
 		if Qd.EmptyRgn(myregion):
 			return
 		Qd.RGBBackColor(self.bg_color)
-		Qd.EraseRgn(visregion) # XXXX Set background color
+		Qd.RGBForeColor((0, 0xffff, 0)) # DBG
+		Qd.EraseRgn(visregion)
 		self.ted.WEUpdate(myregion)
 ##		self.updatescrollbars()
 		
@@ -202,9 +211,9 @@ class HTMLWidget:
 		self.rect = rect
 		Qd.SetPort(self.wid)
 		Qd.RGBBackColor(self.bg_color)
-		vr = (l+LEFTMARGIN, t, r, b)
+		vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
 		self.ted.WESetViewRect(vr)
-		Win.InvalRect(vr)
+		Win.InvalRect(self.rect)
 		self.createscrollbars()
 		
 	def do_click(self, down, local, evt):
@@ -336,7 +345,9 @@ class HTMLWidget:
 		self.ted.WEInsert('\r', None, None)
 		
 	def send_hor_rule(self, *args, **kw):
-		self.ted.WEInsert('\r------------------- %s %s\r'%(args, kw), None, None)
+		# Ignore ruler options, for now
+		dummydata = Res.Resource('')
+		self.ted.WEInsertObject('rulr', dummydata, (0,0))
 		
 	def send_label_data(self, data):
 		self.ted.WEInsert(data, None, None)
@@ -367,3 +378,47 @@ class MyHTMLParser(htmllib.HTMLParser):
 		# It seems most browsers treat </p> as <p>...
 		self.do_p(())
 
+waste_inited = 0
+
+def init_waste():
+	global waste_inited
+	if waste_inited:
+		return
+	waste_inited = 1
+	# Ruler handlers
+	waste.WEInstallObjectHandler('rulr', 'new ', newRuler)
+	waste.WEInstallObjectHandler('rulr', 'draw', drawRuler)
+	waste.WEInstallObjectHandler('rulr', 'free', freeRuler)
+	# GIF handlers
+	waste.WEInstallObjectHandler('GIF ', 'new ', newGIF)
+	waste.WEInstallObjectHandler('GIF ', 'draw', drawGIF)
+	waste.WEInstallObjectHandler('GIF ', 'free', freeGIF)
+	
+def newRuler(obj):
+	"""Insert a new ruler. Make it as wide as the window minus 2 pxls"""
+	ted = obj.WEGetObjectOwner()
+	l, t, r, b = ted.WEGetDestRect()
+	return r-l, 4
+	
+def drawRuler((l, t, r, b), obj):
+	y = (t+b)/2
+	Qd.MoveTo(l+2, y)
+	Qd.LineTo(r-2, y)
+	return 0
+	
+def freeRuler(*args):
+	print 'FREERULER', args
+	return 0
+	
+def newGIF(obj):
+	return 0,0
+	
+def drawGIF((l,t,r,b),obj):
+	return 0
+	
+def freeGIF(*args):
+	return 0
+	
+			
+
+	
