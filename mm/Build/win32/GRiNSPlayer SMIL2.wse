@@ -23,7 +23,7 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=..\..\bin\win32\grinsp2.0.135.exe
+  EXE Filename=..\..\bin\win32\grinsp2.0.136.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -1388,33 +1388,23 @@ item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
-  Source=..\..\My Devices\H3G2.gskin
-  Destination=%MAINDIR%\My Devices\H3G2.gskin
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\My Devices\H3G.gskin
-  Destination=%MAINDIR%\My Devices\H3G.gskin
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\My Devices\gskin-spec.txt
-  Destination=%MAINDIR%\My Devices\gskin-spec.txt
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\My Devices\grprefs-spec.txt
-  Destination=%MAINDIR%\My Devices\grprefs-spec.txt
-  Flags=0000000010000010
-end
-item: Install File
   Source=..\..\My Devices\G-DevE-US.gskin
   Destination=%MAINDIR%\My Devices\G-DevE-US.gskin
   Flags=0000000010000010
 end
 item: Install File
+  Source=..\..\My Devices\G-DevE-US.gif
+  Destination=%MAINDIR%\My Devices\G-DevE-US.gif
+  Flags=0000000010000010
+end
+item: Install File
   Source=..\..\My Devices\G-DevE-EU.gskin
   Destination=%MAINDIR%\My Devices\G-DevE-EU.gskin
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\My Devices\G-DevE-EU.gif
+  Destination=%MAINDIR%\My Devices\G-DevE-EU.gif
   Flags=0000000010000010
 end
 item: Install File
@@ -1428,8 +1418,18 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
+  Source=..\..\My Devices\G-DevD-US.gif
+  Destination=%MAINDIR%\My Devices\G-DevD-US.gif
+  Flags=0000000010000010
+end
+item: Install File
   Source=..\..\My Devices\G-DevD-EU.gskin
   Destination=%MAINDIR%\My Devices\G-DevD-EU.gskin
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\My Devices\G-DevD-EU.gif
+  Destination=%MAINDIR%\My Devices\G-DevD-EU.gif
   Flags=0000000010000010
 end
 item: Install File
@@ -1443,8 +1443,18 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
+  Source=..\..\My Devices\G-DevC-US.gif
+  Destination=%MAINDIR%\My Devices\G-DevC-US.gif
+  Flags=0000000010000010
+end
+item: Install File
   Source=..\..\My Devices\G-DevC-EU.gskin
   Destination=%MAINDIR%\My Devices\G-DevC-EU.gskin
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\My Devices\G-DevC-EU.gif
+  Destination=%MAINDIR%\My Devices\G-DevC-EU.gif
   Flags=0000000010000010
 end
 item: Install File
@@ -1458,8 +1468,18 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
+  Source=..\..\My Devices\G-DevB-P4.gif
+  Destination=%MAINDIR%\My Devices\G-DevB-P4.gif
+  Flags=0000000010000010
+end
+item: Install File
   Source=..\..\My Devices\G-DevB-MMS.gskin
   Destination=%MAINDIR%\My Devices\G-DevB-MMS.gskin
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\My Devices\G-DevB-MMS.gif
+  Destination=%MAINDIR%\My Devices\G-DevB-MMS.gif
   Flags=0000000010000010
 end
 item: Install File
@@ -1478,38 +1498,13 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\My Devices\DeviceXrocker.gskin
-  Destination=%MAINDIR%\My Devices\DeviceXrocker.gskin
+  Source=..\..\My Devices\gskin-spec.txt
+  Destination=%MAINDIR%\My Devices\gskin-spec.txt
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\My Devices\DeviceX.gskin
-  Destination=%MAINDIR%\My Devices\DeviceX.gskin
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\My Devices\DeviceX.gif
-  Destination=%MAINDIR%\My Devices\DeviceX.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\My Devices\Classic.gskin
-  Destination=%MAINDIR%\My Devices\Classic.gskin
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\My Devices\Classic.gif
-  Destination=%MAINDIR%\My Devices\Classic.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\My Devices\begin_end_icon2.gif
-  Destination=%MAINDIR%\My Devices\begin_end_icon2.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\My Devices\begin_end_icon.gif
-  Destination=%MAINDIR%\My Devices\begin_end_icon.gif
+  Source=..\..\My Devices\grprefs-spec.txt
+  Destination=%MAINDIR%\My Devices\grprefs-spec.txt
   Flags=0000000010000010
 end
 item: Install File
