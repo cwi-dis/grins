@@ -7,7 +7,6 @@ class Animator:
 	def __init__(self, timenode, attr, dict):
 		self._timenode = timenode
 		self._attr = attr
-		self._dur = float(dict.get('dur'))
 		self._calcMode = dict.get('calcMode')
 		self._values = dict.get('values')
 		self._times = dict.get('times')
@@ -24,15 +23,16 @@ class Animator:
 		self._setAccelerateDecelerate(dict['accelerate'], dict['decelerate'])
 		self._setAutoReverse(dict['autoReverse'])
 
+		self._dur = None # will be set by prepare
+		self._efftimes = None
+
 		# shortcuts
 		mode = self._calcMode
-		dur = self._dur
 		values, times, splines = self._values, self._times, self._splines
 
 		# assertions
-		values, times, splines = self._values, self._times, self._splines
 		assert len(values)>0, 'empty values'
-		assert len(values)!=1 or self._calcMode == 'discrete', 'missing values'		
+		assert len(values)!=1 or mode == 'discrete', 'missing values'		
 		assert not times or len(times)==len(values), 'times vs values missmatch'
 		assert (not times or not splines) or len(splines)==len(times)-1, 'times vs splines missmatch'
 
@@ -41,6 +41,39 @@ class Animator:
 		elif mode=='paced': self._inrepol = self._paced
 		elif mode=='spline': self._inrepol = self._spline
 		else: self._inrepol = self._linear
+
+		# repeat counter
+		self._repeatCounter = 0
+
+		# cashed acc value
+		self._accValue = None
+
+		# current values
+		self._curvalue = None
+		self._time = None
+
+		# path origin
+		self._origin = ""
+
+		# transitionFilter
+		self._trdict = None
+
+	# reset
+	def reset(self):
+		self._repeatCounter = 0
+		self._accValue = None
+		self._curvalue = None
+		self._time = None
+		self._dur = None
+
+	def prepareInterval(self, dur):
+		self._dur = dur
+		if dur == 'indefinite':
+			return
+		assert dur>0, 'invalid element interval'
+
+		mode = self._calcMode
+		values, times = self._values, self._times
 
 		# construct boundaries of time intervals
 		self._efftimes = []
@@ -92,24 +125,6 @@ class Animator:
 				for p in times:
 					self._efftimes.append(p*dur)	
 
-		# repeat counter
-		self._repeatCounter = 0
-
-		# cashed acc value
-		self._accValue = None
-
-		# current values
-		self._curvalue = None
-		self._time = None
-
-		# path origin
-		self._origin = ""
-
-		# composition context of this animator
-		self._attr = None
-
-		# transitionFilter
-		self._trdict = None
 
 	def getTimeManipulatedDur(self):
 		dur = self._dur
@@ -125,6 +140,10 @@ class Animator:
 
 	# set local time to t and return value at t
 	def getValue(self, t):
+		if self._dur == 'indefinite':
+			self._curvalue = self._values[0]
+			return self._curvalue
+
 		# time manipulate transform
 		t = self._transformTime(t)
 		self._time = t
@@ -147,7 +166,7 @@ class Animator:
 		return v
 
 	def getCurrValue(self):
-		iter, t = self._timenode.getDurInstanceTime()
+		t = self._timenode.getSimpleTime()
 		if self._timenode.isFrozen() and t == self._dur:
 			self.setToEnd()	
 		else:
@@ -156,7 +175,10 @@ class Animator:
 
 	# mainly for freeze and accumulate calculations 
 	def setToEnd(self):
-		if self._dur <= 0: return
+		if self._dur == 'indefinite':
+			self._curvalue = self._values[0]
+			return self._curvalue
+
 		# set local time to end
 		if self._autoReverse:t = 0
 		else: t = self._dur
@@ -176,13 +198,6 @@ class Animator:
 		else:
 			self._curvalue = v
 		return self._curvalue
-
-	# reset
-	def reset(self):
-		self._repeatCounter = 0
-		self._accValue = None
-		self._curvalue = None
-		self._time = None
 
 	def isAdditive(self):
 		return self._additive=='sum'
@@ -439,17 +454,18 @@ class RNPath:
 class FloatTupleAnimator(Animator):
 	def __init__(self, timenode, attr, dict):
 		self._path = RNPath(dict.get('values'))
-		
-		# pass to base the length parameters of the path
+		self._time2length = 1
 		dict['values'] = self._path.getLengthValues()
 		Animator.__init__(self, timenode, attr, dict)
-				
-		# time to paced interval convertion factor
-		dur = dict.get('dur')
-		if dur>0:
+
+	def prepareInterval(self, dur):
+		Animator.prepareInterval(self, dur)
+		if dur != 'indefinite':
 			self._time2length = self._path.getLength()/dur
-		else:
-			self._time2length = 1
+
+	def reset(self):
+		Animator.reset(self)
+		self._time2length = 1
 
 	def _paced(self, t):
 		return self._path.getPointAtLength(t*self._time2length)
@@ -493,22 +509,25 @@ class EffColorAnimator(EffIntTupleAnimator):
 class MotionAnimator(Animator):
 	def __init__(self, timenode, attr, dict):
 		self._path = dict.get('path')
+		self._totlen = self._path.getLength()
+		self._time2length = 1
+		self._currlen = 0
 		self.tftype = 'translate'
 		self.rotate = dict.get('rotate')
-		# pass to base the length parameters of values or path
 		dict['values'] = self._path.getLengthValues()
-
 		Animator.__init__(self, timenode, attr, dict)
-		
-		self._currlen = 0
-		self._totlen = self._path.getLength()
 
-		# time to paced interval convertion factor
-		dur = dict.get('dur')
-		self._time2length = self._totlen/dur
-		
+	def prepareInterval(self, dur):
+		Animator.prepareInterval(self, dur)
+		if dur == 'indefinite':
+			self._time2length = 1
+		else:
+			self._time2length = self._totlen/dur
+
+	def reset(self):
+		Animator.reset(self)
+		self._time2length = 1
 		self._currlen = 0
-		self._totlen = self._path.getLength()
 
 	def _paced(self, t):
 		self._currlen = t*self._time2length
