@@ -1406,6 +1406,10 @@ class AttrEditor(AttrEditorDialog):
 				C = ColorAttrEditorField
 			elif displayername == 'csscolor':
 				C = CssColorAttrEditorField
+			elif displayername == 'csspos':
+				C = CssPosAttrEditorField
+			elif displayername == 'regpoint':
+				C = RegpointAttrEditorField
 			elif displayername == 'layoutname':
 				C = LayoutnameAttrEditorField
 			elif displayername == 'channelname':
@@ -2094,6 +2098,41 @@ class CssColorAttrEditorField(AttrEditorField):
 			return colors.rcolors[color]
 		return svalue[1]+' '+svalue[2]+' '+svalue[3]		
 
+class CssPosAttrEditorField(AttrEditorField):
+# a parsed value is either:
+# - a real number (0 to 1) representing a percent value
+# - a int number representing a pixel value
+# None representing the auto value
+
+# a string representation value is either:
+# a string including '%' representing a percent
+# a string not including '%' and different of '' representing a pixel value
+# '' representing the auto value
+
+	type = 'csspos'
+	def parsevalue(self, str):
+		import string
+		val = None
+		if str == '':
+			pass
+		else:
+			if '%' not in str:
+				val = int(str)
+			else:
+				val = float(str[:-1])/100
+		return val		
+
+	def valuerepr(self, value):
+		if value is None or value == '':
+			return ''
+		elif type(value) == type(0):
+			return `value`
+		elif type(value) == type(1.0):
+			val = `value*100`+'%'
+			return val
+		else:
+			print 'unknown value ',value
+
 class PopupAttrEditorField(AttrEditorField):
 	# A choice menu choosing from a list -- base class only
 	type = 'option'
@@ -2312,6 +2351,14 @@ class EnumAttrEditorField(PopupAttrEditorFieldNoDefault):
 	def getoptions(self):
 		return self.__values
 
+class RegpointAttrEditorField(EnumAttrEditorField):
+	type = 'regpoint'
+
+	def getoptions(self):
+		list = self.wrapper.context.regpoints.keys()
+		list.sort()
+		return list
+		
 class QualityAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['low', 'normal', 'high', 'highest']
 	__valuesmap = [20, 50, 75, 90]
