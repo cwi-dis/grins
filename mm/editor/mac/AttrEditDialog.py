@@ -1449,6 +1449,53 @@ class ChannelAreaTabPage(AreaTabPage):
 
 	def _savexywh(self, x, y, w, h):
 		self._attr_to_field[self._xywhfield]._savevaluefrompage(x+' '+y+' '+w+' '+h)
+		
+class ChannelAreaLiteTabPage(AreaTabPage):
+	TAB_LABEL='Position and Size'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_CH_AREA_LITE
+	ITEM_GROUP=1
+	ITEM_X=3
+	ITEM_Y=5
+	ITEM_W=7
+	ITEM_H=9
+	ITEM_Z=11
+	N_ITEMS=11
+	_attr_to_checkbox = {
+	}
+	_attr_to_string = {
+		'z': ITEM_Z,
+	}
+	_xywhfield = 'base_winoff'
+	attrs_on_page = ['base_winoff', 'z']
+	_checkboxes = ()
+	_otherfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H, ITEM_Z)
+
+	def init_controls(self, item0):
+		rv = AreaTabPage.init_controls(self, item0)
+		return rv
+		
+	def update(self):
+		for name, item in self._attr_to_string.items():
+			value = self._attr_to_field[name]._getvalueforpage()
+			self.attreditor._setlabel(self.item0+item, value)
+		AreaTabPage.update(self)
+		
+	def _getxywh(self):
+		str = self._attr_to_field[self._xywhfield]._getvalueforpage()
+		if not str:
+			return '0', '0', '0', '0'
+		[f1, f2, f3, f4] = string.split(str)
+		return f1, f2, f3, f4
+		
+	def save(self):
+		for name, item in self._attr_to_string.items():
+			value = self.attreditor._getlabel(self.item0+item)
+			self._attr_to_field[name]._savevaluefrompage(value)
+		AreaTabPage.save(self)
+
+	def _savexywh(self, x, y, w, h):
+		self._attr_to_field[self._xywhfield]._savevaluefrompage(x+' '+y+' '+w+' '+h)
 #
 # List of classes handling pages with multiple attributes. The order is
 # important: we loop over these classes in order, and if all attributes
