@@ -93,6 +93,11 @@ class AnimationData:
 		self._data = []   # a list of key frames (rect, color)
 		self._times = []  # key times list
 		self._domrect, self._domcolor = self._target.getDomValues()
+		
+		self._animateMotion = None
+		self._animateWidth = None
+		self._animateHeight = None
+		self._animateColor = None
 
 	#
 	#  public
@@ -250,6 +255,33 @@ class AnimationData:
 		em.commit()
 		return 1
 
+	def createAnimators(self):
+		import svgpath
+		import Animators
+		
+		animateMotionValues, animateWidthValues,\
+		animateHeightValues, animateColorValues = self._dataToValues()
+		
+		# animateMotion
+		path = svgpath.Path()
+		coords = animateMotionValues
+		path.constructFromPoints(coords)
+		attr = 'position'
+		domval = complex(self._domrect[0],self._domrect[1])
+		dur = 1
+		mode = 'linear'
+		times = self._times
+		splines = None
+		accumulate = 'none'
+		additive = 'none'
+		self._animateMotion = Animators.MotionAnimator(attr, domval, path, dur, mode, times, splines, accumulate, additive)
+
+	def getPosAt(self, keyTime):
+		if self._animateMotion is not None:
+			z = self._animateMotion.getValue(keyTime)
+			return self._animateMotion.convert(z)
+		return self._domrect[:2]
+
 	#
 	#  private
 	#
@@ -267,7 +299,7 @@ class AnimationData:
 		self._writeAnimateHeight = 1
 		self._writeAnimateColor = 1
 
-	def _dataToValuesAttr(self):
+	def _dataToValues(self):
 		animateMotionValues = [] 
 		animateWidthValues = []
 		animateHeightValues = [] 
@@ -278,6 +310,11 @@ class AnimationData:
 			animateWidthValues.append(rect[2])
 			animateHeightValues.append(rect[3])
 			animateColorValues.append(color)
+		return animateMotionValues, animateWidthValues, animateHeightValues, animateColorValues
+
+	def _dataToValuesAttr(self):
+		animateMotionValues, animateWidthValues,\
+		animateHeightValues, animateColorValues = self._dataToValues()
 
 		self._setWriteFlagsOn()
 
